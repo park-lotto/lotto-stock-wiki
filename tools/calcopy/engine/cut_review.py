@@ -27,8 +27,8 @@ KEYS = ("A3", "A5", "B10", "meaningless_person")
 LONG = 768
 
 PROMPT = """너는 쇼핑 쇼츠 검수원이다. 그림 1장 = 한 컷에서 뽑은 프레임 3장을 가로로 붙인 것(왼쪽=컷 시작, 가운데=중간, 오른쪽=컷 끝).
-이 컷 동안 나오는 자막(대사 조각): «{piece}»
-그 줄 전체 문장: {line}
+이 컷 동안 나오는 자막(대사 조각): «{piece}» (비어 있으면 그림 속 우리 자막 띠의 글자를 직접 읽어 그것을 자막으로 삼는다)
+그 줄 전체 문장(또는 대본 전체 — 문맥): {line}
 영상 주제(제품): {topic}
 재료 고를 때 적어 둔 장면 설명(참고만, 실제 그림이 우선): {seen}
 우리가 얹은 틀(남의 글자가 아니다 — 판정에서 완전히 무시): 화면 위쪽의 채널 머리띠(채널명 «{channel}»·메뉴 아이콘·검색 돋보기·'광고' 배지), 제목 띠({titles}), 자막 띠(«{piece}» 같은 우리 자막).
@@ -55,7 +55,7 @@ def _find_timeline(folder: Path, given: str | None) -> Path:
     for c in cands:
         if c.exists():
             return c
-    raise SystemExit(f"timeline.json 없음 — 찾은 곳: {[str(c) for c in cands]} (--timeline 으로 지정)")
+    return None      # 없으면 장면 전환 검출 모드(scene_cuts)
 
 
 def load_cuts(folder: Path, tl_path: Path) -> tuple[list[dict], dict]:
@@ -80,6 +80,37 @@ def load_cuts(folder: Path, tl_path: Path) -> tuple[list[dict], dict]:
                      "kind": g.get("kind", "")})
     meta = {"topic": D.get("topic") or D.get("제품명") or "", "titles": list(dict.fromkeys((D.get("title_lines") or []) + [v for v in (D.get("title_slots") or {}).values() if isinstance(v, str)])),
             "channel": D.get("채널") or D.get("channel") or ""}
+    return cuts, meta
+
+
+def _scene_times(video: Path, th: float = 0.3) -> list[float]:
+    import re
+    r = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(video), "-vf", f"crop=iw:ih*0.57:0:ih*0.43,select='gt(scene,{th})',showinfo",
+                        "-an", "-f", "null", "-"], capture_output=True, text=True, encoding="utf-8", errors="replace")
+    return [float(x) for x in re.findall(r"pts_time:([0-9.]+)", r.stderr)]
+
+
+def _duration(video: Path) -> float:
+    r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(video)],
+                       capture_output=True, text=True)
+    return float(r.stdout.strip())
+
+
+def scene_cuts(video: Path, folder: Path) -> tuple[list[dict], dict]:
+    """timeline 이 없거나 이 렌더 것이 아닐 때 — 영상 창 장면 전환으로 컷을 나눈다(0.3초 안 연속 감지는 한 경계).
+    자막 조각은 Claude 가 화면 자막을 직접 읽는다(piece 비움), 줄 문장은 대본 전체를 문맥으로 준다."""
+    D = json.loads((folder / "대본.json").read_text(encoding="utf-8")) if (folder / "대본.json").exists() else {}
+    dur = _duration(video)
+    b = [0.0]
+    for t in _scene_times(video):
+        if t - b[-1] >= 0.3 and dur - t >= 0.3:
+            b.append(t)
+    b.append(dur)
+    whole = " / ".join(l.get("text", "") for l in D.get("lines") or [])
+    cuts = [{"n": k, "t0": round(b[k], 3), "dur": round(b[k + 1] - b[k], 3), "piece": "", "line": whole, "seen": "", "kind": ""}
+            for k in range(len(b) - 1)]
+    meta = {"topic": D.get("topic") or "", "channel": D.get("채널") or D.get("channel") or "",
+            "titles": list(dict.fromkeys((D.get("title_lines") or []) + [v for v in (D.get("title_slots") or {}).values() if isinstance(v, str)]))}
     return cuts, meta
 
 
@@ -123,10 +154,16 @@ def hints(imgs: list[Path]) -> dict:
 def review(video: Path, folder: Path, out: Path, tl: str | None = None, workers: int = 6) -> dict:
     from PIL import Image
     from tools.calcopy.engine import claude_cli
-    cuts, meta = load_cuts(folder, _find_timeline(folder, tl))
-    match = timeline_matches(video, cuts)
-    if match < 0.6:
-        raise SystemExit(f"timeline.json 이 이 영상과 안 맞음(컷 시작 일치 {match}) — 이 렌더의 timeline 을 --timeline 으로 지정")
+    tp = _find_timeline(folder, tl)
+    match, mode = None, "scene"
+    if tp:
+        cuts, meta = load_cuts(folder, tp)
+        match = timeline_matches(video, cuts)
+        mode = "timeline"
+    if not tp or match < 0.6:        # 없음/다른 렌더 것(make/ 는 재렌더 때 덮인다) → 장면 전환 모드
+        print(f"[컷 시각] timeline {'없음' if not tp else f'불일치({match})'} → 장면 전환 검출 모드")
+        cuts, meta = scene_cuts(video, folder)
+        mode = "scene"
     fdir = out / "frames"
     fdir.mkdir(parents=True, exist_ok=True)
     calls = [0]
@@ -173,7 +210,7 @@ def review(video: Path, folder: Path, out: Path, tl: str | None = None, workers:
     t_all = time.time()
     with cf.ThreadPoolExecutor(workers) as ex:
         res = list(ex.map(one, cuts))
-    rep = {"video": str(video), "timeline_match": match, "cuts": res, "n_bad": sum(not c["ok"] for c in res), "calls": calls[0],
+    rep = {"video": str(video), "timeline_match": match, "cut_mode": mode, "cuts": res, "n_bad": sum(not c["ok"] for c in res), "calls": calls[0],
            "wall_sec": round(time.time() - t_all, 1)}
     (out / "cut_review.json").write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")
     mk = lambda v: "○" if v is True else ("×" if v is False else "?")
