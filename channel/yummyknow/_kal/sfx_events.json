@@ -2,9 +2,19 @@
  "_meta": {
   "made_by": "tools/calcopy/engine/sound/sfx_events.py yummyknow --detect",
   "how": "detect",
+  "asr_filter": {
+   "how": "후보 시각이 받아쓰기 낱말 구간[t0−0.05, t1+0.05] 안이면 cand_in_words(치찰음·파열음 오탐) — 단 전환(cut)·스티커 ±0.3초 안은 남김(keep_why). 남은 것 = cand_kept",
+   "asr": "C:/숏템_칼카피/yummyknow/work/asrw",
+   "no_speech": {},
+   "no_asr": [],
+   "n_kept": 1,
+   "n_in_words": 4,
+   "note": "귀 확인 아님(신호). 무음 환각 = 환각 문구(Thanks for watching·구독과 좋아요·Music…)가 절반 이상이거나 빼고 2낱말 이하, 또는 길이0 낱말 40% 이상"
+  },
   "from": "C:/숏템_칼카피\\yummyknow\\src",
   "n_videos": 6,
-  "n_cand": 4
+  "n_cand": 5,
+  "line_link_how": "line_link = 남은 후보(cand_kept)가 든 줄의 sfx·sticker 유무 + 줄판독 sfx 시각(t, 없으면 줄 t0)·스티커 t_in 에서 가장 가까운 후보 거리(≤0.15초 = match). 줄판독 sfx 칸은 바꾸지 않았다(1판 파형 판독 근거가 따로 있다) — 10-25 재측정(03 low·낱말 거름 내장 뒤) 다시 붙임"
  },
  "76uZKOpnlqQ": {
   "strong_n": 5,
@@ -97,6 +107,58 @@
    "cap": 0.14,
    "sticker": 0.03,
    "cut": 0.09
+  },
+  "asr_words": 120,
+  "cand_in_words": [
+   {
+    "t": 4.46,
+    "kind": "broad",
+    "dur": 0.08,
+    "db": 18.5,
+    "voiced": 0.0,
+    "isolated": 0.85,
+    "cen_hz": 5796,
+    "near": {
+     "cap": 0.84,
+     "sticker": 25.04,
+     "cut": 0.76
+    },
+    "word": "시킨다"
+   },
+   {
+    "t": 16.38,
+    "kind": "broad",
+    "dur": 0.06,
+    "db": 20.2,
+    "voiced": 0.09,
+    "isolated": 0.8,
+    "cen_hz": 6748,
+    "near": {
+     "cap": 0.32,
+     "sticker": 13.12,
+     "cut": 1.62
+    },
+    "word": "업체였어요"
+   }
+  ],
+  "cand_kept": [],
+  "line_link": {
+   "kept_to_line": [],
+   "line_sfx_to_kept": [],
+   "sticker_to_kept": [
+    {
+     "line": 0,
+     "t_in": 0.0,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 35,
+     "t_in": 39.4,
+     "nearest_kept_s": null,
+     "match": false
+    }
+   ]
   }
  },
  "8f9T8Jeo-gQ": {
@@ -154,6 +216,21 @@
   "chance": {
    "cap": 0.26,
    "sticker": 0.01
+  },
+  "asr_words": 102,
+  "cand_in_words": [],
+  "cand_kept": [],
+  "line_link": {
+   "kept_to_line": [],
+   "line_sfx_to_kept": [],
+   "sticker_to_kept": [
+    {
+     "line": 24,
+     "t_in": 26.87,
+     "nearest_kept_s": null,
+     "match": false
+    }
+   ]
   }
  },
  "PFvCfu1ECK4": {
@@ -223,6 +300,14 @@
    "cap": 0.14,
    "sticker": 0.01,
    "cut": 0.14
+  },
+  "asr_words": 87,
+  "cand_in_words": [],
+  "cand_kept": [],
+  "line_link": {
+   "kept_to_line": [],
+   "line_sfx_to_kept": [],
+   "sticker_to_kept": []
   }
  },
  "g7cxCPWMI5M": {
@@ -332,6 +417,54 @@
    "sticker": 0.06,
    "switch": 0.01,
    "cut": 0.11
+  },
+  "asr_words": 92,
+  "cand_in_words": [
+   {
+    "t": 0.09,
+    "kind": "broad",
+    "dur": 0.2,
+    "db": 31.3,
+    "voiced": 0.61,
+    "isolated": 0.81,
+    "cen_hz": 7756,
+    "near": {
+     "cap": 1.21,
+     "sticker": 6.91,
+     "switch": 9.08,
+     "cut": 1.24
+    },
+    "word": "영업"
+   },
+   {
+    "t": 16.73,
+    "kind": "broad",
+    "dur": 0.06,
+    "db": 18.5,
+    "voiced": 0.55,
+    "isolated": 0.8,
+    "cen_hz": 6303,
+    "near": {
+     "cap": 0.83,
+     "sticker": 0.83,
+     "switch": 6.53,
+     "cut": 0.86
+    },
+    "word": "치즈스틱의"
+   }
+  ],
+  "cand_kept": [],
+  "line_link": {
+   "kept_to_line": [],
+   "line_sfx_to_kept": [],
+   "sticker_to_kept": [
+    {
+     "line": 7,
+     "t_in": 6.93,
+     "nearest_kept_s": null,
+     "match": false
+    }
+   ]
   }
  },
  "gBVXQdbzwJU": {
@@ -412,6 +545,27 @@
    "sticker": 0.07,
    "switch": 0.04,
    "cut": 0.15
+  },
+  "asr_words": 104,
+  "cand_in_words": [],
+  "cand_kept": [],
+  "line_link": {
+   "kept_to_line": [],
+   "line_sfx_to_kept": [],
+   "sticker_to_kept": [
+    {
+     "line": 0,
+     "t_in": 0.0,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 23,
+     "t_in": 20.03,
+     "nearest_kept_s": null,
+     "match": false
+    }
+   ]
   }
  },
  "rGFXQlS9Cp4": {
@@ -421,8 +575,22 @@
    "cut": []
   },
   "dur": 33.7,
-  "n_events_all": 16,
-  "cand": [],
+  "n_events_all": 17,
+  "cand": [
+   {
+    "t": 33.49,
+    "kind": "low",
+    "dur": 0.06,
+    "db": 17.3,
+    "rel_db": -5.6,
+    "low_mid_db": 14.1,
+    "voiced": 0.09,
+    "near": {
+     "cap": 1.79,
+     "cut": 1.76
+    }
+   }
+  ],
   "markers": {
    "cap": [
     1.5,
@@ -464,6 +632,42 @@
   "chance": {
    "cap": 0.15,
    "cut": 0.12
+  },
+  "asr_words": 91,
+  "cand_in_words": [],
+  "cand_kept": [
+   {
+    "t": 33.49,
+    "kind": "low",
+    "dur": 0.06,
+    "db": 17.3,
+    "rel_db": -5.6,
+    "low_mid_db": 14.1,
+    "voiced": 0.09,
+    "near": {
+     "cap": 1.79,
+     "cut": 1.76
+    }
+   }
+  ],
+  "line_link": {
+   "kept_to_line": [
+    {
+     "t": 33.49,
+     "kind": "low",
+     "lines": [
+      30
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    }
+   ],
+   "line_sfx_to_kept": [],
+   "sticker_to_kept": []
   }
  }
 }
