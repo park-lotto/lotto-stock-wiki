@@ -334,7 +334,10 @@ def _grab(mp4: Path, t: float, dst: Path) -> Path | None:
 
 def _look(K, png: Path, band) -> dict | None:
     import numpy as np
-    m = K.frame_metrics(str(png), band)
+    try:
+        m = K.frame_metrics(str(png), band)
+    except statistics.StatisticsError:      # frame_metrics 가 글자 사이 빈 칸 0개 프레임에서 median([]) — 그 프레임은 셈 밖(why 에 장수로 남는다)
+        return None
     if not m.get("box") or not m.get("fill_hex") or not m.get("outline_hex"):
         return None
     rgb = lambda h: [int(h[i:i + 2], 16) for i in (1, 3, 5)]   # noqa: E731
@@ -354,9 +357,12 @@ def m_cap_look(C: Ctx, n: int = 6) -> dict:
     band = (int(statistics.median(b[0] for b in bands)) - 30, int(statistics.median(b[1] for b in bands)) + 30)
     tmp = C.work / "upgrade_look"
 
+    tried = {"n": 0}
+
     def grab_set(mp4: Path, lines: list[dict], tag: str) -> list[dict]:
         out = []
         for i, l in enumerate([l for l in lines if K._sp(l.get("speaker")) == "나레" and float(l.get("t1") or 0) - float(l.get("t0") or 0) > 0.3][:n]):
+            tried["n"] += 1
             p = _grab(mp4, (float(l["t0"]) + float(l["t1"])) / 2, tmp / f"{tag}_{i}.png")
             v = _look(K, p, band) if p else None
             if v:
@@ -374,7 +380,7 @@ def m_cap_look(C: Ctx, n: int = 6) -> dict:
     bh, bd = statistics.median(x["h"] for x in b), statistics.median(x["dE"] for x in b)
     oh, od = statistics.median(x["h"] for x in o), statistics.median(x["dE"] for x in o)
     return {"bench": {"h": bh, "dE": bd, "n": len(b)}, "ours": {"h": oh, "dE": od, "n": len(o)}, "better": (od > bd) or (oh > bh),
-            "why": f"대비↑ 또는 크기↑ — ΔE 우리 {od} vs 벤치 {bd} · 높이 우리 {oh}px vs 벤치 {bh}px (띠 {band}, 상위 편 프레임 {len(b)}장·우리 {len(o)}장)"}
+            "why": f"대비↑ 또는 크기↑ — ΔE 우리 {od} vs 벤치 {bd} · 높이 우리 {oh}px vs 벤치 {bh}px (띠 {band}, 잰 프레임 상위 편 {len(b)}장·우리 {len(o)}장 / 시도 {tried['n']}장 — 나머지는 글자 못 찾음)"}
 
 
 def measure_axis(C: Ctx, axis: str) -> dict:
@@ -421,7 +427,7 @@ def measure(style, doc, work, base_doc=None, base_work=None, extra_axes: tuple =
     un_n = sum(r["better"] is None for r in out)
     meas_n = sum(r["better"] in (True, False) for r in out)
     res = {"style": name, "base": st.get("base"), "table": TABLE_VERSION, "upgrades_from": src, "doc": str(doc), "work": str(work),
-           "bench_ids": [d.get("id") for d in C.bench], "bench_top_ids": C.top_ids(), "views": C.views(),
+           "bench_ids": [d.get("id") for d in C.bench], "bench_top_ids": C.top_ids(), "views": {d.get("id"): C.views().get(d.get("id")) for d in C.bench},
            "items": out, "better_n": better_n, "measured_n": meas_n, "human_n": human_n, "unmeasured_n": un_n, "total": len(out),
            "evidence_ok_n": sum(r["evidence_ok"] for r in out),
            "gates": {"upgrade": {"better": f"{better_n}/{meas_n}", "human": human_n, "unmeasured": un_n, "total": len(out),
