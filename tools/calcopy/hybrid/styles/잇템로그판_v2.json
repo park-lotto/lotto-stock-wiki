@@ -87,27 +87,18 @@
   "_why": "벤치 상위 편 = 조회 상위 50%(6편 중 ro1l 2,006만·aUic 1,832만·J7Gx 1,561만, 스타일분석 머리말) · 값 = 줄판독 칸(눈 점수 fit·enter/sticker/emph·sfx·나레 문장 cps)으로 잰 것 — §12-5 같은 자 재측정(상위편_목표.json, 지시서 14·15) 전 임시 · n=3 사분위는 선형 보간 · 꾸밈·효과음 밀도 목표 = channel/ititemlog/_kal/상위편_목표.json density(placement.py count --top, 15 — 같은 자 kal_analyze._stats) — 옛 targets.fx.deco_rate(줄판독 눈 셈, 다른 자)는 지움",
   "scene_fit": {
    "mean": {
-    "bench_top_q": 7.814,
-    "ours_goal": 7.814,
-    "cap": null,
-    "bench_top_values": {
-     "ro1l": 6.312,
-     "aUic": 8.258,
-     "J7Gx": 7.371
-    },
-    "why": "좋은 쪽 = 높은 쪽 p75"
+    "bench_top_q": 7.92,
+    "ours_goal": 7.92,
+    "cap": 7.97,
+    "why": "상위 편 루브릭 평균 p75"
    },
    "below7": {
-    "bench_top_q": 0.206,
-    "ours_goal": 0.206,
+    "bench_top_q": 0.15,
+    "ours_goal": 0.15,
     "cap": null,
-    "bench_top_values": {
-     "ro1l": 0.562,
-     "aUic": 0.097,
-     "J7Gx": 0.314
-    },
-    "why": "좋은 쪽 = 낮은 쪽 p25"
-   }
+    "why": "상위 편 루브릭 7 미만 비율 p25"
+   },
+   "_from": "channel/ititemlog/_kal/상위편_목표.json scene_fit · RUBRIC_V rubric:v1(2026-10-25) · made_by tools/calcopy/oneshot/scene_fit.bench_measure · 복사 2026-10-25(표준 §11-4 ㉕ — 자는 루브릭 하나, 줄판독 눈 fit 은 목표로 안 씀)"
   },
   "sfx": {
    "per_s": {
@@ -221,5 +212,16 @@
    ],
    "from": "등장 효과팩 off — 판 자막팩이 등장까지 정한다(caption-motions.js motionPlan: 팩 motion 이 효과팩 번호보다 이긴다) · 모션그래픽팩 off — 벤치 전환 {'zoomblur': 0.016} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
   }
+ },
+ "placement": {
+  "rules": {
+   "emph_color": {
+    "de_min": 30.0,
+    "why": "표준 §11-4 ㉙: 업그레이드 판 강조색 문턱 = max(실측 17.97, 30) = 30 — 실측 = placement.emph_threshold('ititemlog') 벤치 줄판독 색 강조 4쌍 ΔE76 최소(#F0A5C4↔#E786C1 zOSp)"
+   }
+  }
+ },
+ "_pending": {
+  "emph_colors": "㉚: v2 강조 후보 색은 판에 적지 않는다 — 팩 variants 로(관제 235 자막팩 작업자, 11 의 팩요청.md). 판은 variants 키만 고른다. 1차 판(잇템로그판)은 훅 빨강 줄에서 강조가 사라지는 게 벤치대로(나레 emph 1/41)"
  }
 }

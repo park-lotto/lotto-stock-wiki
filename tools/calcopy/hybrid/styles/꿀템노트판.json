@@ -35,16 +35,19 @@
  },
  "loudness": {
   "lufs": -14.0,
-  "tp": -1.5
+  "tp": -1.5,
+  "why": "−14 LUFS·TP −1.5 통일(사장님 10-18) · 벤치 −15.3(1위 BpU)·8편 중앙 −15.7 — 하이브리드_판설계.md 소리"
  },
  "length": {
   "min": 15,
-  "max": 22
+  "max": 22,
+  "why": "15~22초(벤치 중앙 16.8, 1편 21.6 — 하이브리드_판설계.md 표)"
  },
  "timing": {
   "gap_after_tts": 0.06,
   "gap_after_orig": 0.04,
-  "tail": 0.3
+  "tail": 0.3,
+  "why": "gap_after_tts 0.06·gap_after_orig 0.04·tail 0.3 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
  },
  "frame": {
   "bg": [
@@ -65,7 +68,8 @@
     "ink_top": 176,
     "color": "#FFFFFF",
     "hi": "#FCB9CE",
-    "max_w": 960
+    "max_w": 960,
+    "why": "제목 2줄 SBAggroB 98/112px y176·287(하이브리드_판설계.md 틀) · max_w 960 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
    },
    {
     "font": "SBAggroB.ttf",
@@ -73,7 +77,8 @@
     "ink_top": 287,
     "color": "#FFFFFF",
     "hi": "#0091FD",
-    "max_w": 960
+    "max_w": 960,
+    "why": "제목 2줄 SBAggroB 98/112px y176·287(하이브리드_판설계.md 틀) · max_w 960 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
    }
   ],
   "logo": null,
@@ -81,12 +86,15 @@
    "font": "Pretendard-Regular.otf",
    "px": 40,
    "color": "#FAFAFA",
-   "ink_top": 1615
+   "ink_top": 1615,
+   "why": "출처 40px y1615(틀)"
   },
   "comment": {
    "bottom": 1505,
-   "px": 30
-  }
+   "px": 30,
+   "why": "댓글 카드 아래변 y1505(틀) · px 30 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
+  },
+  "why": "하이브리드_판설계.md 틀: 바탕 검정 · 창 [0,420,1080,1080] · 출처 Pretendard Regular 40px #FAFAFA y1615 · 댓글 카드 아래변 y1505(벤치 5/8편)"
  },
  "caption": {
   "pack": "kkultemnote",
@@ -105,11 +113,13 @@
    1245,
    1328
   ],
-  "why_band": "자막 잉크 y1245~1328(kkultemnote place — 8편 중 7편) — caption_side 짤·스티커 자리용(fx_target)"
+  "why_band": "자막 잉크 y1245~1328(kkultemnote place — 8편 중 7편) — caption_side 짤·스티커 자리용(fx_target)",
+  "why": "자막팩 kkultemnote(자막) · band = 자막 잉크 y1245~1328(why_band) · chunk_max_chars 15 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
  },
  "cuts": {
   "push_tts": 0.0,
-  "push_orig": 0.0
+  "push_orig": 0.0,
+  "why": "하드컷(하이브리드_판설계.md 장면) · push 0(제품 그릇 컷 느린 확대 1.0→1.08~1.10 은 재료 move 칸)"
  },
  "sfx_files": {
   "ding": "팩01/ding.wav",
@@ -880,5 +890,6 @@
    "gap": [],
    "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
   }
- }
+ },
+ "_why_cps_target": "10.5 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체) (박창수 배속 맞춤 값 — 벤치 나레 자/초는 06 재측정 뒤)"
 }

@@ -38,15 +38,18 @@
  },
  "loudness": {
   "lufs": -14.0,
-  "tp": -1.5
+  "tp": -1.5,
+  "why": "−14 LUFS·TP −1.5 통일(사장님 10-18) · 벤치 −16.0(중앙) — 하이브리드_판설계.md §5"
  },
  "length": {
   "min": 25,
-  "max": 30
+  "max": 30,
+  "why": "하이브리드 25~28초(앞 원음 12~14 + 뒤 12~14) — 하이브리드_판설계.md §1 · 벤치 단독 10~21초와 다른 점"
  },
  "timing": {
   "gap": 0.1,
-  "tail": 0.35
+  "tail": 0.35,
+  "why": "gap 0.1·tail 0.35 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
  },
  "frame": {
   "bg": [
@@ -68,7 +71,8 @@
     "shear": 0.2,
     "color": "#FFFFFF",
     "hi": "#FF2A2A",
-    "max_w": 1000
+    "max_w": 1000,
+    "why": "제목 1줄 흰 기울임 Jalnan2 79(§2) · ink_top 164·shear 0.2·max_w = kitchit_frame.json"
    },
    {
     "font": "Jalnan2.ttf",
@@ -81,7 +85,8 @@
     ],
     "box_color": "#FDE600",
     "color": "#000000",
-    "max_w": 960
+    "max_w": 960,
+    "why": "2줄 노랑 박스 #FDE600 x42~1037 y269~399 + 검정 Jalnan2 77(§2) · max_w = kitchit_frame.json"
    }
   ],
   "logo": {
@@ -102,15 +107,18 @@
     50,
     50,
     200
-   ]
+   ],
+   "why": "창 왼쪽 위 '얜샷템' — 벤치 '키치잇' 자리·크기, 회색+진회색 테두리(§2) · px·x·y·rgba = kitchit_frame.json"
   },
   "credit": {
    "font": "Pretendard-Bold.otf",
    "px": 46,
    "color": "#B6B6B6",
-   "ink_top": 1535
+   "ink_top": 1535,
+   "why": "'출처: <원본 채널>' 회색 y1535(§2) · px 46 = kitchit_frame.json"
   },
-  "flash_sec": 0.1
+  "flash_sec": 0.1,
+  "why": "하이브리드_판설계.md §2 + channel/kitchit/preset/kitchit_frame.json: 검정 바탕 · 창 1080×1080 y420 · 출처 회색 y1535 · 흰 번쩍 0.1초(나레↔원음, 벤치 BRa 19초·_Wa — §4)"
  },
  "caption": {
   "pack": "kitchit",
@@ -132,11 +140,13 @@
    1311,
    1391
   ],
-  "why_band": "자막 잉크 가운데 y1351(caption-motions.js kitchit place — 스타일분석 §1 8편 같음) ±40(잉크 높이 미기입) — caption_side 짤·스티커 자리용(fx_target)"
+  "why_band": "자막 잉크 가운데 y1351(caption-motions.js kitchit place — 스타일분석 §1 8편 같음) ±40(잉크 높이 미기입) — caption_side 짤·스티커 자리용(fx_target)",
+  "why": "자막팩 kitchit(§3) · band = 자막 잉크 가운데 y1351 ±40(why_band) · chunk_max_chars 12·typing_cps 10 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
  },
  "cuts": {
   "push_tts": 0.06,
-  "push_orig": 0.03
+  "push_orig": 0.03,
+  "why": "컷마다 천천히 밀기 줌 3~6%(하이브리드_판설계.md §4) → 나레 0.06·원음 0.03"
  },
  "sfx_files": {
   "ding": "팩01/ding.wav",
@@ -844,5 +854,6 @@
    "gap": [],
    "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
   }
- }
+ },
+ "_why_cps_target": "미나(일레븐랩스) 서비스 배속 고정 — README cps_target '일레븐랩스는 서비스 배속 고정' · 6.9 = 손 상수(벤치 나레 자/초는 스타일분석 참고, 06)"
 }

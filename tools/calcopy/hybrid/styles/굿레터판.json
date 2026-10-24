@@ -39,7 +39,8 @@
  },
  "loudness": {
   "lufs": -14.0,
-  "tp": -1.5
+  "tp": -1.5,
+  "why": "−14 LUFS 통일(벤치 −22.7~−9.4 들쭉날쭉 — 따라 하지 않음, 사장님 결정 · 판설계.md)"
  },
  "length": {
   "min": 24,
@@ -71,7 +72,8 @@
     "ink_top": 173,
     "shear": 0,
     "color": "#FFFFFF",
-    "max_w": 1040
+    "max_w": 1040,
+    "why": "제목 1줄 흰 Jalnan2(훅 ≤9자 — 판설계.md) · px 100·ink_top 173·max_w·shear 0 = 프리셋 검정틀_주황상자_팝자막"
    },
    {
     "font": "Jalnan2.ttf",
@@ -87,19 +89,22 @@
     "shear": 0,
     "color": "#0B0F0F",
     "max_w": 900,
-    "why_box": "주황 둥근 상자 #FE7813 sMx9 x182~897 y288~411(스타일분석 §2 — 글 길이 따라 폭, 렌더러 상자는 고정 칸 → 02) · 옛 값 box:true 는 frame_png TypeError(10-25 02 보고)"
+    "why_box": "주황 둥근 상자 #FE7813 sMx9 x182~897 y288~411(스타일분석 §2 — 글 길이 따라 폭, 렌더러 상자는 고정 칸 → 02) · 옛 값 box:true 는 frame_png TypeError(10-25 02 보고)",
+    "why": "주황 둥근 상자 #FE7813 sMx9 x182~897 y288~411(스타일분석 §2 — 글 길이 따라 폭, 렌더러 상자는 고정 칸 → 02) · 옛 값 box:true 는 frame_png TypeError(10-25 02 보고) · px 96·center 350·max_w 900·shear 0 = 프리셋 검정틀_주황상자_팝자막"
    }
   ],
   "rules": [
    {
     "y": 464,
     "h": 12,
-    "color": "#FE7813"
+    "color": "#FE7813",
+    "why": "주황 #FE7813 12px y464~475·y1546~1557(스타일분석 §2)"
    },
    {
     "y": 1546,
     "h": 12,
-    "color": "#FE7813"
+    "color": "#FE7813",
+    "why": "주황 #FE7813 12px y464~475·y1546~1557(스타일분석 §2)"
    }
   ],
   "watermark": {
@@ -117,7 +122,8 @@
    "px": 40,
    "color": "#BEBEBE",
    "center": 1604,
-   "form": "출처 · {채널} (YouTube)"
+   "form": "출처 · {채널} (YouTube)",
+   "why": "출처 줄(판설계.md 틀) · px 40·center 1604 = 프리셋 값"
   },
   "product_tag": {
    "form": "● {제품}",
@@ -140,7 +146,8 @@
    "why": "새 틀 3/3편 편 길이 45% 지점부터 끝까지 즉시 — 스키마에 없는 새 칸"
   },
   "link_line": null,
-  "_link_why": "벤치 '프로필 링크에서 N번' = CTA — 우리 판 CTA 없음(얜샷템 §12·_common forbid)"
+  "_link_why": "벤치 '프로필 링크에서 N번' = CTA — 우리 판 CTA 없음(얜샷템 §12·_common forbid)",
+  "why": "판설계.md 틀: 검정 · 창 (6,464) 1068×1096 · 주황 가로선 y464/1546(12px — 스타일분석 §2 #FE7813 12px y464~475·y1546~1557) · 출처 '출처 · <채널> (YouTube)'"
  },
  "caption": {
   "pack": "goodletter",
@@ -684,5 +691,6 @@
    "gap": [],
    "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
   }
- }
+ },
+ "_why_cps_target": "6.0 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체) (원음 위주 채널 — 나레 1~2조각)"
 }

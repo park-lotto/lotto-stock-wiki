@@ -38,16 +38,19 @@
  },
  "loudness": {
   "lufs": -14.0,
-  "tp": -1.5
+  "tp": -1.5,
+  "why": "−14 LUFS·TP −1.5 통일(사장님 10-18) · 벤치 −19.4(중앙) — 하이브리드_판설계.md §5"
  },
  "length": {
   "min": 28,
-  "max": 38
+  "max": 38,
+  "why": "길이 목표 30~38초(벤치 중앙 37.4 — 하이브리드_판설계.md §1) · 판 28~38 의 하한 28 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
  },
  "timing": {
   "gap": 0.2,
   "gap_oo": 0.25,
-  "tail": 0.5
+  "tail": 0.5,
+  "why": "gap 0.2·gap_oo 0.25·tail 0.5 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
  },
  "frame": {
   "bg": [
@@ -69,7 +72,8 @@
     "shear": 0.1763,
     "color": "#FCFCFC",
     "hi": "#FDF702",
-    "max_w": 1030
+    "max_w": 1030,
+    "why": "제목 2줄 Cafe24Ohsquare 기울임 92px(§2) · center·shear 0.1763(=tan 10°)·max_w = _tools/spr_overlay.py 값"
    },
    {
     "font": "Cafe24Ohsquare.ttf",
@@ -78,7 +82,8 @@
     "shear": 0.1763,
     "color": "#FCFCFC",
     "hi": "#CF04FC",
-    "max_w": 1030
+    "max_w": 1030,
+    "why": "제목 2줄 Cafe24Ohsquare 기울임 92px(§2) · center·shear 0.1763(=tan 10°)·max_w = _tools/spr_overlay.py 값"
    }
   ],
   "watermark": {
@@ -87,7 +92,8 @@
    "px": 56,
    "x1": 1030,
    "cy": 550,
-   "alpha": 140
+   "alpha": 140,
+   "why": "창 오른쪽 위 '얜샷템' 흰 반투명(§2) · px·x1·cy·alpha = spr_overlay.py 값"
   },
   "logo": {
    "kind": "spr_gold",
@@ -97,8 +103,10 @@
    "font": "Pretendard-Bold.otf",
    "px": 36,
    "color": "#8B8B88",
-   "center": 1626
-  }
+   "center": 1626,
+   "why": "출처 회색 y1604(§2) · px 36 = 프리셋 frame.json"
+  },
+  "why": "하이브리드_판설계.md §2 · 프리셋 channel/starpickroom/preset/검정틀_금색로고_타이핑나레/: 검정 · 창 x0 y483 1080×1058 · 출처 회색 y1604(판 center 1626 = 잉크 가운데)"
  },
  "caption": {
   "pack": "starpick",
@@ -119,11 +127,13 @@
    1105,
    1175
   ],
-  "why_band": "자막 잉크 y1105~1175(starpick place — 8편 같음) — caption_side 짤·스티커 자리용(fx_target)"
+  "why_band": "자막 잉크 y1105~1175(starpick place — 8편 같음) — caption_side 짤·스티커 자리용(fx_target)",
+  "why": "자막팩 starpick(§3) · band = 자막 잉크 y1105~1175(why_band) · chunk_max_chars 15 = 자막 조각 ≤15자(§1) · typing_cps 12.5 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
  },
  "cuts": {
   "push_tts": 0.0,
-  "push_orig": 0.0
+  "push_orig": 0.0,
+  "why": "컷 전환 = 자름(효과 없음, §4) · push 0 = 밀기 없음"
  },
  "sfx_files": {
   "ding": "팩01/ding.wav",
@@ -763,5 +773,6 @@
    "gap": [],
    "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
   }
- }
+ },
+ "_why_cps_target": "6.9 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
 }
