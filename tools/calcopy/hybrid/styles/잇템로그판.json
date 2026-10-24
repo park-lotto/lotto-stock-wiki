@@ -106,8 +106,8 @@
    "kinds": {
     "zoomblur": 0.016
    },
-   "ms": 167,
-   "why": "벤치 6편 줄 경계 193 중 zoomblur 3(aUic 2·J7G 1, 원본 바뀔 때 앞뒤 2~3프레임 방사 흐림 → 5프레임 ≈ 167ms)·flash 0·black 0(스타일분석 §3, placement count transition 0.016). 자리·편마다 개수 = placement 가 본보기 편 비율로(본보기 편에 줌블러 없으면 이 비율 × 경계 수 → 보통 0)"
+   "ms": 467,
+   "why": "벤치 6편 줄 경계 193 중 zoomblur 3(줄판독 aUicTeDoW04 7.533·19.833, J7GxfaVdwSU 24.333)·flash 0·black 0(스타일분석 §3, placement count transition 0.016) · ms 467 = 같은 자 render_bench bench_transition_drop 로 잰 벤치 3회 길이 467/167/500 중앙(세기 drop 0.923/0.587/0.72 중앙 0.72 — 02 실측 c018c7c58·f619f36fe) · 자리·편마다 개수 = placement 가 본보기 편 비율로(본보기 편에 줌블러 없으면 이 비율 × 경계 수 → 보통 0)"
   }
  },
  "sfx_files": {
