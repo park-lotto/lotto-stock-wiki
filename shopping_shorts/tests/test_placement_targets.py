@@ -226,3 +226,15 @@ def test_channel_sfx_events_matches_legacy_shared_file(monkeypatch):
         old = PL._sfx_table(st)
         monkeypatch.undo()
         assert new == old and len(new) == 8, (pan, new, old)
+
+
+def test_sfx_no_overlap_on_dense_chunks(tmp_path):
+    """촘촘한 덩어리(0.15초 간격)에도 효과음은 0.3초 안에 두 발 안 놓는다(사보타주 S9 — 간격 검사를 끄면 실패해야 한다)."""
+    lines = [{"t0": 0.5 * k, "t1": 0.5 * k + 0.4, "speaker": "나레", "text": "가", "role": "훅", "sfx": {"kind": "띵", "t": 0.5 * k}} for k in range(4)]
+    st = _style(_bench_read(tmp_path, lines), {"sfx": {"max": 9}})
+    st["placement"]["counted"] = PL.count(st)
+    rows = [{"line": "L0", "j": j, "speaker": "narr", "text": f"덩어리 {j}", "t0": round(0.15 * j, 3), "t1": round(0.15 * j + 0.15, 3), "role": "훅"} for j in range(8)]
+    rows += [{"line": "L1", "j": 0, "speaker": "orig", "text": "끝", "t0": 1.2, "t1": 3.0, "role": "끝"}]
+    p = PL.place(rows, st, "seed", cuts=[{"t0": 0.0, "t1": 1.2}, {"t0": 1.2, "t1": 3.0}])
+    sx = p["sfx"]
+    assert sx and all(b["t"] - a["t"] >= 0.3 for a, b in zip(sx, sx[1:])), sx
