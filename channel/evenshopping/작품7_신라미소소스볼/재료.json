@@ -1,5 +1,5 @@
 {
- "_note": "작품7 신라미소소스볼 — 손으로 고른 컷. 영상=국립경주박물관 공식 2편(원 유물)+인스타 리뷰 2편(제품), 사진=쿠팡 9039062235 상품평 사진(1080)을 narr_video.still_move 로 움직인 4초 클립(src/cp/mv_*.mp4, 같은 사진 ≤2컷). 1차 렌더 B13(±3초 중복 49)·B4(끝 줄 컷<1.2) 미달 → 2차에서 재료 교체",
+ "_note": "작품7 신라미소소스볼 — 손으로 고른 컷. 영상=국립경주박물관 공식 2편(원 유물)+인스타 리뷰 2편(제품), 사진=쿠팡 9039062235 상품평 사진(1080)을 narr_video.still_move 로 움직인 4초 클립(src/cp/mv_*.mp4, 같은 사진 ≤2컷). 1차 렌더 B13(±3초 중복 49)·B4(끝 줄 컷<1.2) 미달 → 2차에서 재료 교체 · 3차 수정(cut_review × 반영, 렌더 대기): 컷0·1·13 수막새 전체 구간, 컷17·18 crop 다시, 컷5·7·23 쿠팡 사진 교체. 컷2 제품 자체 글자는 허용(조율자)",
  "cand_dir": "C:/숏템_칼카피/evenshopping/작품7_신라미소소스볼/src/",
  "shots": [
   {
@@ -7,12 +7,12 @@
    "caption": "1400년 전",
    "kind": "product",
    "cont": false,
-   "seen": "원 유물 수막새 얼굴 크게(1400년 전)",
+   "seen": "수막새 얼굴 전체(1400년 전) — 3차 수정: 근접→전체",
    "url": "https://www.youtube.com/watch?v=tF6ppAmGU_k",
    "src": "C:/숏템_칼카피/evenshopping/작품7_신라미소소스볼/src/tF6ppAmGU_k.mp4",
-   "ss": 27.0,
+   "ss": 40.0,
    "src_crop": [
-    466,
+    606,
     0,
     829,
     1080
@@ -23,12 +23,12 @@
    "caption": "기와 속 얼굴로",
    "kind": "product",
    "cont": false,
-   "seen": "수막새 얼굴 근접(기와 속 얼굴)",
+   "seen": "수막새 전체가 벽에 걸린 모습(기와 속 얼굴) — 3차 수정",
    "url": "https://www.youtube.com/watch?v=04MgK-DI0Vo",
    "src": "C:/숏템_칼카피/evenshopping/작품7_신라미소소스볼/src/04MgK-DI0Vo.mp4",
-   "ss": 22.0,
+   "ss": 79.0,
    "src_crop": [
-    545,
+    506,
     0,
     829,
     1080
@@ -89,16 +89,17 @@
    "caption": "사이에서 품절 대란 난",
    "kind": "product",
    "cont": false,
-   "seen": "빼곡한 상자 더미(품절 대란)",
-   "url": "https://www.instagram.com/reel/DOHxFagk8IW/",
-   "src": "C:/숏템_칼카피/evenshopping/작품7_신라미소소스볼/src/ig_DOHxFagk8IW.mp4",
-   "ss": 18.0,
+   "seen": "상자 속 소스볼 3종(품절 대란) — 3차 수정: 보자기 상자→쿠팡 사진",
+   "url": "https://www.coupang.com/vp/products/9039062235 (상품평 사진, /local/1080/)",
+   "src": "C:/숏템_칼카피/evenshopping/작품7_신라미소소스볼/src/cp/mv_rv_01.mp4",
+   "ss": 0.0,
    "src_crop": [
     0,
-    175,
-    720,
-    938
-   ]
+    0,
+    1080,
+    1406
+   ],
+   "photo": "cp/rv_01.jpg"
   },
   {
    "i": 6,
@@ -122,16 +123,17 @@
    "caption": "이건 바로",
    "kind": "product",
    "cont": false,
-   "seen": "NATIONAL MUSEUM KOREA 택배 상자(국립박물관)",
-   "url": "https://www.instagram.com/reel/DB0PR6FpG_z/",
-   "src": "C:/숏템_칼카피/evenshopping/작품7_신라미소소스볼/src/ig_DB0PR6FpG_z.mp4",
-   "ss": 2.1,
+   "seen": "신라의 미소 로고 상자 4개(이건 바로·국립박물관 뮷즈) — 3차 수정: 택배 상자 로고→쿠팡 사진",
+   "url": "https://www.coupang.com/vp/products/9039062235 (상품평 사진, /local/1080/)",
+   "src": "C:/숏템_칼카피/evenshopping/작품7_신라미소소스볼/src/cp/mv_rv_29.mp4",
+   "ss": 0.0,
    "src_crop": [
     0,
-    513,
+    0,
     1080,
-    1407
-   ]
+    1406
+   ],
+   "photo": "cp/rv_29.jpg"
   },
   {
    "i": 8,
@@ -236,12 +238,12 @@
    "caption": "보물 제2010호",
    "kind": "product",
    "cont": false,
-   "seen": "수막새 근접(보물)",
+   "seen": "수막새 전체(보물 제2010호) — 3차 수정: 근접→전체",
    "url": "https://www.youtube.com/watch?v=04MgK-DI0Vo",
    "src": "C:/숏템_칼카피/evenshopping/작품7_신라미소소스볼/src/04MgK-DI0Vo.mp4",
-   "ss": 57.5,
+   "ss": 86.0,
    "src_crop": [
-    505,
+    466,
     0,
     829,
     1080
@@ -301,12 +303,12 @@
    "caption": "넘어갔다가 38년 만에",
    "kind": "product",
    "cont": false,
-   "seen": "공중에 뜬 수막새(38년)",
-   "url": "https://www.youtube.com/watch?v=04MgK-DI0Vo",
-   "src": "C:/숏템_칼카피/evenshopping/작품7_신라미소소스볼/src/04MgK-DI0Vo.mp4",
-   "ss": 84.0,
+   "seen": "수막새 전체 가운데(38년) — 3차 수정: crop 다시 잼",
+   "url": "https://www.youtube.com/watch?v=tF6ppAmGU_k",
+   "src": "C:/숏템_칼카피/evenshopping/작품7_신라미소소스볼/src/tF6ppAmGU_k.mp4",
+   "ss": 78.0,
    "src_crop": [
-    585,
+    506,
     0,
     829,
     1080
@@ -317,12 +319,12 @@
    "caption": "돌아온 진짜 보물이라고",
    "kind": "product",
    "cont": false,
-   "seen": "수막새 전신(돌아온 보물)",
+   "seen": "수막새 전체 가운데(돌아온 보물) — 3차 수정: crop x 700→506",
    "url": "https://www.youtube.com/watch?v=tF6ppAmGU_k",
    "src": "C:/숏템_칼카피/evenshopping/작품7_신라미소소스볼/src/tF6ppAmGU_k.mp4",
    "ss": 72.5,
    "src_crop": [
-    700,
+    506,
     0,
     829,
     1080
@@ -403,10 +405,10 @@
    "caption": "그래서 요즘엔",
    "kind": "product",
    "cont": false,
-   "seen": "소스 담긴 소스볼(간장 찍을 때) — 다가감",
+   "seen": "손바닥 위 소스볼 얼굴(간장 찍을 때) — 3차 수정: 쏠린 rv_11→rv_09",
    "url": "https://www.coupang.com/vp/products/9039062235 (상품평 사진, /local/1080/)",
-   "photo": "cp/rv_11.jpg",
-   "src": "C:/숏템_칼카피/evenshopping/작품7_신라미소소스볼/src/cp/mv_rv_11.mp4",
+   "photo": "cp/rv_09.jpg",
+   "src": "C:/숏템_칼카피/evenshopping/작품7_신라미소소스볼/src/cp/mv_rv_09.mp4",
    "ss": 0.0,
    "src_crop": [
     0,
