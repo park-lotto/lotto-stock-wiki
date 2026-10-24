@@ -12,7 +12,7 @@
 - 승인: 
 - 병합: 76e5444e12 2026-10-24 15:38 (도메인전환)
 - 서버 반영: 
-- 라이브 실측: 2026-10-24 16:41 ❌ 실패 · url https://stmaker.kr/login → HTTP 0 · 병합 76e5444e12
+- 라이브 실측: 2026-10-24 18:05 ✅ stmaker.kr 실제 구글 로그인(parklotto21) → dash_auth 쿠키 stmaker.kr · /welcome 도착 / 콜백 stmaker.kr↔duckdns 각자 / 옛 /surl/O/3068 → 302 /pay/toss
 - 재발: 
 
 ## 요청
@@ -27,3 +27,4 @@
 - 2026-10-24 16:41 라이브 실측: 2026-10-24 16:41 ❌ 실패 · url https://stmaker.kr/login → HTTP 0 · 병합 76e5444e12
 - 2026-10-24 16:41 상태 병합 → 회귀
 - 2026-10-24 17:50 검사: url /login 로그인
+- 2026-10-24 17:50 라이브 실측: 2026-10-24 18:05 ✅ stmaker.kr 실제 구글 로그인(parklotto21) → dash_auth 쿠키 stmaker.kr · /welcome 도착 / 콜백 stmaker.kr↔duckdns 각자 / 옛 /surl/O/3068 → 302 /pay/toss
