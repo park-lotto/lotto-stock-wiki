@@ -448,8 +448,78 @@ def density_axis(key: str, top_vals: dict, all_vals: list, ours_rate: float, R: 
 
 
 def _is_deco(r: dict) -> bool:
-    """우리 덩어리의 꾸밈 유무 — kal_analyze._decorated 와 같은 칸(등장 효과·강조·스티커)으로 센다(효과음은 match 가 덩어리에 안 붙여 뺀다)."""
-    return r.get("enter") not in ("cut", "instant", "append", None) or bool(r.get("emph")) or bool(r.get("stickers"))
+    """우리 덩어리의 꾸밈 유무 — kal_analyze._decorated 와 같은 칸(등장 효과·강조·스티커·훅 빨강/팝 변형 variant_fx — 04 b94bcb3aa)으로 센다
+    (효과음은 match 가 덩어리에 안 붙여 뺀다)."""
+    from tools.calcopy.engine import kal_analyze as K
+    return (r.get("enter") not in ("cut", "instant", "append", None) or bool(r.get("emph")) or bool(r.get("stickers"))
+            or K.variant_fx(r.get("variant_force") or r.get("variant")))
+
+
+_bench_fx_cache: dict = {}
+
+
+def bench_fx(style: dict) -> dict:
+    """벤치 줄판독(판 bench.line_reads)의 꾸밈 자리·화자별 꾸밈 비율 — kal_analyze._stats(1차 자 match 와 같은 자) 편마다 → 중앙.
+    반환 {pos: {훅, 본문, 끝}, rate: {나레, 원음}, tol: {pos, rate}(MATCH_RULES 허용 폭 %p), n_docs}."""
+    import statistics
+    from tools.calcopy.engine import kal_analyze as K
+    lr = (style.get("bench") or {}).get("line_reads")
+    if lr in _bench_fx_cache:
+        return _bench_fx_cache[lr]
+    p = K._abs(lr) if lr else None
+    docs = K._load_docs([str(p)]) if p and p.exists() else []
+    S = [K._stats(d.get("lines") or [], float(d.get("dur") or 0)) for d in docs]
+    med = lambda xs: statistics.median(xs) if xs else None  # noqa: E731
+    pos = {k: med([s["fx.pos"][k] for s in S if s.get("fx.pos")]) for k in ("훅", "본문", "끝")}
+    rate = {sp: med([s[f"fx.rate.{sp}"] for s in S if isinstance(s.get(f"fx.rate.{sp}"), (int, float))]) for sp in ("나레", "원음")}
+    tol = {r[0]: r[2] / 100.0 for r in K.MATCH_RULES if r[0] in ("fx.pos", "fx.rate.나레", "fx.rate.원음")}
+    _bench_fx_cache[lr] = {"pos": pos, "rate": rate, "tol": tol, "n_docs": len(S)}
+    return _bench_fx_cache[lr]
+
+
+def deco_pos_step(out: list[dict], style: dict, log: list) -> dict | None:
+    """(판단 주인: 꾸밈 자리 — 훅/본문/끝 나눔, 04 실측 뒤 관제 263 15) 판 rules.deco_pos 가 있으면 벤치 꾸밈 자리 비율(bench_fx.pos)에 맞춘다.
+    정해진 꾸밈(훅 변형 등 1차 규칙)은 그대로 두고, 모자란 자리(본문·끝)에 1차와 같은 종류(대본 key 강조 낱말)를 더한다 —
+    더할 수 = 정해진 꾸밈이 가장 많이 넘친 자리를 기준으로 벤치 비율대로 · 화자별 꾸밈 비율이 벤치 중앙 + 허용 폭(MATCH_RULES)을 넘지 않게."""
+    if not (style["placement"].get("rules") or {}).get("deco_pos"):
+        return None
+    from tools.calcopy.engine import kal_analyze as K
+    B = bench_fx(style)
+    share = {k: v for k, v in B["pos"].items() if isinstance(v, (int, float))}
+    if not share or not out:
+        log.append("⚠ 꾸밈 자리: 벤치 fx.pos 없음 — 못 맞춤"); return None
+    dur = max(float(r.get("t1") or 0) for r in out)
+    posof = lambda r: K._pos({"t0": r["t0"], "t1": r["t1"]}, dur)  # noqa: E731
+    have = Counter(posof(r) for r in out if _is_deco(r))
+    if not sum(have.values()):
+        log.append("꾸밈 자리: 정해진 꾸밈 0 — 맞출 기준 없음"); return {"have": {}}
+    base = max((have[k] / share[k] for k in have if share.get(k)), default=0)
+    want = {k: int(math.floor(share[k] * base + 0.5)) for k in share}
+    cap = {sp: int(math.floor(((B["rate"].get(nm) or 0) + B["tol"].get(f"fx.rate.{nm}", 0.2)) * sum(1 for r in out if r["speaker"] == sp) + 1e-9))
+           for sp, nm in (("narr", "나레"), ("orig", "원음"))}
+    deco_sp = Counter(r["speaker"] for r in out if _is_deco(r))
+    added = []
+    for k in ("본문", "끝", "훅"):
+        need = want.get(k, 0) - have.get(k, 0)
+        cand = [i for i, r in enumerate(out) if posof(r) == k and r.get("key") and not _is_deco(r)]
+        for i in _spread(cand, len(cand)):
+            if need <= 0:
+                break
+            sp = out[i]["speaker"]
+            if deco_sp[sp] >= cap.get(sp, 0):
+                continue
+            out[i]["emph"] = [{"word": out[i]["key"], **({"color": out[i]["key_color"]} if out[i].get("key_color") else {})}]
+            out[i]["emph_by"] = "deco_pos"
+            deco_sp[sp] += 1; need -= 1; added.append(i)
+        if need > 0:
+            log.append(f"꾸밈 자리 {k} 목표 {want[k]} 중 {want[k] - need}개 — key 덩어리·화자 상한 {cap} 모자람")
+    got = Counter(posof(r) for r in out if _is_deco(r))
+    tot = sum(got.values()) or 1
+    rep = {"bench_pos": {k: round(v, 3) for k, v in share.items()}, "want": want, "have_before": dict(have), "ours": dict(got),
+           "ours_share": {k: round(got[k] / tot, 3) for k in share}, "speaker_cap": cap}
+    log.append(f"꾸밈 자리(rules.deco_pos): 벤치 {rep['bench_pos']} · 정해진 {dict(have)} → 목표 {want} · 우리 {dict(got)} "
+               f"(+강조 {[out[i]['line'] + '「' + out[i]['text'] + '」' for i in added]})")
+    return rep
 
 
 def density_step(out: list[dict], style: dict, tg: dict, log: list) -> dict:
@@ -645,6 +715,7 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
         for r in out:
             if r["enter"] == "typing" and r["speaker"] == ty.get("speaker", r["speaker"]):
                 r["stickers"].append({"kind": ty["kind"], "follow": True})
+    dp_rep = deco_pos_step(out, style, log)
     tg_rep = density_step(out, style, tg, log) if tg else {}
     # ⑥ 전환(표준 §3-3 A1): 본보기 편 줄판독 transition 비율 → 컷 경계(짧은 컷 제외, 화자 바뀜·공개 앞 먼저). 옛 흰 번쩍(rules.flash)도 여기서.
     transitions = transitions_step(out, style, seed, ref, cuts, log)
@@ -663,6 +734,9 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
     for r in out:
         r["variant"] = r.pop("variant_force", None) or variant_of(r, style)
     emph_color_step(out, style, log)      # 강조색(㉒) — 줄 변형(색)이 정해진 뒤
+    if tg and any(k.startswith("fx_rate") for k in tg):     # 강조색 규칙이 지운 강조만큼 목표 모드가 다른 덩어리로 다시 채운다(같은 함수, 이미 센 꾸밈은 그대로)
+        tg_rep.update(density_step(out, style, tg, log))
+        emph_color_step(out, style, log)
     tally = Counter(r["enter"] for r in out)
     log.append(f"등장 {dict(tally)} · 강조 {sum(1 for r in out if r.get('emph'))}/{len(out)}")
     log += warn
@@ -672,6 +746,8 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
         res["warn"] = warn
     if tg_rep:
         res["targets"] = tg_rep
+    if dp_rep:
+        res["deco_pos"] = dp_rep
     return res
 
 
@@ -936,7 +1012,7 @@ def _sfx_allowed(style: dict) -> list[str]:
     S = (style["placement"].get("rules") or {}).get("sfx") or {}
     if isinstance(S.get("kinds"), dict):
         return list(S["kinds"])
-    files = [k for k in (style.get("sfx_files") or {}) if k != "gain_db"]
+    files = [k for k in (style.get("sfx_files") or {}) if k not in ("gain_db", "why") and not str(k).startswith("_")]   # 메타 키는 종류 아님(11 보고 — 새 판 sfx_files 에 why)
     return files or [S.get("kind", "ding")]
 
 

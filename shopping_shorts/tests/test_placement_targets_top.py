@@ -51,11 +51,12 @@ def _rows():
 
 
 def _deco(r):
-    return r.get("enter") not in ("cut", "instant", "append", None) or bool(r.get("emph")) or bool(r.get("stickers"))
+    return PL._is_deco(r)          # 1차 자(kal_analyze._decorated)와 같은 자 — 훅 빨강·팝 변형도 꾸밈(04 b94bcb3aa)
 
 
-TG = {"fx_rate_narr": {"goal": 0.18, "cap": 0.231, "src": "시험"}, "fx_rate_orig": {"goal": 0.056, "cap": 0.111, "src": "시험"},
-      "sfx_rate": {"goal": 0.051, "cap": 0.067, "src": "시험"}}
+TG = {"fx_rate_narr": {"goal": 0.18, "cap": 0.231, "p25": 0.12, "first": 0.124, "src": "시험"},
+      "fx_rate_orig": {"goal": 0.056, "cap": 0.111, "p25": 0.0, "first": 0.056, "src": "시험"},
+      "sfx_rate": {"goal": 0.051, "cap": 0.067, "p25": 0.035, "first": 0.051, "src": "시험"}}
 
 
 def test_no_sfx_rule_warns_and_check_fails():
@@ -90,19 +91,25 @@ def test_targets_fill_density_to_goal_within_cap():
     rows = _rows()
     p = PL.place(rows, st, "ep13", targets=TG)
     narr = [r for r in p["rows"] if r["speaker"] == "narr"]
-    got = sum(_deco(r) for r in narr) / len(narr)
-    assert abs(got - 0.18) <= 0.20 and got <= 0.231 + 1e-9, got
-    assert sum(_deco(r) for r in narr) == 3                      # round(0.18×16)=3, 상한 floor(0.231×16)=3
+    G = PL.density_goal({"p75": 0.18, "p25": 0.12, "max": 0.231, "first": 0.124}, len(narr))
+    assert (G["n_goal"], G["lo"], G["hi"], G["n_first"]) == (3, 2, 4, 2)          # 16덩어리: round(2.88)·round(1.92)·round(3.70)·round(1.98)
+    assert sum(_deco(r) for r in narr) == G["n_goal"]
     assert all(r["emph"][0]["word"] == r["key"] for r in narr if r.get("emph_by") == "targets")   # 종류 = 1차 그대로(강조 낱말 = 대본 key)
-    assert narr[0].get("emph"), "역할 순서 훅 먼저"
+    # 훅 변형 3덩어리만으로 목표 3 이 찬다 → 목표를 올리면(0.3×16=5) 훅 밖 덩어리에 강조를 더하고, 강조색 규칙(㉒)이 지워도 다른 덩어리로 다시 채운다
+    TG2 = {**TG, "fx_rate_narr": {**TG["fx_rate_narr"], "goal": 0.3, "cap": 0.4}}
+    p2 = PL.place(rows, st, "ep13", targets=TG2)
+    n2 = [r for r in p2["rows"] if r["speaker"] == "narr"]
+    G2 = PL.density_goal({"p75": 0.3, "p25": 0.12, "max": 0.4, "first": 0.124}, len(n2))
+    assert sum(_deco(r) for r in n2) == G2["n_goal"] == 5, [(r["text"], r.get("emph"), r.get("variant")) for r in n2]
+    assert sum(1 for r in n2 if r.get("emph_by") == "targets" and r.get("emph")) == 2
     dur = rows[-1]["t1"]
-    want, cap = PL._want(0.051, 0.067, dur)
-    assert len(p["sfx"]) == want and (cap is None or len(p["sfx"]) <= cap)
+    Gs = PL.density_goal({"p75": 0.051, "p25": 0.035, "max": 0.067, "first": 0.051}, dur)
+    assert len(p["sfx"]) == Gs["n_goal"] and Gs["lo"] <= len(p["sfx"]) <= Gs["hi"]
     chk = PL.check_place(p, st)
     assert "targets" in chk["slots"] and not [b for b in chk["bad"] if "목표 밀도" in b], chk["bad"]
     # 1차로 돌리면 강조는 본보기 비율만(목표 모드 아님)
     a = PL.place(rows, ST.load("잇템로그판"), "ep13")
-    assert sum(_deco(r) for r in a["rows"] if r["speaker"] == "narr") < 3
+    assert not any(r.get("emph_by") == "targets" for r in a["rows"])
 
 
 def test_targets_sfx_roles_rule_and_cap_check():
@@ -111,7 +118,7 @@ def test_targets_sfx_roles_rule_and_cap_check():
     st["placement"]["rules"]["sfx"]["roles"] = ["훅"]
     p = PL.place(_rows(), st, "ep13", targets=TG)
     assert p["sfx"] and all(e.get("role") in ("hook", None) for e in p["sfx"]), p["sfx"]
-    bad = PL.check_place({**p, "targets": {"sfx_rate": {"goal": 0.051, "cap": 0.067, "ours": 0.5}}}, st)["bad"]
+    bad = PL.check_place({**p, "targets": {"sfx_rate": {"n": 9, "n_goal": 1, "lo": 1, "hi": 2}}}, st)["bad"]
     assert any("목표 밀도 sfx_rate" in b for b in bad)
 
 
@@ -138,24 +145,37 @@ def _script(caps_per_line):
     return {"lines": [{"id": f"N{i + 1}", "kind": "tts", "tts": " ".join(c) + ".", "caps": [{"text": x} for x in c]} for i, c in enumerate(caps_per_line)]}
 
 
-def test_tts_cps_spread_uneven_fails_with_suggestion_even_passes():
+def test_tts_cps_spread_line_level_uneven_fails_with_suggestion_even_passes():
+    """⑲ 말속도 편차 = TTS 줄 단위(자막 조각 나누기와 무관 — caps 를 바꿔도 값이 같다)."""
     st = ST.load("잇템로그판")
-    uneven = _script([["댓글 보니", "캡슐은 한두 알이면 충분하다던데"], ["다른 외국인", "처음 보고는 소리부터 질렀는데"],
-                      ["분홍 알갱이", "연어에서 뽑은 성분이 들었다는데"]])
-    ok, why = SA.rule_check({"kind": "tts_cps_spread", "max": 0.10}, uneven, st)
-    assert ok is False and "제안" in why and "→" in why, why
-    R = SA.cps_spread(uneven, {"max": 0.10}, st)
-    assert R["suggest"] and all(s["cv_if"] < R["cv"] for s in R["suggest"])
-    even = _script([["댓글 보니까 캡슐은", "한두 알이면 충분하다던데"], ["다른 외국인도 처음", "보고는 소리부터 질렀는데"],
-                    ["분홍 알갱이마다 연어", "에서 뽑은 성분이 들었다"]])
-    ok2, why2 = SA.rule_check({"kind": "tts_cps_spread", "max": 0.10}, even, st)
+    uneven = _script([["댓글 보니까"], ["캡슐은 한두 알이면 충분하다던데 사람마다 다르다고 하고"], ["아, 진짜, 와,"], ["처음 보고는 소리부터 질렀는데"]])
+    ok, why = SA.rule_check({"kind": "tts_cps_spread", "max": 0.063}, uneven, st)
+    assert ok is False and "제안" in why, why
+    R = SA.cps_spread(uneven, {"max": 0.063}, st)
+    assert R["level"] == "line" and R["suggest"] and any("쉼표" in s["why"] for s in R["suggest"]), R["suggest"]
+    resplit = _script([["댓글", "보니까"], ["캡슐은 한두 알이면", "충분하다던데 사람마다 다르다고 하고"], ["아,", "진짜, 와,"], ["처음 보고는", "소리부터 질렀는데"]])
+    assert SA.cps_spread(resplit, {"max": 0.063}, st)["cv"] == R["cv"], "자막 나누기는 줄 단위 자에 영향 없음"
+    even = _script([["댓글 보니까 캡슐은 한두 알이면"], ["다른 외국인도 처음 보고 놀랐는데"], ["분홍 알갱이마다 성분이 들었다는데"]])
+    ok2, why2 = SA.rule_check({"kind": "tts_cps_spread", "max": 0.063}, even, st)
     assert ok2 is True, why2
 
 
 def test_speech_rule_from_targets_only_on_upgrade_pan():
     assert SA.speech_rule(ST.load("잇템로그판")) is None
     r = SA.speech_rule(ST.load("잇템로그판_v2"))
-    assert r and r["kind"] == "tts_cps_spread" and r["level"] in ("chunk", "line")
+    v2 = ST.load("잇템로그판_v2")["targets"]["speech"]
+    assert r and r["kind"] == "tts_cps_spread" and r["max"] == v2["cps_cv"]["ours_goal"], r      # 조각 자(spread)가 아니라 문장 자(cps_cv)
+    assert RI.spread_of(ST.load("잇템로그판_v2")) == v2["cps_cv"]["ours_goal"]
+
+
+def test_density_judge_rule():
+    """⑳ 나아짐 = 허용 범위 안 ∧ 1차 n 보다 목표에 가깝거나 같음 · 나빠짐 = 범위 밖(27.8초 효과음: 목표 1·허용 1~2)."""
+    G = PL.density_goal({"p75": 0.051, "p25": 0.035, "max": 0.067, "first": 0.051}, 27.77)
+    assert (G["n_goal"], G["lo"], G["hi"], G["n_first"]) == (1, 1, 2, 1)
+    assert PL.density_judge(1, G) == (True, False)
+    assert PL.density_judge(2, G) == (False, False)      # 범위 안이지만 1차(1)보다 목표에서 멀다
+    assert PL.density_judge(0, G) == (False, True)
+    assert PL.density_judge(3, G) == (False, True)
 
 
 def test_fine_tempos_bounds():
@@ -203,3 +223,57 @@ def test_make_sentences_spread_mina_untouched_typecast_fine(tmp_path, voice, fix
     else:
         assert fix["applied"] is True and fix["cv_after_est"] < fix["cv_before"], fix
         assert all(tb * 0.9 - 1e-4 <= x["tempo"] <= min(tb * 1.1, RI.TEMPO_MAX) + 1e-4 for x in b)      # 옛 ±10% 안 · 새로 더한 몫은 ±8% 안(fine_tempos)
+
+
+def test_sfx_allowed_skips_meta_keys():
+    """11 보고: 판 sfx_files 의 why·_ 시작·gain_db 는 효과음 종류가 아니다."""
+    st = copy.deepcopy(ST.load("잇템로그판"))
+    st["placement"]["rules"]["sfx"].pop("kinds", None)
+    st["sfx_files"] = {"pop": "팩01/pop.wav", "gain_db": -8, "why": "근거 글", "_note": "x"}
+    assert PL._sfx_allowed(st) == ["pop"]
+
+
+def test_deco_counts_hook_variant_same_ruler_as_match():
+    """04(b94bcb3aa): 훅 빨강·팝 변형 = 꾸밈 — placement 도 같은 자(kal_analyze.variant_fx)로 센다."""
+    assert PL._is_deco({"enter": "cut", "variant_force": "hook"}) and PL._is_deco({"enter": "cut", "variant": "hook_pop"})
+    assert not PL._is_deco({"enter": "cut", "variant": ""})
+
+
+def test_deco_pos_spreads_decoration_to_body_like_bench():
+    """rules.deco_pos: 훅 변형만 꾸밈이던 1차(훅 1.0) → 벤치 자리 비율(훅·본문)로 본문에 강조 · 화자 꾸밈 비율은 벤치 중앙+허용 폭 안."""
+    st = copy.deepcopy(ST.load("잇템로그판"))
+    rows = _rows()
+    a = PL.place(rows, st, "ep13")
+    assert "deco_pos" not in a                                   # 규칙 없으면 옛 동작
+    st["placement"]["rules"]["deco_pos"] = {"from": "bench"}
+    p = PL.place(rows, st, "ep13")
+    B = PL.bench_fx(st)
+    dur = max(r["t1"] for r in p["rows"])
+    from tools.calcopy.engine import kal_analyze as K
+    pos = [K._pos(r, dur) for r in p["rows"] if PL._is_deco(r)]
+    for k, v in B["pos"].items():
+        assert abs(pos.count(k) / len(pos) - v) <= B["tol"]["fx.pos"] + 1e-9, (k, pos, B["pos"])
+    for sp, nm in (("narr", "나레"), ("orig", "원음")):
+        g = [r for r in p["rows"] if r["speaker"] == sp]
+        assert sum(PL._is_deco(r) for r in g) / len(g) <= B["rate"][nm] + B["tol"][f"fx.rate.{nm}"] + 1e-9
+    assert all(r["emph"][0]["word"] == r["key"] for r in p["rows"] if r.get("emph_by") == "deco_pos")
+
+
+def test_targets_refill_after_emph_color_drops(monkeypatch):
+    """강조색 규칙(㉒)이 목표 모드 강조를 '후보 전부 미달'로 지우면 다른 key 덩어리로 다시 채워 목표 개수를 지킨다."""
+    st = ST.load("잇템로그판_v2")
+    rows = _rows()
+    dropped = []
+    real = PL.emph_color_step
+
+    def drop_once(out, style, log):
+        real(out, style, log)
+        if not dropped:
+            for r in out:
+                if r.get("emph_by") == "targets" and r.get("emph"):
+                    r["emph"] = []; dropped.append(r["text"]); break
+    monkeypatch.setattr(PL, "emph_color_step", drop_once)
+    TG2 = {**TG, "fx_rate_narr": {**TG["fx_rate_narr"], "goal": 0.3, "cap": 0.4}}
+    p = PL.place(rows, st, "ep13", targets=TG2)
+    narr = [r for r in p["rows"] if r["speaker"] == "narr"]
+    assert dropped and sum(_deco(r) for r in narr) == 5, (dropped, [(r["text"], r.get("emph")) for r in narr])

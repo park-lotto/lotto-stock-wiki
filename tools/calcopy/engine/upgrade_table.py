@@ -259,14 +259,10 @@ def m_density(C: Ctx, axis: str) -> dict:
     ours = _density_val(key, {key: row["ours"]}) if row else None
     if not bv or ours is None:
         return _miss(f"미측정 — 벤치 {grp} {list(bv) or '없음'} · 우리 {'match 없음' if M is None else '칸 없음'}", bv or None, ours)
-    lo, hi, g = min(bv.values()), max(bv.values()), _q(list(bv.values()), 75)
-    e = 1e-9
-    if hi - lo < e:                             # 상위 편이 전부 같은 값 — 같으면 '비슷함', 다르면 나빠짐(없는 것도 스타일)
-        better, worse = False, abs(ours - lo) > e
-    else:
-        better, worse = g - e <= ours <= hi + e, ours < lo - e or ours > hi + e
-    return {"bench": {"group": grp, "per_doc": bv, "range": [lo, hi], "goal_p75": g}, "ours": ours, "better": better, "worse": worse,
-            "why": f"{key}{'(cut 밖 비율)' if key == 'transition.rate' else ''} 우리 {ours} — 나아짐 = {grp} p75 {g}~최대 {hi} · 나빠짐 = 범위 {lo}~{hi} 밖"}
+    # 판정 = 편 길이 환산 정수 개수 범위(표준 §11-3 ⑳) — 주인 placement.density_goal (지시서 15, 여기는 부르기만)
+    from tools.calcopy.hybrid import placement as PL
+    ball = [v for v in (_density_val(key, C.K._stats(d.get("lines") or [], float(d.get("dur") or 0))) for d in C.bench) if v is not None]
+    return PL.density_axis(key, bv, ball, ours, C.R, grp)
 
 
 def _first_cut(K, mp4: Path, win) -> float | None:

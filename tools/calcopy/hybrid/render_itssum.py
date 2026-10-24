@@ -132,9 +132,9 @@ def fine_tempos(rates: list[float], tempo: float, spread: float | None, mean: fl
 
 
 def spread_of(st: dict | None) -> float | None:
-    """판 targets.speech 목표 변동계수(spread 먼저, 없으면 cps_cv — 07 이 적는 칸) — 1차 판(targets 없음)은 None."""
+    """판 targets.speech.cps_cv(나레 문장 = TTS 줄 단위 자, §11-3 ⑲ — 07 이 적는 칸) — 1차 판(targets 없음)은 None. spread(자막 조각 자)는 안 쓴다."""
     sp = ((st or {}).get("targets") or {}).get("speech") or {}
-    for k in ("spread", "cps_cv"):
+    for k in ("cps_cv",):
         g = (sp.get(k) or {}).get("ours_goal")
         if isinstance(g, (int, float)):
             return float(g)
