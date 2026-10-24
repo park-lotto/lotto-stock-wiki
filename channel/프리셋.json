@@ -28,7 +28,7 @@
       "engine": {"style_file": "tools/calcopy/hybrid/styles/숏템리폿판.json", "renderer": "hand", "preset_dir": "channel/hottemreport/preset/검정띠", "hand_scripts": ["channel/hottemreport/make_frame_숏템리폿.py", "channel/hottemreport/make_render_숏템리폿.py", "channel/hottemreport/현장썰하이브리드/render_front.py", "channel/hottemreport/현장썰_run.py"]},
       "member": {"line_json": null, "preset_name": "해외핫영상+리뷰형(claude_preset_names hottemreport/검정띠 — 옛 길)", "flow_format": "해외원본형"}},
     "foreignshowshow": {"format": "해외원본", "subformat": "나레+원음", "bench_option": "해외쇼츠 샤크탱크 편", "brand_ref": "foreignshowshow",
-      "engine": {"style_file": null, "renderer": "hand", "preset_dir": "channel/foreignshowshow/preset/샤크탱크_검정띠2줄", "hand_scripts": ["tools/calcopy/shark/render.py", "tools/calcopy/shark/fx_place.py", "channel/foreignshowshow/<편>/make_plan.py(편마다)"]},
+      "engine": {"style_file": "tools/calcopy/hybrid/styles/샥탬판.json", "renderer": "hand", "preset_dir": "channel/foreignshowshow/preset/샤크탱크_검정띠2줄", "hand_scripts": ["tools/calcopy/shark/render.py", "tools/calcopy/shark/fx_place.py", "channel/foreignshowshow/<편>/make_plan.py(편마다)"]},
       "member": {"line_json": null, "preset_name": "샤크탱크+리뷰형(claude_preset_names foreignshowshow/샤크탱크_검정띠2줄 — 옛 길)", "flow_format": "해외원본형"}},
     "ititemlog": {"format": "해외원본", "subformat": "나레+원음", "bench_option": "잇템로그(현장썰 2번·화장품)", "brand_ref": null, "brand_note": "브랜드.json 미등록 — 드라이브 '잇템로그 대기중'·6번 잇템로그_998, 우리 이름 '잇템로그'(01b 문서)",
       "engine": {"style_file": "tools/calcopy/hybrid/styles/잇템로그판.json", "renderer": "bench", "preset_dir": null, "hand_scripts": ["(scratchpad) mk_v3_*.py — 대본·재료 생성", "(scratchpad) vmake.py — 자막 지우기(VMake Pro 서버)"]},
