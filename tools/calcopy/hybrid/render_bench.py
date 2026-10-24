@@ -638,10 +638,14 @@ def _gray_seg(video: Path, t0: float, t1: float, crop) -> tuple:
     import numpy as np
     x, y, w, h = crop
     t0 = max(0.0, t0)
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t0:.3f}", "-i", str(video), "-t", f"{t1 - t0:.3f}", "-vf",
-                          f"fps={FPS},crop={w}:{h}:{x}:{y},format=gray", "-f", "rawvideo", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
+    # 시각 → 프레임은 trim(start_frame) 으로(입력 -ss 는 파일마다 시작 pts 가 달라 한 프레임씩 어긋났다 — 완성본(광고 표시 다시 굽기)↔captioned 마스크가 1프레임 밀림, 10-25 실측)
+    f0, f1 = round(t0 * FPS), round(t1 * FPS)
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vf",
+                          f"trim=start_frame={f0}:end_frame={f1},setpts=PTS-STARTPTS,crop={w}:{h}:{x}:{y},format=gray", "-fps_mode", "passthrough",
+                          "-f", "rawvideo", "-"],
+                         capture_output=True, stdin=subprocess.DEVNULL).stdout
     fr = np.frombuffer(raw, np.uint8).reshape(-1, h, w)
-    return fr, [round(t0 + k / FPS, 4) for k in range(len(fr))]
+    return fr, [round((f0 + k) / FPS, 4) for k in range(len(fr))]
 
 
 def _masked_lapvar(fr, mask) -> float:
