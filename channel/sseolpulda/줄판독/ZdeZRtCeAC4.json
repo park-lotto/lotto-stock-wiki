@@ -132,7 +132,12 @@
    "glow": null,
    "emph": [],
    "sticker": [],
-   "sfx": null,
+   "sfx": {
+    "kind": "기타",
+    "t": 5.24,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +22.5dB(유성 0.0·고립 0.8) — 귀 확인 못 함"
+   },
    "scene": "손·제품 근접",
    "scene_desc": "스피커를 난간에 붙이고 손을 뗌",
    "fit": 5,

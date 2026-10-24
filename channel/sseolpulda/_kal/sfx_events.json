@@ -1,0 +1,445 @@
+{
+ "_meta": {
+  "made_by": "tools/calcopy/engine/sound/sfx_events.py sseolpulda --detect",
+  "how": "detect",
+  "from": "C:/숏템_칼카피\\sseolpulda\\src",
+  "n_videos": 6,
+  "n_cand": 7,
+  "asr_filter": "받아쓰기 낱말 구간(±0.05초) 안 후보는 cand_in_words 로 거름 — 받아쓰기 = 원자료/asr/<id>.json(스피치매틱스 10-15 결과 재사용, 새 호출 0). 남은 것 = cand_kept",
+  "n_kept": 5,
+  "n_in_words": 2,
+  "note": "귀 확인 아님(신호). tonal 은 유성 아님 조건이 이미 들어 있어 isolated 칸 없음"
+ },
+ "D3Pc6HZ6t6c": {
+  "strong_n": 3,
+  "strong_hits": {
+   "cap": [
+    0.16
+   ],
+   "cut": [
+    1.67
+   ]
+  },
+  "dur": 9.8,
+  "n_events_all": 8,
+  "cand": [],
+  "markers": {
+   "cap": [
+    0.1,
+    1.1,
+    1.9,
+    2.5,
+    3.1,
+    7.4,
+    8.3,
+    9.2
+   ],
+   "sticker": [],
+   "switch": [],
+   "cut": [
+    1.73,
+    2.57,
+    3.5,
+    4.37,
+    7.63
+   ]
+  },
+  "chance": {
+   "cap": 0.26,
+   "cut": 0.15
+  },
+  "cand_kept": [],
+  "cand_in_words": [],
+  "asr_words": 19
+ },
+ "GqSkDhM_bV0": {
+  "strong_n": 2,
+  "strong_hits": {
+   "cap": [
+    9.9,
+    9.9
+   ],
+   "sticker": [],
+   "cut": []
+  },
+  "dur": 19.2,
+  "n_events_all": 4,
+  "cand": [],
+  "markers": {
+   "cap": [
+    1.5,
+    2.6,
+    3.5,
+    4.6,
+    5.5,
+    5.9,
+    6.9,
+    7.8,
+    9.0,
+    9.4,
+    9.9,
+    10.4,
+    12.6,
+    13.4,
+    14.8,
+    15.5
+   ],
+   "sticker": [
+    4.1
+   ],
+   "switch": [],
+   "cut": [
+    0.93,
+    1.23,
+    5.4,
+    6.47,
+    7.97,
+    10.63,
+    11.03,
+    11.63,
+    12.93,
+    13.73,
+    15.1,
+    15.93
+   ]
+  },
+  "chance": {
+   "cap": 0.24,
+   "sticker": 0.01,
+   "cut": 0.18
+  },
+  "cand_kept": [],
+  "cand_in_words": [],
+  "asr_words": 44
+ },
+ "ZdeZRtCeAC4": {
+  "strong_n": 0,
+  "strong_hits": {
+   "cap": [],
+   "sticker": [],
+   "cut": []
+  },
+  "dur": 24.0,
+  "n_events_all": 5,
+  "cand": [
+   {
+    "t": 5.24,
+    "kind": "broad",
+    "dur": 0.1,
+    "db": 22.5,
+    "voiced": 0.0,
+    "isolated": 0.8,
+    "cen_hz": 6712,
+    "near": {
+     "cap": 0.04,
+     "sticker": 2.84,
+     "cut": 2.09
+    }
+   },
+   {
+    "t": 10.69,
+    "kind": "broad",
+    "dur": 0.1,
+    "db": 18.5,
+    "voiced": 0.0,
+    "isolated": 0.85,
+    "cen_hz": 7505,
+    "near": {
+     "cap": 0.21,
+     "sticker": 8.29,
+     "cut": 2.71
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    5.2,
+    7.3,
+    10.9,
+    14.8,
+    18.2,
+    21.7
+   ],
+   "sticker": [
+    2.4
+   ],
+   "switch": [],
+   "cut": [
+    7.33,
+    13.4,
+    17.4,
+    19.87,
+    21.23
+   ]
+  },
+  "chance": {
+   "cap": 0.07,
+   "sticker": 0.01,
+   "cut": 0.06
+  },
+  "cand_kept": [
+   {
+    "t": 5.24,
+    "kind": "broad",
+    "dur": 0.1,
+    "db": 22.5,
+    "voiced": 0.0,
+    "isolated": 0.8,
+    "cen_hz": 6712,
+    "near": {
+     "cap": 0.04,
+     "sticker": 2.84,
+     "cut": 2.09
+    }
+   }
+  ],
+  "cand_in_words": [
+   {
+    "t": 10.69,
+    "kind": "broad",
+    "dur": 0.1,
+    "db": 18.5,
+    "voiced": 0.0,
+    "isolated": 0.85,
+    "cen_hz": 7505,
+    "near": {
+     "cap": 0.21,
+     "sticker": 8.29,
+     "cut": 2.71
+    },
+    "in_word": [
+     10.7,
+     11.15
+    ]
+   }
+  ],
+  "asr_words": 18
+ },
+ "fnZNougO6NQ": {
+  "strong_n": 1,
+  "strong_hits": {
+   "cap": []
+  },
+  "dur": 11.4,
+  "n_events_all": 2,
+  "cand": [
+   {
+    "t": 10.74,
+    "kind": "broad",
+    "dur": 0.09,
+    "db": 19.5,
+    "voiced": 0.0,
+    "isolated": 0.85,
+    "cen_hz": 6664,
+    "near": {
+     "cap": 3.97
+    }
+   },
+   {
+    "t": 10.81,
+    "kind": "tonal",
+    "dur": 0.22,
+    "db": 31.7,
+    "cen_hz": 1012,
+    "near": {
+     "cap": 4.04
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    2.13,
+    2.13,
+    6.77,
+    6.77
+   ],
+   "sticker": [],
+   "switch": [],
+   "cut": []
+  },
+  "chance": {
+   "cap": 0.06
+  },
+  "cand_kept": [
+   {
+    "t": 10.74,
+    "kind": "broad",
+    "dur": 0.09,
+    "db": 19.5,
+    "voiced": 0.0,
+    "isolated": 0.85,
+    "cen_hz": 6664,
+    "near": {
+     "cap": 3.97
+    }
+   },
+   {
+    "t": 10.81,
+    "kind": "tonal",
+    "dur": 0.22,
+    "db": 31.7,
+    "cen_hz": 1012,
+    "near": {
+     "cap": 4.04
+    }
+   }
+  ],
+  "cand_in_words": [],
+  "asr_words": 0
+ },
+ "iZ-TprLYezA": {
+  "strong_n": 1,
+  "strong_hits": {
+   "cap": []
+  },
+  "dur": 14.1,
+  "n_events_all": 8,
+  "cand": [
+   {
+    "t": 9.28,
+    "kind": "tonal",
+    "dur": 0.24,
+    "db": 55.5,
+    "cen_hz": 1486,
+    "near": {
+     "cap": 0.99
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    0.2,
+    0.2,
+    5.73,
+    5.73,
+    10.27,
+    10.27
+   ],
+   "sticker": [],
+   "switch": [],
+   "cut": []
+  },
+  "chance": {
+   "cap": 0.07
+  },
+  "cand_kept": [
+   {
+    "t": 9.28,
+    "kind": "tonal",
+    "dur": 0.24,
+    "db": 55.5,
+    "cen_hz": 1486,
+    "near": {
+     "cap": 0.99
+    }
+   }
+  ],
+  "cand_in_words": [],
+  "asr_words": 0
+ },
+ "mYxuF1A74j4": {
+  "strong_n": 10,
+  "strong_hits": {
+   "cap": [],
+   "sticker": [],
+   "cut": [
+    8.82,
+    13.2
+   ]
+  },
+  "dur": 22.5,
+  "n_events_all": 16,
+  "cand": [
+   {
+    "t": 13.2,
+    "kind": "tonal",
+    "dur": 0.24,
+    "db": 36.6,
+    "cen_hz": 1098,
+    "near": {
+     "cap": 1.6,
+     "sticker": 6.8,
+     "cut": 0.1
+    }
+   },
+   {
+    "t": 22.14,
+    "kind": "tonal",
+    "dur": 0.35,
+    "db": 40.5,
+    "cen_hz": 1120,
+    "near": {
+     "cap": 1.14,
+     "sticker": 2.14,
+     "cut": 3.57
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    0.1,
+    6.3,
+    7.3,
+    8.5,
+    10.2,
+    11.6,
+    17.1,
+    18.1,
+    18.6,
+    20.1,
+    21.0
+   ],
+   "sticker": [
+    1.4,
+    5.0,
+    20.0
+   ],
+   "switch": [],
+   "cut": [
+    5.77,
+    8.7,
+    13.3,
+    17.97,
+    18.57
+   ]
+  },
+  "chance": {
+   "cap": 0.15,
+   "sticker": 0.04,
+   "cut": 0.06
+  },
+  "cand_kept": [
+   {
+    "t": 22.14,
+    "kind": "tonal",
+    "dur": 0.35,
+    "db": 40.5,
+    "cen_hz": 1120,
+    "near": {
+     "cap": 1.14,
+     "sticker": 2.14,
+     "cut": 3.57
+    }
+   }
+  ],
+  "cand_in_words": [
+   {
+    "t": 13.2,
+    "kind": "tonal",
+    "dur": 0.24,
+    "db": 36.6,
+    "cen_hz": 1098,
+    "near": {
+     "cap": 1.6,
+     "sticker": 6.8,
+     "cut": 0.1
+    },
+    "in_word": [
+     13.16,
+     13.76
+    ]
+   }
+  ],
+  "asr_words": 50
+ }
+}

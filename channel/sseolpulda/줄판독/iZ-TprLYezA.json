@@ -153,7 +153,12 @@
    "glow": null,
    "emph": [],
    "sticker": [],
-   "sfx": null,
+   "sfx": {
+    "kind": "기타",
+    "t": 9.28,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +55.5dB(유성 0.0·고립 1.0) — 귀 확인 못 함"
+   },
    "scene": "손·제품 근접",
    "scene_desc": "산맥 무늬 반지 두 개를 맞춤",
    "fit": 9,

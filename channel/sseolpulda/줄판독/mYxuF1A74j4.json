@@ -832,7 +832,12 @@
    "glow": null,
    "emph": [],
    "sticker": [],
-   "sfx": null,
+   "sfx": {
+    "kind": "기타",
+    "t": 22.14,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +40.5dB(유성 0.0·고립 1.0) — 귀 확인 못 함"
+   },
    "scene": "기타",
    "scene_desc": "여성이 소녀에게 퍽을 건넴",
    "fit": 8,
