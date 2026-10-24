@@ -1,0 +1,474 @@
+{
+ "_note": "작품6 취객선비잔 — 손으로 고른 컷(screen 시트 보고), src_crop 은 박힌 자막·뉴스 띠 밖",
+ "cand_dir": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/",
+ "shots": [
+  {
+   "i": 0,
+   "caption": "옛날 그림 보다",
+   "kind": "product",
+   "cont": false,
+   "seen": "평안감사향연도 그림 속 취객 선비",
+   "url": "https://www.youtube.com/watch?v=mcRMXkBeMwg",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/mcRMXkBeMwg.mp4",
+   "ss": 40.3,
+   "src_crop": [
+    630,
+    0,
+    660,
+    860
+   ]
+  },
+  {
+   "i": 1,
+   "caption": "빵 터진 한국 천재가",
+   "kind": "product",
+   "cont": false,
+   "seen": "그림 위 선비들 말풍선 장면",
+   "url": "https://www.youtube.com/watch?v=mcRMXkBeMwg",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/mcRMXkBeMwg.mp4",
+   "ss": 45.0,
+   "src_crop": [
+    630,
+    0,
+    660,
+    860
+   ]
+  },
+  {
+   "i": 2,
+   "caption": "만들어 떼돈 번",
+   "kind": "product",
+   "cont": false,
+   "seen": "계산대에 몰린 손님들",
+   "url": "https://www.youtube.com/watch?v=FOd_4I5jrHo",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/FOd_4I5jrHo.mp4",
+   "ss": 99.0,
+   "src_crop": [
+    669,
+    60,
+    582,
+    760
+   ]
+  },
+  {
+   "i": 3,
+   "caption": "술잔의 정체",
+   "kind": "product",
+   "cont": false,
+   "seen": "상자 속 잔 세 개",
+   "url": "https://www.youtube.com/watch?v=mcRMXkBeMwg",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/mcRMXkBeMwg.mp4",
+   "ss": 4.6,
+   "src_crop": [
+    630,
+    0,
+    660,
+    860
+   ]
+  },
+  {
+   "i": 4,
+   "caption": "최근 술꾼들 사이에서",
+   "kind": "product",
+   "cont": false,
+   "seen": "소주잔에 술 따르는 손",
+   "url": "https://www.youtube.com/watch?v=HkPSyCVLjz0",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/HkPSyCVLjz0.mp4",
+   "ss": 1.0,
+   "src_crop": [
+    669,
+    100,
+    582,
+    760
+   ]
+  },
+  {
+   "i": 5,
+   "caption": "바이럴이 터지며",
+   "cont": true
+  },
+  {
+   "i": 6,
+   "caption": "논란인 술잔이 있는데",
+   "kind": "product",
+   "cont": false,
+   "seen": "선비 그림 상자 든 손",
+   "url": "https://www.youtube.com/watch?v=oEAVcJXq4q8",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/oEAVcJXq4q8.mp4",
+   "ss": 30.0,
+   "src_crop": [
+    546,
+    0,
+    828,
+    1080
+   ]
+  },
+  {
+   "i": 7,
+   "caption": "이건 바로",
+   "kind": "product",
+   "cont": false,
+   "seen": "국립중앙박물관 뮤지엄숍 매장",
+   "url": "https://www.youtube.com/watch?v=FOd_4I5jrHo",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/FOd_4I5jrHo.mp4",
+   "ss": 38.5,
+   "src_crop": [
+    669,
+    60,
+    582,
+    760
+   ]
+  },
+  {
+   "i": 8,
+   "caption": "국립중앙박물관",
+   "cont": true
+  },
+  {
+   "i": 9,
+   "caption": "취객선비 변색 잔",
+   "kind": "product",
+   "cont": false,
+   "seen": "잔 세 개 선비 얼굴 빨개짐",
+   "url": "https://www.youtube.com/watch?v=mcRMXkBeMwg",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/mcRMXkBeMwg.mp4",
+   "ss": 11.5,
+   "src_crop": [
+    630,
+    0,
+    660,
+    860
+   ]
+  },
+  {
+   "i": 10,
+   "caption": "이게 말도 안 되는 게",
+   "kind": "product",
+   "cont": false,
+   "seen": "잔에 물 붓기",
+   "url": "https://www.youtube.com/watch?v=Arfr25jFfCM",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/Arfr25jFfCM.mp4",
+   "ss": 0.5,
+   "src_crop": [
+    546,
+    0,
+    828,
+    1080
+   ]
+  },
+  {
+   "i": 11,
+   "caption": "투명한 잔인데",
+   "kind": "product",
+   "cont": false,
+   "seen": "식탁 위 빈 잔 세 개",
+   "url": "https://www.youtube.com/watch?v=oEAVcJXq4q8",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/oEAVcJXq4q8.mp4",
+   "ss": 57.0,
+   "src_crop": [
+    546,
+    0,
+    828,
+    1080
+   ]
+  },
+  {
+   "i": 12,
+   "caption": "차가운 술만 따르면",
+   "kind": "product",
+   "cont": false,
+   "seen": "잔에 찬물 붓는 순간",
+   "url": "https://www.youtube.com/watch?v=0_ZkLcFDBUk",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/0_ZkLcFDBUk.mp4",
+   "ss": 2.5,
+   "src_crop": [
+    1092,
+    0,
+    1656,
+    2160
+   ]
+  },
+  {
+   "i": 13,
+   "caption": "선비 얼굴이 빨갛게",
+   "kind": "product",
+   "cont": false,
+   "seen": "선비 얼굴 빨간 근접",
+   "url": "https://www.youtube.com/watch?v=mcRMXkBeMwg",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/mcRMXkBeMwg.mp4",
+   "ss": 33.5,
+   "src_crop": [
+    630,
+    0,
+    660,
+    860
+   ]
+  },
+  {
+   "i": 14,
+   "caption": "취해 버린다는 거",
+   "kind": "product",
+   "cont": false,
+   "seen": "세 잔 모두 얼굴 빨개짐",
+   "url": "https://www.youtube.com/watch?v=0_ZkLcFDBUk",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/0_ZkLcFDBUk.mp4",
+   "ss": 40.0,
+   "src_crop": [
+    1092,
+    0,
+    1656,
+    2160
+   ]
+  },
+  {
+   "i": 15,
+   "caption": "심지어 이 선비들",
+   "kind": "product",
+   "cont": false,
+   "seen": "손가락으로 잔 속 선비 가리킴",
+   "url": "https://www.youtube.com/watch?v=mcRMXkBeMwg",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/mcRMXkBeMwg.mp4",
+   "ss": 50.3,
+   "src_crop": [
+    630,
+    0,
+    660,
+    860
+   ]
+  },
+  {
+   "i": 16,
+   "caption": "김홍도가 그렸다고",
+   "kind": "product",
+   "cont": false,
+   "seen": "평안감사향연도 그림",
+   "url": "https://www.youtube.com/watch?v=3P8XBBSlLGc",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/3P8XBBSlLGc.mp4",
+   "ss": 63.0,
+   "src_crop": [
+    630,
+    60,
+    660,
+    860
+   ]
+  },
+  {
+   "i": 17,
+   "caption": "전해지는 평안감사향연도",
+   "kind": "product",
+   "cont": false,
+   "seen": "그림 속 취객 선비 동그라미",
+   "url": "https://www.youtube.com/watch?v=Vk_Lw_dyJ-4",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/Vk_Lw_dyJ-4.mp4",
+   "ss": 38.6,
+   "src_crop": [
+    661,
+    60,
+    598,
+    780
+   ]
+  },
+  {
+   "i": 18,
+   "caption": "속 진짜 취객들인데",
+   "kind": "product",
+   "cont": false,
+   "seen": "그림 속 선비들",
+   "url": "https://www.youtube.com/watch?v=3P8XBBSlLGc",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/3P8XBBSlLGc.mp4",
+   "ss": 116.0,
+   "src_crop": [
+    630,
+    60,
+    660,
+    860
+   ]
+  },
+  {
+   "i": 19,
+   "caption": "2500여 명이 나오는",
+   "kind": "product",
+   "cont": false,
+   "seen": "사람 가득한 그림 전경",
+   "url": "https://www.youtube.com/watch?v=3P8XBBSlLGc",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/3P8XBBSlLGc.mp4",
+   "ss": 92.0,
+   "src_crop": [
+    630,
+    60,
+    660,
+    860
+   ]
+  },
+  {
+   "i": 20,
+   "caption": "그림에서 취한",
+   "cont": true
+  },
+  {
+   "i": 21,
+   "caption": "선비 세 명만",
+   "kind": "product",
+   "cont": false,
+   "seen": "선비 셋 그림",
+   "url": "https://www.youtube.com/watch?v=mcRMXkBeMwg",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/mcRMXkBeMwg.mp4",
+   "ss": 70.3,
+   "src_crop": [
+    630,
+    0,
+    660,
+    860
+   ]
+  },
+  {
+   "i": 22,
+   "caption": "잔으로 데려왔다고",
+   "kind": "product",
+   "cont": false,
+   "seen": "식탁 위 잔 세 개",
+   "url": "https://www.youtube.com/watch?v=oEAVcJXq4q8",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/oEAVcJXq4q8.mp4",
+   "ss": 63.0,
+   "src_crop": [
+    546,
+    0,
+    828,
+    1080
+   ]
+  },
+  {
+   "i": 23,
+   "caption": "근데 진짜 충격적인",
+   "kind": "product",
+   "cont": false,
+   "seen": "잔 세 개 붉어지는 중",
+   "url": "https://www.youtube.com/watch?v=Arfr25jFfCM",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/Arfr25jFfCM.mp4",
+   "ss": 10.0,
+   "src_crop": [
+    546,
+    0,
+    828,
+    1080
+   ]
+  },
+  {
+   "i": 24,
+   "caption": "포인트는 매달",
+   "kind": "product",
+   "cont": false,
+   "seen": "잔과 디자이너(SBS)",
+   "url": "https://www.youtube.com/watch?v=Vk_Lw_dyJ-4",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/Vk_Lw_dyJ-4.mp4",
+   "ss": 60.5,
+   "src_crop": [
+    669,
+    60,
+    582,
+    760
+   ]
+  },
+  {
+   "i": 25,
+   "caption": "예약 판매를 5000개로",
+   "kind": "product",
+   "cont": false,
+   "seen": "온라인숍 접속 폭주 안내 그림",
+   "url": "https://www.youtube.com/watch?v=Vk_Lw_dyJ-4",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/Vk_Lw_dyJ-4.mp4",
+   "ss": 81.0,
+   "src_crop": [
+    661,
+    60,
+    598,
+    780
+   ]
+  },
+  {
+   "i": 26,
+   "caption": "늘렸는데도 2분 만에",
+   "kind": "product",
+   "cont": false,
+   "seen": "매장 잔 진열",
+   "url": "https://www.youtube.com/watch?v=Vk_Lw_dyJ-4",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/Vk_Lw_dyJ-4.mp4",
+   "ss": 69.5,
+   "src_crop": [
+    669,
+    60,
+    582,
+    760
+   ]
+  },
+  {
+   "i": 27,
+   "caption": "완판됐다고",
+   "kind": "product",
+   "cont": false,
+   "seen": "온라인숍 일시품절 화면",
+   "url": "https://www.youtube.com/watch?v=Vk_Lw_dyJ-4",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/Vk_Lw_dyJ-4.mp4",
+   "ss": 77.0,
+   "src_crop": [
+    661,
+    60,
+    598,
+    780
+   ]
+  },
+  {
+   "i": 28,
+   "caption": "그래서 요즘엔",
+   "kind": "product",
+   "cont": false,
+   "seen": "식탁 위 술 담긴 잔",
+   "url": "https://www.youtube.com/watch?v=oEAVcJXq4q8",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/oEAVcJXq4q8.mp4",
+   "ss": 70.0,
+   "src_crop": [
+    546,
+    0,
+    828,
+    1080
+   ]
+  },
+  {
+   "i": 29,
+   "caption": "누가 먼저 빨개지나",
+   "cont": true
+  },
+  {
+   "i": 30,
+   "caption": "내기하는 술꾼들 사이에서",
+   "kind": "product",
+   "cont": false,
+   "seen": "두 손에 든 잔",
+   "url": "https://www.youtube.com/watch?v=mcRMXkBeMwg",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/mcRMXkBeMwg.mp4",
+   "ss": 26.0,
+   "src_crop": [
+    630,
+    0,
+    660,
+    860
+   ]
+  },
+  {
+   "i": 31,
+   "caption": "필수템으로 난리라고",
+   "kind": "product",
+   "cont": false,
+   "seen": "바 위 잔 세 개",
+   "url": "https://www.youtube.com/watch?v=mcRMXkBeMwg",
+   "src": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/mcRMXkBeMwg.mp4",
+   "ss": 78.3,
+   "src_crop": [
+    630,
+    0,
+    660,
+    860
+   ]
+  }
+ ]
+}
