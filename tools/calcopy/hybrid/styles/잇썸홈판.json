@@ -14,7 +14,8 @@
  "bgm": {
   "id": "honwaka_puppu",
   "db_below_voice": 14.4,
-  "duck_orig_db": -10.0
+  "duck_orig_db": -10.0,
+  "why": "나레 −14.4dB·원음 창 −10dB 덕킹 = 옛 판 렌더 render_itssum 기본값(docstring 12줄 — 함익병·박세리·장윤정·최은경 4편 통과본 값, 벤치 두유노 측정 아님)"
  },
  "loudness": {
   "lufs": -8.6,
@@ -23,7 +24,8 @@
  },
  "length": {
   "min": 28,
-  "max": 38
+  "max": 38,
+  "why": "28~38초 = 얜샷템 하이브리드 4편 통과본 길이 범위(앞 원음 + 뒤 두유노 결 B) — 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
  },
  "render": {
   "gap": 0.2,
@@ -37,7 +39,8 @@
   "orig_fade": 0.015,
   "bgm_dir": "shopping_shorts/assets/bgm_lib",
   "preset_b": "channel/homedesignnote/preset/전체화면_가운데자막",
-  "frame_a": "channel/mantem/frame_얜샷템.json"
+  "frame_a": "channel/mantem/frame_얜샷템.json",
+  "why": "render_itssum DEF 주인 칸(옛 판 동작 그대로 옮김, 10-19): target_lufs −8.6·tp −3.2 = loudness.why 와 같음(⑨) · gap 0.2·gap_ab 0.2·gap_oo 0.25·tail 0.5·a_end_pad 0·orig_fade 0.015 = 4편 손질에서 정한 렌더 상수(박세리 pieces·최은경 gap_before 등 — render_itssum docstring) — 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
  },
  "title_form": "2줄 '<수식어> <이름>이 요즘 매일 ~' / '<제품 분류>의 비밀' (얜샷템 틀 흰/민트)",
  "script": {

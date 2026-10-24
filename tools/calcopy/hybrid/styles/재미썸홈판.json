@@ -16,11 +16,13 @@
  },
  "loudness": {
   "lufs": -14.0,
-  "tp": -1.5
+  "tp": -1.5,
+  "why": "−14 LUFS·TP −1.5 통일(사장님 10-18)"
  },
  "length": {
   "min": 25,
-  "max": 35
+  "max": 35,
+  "why": "25~35초 = 재미썸홈 하이브리드 통과본 범위 — 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
  },
  "render": {
   "end_pad": 0.7,
@@ -39,7 +41,8 @@
   "pause_comma": 0.235,
   "pause_period": 0.315,
   "opener_at": -0.25,
-  "preset_b": "channel/evenshopping/preset/숏템템플릿/manifest.json"
+  "preset_b": "channel/evenshopping/preset/숏템템플릿/manifest.json",
+  "why": "render_jaemi DEF 주인 칸(옛 판 동작 그대로, 10-19) — 근거 있는 값: pause_comma 0.235·pause_period 0.315 = 쉼표 0.22·마침표 0.30 + 이음매 겹침 15ms 보정(엔진 tts_pause.shape·B18, render_jaemi 255줄) · end_pad 0.7 = 끝 컷 늘림 B4 ≥1.5초 · opener_at −0.25 = 장윤정 '저 영상' 덮임 수리 · last_tempo_tol 0.1 = 끝 문장 atempo ±10%(B15) · tempo_max 1.27·tempo_min 0.85 = 배속 범위 · target_lufs −14 = loudness · 나머지(gap_o_f1 0.12·duck_db −10·bgm_a_rms −31.5·voice_rms −17.5·silence_d 0.08) = 4편 손질 렌더 상수 — 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
  },
  "title_form": "body_title 한 줄(이븐쇼핑 t11 틀)",
  "script": {
