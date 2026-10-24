@@ -27,7 +27,7 @@ def _src():
     return "\n".join([
         _slice(s, "const EN_CHARS_PER_SEC", "// ★2026-07-17 병합 해결"),
         _slice(s, "function s2SecOf(text, dr){", "function s2SecTag("),
-        _slice(s, "const S2_LANG_NAME=", "// [이대로 쓰기]"),
+        _slice(s, "// 원문(처음 언어)은 text_ko", "// [이대로 쓰기]"),
     ])
 
 
@@ -36,7 +36,7 @@ def _run(tail, reply):
 var SYLLABLES_PER_SEC = 5.7;
 var toast = function(m){{ LOG.toast = m; }}, saveWork = function(){{}}, s2RenderDrafts = function(){{}};
 var LOG = {{}};
-var document = {{ getElementById: function(){{ return null; }} }};
+var document = {{ getElementById: function(){{ return null; }}, querySelectorAll: function(){{ return []; }} }};
 function s2Beats(dr){{ return dr.beats; }}
 function s2Cps(){{ return 7.41; }}
 var fetch = async function(url, opt){{ LOG.url = url; LOG.body = JSON.parse(opt.body);
@@ -82,10 +82,12 @@ def test_toggle_en_keeps_cps_en():
     assert d["body"]["lang"] == "en" and d["lang"] == "en" and d["cps_en"] == 14.9 and d["cps_x"] == 14.9
 
 
-def test_card_shows_three_states():
+def test_card_shows_four_lang_buttons():
+    """관제 254: 버튼은 lang4Btns 하나가 만든다 — 지금 언어를 뺀 세 언어, 원문 언어 버튼은 '원문'으로 되돌리기."""
     s = PRODUCE.read_text(encoding="utf-8")
-    assert "onclick=\"s2ToggleLang(${i},'en')\"" in s
-    assert "onclick=\"s2ToggleLang(${i},'ja')\"" in s
-    assert "onclick=\"s2ToggleLang(${i},'ko')\"" in s
-    assert "onclick=\"sbToggleLang('ja')\"" in s and "onclick=\"sbToggleLang('ko')\"" in s
+    assert "onclick=\"s2ToggleLang(${i},'${c}')\"" in s and "onclick=\"sbToggleLang('${c}')\"" in s
     assert "s2ToggleLang(${i})\"" not in s and "sbToggleLang()\"" not in s
+    out = run_js(_src() + "\nconsole.log(JSON.stringify([lang4Btns('ko','ko',(c,l)=>c+'|'+l+';'), lang4Btns('ja','ko',(c,l)=>c+'|'+l+';')]));")
+    ko, ja = json.loads(out)
+    assert [x.split("|")[0] for x in ko.strip(";").split(";")] == ["ja", "zh", "en"]
+    assert [x.split("|")[0] for x in ja.strip(";").split(";")] == ["ko", "zh", "en"] and "원문" in ja.split(";")[0]
