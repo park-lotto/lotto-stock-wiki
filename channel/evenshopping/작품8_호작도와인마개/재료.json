@@ -23,13 +23,13 @@
    "caption": "와인병 위에 올라탄",
    "kind": "product",
    "cont": false,
-   "seen": "마개 꽂힌 병을 기울여 따르기 — '와인병 위에 올라탄'",
+   "seen": "병 위에 꽂힌 청호 마개(손 없음) — 와인병 위에 올라탄",
    "url": "https://www.instagram.com/reel/DR_-1CgE64c/",
    "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DR_-1CgE64c.mp4",
-   "ss": 0.0,
+   "ss": 2.0,
    "src_crop": [
-    180,
-    520,
+    330,
+    440,
     700,
     912
    ]
@@ -42,9 +42,9 @@
    "seen": "백호 마개 근접 — '마개의 정체'",
    "url": "https://www.instagram.com/reel/DOvy8NKEu0Z/",
    "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DOvy8NKEu0Z.mp4",
-   "ss": 1.0,
+   "ss": 1.4,
    "src_crop": [
-    120,
+    0,
     330,
     840,
     1094
@@ -60,10 +60,10 @@
    "caption": "요즘 와인 좀 마신다는",
    "kind": "product",
    "cont": false,
-   "seen": "손 위 마개 근접",
+   "seen": "손 위 백호 마개 근접",
    "url": "https://www.instagram.com/reel/DOvy8NKEu0Z/",
    "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DOvy8NKEu0Z.mp4",
-   "ss": 5.5,
+   "ss": 7.0,
    "src_crop": [
     120,
     330,
@@ -100,18 +100,7 @@
   {
    "i": 8,
    "caption": "이건 바로",
-   "kind": "product",
-   "cont": false,
-   "seen": "손 위 청호 마개 정면",
-   "url": "https://www.instagram.com/reel/DOvy8NKEu0Z/",
-   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DOvy8NKEu0Z.mp4",
-   "ss": 30.0,
-   "src_crop": [
-    120,
-    330,
-    840,
-    1094
-   ]
+   "cont": true
   },
   {
    "i": 9,
@@ -123,13 +112,13 @@
    "caption": "호작도 와인마개",
    "kind": "product",
    "cont": false,
-   "seen": "두 손 위 청호 마개 — 제품 이름",
+   "seen": "상자 위 백호 마개 — 제품 이름",
    "url": "https://www.instagram.com/reel/DOvy8NKEu0Z/",
    "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DOvy8NKEu0Z.mp4",
-   "ss": 11.0,
+   "ss": 28.4,
    "src_crop": [
     120,
-    330,
+    420,
     840,
     1094
    ]
@@ -179,7 +168,7 @@
    "seen": "상자 위에 선 청호 마개 — 원화를 옮긴 모양",
    "url": "https://www.instagram.com/reel/DOvy8NKEu0Z/",
    "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DOvy8NKEu0Z.mp4",
-   "ss": 23.0,
+   "ss": 22.0,
    "src_crop": [
     120,
     420,
@@ -244,10 +233,10 @@
    "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/J7MdwAY03MI.mp4",
    "ss": 70.0,
    "src_crop": [
-    930,
-    140,
-    660,
-    860
+    960,
+    60,
+    620,
+    808
    ]
   },
   {
@@ -297,7 +286,7 @@
    "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DPTVQy6ETBu.mp4",
    "ss": 4.2,
    "src_crop": [
-    195,
+    300,
     580,
     691,
     900
@@ -347,18 +336,7 @@
   {
    "i": 31,
    "caption": "병보다 마개를",
-   "kind": "product",
-   "cont": false,
-   "seen": "선물 상자 열고 마개 꺼내기 — 마무리",
-   "url": "https://www.instagram.com/reel/DOvy8NKEu0Z/",
-   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DOvy8NKEu0Z.mp4",
-   "ss": 18.0,
-   "src_crop": [
-    120,
-    420,
-    840,
-    1094
-   ]
+   "cont": true
   },
   {
    "i": 32,
@@ -370,15 +348,15 @@
    "caption": "사람들 사이에서",
    "kind": "product",
    "cont": false,
-   "seen": "병 위 청호 마개 — 필수템",
-   "url": "https://www.instagram.com/reel/DR_-1CgE64c/",
-   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DR_-1CgE64c.mp4",
-   "ss": 4.5,
+   "seen": "손 위 청호 마개 — 마무리 필수템",
+   "url": "https://www.instagram.com/reel/DOvy8NKEu0Z/",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DOvy8NKEu0Z.mp4",
+   "ss": 31.0,
    "src_crop": [
+    120,
     330,
-    450,
-    700,
-    912
+    840,
+    1094
    ]
   },
   {
