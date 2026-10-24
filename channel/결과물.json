@@ -986,6 +986,42 @@
    "date": "2026-10-20",
    "judge": "preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
+  },
+  {
+   "n": 68,
+   "channel": "staybrokr",
+   "channel_name": "스테이브로",
+   "brand": "@shortem.stay",
+   "style": "두유노홈디노 체험담 대본 + 스테이브로 촌캉스 화면",
+   "title": "가평숨은계곡핀란드사우나펜션_hdn_AVo84VRq55k틀_3판",
+   "path": "C:/Users/TheRose/숏템자료/여행/hotel_copy/숨은계곡_홈디노/out.mp4",
+   "desktop": "가평숨은계곡핀란드사우나펜션_hdn_AVo84VRq55k틀_3판.mp4",
+   "md5": "9e8e045b7e44a26be057de499af39e7d",
+   "seconds": 25.67,
+   "preset": "tools/travel/hotel_copy/refs/hdn_AVo84VRq55k.json",
+   "date": "2026-10-24",
+   "judge": "engine check 전 칸 통과(사람 판정 전)",
+   "from": "tools/travel/hotel_copy/engine.py (여행쇼핑쇼츠 트랙)",
+   "doc": "channel/staybrokr/숙소쇼츠_지침서.md",
+   "note": "AI 영상 3컷(Veo Lite 4초, 앞쪽 0~1.2초)"
+  },
+  {
+   "n": 69,
+   "channel": "staybrokr",
+   "channel_name": "스테이브로",
+   "brand": "@shortem.trip(임시 채널명)",
+   "style": "스테이브로 1위 온천편 틀 — 다른 채널판",
+   "title": "가평숨은계곡핀란드사우나펜션_ee3U4FtLb10틀_1판",
+   "path": "C:/Users/TheRose/숏템자료/여행/hotel_copy/숨은계곡_채널2/out.mp4",
+   "desktop": "가평숨은계곡핀란드사우나펜션_ee3U4FtLb10틀_1판.mp4",
+   "md5": "6b4a01919354775e4dfe5139ffe446f8",
+   "seconds": 19.73,
+   "preset": "tools/travel/hotel_copy/refs/ee3U4FtLb10.json",
+   "date": "2026-10-24",
+   "judge": "engine check 전 칸 통과(사람 판정 전)",
+   "from": "tools/travel/hotel_copy/engine.py (여행쇼핑쇼츠 트랙)",
+   "doc": "channel/staybrokr/숙소쇼츠_지침서.md",
+   "note": "채널1 AI 영상의 뒤쪽 절반 재사용(Veo 0원) · 앞판과 같은 AI 구간 0초 · 대본 겹침 17%"
   }
  ]
 }
