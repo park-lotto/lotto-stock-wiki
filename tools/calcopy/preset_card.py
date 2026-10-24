@@ -371,6 +371,8 @@ def _no_why(raw: dict) -> list[str]:
         elif isinstance(v, (int, float)) and not isinstance(v, bool) and not has:
             miss.append(".".join(path))
     for k, v in (raw or {}).items():
+        if k == "packs":    # 팩 칸 숫자(rank·enter_cover…)는 pack_map 생성 값 — made_by 가 있으면 기계 산출, 없어도 packs 서브트리는 셈에서 뺀다(페이블 지시 10-25)
+            continue
         if not str(k).startswith("_") and k not in ("script",):
             walk(v, [k], False)
     return sorted(set(miss))
