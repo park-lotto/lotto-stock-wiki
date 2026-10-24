@@ -398,7 +398,7 @@ def facts(O: dict, recs: list[dict]) -> dict:
         "quality_gate_ok": bool((G.get("품질관문.json") or {}).get("ok")),
         "match_ok": bool((G.get("재현일치도.json") or {}).get("ok")),
         "eye": G.get("눈검수.json"),
-        "upgrade": {"better": ((G.get("품질관문.json") or {}).get("gates") or {}).get("upgrade", {}) and G["품질관문.json"]["gates"]["upgrade"].get("better_n") or (G.get("업그레이드_측정.json") or {}).get("better_n") or 0},   # gates.upgrade(관문 04·업그레이드 자 05) — better = 나아진 항목 수(int)
+        "upgrade": (lambda u: {"better": u.get("better_n") or 0, "worse": u.get("worse_n"), "l3_ok": u.get("l3_ok") is True})(((G.get("품질관문.json") or {}).get("gates") or {}).get("upgrade") or (G.get("업그레이드_측정.json") or {}).get("gates", {}).get("upgrade") or {}),   # gates.upgrade(관문 04·업그레이드 자 05) — L3 판정 주인 = upgrade_table.l3_verdict(여기선 읽기만, 표준 §11-2 ⑱)
         "member": mem, "line_json_exists": bool(mem.get("line_json")) and (ROOT / str(mem.get("line_json"))).exists(),
         "member_live_ok": bool((O["member_live"] or {}).get("ok")),
         "results_n": len(O["results"]), "results_pass_n": sum(1 for it in O["results"] if "페이블 판정 통과" in str(it.get("judge") or "")),
@@ -423,7 +423,7 @@ def level(card: dict) -> tuple[str, list[str]]:
                ("숫자칸 why", F["no_why"] == []), (f"counted≥{COUNTED_MIN}", (F["counted_n"] or 0) >= COUNTED_MIN),
                ("자막팩", F["caption_pack_ok"]), ("rules 미측정0", F["unmeasured"] == 0)],
         "L2": [("품질관문 ○", F["quality_gate_ok"]), ("재현일치도 ○", F["match_ok"]), ("눈검수 E1~E8", _eye_ok(F["eye"], [f"E{i}" for i in range(1, 9)]))],
-        "L3": [("업그레이드 나아짐≥1", isinstance(F["upgrade"], dict) and (F["upgrade"].get("better") or 0) >= 1),
+        "L3": [("업그레이드 나아짐≥과반∧나빠짐0", isinstance(F["upgrade"], dict) and F["upgrade"].get("l3_ok") is True),
                ("눈검수 E9", _eye_ok(F["eye"], ["E9"])), ("사장님 판정", F["owner_pass"])],
         "L4": [("member line.json", F["line_json_exists"]), ("member preset_name", bool(F["member"].get("preset_name"))),
                ("member flow_format", bool(F["member"].get("flow_format"))), ("회원실측", F["member_live_ok"])],

@@ -16,6 +16,7 @@
   말속도·쉼 = 자막 조각 cps 편차(벤치 줄판독·우리 자막표 — 같은 함수 _cps_cv) · 쉼 = <doc>/품질관문.json 'B18 쉼'(checks.pauses_between)
   자막 가독성 = kal_analyze.frame_metrics(글자 높이·채움↔외곽 ΔE) — 벤치 원본·우리 완성본 프레임, 같은 띠
   못 재는 축(script·cap_enter·cap_exit·pointer) 또는 verify='사람 판정' = 'human'(사장님)
+L3(표준 §11-2 ⑱) = l3_verdict: 측정 가능한 축 전부(MEASURABLE) 중 better_n ≥ ceil(측정 축/2) ∧ worse_n = 0 — better = 상위 편 좋은 쪽 사분위(p75/p25), worse = 상위 편 중앙보다 나쁨(밀도는 범위 밖).
 '벤치 상위 편' = 조회 상위 50%(C:/숏템_칼카피/<slug>/top.json views, 없는 편은 src_dir/<id>.info.json view_count).
 """
 from __future__ import annotations
@@ -171,10 +172,29 @@ def _key(p: Path, extra) -> str:
     return f"{p.name}|{p.stat().st_size}|{int(p.stat().st_mtime)}|{extra}"
 
 
-# ---------------------------------------------------------------- 축별 측정(벤치·우리 같은 함수) → {bench, ours, better, why}
+# ---------------------------------------------------------------- 축별 측정(벤치·우리 같은 함수) → {bench, ours, better, worse, why}
+# 비교 대상 = 벤치 상위 편(조회 상위 50%). better = 상위 편 '좋은 쪽 사분위'(표준 §12-2: 높을수록 좋은 칸 p75 · 낮을수록 좋은 칸 p25)에 닿음 ·
+# worse = 상위 편 중앙보다 나쁨(밀도는 상위 편 범위 밖). 둘 다 아니면 '비슷함'(나아짐도 나빠짐도 아님). 표준 §11-2 ⑱.
+def _q(xs, p: float):
+    import numpy as np
+    xs = [float(x) for x in xs if isinstance(x, (int, float))]
+    return round(float(np.percentile(xs, p)), 3) if xs else None
+
+
+def _top_or_all(C: "Ctx") -> tuple[list[dict], str]:
+    t = C.top()
+    return (t, "상위 편(조회 상위 50%)") if t else (C.bench, "전체 편(조회수 없음 — 상위 편 못 가름)")
+
+
+def _miss(why: str, bench=None, ours=None) -> dict:
+    return {"bench": bench, "ours": ours, "better": None, "worse": None, "why": why}
+
+
 def m_scene_fit(C: Ctx) -> dict:
     from tools.calcopy.hybrid import quality_gate as QG
-    bench = QG.bench_fit(C.bench)
+    docs, grp = _top_or_all(C)
+    per = {d.get("id"): QG.bench_fit([d]) for d in docs}          # 편마다 같은 함수(quality_gate.bench_fit)
+    per = {k: v for k, v in per.items() if v}
     p = C.doc / "장면대사.json"
     if p.exists():
         ours, src = _jl(p).get("summary"), f"{p.name}(scene_fit.measure_render — 관문이 남긴 것)"
@@ -183,24 +203,28 @@ def m_scene_fit(C: Ctx) -> dict:
         ours, src = scene_fit.measure_render(C.work, out=p)["summary"], "scene_fit.measure_render(지금 잼)"
     else:
         ours, src = None, "장면대사.json 없음(--fit 으로 재면 Claude 호출)"
-    if not bench or not ours or ours.get("mean") is None:
-        return {"bench": bench, "ours": ours, "better": None, "why": f"미측정 — 벤치 {'있음' if bench else '줄판독 fit 칸 없음'} · 우리 {src}"}
-    better = ours["mean"] > bench["mean"] and ours["below_rate"] <= bench["below_rate"]
-    return {"bench": {"mean": bench["mean"], "below_rate": bench["below_rate"], "n_docs": bench["n_docs"]},
-            "ours": {"mean": ours["mean"], "below_rate": ours["below_rate"], "judged": ours.get("judged")}, "better": better,
-            "why": f"평균↑·7 미만 비율↓ 둘 다여야 — 우리 {ours['mean']}/{ours['below_rate']} vs 벤치 {bench['mean']}/{bench['below_rate']} · 우리 출처 {src}"}
+    if not per or not ours or ours.get("mean") is None:
+        return _miss(f"미측정 — 벤치 {grp} fit {'있음' if per else '칸 없음'} · 우리 {src}", per or None, ours)
+    ms, bs = [v["mean"] for v in per.values()], [v["below_rate"] for v in per.values()]
+    g_m, g_b, md_m, md_b = _q(ms, 75), _q(bs, 25), _q(ms, 50), _q(bs, 50)
+    better = ours["mean"] >= g_m and ours["below_rate"] <= g_b
+    worse = ours["mean"] < md_m or ours["below_rate"] > md_b
+    return {"bench": {"group": grp, "per_doc": per, "goal_mean_p75": g_m, "goal_below_p25": g_b, "median_mean": md_m, "median_below": md_b},
+            "ours": {"mean": ours["mean"], "below_rate": ours["below_rate"], "judged": ours.get("judged")}, "better": better, "worse": worse,
+            "why": f"우리 평균 {ours['mean']}·7 미만 {ours['below_rate']} — 나아짐 = 평균 ≥{g_m}(p75) ∧ 미만 ≤{g_b}(p25) · 나빠짐 = 평균 <{md_m} 또는 미만 >{md_b}(중앙) · {grp} · 우리 출처 {src}"}
 
 
 def m_cut_rhythm(C: Ctx) -> dict:
-    """정지·멈춤 = quality_gate.freezes(창 안 같은 그림 0.3초+) — 우리 완성본 0건이면 나아짐(표준 §4-2). 벤치 원본도 같은 함수로 잰다(참고)."""
+    """정지·멈춤 = quality_gate.freezes(창 안 같은 그림 0.3초+) — 나아짐 = 0건(표준 §4-2) · 나빠짐 = 상위 편 중앙보다 많음(벤치 없으면 1건 이상)."""
     from tools.calcopy.hybrid import quality_gate as QG
     if not C.has_final():
-        return {"bench": None, "ours": None, "better": None, "why": "완성본 없음(미측정)"}
+        return _miss("완성본 없음(미측정)")
     ours = QG.freezes(C.final(), C.win())
+    docs, grp = _top_or_all(C)
     bench, cp = {}, None
     if C.src and C.bench_win():
         cache, cp = C.cache("_upgrade_freeze_cache.json")
-        for d in C.bench:
+        for d in docs:
             mp4 = C.src / f"{d.get('id')}.mp4"
             if not mp4.exists():
                 continue
@@ -209,9 +233,11 @@ def m_cut_rhythm(C: Ctx) -> dict:
                 cache[k] = QG.freezes(mp4, C.bench_win())
             bench[d["id"]] = len(cache[k])
         _save_cache(cache, cp)
-    return {"bench": {"freezes_per_doc": bench, "median": statistics.median(bench.values()) if bench else None},
-            "ours": {"freezes": len(ours), "spans": ours}, "better": len(ours) == 0,
-            "why": f"멈춤(창 안 같은 그림 ≥{QG.FREEZE_SEC}초) 우리 {len(ours)}건 — 0건이어야 나아짐 · 벤치 원본 같은 함수 {bench or '없음'}"}
+    med = _q(list(bench.values()), 50)
+    worse = len(ours) > (med if med is not None else 0)
+    return {"bench": {"group": grp, "freezes_per_doc": bench, "median": med},
+            "ours": {"freezes": len(ours), "spans": ours}, "better": len(ours) == 0, "worse": worse,
+            "why": f"멈춤(창 안 같은 그림 ≥{QG.FREEZE_SEC}초) 우리 {len(ours)}건 — 나아짐 = 0건 · 나빠짐 = {grp} 중앙 {med if med is not None else '(벤치 없음 → 0)'}건 초과 · 벤치 {bench or '없음'}"}
 
 
 def _density_val(key: str, s: dict | None):
@@ -225,17 +251,22 @@ def _density_val(key: str, s: dict | None):
 
 def m_density(C: Ctx, axis: str) -> dict:
     key = DENSITY_KEY[axis]
-    top = C.top()
-    bv = {d["id"]: _density_val(key, C.K._stats(d.get("lines") or [], float(d.get("dur") or 0))) for d in top}
+    docs, grp = _top_or_all(C)
+    bv = {d["id"]: _density_val(key, C.K._stats(d.get("lines") or [], float(d.get("dur") or 0))) for d in docs}
     bv = {k: v for k, v in bv.items() if v is not None}
     M = C.ours_match()
     row = next((r for r in (M or {}).get("rows") or [] if r["key"] == key), None)
     ours = _density_val(key, {key: row["ours"]}) if row else None
     if not bv or ours is None:
-        return {"bench": bv or None, "ours": ours, "better": None, "why": f"미측정 — 벤치 상위 편 {list(bv) or '없음'} · 우리 {'match 없음' if M is None else '칸 없음'}"}
-    lo, hi = min(bv.values()), max(bv.values())
-    return {"bench": {"top_ids": list(bv), "per_doc": bv, "range": [lo, hi]}, "ours": ours, "better": lo - 1e-9 <= ours <= hi + 1e-9,
-            "why": f"{key}{'(cut 밖 비율)' if key == 'transition.rate' else ''} 우리 {ours} — 벤치 조회 상위 50% {len(bv)}편 범위 {lo}~{hi} 안이면 나아짐"}
+        return _miss(f"미측정 — 벤치 {grp} {list(bv) or '없음'} · 우리 {'match 없음' if M is None else '칸 없음'}", bv or None, ours)
+    lo, hi, g = min(bv.values()), max(bv.values()), _q(list(bv.values()), 75)
+    e = 1e-9
+    if hi - lo < e:                             # 상위 편이 전부 같은 값 — 같으면 '비슷함', 다르면 나빠짐(없는 것도 스타일)
+        better, worse = False, abs(ours - lo) > e
+    else:
+        better, worse = g - e <= ours <= hi + e, ours < lo - e or ours > hi + e
+    return {"bench": {"group": grp, "per_doc": bv, "range": [lo, hi], "goal_p75": g}, "ours": ours, "better": better, "worse": worse,
+            "why": f"{key}{'(cut 밖 비율)' if key == 'transition.rate' else ''} 우리 {ours} — 나아짐 = {grp} p75 {g}~최대 {hi} · 나빠짐 = 범위 {lo}~{hi} 밖"}
 
 
 def _first_cut(K, mp4: Path, win) -> float | None:
@@ -244,14 +275,15 @@ def _first_cut(K, mp4: Path, win) -> float | None:
 
 
 def m_thumb(C: Ctx) -> dict:
-    """훅 = 첫 컷 길이(scene_cuts — 벤치 원본·우리 완성본 같은 함수) + 0초 종류(card/scene). 0초 얼굴·물건 비율은 아직 안 잰다(why 에 적음)."""
+    """훅 = 첫 컷 길이(scene_cuts — 벤치 원본·우리 완성본 같은 함수) + 0초 종류(card/scene). 첫 컷은 좋은 방향이 정해지지 않아 상위 편 범위 안 + 0초 같음 = 나아짐, 아니면 나빠짐.
+    0초 얼굴·물건 비율은 아직 안 잰다(why 에 적음)."""
     if not C.has_final():
-        return {"bench": None, "ours": None, "better": None, "why": "완성본 없음(미측정)"}
+        return _miss("완성본 없음(미측정)")
     K = C.K
-    top = C.top()
+    docs, grp = _top_or_all(C)
     cache, cp = C.cache("_upgrade_firstcut_cache.json")
     bfc = {}
-    for d in top:
+    for d in docs:
         mp4 = C.src / f"{d['id']}.mp4" if C.src else None
         if mp4 and mp4.exists():
             k = _key(mp4, list(C.bench_win() or []))
@@ -261,36 +293,44 @@ def m_thumb(C: Ctx) -> dict:
                 bfc[d["id"]] = cache[k]
     _save_cache(cache, cp)
     from collections import Counter
-    f0b = Counter(k for k in (K.frame0_kind(d) for d in top) if k).most_common(1)
+    f0b = Counter(k for k in (K.frame0_kind(d) for d in docs) if k).most_common(1)
     f0b = f0b[0][0] if f0b else None
     ofc = _first_cut(K, C.final(), C.win())
     row = next((r for r in (C.ours_match() or {}).get("rows") or [] if r["key"] == "thumb.frame0"), None)
     gr = C.gate_row("썸네일 맨 앞 2프레임")
     f0o = ("card" if gr["ok"] else "scene") if gr and gr.get("ok") is not None else (row or {}).get("ours")
     if not bfc or ofc is None or not f0b or not f0o:
-        return {"bench": {"first_cut": bfc, "frame0": f0b}, "ours": {"first_cut": ofc, "frame0": f0o}, "better": None, "why": "미측정 — 첫 컷·0초 종류 한쪽 없음"}
+        return _miss("미측정 — 첫 컷·0초 종류 한쪽 없음", {"first_cut": bfc, "frame0": f0b}, {"first_cut": ofc, "frame0": f0o})
     lo, hi = min(bfc.values()), max(bfc.values())
     ok = lo - 0.05 <= ofc <= hi + 0.05 and f0o == f0b
-    return {"bench": {"top_ids": list(bfc), "first_cut": bfc, "range": [lo, hi], "frame0": f0b}, "ours": {"first_cut": ofc, "frame0": f0o}, "better": ok,
-            "why": f"첫 컷 우리 {ofc}초 vs 상위 편 {lo}~{hi}초(±0.05) · 0초 우리 {f0o} vs 상위 편 최빈 {f0b} — 둘 다 안이면 나아짐 · 0초 얼굴/물건 비율은 미측정"}
+    return {"bench": {"group": grp, "first_cut": bfc, "range": [lo, hi], "frame0": f0b}, "ours": {"first_cut": ofc, "frame0": f0o}, "better": ok, "worse": not ok,
+            "why": f"첫 컷 우리 {ofc}초 vs {grp} {lo}~{hi}초(±0.05) · 0초 우리 {f0o} vs 최빈 {f0b} — 둘 다 안이면 나아짐, 아니면 나빠짐 · 0초 얼굴/물건 비율은 미측정"}
 
 
 def m_bgm(C: Ctx) -> dict:
-    """소리 = LUFS −14±1(hybrid.common.lufs) + 나레 받아쓰기 100%(관문 행). 벤치 LUFS 는 bench_media_cached(참고 — 벤치 원본은 −14 통일 전 값)."""
+    """소리 = LUFS −14±1(hybrid.common.lufs) + 나레 받아쓰기 100%(관문 행) — 둘 다 ○ 나아짐, 하나라도 × 나빠짐(통일값·받아쓰기는 벤치와 상관없는 바닥 기준).
+    벤치 LUFS 는 bench_media_cached(참고 — 벤치 원본은 −14 통일 전 값)."""
     if not C.has_final():
-        return {"bench": None, "ours": None, "better": None, "why": "완성본 없음(미측정)"}
+        return _miss("완성본 없음(미측정)")
     from tools.calcopy.hybrid.common import lufs
     I, tp = lufs(C.final())
     bl = None
     if C.src and C.bench:
         bm = C.K.bench_media_cached(str(C.src), [d.get("id") for d in C.bench], C.bench_win())
         bl = {k: v.get("lufs") for k, v in (bm.get("per") or {}).items()}
+    if I is None or (isinstance(I, float) and math.isnan(I)):
+        return _miss(f"LUFS 못 잼({I} — 소리 줄 없음?)", {"lufs_per_doc": bl})
     asr = C.gate_row("나레 받아쓰기")
     asr_ok = asr.get("ok") if asr else None
     lufs_ok = abs(I - LUFS_TARGET) <= LUFS_TOL
-    better = None if asr_ok is None else (lufs_ok and asr_ok is True)
-    return {"bench": {"lufs_per_doc": bl}, "ours": {"lufs": I, "tp": tp, "asr_ok": asr_ok, "asr": (asr or {}).get("value")}, "better": better,
-            "why": f"LUFS {I}(목표 {LUFS_TARGET}±{LUFS_TOL} {'○' if lufs_ok else '×'}) · 받아쓰기 {('○' if asr_ok else '×') if asr_ok is not None else '미측정(품질관문.json 없음)'} — 둘 다 ○이어야 나아짐"}
+    if not lufs_ok or asr_ok is False:          # 바닥 기준 하나라도 × = 측정된 나빠짐(받아쓰기를 못 쟀어도)
+        better, worse = False, True
+    elif asr_ok is None:                        # LUFS 만 ○ — 받아쓰기 없이는 나아짐을 못 정한다(미측정)
+        better, worse = None, None
+    else:
+        better, worse = True, False
+    return {"bench": {"lufs_per_doc": bl}, "ours": {"lufs": I, "tp": tp, "asr_ok": asr_ok, "asr": (asr or {}).get("value")}, "better": better, "worse": worse,
+            "why": f"LUFS {I}(목표 {LUFS_TARGET}±{LUFS_TOL} {'○' if lufs_ok else '×'}) · 받아쓰기 {('○' if asr_ok else '×') if asr_ok is not None else '미측정(품질관문.json 없음)'} — 둘 다 ○ 나아짐, 하나라도 × 나빠짐"}
 
 
 def _cps_cv(lines: list[dict], K) -> float | None:
@@ -310,19 +350,23 @@ def _cps_cv(lines: list[dict], K) -> float | None:
 
 
 def m_speech(C: Ctx) -> dict:
+    """말속도 = 나레 조각 cps 변동계수(낮을수록 좋음 — 나아짐 ≤ 상위 편 p25, 나빠짐 > 상위 편 중앙) + 쉼 0.22~0.30(관문 B18 행, × 면 나빠짐)."""
     K = C.K
-    bcv = {d.get("id"): _cps_cv(d.get("lines") or [], K) for d in C.bench}
+    docs, grp = _top_or_all(C)
+    bcv = {d.get("id"): _cps_cv(d.get("lines") or [], K) for d in docs}
     bcv = {k: v for k, v in bcv.items() if v is not None}
     tp = C.R / "자막표.json"
     ocv = _cps_cv(K._ours_lines({"rows": _jl(tp).get("rows") or []})[0], K) if tp.exists() else None
     b18 = C.gate_row("B18 쉼")
     if not bcv or ocv is None:
-        return {"bench": bcv or None, "ours": ocv, "better": None, "why": "미측정 — 조각 cps 한쪽 없음"}
-    bmed = round(statistics.median(bcv.values()), 3)
+        return _miss("미측정 — 조각 cps 한쪽 없음", bcv or None, ocv)
+    g, med = _q(list(bcv.values()), 25), _q(list(bcv.values()), 50)
     pause_ok = b18.get("ok") if b18 else None
-    better = ocv <= bmed and (pause_ok is not False)
-    return {"bench": {"cps_cv_per_doc": bcv, "median": bmed}, "ours": {"cps_cv": ocv, "pause_ok": pause_ok, "pause": (b18 or {}).get("value")}, "better": better,
-            "why": f"나레 조각 cps 편차(변동계수) 우리 {ocv} ≤ 벤치 중앙 {bmed} {'○' if ocv <= bmed else '×'} · 쉼 0.22~0.30 {('○' if pause_ok else '×') if pause_ok is not None else '미측정'}"}
+    better = ocv <= g and pause_ok is not False
+    worse = ocv > med or pause_ok is False
+    return {"bench": {"group": grp, "cps_cv_per_doc": bcv, "goal_p25": g, "median": med},
+            "ours": {"cps_cv": ocv, "pause_ok": pause_ok, "pause": (b18 or {}).get("value")}, "better": better, "worse": worse,
+            "why": f"나레 조각 cps 편차 우리 {ocv} — 나아짐 ≤{g}(p25) · 나빠짐 >{med}(중앙) · 쉼 0.22~0.30 {('○' if pause_ok else '×') if pause_ok is not None else '미측정'} · {grp}"}
 
 
 def _grab(mp4: Path, t: float, dst: Path) -> Path | None:
@@ -336,7 +380,7 @@ def _look(K, png: Path, band) -> dict | None:
     import numpy as np
     try:
         m = K.frame_metrics(str(png), band)
-    except statistics.StatisticsError:      # frame_metrics 가 글자 사이 빈 칸 0개 프레임에서 median([]) — 그 프레임은 셈 밖(why 에 장수로 남는다)
+    except statistics.StatisticsError:      # 옛 frame_metrics(04 수리 전)가 글자 사이 빈 칸 0개 프레임에서 median([]) — 그 프레임은 셈 밖
         return None
     if not m.get("box") or not m.get("fill_hex") or not m.get("outline_hex"):
         return None
@@ -345,18 +389,21 @@ def _look(K, png: Path, band) -> dict | None:
     return {"h": m["h"], "dE": round(dE, 1)}
 
 
+H_TOL, DE_TOL = 4, 5.0          # kal_analyze.FRAME_PASS 폭(±4px · ΔE 5) — 이만큼 안쪽 차이는 '같음'
+
+
 def m_cap_look(C: Ctx, n: int = 6) -> dict:
-    """자막 가독성 = 글자 잉크 높이 h·채움↔외곽 ΔE(kal_analyze.frame_metrics) — 벤치 상위 편 원본·우리 완성본 나레 조각 가운데 프레임, 같은 띠(줄판독 layout.caption_band ±30)."""
+    """자막 가독성 = 글자 잉크 높이 h·채움↔외곽 ΔE(kal_analyze.frame_metrics) — 벤치 상위 편 원본·우리 완성본 나레 조각 가운데 프레임, 같은 띠(줄판독 layout.caption_band ±30).
+    나아짐 = ΔE 또는 h 가 상위 편 p75 이상(다른 하나는 중앙−폭 안) · 나빠짐 = h 가 중앙−4px 미만 또는 ΔE 가 중앙−5 미만."""
     if not C.has_final():
-        return {"bench": None, "ours": None, "better": None, "why": "완성본 없음(미측정)"}
+        return _miss("완성본 없음(미측정)")
     K = C.K
     bands = [tuple((d.get("layout") or {}).get("caption_band") or ()) for d in C.bench]
     bands = [b for b in bands if len(b) == 2]
     if not bands:
-        return {"bench": None, "ours": None, "better": None, "why": "벤치 줄판독 layout.caption_band 없음(미측정)"}
+        return _miss("벤치 줄판독 layout.caption_band 없음(미측정)")
     band = (int(statistics.median(b[0] for b in bands)) - 30, int(statistics.median(b[1] for b in bands)) + 30)
     tmp = C.work / "upgrade_look"
-
     tried = {"n": 0}
 
     def grab_set(mp4: Path, lines: list[dict], tag: str) -> list[dict]:
@@ -368,33 +415,58 @@ def m_cap_look(C: Ctx, n: int = 6) -> dict:
             if v:
                 out.append(v)
         return out
+    docs, grp = _top_or_all(C)
     b = []
-    for d in C.top():
+    for d in docs:
         mp4 = C.src / f"{d['id']}.mp4" if C.src else None
         if mp4 and mp4.exists():
             b += grab_set(mp4, d.get("lines") or [], d["id"])
     tp = C.R / "자막표.json"
     o = grab_set(C.final(), K._ours_lines({"rows": _jl(tp).get("rows") or []})[0], "ours") if tp.exists() else []
     if not b or not o:
-        return {"bench": b or None, "ours": o or None, "better": None, "why": f"미측정 — 글자 못 찾음(벤치 {len(b)}·우리 {len(o)}장, 띠 {band})"}
-    bh, bd = statistics.median(x["h"] for x in b), statistics.median(x["dE"] for x in b)
+        return _miss(f"미측정 — 글자 못 찾음(벤치 {len(b)}·우리 {len(o)}장, 띠 {band})", b or None, o or None)
+    hs, ds = [x["h"] for x in b], [x["dE"] for x in b]
+    gh, gd, mh, md = _q(hs, 75), _q(ds, 75), _q(hs, 50), _q(ds, 50)
     oh, od = statistics.median(x["h"] for x in o), statistics.median(x["dE"] for x in o)
-    return {"bench": {"h": bh, "dE": bd, "n": len(b)}, "ours": {"h": oh, "dE": od, "n": len(o)}, "better": (od > bd) or (oh > bh),
-            "why": f"대비↑ 또는 크기↑ — ΔE 우리 {od} vs 벤치 {bd} · 높이 우리 {oh}px vs 벤치 {bh}px (띠 {band}, 잰 프레임 상위 편 {len(b)}장·우리 {len(o)}장 / 시도 {tried['n']}장 — 나머지는 글자 못 찾음)"}
+    worse = oh < mh - H_TOL or od < md - DE_TOL
+    better = (od >= gd or oh >= gh) and not worse
+    return {"bench": {"group": grp, "h_p75": gh, "dE_p75": gd, "h_median": mh, "dE_median": md, "n": len(b)}, "ours": {"h": oh, "dE": od, "n": len(o)},
+            "better": better, "worse": worse,
+            "why": f"ΔE 우리 {od} vs {grp} p75 {gd}·중앙 {md} · 높이 우리 {oh}px vs p75 {gh}·중앙 {mh}px — 나빠짐 = 높이 <중앙−{H_TOL} 또는 ΔE <중앙−{DE_TOL} "
+                   f"(띠 {band}, 잰 프레임 벤치 {len(b)}장·우리 {len(o)}장 / 시도 {tried['n']}장 — 나머지는 글자 못 찾음)"}
+
+
+MEASURABLE = ("scene_fit", "cut_rhythm", "thumb", "bgm", "speech", "cap_look") + tuple(DENSITY_KEY)   # L3 '측정 가능한 축'(표준 §4-2·§11-2 ⑱)
 
 
 def measure_axis(C: Ctx, axis: str) -> dict:
     if axis in HUMAN_AXES:
-        return {"bench": None, "ours": None, "better": "human", "why": f"{axis} = 측정 함수 없는 축(표준 §4-2 '못 재는 칸') — 사장님 판정"}
+        return {"bench": None, "ours": None, "better": "human", "worse": None, "why": f"{axis} = 측정 함수 없는 축(표준 §4-2 '못 재는 칸') — 사장님 판정"}
     if axis in DENSITY_KEY:
         return m_density(C, axis)
     return {"scene_fit": m_scene_fit, "cut_rhythm": m_cut_rhythm, "thumb": m_thumb, "bgm": m_bgm, "speech": m_speech, "cap_look": m_cap_look}[axis](C)
 
 
+def l3_verdict(axes: dict) -> dict:
+    """(판단 주인 — L3 '벤치보다 낫다', 표준 §11-2 ⑱) 측정된 축(better 가 True/False) 중 better_n ≥ ceil(측정/2) ∧ worse_n = 0. human·미측정은 따로 센다."""
+    meas = {a: m for a, m in axes.items() if m.get("better") in (True, False)}
+    better = sorted(a for a, m in meas.items() if m["better"] is True)
+    worse = sorted(a for a, m in meas.items() if m.get("worse") is True)
+    need = math.ceil(len(meas) / 2) if meas else 1
+    ok = bool(meas) and len(better) >= need and not worse
+    return {"l3_ok": ok, "better_n": len(better), "worse_n": len(worse), "measured_n": len(meas), "need_better": need,
+            "better_axes": better, "worse_axes": worse,
+            "human_axes": sorted(a for a, m in axes.items() if m.get("better") == "human"),
+            "unmeasured_axes": sorted(a for a, m in axes.items() if m.get("better") is None),
+            "rule": "better_n ≥ ceil(측정 축/2) ∧ worse_n = 0 (비교 = 벤치 상위 편 좋은 쪽 사분위, 표준 §11-2 ⑱·§12-2)"}
+
+
 # ---------------------------------------------------------------- 판정 한 곳
-def measure(style, doc, work, base_doc=None, base_work=None, extra_axes: tuple = (), allow_llm: bool = False, write: bool = True) -> dict:
-    """(판단 주인 — 업그레이드 자) 판 upgrades 항목마다 측정 → <doc>/업그레이드_측정.json.
-    better: True/False(측정값) · 'human'(사람 판정 — 따로 셈) · None(미측정 — 나아짐으로 안 친다).
+def measure(style, doc, work, base_doc=None, base_work=None, extra_axes: tuple = (), allow_llm: bool = False, write: bool = True,
+            all_axes: bool = True) -> dict:
+    """(판단 주인 — 업그레이드 자) 측정 가능한 축 전부(all_axes) + 판 upgrades 항목 → <doc>/업그레이드_측정.json.
+    축 판정 better: True(상위 편 좋은 쪽 사분위) / False · worse: True(상위 편 중앙보다 나쁨) · 'human'(사람 판정 — 따로 셈) · None(미측정).
+    L3 = l3_verdict(축 표) — 판 upgrades 항목 축만이 아니라 측정 가능한 축 전부(나빠진 축을 숨기지 않는다).
     base_doc·base_work = 1차 판 완성본 doc·work(있으면 같은 축의 1차 값을 'first' 칸에 — 1차보다도 나아졌나 참고)."""
     from tools.calcopy.hybrid import styles as ST
     name = style if isinstance(style, str) else style.get("name")
@@ -415,24 +487,27 @@ def measure(style, doc, work, base_doc=None, base_work=None, extra_axes: tuple =
     out = []
     for it in items:
         human = str(it.get("verify") or "").startswith("사람") or it.get("axis") in HUMAN_AXES
-        m = {"bench": None, "ours": None, "better": "human", "why": f"verify='{it.get('verify')}' — 사장님 판정"} if human and it.get("axis") not in HUMAN_AXES else get(it["axis"])
-        row = {"axis": it["axis"], "what": it.get("what"), "bench": m["bench"], "ours": m["ours"], "better": m["better"], "why": m["why"],
+        m = ({"bench": None, "ours": None, "better": "human", "worse": None, "why": f"verify='{it.get('verify')}' — 사장님 판정"}
+             if human and it.get("axis") not in HUMAN_AXES else get(it["axis"]))
+        row = {"axis": it["axis"], "what": it.get("what"), "bench": m["bench"], "ours": m["ours"], "better": m["better"], "worse": m.get("worse"), "why": m["why"],
                "item_why": it.get("why"), "source": it.get("source"), "expect": it.get("expect"), "verify": it.get("verify"), "evidence_ok": evidence_ok(it)}
         if Cb and it["axis"] not in HUMAN_AXES and not human:
             row["first"] = measure_axis(Cb, it["axis"]).get("ours")
         out.append(row)
-    ref = [{"axis": ax, **get(ax), "_note": "참고(판 upgrades 항목 아님 — --axes)"} for ax in extra_axes]
-    better_n = sum(r["better"] is True for r in out)
+    want = list(dict.fromkeys((list(MEASURABLE) if all_axes else []) + [it["axis"] for it in items] + list(extra_axes)))
+    axes = {a: get(a) for a in want}
+    L3 = l3_verdict(axes)
     human_n = sum(r["better"] == "human" for r in out)
-    un_n = sum(r["better"] is None for r in out)
-    meas_n = sum(r["better"] in (True, False) for r in out)
     res = {"style": name, "base": st.get("base"), "table": TABLE_VERSION, "upgrades_from": src, "doc": str(doc), "work": str(work),
            "bench_ids": [d.get("id") for d in C.bench], "bench_top_ids": C.top_ids(), "views": {d.get("id"): C.views().get(d.get("id")) for d in C.bench},
-           "items": out, "better_n": better_n, "measured_n": meas_n, "human_n": human_n, "unmeasured_n": un_n, "total": len(out),
-           "evidence_ok_n": sum(r["evidence_ok"] for r in out),
-           "gates": {"upgrade": {"better": f"{better_n}/{meas_n}", "human": human_n, "unmeasured": un_n, "total": len(out),
-                                 "ok": bool(out) and meas_n > 0 and better_n == meas_n and un_n == 0}},
-           "reference": ref}
+           "items": out, "axes": axes,
+           "better_n": L3["better_n"], "worse_n": L3["worse_n"], "measured_n": L3["measured_n"], "l3_ok": L3["l3_ok"],
+           "human_n": human_n, "unmeasured_n": len(L3["unmeasured_axes"]), "total": len(out),
+           "items_better_n": sum(r["better"] is True for r in out), "items_worse_n": sum(r.get("worse") is True for r in out),
+           "evidence_ok_n": sum(r["evidence_ok"] for r in out), "l3": L3,
+           "gates": {"upgrade": {"better": f"{L3['better_n']}/{L3['measured_n']}", "better_n": L3["better_n"], "worse_n": L3["worse_n"],
+                                 "measured_n": L3["measured_n"], "l3_ok": L3["l3_ok"], "ok": L3["l3_ok"] and bool(out),
+                                 "human": human_n, "worse_axes": L3["worse_axes"], "total": len(out)}}}
     if write and Path(doc).exists():
         (Path(doc) / "업그레이드_측정.json").write_text(json.dumps(res, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
     return res
@@ -445,13 +520,16 @@ def upgrade_table(st, doc, work) -> dict:
 
 def table_md(r: dict) -> str:
     mark = lambda b: {True: "○", False: "×", "human": "사람", None: "미측정"}.get(b, str(b))   # noqa: E731
-    L = [f"# 업그레이드 측정 {r['style']}(base {r['base']}) — 나아짐 {r['better_n']}/{r['measured_n']} · 사람 {r['human_n']} · 미측정 {r['unmeasured_n']} · 전체 {r['total']} · 근거 기록 {r['evidence_ok_n']}/{r['total']}",
-         f"(upgrades 출처 {r['upgrades_from']} · 벤치 상위 편 {r['bench_top_ids']})", "", "| 축 | 무엇 | 벤치 | 우리 | 나아짐 | 근거 기록 | 왜 |", "|---|---|---|---|---|---|---|"]
+    L3 = r["l3"]
+    L = [f"# 업그레이드 측정 {r['style']}(base {r['base']}) — L3 {'○' if r['l3_ok'] else '×'} · 나아짐 {L3['better_n']}/{L3['measured_n']}(필요 ≥{L3['need_better']}) · 나빠짐 {L3['worse_n']} {L3['worse_axes']} · 사람 {r['human_n']} · 미측정 축 {L3['unmeasured_axes']}",
+         f"(upgrades 출처 {r['upgrades_from']} {r['total']}건 · 근거 기록 {r['evidence_ok_n']}/{r['total']} · 벤치 상위 편 {r['bench_top_ids']})", "",
+         "## 축 표(L3 판정 대상 — 측정 가능한 축 전부)", "| 축 | 벤치 | 우리 | 나아짐 | 나빠짐 | 왜 |", "|---|---|---|---|---|---|"]
+    for a, x in r["axes"].items():
+        L.append(f"| {a} | {json.dumps(x['bench'], ensure_ascii=False, default=str)[:90]} | {json.dumps(x['ours'], ensure_ascii=False, default=str)[:70]} | "
+                 f"{mark(x['better'])} | {'나빠짐' if x.get('worse') is True else ('-' if x.get('worse') is False else '미측정')} | {x['why'][:150]} |")
+    L += ["", "## 판 upgrades 항목", "| 축 | 무엇 | 나아짐 | 나빠짐 | 근거 기록 |", "|---|---|---|---|---|"]
     for x in r["items"]:
-        L.append(f"| {x['axis']} | {str(x['what'])[:40]} | {json.dumps(x['bench'], ensure_ascii=False, default=str)[:80]} | "
-                 f"{json.dumps(x['ours'], ensure_ascii=False, default=str)[:80]} | {mark(x['better'])} | {'○' if x['evidence_ok'] else '×'} | {x['why'][:120]} |")
-    for x in r.get("reference") or []:
-        L.append(f"| (참고) {x['axis']} | --axes | {json.dumps(x['bench'], ensure_ascii=False, default=str)[:80]} | {json.dumps(x['ours'], ensure_ascii=False, default=str)[:80]} | {mark(x['better'])} | - | {x['why'][:120]} |")
+        L.append(f"| {x['axis']} | {str(x['what'])[:50]} | {mark(x['better'])} | {'나빠짐' if x.get('worse') is True else ('-' if x.get('worse') is False else '미측정')} | {'○' if x['evidence_ok'] else '×'} |")
     return "\n".join(L)
 
 
@@ -459,13 +537,14 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("style"); ap.add_argument("doc"); ap.add_argument("work")
     ap.add_argument("--base-doc", help="1차 판 완성본 doc(같은 축의 1차 값 참고 — --base-work 와 함께)"); ap.add_argument("--base-work")
-    ap.add_argument("--axes", default="", help="판 upgrades 와 별개로 참고로 더 잴 축(쉼표) — 표준 15종 이름")
+    ap.add_argument("--axes", default="", help="(측정 가능한 축은 기본으로 다 잰다) 더 잴 축(쉼표) — 표준 15종 이름")
+    ap.add_argument("--items-only", action="store_true", help="판 upgrades 항목 축만(L3 는 측정 가능한 축 전부가 기준 — 시험용)")
     ap.add_argument("--fit", action="store_true", help="장면대사.json 이 없으면 scene_fit.measure_render 로 잰다(Claude 호출)")
     ap.add_argument("--no-write", action="store_true")
     A = ap.parse_args(argv)
     doc = Path(A.doc) if Path(A.doc).is_absolute() else ROOT / A.doc
     r = measure(A.style, doc, Path(A.work), base_doc=A.base_doc, base_work=A.base_work, extra_axes=tuple(x for x in A.axes.split(",") if x),
-                allow_llm=A.fit, write=not A.no_write)
+                allow_llm=A.fit, write=not A.no_write, all_axes=not A.items_only)
     print(table_md(r))
     print(f"\n결과: {doc / '업그레이드_측정.json'}" if not A.no_write else "")
     return 0
