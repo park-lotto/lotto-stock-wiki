@@ -351,30 +351,82 @@ def validate(card: dict) -> list[str]:
 
 
 # ---------------------------------------------------------------- 단계 판정
-def _no_why(raw: dict) -> list[str]:
-    """판 파일 숫자 칸 중 근거(why/_from)가 없는 칸 경로. 근거는 그 칸을 품은 사전(뿌리 제외) 어디에든 있으면 된다. counted(made_by)는 기계 산출."""
-    miss = []
+HAND_CONST = "손 상수"      # why 에 이 말이 있으면 근거가 아니라 '측정 전 손 값' 자백 → 근거로 치지 않는다(지어낸 근거 방지, 페이블 10-25)
 
-    def walk(v, path, has):
+
+def _is_why(w) -> bool:
+    return w is not None and HAND_CONST not in str(w)
+
+
+def _pack_paths(style_name: str | None) -> set[str]:
+    """styles.load 가 packs 에서 채우는 옛 칸 경로 — 판 원본(_skip_packs)에 packs 변환만 얹어 생긴 칸을 diff 로 찾는다(이름 하드코딩 금지).
+    이 칸들은 packs 가 정본이라 판 옛 칸에 why 를 달 수 없다(두 벌 금지) → 숫자 칸 why 셈에서 뺀다."""
+    if not style_name:
+        return set()
+    import copy
+    from tools.calcopy.hybrid import pack_map
+    s0 = styles_mod.load(style_name, _skip_packs=True)
+    probe = {"packs": copy.deepcopy(s0.get("packs") or {}), "caption": {}}
+    if isinstance(_get(s0, "placement.rules.meme"), dict):
+        probe["placement"] = {"rules": {"meme": {}}}
+    before = json.loads(json.dumps(probe))
+    pack_map.apply_to_style(probe, None, style_name)
+    out = set()
+
+    def leaves(v, path):
+        if isinstance(v, dict) and v:
+            for k, x in v.items():
+                leaves(x, path + [str(k)])
+        else:
+            out.add(".".join(path))
+    for k, v in probe.items():
+        if k != "packs":
+            leaves(v, [k])
+    return {p for p in out if _get(before, p) != _get(probe, p)}
+
+
+def _no_why(raw: dict, from_packs: set[str] | frozenset = frozenset(), hand: list | None = None) -> list[str]:
+    """판 파일 숫자 칸 중 근거(why/_from)가 없는 칸 경로. 근거는 그 칸을 품은 사전(뿌리 제외) 어디에든 있으면 된다. counted(made_by)는 기계 산출.
+    뿌리 숫자 칸(cps_target 등)은 판 머리 why 사전(why:{칸: …}) 또는 옛 꼴 _why_<칸> 이 근거. packs 에서 채운 칸(from_packs)은 뺀다.
+    why 가 '손 상수 — 벤치 근거 없음' 이면 근거 아님 → 미달로 남기고 hand 목록(measure_task 대상)에도 적는다."""
+    miss = []
+    raw = raw or {}
+    root_why = raw.get("why") if isinstance(raw.get("why"), dict) else {}
+
+    def skip(path):
+        p = ".".join(path)
+        return p in from_packs or any(p.startswith(q + ".") for q in from_packs)
+
+    def note(path, handed):
+        miss.append(".".join(path))
+        if handed and hand is not None:
+            hand.append(".".join(path))
+
+    def walk(v, path, has, handed):
+        if skip(path):
+            return
         if isinstance(v, dict):
-            h = has or any(k in v for k in ("why", "_from", "made_by"))
+            ws = [v[k] for k in ("why", "_from", "made_by") if k in v]
+            h = has or any(_is_why(w) for w in ws)
+            hd = handed or any(not _is_why(w) for w in ws)
             for k, x in v.items():
                 if not str(k).startswith("_"):
-                    walk(x, path + [str(k)], h)
+                    walk(x, path + [str(k)], h, hd)
         elif isinstance(v, list):
             if any(isinstance(x, (int, float)) and not isinstance(x, bool) for x in v) and not has:
-                miss.append(".".join(path))
+                note(path, handed)
             else:
                 for i, x in enumerate(v):
                     if isinstance(x, dict):
-                        walk(x, path + [str(i)], has)
+                        walk(x, path + [str(i)], has, handed)
         elif isinstance(v, (int, float)) and not isinstance(v, bool) and not has:
-            miss.append(".".join(path))
-    for k, v in (raw or {}).items():
+            note(path, handed)
+    for k, v in raw.items():
         if k == "packs":    # 팩 칸 숫자(rank·enter_cover…)는 pack_map 생성 값 — made_by 가 있으면 기계 산출, 없어도 packs 서브트리는 셈에서 뺀다(페이블 지시 10-25)
             continue
-        if not str(k).startswith("_") and k not in ("script",):
-            walk(v, [k], False)
+        if not str(k).startswith("_") and k not in ("script", "why"):
+            ws = [w for w in (root_why.get(k), raw.get(f"_why_{k}")) if w is not None]   # 뿌리 칸 근거 = 판 머리 why 사전 · 옛 꼴 _why_<칸>
+            walk(v, [k], any(_is_why(w) for w in ws), any(not _is_why(w) for w in ws))
     return sorted(set(miss))
 
 
@@ -387,13 +439,16 @@ def facts(O: dict, recs: list[dict]) -> dict:
     pack = _get(st, "caption.pack")
     mem = pre.get("member") or {}
     G = O["gate"]
+    hand = []
+    no_why = _no_why(O["style_raw"], _pack_paths(O["style_name"]), hand) if O["style_raw"] else None
     return {
+        "hand_const": sorted(set(hand)),      # why = '손 상수' 자백 칸 — 근거 아님(no_why 에 남음), measure_task 로 센다
         "line_reads": len(docs), "line_reads_strict_errors": strict_err,
         "rules_freq": O["rules_freq"] is not None, "style_analysis": O["style_analysis"], "palette": O["palette"] is not None,
         "sfx_events": O["sfx_events"] is not None,
         "style_file": eng.get("style_file"), "style_file_exists": O["style"] is not None, "renderer": st.get("renderer") or eng.get("renderer"),
         "caption_pack": pack, "caption_pack_ok": bool(pack) and pack in pack_keys(),
-        "counted_n": _get(st, "placement.counted.n_videos"), "no_why": _no_why(O["style_raw"]) if O["style_raw"] else None,
+        "counted_n": _get(st, "placement.counted.n_videos"), "no_why": no_why,
         "hand_scripts": [h for h in eng.get("hand_scripts") or [] if not DEPRECATED_RE.search(str(h))],
         "hand_scripts_reference": [h for h in eng.get("hand_scripts") or [] if DEPRECATED_RE.search(str(h))],
         "unmeasured": sum(1 for r in recs if r["confidence"] == "미측정"),
@@ -490,9 +545,28 @@ def build_card(slug: str, built_at: str | None = None) -> dict:
     if pre.get("status") == "보류":      # 표준 §11-3 ㉓ — 보류는 분모에서 빼지 않고 사유와 함께 드러낸다(완료로 포장 금지)
         L = "보류(%s)" % ((pre.get("hold") or {}).get("short") or "사유 미기재")
     card["done"] = {"level": L, "missing": missing, "rule_unmeasured": F["unmeasured"],
-                    "measure_tasks": sorted({r["measure_task"] for r in recs if r.get("measure_task")}),
+                    "measure_tasks": sorted({r["measure_task"] for r in recs if r.get("measure_task")} | ({f"06-{slug}"} if F["hand_const"] else set())),
+                    "hand_const": F["hand_const"],
                     "complete": L == "L4" and not F["hand_scripts"]}
+    weak = _emph_weak(O)
+    if weak:
+        card["emph_weak"] = weak
     return card
+
+
+def _emph_weak(O: dict) -> dict | None:
+    """결정 ㉙: 1차 판(upgrades·회원 패치 없음)의 강조색 문턱이 30 미만이면 '벤치 대비 약함'. 문턱 판단 주인 = placement(판 de_min → emph_threshold)."""
+    st, raw = O["style"] or {}, O["style_raw"] or {}
+    if not st or raw.get("upgrades") or raw.get("base") or st.get("upgrades"):
+        return None
+    from tools.calcopy.hybrid import placement
+    R = (_get(st, "placement.rules") or {}).get("emph_color") or {}
+    if isinstance(R.get("de_min"), (int, float)):
+        thr = float(R["de_min"])
+    else:
+        thr = placement.emph_threshold((st.get("bench") or {}).get("channel"))[0]
+    floor = placement.EMPH_DE_FALLBACK
+    return {"de_min": round(thr, 2), "threshold": floor, "label": "벤치 대비 약함"} if thr < floor else None
 
 
 def card_path(slug: str) -> Path:
