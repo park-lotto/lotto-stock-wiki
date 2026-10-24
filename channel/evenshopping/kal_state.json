@@ -27,6 +27,101 @@
     ]
    },
    "note": "받음 6/6(1080p, C 여유 22.4GB)"
+  },
+  "tteutgi": {
+   "state": "done",
+   "sec": 4270.2,
+   "at": "2026-10-25 01:11",
+   "outputs": {
+    "ids": [
+     "ABjQ0YCZoes",
+     "LHembw8EUU0",
+     "tcaIPaGWLrE",
+     "kC8fkx1Ve3Q",
+     "1kfqEB2b1xM",
+     "Y2YXuAE4J00"
+    ],
+    "dir": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\evenshopping\\뜯기"
+   },
+   "note": "뜯기 6편 (LLM=claude_cli, 받아쓰기 칸은 vtt 로)"
+  },
+  "frames": {
+   "state": "done",
+   "sec": 665.2,
+   "at": "2026-10-25 01:22",
+   "outputs": {
+    "dirs": {
+     "ABjQ0YCZoes": "C:\\숏템_칼카피\\evenshopping\\kal\\frames_ABjQ0YCZoes",
+     "LHembw8EUU0": "C:\\숏템_칼카피\\evenshopping\\kal\\frames_LHembw8EUU0",
+     "tcaIPaGWLrE": "C:\\숏템_칼카피\\evenshopping\\kal\\frames_tcaIPaGWLrE",
+     "kC8fkx1Ve3Q": "C:\\숏템_칼카피\\evenshopping\\kal\\frames_kC8fkx1Ve3Q",
+     "1kfqEB2b1xM": "C:\\숏템_칼카피\\evenshopping\\kal\\frames_1kfqEB2b1xM",
+     "Y2YXuAE4J00": "C:\\숏템_칼카피\\evenshopping\\kal\\frames_Y2YXuAE4J00"
+    }
+   },
+   "note": "시트·0.1초 띠 6편"
+  },
+  "skeleton": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-25 01:22",
+   "outputs": {
+    "skeletons": [],
+    "bundle": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\evenshopping\\_kal\\워커묶음.json",
+    "brief": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\evenshopping\\_kal\\줄판독_브리프.md"
+   },
+   "note": "뼈대 0편 새로, 묶음 6편"
+  },
+  "readlines": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-25 01:22",
+   "outputs": {
+    "ids": [
+     "ABjQ0YCZoes",
+     "LHembw8EUU0",
+     "tcaIPaGWLrE",
+     "kC8fkx1Ve3Q",
+     "1kfqEB2b1xM",
+     "Y2YXuAE4J00"
+    ]
+   },
+   "note": "줄판독 6편 strict 통과"
+  },
+  "rules": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-25 01:30",
+   "outputs": {
+    "draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\evenshopping\\_kal\\스타일분석_초안.md",
+    "palette": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\evenshopping\\팔레트.json",
+    "plan_draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\evenshopping\\_kal\\evenshopping판_초안.json"
+   },
+   "note": "규칙빈도·대본언어·팔레트·판 설정 초안 + 스타일분석.md 있음"
+  },
+  "copy": {
+   "state": "done",
+   "sec": 16.0,
+   "at": "2026-10-25 01:30",
+   "outputs": {
+    "frames": [
+     "ABjQ0YCZoes",
+     "LHembw8EUU0",
+     "tcaIPaGWLrE",
+     "kC8fkx1Ve3Q",
+     "1kfqEB2b1xM",
+     "Y2YXuAE4J00"
+    ],
+    "preset": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\evenshopping\\preset\\숏템템플릿"
+   },
+   "note": "자동 설명서 6편 · 프리셋 숏템템플릿"
+  },
+  "make": {
+   "state": "waiting_human",
+   "sec": 0.0,
+   "at": "2026-10-25 01:30",
+   "outputs": {},
+   "note": "제작 — 소재·대본·재료 준비 뒤 preset_make 로 시험편 1편(TTS 과금은 허락됨) → --ours-mp4/--ours-lines 로 다시 실행"
   }
  },
  "asked": {},
