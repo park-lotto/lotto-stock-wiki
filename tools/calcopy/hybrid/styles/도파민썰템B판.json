@@ -138,13 +138,217 @@
      "pop": 1.0
     },
     "max": 1,
-    "why": "벤치 효과음 편당 0~1(줄판독 6편 0·1·0·1·1·1 — 두 갈래 섞인 폴더) · 종류 미확인 → 팩01 pop 임시 · 상한 1"
+    "why": "벤치 효과음 줄 편당 0·0·1(나레 갈래 D3Pc·GqSk·mYxu) — 갈래별 counted(10-25) · 종류 미확인('기타') → 팩01 pop 임시 · 상한 1"
    }
   },
-  "counted": {}
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/sseolpulda/줄판독",
+   "n_videos": 3,
+   "slots": {
+    "narr.first": {
+     "n": 3,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.333
+    },
+    "narr.rest": {
+     "n": 45,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.089
+    }
+   },
+   "share": {
+    "emph": 0.333,
+    "typing": 0.0,
+    "sfx": 0.667
+   },
+   "stickers": {
+    "circle_arrow": 0.667,
+    "comment_card": 0.333,
+    "cursor": 0.333,
+    "other": 0.333
+   },
+   "transition": {
+    "cut": 1.0
+   },
+   "sfx_kinds": {
+    "other": 1.0
+   },
+   "videos": [
+    {
+     "id": "D3Pc6HZ6t6c",
+     "n": 11,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 10,
+       "enter": {
+        "cut": 10
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "comment_card": 1
+     },
+     "sticker_lex": {
+      "comment_card": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "기본(흰 글 검정 외곽)": 11
+     },
+     "sfx": [
+      "cut"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 10
+     },
+     "n_trans": 10,
+     "roles": {
+      "hook": 2,
+      "body": 7,
+      "reveal": 1,
+      "end": 1
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "GqSkDhM_bV0",
+     "n": 18,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 1
+      },
+      "narr.rest": {
+       "n": 17,
+       "enter": {
+        "cut": 17
+       },
+       "emph": 4
+      }
+     },
+     "stickers": {
+      "circle_arrow": 1,
+      "cursor": 1
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "none": 1
+      },
+      "cursor": {
+       "ask": 1
+      }
+     },
+     "variants": {
+      "기본(흰 기울인 글 검정 외곽) + 낱말 강조색": 5,
+      "기본(흰 기울인 글 검정 외곽)": 13
+     },
+     "sfx": [],
+     "no_caption": 6,
+     "transitions": {
+      "cut": 17
+     },
+     "n_trans": 17,
+     "roles": {
+      "hook": 1,
+      "body": 13,
+      "reveal": 2,
+      "end": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "mYxuF1A74j4",
+     "n": 19,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 18,
+       "enter": {
+        "cut": 18
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "circle_arrow": 3,
+      "other": 1
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "none": 3
+      },
+      "other": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "기본(흰 글 검정 외곽)": 19
+     },
+     "sfx": [
+      "cut",
+      "none"
+     ],
+     "no_caption": 8,
+     "transitions": {
+      "cut": 18
+     },
+     "n_trans": 18,
+     "roles": {
+      "hook": 3,
+      "body": 10,
+      "twist": 3,
+      "reveal": 1,
+      "end": 2
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "end",
+       "t": 22.14,
+       "off": 1.173,
+       "basis": "파형 솟음"
+      }
+     ]
+    }
+   ],
+   "filter": {
+    "sound_mode": "나레",
+    "ids": [
+     "D3Pc6HZ6t6c",
+     "GqSkDhM_bV0",
+     "mYxuF1A74j4"
+    ],
+    "how": "07 이 줄판독 sound_mode 로 골라 placement.count 를 그 편들에만 돌림(10-25) — placement 편 필터 칸 없음 → 15 쪽지",
+    "made_by": "tools/calcopy/hybrid/placement.py count(편 필터 = 07 임시 묶음)"
+   }
+  }
  },
  "_pending": {
-  "counted": "줄판독 6편이 두 갈래 섞임(나레 3: D3Pc·GqSk·mYxu / 자막만 3: fnZN·iZ-T·ZdeZ) — placement.count 는 폴더 통째라 섞어 센다 → 06 이 갈래별 폴더로 나눈 뒤 count(규칙빈도_나레/자막만.json 은 이미 갈래별)",
+  "counted": "갈래별 counted = 줄판독 sound_mode 로 3편만(표본부족 n<5 — L1 counted≥6 미달) · placement.count 편 필터 칸 없음 → 07 이 임시 묶음으로 셈(counted.filter) — 15 에 편 필터 칸 쪽지 · 06 에 갈래마다 3편 더",
   "enter_rise": "자막 등장 rise 300ms(manifest default) vs 줄판독 instant — 06 재확인"
  },
  "script": {

@@ -136,13 +136,203 @@
      "pop": 1.0
     },
     "max": 1,
-    "why": "벤치 효과음 편당 0~1(줄판독 6편 0·1·0·1·1·1 — 두 갈래 섞인 폴더) · 종류 미확인 → 팩01 pop 임시 · 상한 1"
+    "why": "벤치 효과음 줄 편당 1·1·1(자막만 갈래 fnZN·iZ-T·ZdeZ) — 갈래별 counted(10-25) · 종류 미확인('기타') → 팩01 pop 임시 · 상한 1"
    }
   },
-  "counted": {}
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/sseolpulda/줄판독",
+   "n_videos": 3,
+   "slots": {
+    "orig.first": {
+     "n": 3,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.0
+    },
+    "orig.rest": {
+     "n": 15,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.067
+    }
+   },
+   "share": {
+    "emph": 0.333,
+    "typing": 0.0,
+    "sfx": 1.0
+   },
+   "stickers": {},
+   "transition": {
+    "cut": 0.933,
+    "black": 0.067
+   },
+   "sfx_kinds": {
+    "other": 1.0
+   },
+   "videos": [
+    {
+     "id": "fnZNougO6NQ",
+     "n": 6,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 5,
+       "enter": {
+        "cut": 5
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "기본(흰 상자 검정 글)": 3,
+      "기타(창 위 검정 상자 흰 글 설명띠)": 3
+     },
+     "sfx": [
+      "none",
+      "none"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 5
+     },
+     "n_trans": 5,
+     "roles": {
+      "hook": 2,
+      "body": 2,
+      "end": 2
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "end",
+       "t": 10.74,
+       "off": 3.973,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "iZ-TprLYezA",
+     "n": 6,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 5,
+       "enter": {
+        "cut": 5
+       },
+       "emph": 1
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "기본(흰 둥근 상자 검정 글)": 2,
+      "기본(흰 둥근 상자 검정 글, ❤ 이모지 낀 글)": 1,
+      "기타(창 위 검정 알약 순위 표지)": 3
+     },
+     "sfx": [
+      "none"
+     ],
+     "no_caption": 2,
+     "transitions": {
+      "cut": 4,
+      "black": 1
+     },
+     "n_trans": 5,
+     "roles": {
+      "body": 4,
+      "reveal": 2
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 9.28,
+       "off": 3.547,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "ZdeZRtCeAC4",
+     "n": 6,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 5,
+       "enter": {
+        "cut": 5
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "기본(흰 바탕 위 검정 글, 외곽 없음)": 6
+     },
+     "sfx": [
+      "cap"
+     ],
+     "no_caption": 1,
+     "transitions": {
+      "cut": 5
+     },
+     "n_trans": 5,
+     "roles": {
+      "hook": 1,
+      "body": 4,
+      "reveal": 1
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 5.24,
+       "off": 0.073,
+       "basis": "파형 솟음"
+      }
+     ]
+    }
+   ],
+   "filter": {
+    "sound_mode": "자막만",
+    "ids": [
+     "fnZNougO6NQ",
+     "iZ-TprLYezA",
+     "ZdeZRtCeAC4"
+    ],
+    "how": "07 이 줄판독 sound_mode 로 골라 placement.count 를 그 편들에만 돌림(10-25) — placement 편 필터 칸 없음 → 15 쪽지",
+    "made_by": "tools/calcopy/hybrid/placement.py count(편 필터 = 07 임시 묶음)"
+   }
+  }
  },
  "_pending": {
-  "counted": "줄판독 6편이 두 갈래 섞임(나레 3: D3Pc·GqSk·mYxu / 자막만 3: fnZN·iZ-T·ZdeZ) — placement.count 는 폴더 통째라 섞어 센다 → 06 이 갈래별 폴더로 나눈 뒤 count(규칙빈도_나레/자막만.json 은 이미 갈래별)",
+  "counted": "갈래별 counted = 줄판독 sound_mode 로 3편만(표본부족 n<5 — L1 counted≥6 미달) · placement.count 편 필터 칸 없음 → 07 이 임시 묶음으로 셈(counted.filter) — 15 에 편 필터 칸 쪽지 · 06 에 갈래마다 3편 더",
   "no_narration": "나레 0 갈래 = 대본 줄 kind:'sub'(02 2차) — 판 칸 아님",
   "sub_styles": "A 틀 안 자막 3갈래(창아래_검정·창안_흰외곽선·창안_상자 — styles.json) 중 창아래_검정만 판으로(ZdeZ 1편) — 나머지 2갈래 판은 06 줄판독 뒤",
   "transition": "줄판독 black 0.017(iZ-T 0.2초) — bench_transition_drop drop −0.079·ms 0 = 실제 검은 전환 아님(첫 프레임) → 넣지 않음"
