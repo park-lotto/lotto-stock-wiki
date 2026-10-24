@@ -632,6 +632,39 @@ def _abs(p: str | None) -> Path | None:
     return Path(p) if Path(p).is_absolute() else ROOT / p
 
 
+BENCH_MEDIA_CACHE = "_bench_media_cache.json"
+
+
+def bench_media_cached(src_dir: str, ids: list[str], win: tuple | None) -> dict:
+    """bench_media_src 와 같은 값·같은 꼴 — 벤치 원본 한 편 측정(media_of, 편당 2~3분)을 src_dir/_bench_media_cache.json 에 남겨 다시 안 잰다.
+    열쇠 = 편 id·파일 크기·수정 시각·창 — 원본이 바뀌면 다시 잰다(10-24 실측: 관문 한 번 20분 중 대부분이 벤치 6편 재측정)."""
+    cp = Path(src_dir) / BENCH_MEDIA_CACHE
+    try:
+        cache = json.loads(cp.read_text(encoding="utf-8")) if cp.exists() else {}
+    except (OSError, ValueError):
+        cache = {}
+    out = {"cut_median": [], "lufs": [], "ids": [], "per": {}}
+    for vid in ids:
+        p = Path(src_dir) / f"{vid}.mp4"
+        if not p.exists():
+            continue
+        key = f"{vid}|{p.stat().st_size}|{int(p.stat().st_mtime)}|{list(win) if win else None}"
+        m = cache.get(key) or media_of(str(p), win)
+        cache[key] = m
+        out["per"][vid] = m
+        out["ids"].append(vid)
+        if isinstance(m["cut_median"], (int, float)):
+            out["cut_median"].append(m["cut_median"])
+        if isinstance(m["lufs"], (int, float)):
+            out["lufs"].append(m["lufs"])
+    try:
+        cp.write_text(json.dumps(cache, ensure_ascii=False, indent=1), encoding="utf-8")
+    except OSError:
+        pass                                # 캐시를 못 써도 값은 그대로(다음에 다시 잴 뿐)
+    out["method"] = "media_of(같은 자) — 편별 캐시 " + BENCH_MEDIA_CACHE
+    return out
+
+
 def match_from_render(style, doc, work, media: bool = True, frame0_kind_measured: str | None = None) -> dict:
     """(어댑터 — 관제 263 지시서 04) 공용 렌더러(render_bench) 산출 → match_table. 판단은 match_table 한 곳(여기서 새로 판정하지 않는다).
     style = 판 이름 또는 판 dict · 벤치 = 판 bench.line_reads(줄판독) + bench.src_dir(같은 자로 컷·LUFS) ·
@@ -670,7 +703,7 @@ def match_from_render(style, doc, work, media: bool = True, frame0_kind_measured
         x, y, w, h = (st.get("frame") or {}).get("window") or (0, 0, 1080, 1920)
         om = media_of(str(R / "final.mp4"), (x, y, w, h))
         if B.get("src_dir"):
-            bm = bench_media_src(B["src_dir"], [d.get("id") for d in bench], _win_arg(None, bench))
+            bm = bench_media_cached(B["src_dir"], [d.get("id") for d in bench], _win_arg(None, bench))
     Tm = match_table(bench, ours, om, bm)
     Tm.update({"ours_media": om, "bench_media": bm, "bench_ids": [d.get("id") for d in bench], "line_reads": str(lrp) if lrp else None,
                "frame0_from": "완성본 측정" if frame0_kind_measured else "썸네일.json pick(선언)",
