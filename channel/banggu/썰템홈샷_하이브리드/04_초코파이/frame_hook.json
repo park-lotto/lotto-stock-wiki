@@ -127,13 +127,13 @@
    "kind": "text",
    "role": "label",
    "x": 540,
-   "y": 646,
+   "y": 644,
    "w": 960,
    "align": "center",
    "lines": 1,
    "font": "CcPretendard-SemiBold",
-   "size": 35.6,
-   "line_h": 41,
+   "size": 40.4,
+   "line_h": 47,
    "rgb": [
     168,
     180,
@@ -147,7 +147,7 @@
    "letter_spacing": 0,
    "word_spacing": 0,
    "enter": null,
-   "text": "영화 속 북한 병사의 꿈, 북한판 초코파이는 진짜였다"
+   "text": "북한판 초코파이는 진짜였다"
   }
  ]
 }
