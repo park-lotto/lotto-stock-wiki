@@ -253,6 +253,43 @@ def test_cutdet_v2_zoom_out_and_pan(tmp_path):
         assert d["shots"][0]["motion"] == want, (name, d["shots"])
 
 
+def test_capseg_dark_and_box_modes(tmp_path):
+    """검정 글(흰 상자) 자막: dark·box 모드가 1.0초 교체를 잡는다."""
+    fr = []
+    for i in range(60):
+        f = np.full((H, W, 3), 150, np.uint8)
+        cv2.rectangle(f, (120, 1200), (960, 1330), (255, 255, 255), -1)                      # 흰 상자(회색 바탕)
+        cv2.putText(f, "AB" if i < 30 else "CDEFG", (200, 1300), cv2.FONT_HERSHEY_SIMPLEX, 3.0, (0, 0, 0), 10, cv2.LINE_8)
+        fr.append(f)
+    mp4 = tmp_path / "box.mp4"
+    _write_mp4(mp4, fr)
+    for mode in ("dark", "box"):
+        segs = capseg.capseg(str(mp4), 1150, 1380, mode=mode)
+        assert any(abs(x["t0"] - 1.0) <= 1 / FPS for x in segs[1:]), (mode, segs)
+
+
+@pytest.mark.skipif(not (Path("C:/숏템_칼카피/ititemlog/src/SbWTqCnleC8.mp4").exists()), reason="잇템로그 원본 없음(집 PC 전용)")
+def test_capseg_odd_band_not_garbage():
+    """홀수 높이 띠(1137~1462 = 325줄): exact=1 전엔 ffmpeg 가 324줄로 잘라 프레임이 밀려 경계 38개 중 18개만 맞았다(10-25 실측).
+    합성 영상은 단색 바탕이라 밀림이 경계를 안 바꿔 못 잡는다 — 실물로 잰다."""
+    ref = [x["t0"] for x in json.loads(Path("C:/숏템_칼카피/ititemlog/work/lr6/seg_SbWTqCnleC8.json").read_text())[1:]]
+    got = [x["t0"] for x in capseg.capseg("C:/숏템_칼카피/ititemlog/src/SbWTqCnleC8.mp4", 1137, 1462)[1:]]
+    hit = sum(1 for t in ref if any(abs(t - u) <= 1 / FPS + 1e-6 for u in got))
+    assert hit / len(ref) >= 0.95, (hit, len(ref))
+
+
+_HS = Path("C:/숏템_칼카피/humorshowshow")
+
+
+@pytest.mark.skipif(not (_HS / "work/lr6/mo_bfKkNmVTGPs.json").exists(), reason="유머쇼쇼 원본·옛 산출물 없음(집 PC 전용)")
+def test_reproduce_humorshowshow_motion():
+    from tools.calcopy.engine.readline_tools import shotmotion
+    C = json.loads((_HS / "work/lr6/cut_bfKkNmVTGPs.json").read_text(encoding="utf-8"))
+    ref = json.loads((_HS / "work/lr6/mo_bfKkNmVTGPs.json").read_text(encoding="utf-8"))
+    r = shotmotion.run(str(_HS / "mp4/bfKkNmVTGPs.mp4"), C, 672, 1550)
+    assert r["shots"] == ref["shots"] and r["cuts"] == ref["cuts"]
+
+
 _KC = Path("C:/숏템_칼카피/kitchit/src")
 
 

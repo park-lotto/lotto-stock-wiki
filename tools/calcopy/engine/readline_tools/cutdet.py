@@ -10,7 +10,7 @@
 
     PYTHONUTF8=1 py tools/calcopy/engine/readline_tools/cutdet.py <mp4> <y0> <y1> <out.json> [--v2 [--cap-band y0,y1]]
 --v2(10-25 추가, 06 키치잇 결손): 자막 띠를 뺀 라플라시안으로 컷 직후 7프레임·직전 6프레임 블러(바탕의 50% 밑 2프레임↑)를 zoomblur 로,
-     영상 시작 블러를 t=0 사건으로, 샷마다 광류(Farneback, measure.py 와 같은 발산·이동) 로 motion still/cam/zoom_in/zoom_out/pan.
+     영상 시작 블러를 t=0 사건으로, 샷마다 shotmotion.shot_motion(ORB 닮음변환 — 배율·이동)으로 motion still/cam/zoom_in/zoom_out/pan.
      옛 분류는 kind_v1 에 남는다. v2 없이 부르면 출력은 옛 도구와 같다.
 """
 from __future__ import annotations
@@ -19,13 +19,19 @@ import json
 import subprocess
 import sys
 
+from pathlib import Path
+
 import cv2
 import numpy as np
+
+_ROOT = Path(__file__).resolve().parents[4]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 
 
 def cutdet(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080, v2: bool = False, cap_band: tuple | None = None) -> dict:
     """v2=False = 옛 도구 그대로(재현). v2=True = 자막 띠를 뺀 선명도로 전환 종류를 다시 가르고(kind, 옛 값은 kind_v1),
-    영상 시작 블러를 사건으로 더하고, 샷마다 광류 움직임(motion: still/cam/zoom_in/zoom_out/pan)을 붙인다(06 키치잇 10-25 결손)."""
+    영상 시작 블러를 사건으로 더하고, 샷마다 shotmotion 움직임(motion: still/cam/zoom_in/zoom_out/pan)을 붙인다(06 키치잇 10-25 결손)."""
     H = y1 - y0
     w, h = 360, int(H / 3)
     raw = subprocess.run(["ffmpeg", "-v", "error", "-i", mp4, "-vf", f"crop={width}:{H}:0:{y0},scale={w}:{h}", "-f", "rawvideo", "-pix_fmt", "gray", "-"],
@@ -78,14 +84,12 @@ def cutdet(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080, v2:
         chg = float(np.abs(A - B).mean())
         shots.append({"t0": round(a / fps, 3), "t1": round((b + 1) / fps, 3), "chg": round(chg, 1)})
     if v2:
-        _refine_v2(F, mean, res, shots, fps, h, y0, cap_band)
+        _refine_v2(F, mean, res, shots, fps, h, y0, cap_band, mp4, y1)
     return {"n": n, "cuts": res, "shots": shots, **({"v2": True} if v2 else {})}
 
 
 V2_LOW = 0.5        # 바탕 선명도의 이 비율 밑 = 흐린 프레임
 V2_MIN_FR = 3       # 흐린 프레임이 컷 직후 7프레임(또는 직전 6프레임) 안에 이만큼 → zoomblur (키치잇 눈 정답: 2 면 cut 3곳 오탐, 3 이면 0)
-ZOOM_DIV = 0.35     # 광류 발산(×100) 중앙값 |div| 이상 = 줌(＋ 안으로·－ 밖으로)
-PAN_T = 1.2         # 광류 평균 이동(px/표본, 120폭) 이상 = 팬
 
 
 def _masked_sharp(F, h, y0, cap_band):
@@ -97,7 +101,7 @@ def _masked_sharp(F, h, y0, cap_band):
     return np.array([cv2.Laplacian(f[keep], cv2.CV_32F).var() for f in F])
 
 
-def _refine_v2(F, mean, res, shots, fps, h, y0, cap_band):
+def _refine_v2(F, mean, res, shots, fps, h, y0, cap_band, mp4, y1):
     n = len(F)
     sh = _masked_sharp(F, h, y0, cap_band)
     for r in res:
@@ -120,37 +124,20 @@ def _refine_v2(F, mean, res, shots, fps, h, y0, cap_band):
         recovered = float(sh[5:8].mean()) >= 0.85 * base   # 블러는 몇 프레임 안에 선명해진다(키치잇 Cs-Ka: 0.47→0.51 평평 = 블러 아님)
         if low >= 2 and recovered:
             res.insert(0, {"t": 0.0, "t_end": 0.0, "kind": "zoomblur", "diff": 0.0, "blurfr": low, "start": True, "kind_v1": None})
+    from tools.calcopy.engine.readline_tools.shotmotion import shot_motion   # 움직임 주인 = shotmotion(ORB 닮음변환, 유머쇼쇼 워커 motion.py)
+    cap = cv2.VideoCapture(mp4)
+    orb = cv2.ORB_create(1500)
     for s in shots:
-        a = int(round(s["t0"] * fps))
-        b = int(round(s["t1"] * fps)) - 1
-        s["motion"] = _shot_motion(F, a, b, s.get("chg", 0))
-
-
-def _shot_motion(F, a, b, chg):
-    if b - a < 6:
-        return "still?"
-    idx = list(range(a + 2, b - 2, 3))
-    divs, txs, tys = [], [], []
-    for i, j in zip(idx[:-1], idx[1:]):
-        A = cv2.resize(F[i], (120, max(8, int(F.shape[1] * 120 / F.shape[2]))), interpolation=cv2.INTER_AREA).astype(np.uint8)
-        B = cv2.resize(F[j], (120, A.shape[0]), interpolation=cv2.INTER_AREA).astype(np.uint8)
-        fl = cv2.calcOpticalFlowFarneback(A, B, None, 0.5, 3, 15, 3, 5, 1.2, 0)
-        hh, ww = A.shape
-        yy, xx = np.mgrid[0:hh, 0:ww]
-        rx, ry = xx - ww / 2, yy - hh / 2
-        r2 = rx * rx + ry * ry + 1e-6
-        divs.append(float(((fl[..., 0] * rx + fl[..., 1] * ry) / r2).mean()) * 100)
-        txs.append(float(fl[..., 0].mean()))
-        tys.append(float(fl[..., 1].mean()))
-    if not divs:
-        return "still?"
-    dv = float(np.median(divs))
-    tr = float(np.hypot(np.median(txs), np.median(tys)))
-    if abs(dv) >= ZOOM_DIV:
-        return "zoom_in" if dv > 0 else "zoom_out"
-    if tr >= PAN_T:
-        return "pan"
-    return "still" if chg < 6 else "cam"
+        if s["t1"] - s["t0"] < 0.15:
+            s["motion"] = "still?"
+            continue
+        cut = next((c for c in res if abs(c["t"] - s["t0"]) < 0.5 / fps), None)
+        skip = (cut.get("blur_post") or cut.get("blurfr") or 0) / fps if cut and cut["kind"] == "zoomblur" else 0.0
+        a = min(s["t0"] + skip, max(s["t0"], s["t1"] - 0.3))     # 블러 프레임은 ORB 가 못 잡는다 → 블러가 풀린 뒤부터
+        m = shot_motion(cap, a, s["t1"], y0, y1, orb)
+        s["motion"] = m["motion"]
+        s.update({k: m[k] for k in ("scale", "tx", "ty") if k in m})
+    cap.release()
 
 
 def main(argv=None) -> int:

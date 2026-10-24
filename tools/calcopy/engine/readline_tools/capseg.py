@@ -5,7 +5,7 @@
   mode=color  06 잇템로그 워커 capseg.py(10-24) — '검정 외곽 옆 밝은 채움'(V>185 & 검정 V<45 9x9 팽창). 색·흰 채움 + 검정 외곽. 기본값.
   mode=bright/dark/both  06 썰풀다 워커 seg2.py(10-25) — bright = 흰 저채도 채움(V>200·S<70) + 검정 외곽, dark = 검정 글(V<60) 옆 흰,
               both = 둘 다. 마스크 2px 간격, 잉크 >80, yr 2px 단위.
-  capseg_box  06 유머쇼쇼 워커 seg2.py(10-25) — 흰 상자 위 검정 글(외곽 없음): 흰 행(흰 비율>0.45) ±7행 안 어두운 픽셀 = 잉크,
+  capseg_box  06 유머쇼쇼 워커 seg2.py·seg3.py(10-25, seg3 = --grid 줄 칸 거르기) — 흰 상자 위 검정 글(외곽 없음): 흰 행(흰 비율>0.45) ±7행 안 어두운 픽셀 = 잉크,
               IoU 차>0.35 또는 잉크가 10%·60칸 넘게 늘면(한 줄씩 덧붙는 자막) 새 덩어리, 2프레임 이하 조각은 앞 덩어리에 붙임.
               출력 꼴이 다르다(lines_y·ink_x·first_frac·enter_fr·append).
 입력: mp4 · 띠 y0 y1 (예: 잇템로그 1150 1460) · [--mode color|bright|dark|both|box]
@@ -13,7 +13,7 @@
 crop 은 exact=1 — yuv420 원본은 홀수 y·높이를 ffmpeg 가 짝수로 내려 잘라 프레임 크기가 어긋나고 reshape 가 프레임을 밀어 쓰레기가 된다
 (10-25 실측: 띠 1137~1462(높이 325) → 실제 324줄 → 경계 39개 중 20개 어긋남). 짝수 띠는 exact 유무와 출력이 같다.
 
-    PYTHONUTF8=1 py tools/calcopy/engine/readline_tools/capseg.py <mp4> <y0> <y1> <out.json> [--mode color]
+    PYTHONUTF8=1 py tools/calcopy/engine/readline_tools/capseg.py <mp4> <y0> <y1> <out.json> [--mode color] [--grid 줄위끝y,...(box 만)]
 """
 from __future__ import annotations
 
@@ -41,10 +41,11 @@ def read_band(mp4: str, y0: int, y1: int, width: int = 1080, pix: str = "bgr24",
     return np.frombuffer(raw, np.uint8)[:n * w * h * 3].reshape(n, h, w, 3)
 
 
-def capseg(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080, mode: str = "color", frames: np.ndarray | None = None) -> list[dict]:
-    """frames 를 주면(이미 자른 띠 [n,H,W,3] bgr) 읽기를 건너뛴다 — 띠 찾기·시험용."""
+def capseg(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080, mode: str = "color", frames: np.ndarray | None = None,
+           grid: list[int] | None = None) -> list[dict]:
+    """frames 를 주면(이미 자른 띠 [n,H,W,3] bgr) 읽기를 건너뛴다 — 띠 찾기·시험용. grid 는 box 모드에서만."""
     if mode == "box":
-        return capseg_box(mp4, y0, y1, fps=fps, width=width)
+        return capseg_box(mp4, y0, y1, fps=fps, width=width, grid=grid)
     F = read_band(mp4, y0, y1, width) if frames is None else frames
     if mode == "color":
         return _seg_color(F, y0, fps)
@@ -135,7 +136,9 @@ def _seg_pol(F: np.ndarray, y0: int, mode: str, fps: float) -> list[dict]:
     return res
 
 
-def capseg_box(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080) -> list[dict]:
+def capseg_box(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080, grid: list[int] | None = None) -> list[dict]:
+    """grid = 자막 줄 위끝 y 목록(유머쇼쇼 seg3.py): 주면 그 줄 칸(−6~+58px)에 잉크가 줄 머리부터 있고 바로 아래로 이어지지 않을 때만 남긴다
+    (창 그림 속 검정 글자가 상자 자막으로 섞이는 것을 막는다)."""
     W, H = 540, (y1 - y0) // 2
     F = read_band(mp4, y0, y1, width, pix="rgb24", scale=(W, H))
     n = F.shape[0]
@@ -151,6 +154,16 @@ def capseg_box(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080)
             wr2[d:] |= wr[:-d]
             wr2[:-d] |= wr[d:]
         ink = (V < 100) & (S < 60) & wr2[:, None]
+        if grid:
+            keep = np.zeros(H, bool)
+            for g in grid:
+                a = max((g - 6 - y0) // 2, 0)
+                b = min((g + 58 - y0) // 2, H)
+                rs = ink[a:b].sum(1) > 0
+                below = ink[b:b + 3].sum(1) > 0 if b + 3 <= H else np.zeros(1, bool)
+                if rs.any() and rs[:8].any() and not below.all():
+                    keep[a:b] = True
+            ink = ink & keep[:, None]
         inks.append(ink)
         cnt.append(int(ink.sum()))
     segs = []
@@ -225,6 +238,11 @@ def capseg_box(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080)
 def main(argv=None) -> int:
     a = list(sys.argv[1:] if argv is None else argv)
     mode = "color"
+    grid = None
+    if "--grid" in a:
+        i = a.index("--grid")
+        grid = [int(g) for g in a[i + 1].split(",")]
+        del a[i:i + 2]
     if "--mode" in a:
         i = a.index("--mode")
         mode = a[i + 1]
@@ -233,7 +251,7 @@ def main(argv=None) -> int:
         print(__doc__)
         return 2
     mp4, y0, y1, out = a[0], int(a[1]), int(a[2]), a[3]
-    res = capseg(mp4, y0, y1, mode=mode)
+    res = capseg(mp4, y0, y1, mode=mode, grid=grid)
     if mode == "box":
         json.dump(res, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=0)
         print(len(res), "덩어리")
