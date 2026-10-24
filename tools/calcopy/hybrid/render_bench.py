@@ -28,7 +28,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from tools.calcopy.hybrid.common import FACE_MODEL, FPS, ROOT, SR, StageError, dur_of, jload, jsave, lufs, nchar, probe, run  # noqa: E402
-from tools.calcopy.engine.encoder import venc  # noqa: E402 — 인코더 주인(GPU 있으면 NVENC, 화질 같게, 98 #79)
 
 W, H = 1080, 1920
 FONTS = ROOT / "shopping_shorts/static/fonts"
@@ -554,7 +553,8 @@ def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, pu
         # 최화정_피부 완성본에도 제목 빠짐 2+2프레임이 있었다 — 원인 대조는 안 함). 영상 조각과 같은 꼴로 맞춘다.
         vf = (f"crop={cw}:{ch}:{x}:{y},{mv}scale={ww}:{wh}:flags=lanczos:out_range=tv:out_color_matrix=bt709,"
               f"format=yuv420p,setsar=1")
-        run(["ffmpeg", "-y", "-v", "error", "-loop", "1", "-i", src, "-vf", vf, "-frames:v", n, "-r", FPS, *venc(16), "-pix_fmt", "yuv420p", "-color_range", "tv", "-colorspace", "bt709", out])
+        run(["ffmpeg", "-y", "-v", "error", "-loop", "1", "-i", src, "-vf", vf, "-frames:v", n, "-r", FPS, "-c:v", "libx264", "-crf", "16",
+             "-preset", "veryfast", "-pix_fmt", "yuv420p", "-color_range", "tv", "-colorspace", "bt709", out])
         return
     x, y, cw, ch = crop
     bl = blur_vf(blur, ss, n / FPS)
@@ -563,7 +563,8 @@ def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, pu
     if push:
         vf = (f"{pre}crop={cw}:{ch}:{x}:{y},scale={ww * 2}:{wh * 2}:flags=lanczos,fps={FPS},"
               f"zoompan=z='1+{push}*on/{max(1, n)}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={ww}x{wh}:fps={FPS},setsar=1")
-    run(["ffmpeg", "-y", "-v", "error", "-ss", f"{ss:.3f}", "-i", src, "-an", "-vf", vf, "-frames:v", n, *venc(16), "-pix_fmt", "yuv420p", out])
+    run(["ffmpeg", "-y", "-v", "error", "-ss", f"{ss:.3f}", "-i", src, "-an", "-vf", vf, "-frames:v", n, "-c:v", "libx264", "-crf", "16",
+         "-preset", "veryfast", "-pix_fmt", "yuv420p", out])
 
 
 # ── 장면 전환(A1) — 종류·자리 결정 = placement.place(placed["transitions"]), 여기는 읽기·그리기만 ──────────────
@@ -655,12 +656,18 @@ def render_window(T: dict, M: dict, st: dict, R: Path, trans: list[dict] | None 
     (parts / "list.txt").write_text("\n".join(lst), encoding="utf-8")
     win = R / "window.mp4"
     run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", parts / "list.txt", "-c", "copy", win])
+    return window_transitions(win, T, st, R, trans)
+
+
+def window_transitions(win: Path, T: dict, st: dict, R: Path, trans: list[dict] | None) -> Path:
+    """창 영상에 전환(줌블러·검은 프레임)을 입힌다 — 그릴 것이 없으면 창 그대로(다시 굽지 않는다)."""
+    x, y, ww, wh = frame_window(st["frame"])
     fx = window_fx(trans or [], ww, wh)
     if fx:
         n_all = sum(c["frames"] for c in T["cuts"])
         out = R / "window_tr.mp4"
         run(["ffmpeg", "-y", "-v", "error", "-i", win, "-filter_complex", fx, "-map", "[v]", "-frames:v", n_all, "-r", FPS,
-             *venc(16), "-pix_fmt", "yuv420p", out])
+             "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", out])
         got = count_frames(out)
         if got != n_all:
             raise StageError(f"전환 입힌 창 프레임 {got} ≠ 계획 {n_all}")
@@ -668,8 +675,22 @@ def render_window(T: dict, M: dict, st: dict, R: Path, trans: list[dict] | None 
     return win
 
 
-def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, trans: list[dict] | None = None) -> Path:
-    """틀 + 창 + 댓글 카드 + 흰 번쩍임(자막 없는 바탕). 번쩍임 = 전환 목록(transitions_of) kind=flash — 화면 전체."""
+def meme_overlays(placed: dict) -> list[dict]:
+    """배치가 자리를 받은 짤(placement meme_step → site detected|fixed) → [{src, t0, len, box[x0,y0,w,h]}]. 자리 못 받은 짤(pending)은 안 그린다."""
+    out = []
+    for r in placed.get("rows") or []:
+        for s in r.get("stickers") or []:
+            if s.get("kind") != "meme" or s.get("site") not in ("detected", "fixed") or not s.get("src"):
+                continue
+            w, h = int(s.get("w") or 420), int(s.get("h") or 420)
+            cx, cy = float(s["x"]) / 100 * W, float(s["y"]) / 100 * H
+            out.append({"src": s["src"], "t0": float(r["t0"]), "len": float(s.get("len_s", 1.0)), "box": [round(cx - w / 2), round(cy - h / 2), w, h]})
+    return out
+
+
+def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, trans: list[dict] | None = None, name: str = "base.mp4") -> Path:
+    """틀 + 창 + 댓글 카드 + 짤 + 흰 번쩍임(자막 없는 바탕). 번쩍임 = 전환 목록(transitions_of) kind=flash — 화면 전체.
+    짤 = 배치가 검출로 자리를 받은 meme 스티커(자막팩은 짤을 안 그린다 — 여기 한 곳)."""
     F = st["frame"]
     x, y, ww, wh = frame_window(F)
     png = frame_png(S, st, R / "frame.png")
@@ -684,15 +705,23 @@ def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, tr
         ins += ["-loop", "1", "-t", f"{end:.3f}", "-i", R / "comment.png"]
         fc += f";[b][3:v]overlay={(W - cw) // 2}:{F['comment']['bottom'] - ch}:enable='between(t,{C['t0']:.3f},{C['t1']:.3f})'[c]"
         last = "c"
+    for j, m in enumerate(meme_overlays(placed)):
+        k = len([a for a in ins if a == "-i"])
+        mx, my, mw, mh = m["box"]
+        ins += ["-i", m["src"]]
+        fc += (f";[{k}:v]trim=duration={m['len']:.3f},setpts=PTS-STARTPTS+{m['t0']:.3f}/TB,fps={FPS},"
+               f"scale={mw}:{mh}:force_original_aspect_ratio=decrease[mm{j}];"
+               f"[{last}][mm{j}]overlay={mx}+({mw}-w)/2:{my}+({mh}-h)/2:eof_action=pass:enable='between(t,{m['t0']:.3f},{m['t0'] + m['len']:.3f})'[m{j}]")
+        last = f"m{j}"
     fl = [(e["t"], e["sec"] if "sec" in e else e["ms"] / 1000) for e in (trans if trans is not None else transitions_of(T, st, placed))
           if e["kind"] == "flash"]
     if fl:
         e = "+".join(f"between(T,{t:.3f},{t + dsec:.3f})*(1-(T-{t:.3f})/{dsec})" for t, dsec in fl)
         fc += f";[{last}]geq=lum='min(255,lum(X,Y)+255*({e}))':cb='cb(X,Y)':cr='cr(X,Y)'[f]"
         last = "f"
-    out = R / "base.mp4"
+    out = R / name
     run(["ffmpeg", "-y", "-v", "error", *ins, "-filter_complex", fc + f";[{last}]format=yuv420p[v]", "-map", "[v]", "-frames:v", n, "-r", FPS,
-         *venc(16), out])
+         "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", out])
     return out
 
 
@@ -708,7 +737,7 @@ def caption_rows(placed: dict, st: dict) -> list[dict]:
         for s in r.get("stickers") or []:
             if s["kind"] == "heart":
                 row["sticker"] = "heart"
-            elif s["kind"] != "comment_card":
+            elif s["kind"] not in ("comment_card", "meme") and s.get("site") != "pending":   # 짤 = render_base · 자리 못 받은 것 = 안 그림(눈대중 금지, 03)
                 row["stickers"].append({k: v for k, v in s.items() if k != "follow"})
         if r["enter"] == "typing":
             n = len(r["text"].replace(" ", ""))
@@ -849,10 +878,43 @@ def loud(src: Path, dst: Path, L: dict):
 
 
 # ── 전체 ────────────────────────────────────────────────────────────────
-def plan_rows(S: dict, T: dict, st: dict) -> dict:
-    """배치(placement.place) — 씨앗 = 편 slug(같은 편은 늘 같은 배치)."""
+def needs_locate(st: dict) -> bool:
+    """판 배치 규칙에 검출 자리(target = face|object|caption_side)를 받는 스티커·짤이 있나 — 없으면 검출 영상을 안 만든다."""
+    Rl = (st.get("placement") or {}).get("rules") or {}
+    if any(isinstance(r, dict) and isinstance(r.get("target"), str) for r in (Rl.get("stickers") or {}).values()):
+        return True
+    Mm = Rl.get("meme")
+    return bool(Mm and float(Mm.get("rate", 0)) > 0 and not isinstance(Mm.get("target"), dict))
+
+
+def make_locate(S: dict, T: dict, st: dict, R: Path, win: Path, log=print):
+    """placement.place(locate=…) 에 꽂을 자리 검출기(주인 = fx_target.locator/find). 검출 화면 = 틀+창(자막·전환 없이) detect_base.mp4.
+    caption_side 는 판 칸 caption.band(y0,y1 — 자막 띠)가 있어야 한다. 크기 = 판 규칙 size([w,h]) · 없으면 스티커 160 · 짤 420."""
+    if not needs_locate(st):
+        return None
+    from tools.calcopy.hybrid import fx_target as FX
+    det = render_base(S, T, st, {}, R, win, [], name="detect_base.mp4")
+    Rl = st["placement"].get("rules") or {}
+    band = (st.get("caption") or {}).get("band")
+
+    def size_of(s):
+        rule = Rl.get("meme") if s.get("kind") == "meme" else (Rl.get("stickers") or {}).get(s.get("kind")) or {}
+        return tuple((rule or {}).get("size") or ((420, 420) if s.get("kind") == "meme" else (160, 160)))
+    loc = FX.locator(det, win=frame_window(st["frame"]), caption_band=tuple(band) if band else None, size_of=size_of)
+
+    def locate(target, row, s):
+        try:
+            return loc(target, row, s)
+        except ValueError as e:        # caption_side 인데 caption.band 없음·object 인데 무엇(what) 없음 → 안 붙인다(조용히 넘기지 않고 로그)
+            log(f"[자리] {s.get('kind')} {target.get('kind')} 검출 못 함: {e}")
+            return None
+    return locate
+
+
+def plan_rows(S: dict, T: dict, st: dict, locate=None) -> dict:
+    """배치(placement.place) — 씨앗 = 편 slug(같은 편은 늘 같은 배치). locate = make_locate(스티커·짤 자리 검출, 없으면 자리는 pending)."""
     from tools.calcopy.hybrid import placement as PL
-    placed = PL.place(T["rows"], st, S.get("slug") or "x", cuts=T["cuts"])      # 전환·효과음 자리는 화면 컷 경계에(03)
+    placed = PL.place(T["rows"], st, S.get("slug") or "x", cuts=T["cuts"], locate=locate)      # 전환·효과음 자리 = 화면 컷 경계(03)
     for r, t in zip(placed["rows"], T["rows"]):
         r["show"] = t["show"]
     # 댓글 카드 = 배치가 고르고(벤치 편 비율) 대본에 원본 댓글이 있을 때만
@@ -925,11 +987,12 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     over = [c for c in T["cuts"] if c["over"] > 0]
     if over:
         raise StageError("컷이 원본 샷보다 길다: " + str([(c["line"], c["src"], c.get("ss"), c["dur"], c.get("max"), {"원본 남음": c["src_left"]} if "src_left" in c else None) for c in over]))
-    placed = plan_rows(S, T, st)
+    win0 = render_window(T, M, st, R)                          # 창(전환 없이) — 자리 검출 화면의 재료
+    placed = plan_rows(S, T, st, make_locate(S, T, st, R, win0, log))
     from tools.calcopy.hybrid import placement as PL
     chk = PL.check_place(placed, st)
     trans = transitions_of(T, st, placed, log)
-    win = render_window(T, M, st, R, trans)
+    win = window_transitions(win0, T, st, R, trans)
     base = render_base(S, T, st, placed, R, win, trans)
     T["end"] = round(sum(c["frames"] for c in T["cuts"]) / FPS, 4)
     rows = caption_rows(placed, st)
@@ -948,7 +1011,8 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         log(f"썸네일 {tc['pick']} → 맨 앞 {TH.THUMB_FRAMES}프레임")      # 오른쪽 위 '광고' 표시 — 주인 = engine/ad_mark(사장님 10-22 모든 렌더)
     jsave(R / "timeline.json", T)
     tab = {"_note": f"배치 결과 — placement.place(판 설정 {style_name}) · 시각은 final.mp4 기준 초", "pack": st["caption"]["pack"], "rows": rows,
-           "sfx": placed["sfx"], "flashes": placed["flashes"], "transitions": trans, "comment": placed.get("comment"), "log": placed["log"], "check": chk}
+           "sfx": placed["sfx"], "flashes": placed["flashes"], "transitions": trans, "memes": meme_overlays(placed), "comment": placed.get("comment"),
+           "log": placed["log"], "check": chk}
     jsave(R / "자막표.json", tab)
     jsave(doc / "자막표.json", tab)
     info = {"made_by": "tools/calcopy/hybrid/render_bench.py", "version": style_name, "tempo": tempo, "final": str(final), "final_dur": dur_of(final),

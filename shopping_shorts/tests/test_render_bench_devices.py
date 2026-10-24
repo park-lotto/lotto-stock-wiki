@@ -135,6 +135,25 @@ def test_flash_expression_unchanged(monkeypatch, tmp_path):
     assert f"geq=lum='min(255,lum(X,Y)+255*({old}))'" in fc
 
 
+# ── 03 연결: 자리 검출·짤 ──────────────────────────────────────────────
+def test_needs_locate_only_for_target_rules():
+    assert not RB.needs_locate({"placement": {"rules": {"stickers": {"gem": {"lex": ["lux"]}}}}})          # 옛 규칙(자리 없음)
+    assert RB.needs_locate({"placement": {"rules": {"stickers": {"circle_arrow": {"target": "face"}}}}})
+    assert RB.needs_locate({"placement": {"rules": {"meme": {"rate": 0.3}}}})                               # 짤 기본 자리 = caption_side
+    assert not RB.needs_locate({"placement": {"rules": {"meme": {"rate": 0}}}})
+
+
+def test_meme_overlay_and_caption_rows_split():
+    placed = {"rows": [{"line": "n1", "t0": 2.0, "show": [2.0, 3.0], "text": "가", "speaker": "narr", "enter": "cut", "stickers": [
+        {"kind": "meme", "src": "m.mp4", "len_s": 1.2, "x": 50.0, "y": 50.0, "w": 300, "h": 300, "site": "detected"},
+        {"kind": "meme", "src": "p.mp4", "site": "pending"},
+        {"kind": "circle_arrow", "site": "pending", "target": {"kind": "face"}},
+        {"kind": "circle_arrow", "site": "detected", "x": 40.0, "y": 30.0}]}]}
+    assert RB.meme_overlays(placed) == [{"src": "m.mp4", "t0": 2.0, "len": 1.2, "box": [390, 810, 300, 300]}]   # 자리 못 받은 짤은 안 그림
+    rows = RB.caption_rows(placed, {"caption": {}})
+    assert [s["kind"] for s in rows[0]["stickers"]] == ["circle_arrow"] and rows[0]["stickers"][0]["x"] == 40.0   # 짤·pending 은 자막팩에 안 감
+
+
 # ── B1 틀 종류 ─────────────────────────────────────────────────────────
 POST = {
     "kind": "post", "bg": [95, 95, 95], "window": [0, 760, 1080, 1056],
@@ -269,11 +288,27 @@ def _cli():
     d = sub.add_parser("duck"); d.add_argument("off"); d.add_argument("on")
     f = sub.add_parser("framediff"); f.add_argument("a"); f.add_argument("b"); f.add_argument("--start", type=float, default=0.5)
     f.add_argument("--n", type=int, default=10)
+    ab = sub.add_parser("blurab"); ab.add_argument("plain"); ab.add_argument("fx"); ab.add_argument("timeline"); ab.add_argument("--window", default="0,420,1080,1080")
     pc = sub.add_parser("postcmp"); pc.add_argument("ref"); pc.add_argument("ours"); pc.add_argument("--x", type=int, default=20)
     pc.add_argument("--y1", type=int, default=760); pc.add_argument("--bands", default="100,250;600,720")
     a = ap.parse_args()
     if a.cmd == "postcmp":
         print(json.dumps(postcmp(a.ref, a.ours, a.x, a.y1, [tuple(int(v) for v in b.split(",")) for b in a.bands.split(";")]), ensure_ascii=False, indent=1))
+    if a.cmd == "blurab":       # 같은 편·같은 시각: 장치 끈 판(plain) ↔ 켠 판(fx) — 경계 ±0.1초 띠의 라플라시안 분산이 얼마나 떨어졌나
+        x, y, w, h = (int(v) for v in a.window.split(","))
+        T = json.loads(Path(a.timeline).read_text(encoding="utf-8"))
+        T = T.get("timeline", T)
+        lp = lap_var(frames_gray(Path(a.plain), 1080, 1920, (x, y, w, h))[:, ::2, ::2])
+        lf = lap_var(frames_gray(Path(a.fx), 1080, 1920, (x, y, w, h))[:, ::2, ::2])
+        rows = []
+        for c in T["cuts"][1:]:
+            n0 = round(c["t0"] * FPS)
+            band = slice(max(0, n0 - 3), n0 + 3)
+            far = np.r_[max(0, n0 - 12):max(0, n0 - 6), n0 + 6:n0 + 12]
+            rows.append({"t": c["t0"], "drop_band": round(float(1 - lf[band].mean() / lp[band].mean()), 3),
+                         "drop_far": round(float(1 - lf[far].mean() / lp[far].mean()), 3)})
+        print(json.dumps({"boundaries": rows, "median_drop_band": float(np.median([r["drop_band"] for r in rows])),
+                          "max_abs_drop_far": float(max(abs(r["drop_far"]) for r in rows))}, ensure_ascii=False))
     if a.cmd == "blur":
         x, y, w, h = (int(v) for v in a.window.split(","))
         T = json.loads(Path(a.timeline).read_text(encoding="utf-8"))
