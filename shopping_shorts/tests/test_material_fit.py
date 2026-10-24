@@ -1,0 +1,150 @@
+# -*- coding: utf-8 -*-
+"""장면↔대사 계획 매칭 루프(tools/calcopy/hybrid/material_fit.py) 시험 — 관제 263 지시서 14.
+
+① 제약 위반 후보(원음 고정 컷과 재사용)는 **점수 전에** 빠진다(채점 그림에 안 실린다)
+② 하한 9 → 루프가 3회 돌고 '멈춤(사유: 줄 …)'으로 끝난다(무한 루프·조용한 통과 0)
+③ gold 10컷 실측 점수(judge_rubric, 10-25) — 틀린 자막(low)엔 어떤 그림도 하한을 못 넘고, 맞는 자막(high)엔 넘는다(혼동 0)
+④ 대사↔장면 판정 한 벌 — material_auto.fit_judge 가 scene_fit.RUBRIC 으로 묻는다(옛 7/4/1 프롬프트 없음)
+"""
+from __future__ import annotations
+
+import json
+import re
+import shutil
+import subprocess
+from pathlib import Path
+
+import pytest
+
+from tools.calcopy.hybrid import material_fit as MF
+from tools.calcopy.engine import material_auto as MA
+
+FIX = Path(__file__).parent / "fixtures"
+pytestmark = pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg 없음")
+
+
+def _src(p: Path):
+    """4색 × 5초 = 샷 4개(0~5 빨강·5~10 파랑·10~15 초록·15~20 노랑)."""
+    cols = ["red", "blue", "green", "yellow"]
+    args = ["ffmpeg", "-v", "error", "-y"]
+    for c in cols:
+        args += ["-f", "lavfi", "-i", f"color=c={c}:s=360x640:d=5:r=30"]
+    args += ["-filter_complex", "".join(f"[{i}:v]" for i in range(4)) + "concat=n=4:v=1:a=0[v]", "-map", "[v]", "-c:v", "libx264", "-pix_fmt", "yuv420p", str(p)]
+    subprocess.run(args, check=True, stdin=subprocess.DEVNULL)
+
+
+def _ep(tmp: Path, n2_role="본문"):
+    W = tmp / "w"
+    (W / "src").mkdir(parents=True)
+    (W / "render").mkdir()
+    D = tmp / "doc"
+    D.mkdir()
+    _src(W / "src" / "a.mp4")
+    S = {"product": "시험 상자", "lines": [
+        {"id": "N1", "kind": "tts", "role": "나레 훅", "tts": "빨간 화면이 보여요.", "caps": [{"text": "빨간 화면이"}, {"text": "보여요"}]},
+        {"id": "O1", "kind": "orig", "role": "원음", "src": "a.mp4", "spans": [[6.0, 8.0]], "caps_rel": [["원음", 0.0, 2.0]]},
+        {"id": "N2", "kind": "tts", "role": f"나레 {n2_role}", "tts": "초록 화면이 나와요.", "caps": [{"text": "초록 화면이"}, {"text": "나와요"}]}]}
+    M = {"cand_dir": str(W / "src"), "cuts": {"N1": [{"src": "a.mp4", "ss": 0.5, "crop": [0, 0, 360, 640], "see": "빨강"}],
+                                              "N2": [{"src": "a.mp4", "ss": 6.5, "crop": [0, 0, 360, 640], "see": "파랑(원음 구간 재사용 — 위반)"}]}}
+    T = {"lines": {"N1": [0.0, 2.0], "O1": [2.0, 4.0], "N2": [4.0, 6.0]}, "end": 6.0,
+         "rows": [{"line": "N1", "text": "빨간 화면이", "t0": 0.0, "t1": 1.0}, {"line": "N1", "text": "보여요", "t0": 1.0, "t1": 2.0},
+                  {"line": "O1", "text": "원음", "t0": 2.0, "t1": 4.0},
+                  {"line": "N2", "text": "초록 화면이", "t0": 4.0, "t1": 5.0}, {"line": "N2", "text": "나와요", "t0": 5.0, "t1": 6.0}],
+         "cuts": [{"src": "a.mp4", "ss": 6.0, "line": "O1", "kind": "orig", "t0": 2.0, "t1": 4.0, "dur": 2.0, "crop": [0, 0, 360, 640]}]}
+    (D / "대본.json").write_text(json.dumps(S, ensure_ascii=False), encoding="utf-8")
+    (D / "재료.json").write_text(json.dumps(M, ensure_ascii=False), encoding="utf-8")
+    (W / "render" / "timeline.json").write_text(json.dumps(T, ensure_ascii=False), encoding="utf-8")
+    return D, W
+
+
+class Fake:
+    """샷 설명·순위·채점·고침을 흉내 — 채점 칸마다 그림 띠를 기록한다(점수 전에 빠졌나 보려고)."""
+
+    def __init__(self, score=7, fix=True):
+        self.score, self.fix, self.sheets, self.fit_rows = score, fix, 0, []
+
+    def __call__(self, parts, prompt, tag):
+        if tag == "ma_fit:shot":
+            hi = int(re.search(r"번호 0~(\d+)", prompt).group(1))
+            return {"shots": [{"n": i, "desc": f"단색 화면 {i}"} for i in range(hi + 1)]}, None
+        if tag == "ma_fit:rank":
+            ids = re.findall(r"^(\w+#\d+):", prompt, re.M)
+            lines = re.findall(r"^(N\d+):", prompt, re.M)
+            return {"lines": [{"id": l, "shots": ids} for l in lines]}, None
+        if tag == "ma_fit:fix":
+            if not self.fix:
+                return None, "no"
+            old = re.search(r"\[원문 대사\] (.+)", prompt).group(1)
+            a, b = ("가득이", "꽉이") if "가득이" in old else (("꽉이", "가득이") if "꽉이" in old else ("화면이", "화면 가득이"))
+            new = old.replace(a, b)
+            caps = re.search(r"\[원문 자막 덩어리\] (\[.*\])", prompt).group(1)
+            cl = json.loads(caps.replace("'", '"'))
+            cl[0] = cl[0].replace(a, b)
+            return {"tts": new, "caps": cl, "why": "시험"}, None
+        self.sheets += 1
+        self.fit_rows += re.findall(r"^\d+: «", prompt, re.M)
+        n = len(re.findall(r"^\d+: «", prompt, re.M))
+        return {"fits": [{"n": i, "score": self.score, "seen": "단색"} for i in range(n)]}, None
+
+
+def test_constraint_violation_removed_before_scoring(tmp_path):
+    """사람 컷 N2(a.mp4 6.5초~) = 원음 O1(6~8초) 구간 재사용 → 제외 이유 reuse, 고르지 않는다(점수는 비교용으로만)."""
+    D, W = _ep(tmp_path)
+    r = MF.plan(D, W, "잇템로그판", llm=MA.LLM(Fake()), do_supplement=False)
+    n2 = next(x for x in r["lines"] if x["id"] == "N2#0")
+    assert any(abs(c["ss"] - 6.5) < 0.01 and "reuse" in c["why"] for c in n2["rejected"])
+    assert n2["pick"] and abs(n2["pick"]["ss"] - 6.5) > 0.4            # 위반 사람 컷은 안 고른다
+    # 원음 구간(6~8 ±거리) 안의 순위 후보는 채점 시트에 아예 안 실린다(사람 컷 1개만 비교용으로 실림)
+    cands = json.loads((D / "장면대사_계획.json").read_text(encoding="utf-8"))
+    assert cands["lines"][2]["cand_n"] >= 2
+
+
+def test_floor9_loops_three_times_then_stops(tmp_path):
+    """사보타주: 하한 9(어떤 후보도 못 넘음) + 대사 고침 자동 사인 → 3회 돌고 '멈춤(사유: … 줄 …)'."""
+    D, W = _ep(tmp_path)
+    r = MF.plan(D, W, "잇템로그판", llm=MA.LLM(Fake(score=7)), do_supplement=False, sign=True, floors={"hi": 9, "lo": 9})
+    assert len(r["rounds"]) == 3 and not r["ok"]
+    assert r["stop"].startswith("멈춤(사유: 3회") and "N1" in r["stop"] and "N2" in r["stop"]
+    assert r["needs_tts"]                      # 고친 대사 = 새 합성 필요 목록(합성은 안 한다)
+
+
+def test_floor_default_passes_and_writes_material(tmp_path):
+    D, W = _ep(tmp_path)
+    r = MF.plan(D, W, "잇템로그판", llm=MA.LLM(Fake(score=10)), do_supplement=False)
+    assert r["ok"] and len(r["rounds"]) == 1 and r["stop"] is None
+    M2 = json.loads((D / "재료_계획.json").read_text(encoding="utf-8"))
+    assert all(c.get("fit") == 10 and c.get("cand_n") for c in M2["cuts"]["N2"])
+    assert not (D / "재료_사람.json").exists()                          # --apply 없으면 재료.json 안 바꿈
+
+
+def test_floor_of_roles():
+    assert MF.floor_of("나레 공개") == 7 and MF.floor_of("증거") == 7 and MF.floor_of("나레 훅(빨강)") == 5
+    assert MF.floor_of("끝 — 전언") == 5 and MF.floor_of("이음") == 5 and MF.floor_of("나레 성분") == 7
+
+
+def test_gold_real_scores_no_confusion():
+    """합격 ①: gold 10컷 그림이 후보인 칸 — 틀린 자막(low 3)엔 최고점이 하한(7) 미만이라 '통과'로 안 고르고, 맞는 자막(high 3)엔 하한 넘는 컷을 고른다.
+    점수 = 10-25 judge_rubric 실측(Claude 소넷 2회 중앙값, fixtures/material_fit_gold_scores.json)."""
+    G = json.loads((FIX / "material_fit_gold_scores.json").read_text(encoding="utf-8"))
+    assert len(G["rows"]) == 6
+    for r in G["rows"]:
+        slot = {"id": f"L{r['cap_of']}#0", "line": f"L{r['cap_of']}", "kind": "tts", "role": "본문", "t0": 0.0, "t1": 1.0,
+                "cands": [{"src": f"g{k}.mp4", "ss": 0.0, "dur": 1.0, "score": s, "from": f"rank{k}"} for k, s in enumerate(r["scores"]) if s is not None]}
+        sel = MF.select([slot], {})[0]
+        if r["gold"] == "low":
+            assert sel["below"], (r["piece"], r["scores"])
+        else:
+            assert not sel["below"], (r["piece"], r["scores"])
+
+
+def test_fit_judge_is_rubric_shell(tmp_path):
+    """대사↔장면 프롬프트 한 벌 — fit_judge 가 scene_fit.RUBRIC(기준점 10/7/5/3/1)으로 묻는다."""
+    from tools.calcopy.oneshot import scene_fit as SF
+    seen = []
+
+    def fake(parts, prompt, tag):
+        seen.append(prompt)
+        return {"fits": [{"n": 0, "score": 7, "seen": "a"}]}, None
+    r = MA.fit_judge([{"img": "", "piece": "x", "line": "x"}], tmp_path, MA.LLM(fake), tag="t")
+    assert r[0]["score"] == 7 and seen and all(p.startswith(SF.RUBRIC.split("\n")[0]) for p in seen)
+    assert not hasattr(MA, "FIT_PROMPT")
