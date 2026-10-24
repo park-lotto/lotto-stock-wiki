@@ -57,7 +57,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "0.0 작게 → 0.2~0.3 가로 번짐 → 0.4 완성. 한 덩어리 안에 굵은 노랑 고딕과 꾸불림 흰이 섞임",
-   "cut_at": []
+   "cut_at": [],
+   "role": "훅",
+   "fit": 6,
+   "scene_desc": "장윤정 + 가방",
+   "transition": "none(첫 프레임)",
+   "motion": "still",
+   "motion_basis": "div중앙 0.021·양수 0.74·sd 0.42·|tx| 0.01(n35)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 1.0,
@@ -78,7 +92,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "훅",
+   "fit": 7,
+   "scene_desc": "가방 든 장윤정",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 -0.066·양수 0.36·sd 1.75·|tx| 0.08(n28)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 2.05,
@@ -116,7 +144,21 @@
    "notes": "2.0 카드만 먼저, 0.1초 뒤 나레 글",
    "cut_at": [
     2.367
-   ]
+   ],
+   "role": "다리",
+   "fit": 7,
+   "scene_desc": "가방 앞 앉은 장윤정",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "cam",
+   "motion_basis": "div중앙 -0.028·양수 0.32·sd 1.46·|tx| 0.02(n37)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 3.4,
@@ -142,7 +184,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "3.4 겹친 이중상 1~2프레임",
-   "cut_at": []
+   "cut_at": [],
+   "role": "질문",
+   "fit": 6,
+   "scene_desc": "가방 속 + WOW",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 -0.020·양수 0.46·sd 6.05·|tx| 0.18(n39)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 4.8,
@@ -168,7 +224,21 @@
    ],
    "fill_hex": "#EDCC2A",
    "notes": "화자 확정 못 함(굵은 고딕=나레 글꼴이지만 내용은 원음식)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "공개",
+   "fit": 8,
+   "scene_desc": "가방 속(메이크업 박스)",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "still",
+   "motion_basis": "div중앙 0.004·양수 0.55·sd 0.30·|tx| 0.01(n58)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 5.9,
@@ -196,7 +266,21 @@
    "notes": "원음인데 앞 어절이 노랑 꾸불림",
    "cut_at": [
     7.067
-   ]
+   ],
+   "role": "본문",
+   "fit": 3,
+   "scene_desc": "팬 행사(다른 영상)",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 -0.010·양수 0.43·sd 2.03·|tx| 0.08(n44)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 7.7,
@@ -217,7 +301,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "바탕 흐림(모자이크)은 원본 영상",
-   "cut_at": []
+   "cut_at": [],
+   "role": "증거",
+   "fit": 8,
+   "scene_desc": "가방 여는 손",
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.654·양수 0.81·sd 9.23·|tx| 0.91(n16)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 8.4,
@@ -238,7 +336,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "증거",
+   "fit": 7,
+   "scene_desc": "가방 여는 손",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "cam",
+   "motion_basis": "div중앙 -0.006·양수 0.48·sd 6.06·|tx| 0.43(n23)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 9.2,
@@ -269,7 +381,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "굵은 흰 고딕, 9.2~9.5 흐린 큰 사본 → 9.6 정상. 이 덩어리부터 댓글카드 2",
-   "cut_at": []
+   "cut_at": [],
+   "role": "증거",
+   "fit": 9,
+   "scene_desc": "펼친 가방 속",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.015·양수 0.79·sd 6.11·|tx| 0.02(n24)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 9.75,
@@ -290,7 +416,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "증거",
+   "fit": 7,
+   "scene_desc": "가방 속 밴드",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.014·양수 0.67·sd 2.18·|tx| 0.04(n12)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 10.5,
@@ -316,7 +456,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "증거",
+   "fit": 7,
+   "scene_desc": "가방 속 칸",
+   "transition": "cut",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.180·양수 0.00·sd 3.28·|tx| 0.24(n7)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 10.9,
@@ -337,7 +491,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "증거",
+   "fit": 8,
+   "scene_desc": "가방 속 칸 넓이",
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.806·양수 0.92·sd 7.94·|tx| 0.08(n12)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 11.4,
@@ -386,7 +554,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "✦ 3개(글 오른쪽 위 → 오른쪽 아래 → 왼쪽 아래)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "증거",
+   "fit": 8,
+   "scene_desc": "가방 속 칸",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.155·양수 0.80·sd 2.91·|tx| 0.03(n30)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 12.3,
@@ -407,7 +589,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "증거",
+   "fit": 7,
+   "scene_desc": "바깥 주머니",
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.417·양수 0.79·sd 8.25·|tx| 0.41(n14)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 12.9,
@@ -428,7 +624,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "증거",
+   "fit": 8,
+   "scene_desc": "주머니 속 넓이",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.554·양수 0.64·sd 11.79·|tx| 0.42(n14)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 13.5,
@@ -454,7 +664,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "고조",
+   "fit": 8,
+   "scene_desc": "주머니 속",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.172·양수 0.64·sd 4.01·|tx| 0.09(n14)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 14.1,
@@ -475,7 +699,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "증거",
+   "fit": 7,
+   "scene_desc": "주머니 밴드",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.310·양수 0.16·sd 6.38·|tx| 0.69(n19)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 14.8,
@@ -496,7 +734,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "15.1~15.5 글 뒤에 흐린 사본이 아래로 번져 있음",
-   "cut_at": []
+   "cut_at": [],
+   "role": "본문",
+   "fit": 4,
+   "scene_desc": "장윤정 얼굴",
+   "transition": "cut",
+   "motion": "still",
+   "motion_basis": "div중앙 0.004·양수 0.53·sd 0.54·|tx| 0.01(n19)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 15.6,
@@ -517,7 +769,21 @@
    ],
    "fill_hex": "#E10116",
    "notes": "15.6 안 → 15.7 안 들어가 → 15.8 안 들어가는 게 어절씩 튀어나오며 쌓임, 빨강 꾸불림",
-   "cut_at": []
+   "cut_at": [],
+   "role": "고조",
+   "fit": 4,
+   "scene_desc": "장윤정 얼굴",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 -0.009·양수 0.46·sd 1.06·|tx| 0.02(n26)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 16.3,
@@ -538,7 +804,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "고조",
+   "fit": 6,
+   "scene_desc": "가방 손",
+   "transition": "cut",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.467·양수 0.21·sd 5.99·|tx| 0.21(n14)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 17.1,
@@ -564,7 +844,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "질문",
+   "fit": 8,
+   "scene_desc": "가방 메는 장윤정",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.026·양수 0.53·sd 7.76·|tx| 0.33(n30)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 18.4,
@@ -585,7 +879,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "답",
+   "fit": 7,
+   "scene_desc": "가방 맨 모습",
+   "transition": "cut",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.239·양수 0.00·sd 3.40·|tx| 0.21(n12)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 19.0,
@@ -606,7 +914,23 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [
+    19.467
+   ],
+   "role": "끝",
+   "fit": 6,
+   "scene_desc": "가방 맨 모습",
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.095·양수 1.00·sd 1.36·|tx| 0.03(n8)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   }
  ],
  "no_caption": [],
@@ -621,5 +945,104 @@
   "효과음: 뜯기 후보 0.1·1.8 은 파형 솟음 없음 → null. 다른 솟음은 말·BGM 시작과 구분 불가",
   "원음 화자 이름은 출처 채널명·제목 장윤정 으로만 추정, 줄마다 확인은 안 함",
   "4.8 메이크업 박스인 거야 화자 불명"
- ]
+ ],
+ "frame0": {
+  "what": "장윤정 + 가방(소파)",
+  "face_frac": 0.22,
+  "text": "가방 안사는 장윤정이 / 지갑 열게 만든 이유",
+  "basis": "0.02초 프레임 창(0,420,1080,1080) YuNet 얼굴 높이/창 높이 · what=눈"
+ },
+ "transitions": [
+  {
+   "t": 1.0,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 2.367,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 3.367,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 5.9,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 7.067,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 7.7,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 9.8,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 10.433,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 10.867,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 12.267,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 13.5,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 14.833,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 15.567,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 16.3,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 17.033,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 18.333,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 18.967,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 19.467,
+   "kind": "cut",
+   "note": null
+  }
+ ],
+ "_made_by": "오푸스 실행자 보강(관제 263 지시서 06, 2026-10-25): role·fit·scene_desc=눈(work/lr7/fit_*.jpg) · transition·cut_at=cutdet 30fps(work/lr7/cut_*.json, 60fps 원본을 30fps 사본으로) + rangesheet 눈 정정 · motion=measure 광류(work/lr7/m_*.json) · frame0 face_frac=thumb.faces_of(YuNet, 창 1080²)"
 }

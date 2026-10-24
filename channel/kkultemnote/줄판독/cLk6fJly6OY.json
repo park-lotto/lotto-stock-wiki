@@ -45,11 +45,7 @@
     }
    ],
    "sticker": [],
-   "sfx": {
-    "kind": "띵",
-    "t": 0.0,
-    "basis": "뜯기 후보"
-   },
+   "sfx": null,
    "cut_at": [],
    "scene": "손·제품 근접",
    "y": [
@@ -57,7 +53,27 @@
     1442
    ],
    "fill_hex": "#FFFFFF",
-   "notes": "0.03 아주 작게→0.17 정상 이상, 0.2~0.4 색분리 잔상"
+   "notes": "0.03 아주 작게→0.17 정상 이상, 0.2~0.4 색분리 잔상",
+   "role": "훅",
+   "fit": 4,
+   "scene_desc": "최화정 얼굴",
+   "transition": "none(첫 프레임)",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.004·양수 0.75·sd 1.68·|tx| 0.01(n24)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   },
+   "sfx_unverified": {
+    "kind": "띵",
+    "t": 0.0,
+    "basis": "뜯기 후보",
+    "why": "1판(10-18) 값 — 뜯기 후보(제미나이 청취)·말 시작과 겹친 파형 솟음·사람 소리(탄성·웃음). sfx_events --detect(10-25) 고립 후보에 없음 → 규칙 분모에서 뺌"
+   }
   },
   {
    "t0": 0.53,
@@ -78,7 +94,21 @@
     1442
    ],
    "fill_hex": "#FFFFFF",
-   "notes": ""
+   "notes": "",
+   "role": "훅",
+   "fit": 4,
+   "scene_desc": "최화정 얼굴",
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.096·양수 1.00·sd 1.11·|tx| 0.07(n6)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 0.97,
@@ -96,11 +126,7 @@
     }
    ],
    "sticker": [],
-   "sfx": {
-    "kind": "휙",
-    "t": 1.0,
-    "basis": "뜯기 후보"
-   },
+   "sfx": null,
    "cut_at": [],
    "scene": "손·제품 근접",
    "y": [
@@ -108,7 +134,27 @@
     1442
    ],
    "fill_hex": "#FFFFFF",
-   "notes": ""
+   "notes": "",
+   "role": "다리",
+   "fit": 8,
+   "scene_desc": "아이스 커피 근접",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 -0.063·양수 0.43·sd 2.74·|tx| 0.09(n21)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   },
+   "sfx_unverified": {
+    "kind": "휙",
+    "t": 1.0,
+    "basis": "뜯기 후보",
+    "why": "1판(10-18) 값 — 뜯기 후보(제미나이 청취)·말 시작과 겹친 파형 솟음·사람 소리(탄성·웃음). sfx_events --detect(10-25) 고립 후보에 없음 → 규칙 분모에서 뺌"
+   }
   },
   {
    "t0": 1.7,
@@ -145,7 +191,21 @@
     1442
    ],
    "fill_hex": "#FFFFFF",
-   "notes": "크래커 누끼 스티커 1.7~2.95"
+   "notes": "크래커 누끼 스티커 1.7~2.95",
+   "role": "공개",
+   "fit": 8,
+   "scene_desc": "커피 + 크래커 누끼",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.016·양수 0.60·sd 1.81·|tx| 0.04(n58)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 2.93,
@@ -166,7 +226,21 @@
     1442
    ],
    "fill_hex": "#FFFFFF",
-   "notes": ""
+   "notes": "",
+   "role": "증거",
+   "fit": 8,
+   "scene_desc": "크래커 줄줄이 포장 들어 올림",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.003·양수 0.50·sd 1.42·|tx| 0.03(n46)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 4.53,
@@ -207,7 +281,21 @@
     1442
    ],
    "fill_hex": "#FFFFFF",
-   "notes": "빨간 큰 글자 쿵 직 5.4~6.65가 이 줄 끝부터 뜸"
+   "notes": "빨간 큰 글자 쿵 직 5.4~6.65가 이 줄 끝부터 뜸",
+   "role": "공개",
+   "fit": 8,
+   "scene_desc": "대용량 상자 꺼냄",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.053·양수 0.57·sd 3.29·|tx| 0.28(n40)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 5.9,
@@ -239,7 +327,21 @@
     1442
    ],
    "fill_hex": "#FFFFFF",
-   "notes": ""
+   "notes": "",
+   "role": "고조",
+   "fit": 5,
+   "scene_desc": "먹음직 표정 + '쿵 직' 글자",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.172·양수 1.00·sd 1.96·|tx| 0.06(n22)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 6.73,
@@ -260,7 +362,21 @@
     1442
    ],
    "fill_hex": "#F4C729",
-   "notes": "줄 통째 노랑(레몬색)"
+   "notes": "줄 통째 노랑(레몬색)",
+   "role": "공개",
+   "fit": 5,
+   "scene_desc": "최화정 얼굴",
+   "transition": "cut",
+   "motion": "still",
+   "motion_basis": "div중앙 -0.012·양수 0.35·sd 0.48·|tx| 0.01(n26)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 7.7,
@@ -292,7 +408,21 @@
     1442
    ],
    "fill_hex": "#FFFFFF",
-   "notes": "버터 크래커 큰 누끼 스티커 7.7 등장"
+   "notes": "버터 크래커 큰 누끼 스티커 7.7 등장",
+   "role": "본문",
+   "fit": 6,
+   "scene_desc": "크래커 + 얼굴",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.007·양수 0.56·sd 1.54·|tx| 0.08(n9)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 8.2,
@@ -317,14 +447,30 @@
     }
    ],
    "sfx": null,
-   "cut_at": [],
+   "cut_at": [
+    8.767
+   ],
    "scene": "얼굴",
    "y": [
     1366,
     1442
    ],
    "fill_hex": "#F6FA10",
-   "notes": "8.20 크래→8.30 크래커에 짝→8.40 있는→8.50 거야, 어절마다 위로 솟았다 내려앉음"
+   "notes": "8.20 크래→8.30 크래커에 짝→8.40 있는→8.50 거야, 어절마다 위로 솟았다 내려앉음",
+   "role": "본문",
+   "fit": 7,
+   "scene_desc": "크래커 + 얼굴",
+   "transition": "cut",
+   "motion": "still",
+   "motion_basis": "div중앙 -0.026·양수 0.32·sd 0.89·|tx| 0.04(n44)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 9.57,
@@ -356,7 +502,21 @@
     1442
    ],
    "fill_hex": "#FFFFFF",
-   "notes": ""
+   "notes": "",
+   "role": "본문",
+   "fit": 4,
+   "scene_desc": "최화정 얼굴",
+   "transition": "cut",
+   "motion": "still",
+   "motion_basis": "div중앙 -0.051·양수 0.00·sd 0.51·|tx| 0.01(n10)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 10.07,
@@ -377,7 +537,21 @@
     1442
    ],
    "fill_hex": "#FFFFFF",
-   "notes": ""
+   "notes": "",
+   "role": "고조",
+   "fit": 8,
+   "scene_desc": "크래커 근접",
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.324·양수 1.00·sd 3.52·|tx| 0.31(n17)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 10.83,
@@ -398,7 +572,21 @@
     1442
    ],
    "fill_hex": "#FFFFFF",
-   "notes": ""
+   "notes": "",
+   "role": "다리",
+   "fit": 5,
+   "scene_desc": "손 내밀며 권함",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.041·양수 0.62·sd 1.70·|tx| 0.12(n32)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 12.0,
@@ -416,11 +604,7 @@
     }
    ],
    "sticker": [],
-   "sfx": {
-    "kind": "띵",
-    "t": 11.9,
-    "basis": "뜯기 후보"
-   },
+   "sfx": null,
    "cut_at": [],
    "scene": "기타",
    "y": [
@@ -428,7 +612,27 @@
     1442
    ],
    "fill_hex": "#FFFFFF",
-   "notes": "12.0~12.2 원본 장면전환 줌블러 위에서 시작(검정 프레임 12.0)"
+   "notes": "12.0~12.2 원본 장면전환 줌블러 위에서 시작(검정 프레임 12.0)",
+   "role": "질문",
+   "fit": 3,
+   "scene_desc": "최화정 화보(다른 영상, 줌블러로 진입)",
+   "transition": "zoomblur(방사 줌블러 2프레임(12.03~12.10) — cutdet 는 밝아져 flash 로 셈, rs_cLk_trans.jpg)",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.060·양수 0.25·sd 6.02·|tx| 0.02(n59)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)+눈(rangesheet)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   },
+   "sfx_unverified": {
+    "kind": "띵",
+    "t": 11.9,
+    "basis": "뜯기 후보",
+    "why": "1판(10-18) 값 — 뜯기 후보(제미나이 청취)·말 시작과 겹친 파형 솟음·사람 소리(탄성·웃음). sfx_events --detect(10-25) 고립 후보에 없음 → 규칙 분모에서 뺌"
+   }
   },
   {
    "t0": 13.3,
@@ -465,7 +669,21 @@
     1442
    ],
    "fill_hex": "#FFFFFF",
-   "notes": "댓글카드 13.3 같은 순간"
+   "notes": "댓글카드 13.3 같은 순간",
+   "role": "답",
+   "fit": 4,
+   "scene_desc": "최화정 웃음 + 댓글카드",
+   "transition": "black(12.93~13.23 그림이 왼쪽으로 밀려 나가며 검정 → 13.30 새 컷(밀어내기+검정), rs_cLk_trans.jpg)",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.116·양수 0.27·sd 2.72·|tx| 0.20(n26)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)+눈(rangesheet)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 14.23,
@@ -500,16 +718,28 @@
     }
    ],
    "sfx": null,
-   "cut_at": [
-    14.898
-   ],
+   "cut_at": [],
    "scene": "손·제품 근접",
    "y": [
     1366,
     1442
    ],
    "fill_hex": "#FFFFFF",
-   "notes": "화자는 소리로 확인 못 함(추정)"
+   "notes": "화자는 소리로 확인 못 함(추정)",
+   "role": "답",
+   "fit": 7,
+   "scene_desc": "크래커 포장 + 댓글카드",
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.233·양수 1.00·sd 3.48·|tx| 0.10(n15)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 14.93,
@@ -535,7 +765,21 @@
     1442
    ],
    "fill_hex": "#FFFFFF",
-   "notes": "화자는 소리로 확인 못 함(추정)"
+   "notes": "화자는 소리로 확인 못 함(추정)",
+   "role": "끝",
+   "fit": 5,
+   "scene_desc": "최화정 + 상자",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 -0.486·양수 0.36·sd 4.49·|tx| 0.51(n14)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   }
  ],
  "no_caption": [],
@@ -546,5 +790,89 @@
   "효과음 뜯기 후보 0.0·1.0·11.9 는 파형 근거 없음(0.0·1.0 은 파일 시작 0.3초 안이라 RMS 검증 불가).",
   "캡션 y 1366~1442(다른 3편 1245~1330보다 아래), 댓글카드는 캡션 위(y 1140~1324).",
   "커피잔 일러스트·'쿵 직' 위치 좌표는 눈대중(±40px)."
- ]
+ ],
+ "frame0": {
+  "what": "최화정 상반신(앞치마)",
+  "face_frac": 0.29,
+  "text": "버터 풍미 미쳐버린 / 최화정 커피용 간식",
+  "basis": "0.02초 프레임 창(0,420,1080,1080) YuNet 얼굴 높이/창 높이 · what=눈"
+ },
+ "transitions": [
+  {
+   "t": 0.533,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 0.933,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 2.933,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 4.5,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 6.733,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 7.7,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 8.167,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 8.767,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 9.567,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 10.067,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 10.833,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 12.0,
+   "kind": "zoomblur",
+   "note": "방사 줌블러 2프레임(12.03~12.10) — cutdet 는 밝아져 flash 로 셈, rs_cLk_trans.jpg"
+  },
+  {
+   "t": 13.3,
+   "kind": "black",
+   "note": "12.93~13.23 그림이 왼쪽으로 밀려 나가며 검정 → 13.30 새 컷(밀어내기+검정), rs_cLk_trans.jpg"
+  },
+  {
+   "t": 14.233,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 14.9,
+   "kind": "cut",
+   "note": null
+  }
+ ],
+ "_made_by": "오푸스 실행자 보강(관제 263 지시서 06, 2026-10-25): role·fit·scene_desc=눈(work/lr7/fit_*.jpg) · transition·cut_at=cutdet 30fps(work/lr7/cut_*.json, 60fps 원본을 30fps 사본으로) + rangesheet 눈 정정 · motion=measure 광류(work/lr7/m_*.json) · frame0 face_frac=thumb.faces_of(YuNet, 창 1080²)"
 }

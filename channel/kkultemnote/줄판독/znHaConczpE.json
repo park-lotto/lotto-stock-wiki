@@ -48,7 +48,21 @@
     1340
    ],
    "fill_hex": "#FFFFFF",
-   "notes": "어절 단위로 붙여 나감(들어오→들어오자마자→+소리→+지를→뻔했어, 0.10~0.40초), 끝 어절이 순간 크게 튐"
+   "notes": "어절 단위로 붙여 나감(들어오→들어오자마자→+소리→+지를→뻔했어, 0.10~0.40초), 끝 어절이 순간 크게 튐",
+   "role": "훅",
+   "fit": 6,
+   "scene_desc": "장윤정 머리 감싸 쥠(소리 지를 뻔)",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.047·양수 0.61·sd 9.96·|tx| 0.73(n44)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 1.2,
@@ -67,16 +81,28 @@
    ],
    "sticker": [],
    "sfx": null,
-   "cut_at": [
-    2.267
-   ],
+   "cut_at": [],
    "scene": "손·제품 근접",
    "y": [
     1237,
     1340
    ],
    "fill_hex": "#FFFFFF",
-   "notes": "0.3배에서 시작→1.33초 최대+색분리 잔상(1.4~1.5)→정상. 노랑 굵은 변형"
+   "notes": "0.3배에서 시작→1.33초 최대+색분리 잔상(1.4~1.5)→정상. 노랑 굵은 변형",
+   "role": "훅",
+   "fit": 3,
+   "scene_desc": "식물 + 뒷모습",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "cam",
+   "motion_basis": "div중앙 -0.682·양수 0.38·sd 12.73·|tx| 1.70(n45)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 2.3,
@@ -102,7 +128,21 @@
     1340
    ],
    "fill_hex": "#FFFFFF",
-   "notes": ""
+   "notes": "",
+   "role": "다리",
+   "fit": 5,
+   "scene_desc": "장윤정 웃음 + 뒤 그릇 진열",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "cam",
+   "motion_basis": "div중앙 -0.010·양수 0.46·sd 3.92·|tx| 0.28(n28)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 3.1,
@@ -123,7 +163,21 @@
     1340
    ],
    "fill_hex": "#FFFFFF",
-   "notes": "0.4초짜리 짧은 덩어리"
+   "notes": "0.4초짜리 짧은 덩어리",
+   "role": "공개",
+   "fit": 6,
+   "scene_desc": "그릇 진열 + 장윤정",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.030·양수 0.50·sd 3.20·|tx| 0.08(n10)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 3.5,
@@ -137,16 +191,28 @@
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "cut_at": [
-    4.467
-   ],
+   "cut_at": [],
    "scene": "얼굴",
    "y": [
     1237,
     1340
    ],
    "fill_hex": "#FFFFFF",
-   "notes": "전언체"
+   "notes": "전언체",
+   "role": "반전",
+   "fit": 5,
+   "scene_desc": "이미숙 컵 마심",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 -0.014·양수 0.31·sd 1.13·|tx| 0.12(n29)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 4.5,
@@ -172,7 +238,21 @@
     1340
    ],
    "fill_hex": "#FFFFFF",
-   "notes": ""
+   "notes": "",
+   "role": "질문",
+   "fit": 4,
+   "scene_desc": "이미숙 식탁",
+   "transition": "cut",
+   "motion": "still",
+   "motion_basis": "div중앙 0.028·양수 1.00·sd 0.24·|tx| 0.01(n26)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 5.3,
@@ -191,16 +271,28 @@
    ],
    "sticker": [],
    "sfx": null,
-   "cut_at": [
-    6.367
-   ],
+   "cut_at": [],
    "scene": "기타",
    "y": [
     1237,
     1340
    ],
    "fill_hex": "#FFFFFF",
-   "notes": "강조색이 바로 위 줄(#FDF70C 계열)과 다른 주황빛 노랑"
+   "notes": "강조색이 바로 위 줄(#FDF70C 계열)과 다른 주황빛 노랑",
+   "role": "질문",
+   "fit": 4,
+   "scene_desc": "이미숙 식탁",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "still",
+   "motion_basis": "div중앙 0.031·양수 0.86·sd 0.27·|tx| 0.01(n36)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 6.4,
@@ -247,7 +339,21 @@
     1340
    ],
    "fill_hex": "#FFFFFF",
-   "notes": "댓글카드 같은 순간 등장, 6.65~6.8 반짝 별"
+   "notes": "댓글카드 같은 순간 등장, 6.65~6.8 반짝 별",
+   "role": "공개",
+   "fit": 6,
+   "scene_desc": "장윤정 그릇 앞(주석)",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.018·양수 0.60·sd 2.79·|tx| 0.19(n30)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 7.43,
@@ -276,7 +382,11 @@
      "anim": "cut"
     }
    ],
-   "sfx": null,
+   "sfx": {
+    "kind": "기타(broad 고주파 솟음 7321Hz·0.06초 — 휙·틱 류 추정)",
+    "t": 7.43,
+    "basis": "신호(sfx_events --detect 고립 후보, 귀 미확인)"
+   },
    "cut_at": [],
    "scene": "손·제품 근접",
    "y": [
@@ -284,7 +394,21 @@
     1340
    ],
    "fill_hex": "#FFFFFF",
-   "notes": ""
+   "notes": "",
+   "role": "증거",
+   "fit": 8,
+   "scene_desc": "주석 그릇 든 손",
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.467·양수 1.00·sd 4.12·|tx| 0.03(n18)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호(_kal/sfx_events.json cand)"
+   }
   },
   {
    "t0": 8.03,
@@ -321,7 +445,21 @@
     1340
    ],
    "fill_hex": "#FFFFFF",
-   "notes": "전언체"
+   "notes": "전언체",
+   "role": "증거",
+   "fit": 8,
+   "scene_desc": "주석 그릇 든 손",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.084·양수 0.70·sd 4.31·|tx| 0.10(n33)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 9.07,
@@ -345,11 +483,7 @@
      "anim": "cut"
     }
    ],
-   "sfx": {
-    "kind": "탄성",
-    "t": 9.4,
-    "basis": "뜯기 후보"
-   },
+   "sfx": null,
    "cut_at": [
     9.833
    ],
@@ -359,7 +493,27 @@
     1340
    ],
    "fill_hex": "#F51816",
-   "notes": "작게→크게(9.07→9.23), 이후 색분리 잔상. 행사 무대 컷(다른 영상) 위"
+   "notes": "작게→크게(9.07→9.23), 이후 색분리 잔상. 행사 무대 컷(다른 영상) 위",
+   "role": "고조",
+   "fit": 3,
+   "scene_desc": "무대(다른 영상)",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.007·양수 0.62·sd 7.38·|tx| 0.18(n26)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   },
+   "sfx_unverified": {
+    "kind": "탄성",
+    "t": 9.4,
+    "basis": "뜯기 후보",
+    "why": "1판(10-18) 값 — 뜯기 후보(제미나이 청취)·말 시작과 겹친 파형 솟음·사람 소리(탄성·웃음). sfx_events --detect(10-25) 고립 후보에 없음 → 규칙 분모에서 뺌"
+   }
   },
   {
    "t0": 9.9,
@@ -391,7 +545,21 @@
     1340
    ],
    "fill_hex": "#FFFFFF",
-   "notes": "첫 0.1초 글자가 겹쳐 번져 보이다 정리, 이후 정상"
+   "notes": "첫 0.1초 글자가 겹쳐 번져 보이다 정리, 이후 정상",
+   "role": "본문",
+   "fit": 7,
+   "scene_desc": "접시 만지는 손",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 -0.013·양수 0.31·sd 4.51·|tx| 0.21(n67)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 11.3,
@@ -423,7 +591,21 @@
     1340
    ],
    "fill_hex": "#FFFFFF",
-   "notes": ""
+   "notes": "",
+   "role": "증거",
+   "fit": 8,
+   "scene_desc": "접시 들어 무게",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.021·양수 0.56·sd 7.08·|tx| 0.46(n39)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 12.5,
@@ -455,7 +637,21 @@
     1340
    ],
    "fill_hex": "#FFFFFF",
-   "notes": ""
+   "notes": "",
+   "role": "본문",
+   "fit": 4,
+   "scene_desc": "장윤정 그릇 앞",
+   "transition": "cut",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.573·양수 0.00·sd 4.64·|tx| 0.29(n30)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 13.5,
@@ -487,7 +683,21 @@
     1340
    ],
    "fill_hex": "#FFFFFF",
-   "notes": ""
+   "notes": "",
+   "role": "본문",
+   "fit": 5,
+   "scene_desc": "장윤정 그릇 앞",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.042·양수 0.77·sd 4.91·|tx| 0.36(n22)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 14.1,
@@ -511,7 +721,11 @@
      "anim": "cut"
     }
    ],
-   "sfx": null,
+   "sfx": {
+    "kind": "기타(broad 고주파 솟음 7169Hz·0.10초 — 휙·틱 류 추정)",
+    "t": 14.77,
+    "basis": "신호(sfx_events --detect 고립 후보, 귀 미확인)"
+   },
    "cut_at": [],
    "scene": "손·제품 근접",
    "y": [
@@ -519,7 +733,21 @@
     1340
    ],
    "fill_hex": "#FFFFFF",
-   "notes": ""
+   "notes": "",
+   "role": "본문",
+   "fit": 6,
+   "scene_desc": "접시 들기",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.193·양수 0.97·sd 5.22·|tx| 0.27(n31)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호(_kal/sfx_events.json cand)"
+   }
   },
   {
    "t0": 15.1,
@@ -545,7 +773,21 @@
     1340
    ],
    "fill_hex": "#FFFFFF",
-   "notes": "'결국 ~했네요' 끝맺음"
+   "notes": "'결국 ~했네요' 끝맺음",
+   "role": "끝",
+   "fit": 4,
+   "scene_desc": "장윤정 식당",
+   "transition": "cut",
+   "motion": "still",
+   "motion_basis": "div중앙 -0.048·양수 0.00·sd 0.52·|tx| 0.01(n21)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 15.9,
@@ -566,7 +808,21 @@
     1340
    ],
    "fill_hex": "#FCCF06",
-   "notes": "줄 통째 노랑 변형"
+   "notes": "줄 통째 노랑 변형",
+   "role": "끝",
+   "fit": 5,
+   "scene_desc": "장윤정 결제 말함",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.016·양수 0.59·sd 2.28·|tx| 0.08(n22)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 16.7,
@@ -579,11 +835,7 @@
    "variant": "기본",
    "emph": [],
    "sticker": [],
-   "sfx": {
-    "kind": "탄성",
-    "t": 17.3,
-    "basis": "뜯기 후보"
-   },
+   "sfx": null,
    "cut_at": [],
    "scene": "손·제품 근접",
    "y": [
@@ -591,7 +843,27 @@
     1340
    ],
    "fill_hex": "#FFFFFF",
-   "notes": "한 글자, 끝까지 유지"
+   "notes": "한 글자, 끝까지 유지",
+   "role": "끝",
+   "fit": 3,
+   "scene_desc": "장윤정 그릇 앞",
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.393·양수 0.68·sd 4.66·|tx| 0.11(n19)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   },
+   "sfx_unverified": {
+    "kind": "탄성",
+    "t": 17.3,
+    "basis": "뜯기 후보",
+    "why": "1판(10-18) 값 — 뜯기 후보(제미나이 청취)·말 시작과 겹친 파형 솟음·사람 소리(탄성·웃음). sfx_events --detect(10-25) 고립 후보에 없음 → 규칙 분모에서 뺌"
+   }
   }
  ],
  "no_caption": [],
@@ -603,5 +875,64 @@
   "효과음 후보 9.4·17.3(뜯기)는 파형 10ms RMS 솟음과 겹치지 않음 → '뜯기 후보'만. 들을 수 없어 확정 못 함.",
   "강조 노랑이 편 안에서 두 종류(#FEF60E 레몬 / #FCD108 주황빛)로 갈림 — 앞쪽 줄(2.3~7)은 주황빛, 7.4 이후 나레는 레몬.",
   "y 는 한 줄 기준 1237~1340(댓글카드 있을 때도 같은 자리)."
- ]
+ ],
+ "frame0": {
+  "what": "장윤정 손으로 머리 감싸 얼굴 가림(창가)",
+  "face_frac": 0.0,
+  "text": "장윤정도 내돈 내산! / 스캔들 원조 배우 이미숙 그릇",
+  "basis": "0.02초 프레임 창(0,420,1080,1080) YuNet 얼굴 높이/창 높이 · what=눈"
+ },
+ "transitions": [
+  {
+   "t": 3.467,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 4.467,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 6.367,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 7.4,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 9.067,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 9.833,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 12.5,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 15.1,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 15.933,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 16.7,
+   "kind": "cut",
+   "note": null
+  }
+ ],
+ "_made_by": "오푸스 실행자 보강(관제 263 지시서 06, 2026-10-25): role·fit·scene_desc=눈(work/lr7/fit_*.jpg) · transition·cut_at=cutdet 30fps(work/lr7/cut_*.json, 60fps 원본을 30fps 사본으로) + rangesheet 눈 정정 · motion=measure 광류(work/lr7/m_*.json) · frame0 face_frac=thumb.faces_of(YuNet, 창 1080²)"
 }
