@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """설명서 frame.json(calcopy_frame v1 층 목록) → 판 설정 `frame` 칸 초안 (관제 263 지시서 07 · 표준 §3-3 B1). 한 번 돌리고 끝 — 판 파일이 주인.
 
-    PYTHONUTF8=1 py tools/calcopy/hybrid/frame_import.py <frame.json> --kind post|full|window [--frame body|hook] [--out 초안.json]
+    PYTHONUTF8=1 py tools/calcopy/hybrid/frame_import.py <frame.json> --kind post|full|window [--frame body|hook] [--manifest m.json] [--out 초안.json]
 
 픽셀 그대로 옮긴다(값을 고치지 않는다). 옮기는 법(render_bench.frame_png · _draw_post 칸 이름):
   bg → frame.bg · video → frame.window[x,y,w,h]
@@ -10,6 +10,8 @@
          fade 있는 띠 → post.body_box{box,color,fade} (그 안 띠 = body_box.rules, 그 안 label 글 = body_box.text) ·
          작은 글(label, 크기 < 45) → post.author_line · 그 밖 띠 → post.rules
   text role=title(줄 여러 개) → frame.title[] 줄마다 {font,px,center,color,max_w(+stroke,shadow)} · 머리띠 밑 굵은 label(제목 꼴, post) → frame.title[0]
+  (window) brand 글 → frame.logo{text,font,px,x(왼쪽),y,rgba,stroke} · label 글 → frame.credit(출처 줄 자리)
+  '$per_video' 칸 = manifest.variable_stats default(편마다 값 중앙) · 못 채운 칸 `_per_video_unfilled` · 칸 없는 글 속성(기울임·자간·글로우·등장·둥근 창) `_unmapped_props`
   text role=caption → 반환 `_caption_layer`(자막 자리 — 렌더러는 자막팩이 자리를 정한다, 판 caption.band 근거로만 쓴다)
 글꼴 이름: frame.json 의 글꼴 이름('CcPretendard-SemiBold')을 shopping_shorts/static/fonts 파일로(앞 'Cc' 떼고 같은 이름 .ttf/.otf). 못 찾으면 `_unresolved` 에 적는다(지어내지 않는다).
 글 세로 자리: frame.json text 는 y=줄 상자 위, valign center → 줄 i 가운데 = y + line_h×(i+0.5) (render_bench._draw_text cy · _title_line center 와 같은 뜻).
@@ -103,12 +105,34 @@ def _search_icon(l) -> dict | None:
     return {"kind": "search", "x": int(l["x"]), "y": int(l["y"]), "size": int(l["w"]), "stroke": int(m.group(1)) if m else 7, "color": col}
 
 
-def convert(fj: dict, kind: str, frame_id: str | None = None) -> dict:
+def _fill_per_video(fr: dict, manifest: dict | None, multi: bool) -> tuple[list, list]:
+    """'$per_video' 칸 → manifest.variable_stats 의 default(편마다 값의 중앙값 — preset_save 가 정함). 못 채운 칸은 목록으로(지어내지 않는다)."""
+    import copy
+    VS = (manifest or {}).get("variable_stats") or {}
+    L = copy.deepcopy(fr["layers"])
+    miss = []
+    for l in L:
+        tag = f"layers[{l['kind']}:{l.get('role')}]" if l.get("role") else f"layers[{l['kind']}]"
+        for k, v in list(l.items()):
+            if v != "$per_video":
+                continue
+            keys = [f"frames[{fr.get('id')}].{tag}.{k}", f"{tag}.{k}"] if multi else [f"{tag}.{k}"]
+            got = next((VS[x] for x in keys if x in VS), None)
+            if got is not None and got.get("default") is not None:
+                l[k] = got["default"]
+            else:
+                l[k] = None
+                miss.append(f"{tag}.{k}")
+    return L, miss
+
+
+def convert(fj: dict, kind: str, frame_id: str | None = None, manifest: dict | None = None) -> dict:
     frames = fj.get("frames") or [{"id": "only", "layers": fj.get("layers") or []}]
     fr = next((f for f in frames if f.get("id") == frame_id), None) if frame_id else frames[-1]
     if fr is None:
         raise SystemExit(f"frame id {frame_id} 없음 — 있는 것 {[f.get('id') for f in frames]}")
-    L = fr["layers"]
+    L, per_miss = _fill_per_video(fr, manifest, bool(fj.get("frames")))
+    L = [l for l in L if not (l["kind"] == "text" and l.get("role") == "label" and l.get("text") is None and l.get("size") is None)]
     unresolved: list = []
     out: dict = {"kind": kind, "_from": f"frame_import.py ← {fj.get('made_by')} source={fj.get('source')} frame={fr.get('id')} span={fr.get('span')}"}
     bg = next((l for l in L if l["kind"] == "bg"), None)
@@ -189,6 +213,50 @@ def convert(fj: dict, kind: str, frame_id: str | None = None) -> dict:
         left = [l for l in left if not (l["kind"] == "image" and any(ic.get("kind") == "search" for ic in (P.get("head_bar") or {}).get("icons", [])) and _search_icon(l))]
     if left:
         out["_unmapped"] = [{k: (v[:40] if isinstance(v, str) else v) for k, v in l.items() if v not in (None, False, [], 0) or k in ("x", "y")} for l in left]
+    if kind == "window":
+        used_w = set()
+        br = [l for l in L if l["kind"] == "text" and l.get("role") == "brand"]
+        if br:      # 로고 = 채널 이름 글(왼쪽 x·위 y 는 글꼴로 잰다 — render_bench.frame_png logo 꼴)
+            b = br[0]
+            f = font_file(b.get("font"), unresolved)
+            txt = str(b.get("text") or "").replace(chr(10), " ")
+            left = int(b["x"])
+            try:
+                from PIL import ImageFont
+                ft = ImageFont.truetype(str(FONTS / f), int(b["size"]))
+                if b.get("align", "center") == "center":
+                    left = int(b["x"] - ft.getlength(txt) / 2)
+            except Exception as e:      # 글꼴 못 열면 가운데 x 그대로 두고 표시
+                out.setdefault("_notes", []).append(f"로고 폭 못 잼({e}) — x 는 가운데 값")
+            out["logo"] = {"text": txt, "font": f, "px": int(b["size"]), "x": left, "y": int(b["y"]),
+                           "rgba": list(b["rgb"][:3]) + [255], "stroke": int((b.get("outline") or {}).get("px", 0))}
+            used_w.add(id(b))
+        lab = [l for l in L if l["kind"] == "text" and l.get("role") == "label"]
+        if lab:     # 출처 줄 = 대본 source_label 이 그려지는 자리
+            c = lab[0]
+            out["credit"] = {"font": font_file(c.get("font"), unresolved), "px": c["size"], "center": round(c["y"] + (c.get("line_h") or c["size"]) / 2, 1),
+                             "color": hexc(c["rgb"])}
+            used_w.add(id(c))
+        rest = [l for l in L if l["kind"] not in ("bg", "video") and id(l) not in used_w and not (l["kind"] == "text" and l.get("role") in ("title", "caption"))]
+        out.pop("_unmapped", None)
+        if br and int((br[0].get("lines") or 1)) > 1:
+            out.setdefault("_notes", []).append(f"로고 글 {br[0].get('lines')}줄 → logo 칸은 한 줄(줄바꿈을 띄어쓰기로)")
+        if rest:
+            out["_unmapped"] = [{k: (v[:40] if isinstance(v, str) else v) for k, v in l.items() if v not in (None, False, [], 0) or k in ("x", "y")} for l in rest]
+    # 칸이 없어 못 옮긴 글 속성(제목·자막 층) — 판 담당이 _pending 으로 적는다
+    props = []
+    for l in L:
+        if l["kind"] == "text" and l.get("role") in ("title", "caption", "brand"):
+            for k in ("italic", "letter_spacing", "word_spacing", "line_scale", "glow", "enter", "radius"):
+                if l.get(k) not in (None, False, 0, [], ""):
+                    props.append(f"{l['role']}.{k}={l[k]}")
+    vid = next((l for l in L if l["kind"] == "video"), None)
+    if vid and vid.get("radius"):
+        props.append(f"video.radius={vid['radius']}")
+    if props:
+        out["_unmapped_props"] = props
+    if per_miss:
+        out["_per_video_unfilled"] = per_miss
     if unresolved:
         out["_unresolved_fonts"] = sorted(set(unresolved))
     return out
@@ -200,9 +268,12 @@ def main(argv=None):
     ap.add_argument("--kind", required=True, choices=["post", "full", "window"])
     ap.add_argument("--frame", default=None, help="frames[].id (기본 = 마지막 틀 = 본문)")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--manifest", default=None, help="'$per_video' 칸을 채울 manifest.json(기본 = frame.json 옆)")
     a = ap.parse_args(argv)
     fj = json.loads(Path(a.frame_json).read_text(encoding="utf-8"))
-    res = convert(fj, a.kind, a.frame)
+    mp = Path(a.manifest) if a.manifest else Path(a.frame_json).with_name("manifest.json")
+    man = json.loads(mp.read_text(encoding="utf-8")) if mp.exists() else None
+    res = convert(fj, a.kind, a.frame, man)
     s = json.dumps(res, ensure_ascii=False, indent=1)
     if a.out:
         Path(a.out).write_text(s + "\n", encoding="utf-8")
