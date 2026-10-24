@@ -106,7 +106,7 @@
     308,
     774
    ],
-   "fill_hex": "#000000",
+   "fill_hex": "#010101",
    "emph": [],
    "sticker": [],
    "sfx": null,
@@ -761,19 +761,19 @@
    "type_cps": null,
    "cursor": false,
    "exit": "cut",
-   "variant": "기본(새 페이지 첫 줄) — 3줄이 한 번에",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
    "y": [
     568,
-    834
+    698
    ],
-   "x": 591,
+   "x": 535,
    "align": "center",
-   "max_w": 774,
+   "max_w": 326,
    "ink_x": [
-    204,
-    978
+    372,
+    698
    ],
-   "fill_hex": "#412A20",
+   "fill_hex": "#000000",
    "emph": [],
    "sticker": [],
    "sfx": null,
@@ -781,10 +781,10 @@
     "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
     "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
    },
-   "size_px": 56,
+   "size_px": 57,
    "letter_gap_px": 3.5,
-   "word_gap_px": 227.5,
-   "line_gap_px": 24,
+   "word_gap_px": 21.0,
+   "line_gap_px": 23,
    "outline": {
     "px": 0,
     "hex": null
@@ -923,7 +923,7 @@
     432,
     658
    ],
-   "fill_hex": "#000000",
+   "fill_hex": "#010101",
    "emph": [],
    "sticker": [],
    "sfx": null,
@@ -2139,7 +2139,7 @@
     382,
     696
    ],
-   "fill_hex": "#000000",
+   "fill_hex": "#010101",
    "emph": [],
    "sticker": [],
    "sfx": null,
@@ -2214,7 +2214,7 @@
     226,
     848
    ],
-   "fill_hex": "#000000",
+   "fill_hex": "#010101",
    "emph": [],
    "sticker": [],
    "sfx": null,
@@ -2662,7 +2662,7 @@
     214,
     878
    ],
-   "fill_hex": "#000000",
+   "fill_hex": "#010101",
    "emph": [],
    "sticker": [],
    "sfx": null,
@@ -4653,17 +4653,17 @@
    "type_cps": null,
    "cursor": false,
    "exit": "cut",
-   "variant": "덧붙음(3번째 줄까지)",
+   "variant": "덧붙음(2번째 줄)",
    "y": [
     646,
-    804
+    698
    ],
-   "x": 515,
+   "x": 539,
    "align": "center",
-   "max_w": 650,
+   "max_w": 494,
    "ink_x": [
-    190,
-    840
+    292,
+    786
    ],
    "fill_hex": "#000000",
    "emph": [],
@@ -4673,10 +4673,10 @@
     "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
     "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
    },
-   "size_px": 34,
-   "letter_gap_px": 3.0,
-   "word_gap_px": 15.8,
-   "line_gap_px": 44,
+   "size_px": 56,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 20.0,
+   "line_gap_px": 24,
    "outline": {
     "px": 0,
     "hex": null

@@ -1,0 +1,98 @@
+{
+ "name": "humorshowshow판",
+ "renderer": "bench",
+ "_note": "kal.py rules 초안(2026-10-25) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
+ "bench": {
+  "ko": null,
+  "channel": "https://www.youtube.com/@humorshowshow",
+  "analysis": "channel/humorshowshow/스타일분석.md",
+  "line_reads": "channel/humorshowshow/줄판독/",
+  "src_dir": "C:\\숏템_칼카피\\humorshowshow\\src",
+  "sfx_events": null,
+  "sfx_key": null,
+  "palette": "channel/humorshowshow/팔레트.json",
+  "rules_counted": "channel/humorshowshow/_kal/규칙빈도.json"
+ },
+ "voice": {
+  "name": null,
+  "voice_id": null,
+  "candidates": [],
+  "why": "미정 — 사장님께(kal.py 시작 질문, 추천: 미측정(뜯기에 화자 성별 없음 — 줄판독 뒤 engine/sound/narr_report.py 닮은 목소리 순위로))"
+ },
+ "cps_target": 8.71,
+ "bgm": {
+  "id": null,
+  "db_below_voice": null,
+  "duck_orig_db": null,
+  "fade_out": null,
+  "why": "engine/sound/bgm_fp.py·뜯기 audio"
+ },
+ "loudness": {
+  "lufs": -14,
+  "tp": -1.5
+ },
+ "length": {
+  "min": 25.0,
+  "max": 59.7
+ },
+ "script": {
+  "brief": [
+   "나레: 어미 다, 어떰, 떡에, 지 · 존댓말 0.21 · 전언 0.0 · 자수 중앙 10.0"
+  ],
+  "example": [
+   "미국 선물 1위 반입금지시켜버린 한국",
+   "오뚜기가 일반인한테는 절대 안 파는 것",
+   "한국인들이 공식 깨부셨다는 디저트"
+  ],
+  "audit": []
+ },
+ "frame": {
+  "window": null,
+  "title": [],
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "comment": null
+ },
+ "caption": {
+  "pack": null,
+  "pack_default": null,
+  "variant_for": {},
+  "typing_cps": 9.5
+ },
+ "timing": null,
+ "cuts": null,
+ "sfx_files": null,
+ "placement": {
+  "rules": {
+   "narr_enter": "instant",
+   "orig_enter": null,
+   "fx_rate": {
+    "나레": 0.04
+   },
+   "plain_rate": 0.96,
+   "by_pos": {
+    "훅": 0.07,
+    "본문": 0.03,
+    "끝": 0.03
+   },
+   "strong": [
+    "역할=다리 → enter=instant 12/16",
+    "자리=훅 → enter=instant 12/15",
+    "역할=고조 → enter=instant 9/15",
+    "역할=증거 → enter=instant 9/14",
+    "역할=공개 → enter=instant 6/10",
+    "역할=답 → enter=append 6/9",
+    "역할=훅 → enter=instant 6/8",
+    "화자전환 첫 덩어리=나레 → enter=instant 6/6"
+   ]
+  },
+  "counted": {}
+ },
+ "_todo": [
+  "voice·bgm·sfx = engine/sound 결과",
+  "frame.title/logo/credit = 스타일분석 §틀",
+  "caption.pack = caption-motions.js 팩 이름(없으면 요청서)",
+  "timing·cuts·sfx_files = 견본 styles/키치잇판.json 꼴"
+ ]
+}
