@@ -44,5 +44,5 @@
 | `frame.post` | `head_bar{box,color,icons[bars{x,ys,w,h,color}·search{x,y,size,stroke,color}·text{…,from}]}` · `rules[{box,color}]`(가는 줄·띠) · `author_line{text,font,px,color,x|cx,cy|ink_top,word_spacing}` · `body_box{box,color,fade[위,아래 px],radius,rules[],text{…}}` · `views_line{…}` · `meme_slot{box[x,y,w,h]}` — 글은 대본 `post{brand,author,body,views,meme}` 가 있으면 그것 | `_draw_post` | — | |
 | `frame.full` | `band{cy,h,rgba}`(가운데 자막 띠, 선택) — 창 = 화면 전체, 제목·로고·워터마크는 위에 얹힌다 | `_draw_full` | — | |
 
-`render_info.json` 표식: `devices{transition{kinds_set,drawn,n}, duck_narr{db,bed}, frame_kind}` · `style_sha{file(판 파일 바이트), effective(_common·base 합친 설정)}` — 품질 관문(04)이 읽는다. 자막표.json 에 `transitions`(그린 목록).
+`render_info.json` 표식: `devices{transition{kinds_set,drawn,n}, duck_narr{db,bed}, frame_kind}` · `style_sha`(판 파일 sha256) · `style_sha_effective`(_common·base 합친 설정) · `renderer_sig`(렌더러 파일@sha) · `line_cps{줄: 자/초}` — 표식 주인 `render_bench.render_marks`(itssum·jaemi 도 부른다), 품질 관문(04)이 읽는다. 자막표.json 에 `transitions`(그린 목록).
 시험 판(목록에 안 뜸): `_test_transition`(모든 경계 줌블러 200ms) · `_test_duck`(나레 −8dB) · `_test_post`(게시글형 = banggu 게시글형 훅 틀 좌표).

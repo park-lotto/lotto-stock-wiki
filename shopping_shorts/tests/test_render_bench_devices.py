@@ -122,6 +122,28 @@ def test_black_frame_drawn(tmp_path):
     assert fr[FPS - 1].mean() > 60 and fr[FPS + 1].mean() > 60   # 앞뒤 프레임은 그대로
 
 
+def test_transition_drop_same_ruler(tmp_path):
+    """⑯ 자: 경계 띠 vs 앞뒤 바탕 — 줌블러 입힌 영상은 크게 떨어지고(≥0.5) 안 입힌 영상은 거의 0. 마스크로 뺀 픽셀은 안 센다."""
+    src = _src(tmp_path)
+    fx = _apply(src, RB.window_fx([{"t": 1.0, "kind": "zoomblur", "ms": 200.0}], 216, 216), tmp_path / "zb.mp4")
+    a = RB.transition_drop(fx, [1.0], [0, 0, 216, 216])[0]
+    b = RB.transition_drop(src, [1.0], [0, 0, 216, 216])[0]
+    assert a["drop"] >= 0.5 and abs(b["drop"]) < 0.1, (a, b)
+    assert 100 <= a["ms"] <= 300 and b["ms"] == 0
+    whole = RB.rect_mask_of([[0, 0, 216, 216, 0, 9]], [0, 0, 216, 216])        # 다 가리면 잴 픽셀 없음 → nan
+    assert RB.transition_drop(fx, [1.0], [0, 0, 216, 216], whole)[0]["drop"] != RB.transition_drop(fx, [1.0], [0, 0, 216, 216], whole)[0]["drop"]
+
+
+def test_render_marks_and_line_cps():
+    from tools.calcopy.hybrid import render_itssum as RI
+    m = RB.render_marks("키치잇판", RB.__file__)
+    import hashlib
+    assert m["style_sha"] == hashlib.sha256((ROOT / "tools/calcopy/hybrid/styles/키치잇판.json").read_bytes()).hexdigest()
+    assert m["renderer_sig"].startswith("render_bench@") and len(m["style_sha_effective"]) == 12
+    assert RI.CPS_LINE_TOL == 0.35
+    assert RI.line_cps([{"id": "n1", "chars": 14, "dur": 2.0}, {"id": "n2", "chars": 7, "dur": 0}]) == {"n1": 7.0}
+
+
 def test_flash_expression_unchanged(monkeypatch, tmp_path):
     """흰 번쩍은 옛 길(flashes → render_base geq 식)과 같은 글자로 나와야 한다(장치 안 켠 판 그림 불변)."""
     cmds = []
@@ -289,11 +311,18 @@ def _cli():
     f = sub.add_parser("framediff"); f.add_argument("a"); f.add_argument("b"); f.add_argument("--start", type=float, default=0.5)
     f.add_argument("--n", type=int, default=10)
     ab = sub.add_parser("blurab"); ab.add_argument("plain"); ab.add_argument("fx"); ab.add_argument("timeline"); ab.add_argument("--window", default="0,420,1080,1080")
+    td = sub.add_parser("tdrop"); td.add_argument("what", choices=["ours", "bench"]); td.add_argument("a"); td.add_argument("b")   # ours <render 폴더> <판> · bench <줄판독.json> <원본.mp4>
     pc = sub.add_parser("postcmp"); pc.add_argument("ref"); pc.add_argument("ours"); pc.add_argument("--x", type=int, default=20)
     pc.add_argument("--y1", type=int, default=760); pc.add_argument("--bands", default="100,250;600,720")
     a = ap.parse_args()
     if a.cmd == "postcmp":
         print(json.dumps(postcmp(a.ref, a.ours, a.x, a.y1, [tuple(int(v) for v in b.split(",")) for b in a.bands.split(";")]), ensure_ascii=False, indent=1))
+    if a.cmd == "tdrop":        # ⑯ 같은 자(마스크 뺀 라플라시안 분산 하락·ms 실측)
+        r = RB.render_transition_drop(Path(a.a), a.b) if a.what == "ours" else RB.bench_transition_drop(Path(a.a), Path(a.b))
+        ds = [b["drop"] for b in r["boundaries"] if b["drop"] == b["drop"]]
+        r["median_drop"] = float(np.median(ds)) if ds else None
+        r["median_ms"] = float(np.median([b["ms"] for b in r["boundaries"]])) if r["boundaries"] else None
+        print(json.dumps(r, ensure_ascii=False))
     if a.cmd == "blurab":       # 같은 편·같은 시각: 장치 끈 판(plain) ↔ 켠 판(fx) — 경계 ±0.1초 띠의 라플라시안 분산이 얼마나 떨어졌나
         x, y, w, h = (int(v) for v in a.window.split(","))
         T = json.loads(Path(a.timeline).read_text(encoding="utf-8"))

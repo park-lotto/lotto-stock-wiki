@@ -98,6 +98,14 @@ def tts_once(S, R: Path, log=print) -> tuple[Path, dict | None]:
 
 
 END_PAD, HEAD_PAD = 0.15, 0.25      # 줄 경계 여유(초) — split_by_align 한 곳
+CPS_LINE_TOL = 0.35                 # 줄 말속도 허용 폭(평균 ±35%) 주인 — 넘으면 렌더를 멈춘다(문장 자르기·TTS 되풀이 의심). 품질 관문(quality_gate.cps_tol)이 이 이름을 읽는다(표준 §11 ⑤)
+
+
+def line_cps(sent: list[dict]) -> dict:
+    """render_info.line_cps = {줄: 자/초}(나온 소리 기준 — make_sentences 의 chars/dur) — 관문은 재계산 없이 이 표만 본다."""
+    return {s["id"]: round(s["chars"] / s["dur"], 2) for s in sent if s.get("dur") and s.get("chars") is not None}
+
+
 TEMPO_MAX = 1.25                    # 고정 배속이 아닌 목소리(타입캐스트)의 배속 상한 — 기본·줄별 모두(사장님 10-21). 미나 1.35 는 narr_align.fixed_tempo 가 정한다
 
 
@@ -165,9 +173,9 @@ def split_sentences(full, n, chars: list[int] | None = None):
     if chars:
         rates = [c / max(b - a, 0.1) for c, (a, b) in zip(chars, spans)]
         mean = sum(chars) / sum(b - a for a, b in spans)
-        bad = [(i, round(r, 2)) for i, r in enumerate(rates) if not (0.65 * mean <= r <= 1.35 * mean)]
+        bad = [(i, round(r, 2)) for i, r in enumerate(rates) if not ((1 - CPS_LINE_TOL) * mean <= r <= (1 + CPS_LINE_TOL) * mean)]
         if bad:
-            raise StageError(f"문장 자르기 의심(줄 말속도 평균 {mean:.2f}자/초의 ±35% 밖: {bad}) — tts_spans 를 손으로 확인")
+            raise StageError(f"문장 자르기 의심(줄 말속도 평균 {mean:.2f}자/초의 ±{CPS_LINE_TOL:.0%} 밖: {bad}) — tts_spans 를 손으로 확인")
     return spans, inner
 
 
@@ -223,9 +231,9 @@ def make_sentences(S, full: Path, R: Path, log=print, align: dict | None = None)
                     "override": str(src_l) if src_l is not full else None})
     log(f"atempo 기본 {tempo} · 평균 {mean:.2f}자/초 · " + " ".join(f"{o['id']}:{o['chars'] / o['dur']:.2f}@{o['tempo']}" for o in out))
     if how == "align":   # 글자 시각은 '보낸 글' 기준이라 TTS 가 문장을 되풀이·누락해도 경계가 맞아 보인다 → 줄 말속도로 잡는다(10-24 잇템로그 12편 N3 4.90자/초 = 반복 '…원리라는데 다른 외국인 모녀는' 그대로 통과)
-        bad = [(o["id"], round(o["chars"] / o["dur"], 2)) for o in out if not (0.65 * mean <= o["chars"] / o["dur"] <= 1.35 * mean)]
+        bad = [(o["id"], round(o["chars"] / o["dur"], 2)) for o in out if not ((1 - CPS_LINE_TOL) * mean <= o["chars"] / o["dur"] <= (1 + CPS_LINE_TOL) * mean)]
         if bad:
-            raise StageError(f"TTS 줄 말속도 이상(평균 {mean:.2f}자/초의 ±35% 밖: {bad}) — 되풀이·빠뜨림 의심. s_<줄>.wav 받아쓰기로 확인 후 문장을 바꾸고 "
+            raise StageError(f"TTS 줄 말속도 이상(평균 {mean:.2f}자/초의 ±{CPS_LINE_TOL:.0%} 밖: {bad}) — 되풀이·빠뜨림 의심. s_<줄>.wav 받아쓰기로 확인 후 문장을 바꾸고 "
                              f"narr_full.mp3 와 .tts.json 을 함께 치워 다시 합성(사이드카만 치우면 옛 소리를 그대로 받아들인다)")
     out[0]["split_how"] = how
     return out, tempo, inner
@@ -566,7 +574,9 @@ def render(doc: Path, work: Path, plan_only: bool = False, desktop: Path | None 
     # 완성본 인코딩·진짜 최고점(B2 ≤ −0.5) 지킴은 engine/master_guard 한 곳 — 예전 '리미터 1dB씩 내려 다시 섞기' 루프(10-18 김가연 −0.8 → +0.4)를 대신한다
     from tools.calcopy.engine.master_guard import encode_final
     A = {**A, "master_guard": encode_final(vid, mix, final, -0.5, log=log)}
+    from tools.calcopy.hybrid.render_bench import render_marks
     info = {"made_by": "tools/calcopy/hybrid/render_itssum.py", "version": "잇썸홈판", "tempo": tempo, "sentences": sent, "inner_silences": inner,
+            **render_marks("잇썸홈판", __file__), "line_cps": line_cps(sent),
             "split_how": sent[0].get("split_how"), "tts_align": bool(align),
             "timeline": T, "audio": A, "final": str(final), "final_dur": dur_of(final), "final_lufs": lufs(final),
             "cuts_flat": [{"src": c["src"], "ss": c["ss"], "t0": c["t0"], "t1": c["t1"], "dur": c["dur"], "seg": "B", "line": c["line"], "see": c.get("see", "")} for c in T["cuts"]]

@@ -605,7 +605,9 @@ def render(doc: Path, work: Path, plan_only: bool = False, desktop: Path | None 
            "mix_gain": round(gain, 2), "max_caption": max(len(p["caption"]) for p in S["pieces"]), "master_guard": guard}
     cuts_flat = [{"src": g["src"], "ss": g["ss"], "t0": g["t0_final"], "t1": g["t1_final"], "dur": g["dur"], "seg": "B", "line": pl[g["pieces"][0]], "see": g.get("seen", "")} for g in gs]
     cuts_flat += [{"src": s["src"], "ss": s["ss"], "t0": s["t0"], "t1": s["t1"], "dur": s["dur"], "seg": "A", "line": s["who"], "see": s.get("see", "")} for s in T["a_shots"]]
-    info = {"report": rep, "pieces": T["pieces"], "a_shots": T["a_shots"], "a_caps": ev, "b_groups": gs, "timed": T["timed"], "cut": cut, "cuts_flat": cuts_flat,
+    from tools.calcopy.hybrid.render_bench import render_marks
+    info = {**render_marks("재미썸홈판", __file__), "line_cps": {str(S["lines"][i].get("slot") or i): r for i, r in enumerate(rates)},   # 표식·줄 말속도 표(표준 §11 ⑤)
+            "report": rep, "pieces": T["pieces"], "a_shots": T["a_shots"], "a_caps": ev, "b_groups": gs, "timed": T["timed"], "cut": cut, "cuts_flat": cuts_flat,
             "lines": [{"slot": l["slot"], "text": l["text"], "tts": l["tts"], "chars": nchar(l["tts"])} for l in S["lines"]]}
     jsave(R / "render_info.json", info)
     jsave(R / "timeline.json", info)

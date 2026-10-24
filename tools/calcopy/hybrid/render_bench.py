@@ -625,6 +625,137 @@ def window_fx(trans: list[dict], ww: int, wh: int) -> str:
     return ";".join(fc)
 
 
+# ── 전환 세기 자(표준 §11-2 ⑯) — 우리 완성본과 벤치를 **같은 함수·같은 마스크 규칙**으로 잰다 ──────────────
+TD_BAND_S = 0.1                 # 경계 띠 = 경계 ±0.05초(0.1초 띠)
+TD_AROUND = (0.2, 0.4)          # 비교 바탕 = 경계 앞뒤 0.2~0.4초
+TD_LOW = 0.7                    # 바탕 대비 분산이 이 비율 밑인 연속 프레임 = 전환이 보이는 길이(ms 실측)
+TD_PAD = 8                      # 자막·스티커 상자 테두리(px)
+
+
+def _gray_seg(video: Path, t0: float, t1: float, crop) -> tuple:
+    """[t0,t1) 프레임(회색, crop=[x,y,w,h]) 배열과 그 프레임들의 시각."""
+    import subprocess
+    import numpy as np
+    x, y, w, h = crop
+    t0 = max(0.0, t0)
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t0:.3f}", "-i", str(video), "-t", f"{t1 - t0:.3f}", "-vf",
+                          f"fps={FPS},crop={w}:{h}:{x}:{y},format=gray", "-f", "rawvideo", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
+    fr = np.frombuffer(raw, np.uint8).reshape(-1, h, w)
+    return fr, [round(t0 + k / FPS, 4) for k in range(len(fr))]
+
+
+def _masked_lapvar(fr, mask) -> float:
+    import cv2
+    import numpy as np
+    lap = cv2.Laplacian(fr, cv2.CV_64F)
+    keep = ~mask if mask is not None else np.ones(fr.shape, bool)
+    return float(lap[keep].var()) if keep.sum() > 1000 else float("nan")
+
+
+def transition_drop(video: Path, ts: list[float], crop, mask_of=None) -> list[dict]:
+    """경계마다 drop = 1 − (경계 ±0.05초 띠 라플라시안 분산 평균)/(앞뒤 0.2~0.4초 바탕 평균) · ms = 바탕의 TD_LOW 밑으로 떨어진 연속 프레임 길이.
+    crop = 창 [x,y,w,h](화면 픽셀) · mask_of(t, shape) → bool 배열(True = 빼는 픽셀: 자막 띠·스티커, 테두리 8px 포함) | None.
+    우리 완성본·벤치 원본 둘 다 이 함수(⑯ '같은 자'). 품질 관문(04)은 이 함수를 부르면 된다."""
+    import numpy as np
+    out = []
+    for t in ts:
+        a0, a1 = TD_AROUND
+        fr, tt = _gray_seg(video, t - a1, t + a1, crop)
+        if not len(fr):
+            continue
+        lv = np.array([_masked_lapvar(f, mask_of(ti, f.shape) if mask_of else None) for f, ti in zip(fr, tt)])
+        rel = np.array(tt) - t
+        band = np.abs(rel) <= TD_BAND_S / 2 + 1e-3
+        around = (np.abs(rel) >= a0 - 1e-3) & (np.abs(rel) <= a1 + 1e-3)
+        base = float(np.nanmean(lv[around])) if around.any() else float("nan")
+        drop = 1 - float(np.nanmean(lv[band])) / base if band.any() and base > 0 else float("nan")
+        k0 = int(np.argmin(np.abs(rel)))
+        low = lv < TD_LOW * base
+        a = b = k0
+        if low[k0]:
+            while a > 0 and low[a - 1]:
+                a -= 1
+            while b + 1 < len(low) and low[b + 1]:
+                b += 1
+            ms = round((b - a + 1) * 1000 / FPS)
+        else:
+            ms = 0
+        out.append({"t": round(t, 3), "drop": round(drop, 3), "ms": ms, "band_var": round(float(np.nanmean(lv[band])), 1), "around_var": round(base, 1)})
+    return out
+
+
+def overlay_mask_of(base: Path, over: Path, crop, pad: int = TD_PAD, th: int = 12):
+    """우리 완성본 마스크: 바탕(base.mp4, 자막 없음)과 자막 입힌 영상(captioned.mp4)이 다른 픽셀 = 자막·스티커 → 테두리 pad px 넓혀 뺀다."""
+    import cv2
+    import numpy as np
+    cache = {}
+    k = np.ones((2 * pad + 1, 2 * pad + 1), np.uint8)
+
+    def mask_of(t, shape):
+        key = round(t * FPS)
+        if key not in cache:          # 1초 덩어리로 한 번에 읽어 둔다(프레임마다 영상 열기 금지)
+            a, ta = _gray_seg(base, t, t + 1.0, crop)
+            b, _ = _gray_seg(over, t, t + 1.0, crop)
+            for fa, fb, ti in zip(a, b, ta):
+                m = (np.abs(fa.astype(np.int16) - fb.astype(np.int16)) > th).astype(np.uint8)
+                cache[round(ti * FPS)] = cv2.dilate(m, k) > 0
+        return cache.get(key)
+    return mask_of
+
+
+def rect_mask_of(rects, crop, pad: int = TD_PAD):
+    """벤치 마스크: 줄판독 자막 띠·스티커 상자 [x0,y0,x1,y1,t0,t1](화면 픽셀·초) → 그 시각에 걸린 상자를 pad px 넓혀 뺀다."""
+    import numpy as np
+    cx, cy, cw, ch = crop
+
+    def mask_of(t, shape):
+        m = np.zeros(shape, bool)
+        for x0, y0, x1, y1, a, b in rects:
+            if a - 1e-3 <= t < b + 1e-3:
+                m[max(0, int(y0) - pad - cy):max(0, int(y1) + pad - cy), max(0, int(x0) - pad - cx):max(0, int(x1) + pad - cx)] = True
+        return m
+    return mask_of
+
+
+def bench_transition_drop(line_read: Path, video: Path, kind: str = "zoomblur") -> dict:
+    """벤치 한 편: 줄판독 lines[].transition==kind 인 줄 시작 근처(±0.2초) 장면 경계(shot_starts, 없으면 줄 시작)에서 transition_drop.
+    마스크 = 줄판독 자막 띠(y)·스티커 상자 · 창 = layout.window(화면 밖은 잘라 냄)."""
+    import json as _j
+    d = _j.loads(Path(line_read).read_text(encoding="utf-8"))
+    x, y, w, h = d["layout"]["window"]
+    h = min(h, H - y)
+    crop = [x, y, w, h]
+    rects = []
+    for l in d["lines"]:
+        yy = l.get("y")
+        if isinstance(yy, list) and len(yy) == 2:
+            rects.append([0, yy[0], W, yy[1], l["t0"], l["t1"]])
+        for s in l.get("sticker") or []:
+            b = s.get("bbox") if isinstance(s, dict) else None
+            if isinstance(b, list) and len(b) == 4:
+                rects.append([*b, l["t0"], l["t1"]])
+    st = shot_starts(Path(video))
+    ts = []
+    for l in d["lines"]:
+        if l.get("transition") == kind:
+            near = [s for s in st if abs(s - l["t0"]) <= 0.2]
+            ts.append(min(near, key=lambda s: abs(s - l["t0"])) if near else l["t0"])
+    return {"id": d.get("id"), "kind": kind, "window": crop, "boundaries": transition_drop(Path(video), ts, crop, rect_mask_of(rects, crop))}
+
+
+def render_transition_drop(R: Path, style_name: str, kinds=("zoomblur",)) -> dict:
+    """우리 완성본 한 편: render/자막표.json transitions(kind) 경계에서 transition_drop — 완성본(final.mp4) 창 영역,
+    마스크 = base.mp4(자막 없음) ↔ captioned.mp4 가 다른 픽셀(자막·스티커) + 8px. 벤치(bench_transition_drop)와 같은 함수."""
+    from tools.calcopy.hybrid import styles as ST
+    R = Path(R)
+    st = ST.load(style_name)
+    crop = frame_window(st["frame"])
+    crop = [crop[0], crop[1], crop[2], min(crop[3], H - crop[1])]
+    tab = jload(R / "자막표.json")
+    ts = [e["t"] for e in tab.get("transitions") or [] if e["kind"] in kinds]
+    return {"style": style_name, "window": crop, "boundaries": transition_drop(R / "final.mp4", ts, crop, overlay_mask_of(R / "base.mp4", R / "captioned.mp4", crop))}
+
+
 def render_window(T: dict, M: dict, st: dict, R: Path, trans: list[dict] | None = None) -> Path:
     src_dir = Path(M["cand_dir"])
     x, y, ww, wh = frame_window(st["frame"])
@@ -938,13 +1069,17 @@ def devices(st: dict, trans: list[dict], A: dict | None = None) -> dict:
             "frame_kind": frame_kind(st["frame"])}
 
 
-def style_sha(style_name: str) -> dict:
-    """판 파일 sha(그 파일 바이트) + 실제로 쓴 설정 sha(_common·base 합친 뒤) — 어떤 판 글로 만들었나 표식."""
+def render_marks(style_name: str, renderer_file: str | Path) -> dict:
+    """render_info 표식 한 곳(0순위-C, 표준 §11 ⑤ — 04 품질 관문 marker_verdict 가 읽는다): render_bench·render_itssum·render_jaemi 가 같이 부른다.
+    style_sha = 판 파일 바이트 sha256(관문이 지금 파일과 앞자리 대조) · style_sha_effective = _common·base 합친 설정 sha256 앞 12자리 ·
+    renderer_sig = '<렌더러 파일 이름>@<그 파일 sha256 앞 12자리>'."""
     import hashlib
     from tools.calcopy.hybrid import styles as ST
-    raw = ST.path_of(style_name).read_bytes()
+    rf = Path(renderer_file)
     eff = json.dumps(ST.load(style_name), ensure_ascii=False, sort_keys=True).encode("utf-8")
-    return {"file": hashlib.sha1(raw).hexdigest()[:12], "effective": hashlib.sha1(eff).hexdigest()[:12]}
+    return {"style_sha": hashlib.sha256(ST.path_of(style_name).read_bytes()).hexdigest(),
+            "style_sha_effective": hashlib.sha256(eff).hexdigest()[:12],
+            "renderer_sig": f"{rf.stem}@{hashlib.sha256(rf.read_bytes()).hexdigest()[:12]}"}
 
 
 def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=print, tts: bool = False) -> dict:
@@ -1016,7 +1151,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     jsave(doc / "자막표.json", tab)
     info = {"made_by": "tools/calcopy/hybrid/render_bench.py", "version": style_name, "tempo": tempo, "final": str(final), "final_dur": dur_of(final),
             "final_lufs": lufs(final), "audio": A, "placement_check": chk, "n_cuts": len(T["cuts"]),
-            "devices": devices(st, trans, A), "style_sha": style_sha(style_name),
+            "devices": devices(st, trans, A), **render_marks(style_name, __file__), "line_cps": RI.line_cps(sent),
             "cuts_flat": [{k: c.get(k) for k in ("line", "src", "ss", "t0", "t1", "dur", "see")} for c in T["cuts"]]}
     jsave(R / "render_info.json", info)
     from tools.calcopy.engine.remake import sheet_1s
