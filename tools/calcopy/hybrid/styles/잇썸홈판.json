@@ -2,14 +2,43 @@
  "name": "잇썸홈판",
  "renderer": "itssum",
  "_note": "얜샷템 하이브리드 1번 판 — 두유노(잇썸홈) 결. 렌더러 render_itssum.py 는 render 칸을 기본값(DEF)으로 읽는다(값 주인 = 이 파일). 정본 channel/yanshottem/하이브리드_함익병/.",
- "bench": {"channel": "homedesignnote", "analysis": "channel/homedesignnote/대본설명서/설명서.md"},
- "voice": {"name": "미나", "voice_id": "kr-mina-expressive", "why": "사장님 10-18 밤 확정 — 잇썸홈판 = 일레븐랩스 미나(배속 서비스 규칙 1.35 고정)"},
- "bgm": {"id": "honwaka_puppu", "db_below_voice": 14.4, "duck_orig_db": -10.0},
- "loudness": {"lufs": -8.6, "tp": -3.2, "why": "옛 판 그대로(동작 그대로 옮김) — −14 통일은 벤치 3판부터"},
- "length": {"min": 28, "max": 38},
- "render": {"gap": 0.20, "gap_ab": 0.20, "gap_oo": 0.25, "tail": 0.50, "target_lufs": -8.6, "tp": -3.2, "orig_af": "highpass=f=90",
-            "a_end_pad": 0.0, "orig_fade": 0.015, "bgm_dir": "shopping_shorts/assets/bgm_lib", "preset_b": "channel/homedesignnote/preset/전체화면_가운데자막",
-            "frame_a": "channel/mantem/frame_얜샷템.json"},
+ "bench": {
+  "channel": "homedesignnote",
+  "analysis": "channel/homedesignnote/대본설명서/설명서.md"
+ },
+ "voice": {
+  "name": "미나",
+  "voice_id": "kr-mina-expressive",
+  "why": "사장님 10-18 밤 확정 — 잇썸홈판 = 일레븐랩스 미나(배속 서비스 규칙 1.35 고정)"
+ },
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 14.4,
+  "duck_orig_db": -10.0
+ },
+ "loudness": {
+  "lufs": -8.6,
+  "tp": -3.2,
+  "why": "−8.6 LUFS·TP −3.2 = 옛 판 렌더 render_itssum DEF 그대로(함익병·박세리·장윤정·최은경 4편 통과본) — 표준 §11 ⑨: −14 통일은 renderer→bench 전환 때 이 판 담당(07)이 바꾼다. 아직 전환 못 함(_pending.bench_migration) — 지금 −14 로 바꾸면 옛 렌더러 마스터 이득만 바뀌어 통과본과 소리 크기가 달라진다(렌더 대조 없이 바꾸지 않는다)"
+ },
+ "length": {
+  "min": 28,
+  "max": 38
+ },
+ "render": {
+  "gap": 0.2,
+  "gap_ab": 0.2,
+  "gap_oo": 0.25,
+  "tail": 0.5,
+  "target_lufs": -8.6,
+  "tp": -3.2,
+  "orig_af": "highpass=f=90",
+  "a_end_pad": 0.0,
+  "orig_fade": 0.015,
+  "bgm_dir": "shopping_shorts/assets/bgm_lib",
+  "preset_b": "channel/homedesignnote/preset/전체화면_가운데자막",
+  "frame_a": "channel/mantem/frame_얜샷템.json"
+ },
  "title_form": "2줄 '<수식어> <이름>이 요즘 매일 ~' / '<제품 분류>의 비밀' (얜샷템 틀 흰/민트)",
  "script": {
   "brief": [
@@ -18,6 +47,14 @@
    "재료 A: H 컷도 연예인 얼굴(썸네일 규칙) · O 컷은 원음 입 모양 그대로(at = 원음 이어 붙인 초) · B 컷은 제품만(max = 원본 샷 경계)."
   ],
   "example": "channel/yanshottem/하이브리드_한혜진/대본_2판/",
-  "audit": [{"kind": "engine", "name": "itssum"}]
+  "audit": [
+   {
+    "kind": "engine",
+    "name": "itssum"
+   }
+  ]
+ },
+ "_pending": {
+  "bench_migration": "renderer=bench 로 아직 못 옮김(07 판단 10-25): ① 한 편이 A(얜샷템 틀 1080² 창 + 원음)·B(다른 프리셋 틀) 두 틀 — render_bench.frame_png 는 편 하나에 틀 하나(시간 구간별 틀 칸 없음, 방구석·맛템썰템·썰템쇼 훅 카드와 같은 결손) → 02 에 frame.segments[{t0,t1,frame}] 요청 ② 대본 꼴이 다르다(seg A/B · seg A/B·pieces·mute ) — render_bench 대본(lines[kind tts|orig, caps]) 로 바꾸는 변환기 필요(08 flow 와 같이) ③ 소리 규칙(원음 조각 pieces·mute·tts_override·쉼 모양)이 render_itssum/jaemi 안 — bench 의 audio 칸에 없음. 세 가지가 들어오면 같은 편(함익병) 대본으로 옛 렌더 ↔ bench 렌더 프레임·LUFS 대조 뒤 전환"
  }
 }
