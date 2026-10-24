@@ -1,0 +1,166 @@
+{
+ "id": "bfKkNmVTGPs",
+ "title_card": "미국선물 1위 / 한국에선 반입금지",
+ "post_title": "미국선물1위 한국에선 반입금지",
+ "dur": 25.0,
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.97,
+   "caption": "미국 선물 1위 반입금지시켜버린 한국",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "훅 카드(어두운 바탕 큰 제목 2줄) 아래 그림 창: 손으로 계란을 깨 시즈닝 위에 떨어뜨림",
+   "effect": null,
+   "ending": "~한국(명사 끝)"
+  },
+  {
+   "t0": 1.97,
+   "t1": 3.8,
+   "caption": "미국인들이 숨쉬듯/뿌려먹는다는 이것",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "시즈닝 잔뜩 묻은 베이글",
+   "effect": null,
+   "ending": "이것"
+  },
+  {
+   "t0": 3.8,
+   "t1": 5.3,
+   "caption": "바로 에브리띵 베이글 시즈닝",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "트레이더조 EVERYTHING but the BAGEL 시즈닝 병",
+   "effect": null,
+   "ending": "명사 끝"
+  },
+  {
+   "t0": 5.3,
+   "t1": 8.47,
+   "caption": "하지만 포피씨드(양귀비)성분 때문에/작년 7월부터 반입이 막혀버리자",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "시즈닝 병을 기울여 쏟는 장면 → 공항 검사대에서 짐(상자) 검사하는 영상",
+   "effect": null,
+   "ending": "~자"
+  },
+  {
+   "t0": 8.47,
+   "t1": 10.83,
+   "caption": "당근에 프리미엄 붙어서/팔리는 사태까지 발생 ㄷㄷ",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "밈짤",
+   "screen_desc": "당근 '판매완료' 매물 캡처가 잠깐 → 손으로 얼굴 감싸는 남성 짤(사이먼 코웰로 추정, 화면 이름 없음)",
+   "effect": null,
+   "ending": "ㄷㄷ"
+  },
+  {
+   "t0": 10.83,
+   "t1": 12.47,
+   "caption": "오갈데 없어진/시즈닝 유목민들",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "밈짤",
+   "screen_desc": "정장·안경 흑인 남성이 손 휘젓는 짤(영화 장면, 덴젤 워싱턴으로 추정·이름 글자 없음)",
+   "effect": null,
+   "ending": "~들(명사 끝)"
+  },
+  {
+   "t0": 12.47,
+   "t1": 15.3,
+   "caption": "그러자 \"뭐해? 만들어\"/가만히 있을 수 없던 코스트코에서",
+   "narration": null,
+   "kind": "화자대사",
+   "speaker": "코스트코(의인화)",
+   "screen": "기타",
+   "screen_desc": "코스트코 간판을 머리에 인 정장 캐릭터 그림(손가락질) → 코스트코 매장 외관 사진",
+   "effect": null,
+   "ending": "~에서"
+  },
+  {
+   "t0": 15.3,
+   "t1": 17.87,
+   "caption": "문제성분만 쏙 뺀 버전으로/대체품을 출시해버림",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "코스트코 매대에 쌓인 커클랜드 Everything Bagel 시즈닝(SPICES 표지)",
+   "effect": null,
+   "ending": "~해버림"
+  },
+  {
+   "t0": 17.87,
+   "t1": 20.43,
+   "caption": "심지어 대용량이라/여기저기 팍팍 뿌려도 되는데",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "커클랜드 통 클로즈업 → 아보카도 넣은 베이글 샌드위치",
+   "effect": null,
+   "ending": "~는데"
+  },
+  {
+   "t0": 20.43,
+   "t1": 22.73,
+   "caption": "특히 삶은계란이나/아보카도 조합이 맛도리라고",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "아보카도·계란 토스트(노른자 흐름)에 시즈닝",
+   "effect": null,
+   "ending": "~라고"
+  },
+  {
+   "t0": 22.73,
+   "t1": 25.0,
+   "caption": "아 코스트코 회장님/또 눈물흘리게 생겼네 ㅋㅋ",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "캡처(댓글·성분표·기사·문의답변)",
+   "screen_desc": "인터뷰 인용 카드 “한국은 장사가 잘 돼 생각만 해도 눈물이 날 지경”(미 시애틀타임스 2011년 인터뷰) + 노인 사진, 이름표 '제임스 시네갈 코스트코 회장'(화면 글자)",
+   "effect": "인물 눈에 파란 눈물 줄기 그림 합성 + 집중선",
+   "ending": "ㅋㅋ"
+  }
+ ],
+ "structure": "훅(반입금지 제품) → 정체 공개 → 금지 이유 → 품귀(당근 프리미엄) + 밈 리액션 → 대체품 등장(코스트코) → 장점·먹는 법 → 회장 눈물 드립 마무리(ㅋㅋ)",
+ "celeb_scenes": [
+  {
+   "t0": 8.47,
+   "t1": 10.83,
+   "who": "사이먼 코웰 추정(얼굴, 이름 글자 없음)",
+   "program": null,
+   "why_here": "'당근에 프리미엄 붙어 팔리는 사태' — 어이없음 리액션 밈"
+  },
+  {
+   "t0": 10.83,
+   "t1": 12.47,
+   "who": "덴젤 워싱턴 추정(얼굴, 이름 글자 없음)",
+   "program": null,
+   "why_here": "'오갈데 없어진 유목민들' — 허둥대는 리액션 밈"
+  },
+  {
+   "t0": 22.73,
+   "t1": 25.0,
+   "who": "제임스 시네갈(화면 이름표)",
+   "program": "미 시애틀타임스 2011년 인터뷰(화면 글자)",
+   "why_here": "'코스트코 회장님 또 눈물' 드립의 근거 인용 + 눈물 합성"
+  }
+ ],
+ "kangjueun": "없음 — 25초 전체 그림 창 13컷(cap) + 자막 칸 실측에서 강주은 이름 글자 없음, 한국 여성 방송인 얼굴 장면 없음",
+ "_note": "t0/t1 = 자막 칸(y480~680) 픽셀 변화 프레임 실측(30fps). 같은 칸에 줄이 덧붙는 누적형은 한 줄(lines 1개)로 묶음. narration=제미나이 받아쓰기(asr/) 해당 구간, 받아쓰기 없는 편은 null."
+}

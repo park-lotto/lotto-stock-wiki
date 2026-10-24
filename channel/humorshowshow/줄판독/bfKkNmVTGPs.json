@@ -1,166 +1,1882 @@
 {
  "id": "bfKkNmVTGPs",
- "title_card": "미국선물 1위 / 한국에선 반입금지",
- "post_title": "미국선물1위 한국에선 반입금지",
- "dur": 25.0,
+ "views": 4200000,
+ "dur": 25.014,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "미국선물1위 한국에선 반입금지",
+   "colors": [
+    {
+     "word": "미국선물1위 한국에선 반입금지",
+     "hex": "#000000"
+    }
+   ],
+   "y": [
+    282,
+    352
+   ],
+   "where": "본문 게시글 제목(검정 굵은 고딕 1줄, 가운데, 영상 내내 고정)"
+  }
+ ],
+ "hook_title_lines": [
+  {
+   "text": "미국선물 1위",
+   "colors": [
+    {
+     "word": "미국선물 1위",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "y": [
+    138,
+    251
+   ],
+   "where": "훅 카드 큰 제목 1줄(흰 채움+짙은 외곽)"
+  },
+  {
+   "text": "한국에선 반입금지",
+   "colors": [
+    {
+     "word": "한국에선 반입금지",
+     "hex": "#8DFF4D"
+    }
+   ],
+   "y": [
+    268,
+    377
+   ],
+   "where": "훅 카드 큰 제목 2줄(연두 채움+짙은 외곽)"
+  }
+ ],
+ "source_label": "익명 추천891 조회 1,954,556 25.10.31 09:18 댓글 7544",
+ "layout": {
+  "header": [
+   0,
+   238
+  ],
+  "title_y": [
+   282,
+   352
+  ],
+  "meta_y": [
+   379,
+   396
+  ],
+  "rule_y": [
+   402,
+   403
+  ],
+  "caption_lines_y": [
+   [
+    500,
+    552
+   ],
+   [
+    576,
+    628
+   ]
+  ],
+  "line_pitch_px": 76,
+  "window": [
+   0,
+   672,
+   1080,
+   1550
+  ],
+  "window_note": "고정 전폭 1080×878(컷 대부분), 작은 캡처 그림은 가운데 여백",
+  "below_window": [
+   1550,
+   1920
+  ],
+  "header_hex": "#E4F2D4",
+  "bg_hex": "#FDFDFA",
+  "source_hex": "#8C8C8C",
+  "comment_count_hex": "#B0384A",
+  "logo": "가운데 '재밌쇼' 손글씨 로고(연두+검정 외곽) · 왼쪽 '<' · 오른쪽 초록 북마크",
+  "watermark": {
+   "present": false,
+   "alpha": null,
+   "note": "채널 워터마크 없음"
+  }
+ },
  "lines": [
   {
    "t0": 0.0,
-   "t1": 1.97,
-   "caption": "미국 선물 1위 반입금지시켜버린 한국",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품영상",
-   "screen_desc": "훅 카드(어두운 바탕 큰 제목 2줄) 아래 그림 창: 손으로 계란을 깨 시즈닝 위에 떨어뜨림",
-   "effect": null,
-   "ending": "~한국(명사 끝)"
+   "t1": 1.967,
+   "speaker": "나레",
+   "text": "미국 선물 1위 반입금지시켜버린 한국",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 200,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "훅 카드 라벨 줄(회색 띠 안 검은 글 = 큰 제목과 같은 문장, 카드째 천천히 위로 이동)",
+   "y": [
+    582,
+    634
+   ],
+   "x": 550,
+   "align": "center",
+   "max_w": 872,
+   "ink_x": [
+    114,
+    986
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 7.0,
+   "word_gap_px": 22.5,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "손으로 계란을 깨 시즈닝 위에 떨어뜨림(훅 카드 아래 창)",
+   "fit": 7,
+   "cut_at": [
+    1.9
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 0.0,
+    "t1": 1.9,
+    "diff": 28.3,
+    "scale": 0.996,
+    "tx": 3,
+    "ty": 3
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 161.5,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 1.97,
+   "t0": 1.967,
+   "t1": 2.833,
+   "speaker": "나레",
+   "text": "미국인들이 숨쉬듯",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    550
+   ],
+   "x": 543,
+   "align": "center",
+   "max_w": 414,
+   "ink_x": [
+    336,
+    750
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 6.5,
+   "word_gap_px": 21.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "시즈닝 잔뜩 묻은 베이글",
+   "fit": 8,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 1.9,
+    "t1": 3.8,
+    "diff": 42.7,
+    "scale": 0.998,
+    "tx": 2,
+    "ty": 2
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 205.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 2.833,
    "t1": 3.8,
-   "caption": "미국인들이 숨쉬듯/뿌려먹는다는 이것",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "시즈닝 잔뜩 묻은 베이글",
-   "effect": null,
-   "ending": "이것"
+   "speaker": "나레",
+   "text": "뿌려먹는다는 이것",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    576,
+    626
+   ],
+   "x": 547,
+   "align": "center",
+   "max_w": 414,
+   "ink_x": [
+    340,
+    754
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 20.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "시즈닝 잔뜩 묻은 베이글",
+   "fit": 8,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 1.9,
+    "t1": 3.8,
+    "diff": 42.7,
+    "scale": 0.998,
+    "tx": 2,
+    "ty": 2
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 165.8,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
    "t0": 3.8,
    "t1": 5.3,
-   "caption": "바로 에브리띵 베이글 시즈닝",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "트레이더조 EVERYTHING but the BAGEL 시즈닝 병",
-   "effect": null,
-   "ending": "명사 끝"
+   "speaker": "나레",
+   "text": "바로 에브리띵 베이글 시즈닝",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    552
+   ],
+   "x": 547,
+   "align": "center",
+   "max_w": 642,
+   "ink_x": [
+    226,
+    868
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 18.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "트레이더조 EVERYTHING but the BAGEL 시즈닝 병(검은 화면에서 종이 찢기듯 드러남)",
+   "fit": 9,
+   "cut_at": [
+    3.8
+   ],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 3.8,
+    "t1": 5.3,
+    "diff": 207.9,
+    "scale": 1.308,
+    "tx": -166,
+    "ty": -137
+   },
+   "transition": "black",
+   "dialog": null,
+   "f0_med": 133.6,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": "전환 = 검은 화면(3.8초) → 종이 찢기듯 흰 조각이 열리며 시즈닝 병이 드러남(3.87~4.27초, 약 0.45초) — 30fps 프레임 눈 확인. 6편 중 유일한 특수 전환"
   },
   {
    "t0": 5.3,
-   "t1": 8.47,
-   "caption": "하지만 포피씨드(양귀비)성분 때문에/작년 7월부터 반입이 막혀버리자",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품영상",
-   "screen_desc": "시즈닝 병을 기울여 쏟는 장면 → 공항 검사대에서 짐(상자) 검사하는 영상",
-   "effect": null,
-   "ending": "~자"
+   "t1": 6.733,
+   "speaker": "나레",
+   "text": "하지만 포피씨드(양귀비)성분 때문에",
+   "layer": "채널",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    552
+   ],
+   "x": 547,
+   "align": "center",
+   "max_w": 826,
+   "ink_x": [
+    134,
+    960
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 17.5,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "과정",
+   "scene_desc": "시즈닝 병 기울여 쏟음 → 공항 검사대 짐 검사 영상",
+   "fit": 8,
+   "cut_at": [
+    5.3
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 5.3,
+    "t1": 6.733,
+    "diff": 68.7
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 206.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 8.47,
-   "t1": 10.83,
-   "caption": "당근에 프리미엄 붙어서/팔리는 사태까지 발생 ㄷㄷ",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "밈짤",
-   "screen_desc": "당근 '판매완료' 매물 캡처가 잠깐 → 손으로 얼굴 감싸는 남성 짤(사이먼 코웰로 추정, 화면 이름 없음)",
-   "effect": null,
-   "ending": "ㄷㄷ"
+   "t0": 6.733,
+   "t1": 8.467,
+   "speaker": "나레",
+   "text": "작년 7월부터 반입이 막혀버리자",
+   "layer": "채널",
+   "role": "반전",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    576,
+    626
+   ],
+   "x": 549,
+   "align": "center",
+   "max_w": 734,
+   "ink_x": [
+    182,
+    916
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 23.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "과정",
+   "scene_desc": "시즈닝 병 기울여 쏟음 → 공항 검사대 짐 검사 영상",
+   "fit": 8,
+   "cut_at": [
+    6.733
+   ],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 6.733,
+    "t1": 8.467,
+    "diff": 89.2,
+    "scale": 0.996,
+    "tx": -241,
+    "ty": 296
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 145.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 10.83,
-   "t1": 12.47,
-   "caption": "오갈데 없어진/시즈닝 유목민들",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "밈짤",
-   "screen_desc": "정장·안경 흑인 남성이 손 휘젓는 짤(영화 장면, 덴젤 워싱턴으로 추정·이름 글자 없음)",
-   "effect": null,
-   "ending": "~들(명사 끝)"
+   "t0": 8.467,
+   "t1": 9.5,
+   "speaker": "나레",
+   "text": "당근에 프리미엄 붙어서",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    552
+   ],
+   "x": 547,
+   "align": "center",
+   "max_w": 526,
+   "ink_x": [
+    284,
+    810
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [
+    {
+     "what": "빨간 화살표+흰 반짝(작은)",
+     "t_in": 8.433,
+     "t_out": 9.5,
+     "x": 430,
+     "y": 1434,
+     "w": 153,
+     "h": 60,
+     "anim": "slide(대상 쪽으로 찌르듯 ~30px)",
+     "basis": "픽셀(30fps 순빨강 bbox)"
+    }
+   ],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 20.5,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "캡처",
+   "scene_desc": "당근 판매 캡처(가격 57,000원에 빨간 화살표·흰 반짝) → 얼굴 감싸는 남성 짤",
+   "fit": 8,
+   "cut_at": [
+    8.467
+   ],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 8.467,
+    "t1": 9.5,
+    "diff": 20.5,
+    "scale": 1.09,
+    "tx": -49,
+    "ty": -38
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 196.9,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 12.47,
+   "t0": 9.5,
+   "t1": 10.833,
+   "speaker": "나레",
+   "text": "팔리는 사태까지 발생 ㄷㄷ",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    576,
+    628
+   ],
+   "x": 545,
+   "align": "center",
+   "max_w": 590,
+   "ink_x": [
+    250,
+    840
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 4.5,
+   "word_gap_px": 19.5,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "캡처",
+   "scene_desc": "당근 판매 캡처(가격 57,000원에 빨간 화살표·흰 반짝) → 얼굴 감싸는 남성 짤",
+   "fit": 8,
+   "cut_at": [
+    9.5
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 9.5,
+    "t1": 10.833,
+    "diff": 30.4
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 175.7,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 10.833,
+   "t1": 11.5,
+   "speaker": "나레",
+   "text": "오갈데 없어진",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    550
+   ],
+   "x": 547,
+   "align": "center",
+   "max_w": 310,
+   "ink_x": [
+    392,
+    702
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 20.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "정장·안경 남성이 손 휘젓는 짤(이름 글자 없음)",
+   "fit": 5,
+   "cut_at": [
+    10.833
+   ],
+   "motion": "zoom_out",
+   "motion_info": {
+    "t0": 10.833,
+    "t1": 12.467,
+    "diff": 28.0,
+    "scale": 0.932,
+    "tx": 48,
+    "ty": 30
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 186.9,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 11.5,
+   "t1": 12.467,
+   "speaker": "나레",
+   "text": "시즈닝 유목민들",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    576,
+    628
+   ],
+   "x": 549,
+   "align": "center",
+   "max_w": 366,
+   "ink_x": [
+    366,
+    732
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 21.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "정장·안경 남성이 손 휘젓는 짤(이름 글자 없음)",
+   "fit": 5,
+   "cut_at": [],
+   "motion": "zoom_out",
+   "motion_info": {
+    "t0": 10.833,
+    "t1": 12.467,
+    "diff": 28.0,
+    "scale": 0.932,
+    "tx": 48,
+    "ty": 30
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 159.8,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 12.467,
+   "t1": 13.733,
+   "speaker": "나레",
+   "text": "그러자 \"뭐해? 만들어\"",
+   "layer": "채널",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    550
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 504,
+   "ink_x": [
+    288,
+    792
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "매장·건물",
+   "scene_desc": "코스트코 간판 머리 캐릭터 그림 → 코스트코 매장 외관",
+   "fit": 7,
+   "cut_at": [
+    12.467
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 12.467,
+    "t1": 13.733,
+    "diff": 59.7,
+    "scale": 1.018,
+    "tx": -9,
+    "ty": 20
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "코스트코(의인화)",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": true
+   },
+   "f0_med": 242.3,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 13.733,
    "t1": 15.3,
-   "caption": "그러자 \"뭐해? 만들어\"/가만히 있을 수 없던 코스트코에서",
-   "narration": null,
-   "kind": "화자대사",
-   "speaker": "코스트코(의인화)",
-   "screen": "기타",
-   "screen_desc": "코스트코 간판을 머리에 인 정장 캐릭터 그림(손가락질) → 코스트코 매장 외관 사진",
-   "effect": null,
-   "ending": "~에서"
+   "speaker": "나레",
+   "text": "가만히 있을 수 없던 코스트코에서",
+   "layer": "채널",
+   "role": "반전",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    576,
+    626
+   ],
+   "x": 547,
+   "align": "center",
+   "max_w": 758,
+   "ink_x": [
+    168,
+    926
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 19.5,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "매장·건물",
+   "scene_desc": "코스트코 간판 머리 캐릭터 그림 → 코스트코 매장 외관",
+   "fit": 7,
+   "cut_at": [
+    13.733
+   ],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 13.733,
+    "t1": 15.3,
+    "diff": 33.1,
+    "scale": 1.142,
+    "tx": -66,
+    "ty": -57
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 182.2,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
    "t0": 15.3,
-   "t1": 17.87,
-   "caption": "문제성분만 쏙 뺀 버전으로/대체품을 출시해버림",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "코스트코 매대에 쌓인 커클랜드 Everything Bagel 시즈닝(SPICES 표지)",
-   "effect": null,
-   "ending": "~해버림"
+   "t1": 16.733,
+   "speaker": "나레",
+   "text": "문제성분만 쏙 뺀 버전으로",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    552
+   ],
+   "x": 549,
+   "align": "center",
+   "max_w": 598,
+   "ink_x": [
+    250,
+    848
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 18.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "코스트코 매대 커클랜드 Everything Bagel 시즈닝",
+   "fit": 9,
+   "cut_at": [
+    15.3
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 15.3,
+    "t1": 18.933,
+    "diff": 77.4
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 167.0,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 17.87,
-   "t1": 20.43,
-   "caption": "심지어 대용량이라/여기저기 팍팍 뿌려도 되는데",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품영상",
-   "screen_desc": "커클랜드 통 클로즈업 → 아보카도 넣은 베이글 샌드위치",
-   "effect": null,
-   "ending": "~는데"
+   "t0": 16.733,
+   "t1": 17.867,
+   "speaker": "나레",
+   "text": "대체품을 출시해버림",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    574,
+    626
+   ],
+   "x": 547,
+   "align": "center",
+   "max_w": 462,
+   "ink_x": [
+    316,
+    778
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 18.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "코스트코 매대 커클랜드 Everything Bagel 시즈닝",
+   "fit": 9,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 15.3,
+    "t1": 18.933,
+    "diff": 77.4
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 208.0,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 20.43,
-   "t1": 22.73,
-   "caption": "특히 삶은계란이나/아보카도 조합이 맛도리라고",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품영상",
-   "screen_desc": "아보카도·계란 토스트(노른자 흐름)에 시즈닝",
-   "effect": null,
-   "ending": "~라고"
+   "t0": 17.867,
+   "t1": 18.933,
+   "speaker": "나레",
+   "text": "심지어 대용량이라",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    552
+   ],
+   "x": 550,
+   "align": "center",
+   "max_w": 416,
+   "ink_x": [
+    342,
+    758
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 23.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "커클랜드 통 클로즈업 → 아보카도 베이글 샌드위치",
+   "fit": 8,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 15.3,
+    "t1": 18.933,
+    "diff": 77.4
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 195.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 22.73,
+   "t0": 18.933,
+   "t1": 20.433,
+   "speaker": "나레",
+   "text": "여기저기 팍팍 뿌려도 되는데",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    576,
+    626
+   ],
+   "x": 548,
+   "align": "center",
+   "max_w": 644,
+   "ink_x": [
+    226,
+    870
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 7.0,
+   "word_gap_px": 18.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "커클랜드 통 클로즈업 → 아보카도 베이글 샌드위치",
+   "fit": 8,
+   "cut_at": [
+    18.933
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 18.933,
+    "t1": 20.433,
+    "diff": 67.1
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 156.9,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 20.433,
+   "t1": 21.367,
+   "speaker": "나레",
+   "text": "특히 삶은계란이나",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    550
+   ],
+   "x": 549,
+   "align": "center",
+   "max_w": 418,
+   "ink_x": [
+    340,
+    758
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 21.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "아보카도·계란 토스트에 시즈닝",
+   "fit": 9,
+   "cut_at": [
+    20.433
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 20.433,
+    "t1": 22.733,
+    "diff": 30.2,
+    "scale": 1.004,
+    "tx": -2,
+    "ty": -7
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 220.5,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 21.367,
+   "t1": 22.733,
+   "speaker": "나레",
+   "text": "아보카도 조합이 맛도리라고",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    576,
+    626
+   ],
+   "x": 542,
+   "align": "center",
+   "max_w": 632,
+   "ink_x": [
+    226,
+    858
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 20.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "아보카도·계란 토스트에 시즈닝",
+   "fit": 9,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 20.433,
+    "t1": 22.733,
+    "diff": 30.2,
+    "scale": 1.004,
+    "tx": -2,
+    "ty": -7
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 143.2,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 22.733,
+   "t1": 23.767,
+   "speaker": "나레",
+   "text": "아 코스트코 회장님",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    552
+   ],
+   "x": 547,
+   "align": "center",
+   "max_w": 426,
+   "ink_x": [
+    334,
+    760
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [
+    {
+     "what": "파란 눈물 줄기 그림(인물 사진 위)",
+     "t_in": 22.733,
+     "t_out": 25.0,
+     "x": null,
+     "y": null,
+     "w": null,
+     "anim": "없음(그림과 같이 컷)",
+     "basis": "눈 — 자리 미측정(원본 사진 합성인지 채널 스티커인지 갈리지 않음)"
+    }
+   ],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 17.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "캡처",
+   "scene_desc": "인터뷰 인용 카드(제임스 시네갈 코스트코 회장 이름표) + 인물 눈에 파란 눈물 그림",
+   "fit": 7,
+   "cut_at": [
+    22.733
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 22.733,
+    "t1": 25.0,
+    "diff": 3.1
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 204.2,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 23.767,
    "t1": 25.0,
-   "caption": "아 코스트코 회장님/또 눈물흘리게 생겼네 ㅋㅋ",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "캡처(댓글·성분표·기사·문의답변)",
-   "screen_desc": "인터뷰 인용 카드 “한국은 장사가 잘 돼 생각만 해도 눈물이 날 지경”(미 시애틀타임스 2011년 인터뷰) + 노인 사진, 이름표 '제임스 시네갈 코스트코 회장'(화면 글자)",
-   "effect": "인물 눈에 파란 눈물 줄기 그림 합성 + 집중선",
-   "ending": "ㅋㅋ"
+   "speaker": "나레",
+   "text": "또 눈물흘리게 생겼네 ㅋㅋ",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(영상 끝)",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    574,
+    628
+   ],
+   "x": 545,
+   "align": "center",
+   "max_w": 590,
+   "ink_x": [
+    250,
+    840
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 58,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 22,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "캡처",
+   "scene_desc": "인터뷰 인용 카드(제임스 시네갈 코스트코 회장 이름표) + 인물 눈에 파란 눈물 그림",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "still",
+   "motion_info": {
+    "t0": 22.733,
+    "t1": 25.0,
+    "diff": 3.1
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 165.2,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   }
  ],
- "structure": "훅(반입금지 제품) → 정체 공개 → 금지 이유 → 품귀(당근 프리미엄) + 밈 리액션 → 대체품 등장(코스트코) → 장점·먹는 법 → 회장 눈물 드립 마무리(ㅋㅋ)",
- "celeb_scenes": [
+ "no_caption": [],
+ "beats": "훅(0.0초 '미국 선물 1위 반입금지시켜버린 ') → 다리(2.0초 '미국인들이 숨쉬듯') → 공개(3.8초 '바로 에브리띵 베이글 시즈닝') → 반전(5.3초 '하지만 포피씨드(양귀비)성분 때문') → 증거(8.5초 '당근에 프리미엄 붙어서') → 고조(10.8초 '오갈데 없어진') → 반전(12.5초 '그러자 \"뭐해? 만들어\"') → 공개(15.3초 '문제성분만 쏙 뺀 버전으로') → 본문(17.9초 '심지어 대용량이라') → 끝(22.7초 '아 코스트코 회장님')",
+ "narr_share": "나레 20/20줄(원음 0 — 한 목소리가 화자 대사 줄까지 읽음), 자막 표시 25.0초/25.014초",
+ "dialog_summary": {
+  "rows": 1,
+  "of": 20,
+  "turns": 1,
+  "who": [
+   "코스트코(의인화)"
+  ],
+  "forms": [
+   "따옴표"
+  ],
+  "meme_rows": 0,
+  "f0_med_dialog": 242.3,
+  "f0_med_other": 175.7
+ },
+ "notes": [],
+ "name_evidence": [],
+ "frame0": {
+  "what": "훅 카드: 본문 틀을 짙은 회색으로 깔고 큰 제목 2줄(흰/연두) + 회색 띠 안 검은 라벨 문장 + 아래 큰 그림 창",
+  "face_frac": 0.0,
+  "text": "미국선물 1위 / 한국에선 반입금지"
+ },
+ "hook": {
+  "t0": 0.0,
+  "t1": 1.967,
+  "kind": "훅 카드(본문 틀 어둡게 + 큰 제목 2줄 흰/연두 + 회색 띠 라벨 = 나레 첫 문장)",
+  "bg_hex": "#575F50 근처(편마다 #565C4F~#5B5E52)",
+  "exit": "cut(본문 틀로 1프레임에 바뀜)"
+ },
+ "cuts": [
+  1.9,
+  3.8,
+  5.3,
+  6.733,
+  8.467,
+  9.5,
+  10.833,
+  12.467,
+  13.733,
+  15.3,
+  18.933,
+  20.433,
+  22.733
+ ],
+ "cuts_detail": [
   {
-   "t0": 8.47,
-   "t1": 10.83,
-   "who": "사이먼 코웰 추정(얼굴, 이름 글자 없음)",
-   "program": null,
-   "why_here": "'당근에 프리미엄 붙어 팔리는 사태' — 어이없음 리액션 밈"
+   "t": 1.9,
+   "t_end": 1.967,
+   "kind": "cut",
+   "diff": 89.5,
+   "blurfr": 0
   },
   {
-   "t0": 10.83,
-   "t1": 12.47,
-   "who": "덴젤 워싱턴 추정(얼굴, 이름 글자 없음)",
-   "program": null,
-   "why_here": "'오갈데 없어진 유목민들' — 허둥대는 리액션 밈"
+   "t": 3.8,
+   "t_end": 3.8,
+   "kind": "black",
+   "diff": 166.1,
+   "blurfr": 0
   },
   {
-   "t0": 22.73,
-   "t1": 25.0,
-   "who": "제임스 시네갈(화면 이름표)",
-   "program": "미 시애틀타임스 2011년 인터뷰(화면 글자)",
-   "why_here": "'코스트코 회장님 또 눈물' 드립의 근거 인용 + 눈물 합성"
+   "t": 5.3,
+   "t_end": 5.3,
+   "kind": "cut",
+   "diff": 51.1,
+   "blurfr": 0
+  },
+  {
+   "t": 6.733,
+   "t_end": 6.733,
+   "kind": "cut",
+   "diff": 110.8,
+   "blurfr": 0
+  },
+  {
+   "t": 8.467,
+   "t_end": 8.467,
+   "kind": "cut",
+   "diff": 105.5,
+   "blurfr": 0
+  },
+  {
+   "t": 9.5,
+   "t_end": 9.5,
+   "kind": "cut",
+   "diff": 139.3,
+   "blurfr": 0
+  },
+  {
+   "t": 10.833,
+   "t_end": 10.833,
+   "kind": "cut",
+   "diff": 67.6,
+   "blurfr": 0
+  },
+  {
+   "t": 12.467,
+   "t_end": 12.467,
+   "kind": "cut",
+   "diff": 80.3,
+   "blurfr": 0
+  },
+  {
+   "t": 13.733,
+   "t_end": 13.733,
+   "kind": "cut",
+   "diff": 79.4,
+   "blurfr": 0
+  },
+  {
+   "t": 15.3,
+   "t_end": 15.3,
+   "kind": "cut",
+   "diff": 75.6,
+   "blurfr": 0
+  },
+  {
+   "t": 18.933,
+   "t_end": 18.933,
+   "kind": "cut",
+   "diff": 67.2,
+   "blurfr": 0
+  },
+  {
+   "t": 20.433,
+   "t_end": 20.433,
+   "kind": "cut",
+   "diff": 74.0,
+   "blurfr": 0
+  },
+  {
+   "t": 22.733,
+   "t_end": 22.733,
+   "kind": "cut",
+   "diff": 91.8,
+   "blurfr": 0
   }
  ],
- "kangjueun": "없음 — 25초 전체 그림 창 13컷(cap) + 자막 칸 실측에서 강주은 이름 글자 없음, 한국 여성 방송인 얼굴 장면 없음",
- "_note": "t0/t1 = 자막 칸(y480~680) 픽셀 변화 프레임 실측(30fps). 같은 칸에 줄이 덧붙는 누적형은 한 줄(lines 1개)로 묶음. narration=제미나이 받아쓰기(asr/) 해당 구간, 받아쓰기 없는 편은 null."
+ "cuts_rejected_same_picture": [],
+ "shots": [
+  {
+   "t0": 0.0,
+   "t1": 1.9,
+   "diff": 28.3,
+   "scale": 0.996,
+   "tx": 3,
+   "ty": 3,
+   "inl": 131,
+   "motion": "cam"
+  },
+  {
+   "t0": 1.9,
+   "t1": 3.8,
+   "diff": 42.7,
+   "scale": 0.998,
+   "tx": 2,
+   "ty": 2,
+   "inl": 30,
+   "motion": "cam"
+  },
+  {
+   "t0": 3.8,
+   "t1": 5.3,
+   "diff": 207.9,
+   "scale": 1.308,
+   "tx": -166,
+   "ty": -137,
+   "inl": 139,
+   "motion": "zoom_in"
+  },
+  {
+   "t0": 5.3,
+   "t1": 6.733,
+   "diff": 68.7,
+   "motion": "cam"
+  },
+  {
+   "t0": 6.733,
+   "t1": 8.467,
+   "diff": 89.2,
+   "scale": 0.996,
+   "tx": -241,
+   "ty": 296,
+   "inl": 47,
+   "motion": "pan"
+  },
+  {
+   "t0": 8.467,
+   "t1": 9.5,
+   "diff": 20.5,
+   "scale": 1.09,
+   "tx": -49,
+   "ty": -38,
+   "inl": 649,
+   "motion": "zoom_in"
+  },
+  {
+   "t0": 9.5,
+   "t1": 10.833,
+   "diff": 30.4,
+   "motion": "cam"
+  },
+  {
+   "t0": 10.833,
+   "t1": 12.467,
+   "diff": 28.0,
+   "scale": 0.932,
+   "tx": 48,
+   "ty": 30,
+   "inl": 15,
+   "motion": "zoom_out"
+  },
+  {
+   "t0": 12.467,
+   "t1": 13.733,
+   "diff": 59.7,
+   "scale": 1.018,
+   "tx": -9,
+   "ty": 20,
+   "inl": 557,
+   "motion": "cam"
+  },
+  {
+   "t0": 13.733,
+   "t1": 15.3,
+   "diff": 33.1,
+   "scale": 1.142,
+   "tx": -66,
+   "ty": -57,
+   "inl": 617,
+   "motion": "zoom_in"
+  },
+  {
+   "t0": 15.3,
+   "t1": 18.933,
+   "diff": 77.4,
+   "motion": "cam"
+  },
+  {
+   "t0": 18.933,
+   "t1": 20.433,
+   "diff": 67.1,
+   "motion": "cam"
+  },
+  {
+   "t0": 20.433,
+   "t1": 22.733,
+   "diff": 30.2,
+   "scale": 1.004,
+   "tx": -2,
+   "ty": -7,
+   "inl": 712,
+   "motion": "cam"
+  },
+  {
+   "t0": 22.733,
+   "t1": 25.0,
+   "diff": 3.1,
+   "motion": "still"
+  }
+ ],
+ "_made_by": "humorshowshow 줄판독 2판(오퍼스 눈 + 30fps 잉크 마스크·cutdet·ORB·f0·sfx 실측, 2026-10-25, 관제 263 지시서 06) — 옛 1판은 줄판독/_옛꼴/"
 }

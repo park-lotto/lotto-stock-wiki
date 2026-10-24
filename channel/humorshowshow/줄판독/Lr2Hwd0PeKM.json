@@ -1,526 +1,3183 @@
 {
  "id": "Lr2Hwd0PeKM",
- "title_card": null,
- "post_title": "메뉴판에서 미감 성향 다 보임",
- "dur": 45.99,
+ "views": 7600000,
+ "dur": 45.994,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "메뉴판에서 미감 성향 다 보임",
+   "colors": [
+    {
+     "word": "메뉴판에서 미감 성향 다 보임",
+     "hex": "#000000"
+    }
+   ],
+   "y": [
+    363,
+    439
+   ],
+   "where": "본문 게시글 제목(검정 굵은 고딕 1줄, 가운데, 영상 내내 고정)"
+  }
+ ],
+ "hook_title_lines": [],
+ "source_label": "익명 추천891 조회 1,954,556 24.10.21 09:18 댓글 7544",
+ "layout": {
+  "header": [
+   0,
+   300
+  ],
+  "title_y": [
+   363,
+   439
+  ],
+  "meta_y": [
+   465,
+   473
+  ],
+  "rule_y": [
+   506,
+   506
+  ],
+  "caption_lines_y": [
+   [
+    1296,
+    1366
+   ],
+   [
+    1404,
+    1474
+   ]
+  ],
+  "line_pitch_px": 108,
+  "window": [
+   75,
+   512,
+   1006,
+   1250
+  ],
+  "window_note": "여백 있는 상자 창(x≈75~1006) — 자막이 창 **아래**(옛 꼴)",
+  "below_window": [
+   1500,
+   1920
+  ],
+  "header_hex": "#E4F2D4",
+  "bg_hex": "#FDFDFA",
+  "source_hex": "#8C8C8C",
+  "comment_count_hex": "#B0384A",
+  "logo": "가운데 '재밌쇼' 손글씨 로고(연두+검정 외곽) · 왼쪽 '<' · 오른쪽 초록 북마크",
+  "watermark": {
+   "present": false,
+   "alpha": null,
+   "note": "채널 워터마크 없음"
+  }
+ },
  "lines": [
   {
    "t0": 0.0,
-   "t1": 2.4,
-   "caption": "흑백요리사 셰프별/성격보인다는 식당 메뉴판",
-   "narration": "흑백 요리사 셰프별 성격 보인다는 식당 메뉴판",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "손글씨 메뉴판 사진(하우스와인-15, 콜라-6 …). 이 편은 자막이 그림 아래",
-   "effect": "흑백요리사·메뉴판 빨간 글자 강조",
-   "ending": "~뉴판"
+   "t1": 2.233,
+   "speaker": "나레",
+   "text": "흑백요리사 셰프별 / 성격보인다는 식당 메뉴판",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    1296,
+    1484
+   ],
+   "x": 479,
+   "align": "center",
+   "max_w": 702,
+   "ink_x": [
+    128,
+    830
+   ],
+   "fill_hex": "#000000",
+   "emph": [
+    {
+     "word": "흑백요리사",
+     "hex": "#9E3023"
+    },
+    {
+     "word": "메뉴판",
+     "hex": "#9E3023"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 81,
+   "letter_gap_px": 6.8,
+   "word_gap_px": 28.0,
+   "line_gap_px": 33,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "손글씨 메뉴판 사진(첫 컷, 이 편은 자막이 그림 아래)",
+   "fit": 8,
+   "cut_at": [],
+   "motion": "still",
+   "motion_info": {
+    "t0": 0.0,
+    "t1": 2.233,
+    "diff": 1.5
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 137.8,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 2.4,
-   "t1": 3.6,
-   "caption": "안성재 - 모수",
-   "narration": "안성제의 모수",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "방송화면(연예인·예능)",
-   "screen_desc": "안성재(자막에 이름) 방송 장면, 손에 파란 빛 고리",
-   "effect": "파란 빛 고리",
-   "ending": "~모수"
+   "t0": 2.233,
+   "t1": 3.3,
+   "speaker": "나레",
+   "text": "안성재 - 모수",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    1296,
+    1366
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 426,
+   "ink_x": [
+    326,
+    752
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 75,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 29.0,
+   "line_gap_px": 38,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "안성재 방송 장면(손에 파란 빛 고리) — 자막 '안성재 - 모수'",
+   "fit": 8,
+   "cut_at": [
+    2.233
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 2.233,
+    "t1": 3.3,
+    "diff": 0.4
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 129.7,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 3.6,
-   "t1": 4.2,
-   "caption": "메뉴판만 봤는데",
-   "narration": "메뉴판만 봤는데",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "모수 흰 메뉴판 전체",
-   "effect": null,
-   "ending": "~는데"
+   "t0": 3.3,
+   "t1": 3.967,
+   "speaker": "나레",
+   "text": "메뉴판만 봤는데",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    1296,
+    1366
+   ],
+   "x": 529,
+   "align": "center",
+   "max_w": 494,
+   "ink_x": [
+    282,
+    776
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 75,
+   "letter_gap_px": 4.5,
+   "word_gap_px": 23.0,
+   "line_gap_px": 38,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "모수 흰 메뉴판 → 확대",
+   "fit": 8,
+   "cut_at": [
+    3.3
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 3.3,
+    "t1": 3.967,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 132.8,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 4.2,
-   "t1": 5.6,
-   "caption": "메뉴판만 봤는데/벌써 음식 정갈해보임",
-   "narration": "메뉴판만 봤는데 벌써 음식 정갈해 보임",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "모수 메뉴판 확대(Korean organic wheat noodle 등)",
-   "effect": null,
-   "ending": "~보임"
+   "t0": 3.967,
+   "t1": 5.433,
+   "speaker": "나레",
+   "text": "벌써 음식 정갈해보임",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    1404,
+    1474
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 650,
+   "ink_x": [
+    214,
+    864
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 75,
+   "letter_gap_px": 8.5,
+   "word_gap_px": 31.5,
+   "line_gap_px": 38,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "모수 흰 메뉴판 → 확대",
+   "fit": 8,
+   "cut_at": [
+    3.967
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 3.967,
+    "t1": 5.433,
+    "diff": 0.2
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 138.7,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 5.6,
-   "t1": 6.8,
-   "caption": "와인 메뉴판과 겹치면",
-   "narration": "와인 메뉴판과 겹치면",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "메뉴판에 와인명 겹친 사진",
-   "effect": "빨간 밑줄·빗금",
-   "ending": "~치면"
+   "t0": 5.433,
+   "t1": 6.533,
+   "speaker": "나레",
+   "text": "와인 메뉴판과 겹치면",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    1294,
+    1366
+   ],
+   "x": 537,
+   "align": "center",
+   "max_w": 654,
+   "ink_x": [
+    210,
+    864
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 77,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 29.0,
+   "line_gap_px": 36,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "메뉴판에 와인명 겹친 사진(빨간 밑줄)",
+   "fit": 8,
+   "cut_at": [
+    5.433
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 5.433,
+    "t1": 6.533,
+    "diff": 0.1
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 138.7,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 6.8,
-   "t1": 7.8,
-   "caption": "음식과 잘 어울리는",
-   "narration": "음식과 잘 어울리는",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "접시 위 요리",
-   "effect": null,
-   "ending": "~리는"
+   "t0": 6.533,
+   "t1": 7.567,
+   "speaker": "나레",
+   "text": "음식과 잘 어울리는",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    1296,
+    1366
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 588,
+   "ink_x": [
+    246,
+    834
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 75,
+   "letter_gap_px": 9.0,
+   "word_gap_px": 24.0,
+   "line_gap_px": 38,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "접시 위 요리 → 메뉴판+와인잔 합성(빨간 밑줄)",
+   "fit": 8,
+   "cut_at": [
+    6.533
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 6.533,
+    "t1": 7.567,
+    "diff": 0.7
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 129.7,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 7.8,
-   "t1": 9.0,
-   "caption": "음식과 잘 어울리는/페어링 와인이 보인다고 함",
-   "narration": "음식과 잘 어울리는 페어링 와인이 보인다고 함",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "메뉴판 + 와인잔 합성",
-   "effect": "빨간 밑줄·빗금",
-   "ending": "함"
+   "t0": 7.567,
+   "t1": 8.867,
+   "speaker": "나레",
+   "text": "페어링 와인이 보인다고 함",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    1402,
+    1474
+   ],
+   "x": 541,
+   "align": "center",
+   "max_w": 822,
+   "ink_x": [
+    130,
+    952
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 77,
+   "letter_gap_px": 7.0,
+   "word_gap_px": 30.0,
+   "line_gap_px": 36,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "접시 위 요리 → 메뉴판+와인잔 합성(빨간 밑줄)",
+   "fit": 8,
+   "cut_at": [
+    7.567
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 7.567,
+    "t1": 8.867,
+    "diff": 0.4
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 136.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 9.0,
-   "t1": 9.8,
-   "caption": "디테일 무엇/(배운 변ㅌ...)",
-   "narration": "디테일 못",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "방송화면(연예인·예능)",
-   "screen_desc": "검은 배경 인터뷰 남성(이름 표기 없음), 방송자막 \"쓰잘데기없는 걸 놓는 걸 굉장히 싫어해요\"",
-   "effect": null,
-   "ending": "~변ㅌ...)"
+   "t0": 8.867,
+   "t1": 9.633,
+   "speaker": "나레",
+   "text": "디테일 무엇 / (배운 변ㅌ...)",
+   "layer": "채널",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    1296,
+    1472
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 402,
+   "ink_x": [
+    338,
+    740
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 74,
+   "letter_gap_px": 7.5,
+   "word_gap_px": 30.5,
+   "line_gap_px": 39,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "검은 배경 인터뷰 남성 + 방송자막(이름 글자 없음)",
+   "fit": 6,
+   "cut_at": [
+    8.867
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 8.867,
+    "t1": 9.633,
+    "diff": 0.2
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 123.2,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 9.8,
-   "t1": 10.6,
-   "caption": "나폴리맛피아/비아톨레도 파스타바",
-   "narration": "나폴리 마피아 비아톨레도 파스타바",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "인물",
-   "screen_desc": "조리복 남성이 팬으로 요리하는 식당 주방 영상, 자막에 별칭 나폴리맛피아",
-   "effect": null,
-   "ending": "~타바"
+   "t0": 9.633,
+   "t1": 11.6,
+   "speaker": "나레",
+   "text": "나폴리맛피아 / 비아톨레도 파스타바",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    1296,
+    1474
+   ],
+   "x": 543,
+   "align": "center",
+   "max_w": 638,
+   "ink_x": [
+    224,
+    862
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 74,
+   "letter_gap_px": 7.2,
+   "word_gap_px": 27.0,
+   "line_gap_px": 39,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "조리복 남성이 팬으로 요리 → 얼굴 확대 — 자막 '나폴리맛피아'",
+   "fit": 8,
+   "cut_at": [
+    9.633,
+    10.9
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 9.633,
+    "t1": 10.9,
+    "diff": 37.6
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 139.6,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 10.6,
-   "t1": 11.2,
-   "caption": "나폴리맛피아/비아톨레도 파스타바",
-   "narration": "나폴리 마피아 비아톨레도 파스타바",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "인물",
-   "screen_desc": "같은 남성 얼굴 확대",
-   "effect": "줌인",
-   "ending": "~타바"
+   "t0": 11.6,
+   "t1": 12.867,
+   "speaker": "나레",
+   "text": "비행기 티켓의 / QR을 찍으면",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    1294,
+    1474
+   ],
+   "x": 530,
+   "align": "center",
+   "max_w": 420,
+   "ink_x": [
+    320,
+    740
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 76,
+   "letter_gap_px": 8.0,
+   "word_gap_px": 31.0,
+   "line_gap_px": 37,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "비행기 티켓 모양 메뉴(QR 2개)",
+   "fit": 9,
+   "cut_at": [
+    11.6
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 11.6,
+    "t1": 12.867,
+    "diff": 1.0
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 142.3,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 11.2,
-   "t1": 11.8,
-   "caption": "나폴리맛피아/비아톨레도 파스타바",
-   "narration": "나폴리 마피아 비아톨레도 파스타바",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "인물",
-   "screen_desc": "같은 주방 장면 원래 크기",
-   "effect": null,
-   "ending": "~타바"
+   "t0": 12.867,
+   "t1": 14.367,
+   "speaker": "나레",
+   "text": "메뉴와 와인 리스트가 보임",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    1296,
+    1366
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 812,
+   "ink_x": [
+    132,
+    944
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 75,
+   "letter_gap_px": 7.0,
+   "word_gap_px": 23.0,
+   "line_gap_px": 38,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "캡처",
+   "scene_desc": "VIA TOLEDO 메뉴·와인 리스트 화면",
+   "fit": 9,
+   "cut_at": [
+    12.867
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 12.867,
+    "t1": 14.367,
+    "diff": 0.5
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 135.3,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 11.8,
-   "t1": 13.0,
-   "caption": "비행기 티켓의/QR을 찍으면",
-   "narration": "비행기 티켓에 QR을 찍으면",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "비행기 티켓 모양 메뉴(QR 2개)",
-   "effect": null,
-   "ending": "~으면"
+   "t0": 14.367,
+   "t1": 15.633,
+   "speaker": "나레",
+   "text": "와인도 이탈리아만 있고",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    1296,
+    1366
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 728,
+   "ink_x": [
+    174,
+    902
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 75,
+   "letter_gap_px": 7.0,
+   "word_gap_px": 27.0,
+   "line_gap_px": 38,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "캡처",
+   "scene_desc": "와인 리스트 두 쪽",
+   "fit": 8,
+   "cut_at": [
+    14.367
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 14.367,
+    "t1": 15.633,
+    "diff": 0.4
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 129.3,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 13.0,
-   "t1": 14.6,
-   "caption": "메뉴와 와인 리스트가 보임",
-   "narration": "메뉴와 와이니스트가 보임",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "캡처(댓글·성분표·기사·문의답변)",
-   "screen_desc": "VIA TOLEDO 메뉴·와인 리스트 화면",
-   "effect": null,
-   "ending": "~보임"
+   "t0": 15.633,
+   "t1": 16.967,
+   "speaker": "나레",
+   "text": "음식도 이탈리아를 상징하는",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    1296,
+    1366
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 866,
+   "ink_x": [
+    106,
+    972
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 75,
+   "letter_gap_px": 8.0,
+   "word_gap_px": 28.0,
+   "line_gap_px": 38,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "피규어 장식 플레이트에 음식 놓음 → 피규어와 나온 음식",
+   "fit": 9,
+   "cut_at": [
+    15.633
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 15.633,
+    "t1": 16.967,
+    "diff": 1.4
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 134.9,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 14.6,
-   "t1": 15.8,
-   "caption": "와인도 이탈리아만 있고",
-   "narration": "와인도 이탈리아만 있고",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "캡처(댓글·성분표·기사·문의답변)",
-   "screen_desc": "와인 리스트 두 쪽",
-   "effect": null,
-   "ending": "~있고"
+   "t0": 16.967,
+   "t1": 18.0,
+   "speaker": "나레",
+   "text": "피규어와 함께 내줌",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    1402,
+    1474
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 586,
+   "ink_x": [
+    246,
+    832
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 77,
+   "letter_gap_px": 5.5,
+   "word_gap_px": 27.0,
+   "line_gap_px": 36,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "피규어 장식 플레이트에 음식 놓음 → 피규어와 나온 음식",
+   "fit": 9,
+   "cut_at": [
+    16.967
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 16.967,
+    "t1": 18.0,
+    "diff": 0.1
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 141.3,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 15.8,
-   "t1": 17.2,
-   "caption": "음식도 이탈리아를 상징하는",
-   "narration": "음식도 이탈리아를 상징하는",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품영상",
-   "screen_desc": "장갑 낀 손이 피규어 장식 플레이트에 음식 놓음",
-   "effect": null,
-   "ending": "~하는"
+   "t0": 18.0,
+   "t1": 19.767,
+   "speaker": "나레",
+   "text": "그는 과거에 오픈했던 / 카페에서도",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    1294,
+    1466
+   ],
+   "x": 537,
+   "align": "center",
+   "max_w": 654,
+   "ink_x": [
+    210,
+    864
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 71,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 27.5,
+   "line_gap_px": 42,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "매장·건물",
+   "scene_desc": "VIA TOLEDO ESPRESSO BAR 간판 카페 외관",
+   "fit": 8,
+   "cut_at": [
+    18.0
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 18.0,
+    "t1": 19.767,
+    "diff": 0.6
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 139.6,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 17.2,
-   "t1": 18.2,
-   "caption": "음식도 이탈리아를 상징하는/피규어와 함께 내줌",
-   "narration": "음식도 이탈리아를 상징하는 피규어와 함께 내줌",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "피규어(흉상 등)와 나온 음식 플레이트",
-   "effect": null,
-   "ending": "~내줌"
+   "t0": 19.767,
+   "t1": 21.267,
+   "speaker": "나레",
+   "text": "아메리카노를 / '논커피'에 넣음",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    1298,
+    1476
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 472,
+   "ink_x": [
+    304,
+    776
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 77,
+   "letter_gap_px": 8.8,
+   "word_gap_px": 33.0,
+   "line_gap_px": 36,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "NON COFFEE 메뉴판에 Americano",
+   "fit": 9,
+   "cut_at": [
+    19.767
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 19.767,
+    "t1": 21.267,
+    "diff": 0.8
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 130.5,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 18.2,
-   "t1": 20.0,
-   "caption": "그는 과거에 오픈했던/카페에서도",
-   "narration": "그는 과거에 오픈했던 카페에서도",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "기타",
-   "screen_desc": "카페 외관(VIA TOLEDO ESPRESSO BAR 간판)",
-   "effect": null,
-   "ending": "~서도"
+   "t0": 21.267,
+   "t1": 22.6,
+   "speaker": "나레",
+   "text": "이탈리아에 진심인사람..",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    1296,
+    1366
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 744,
+   "ink_x": [
+    168,
+    912
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [
+    {
+     "what": "이탈리아 국기 원형 스티커",
+     "t_in": 21.3,
+     "t_out": 22.6,
+     "x": 848,
+     "y": 726,
+     "w": 114,
+     "anim": "없음(컷과 같이)",
+     "basis": "픽셀(빨강 띠 bbox — 국기 오른쪽 빨강만 잡힘, 실제 원은 더 큼)"
+    }
+   ],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 75,
+   "letter_gap_px": 7.5,
+   "word_gap_px": 31.0,
+   "line_gap_px": 38,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "마이크 든 남성 + 방송자막 + 이탈리아 국기 원형 스티커",
+   "fit": 7,
+   "cut_at": [
+    21.267
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 21.267,
+    "t1": 22.6,
+    "diff": 0.1
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 133.6,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 20.0,
-   "t1": 21.4,
-   "caption": "아메리카노를/'논커피'에 넣음",
-   "narration": "아메리카노를 롱 커피에 넣음",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "NON COFFEE 메뉴판에 Americano 표기",
-   "effect": null,
-   "ending": "~넣음"
+   "t0": 22.6,
+   "t1": 23.733,
+   "speaker": "나레",
+   "text": "트리플스타 - 트리드",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    1298,
+    1366
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 634,
+   "ink_x": [
+    222,
+    856
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 73,
+   "letter_gap_px": 8.0,
+   "word_gap_px": 26.0,
+   "line_gap_px": 40,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "안경 남성 웃음(방송자막 '1위 트리플 스타')",
+   "fit": 8,
+   "cut_at": [
+    22.6
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 22.6,
+    "t1": 23.733,
+    "diff": 0.2
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 172.0,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 21.4,
-   "t1": 22.8,
-   "caption": "이탈리아에 진심인사람..",
-   "narration": "이탈리아의 진심인 사랑",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "방송화면(연예인·예능)",
-   "screen_desc": "마이크 든 남성, 방송자막 \"이탈리아 남부 나폴리에서 요리 공부\"",
-   "effect": "이탈리아 국기 원형 스티커",
-   "ending": "~사람.."
+   "t0": 23.733,
+   "t1": 25.067,
+   "speaker": "나레",
+   "text": "그냥 깔끔 그 잡채",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    1294,
+    1366
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 536,
+   "ink_x": [
+    270,
+    806
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 77,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 26.0,
+   "line_gap_px": 36,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "트리드 메뉴판",
+   "fit": 8,
+   "cut_at": [
+    23.733
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 23.733,
+    "t1": 25.067,
+    "diff": 2.6
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 153.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 22.8,
-   "t1": 24.0,
-   "caption": "트리플스타 - 트리드",
-   "narration": "트리플 스타 트리드",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "방송화면(연예인·예능)",
-   "screen_desc": "안경 쓴 남성 웃음, 방송자막 \"1위 트리플 스타\"",
-   "effect": null,
-   "ending": "~리드"
+   "t0": 25.067,
+   "t1": 27.133,
+   "speaker": "나레",
+   "text": "한지느낌의 메뉴판 / 재질도 깔끔함",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    1296,
+    1474
+   ],
+   "x": 531,
+   "align": "center",
+   "max_w": 570,
+   "ink_x": [
+    246,
+    816
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 76,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 30.0,
+   "line_gap_px": 37,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "trid 글자 흰 메뉴판 겉면",
+   "fit": 8,
+   "cut_at": [
+    25.067
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 25.067,
+    "t1": 27.133,
+    "diff": 0.4
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 134.5,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 24.0,
-   "t1": 25.2,
-   "caption": "그냥 깔끔 그 잡채",
-   "narration": "그냥 깔끔 그 자체",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "트리드 메뉴판(choux, beef tartare …)",
-   "effect": null,
-   "ending": "~잡채"
+   "t0": 27.133,
+   "t1": 28.1,
+   "speaker": "나레",
+   "text": "최현석 - 쵸이닷",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    1296,
+    1366
+   ],
+   "x": 541,
+   "align": "center",
+   "max_w": 498,
+   "ink_x": [
+    292,
+    790
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 75,
+   "letter_gap_px": 9.0,
+   "word_gap_px": 29.0,
+   "line_gap_px": 38,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "흰 조리복 남성(자막 '최현석')",
+   "fit": 8,
+   "cut_at": [
+    27.133
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 27.133,
+    "t1": 28.1,
+    "diff": 0.7
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 200.5,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 25.2,
-   "t1": 27.4,
-   "caption": "한지느낌의 메뉴판/재질도 깔끔함",
-   "narration": "한지 느낌의 메뉴판 재질도 깔끔함",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "trid 글자 흰 메뉴판 겉면",
-   "effect": null,
-   "ending": "~끔함"
+   "t0": 28.1,
+   "t1": 29.667,
+   "speaker": "나레",
+   "text": "이제 '마늘'에 / 진하게 표시 되어있음",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    1292,
+    1478
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 656,
+   "ink_x": [
+    212,
+    868
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 80,
+   "letter_gap_px": 5.8,
+   "word_gap_px": 31.2,
+   "line_gap_px": 34,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "쵸이닷 메뉴판 마늘 표시(빨간 점선 상자)",
+   "fit": 9,
+   "cut_at": [
+    28.1
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 28.1,
+    "t1": 29.667,
+    "diff": 0.5
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 132.8,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 27.4,
-   "t1": 28.4,
-   "caption": "최현석 - 쵸이닷",
-   "narration": "최연석 초이다",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "방송화면(연예인·예능)",
-   "screen_desc": "흰 조리복 남성(자막에 최현석), 하단 방송자막",
-   "effect": null,
-   "ending": "~이닷"
+   "t0": 29.667,
+   "t1": 31.0,
+   "speaker": "나레",
+   "text": "알차게 써먹으시는 중",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    1294,
+    1366
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 658,
+   "ink_x": [
+    210,
+    868
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 77,
+   "letter_gap_px": 4.5,
+   "word_gap_px": 28.0,
+   "line_gap_px": 36,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "캡처",
+   "scene_desc": "흑백요리사 관련 기사 목록(빨간 밑줄)",
+   "fit": 6,
+   "cut_at": [
+    29.667
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 29.667,
+    "t1": 31.0,
+    "diff": 0.5
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 157.5,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 28.4,
-   "t1": 29.8,
-   "caption": "이제 '마늘'에/진하게 표시 되어있음",
-   "narration": "이제 마늘에 진하게 표시되어 있음",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "쵸이닷 메뉴판 수제비 줄 마늘 표시",
-   "effect": "빨간 점선 박스",
-   "ending": "~있음"
+   "t0": 31.0,
+   "t1": 31.9,
+   "speaker": "나레",
+   "text": "남정석 - 로컬릿",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    1296,
+    1366
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 490,
+   "ink_x": [
+    294,
+    784
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 75,
+   "letter_gap_px": 10.0,
+   "word_gap_px": 29.0,
+   "line_gap_px": 38,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "흰 조리복 남성(방송자막 '남정석 … 로컬릿')",
+   "fit": 8,
+   "cut_at": [
+    31.0
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 31.0,
+    "t1": 31.9,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 138.7,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 29.8,
-   "t1": 31.2,
-   "caption": "알차게 써먹으시는 중",
-   "narration": "알차게 써먹으시는 중",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "캡처(댓글·성분표·기사·문의답변)",
-   "screen_desc": "흑백요리사 관련 기사 목록 캡처",
-   "effect": "빨간 밑줄",
-   "ending": "중"
+   "t0": 31.9,
+   "t1": 32.6,
+   "speaker": "나레",
+   "text": "검색 안하고도",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    1296,
+    1366
+   ],
+   "x": 530,
+   "align": "center",
+   "max_w": 428,
+   "ink_x": [
+    316,
+    744
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 75,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 30.0,
+   "line_gap_px": 38,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "음식 사진 들어간 메뉴판 두 쪽",
+   "fit": 9,
+   "cut_at": [
+    31.9
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 31.9,
+    "t1": 32.6,
+    "diff": 1.9
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 136.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 31.2,
-   "t1": 32.2,
-   "caption": "남정석 - 로컬릿",
-   "narration": "남정석 로컬릿",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "방송화면(연예인·예능)",
-   "screen_desc": "흰 조리복 남성, 방송자막 \"남정석 2년 연속 <서울 미쉐린 100선> … <로컬릿> 오너 셰프\"",
-   "effect": null,
-   "ending": "~컬릿"
+   "t0": 32.6,
+   "t1": 33.967,
+   "speaker": "나레",
+   "text": "음식사진 딱 보이는거 좋음",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    1404,
+    1476
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 818,
+   "ink_x": [
+    130,
+    948
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 77,
+   "letter_gap_px": 8.5,
+   "word_gap_px": 30.0,
+   "line_gap_px": 36,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "음식 사진 들어간 메뉴판 두 쪽",
+   "fit": 9,
+   "cut_at": [
+    32.6
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 32.6,
+    "t1": 33.967,
+    "diff": 0.8
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 124.6,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 32.2,
-   "t1": 32.8,
-   "caption": "검색 안하고도",
-   "narration": "검색 안 하고도",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "음식 사진 들어간 메뉴판",
-   "effect": null,
-   "ending": "~고도"
+   "t0": 33.967,
+   "t1": 34.967,
+   "speaker": "나레",
+   "text": "영탉 - 남영탉",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    1296,
+    1366
+   ],
+   "x": 542,
+   "align": "center",
+   "max_w": 428,
+   "ink_x": [
+    328,
+    756
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 75,
+   "letter_gap_px": 9.0,
+   "word_gap_px": 26.0,
+   "line_gap_px": 38,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "통닭 화로 옆 남성(방송자막 '영탉')",
+   "fit": 8,
+   "cut_at": [
+    33.967
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 33.967,
+    "t1": 34.967,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 136.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 32.8,
-   "t1": 34.2,
-   "caption": "검색 안하고도/음식사진 딱 보이는거 좋음",
-   "narration": "검색 안 하고도 음식 사진 딱 보이는 거 좋음",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "음식 사진 메뉴판 다른 쪽",
-   "effect": null,
-   "ending": "~좋음"
+   "t0": 34.967,
+   "t1": 35.9,
+   "speaker": "나레",
+   "text": "무슨 태국식당에서",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    1296,
+    1366
+   ],
+   "x": 536,
+   "align": "center",
+   "max_w": 564,
+   "ink_x": [
+    254,
+    818
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 75,
+   "letter_gap_px": 7.0,
+   "word_gap_px": 28.0,
+   "line_gap_px": 38,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "매장·건물",
+   "scene_desc": "태국 식당 야외 풍경",
+   "fit": 7,
+   "cut_at": [
+    34.967
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 34.967,
+    "t1": 35.9,
+    "diff": 1.1
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 134.5,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 34.2,
-   "t1": 35.2,
-   "caption": "영탉 - 남영탉",
-   "narration": "영탁 남영탁",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "방송화면(연예인·예능)",
-   "screen_desc": "통닭 화로 옆 남성, 방송자막 \"영탉 <남영탉> 오너 셰프\"",
-   "effect": null,
-   "ending": "~영탉"
+   "t0": 35.9,
+   "t1": 37.667,
+   "speaker": "나레",
+   "text": "한국인들을 위해 / 만든 메뉴판같지만",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    1296,
+    1474
+   ],
+   "x": 532,
+   "align": "center",
+   "max_w": 568,
+   "ink_x": [
+    248,
+    816
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 75,
+   "letter_gap_px": 4.2,
+   "word_gap_px": 27.5,
+   "line_gap_px": 38,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "사진·한글 가득한 메뉴판",
+   "fit": 8,
+   "cut_at": [
+    35.9
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 35.9,
+    "t1": 37.667,
+    "diff": 2.5
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 129.7,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 35.2,
-   "t1": 36.2,
-   "caption": "무슨 태국식당에서",
-   "narration": "무슨 태국 식당에서",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "기타",
-   "screen_desc": "태국 식당 야외 풍경",
-   "effect": null,
-   "ending": "~에서"
+   "t0": 37.667,
+   "t1": 39.633,
+   "speaker": "나레",
+   "text": "보는 입장에서 / 편하긴 한듯.. 효도폰 st",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    1296,
+    1474
+   ],
+   "x": 542,
+   "align": "center",
+   "max_w": 716,
+   "ink_x": [
+    184,
+    900
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 75,
+   "letter_gap_px": 5.2,
+   "word_gap_px": 28.0,
+   "line_gap_px": 38,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "큰 글씨 사진 메뉴판",
+   "fit": 7,
+   "cut_at": [
+    37.667
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 37.667,
+    "t1": 39.633,
+    "diff": 0.1
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 131.6,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 36.2,
-   "t1": 37.8,
-   "caption": "한국인들을 위해/만든 메뉴판같지만",
-   "narration": "한국인들을 위해 만든 메뉴판 같지만",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "사진·한글 가득한 메뉴판",
-   "effect": null,
-   "ending": "~지만"
+   "t0": 39.633,
+   "t1": 40.7,
+   "speaker": "나레",
+   "text": "김도윤 - 윤서울",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    1296,
+    1366
+   ],
+   "x": 541,
+   "align": "center",
+   "max_w": 494,
+   "ink_x": [
+    294,
+    788
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 75,
+   "letter_gap_px": 8.0,
+   "word_gap_px": 27.0,
+   "line_gap_px": 38,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "장발·수염 남성(자막 '김도윤')",
+   "fit": 8,
+   "cut_at": [
+    39.633
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 39.633,
+    "t1": 40.7,
+    "diff": 0.6
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 137.0,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 37.8,
-   "t1": 39.8,
-   "caption": "보는 입장에서/편하긴 한듯.. 효도폰 st",
-   "narration": "보는 입장에서 편하긴 한 듯 효도폰 스티",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "큰 글씨 사진 메뉴판",
-   "effect": null,
-   "ending": "~st"
+   "t0": 40.7,
+   "t1": 41.767,
+   "speaker": "나레",
+   "text": "미니멀함의 정석",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    1294,
+    1366
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 490,
+   "ink_x": [
+    294,
+    784
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 77,
+   "letter_gap_px": 8.0,
+   "word_gap_px": 32.0,
+   "line_gap_px": 36,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "윤서울 미니멀 메뉴판",
+   "fit": 9,
+   "cut_at": [
+    40.7
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 40.7,
+    "t1": 41.767,
+    "diff": 0.1
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 130.9,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 39.8,
-   "t1": 41.0,
-   "caption": "김도윤 - 윤서울",
-   "narration": "김도윤 윤서울",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "방송화면(연예인·예능)",
-   "screen_desc": "장발·수염 흰 옷 남성(자막에 김도윤)",
-   "effect": null,
-   "ending": "~서울"
+   "t0": 41.767,
+   "t1": 42.567,
+   "speaker": "나레",
+   "text": "불꽃남자 - / 비스트로스파크(폐업)",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    1296,
+    1474
+   ],
+   "x": 537,
+   "align": "center",
+   "max_w": 674,
+   "ink_x": [
+    200,
+    874
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 75,
+   "letter_gap_px": 5.5,
+   "word_gap_px": 23.0,
+   "line_gap_px": 38,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "투명 마스크·빨간 완장 남성(방송자막)",
+   "fit": 7,
+   "cut_at": [
+    41.767
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 41.767,
+    "t1": 42.567,
+    "diff": 0.2
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 138.7,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 41.0,
-   "t1": 42.0,
-   "caption": "미니멀함의 정석",
-   "narration": "미니멀함의 정석",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "윤서울 미니멀 메뉴판",
-   "effect": null,
-   "ending": "~정석"
+   "t0": 42.567,
+   "t1": 44.1,
+   "speaker": "나레",
+   "text": "호불호 갈릴 / 직접 쓴 메뉴판",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    1294,
+    1474
+   ],
+   "x": 542,
+   "align": "center",
+   "max_w": 452,
+   "ink_x": [
+    316,
+    768
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 76,
+   "letter_gap_px": 6.8,
+   "word_gap_px": 28.2,
+   "line_gap_px": 37,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "손글씨 메뉴판(가격)",
+   "fit": 9,
+   "cut_at": [
+    42.567
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 42.567,
+    "t1": 44.1,
+    "diff": 1.3
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 128.9,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 42.0,
-   "t1": 42.8,
-   "caption": "불꽃남자 -/비스트로스파크(폐업)",
-   "narration": "불꽃 남자",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "방송화면(연예인·예능)",
-   "screen_desc": "투명 마스크·빨간 완장 남성, 방송자막 \"저쪽은 지금 벌써 움직이거든\"",
-   "effect": null,
-   "ending": "~폐업)"
-  },
-  {
-   "t0": 42.8,
-   "t1": 44.4,
-   "caption": "호불호 갈릴/직접 쓴 메뉴판",
-   "narration": "호불호 갈릴 직접 쓴 메뉴판",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "손글씨 메뉴판(가격 -17, -25 …)",
-   "effect": null,
-   "ending": "~뉴판"
-  },
-  {
-   "t0": 44.4,
-   "t1": 46.0,
-   "caption": "이 한줄 만으로도/팀전 때 성격보임",
-   "narration": "이 한 줄만으로도 팀전 때 성격 보임",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "첫 컷 손글씨 메뉴판 \"※메뉴에 없는 거 드시고 싶으신 거 있으세요??\"",
-   "effect": "빨간 점선 박스",
-   "ending": "~보임"
+   "t0": 44.1,
+   "t1": 45.967,
+   "speaker": "나레",
+   "text": "이 한줄 만으로도 / 팀전 때 성격보임",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(영상 끝)",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    1296,
+    1474
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 516,
+   "ink_x": [
+    282,
+    798
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 75,
+   "letter_gap_px": 7.0,
+   "word_gap_px": 31.0,
+   "line_gap_px": 38,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "첫 컷 손글씨 메뉴판 '※메뉴에 없는 거…' 빨간 점선 상자",
+   "fit": 9,
+   "cut_at": [
+    44.1
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 44.1,
+    "t1": 45.967,
+    "diff": 0.1
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 131.6,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   }
  ],
- "structure": "훅(흑백요리사 셰프별 메뉴판) → [셰프 이름-식당 방송컷 → 메뉴판 사진 2~4컷 → 한줄 평] ×9 반복 → 첫 컷 손글씨 메뉴판으로 돌아와 마무리",
- "celeb_scenes": [
+ "no_caption": [],
+ "beats": "훅(0.0초 '흑백요리사 셰프별 / 성격보인다는') → 다리(2.2초 '안성재 - 모수') → 본문(3.3초 '메뉴판만 봤는데') → 이음(8.9초 '디테일 무엇 / (배운 변ㅌ...') → 다리(9.6초 '나폴리맛피아 / 비아톨레도 파스타') → 본문(11.6초 '비행기 티켓의 / QR을 찍으면') → 증거(12.9초 '메뉴와 와인 리스트가 보임') → 본문(15.6초 '음식도 이탈리아를 상징하는') → 증거(19.8초 '아메리카노를 / '논커피'에 넣음') → 끝(21.3초 '이탈리아에 진심인사람..') → 다리(22.6초 '트리플스타 - 트리드') → 본문(23.7초 '그냥 깔끔 그 잡채') → 다리(27.1초 '최현석 - 쵸이닷') → 증거(28.1초 '이제 '마늘'에 / 진하게 표시 ') → 본문(29.7초 '알차게 써먹으시는 중') → 다리(31.0초 '남정석 - 로컬릿') → 본문(31.9초 '검색 안하고도') → 다리(34.0초 '영탉 - 남영탉') → 본문(35.0초 '무슨 태국식당에서') → 끝(37.7초 '보는 입장에서 / 편하긴 한듯..') → 다리(39.6초 '김도윤 - 윤서울') → 본문(40.7초 '미니멀함의 정석') → 다리(41.8초 '불꽃남자 - / 비스트로스파크(폐') → 본문(42.6초 '호불호 갈릴 / 직접 쓴 메뉴판') → 끝(44.1초 '이 한줄 만으로도 / 팀전 때 성')",
+ "narr_share": "나레 35/35줄(원음 0 — 한 목소리가 화자 대사 줄까지 읽음), 자막 표시 45.97초/45.994초",
+ "dialog_summary": {
+  "rows": 0,
+  "of": 35,
+  "turns": 0,
+  "who": [],
+  "forms": [],
+  "meme_rows": 0,
+  "f0_med_dialog": null,
+  "f0_med_other": 135.3
+ },
+ "notes": [],
+ "name_evidence": [],
+ "frame0": {
+  "what": "훅 카드 없음 — 0초부터 게시글 본문 틀(머리띠·제목·메타) + 자막 + 그림",
+  "face_frac": 0.0,
+  "text": "메뉴판에서 미감 성향 다 보임"
+ },
+ "hook": null,
+ "cuts": [
+  2.233,
+  3.3,
+  3.967,
+  5.433,
+  6.533,
+  7.567,
+  8.867,
+  9.633,
+  10.9,
+  11.6,
+  12.867,
+  14.367,
+  15.633,
+  16.967,
+  18.0,
+  19.767,
+  21.267,
+  22.6,
+  23.733,
+  25.067,
+  27.133,
+  28.1,
+  29.667,
+  31.0,
+  31.9,
+  32.6,
+  33.967,
+  34.967,
+  35.9,
+  37.667,
+  39.633,
+  40.7,
+  41.767,
+  42.567,
+  44.1
+ ],
+ "cuts_detail": [
   {
-   "t0": 2.4,
-   "t1": 3.6,
-   "who": "안성재(자막 이름)",
-   "program": "흑백요리사(첫 줄 자막에 프로그램명, 화면 로고는 미확인)",
-   "why_here": "셰프 소개 카드 — 다음 메뉴판의 주인"
+   "t": 2.233,
+   "t_end": 2.233,
+   "kind": "cut",
+   "diff": 54.7,
+   "blurfr": 0
   },
   {
-   "t0": 9.0,
-   "t1": 9.8,
-   "who": "불명",
-   "program": "추정: 흑백요리사 인터뷰",
-   "why_here": "\"디테일 무엇\" 한줄 평의 근거로 셰프 인터뷰 말 인용"
+   "t": 3.3,
+   "t_end": 3.3,
+   "kind": "cut",
+   "diff": 118.9,
+   "blurfr": 0
   },
   {
-   "t0": 9.8,
-   "t1": 11.8,
-   "who": "나폴리맛피아(자막 별칭)",
-   "program": "불명(식당 주방 영상)",
-   "why_here": "셰프 소개 카드"
+   "t": 3.967,
+   "t_end": 3.967,
+   "kind": "cut",
+   "diff": 43.8,
+   "blurfr": 0
   },
   {
-   "t0": 21.4,
-   "t1": 22.8,
-   "who": "추정: 나폴리맛피아(방송자막 \"나폴리에서 요리 공부\", 이름 표기 없음)",
-   "program": "추정: 흑백요리사",
-   "why_here": "\"이탈리아에 진심\" 평의 근거"
+   "t": 5.433,
+   "t_end": 5.433,
+   "kind": "cut",
+   "diff": 37.6,
+   "blurfr": 0
   },
   {
-   "t0": 22.8,
-   "t1": 24.0,
-   "who": "트리플스타(자막)",
-   "program": "추정: 흑백요리사(방송자막 \"1위 트리플 스타\")",
-   "why_here": "셰프 소개 카드"
+   "t": 6.533,
+   "t_end": 6.533,
+   "kind": "cut",
+   "diff": 55.1,
+   "blurfr": 0
   },
   {
-   "t0": 27.4,
-   "t1": 28.4,
-   "who": "최현석(자막)",
-   "program": "추정: 흑백요리사",
-   "why_here": "셰프 소개 카드"
+   "t": 7.567,
+   "t_end": 7.567,
+   "kind": "cut",
+   "diff": 67.0,
+   "blurfr": 0
   },
   {
-   "t0": 31.2,
-   "t1": 32.2,
-   "who": "남정석(자막·방송자막)",
-   "program": "추정: 흑백요리사",
-   "why_here": "셰프 소개 카드"
+   "t": 8.867,
+   "t_end": 8.867,
+   "kind": "cut",
+   "diff": 154.4,
+   "blurfr": 0
   },
   {
-   "t0": 34.2,
-   "t1": 35.2,
-   "who": "영탉(자막·방송자막)",
-   "program": "추정: 흑백요리사",
-   "why_here": "셰프 소개 카드"
+   "t": 9.633,
+   "t_end": 9.633,
+   "kind": "cut",
+   "diff": 54.6,
+   "blurfr": 0
   },
   {
-   "t0": 39.8,
-   "t1": 41.0,
-   "who": "김도윤(자막)",
-   "program": "추정: 흑백요리사",
-   "why_here": "셰프 소개 카드"
+   "t": 10.9,
+   "t_end": 10.9,
+   "kind": "cut",
+   "diff": 39.1,
+   "blurfr": 0
   },
   {
-   "t0": 42.0,
-   "t1": 42.8,
-   "who": "불꽃남자(자막)",
-   "program": "추정: 흑백요리사",
-   "why_here": "셰프 소개 카드"
+   "t": 11.6,
+   "t_end": 11.6,
+   "kind": "cut",
+   "diff": 76.4,
+   "blurfr": 0
+  },
+  {
+   "t": 12.867,
+   "t_end": 12.867,
+   "kind": "cut",
+   "diff": 55.9,
+   "blurfr": 0
+  },
+  {
+   "t": 14.367,
+   "t_end": 14.367,
+   "kind": "cut",
+   "diff": 42.1,
+   "blurfr": 0
+  },
+  {
+   "t": 15.633,
+   "t_end": 15.633,
+   "kind": "cut",
+   "diff": 88.7,
+   "blurfr": 0
+  },
+  {
+   "t": 16.967,
+   "t_end": 16.967,
+   "kind": "cut",
+   "diff": 62.5,
+   "blurfr": 0
+  },
+  {
+   "t": 18.0,
+   "t_end": 18.0,
+   "kind": "cut",
+   "diff": 67.2,
+   "blurfr": 0
+  },
+  {
+   "t": 19.767,
+   "t_end": 19.767,
+   "kind": "cut",
+   "diff": 64.7,
+   "blurfr": 0
+  },
+  {
+   "t": 21.267,
+   "t_end": 21.267,
+   "kind": "cut",
+   "diff": 93.4,
+   "blurfr": 0
+  },
+  {
+   "t": 22.6,
+   "t_end": 22.6,
+   "kind": "cut",
+   "diff": 50.3,
+   "blurfr": 0
+  },
+  {
+   "t": 23.733,
+   "t_end": 23.733,
+   "kind": "cut",
+   "diff": 93.3,
+   "blurfr": 0
+  },
+  {
+   "t": 25.067,
+   "t_end": 25.067,
+   "kind": "cut",
+   "diff": 42.7,
+   "blurfr": 0
+  },
+  {
+   "t": 27.133,
+   "t_end": 27.133,
+   "kind": "cut",
+   "diff": 95.3,
+   "blurfr": 0
+  },
+  {
+   "t": 28.1,
+   "t_end": 28.1,
+   "kind": "cut",
+   "diff": 132.8,
+   "blurfr": 0
+  },
+  {
+   "t": 29.667,
+   "t_end": 29.667,
+   "kind": "cut",
+   "diff": 37.7,
+   "blurfr": 0
+  },
+  {
+   "t": 31.0,
+   "t_end": 31.0,
+   "kind": "cut",
+   "diff": 156.6,
+   "blurfr": 0
+  },
+  {
+   "t": 31.9,
+   "t_end": 31.9,
+   "kind": "cut",
+   "diff": 118.2,
+   "blurfr": 0
+  },
+  {
+   "t": 32.6,
+   "t_end": 32.6,
+   "kind": "cut",
+   "diff": 50.2,
+   "blurfr": 0
+  },
+  {
+   "t": 33.967,
+   "t_end": 33.967,
+   "kind": "cut",
+   "diff": 122.7,
+   "blurfr": 0
+  },
+  {
+   "t": 34.967,
+   "t_end": 34.967,
+   "kind": "cut",
+   "diff": 45.6,
+   "blurfr": 0
+  },
+  {
+   "t": 35.9,
+   "t_end": 35.9,
+   "kind": "cut",
+   "diff": 80.0,
+   "blurfr": 0
+  },
+  {
+   "t": 37.667,
+   "t_end": 37.667,
+   "kind": "cut",
+   "diff": 63.9,
+   "blurfr": 0
+  },
+  {
+   "t": 39.633,
+   "t_end": 39.633,
+   "kind": "cut",
+   "diff": 100.3,
+   "blurfr": 0
+  },
+  {
+   "t": 40.7,
+   "t_end": 40.7,
+   "kind": "cut",
+   "diff": 117.0,
+   "blurfr": 0
+  },
+  {
+   "t": 41.767,
+   "t_end": 41.767,
+   "kind": "cut",
+   "diff": 119.1,
+   "blurfr": 0
+  },
+  {
+   "t": 42.567,
+   "t_end": 42.567,
+   "kind": "cut",
+   "diff": 53.5,
+   "blurfr": 0
+  },
+  {
+   "t": 44.1,
+   "t_end": 44.1,
+   "kind": "cut",
+   "diff": 33.5,
+   "blurfr": 0
   }
  ],
- "kangjueun": "없음 — 37줄 전부 확인. 등장 인물은 자막에 이름 적힌 남성 셰프 8명과 이름 없는 남성 1명뿐, 여성 방송인 컷 없음"
+ "cuts_rejected_same_picture": [],
+ "shots": [
+  {
+   "t0": 0.0,
+   "t1": 2.233,
+   "diff": 1.5,
+   "motion": "still"
+  },
+  {
+   "t0": 2.233,
+   "t1": 3.3,
+   "diff": 0.4,
+   "motion": "still"
+  },
+  {
+   "t0": 3.3,
+   "t1": 3.967,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 3.967,
+   "t1": 5.433,
+   "diff": 0.2,
+   "motion": "still"
+  },
+  {
+   "t0": 5.433,
+   "t1": 6.533,
+   "diff": 0.1,
+   "motion": "still"
+  },
+  {
+   "t0": 6.533,
+   "t1": 7.567,
+   "diff": 0.7,
+   "motion": "still"
+  },
+  {
+   "t0": 7.567,
+   "t1": 8.867,
+   "diff": 0.4,
+   "motion": "still"
+  },
+  {
+   "t0": 8.867,
+   "t1": 9.633,
+   "diff": 0.2,
+   "motion": "still"
+  },
+  {
+   "t0": 9.633,
+   "t1": 10.9,
+   "diff": 37.6,
+   "motion": "cam"
+  },
+  {
+   "t0": 10.9,
+   "t1": 11.6,
+   "diff": 22.0,
+   "scale": 1.004,
+   "tx": -46,
+   "ty": -15,
+   "inl": 243,
+   "motion": "pan"
+  },
+  {
+   "t0": 11.6,
+   "t1": 12.867,
+   "diff": 1.0,
+   "motion": "still"
+  },
+  {
+   "t0": 12.867,
+   "t1": 14.367,
+   "diff": 0.5,
+   "motion": "still"
+  },
+  {
+   "t0": 14.367,
+   "t1": 15.633,
+   "diff": 0.4,
+   "motion": "still"
+  },
+  {
+   "t0": 15.633,
+   "t1": 16.967,
+   "diff": 1.4,
+   "motion": "still"
+  },
+  {
+   "t0": 16.967,
+   "t1": 18.0,
+   "diff": 0.1,
+   "motion": "still"
+  },
+  {
+   "t0": 18.0,
+   "t1": 19.767,
+   "diff": 0.6,
+   "motion": "still"
+  },
+  {
+   "t0": 19.767,
+   "t1": 21.267,
+   "diff": 0.8,
+   "motion": "still"
+  },
+  {
+   "t0": 21.267,
+   "t1": 22.6,
+   "diff": 0.1,
+   "motion": "still"
+  },
+  {
+   "t0": 22.6,
+   "t1": 23.733,
+   "diff": 0.2,
+   "motion": "still"
+  },
+  {
+   "t0": 23.733,
+   "t1": 25.067,
+   "diff": 2.6,
+   "motion": "still"
+  },
+  {
+   "t0": 25.067,
+   "t1": 27.133,
+   "diff": 0.4,
+   "motion": "still"
+  },
+  {
+   "t0": 27.133,
+   "t1": 28.1,
+   "diff": 0.7,
+   "motion": "still"
+  },
+  {
+   "t0": 28.1,
+   "t1": 29.667,
+   "diff": 0.5,
+   "motion": "still"
+  },
+  {
+   "t0": 29.667,
+   "t1": 31.0,
+   "diff": 0.5,
+   "motion": "still"
+  },
+  {
+   "t0": 31.0,
+   "t1": 31.9,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 31.9,
+   "t1": 32.6,
+   "diff": 1.9,
+   "motion": "still"
+  },
+  {
+   "t0": 32.6,
+   "t1": 33.967,
+   "diff": 0.8,
+   "motion": "still"
+  },
+  {
+   "t0": 33.967,
+   "t1": 34.967,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 34.967,
+   "t1": 35.9,
+   "diff": 1.1,
+   "motion": "still"
+  },
+  {
+   "t0": 35.9,
+   "t1": 37.667,
+   "diff": 2.5,
+   "motion": "still"
+  },
+  {
+   "t0": 37.667,
+   "t1": 39.633,
+   "diff": 0.1,
+   "motion": "still"
+  },
+  {
+   "t0": 39.633,
+   "t1": 40.7,
+   "diff": 0.6,
+   "motion": "still"
+  },
+  {
+   "t0": 40.7,
+   "t1": 41.767,
+   "diff": 0.1,
+   "motion": "still"
+  },
+  {
+   "t0": 41.767,
+   "t1": 42.567,
+   "diff": 0.2,
+   "motion": "still"
+  },
+  {
+   "t0": 42.567,
+   "t1": 44.1,
+   "diff": 1.3,
+   "motion": "still"
+  },
+  {
+   "t0": 44.1,
+   "t1": 45.967,
+   "diff": 0.1,
+   "motion": "still"
+  }
+ ],
+ "_made_by": "humorshowshow 줄판독 2판(오퍼스 눈 + 30fps 잉크 마스크·cutdet·ORB·f0·sfx 실측, 2026-10-25, 관제 263 지시서 06) — 옛 1판은 줄판독/_옛꼴/"
 }
