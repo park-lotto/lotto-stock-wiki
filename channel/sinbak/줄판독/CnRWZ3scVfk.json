@@ -65,7 +65,14 @@
    "motion": "cam",
    "transition": "cut",
    "cut_at": [],
-   "voiced": false
+   "voiced": false,
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1080 원본 프레임 눈 판독 + cv2 색·좌표, 1/30초 띠 cap_in — 10-20 줄판독 워커)",
+    "transition·cut_at": "픽셀(ffmpeg scene 컷 8.933·12.934·13.234·16.234 — notes)",
+    "motion": "눈(0~8.9초 한 테이크 손떨림 카메라·10.3초 팬 관찰 — notes)",
+    "speaker·role·fit·scene_desc": "눈(원본 프레임)",
+    "sfx": "신호(줄 sfx 글 = 파형 세기 관찰 · sfx_events --detect 고립 후보 7.2 tonal 1개는 줄 sfx 칸과 안 겹침 → _kal/sfx_events.json line_link)"
+   }
   },
   {
    "t0": 2.433,
@@ -90,7 +97,14 @@
    "motion": "cam",
    "transition": "cut",
    "cut_at": [],
-   "voiced": false
+   "voiced": false,
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1080 원본 프레임 눈 판독 + cv2 색·좌표, 1/30초 띠 cap_in — 10-20 줄판독 워커)",
+    "transition·cut_at": "픽셀(ffmpeg scene 컷 8.933·12.934·13.234·16.234 — notes)",
+    "motion": "눈(0~8.9초 한 테이크 손떨림 카메라·10.3초 팬 관찰 — notes)",
+    "speaker·role·fit·scene_desc": "눈(원본 프레임)",
+    "sfx": "신호(줄 sfx 글 = 파형 세기 관찰 · sfx_events --detect 고립 후보 7.2 tonal 1개는 줄 sfx 칸과 안 겹침 → _kal/sfx_events.json line_link)"
+   }
   },
   {
    "t0": 3.867,
@@ -115,7 +129,14 @@
    "motion": "cam",
    "transition": "cut",
    "cut_at": [],
-   "voiced": false
+   "voiced": false,
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1080 원본 프레임 눈 판독 + cv2 색·좌표, 1/30초 띠 cap_in — 10-20 줄판독 워커)",
+    "transition·cut_at": "픽셀(ffmpeg scene 컷 8.933·12.934·13.234·16.234 — notes)",
+    "motion": "눈(0~8.9초 한 테이크 손떨림 카메라·10.3초 팬 관찰 — notes)",
+    "speaker·role·fit·scene_desc": "눈(원본 프레임)",
+    "sfx": "신호(줄 sfx 글 = 파형 세기 관찰 · sfx_events --detect 고립 후보 7.2 tonal 1개는 줄 sfx 칸과 안 겹침 → _kal/sfx_events.json line_link)"
+   }
   },
   {
    "t0": 5.567,
@@ -140,7 +161,14 @@
    "motion": "cam",
    "transition": "cut",
    "cut_at": [],
-   "voiced": false
+   "voiced": false,
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1080 원본 프레임 눈 판독 + cv2 색·좌표, 1/30초 띠 cap_in — 10-20 줄판독 워커)",
+    "transition·cut_at": "픽셀(ffmpeg scene 컷 8.933·12.934·13.234·16.234 — notes)",
+    "motion": "눈(0~8.9초 한 테이크 손떨림 카메라·10.3초 팬 관찰 — notes)",
+    "speaker·role·fit·scene_desc": "눈(원본 프레임)",
+    "sfx": "신호(줄 sfx 글 = 파형 세기 관찰 · sfx_events --detect 고립 후보 7.2 tonal 1개는 줄 sfx 칸과 안 겹침 → _kal/sfx_events.json line_link)"
+   }
   },
   {
    "t0": 7.4,
@@ -165,7 +193,14 @@
    "motion": "cam",
    "transition": "cut",
    "cut_at": [],
-   "voiced": false
+   "voiced": false,
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1080 원본 프레임 눈 판독 + cv2 색·좌표, 1/30초 띠 cap_in — 10-20 줄판독 워커)",
+    "transition·cut_at": "픽셀(ffmpeg scene 컷 8.933·12.934·13.234·16.234 — notes)",
+    "motion": "눈(0~8.9초 한 테이크 손떨림 카메라·10.3초 팬 관찰 — notes)",
+    "speaker·role·fit·scene_desc": "눈(원본 프레임)",
+    "sfx": "신호(줄 sfx 글 = 파형 세기 관찰 · sfx_events --detect 고립 후보 7.2 tonal 1개는 줄 sfx 칸과 안 겹침 → _kal/sfx_events.json line_link)"
+   }
   },
   {
    "t0": 8.933,
@@ -192,7 +227,14 @@
    "cut_at": [
     8.933
    ],
-   "voiced": false
+   "voiced": false,
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1080 원본 프레임 눈 판독 + cv2 색·좌표, 1/30초 띠 cap_in — 10-20 줄판독 워커)",
+    "transition·cut_at": "픽셀(ffmpeg scene 컷 8.933·12.934·13.234·16.234 — notes)",
+    "motion": "눈(0~8.9초 한 테이크 손떨림 카메라·10.3초 팬 관찰 — notes)",
+    "speaker·role·fit·scene_desc": "눈(원본 프레임)",
+    "sfx": "신호(줄 sfx 글 = 파형 세기 관찰 · sfx_events --detect 고립 후보 7.2 tonal 1개는 줄 sfx 칸과 안 겹침 → _kal/sfx_events.json line_link)"
+   }
   },
   {
    "t0": 10.967,
@@ -217,7 +259,14 @@
    "motion": "cam",
    "transition": "cut",
    "cut_at": [],
-   "voiced": false
+   "voiced": false,
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1080 원본 프레임 눈 판독 + cv2 색·좌표, 1/30초 띠 cap_in — 10-20 줄판독 워커)",
+    "transition·cut_at": "픽셀(ffmpeg scene 컷 8.933·12.934·13.234·16.234 — notes)",
+    "motion": "눈(0~8.9초 한 테이크 손떨림 카메라·10.3초 팬 관찰 — notes)",
+    "speaker·role·fit·scene_desc": "눈(원본 프레임)",
+    "sfx": "신호(줄 sfx 글 = 파형 세기 관찰 · sfx_events --detect 고립 후보 7.2 tonal 1개는 줄 sfx 칸과 안 겹침 → _kal/sfx_events.json line_link)"
+   }
   },
   {
    "t0": 12.934,
@@ -245,7 +294,14 @@
     12.934,
     13.234
    ],
-   "voiced": false
+   "voiced": false,
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1080 원본 프레임 눈 판독 + cv2 색·좌표, 1/30초 띠 cap_in — 10-20 줄판독 워커)",
+    "transition·cut_at": "픽셀(ffmpeg scene 컷 8.933·12.934·13.234·16.234 — notes)",
+    "motion": "눈(0~8.9초 한 테이크 손떨림 카메라·10.3초 팬 관찰 — notes)",
+    "speaker·role·fit·scene_desc": "눈(원본 프레임)",
+    "sfx": "신호(줄 sfx 글 = 파형 세기 관찰 · sfx_events --detect 고립 후보 7.2 tonal 1개는 줄 sfx 칸과 안 겹침 → _kal/sfx_events.json line_link)"
+   }
   },
   {
    "t0": 13.9,
@@ -275,7 +331,14 @@
    "motion": "cam",
    "transition": "cut",
    "cut_at": [],
-   "voiced": false
+   "voiced": false,
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1080 원본 프레임 눈 판독 + cv2 색·좌표, 1/30초 띠 cap_in — 10-20 줄판독 워커)",
+    "transition·cut_at": "픽셀(ffmpeg scene 컷 8.933·12.934·13.234·16.234 — notes)",
+    "motion": "눈(0~8.9초 한 테이크 손떨림 카메라·10.3초 팬 관찰 — notes)",
+    "speaker·role·fit·scene_desc": "눈(원본 프레임)",
+    "sfx": "신호(줄 sfx 글 = 파형 세기 관찰 · sfx_events --detect 고립 후보 7.2 tonal 1개는 줄 sfx 칸과 안 겹침 → _kal/sfx_events.json line_link)"
+   }
   },
   {
    "t0": 16.234,
@@ -302,7 +365,14 @@
    "cut_at": [
     16.234
    ],
-   "voiced": false
+   "voiced": false,
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1080 원본 프레임 눈 판독 + cv2 색·좌표, 1/30초 띠 cap_in — 10-20 줄판독 워커)",
+    "transition·cut_at": "픽셀(ffmpeg scene 컷 8.933·12.934·13.234·16.234 — notes)",
+    "motion": "눈(0~8.9초 한 테이크 손떨림 카메라·10.3초 팬 관찰 — notes)",
+    "speaker·role·fit·scene_desc": "눈(원본 프레임)",
+    "sfx": "신호(줄 sfx 글 = 파형 세기 관찰 · sfx_events --detect 고립 후보 7.2 tonal 1개는 줄 sfx 칸과 안 겹침 → _kal/sfx_events.json line_link)"
+   }
   },
   {
    "t0": 1.417,
@@ -328,7 +398,14 @@
    "transition": "cut",
    "cut_at": [],
    "voiced": false,
-   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님"
+   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1080 원본 프레임 눈 판독 + cv2 색·좌표, 1/30초 띠 cap_in — 10-20 줄판독 워커)",
+    "transition·cut_at": "픽셀(ffmpeg scene 컷 8.933·12.934·13.234·16.234 — notes)",
+    "motion": "눈(0~8.9초 한 테이크 손떨림 카메라·10.3초 팬 관찰 — notes)",
+    "speaker·role·fit·scene_desc": "눈(원본 프레임)",
+    "sfx": "신호(줄 sfx 글 = 파형 세기 관찰 · sfx_events --detect 고립 후보 7.2 tonal 1개는 줄 sfx 칸과 안 겹침 → _kal/sfx_events.json line_link)"
+   }
   },
   {
    "t0": 3.867,
@@ -354,7 +431,14 @@
    "transition": "cut",
    "cut_at": [],
    "voiced": false,
-   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님"
+   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1080 원본 프레임 눈 판독 + cv2 색·좌표, 1/30초 띠 cap_in — 10-20 줄판독 워커)",
+    "transition·cut_at": "픽셀(ffmpeg scene 컷 8.933·12.934·13.234·16.234 — notes)",
+    "motion": "눈(0~8.9초 한 테이크 손떨림 카메라·10.3초 팬 관찰 — notes)",
+    "speaker·role·fit·scene_desc": "눈(원본 프레임)",
+    "sfx": "신호(줄 sfx 글 = 파형 세기 관찰 · sfx_events --detect 고립 후보 7.2 tonal 1개는 줄 sfx 칸과 안 겹침 → _kal/sfx_events.json line_link)"
+   }
   },
   {
    "t0": 5.567,
@@ -380,7 +464,14 @@
    "transition": "cut",
    "cut_at": [],
    "voiced": false,
-   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님"
+   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1080 원본 프레임 눈 판독 + cv2 색·좌표, 1/30초 띠 cap_in — 10-20 줄판독 워커)",
+    "transition·cut_at": "픽셀(ffmpeg scene 컷 8.933·12.934·13.234·16.234 — notes)",
+    "motion": "눈(0~8.9초 한 테이크 손떨림 카메라·10.3초 팬 관찰 — notes)",
+    "speaker·role·fit·scene_desc": "눈(원본 프레임)",
+    "sfx": "신호(줄 sfx 글 = 파형 세기 관찰 · sfx_events --detect 고립 후보 7.2 tonal 1개는 줄 sfx 칸과 안 겹침 → _kal/sfx_events.json line_link)"
+   }
   },
   {
    "t0": 12.934,
@@ -409,7 +500,14 @@
     13.234
    ],
    "voiced": false,
-   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님"
+   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1080 원본 프레임 눈 판독 + cv2 색·좌표, 1/30초 띠 cap_in — 10-20 줄판독 워커)",
+    "transition·cut_at": "픽셀(ffmpeg scene 컷 8.933·12.934·13.234·16.234 — notes)",
+    "motion": "눈(0~8.9초 한 테이크 손떨림 카메라·10.3초 팬 관찰 — notes)",
+    "speaker·role·fit·scene_desc": "눈(원본 프레임)",
+    "sfx": "신호(줄 sfx 글 = 파형 세기 관찰 · sfx_events --detect 고립 후보 7.2 tonal 1개는 줄 sfx 칸과 안 겹침 → _kal/sfx_events.json line_link)"
+   }
   },
   {
    "t0": 6.217,
@@ -435,7 +533,14 @@
    "transition": "cut",
    "cut_at": [],
    "voiced": true,
-   "_note": "창 안 자막 = 화면 속 신부의 실제 말(위스퍼 en: 6~8초 'Amen.' / 12~14초 'There we go.')을 한국어로 옮긴 것으로 봄"
+   "_note": "창 안 자막 = 화면 속 신부의 실제 말(위스퍼 en: 6~8초 'Amen.' / 12~14초 'There we go.')을 한국어로 옮긴 것으로 봄",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1080 원본 프레임 눈 판독 + cv2 색·좌표, 1/30초 띠 cap_in — 10-20 줄판독 워커)",
+    "transition·cut_at": "픽셀(ffmpeg scene 컷 8.933·12.934·13.234·16.234 — notes)",
+    "motion": "눈(0~8.9초 한 테이크 손떨림 카메라·10.3초 팬 관찰 — notes)",
+    "speaker·role·fit·scene_desc": "눈(원본 프레임)",
+    "sfx": "신호(줄 sfx 글 = 파형 세기 관찰 · sfx_events --detect 고립 후보 7.2 tonal 1개는 줄 sfx 칸과 안 겹침 → _kal/sfx_events.json line_link)"
+   }
   },
   {
    "t0": 8.933,
@@ -463,7 +568,14 @@
     8.933
    ],
    "voiced": false,
-   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님"
+   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1080 원본 프레임 눈 판독 + cv2 색·좌표, 1/30초 띠 cap_in — 10-20 줄판독 워커)",
+    "transition·cut_at": "픽셀(ffmpeg scene 컷 8.933·12.934·13.234·16.234 — notes)",
+    "motion": "눈(0~8.9초 한 테이크 손떨림 카메라·10.3초 팬 관찰 — notes)",
+    "speaker·role·fit·scene_desc": "눈(원본 프레임)",
+    "sfx": "신호(줄 sfx 글 = 파형 세기 관찰 · sfx_events --detect 고립 후보 7.2 tonal 1개는 줄 sfx 칸과 안 겹침 → _kal/sfx_events.json line_link)"
+   }
   },
   {
    "t0": 10.967,
@@ -489,7 +601,14 @@
    "transition": "cut",
    "cut_at": [],
    "voiced": true,
-   "_note": "창 안 자막 = 화면 속 신부의 실제 말(위스퍼 en: 6~8초 'Amen.' / 12~14초 'There we go.')을 한국어로 옮긴 것으로 봄"
+   "_note": "창 안 자막 = 화면 속 신부의 실제 말(위스퍼 en: 6~8초 'Amen.' / 12~14초 'There we go.')을 한국어로 옮긴 것으로 봄",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1080 원본 프레임 눈 판독 + cv2 색·좌표, 1/30초 띠 cap_in — 10-20 줄판독 워커)",
+    "transition·cut_at": "픽셀(ffmpeg scene 컷 8.933·12.934·13.234·16.234 — notes)",
+    "motion": "눈(0~8.9초 한 테이크 손떨림 카메라·10.3초 팬 관찰 — notes)",
+    "speaker·role·fit·scene_desc": "눈(원본 프레임)",
+    "sfx": "신호(줄 sfx 글 = 파형 세기 관찰 · sfx_events --detect 고립 후보 7.2 tonal 1개는 줄 sfx 칸과 안 겹침 → _kal/sfx_events.json line_link)"
+   }
   },
   {
    "t0": 14.95,
@@ -515,7 +634,14 @@
    "transition": "cut",
    "cut_at": [],
    "voiced": false,
-   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님"
+   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1080 원본 프레임 눈 판독 + cv2 색·좌표, 1/30초 띠 cap_in — 10-20 줄판독 워커)",
+    "transition·cut_at": "픽셀(ffmpeg scene 컷 8.933·12.934·13.234·16.234 — notes)",
+    "motion": "눈(0~8.9초 한 테이크 손떨림 카메라·10.3초 팬 관찰 — notes)",
+    "speaker·role·fit·scene_desc": "눈(원본 프레임)",
+    "sfx": "신호(줄 sfx 글 = 파형 세기 관찰 · sfx_events --detect 고립 후보 7.2 tonal 1개는 줄 sfx 칸과 안 겹침 → _kal/sfx_events.json line_link)"
+   }
   },
   {
    "t0": 16.417,
@@ -541,7 +667,14 @@
    "transition": "cut",
    "cut_at": [],
    "voiced": false,
-   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님"
+   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1080 원본 프레임 눈 판독 + cv2 색·좌표, 1/30초 띠 cap_in — 10-20 줄판독 워커)",
+    "transition·cut_at": "픽셀(ffmpeg scene 컷 8.933·12.934·13.234·16.234 — notes)",
+    "motion": "눈(0~8.9초 한 테이크 손떨림 카메라·10.3초 팬 관찰 — notes)",
+    "speaker·role·fit·scene_desc": "눈(원본 프레임)",
+    "sfx": "신호(줄 sfx 글 = 파형 세기 관찰 · sfx_events --detect 고립 후보 7.2 tonal 1개는 줄 sfx 칸과 안 겹침 → _kal/sfx_events.json line_link)"
+   }
   }
  ],
  "beats": "훅(0~2.4초 세례 물 붓기+'(뿌애앵~)' 우는 아기) → 다리·이음(2.4~5.6 차가운듯?/엄숙한 신부님, 아기 속마음 말풍선 교체) → 본문(5.6~8.9 닦기·마지막 단계, '(아멘!)') → 고조(8.9~12.9 부제 '도장 찍으시죠' → 신부가 안고 달램 '오구오구') → 반전(12.9~13.9 아기가 신부 얼굴 찰싹 '복수ㅋㅋㅋ') → 고조(13.9~16.2 파란 ㅋ 줄 흔들림·웃음) → 끝(16.2~17.3 '자매님 성격 화끈하네ㅋㅋ'·'환영해요~')",

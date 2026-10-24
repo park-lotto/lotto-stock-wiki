@@ -1,0 +1,1237 @@
+{
+ "_meta": {
+  "made_by": "tools/calcopy/engine/sound/sfx_events.py sinbak --detect",
+  "how": "detect",
+  "from": "C:/숏템_칼카피\\sinbak\\src",
+  "n_videos": 6,
+  "n_cand": 18,
+  "asr_filter": {
+   "how": "후보 시각이 받아쓰기 낱말 구간[t0−0.05, t1+0.05] 안이면 cand_in_words 로 거름(치찰음·파열음 오탐). 남은 것 = cand_kept",
+   "asr": "faster-whisper small int8 로컬(무료) word_timestamps — C:/숏템_칼카피/sinbak/work/asrw_auto/<id>.json (새 유료 호출 0)",
+   "no_speech": [
+    "bpjoacs2S6Q",
+    "edTkyQKrqMk",
+    "fzoZc7V_hDM",
+    "oT-SxFJcQ-4",
+    "rAt34vkQ0OY"
+   ],
+   "no_speech_why": "위스퍼 결과가 무음 환각(Thanks for watching·구독과 좋아요·Music) — 줄판독 notes 의 말소리 0 판정과 같다 → 낱말 0",
+   "n_kept": 18,
+   "n_in_words": 0,
+   "note": "귀 확인 아님(신호). tonal 은 유성 아님 조건이 이미 들어 있다"
+  },
+  "line_link_how": "line_link = 남은 후보(cand_kept)가 든 줄의 sfx·sticker 유무 + 줄판독 sfx 시각(t, 없으면 줄 t0)·스티커 t_in 에서 가장 가까운 후보 거리(≤0.15초 = match). 줄판독 sfx 칸은 바꾸지 않았다(1판 파형 판독 근거가 따로 있다)"
+ },
+ "CnRWZ3scVfk": {
+  "strong_n": 1,
+  "strong_hits": {
+   "cap": [],
+   "switch": [],
+   "cut": []
+  },
+  "dur": 17.4,
+  "n_events_all": 2,
+  "cand": [
+   {
+    "t": 7.2,
+    "kind": "tonal",
+    "dur": 0.21,
+    "db": 36.6,
+    "cen_hz": 2132,
+    "near": {
+     "cap": 0.2,
+     "switch": 5.78,
+     "cut": 1.73
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    2.4,
+    3.9,
+    5.6,
+    7.4,
+    8.9,
+    11.0,
+    12.9,
+    13.9,
+    14.3,
+    15.3,
+    15.8
+   ],
+   "sticker": [],
+   "switch": [
+    1.42
+   ],
+   "cut": [
+    2.43,
+    3.87,
+    8.93,
+    12.93,
+    13.9,
+    16.23
+   ]
+  },
+  "chance": {
+   "cap": 0.18,
+   "switch": 0.02,
+   "cut": 0.09
+  },
+  "asr_words": 29,
+  "cand_in_words": [],
+  "cand_kept": [
+   {
+    "t": 7.2,
+    "kind": "tonal",
+    "dur": 0.21,
+    "db": 36.6,
+    "cen_hz": 2132,
+    "near": {
+     "cap": 0.2,
+     "switch": 5.78,
+     "cut": 1.73
+    }
+   }
+  ],
+  "line_link": {
+   "kept_to_line": [
+    {
+     "t": 7.2,
+     "kind": "tonal",
+     "lines": [
+      3
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    }
+   ],
+   "line_sfx_to_kept": [
+    {
+     "line": 8,
+     "t": 13.9,
+     "nearest_kept_s": 6.7,
+     "match": false
+    }
+   ],
+   "sticker_to_kept": []
+  }
+ },
+ "bpjoacs2S6Q": {
+  "strong_n": 0,
+  "strong_hits": {
+   "cap": [],
+   "cut": []
+  },
+  "dur": 24.0,
+  "n_events_all": 1,
+  "cand": [
+   {
+    "t": 0.05,
+    "kind": "broad",
+    "dur": 0.12,
+    "db": 19.4,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 7304,
+    "near": {
+     "cap": 2.55,
+     "cut": 2.55
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    2.6,
+    4.5,
+    6.8,
+    8.3,
+    10.7,
+    12.5,
+    14.6,
+    16.4,
+    17.6,
+    20.0,
+    22.4
+   ],
+   "sticker": [],
+   "switch": [],
+   "cut": [
+    2.6,
+    4.5,
+    6.77,
+    8.3,
+    10.7,
+    12.53,
+    13.67,
+    15.23,
+    16.37,
+    17.6,
+    18.9,
+    19.97,
+    20.6,
+    21.63,
+    22.37
+   ]
+  },
+  "chance": {
+   "cap": 0.14,
+   "cut": 0.19
+  },
+  "asr_words": 0,
+  "cand_in_words": [],
+  "cand_kept": [
+   {
+    "t": 0.05,
+    "kind": "broad",
+    "dur": 0.12,
+    "db": 19.4,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 7304,
+    "near": {
+     "cap": 2.55,
+     "cut": 2.55
+    }
+   }
+  ],
+  "line_link": {
+   "kept_to_line": [
+    {
+     "t": 0.05,
+     "kind": "broad",
+     "lines": [
+      0
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    }
+   ],
+   "line_sfx_to_kept": [
+    {
+     "line": 7,
+     "t": 14.73,
+     "nearest_kept_s": 14.68,
+     "match": false
+    }
+   ],
+   "sticker_to_kept": []
+  }
+ },
+ "edTkyQKrqMk": {
+  "strong_n": 6,
+  "strong_hits": {
+   "cap": [],
+   "cut": []
+  },
+  "dur": 19.2,
+  "n_events_all": 19,
+  "cand": [
+   {
+    "t": 9.46,
+    "kind": "broad",
+    "dur": 0.09,
+    "db": 22.8,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 7073,
+    "near": {
+     "cap": 1.04,
+     "cut": 0.39
+    }
+   },
+   {
+    "t": 16.95,
+    "kind": "broad",
+    "dur": 0.06,
+    "db": 26.6,
+    "voiced": 0.18,
+    "isolated": 0.8,
+    "cen_hz": 7141,
+    "near": {
+     "cap": 0.55,
+     "cut": 0.42
+    }
+   },
+   {
+    "t": 17.17,
+    "kind": "broad",
+    "dur": 0.1,
+    "db": 24.6,
+    "voiced": 0.07,
+    "isolated": 0.9,
+    "cen_hz": 7207,
+    "near": {
+     "cap": 0.77,
+     "cut": 0.64
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    2.5,
+    4.7,
+    6.7,
+    10.5,
+    13.3,
+    15.0,
+    16.4,
+    18.0
+   ],
+   "sticker": [],
+   "switch": [],
+   "cut": [
+    8.43,
+    9.07,
+    13.3,
+    13.83,
+    14.97,
+    16.53
+   ]
+  },
+  "chance": {
+   "cap": 0.12,
+   "cut": 0.09
+  },
+  "asr_words": 0,
+  "cand_in_words": [],
+  "cand_kept": [
+   {
+    "t": 9.46,
+    "kind": "broad",
+    "dur": 0.09,
+    "db": 22.8,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 7073,
+    "near": {
+     "cap": 1.04,
+     "cut": 0.39
+    }
+   },
+   {
+    "t": 16.95,
+    "kind": "broad",
+    "dur": 0.06,
+    "db": 26.6,
+    "voiced": 0.18,
+    "isolated": 0.8,
+    "cen_hz": 7141,
+    "near": {
+     "cap": 0.55,
+     "cut": 0.42
+    }
+   },
+   {
+    "t": 17.17,
+    "kind": "broad",
+    "dur": 0.1,
+    "db": 24.6,
+    "voiced": 0.07,
+    "isolated": 0.9,
+    "cen_hz": 7207,
+    "near": {
+     "cap": 0.77,
+     "cut": 0.64
+    }
+   }
+  ],
+  "line_link": {
+   "kept_to_line": [
+    {
+     "t": 9.46,
+     "kind": "broad",
+     "lines": [
+      3,
+      17
+     ],
+     "line_sfx": [
+      true,
+      false
+     ],
+     "line_sticker": [
+      0,
+      0
+     ]
+    },
+    {
+     "t": 16.95,
+     "kind": "broad",
+     "lines": [
+      7,
+      24
+     ],
+     "line_sfx": [
+      true,
+      false
+     ],
+     "line_sticker": [
+      0,
+      0
+     ]
+    },
+    {
+     "t": 17.17,
+     "kind": "broad",
+     "lines": [
+      7,
+      24
+     ],
+     "line_sfx": [
+      true,
+      false
+     ],
+     "line_sticker": [
+      0,
+      0
+     ]
+    }
+   ],
+   "line_sfx_to_kept": [
+    {
+     "line": 3,
+     "t": 6.9,
+     "nearest_kept_s": 2.56,
+     "match": false
+    },
+    {
+     "line": 4,
+     "t": 10.467,
+     "nearest_kept_s": 1.01,
+     "match": false
+    },
+    {
+     "line": 5,
+     "t": 13.3,
+     "nearest_kept_s": 3.65,
+     "match": false
+    },
+    {
+     "line": 6,
+     "t": 14.967,
+     "nearest_kept_s": 1.98,
+     "match": false
+    },
+    {
+     "line": 7,
+     "t": 16.533,
+     "nearest_kept_s": 0.42,
+     "match": false
+    },
+    {
+     "line": 8,
+     "t": 17.967,
+     "nearest_kept_s": 0.8,
+     "match": false
+    }
+   ],
+   "sticker_to_kept": []
+  }
+ },
+ "fzoZc7V_hDM": {
+  "strong_n": 2,
+  "strong_hits": {
+   "cap": [],
+   "cut": []
+  },
+  "dur": 12.6,
+  "n_events_all": 7,
+  "cand": [
+   {
+    "t": 1.44,
+    "kind": "broad",
+    "dur": 0.07,
+    "db": 25.4,
+    "voiced": 0.0,
+    "isolated": 0.95,
+    "cen_hz": 7860,
+    "near": {
+     "cap": 0.66,
+     "cut": 5.46
+    }
+   },
+   {
+    "t": 7.45,
+    "kind": "broad",
+    "dur": 0.13,
+    "db": 18.2,
+    "voiced": 0.0,
+    "isolated": 0.9,
+    "cen_hz": 6652,
+    "near": {
+     "cap": 0.55,
+     "cut": 0.55
+    }
+   },
+   {
+    "t": 9.46,
+    "kind": "broad",
+    "dur": 0.08,
+    "db": 20.0,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 7140,
+    "near": {
+     "cap": 0.74,
+     "cut": 0.76
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    2.1,
+    3.5,
+    4.8,
+    6.9,
+    8.7,
+    10.2,
+    11.1
+   ],
+   "sticker": [],
+   "switch": [],
+   "cut": [
+    6.9,
+    8.7
+   ]
+  },
+  "chance": {
+   "cap": 0.16,
+   "cut": 0.05
+  },
+  "asr_words": 0,
+  "cand_in_words": [],
+  "cand_kept": [
+   {
+    "t": 1.44,
+    "kind": "broad",
+    "dur": 0.07,
+    "db": 25.4,
+    "voiced": 0.0,
+    "isolated": 0.95,
+    "cen_hz": 7860,
+    "near": {
+     "cap": 0.66,
+     "cut": 5.46
+    }
+   },
+   {
+    "t": 7.45,
+    "kind": "broad",
+    "dur": 0.13,
+    "db": 18.2,
+    "voiced": 0.0,
+    "isolated": 0.9,
+    "cen_hz": 6652,
+    "near": {
+     "cap": 0.55,
+     "cut": 0.55
+    }
+   },
+   {
+    "t": 9.46,
+    "kind": "broad",
+    "dur": 0.08,
+    "db": 20.0,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 7140,
+    "near": {
+     "cap": 0.74,
+     "cut": 0.76
+    }
+   }
+  ],
+  "line_link": {
+   "kept_to_line": [
+    {
+     "t": 1.44,
+     "kind": "broad",
+     "lines": [
+      0,
+      8
+     ],
+     "line_sfx": [
+      false,
+      false
+     ],
+     "line_sticker": [
+      1,
+      0
+     ]
+    },
+    {
+     "t": 7.45,
+     "kind": "broad",
+     "lines": [
+      4,
+      11
+     ],
+     "line_sfx": [
+      true,
+      true
+     ],
+     "line_sticker": [
+      0,
+      0
+     ]
+    },
+    {
+     "t": 9.46,
+     "kind": "broad",
+     "lines": [
+      5,
+      12
+     ],
+     "line_sfx": [
+      true,
+      true
+     ],
+     "line_sticker": [
+      0,
+      0
+     ]
+    }
+   ],
+   "line_sfx_to_kept": [
+    {
+     "line": 1,
+     "t": 2.067,
+     "nearest_kept_s": 0.63,
+     "match": false
+    },
+    {
+     "line": 4,
+     "t": 6.9,
+     "nearest_kept_s": 0.55,
+     "match": false
+    },
+    {
+     "line": 5,
+     "t": 8.7,
+     "nearest_kept_s": 0.76,
+     "match": false
+    },
+    {
+     "line": 7,
+     "t": 11.1,
+     "nearest_kept_s": 1.64,
+     "match": false
+    },
+    {
+     "line": 11,
+     "t": 7.333,
+     "nearest_kept_s": 0.12,
+     "match": true
+    },
+    {
+     "line": 12,
+     "t": 8.7,
+     "nearest_kept_s": 0.76,
+     "match": false
+    },
+    {
+     "line": 13,
+     "t": 11.1,
+     "nearest_kept_s": 1.64,
+     "match": false
+    }
+   ],
+   "sticker_to_kept": [
+    {
+     "line": 0,
+     "t_in": 0.333,
+     "nearest_kept_s": 1.11,
+     "match": false
+    }
+   ]
+  }
+ },
+ "oT-SxFJcQ-4": {
+  "strong_n": 6,
+  "strong_hits": {
+   "cap": [],
+   "switch": [],
+   "cut": []
+  },
+  "dur": 28.0,
+  "n_events_all": 19,
+  "cand": [
+   {
+    "t": 0.38,
+    "kind": "broad",
+    "dur": 0.13,
+    "db": 23.2,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 6836,
+    "near": {
+     "cap": 1.32,
+     "switch": 5.22,
+     "cut": 1.29
+    }
+   },
+   {
+    "t": 0.72,
+    "kind": "broad",
+    "dur": 0.1,
+    "db": 22.3,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 7045,
+    "near": {
+     "cap": 0.98,
+     "switch": 4.88,
+     "cut": 0.95
+    }
+   },
+   {
+    "t": 1.49,
+    "kind": "broad",
+    "dur": 0.35,
+    "db": 19.3,
+    "voiced": 0.11,
+    "isolated": 0.9,
+    "cen_hz": 6853,
+    "near": {
+     "cap": 0.21,
+     "switch": 4.11,
+     "cut": 0.18
+    }
+   },
+   {
+    "t": 2.77,
+    "kind": "tonal",
+    "dur": 0.23,
+    "db": 34.6,
+    "cen_hz": 1055,
+    "near": {
+     "cap": 0.93,
+     "switch": 2.83,
+     "cut": 0.9
+    }
+   },
+   {
+    "t": 3.02,
+    "kind": "tonal",
+    "dur": 0.21,
+    "db": 31.6,
+    "cen_hz": 1055,
+    "near": {
+     "cap": 0.68,
+     "switch": 2.58,
+     "cut": 0.65
+    }
+   },
+   {
+    "t": 6.25,
+    "kind": "tonal",
+    "dur": 0.27,
+    "db": 47.3,
+    "cen_hz": 1314,
+    "near": {
+     "cap": 0.65,
+     "switch": 0.65,
+     "cut": 0.65
+    }
+   },
+   {
+    "t": 23.21,
+    "kind": "tonal",
+    "dur": 0.26,
+    "db": 45.4,
+    "cen_hz": 1249,
+    "near": {
+     "cap": 0.59,
+     "switch": 17.61,
+     "cut": 0.59
+    }
+   },
+   {
+    "t": 24.5,
+    "kind": "tonal",
+    "dur": 0.26,
+    "db": 51.9,
+    "cen_hz": 1787,
+    "near": {
+     "cap": 0.7,
+     "switch": 18.9,
+     "cut": 0.7
+    }
+   },
+   {
+    "t": 25.54,
+    "kind": "tonal",
+    "dur": 0.28,
+    "db": 49.8,
+    "cen_hz": 1055,
+    "near": {
+     "cap": 0.36,
+     "switch": 19.94,
+     "cut": 0.36
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    1.7,
+    3.7,
+    5.6,
+    7.6,
+    9.7,
+    11.7,
+    13.7,
+    15.8,
+    17.8,
+    19.8,
+    21.8,
+    23.8,
+    25.9
+   ],
+   "sticker": [],
+   "switch": [
+    5.6
+   ],
+   "cut": [
+    1.67,
+    3.67,
+    4.9,
+    5.6,
+    7.63,
+    9.73,
+    11.73,
+    12.83,
+    13.73,
+    15.3,
+    15.8,
+    17.8,
+    19.8,
+    21.8,
+    23.8,
+    25.9,
+    26.83
+   ]
+  },
+  "chance": {
+   "cap": 0.14,
+   "switch": 0.01,
+   "cut": 0.18
+  },
+  "asr_words": 0,
+  "cand_in_words": [],
+  "cand_kept": [
+   {
+    "t": 0.38,
+    "kind": "broad",
+    "dur": 0.13,
+    "db": 23.2,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 6836,
+    "near": {
+     "cap": 1.32,
+     "switch": 5.22,
+     "cut": 1.29
+    }
+   },
+   {
+    "t": 0.72,
+    "kind": "broad",
+    "dur": 0.1,
+    "db": 22.3,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 7045,
+    "near": {
+     "cap": 0.98,
+     "switch": 4.88,
+     "cut": 0.95
+    }
+   },
+   {
+    "t": 1.49,
+    "kind": "broad",
+    "dur": 0.35,
+    "db": 19.3,
+    "voiced": 0.11,
+    "isolated": 0.9,
+    "cen_hz": 6853,
+    "near": {
+     "cap": 0.21,
+     "switch": 4.11,
+     "cut": 0.18
+    }
+   },
+   {
+    "t": 2.77,
+    "kind": "tonal",
+    "dur": 0.23,
+    "db": 34.6,
+    "cen_hz": 1055,
+    "near": {
+     "cap": 0.93,
+     "switch": 2.83,
+     "cut": 0.9
+    }
+   },
+   {
+    "t": 3.02,
+    "kind": "tonal",
+    "dur": 0.21,
+    "db": 31.6,
+    "cen_hz": 1055,
+    "near": {
+     "cap": 0.68,
+     "switch": 2.58,
+     "cut": 0.65
+    }
+   },
+   {
+    "t": 6.25,
+    "kind": "tonal",
+    "dur": 0.27,
+    "db": 47.3,
+    "cen_hz": 1314,
+    "near": {
+     "cap": 0.65,
+     "switch": 0.65,
+     "cut": 0.65
+    }
+   },
+   {
+    "t": 23.21,
+    "kind": "tonal",
+    "dur": 0.26,
+    "db": 45.4,
+    "cen_hz": 1249,
+    "near": {
+     "cap": 0.59,
+     "switch": 17.61,
+     "cut": 0.59
+    }
+   },
+   {
+    "t": 24.5,
+    "kind": "tonal",
+    "dur": 0.26,
+    "db": 51.9,
+    "cen_hz": 1787,
+    "near": {
+     "cap": 0.7,
+     "switch": 18.9,
+     "cut": 0.7
+    }
+   },
+   {
+    "t": 25.54,
+    "kind": "tonal",
+    "dur": 0.28,
+    "db": 49.8,
+    "cen_hz": 1055,
+    "near": {
+     "cap": 0.36,
+     "switch": 19.94,
+     "cut": 0.36
+    }
+   }
+  ],
+  "line_link": {
+   "kept_to_line": [
+    {
+     "t": 0.38,
+     "kind": "broad",
+     "lines": [
+      0
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
+    {
+     "t": 0.72,
+     "kind": "broad",
+     "lines": [
+      0
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
+    {
+     "t": 1.49,
+     "kind": "broad",
+     "lines": [
+      0
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
+    {
+     "t": 2.77,
+     "kind": "tonal",
+     "lines": [
+      1
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
+    {
+     "t": 3.02,
+     "kind": "tonal",
+     "lines": [
+      1
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
+    {
+     "t": 6.25,
+     "kind": "tonal",
+     "lines": [
+      3,
+      14
+     ],
+     "line_sfx": [
+      false,
+      false
+     ],
+     "line_sticker": [
+      0,
+      0
+     ]
+    },
+    {
+     "t": 23.21,
+     "kind": "tonal",
+     "lines": [
+      11
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
+    {
+     "t": 24.5,
+     "kind": "tonal",
+     "lines": [
+      12
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      1
+     ]
+    },
+    {
+     "t": 25.54,
+     "kind": "tonal",
+     "lines": [
+      12
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      1
+     ]
+    }
+   ],
+   "line_sfx_to_kept": [],
+   "sticker_to_kept": [
+    {
+     "line": 2,
+     "t_in": 3.667,
+     "nearest_kept_s": 0.65,
+     "match": false
+    },
+    {
+     "line": 4,
+     "t_in": 7.633,
+     "nearest_kept_s": 1.38,
+     "match": false
+    },
+    {
+     "line": 6,
+     "t_in": 11.733,
+     "nearest_kept_s": 5.48,
+     "match": false
+    },
+    {
+     "line": 8,
+     "t_in": 15.8,
+     "nearest_kept_s": 7.41,
+     "match": false
+    },
+    {
+     "line": 10,
+     "t_in": 19.8,
+     "nearest_kept_s": 3.41,
+     "match": false
+    },
+    {
+     "line": 12,
+     "t_in": 23.8,
+     "nearest_kept_s": 0.59,
+     "match": false
+    }
+   ]
+  }
+ },
+ "rAt34vkQ0OY": {
+  "strong_n": 1,
+  "strong_hits": {
+   "cap": [],
+   "cut": []
+  },
+  "dur": 11.5,
+  "n_events_all": 8,
+  "cand": [
+   {
+    "t": 7.74,
+    "kind": "broad",
+    "dur": 0.07,
+    "db": 19.2,
+    "voiced": 0.0,
+    "isolated": 0.8,
+    "cen_hz": 7782,
+    "near": {
+     "cap": 0.34,
+     "cut": 0.37
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    2.2,
+    4.3,
+    5.9,
+    7.4,
+    9.3,
+    10.5
+   ],
+   "sticker": [],
+   "switch": [],
+   "cut": [
+    2.17,
+    4.27,
+    5.67,
+    7.37,
+    10.5
+   ]
+  },
+  "chance": {
+   "cap": 0.15,
+   "cut": 0.13
+  },
+  "asr_words": 0,
+  "cand_in_words": [],
+  "cand_kept": [
+   {
+    "t": 7.74,
+    "kind": "broad",
+    "dur": 0.07,
+    "db": 19.2,
+    "voiced": 0.0,
+    "isolated": 0.8,
+    "cen_hz": 7782,
+    "near": {
+     "cap": 0.34,
+     "cut": 0.37
+    }
+   }
+  ],
+  "line_link": {
+   "kept_to_line": [
+    {
+     "t": 7.74,
+     "kind": "broad",
+     "lines": [
+      4,
+      15
+     ],
+     "line_sfx": [
+      false,
+      false
+     ],
+     "line_sticker": [
+      0,
+      0
+     ]
+    }
+   ],
+   "line_sfx_to_kept": [
+    {
+     "line": 5,
+     "t": 9.62,
+     "nearest_kept_s": 1.88,
+     "match": false
+    },
+    {
+     "line": 8,
+     "t": 1.72,
+     "nearest_kept_s": 6.02,
+     "match": false
+    },
+    {
+     "line": 9,
+     "t": 2.58,
+     "nearest_kept_s": 5.16,
+     "match": false
+    },
+    {
+     "line": 12,
+     "t": 4.8,
+     "nearest_kept_s": 2.94,
+     "match": false
+    },
+    {
+     "line": 13,
+     "t": 6.1,
+     "nearest_kept_s": 1.64,
+     "match": false
+    },
+    {
+     "line": 16,
+     "t": 8.6,
+     "nearest_kept_s": 0.86,
+     "match": false
+    },
+    {
+     "line": 18,
+     "t": 11.15,
+     "nearest_kept_s": 3.41,
+     "match": false
+    }
+   ],
+   "sticker_to_kept": []
+  }
+ }
+}

@@ -1,7 +1,7 @@
 {
  "name": "sinbak판",
  "renderer": "bench",
- "_note": "kal.py rules 초안(2026-10-20) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
+ "_note": "kal.py rules 초안(2026-10-25) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
  "bench": {
   "ko": "신박발견",
   "channel": "https://www.youtube.com/channel/UC9SnR_zj0wRj59NSBrWdI2g",
