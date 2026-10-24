@@ -33,7 +33,8 @@ if str(ROOT) not in sys.path:
 
 # ---------------------------------------------------------------- 줄판독 칸 (지침서 §2 와 짝)
 LINE_REQUIRED = ("t0", "t1", "speaker", "text", "layer", "enter", "emph", "sticker", "sfx", "scene", "cut_at")
-LINE_STRICT = ("role", "y", "fill_hex", "fit")           # --strict 에서만 오류(10-20 이후 새 줄판독은 strict 로 검사)
+LINE_STRICT = ("role", "y", "fill_hex", "fit", "transition", "motion", "confidence")   # transition·motion·confidence = 표준 §11 ⑩(06 이 채우는 칸을 검사가 봐야 미측정이 안 숨는다) · --strict 에서만 오류
+STRICT_NONNULL = ("transition", "motion", "confidence")   # null 도 미측정으로 센다(표준 §11 ⑩ — transition null 이 숨었다)
 DOC_REQUIRED = ("id", "dur", "title_lines", "source_label", "lines", "beats", "narr_share", "notes")
 ROLE_VOCAB = ("훅", "다리", "고조", "공개", "증거", "반전", "질문", "답", "끝", "이음", "본문")
 SPEAKER_RE = re.compile(r"^(나레|원음|제3자|불명|연예인|본인)")
@@ -62,8 +63,8 @@ def _has(v) -> bool:
     return bool(v) if not isinstance(v, str) else bool(v.strip())
 
 
-ENTER_VOCAB = ("instant", "typing", "pop", "glitch", "wipe", "slide", "rainbow", "fade", "shake", "기타")
-_ENTER_KO = (("타이핑", "typing"), ("글리치", "glitch"), ("rgb", "glitch"), ("무지개", "rainbow"), ("색 순환", "rainbow"), ("색순환", "rainbow"),
+ENTER_VOCAB = ("instant", "append", "typing", "pop", "glitch", "wipe", "slide", "rainbow", "fade", "shake", "기타")   # append = 쌓기(렌더는 cut 과 같지만 측정은 따로 — 표준 §11 ⑪)
+_ENTER_KO = (("쌓기", "append"), ("쌓이", "append"), ("타이핑", "typing"), ("글리치", "glitch"), ("rgb", "glitch"), ("무지개", "rainbow"), ("색 순환", "rainbow"), ("색순환", "rainbow"),
              ("와이프", "wipe"), ("닦아", "wipe"), ("슬라이드", "slide"), ("팝", "pop"), ("확대", "pop"), ("커진", "pop"), ("페이드", "fade"),
              ("흔들", "shake"), ("한 번에", "instant"), ("즉시", "instant"), ("컷인", "instant"))
 
@@ -92,7 +93,7 @@ def enter_key(v) -> str:
 def _decorated(l: dict) -> dict:
     """줄 하나의 꾸밈 유무 — 분모 계산의 기준(한 곳)."""
     enter = enter_key(l.get("enter"))
-    return {"enter_fx": enter not in ("instant", "cut", None), "emph": _has(l.get("emph")),
+    return {"enter_fx": enter not in ("instant", "append", "cut", None), "emph": _has(l.get("emph")),   # append(쌓기)는 꾸밈이 아니라 등장 방식 — 비율은 enter 로 따로 센다
             "sticker": _has(l.get("sticker")), "sfx": _has(l.get("sfx"))}
 
 
@@ -131,6 +132,8 @@ def check_doc(d: dict, strict: bool = False) -> dict:
         for k in LINE_STRICT:
             if k not in l:
                 (errs if strict else warns).append(f"{tag} 칸 누락(strict): {k}")
+            elif l[k] is None and k in STRICT_NONNULL:
+                (errs if strict else warns).append(f"{tag} 칸 비어 있음(strict): {k} — 없으면 'none'(전환 없음)·값을 적는다")
         t0, t1 = l.get("t0"), l.get("t1")
         if isinstance(t0, (int, float)) and isinstance(t1, (int, float)):
             if t1 <= t0:
@@ -346,7 +349,9 @@ MATCH_RULES = [
     ("meme.rate", "pctp", 20, True, "짤 화면 줄 비율 차 ≤20%p(표준 §4-1 A3 · 줄판독 screen/scene 에 '짤')"),
     ("thumb.frame0", "eq", None, True, "0초 첫 화면 종류(card=글 얹은 표지 2프레임 / scene=그냥 장면) 벤치 최빈과 같음(표준 §4-1 A6)"),
 ]
-MATCH_SKELETON = ("len.duration", "cut.median", "speech.cps.나레", "chunk.chars", "chunk.sec")   # 업그레이드 판(base 있음)에서도 필수인 뼈대 칸(관제 263 04 — 표준에 목록이 없어 04 가 정함)
+# 업그레이드 판(base 있음)에서도 필수인 뼈대 칸 — 표준 §11 ③(페이블 10-25). 겉모양(바꿔도 됨) = framecmp·mix.lufs·narr.share·thumb.frame0·meme.rate·스티커 종류
+MATCH_SKELETON = ("len.duration", "cut.median", "speech.cps.나레", "chunk.chars", "chunk.sec", "enter.mode.나레", "enter.mode.원음",
+                  "fx.rate.나레", "fx.rate.원음", "fx.pos", "plain.rate", "sfx.rate", "transition.rate", "sticker.rate")
 TRANS_VOCAB = ("cut", "flash", "zoomblur", "black", "기타")
 
 
