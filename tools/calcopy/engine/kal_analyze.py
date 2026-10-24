@@ -92,11 +92,20 @@ def enter_key(v) -> str:
     return "기타"
 
 
+VARIANT_FX = ("빨강", "팝", "글리치", "hook", "pop", "glitch")   # 꾸밈인 자막 변형(훅 빨강·팝+글리치) — 벤치 줄판독 한국어 서술·우리 자막표 변형 키 둘 다(15 ⓑ, 10-25)
+VARIANT_NOT = ("썸네일",)                                         # 0~2프레임 표지 카드 = thumb.frame0 칸이 잰다(자막 꾸밈 아님)
+
+
+def variant_fx(v) -> bool:
+    s = str(v or "").strip().lower()
+    return bool(s) and not s.startswith(VARIANT_NOT) and any(k in s for k in VARIANT_FX)
+
+
 def _decorated(l: dict) -> dict:
-    """줄 하나의 꾸밈 유무 — 분모 계산의 기준(한 곳)."""
+    """줄 하나의 꾸밈 유무 — 분모 계산의 기준(한 곳). variant = 훅 빨강·팝 같은 변형(기본·기본(흰/노랑)·손글씨는 꾸밈 아님)."""
     enter = enter_key(l.get("enter"))
     return {"enter_fx": enter not in ("instant", "append", "cut", None), "emph": _has(l.get("emph")),   # append(쌓기)는 꾸밈이 아니라 등장 방식 — 비율은 enter 로 따로 센다
-            "sticker": _has(l.get("sticker")), "sfx": _has(l.get("sfx"))}
+            "sticker": _has(l.get("sticker")), "sfx": _has(l.get("sfx")), "variant": variant_fx(l.get("variant"))}
 
 
 def _pos(l: dict, dur: float) -> str:
@@ -222,7 +231,7 @@ def _norm_line(l: dict, dur: float) -> dict:
 
 def rules_of(docs: list[dict]) -> dict:
     """(판단 주인) 줄판독 모음 → 붙는 조건 규칙 + 빈도. 분모를 항상 같이 낸다."""
-    FX = ("enter_fx", "emph", "sticker", "sfx")
+    FX = ("enter_fx", "emph", "sticker", "sfx", "variant")   # variant = 훅 빨강·팝 변형(15 ⓑ)
     by_sp = defaultdict(lambda: {"n": 0, "enter": Counter(), "chars": [], "sec": [], **{k: 0 for k in FX}, "any": 0})
     by_pos = defaultdict(lambda: {"n": 0, "enter": Counter(), **{k: 0 for k in FX}, "any": 0})
     by_role = defaultdict(lambda: {"n": 0, "enter": Counter(), **{k: 0 for k in FX}, "any": 0})
@@ -410,7 +419,7 @@ def _ours_lines(o: dict) -> tuple[list[dict], float]:
         t0, t1 = float(r.get("t0") or 0), float(r.get("t1") or 0)
         rows.append({"t0": t0, "t1": t1, "speaker": r.get("speaker") or r.get("kind"), "text": r.get("text"),
                      "enter": r.get("enter") or "instant", "emph": emph, "sticker": st,
-                     "sfx": next((f"{t}" for t in sfx_t if t0 <= t < t1), None), "role": r.get("role"), "layer": "채널"})
+                     "sfx": next((f"{t}" for t in sfx_t if t0 <= t < t1), None), "role": r.get("role"), "layer": "채널", "variant": r.get("variant")})
     return rows, float(o.get("dur") or (max((r["t1"] for r in rows), default=0)))
 
 

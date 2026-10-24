@@ -300,3 +300,25 @@ def test_ref_row_not_in_verdict(tmp_path):
     rows = []
     _row(rows, "화면", "참고", lambda: (False, "x"), "s", ref=True)
     assert rows[0]["ref"] is True and rows[0]["ok"] is False
+
+
+# ---------------------------------------------------------------- 15 ⓑ 훅 빨강·팝 변형 = 꾸밈(fx.pos 가 '우리 꾸밈 0' 으로 미측정되던 것)
+def test_hook_variant_counts_as_decoration():
+    from tools.calcopy.engine.kal_analyze import _decorated, match_table, variant_fx
+    assert variant_fx("빨강") and variant_fx("빨강+팝+글리치") and variant_fx("hook") and variant_fx("hook_pop")
+    assert not variant_fx("기본(흰)") and not variant_fx("기본(노랑)") and not variant_fx("") and not variant_fx(None)
+    assert not variant_fx("썸네일카드(빨강·크게)")                      # 0~2프레임 표지 = thumb.frame0 몫
+    assert _decorated({"enter": "cut", "variant": "hook"})["variant"] is True
+    rows = [{"line": "N1", "t0": 0.0, "t1": 1.2, "text": "가나다", "speaker": "narr", "variant": "hook", "emph": [], "enter": "cut"},
+            {"line": "N1", "t0": 1.2, "t1": 2.5, "text": "라마바", "speaker": "narr", "variant": "hook_pop", "emph": [], "enter": "cut"},
+            {"line": "N2", "t0": 5.0, "t1": 6.0, "text": "사아자", "speaker": "narr", "variant": "", "emph": [], "enter": "cut"}]
+    T = match_table(_bench_docs(), {"rows": rows, "dur": 20.0}, None, None)
+    fxpos = next(r for r in T["rows"] if r["key"] == "fx.pos")
+    assert fxpos["ours"] == {"훅": 1.0, "본문": 0.0, "끝": 0.0}, fxpos            # 고치기 전: ours None → 미측정
+
+
+def test_speech_spread_is_per_tts_line():
+    """⑲: 관문 말속도 칸은 TTS 줄(문장) 단위 — render_info.line_cps(줄 id → 자/초)만 본다(자막 조각 단위로 재지 않는다)."""
+    from tools.calcopy.hybrid.quality_gate import line_cps_verdict
+    ok, msg = line_cps_verdict({"N1": 8.0, "N2": 8.4, "N3": 7.9}, 0.35)
+    assert ok is True and "N1:8.0" in msg and "N3:7.9" in msg

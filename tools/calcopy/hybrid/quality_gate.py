@@ -560,7 +560,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             nonlocal match
             from tools.calcopy.engine import kal_analyze as K
             lr = sorted((st.get("bench") or {}).get("line_reads") and (ROOT / st["bench"]["line_reads"]).glob("*.json") or [])
-            key = "match|" + hashlib.sha256("|".join([fmd5, md5(R / "자막표.json"), md5(R / "timeline.json"), str(media), str(cache.get("frame0")),
+            key = "match|" + hashlib.sha256("|".join([fmd5, md5(R / "자막표.json"), md5(R / "timeline.json"), str(media), str(cache.get("frame0")), md5(Path(K.__file__)),
                                                        hashlib.sha256(ST.path_of(style_name).read_bytes()).hexdigest()]
                                                       + [f"{p.name}:{p.stat().st_size}:{int(p.stat().st_mtime)}" for p in lr]).encode()).hexdigest()[:24]
             match = _cached(store, key, lambda: K.match_from_render(st, doc, work, media=media, frame0_kind_measured=cache.get("frame0")))
