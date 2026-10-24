@@ -51,10 +51,24 @@
    1700,
    1900
   ],
-  "watermark": "창 오른쪽 위 반투명 흰 '스타픽룸'(ASqF 와 같은 자리)",
+  "watermark": {
+   "text": "스타픽룸",
+   "where": "창 오른쪽 위 반투명 흰 '스타픽룸'(ASqF 와 같은 자리)",
+   "alpha": 0.55,
+   "alpha_basis": "눈(1판 스타일분석 §3 약 55%)"
+  },
   "sub_y": [
    1105,
    1175
+  ],
+  "source_hex": "#8B8B88",
+  "caption_band_measure": [
+   1090,
+   1190
+  ],
+  "cut_window_measure": [
+   484,
+   1540
   ]
  },
  "lines": [
@@ -84,7 +98,14 @@
    "sticker": [],
    "sfx": null,
    "scene": "손·제품 근접(젓가락 시식)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "훅",
+   "fit": 7,
+   "scene_desc": "젓가락으로 시식하는 사람들",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 1.2,
@@ -106,7 +127,14 @@
    "sticker": [],
    "sfx": null,
    "scene": "손·제품 근접",
-   "cut_at": []
+   "cut_at": [],
+   "role": "훅",
+   "fit": 6,
+   "scene_desc": "젓가락 시식",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 1.7,
@@ -129,12 +157,19 @@
    "sfx": null,
    "scene": "얼굴(먹는 여성)",
    "cut_at": [],
-   "note": "vtt 0.04~2.7 '최화정이 만들자마자 스태프들이 난리가 났다는데' 와 일치"
+   "role": "훅",
+   "fit": 7,
+   "scene_desc": "먹고 놀란 여성",
+   "notes": "vtt 0.04~2.7 '최화정이 만들자마자 스태프들이 난리가 났다는데' 와 일치",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 2.7,
    "t1": 5.4,
-   "speaker": "원음:여러 명(스태프)",
+   "speaker": "원음",
    "text": "역대급이야. 진짜 너무 맛있어요.",
    "layer": "원본박힘",
    "enter": "기타(노랑 '역대급이야' 3.0~3.4, 분홍 네온 글로우 '진짜 너무 맛있어요' 3.5~4.2)",
@@ -152,7 +187,16 @@
    "sfx": null,
    "scene": "기타(단체 와이드)",
    "cut_at": [],
-   "note": "스타픽룸 자막 y 에는 이 구간 자막 없음"
+   "speaker_basis": "원음:여러 명(스태프)",
+   "role": "고조",
+   "fit": 6,
+   "scene_desc": "단체 와이드+원본 분홍 글씨",
+   "notes": "스타픽룸 자막 y 에는 이 구간 자막 없음",
+   "transition": "cut",
+   "transition_t": 2.6,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 4.4,
@@ -163,8 +207,11 @@
    "enter": "기타",
    "type_cps": null,
    "cursor": false,
-   "y": null,
-   "fill_hex": null,
+   "y": [
+    548,
+    764
+   ],
+   "fill_hex": "#FFE02A",
    "outline": null,
    "glow": null,
    "emph": [],
@@ -180,12 +227,21 @@
    ],
    "sfx": null,
    "scene": "얼굴(손으로 입 가림)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "고조",
+   "fit": 6,
+   "scene_desc": "입 가린 남자+번쩍",
+   "_fill_basis": "눈(원본 층 — 보기 시트 300px 축소 환산 ±40px·색 눈, 픽셀 실측 아님)",
+   "transition": "cut",
+   "transition_t": 4.5,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 5.15,
    "t1": 5.95,
-   "speaker": "원음:연예인(화면 글자로 이름 확인 안 됨)",
+   "speaker": "원음:최화정",
    "text": "아니 이거는",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -202,12 +258,21 @@
    "sticker": [],
    "sfx": null,
    "scene": "기타",
-   "cut_at": []
+   "cut_at": [],
+   "speaker_basis": "원음:연예인(화면 글자로 이름 확인 안 됨)",
+   "role": "고조",
+   "fit": 4,
+   "scene_desc": "말하는 최화정",
+   "transition": "cut",
+   "transition_t": 5.1,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 6.0,
    "t1": 6.9,
-   "speaker": "원음:연예인(화면 글자로 이름 확인 안 됨)",
+   "speaker": "원음:최화정",
    "text": "밀키트로 팔아야 돼요",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -225,7 +290,15 @@
    "sfx": null,
    "scene": "기타",
    "cut_at": [],
-   "note": "vtt 는 '링키로 팔아야 돼요' 로 받아쓴 것, 화면은 '밀키트'"
+   "speaker_basis": "원음:연예인(화면 글자로 이름 확인 안 됨)",
+   "role": "고조",
+   "fit": 4,
+   "scene_desc": "웃는 최화정",
+   "notes": "vtt 는 '링키로 팔아야 돼요' 로 받아쓴 것, 화면은 '밀키트'",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 6.9,
@@ -256,7 +329,15 @@
    ],
    "sfx": null,
    "scene": "요리 완성(오징어전 클로즈업)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "다리",
+   "fit": 6,
+   "scene_desc": "완성된 오징어전 근접",
+   "transition": "cut",
+   "transition_t": 6.867,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 8.0,
@@ -287,7 +368,14 @@
    ],
    "sfx": null,
    "scene": "요리 완성",
-   "cut_at": []
+   "cut_at": [],
+   "role": "다리",
+   "fit": 5,
+   "scene_desc": "오징어전 근접",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 8.5,
@@ -318,7 +406,14 @@
    ],
    "sfx": null,
    "scene": "요리 완성에서 와이드로(9.2초 컷)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "다리",
+   "fit": 7,
+   "scene_desc": "오징어전 근접",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 9.5,
@@ -329,15 +424,26 @@
    "enter": "기타",
    "type_cps": null,
    "cursor": false,
-   "y": null,
-   "fill_hex": null,
+   "y": [
+    1448,
+    1538
+   ],
+   "fill_hex": "#FFFFFF",
    "outline": null,
    "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
    "scene": "주방 와이드",
-   "cut_at": []
+   "cut_at": [],
+   "role": "이음",
+   "fit": 4,
+   "scene_desc": "주방에서 요리",
+   "_fill_basis": "눈(원본 층 — 보기 시트 300px 축소 환산 ±40px·색 눈, 픽셀 실측 아님)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 9.7,
@@ -359,7 +465,15 @@
    "sticker": [],
    "sfx": null,
    "scene": "요리 과정(와이드)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "이음",
+   "fit": 5,
+   "scene_desc": "주방에서 요리",
+   "transition": "cut",
+   "transition_t": 9.633,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 11.2,
@@ -381,7 +495,14 @@
    "sticker": [],
    "sfx": null,
    "scene": "손·제품 근접",
-   "cut_at": []
+   "cut_at": [],
+   "role": "증거",
+   "fit": 9,
+   "scene_desc": "감자 씻는 체",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 11.4,
@@ -392,15 +513,26 @@
    "enter": "기타(왼쪽 위 노란 박스 라벨, 계속 떠 있음)",
    "type_cps": null,
    "cursor": false,
-   "y": null,
-   "fill_hex": null,
+   "y": [
+    484,
+    540
+   ],
+   "fill_hex": "#111111",
    "outline": null,
    "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
    "scene": "요리 과정",
-   "cut_at": []
+   "cut_at": [],
+   "role": "본문",
+   "fit": 7,
+   "scene_desc": "요리하는 최화정+라벨",
+   "_fill_basis": "눈(원본 층 — 보기 시트 300px 축소 환산 ±40px·색 눈, 픽셀 실측 아님)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 13.2,
@@ -422,7 +554,15 @@
    "sticker": [],
    "sfx": null,
    "scene": "손·제품 근접",
-   "cut_at": []
+   "cut_at": [],
+   "role": "증거",
+   "fit": 9,
+   "scene_desc": "썬 오징어 통",
+   "transition": "cut",
+   "transition_t": 13.067,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 13.4,
@@ -444,7 +584,14 @@
    "sticker": [],
    "sfx": null,
    "scene": "손·제품 근접",
-   "cut_at": []
+   "cut_at": [],
+   "role": "증거",
+   "fit": 9,
+   "scene_desc": "썬 오징어 통",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 14.5,
@@ -466,7 +613,14 @@
    "sticker": [],
    "sfx": null,
    "scene": "기타",
-   "cut_at": []
+   "cut_at": [],
+   "role": "증거",
+   "fit": 9,
+   "scene_desc": "썬 오징어 통",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 15.0,
@@ -488,7 +642,14 @@
    "sticker": [],
    "sfx": null,
    "scene": "요리 과정(상반신)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "이음",
+   "fit": 6,
+   "scene_desc": "요리하는 최화정",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 16.0,
@@ -503,7 +664,7 @@
     1400,
     1540
    ],
-   "fill_hex": null,
+   "fill_hex": "#3BD13B",
    "outline": null,
    "glow": null,
    "emph": [],
@@ -519,7 +680,15 @@
    ],
    "sfx": null,
    "scene": "요리 과정",
-   "cut_at": []
+   "cut_at": [],
+   "role": "증거",
+   "fit": 7,
+   "scene_desc": "고추 넣는 최화정+화살표",
+   "_fill_basis": "눈(원본 층 — 보기 시트 300px 축소 환산 ±40px·색 눈, 픽셀 실측 아님)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 17.4,
@@ -550,7 +719,15 @@
    ],
    "sfx": null,
    "scene": "손·제품 근접",
-   "cut_at": []
+   "cut_at": [],
+   "role": "증거",
+   "fit": 9,
+   "scene_desc": "녹말가루 붓기",
+   "transition": "cut",
+   "transition_t": 17.467,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 18.5,
@@ -581,7 +758,15 @@
    ],
    "sfx": null,
    "scene": "손·제품 근접",
-   "cut_at": []
+   "cut_at": [],
+   "role": "증거",
+   "fit": 9,
+   "scene_desc": "액젓 붓기",
+   "transition": "cut",
+   "transition_t": 18.467,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 20.5,
@@ -603,7 +788,14 @@
    "sticker": [],
    "sfx": null,
    "scene": "손·제품 근접",
-   "cut_at": []
+   "cut_at": [],
+   "role": "증거",
+   "fit": 7,
+   "scene_desc": "팬 위 반죽",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 22.2,
@@ -625,7 +817,15 @@
    "sticker": [],
    "sfx": null,
    "scene": "기타(단체 뒷모습)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "다리",
+   "fit": 5,
+   "scene_desc": "단체 뒷모습",
+   "transition": "cut",
+   "transition_t": 22.1,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 23.2,
@@ -648,12 +848,20 @@
    "sfx": null,
    "scene": "기타(단체 뒷모습)",
    "cut_at": [],
-   "note": "vtt 22.16~24.31 '그리고 최화정만의 킥이 있다는데' 와 일치"
+   "role": "다리",
+   "fit": 4,
+   "scene_desc": "단체 뒷모습",
+   "notes": "vtt 22.16~24.31 '그리고 최화정만의 킥이 있다는데' 와 일치",
+   "transition": "cut",
+   "transition_t": 23.167,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 24.2,
    "t1": 25.3,
-   "speaker": "원음:연예인(화면 글자로 이름 확인 안 됨)",
+   "speaker": "원음:최화정",
    "text": "자~이거 한번 뿌려보자",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -670,7 +878,16 @@
    "sticker": [],
    "sfx": null,
    "scene": "기타(단체)",
-   "cut_at": []
+   "cut_at": [],
+   "speaker_basis": "원음:연예인(화면 글자로 이름 확인 안 됨)",
+   "role": "공개",
+   "fit": 5,
+   "scene_desc": "최화정과 사람들",
+   "transition": "cut",
+   "transition_t": 24.167,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 24.5,
@@ -681,15 +898,26 @@
    "enter": "기타(상단 노란 글씨)",
    "type_cps": null,
    "cursor": false,
-   "y": null,
-   "fill_hex": null,
+   "y": [
+    490,
+    590
+   ],
+   "fill_hex": "#FFE234",
    "outline": null,
    "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
    "scene": "기타(단체)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "이음",
+   "fit": 5,
+   "scene_desc": "단체",
+   "_fill_basis": "눈(원본 층 — 보기 시트 300px 축소 환산 ±40px·색 눈, 픽셀 실측 아님)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 25.5,
@@ -704,14 +932,22 @@
     1400,
     1500
    ],
-   "fill_hex": null,
+   "fill_hex": "#F2E27C",
    "outline": null,
    "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
    "scene": "기타(단체)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "고조",
+   "fit": 5,
+   "scene_desc": "단체 시식",
+   "_fill_basis": "눈(원본 층 — 보기 시트 300px 축소 환산 ±40px·색 눈, 픽셀 실측 아님)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 25.7,
@@ -722,15 +958,26 @@
    "enter": "기타(상단 하늘색 글씨)",
    "type_cps": null,
    "cursor": false,
-   "y": null,
-   "fill_hex": null,
+   "y": [
+    584,
+    710
+   ],
+   "fill_hex": "#6EC6F0",
    "outline": null,
    "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
    "scene": "기타(단체)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "고조",
+   "fit": 5,
+   "scene_desc": "단체 시식",
+   "_fill_basis": "눈(원본 층 — 보기 시트 300px 축소 환산 ±40px·색 눈, 픽셀 실측 아님)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 27.4,
@@ -752,12 +999,19 @@
    "sticker": [],
    "sfx": null,
    "scene": "기타(식사 장면)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "끝",
+   "fit": 6,
+   "scene_desc": "식사 장면",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 28.8,
    "t1": 30.3,
-   "speaker": "원음/나레 불명",
+   "speaker": "불명",
    "text": "썰어만 놓으면 할 일이 없어",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -775,7 +1029,16 @@
    "sfx": null,
    "scene": "손·제품 근접(오징어)",
    "cut_at": [],
-   "note": "말한 사람 불명"
+   "speaker_basis": "원음/나레 불명",
+   "role": "끝",
+   "fit": 7,
+   "scene_desc": "썬 오징어 통",
+   "notes": "말한 사람 불명",
+   "transition": "cut",
+   "transition_t": 28.667,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   }
  ],
  "beats": "훅(0~2.6초 나레 무지개 3줄 '최화정이 만들자마자 스태프들이 난리가 났다는데..?') → 원음 반응 2.7~6.9 → 나레 6.9~9.6(요리 완성샷+번쩍 이펙트) → 원음 요리 과정 9.7~22(타이핑 없음, 원본 라벨 다수) → 나레 22.2~24.1(무지개) → 원음 시식·재료 → 끝('썰어만 놓으면 할 일이 없어'에서 끊김)",
@@ -808,5 +1071,15 @@
   25.4,
   27.1,
   28.8
- ]
+ ],
+ "name_evidence": [
+  "최화정: 제목 2줄 '최화정도 반한'·출처 '안녕하세요 최화정이에요'·나레 줄0 — 화자=남색 잠옷 여성(얼굴 대조 아님)"
+ ],
+ "frame0": {
+  "what": "젓가락으로 전을 집는 사람들(주방)",
+  "face_frac": 0.02,
+  "text": "제목 2줄 + 무지개 나레 '최화정이 만들자마자'"
+ },
+ "_made_by_v2": "오푸스 실행자 보강 2026-10-25(관제 263 지시서 06): role·fit·scene_desc 눈 · transition/cut_at/motion = readline_tools/cutdet 30fps · sfx = _kal/sfx_events.json 연결 · speaker 이름은 화면 글자 근거만(speaker_basis 에 옛 글)",
+ "_tools_v2": "tools/calcopy/engine/readline_tools/{capseg 1090~1190, cutdet 484~1540, rangesheet} → C:/숏템_칼카피/starpickroom/work/lr6/"
 }
