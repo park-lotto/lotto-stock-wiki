@@ -8,7 +8,7 @@
   "analysis": "channel/kkultemnote/스타일분석.md",
   "line_reads": "channel/kkultemnote/줄판독/",
   "src_dir": "C:\\숏템_칼카피\\kkultemnote\\src",
-  "sfx_events": null,
+  "sfx_events": "channel/kkultemnote/_kal/sfx_events.json",
   "sfx_key": null,
   "palette": "channel/kkultemnote/팔레트.json",
   "rules_counted": "channel/kkultemnote/_kal/규칙빈도.json"
