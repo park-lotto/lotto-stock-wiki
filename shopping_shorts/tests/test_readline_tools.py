@@ -193,6 +193,80 @@ def test_red_tracks_mark(tmp_path):
     assert abs((x0 + x1) / 2 - 540) <= 12 and abs((y0 + y1) / 2 - 1000) <= 12 and after[0]["white"] > 0.5
 
 
+def _write_mp4(path, frames):
+    p = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
+                          "-c:v", "libx264", "-preset", "ultrafast", "-crf", "12", "-pix_fmt", "yuv420p", str(path)], stdin=subprocess.PIPE)
+    for f in frames:
+        p.stdin.write(f.tobytes())
+    p.stdin.close()
+    assert p.wait() == 0
+
+
+@pytest.fixture(scope="module")
+def blurzoom(tmp_path_factory) -> str:
+    """0.0~0.13 시작 블러 · 1.0초 컷 · 컷 뒤 8프레임에 걸쳐 풀리는 블러 · 컷 뒤 샷은 줌인(1.0→1.35)."""
+    rng = np.random.default_rng(1)
+    A = rng.integers(0, 255, (H // 8, W // 8, 3), dtype=np.uint8)
+    A = cv2.resize(A, (W, H), interpolation=cv2.INTER_NEAREST)
+    B = rng.integers(0, 255, (H // 6, W // 6, 3), dtype=np.uint8)
+    B = cv2.resize(B, (W, H), interpolation=cv2.INTER_NEAREST)
+    fr = []
+    for i in range(30):
+        f = A.copy()
+        if i < 4:
+            f = cv2.GaussianBlur(f, (0, 0), 12 - 2 * i)
+        fr.append(f)
+    for j in range(60):
+        z = 1.0 + 0.35 * j / 59
+        M = cv2.getRotationMatrix2D((W / 2, H / 2), 0, z)
+        f = cv2.warpAffine(B, M, (W, H), flags=cv2.INTER_LINEAR)
+        if j < 8:                                              # 컷 직후 블러가 8프레임에 걸쳐 풀린다 → 옛 '뒤 바탕'(b+5~11)이 흐린 프레임을 품는다
+            f = cv2.GaussianBlur(f, (0, 0), 8.0 - j)
+        fr.append(f)
+    out = tmp_path_factory.mktemp("bz") / "bz.mp4"
+    _write_mp4(out, fr)
+    return str(out)
+
+
+def test_cutdet_v2_blur_start_zoom(blurzoom):
+    v1 = cutdet.cutdet(blurzoom, 0, H)
+    v2 = cutdet.cutdet(blurzoom, 0, H, v2=True)
+    c1 = [c for c in v1["cuts"] if abs(c["t"] - 1.0) <= 1 / FPS]
+    c2 = [c for c in v2["cuts"] if abs(c["t"] - 1.0) <= 1 / FPS]
+    assert c1 and "kind_v1" not in c1[0]                        # v2 없이 = 옛 출력 꼴 그대로(옛 분류가 놓치는 실물은 키치잇 대조 — 합성으로는 재현 못 함)
+    assert c2 and c2[0]["kind"] == "zoomblur" and c2[0]["blur_post"] >= cutdet.V2_MIN_FR
+    assert v2["cuts"][0].get("start") and v2["cuts"][0]["kind"] == "zoomblur"
+    after = [s for s in v2["shots"] if s["t0"] >= 0.99]
+    assert after and after[-1]["motion"] == "zoom_in", v2["shots"]
+    assert "motion" not in v1["shots"][-1] and "v2" not in v1
+
+
+def test_cutdet_v2_zoom_out_and_pan(tmp_path):
+    rng = np.random.default_rng(2)
+    B = cv2.resize(rng.integers(0, 255, (H // 6, W // 6, 3), dtype=np.uint8), (W, H), interpolation=cv2.INTER_NEAREST)
+    zo = [cv2.warpAffine(B, cv2.getRotationMatrix2D((W / 2, H / 2), 0, 1.35 - 0.35 * j / 44), (W, H)) for j in range(45)]
+    pn = [cv2.warpAffine(B, np.float32([[1, 0, 6 * j], [0, 1, 0]]), (W, H), borderMode=cv2.BORDER_REFLECT) for j in range(45)]
+    for name, frames, want in (("zo", zo, "zoom_out"), ("pn", pn, "pan")):
+        p = tmp_path / f"{name}.mp4"
+        _write_mp4(p, frames)
+        d = cutdet.cutdet(str(p), 0, H, v2=True)
+        assert d["shots"][0]["motion"] == want, (name, d["shots"])
+
+
+_KC = Path("C:/숏템_칼카피/kitchit/src")
+
+
+@pytest.mark.skipif(not (_KC / "vSEaZ-BCELY.mp4").exists(), reason="키치잇 원본 없음(집 PC 전용)")
+def test_kitchit_transition_v2():
+    """키치잇 눈 정답: vSE 2.467 zoomblur 는 옛 분류가 cut 으로 본 자리 · Ks5k 시작 블러·black 2·zoomblur 1."""
+    from tools.calcopy.engine.readline_tools import eval_transition as E
+    tot = hit = fp = 0
+    for vid in ("vSEaZ-BCELY", "Ks5kYYKAUlQ"):
+        e = E.eval_video("kitchit", vid, str(_KC / f"{vid}.mp4"))
+        tot += e["total"]; hit += e["hit"]; fp += e["fp"]
+    assert tot == 5 and hit == 5 and fp == 0
+
+
 _EV_SRC = Path("C:/숏템_칼카피/evenshopping/src/kC8fkx1Ve3Q.mp4")
 _EV_OLD = Path("C:/숏템_칼카피/evenshopping/work/tone_detect.json")
 
