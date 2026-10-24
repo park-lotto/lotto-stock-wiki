@@ -1,0 +1,102 @@
+{
+ "name": "kkultemnote판",
+ "renderer": "bench",
+ "_note": "kal.py rules 초안(2026-10-25) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
+ "bench": {
+  "ko": "꿀템노트",
+  "channel": "https://www.youtube.com/@꿀템노트-g1z",
+  "analysis": "channel/kkultemnote/스타일분석.md",
+  "line_reads": "channel/kkultemnote/줄판독/",
+  "src_dir": "C:\\숏템_칼카피\\kkultemnote\\src",
+  "sfx_events": null,
+  "sfx_key": null,
+  "palette": "channel/kkultemnote/팔레트.json",
+  "rules_counted": "channel/kkultemnote/_kal/규칙빈도.json"
+ },
+ "voice": {
+  "name": null,
+  "voice_id": null,
+  "candidates": [],
+  "why": "미정 — 사장님께(kal.py 시작 질문, 추천: 미나 / 문정 / 유라 중에서 (벤치 화자 여 15/20))"
+ },
+ "cps_target": 9.86,
+ "bgm": {
+  "id": null,
+  "db_below_voice": null,
+  "duck_orig_db": null,
+  "fade_out": null,
+  "why": "engine/sound/bgm_fp.py·뜯기 audio"
+ },
+ "loudness": {
+  "lufs": -14,
+  "tp": -1.5
+ },
+ "length": {
+  "min": 15.2,
+  "max": 19.6
+ },
+ "script": {
+  "brief": [
+   "나레: 어미 다네요, 는데요, 네요, 다는데 · 존댓말 0.74 · 전언 0.63 · 자수 중앙 10.0",
+   "원음: 어미 다, 야, 지, 죠 · 존댓말 0.35 · 전언 0.0 · 자수 중앙 7.0"
+  ],
+  "example": [],
+  "audit": []
+ },
+ "frame": {
+  "window": [
+   0,
+   420,
+   1080,
+   1080
+  ],
+  "title": [],
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "comment": null
+ },
+ "caption": {
+  "pack": null,
+  "pack_default": null,
+  "variant_for": {},
+  "typing_cps": 9.93
+ },
+ "timing": null,
+ "cuts": null,
+ "sfx_files": null,
+ "placement": {
+  "rules": {
+   "narr_enter": "fade",
+   "orig_enter": "instant",
+   "fx_rate": {
+    "원음": 0.63,
+    "나레": 0.76,
+    "불명": 1.0
+   },
+   "plain_rate": 0.32,
+   "by_pos": {
+    "훅": 0.68,
+    "본문": 0.71,
+    "끝": 0.56
+   },
+   "strong": [
+    "자리=끝 → enter=instant 17/25",
+    "역할=끝 → enter=instant 11/16",
+    "역할=공개 → emph 9/12",
+    "역할=질문 → emph 8/8",
+    "역할=질문 → enter=fade 6/8",
+    "역할=질문 → enter_fx 6/8",
+    "역할=반전 → enter=fade 4/6",
+    "역할=반전 → enter_fx 4/6"
+   ]
+  },
+  "counted": {}
+ },
+ "_todo": [
+  "voice·bgm·sfx = engine/sound 결과",
+  "frame.title/logo/credit = 스타일분석 §틀",
+  "caption.pack = caption-motions.js 팩 이름(없으면 요청서)",
+  "timing·cuts·sfx_files = 견본 styles/키치잇판.json 꼴"
+ ]
+}
