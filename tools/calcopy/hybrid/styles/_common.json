@@ -1,6 +1,8 @@
 {
  "_note": "모든 판에 먼저 깔리는 칸(판 파일 값이 이긴다). 얜샷템 §12 규칙: CTA 없음 · 효능 단정·질병 말 금지(식품표시광고법 제8조) · 말투 '따라 사 봤는데' · 음량 −14 LUFS 통일(사장님 10-18).",
  "loudness": {"lufs": -14.0, "tp": -1.5},
+ "cuts": {"transition": {"kinds": {"cut": 1.0}, "ms": 0, "why": "기본 = 그냥 컷(전환 효과 없음). 판이 kinds{cut·flash·zoomblur·black 비율}·ms 를 적으면 render_bench 가 그린다(경계 자리 = placement.transitions, 지시서 03)"}},
+ "bgm": {"duck_narr_db": 0.0, "why_duck_narr": "기본 0 = 나레 구간 덕킹 없음. 판이 음수 dB 를 적으면 말할 때 BGM 을 그만큼 더 줄인다(이븐쇼핑 실측 '말할 때 줄어듦')"},
  "script": {
   "forbid": [
    {"pattern": "구독(하|해|버튼|과 좋아요)|좋아요 눌|댓글 (남|달)|링크|프로필|구매하(세요|러)|사러 가", "why": "CTA 없음(사장님 10-18 유튜브 스타일)"},

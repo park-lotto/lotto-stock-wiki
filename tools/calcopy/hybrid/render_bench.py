@@ -187,46 +187,192 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
 
 
 # ── 틀 그림(판단 주인: 판 설정 frame) ─────────────────────────────────────
+FRAME_KINDS = ("window", "post", "full")      # 표준 §3-3 B1 — frame.kind 하나로 갈린다(채널 이름 분기 없음)
+
+
+def frame_kind(F: dict) -> str:
+    k = F.get("kind") or "window"
+    if k not in FRAME_KINDS:
+        raise StageError(f"frame.kind '{k}' 모름 — {FRAME_KINDS}")
+    return k
+
+
+def frame_window(F: dict) -> list[int]:
+    """영상 창 [x,y,w,h] 한 곳 — full = 화면 전체(창 칸을 안 적어도 된다), 그 밖 = frame.window."""
+    return [0, 0, W, H] if frame_kind(F) == "full" else list(F["window"])
+
+
+def _draw_text(im, T: dict, text: str):
+    """한 줄 글(게시글 작성자·조회수·본문): font·px·color · x(왼쪽 x) 또는 cx(가운데 x) · cy(잉크 가운데 y) 또는 ink_top ·
+    word_spacing(어절 사이 더 띄우기 px) · max_w(넘치면 px 줄임)."""
+    from PIL import Image, ImageDraw
+    if not text:
+        return
+    px = float(T["px"])
+    ws = float(T.get("word_spacing", 0))
+    words = text.split(" ")
+    while True:
+        f = _font(T["font"], px)
+        sp = f.getlength(" ") + ws
+        tw = sum(f.getlength(w_) for w_ in words) + sp * (len(words) - 1)
+        if tw <= T.get("max_w", W) or px <= 20:
+            break
+        px -= 2
+    asc, desc = f.getmetrics()
+    lay = Image.new("RGBA", (int(tw) + 8, asc + desc + 8), (0, 0, 0, 0))
+    dl = ImageDraw.Draw(lay)
+    xx = 4
+    col = _rgb(T.get("color", "#000000")) + (255,)
+    for w_ in words:
+        dl.text((xx, 4), w_, font=f, fill=col)
+        xx += f.getlength(w_) + sp
+    bb = lay.getbbox()
+    if not bb:
+        return
+    lay = lay.crop(bb)
+    left = int(T["x"]) if "cx" not in T else int(T["cx"]) - lay.size[0] // 2
+    top = int(T["ink_top"]) if "ink_top" in T else int(T["cy"]) - lay.size[1] // 2
+    im.alpha_composite(lay, (left, top))
+
+
+def _draw_rect(im, box, color, fade=None, radius=0):
+    """[x0,y0,x1,y1](끝 제외) 채움 — fade [위 px, 아래 px] = 그 폭만큼 위·아래 끝이 투명→불투명(게시글 본문 상자 번짐) · radius 둥근 모서리."""
+    from PIL import Image, ImageDraw
+    import numpy as np
+    x0, y0, x1, y1 = (int(v) for v in box)
+    lay = Image.new("RGBA", (x1 - x0, y1 - y0), _rgb(color) + (255,))
+    a = np.full((y1 - y0, x1 - x0), 255, np.uint8)
+    if fade:
+        col = np.full((y1 - y0,), 255.0)
+        ft, fb = int(fade[0]), int(fade[1])
+        if ft:
+            col[:ft] = np.linspace(0, 255, ft, endpoint=False)
+        if fb:
+            col[-fb:] = np.linspace(255, 0, fb, endpoint=False)
+        a = np.repeat(col.astype(np.uint8)[:, None], x1 - x0, axis=1)
+    if radius:
+        m = Image.new("L", lay.size, 0)
+        ImageDraw.Draw(m).rounded_rectangle([0, 0, lay.size[0] - 1, lay.size[1] - 1], radius=int(radius), fill=255)
+        a = (a.astype(np.uint16) * np.asarray(m, np.uint16) // 255).astype(np.uint8)
+    lay.putalpha(Image.fromarray(a, "L"))
+    im.alpha_composite(lay, (x0, y0))
+
+
+def _draw_post(im, P: dict, S: dict):
+    """게시글형 틀(B1): head_bar{box,color,icons[bars|search|text]} · rules[{box,color}](가는 줄) · author_line ·
+    body_box{box,color,fade,radius,rules,text} · views_line · meme_slot{box[x,y,w,h]}.
+    글은 대본 post{brand,author,body,views,meme} 가 있으면 그것, 없으면 판 칸 text."""
+    from PIL import Image, ImageDraw
+    SP = S.get("post") or {}
+    HB = P.get("head_bar")
+    if HB:
+        _draw_rect(im, HB["box"], HB["color"])
+        d = ImageDraw.Draw(im)
+        for ic in HB.get("icons") or []:
+            col = _rgb(ic.get("color", "#000000"))
+            if ic["kind"] == "bars":        # 메뉴(가로 막대 여러 개)
+                for yy in ic["ys"]:
+                    d.rectangle([ic["x"], yy, ic["x"] + ic["w"] - 1, yy + ic["h"] - 1], fill=col)
+            elif ic["kind"] == "search":    # 돋보기(고리 + 손잡이) — 84px 기준 꼴(설명서 frame.json 아이콘과 같은 비율)
+                k = ic["size"] / 84.0
+                sw = max(1, int(round(ic.get("stroke", 7) * k)))
+                cx, cy, r = ic["x"] + 34 * k, ic["y"] + 34 * k, 28 * k
+                d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=col, width=sw)
+                d.line([ic["x"] + 54 * k, ic["y"] + 54 * k, ic["x"] + 80 * k, ic["y"] + 80 * k], fill=col, width=sw)
+            elif ic["kind"] == "text":      # 머리띠 안 채널 글(브랜드)
+                _draw_text(im, ic, SP.get(ic.get("from", "brand")) or ic.get("text"))
+    for r in P.get("rules") or []:
+        _draw_rect(im, r["box"], r["color"])
+    BB = P.get("body_box")
+    if BB:
+        _draw_rect(im, BB["box"], BB["color"], BB.get("fade"), BB.get("radius", 0))
+        for r in BB.get("rules") or []:
+            _draw_rect(im, r["box"], r["color"])
+        if BB.get("text"):
+            _draw_text(im, BB["text"], SP.get("body") or BB["text"].get("text"))
+    for key, sk in (("author_line", "author"), ("views_line", "views")):
+        if P.get(key):
+            _draw_text(im, P[key], SP.get(sk) or P[key].get("text"))
+    MS = P.get("meme_slot")
+    if MS and SP.get("meme") and Path(SP["meme"]).exists():      # 반응 짤 자리(채워 자르기)
+        x, y, w, h = MS["box"]
+        m = Image.open(SP["meme"]).convert("RGBA")
+        s = max(w / m.size[0], h / m.size[1])
+        m = m.resize((max(1, round(m.size[0] * s)), max(1, round(m.size[1] * s))), Image.LANCZOS)
+        l, t = (m.size[0] - w) // 2, (m.size[1] - h) // 2
+        im.alpha_composite(m.crop((l, t, l + w, t + h)), (x, y))
+
+
+def _draw_full(im, FL: dict | None):
+    """전체화면 틀(B1): 창 = 화면 전체, 위에 얹는 것은 가운데 자막 띠(선택) — band{cy,h,rgba}."""
+    from PIL import Image
+    B = (FL or {}).get("band")
+    if B:
+        im.alpha_composite(Image.new("RGBA", (W, int(B["h"])), tuple(B["rgba"])), (0, int(B["cy"]) - int(B["h"]) // 2))
+
+
+def _title_line(im, spec: dict, segs):
+    """제목 한 줄(낱말 색·기울임·박스) 한 곳 — 선택 칸 stroke{px,color}·shadow{dx,dy,color}(게시글형 제목 외곽선·그림자).
+    두 칸이 없으면 외곽선 0·그림자 없음 = 옛 그림과 같은 픽셀(회귀 검사 대상)."""
+    from PIL import Image, ImageDraw
+    d = ImageDraw.Draw(im)
+    segs = [(s, None) if isinstance(s, str) else (s[0], s[1] if len(s) > 1 else None) for s in segs]
+    col = lambda c: _rgb(spec["hi"]) if c == "hi" else (_rgb(c) if c else _rgb(spec["color"]))
+    px = spec["px"]
+    while True:
+        f = _font(spec["font"], px)
+        tw = sum(f.getlength(t) for t, _ in segs)
+        if tw <= spec.get("max_w", 1000) or px <= 50:
+            break
+        px -= 2
+    asc, desc = f.getmetrics()
+    SK, SH = spec.get("stroke") or {}, spec.get("shadow")
+    sw = int(SK.get("px", 0))
+    pad = int(px * 0.5) + sw + (max(abs(SH["dx"]), abs(SH["dy"])) if SH else 0)
+    sh = float(spec.get("shear") or 0)
+    lay = Image.new("RGBA", (int(tw) + 2 * pad + int((asc + desc) * sh), asc + desc + 2 * pad), (0, 0, 0, 0))
+    dl = ImageDraw.Draw(lay)
+    x0 = pad + int((asc + desc) * sh * 0.5)
+    if SH:
+        xx = x0
+        for t, c in segs:
+            dl.text((xx + SH["dx"], pad + SH["dy"]), t, font=f, fill=_rgb(SH["color"]) + (255,), stroke_width=sw,
+                    stroke_fill=_rgb(SH["color"]) + (255,))
+            xx += f.getlength(t)
+    xx = x0
+    for t, c in segs:
+        dl.text((xx, pad), t, font=f, fill=col(c) + (255,), stroke_width=sw, stroke_fill=_rgb(SK.get("color", "#000000")) + (255,))
+        xx += f.getlength(t)
+    if sh:
+        lay = lay.transform(lay.size, Image.AFFINE, (1, sh, -sh * lay.size[1] * 0.5, 0, 1, 0), resample=Image.BICUBIC)
+    lay = lay.crop(lay.getbbox())
+    if spec.get("box"):
+        bx = spec["box"]
+        d.rectangle(bx, fill=_rgb(spec["box_color"]) + (255,))
+        top = (bx[1] + bx[3]) // 2 - lay.size[1] // 2
+    elif "center" in spec:
+        top = spec["center"] - lay.size[1] // 2
+    else:
+        top = spec["ink_top"]
+    im.alpha_composite(lay, (W // 2 - lay.size[0] // 2, int(top)))
+
+
 def frame_png(S: dict, st: dict, out: Path) -> Path:
-    """검정 바탕 + 제목 줄들(낱말 색·기울임·박스) + 로고 + 출처 + 워터마크, 창 자리는 투명."""
+    """틀 한 장(창 자리는 투명). frame.kind = window(바탕 + 제목 줄들 + 로고 + 출처 + 워터마크, 기본) ·
+    post(게시글형: 머리띠·작성자 줄·본문 상자·조회수 줄·짤 자리 + 같은 제목 줄·출처·로고) · full(전체화면 — 창 = 화면 전체, 가운데 자막 띠·제목·로고만)."""
     from PIL import Image, ImageDraw
     F = st["frame"]
+    kind = frame_kind(F)
     im = Image.new("RGBA", (W, H), _rgb(F.get("bg", [0, 0, 0])) + (255,))
-    x, y, w, h = F["window"]
+    x, y, w, h = frame_window(F)
     im.paste((0, 0, 0, 0), (x, y, x + w, y + h))
+    if kind == "post":
+        _draw_post(im, F.get("post") or {}, S)
+    elif kind == "full":
+        _draw_full(im, F.get("full"))
     d = ImageDraw.Draw(im)
-    for spec, segs in zip(F["title"], S["title_lines"]):
-        segs = [(s, None) if isinstance(s, str) else (s[0], s[1] if len(s) > 1 else None) for s in segs]
-        col = lambda c: _rgb(spec["hi"]) if c == "hi" else (_rgb(c) if c else _rgb(spec["color"]))
-        px = spec["px"]
-        while True:
-            f = _font(spec["font"], px)
-            tw = sum(f.getlength(t) for t, _ in segs)
-            if tw <= spec.get("max_w", 1000) or px <= 50:
-                break
-            px -= 2
-        asc, desc = f.getmetrics()
-        pad = int(px * 0.5)
-        sh = float(spec.get("shear") or 0)
-        lay = Image.new("RGBA", (int(tw) + 2 * pad + int((asc + desc) * sh), asc + desc + 2 * pad), (0, 0, 0, 0))
-        dl = ImageDraw.Draw(lay)
-        xx = pad + int((asc + desc) * sh * 0.5)
-        for t, c in segs:
-            dl.text((xx, pad), t, font=f, fill=col(c) + (255,))
-            xx += f.getlength(t)
-        if sh:
-            lay = lay.transform(lay.size, Image.AFFINE, (1, sh, -sh * lay.size[1] * 0.5, 0, 1, 0), resample=Image.BICUBIC)
-        bb = lay.getbbox()
-        lay = lay.crop(bb)
-        if spec.get("box"):
-            bx = spec["box"]
-            d.rectangle(bx, fill=_rgb(spec["box_color"]) + (255,))
-            top = (bx[1] + bx[3]) // 2 - lay.size[1] // 2
-        elif "center" in spec:
-            top = spec["center"] - lay.size[1] // 2
-        else:
-            top = spec["ink_top"]
-        im.alpha_composite(lay, (W // 2 - lay.size[0] // 2, int(top)))
+    for spec, segs in zip(F.get("title") or [], S.get("title_lines") or []):
+        _title_line(im, spec, segs)
     C = F.get("credit")
     if C and S.get("source_label"):
         f = _font(C["font"], C["px"])
@@ -407,9 +553,74 @@ def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, pu
          "-preset", "veryfast", "-pix_fmt", "yuv420p", out])
 
 
-def render_window(T: dict, M: dict, st: dict, R: Path) -> Path:
+# ── 장면 전환(A1) — 종류·자리 결정 = placement.place(placed["transitions"]), 여기는 읽기·그리기만 ──────────────
+TRANSITION_KINDS = ("cut", "flash", "zoomblur", "black")
+TRANSITION_MS = {"flash": 100, "zoomblur": 200, "black": 33}     # 판 칸 cuts.transition.ms 가 0/없을 때 종류별 기본 길이
+ZOOMBLUR_ZOOM, ZOOMBLUR_SIGMA = 0.12, 14.0                         # 줌블러: 경계에서 최대 12% 확대 + gblur(가림 흐림 BLUR_SIGMA 와 별개 — 움직임 번짐)
+
+
+def transitions_of(T: dict, st: dict, placed: dict, log=None) -> list[dict]:
+    """전환 목록 [{t, kind, ms, sec?, why}] 한 곳 — render_window(줌블러·검은 프레임, 창 안)·render_base(흰 번쩍, 화면 전체)가 이것만 읽는다.
+    ① placement 가 placed["transitions"] 를 주면 그대로(주인 = placement.place, 지시서 03).
+    ② 없으면 옛 키 placed["flashes"] 를 kind=flash 로 읽는다(변환만 — 흰 번쩍 그림은 예전과 한 픽셀도 안 바뀐다).
+       판 칸 cuts.transition.kinds 에서 cut 밖 종류가 하나뿐이고 비율 1.0 이면 고를 것이 없으니 모든 컷 경계에 그 종류를 단다.
+       여러 종류가 섞인 비율은 '어느 경계에 무엇'을 placement 가 정해야 해서 여기서는 그리지 않고 로그만 남긴다(두 벌 금지)."""
+    F = st.get("frame") or {}
+    TR = (st.get("cuts") or {}).get("transition") or {}
+    ms_set = float(TR.get("ms") or 0)
+
+    def norm(e):
+        k = e.get("kind", "cut")
+        if k not in TRANSITION_KINDS:
+            raise StageError(f"전환 종류 '{k}' 모름 — {TRANSITION_KINDS}")
+        out = {"t": round(float(e["t"]), 3), "kind": k, "ms": float(e.get("ms") or ms_set or TRANSITION_MS.get(k, 0))}
+        if e.get("sec") is not None:
+            out["sec"] = float(e["sec"])
+        if e.get("why"):
+            out["why"] = e["why"]
+        return out
+    if placed.get("transitions") is not None:
+        return [norm(e) for e in placed["transitions"] if e.get("kind", "cut") != "cut"]
+    fsec = F.get("flash_sec", 0.1)
+    out = [{"t": t, "kind": "flash", "ms": round(fsec * 1000), "sec": fsec, "why": "placement flashes(옛 키)"} for t in placed.get("flashes") or []]
+    kinds = {k: float(v) for k, v in (TR.get("kinds") or {}).items() if float(v) > 0 and k != "cut"}   # _common 의 cut:1.0 은 깊게 합쳐져 남는다 — cut 밖 종류만 본다
+    if len(kinds) == 1 and next(iter(kinds.values())) >= 1.0:
+        k = next(iter(kinds))
+        out += [norm({"t": c["t0"], "kind": k, "why": f"판 cuts.transition.kinds {k}:1.0 — 모든 컷 경계"}) for c in T["cuts"][1:]]
+    elif kinds and log:
+        log(f"[전환] 판 비율 {kinds} 이 섞여 있다 — 어느 경계에 무엇을 다는지는 placement.transitions(03)가 정해야 한다. 이번엔 컷만")
+    return sorted(out, key=lambda e: e["t"])
+
+
+def window_fx(trans: list[dict], ww: int, wh: int) -> str:
+    """창 안 전환 필터(filter_complex, 입력 [0:v] → [v]). 줌블러 = 경계 ±ms/2 동안 확대 사다리꼴 + gblur 덮기 · 검은 = 경계 프레임부터 ms 만큼 검정.
+    그릴 것이 없으면 '' (창 영상을 다시 굽지 않는다 — 장치 끈 판은 그림이 그대로)."""
+    zb = [e for e in trans if e["kind"] == "zoomblur"]
+    bk = [e for e in trans if e["kind"] == "black"]
+    if not (zb or bk):
+        return ""
+    fc, last = [], "0:v"
+    if zb:
+        terms = "+".join(f"max(0,1-abs(in/{FPS}-{e['t']:.3f})/{e['ms'] / 2000:.3f})" for e in zb)
+        en = "+".join(f"between(t,{max(0.0, e['t'] - e['ms'] / 2000):.3f},{e['t'] + e['ms'] / 2000:.3f})" for e in zb)
+        fc.append(f"[0:v]split[zm][zc];[zc]zoompan=z='1+{ZOOMBLUR_ZOOM}*({terms})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:"
+                  f"s={ww}x{wh}:fps={FPS},gblur=sigma={ZOOMBLUR_SIGMA}[zb];[zm][zb]overlay=0:0:enable='{en}'[z]")
+        last = "z"
+    if bk:
+        rng = []
+        for e in bk:
+            n0 = round(e["t"] * FPS)
+            k = max(1, round(e["ms"] / 1000 * FPS))
+            rng.append(f"between(n,{n0},{n0 + k - 1})")
+        fc.append(f"[{last}]drawbox=x=0:y=0:w=iw:h=ih:color=black:t=fill:enable='{'+'.join(rng)}'[k]")
+        last = "k"
+    fc.append(f"[{last}]format=yuv420p[v]")
+    return ";".join(fc)
+
+
+def render_window(T: dict, M: dict, st: dict, R: Path, trans: list[dict] | None = None) -> Path:
     src_dir = Path(M["cand_dir"])
-    x, y, ww, wh = st["frame"]["window"]
+    x, y, ww, wh = frame_window(st["frame"])
     parts = R / "parts"; shutil.rmtree(parts, ignore_errors=True); parts.mkdir(parents=True)
     lst = []
     for k, c in enumerate(T["cuts"]):
@@ -437,13 +648,23 @@ def render_window(T: dict, M: dict, st: dict, R: Path) -> Path:
     (parts / "list.txt").write_text("\n".join(lst), encoding="utf-8")
     win = R / "window.mp4"
     run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", parts / "list.txt", "-c", "copy", win])
+    fx = window_fx(trans or [], ww, wh)
+    if fx:
+        n_all = sum(c["frames"] for c in T["cuts"])
+        out = R / "window_tr.mp4"
+        run(["ffmpeg", "-y", "-v", "error", "-i", win, "-filter_complex", fx, "-map", "[v]", "-frames:v", n_all, "-r", FPS,
+             "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", out])
+        got = count_frames(out)
+        if got != n_all:
+            raise StageError(f"전환 입힌 창 프레임 {got} ≠ 계획 {n_all}")
+        return out
     return win
 
 
-def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path) -> Path:
-    """틀 + 창 + 댓글 카드 + 번쩍임(자막 없는 바탕)."""
+def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, trans: list[dict] | None = None) -> Path:
+    """틀 + 창 + 댓글 카드 + 흰 번쩍임(자막 없는 바탕). 번쩍임 = 전환 목록(transitions_of) kind=flash — 화면 전체."""
     F = st["frame"]
-    x, y, ww, wh = F["window"]
+    x, y, ww, wh = frame_window(F)
     png = frame_png(S, st, R / "frame.png")
     n = sum(c["frames"] for c in T["cuts"])
     end = n / FPS
@@ -456,10 +677,10 @@ def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path) ->
         ins += ["-loop", "1", "-t", f"{end:.3f}", "-i", R / "comment.png"]
         fc += f";[b][3:v]overlay={(W - cw) // 2}:{F['comment']['bottom'] - ch}:enable='between(t,{C['t0']:.3f},{C['t1']:.3f})'[c]"
         last = "c"
-    fl = placed.get("flashes") or []
+    fl = [(e["t"], e["sec"] if "sec" in e else e["ms"] / 1000) for e in (trans if trans is not None else transitions_of(T, st, placed))
+          if e["kind"] == "flash"]
     if fl:
-        dsec = F.get("flash_sec", 0.1)
-        e = "+".join(f"between(T,{t:.3f},{t + dsec:.3f})*(1-(T-{t:.3f})/{dsec})" for t in fl)
+        e = "+".join(f"between(T,{t:.3f},{t + dsec:.3f})*(1-(T-{t:.3f})/{dsec})" for t, dsec in fl)
         fc += f";[{last}]geq=lum='min(255,lum(X,Y)+255*({e}))':cb='cb(X,Y)':cr='cr(X,Y)'[f]"
         last = "f"
     out = R / "base.mp4"
@@ -549,9 +770,18 @@ def audio(S: dict, M: dict, st: dict, T: dict, sent: list[dict], placed: dict, R
     g = round((nI - B["db_below_voice"]) - bI, 2)
     k = 10 ** (float(B.get("duck_orig_db", 0.0)) / 20)
     duck = "+".join(f"between(t,{p['t0']:.3f},{p['t1']:.3f})" for p in T["opos"]) or "0"
+    vol = f"if({duck},{k:.4f},1)"
+    dn = float(B.get("duck_narr_db") or 0.0)          # 나레 덕킹(A4) — 말할 때 BGM 을 더 줄인다. 0 = 없음(식이 예전과 같다)
+    narr_spans = [T["lines"][s["id"]] for s in sent]
+    if dn:
+        nduck = "+".join(f"between(t,{a:.3f},{b:.3f})" for a, b in narr_spans) or "0"
+        vol = f"if({duck},{k:.4f},if({nduck},{10 ** (dn / 20):.4f},1))"
+    bed_chain = (f"aresample={SR},aformat=channel_layouts=mono,atrim=0:{end:.3f},asetpts=PTS-STARTPTS,volume={g}dB,"
+                 f"volume='{vol}':eval=frame,afade=t=out:st={end - B.get('fade_out', 0.4):.3f}:d={B.get('fade_out', 0.4)}")
+    bed = R / "bgm_bed.wav"       # BGM 만(나레·원음·효과음 없이) — 덕킹 실측·품질 관문이 읽는다
+    run(["ffmpeg", "-y", "-v", "error", "-stream_loop", "-1", "-i", bgm, "-filter_complex", f"[0:a]{bed_chain}[b]", "-map", "[b]", "-ar", SR, bed])
     ins2 = ["-i", voice, "-stream_loop", "-1", "-i", bgm]
-    fc2 = [f"[1:a]aresample={SR},aformat=channel_layouts=mono,atrim=0:{end:.3f},asetpts=PTS-STARTPTS,volume={g}dB,"
-           f"volume='if({duck},{k:.4f},1)':eval=frame,afade=t=out:st={end - B.get('fade_out', 0.4):.3f}:d={B.get('fade_out', 0.4)}[b]"]
+    fc2 = [f"[1:a]{bed_chain}[b]"]
     mix_in = "[0:a][b]"
     SF = st.get("sfx_files") or {}
     for j, e in enumerate(placed.get("sfx") or []):
@@ -565,7 +795,31 @@ def audio(S: dict, M: dict, st: dict, T: dict, sent: list[dict], placed: dict, R
     run(["ffmpeg", "-y", "-v", "error", *ins2, "-filter_complex", ";".join(fc2), "-map", "[o]", "-ar", SR, raw])
     mix = R / "mix.wav"
     loud(raw, mix, st["loudness"])
-    return mix, {"narr_lufs": nI, "orig_lufs": oI, "orig_gain": og, "bgm_gain": g, "mix": lufs(mix)}
+    return mix, {"narr_lufs": nI, "orig_lufs": oI, "orig_gain": og, "bgm_gain": g, "mix": lufs(mix),
+                 "duck_narr_db": dn, "bed": bed_contrast(bed, narr_spans, [[p["t0"], p["t1"]] for p in T["opos"]], end)}
+
+
+def bed_contrast(bed: Path, narr: list, orig: list, end: float) -> dict:
+    """BGM 만 뽑은 트랙의 구간별 크기(RMS dBFS) — 나레 구간 · 원음 구간 · 빈 구간(둘 다 아님). 끝 페이드 0.5초는 뺀다."""
+    import subprocess
+    import numpy as np
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(bed), "-ac", "1", "-ar", "16000", "-f", "f32le", "-"], capture_output=True,
+                         stdin=subprocess.DEVNULL).stdout
+    x = np.frombuffer(raw, np.float32)
+    t = np.arange(len(x)) / 16000.0
+    def mask(spans):
+        m = np.zeros(len(x), bool)
+        for a, b in spans:
+            m |= (t >= a) & (t < b)
+        return m
+    mn, mo = mask(narr), mask(orig)
+    live = t < end - 0.5
+    def db(m):
+        m = m & live
+        return round(float(10 * np.log10(np.mean(x[m] ** 2) + 1e-12)), 2) if m.sum() > 1600 else None
+    out = {"narr_db": db(mn), "orig_db": db(mo), "gap_db": db(~mn & ~mo)}
+    out["narr_vs_gap"] = round(out["narr_db"] - out["gap_db"], 2) if out["narr_db"] is not None and out["gap_db"] is not None else None
+    return out
 
 
 def loud(src: Path, dst: Path, L: dict):
@@ -607,6 +861,24 @@ def plan_rows(S: dict, T: dict, st: dict) -> dict:
     return placed
 
 
+def devices(st: dict, trans: list[dict], A: dict | None = None) -> dict:
+    """render_info.devices 표식(지시서 02 → 04 품질 관문이 읽는다): 전환 종류별 개수 · 나레 덕킹 dB·실측 · 틀 종류."""
+    from collections import Counter
+    TR = (st.get("cuts") or {}).get("transition") or {}
+    return {"transition": {"kinds_set": TR.get("kinds") or {"cut": 1.0}, "drawn": dict(Counter(e["kind"] for e in trans)), "n": len(trans)},
+            "duck_narr": {"db": float((st.get("bgm") or {}).get("duck_narr_db") or 0.0), "bed": (A or {}).get("bed")},
+            "frame_kind": frame_kind(st["frame"])}
+
+
+def style_sha(style_name: str) -> dict:
+    """판 파일 sha(그 파일 바이트) + 실제로 쓴 설정 sha(_common·base 합친 뒤) — 어떤 판 글로 만들었나 표식."""
+    import hashlib
+    from tools.calcopy.hybrid import styles as ST
+    raw = ST.path_of(style_name).read_bytes()
+    eff = json.dumps(ST.load(style_name), ensure_ascii=False, sort_keys=True).encode("utf-8")
+    return {"file": hashlib.sha1(raw).hexdigest()[:12], "effective": hashlib.sha1(eff).hexdigest()[:12]}
+
+
 def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=print, tts: bool = False) -> dict:
     from tools.calcopy.hybrid import render_itssum as RI
     from tools.calcopy.hybrid import styles as ST
@@ -625,6 +897,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
             sm = {x["id"]: x for x in sent}
         T = timeline(S, M, st, sm, align)
         placed = plan_rows(S, T, st)
+        placed["transitions_drawn"] = transitions_of(T, st, placed, log)
         jsave(doc / "plan/계획_시간표.json", {"timeline": T, "placement": placed})
         over = [c for c in T["cuts"] if c["over"] > 0]
         for c in T["cuts"]:
@@ -648,8 +921,9 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     placed = plan_rows(S, T, st)
     from tools.calcopy.hybrid import placement as PL
     chk = PL.check_place(placed, st)
-    win = render_window(T, M, st, R)
-    base = render_base(S, T, st, placed, R, win)
+    trans = transitions_of(T, st, placed, log)
+    win = render_window(T, M, st, R, trans)
+    base = render_base(S, T, st, placed, R, win, trans)
     T["end"] = round(sum(c["frames"] for c in T["cuts"]) / FPS, 4)
     rows = caption_rows(placed, st)
     cap = burn_captions(base, rows, st, R, T["end"])
@@ -667,11 +941,12 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         log(f"썸네일 {tc['pick']} → 맨 앞 {TH.THUMB_FRAMES}프레임")      # 오른쪽 위 '광고' 표시 — 주인 = engine/ad_mark(사장님 10-22 모든 렌더)
     jsave(R / "timeline.json", T)
     tab = {"_note": f"배치 결과 — placement.place(판 설정 {style_name}) · 시각은 final.mp4 기준 초", "pack": st["caption"]["pack"], "rows": rows,
-           "sfx": placed["sfx"], "flashes": placed["flashes"], "comment": placed.get("comment"), "log": placed["log"], "check": chk}
+           "sfx": placed["sfx"], "flashes": placed["flashes"], "transitions": trans, "comment": placed.get("comment"), "log": placed["log"], "check": chk}
     jsave(R / "자막표.json", tab)
     jsave(doc / "자막표.json", tab)
     info = {"made_by": "tools/calcopy/hybrid/render_bench.py", "version": style_name, "tempo": tempo, "final": str(final), "final_dur": dur_of(final),
             "final_lufs": lufs(final), "audio": A, "placement_check": chk, "n_cuts": len(T["cuts"]),
+            "devices": devices(st, trans, A), "style_sha": style_sha(style_name),
             "cuts_flat": [{k: c.get(k) for k in ("line", "src", "ss", "t0", "t1", "dur", "see")} for c in T["cuts"]]}
     jsave(R / "render_info.json", info)
     from tools.calcopy.engine.remake import sheet_1s
