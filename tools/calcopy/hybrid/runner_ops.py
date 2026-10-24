@@ -24,6 +24,7 @@ from tools.calcopy.hybrid import rules as RU  # noqa: E402
 from tools.calcopy.hybrid.common import StageError, jload, jsave, run  # noqa: E402
 
 CACHE = os.environ.get("SHORTEM_SOURCE_CACHE") or ""
+PAID_OFF = os.environ.get("SHORTEM_NO_PAID") == "1"     # '돈 0' 스위치(개발 완주·시험) — TTS 는 캐시만, 스피치매틱스·VMake 안 부름(관제 263 08)
 
 
 class CacheMiss(Exception):
@@ -121,6 +122,8 @@ def asr(path: Path, engine: str | None = None) -> list[dict]:
 
 
 def have_speechmatics() -> bool:
+    if PAID_OFF:
+        return False
     try:
         from tools.calcopy.engine import asr_local
         return bool(asr_local.speechmatics_key())
@@ -866,7 +869,7 @@ def c_orig_heard(W, d):
         if not src.exists():
             continue
         a, b = float(l["spans"][0][0]), float(l["spans"][-1][1])
-        cap = RU.norm("".join(str(c[0]) for c in l.get("caps_rel") or []))
+        cap = RU.norm(str(l.get("said") or "") or "".join(str(c[0]) for c in l.get("caps_rel") or []))   # said(원문 그대로)가 있으면 그것 — 해외원본형은 자막이 번역이라 소리와 글이 다르다(관제 263 08)
         w = ad / f"chk_{l['id']}.wav"
         run(["ffmpeg", "-y", "-v", "error", "-ss", f"{a:.2f}", "-to", f"{b:.2f}", "-i", str(src), "-ac", "1", "-ar", "16000", str(w)])
         heard = " ".join(x["text"] for x in asr(w))
@@ -883,10 +886,10 @@ def c_orig_heard(W, d):
 
 def c_asr_spans(W, d):
     """원음 구간 받아쓰기 — 스피치매틱스(키 있으면) + 위스퍼 교차(사장님 10-21)."""
-    src = W / d["src"]
     ad = W / "asr"; ad.mkdir(exist_ok=True)
     out = []
     for s in d.get("spans") or []:
+        src = W / "src" / str(s["src"]) if s.get("src") else W / d["src"]      # 해외원본형 = 구간마다 원본 파일이 다르다(spans[].src)
         wav = ad / f"{s.get('tag', 'O')}.wav"
         run(["ffmpeg", "-y", "-v", "error", "-ss", f"{float(s['a']):.2f}", "-to", f"{float(s['b']):.2f}", "-i", str(src), "-ac", "1", "-ar", "16000", str(wav)])
         out.append({**s, "src": src.name, **asr_cross(wav)})
@@ -1059,9 +1062,41 @@ def _origin_names(W: Path, version: str) -> set:
         return set()
 
 
+def tts_cache_miss(W: Path, v: str) -> str:
+    """SHORTEM_NO_PAID 일 때 — 렌더·계획이 부를 TTS 합성이 캐시에 있나(열쇠 = engine/narr_align.cache_key, 같은 글·목소리·배속). 없으면 이유, 있으면 ''.
+    합성 함수(narr_align.synth_cached)는 캐시가 없으면 돈 드는 합성을 하므로 여기서 미리 막는다."""
+    if not PAID_OFF:
+        return ""
+    from tools.calcopy.engine import narr_align as NA
+    from tools.calcopy.hybrid import render_itssum as RI, styles as STY
+    S = jload(W / "doc" / v / "대본.json")
+    if not any(l.get("kind") == "tts" for l in S.get("lines") or []):
+        return ""
+    st = STY.load(v)
+    S.setdefault("voice", {k: st["voice"][k] for k in ("name", "voice_id") if k in st["voice"]})
+    key = NA.cache_key(RI.tts_text({**S, "lines": [l for l in S["lines"] if l["kind"] == "tts"]}), S["voice"]["voice_id"], S["voice"].get("tempo"), NA.TTS_MODEL)
+    sc = W / v / "render" / "narr_full.mp3.tts.json"
+    have = json.loads(sc.read_text(encoding="utf-8")).get("key") if sc.exists() else None
+    return "" if have == key else f"TTS 캐시 없음(SHORTEM_NO_PAID — 돈 드는 합성 막음): 열쇠 {key[:8]} ≠ 캐시 {str(have)[:8]}"
+
+
+def _conflict_of(res) -> dict | None:
+    """placement 가 낸 충돌 {axis, need, cap, cause}(표준 §11-5 ㉛ — 뼈대 최소 개수 > 업그레이드 상한이면 어느 쪽도 늘리지 않고 멈춘다, 주인 placement·지시서 15).
+    판단은 하지 않고 그대로 싣는다(flow 가 대본 단계로 되돌린다)."""
+    if not isinstance(res, dict):
+        return None
+    for c in ((res.get("placement") or {}).get("conflict"), res.get("conflict"), (res.get("placement_check") or {}).get("conflict")):
+        if c:
+            return c if isinstance(c, dict) else {"cause": str(c)[:300]}
+    return None
+
+
 def c_plan(W, d):
     from tools.calcopy.hybrid import render_bench
     v = d["version"]
+    miss = tts_cache_miss(W, v)
+    if miss:
+        return {"error": miss}
     try:
         res = render_bench.render(v, W / "doc" / v, W / v, plan_only=True, tts=True)      # 진짜 목소리 길이로 계획(합성은 캐시 — 렌더가 그대로 쓴다)
         over = res.get("over") or ""
@@ -1069,6 +1104,9 @@ def c_plan(W, d):
         res, over = {"timeline": {"cuts": []}}, str(e)
     T = res.get("timeline") or {}
     out = {"over": over, "cuts": len(T.get("cuts") or []), "length": res.get("length")}
+    cf = _conflict_of(res)
+    if cf:
+        out["conflict"] = cf
     if T.get("cuts"):
         out["sheet"] = rel(W, plan_sheet(W, v, T))
         out["jumps"] = source_rule_scan(W, T, _origin_names(W, v) | set(d.get("origin_names") or []))
@@ -1078,30 +1116,202 @@ def c_plan(W, d):
 def c_render(W, d):
     from tools.calcopy.hybrid import render_bench
     v = d["version"]
+    miss = tts_cache_miss(W, v)
+    if miss:
+        return {"ok": False, "error": miss}
     try:
-        render_bench.render(v, W / "doc" / v, W / v)
+        info = render_bench.render(v, W / "doc" / v, W / v)
     except StageError as e:
         return {"ok": False, "error": str(e)[:600]}
+    cf = _conflict_of(info)
+    if cf:
+        return {"ok": False, "conflict": cf}
     T = jload(W / v / "render" / "timeline.json") if (W / v / "render" / "timeline.json").exists() else {}
     jumps = source_rule_scan(W, T, _origin_names(W, v) | set(d.get("origin_names") or []))
     return {"ok": (W / v / "render" / "final.mp4").exists() and not jumps, "jumps": jumps}
 
 
+EYE_FILES = ("시트_1초.jpg", "벤치대조_시트.jpg", "벤치대조_등장.jpg", "훅3초_0.1초.jpg", "끝2초_0.1초.jpg")
+EYE_TEXTS = ("받아쓰기대조.md", "줄컷대조.md")
+
+
 def c_check(W, d):
-    from tools.calcopy.hybrid import bench_check
+    """완성본 검사 = quality_gate.gate 한 벌(표준 §5-1 — 우리 PC 와 같은 함수, 관제 263 08). 1단 결과 + 눈 2단 묶음(<판>/eye/ 그림·대조표)을 싣는다.
+    QG_FORCE_FAIL=1 = 사보타주 — 관문을 돈 뒤 결과를 강제로 ×(flow 가 고치기 2회 뒤 멈추는지 보는 시험, 08 합격 검사 3)."""
+    from tools.calcopy.hybrid import quality_gate as QG, styles as STY
     v = d["version"]
     final = W / v / "render" / "final.mp4"
     if not final.exists():
         return {"error": "완성본 없음"}
-    auto = bench_check.check(v, W / "doc" / v, W / v)
-    sh = W / "doc" / v / "final_sheet_1s.jpg"
-    if not sh.exists():
-        sheet(final, sh, fps=1, cols=6, rows=6, w=240)
-    rep = auto.get("report")
-    if isinstance(rep, (str, Path)) and Path(rep).exists():          # bench_check 는 보고서 파일 경로를 준다 — 내용(6항목)을 싣는다(10-21: 경로만 가서 검수가 못 봤다)
-        rep = jload(rep)
-    rows = [{k: r.get(k) for k in ("what", "ok", "value")} for r in (rep or {}).get("rows") or []] if isinstance(rep, dict) else []
-    return {"auto": {"ok": bool(auto.get("ok")), "rows": rows}, "heard": asr_cross(final), "sheet": rel(W, sh)}
+    r = QG.gate(v, W / "doc" / v, W / v, mode="full" if d.get("mode", "full") == "full" else "fast", log=lambda s: print(s, file=sys.stderr))
+    rows = [{k: x.get(k) for k in ("group", "what", "ok", "value")} | ({"ref": True} if x.get("ref") else {}) for x in r.get("rows") or []]
+    ok = bool(r.get("ok"))
+    if os.environ.get("QG_FORCE_FAIL") == "1":
+        rows.append({"group": "표식", "what": "QG_FORCE_FAIL(사보타주)", "ok": False, "value": "환경변수로 강제 ×"})
+        ok = False
+    E = Path(r.get("eye_pack_dir") or (W / v / "eye"))
+    eye_files = [rel(W, E / n) for n in EYE_FILES if (E / n).exists()]
+    eye_texts = {n: (E / n).read_text(encoding="utf-8")[:6000] for n in EYE_TEXTS if (E / n).exists()}
+    return {"auto": {"ok": ok, "rows": rows, "report": str(r.get("report")), "n_bad": sum(1 for x in rows if x.get("ok") is False),
+                     "n_unmeasured": sum(1 for x in rows if x.get("ok") is None and not x.get("ref"))},
+            "eye_files": eye_files, "eye_texts": eye_texts, "upgrade": bool(STY.load(v).get("base")),
+            "sheet": eye_files[0] if eye_files else None}
+
+
+# ── 해외원본형(관제 263 08) ────────────────────────────────────────────────
+OF_FRAMES = (0.15, 0.35, 0.55, 0.75)     # 렌즈 장면 = 원본찾기와 같은 자리(origin_find.FRAMES)
+OF_SHEET_N = 24                         # 판정 시트 한 장 칸 수(8열 — origin_find.judge_same 과 같은 꼴)
+
+
+def _of_seed_frames(W: Path) -> list[Path]:
+    from tools.calcopy.origin_find import FRAMES
+    src = W / "bench" / "bench.mp4"
+    out = []
+    if not src.exists():
+        return out
+    du = dims(src)["dur"]
+    for f in FRAMES:
+        p = W / "origin_foreign" / f"seed_{int(f * 100)}.jpg"
+        if not p.exists():
+            frame(src, du * f, p)
+        if p.exists():
+            out.append(p)
+    return out
+
+
+def _of_thumb(W: Path, c: dict):
+    """후보 썸네일(PIL) — 캐시 모드 = 받아 둔 영상 30% 장면, 아니면 썸네일 주소. 못 받으면 None(미판정 — '다르다'로 단정하지 않는다)."""
+    import io
+    import urllib.request
+    from PIL import Image
+    vid = str(c.get("id") or "")
+    if CACHE:
+        for sub in ("yt", "material", "origin_foreign"):
+            for ext in (".jpg", ".mp4"):
+                f = cache_path(sub, vid + ext)
+                if f.exists():
+                    if ext == ".jpg":
+                        return Image.open(f).convert("RGB")
+                    p = W / "origin_foreign" / f"thumb_{vid}.jpg"
+                    if not p.exists():
+                        frame(f, dims(f)["dur"] * 0.3, p)
+                    return Image.open(p).convert("RGB") if p.exists() else None
+        return None
+    u = c.get("thumb") or (f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg" if c.get("platform") == "yt" else None)
+    if not u:
+        return None
+    try:
+        return Image.open(io.BytesIO(urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0"}), timeout=20).read())).convert("RGB")
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _of_sheets(W: Path, seeds: list[Path], cands: list[dict]) -> list[str]:
+    """맨 위 줄 S1~S4 = 소재 장면, 아래 파란 번호 칸 = 후보 썸네일(번호 = 후보 n, 시트가 여러 장이어도 이어서) — 판정은 회원 Claude(flow)."""
+    from PIL import Image, ImageDraw, ImageFont
+    try:
+        font = ImageFont.truetype("C:/Windows/Fonts/malgunbd.ttf", 26)
+    except OSError:
+        font = ImageFont.load_default()
+    pool = [(c, im) for c in cands for im in [_of_thumb(W, c)] if im is not None]
+    for c in cands:
+        c["thumb_ok"] = any(x is c for x, _ in pool)
+    out = []
+    cw, chh, cols = 200, 300, 8
+    for s0 in range(0, len(pool), OF_SHEET_N):
+        part = pool[s0:s0 + OF_SHEET_N]
+        rows_n = 1 + (len(part) + cols - 1) // cols
+        sh = Image.new("RGB", (cw * cols, (chh + 34) * rows_n), "white")
+        dr = ImageDraw.Draw(sh)
+        for k, p in enumerate(seeds[:4]):
+            im = Image.open(p).convert("RGB"); im.thumbnail((cw, chh)); sh.paste(im, (k * cw, 34)); dr.text((k * cw + 4, 2), f"S{k + 1}", fill="red", font=font)
+        for j, (c, im) in enumerate(part):
+            x, y = (j % cols) * cw, (1 + j // cols) * (chh + 34)
+            im = im.copy(); im.thumbnail((cw, chh)); sh.paste(im, (x, y + 34)); dr.text((x + 4, y + 2), str(c["n"]), fill="blue", font=font)
+        p = W / "origin_foreign" / f"judge_{s0 // OF_SHEET_N}.jpg"
+        p.parent.mkdir(parents=True, exist_ok=True)
+        sh.save(p, quality=82)
+        out.append(rel(W, p))
+    return out
+
+
+def c_origin_foreign(W, d):
+    """해외 원본 후보 + 판정 시트. mode lens = 소재(한국 재편집) 장면 4장 → 구글 렌즈 → 영상 링크 → 메타(origin_find 와 같은 함수) /
+    mode peers = 영어 검색어로 같은 제품 다른 해외 반응 쇼츠. 같은 영상·같은 제품 판정은 하지 않는다(서버 질문 — 회원 Claude 눈).
+    캐시 모드: lens = <캐시>/origin_foreign/<소재 id>.json {cands:[…]} · peers = 검색 캐시(search/<검색어>.json 또는 _default) — 유튜브·구글 0회."""
+    from tools.calcopy import origin_find as OF
+    mode = d.get("mode") or "lens"
+    seeds = _of_seed_frames(W)
+    skip = set(d.get("skip") or [])
+    raw: list[dict] = []
+    if mode == "lens":
+        if CACHE:
+            f = cache_path("origin_foreign", f"{d.get('bench_id')}.json")
+            if not f.exists():
+                _need("origin_foreign", [d.get("bench_id")])
+                return {"mode": mode, "error": f"cache_miss: 렌즈 결과 {d.get('bench_id')}", "cands": [], "sheets": []}
+            raw = jload(f).get("cands") or []
+        else:
+            if not seeds:
+                return {"mode": mode, "error": "소재 장면을 못 뽑았다", "cands": [], "sheets": []}
+            from tools.calcopy import lens as LN
+            found: dict = {}
+            with LN.lens_page() as pg:
+                for im in seeds:
+                    try:
+                        rows = LN.lens_rows(pg, str(im), skip=LN.SKIP_VIDEO)
+                    except Exception as e:  # noqa: BLE001 — 한 장 실패는 남기고 나머지
+                        sys.stderr.write(f"[origin_foreign] 렌즈 실패 {im.name}: {type(e).__name__} {str(e)[:80]}\n"); rows = []
+                    for r in rows:
+                        k = OF.vkey(r["href"])
+                        if k and k[1] != d.get("bench_id"):
+                            found.setdefault(k, {"href": r["href"], "text": r["text"], "hits": 0})["hits"] += 1
+            for (pf, vid), x in list(found.items())[:40]:
+                m = OF.meta(OF.url_of(pf, vid, x["href"]))
+                raw.append({"platform": pf, "id": vid, "url": OF.url_of(pf, vid, x["href"]), "lens_text": x["text"], "lens_hits": x["hits"], **m})
+    else:
+        for e in _search(d.get("queries") or [], int(d.get("n") or 12)):
+            raw.append({"platform": "yt", "id": e.get("id"), "url": f"https://www.youtube.com/shorts/{e.get('id')}", **{k: e.get(k) for k in ("title", "channel", "channel_id", "dur", "views", "date")}})
+    cands, seen = [], set()
+    for c in raw:
+        if not c.get("id") or c["id"] in skip or c["id"] in seen or c.get("why"):
+            continue
+        seen.add(c["id"])
+        c["korean"] = OF.is_korean(f"{c.get('title') or ''} {c.get('lens_text') or ''}", c.get("channel") or "")   # 주인 = origin_find.is_korean
+        c["n"] = len(cands) + 1
+        cands.append(c)
+    sheets = _of_sheets(W, seeds, cands) if cands else []
+    jsave(W / "origin_foreign" / f"cands_{mode}.json", cands)
+    return {"mode": mode, "cands": [{k: c.get(k) for k in ("n", "platform", "id", "url", "title", "channel", "channel_id", "date", "dur", "views", "korean", "thumb_ok")} for c in cands],
+            "sheets": sheets, "seed": [rel(W, p) for p in seeds]}
+
+
+def c_clean_text(W, d):
+    """박힌 글자 지우기 — 회원 VMake 키(VMAKE_API_KEY)가 있고 SHORTEM_NO_PAID 가 아니면 vmake_clean.member_clean, 아니면 **부르지 않고** 흐림으로 대체.
+    흐림 칸은 서버(flow → rules.text_blur_all)가 재료.blur 에 채운다. 호출 수·이유는 <작업>/src/vmake_log.json 에도(돈 든 호출을 셀 수 있게)."""
+    from tools.calcopy import vmake_clean as VC
+    files = [W / f for f in d.get("files") or [] if (W / f).exists()]
+    key = VC.member_key()
+    if PAID_OFF or not key or not files:
+        why = "SHORTEM_NO_PAID — 돈 드는 호출 막음" if PAID_OFF else ("회원 VMake 키 없음 — 흐림으로 대체" if files else "지울 파일 없음")
+        for f in files:
+            VC.log_entry(f.parent, {"file": f.name, "mode": "blur", "ok": True, "calls": 0, "why": why})
+        sys.stderr.write(f"[clean_text] VMake 호출 0회 — {why} ({[f.name for f in files]})\n")
+        return {"mode": "blur", "cleaned": [], "calls": 0, "why": why}
+    r = VC.member_clean(files, key, log=lambda s: print(s, file=sys.stderr))
+    return {"mode": "vmake", "cleaned": r["cleaned"], "calls": r["calls"], "why": "; ".join(f"{k}: {v}" for k, v in r["fail"].items())[:300]}
+
+
+def c_materials_draft(W, d):
+    """재료 초안(ititemlog_make.draft — 원본별 시간순·재사용 0·확대 1.0·박힌 글자 표시) → <doc>/<판>/재료_초안.json + 본문."""
+    from tools.calcopy import ititemlog_make as IM
+    from tools.calcopy.hybrid import styles as STY
+    v = d["version"]
+    _, _, ww, wh = STY.load(v)["frame"]["window"]
+    files = [dims(W / "src" / n) for n in d.get("files") or [] if (W / "src" / n).exists()]
+    res = IM.draft(files, d.get("shots") or {}, ww / wh, d.get("cleaned") or [])
+    jsave(W / "doc" / v / "재료_초안.json", res)
+    return {"draft": res, "file": f"doc/{v}/재료_초안.json"}
 
 
 def c_finish(W, d):
@@ -1113,7 +1323,8 @@ def c_finish(W, d):
 CMDS = {"env": c_env, "bench": c_bench, "search": c_search, "peer_sheet": c_peer_sheet, "channel_list": c_channel_list, "origin_subs": c_origin_subs,
         "origin_get": c_origin_get, "channel_find": c_channel_find, "origin_probe": c_origin_probe, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "coupang_reviews": c_coupang_reviews, "cand_sheet": c_cand_sheet, "naver": c_naver, "origin_words": c_origin_words,
         "screen": c_screen, "download": c_download, "product_stills": c_product_stills, "orig_heard": c_orig_heard, "asr_spans": c_asr_spans, "shot_sheets": c_shot_sheets, "mat_sheets": c_mat_sheets,
-        "write_doc": c_write_doc, "plan": c_plan, "render": c_render, "check": c_check, "finish": c_finish}
+        "write_doc": c_write_doc, "plan": c_plan, "render": c_render, "check": c_check, "finish": c_finish,
+        "origin_foreign": c_origin_foreign, "clean_text": c_clean_text, "materials_draft": c_materials_draft}
 
 
 def run_do(W: Path, do: list[dict], log=print) -> dict:
