@@ -1,0 +1,147 @@
+{
+ "name": "숏비타민c판",
+ "renderer": "bench",
+ "_note": "숏비타민c(shortvitc) 칼카피 1차 판 — 틀만(지시서 07 '숏비타민c판(틀만)'): 해외원본 자막+배경음. 근거 channel/shortvitc/{역분석_2026-10-03.md, bench_2026-10-03.json}. 나레 = 첫 한 줄뿐(Whisper 4편) · 줄판독 0편(06)",
+ "bench": {
+  "ko": "숏비타민c",
+  "channel": "shortvitc",
+  "analysis": "channel/shortvitc/역분석_2026-10-03.md",
+  "line_reads": "channel/shortvitc/줄판독",
+  "design": "channel/shortvitc/bench_2026-10-03.json"
+ },
+ "voice": {
+  "name": "유라",
+  "voice_id": "tc_61130d6cf89dd58a4c13295d",
+  "candidates": [
+   "박창수"
+  ],
+  "why": "나레 첫 한 줄뿐 — 목소리 미측정(TTS 여부 미확인, 역분석 §4) → 손 상수"
+ },
+ "cps_target": 7.0,
+ "_why_cps_target": "손 상수 — 훅 한 줄만 말함(역분석 §4)",
+ "bgm": {
+  "id": "sweets",
+  "db_below_voice": 12.0,
+  "duck_orig_db": -6.0,
+  "duck_narr_db": 0.0,
+  "fade_out": 0.4,
+  "candidates": [],
+  "why": "손 상수 — 원본 소리+BGM, 곡·dB 미측정"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 통일(사장님 10-18)"
+ },
+ "length": {
+  "min": 12.0,
+  "max": 36.4,
+  "why": "역분석 §2 길이 중앙 15.6초(11.97~36.4)"
+ },
+ "timing": {
+  "gap": 0.0,
+  "tail": 0.5,
+  "why": "손 상수 — 나레 한 줄뿐"
+ },
+ "frame": {
+  "kind": "window",
+  "bg": [
+   0,
+   0,
+   0
+  ],
+  "window": [
+   0,
+   440,
+   1080,
+   1480
+  ],
+  "title": [
+   {
+    "font": "BlackHanSans.ttf",
+    "px": 110,
+    "center": 220,
+    "color": "#FFFFFF",
+    "max_w": 1000
+   },
+   {
+    "font": "BlackHanSans.ttf",
+    "px": 110,
+    "center": 340,
+    "color": "#7FD3FF",
+    "max_w": 1000
+   }
+  ],
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "why": "역분석_2026-10-03.md §2(channelkit.bench.run, 최근 11편): 캔버스 검정 · 영상창 x0 y440 1080×1480(11/11) · 제목 띠 y0~440 2줄 고정 1줄 흰·2줄 하늘색 · 로고 없음 — 제목 글꼴·px·가운데 y·하늘색 hex 는 미측정 → 손 상수(BlackHanSans 110 · 220/340 · #7FD3FF)",
+  "_pending": {
+   "title_measure": "제목 글꼴·크기·y·하늘색 hex 미측정 → 06(줄판독 6편·px.py) 뒤 교체"
+  }
+ },
+ "caption": {
+  "pack": "clean",
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 10.0,
+  "chunk_max_chars": 14,
+  "band": [
+   1500,
+   1700
+  ],
+  "why": "자막 = 창 안(상자·색 글씨, 역분석 §5 — bench 측정이 창 밖 띠를 가정해 값 못 씀) · band·chunk 손 상수",
+  "_pending": {
+   "pack": "숏비타민c 창 안 자막(훅 흰+빨강 핵심어·해설 검정 상자) 팩 없음 → 관제 235",
+   "measure": "자막 글꼴·크기·y 분포 미측정(역분석 §5) → 06"
+  }
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "cut": 1.0
+   },
+   "ms": 0,
+   "why": "줌 0%/s · 샷 중앙 1.9초(역분석 §2) — 전환 효과 미측정, 컷"
+  },
+  "why": "줌 없음(0%/s, 역분석 §2)"
+ },
+ "sfx_files": {
+  "gain_db": -8,
+  "why": "효과음 미측정 — gain 손 상수"
+ },
+ "placement": {
+  "rules": {
+   "meme": {
+    "rate": 0.0,
+    "why": "짤 미측정"
+   }
+  },
+  "counted": {}
+ },
+ "_pending": {
+  "frame_only": "틀만 판(지시서 07) — 대본·소리·배치는 06 줄판독 뒤",
+  "no_narration": "나레 첫 한 줄 뒤 원본 소리만 — render_bench 나레 전제 → 02"
+ },
+ "script": {
+  "brief": [
+   "훅 첫 줄 '~다는데..'(나레와 같은 글) → 원본 소리 + 창 안 해설 상자 '~하는 중' → 전환점 '대참사가 일어남'(역분석 §4)"
+  ],
+  "audit": [
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 12.0,
+    "max": 36.4,
+    "why": "역분석 §2 길이 중앙 15.6초(11.97~36.4)"
+   }
+  ]
+ }
+}

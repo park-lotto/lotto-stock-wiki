@@ -1,0 +1,149 @@
+{
+ "name": "뜨거운사람들판",
+ "renderer": "bench",
+ "_note": "뜨거운사람들(hotpeople) 칼카피 1차 판 — 인물형>인물썰형(흰 바탕 틀 A). 근거 channel/hotpeople/{칼카피_기준표_1안_2026-09-27.md, 실측_2026-09-27/, 역분석_2026-09-25.md}. 줄판독 0편(06) · 손 스크립트 없음(프리셋.json hand_scripts []) — 틀·자막 숫자만 옮김",
+ "bench": {
+  "ko": "뜨거운사람들",
+  "channel": "hotpeople",
+  "analysis": "channel/hotpeople/칼카피_기준표_1안_2026-09-27.md",
+  "line_reads": "channel/hotpeople/줄판독",
+  "design": "channel/hotpeople/실측_2026-09-27"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f",
+  "candidates": [
+   "지훈"
+  ],
+  "why": "손 상수 — 벤치 목소리 미측정(실측 audio.json 성별 확인 필요, 06)"
+ },
+ "cps_target": 8.0,
+ "_why_cps_target": "손 상수 — 나레 자/초 미측정(실측 rhythm.json 확인 필요, 06)",
+ "bgm": {
+  "id": "sweets",
+  "db_below_voice": 14.0,
+  "duck_orig_db": -6.0,
+  "duck_narr_db": 0.0,
+  "fade_out": 0.4,
+  "candidates": [],
+  "why": "손 상수 — 실측 bgm.json 곡·dB 옮김은 06 뒤"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 통일(사장님 10-18)"
+ },
+ "length": {
+  "min": 20.0,
+  "max": 40.0,
+  "why": "손 상수 — 길이 분포 미기입(실측 channel_56편.json 에서 06 이 채움)"
+ },
+ "timing": {
+  "gap": 0.1,
+  "tail": 0.3,
+  "why": "손 상수 — 쉼 미측정"
+ },
+ "frame": {
+  "kind": "window",
+  "bg": [
+   248,
+   248,
+   248
+  ],
+  "window": [
+   0,
+   483,
+   1080,
+   790
+  ],
+  "title": [
+   {
+    "font": "BMJUA.ttf",
+    "px": 96,
+    "center": 241.5,
+    "color": "#000000",
+    "max_w": 1000
+   },
+   {
+    "font": "BMJUA.ttf",
+    "px": 96,
+    "center": 360.5,
+    "color": "#000000",
+    "max_w": 1000
+   }
+  ],
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "why": "칼카피_기준표_1안_2026-09-27.md(실측_2026-09-27 rows/color/glyph, 10편): 바탕 (248,248,248) 3편 · 틀 A 흰 바탕 9/10 · 영상 칸 x0~1080 y483~1273(6편, ±5) · 헤드라인 2줄 띠 윗줄 208~275 시작/아랫줄 337~384 시작(전체 205~471) → 가운데 241.5/360.5 · 글꼴 미동정 — 기준표 spec 주아 96 임시(원본보다 굵어 보임, 09-25)",
+  "_pending": {
+   "logo": "로고 띠 y91~195·x≈48~52 아이콘 지름 92 + 채널명 — 우리 브랜드 미정(브랜드.json 에 hotpeople 없음)",
+   "title_color": "헤드라인 색 미기입(기준표 H 색 칸 확인 필요)",
+   "frame_B": "틀 B 검정(7PFW 1/10, 슬롯 y270~1920) — 1차 판은 A 만"
+  }
+ },
+ "caption": {
+  "pack": "clean",
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 10.0,
+  "chunk_max_chars": 14,
+  "band": [
+   1285,
+   1458
+  ],
+  "why": "자막 첫 줄 잉크 시작 1285(1276~1340, N=232 — 67%) · 끝 ≤1458 · 주아 71px(획 8~9px, 줄높이 58.5) · 외곽·그림자 0/54 · 형광펜 띠 ≈(248,232,152) 잉크 아래 15px · 행간 80 · 줄 폭 중앙 517(최대 940) · chunk 14·typing 손 상수",
+  "_pending": {
+   "pack": "뜨거운사람들 자막 팩 없음 → 관제 235 요청: BMJUA 71 검정 외곽 0 + 옅은 노랑 형광펜 띠(248,232,152) 둥근, place y≈67%, 2줄 행간 80. 그동안 clean(검정·흰 띠 근사)"
+  }
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "cut": 1.0
+   },
+   "ms": 0,
+   "why": "전환 미측정 — 1차 컷"
+  },
+  "why": "push 손 상수"
+ },
+ "sfx_files": {
+  "gain_db": -8,
+  "why": "효과음 미측정 — gain 손 상수"
+ },
+ "placement": {
+  "rules": {
+   "meme": {
+    "rate": 0.0,
+    "why": "짤 미측정"
+   }
+  },
+  "counted": {}
+ },
+ "_pending": {
+  "line_reads": "줄판독 0편 → 06-hotpeople 뒤 counted·rules·목소리·길이 교체 — L1 미달",
+  "hand_constants": "voice·cps·bgm·length·timing 은 근거 없는 손 상수(why 에 표시)"
+ },
+ "script": {
+  "brief": [
+   "마무리 꼴: 걸린 시간 'N년' 2 · '~창업자 '이름' 이야기임' 3 · 인용 펀치 2(기준표 W.ending_phrase)",
+   "실존 유명인 9/9 · 제목 = 헤드라인 + 이름(9/9)"
+  ],
+  "audit": [
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 20.0,
+    "max": 40.0,
+    "why": "손 상수 — 길이 분포 미기입(실측 channel_56편.json 에서 06 이 채움)"
+   }
+  ]
+ }
+}
