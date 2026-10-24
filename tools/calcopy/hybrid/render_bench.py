@@ -379,7 +379,7 @@ def snap_ss(src: Path, ss: float, dur: float, reach: float = 0.4) -> float:
 
 def count_frames(p: Path) -> int:
     return int(run(["ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0", "-show_entries", "stream=nb_read_frames",
-                    "-of", "csv=p=0", p]).stdout.strip() or 0)
+                    "-of", "csv=p=0", p]).stdout.strip().split(",")[0] or 0)   # ICC side_data 면 '78,' (98 #73)
 
 
 def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, push: float = 0.0, move=None, blur=None):
