@@ -1,0 +1,1420 @@
+{
+ "id": "iS0la2aQyl8",
+ "dur": 26.03,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "현백 VIP들은",
+   "colors": [
+    {
+     "word": "현백 VIP들은",
+     "hex": "#FFFFFF"
+    }
+   ]
+  },
+  {
+   "text": "식품관에서 뭘살까?",
+   "colors": [
+    {
+     "word": "식품관에서",
+     "hex": "#FAEB75"
+    },
+    {
+     "word": "뭘살까?",
+     "hex": "#F375CB"
+    }
+   ]
+  }
+ ],
+ "source_label": "출처: 고은언니 한고은",
+ "layout": {
+  "window": [
+   0,
+   419,
+   1080,
+   1082
+  ],
+  "caption_band": [
+   1163,
+   1246
+  ],
+  "title_y": [
+   [
+    175,
+    282
+   ],
+   [
+    304,
+    400
+   ]
+  ],
+  "bg_hex": "#000000",
+  "source_y": [
+   1518,
+   1551
+  ],
+  "logo_y": [
+   1748,
+   1830
+  ],
+  "watermark": null,
+  "source_hex": "#7D7D7D",
+  "credit_text": "출처: 고은언니 한고은",
+  "logo_text": "anna pick(회색 2줄)",
+  "note": "검정 바탕 + 위 2줄 제목(1줄 흰 “ ”, 2줄 노랑 인물+분홍 제품) + 정사각 창 y419~1501 + 창 안 자막 1줄(자리는 편마다·줄마다 다름) + 창 아래 회색 '출처 : <원본 채널>' + 맨 아래 회색 'anna pick'"
+ },
+ "lines": [
+  {
+   "t0": 0.133,
+   "t1": 1.3,
+   "speaker": "원음:한고은",
+   "text": "잠깐만 잠깐만!",
+   "layer": "안나픽",
+   "role": "훅",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1158,
+    1237
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "빨간 경광등 그림(아래 가운데)",
+     "x": 540,
+     "y": 1320,
+     "w": 140,
+     "t_in": 0.0,
+     "t_out": 1.3,
+     "anim": "깜빡임"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "카트 미는 한고은(식품관) + 빨간 경광등",
+   "fit": 4,
+   "cut_at": [
+    1.167
+   ],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 1.3,
+   "t1": 1.733,
+   "speaker": "원음:한고은",
+   "text": "헤엑-!",
+   "layer": "안나픽",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "빨강 굵은 기울임",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1145,
+    1253
+   ],
+   "fill_hex": "#E1021E",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "헤엑-!",
+     "hex": "#E1021E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [
+    {
+     "what": "'(!!!)' 글자 그림(머리 위)",
+     "x": 270,
+     "y": 530,
+     "w": 220,
+     "t_in": 1.3,
+     "t_out": 1.733,
+     "anim": "컷과 함께 나타남"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "고개 숙인 한고은 + 머리 위 '(!!!)'",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 1.733,
+   "t1": 2.333,
+   "speaker": "원음:한고은",
+   "text": "나 오늘 한",
+   "layer": "안나픽",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1171,
+    1244
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "한고은 얼굴(식품관)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.333,
+   "t1": 3.433,
+   "speaker": "원음:한고은",
+   "text": "2~300만원 쓸거 같아!",
+   "layer": "안나픽",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "빨강 굵은 기울임",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1159,
+    1255
+   ],
+   "fill_hex": "#E1021E",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "2~300만원 쓸거 같아!",
+     "hex": "#E1021E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "한고은 얼굴(놀란 표정)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.433,
+   "t1": 3.8,
+   "speaker": "원음:한고은",
+   "text": "쫓겨나면",
+   "layer": "안나픽",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "손글씨 가는체(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1088,
+    1259
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 2px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "한고은과 남자(보라 옷)",
+   "fit": 3,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨 가는체(예능 손글씨 계열, 이름 미확정)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "화자 = 받아쓰기·입 모양으로 한고은 추정(남자 목소리 확인 못 함)"
+  },
+  {
+   "t0": 3.8,
+   "t1": 4.2,
+   "speaker": "원음:한고은",
+   "text": "어떡하지?",
+   "layer": "안나픽",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "손글씨 가는체(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1158,
+    1264
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 2px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "한고은과 남자",
+   "fit": 3,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨 가는체(예능 손글씨 계열, 이름 미확정)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.2,
+   "t1": 5.4,
+   "speaker": "원음:한고은",
+   "text": "큰일 났다 큰일 났다",
+   "layer": "안나픽",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "굵은 흰(물결로 흔들림)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1147,
+    1273
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "노랑 반짝이 ✦ 여러 개(글자 둘레)",
+     "x": 540,
+     "y": 1180,
+     "w": 600,
+     "t_in": 4.2,
+     "t_out": 5.3,
+     "anim": "깜빡이며 둘러쌈"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "고개 숙인 한고은 + 반짝이",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.633,
+   "t1": 6.6,
+   "speaker": "원음:한고은",
+   "text": "나 이거 너무 좋아하거든요",
+   "layer": "안나픽",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1162,
+    1246
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "좋아하거든요",
+     "hex": "#EE78C5",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [
+    {
+     "what": "분홍 하트 여러 개(터지듯 퍼짐)",
+     "x": 540,
+     "y": 1250,
+     "w": 600,
+     "t_in": 5.4,
+     "t_out": 5.8,
+     "anim": "가운데서 터져 퍼짐"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "한고은 상반신 + 분홍 하트",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 6.733,
+   "t1": 7.567,
+   "speaker": "나레",
+   "text": "요리고수 한고은이",
+   "layer": "안나픽",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "노랑 손글씨(창 가운데 높이)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    830,
+    875
+   ],
+   "fill_hex": "#F5FF50",
+   "outline": "검정 약 2px(눈)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "요리고수 한고은이",
+     "hex": "#F5FF50",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [
+    {
+     "what": "손글씨 '+또 담고'(장바구니 쪽)",
+     "x": 540,
+     "y": 1150,
+     "w": 260,
+     "t_in": 7.033,
+     "t_out": 7.6,
+     "anim": "컷과 함께 나타남"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "채소 진열대 앞 한고은",
+   "fit": 5,
+   "cut_at": [
+    7.033
+   ],
+   "font": {
+    "name": "손글씨 가는체(예능 손글씨 계열, 이름 미확정)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "노랑은 가는 손글씨라 px 로 못 잼(채널 노랑 #F5FF50 으로 적음, 눈) · 나레 자막만 창 가운데 높이(y≈830~875) — 본 자막 자리와 다름. 시각은 capseg 790~910 띠 잉크로(±0.07)"
+  },
+  {
+   "t0": 7.567,
+   "t1": 8.867,
+   "speaker": "나레",
+   "text": "꼭 사는 3가지가 있다는데요",
+   "layer": "안나픽",
+   "role": "다리",
+   "enter": "typing",
+   "enter_ms": 200,
+   "variant": "노랑 손글씨(창 가운데 높이)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    830,
+    875
+   ],
+   "fill_hex": "#F5FF50",
+   "outline": "검정 약 2px(눈)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "꼭 사는 3가지가 있다는데요",
+     "hex": "#F5FF50",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [
+    {
+     "what": "손글씨 '+또또 담고'",
+     "x": 540,
+     "y": 1200,
+     "w": 300,
+     "t_in": 8.0,
+     "t_out": 8.6,
+     "anim": "컷과 함께 나타남"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장 보는 한고은(와인 진열대)",
+   "fit": 5,
+   "cut_at": [
+    7.933
+   ],
+   "font": {
+    "name": "손글씨 가는체(예능 손글씨 계열, 이름 미확정)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 9.033,
+   "t1": 10.3,
+   "speaker": "원음:한고은",
+   "text": "매콤한 소세지인데",
+   "layer": "안나픽",
+   "role": "공개",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "손글씨 + 분홍 낱말",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1162,
+    1252
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 2px(눈)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "매콤한",
+     "hex": "#EE5D7F",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    },
+    {
+     "word": "소세지",
+     "hex": "#EE5D7F",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "소세지 봉지를 든 한고은",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨 가는체(예능 손글씨 계열, 이름 미확정)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 10.333,
+   "t1": 11.1,
+   "speaker": "원음:한고은",
+   "text": "파스타 할 때 넣으면",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1171,
+    1245
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "소세지 봉지 든 한고은",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.267,
+   "t1": 11.8,
+   "speaker": "원음:한고은",
+   "text": "되게 맛있거든요",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "fade(빛 번짐)",
+   "enter_ms": 70,
+   "variant": "노랑 글자",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1171,
+    1238
+   ],
+   "fill_hex": "#F5FF50",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "되게 맛있거든요",
+     "hex": "#F5FF50",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "소세지 봉지 근접",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.8,
+   "t1": 12.767,
+   "speaker": "원음:한고은",
+   "text": "파스타 면은 저는",
+   "layer": "안나픽",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1171,
+    1238
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "목록 글자 '2.파스타면'(왼쪽 위, 끝까지 남음 · 16.5부터 '3.피클링스파이스' 추가)",
+     "x": 160,
+     "y": 470,
+     "w": 260,
+     "t_in": 12.3,
+     "t_out": 25.967,
+     "anim": "항목이 하나씩 붙음"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "진열대 앞 한고은 + 왼쪽 위 목록 '2.파스타면'",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 12.767,
+   "t1": 13.7,
+   "speaker": "원음:한고은",
+   "text": "리구오리 좋아해요",
+   "layer": "안나픽",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1171,
+    1243
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "리구오리",
+     "hex": "#F5B5AB",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "진열대 앞 한고은",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 13.7,
+   "t1": 14.533,
+   "speaker": "원음:한고은",
+   "text": "얘네들이 표면이",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1171,
+    1248
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "흰 쪽지 카드 '(고은언니 꿀팁)' 설명 글(오른쪽 위)",
+     "x": 820,
+     "y": 600,
+     "w": 400,
+     "t_in": 13.9,
+     "t_out": 16.467,
+     "anim": "컷과 함께 나타남"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "리구오리 스파게티 봉지 근접 + 꿀팁 쪽지",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 14.533,
+   "t1": 15.333,
+   "speaker": "원음:한고은",
+   "text": "되게 거칠어서",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1171,
+    1246
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "스파게티 봉지 근접",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 15.567,
+   "t1": 16.467,
+   "speaker": "원음:한고은",
+   "text": "소스를 많이 안아요",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1171,
+    1238
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "스파게티 봉지 근접",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 16.467,
+   "t1": 17.367,
+   "speaker": "원음:한고은",
+   "text": "이탈리아 레스토랑 가면",
+   "layer": "안나픽",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1171,
+    1246
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "한고은 얼굴(손짓)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 17.367,
+   "t1": 17.967,
+   "speaker": "원음:한고은",
+   "text": "피클 나오잖아요",
+   "layer": "안나픽",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1171,
+    1238
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "피클 통을 든 한고은",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 17.967,
+   "t1": 18.933,
+   "speaker": "원음:한고은",
+   "text": "여긴 피클이 맛있어!",
+   "layer": "안나픽",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1171,
+    1238
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "피클 통 든 한고은",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 18.933,
+   "t1": 19.7,
+   "speaker": "원음:한고은",
+   "text": "우리 이런 얘기도 하잖아요",
+   "layer": "안나픽",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1171,
+    1238
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "피클 통 든 한고은",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 19.733,
+   "t1": 20.967,
+   "speaker": "원음:한고은",
+   "text": "피클링 스파이스라고 나와요",
+   "layer": "안나픽",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1166,
+    1245
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "피클링 스파이스",
+     "hex": "#1FFF13",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "한고은 얼굴(식품관)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "capseg 이 19.7~20.0 을 못 잡음 — 0.2초 띠 19.8 에 이미 보여 컷(19.7) 다음 프레임으로 적음(눈)"
+  },
+  {
+   "t0": 20.967,
+   "t1": 21.733,
+   "speaker": "원음:한고은",
+   "text": "뜨거운 물하고",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1171,
+    1238
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "뜨거운 물",
+     "hex": "#F37CAA",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [
+    {
+     "what": "글자 딱지 '영상속 제품은 여기 클릭👇'(오른쪽 아래, 끝까지)",
+     "x": 760,
+     "y": 1440,
+     "w": 260,
+     "t_in": 20.967,
+     "t_out": 25.967,
+     "anim": "컷과 함께 나타남"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "향신료 병을 든 한고은 + '영상속 제품은 여기 클릭' 딱지",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 21.9,
+   "t1": 23.1,
+   "speaker": "원음:한고은",
+   "text": "식초하고 반반하시고",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "fade",
+   "enter_ms": 70,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1171,
+    1244
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "향신료 병 든 손",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 23.167,
+   "t1": 24.6,
+   "speaker": "원음:한고은",
+   "text": "거기다가 소금간하시고",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "fade",
+   "enter_ms": 70,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1171,
+    1244
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "소금간",
+     "hex": "#B6DCEE",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "향신료 병 든 한고은",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 24.6,
+   "t1": 25.533,
+   "speaker": "원음:한고은",
+   "text": "이거 넣으면 돼요",
+   "layer": "안나픽",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1167,
+    1251
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "이거",
+     "hex": "#F5FF50",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "향신료 병 든 한고은",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 25.533,
+   "t1": 25.967,
+   "speaker": "원음:한고은",
+   "text": "그럼 끝이야!",
+   "layer": "안나픽",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1152,
+    1256
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "끝",
+     "hex": "#1FFF13",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "향신료 병 든 한고은",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  }
+ ],
+ "no_caption": [
+  [
+   0.0,
+   0.133,
+   "첫 4프레임"
+  ],
+  [
+   5.4,
+   5.633,
+   "하트 그림만"
+  ],
+  [
+   6.6,
+   6.733,
+   "컷 직후"
+  ],
+  [
+   8.867,
+   9.033,
+   "컷 직후"
+  ],
+  [
+   11.1,
+   11.267,
+   "덩어리 사이"
+  ],
+  [
+   15.333,
+   15.567,
+   "덩어리 사이"
+  ],
+  [
+   19.7,
+   19.733,
+   "1프레임"
+  ],
+  [
+   21.733,
+   21.9,
+   "덩어리 사이"
+  ]
+ ],
+ "beats": "원음 훅(0.13~5.4 '잠깐만 잠깐만!·헤엑-!·나 오늘 한 2~300만원 쓸거 같아!·쫓겨나면 어떡하지?·큰일 났다' + 경광등·(!!!)·반짝이) → 원음 고조('나 이거 너무 좋아하거든요' + 하트) → 나레 다리(6.73~8.87 '요리고수 한고은이 꼭 사는 3가지가 있다는데요', 노랑 손글씨·창 가운데 + '+또 담고') → 항목 ① 소세지(9.03~11.8) → ② 파스타면 리구오리(11.8~16.47, 목록 글자·꿀팁 쪽지) → ③ 피클링 스파이스(16.47~25.97, 만드는 법) → 원음 끝('이거 넣으면 돼요·그럼 끝이야!' + '영상속 제품은 여기 클릭👇')",
+ "narr_share": "나레 줄 2/28, 나레 2.1초/26.03초",
+ "notes": [
+  "3가지 목록형 — 왼쪽 위 목록 글자가 항목마다 붙는다(2.파스타면 → 3.피클링스파이스).",
+  "그림·딱지 9개(경광등·(!!!)·반짝이·하트·+또 담고·+또또 담고·목록·꿀팁 쪽지·'영상속 제품은 여기 클릭') — 6편 중 가장 많음.",
+  "'영상속 제품은 여기 클릭👇' = 구매 연결 유도(설명란/고정댓글)."
+ ],
+ "name_evidence": [
+  "나레 자막 '요리고수 한고은이'",
+  "출처 줄 '고은언니 한고은'"
+ ],
+ "frame0": {
+  "what": "카트 미는 한고은 전신(백화점 식품관) + 아래 빨간 경광등 그림 — 자막 0.13초부터",
+  "face_frac": "약 0.03(창 대비 얼굴, 눈)",
+  "text": "현백 VIP들은 / 식품관에서 뭘살까?(제목)"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈+픽셀: capseg 30fps·cutdet --v2·px·rangesheet 0.2초/1프레임 등장 시트) 2026-10-25 (관제 263 지시서 06)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr"
+}
