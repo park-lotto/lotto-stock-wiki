@@ -320,7 +320,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
         jsave(cpath, store)
 
     def row(group, what, fn, src):
-        return row(group, what, fn, src, timer)
+        return _row(rows, group, what, fn, src, timer)
 
     def dur():
         if "d" not in cache:

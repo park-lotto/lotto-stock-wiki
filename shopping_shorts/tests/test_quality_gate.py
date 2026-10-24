@@ -240,3 +240,20 @@ def test_scene_fit_gold_fixture_check():
     assert gold_check(old, gold)["ok"]
     assert not gold_check([7, 5, 7, 5, 10, 1, 10, 10, 1, 7], gold)["ok"]   # 틀린 컷(2)을 7로 = 혼동
     assert not gold_check([7, 5, 1, 5, 5, 1, 10, 10, 1, 7], gold)["ok"]    # 맞는 컷(4)을 5로 = 혼동
+
+
+# ---------------------------------------------------------------- gate() 배선(행 쌓기·초·캐시·보고 파일) — 10-25 row() 재귀 사고 재발 막기
+def test_gate_wiring_minimal(tmp_path):
+    from tools.calcopy.hybrid.quality_gate import gate
+    doc, R = tmp_path / "doc", tmp_path / "work" / "render"
+    doc.mkdir(); R.mkdir(parents=True)
+    _ffmpeg("-f", "lavfi", "-i", "color=c=blue:s=108x192:r=30:d=1", "-pix_fmt", "yuv420p", R / "final.mp4")
+    (R / "timeline.json").write_text(json.dumps({"cuts": [], "lines": {"N1": [0.0, 1.0]}, "end": 1.0}), encoding="utf-8")
+    (R / "자막표.json").write_text(json.dumps({"rows": [], "sfx": [{"t": 0.1}] * 5, "check": {"ok": True, "reference": "x", "worst_slot_diff": 0}}), encoding="utf-8")
+    r = gate("잇템로그판", doc, tmp_path / "work", only=("자막·효과", "표식"), eye_pack=False, log=lambda *a: None)
+    what = {x["what"]: x for x in r["rows"]}
+    assert r["ok"] is False and len(r["rows"]) == 3, r["rows"]
+    assert what["B14 효과음 과다(≤ 벤치 p90)"]["ok"] is False                      # 5발/1초
+    assert what["render_info 표식(판 sha·렌더러 sig·reference)"]["ok"] is False   # render_info 없음 = 불신
+    assert all(isinstance(x["sec"], float) for x in r["rows"])
+    assert (doc / "품질관문.json").exists() and (tmp_path / "work" / "gate_stage_log.json").exists()
