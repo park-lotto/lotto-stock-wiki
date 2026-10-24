@@ -1,0 +1,189 @@
+{
+ "_note": "12편 비행기 마스크팩(10-24 새 편, v3 방식): 결과(투명) 먼저 훅 · 원본 3개(Sarah Palmyra 13시간 비행 → 원리 → Aylen 모녀 밤새) · 원음 2번 · 끝 = 전언 2줄 + 혼잣말 · 확대 1.0. 브랜드 단정 안 함 — Aylen = Dermall Matrix(고정 댓글), Dani = Biodance(제목), Sarah = 아마존 링크뿐(미확인). 원본 = Sarah 0eQlBxUOH_U(1,034만) · Aylen -lXRz65OCjE(437만) · Dani rJh6JD2xSqE(272만). 박힌 자막 → 쓰는 구간만 VMake Pro(saA=0~23.4·ayA=28~36·ayB=41~53·daA=0~14초, 파일 안 시간 0부터).",
+ "slug": "ititemlog_ep12_sheetmask_v3",
+ "brand": "잇템로그판",
+ "pan": "잇템로그판",
+ "product": "투명해지는 콜라겐 하이드로겔 마스크(쿠팡: 정확한 이름 → 같은 제품 → 비슷한 제품)",
+ "title_lines": [
+  [
+   [
+    "비행기에서 붙인 마스크팩"
+   ]
+  ],
+  [
+   [
+    "투명해져서 놀란 외국인"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "sa 0.16~5.24 'Seeing how many hours it takes for my sheet mask to turn clear on a 13 hour flight'",
+  "f2": "sa 5.6~17초 '20 minutes · One hour · Two hours · Three hours · Five hours · Six hours' — 화면에서 하얀 마스크가 점점 투명",
+  "f3": "sa 17.0~21.36 'Time to peel it off. It came off in one piece.' · 댓글 'THE ONE PIECCEEEE'·'One piece!!!'",
+  "f4": "Biodance 제품 설명(cultbeauty·well.ca): 세럼이 피부로 스며들수록 마스크가 투명해지고 다 되면 완전히 투명 · 밤새 또는 투명해질 때까지 3~4시간",
+  "f5": "ay 28.72~33.40 'my mom and I slept with the sheet mask overnight, and eight hours later, the mask had turned completely clear' · 33.40~35.60 'what kind of magic did they put in this'",
+  "f6": "ay 51.80~57.04 'you can wash your face in the morning like usual, but your face will still feel so hydrated and glowy'",
+  "f7": "da 제목 'Watch the Biodance collagen mask dry up on my flight' · 화면 1~4 hours 글"
+ },
+ "cta": "심리 CTA(혼잣말·다음 비행) — 직접 구매 문장 없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강) — 결과 먼저",
+   "tts": "비행기에서 붙인 마스크팩이 점점 투명해지는 걸 찍은 외국인이 있다는데요.",
+   "caps": [
+    {
+     "text": "비행기에서 붙인 마스크팩이"
+    },
+    {
+     "text": "점점 투명해지는 걸",
+     "key": "투명"
+    },
+    {
+     "text": "찍은 외국인이 있다는데요"
+    }
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 경과",
+   "tts": "처음엔 하얗던 마스크가 몇 시간 만에 점점 비치더니,",
+   "caps": [
+    {
+     "text": "처음엔 하얗던 마스크가",
+     "key": "하얗던"
+    },
+    {
+     "text": "몇 시간 만에 점점 비치더니"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(떼기)",
+   "src": "saA.mp4",
+   "spans": [
+    [
+     17.0,
+     21.293
+    ]
+   ],
+   "said": "Time to peel it off. It came off in one piece.",
+   "caps_rel": [
+    [
+     "이제 떼 볼까",
+     0.0,
+     1.56
+    ],
+    [
+     "한 번에 통째로 떨어졌어!",
+     2.32,
+     4.293,
+     "통째로"
+    ]
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 원리",
+   "tts": "세럼이 피부로 스며들수록 점점 투명해지는 원리래요.",
+   "caps": [
+    {
+     "text": "세럼이 피부로 스며들수록"
+    },
+    {
+     "text": "점점 투명해지는 원리래요",
+     "key": "투명"
+    }
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "나레 둘째 원본",
+   "tts": "또 다른 외국인 모녀는 아예 밤새 붙이고 잤더니,",
+   "caps": [
+    {
+     "text": "또 다른 외국인 모녀는"
+    },
+    {
+     "text": "아예 밤새 붙이고 잤더니",
+     "key": "밤새"
+    }
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음(감탄)",
+   "src": "ayA.mp4",
+   "spans": [
+    [
+     5.433,
+     7.6
+    ]
+   ],
+   "said": "Like, what kind of magic did they put in this",
+   "caps_rel": [
+    [
+     "대체 무슨 마법을 넣은 거야?",
+     0.0,
+     2.167,
+     "마법"
+    ]
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "써 본 사람들은 통째로 한 번에 떨어지는 게 제일 신기하다던데,",
+   "caps": [
+    {
+     "text": "써 본 사람들은"
+    },
+    {
+     "text": "통째로 한 번에 떨어지는 게",
+     "key": "통째로"
+    },
+    {
+     "text": "제일 신기하다던데"
+    }
+   ]
+  },
+  {
+   "id": "N6",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "아침에 세수해도 촉촉함이 그대로라고 하고.",
+   "caps": [
+    {
+     "text": "아침에 세수해도"
+    },
+    {
+     "text": "촉촉함이 그대로라고 하고",
+     "key": "촉촉함"
+    }
+   ]
+  },
+  {
+   "id": "N7",
+   "kind": "tts",
+   "role": "끝 — 혼잣말 CTA",
+   "tts": "아, 나도 다음 비행기에선 이거 하나 붙이고 자야겠다.",
+   "caps": [
+    {
+     "text": "아, 나도 다음 비행기에선",
+     "key": "비행기"
+    },
+    {
+     "text": "이거 하나 붙이고 자야겠다"
+    }
+   ]
+  }
+ ]
+}

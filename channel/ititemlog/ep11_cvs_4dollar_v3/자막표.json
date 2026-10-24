@@ -5,233 +5,254 @@
   {
    "line": "N1",
    "t0": 0.0,
-   "t1": 0.765,
+   "t1": 0.795,
    "text": "새벽 한 시에",
    "speaker": "narr",
    "variant": "hook",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "N1",
-   "t0": 0.765,
-   "t1": 1.868,
+   "t0": 0.795,
+   "t1": 1.871,
    "text": "한국 편의점을 털고",
    "speaker": "narr",
    "variant": "hook",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "N1",
-   "t0": 1.868,
-   "t1": 3.585,
+   "t0": 1.871,
+   "t1": 3.547,
    "text": "계산서 보고 놀란 외국인이 있어요",
    "speaker": "narr",
    "variant": "hook_pop",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "O1",
-   "t0": 3.585,
-   "t1": 5.105,
+   "t0": 3.547,
+   "t1": 5.067,
    "text": "한국 새벽 1시인데",
    "speaker": "orig",
    "variant": "",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "O1",
-   "t0": 5.105,
-   "t1": 6.625,
+   "t0": 5.067,
+   "t1": 6.587,
    "text": "또 저녁 먹는 걸 까먹었어",
    "speaker": "orig",
    "variant": "",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "O2",
-   "t0": 6.625,
-   "t1": 8.465,
+   "t0": 6.587,
+   "t1": 8.427,
    "text": "커피우유, 초코우유",
    "speaker": "orig",
    "variant": "",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "O2",
-   "t0": 8.465,
-   "t1": 9.825,
+   "t0": 8.427,
+   "t1": 9.787,
    "text": "민트초코우유까지!",
    "speaker": "orig",
    "variant": "",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "N2",
-   "t0": 9.825,
-   "t1": 11.531,
+   "t0": 9.787,
+   "t1": 11.38,
    "text": "복숭아, 딸기, 수박까지",
    "speaker": "narr",
    "variant": "",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "N2",
-   "t0": 11.531,
-   "t1": 12.754,
+   "t0": 11.38,
+   "t1": 12.668,
    "text": "우유 종류만 끝도 없었는데",
    "speaker": "narr",
    "variant": "",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "O3",
-   "t0": 12.754,
-   "t1": 14.261,
+   "t0": 12.668,
+   "t1": 14.175,
    "text": "그리고 여기, 바나나우유!",
    "speaker": "orig",
    "variant": "",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "N3",
-   "t0": 14.261,
-   "t1": 15.675,
+   "t0": 14.175,
+   "t1": 15.498,
    "text": "바나나우유에 김치까지",
    "speaker": "narr",
    "variant": "",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "N3",
-   "t0": 15.675,
-   "t1": 16.648,
+   "t0": 15.498,
+   "t1": 16.744,
    "text": "한 봉지 가득 담았는데",
    "speaker": "narr",
    "variant": "",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "N3",
-   "t0": 16.648,
-   "t1": 16.878,
+   "t0": 16.744,
+   "t1": 17.975,
    "text": "계산대에서 나온 금액이",
    "speaker": "narr",
    "variant": "",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "O4",
-   "t0": 16.878,
-   "t1": 18.185,
+   "t0": 17.975,
+   "t1": 19.282,
    "text": "다 해서 4달러!",
    "speaker": "orig",
    "variant": "",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "N4",
-   "t0": 18.185,
-   "t1": 20.515,
+   "t0": 19.282,
+   "t1": 20.549,
    "text": "엄마랑 같이 갔을 땐",
    "speaker": "narr",
    "variant": "",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "N4",
-   "t0": 20.515,
-   "t1": 22.328,
+   "t0": 20.549,
+   "t1": 22.321,
    "text": "떡볶이 종류만 열 가지가 넘었다던데",
    "speaker": "narr",
    "variant": "",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "N5",
-   "t0": 22.328,
-   "t1": 24.111,
+   "t0": 22.321,
+   "t1": 24.102,
    "text": "삼각김밥도 맛별로 다 있어서",
    "speaker": "narr",
    "variant": "",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "N5",
-   "t0": 24.111,
-   "t1": 25.172,
+   "t0": 24.102,
+   "t1": 25.105,
    "text": "고르기 힘들다고 하고",
    "speaker": "narr",
    "variant": "",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "N6",
-   "t0": 25.172,
-   "t1": 26.942,
+   "t0": 25.105,
+   "t1": 26.458,
    "text": "아, 출출하다",
    "speaker": "narr",
    "variant": "",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "N6",
-   "t0": 26.942,
-   "t1": 28.495,
+   "t0": 26.458,
+   "t1": 27.882,
    "text": "오늘 밤엔 바나나우유 하나 들고",
    "speaker": "narr",
    "variant": "",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "N6",
-   "t0": 28.495,
-   "t1": 30.1,
+   "t0": 27.882,
+   "t1": 29.433,
    "text": "편의점 한 바퀴 돌아야겠다",
    "speaker": "narr",
    "variant": "",
    "emph": [],
    "sticker": "",
-   "stickers": []
+   "stickers": [],
+   "enter": "cut"
   }
  ],
  "sfx": [],

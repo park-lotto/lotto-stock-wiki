@@ -111,8 +111,8 @@ def split_by_align(S, align) -> list[tuple[float, float]]:
         i += len(NA.punct_marks(l["tts"]))
         if k == len(L) - 1:
             spans.append((start, tail)); break
-        if i == 0:
-            raise StageError(f"줄 {l['id']} 끝에 문장부호가 없다 — tts 끝을 마침표로")
+        if i == 0 or not NA.punct_marks(l["tts"].rstrip()[-1:]):   # 줄 가운데 쉼표만 있고 끝에 없으면 그 쉼표가 줄 끝이 된다(10-24 잇템로그 09 N3 '…붓고, …따르자' → '따르자'가 N4 로 밀림)
+            raise StageError(f"줄 {l['id']} 끝에 문장부호가 없다 — tts 끝을 마침표·쉼표로")
         a, b = slots[i - 1][1], slots[i - 1][2]
         # 글자 시각은 소리보다 늦게 끝나고 늦게 시작한다(10-21 손태영 미나: '벨기에'→'기의', '대체'→'차에', 줄 끝 음절 잘림 —
         # 받아쓰기로 맞춘 손 경계가 끝 +0.12~0.17·시작 −0.07~0.25초). 그 틈 안에서만 여유를 준다(넘치는 무음은 쉼 고치기가 줄인다).
@@ -221,6 +221,11 @@ def make_sentences(S, full: Path, R: Path, log=print, align: dict | None = None)
         out.append({"id": l["id"], "wav": str(p), "dur": round(dur_of(p), 3), "chars": c, "raw": [round(a, 3), round(b, 3)], "tempo": tl, "pauses": cuts,
                     "override": str(src_l) if src_l is not full else None})
     log(f"atempo 기본 {tempo} · 평균 {mean:.2f}자/초 · " + " ".join(f"{o['id']}:{o['chars'] / o['dur']:.2f}@{o['tempo']}" for o in out))
+    if how == "align":   # 글자 시각은 '보낸 글' 기준이라 TTS 가 문장을 되풀이·누락해도 경계가 맞아 보인다 → 줄 말속도로 잡는다(10-24 잇템로그 12편 N3 4.90자/초 = 반복 '…원리라는데 다른 외국인 모녀는' 그대로 통과)
+        bad = [(o["id"], round(o["chars"] / o["dur"], 2)) for o in out if not (0.65 * mean <= o["chars"] / o["dur"] <= 1.35 * mean)]
+        if bad:
+            raise StageError(f"TTS 줄 말속도 이상(평균 {mean:.2f}자/초의 ±35% 밖: {bad}) — 되풀이·빠뜨림 의심. s_<줄>.wav 받아쓰기로 확인 후 문장을 바꾸고 "
+                             f"narr_full.mp3 와 .tts.json 을 함께 치워 다시 합성(사이드카만 치우면 옛 소리를 그대로 받아들인다)")
     out[0]["split_how"] = how
     return out, tempo, inner
 

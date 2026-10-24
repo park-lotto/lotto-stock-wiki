@@ -1,0 +1,221 @@
+{
+ "_note": "13편 연어 크림(10-24 새 편, v3 방식): 얼굴 가득 캡슐 훅 · 원본 2개(MissDarcei 연어 → milky 기겁) · 원음 3번 · 끝 = 댓글 전언 2줄 + 혼잣말 · 확대 1.0. 효능 단정 안 함(원본의 탄력·색소 말은 안 옮김) · 33초 뒤 기기(부스터 프로) 장면 안 씀. 원본 = MissDarcei 8U0MvYtEAOo(279만, 박힌 자막 없음) + milky E7x20fdjn84(194만, 박힌 자막 → mkA=0~7.5초만 VMake Pro).",
+ "slug": "ititemlog_ep13_salmon_cream_v3",
+ "brand": "잇템로그판",
+ "pan": "잇템로그판",
+ "product": "메디큐브 PDRN 핑크 콜라겐 캡슐 크림(쿠팡: 정확한 이름 → 같은 제품 → 비슷한 제품)",
+ "title_lines": [
+  [
+   [
+    "연어로 만든 한국 크림"
+   ]
+  ],
+  [
+   [
+    "바르고 경악한 외국인"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "d2 4.52~8.56 'This is Medicube PDR collagen capsule cream' · 8.56~11.88 'And yes, it's made with salmon sperm. What?' · 화면 0~3초 얼굴에 분홍·노랑 캡슐",
+  "f2": "제품 설명(lookfantastic·beautybay): PDRN = 연어 DNA 에서 뽑음 · 젤 + 캡슐, 캡슐은 피부에 닿으면 녹음",
+  "f3": "d2 26~30초 캡슐을 볼에 문지름 · 31.04~33.36 'Oh my God. Oh my God.'",
+  "f4": "mk 1.20~3.24 'Whoa! What the hell?' · 제목 'HAS SKINTOK GONE TOO FAR?'",
+  "f5": "댓글(d2·mk): 'Don't put too much' · 'one capsule and 2 scoops' · '1/30 of that amount would be pretty enough' · 'You don't need to put that much'",
+  "f6": "댓글(mk): 'THOSE ARE STRAWBERRY BUBBLE TAPIOCAAA!!'",
+  "f7": "d2 73~77초 'look how plump and glowy my skin is' — 바른 뒤 얼굴"
+ },
+ "cta": "심리 CTA(혼잣말·두 알만) — 직접 구매 문장 없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강)",
+   "tts": "연어로 만든 한국 크림을 얼굴에 바르고 경악한 외국인이 있다는데요?",
+   "caps": [
+    {
+     "text": "연어로 만든 한국 크림을",
+     "key": "연어"
+    },
+    {
+     "text": "얼굴에 바르고"
+    },
+    {
+     "text": "경악한 외국인이 있다는데요?"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(정체)",
+   "src": "d2.mp4",
+   "spans": [
+    [
+     8.567,
+     11.88
+    ]
+   ],
+   "said": "And yes, it's made with salmon sperm. What?",
+   "caps_rel": [
+    [
+     "진짜야, 연어로 만든 거래",
+     0.0,
+     2.833,
+     "연어"
+    ],
+    [
+     "뭐?",
+     2.833,
+     3.313
+    ]
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 성분",
+   "tts": "분홍 알갱이마다 연어에서 뽑은 성분이 들었다는데,",
+   "caps": [
+    {
+     "text": "분홍 알갱이마다",
+     "key": "분홍"
+    },
+    {
+     "text": "연어에서 뽑은 성분이 들었다는데",
+     "key": "연어"
+    }
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 바르기",
+   "tts": "얼굴에 올리고 문지르자 알갱이가 스르르 녹아 버렸어요.",
+   "caps": [
+    {
+     "text": "얼굴에 올리고 문지르자"
+    },
+    {
+     "text": "알갱이가 스르르 녹아 버렸어요",
+     "key": "녹아"
+    }
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음(감탄)",
+   "src": "d2.mp4",
+   "spans": [
+    [
+     31.1,
+     33.254
+    ]
+   ],
+   "said": "Oh my God. Oh my God.",
+   "caps_rel": [
+    [
+     "어머, 세상에!",
+     0.0,
+     0.94
+    ],
+    [
+     "진짜 세상에!",
+     0.94,
+     2.154,
+     "세상에"
+    ]
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "나레 둘째 원본",
+   "tts": "다른 외국인도 처음 보고는 소리부터 질렀는데,",
+   "caps": [
+    {
+     "text": "다른 외국인도"
+    },
+    {
+     "text": "처음 보고는 소리부터 질렀는데",
+     "key": "소리"
+    }
+   ]
+  },
+  {
+   "id": "O3",
+   "kind": "orig",
+   "role": "원음(기겁)",
+   "src": "mkA.mp4",
+   "spans": [
+    [
+     1.2,
+     3.24
+    ]
+   ],
+   "said": "Whoa! What the hell?",
+   "caps_rel": [
+    [
+     "우와!",
+     0.0,
+     0.6
+    ],
+    [
+     "이게 뭐야?",
+     0.8,
+     2.04,
+     "뭐야?"
+    ]
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "댓글 보니까 캡슐은 한두 알이면 충분하다던데,",
+   "caps": [
+    {
+     "text": "댓글 보니까"
+    },
+    {
+     "text": "캡슐은 한두 알이면 충분하다던데",
+     "key": "한두 알"
+    }
+   ]
+  },
+  {
+   "id": "N6",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "딸기 버블티 펄 같다는 사람도 있다고 하고.",
+   "caps": [
+    {
+     "text": "딸기 버블티 펄 같다는",
+     "key": "버블티"
+    },
+    {
+     "text": "사람도 있다고 하고"
+    }
+   ]
+  },
+  {
+   "id": "N7",
+   "kind": "tts",
+   "role": "끝 — 혼잣말 CTA",
+   "tts": "아, 나도 오늘 밤엔 분홍 캡슐 딱 두 알만 발라 봐야겠다.",
+   "caps": [
+    {
+     "text": "아, 나도 오늘 밤엔"
+    },
+    {
+     "text": "분홍 캡슐 딱 두 알만",
+     "key": "두 알"
+    },
+    {
+     "text": "발라 봐야겠다"
+    }
+   ]
+  }
+ ]
+}
