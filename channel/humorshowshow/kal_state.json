@@ -74,14 +74,14 @@
    "note": "6편 190줄 check --strict 0(관제 263 지시서 06, 2026-10-25)"
   },
   "rules": {
-   "state": "waiting_human",
-   "sec": 0.0,
-   "at": "2026-10-25 02:51",
+   "state": "done",
+   "sec": 0.1,
+   "at": "2026-10-25 03:00",
    "outputs": {
     "draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\humorshowshow\\_kal\\스타일분석_초안.md",
     "plan_draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\humorshowshow\\_kal\\humorshowshow판_초안.json"
    },
-   "note": "규칙 판정 — _kal/스타일분석_초안.md 를 보고 channel/<slug>/스타일분석.md 를 쓴다(붙는 조건 규칙 채택은 사람) → 다시 실행"
+   "note": "규칙빈도·대본언어·팔레트·판 초안(kal.py --from rules) + 스타일분석.md(사람, 11축·채택표·화자대사줄 5-1) — 2026-10-25 03:06 · 다음 copy 는 07(판 파일 주인)·사장님 지시 때"
   }
  },
  "asked": {}
