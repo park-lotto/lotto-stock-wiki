@@ -1,0 +1,54 @@
+{
+ "slug": "evenshopping",
+ "ref": "https://www.youtube.com/channel/UClecY6IhcjwmCBJHiZ2-cTg",
+ "steps": {
+  "select": {
+   "state": "done",
+   "sec": 30.4,
+   "at": "2026-10-24 23:59",
+   "outputs": {
+    "top": "C:\\숏템_칼카피\\evenshopping\\top.json"
+   },
+   "note": "이븐쇼핑 구독 37300 편 237 조회중앙 97,000 최대 4,800,000 (구독 대비 중앙 2.6)"
+  },
+  "collect": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-24 23:59",
+   "outputs": {
+    "src": "C:\\숏템_칼카피\\evenshopping\\src",
+    "ids": [
+     "ABjQ0YCZoes",
+     "LHembw8EUU0",
+     "tcaIPaGWLrE",
+     "kC8fkx1Ve3Q",
+     "1kfqEB2b1xM",
+     "Y2YXuAE4J00"
+    ]
+   },
+   "note": "받음 6/6(1080p, C 여유 22.4GB)"
+  }
+ },
+ "asked": {},
+ "brand": "재미썸홈",
+ "n": 6,
+ "hybrid": "아니오",
+ "voice": "tc_6059dad0b83880769a50502f",
+ "channel": {
+  "name": "이븐쇼핑",
+  "url": "https://www.youtube.com/channel/UClecY6IhcjwmCBJHiZ2-cTg/shorts",
+  "subs": 37300,
+  "total": 237,
+  "view_median": 97000,
+  "view_max": 4800000,
+  "top_ids": [
+   "ABjQ0YCZoes",
+   "LHembw8EUU0",
+   "tcaIPaGWLrE",
+   "kC8fkx1Ve3Q",
+   "1kfqEB2b1xM",
+   "Y2YXuAE4J00"
+  ],
+  "views_per_sub": 2.6
+ }
+}
