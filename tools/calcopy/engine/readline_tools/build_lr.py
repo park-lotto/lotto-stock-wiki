@@ -8,7 +8,8 @@
             sfx = sfx_raw 에서 고립>=0.5·유성<=0.3 솟음 첫 개(귀 확인 아님) · dur = ffprobe.
             나머지(글·화자·역할·등장·스티커·장면·fit)는 spec 에 사람이 적은 값.
 spec 꼴(예: examples/ititemlog_SbW.py): ID · TITLE · LAYOUT · FRAME0 · LINES[(t0,t1,화자,글,역할,등장,변형,강조,스티커,장면,장면설명,fit[,ex])] ·
-            NO_CAP · BEATS · NOTES · (선택) NAME_EV. spec 에 FONT·HAND_FONT·LAYER·MEASURE_BAND·MADE_BY 가 있으면 프로필보다 이긴다.
+            NO_CAP · BEATS · NOTES · (선택) NAME_EV·PROFILE·SOURCE_LABEL·SOUND_MODE·EXTRA(문서 칸 추가)·ex 의 다른 칸(그대로 실림)·ex.sfx_none.
+            spec 에 FONT·HAND_FONT·LAYER·MEASURE_BAND·MADE_BY 가 있으면 프로필보다 이긴다. (썰풀다 워커 mk.py 의 덧붙임을 여기로 합침)
 입력: spec · capseg 결과(seg_<id>.json) · cutdet 결과(cut_<id>.json) · 원본 mp4 · (선택) sfx_raw.json({id:[솟음...]}) · 프로필 json
 출력: 줄판독 json(kal_analyze check --strict 칸 꼴)
 
@@ -28,6 +29,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+EX_USED = {"y", "fill_hex", "transition", "layer", "enter_ms", "outline", "line_gap_px", "motion", "exit", "notes"}
 TOOLS_NOTE = "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr"
 DEFAULT_PROFILE = {"layer": None, "measure_band": [1180, 1470],
                    "font": {"name": "미확정", "basis": "없음"}, "hand_font": {"name": "미확정(손글씨체)", "basis": "없음"},
@@ -149,6 +151,7 @@ def _dur(mp4: str) -> float:
 
 def build_doc(S, segs: list[dict], cd: dict, mp4: str, sfx_raw: dict | None = None, profile: dict | None = None) -> dict:
     P = dict(DEFAULT_PROFILE, **(profile or {}))
+    P.update(getattr(S, "PROFILE", None) or {})          # spec 안 PROFILE 이 프로필 파일보다 이긴다(썰풀다 mk.py 꼴)
     FONT = getattr(S, "FONT", P["font"])
     HAND_FONT = getattr(S, "HAND_FONT", P["hand_font"])
     layer = getattr(S, "LAYER", P["layer"])
@@ -183,6 +186,12 @@ def build_doc(S, segs: list[dict], cd: dict, mp4: str, sfx_raw: dict | None = No
              "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"}
         if ex.get("notes"):
             d["notes"] = ex["notes"]
+        for k, v in ex.items():                           # 위 칸에 안 쓰인 ex 칸(box·size_px·emph 등)은 그대로 싣는다(썰풀다 mk.py 꼴)
+            if k not in EX_USED:
+                d[k] = v
+        if ex.get("sfx_none"):
+            d["sfx"] = None
+            d.pop("sfx_none", None)
         lines.append(d)
     cap.release()
     doc = {"id": vid, "dur": round(_dur(mp4), 3), "fps": 30.0, "size": [1080, 1920], "title_lines": S.TITLE, "source_label": None,
@@ -190,6 +199,12 @@ def build_doc(S, segs: list[dict], cd: dict, mp4: str, sfx_raw: dict | None = No
            "notes": S.NOTES, "name_evidence": getattr(S, "NAME_EV", []), "frame0": S.FRAME0,
            "_made_by": getattr(S, "MADE_BY", P["made_by"]),
            "_tools": TOOLS_NOTE}
+    if hasattr(S, "SOURCE_LABEL"):
+        doc["source_label"] = S.SOURCE_LABEL
+    if hasattr(S, "SOUND_MODE"):
+        doc["sound_mode"] = S.SOUND_MODE
+    for k, v in (getattr(S, "EXTRA", None) or {}).items():
+        doc[k] = v
     nl = [l for l in lines if l["speaker"] == "나레"]
     doc["narr_share"] = f"나레 줄 {len(nl)}/{len(lines)}, 나레 {round(sum(l['t1'] - l['t0'] for l in nl), 1)}초/{doc['dur']}초"
     return doc
