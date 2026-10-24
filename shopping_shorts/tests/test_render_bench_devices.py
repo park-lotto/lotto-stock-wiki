@@ -43,15 +43,19 @@ def test_flashes_old_key_reads_as_flash():
     assert tr == [{"t": 1.5, "kind": "flash", "ms": 100, "sec": 0.1, "why": "placement flashes(옛 키)"}]
 
 
-def test_single_kind_all_boundaries():
-    # _common 의 cut:1.0 이 깊게 합쳐져 남아도(실제 판 합치기 꼴) cut 밖 한 종류 1.0 이면 모든 경계
-    tr = RB.transitions_of(_cuts([1.0, 2.0, 3.0]), _st(transition={"kinds": {"cut": 1.0, "zoomblur": 1.0}, "ms": 200}), {"flashes": []})
-    assert [(e["t"], e["kind"], e["ms"]) for e in tr] == [(1.0, "zoomblur", 200.0), (2.0, "zoomblur", 200.0), (3.0, "zoomblur", 200.0)]
+def test_ms_filled_from_style_then_default():
+    """placement 가 ms 를 비우면(None) 판 cuts.transition.ms → 종류별 기본."""
+    placed = {"transitions": [{"t": 1.0, "kind": "zoomblur", "ms": None}, {"t": 2.0, "kind": "black", "ms": None}]}
+    tr = RB.transitions_of(_cuts([1.0, 2.0]), _st(transition={"kinds": {"cut": 1.0}, "ms": 0}), placed)
+    assert [(e["kind"], e["ms"]) for e in tr] == [("zoomblur", 200.0), ("black", 33.0)]
+    tr = RB.transitions_of(_cuts([1.0, 2.0]), _st(transition={"ms": 150}), placed)
+    assert [e["ms"] for e in tr] == [150.0, 150.0]
 
 
-def test_mixed_ratio_waits_for_placement():
+def test_no_decision_without_placement():
+    """자리 판단 주인은 placement 하나 — 옛 배치 결과(transitions 칸 없음)면 판 비율이 1.0 이어도 여기서 경계를 고르지 않는다(로그만)."""
     logs = []
-    tr = RB.transitions_of(_cuts([1.0, 2.0]), _st(transition={"kinds": {"cut": 0.6, "zoomblur": 0.4}}), {"flashes": []}, logs.append)
+    tr = RB.transitions_of(_cuts([1.0, 2.0]), _st(transition={"kinds": {"cut": 1.0, "zoomblur": 1.0}, "ms": 200}), {"flashes": []}, logs.append)
     assert tr == [] and logs and "placement" in logs[0]
 
 

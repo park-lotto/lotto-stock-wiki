@@ -494,10 +494,24 @@ def shot_starts(video: Path) -> list[float]:
     import numpy as np
     k = str(video)
     if k not in _shots:
-        raw = subprocess.run(["ffmpeg", "-v", "error", "-i", k, "-vf", f"fps={FPS},scale=108:192,format=gray", "-f", "rawvideo", "-"],
-                             capture_output=True, stdin=subprocess.DEVNULL).stdout
-        fr = np.frombuffer(raw, np.uint8).reshape(-1, 192, 108).astype(np.int16)
-        d = np.abs(np.diff(fr, axis=0)).mean(axis=(1, 2)) if len(fr) > 1 else np.zeros(0)
+        # 조각으로 읽는다(10-24: 26분 원본 47,760프레임을 한 번에 int16 로 바꾸다 1.84GiB 할당 실패 — 렌더·검사가 MemoryError 로 죽었다).
+        # 프레임 쌍마다 같은 식(|차| 평균)이라 값은 통째 계산과 같다.
+        FB, CH = 192 * 108, 1024
+        pr = subprocess.Popen(["ffmpeg", "-v", "error", "-i", k, "-vf", f"fps={FPS},scale=108:192,format=gray", "-f", "rawvideo", "-"],
+                              stdout=subprocess.PIPE, stdin=subprocess.DEVNULL)
+        ds, prev = [], None
+        while True:
+            buf = pr.stdout.read(FB * CH)
+            if not buf:
+                break
+            fr = np.frombuffer(buf[:len(buf) // FB * FB], np.uint8).reshape(-1, 192, 108).astype(np.int16)
+            if prev is not None:
+                fr = np.concatenate([prev, fr])
+            if len(fr) > 1:
+                ds.append(np.abs(np.diff(fr, axis=0)).mean(axis=(1, 2)))
+            prev = fr[-1:]
+        pr.wait()
+        d = np.concatenate(ds) if ds else np.zeros(0)
         lim = max(25.0, 4 * float(np.median(d))) if len(d) else 25.0
         _shots[k] = [round((i + 1) / FPS, 4) for i, x in enumerate(d) if x > lim]
     return _shots[k]
@@ -561,35 +575,29 @@ ZOOMBLUR_ZOOM, ZOOMBLUR_SIGMA = 0.12, 14.0                         # 줌블러: 
 
 def transitions_of(T: dict, st: dict, placed: dict, log=None) -> list[dict]:
     """전환 목록 [{t, kind, ms, sec?, why}] 한 곳 — render_window(줌블러·검은 프레임, 창 안)·render_base(흰 번쩍, 화면 전체)가 이것만 읽는다.
-    ① placement 가 placed["transitions"] 를 주면 그대로(주인 = placement.place, 지시서 03).
-    ② 없으면 옛 키 placed["flashes"] 를 kind=flash 로 읽는다(변환만 — 흰 번쩍 그림은 예전과 한 픽셀도 안 바뀐다).
-       판 칸 cuts.transition.kinds 에서 cut 밖 종류가 하나뿐이고 비율 1.0 이면 고를 것이 없으니 모든 컷 경계에 그 종류를 단다.
-       여러 종류가 섞인 비율은 '어느 경계에 무엇'을 placement 가 정해야 해서 여기서는 그리지 않고 로그만 남긴다(두 벌 금지)."""
+    종류·자리 판단 주인 = placement.place → placed["transitions"](지시서 03, 판 칸 cuts.transition.kinds 비율도 거기서 읽는다).
+    여기는 **읽기·정리만**: 모르는 종류는 막고, ms 가 비면 판 cuts.transition.ms → 종류별 기본(TRANSITION_MS). cut 은 그릴 것 없음.
+    placed 에 transitions 칸이 없는 옛 배치 결과(03 전)는 옛 키 flashes 를 kind=flash 로 읽는다(변환만 — 흰 번쩍 그림 그대로)."""
     F = st.get("frame") or {}
-    TR = (st.get("cuts") or {}).get("transition") or {}
-    ms_set = float(TR.get("ms") or 0)
+    ms_set = (st.get("cuts") or {}).get("transition", {}).get("ms") or 0
 
     def norm(e):
         k = e.get("kind", "cut")
         if k not in TRANSITION_KINDS:
             raise StageError(f"전환 종류 '{k}' 모름 — {TRANSITION_KINDS}")
-        out = {"t": round(float(e["t"]), 3), "kind": k, "ms": float(e.get("ms") or ms_set or TRANSITION_MS.get(k, 0))}
+        m = e.get("ms") or (ms_set.get(k) if isinstance(ms_set, dict) else ms_set) or TRANSITION_MS.get(k, 0)
+        out = {"t": round(float(e["t"]), 3), "kind": k, "ms": float(m)}
         if e.get("sec") is not None:
             out["sec"] = float(e["sec"])
         if e.get("why"):
             out["why"] = e["why"]
         return out
     if placed.get("transitions") is not None:
-        return [norm(e) for e in placed["transitions"] if e.get("kind", "cut") != "cut"]
+        return sorted((norm(e) for e in placed["transitions"] if e.get("kind", "cut") != "cut"), key=lambda e: e["t"])
     fsec = F.get("flash_sec", 0.1)
-    out = [{"t": t, "kind": "flash", "ms": round(fsec * 1000), "sec": fsec, "why": "placement flashes(옛 키)"} for t in placed.get("flashes") or []]
-    kinds = {k: float(v) for k, v in (TR.get("kinds") or {}).items() if float(v) > 0 and k != "cut"}   # _common 의 cut:1.0 은 깊게 합쳐져 남는다 — cut 밖 종류만 본다
-    if len(kinds) == 1 and next(iter(kinds.values())) >= 1.0:
-        k = next(iter(kinds))
-        out += [norm({"t": c["t0"], "kind": k, "why": f"판 cuts.transition.kinds {k}:1.0 — 모든 컷 경계"}) for c in T["cuts"][1:]]
-    elif kinds and log:
-        log(f"[전환] 판 비율 {kinds} 이 섞여 있다 — 어느 경계에 무엇을 다는지는 placement.transitions(03)가 정해야 한다. 이번엔 컷만")
-    return sorted(out, key=lambda e: e["t"])
+    if log and any(k != "cut" for k in ((st.get("cuts") or {}).get("transition", {}).get("kinds") or {})):
+        log("[전환] 배치 결과에 transitions 칸이 없다(옛 placement) — 판 cuts.transition.kinds 는 placement.place 가 자리를 정해야 그려진다")
+    return [{"t": t, "kind": "flash", "ms": round(fsec * 1000), "sec": fsec, "why": "placement flashes(옛 키)"} for t in placed.get("flashes") or []]
 
 
 def window_fx(trans: list[dict], ww: int, wh: int) -> str:
@@ -845,7 +853,7 @@ def loud(src: Path, dst: Path, L: dict):
 def plan_rows(S: dict, T: dict, st: dict) -> dict:
     """배치(placement.place) — 씨앗 = 편 slug(같은 편은 늘 같은 배치)."""
     from tools.calcopy.hybrid import placement as PL
-    placed = PL.place(T["rows"], st, S.get("slug") or "x")
+    placed = PL.place(T["rows"], st, S.get("slug") or "x", cuts=T["cuts"])      # 전환·효과음 자리는 화면 컷 경계에(03)
     for r, t in zip(placed["rows"], T["rows"]):
         r["show"] = t["show"]
     # 댓글 카드 = 배치가 고르고(벤치 편 비율) 대본에 원본 댓글이 있을 때만
