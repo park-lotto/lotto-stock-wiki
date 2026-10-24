@@ -28,6 +28,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from tools.calcopy.hybrid.common import (FPS, FRAME_A_DEFAULT, PRESET_ITSSUM_B, ROOT, SR, StageError, dur_of, frame_png, jload, jsave,  # noqa: E402
                                          lufs, nchar, run, silences)
+from tools.calcopy.engine.encoder import venc  # noqa: E402 — 인코더 주인(GPU 있으면 NVENC, 화질 같게, 98 #79)
 
 # 기본값 주인 = 판 설정 styles/잇썸홈판.json render 칸(판 등록 한 곳, 10-19). 대본 render 칸이 이긴다.
 def _style_def(name: str) -> dict:
@@ -381,7 +382,7 @@ def render_a(S, M, T, fr, R: Path):
         c["frames"] = nf
         p = parts / f"a{k:02d}.mp4"
         run(["ffmpeg", "-y", "-ss", f"{c['ss']:.3f}", "-i", src / c["src"], "-an", "-vf", crop_vf(c["crop"], 1080, 1080), "-frames:v", nf,
-             "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", p])
+             *venc(16), "-pix_fmt", "yuv420p", p])
         lst.append(f"file '{p.as_posix()}'")
     (parts / "list.txt").write_text("\n".join(lst), encoding="utf-8")
     mat = R / "a_mat.mp4"
@@ -404,7 +405,7 @@ def render_a(S, M, T, fr, R: Path):
         last = f"e{k}"
     out = R / "a_final.mp4"
     run(["ffmpeg", "-y", "-i", seg, *ins, "-filter_complex", fc + f";[{last}]format=yuv420p[v]", "-map", "[v]", "-frames:v", n,
-         "-r", FPS, "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", out])
+         "-r", FPS, *venc(16), out])
     return out, n
 
 
@@ -421,7 +422,7 @@ def render_b(S, M, T, R: Path):
         c["frames"] = n
         p = parts / f"p{k:02d}.mp4"
         run(["ffmpeg", "-y", "-ss", f"{c['ss']:.3f}", "-i", src / c["src"], "-an", "-vf", crop_vf(c["crop"], 1080, 1920), "-frames:v", n,
-             "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", p])
+             *venc(16), "-pix_fmt", "yuv420p", p])
         lst.append(f"file '{p.as_posix()}'")
     (parts / "list.txt").write_text("\n".join(lst), encoding="utf-8")
     mat = R / "b_mat.mp4"
@@ -557,7 +558,7 @@ def render(doc: Path, work: Path, plan_only: bool = False, desktop: Path | None 
     b_mp4, nb = render_b(S, M, T, R)
     (R / "ab.txt").write_text(f"file '{a_mp4.as_posix()}'\nfile '{b_mp4.as_posix()}'\n", encoding="utf-8")
     vid = R / "video.mp4"
-    run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", R / "ab.txt", "-an", "-r", FPS, "-c:v", "libx264", "-crf", "16", "-preset", "veryfast",
+    run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", R / "ab.txt", "-an", "-r", FPS, *venc(16),
          "-pix_fmt", "yuv420p", vid])
     T["end"] = round((na + nb) / FPS, 3)
     mix, A = audio(S, M, T, sent, R)

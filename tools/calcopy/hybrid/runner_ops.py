@@ -164,7 +164,9 @@ def c_env(W, d):
     tools = {t: bool(shutil.which(t)) for t in ("ffmpeg", "ffprobe")} | {"yt-dlp": bool(shutil.which("yt-dlp")) or bool(CACHE)}
     if not all(tools.values()):
         return {"error": f"실행 도구 없음: {[k for k, v in tools.items() if not v]}"}
-    return {"keys": keys, "dev": dev, "cache": bool(CACHE), "disk_gb": round(du.free / 1e9, 1), "voice": voice}
+    from tools.calcopy.engine import encoder
+    return {"keys": keys, "dev": dev, "cache": bool(CACHE), "disk_gb": round(du.free / 1e9, 1), "voice": voice,
+            "encoder": encoder.kind()}       # 'gpu'(NVENC) | 'cpu' — 그래픽카드 있으면 렌더가 GPU 우선(98 #79)
 
 
 def c_bench(W, d):

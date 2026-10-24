@@ -28,6 +28,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from tools.calcopy.hybrid.common import FACE_MODEL, FPS, ROOT, SR, StageError, dur_of, jload, jsave, lufs, nchar, probe, run  # noqa: E402
+from tools.calcopy.engine.encoder import venc  # noqa: E402 — 인코더 주인(GPU 있으면 NVENC, 화질 같게, 98 #79)
 
 W, H = 1080, 1920
 FONTS = ROOT / "shopping_shorts/static/fonts"
@@ -553,8 +554,7 @@ def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, pu
         # 최화정_피부 완성본에도 제목 빠짐 2+2프레임이 있었다 — 원인 대조는 안 함). 영상 조각과 같은 꼴로 맞춘다.
         vf = (f"crop={cw}:{ch}:{x}:{y},{mv}scale={ww}:{wh}:flags=lanczos:out_range=tv:out_color_matrix=bt709,"
               f"format=yuv420p,setsar=1")
-        run(["ffmpeg", "-y", "-v", "error", "-loop", "1", "-i", src, "-vf", vf, "-frames:v", n, "-r", FPS, "-c:v", "libx264", "-crf", "16",
-             "-preset", "veryfast", "-pix_fmt", "yuv420p", "-color_range", "tv", "-colorspace", "bt709", out])
+        run(["ffmpeg", "-y", "-v", "error", "-loop", "1", "-i", src, "-vf", vf, "-frames:v", n, "-r", FPS, *venc(16), "-pix_fmt", "yuv420p", "-color_range", "tv", "-colorspace", "bt709", out])
         return
     x, y, cw, ch = crop
     bl = blur_vf(blur, ss, n / FPS)
@@ -563,8 +563,7 @@ def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, pu
     if push:
         vf = (f"{pre}crop={cw}:{ch}:{x}:{y},scale={ww * 2}:{wh * 2}:flags=lanczos,fps={FPS},"
               f"zoompan=z='1+{push}*on/{max(1, n)}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={ww}x{wh}:fps={FPS},setsar=1")
-    run(["ffmpeg", "-y", "-v", "error", "-ss", f"{ss:.3f}", "-i", src, "-an", "-vf", vf, "-frames:v", n, "-c:v", "libx264", "-crf", "16",
-         "-preset", "veryfast", "-pix_fmt", "yuv420p", out])
+    run(["ffmpeg", "-y", "-v", "error", "-ss", f"{ss:.3f}", "-i", src, "-an", "-vf", vf, "-frames:v", n, *venc(16), "-pix_fmt", "yuv420p", out])
 
 
 # ── 장면 전환(A1) — 종류·자리 결정 = placement.place(placed["transitions"]), 여기는 읽기·그리기만 ──────────────
@@ -661,7 +660,7 @@ def render_window(T: dict, M: dict, st: dict, R: Path, trans: list[dict] | None 
         n_all = sum(c["frames"] for c in T["cuts"])
         out = R / "window_tr.mp4"
         run(["ffmpeg", "-y", "-v", "error", "-i", win, "-filter_complex", fx, "-map", "[v]", "-frames:v", n_all, "-r", FPS,
-             "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", out])
+             *venc(16), "-pix_fmt", "yuv420p", out])
         got = count_frames(out)
         if got != n_all:
             raise StageError(f"전환 입힌 창 프레임 {got} ≠ 계획 {n_all}")
@@ -693,7 +692,7 @@ def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, tr
         last = "f"
     out = R / "base.mp4"
     run(["ffmpeg", "-y", "-v", "error", *ins, "-filter_complex", fc + f";[{last}]format=yuv420p[v]", "-map", "[v]", "-frames:v", n, "-r", FPS,
-         "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", out])
+         *venc(16), out])
     return out
 
 

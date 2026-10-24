@@ -42,7 +42,8 @@ DATA_ROOT = Path("C:/숏템_칼카피")
 OVERLAP_TOOL = ROOT / "channel/evenshopping/작품1_총알람/check_overlap.py"   # B13 중복 판단 주인(재미썸홈 수정3 담당) — 부르기만
 RESULTS = ROOT / "channel/결과물.json"
 FF_PAR = 2            # 동시 ffmpeg 상한(담당 공통 규칙 ≤4, 지시 ≤2)
-ENC = ["-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p"]   # 컷 조각 인코딩(두 render.py 그대로)
+from tools.calcopy.engine.encoder import cpu_retry, venc  # noqa: E402 — 98 #79
+ENC = [*venc(16), "-pix_fmt", "yuv420p"]   # 컷 조각 인코딩(두 render.py 그대로)
 
 
 # ── 작은 도구 ────────────────────────────────────────────────────────────
@@ -68,6 +69,8 @@ def md5(p) -> str:
 
 def run(cmd):
     r = subprocess.run([str(c) for c in cmd], stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if r.returncode and cpu_retry(cmd):      # GPU 인코딩 실패(세션 한도 등) → 같은 명령 CPU 로 한 번 더
+        r = subprocess.run(cpu_retry(cmd), stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode:
         raise RuntimeError(f"명령 실패({r.returncode}): {' '.join(map(str, cmd))[:300]}\n{(r.stderr or '')[-800:]}")
     return r

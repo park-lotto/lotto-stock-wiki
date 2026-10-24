@@ -26,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from tools.calcopy.hybrid.common import FPS, StageError, dur_of, jload, jsave, run  # noqa: E402
 
 from tools.calcopy.hybrid.common import FACE_MODEL as _FM  # noqa: E402 — 주인 = common.FACE_MODEL
+from tools.calcopy.engine.encoder import venc  # noqa: E402 — 인코더 주인(GPU 있으면 NVENC, 화질 같게, 98 #79)
 MODEL = Path(_FM)
 MODEL_SRC = "https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx"
 FACE_MIN_FRAC = 0.20          # 얼굴 높이 / 창 높이 하한 — 10-18 실측: 바탕화면 15판 첫 프레임 0.28~1.0 · 옛 장윤정 재미썸 전신 0.12(작다·반려) · 옛 최은경 재미썸 0.27(얼굴 큼·통과)
@@ -424,7 +425,7 @@ def stamp_video(video: Path, jpg: Path, frames: int = THUMB_FRAMES) -> None:
     im.convert("RGB").save(card_png)
     run(["ffmpeg", "-y", "-v", "error", "-i", video, "-i", card_png, "-filter_complex",
          f"[1:v]scale=1080:1920,setsar=1[t];[0:v][t]overlay=0:0:enable='lt(n,{frames})',format=yuv420p[v]", "-map", "[v]", "-map", "0:a",
-         "-map_metadata", "0", "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-c:a", "copy", "-movflags", "+faststart", tmp])
+         "-map_metadata", "0", *venc(16), "-c:a", "copy", "-movflags", "+faststart", tmp])
     shutil.move(str(tmp), str(video))
     card_png.unlink(missing_ok=True); Path(bp).unlink(missing_ok=True)
 

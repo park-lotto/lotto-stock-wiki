@@ -27,6 +27,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from tools.calcopy.hybrid.common import (FPS, FRAME_A_DEFAULT, PRESET_JAEMI_B, ROOT, SR, StageError, dur_of, frame_png, jload, jsave,  # noqa: E402
                                          lufs, nchar, probe, run, silences)
+from tools.calcopy.engine.encoder import venc  # noqa: E402 — 인코더 주인(GPU 있으면 NVENC, 화질 같게, 98 #79)
 
 WIN_A = 1080
 WIN_B = (1080, 1407)
@@ -502,7 +503,7 @@ def render(doc: Path, work: Path, plan_only: bool = False, desktop: Path | None 
         last = f"e{k}"
     matA2 = work_ / "matA_emph.mp4"
     run(["ffmpeg", "-y", "-i", matA, *ins, "-filter_complex", fc + f";[{last}]format=yuv420p[v]", "-map", "[v]", "-t", f"{A_end:.3f}",
-         "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-color_range", "tv", matA2])
+         *venc(16), "-color_range", "tv", matA2])
     tlA = [{"beat_idx": 0, "t0": 0.0, "dur": A_end, "narration": "", "caption_lines": [], "role": "hook", "primary": {"video_id": "s0", "start": 0.0, "end": A_end}}]
     vidA = work_ / "vidA.mp4"
     scene_style.compose(str(matA2), tlA, scene_style.validate_snapshot(to_snapshot.to_snapshot(frame)), str(vidA), work_ / "composeA", {"text": S["title"]})
@@ -514,7 +515,7 @@ def render(doc: Path, work: Path, plan_only: bool = False, desktop: Path | None 
         out = work_ / f"b{gi:02d}.mp4"
         run(["ffmpeg", "-y", "-ss", f"{g['ss']:.3f}", "-i", SRC / g["src"], "-an", "-vf",
              f"crop={w}:{h}:{x}:{y},scale={WIN_B[0]}:{WIN_B[1] + 1}:flags=lanczos,setsar=1,fps={FPS}", "-frames:v", nf,
-             "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", out])
+             *venc(16), "-pix_fmt", "yuv420p", out])
         lst.append(f"file '{out.as_posix()}'")
         g.update({"frames": nf, "dur": round(nf / FPS, 3), "src_end": round(g["ss"] + nf / FPS, 3), "t0_final": round(A_end + g["t0"], 3), "t1_final": round(A_end + g["t1"], 3)})
     (work_ / "b.txt").write_text("\n".join(lst), encoding="utf-8")
@@ -529,7 +530,7 @@ def render(doc: Path, work: Path, plan_only: bool = False, desktop: Path | None 
     scene_style.compose(str(matB), tlB, snapB, str(vidB), work_ / "composeB", {"text": "", "body_title": S["body_title"]})
     vid = work_ / "video.mp4"
     (work_ / "v.txt").write_text(f"file '{vidA.as_posix()}'\nfile '{vidB.as_posix()}'\n", encoding="utf-8")
-    run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", work_ / "v.txt", "-an", "-r", FPS, "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", vid])
+    run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", work_ / "v.txt", "-an", "-r", FPS, *venc(16), "-pix_fmt", "yuv420p", vid])
     total = dur_of(vid)
     # ── 소리
     oparts, ot = [], 0.0
