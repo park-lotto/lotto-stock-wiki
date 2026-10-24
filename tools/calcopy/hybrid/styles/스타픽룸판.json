@@ -9,8 +9,9 @@
   "design": "channel/starpickroom/하이브리드_판설계.md",
   "line_reads": "channel/starpickroom/줄판독",
   "src_dir": "C:/숏템_칼카피/starpickroom/src",
-  "sfx_events": "channel/starpickroom/_tools/결과/sfx_events_rules.json",
-  "sfx_key": "starpickroom"
+  "sfx_events": "channel/starpickroom/_kal/sfx_events.json",
+  "sfx_key": "starpickroom",
+  "why_sfx_events": "채널 자기 신호표(표준 §3-3 A2) — placement.sfx_events_path 는 이미 이 파일을 먼저 읽는다(옛 칸 channel/starpickroom/_tools/결과/sfx_events_rules.json 은 표시만 낡아 있었음, 렌더 동작 같음)"
  },
  "voice": {
   "name": "미나",
@@ -661,7 +662,6 @@
   ]
  },
  "_pending": {
-  "sfx_events_own": "bench.sfx_events 를 채널 자기 신호표 channel/starpickroom/_kal/sfx_events.json 으로 바꿀 것(표준 §3-3 A2 — 지금 channel/starpickroom/_tools/결과/sfx_events_rules.json 공유). 바꾸면 placement.py count 재집계가 counted.videos.sfx·sfx_lines 를 바꿔 효과음 배치가 달라진다 → 같은 편 렌더 전/후 대조 뒤 바꾼다(07 다음 차례)",
   "transition_counted": "줄판독 transition {'cut': 1.0} — 그릴 전환 없음"
  }
 }
