@@ -398,7 +398,7 @@ def facts(O: dict, recs: list[dict]) -> dict:
         "quality_gate_ok": bool((G.get("품질관문.json") or {}).get("ok")),
         "match_ok": bool((G.get("재현일치도.json") or {}).get("ok")),
         "eye": G.get("눈검수.json"),
-        "upgrade": G.get("업그레이드_측정.json"),
+        "upgrade": {"better": ((G.get("품질관문.json") or {}).get("gates") or {}).get("upgrade", {}) and G["품질관문.json"]["gates"]["upgrade"].get("better_n") or (G.get("업그레이드_측정.json") or {}).get("better_n") or 0},   # gates.upgrade(관문 04·업그레이드 자 05) — better = 나아진 항목 수(int)
         "member": mem, "line_json_exists": bool(mem.get("line_json")) and (ROOT / str(mem.get("line_json"))).exists(),
         "member_live_ok": bool((O["member_live"] or {}).get("ok")),
         "results_n": len(O["results"]), "results_pass_n": sum(1 for it in O["results"] if "페이블 판정 통과" in str(it.get("judge") or "")),

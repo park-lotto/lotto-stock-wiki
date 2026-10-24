@@ -639,6 +639,12 @@ def _abs(p: str | None) -> Path | None:
     return Path(p) if Path(p).is_absolute() else ROOT / p
 
 
+def upgrade_table(st, doc, work) -> dict:
+    """업그레이드 자 — 주인은 engine/upgrade_table.py(지시서 05). quality_gate 가 이 이름으로 부른다(한 줄 연결, 순환 import 피해 늦게 부름)."""
+    from tools.calcopy.engine import upgrade_table as _U
+    return _U.upgrade_table(st, doc, work)
+
+
 BENCH_MEDIA_CACHE = "_bench_media_cache.json"
 
 
@@ -966,9 +972,12 @@ def frame_metrics(png: str, band: tuple) -> dict:
     gaps_r = [len(g) for g in re.findall(r"0+", "".join(map(str, rows[int(ys.min()):int(ys.max()) + 1])))]
     cols = (m[int(ys.min()):int(ys.max()) + 1].sum(0) > 2).astype(int)
     gaps_c = [len(g) for g in re.findall(r"0+", "".join(map(str, cols[int(xs.min()):int(xs.max()) + 1])))]
+    letters = [g for g in gaps_c if g <= 40]       # 40px 넘는 빈 칸 = 어절·줄 끝 — 글자 사이가 아니다. 전부 넘으면 표본 0(미측정 — median([]) 로 죽지 않는다, 10-25)
     return {"ink": int(m.sum()), "box": box, "h": box[3] - box[1], "cx": (box[0] + box[2]) // 2,
             "fill_hex": med(fill), "outline_hex": med(dark),
-            "line_gap_px": statistics.median(gaps_r) if gaps_r else 0, "letter_gap_px": statistics.median([g for g in gaps_c if g <= 40]) if gaps_c else 0}
+            "line_gap_px": statistics.median(gaps_r) if gaps_r else 0,
+            "letter_gap_px": statistics.median(letters) if letters else (0 if not gaps_c else None),
+            "letter_gap_n": len(letters), "letter_gap_dropped": len(gaps_c) - len(letters)}
 
 
 SKIN_DIFF = {"y_px": 12, "dE": 10.0}   # 업그레이드 뒤 "얼마나 달라졌나" 측정 기준(지침서 §2-6-1 — 목표·합격선이 아니다)
@@ -993,7 +1002,11 @@ def frame_compare(bench_png: str, ours_png: str, band: tuple, skin: bool = False
         rows.append({"key": "cx(가운데 x)", "bench": a["cx"], "ours": b["cx"], "diff": b["cx"] - a["cx"], "pass": abs(b["cx"] - a["cx"]) <= FRAME_PASS["xy_px"]})
         rows.append({"key": "y0(잉크 위)", "bench": a["box"][1], "ours": b["box"][1], "diff": b["box"][1] - a["box"][1], "pass": abs(b["box"][1] - a["box"][1]) <= FRAME_PASS["xy_px"]})
         rows.append({"key": "h(잉크 높이)", "bench": a["h"], "ours": b["h"], "diff": b["h"] - a["h"], "pass": abs(b["h"] - a["h"]) <= FRAME_PASS["h_px"]})
-        rows.append({"key": "letter_gap_px", "bench": a["letter_gap_px"], "ours": b["letter_gap_px"], "diff": b["letter_gap_px"] - a["letter_gap_px"], "pass": abs(b["letter_gap_px"] - a["letter_gap_px"]) <= 2})
+        if a["letter_gap_px"] is None or b["letter_gap_px"] is None:      # 글자 사이 표본 0 — 이 칸은 미측정(통과 아님), 장수는 letter_gap_n 에
+            rows.append({"key": "letter_gap_px", "bench": a["letter_gap_px"], "ours": b["letter_gap_px"], "diff": "표본 없음(미측정)", "pass": False})
+        else:
+            rows.append({"key": "letter_gap_px", "bench": a["letter_gap_px"], "ours": b["letter_gap_px"], "diff": b["letter_gap_px"] - a["letter_gap_px"],
+                         "pass": abs(b["letter_gap_px"] - a["letter_gap_px"]) <= 2})
         for k in ("fill_hex", "outline_hex"):
             if a.get(k) and b.get(k):
                 dE = float(np.linalg.norm(_lab([int(a[k][i:i + 2], 16) for i in (1, 3, 5)]) - _lab([int(b[k][i:i + 2], 16) for i in (1, 3, 5)])))

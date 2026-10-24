@@ -257,3 +257,28 @@ def test_gate_wiring_minimal(tmp_path):
     assert what["render_info 표식(판 sha·렌더러 sig·reference)"]["ok"] is False   # render_info 없음 = 불신
     assert all(isinstance(x["sec"], float) for x in r["rows"])
     assert (doc / "품질관문.json").exists() and (tmp_path / "work" / "gate_stage_log.json").exists()
+
+
+# ---------------------------------------------------------------- frame_metrics 글자 사이 빈칸이 전부 40px 넘음 → median([]) 로 죽던 것(10-25)
+def test_frame_metrics_all_gaps_wide(tmp_path):
+    import cv2
+    import numpy as np
+    from tools.calcopy.engine.kal_analyze import frame_compare, frame_metrics
+    img = np.zeros((300, 1080, 3), np.uint8)
+    for x0 in (200, 400, 600):
+        cv2.rectangle(img, (x0, 100), (x0 + 50, 200), (255, 255, 255), -1)
+        cv2.rectangle(img, (x0 - 6, 94), (x0 + 56, 206), (0, 0, 0), 3)
+    p = tmp_path / "f.png"
+    cv2.imwrite(str(p), img)
+    m = frame_metrics(str(p), (0, 300))
+    assert m["letter_gap_px"] is None and m["letter_gap_n"] == 0 and m["letter_gap_dropped"] >= 1
+    row = next(r for r in frame_compare(str(p), str(p), (0, 300))["rows"] if r["key"] == "letter_gap_px")
+    assert row["pass"] is False and "미측정" in row["diff"]                           # 표본 0 은 통과가 아니다
+
+
+# ---------------------------------------------------------------- 업그레이드 자 연결(05 engine/upgrade_table) — kal_analyze 이름으로 불린다
+def test_upgrade_table_is_wired(monkeypatch):
+    from tools.calcopy.engine import kal_analyze as K
+    from tools.calcopy.engine import upgrade_table as U
+    monkeypatch.setattr(U, "upgrade_table", lambda st, doc, work: {"called": (st, doc, work)})
+    assert K.upgrade_table("판", "d", "w") == {"called": ("판", "d", "w")}

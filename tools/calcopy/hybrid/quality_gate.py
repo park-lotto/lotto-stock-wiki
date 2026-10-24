@@ -497,12 +497,16 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
                                                       + [f"{p.name}:{p.stat().st_size}:{int(p.stat().st_mtime)}" for p in lr]).encode()).hexdigest()[:24]
             match = _cached(store, key, lambda: K.match_from_render(st, doc, work, media=media, frame0_kind_measured=cache.get("frame0")))
             save_store()
+            match["ok"] = match.get("verdict") == "통과"       # 카드(preset_card match_ok)가 읽는 칸
             jsave(doc / "재현일치도.json", match)
             (doc / "재현일치도.md").write_text(K.match_md(match, f"{style_name} {doc.name}"), encoding="utf-8")
             ok, msg, _ = match_verdict(match, bool(st.get("base")))
-            if st.get("base"):
-                up = getattr(K, "upgrade_table", None)
-                match["upgrade"] = up(st, doc, work) if callable(up) else "kal_analyze.upgrade_table 없음(지시서 05 전)"
+            if st.get("base"):                                  # 업그레이드 판: 05 업그레이드 자 결과를 붙인다(판정은 05 의 gates.upgrade)
+                up = K.upgrade_table(st, doc, work)
+                cache["gates_upgrade"] = {**up["gates"]["upgrade"], "better_n": up["better_n"], "measured_n": up["measured_n"],
+                                          "file": str(doc / "업그레이드_측정.json")}
+                match["upgrade"] = cache["gates_upgrade"]
+                msg += f" · 업그레이드 나아짐 {up['gates']['upgrade']['better']}(사람 {up['human_n']}·미측정 {up['unmeasured_n']})"
             return ok, msg
         row("1차 자", "재현일치도(match_table)", m, "kal_analyze.match_from_render → 재현일치도.json")
     # ── 장면↔대사
@@ -538,6 +542,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
            "n": len(rows), "n_ok": sum(r["ok"] is True for r in rows), "n_bad": sum(r["ok"] is False for r in rows), "n_unmeasured": sum(r["ok"] is None for r in rows),
            "placement": tab.get("check"), "log": tab.get("log"),
            "match": {"verdict": match["verdict"], "file": str(doc / "재현일치도.json")} if match else None,
+           "gates": {"upgrade": cache.get("gates_upgrade")},      # preset_card L3 가 읽는다(업그레이드 판만, 1차 판은 None)
            "fit": {"summary": fit_res["summary"], "bench": fit_res.get("bench"), "file": str(doc / "장면대사.json")} if fit_res else None}
     if eye_pack and not legacy:
         try:
