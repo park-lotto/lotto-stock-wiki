@@ -111,39 +111,129 @@ def voice_recommend(S) -> str:
 
 
 def menu(axis: str = "all") -> list[dict]:
-    """장점 카탈로그 — 주인 channel/스타일.json strengths·options 를 읽어 축별로(새 장부 없음). axis·engine·style_cell 키가 없으면 '미기입'(장부에 채울 일)."""
+    """장점 카탈로그 — 주인 channel/스타일.json strengths·options 를 읽어 요소별로(새 장부 없음).
+    축 = 장부의 `element`(표준 §2-3 요소 15종 — 05 가 채움) > `axis`. 엔진 지원(○△×)·판 칸 = 장부 `engine`·`style_cell`. 장부에 없으면 '미기입'(짐작해 채우지 않는다 — 채울 일이 보이게).
+    axis 인자 = 'all' · 15종 이름(upgrade_table.AXES15) · 장부의 옛 axis 값(예 '화면')."""
     d = json.loads((ROOT / "channel/스타일.json").read_text(encoding="utf-8"))
     rows = []
+
+    def row(x: dict, kind: str, what, channel, evidence, source, views=None):
+        el = x.get("element") or x.get("axis") or "미기입"
+        rows.append({"axis": el, "axis_src": "장부" if (x.get("element") or x.get("axis")) else "미기입", "axis_old": x.get("axis"), "kind": kind,
+                     "what": what, "channel": channel, "evidence": evidence, "source": source, "views": views,
+                     "engine": x.get("engine") or "미기입", "style_cell": x.get("style_cell") or "미기입"})
     for st, v in (d.get("styles") or {}).items():
         for x in v.get("strengths") or []:
-            txt = json.dumps(x, ensure_ascii=False)
-            ax = x.get("axis") or next((a for a, kws in _AXIS_KW.items() if any(k in txt for k in kws)), "미기입")
-            rows.append({"axis": ax, "axis_src": "장부" if x.get("axis") else "추정", "kind": f"strength/{st}", "what": x.get("what"), "channel": x.get("channel"),
-                         "evidence": x.get("evidence") or x.get("strength"), "source": x.get("source"), "engine": x.get("engine") or "미기입", "style_cell": x.get("style_cell") or "미기입"})
+            row(x, f"strength/{st}", x.get("what"), x.get("channel"), x.get("evidence") or x.get("strength"), x.get("source"))
     for name, o in (d.get("options") or {}).items():
         if isinstance(o, dict):
-            txt = o.get("desc") or ""
-            ax = o.get("axis") or next((a for a, kws in _AXIS_KW.items() if any(k in txt for k in kws)), "미기입")
-            rows.append({"axis": ax, "axis_src": "장부" if o.get("axis") else "추정", "kind": f"option/{name}", "what": txt, "channel": o.get("bench") or o.get("source"),
-                         "evidence": o.get("why"), "source": o.get("judge"), "engine": o.get("engine") or "미기입", "style_cell": o.get("style_cell") or "미기입"})
-    return [r for r in rows if axis == "all" or r["axis"] == axis]
+            vs = [b.get("views_median") for b in (o.get("bench") or {}).values() if isinstance(b, dict) and isinstance(b.get("views_median"), (int, float))]
+            row(o, f"option/{name}", o.get("desc"), ",".join((o.get("bench") or {}).keys()) or o.get("source"), o.get("why") or o.get("bench"), o.get("judge") or o.get("source"),
+                max(vs) if vs else None)
+    return [r for r in rows if axis == "all" or axis in (r["axis"], r["axis_old"])]
+
+
+_ENGINE_RANK = {"○": 0, "△": 1, "×": 2}
+
+
+def _views_of(r: dict) -> float:
+    """근거 조회 — 장부 views_median, 없으면 evidence 글 속 '조회 …만'·'…만' 최대값(ⓑ 근거 조회가 큰 쪽)."""
+    if isinstance(r.get("views"), (int, float)):
+        return float(r["views"])
+    best = 0.0
+    for num, unit in re.findall(r"(\d[\d,.]*)\s*(만|억)", str(r.get("evidence") or "")):
+        try:
+            best = max(best, float(num.replace(",", "")) * (1e4 if unit == "만" else 1e8))
+        except ValueError:
+            pass
+    return best
+
+
+def _base_style(slug: str) -> tuple[str | None, dict]:
+    """1차 판 = styles/*.json 중 bench.channel == slug 이고 base 없는 판(초안 이름 ititemlog판 ≠ 실제 판 잇템로그판 — 10-25 실측)."""
+    sd = ROOT / "tools/calcopy/hybrid/styles"
+    for p in sorted(sd.glob("*.json")):
+        if p.stem.startswith("_"):
+            continue
+        try:
+            st = json.loads(p.read_text(encoding="utf-8"))
+        except ValueError:
+            continue
+        if (st.get("bench") or {}).get("channel") == slug and not st.get("base"):
+            return st.get("name") or p.stem, st
+    return None, {}
+
+
+def _kyeol(slug: str, plan: dict) -> tuple[list[str], str]:
+    """같은 결(스타일.json styles = 소리 구성 축) — ① styles.*.bench 에 slug 가 있으면 그것 ② 없으면 1차 판 script.audit count 로(원음+나레 = 현장썰 · 나레만 = 나레썰 · 원음만 = 자막썰)."""
+    d = json.loads((ROOT / "channel/스타일.json").read_text(encoding="utf-8"))
+    hit = [k for k, v in (d.get("styles") or {}).items() if slug in (v.get("bench") or {})]
+    if hit:
+        return hit, "장부 styles.*.bench"
+    cnt = {a.get("of"): a.get("min", 0) for a in ((plan.get("script") or {}).get("audit") or []) if a.get("kind") == "count"}
+    if cnt.get("orig", 0) >= 1 and cnt.get("tts", 0) >= 1:
+        return ["현장썰"], "추정 — 1차 판 audit count 원음·나레 둘 다"
+    if cnt.get("tts", 0) >= 1:
+        return ["나레썰"], "추정 — 1차 판 audit count 나레만"
+    if cnt.get("orig", 0) >= 1:
+        return ["자막썰"], "추정 — 1차 판 audit count 원음만"
+    return [], "결 모름(1차 판 audit count 없음)"
+
+
+SKELETON_EL = ("script", "cut_rhythm", "speech", "cap_enter", "sfx")   # 지침서 §5-1 뼈대(script·cuts·timing·typing_cps·variant_for·sfx 규칙) — 바꾸려면 사장님
+
+
+def recommend(slug: str, plan: dict) -> dict:
+    """업그레이드 추천 후보(지침서 §2-6-1 ②) — 카탈로그에서 같은 결·상위 편 근거·엔진 ○ 우선, 같은 요소끼리 부딪치면 ⓐ 같은 결 ⓑ 근거 조회 ⓒ 엔진 ○ ⓓ 사람.
+    ★후보일 뿐 — 판에 자동으로 넣지 않는다(사람이 고른다). 이 채널 자신의 옵션(bench 에 slug)은 1차 몫이라 뺀다. 엔진 × 는 '못 만듦'으로 따로."""
+    kyeol, ksrc = _kyeol(slug, plan)
+    d = json.loads((ROOT / "channel/스타일.json").read_text(encoding="utf-8"))
+    own = {f"option/{k}" for k, o in (d.get("options") or {}).items() if isinstance(o, dict) and slug in (o.get("bench") or {})}
+    cands, cant = [], []
+    for r in menu("all"):
+        if r["kind"] in own:
+            continue
+        same = r["kind"].startswith("strength/") and r["kind"].split("/", 1)[1] in kyeol
+        c = {"element": r["axis"], "kind": r["kind"], "what": r["what"], "channel": r["channel"], "same_kyeol": same, "views": _views_of(r),
+             "engine": r["engine"], "style_cell": r["style_cell"], "skeleton": r["axis"] in SKELETON_EL, "evidence": r["evidence"], "source": r["source"]}
+        (cant if r["engine"] == "×" else cands).append(c)
+    cands.sort(key=lambda c: (not c["same_kyeol"], -c["views"], _ENGINE_RANK.get(c["engine"], 3)))
+    groups: dict = {}
+    for i, c in enumerate(cands):
+        c["rank"] = i + 1
+        groups.setdefault(c["element"], []).append(c["rank"])
+    for c in cands:
+        g = groups[c["element"]]
+        if len(g) > 1:
+            first, second = cands[g[0] - 1], cands[g[1] - 1]
+            tie = (first["same_kyeol"], first["views"], first["engine"]) == (second["same_kyeol"], second["views"], second["engine"])
+            c["conflict"] = {"with": g, "rule": "ⓓ 사람(사장님) — ⓐⓑⓒ 로 못 가름" if tie else "ⓐ 같은 결 → ⓑ 근거 조회 → ⓒ 엔진 ○ 순으로 위가 앞"}
+    return {"kyeol": kyeol, "kyeol_src": ksrc, "candidates": cands, "cannot_build": cant,
+            "rule": "후보 — 사람이 고른다(자동 반영 금지). skeleton:true = 뼈대 요소(지침서 §5-1) — 바꾸려면 사장님 확인"}
 
 
 def stage_upgrade(S) -> dict:
-    """업그레이드 단계 자리(지침서 §2-6-1) — 1차 판 초안을 복사해 upgrades 빈 칸 + 카탈로그 메뉴. 추천 알고리즘·판 반영은 계획(§7 P1)."""
+    """업그레이드 단계(지침서 §2-6-1) — 1차 판(styles/ bench.channel==slug)을 base 로 상속하는 초안 + upgrades 빈 칸 + 추천 후보(recommend) + 카탈로그 메뉴.
+    측정 = engine/upgrade_table.py(판·완성본이 생긴 뒤). 추천은 후보일 뿐 판에 자동 반영하지 않는다."""
     kd = S.dir / "_kal"
     kd.mkdir(parents=True, exist_ok=True)
-    base = kd / f"{S.d['slug']}판_초안.json"
-    plan = json.loads(base.read_text(encoding="utf-8")) if base.exists() else {"name": f"{S.d['slug']}판", "_note": "1차 판 초안 없음 — rules 단계 먼저"}
-    up = {"name": f"{S.d['slug']}_업그레이드판", "base": plan.get("name"),   # styles.py 가 base 판을 상속(관제 235 6fcdcef89, 예 styles/연예인레시피판.json) — 바꾼 칸만 아래에 덮어쓴다
-          "_rule": "뼈대 칸(placement·script·cuts·timing·caption.typing_cps·variant_for·length·sfx_key)은 1차 값 그대로. 겉모양 칸만 근거 있는 장점으로 — 기록 필수(업그레이드_기록.md)",
-          "upgrades": [], "_upgrade_item": {"axis": "", "what": "", "why": "수치·채널·편", "source": "스타일.json strengths/options 키 또는 사고 기록", "expect": "나아질 측정값", "verify": "측정값|사람 판정"},
-          "menu": menu("all")}
+    name, plan = _base_style(S.d["slug"])
+    if not name:
+        base = kd / f"{S.d['slug']}판_초안.json"
+        plan = json.loads(base.read_text(encoding="utf-8")) if base.exists() else {"name": f"{S.d['slug']}판", "_note": "1차 판 초안 없음 — rules 단계 먼저"}
+        name = plan.get("name")
+    rec = recommend(S.d["slug"], plan)
+    up = {"name": f"{name}_v2", "base": name,   # styles.py 가 base 판을 상속(관제 235 6fcdcef89, 예 styles/연예인레시피판.json) — 바꾼 칸만 아래에 덮어쓴다
+          "_rule": "뼈대 칸(placement·script·cuts·timing·caption.typing_cps·variant_for·length·sfx_key)은 1차 값 그대로. 겉모양 칸만 근거 있는 장점으로 — 기록 필수(업그레이드_기록.md). 뼈대를 바꾸는 항목은 사장님 확인(skeleton:true)",
+          "upgrades": [], "_upgrade_item": {"axis": "표준 §2-3 15종 중 하나", "what": "", "why": "수치·채널·편", "source": "스타일.json strengths/options 키 또는 사고 기록·커밋", "expect": "나아질 측정값", "verify": "측정값|사람 판정"},
+          "recommend": rec, "menu": menu("all"),
+          "measure": f"PYTHONUTF8=1 py tools/calcopy/engine/upgrade_table.py {name}_v2 <doc> <work>"}
     (kd / f"{S.d['slug']}_업그레이드판_초안.json").write_text(json.dumps(up, ensure_ascii=False, indent=1), encoding="utf-8")
-    rec = kd / "업그레이드_기록.md"
-    if not rec.exists():
-        rec.write_text(f"# {S.d['slug']} 업그레이드 기록 — 무엇을 → 왜(수치·채널·편) → 예상 효과 → 검증(측정값|사람 판정)\n(근거 없이 바꾸는 것 금지 — 지침서 §2-6-1)\n", encoding="utf-8")
-    return {"draft": str(kd / f"{S.d['slug']}_업그레이드판_초안.json"), "record": str(rec), "menu_n": len(up["menu"])}
+    recp = kd / "업그레이드_기록.md"
+    if not recp.exists():
+        recp.write_text(f"# {S.d['slug']} 업그레이드 기록 — 무엇을 → 왜(수치·채널·편) → 예상 효과 → 검증(측정값|사람 판정)\n(근거 없이 바꾸는 것 금지 — 지침서 §2-6-1)\n", encoding="utf-8")
+    return {"draft": str(kd / f"{S.d['slug']}_업그레이드판_초안.json"), "record": str(recp), "menu_n": len(up["menu"]), "base": name,
+            "kyeol": rec["kyeol"], "kyeol_src": rec["kyeol_src"], "candidates": rec["candidates"], "cannot_build": rec["cannot_build"]}
 
 
 def _slug_of(ref: str) -> str:
@@ -491,7 +581,12 @@ def main(argv=None) -> int:
     if A.stage == "upgrade":
         S.save()
         r = stage_upgrade(S)
-        print(f"업그레이드 단계 자리: 초안 {r['draft']} · 기록 {r['record']} · 메뉴 {r['menu_n']}건 (추천·판 반영은 계획 — 지침서 §2-6-1)")
+        print(f"업그레이드 단계: base {r['base']} · 결 {r['kyeol']}({r['kyeol_src']}) · 초안 {r['draft']} · 기록 {r['record']} · 메뉴 {r['menu_n']}건")
+        print(f"추천 후보 {len(r['candidates'])}건(사람이 고른다 — 자동 반영 없음) · 엔진 × 못 만듦 {len(r['cannot_build'])}건")
+        for c in r["candidates"]:
+            print(f"  {c['rank']:2d}. [{c['element']}{' 뼈대' if c['skeleton'] else ''}] {c['kind']} 같은결={'○' if c['same_kyeol'] else '×'} 조회 {int(c['views']):,} 엔진 {c['engine']}"
+                  f"{' · 부딪침 ' + str(c['conflict']['with']) + ' ' + c['conflict']['rule'] if c.get('conflict') else ''} | {str(c['what'])[:60]}")
+        print("측정: PYTHONUTF8=1 py tools/calcopy/engine/upgrade_table.py <업그레이드판> <doc> <work>")
         return 0
     S.save()
     run(S, A.start)

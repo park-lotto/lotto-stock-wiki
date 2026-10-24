@@ -21,7 +21,11 @@
      ],
      "date": "2026-10-18",
      "evidence": "상위 50편 중 쇼핑 편 23편 전부 샤크탱크 · 쇼핑 편 조회 중앙 410만 · 기준 편 QMJtjJz4M6w 1,247만·50.5초 · 8편 실측 창 [0,434~437,1080,~1050] 8/8 동일 · 길이 29~60초 · 첫 컷 0.57~1.87초(7/8) · 통합 −7.1~−8.2 LUFS(트루피크 +1.0~+1.6, 클리핑) · 근거편 QMJtjJz4M6w, kmQGQNJgSVo, 2jJoIbdciDY, vbxJ_v132ao, hZgCO9PEnO8, mVzrvBpMu3E, aFqKN8s2cA8, HI--3fL7nt4",
-     "strength": "중"
+     "strength": "중",
+     "element": "script",
+     "engine": "○",
+     "style_cell": "script.brief(박자) + script.audit",
+     "axis": "script"
     },
     {
      "what": "원음 구간엔 나레를 끈다(교대) — 나레가 원음을 덮지 않는다",
@@ -29,7 +33,11 @@
      "strength": "강",
      "channel": "핫템리포트·썰풀다",
      "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
-     "date": "2026-10-18"
+     "date": "2026-10-18",
+     "element": "script",
+     "engine": "○",
+     "style_cell": "script.audit(count tts/orig 교대) — render_bench 줄 순서대로 깔아 겹침 0",
+     "axis": "script"
     },
     {
      "what": "나레 한 줄이 기능·궁금증을 말하고 끊으면 원음이 바로 그것을 시연한다(원음 = 제품 증거)",
@@ -37,7 +45,11 @@
      "strength": "중",
      "channel": "핫템리포트·썰풀다",
      "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
-     "date": "2026-10-18"
+     "date": "2026-10-18",
+     "element": "script",
+     "engine": "○",
+     "style_cell": "script.brief",
+     "axis": "script"
     },
     {
      "what": "원음 대사는 의역 감탄형 한국어 자막, 나레 자막과 색을 달리한다(원음 하늘색 / 나레 흰색)",
@@ -45,7 +57,11 @@
      "strength": "중",
      "channel": "핫템리포트",
      "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
-     "date": "2026-10-18"
+     "date": "2026-10-18",
+     "element": "cap_look",
+     "engine": "○",
+     "style_cell": "caption.pack(화자색 narr/orig) · placement.rules.enter",
+     "axis": "cap_look"
     },
     {
      "what": "원음 크기를 나레와 비슷하게 올린다(덕킹으로 묻지 않음)",
@@ -53,7 +69,11 @@
      "strength": "중",
      "channel": "핫템리포트·썰풀다",
      "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
-     "date": "2026-10-18"
+     "date": "2026-10-18",
+     "element": "bgm",
+     "engine": "○",
+     "style_cell": "bgm.duck_orig_db · render_bench.audio orig_gain(render_info.audio)",
+     "axis": "bgm"
     },
     {
      "what": "제품은 첫 프레임에, 제품 범주어는 훅(0~4.5초) 안에",
@@ -61,7 +81,11 @@
      "strength": "약",
      "channel": "핫템리포트·썰풀다",
      "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
-     "date": "2026-10-18"
+     "date": "2026-10-18",
+     "element": "thumb",
+     "engine": "○",
+     "style_cell": "썸네일.json(thumb_rule) + script.brief(범주어 훅)",
+     "axis": "thumb"
     },
     {
      "what": "끝은 전언 '~다고(하네요)' 뒤 원음 한 마디로 닫는다, 구매 유도 문장은 없다",
@@ -69,7 +93,11 @@
      "strength": "중",
      "channel": "핫템리포트·썰풀다",
      "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
-     "date": "2026-10-18"
+     "date": "2026-10-18",
+     "element": "script",
+     "engine": "○",
+     "style_cell": "script.audit(ending last_tts) + script.brief",
+     "axis": "script"
     },
     {
      "what": "제조사·사용자 본인 영상이면 원음을 판매 멘트로 그대로 살린다",
@@ -77,7 +105,11 @@
      "strength": "약",
      "channel": "핫템리포트",
      "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
-     "date": "2026-10-18"
+     "date": "2026-10-18",
+     "element": "script",
+     "engine": "○",
+     "style_cell": "script.brief + 대본 lines kind=orig(spans)",
+     "axis": "script"
     }
    ],
    "bench": {
@@ -402,7 +434,10 @@
     }
    },
    "axis": "대본·자막",
-   "name": "화자 대사 줄"
+   "name": "화자 대사 줄",
+   "element": "script",
+   "engine": "△",
+   "style_cell": "script.brief + frame.kind=post(render_bench _draw_post) — '화자 : 대사' 줄 꼴은 renderer jaemi 에만"
   },
   "따옴표인용반전": {
    "axis": "대본·자막",
@@ -413,7 +448,10 @@
      "of": 20,
      "source": "channel/godsungbi/스타일분석_2026-10-17.md"
     }
-   }
+   },
+   "element": "script",
+   "engine": "△",
+   "style_cell": "script.brief — 흰 화면 '라며' 0.3~0.8초 카드 장치는 render_bench 에 없음"
   },
   "연예인보증컷": {
    "axis": "화면",
@@ -432,7 +470,10 @@
      "note": "강주은 몬트리올 시즈닝"
     }
    },
-   "source": "channel/godsungbi/스타일분석_2026-10-17.md · channel/humorshowshow/대본스타일_줄판독_2026-10-17.md"
+   "source": "channel/godsungbi/스타일분석_2026-10-17.md · channel/humorshowshow/대본스타일_줄판독_2026-10-17.md",
+   "element": "scene_fit",
+   "engine": "○",
+   "style_cell": "재료.json cuts(연예인 본인 원본 컷) + script.brief"
   },
   "조회수줄": {
    "axis": "화면",
@@ -442,7 +483,10 @@
      "n": 21,
      "of": 21
     }
-   }
+   },
+   "element": "cap_look",
+   "engine": "○",
+   "style_cell": "frame.post.views_line(render_bench _draw_post)"
   },
   "AI캐릭터감정": {
    "axis": "화면",
@@ -453,7 +497,10 @@
      "of_videos": 21,
      "source": "channel/funbox/스타일분석_2026-10-18.md"
     }
-   }
+   },
+   "element": "meme",
+   "engine": "×",
+   "style_cell": "없음 — 그림 생성 장치 없음(render_bench 는 받은 짤만 meme_slot·meme_overlays)"
   },
   "AI장면재연": {
    "axis": "화면",
@@ -470,7 +517,10 @@
      "note": "개발자·발명가 사연 인물, 한 편 안 같은 얼굴",
      "source": "channel/apbuki/스타일분석_2026-10-18.md"
     }
-   }
+   },
+   "element": "scene_fit",
+   "engine": "×",
+   "style_cell": "없음 — AI 재연 그림 생성 장치 없음(재료.json 은 실제 영상 컷)"
   },
   "AI고지문구": {
    "axis": "화면",
@@ -481,7 +531,10 @@
      "of": 21
     }
    },
-   "note": "앞북이는 고지 없음"
+   "note": "앞북이는 고지 없음",
+   "element": "cap_look",
+   "engine": "△",
+   "style_cell": "frame.credit(글 한 줄 고정 표시) — 회색 굵은 글자 상시"
   },
   "감정효과": {
    "axis": "화면",
@@ -490,7 +543,10 @@
     "apbuki": {
      "source": "channel/apbuki/스타일분석_2026-10-18.md"
     }
-   }
+   },
+   "element": "sticker",
+   "engine": "△",
+   "style_cell": "caption.pack 등장 glitch 만 — 집중선·빛망울·색조 오버레이 없음"
   },
   "인포그래픽모션": {
    "axis": "화면",
@@ -503,7 +559,10 @@
      "note": "최근 편 1편에만 6장면, 상위 20편엔 없음(신규 시도)",
      "source": "channel/funbox/스타일분석_2026-10-18.md"
     }
-   }
+   },
+   "element": "meme",
+   "engine": "×",
+   "style_cell": "없음 — 모션그래픽 장치 없음"
   },
   "밈감정짤": {
    "axis": "화면",
@@ -515,7 +574,10 @@
     "humorshowshow": {
      "note": "화자대사줄과 함께"
     }
-   }
+   },
+   "element": "meme",
+   "engine": "○",
+   "style_cell": "placement.rules.meme(meme_step) → render_bench.meme_overlays"
   },
   "진짜는여기서부터": {
    "axis": "대본",
@@ -524,7 +586,10 @@
     "apbuki": {
      "source": "channel/apbuki/스타일분석_2026-10-18.md"
     }
-   }
+   },
+   "element": "script",
+   "engine": "○",
+   "style_cell": "script.brief"
   },
   "끝줄혼잣말웃음": {
    "axis": "대본",
@@ -539,7 +604,10 @@
    "laugh": [
     "ㅋㅋ",
     "ㅎㅎ"
-   ]
+   ],
+   "element": "script",
+   "engine": "○",
+   "style_cell": "script.audit(ending last_tts) + script.brief"
   }
  }
 }
