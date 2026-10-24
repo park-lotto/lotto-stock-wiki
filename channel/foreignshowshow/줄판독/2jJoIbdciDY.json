@@ -89,7 +89,15 @@
     "sec": null,
     "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
    },
-   "emph": [],
+   "emph": [
+    {
+     "word": "펌프로 땅콩버터를",
+     "hex": "#F4E749",
+     "color": "노랑",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
    "sticker": [
     {
      "what": "빨간원",
@@ -158,14 +166,22 @@
     930,
     986
    ],
-   "fill_hex": "#51FFE6",
+   "fill_hex": "#51FFE8",
    "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
    "glow": {
     "hex": "글자와 같은 색",
     "sec": null,
     "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
    },
-   "emph": [],
+   "emph": [
+    {
+     "word": "짜는 남자",
+     "hex": "#51FFE8",
+     "color": "민트",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
    "sticker": [],
    "sfx": null,
    "scene": "손·제품 근접",
@@ -230,7 +246,15 @@
     "sec": null,
     "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
    },
-   "emph": [],
+   "emph": [
+    {
+     "word": "오 와우",
+     "hex": "#4FFFF5",
+     "color": "민트",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
    "sticker": [],
    "sfx": null,
    "scene": "얼굴",
@@ -286,7 +310,7 @@
     928,
     988
    ],
-   "fill_hex": "#FCF9F7",
+   "fill_hex": "#FBF9F7",
    "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
    "glow": {
     "hex": "글자와 같은 색",
@@ -352,10 +376,10 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    929,
-    988
+    933,
+    987
    ],
-   "fill_hex": "#FBFAFA",
+   "fill_hex": "#FBF9FA",
    "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
    "glow": {
     "hex": "글자와 같은 색",
@@ -365,7 +389,7 @@
    "emph": [
     {
      "word": "불편한 기존통",
-     "hex": "#D93E55",
+     "hex": "#D93F56",
      "color": "빨강"
     }
    ],
@@ -398,13 +422,13 @@
    },
    "_meas": {
     "line_h": [
-     59
+     54
     ],
     "blur_in": 1,
     "blur_out": 1,
     "x_span": [
-     141,
-     1080
+     162,
+     920
     ]
    }
   },
@@ -434,7 +458,7 @@
    "emph": [
     {
      "word": "빠르고",
-     "hex": "#F07FC4",
+     "hex": "#F080C4",
      "color": "분홍"
     }
    ],
@@ -476,7 +500,7 @@
     "blur_in": 1,
     "blur_out": 1,
     "x_span": [
-     299,
+     314,
      781
     ]
    }
@@ -497,7 +521,7 @@
     929,
     988
    ],
-   "fill_hex": "#FCF9F7",
+   "fill_hex": "#FDF9F7",
    "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
    "glow": {
     "hex": "글자와 같은 색",
@@ -507,7 +531,7 @@
    "emph": [
     {
      "word": "훨씬 쉬워지죠",
-     "hex": "#F4E749",
+     "hex": "#F3E74A",
      "color": "노랑"
     }
    ],
@@ -569,7 +593,7 @@
     928,
     988
    ],
-   "fill_hex": "#FCF9FC",
+   "fill_hex": "#FAF9FC",
    "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
    "glow": {
     "hex": "글자와 같은 색",
@@ -638,10 +662,10 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    902,
+    895,
     1022
    ],
-   "fill_hex": "#FBF9FA",
+   "fill_hex": "#FAF9FC",
    "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
    "glow": {
     "hex": "글자와 같은 색",
@@ -674,9 +698,14 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "exit": "cut",
+   "exit": "가로흐림(1프레임)",
    "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
    "notes": "줄 안 14.067초 색 번쩍(빨강)",
+   "y_measured": [
+    900,
+    1042
+   ],
+   "y_basis": "틀값(preset/_hand/measure_caps.json 1줄 929~988·2줄 895~1022·크게 921~995) — 이 줄 픽셀 측정이 장면 잡음·색 번짐으로 빗나감",
    "max_w": 1000,
    "size_px": 68,
    "shadow": {
@@ -688,11 +717,11 @@
    },
    "_meas": {
     "line_h": [
-     46,
+     48,
      59
     ],
     "blur_in": 0,
-    "blur_out": 0,
+    "blur_out": 1,
     "x_span": [
      111,
      969
@@ -715,7 +744,7 @@
     929,
     987
    ],
-   "fill_hex": "#FBF9F8",
+   "fill_hex": "#FBFAF9",
    "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
    "glow": null,
    "emph": [],
@@ -824,7 +853,7 @@
     "blur_in": 0,
     "blur_out": 1,
     "x_span": [
-     182,
+     179,
      822
     ]
    }
@@ -852,7 +881,15 @@
     "sec": null,
     "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
    },
-   "emph": [],
+   "emph": [
+    {
+     "word": "짜준다고",
+     "hex": "#4BABF0",
+     "color": "파랑",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
    "sticker": [],
    "sfx": null,
    "scene": "얼굴",
@@ -908,7 +945,7 @@
     929,
     988
    ],
-   "fill_hex": "#FBF9F9",
+   "fill_hex": "#FBF9FA",
    "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
    "glow": {
     "hex": "글자와 같은 색",
@@ -987,7 +1024,15 @@
     "sec": null,
     "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
    },
-   "emph": [],
+   "emph": [
+    {
+     "word": "그런데 이 때",
+     "hex": "#50FF5A",
+     "color": "초록",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
    "sticker": [],
    "sfx": null,
    "scene": "얼굴",
@@ -1053,7 +1098,7 @@
    "emph": [
     {
      "word": "직접 만들어먹기까지 한다는",
-     "hex": "#F080C4",
+     "hex": "#F07FC4",
      "color": "분홍"
     }
    ],
@@ -1090,12 +1135,12 @@
    "_meas": {
     "line_h": [
      58,
-     39
+     51
     ],
     "blur_in": 0,
     "blur_out": 0,
     "x_span": [
-     129,
+     131,
      950
     ]
    }
@@ -1116,7 +1161,7 @@
     929,
     987
    ],
-   "fill_hex": "#FBF9FC",
+   "fill_hex": "#FBF9FA",
    "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
    "glow": {
     "hex": "글자와 같은 색",
@@ -1126,7 +1171,7 @@
    "emph": [
     {
      "word": "투자자가",
-     "hex": "#4BACF0",
+     "hex": "#4BACF1",
      "color": "파랑"
     }
    ],
@@ -1204,7 +1249,7 @@
     },
     {
      "word": "막히진 않겠지 ?",
-     "hex": "#D93E54",
+     "hex": "#D83E54",
      "color": "빨강"
     }
    ],
@@ -1244,13 +1289,13 @@
    },
    "_meas": {
     "line_h": [
-     59,
-     41
+     60,
+     53
     ],
     "blur_in": 0,
     "blur_out": 1,
     "x_span": [
-     156,
+     120,
      899
     ]
    }
@@ -1271,7 +1316,7 @@
     895,
     1022
    ],
-   "fill_hex": "#FBFAFA",
+   "fill_hex": "#FBF9FA",
    "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
    "glow": {
     "hex": "글자와 같은 색",
@@ -1338,7 +1383,7 @@
     "blur_in": 1,
     "blur_out": 1,
     "x_span": [
-     0,
+     24,
      998
     ]
    }
@@ -1369,7 +1414,7 @@
    "emph": [
     {
      "word": "냉장고에 넣어도 되는거겠지 ?",
-     "hex": "#F2E749",
+     "hex": "#F3E749",
      "color": "노랑"
     }
    ],
@@ -1410,7 +1455,7 @@
     "blur_in": 0,
     "blur_out": 0,
     "x_span": [
-     0,
+     31,
      988
     ]
    }
@@ -1431,14 +1476,22 @@
     929,
     986
    ],
-   "fill_hex": "#EE994A",
+   "fill_hex": "#EE9A49",
    "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
    "glow": {
     "hex": "글자와 같은 색",
     "sec": null,
     "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
    },
-   "emph": [],
+   "emph": [
+    {
+     "word": "진짜 애호가 다운",
+     "hex": "#EE9A49",
+     "color": "주황",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
    "sticker": [],
    "sfx": null,
    "scene": "얼굴",
@@ -1494,7 +1547,7 @@
     929,
     988
    ],
-   "fill_hex": "#FBF9FB",
+   "fill_hex": "#FBF9FC",
    "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
    "glow": {
     "hex": "글자와 같은 색",
@@ -1573,7 +1626,15 @@
     "sec": null,
     "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
    },
-   "emph": [],
+   "emph": [
+    {
+     "word": "아니",
+     "hex": "#D93E54",
+     "color": "빨강",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
    "sticker": [],
    "sfx": null,
    "scene": "얼굴",
@@ -1639,7 +1700,16 @@
     "sec": null,
     "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
    },
-   "emph": [],
+   "emph": [
+    {
+     "word": "냉장고에 안넣은 땅콩버터만 가능해",
+     "hex": "#FCE23D",
+     "color": "노랑",
+     "whole": true,
+     "hex_basis": "팔레트값(이 줄 픽셀 표본 40 미만)",
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
    "sticker": [],
    "sfx": {
     "kind": "기타",
@@ -1841,7 +1911,7 @@
     928,
     988
    ],
-   "fill_hex": "#FCF9F7",
+   "fill_hex": "#FAF9FC",
    "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
    "glow": {
     "hex": "글자와 같은 색",
@@ -2039,7 +2109,7 @@
     "blur_out": 0,
     "x_span": [
      255,
-     1029
+     1035
     ]
    }
   },
@@ -2066,7 +2136,15 @@
     "sec": null,
     "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
    },
-   "emph": [],
+   "emph": [
+    {
+     "word": "..내가 리더다 왜",
+     "hex": "#D83E52",
+     "color": "빨강",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
    "sticker": [],
    "sfx": null,
    "scene": "얼굴",
@@ -2110,7 +2188,7 @@
   },
   {
    "t0": 48.533,
-   "t1": 49.5,
+   "t1": 49.467,
    "speaker": "나레",
    "text": "결국 남은 넷도",
    "layer": "해외쇼츠",
@@ -2143,9 +2221,7 @@
    "scene": "얼굴",
    "scene_desc": "손 흔드는 여성 투자자",
    "fit": 6,
-   "cut_at": [
-    49.433
-   ],
+   "cut_at": [],
    "font": {
     "name": "GmarketSansBold(추정)",
     "basis": "preset/_hand/measure_title.json fontmatch 1위(제목 표본) + 자막 1줄 잉크 높이 59~60px = 68px 꼴(preset 실측 measure_caps) — 자막 줄 글꼴 자체 대조는 안 함"
@@ -2156,7 +2232,7 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "exit": "cut",
+   "exit": "가로흐림(1프레임)",
    "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
    "max_w": 1000,
    "size_px": 68,
@@ -2172,22 +2248,22 @@
      58
     ],
     "blur_in": 0,
-    "blur_out": 0,
+    "blur_out": 1,
     "x_span": [
-     71,
+     85,
      758
     ]
    }
   },
   {
-   "t0": 49.5,
+   "t0": 49.467,
    "t1": 50.133,
    "speaker": "나레",
    "text": "모두 아웃",
    "layer": "해외쇼츠",
    "role": "끝",
-   "enter": "instant",
-   "enter_ms": 0,
+   "enter": "기타(가로 흐림 넘김 1프레임)",
+   "enter_ms": 33,
    "variant": "줄 전체 한 색(빨강)",
    "type_cps": null,
    "cursor": false,
@@ -2195,14 +2271,22 @@
     930,
     986
    ],
-   "fill_hex": "#D93E54",
+   "fill_hex": "#D83E55",
    "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
    "glow": {
     "hex": "글자와 같은 색",
     "sec": null,
     "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
    },
-   "emph": [],
+   "emph": [
+    {
+     "word": "모두 아웃",
+     "hex": "#D83E55",
+     "color": "빨강",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
    "sticker": [],
    "sfx": null,
    "scene": "얼굴",
@@ -2221,7 +2305,7 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "exit": "cut",
+   "exit": "가로흐림(1프레임)",
    "confidence": "픽셀(시각·y·채움/강조 hex·크게·가로흐림·컷/전환: 30fps 자막 마스크·cutdet·색 번쩍)/눈(글·화자·역할·fit·장면·스티커 종류)/신호(motion·sfx)",
    "max_w": 1000,
    "size_px": 68,
@@ -2236,11 +2320,11 @@
     "line_h": [
      56
     ],
-    "blur_in": 0,
-    "blur_out": 0,
+    "blur_in": 1,
+    "blur_out": 1,
     "x_span": [
      410,
-     680
+     682
     ]
    }
   },
@@ -2267,7 +2351,15 @@
     "sec": null,
     "note": "색 글자 둘레 같은 색 번짐 2~10px(rules.json caption.glow)"
    },
-   "emph": [],
+   "emph": [
+    {
+     "word": "행운을 빌어 ..",
+     "hex": "#ED9769",
+     "color": "주황",
+     "whole": true,
+     "note": "줄 전체 한 색 — 채널 기본 채움(흰 #FDFAFA)과 다른 색이라 강조로 셈(원리 §4 '색 있는 칸 96%')"
+    }
+   ],
    "sticker": [],
    "sfx": null,
    "scene": "얼굴",
@@ -2303,7 +2395,7 @@
     "blur_out": 1,
     "x_span": [
      335,
-     1068
+     1067
     ]
    }
   },
@@ -2323,7 +2415,7 @@
     929,
     988
    ],
-   "fill_hex": "#FBF9FA",
+   "fill_hex": "#F9FAFC",
    "outline": "외곽선 없음 — 흰 글자 오른쪽아래 그림자(dx3·dy3·흐림6·α0.75), 색 글자 같은 색 번짐+오른쪽아래 2px 어두운 테(tools/calcopy/shark/rules.json caption, QMJ 크롭 실측)",
    "glow": {
     "hex": "글자와 같은 색",
