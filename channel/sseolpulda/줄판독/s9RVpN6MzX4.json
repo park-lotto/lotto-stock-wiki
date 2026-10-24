@@ -1,0 +1,644 @@
+{
+ "id": "s9RVpN6MzX4",
+ "dur": 10.574,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   0,
+   1080,
+   1920
+  ],
+  "bg_hex": null,
+  "caption_band": [
+   1140,
+   1250
+  ],
+  "title_y": [],
+  "source_y": null,
+  "logo_y": null,
+  "source_hex": null,
+  "watermark": null,
+  "note": "틀 C'(제목 없음 — 0초부터 끝까지 전체화면, 위 띠·제목 0). 자막 흰 글 검정 외곽, y≈1140~1250(화면 가운데 아래)"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.3,
+   "speaker": "나레",
+   "text": "믿을 놈 하나 없다더니",
+   "layer": null,
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1150,
+    1230
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "빨간 화살표",
+     "t_in": 0.0,
+     "t_out": 1.4,
+     "x": 674,
+     "y": 1296,
+     "w": 300,
+     "h": 100,
+     "anim": "cut 등장·오른쪽(매트 든 보조)을 가리킴, 0~1.4 제자리(눈)"
+    }
+   ],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "철봉 위 공중 회전 선수 + 매트 든 보조(화살표가 보조를 짚음)",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 1.633,
+   "t1": 2.067,
+   "speaker": "나레",
+   "text": "평온하게",
+   "layer": null,
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1140,
+    1241
+   ],
+   "fill_hex": "#FBFAFA",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "철봉 대차돌기 시작",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.067,
+   "t1": 2.433,
+   "speaker": "나레",
+   "text": "루틴을",
+   "layer": null,
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1139,
+    1239
+   ],
+   "fill_hex": "#F9F8F9",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "철봉 위 물구나무 자세",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.433,
+   "t1": 3.0,
+   "speaker": "나레",
+   "text": "수행하던",
+   "layer": null,
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1140,
+    1239
+   ],
+   "fill_hex": "#F9F9F9",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "철봉 회전 중",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.0,
+   "t1": 3.567,
+   "speaker": "나레",
+   "text": "이 남자",
+   "layer": null,
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽) + 낱말 강조색",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1139,
+    1238
+   ],
+   "fill_hex": "#EECF49",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "이 남자",
+     "hex": "#F1CB64"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "철봉에 매달린 선수(멀리)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.067,
+   "t1": 4.767,
+   "speaker": "나레",
+   "text": "그리고 잠시 후",
+   "layer": null,
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1141,
+    1239
+   ],
+   "fill_hex": "#FBFBFB",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "철봉 위 회전",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.767,
+   "t1": 5.4,
+   "speaker": "나레",
+   "text": "최악의 상황을",
+   "layer": null,
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽) + 낱말 강조색",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1140,
+    1239
+   ],
+   "fill_hex": "#E6245C",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "최악의 상황",
+     "hex": "#F56064"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "선수가 철봉에서 미끄러지기 시작",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.4,
+   "t1": 5.867,
+   "speaker": "나레",
+   "text": "맞이하게",
+   "layer": null,
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1139,
+    1238
+   ],
+   "fill_hex": "#FAF9FA",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "철봉에서 몸이 빠짐",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.867,
+   "t1": 6.733,
+   "speaker": "나레",
+   "text": "될 줄은 꿈에도",
+   "layer": null,
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1139,
+    1239
+   ],
+   "fill_hex": "#FCFCFC",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "선수가 손을 놓치고 떨어지는 순간",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 6.733,
+   "t1": 7.5,
+   "speaker": "나레",
+   "text": "몰랐을 겁니다",
+   "layer": null,
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1140,
+    1239
+   ],
+   "fill_hex": "#FDFCFC",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 7.24,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +20.6dB(유성 0.27·고립 0.5) — 귀 확인 못 함"
+   },
+   "scene": "기타",
+   "scene_desc": "떨어진 선수·보조가 매트를 든 채 서 있음",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 7.967,
+   "t1": 8.6,
+   "speaker": "나레",
+   "text": "그래서 곁에",
+   "layer": null,
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1148,
+    1229
+   ],
+   "fill_hex": "#FEFEFD",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(💀 해골 이모지)",
+     "t_in": 7.533,
+     "t_out": 9.667,
+     "x": 437,
+     "y": 227,
+     "w": 227,
+     "h": 243,
+     "anim": "cut 등장(흑백 되감기 구간과 함께), 제자리"
+    }
+   ],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "흑백 되감기: 철봉에서 떨어지는 선수(해골 이모지)",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.6,
+   "t1": 9.467,
+   "speaker": "나레",
+   "text": "믿음직한 조수가",
+   "layer": null,
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽) + 낱말 강조색",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1138,
+    1230
+   ],
+   "fill_hex": "#F1D94A",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "믿음직한 조수",
+     "hex": "#F3D36C"
+    }
+   ],
+   "sticker": [
+    {
+     "what": "기타(💀 해골 이모지)",
+     "t_in": 7.533,
+     "t_out": 9.667,
+     "x": 437,
+     "y": 227,
+     "w": 227,
+     "h": 243,
+     "anim": "cut 등장(흑백 되감기 구간과 함께), 제자리"
+    }
+   ],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "흑백: 보조가 매트를 들어 떨어지는 선수 밑을 받침",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 9.467,
+   "t1": 10.133,
+   "speaker": "나레",
+   "text": "있어야 하죠",
+   "layer": null,
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1139,
+    1239
+   ],
+   "fill_hex": "#FBF9FB",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(💀 해골 이모지)",
+     "t_in": 7.533,
+     "t_out": 9.667,
+     "x": 437,
+     "y": 227,
+     "w": 227,
+     "h": 243,
+     "anim": "cut 등장(흑백 되감기 구간과 함께), 제자리"
+    }
+   ],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "매트 위로 떨어진 선수(9.667 컬러로 돌아옴)",
+   "fit": 7,
+   "cut_at": [
+    9.667
+   ],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  }
+ ],
+ "no_caption": [
+  [
+   1.3,
+   1.633
+  ],
+  [
+   3.567,
+   4.067
+  ],
+  [
+   7.5,
+   7.967
+  ],
+  [
+   10.133,
+   10.574
+  ]
+ ],
+ "beats": "훅(0~1.3 '믿을 놈 하나 없다더니' + 빨간 화살표로 보조 짚기) → 다리(1.63~3.57 '평온하게 루틴을 수행하던 이 남자') → 이음(4.07 '그리고 잠시 후') → 고조(4.77~7.5 '최악의 상황을 맞이하게 될 줄은 꿈에도 몰랐을 겁니다', 떨어지는 순간) → 반전·공개(7.97~9.47 흑백 되감기+해골 '그래서 곁에 믿음직한 조수가') → 끝(9.47~10.13 '있어야 하죠', CTA 없음)",
+ "narr_share": "나레 줄 13/13, 나레 8.8초/10.574초",
+ "notes": [
+  "존댓말 나레 1명(스피치매틱스 10-15 25낱말이 자막과 낱말 단위로 맞음 — 소리 '잠시 후', 화면 '그리고 잠시 후'만 다름).",
+  "제목·위 띠 없음 — 0초부터 끝까지 전체화면(이번 표본에서 D3Pc(제목 0.83초) 다음으로 틀 없는 편).",
+  "6.733 자막 교체('될 줄은 꿈에도'→'몰랐을 겁니다')는 capseg 가 못 가름(잉크 폭 비슷) — 30fps 띠(work2/fr/s9_r.jpg)에서 눈으로 6.733.",
+  "강조색 3줄: 노랑 #F1CB64·#F3D36C('이 남자'·'믿음직한 조수'), 분홍빨강 #F56064('최악의 상황') — 핵심 명사.",
+  "7.533~9.667 흑백 되감기 + 💀 해골 이모지(채널이 얹은 것으로 봄 — 흑백 처리와 같이 등장).",
+  "자막 사이 빈칸 3곳(0.33~0.5초) — 말 쉼과 함께 자막도 빠진다."
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "체육관 철봉에서 공중 회전하는 남자 선수 + 매트 든 보조 + 첫 자막·빨간 화살표가 0초부터 떠 있음",
+  "face_frac": 0.01,
+  "text": "믿을 놈 하나 없다더니"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈: 1초 시트·구간 시트·30fps 띠·원본 프레임 확대 / 픽셀: seg2(capseg 양극 변형)·cutdet·boxm·colk / 신호: sfx_events) 2026-10-25 (관제 263 지시서 06 · sseolpulda)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr",
+ "sound_mode": "나레",
+ "title_mode": "없음",
+ "sound_detail": "한국어 존댓말 나레 1명(스피치매틱스 10-15) + 배경음"
+}
