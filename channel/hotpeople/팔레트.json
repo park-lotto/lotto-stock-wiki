@@ -1,0 +1,114 @@
+{
+ "n_docs": 6,
+ "roles": {
+  "본문": [
+   {
+    "hex": "#000000",
+    "n_lines": 156,
+    "n_docs": 6,
+    "docs": [
+     "BzMWncGDhnY",
+     "N4VoQUIwb-I",
+     "X4GIghUr_B4",
+     "dvJg0By8Luw",
+     "s1Z5z_TrnPA",
+     "z1fgI__kSPw"
+    ],
+    "members": [
+     "#000000",
+     "#030000",
+     "#020000"
+    ]
+   }
+  ],
+  "강조": [
+   {
+    "hex": "#E71D21",
+    "n_lines": 4,
+    "n_docs": 1,
+    "docs": [
+     "BzMWncGDhnY"
+    ],
+    "members": [
+     "#E71D21"
+    ]
+   },
+   {
+    "hex": "#F4FE01",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "z1fgI__kSPw"
+    ],
+    "members": [
+     "#F4FE01"
+    ]
+   }
+  ],
+  "외곽선": [
+   {
+    "hex": "#000000",
+    "n_lines": 312,
+    "n_docs": 6,
+    "docs": [
+     "BzMWncGDhnY",
+     "N4VoQUIwb-I",
+     "X4GIghUr_B4",
+     "dvJg0By8Luw",
+     "s1Z5z_TrnPA",
+     "z1fgI__kSPw"
+    ],
+    "members": [
+     "#000000"
+    ]
+   }
+  ],
+  "글로우": [],
+  "제목": [
+   {
+    "hex": "#000000",
+    "n_lines": 8,
+    "n_docs": 6,
+    "docs": [
+     "BzMWncGDhnY",
+     "N4VoQUIwb-I",
+     "X4GIghUr_B4",
+     "dvJg0By8Luw",
+     "s1Z5z_TrnPA",
+     "z1fgI__kSPw"
+    ],
+    "members": [
+     "#000000"
+    ]
+   },
+   {
+    "hex": "#E71D21",
+    "n_lines": 4,
+    "n_docs": 4,
+    "docs": [
+     "BzMWncGDhnY",
+     "N4VoQUIwb-I",
+     "X4GIghUr_B4",
+     "s1Z5z_TrnPA"
+    ],
+    "members": [
+     "#E71D21"
+    ]
+   },
+   {
+    "hex": "#F4FE01",
+    "n_lines": 2,
+    "n_docs": 2,
+    "docs": [
+     "dvJg0By8Luw",
+     "z1fgI__kSPw"
+    ],
+    "members": [
+     "#F4FE01"
+    ]
+   }
+  ],
+  "스티커": [],
+  "출처": []
+ }
+}
