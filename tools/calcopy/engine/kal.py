@@ -351,7 +351,12 @@ def step_frames(S: State):
             continue
         tt = json.loads((S.dir / "뜯기" / vid / "뜯기.json").read_text(encoding="utf-8"))
         y0, y1 = _win(tt)
-        lst = K.frames_cmd(str(base / "src" / f"{vid}.mp4"), str(od), max(0, y0 - 20), min(1920, y1 + 20), 2, 80)
+        from tools.calcopy.engine.readline_tools.build_lr import bands_for   # 띠·창 주인 = readline_tools(지시서 13)
+        bd = bands_for(S.d["slug"], tt.get("layout"))
+        lst = K.frames_cmd(str(base / "src" / f"{vid}.mp4"), str(od), max(0, y0 - 20), min(1920, y1 + 20), 2, 80,
+                           window=tuple(bd["window"]), cap_band=tuple(bd["cap_band"]) if bd["cap_band"] else None)
+        lst.setdefault("readline", {})["bands_why"] = bd["why"]
+        (od / f"판독목록_{vid}.json").write_text(json.dumps(lst, ensure_ascii=False, indent=1), encoding="utf-8")
         outs[vid] = str(od)
     return "done", {"dirs": outs}, f"시트·0.1초 띠 {len(outs)}편"
 

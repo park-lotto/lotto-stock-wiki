@@ -13,7 +13,7 @@ spec 꼴(예: examples/ititemlog_SbW.py): ID · TITLE · LAYOUT · FRAME0 · LIN
 출력: 줄판독 json(kal_analyze check --strict 칸 꼴)
 
     PYTHONUTF8=1 py tools/calcopy/engine/readline_tools/build_lr.py <spec.py> <out.json> --work <seg·cut 폴더> --mp4 <원본.mp4>
-        [--sfx-raw sfx_raw.json] [--profile examples/ititemlog_profile.json] [--seg x.json --cut y.json]
+        [--sfx-raw sfx_raw.json] [--profile profiles/ititemlog.json] [--seg x.json --cut y.json]
     (잇템로그 예: --work C:/숏템_칼카피/ititemlog/work/lr6 --mp4 C:/숏템_칼카피/ititemlog/src/<id>.mp4 --sfx-raw C:/숏템_칼카피/ititemlog/kal/sfx_raw.json)
 """
 from __future__ import annotations
@@ -46,6 +46,43 @@ def load_profile(p: str | None) -> dict:
     if p:
         prof.update({k: v for k, v in json.loads(Path(p).read_text(encoding="utf-8")).items() if not k.startswith("_")})
     return prof
+
+
+PROFILES = Path(__file__).resolve().parent / "profiles"
+CAP_PAD = 100   # 채널 프로필이 없을 때 뜯기 caption_band(OCR 글자 띠, 빡빡함) 위아래 여유 — 손 값 아님(재현 안 됨, README '띠 민감')
+
+
+def channel_profile(slug: str) -> dict | None:
+    """profiles/<slug>.json (채널 값 한 곳) — 없으면 None."""
+    p = PROFILES / f"{slug}.json"
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
+
+
+def bands_for(slug: str, layout: dict | None, H: int = 1920) -> dict:
+    """capseg 띠·cutdet 창을 정하는 주인 — 프로필(손으로 정한 값) > 뜯기 layout(caption_band±CAP_PAD · window) > 없음.
+    kal.py step_frames 가 부른다. 돌려줌 {cap_band, window, why}."""
+    prof = channel_profile(slug) or {}
+    lay = layout or {}
+    cb, why = prof.get("capseg_band"), []
+    if cb:
+        why.append(f"capseg 띠 = profiles/{slug}.json")
+    elif lay.get("caption_band") and len(lay["caption_band"]) == 2:
+        c = lay["caption_band"]
+        cb = [max(0, int(c[0]) - CAP_PAD), min(H, int(c[1]) + CAP_PAD)]
+        why.append(f"capseg 띠 = 뜯기 caption_band±{CAP_PAD}(프로필 없음 — 손 띠와 결과가 다를 수 있다)")
+    else:
+        why.append("capseg 띠 없음 → 건너뜀")
+    win = prof.get("cutdet_window")
+    if win:
+        why.append(f"cutdet 창 = profiles/{slug}.json")
+    elif lay.get("window") and len(lay["window"]) == 4:
+        w = lay["window"]
+        win = [int(w[1]), min(H, int(w[1]) + int(w[3]))]
+        why.append("cutdet 창 = 뜯기 layout.window")
+    else:
+        win = [0, H]
+        why.append("cutdet 창 = 전체")
+    return {"cap_band": cb, "window": win, "why": " · ".join(why)}
 
 
 def sfx_ok_of(sfx_raw: dict | None, vid: str) -> list[dict]:

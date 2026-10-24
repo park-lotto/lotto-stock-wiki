@@ -112,6 +112,39 @@ def test_kal_analyze_frames_calls_readline(synth, tmp_path):
     assert "seg" not in lst2["readline"] and "건너뜀" in lst2["readline"]["capseg"] and lst2["readline"]["window"] == [0, H]
 
 
+def test_bands_for_profile_then_layout():
+    b = build_lr.bands_for("ititemlog", {"caption_band": [1257, 1342], "window": [0, 486, 1080, 1434]})
+    assert b["cap_band"] == [1150, 1460] and b["window"] == [486, 1920] and "profiles/ititemlog.json" in b["why"]
+    b = build_lr.bands_for("__없는채널__", {"caption_band": [1257, 1342], "window": [0, 486, 1080, 1434]})
+    assert b["cap_band"] == [1257 - build_lr.CAP_PAD, 1342 + build_lr.CAP_PAD] and b["window"] == [486, 1920]
+    b = build_lr.bands_for("__없는채널__", {})
+    assert b["cap_band"] is None and b["window"] == [0, 1920]
+
+
+def test_kal_step_frames_runs_capseg(synth, tmp_path, monkeypatch):
+    """kal.py 흐름: 뜯기 layout 의 caption_band 로 capseg·segsheet 까지 돈다(05 뒤 연결)."""
+    from tools.calcopy.engine import kal
+    data = tmp_path / "data"
+    (data / "zz/src").mkdir(parents=True)
+    shutil.copy(synth, data / "zz/src/vv.mp4")
+    cdir = tmp_path / "ch"
+    (cdir / "뜯기/vv").mkdir(parents=True)
+    (cdir / "뜯기/vv/뜯기.json").write_text(json.dumps({"layout": {"window": [0, 0, W, H], "caption_band": [1230, 1360]}}), encoding="utf-8")
+    monkeypatch.setattr(kal, "DATA", data)
+
+    class St:
+        d = {"slug": "zz"}
+        dir = cdir
+
+        def step(self, n):
+            return {"outputs": {"ids": ["vv"]}}
+    state, out, _ = kal.step_frames(St())
+    od = Path(out["dirs"]["vv"])
+    lst = json.loads((od / "판독목록_vv.json").read_text(encoding="utf-8"))
+    assert (od / "seg_vv.json").exists() and lst["readline"]["band"] == [1130, 1460] and "caption_band" in lst["readline"]["bands_why"]
+    assert any(abs(s["t0"] - 1.0) <= 1 / FPS for s in json.loads((od / "seg_vv.json").read_text()))
+
+
 def test_no_scratchpad_reference():
     hits = [str(p) for p in TOOLS.rglob("*") if p.is_file() and p.suffix in (".py", ".md", ".json")
             and "scratchpad" in p.read_text(encoding="utf-8", errors="replace")]
@@ -132,7 +165,7 @@ def test_reproduce_ititemlog_SbW(tmp_path):
     assert cd == json.loads((_LR6 / "cut_SbWTqCnleC8.json").read_text())
     S = build_lr.load_spec(str(TOOLS / "examples/ititemlog_SbW.py"))
     sfx = json.loads(_SFX.read_text(encoding="utf-8")) if _SFX.exists() else None
-    doc = build_lr.build_doc(S, segs, cd, str(_SRC), sfx, build_lr.load_profile(str(TOOLS / "examples/ititemlog_profile.json")))
+    doc = build_lr.build_doc(S, segs, cd, str(_SRC), sfx, build_lr.load_profile(str(TOOLS / "profiles/ititemlog.json")))
     ref = json.loads((ROOT / "channel/ititemlog/줄판독/SbWTqCnleC8.json").read_text(encoding="utf-8"))
     if sfx is None:
         pytest.skip("sfx_raw 없음")

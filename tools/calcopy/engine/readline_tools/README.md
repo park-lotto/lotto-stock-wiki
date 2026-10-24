@@ -19,14 +19,14 @@ PYTHONUTF8=1 py tools/calcopy/engine/readline_tools/segsheet.py <mp4> seg_<id>.j
 PYTHONUTF8=1 py tools/calcopy/engine/readline_tools/px.py       <mp4> <t> <띠y0> <띠y1> [K]          # 색 글자
 PYTHONUTF8=1 py tools/calcopy/engine/readline_tools/px.py box   <mp4> <띠y0> <띠y1> <t1> [t2 ...]    # 흰 글자
 PYTHONUTF8=1 py tools/calcopy/engine/readline_tools/build_lr.py <spec.py> <out.json> --work <seg·cut 폴더> --mp4 <원본> \
-      [--sfx-raw <sfx_raw.json>] [--profile examples/ititemlog_profile.json]
+      [--sfx-raw <sfx_raw.json>] [--profile profiles/ititemlog.json]
 ```
 한 번에: `kal_analyze frames <mp4> --out <dir> --y0 <띠> --y1 <띠> --cap-band y0,y1 --window y0,y1` → strips/ + `seg_`·`cut_`·`segsheet_` 가 같은 폴더에,
 이어서 `kal_analyze skeleton <dir> --spec <spec.py> --mp4 <원본> [--sfx-raw] [--profile] --out 줄판독/<id>.json`.
 `kal.py` frames 단계는 영상 창만 넘기므로 cutdet 만 돌고 capseg 는 "건너뜀(자막 띠 모름)" 으로 남는다 — 자막 띠는 `--cap-band` 로 따로.
 
 ## 채널 값
-- 띠·창은 채널마다 다르다. 잇템로그: capseg 띠 1150~1460 · cutdet 창 486~1920 · 측정 띠(build_lr) 1180~1470 → `examples/ititemlog_profile.json`.
+- 띠·창은 채널마다 다르다. 잇템로그: capseg 띠 1150~1460 · cutdet 창 486~1920 · 측정 띠(build_lr) 1180~1470 → `profiles/ititemlog.json`.
 - `examples/ititemlog_*.py` = 잇템로그 4편 spec(06 워커가 눈으로 적은 것) — spec 꼴 견본. 새 채널은 프로필 json 을 복사해 글꼴·외곽·층 이름을 고친다.
 
 ## 재현 대조 (10-25, SbWTqCnleC8)
