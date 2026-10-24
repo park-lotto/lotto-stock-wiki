@@ -189,7 +189,7 @@ def _sfx_table(style: dict) -> dict:
     d = json.loads(p.read_text(encoding="utf-8"))
     out = {}
     for k, v in d.items():
-        if k.startswith("_") or not isinstance(v, dict):
+        if k == "_meta" or not isinstance(v, dict):       # 편 id 가 _ 로 시작할 수 있다(_Wa4IehA6yE) — 표식 칸은 _meta 하나뿐
             continue
         if prefix:
             if not k.startswith(prefix + "/"):
@@ -222,7 +222,7 @@ def count(style: dict) -> dict:
         trans, n_trans, roles, sfx_lines = Counter(), 0, Counter(), []
         for k_, l in enumerate(rows):
             roles[role_key(l.get("role"))] += 1
-            if k_ and "transition" in l:              # 칸이 있는 줄만 분모(빈 칸 = 안 잰 것, '전환 없음'과 다르다)
+            if k_ and l.get("transition") not in (None, ""):      # 잰 줄만 분모(null·빈 칸 = 안 잰 것, '전환 없음(cut·none)'과 다르다)
                 n_trans += 1; trans[trans_key(l.get("transition"))] += 1
             s = l.get("sfx")
             if isinstance(s, dict) and s.get("kind"):
