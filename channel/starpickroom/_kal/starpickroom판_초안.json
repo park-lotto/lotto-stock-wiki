@@ -17,7 +17,7 @@
   "name": null,
   "voice_id": null,
   "candidates": [],
-  "why": "미정 — 사장님께. 근거: engine/sound/narr_report 10-19 닮은 우리 목소리 1위 tc-yura(21Vo 1.55·VbpdN 1.85), 2위권 문정 — 스타일분석.md §7"
+  "why": "미정 — 사장님께. 근거: engine/sound/narr_report 10-25 닮은 우리 목소리 1위 tc-yura 4/8편(21Vo 1.55·VbpdN 1.85·EZQl 2.01·onmw 2.31) — 스타일분석.md §7"
  },
  "cps_target": 9.29,
  "bgm": {
@@ -74,13 +74,13 @@
    "orig_enter": "instant",
    "fx_rate": {
     "나레": 0.97,
-    "원음": 0.23,
+    "원음": 0.22,
     "제3자": 0.07,
     "불명": 0.0
    },
    "plain_rate": 0.66,
    "by_pos": {
-    "본문": 0.38,
+    "본문": 0.37,
     "끝": 0.1,
     "훅": 0.38
    },

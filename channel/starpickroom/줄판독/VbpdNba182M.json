@@ -438,11 +438,7 @@
     1168
    ],
    "scene": "얼굴",
-   "sfx": {
-    "kind": "broad",
-    "t": 17.33,
-    "basis": "신호(_kal/sfx_events.json 고립 솟음 19.8dB · 귀 확인 못 함 — 원본 조리·말소리일 수 있음)"
-   },
+   "sfx": null,
    "cut_at": [],
    "cursor": false,
    "emph": [],
@@ -471,7 +467,11 @@
     1168
    ],
    "scene": "얼굴",
-   "sfx": null,
+   "sfx": {
+    "kind": "broad",
+    "t": 17.33,
+    "basis": "신호(_kal/sfx_events.json 고립 솟음 19.8dB · 귀 확인 못 함 — 원본 조리·말소리일 수 있음) · 자막교체(17.4) 0.07초 앞"
+   },
    "cut_at": [],
    "cursor": false,
    "emph": [],
