@@ -17,7 +17,7 @@ import { resolveTools } from './tools_paths.js';
 import { readLicense, saveLicense, keyPrint, deviceName, ENGINE_VERSION } from './license.js';
 import { keyStatus } from './engine/voice.js';
 import { homeDir, workDir, writeFileIn, jail } from './paths.js';
-import { selftest } from './selftest.js';
+import { selftest, encoderCheck } from './selftest.js';
 import { makeStep, aiList } from './make_flow.js';
 import { requestContent, answer as aiAnswer, engineRoot } from './engine_bridge.js';
 import { sweep as sweepRented } from './preset_rent.js';
@@ -103,10 +103,10 @@ export function buildServer(ctx = makeCtx()) {
     let free = null;
     try { const s = fs.statfsSync(workDir().split(/[\\/]/)[0] + (process.platform === 'win32' ? '\\' : '/')); free = Math.round((s.bavail * s.bsize) / 1e8) / 10; } catch { /* 모름 */ }
     if (free != null && free < 3) fails.push({ where: '디스크', why: '디스크 여유가 부족합니다', fix: '작업 폴더 디스크를 비워 주세요', retry_ok: true });
-    const info = { license: lic, tools: { mode: tools.mode, ok: !tools.problems.length, problems: tools.problems.map(p => `${p.tool}: ${p.why}`) }, keys: { typecast: keyStatus('typecast') }, disk_free_gb: free, device_name: deviceName(), work_dir: workDir() };
+    const info = { license: lic, tools: { mode: tools.mode, ok: !tools.problems.length, problems: tools.problems.map(p => `${p.tool}: ${p.why}`) }, keys: { typecast: keyStatus('typecast') }, disk_free_gb: free, device_name: deviceName(), work_dir: workDir(), video_encoder: await encoderCheck() };   // 'gpu'=그래픽카드 우선 · 'cpu'(98 #79)
     if (st) {
       const r = await selftest();
-      info.selftest = { report: r.report, items: r.items.map(i => ({ name: i.name, ok: i.ok, ...(i.file ? { file: i.file } : {}), ...(i.skipped ? { skipped: i.why } : {}), ...(i.version ? { version: i.version, ass_filter: i.ass_filter } : {}) })) };
+      info.selftest = { report: r.report, items: r.items.map(i => ({ name: i.name, ok: i.ok, ...(i.file ? { file: i.file } : {}), ...(i.skipped ? { skipped: i.why } : {}), ...(i.version ? { version: i.version, ass_filter: i.ass_filter } : {}), ...(i.encoder ? { encoder: i.encoder, how: i.how } : {}) })) };
       fails.push(...r.fails);
     }
     audit('setup', { result: fails.length ? 'fail' : 'ok', n: fails.length });

@@ -11,6 +11,7 @@ disallowed-tools: Bash PowerShell Write Edit NotebookEdit
 1. `shortem_setup` 도구를 부른다. 인자 `$ARGUMENTS` 가 `quick` 이면 `{"selftest": false}`, 아니면 `{"selftest": true}`.
 2. 결과를 사용자에게 **한국어로 짧게** 알린다 — 항목마다 "됨 / 안 됨" 한 줄씩.
    - 안 된 항목이 있으면 도구가 돌려준 `fix` 문장을 그대로 전한다. 다른 해결책을 지어내지 않는다.
+   - `video_encoder` 를 한 줄로 알린다 — `gpu` 면 "영상 만들기: 그래픽카드 우선(빠름)", `cpu` 면 "영상 만들기: CPU(그래픽카드 인코딩 없음 — 화질은 같고 시간이 더 걸려요)". 둘 다 정상이다. 숏템이 알아서 고르니 회원이 바꿀 것은 없다.
    - 도구가 "실행 도구가 아직 없습니다"라고 하면: `shortem_setup` 을 `{"install": true}` 로 불러 설치를 시작하고(설정에 키가 없다고 나오면 사용자에게 `/plugin configure shortem@shortem` 으로 키를 넣게 한 뒤 다시), 30초마다 `shortem_setup` 을 다시 불러 진행(받는 중 몇 %)을 한 줄로 알린다. "설치를 마쳤습니다"가 나오면 Claude Code 를 완전히 껐다 켜 달라고 안내한다.
    - 라이선스 키가 없다고 나오면: `/plugin configure shortem@shortem` 을 입력해 키를 붙여 넣으라고 안내한다. **키를 채팅에 붙여 넣으라고 하지 않는다.**
    - 목소리 키(타입캐스트)가 없다고 나오면: 설정 화면(`shortem_settings(action="open")`)의 **소리** 칸 '목소리 키'에 typecast.ai 개발자 화면의 API 키를 붙여 넣고 저장하라고 안내한다. **키를 채팅에 붙여 넣으라고 하지 않는다.**
