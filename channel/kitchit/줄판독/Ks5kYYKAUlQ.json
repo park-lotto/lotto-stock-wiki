@@ -1,10 +1,44 @@
 {
  "id": "Ks5kYYKAUlQ",
  "dur": 10.356,
- "fps": 30,
- "size": "1080x1920",
- "title_lines": [],
- "source_label": "출처: 박세리의 속사정 → AHC(스타일분석 기준, 이번에 재확인 안 함)",
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "가을 햇볕에 피부 찢어질 때?",
+   "colors": [
+    {
+     "word": "가을 햇볕에 피부 찢어질 때?",
+     "hex": "#FFFFFF(가을 햇볕 = 빨강)"
+    }
+   ]
+  },
+  {
+   "text": "박세리가 '몇 통째' 쓴 선크림!",
+   "colors": [
+    {
+     "word": "박세리가 '몇 통째' 쓴 선크림!",
+     "hex": "#000000(노랑 박스)"
+    }
+   ]
+  }
+ ],
+ "source_label": "출처: 박세리의 속사정 → 출처: AHC(5.9초부터)",
+ "layout": {
+  "window": [
+   0,
+   420,
+   1080,
+   1500
+  ],
+  "caption_y": [
+   1290,
+   1420
+  ]
+ },
  "lines": [
   {
    "t0": 0.07,
@@ -12,20 +46,73 @@
    "speaker": "나레",
    "text": "솔직히 선크림",
    "layer": "채널",
+   "role": "훅",
    "enter": "pop",
    "enter_ms": 130,
    "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1311,
+    1394
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 7,
+    "hex": "#151618",
+    "basis": "픽셀(Cs-Ka '1년 내내' 행 스캔, 스타일분석 §1)"
+   },
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "cut_at": [],
    "scene": "기타",
-   "y": [
-    1290,
-    1420
-   ],
-   "fill_hex": "#FFFFFF",
-   "notes": "30fps 3~4프레임에 거의 완성(시작 프레임이 0.1 이라 앞 2프레임 못 봄), 강조색 없음"
+   "scene_desc": "박세리 골프 화보 방사형 줌 블러 등장",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "Jalnan2",
+    "basis": "뜯기 fontmatch 합산 1위 0.36(Cs-Ka) + 눈 대조 '생각도 안 하고' — BRa 는 폭이 좁아 TmonMonsori 와도 닮음(스타일분석 §1)"
+   },
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "zoomblur(영상 시작 — 방사형 블러 3프레임)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1": "눈(10-18 30fps 띠)+픽셀(capseg 대조)",
+    "text": "눈",
+    "speaker": "눈(말꼴·vtt)",
+    "role": "눈",
+    "fit": "눈(2fps 전체 시트)",
+    "enter": "눈(30fps 띠)",
+    "y": "픽셀(px.fill_clusters 흰/색 묶음 2~98%)",
+    "fill_hex": "픽셀(px.fill_clusters)",
+    "font": "눈+뜯기 fontmatch",
+    "transition": "픽셀(cutdet)+눈(30fps 띠 확인)",
+    "motion": "신호(cutdet 샷 chg)",
+    "sticker": "눈(10-18)",
+    "sfx": "신호(sfx_events 고립 솟음, 귀 확인 못 함)"
+   },
+   "notes": "30fps 3~4프레임에 거의 완성(시작 프레임이 0.1 이라 앞 2프레임 못 봄), 강조색 없음",
+   "transition_m": {
+    "cut_t": 0.033,
+    "kind_cutdet": "cut",
+    "diff": 29.9,
+    "blurfr": 0,
+    "basis": "readline_tools.cutdet(창 y420~1500, 자막 띠 마스크 안 함)"
+   },
+   "size_px": 73,
+   "ring": {
+    "px": 2,
+    "hex": "#FFFFFF",
+    "basis": "픽셀(바깥 흰 테두리 한 겹 — 스타일분석 §1)"
+   },
+   "shadow": null,
+   "box": null,
+   "max_w": 900
   },
   {
    "t0": 0.77,
@@ -33,22 +120,73 @@
    "speaker": "나레",
    "text": "바르면 피부",
    "layer": "채널",
+   "role": "훅",
    "enter": "fade",
    "enter_ms": 100,
    "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1311,
+    1393
+   ],
+   "fill_hex": "#FEFCFE",
+   "outline": {
+    "px": 7,
+    "hex": "#151618",
+    "basis": "픽셀(Cs-Ka '1년 내내' 행 스캔, 스타일분석 §1)"
+   },
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "cut_at": [
-    0.733
-   ],
    "scene": "손·제품 근접",
-   "y": [
-    1290,
-    1420
-   ],
-   "fill_hex": "#FFFFFF",
-   "notes": "컷 직전 검은 1프레임(0.73, 영상 효과) → 반투명 1프레임 → 108% → 100% (스타일분석과 같음). 강조색 없음"
+   "scene_desc": "검은 1프레임 뒤 박세리 흰 셔츠 화보 미소",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "Jalnan2",
+    "basis": "뜯기 fontmatch 합산 1위 0.36(Cs-Ka) + 눈 대조 '생각도 안 하고' — BRa 는 폭이 좁아 TmonMonsori 와도 닮음(스타일분석 §1)"
+   },
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "black",
+   "exit": "cut",
+   "confidence": {
+    "t0t1": "눈(10-18 30fps 띠)+픽셀(capseg 대조)",
+    "text": "눈",
+    "speaker": "눈(말꼴·vtt)",
+    "role": "눈",
+    "fit": "눈(2fps 전체 시트)",
+    "enter": "눈(30fps 띠)",
+    "y": "픽셀(px.fill_clusters 흰/색 묶음 2~98%)",
+    "fill_hex": "픽셀(px.fill_clusters)",
+    "font": "눈+뜯기 fontmatch",
+    "transition": "픽셀(cutdet)+눈(30fps 띠 확인)",
+    "motion": "신호(cutdet 샷 chg)",
+    "sticker": "눈(10-18)",
+    "sfx": "신호(sfx_events 고립 솟음, 귀 확인 못 함)"
+   },
+   "notes": "컷 직전 검은 1프레임(0.73, 영상 효과) → 반투명 1프레임 → 108% → 100% (스타일분석과 같음). 강조색 없음",
+   "transition_m": {
+    "cut_t": 0.733,
+    "kind_cutdet": "black",
+    "diff": 192.1,
+    "blurfr": 0,
+    "basis": "readline_tools.cutdet(창 y420~1500, 자막 띠 마스크 안 함)"
+   },
+   "size_px": 73,
+   "ring": {
+    "px": 2,
+    "hex": "#FFFFFF",
+    "basis": "픽셀(바깥 흰 테두리 한 겹 — 스타일분석 §1)"
+   },
+   "shadow": null,
+   "box": null,
+   "max_w": 900
   },
   {
    "t0": 1.53,
@@ -56,9 +194,23 @@
    "speaker": "나레",
    "text": "찢어질 것 같잖아?",
    "layer": "채널",
+   "role": "훅",
    "enter": "pop",
    "enter_ms": 170,
    "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1319,
+    1386
+   ],
+   "fill_hex": "#FDFCFD",
+   "outline": {
+    "px": 7,
+    "hex": "#151618",
+    "basis": "픽셀(Cs-Ka '1년 내내' 행 스캔, 스타일분석 §1)"
+   },
+   "glow": null,
    "emph": [
     {
      "word": "찢어질 것",
@@ -67,16 +219,53 @@
    ],
    "sticker": [],
    "sfx": null,
-   "cut_at": [
-    1.467
-   ],
    "scene": "기타",
-   "y": [
-    1290,
-    1420
-   ],
-   "fill_hex": "#FFFFFF",
-   "notes": "처음 1~2프레임 어두운 반투명"
+   "scene_desc": "골프 스윙 화보(줌 블러로 들어옴)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "Jalnan2",
+    "basis": "뜯기 fontmatch 합산 1위 0.36(Cs-Ka) + 눈 대조 '생각도 안 하고' — BRa 는 폭이 좁아 TmonMonsori 와도 닮음(스타일분석 §1)"
+   },
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "zoomblur",
+   "exit": "cut",
+   "confidence": {
+    "t0t1": "눈(10-18 30fps 띠)+픽셀(capseg 대조)",
+    "text": "눈",
+    "speaker": "눈(말꼴·vtt)",
+    "role": "눈",
+    "fit": "눈(2fps 전체 시트)",
+    "enter": "눈(30fps 띠)",
+    "y": "픽셀(px.fill_clusters 흰/색 묶음 2~98%)",
+    "fill_hex": "픽셀(px.fill_clusters)",
+    "font": "눈+뜯기 fontmatch",
+    "transition": "픽셀(cutdet)+눈(30fps 띠 확인)",
+    "motion": "신호(cutdet 샷 chg)",
+    "sticker": "눈(10-18)",
+    "sfx": "신호(sfx_events 고립 솟음, 귀 확인 못 함)"
+   },
+   "notes": "처음 1~2프레임 어두운 반투명",
+   "transition_m": {
+    "cut_t": 1.467,
+    "kind_cutdet": "cut",
+    "diff": 91.7,
+    "blurfr": 2,
+    "basis": "readline_tools.cutdet(창 y420~1500, 자막 띠 마스크 안 함)"
+   },
+   "size_px": 73,
+   "ring": {
+    "px": 2,
+    "hex": "#FFFFFF",
+    "basis": "픽셀(바깥 흰 테두리 한 겹 — 스타일분석 §1)"
+   },
+   "shadow": null,
+   "box": null,
+   "max_w": 900
   },
   {
    "t0": 2.3,
@@ -84,9 +273,23 @@
    "speaker": "원음",
    "text": "이거 다 썼어 선크림",
    "layer": "채널",
+   "role": "증거",
    "enter": "fade",
    "enter_ms": 100,
    "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1309,
+    1395
+   ],
+   "fill_hex": "#FBFAFC",
+   "outline": {
+    "px": 7,
+    "hex": "#151618",
+    "basis": "픽셀(Cs-Ka '1년 내내' 행 스캔, 스타일분석 §1)"
+   },
+   "glow": null,
    "emph": [
     {
      "word": "이거 다 썼어",
@@ -95,16 +298,53 @@
    ],
    "sticker": [],
    "sfx": null,
-   "cut_at": [
-    2.267
-   ],
    "scene": "얼굴",
-   "y": [
-    1290,
-    1420
-   ],
-   "fill_hex": "#FFFFFF",
-   "notes": "반투명 1프레임 → 108% → 100%"
+   "scene_desc": "선크림 병을 얼굴 앞으로 짬",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "Jalnan2",
+    "basis": "뜯기 fontmatch 합산 1위 0.36(Cs-Ka) + 눈 대조 '생각도 안 하고' — BRa 는 폭이 좁아 TmonMonsori 와도 닮음(스타일분석 §1)"
+   },
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": {
+    "t0t1": "눈(10-18 30fps 띠)+픽셀(capseg 대조)",
+    "text": "눈",
+    "speaker": "눈(말꼴·vtt)",
+    "role": "눈",
+    "fit": "눈(2fps 전체 시트)",
+    "enter": "눈(30fps 띠)",
+    "y": "픽셀(px.fill_clusters 흰/색 묶음 2~98%)",
+    "fill_hex": "픽셀(px.fill_clusters)",
+    "font": "눈+뜯기 fontmatch",
+    "transition": "픽셀(cutdet)",
+    "motion": "신호(cutdet 샷 chg)",
+    "sticker": "눈(10-18)",
+    "sfx": "신호(sfx_events 고립 솟음, 귀 확인 못 함)"
+   },
+   "notes": "반투명 1프레임 → 108% → 100%",
+   "transition_m": {
+    "cut_t": 2.267,
+    "kind_cutdet": "cut",
+    "diff": 101.0,
+    "blurfr": 0,
+    "basis": "readline_tools.cutdet(창 y420~1500, 자막 띠 마스크 안 함)"
+   },
+   "size_px": 73,
+   "ring": {
+    "px": 2,
+    "hex": "#FFFFFF",
+    "basis": "픽셀(바깥 흰 테두리 한 겹 — 스타일분석 §1)"
+   },
+   "shadow": null,
+   "box": null,
+   "max_w": 900
   },
   {
    "t0": 3.3,
@@ -112,9 +352,23 @@
    "speaker": "원음",
    "text": "난 선크림만 바르면 돼",
    "layer": "채널",
+   "role": "증거",
    "enter": "cut",
    "enter_ms": 0,
    "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1306,
+    1394
+   ],
+   "fill_hex": "#FDFCFC",
+   "outline": {
+    "px": 7,
+    "hex": "#151618",
+    "basis": "픽셀(Cs-Ka '1년 내내' 행 스캔, 스타일분석 §1)"
+   },
+   "glow": null,
    "emph": [
     {
      "word": "선크림만",
@@ -123,16 +377,53 @@
    ],
    "sticker": [],
    "sfx": null,
-   "cut_at": [
-    3.3
-   ],
    "scene": "얼굴",
-   "y": [
-    1290,
-    1420
-   ],
-   "fill_hex": "#FFFFFF",
-   "notes": "30fps 99→100프레임에 거의 완성(1프레임 작은 팝 가능, 구분 못 함)"
+   "scene_desc": "손으로 얼굴에 선크림 바름",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "Jalnan2",
+    "basis": "뜯기 fontmatch 합산 1위 0.36(Cs-Ka) + 눈 대조 '생각도 안 하고' — BRa 는 폭이 좁아 TmonMonsori 와도 닮음(스타일분석 §1)"
+   },
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": {
+    "t0t1": "눈(10-18 30fps 띠)+픽셀(capseg 대조)",
+    "text": "눈",
+    "speaker": "눈(말꼴·vtt)",
+    "role": "눈",
+    "fit": "눈(2fps 전체 시트)",
+    "enter": "눈(30fps 띠)",
+    "y": "픽셀(px.fill_clusters 흰/색 묶음 2~98%)",
+    "fill_hex": "픽셀(px.fill_clusters)",
+    "font": "눈+뜯기 fontmatch",
+    "transition": "픽셀(cutdet)",
+    "motion": "신호(cutdet 샷 chg)",
+    "sticker": "눈(10-18)",
+    "sfx": "신호(sfx_events 고립 솟음, 귀 확인 못 함)"
+   },
+   "notes": "30fps 99→100프레임에 거의 완성(1프레임 작은 팝 가능, 구분 못 함)",
+   "transition_m": {
+    "cut_t": 3.3,
+    "kind_cutdet": "cut",
+    "diff": 79.8,
+    "blurfr": 0,
+    "basis": "readline_tools.cutdet(창 y420~1500, 자막 띠 마스크 안 함)"
+   },
+   "size_px": 73,
+   "ring": {
+    "px": 2,
+    "hex": "#FFFFFF",
+    "basis": "픽셀(바깥 흰 테두리 한 겹 — 스타일분석 §1)"
+   },
+   "shadow": null,
+   "box": null,
+   "max_w": 900
   },
   {
    "t0": 4.27,
@@ -140,22 +431,73 @@
    "speaker": "나레",
    "text": "에이 선크림이",
    "layer": "채널",
+   "role": "질문",
    "enter": "fade",
    "enter_ms": 130,
    "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1314,
+    1393
+   ],
+   "fill_hex": "#FFFDFE",
+   "outline": {
+    "px": 7,
+    "hex": "#151618",
+    "basis": "픽셀(Cs-Ka '1년 내내' 행 스캔, 스타일분석 §1)"
+   },
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "cut_at": [
-    4.233
-   ],
    "scene": "기타",
-   "y": [
-    1290,
-    1420
-   ],
-   "fill_hex": "#FFFFFF",
-   "notes": "반투명 1프레임 → 108% → 100%, 강조색 없음, 분홍 배경 위 흰 글"
+   "scene_desc": "분홍 셔츠 박세리 손가락 하트(제품 없음)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "Jalnan2",
+    "basis": "뜯기 fontmatch 합산 1위 0.36(Cs-Ka) + 눈 대조 '생각도 안 하고' — BRa 는 폭이 좁아 TmonMonsori 와도 닮음(스타일분석 §1)"
+   },
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": {
+    "t0t1": "눈(10-18 30fps 띠)+픽셀(capseg 대조)",
+    "text": "눈",
+    "speaker": "눈(말꼴·vtt)",
+    "role": "눈",
+    "fit": "눈(2fps 전체 시트)",
+    "enter": "눈(30fps 띠)",
+    "y": "픽셀(px.fill_clusters 흰/색 묶음 2~98%)",
+    "fill_hex": "픽셀(px.fill_clusters)",
+    "font": "눈+뜯기 fontmatch",
+    "transition": "픽셀(cutdet)",
+    "motion": "신호(cutdet 샷 chg)",
+    "sticker": "눈(10-18)",
+    "sfx": "신호(sfx_events 고립 솟음, 귀 확인 못 함)"
+   },
+   "notes": "반투명 1프레임 → 108% → 100%, 강조색 없음, 분홍 배경 위 흰 글",
+   "transition_m": {
+    "cut_t": 4.233,
+    "kind_cutdet": "cut",
+    "diff": 53.6,
+    "blurfr": 1,
+    "basis": "readline_tools.cutdet(창 y420~1500, 자막 띠 마스크 안 함)"
+   },
+   "size_px": 73,
+   "ring": {
+    "px": 2,
+    "hex": "#FFFFFF",
+    "basis": "픽셀(바깥 흰 테두리 한 겹 — 스타일분석 §1)"
+   },
+   "shadow": null,
+   "box": null,
+   "max_w": 900
   },
   {
    "t0": 5.13,
@@ -163,9 +505,23 @@
    "speaker": "나레",
    "text": "에센스 같다고?",
    "layer": "채널",
+   "role": "질문",
    "enter": "typing",
    "enter_ms": 270,
    "variant": "기타(낱말·글자 단위로 이어 붙음)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1322,
+    1388
+   ],
+   "fill_hex": "#FFFEFF",
+   "outline": {
+    "px": 7,
+    "hex": "#151618",
+    "basis": "픽셀(Cs-Ka '1년 내내' 행 스캔, 스타일분석 §1)"
+   },
+   "glow": null,
    "emph": [
     {
      "word": "에센스",
@@ -184,16 +540,53 @@
     }
    ],
    "sfx": null,
-   "cut_at": [
-    5.067
-   ],
    "scene": "얼굴",
-   "y": [
-    1290,
-    1420
-   ],
-   "fill_hex": "#FFFFFF",
-   "notes": "'에센스' 먼저 → '같' → '다고?' 로 한 덩어리가 0.27초에 완성"
+   "scene_desc": "검은 1프레임 뒤 박세리 검정 코트 화보 웃음",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "Jalnan2",
+    "basis": "뜯기 fontmatch 합산 1위 0.36(Cs-Ka) + 눈 대조 '생각도 안 하고' — BRa 는 폭이 좁아 TmonMonsori 와도 닮음(스타일분석 §1)"
+   },
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "black",
+   "exit": "cut",
+   "confidence": {
+    "t0t1": "눈(10-18 30fps 띠)+픽셀(capseg 대조)",
+    "text": "눈",
+    "speaker": "눈(말꼴·vtt)",
+    "role": "눈",
+    "fit": "눈(2fps 전체 시트)",
+    "enter": "눈(30fps 띠)",
+    "y": "픽셀(px.fill_clusters 흰/색 묶음 2~98%)",
+    "fill_hex": "픽셀(px.fill_clusters)",
+    "font": "눈+뜯기 fontmatch",
+    "transition": "픽셀(cutdet)+눈(30fps 띠 확인)",
+    "motion": "신호(cutdet 샷 chg)",
+    "sticker": "눈(10-18)",
+    "sfx": "신호(sfx_events 고립 솟음, 귀 확인 못 함)"
+   },
+   "notes": "'에센스' 먼저 → '같' → '다고?' 로 한 덩어리가 0.27초에 완성",
+   "transition_m": {
+    "cut_t": 5.067,
+    "kind_cutdet": "black",
+    "diff": 212.5,
+    "blurfr": 0,
+    "basis": "readline_tools.cutdet(창 y420~1500, 자막 띠 마스크 안 함)"
+   },
+   "size_px": 73,
+   "ring": {
+    "px": 2,
+    "hex": "#FFFFFF",
+    "basis": "픽셀(바깥 흰 테두리 한 겹 — 스타일분석 §1)"
+   },
+   "shadow": null,
+   "box": null,
+   "max_w": 900
   },
   {
    "t0": 5.93,
@@ -201,9 +594,23 @@
    "speaker": "원음",
    "text": "나도 워낙 많이 발라봤는데",
    "layer": "채널",
+   "role": "증거",
    "enter": "cut",
    "enter_ms": 0,
    "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1290,
+    1420
+   ],
+   "fill_hex": "#FFFDFF",
+   "outline": {
+    "px": 7,
+    "hex": "#151618",
+    "basis": "픽셀(Cs-Ka '1년 내내' 행 스캔, 스타일분석 §1)"
+   },
+   "glow": null,
    "emph": [
     {
      "word": "워낙",
@@ -212,16 +619,53 @@
    ],
    "sticker": [],
    "sfx": null,
-   "cut_at": [
-    5.9
-   ],
    "scene": "손·제품 근접",
-   "y": [
-    1290,
-    1420
-   ],
-   "fill_hex": "#FFFFFF",
-   "notes": "컷과 같이 첫 프레임 완성"
+   "scene_desc": "소파 세 사람 대화, 테이블에 제품",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "Jalnan2",
+    "basis": "뜯기 fontmatch 합산 1위 0.36(Cs-Ka) + 눈 대조 '생각도 안 하고' — BRa 는 폭이 좁아 TmonMonsori 와도 닮음(스타일분석 §1)"
+   },
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": {
+    "t0t1": "눈(10-18 30fps 띠)+픽셀(capseg 대조)",
+    "text": "눈",
+    "speaker": "눈(말꼴·vtt)",
+    "role": "눈",
+    "fit": "눈(2fps 전체 시트)",
+    "enter": "눈(30fps 띠)",
+    "y": "눈(10-18 판독값 — px 묶음 높이 112px 가 배경에 오염돼 버림)",
+    "fill_hex": "픽셀(px.fill_clusters)",
+    "font": "눈+뜯기 fontmatch",
+    "transition": "픽셀(cutdet)",
+    "motion": "신호(cutdet 샷 chg)",
+    "sticker": "눈(10-18)",
+    "sfx": "신호(sfx_events 고립 솟음, 귀 확인 못 함)"
+   },
+   "notes": "컷과 같이 첫 프레임 완성",
+   "transition_m": {
+    "cut_t": 5.9,
+    "kind_cutdet": "cut",
+    "diff": 77.1,
+    "blurfr": 0,
+    "basis": "readline_tools.cutdet(창 y420~1500, 자막 띠 마스크 안 함)"
+   },
+   "size_px": 73,
+   "ring": {
+    "px": 2,
+    "hex": "#FFFFFF",
+    "basis": "픽셀(바깥 흰 테두리 한 겹 — 스타일분석 §1)"
+   },
+   "shadow": null,
+   "box": null,
+   "max_w": 900
   },
   {
    "t0": 7.17,
@@ -229,20 +673,67 @@
    "speaker": "원음",
    "text": "선크림이",
    "layer": "채널",
+   "role": "증거",
    "enter": "fade",
    "enter_ms": 100,
    "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1295,
+    1387
+   ],
+   "fill_hex": "#FFFEFF",
+   "outline": {
+    "px": 7,
+    "hex": "#151618",
+    "basis": "픽셀(Cs-Ka '1년 내내' 행 스캔, 스타일분석 §1)"
+   },
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "cut_at": [],
    "scene": "손·제품 근접",
-   "y": [
-    1290,
-    1420
-   ],
-   "fill_hex": "#FFFFFF",
-   "notes": "반투명 1~2프레임 → 완성, 같은 컷 안 교체, 강조색 없음"
+   "scene_desc": "같은 장면, 손에 선크림",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "Jalnan2",
+    "basis": "뜯기 fontmatch 합산 1위 0.36(Cs-Ka) + 눈 대조 '생각도 안 하고' — BRa 는 폭이 좁아 TmonMonsori 와도 닮음(스타일분석 §1)"
+   },
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": {
+    "t0t1": "눈(10-18 30fps 띠)+픽셀(capseg 대조)",
+    "text": "눈",
+    "speaker": "눈(말꼴·vtt)",
+    "role": "눈",
+    "fit": "눈(2fps 전체 시트)",
+    "enter": "눈(30fps 띠)",
+    "y": "픽셀(px.fill_clusters 흰/색 묶음 2~98%)",
+    "fill_hex": "픽셀(px.fill_clusters)",
+    "font": "눈+뜯기 fontmatch",
+    "transition": "픽셀(cutdet)",
+    "motion": "신호(cutdet 샷 chg)",
+    "sticker": "눈(10-18)",
+    "sfx": "신호(sfx_events 고립 솟음, 귀 확인 못 함)"
+   },
+   "notes": "반투명 1~2프레임 → 완성, 같은 컷 안 교체, 강조색 없음",
+   "transition_m": null,
+   "size_px": 73,
+   "ring": {
+    "px": 2,
+    "hex": "#FFFFFF",
+    "basis": "픽셀(바깥 흰 테두리 한 겹 — 스타일분석 §1)"
+   },
+   "shadow": null,
+   "box": null,
+   "max_w": 900
   },
   {
    "t0": 7.73,
@@ -250,22 +741,73 @@
    "speaker": "원음",
    "text": "얼굴 바르면 진짜",
    "layer": "채널",
+   "role": "증거",
    "enter": "pop",
    "enter_ms": 130,
    "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1319,
+    1386
+   ],
+   "fill_hex": "#FEFDFF",
+   "outline": {
+    "px": 7,
+    "hex": "#151618",
+    "basis": "픽셀(Cs-Ka '1년 내내' 행 스캔, 스타일분석 §1)"
+   },
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "cut_at": [
-    7.7
-   ],
    "scene": "손·제품 근접",
-   "y": [
-    1290,
-    1420
-   ],
-   "fill_hex": "#FFFFFF",
-   "notes": "컷 직후 반투명→완성 4프레임, 강조색 없음"
+   "scene_desc": "주황 후드 출연자 근접 말함",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "Jalnan2",
+    "basis": "뜯기 fontmatch 합산 1위 0.36(Cs-Ka) + 눈 대조 '생각도 안 하고' — BRa 는 폭이 좁아 TmonMonsori 와도 닮음(스타일분석 §1)"
+   },
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": {
+    "t0t1": "눈(10-18 30fps 띠)+픽셀(capseg 대조)",
+    "text": "눈",
+    "speaker": "눈(말꼴·vtt)",
+    "role": "눈",
+    "fit": "눈(2fps 전체 시트)",
+    "enter": "눈(30fps 띠)",
+    "y": "픽셀(px.fill_clusters 흰/색 묶음 2~98%)",
+    "fill_hex": "픽셀(px.fill_clusters)",
+    "font": "눈+뜯기 fontmatch",
+    "transition": "픽셀(cutdet)",
+    "motion": "신호(cutdet 샷 chg)",
+    "sticker": "눈(10-18)",
+    "sfx": "신호(sfx_events 고립 솟음, 귀 확인 못 함)"
+   },
+   "notes": "컷 직후 반투명→완성 4프레임, 강조색 없음",
+   "transition_m": {
+    "cut_t": 7.7,
+    "kind_cutdet": "cut",
+    "diff": 72.3,
+    "blurfr": 0,
+    "basis": "readline_tools.cutdet(창 y420~1500, 자막 띠 마스크 안 함)"
+   },
+   "size_px": 73,
+   "ring": {
+    "px": 2,
+    "hex": "#FFFFFF",
+    "basis": "픽셀(바깥 흰 테두리 한 겹 — 스타일분석 §1)"
+   },
+   "shadow": null,
+   "box": null,
+   "max_w": 900
   },
   {
    "t0": 8.77,
@@ -273,9 +815,23 @@
    "speaker": "원음",
    "text": "엄청 당기거든?",
    "layer": "채널",
+   "role": "증거",
    "enter": "cut",
    "enter_ms": 0,
    "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1319,
+    1386
+   ],
+   "fill_hex": "#FBF9FF",
+   "outline": {
+    "px": 7,
+    "hex": "#151618",
+    "basis": "픽셀(Cs-Ka '1년 내내' 행 스캔, 스타일분석 §1)"
+   },
+   "glow": null,
    "emph": [
     {
      "word": "당기거든?",
@@ -284,14 +840,47 @@
    ],
    "sticker": [],
    "sfx": null,
-   "cut_at": [],
    "scene": "손·제품 근접",
-   "y": [
-    1290,
-    1420
-   ],
-   "fill_hex": "#FFFFFF",
-   "notes": "같은 컷 안 교체, 첫 프레임 완성"
+   "scene_desc": "주황 후드 출연자 근접",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "Jalnan2",
+    "basis": "뜯기 fontmatch 합산 1위 0.36(Cs-Ka) + 눈 대조 '생각도 안 하고' — BRa 는 폭이 좁아 TmonMonsori 와도 닮음(스타일분석 §1)"
+   },
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": {
+    "t0t1": "눈(10-18 30fps 띠)+픽셀(capseg 대조)",
+    "text": "눈",
+    "speaker": "눈(말꼴·vtt)",
+    "role": "눈",
+    "fit": "눈(2fps 전체 시트)",
+    "enter": "눈(30fps 띠)",
+    "y": "픽셀(px.fill_clusters 흰/색 묶음 2~98%)",
+    "fill_hex": "픽셀(px.fill_clusters)",
+    "font": "눈+뜯기 fontmatch",
+    "transition": "픽셀(cutdet)",
+    "motion": "신호(cutdet 샷 chg)",
+    "sticker": "눈(10-18)",
+    "sfx": "신호(sfx_events 고립 솟음, 귀 확인 못 함)"
+   },
+   "notes": "같은 컷 안 교체, 첫 프레임 완성",
+   "transition_m": null,
+   "size_px": 73,
+   "ring": {
+    "px": 2,
+    "hex": "#FFFFFF",
+    "basis": "픽셀(바깥 흰 테두리 한 겹 — 스타일분석 §1)"
+   },
+   "shadow": null,
+   "box": null,
+   "max_w": 900
   },
   {
    "t0": 9.37,
@@ -299,22 +888,73 @@
    "speaker": "원음",
    "text": "얘는",
    "layer": "채널",
+   "role": "답",
    "enter": "pop",
    "enter_ms": 130,
    "variant": "기본",
-   "emph": [],
-   "sticker": [],
-   "sfx": null,
-   "cut_at": [
-    9.3
-   ],
-   "scene": "기타",
+   "type_cps": null,
+   "cursor": false,
    "y": [
     1290,
     1420
    ],
-   "fill_hex": "#FFFFFF",
-   "notes": "0.27초만 보임, 강조색 없음"
+   "fill_hex": "#FEFDFF",
+   "outline": {
+    "px": 7,
+    "hex": "#151618",
+    "basis": "픽셀(Cs-Ka '1년 내내' 행 스캔, 스타일분석 §1)"
+   },
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "넓은 장면, 박세리 손에 제품",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "Jalnan2",
+    "basis": "뜯기 fontmatch 합산 1위 0.36(Cs-Ka) + 눈 대조 '생각도 안 하고' — BRa 는 폭이 좁아 TmonMonsori 와도 닮음(스타일분석 §1)"
+   },
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": {
+    "t0t1": "눈(10-18 30fps 띠)+픽셀(capseg 대조)",
+    "text": "눈",
+    "speaker": "눈(말꼴·vtt)",
+    "role": "눈",
+    "fit": "눈(2fps 전체 시트)",
+    "enter": "눈(30fps 띠)",
+    "y": "눈(10-18 판독값 — px 묶음 높이 149px 가 배경에 오염돼 버림)",
+    "fill_hex": "픽셀(px.fill_clusters)",
+    "font": "눈+뜯기 fontmatch",
+    "transition": "픽셀(cutdet)",
+    "motion": "신호(cutdet 샷 chg)",
+    "sticker": "눈(10-18)",
+    "sfx": "신호(sfx_events 고립 솟음, 귀 확인 못 함)"
+   },
+   "notes": "0.27초만 보임, 강조색 없음",
+   "transition_m": {
+    "cut_t": 9.3,
+    "kind_cutdet": "cut",
+    "diff": 67.1,
+    "blurfr": 0,
+    "basis": "readline_tools.cutdet(창 y420~1500, 자막 띠 마스크 안 함)"
+   },
+   "size_px": 73,
+   "ring": {
+    "px": 2,
+    "hex": "#FFFFFF",
+    "basis": "픽셀(바깥 흰 테두리 한 겹 — 스타일분석 §1)"
+   },
+   "shadow": null,
+   "box": null,
+   "max_w": 900
   },
   {
    "t0": 9.67,
@@ -322,9 +962,23 @@
    "speaker": "원음",
    "text": "에센스 같애!",
    "layer": "채널",
+   "role": "답",
    "enter": "typing",
    "enter_ms": 330,
    "variant": "기타(글자 단위로 튀며 이어 붙음, 전체 초록)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1290,
+    1420
+   ],
+   "fill_hex": "#FCFBFC",
+   "outline": {
+    "px": 7,
+    "hex": "#151618",
+    "basis": "픽셀(Cs-Ka '1년 내내' 행 스캔, 스타일분석 §1)"
+   },
+   "glow": null,
    "emph": [
     {
      "word": "에센스 같애!",
@@ -343,21 +997,58 @@
     }
    ],
    "sfx": null,
-   "cut_at": [
-    9.667
-   ],
    "scene": "기타",
-   "y": [
-    1290,
-    1420
-   ],
-   "fill_hex": "#FFFFFF",
-   "notes": "9.67 '얘' 초록 한 글자부터 시작해 0.33초에 '에센스 같애!' 완성"
+   "scene_desc": "넓은 장면 + 위 작은 글 '에센스처럼'·'수분 촉촉'",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "Jalnan2",
+    "basis": "뜯기 fontmatch 합산 1위 0.36(Cs-Ka) + 눈 대조 '생각도 안 하고' — BRa 는 폭이 좁아 TmonMonsori 와도 닮음(스타일분석 §1)"
+   },
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": {
+    "t0t1": "눈(10-18 30fps 띠)+픽셀(capseg 대조)",
+    "text": "눈",
+    "speaker": "눈(말꼴·vtt)",
+    "role": "눈",
+    "fit": "눈(2fps 전체 시트)",
+    "enter": "눈(30fps 띠)",
+    "y": "눈(10-18 판독값 — px 묶음 높이 155px 가 배경에 오염돼 버림)",
+    "fill_hex": "픽셀(px.fill_clusters)",
+    "font": "눈+뜯기 fontmatch",
+    "transition": "픽셀(cutdet)",
+    "motion": "신호(cutdet 샷 chg)",
+    "sticker": "눈(10-18)",
+    "sfx": "신호(sfx_events 고립 솟음, 귀 확인 못 함)"
+   },
+   "notes": "9.67 '얘' 초록 한 글자부터 시작해 0.33초에 '에센스 같애!' 완성",
+   "transition_m": {
+    "cut_t": 9.667,
+    "kind_cutdet": "cut",
+    "diff": 95.8,
+    "blurfr": 0,
+    "basis": "readline_tools.cutdet(창 y420~1500, 자막 띠 마스크 안 함)"
+   },
+   "size_px": 73,
+   "ring": {
+    "px": 2,
+    "hex": "#FFFFFF",
+    "basis": "픽셀(바깥 흰 테두리 한 겹 — 스타일분석 §1)"
+   },
+   "shadow": null,
+   "box": null,
+   "max_w": 900
   }
  ],
  "no_caption": [],
  "beats": "훅 0.07~2.27 나레 3덩어리(솔직히 선크림 바르면 피부 찢어질 것 같잖아?) → 2.3~4.23 원음 2덩어리(이거 다 썼어 선크림/난 선크림만 바르면 돼) → 4.27~5.9 나레 2덩어리(에이 선크림이 에센스 같다고?) → 5.93~10.3 원음 6덩어리(워낙~에센스 같애!) 끝=원음",
- "narr_share": "나레 덩어리 5/13, 나레 초 약 2.2+1.6=3.8/10.3",
+ "narr_share": "나레 줄 5/13, 나레 3.7초/10.356초",
  "notes": [
   "효과음 전부 null: 뜯기 후보 없음, 이번에 파형은 안 쟀음",
   "강조색 있는 덩어리 7/13: 보라·초록·하늘·분홍·라일락·초록. 같은 색이 편 안에서 초록 3번",
@@ -365,6 +1056,18 @@
   "첫 덩어리 시작(0.07 전후)은 격자 0.2 간격이라 첫 2프레임 못 봄",
   "스타일분석의 10.5초 '에센스처럼/수분 촉촉' 작은 위 글은 이 파일(10.36초)에서 못 봄 — 격자 10.2까지 그런 글 없음. 다른 시각의 값이거나 오기록 가능성, 확인 못 함",
   "스티커는 강조선 2개뿐(💎·♥ 없음). 좌표는 눈대중",
-  "색 hex = cv2 채도 픽셀 중앙값"
- ]
+  "색 hex = cv2 채도 픽셀 중앙값",
+  "10-25 보강: role·fit·scene_desc 눈(2fps 전체 시트 work/lrw) · y·fill_hex·cut_at·transition·motion = readline_tools(capseg/cutdet 30fps, 띠 1180~1480·창 420~1500) · 특수 전환(black/flash/zoomblur) 30fps 띠 눈 확인 work/lr/tr · sfx = sfx_events 후보(고립≥0.5·유성≤0.3)"
+ ],
+ "name_evidence": [
+  "박세리 = 제목 2줄·출처 줄"
+ ],
+ "frame0": {
+  "what": "박세리 골프 화보가 방사형 줌 블러로 들어옴",
+  "face_frac": 0.1,
+  "text": "가을 햇볕에 피부 찢어질 때? / 박세리가 '몇 통째' 쓴 선크림!"
+ },
+ "_made_by": "오푸스 실행자 줄판독 보강(눈+readline_tools capseg/cutdet 30fps·sfx_events 신호) 2026-10-25 관제 263 지시서 06",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr",
+ "views": null
 }
