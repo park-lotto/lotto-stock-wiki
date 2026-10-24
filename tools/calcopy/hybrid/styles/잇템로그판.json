@@ -772,7 +772,146 @@
       }
      ]
     }
-   ]
+   ],
+   "top": {
+    "made_by": "placement.top_of(upgrade_table.Ctx.top · kal_analyze._stats)",
+    "group": "조회 상위 50%",
+    "ids": [
+     "ro1l3u734v4",
+     "aUicTeDoW04",
+     "J7GxfaVdwSU"
+    ],
+    "views": {
+     "ro1l3u734v4": 20000000.0,
+     "aUicTeDoW04": 18000000.0,
+     "J7GxfaVdwSU": 15000000.0
+    },
+    "slots": {
+     "orig.first": {
+      "n": 19,
+      "enter": {
+       "cut": 18,
+       "other": 1
+      },
+      "emph": 0
+     },
+     "narr.first": {
+      "n": 19,
+      "enter": {
+       "cut": 18,
+       "other": 1
+      },
+      "emph": 0
+     },
+     "narr.rest": {
+      "n": 35,
+      "enter": {
+       "cut": 30,
+       "pop": 3,
+       "append": 2
+      },
+      "emph": 2
+     },
+     "orig.rest": {
+      "n": 25,
+      "enter": {
+       "cut": 24,
+       "other": 1
+      },
+      "emph": 1
+     }
+    },
+    "stickers": {
+     "circle_arrow": 2,
+     "other": 9,
+     "spark_lines": 1
+    },
+    "sfx": [
+     {
+      "kind": "pop",
+      "role": "body",
+      "t": 17.09,
+      "off": 0.19,
+      "basis": "파형 솟음(17.09·17.26·17.39·17.53 20~30ms 짧은 솟음, 원음 두드림 소리일 수 있음)"
+     },
+     {
+      "kind": "other",
+      "role": "body",
+      "t": 18.68,
+      "off": 0.313,
+      "basis": "파형 솟음"
+     },
+     {
+      "kind": "other",
+      "role": "hook",
+      "t": 0.12,
+      "off": 0.053,
+      "basis": "파형 솟음"
+     },
+     {
+      "kind": "whoosh",
+      "role": "hook",
+      "t": 1.34,
+      "off": 0.073,
+      "basis": "파형 솟음"
+     }
+    ],
+    "per_video": {
+     "ro1l3u734v4": {
+      "fx_rate_narr": 0.13,
+      "fx_rate_orig": 0.0,
+      "sfx_rate": 0.067,
+      "sticker_rate": 0.0
+     },
+     "aUicTeDoW04": {
+      "fx_rate_narr": 0.111,
+      "fx_rate_orig": 0.0,
+      "sfx_rate": 0.034,
+      "sticker_rate": 0.065
+     },
+     "J7GxfaVdwSU": {
+      "fx_rate_narr": 0.231,
+      "fx_rate_orig": 0.111,
+      "sfx_rate": 0.035,
+      "sticker_rate": 0.057
+     }
+    },
+    "p75": {
+     "fx_rate_narr": 0.18,
+     "fx_rate_orig": 0.056,
+     "sfx_rate": 0.051,
+     "sticker_rate": 0.061
+    },
+    "max": {
+     "fx_rate_narr": 0.231,
+     "fx_rate_orig": 0.111,
+     "sfx_rate": 0.067,
+     "sticker_rate": 0.065
+    },
+    "hook": {
+     "first_cut_sec_p50": 2.97,
+     "face_or_object_frac": 0.15,
+     "first_fx_t": 0.0,
+     "per_video": {
+      "first_cut": {
+       "ro1l3u734v4": 5.07,
+       "aUicTeDoW04": 0.73,
+       "J7GxfaVdwSU": 2.97
+      },
+      "face_frac": {
+       "ro1l3u734v4": 0.5,
+       "aUicTeDoW04": 0.1,
+       "J7GxfaVdwSU": 0.15
+      },
+      "first_fx_t": {
+       "ro1l3u734v4": 0.0,
+       "aUicTeDoW04": 0.0,
+       "J7GxfaVdwSU": 0.0
+      }
+     },
+     "why": "첫 컷 = upgrade_table._first_cut(벤치 원본) · 0초 얼굴 = 줄판독 frame0.face_frac(눈 어림 숫자) · 첫 꾸밈 = kal_analyze._decorated 첫 줄 t0"
+    }
+   }
   }
  },
  "title_form": "1줄 흰 = 제품·상황('한국 쿠션 바르고') / 2줄 노랑 = 반응('충격받은 외국인 ㄷㄷ') · 줄별 색(낱말 색 아님)",

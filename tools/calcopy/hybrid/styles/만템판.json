@@ -64,14 +64,16 @@
     "px": 118,
     "center": 209.5,
     "color": "#FDFDFD",
-    "max_w": 1040
+    "max_w": 1040,
+    "letter_spacing": -5.5
    },
    {
     "font": "Cafe24Ohsquare.ttf",
     "px": 118,
     "center": 336.5,
     "color": "#A6FEF6",
-    "max_w": 1040
+    "max_w": 1040,
+    "letter_spacing": -5.5
    }
   ],
   "credit": {
@@ -81,7 +83,7 @@
    "color": "#FFFFFF"
   },
   "watermark": null,
-  "why": "frame_import.py ← channel/mantem/preset/얜샷템/frame.json + manifest.variable_stats default(편마다 값 중앙 — 8편 BDAj·S_CX·qBPn·3Xb8·9Fc·Sq-k·Pfvw·0LOy)",
+  "why": "frame_import.py ← channel/mantem/preset/얜샷템/frame.json + manifest.variable_stats default(편마다 값 중앙 — 8편 BDAj·S_CX·qBPn·3Xb8·9Fc·Sq-k·Pfvw·0LOy) · 제목 자간 -5.5(frame.json title.letter_spacing)",
   "_pending": {
    "props": "['title.italic=True', 'title.letter_spacing=-5.5', 'title.word_spacing=14', 'caption.italic=True', \"caption.enter={'kind': 'none', 'ms': 300}\"]",
    "per_video_unfilled": [
@@ -116,10 +118,14 @@
   "push_orig": 0.0,
   "transition": {
    "kinds": {
-    "cut": 1.0
+    "black": 0.018,
+    "flash": 0.009
    },
-   "ms": 0,
-   "why": "전환 미측정(줄판독 0편) — 1차 = 컷(06 뒤 교체)"
+   "ms": {
+    "black": 267,
+    "flash": 100
+   },
+   "why": "벤치 줄 경계 비율 black 0.018·flash 0.009(other 0.045 는 못 그림, 줄판독 count) · ms = bench_transition_drop: black 133·400(중앙 267) · flash 100 (3Xb8·9Fc)"
   },
   "why": "push 0 = 손 상수(줄판독 0편)"
  },
@@ -135,9 +141,498 @@
    "meme": {
     "rate": 0.0,
     "why": "짤 미측정 — 0(06 뒤 교체)"
+   },
+   "sfx": {
+    "max": 0,
+    "why": "효과음 0 — 줄판독 6편 sfx 0/6(10-25 count; 뜯기 sfx_rules per_sec 0.163 은 곡 속 소리 포함)"
+   },
+   "transition": {
+    "kinds": [
+     "black",
+     "flash"
+    ],
+    "why": "그릴 종류 = 벤치에서 본 것 · 자리 = 본보기 편 줄판독(placement)"
    }
   },
-  "counted": {}
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/mantem/줄판독",
+   "n_videos": 6,
+   "slots": {
+    "narr.first": {
+     "n": 11,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.0
+    },
+    "narr.rest": {
+     "n": 13,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.0
+    },
+    "orig.first": {
+     "n": 13,
+     "enter": {
+      "typing": 0.462,
+      "cut": 0.385,
+      "pop": 0.077,
+      "fade": 0.077
+     },
+     "emph": 0.308
+    },
+    "orig.rest": {
+     "n": 81,
+     "enter": {
+      "cut": 0.691,
+      "typing": 0.247,
+      "pop": 0.037,
+      "fade": 0.025
+     },
+     "emph": 0.086
+    }
+   },
+   "share": {
+    "emph": 1.0,
+    "typing": 1.0,
+    "sfx": 0.167
+   },
+   "stickers": {
+    "heart": 0.167,
+    "other": 0.5,
+    "spark_lines": 1.0
+   },
+   "transition": {
+    "cut": 0.929,
+    "other": 0.045,
+    "black": 0.018,
+    "flash": 0.009
+   },
+   "sfx_kinds": {},
+   "videos": [
+    {
+     "id": "3Xb8hDoRiU4",
+     "n": 22,
+     "slots": {
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "typing": 2
+       },
+       "emph": 1
+      },
+      "orig.rest": {
+       "n": 18,
+       "enter": {
+        "typing": 11,
+        "cut": 7
+       },
+       "emph": 2
+      },
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "spark_lines": 2,
+      "heart": 1,
+      "other": 3
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "none": 2
+      },
+      "heart": {
+       "none": 1
+      },
+      "other": {
+       "none": 1,
+       "excl": 2
+      }
+     },
+     "variants": {
+      "원음(흰)": 7,
+      "원음(연두)": 3,
+      "나레(노랑)": 2,
+      "원음(연노랑)": 4,
+      "원음(하늘)": 1,
+      "원음(분홍)": 3,
+      "원음(초록)": 1,
+      "원음(살구)": 1
+     },
+     "sfx": [],
+     "no_caption": 2,
+     "transitions": {
+      "cut": 18,
+      "other": 2,
+      "black": 1
+     },
+     "n_trans": 21,
+     "roles": {
+      "hook": 3,
+      "body": 17,
+      "reveal": 1,
+      "end": 1
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "9FcPMZtJVB0",
+     "n": 22,
+     "slots": {
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "typing": 1,
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "cut": 2
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 2,
+       "enter": {
+        "cut": 2
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 16,
+       "enter": {
+        "cut": 15,
+        "typing": 1
+       },
+       "emph": 3
+      }
+     },
+     "stickers": {
+      "spark_lines": 2
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "lux": 1,
+       "none": 1
+      }
+     },
+     "variants": {
+      "원음(분홍)": 5,
+      "나레(노랑)": 4,
+      "원음(흰)": 11,
+      "원음(연두)": 1,
+      "원음(연노랑)": 1
+     },
+     "sfx": [],
+     "no_caption": 1,
+     "transitions": {
+      "other": 1,
+      "flash": 1,
+      "cut": 18,
+      "black": 1
+     },
+     "n_trans": 21,
+     "roles": {
+      "hook": 1,
+      "body": 16,
+      "reveal": 2,
+      "end": 3
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "BDAjUIBTjfY",
+     "n": 19,
+     "slots": {
+      "orig.first": {
+       "n": 3,
+       "enter": {
+        "cut": 2,
+        "pop": 1
+       },
+       "emph": 1
+      },
+      "orig.rest": {
+       "n": 12,
+       "enter": {
+        "typing": 5,
+        "cut": 5,
+        "pop": 1,
+        "fade": 1
+       },
+       "emph": 1
+      },
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "cut": 2
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 2,
+       "enter": {
+        "cut": 2
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "spark_lines": 2
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "excl": 1,
+       "none": 1
+      }
+     },
+     "variants": {
+      "원음(흰)": 13,
+      "나레(노랑)": 4,
+      "원음(분홍)": 1,
+      "원음(연분홍)": 1
+     },
+     "sfx": [],
+     "no_caption": 1,
+     "transitions": {
+      "cut": 18
+     },
+     "n_trans": 18,
+     "roles": {
+      "hook": 2,
+      "body": 15,
+      "reveal": 1,
+      "end": 1
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "qBPnRzR-VaQ",
+     "n": 15,
+     "slots": {
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "typing": 1,
+        "fade": 1
+       },
+       "emph": 1
+      },
+      "orig.rest": {
+       "n": 9,
+       "enter": {
+        "cut": 7,
+        "typing": 1,
+        "pop": 1
+       },
+       "emph": 0
+      },
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "cut": 2
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 2,
+       "enter": {
+        "cut": 2
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "spark_lines": 2,
+      "other": 3
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "excl": 1,
+       "none": 1
+      },
+      "other": {
+       "excl": 1,
+       "ask": 1,
+       "none": 2
+      }
+     },
+     "variants": {
+      "원음(연노랑)": 1,
+      "원음(연초록)": 2,
+      "원음(흰)": 4,
+      "나레(노랑)": 4,
+      "원음(분홍)": 2,
+      "원음(빨강)": 1,
+      "원음(초록)": 1
+     },
+     "sfx": [],
+     "no_caption": 1,
+     "transitions": {
+      "cut": 14
+     },
+     "n_trans": 14,
+     "roles": {
+      "hook": 3,
+      "body": 10,
+      "end": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "S_CXTCRKFVg",
+     "n": 15,
+     "slots": {
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "typing": 1,
+        "cut": 1
+       },
+       "emph": 1
+      },
+      "orig.rest": {
+       "n": 8,
+       "enter": {
+        "cut": 7,
+        "typing": 1
+       },
+       "emph": 0
+      },
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "cut": 2
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 3,
+       "enter": {
+        "cut": 3
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "spark_lines": 1
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "원음(흰)": 2,
+      "원음(분홍)": 8,
+      "나레(노랑)": 5
+     },
+     "sfx": [],
+     "no_caption": 1,
+     "transitions": {
+      "cut": 12,
+      "other": 2
+     },
+     "n_trans": 14,
+     "roles": {
+      "hook": 2,
+      "body": 10,
+      "end": 3
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "Sq-kzCh0Xds",
+     "n": 25,
+     "slots": {
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "typing": 1,
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 18,
+       "enter": {
+        "cut": 15,
+        "pop": 1,
+        "typing": 1,
+        "fade": 1
+       },
+       "emph": 1
+      },
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "cut": 2
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 3,
+       "enter": {
+        "cut": 3
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "spark_lines": 1,
+      "other": 1
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "excl": 1
+      },
+      "other": {
+       "excl": 1
+      }
+     },
+     "variants": {
+      "원음(흰)": 13,
+      "원음(분홍)": 2,
+      "나레(노랑)": 5,
+      "원음(연두)": 2,
+      "원음(민트)": 1,
+      "원음(연노랑)": 2
+     },
+     "sfx": [
+      "none",
+      "none"
+     ],
+     "no_caption": 2,
+     "transitions": {
+      "cut": 24
+     },
+     "n_trans": 24,
+     "roles": {
+      "hook": 4,
+      "body": 19,
+      "end": 2
+     },
+     "sfx_lines": []
+    }
+   ]
+  }
  },
  "_pending": {
   "line_reads": "줄판독 0편 → 06-mantem(6편)·규칙빈도·sfx_events 뒤 counted·rules 채움 — 지금 판은 L1 미달(counted<6)",

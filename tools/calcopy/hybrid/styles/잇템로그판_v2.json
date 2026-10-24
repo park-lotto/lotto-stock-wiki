@@ -84,7 +84,7 @@
   }
  },
  "targets": {
-  "_why": "벤치 상위 편 = 조회 상위 50%(6편 중 ro1l 2,006만·aUic 1,832만·J7Gx 1,561만, 스타일분석 머리말) · 값 = 줄판독 칸(눈 점수 fit·enter/sticker/emph·sfx·나레 문장 cps)으로 잰 것 — §12-5 같은 자 재측정(상위편_목표.json, 지시서 14·15) 전 임시 · n=3 사분위는 선형 보간",
+  "_why": "벤치 상위 편 = 조회 상위 50%(6편 중 ro1l 2,006만·aUic 1,832만·J7Gx 1,561만, 스타일분석 머리말) · 값 = 줄판독 칸(눈 점수 fit·enter/sticker/emph·sfx·나레 문장 cps)으로 잰 것 — §12-5 같은 자 재측정(상위편_목표.json, 지시서 14·15) 전 임시 · n=3 사분위는 선형 보간 · 꾸밈·효과음 밀도 목표 = channel/ititemlog/_kal/상위편_목표.json density(placement.py count --top, 15 — 같은 자 kal_analyze._stats) — 옛 targets.fx.deco_rate(줄판독 눈 셈, 다른 자)는 지움",
   "scene_fit": {
    "mean": {
     "bench_top_q": 7.814,
@@ -107,19 +107,6 @@
      "J7Gx": 0.314
     },
     "why": "좋은 쪽 = 낮은 쪽 p25"
-   }
-  },
-  "fx": {
-   "deco_rate": {
-    "bench_top_q": 0.134,
-    "ours_goal": 0.134,
-    "cap": 0.171,
-    "bench_top_values": {
-     "ro1l": 0.094,
-     "aUic": 0.097,
-     "J7Gx": 0.171
-    },
-    "why": "꾸밈 줄 비율(등장≠instant·스티커·강조) p75, 상한 = 상위 편 최대(B14)"
    }
   },
   "sfx": {
@@ -146,6 +133,17 @@
      "J7Gx": 0.178
     },
     "why": "나레 문장 cps 변동계수 — 낮은 쪽 p25(tts_cps_spread 목표)"
+   },
+   "spread": {
+    "bench_top_q": 0.096,
+    "ours_goal": 0.096,
+    "cap": null,
+    "bench_top_values": {
+     "ro1l": 0.088,
+     "aUic": 0.103,
+     "J7Gx": 2.17
+    },
+    "why": "나레 자막 조각 표시 말속도(글자÷표시 초) 변동계수 — 상위 3편 p25(선형 보간 0.088·0.103 → 0.096; J7Gx 2.17 은 짧은 조각 튐) · 지휘자 값 0.096 과 같음을 줄판독으로 다시 셈(10-25) · script_audit.speech_rule 이 spread 를 먼저 쓴다(15)"
    }
   }
  },

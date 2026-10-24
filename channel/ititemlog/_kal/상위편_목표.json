@@ -2979,16 +2979,20 @@
   "rule": "업그레이드 판 목표 = 상위 편 p75 · 상한 = 상위 편 max(표준 §12-2·§12-4) — upgrade_table.m_density 와 같은 자(kal_analyze._stats)",
   "fx_rate_narr": {
    "p75": 0.18,
+   "p25": 0.12,
    "max": 0.231,
+   "first": 0.124,
    "per_video": {
     "ro1l3u734v4": 0.13,
-    "aUicTeDoW04": 0.056,
+    "aUicTeDoW04": 0.111,
     "J7GxfaVdwSU": 0.231
    }
   },
   "fx_rate_orig": {
    "p75": 0.056,
+   "p25": 0.0,
    "max": 0.111,
+   "first": 0.056,
    "per_video": {
     "ro1l3u734v4": 0.0,
     "aUicTeDoW04": 0.0,
@@ -2997,7 +3001,9 @@
   },
   "sfx_rate": {
    "p75": 0.051,
+   "p25": 0.035,
    "max": 0.067,
+   "first": 0.051,
    "per_video": {
     "ro1l3u734v4": 0.067,
     "aUicTeDoW04": 0.034,
@@ -3006,7 +3012,9 @@
   },
   "sticker_rate": {
    "p75": 0.061,
+   "p25": 0.029,
    "max": 0.065,
+   "first": 0.061,
    "per_video": {
     "ro1l3u734v4": 0.0,
     "aUicTeDoW04": 0.065,

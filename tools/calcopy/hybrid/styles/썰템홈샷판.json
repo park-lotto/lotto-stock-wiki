@@ -147,8 +147,182 @@
   "watermark": null,
   "why": "frame_import.py ← channel/banggu/preset/게시글형/frame.json(body, ILIi 측정) 초안을 벤치 6편 픽셀로 덮음(스타일분석 §1 2): 머리띠 y0~233 #39A0FA(8iEh·48Pb·E9hm 8초 프레임 픽셀 중앙값 — 스타일분석 #42A4F5 는 로고 둘레 평균, ILIi 만 #2AA1FD) · 아래 줄 y236~239 · 게시글 제목 잉크 y274~342(가운데 308) · 부제 잉크 #555355(3편 픽셀 중앙) y378~402(가운데 390) · 가로줄 y446~451 #221F23(3편 픽셀 중앙) · 바탕 #FDFDFD · 창 x20 y672 1036×880(픽셀 재측, 4px 격자) · 브랜드 자리 = 벤치 '방구석' 손글씨 로고 자리(Kkubulim 109.9 = ILIi 측정) → 우리 브랜드 썰템홈샷(브랜드.json) · 부제 시각 '14:25' 뺌(사장님 10-24 가짜 시각 금지) · 워터마크 0/6",
   "_pending": {
-   "title_letter_gap": "framecmp 제목 띠 letter_gap 벤치 2px ↔ 우리 6px ✗ — 제목 글꼴 미확정(스타일분석 §4 measure_task: 자막 띠 반전 크롭 font_pool 대조). 판 title 칸에 자간 칸 없음 → 글꼴 확정 뒤 font 교체(06·02)"
-  }
+   "title_letter_gap": "framecmp 글자 사이 벤치 2px ↔ 우리 5~6px — 자간 −4 로 맞추면 줄 폭이 836→767px 로 좁아짐(벤치 글꼴이 더 넓다) → 자간 0 유지, 글꼴 확정(06) 뒤"
+  },
+  "segments": [
+   {
+    "t0": 0,
+    "t1": "#1.end",
+    "frame": {
+     "kind": "post",
+     "bg": [
+      95,
+      95,
+      95
+     ],
+     "window": [
+      0,
+      760,
+      1080,
+      1056
+     ],
+     "title": [
+      {
+       "font": "JalnanGothic.ttf",
+       "px": 105.6,
+       "center": 183.5,
+       "color": "#FFFFFF",
+       "max_w": 1000,
+       "stroke": {
+        "px": 6,
+        "color": "#000114"
+       },
+       "shadow": {
+        "dx": 3,
+        "dy": 4,
+        "color": "#000114"
+       }
+      },
+      {
+       "font": "JalnanGothic.ttf",
+       "px": 105.6,
+       "center": 307,
+       "color": "#43A6F7",
+       "max_w": 1000,
+       "stroke": {
+        "px": 6,
+        "color": "#000114"
+       },
+       "shadow": {
+        "dx": 3,
+        "dy": 4,
+        "color": "#000114"
+       }
+      }
+     ],
+     "post": {
+      "head_bar": {
+       "box": [
+        0,
+        0,
+        1080,
+        234
+       ],
+       "color": "#0F3B5F",
+       "icons": [
+        {
+         "kind": "bars",
+         "x": 79,
+         "ys": [
+          130,
+          160,
+          193
+         ],
+         "w": 88,
+         "h": 10,
+         "color": "#000002"
+        },
+        {
+         "kind": "search",
+         "x": 904,
+         "y": 128,
+         "size": 84,
+         "stroke": 7,
+         "color": "#000000"
+        }
+       ]
+      },
+      "body_box": {
+       "box": [
+        0,
+        540,
+        1080,
+        802
+       ],
+       "color": "#FDFDFD",
+       "fade": [
+        56,
+        74
+       ],
+       "rules": [
+        {
+         "box": [
+          0,
+          583,
+          1080,
+          585
+         ],
+         "color": "#3C3C3C"
+        },
+        {
+         "box": [
+          0,
+          736,
+          1080,
+          737
+         ],
+         "color": "#3C3C3C"
+        }
+       ],
+       "text": {
+        "font": "Pretendard-Regular.otf",
+        "px": 53.4,
+        "color": "#000000",
+        "cx": 540,
+        "cy": 658.5,
+        "max_w": 960,
+        "text": ""
+       }
+      },
+      "author_line": {
+       "font": "Pretendard-SemiBold.otf",
+       "px": 36.3,
+       "color": "#222121",
+       "x": 125,
+       "cy": 392.0,
+       "word_spacing": 14,
+       "max_w": 600,
+       "text": "썰템홈샷"
+      },
+      "rules": [
+       {
+        "box": [
+         0,
+         1816,
+         1080,
+         1920
+        ],
+        "color": "#7D7D7D"
+       },
+       {
+        "box": [
+         0,
+         236,
+         1080,
+         240
+        ],
+        "color": "#240400"
+       },
+       {
+        "box": [
+         60,
+         446,
+         1020,
+         451
+        ],
+        "color": "#111313"
+       }
+      ]
+     },
+     "logo": null,
+     "credit": null,
+     "watermark": null
+    },
+    "captions": "hide",
+    "body_text": "lines",
+    "why": "훅 카드 6/6편 0~1.53~1.97초(중앙 1.70) = 첫 나레 문장(제목 낭독) 동안 → 본문 틀로 하드 컷(30fps, 스타일분석 §1-2') · 틀 = frame.json hook(ILIi 측정: 어둡게 깐 머리띠 #0F3B5F·큰 제목 2줄 JalnanGothic 103.2 흰/파랑 외곽 6+그림자·흰 띠 y540~802 나레 문장) · 2줄 파랑 #43A6F7(6편 픽셀, frame.json #2BA2FC 는 ILIi) · 부제 = 우리 브랜드 · 제목 px 103.2→105.6·가운데 183.5/307 = 8iEh 0.5초 잉크(1줄 132~229) 대조 보정"
+   }
+  ]
  },
  "caption": {
   "pack": "clean",
@@ -165,8 +339,14 @@
   ],
   "why": "자막 검정 #000000 외곽·그림자·상자 0 · 줄 자리 y502~552/580~630/660~709(줄 간격 79, 잉크 49~50px ≈ 53px) · 등장 instant 121/121 · 1줄→덧붙음→지움(2줄 페이지 52/57) · 조각 자수 중앙 9~13(6편, 규칙빈도 episodes.chunk_chars_med) → chunk_max_chars 11 · typing 0/121(typing_cps 는 쓰이지 않음)",
   "_pending": {
-   "pack": "방구석 게시글 자막 팩 없음 → 관제 235 요청: Pretendard-Bold 55.6px(frame.json caption, 잉크 49~50px) 검정 외곽 0 · place y≈31.6%(잉크 502~709 가운데) · 2줄 쌓기(accumulate, 줄 간격 79px) · 등장 즉시. 그동안 가장 가까운 clean(검정 #111111·외곽 0, 단 글꼴 Gmarket·크기 100·자리 기본) — 렌더 자막 자리·크기 미달 예상",
-   "accumulate": "2줄 페이지 쌓기 = render_bench·scene_style 에 칸 없음 → 02 쪽지"
+   "pack": "방구석 게시글 자막 팩 없음 → 관제 235 요청: Pretendard-Bold 55.6px(frame.json caption, 잉크 49~50px) 검정 외곽 0 · place y≈31.6%(잉크 502~709 가운데) · 2줄 쌓기(accumulate, 줄 간격 79px) · 등장 즉시. 그동안 가장 가까운 clean(검정 #111111·외곽 0, 단 글꼴 Gmarket·크기 100·자리 기본) — 렌더 자막 자리·크기 미달 예상 · 줄 간격 벤치 79px vs 임시 clean 110px(팩 몫 — 지시서 11) → 팩이 오면 stack.y 527·pitch 79"
+  },
+  "stack": {
+   "lines": 2,
+   "break": "full",
+   "y": 505,
+   "pitch": 110,
+   "why": "쌓기 1줄→덧붙음→지움, 페이지 2줄 52·3줄 3(아웃백만)·1줄 2(57페이지, 스타일분석 §1-1) → lines 2 · 문장 경계와 다르게 줄 바뀜(볼펜 18.77) → break full · 벤치 첫 줄 잉크 502~552(가운데 527)·줄 간격 79 — 임시 clean 팩 줄 간격 110(02 실측)이라 y505·pitch 110(벤치 y527 이면 둘째 줄이 창 y672 에 닿음)"
   }
  },
  "cuts": {
@@ -201,6 +381,10 @@
    "meme": {
     "rate": 0.0,
     "why": "짤 = 재료 자체(애니 2컷), 얹는 짤 0/6"
+   },
+   "sfx": {
+    "max": 0,
+    "why": "효과음 0 — sfx_events.py banggu 신호 0/121줄·줄판독 sfx 0/6편(10-25 count)"
    }
   },
   "counted": {
@@ -506,12 +690,8 @@
  },
  "title_form": "게시글 제목 1줄 검정 굵은 고딕('마케팅 천재가 만든 티라미수') — 훅 카드 2줄(흰/파랑 #43A6F7)은 첫 1.53~1.97초만(→ _pending.hook_card)",
  "_pending": {
-  "hook_card": {
-   "what": "0~1.70초(중앙, 6편 1.53~1.97) 훅 카드 틀 = frame.json hook(머리띠 #0F3B5F 어둡게·큰 제목 2줄 JalnanGothic 103.2 흰/파랑 외곽 6·흰 띠 y584~745 나레 문장) → 본문 틀로 하드 컷",
-   "gap": "render_bench.frame_png 는 편 하나에 틀 하나 — 시간 구간별 틀 바꾸기 칸 없음 → 02 쪽지(frame.segments[{t0,t1,frame}] 같은 칸). 지금 렌더는 본문 틀만"
-  },
-  "page_clear": "자막 페이지째 지움(2줄 차면 다음 페이지) — 렌더러 칸 없음(02)",
-  "upgrade_from_hand_scripts": "make_썰템홈샷.py: 차콜 #1C1E22 머리(210)·민트 네온 채널명 GmarketSansBold 70·페이지 (238,240,242)·흰 카드·둥근 그림 창 R28·자막 박스 SBAggroB · 썰템홈샷_하이브리드/make.py: 박창수 tempo 1.1·LENGTH 30~42·CHUNK 13·BGM honwaka_puppu 0.22·앞 썰+뒤 체험 → 업그레이드 판(base=썰템홈샷판) 재료(지시서 05)"
+  "upgrade_from_hand_scripts": "make_썰템홈샷.py: 차콜 #1C1E22 머리(210)·민트 네온 채널명 GmarketSansBold 70·페이지 (238,240,242)·흰 카드·둥근 그림 창 R28·자막 박스 SBAggroB · 썰템홈샷_하이브리드/make.py: 박창수 tempo 1.1·LENGTH 30~42·CHUNK 13·BGM honwaka_puppu 0.22·앞 썰+뒤 체험 → 업그레이드 판(base=썰템홈샷판) 재료(지시서 05)",
+  "body_title_join": "본문 게시글 제목은 1줄(제목 전체) · 훅 카드는 같은 글 2줄 — 렌더러는 title[] 와 대본 title_lines 를 줄마다 짝지어 본문엔 1줄째만 나온다 → 02(title join 칸)"
  },
  "script": {
   "brief": [

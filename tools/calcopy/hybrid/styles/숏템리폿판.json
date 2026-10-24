@@ -87,13 +87,17 @@
     240,
     255
    ],
-   "stroke": 0
+   "stroke": 0,
+   "glow": {
+    "px": 37,
+    "color": "#047104",
+    "strength": 1.0
+   }
   },
   "credit": null,
   "watermark": null,
-  "why": "frame_import.py ← channel/hottemreport/preset/검정띠/frame.json(OE-11wb7vdY 측정) + 벤치 6편 픽셀(스타일분석 §2): 검정 띠 y0~559·창 y559~1920 가로 꽉(5/6) · 채널명 GasoekOne 62.5 연한 흰(+초록 번짐 5/6) → 우리 '숏템리폿'(브랜드.json) · 제목 줄별 색 6/6: 1줄 노랑 #FDF637(kal_analyze framecmp 채움 추정 — 관문 자와 같은 함수, OE 8초; frame.json #F8E903·마스크 중앙 #FAEA02) 잉크 y298~395(97px, 가운데 346.5) · 2줄 빨강 #FD211F(OE #FD201E) y410~546(136px, 가운데 478) — px = frame.json 127.4 × 벤치 잉크/우리 잉크(IBMPlex 기준: 97/118→104.7 · 136/118→146.8) · 출처 줄·워터마크 0/6",
+  "why": "frame_import.py ← channel/hottemreport/preset/검정띠/frame.json(OE-11wb7vdY 측정) + 벤치 6편 픽셀(스타일분석 §2): 검정 띠 y0~559·창 y559~1920 가로 꽉(5/6) · 채널명 GasoekOne 62.5 연한 흰(+초록 번짐 5/6) → 우리 '숏템리폿'(브랜드.json) · 제목 줄별 색 6/6: 1줄 노랑 #FDF637(kal_analyze framecmp 채움 추정 — 관문 자와 같은 함수, OE 8초; frame.json #F8E903·마스크 중앙 #FAEA02) 잉크 y298~395(97px, 가운데 346.5) · 2줄 빨강 #FD211F(OE #FD201E) y410~546(136px, 가운데 478) — px = frame.json 127.4 × 벤치 잉크/우리 잉크(IBMPlex 기준: 97/118→104.7 · 136/118→146.8) · 출처 줄·워터마크 0/6 · 로고 뒤 초록 번짐 glow px37 #047104(frame.json brand.glow — 5/6편) · 제목 자간 0(frame.json −1.2 이면 줄 폭 725 vs 벤치 747 — 붓 글꼴 근사라 자간 0)",
   "_pending": {
-   "logo_glow": "채널명 뒤 초록 번짐(glow 37px #047104, 5/6) — logo 칸에 글로우 없음 → 02",
    "title_letter_spacing": "['title.letter_spacing=-1.2', 'title.line_scale=[0.835, 1.165]', \"caption.enter={'kind': 'none', 'ms': 300}\", 'brand.letter_spacing=-3.8', \"brand.glow={'px': 37, 'rgb': [4, 113, 4]}\"]",
    "title_font": "제목 글꼴 = 굵은 붓 디스플레이체(눈) — IBMPlexSansKR-Bold 는 근사(폭 897 vs 벤치 749px), 06 fontmatch 뒤 교체 · 채널명도 벤치는 얇은 고딕(GasoekOne 근사)"
   }
@@ -146,6 +150,13 @@
    "meme": {
     "rate": 0.0,
     "why": "짤 0/6"
+   },
+   "sfx": {
+    "kinds": {
+     "pop": 1.0
+    },
+    "max": 2,
+    "why": "벤치 효과음 줄 6발/6편(편당 1·1·0·2·0·2, 줄판독 sfx 10-25 count) — 1차 = 본보기 편 sfx 시각·역할(placement) · 상한 2 = 편당 최대 · 종류 귀 미확인('기타') → 팩01 pop 임시(packs.sfx 매핑은 지시서 11)"
    }
   },
   "counted": {
@@ -201,7 +212,8 @@
     "sfx": 0.667
    },
    "stickers": {
-    "other": 0.5
+    "cursor": 0.167,
+    "question": 0.333
    },
    "transition": {
     "cut": 1.0
@@ -248,10 +260,10 @@
       }
      },
      "stickers": {
-      "other": 1
+      "question": 1
      },
      "sticker_lex": {
-      "other": {
+      "question": {
        "excl": 1
       }
      },
@@ -321,10 +333,10 @@
       }
      },
      "stickers": {
-      "other": 1
+      "cursor": 1
      },
      "sticker_lex": {
-      "other": {
+      "cursor": {
        "price": 1
       }
      },
@@ -439,10 +451,10 @@
       }
      },
      "stickers": {
-      "other": 1
+      "question": 1
      },
      "sticker_lex": {
-      "other": {
+      "question": {
        "none": 1
       }
      },
@@ -606,7 +618,6 @@
  },
  "title_form": "2줄 노랑/빨강 '<장소/사람>가 환장하는/난리 난' + '<제품>(정체)' 4/6",
  "_pending": {
-  "sfx": "줄에 붙은 효과음 6/170 — 종류 귀 미확인(sfx_events tonal/broad 만) → 06 measure_task(귀 확인) 뒤 rules.sfx{kinds,max 3}",
   "stickers": "노랑 물음표+동심원 그림 2편·마우스 포인터 1편(3/170) — 스티커 kind·자리 검출 미등록 → 03",
   "thumb": "유튜브 썸네일 = 중간 프레임(12~19초, 상관 0.85~0.998) · 0초 카드 0/6 — thumb_rule 칸(06·05)",
   "upgrade_from_hand_scripts": "make_frame/make_render_숏템리폿.py: 외관 B(분홍 YEL [255,130,195])·현장썰 하이브리드 render_front.py BACK_CAPTION SBAggroB 80·BACK_FX 공개 typewriter 400ms → 업그레이드 판 재료"

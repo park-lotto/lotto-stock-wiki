@@ -64,20 +64,22 @@
     "px": 159.4,
     "center": 166,
     "color": "#FFFFFF",
-    "max_w": 1000
+    "max_w": 1000,
+    "letter_spacing": -13
    },
    {
     "font": "BlackHanSans.ttf",
     "px": 159.4,
     "center": 311.5,
     "color": "#F0C612",
-    "max_w": 1000
+    "max_w": 1000,
+    "letter_spacing": -13
    }
   ],
   "logo": null,
   "credit": null,
   "watermark": null,
-  "why": "frame_import.py ← channel/sseolpulda/preset/B_검정띠/frame.json(mYxuF1A74j4 측정, manifest default) — 검정 바탕·창 y347~1920·제목 2줄 흰/노랑 #F0C612 BlackHanSans · 제목 가운데 177/319 → 166/311.5 = mYxu 6초 프레임 잉크(1줄 102~221·2줄 244~339) 대조 보정 · 폭은 벤치가 좁음(850 vs 937px — 자간 −18.1 칸 없음 → 02)",
+  "why": "frame_import.py ← channel/sseolpulda/preset/B_검정띠/frame.json(mYxuF1A74j4 측정, manifest default) — 검정 바탕·창 y347~1920·제목 2줄 흰/노랑 #F0C612 BlackHanSans · 제목 가운데 177/319 → 166/311.5 = mYxu 6초 프레임 잉크(1줄 102~221·2줄 244~339) 대조 보정 · 폭은 벤치가 좁음(850 vs 937px — 자간 −18.1 칸 없음 → 02) · 제목 자간 −18.1(frame.json title.letter_spacing — mYxu 폭 850 vs 자간 0 우리 937px) · 자간 −18.1→−13(mYxu 6초 줄 폭 850 vs 우리 792 보정)",
   "_pending": {
    "props": "['title.letter_spacing=-18.1', \"caption.enter={'kind': 'rise', 'ms': 300}\"]"
   }
@@ -130,6 +132,13 @@
    "meme": {
     "rate": 0.0,
     "why": "짤 미측정"
+   },
+   "sfx": {
+    "kinds": {
+     "pop": 1.0
+    },
+    "max": 1,
+    "why": "벤치 효과음 편당 0~1(줄판독 6편 0·1·0·1·1·1 — 두 갈래 섞인 폴더) · 종류 미확인 → 팩01 pop 임시 · 상한 1"
    }
   },
   "counted": {}

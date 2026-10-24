@@ -64,7 +64,8 @@
     "px": 76.9,
     "center": 316.0,
     "color": "#000000",
-    "max_w": 980
+    "max_w": 980,
+    "x": 546
    }
   ],
   "post": {
@@ -136,16 +137,151 @@
   "logo": null,
   "credit": null,
   "watermark": null,
-  "why": "frame_import.py ← channel/humorshowshow/preset/썰템쇼_화자썰/frame.json(body, 8편 실측 hs_measure → preset_save 중앙값, manifest.variable_stats) 픽셀 그대로 · 로고 '재밌쇼'→'썰템쇼' 글자마다 색(사장님 10-18 '로고만 바꾼다') · 창 [0,673,1080,878] = 프리셋 고정 창(벤치는 컷마다 그림 높이 489~933 — manifest.differences)",
+  "why": "frame_import.py ← channel/humorshowshow/preset/썰템쇼_화자썰/frame.json(body, 8편 실측 hs_measure → preset_save 중앙값, manifest.variable_stats) 픽셀 그대로 · 로고 '재밌쇼'→'썰템쇼' 글자마다 색(사장님 10-18 '로고만 바꾼다') · 창 [0,673,1080,878] = 프리셋 고정 창(벤치는 컷마다 그림 높이 489~933 — manifest.differences) · 제목 가운데 x 546(framecmp 벤치 NBdm 8초 cx 546)",
   "_pending": {
    "unmapped_layers": "머리띠 svg 아이콘 2(x172·x834)·로고 밑 장식 선 svg(x419 y137)·조회수 줄 2칸(SUIT-Bold 23.3 회색·20 빨강, $per_video) — post 칸에 그림(image) 아이콘·메타 2색 칸 없음 → 02 쪽지",
    "views_line": "벤치 메타 줄 '추천891 조회 1,954,556 <날짜> 09:18 댓글 7544'(21편 같은 꾸민 값) — 사장님 10-18 '켜 둔다' ↔ 금지선 '가짜 지표' 충돌(manifest.meta_line.caution) → 판엔 안 켬, 대본 post.views 가 있을 때만 그려짐. 사장님 확인 필요",
    "logo_rotate": "벤치 로고 글자마다 기울인 손글씨 — 렌더러 글자 회전 칸 없음(manifest.differences) → 02",
-   "hook_card": "0~1.95초 훅 카드(어두운 틀·큰 제목 2줄 흰/연두 #84FD46 GmarketSans 113.6·흰 띠 제목 반복) = frame.json hook — 시간 구간별 틀 칸 없음 → 02",
    "pic_box_per_cut": "그림 높이 컷마다 489~933 — 창 고정만 → 02",
-   "title_cx": "framecmp 제목 띠: y0 −1·h +1·letter_gap +2 ✓ · cx −7 ✗(벤치 제목 가운데 x 546 — 렌더러 _title_line 은 W/2 고정, x 칸 없음 → 02)",
    "logo_stroke": "벤치 로고 굵은 어두운 외곽+그림자 — head_bar 글 아이콘(_draw_text)에 외곽·그림자 칸 없음 → 02"
-  }
+  },
+  "segments": [
+   {
+    "t0": 0,
+    "t1": "#1.end",
+    "frame": {
+     "kind": "post",
+     "bg": [
+      97,
+      97,
+      97
+     ],
+     "window": [
+      0,
+      748,
+      1080,
+      1172
+     ],
+     "title": [
+      {
+       "font": "GmarketSansBold.otf",
+       "px": 113.6,
+       "center": 198,
+       "color": "#FFFFFF",
+       "max_w": 1060,
+       "stroke": {
+        "px": 3,
+        "color": "#000000"
+       },
+       "shadow": {
+        "dx": 6,
+        "dy": 6,
+        "color": "#141414"
+       }
+      },
+      {
+       "font": "GmarketSansBold.otf",
+       "px": 113.6,
+       "center": 324,
+       "color": "#84FD46",
+       "max_w": 1060,
+       "stroke": {
+        "px": 3,
+        "color": "#000000"
+       },
+       "shadow": {
+        "dx": 6,
+        "dy": 6,
+        "color": "#141414"
+       }
+      }
+     ],
+     "post": {
+      "head_bar": {
+       "box": [
+        0,
+        0,
+        1080,
+        239
+       ],
+       "color": "#565D50",
+       "icons": []
+      },
+      "rules": [
+       {
+        "box": [
+         0,
+         530,
+         1080,
+         533
+        ],
+        "color": "#373737"
+       },
+       {
+        "box": [
+         0,
+         640,
+         1080,
+         704
+        ],
+        "color": "#EDEDED"
+       },
+       {
+        "box": [
+         0,
+         704,
+         1080,
+         707
+        ],
+        "color": "#323232"
+       },
+       {
+        "box": [
+         0,
+         707,
+         1080,
+         733
+        ],
+        "color": "#CDCDCD"
+       },
+       {
+        "box": [
+         0,
+         733,
+         1080,
+         748
+        ],
+        "color": "#343434"
+       }
+      ],
+      "body_box": {
+       "box": [
+        0,
+        533,
+        1080,
+        640
+       ],
+       "color": "#FDFDFD",
+       "text": {
+        "font": "Pretendard-SemiBold.otf",
+        "px": 59.6,
+        "color": "#000000",
+        "cx": 540,
+        "cy": 612,
+        "max_w": 1040,
+        "text": ""
+       }
+      }
+     },
+     "logo": null,
+     "credit": null,
+     "watermark": null
+    },
+    "captions": "hide",
+    "body_text": "lines",
+    "why": "훅 카드(0~2초, manifest.roles[0] — 첫 컷 1.83~2.2초 8편) = 첫 나레 문장 → 본문 게시글 틀 · 틀 = frame.json hook(NBdm, 8편 중앙: 바탕 97·머리띠 자리 #565D50·큰 제목 2줄 GmarketSans 113.6 흰/연두 #84FD46 외곽 3+그림자 6·흰 띠 y533~640 Pretendard-SemiBold 59.6 같은 문장) · 제목 가운데 208/334→198/324(NBdm 0.5초 잉크 y0 +10 보정)"
+   }
+  ]
  },
  "caption": {
   "pack": "clean",
@@ -162,8 +298,14 @@
   ],
   "why": "자막 = frame.json caption 층(Pretendard-Bold 60.1 검정·외곽 0·가운데·3줄 칸 y488 줄 76 = 488~716) · 조각 초 중앙 1.4(뜯기 8편) · chunk_max_chars 12 = 손 상수(조각 자수 미측정 — 06)",
   "_pending": {
-   "pack": "재밌쇼 게시글 자막 팩 없음 → 관제 235 요청: Pretendard-Bold 60.1 검정 외곽 0 · place 1줄 위 y488(25.4%)·줄 76 · 누적 2~3줄 · 화자대사줄 「화자 : 대사」 꼴. 그동안 clean",
-   "accumulate": "자막 2줄째 덧붙음(누적) — 렌더러 칸 없음 → 02"
+   "pack": "재밌쇼 게시글 자막 팩 없음 → 관제 235 요청: Pretendard-Bold 60.1 검정 외곽 0 · place 1줄 위 y488(25.4%)·줄 76 · 누적 2~3줄 · 화자대사줄 「화자 : 대사」 꼴. 그동안 clean · 줄 간격 벤치 76px vs 임시 clean 110px(지시서 11)"
+  },
+  "stack": {
+   "lines": 3,
+   "break": "full",
+   "y": 526,
+   "pitch": 110,
+   "why": "자막 칸 = frame.json caption 3줄(y488·줄 76) 덧붙음 누적(manifest.differences '2줄째 덧붙음') → lines 3 · 첫 줄 가운데 488+76/2=526 · 임시 clean 팩 줄 간격 110(벤치 76 은 팩 몫) — break 는 줄판독 새 꼴로 확인 전 full"
   }
  },
  "cuts": {
@@ -171,10 +313,10 @@
   "push_orig": 0.0,
   "transition": {
    "kinds": {
-    "cut": 1.0
+    "black": 0.005
    },
-   "ms": 0,
-   "why": "전환 효과 미측정(줄판독 옛 꼴에 transition 칸 없음 — 06) · 1차 = 컷"
+   "ms": 67,
+   "why": "벤치 줄 경계 비율 black 0.005(1회, bfKk 3.8초 — 줄판독 count) · ms 67 = bench_transition_drop(drop 0.228)"
   },
   "why": "push 0 — 벤치 줌인 컷 비율 0.368(뜯기 8편)이나 세기·조건 미측정 → _pending"
  },
@@ -192,9 +334,357 @@
    "meme": {
     "rate": 0.0,
     "why": "반응 짤은 그림 칸 재료 자체(17/21편) — 얹는 짤 아님"
+   },
+   "sfx": {
+    "max": 0,
+    "why": "효과음 0 — 줄판독(06 새 꼴) 6편 sfx 0/6(10-25 count) · 옛 manifest '휙·띵 NBdm 6개'는 받아쓰기 1편 표시라 줄판독이 이긴다"
+   },
+   "transition": {
+    "kinds": [
+     "black"
+    ],
+    "why": "그릴 종류 = 벤치에서 본 것 · 자리 = 본보기 편 줄판독(placement)"
    }
   },
-  "counted": {}
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/humorshowshow/줄판독",
+   "n_videos": 6,
+   "slots": {
+    "narr.first": {
+     "n": 6,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.167
+    },
+    "narr.rest": {
+     "n": 184,
+     "enter": {
+      "cut": 0.565,
+      "append": 0.435
+     },
+     "emph": 0.0
+    }
+   },
+   "share": {
+    "emph": 0.167,
+    "typing": 0.0,
+    "sfx": 0.667
+   },
+   "stickers": {
+    "other": 0.333,
+    "spark_lines": 0.667
+   },
+   "transition": {
+    "cut": 0.995,
+    "black": 0.005
+   },
+   "sfx_kinds": {},
+   "videos": [
+    {
+     "id": "bfKkNmVTGPs",
+     "n": 20,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 19,
+       "enter": {
+        "cut": 10,
+        "append": 9
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "spark_lines": 1,
+      "other": 1
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "lux": 1
+      },
+      "other": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "훅 카드 라벨 줄(회색 띠 안 검은 글 = 큰 제목과 같은 문장, 카드째 천천히 위로 이동)": 1,
+      "기본(새 페이지 첫 줄)": 10,
+      "덧붙음(2번째 줄)": 9
+     },
+     "sfx": [
+      "none",
+      "cap"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 18,
+      "black": 1
+     },
+     "n_trans": 19,
+     "roles": {
+      "hook": 1,
+      "body": 10,
+      "reveal": 3,
+      "twist": 4,
+      "end": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "BlA9f8rBPuc",
+     "n": 22,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 21,
+       "enter": {
+        "cut": 11,
+        "append": 10
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "spark_lines": 1
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "훅 카드 라벨 줄(회색 띠 안 검은 글 = 큰 제목과 같은 문장, 카드째 천천히 위로 이동)": 1,
+      "기본(새 페이지 첫 줄)": 11,
+      "덧붙음(2번째 줄)": 10
+     },
+     "sfx": [],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 21
+     },
+     "n_trans": 21,
+     "roles": {
+      "hook": 1,
+      "body": 12,
+      "reveal": 3,
+      "twist": 4,
+      "end": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "jECuoRljWj0",
+     "n": 23,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 22,
+       "enter": {
+        "cut": 12,
+        "append": 10
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "spark_lines": 1
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "훅 카드 라벨 줄(회색 띠 안 검은 글 = 큰 제목과 같은 문장, 카드째 천천히 위로 이동)": 1,
+      "기본(새 페이지 첫 줄)": 12,
+      "덧붙음(2번째 줄)": 10
+     },
+     "sfx": [],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 22
+     },
+     "n_trans": 22,
+     "roles": {
+      "hook": 1,
+      "body": 15,
+      "twist": 3,
+      "reveal": 2,
+      "end": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "Lr2Hwd0PeKM",
+     "n": 35,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 1
+      },
+      "narr.rest": {
+       "n": 34,
+       "enter": {
+        "cut": 30,
+        "append": 4
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "other": 1
+     },
+     "sticker_lex": {
+      "other": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "기본(새 페이지 첫 줄) — 2줄이 한 번에": 13,
+      "기본(새 페이지 첫 줄)": 18,
+      "덧붙음(2번째 줄)": 4
+     },
+     "sfx": [
+      "none",
+      "cap",
+      "none",
+      "none"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 34
+     },
+     "n_trans": 34,
+     "roles": {
+      "hook": 1,
+      "body": 31,
+      "end": 3
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "NBdmq90aJus",
+     "n": 25,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 24,
+       "enter": {
+        "cut": 12,
+        "append": 12
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "spark_lines": 1
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "훅 카드 라벨 줄(회색 띠 안 검은 글 = 큰 제목과 같은 문장, 카드째 천천히 위로 이동)": 1,
+      "기본(새 페이지 첫 줄)": 12,
+      "덧붙음(2번째 줄)": 12
+     },
+     "sfx": [
+      "none"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 24
+     },
+     "n_trans": 24,
+     "roles": {
+      "hook": 1,
+      "body": 16,
+      "twist": 4,
+      "reveal": 2,
+      "end": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "pY2zNE5A1m4",
+     "n": 65,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 64,
+       "enter": {
+        "append": 35,
+        "cut": 29
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "기본(새 페이지 첫 줄)": 21,
+      "덧붙음(2번째 줄)": 14,
+      "덧붙음(3번째 줄)": 12,
+      "기본(새 페이지 첫 줄) — 2줄이 한 번에": 7,
+      "덧붙음(3번째 줄까지)": 4,
+      "덧붙음(4번째 줄)": 5,
+      "기본(새 페이지 첫 줄) — 3줄이 한 번에": 2
+     },
+     "sfx": [
+      "cap",
+      "cap"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 64
+     },
+     "n_trans": 64,
+     "roles": {
+      "hook": 3,
+      "body": 49,
+      "twist": 7,
+      "end": 6
+     },
+     "sfx_lines": []
+    }
+   ]
+  }
  },
  "title_form": "게시글 제목 1줄(Pretendard-ExtraBold 76.9) = 훅 문장 · 훅 카드 2줄(흰/연두)은 _pending.hook_card",
  "_pending": {

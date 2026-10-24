@@ -62,20 +62,22 @@
     "px": 93.2,
     "center": 264,
     "color": "#000000",
-    "max_w": 1000
+    "max_w": 1000,
+    "letter_spacing": -2
    },
    {
     "font": "SBAggroB.ttf",
     "px": 93.2,
     "center": 358,
     "color": "#000000",
-    "max_w": 1000
+    "max_w": 1000,
+    "letter_spacing": -2
    }
   ],
   "logo": null,
   "credit": null,
   "watermark": null,
-  "why": "frame_import.py ← channel/sseolpulda/preset/A_흰바탕창/창아래_검정/frame.json(ZdeZRtCeAC4 측정, manifest default) — 흰 바탕 #FBF8FC·창 [0,426,1080,1006]·제목 2줄 검정 SBAggroB 93.2 · 오른쪽 위 '[광고]'(TmonMonsori) = 엔진 ad_mark 가 그린다(판 logo 아님) · 제목 가운데 272/368 → 264/358 = ZdeZ 6초 프레임 잉크(223~304·318~397) 대조 보정",
+  "why": "frame_import.py ← channel/sseolpulda/preset/A_흰바탕창/창아래_검정/frame.json(ZdeZRtCeAC4 측정, manifest default) — 흰 바탕 #FBF8FC·창 [0,426,1080,1006]·제목 2줄 검정 SBAggroB 93.2 · 오른쪽 위 '[광고]'(TmonMonsori) = 엔진 ad_mark 가 그린다(판 logo 아님) · 제목 가운데 272/368 → 264/358 = ZdeZ 6초 프레임 잉크(223~304·318~397) 대조 보정 · 제목 자간 −2(frame.json title.letter_spacing)",
   "_pending": {
    "props": "['title.letter_spacing=-2', 'caption.letter_spacing=-7.4', 'caption.word_spacing=6.8', \"caption.enter={'kind': 'none', 'ms': 300}\", 'brand.italic=True', 'brand.letter_spacing=-2.3']"
   }
@@ -128,18 +130,27 @@
    "meme": {
     "rate": 0.0,
     "why": "짤 미측정"
+   },
+   "sfx": {
+    "kinds": {
+     "pop": 1.0
+    },
+    "max": 1,
+    "why": "벤치 효과음 편당 0~1(줄판독 6편 0·1·0·1·1·1 — 두 갈래 섞인 폴더) · 종류 미확인 → 팩01 pop 임시 · 상한 1"
    }
   },
   "counted": {}
  },
  "_pending": {
   "counted": "줄판독 6편이 두 갈래 섞임(나레 3: D3Pc·GqSk·mYxu / 자막만 3: fnZN·iZ-T·ZdeZ) — placement.count 는 폴더 통째라 섞어 센다 → 06 이 갈래별 폴더로 나눈 뒤 count(규칙빈도_나레/자막만.json 은 이미 갈래별)",
-  "no_narration": "나레 0 갈래 — render_bench 는 나레 TTS 전제 → 나레 없는 편 길(02)",
-  "sub_styles": "A 틀 안 자막 3갈래(창아래_검정·창안_흰외곽선·창안_상자 — styles.json) 중 창아래_검정만 판으로(ZdeZ 1편) — 나머지 2갈래 판은 06 줄판독 뒤"
+  "no_narration": "나레 0 갈래 = 대본 줄 kind:'sub'(02 2차) — 판 칸 아님",
+  "sub_styles": "A 틀 안 자막 3갈래(창아래_검정·창안_흰외곽선·창안_상자 — styles.json) 중 창아래_검정만 판으로(ZdeZ 1편) — 나머지 2갈래 판은 06 줄판독 뒤",
+  "transition": "줄판독 black 0.017(iZ-T 0.2초) — bench_transition_drop drop −0.079·ms 0 = 실제 검은 전환 아님(첫 프레임) → 넣지 않음"
  },
  "script": {
   "brief": [
-   "자막만 갈래(나레 0, 원본 소리+BGM) — 긴 자막 조각(16~18자·4초)"
+   "자막만 갈래(나레 0, 원본 소리+BGM) — 긴 자막 조각(16~18자·4초)",
+   "대본 꼴: 자막만 갈래 — 모든 줄 kind:'sub'{id, dur, caps}(TTS 0, 원본 소리+BGM)"
   ],
   "audit": [
    {

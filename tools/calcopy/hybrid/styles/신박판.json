@@ -62,7 +62,10 @@
     "px": 73.05,
     "center": 487,
     "color": "#0D0D0D",
-    "max_w": 1000
+    "max_w": 1000,
+    "align": "left",
+    "x": 97,
+    "letter_spacing": -0.6
    }
   ],
   "logo": {
@@ -81,15 +84,13 @@
   },
   "credit": null,
   "watermark": null,
-  "why": "frame_import.py ← channel/sinbak/preset/연회색틀_둥근창_창아래자막/frame.json(rAt 측정, manifest default) + 스타일분석 §1(6편 픽셀): 바탕 연회색 #F1F3F0~#F3F3F3(frame.json #F3F3F3) · 창 [19,541,1041,746](5/6 같은 좌표) · 제목 검정 굵은 고딕 1줄 잉크 y449~525(가운데 487)·고정 5/6 · 로고 줄 y280~406 = 벤치 마스코트+'a novel discovery'+'신박발견' → 우리 '신박리포트' 글만(마스코트 안 씀 — 스타일분석 §5; 글꼴·px·자리 = 손 상수, 벤치 영문 줄 자리) · 워터마크·출처 0/6",
+  "why": "frame_import.py ← channel/sinbak/preset/연회색틀_둥근창_창아래자막/frame.json(rAt 측정, manifest default) + 스타일분석 §1(6편 픽셀): 바탕 연회색 #F1F3F0~#F3F3F3(frame.json #F3F3F3) · 창 [19,541,1041,746](5/6 같은 좌표) · 제목 검정 굵은 고딕 1줄 잉크 y449~525(가운데 487)·고정 5/6 · 로고 줄 y280~406 = 벤치 마스코트+'a novel discovery'+'신박발견' → 우리 '신박리포트' 글만(마스코트 안 씀 — 스타일분석 §5; 글꼴·px·자리 = 손 상수, 벤치 영문 줄 자리) · 워터마크·출처 0/6 · 제목 왼쪽 x97(벤치 rAt 3초 잉크 왼쪽 실측 — 02 _test_sinbak)·자간 −2.1(frame.json title.letter_spacing) · 둥근 창 87(frame.json video.radius, 벤치 모서리 곡선과 맞음 — 02 실측) · 자간 −2.1→−0.6(rAt 3초 줄 폭 810 vs 우리 790 보정)",
   "_pending": {
-   "title_align_left": "제목 왼쪽 정렬 x≈71(벤치) — 렌더러 _title_line 가운데만 → 02",
-   "window_radius": "둥근 창 모서리 87(frame.json)·30~75(눈) — frame.window 에 radius 칸 없음 → 02",
    "logo_two_lines": "벤치 로고 = 마스코트 그림 + 영문 굵은 줄 + 한글 작은 줄 — logo 칸 한 줄 글만",
    "props": "['title.letter_spacing=-2.1', 'title.word_spacing=5.6', 'caption.letter_spacing=-3.3', 'caption.word_spacing=20.3', \"caption.enter={'kind': 'none', 'ms': 0}\", 'video.radius=87']",
-   "bottom_fade": "벤치 아래 y≈1780~1920 어두워지는 띠(rAt 3초 프레임, 픽셀 차 0.29) — frame 칸 없음 → 02(또는 06 측정 뒤 rules 띠)",
-   "title_cx": "framecmp 제목 y0 +1·h +4 ✓ · cx +35 ✗(왼쪽 정렬) · letter_gap 4↔7 ✗"
-  }
+   "bottom_fade": "벤치 아래 y≈1780~1920 어두워지는 띠(rAt 3초 프레임, 픽셀 차 0.29) — frame 칸 없음 → 02(또는 06 측정 뒤 rules 띠)"
+  },
+  "window_radius": 87
  },
  "caption": {
   "pack": "clean",
@@ -144,6 +145,14 @@
    "meme": {
     "rate": 0.0,
     "why": "짤 0"
+   },
+   "sfx": {
+    "kinds": {
+     "whoosh": 0.67,
+     "pop": 0.33
+    },
+    "max": 7,
+    "why": "벤치 효과음 7발이 1/6편(edT)에만 — 종류 기타 2·whoosh 2·wow 2·pop 1(줄판독 count) → 그릴 수 있는 whoosh:pop = 2:1 · 상한 7 = 그 편 수(본보기 편이 다른 5편이면 0발 — 1차 = 본보기 편) · 파일 = 팩01 기본(packs.sfx 는 11)"
    }
   },
   "counted": {
@@ -183,11 +192,11 @@
    "share": {
     "emph": 0.167,
     "typing": 0.0,
-    "sfx": 0.0
+    "sfx": 1.0
    },
    "stickers": {
     "circle_arrow": 0.167,
-    "other": 0.167
+    "hand_x": 0.167
    },
    "transition": {
     "cut": 1.0
@@ -221,7 +230,9 @@
      "stickers": {},
      "sticker_lex": {},
      "variants": {},
-     "sfx": [],
+     "sfx": [
+      "none"
+     ],
      "no_caption": 0,
      "transitions": {
       "cut": 11
@@ -271,7 +282,9 @@
      "stickers": {},
      "sticker_lex": {},
      "variants": {},
-     "sfx": [],
+     "sfx": [
+      "cap"
+     ],
      "no_caption": 0,
      "transitions": {
       "cut": 18
@@ -307,7 +320,11 @@
      "stickers": {},
      "sticker_lex": {},
      "variants": {},
-     "sfx": [],
+     "sfx": [
+      "none",
+      "none",
+      "none"
+     ],
      "no_caption": 0,
      "transitions": {
       "cut": 24
@@ -349,7 +366,11 @@
       }
      },
      "variants": {},
-     "sfx": [],
+     "sfx": [
+      "none",
+      "none",
+      "none"
+     ],
      "no_caption": 0,
      "transitions": {
       "cut": 14
@@ -382,15 +403,25 @@
       }
      },
      "stickers": {
-      "other": 6
+      "hand_x": 6
      },
      "sticker_lex": {
-      "other": {
+      "hand_x": {
        "none": 6
       }
      },
      "variants": {},
-     "sfx": [],
+     "sfx": [
+      "none",
+      "none",
+      "cut",
+      "none",
+      "none",
+      "none",
+      "none",
+      "none",
+      "none"
+     ],
      "no_caption": 0,
      "transitions": {
       "cut": 13
@@ -425,7 +456,9 @@
      "stickers": {},
      "sticker_lex": {},
      "variants": {},
-     "sfx": [],
+     "sfx": [
+      "none"
+     ],
      "no_caption": 0,
      "transitions": {
       "cut": 18
@@ -494,14 +527,15 @@
  },
  "title_form": "결과 약속형 1줄 — '한 번 보면 절대 안 까먹음'·'너무 쉬워 안 까먹는 아이디어'",
  "_pending": {
-  "no_narration": "나레 0/6 — render_bench 는 나레 TTS 1회가 전제(tts_once) → 나레 없는 편(자막만·원음만) 길 → 02",
+  "no_narration": "나레 없는 줄 = 대본 줄 kind:'sub'{id,dur,caps}(02 2차 — TTS 0·배경음 기준 원음) — 판 칸 아님, 대본에서. 박창수 나레는 훅·공개 줄에만(kind tts)",
   "sfx": "공개 순간 효과음(가장 큰 자리) — 종류 미확인 → 06",
   "drawings": "주황 손그림 X(틀린 행동 줄 6/6 — oT)·빨간 화살표 — 스티커 kind 미등록 → 03"
  },
  "script": {
   "brief": [
    "박자: 훅 '…인데/…다는데'(5/6) → 다리(실패·문제) → 과정 본문 → 질문 '…하면?' → 공개(감탄+효과음) → 끝 '진짜 ○○하네!!/ㄷㄷ'.",
-   "반말·혼잣말(존댓말 0.21) · ㄷㄷ 4·ㅋㅋ 3 · CTA·가격 0 · 소재 = 쿠팡 제품 시연"
+   "반말·혼잣말(존댓말 0.21) · ㄷㄷ 4·ㅋㅋ 3 · CTA·가격 0 · 소재 = 쿠팡 제품 시연",
+   "대본 꼴: 나레 없는 자막 줄은 kind:'sub'{id, dur, caps[{text, s0}]}(render_bench 02 2차) · 나레는 훅·공개 줄만 kind:'tts'(박창수)"
   ],
   "audit": [
    {

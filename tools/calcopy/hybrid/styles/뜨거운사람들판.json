@@ -1,13 +1,16 @@
 {
  "name": "뜨거운사람들판",
  "renderer": "bench",
- "_note": "뜨거운사람들(hotpeople) 칼카피 1차 판 — 인물형>인물썰형(흰 바탕 틀 A). 근거 channel/hotpeople/{칼카피_기준표_1안_2026-09-27.md, 실측_2026-09-27/, 역분석_2026-09-25.md}. 줄판독 0편(06) · 손 스크립트 없음(프리셋.json hand_scripts []) — 틀·자막 숫자만 옮김",
+ "_note": "뜨거운사람들(hotpeople) 칼카피 1차 판 — 인물형>인물썰형(흰 바탕 틀 A, 목소리 없는 자막+BGM). 근거 channel/hotpeople/{스타일분석.md(06, 10-25), 줄판독/ 6편 156줄, _kal/규칙빈도.json·sfx_events.json} + 칼카피_기준표_1안(픽셀). 손 스크립트 없음",
  "bench": {
   "ko": "뜨거운사람들",
   "channel": "hotpeople",
-  "analysis": "channel/hotpeople/칼카피_기준표_1안_2026-09-27.md",
+  "analysis": "channel/hotpeople/스타일분석.md",
   "line_reads": "channel/hotpeople/줄판독",
-  "design": "channel/hotpeople/실측_2026-09-27"
+  "design": "channel/hotpeople/실측_2026-09-27",
+  "src_dir": "C:/숏템_칼카피/hotpeople/src",
+  "sfx_events": "channel/hotpeople/_kal/sfx_events.json",
+  "palette": "channel/hotpeople/팔레트.json"
  },
  "voice": {
   "name": "박창수",
@@ -15,10 +18,10 @@
   "candidates": [
    "지훈"
   ],
-  "why": "손 상수 — 벤치 목소리 미측정(실측 audio.json 성별 확인 필요, 06)"
+  "why": "벤치 목소리 없음 6/6(위스퍼 말 0구절·자동자막 없음 — 스타일분석 §7) → 대본 줄 전부 kind:'sub'(TTS 0). 목소리 칸은 필수라 둠(쓰이지 않음)"
  },
- "cps_target": 8.0,
- "_why_cps_target": "손 상수 — 나레 자/초 미측정(실측 rhythm.json 확인 필요, 06)",
+ "cps_target": 7.4,
+ "_why_cps_target": "자막 읽기 속도 5.26~8.2자/초(편 중앙 7.4, 스타일분석 §1) — sub 줄 dur 계산 기준",
  "bgm": {
   "id": "sweets",
   "db_below_voice": 14.0,
@@ -26,7 +29,7 @@
   "duck_narr_db": 0.0,
   "fade_out": 0.4,
   "candidates": [],
-  "why": "손 상수 — 실측 bgm.json 곡·dB 옮김은 06 뒤"
+  "why": "BGM 한 곡 4/6편 같음(템포 74.9 BPM — 스타일분석 §7) · 곡 이름 미확인 → sweets 손 상수 · 목소리 없음 → 배경음 기준 = 판 목표 음량(02 2차 bgm_ref target) · dB·덕킹 근거 없음"
  },
  "loudness": {
   "lufs": -14.0,
@@ -34,14 +37,14 @@
   "why": "−14 통일(사장님 10-18)"
  },
  "length": {
-  "min": 20.0,
-  "max": 40.0,
-  "why": "손 상수 — 길이 분포 미기입(실측 channel_56편.json 에서 06 이 채움)"
+  "min": 53.3,
+  "max": 73.3,
+  "why": "벤치 6편 53.31~73.28초(규칙빈도 episodes.dur)"
  },
  "timing": {
-  "gap": 0.1,
-  "tail": 0.3,
-  "why": "손 상수 — 쉼 미측정"
+  "gap": 0.0,
+  "tail": 0.5,
+  "why": "자막 교체 = 컷 교체(144/156) — 줄 사이 틈 0 · tail 손 상수"
  },
  "frame": {
   "kind": "window",
@@ -52,30 +55,32 @@
   ],
   "window": [
    0,
-   483,
+   484,
    1080,
-   790
+   788
   ],
   "title": [
    {
-    "font": "BMJUA.ttf",
-    "px": 96,
-    "center": 241.5,
+    "font": "GmarketSansBold.otf",
+    "px": 90,
+    "center": 314,
     "color": "#000000",
-    "max_w": 1000
+    "max_w": 1000,
+    "letter_spacing": -4
    },
    {
-    "font": "BMJUA.ttf",
-    "px": 96,
-    "center": 360.5,
-    "color": "#000000",
-    "max_w": 1000
+    "font": "GmarketSansBold.otf",
+    "px": 90,
+    "center": 418.5,
+    "color": "#E71D21",
+    "max_w": 1000,
+    "letter_spacing": -4
    }
   ],
   "logo": null,
   "credit": null,
   "watermark": null,
-  "why": "칼카피_기준표_1안_2026-09-27.md(실측_2026-09-27 rows/color/glyph, 10편): 바탕 (248,248,248) 3편 · 틀 A 흰 바탕 9/10 · 영상 칸 x0~1080 y483~1273(6편, ±5) · 헤드라인 2줄 띠 윗줄 208~275 시작/아랫줄 337~384 시작(전체 205~471) → 가운데 241.5/360.5 · 글꼴 미동정 — 기준표 spec 주아 96 임시(원본보다 굵어 보임, 09-25)",
+  "why": "06 줄판독 6편 layout + N4Vo 8초 프레임 픽셀: 흰 바탕 · 창 [0,484,1080,788] · 헤드라인 2줄 잉크 1줄 274~354(80px, 가운데 314)·2줄 380~457(77px, 가운데 418.5) · 2줄 빨강 #E71D21(한 줄 빨강 4/6 — 그중 2줄째 3편, 스타일분석 §2) · 글꼴 = 잉크 폭 대조로 고름: GmarketSansBold 90 이 줄 폭 349/559 vs 벤치 334/541(BMJUA 306/500·Pretendard 302/474 보다 가까움) → 자간 −4 · 로고 y91~195 원형 불꽃+'뜨거운 사람들 @HotPeople' = 우리 브랜드 미정(_pending)",
   "_pending": {
    "logo": "로고 띠 y91~195·x≈48~52 아이콘 지름 92 + 채널명 — 우리 브랜드 미정(브랜드.json 에 hotpeople 없음)",
    "title_color": "헤드라인 색 미기입(기준표 H 색 칸 확인 필요)",
@@ -92,14 +97,14 @@
   },
   "variant_for": {},
   "typing_cps": 10.0,
-  "chunk_max_chars": 14,
+  "chunk_max_chars": 21,
   "band": [
-   1285,
-   1458
+   1284,
+   1424
   ],
-  "why": "자막 첫 줄 잉크 시작 1285(1276~1340, N=232 — 67%) · 끝 ≤1458 · 주아 71px(획 8~9px, 줄높이 58.5) · 외곽·그림자 0/54 · 형광펜 띠 ≈(248,232,152) 잉크 아래 15px · 행간 80 · 줄 폭 중앙 517(최대 940) · chunk 14·typing 손 상수",
+  "why": "검정 #000000 156/156 · 외곽·그림자 0 · 덩어리 세로 가운데 맞춤: 2줄 121개 잉크 y1284~1424(가운데 1355)·1줄 35개 1318~1376(가운데 1347) — 1판 SUB_TOP 1285 고정은 2줄에만 맞음(스타일분석 §1 ⚠) · 2줄 78%·3줄 0 · 덩어리 자수 중앙 16(p90 21) → chunk_max_chars 21 · 노출 2.3초 · instant 156/156 · 형광펜 #F8EDA5 첫 줄 6/6",
   "_pending": {
-   "pack": "뜨거운사람들 자막 팩 없음 → 관제 235 요청: BMJUA 71 검정 외곽 0 + 옅은 노랑 형광펜 띠(248,232,152) 둥근, place y≈67%, 2줄 행간 80. 그동안 clean(검정·흰 띠 근사)"
+   "pack": "뜨거운사람들 자막 팩 없음 → 관제 235·지시서 11 요청: BMJUA 검정 외곽 0 · place = 덩어리 세로 가운데 y≈1350(70.3%)(1줄 위 1318·2줄 위 1284) · 2줄 행 간격 80 · 첫 줄 형광펜 #F8EDA5 둥근 띠. 그동안 clean — 줄 간격 벤치 80px vs 임시 팩 110px(팩 몫)"
   }
  },
  "cuts": {
@@ -107,10 +112,10 @@
   "push_orig": 0.0,
   "transition": {
    "kinds": {
-    "cut": 1.0
+    "zoomblur": 0.053
    },
-   "ms": 0,
-   "why": "전환 미측정 — 1차 컷"
+   "ms": 383,
+   "why": "벤치 줄 경계 152 중 zoomblur 8(5편, 자리 = 훅 뒤 1~2번째 자막 교체 5/6 · 본문 1~2 · 끝 1 — 스타일분석 §3) · ms 383 = bench_transition_drop 8회 길이 중앙(200~567, drop 중앙 0.921)"
   },
   "why": "push 손 상수"
  },
@@ -123,26 +128,398 @@
    "meme": {
     "rate": 0.0,
     "why": "짤 미측정"
+   },
+   "sfx": {
+    "kinds": {
+     "whoosh": 1.0
+    },
+    "max": 2,
+    "why": "벤치 broad 후보 4발/6편(줄판독 sfx 편당 2·0·0·0·1·1) — BzMW 4.62 '휙' 꼴 7.3kHz(컷 0.09초 뒤) · tonal 20발은 BGM 음이라 뺌(스타일분석 §7) · 상한 2 = 편당 최대 · 파일 = 팩01 whoosh(packs.sfx 는 11)"
+   },
+   "transition": {
+    "kinds": [
+     "zoomblur"
+    ],
+    "why": "그릴 종류 = 벤치에서 본 것 · 자리 = 본보기 편 줄판독(placement)"
+   },
+   "enter": {
+    "narr.first": "cut",
+    "narr.rest": "cut",
+    "orig.first": "cut",
+    "orig.rest": "cut",
+    "why": "instant 156/156 · exit cut 156(스타일분석 §1)"
    }
   },
-  "counted": {}
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/hotpeople/줄판독",
+   "n_videos": 6,
+   "slots": {
+    "narr.first": {
+     "n": 6,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.0
+    },
+    "narr.rest": {
+     "n": 150,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.033
+    }
+   },
+   "share": {
+    "emph": 0.333,
+    "typing": 0.0,
+    "sfx": 1.0
+   },
+   "stickers": {
+    "circle_arrow": 0.167
+   },
+   "transition": {
+    "cut": 0.947,
+    "zoomblur": 0.053
+   },
+   "sfx_kinds": {
+    "other": 1.0
+   },
+   "videos": [
+    {
+     "id": "BzMWncGDhnY",
+     "n": 27,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 26,
+       "enter": {
+        "cut": 26
+       },
+       "emph": 4
+      }
+     },
+     "stickers": {
+      "circle_arrow": 1
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "형광펜(옅은 노랑 둥근 띠 뒤 검정 글)": 2,
+      "기본(검정·흰 바탕)": 25
+     },
+     "sfx": [
+      "cap",
+      "none",
+      "none",
+      "none",
+      "none",
+      "none",
+      "none",
+      "none"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "zoomblur": 3,
+      "cut": 23
+     },
+     "n_trans": 26,
+     "roles": {
+      "hook": 1,
+      "body": 19,
+      "reveal": 2,
+      "twist": 2,
+      "end": 3
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 4.62,
+       "off": 0.087,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "twist",
+       "t": 22.73,
+       "off": 0.33,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "dvJg0By8Luw",
+     "n": 24,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 23,
+       "enter": {
+        "cut": 23
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "형광펜(옅은 노랑 둥근 띠 뒤 검정 글)": 1,
+      "기본(검정·흰 바탕)": 23
+     },
+     "sfx": [
+      "none"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 22,
+      "zoomblur": 1
+     },
+     "n_trans": 23,
+     "roles": {
+      "hook": 1,
+      "body": 14,
+      "reveal": 3,
+      "twist": 3,
+      "end": 3
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "N4VoQUIwb-I",
+     "n": 26,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 25,
+       "enter": {
+        "cut": 25
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "형광펜(옅은 노랑 둥근 띠 뒤 검정 글)": 2,
+      "기본(검정·흰 바탕)": 24
+     },
+     "sfx": [
+      "none",
+      "cap"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "zoomblur": 1,
+      "cut": 24
+     },
+     "n_trans": 25,
+     "roles": {
+      "hook": 2,
+      "reveal": 1,
+      "body": 19,
+      "twist": 2,
+      "end": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "s1Z5z_TrnPA",
+     "n": 25,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 24,
+       "enter": {
+        "cut": 24
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "형광펜(옅은 노랑 둥근 띠 뒤 검정 글)": 1,
+      "기본(검정·흰 바탕)": 24
+     },
+     "sfx": [
+      "none",
+      "none",
+      "none",
+      "none",
+      "none"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 22,
+      "zoomblur": 2
+     },
+     "n_trans": 24,
+     "roles": {
+      "hook": 2,
+      "reveal": 2,
+      "body": 16,
+      "twist": 2,
+      "end": 3
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "X4GIghUr_B4",
+     "n": 27,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 26,
+       "enter": {
+        "cut": 26
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "형광펜(옅은 노랑 둥근 띠 뒤 검정 글)": 1,
+      "기본(검정·흰 바탕)": 26
+     },
+     "sfx": [
+      "none",
+      "none",
+      "none",
+      "cap",
+      "none"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 25,
+      "zoomblur": 1
+     },
+     "n_trans": 26,
+     "roles": {
+      "hook": 2,
+      "reveal": 1,
+      "body": 19,
+      "twist": 2,
+      "end": 3
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 54.04,
+       "off": 0.44,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "z1fgI__kSPw",
+     "n": 27,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 26,
+       "enter": {
+        "cut": 26
+       },
+       "emph": 1
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "형광펜(옅은 노랑 둥근 띠 뒤 검정 글)": 1,
+      "기본(검정·흰 바탕)": 26
+     },
+     "sfx": [
+      "none",
+      "none",
+      "none"
+     ],
+     "no_caption": 1,
+     "transitions": {
+      "cut": 26
+     },
+     "n_trans": 26,
+     "roles": {
+      "hook": 2,
+      "body": 19,
+      "reveal": 1,
+      "twist": 2,
+      "end": 3
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "hook",
+       "t": 0.06,
+       "off": 0.06,
+       "basis": "파형 솟음"
+      }
+     ]
+    }
+   ]
+  }
  },
  "_pending": {
-  "line_reads": "줄판독 0편 → 06-hotpeople 뒤 counted·rules·목소리·길이 교체 — L1 미달",
-  "hand_constants": "voice·cps·bgm·length·timing 은 근거 없는 손 상수(why 에 표시)"
+  "hand_constants": "bgm.id·db·timing 은 손 상수(why 표시)",
+  "logo": null,
+  "logo_headline_vanish": "로고·헤드라인 도중 사라짐 4/6편(9~23초 자막 교체 컷) — frame.segments 로 가능(t0 = 사라지는 줄) · 시각 규칙 미확정(06) → 보류",
+  "highlighter": "첫 줄 형광펜 6/6 — 자막팩 변형(팩 몫) + rules.hook 변형 연결 필요"
  },
  "script": {
   "brief": [
-   "마무리 꼴: 걸린 시간 'N년' 2 · '~창업자 '이름' 이야기임' 3 · 인용 펀치 2(기준표 W.ending_phrase)",
-   "실존 유명인 9/9 · 제목 = 헤드라인 + 이름(9/9)"
+   "대본 꼴: 목소리 없음 — 모든 줄 kind:'sub'{id, dur, caps}(TTS 0, BGM 만)",
+   "박자: 훅 형광펜 1줄(충격 사실 '~터짐/~있음/~나타남') → 보강 1~2줄 → 이름 공개 3~4번째 줄 '그의 이름 \"○○\"'(4/6) 또는 끝 줄 '\"○○\" 이야기임'(2/6) → 시련(숫자) → '하지만 …'(5/6) → 끝 직전 '~까지' 넘기고 끝 줄 답",
+   "반말 명사형 종결(~음/~함/~임/~됨) · 존댓 0·전언 0·물음 0 · 덩어리 = 컷 1개(≈2.2초) · 25~27줄"
   ],
   "audit": [
    {
     "id": "est_length",
     "kind": "est_length",
-    "min": 20.0,
-    "max": 40.0,
-    "why": "손 상수 — 길이 분포 미기입(실측 channel_56편.json 에서 06 이 채움)"
+    "min": 53.3,
+    "max": 73.3,
+    "why": "벤치 6편 길이"
    }
   ]
  },

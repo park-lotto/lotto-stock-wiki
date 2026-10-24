@@ -76,12 +76,18 @@
    {
     "font": "Jalnan2.ttf",
     "px": 96,
-    "box": true,
+    "box": [
+     182,
+     288,
+     897,
+     411
+    ],
     "box_color": "#FE7813",
     "center": 350,
     "shear": 0,
     "color": "#0B0F0F",
-    "max_w": 900
+    "max_w": 900,
+    "why_box": "주황 둥근 상자 #FE7813 sMx9 x182~897 y288~411(스타일분석 §2 — 글 길이 따라 폭, 렌더러 상자는 고정 칸 → 02) · 옛 값 box:true 는 frame_png TypeError(10-25 02 보고)"
    }
   ],
   "rules": [
