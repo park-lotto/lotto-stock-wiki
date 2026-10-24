@@ -16091,20 +16091,34 @@ def _google_configured():
     return bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
 
 
-def _google_authorize_url(state):
+# 정식 도메인(2026-10-23 도메인전환). g_state 쿠키는 접속한 도메인에만 붙으므로 콜백도
+# **들어온 도메인으로** 돌아와야 한다 — 한 주소로 고정하면 다른 도메인 고객은 "보안 검증 실패".
+# 두 콜백 모두 구글 콘솔에 등록돼 있다(duckdns · stmaker.kr). www·app 은 아파치가 루트로 돌린다.
+_STMAKER_REDIRECT_URI = "https://stmaker.kr/auth/google/callback"
+
+
+def _google_redirect_uri(request=None):
+    """구글 콜백 주소의 주인 — 로그인 시작·토큰 교환이 둘 다 이 함수만 부른다(짝이 어긋나면 400)."""
+    host = ((request.headers.get("host") if request is not None else "") or "").split(":")[0].lower()
+    if host == "stmaker.kr":
+        return _STMAKER_REDIRECT_URI
+    return GOOGLE_REDIRECT_URI
+
+
+def _google_authorize_url(state, redirect_uri=None):
     q = urllib.parse.urlencode({
-        "client_id": GOOGLE_CLIENT_ID, "redirect_uri": GOOGLE_REDIRECT_URI,
+        "client_id": GOOGLE_CLIENT_ID, "redirect_uri": redirect_uri or GOOGLE_REDIRECT_URI,
         "response_type": "code", "scope": "openid email profile",
         "state": state, "access_type": "online", "prompt": "select_account"})
     return _GOOGLE_AUTH_URL + "?" + q
 
 
-def _google_fetch_identity(code, _requests=None):
+def _google_fetch_identity(code, _requests=None, redirect_uri=None):
     """code → {sub, email} 또는 None. 네트워크는 _requests 주입으로 테스트 가능."""
     rq = _requests or requests
     tok = rq.post(_GOOGLE_TOKEN_URL, data={
         "code": code, "client_id": GOOGLE_CLIENT_ID, "client_secret": GOOGLE_CLIENT_SECRET,
-        "redirect_uri": GOOGLE_REDIRECT_URI, "grant_type": "authorization_code"}, timeout=10)
+        "redirect_uri": redirect_uri or GOOGLE_REDIRECT_URI, "grant_type": "authorization_code"}, timeout=10)
     if tok.status_code != 200:
         return None
     access = tok.json().get("access_token")
@@ -16127,7 +16141,7 @@ def _google_login(request: Request):
         return HTMLResponse("<h3 style='font-family:sans-serif'>구글 로그인이 아직 설정되지 않았어요.</h3>",
                             status_code=503)
     state = secrets.token_urlsafe(24)
-    r = RedirectResponse(_google_authorize_url(state), status_code=303)
+    r = RedirectResponse(_google_authorize_url(state, _google_redirect_uri(request)), status_code=303)
     r.set_cookie("g_state", state, max_age=600, httponly=True, samesite="lax")
     return r
 
@@ -16143,7 +16157,7 @@ def _google_callback(request: Request, code: str = "", state: str = "", error: s
         state_ok = False       # 비-ASCII state 주입 등 → fail-closed
     if not state_ok:
         return RedirectResponse("/login?e=" + urllib.parse.quote("보안 검증 실패 — 다시 시도해주세요"), status_code=303)
-    ident = _google_fetch_identity(code)
+    ident = _google_fetch_identity(code, redirect_uri=_google_redirect_uri(request))
     if not ident:
         return RedirectResponse("/login?e=" + urllib.parse.quote("구글 인증에 실패했어요"), status_code=303)
     cid, created = Store(DB_PATH).get_or_create_by_google(
