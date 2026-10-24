@@ -220,8 +220,13 @@ def count(style: dict) -> dict:
     sfx = _sfx_table(style)
     allslot = defaultdict(lambda: {"n": 0, "enter": Counter(), "emph": 0})
     videos = []
+    crit = count_filter(style)
+    kept = []
     for f in files:
+        if crit and not all(json.loads(f.read_text(encoding="utf-8")).get(k) == v for k, v in crit.items()):
+            continue        # 편 필터(판 counted.filter — 한 채널 폴더에 두 갈래가 섞인 경우 그 판 갈래 편만, 07 70b5bef9a 쪽지)
         rows, d = _bench_rows(f)
+        kept.append(d.get("id", f.stem))
         vid = d.get("id", f.stem)
         sl = defaultdict(lambda: {"n": 0, "enter": Counter(), "emph": 0})
         stick, variants = Counter(), Counter()
@@ -270,7 +275,20 @@ def count(style: dict) -> dict:
            "transition": {k: round(c / n_tr_all, 3) for k, c in tr_all.most_common()} if n_tr_all else {},     # 줄 경계당 전환 종류 비율(잰 줄만)
            "sfx_kinds": {k: round(c / sum(sk_all.values()), 3) for k, c in sk_all.most_common()} if sk_all else {},
            "videos": videos}
+    if crit:
+        out["filter"] = {**crit, "ids": kept, "made_by": "tools/calcopy/hybrid/placement.py count(편 필터 count_filter)"}
     return out
+
+
+FILTER_META = ("ids", "how", "made_by", "n", "why")
+
+
+def count_filter(style: dict) -> dict:
+    """(판단 주인: 이 판이 셀 벤치 편) 판 placement.counted.filter(또는 placement.filter) 의 조건 칸 — 줄판독 문서 최상위 칸과 값이 같은 편만
+    (예 {sound_mode:"나레"} — 썰풀다 폴더에 나레·자막만 두 갈래). ids·how·made_by 는 기록 칸이라 조건이 아니다. 없으면 {}(폴더 통째, 옛 동작)."""
+    P = style.get("placement") or {}
+    F = P.get("filter") or (P.get("counted") or {}).get("filter") or {}
+    return {k: v for k, v in F.items() if k not in FILTER_META and not str(k).startswith("_")}
 
 
 # ── 상위 편 묶음(표준 §12-2·§12-4, 지시서 15) ─────────────────────────────────

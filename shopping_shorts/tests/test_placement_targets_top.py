@@ -277,3 +277,16 @@ def test_targets_refill_after_emph_color_drops(monkeypatch):
     p = PL.place(rows, st, "ep13", targets=TG2)
     narr = [r for r in p["rows"] if r["speaker"] == "narr"]
     assert dropped and sum(_deco(r) for r in narr) == 5, (dropped, [(r["text"], r.get("emph")) for r in narr])
+
+
+def test_count_filter_by_sound_mode_matches_07_grouping():
+    """판 counted.filter{sound_mode} = 그 갈래 편만 센다(07 70b5bef9a 임시 묶음과 같은 값) · 필터 없으면 폴더 통째(옛 동작)."""
+    for name in ("도파민썰템A판", "도파민썰템B판"):
+        st = ST.load(name)
+        saved = st["placement"]["counted"]
+        c = PL.count(st)
+        assert c["filter"]["ids"] == saved["filter"]["ids"]
+        assert {k: v for k, v in c.items() if k != "filter"} == {k: v for k, v in saved.items() if k != "filter"}, name
+        st2 = copy.deepcopy(st)
+        st2["placement"]["counted"].pop("filter")
+        assert PL.count(st2)["n_videos"] > c["n_videos"] and "filter" not in PL.count(st2)
