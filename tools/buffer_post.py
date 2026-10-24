@@ -12,7 +12,8 @@
   ① 짝 .txt(같은 이름) 읽기 — 첫 줄=유튜브 제목(buffer_api._yt_title), 전체=설명. ★없으면 건너뛴다
      (제목·설명은 Claude가 .txt로 먼저 써 둔다. 이 도구는 글을 지어내지 않는다)
   ② scp로 서버 data/buffer_drop/<무작위>.mp4 에 올림 → 공개 주소 /api/share/f/<이름> (app.api_share_f)
-  ③ HEAD 200·video/mp4 확인 뒤 buffer_api.schedule_video  ④ 영상·.txt를 그 폴더 '완료\'로 옮기고 장부에 적는다
+  ③ HEAD 200·video/mp4 확인 뒤 buffer_api.schedule_video  ④ 영상·.txt를 그 폴더 '예약\'으로 옮기고 장부에 적는다
+  ⑤ cleanup(post 시작 때도 자동)이 Buffer 상태 sent 를 보면 '예약\' → '완료\'  (완료 = 유튜브에 실제로 올라감)
 
 폴더 = G:\\내 드라이브\\버퍼예약\\<폴더명>, 키 = ~/.claude/buffer_keys.json {폴더명: Buffer API 키}.
 ★키 파일은 git·드라이브에 두지 않는다. 장부 = ~/.claude/buffer_post_ledger.json
@@ -33,7 +34,8 @@ from shopping_shorts import buffer_api  # noqa: E402
 from tools.live_admin import BASE, HOST, KEY  # noqa: E402
 
 DRIVE = r"G:\내 드라이브\버퍼예약"
-DONE = "완료"
+RESERVED = "예약"     # Buffer 에 넘긴 것(아직 안 올라감) — 2026-10-24 사장님 "예약폴더는 올려져있는걸로"
+DONE = "완료"         # 유튜브에 실제로 게시된 것 — cleanup 이 status sent 를 보고 예약 → 완료로 옮긴다
 KEYS = os.path.expanduser("~/.claude/buffer_keys.json")
 LEDGER = os.path.expanduser("~/.claude/buffer_post_ledger.json")
 REMOTE_DIR = "/home/ubuntu/lotto-stock-wiki/shopping_shorts/data/buffer_drop"
@@ -54,15 +56,20 @@ def _save_ledger(rows):
         json.dump(rows, f, ensure_ascii=False, indent=1)
 
 
-def _folders(only=None):
+def _folders(only=None, need_dir=True):
+    """need_dir=False: test --file 처럼 드라이브 폴더 없이 키만 쓰는 경우(드라이브 G: 가 안 붙어 있어도 시험)."""
     keys = _load(KEYS, {})
     names = [only] if only else sorted(keys)
+    if need_dir and not os.path.isdir(DRIVE):
+        raise SystemExit(f"드라이브 폴더가 안 보인다: {DRIVE} — 구글 드라이브(G:)가 연결돼 있나 확인")
     for n in names:
         if n not in keys:
             raise SystemExit(f"키 없음: {n} — {KEYS} 에 등록돼 있지 않다")
         d = os.path.join(DRIVE, n)
-        if not os.path.isdir(d):
-            raise SystemExit(f"폴더 없음: {d}")
+        if need_dir and not os.path.isdir(d):
+            # ★멈추지 않는다 — 2026-10-24 '997(미사용)' 하나 때문에 뒤의 998·999·숏템07 을 통째로 못 봤다
+            print(f"폴더 없음(건너뜀): {d}")
+            continue
         yield n, d, keys[n]
 
 
@@ -179,9 +186,26 @@ def cmd_cleanup(a=None):
             _remove_remote(r["remote"])
             r["cleaned"], r["final_status"] = dt.datetime.now(KST).isoformat(timespec="seconds"), st
             changed += 1
+            if st == "sent":
+                _to_done(r)
+            else:
+                print(f"   ⚠️ {r['folder']} {r['file']}: Buffer 상태 {st} — '{RESERVED}' 폴더에 그대로 둔다(확인 필요)")
     if changed:
         _save_ledger(rows)
     print(f"서버 사본 정리 {changed}개")
+
+
+def _to_done(r):
+    """게시된 영상·.txt 를 '예약' → '완료' 로 옮긴다. 이미 완료에 있으면(옛 방식으로 옮긴 것) 그대로."""
+    d = os.path.join(DRIVE, r["folder"])
+    if not os.path.isdir(d):
+        return
+    for name in (r["file"], os.path.splitext(r["file"])[0] + ".txt"):
+        src = os.path.join(d, RESERVED, name)
+        if os.path.isfile(src):
+            os.makedirs(os.path.join(d, DONE), exist_ok=True)
+            shutil.move(src, os.path.join(d, DONE, name))
+    print(f"   {r['folder']} {r['file']}: 게시됨 → '{DONE}'")
 
 
 def cmd_post(a):
@@ -213,10 +237,10 @@ def cmd_post(a):
                 print(f"[{n}] {v}: 실패 — {e}")
                 fail += 1
                 continue
-            done = os.path.join(d, DONE)
-            os.makedirs(done, exist_ok=True)
-            shutil.move(os.path.join(d, v), os.path.join(done, v))
-            shutil.move(cap_path, os.path.join(done, os.path.basename(cap_path)))
+            rsv = os.path.join(d, RESERVED)
+            os.makedirs(rsv, exist_ok=True)
+            shutil.move(os.path.join(d, v), os.path.join(rsv, v))
+            shutil.move(cap_path, os.path.join(rsv, os.path.basename(cap_path)))
             rows.append({"folder": n, "channel": ch.get("name"), "file": v, "post_id": res["id"],
                          "due": res.get("dueAt") or "큐", "remote": remote,
                          "at": dt.datetime.now(KST).isoformat(timespec="seconds")})
@@ -230,7 +254,7 @@ def cmd_test(a):
     """실제 시험 — 게시하지 않는다: 30일 뒤 비공개 예약 → 상태 scheduled 확인 → 삭제 → NOT_FOUND 확인."""
     due = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
     src = a.file
-    for n, d, key in _folders(a.folder):
+    for n, d, key in _folders(a.folder, need_dir=not src):
         try:
             ch = _channel(key, n)
         except RuntimeError as e:
