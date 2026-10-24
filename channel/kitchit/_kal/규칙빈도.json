@@ -135,6 +135,7 @@
    "emph": 33,
    "sticker": 5,
    "sfx": 0,
+   "variant": 0,
    "any": 47,
    "chars_med": 6,
    "sec_med": 0.67,
@@ -152,6 +153,7 @@
    "emph": 41,
    "sticker": 9,
    "sfx": 2,
+   "variant": 0,
    "any": 66,
    "chars_med": 6,
    "sec_med": 0.83,
@@ -166,6 +168,7 @@
    "emph": 0,
    "sticker": 0,
    "sfx": 0,
+   "variant": 0,
    "any": 0,
    "chars_med": 4,
    "sec_med": 0.77,
@@ -184,6 +187,7 @@
    "emph": 17,
    "sticker": 3,
    "sfx": 0,
+   "variant": 0,
    "any": 27
   },
   "본문": {
@@ -198,6 +202,7 @@
    "emph": 43,
    "sticker": 8,
    "sfx": 2,
+   "variant": 0,
    "any": 68
   },
   "끝": {
@@ -212,6 +217,7 @@
    "emph": 14,
    "sticker": 3,
    "sfx": 0,
+   "variant": 0,
    "any": 18
   }
  },
@@ -227,6 +233,7 @@
    "emph": 12,
    "sticker": 2,
    "sfx": 0,
+   "variant": 0,
    "any": 18
   },
   "증거": {
@@ -241,6 +248,7 @@
    "emph": 22,
    "sticker": 5,
    "sfx": 1,
+   "variant": 0,
    "any": 41
   },
   "질문": {
@@ -255,6 +263,7 @@
    "emph": 4,
    "sticker": 1,
    "sfx": 0,
+   "variant": 0,
    "any": 6
   },
   "답": {
@@ -268,6 +277,7 @@
    "emph": 7,
    "sticker": 1,
    "sfx": 1,
+   "variant": 0,
    "any": 11
   },
   "끝": {
@@ -281,6 +291,7 @@
    "emph": 7,
    "sticker": 2,
    "sfx": 0,
+   "variant": 0,
    "any": 8
   },
   "본문": {
@@ -295,6 +306,7 @@
    "emph": 13,
    "sticker": 2,
    "sfx": 0,
+   "variant": 0,
    "any": 15
   },
   "고조": {
@@ -306,6 +318,7 @@
    "emph": 1,
    "sticker": 1,
    "sfx": 0,
+   "variant": 0,
    "any": 1
   },
   "이음": {
@@ -317,6 +330,7 @@
    "emph": 0,
    "sticker": 0,
    "sfx": 0,
+   "variant": 0,
    "any": 0
   },
   "공개": {
@@ -330,6 +344,7 @@
    "emph": 4,
    "sticker": 0,
    "sfx": 0,
+   "variant": 0,
    "any": 6
   },
   "반전": {
@@ -342,6 +357,7 @@
    "emph": 4,
    "sticker": 0,
    "sfx": 0,
+   "variant": 0,
    "any": 7
   }
  },
@@ -377,7 +393,8 @@
   "enter_fx": 0.67,
   "emph": 0.55,
   "sticker": 0.1,
-  "sfx": 0.01
+  "sfx": 0.01,
+  "variant": 0.0
  },
  "rules": [
   {
@@ -449,6 +466,15 @@
    "grade": "약"
   },
   {
+   "cond": "자리=본문",
+   "effect": "variant",
+   "k": 0,
+   "n": 84,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약"
+  },
+  {
    "cond": "화자=원음",
    "effect": "enter_fx",
    "k": 50,
@@ -514,6 +540,15 @@
    "n": 83,
    "rate": 0.02,
    "base": 0.01,
+   "grade": "약"
+  },
+  {
+   "cond": "화자=원음",
+   "effect": "variant",
+   "k": 0,
+   "n": 83,
+   "rate": 0.0,
+   "base": 0.0,
    "grade": "약"
   },
   {
@@ -585,6 +620,15 @@
    "grade": "약"
   },
   {
+   "cond": "역할=증거",
+   "effect": "variant",
+   "k": 0,
+   "n": 52,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약"
+  },
+  {
    "cond": "화자=나레",
    "effect": "enter_fx",
    "k": 41,
@@ -653,6 +697,15 @@
    "grade": "약"
   },
   {
+   "cond": "화자=나레",
+   "effect": "variant",
+   "k": 0,
+   "n": 51,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약"
+  },
+  {
    "cond": "자리=훅",
    "effect": "enter_fx",
    "k": 23,
@@ -710,6 +763,15 @@
    "n": 31,
    "rate": 0.0,
    "base": 0.01,
+   "grade": "약"
+  },
+  {
+   "cond": "자리=훅",
+   "effect": "variant",
+   "k": 0,
+   "n": 31,
+   "rate": 0.0,
+   "base": 0.0,
    "grade": "약"
   },
   {
@@ -832,12 +894,30 @@
    "grade": "약"
   },
   {
+   "cond": "자리=끝",
+   "effect": "variant",
+   "k": 0,
+   "n": 20,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약"
+  },
+  {
    "cond": "역할=훅",
    "effect": "sfx",
    "k": 0,
    "n": 20,
    "rate": 0.0,
    "base": 0.01,
+   "grade": "약"
+  },
+  {
+   "cond": "역할=훅",
+   "effect": "variant",
+   "k": 0,
+   "n": 20,
+   "rate": 0.0,
+   "base": 0.0,
    "grade": "약"
   },
   {
@@ -906,6 +986,15 @@
    "n": 17,
    "rate": 0.0,
    "base": 0.01,
+   "grade": "약"
+  },
+  {
+   "cond": "역할=본문",
+   "effect": "variant",
+   "k": 0,
+   "n": 17,
+   "rate": 0.0,
+   "base": 0.0,
    "grade": "약"
   },
   {
@@ -1017,6 +1106,15 @@
    "grade": "약"
   },
   {
+   "cond": "역할=답",
+   "effect": "variant",
+   "k": 0,
+   "n": 13,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약"
+  },
+  {
    "cond": "역할=끝",
    "effect": "emph",
    "k": 7,
@@ -1074,6 +1172,15 @@
    "n": 10,
    "rate": 0.0,
    "base": 0.01,
+   "grade": "약"
+  },
+  {
+   "cond": "역할=끝",
+   "effect": "variant",
+   "k": 0,
+   "n": 10,
+   "rate": 0.0,
+   "base": 0.0,
    "grade": "약"
   },
   {
@@ -1221,6 +1328,15 @@
    "grade": "약"
   },
   {
+   "cond": "역할=질문",
+   "effect": "variant",
+   "k": 0,
+   "n": 7,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약"
+  },
+  {
    "cond": "역할=공개",
    "effect": "sticker",
    "k": 0,
@@ -1239,6 +1355,15 @@
    "grade": "약"
   },
   {
+   "cond": "역할=공개",
+   "effect": "variant",
+   "k": 0,
+   "n": 7,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약"
+  },
+  {
    "cond": "역할=반전",
    "effect": "sticker",
    "k": 0,
@@ -1254,6 +1379,15 @@
    "n": 7,
    "rate": 0.0,
    "base": 0.01,
+   "grade": "약"
+  },
+  {
+   "cond": "역할=반전",
+   "effect": "variant",
+   "k": 0,
+   "n": 7,
+   "rate": 0.0,
+   "base": 0.0,
    "grade": "약"
   },
   {
@@ -1352,12 +1486,30 @@
    "grade": "표본부족"
   },
   {
+   "cond": "화자=불명",
+   "effect": "variant",
+   "k": 0,
+   "n": 1,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "표본부족"
+  },
+  {
    "cond": "역할=고조",
    "effect": "sfx",
    "k": 0,
    "n": 1,
    "rate": 0.0,
    "base": 0.01,
+   "grade": "표본부족"
+  },
+  {
+   "cond": "역할=고조",
+   "effect": "variant",
+   "k": 0,
+   "n": 1,
+   "rate": 0.0,
+   "base": 0.0,
    "grade": "표본부족"
   },
   {
@@ -1394,6 +1546,15 @@
    "n": 1,
    "rate": 0.0,
    "base": 0.01,
+   "grade": "표본부족"
+  },
+  {
+   "cond": "역할=이음",
+   "effect": "variant",
+   "k": 0,
+   "n": 1,
+   "rate": 0.0,
+   "base": 0.0,
    "grade": "표본부족"
   }
  ],
