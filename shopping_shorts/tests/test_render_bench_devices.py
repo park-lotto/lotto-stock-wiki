@@ -9,7 +9,9 @@
 실제 렌더 대조(키치잇판 회귀·시험 판 줌블러·덕킹 dB·게시글 틀 framecmp)는 아래 CLI 로 —
     PYTHONUTF8=1 py shopping_shorts/tests/test_render_bench_devices.py blur <final.mp4> <render_info.json|timeline.json> [--window x,y,w,h]
     PYTHONUTF8=1 py shopping_shorts/tests/test_render_bench_devices.py duck <off/render> <on/render>
-    PYTHONUTF8=1 py shopping_shorts/tests/test_render_bench_devices.py framediff <a.mp4> <b.mp4> [--from 0.5 --n 10]
+    PYTHONUTF8=1 py shopping_shorts/tests/test_render_bench_devices.py framediff <a.mp4> <b.mp4> [--start 0.5 --n 10]
+    PYTHONUTF8=1 py shopping_shorts/tests/test_render_bench_devices.py postcmp <설명서 렌더 0초.png> <우리 0초.png> [--x 20]
+      = kal_analyze framecmp(제목 첫 줄·본문 글 띠) + 머리띠·줄·본문 상자 가장자리 y(세로 한 줄에서 색이 바뀌는 행) ±4px·색 ΔE<5
 """
 import json
 import subprocess
@@ -169,6 +171,20 @@ def test_post_frame_script_text_wins(tmp_path):
     assert np.abs(a[:300] - b[:300]).sum() == 0
 
 
+def test_post_views_line_and_meme_slot(tmp_path):
+    from PIL import Image
+    meme = tmp_path / "m.png"
+    Image.new("RGB", (40, 20), (200, 30, 30)).save(meme)
+    F = {**POST, "post": {**POST["post"], "views_line": {"text": "조회수 1.2만", "font": "Pretendard-Regular.otf", "px": 30, "color": "#FFFFFF",
+                                                         "x": 125, "cy": 500},
+                          "meme_slot": {"box": [800, 300, 200, 120]}}}
+    a = _png(F, {"title_lines": [], "post": {"meme": str(meme)}}, tmp_path)
+    assert tuple(a[360, 900][:3]) == (200, 30, 30)                       # 짤 자리 = 대본 post.meme 채워 자르기
+    assert (a[485:515, 125:300, :3].min(2) > 200).sum() > 50              # 조회수 줄(흰 글)
+    b = _png(F, {"title_lines": []}, tmp_path)
+    assert tuple(b[360, 900][:3]) == (95, 95, 95)                         # 짤 없으면 바탕 그대로
+
+
 def test_full_frame_is_transparent_window(tmp_path):
     F = {"kind": "full", "bg": [0, 0, 0], "full": {"band": {"cy": 1200, "h": 200, "rgba": [0, 0, 0, 128]}}}
     a = _png(F, {}, tmp_path)
@@ -207,6 +223,39 @@ def test_bed_contrast(tmp_path):
     assert abs(r["narr_vs_gap"] + 8.0) < 0.2, r
 
 
+# ── CLI: 실제 렌더 대조(합격 검사 1·2·3·4) ───────────────────────────────
+def _img(p):
+    import cv2
+    return cv2.imdecode(np.fromfile(str(p), np.uint8), cv2.IMREAD_COLOR)[:, :, ::-1].astype(int)
+
+
+def edges(col: np.ndarray, th: float = 10.0) -> list[tuple[int, list]]:
+    """세로 한 줄(위→아래)에서 색이 ΔE>th 로 바뀌는 행과 그 아래 색 — 번짐(그러데이션)은 한 행 차가 작아 안 잡힌다."""
+    from tools.calcopy.engine.kal_analyze import _lab
+    lab = np.array([_lab(c) for c in col])
+    d = np.linalg.norm(np.diff(lab, axis=0), axis=1)
+    return [(int(i + 1), col[i + 1].tolist()) for i in np.where(d > th)[0]]
+
+
+def postcmp(ref: str, ours: str, x: int = 20, y1: int = 760, bands=((100, 250), (600, 720))) -> dict:
+    """게시글형 틀 대조: 설명서 렌더(preset 렌더) 0초 ↔ 우리 frame_png 0초. 판정 = 글 띠 framecmp 통과 + 가장자리 행 ±4px + 그 아래 색 ΔE<5."""
+    from tools.calcopy.engine import kal_analyze as K
+    A, B = _img(ref), _img(ours)
+    ea, eb = edges(A[:y1, x]), edges(B[:y1, x])
+    rows = []
+    for y, c in ea:
+        near = min(eb, key=lambda e: abs(e[0] - y)) if eb else None
+        dE = float(np.linalg.norm(K._lab(c) - K._lab(near[1]))) if near else None
+        rows.append({"ref_y": y, "ours_y": near[0] if near else None, "dy": (near[0] - y) if near else None, "ref_rgb": c,
+                     "ours_rgb": near[1] if near else None, "dE": round(dE, 1) if dE is not None else None,
+                     "pass": bool(near and abs(near[0] - y) <= K.FRAME_PASS["xy_px"] and dE < K.FRAME_PASS["dE"])})
+    extra = [e[0] for e in eb if all(abs(e[0] - r["ref_y"]) > K.FRAME_PASS["xy_px"] for r in rows)]
+    txt = {f"{b0}-{b1}": K.frame_compare(ref, ours, (b0, b1)) for b0, b1 in bands}
+    ok = all(r["pass"] for r in rows) and not extra and all(t["verdict"] == "통과" for t in txt.values())
+    return {"x": x, "edges": rows, "ours_extra_edges": extra,
+            "text": {k: {"verdict": v["verdict"], "rows": v["rows"]} for k, v in txt.items()}, "ok": ok}
+
+
 # ── CLI: 실제 렌더 대조(합격 검사 1·2·4) ─────────────────────────────────
 def _cli():
     import argparse
@@ -216,7 +265,11 @@ def _cli():
     d = sub.add_parser("duck"); d.add_argument("off"); d.add_argument("on")
     f = sub.add_parser("framediff"); f.add_argument("a"); f.add_argument("b"); f.add_argument("--start", type=float, default=0.5)
     f.add_argument("--n", type=int, default=10)
+    pc = sub.add_parser("postcmp"); pc.add_argument("ref"); pc.add_argument("ours"); pc.add_argument("--x", type=int, default=20)
+    pc.add_argument("--y1", type=int, default=760); pc.add_argument("--bands", default="100,250;600,720")
     a = ap.parse_args()
+    if a.cmd == "postcmp":
+        print(json.dumps(postcmp(a.ref, a.ours, a.x, a.y1, [tuple(int(v) for v in b.split(",")) for b in a.bands.split(";")]), ensure_ascii=False, indent=1))
     if a.cmd == "blur":
         x, y, w, h = (int(v) for v in a.window.split(","))
         T = json.loads(Path(a.timeline).read_text(encoding="utf-8"))
