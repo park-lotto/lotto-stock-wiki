@@ -1,0 +1,908 @@
+{
+ "id": "mYxuF1A74j4",
+ "dur": 22.523,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "퍽? 이게 뭐라고",
+   "colors": [
+    {
+     "word": "퍽? 이게 뭐라고",
+     "hex": "#FFFFFF"
+    }
+   ]
+  },
+  {
+   "text": "눈물 줄줄 ㅠㅠ",
+   "colors": [
+    {
+     "word": "눈물 줄줄 ㅠㅠ",
+     "hex": "#ECCD19"
+    }
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   350,
+   1080,
+   1920
+  ],
+  "bg_hex": "#000000",
+  "caption_band": [
+   1230,
+   1320
+  ],
+  "title_y": [
+   [
+    102,
+    221
+   ],
+   [
+    244,
+    359
+   ]
+  ],
+  "source_y": null,
+  "logo_y": null,
+  "source_hex": null,
+  "watermark": {
+   "what": "원본 워터마크를 가린 회색 흐림 상자(창 위 왼쪽·아래)",
+   "alpha": "흐림(눈)"
+  },
+  "note": "틀 B(위 검정 띠 0~350 + 제목 2줄 흰/노랑 + 아래 전폭 창 끝까지). 노랑 2줄 아랫단이 창에 살짝 가림. 자막 흰 글 검정 외곽, 창 안 y≈1230~1320"
+ },
+ "lines": [
+  {
+   "t0": 0.033,
+   "t1": 1.0,
+   "speaker": "나레",
+   "text": "하키 경기 중",
+   "layer": null,
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1229,
+    1316
+   ],
+   "fill_hex": "#FDFAF9",
+   "outline": "검정 약 5~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "하키 경기장 유리벽 너머 관중석",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 1.0,
+   "t1": 1.733,
+   "speaker": "나레",
+   "text": "선수가 퍽을",
+   "layer": null,
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1229,
+    1317
+   ],
+   "fill_hex": "#FFFBFB",
+   "outline": "검정 약 5~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "빨간 화살표",
+     "t_in": 1.0,
+     "t_out": 1.37,
+     "x": 904,
+     "y": 1059,
+     "w": 60,
+     "h": 94,
+     "anim": "cut 등장·선수 손(퍽) 가리킴, 살짝 움직임(눈)"
+    },
+    {
+     "what": "빨간원",
+     "t_in": 1.43,
+     "t_out": 1.77,
+     "x": 404,
+     "y": 374,
+     "w": 172,
+     "anim": "날아가는 퍽을 따라 이동(트래킹, 0.1초마다 x 524→404·y 374→604)"
+    }
+   ],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "선수가 관중석 쪽으로 퍽을 던짐(빨간 화살표·빨간 원이 퍽을 짚음)",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 1.733,
+   "t1": 3.367,
+   "speaker": "나레",
+   "text": "관중석으로 던졌어요",
+   "layer": null,
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1229,
+    1315
+   ],
+   "fill_hex": "#FFFCFC",
+   "outline": "검정 약 5~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "관중들이 손을 뻗음",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.367,
+   "t1": 4.0,
+   "speaker": "나레",
+   "text": "한 여성이",
+   "layer": null,
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1230,
+    1316
+   ],
+   "fill_hex": "#FDFBFB",
+   "outline": "검정 약 5~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "관중석 여성들",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.0,
+   "t1": 4.9,
+   "speaker": "나레",
+   "text": "퍽을 잡았지만",
+   "layer": null,
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1230,
+    1317
+   ],
+   "fill_hex": "#FFFBFC",
+   "outline": "검정 약 5~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "퍽을 잡은 관중",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.267,
+   "t1": 6.267,
+   "speaker": "나레",
+   "text": "사실 이 어린 소녀가",
+   "layer": null,
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1229,
+    1315
+   ],
+   "fill_hex": "#FFFDFD",
+   "outline": "검정 약 5~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "빨간 화살표",
+     "t_in": 4.967,
+     "t_out": 5.33,
+     "x": 512,
+     "y": 1296,
+     "w": 104,
+     "h": 62,
+     "anim": "cut 등장·소녀 쪽으로 이동(x 512→588)"
+    }
+   ],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "빨간 화살표가 짚은 땋은 머리 소녀",
+   "fit": 8,
+   "cut_at": [
+    5.767
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "4.9~5.27 자막 빈 사이에 화살표 먼저 등장(4.967)"
+  },
+  {
+   "t0": 6.267,
+   "t1": 7.333,
+   "speaker": "나레",
+   "text": "처음부터 간절히",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1230,
+    1316
+   ],
+   "fill_hex": "#FFFDFD",
+   "outline": "검정 약 5~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "유리벽에 손을 댄 소녀 근접",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 7.4,
+   "t1": 8.467,
+   "speaker": "나레",
+   "text": "퍽을 기다리고 있었죠",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1230,
+    1312
+   ],
+   "fill_hex": "#FFFDFC",
+   "outline": "검정 약 5~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "손팻말 든 소녀",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.767,
+   "t1": 10.167,
+   "speaker": "나레",
+   "text": "소녀는 퍽을 받지 못해",
+   "layer": null,
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1230,
+    1317
+   ],
+   "fill_hex": "#FFFDFC",
+   "outline": "검정 약 5~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "유리벽을 짚은 소녀 뒷모습",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 10.167,
+   "t1": 11.567,
+   "speaker": "나레",
+   "text": "울음을 터뜨렸어요",
+   "layer": null,
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1230,
+    1308
+   ],
+   "fill_hex": "#FFFEFD",
+   "outline": "검정 약 5~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "소녀 뒷모습·손",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.7,
+   "t1": 12.9,
+   "speaker": "나레",
+   "text": "그때 다른 선수가",
+   "layer": null,
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1316
+   ],
+   "fill_hex": "#FEFBFA",
+   "outline": "검정 약 5~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "유리벽 앞 소녀와 관중",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 12.9,
+   "t1": 14.0,
+   "speaker": "나레",
+   "text": "퍽을 던졌고",
+   "layer": null,
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1229,
+    1317
+   ],
+   "fill_hex": "#FFFBFA",
+   "outline": "검정 약 5~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "선수가 다가옴",
+   "fit": 6,
+   "cut_at": [
+    13.233
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 14.0,
+   "t1": 14.8,
+   "speaker": "나레",
+   "text": "이번에 선수의",
+   "layer": null,
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1229,
+    1315
+   ],
+   "fill_hex": "#FEFBF9",
+   "outline": "검정 약 5~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "관중석 전경",
+   "fit": 4,
+   "cut_at": [
+    14.133
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 14.8,
+   "t1": 15.8,
+   "speaker": "나레",
+   "text": "아내가 잡았죠",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1229,
+    1316
+   ],
+   "fill_hex": "#FEFCFB",
+   "outline": "검정 약 5~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "관중석 전경(잡는 순간 작게)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 15.967,
+   "t1": 17.067,
+   "speaker": "나레",
+   "text": "모두를 놀라게 한",
+   "layer": null,
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1230,
+    1316
+   ],
+   "fill_hex": "#FFFDFC",
+   "outline": "검정 약 5~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "관중석·소녀",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 17.067,
+   "t1": 18.1,
+   "speaker": "나레",
+   "text": "감동적인 순간",
+   "layer": null,
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1230,
+    1316
+   ],
+   "fill_hex": "#FFFDFA",
+   "outline": "검정 약 5~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "환호하는 관중",
+   "fit": 6,
+   "cut_at": [
+    17.967
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 18.567,
+   "t1": 20.067,
+   "speaker": "나레",
+   "text": "선수의 아내는 망설임 없이",
+   "layer": null,
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1230,
+    1316
+   ],
+   "fill_hex": "#FFFEFD",
+   "outline": "검정 약 5~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(👍+윙크 노란 이모지 — 얼굴 가림)",
+     "t_in": 20.0,
+     "t_out": 22.367,
+     "x": 440,
+     "y": 580,
+     "w": 268,
+     "anim": "cut 등장(1프레임에 완성) 후 얼굴을 따라 이동(x 390~450)"
+    }
+   ],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "여성이 소녀 쪽으로 몸을 돌림 — 20.0 부터 얼굴에 이모지",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 20.067,
+   "t1": 20.967,
+   "speaker": "나레",
+   "text": "울고 있는 소녀에게",
+   "layer": null,
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1231,
+    1315
+   ],
+   "fill_hex": "#FFFDFD",
+   "outline": "검정 약 5~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "이모지로 가린 여성과 소녀",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 20.967,
+   "t1": 22.367,
+   "speaker": "나레",
+   "text": "퍽을 꺼내주었죠",
+   "layer": null,
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1231,
+    1316
+   ],
+   "fill_hex": "#FFFDFD",
+   "outline": "검정 약 5~6px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "여성이 소녀에게 퍽을 건넴",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  }
+ ],
+ "no_caption": [
+  [
+   0.0,
+   0.033
+  ],
+  [
+   4.9,
+   5.267
+  ],
+  [
+   7.333,
+   7.4
+  ],
+  [
+   8.467,
+   8.767
+  ],
+  [
+   11.567,
+   11.7
+  ],
+  [
+   15.8,
+   15.967
+  ],
+  [
+   18.1,
+   18.567
+  ],
+  [
+   22.367,
+   22.523
+  ]
+ ],
+ "beats": "훅(0~3.37 '하키 경기 중 / 선수가 퍽을 / 관중석으로 던졌어요' + 화살표·원으로 퍽 짚기) → 다리(3.37~4.9 '한 여성이 / 퍽을 잡았지만') → 반전(5.27~8.47 '사실 이 어린 소녀가…기다리고 있었죠', 화살표로 소녀 짚기) → 고조(8.77~11.57 '받지 못해 / 울음을 터뜨렸어요') → 반전2(11.7~15.8 다른 선수·아내가 잡음) → 고조(15.97~18.1 '감동적인 순간') → 끝(18.57~22.37 '망설임 없이 / 울고 있는 소녀에게 / 퍽을 꺼내주었죠', 이모지로 얼굴 가림, CTA 없음)",
+ "narr_share": "나레 줄 19/19, 나레 20.8초/22.523초",
+ "notes": [
+  "존댓말 나레 1명(스피치매틱스 50단어가 자막과 낱말 단위로 맞음). 자막 = 2~4어절 덩어리, 줄당 0.63~1.63초. 화면 글은 '퍽을 꺼내주었죠', 소리는 '퍽을 건네고 있죠'(자막이 소리와 다른 곳 1).",
+  "자막 사이 빈칸 7곳(0.07~0.47초) — 말 쉼과 같이 자막도 빠진다.",
+  "그림(채널이 얹음): 빨간 화살표 2·빨간 원 1(움직이는 대상을 따라감)·👍윙크 이모지 1(얼굴 가림, 20.0~끝). 강조색 0, 등장 효과 0.",
+  "자막 교체 19번 중 원본 컷과 같은 프레임 1(18.567) — 컷 6개뿐(원본 직캠 2개를 길게 씀).",
+  "원본 워터마크는 회색 흐림 상자로 가림(눈)."
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "하키 경기장 유리벽 앞 관중석(얼굴 작게 여럿) + 제목 2줄, 첫 프레임은 자막 없음(0.033 부터)",
+  "face_frac": 0.02,
+  "text": "퍽? 이게 뭐라고 / 눈물 줄줄 ㅠㅠ"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈: 1초 시트·구간 시트·30fps 띠·원본 프레임 확대 / 픽셀: seg2(capseg 양극 변형)·cutdet·boxm·colk / 신호: sfx_events) 2026-10-25 (관제 263 지시서 06 · sseolpulda)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr",
+ "sound_mode": "나레",
+ "title_mode": "상시 고정 2줄",
+ "sound_detail": "한국어 존댓말 나레 1명(judge·스피치매틱스) + 배경음 신호는 bgm_fp 표"
+}

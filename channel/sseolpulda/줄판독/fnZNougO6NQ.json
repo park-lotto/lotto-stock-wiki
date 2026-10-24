@@ -1,0 +1,400 @@
+{
+ "id": "fnZNougO6NQ",
+ "dur": 11.374,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "3분 맥모닝 끝판왕 🍔",
+   "colors": [
+    {
+     "word": "3분",
+     "hex": "#E90053"
+    },
+    {
+     "word": "맥모닝",
+     "hex": "#0C94F8"
+    },
+    {
+     "word": "끝판왕",
+     "hex": "#E90053"
+    }
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   320,
+   1080,
+   1797
+  ],
+  "bg_hex": "#FFFFFF",
+  "caption_band": [
+   1292,
+   1379
+  ],
+  "title_y": [
+   [
+    212,
+    291
+   ]
+  ],
+  "top_band": {
+   "y": [
+    418,
+    506
+   ],
+   "box_hex": "#000000",
+   "ink_hex": "#FFFFFF",
+   "ink_h": 48,
+   "note": "창 윗머리에 겹친 검정 상자 흰 글 설명띠(두 번째 자막 줄)"
+  },
+  "ad_mark": {
+   "text": "[광고]",
+   "xy": [
+    870,
+    15,
+    1060,
+    60
+   ],
+   "hex": "회색 기울임(눈)"
+  },
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null,
+  "source_hex": null,
+  "note": "틀 A'(흰 바탕+제목 1줄 2색+창) + 창 위 검정 설명띠 + 창 아래쪽 흰 상자 본 자막 — 자막 두 겹"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 2.133,
+   "speaker": "불명",
+   "text": "인스타에서 난리 난 이 귀요미 기계!",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 상자 검정 글)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1309,
+    1362
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "손이 기계 뚜껑을 열고 완성 버거가 보임",
+   "fit": 7,
+   "cut_at": [
+    1.067,
+    1.233
+   ],
+   "font": {
+    "name": "미확정",
+    "basis": "없음"
+   },
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "말 없음(자막만) — 소리는 조리 현장음",
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": "좌우 약 14px·위아래 약 15px",
+    "radius": 0
+   },
+   "size_px": 54
+  },
+  {
+   "t0": 2.133,
+   "t1": 6.767,
+   "speaker": "불명",
+   "text": "계란이랑 패티 넣고 뚜껑 닫아주면 3분 완성!",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 상자 검정 글)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1311,
+    1361
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "빵을 깔고 계란을 깨 넣고 뚜껑을 닫음",
+   "fit": 9,
+   "cut_at": [
+    3.367,
+    3.633,
+    4.367,
+    5.2
+   ],
+   "font": {
+    "name": "미확정",
+    "basis": "없음"
+   },
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": "좌우 약 14px·위아래 약 15px",
+    "radius": 0
+   },
+   "size_px": 51
+  },
+  {
+   "t0": 6.767,
+   "t1": 11.367,
+   "speaker": "불명",
+   "text": "한 번 쓰면 절대 전으로 못 돌아감 ㄷㄷ",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 상자 검정 글)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1305,
+    1363
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "익은 계란·완성 버거를 꺼내 들어 보임",
+   "fit": 6,
+   "cut_at": [
+    7.133,
+    9.3,
+    9.733,
+    10.667,
+    10.8
+   ],
+   "font": {
+    "name": "미확정",
+    "basis": "없음"
+   },
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": "좌우 약 14px·위아래 약 15px",
+    "radius": 0
+   },
+   "size_px": 59
+  },
+  {
+   "t0": 0.0,
+   "t1": 2.133,
+   "speaker": "불명",
+   "text": "이제 주말 아침에 맥모닝 배달 안 시킵니다",
+   "layer": "채널(위 설명띠)",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기타(창 위 검정 상자 흰 글 설명띠)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    434,
+    481
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "완성 버거가 든 기계",
+   "fit": 6,
+   "cut_at": [
+    1.067,
+    1.233
+   ],
+   "font": {
+    "name": "미확정",
+    "basis": "없음"
+   },
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "box": {
+    "hex": "#000000",
+    "alpha": 1.0,
+    "pad": "좌우 약 16px·위아래 약 16px",
+    "radius": 0
+   },
+   "size_px": 48
+  },
+  {
+   "t0": 2.133,
+   "t1": 6.767,
+   "speaker": "불명",
+   "text": "원팬으로 빵, 계란, 패티가 동시에 익는 기적",
+   "layer": "채널(위 설명띠)",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기타(창 위 검정 상자 흰 글 설명띠)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    435,
+    482
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "한 기계 안에 빵·계란이 층으로 들어감",
+   "fit": 9,
+   "cut_at": [
+    3.367,
+    3.633,
+    4.367,
+    5.2
+   ],
+   "font": {
+    "name": "미확정",
+    "basis": "없음"
+   },
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "box": {
+    "hex": "#000000",
+    "alpha": 1.0,
+    "pad": "좌우 약 16px·위아래 약 16px",
+    "radius": 0
+   },
+   "size_px": 48
+  },
+  {
+   "t0": 6.767,
+   "t1": 11.367,
+   "speaker": "불명",
+   "text": "판매량 폭발한 이유, 직접 만들어 보니 알겠네",
+   "layer": "채널(위 설명띠)",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기타(창 위 검정 상자 흰 글 설명띠)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    434,
+    482
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "완성 버거 근접",
+   "fit": 6,
+   "cut_at": [
+    7.133,
+    9.3,
+    9.733,
+    10.667,
+    10.8
+   ],
+   "font": {
+    "name": "미확정",
+    "basis": "없음"
+   },
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "box": {
+    "hex": "#000000",
+    "alpha": 1.0,
+    "pad": "좌우 약 16px·위아래 약 16px",
+    "radius": 0
+   },
+   "size_px": 49
+  }
+ ],
+ "no_caption": [],
+ "beats": "훅(0~2.13 위 '배달 안 시킵니다' + 아래 '인스타에서 난리 난 이 귀요미 기계!', 완성 버거) → 본문(2.13~6.77 사용법 '계란이랑 패티 넣고 뚜껑 닫아주면 3분 완성!' / 위 '원팬으로…동시에 익는 기적') → 끝(6.77~11.37 '한 번 쓰면 절대 전으로 못 돌아감 ㄷㄷ' / 위 '판매량 폭발한 이유', CTA 없음)",
+ "narr_share": "나레 줄 0/6, 나레 0초/11.374초",
+ "notes": [
+  "자막 두 겹: 창 위 검정 설명띠(흰 글)와 창 아래 흰 상자(검정 글)가 **같은 프레임에 함께** 바뀐다(2.133·6.767, 30fps 띠 e30.jpg) — 3덩어리×2층.",
+  "말 없음: 스피치매틱스 한국어 단어 0, voice_fp 유성 프레임 3% — 소리는 조리 현장음(지글·뚜껑)과 약한 음악 줄(스펙트럼 spec.png).",
+  "2.133 교체는 원본 컷과 같은 프레임, 6.767 교체는 샷 중간(컷 7.133).",
+  "효과음·스티커·강조색 0. 제목 1줄 2색(빨강 #E90053·파랑 #0C94F8) + 🍔 이모지, 오른쪽 위 [광고]."
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "완성 버거가 든 빨간 샌드위치 기계 근접 + 제목·설명띠·본 자막이 0초부터 다 떠 있음",
+  "face_frac": 0.0,
+  "text": "3분 맥모닝 끝판왕 🍔 / 이제 주말 아침에 맥모닝 배달 안 시킵니다 / 인스타에서 난리 난 이 귀요미 기계!"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈: 1초 시트·구간 시트·30fps 띠·원본 프레임 확대 / 픽셀: seg2(capseg 양극 변형)·cutdet·boxm·colk / 신호: sfx_events) 2026-10-25 (관제 263 지시서 06 · sseolpulda)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr",
+ "sound_mode": "자막만",
+ "title_mode": "상시 고정 1줄",
+ "sound_detail": "말 없음 · 조리 현장음 + 약한 음악(신호)"
+}

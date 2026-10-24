@@ -1,0 +1,347 @@
+{
+ "id": "ZdeZRtCeAC4",
+ "dur": 23.963,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "닿으면 스피커",
+   "colors": [
+    {
+     "word": "닿으면 스피커",
+     "hex": "#000000"
+    }
+   ]
+  },
+  {
+   "text": "소름 돋는 음질 수준",
+   "colors": [
+    {
+     "word": "소름 돋는 음질 수준",
+     "hex": "#000000"
+    }
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   425,
+   1080,
+   1432
+  ],
+  "bg_hex": "#FFFFFF",
+  "caption_band": [
+   1466,
+   1530
+  ],
+  "title_y": [
+   [
+    220,
+    300
+   ],
+   [
+    318,
+    398
+   ]
+  ],
+  "ad_mark": {
+   "text": "[광고]",
+   "xy": [
+    925,
+    15,
+    1065,
+    65
+   ],
+   "hex": "회색 기울임(눈)"
+  },
+  "full_screen_tail": [
+   21.733,
+   23.963
+  ],
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null,
+  "source_hex": null,
+  "note": "틀 A(흰 바탕+검정 제목 2줄+전폭 창+창 아래 흰 바탕 위 검정 글 자막, 상자·외곽 없음). 21.733~끝 틀 없이 전체화면"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 5.167,
+   "speaker": "불명",
+   "text": "아니 이거 해외 릴스에서 맨날 보이길래",
+   "layer": null,
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 바탕 위 검정 글, 외곽 없음)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1468,
+    1528
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "수영장 난간에 스피커를 대려는 손(원본 영상 속 3·2·1 원형 카운트다운)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정",
+    "basis": "없음"
+   },
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "말 없음(한국어) — 원본 릴스 소리 그대로. 카운트다운 원은 창 안 원본 그래픽(창과 같이 움직임) → 채널 스티커 아님",
+   "box": null
+  },
+  {
+   "t0": 5.167,
+   "t1": 7.333,
+   "speaker": "불명",
+   "text": "바이럴인 줄 알았는데...",
+   "layer": null,
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 바탕 위 검정 글, 외곽 없음)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1468,
+    1528
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "스피커를 난간에 붙이고 손을 뗌",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "미확정",
+    "basis": "없음"
+   },
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "box": null
+  },
+  {
+   "t0": 7.333,
+   "t1": 10.9,
+   "speaker": "불명",
+   "text": "진짜 아무 데나 대면",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 바탕 위 검정 글, 외곽 없음)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1468,
+    1528
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "금발 여성이 스피커를 벽·유리에 갖다 댐",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정",
+    "basis": "없음"
+   },
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "box": null
+  },
+  {
+   "t0": 10.9,
+   "t1": 14.8,
+   "speaker": "불명",
+   "text": "수십만 원짜리 우퍼 스피커로 변함;;",
+   "layer": null,
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 바탕 위 검정 글, 외곽 없음)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1468,
+    1528
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "벽에 붙인 스피커 → 표지판 기둥에 붙임",
+   "fit": 7,
+   "cut_at": [
+    13.4
+   ],
+   "font": {
+    "name": "미확정",
+    "basis": "없음"
+   },
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "box": null
+  },
+  {
+   "t0": 14.8,
+   "t1": 18.233,
+   "speaker": "불명",
+   "text": "소리 커지는 거 소름 돋네",
+   "layer": null,
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 바탕 위 검정 글, 외곽 없음)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1468,
+    1528
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "표지판에 붙은 스피커 → 웃는 여성",
+   "fit": 6,
+   "cut_at": [
+    17.4
+   ],
+   "font": {
+    "name": "미확정",
+    "basis": "없음"
+   },
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "box": null
+  },
+  {
+   "t0": 18.233,
+   "t1": 21.7,
+   "speaker": "불명",
+   "text": "솔직히 소리 미쳤다 인정?",
+   "layer": null,
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 바탕 위 검정 글, 외곽 없음)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1468,
+    1528
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "여성이 스피커를 책상에 대고 놀란 얼굴",
+   "fit": 6,
+   "cut_at": [
+    19.867,
+    21.233
+   ],
+   "font": {
+    "name": "미확정",
+    "basis": "없음"
+   },
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "box": null
+  }
+ ],
+ "no_caption": [
+  [
+   21.7,
+   23.963
+  ]
+ ],
+ "beats": "훅(0~5.17 '아니 이거 해외 릴스에서 맨날 보이길래', 수영장 시연) → 이음(5.17~7.33 '바이럴인 줄 알았는데...') → 본문·공개(7.33~14.8 '진짜 아무 데나 대면 / 수십만 원짜리 우퍼 스피커로 변함;;') → 고조(14.8~18.23 '소리 커지는 거 소름 돋네') → 질문(18.23~21.7 '솔직히 소리 미쳤다 인정?') → 끝(21.73~ 틀 없이 전체화면 입 근접, 자막 없음, CTA 없음)",
+ "narr_share": "나레 줄 0/6, 나레 0초/23.963초",
+ "notes": [
+  "자막 교체 6번 중 원본 컷과 같은 프레임은 7.333 하나 — 나머지 5.167·10.9·14.8·18.233 는 샷 중간(자막 박자 ≠ 컷 박자). 줄당 2.2~5.2초로 썰풀다 나레 편(약 1초)보다 4배 느림.",
+  "말 없음(한국어): judge 나레 없음. 스피치매틱스 18단어('클레오파트라'·'타메이리아' 등)는 원본 소리(음악·외국어)를 한국어로 잘못 받아 적은 것 — 뜻이 안 이어짐. voice_fp 유성 0.37(음악 포함).",
+  "끝 2.2초 틀 사라짐: 21.70 자막 퇴장 → 21.733 제목·흰 바탕 없이 전체화면(30fps 띠 abc.jpg 1행).",
+  "채널이 얹은 그림은 [광고] 표기뿐 — 스티커·강조색·효과 0."
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "수영장 난간 앞에서 손에 든 원형 스피커(분홍 튜브 뒤) + 제목 2줄·자막이 0초부터",
+  "face_frac": 0.0,
+  "text": "닿으면 스피커 / 소름 돋는 음질 수준 / 아니 이거 해외 릴스에서 맨날 보이길래"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈: 1초 시트·구간 시트·30fps 띠·원본 프레임 확대 / 픽셀: seg2(capseg 양극 변형)·cutdet·boxm·colk / 신호: sfx_events) 2026-10-25 (관제 263 지시서 06 · sseolpulda)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr",
+ "sound_mode": "자막만",
+ "title_mode": "상시 고정 2줄(끝 2.2초 제외)",
+ "sound_detail": "한국어 말 없음 · 원본 릴스 소리 그대로(음악·원본 말소리 가능 — 귀 미확인)"
+}
