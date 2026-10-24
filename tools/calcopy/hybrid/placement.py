@@ -759,6 +759,7 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
 EMPH_DE_FALLBACK = 30.0
 EMPH_CONTRAST = 3.0
 EMPH_HUE_MIN = 30.0
+EMPH_CHROMA_MIN = 20.0      # 표준 §11-3 ㉘: 한쪽 C* < 20 이면 색상각 규칙 건너뜀
 EMPH_COLOR_ONLY = 10.0     # 벤치 쌍 ΔE 가 이보다 작으면 색 강조가 아니다(줄 전체가 그 색·크기 강조·같은 색 측정 흔들림 — 키치잇 #E74264↔#EC335A 7.4·#F17ECA↔#F375CA 5.5, 색상각 < 3°) → 문턱 계산에서 뺀다
 _HEX = re.compile(r"#[0-9A-Fa-f]{6}")
 _thr_cache: dict = {}
@@ -807,13 +808,13 @@ def contrast(a: str, b: str) -> float:
 
 
 def hue_gap(a: str, b: str) -> float | None:
-    """색상환 거리(도) = CIELCh 색상각(ΔE 와 같은 Lab 공간). 어느 쪽이든 무채색(C* < 15)이면 None(색상 비교 안 함).
+    """색상환 거리(도) = CIELCh 색상각(ΔE 와 같은 Lab 공간). 어느 쪽이든 채도 C* < EMPH_CHROMA_MIN(20, 표준 ㉘)이면 None — 색상각 규칙 건너뜀(ΔE·명도만).
     HSV 색상각을 쓰지 않는 까닭(10-25 실측): ep13 훅 빨강 #E30004↔주황 #F07A09 = HSV 30.4°(30° 문턱을 넘어 못 거름) · LCh 20.6° /
     벤치 ro1l 노랑 #F7EB0E↔주황 #F07A09(벤치가 실제로 쓴 쌍) = HSV 27.6°(벤치 쌍을 거름) · LCh 39.6°. 눈에 가까운 각이 둘 다 맞게 가른다."""
     import math
     from tools.calcopy.hybrid.pack_map import _hex_lab
     (_, a1, b1), (_, a2, b2) = _hex_lab(a), _hex_lab(b)
-    if min(math.hypot(a1, b1), math.hypot(a2, b2)) < 15:
+    if min(math.hypot(a1, b1), math.hypot(a2, b2)) < EMPH_CHROMA_MIN:
         return None
     d = abs(math.degrees(math.atan2(b1, a1)) - math.degrees(math.atan2(b2, a2))) % 360
     return round(min(d, 360 - d), 1)

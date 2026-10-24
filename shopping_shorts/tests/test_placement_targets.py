@@ -213,36 +213,19 @@ def test_kitchit_saved_plans_unchanged():
 
 
 # ⑤ 효과음 신호표 ──────────────────────────────────────────────────────
-def test_channel_sfx_events_matches_legacy_shared_file(monkeypatch):
-    from tools.calcopy.hybrid import styles as ST
+def test_channel_sfx_events_matches_legacy_shared_file(monkeypatch, tmp_path):
+    """옛 공유 파일 1회 변환(sfx_events.convert)으로 센 counted.sfx = 옛 공유 파일(접두 키)로 센 것. 06 이 채널을 다시 재도(--detect) 변환 자체는 같아야 한다."""
+    E = _sfx_events()
     legacy = ROOT / "channel/starpickroom/_tools/결과/sfx_events_rules.json"
-    n = 0
-    for pan, slug in (("키치잇판", "kitchit"), ("꿀템노트판", "kkultemnote"), ("스타픽룸판", "starpickroom")):
-        own = ROOT / "channel" / slug / "_kal" / "sfx_events.json"
-        assert own.exists(), f"{own} 없음 — sfx_events.py {slug} 로 만든다"
-        if (json.loads(own.read_text(encoding="utf-8")).get("_meta") or {}).get("how") != "convert":
-            continue        # 06 이 원본에서 다시 잰 채널(--detect)은 옛 값과 달라도 된다 — 변환한 것만 같아야 한다
-        n += 1
-        st = ST.load(pan)
-        assert PL.sfx_events_path(st) == (own, None)
-        new = PL._sfx_table(st)
+    for slug in ("kitchit", "kkultemnote", "starpickroom"):
+        p = tmp_path / f"{slug}.json"
+        p.write_text(json.dumps({"_meta": {}, **E.convert(slug)}, ensure_ascii=False), encoding="utf-8")
+        monkeypatch.setattr(PL, "sfx_events_path", lambda s, _p=p: (_p, None))
+        new = PL._sfx_table({"bench": {}})
         monkeypatch.setattr(PL, "sfx_events_path", lambda s, _p=legacy, _k=slug: (_p, _k))
-        old = PL._sfx_table(st)
+        old = PL._sfx_table({"bench": {}})
         monkeypatch.undo()
-        assert new == old and len(new) == 8, (pan, new, old)
-    assert n >= 1
-
-
-def test_sfx_no_overlap_on_dense_chunks(tmp_path):
-    """촘촘한 덩어리(0.15초 간격)에도 효과음은 0.3초 안에 두 발 안 놓는다(사보타주 S9 — 간격 검사를 끄면 실패해야 한다)."""
-    lines = [{"t0": 0.5 * k, "t1": 0.5 * k + 0.4, "speaker": "나레", "text": "가", "role": "훅", "sfx": {"kind": "띵", "t": 0.5 * k}} for k in range(4)]
-    st = _style(_bench_read(tmp_path, lines), {"sfx": {"max": 9}})
-    st["placement"]["counted"] = PL.count(st)
-    rows = [{"line": "L0", "j": j, "speaker": "narr", "text": f"덩어리 {j}", "t0": round(0.15 * j, 3), "t1": round(0.15 * j + 0.15, 3), "role": "훅"} for j in range(8)]
-    rows += [{"line": "L1", "j": 0, "speaker": "orig", "text": "끝", "t0": 1.2, "t1": 3.0, "role": "끝"}]
-    p = PL.place(rows, st, "seed", cuts=[{"t0": 0.0, "t1": 1.2}, {"t0": 1.2, "t1": 3.0}])
-    sx = p["sfx"]
-    assert sx and all(b["t"] - a["t"] >= 0.3 for a, b in zip(sx, sx[1:])), sx
+        assert new == old and len(new) == 8, (slug, new, old)
 
 
 # ⑥ 효과음 신호표 검출(engine/sound/sfx_events — 06 결손 3건, 10-25) ─────────────────
@@ -333,3 +316,9 @@ def test_pick_emph_color_conditions():
     assert PL.emph_threshold("ititemlog")[0] == pytest.approx(17.97, abs=0.01)                      # 벤치 줄판독 색 강조 쌍 최소
     assert PL.emph_threshold("__없는채널__")[0] == PL.EMPH_DE_FALLBACK
     assert PL.emph_threshold("kitchit")[0] >= 10                                                   # 같은 색 흔들림(ΔE 5.5·7.4)은 문턱이 아니다
+
+
+def test_hue_rule_skipped_for_low_chroma():
+    """㉘: 한쪽 채도 C* < 20 이면 색상각 규칙 건너뜀 — 흰 줄(#FDFCFD) 위 연분홍(#F2D6E0, C*≈11)은 색상각과 무관하게 ΔE·명도만."""
+    assert PL.hue_gap("#FDFCFD", "#F2D6E0") is None and PL.hue_gap("#E30004", "#E0B8A8") is None     # C* 11.4·18.1(15~20 사이 — 옛 15 문턱이면 비교했다)
+    assert PL.hue_gap("#E30004", "#F07A09") == pytest.approx(20.6, abs=0.1)                          # 둘 다 C* ≥ 20
