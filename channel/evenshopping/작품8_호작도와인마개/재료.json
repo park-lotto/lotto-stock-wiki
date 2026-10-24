@@ -100,7 +100,19 @@
   {
    "i": 8,
    "caption": "이건 바로",
-   "cont": true
+   "kind": "product",
+   "cont": false,
+   "seen": "박물관에 걸린 원화 호랑이 — 국립중앙박물관",
+   "url": "https://www.youtube.com/watch?v=J7MdwAY03MI",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/J7MdwAY03MI.mp4",
+   "ss": 74.5,
+   "src_crop": [
+    630,
+    140,
+    620,
+    808
+   ],
+   "move": "sway"
   },
   {
    "i": 9,
@@ -112,16 +124,17 @@
    "caption": "호작도 와인마개",
    "kind": "product",
    "cont": false,
-   "seen": "상자 위 백호 마개 — 제품 이름",
+   "seen": "손 위 청호 마개 — 제품 이름",
    "url": "https://www.instagram.com/reel/DOvy8NKEu0Z/",
    "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DOvy8NKEu0Z.mp4",
-   "ss": 28.4,
+   "ss": 12.0,
    "src_crop": [
     120,
-    420,
+    330,
     840,
     1094
-   ]
+   ],
+   "move": "bounce"
   },
   {
    "i": 11,
@@ -153,7 +166,8 @@
     110,
     660,
     860
-   ]
+   ],
+   "move": "sway"
   },
   {
    "i": 13,
@@ -200,7 +214,18 @@
   {
    "i": 17,
    "caption": "호랑이랑 까치도",
-   "cont": true
+   "kind": "product",
+   "cont": false,
+   "seen": "원화 속 호랑이와 소나무 위 까치",
+   "url": "https://www.youtube.com/watch?v=AFsePLfffQU",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/AFsePLfffQU.mp4",
+   "ss": 64.0,
+   "src_crop": [
+    560,
+    110,
+    660,
+    860
+   ]
   },
   {
    "i": 18,
@@ -221,7 +246,19 @@
   {
    "i": 19,
    "caption": "영감을 받았다고",
-   "cont": true
+   "kind": "product",
+   "cont": false,
+   "seen": "원화 까치호랑이(KBS 전시 원화) — 영감의 원본",
+   "url": "https://www.youtube.com/watch?v=J7MdwAY03MI",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/J7MdwAY03MI.mp4",
+   "ss": 153.0,
+   "src_crop": [
+    520,
+    150,
+    620,
+    808
+   ],
+   "move": "punch"
   },
   {
    "i": 20,
@@ -237,7 +274,8 @@
     60,
     620,
     808
-   ]
+   ],
+   "move": "punch"
   },
   {
    "i": 21,
@@ -300,7 +338,18 @@
   {
    "i": 26,
    "caption": "와인마개가",
-   "cont": true
+   "kind": "product",
+   "cont": false,
+   "seen": "전작 조선왕실 마개를 꽂고 병을 뒤집기(새지 않음)",
+   "url": "https://www.instagram.com/reel/DM0DSLlpUAC/",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DM0DSLlpUAC.mp4",
+   "ss": 5.42,
+   "src_crop": [
+    0,
+    100,
+    1078,
+    1404
+   ]
   },
   {
    "i": 27,
@@ -336,7 +385,18 @@
   {
    "i": 31,
    "caption": "병보다 마개를",
-   "cont": true
+   "kind": "product",
+   "cont": false,
+   "seen": "선물 상자 열고 마개 — 마개를 고르는",
+   "url": "https://www.instagram.com/reel/DOvy8NKEu0Z/",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DOvy8NKEu0Z.mp4",
+   "ss": 16.3,
+   "src_crop": [
+    120,
+    420,
+    840,
+    1094
+   ]
   },
   {
    "i": 32,
