@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# _deprecated_2026-10-25 → tools/calcopy/hybrid/styles/신박판.json (관제 263 지시서 07 · 표준 §3-1: 새 편은 공용 렌더러로. 읽기 전용 참고물 — 설명서 프리셋 생성기는 회원 옛 길이 결과를 읽으므로 지우지 않는다)
 """신박리포트 시험편 1 — 대본.json → 완성 mp4 (사장님 10-20 '카운트다운으로 처음 넣고 박창수 위트 멘트').
 
     PYTHONUTF8=1 py channel/sinbak/시험편1/make.py [tts|build|all]
