@@ -1906,16 +1906,37 @@ def _fav_channel_home_url(platform, channel_id, fallback=""):
     return tpl.format(id=cid) if tpl else fallback
 
 
-def _fav_channel_decorate(items):
-    """목록에 화면이 쓸 파생값을 붙인다(저장은 안 한다)."""
+def _fav_channel_decorate(items, cid=None):
+    """목록에 화면이 쓸 파생값을 붙인다(저장은 안 한다).
+    cid 가 분류를 쓰는 사람이면 채널마다 category(없으면 '기타')도 붙인다(관제 261)."""
+    cats = Store(DB_PATH).fav_cat_of(customer_id=cid) if cid is not None and _fav_cat_on(cid) else None
     for it in items:
         it["home_url"] = _fav_channel_home_url(
             it.get("platform"), it.get("channel_id"), it.get("url") or "")
+        if cats is not None:
+            it["category"] = cats.get((it.get("platform"), it.get("channel_id")), Store.FAV_CAT_ETC)
     return items
 
 
+def _fav_cat_on(cid) -> bool:
+    """나만의 채널 분류를 쓰는 사람 — ★판단의 주인은 여기 하나(관제 261).
+    지금은 관리자만(사장님 2026-10-24 "지금은 나만 보는거야"). 회원에게 열 땐 여기만 바꾼다."""
+    return _is_admin(cid)
+
+
+def _fav_cat_payload(cid, platform="", channel_id="") -> dict:
+    """분류 버튼을 그릴 재료 — 분류 이름(최근 쓴 순)·기타 이름·(채널을 주면) 그 채널의 지금 분류."""
+    store = Store(DB_PATH)
+    out = {"cats": store.fav_cat_names(customer_id=cid), "etc": Store.FAV_CAT_ETC,
+           "cats_fixed": store.fav_cat_names(customer_id=cid, recent=False)}   # 목록 탭은 순서 고정
+    if channel_id:
+        out["category"] = store.fav_cat_of(customer_id=cid).get(
+            ((platform or "").lower(), channel_id.lstrip("@")), Store.FAV_CAT_ETC)
+    return out
+
+
 def _fav_channel_cap(cid) -> int:
-    """나만의 채널 상한 — ★판단의 주인은 여기 하나다. 관리자 100 · 회원 50(사장님 2026-10-18)."""
+    """나만의 채널 상한 — ★판단의 주인은 여기 하나다. 관리자 0(=한도 없음, 사장님 2026-10-24) · 회원 50."""
     return Store.FAV_CHANNEL_CAP_ADMIN if _is_admin(cid) else Store.FAV_CHANNEL_CAP
 
 
@@ -1924,8 +1945,50 @@ def api_fav_channel_list(request: Request):
     """내 볼채널 목록. 지표 갱신은 여기서 하지 않는다 — 화면이 refresh를 따로 부른다
     (열 때 1회·6시간 캐시. 목록 조회마다 외부 API를 때리면 카드 수만큼 비용이 난다)."""
     store = Store(DB_PATH)
-    items = _fav_channel_decorate(store.fav_channel_list(customer_id=_cid(request)))
-    return {"ok": True, "items": items, "cap": _fav_channel_cap(_cid(request))}
+    cid = _cid(request)
+    items = _fav_channel_decorate(store.fav_channel_list(customer_id=cid), cid)
+    out = {"ok": True, "items": items, "cap": _fav_channel_cap(cid)}
+    if _fav_cat_on(cid):
+        out.update(_fav_cat_payload(cid))
+    return out
+
+
+def _fav_cat_cid(request: Request):
+    """분류 API 입구 검사 — 로그인(세션) + 분류 쓰는 사람인지. 통과면 (cid, None)."""
+    cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
+    if cid is None:
+        return None, {"ok": False, "error": "로그인이 필요합니다"}
+    if not _fav_cat_on(cid):
+        return None, {"ok": False, "error": "분류는 관리자만 쓸 수 있어요"}
+    return cid, None
+
+
+@app.post("/api/fav_channel/cats/add")
+def api_fav_channel_cat_add(request: Request, body: dict):
+    """새 분류 만들기(관제 261). body: {name}"""
+    cid, err = _fav_cat_cid(request)
+    if err:
+        return err
+    name = Store(DB_PATH).fav_cat_add(body.get("name") or "", customer_id=cid)
+    if not name:
+        return {"ok": False, "error": "분류 이름을 넣어주세요"}
+    return {"ok": True, "name": name, **_fav_cat_payload(cid)}
+
+
+@app.post("/api/fav_channel/set_cat")
+def api_fav_channel_set_cat(request: Request, body: dict):
+    """채널을 분류로 옮기기(관제 261). body: {platform, channel_id, category} — ''·'기타' = 기타."""
+    cid, err = _fav_cat_cid(request)
+    if err:
+        return err
+    plat = (body.get("platform") or "").strip().lower()
+    chid = (body.get("channel_id") or "").strip().lstrip("@")
+    store = Store(DB_PATH)
+    if not any(i["platform"] == plat and i["channel_id"] == chid
+               for i in store.fav_channel_list(customer_id=cid)):
+        return {"ok": False, "error": "나만의 채널에 없는 채널이에요"}
+    cat = store.fav_cat_set(plat, chid, body.get("category") or "", customer_id=cid)
+    return {"ok": True, "platform": plat, "channel_id": chid, **_fav_cat_payload(cid), "category": cat}
 
 
 @app.post("/api/fav_channel/add")
@@ -2012,7 +2075,7 @@ def api_fav_channel_refresh(request: Request):
                                        customer_id=cid, **meta)
             done += 1
     return {"ok": True, "refreshed": done,
-            "items": _fav_channel_decorate(store.fav_channel_list(customer_id=cid))}
+            "items": _fav_channel_decorate(store.fav_channel_list(customer_id=cid), cid)}
 
 
 def _fav_channel_yt_probe(channel_id):
@@ -2517,6 +2580,8 @@ def api_share(request: Request, background_tasks: BackgroundTasks, body: dict):
                         background_tasks=background_tasks)
     elif dest == "channel":
         r = _fav_channel_register(cid, link)
+        if r["status"] in ("added", "exists") and _fav_cat_on(cid):
+            r.update(_fav_cat_payload(cid, r["platform"], r["channel_id"]))   # 분류 버튼 재료(관제 261)
     else:
         return {"ok": True, "status": "preview", "link": link,
                 "platform": _grab_platform(link) or _fav_channel_platform(link)}
@@ -9965,7 +10030,7 @@ def api_script_translate(request: Request, body: dict):
     """
     from shopping_shorts import script_translate
     lang = body.get("lang") or "en"
-    if lang not in ("en", "ja"):
+    if lang not in script_translate.LANG_LABEL:      # ko·ja·zh·en 어느 쪽으로든(관제 254 — 원문 언어는 엔진이 판정)
         return JSONResponse(status_code=422, content={"ok": False, "error": "지원하지 않는 언어예요"})
     lines = [str(x or "") for x in (body.get("lines") or []) if isinstance(x, (str, int, float))]
     if not lines:
@@ -9976,7 +10041,8 @@ def api_script_translate(request: Request, body: dict):
     if _blocked:
         return _blocked
     try:
-        out = script_translate.translate(lines, lang, str(body.get("product") or ""))
+        out = script_translate.translate(lines, lang, str(body.get("product") or ""),
+                                         source=(body.get("src") if body.get("src") in script_translate.LANG_LABEL else None))
     except ValueError as e:
         return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
     # 화면이 "몇 초"를 그 언어 계수로 말하게 같이 준다(2026-09-29 사장님 "영어는 두 배가 되네" — 한국어 계수로 나눈 표시).
@@ -9986,6 +10052,34 @@ def api_script_translate(request: Request, body: dict):
     if lang == "en":
         res["cps_en"] = cps                              # 옛 화면·저장본 호환(관제 029)
     return res
+
+
+@app.get("/api/script/chat/models")
+def api_script_chat_models(request: Request):
+    """대화창 모델 선택 칸(관제 253) — 이 계정이 고를 수 있는 모델. 판단 주인 script_chat.models_for(vertex_route.plan)."""
+    from shopping_shorts import script_chat
+    if not _setting_gate(Store(DB_PATH), "script_chat_enabled", _cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "아직 열리지 않은 기능이에요"})
+    return {"ok": True, **script_chat.models_for(_cid(request))}
+
+
+@app.post("/api/script/chat")
+def api_script_chat(request: Request, body: dict):
+    """2단계 대본 AI 대화 고치기(관제 253). body: {lines, message, history?, product?, roles?, only?(한 줄 요구창 줄 번호)}
+    → {ok, reply, lines(같은 줄 수), changed}. 판단 주인 script_chat.revise — AI 길(자기 버텍스·관리자·무료 키)은
+    script_generate._call_json 이 vertex_route.plan 으로 가른다. 작업(job)을 건드리지 않는다 — 화면이 [적용]으로 칸에 넣는다."""
+    from shopping_shorts import script_chat
+    if not _setting_gate(Store(DB_PATH), "script_chat_enabled", _cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "아직 열리지 않은 기능이에요"})
+    try:
+        return {"ok": True, **script_chat.revise(body.get("lines") or [], body.get("message") or "",
+                                                 body.get("history") if isinstance(body.get("history"), list) else [],
+                                                 str(body.get("product") or ""),
+                                                 body.get("roles") if isinstance(body.get("roles"), list) else None,
+                                                 body.get("only") if isinstance(body.get("only"), int) else None,
+                                                 str(body.get("model") or "") or None)}
+    except ValueError as e:
+        return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
 
 
 @app.post("/api/script/cta_guess")
@@ -10007,11 +10101,11 @@ def api_script_cta_guess(body: dict):
 
 
 def _lang_voice_block(job, voice):
-    """영어·일본어모드 작업에 타입캐스트(한국 성우)·Fish 한국어 성우를 쓰려 하면 422 응답, 아니면 None.
+    """영어·일본어·중국어모드 작업에 타입캐스트(한국 성우)·Fish 한국어 성우를 쓰려 하면 422 응답, 아니면 None.
     언어 판정은 script_translate.job_lang 한 곳(2단계에서 외국어로 확정한 작업 = given_script가 그 언어)."""
     from shopping_shorts import script_translate
     lang = script_translate.job_lang(job)
-    if lang not in ("en", "ja"):
+    if lang not in ("en", "ja", "zh"):
         return None
     label = script_translate.LANG_LABEL[lang]
     if fish_tts.is_fish((voice or {}).get("model_id")):
@@ -15998,20 +16092,34 @@ def _google_configured():
     return bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
 
 
-def _google_authorize_url(state):
+# 정식 도메인(2026-10-23 도메인전환). g_state 쿠키는 접속한 도메인에만 붙으므로 콜백도
+# **들어온 도메인으로** 돌아와야 한다 — 한 주소로 고정하면 다른 도메인 고객은 "보안 검증 실패".
+# 두 콜백 모두 구글 콘솔에 등록돼 있다(duckdns · stmaker.kr). www·app 은 아파치가 루트로 돌린다.
+_STMAKER_REDIRECT_URI = "https://stmaker.kr/auth/google/callback"
+
+
+def _google_redirect_uri(request=None):
+    """구글 콜백 주소의 주인 — 로그인 시작·토큰 교환이 둘 다 이 함수만 부른다(짝이 어긋나면 400)."""
+    host = ((request.headers.get("host") if request is not None else "") or "").split(":")[0].lower()
+    if host == "stmaker.kr":
+        return _STMAKER_REDIRECT_URI
+    return GOOGLE_REDIRECT_URI
+
+
+def _google_authorize_url(state, redirect_uri=None):
     q = urllib.parse.urlencode({
-        "client_id": GOOGLE_CLIENT_ID, "redirect_uri": GOOGLE_REDIRECT_URI,
+        "client_id": GOOGLE_CLIENT_ID, "redirect_uri": redirect_uri or GOOGLE_REDIRECT_URI,
         "response_type": "code", "scope": "openid email profile",
         "state": state, "access_type": "online", "prompt": "select_account"})
     return _GOOGLE_AUTH_URL + "?" + q
 
 
-def _google_fetch_identity(code, _requests=None):
+def _google_fetch_identity(code, _requests=None, redirect_uri=None):
     """code → {sub, email} 또는 None. 네트워크는 _requests 주입으로 테스트 가능."""
     rq = _requests or requests
     tok = rq.post(_GOOGLE_TOKEN_URL, data={
         "code": code, "client_id": GOOGLE_CLIENT_ID, "client_secret": GOOGLE_CLIENT_SECRET,
-        "redirect_uri": GOOGLE_REDIRECT_URI, "grant_type": "authorization_code"}, timeout=10)
+        "redirect_uri": redirect_uri or GOOGLE_REDIRECT_URI, "grant_type": "authorization_code"}, timeout=10)
     if tok.status_code != 200:
         return None
     access = tok.json().get("access_token")
@@ -16034,7 +16142,7 @@ def _google_login(request: Request):
         return HTMLResponse("<h3 style='font-family:sans-serif'>구글 로그인이 아직 설정되지 않았어요.</h3>",
                             status_code=503)
     state = secrets.token_urlsafe(24)
-    r = RedirectResponse(_google_authorize_url(state), status_code=303)
+    r = RedirectResponse(_google_authorize_url(state, _google_redirect_uri(request)), status_code=303)
     r.set_cookie("g_state", state, max_age=600, httponly=True, samesite="lax")
     return r
 
@@ -16050,7 +16158,7 @@ def _google_callback(request: Request, code: str = "", state: str = "", error: s
         state_ok = False       # 비-ASCII state 주입 등 → fail-closed
     if not state_ok:
         return RedirectResponse("/login?e=" + urllib.parse.quote("보안 검증 실패 — 다시 시도해주세요"), status_code=303)
-    ident = _google_fetch_identity(code)
+    ident = _google_fetch_identity(code, redirect_uri=_google_redirect_uri(request))
     if not ident:
         return RedirectResponse("/login?e=" + urllib.parse.quote("구글 인증에 실패했어요"), status_code=303)
     cid, created = Store(DB_PATH).get_or_create_by_google(
@@ -17045,6 +17153,8 @@ def _api_me(request: Request):
             "story_writer": _setting_gate(st, "story_writer_enabled", cid),
             # 2단계 스토리보드(관제 120) — 서버 입구(mix/start)와 같은 스위치 하나. 화면은 이 값으로만 보인다
             "storyboard": _setting_gate(st, "storyboard_enabled", cid),
+            # 대본 붙여넣기·AI 대화·한 줄 요구(관제 253) — 화면과 서버 입구(/api/script/chat*)가 같은 스위치 하나
+            "script_chat": _setting_gate(st, "script_chat_enabled", cid),
             # 카드뉴스 제작소(관제 223) — 사이드바 메뉴와 서버 입구(/cardnews·/api/cardnews/*)가 같은 스위치 하나
             "cardnews": _setting_gate(st, "cardnews_enabled", cid),
             # 감정짤(관제 139·143) — 좌측 '밈팩' 메뉴·2단계 짤 칸. 판정은 렌더 경로와 같은 mix_pipeline._meme_on 한 곳
@@ -17192,6 +17302,8 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "scene_style_inline_enabled",
                        # 2단계 스토리보드(관제 120, 2026-10-05) — 칸마다 고른 장면 그대로 3단계로. ""끔 · "admin" · "11,42" · "1" 전체
                        "storyboard_enabled",
+                       # 2단계 대본 붙여넣기·AI 대화·한 줄 요구(관제 253, 2026-10-22 사장님 "관리자 먼저 열어줘") — ""끔 · "admin" · "11,42" · "1" 전체
+                       "script_chat_enabled",
                        # 지침서 작가(관제 249, 2026-10-20) — 2단계 스토리보드에 '체험형·정보형(지침서)' 스타일. 버텍스가 쓰고 코드가 검수·1회 재작성. ""끔 · "admin" · "11,42" · "1" 전체
                        "guide_writer_enabled",
                        # 카드뉴스 제작소(관제 223, 2026-10-17) — 사이드바 메뉴·/cardnews·/api/cardnews/*. ""끔 · "admin" · "11,42" · "1" 전체
@@ -22584,6 +22696,37 @@ def api_storyboard_picks(request: Request, job_id: str, body: dict):
     return {"ok": True, "slots": bd["slots"], "pack_sfx_on": bd.get("pack_sfx_on"), "check": _check}
 
 
+@app.post("/api/produce/storyboard/{job_id}/scene_review")
+def api_storyboard_scene_review(request: Request, job_id: str, body: dict):
+    """장면 점검(관제 257) — 줄마다 지금 장면이 최선인지 이유와 함께 유지·교체 제안·장면 없음.
+    body {slots:[{slot,line,ids}], rows?:[줄 번호], message?, model?, product?, use_seed?}. 판단 주인 storyboard.scene_review,
+    근거 조각은 보드를 만들 때와 같은 _materials. 작업을 건드리지 않는다 — 화면이 [이 장면으로 바꾸기]로 칸에 넣는다.
+    스위치: 스토리보드(_sb_gate) + 대본 AI(script_chat_enabled) 둘 다."""
+    g = _sb_gate(request)
+    if g:
+        return g
+    if not _setting_gate(Store(DB_PATH), "script_chat_enabled", _cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "아직 열리지 않은 기능이에요"})
+    key, _ex, _jid = _sb_job(request, job_id)
+    if not key:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    slots = (body or {}).get("slots")
+    if not isinstance(slots, list) or not slots or len(slots) > 60:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "slots 목록이 필요해요"})
+    slots = [dict(x) if isinstance(x, dict) else {} for x in slots]
+    rows = body.get("rows") if isinstance(body.get("rows"), list) else None
+    from shopping_shorts import storyboard as _sbm, script_chat
+    _keep = {c for x in slots for c in (x.get("ids") or []) if isinstance(c, str)}
+    mats = _sbm._materials(None, key, _ex or {}, keep=_keep, with_seed=body.get("use_seed") is True)
+    model = str(body.get("model") or "")
+    model = model if model in {m["id"] for m in script_chat.CHAT_MODELS} else script_chat.DEFAULT_CHAT_MODEL
+    try:
+        return {"ok": True, **_sbm.scene_review(slots, rows, mats, str(body.get("message") or ""),
+                                                str(body.get("product") or ""), model)}
+    except ValueError as e:
+        return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
+
+
 @app.get("/api/produce/storyboard/{job_id}")
 def api_storyboard_get(request: Request, job_id: str):
     """재료 장면 카드(썸네일·초·설명) + 장면 목록·스타일 추천(있으면) + 스타일 카드 + 진행 중인 일."""
@@ -23076,8 +23219,9 @@ def api_produce_mix_settings(body: dict):
         # ★새 편집기에서 고친 채널명을 계정 채널명으로도 기억한다(2026-09-29) — 다음 작업의 기본값이 된다
         #   (scene_style.account_channel). 샘플값 그대로면 건드리지 않는다.
         _ch = str(((snapshot or {}).get("text") or {}).get("channel") or "").strip()
-        if _ch and _ch != "숏템메이커" and len(_ch) <= 40 and int(job.get("customer_id") or 0):
-            store.set_pref(_MY_CHANNEL_KEY, _ch, customer_id=int(job.get("customer_id")))
+        #   cid 0 = 관리자 계정도 기억한다(관제 252 — 0을 '없음'으로 보고 건너뛰어 사장님만 매번 숏템메이커였다)
+        if _ch and _ch != "숏템메이커" and len(_ch) <= 40:
+            store.set_pref(_MY_CHANNEL_KEY, _ch, customer_id=int(job.get("customer_id") or 0))
     if "seo" in body:
         fields["seo"] = body.get("seo")  # 6단계 SEO 일습 dict or None
     if fields:

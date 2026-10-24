@@ -121,7 +121,7 @@ def test_화면이_고칠때마다_picks로_다시잰다():
         assert "sbResync(ek)" in _fn(f), f
     ps = _fn("sbPicksSync")
     assert "ids:sbLiveIds(ek,k,x)" in ps and "line:sbLine(ek,k,x)" in ps and "bd.check=r.check" in ps
-    assert 'onblur="sbEditDone()"' in HTML
+    assert 'onblur="sbEditDone(event)"' in HTML
 
 
 # ── ⑥ 장면 구간 미리보기 ──

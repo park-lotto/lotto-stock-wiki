@@ -1630,3 +1630,168 @@ def insert(db_path, jid, payload, R=None, ex=None):
                sig_yt=yt, auth=[n.get("auth"), auth2], mode="insert",
                prompt_chars=len(prompt))
     return out
+
+
+# ── 장면 점검(관제 257, 2026-10-23 사장님 "대화창에서 대본을 바꾸면 장면조각도 다시 매칭 후보를 정해 보게 /
+#    의미 없이 바꾸는 게 아니라 이게 최선이면 그렇게 하는 게 맞고, 왜 최선인지 이유를 설명하며 피드백") ──
+# 판단 주인: scene_review() — 줄마다 지금 붙은 장면이 그 문장을 가장 잘 보여주는가를 판정한다.
+#   keep(유지·이유) / swap(더 맞는 조각이 목록에 확실히 있을 때만 · 조각 번호와 이유) / none(맞는 조각이 없음 · 장면에 맞춘 문장 제안).
+#   근거는 보드를 만들 때와 같은 조각 설명(_materials 의 rows — 장면·쓰임·소구점·길이) 하나. 화면은 결과를 보여 주기만 하고
+#   [이 장면으로 바꾸기]를 눌러야 칸에 넣는다(여기선 작업을 건드리지 않는다).
+SCENE_VERDICTS = ("keep", "swap", "none")
+SCENE_REVIEW_MAX_IDS = 3
+SCENE_REVIEW_TEMP = 0.1     # 판정은 같은 대본·같은 장면이면 같은 답이어야 한다(기본값으론 같은 줄이 교체↔유지로 갈렸다, 10-23 실측)
+
+_SR_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "reply": {"type": "string"},
+        "reviews": {"type": "array", "items": {"type": "object", "properties": {
+            "line_no": {"type": "integer"},
+            "verdict": {"type": "string", "enum": list(SCENE_VERDICTS)},
+            "why": {"type": "string"},
+            "ids": {"type": "array", "items": {"type": "string"}},
+            "line": {"type": "string"},
+        }, "required": ["line_no", "verdict", "why"]}},
+    },
+    "required": ["reply", "reviews"],
+}
+
+_SR_PROMPT = """너는 쇼츠(세로 60초 이하) 편집 감독이다. 대본 줄마다 붙은 화면(장면 조각)이 그 문장을 가장 잘 보여주는지 판단한다.
+줄 하나 = 영상 한 칸이다. 성우가 문장을 읽는 동안 그 칸의 장면 조각이 순서대로 나온다.
+
+[장면 조각 목록 — 번호 | 길이 | 화면 설명 | 쓰임 | 소구점]
+{catalog}
+
+[대본과 지금 붙은 장면]
+{board}
+{product_hint}
+[점검할 줄] {targets}
+[회원 요청] {message}
+
+판단하는 법:
+- 기본은 유지(keep)다. 지금 장면이 문장의 핵심 말을 화면으로 보여주면 keep. why 에 문장의 어떤 말과 장면의 무엇이 맞는지 구체적으로 쓴다.
+- 목록에 **확실히 더 잘 맞는** 조각이 있을 때만 swap. ids 에 새 조각 번호(1~{max_ids}개, 순서대로 나올 차례)를 주고,
+  why 에 ① 지금 장면이 왜 약한지 ② 새 조각(번호를 적어라)이 문장의 어떤 말을 보여주는지 쓴다. 조금 나은 정도면 keep 으로 둔다.
+- 새 조각 길이 합이 그 줄 문장 길이(약 N초)를 덮게 고른다. [다른 줄 사용중] 표시가 있는 조각은 고르지 않는다.
+- 지금 장면이 맞아도 "장면이 문장보다 짧음" 표시가 있으면, 같은 내용을 이어 보여줄 안 쓴 조각이 목록에 있을 때
+  지금 조각을 그대로 앞에 두고 그 조각을 뒤에 더한 swap 을 제안한다(why 에 "장면이 짧아 ○○을 이어 붙인다"). 없으면 keep 하고 why 에 짧다고 적는다.
+- 지금 장면도 안 맞고 목록에도 맞는 조각이 없으면 none. why 에 문장의 어떤 말을 보여줄 화면이 없는지 쓰고,
+  line 에 지금 장면이 보여주는 것에 맞춘 문장(말투 그대로, 사실·수치 지어내지 말 것)을 준다.
+- 화면 내용은 목록의 설명에 적힌 것만 근거로 삼는다. 설명에 없는 장면을 지어내지 않는다.
+- why 는 회원이 읽는다. 조각을 가리킬 땐 번호를 쓰지 말고 화면 설명을 짧게 따옴표로(예: 「티셔츠가 부풀어 마르는 장면」) 쓴다. 번호는 ids 에만 넣는다.
+- 회원 요청이 있으면 그 요청(예: "더 역동적인 걸로")을 기준에 더한다. 그래도 요청에 맞는 조각이 없으면 없다고 솔직히 말한다(keep 또는 none).
+- reviews 는 점검할 줄마다 하나씩, line_no 는 대본 줄 번호(1부터). reply 는 전체를 한두 문장으로 요약(마크다운 기호 금지).
+"""
+
+
+def scene_review(slots, rows=None, materials=None, message="", product="", model=None, *, call=None, tries=2):
+    """줄마다 장면 판정 → {"reply", "auth", "model", "reviews": [{i, verdict, why, ids(제안·swap 일 때), cur_ids, line(none 일 때), have, need, short}]}.
+    slots: [{slot, line, ids}] — 화면의 지금 보드(손으로 고친 문장·장면 반영). rows: 점검할 줄 번호(0부터), None = 글이 있는 줄 전부.
+    materials: _materials(...) 결과 (segs, texts, order, rows). call: (prompt, schema) -> dict(테스트가 갈아끼운다).
+    AI 판정은 코드가 다시 거른다 — 목록 밖·다른 줄 사용중·중복 번호는 빼고, 남는 게 없으면 다시 묻고, 끝까지 안 되면 error."""
+    slots = [x if isinstance(x, dict) else {} for x in (slots or [])][:60]
+    if not slots:
+        raise ValueError("스토리보드 칸이 없어요")
+    segs, texts, order, cat_rows = materials or ({}, {}, [], [])
+    if not segs:
+        raise ValueError("장면 조각 목록이 비었어요 — 1단계 재료 분석을 먼저 해 주세요")
+    lines = [str(x.get("line") or "").strip() for x in slots]
+    cur = [[c for c in (x.get("ids") or []) if isinstance(c, str) and c] for x in slots]
+    if rows is None:
+        rows = [i for i, t in enumerate(lines) if t]
+    rows = sorted({int(i) for i in rows if isinstance(i, int) and 0 <= i < len(slots) and lines[i]})
+    if not rows:
+        raise ValueError("점검할 문장이 없어요")
+    used_by = {}
+    for i, ids in enumerate(cur):
+        for c in ids:
+            used_by.setdefault(c, set()).add(i)
+    catalog = "\n".join("%s%s" % (r, ("  [다른 줄 사용중: %s번]" % ",".join(str(k + 1) for k in sorted(used_by[sid])))
+                                      if used_by.get(sid) else "")
+                        for sid, r in zip(order, cat_rows))
+    chk = slot_checks([{"line": lines[i], "ids": cur[i]} for i in range(len(slots))], segs)
+    board = "\n".join("%d. [%s] (문장 약 %.1f초 · 장면 %.1f초%s) %s\n   지금 장면: %s" % (
+        i + 1, str(x.get("slot") or "").split("_")[0] or "-", narr_secs(lines[i]), chk[i]["have"],
+        " · 장면이 문장보다 짧음" if lines[i] and chk[i]["short"] else "", lines[i] or "(빈 칸)",
+        " / ".join("%s(%s초) %s" % (c, segs.get(c, "?"), texts.get(c, "(지금 재료에 없음)").strip()[:80]) for c in cur[i]) or "(없음)")
+        for i, x in enumerate(slots))
+    hint = ("\n[상품] %s\n" % str(product).strip()[:200]) if str(product or "").strip() else ""
+    prompt = _SR_PROMPT.format(catalog=catalog, board=board, product_hint=hint, max_ids=SCENE_REVIEW_MAX_IDS,
+                               targets=", ".join("%d번" % (i + 1) for i in rows),
+                               message=str(message or "").strip()[:1000] or "(없음 — 장면이 최선인지 점검)")
+    note = {}   # _call_json 이 실제로 탄 길(auth·model) — 화면이 "구글 버텍스 · Flash 3.6로 판단"을 말한다
+    call = call or (lambda p, s: sg._call_json(p, s, note=note, vertex=True, vertex_model=model or None,
+                                                   temperature=SCENE_REVIEW_TEMP))   # 길(op)은 대화창과 같은 script_generate — 회원 버텍스 기본 허용 op
+    got_rows, reply, last = {}, "", ""
+    for _ in range(max(1, tries)):
+        got = call(prompt, _SR_SCHEMA) or {}
+        reply = str(got.get("reply") or "").strip()[:2000] or reply
+        for rv in got.get("reviews") or []:
+            if not isinstance(rv, dict):
+                continue
+            n = rv.get("line_no")
+            i = n - 1 if isinstance(n, int) else -1
+            if i not in rows or i in got_rows:
+                continue
+            v = _sr_clean(rv, i, cur, used_by, segs, lines)
+            if v:
+                v["why"] = _sr_names(v["why"], texts)
+                got_rows[i] = v
+        miss = [i for i in rows if i not in got_rows]
+        if not miss:
+            break
+        last = "%s 판정이 비었어요" % ",".join("%d번" % (i + 1) for i in miss)
+        prompt += "\n★직전 답에 %s 줄 판정이 빠졌거나 쓸 수 없는 조각 번호였다. 목록에 있는 번호로 다시 판정하라.\n" % ",".join(str(i + 1) for i in miss)
+    if not got_rows:
+        raise ValueError("AI가 장면을 판정하지 못했어요 — " + (last or "응답이 비었어요") + ". 잠시 후 다시 해 주세요")
+    out = []
+    for i in rows:
+        v = got_rows.get(i) or {"verdict": "error", "why": "AI가 이 줄을 판정하지 못했어요", "ids": [], "line": ""}
+        ids = v["ids"] if v["verdict"] == "swap" else cur[i]
+        chk = slot_checks([{"line": lines[i], "ids": ids}], segs)[0]
+        out.append(dict(v, i=i, cur_ids=cur[i], have=chk["have"], need=chk["need"], short=chk["short"]))
+    auth = "vertex" if note.get("auth") == "vertex" else "free"
+    return {"reply": reply, "reviews": out, "auth": auth,
+            "model": note.get("model") or ((model or "") if auth == "vertex" else sg._MODEL)}
+
+
+def _sr_names(why, texts):
+    """이유 글에 AI가 남긴 조각 번호(grab_youtube_…-3 · 앞머리 뺀 …-3)를 화면 설명 조각 「…」으로 바꾼다 — 회원이 읽는 글이다."""
+    short = {}
+    for sid in texts:
+        short[sid] = sid
+        short[re.sub(r"^grab_[a-z]+_", "", sid)] = sid
+    if not short:
+        return why
+    pat = re.compile("|".join(re.escape(k) for k in sorted(short, key=len, reverse=True)))
+
+    def _nm(m):
+        d = re.split(r"[.。,·]", (texts.get(short[m.group(0)]) or "").strip())[0].strip()
+        return "「%s」" % (d[:22] + ("…" if len(d) > 22 else "")) if d else "장면"
+    return re.sub(r"\(\s*(「[^」]*」)\s*\)", r"\1", pat.sub(_nm, why))
+
+
+def _sr_clean(rv, i, cur, used_by, segs, lines):
+    """AI 판정 하나를 코드로 거른다 → dict | None(못 씀). swap 조각은 목록에 있고·다른 줄이 안 쓰고·중복 없는 것만.
+    거른 뒤 남는 게 지금 장면과 같으면 keep 으로 본다(바꿀 게 없다)."""
+    verdict = str(rv.get("verdict") or "")
+    why = str(rv.get("why") or "").strip()[:600]
+    if verdict not in SCENE_VERDICTS or not why:
+        return None
+    if verdict == "swap":
+        ids = []
+        for c in rv.get("ids") or []:
+            c = str(c or "").strip()
+            if c in segs and c not in ids and not (used_by.get(c, set()) - {i}):
+                ids.append(c)
+        ids = ids[:SCENE_REVIEW_MAX_IDS]
+        if not ids:
+            return None
+        if ids == cur[i]:
+            return {"verdict": "keep", "why": why, "ids": [], "line": ""}
+        return {"verdict": "swap", "why": why, "ids": ids, "line": ""}
+    if verdict == "none":
+        ln = str(rv.get("line") or "").strip()[:300]
+        return {"verdict": "none", "why": why, "ids": [], "line": ln if ln and ln != lines[i] else ""}
+    return {"verdict": "keep", "why": why, "ids": [], "line": ""}

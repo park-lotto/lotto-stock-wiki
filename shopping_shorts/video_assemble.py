@@ -1807,12 +1807,14 @@ def simple_caption_split(text, max_chars):
     한 어절이 max_chars를 넘으면 그 어절은 혼자 한 줄(글자를 쪼개지 않는다).
     ★일본어는 띄어쓰기가 없어 이 규칙이 문장 통째를 한 어절로 본다 → _caption_segments_ja(폭=max_chars)로 보낸다(관제 248)."""
     from shopping_shorts.script_translate import lang_of
-    if lang_of(text) == "ja":
+    _lg = lang_of(text)
+    if _lg in ("ja", "zh"):
         try:
             _mx = int(max_chars or 0)
         except (TypeError, ValueError):
             _mx = 0
-        return _caption_segments_ja(text, width=_mx if _mx > 0 else None)
+        _fn = _caption_segments_zh if _lg == "zh" else _caption_segments_ja
+        return _fn(text, width=_mx if _mx > 0 else None)
     words = (text or "").split()
     try:
         mx = int(max_chars or 0)
@@ -1860,14 +1862,17 @@ def simple_caption_split(text, max_chars):
 # 2026-10-21 라이브 e2e(job 1e2c12ade064, 캡컷 21구절) 실측 수리: 문말 조사 ね·よ 는 "重ね|られ" 같은 동사 속 ね 를 조사로 봐 뺐다
 #   (문장 끝엔 어차피 。！？로 끊긴다). て(연용 접속)는 "取って|割れやすかった" 같은 자연 휴지라 넣었다.
 _JA_PARTICLES = ("から", "まで", "より", "は", "が", "を", "に", "で", "と", "も", "の", "へ", "て")
-_JA_MIN_HEAD = 6      # 조사 뒤에서 끊을 때 앞 조각 최소 글자수
-_JA_MIN_TAIL = 4      # 끊고 남는 뒤 조각 최소 글자수(이보다 짧은 끝 조각은 앞에 붙인다)
+_JA_MIN_HEAD = 3      # 조사 뒤에서 끊을 때 앞 조각 최소 글자수
+_JA_MIN_TAIL = 3      # 끊고 남는 뒤 조각 최소 글자수(이보다 짧은 끝 조각은 앞에 붙인다)
+# ★일본어 한 줄 상한(관제 254, 2026-10-22): 19자는 띄어쓰기 있는 한국어 기준이다. 일본어는 공백 없이 전각 글자만이라
+#   19자가 자막 칸에 안 들어가 편집기가 글자를 줄였다(5자~19자 줄마다 크기가 달라 보임, 실측 job 1e2c12ade064).
+_JA_CAP_WRAP = 10   # 10-22 이 PC 렌더 실측: 템플릿 없음 자막 칸에 전각 11자부터 오른쪽이 잘렸다
 
 
 def _ja_split_long(seg, width=None):
     """_CAP_WRAP 를 넘는 일본어 조각 하나 → 조각들. 조사 바로 뒤 중 두 조각 길이 차가 가장 작은 곳에서 끊고,
     조사가 없으면 가운데 가까운 곳에서 _CAP_WRAP 이내로 자른다. 결과 조각이 또 길면 다시 나눈다."""
-    width = width or _CAP_WRAP
+    width = width or _JA_CAP_WRAP
     if len(seg) <= width:
         return [seg]
     n = len(seg)
@@ -1886,6 +1891,8 @@ def _ja_split_long(seg, width=None):
         #   "再利用で|きる"를 못 막았다). 결합 조사("のに"·"とは"·"ために")는 마지막 조사 뒤(한자·가타카나 앞)에서 잘린다.
         if _hira(seg[i]):
             continue
+        if pt == "の" and not head.endswith("のに"):
+            continue   # の 는 뒤 낱말을 꾸민다 — "普通の|カップ" 처럼 끊지 않는다(관제 254)
         diff = abs(i - (n - i))
         if best is None or diff < best[0]:
             best = (diff, i)
@@ -1894,8 +1901,24 @@ def _ja_split_long(seg, width=None):
     else:
         # 조사가 없으면 가운데 가까운 **글자 종류 경계**(히라가나↔한자·가타카나)에서 자른다 — "割れ|やすかった"처럼
         # 낱말 한가운데를 가르던 고정 가운데 절단 대신(2026-10-21 실측). 경계도 없으면 가운데.
-        cands = [i for i in range(_JA_MIN_HEAD, n - _JA_MIN_TAIL + 1) if _hira(seg[i - 1]) != _hira(seg[i])]
-        cut = min(cands, key=lambda i: abs(i - (n - i))) if cands else min(width, max(1, n // 2 + (n % 2)))
+        # 글자 종류가 바뀌고 뒤가 히라가나가 아닌 자리(→한자·가타카나·영문 시작)만 — "普通|の" 같은 조사 앞 절단 금지(관제 254)
+        _cls = lambda c: "h" if _hira(c) else ("k" if "゠" <= c <= "ヿ" else ("c" if "一" <= c <= "鿿" else "o"))  # noqa: E731
+        cands = [i for i in range(_JA_MIN_HEAD, n - _JA_MIN_TAIL + 1)
+                 if _cls(seg[i - 1]) != _cls(seg[i]) and _cls(seg[i]) != "h" and seg[i] != "ー"]
+        if not cands:
+            # 긴 가타카나 낱말: ン·ング 뒤(다음이 가타카나 본글자)에서 나눈다 — "スタンディング|オベーションした"(관제 254 렌더 실측:
+            #   통째로 둔 15자가 완성본 오른쪽에서 잘렸다). 그래도 없으면 가운데.
+            _small = "ァィゥェォッャュョヮー"
+            cands = [i for i in range(_JA_MIN_HEAD, n - _JA_MIN_TAIL + 1)
+                     if seg[i - 1] == "ン" and _cls(seg[i]) == "k" and seg[i] not in _small
+                     or seg[i - 2:i] == "ング" and _cls(seg[i]) == "k" and seg[i] not in _small]
+        if not cands:
+            # て형 뒤(보조동사 앞) — "アイロンがけして|くれること"(관제 254). 가운데보다 낫다
+            cands = [i for i in range(_JA_MIN_HEAD, n - _JA_MIN_TAIL + 1) if seg[i - 1] in "てで" and _hira(seg[i - 2])]
+        if not cands:
+            # 그래도 없으면 の 뒤 낱말 시작 — 가운데 기계 절단("くしゃくしゃ|のシャツを")보다 낫다
+            cands = [i for i in range(_JA_MIN_HEAD, n - _JA_MIN_TAIL + 1) if seg[i - 1] == "の" and _cls(seg[i]) != "h"]
+        cut = min(cands, key=lambda i: (not _hira(seg[i - 1]), abs(i - (n - i)))) if cands else min(width, max(1, n // 2 + (n % 2)))   # 히라가나 끝 자리 우선("クリーニング|屋" 보다 "屋の|社長")
     return _ja_split_long(seg[:cut], width) + _ja_split_long(seg[cut:], width)
 
 
@@ -1916,6 +1939,40 @@ def _caption_segments_ja(narr, width=None):
         pieces.extend(_ja_split_long(p, width))
     pieces = [p for p in pieces if p.strip()]
     if len(pieces) >= 2 and len(pieces[-1]) < _JA_MIN_TAIL:
+        last = pieces.pop()
+        pieces[-1] = pieces[-1] + last
+    return pieces
+
+
+_ZH_AFTER = "的了着过吧呢啊呀嘛哦"          # 이 글자 뒤에서 끊으면 자연스럽다(어기조사·구조조사)
+_ZH_BEFORE = ("就", "都", "也", "还", "但", "而", "所以", "因为", "然后", "可是", "而且", "直接", "只要", "连")   # 이 말 앞에서
+
+
+def _zh_split_long(seg, width=None):
+    """쉼표로도 못 줄인 긴 중국어 조각 → 자연 경계(的了吧… 뒤 / 就都也… 앞)에서 가장 균형 있게, 없으면 가운데."""
+    width = width or _CAP_WRAP
+    n = len(seg)
+    if n <= width:
+        return [seg]
+    lo, hi = 4, n - 3
+    cands = [i for i in range(lo, hi + 1) if seg[i - 1] in _ZH_AFTER or any(seg.startswith(w, i) for w in _ZH_BEFORE)]
+    cut = min(cands, key=lambda i: abs(i - (n - i))) if cands else min(width, max(1, n // 2 + (n % 2)))
+    return _zh_split_long(seg[:cut], width) + _zh_split_long(seg[cut:], width)
+
+
+def _caption_segments_zh(narr, width=None):
+    """중국어 나레이션 → 자막 줄 목록(관제 254). ①。！？，、； 뒤에서 끊는다 ②그래도 넘치면 _zh_split_long
+    ③끝 조각이 3자 미만이면 앞 조각에 붙인다. 일본어 규칙은 가나 조사 기준이라 중국어엔 맞지 않는다."""
+    t = (narr or "").strip()
+    if not t:
+        return []
+    pieces = []
+    for p in re.split(r"(?<=[。！？!?，,、；;])", t):
+        p = _strip_cap_tail(p.strip())
+        if p:
+            pieces.extend(_zh_split_long(p, width))
+    pieces = [p for p in pieces if p.strip()]
+    if len(pieces) >= 2 and len(pieces[-1]) < 3:
         last = pieces.pop()
         pieces[-1] = pieces[-1] + last
     return pieces
@@ -1947,9 +2004,9 @@ def _wrap_long(segs, manual=False):
             continue
         # ★일본어는 어절(띄어쓰기)이 없다 — textwrap 19자 기계 절단 대신 조사 뒤에서 나눈다(관제 248).
         #   manual 이어도 19자 넘는 덩어리는 나눈다("어절 둘 이상이면 존중" 규칙이 일본어엔 안 맞는다).
-        if lang_of(s) == "ja":
+        if lang_of(s) in ("ja", "zh"):
             if len(s.replace(" ", "")) > _CAP_WRAP:
-                out.extend(_caption_segments_ja(s) or [s])
+                out.extend((_caption_segments_zh if lang_of(s) == "zh" else _caption_segments_ja)(s) or [s])
             else:
                 out.append(s)
             continue
@@ -1995,6 +2052,8 @@ def _caption_segments(narration, preset=None):
     from shopping_shorts.script_translate import lang_of
     if lang_of(narr) == "ja":
         return _caption_segments_ja(narr) or [narr]
+    if lang_of(narr) == "zh":
+        return _caption_segments_zh(narr) or [narr]
     words = narr.split()
     out, cur = [], []
     for i, w in enumerate(words):
@@ -3222,10 +3281,11 @@ def _default_or_lang_font(work, text):
         base = _resolve_font()
         if not base or _fg.too_broken(base, text, label="기본폰트"):
             try:
-                shutil.copy(jp, Path(work) / "font_ja.ttf")
-                return "font_ja.ttf"
+                _name = "font_ja.ttf" if jp.endswith("JP-Bold.ttf") else "font_lang" + Path(jp).suffix   # 일본어는 종전 이름 그대로
+                shutil.copy(jp, Path(work) / _name)
+                return _name
             except Exception as e:      # noqa: BLE001 — 복사 실패는 종전(기본폰트)으로, 흔적은 남긴다
-                print(f"[폰트] 일본어 폴백 폰트 복사 실패 — 기본폰트로: {e!r}", file=sys.stderr)
+                print(f"[폰트] 언어 폴백 폰트 복사 실패 — 기본폰트로: {e!r}", file=sys.stderr)
     return "font.ttf"
 
 
