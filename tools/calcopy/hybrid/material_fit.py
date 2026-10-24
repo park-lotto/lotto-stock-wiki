@@ -102,6 +102,20 @@ def strip(src: Path, ss: float, dur: float, crop, dst: Path) -> Path:
     return dst
 
 
+def center_crop(src: Path, aspect: float) -> list | None:
+    """재료.json 에 칸이 없는 소스(보충 재료 등) = 판 창 비율 가운데 자르기 [x,y,w,h] — 채점 그림과 렌더가 같은 칸을 보게(10-25: 사람 칸 1080×1434 를 다른 크기 영상에 물려 렌더 실패)."""
+    from tools.calcopy.hybrid.common import probe
+    try:
+        w, h, _ = probe(src)
+    except Exception:  # noqa: BLE001
+        return None
+    if w / h > aspect:
+        cw = int(round(h * aspect)) // 2 * 2
+        return [(w - cw) // 2, 0, cw, h]
+    ch = int(round(w / aspect)) // 2 * 2
+    return [0, (h - ch) // 2, w, ch]
+
+
 def _key(*parts) -> str:
     return hashlib.sha1(json.dumps(parts, ensure_ascii=False, default=str).encode()).hexdigest()[:12]
 
@@ -346,7 +360,7 @@ def score(cands: list[dict], slot: dict, wd: Path, llm) -> list[dict]:
         return []
     items = []
     for c in cands:
-        img = strip(c["_path"], float(c["ss"]), float(c["dur"]), c.get("crop"), Path(wd) / "strips" / f"{Path(c['src']).stem}_{float(c['ss']):.2f}_{float(c['dur']):.2f}.jpg")
+        img = strip(c["_path"], float(c["ss"]), float(c["dur"]), c.get("crop"), Path(wd) / "strips" / f"{Path(c['src']).stem}_{float(c['ss']):.2f}_{float(c['dur']):.2f}_{_key(c.get('crop'))[:6]}.jpg")   # 칸(crop)도 이름에 — 칸이 바뀌면 다른 그림
         items.append({"img": str(img), "piece": slot["piece"], "line": slot["text"]})
     res = judge_rubric(items, Path(wd), llm, cache=Path(wd) / "cache.json")
     for c, r in zip(cands, res):
@@ -588,6 +602,11 @@ def plan(doc, work, version: str, llm=None, apply: bool = False, sign: bool = Fa
     for s in slots:
         if s["kind"] == "orig":
             crops.setdefault(s["fixed"]["src"], s["fixed"].get("crop") if isinstance(s["fixed"].get("crop"), list) else None)
+    _, _, ww, wh = st["frame"]["window"]
+    aspect = ww / wh
+    for sname in list({(s.get("human") or {}).get("src") for s in slots} | {s["fixed"]["src"] for s in slots if s["kind"] == "orig"}) :
+        if sname and not crops.get(sname):
+            crops[sname] = center_crop(src_dir / sname, aspect)
     srcs = sorted({s for s in crops} | {(s.get("human") or {}).get("src") for s in slots if s.get("human")} - {None})
     outside_all: set = set()
     goal = goal_of(st, (st.get("bench") or {}).get("channel"), log)
@@ -634,6 +653,7 @@ def plan(doc, work, version: str, llm=None, apply: bool = False, sign: bool = Fa
                 for f in new_src:
                     outside_all.add(f)
                     srcs.append(f)
+                    crops[f] = center_crop(src_dir / f, aspect)
                 for s in slots:
                     if s["line"] in wl:
                         s.pop("cands", None)
@@ -665,7 +685,7 @@ def plan(doc, work, version: str, llm=None, apply: bool = False, sign: bool = Fa
                 continue
             h = s.get("human") or {}
             same = h.get("src") == p["src"] and abs(float(h.get("ss") or -9) - float(p["ss"])) < 0.05
-            new.append({"src": p["src"], "ss": round(float(p["ss"]), 3), "w": s["w"], "crop": p.get("crop") or h.get("crop"),
+            new.append({"src": p["src"], "ss": round(float(p["ss"]), 3), "w": s["w"], "crop": p.get("crop") or crops.get(p["src"]) or "face",
                         "see": h.get("see") if same else (p.get("seen") or ""), "fit": p.get("score"), "fit_why": p.get("seen") or "", "cand_n": len(s.get("cands") or []),
                         **({"outside": True} if p["src"] in outside_all else {})})
         cuts[lid] = new
