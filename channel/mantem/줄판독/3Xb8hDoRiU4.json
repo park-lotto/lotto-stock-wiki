@@ -1,0 +1,1051 @@
+{
+ "id": "3Xb8hDoRiU4",
+ "dur": 20.898,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "대성이 10년 정착한",
+   "colors": [
+    {
+     "word": "대성이 10년 정착한",
+     "hex": "#FDFDFD"
+    }
+   ]
+  },
+  {
+   "text": "역대급 인생 립밤",
+   "colors": [
+    {
+     "word": "역대급 인생",
+     "hex": "#A6FEF6"
+    },
+    {
+     "word": "립밤",
+     "hex": "#F9F59D"
+    }
+   ],
+   "note": "끝 낱말만 연노랑(1판 8/8)"
+  }
+ ],
+ "source_label": "출처 : Allure Korea",
+ "layout": {
+  "window": [
+   0,
+   420,
+   1080,
+   1080
+  ],
+  "caption_band": [
+   1200,
+   1290
+  ],
+  "title_y": [
+   [
+    151,
+    256
+   ],
+   [
+    288,
+    391
+   ]
+  ],
+  "bg_hex": "#000000",
+  "source_y": [
+   1518,
+   1557
+  ],
+  "logo_y": null,
+  "watermark": null,
+  "source_hex": "#FFFFFF",
+  "credit_text": "출처 : Allure Korea",
+  "note": "검정 바탕 + 2줄 제목(1줄 흰·2줄 민트+끝 낱말 연노랑, 기울임) + 정사각 영상 창 y420~1500 + 창 안 자막(나레 노랑 위 y≈1226 · 원음 아래 y≈1322) + 창 아래 '출처 : <원본 채널>' 흰 32px · 이 편은 원음 자막도 나레와 같은 위 자리(잉크 y≈1200~1290)"
+ },
+ "lines": [
+  {
+   "t0": 0.233,
+   "t1": 0.7,
+   "speaker": "원음:대성",
+   "text": "와~ 나는",
+   "layer": "만템",
+   "role": "훅",
+   "enter": "typing(낱자마다 크게 튀어나왔다 제자리 — 마지막 글자가 큼, 4~6프레임)",
+   "enter_ms": 170,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1226,
+    1293
+   ],
+   "fill_hex": "#FEFDFD",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "대성 얼굴 근접",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 0.733,
+   "t1": 1.867,
+   "speaker": "원음:대성",
+   "text": "립밤 중 세계 최고인 거 같아",
+   "layer": "만템",
+   "role": "훅",
+   "enter": "typing(낱자마다 크게 튀어나왔다 제자리 — 마지막 글자가 큼, 4~6프레임)",
+   "enter_ms": 300,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1218,
+    1291
+   ],
+   "fill_hex": "#FCFDF8",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "립밤 중",
+     "hex": "#F9F98F",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    },
+    {
+     "word": "최고",
+     "hex": "#43EC48",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "대성 얼굴 근접(입 앞 립밤)",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.033,
+   "t1": 2.367,
+   "speaker": "원음:대성",
+   "text": "이게 진짜!",
+   "layer": "만템",
+   "role": "훅",
+   "enter": "typing(낱자마다 크게 튀어나왔다 제자리 — 마지막 글자가 큼, 4~6프레임)",
+   "enter_ms": 200,
+   "variant": "원음(연두)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1218,
+    1291
+   ],
+   "fill_hex": "#B3FF60",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "립밤 든 손과 얼굴",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.367,
+   "t1": 3.6,
+   "speaker": "나레",
+   "text": "대성이 10년째 정착중인",
+   "layer": "만템",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "나레(노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1195,
+    1262
+   ],
+   "fill_hex": "#EBFF14",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "대성 화보 사진(종이 넘김으로 공개)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "기타",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "transition_kind": "페이지 말림(2.37~3.2, 오른쪽 위 모서리 말림 — cutdet zoomblur 로 잡힘)"
+  },
+  {
+   "t0": 3.667,
+   "t1": 4.833,
+   "speaker": "나레",
+   "text": "역대급 립밤이라는데",
+   "layer": "만템",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "나레(노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1196,
+    1254
+   ],
+   "fill_hex": "#ECFF0E",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "작게 줄인 사진 카드가 검정 바탕에서 커짐 → 대성 화보 전신",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "black",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "transition_kind": "검정 바탕 작은 카드 → 확대(3.67~4.6)"
+  },
+  {
+   "t0": 5.067,
+   "t1": 5.967,
+   "speaker": "원음:대성",
+   "text": "거의 웬만한 립밤은",
+   "layer": "만템",
+   "role": "본문",
+   "enter": "typing(낱자마다 크게 튀어나왔다 제자리 — 마지막 글자가 큼, 4~6프레임)",
+   "enter_ms": 200,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1221,
+    1291
+   ],
+   "fill_hex": "#FAECE3",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "립밤",
+     "hex": "#F891B8",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "대성 얼굴(말하는 중)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 6.233,
+   "t1": 6.7,
+   "speaker": "원음:대성",
+   "text": "다 써봤습니다",
+   "layer": "만템",
+   "role": "본문",
+   "enter": "typing(낱자마다 크게 튀어나왔다 제자리 — 마지막 글자가 큼, 4~6프레임)",
+   "enter_ms": 200,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1221,
+    1289
+   ],
+   "fill_hex": "#FAF7F5",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "대성 얼굴(입 크게)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 6.8,
+   "t1": 7.867,
+   "speaker": "원음:대성",
+   "text": "10년 정착한",
+   "layer": "만템",
+   "role": "본문",
+   "enter": "typing(6.8 '1' + 나비 반짝이 → 7.2 전체)",
+   "enter_ms": 400,
+   "variant": "원음(연노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1221,
+    1282
+   ],
+   "fill_hex": "#F6FFA9",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "보라·노랑 나비 반짝이",
+     "x": 640,
+     "y": 1250,
+     "w": 60,
+     "t_in": 6.8,
+     "t_out": 7.1,
+     "anim": "나비가 글자 앞을 날며 글자를 펼침"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "대성 상반신(재킷 만짐)",
+   "fit": 5,
+   "cut_at": [
+    7.267
+   ],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.0,
+   "t1": 8.833,
+   "speaker": "원음:대성",
+   "text": "립밤이 있는데",
+   "layer": "만템",
+   "role": "본문",
+   "enter": "typing(8.0 '립밤' + 나비 → 8.2 전체)",
+   "enter_ms": 200,
+   "variant": "원음(연노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1229,
+    1282
+   ],
+   "fill_hex": "#F7FFAA",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "보라·노랑 나비 반짝이",
+     "x": 380,
+     "y": 1265,
+     "w": 60,
+     "t_in": 8.0,
+     "t_out": 8.2,
+     "anim": "나비가 글자 앞을 지나감"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "고개 숙인 대성",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.833,
+   "t1": 9.667,
+   "speaker": "원음:대성",
+   "text": "정말 예술입니다",
+   "layer": "만템",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(하늘)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1226,
+    1291
+   ],
+   "fill_hex": "#81FFF4",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "립밤 들고 얼굴 근접",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 9.8,
+   "t1": 10.733,
+   "speaker": "원음:대성",
+   "text": "찾았다 내 사랑",
+   "layer": "만템",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(분홍)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1221,
+    1289
+   ],
+   "fill_hex": "#F099D5",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "보라 연기·하트 소용돌이(글자 뒤에서 피어오름)",
+     "x": 540,
+     "y": 1240,
+     "w": 420,
+     "t_in": 9.8,
+     "t_out": 10.9,
+     "anim": "연기가 피어올랐다 흩어짐"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "립밤 쥔 두 손(보라 연기 그림)",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.0,
+   "t1": 11.7,
+   "speaker": "원음:대성",
+   "text": "내가 찾던 사랑",
+   "layer": "만템",
+   "role": "고조",
+   "enter": "typing(11.0 '내가 찾던' + 연기 → 11.2 전체)",
+   "enter_ms": 200,
+   "variant": "원음(분홍)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1221,
+    1291
+   ],
+   "fill_hex": "#F099D4",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "보라 연기(앞 줄과 같은 그림 이어짐)",
+     "x": 440,
+     "y": 1240,
+     "w": 300,
+     "t_in": 11.0,
+     "t_out": 11.2,
+     "anim": "흩어짐"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "립밤 쥔 손·니트 소매",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.7,
+   "t1": 12.667,
+   "speaker": "제3자",
+   "text": "몇 통이나 있으세요?",
+   "layer": "만템",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(초록)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1229,
+    1282
+   ],
+   "fill_hex": "#43EC48",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "대성 얼굴(질문 듣는 중)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "진행자 질문(목소리 다름, 화면에 진행자 없음) — 초록 글자"
+  },
+  {
+   "t0": 12.667,
+   "t1": 13.533,
+   "speaker": "원음:대성",
+   "text": "몇 통이요?",
+   "layer": "만템",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1220,
+    1288
+   ],
+   "fill_hex": "#FDFBFB",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "대성 얼굴 옆",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 13.767,
+   "t1": 14.433,
+   "speaker": "원음:대성",
+   "text": "20통 있고",
+   "layer": "만템",
+   "role": "답",
+   "enter": "typing(13.6 '2' → 13.8 '20통' → 14.0 전체)",
+   "enter_ms": 330,
+   "variant": "원음(살구)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1221,
+    1291
+   ],
+   "fill_hex": "#F5D9B5",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "대성 상반신",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 14.433,
+   "t1": 15.7,
+   "speaker": "원음:대성",
+   "text": "바겐세일 한 적이 있어요",
+   "layer": "만템",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1221,
+    1291
+   ],
+   "fill_hex": "#F8D0D0",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "바겐세일",
+     "hex": "#F891B8",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "대성 얼굴 아래(말하는 중)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 15.767,
+   "t1": 16.8,
+   "speaker": "원음:대성",
+   "text": "평생 쓰겠다 해가지고",
+   "layer": "만템",
+   "role": "증거",
+   "enter": "typing(낱자마다 크게 튀어나왔다 제자리 — 마지막 글자가 큼, 4~6프레임)",
+   "enter_ms": 330,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1218,
+    1291
+   ],
+   "fill_hex": "#D1FDCA",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "대성 입 근접·엄지 척",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 16.933,
+   "t1": 17.8,
+   "speaker": "원음:대성",
+   "text": "50통을 사놨습니다",
+   "layer": "만템",
+   "role": "고조",
+   "enter": "typing(낱자마다 크게 튀어나왔다 제자리 — 마지막 글자가 큼, 4~6프레임)",
+   "enter_ms": 300,
+   "variant": "원음(분홍)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1221,
+    1291
+   ],
+   "fill_hex": "#F3A1C6",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "대성 상반신(니트 소매)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 17.967,
+   "t1": 18.5,
+   "speaker": "원음:대성",
+   "text": "강추입니다!",
+   "layer": "만템",
+   "role": "고조",
+   "enter": "typing(18.0 + 흰 집중선 → 18.2 전체)",
+   "enter_ms": 200,
+   "variant": "원음(연노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1293
+   ],
+   "fill_hex": "#F7E7B5",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "흰 집중선(글자 오른쪽 짧은 선)",
+     "x": 700,
+     "y": 1260,
+     "w": 120,
+     "t_in": 17.967,
+     "t_out": 18.1,
+     "anim": "튀었다 사라짐"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "대성 얼굴 아래",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 18.567,
+   "t1": 19.433,
+   "speaker": "원음:대성",
+   "text": "엘리자베스",
+   "layer": "만템",
+   "role": "공개",
+   "enter": "typing(낱자마다 크게 튀어나왔다 제자리 — 마지막 글자가 큼, 4~6프레임)",
+   "enter_ms": 300,
+   "variant": "원음(연두)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1217,
+    1293
+   ],
+   "fill_hex": "#D1FFE8",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "립밤 뚜껑 여는 손",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "제품 브랜드(엘리자베스 아덴)를 원음 한 마디로 공개"
+  },
+  {
+   "t0": 19.6,
+   "t1": 20.133,
+   "speaker": "원음:대성",
+   "text": "앙~",
+   "layer": "만템",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(연두)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1218,
+    1293
+   ],
+   "fill_hex": "#D2FBE6",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "립밤 들고 혀 내민 대성",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 20.4,
+   "t1": 20.867,
+   "speaker": "원음:대성",
+   "text": "최고예요!",
+   "layer": "만템",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(연노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1214,
+    1294
+   ],
+   "fill_hex": "#E5E3B1",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "검정 괄호 곡선 ( ) 두 개(제품 양옆)",
+     "x": 540,
+     "y": 900,
+     "w": 1000,
+     "t_in": 20.4,
+     "t_out": 20.867,
+     "anim": "제품을 괄호로 감싼 정지 그림"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "흰 바탕 립밤 제품 사진 + 검정 괄호 그림",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "기타",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "transition_kind": "종이 찢김(20.13~20.4 검정 → 찢긴 종이 가장자리 아래에서 위로)"
+  }
+ ],
+ "no_caption": [
+  [
+   0.0,
+   0.233,
+   "첫 7프레임 자막 없음"
+  ],
+  [
+   20.133,
+   20.4,
+   "종이 찢김 전환 중"
+  ]
+ ],
+ "beats": "원음 훅 3줄(0.23~2.37 '와~ 나는 / 립밤 중 세계 최고인 거 같아 / 이게 진짜!', 낱자 튀는 타이핑) → 나레 다리 2줄(2.37~4.83 '대성이 10년째 정착중인 / 역대급 립밤이라는데' + 화보 사진, 페이지 말림·검정 카드 확대) → 원음 본문(5.07~8.83 웬만한 립밤 다 써봤다·10년 정착, 나비 그림) → 고조(8.83~11.7 '정말 예술입니다·찾았다 내 사랑', 보라 연기) → 문답(11.7~14.43 진행자 '몇 통이나 있으세요?' → '20통 있고') → 증거·고조(14.43~18.5 바겐세일·50통·강추) → 공개(18.57 '엘리자베스') → 끝(20.4 종이 찢김 → 제품 사진 '최고예요!', 나레 끝맺음 없음)",
+ "narr_share": "나레 줄 2/22, 나레 2.4초/20.898초",
+ "notes": [
+  "8편 중 꾸밈이 가장 많은 편: 원음 줄 거의 전부 낱자 튀는 타이핑 + 줄마다 다른 색(흰·연두·하늘·분홍·초록·연노랑·살구) + 그림 6개(나비 2·연기 2·집중선·괄호).",
+  "끝을 나레로 맺지 않고 제품 사진 + 원음 '최고예요!'(1판: 나레로 끝 5/8 — 이 편은 아님).",
+  "진행자 질문 줄은 초록 글자 — 화자 구분을 색으로."
+ ],
+ "name_evidence": [
+  "제목 '대성이 10년 정착한 역대급 인생 립밤'",
+  "나레 자막 '대성이 10년째 정착중인'"
+ ],
+ "frame0": {
+  "what": "대성 얼굴 근접(곱슬머리·검정 재킷, 립밤 바르는 입) — 자막 0.23초부터",
+  "face_frac": "약 0.30(창 대비 얼굴, 눈)",
+  "text": "대성이 10년 정착한 / 역대급 인생 립밤(제목)"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈+픽셀: capseg 자막띠 30fps·cutdet 컷/전환·px 채움색·rangesheet 0.2초/1프레임 시트) 2026-10-25 (관제 263 지시서 06)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr"
+}

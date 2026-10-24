@@ -1,0 +1,877 @@
+{
+ "id": "BDAjUIBTjfY",
+ "dur": 19.783,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "장윤정이 가격",
+   "colors": [
+    {
+     "word": "장윤정이 가격",
+     "hex": "#FDFDFD"
+    }
+   ]
+  },
+  {
+   "text": "안 보고 사는 물건",
+   "colors": [
+    {
+     "word": "안 보고 사는",
+     "hex": "#A6FEF6"
+    },
+    {
+     "word": "물건",
+     "hex": "#F9F59D"
+    }
+   ],
+   "note": "끝 낱말만 연노랑(1판 8/8)"
+  }
+ ],
+ "source_label": "출처 : 장공장장윤정",
+ "layout": {
+  "window": [
+   0,
+   420,
+   1080,
+   1080
+  ],
+  "caption_band": [
+   1226,
+   1390
+  ],
+  "title_y": [
+   [
+    157,
+    258
+   ],
+   [
+    285,
+    386
+   ]
+  ],
+  "bg_hex": "#000000",
+  "source_y": [
+   1518,
+   1557
+  ],
+  "logo_y": null,
+  "watermark": null,
+  "source_hex": "#FFFFFF",
+  "credit_text": "출처 : 장공장장윤정",
+  "note": "검정 바탕 + 2줄 제목(1줄 흰·2줄 민트+끝 낱말 연노랑, 기울임) + 정사각 영상 창 y420~1500 + 창 안 자막(나레 노랑 위 y≈1226 · 원음 아래 y≈1322) + 창 아래 '출처 : <원본 채널>' 흰 32px"
+ },
+ "lines": [
+  {
+   "t0": 0.067,
+   "t1": 1.033,
+   "speaker": "원음:장윤정",
+   "text": "제가 돈을 쓰는",
+   "layer": "만템",
+   "role": "훅",
+   "enter": "pop(작게→크게 0.033~0.067, 2프레임)",
+   "enter_ms": 67,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1329,
+    1389
+   ],
+   "fill_hex": "#FBF1FA",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장윤정 얼굴·상반신, 말하는 중",
+   "fit": 6,
+   "cut_at": [
+    0.533
+   ],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 1.067,
+   "t1": 2.2,
+   "speaker": "원음:장윤정",
+   "text": "포인트들이 몇 개가 있는데",
+   "layer": "만템",
+   "role": "훅",
+   "enter": "pop(1.067~1.2 4프레임 작게→크게)",
+   "enter_ms": 133,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1320,
+    1390
+   ],
+   "fill_hex": "#F9EFF8",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장윤정 얼굴 근접, 눈 감고 말함",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.2,
+   "t1": 3.133,
+   "speaker": "나레",
+   "text": "장윤정이 비싸도",
+   "layer": "만템",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "나레(노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1226,
+    1290
+   ],
+   "fill_hex": "#F3FF1D",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "얼굴 앞 손가락 집는 시늉(조금·비싸다 손짓)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.133,
+   "t1": 4.533,
+   "speaker": "나레",
+   "text": "매일 챙겨쓰는 것이 있다는데",
+   "layer": "만템",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "나레(노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1218,
+    1291
+   ],
+   "fill_hex": "#F3FF2A",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 샷 손짓",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.533,
+   "t1": 5.033,
+   "speaker": "원음:장윤정",
+   "text": "치약에도",
+   "layer": "만템",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1321,
+    1390
+   ],
+   "fill_hex": "#F8FCCA",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "치약",
+     "hex": "#F5FF15",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장윤정 얼굴(위쪽 보며 말함)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "'치약' 두 글자만 노랑(나레 색과 같은 노랑)"
+  },
+  {
+   "t0": 5.1,
+   "t1": 5.967,
+   "speaker": "원음:장윤정",
+   "text": "돈을 진짜 많이",
+   "layer": "만템",
+   "role": "본문",
+   "enter": "typing(낱자씩 왼→오, 잔상 흐림 5.10~5.40)",
+   "enter_ms": 300,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1329,
+    1382
+   ],
+   "fill_hex": "#FDFCFE",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 얼굴 샷",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.967,
+   "t1": 6.5,
+   "speaker": "원음:장윤정",
+   "text": "쓰는 편이거든",
+   "layer": "만템",
+   "role": "본문",
+   "enter": "typing(5.97~6.17)",
+   "enter_ms": 200,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1321,
+    1382
+   ],
+   "fill_hex": "#FCFBFC",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 얼굴 샷",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 6.5,
+   "t1": 7.3,
+   "speaker": "원음:장윤정",
+   "text": "입 안에 들어가는",
+   "layer": "만템",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1304,
+    1374
+   ],
+   "fill_hex": "#F2FADB",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "손가락으로 입 가리키는 얼굴",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "자막 위아래로 천천히 출렁임(1프레임 시트 6.5~7.3 — 6.63 위·7.0 아래, 약 ±12px)",
+   "motion_caption": "float"
+  },
+  {
+   "t0": 7.3,
+   "t1": 8.167,
+   "speaker": "원음:장윤정",
+   "text": "거기 때문에",
+   "layer": "만템",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1309,
+    1378
+   ],
+   "fill_hex": "#F3FBD8",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 샷 손짓",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.167,
+   "t1": 9.633,
+   "speaker": "원음:장윤정",
+   "text": "진짜 성분 되게",
+   "layer": "만템",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1320,
+    1389
+   ],
+   "fill_hex": "#F1FEFA",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "성분",
+     "hex": "#B4FFF2",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "손가락 모으며 강조하는 얼굴",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 9.8,
+   "t1": 10.7,
+   "speaker": "원음:장윤정",
+   "text": "비싼 거 써요 저",
+   "layer": "만템",
+   "role": "고조",
+   "enter": "typing(9.8 '비싼 거' → 10.2 '써요 저', 낱말씩)",
+   "enter_ms": 400,
+   "variant": "원음(분홍)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1329,
+    1382
+   ],
+   "fill_hex": "#F891B8",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "얼굴(웃으며)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 10.7,
+   "t1": 11.767,
+   "speaker": "나레",
+   "text": "요즘 소금 양치에",
+   "layer": "만템",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "나레(노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1226,
+    1291
+   ],
+   "fill_hex": "#F3FF1C",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "장윤정이 칫솔로 양치하는 옆얼굴",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.767,
+   "t1": 12.567,
+   "speaker": "나레",
+   "text": "관심이 많다고",
+   "layer": "만템",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "나레(노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1226,
+    1284
+   ],
+   "fill_hex": "#F3FF20",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "제품 사용",
+   "scene_desc": "양치하는 옆얼굴",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 12.567,
+   "t1": 13.567,
+   "speaker": "원음:장윤정",
+   "text": "제가 쓰고 있는 건데",
+   "layer": "만템",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1321,
+    1391
+   ],
+   "fill_hex": "#FAF8F8",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "파우치에서 치약 튜브 꺼냄",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 13.633,
+   "t1": 14.8,
+   "speaker": "원음:장윤정",
+   "text": "역한 짠 맛이 아니에요",
+   "layer": "만템",
+   "role": "증거",
+   "enter": "fade(13.6 흐림→13.67 선명, 2프레임)",
+   "enter_ms": 67,
+   "variant": "원음(연분홍)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1321,
+    1389
+   ],
+   "fill_hex": "#FFE1FD",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "치약 튜브(WELEDA) 들고 말함",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 14.967,
+   "t1": 15.5,
+   "speaker": "원음:장윤정",
+   "text": "들 짜!",
+   "layer": "만템",
+   "role": "고조",
+   "enter": "typing(15.0 '들짜' + 노랑 반짝이 지팡이 꼬리 → 15.2 '들 짜!')",
+   "enter_ms": 200,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1326,
+    1385
+   ],
+   "fill_hex": "#FAFFB4",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "반짝이 지팡이(노랑 별가루 꼬리, 글자 따라 왼→오)",
+     "x": 600,
+     "y": 1330,
+     "w": 120,
+     "t_in": 14.967,
+     "t_out": 15.3,
+     "anim": "글자 쓰는 자리를 따라가며 별가루 흩뿌림 → 사라짐"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "치약 든 얼굴",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 15.5,
+   "t1": 16.367,
+   "speaker": "원음:장윤정",
+   "text": "깔끔하고",
+   "layer": "만템",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1321,
+    1391
+   ],
+   "fill_hex": "#F3E5C3",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "치약 튜브 들고 말함",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 16.4,
+   "t1": 17.733,
+   "speaker": "원음:장윤정",
+   "text": "극강이 개운함이 있다",
+   "layer": "만템",
+   "role": "증거",
+   "enter": "typing(16.4 나비 반짝이 먼저 → 16.6 '극강이 개운함' → 16.8 전체)",
+   "enter_ms": 400,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1321,
+    1390
+   ],
+   "fill_hex": "#FBFAFC",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "보라·노랑 나비 반짝이(작은 그림)",
+     "x": 500,
+     "y": 1325,
+     "w": 60,
+     "t_in": 16.4,
+     "t_out": 16.9,
+     "anim": "나비가 날며 글자 앞을 지나감(글자 등장 길잡이)"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "치약 들고 말함",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "화면 글 '극강이'(말은 '극강의')"
+  },
+  {
+   "t0": 17.733,
+   "t1": 18.567,
+   "speaker": "원음:장윤정",
+   "text": "입이 마르지 않아",
+   "layer": "만템",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "원음(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1321,
+    1390
+   ],
+   "fill_hex": "#C7FFEF",
+   "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "치약 든 얼굴, 입가 가리킴",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+   },
+   "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  }
+ ],
+ "no_caption": [
+  [
+   18.567,
+   19.7,
+   "장윤정 크게 웃는 입 근접(자막 없음) — 끝 원음 반응"
+  ]
+ ],
+ "beats": "원음 훅(0.07~2.2 '제가 돈을 쓰는 포인트들이 몇 개가 있는데', 팝 등장) → 나레 다리 2줄(2.2~4.53 '장윤정이 비싸도 / 매일 챙겨쓰는 것이 있다는데') → 원음 본문(4.53~10.7 치약에 돈 쓴다·성분, 강조 낱말·타이핑·분홍 줄) → 나레 다리 2줄(10.7~12.57 '요즘 소금 양치에 / 관심이 많다고' + 양치 장면) → 원음 공개·증거(12.57~18.57 제품 꺼냄·'들 짜!'·'극강이 개운함', 반짝이·나비 그림) → 자막 없는 웃음(18.57~19.7, CTA 없음)",
+ "narr_share": "나레 줄 4/19, 나레 4.2초/19.783초",
+ "notes": [
+  "1판(calcopy.json) '등장 효과 없음'은 나레 노랑 줄만 맞다 — 원음 흰 줄은 팝(2~4프레임)·타이핑(200~400ms)·페이드가 섞여 있다(10-25 1프레임 시트 f_BDAj_4.9·6.5).",
+  "원음 줄 색이 줄마다 바뀐다: 흰 기본 · 분홍 #F891B8('비싼 거 써요 저') · 연분홍 #FFE1FD('역한 짠 맛이 아니에요'), 강조 낱말 노랑('치약')·민트('성분').",
+  "나레는 2줄씩 두 번(다리) — 원음 비중 크다(나레 4줄/19줄).",
+  "효과음: 귀로 못 들음 — sfx 칸은 sfx_events 신호(받아쓰기 낱말 밖 고립 솟음)만."
+ ],
+ "name_evidence": [
+  "제목 '장윤정이 가격 안 보고 사는 물건'",
+  "출처 줄 '출처 : 장공장장윤정'",
+  "나레 자막 '장윤정이 비싸도'"
+ ],
+ "frame0": {
+  "what": "장윤정 상반신(녹색 야상, 말하는 중) — 0.067초부터 원음 자막 '제가 돈을 쓰는'",
+  "face_frac": "약 0.12(창 1080×1080 대비 얼굴, 눈)",
+  "text": "장윤정이 가격 / 안 보고 사는 물건(제목)"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈+픽셀: capseg 자막띠 30fps·cutdet 컷/전환·px 채움색·rangesheet 0.2초/1프레임 시트) 2026-10-25 (관제 263 지시서 06)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr"
+}
