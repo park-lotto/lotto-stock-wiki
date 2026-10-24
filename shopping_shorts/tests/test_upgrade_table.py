@@ -156,3 +156,34 @@ def test_speech_is_tts_line_level(tmp_path):
     assert (res["mid"]["better"], res["mid"]["worse"]) == (False, False), res["mid"]          # cv 0.056: 목표 0.05 넘고 중앙 0.08 아래 = 비슷함
     assert (res["uneven"]["better"], res["uneven"]["worse"]) == (False, True), res["uneven"]  # cv 0.15 > 중앙 0.08
     assert res["even"]["ours"]["src"] == "render_info.line_cps"
+
+
+def test_pending_pack_not_worse_but_not_l3():
+    """표준 §11-5 ㉜: 외부 팩 대기 축은 worse_n 에서 빼고 pending 으로 — 그래도 l3_ok 아님(상태 'L3(팩 대기 n)')."""
+    T, F = True, False
+    pp = {"req": "잇템로그판_v2#2", "date": "2026-10-25", "src": "팩요청.md"}
+    r = U.l3_verdict({"a": {"better": T, "worse": F}, "b": {"better": F, "worse": T, "pending_pack": pp}})
+    assert (r["l3_ok"], r["state"], r["worse_n"], r["pending_n"]) == (False, "L3(팩 대기 1)", 0, 1), r
+    assert r["pending_pack"][0]["axis"] == "b"
+    r2 = U.l3_verdict({"a": {"better": T, "worse": F}, "b": {"better": F, "worse": T}})               # 요청 없음 = 나빠짐 그대로
+    assert (r2["l3_ok"], r2["state"], r2["worse_n"], r2["pending_n"]) == (False, "×", 1, 0)
+    r3 = U.l3_verdict({"a": {"better": T, "worse": F}, "b": {"better": F, "worse": T, "pending_pack": pp}, "c": {"better": F, "worse": T}})
+    assert (r3["state"], r3["worse_axes"], r3["pending_n"]) == ("×", ["c"], 1)                      # 우리 원인 나빠짐이 남으면 ×
+
+
+class _PCtx:
+    def __init__(self, st, slug):
+        self.st, self.slug = st, slug
+
+
+def test_pending_pack_evidence_only_when_requested():
+    """근거 = 판 <칸>._pending.pack 또는 channel/<slug>/_kal/팩요청.md 의 그 축 요청 — 실제 잇템로그 팩요청.md(v2#2 자막 크기 변형)로."""
+    from tools.calcopy.hybrid import styles as ST
+    C = _PCtx(ST.load("잇템로그판_v2"), "ititemlog")
+    cap = U.pending_pack(C, "cap_look")
+    assert cap and cap["req"] == "잇템로그판_v2#2" and cap["date"], cap
+    for ax in ("sfx", "cap_emph", "sticker", "scene_fit"):                                       # 요청 없음·우리 원인 축 = None(나빠짐 그대로)
+        assert U.pending_pack(C, ax) is None, ax
+    C2 = _PCtx({"name": "_x", "caption": {"_pending": {"pack": "자막 팩 없음 → 관제 235 요청"}}}, "_fixture_none")
+    assert U.pending_pack(C2, "cap_look")["src"] == "판 caption._pending.pack"
+    assert U.pending_pack(_PCtx({"name": "_x"}, "_fixture_none"), "cap_look") is None

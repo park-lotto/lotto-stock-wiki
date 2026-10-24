@@ -25,8 +25,10 @@ import argparse
 import json
 import math
 import statistics
+import re
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -499,18 +501,59 @@ def measure_axis(C: Ctx, axis: str) -> dict:
     return {"scene_fit": m_scene_fit, "cut_rhythm": m_cut_rhythm, "thumb": m_thumb, "bgm": m_bgm, "speech": m_speech, "cap_look": m_cap_look}[axis](C)
 
 
+# 외부 주인 대기(표준 §11-5 ㉜) — 그 축의 결함을 고칠 손이 팩 주인(자막팩·모션팩·효과음팩)에게 있고 요청이 걸려 있을 때만.
+# 근거 = 판 <칸>._pending.pack(칸 = 그 축의 판 칸) 또는 channel/<slug>/_kal/팩요청.md 의 '### <판>#n' 제목에 그 축 낱말. 우리 원인 축(cap_emph·sticker 등 판·placement 칸)은 목록에 없다 = 그대로 worse.
+PACK_AXIS = {"cap_look": {"cells": ("caption",), "kw": ("자막 크기", "size:", "line_pitch", "줄 간격")},
+             "transition": {"cells": ("cuts",), "kw": ("전환",)},
+             "sfx": {"cells": ("sfx_files",), "kw": ("효과음팩", "효과음 팩")}}
+PACK_REQ_FILE = "팩요청.md"
+
+
+def _file_date(p: Path) -> str:
+    r = subprocess.run(["git", "log", "-1", "--format=%cs", "--", str(p)], cwd=str(ROOT), capture_output=True, text=True, encoding="utf-8", errors="replace")
+    d = (r.stdout or "").strip()
+    return d or time.strftime("%Y-%m-%d", time.localtime(p.stat().st_mtime))
+
+
+def pending_pack(C: "Ctx", axis: str) -> dict | None:
+    """(판단 주인: 외부 팩 대기 근거) 그 축 요청이 있으면 {req, title, date, src}, 없으면 None(= 나빠짐 그대로)."""
+    A = PACK_AXIS.get(axis)
+    if not A:
+        return None
+    for cell in A["cells"]:
+        pk = (((C.st.get(cell) or {}).get("_pending") or {}).get("pack")) if isinstance(C.st.get(cell), dict) else None
+        if pk:
+            return {"req": f"{C.st.get('name')}:{cell}._pending.pack", "title": str(pk)[:160], "date": None, "src": f"판 {cell}._pending.pack"}
+    p = ROOT / "channel" / (C.slug or "_") / "_kal" / PACK_REQ_FILE
+    if not p.exists():
+        return None
+    txt = p.read_text(encoding="utf-8")
+    for nm in [x for x in (C.st.get("name"), C.st.get("base")) if x]:
+        m = re.search(rf"<!-- 판:{re.escape(nm)} -->(.*?)<!-- /판:{re.escape(nm)} -->", txt, re.S)
+        for h in re.findall(r"^### (\S+#\d+) (.+)$", m.group(1) if m else "", re.M):
+            if any(k in h[1] for k in A["kw"]):
+                return {"req": h[0], "title": h[1][:160], "date": _file_date(p), "src": str(p.relative_to(ROOT)).replace("\\", "/")}
+    return None
+
+
 def l3_verdict(axes: dict) -> dict:
-    """(판단 주인 — L3 '벤치보다 낫다', 표준 §11-2 ⑱) 측정된 축(better 가 True/False) 중 better_n ≥ ceil(측정/2) ∧ worse_n = 0. human·미측정은 따로 센다."""
+    """(판단 주인 — L3 '벤치보다 낫다', 표준 §11-2 ⑱ · §11-5 ㉜) 측정된 축(better 가 True/False) 중 better_n ≥ ceil(측정/2) ∧ worse_n = 0.
+    나빠진 축에 외부 팩 대기(m['pending_pack'])가 걸려 있으면 worse_n 에서 빼고 pending 으로 센다 — 그래도 l3_ok 는 아니다(상태 'L3(팩 대기 n)').
+    human·미측정은 따로 센다."""
     meas = {a: m for a, m in axes.items() if m.get("better") in (True, False)}
     better = sorted(a for a, m in meas.items() if m["better"] is True)
-    worse = sorted(a for a, m in meas.items() if m.get("worse") is True)
+    bad = sorted(a for a, m in meas.items() if m.get("worse") is True)
+    pending = {a: meas[a]["pending_pack"] for a in bad if meas[a].get("pending_pack")}
+    worse = [a for a in bad if a not in pending]
     need = math.ceil(len(meas) / 2) if meas else 1
-    ok = bool(meas) and len(better) >= need and not worse
-    return {"l3_ok": ok, "better_n": len(better), "worse_n": len(worse), "measured_n": len(meas), "need_better": need,
-            "better_axes": better, "worse_axes": worse,
+    core = bool(meas) and len(better) >= need and not worse
+    ok = core and not pending
+    state = "L3" if ok else (f"L3(팩 대기 {len(pending)})" if core else "×")
+    return {"l3_ok": ok, "state": state, "better_n": len(better), "worse_n": len(worse), "pending_n": len(pending), "measured_n": len(meas), "need_better": need,
+            "better_axes": better, "worse_axes": worse, "pending_pack": [{"axis": a, **v} for a, v in pending.items()],
             "human_axes": sorted(a for a, m in axes.items() if m.get("better") == "human"),
             "unmeasured_axes": sorted(a for a, m in axes.items() if m.get("better") is None),
-            "rule": "better_n ≥ ceil(측정 축/2) ∧ worse_n = 0 (비교 = 벤치 상위 편 좋은 쪽 사분위, 표준 §11-2 ⑱·§12-2)"}
+            "rule": "better_n ≥ ceil(측정 축/2) ∧ worse_n = 0 ∧ 팩 대기 0 (비교 = 벤치 상위 편 좋은 쪽 사분위, 표준 §11-2 ⑱·§12-2 · 팩 대기 = §11-5 ㉜)"}
 
 
 # ---------------------------------------------------------------- 판정 한 곳
@@ -548,6 +591,12 @@ def measure(style, doc, work, base_doc=None, base_work=None, extra_axes: tuple =
         out.append(row)
     want = list(dict.fromkeys((list(MEASURABLE) if all_axes else []) + [it["axis"] for it in items] + list(extra_axes)))
     axes = {a: get(a) for a in want}
+    for a, m in axes.items():
+        if m.get("worse") is True and m.get("better") is False:
+            pp = pending_pack(C, a)
+            if pp:
+                m["pending_pack"] = pp
+                m["why"] += f" · ★외부 팩 대기 {pp['req']}({pp['src']}{' ' + pp['date'] if pp.get('date') else ''}) — worse_n 에서 빼고 따로 셈(㉜)"
     L3 = l3_verdict(axes)
     human_n = sum(r["better"] == "human" for r in out)
     res = {"style": name, "base": st.get("base"), "table": TABLE_VERSION, "upgrades_from": src, "doc": str(doc), "work": str(work),
@@ -558,7 +607,8 @@ def measure(style, doc, work, base_doc=None, base_work=None, extra_axes: tuple =
            "items_better_n": sum(r["better"] is True for r in out), "items_worse_n": sum(r.get("worse") is True for r in out),
            "evidence_ok_n": sum(r["evidence_ok"] for r in out), "l3": L3,
            "gates": {"upgrade": {"better": f"{L3['better_n']}/{L3['measured_n']}", "better_n": L3["better_n"], "worse_n": L3["worse_n"],
-                                 "measured_n": L3["measured_n"], "l3_ok": L3["l3_ok"], "ok": L3["l3_ok"] and bool(out),
+                                 "measured_n": L3["measured_n"], "l3_ok": L3["l3_ok"], "ok": L3["l3_ok"] and bool(out), "state": L3["state"],
+                                 "pending_pack": L3["pending_pack"], "need_better": L3["need_better"],
                                  "human": human_n, "worse_axes": L3["worse_axes"], "total": len(out)}}}
     if write and Path(doc).exists():
         (Path(doc) / "업그레이드_측정.json").write_text(json.dumps(res, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
@@ -573,7 +623,7 @@ def upgrade_table(st, doc, work) -> dict:
 def table_md(r: dict) -> str:
     mark = lambda b: {True: "○", False: "×", "human": "사람", None: "미측정"}.get(b, str(b))   # noqa: E731
     L3 = r["l3"]
-    L = [f"# 업그레이드 측정 {r['style']}(base {r['base']}) — L3 {'○' if r['l3_ok'] else '×'} · 나아짐 {L3['better_n']}/{L3['measured_n']}(필요 ≥{L3['need_better']}) · 나빠짐 {L3['worse_n']} {L3['worse_axes']} · 사람 {r['human_n']} · 미측정 축 {L3['unmeasured_axes']}",
+    L = [f"# 업그레이드 측정 {r['style']}(base {r['base']}) — {L3['state']} · 나아짐 {L3['better_n']}/{L3['measured_n']}(필요 ≥{L3['need_better']}) · 나빠짐 {L3['worse_n']} {L3['worse_axes']} · 팩 대기 {L3['pending_n']} {[x['axis'] + '=' + x['req'] for x in L3['pending_pack']]} · 사람 {r['human_n']} · 미측정 축 {L3['unmeasured_axes']}",
          f"(upgrades 출처 {r['upgrades_from']} {r['total']}건 · 근거 기록 {r['evidence_ok_n']}/{r['total']} · 벤치 상위 편 {r['bench_top_ids']})", "",
          "## 축 표(L3 판정 대상 — 측정 가능한 축 전부)", "| 축 | 벤치 | 우리 | 나아짐 | 나빠짐 | 왜 |", "|---|---|---|---|---|---|"]
     for a, x in r["axes"].items():
