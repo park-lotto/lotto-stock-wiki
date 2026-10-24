@@ -12,7 +12,7 @@
    "emph": [],
    "sticker": "",
    "stickers": [],
-   "enter": "cut"
+   "enter": "fade"
   },
   {
    "line": "N1",
@@ -52,7 +52,7 @@
    "emph": [],
    "sticker": "",
    "stickers": [],
-   "enter": "fade"
+   "enter": "cut"
   },
   {
    "line": "N2",
@@ -80,7 +80,7 @@
    "emph": [],
    "sticker": "",
    "stickers": [],
-   "enter": "cut"
+   "enter": "fade"
   },
   {
    "line": "N3",
@@ -148,7 +148,7 @@
    "emph": [],
    "sticker": "",
    "stickers": [],
-   "enter": "fade"
+   "enter": "cut"
   },
   {
    "line": "O5",
@@ -160,7 +160,7 @@
    "emph": [],
    "sticker": "",
    "stickers": [],
-   "enter": "cut"
+   "enter": "fade"
   }
  ],
  "sfx": [],
@@ -170,7 +170,7 @@
   "본보기 벤치 편 = BpUOIUwkoG4",
   "변형 orig_red → O1「너무 고급스럽잖아」",
   "효과음 0발(본보기 0) []",
-  "등장 {'cut': 4, 'fade': 7, 'pop': 1} · 강조 4/12"
+  "등장 {'fade': 8, 'cut': 3, 'pop': 1} · 강조 4/12"
  ],
  "check": {
   "ok": true,
@@ -208,8 +208,8 @@
      "pop": 0.2
     },
     "ours": {
-     "cut": 0.5,
-     "fade": 0.33,
+     "fade": 0.5,
+     "cut": 0.33,
      "pop": 0.17
     },
     "bench_emph": 0.0,

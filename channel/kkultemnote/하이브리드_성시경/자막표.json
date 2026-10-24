@@ -1,304 +1,317 @@
 {
- "_note": "자막 입히기 직전 — 이 표대로 자막팩(kkultemnote 보강안)으로 입힌다. 초는 final_nocap.mp4 기준.",
- "video": "C:\\숏템_칼카피\\kkultemnote\\hybrid_ssk2\\final_nocap.mp4",
- "pack": "kkultemnote(보강안 channel/kkultemnote/자막팩_보강안.json)",
- "style_keys": {
-  "orig": "speakers.orig(꾸불림 90 흰·검정 테, 컷인)",
-  "orig_pop": "variants.orig_pop(popOvershoot 380ms)",
-  "orig_red": "variants.orig_red(빨강 #F51814, 컷인)",
-  "narr": "speakers.narr(굵은 고딕 83 흰 + emph 노랑 #FDF60E, flashIn 66ms)"
- },
- "stickers": [
-  {
-   "kind": "comment_card",
-   "in_video": true,
-   "t0": 12.201,
-   "t1": 17.452,
-   "text": "표고에 어묵에 바지락살 들어간 순간 이미 다른 요리, 다른 레시피임",
-   "likes": 286,
-   "note": "렌더에 이미 들어 있음(틀 층) — 자막 입힐 때 다시 넣지 말 것"
-  }
- ],
- "timeline": {
-  "rows": [
-   {
-    "id": "HOOK",
-    "kind": "orig",
-    "t0": 0.0,
-    "t1": 0.81
-   },
-   {
-    "id": "N1",
-    "kind": "tts",
-    "t0": 0.85,
-    "t1": 3.055
-   },
-   {
-    "id": "O1",
-    "kind": "orig",
-    "t0": 3.115,
-    "t1": 4.585
-   },
-   {
-    "id": "N2",
-    "kind": "tts",
-    "t0": 4.625,
-    "t1": 6.07
-   },
-   {
-    "id": "O2",
-    "kind": "orig",
-    "t0": 6.13,
-    "t1": 9.37
-   },
-   {
-    "id": "N3",
-    "kind": "tts",
-    "t0": 9.41,
-    "t1": 11.051
-   },
-   {
-    "id": "O3",
-    "kind": "orig",
-    "t0": 11.111,
-    "t1": 12.161
-   },
-   {
-    "id": "N4",
-    "kind": "tts",
-    "t0": 12.201,
-    "t1": 13.932
-   },
-   {
-    "id": "O4",
-    "kind": "orig",
-    "t0": 13.992,
-    "t1": 15.642
-   },
-   {
-    "id": "O5",
-    "kind": "orig",
-    "t0": 15.682,
-    "t1": 17.152
-   }
-  ],
-  "end": 17.452
- },
- "narr_align": {
-  "N1": [
-   0.147,
-   2.252
-  ],
-  "N2": [
-   2.569,
-   3.914
-  ],
-  "N3": [
-   4.068,
-   5.609
-  ],
-  "N4": [
-   5.609,
-   7.284
-  ]
- },
+ "_note": "배치 결과 — placement.place(판 설정 꿀템노트판) · 시각은 final.mp4 기준 초",
+ "pack": "kkultemnote",
  "rows": [
   {
    "line": "HOOK",
-   "who": "원음",
    "t0": 0.0,
    "t1": 0.33,
    "text": "그게 뭐가",
+   "speaker": "orig",
+   "variant": "",
    "emph": [],
-   "style": "orig"
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
   },
   {
    "line": "HOOK",
-   "who": "원음",
    "t0": 0.33,
-   "t1": 0.81,
+   "t1": 0.85,
    "text": "그게 뭐가 맛있겠어?",
+   "speaker": "orig",
+   "variant": "",
    "emph": [],
-   "style": "orig"
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "N1",
-   "who": "나레",
    "t0": 0.85,
-   "t1": 1.92,
+   "t1": 1.672,
    "text": "성시경도 따라 한",
+   "speaker": "narr",
+   "variant": "",
    "emph": [],
-   "style": "narr"
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
   },
   {
    "line": "N1",
-   "who": "나레",
-   "t0": 1.92,
-   "t1": 3.06,
+   "t0": 1.672,
+   "t1": 2.574,
    "text": "1등 레시피라는데요?",
+   "speaker": "narr",
+   "variant": "",
    "emph": [
-    "1등 레시피"
+    {
+     "word": "1등 레시피"
+    }
    ],
-   "style": "narr"
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
   },
   {
    "line": "O1",
-   "who": "원음",
-   "t0": 3.12,
-   "t1": 3.87,
+   "t0": 2.574,
+   "t1": 3.324,
    "text": "근데 1등했다는 거",
+   "speaker": "orig",
+   "variant": "",
    "emph": [],
-   "style": "orig"
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "O1",
-   "who": "원음",
-   "t0": 3.87,
-   "t1": 4.58,
+   "t0": 3.324,
+   "t1": 4.084,
    "text": "맛있을 거 아니에요",
+   "speaker": "orig",
+   "variant": "orig_red",
    "emph": [],
-   "style": "orig"
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
   },
   {
    "line": "N2",
-   "who": "나레",
-   "t0": 4.62,
-   "t1": 6.08,
+   "t0": 4.084,
+   "t1": 5.181,
    "text": "대체 어떻게 끓이나요?",
+   "speaker": "narr",
+   "variant": "",
    "emph": [
-    "어떻게"
+    {
+     "word": "어떻게"
+    }
    ],
-   "style": "narr"
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
   },
   {
    "line": "O2",
-   "who": "원음",
-   "t0": 6.13,
-   "t1": 6.85,
-   "text": "면 빼서",
+   "t0": 5.181,
+   "t1": 6.681,
+   "text": "면 빼서 면을 참기름",
+   "speaker": "orig",
+   "variant": "",
    "emph": [],
-   "style": "orig_pop"
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
   },
   {
    "line": "O2",
-   "who": "원음",
-   "t0": 6.85,
-   "t1": 7.63,
-   "text": "면을 참기름",
-   "emph": [],
-   "style": "orig"
-  },
-  {
-   "line": "O2",
-   "who": "원음",
-   "t0": 7.63,
-   "t1": 8.71,
+   "t0": 6.681,
+   "t1": 7.761,
    "text": "다진마늘에다가",
+   "speaker": "orig",
+   "variant": "",
    "emph": [],
-   "style": "orig"
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "O2",
-   "who": "원음",
-   "t0": 8.71,
-   "t1": 9.37,
+   "t0": 7.761,
+   "t1": 8.461,
    "text": "비벼요",
+   "speaker": "orig",
+   "variant": "",
    "emph": [],
-   "style": "orig"
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "N3",
-   "who": "나레",
-   "t0": 9.41,
-   "t1": 10.45,
-   "text": "계란은 국물에",
+   "t0": 8.461,
+   "t1": 9.55,
+   "text": "계란은 국물에 푼다네요?",
+   "speaker": "narr",
+   "variant": "cut",
    "emph": [
-    "계란"
+    {
+     "word": "계란"
+    }
    ],
-   "style": "narr"
-  },
-  {
-   "line": "N3",
-   "who": "나레",
-   "t0": 10.45,
-   "t1": 11.05,
-   "text": "푼다네요?",
-   "emph": [],
-   "style": "narr"
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "O3",
-   "who": "원음",
-   "t0": 11.11,
-   "t1": 11.56,
-   "text": "아이",
+   "t0": 9.55,
+   "t1": 10.64,
+   "text": "아이 맛있겠는데",
+   "speaker": "orig",
+   "variant": "orig_pop",
    "emph": [],
-   "style": "orig_red"
-  },
-  {
-   "line": "O3",
-   "who": "원음",
-   "t0": 11.56,
-   "t1": 12.16,
-   "text": "맛있겠는데",
-   "emph": [],
-   "style": "orig_red"
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
   },
   {
    "line": "N4",
-   "who": "나레",
-   "t0": 12.2,
-   "t1": 13.08,
+   "t0": 10.64,
+   "t1": 11.336,
    "text": "근데 1등감은",
+   "speaker": "narr",
+   "variant": "",
    "emph": [
-    "1등감"
+    {
+     "word": "1등감"
+    }
    ],
-   "style": "narr"
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
   },
   {
    "line": "N4",
-   "who": "나레",
-   "t0": 13.08,
-   "t1": 13.93,
+   "t0": 11.336,
+   "t1": 11.957,
    "text": "아니라는데요?",
+   "speaker": "narr",
+   "variant": "",
    "emph": [],
-   "style": "narr"
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
   },
   {
    "line": "O4",
-   "who": "원음",
-   "t0": 13.99,
-   "t1": 14.74,
+   "t0": 11.957,
+   "t1": 12.707,
    "text": "1등 레시피는",
+   "speaker": "orig",
+   "variant": "",
    "emph": [],
-   "style": "orig"
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
   },
   {
    "line": "O4",
-   "who": "원음",
-   "t0": 14.74,
-   "t1": 15.64,
+   "t0": 12.707,
+   "t1": 13.647,
    "text": "저는 아닌 것 같아요",
+   "speaker": "orig",
+   "variant": "",
    "emph": [],
-   "style": "orig"
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
   },
   {
    "line": "O5",
-   "who": "원음",
-   "t0": 15.68,
-   "t1": 16.31,
+   "t0": 13.647,
+   "t1": 14.277,
    "text": "한 번쯤 해보는 건",
+   "speaker": "orig",
+   "variant": "",
    "emph": [],
-   "style": "orig"
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
   },
   {
    "line": "O5",
-   "who": "원음",
-   "t0": 16.31,
-   "t1": 17.15,
+   "t0": 14.277,
+   "t1": 15.433,
    "text": "해보는 건 괜찮다^^",
+   "speaker": "orig",
+   "variant": "",
    "emph": [],
-   "style": "orig"
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
   }
- ]
+ ],
+ "sfx": [],
+ "flashes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = BpUOIUwkoG4",
+  "변형 orig_red → O1「맛있을 거 아니에요」",
+  "효과음 0발(본보기 0) []",
+  "효과 append_text 0회(편당 0~2)",
+  "등장 {'fade': 10, 'cut': 7, 'pop': 1} · 강조 4/18"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "BpUOIUwkoG4",
+  "worst_slot_diff": 0.1,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "fade": 0.75,
+     "cut": 0.25
+    },
+    "ours": {
+     "fade": 0.75,
+     "cut": 0.25
+    },
+    "bench_emph": 0.75,
+    "ours_emph": 0.75,
+    "n": 4
+   },
+   "narr.rest": {
+    "bench": {
+     "fade": 1.0
+    },
+    "ours": {
+     "fade": 1.0
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 0.5,
+    "n": 2
+   },
+   "orig.first": {
+    "bench": {
+     "fade": 0.4,
+     "cut": 0.4,
+     "pop": 0.2
+    },
+    "ours": {
+     "fade": 0.5,
+     "cut": 0.33,
+     "pop": 0.17
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 6
+   },
+   "orig.rest": {
+    "bench": {
+     "cut": 0.67,
+     "fade": 0.33
+    },
+    "ours": {
+     "cut": 0.67,
+     "fade": 0.33
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 6
+   },
+   "stickers": {
+    "bench": {
+     "spark_lines": 2
+    },
+    "ours": {}
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0
+   }
+  }
+ }
 }
