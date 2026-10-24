@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# _deprecated_2026-10-25 → tools/calcopy/hybrid/styles/맛템썰템판.json (관제 263 지시서 07 · 표준 §3-1: 새 편은 공용 렌더러로. 옛 영상 재현용 읽기 전용 참고물 — 규칙은 판 칸·_pending.upgrade_from_hand_scripts 로 옮김)
 """yummyknow 3편 외관 교체 — 원본 채널 틀 흔적 제거(채널명 맛템썰템·미식 삭제·팔레트·글꼴·카드 모양·상단·자막 칸·조회수 줄 전부 새 설계).
 대본·나레·컷·자막 글은 그대로, 영상 창(video) 자리도 그대로 — frame 만 새 파일로 (관제 097, 10-17)."""
 import json

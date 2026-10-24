@@ -136,10 +136,11 @@ def convert(fj: dict, kind: str, frame_id: str | None = None) -> dict:
                 ic = _search_icon(im)
                 if ic:
                     hb["icons"].append(ic)
-            for t in [l for l in L if l["kind"] == "text" and l.get("role") == "brand"]:
-                d = _text(t, unresolved)
+            for t in [l for l in L if l["kind"] == "text" and l.get("role") in ("brand", "label") and _inside({**l, "w": 0, "h": 0}, hb["box"])]:
+                d = _text(t, unresolved)          # 머리띠 안 글 = 채널 이름 자리(brand) — 대본 post.brand 가 있으면 그것
                 d.update({"kind": "text", "from": "brand"})
                 hb["icons"].append(d)
+                used.add(id(t))
             P["head_bar"] = hb
         body = next((b for b in bands if b.get("fade")), None)
         if body:
@@ -156,17 +157,31 @@ def convert(fj: dict, kind: str, frame_id: str | None = None) -> dict:
                 bb["text"] = _text(bt, unresolved)
                 used.add(id(bt))
             P["body_box"] = bb
-        labels = [t for t in L if t["kind"] == "text" and t.get("role") == "label" and id(t) not in used]
+        labels = [t for t in L if t["kind"] == "text" and t.get("role") in ("label", "brand") and id(t) not in used]
         small_lab = [t for t in labels if t["size"] < 45]
         if small_lab:
             P["author_line"] = _text(small_lab[0], unresolved)
+            used.add(id(small_lab[0]))
         big = [t for t in labels if t["size"] >= 45 and head and t["y"] >= head["y"] + head["h"]]
-        if big and not out["title"]:      # 게시글 제목 줄(머리띠 밑 굵은 글 1줄) = 대본 title_lines 첫 줄 자리
-            out["title"] = _title_lines({**big[0], "lines": 1}, unresolved)
+        if big and not out["title"]:      # 게시글 제목 줄(머리띠 밑 굵은 글 중 가장 아래 줄 = 글 제목) = 대본 title_lines 첫 줄 자리
+            tt = max(big, key=lambda t: t["y"])
+            out["title"] = _title_lines({**tt, "lines": 1}, unresolved)
+            if tt.get("align") == "left":
+                out["title"][0]["_align_left_x"] = int(tt["x"])   # 렌더러 제목은 가운데 정렬만 — 왼쪽 정렬 칸 없음(02 쪽지)
+            used.add(id(tt))
         rules = [b for b in bands if id(b) not in used]
         if rules:
             P["rules"] = [{"box": _box(b), "color": hexc(b["rgb"])} for b in rules]
+            used.update(id(b) for b in rules)
         out["post"] = P
+    # 옮기지 못한 층 — 조용히 버리지 않는다(판 담당이 칸을 고르거나 렌더러 결손으로 적는다)
+    mapped_kinds = {"bg", "video"}
+    left = [l for l in L if l["kind"] not in mapped_kinds and id(l) not in (used if kind == "post" else set())
+            and not (l["kind"] == "text" and l.get("role") in ("title", "caption"))]
+    if kind == "post":
+        left = [l for l in left if not (l["kind"] == "image" and any(ic.get("kind") == "search" for ic in (P.get("head_bar") or {}).get("icons", [])) and _search_icon(l))]
+    if left:
+        out["_unmapped"] = [{k: (v[:40] if isinstance(v, str) else v) for k, v in l.items() if v not in (None, False, [], 0) or k in ("x", "y")} for l in left]
     if unresolved:
         out["_unresolved_fonts"] = sorted(set(unresolved))
     return out

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# _deprecated_2026-10-25 → tools/calcopy/hybrid/styles/맛템썰템판.json (관제 263 지시서 07 · 표준 §3-1: 새 편은 공용 렌더러로. 옛 영상 재현용 읽기 전용 참고물 — 규칙은 판 칸·_pending.upgrade_from_hand_scripts 로 옮김)
 """맛템썰템 v2 — 그림 칸을 큰 창 전체(가로 1080·창 높이 cover)로 감싸 재렌더(TTS 0). 옛 엔진 복사본(scratch eng_*)의 tools 로 실행.
    cwd=엔진 복사본 루트:  PYTHONPATH=<repo> py <이 파일> <bread|ramyun|dubai>"""
 import inspect, json, runpy, sys
