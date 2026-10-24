@@ -1,0 +1,751 @@
+{
+ "id": "R6Beze-n77Q",
+ "dur": 20.354,
+ "fps": 59.94,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   0,
+   1080,
+   1920
+  ],
+  "caption_band": [
+   531,
+   724
+  ],
+  "title_y": null,
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 0.8,
+   "speaker": null,
+   "text": "숙박하면",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    536,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "숙박하면 섬까지 우리끼리 누릴 수"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 0.8,
+   "t1": 1.3,
+   "speaker": null,
+   "text": "섬까지",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    536,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    1.24
+   ],
+   "_asr": [
+    "숙박하면 섬까지 우리끼리 누릴 수"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 1.8,
+   "t1": 2.3,
+   "speaker": null,
+   "text": "누릴수있는",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    528,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    2.27
+   ],
+   "_asr": [
+    "숙박하면 섬까지 우리끼리 누릴 수",
+    "있는 모션뷰 숙소가 있습니다."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 2.3,
+   "t1": 3.0,
+   "speaker": null,
+   "text": "오션뷰 숙소가",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    2.27
+   ],
+   "_asr": [
+    "있는 모션뷰 숙소가 있습니다."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 3.0,
+   "t1": 3.5,
+   "speaker": null,
+   "text": "있습니다.",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    3.45
+   ],
+   "_asr": [
+    "있는 모션뷰 숙소가 있습니다.",
+    "[음악] 육지와 연결된 섬인데 쑥박만"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 3.5,
+   "t1": 4.7,
+   "speaker": null,
+   "text": "연결된 섬인데",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    3.45,
+    4.71
+   ],
+   "_asr": [
+    "[음악] 육지와 연결된 섬인데 쑥박만"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 4.7,
+   "t1": 5.2,
+   "speaker": null,
+   "text": "숙박객만",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    491,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    4.71
+   ],
+   "_asr": [
+    "[음악] 육지와 연결된 섬인데 쑥박만"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 5.2,
+   "t1": 6.2,
+   "speaker": null,
+   "text": "출입할 수있어서",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    491,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    5.92
+   ],
+   "_asr": [
+    "[음악] 육지와 연결된 섬인데 쑥박만",
+    "출입할 수 있어서 정말 한적하고요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 6.2,
+   "t1": 6.7,
+   "speaker": null,
+   "text": "정말 한적하고요.",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    497,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "출입할 수 있어서 정말 한적하고요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 6.7,
+   "t1": 7.9,
+   "speaker": null,
+   "text": "객실에서는",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    7.11
+   ],
+   "_asr": [
+    "출입할 수 있어서 정말 한적하고요.",
+    "객실에서는 소나무 사이로 바다가"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 7.9,
+   "t1": 8.5,
+   "speaker": null,
+   "text": "소나무사이로",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    529,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    8.54
+   ],
+   "_asr": [
+    "객실에서는 소나무 사이로 바다가"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 8.5,
+   "t1": 9.4,
+   "speaker": null,
+   "text": "바다가펼쳐지고",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    491,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    8.54
+   ],
+   "_asr": [
+    "객실에서는 소나무 사이로 바다가",
+    "펼쳐지고 여유롭게 수영도 즐길 수"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 9.4,
+   "t1": 9.8,
+   "speaker": null,
+   "text": "여유롭게",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    491,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    9.76
+   ],
+   "_asr": [
+    "펼쳐지고 여유롭게 수영도 즐길 수"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 9.8,
+   "t1": 11.0,
+   "speaker": null,
+   "text": "즐길수있어요.",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    506,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    9.76,
+    11.03
+   ],
+   "_asr": [
+    "펼쳐지고 여유롭게 수영도 즐길 수",
+    "있어요. 바다를 바라보는 야외"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 11.0,
+   "t1": 11.8,
+   "speaker": null,
+   "text": "바다를 바라보는",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    523,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    11.03
+   ],
+   "_asr": [
+    "있어요. 바다를 바라보는 야외"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 11.8,
+   "t1": 12.9,
+   "speaker": null,
+   "text": "야외자쿠지에서",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    523,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    12.88
+   ],
+   "_asr": [
+    "있어요. 바다를 바라보는 야외",
+    "자쿠지에서욕하기도 좋고 섬 주변을"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 12.9,
+   "t1": 13.8,
+   "speaker": null,
+   "text": "반신욕하기도 좋고,",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    12.88
+   ],
+   "_asr": [
+    "자쿠지에서욕하기도 좋고 섬 주변을"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 13.8,
+   "t1": 14.5,
+   "speaker": null,
+   "text": "섬주변을",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    13.93
+   ],
+   "_asr": [
+    "자쿠지에서욕하기도 좋고 섬 주변을"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 14.5,
+   "t1": 14.9,
+   "speaker": null,
+   "text": "천천히",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    536,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "자쿠지에서욕하기도 좋고 섬 주변을",
+    "천천히 산책하다 보면 제주의에 온듯한"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 14.9,
+   "t1": 15.8,
+   "speaker": null,
+   "text": "산책하다보면",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    502,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    15.43
+   ],
+   "_asr": [
+    "천천히 산책하다 보면 제주의에 온듯한"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 15.8,
+   "t1": 16.3,
+   "speaker": null,
+   "text": "제주에 온 듯한",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    491,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "천천히 산책하다 보면 제주의에 온듯한"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 16.3,
+   "t1": 16.8,
+   "speaker": null,
+   "text": "분위기도",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    491,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    16.88
+   ],
+   "_asr": [
+    "천천히 산책하다 보면 제주의에 온듯한",
+    "분위기도 느껴집니다. 사람 [음악]"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 16.8,
+   "t1": 17.5,
+   "speaker": null,
+   "text": "느껴집니다.",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    16.88
+   ],
+   "_asr": [
+    "분위기도 느껴집니다. 사람 [음악]"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 17.5,
+   "t1": 18.4,
+   "speaker": null,
+   "text": "사람 많은곳을 피해",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    18.07
+   ],
+   "_asr": [
+    "분위기도 느껴집니다. 사람 [음악]",
+    "많은 곳을 피해 조용히 쉬고 싶다면"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 18.4,
+   "t1": 18.8,
+   "speaker": null,
+   "text": "조용히",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    536,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "많은 곳을 피해 조용히 쉬고 싶다면"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 18.8,
+   "t1": 19.5,
+   "speaker": null,
+   "text": "쉬고 싶다면",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    19.34
+   ],
+   "_asr": [
+    "많은 곳을 피해 조용히 쉬고 싶다면"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 19.5,
+   "t1": 20.35,
+   "speaker": null,
+   "text": "이런 곳 괜찮겠죠?",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "많은 곳을 피해 조용히 쉬고 싶다면",
+    "이런 거 괜찮겠죠?"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  }
+ ],
+ "beats": null,
+ "narr_share": null,
+ "notes": [],
+ "name_evidence": [],
+ "_todo": [
+  "speaker",
+  "layer",
+  "role",
+  "enter",
+  "fill_hex",
+  "emph",
+  "sticker",
+  "sfx",
+  "scene",
+  "fit",
+  "beats",
+  "narr_share"
+ ],
+ "_made_by": "kal_analyze.skeleton(기계값 뼈대 — 판독 전)"
+}

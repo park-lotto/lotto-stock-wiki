@@ -1,0 +1,706 @@
+{
+ "id": "lYFJTJSTM6s",
+ "dur": 18.1,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   0,
+   1080,
+   1920
+  ],
+  "caption_band": [
+   531,
+   731
+  ],
+  "title_y": null,
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.0,
+   "speaker": null,
+   "text": "예약만 성공하면",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    1.03
+   ],
+   "_asr": [
+    "예약만 성공하면 만족도 [음악]"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 1.0,
+   "t1": 1.8,
+   "speaker": null,
+   "text": "만족도 높다는",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    491,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    1.03
+   ],
+   "_asr": [
+    "예약만 성공하면 만족도 [음악]",
+    "높다는 10만 원대 호텔이 있습니다."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 1.8,
+   "t1": 2.5,
+   "speaker": null,
+   "text": "10만원대",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    2.13
+   ],
+   "_asr": [
+    "높다는 10만 원대 호텔이 있습니다."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 2.5,
+   "t1": 3.2,
+   "speaker": null,
+   "text": "호텔이 있습니다.",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    3.17
+   ],
+   "_asr": [
+    "높다는 10만 원대 호텔이 있습니다."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 3.2,
+   "t1": 4.1,
+   "speaker": null,
+   "text": "3시인데",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    3.17,
+    4.13
+   ],
+   "_asr": [
+    "체크인는 3시인데 수영장은 아침"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 4.1,
+   "t1": 4.5,
+   "speaker": null,
+   "text": "수영장은",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    534,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    4.13
+   ],
+   "_asr": [
+    "체크인는 3시인데 수영장은 아침"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 4.5,
+   "t1": 5.1,
+   "speaker": null,
+   "text": "아침 9시부터",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    530,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "체크인는 3시인데 수영장은 아침",
+    "9시부터 먼저 이용할 수 있고요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 5.1,
+   "t1": 6.3,
+   "speaker": null,
+   "text": "이용할 수있고요.",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    529,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    5.43
+   ],
+   "_asr": [
+    "9시부터 먼저 이용할 수 있고요.",
+    "백실도이 가격이 많나 싶을 정도로"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 6.3,
+   "t1": 7.4,
+   "speaker": null,
+   "text": "이가격이맞나",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    6.63
+   ],
+   "_asr": [
+    "백실도이 가격이 많나 싶을 정도로"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 7.4,
+   "t1": 8.0,
+   "speaker": null,
+   "text": "싶을정도로",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    7.8
+   ],
+   "_asr": [
+    "백실도이 가격이 많나 싶을 정도로"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 8.0,
+   "t1": 8.9,
+   "speaker": null,
+   "text": "침대2개에",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    503,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    8.87
+   ],
+   "_asr": [
+    "넓고 침대 두 개의 욕조까지 있어요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 8.9,
+   "t1": 9.8,
+   "speaker": null,
+   "text": "욕조까지 있어요.",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    8.87,
+    9.83
+   ],
+   "_asr": [
+    "넓고 침대 두 개의 욕조까지 있어요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 9.8,
+   "t1": 10.9,
+   "speaker": null,
+   "text": "오후6시까지",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    491,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    9.83,
+    10.93
+   ],
+   "_asr": [
+    "넓고 침대 두 개의 욕조까지 있어요.",
+    "오후 6시까지 [음악] 수영장에서"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 10.9,
+   "t1": 11.7,
+   "speaker": null,
+   "text": "수영장에서",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    522,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    10.93
+   ],
+   "_asr": [
+    "오후 6시까지 [음악] 수영장에서",
+    "놀다가 당구 스크린 골프에 저녁에는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 11.7,
+   "t1": 12.1,
+   "speaker": null,
+   "text": "놀다가",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    514,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    12.13
+   ],
+   "_asr": [
+    "놀다가 당구 스크린 골프에 저녁에는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 12.1,
+   "t1": 12.5,
+   "speaker": null,
+   "text": "당구,",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    536,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    12.13
+   ],
+   "_asr": [
+    "놀다가 당구 스크린 골프에 저녁에는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 12.5,
+   "t1": 13.2,
+   "speaker": null,
+   "text": "스크린골프에",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    536,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    13.23
+   ],
+   "_asr": [
+    "놀다가 당구 스크린 골프에 저녁에는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 13.2,
+   "t1": 13.6,
+   "speaker": null,
+   "text": "저녁에는",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    536,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    13.23
+   ],
+   "_asr": [
+    "놀다가 당구 스크린 골프에 저녁에는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 13.6,
+   "t1": 14.1,
+   "speaker": null,
+   "text": "바비큐까지",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    536,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    14.1
+   ],
+   "_asr": [
+    "놀다가 당구 스크린 골프에 저녁에는",
+    "바비큐까지 즐길 수 있습니다. 계약은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 14.1,
+   "t1": 14.9,
+   "speaker": null,
+   "text": "즐길수있습니다.",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    14.1
+   ],
+   "_asr": [
+    "바비큐까지 즐길 수 있습니다. 계약은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 14.9,
+   "t1": 15.5,
+   "speaker": null,
+   "text": "예약은",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    536,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    15.07
+   ],
+   "_asr": [
+    "바비큐까지 즐길 수 있습니다. 계약은",
+    "원하는 날짜 한 달 [음악] 전부터"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 15.5,
+   "t1": 16.2,
+   "speaker": null,
+   "text": "원하는 날짜",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    16.17
+   ],
+   "_asr": [
+    "원하는 날짜 한 달 [음악] 전부터"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 16.2,
+   "t1": 16.8,
+   "speaker": null,
+   "text": "한달전부터",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    16.17
+   ],
+   "_asr": [
+    "원하는 날짜 한 달 [음악] 전부터"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 16.8,
+   "t1": 17.3,
+   "speaker": null,
+   "text": "가능하니",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    536,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    17.27
+   ],
+   "_asr": [
+    "가능하니 미리 알아두세요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 17.3,
+   "t1": 18.1,
+   "speaker": null,
+   "text": "미리 알아두세요.",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    491,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    17.27
+   ],
+   "_asr": [
+    "가능하니 미리 알아두세요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  }
+ ],
+ "beats": null,
+ "narr_share": null,
+ "notes": [],
+ "name_evidence": [],
+ "_todo": [
+  "speaker",
+  "layer",
+  "role",
+  "enter",
+  "fill_hex",
+  "emph",
+  "sticker",
+  "sfx",
+  "scene",
+  "fit",
+  "beats",
+  "narr_share"
+ ],
+ "_made_by": "kal_analyze.skeleton(기계값 뼈대 — 판독 전)"
+}

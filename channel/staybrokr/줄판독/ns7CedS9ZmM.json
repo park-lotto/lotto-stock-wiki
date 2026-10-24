@@ -1,0 +1,652 @@
+{
+ "id": "ns7CedS9ZmM",
+ "dur": 16.033,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   0,
+   1080,
+   1920
+  ],
+  "caption_band": [
+   531,
+   614
+  ],
+  "title_y": null,
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.2,
+   "speaker": null,
+   "text": "혼자 조용히",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    1.17
+   ],
+   "_asr": [
+    "서울에서 혼자 조용히 쉬고 싶을 때"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 1.2,
+   "t1": 1.8,
+   "speaker": null,
+   "text": "쉬고 싶을때",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    1.17
+   ],
+   "_asr": [
+    "서울에서 혼자 조용히 쉬고 싶을 때"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 1.8,
+   "t1": 2.9,
+   "speaker": null,
+   "text": "딱인 숙소가 있습니다.",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    2.13
+   ],
+   "_asr": [
+    "서울에서 혼자 조용히 쉬고 싶을 때",
+    "딱인 숙소가 있습니다. 10만"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 2.9,
+   "t1": 3.7,
+   "speaker": null,
+   "text": "10만원대인데",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    3.23
+   ],
+   "_asr": [
+    "딱인 숙소가 있습니다. 10만",
+    "원대인데 전 객실에 프라이빗스 파와"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 3.7,
+   "t1": 4.2,
+   "speaker": null,
+   "text": "전객실에",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    4.17
+   ],
+   "_asr": [
+    "원대인데 전 객실에 프라이빗스 파와"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 4.2,
+   "t1": 5.0,
+   "speaker": null,
+   "text": "프라이빗스파와",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    4.17
+   ],
+   "_asr": [
+    "원대인데 전 객실에 프라이빗스 파와",
+    "가도 세트가 준비되어 있고요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 5.0,
+   "t1": 5.5,
+   "speaker": null,
+   "text": "다도세트가",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    5.2
+   ],
+   "_asr": [
+    "가도 세트가 준비되어 있고요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 5.5,
+   "t1": 6.3,
+   "speaker": null,
+   "text": "준비되어있고요.",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    6.3
+   ],
+   "_asr": [
+    "가도 세트가 준비되어 있고요.",
+    "따뜻하게 조격하면서 차 한 잔 마시기"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 6.3,
+   "t1": 6.9,
+   "speaker": null,
+   "text": "따뜻하게",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    536,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    6.3
+   ],
+   "_asr": [
+    "따뜻하게 조격하면서 차 한 잔 마시기"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 6.9,
+   "t1": 7.6,
+   "speaker": null,
+   "text": "족욕하면서",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    536,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    7.57
+   ],
+   "_asr": [
+    "따뜻하게 조격하면서 차 한 잔 마시기"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 7.6,
+   "t1": 8.0,
+   "speaker": null,
+   "text": "차한잔",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    7.57
+   ],
+   "_asr": [
+    "따뜻하게 조격하면서 차 한 잔 마시기"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 8.0,
+   "t1": 8.6,
+   "speaker": null,
+   "text": "마시기좋아요.",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    8.6
+   ],
+   "_asr": [
+    "따뜻하게 조격하면서 차 한 잔 마시기",
+    "좋아요. 까지 챙겨주는데 평일에는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 8.6,
+   "t1": 9.1,
+   "speaker": null,
+   "text": "조식까지",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    536,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    8.6
+   ],
+   "_asr": [
+    "좋아요. 까지 챙겨주는데 평일에는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 9.1,
+   "t1": 9.6,
+   "speaker": null,
+   "text": "챙겨주는데",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    536,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    9.63
+   ],
+   "_asr": [
+    "좋아요. 까지 챙겨주는데 평일에는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 9.6,
+   "t1": 10.0,
+   "speaker": null,
+   "text": "평일에는",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    536,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    9.63
+   ],
+   "_asr": [
+    "좋아요. 까지 챙겨주는데 평일에는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 10.0,
+   "t1": 10.5,
+   "speaker": null,
+   "text": "체크아웃이",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    536,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "좋아요. 까지 챙겨주는데 평일에는",
+    "체크아웃이 무려 오후 1시 [음악]"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 10.5,
+   "t1": 11.2,
+   "speaker": null,
+   "text": "무려 오후1시!",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    10.67
+   ],
+   "_asr": [
+    "체크아웃이 무려 오후 1시 [음악]"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 11.2,
+   "t1": 11.8,
+   "speaker": null,
+   "text": "늦잠자고",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    11.8
+   ],
+   "_asr": [
+    "체크아웃이 무려 오후 1시 [음악]",
+    "늦잠자고 아침까지 여유롭게 즐길 수"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 12.5,
+   "t1": 13.4,
+   "speaker": null,
+   "text": "즐길수있어서,",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    13.0
+   ],
+   "_asr": [
+    "늦잠자고 아침까지 여유롭게 즐길 수",
+    "있어서 서울에서 가성비 홍캉스"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 13.4,
+   "t1": 13.8,
+   "speaker": null,
+   "text": "서울에서",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    536,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    13.83
+   ],
+   "_asr": [
+    "있어서 서울에서 가성비 홍캉스"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 13.8,
+   "t1": 14.7,
+   "speaker": null,
+   "text": "가성비 혼캉스",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    530,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    13.83,
+    14.73
+   ],
+   "_asr": [
+    "있어서 서울에서 가성비 홍캉스",
+    "찾는다면 여기 알아두세요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 14.7,
+   "t1": 15.3,
+   "speaker": null,
+   "text": "찾는다면",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    536,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    14.73
+   ],
+   "_asr": [
+    "찾는다면 여기 알아두세요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 15.3,
+   "t1": 16.03,
+   "speaker": null,
+   "text": "여기 알아두세요.",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "찾는다면 여기 알아두세요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  }
+ ],
+ "beats": null,
+ "narr_share": null,
+ "notes": [],
+ "name_evidence": [],
+ "_todo": [
+  "speaker",
+  "layer",
+  "role",
+  "enter",
+  "fill_hex",
+  "emph",
+  "sticker",
+  "sfx",
+  "scene",
+  "fit",
+  "beats",
+  "narr_share"
+ ],
+ "_made_by": "kal_analyze.skeleton(기계값 뼈대 — 판독 전)"
+}

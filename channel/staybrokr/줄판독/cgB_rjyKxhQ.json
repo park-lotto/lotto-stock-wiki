@@ -1,0 +1,714 @@
+{
+ "id": "cgB_rjyKxhQ",
+ "dur": 23.933,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   0,
+   1080,
+   1920
+  ],
+  "caption_band": [
+   539,
+   603
+  ],
+  "title_y": null,
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.0,
+   "speaker": null,
+   "text": "한국의 스위스라고",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    538,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "한국의 스위스라고 불리는 오성급"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 1.0,
+   "t1": 2.4,
+   "speaker": null,
+   "text": "5성급 호텔입니다.",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    540,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    1.3
+   ],
+   "_asr": [
+    "한국의 스위스라고 불리는 오성급",
+    "호텔입니다. 푸른산과 수영장이"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 2.4,
+   "t1": 3.1,
+   "speaker": null,
+   "text": "푸른 산과",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    541,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    3.07
+   ],
+   "_asr": [
+    "호텔입니다. 푸른산과 수영장이"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 3.1,
+   "t1": 4.5,
+   "speaker": null,
+   "text": "어우러진 풍경이",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    540,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    3.07,
+    4.47
+   ],
+   "_asr": [
+    "호텔입니다. 푸른산과 수영장이",
+    "어울러진 풍경이 정말 인상적이었어요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 4.5,
+   "t1": 5.6,
+   "speaker": null,
+   "text": "정말 인상적이었어요.",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    540,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    4.47,
+    5.57
+   ],
+   "_asr": [
+    "어울러진 풍경이 정말 인상적이었어요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 5.6,
+   "t1": 6.3,
+   "speaker": null,
+   "text": "야외 수영장은",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    539,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    5.57
+   ],
+   "_asr": [
+    "야외 수영장은 수심이 얕아서 아이들과"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 6.3,
+   "t1": 7.1,
+   "speaker": null,
+   "text": "수심이 얕아서",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    540,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    7.13
+   ],
+   "_asr": [
+    "야외 수영장은 수심이 얕아서 아이들과"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 7.1,
+   "t1": 7.9,
+   "speaker": null,
+   "text": "아이들과 함께",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    541,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    7.13
+   ],
+   "_asr": [
+    "야외 수영장은 수심이 얕아서 아이들과",
+    "함께 즐기기 좋았고 [음악] 실내"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 7.9,
+   "t1": 8.7,
+   "speaker": null,
+   "text": "즐기기 좋았고,",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    540,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    8.7
+   ],
+   "_asr": [
+    "함께 즐기기 좋았고 [음악] 실내"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 8.7,
+   "t1": 9.5,
+   "speaker": null,
+   "text": "실내 수영장에서는",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    540,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    8.7
+   ],
+   "_asr": [
+    "함께 즐기기 좋았고 [음악] 실내",
+    "수영장에서는 산을 바라보며 여유롭게"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 9.5,
+   "t1": 10.3,
+   "speaker": null,
+   "text": "산을 바라보며",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    539,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    10.3
+   ],
+   "_asr": [
+    "수영장에서는 산을 바라보며 여유롭게"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 10.3,
+   "t1": 11.7,
+   "speaker": null,
+   "text": "쉬기 좋았습니다.",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    540,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    10.3,
+    11.7
+   ],
+   "_asr": [
+    "수영장에서는 산을 바라보며 여유롭게",
+    "쉬기 좋았습니다. 자쿠지와 사우나"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 11.7,
+   "t1": 12.7,
+   "speaker": null,
+   "text": "자쿠지와 사우나,",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    540,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    11.7
+   ],
+   "_asr": [
+    "쉬기 좋았습니다. 자쿠지와 사우나",
+    "멜니스 프로그램까지 부대 시설도 잘"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 12.7,
+   "t1": 13.6,
+   "speaker": null,
+   "text": "웰니스 프로그램까지",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    540,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    12.9
+   ],
+   "_asr": [
+    "멜니스 프로그램까지 부대 시설도 잘"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 13.6,
+   "t1": 14.2,
+   "speaker": null,
+   "text": "부대시설도",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    539,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    14.2
+   ],
+   "_asr": [
+    "멜니스 프로그램까지 부대 시설도 잘"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 14.2,
+   "t1": 15.3,
+   "speaker": null,
+   "text": "잘 갖춰져 있었고,",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    539,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    14.2,
+    15.33
+   ],
+   "_asr": [
+    "멜니스 프로그램까지 부대 시설도 잘",
+    "갖춰져 있었고 [음악] 조식도"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 15.3,
+   "t1": 15.8,
+   "speaker": null,
+   "text": "조식도",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    541,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    15.33
+   ],
+   "_asr": [
+    "갖춰져 있었고 [음악] 조식도"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 15.8,
+   "t1": 16.8,
+   "speaker": null,
+   "text": "12시까지 운영해서",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    539,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    16.8
+   ],
+   "_asr": [
+    "갖춰져 있었고 [음악] 조식도",
+    "12시까지 운영해서 아침을 여유롭게"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 16.8,
+   "t1": 17.7,
+   "speaker": null,
+   "text": "아침을 여유롭게",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    539,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    16.8
+   ],
+   "_asr": [
+    "12시까지 운영해서 아침을 여유롭게",
+    "시작할 수 있었어요. 백실 컨디션도"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 17.7,
+   "t1": 18.7,
+   "speaker": null,
+   "text": "시작할 수 있었어요.",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    538,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    18.67
+   ],
+   "_asr": [
+    "시작할 수 있었어요. 백실 컨디션도"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 18.7,
+   "t1": 19.8,
+   "speaker": null,
+   "text": "객실 컨디션도 좋고",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    541,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    18.67
+   ],
+   "_asr": [
+    "시작할 수 있었어요. 백실 컨디션도",
+    "좋고 가격도 생각보다 괜찮아서"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 19.8,
+   "t1": 20.3,
+   "speaker": null,
+   "text": "가격도",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    541,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    20.27
+   ],
+   "_asr": [
+    "좋고 가격도 생각보다 괜찮아서"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 20.3,
+   "t1": 21.8,
+   "speaker": null,
+   "text": "생각보다 괜찮아서",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    539,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    20.27,
+    21.83
+   ],
+   "_asr": [
+    "좋고 가격도 생각보다 괜찮아서"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 21.8,
+   "t1": 22.8,
+   "speaker": null,
+   "text": "만족도가 높았던",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    540,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    21.83,
+    22.83
+   ],
+   "_asr": [
+    "좋고 가격도 생각보다 괜찮아서",
+    "만족도가 높았던 오성급"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 22.8,
+   "t1": 23.93,
+   "speaker": null,
+   "text": "5성급 호텔이었습니다.",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    540,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    22.83
+   ],
+   "_asr": [
+    "만족도가 높았던 오성급",
+    "호텔이었습니다."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  }
+ ],
+ "beats": null,
+ "narr_share": null,
+ "notes": [],
+ "name_evidence": [],
+ "_todo": [
+  "speaker",
+  "layer",
+  "role",
+  "enter",
+  "fill_hex",
+  "emph",
+  "sticker",
+  "sfx",
+  "scene",
+  "fit",
+  "beats",
+  "narr_share"
+ ],
+ "_made_by": "kal_analyze.skeleton(기계값 뼈대 — 판독 전)"
+}
