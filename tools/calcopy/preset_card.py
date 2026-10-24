@@ -33,6 +33,7 @@ if str(REPO) not in sys.path:
 
 from tools.calcopy.engine import kal_analyze  # noqa: E402  (줄판독 칸 검사 check_doc · MIN_N — 주인 그대로 부른다)
 from tools.calcopy.hybrid import styles as styles_mod  # noqa: E402  (판 설정 읽기 주인)
+from shopping_shorts.calcopy_board import result_state  # noqa: E402  (결과물 판정 글 읽기 주인 — 표준 §11 ⑧)
 
 MADE_BY = "tools/calcopy/preset_card.py build"
 ROOT = REPO
@@ -401,7 +402,7 @@ def facts(O: dict, recs: list[dict]) -> dict:
         "member": mem, "line_json_exists": bool(mem.get("line_json")) and (ROOT / str(mem.get("line_json"))).exists(),
         "member_live_ok": bool((O["member_live"] or {}).get("ok")),
         "results_n": len(O["results"]), "results_pass_n": sum(1 for it in O["results"] if "페이블 판정 통과" in str(it.get("judge") or "")),
-        "owner_pass": any(re.search(r"사장님\s*(시청\s*)?(판정\s*)?(통과|승인)", str(it.get("judge") or "")) for it in O["results"]),
+        "owner_pass": any(result_state(it.get("judge"), fine=True) == "사장님 승인" for it in O["results"]),   # 판정 글 주인 = calcopy_board.result_state(표준 §11 ⑧)
     }
 
 
