@@ -151,5 +151,106 @@
     "why": "뜯기 probe.duration 8편 15.17~42.3초"
    }
   ]
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "kitchit",
+   "gap": [
+    "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 kkultemnote same=False) → 팩요청.md 아이템홈판#1(관제 235) · 그동안 'kitchit' 임시(stand_in)"
+   ],
+   "rank": [
+    {
+     "pack": "kkultemnote",
+     "d": 0.674,
+     "terms": {
+      "px": 0.59,
+      "fill": 0.34,
+      "stroke": 0.5,
+      "y": 0.44,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "tension",
+     "d": 0.742,
+     "terms": {
+      "px": 2.34,
+      "fill": 0.34,
+      "stroke": 0.03,
+      "y": 1.0,
+      "font": 0.0
+     }
+    },
+    {
+     "pack": "deal",
+     "d": 0.776,
+     "terms": {
+      "px": 1.01,
+      "fill": 0.34,
+      "stroke": 0.03,
+      "y": 1.0,
+      "font": 1.5
+     }
+    }
+   ],
+   "from": "벤치 6편 214줄 실측 [나레 82줄[잉크 높이 73px(82줄 y칸) · 자리 y1266 · 채움 #FFFCFA(78줄) · 테 4px] · 원음 132줄[잉크 높이 80px(131줄 y칸) · 자리 y1265 · 채움 #FFFCFA(110줄) · 테 4px] · 글꼴 SBAggroB(판 _pending 측정 층) · 글자 크기 75px(판 _pending 측정 층)] → 1위 kkultemnote(거리 0.674) · 지금 kitchit(거리 1.098, 순위 6)",
+   "stand_in": true,
+   "enter_cover": {
+    "cut": {
+     "share": 0.869,
+     "n": 186,
+     "item": "정지(팩 불필요)"
+    },
+    "pop": {
+     "share": 0.121,
+     "n": 26,
+     "item": "overPop"
+    },
+    "slide": {
+     "share": 0.005,
+     "n": 1,
+     "item": null
+    },
+    "fade": {
+     "share": 0.005,
+     "n": 1,
+     "item": null
+    }
+   }
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — 판 자막팩이 등장까지 정한다(caption-motions.js motionPlan: 팩 motion 이 효과팩 번호보다 이긴다) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": null,
+   "map": {},
+   "gain_db": -8,
+   "why": "효과음 종류 미측정 — gain 손 상수",
+   "ncc": {
+    "measured": true,
+    "hits": 45,
+    "pack_hits": 30,
+    "ge06": 0,
+    "max": 0.455,
+    "max_file": "팩03/tick.wav",
+    "mine_max": null
+   },
+   "from": "NCC 벤치↔팩 파일 30발 중 ≥0.6 0개(최대 0.455 팩03/tick.wav) → 지문으로 고를 수 없어 종류 이름표로 slot: 없음 · 팩 없음(종류 미측정)",
+   "gap": []
+  },
+  "bgm": {
+   "id": "sweets",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)",
+   "candidates": []
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 칼카피 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
+  }
  }
 }

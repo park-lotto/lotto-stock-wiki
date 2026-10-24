@@ -150,5 +150,85 @@
     "why": "자막만 갈래 3편 11.37~23.96초(규칙빈도_자막만.json)"
    }
   ]
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "clean",
+   "gap": [
+    "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 kitchit same=False) → 팩요청.md 도파민썰템A판#1(관제 235) · 그동안 'clean' 임시(stand_in)"
+   ],
+   "rank": [
+    {
+     "pack": "kitchit",
+     "d": 0.674,
+     "terms": {
+      "px": 0.18,
+      "fill": 0.0,
+      "stroke": 0.07,
+      "y": 1.62,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "goodletter",
+     "d": 0.69,
+     "terms": {
+      "px": 0.33,
+      "fill": 0.14,
+      "stroke": 0.5,
+      "y": 0.98,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "deal",
+     "d": 0.798,
+     "terms": {
+      "px": 0.12,
+      "fill": 0.0,
+      "stroke": 1.37,
+      "y": 1.0,
+      "font": 1.5
+     }
+    }
+   ],
+   "from": "벤치 6편 66줄 실측 [나레 48줄[잉크 높이 87px(47줄 y칸) · 자리 y1273 · 채움 #FFFFFF(45줄) · 테 8px] · 글꼴 SpoqaHanSansNeo-Bold(판 _pending 측정 층) · 글자 크기 66px(판 _pending 측정 층)] → 1위 kitchit(거리 0.674) · 지금 clean(거리 4.832, 순위 12)",
+   "stand_in": true,
+   "enter_cover": {
+    "instant": {
+     "share": 1.0,
+     "n": 66,
+     "item": "정지(팩 불필요)"
+    }
+   }
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — render_bench 옛 고정값 그대로(벤치 등장 = 판 caption.pack_default·placement.rules.enter 가 정함) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": null,
+   "map": {},
+   "gain_db": -8,
+   "why": "효과음 4/66줄(나레 1·불명 3, 규칙빈도_초안) — 종류 미측정 → 파일 칸 비움",
+   "ncc": {
+    "measured": false
+   },
+   "from": "NCC 미측정(_kal/sfx_ncc.json 없음) → 지문으로 고를 수 없어 종류 이름표로 slot: 없음 · 팩 없음(종류 미측정)",
+   "gap": []
+  },
+  "bgm": {
+   "id": "sweets",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)",
+   "candidates": []
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 칼카피 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
+  }
  }
 }

@@ -771,5 +771,114 @@
  },
  "_pending": {
   "transition_counted": "줄판독 transition 비율(placement.py count --dry 10-25): {'cut': 0.979, 'black': 0.014, 'zoomblur': 0.007} — cuts.transition.kinds·placement.rules.transition 에 넣으면 전환이 실제로 그려진다(지금 판 렌더와 달라짐) → 같은 편 렌더 전/후 대조 뒤 넣는다. 길이 ms 는 02 의 bench_transition_drop 같은 자로 재야 한다(표준 §11 ⑯)"
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "kkultemnote",
+   "gap": [
+    "자기 팩 1위지만 문턱 밖 {'px': 1.29}(1.0 = 문턱) → 팩요청.md 꿀템노트판#1(보정 또는 재측정)",
+    "벤치 등장 ['fade'](줄 5% 이상) 팩 'kkultemnote' 에 없음 → 팩요청.md 꿀템노트판#2"
+   ],
+   "rank": [
+    {
+     "pack": "kkultemnote",
+     "d": 0.33,
+     "terms": {
+      "px": 1.29,
+      "fill": 0.0,
+      "y": 0.03,
+      "font": 0.0
+     }
+    },
+    {
+     "pack": "deal",
+     "d": 0.655,
+     "terms": {
+      "px": 0.12,
+      "fill": 0.0,
+      "y": 1.0,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "goodletter",
+     "d": 0.72,
+     "terms": {
+      "px": 0.56,
+      "fill": 0.14,
+      "y": 0.68,
+      "font": 1.5
+     }
+    }
+   ],
+   "from": "벤치 8편 149줄 실측 [글꼴 Kkubulim(스타일분석 §1) · 나레 54줄[잉크 높이 85px(54줄 y칸) · 자리 y1288 · 채움 #FFFFFF(53줄)] · 원음 94줄[잉크 높이 85px(92줄 y칸) · 자리 y1288 · 채움 #FFFFFF(78줄)]] → 1위 kkultemnote(거리 0.33) · 지금 kkultemnote(거리 0.33, 순위 1)",
+   "enter_cover": {
+    "cut": {
+     "share": 0.49,
+     "n": 73,
+     "item": "정지(팩 불필요)"
+    },
+    "fade": {
+     "share": 0.362,
+     "n": 54,
+     "item": null
+    },
+    "pop": {
+     "share": 0.081,
+     "n": 12,
+     "item": "overPopBig"
+    },
+    "append": {
+     "share": 0.027,
+     "n": 4,
+     "item": "정지(팩 불필요)"
+    },
+    "기타": {
+     "share": 0.02,
+     "n": 3,
+     "item": null
+    },
+    "typing": {
+     "share": 0.02,
+     "n": 3,
+     "item": null
+    }
+   }
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — 판 자막팩이 등장까지 정한다(caption-motions.js motionPlan: 팩 motion 이 효과팩 번호보다 이긴다) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": "팩01",
+   "map": {
+    "ding": "띠링",
+    "whoosh": "휙",
+    "pop": "뽁"
+   },
+   "gain_db": -8,
+   "ncc": {
+    "measured": false
+   },
+   "from": "NCC 미측정(_kal/sfx_ncc.json 없음) → 지문으로 고를 수 없어 종류 이름표로 slot: ding→띠링 · 팩 팩01",
+   "gap": []
+  },
+  "bgm": {
+   "id": "honwaka_puppu",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)",
+   "candidates": [
+    "otsukare_summer",
+    "sweets",
+    "beggin"
+   ]
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
+  }
  }
 }

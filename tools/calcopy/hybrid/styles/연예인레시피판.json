@@ -93,5 +93,13 @@
    }
   }
  },
- "title_form": "1줄 = 연예인 본인 말 인용·훅 구절(주황 hi = 핵심 낱말) / 2줄 = '이름의 [민트 hi 요리]'"
+ "title_form": "1줄 = 연예인 본인 말 인용·훅 구절(주황 hi = 핵심 낱말) / 2줄 = '이름의 [민트 hi 요리]'",
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "recipe",
+   "gap": [],
+   "from": "변형판(base 스타픽룸판) — 사람이 고른 우리 변형 팩 'recipe'(벤치 없음: 자막팩 recipe.bench = 우리 값 note) · 측정 거리 해당 없음"
+  }
+ }
 }

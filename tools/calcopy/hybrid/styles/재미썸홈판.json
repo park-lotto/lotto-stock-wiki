@@ -57,5 +57,35 @@
  },
  "_pending": {
   "bench_migration": "renderer=bench 로 아직 못 옮김(07 판단 10-25): ① 한 편이 A(얜샷템 틀 1080² 창 + 원음)·B(다른 프리셋 틀) 두 틀 — render_bench.frame_png 는 편 하나에 틀 하나(시간 구간별 틀 칸 없음, 방구석·맛템썰템·썰템쇼 훅 카드와 같은 결손) → 02 에 frame.segments[{t0,t1,frame}] 요청 ② 대본 꼴이 다르다(seg A/B · slot·pieces·orig_caps ) — render_bench 대본(lines[kind tts|orig, caps]) 로 바꾸는 변환기 필요(08 flow 와 같이) ③ 소리 규칙(원음 조각 pieces·mute·tts_override·쉼 모양)이 render_itssum/jaemi 안 — bench 의 audio 칸에 없음. 세 가지가 들어오면 같은 편(함익병) 대본으로 옛 렌더 ↔ bench 렌더 프레임·LUFS 대조 뒤 전환"
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": null,
+   "gap": [
+    "자막팩 길 아님(itssum/jaemi 렌더러) — bench 전환 뒤 pack_map 다시"
+   ],
+   "from": "renderer jaemi — 자막은 렌더러 자체(render 칸)가 그린다, 자막팩 층 밖(_pending.bench_migration)"
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — render_bench 옛 고정값 그대로(벤치 등장 = 판 caption.pack_default·placement.rules.enter 가 정함) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": null,
+   "gap": [],
+   "from": "renderer jaemi — 효과음은 렌더러 자체(render 칸)"
+  },
+  "bgm": {
+   "id": "honwaka_puppu",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)"
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
+  }
  }
 }

@@ -578,5 +578,99 @@
  },
  "_pending": {
   "transition_counted": "줄판독 transition 칸 비어 있음(06) — 그릴 전환 없음"
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "goodletter",
+   "gap": [
+    "자기 팩 1위지만 문턱 밖 {'px': 1.56, 'y': 1.57}(1.0 = 문턱) → 팩요청.md 굿레터판#1(보정 또는 재측정)"
+   ],
+   "rank": [
+    {
+     "pack": "goodletter",
+     "d": 0.792,
+     "terms": {
+      "px": 1.56,
+      "fill": 0.0,
+      "stroke": 0.83,
+      "y": 1.57,
+      "font": 0.0
+     }
+    },
+    {
+     "pack": "kitchit",
+     "d": 0.814,
+     "terms": {
+      "px": 1.1,
+      "fill": 0.14,
+      "stroke": 0.4,
+      "y": 0.93,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "recipe",
+     "d": 0.842,
+     "terms": {
+      "px": 0.44,
+      "fill": 0.14,
+      "stroke": 1.2,
+      "y": 0.93,
+      "font": 1.5
+     }
+    }
+   ],
+   "from": "벤치 8편 214줄 실측 [글꼴 Binggrae-Bold(스타일분석 §1) · 원음 192줄[잉크 높이 65px(191줄 y칸) · 자리 y1396 · 채움 #FDFDFD(120줄) · 테 9px]] → 1위 goodletter(거리 0.792) · 지금 goodletter(거리 0.792, 순위 1)",
+   "enter_cover": {
+    "pop": {
+     "share": 0.981,
+     "n": 210,
+     "item": "glPop"
+    },
+    "instant": {
+     "share": 0.019,
+     "n": 4,
+     "item": "정지(팩 불필요)"
+    }
+   }
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — 판 자막팩이 등장까지 정한다(caption-motions.js motionPlan: 팩 motion 이 효과팩 번호보다 이긴다) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": "팩05",
+   "map": {
+    "pop": "뽁"
+   },
+   "outside": {
+    "impact": "meme_sfx:research/sfx_census/meme_sfx/충격_입막/sfx__impact-bass-2.mp3"
+   },
+   "gain_db": -6,
+   "ncc": {
+    "measured": false
+   },
+   "from": "NCC 미측정(_kal/sfx_ncc.json 없음) → 지문으로 고를 수 없어 종류 이름표로 slot: pop→뽁 · 팩 팩05",
+   "gap": [
+    "팩 밖 효과음 ['impact'] — slot 없음 → 팩요청.md 굿레터판#2"
+   ]
+  },
+  "bgm": {
+   "id": null,
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)",
+   "candidates": [
+    "otsukare_summer",
+    "beggin",
+    "passo_bem_solto"
+   ]
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
+  }
  }
 }

@@ -732,5 +732,117 @@
  },
  "_pending": {
   "transition_counted": "줄판독 transition 비율(placement.py count --dry 10-25): {'cut': 0.913, 'black': 0.039, 'zoomblur': 0.039, 'flash': 0.008} — cuts.transition.kinds·placement.rules.transition 에 넣으면 전환이 실제로 그려진다(지금 판 렌더와 달라짐) → 같은 편 렌더 전/후 대조 뒤 넣는다. 길이 ms 는 02 의 bench_transition_drop 같은 자로 재야 한다(표준 §11 ⑯)"
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "kitchit",
+   "gap": [
+    "벤치 등장 ['fade'](줄 5% 이상) 팩 'kitchit' 에 없음 → 팩요청.md 키치잇판#1"
+   ],
+   "rank": [
+    {
+     "pack": "kitchit",
+     "d": 0.212,
+     "terms": {
+      "px": 0.68,
+      "fill": 0.08,
+      "stroke": 0.27,
+      "y": 0.03,
+      "font": 0.0
+     }
+    },
+    {
+     "pack": "goodletter",
+     "d": 0.526,
+     "terms": {
+      "px": 0.13,
+      "fill": 0.15,
+      "stroke": 0.17,
+      "y": 0.68,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "recipe",
+     "d": 0.806,
+     "terms": {
+      "px": 0.1,
+      "fill": 0.08,
+      "stroke": 0.53,
+      "y": 1.82,
+      "font": 1.5
+     }
+    }
+   ],
+   "from": "벤치 8편 135줄 실측 [글꼴 Jalnan2(스타일분석 §1) · 나레 51줄[잉크 높이 78px(51줄 y칸) · 자리 y1352 · 채움 #FFFFFF(43줄) · 테 7px] · 원음 83줄[잉크 높이 78px(83줄 y칸) · 자리 y1352 · 채움 #FFFEFF(72줄) · 테 7px]] → 1위 kitchit(거리 0.212) · 지금 kitchit(거리 0.212, 순위 1)",
+   "enter_cover": {
+    "pop": {
+     "share": 0.43,
+     "n": 58,
+     "item": "overPop"
+    },
+    "cut": {
+     "share": 0.326,
+     "n": 44,
+     "item": "정지(팩 불필요)"
+    },
+    "fade": {
+     "share": 0.141,
+     "n": 19,
+     "item": null
+    },
+    "typing": {
+     "share": 0.096,
+     "n": 13,
+     "item": "typeFlash"
+    },
+    "기타": {
+     "share": 0.007,
+     "n": 1,
+     "item": null
+    }
+   }
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — 판 자막팩이 등장까지 정한다(caption-motions.js motionPlan: 팩 motion 이 효과팩 번호보다 이긴다) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": "팩01",
+   "map": {
+    "ding": "띠링",
+    "whoosh": "휙",
+    "pop": "뽁"
+   },
+   "gain_db": -8,
+   "ncc": {
+    "measured": true,
+    "hits": 35,
+    "pack_hits": 23,
+    "ge06": 0,
+    "max": 0.525,
+    "max_file": "팩02/tick.wav",
+    "mine_max": 0.496
+   },
+   "from": "NCC 벤치↔팩 파일 23발 중 ≥0.6 0개(최대 0.525 팩02/tick.wav) → 지문으로 고를 수 없어 종류 이름표로 slot: ding→띠링 · 팩 팩01",
+   "gap": []
+  },
+  "bgm": {
+   "id": "qiuqiu",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)",
+   "candidates": [
+    "otsukare_summer",
+    "passo_bem_solto",
+    "sweets"
+   ]
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
+  }
  }
 }

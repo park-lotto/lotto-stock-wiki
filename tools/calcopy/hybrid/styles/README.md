@@ -47,6 +47,22 @@
 `render_info.json` 표식: `devices{transition{kinds_set,drawn,n}, duck_narr{db,bed}, frame_kind}` · `style_sha`(판 파일 sha256) · `style_sha_effective`(_common·base 합친 설정) · `renderer_sig`(렌더러 파일@sha) · `line_cps{줄: 자/초}` — 표식 주인 `render_bench.render_marks`(itssum·jaemi 도 부른다), 품질 관문(04)이 읽는다. 자막표.json 에 `transitions`(그린 목록).
 시험 판(목록에 안 뜸): `_test_transition`(모든 경계 줌블러 200ms) · `_test_duck`(나레 −8dB) · `_test_post`(게시글형 = banggu 게시글형 훅 틀 좌표).
 
+## `packs` 칸 — 프리셋 = 숏템메이커 팩에서 고른 기본 선택(관제 263 지시서 11 — 표준 §10-2·§10-3)
+
+**packs 가 정본, 옛 칸(`caption.pack`·`sfx_files`·`bgm.id`·`bgm.candidates`·`placement.rules.meme.tone/pack`)은 `styles.load` 가 packs 에서 채운다**(주인 `pack_map.apply_to_style`). 판 파일에 옛 칸도 남아 있으면 같아야 한다 — 다르면 load 가 `PackError`(두 벌 불일치). 칸은 사람이 손으로 적지 않고 `py tools/calcopy/hybrid/pack_map.py <판> --write`(벤치 측정 → 팩 항목, 근거 `from`·없는 것 `gap` + `channel/<slug>/_kal/팩요청.md`).
+
+| 요소 | 칸 | 팩(읽기만) | 렌더가 쓰는 곳 |
+|---|---|---|---|
+| `caption` | `pack`(자막팩 키) · `stand_in`(벤치와 같은 팩이 없어 임시) · `rank`(측정 거리 1~3위, 항목별 1.0 = 같음 문턱: 글꼴 같음·잉크 ±10%·ΔE<5·테 ±3px·자리 ±2.5%) · `enter_cover`(벤치 등장 분포 ↔ 팩 등장 이름표) | `caption-motions.js` /*PACKS*/ | `caption.pack` → `render_bench.snapshot` captionPack |
+| `motion` | `pack` = **등장 효과팩 번호** `off`·`1`~`20`(/*MPACKS*/ — `snapshot.motionPack` 이 받는 값) · `graphics` = 모션그래픽팩 `off`·`dynamic_pop`·`minimal_chic`(assets/motion/packs.json) | MPACKS · motion/packs.json | `pack_map.snapshot_fields` → motionPack. ★자막팩에 `motion`(등장)이 있으면 팩이 이긴다(motionPlan) — 칼카피 6팩은 번호가 안 먹는다. ★`graphics` 는 render_bench 가 못 그린다 → off 아니면 거절 |
+| `sfx` | `pack`(팩NN) · `map{종류: 한글 slot}`(뽁·띠링·휙·둥·오프너·틱·딸깍2 = 파일 pop·ding·whoosh·dung·opener·tick·click2) · `outside{종류: 팩 밖 파일}`(표시된 임시 + gap) · `gain_db` · `ncc`(벤치↔팩 파일 상관 요약) | `assets/sfx_packs` | → `sfx_files{종류: 팩NN/파일.wav}` |
+| `bgm` | `id`(사람이 고른 곡) · `candidates`(bgm_pick 상위 3) | `bgm_lib/catalog.json` | → `bgm.id`·`bgm.candidates` |
+| `meme` | `pack` = `local`(칼카피 로컬 짤 팩 — 기본)·`server`(회원 prefs — 칼카피 길 미연결, 짤 규칙 있는 판이면 거절)·`none` · `tone`·`dir`(있으면 `placement.rules.meme.tone/pack` 로) | 로컬 짤 팩 | placement.meme_step. **빈도 `rate` 는 `placement.rules.meme.rate`(뼈대)** — packs 에 안 적는다(두 벌 금지) |
+
+- 합치기 = `pack_map.merge(엔진 기본 ENGINE_DEFAULT, 판 packs, 회원 patch.packs)` 한 곳 — `styles.load(판, patch={"packs": …})`. 회원 patch 는 지금 `packs` 만(다른 칸은 지시서 12 `apply_patch` — 그 전엔 거절). 없는 팩 항목은 거절(`check`).
+- 상속 판(`base`): packs 는 바탕 판과 **다른 요소만** 적는다(`연예인레시피판` = caption 만, `잇템로그판_v2` = 없음). 목록 칸 `script.audit`·`brief` 도 통째로 못 적고 `audit_patch`·`brief_patch{add,remove,replace}` 만(⑰ — 통째면 load 거절).
+- 카드(01) 레코드 키 제안: `pack_item` = `"caption:<packs.caption.pack>"` · `"motion:<pack>/<graphics>"` · `"sfx:<pack>/<map>"` · `"bgm:<id>"` · `"meme:<pack>"`, 임시면 `stand_in` 표시.
+
 ## 판 목록(관제 263 지시서 07 — 표 줄만, 칸 문서는 위 02 표가 주인)
 | 판 | 벤치(slug) | 틀 kind | counted 편 | 틀 대조(벤치 프레임 ↔ frame_png) | 손 스크립트 | 큰 _pending |
 |---|---|---|---|---|---|---|

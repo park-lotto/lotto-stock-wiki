@@ -554,5 +554,87 @@
     "why": "벤치 6편 길이"
    }
   ]
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "clean",
+   "gap": [
+    "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 clean same=False) → 팩요청.md 맛템썰템판#1(관제 235) · 그동안 'clean' 임시(stand_in)"
+   ],
+   "rank": [
+    {
+     "pack": "clean",
+     "d": 1.855,
+     "terms": {
+      "px": 3.91,
+      "fill": 1.01,
+      "y": 1.0,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "soft",
+     "d": 3.015,
+     "terms": {
+      "px": 4.9,
+      "fill": 4.66,
+      "y": 1.0,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "premium",
+     "d": 6.515,
+     "terms": {
+      "px": 4.54,
+      "fill": 19.02,
+      "y": 1.0,
+      "font": 1.5
+     }
+    }
+   ],
+   "from": "벤치 6편 200줄 실측 [글꼴 BMDOHYEON(스타일분석 §1) · 나레 195줄[잉크 높이 53px(195줄 y칸) · 자리 y606 · 채움 #000000(195줄)]] → 1위 clean(거리 1.855) · 지금 clean(거리 1.855, 순위 1)",
+   "stand_in": true,
+   "enter_cover": {
+    "cut": {
+     "share": 0.56,
+     "n": 112,
+     "item": "정지(팩 불필요)"
+    },
+    "append": {
+     "share": 0.44,
+     "n": 88,
+     "item": "정지(팩 불필요)"
+    }
+   }
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — render_bench 옛 고정값 그대로(벤치 등장 = 판 caption.pack_default·placement.rules.enter 가 정함) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": null,
+   "map": {},
+   "gain_db": -8,
+   "why": "효과음 0(sfx_events 강한 후보 33 중 규칙 근거 없음, 스타일분석 §7) — gain 은 꼴 유지용 손 상수",
+   "ncc": {
+    "measured": false
+   },
+   "from": "NCC 미측정(_kal/sfx_ncc.json 없음) → 지문으로 고를 수 없어 종류 이름표로 slot: 없음 · 팩 없음(종류 미측정)",
+   "gap": []
+  },
+  "bgm": {
+   "id": "qiuqiu",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)",
+   "candidates": []
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 칼카피 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
+  }
  }
 }

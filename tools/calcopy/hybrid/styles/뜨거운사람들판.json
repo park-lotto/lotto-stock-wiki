@@ -145,5 +145,82 @@
     "why": "손 상수 — 길이 분포 미기입(실측 channel_56편.json 에서 06 이 채움)"
    }
   ]
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "clean",
+   "gap": [
+    "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 clean same=False) → 팩요청.md 뜨거운사람들판#1(관제 235) · 그동안 'clean' 임시(stand_in)"
+   ],
+   "rank": [
+    {
+     "pack": "clean",
+     "d": 2.493,
+     "terms": {
+      "px": 5.63,
+      "fill": 1.01,
+      "stroke": 2.33,
+      "y": 1.0
+     }
+    },
+    {
+     "pack": "soft",
+     "d": 2.768,
+     "terms": {
+      "px": 3.08,
+      "fill": 4.66,
+      "stroke": 2.33,
+      "y": 1.0
+     }
+    },
+    {
+     "pack": "tension",
+     "d": 6.133,
+     "terms": {
+      "px": 2.5,
+      "fill": 20.0,
+      "stroke": 1.03,
+      "y": 1.0
+     }
+    }
+   ],
+   "from": "벤치 6편 156줄 실측 [나레 156줄[잉크 높이 136px(149줄 y칸) · 자리 y1354 · 채움 #000000(156줄) · 테 7px]] → 1위 clean(거리 2.493) · 지금 clean(거리 2.493, 순위 1)",
+   "stand_in": true,
+   "enter_cover": {
+    "cut": {
+     "share": 1.0,
+     "n": 156,
+     "item": "정지(팩 불필요)"
+    }
+   }
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — render_bench 옛 고정값 그대로(벤치 등장 = 판 caption.pack_default·placement.rules.enter 가 정함) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": null,
+   "map": {},
+   "gain_db": -8,
+   "why": "효과음 미측정 — gain 손 상수",
+   "ncc": {
+    "measured": false
+   },
+   "from": "NCC 미측정(_kal/sfx_ncc.json 없음) → 지문으로 고를 수 없어 종류 이름표로 slot: 없음 · 팩 없음(종류 미측정)",
+   "gap": []
+  },
+  "bgm": {
+   "id": "sweets",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)",
+   "candidates": []
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 칼카피 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
+  }
  }
 }

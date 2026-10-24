@@ -159,5 +159,73 @@
     "why": "뜯기 probe.duration 6편 12.23~25.97초"
    }
   ]
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "kitchit",
+   "gap": [
+    "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 goodletter same=False) → 팩요청.md 안나픽판#1(관제 235) · 그동안 'kitchit' 임시(stand_in)"
+   ],
+   "rank": [
+    {
+     "pack": "goodletter",
+     "d": 0.61,
+     "terms": {
+      "px": 0.11,
+      "fill": 0.22,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "kitchit",
+     "d": 0.717,
+     "terms": {
+      "px": 0.36,
+      "fill": 0.29,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "starpick",
+     "d": 0.743,
+     "terms": {
+      "px": 0.44,
+      "fill": 0.29,
+      "font": 1.5
+     }
+    }
+   ],
+   "from": "벤치 0편 0줄 실측 [글꼴 KirangHaerang(판 _pending 측정 층) · 글자 크기 75.2px(판 _pending 측정 층) · 채움 #FDFCFA(판 _pending 측정 층)] → 1위 goodletter(거리 0.61) · 지금 kitchit(거리 0.717, 순위 2)",
+   "stand_in": true,
+   "enter_cover": {}
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — 판 자막팩이 등장까지 정한다(caption-motions.js motionPlan: 팩 motion 이 효과팩 번호보다 이긴다) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": null,
+   "map": {},
+   "gain_db": -8,
+   "why": "효과음 종류 미측정 — gain 손 상수",
+   "ncc": {
+    "measured": false
+   },
+   "from": "NCC 미측정(_kal/sfx_ncc.json 없음) → 지문으로 고를 수 없어 종류 이름표로 slot: 없음 · 팩 없음(종류 미측정)",
+   "gap": []
+  },
+  "bgm": {
+   "id": "sweets",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)",
+   "candidates": []
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 칼카피 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
+  }
  }
 }
