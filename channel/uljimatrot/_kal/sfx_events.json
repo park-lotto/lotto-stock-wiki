@@ -2,19 +2,19 @@
  "_meta": {
   "made_by": "tools/calcopy/engine/sound/sfx_events.py uljimatrot --detect",
   "how": "detect",
+  "asr_filter": {
+   "how": "후보 시각이 받아쓰기 낱말 구간[t0−0.05, t1+0.05] 안이면 cand_in_words(치찰음·파열음 오탐) — 단 전환(cut)·스티커 ±0.3초 안은 남김(keep_why). 남은 것 = cand_kept",
+   "asr": "C:/숏템_칼카피/uljimatrot/work/asrw",
+   "no_speech": {},
+   "no_asr": [],
+   "n_kept": 2,
+   "n_in_words": 8,
+   "note": "귀 확인 아님(신호). 무음 환각 = 환각 문구(Thanks for watching·구독과 좋아요·Music…)가 절반 이상이거나 빼고 2낱말 이하, 또는 길이0 낱말 40% 이상"
+  },
   "from": "C:/숏템_칼카피\\uljimatrot\\src",
   "n_videos": 10,
-  "n_cand": 8,
-  "asr_filter": {
-   "how": "후보 시각이 받아쓰기 낱말 구간[t0−0.05, t1+0.05] 안이면 cand_in_words 로 거름(치찰음·파열음 오탐). 남은 것 = cand_kept",
-   "asr": "faster-whisper small int8 로컬(무료) word_timestamps — C:/숏템_칼카피/uljimatrot/work/asrw/<id>.json (새 유료 호출 0)",
-   "no_speech": [],
-   "no_speech_why": null,
-   "n_kept": 0,
-   "n_in_words": 8,
-   "note": "귀 확인 아님(신호). tonal 은 유성 아님 조건이 이미 들어 있다"
-  },
-  "line_link_how": "line_link = 남은 후보(cand_kept)가 든 줄의 sfx·sticker 유무 + 줄판독 sfx 시각(t, 없으면 줄 t0)·스티커 t_in 에서 가장 가까운 후보 거리(≤0.15초 = match). 줄판독 sfx 칸은 바꾸지 않았다(1판 파형 판독 근거가 따로 있다)"
+  "n_cand": 10,
+  "line_link_how": "line_link = 남은 후보(cand_kept)가 든 줄의 sfx·sticker 유무 + 줄판독 sfx 시각(t, 없으면 줄 t0)·스티커 t_in 에서 가장 가까운 후보 거리(≤0.15초 = match). 줄판독 sfx 칸은 바꾸지 않았다(1판 파형 판독 근거가 따로 있다) — 10-25 재측정(03 low·낱말 거름 내장 뒤) 다시 붙임"
  },
  "7b1j3LptlCo": {
   "strong_n": 6,
@@ -217,8 +217,23 @@
    "cut": []
   },
   "dur": 24.2,
-  "n_events_all": 16,
-  "cand": [],
+  "n_events_all": 17,
+  "cand": [
+   {
+    "t": 14.35,
+    "kind": "low",
+    "dur": 0.06,
+    "db": 13.7,
+    "rel_db": -0.7,
+    "low_mid_db": 13.1,
+    "voiced": 0.45,
+    "near": {
+     "cap": 0.45,
+     "switch": 9.08,
+     "cut": 1.35
+    }
+   }
+  ],
   "markers": {
    "cap": [
     4.5,
@@ -256,7 +271,23 @@
    "cut": 0.08
   },
   "asr_words": 52,
-  "cand_in_words": [],
+  "cand_in_words": [
+   {
+    "t": 14.35,
+    "kind": "low",
+    "dur": 0.06,
+    "db": 13.7,
+    "rel_db": -0.7,
+    "low_mid_db": 13.1,
+    "voiced": 0.45,
+    "near": {
+     "cap": 0.45,
+     "switch": 9.08,
+     "cut": 1.35
+    },
+    "word": "가격도"
+   }
+  ],
   "cand_kept": [],
   "line_link": {
    "kept_to_line": [],
@@ -425,8 +456,22 @@
    ]
   },
   "dur": 24.4,
-  "n_events_all": 26,
-  "cand": [],
+  "n_events_all": 27,
+  "cand": [
+   {
+    "t": 18.97,
+    "kind": "low",
+    "dur": 0.09,
+    "db": 14.5,
+    "rel_db": 0.0,
+    "low_mid_db": 13.1,
+    "voiced": 0.57,
+    "near": {
+     "cap": 0.27,
+     "cut": 0.27
+    }
+   }
+  ],
   "markers": {
    "cap": [
     3.2,
@@ -466,9 +511,39 @@
   },
   "asr_words": 50,
   "cand_in_words": [],
-  "cand_kept": [],
+  "cand_kept": [
+   {
+    "t": 18.97,
+    "kind": "low",
+    "dur": 0.09,
+    "db": 14.5,
+    "rel_db": 0.0,
+    "low_mid_db": 13.1,
+    "voiced": 0.57,
+    "near": {
+     "cap": 0.27,
+     "cut": 0.27
+    },
+    "word": "골프장의",
+    "keep_why": "낱말 안이지만 전환·스티커 0.27초 안"
+   }
+  ],
   "line_link": {
-   "kept_to_line": [],
+   "kept_to_line": [
+    {
+     "t": 18.97,
+     "kind": "low",
+     "lines": [
+      12
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    }
+   ],
    "line_sfx_to_kept": [],
    "sticker_to_kept": []
   }
@@ -654,7 +729,8 @@
    "cut": 0.07
   },
   "asr_words": 39,
-  "cand_in_words": [
+  "cand_in_words": [],
+  "cand_kept": [
    {
     "t": 7.27,
     "kind": "broad",
@@ -667,12 +743,26 @@
      "cap": 0.17,
      "cut": 0.14
     },
-    "word": "멋있게"
+    "word": "멋있게",
+    "keep_why": "낱말 안이지만 전환·스티커 0.14초 안"
    }
   ],
-  "cand_kept": [],
   "line_link": {
-   "kept_to_line": [],
+   "kept_to_line": [
+    {
+     "t": 7.27,
+     "kind": "broad",
+     "lines": [
+      2
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    }
+   ],
    "line_sfx_to_kept": [],
    "sticker_to_kept": []
   }
