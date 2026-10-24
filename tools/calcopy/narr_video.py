@@ -370,7 +370,7 @@ def _lerp_expr(keys, idx):
 
 def still_move(src, src_crop, ar, dur: float, move) -> str:
     """(판단 주인) 그림 파일 컷의 움직임 — 사장님 10-18 "정지 장면이 많다, 이미지를 쓰려면 확대 효과를 주든지 계속 움직이게".
-    move = "in"(천천히 다가감) · "out"(물러남) · "left"/"right"(살짝 확대한 채 옆으로 흐름) 또는 {"kind":…, "zoom":1.2}.
+    move = "in"(천천히 다가감) · "out"(물러남) · "left"/"right"(살짝 확대한 채 옆으로 흐름) · sway/bounce/punch/shake(move_vf) 또는 {"kind":…, "zoom":1.2}.
     src_crop·ar 로 자른 뒤의 그림 크기 그대로 내보내므로 뒤 채우기(cover·box·contain)는 그대로 돈다. 2배로 키운 뒤 움직여 픽셀 떨림을 줄인다."""
     from PIL import Image
     mv = move if isinstance(move, dict) else {"kind": move}
@@ -382,10 +382,45 @@ def still_move(src, src_crop, ar, dur: float, move) -> str:
         iw, ih = min(iw, ih * ar), min(ih, iw / ar)
     ow, oh = int(iw) // 2 * 2, int(ih) // 2 * 2
     n = max(1, round(dur * FPS))
+    if kind in LIVE_MOVES:   # 흔들흔들·통통·펀치인·떨림 — 영상 컷과 같은 식(move_vf 한 곳)
+        return f"scale={ow * 2}:{oh * 2}," + move_vf(mv, n, ow, oh) + ","
     p = f"min(on/{n},1)"
     z = {"in": f"1+{z1 - 1:.4f}*{p}", "out": f"{z1:.4f}-{z1 - 1:.4f}*{p}"}.get(kind, f"{z1:.4f}")
     x = {"left": f"(iw-iw/zoom)*(1-{p})", "right": f"(iw-iw/zoom)*{p}"}.get(kind, "(iw-iw/zoom)/2")
     return f"scale={ow * 2}:{oh * 2},zoompan=z='{z}':x='{x}':y='(ih-ih/zoom)/2':d=1:s={ow}x{oh}:fps={FPS},"
+
+
+LIVE_MOVES = ("sway", "bounce", "punch", "shake")
+
+
+def move_vf(move, n: int, ow: int, oh: int) -> str:
+    """(판단 주인) 컷 움직임 중 '살아 움직이는' 종류 — 그림 컷(still_move)·영상 컷(preset_make.render_parts)이 같이 부른다(관제 097, 10-24 사장님
+    "고객 거나 내 거나 같은 방법"). 입력 프레임 1장 → 출력 1장(zoompan d=1), 결과 크기 ow×oh 그대로라 뒤 채우기는 그대로 돈다.
+      sway   = 캐릭터 흔들흔들(좌우 기울기 ±deg, 주기 period 초) — 기울인 모서리가 안 보이게 8% 크게 잡고 자른다
+      bounce = 통통 튀기(주기 period 초, 높이 amp = 화면 높이 비율) — 바닥에서 뾰족하게 튀는 |sin|
+      punch  = 펀치인(첫 ms 동안 1→zoom 으로 ease-out 세제곱, 그 뒤 유지 — scale(0) 시작 아님)
+      shake  = 떨림(첫 ms 동안 흔들리다 잦아듦 — 강조 박자용)
+    move = "sway" 또는 {"kind":"sway","deg":2.5,"period":1.4,"zoom":1.1,"ms":220,"amp":0.03}."""
+    mv = move if isinstance(move, dict) else {"kind": move}
+    kind = mv.get("kind")
+    c = "(iw-iw/zoom)/2", "(ih-ih/zoom)/2"
+    if kind == "sway":
+        z, deg, per = float(mv.get("zoom", 1.08)), float(mv.get("deg", 2.5)), float(mv.get("period", 1.4))
+        bw, bh = int(ow * z) // 2 * 2, int(oh * z) // 2 * 2
+        return (f"scale={bw}:{bh},rotate='{deg:.3f}*PI/180*sin(2*PI*t/{per:.3f})':fillcolor=white,"
+                f"crop={ow}:{oh}:(iw-{ow})/2:(ih-{oh})/2,setsar=1")
+    if kind == "bounce":
+        z, per, amp = float(mv.get("zoom", 1.08)), float(mv.get("period", 0.5)), float(mv.get("amp", 0.6))
+        k = round(per * FPS, 3)
+        return (f"zoompan=z='{z:.4f}':x='{c[0]}':y='{c[1]}*(1-{amp:.3f}*abs(sin(on*PI/{k})))':d=1:s={ow}x{oh}:fps={FPS}")
+    if kind == "punch":
+        z, f = float(mv.get("zoom", 1.15)), max(1, round(float(mv.get("ms", 220)) / 1000 * FPS))
+        return f"zoompan=z='1+{z - 1:.4f}*(1-pow(1-min(on/{f},1),3))':x='{c[0]}':y='{c[1]}':d=1:s={ow}x{oh}:fps={FPS}"
+    if kind == "shake":
+        z, f = float(mv.get("zoom", 1.06)), max(1, round(float(mv.get("ms", 500)) / 1000 * FPS))
+        d = f"max(0,1-on/{f})"
+        return (f"zoompan=z='{z:.4f}':x='{c[0]}*(1+0.9*{d}*sin(on*2.7))':y='{c[1]}*(1+0.9*{d}*cos(on*3.3))':d=1:s={ow}x{oh}:fps={FPS}")
+    raise ValueError(f"move 종류 모름: {kind} (가능: in·out·left·right·{'·'.join(LIVE_MOVES)})")
 
 
 def box_top(by: int, min_y: int, anchor: bool = True, cap_top: int | None = None) -> int:

@@ -186,7 +186,7 @@ def load_work(wdir: Path, M: dict, cfg: dict) -> dict:
         path = meme_dir / f"{src[5:]}.mp4" if src.startswith("meme:") else (data / src if src.endswith(".mp4") else data / f"src_{src}.mp4")
         cuts.append({"src": src, "path": path, "ss": float(r["ss"] if "ss" in r else r["src_t0"]), "crop": r.get("src_crop"),
                      "crop_x": r.get("crop_x"), "kind": r.get("kind") or "", "meme": src.startswith("meme:") or r.get("kind") == "짤",
-                     "seen": r.get("seen") or r.get("ours") or "", "pieces": [k]})
+                     "seen": r.get("seen") or r.get("ours") or "", "pieces": [k], "move": r.get("move")})
     title = S.get("title_slots") or M.get("sample_title") or {}
     voice = (S.get("voice") or {}).get("voice_id") or cfg["voice_id"]
     name = S.get("desktop_title") or re.sub(r"^작품\d+_", "", wdir.name)
@@ -496,6 +496,14 @@ def fit_shot(c: dict, fit: dict):
         c["speed"] = round(have / need, 4)
 
 
+def _move(c, W, H) -> str:
+    """재료.json 컷 move(sway·bounce·punch·shake) — 판단 주인 narr_video.move_vf(그림 컷 still_move 와 같은 식). 없으면 빈 글(예전 그대로)."""
+    if not c.get("move"):
+        return ""
+    from tools.calcopy.narr_video import move_vf
+    return "," + move_vf(c["move"], c["n"], W, H)
+
+
 def render_parts(w, cfg, cache: Path, out: Path, log: dict) -> tuple[Path, list]:
     W, H = cfg["window"]
     H2 = H + (H % 2)
@@ -505,7 +513,8 @@ def render_parts(w, cfg, cache: Path, out: Path, log: dict) -> tuple[Path, list]
     for c in w["cuts"]:
         st = c["path"].stat()
         sp = c.get("speed", 1.0)
-        key = sha([str(c["path"]), st.st_size, int(st.st_mtime), round(c["ss"], 3), c["box"], W, H2, c["n"], FPS, ENC] + ([sp] if sp != 1.0 else []))
+        key = sha([str(c["path"]), st.st_size, int(st.st_mtime), round(c["ss"], 3), c["box"], W, H2, c["n"], FPS, ENC] + ([sp] if sp != 1.0 else [])
+                  + ([["move", c["move"]]] if c.get("move") else []))   # move 없는 컷은 예전 키 그대로(옛 편 불변)
         c["part_key"] = key
         mat_map.append((key, c["n"]))
         dst = pdir / f"{key}.mp4"
@@ -518,7 +527,7 @@ def render_parts(w, cfg, cache: Path, out: Path, log: dict) -> tuple[Path, list]
         tmp = dst.with_name(dst.stem + ".part.mp4")
         run(["ffmpeg", "-y", "-ss", f"{c['ss']:.3f}", "-i", c["path"], "-an", "-vf",
              (f"setpts=PTS/{c['speed']}," if c.get("speed", 1.0) != 1.0 else "") +
-             f"crop={cw}:{ch}:{x}:{y},scale={W}:{H2}:flags=lanczos,setsar=1,fps={FPS}", "-frames:v", c["n"], *ENC, tmp])
+             f"crop={cw}:{ch}:{x}:{y},scale={W}:{H2}:flags=lanczos,setsar=1,fps={FPS}" + _move(c, W, H2), "-frames:v", c["n"], *ENC, tmp])
         tmp.replace(dst)
     with cf.ThreadPoolExecutor(FF_PAR) as ex:
         list(ex.map(one, jobs))
@@ -596,6 +605,9 @@ def snapshot_and_timeline(w, M, cfg, pdir: Path):
         a, b = round(p["f0"] / FPS, 3), round(p["f1"] / FPS, 3)
         beats.append({"beat_idx": len(beats), "t0": a, "dur": round(b - a, 3), "narration": p["text"], "caption_lines": [p["text"]],
                       "role": "body", "primary": {"video_id": "s0", "start": a, "end": b}})
+    from tools.calcopy.engine import line_fx               # 강조어 자막·모션 효과(대본 줄 emph·fx) — 칸 없으면 비트 그대로
+    w["fx_placed"] = line_fx.apply(beats, [0] + [p["line"] for p in P_[hook_n:]], w["S"].get("lines") or [])
+    snap = scene_style.validate_snapshot(line_fx.snapshot_patch(snap, w["fx_placed"]))
     return snap, beats, head
 
 
@@ -950,7 +962,10 @@ def make_one(pdir: Path, wdir: Path, a) -> dict:
     for c in w["cuts"]:
         groups.append({"src": c["src"], "ss": round(c["ss"], 3), "dur": round(c["n"] / FPS, 3), "t0": round(c["f0"] / FPS, 3),
                        "pieces": [i + 1 for i in c["pieces"]], "kind": c["kind"], "part_key": c["part_key"],
-                       "speed": c.get("speed", 1.0), "src_span": round(c["n"] / FPS * c.get("speed", 1.0), 3)})
+                       "speed": c.get("speed", 1.0), "src_span": round(c["n"] / FPS * c.get("speed", 1.0), 3),
+                       **({"move": c["move"]} if c.get("move") else {})})
+    if w.get("fx_placed"):
+        log["fx_placed"] = w["fx_placed"]
     (out / "timeline.json").write_text(json.dumps({"groups": groups, "pieces": [{k: p[k] for k in ("text", "line", "t0", "t1", "f0", "f1")} for p in w["pieces"]],
                                                    "tl": tl}, ensure_ascii=False, indent=1), encoding="utf-8")
     rows = checks(w, cfg, final, narr, sfx_n, out, work, plan)
