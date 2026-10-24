@@ -13,6 +13,8 @@
   장면↔대사 = oneshot/scene_fit.measure_render(material_auto.fit_judge, Claude 소넷) · 썸네일 규칙 = thumb_rule.check · 광고 = engine/ad_mark 표식
 판정: 항목 ok = True(○) / False(×) / None(미측정 — ×로 센다, 표준 §4-1 "미측정 칸은 ✓가 아니다"). 하나라도 ○가 아니면 ok:false.
 출력: <doc>/품질관문.json · <doc>/자동검사.json(같은 내용, 옛 꼴 호환) · <doc>/재현일치도.json·.md · <doc>/장면대사.json · <work>/eye/(눈 검수 묶음)
+모드(표준 §11 ⑥): --fast = 렌더 직후(규격·화면·재료·자막·효과·표식) · --full = 납품 전(전부: 소리·대본·썸네일·1차 자·장면↔대사 포함).
+  항목마다 걸린 초 = <work>/gate_stage_log.json(engine/stage_log) · 무거운 측정은 <work>/render/gate_cache.json(완성본·목소리 md5, match 입력 sha)로 재사용.
 """
 from __future__ import annotations
 
@@ -27,9 +29,13 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from tools.calcopy.hybrid.common import FPS, ROOT, jload, jsave, lufs, nchar, probe, run  # noqa: E402
+from tools.calcopy.hybrid.common import FPS, ROOT, jload, jsave, lufs, probe, run  # noqa: E402
 
-GATE_VERSION = "quality_gate:v1(2026-10-24)"
+GATE_VERSION = "quality_gate:v2(2026-10-25 표준 §11)"
+FAST_GROUPS = ("규격", "화면", "재료", "자막·효과", "표식")
+GAP_TOL = 1 / 30 + 0.02    # 줄 사이 간격 = 판 timing(시간표) ±1프레임+0.02 (표준 §11 ①ⓐ)
+OLD_PAUSE_RENDERERS = ("make", "itssum", "jaemi")   # 고정 PAUSE_LO/HI 는 옛 렌더러 판에서만(표준 §11 ①ⓒ)
+B13_GAP_MAX, B13_GAP_FRAC = 3.0, 0.25            # 거리 문턱 = min(3.0, 0.25 × 소스 길이) (표준 §11 ②)
 FREEZE_SEC = 0.3      # 창 안 같은 그림이 이만큼 이어지면 멈춤(벤치 컷 중앙 약 1초 · 실제 촬영 영상은 프레임마다 잡음이 있어 0이 안 나온다)
 SIZE = (1080, 1920)
 FIT_MEAN_TOL, FIT_BELOW_TOL = 1.0, 0.10   # 장면↔대사 = 평균 ≥ 벤치−1 · 7 미만 비율 ≤ 벤치+10%p(표준 §3-3 A5 · 지침서 §3-4)
@@ -184,30 +190,108 @@ def marker_verdict(info: dict, style_file: Path | None) -> tuple[bool, str]:
     return True, f"style_sha {str(info['style_sha'])[:12]} · renderer_sig {info['renderer_sig']} · reference {ref}"
 
 
-def line_cps_verdict(chars: dict, durs: dict) -> tuple[bool | None, str]:
-    """줄별 말속도 ±35%(2693d5856 render_itssum.make_sentences 의 align 경계 장치와 같은 폭 — 그쪽은 렌더를 멈추고, 여기는 완성본 소리 조각으로 다시 잰다)."""
-    ids = [k for k in chars if durs.get(k)]
-    if not ids:
-        return None, "줄 소리 조각(s_<줄>.wav) 없음(미측정)"
-    mean = sum(chars[k] for k in ids) / sum(durs[k] for k in ids)
-    rates = {k: round(chars[k] / durs[k], 2) for k in ids}
-    bad = {k: r for k, r in rates.items() if not (0.65 * mean <= r <= 1.35 * mean)}
-    return (not bad), f"평균 {mean:.2f}자/초 · " + " ".join(f"{k}:{r}" for k, r in rates.items()) + (f" · 밖 {bad}" if bad else "")
+def cps_tol():
+    """줄별 말속도 허용 폭의 주인 = render_itssum.CPS_LINE_TOL(표준 §11 ⑤). 상수가 아직 없으면 None(02 몫)."""
+    try:
+        from tools.calcopy.hybrid import render_itssum
+    except Exception:  # noqa: BLE001
+        return None
+    return getattr(render_itssum, "CPS_LINE_TOL", None)
+
+
+def line_cps_verdict(table: dict | None, tol: float | None) -> tuple[bool | None, str]:
+    """렌더가 render_info.json 에 남긴 줄별 cps 표 {줄: 자/초} 가 평균 ±tol 안인가 — 재계산하지 않는다(주인 = render_itssum, 렌더가 막는다)."""
+    if tol is None:
+        return None, "render_itssum.CPS_LINE_TOL 없음(미측정 — 02 가 상수 이름을 뽑는다)"
+    if not table:
+        return None, "render_info.json 에 줄별 cps 표(line_cps) 없음(미측정 — 렌더가 남겨야 한다)"
+    vals = [float(v) for v in table.values()]
+    mean = sum(vals) / len(vals)
+    bad = {k: v for k, v in table.items() if not ((1 - tol) * mean <= float(v) <= (1 + tol) * mean)}
+    return (not bad), f"렌더 기록 평균 {mean:.2f}자/초 ±{tol:.0%} · " + " ".join(f"{k}:{v}" for k, v in table.items()) + (f" · 밖 {bad}" if bad else "")
+
+
+def reuse_violations_bench(cuts: list[dict], src_len: dict) -> list[str]:
+    """B13(공용 렌더러 판 — 표준 §11 ②): 같은 소스에서 ① 프레임을 하나라도 공유(겹침)하면 항상 × ② 겹치지 않아도 거리 < min(3.0, 0.25×소스 길이)
+    이고 이어 붙인 앞으로 가기(앞 컷 끝 = 다음 컷 시작, 원본에서 앞으로)가 아니면 ×. 사진·짤은 B6 몫이라 뺀다.
+    (옛 길 itssum·jaemi 는 checks.reuse_violations 그대로 — 그쪽 ±3초는 긴 원본 전제)"""
+    from tools.calcopy.hybrid.render_bench import IMG_EXT
+    eps = 1 / 30
+    rows = sorted([(c["src"], float(c["ss"]), float(c["ss"]) + float(c["dur"]), c) for c in cuts
+                   if Path(str(c["src"])).suffix.lower() not in IMG_EXT], key=lambda r: r[3]["t0"])
+    bad = []
+    for i in range(len(rows)):
+        for j in range(i + 1, len(rows)):
+            s1, a1, b1, c1 = rows[i]
+            s2, a2, b2, c2 = rows[j]
+            if s1 != s2:
+                continue
+            tag = f"{Path(s1).stem} {a1:.2f}~{b1:.2f}({c1.get('line')}) ↔ {a2:.2f}~{b2:.2f}({c2.get('line')})"
+            if a1 < b2 - eps and a2 < b1 - eps:
+                bad.append(f"겹침 {min(b1, b2) - max(a1, a2):.2f}초: {tag}")
+                continue
+            adjacent = abs(float(c1["t1"]) - float(c2["t0"])) < 0.06 and a2 >= b1 - eps
+            th = min(B13_GAP_MAX, B13_GAP_FRAC * float(src_len.get(s1) or 0)) if src_len.get(s1) else B13_GAP_MAX
+            gap = max(a1, a2) - min(b1, b2)
+            if not adjacent and gap < th:
+                bad.append(f"거리 {gap:.2f}초 < {th:.2f}: {tag}")
+    return bad
+
+
+def gap_verdict(pairs: list[tuple[str, float, float]]) -> tuple[bool | None, str]:
+    """B18 줄 사이 간격(표준 §11 ①ⓐ): [(경계, 계획 간격=시간표, 실측 무음)] — |실측−계획| ≤ 1프레임+0.02."""
+    if not pairs:
+        return None, "줄 경계 없음(미측정)"
+    bad = [(k, p, m) for k, p, m in pairs if abs(m - p) > GAP_TOL]
+    return (not bad), "경계 " + " ".join(f"{k}:{p:.2f}→{m:.2f}" for k, p, m in pairs) + f" (허용 ±{GAP_TOL:.3f})" + (f" · 밖 {[k for k, _, _ in bad]}" if bad else "")
+
+
+def inline_pause_verdict(items: list[tuple[str, list[str], list[float]]], th: dict) -> tuple[bool | None, str]:
+    """B18a 한 줄 안 문장부호 쉼(표준 §11 ①ⓑ): [(줄, 부호 목록(쉼표·마침표), 그 줄 안 무음 길이 목록)] — 긴 무음부터 마침표·쉼표 순으로 짝지어
+    문턱 th{comma, period} −0.02/+0.03 안(checks 의 허용 폭과 같다)."""
+    if not items:
+        return None, "줄 안 문장부호 없음(해당 없음 — 미측정)"
+    out, bad = [], []
+    for lid, marks, sil in items:
+        ms = sorted(marks, key=lambda m: 0 if m == "period" else 1)
+        ss = sorted(sil, reverse=True)
+        for k, m in enumerate(ms):
+            v = ss[k] if k < len(ss) else 0.0
+            ok = th[m] - 0.02 <= v <= th[m] + 0.03
+            out.append(f"{lid}{'.' if m == 'period' else ','}{v:.2f}")
+            if not ok:
+                bad.append(f"{lid}:{m} {v:.2f}(목표 {th[m]})")
+    return (not bad), " ".join(out) + f" (쉼표 {th['comma']}·마침표 {th['period']}, −0.02/+0.03)" + (f" · 밖 {bad}" if bad else "")
 
 
 # ---------------------------------------------------------------- 관문
-def _row(rows: list, group: str, what: str, fn, src: str):
+def _row(rows: list, group: str, what: str, fn, src: str, timer=None):
+    import time
+    t0 = time.time()
     try:
         ok, value = fn()
     except Exception as e:  # noqa: BLE001 — 못 잰 항목은 ×(미측정)로 남긴다. 조용히 넘기지 않는다
         ok, value = None, f"측정 실패: {type(e).__name__}: {str(e)[:200]}"
-    rows.append({"group": group, "what": what, "ok": ok, "value": value, "src": src})
+    sec = round(time.time() - t0, 1)
+    rows.append({"group": group, "what": what, "ok": ok, "value": value, "src": src, "sec": sec})
+    if timer is not None:
+        timer.done(f"gate:{group}:{what}", sec)
     return ok
 
 
+def _cached(store: dict, key: str, fn):
+    if key in store:
+        return store[key]
+    store[key] = fn()
+    return store[key]
+
+
 def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, fit: bool = True, asr: bool = True, media: bool = True,
-         only: tuple | None = None, llm=None, log=print) -> dict:
-    """(판단 주인 — 품질 관문 한 벌) 표준 §5-1 묶음 그대로. only = 묶음 이름 튜플 또는 'legacy10'(옛 bench_check 10항목만 — 회원 경로 호환)."""
+         only: tuple | None = None, llm=None, log=print, mode: str = "full") -> dict:
+    """(판단 주인 — 품질 관문 한 벌) 표준 §5-1 묶음 그대로. mode = 'full'(납품 전 전부) | 'fast'(렌더 직후 FAST_GROUPS, 눈 묶음 없음).
+    only = 묶음 이름 튜플 또는 'legacy10'(옛 bench_check 10항목만 — 회원 경로 호환)."""
+    from tools.calcopy.engine.stage_log import Timer
+    from tools.calcopy.hybrid.common import md5
     from tools.calcopy.hybrid import styles as ST
     from tools.calcopy.hybrid import thumb
     doc, work = Path(doc), Path(work)
@@ -221,9 +305,22 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
     L, LD = st["loudness"], st["length"]
     win = tuple(st["frame"]["window"])
     legacy = only == "legacy10"
+    if mode == "fast" and not only:
+        only = FAST_GROUPS
+        eye_pack = False
     want = (lambda g: True) if not only or legacy else (lambda g: g in only)
     rows: list = []
     cache: dict = {}
+    timer = Timer(work / "gate_stage_log.json")
+    cpath = R / "gate_cache.json"
+    store = jload(cpath) if cpath.exists() else {}
+    fmd5 = md5(final)
+
+    def save_store():
+        jsave(cpath, store)
+
+    def row(group, what, fn, src):
+        return row(group, what, fn, src, timer)
 
     def dur():
         if "d" not in cache:
@@ -237,16 +334,16 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
 
     # ── 규격
     if want("규격"):
-        _row(rows, "규격", "길이", lambda: (LD["min"] - 0.5 <= dur() <= LD["max"] + 0.5, f"{dur():.2f}초 (판 {LD['min']}~{LD['max']})"), "판 length · ffprobe")
-        _row(rows, "규격", "화면=시간표", lambda: (abs(dur() - T["end"]) <= 1 / FPS + 0.01, f"{dur():.3f} vs {T['end']}"), "timeline.end")
-        _row(rows, "규격", "음량", lambda: (abs(loud()[0] - L["lufs"]) <= 0.5, f"{loud()[0]} LUFS (목표 {L['lufs']})"), "ebur128")
-        _row(rows, "규격", "최고점", lambda: (loud()[1] <= L["tp"] + 0.5, f"{loud()[1]} dBFS (≤ {L['tp']}+0.5)"), "ebur128 peak")
+        row("규격", "길이", lambda: (LD["min"] - 0.5 <= dur() <= LD["max"] + 0.5, f"{dur():.2f}초 (판 {LD['min']}~{LD['max']})"), "판 length · ffprobe")
+        row("규격", "화면=시간표", lambda: (abs(dur() - T["end"]) <= 1 / FPS + 0.01, f"{dur():.3f} vs {T['end']}"), "timeline.end")
+        row("규격", "음량", lambda: (abs(loud()[0] - L["lufs"]) <= 0.5, f"{loud()[0]} LUFS (목표 {L['lufs']})"), "ebur128")
+        row("규격", "최고점", lambda: (loud()[1] <= L["tp"] + 0.5, f"{loud()[1]} dBFS (≤ {L['tp']}+0.5)"), "ebur128 peak")
         if not legacy:
             def size():
                 w, h, _ = probe(final)
                 f = fps_of(final)
                 return (w, h) == SIZE and abs(f - FPS) < 0.01, f"{w}×{h} · {f}fps"
-            _row(rows, "규격", "1080×1920·30fps", size, "ffprobe")
+            row("규격", "1080×1920·30fps", size, "ffprobe")
     # ── 화면
     if want("화면"):
         first = T["lines"][next(iter(T["lines"]))]
@@ -254,17 +351,17 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
         def face():
             f = thumb.face_check(final, win, tuple(first), log=log)
             return f["ok"], " ".join(f"{x['t']}s:{'○' if x['ok'] else x['why']}" for x in f["frames"])
-        _row(rows, "화면", "0초·첫 줄 얼굴", face, "thumb.face_check")
-        _row(rows, "화면", "컷 조각 프레임 = 계획", lambda: (lambda b: (not b, "전부 같음" if not b else str(b)))(part_frames(R, T)), "parts/c*.mp4")
-        _row(rows, "화면", "화면 멈춤 없음", lambda: (lambda z: (not z, "0건" if not z else " ".join(f"{a}~{b}s" for a, b in z)))(freezes(final, win)), "창 안 프레임 차")
-        _row(rows, "화면", "컷 끝 번쩍임 없음(0.2초 안 장면 경계)",
+        row("화면", "0초·첫 줄 얼굴", face, "thumb.face_check")
+        row("화면", "컷 조각 프레임 = 계획", lambda: (lambda b: (not b, "전부 같음" if not b else str(b)))(part_frames(R, T)), "parts/c*.mp4")
+        row("화면", "화면 멈춤 없음", lambda: (lambda z: (not z, "0건" if not z else " ".join(f"{a}~{b}s" for a, b in z)))(freezes(final, win)), "창 안 프레임 차")
+        row("화면", "컷 끝 번쩍임 없음(0.2초 안 장면 경계)",
              lambda: (lambda s: (not s, "0건" if not s else str(s)))(part_slivers(R, T, Path(jload(doc / "재료.json")["cand_dir"]))), "render_bench.shot_starts")
         if not legacy:
             def y_ok():
                 from tools.calcopy.hybrid.checks import Y_MIN, _ymean
                 y0, y1 = _ymean(final, 0.3, win), _ymean(final, dur() - 0.3, win)
                 return y0 >= Y_MIN and y1 >= Y_MIN, f"{y0:.0f} · {y1:.0f} (≥{Y_MIN})"
-            _row(rows, "화면", "B9 첫·끝 컷 Y≥60", y_ok, "checks._ymean")
+            row("화면", "B9 첫·끝 컷 Y≥60", y_ok, "checks._ymean")
     # ── 재료
     cuts = [{"src": c["src"], "ss": float(c.get("ss") or 0), "dur": float(c["t1"]) - float(c["t0"]), "t0": float(c["t0"]), "t1": float(c["t1"]),
              "line": c.get("line"), "seg": "A" if c.get("kind") == "orig" else "B", "see": c.get("see")} for c in T.get("cuts") or []]
@@ -272,53 +369,80 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
         from tools.calcopy.hybrid import checks as CK
 
         def b13():
-            v = CK.reuse_violations(cuts, CK.orig_spans_of(S, "잇썸홈판"))     # 대본 lines[kind=orig, src, spans] 꼴 = 잇썸홈판 꼴과 같다
-            return not v, v or "0"
-        _row(rows, "재료", "B13 같은 장면 ±3초 재사용", b13, "checks.reuse_violations")
-        _row(rows, "재료", "B16 A-B-A 끼움(나레 컷)", lambda: (lambda v: (not v, v or "0"))(CK.aba_violations([c for c in cuts if c["seg"] == "B"])), "checks.aba_violations")
+            if st.get("renderer") in OLD_PAUSE_RENDERERS:
+                v = CK.reuse_violations(cuts, CK.orig_spans_of(S, "잇썸홈판"))
+                return not v, v or "0"
+            from tools.calcopy.hybrid.common import dur_of
+            cd = Path(jload(doc / "재료.json")["cand_dir"])
+            lens = {c["src"]: dur_of(cd / c["src"]) for c in cuts if (cd / c["src"]).exists()}
+            v = reuse_violations_bench(cuts, lens)
+            return not v, (v or "0") if v else f"0 (소스 길이 {{{', '.join(f'{Path(k).stem}:{x:.1f}' for k, x in lens.items())}}})"
+        row("재료", "B13 같은 장면 재사용(겹침 ×·거리 min(3, 0.25×길이))", b13, "quality_gate.reuse_violations_bench")
+        row("재료", "B16 A-B-A 끼움(나레 컷)", lambda: (lambda v: (not v, v or "0"))(CK.aba_violations([c for c in cuts if c["seg"] == "B"])), "checks.aba_violations")
 
         def seams():
             from tools.calcopy.engine import check_seams
-            s = check_seams.check(str(final), win, None)
+            s = _cached(store, f"seams|{fmd5}|{list(win)}", lambda: check_seams.check(str(final), win, None))
+            save_store()
             jsave(R / "seams.json", s)
             return s["ok"], f"컷 {len(s['컷'])} · 되감김 {len(s['되감김'])} {[r.get('t') for r in s['되감김']]} · 점프줌 {len(s['점프줌'])}({s['점프줌_판정'] or '드묾'})"
-        _row(rows, "재료", "B16' 되감김·점프줌", seams, "engine/check_seams.check")
+        row("재료", "B16' 되감김·점프줌", seams, "engine/check_seams.check")
     # ── 자막·효과
     lrp = (st.get("bench") or {}).get("line_reads")
     lrp = (ROOT / lrp) if lrp and not Path(lrp).is_absolute() else (Path(lrp) if lrp else None)
     bench_docs = [jload(p) for p in sorted(lrp.glob("*.json"))] if lrp and lrp.exists() else []
     if want("자막·효과"):
-        _row(rows, "자막·효과", "배치(본보기 벤치 편 대조)",
+        row("자막·효과", "배치(본보기 벤치 편 대조)",
              lambda: (tab["check"]["ok"], f"본보기 {tab['check']['reference']} · 칸 최대 차 {tab['check']['worst_slot_diff']}"), "자막표.check = placement.check_place")
         if not legacy:
-            _row(rows, "자막·효과", "B14 효과음 과다(≤ 벤치 p90)", lambda: sfx_excess(len(tab.get("sfx") or []), float(T["end"]), bench_docs), "자막표.sfx · 줄판독 sfx")
+            row("자막·효과", "B14 효과음 과다(≤ 벤치 p90)", lambda: sfx_excess(len(tab.get("sfx") or []), float(T["end"]), bench_docs), "자막표.sfx · 줄판독 sfx")
     # ── 소리
     if want("소리") and not legacy:
         narr = [l for l in S.get("lines") or [] if l.get("kind") == "tts"]
 
         def cps():
-            from tools.calcopy.hybrid.common import dur_of
-            chars = {l["id"]: nchar(l.get("tts") or "") for l in narr}
-            durs = {k: dur_of(R / f"s_{k}.wav") for k in chars if (R / f"s_{k}.wav").exists()}
-            return line_cps_verdict(chars, durs)
-        _row(rows, "소리", "줄별 말속도 ±35%", cps, "s_<줄>.wav · 대본 tts 글자")
+            return line_cps_verdict(info.get("line_cps"), cps_tol())
+        row("소리", "줄별 말속도 ±35%(렌더 기록)", cps, "render_info.line_cps · render_itssum.CPS_LINE_TOL")
 
-        def pauses():
+        ids = list(T["lines"])
+
+        def gaps():
             from tools.calcopy.hybrid.checks import PAUSE_HI, PAUSE_LO, pauses_between
-            ids = list(T["lines"])
-            bounds = [(T["lines"][a][1], T["lines"][b][0]) for a, b in zip(ids[:-1], ids[1:]) if a.startswith("N") and b.startswith("N")]
-            if not bounds:
-                return None, "이어진 나레 줄 경계 없음(미측정)"
-            pv = [p["pause"] for p in pauses_between(R / "voice.wav", bounds)]
-            return all(PAUSE_LO - 0.02 <= p <= PAUSE_HI + 0.03 for p in pv), f"나레↔나레 경계 쉼 {pv} (checks {PAUSE_LO}~{PAUSE_HI} +0.03/−0.02)"
-        _row(rows, "소리", "B18 쉼 0.22~0.30", pauses, "checks.pauses_between(voice.wav)")
+            if st.get("renderer") in OLD_PAUSE_RENDERERS:      # 옛 길 상수(표준 §11 ①ⓒ)
+                bounds = [(T["lines"][a][1], T["lines"][b][0]) for a, b in zip(ids[:-1], ids[1:]) if a.startswith("N") and b.startswith("N")]
+                pv = [p["pause"] for p in pauses_between(R / "voice.wav", bounds)]
+                return (all(PAUSE_LO - 0.02 <= p <= PAUSE_HI + 0.03 for p in pv) if pv else None), f"옛 길 쉼 {pv} ({PAUSE_LO}~{PAUSE_HI})"
+            bounds = [(f"{a}→{b}", T["lines"][a][1], T["lines"][b][0]) for a, b in zip(ids[:-1], ids[1:])]
+            meas = pauses_between(R / "voice.wav", [(x, y) for _, x, y in bounds])
+            return gap_verdict([(k, round(y - x, 3), m["pause"]) for (k, x, y), m in zip(bounds, meas)])
+        row("소리", "B18 줄 사이 간격 = 판 timing(±1프레임+0.02)", gaps, "timeline.lines(판 timing) · checks.pauses_between(voice.wav)")
+
+        def inline():
+            from tools.calcopy.hybrid.common import silences
+            sp = st.get("speech") or {}
+            th = {"comma": float(sp.get("pause_comma", 0.22)), "period": float(sp.get("pause_period", 0.30))}
+            sil = silences(R / "voice.wav", "-35dB", 0.08)
+            items = []
+            for l in narr:
+                txt = (l.get("tts") or "").rstrip(" .,?!~…")
+                marks = ["comma" if ch == "," else "period" for ch in txt if ch in ",."]
+                if not marks or l["id"] not in T["lines"]:
+                    continue
+                a, b = T["lines"][l["id"]]
+                inside = [round(min(e, b - 0.05) - max(x, a + 0.05), 3) for x, e in sil if e > a + 0.05 and x < b - 0.05]
+                items.append((l["id"], marks, [v for v in inside if v > 0]))
+            return inline_pause_verdict(items, th)
+        row("소리", "B18a 줄 안 문장부호 쉼", inline, "판 speech.pause_comma/period(없으면 0.22/0.30) · voice.wav 무음")
 
         def asr_rows():
             if not asr:
                 return None, "받아쓰기 안 함(--no-asr, 미측정)"
             from tools.calcopy.engine import check_line_sync as LS
             win_n = [tuple(T["lines"][l["id"]]) for l in narr if l["id"] in T["lines"]]
-            segs = [s for s in LS.asr_segments(R / "voice.wav") if any(a - 0.3 <= s[0] <= b + 0.3 for a, b in win_n)]
+            vmd5 = md5(R / "voice.wav")
+            allsegs = _cached(store, f"asr|{vmd5}", lambda: [list(x) for x in LS.asr_segments(R / "voice.wav")])
+            save_store()
+            segs = [tuple(s) for s in allsegs if any(a - 0.3 <= s[0] <= b + 0.3 for a, b in win_n)]
             heard = LS.line_starts_from_asr([l.get("tts") or "" for l in narr], segs)
             out = []
             for l, h in zip(narr, heard):
@@ -328,7 +452,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             cache["asr"] = {"rows": out, "segs": segs}
             bad = [r["line"] for r in out if not r["ok"]]
             return not bad, f"나레 {len(out)}줄 중 못 찾음·{LS.LIMIT}초 넘게 어긋남 {bad or '0'} (whisper 로컬)"
-        _row(rows, "소리", "나레 받아쓰기 ↔ 대본", asr_rows, "engine/check_line_sync(whisper)")
+        row("소리", "나레 받아쓰기 ↔ 대본", asr_rows, "engine/check_line_sync(whisper)")
     # ── 대본
     if want("대본") and not legacy:
         def aud():
@@ -336,7 +460,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             r = script_audit.audit(doc / "대본.json", style_name)
             bad = [f"{x['kind']}: {x['why']}" for x in r["rules"] if not x["ok"]] + ([f"engine {r['engine']}"] if r.get("engine") and not r["engine"].get("ok") else [])
             return r["ok"], f"규칙 {len(r['rules'])}개 · 미달 {bad or '0'}"
-        _row(rows, "대본", "script_audit", aud, "hybrid/script_audit.audit")
+        row("대본", "script_audit", aud, "hybrid/script_audit.audit")
     # ── 썸네일(0초 측정이 1차 자 thumb.frame0 에 들어가므로 1차 자보다 먼저)
     if want("썸네일"):
         def ts():
@@ -345,7 +469,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             if legacy:              # 옛 bench_check 그대로: 썸네일.json 없으면 검사 안 함 = 통과
                 return ok is not False, msg
             return ok, msg
-        _row(rows, "썸네일", "썸네일 맨 앞 2프레임", ts, "썸네일.json · 완성본 0~2프레임")
+        row("썸네일", "썸네일 맨 앞 2프레임", ts, "썸네일.json · 완성본 0~2프레임")
         if not legacy:
             def trule():
                 from tools.calcopy.hybrid import thumb_rule
@@ -354,20 +478,25 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
                     return None, "썸네일.json 없음(미측정)"
                 bad = thumb_rule.check(jload(sp), n_parts=len(T.get("cuts") or []))
                 return not bad, bad or "통과"
-            _row(rows, "썸네일", "thumb_rule.check(3안 규칙)", trule, "hybrid/thumb_rule.check")
+            row("썸네일", "thumb_rule.check(3안 규칙)", trule, "hybrid/thumb_rule.check")
 
             def adm():
                 from tools.calcopy.engine import ad_mark
                 _, _, comment = ad_mark._probe(final)
                 return ad_mark.MARK in comment, f"완성본 comment = {comment!r}"
-            _row(rows, "썸네일", "광고 표시(ad_mark)", adm, "engine/ad_mark 표식")
+            row("썸네일", "광고 표시(ad_mark)", adm, "engine/ad_mark 표식")
     # ── 1차 자
     match = None
     if want("1차 자") and not legacy and bench:
         def m():
             nonlocal match
             from tools.calcopy.engine import kal_analyze as K
-            match = K.match_from_render(st, doc, work, media=media, frame0_kind_measured=cache.get("frame0"))
+            lr = sorted((st.get("bench") or {}).get("line_reads") and (ROOT / st["bench"]["line_reads"]).glob("*.json") or [])
+            key = "match|" + hashlib.sha256("|".join([fmd5, md5(R / "자막표.json"), md5(R / "timeline.json"), str(media), str(cache.get("frame0")),
+                                                       hashlib.sha256(ST.path_of(style_name).read_bytes()).hexdigest()]
+                                                      + [f"{p.name}:{p.stat().st_size}:{int(p.stat().st_mtime)}" for p in lr]).encode()).hexdigest()[:24]
+            match = _cached(store, key, lambda: K.match_from_render(st, doc, work, media=media, frame0_kind_measured=cache.get("frame0")))
+            save_store()
             jsave(doc / "재현일치도.json", match)
             (doc / "재현일치도.md").write_text(K.match_md(match, f"{style_name} {doc.name}"), encoding="utf-8")
             ok, msg, _ = match_verdict(match, bool(st.get("base")))
@@ -375,7 +504,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
                 up = getattr(K, "upgrade_table", None)
                 match["upgrade"] = up(st, doc, work) if callable(up) else "kal_analyze.upgrade_table 없음(지시서 05 전)"
             return ok, msg
-        _row(rows, "1차 자", "재현일치도(match_table)", m, "kal_analyze.match_from_render → 재현일치도.json")
+        row("1차 자", "재현일치도(match_table)", m, "kal_analyze.match_from_render → 재현일치도.json")
     # ── 장면↔대사
     fit_res = None
     if want("장면↔대사") and not legacy:
@@ -384,12 +513,13 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             if not fit:
                 return None, "장면↔대사 안 함(--no-fit, 미측정)"
             from tools.calcopy.oneshot import scene_fit
-            fit_res = scene_fit.measure_render(work, llm=llm, out=doc / "장면대사.json")
+            roles = {l.get("id"): l.get("role") for l in S.get("lines") or []}
+            fit_res = scene_fit.measure_render(work, llm=llm, out=doc / "장면대사.json", roles=roles)
             bf = bench_fit(bench_docs)
             fit_res["bench"] = bf
             jsave(doc / "장면대사.json", fit_res)
             return fit_verdict(fit_res["summary"], bf)
-        _row(rows, "장면↔대사", "scene_fit(컷마다 대사↔장면)", f, "oneshot/scene_fit.measure_render → material_auto.fit_judge")
+        row("장면↔대사", "scene_fit(컷마다 대사↔장면)", f, "oneshot/scene_fit.measure_render → material_auto.fit_judge")
     # ── 표식
     if want("표식") and not legacy:
         def mk():
@@ -398,12 +528,13 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             except SystemExit:
                 sf = None
             return marker_verdict(info, sf)
-        _row(rows, "표식", "render_info 표식(판 sha·렌더러 sig·reference)", mk, "render_info.json")
+        row("표식", "render_info 표식(판 sha·렌더러 sig·reference)", mk, "render_info.json")
     if legacy:                      # 옛 bench_check 줄 순서 그대로(자동검사.json 대조 호환)
         rows.sort(key=lambda r: LEGACY10.index(r["what"]))
     ok = all(r["ok"] is True for r in rows)
-    rep = {"style": style_name, "ok": ok, "gate": GATE_VERSION, "mode": "legacy10" if legacy else (list(only) if only else "full"),
-           "rows": [{"group": r["group"], "what": r["what"], "ok": r["ok"], "value": r["value"], "src": r["src"]} for r in rows],
+    rep = {"style": style_name, "ok": ok, "gate": GATE_VERSION, "mode": "legacy10" if legacy else (mode if mode == "fast" else (list(only) if only else "full")),
+           "sec": round(sum(r.get("sec") or 0 for r in rows), 1),
+           "rows": [{"group": r["group"], "what": r["what"], "ok": r["ok"], "value": r["value"], "src": r["src"], "sec": r.get("sec")} for r in rows],
            "n": len(rows), "n_ok": sum(r["ok"] is True for r in rows), "n_bad": sum(r["ok"] is False for r in rows), "n_unmeasured": sum(r["ok"] is None for r in rows),
            "placement": tab.get("check"), "log": tab.get("log"),
            "match": {"verdict": match["verdict"], "file": str(doc / "재현일치도.json")} if match else None,
@@ -419,7 +550,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
         jsave(doc / "품질관문.json", rep)
     jsave(doc / "자동검사.json", rep)       # 호환(runner_ops·flow 가 이 파일을 읽는다) — 같은 내용
     for r in rep["rows"]:
-        log(f"  {'○' if r['ok'] is True else '×' if r['ok'] is False else '미측정'} [{r['group']}] {r['what']}: {r['value']}")
+        log(f"  {'○' if r['ok'] is True else '×' if r['ok'] is False else '미측정'} [{r['group']}] {r['what']} ({r.get('sec')}초): {r['value']}")
     return {"ok": rep["ok"], "report": str(doc / ("자동검사.json" if legacy else "품질관문.json")), "rows": rep["rows"], "match": match, "fit": fit_res,
             "eye_pack_dir": rep.get("eye_pack_dir")}
 
@@ -512,9 +643,12 @@ def main(argv=None) -> int:
     g.add_argument("--no-fit", action="store_true"); g.add_argument("--no-asr", action="store_true")
     g.add_argument("--no-media", action="store_true"); g.add_argument("--no-eye", action="store_true")
     g.add_argument("--legacy10", action="store_true", help="옛 bench_check 10항목만")
+    m = g.add_mutually_exclusive_group()
+    m.add_argument("--fast", action="store_true", help="렌더 직후: 규격·화면·재료·자막·효과·표식(목표 ≤2분)")
+    m.add_argument("--full", action="store_true", help="납품 전: 전부(기본)")
     a = ap.parse_args(argv)
     r = gate(a.style, Path(a.doc), Path(a.work), eye_pack=not a.no_eye, fit=not a.no_fit, asr=not a.no_asr, media=not a.no_media,
-             only="legacy10" if a.legacy10 else None)
+             only="legacy10" if a.legacy10 else None, mode="fast" if a.fast else "full")
     print(f"판정 {'통과' if r['ok'] else '미달'} → {r['report']}")
     if r.get("match"):
         print(f"재현일치도 {r['match']['verdict']}")

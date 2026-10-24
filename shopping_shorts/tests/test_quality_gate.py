@@ -117,7 +117,11 @@ def test_match_unmeasured_required_cell_fails():
     rows[5] = {"key": "sfx.rate", "judge": "failed", "core": True}
     ok, msg, bad = match_verdict({"rows": rows, "n_bench": 2}, upgrade=False)
     assert ok is False and "sfx.rate(미측정)" in bad
-    assert match_verdict({"rows": rows, "n_bench": 2}, upgrade=True)[0] is True        # 업그레이드 판 = 뼈대 칸만 필수
+    assert match_verdict({"rows": rows, "n_bench": 2}, upgrade=True)[0] is False       # sfx.rate 는 뼈대 칸(표준 §11 ③) — 업그레이드 판도 필수
+    rows[5] = {"key": "sfx.rate", "judge": "in", "core": True}
+    rows.append({"key": "thumb.frame0", "judge": "out", "core": True})                  # 겉모양 칸 — 업그레이드 판은 바꿔도 된다
+    assert match_verdict({"rows": rows, "n_bench": 2}, upgrade=True)[0] is True
+    assert match_verdict({"rows": rows, "n_bench": 2}, upgrade=False)[0] is False
     rows[1] = {"key": "cut.median", "judge": "failed", "core": True}
     assert match_verdict({"rows": rows, "n_bench": 2}, upgrade=True)[0] is False
 
@@ -161,14 +165,78 @@ def test_scene_fit_render_adapter(tmp_path):
     res = scene_fit.measure_render(tmp_path / "work", llm=llm)
     s = res["summary"]
     assert s["judged"] == 10 and abs(s["below_min"] - 3) <= 1, s
-    assert len(llm.calls) <= 3                                                        # 시트 10칸 1회 · 편당 ≤3회
+    assert len(llm.calls) == 2                                                        # 시트 1장 × 2회 채점(두 번이 같으면 3회째 없음)
+    assert scene_fit.gold_check([r["score"] for r in res["rows"]], ["low" if not t else "high" for t in truth])["ok"]
+    llm2 = FakeLLM()
+    scene_fit.measure_render(tmp_path / "work", llm=llm2)
+    assert len(llm2.calls) == 0                                                       # 같은 시트 = 캐시(재계산 0)
+    roles = {f"N{k}": ("나레 훅" if k in (2, 6) else "본문") for k in range(10)}
+    s2 = scene_fit.summarize([r["score"] for r in res["rows"]], [roles[r["cut"]["line"]] for r in res["rows"]])
+    assert s2["below_base"] == 8 and s2["below_min"] == 1 and s2["skipped_roles"] == 2   # 훅 줄 컷은 미만 비율 분모에서 뺀다
     assert fit_verdict(s, {"mean": 8.0, "below_rate": 0.1})[0] is False               # 평균 6.9 < 7.0, 미만 30% > 20%
     assert fit_verdict(s, {"mean": 7.5, "below_rate": 0.25})[0] is True
     assert fit_verdict(s, None)[0] is None                                            # 벤치 fit 없음 = 미측정
 
 
-def test_line_cps_verdict():
+def test_line_cps_reads_render_table():
     from tools.calcopy.hybrid.quality_gate import line_cps_verdict
-    assert line_cps_verdict({"N1": 20, "N2": 22}, {"N1": 2.3, "N2": 2.5})[0] is True
-    assert line_cps_verdict({"N1": 20, "N2": 22, "N3": 20}, {"N1": 2.3, "N2": 2.5, "N3": 4.9})[0] is False   # 12편 N3 4.90자/초 꼴(되풀이)
-    assert line_cps_verdict({"N1": 20}, {})[0] is None
+    assert line_cps_verdict({"N1": 8.7, "N2": 8.8}, 0.35)[0] is True
+    assert line_cps_verdict({"N1": 8.7, "N2": 8.8, "N3": 4.1}, 0.35)[0] is False     # 12편 N3 되풀이 꼴(평균의 ±35% 밖)
+    assert line_cps_verdict(None, 0.35)[0] is None                                     # 렌더가 표를 안 남김 = 미측정
+    assert line_cps_verdict({"N1": 8.7}, None)[0] is None                              # 주인 상수 없음 = 미측정
+
+
+# ---------------------------------------------------------------- 표준 §11 ② B13: 겹침 항상 × · 거리 min(3, 0.25×길이)
+def test_b13_overlap_and_length_scaled_gap():
+    from tools.calcopy.hybrid.quality_gate import reuse_violations_bench
+
+    def c(src, ss, dur, t0, line):
+        return {"src": src, "ss": ss, "dur": dur, "t0": t0, "t1": t0 + dur, "line": line}
+    ep13 = [c("mkA.mp4", 0.0, 2.486, 15.0, "N4"), c("mkA.mp4", 1.2, 2.12, 17.49, "O3"), c("mkA.mp4", 6.0, 0.49, 23.85, "N6")]
+    bad = reuse_violations_bench(ep13, {"mkA.mp4": 7.5})
+    assert any(b.startswith("겹침") and "(N4)" in b and "(O3)" in b for b in bad), bad        # 13편 N4↔O3 같은 프레임 1.2~2.49
+    assert not any("(N6)" in b for b in bad), bad                                           # 7.5초 소스 문턱 1.875초, O3 끝 3.32 → N6 6.0 = 2.68초 떨어짐
+    long_src = [c("d2.mp4", 24.087, 2.19, 19.6, "N5"), c("d2.mp4", 28.2, 1.45, 11.3, "N3")]
+    assert reuse_violations_bench(long_src, {"d2.mp4": 80.0})                               # 긴 소스 = 3초 안 1.92초 떨어짐 → ×
+    assert not reuse_violations_bench([c("d2.mp4", 0.0, 2.0, 0.0, "N1"), c("d2.mp4", 2.0, 2.0, 2.0, "N1")], {"d2.mp4": 80.0})   # 이어 읽기
+
+
+# ---------------------------------------------------------------- 표준 §11 ① B18 줄 간격 = 판 timing · B18a 줄 안 쉼
+def test_b18_gap_follows_timing_and_b18a_inline():
+    from tools.calcopy.hybrid.quality_gate import gap_verdict, inline_pause_verdict
+    assert gap_verdict([("N2→N3", 0.08, 0.095), ("N3→O2", 0.08, 0.129)])[0] is True       # 잇템로그 13편 실측(판 timing.gap 0.08)
+    assert gap_verdict([("N2→N3", 0.08, 0.30)])[0] is False                                 # 옛 상수 0.30 으로 쉬면 벤치(붙여 말함)와 다르다
+    th = {"comma": 0.22, "period": 0.30}
+    assert inline_pause_verdict([("N7", ["comma"], [0.23, 0.09])], th)[0] is True
+    assert inline_pause_verdict([("N7", ["comma"], [0.10])], th)[0] is False
+    assert inline_pause_verdict([], th)[0] is None
+
+
+def test_strict_catches_null_transition():
+    from tools.calcopy.engine.kal_analyze import check_doc
+    doc = {"id": "x", "dur": 5.0, "title_lines": [], "source_label": None, "beats": None, "narr_share": None, "notes": [],
+           "lines": [{"t0": 0.0, "t1": 1.0, "speaker": "나레", "text": "가", "layer": "채널", "enter": "cut", "emph": [], "sticker": [], "sfx": None,
+                      "scene": "얼굴", "cut_at": [], "role": "훅", "y": [1, 2], "fill_hex": "#FFFFFF", "fit": 7,
+                      "transition": None, "motion": "cam", "confidence": "눈"}]}
+    assert any("transition" in e for e in check_doc(doc, strict=True)["errors"])
+    doc["lines"][0]["transition"] = "cut"
+    assert not check_doc(doc, strict=True)["errors"]
+
+
+def test_enter_append_is_its_own_word_not_decoration():
+    from tools.calcopy.engine.kal_analyze import _decorated, enter_key
+    assert enter_key("append") == "append" and enter_key("쌓기(아래로)") == "append"
+    assert _decorated({"enter": "append"})["enter_fx"] is False
+
+
+def test_scene_fit_gold_fixture_check():
+    from tools.calcopy.oneshot.scene_fit import gold_check
+    G = json.loads((FIX.parent / "scene_fit_gold.json").read_text(encoding="utf-8"))
+    gold = [r["gold"] for r in G["rows"]]
+    assert gold.count("low") == 3 and gold.count("high") == 3
+    real = [7, 5, 1, 5, 10, 1, 10, 10, 1, 7]                       # 10-25 실제 Claude 소넷 루브릭 2~3회 중앙값(보고 표)
+    assert gold_check(real, gold)["ok"]
+    old = [10, 6, 1, 5, 8, 1, 6, 6, 1, 5]                           # 10-24 옛 fit_judge 한 번 채점 — 분류로는 혼동 0(옛 미달은 '7 미만 비율' 자 탓)
+    assert gold_check(old, gold)["ok"]
+    assert not gold_check([7, 5, 7, 5, 10, 1, 10, 10, 1, 7], gold)["ok"]   # 틀린 컷(2)을 7로 = 혼동
+    assert not gold_check([7, 5, 1, 5, 5, 1, 10, 10, 1, 7], gold)["ok"]    # 맞는 컷(4)을 5로 = 혼동
