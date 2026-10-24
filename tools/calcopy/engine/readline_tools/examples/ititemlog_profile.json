@@ -1,0 +1,14 @@
+{
+ "_what": "잇템로그(ititemlog) 줄판독 build_lr 채널 기본값 — 06 워커 10-24 build_lr.py 에 박혀 있던 상수를 그대로 옮김. 다른 채널은 이 파일을 복사해 고친다.",
+ "_bands": "capseg 띠 1150~1460 · cutdet 창 486~1920 (잇템로그 6편 결과 work/lr6/seg_·cut_ 를 낸 값 — 재현 대조로 확인)",
+ "layer": "잇템로그",
+ "measure_band": [1180, 1470],
+ "font": {"name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)", "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"},
+ "hand_font": {"name": "미확정(손글씨체 — 둥근 필기체, 얇은 검정 외곽)", "basis": "눈"},
+ "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+ "hand_outline": "검정 얇은 외곽 약 3~4px(눈)",
+ "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+ "made_by": "오푸스 실행자 줄판독(눈+픽셀: capseg 자막띠 30fps·cutdet 컷/전환·px 채움색·sfx_events 신호) 2026-10-24 (관제 263 지시서 06)",
+ "capseg_band": [1150, 1460],
+ "cutdet_window": [486, 1920]
+}
