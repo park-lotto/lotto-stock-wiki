@@ -1,0 +1,235 @@
+{
+ "name": "썰템쇼판",
+ "renderer": "bench",
+ "_note": "재밌쇼(@humorshowshow) 칼카피 1차 판 — 쇼핑형>썰커뮤니티형 + 화자대사줄 옵션(「화자 : 대사」). 근거 = 설명서 프리셋 channel/humorshowshow/preset/썰템쇼_화자썰/{frame.json,manifest.json}(hs_preset.py 가 만든 것, 8편 실측) · 줄판독 21편(옛 꼴 줄판독/_옛꼴 — 06 새 꼴 미변환이라 placement.count·규칙빈도 없음 → measure_task 06-humorshowshow). 손 스크립트 preset/hs_preset.py·hs_loo.py·hs_measure.py = 설명서 프리셋 생성기(회원 옛 길 preset_make 가 읽음 — 지우지 않는다)",
+ "bench": {
+  "ko": "재밌쇼",
+  "channel": "humorshowshow",
+  "analysis": "channel/humorshowshow/스타일분석_2026-10-17.md",
+  "line_reads": "channel/humorshowshow/줄판독",
+  "src_dir": "C:/숏템_칼카피/humorshowshow/mp4",
+  "design": "channel/humorshowshow/preset/썰템쇼_화자썰/manifest.json"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f",
+  "candidates": [
+   "지훈"
+  ],
+  "why": "벤치 '빠르고 위트 있는 20대 남성 TTS 해설 톤'(NBdm 판독) · 사장님 10-17 '목소리는 따라가지 않는다' → 남 = 박창수·지훈(CLAUDE.md 10-20, 필재 금지) 중 박창수(손 상수 — 귀 확인 필요)"
+ },
+ "cps_target": 8.6,
+ "_why_cps_target": "뜯기 voice_rules.cps 중앙 8.6(받아쓰기 된 2편 8.92·8.28 — manifest.channel_rules.sound)",
+ "bgm": {
+  "id": "sweets",
+  "db_below_voice": 12.0,
+  "duck_orig_db": 0.0,
+  "duck_narr_db": 0.0,
+  "fade_out": 0.4,
+  "candidates": [],
+  "why": "BGM 있음·경쾌(NBdm 판독) — 곡·dB 미측정(measure_task 06-humorshowshow bgm_fp) → 손 상수 sweets·12dB·fade 0.4 · 원음 0 · 덕킹 근거 없음"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 통일(사장님 10-18) · 벤치 I 중앙 −13.8(8편)"
+ },
+ "length": {
+  "min": 26.3,
+  "max": 32.3,
+  "why": "벤치 8편 길이 26.33~32.33(중앙 28.392, manifest shot_contract.rows)"
+ },
+ "timing": {
+  "gap": 0.05,
+  "tail": 0.2,
+  "why": "손 상수 — 벤치 줄 사이 쉼 미측정(06 measure_task)"
+ },
+ "frame": {
+  "kind": "post",
+  "_from": "frame_import.py ← calcopy_frame v1 source=NBdmq90aJus frame=body span=$per_video",
+  "bg": [
+   255,
+   255,
+   255
+  ],
+  "window": [
+   0,
+   673,
+   1080,
+   878
+  ],
+  "title": [
+   {
+    "font": "Pretendard-ExtraBold.otf",
+    "px": 76.9,
+    "center": 316.0,
+    "color": "#000000",
+    "max_w": 980
+   }
+  ],
+  "post": {
+   "head_bar": {
+    "box": [
+     0,
+     0,
+     1080,
+     239
+    ],
+    "color": "#E2EED2",
+    "icons": [
+     {
+      "font": "BMJUA.ttf",
+      "px": 92.7,
+      "color": "#AFDA81",
+      "cx": 460,
+      "cy": 189.5,
+      "max_w": 120,
+      "text": "썰",
+      "kind": "text",
+      "from": "_fixed"
+     },
+     {
+      "font": "BMJUA.ttf",
+      "px": 92.7,
+      "color": "#FFFFFF",
+      "cx": 541,
+      "cy": 189.5,
+      "max_w": 120,
+      "text": "템",
+      "kind": "text",
+      "from": "_fixed"
+     },
+     {
+      "font": "BMJUA.ttf",
+      "px": 92.7,
+      "color": "#AFDA81",
+      "cx": 622,
+      "cy": 189.5,
+      "max_w": 120,
+      "text": "쇼",
+      "kind": "text",
+      "from": "_fixed"
+     }
+    ]
+   },
+   "author_line": {
+    "font": "SUIT-Bold.otf",
+    "px": 23.3,
+    "color": "#020000",
+    "x": 80,
+    "cy": 387.5,
+    "max_w": 200,
+    "text": "익명"
+   },
+   "rules": [
+    {
+     "box": [
+      0,
+      402,
+      1080,
+      404
+     ],
+     "color": "#6E666D"
+    }
+   ]
+  },
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "why": "frame_import.py ← channel/humorshowshow/preset/썰템쇼_화자썰/frame.json(body, 8편 실측 hs_measure → preset_save 중앙값, manifest.variable_stats) 픽셀 그대로 · 로고 '재밌쇼'→'썰템쇼' 글자마다 색(사장님 10-18 '로고만 바꾼다') · 창 [0,673,1080,878] = 프리셋 고정 창(벤치는 컷마다 그림 높이 489~933 — manifest.differences)",
+  "_pending": {
+   "unmapped_layers": "머리띠 svg 아이콘 2(x172·x834)·로고 밑 장식 선 svg(x419 y137)·조회수 줄 2칸(SUIT-Bold 23.3 회색·20 빨강, $per_video) — post 칸에 그림(image) 아이콘·메타 2색 칸 없음 → 02 쪽지",
+   "views_line": "벤치 메타 줄 '추천891 조회 1,954,556 <날짜> 09:18 댓글 7544'(21편 같은 꾸민 값) — 사장님 10-18 '켜 둔다' ↔ 금지선 '가짜 지표' 충돌(manifest.meta_line.caution) → 판엔 안 켬, 대본 post.views 가 있을 때만 그려짐. 사장님 확인 필요",
+   "logo_rotate": "벤치 로고 글자마다 기울인 손글씨 — 렌더러 글자 회전 칸 없음(manifest.differences) → 02",
+   "hook_card": "0~1.95초 훅 카드(어두운 틀·큰 제목 2줄 흰/연두 #84FD46 GmarketSans 113.6·흰 띠 제목 반복) = frame.json hook — 시간 구간별 틀 칸 없음 → 02",
+   "pic_box_per_cut": "그림 높이 컷마다 489~933 — 창 고정만 → 02",
+   "title_cx": "framecmp 제목 띠: y0 −1·h +1·letter_gap +2 ✓ · cx −7 ✗(벤치 제목 가운데 x 546 — 렌더러 _title_line 은 W/2 고정, x 칸 없음 → 02)",
+   "logo_stroke": "벤치 로고 굵은 어두운 외곽+그림자 — head_bar 글 아이콘(_draw_text)에 외곽·그림자 칸 없음 → 02"
+  }
+ },
+ "caption": {
+  "pack": "clean",
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 8.6,
+  "chunk_max_chars": 12,
+  "band": [
+   488,
+   716
+  ],
+  "why": "자막 = frame.json caption 층(Pretendard-Bold 60.1 검정·외곽 0·가운데·3줄 칸 y488 줄 76 = 488~716) · 조각 초 중앙 1.4(뜯기 8편) · chunk_max_chars 12 = 손 상수(조각 자수 미측정 — 06)",
+  "_pending": {
+   "pack": "재밌쇼 게시글 자막 팩 없음 → 관제 235 요청: Pretendard-Bold 60.1 검정 외곽 0 · place 1줄 위 y488(25.4%)·줄 76 · 누적 2~3줄 · 화자대사줄 「화자 : 대사」 꼴. 그동안 clean",
+   "accumulate": "자막 2줄째 덧붙음(누적) — 렌더러 칸 없음 → 02"
+  }
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "cut": 1.0
+   },
+   "ms": 0,
+   "why": "전환 효과 미측정(줄판독 옛 꼴에 transition 칸 없음 — 06) · 1차 = 컷"
+  },
+  "why": "push 0 — 벤치 줌인 컷 비율 0.368(뜯기 8편)이나 세기·조건 미측정 → _pending"
+ },
+ "sfx_files": {
+  "gain_db": -8,
+  "why": "벤치 효과음 휙·띵(NBdm 받아쓰기 6개/28초 — 1편, 신호표 sfx_events 없음) → 규칙 없음, 06 측정 뒤(손 상수)"
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "narr.first": "cut",
+    "narr.rest": "cut",
+    "why": "꾸밈 등장 미측정(옛 꼴) — 설명서 프리셋 캡션 enter null(즉시) 그대로"
+   },
+   "meme": {
+    "rate": 0.0,
+    "why": "반응 짤은 그림 칸 재료 자체(17/21편) — 얹는 짤 아님"
+   }
+  },
+  "counted": {}
+ },
+ "title_form": "게시글 제목 1줄(Pretendard-ExtraBold 76.9) = 훅 문장 · 훅 카드 2줄(흰/연두)은 _pending.hook_card",
+ "_pending": {
+  "counted": "줄판독 21편이 옛 꼴(줄판독/_옛꼴) — placement.count 가 못 읽음 → 06-humorshowshow 새 꼴 6편 뒤 count",
+  "speaker_lines": {
+   "rule": "「화자 : 대사」 자막 줄 0~3개/편 — 화자 = 의인화한 집단·회사·나라(한국인들·제조사·벨·코스트코·프랑스…)",
+   "narration_reads": "나레는 화자 이름을 빼고 대사만 읽는다(78p9·jECu 받아쓰기 대조)",
+   "count_from": "21편 356줄: 화자대사 48 · 2인대화 8 (15/21편에 있음)",
+   "max_per_video": 3
+  },
+  "last_line": {
+   "rule": "1인칭 혼잣말 드립 + ㅋㅋ 또는 ㅎㅎ 로 끝 — 편마다 둘 중 하나(사장님 10-18 ㅎㅎ 추가, 벤치는 ㅋㅋ 16/16·ㅎㅎ 0)",
+   "from": "훅 카드 꼴 16/16편 ㅋㅋ 끝, 그중 12편 '아/하 ~' 시작"
+  }
+ },
+ "script": {
+  "brief": [
+   "박자: 훅 카드(0~2초): [주체] + [센 동사] + [정체 숨긴 대상]? — 2줄째 연두, 아래 띠에 같은 문장 → 대상 소개·배경(회사·시장·문제, ~는데로 넘김) → 충격 사실·장애물(숫자·ㄷㄷ) → 화자 대사 1~3줄(「화자 : 대사」 + 반응 짤) → 정체 공개·해결(바로 ○○ / 대체품·먹는 법) → 근거(성분표·문의답변·댓글·인터뷰 캡처 + 빨간 화살표·밑줄) → 맛·이득 묘사 2~4줄(꾸덕·도른 조합·쟁여두기) → 끝줄 = 1인칭 혼잣말 드립 + ㅋㅋ 또는 ㅎㅎ(아/하 ~ 로 시작)",
+   "반말 전언체(존댓말 0) · 자막 끝 ㄷㄷ 27·~는데 17·ㅋㅋ 16·명사 10(21편) · 훅 = [주체]+[센 동사]+[정체 숨긴 대상]",
+   "화자대사줄(옵션): 「화자 : 대사」 0~3줄/편 — 화자 = 의인화한 집단·회사·나라, 나레는 화자 이름 빼고 대사만 읽는다 · 끝줄 = 1인칭 혼잣말 드립 + ㅋㅋ/ㅎㅎ"
+  ],
+  "audit": [
+   {
+    "id": "first_line",
+    "kind": "first_line",
+    "is": "tts",
+    "why": "나레 1명(뜯기 판정 2편)"
+   },
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 26.3,
+    "max": 32.3,
+    "why": "벤치 8편 길이"
+   }
+  ]
+ }
+}

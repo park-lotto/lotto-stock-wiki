@@ -41,6 +41,12 @@ def font_file(name: str | None, unresolved: list) -> str | None:
     hit = sorted(p.name for p in FONTS.glob(base + "*") if p.suffix.lower() in (".ttf", ".otf"))
     if hit:
         return hit[0]
+    for w, full in (("XBold", "ExtraBold"), ("ExtraBold", "ExtraBold"), ("SemiBold", "SemiBold"), ("Bold", "Bold"), ("Regular", "Regular"), ("Black", "Black"), ("Medium", "Medium")):
+        if base.endswith(w) and not base.endswith("-" + w):      # 'PretendardXBold' → Pretendard-ExtraBold · 'SUITBold' → SUIT-Bold
+            for ext in (".otf", ".ttf"):
+                f = base[: -len(w)] + "-" + full + ext
+                if (FONTS / f).exists():
+                    return f
     unresolved.append(name)
     return name
 
@@ -136,9 +142,10 @@ def convert(fj: dict, kind: str, frame_id: str | None = None) -> dict:
                 ic = _search_icon(im)
                 if ic:
                     hb["icons"].append(ic)
-            for t in [l for l in L if l["kind"] == "text" and l.get("role") in ("brand", "label") and _inside({**l, "w": 0, "h": 0}, hb["box"])]:
-                d = _text(t, unresolved)          # 머리띠 안 글 = 채널 이름 자리(brand) — 대본 post.brand 가 있으면 그것
-                d.update({"kind": "text", "from": "brand"})
+            htx = [l for l in L if l["kind"] == "text" and l.get("role") in ("brand", "label") and _inside({**l, "w": 0, "h": 0}, hb["box"])]
+            for t in htx:
+                d = _text(t, unresolved)          # 머리띠 안 글 = 채널 이름 자리(brand) — 대본 post.brand 가 있으면 그것. 글자마다 따로 그린 로고(여러 개)는 제 글 그대로
+                d.update({"kind": "text", "from": "brand" if len(htx) == 1 else "_fixed"})
                 hb["icons"].append(d)
                 used.add(id(t))
             P["head_bar"] = hb
