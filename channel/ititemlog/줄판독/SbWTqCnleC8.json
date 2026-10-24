@@ -164,8 +164,8 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1150,
-    1382
+    1258,
+    1329
    ],
    "fill_hex": "#F9010A",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
@@ -203,10 +203,10 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1178,
-    1454
+    1257,
+    1341
    ],
-   "fill_hex": "#FFFDFD",
+   "fill_hex": "#FFFEFF",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
    "glow": null,
    "emph": [],
@@ -247,10 +247,10 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1170,
-    1454
+    1234,
+    1349
    ],
-   "fill_hex": "#FBF2EB",
+   "fill_hex": "#F6EDEA",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
    "glow": null,
    "emph": [],
@@ -365,10 +365,10 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1150,
-    1382
+    1258,
+    1330
    ],
-   "fill_hex": "#FBDC0A",
+   "fill_hex": "#F7E712",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
    "glow": null,
    "emph": [],
@@ -404,8 +404,8 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1218,
-    1410
+    1257,
+    1330
    ],
    "fill_hex": "#FFFEFF",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
@@ -448,10 +448,10 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1150,
-    1454
+    1258,
+    1330
    ],
-   "fill_hex": "#FADC0B",
+   "fill_hex": "#F6E812",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
    "glow": null,
    "emph": [],
@@ -492,10 +492,10 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1242,
-    1346
+    1258,
+    1330
    ],
-   "fill_hex": "#FEFCFC",
+   "fill_hex": "#FFFEFD",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
    "glow": null,
    "emph": [],
@@ -531,8 +531,8 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1242,
-    1338
+    1258,
+    1330
    ],
    "fill_hex": "#FFFEFF",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
@@ -575,10 +575,10 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1150,
-    1342
+    1258,
+    1330
    ],
-   "fill_hex": "#FADC0E",
+   "fill_hex": "#F7E813",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
    "glow": null,
    "emph": [],
@@ -614,10 +614,10 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1150,
-    1338
+    1258,
+    1328
    ],
-   "fill_hex": "#F9DB10",
+   "fill_hex": "#F6E814",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
    "glow": null,
    "emph": [],
@@ -653,8 +653,8 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1242,
-    1338
+    1258,
+    1328
    ],
    "fill_hex": "#FFFEFF",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
@@ -697,10 +697,10 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1226,
-    1454
+    1258,
+    1330
    ],
-   "fill_hex": "#FFFDFF",
+   "fill_hex": "#FFFEFF",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
    "glow": null,
    "emph": [],
@@ -741,10 +741,10 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1150,
-    1342
+    1258,
+    1343
    ],
-   "fill_hex": "#F7DC11",
+   "fill_hex": "#F3E719",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
    "glow": null,
    "emph": [],
@@ -780,8 +780,8 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1154,
-    1342
+    1258,
+    1330
    ],
    "fill_hex": "#FFFFFF",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
@@ -824,10 +824,10 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1242,
-    1342
+    1258,
+    1330
    ],
-   "fill_hex": "#FADC0B",
+   "fill_hex": "#F6E813",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
    "glow": null,
    "emph": [],
@@ -863,10 +863,10 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1242,
-    1342
+    1258,
+    1330
    ],
-   "fill_hex": "#FADC0B",
+   "fill_hex": "#F6E712",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
    "glow": null,
    "emph": [],
@@ -902,8 +902,8 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1242,
-    1446
+    1258,
+    1329
    ],
    "fill_hex": "#FFFFFF",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
@@ -944,8 +944,8 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1242,
-    1434
+    1258,
+    1330
    ],
    "fill_hex": "#FFFFFF",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
@@ -988,8 +988,8 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1242,
-    1398
+    1258,
+    1329
    ],
    "fill_hex": "#FFFFFF",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
@@ -1032,8 +1032,8 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1242,
-    1406
+    1258,
+    1328
    ],
    "fill_hex": "#FFFFFF",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
@@ -1071,10 +1071,10 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1242,
-    1450
+    1279,
+    1328
    ],
-   "fill_hex": "#FEFEFF",
+   "fill_hex": "#FFFFFF",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
    "glow": null,
    "emph": [],
@@ -1110,8 +1110,8 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1242,
-    1450
+    1258,
+    1330
    ],
    "fill_hex": "#FFFFFF",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
@@ -1149,8 +1149,8 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1182,
-    1338
+    1258,
+    1328
    ],
    "fill_hex": "#FFFFFF",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
@@ -1188,8 +1188,8 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1230,
-    1342
+    1258,
+    1330
    ],
    "fill_hex": "#FFFFFF",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
@@ -1227,10 +1227,10 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1242,
-    1454
+    1258,
+    1330
    ],
-   "fill_hex": "#FCDB0A",
+   "fill_hex": "#F7E711",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
    "glow": null,
    "emph": [],
@@ -1266,8 +1266,8 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1242,
-    1454
+    1258,
+    1330
    ],
    "fill_hex": "#FFFFFF",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
@@ -1310,8 +1310,8 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1242,
-    1454
+    1258,
+    1330
    ],
    "fill_hex": "#FFFFFF",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
@@ -1349,10 +1349,10 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1186,
-    1454
+    1258,
+    1330
    ],
-   "fill_hex": "#FADC0A",
+   "fill_hex": "#F7E711",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
    "glow": null,
    "emph": [],
@@ -1388,8 +1388,8 @@
    "type_cps": null,
    "cursor": false,
    "y": [
-    1242,
-    1454
+    1258,
+    1330
    ],
    "fill_hex": "#FFFFFF",
    "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",

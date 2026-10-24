@@ -92,8 +92,9 @@
    "x": "가운데",
    "align": "center",
    "motion": "cam",
-   "transition": null,
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 0.067,
@@ -137,7 +138,8 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 1.267,
@@ -178,8 +180,9 @@
    "x": "가운데",
    "align": "center",
    "motion": "cam",
-   "transition": null,
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "transition": "none",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 2.633,
@@ -219,7 +222,8 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 3.033,
@@ -256,8 +260,9 @@
    "x": "가운데",
    "align": "center",
    "motion": "cam",
-   "transition": null,
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "transition": "none",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 3.833,
@@ -294,8 +299,9 @@
    "x": "가운데",
    "align": "center",
    "motion": "cam",
-   "transition": null,
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "transition": "none",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 5.067,
@@ -335,7 +341,8 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 5.767,
@@ -372,8 +379,9 @@
    "x": "가운데",
    "align": "center",
    "motion": "cam",
-   "transition": null,
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "transition": "none",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 6.7,
@@ -413,7 +421,8 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 7.867,
@@ -450,8 +459,9 @@
    "x": "가운데",
    "align": "center",
    "motion": "cam",
-   "transition": null,
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 9.733,
@@ -491,7 +501,8 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 10.833,
@@ -528,8 +539,9 @@
    "x": "가운데",
    "align": "center",
    "motion": "cam",
-   "transition": null,
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "transition": "none",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 11.433,
@@ -569,7 +581,8 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 12.333,
@@ -609,7 +622,8 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 13.567,
@@ -649,7 +663,8 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 14.567,
@@ -686,8 +701,9 @@
    "x": "가운데",
    "align": "center",
    "motion": "cam",
-   "transition": null,
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "transition": "none",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 15.567,
@@ -727,7 +743,8 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 16.067,
@@ -767,7 +784,8 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 17.367,
@@ -807,7 +825,8 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 17.767,
@@ -844,8 +863,9 @@
    "x": "가운데",
    "align": "center",
    "motion": "cam",
-   "transition": null,
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "transition": "none",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 19.033,
@@ -885,7 +905,8 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 20.3,
@@ -925,7 +946,8 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 21.0,
@@ -962,8 +984,9 @@
    "x": "가운데",
    "align": "center",
    "motion": "cam",
-   "transition": null,
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "transition": "none",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 21.533,
@@ -1009,7 +1032,8 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 22.433,
@@ -1050,7 +1074,8 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 23.633,
@@ -1087,8 +1112,9 @@
    "x": "가운데",
    "align": "center",
    "motion": "cam",
-   "transition": null,
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "transition": "none",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 24.333,
@@ -1128,7 +1154,8 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 25.2,
@@ -1168,7 +1195,8 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 26.367,
@@ -1205,8 +1233,9 @@
    "x": "가운데",
    "align": "center",
    "motion": "cam",
-   "transition": null,
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "transition": "none",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 27.5,
@@ -1246,7 +1275,8 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 27.967,
@@ -1286,7 +1316,8 @@
    "align": "center",
    "motion": "cam",
    "transition": "cut",
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   },
   {
    "t0": 29.067,
@@ -1323,8 +1354,9 @@
    "x": "가운데",
    "align": "center",
    "motion": "cam",
-   "transition": null,
-   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)",
+   "exit": "cut"
   }
  ],
  "beats": "훅(0~3.0초 빨강 자막: 표지 '이거 맞아??!' 2프레임 → 나레 '한국 콜라겐 마스크를 쓰고 / 충격 받은 외국인이 있는데요'(팝+글리치) → '!!!!!!!!!!') → 나레 상황(3.0~6.7 '3시간이 아니라 3일을 붙여 놓은 것 같은데요 / 처음 써본 이 여성은') → 원음 의문(6.7~9.7 흰 자막 '원래 투명해져야 하는거 아님?') → 나레·원음 교차(9.7~13.6 '그대로라며'/'계속 그대로야..'/'뭔가 잘못된것 같다는데') → 원음 질문(13.6~17.4 '부드러운 부분을…오돌토돌한 부분을..') → 반전·공개(17.4~19.0 '알고보니 거꾸로 붙여 놨던 것인데요') → 정보(19.0~25.2 한국 연예인 촬영 전날·콜라겐 마스크(주황 강조)·투명해진다는데요) → 끝(25.2~30.0 사용 팁 '최소 3시간'·'수면팩처럼 붙여놓는게 제일 좋다고 하네요', CTA 없음)",
@@ -1340,7 +1372,8 @@
   "'!!!!!!!!!!'(2.633~3.033)·'이거 맞아??!' 는 말이 아니라 반응 표시라 화자 '불명'.",
   "효과음: 귀로 확인 불가. 5kHz 이상 에너지 솟음 0.12초(+39dB)·1.34초(+30dB, 팝+글리치 줄 등장과 겹침)만 후보. 나머지 솟음은 말소리 자음과 못 가려 null.",
   "글꼴 이름·크기 px 미확정(채움 잉크 높이 74~76px). 자간은 채움 열 빈칸 중앙값 근사. 한 줄 자막뿐이라 행간 없음.",
-  "컷: 뜯기 컷 16개 + 프레임 차로 찾은 0.067·2.633·6.7·15.567 추가. 자막 교체가 거의 모두 컷과 같은 프레임(자막 단위 편집)."
+  "컷: 뜯기 컷 16개 + 프레임 차로 찾은 0.067·2.633·6.7·15.567 추가. 자막 교체가 거의 모두 컷과 같은 프레임(자막 단위 편집).",
+  "2026-10-24 보강(관제 263 지시서 06): transition null 13줄을 cutdet(30fps 프레임차·흐림 검출) 결과로 채움 — 줄 시작이 컷 경계가 아니면 'none'(같은 샷 안 자막 교체). exit null 32줄 = 'cut'(다음 자막이 같은 프레임에 바꿔 침, 눈)."
  ],
  "name_evidence": [],
  "_made_by": "줄판독 워커(눈+픽셀 실측) 2026-10-20",

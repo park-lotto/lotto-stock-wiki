@@ -1,635 +1,1315 @@
 {
  "id": "AZ2q07mBzlM",
- "dur": 24.467,
+ "dur": 24.567,
  "fps": 30.0,
  "size": [
   1080,
   1920
  ],
- "title_lines": [],
+ "title_lines": [
+  {
+   "text": "한국에서 누가",
+   "colors": [
+    {
+     "word": "한국에서 누가",
+     "hex": "#FFFFFF"
+    }
+   ]
+  },
+  {
+   "text": "이딴걸 보냈어??!",
+   "colors": [
+    {
+     "word": "이딴걸 보냈어??!",
+     "hex": "#FDDE00"
+    }
+   ]
+  }
+ ],
  "source_label": null,
  "layout": {
   "window": [
    0,
    486,
    1080,
-   1434
+   1920
   ],
   "caption_band": [
-   1246,
-   1330
+   1240,
+   1345
   ],
-  "title_y": null,
+  "title_y": [
+   [
+    200,
+    330
+   ],
+   [
+    345,
+    465
+   ]
+  ],
+  "bg_hex": "#000000",
   "source_y": null,
   "logo_y": null,
-  "watermark": null
+  "watermark": null,
+  "source_hex": null,
+  "pip": {
+   "t": [
+    3.367,
+    5.367
+   ],
+   "caption_y": [
+    [
+     581,
+     650
+    ],
+    [
+     681,
+     752
+    ]
+   ],
+   "note": "작은 창 위 노랑 나레 — 3.37 1줄 → 3.9 2줄째 붙임 → 4.67 다른 작은 창으로 바뀌며 새 1줄"
+  },
+  "note": "앞 편들과 같은 틀"
  },
  "lines": [
   {
    "t0": 0.0,
-   "t1": 1.3,
-   "speaker": null,
-   "text": "특대형 파운데이션을",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "t1": 0.067,
+   "speaker": "불명",
+   "text": "나랑 장난해??",
+   "layer": "잇템로그",
+   "role": "훅",
+   "enter": "기타(썸네일 카드 — 첫 2프레임만)",
+   "enter_ms": 0,
+   "variant": "썸네일카드(빨강·기울임)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1256,
-    null
+    1250,
+    1340
    ],
-   "fill_hex": null,
+   "fill_hex": "#DA0008",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
    "emph": [],
-   "sticker": [],
+   "sticker": [
+    {
+     "what": "기타(손글씨 '(빈통)' — 빈 쿠션 퍼프 자리 위)",
+     "x": 240,
+     "y": 1290,
+     "w": 280,
+     "t_in": 0.0,
+     "t_out": 0.067,
+     "anim": "없음(정지)"
+    }
+   ],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    0.5
-   ],
-   "_asr": [
-    "한국에서 특대용 파운데이션을 받은"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "scene": "손·제품 근접",
+   "scene_desc": "빈 쿠션 통을 펼쳐 내민 여성",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
   },
   {
-   "t0": 1.3,
-   "t1": 2.1,
-   "speaker": null,
-   "text": "받은 이 여성은",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "t0": 0.067,
+   "t1": 0.5,
+   "speaker": "나레",
+   "text": "한국에서",
+   "layer": "잇템로그",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(노랑)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
     1258,
-    null
+    1329
    ],
-   "fill_hex": null,
+   "fill_hex": "#F7EF1A",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    2.1
+   "scene": "손·제품 근접",
+   "scene_desc": "빨간 TIRTIR 상자를 든 여성",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "첫 나레 줄이 노랑·팝 없음(30fps 띠 0.067~0.5 잉크 변화 0)"
+  },
+  {
+   "t0": 0.5,
+   "t1": 1.333,
+   "speaker": "나레",
+   "text": "특대형 파운데이션을",
+   "layer": "잇템로그",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1258,
+    1329
    ],
-   "_asr": [
-    "한국에서 특대용 파운데이션을 받은",
-    "여성은"
+   "fill_hex": "#F7EF1F",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "상자에서 꺼낸 빨간 쿠션",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 1.333,
+   "t1": 2.1,
+   "speaker": "나레",
+   "text": "받은 이 여성은",
+   "layer": "잇템로그",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1258,
+    1329
    ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "fill_hex": "#F7EE1D",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "쿠션 통을 연 여성 정면",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
   },
   {
    "t0": 2.1,
-   "t1": 3.4,
-   "speaker": null,
+   "t1": 3.367,
+   "speaker": "원음",
    "text": "비어 있는걸 왜 보냄??!",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1256,
-    null
+    1258,
+    1329
    ],
-   "fill_hex": null,
+   "fill_hex": "#FDFCFD",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    2.1,
-    3.37
-   ],
-   "_asr": [
-    "여성은"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "scene": "손·제품 근접",
+   "scene_desc": "퍼프 자리가 빈 쿠션 통을 가리킴",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
   },
   {
-   "t0": 5.4,
-   "t1": 6.1,
-   "speaker": null,
+   "t0": 3.367,
+   "t1": 3.9,
+   "speaker": "나레",
+   "text": "쿠션 용기가",
+   "layer": "잇템로그",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기타(작은 창(PIP) 위 쌓기 줄 1)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    581,
+    650
+   ],
+   "fill_hex": "#F4EA38",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "작은 창: 빈 쿠션 통 근접",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.9,
+   "t1": 4.667,
+   "speaker": "나레",
+   "text": "비어있는걸 보고",
+   "layer": "잇템로그",
+   "role": "다리",
+   "enter": "append(앞 줄 두고 아래 줄 붙임)",
+   "enter_ms": 0,
+   "variant": "기타(작은 창 위 쌓기 줄 2)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    681,
+    752
+   ],
+   "fill_hex": "#F9F017",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "작은 창: 빈 쿠션 통 근접",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": "줄 간격 약 100px(눈)",
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.667,
+   "t1": 5.367,
+   "speaker": "나레",
+   "text": "당황하는데요",
+   "layer": "잇템로그",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기타(다른 작은 창 위 1줄)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    581,
+    650
+   ],
+   "fill_hex": "#F7EE19",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "작은 창: 말하는 여성 얼굴",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.367,
+   "t1": 6.133,
+   "speaker": "원음",
    "text": "혹시나 해서",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1245,
-    null
+    1239,
+    1328
    ],
-   "fill_hex": null,
+   "fill_hex": "#FBFAFA",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    5.37
-   ],
-   "_asr": [
-    "당황하는데요."
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "scene": "얼굴",
+   "scene_desc": "쿠션 통 들고 말하는 여성",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
   },
   {
-   "t0": 6.1,
+   "t0": 6.133,
    "t1": 7.0,
-   "speaker": null,
+   "speaker": "원음",
    "text": "상자를 다시 봤는데",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1246,
-    null
+    1258,
+    1329
    ],
-   "fill_hex": null,
+   "fill_hex": "#FDFCFD",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    7.0
-   ],
-   "_asr": [
-    "당황하는데요."
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "scene": "얼굴",
+   "scene_desc": "쿠션 통 들고 말하는 여성",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
   },
   {
    "t0": 7.0,
-   "t1": 8.0,
-   "speaker": null,
+   "t1": 7.967,
+   "speaker": "나레",
    "text": "상자에 파운데이션이",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(노랑)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
     1258,
-    null
+    1329
    ],
-   "fill_hex": null,
+   "fill_hex": "#F7EF1E",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    7.0,
-    7.97
-   ],
-   "_asr": [
-    "당황하는데요.",
-    "&gt;&gt; 상자의 파운데이션이 따로 들어 있는"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 8.0,
-   "t1": 9.0,
-   "speaker": null,
-   "text": "따로 들어있는걸 확인하자",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1255,
-    null
-   ],
-   "fill_hex": null,
-   "emph": [],
-   "sticker": [],
-   "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    7.97,
-    9.03
-   ],
-   "_asr": [
-    "&gt;&gt; 상자의 파운데이션이 따로 들어 있는",
-    "걸 확인하자 용기를 채워보기로"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 9.0,
-   "t1": 9.4,
-   "speaker": null,
-   "text": "",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1206,
-    null
-   ],
-   "fill_hex": null,
-   "emph": [],
-   "sticker": [],
-   "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    9.03
-   ],
-   "_asr": [
-    "걸 확인하자 용기를 채워보기로"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 9.4,
-   "t1": 9.8,
-   "speaker": null,
-   "text": "",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1206,
-    null
-   ],
-   "fill_hex": null,
-   "emph": [],
-   "sticker": [],
-   "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "파운데이션 병을 들어 보임",
+   "fit": 9,
    "cut_at": [],
-   "_asr": [
-    "걸 확인하자 용기를 채워보기로"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
   },
   {
-   "t0": 9.8,
-   "t1": 11.3,
-   "speaker": null,
-   "text": "용기를 채워 보기로 합니다",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1256,
-    null
-   ],
-   "fill_hex": null,
-   "emph": [],
-   "sticker": [],
-   "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    10.0,
-    11.27
-   ],
-   "_asr": [
-    "걸 확인하자 용기를 채워보기로",
-    "합니다. 일단 뚜껑을 열고 그냥 위에"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 11.3,
-   "t1": 12.3,
-   "speaker": null,
-   "text": "일단 뚜껑을 열고",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "t0": 7.967,
+   "t1": 9.033,
+   "speaker": "나레",
+   "text": "따로 들어있는걸 확인하자",
+   "layer": "잇템로그",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(노랑)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
     1258,
-    null
+    1329
    ],
-   "fill_hex": null,
+   "fill_hex": "#F7EE21",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    11.27,
-    12.3
+   "scene": "손·제품 근접",
+   "scene_desc": "파운데이션 병을 들고 웃음",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 9.033,
+   "t1": 10.0,
+   "speaker": "불명",
+   "text": "ㅎㅎㅎ",
+   "layer": "잇템로그",
+   "role": "고조",
+   "enter": "pop(ㅎ 글자 여러 개가 튀어나와 얼굴 둘레로 흩어짐)",
+   "enter_ms": 0,
+   "variant": "기타(흰 ㅎ 반응 글자 무리)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1000,
+    1350
    ],
-   "_asr": [
-    "합니다. 일단 뚜껑을 열고 그냥 위에"
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "ㅋㅋㅋ",
+     "x": 540,
+     "y": 1100,
+     "w": 900,
+     "t_in": 9.2,
+     "t_out": 10.0,
+     "anim": "pop 여러 개(ㅎ 3→9개, 크기 제각각, 퍼짐)"
+    }
    ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "입 크게 벌리고 웃으며 쿠션·병을 듦",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "자막 없음 구간 웃음 표시(스티커 what 어휘 ㅋㅋㅋ 칸에 'ㅎ')"
+  },
+  {
+   "t0": 10.0,
+   "t1": 11.267,
+   "speaker": "나레",
+   "text": "용기를 채워 보기로 합니다",
+   "layer": "잇템로그",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1258,
+    1329
+   ],
+   "fill_hex": "#F7EE24",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(손글씨 'lets do this!' — 원음 영어 말 번역 대신 원문 손글씨)",
+     "x": 540,
+     "y": 855,
+     "w": 425,
+     "t_in": 10.0,
+     "t_out": 11.267,
+     "anim": "cut 등장"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "결심한 표정으로 말함",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.267,
+   "t1": 12.3,
+   "speaker": "나레",
+   "text": "일단 뚜껑을 열고",
+   "layer": "잇템로그",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1258,
+    1329
+   ],
+   "fill_hex": "#F5ED27",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "파운데이션 병 뚜껑을 엶",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
   },
   {
    "t0": 12.3,
-   "t1": 13.9,
-   "speaker": null,
-   "text": "냅다 부워버리는데요",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "t1": 12.733,
+   "speaker": "나레",
+   "text": "그냥 위에",
+   "layer": "잇템로그",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(노랑)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
     1258,
-    null
+    1330
    ],
-   "fill_hex": null,
+   "fill_hex": "#F6ED1D",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    12.3
+   "scene": "손·제품 근접",
+   "scene_desc": "병을 기울여 쿠션 위로",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 12.733,
+   "t1": 13.867,
+   "speaker": "나레",
+   "text": "냅다 부워버리는데요",
+   "layer": "잇템로그",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1258,
+    1329
    ],
-   "_asr": [
-    "합니다. 일단 뚜껑을 열고 그냥 위에",
-    "냅다 부어 버리는데요."
+   "fill_hex": "#F7EF1A",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(손글씨 '????' — 쿠션 위)",
+     "x": 285,
+     "y": 1713,
+     "w": 200,
+     "t_in": 13.2,
+     "t_out": 14.3,
+     "anim": "cut 등장(기울임)"
+    }
    ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "파운데이션을 쿠션 위에 부음",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 14.033,
+   "t1": 14.3,
+   "speaker": "불명",
+   "text": "허",
+   "layer": "잇템로그",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "빨강(작게)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1383,
+    1451
+   ],
+   "fill_hex": "#DC0009",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "쿠션 위로 흘러내리는 파운데이션",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "반응 글"
+  },
+  {
+   "t0": 14.3,
+   "t1": 14.767,
+   "speaker": "불명",
+   "text": "헐",
+   "layer": "잇템로그",
+   "role": "고조",
+   "enter": "typing(앞 '허'가 '헐'로 완성되며 커짐 — 2단 글자 완성)",
+   "enter_ms": 33,
+   "variant": "빨강(크게)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1338,
+    1453
+   ],
+   "fill_hex": "#DA0008",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "쿠션에 고인 파운데이션",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
   },
   {
    "t0": 14.8,
-   "t1": 15.4,
-   "speaker": null,
+   "t1": 15.367,
+   "speaker": "불명",
    "text": "이미 늦었다..",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
     1258,
-    null
+    1329
    ],
-   "fill_hex": null,
+   "fill_hex": "#FDFCFE",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    14.77,
-    15.37
-   ],
-   "_asr": [
-    "냅다 부어 버리는데요.",
-    "toate."
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "scene": "손·제품 근접",
+   "scene_desc": "계속 붓는 파운데이션 줄기",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "말 없는 구간의 해설 글 — 화자 불명"
   },
   {
-   "t0": 16.8,
-   "t1": 17.7,
-   "speaker": null,
-   "text": "잘 퍼트려준 뒤",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "t0": 15.367,
+   "t1": 16.767,
+   "speaker": "불명",
+   "text": "(잘못됨 감지)",
+   "layer": "잇템로그",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "손글씨(괄호 상황 설명·기울임)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1257,
-    null
+    880,
+    960
    ],
-   "fill_hex": null,
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 얇은 외곽 약 3~4px(눈)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    16.77,
-    17.7
+   "scene": "손·제품 근접",
+   "scene_desc": "파운데이션이 넘친 쿠션과 병",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(손글씨체 — 둥근 필기체, 얇은 검정 외곽)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "자막 띠 밖(창 위쪽) 손글씨 상황 설명 — y 는 눈"
+  },
+  {
+   "t0": 16.767,
+   "t1": 17.7,
+   "speaker": "나레",
+   "text": "잘 퍼트려준 뒤",
+   "layer": "잇템로그",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1258,
+    1329
    ],
-   "_asr": [
-    "잘 퍼트려 준 뒤 살짝 찍어서"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "fill_hex": "#F8ED1C",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "퍼프로 펴 바른 쿠션 표면",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
   },
   {
    "t0": 17.7,
-   "t1": 18.5,
-   "speaker": null,
+   "t1": 18.467,
+   "speaker": "나레",
    "text": "살짝 찍어서",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(노랑)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1258,
+    1329
+   ],
+   "fill_hex": "#F7ED1F",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "퍼프로 쿠션을 찍음",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 18.467,
+   "t1": 18.9,
+   "speaker": "원음",
+   "text": "오우..",
+   "layer": "잇템로그",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
     1246,
-    null
+    1336
    ],
-   "fill_hex": null,
+   "fill_hex": "#FAF9FA",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    17.7
-   ],
-   "_asr": [
-    "잘 퍼트려 준 뒤 살짝 찍어서"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 18.5,
-   "t1": 19.0,
-   "speaker": null,
-   "text": "오우..",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1250,
-    null
-   ],
-   "fill_hex": null,
-   "emph": [],
-   "sticker": [],
-   "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "퍼프를 쿠션에 누름",
+   "fit": 5,
    "cut_at": [],
-   "_asr": [
-    "잘 퍼트려 준 뒤 살짝 찍어서"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
   },
   {
-   "t0": 19.0,
-   "t1": 19.7,
-   "speaker": null,
-   "text": "이거 맛아??",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "t0": 18.9,
+   "t1": 19.733,
+   "speaker": "원음",
+   "text": "이거 맞아??",
+   "layer": "잇템로그",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1266,
-    null
+    1241,
+    1350
    ],
-   "fill_hex": null,
+   "fill_hex": "#E8DCDA",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    19.73
-   ],
-   "_asr": [
-    "잘 퍼트려 준 뒤 살짝 찍어서"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "scene": "손·제품 근접",
+   "scene_desc": "퍼프를 쿠션에 누르며 의심",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
   },
   {
-   "t0": 19.7,
-   "t1": 20.8,
-   "speaker": null,
+   "t0": 19.733,
+   "t1": 20.767,
+   "speaker": "나레",
    "text": "얼굴에 발라보더니",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(노랑)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
     1258,
-    null
+    1329
    ],
-   "fill_hex": null,
+   "fill_hex": "#F6EE1C",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    19.73,
-    20.77
-   ],
-   "_asr": [
-    "잘 퍼트려 준 뒤 살짝 찍어서",
-    "&gt;&gt; 얼굴에 발라보더니"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "scene": "얼굴",
+   "scene_desc": "퍼프로 얼굴에 바름",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
   },
   {
-   "t0": 20.8,
-   "t1": 21.6,
-   "speaker": null,
+   "t0": 20.767,
+   "t1": 21.567,
+   "speaker": "원음",
    "text": "오 마이 갓",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
     1258,
-    null
+    1328
    ],
-   "fill_hex": null,
+   "fill_hex": "#FCFAFA",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    20.77,
-    21.57
-   ],
-   "_asr": [
-    "&gt;&gt; 얼굴에 발라보더니"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "scene": "얼굴",
+   "scene_desc": "퍼프로 볼을 두드림",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
   },
   {
-   "t0": 21.6,
-   "t1": 22.5,
-   "speaker": null,
+   "t0": 21.567,
+   "t1": 22.533,
+   "speaker": "원음",
    "text": "이거 너무 예쁘자나",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
     1258,
-    null
+    1328
    ],
-   "fill_hex": null,
+   "fill_hex": "#FDFCFD",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    21.57,
-    22.53
-   ],
-   "_asr": [
-    "&gt;&gt; 얼굴에 발라보더니"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "scene": "얼굴",
+   "scene_desc": "바른 얼굴 정면",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
   },
   {
-   "t0": 22.5,
-   "t1": 23.1,
-   "speaker": null,
+   "t0": 22.533,
+   "t1": 23.467,
+   "speaker": "나레",
    "text": "피부톤에 딱 맞아",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(노랑)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
     1258,
-    null
+    1330
    ],
-   "fill_hex": null,
+   "fill_hex": "#F6ED23",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    22.53
-   ],
-   "_asr": [
-    "&gt;&gt; 얼굴에 발라보더니",
-    "&gt;&gt; 피부톤의 딱 맞아 마음에 든다고"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "scene": "얼굴",
+   "scene_desc": "피부톤과 맞은 볼 근접",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
   },
   {
-   "t0": 23.1,
-   "t1": 24.47,
-   "speaker": null,
+   "t0": 23.467,
+   "t1": 24.567,
+   "speaker": "나레",
    "text": "마음에 든다고 하네요",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(노랑)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1257,
-    null
+    1258,
+    1329
    ],
-   "fill_hex": null,
+   "fill_hex": "#F7ED1D",
+   "outline": "검정 #000000 약 9~10px(앞 2편 행 스캔 값과 같은 모양 — 눈 대조)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    23.47
-   ],
-   "_asr": [
-    "&gt;&gt; 피부톤의 딱 맞아 마음에 든다고",
-    "하네요."
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "scene": "얼굴",
+   "scene_desc": "퍼프 들고 웃는 얼굴",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 후보 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(앞 2편 값, 이 편은 눈 대조)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
   }
  ],
- "beats": null,
- "narr_share": null,
- "notes": [],
- "name_evidence": [],
- "_todo": [
-  "speaker",
-  "layer",
-  "role",
-  "enter",
-  "fill_hex",
-  "emph",
-  "sticker",
-  "sfx",
-  "scene",
-  "fit",
-  "beats",
-  "narr_share"
+ "no_caption": [
+  [
+   13.867,
+   14.033
+  ]
  ],
- "_made_by": "kal_analyze.skeleton(기계값 뼈대 — 판독 전)"
+ "beats": "썸네일 카드(0~0.07 빨강 '나랑 장난해??'+손글씨 '(빈통)') → 훅 나레 노랑(0.07~2.1 '한국에서/특대형 파운데이션을/받은 이 여성은', 꾸밈 없음) → 원음 질문(2.1~3.37 '비어 있는걸 왜 보냄??!') → 작은 창 위 쌓기(3.37~5.37 '쿠션 용기가/비어있는걸 보고'→'당황하는데요') → 원음(5.4~7.0) → 공개(7.0~9.0 '상자에 파운데이션이 따로 들어있는걸 확인하자') → ㅎ 웃음 무리(9.0~10.0) → 나레 과정(10.0~13.9 'lets do this!' 손글씨·'냅다 부워버리는데요'+'????') → 반응 고조(14.0~16.8 빨강 '허→헐'·'이미 늦었다..'·손글씨 '(잘못됨 감지)') → 사용(16.8~22.5 나레·원음 교차 '오 마이 갓/이거 너무 예쁘자나') → 끝(22.5~24.6 나레 '피부톤에 딱 맞아/마음에 든다고 하네요', CTA 없음)",
+ "narr_share": "나레 줄 17/30, 나레 14.7초/24.567초",
+ "notes": [
+  "앞 2편과 다름: 첫 나레 줄이 노랑이고 팝·글리치 없음(zOSp 와 같음) — 훅 빨강은 썸네일 카드에만.",
+  "반응 글 층이 많다: ㅎ 무리(팝)·'????' 손글씨·빨강 '허→헐'·'이미 늦었다..'·'(잘못됨 감지)' — 대부분 원음이 말을 안 하는 구간(9~10초·13~16.8초)에 들어간다(빈칸 메우기).",
+  "손글씨 'lets do this!'(10.0~11.3)는 나레 줄과 같은 때에 위쪽에 따로 떠 있어 스티커로 적음(같은 층 줄 겹침 방지).",
+  "효과음: 귀로 못 들음 — sfx 칸은 sfx_events 고립·무성 솟음만, 종류 미확인.",
+  "제품 글자(TIRTIR)는 원본 화면 속 상자·퍼프 인쇄 — 이름 근거로 쓰지 않음."
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "썸네일 카드 2프레임: 빈 쿠션 통을 내민 여성+빨강 '나랑 장난해??'+손글씨 '(빈통)'",
+  "face_frac": "약 0.35(창 대비, 눈)",
+  "text": "나랑 장난해??"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈+픽셀: capseg 자막띠 30fps·cutdet 컷/전환·px 채움색·sfx_events 신호) 2026-10-24 (관제 263 지시서 06)",
+ "_tools": "scratchpad capseg.py/cutdet.py/px.py/segsheet.py — 결과 C:/숏템_칼카피/ititemlog/work/lr6/"
 }
