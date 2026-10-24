@@ -41,41 +41,36 @@
   "uljimatrot/7b1j3LptlCo": {
    "narr": {
     "dur": 16.9,
-    "voiced_ratio": 0.599,
+    "voiced_ratio": 0.598,
     "f0_med": 164.6,
     "f0_p10": 106.5,
     "f0_p90": 204.2,
     "st_std": 4.83,
-    "micro_dst": 0.209,
+    "micro_dst": 0.212,
     "micro_p90": 0.831,
     "pause_n": 28,
     "pause_cv": 0.44,
     "shim": 0.089,
-    "formants": [
-     697.0,
-     2332.0,
-     3568.0
-    ],
     "rank": [
      [
       "fs-jiseong-stable",
-      3.52
+      3.46
      ],
      [
       "tc-piljae-expressive",
-      3.92
+      3.85
      ],
      [
       "fs-doyun-stable",
-      4.4
+      4.13
      ],
      [
       "tc-changsu-natural",
-      5.01
+      4.61
      ],
      [
       "fs-minjun-stable",
-      5.04
+      4.72
      ]
     ],
     "segs": [
@@ -129,12 +124,12 @@
   "uljimatrot/BFTGKYRPXeU": {
    "narr": {
     "dur": 19.67,
-    "voiced_ratio": 0.473,
+    "voiced_ratio": 0.472,
     "f0_med": 140.4,
     "f0_p10": 104.5,
-    "f0_p90": 200.6,
+    "f0_p90": 200.8,
     "st_std": 5.28,
-    "micro_dst": 0.169,
+    "micro_dst": 0.168,
     "micro_p90": 0.811,
     "pause_n": 43,
     "pause_cv": 0.65,
@@ -142,23 +137,23 @@
     "rank": [
      [
       "tc-jihoon-expressive",
-      3.29
-     ],
-     [
-      "tc-gunn-stable",
-      3.85
+      2.95
      ],
      [
       "tc-changsu-natural",
-      3.99
+      3.57
+     ],
+     [
+      "tc-gunn-stable",
+      3.59
      ],
      [
       "tc-jihoon-natural",
-      4.05
+      3.75
      ],
      [
       "tc-changsu-stable",
-      4.15
+      3.75
      ]
     ],
     "segs": [
@@ -224,41 +219,36 @@
   "uljimatrot/JlgdcIk9Gd0": {
    "narr": {
     "dur": 18.83,
-    "voiced_ratio": 0.667,
+    "voiced_ratio": 0.662,
     "f0_med": 155.3,
-    "f0_p10": 113.7,
+    "f0_p10": 113.5,
     "f0_p90": 206.1,
-    "st_std": 4.71,
+    "st_std": 4.63,
     "micro_dst": 0.246,
-    "micro_p90": 0.787,
-    "pause_n": 25,
-    "pause_cv": 0.39,
+    "micro_p90": 0.774,
+    "pause_n": 26,
+    "pause_cv": 0.38,
     "shim": 0.084,
-    "formants": [
-     1000.0,
-     2687.0,
-     3451.0
-    ],
     "rank": [
      [
       "tc-jihoon-expressive",
-      4.48
-     ],
-     [
-      "tc-jihoon-natural",
-      4.8
-     ],
-     [
-      "fs-jiseong-stable",
-      4.83
+      4.22
      ],
      [
       "tc-changsu-natural",
-      4.87
+      4.53
+     ],
+     [
+      "tc-jihoon-natural",
+      4.58
+     ],
+     [
+      "fs-jiseong-stable",
+      4.77
      ],
      [
       "tc-gunn-stable",
-      5.1
+      4.9
      ]
     ],
     "segs": [
@@ -328,41 +318,36 @@
   "uljimatrot/NXBepjjp6BY": {
    "narr": {
     "dur": 13.67,
-    "voiced_ratio": 0.605,
+    "voiced_ratio": 0.602,
     "f0_med": 140.4,
     "f0_p10": 107.6,
-    "f0_p90": 192.4,
-    "st_std": 4.8,
+    "f0_p90": 193.3,
+    "st_std": 4.81,
     "micro_dst": 0.221,
-    "micro_p90": 0.756,
+    "micro_p90": 0.753,
     "pause_n": 23,
     "pause_cv": 0.33,
-    "shim": 0.096,
-    "formants": [
-     642.0,
-     2616.0,
-     3435.0
-    ],
+    "shim": 0.095,
     "rank": [
      [
       "tc-jihoon-expressive",
-      3.15
+      2.86
      ],
      [
       "tc-gunn-stable",
-      3.49
+      3.25
      ],
      [
       "tc-changsu-natural",
-      3.77
+      3.37
      ],
      [
       "tc-changsu-stable",
-      4.04
+      3.66
      ],
      [
-      "fs-taeho-stable",
-      4.07
+      "tc-jihoon-natural",
+      3.83
      ]
     ],
     "segs": [
@@ -416,41 +401,41 @@
   "uljimatrot/QReZRnEVz0o": {
    "narr": {
     "dur": 21.07,
-    "voiced_ratio": 0.713,
+    "voiced_ratio": 0.708,
     "f0_med": 195.1,
     "f0_p10": 127.5,
     "f0_p90": 247.8,
     "st_std": 4.57,
     "micro_dst": 0.21,
-    "micro_p90": 0.861,
+    "micro_p90": 0.854,
     "pause_n": 29,
-    "pause_cv": 0.41,
+    "pause_cv": 0.4,
     "shim": 0.075,
     "formants": [
-     871.0,
-     2746.0,
-     3550.0
+     633.0,
+     2523.0,
+     3577.0
     ],
     "rank": [
      [
-      "fs-jiseong-stable",
-      3.28
+      "fs-minjun-stable",
+      3.02
      ],
      [
-      "fs-minjun-stable",
-      3.44
+      "fs-jiseong-stable",
+      3.08
      ],
      [
       "tc-changsu-expressive",
-      3.75
+      3.42
      ],
      [
       "tc-gunn-expressive",
-      4.07
+      3.84
      ],
      [
       "tc-yongsik-stable",
-      4.71
+      4.35
      ]
     ],
     "segs": [
@@ -532,41 +517,41 @@
   "uljimatrot/VlJMP0sNwhY": {
    "narr": {
     "dur": 21.1,
-    "voiced_ratio": 0.645,
+    "voiced_ratio": 0.644,
     "f0_med": 196.9,
-    "f0_p10": 129.7,
+    "f0_p10": 129.6,
     "f0_p90": 262.5,
-    "st_std": 5.22,
+    "st_std": 5.23,
     "micro_dst": 0.189,
-    "micro_p90": 0.927,
-    "pause_n": 35,
+    "micro_p90": 0.928,
+    "pause_n": 36,
     "pause_cv": 0.32,
     "shim": 0.107,
     "formants": [
-     840.0,
-     2526.0,
-     3468.0
+     497.0,
+     2367.0,
+     3505.0
     ],
     "rank": [
      [
-      "fs-jiseong-stable",
-      3.49
-     ],
-     [
       "fs-minjun-stable",
-      3.59
+      3.17
      ],
      [
       "tc-changsu-expressive",
-      3.59
+      3.24
+     ],
+     [
+      "fs-jiseong-stable",
+      3.26
      ],
      [
       "tc-gunn-expressive",
-      4.11
+      3.87
      ],
      [
       "tc-yongsik-stable",
-      5.04
+      4.67
      ]
     ],
     "segs": [
@@ -640,16 +625,16 @@
   "uljimatrot/hNRxwfSjXxY": {
    "narr": {
     "dur": 20.4,
-    "voiced_ratio": 0.608,
+    "voiced_ratio": 0.61,
     "f0_med": 167.0,
     "f0_p10": 108.6,
     "f0_p90": 225.0,
-    "st_std": 5.48,
-    "micro_dst": 0.264,
-    "micro_p90": 0.847,
-    "pause_n": 41,
-    "pause_cv": 0.56,
-    "shim": 0.079,
+    "st_std": 5.52,
+    "micro_dst": 0.256,
+    "micro_p90": 0.845,
+    "pause_n": 39,
+    "pause_cv": 0.55,
+    "shim": 0.078,
     "rank": [
      [
       "fs-jiseong-stable",
@@ -657,19 +642,19 @@
      ],
      [
       "tc-piljae-expressive",
-      4.48
+      4.47
      ],
      [
       "fs-doyun-stable",
-      4.92
+      4.67
+     ],
+     [
+      "tc-changsu-natural",
+      4.9
      ],
      [
       "fs-minjun-stable",
-      5.23
-     ],
-     [
-      "tc-jihoon-expressive",
-      5.25
+      4.99
      ]
     ],
     "segs": [
@@ -751,32 +736,32 @@
     "f0_med": 177.8,
     "f0_p10": 120.5,
     "f0_p90": 250.6,
-    "st_std": 5.3,
-    "micro_dst": 0.26,
-    "micro_p90": 0.831,
+    "st_std": 5.28,
+    "micro_dst": 0.253,
+    "micro_p90": 0.825,
     "pause_n": 27,
-    "pause_cv": 0.51,
+    "pause_cv": 0.49,
     "shim": 0.105,
     "rank": [
      [
       "fs-jiseong-stable",
-      2.63
+      2.56
      ],
      [
       "fs-minjun-stable",
-      4.41
-     ],
-     [
-      "tc-gunn-expressive",
-      4.64
+      4.1
      ],
      [
       "tc-changsu-expressive",
-      4.65
+      4.44
      ],
      [
-      "tc-piljae-expressive",
-      4.85
+      "tc-gunn-expressive",
+      4.52
+     ],
+     [
+      "tc-yongsik-stable",
+      4.65
      ]
     ],
     "segs": [
@@ -846,41 +831,41 @@
   "uljimatrot/pjhCRN0BwaQ": {
    "narr": {
     "dur": 16.67,
-    "voiced_ratio": 0.658,
+    "voiced_ratio": 0.656,
     "f0_med": 200.5,
     "f0_p10": 135.3,
     "f0_p90": 262.5,
     "st_std": 4.73,
-    "micro_dst": 0.197,
-    "micro_p90": 0.845,
+    "micro_dst": 0.196,
+    "micro_p90": 0.85,
     "pause_n": 25,
     "pause_cv": 0.41,
-    "shim": 0.085,
+    "shim": 0.084,
     "formants": [
-     470.0,
-     2391.0,
-     3541.0
+     415.0,
+     2373.0,
+     3512.0
     ],
     "rank": [
      [
       "fs-minjun-stable",
-      3.33
+      2.92
      ],
      [
       "fs-jiseong-stable",
-      3.35
+      3.13
      ],
      [
       "tc-changsu-expressive",
-      3.5
+      3.17
      ],
      [
       "tc-gunn-expressive",
-      3.58
+      3.34
      ],
      [
       "tc-yongsik-expressive",
-      4.62
+      4.31
      ]
     ],
     "segs": [
@@ -946,41 +931,36 @@
   "uljimatrot/tv-hFwrvEc4": {
    "narr": {
     "dur": 19.33,
-    "voiced_ratio": 0.528,
-    "f0_med": 159.2,
+    "voiced_ratio": 0.525,
+    "f0_med": 158.6,
     "f0_p10": 108.1,
     "f0_p90": 225.0,
     "st_std": 5.33,
     "micro_dst": 0.24,
-    "micro_p90": 0.859,
-    "pause_n": 38,
-    "pause_cv": 0.53,
+    "micro_p90": 0.85,
+    "pause_n": 37,
+    "pause_cv": 0.56,
     "shim": 0.093,
-    "formants": [
-     983.0,
-     2575.0,
-     3502.0
-    ],
     "rank": [
      [
       "fs-jiseong-stable",
-      4.0
+      3.95
      ],
      [
       "tc-piljae-expressive",
-      4.26
+      4.2
      ],
      [
       "tc-changsu-natural",
-      5.31
+      4.91
      ],
      [
       "tc-jihoon-expressive",
-      5.35
+      5.06
      ],
      [
       "tc-piljae-stable",
-      5.42
+      5.26
      ]
     ],
     "segs": [
