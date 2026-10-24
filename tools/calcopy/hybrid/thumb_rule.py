@@ -34,6 +34,18 @@ GOOD = """좋은 썸네일 조건(본보기 channel/banggu/썰템홈샷_하이�
 3안은 서로 다른 axis 로(인물순간 / 물건근접·정체숨김 / 황당사실·짤반응). 맨 앞 2프레임(0.067초)만 — 늘리지 않는다."""
 
 
+def find_order(slug: str | None = None) -> str:
+    """FIND_ORDER + 그 채널 상위 편 훅 3초 참고 한 줄(channel/<slug>/_kal/상위편_목표.json hook — placement.py count <판> --top 이 잰다, 지시서 15).
+    판정 규칙(check)은 안 바뀐다 — 장면 고를 때 참고하는 추천일 뿐. 파일·칸이 없으면 FIND_ORDER 그대로."""
+    import json
+    p = Path(__file__).resolve().parents[3] / "channel" / str(slug or "_") / "_kal" / "상위편_목표.json"
+    h = (json.loads(p.read_text(encoding="utf-8")).get("hook") or {}) if slug and p.exists() else {}
+    if not h:
+        return FIND_ORDER
+    return FIND_ORDER + (f"\n참고(상위 편 {len(h.get('top_ids') or [])}편 훅 실측 — 판정 아님): 첫 컷 중앙 {h.get('first_cut_sec_p50')}초 · "
+                         f"0초 화면 얼굴 비율 중앙 {h.get('face_or_object_frac')} · 첫 꾸밈 {h.get('first_fx_t')}초 — 0초부터 얼굴/물건이 크게 보이는 장면을 앞에.")
+
+
 def _n(s: str) -> int:
     return len(re.sub(r"\s", "", s or ""))
 

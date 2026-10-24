@@ -2967,5 +2967,80 @@
   "SbWTqCnleC8": 8500000.0,
   "zOSpeiMw1nA": 10000000.0
  },
- "_note": "벤치 상위 편 같은 자 재측정(표준 §12-5) — scene_fit 은 지시서 14(scene_fit.bench_measure), 밀도·cps 칸은 15 가 더한다"
+ "_note": "벤치 상위 편 같은 자 재측정(표준 §12-5) — scene_fit 은 지시서 14(scene_fit.bench_measure), 밀도·cps 칸은 15 가 더한다",
+ "density": {
+  "made_by": "tools/calcopy/hybrid/placement.py count <판> --top (top_of)",
+  "group": "조회 상위 50%",
+  "top_ids": [
+   "ro1l3u734v4",
+   "aUicTeDoW04",
+   "J7GxfaVdwSU"
+  ],
+  "rule": "업그레이드 판 목표 = 상위 편 p75 · 상한 = 상위 편 max(표준 §12-2·§12-4) — upgrade_table.m_density 와 같은 자(kal_analyze._stats)",
+  "fx_rate_narr": {
+   "p75": 0.18,
+   "max": 0.231,
+   "per_video": {
+    "ro1l3u734v4": 0.13,
+    "aUicTeDoW04": 0.056,
+    "J7GxfaVdwSU": 0.231
+   }
+  },
+  "fx_rate_orig": {
+   "p75": 0.056,
+   "max": 0.111,
+   "per_video": {
+    "ro1l3u734v4": 0.0,
+    "aUicTeDoW04": 0.0,
+    "J7GxfaVdwSU": 0.111
+   }
+  },
+  "sfx_rate": {
+   "p75": 0.051,
+   "max": 0.067,
+   "per_video": {
+    "ro1l3u734v4": 0.067,
+    "aUicTeDoW04": 0.034,
+    "J7GxfaVdwSU": 0.035
+   }
+  },
+  "sticker_rate": {
+   "p75": 0.061,
+   "max": 0.065,
+   "per_video": {
+    "ro1l3u734v4": 0.0,
+    "aUicTeDoW04": 0.065,
+    "J7GxfaVdwSU": 0.057
+   }
+  }
+ },
+ "hook": {
+  "made_by": "placement.hook_of",
+  "top_ids": [
+   "ro1l3u734v4",
+   "aUicTeDoW04",
+   "J7GxfaVdwSU"
+  ],
+  "first_cut_sec_p50": 2.97,
+  "face_or_object_frac": 0.15,
+  "first_fx_t": 0.0,
+  "per_video": {
+   "first_cut": {
+    "ro1l3u734v4": 5.07,
+    "aUicTeDoW04": 0.73,
+    "J7GxfaVdwSU": 2.97
+   },
+   "face_frac": {
+    "ro1l3u734v4": 0.5,
+    "aUicTeDoW04": 0.1,
+    "J7GxfaVdwSU": 0.15
+   },
+   "first_fx_t": {
+    "ro1l3u734v4": 0.0,
+    "aUicTeDoW04": 0.0,
+    "J7GxfaVdwSU": 0.0
+   }
+  },
+  "why": "첫 컷 = upgrade_table._first_cut(벤치 원본) · 0초 얼굴 = 줄판독 frame0.face_frac(눈 어림 숫자) · 첫 꾸밈 = kal_analyze._decorated 첫 줄 t0"
+ }
 }
