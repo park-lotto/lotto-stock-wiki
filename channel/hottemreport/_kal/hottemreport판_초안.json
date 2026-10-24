@@ -1,0 +1,110 @@
+{
+ "name": "hottemreport판",
+ "renderer": "bench",
+ "_note": "kal.py rules 초안(2026-10-25) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
+ "bench": {
+  "ko": "핫템리포트",
+  "channel": "https://www.youtube.com/@핫템리포트",
+  "analysis": "channel/hottemreport/스타일분석.md",
+  "line_reads": "channel/hottemreport/줄판독/",
+  "src_dir": "C:\\숏템_칼카피\\hottemreport\\src",
+  "sfx_events": null,
+  "sfx_key": null,
+  "palette": "channel/hottemreport/팔레트.json",
+  "rules_counted": "channel/hottemreport/_kal/규칙빈도.json"
+ },
+ "voice": {
+  "name": null,
+  "voice_id": null,
+  "candidates": [],
+  "why": "미정 — 사장님께(kal.py 시작 질문, 추천: 박창수 / 지훈 중에서 (벤치 화자 남 5/6))"
+ },
+ "cps_target": 7.76,
+ "bgm": {
+  "id": null,
+  "db_below_voice": null,
+  "duck_orig_db": null,
+  "fade_out": null,
+  "why": "engine/sound/bgm_fp.py·뜯기 audio"
+ },
+ "loudness": {
+  "lufs": -14,
+  "tp": -1.5
+ },
+ "length": {
+  "min": 25.2,
+  "max": 36.2
+ },
+ "script": {
+  "brief": [
+   "나레: 어미 네요, 는데요, 지, 다 · 존댓말 0.75 · 전언 0.25 · 자수 중앙 8",
+   "원음: 어미 죠, 는데, 세요, 잠깐 · 존댓말 0.43 · 전언 0.0 · 자수 중앙 7"
+  ],
+  "example": [
+   "여기 월 천 찍은",
+   "요즘 미국에서 난리난",
+   "요즘 미국에서"
+  ],
+  "audit": []
+ },
+ "frame": {
+  "window": [
+   0,
+   559,
+   1080,
+   1361
+  ],
+  "title": [],
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "comment": null
+ },
+ "caption": {
+  "pack": null,
+  "pack_default": null,
+  "variant_for": {},
+  "typing_cps": 7.62
+ },
+ "timing": null,
+ "cuts": null,
+ "sfx_files": null,
+ "placement": {
+  "rules": {
+   "narr_enter": "instant",
+   "orig_enter": "instant",
+   "fx_rate": {
+    "나레": 0.17,
+    "원음": 0.34
+   },
+   "plain_rate": 0.78,
+   "by_pos": {
+    "훅": 0.56,
+    "본문": 0.21,
+    "끝": 0.04
+   },
+   "strong": [
+    "자리=본문 → enter=instant 108/130",
+    "화자=나레 → enter=instant 108/123",
+    "역할=증거 → enter=instant 41/49",
+    "화자=원음 → enter=instant 33/47",
+    "자리=끝 → enter=instant 24/24",
+    "역할=공개 → enter=instant 22/24",
+    "역할=다리 → enter=instant 17/22",
+    "역할=끝 → enter=instant 21/21",
+    "화자전환 첫 덩어리=나레 → enter=instant 12/17",
+    "역할=고조 → enter=instant 11/17",
+    "화자전환 첫 덩어리=원음 → enter=instant 8/13",
+    "역할=반전 → enter=instant 10/10",
+    "역할=본문 → enter=instant 8/8"
+   ]
+  },
+  "counted": {}
+ },
+ "_todo": [
+  "voice·bgm·sfx = engine/sound 결과",
+  "frame.title/logo/credit = 스타일분석 §틀",
+  "caption.pack = caption-motions.js 팩 이름(없으면 요청서)",
+  "timing·cuts·sfx_files = 견본 styles/키치잇판.json 꼴"
+ ]
+}
