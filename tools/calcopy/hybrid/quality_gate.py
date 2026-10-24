@@ -36,6 +36,8 @@ FAST_GROUPS = ("규격", "화면", "재료", "자막·효과", "표식")
 GAP_TOL = 1 / 30 + 0.02    # 줄 사이 간격 = 판 timing(시간표) ±1프레임+0.02 (표준 §11 ①ⓐ)
 OLD_PAUSE_RENDERERS = ("make", "itssum", "jaemi")   # 고정 PAUSE_LO/HI 는 옛 렌더러 판에서만(표준 §11 ①ⓒ)
 B13_GAP_MAX, B13_GAP_FRAC = 3.0, 0.25            # 거리 문턱 = min(3.0, 0.25 × 소스 길이) (표준 §11 ②)
+TD_TOL = 0.30                                     # 전환 세기 = 우리 drop 중앙값이 벤치 drop 중앙값 ±30% (표준 ⑯, 측정 주인 render_bench.transition_drop)
+TD_KINDS = ("zoomblur",)
 FREEZE_SEC = 0.3      # 창 안 같은 그림이 이만큼 이어지면 멈춤(벤치 컷 중앙 약 1초 · 실제 촬영 영상은 프레임마다 잡음이 있어 0이 안 나온다)
 SIZE = (1080, 1920)
 FIT_MEAN_TOL, FIT_BELOW_TOL = 1.0, 0.10   # 장면↔대사 = 평균 ≥ 벤치−1 · 7 미만 비율 ≤ 벤치+10%p(표준 §3-3 A5 · 지침서 §3-4)
@@ -238,6 +240,58 @@ def reuse_violations_bench(cuts: list[dict], src_len: dict) -> list[str]:
     return bad
 
 
+def drop_verdict(ours: list, bench: list) -> tuple[bool | None, str]:
+    """전환 세기(표준 ⑯): 우리 경계 drop 중앙값이 벤치 drop 중앙값의 ±TD_TOL 안. 우리 경계 0개 = ×(벤치엔 전환이 있는데 우리는 없다)."""
+    o = [float(x) for x in ours if x is not None and x == x]
+    b = [float(x) for x in bench if x is not None and x == x]
+    if not b:
+        return None, "벤치 drop 표본 없음(미측정)"
+    bm = statistics.median(b)
+    if not o:
+        return False, f"우리 전환 경계 0개 — 벤치 drop 중앙 {bm:.3f}({len(b)}회)"
+    om = statistics.median(o)
+    ok = abs(om - bm) <= TD_TOL * abs(bm)
+    return ok, f"우리 drop 중앙 {om:.3f}({len(o)}경계) vs 벤치 {bm:.3f}({len(b)}회 {[round(x, 3) for x in b]}) · 허용 ±{TD_TOL:.0%}"
+
+
+def bench_drops(st: dict, kinds=TD_KINDS) -> dict | None:
+    """벤치 줄판독에 그 전환 종류가 있는 편만 render_bench.bench_transition_drop — 채널 _kal/transition_drop.json 에 편별 캐시.
+    벤치에 그 종류가 하나도 없으면 None(관문 행 생략 — 미측정 아님)."""
+    from tools.calcopy.engine.kal_analyze import transition_key
+    from tools.calcopy.hybrid.render_bench import bench_transition_drop
+    B = st.get("bench") or {}
+    lr = (ROOT / B["line_reads"]) if B.get("line_reads") and not Path(B["line_reads"]).is_absolute() else Path(B.get("line_reads") or "")
+    if not B.get("line_reads") or not lr.exists():
+        return None
+    cpath = ROOT / "channel" / str(B.get("channel")) / "_kal" / "transition_drop.json"
+    cache = jload(cpath) if cpath.exists() else {}
+    out, used, n_src = {"drops": [], "ms": [], "per": {}}, False, 0
+    for f in sorted(lr.glob("*.json")):
+        d = jload(f)
+        if not any(transition_key(l.get("transition")) in kinds for l in d.get("lines") or []):
+            continue
+        used = True
+        v = Path(B.get("src_dir") or "") / f"{d.get('id')}.mp4"
+        if not v.exists():
+            out["per"][d.get("id")] = "원본 mp4 없음"
+            continue
+        n_src += 1
+        for k in kinds:
+            key = f"{d.get('id')}|{k}|{f.stat().st_size}:{int(f.stat().st_mtime)}|{v.stat().st_size}"
+            if key not in cache:
+                cache[key] = bench_transition_drop(f, v, kind=k)
+            bs = cache[key].get("boundaries") or []
+            out["per"][f"{d.get('id')}:{k}"] = [b.get("drop") for b in bs]
+            out["drops"] += [b.get("drop") for b in bs]
+            out["ms"] += [b.get("ms") for b in bs if b.get("ms") is not None]
+    if not used:
+        return None
+    cpath.parent.mkdir(parents=True, exist_ok=True)
+    jsave(cpath, cache)
+    out["n_src"] = n_src
+    return out
+
+
 def gap_verdict(pairs: list[tuple[str, float, float]]) -> tuple[bool | None, str]:
     """B18 줄 사이 간격(표준 §11 ①ⓐ): [(경계, 계획 간격=시간표, 실측 무음)] — |실측−계획| ≤ 1프레임+0.02."""
     if not pairs:
@@ -265,7 +319,7 @@ def inline_pause_verdict(items: list[tuple[str, list[str], list[float]]], th: di
 
 
 # ---------------------------------------------------------------- 관문
-def _row(rows: list, group: str, what: str, fn, src: str, timer=None):
+def _row(rows: list, group: str, what: str, fn, src: str, timer=None, ref: bool = False):
     import time
     t0 = time.time()
     try:
@@ -273,7 +327,7 @@ def _row(rows: list, group: str, what: str, fn, src: str, timer=None):
     except Exception as e:  # noqa: BLE001 — 못 잰 항목은 ×(미측정)로 남긴다. 조용히 넘기지 않는다
         ok, value = None, f"측정 실패: {type(e).__name__}: {str(e)[:200]}"
     sec = round(time.time() - t0, 1)
-    rows.append({"group": group, "what": what, "ok": ok, "value": value, "src": src, "sec": sec})
+    rows.append({"group": group, "what": what, "ok": ok, "value": value, "src": src, "sec": sec, **({"ref": True} if ref else {})})
     if timer is not None:
         timer.done(f"gate:{group}:{what}", sec)
     return ok
@@ -319,8 +373,8 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
     def save_store():
         jsave(cpath, store)
 
-    def row(group, what, fn, src):
-        return _row(rows, group, what, fn, src, timer)
+    def row(group, what, fn, src, ref=False):
+        return _row(rows, group, what, fn, src, timer, ref)
 
     def dur():
         if "d" not in cache:
@@ -362,6 +416,22 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
                 y0, y1 = _ymean(final, 0.3, win), _ymean(final, dur() - 0.3, win)
                 return y0 >= Y_MIN and y1 >= Y_MIN, f"{y0:.0f} · {y1:.0f} (≥{Y_MIN})"
             row("화면", "B9 첫·끝 컷 Y≥60", y_ok, "checks._ymean")
+            bd = None
+            try:
+                bd = bench_drops(st)
+            except Exception as e:  # noqa: BLE001 — 벤치를 못 재면 행을 미측정으로 남긴다(생략 아님)
+                row("화면", "전환 세기(zoomblur drop)", lambda e=e: (None, f"벤치 측정 실패: {type(e).__name__}: {str(e)[:160]}"), "render_bench.bench_transition_drop")
+            if bd is not None:                  # 벤치에 zoomblur 가 없는 판은 행 생략(표준 ⑯)
+                td = {}
+
+                def drop_row():
+                    from tools.calcopy.hybrid.render_bench import render_transition_drop
+                    r = render_transition_drop(R, style_name, kinds=TD_KINDS)
+                    td["ours"] = r.get("boundaries") or []
+                    return drop_verdict([b.get("drop") for b in td["ours"]], bd["drops"])
+                row("화면", "전환 세기(zoomblur drop 중앙 ±30%)", drop_row, "render_bench.render_transition_drop ↔ bench_transition_drop(채널 _kal 캐시)")
+                row("화면", "전환 길이 ms(참고)", lambda: (True, f"우리 {[b.get('ms') for b in td.get('ours') or []]} · 벤치 {bd['ms']}"),
+                    "transition_drop.ms", ref=True)
     # ── 재료
     cuts = [{"src": c["src"], "ss": float(c.get("ss") or 0), "dur": float(c["t1"]) - float(c["t0"]), "t0": float(c["t0"]), "t1": float(c["t1"]),
              "line": c.get("line"), "seg": "A" if c.get("kind") == "orig" else "B", "see": c.get("see")} for c in T.get("cuts") or []]
@@ -397,12 +467,10 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
         if not legacy:
             row("자막·효과", "B14 효과음 과다(≤ 벤치 p90)", lambda: sfx_excess(len(tab.get("sfx") or []), float(T["end"]), bench_docs), "자막표.sfx · 줄판독 sfx")
     # ── 소리
+    if (want("소리") or mode == "fast") and not legacy:      # 줄별 cps = render_info 표 읽기라 빠르다 → --fast 에도
+        row("소리", "줄별 말속도 ±35%(렌더 기록)", lambda: line_cps_verdict(info.get("line_cps"), cps_tol()), "render_info.line_cps · render_itssum.CPS_LINE_TOL")
     if want("소리") and not legacy:
         narr = [l for l in S.get("lines") or [] if l.get("kind") == "tts"]
-
-        def cps():
-            return line_cps_verdict(info.get("line_cps"), cps_tol())
-        row("소리", "줄별 말속도 ±35%(렌더 기록)", cps, "render_info.line_cps · render_itssum.CPS_LINE_TOL")
 
         ids = list(T["lines"])
 
@@ -535,10 +603,10 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
         row("표식", "render_info 표식(판 sha·렌더러 sig·reference)", mk, "render_info.json")
     if legacy:                      # 옛 bench_check 줄 순서 그대로(자동검사.json 대조 호환)
         rows.sort(key=lambda r: LEGACY10.index(r["what"]))
-    ok = all(r["ok"] is True for r in rows)
+    ok = all(r["ok"] is True for r in rows if not r.get("ref"))     # 참고 행은 판정 밖
     rep = {"style": style_name, "ok": ok, "gate": GATE_VERSION, "mode": "legacy10" if legacy else (mode if mode == "fast" else (list(only) if only else "full")),
            "sec": round(sum(r.get("sec") or 0 for r in rows), 1),
-           "rows": [{"group": r["group"], "what": r["what"], "ok": r["ok"], "value": r["value"], "src": r["src"], "sec": r.get("sec")} for r in rows],
+           "rows": [{"group": r["group"], "what": r["what"], "ok": r["ok"], "value": r["value"], "src": r["src"], "sec": r.get("sec"), **({"ref": True} if r.get("ref") else {})} for r in rows],
            "n": len(rows), "n_ok": sum(r["ok"] is True for r in rows), "n_bad": sum(r["ok"] is False for r in rows), "n_unmeasured": sum(r["ok"] is None for r in rows),
            "placement": tab.get("check"), "log": tab.get("log"),
            "match": {"verdict": match["verdict"], "file": str(doc / "재현일치도.json")} if match else None,
@@ -555,7 +623,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
         jsave(doc / "품질관문.json", rep)
     jsave(doc / "자동검사.json", rep)       # 호환(runner_ops·flow 가 이 파일을 읽는다) — 같은 내용
     for r in rep["rows"]:
-        log(f"  {'○' if r['ok'] is True else '×' if r['ok'] is False else '미측정'} [{r['group']}] {r['what']} ({r.get('sec')}초): {r['value']}")
+        log(f"  {'참고' if r.get('ref') else '○' if r['ok'] is True else '×' if r['ok'] is False else '미측정'} [{r['group']}] {r['what']} ({r.get('sec')}초): {r['value']}")
     return {"ok": rep["ok"], "report": str(doc / ("자동검사.json" if legacy else "품질관문.json")), "rows": rep["rows"], "match": match, "fit": fit_res,
             "eye_pack_dir": rep.get("eye_pack_dir")}
 

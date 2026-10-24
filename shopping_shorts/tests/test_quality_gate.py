@@ -282,3 +282,21 @@ def test_upgrade_table_is_wired(monkeypatch):
     from tools.calcopy.engine import upgrade_table as U
     monkeypatch.setattr(U, "upgrade_table", lambda st, doc, work: {"called": (st, doc, work)})
     assert K.upgrade_table("판", "d", "w") == {"called": ("판", "d", "w")}
+
+
+# ---------------------------------------------------------------- 표준 ⑯ 전환 세기(02 transition_drop) — 장치 끈 판 대조 −0.072 는 통과하면 안 된다
+def test_transition_strength_drop_verdict():
+    from tools.calcopy.hybrid.quality_gate import drop_verdict
+    bench = [0.923, 0.587, 0.72]                                   # 잇템로그 벤치 zoomblur 3회(02 f619f36fe 실측)
+    assert drop_verdict([0.654] * 9, bench)[0] is True             # 장치 켠 우리 완성본 중앙 0.654(9경계)
+    assert drop_verdict([-0.072], bench)[0] is False               # 장치 끈 키치잇판 같은 시각 대조 −0.072
+    assert drop_verdict([], bench)[0] is False                     # 벤치엔 전환이 있는데 우리 경계 0개
+    assert drop_verdict([0.5], [])[0] is None                      # 벤치 표본 없음 = 미측정
+    assert drop_verdict([0.966], bench)[0] is False                # 마스크 안 뺀 창 전체 자(0.966)로 재면 +34% → 밖
+
+
+def test_ref_row_not_in_verdict(tmp_path):
+    from tools.calcopy.hybrid.quality_gate import _row
+    rows = []
+    _row(rows, "화면", "참고", lambda: (False, "x"), "s", ref=True)
+    assert rows[0]["ref"] is True and rows[0]["ok"] is False
