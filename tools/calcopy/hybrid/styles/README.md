@@ -46,3 +46,23 @@
 
 `render_info.json` 표식: `devices{transition{kinds_set,drawn,n}, duck_narr{db,bed}, frame_kind}` · `style_sha`(판 파일 sha256) · `style_sha_effective`(_common·base 합친 설정) · `renderer_sig`(렌더러 파일@sha) · `line_cps{줄: 자/초}` — 표식 주인 `render_bench.render_marks`(itssum·jaemi 도 부른다), 품질 관문(04)이 읽는다. 자막표.json 에 `transitions`(그린 목록).
 시험 판(목록에 안 뜸): `_test_transition`(모든 경계 줌블러 200ms) · `_test_duck`(나레 −8dB) · `_test_post`(게시글형 = banggu 게시글형 훅 틀 좌표).
+
+## 판 목록(관제 263 지시서 07 — 표 줄만, 칸 문서는 위 02 표가 주인)
+| 판 | 벤치(slug) | 틀 kind | counted 편 | 틀 대조(벤치 프레임 ↔ frame_png) | 손 스크립트 | 큰 _pending |
+|---|---|---|---|---|---|---|
+| 잇템로그판 | 잇템로그(ititemlog) | window | 6 | ep13 렌더: 줌블러 그림 3.57~3.64초 라플라시안 66→3 · 효과음 pop 1발 | (scratchpad mk_v3·vmake → 08) | targets 는 _v2 · cps_target 근거 칸(뿌리) |
+| 썰템홈샷판 | 방구석(banggu) | post | 6 | 제목 y0 0·h −4 · letter_gap ✗ | make_썰템홈샷.py·하이브리드/make.py `_deprecated` | 자막팩 없음·훅 카드 틀 바꾸기·페이지 쌓기 |
+| 맛템썰템판 | 맛있는 친구들(yummyknow) | post | 6 | 제목 y0 +2·h −3 · cx +95(왼쪽 정렬) | make_맛템썰템·rerender_* `_deprecated` | 자막팩·제목 왼쪽 정렬·게시자 줄 칸·표지 카드 |
+| 썰템쇼판 | 재밌쇼(humorshowshow) | post | 0(옛 꼴) | 제목 y0 −1·h +1 · cx −7 | preset/hs_*.py `_deprecated` | 줄판독 새 꼴(06)·조회수 줄(가짜 지표 → 사장님) |
+| 숏템리폿판 | 핫템리포트(hottemreport) | window | 6 | 제목 1줄 y0 −1·h 0·ΔE 0 / 2줄 y −1·h 0 | make_frame/make_render 숏템리폿·현장썰 `_deprecated` | 원음 색 기울임 자막팩·효과음 종류 |
+| 신박판 | 신박발견(sinbak) | window | 6 | 제목 y0 +1·h +4 · cx +35(왼쪽 정렬) | sinbak_preset·measure·시험편1 `_deprecated` | 나레 없는 편·둥근 창·창 안 색 글씨 |
+| 트롯파파판 | 울지마트로트(uljimatrot) | window | 10 | 줄판독 픽셀: 제목 180~264/322~407 vs 178~265/325~409 | _tools/make_trotpapa.py `_deprecated` | 훅 누끼·CTA·가격 카드(금지선 → 사장님) |
+| 만템판 | 만템(mantem) | window | 0 | 제목 1줄 158~259 vs 158~258 | preset/mt_preset.py `_deprecated` | 줄판독 0(06) |
+| 아이템홈판 | 아이템홈(itemhome) | window | 0 | framecmp 통과급(y0 +3·h −3) | 1편 make_render·ih_preset `_deprecated` | 줄판독 0(06)·브랜드 미정 |
+| 안나픽판 | 안나픽(annapick) | window | 0 | framecmp 통과(y0 −1·h +1) | 1편 make_plan/make_render·ap_preset `_deprecated` | 줄판독 0(06)·브랜드 미정 |
+| 도파민썰템A판 | 썰풀다 자막만(sseolpulda) | window | 0(섞인 폴더) | 제목 223~304/318~398 = 벤치 | — | 갈래별 줄판독 폴더(06)·나레 없는 편 |
+| 도파민썰템B판 | 썰풀다 나레(sseolpulda) | window | 0(섞인 폴더) | 제목 105~227 vs 102~221 · 폭(자간) ✗ | — | 갈래별 폴더·표본 3편 |
+| 뜨거운사람들판 | 뜨거운사람들(hotpeople) | window | 0 | (벤치 영상 로컬 없음) | — | 줄판독 0·목소리·길이 손 상수 |
+| 숏비타민c판 | 숏비타민c(shortvitc) | window(틀만) | 0 | (벤치 영상 로컬 없음) | — | 틀만 — 자막·소리 06 |
+| 잇썸홈판·재미썸홈판 | 두유노·이븐쇼핑 | itssum·jaemi | — | (bench 전환 불가 판단) | — | _pending.bench_migration(A·B 두 틀·대본 꼴·소리 규칙) |
+판 설정 초안 변환기 = `tools/calcopy/hybrid/frame_import.py <frame.json> --kind post|full|window [--frame body|hook]`(한 번 돌리고 끝, 판 파일이 주인).
