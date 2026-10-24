@@ -1,0 +1,382 @@
+{
+ "_meta": {
+  "made_by": "C:/숏템_칼카피/foreignshowshow/work/tools/sfxfilter.py",
+  "rule": "후보 시각이 받아쓰기 낱말(구) 구간 ±0.05초 안이면 거름(나레 목소리 자음 오탐 방지). 시각 깨진 편은 나레 줄 구간으로.",
+  "src": "_kal/sfx_events.json(engine/sound/sfx_events.py foreignshowshow --detect)"
+ },
+ "2jJoIbdciDY": {
+  "how": "나레줄(받아쓰기 시각 깨짐)",
+  "n_cand": 12,
+  "n_keep": 4,
+  "n_drop_in_speech": 8,
+  "keep": [
+   [
+    24.74,
+    "broad",
+    22.9,
+    6130
+   ],
+   [
+    24.95,
+    "broad",
+    27.3,
+    7236
+   ],
+   [
+    25.59,
+    "broad",
+    20.4,
+    7182
+   ],
+   [
+    35.2,
+    "broad",
+    26.3,
+    6810
+   ]
+  ],
+  "drop": [
+   [
+    9.53,
+    "broad"
+   ],
+   [
+    9.71,
+    "broad"
+   ],
+   [
+    15.46,
+    "broad"
+   ],
+   [
+    20.87,
+    "broad"
+   ],
+   [
+    32.74,
+    "broad"
+   ],
+   [
+    33.02,
+    "broad"
+   ],
+   [
+    54.69,
+    "broad"
+   ],
+   [
+    55.09,
+    "tonal"
+   ]
+  ],
+  "strong_n": 6,
+  "chance": {
+   "cap": 0.1,
+   "switch": 0.08,
+   "cut": 0.2
+  }
+ },
+ "QMJtjJz4M6w": {
+  "how": "asr",
+  "n_cand": 11,
+  "n_keep": 3,
+  "n_drop_in_speech": 8,
+  "keep": [
+   [
+    13.6,
+    "broad",
+    18.6,
+    6496
+   ],
+   [
+    13.7,
+    "broad",
+    24.8,
+    6582
+   ],
+   [
+    33.7,
+    "broad",
+    28.3,
+    7213
+   ]
+  ],
+  "drop": [
+   [
+    6.03,
+    "tonal"
+   ],
+   [
+    6.52,
+    "broad"
+   ],
+   [
+    7.26,
+    "broad"
+   ],
+   [
+    7.36,
+    "tonal"
+   ],
+   [
+    20.48,
+    "broad"
+   ],
+   [
+    23.7,
+    "broad"
+   ],
+   [
+    26.62,
+    "broad"
+   ],
+   [
+    35.79,
+    "broad"
+   ]
+  ],
+  "strong_n": 9,
+  "chance": {
+   "cap": 0.03,
+   "switch": 0.09,
+   "cut": 0.19
+  }
+ },
+ "hZgCO9PEnO8": {
+  "how": "asr",
+  "n_cand": 9,
+  "n_keep": 4,
+  "n_drop_in_speech": 5,
+  "keep": [
+   [
+    8.81,
+    "broad",
+    21.1,
+    7824
+   ],
+   [
+    16.0,
+    "broad",
+    18.1,
+    6969
+   ],
+   [
+    20.25,
+    "broad",
+    19.2,
+    7463
+   ],
+   [
+    23.03,
+    "broad",
+    25.2,
+    6846
+   ]
+  ],
+  "drop": [
+   [
+    3.66,
+    "broad"
+   ],
+   [
+    6.9,
+    "broad"
+   ],
+   [
+    16.27,
+    "broad"
+   ],
+   [
+    17.02,
+    "tonal"
+   ],
+   [
+    31.39,
+    "broad"
+   ]
+  ],
+  "strong_n": 4,
+  "chance": {
+   "cap": 0.22,
+   "switch": 0.07,
+   "cut": 0.17
+  }
+ },
+ "kmQGQNJgSVo": {
+  "how": "asr",
+  "n_cand": 9,
+  "n_keep": 4,
+  "n_drop_in_speech": 5,
+  "keep": [
+   [
+    12.69,
+    "tonal",
+    34.6,
+    1077
+   ],
+   [
+    19.89,
+    "broad",
+    18.2,
+    6619
+   ],
+   [
+    23.53,
+    "broad",
+    21.3,
+    7245
+   ],
+   [
+    35.57,
+    "broad",
+    26.0,
+    6126
+   ]
+  ],
+  "drop": [
+   [
+    6.99,
+    "broad"
+   ],
+   [
+    15.26,
+    "broad"
+   ],
+   [
+    15.5,
+    "tonal"
+   ],
+   [
+    29.04,
+    "tonal"
+   ],
+   [
+    30.73,
+    "broad"
+   ]
+  ],
+  "strong_n": 10,
+  "chance": {
+   "cap": 0.28,
+   "switch": 0.09,
+   "cut": 0.18
+  }
+ },
+ "mVzrvBpMu3E": {
+  "how": "asr",
+  "n_cand": 4,
+  "n_keep": 0,
+  "n_drop_in_speech": 4,
+  "keep": [],
+  "drop": [
+   [
+    34.32,
+    "broad"
+   ],
+   [
+    35.99,
+    "broad"
+   ],
+   [
+    47.48,
+    "tonal"
+   ],
+   [
+    47.79,
+    "broad"
+   ]
+  ],
+  "strong_n": 15,
+  "chance": {
+   "cap": 0.26,
+   "switch": 0.08,
+   "cut": 0.21
+  }
+ },
+ "vbxJ_v132ao": {
+  "how": "asr",
+  "n_cand": 14,
+  "n_keep": 7,
+  "n_drop_in_speech": 7,
+  "keep": [
+   [
+    27.45,
+    "broad",
+    24.6,
+    9449
+   ],
+   [
+    27.45,
+    "broad",
+    18.1,
+    9254
+   ],
+   [
+    27.45,
+    "broad",
+    18.2,
+    5674
+   ],
+   [
+    29.32,
+    "tonal",
+    35.7,
+    1012
+   ],
+   [
+    33.45,
+    "broad",
+    23.4,
+    6781
+   ],
+   [
+    34.86,
+    "tonal",
+    39.3,
+    1012
+   ],
+   [
+    39.08,
+    "broad",
+    18.5,
+    6388
+   ]
+  ],
+  "drop": [
+   [
+    6.27,
+    "broad"
+   ],
+   [
+    11.06,
+    "broad"
+   ],
+   [
+    13.39,
+    "broad"
+   ],
+   [
+    17.83,
+    "broad"
+   ],
+   [
+    19.81,
+    "broad"
+   ],
+   [
+    23.25,
+    "broad"
+   ],
+   [
+    24.42,
+    "broad"
+   ]
+  ],
+  "strong_n": 3,
+  "chance": {
+   "cap": 0.3,
+   "switch": 0.07,
+   "cut": 0.18
+  }
+ }
+}
