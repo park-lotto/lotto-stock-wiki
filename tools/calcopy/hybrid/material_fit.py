@@ -30,7 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from tools.calcopy.hybrid.common import ROOT, jload, jsave  # noqa: E402
 
 MAX_ROUNDS = 3            # 표준 §12-3 ④ 최대 3회
-MAX_CANDS = 10            # 칸 하나의 후보 = 시트 한 장(scene_fit.PER_SHEET)
+MAX_CANDS = 20            # 칸 하나의 후보 = 시트 두 장(scene_fit.PER_SHEET 10) — 10 개로는 제약(재사용·A-B-A)을 지키는 길이 끊겨 위반 컷이 남았다(10-25 ep13 N6·N7)
 TOP_SHOTS = 8             # 줄마다 순위 상위 샷 수(샷마다 자리 3개 — 제약을 통과한 것만 사람 컷 포함 10 개까지)
 FLOOR_HI, FLOOR_LO = 7, 5
 ROLE_HI = ("본문", "공개", "증거", "반전")      # 지침서 §3-4(handoff 10-19) — 대사가 화면을 가리키는 줄
@@ -53,7 +53,7 @@ RANK_PROMPT = """숏폼 편집자다. [대사 줄]마다 그 대사가 말하는
 출력 JSON만: {{"lines":[{{"id":"줄 id","shots":["장면 id", …]}}]}}"""
 
 FIX_PROMPT = """숏폼 대본 편집자다. 아래 나레 줄은 화면(고른 장면)이 대사와 안 맞는다. 대사를 **화면에 실제로 보이는 것**에 맞춰 조금 고쳐라.
-지킬 것: ① 뜻(전하는 사실)은 유지 — 없는 사실·효능·숫자를 지어내지 마라 ② 끝 어미 유지(원문 끝 '{ending}' 그대로) ③ 글자 수(공백 뺀) 원문 {n}자 ±2
+지킬 것: ① 뜻(전하는 사실)은 유지 — 없는 사실·효능·숫자를 지어내지 마라 ② 끝 어미·끝 문장부호 유지(원문 끝 '{ending}' 과 마지막 부호 '{punct}' 그대로 — 부호가 줄 경계다) ③ 글자 수(공백 뺀) 원문 {n}자 ±2
 ④ 자막 덩어리(caps)는 고친 대사를 앞에서부터 그대로 나눈 것(이어 붙이면 문장부호만 빼고 대사와 같다), 덩어리 수 {nc}개 유지 ⑤ 말투·존댓말 유지.
 [줄] {lid} (역할 {role})
 [원문 대사] {tts}
@@ -307,6 +307,12 @@ def candidates(slot: dict, table: dict, ranked: list[str], src_dir: Path, crops:
         per_shot.append(got)
     for k in range(3):                     # 샷마다 가운데 먼저 돌고, 그다음 처음·끝(상위 샷이 고루 들어가게)
         raw += [g[k] for g in per_shot if len(g) > k]
+    ranked_set = set(order)
+    for s, v in table.items():             # 순위 밖 샷의 가운데로 채운다(제약을 통과한 후보가 MAX_CANDS 에 모자랄 때 — 순위는 후보 줄이기일 뿐)
+        for x in v["shots"]:
+            sid = f"{Path(s).stem}#{x['i']}"
+            if sid not in ranked_set:
+                raw.append({"src": s, "ss": round(max(0.0, (x["a"] + x["b"] - d) / 2), 2), "crop": crops.get(s), "shot": sid, "pos": "mid", "from": "fill"})
     raw += list(extra or [])
     keep, rej, seen = [], [], set()
     for c in raw:
@@ -385,8 +391,18 @@ def select(slots: list[dict], src_len: dict, floors: dict | None = None) -> list
                                                                                     "why": f"제약 안 후보 0 — 위반째 남김 {skipped[:2]}"}]))
                 else:
                     nxt.append((v - VIOL_PENALTY, ch, dec + [{"pick": None, "below": True, "floor": fl, "why": "후보 0"}]))
+        if any(not (x[2][-1].get("pick") or {}).get("violation") and x[2][-1].get("pick") for x in nxt):   # 제약 지킨 길이 하나라도 있으면 위반 길은 버린다
+            nxt = [x for x in nxt if not (x[2][-1].get("pick") or {}).get("violation") and x[2][-1].get("pick")]
         nxt.sort(key=lambda x: -x[0])
-        beams = nxt[:BEAM]
+        seen_k, beams = set(), []
+        for x in nxt:                    # 다양성: 최근 나레 컷 3개가 같은 길은 하나만(같은 앞 고르기만 200개 남아 뒤 칸이 막히던 것, 10-25 ep13 실측)
+            k = tuple((c["src"], round(c["ss"], 1)) for c in x[1] if c["kind"] == "tts")[-3:]
+            if k in seen_k:
+                continue
+            seen_k.add(k)
+            beams.append(x)
+            if len(beams) >= BEAM:
+                break
     best = beams[0][2] if beams else []
     return [{**s, **d} for s, d in zip(slots, best)]
 
@@ -433,6 +449,9 @@ def verdict(sel: list[dict], goal: dict | None) -> tuple[bool, dict, list[dict]]
 
 
 # ── (a) 보충 재료 · (b) 대사 고침 ─────────────────────────────────────────────
+GENERIC = ("크림", "제품", "같은", "비슷한", "정확한", "이름", "쿠팡", "세트")
+
+
 def supplement(weak: list[dict], doc_S: dict, work: Path, log=print, n: int = 6, take: int = 2) -> list[str]:
     """하한 미달 줄 → screen.search('<제품> <동작 낱말>') → 짧은 순 take 개 받기(src/sup_<id>.mp4). 받은 파일 이름 목록.
     받은 것은 원본 밖 재료 — 후보가 될 때 얼굴 있는 컷은 제약(face_outside)이 뺀다. 실패는 사유를 남기고 빈 목록(조용히 통과 아님)."""
@@ -449,7 +468,13 @@ def supplement(weak: list[dict], doc_S: dict, work: Path, log=print, n: int = 6,
     except Exception as e:  # noqa: BLE001 — 검색이 막히면 사유를 남기고 대사 고침으로 넘어간다
         log(f"[fit] 보충 검색 실패: {type(e).__name__}: {str(e)[:160]}")
         return []
-    cands = sorted([c for c in cands if c.get("duration") and c["duration"] <= 90], key=lambda c: c["duration"])[:take]
+    # 길이 모름(서버 API 결과 — 대개 쇼츠)도 받는다: 길이 아는 90초 이하 짧은 순 → 모르는 것 순(10-25 ep13: 14개 중 11개가 길이 None 이라 다 빠졌다)
+    toks = [t for t in re.findall(r"[가-힣]{2,}|[A-Za-z]{3,}", str(doc_S.get("product") or "")) if t not in GENERIC]
+    hit = (lambda c: sum(1 for t in toks if t.lower() in (c.get("title") or "").lower()))
+    cands = [c for c in cands if hit(c) >= 1]          # 제목에 제품 낱말(브랜드·성분·모양) 1개 이상 — 10-25 ep13 '톤업 선크림'이 들어왔다
+    cands = sorted(cands, key=lambda c: -hit(c))
+    cands = (sorted([c for c in cands if c.get("duration") and c["duration"] <= 90], key=lambda c: c["duration"])
+             + [c for c in cands if not c.get("duration")])[:take]
     got = []
     for c in cands:
         try:
@@ -484,7 +509,7 @@ def propose_fixes(weak_lines: list[str], sel: list[dict], S: dict, llm, version:
         i = order.index(lid)
         seen = " / ".join(str((s.get("pick") or {}).get("seen") or "") for s in sel if s["line"] == lid)
         caps = [c["text"] for c in L.get("caps") or []]
-        body = FIX_PROMPT.format(ending=_ending(L["tts"]), n=nchar(L["tts"]), nc=len(caps), lid=lid, role=L.get("role"), tts=L["tts"], caps=caps, seen=seen,
+        body = FIX_PROMPT.format(punct=(re.findall(r"[,.?!~]", L["tts"].strip()[-1:]) or [""])[0], ending=_ending(L["tts"]), n=nchar(L["tts"]), nc=len(caps), lid=lid, role=L.get("role"), tts=L["tts"], caps=caps, seen=seen,
                                  prev=Lm[order[i - 1]].get("tts") or Lm[order[i - 1]].get("said") if i else "", next=(Lm[order[i + 1]].get("tts") or "") if i + 1 < len(order) else "")
         r, err = llm([], body, "ma_fit:fix")
         if not r or not r.get("tts"):
@@ -492,7 +517,7 @@ def propose_fixes(weak_lines: list[str], sel: list[dict], S: dict, llm, version:
             continue
         new, ncaps = str(r["tts"]).strip(), [str(x) for x in r.get("caps") or []]
         plain = (lambda t: re.sub(r"[\s,.?!~…'\"“”]", "", t))
-        checks = {"ending": _ending(new) == _ending(L["tts"]), "chars": abs(nchar(new) - nchar(L["tts"])) <= 2,
+        checks = {"ending": _ending(new) == _ending(L["tts"]), "punct": new.strip()[-1:] == L["tts"].strip()[-1:], "chars": abs(nchar(new) - nchar(L["tts"])) <= 2,
                   "caps": plain("".join(ncaps)) == plain(new) and len(ncaps) == len(caps), "changed": plain(new) != plain(L["tts"])}
         S2 = {**S, "lines": [({**l, "tts": new, "caps": [{**(l["caps"][k] if k < len(l.get("caps") or []) else {}), "text": t} for k, t in enumerate(ncaps)]}
                               if l["id"] == lid else l) for l in S["lines"]]}
