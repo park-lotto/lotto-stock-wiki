@@ -651,9 +651,15 @@
    },
    "gain_db": -6,
    "ncc": {
-    "measured": false
+    "measured": true,
+    "hits": 95,
+    "pack_hits": 75,
+    "ge06": 0,
+    "max": 0.571,
+    "max_file": "팩05/pop.wav",
+    "mine_max": 0.571
    },
-   "from": "NCC 미측정(_kal/sfx_ncc.json 없음) → 지문으로 고를 수 없어 종류 이름표로 slot: pop→뽁 · 팩 팩05",
+   "from": "NCC 벤치↔팩 파일 75발 중 ≥0.6 0개(최대 0.571 팩05/pop.wav) → 지문으로 고를 수 없어 종류 이름표로 slot: pop→뽁 · 팩 팩05",
    "gap": [
     "팩 밖 효과음 ['impact'] — slot 없음 → 팩요청.md 굿레터판#2"
    ]

@@ -77,6 +77,7 @@
 | `bgm` | `id`(사람이 고른 곡) · `candidates`(bgm_pick 상위 3) | `bgm_lib/catalog.json` | → `bgm.id`·`bgm.candidates` |
 | `meme` | `pack` = `local`(칼카피 로컬 짤 팩 — 기본)·`server`(회원 prefs — 칼카피 길 미연결, 짤 규칙 있는 판이면 거절)·`none` · `tone`·`dir`(있으면 `placement.rules.meme.tone/pack` 로) | 로컬 짤 팩 | placement.meme_step. **빈도 `rate` 는 `placement.rules.meme.rate`(뼈대)** — packs 에 안 적는다(두 벌 금지) |
 
+- **자막 크기·줄 간격의 주인 = 자막팩(표준 §11-3 ㉑)** — 판 `caption` 에 크기·간격 칸을 만들지 않는다. 다르게 하려면 `packs.caption.variants{size: …, line_pitch: …}` 로 **팩에 있는 변형**을 고른다(없는 변형 = load 거절). 팩에 없으면 `pack_map` 이 `팩요청.md`(관제 235)+`gap` 을 쓴다: 업그레이드 판 상위 편 p75 잉크가 팩보다 10%↑ → size 변형 요청(잇템로그판_v2 89 vs 74px) · 여러 줄 자막 피치가 팩 기본 줄 높이(글꼴 ascent+descent)와 10%↑ 다름 → line_pitch 변형 요청(썰템쇼·썰템홈샷·트롯파파). 1차 판은 벤치 실측 그대로.
 - 합치기 = `pack_map.merge(엔진 기본 ENGINE_DEFAULT, 판 packs, 회원 patch.packs)` 한 곳 — `styles.load(판, patch={"packs": …})`. 회원 patch 는 지금 `packs` 만(다른 칸은 지시서 12 `apply_patch` — 그 전엔 거절). 없는 팩 항목은 거절(`check`).
 - 상속 판(`base`): packs 는 바탕 판과 **다른 요소만** 적는다(`연예인레시피판` = caption 만, `잇템로그판_v2` = 없음). 목록 칸 `script.audit`·`brief` 도 통째로 못 적고 `audit_patch`·`brief_patch{add,remove,replace}` 만(⑰ — 통째면 load 거절).
 - 카드(01) 레코드 키 제안: `pack_item` = `"caption:<packs.caption.pack>"` · `"motion:<pack>/<graphics>"` · `"sfx:<pack>/<map>"` · `"bgm:<id>"` · `"meme:<pack>"`, 임시면 `stand_in` 표시.

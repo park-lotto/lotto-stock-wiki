@@ -229,8 +229,11 @@
   "motion": {
    "pack": "off",
    "graphics": "off",
-   "gap": [],
-   "from": "등장 효과팩 off — 판 자막팩이 등장까지 정한다(caption-motions.js motionPlan: 팩 motion 이 효과팩 번호보다 이긴다) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+   "gap": [
+    "전환 black 0.018 — 모션그래픽팩 항목 없음(있는 것 ['swipe_left']) · 그리기는 엔진 cuts.transition(02)이 하지만 회원이 팩으로 못 바꾼다 → 팩요청.md 만템판#2",
+    "전환 flash 0.009 — 모션그래픽팩 항목 없음(있는 것 ['swipe_left']) · 그리기는 엔진 cuts.transition(02)이 하지만 회원이 팩으로 못 바꾼다 → 팩요청.md 만템판#3"
+   ],
+   "from": "등장 효과팩 off — 판 자막팩이 등장까지 정한다(caption-motions.js motionPlan: 팩 motion 이 효과팩 번호보다 이긴다) · 모션그래픽팩 off — 벤치 전환 {'black': 0.018, 'flash': 0.009} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
   },
   "sfx": {
    "pack": null,

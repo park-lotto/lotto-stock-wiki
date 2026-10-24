@@ -237,7 +237,8 @@
   "caption": {
    "pack": "clean",
    "gap": [
-    "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 clean same=False) → 팩요청.md 썰템쇼판#1(관제 235) · 그동안 'clean' 임시(stand_in)"
+    "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 clean same=False) → 팩요청.md 썰템쇼판#1(관제 235) · 그동안 'clean' 임시(stand_in)",
+    "자막 줄 간격 변형 line_pitch(clean) → 팩요청.md 썰템쇼판#2(관제 235) · 판 caption 에 크기·간격 칸 안 만듦(㉑) — 그동안 팩 기본값"
    ],
    "rank": [
     {
@@ -289,8 +290,10 @@
   "motion": {
    "pack": "off",
    "graphics": "off",
-   "gap": [],
-   "from": "등장 효과팩 off — render_bench 옛 고정값 그대로(벤치 등장 = 판 caption.pack_default·placement.rules.enter 가 정함) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+   "gap": [
+    "전환 black 0.005 — 모션그래픽팩 항목 없음(있는 것 ['swipe_left']) · 그리기는 엔진 cuts.transition(02)이 하지만 회원이 팩으로 못 바꾼다 → 팩요청.md 썰템쇼판#3"
+   ],
+   "from": "등장 효과팩 off — render_bench 옛 고정값 그대로(벤치 등장 = 판 caption.pack_default·placement.rules.enter 가 정함) · 모션그래픽팩 off — 벤치 전환 {'black': 0.005} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
   },
   "sfx": {
    "pack": null,

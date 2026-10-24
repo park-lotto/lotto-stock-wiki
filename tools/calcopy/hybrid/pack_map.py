@@ -134,6 +134,11 @@ def check(P: dict) -> list[str]:
     c = P.get("caption") or {}
     if c.get("pack") is not None and c["pack"] not in caption_packs():
         errs.append(f"caption.pack '{c['pack']}' 자막팩에 없음")
+    if c.get("variants"):          # ㉑ 자막 크기·줄 간격 = 팩 변형(판 caption 에 크기 칸 금지) — 팩에 있는 변형 이름만
+        have = list(((caption_packs().get(c.get("pack")) or {}).get("variants") or {}))
+        for axis, v in c["variants"].items():
+            if v not in have:
+                errs.append(f"caption.variants.{axis} '{v}' — 자막팩 '{c.get('pack')}' 에 그 변형 없음(있는 것 {have}) → 팩요청(관제 235)")
     m = P.get("motion") or {}
     if str(m.get("pack", "off")) not in motion_pack_ids():
         errs.append(f"motion.pack '{m.get('pack')}' — 등장 효과팩 번호(off·1~{len(motion_pack_ids()) - 1})가 아님")
@@ -471,6 +476,70 @@ def cap_rank(B: dict) -> list[dict]:
     return sorted((cap_distance(B, k) for k in caption_packs()), key=lambda r: r["d"])
 
 
+def font_pitch(family: str, size: float) -> float | None:
+    """그 글꼴 그 크기의 기본 줄 높이(ascent+descent, CSS line-height normal 의 바탕) — 팩에 줄 간격 칸이 없을 때 렌더가 쓰는 값."""
+    f = font_file(family)
+    if not f:
+        return None
+    from PIL import ImageFont
+    a, d = ImageFont.truetype(str(f), int(round(size))).getmetrics()
+    return float(a + d)
+
+
+def _spans_of(slug: str, ids: set | None = None) -> tuple[list, list]:
+    sp, gap = [], []
+    for f in sorted(glob.glob(str(ROOT / f"channel/{slug}/줄판독/*.json"))):
+        if ids and Path(f).stem not in ids:
+            continue
+        try:
+            L = json.loads(Path(f).read_text(encoding="utf-8")).get("lines") or []
+        except Exception:     # noqa: BLE001
+            continue
+        sp += [x["y"][1] - x["y"][0] for x in L if isinstance(x.get("y"), list) and len(x["y"]) == 2
+               and all(isinstance(v, (int, float)) for v in x["y"]) and 20 < x["y"][1] - x["y"][0] < 150]
+        gap += [x["line_gap_px"] for x in L if isinstance(x.get("line_gap_px"), (int, float))]
+    return sp, gap
+
+
+def _q75(v: list) -> float:
+    v = sorted(v)
+    return float(v[min(len(v) - 1, int(round(0.75 * (len(v) - 1))))])
+
+
+def cap_shape_requests(name: str, st: dict, slug: str, cap: str) -> list[dict]:
+    """표준 §11-3 ㉑: 자막 크기·줄 간격의 주인 = 자막팩. 판에 크기 칸을 만들지 않고, 벤치(1차)·상위 편(업그레이드 판 targets)이 팩과 다르면
+    팩 변형(packs.caption.variants.size / line_pitch) 요청서를 낸다. 1차 판은 벤치 실측 그대로가 목표, 업그레이드 판은 상위 편 p75."""
+    out = []
+    look = pack_look(cap)
+    variants = list((caption_packs()[cap].get("variants") or {}))
+    top = {k for v in (st.get("targets") or {}).values() if isinstance(v, dict) for m in v.values() if isinstance(m, dict)
+           for k in (m.get("bench_top_values") or {})}
+    if top:
+        ids = {Path(f).stem for f in glob.glob(str(ROOT / f"channel/{slug}/줄판독/*.json")) if any(Path(f).stem.startswith(i) for i in top)}
+        sp, _ = _spans_of(slug, ids)
+        if len(sp) >= 10 and look["ink"]:
+            q = _q75(sp)
+            base = min((look["ink"], look["outer"]), key=lambda v: abs(stt.median(_spans_of(slug)[0]) / v - 1))   # 1차 벤치와 맞는 쪽(채움/테 포함)
+            if q / base > 1.10:
+                out.append({"element": f"자막 크기 변형 size:large({cap})", "owner": "관제 235(자막팩 세션)",
+                            "measure": f"상위 편 {sorted(ids)} 자막 y칸 높이 p75 {q:.0f}px({len(sp)}줄) vs 팩 '{cap}' {base:.0f}px(1차 벤치 중앙과 같은 자) — {q / base:.2f}배",
+                            "stand_in": f"'{cap}' 기본 크기(1차 = 벤치 실측 그대로)",
+                            "want": f"'{cap}' variants 에 size 변형(예 large ≈ {q:.0f}px 잉크) — 판 packs.caption.variants.size 로 고른다(판 caption 에 크기 칸 금지 ㉑)"
+                                    + ("" if not any("large" in v or "big" in v for v in variants) else f" · 지금 변형 {variants} 중 크기 변형 있음 — 이름 확인"),
+                            "frames": f"channel/{slug}/줄판독/<상위 편>.json y 칸"})
+    sp, gap = _spans_of(slug)
+    if len(gap) >= 10 and len(sp) >= 10:
+        g = stt.median(gap)
+        bp = g if g > stt.median(sp) else stt.median(sp) + g     # 줄판독 line_gap_px 는 채널마다 '줄 사이'(26~28) 또는 '줄 피치'(맛친 93) — 잉크보다 크면 피치
+        pp = font_pitch(look["font"], look["size"])
+        if pp and abs(bp / pp - 1) > 0.10:
+            out.append({"element": f"자막 줄 간격 변형 line_pitch({cap})", "owner": "관제 235(자막팩 세션)",
+                        "measure": f"벤치 여러 줄 자막 줄 피치 {bp:.0f}px(잉크 {stt.median(sp):.0f} · line_gap_px 중앙 {g:.0f}, {len(gap)}줄) vs 팩 '{cap}' 기본 줄 높이 {pp:.0f}px({look['font']} {look['size']} ascent+descent)",
+                        "stand_in": f"'{cap}' 기본 줄 높이", "want": f"'{cap}' 에 줄 간격 변형(≈{bp:.0f}px) — 판 packs.caption.variants.line_pitch 로 고른다",
+                        "frames": f"channel/{slug}/줄판독/*.json y·line_gap_px 칸"})
+    return out
+
+
 def _enter_word(e) -> str:
     e = str(e or "").strip()
     for w in ("typing", "append", "instant", "cut", "pop", "fade", "slide"):
@@ -614,6 +683,11 @@ def map_all(name: str) -> tuple[dict, list[dict]]:
                              "measure": json.dumps({w: C['enter_cover'][w] for w in miss}, ensure_ascii=False),
                              "stand_in": cap, "want": f"{cap} 팩에 {miss} 등장 변형(벤치 줄 비율 위)", "frames": f"channel/{slug}/줄판독/*.json enter·enter_ms 칸"})
                 C["gap"].append(f"벤치 등장 {miss}(줄 5% 이상) 팩 '{cap}' 에 없음 → 팩요청.md {name}#{n}")
+    if slug and st["renderer"] == "bench" and cap in caption_packs():
+        for r in cap_shape_requests(name, st, slug, cap):
+            n = len(reqs) + 1
+            reqs.append(r)
+            C["gap"].append(f"{r['element']} → 팩요청.md {name}#{n}(관제 235) · 판 caption 에 크기·간격 칸 안 만듦(㉑) — 그동안 팩 기본값")
     P["caption"] = C
 
     # 모션(등장 효과팩 번호 · 모션그래픽팩)
@@ -710,6 +784,8 @@ def only_diff(P: dict, base: dict) -> dict:
         a, b = P.get(k) or {}, base.get(k) or {}
         if any(a.get(x) != b.get(x) for x in DECIDE if x in a or x in b):
             out[k] = a
+        elif (a.get("gap") or []) != (b.get("gap") or []):      # 결정은 같고 근거·요청만 다름 → 결정 칸 없이(바탕 값 상속)
+            out[k] = {x: v for x, v in a.items() if x not in DECIDE}
     return out
 
 

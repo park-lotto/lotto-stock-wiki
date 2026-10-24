@@ -720,8 +720,10 @@
    "ncc": {
     "measured": false
    },
-   "from": "NCC 미측정(_kal/sfx_ncc.json 없음) → 지문으로 고를 수 없어 종류 이름표로 slot: 없음 · 팩 없음(종류 미측정)",
-   "gap": []
+   "from": "NCC 미측정(_kal/sfx_ncc.json 없음) → 지문으로 고를 수 없어 종류 이름표로 slot: pop→뽁 · 팩 없음(종류 미측정)",
+   "gap": [
+    "효과음 종류 ['pop'] 팩 미지정 → 06 측정 뒤"
+   ]
   },
   "bgm": {
    "id": "passo_bem_solto",

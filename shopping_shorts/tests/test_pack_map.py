@@ -49,9 +49,11 @@ def test_모든_판_packs_있고_옛칸과_같다():
 
 
 def test_판_파일마다_packs_칸_적힘():
-    """상속 판(바탕 판과 결정이 같은 잇템로그판_v2)만 packs 를 안 적는다 — 나머지는 판 파일에 packs 가 있다."""
+    """모든 판 파일에 packs 칸 — 상속 판은 바탕과 다른 것만(잇템로그판_v2 = 결정 칸 없이 gap 만, 결정은 바탕 상속)."""
     miss = [n for n in ST.names() if "packs" not in json.loads(ST.path_of(n).read_text(encoding="utf-8"))]
-    assert miss == ["잇템로그판_v2"]
+    assert miss == []
+    v2 = json.loads(ST.path_of("잇템로그판_v2").read_text(encoding="utf-8"))["packs"]
+    assert not any(x in (v2.get(k) or {}) for k in PM.PACK_KEYS for x in PM.DECIDE)
 
 
 def test_두벌_불일치는_load_거절(tmp_styles):
@@ -166,3 +168,21 @@ def test_팩요청_판마다_절_하나_다시써도_안덮는다(tmp_path, monk
 def test_글꼴_잉크_실측이_벤치값과_같다():
     """키치잇 스타일분석 §1: Jalnan2 73px 잉크 높이 69~70(픽셀) — 팩 크기를 잉크로 바꾸는 자가 이 값과 맞아야 거리 px 항목이 뜻이 있다."""
     assert abs(PM.font_ink("Jalnan2", 73) - 69.5) <= 2
+
+
+def test_자막크기는_팩변형으로만_없으면_거절():
+    """표준 §11-3 ㉑: 크기 주인 = 자막팩 — packs.caption.variants 는 팩에 있는 변형만(ititemlog 에 size 변형 없음 → 거절, 팩요청)."""
+    with pytest.raises(PM.PackError, match="그 변형 없음"):
+        ST.load("잇템로그판", patch={"packs": {"caption": {"variants": {"size": "large"}}}})
+    st = ST.load("키치잇판", patch={"packs": {"caption": {"variants": {"enter": "typing"}}}})
+    assert st["packs"]["caption"]["variants"] == {"enter": "typing"}
+    for n in ST.names():          # 판 caption 에 크기 칸을 만들지 않는다
+        assert not {"size", "px", "font_size"} & set(json.loads(ST.path_of(n).read_text(encoding="utf-8")).get("caption") or {}), n
+
+
+def test_업그레이드판_상위편_큰자막은_팩요청_gap():
+    st = ST.load("잇템로그판_v2")
+    assert any("size:large" in g for g in st["packs"]["caption"]["gap"])
+    assert st["packs"]["caption"]["pack"] == "ititemlog" and st["caption"]["pack"] == "ititemlog"
+    t = (PM.ROOT / "channel/ititemlog/_kal/팩요청.md").read_text(encoding="utf-8")
+    assert "잇템로그판_v2#" in t and "size:large" in t

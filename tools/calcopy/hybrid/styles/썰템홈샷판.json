@@ -548,7 +548,8 @@
   "caption": {
    "pack": "clean",
    "gap": [
-    "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 clean same=False) → 팩요청.md 썰템홈샷판#1(관제 235) · 그동안 'clean' 임시(stand_in)"
+    "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 clean same=False) → 팩요청.md 썰템홈샷판#1(관제 235) · 그동안 'clean' 임시(stand_in)",
+    "자막 줄 간격 변형 line_pitch(clean) → 팩요청.md 썰템홈샷판#2(관제 235) · 판 caption 에 크기·간격 칸 안 만듦(㉑) — 그동안 팩 기본값"
    ],
    "rank": [
     {

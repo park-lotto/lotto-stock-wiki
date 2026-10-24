@@ -671,7 +671,8 @@
   "caption": {
    "pack": "kitchit",
    "gap": [
-    "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 starpick same=False) → 팩요청.md 트롯파파판#1(관제 235) · 그동안 'kitchit' 임시(stand_in)"
+    "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 starpick same=False) → 팩요청.md 트롯파파판#1(관제 235) · 그동안 'kitchit' 임시(stand_in)",
+    "자막 줄 간격 변형 line_pitch(kitchit) → 팩요청.md 트롯파파판#2(관제 235) · 판 caption 에 크기·간격 칸 안 만듦(㉑) — 그동안 팩 기본값"
    ],
    "rank": [
     {
@@ -742,9 +743,15 @@
    "gain_db": -8,
    "why": "효과음 미측정(소리 못 들음·전환 지점 파형 솟음 없음 oSytU) — gain 손 상수",
    "ncc": {
-    "measured": false
+    "measured": true,
+    "hits": 123,
+    "pack_hits": 119,
+    "ge06": 0,
+    "max": 0.552,
+    "max_file": "팩02/pop.wav",
+    "mine_max": null
    },
-   "from": "NCC 미측정(_kal/sfx_ncc.json 없음) → 지문으로 고를 수 없어 종류 이름표로 slot: 없음 · 팩 없음(종류 미측정)",
+   "from": "NCC 벤치↔팩 파일 119발 중 ≥0.6 0개(최대 0.552 팩02/pop.wav) → 지문으로 고를 수 없어 종류 이름표로 slot: 없음 · 팩 없음(종류 미측정)",
    "gap": []
   },
   "bgm": {
