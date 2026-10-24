@@ -1,0 +1,107 @@
+{
+ "name": "yummyknow판",
+ "renderer": "bench",
+ "_note": "kal.py rules 초안(2026-10-25) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
+ "bench": {
+  "ko": "맛있는 친구들",
+  "channel": "https://www.youtube.com/@yummyknow-x1x",
+  "analysis": "channel/yummyknow/스타일분석.md",
+  "line_reads": "channel/yummyknow/줄판독/",
+  "src_dir": "C:\\숏템_칼카피\\yummyknow\\src",
+  "sfx_events": null,
+  "sfx_key": null,
+  "palette": "channel/yummyknow/팔레트.json",
+  "rules_counted": "channel/yummyknow/_kal/규칙빈도.json"
+ },
+ "voice": {
+  "name": null,
+  "voice_id": null,
+  "candidates": [],
+  "why": "미정 — 사장님께(kal.py 시작 질문, 추천: 미나 / 문정 / 유라 중에서 (벤치 화자 여 3/4))"
+ },
+ "cps_target": 8.53,
+ "bgm": {
+  "id": null,
+  "db_below_voice": null,
+  "duck_orig_db": null,
+  "fade_out": null,
+  "why": "engine/sound/bgm_fp.py·뜯기 audio"
+ },
+ "loudness": {
+  "lufs": -14,
+  "tp": -1.5
+ },
+ "length": {
+  "min": 32.7,
+  "max": 42.3
+ },
+ "script": {
+  "brief": [
+   "나레: 어미 지, 다, 아냐, 야 · 존댓말 0.0 · 전언 0.0 · 자수 중앙 9"
+  ],
+  "example": [
+   "영업기밀 털린 맘스터치",
+   "결국 팀킬해버린 명랑핫도그",
+   "영업기밀 유출된 치즈스틱"
+  ],
+  "audit": []
+ },
+ "frame": {
+  "window": [
+   0,
+   667,
+   1080,
+   1253
+  ],
+  "title": [],
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "comment": null
+ },
+ "caption": {
+  "pack": null,
+  "pack_default": null,
+  "variant_for": {},
+  "typing_cps": 8.47
+ },
+ "timing": null,
+ "cuts": null,
+ "sfx_files": null,
+ "placement": {
+  "rules": {
+   "narr_enter": "instant",
+   "orig_enter": null,
+   "fx_rate": {
+    "나레": 0.03
+   },
+   "plain_rate": 0.97,
+   "by_pos": {
+    "훅": 0.13,
+    "본문": 0.02,
+    "끝": 0.03
+   },
+   "strong": [
+    "화자=나레 → enter=instant 195/195",
+    "자리=본문 → enter=instant 151/151",
+    "역할=본문 → enter=instant 75/75",
+    "역할=증거 → enter=instant 34/34",
+    "자리=끝 → enter=instant 29/29",
+    "역할=반전 → enter=instant 27/27",
+    "역할=공개 → enter=instant 26/26",
+    "자리=훅 → enter=instant 15/15",
+    "역할=끝 → enter=instant 13/13",
+    "역할=훅 → enter=instant 6/6",
+    "화자전환 첫 덩어리=나레 → enter=instant 6/6",
+    "역할=고조 → enter=instant 5/5"
+   ]
+  },
+  "counted": {}
+ },
+ "_todo": [
+  "voice·bgm·sfx = engine/sound 결과",
+  "frame.title/logo/credit = 스타일분석 §틀",
+  "caption.pack = caption-motions.js 팩 이름(없으면 요청서)",
+  "timing·cuts·sfx_files = 견본 styles/키치잇판.json 꼴"
+ ]
+}
