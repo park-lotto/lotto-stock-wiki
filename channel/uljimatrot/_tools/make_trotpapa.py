@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# _deprecated_2026-10-25 → tools/calcopy/hybrid/styles/트롯파파판.json (관제 263 지시서 07 · 표준 §3-1: 새 편은 공용 렌더러로. 옛 영상 재현용 읽기 전용 참고물 — SPEC·CPS·BGM·VOICE 는 판 칸으로, 훅 누끼·CTA·공개 카드는 _pending)
 """트롯파파 1차 제작기 — 울지마트롯 뼈대(같은 위치·같은 흐름) + 우리 유료급 글꼴·자막 (2026-10-23, 관제 097).
 
     PYTHONUTF8=1 py channel/uljimatrot/_tools/make_trotpapa.py channel/uljimatrot/트롯파파_1차/A_후드티.json [--no-tts]

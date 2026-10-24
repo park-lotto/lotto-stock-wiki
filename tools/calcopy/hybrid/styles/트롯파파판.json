@@ -1,0 +1,669 @@
+{
+ "name": "트롯파파판",
+ "renderer": "bench",
+ "_note": "울지마트로트(@울지마트롯) 칼카피 1차 판 — 트로트 가수 물건 가격·사연(검정 틀·빨강 띠 제목, window). 근거 channel/uljimatrot/{스타일분석.md, 줄판독/ 10편 150줄, _kal/규칙빈도.json·narr_report.json}. 손 스크립트 _tools/make_trotpapa.py(틀·훅 누끼·CTA·공개 카드를 PIL 로 직접 그림, --senior 업그레이드) = 읽기 전용 참고물",
+ "bench": {
+  "ko": "울지마트로트",
+  "channel": "uljimatrot",
+  "analysis": "channel/uljimatrot/스타일분석.md",
+  "line_reads": "channel/uljimatrot/줄판독",
+  "palette": "channel/uljimatrot/팔레트.json"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f",
+  "candidates": [
+   "지훈"
+  ],
+  "why": "벤치 나레 남 f0 140~200Hz 10/10 · 닮은 목소리 1위 fs-jiseong 6편·tc-jihoon 3편, 박창수 3~5위(narr_report.json) · make_trotpapa VOICE 박창수(지침서 §1 자동 규칙)"
+ },
+ "cps_target": 6.7,
+ "_why_cps_target": "벤치 나레 6.1~7.5자/초 중앙 6.7(스타일분석 §3·규칙빈도 episodes) — make_trotpapa CPS 6.7",
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 14.0,
+  "duck_orig_db": -6.0,
+  "duck_narr_db": 0.0,
+  "fade_out": 0.4,
+  "candidates": [],
+  "why": "BGM 깔림(BFT 관찰) · 곡·dB 미측정 → make_trotpapa BGM honwaka_puppu · 14dB·원음 −6·fade 0.4 손 상수(06 bgm_fp 뒤 교체)"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 통일(사장님 10-18)"
+ },
+ "length": {
+  "min": 19.1,
+  "max": 25.5,
+  "why": "벤치 10편 19.06~25.5초(중앙 24.2, 규칙빈도 episodes)"
+ },
+ "timing": {
+  "gap": 0.1,
+  "tail": 1.2,
+  "why": "gap 손 상수(벤치 줄 사이 쉼 미측정) · tail 1.2 = 끝 공개 카드 1~1.5초 말 없음(스타일분석 §1) — 카드 그리기는 _pending"
+ },
+ "frame": {
+  "kind": "window",
+  "bg": [
+   0,
+   0,
+   0
+  ],
+  "window": [
+   0,
+   440,
+   1080,
+   996
+  ],
+  "title": [
+   {
+    "font": "GmarketSansBold.otf",
+    "px": 97,
+    "box": [
+     0,
+     153,
+     1080,
+     297
+    ],
+    "box_color": "#FF1700",
+    "color": "#FEFDFD",
+    "max_w": 1040,
+    "stroke": {
+     "px": 4,
+     "color": "#000000"
+    },
+    "shadow": {
+     "dx": 5,
+     "dy": 5,
+     "color": "#000000"
+    }
+   },
+   {
+    "font": "GmarketSansBold.otf",
+    "px": 97,
+    "center": 367,
+    "color": "#FEFDFD",
+    "max_w": 1040,
+    "stroke": {
+     "px": 4,
+     "color": "#000000"
+    },
+    "shadow": {
+     "dx": 5,
+     "dy": 5,
+     "color": "#000000"
+    }
+   }
+  ],
+  "logo": null,
+  "credit": {
+   "font": "GmarketSansBold.otf",
+   "px": 44,
+   "center": 1533.5,
+   "color": "#FDFAD6"
+  },
+  "watermark": null,
+  "why": "손 스크립트 _tools/make_trotpapa.py SPEC(줄판독 Jlgd 픽셀에서 load_spec) + 줄판독 10편 layout: 바탕 검정 · 제목 1줄 빨강 띠 #FF1700 y153~297 위 흰 글(잉크 178~265) · 2줄 검정 위 흰(잉크 325~409, 가운데 367) · 외곽 4px+그림자(5,5)(BFT 줄판독) · 글꼴 GmarketSansBold(make_trotpapa --style=copy 10-23 대조 1위) · px 97 = 잉크 87 ÷ (Gmarket 100px 잉크 89~91) · 창 [0,440,1080,996] = Jlgd(편마다 y433~531·끝 1289~1920 — 원본 비율) · 출처 줄 '출처 : <원본 채널>' y1510~1557 #FDFAD6(3/10편, px 44 = 잉크 47 근사) · 로고·워터마크 0/10",
+  "_pending": {
+   "cursor_icon": "오른쪽 아래 빨강·흰 ↙ 커서 x≈840~973 y≈1256~1440 흔들림(4/10편) — 아이콘 칸 없음 → 02·03",
+   "brand_place": "로고 0/10 — 트롯파파 표기 자리 사장님 결정 필요(스타일분석 §7)",
+   "window_per_video": "창 높이 원본 비율대로 편마다 — 고정 창만 → 02",
+   "credit_only_body": "출처 줄은 본문 구간에만(훅·공개 카드 제외) — 시간 구간 칸 없음 → 02"
+  }
+ },
+ "caption": {
+  "pack": "kitchit",
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 10.0,
+  "chunk_max_chars": 11,
+  "band": [
+   1201,
+   1279
+  ],
+  "why": "흰 #FFFFFF+검정 외곽 7~11px · 굵은 고딕 잉크 78~84px · 창 안 아래 한 줄 y1201~1279(Jlgd SPEC cap) · instant 130/144 · 꾸밈 없는 줄 136/150 · 조각 자수 중앙 8(p90 11) → 11 · typing 0(typing_cps 안 쓰임)",
+  "_pending": {
+   "pack": "울지마트로트 자막 팩 없음 → 관제 235 요청: GmarketSansBold 흰·검정 외곽 7px(#19191F) place y≈64.6% · CTA·공개 2줄 위로(y918~996). 그동안 kitchit(흰+검정 외곽)"
+  }
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "cut": 1.0
+   },
+   "ms": 0,
+   "why": "본문 = 컷 · 훅 끝 원형(고리·회오리) 마스크 전환 0.17~0.4초 1회(눈) — 렌더러 종류 없음(_pending.hook)"
+  },
+  "why": "push 0(본문 원본 그대로) · 훅 누끼 느린 줌 초당 3.3%(make_trotpapa HOOK_ZOOM_PER_S) = _pending.hook"
+ },
+ "sfx_files": {
+  "gain_db": -8,
+  "why": "효과음 미측정(소리 못 들음·전환 지점 파형 솟음 없음 oSytU) — gain 손 상수"
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "narr.first": "cut",
+    "narr.rest": "cut",
+    "orig.first": "cut",
+    "orig.rest": "cut",
+    "why": "instant 130/144(강) · pop 1편만"
+   },
+   "transition": {
+    "kinds": [],
+    "why": "본문 전환 효과 0"
+   },
+   "meme": {
+    "rate": 0.0,
+    "why": "짤 0"
+   }
+  },
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/uljimatrot/줄판독",
+   "n_videos": 10,
+   "slots": {
+    "narr.first": {
+     "n": 10,
+     "enter": {
+      "cut": 0.9,
+      "pop": 0.1
+     },
+     "emph": 0.0
+    },
+    "narr.rest": {
+     "n": 134,
+     "enter": {
+      "cut": 0.903,
+      "pop": 0.09,
+      "other": 0.007
+     },
+     "emph": 0.0
+    },
+    "orig.first": {
+     "n": 6,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.0
+    }
+   },
+   "share": {
+    "emph": 0.0,
+    "typing": 0.0,
+    "sfx": 0.0
+   },
+   "stickers": {
+    "heart": 0.1
+   },
+   "transition": {
+    "cut": 1.0
+   },
+   "sfx_kinds": {},
+   "videos": [
+    {
+     "id": "7b1j3LptlCo",
+     "n": 12,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 10,
+       "enter": {
+        "cut": 10
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "CTA — 자막 y 위로(915~998)": 1,
+      "CTA — 자막 y 915~998": 1,
+      "가격 공개 카드 2줄(브랜드/가격)": 1
+     },
+     "sfx": [],
+     "no_caption": 1,
+     "transitions": {
+      "cut": 11
+     },
+     "n_trans": 11,
+     "roles": {
+      "body": 9,
+      "end": 2,
+      "reveal": 1
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "BFTGKYRPXeU",
+     "n": 15,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "pop": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 13,
+       "enter": {
+        "pop": 12,
+        "other": 1
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "heart": 2
+     },
+     "sticker_lex": {
+      "heart": {
+       "none": 2
+      }
+     },
+     "variants": {
+      "기본(가로 모션블러 섞인 작게→원크기 2프레임)": 11,
+      "기본(최대 폭 넘어 '요' 한 글자 2줄로 넘김)": 1,
+      "기본(낱말 중간에서 줄 넘김 '전화였/습니다')": 1,
+      "크게 튀어나옴(잉크 111px · 2줄 · 창 가운데 위)": 1,
+      "기타(작은 자막 잉크 60px · 창 가운데 · 그림자 약함)": 1
+     },
+     "sfx": [],
+     "no_caption": 2,
+     "transitions": {
+      "cut": 14
+     },
+     "n_trans": 14,
+     "roles": {
+      "body": 14,
+      "reveal": 1
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "hNRxwfSjXxY",
+     "n": 17,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 16,
+       "enter": {
+        "cut": 16
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "위로 올린 자리(y≈980~1096)": 1,
+      "2줄·위로 올린 자리(y≈950~1147)": 2
+     },
+     "sfx": [],
+     "no_caption": 1,
+     "transitions": {
+      "cut": 16
+     },
+     "n_trans": 16,
+     "roles": {
+      "body": 14,
+      "end": 2,
+      "reveal": 1
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "JlgdcIk9Gd0",
+     "n": 16,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 14,
+       "enter": {
+        "cut": 14
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "2줄(줄바꿈 '하버드색/이라며')": 1,
+      "CTA — 자막 y 위로(918~996, 얼굴 아래)": 1,
+      "CTA — 자막 y 918~996": 1,
+      "가격 공개 카드 — 상품 사진 위 같은 자막 꼴": 1
+     },
+     "sfx": [],
+     "no_caption": 1,
+     "transitions": {
+      "cut": 15
+     },
+     "n_trans": 15,
+     "roles": {
+      "body": 13,
+      "end": 2,
+      "reveal": 1
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "NXBepjjp6BY",
+     "n": 12,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 10,
+       "enter": {
+        "cut": 10
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "기타(창 가운데로 올라감 y915 — CTA 자리)": 1,
+      "기타(2줄 · 창 가운데 y862~1051)": 1,
+      "기타(가격 공개 카드 = 같은 자막 꼴 2줄, 창 가운데)": 1
+     },
+     "sfx": [],
+     "no_caption": 1,
+     "transitions": {
+      "cut": 11
+     },
+     "n_trans": 11,
+     "roles": {
+      "body": 10,
+      "reveal": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "oSytU7q_N7Y",
+     "n": 15,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 14,
+       "enter": {
+        "cut": 14
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "위로 올린 자리(y≈980~1096)": 1,
+      "2줄·위로 올린 자리(y≈950~1147)": 2
+     },
+     "sfx": [],
+     "no_caption": 1,
+     "transitions": {
+      "cut": 14
+     },
+     "n_trans": 14,
+     "roles": {
+      "body": 11,
+      "twist": 1,
+      "end": 2,
+      "reveal": 1
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "pjhCRN0BwaQ",
+     "n": 14,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 13,
+       "enter": {
+        "cut": 13
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "가격 카드(같은 자막 모양 여러 줄, 창 가운데 쪽으로 올라옴)": 1
+     },
+     "sfx": [],
+     "no_caption": 1,
+     "transitions": {
+      "cut": 13
+     },
+     "n_trans": 13,
+     "roles": {
+      "body": 13,
+      "reveal": 1
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "QReZRnEVz0o",
+     "n": 19,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 17,
+       "enter": {
+        "cut": 17
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "2줄(가격 공개)": 1
+     },
+     "sfx": [],
+     "no_caption": 1,
+     "transitions": {
+      "cut": 18
+     },
+     "n_trans": 18,
+     "roles": {
+      "body": 16,
+      "end": 2,
+      "reveal": 1
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "tv-hFwrvEc4",
+     "n": 14,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 12,
+       "enter": {
+        "cut": 12
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {},
+     "sfx": [],
+     "no_caption": 1,
+     "transitions": {
+      "cut": 13
+     },
+     "n_trans": 13,
+     "roles": {
+      "body": 11,
+      "end": 2,
+      "reveal": 1
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "VlJMP0sNwhY",
+     "n": 16,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 15,
+       "enter": {
+        "cut": 15
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "가격 카드(같은 자막 모양 여러 줄, 창 가운데 쪽으로 올라옴)": 1
+     },
+     "sfx": [],
+     "no_caption": 1,
+     "transitions": {
+      "cut": 15
+     },
+     "n_trans": 15,
+     "roles": {
+      "body": 15,
+      "reveal": 1
+     },
+     "sfx_lines": []
+    }
+   ]
+  }
+ },
+ "title_form": "2줄 '<가수>이 ~한' / '<물건> 가격' — 1줄 빨강 띠",
+ "_pending": {
+  "hook": "훅 0~4초 = 검정 바탕 누끼 인물 확대(초당 3.3%)+빨간 곡선 화살표 3편/빨간 원 2편, 화면 자막 없음, 끝 원형 전환 — 렌더러에 누끼·훅 구간 칸 없음 → 02·03",
+  "cta_card": "CTA '화면을 빠르게 톡톡 / 두 번 눌러주시면 감사합니다'(자막 위로) — 우리 금지선(CTA 없음, _common forbid·사장님 10-18)과 충돌 → 사장님 결정",
+  "price_card": "끝 공개 카드: 제품 사진(흰 바탕) 위 '<제품명> / 가격 약 N만원' 2줄 — 금액 금지선(_common forbid)과 충돌 → 사장님 결정"
+ },
+ "script": {
+  "brief": [
+   "박자: 훅(나레가 제목 읽음, 0~4초) → 본문(원본 방송·브이로그 + 나레 한 줄씩) → (벤치: CTA·가격 공개 — 우리 금지선이라 뺌, _pending)",
+   "어미 ~는데요 28%·~습니다 25%·~다 25% · 존댓말 0.61·전언 0 · 첫 줄 '<가수>은/이 (최근) …' 8/10"
+  ],
+  "audit": [
+   {
+    "id": "first_line",
+    "kind": "first_line",
+    "is": "tts",
+    "why": "훅 나레 10/10"
+   },
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 19.1,
+    "max": 25.5,
+    "why": "벤치 10편 길이"
+   }
+  ]
+ }
+}
