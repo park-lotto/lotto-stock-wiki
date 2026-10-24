@@ -1,0 +1,155 @@
+{
+ "name": "도파민썰템B판",
+ "renderer": "bench",
+ "_note": "썰풀다 칼카피 1차 판 B — 나레 썰(검정 띠 틀, window). 우리 브랜드 도파민썰템(브랜드.json). 근거 = 설명서 프리셋 channel/sseolpulda/preset/B_검정띠(mYxu)·_kal/규칙빈도_나레.json(3편 — 표본부족 n<5, 06 에 3편 더 필요)",
+ "bench": {
+  "ko": "썰풀다",
+  "channel": "sseolpulda",
+  "analysis": "channel/sseolpulda/_kal/스타일분석_초안.md",
+  "line_reads": "channel/sseolpulda/줄판독",
+  "src_dir": "C:/숏템_칼카피/sseolpulda/mp4",
+  "sfx_events": "channel/sseolpulda/_kal/sfx_events.json"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f",
+  "candidates": [
+   "지훈"
+  ],
+  "why": "벤치 나레 화자 남 4/4(kal.py 추천 박창수/지훈) — 박창수 손 상수(사장님 확인 필요)"
+ },
+ "cps_target": 6.9,
+ "_why_cps_target": "규칙빈도_나레 3편 6.38~7.46(중앙 6.96)",
+ "bgm": {
+  "id": "sweets",
+  "db_below_voice": 14.0,
+  "duck_orig_db": -6.0,
+  "duck_narr_db": 0.0,
+  "fade_out": 0.4,
+  "candidates": [],
+  "why": "BGM 미측정(초안 bgm null — engine/sound/bgm_fp.py 06) → 손 상수"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 통일(사장님 10-18)"
+ },
+ "length": {
+  "min": 9.8,
+  "max": 22.5,
+  "why": "나레 갈래 3편 9.78~22.52초(규칙빈도_나레.json)"
+ },
+ "timing": {
+  "gap": 0.1,
+  "tail": 0.3,
+  "why": "손 상수 — 벤치 줄 사이 쉼 미측정"
+ },
+ "frame": {
+  "kind": "window",
+  "_from": "frame_import.py ← calcopy_frame v1 source=mYxuF1A74j4 frame=only span=None",
+  "bg": [
+   0,
+   0,
+   0
+  ],
+  "window": [
+   0,
+   347,
+   1080,
+   1573
+  ],
+  "title": [
+   {
+    "font": "BlackHanSans.ttf",
+    "px": 159.4,
+    "center": 166,
+    "color": "#FFFFFF",
+    "max_w": 1000
+   },
+   {
+    "font": "BlackHanSans.ttf",
+    "px": 159.4,
+    "center": 311.5,
+    "color": "#F0C612",
+    "max_w": 1000
+   }
+  ],
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "why": "frame_import.py ← channel/sseolpulda/preset/B_검정띠/frame.json(mYxuF1A74j4 측정, manifest default) — 검정 바탕·창 y347~1920·제목 2줄 흰/노랑 #F0C612 BlackHanSans · 제목 가운데 177/319 → 166/311.5 = mYxu 6초 프레임 잉크(1줄 102~221·2줄 244~339) 대조 보정 · 폭은 벤치가 좁음(850 vs 937px — 자간 −18.1 칸 없음 → 02)",
+  "_pending": {
+   "props": "['title.letter_spacing=-18.1', \"caption.enter={'kind': 'rise', 'ms': 300}\"]"
+  }
+ },
+ "caption": {
+  "pack": "clean",
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 10.0,
+  "chunk_max_chars": 12,
+  "band": [
+   1222,
+   1316
+  ],
+  "why": "frame.json caption 층(Pretendard 81.3 흰·검정 외곽 4·등장 rise 300ms) y1222 · 조각 자수 중앙 6~7(나레 3편) → 12 상한 손 상수 · typing_cps 손 상수(벤치 등장 instant 66/66)",
+  "_pending": {
+   "pack": "썰풀다 자막 팩 없음 → 관제 235 요청(자막 층 {\"font\": \"Pretendard-Bold.otf\", \"px\": 81.3, \"color\": \"#FFFDFD\", \"y_top\": 1222, \"line_h\": 94, \"lines\": 1, \"cx\": 540, \"max_w\": 1000}). 그동안 clean"
+  }
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "cut": 1.0
+   },
+   "ms": 0,
+   "why": "전환 미측정 칸 — 1차 = 컷(06 줄판독 transition 칸으로 교체)"
+  },
+  "why": "push 0 손 상수"
+ },
+ "sfx_files": {
+  "gain_db": -8,
+  "why": "효과음 4/66줄(나레 1·불명 3, 규칙빈도_초안) — 종류 미측정 → 파일 칸 비움"
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "narr.first": "cut",
+    "narr.rest": "cut",
+    "orig.first": "cut",
+    "orig.rest": "cut",
+    "why": "등장 instant 66/66(나레 48·불명 18)"
+   },
+   "meme": {
+    "rate": 0.0,
+    "why": "짤 미측정"
+   }
+  },
+  "counted": {}
+ },
+ "_pending": {
+  "counted": "줄판독 6편이 두 갈래 섞임(나레 3: D3Pc·GqSk·mYxu / 자막만 3: fnZN·iZ-T·ZdeZ) — placement.count 는 폴더 통째라 섞어 센다 → 06 이 갈래별 폴더로 나눈 뒤 count(규칙빈도_나레/자막만.json 은 이미 갈래별)",
+  "enter_rise": "자막 등장 rise 300ms(manifest default) vs 줄판독 instant — 06 재확인"
+ },
+ "script": {
+  "brief": [
+   "나레 갈래(썰 나레 100%) — 박자·말투 미측정(대본언어.json 참고, 06 뒤)"
+  ],
+  "audit": [
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 9.8,
+    "max": 22.5,
+    "why": "나레 갈래 3편 9.78~22.52초(규칙빈도_나레.json)"
+   }
+  ]
+ }
+}

@@ -1,0 +1,154 @@
+{
+ "name": "도파민썰템A판",
+ "renderer": "bench",
+ "_note": "썰풀다 칼카피 1차 판 A — 자막만 썰(흰 바탕 창, window). 근거 = 설명서 프리셋 channel/sseolpulda/preset/A_흰바탕창/창아래_검정(ZdeZ 1편)·_kal/규칙빈도_자막만.json(3편 — 표본부족)",
+ "bench": {
+  "ko": "썰풀다",
+  "channel": "sseolpulda",
+  "analysis": "channel/sseolpulda/_kal/스타일분석_초안.md",
+  "line_reads": "channel/sseolpulda/줄판독",
+  "src_dir": "C:/숏템_칼카피/sseolpulda/mp4",
+  "sfx_events": "channel/sseolpulda/_kal/sfx_events.json"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f",
+  "candidates": [],
+  "why": "자막만 갈래 = 나레 0(규칙빈도_자막만 narr_share 0) — 목소리 칸은 필수라 B판과 같게(쓰지 않음)"
+ },
+ "cps_target": 4.1,
+ "_why_cps_target": "자막만 갈래 화면 글자/초 4.08(규칙빈도_초안 '불명' 화자 18줄)",
+ "bgm": {
+  "id": "sweets",
+  "db_below_voice": 14.0,
+  "duck_orig_db": -6.0,
+  "duck_narr_db": 0.0,
+  "fade_out": 0.4,
+  "candidates": [],
+  "why": "BGM 미측정(초안 bgm null — engine/sound/bgm_fp.py 06) → 손 상수"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 통일(사장님 10-18)"
+ },
+ "length": {
+  "min": 11.4,
+  "max": 24.0,
+  "why": "자막만 갈래 3편 11.37~23.96초(규칙빈도_자막만.json)"
+ },
+ "timing": {
+  "gap": 0.0,
+  "tail": 0.5,
+  "why": "손 상수 — 나레 없는 갈래(줄 사이 = 자막 교체)"
+ },
+ "frame": {
+  "kind": "window",
+  "_from": "frame_import.py ← calcopy_frame v1 source=ZdeZRtCeAC4 frame=only span=None",
+  "bg": [
+   251,
+   248,
+   252
+  ],
+  "window": [
+   0,
+   426,
+   1080,
+   1006
+  ],
+  "title": [
+   {
+    "font": "SBAggroB.ttf",
+    "px": 93.2,
+    "center": 264,
+    "color": "#000000",
+    "max_w": 1000
+   },
+   {
+    "font": "SBAggroB.ttf",
+    "px": 93.2,
+    "center": 358,
+    "color": "#000000",
+    "max_w": 1000
+   }
+  ],
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "why": "frame_import.py ← channel/sseolpulda/preset/A_흰바탕창/창아래_검정/frame.json(ZdeZRtCeAC4 측정, manifest default) — 흰 바탕 #FBF8FC·창 [0,426,1080,1006]·제목 2줄 검정 SBAggroB 93.2 · 오른쪽 위 '[광고]'(TmonMonsori) = 엔진 ad_mark 가 그린다(판 logo 아님) · 제목 가운데 272/368 → 264/358 = ZdeZ 6초 프레임 잉크(223~304·318~397) 대조 보정",
+  "_pending": {
+   "props": "['title.letter_spacing=-2', 'caption.letter_spacing=-7.4', 'caption.word_spacing=6.8', \"caption.enter={'kind': 'none', 'ms': 300}\", 'brand.italic=True', 'brand.letter_spacing=-2.3']"
+  }
+ },
+ "caption": {
+  "pack": "clean",
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 10.0,
+  "chunk_max_chars": 12,
+  "band": [
+   1462,
+   1538
+  ],
+  "why": "frame.json caption 층(SpoqaHanSansNeo-Bold 66 검정) 창 아래 y1462 · 조각 자수 중앙 11.5~18·초 3.5~4.6(자막만 3편) → 상한 12 손 상수(긴 자막은 _pending) · typing_cps 손 상수(벤치 등장 instant 66/66)",
+  "_pending": {
+   "pack": "썰풀다 자막 팩 없음 → 관제 235 요청(자막 층 {\"font\": \"SpoqaHanSansNeo-Bold.otf\", \"px\": 66, \"color\": \"#000000\", \"y_top\": 1462, \"line_h\": 76, \"lines\": 1, \"cx\": 540, \"max_w\": 1000}). 그동안 clean"
+  }
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "cut": 1.0
+   },
+   "ms": 0,
+   "why": "전환 미측정 칸 — 1차 = 컷(06 줄판독 transition 칸으로 교체)"
+  },
+  "why": "push 0 손 상수"
+ },
+ "sfx_files": {
+  "gain_db": -8,
+  "why": "효과음 4/66줄(나레 1·불명 3, 규칙빈도_초안) — 종류 미측정 → 파일 칸 비움"
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "narr.first": "cut",
+    "narr.rest": "cut",
+    "orig.first": "cut",
+    "orig.rest": "cut",
+    "why": "등장 instant 66/66(나레 48·불명 18)"
+   },
+   "meme": {
+    "rate": 0.0,
+    "why": "짤 미측정"
+   }
+  },
+  "counted": {}
+ },
+ "_pending": {
+  "counted": "줄판독 6편이 두 갈래 섞임(나레 3: D3Pc·GqSk·mYxu / 자막만 3: fnZN·iZ-T·ZdeZ) — placement.count 는 폴더 통째라 섞어 센다 → 06 이 갈래별 폴더로 나눈 뒤 count(규칙빈도_나레/자막만.json 은 이미 갈래별)",
+  "no_narration": "나레 0 갈래 — render_bench 는 나레 TTS 전제 → 나레 없는 편 길(02)",
+  "sub_styles": "A 틀 안 자막 3갈래(창아래_검정·창안_흰외곽선·창안_상자 — styles.json) 중 창아래_검정만 판으로(ZdeZ 1편) — 나머지 2갈래 판은 06 줄판독 뒤"
+ },
+ "script": {
+  "brief": [
+   "자막만 갈래(나레 0, 원본 소리+BGM) — 긴 자막 조각(16~18자·4초)"
+  ],
+  "audit": [
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 11.4,
+    "max": 24.0,
+    "why": "자막만 갈래 3편 11.37~23.96초(규칙빈도_자막만.json)"
+   }
+  ]
+ }
+}
