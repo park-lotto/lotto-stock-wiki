@@ -1314,55 +1314,18 @@ def verify_cuts(picks, wd: Path, llm, only_new: bool = False, window: tuple[int,
     return flagged
 
 
-FIT_PROMPT = """숏폼 편집 검수다. 그림의 노란 번호 칸 = 그 번호 대사가 나올 때 화면에 깔린 장면(위에 얹힌 자막 글자는 무시).
-각 번호마다 **화면이 그 대사(문장 전체 뜻 포함)를 보여주나** 점수를 매겨라.
-10 = 대사가 말하는 사물·동작·결과·상황이 화면에 그대로 보임(예 '물속에서 진동' ↔ 물컵 속 칫솔이 물을 튀김)
-7 = 대사 내용과 이어지는 장면(같은 문장이 말하는 동작·결과의 다른 각도)
-4 = 제품만 나오고 대사가 말하는 동작·결과·상황은 안 보임(그냥 들고 있음·책상에 놓임)
-1 = 대사와 무관하거나 다른 제품
-[대사] (번호: «자막 조각» / 문장: 그 줄 전체)
-{rows}
-출력 JSON만: {{"fits":[{{"n":번호,"score":0~10,"seen":"화면에 보이는 것 한국어 한 줄","want":"대사에 맞으려면 보여야 할 장면 한국어 한 줄"}}]}}"""
 FIT_MIN = 7               # 대사↔장면 맞음 하한 — 미만은 다시 고른다(사장님 10-18 "대사에 맞는 편집포인트의 영상매칭이 안됐다")
 
 
 def fit_judge(items: list[dict], wd: Path, llm, tag: str = "fit") -> list[dict]:
-    """(판단 주인) 대사↔장면 맞음 — items[{img, piece, line}] → 같은 순서로 {score, seen, want}. 시트 10칸씩 1회.
-    material_auto 선택 뒤 검사와 완성본 측정(oneshot/scene_fit.py)이 둘 다 이것을 부른다."""
-    from PIL import Image, ImageDraw, ImageFont
-    fdir = wd / "fit"
-    fdir.mkdir(parents=True, exist_ok=True)
-    font = ImageFont.truetype(FONT_B, 30)
-    out = [None] * len(items)
-    W, H, cols, per = 300, 400, 5, 10
-    def one(c0):
-        chunk = items[c0:c0 + per]
-        sh = Image.new("RGB", (cols * (W + 6), math.ceil(len(chunk) / cols) * (H + 6)), "white")
-        d = ImageDraw.Draw(sh)
-        for j, it in enumerate(chunk):
-            x, y = (j % cols) * (W + 6), (j // cols) * (H + 6)
-            if it.get("img") and Path(it["img"]).exists():
-                im = Image.open(it["img"]).convert("RGB")
-                im.thumbnail((W, H))
-                sh.paste(im, (x + (W - im.width) // 2, y + (H - im.height) // 2))
-            d.rectangle([x, y, x + 52, y + 38], fill="black")
-            d.text((x + 6, y + 2), str(j), font=font, fill="yellow")
-        sp = fdir / f"{tag}_{c0 // per}.jpg"
-        sh.save(sp, quality=88)
-        rows = "\n".join(f"{j}: «{it['piece']}» / 문장: {it['line']}" for j, it in enumerate(chunk))
-        got, err = {}, None
-        for _try in range(2):          # 10-18 실측: 첫 묶음 10칸이 답 없이 와 기준선에서 빠졌다 — 빠진 번호가 있으면 한 번 더
-            r, err = llm([sp.read_bytes()], FIT_PROMPT.format(rows=rows), f"ma_fit:{tag}")
-            got.update({_as_int(x.get("n")): x for x in (r or {}).get("fits") or [] if isinstance(x, dict) and _as_int(x.get("score")) is not None})
-            if all(j in got for j in range(len(chunk))):
-                break
-        for j in range(len(chunk)):
-            x = got.get(j)
-            out[c0 + j] = ({"score": _as_int(x.get("score")), "seen": str(x.get("seen") or ""), "want": str(x.get("want") or "")}
-                           if x and _as_int(x.get("score")) is not None else {"score": None, "why": err or "답 없음"})
-    with cf.ThreadPoolExecutor(WORKERS) as ex:     # 묶음끼리 동시(Claude 판정 1회 ≈30초 — 10-18 실측 28.5초)
-        list(ex.map(one, range(0, len(items), per)))
-    return out
+    """(껍데기) 대사↔장면 맞음 — items[{img, piece, line}] → 같은 순서로 {score, seen, want}.
+    판정 주인 = oneshot/scene_fit.judge_rubric 한 벌(루브릭 10/7/5/3/1 · 2회 중앙값 · 표준 §12-3 '계획·완성본 같은 함수', 관제 263 지시서 14).
+    10-25 전엔 여기 따로 프롬프트(10/7/4/1·1회)가 있어 재료 고르기 자와 완성본 측정 자가 두 벌이었다 — 이제 그 함수를 부르기만 한다.
+    want 칸은 루브릭에 없어 빈 글(쓰는 곳 없음). 시트는 wd/fit/<tag>/ 아래(동시 호출 eye_<i> 끼리 안 겹치게)."""
+    from tools.calcopy.oneshot.scene_fit import judge_rubric
+    res = judge_rubric(items, Path(wd) / "fit" / str(tag), llm)
+    return [{"score": r["score"], "seen": r.get("seen") or "", "want": ""} if r.get("score") is not None else {"score": None, "why": r.get("why") or "답 없음"}
+            for r in res]
 
 
 def ban_cells(flagged, cells: dict):

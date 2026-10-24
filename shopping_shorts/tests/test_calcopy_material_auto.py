@@ -387,7 +387,8 @@ def test_fit_judge_retries_missing_numbers(tmp_path):
             return {"fits": [{"n": 0, "score": 9, "seen": "a", "want": "a"}]}, None
         return {"fits": [{"n": 1, "score": 3, "seen": "b", "want": "c"}]}, None
     r = ma.fit_judge([{"img": "", "piece": "x", "line": "x"}, {"img": "", "piece": "y", "line": "y"}], tmp_path, ma.LLM(fake))
-    assert len(calls) == 2 and r[0]["score"] == 9 and r[1]["score"] == 3
+    # 10-25 지시서 14: fit_judge = scene_fit.judge_rubric 껍데기 — 2회 채점, 빠진 번호가 있으면 3회째(중앙값은 받은 점수끼리)
+    assert len(calls) == 3 and r[0]["score"] == 9 and r[1]["score"] == 3
 
 
 def test_match_lines_retries_empty_answer():

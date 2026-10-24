@@ -3,12 +3,13 @@
 
     PYTHONUTF8=1 py tools/calcopy/oneshot/scene_fit.py <make 폴더> [<make 폴더> …]
 
-make 폴더의 timeline.json(자막 조각 t0~t1) + final.mp4 → 조각마다 가운데 프레임 → material_auto.fit_judge(판단 주인)로 0~10점.
+make 폴더의 timeline.json(자막 조각 t0~t1) + final.mp4 → 조각마다 가운데 프레임 → material_auto.fit_judge(= judge_rubric 껍데기)로 0~10점.
 결과 = make/scene_fit.json + 화면 요약. 판정은 여기서 새로 하지 않는다.
 """
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -114,9 +115,10 @@ def _sheet(chunk: list[dict], dst: Path) -> Path:
     font = ImageFont.truetype(FONT_B, 30)
     for j, it in enumerate(chunk):
         x, y = (j % cols) * (W + 6), (j // cols) * (H + 6)
-        im = Image.open(it["img"]).convert("RGB")
-        im.thumbnail((W, H))
-        sh.paste(im, (x, y))
+        if it.get("img") and Path(it["img"]).exists():        # 그림 없는 칸은 빈칸(번호만) — 답은 '안 보임'으로 온다
+            im = Image.open(it["img"]).convert("RGB")
+            im.thumbnail((W, H))
+            sh.paste(im, (x, y))
         d.rectangle([x, y, x + 52, y + 38], fill="black")
         d.text((x + 6, y + 2), str(j), font=font, fill="yellow")
     sh.save(dst, quality=88)
@@ -133,7 +135,7 @@ def _ask(llm, sheet: Path, chunk: list[dict], tag: str) -> dict:
 def judge_rubric(items: list[dict], wd: Path, llm, cache: Path | None = None) -> list[dict]:
     """(판단 주인 — 완성본 대사↔장면 채점) 기준점 루브릭 RUBRIC · 시트 10칸 · 2회 채점 중앙값, 두 점수 차 ≥2 면 3회째(표준 §11 ④).
     같은 시트(그림·글 sha)는 cache 에서 다시 쓴다. 반환 = items 순서로 {score, scores, seen}.
-    material_auto.fit_judge(재료 고르기 때 판정, 7/4/1)와는 다른 자다 — 완성본 측정은 이것 하나."""
+    대사↔장면 판정은 이것 한 벌 — 완성본 측정(measure_render)·계획 매칭(hybrid/material_fit)·재료 고르기(material_auto.fit_judge 껍데기)가 다 부른다(지시서 14)."""
     import hashlib
     import statistics
     from tools.calcopy.engine.material_auto import _as_int
@@ -203,7 +205,118 @@ def measure_render(work: Path, llm=None, out: Path | None = None, roles: dict | 
     return o
 
 
+# ── 벤치 상위 편 재측정(같은 자 — 표준 §12-5 · 지시서 14) ─────────────────────────
+BENCH_MIN_LINE = 0.25     # 이보다 짧은 줄(맨 앞 2프레임 썸네일 표지 등)은 컷이 아니라 뺀다
+SENT_END = r"([?!.~？！]|요|다|죠|까|네)\s*$"      # 문장 끝(부호 또는 종결 어미)
+
+
+def bench_items(doc: dict, mp4: Path, out_dir: Path) -> list[dict]:
+    """벤치 완성본(남의 쇼츠) 줄판독 줄마다 {img(그 줄 시각 처음·가운데·끝 3프레임 띠 — 완성본 통째 화면), piece(줄 글), line(같은 화자 이어진 문장), role, eye(줄판독 눈 fit)}.
+    우리 완성본 render_items 와 같은 꼴(통째 화면·3프레임·조각/문장) — 자가 같아야 비교가 된다."""
+    from PIL import Image
+    L = [l for l in doc.get("lines") or [] if (l.get("text") or "").strip() and float(l["t1"]) - float(l["t0"]) >= BENCH_MIN_LINE]
+    sent, cur = [], []
+    for k, l in enumerate(L):           # 문장 = 같은 화자가 이어 말한 줄(문장부호·화자 바뀜·0.5초 넘는 틈에서 끊음)
+        if cur and (l.get("speaker") != cur[-1].get("speaker") or float(l["t0"]) - float(cur[-1]["t1"]) > 0.5):
+            sent.append(cur); cur = []
+        cur.append(l)
+        if re.search(SENT_END, str(l.get("text"))):
+            sent.append(cur); cur = []
+    if cur:
+        sent.append(cur)
+    line_of = {id(l): " ".join(x["text"] for x in g) for g in sent for l in g}
+    if len(L) > MAX_ITEMS:
+        step = len(L) / MAX_ITEMS
+        L = [L[int(k * step)] for k in range(MAX_ITEMS)]
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    items = []
+    for k, l in enumerate(L):
+        a, b = float(l["t0"]), float(l["t1"])
+        ts = [a + min(0.1, (b - a) / 4), (a + b) / 2, b - min(0.1, (b - a) / 4)]
+        img = out_dir / f"line{k:02d}.jpg"
+        if not img.exists():
+            fr = [_frame(mp4, t) for t in ts]
+            strip = Image.new("RGB", (sum(f.width for f in fr) + 8, max(f.height for f in fr)), "white")
+            x = 0
+            for f in fr:
+                strip.paste(f, (x, 0))
+                x += f.width + 4
+            strip.save(img, quality=85)
+        items.append({"img": str(img), "piece": l["text"], "line": line_of[id(l)], "role": l.get("role"),
+                      "eye": l.get("fit") if isinstance(l.get("fit"), (int, float)) else None, "t": [a, b]})
+    return items
+
+
+def _pearson(xs: list, ys: list):
+    pr = [(float(x), float(y)) for x, y in zip(xs, ys) if isinstance(x, (int, float)) and isinstance(y, (int, float))]
+    if len(pr) < 3:
+        return None
+    mx, my = sum(x for x, _ in pr) / len(pr), sum(y for _, y in pr) / len(pr)
+    sx = sum((x - mx) ** 2 for x, _ in pr) ** 0.5
+    sy = sum((y - my) ** 2 for _, y in pr) ** 0.5
+    return round(sum((x - mx) * (y - my) for x, y in pr) / (sx * sy), 3) if sx and sy else None
+
+
+def bench_measure(slug: str, line_reads=None, src_dir=None, llm=None, ids: list | None = None, log=print) -> dict:
+    """벤치 편마다 줄판독 줄 × 그 줄 시각의 완성본 3프레임 → judge_rubric(우리 완성본과 같은 함수) → channel/<slug>/_kal/상위편_목표.json.
+    상위 편 = upgrade_table.Ctx.top()(조회 상위 50% — 판단 주인 그대로). 목표 = 상위 편 평균 p75 · 7 미만 비율 p25(표준 §12-2).
+    파일에 다른 칸(15 의 밀도·cps)이 있으면 그대로 두고 scene_fit·ids·views 만 고친다."""
+    import numpy as np
+    from tools.calcopy.engine import material_auto as MA
+    from tools.calcopy.engine import upgrade_table as UT
+    line_reads = Path(line_reads) if line_reads else ROOT / "channel" / slug / "줄판독"
+    src_dir = Path(src_dir) if src_dir else UT.DATA / slug / "src"
+    st = {"bench": {"channel": slug, "line_reads": str(line_reads), "src_dir": str(src_dir)}}
+    C = UT.Ctx(st, src_dir, src_dir)
+    views, top = C.views(), C.top_ids()
+    docs = [d for d in C.bench if d.get("id") and (not ids or d["id"] in ids)]
+    llm = llm or MA.LLM()
+    cache = src_dir / "_scene_fit_bench_cache.json"
+    per, pairs = {}, []
+    for d in docs:
+        mp4 = src_dir / f"{d['id']}.mp4"
+        if not mp4.exists():
+            per[d["id"]] = {"error": f"완성본 없음 {mp4}"}
+            log(f"[bench] {d['id']} 완성본 없음 — 미측정")
+            continue
+        wd = src_dir / "_scene_fit_bench" / d["id"]
+        items = bench_items(d, mp4, wd / "strips")
+        res = judge_rubric(items, wd, llm, cache=cache)
+        sc = [r.get("score") for r in res]
+        sm = summarize(sc, [it.get("role") for it in items])
+        eye = [it.get("eye") for it in items]
+        pairs += list(zip(sc, eye))
+        ev = [e for e in eye if e is not None]
+        per[d["id"]] = {**{k: sm[k] for k in ("n", "judged", "mean", "below_min", "below_base", "below_rate")},
+                        "eye_mean": round(sum(ev) / len(ev), 2) if ev else None, "views": views.get(d["id"]), "top": d["id"] in top,
+                        "rows": [{"t": it["t"], "piece": it["piece"], "role": it.get("role"), "eye": it.get("eye"), **r} for it, r in zip(items, res)]}
+        log(f"[bench] {d['id']} 평균 {sm['mean']} · 7 미만 {sm['below_min']}/{sm['below_base']}({sm['below_rate']}) · 눈 {per[d['id']]['eye_mean']}")
+    tops = [per[i] for i in top if i in per and per[i].get("mean") is not None]
+    q = (lambda xs, p: round(float(np.percentile(xs, p)), 3) if xs else None)
+    ms, bs = [x["mean"] for x in tops], [x["below_rate"] for x in tops if x.get("below_rate") is not None]
+    sf = {"rubric": RUBRIC_V, "made_by": "tools/calcopy/oneshot/scene_fit.bench_measure", "group": "상위 편(조회 상위 50% — upgrade_table.Ctx.top)",
+          "top_ids": top, "p75_mean": q(ms, 75), "p25_below7": q(bs, 25), "median_mean": q(ms, 50), "median_below7": q(bs, 50),
+          "max_mean": max(ms) if ms else None, "corr_eye": _pearson([a for a, _ in pairs], [b for _, b in pairs]), "corr_n": sum(1 for a, b in pairs if a is not None and b is not None),
+          "per_ep": per, "calls": len(getattr(llm, "calls", None) or [])}
+    dst = ROOT / "channel" / slug / "_kal" / "상위편_목표.json"
+    old = json.loads(dst.read_text(encoding="utf-8")) if dst.exists() else {}
+    out = {**old, "scene_fit": sf, "ids": [d["id"] for d in docs], "views": {d["id"]: views.get(d["id"]) for d in docs},
+           "_note": old.get("_note") or "벤치 상위 편 같은 자 재측정(표준 §12-5) — scene_fit 은 지시서 14(scene_fit.bench_measure), 밀도·cps 칸은 15 가 더한다"}
+    dst.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+    log(f"[bench] 상위 편 {top} → 평균 p75 {sf['p75_mean']} · 7 미만 p25 {sf['p25_below7']} · 눈 상관 {sf['corr_eye']}(n={sf['corr_n']}) → {dst}")
+    return out
+
+
 if __name__ == "__main__":
+    if sys.argv[1:2] == ["bench"]:          # PYTHONUTF8=1 py tools/calcopy/oneshot/scene_fit.py bench <slug> [--ids a,b]
+        a = sys.argv[2:]
+        ids = a[a.index("--ids") + 1].split(",") if "--ids" in a else None
+        r = bench_measure(a[0], ids=ids)["scene_fit"]
+        for i, v in r["per_ep"].items():
+            print(f"  {i} 상위={v.get('top')} 조회={v.get('views')} 평균={v.get('mean')} 7미만={v.get('below_rate')} 눈={v.get('eye_mean')}")
+        print("p75_mean", r["p75_mean"], "p25_below7", r["p25_below7"], "corr_eye", r["corr_eye"])
+        sys.exit(0)
     for a in sys.argv[1:]:
         r = measure(Path(a))
         print("==", a, r["summary"])
