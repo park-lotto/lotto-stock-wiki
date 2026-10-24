@@ -8229,10 +8229,29 @@ const SYLLABLES_PER_SEC = 5.7;
 const EN_CHARS_PER_SEC = 14.9;
 // 일본어 대본(일본어모드, 관제 248)은 일본어 계수 — 서버 edit_plan._JA_CHARS_PER_SEC(6.8, 2026-10-21 실측)와 짝.
 const JA_CHARS_PER_SEC = 6.8;
+// 중국어(관제 254) — 서버 edit_plan._ZH_CHARS_PER_SEC(4.4, 2026-10-23 중국어 성우 4명 실측)와 짝.
+const ZH_CHARS_PER_SEC = 4.4;
 function isEnglishText(t){ t=String(t||''); return !/[가-힣]/.test(t) && (t.match(/[A-Za-z]{2,}/g)||[]).length>=3; }
 // 서버 script_translate.lang_of 와 같은 규칙: 한글→ko · 가나/한자→ja · 영어 단어 3개+→en · 그 외 ko.
-function langOfText(t){ t=String(t||''); if(/[가-힣]/.test(t)) return 'ko'; if(/[\u3040-\u30ff\u4e00-\u9fff]/.test(t)) return 'ja'; return isEnglishText(t)?'en':'ko'; }
-function lenText(t){ t=t||''; const c=t.replace(/\s/g,'').length; const lg=langOfText(t); const sps=lg==='en'?EN_CHARS_PER_SEC:(lg==='ja'?JA_CHARS_PER_SEC:SYLLABLES_PER_SEC); return `${t.length}자 · 약 ${Math.round(c/sps)}초`; }
+function langOfText(t){ t=String(t||''); if(/[가-힣]/.test(t)) return 'ko'; if(/[\u3040-\u30ff]/.test(t)) return 'ja'; if(/[\u4e00-\u9fff]/.test(t)) return ZH_MARK_RE.test(t)?'zh':'ja'; return isEnglishText(t)?'en':'ko'; }
+// 일본어에선 안 쓰는 간체자·중국어 허사 — 서버 script_translate._ZH_MARK 와 짝(관제 254)
+const ZH_MARK_RE=/[别很把跟你她它这们个吗呢吧么还没给让说过对时为样东车门见长发问题实现买卖单冲热线经级运动开关风饭质钱铁锅绝净脏试谁啥咋哪您俩呀啦嘛哦刷扫挂叠带边头儿该无处变软轻贵听觉认识办场]/;
+// 네 언어 바로 옮기기(관제 254) — 2단계 안 카드·스토리보드가 같은 표를 쓴다. 판단(옮기기·검사)은 서버 /api/script/translate 하나.
+const LANG4=[['ko','🇰🇷','한국어'],['ja','🇯🇵','일본어'],['zh','🇨🇳','중국어'],['en','🌐','영어']];
+const LANG4_NAME={ko:'한국어',ja:'일본어',zh:'중국어',en:'영어'};
+const LANG4_FLAG={ko:'🇰🇷',ja:'🇯🇵',zh:'🇨🇳',en:'🌐'};
+// 지금 언어(cur)를 뺀 나머지 언어 버튼. orig = 원문 언어(그 버튼은 '원문으로 되돌리기'). mk(code,label,title) = 버튼 html.
+// 카드·보드의 지금 언어 — 표시(lang)가 없으면 글자로 판정(중국 쇼츠 원문을 그대로 넣은 대본 = 중국어). 원문 언어 = orig_lang, 없으면 지금 언어.
+function lang4Cur(o, text){ return (o&&o.lang)||langOfText(text)||'ko'; }
+function lang4Orig(o, text){ return (o&&o.orig_lang)||lang4Cur(o, text); }
+function lang4Btns(cur, orig, mk){
+  return LANG4.filter(([c])=>c!==cur).map(([c,f,n])=>{
+    const back=(c===orig && cur!==orig);
+    return mk(c, back?`${f} ${n}로(원문)`:`${f} ${n}로`,
+      back?`${n} 원문으로 되돌립니다`:`모든 줄을 ${n}로 바로 옮깁니다 — 어색한 줄은 칸에서 고치고 확정하면 ${n} 음성·자막이 됩니다${c==='ko'?'':'(일레븐랩스 성우만)'}`);
+  }).join('');
+}
+function lenText(t){ t=t||''; const c=t.replace(/\s/g,'').length; const lg=langOfText(t); const sps=lg==='en'?EN_CHARS_PER_SEC:(lg==='ja'?JA_CHARS_PER_SEC:(lg==='zh'?ZH_CHARS_PER_SEC:SYLLABLES_PER_SEC)); return `${t.length}자 · 약 ${Math.round(c/sps)}초`; }
 // ★2026-07-17 병합 해결: 보이스 트랙의 SYLLABLES_PER_SEC(위)와 작업파일 T3의 가드 제거(아래)를
 // 둘 다 살린다. main 쪽은 saveWork() 앞에 HANDOFF 길이 가드가 붙어 있는데, 그걸 그대로 받으면
 // 영상 없이 대본만 확정한 작업이 다시 저장되지 않는다 — 그게 사장님이 잃어버린 구간이다.
@@ -18897,7 +18916,8 @@ function s2Cps(){
 }
 // dr(카드)가 영어·일본어모드면 변환 API가 준 그 언어 계수(dr.cps_x, 옛 저장본은 cps_en)로, 아니면 한국어 계수로. 전부 서버 상수(edit_plan.speech_cps).
 function s2SecOf(text, dr){
-  const cps=(dr && (dr.lang==='en'||dr.lang==='ja')) ? (dr.cps_x||dr.cps_en||null) : s2Cps(); if(!cps) return null;
+  const lg=dr?lang4Cur(dr, dr.script||''):'ko';
+  const cps=(lg!=='ko') ? (dr.cps_x||dr.cps_en||({en:EN_CHARS_PER_SEC,ja:JA_CHARS_PER_SEC,zh:ZH_CHARS_PER_SEC})[lg]||null) : s2Cps(); if(!cps) return null;
   const n=String(text||'').replace(/[\s\.,!?~'"]+/g,'').length;   // script_gate.norm과 같은 규칙
   return n ? Math.round(n/cps*10)/10 : 0;
 }
@@ -19031,10 +19051,10 @@ function s2DraftHtml(dr,i){
         <div class="s2-sent-wrap">
           <div class="s2-sent" contenteditable="true" data-ph="${esc(b.role?s2RoleName(b.role).replace(/^\S+\s*/,''):"새 문장")} — 여기에 쓰세요"
                oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}</div>${chk}
-          ${((dr.lang==='en'||dr.lang==='ja')&&b.text_ko)?`<div class="hint" style="margin-top:4px;font-size:12px;opacity:.75">🇰🇷 ${esc(b.text_ko)}</div>`:''}
+          ${(lang4Cur(dr, dr.script||'')!==lang4Orig(dr, dr.script||'')&&b.text_ko)?`<div class="hint" style="margin-top:4px;font-size:12px;opacity:.75">${LANG4_FLAG[lang4Orig(dr, dr.script||'')]||''} ${esc(b.text_ko)}</div>`:''}
         </div>
         <div class="s2-acts">
-          ${(dr.mine||dr.lang==='en'||dr.lang==='ja'||!b.role)?'':`<button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>`}
+          ${(dr.mine||lang4Cur(dr, dr.script||'')!=='ko'||!b.role)?'':`<button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>`}
           <button class="s2-cta${b.cta_mark===true?' on':''}" title="이 줄이 CTA(댓글·링크로 부르는 말)입니다 — 유튜브용 'CTA 잘라낸 영상'이 이 줄 앞에서 끝납니다. 다시 누르면 해제"
             onclick="s2ToggleCta(${i},${j})">📢 CTA</button>
           <button class="s2-del" title="이 줄을 대본에서 아주 뺍니다 — 3단계에서 이 장면 칸도 안 생깁니다"
@@ -19060,12 +19080,7 @@ function s2DraftHtml(dr,i){
     <div class="s2-dhead"><span class="s2-dname">${dr.mine?'✍ 내 대본':(String.fromCharCode(65+i)+'안'+(dr.style_name?(`<span class="sty"> · ${esc(dr.style_name)}</span>`):''))}</span>
       <span id="s2tot-${i}" title="우리 보이스 실측 속도로 환산한 예상 길이 — 릴스 기본은 30초 이내">${s2SecTag(s2DraftSec(dr), 30)}</span>${gate}
       ${dr.dialogue?`<span class="s2-gate pass" title="대화형 — 줄마다 화자를 바꿀 수 있어요">🎭 ${esc(dr.dialogue.label||'대화형')}</span>`:''}${dr.dialogue_error?`<span class="s2-gate fail" title="${esc(dr.dialogue_error)}">🎭 대화형 변환 실패 — 썰 그대로</span>`:''}
-      ${(dr.lang==='en'||dr.lang==='ja')
-        ?`<button class="btn-ghost s2-lang" id="s2lang-${i}" style="min-width:auto;margin-left:auto;padding:4px 10px" onclick="s2ToggleLang(${i},'ko')"
-        title="${dr.lang==='ja'?'일본어':'영어'} 문장을 버리고 한국어 원문으로 되돌립니다">🇰🇷 한국어로</button>`
-        :`<button class="btn-ghost s2-lang" id="s2lang-${i}" style="min-width:auto;margin-left:auto;padding:4px 10px" onclick="s2ToggleLang(${i},'en')"
-        title="이 안의 모든 문장을 영어로 바꿉니다. 어색한 줄은 칸에서 바로 고치고 확정하면 영어 음성·자막이 됩니다">🌐 영어모드</button><button class="btn-ghost s2-lang" id="s2lang-${i}-ja" style="min-width:auto;margin-left:4px;padding:4px 10px" onclick="s2ToggleLang(${i},'ja')"
-        title="이 안의 모든 문장을 일본어로 바꿉니다. 어색한 줄은 칸에서 바로 고치고 확정하면 일본어 음성·자막이 됩니다(일레븐랩스 성우만)">🇯🇵 일본어모드</button>`}</div>
+      <span style="margin-left:auto"></span>${lang4Btns(lang4Cur(dr, dr.script||''), lang4Orig(dr, dr.script||''), (c,l,t)=>`<button class="btn-ghost s2-lang s2lang-${i}" id="s2lang-${i}-${c}" style="min-width:auto;margin-left:4px;padding:4px 10px" onclick="s2ToggleLang(${i},'${c}')" title="${t}">${l}</button>`)}</div>
     ${rows}${fix}
     <div class="s2-dfoot">
       <button class="btn-ghost" style="min-width:auto" title="맨 아래에 칸을 하나 더 만듭니다 — 칸마다 ▲▼로 옮길 수 있어요" onclick="s2AddBeat(${i},s2Beats(S2.drafts[${i}]).length-1)">＋ 칸 추가</button>
@@ -19291,37 +19306,38 @@ async function s2PickTmpl(i,j,k){
 // 이 안의 문장을 그 언어로 갈아끼운다(원문은 text_ko에 보관 → 되돌리기). 사람이 칸에서 고친 뒤 확정하면
 // given_script가 그 언어로 3단계에 간다. 서버 /api/script/translate 는 줄 수가 다르면 거부한다.
 // lang: 'en'|'ja' = 변환, 'ko'(또는 생략하고 이미 외국어 카드) = 한국어 원문으로 되돌리기.
-const S2_LANG_NAME={en:'영어', ja:'일본어'};
+// 원문(처음 언어)은 text_ko 에 보관한다(이름은 옛 저장본 호환 — 원문이 중국어여도 여기). orig_lang = 원문 언어.
+// 옮길 때는 늘 원문에서 옮긴다(일→중처럼 거듭 옮겨 뜻이 흐려지지 않게). 원문 언어 버튼 = 되돌리기.
 async function s2ToggleLang(i, lang){
   const dr=S2.drafts[i]; if(!dr) return;
   const beats=s2Beats(dr); if(!beats.length){ toast('문장이 없어요'); return; }
-  const foreign=(dr.lang==='en'||dr.lang==='ja');
-  if(lang==='ko' || (!lang && foreign)){
+  const _tx=beats.map(b=>b.text||'').join(' '); const orig=lang4Orig(dr,_tx), cur=lang4Cur(dr,_tx);
+  if(!LANG4_NAME[lang]||lang===cur) return;
+  if(lang===orig){
     beats.forEach(b=>{ if(b.text_ko){ b.text=b.text_ko; } delete b.text_ko; });
-    dr.lang='ko'; delete dr.cps_en; delete dr.cps_x; dr.beats=beats; dr.script=beats.map(b=>b.text).filter(Boolean).join(String.fromCharCode(10));
-    s2RenderDrafts(); saveWork(); toast('한국어 원문으로 되돌렸어요'); return;
+    dr.lang=orig; delete dr.cps_en; delete dr.cps_x; dr.beats=beats; dr.script=beats.map(b=>b.text).filter(Boolean).join(String.fromCharCode(10));
+    s2RenderDrafts(); saveWork(); toast(LANG4_NAME[orig]+' 원문으로 되돌렸어요'); return;
   }
-  lang = (lang==='ja') ? 'ja' : 'en';
-  const name=S2_LANG_NAME[lang];
+  const name=LANG4_NAME[lang];
   const src=beats.map(b=>(b.text_ko||b.text||'').trim());
   if(src.some(t=>!t)){ toast('빈 칸이 있어요 — 채우거나 빼고 다시 눌러 주세요'); return; }
-  const btns=[document.getElementById('s2lang-'+i), document.getElementById('s2lang-'+i+'-ja')].filter(Boolean);
-  const btn=document.getElementById(lang==='ja'?('s2lang-'+i+'-ja'):('s2lang-'+i));
+  const btns=[...document.querySelectorAll('.s2lang-'+i)];
+  const btn=document.getElementById('s2lang-'+i+'-'+lang);
   btns.forEach(x=>{ x.disabled=true; });
-  if(btn){ btn.textContent='⏳ '+name+'로 바꾸는 중…'; }
+  if(btn){ btn.textContent='⏳ '+name+'로 옮기는 중…'; }
   try{
     const r=await fetch('/api/script/translate',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({lines:src, lang:lang, product:(S2.materials&&S2.materials.topic_product)||''})});
+      body:JSON.stringify({lines:src, lang:lang, src:orig, product:(S2.materials&&S2.materials.topic_product)||''})});
     const d=await r.json().catch(()=>null);
     if(!r.ok||!d||d.ok===false){ toast('❌ '+((d&&d.error)||'변환 실패')); return; }
     if(!Array.isArray(d.lines)||d.lines.length!==beats.length){ toast('❌ 줄 수가 맞지 않아 적용하지 않았어요'); return; }
     beats.forEach((b,k)=>{ if(!b.text_ko) b.text_ko=src[k]; b.text=d.lines[k]; });
-    dr.lang=lang; dr.cps_x=d.cps||d.cps_en||null; if(lang==='en') dr.cps_en=d.cps_en||d.cps||null; else delete dr.cps_en;
+    dr.orig_lang=orig; dr.lang=lang; dr.cps_x=d.cps||d.cps_en||null; if(lang==='en') dr.cps_en=d.cps_en||d.cps||null; else delete dr.cps_en;
     dr.beats=beats; dr.script=beats.map(b=>b.text).filter(Boolean).join(String.fromCharCode(10));
     s2RenderDrafts(); saveWork();
-    toast((lang==='ja'?'🇯🇵 ':'🌐 ')+name+'로 바꿨어요 — 어색한 줄은 칸에서 고치고 확정하세요(일레븐랩스 성우만 됩니다)');
+    toast(LANG4_FLAG[lang]+' '+name+'로 옮겼어요 — 어색한 줄은 칸에서 고치고 확정하세요'+(lang==='ko'?'':'(일레븐랩스 성우만 됩니다)'));
   }catch(e){ toast('❌ 서버에 연결하지 못했어요'); }
-  finally{ [document.getElementById('s2lang-'+i), document.getElementById('s2lang-'+i+'-ja')].forEach(b2=>{ if(b2){ b2.disabled=false; } }); }
+  finally{ s2RenderDrafts(); }
 }
 // [이대로 쓰기] — 재생성 없이 틀 원문을 그대로 넣는다(옛 동작). 빈칸은 사장님이 손으로 채운다.
 function s2UseTmplRaw(i,j,k){
@@ -19772,28 +19788,28 @@ function sbRowGenAbsorb(name, t){ const G=SB.rowGen||{}; const g=G[name]; if(!g)
 // 🌐 영어모드(관제 029를 스토리보드로, 관제 200) — 줄 문장을 영어로 갈아끼우고 원문은 line_ko 에 둔다(되돌리기).
 //   변환 판단은 서버 /api/script/translate 하나(줄 수 다르면 거부) — 2단계 옛 안 카드 s2ToggleLang 과 같은 길.
 function sbLangBtn(bd){
-  if(bd.lang==='en'||bd.lang==='ja'){
-    return `<button class="sb-btn" id="sbLangBtn" title="${bd.lang==='ja'?'일본어':'영어'} 문장을 버리고 한국어 원문으로 되돌립니다" onclick="sbToggleLang('ko')">🇰🇷 한국어로</button>`; }
-  return `<button class="sb-btn" id="sbLangBtn" title="모든 줄을 영어로 바꿉니다 — 어색한 줄은 칸에서 고치고 확정하세요(일레븐랩스 성우만)" onclick="sbToggleLang('en')">🌐 영어모드</button>`
-    +` <button class="sb-btn" id="sbLangBtnJa" title="모든 줄을 일본어로 바꿉니다 — 어색한 줄은 칸에서 고치고 확정하세요(일레븐랩스 성우만)" onclick="sbToggleLang('ja')">🇯🇵 일본어모드</button>`; }
+  const _tx=(bd.slots||[]).map(sl=>sl.line||'').join(' ');
+  return lang4Btns(lang4Cur(bd,_tx), lang4Orig(bd,_tx), (c,l,t)=>` <button class="sb-btn sbLangBtn" id="sbLangBtn-${c}" title="${t}" onclick="sbToggleLang('${c}')">${l}</button>`); }
+// 원문은 line_ko 에 보관(이름은 옛 저장본 호환), orig_lang = 원문 언어. 옮길 때는 늘 원문에서 — s2ToggleLang 과 같은 규칙.
 async function sbToggleLang(lang){
   const [ek,bd]=sbCur(); if(!bd) return; sbBake(ek,bd);
-  const foreign=(bd.lang==='en'||bd.lang==='ja');
-  if(lang==='ko' || (!lang && foreign)){ bd.slots.forEach(sl=>{ if(sl.line_ko!=null) sl.line=sl.line_ko; delete sl.line_ko; }); bd.lang='ko'; sbRender(); _sbSaveSoon(); toast('한국어 원문으로 되돌렸어요'); return; }
-  lang=(lang==='ja')?'ja':'en'; const name=(lang==='ja')?'일본어':'영어';
-  const rows=bd.slots.map((sl,k)=>[k,String(sl.line||'').trim()]).filter(x=>x[1]);
+  const _tx=bd.slots.map(sl=>sl.line||'').join(' '); const orig=lang4Orig(bd,_tx), cur=lang4Cur(bd,_tx);
+  if(!LANG4_NAME[lang]||lang===cur) return;
+  if(lang===orig){ bd.slots.forEach(sl=>{ if(sl.line_ko!=null) sl.line=sl.line_ko; delete sl.line_ko; }); bd.lang=orig; sbRender(); _sbSaveSoon(); toast(LANG4_NAME[orig]+' 원문으로 되돌렸어요'); return; }
+  const name=LANG4_NAME[lang];
+  const rows=bd.slots.map((sl,k)=>[k,String((sl.line_ko!=null?sl.line_ko:sl.line)||'').trim()]).filter(x=>x[1]);
   if(!rows.length){ toast('문장이 없어요'); return; }
-  ['sbLangBtn','sbLangBtnJa'].forEach(id=>{ const x=document.getElementById(id); if(x) x.disabled=true; });
-  const b=document.getElementById(lang==='ja'?'sbLangBtnJa':'sbLangBtn'); if(b){ b.textContent='⏳ '+name+'로 바꾸는 중…'; }
+  document.querySelectorAll('.sbLangBtn').forEach(x=>{ x.disabled=true; });
+  const b=document.getElementById('sbLangBtn-'+lang); if(b){ b.textContent='⏳ '+name+'로 옮기는 중…'; }
   try{
     const r=await fetch('/api/script/translate',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({lines:rows.map(x=>x[1]), lang:lang, product:(typeof S2!=='undefined'&&S2.materials&&S2.materials.topic_product)||''})});
+      body:JSON.stringify({lines:rows.map(x=>x[1]), lang:lang, src:orig, product:(typeof S2!=='undefined'&&S2.materials&&S2.materials.topic_product)||''})});
     const d=await r.json().catch(()=>null);
     if(!r.ok||!d||d.ok===false){ toast('❌ '+((d&&d.error)||'변환 실패')); return; }
     if(!Array.isArray(d.lines)||d.lines.length!==rows.length){ toast('❌ 줄 수가 맞지 않아 적용하지 않았어요'); return; }
-    rows.forEach(([k,t],m)=>{ bd.slots[k].line_ko=t; bd.slots[k].line=d.lines[m]; });
-    bd.lang=lang; _sbSaveSoon();
-    toast((lang==='ja'?'🇯🇵 ':'🌐 ')+name+'로 바꿨어요 — 어색한 줄은 칸에서 고치고 확정하세요(일레븐랩스 성우만 됩니다)');
+    rows.forEach(([k,t],m)=>{ if(bd.slots[k].line_ko==null) bd.slots[k].line_ko=t; bd.slots[k].line=d.lines[m]; });
+    bd.orig_lang=orig; bd.lang=lang; _sbSaveSoon();
+    toast(LANG4_FLAG[lang]+' '+name+'로 옮겼어요 — 어색한 줄은 칸에서 고치고 확정하세요'+(lang==='ko'?'':'(일레븐랩스 성우만 됩니다)'));
   }catch(e){ toast('❌ 서버에 연결하지 못했어요'); }
   finally{ sbRender(); }
 }
