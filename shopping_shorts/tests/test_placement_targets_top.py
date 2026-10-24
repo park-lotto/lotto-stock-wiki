@@ -81,13 +81,22 @@ def test_first_pan_unchanged_and_v2_without_targets_equals_first():
     a = PL.place(rows, ST.load("잇템로그판"), "ep13")
     b = PL.place(rows, ST.load("잇템로그판_v2"), "ep13", targets=False)
     assert "targets" not in a and not any("목표 밀도" in l for l in a["log"])
-    for k in ("rows", "sfx", "transitions", "reference"):
+    nocolor = lambda rs: [{**r, "emph": [{k: v for k, v in e.items() if k != "color"} for e in r.get("emph") or []]} for r in rs]  # noqa: E731
+    assert nocolor(a["rows"]) == nocolor(b["rows"])          # 강조색(㉒)은 업그레이드 판에서만 고른다 — 자리·낱말은 같다
+    for k in ("sfx", "transitions", "reference"):
         assert a[k] == b[k], k
     assert PL.density_targets(ST.load("잇템로그판")) is None
 
 
+def _no_deco_pos(name):
+    st = copy.deepcopy(ST.load(name))
+    st["placement"]["rules"].pop("deco_pos", None)          # 07 15a9f46ed 가 판에 넣은 deco_pos·stickers — 목표 모드만 따로 잰다
+    st["placement"]["rules"].pop("stickers", None)
+    return st
+
+
 def test_targets_fill_density_to_goal_within_cap():
-    st = ST.load("잇템로그판_v2")
+    st = _no_deco_pos("잇템로그판_v2")
     rows = _rows()
     p = PL.place(rows, st, "ep13", targets=TG)
     narr = [r for r in p["rows"] if r["speaker"] == "narr"]
@@ -241,7 +250,7 @@ def test_deco_counts_hook_variant_same_ruler_as_match():
 
 def test_deco_pos_spreads_decoration_to_body_like_bench():
     """rules.deco_pos: 훅 변형만 꾸밈이던 1차(훅 1.0) → 벤치 자리 비율(훅·본문)로 본문에 강조 · 화자 꾸밈 비율은 벤치 중앙+허용 폭 안."""
-    st = copy.deepcopy(ST.load("잇템로그판"))
+    st = _no_deco_pos("잇템로그판")
     rows = _rows()
     a = PL.place(rows, st, "ep13")
     assert "deco_pos" not in a                                   # 규칙 없으면 옛 동작
@@ -261,7 +270,7 @@ def test_deco_pos_spreads_decoration_to_body_like_bench():
 
 def test_targets_refill_after_emph_color_drops(monkeypatch):
     """강조색 규칙(㉒)이 목표 모드 강조를 '후보 전부 미달'로 지우면 다른 key 덩어리로 다시 채워 목표 개수를 지킨다."""
-    st = ST.load("잇템로그판_v2")
+    st = _no_deco_pos("잇템로그판_v2")
     rows = _rows()
     dropped = []
     real = PL.emph_color_step
@@ -283,10 +292,65 @@ def test_count_filter_by_sound_mode_matches_07_grouping():
     """판 counted.filter{sound_mode} = 그 갈래 편만 센다(07 70b5bef9a 임시 묶음과 같은 값) · 필터 없으면 폴더 통째(옛 동작)."""
     for name in ("도파민썰템A판", "도파민썰템B판"):
         st = ST.load(name)
-        saved = st["placement"]["counted"]
+        crit = PL.count_filter(st)
+        want = []
+        for f in sorted((PL.ROOT / st["bench"]["line_reads"]).glob("*.json")):
+            d = json.loads(f.read_text(encoding="utf-8"))
+            if all(d.get(k) == v for k, v in crit.items()):
+                want.append(d.get("id", f.stem))
         c = PL.count(st)
-        assert c["filter"]["ids"] == saved["filter"]["ids"]
-        assert {k: v for k, v in c.items() if k != "filter"} == {k: v for k, v in saved.items() if k != "filter"}, name
+        assert crit and c["filter"]["ids"] == want and c["n_videos"] == len(want), (name, crit, c["filter"], want)
+        assert set(c["filter"]["ids"]) >= set(st["placement"]["counted"]["filter"]["ids"])     # 07 임시 묶음(3편)은 다 들어 있다(06 이 편을 더하면 늘어남)
         st2 = copy.deepcopy(st)
         st2["placement"]["counted"].pop("filter")
         assert PL.count(st2)["n_videos"] > c["n_videos"] and "filter" not in PL.count(st2)
+
+
+def test_skeleton_over_upgrade_cap_is_conflict_not_silent():
+    """㉛: 뼈대 꾸밈(훅 변형·deco_pos) > 업그레이드 상한 → 어느 쪽도 안 늘리고 conflict{axis, need, cap, cause} · check_place ×."""
+    st = copy.deepcopy(ST.load("잇템로그판_v2"))
+    st["placement"]["rules"]["deco_pos"] = {"from": "bench"}
+    st["placement"]["rules"].pop("stickers", None)
+    for x in st["script"]["audit"]:
+        if x["kind"] == "tts_chars":
+            x["max"] = 20                                      # 훅 줄 N1 26자 > 20 → 원인 = tts_chars
+    tg = {**TG, "fx_rate_narr": {**TG["fx_rate_narr"], "goal": 0.1, "cap": 0.1, "p25": 0.05}}     # 상한 round(0.1×16)=2 < 훅 변형 3
+    p = PL.place(_rows(), st, "ep13", targets=tg)
+    c = p.get("conflict")
+    assert c and c["axis"] == "fx_rate_narr" and c["cap"] == 2 and c["need"] >= 3, c
+    assert c["cause"] == "tts_chars" and c["by"].get("variant") == 3, c
+    assert not any(r.get("emph_by") in ("deco_pos", "targets") for r in p["rows"]), "conflict 면 아무것도 더하지 않는다"
+    assert any("conflict" in b for b in PL.check_place(p, st)["bad"])
+    # 상한 안이면 conflict 없음(옛 동작)
+    p2 = PL.place(_rows(), st, "ep13", targets=TG)
+    assert not p2.get("conflict")
+
+
+def test_sticker_role_condition_avoid_empty_and_fail_reason():
+    """07 15a9f46ed 쪽지: ① rules.stickers.<kind>.role = 그 역할 덩어리에만 ② avoid [] = 피할 것 없음(기본 face 로 안 바뀜)
+    ③ 자리 검출 실패 사유가 로그에(fx_target.locator.last_why)."""
+    st = copy.deepcopy(ST.load("잇템로그판"))
+    st["placement"]["rules"].pop("deco_pos", None)
+    st["placement"]["rules"]["stickers"] = {"circle_arrow": {"target": "face", "avoid": [], "role": ["훅"], "why": "시험"}}
+    ref = dict(PL.reference(st, "ep13")); ref["stickers"] = {"circle_arrow": 1}
+    st["placement"]["reference"] = ref["id"]
+    for v in st["placement"]["counted"]["videos"]:
+        if v["id"] == ref["id"]:
+            v["stickers"] = {"circle_arrow": 1}
+    seen = []
+
+    def loc(target, row, sticker):
+        seen.append((row["role_key"], list(target["avoid"])))
+        return {"x": 50, "y": 40, "w": 100, "h": 100, "conf": 0.9, "face_clear": True}
+    p = PL.place(_rows(), st, "ep13", locate=loc)
+    assert seen and all(r == "hook" for r, _ in seen), seen
+    assert all(av == [] for _, av in seen), seen
+
+    def loc_fail(target, row, sticker):
+        return None
+    loc_fail.last_why = "띠 위 [460, 1086, 620, 1246] 얼굴 겹침(>0.1) · 띠 아래 창 밖"
+    p2 = PL.place(_rows(), st, "ep13", locate=loc_fail)
+    assert any("사유: 띠 위" in l for l in p2["log"]), [l for l in p2["log"] if "스티커" in l]
+    from tools.calcopy.hybrid import fx_target as FX
+    why = []
+    assert FX.caption_side((160, 160), (1258, 1330), (0, 1250, 1080, 90), (), why=why) is None and len(why) == 2, why

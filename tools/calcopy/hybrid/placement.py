@@ -74,6 +74,11 @@ def norm_enter(s: str) -> str:
     return "other"
 
 
+def _roles_of(v) -> set:
+    """판 규칙 role 칸(글 하나 또는 목록, 한글·영문) → role_key 집합."""
+    return {role_key(x) for x in ([v] if isinstance(v, str) else v or [])}
+
+
 def sticker_kind(what: str) -> str:
     w = what or ""
     # question·yellow_label·cursor·hand_x = 지시서 03→15 넘김(10-25 줄판독 '기타' 실측: 노랑 물음표+동심원 2·노랑 글자 라벨 6·마우스 손가락 포인터 1·주황 손그림 X 6) —
@@ -495,7 +500,37 @@ def bench_fx(style: dict) -> dict:
     return _bench_fx_cache[lr]
 
 
-def deco_pos_step(out: list[dict], style: dict, log: list) -> dict | None:
+def deco_by(out: list[dict], sp: str) -> dict:
+    """그 화자 꾸밈 덩어리를 종류별로(훅 변형·스티커·강조·등장) — conflict 를 받은 쪽이 어느 규칙을 줄일지 보게."""
+    from tools.calcopy.engine import kal_analyze as K
+    c = Counter()
+    for r in out:
+        if r["speaker"] != sp or not _is_deco(r):
+            continue
+        c["variant" if K.variant_fx(r.get("variant_force") or r.get("variant")) else "sticker" if r.get("stickers") else "emph" if r.get("emph") else "enter"] += 1
+    return dict(c)
+
+
+def deco_cause(out: list[dict], style: dict) -> str:
+    """conflict 의 원인 = 위반된 대본 audit 규칙 이름(flow 가 대본 단계로 되돌릴 때 고칠 칸). 정해진 꾸밈(훅 변형)이 몰린 줄의 글자 수가
+    판 script.audit tts_chars 상한을 넘으면 'tts_chars'(ep13 N1 28자 > 26 → 훅 빨강 조각 3개), 아니면 'deco_pos×targets'(판 칸끼리 — 07)."""
+    from tools.calcopy.hybrid.common import nchar
+    rule = next((x for x in (style.get("script") or {}).get("audit") or [] if x.get("kind") == "tts_chars"), None)
+    by: dict = {}
+    for r in out:
+        if _is_deco(r) and r["speaker"] == "narr":
+            by[r["line"]] = sum(nchar(x["text"]) for x in out if x["line"] == r["line"])
+    if rule and any(n > rule["max"] for n in by.values()):
+        return "tts_chars"
+    return "deco_pos×targets"
+
+
+def deco_pos_step(out: list[dict], style: dict, log: list, up_cap: dict | None = None) -> dict | None:
+    """up_cap = 업그레이드 판 화자별 꾸밈 상한 개수({narr: hi, orig: hi} — density_goal) — 뼈대 최소가 이를 넘으면 conflict(아무것도 안 더함, ㉛)."""
+    return _deco_pos(out, style, log, up_cap)
+
+
+def _deco_pos(out: list[dict], style: dict, log: list, up_cap: dict | None) -> dict | None:
     """(판단 주인: 꾸밈 자리 — 훅/본문/끝 나눔, 04 실측 뒤 관제 263 15) 판 rules.deco_pos 가 있으면 벤치 꾸밈 자리 비율(bench_fx.pos)에 맞춘다.
     정해진 꾸밈(훅 변형 등 1차 규칙)은 그대로 두고, 모자란 자리(본문·끝)에 1차와 같은 종류(대본 key 강조 낱말)를 더한다 —
     더할 수 = 정해진 꾸밈이 가장 많이 넘친 자리를 기준으로 벤치 비율대로 · 화자별 꾸밈 비율이 벤치 중앙 + 허용 폭(MATCH_RULES)을 넘지 않게."""
@@ -517,7 +552,7 @@ def deco_pos_step(out: list[dict], style: dict, log: list) -> dict | None:
            for sp, nm in (("narr", "나레"), ("orig", "원음"))}
     deco_sp = Counter(r["speaker"] for r in out if _is_deco(r))
     added = []
-    for k in ("본문", "끝", "훅"):
+    for k in ("본문", "끝", "훅"):          # 먼저 계획만(덩어리를 아직 안 바꾼다) — 업그레이드 상한과 부딪히면 아무것도 안 더한다(㉛)
         need = want.get(k, 0) - have.get(k, 0)
         cand = [i for i, r in enumerate(out) if posof(r) == k and r.get("key") and not _is_deco(r)]
         for i in _spread(cand, len(cand)):
@@ -526,11 +561,19 @@ def deco_pos_step(out: list[dict], style: dict, log: list) -> dict | None:
             sp = out[i]["speaker"]
             if deco_sp[sp] >= cap.get(sp, 0):
                 continue
-            out[i]["emph"] = [{"word": out[i]["key"], **({"color": out[i]["key_color"]} if out[i].get("key_color") else {})}]
-            out[i]["emph_by"] = "deco_pos"
             deco_sp[sp] += 1; need -= 1; added.append(i)
         if need > 0:
             log.append(f"꾸밈 자리 {k} 목표 {want[k]} 중 {want[k] - need}개 — key 덩어리·화자 상한 {cap} 모자람")
+    over = {sp: {"need": deco_sp[sp], "cap": c} for sp, c in (up_cap or {}).items() if c is not None and deco_sp[sp] > c}
+    if over:
+        sp, v = next(iter(over.items()))
+        conflict = {"axis": f"fx_rate_{sp}", "need": v["need"], "cap": v["cap"], "cause": deco_cause(out, style), "by": deco_by(out, sp),
+                    "why": "뼈대 최소(deco_pos — 1차 꾸밈 자리) > 업그레이드 상한(상위 편 max) — 어느 쪽도 늘리지 않고 멈춤(표준 §11-5 ㉛), 대본 단계로"}
+        log.append(f"⚠ conflict {conflict}")
+        return {"bench_pos": {k: round(v, 3) for k, v in share.items()}, "want": want, "have_before": dict(have), "conflict": conflict}
+    for i in added:
+        out[i]["emph"] = [{"word": out[i]["key"], **({"color": out[i]["key_color"]} if out[i].get("key_color") else {})}]
+        out[i]["emph_by"] = "deco_pos"
     got = Counter(posof(r) for r in out if _is_deco(r))
     tot = sum(got.values()) or 1
     rep = {"bench_pos": {k: round(v, 3) for k, v in share.items()}, "want": want, "have_before": dict(have), "ours": dict(got),
@@ -715,7 +758,8 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
         if not need:
             continue
         cand = [i for i, r in enumerate(out) if (not rule.get("lex") or set(rule["lex"]) & set(r["lex"])) and (not rule.get("speaker") or r["speaker"] == rule["speaker"])
-                and (not rule.get("needs_key") or r.get("key")) and (kind != "object_pop" or r.get("object_src"))]
+                and (not rule.get("needs_key") or r.get("key")) and (kind != "object_pop" or r.get("object_src"))
+                and (not rule.get("role") or r["role_key"] in _roles_of(rule["role"]))]      # 역할 조건(벤치 원 스티커 훅 3/3 — 07 15a9f46ed 쪽지)
         for i in _spread(cand, need):
             st = {"kind": kind, "word": out[i].get("key") or ""}
             if kind == "object_pop":
@@ -733,8 +777,21 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
         for r in out:
             if r["enter"] == "typing" and r["speaker"] == ty.get("speaker", r["speaker"]):
                 r["stickers"].append({"kind": ty["kind"], "follow": True})
-    dp_rep = deco_pos_step(out, style, log)
-    tg_rep = density_step(out, style, tg, log) if tg else {}
+    up_cap = None
+    if tg:          # 업그레이드 상한 개수(density_goal hi) — 뼈대(deco_pos)와 부딪히면 conflict(㉛)
+        up_cap = {sp: density_goal({"p75": t["goal"], "p25": t.get("p25"), "max": t["cap"], "first": t.get("first")},
+                                   sum(1 for r in out if r["speaker"] == sp))["hi"]
+                  for sp, key in (("narr", "fx_rate_narr"), ("orig", "fx_rate_orig")) if (t := tg.get(key))}
+    dp_rep = deco_pos_step(out, style, log, up_cap)
+    conflict = (dp_rep or {}).get("conflict")
+    if up_cap and not conflict:      # deco_pos 없이도 1차 규칙(훅 변형·스티커·강조)만으로 상한을 넘으면 같은 conflict(㉛ '뼈대 최소 > 상한')
+        have = Counter(r["speaker"] for r in out if _is_deco(r))
+        sp = next((s for s, c in up_cap.items() if c is not None and have[s] > c), None)
+        if sp:
+            conflict = {"axis": f"fx_rate_{sp}", "need": have[sp], "cap": up_cap[sp], "cause": deco_cause(out, style), "by": deco_by(out, sp),
+                        "why": "1차 규칙 꾸밈(뼈대) > 업그레이드 상한(상위 편 max) — 어느 쪽도 늘리지 않고 멈춤(표준 §11-5 ㉛), 대본 단계로"}
+            log.append(f"⚠ conflict {conflict}")
+    tg_rep = density_step(out, style, tg, log) if tg and not conflict else {}      # conflict 면 목표 모드도 늘리지 않는다
     # ⑥ 전환(표준 §3-3 A1): 본보기 편 줄판독 transition 비율 → 컷 경계(짧은 컷 제외, 화자 바뀜·공개 앞 먼저). 옛 흰 번쩍(rules.flash)도 여기서.
     transitions = transitions_step(out, style, seed, ref, cuts, log)
     flashes = [x["t"] for x in transitions if x["kind"] == "flash"]       # 렌더러가 읽는 뷰 — 정하는 곳은 transitions_step 하나
@@ -752,7 +809,7 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
     for r in out:
         r["variant"] = r.pop("variant_force", None) or variant_of(r, style)
     emph_color_step(out, style, log)      # 강조색(㉒) — 줄 변형(색)이 정해진 뒤
-    if tg and any(k.startswith("fx_rate") for k in tg):     # 강조색 규칙이 지운 강조만큼 목표 모드가 다른 덩어리로 다시 채운다(같은 함수, 이미 센 꾸밈은 그대로)
+    if tg and not conflict and any(k.startswith("fx_rate") for k in tg):     # 강조색 규칙이 지운 강조만큼 목표 모드가 다른 덩어리로 다시 채운다(같은 함수, 이미 센 꾸밈은 그대로)
         tg_rep.update(density_step(out, style, tg, log))
         emph_color_step(out, style, log)
     tally = Counter(r["enter"] for r in out)
@@ -766,6 +823,8 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
         res["targets"] = tg_rep
     if dp_rep:
         res["deco_pos"] = dp_rep
+    if conflict:
+        res["conflict"] = conflict          # flow 가 보고 대본 단계로 되돌린다(08) — 조용히 한쪽을 이기게 두지 않는다(㉛)
     return res
 
 
@@ -926,13 +985,16 @@ def _site(st: dict, rule: dict, row: dict, locate, log: list) -> dict | None:
             return None
         st.update({"x": fx["x"], "y": fx["y"], "site": "fixed", "site_why": why})
         return st
-    st["target"] = {"kind": tg, "avoid": list(rule.get("avoid") or ["face"])}
+    av = rule.get("avoid")
+    st["target"] = {"kind": tg, "avoid": ["face"] if av is None else list(av)}      # 빈 목록 [] = 피할 것 없음(판에 적은 그대로) · 칸이 없을 때만 기본 얼굴
     if locate is None:
         st["site"] = "pending"          # 검출 전 — 렌더 전에 fx_target.locator 로 받아야 한다(check_place 미해결)
         return st
     got = locate(st["target"], row, st)
     if not got:
-        log.append(f"스티커 {st['kind']} 자리 검출 실패({tg}) → {row['line']}「{row['text']}」 안 붙임(억지로 안 둔다)")
+        why = getattr(locate, "last_why", None)          # fx_target.locator 가 남긴 실패 사유(자막 옆 후보마다 왜 막혔나 등)
+        log.append(f"스티커 {st['kind']} 자리 검출 실패({tg}) → {row['line']}「{row['text']}」 안 붙임(억지로 안 둔다)"
+                   + (f" — 사유: {why}" if why else " — 사유 없음(검출기가 안 남김)"))
         return None
     st.update({k: got[k] for k in ("x", "y", "w", "h", "conf", "face_clear", "how") if k in got})
     st["site"] = "detected"
@@ -1355,6 +1417,10 @@ def check_place(placed: dict, style: dict) -> dict:
     rep["meme"] = {"ours": sum(1 for r in rows for s in r["stickers"] if s["kind"] == "meme")}
     # 조용한 0(⑮): 판 규칙이 없어 0발·전부 컷이 된 것 = ×
     bad += list(placed.get("warn") or [])
+    if placed.get("conflict"):        # ㉛ 뼈대 최소 > 업그레이드 상한 — 대본 단계로
+        c = placed["conflict"]
+        bad.append(f"conflict {c['axis']} 뼈대 최소 {c['need']} > 업그레이드 상한 {c['cap']} — 원인 audit {c['cause']}")
+        rep["conflict"] = c
     # 목표 밀도(업그레이드 판 targets, 표준 §11-3 ⑳): 우리 개수 n 이 density_goal 허용 [lo, hi] 안
     T = placed.get("targets") or {}
     if T:

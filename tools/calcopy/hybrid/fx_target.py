@@ -128,17 +128,22 @@ def object_claude(rgb: np.ndarray, what: str, win=None, model: str = "sonnet") -
 
 
 # ── 자막 옆 ──────────────────────────────────────────────────────────────
-def caption_side(size, caption_band, win=None, face_boxes=()) -> list | None:
-    """자막 띠(y0,y1) 바깥 가장 가까운 빈 자리(가운데 정렬, 띠 위 먼저 → 아래) — 얼굴과 겹치거나 창 밖이면 다음 후보, 다 막히면 None."""
+def caption_side(size, caption_band, win=None, face_boxes=(), why: list | None = None) -> list | None:
+    """자막 띠(y0,y1) 바깥 가장 가까운 빈 자리(가운데 정렬, 띠 위 먼저 → 아래) — 얼굴과 겹치거나 창 밖이면 다음 후보, 다 막히면 None.
+    why(목록) 를 주면 후보마다 막힌 까닭을 적는다(조용한 실패 금지 — 07 15a9f46ed 쪽지)."""
     w, h = size
     x, y, ww, wh = win or (0, 0, *CANVAS)
     cx = x + ww / 2
     gap = 12
-    for top in (caption_band[0] - gap - h, caption_band[1] + gap):
+    for side, top in (("위", caption_band[0] - gap - h), ("아래", caption_band[1] + gap)):
         b = [cx - w / 2, top, cx + w / 2, top + h]
         if b[0] < x or b[2] > x + ww or b[1] < y or b[3] > y + wh:
+            if why is not None:
+                why.append(f"띠 {side} {[round(v) for v in b]} 창 {[x, y, x + ww, y + wh]} 밖")
             continue
         if any(_inter_frac(b, f) > FACE_OVERLAP for f in face_boxes):
+            if why is not None:
+                why.append(f"띠 {side} {[round(v) for v in b]} 얼굴 겹침(>{FACE_OVERLAP})")
             continue
         return [round(v) for v in b]
     return None
@@ -146,7 +151,7 @@ def caption_side(size, caption_band, win=None, face_boxes=()) -> list | None:
 
 # ── 찾기(판단 주인) ───────────────────────────────────────────────────────
 def find(kind: str, src, t: float | None = None, win=None, avoid=("face",), what: str | None = None, box=None, how: str = "claude",
-         size=(160, 160), caption_band=None, detector=None) -> dict | None:
+         size=(160, 160), caption_band=None, detector=None, fail: list | None = None) -> dict | None:
     """kind = face | object | caption_side → {x,y,w,h(픽셀 상자), box, conf, how, why, face_clear} | None(못 찾음·확신 낮음·얼굴 겹침).
     object: box(손 상자)를 주면 그것, 아니면 detector(rgb, what, win)(시험용 주입) 또는 Claude CLI. avoid 에 'face' 면 얼굴 겹친 상자 = None."""
     rgb = frame_of(src, t)
@@ -154,13 +159,15 @@ def find(kind: str, src, t: float | None = None, win=None, avoid=("face",), what
     if kind == "face":
         fs = faces(rgb, win)
         if not fs:
+            if fail is not None:
+                fail.append(f"얼굴 0개(t={t})")
             return None
         b = fs[0]["box"]
         return _pack(b, fs[0]["conf"], "yunet", f"얼굴 {len(fs)}개 중 가장 큰 것", True)
     if kind == "caption_side":
         if not caption_band:
             raise ValueError("caption_side 는 caption_band=(y0,y1) 가 필요하다")
-        b = caption_side(size, caption_band, win, fb)
+        b = caption_side(size, caption_band, win, fb, why=fail)
         return _pack(b, 1.0, "caption_band", f"자막 띠 {caption_band} 바깥", True) if b else None
     if kind != "object":
         raise ValueError(f"모르는 자리 종류 {kind} — face|object|caption_side")
@@ -175,8 +182,12 @@ def find(kind: str, src, t: float | None = None, win=None, avoid=("face",), what
     else:
         raise ValueError(f"모르는 검출 방법 {how}")
     if b is None or conf < CONF_MIN:
+        if fail is not None:
+            fail.append(f"물건 '{what}' 못 찾음·확신 {conf}<{CONF_MIN} ({why})")
         return None
     if "face" in (avoid or ()) and any(_inter_frac(b, f) > FACE_OVERLAP for f in fb):
+        if fail is not None:
+            fail.append(f"물건 상자 {b} 얼굴 겹침(>{FACE_OVERLAP})")
         return None
     return _pack(b, conf, "hand" if box is not None else how, why, True if "face" in (avoid or ()) else None)
 
@@ -230,8 +241,13 @@ def locator(video, win=None, caption_band=None, what_of=None, size_of=None, how:
         t = t_of(row) if t_of else float(row["t0"]) + 0.1
         what = what_of(row, st) if what_of else (row.get("key") or st.get("word"))
         size = size_of(st) if size_of else (160, 160)
-        return find(target["kind"], video, t, win=win, avoid=tuple(target.get("avoid") or ("face",)), what=what, how=how,
-                    size=size, caption_band=caption_band, detector=detector)
+        av = target.get("avoid")
+        why: list = []
+        got = find(target["kind"], video, t, win=win, avoid=("face",) if av is None else tuple(av), what=what, how=how,   # 빈 목록 = 피할 것 없음
+                   size=size, caption_band=caption_band, detector=detector, fail=why)
+        locate.last_why = None if got else (" · ".join(why) or "사유 없음")      # placement._site 가 로그·자막표에 적는다
+        return got
+    locate.last_why = None
     return locate
 
 
