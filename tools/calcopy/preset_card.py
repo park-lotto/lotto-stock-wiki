@@ -455,7 +455,7 @@ def facts(O: dict, recs: list[dict]) -> dict:
         "quality_gate_ok": bool((G.get("품질관문.json") or {}).get("ok")),
         "match_ok": bool((G.get("재현일치도.json") or {}).get("ok")),
         "eye": G.get("눈검수.json"),
-        "upgrade": (lambda u: {"better": u.get("better_n") or 0, "worse": u.get("worse_n"), "l3_ok": u.get("l3_ok") is True})(((G.get("품질관문.json") or {}).get("gates") or {}).get("upgrade") or (G.get("업그레이드_측정.json") or {}).get("gates", {}).get("upgrade") or {}),   # gates.upgrade(관문 04·업그레이드 자 05) — L3 판정 주인 = upgrade_table.l3_verdict(여기선 읽기만, 표준 §11-2 ⑱)
+        "upgrade": (lambda u: {"better": u.get("better_n") or 0, "worse": u.get("worse_n"), "l3_ok": u.get("l3_ok") is True, "need": u.get("need_better"), "pending_n": _pending_n(u.get("pending_pack"))})(((G.get("품질관문.json") or {}).get("gates") or {}).get("upgrade") or (G.get("업그레이드_측정.json") or {}).get("gates", {}).get("upgrade") or {}),   # gates.upgrade(관문 04·업그레이드 자 05) — L3 판정 주인 = upgrade_table.l3_verdict(여기선 읽기만, 표준 §11-2 ⑱)
         "member": mem, "line_json_exists": bool(mem.get("line_json")) and (ROOT / str(mem.get("line_json"))).exists(),
         "member_live_ok": bool((O["member_live"] or {}).get("ok")),
         "results_n": len(O["results"]), "results_pass_n": sum(1 for it in O["results"] if "페이블 판정 통과" in str(it.get("judge") or "")),
@@ -480,7 +480,7 @@ def level(card: dict) -> tuple[str, list[str]]:
                ("숫자칸 why", F["no_why"] == []), (f"counted≥{COUNTED_MIN}", (F["counted_n"] or 0) >= COUNTED_MIN),
                ("자막팩", F["caption_pack_ok"]), ("rules 미측정0", F["unmeasured"] == 0)],
         "L2": [("품질관문 ○", F["quality_gate_ok"]), ("재현일치도 ○", F["match_ok"]), ("눈검수 E1~E8", _eye_ok(F["eye"], [f"E{i}" for i in range(1, 9)]))],
-        "L3": [("업그레이드 나아짐≥과반∧나빠짐0", isinstance(F["upgrade"], dict) and F["upgrade"].get("l3_ok") is True),
+        "L3": [("업그레이드 나아짐≥과반∧나빠짐0", isinstance(F["upgrade"], dict) and F["upgrade"].get("l3_ok") is True and not F["upgrade"].get("pending_n")),
                ("눈검수 E9", _eye_ok(F["eye"], ["E9"])), ("사장님 판정", F["owner_pass"])],
         "L4": [("member line.json", F["line_json_exists"]), ("member preset_name", bool(F["member"].get("preset_name"))),
                ("member flow_format", bool(F["member"].get("flow_format"))), ("회원실측", F["member_live_ok"])],
@@ -493,9 +493,21 @@ def level(card: dict) -> tuple[str, list[str]]:
             reached = L
         elif miss:
             broken = True
+    up = F["upgrade"] if isinstance(F["upgrade"], dict) else {}
+    pend = up.get("pending_n") or 0
+    if pend and reached == "L2" and up.get("worse") == 0 and up.get("better", 0) >= (up.get("need") or 1)             and _eye_ok(F["eye"], ["E9"]) and F["owner_pass"]:
+        reached = f"L3(팩 대기 {pend})"     # 결정 ㉜: 외부 팩 주인 대기 축 — L3 완료 아님(관제 '됐다' 아님), 팩이 오면 재측정해 닫는다
+        missing.append(f"팩 대기 {pend}")
     if F["hand_scripts"]:
         missing.append("손스크립트0")
     return reached, missing
+
+
+def _pending_n(p) -> int:
+    """upgrade_table 의 외부 팩 대기 축 칸(pending_pack — 05) 수. 목록·사전이면 길이, 숫자면 그 값(이 칸을 읽는 곳은 여기 하나)."""
+    if isinstance(p, (list, dict)):
+        return len(p)
+    return int(p) if isinstance(p, (int, float)) and not isinstance(p, bool) else 0
 
 
 # ---------------------------------------------------------------- 카드
