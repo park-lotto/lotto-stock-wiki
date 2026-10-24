@@ -10,7 +10,9 @@
   재료 B13·B16 = checks.reuse_violations·aba_violations · 되감김 = engine/check_seams.check
   쉼 B18 = checks.pauses_between(문턱 checks.PAUSE_LO/HI) · 받아쓰기 = engine/check_line_sync(asr_segments·line_starts_from_asr·LIMIT)
   대본 = script_audit.audit · 배치 = placement.check_place(렌더 때 자막표.check 에 기록) · 1차 자 = kal_analyze.match_from_render
-  장면↔대사 = oneshot/scene_fit.measure_render(material_auto.fit_judge, Claude 소넷) · 썸네일 규칙 = thumb_rule.check · 광고 = engine/ad_mark 표식
+  장면↔대사 = 완성본 컷 ↔ 계획이 고른 원본 프레임 동일성(창 픽셀 대조 ≥0.97, 표준 §11-4 ㉔) + 계획 점수(material_fit 의 루브릭 rubric:v1)를 그대로 보고
+    — 완성본을 다시 채점하지 않는다(같은 자를 두 번 돌리면 잡음만 잰다) · 자 = 루브릭 하나(㉕, 상위편_목표.json), 버전 불일치면 ×
+  썸네일 규칙 = thumb_rule.check · 광고 = engine/ad_mark 표식
 판정: 항목 ok = True(○) / False(×) / None(미측정 — ×로 센다, 표준 §4-1 "미측정 칸은 ✓가 아니다"). 하나라도 ○가 아니면 ok:false.
 출력: <doc>/품질관문.json · <doc>/자동검사.json(같은 내용, 옛 꼴 호환) · <doc>/재현일치도.json·.md · <doc>/장면대사.json · <work>/eye/(눈 검수 묶음)
 모드(표준 §11 ⑥): --fast = 렌더 직후(규격·화면·재료·자막·효과·표식) · --full = 납품 전(전부: 소리·대본·썸네일·1차 자·장면↔대사 포함).
@@ -40,7 +42,7 @@ TD_TOL = 0.30                                     # 전환 세기 = 우리 drop 
 TD_KINDS = ("zoomblur",)
 FREEZE_SEC = 0.3      # 창 안 같은 그림이 이만큼 이어지면 멈춤(벤치 컷 중앙 약 1초 · 실제 촬영 영상은 프레임마다 잡음이 있어 0이 안 나온다)
 SIZE = (1080, 1920)
-FIT_MEAN_TOL, FIT_BELOW_TOL = 1.0, 0.10   # 장면↔대사 = 평균 ≥ 벤치−1 · 7 미만 비율 ≤ 벤치+10%p(표준 §3-3 A5 · 지침서 §3-4)
+FRAME_SAME_MIN = 0.97     # 완성본 컷 = 계획 프레임: 창 영역 회색 1−평균절대차/255 ≥ 0.97 (표준 §11-4 ㉔ⓐ)
 LEGACY10 = ("길이", "화면=시간표", "음량", "최고점", "0초·첫 줄 얼굴", "컷 조각 프레임 = 계획", "화면 멈춤 없음",
             "컷 끝 번쩍임 없음(0.2초 안 장면 경계)", "썸네일 맨 앞 2프레임", "배치(본보기 벤치 편 대조)")
 GROUPS = ("규격", "화면", "재료", "자막·효과", "소리", "대본", "1차 자", "장면↔대사", "썸네일", "표식")
@@ -139,27 +141,115 @@ def sfx_excess(n_sfx: int, dur: float, bench_docs: list[dict]) -> tuple[bool | N
     return ours <= p90 + 1e-9, f"우리 {n_sfx}발/{dur:.1f}초 = {ours:.3f}/초 · 벤치 p90 {p90:.3f}/초(편별 {[round(x, 3) for x in dens]})"
 
 
-def bench_fit(bench_docs: list[dict]) -> dict | None:
-    """벤치 줄판독 fit 칸(0~10) → 편별 평균·FIT_MIN 미만 비율의 중앙값."""
-    from tools.calcopy.engine import material_auto as MA
-    per = []
-    for d in bench_docs:
-        sc = [l["fit"] for l in d.get("lines") or [] if isinstance(l.get("fit"), (int, float))]
-        if sc:
-            per.append((sum(sc) / len(sc), sum(1 for s in sc if s < MA.FIT_MIN) / len(sc)))
-    if not per:
-        return None
-    return {"mean": round(statistics.median(m for m, _ in per), 2), "below_rate": round(statistics.median(b for _, b in per), 3), "n_docs": len(per)}
+def _src_gray(src: Path, t: float, crop, size: tuple[int, int]):
+    """계획 프레임 = 원본 t초를 렌더와 같은 칸(crop [x,y,w,h])으로 잘라 창 크기(size=(w,h))로 — 회색."""
+    import numpy as np
+    from tools.calcopy.hybrid.render_bench import IMG_EXT
+    x, y, w, h = crop
+    pre = ["-loop", "1"] if Path(src).suffix.lower() in IMG_EXT else ["-ss", f"{max(0.0, t):.3f}"]
+    raw = subprocess.run(["ffmpeg", "-v", "error", *pre, "-i", str(src), "-frames:v", "1", "-vf",
+                          f"crop={w}:{h}:{x}:{y},scale={size[0]}:{size[1]}:flags=lanczos,format=gray", "-f", "rawvideo", "-"],
+                         capture_output=True, stdin=subprocess.DEVNULL).stdout
+    return np.frombuffer(raw, np.uint8).reshape(size[1], size[0]) if len(raw) == size[0] * size[1] else None
 
 
-def fit_verdict(ours: dict, bench: dict | None) -> tuple[bool | None, str]:
-    if not bench:
-        return None, "벤치 줄판독 fit 칸 없음(미측정)"
-    if ours.get("mean") is None:
-        return None, f"우리 판정 0칸(미측정) — 벤치 평균 {bench['mean']}"
-    ok = ours["mean"] >= bench["mean"] - FIT_MEAN_TOL and ours["below_rate"] <= bench["below_rate"] + FIT_BELOW_TOL
-    return ok, (f"우리 평균 {ours['mean']}·7 미만 {ours['below_min']}/{ours['judged']}({ours['below_rate']}) vs 벤치 평균 {bench['mean']}·"
-                f"7 미만 {bench['below_rate']} (기준 평균 ≥ 벤치−{FIT_MEAN_TOL}, 미만 비율 ≤ 벤치+{FIT_BELOW_TOL})")
+def frame_same(a, b, mask=None) -> float:
+    """두 회색 그림의 같음 = 1 − 평균절대차/255(mask True = 뺄 픽셀: 자막·스티커). 1/4 크기로 줄여 잰다(압축 잡음 완화)."""
+    import cv2
+    import numpy as np
+    sz = (max(8, a.shape[1] // 4), max(8, a.shape[0] // 4))
+    A = cv2.resize(a, sz, interpolation=cv2.INTER_AREA).astype(np.float32)
+    B = cv2.resize(b, sz, interpolation=cv2.INTER_AREA).astype(np.float32)
+    keep = np.ones(A.shape, bool) if mask is None else ~(cv2.resize(mask.astype(np.uint8), sz, interpolation=cv2.INTER_NEAREST) > 0)
+    if keep.sum() < 50:
+        return float("nan")
+    return round(1 - float(np.abs(A - B)[keep].mean()) / 255, 4)
+
+
+def _frames_at(video: Path, frames: list[int], crop) -> dict:
+    """영상의 프레임 번호들을 한 번에(ffmpeg select 1회) 창 칸 회색으로 → {번호: 배열}. 시각→프레임은 번호로(입력 -ss 의 1프레임 밀림 없음)."""
+    import numpy as np
+    if not frames:
+        return {}
+    x, y, w, h = crop
+    fs = sorted(set(int(f) for f in frames))
+    sel = "+".join(f"eq(n\\,{f})" for f in fs)
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vf", f"select={sel},crop={w}:{h}:{x}:{y},format=gray", "-fps_mode", "passthrough",
+                          "-f", "rawvideo", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
+    arr = np.frombuffer(raw, np.uint8).reshape(-1, h, w)
+    return dict(zip(fs, arr))
+
+
+def plan_frames_check(R: Path, T: dict, cand_dir: Path, win: list, mask_of=None) -> list[dict]:
+    """(판단 주인 — 완성본 컷 = 계획 프레임, ㉔) 컷마다 처음·가운데·끝 3시각에서 화면 창 ↔ 원본(ss+경과)을 렌더 칸(crop_used>crop)으로.
+    화면 = render/base.mp4(완성본에서 자막만 뺀 바탕 — 틀·창·전환 그대로)가 있으면 그것, 없으면 final.mp4 + mask_of(자막 띠 빼기).
+    칸이 '얼굴 자동'인데 렌더 기록(crop_used)이 없거나 밀기·움직임·그림 칸이 있는 컷은 대조 밖(sim None + 사유)."""
+    video = R / "base.mp4" if (R / "base.mp4").exists() else R / "final.mp4"
+    if video.name == "base.mp4":
+        mask_of = None
+    plan = []
+    out = []
+    for k, c in enumerate(T.get("cuts") or []):
+        crop = c.get("crop_used") or c.get("crop")
+        why = None
+        if not (isinstance(crop, list) and len(crop) == 4):
+            why = f"칸 '{crop}' — 렌더가 쓴 칸(crop_used) 기록 없음"
+        elif c.get("push") or c.get("move") or c.get("pic"):
+            why = "밀기·움직임·그림 칸 컷 — 원본 프레임과 화면이 다르게 그려짐"
+        src = Path(cand_dir) / str(c.get("src"))
+        if not why and not src.exists():
+            why = f"원본 없음 {src.name}"
+        if why:
+            out.append({"k": k, "line": c.get("line"), "src": c.get("src"), "ss": c.get("ss"), "sim": None, "why": why})
+            continue
+        t0, t1 = float(c["t0"]), float(c["t1"])
+        d = t1 - t0
+        ts = [t0 + d / 2] if d < 0.4 else [t0 + d * 0.2, t0 + d / 2, t1 - d * 0.2]
+        plan.append((k, c, src, crop, [round(t * FPS) for t in ts]))
+        out.append(None)
+    got = _frames_at(video, [f for *_, fs in plan for f in fs], win)
+    for k, c, src, crop, fs in plan:
+        sims = []
+        for f in fs:
+            fr = got.get(f)
+            g = _src_gray(src, float(c.get("ss") or 0) + (f - round(float(c["t0"]) * FPS)) / FPS, crop, (win[2], win[3]))
+            if fr is None or g is None:
+                continue
+            sims.append(frame_same(fr, g, mask_of(f / FPS, fr.shape) if mask_of else None))
+        sims = [x for x in sims if x == x]
+        out[k] = {"k": k, "line": c.get("line"), "src": c.get("src"), "ss": c.get("ss"), "fit": c.get("fit"), "screen": video.name,
+                  "sim": round(statistics.median(sims), 4) if sims else None, "sims": sims, "why": None if sims else "프레임 못 읽음"}
+    return [r for r in out if r is not None]
+
+
+def plan_frames_verdict(rows: list[dict]) -> tuple[bool | None, str]:
+    """컷마다 sim ≥ FRAME_SAME_MIN. 대조 밖 컷(sim None)은 사유와 함께 따로 적고 ×(미측정 ≠ 통과)."""
+    if not rows:
+        return None, "컷 없음(미측정)"
+    bad = [r for r in rows if r["sim"] is not None and r["sim"] < FRAME_SAME_MIN]
+    miss = [r for r in rows if r["sim"] is None]
+    ok = not bad and not miss
+    msg = f"{len(rows)}컷 중 같음 {len(rows) - len(bad) - len(miss)} · 다름 {[(r['k'], r['line'], r['sim']) for r in bad] or 0}"
+    if miss:
+        msg += f" · 대조 밖 {[(r['k'], r['line'], r['why']) for r in miss]}"
+    return ok, msg + f" (창 1−평균차 ≥ {FRAME_SAME_MIN}, 최저 {min((r['sim'] for r in rows if r['sim'] is not None), default=None)})"
+
+
+def plan_score_report(doc: Path, slug: str | None) -> tuple[bool | None, str, bool]:
+    """계획 점수(material_fit 의 장면대사_계획.json) 그대로 보고 + 자 대조(㉕): 계획 rubric = scene_fit.RUBRIC_V = 상위편_목표.json rubric.
+    반환 (ok, 글, ref) — 자가 맞으면 참고 행(ref=True), 어긋나면 ×(ref=False). 계획 파일 없으면 참고 행 '계획 없음'."""
+    from tools.calcopy.oneshot.scene_fit import RUBRIC_V
+    pp = Path(doc) / "장면대사_계획.json"
+    tp = ROOT / "channel" / str(slug or "_") / "_kal" / "상위편_목표.json"
+    top = (jload(tp).get("scene_fit") or {}) if tp.exists() else {}
+    if not pp.exists():
+        return True, f"계획 점수 없음(material_fit 계획 전 편) · 목표 {top.get('p75_mean')}/{top.get('p25_below7')} ({top.get('rubric')})", True
+    P = jload(pp)
+    rv = {"계획": P.get("rubric"), "scene_fit": RUBRIC_V, "상위편_목표": top.get("rubric")}
+    if len({v for v in rv.values()}) != 1:
+        return False, f"자 불일치 {rv} — 벤치·계획을 같은 루브릭으로 다시 재야 한다", False
+    return True, (f"계획 평균 {P.get('mean')}·7 미만 {P.get('below_n')}/{P.get('below_base')}({P.get('below7')}) vs 목표 평균 {top.get('p75_mean')}·"
+                  f"7 미만 {top.get('p25_below7')} · 계획 판정 {'통과' if P.get('ok') else '미달'} · {P.get('stop') or ''} ({RUBRIC_V})"), True
 
 
 def match_verdict(T: dict, upgrade: bool) -> tuple[bool | None, str, list]:
@@ -577,21 +667,30 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
                 msg += f" · 업그레이드 나아짐 {up['gates']['upgrade']['better']}(사람 {up['human_n']}·미측정 {up['unmeasured_n']})"
             return ok, msg
         row("1차 자", "재현일치도(match_table)", m, "kal_analyze.match_from_render → 재현일치도.json")
-    # ── 장면↔대사
+    # ── 장면↔대사(㉔ 프레임 동일성 + 계획 점수 보고)
     fit_res = None
     if want("장면↔대사") and not legacy:
-        def f():
+        def same():
             nonlocal fit_res
-            if not fit:
-                return None, "장면↔대사 안 함(--no-fit, 미측정)"
-            from tools.calcopy.oneshot import scene_fit
-            roles = {l.get("id"): l.get("role") for l in S.get("lines") or []}
-            fit_res = scene_fit.measure_render(work, llm=llm, out=doc / "장면대사.json", roles=roles)
-            bf = bench_fit(bench_docs)
-            fit_res["bench"] = bf
+            from tools.calcopy.hybrid.render_bench import frame_window
+            wv = frame_window(st["frame"])
+            wv = [wv[0], wv[1], wv[2], min(wv[3], 1920 - wv[1])]
+            import numpy as np
+            cb = next((d.get("layout", {}).get("caption_band") for d in bench_docs if (d.get("layout") or {}).get("caption_band")), None)
+
+            def band(t, shape):                 # base.mp4(자막 없는 바탕)가 없을 때만 쓰인다 — 완성본에서 벤치 자막 띠(layout.caption_band ±40)를 뺀다
+                m = np.zeros(shape, bool)
+                if cb:
+                    m[max(0, cb[0] - 40 - wv[1]):max(0, cb[1] + 40 - wv[1]), :] = True
+                return m
+            rows_ = plan_frames_check(R, T, Path(jload(doc / "재료.json")["cand_dir"]), wv, band)
+            fit_res = {"made_by": "quality_gate.plan_frames_check", "min_sim": FRAME_SAME_MIN, "rows": rows_,
+                       "screen": "base.mp4(자막 전 완성 화면)" if (R / "base.mp4").exists() else "final.mp4 − 벤치 자막 띠 ±40"}
             jsave(doc / "장면대사.json", fit_res)
-            return fit_verdict(fit_res["summary"], bf)
-        row("장면↔대사", "scene_fit(컷마다 대사↔장면)", f, "oneshot/scene_fit.measure_render → material_auto.fit_judge")
+            return plan_frames_verdict(rows_)
+        row("장면↔대사", "완성본 컷 = 계획 프레임(창 대조 ≥0.97)", same, "quality_gate.plan_frames_check(base.mp4 또는 final−자막 띠 ↔ 원본 ss)")
+        pr = plan_score_report(doc, (st.get("bench") or {}).get("channel"))
+        row("장면↔대사", "계획 점수(루브릭)", lambda: pr[:2], "<doc>/장면대사_계획.json(material_fit) · channel/<slug>/_kal/상위편_목표.json", ref=pr[2])
     # ── 표식
     if want("표식") and not legacy:
         def mk():
@@ -611,7 +710,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
            "placement": tab.get("check"), "log": tab.get("log"),
            "match": {"verdict": match["verdict"], "file": str(doc / "재현일치도.json")} if match else None,
            "gates": {"upgrade": cache.get("gates_upgrade")},      # preset_card L3 가 읽는다(업그레이드 판만, 1차 판은 None)
-           "fit": {"summary": fit_res["summary"], "bench": fit_res.get("bench"), "file": str(doc / "장면대사.json")} if fit_res else None}
+           "fit": {"min_sim": fit_res["min_sim"], "n": len(fit_res["rows"]), "file": str(doc / "장면대사.json")} if fit_res else None}
     if eye_pack and not legacy:
         try:
             rep["eye_pack_dir"] = str(make_eye_pack(style_name, doc, work, T, tab, S, cuts, cache.get("asr"), fit_res, bool(st.get("base"))))
@@ -688,15 +787,15 @@ def make_eye_pack(style_name: str, doc: Path, work: Path, T: dict, tab: dict, S:
     (E / "받아쓰기대조.md").write_text("\n".join(A) + "\n", encoding="utf-8")
     fit_by = {}
     for r in (fit_res or {}).get("rows") or []:
-        fit_by[(r["cut"]["t0"], r["cut"]["t1"])] = r
-    C = ["# 줄↔컷 대조표 (컷마다: 시각 · 줄 · 그 순간 자막 · 화면 설명(재료) · 장면↔대사 점수)", "",
-         "| # | 시각 | 줄 | 자막 | 화면(소스@초 · 설명) | fit | 판정(E3) |", "|---|---|---|---|---|---|---|"]
+        fit_by[r["k"]] = r
+    C = ["# 줄↔컷 대조표 (컷마다: 시각 · 줄 · 그 순간 자막 · 화면 설명(재료) · 계획 점수(루브릭) · 완성본=계획 프레임 같음)", "",
+         "| # | 시각 | 줄 | 자막 | 화면(소스@초 · 설명) | 계획 fit · 같음 | 판정(E3) |", "|---|---|---|---|---|---|---|"]
     rows = tab.get("rows") or []
     for k, c in enumerate(T.get("cuts") or []):
         cap = " / ".join(r.get("text") or "" for r in rows if float(r["t0"]) < float(c["t1"]) and float(r["t1"]) > float(c["t0"]))
-        fr = fit_by.get((c["t0"], c["t1"]))
+        fr = fit_by.get(k)
         C.append(f"| {k} | {c['t0']:.2f}–{c['t1']:.2f} | {c.get('line')} | {cap} | {Path(str(c['src'])).stem}@{c.get('ss')} {c.get('see', '')} | "
-                 f"{fr.get('score') if fr else '-'} |  |")
+                 f"{c.get('fit', '-')} · 같음 {fr.get('sim') if fr else '-'} |  |")
     (E / "줄컷대조.md").write_text("\n".join(C) + "\n", encoding="utf-8")
     Q = [f"# 눈 검수 질문 — {style_name} {Path(doc).name} (표준 §5-2)", "",
          "답은 `<doc>/눈검수.json` {\"E1\": {\"v\": \"○|×|△\", \"memo\": \"…\"}, …} — ○ 전부 + △ 0 이어야 통과.", "",

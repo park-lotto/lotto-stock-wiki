@@ -101,11 +101,33 @@ def variant_fx(v) -> bool:
     return bool(s) and not s.startswith(VARIANT_NOT) and any(k in s for k in VARIANT_FX)
 
 
+EMPH_PLAIN_DE = 10.0      # 강조 낱말 색 ↔ 줄 채움색 ΔE76 이 이보다 작으면 '색 아닌 강조'(크기·굵기·밑줄·움직임) — 표준 §11-4 ㉙
+
+
+def emph_kind(l: dict) -> str | None:
+    """강조 종류(한 곳): 'color'(강조색이 줄 채움색과 ΔE ≥ 10) · 'plain'(색 아닌 강조 — ΔE < 10 또는 색을 안 바꿈) · None(강조 없음·줄색 모름)."""
+    em = [e for e in (l.get("emph") or []) if e]
+    if not em:
+        return None
+    fill = l.get("fill_hex")
+    if not (isinstance(fill, str) and re.fullmatch(r"#[0-9A-Fa-f]{6}", fill)):
+        return None
+    import numpy as np
+    f = _lab([int(fill[i:i + 2], 16) for i in (1, 3, 5)])
+    des = []
+    for e in em:
+        h = e.get("hex") if isinstance(e, dict) else None
+        if isinstance(h, str) and re.fullmatch(r"#[0-9A-Fa-f]{6}", h):
+            des.append(float(np.linalg.norm(_lab([int(h[i:i + 2], 16) for i in (1, 3, 5)]) - f)))
+    return "color" if any(d >= EMPH_PLAIN_DE for d in des) else "plain"
+
+
 def _decorated(l: dict) -> dict:
     """줄 하나의 꾸밈 유무 — 분모 계산의 기준(한 곳). variant = 훅 빨강·팝 같은 변형(기본·기본(흰/노랑)·손글씨는 꾸밈 아님)."""
     enter = enter_key(l.get("enter"))
     return {"enter_fx": enter not in ("instant", "append", "cut", None), "emph": _has(l.get("emph")),   # append(쌓기)는 꾸밈이 아니라 등장 방식 — 비율은 enter 로 따로 센다
-            "sticker": _has(l.get("sticker")), "sfx": _has(l.get("sfx")), "variant": variant_fx(l.get("variant"))}
+            "sticker": _has(l.get("sticker")), "sfx": _has(l.get("sfx")), "variant": variant_fx(l.get("variant")),
+            "emph_color": emph_kind(l) == "color", "emph_plain": emph_kind(l) == "plain"}   # emph 의 갈래(색 강조 / 색 아닌 강조, ㉙) — any 는 emph 가 이미 센다
 
 
 def _pos(l: dict, dur: float) -> str:
@@ -231,7 +253,7 @@ def _norm_line(l: dict, dur: float) -> dict:
 
 def rules_of(docs: list[dict]) -> dict:
     """(판단 주인) 줄판독 모음 → 붙는 조건 규칙 + 빈도. 분모를 항상 같이 낸다."""
-    FX = ("enter_fx", "emph", "sticker", "sfx", "variant")   # variant = 훅 빨강·팝 변형(15 ⓑ)
+    FX = ("enter_fx", "emph", "emph_color", "emph_plain", "sticker", "sfx", "variant")   # variant = 훅 빨강·팝 변형(15 ⓑ) · emph_color/plain = ㉙ 강조 갈래
     by_sp = defaultdict(lambda: {"n": 0, "enter": Counter(), "chars": [], "sec": [], **{k: 0 for k in FX}, "any": 0})
     by_pos = defaultdict(lambda: {"n": 0, "enter": Counter(), **{k: 0 for k in FX}, "any": 0})
     by_role = defaultdict(lambda: {"n": 0, "enter": Counter(), **{k: 0 for k in FX}, "any": 0})
