@@ -2,9 +2,19 @@
  "_meta": {
   "made_by": "tools/calcopy/engine/sound/sfx_events.py evenshopping --detect",
   "how": "detect",
+  "asr_filter": {
+   "how": "후보 시각이 받아쓰기 낱말 구간[t0−0.05, t1+0.05] 안이면 cand_in_words(치찰음·파열음 오탐) — 단 전환(cut)·스티커 ±0.3초 안은 남김(keep_why). 남은 것 = cand_kept",
+   "asr": "C:/숏템_칼카피/evenshopping/work/asrw",
+   "no_speech": {},
+   "no_asr": [],
+   "n_kept": 1,
+   "n_in_words": 15,
+   "note": "귀 확인 아님(신호). 무음 환각 = 환각 문구(Thanks for watching·구독과 좋아요·Music…)가 절반 이상이거나 빼고 2낱말 이하, 또는 길이0 낱말 40% 이상"
+  },
   "from": "C:/숏템_칼카피\\evenshopping\\src",
   "n_videos": 6,
-  "n_cand": 6
+  "n_cand": 16,
+  "line_link_how": "line_link = 남은 후보(cand_kept)가 든 줄의 sfx·sticker 유무 + 줄판독 sfx 시각(t, 없으면 줄 t0)·스티커 t_in 에서 가장 가까운 후보 거리(≤0.15초 = match). 줄판독 sfx 칸은 바꾸지 않았다(1판 파형 판독 근거가 따로 있다) — 10-25 재측정(03 low·낱말 거름 내장 뒤) 다시 붙임"
  },
  "1kfqEB2b1xM": {
   "strong_n": 14,
@@ -20,8 +30,34 @@
    ]
   },
   "dur": 36.4,
-  "n_events_all": 48,
+  "n_events_all": 51,
   "cand": [
+   {
+    "t": 0.14,
+    "kind": "low",
+    "dur": 0.23,
+    "db": 17.1,
+    "rel_db": -0.2,
+    "low_mid_db": 11.9,
+    "voiced": 0.04,
+    "near": {
+     "cap": 1.86,
+     "cut": 1.81
+    }
+   },
+   {
+    "t": 0.28,
+    "kind": "low",
+    "dur": 0.3,
+    "db": 12.2,
+    "rel_db": -0.7,
+    "low_mid_db": 18.7,
+    "voiced": 0.03,
+    "near": {
+     "cap": 1.72,
+     "cut": 1.67
+    }
+   },
    {
     "t": 0.49,
     "kind": "broad",
@@ -33,6 +69,19 @@
     "near": {
      "cap": 1.51,
      "cut": 1.46
+    }
+   },
+   {
+    "t": 23.23,
+    "kind": "low",
+    "dur": 0.08,
+    "db": 12.5,
+    "rel_db": -1.4,
+    "low_mid_db": 9.2,
+    "voiced": 0.54,
+    "near": {
+     "cap": 1.83,
+     "cut": 1.97
     }
    }
   ],
@@ -78,6 +127,90 @@
   "chance": {
    "cap": 0.14,
    "cut": 0.1
+  },
+  "asr_words": 104,
+  "cand_in_words": [
+   {
+    "t": 0.14,
+    "kind": "low",
+    "dur": 0.23,
+    "db": 17.1,
+    "rel_db": -0.2,
+    "low_mid_db": 11.9,
+    "voiced": 0.04,
+    "near": {
+     "cap": 1.86,
+     "cut": 1.81
+    },
+    "word": "귀찮음에서"
+   },
+   {
+    "t": 0.28,
+    "kind": "low",
+    "dur": 0.3,
+    "db": 12.2,
+    "rel_db": -0.7,
+    "low_mid_db": 18.7,
+    "voiced": 0.03,
+    "near": {
+     "cap": 1.72,
+     "cut": 1.67
+    },
+    "word": "귀찮음에서"
+   },
+   {
+    "t": 0.49,
+    "kind": "broad",
+    "dur": 0.12,
+    "db": 21.2,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 6402,
+    "near": {
+     "cap": 1.51,
+     "cut": 1.46
+    },
+    "word": "귀찮음에서"
+   },
+   {
+    "t": 23.23,
+    "kind": "low",
+    "dur": 0.08,
+    "db": 12.5,
+    "rel_db": -1.4,
+    "low_mid_db": 9.2,
+    "voiced": 0.54,
+    "near": {
+     "cap": 1.83,
+     "cut": 1.97
+    },
+    "word": "토마옥"
+   }
+  ],
+  "cand_kept": [],
+  "line_link": {
+   "kept_to_line": [],
+   "line_sfx_to_kept": [
+    {
+     "line": 5,
+     "t": 5.78,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 22,
+     "t": 19.45,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 32,
+     "t": 29.66,
+     "nearest_kept_s": null,
+     "match": false
+    }
+   ],
+   "sticker_to_kept": []
   }
  },
  "ABjQ0YCZoes": {
@@ -96,8 +229,34 @@
    ]
   },
   "dur": 25.9,
-  "n_events_all": 29,
+  "n_events_all": 31,
   "cand": [
+   {
+    "t": 0.08,
+    "kind": "low",
+    "dur": 0.1,
+    "db": 19.5,
+    "rel_db": -1.1,
+    "low_mid_db": 6.9,
+    "voiced": 0.07,
+    "near": {
+     "cap": 1.62,
+     "cut": 1.59
+    }
+   },
+   {
+    "t": 0.23,
+    "kind": "low",
+    "dur": 0.28,
+    "db": 12.5,
+    "rel_db": -1.1,
+    "low_mid_db": 8.9,
+    "voiced": 0.03,
+    "near": {
+     "cap": 1.47,
+     "cut": 1.44
+    }
+   },
    {
     "t": 24.43,
     "kind": "broad",
@@ -158,6 +317,76 @@
   "chance": {
    "cap": 0.24,
    "cut": 0.18
+  },
+  "asr_words": 91,
+  "cand_in_words": [
+   {
+    "t": 0.08,
+    "kind": "low",
+    "dur": 0.1,
+    "db": 19.5,
+    "rel_db": -1.1,
+    "low_mid_db": 6.9,
+    "voiced": 0.07,
+    "near": {
+     "cap": 1.62,
+     "cut": 1.59
+    },
+    "word": "천재가"
+   },
+   {
+    "t": 0.23,
+    "kind": "low",
+    "dur": 0.28,
+    "db": 12.5,
+    "rel_db": -1.1,
+    "low_mid_db": 8.9,
+    "voiced": 0.03,
+    "near": {
+     "cap": 1.47,
+     "cut": 1.44
+    },
+    "word": "천재가"
+   },
+   {
+    "t": 24.43,
+    "kind": "broad",
+    "dur": 0.08,
+    "db": 18.9,
+    "voiced": 0.08,
+    "isolated": 0.8,
+    "cen_hz": 6214,
+    "near": {
+     "cap": 1.63,
+     "cut": 3.13
+    },
+    "word": "접시"
+   }
+  ],
+  "cand_kept": [],
+  "line_link": {
+   "kept_to_line": [],
+   "line_sfx_to_kept": [
+    {
+     "line": 7,
+     "t": 7.88,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 20,
+     "t": 19.21,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 26,
+     "t": 25.01,
+     "nearest_kept_s": null,
+     "match": false
+    }
+   ],
+   "sticker_to_kept": []
   }
  },
  "LHembw8EUU0": {
@@ -177,7 +406,7 @@
    ]
   },
   "dur": 26.4,
-  "n_events_all": 33,
+  "n_events_all": 36,
   "cand": [
    {
     "t": 0.06,
@@ -190,6 +419,19 @@
     "near": {
      "cap": 1.94,
      "cut": 1.96
+    }
+   },
+   {
+    "t": 0.1,
+    "kind": "low",
+    "dur": 0.23,
+    "db": 16.0,
+    "rel_db": 0.0,
+    "low_mid_db": 11.2,
+    "voiced": 0.15,
+    "near": {
+     "cap": 1.9,
+     "cut": 1.92
     }
    },
    {
@@ -216,6 +458,32 @@
     "near": {
      "cap": 1.81,
      "cut": 1.83
+    }
+   },
+   {
+    "t": 0.27,
+    "kind": "low",
+    "dur": 0.23,
+    "db": 13.4,
+    "rel_db": -1.5,
+    "low_mid_db": 17.8,
+    "voiced": 0.15,
+    "near": {
+     "cap": 1.73,
+     "cut": 1.75
+    }
+   },
+   {
+    "t": 5.45,
+    "kind": "low",
+    "dur": 0.06,
+    "db": 12.3,
+    "rel_db": -2.4,
+    "low_mid_db": 10.7,
+    "voiced": 0.36,
+    "near": {
+     "cap": 0.05,
+     "cut": 0.7
     }
    },
    {
@@ -282,6 +550,145 @@
   "chance": {
    "cap": 0.34,
    "cut": 0.12
+  },
+  "asr_words": 80,
+  "cand_in_words": [
+   {
+    "t": 0.06,
+    "kind": "broad",
+    "dur": 0.09,
+    "db": 23.0,
+    "voiced": 0.43,
+    "isolated": 0.85,
+    "cen_hz": 6734,
+    "near": {
+     "cap": 1.94,
+     "cut": 1.96
+    },
+    "word": "일본"
+   },
+   {
+    "t": 0.1,
+    "kind": "low",
+    "dur": 0.23,
+    "db": 16.0,
+    "rel_db": 0.0,
+    "low_mid_db": 11.2,
+    "voiced": 0.15,
+    "near": {
+     "cap": 1.9,
+     "cut": 1.92
+    },
+    "word": "일본"
+   },
+   {
+    "t": 0.19,
+    "kind": "broad",
+    "dur": 0.34,
+    "db": 40.0,
+    "voiced": 0.0,
+    "isolated": 0.8,
+    "cen_hz": 6914,
+    "near": {
+     "cap": 1.81,
+     "cut": 1.83
+    },
+    "word": "일본"
+   },
+   {
+    "t": 0.19,
+    "kind": "broad",
+    "dur": 0.34,
+    "db": 29.7,
+    "voiced": 0.0,
+    "isolated": 0.8,
+    "cen_hz": 8051,
+    "near": {
+     "cap": 1.81,
+     "cut": 1.83
+    },
+    "word": "일본"
+   },
+   {
+    "t": 0.27,
+    "kind": "low",
+    "dur": 0.23,
+    "db": 13.4,
+    "rel_db": -1.5,
+    "low_mid_db": 17.8,
+    "voiced": 0.15,
+    "near": {
+     "cap": 1.73,
+     "cut": 1.75
+    },
+    "word": "일본"
+   },
+   {
+    "t": 5.45,
+    "kind": "low",
+    "dur": 0.06,
+    "db": 12.3,
+    "rel_db": -2.4,
+    "low_mid_db": 10.7,
+    "voiced": 0.36,
+    "near": {
+     "cap": 0.05,
+     "cut": 0.7
+    },
+    "word": "바로"
+   }
+  ],
+  "cand_kept": [
+   {
+    "t": 10.43,
+    "kind": "broad",
+    "dur": 0.06,
+    "db": 21.5,
+    "voiced": 0.18,
+    "isolated": 0.85,
+    "cen_hz": 7357,
+    "near": {
+     "cap": 0.13,
+     "cut": 0.01
+    },
+    "word": "비누를",
+    "keep_why": "낱말 안이지만 전환·스티커 0.01초 안"
+   }
+  ],
+  "line_link": {
+   "kept_to_line": [
+    {
+     "t": 10.43,
+     "kind": "broad",
+     "lines": [
+      8,
+      9
+     ],
+     "line_sfx": [
+      false,
+      false
+     ],
+     "line_sticker": [
+      0,
+      0
+     ]
+    }
+   ],
+   "line_sfx_to_kept": [
+    {
+     "line": 0,
+     "t": 0.19,
+     "nearest_kept_s": 10.24,
+     "match": false
+    },
+    {
+     "line": 10,
+     "t": 12.83,
+     "nearest_kept_s": 2.4,
+     "match": false
+    }
+   ],
+   "sticker_to_kept": []
   }
  },
  "Y2YXuAE4J00": {
@@ -296,8 +703,22 @@
    ]
   },
   "dur": 26.1,
-  "n_events_all": 30,
-  "cand": [],
+  "n_events_all": 31,
+  "cand": [
+   {
+    "t": 0.13,
+    "kind": "low",
+    "dur": 0.17,
+    "db": 12.6,
+    "rel_db": -0.9,
+    "low_mid_db": 16.8,
+    "voiced": 0.14,
+    "near": {
+     "cap": 1.67,
+     "cut": 1.7
+    }
+   }
+  ],
   "markers": {
    "cap": [
     1.8,
@@ -361,6 +782,67 @@
   "chance": {
    "cap": 0.3,
    "cut": 0.28
+  },
+  "asr_words": 87,
+  "cand_in_words": [
+   {
+    "t": 0.13,
+    "kind": "low",
+    "dur": 0.17,
+    "db": 12.6,
+    "rel_db": -0.9,
+    "low_mid_db": 16.8,
+    "voiced": 0.14,
+    "near": {
+     "cap": 1.67,
+     "cut": 1.7
+    },
+    "word": "한국"
+   }
+  ],
+  "cand_kept": [],
+  "line_link": {
+   "kept_to_line": [],
+   "line_sfx_to_kept": [
+    {
+     "line": 6,
+     "t": 6.7,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 15,
+     "t": 13.75,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 26,
+     "t": 25.01,
+     "nearest_kept_s": null,
+     "match": false
+    }
+   ],
+   "sticker_to_kept": [
+    {
+     "line": 24,
+     "t_in": 23.12,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 24,
+     "t_in": 23.12,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 24,
+     "t_in": 23.6,
+     "nearest_kept_s": null,
+     "match": false
+    }
+   ]
   }
  },
  "kC8fkx1Ve3Q": {
@@ -457,6 +939,27 @@
   "chance": {
    "cap": 0.34,
    "cut": 0.37
+  },
+  "asr_words": 78,
+  "cand_in_words": [],
+  "cand_kept": [],
+  "line_link": {
+   "kept_to_line": [],
+   "line_sfx_to_kept": [
+    {
+     "line": 3,
+     "t": 2.98,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 23,
+     "t": 23.93,
+     "nearest_kept_s": null,
+     "match": false
+    }
+   ],
+   "sticker_to_kept": []
   }
  },
  "tcaIPaGWLrE": {
@@ -482,8 +985,22 @@
    ]
   },
   "dur": 36.8,
-  "n_events_all": 43,
-  "cand": [],
+  "n_events_all": 44,
+  "cand": [
+   {
+    "t": 0.14,
+    "kind": "low",
+    "dur": 0.19,
+    "db": 14.9,
+    "rel_db": 0.0,
+    "low_mid_db": 18.8,
+    "voiced": 0.0,
+    "near": {
+     "cap": 1.76,
+     "cut": 1.76
+    }
+   }
+  ],
   "markers": {
    "cap": [
     1.9,
@@ -556,6 +1073,97 @@
   "chance": {
    "cap": 0.34,
    "cut": 0.19
+  },
+  "asr_words": 117,
+  "cand_in_words": [
+   {
+    "t": 0.14,
+    "kind": "low",
+    "dur": 0.19,
+    "db": 14.9,
+    "rel_db": 0.0,
+    "low_mid_db": 18.8,
+    "voiced": 0.0,
+    "near": {
+     "cap": 1.76,
+     "cut": 1.76
+    },
+    "word": "천재의"
+   }
+  ],
+  "cand_kept": [],
+  "line_link": {
+   "kept_to_line": [],
+   "line_sfx_to_kept": [
+    {
+     "line": 4,
+     "t": 4.74,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 19,
+     "t": 17.65,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 32,
+     "t": 28.55,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 40,
+     "t": 36.06,
+     "nearest_kept_s": null,
+     "match": false
+    }
+   ],
+   "sticker_to_kept": [
+    {
+     "line": 30,
+     "t_in": 26.43,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 31,
+     "t_in": 27.22,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 31,
+     "t_in": 27.9,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 32,
+     "t_in": 28.47,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 32,
+     "t_in": 29.2,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 36,
+     "t_in": 32.68,
+     "nearest_kept_s": null,
+     "match": false
+    },
+    {
+     "line": 36,
+     "t_in": 32.73,
+     "nearest_kept_s": null,
+     "match": false
+    }
+   ]
   }
  }
 }
