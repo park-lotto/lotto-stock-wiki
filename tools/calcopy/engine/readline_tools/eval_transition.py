@@ -26,14 +26,19 @@ SPECIAL = ("zoomblur", "black", "flash")
 
 def eval_video(slug: str, vid: str, mp4: str) -> dict:
     d = json.loads((ROOT / f"channel/{slug}/줄판독/{vid}.json").read_text(encoding="utf-8"))
-    w = (d.get("layout") or {}).get("window")
-    y0, y1 = (w[1], min(1920, w[1] + w[3])) if isinstance(w, list) and len(w) == 4 else (0, 1920)
     tp = ROOT / f"channel/{slug}/뜯기/{vid}/뜯기.json"
-    cb = None
-    if tp.exists():
-        c = (json.loads(tp.read_text(encoding="utf-8")).get("layout") or {}).get("caption_band")
-        cb = (c[0] - 20, c[1] + 20) if c else None
-    r = cutdet.cutdet(mp4, y0, y1, v2=True, cap_band=cb)
+    tl = (json.loads(tp.read_text(encoding="utf-8")).get("layout") or {}) if tp.exists() else {}
+    w = (d.get("layout") or {}).get("window")
+    if not (isinstance(w, list) and len(w) == 4 and all(isinstance(v, (int, float)) for v in w)):
+        w = tl.get("window")                                  # 줄판독에 창이 없으면 뜯기 창
+    y0, y1 = (int(w[1]), min(1920, int(w[1] + w[3]))) if isinstance(w, list) and len(w) == 4 else (0, 1920)
+    c = tl.get("caption_band")
+    cb = (c[0] - 20, c[1] + 20) if c else None
+    pf = ROOT / f"tools/calcopy/engine/readline_tools/profiles/{slug}.json"
+    prof = json.loads(pf.read_text(encoding="utf-8")) if pf.exists() else {}
+    if prof.get("cutdet_window"):
+        y0, y1 = prof["cutdet_window"]
+    r = cutdet.cutdet(mp4, y0, y1, v2=True, cap_band=cb, use_color_flash=bool(prof.get("color_flash")))
     rows, hit, tot, fp, ncut = [], 0, 0, 0, 0
     for l in d["lines"]:
         g = str(l.get("transition") or "none").split("(")[0]

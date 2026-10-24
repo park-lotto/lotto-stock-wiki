@@ -8,6 +8,7 @@
   capseg_box  06 유머쇼쇼 워커 seg2.py·seg3.py(10-25, seg3 = --grid 줄 칸 거르기) — 흰 상자 위 검정 글(외곽 없음): 흰 행(흰 비율>0.45) ±7행 안 어두운 픽셀 = 잉크,
               IoU 차>0.35 또는 잉크가 10%·60칸 넘게 늘면(한 줄씩 덧붙는 자막) 새 덩어리, 2프레임 이하 조각은 앞 덩어리에 붙임.
               출력 꼴이 다르다(lines_y·ink_x·first_frac·enter_fr·append).
+  mode=shadow 06 샤크탱크 워커 fsseg.py(10-25) — 외곽선 없이 그림자·번짐만 있는 흰/형광 자막(오른쪽아래 +4px 가 70↓ 어두움). cols(팔레트 비율) 출력.
 입력: mp4 · 띠 y0 y1 (예: 잇템로그 1150 1460) · [--mode color|bright|dark|both|box]
 출력(json 목록): color/bright/dark/both → [{t0, t1, n, ink, hex, yr}] · box → [{t0, t1, n, lines_y, ink_x, hex, first_frac, enter_fr, append}]
 crop 은 exact=1 — yuv420 원본은 홀수 y·높이를 ffmpeg 가 짝수로 내려 잘라 프레임 크기가 어긋나고 reshape 가 프레임을 밀어 쓰레기가 된다
@@ -24,7 +25,7 @@ import sys
 import cv2
 import numpy as np
 
-MODES = ("color", "bright", "dark", "both", "box")
+MODES = ("color", "bright", "dark", "both", "box", "shadow")
 
 
 def _diff(a, b):
@@ -32,9 +33,26 @@ def _diff(a, b):
     return 0 if u == 0 else 1 - (a & b).sum() / u
 
 
+def src_fps(mp4: str) -> float:
+    r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=r_frame_rate", "-of", "csv=p=0", mp4],
+                       capture_output=True, text=True).stdout.strip()
+    try:
+        a, b = (r.split("/") + ["1"])[:2]
+        return float(a) / float(b)
+    except (ValueError, ZeroDivisionError):
+        return 0.0
+
+
+def fps_filter(mp4: str, fps: float = 30.0) -> str:
+    """원본이 fps 와 1 넘게 다르면(60fps 등) 'fps=30,' 을 앞에 붙인다 — 도구들은 프레임 번호÷30 으로 시각을 낸다.
+    (06 꿀템노트 10-25: 60fps 원본을 그대로 넣으면 시각 2배·중복 프레임을 컷으로 셈 — m0Ex 72컷 vs 30fps 사본 18컷.) 30fps 원본은 그대로(재현 유지)."""
+    f = src_fps(mp4)
+    return f"fps={fps:g}," if f and abs(f - fps) > 1 else ""
+
+
 def read_band(mp4: str, y0: int, y1: int, width: int = 1080, pix: str = "bgr24", scale: tuple | None = None) -> np.ndarray:
     H = y1 - y0
-    vf = f"crop={width}:{H}:0:{y0}:exact=1" + (f",scale={scale[0]}:{scale[1]}" if scale else "")
+    vf = fps_filter(mp4) + f"crop={width}:{H}:0:{y0}:exact=1" + (f",scale={scale[0]}:{scale[1]}" if scale else "")
     raw = subprocess.run(["ffmpeg", "-v", "error", "-i", mp4, "-vf", vf, "-f", "rawvideo", "-pix_fmt", pix, "-"], capture_output=True).stdout
     w, h = scale if scale else (width, H)
     n = len(raw) // (w * h * 3)
@@ -46,6 +64,8 @@ def capseg(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080, mod
     """frames 를 주면(이미 자른 띠 [n,H,W,3] bgr) 읽기를 건너뛴다 — 띠 찾기·시험용. grid 는 box 모드에서만."""
     if mode == "box":
         return capseg_box(mp4, y0, y1, fps=fps, width=width, grid=grid)
+    if mode == "shadow":
+        return capseg_shadow(mp4, y0, y1, fps=fps, width=width)
     F = read_band(mp4, y0, y1, width) if frames is None else frames
     if mode == "color":
         return _seg_color(F, y0, fps)
@@ -133,6 +153,78 @@ def _seg_pol(F: np.ndarray, y0: int, mode: str, fps: float) -> list[dict]:
             ys = np.where(m.any(1))[0]
             yr = [int(y0 + ys.min()), int(y0 + ys.max())]
         res.append({"t0": round(a / fps, 3), "t1": round(b / fps, 3), "n": b - a, "ink": int(ink[mid]), "hex": hx, "yr": yr})
+    return res
+
+
+SHADOW_PAL = {"흰": (253, 250, 250), "노랑": (252, 226, 61), "주황": (245, 155, 72), "빨강": (235, 78, 79), "초록": (66, 252, 81),
+              "민트": (64, 248, 240), "파랑": (67, 165, 246), "분홍": (242, 98, 146)}   # 샤크탱크(해외쇼츠) 자막 팔레트(fsseg.py)
+
+
+def shadow_mask(a: np.ndarray):
+    """외곽선 없는 자막(그림자·번짐): 흰(min>225) 또는 형광(max>215·채도>110) 채움 중 오른쪽아래(+4,+4)가 70 넘게 어두운 픽셀, 3x3 팽창. a = RGB."""
+    a = a.astype(int)
+    mx, mn = a.max(2), a.min(2)
+    br = (mn > 225) | ((mx > 215) & (mx - mn > 110))
+    v = mx
+    sh = np.zeros_like(v)
+    sh[:-4, :-4] = v[4:, 4:]
+    m = br & (sh < v - 70)
+    return cv2.dilate(m.astype(np.uint8), np.ones((3, 3), np.uint8)) > 0, br
+
+
+def capseg_shadow(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080, palette: dict | None = None) -> list[dict]:
+    """06 샤크탱크 워커 fsseg.py(10-25) 덩어리 분할 그대로: 마스크 IoU 차>0.5 & 잉크>40 이면 경계, 2프레임 이하 덩어리(넘김 가로흐림)는 뒤에 붙임.
+    출력 = [{t0,t1,n,ink(덩어리 중앙값),yr,cols(팔레트 비율),hex:None}]."""
+    PAL = palette or SHADOW_PAL
+    PN = list(PAL)
+    PV = np.array([PAL[k] for k in PN], float)
+    F = read_band(mp4, y0, y1, width, pix="rgb24")
+    H = y1 - y0
+    M, C, Y = [], [], []
+    for a in F:
+        m, br = shadow_mask(a)
+        M.append(cv2.resize(m.astype(np.uint8) * 255, (270, max(1, H // 4)), interpolation=cv2.INTER_AREA) > 40)
+        full = br & cv2.dilate(m.astype(np.uint8), np.ones((15, 15), np.uint8)).astype(bool)
+        px = a[full]
+        if len(px) > 300:
+            d = ((px[:, None, :].astype(float) - PV[None]) ** 2).sum(2)
+            k = d.argmin(1)
+            ok = d.min(1) < 60 ** 2
+            cnt = {PN[i]: int(((k == i) & ok).sum()) for i in range(len(PN))}
+        else:
+            cnt = {}
+        C.append(cnt)
+        rows = np.where(m.sum(1) > 8)[0]
+        Y.append([int(y0 + rows.min()), int(y0 + rows.max())] if len(rows) else None)
+    n = len(M)
+    ink = [int(x.sum()) for x in M]
+    cuts = [0]
+    for i in range(1, n):
+        if _diff(M[i], M[i - 1]) > 0.5 and (ink[i] > 40 or ink[i - 1] > 40):
+            cuts.append(i)
+    cuts.append(n)
+    out = []
+    for s in ([a, b] for a, b in zip(cuts[:-1], cuts[1:])):
+        if out and s[1] - s[0] <= 2:
+            out.append(s)
+            continue
+        if out and out[-1][1] - out[-1][0] <= 2:
+            s = [out[-1][0], s[1]]
+            out[-1] = s
+            continue
+        out.append(s)
+    res = []
+    for a, b in out:
+        lo = a + min(3, (b - a) // 3)
+        mid = (lo + b) // 2
+        tot = {}
+        for c in C[lo:b]:
+            for k, v in c.items():
+                tot[k] = tot.get(k, 0) + v
+        tt = sum(tot.values()) or 1
+        cols = {k: round(v / tt, 2) for k, v in sorted(tot.items(), key=lambda x: -x[1]) if v / tt >= 0.04}
+        res.append({"t0": round(a / fps, 3), "t1": round(b / fps, 3), "n": b - a, "ink": int(np.median(ink[lo:b])) if b > lo else ink[a],
+                    "yr": Y[mid], "cols": cols, "hex": None})
     return res
 
 
@@ -252,7 +344,7 @@ def main(argv=None) -> int:
         return 2
     mp4, y0, y1, out = a[0], int(a[1]), int(a[2]), a[3]
     res = capseg(mp4, y0, y1, mode=mode, grid=grid)
-    if mode == "box":
+    if mode in ("box", "shadow"):
         json.dump(res, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=0)
         print(len(res), "덩어리")
         return 0

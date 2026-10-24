@@ -29,12 +29,14 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 
-def cutdet(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080, v2: bool = False, cap_band: tuple | None = None) -> dict:
+def cutdet(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080, v2: bool = False, cap_band: tuple | None = None,
+           use_color_flash: bool = False) -> dict:
     """v2=False = 옛 도구 그대로(재현). v2=True = 자막 띠를 뺀 선명도로 전환 종류를 다시 가르고(kind, 옛 값은 kind_v1),
     영상 시작 블러를 사건으로 더하고, 샷마다 shotmotion 움직임(motion: still/cam/zoom_in/zoom_out/pan)을 붙인다(06 키치잇 10-25 결손)."""
     H = y1 - y0
     w, h = 360, int(H / 3)
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", mp4, "-vf", f"crop={width}:{H}:0:{y0},scale={w}:{h}", "-f", "rawvideo", "-pix_fmt", "gray", "-"],
+    from tools.calcopy.engine.readline_tools.capseg import fps_filter      # 60fps 원본 → 30 (주인 = capseg.fps_filter)
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", mp4, "-vf", fps_filter(mp4, fps) + f"crop={width}:{H}:0:{y0}:exact=1,scale={w}:{h}", "-f", "rawvideo", "-pix_fmt", "gray", "-"],
                          capture_output=True).stdout
     n = len(raw) // (w * h)
     F = np.frombuffer(raw, np.uint8)[:n * w * h].reshape(n, h, w).astype(np.float32)
@@ -84,8 +86,29 @@ def cutdet(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080, v2:
         chg = float(np.abs(A - B).mean())
         shots.append({"t0": round(a / fps, 3), "t1": round((b + 1) / fps, 3), "chg": round(chg, 1)})
     if v2:
-        _refine_v2(F, mean, res, shots, fps, h, y0, cap_band, mp4, y1)
+        _refine_v2(F, mean, res, shots, fps, h, y0, cap_band, mp4, y1, use_color_flash)
     return {"n": n, "cuts": res, "shots": shots, **({"v2": True} if v2 else {})}
+
+
+def color_flash(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080) -> list[dict]:
+    """색 번쩍(06 샤크탱크 워커 fsseg.py 그대로): 창 1/4 크기 평균 색편차 G-(R+B)/2(초록)·R-(G+B)/2(빨강)가 한 프레임에 +12↑ 뛰고
+    14프레임 뒤 뛴 양의 절반 넘게 줄면 번쩍. 같은 색 0.2초 안은 하나. 밝기 번쩍(흰)은 cutdet 의 flash(평균 +50)가 잡는다."""
+    from tools.calcopy.engine.readline_tools.capseg import fps_filter
+    w, h = width // 4, (y1 - y0) // 4
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", mp4, "-vf", fps_filter(mp4, fps) + f"crop={width}:{y1 - y0}:0:{y0}:exact=1,scale={w}:{h}",
+                          "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True).stdout
+    n = len(raw) // (w * h * 3)
+    A = np.frombuffer(raw, np.uint8)[:n * w * h * 3].reshape(n, h, w, 3).astype(float)
+    r, g, b = A[..., 0].mean((1, 2)), A[..., 1].mean((1, 2)), A[..., 2].mean((1, 2))
+    fl = []
+    for name, S in (("초록", g - (r + b) / 2), ("빨강", r - (g + b) / 2)):
+        for i in range(1, len(S) - 14):
+            j = S[i] - S[i - 1]
+            if j > 12 and S[i] - S[min(len(S) - 1, i + 14)] > 0.5 * j and S[i] >= S[i + 1] - 2:
+                if not fl or abs(fl[-1]["t"] - i / fps) > 0.2 or fl[-1]["color"] != name:
+                    fl.append({"t": round(i / fps, 3), "color": name, "jump": round(float(j), 1)})
+    fl.sort(key=lambda e: e["t"])
+    return fl
 
 
 V2_LOW = 0.5        # 바탕 선명도의 이 비율 밑 = 흐린 프레임
@@ -101,23 +124,48 @@ def _masked_sharp(F, h, y0, cap_band):
     return np.array([cv2.Laplacian(f[keep], cv2.CV_32F).var() for f in F])
 
 
-def _refine_v2(F, mean, res, shots, fps, h, y0, cap_band, mp4, y1):
+def _refine_v2(F, mean, res, shots, fps, h, y0, cap_band, mp4, y1, use_color_flash=False):
     n = len(F)
     sh = _masked_sharp(F, h, y0, cap_band)
+    dark = (F < 20).mean((1, 2))
     for r in res:
         r["kind_v1"] = r["kind"]
-        if r["kind"] in ("black", "flash"):
-            continue
         a = int(round(r["t"] * fps))
         b = int(round(r["t_end"] * fps))
         post_base = np.median(sh[min(n - 1, b + 8):min(n, b + 18)]) if b + 9 < n else np.nan
         pre_base = np.median(sh[max(0, a - 18):max(1, a - 8)]) if a - 9 > 0 else np.nan
-        post_low = int((sh[b:min(n, b + 7)] < V2_LOW * post_base).sum()) if post_base == post_base else 0
+        post_low = int((sh[a:min(n, b + 7)] < V2_LOW * post_base).sum()) if post_base == post_base else 0   # 블러 프레임이 컷 묶음(a~b) 안에 들 수 있다(꿀템노트 cLk: a~b 7프레임)
         pre_low = int((sh[max(0, a - 6):a] < V2_LOW * pre_base).sum()) if pre_base == pre_base else 0
         r["blur_post"] = post_low
         r["blur_pre"] = pre_low
-        if r["kind"] == "zoomblur" or post_low >= V2_MIN_FR or pre_low >= V2_MIN_FR:
+        w0, w1 = max(1, a - 1), min(n, b + 6)
+        pre_mean = float(mean[max(0, a - 3)])
+        # 검정: 창의 60%↑ 가 거의 검정(<20)이고 평균이 앞의 1/3 밑 — 60fps 원본의 검정 1프레임 뒤 밝아지는 페이드인도 잡는다(꿀템노트 KCx 13.4)
+        is_black = r["kind"] == "black" or (dark[w0:w1].max() >= 0.6 and mean[w0:w1].min() < max(25.0, pre_mean / 3))
+        # 밝기 번쩍: 컷 프레임에서 바로 +40↑ 밝아짐(어두워졌다 밝아지는 방사 줌블러와 가른다 — 꿀템노트 cLk 12.0 / 키치잇 BRa 0.8)
+        jumps = [float(mean[i] - mean[i - 1]) for i in range(max(1, a - 1), min(n, a + 2))]
+        big = max(jumps, key=abs) if jumps else 0.0
+        pk = int(np.argmax(mean[a:min(n, a + 4)])) + a if a < n else a
+        tail = mean[pk:min(n, pk + 6)]
+        fading = len(tail) >= 6 and bool(np.all(np.diff(tail) < 0.5)) and float(tail[0] - tail[-1]) >= 10   # 번쩍은 뒤로 서서히 어두워진다
+        is_flash = big >= 40 and float(mean[pk]) >= pre_mean + 40 and fading
+        if is_black:
+            r["kind"] = "black"
+        elif is_flash:
+            r["kind"] = "flash"
+        elif r["kind"] == "zoomblur" or post_low >= V2_MIN_FR or pre_low >= V2_MIN_FR:
             r["kind"] = "zoomblur"
+        elif r["kind"] == "flash":                 # 옛 flash 인데 바로 밝아지지 않음 = 번쩍 아님
+            r["kind"] = "cut"
+    # 색 번쩍 ±0.15초 안 컷 = flash (샤크탱크 mkfs.py 규칙) — 채널 프로필 color_flash=true 일 때만(키치잇에 켜면 장면 색 바뀐 컷 4곳을 flash 로 오탐, 10-25 실측)
+    for f in (color_flash(mp4, y0, y1, fps) if use_color_flash else []):
+        near = [r for r in res if abs(r["t"] - f["t"]) <= 0.15]
+        if near:
+            near[0]["kind"] = "flash"
+            near[0]["color_flash"] = f["color"]
+        else:
+            res.append({"t": f["t"], "t_end": f["t"], "kind": "flash", "diff": 0.0, "blurfr": 0, "color_flash": f["color"], "kind_v1": None})
+    res.sort(key=lambda r: r["t"])
     if n > 20:                                   # 영상 시작 블러(컷이 없다): 첫 6프레임이 8~20프레임 바탕보다 흐림
         base = np.median(sh[8:20])
         low = int((sh[:6] < V2_LOW * base).sum())
