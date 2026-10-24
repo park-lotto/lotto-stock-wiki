@@ -1,0 +1,390 @@
+{
+ "_note": "작품8 호작도와인마개 — 손으로 고른 컷(1초 시트 보고), src_crop 은 얼굴·뉴스 꼬리표·자막띠 밖",
+ "cand_dir": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/",
+ "shots": [
+  {
+   "i": 0,
+   "caption": "케데헌 호랑이 원조가",
+   "kind": "product",
+   "cont": false,
+   "seen": "원화 까치호랑이(KBS 뉴스 속 전시 원화) — 케데헌 호랑이의 원조",
+   "url": "https://www.youtube.com/watch?v=J7MdwAY03MI",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/J7MdwAY03MI.mp4",
+   "ss": 62.0,
+   "src_crop": [
+    640,
+    170,
+    500,
+    650
+   ]
+  },
+  {
+   "i": 1,
+   "caption": "와인병 위에 올라탄",
+   "kind": "product",
+   "cont": false,
+   "seen": "마개 꽂힌 병을 기울여 따르기 — '와인병 위에 올라탄'",
+   "url": "https://www.instagram.com/reel/DR_-1CgE64c/",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DR_-1CgE64c.mp4",
+   "ss": 0.0,
+   "src_crop": [
+    180,
+    520,
+    700,
+    912
+   ]
+  },
+  {
+   "i": 2,
+   "caption": "미친 마개의",
+   "kind": "product",
+   "cont": false,
+   "seen": "백호 마개 근접 — '마개의 정체'",
+   "url": "https://www.instagram.com/reel/DOvy8NKEu0Z/",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DOvy8NKEu0Z.mp4",
+   "ss": 1.0,
+   "src_crop": [
+    120,
+    330,
+    840,
+    1094
+   ]
+  },
+  {
+   "i": 3,
+   "caption": "정체",
+   "cont": true
+  },
+  {
+   "i": 4,
+   "caption": "요즘 와인 좀 마신다는",
+   "kind": "product",
+   "cont": false,
+   "seen": "손 위 마개 근접",
+   "url": "https://www.instagram.com/reel/DOvy8NKEu0Z/",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DOvy8NKEu0Z.mp4",
+   "ss": 5.5,
+   "src_crop": [
+    120,
+    330,
+    840,
+    1094
+   ]
+  },
+  {
+   "i": 5,
+   "caption": "사람들 사이에서",
+   "cont": true
+  },
+  {
+   "i": 6,
+   "caption": "선물로 난리 난",
+   "kind": "product",
+   "cont": false,
+   "seen": "쿠팡 상품 사진 백호 마개(천천히 다가감)",
+   "url": "https://www.coupang.com/vp/products/9323176748",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/cp_white_in.mp4",
+   "ss": 0.0,
+   "src_crop": [
+    20,
+    0,
+    1040,
+    1356
+   ]
+  },
+  {
+   "i": 7,
+   "caption": "마개가 있는데",
+   "cont": true
+  },
+  {
+   "i": 8,
+   "caption": "이건 바로",
+   "kind": "product",
+   "cont": false,
+   "seen": "손 위 청호 마개 정면",
+   "url": "https://www.instagram.com/reel/DOvy8NKEu0Z/",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DOvy8NKEu0Z.mp4",
+   "ss": 30.0,
+   "src_crop": [
+    120,
+    330,
+    840,
+    1094
+   ]
+  },
+  {
+   "i": 9,
+   "caption": "국립중앙박물관 굿즈",
+   "cont": true
+  },
+  {
+   "i": 10,
+   "caption": "호작도 와인마개",
+   "kind": "product",
+   "cont": false,
+   "seen": "두 손 위 청호 마개 — 제품 이름",
+   "url": "https://www.instagram.com/reel/DOvy8NKEu0Z/",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DOvy8NKEu0Z.mp4",
+   "ss": 11.0,
+   "src_crop": [
+    120,
+    330,
+    840,
+    1094
+   ]
+  },
+  {
+   "i": 11,
+   "caption": "이게 말도 안 되는 게",
+   "kind": "product",
+   "cont": false,
+   "seen": "쿠팡 사진 백호 마개(옆으로 흐름) — 호랑이·까치 조형",
+   "url": "https://www.coupang.com/vp/products/9323176748",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/cp_white_left.mp4",
+   "ss": 0.0,
+   "src_crop": [
+    20,
+    0,
+    1040,
+    1356
+   ]
+  },
+  {
+   "i": 12,
+   "caption": "조선 민화 속",
+   "kind": "product",
+   "cont": false,
+   "seen": "원화 까치호랑이(소나무 위 까치·호랑이)",
+   "url": "https://www.youtube.com/watch?v=AFsePLfffQU",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/AFsePLfffQU.mp4",
+   "ss": 58.0,
+   "src_crop": [
+    560,
+    110,
+    660,
+    860
+   ]
+  },
+  {
+   "i": 13,
+   "caption": "까치랑 호랑이를",
+   "cont": true
+  },
+  {
+   "i": 14,
+   "caption": "그대로 마개로",
+   "kind": "product",
+   "cont": false,
+   "seen": "상자 위에 선 청호 마개 — 원화를 옮긴 모양",
+   "url": "https://www.instagram.com/reel/DOvy8NKEu0Z/",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DOvy8NKEu0Z.mp4",
+   "ss": 23.0,
+   "src_crop": [
+    120,
+    420,
+    840,
+    1094
+   ]
+  },
+  {
+   "i": 15,
+   "caption": "옮겼다는 거",
+   "cont": true
+  },
+  {
+   "i": 16,
+   "caption": "심지어 케데헌 속",
+   "kind": "product",
+   "cont": false,
+   "seen": "케데헌 더피(파란 호랑이) 전신",
+   "url": "https://www.youtube.com/watch?v=AFsePLfffQU",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/AFsePLfffQU.mp4",
+   "ss": 25.0,
+   "src_crop": [
+    630,
+    200,
+    660,
+    860
+   ]
+  },
+  {
+   "i": 17,
+   "caption": "호랑이랑 까치도",
+   "cont": true
+  },
+  {
+   "i": 18,
+   "caption": "바로 이 호작도에서",
+   "kind": "product",
+   "cont": false,
+   "seen": "원화 까치호랑이(위 까치·아래 호랑이)",
+   "url": "https://www.youtube.com/watch?v=AFsePLfffQU",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/AFsePLfffQU.mp4",
+   "ss": 92.5,
+   "src_crop": [
+    640,
+    110,
+    660,
+    860
+   ]
+  },
+  {
+   "i": 19,
+   "caption": "영감을 받았다고",
+   "cont": true
+  },
+  {
+   "i": 20,
+   "caption": "호랑이는",
+   "kind": "product",
+   "cont": false,
+   "seen": "원화 호랑이 얼굴 근접",
+   "url": "https://www.youtube.com/watch?v=J7MdwAY03MI",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/J7MdwAY03MI.mp4",
+   "ss": 70.0,
+   "src_crop": [
+    930,
+    140,
+    660,
+    860
+   ]
+  },
+  {
+   "i": 21,
+   "caption": "나쁜 기운을 막고",
+   "cont": true
+  },
+  {
+   "i": 22,
+   "caption": "까치는 기쁜 소식을",
+   "kind": "product",
+   "cont": false,
+   "seen": "원화 까치 두 마리",
+   "url": "https://www.youtube.com/watch?v=AFsePLfffQU",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/AFsePLfffQU.mp4",
+   "ss": 79.0,
+   "src_crop": [
+    740,
+    40,
+    598,
+    780
+   ]
+  },
+  {
+   "i": 23,
+   "caption": "물어 온다는 그림이라",
+   "kind": "product",
+   "cont": false,
+   "seen": "쿠팡 사진 청호 마개(옆으로 흐름) — 그 그림이 마개로",
+   "url": "https://www.coupang.com/vp/products/9323176748",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/cp_blue_right.mp4",
+   "ss": 0.0,
+   "src_crop": [
+    20,
+    0,
+    1040,
+    1356
+   ]
+  },
+  {
+   "i": 24,
+   "caption": "근데 진짜 충격적인",
+   "kind": "product",
+   "cont": false,
+   "seen": "전작 조선왕실 와인마개(용 문양) 근접",
+   "url": "https://www.instagram.com/reel/DPTVQy6ETBu/",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DPTVQy6ETBu.mp4",
+   "ss": 4.2,
+   "src_crop": [
+    195,
+    580,
+    691,
+    900
+   ]
+  },
+  {
+   "i": 25,
+   "caption": "포인트는 이 회사 전작",
+   "cont": true
+  },
+  {
+   "i": 26,
+   "caption": "와인마개가",
+   "cont": true
+  },
+  {
+   "i": 27,
+   "caption": "27대 1을 뚫고",
+   "cont": true
+  },
+  {
+   "i": 28,
+   "caption": "대통령상을 받았다는 거",
+   "cont": true
+  },
+  {
+   "i": 29,
+   "caption": "그래서 요즘엔",
+   "kind": "product",
+   "cont": false,
+   "seen": "쿠팡 사진 청호 마개(물러남)",
+   "url": "https://www.coupang.com/vp/products/9323176748",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/cp_blue_out.mp4",
+   "ss": 0.0,
+   "src_crop": [
+    20,
+    0,
+    1040,
+    1356
+   ]
+  },
+  {
+   "i": 30,
+   "caption": "와인 선물할 때",
+   "cont": true
+  },
+  {
+   "i": 31,
+   "caption": "병보다 마개를",
+   "kind": "product",
+   "cont": false,
+   "seen": "선물 상자 열고 마개 꺼내기 — 마무리",
+   "url": "https://www.instagram.com/reel/DOvy8NKEu0Z/",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DOvy8NKEu0Z.mp4",
+   "ss": 18.0,
+   "src_crop": [
+    120,
+    420,
+    840,
+    1094
+   ]
+  },
+  {
+   "i": 32,
+   "caption": "먼저 고르는",
+   "cont": true
+  },
+  {
+   "i": 33,
+   "caption": "사람들 사이에서",
+   "kind": "product",
+   "cont": false,
+   "seen": "병 위 청호 마개 — 필수템",
+   "url": "https://www.instagram.com/reel/DR_-1CgE64c/",
+   "src": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/DR_-1CgE64c.mp4",
+   "ss": 4.5,
+   "src_crop": [
+    330,
+    450,
+    700,
+    912
+   ]
+  },
+  {
+   "i": 34,
+   "caption": "필수템으로 난리라고",
+   "cont": true
+  }
+ ]
+}
