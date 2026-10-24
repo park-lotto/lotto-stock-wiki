@@ -8,12 +8,12 @@
 판에 `upgrades` 칸이 없고 `_diff`(옛 변형판 꼴, 예 연예인레시피판)만 있으면 `_diff` 칸을 upgrades 꼴로 바꿔 읽는다(판 파일은 안 고친다).
 
 판단 주인: '나아짐' 판정 = 이 파일 BETTER(축마다 한 줄). 측정은 **새로 재지 않고 기존 주인 함수를 부른다** — 벤치·우리 같은 함수:
-  장면↔대사 = oneshot/scene_fit.measure_render(우리 · 품질 관문이 남긴 <doc>/장면대사.json 을 먼저 읽음) · quality_gate.bench_fit(벤치 줄판독 fit)
+  장면↔대사 = 루브릭 자 하나(scene_fit.RUBRIC_V, 표준 §11-4 ㉕) — 벤치 = fit_target(판 targets.scene_fit > channel/<slug>/_kal/상위편_목표.json) · 우리 = <doc>/장면대사.json(scene_fit.measure_render). 자 어긋나면 ✗. 줄판독 눈 fit 은 안 씀
   정지 = quality_gate.freezes(우리 완성본 · 벤치 원본 — 같은 함수·같은 문턱)
   효과 밀도 = kal_analyze._stats(벤치 상위 편 편마다) · kal_analyze.match_from_render(우리, media=False) → 같은 칸(sfx.rate·transition.rate·sticker.rate·meme.rate·fx.rate.나레)
   훅 = kal_analyze.scene_cuts(첫 컷 — 벤치 원본·우리 완성본) · kal_analyze.frame0_kind(줄판독) / 썸네일 표식(관문 0초 측정)
   소리 = hybrid.common.lufs · kal_analyze.bench_media_cached(벤치 LUFS) · 받아쓰기 = <doc>/품질관문.json '나레 받아쓰기 ↔ 대본'(quality_gate 가 check_line_sync 로 잰 것)
-  말속도·쉼 = 자막 조각 cps 편차(벤치 줄판독·우리 자막표 — 같은 함수 _cps_cv) · 쉼 = <doc>/품질관문.json 'B18 쉼'(checks.pauses_between)
+  말속도·쉼 = 나레 TTS 줄 자/초 변동계수(⑲ 줄 단위 — 우리 render_info.line_cps, 목표 판 targets.speech.cps_cv > 상위편_목표.json speech, 식 script_audit._cv) · 쉼 = <doc>/품질관문.json 'B18 쉼'
   자막 가독성 = kal_analyze.frame_metrics(글자 높이·채움↔외곽 ΔE) — 벤치 원본·우리 완성본 프레임, 같은 띠
   못 재는 축(script·cap_enter·cap_exit·pointer) 또는 verify='사람 판정' = 'human'(사장님)
 L3(표준 §11-2 ⑱) = l3_verdict: 측정 가능한 축 전부(MEASURABLE) 중 better_n ≥ ceil(측정 축/2) ∧ worse_n = 0 — better = 상위 편 좋은 쪽 사분위(p75/p25), worse = 상위 편 중앙보다 나쁨(밀도는 범위 밖).
@@ -190,28 +190,66 @@ def _miss(why: str, bench=None, ours=None) -> dict:
     return {"bench": bench, "ours": ours, "better": None, "worse": None, "why": why}
 
 
+TARGET_FILE = "상위편_목표.json"      # channel/<slug>/_kal/ — 벤치 상위 편 같은 자 재측정(표준 §12-5, scene_fit.bench_measure·placement count --top)
+
+
+def _rubric_ok(src) -> bool:
+    from tools.calcopy.oneshot.scene_fit import RUBRIC_V
+    return RUBRIC_V in json.dumps(src, ensure_ascii=False, default=str)
+
+
+def fit_target(C: "Ctx") -> dict | None:
+    """(판단 주인: scene_fit 축 벤치 목표, 표준 §11-4 ㉕ — 자는 루브릭 하나) 판 targets.scene_fit(07 이 상위편_목표.json 에서 복사, _from 에 RUBRIC_V)이 있으면 그 칸,
+    없으면 channel/<slug>/_kal/상위편_목표.json scene_fit. 줄판독 눈 fit 은 목표로 쓰지 않는다(보조·상관 검증용). → {goal_mean, goal_below, med_mean, med_below, rubric_ok, src}"""
+    t = (C.st.get("targets") or {}).get("scene_fit")
+    p = ROOT / "channel" / (C.slug or "_") / "_kal" / TARGET_FILE
+    sf = (_jl(p).get("scene_fit") if p.exists() else None) or None
+    if t:
+        mv = list(((t.get("mean") or {}).get("bench_top_values") or {}).values())
+        bv = list(((t.get("below7") or {}).get("bench_top_values") or {}).values())
+        rub_ok = _rubric_ok({k: t.get(k) for k in ("_from", "rubric")})
+        same = bool(sf) and rub_ok and _rubric_ok(sf.get("rubric"))     # 중앙값 칸이 판에 없으면(07 복사 꼴) 같은 자의 원본 파일에서 — 자가 다르면 안 가져온다
+        return {"goal_mean": (t.get("mean") or {}).get("ours_goal"), "goal_below": (t.get("below7") or {}).get("ours_goal"),
+                "med_mean": _q(mv, 50) if mv else (sf.get("median_mean") if same else None),
+                "med_below": _q(bv, 50) if bv else (sf.get("median_below7") if same else None),
+                "rubric_ok": rub_ok, "rubric_src": t.get("_from") or t.get("rubric"), "src": "판 targets.scene_fit" + ("" if mv else f"(중앙 = {TARGET_FILE})")}
+    if not sf:
+        return None
+    return {"goal_mean": sf.get("p75_mean"), "goal_below": sf.get("p25_below7"), "med_mean": sf.get("median_mean"), "med_below": sf.get("median_below7"),
+            "rubric_ok": _rubric_ok(sf.get("rubric")), "rubric_src": sf.get("rubric"), "src": str(p.relative_to(ROOT)).replace("\\", "/")}
+
+
 def m_scene_fit(C: Ctx) -> dict:
-    from tools.calcopy.hybrid import quality_gate as QG
-    docs, grp = _top_or_all(C)
-    per = {d.get("id"): QG.bench_fit([d]) for d in docs}          # 편마다 같은 함수(quality_gate.bench_fit)
-    per = {k: v for k, v in per.items() if v}
+    """장면↔대사 = 루브릭 자 하나(scene_fit RUBRIC_V) — 벤치 = fit_target(판 targets > 상위편_목표.json) · 우리 = <doc>/장면대사.json(scene_fit.measure_render).
+    나아짐 = 평균 ≥ 목표(p75) ∧ 7 미만 ≤ 목표(p25) · 나빠짐 = 평균 < 상위 편 중앙 ∨ 미만 > 중앙. ★자(RUBRIC_V)가 어긋나면 미측정이 아니라 ✗(㉕)."""
+    from tools.calcopy.oneshot.scene_fit import RUBRIC_V
+    T = fit_target(C)
     p = C.doc / "장면대사.json"
     if p.exists():
-        ours, src = _jl(p).get("summary"), f"{p.name}(scene_fit.measure_render — 관문이 남긴 것)"
+        O = _jl(p)
+        ours, orub, src = O.get("summary"), O.get("rubric"), f"{p.name}(scene_fit.measure_render — 관문이 남긴 것)"
     elif C.allow_llm and C.has_final():
         from tools.calcopy.oneshot import scene_fit
-        ours, src = scene_fit.measure_render(C.work, out=p)["summary"], "scene_fit.measure_render(지금 잼)"
+        O = scene_fit.measure_render(C.work, out=p)
+        ours, orub, src = O["summary"], O.get("rubric"), "scene_fit.measure_render(지금 잼)"
     else:
-        ours, src = None, "장면대사.json 없음(--fit 으로 재면 Claude 호출)"
-    if not per or not ours or ours.get("mean") is None:
-        return _miss(f"미측정 — 벤치 {grp} fit {'있음' if per else '칸 없음'} · 우리 {src}", per or None, ours)
-    ms, bs = [v["mean"] for v in per.values()], [v["below_rate"] for v in per.values()]
-    g_m, g_b, md_m, md_b = _q(ms, 75), _q(bs, 25), _q(ms, 50), _q(bs, 50)
-    better = ours["mean"] >= g_m and ours["below_rate"] <= g_b
-    worse = ours["mean"] < md_m or ours["below_rate"] > md_b
-    return {"bench": {"group": grp, "per_doc": per, "goal_mean_p75": g_m, "goal_below_p25": g_b, "median_mean": md_m, "median_below": md_b},
-            "ours": {"mean": ours["mean"], "below_rate": ours["below_rate"], "judged": ours.get("judged")}, "better": better, "worse": worse,
-            "why": f"우리 평균 {ours['mean']}·7 미만 {ours['below_rate']} — 나아짐 = 평균 ≥{g_m}(p75) ∧ 미만 ≤{g_b}(p25) · 나빠짐 = 평균 <{md_m} 또는 미만 >{md_b}(중앙) · {grp} · 우리 출처 {src}"}
+        ours, orub, src = None, None, "장면대사.json 없음(--fit 으로 재면 Claude 호출)"
+    if not T:
+        return _miss(f"미측정 — 벤치 목표 없음(판 targets.scene_fit·channel/{C.slug}/_kal/{TARGET_FILE} 둘 다 없음) · 우리 {src}", None, ours)
+    bench = {k: T[k] for k in ("goal_mean", "goal_below", "med_mean", "med_below", "src", "rubric_src")}
+    if not ours or ours.get("mean") is None:
+        return _miss(f"미측정 — 우리 {src}", bench, ours)
+    bad = [w for w, ok in ((f"벤치 목표({T['src']}) 자 {T['rubric_src']!r}", T["rubric_ok"]), (f"우리 장면대사.json 자 {orub!r}", RUBRIC_V == orub)) if not ok]
+    if bad:
+        return {"bench": bench, "ours": {"mean": ours["mean"], "below_rate": ours.get("below_rate"), "rubric": orub}, "better": False, "worse": True,
+                "why": f"✗ 자 불일치(표준 §11-4 ㉕ — 미측정이 아니라 ✗): {' · '.join(bad)} ≠ {RUBRIC_V}"}
+    if None in (T["goal_mean"], T["goal_below"], T["med_mean"], T["med_below"]):
+        return _miss(f"미측정 — 벤치 목표 칸 빠짐({T['src']})", bench, ours)
+    better = ours["mean"] >= T["goal_mean"] and ours["below_rate"] <= T["goal_below"]
+    worse = ours["mean"] < T["med_mean"] or ours["below_rate"] > T["med_below"]
+    return {"bench": bench, "ours": {"mean": ours["mean"], "below_rate": ours["below_rate"], "judged": ours.get("judged"), "rubric": orub}, "better": better, "worse": worse,
+            "why": f"{RUBRIC_V} · 우리 평균 {ours['mean']}·7 미만 {ours['below_rate']} — 나아짐 = 평균 ≥{T['goal_mean']} ∧ 미만 ≤{T['goal_below']} · "
+                   f"나빠짐 = 평균 <{T['med_mean']} 또는 미만 >{T['med_below']}(상위 편 중앙) · 벤치 {T['src']} · 우리 {src}"}
 
 
 def m_cut_rhythm(C: Ctx) -> dict:
@@ -329,40 +367,58 @@ def m_bgm(C: Ctx) -> dict:
             "why": f"LUFS {I}(목표 {LUFS_TARGET}±{LUFS_TOL} {'○' if lufs_ok else '×'}) · 받아쓰기 {('○' if asr_ok else '×') if asr_ok is not None else '미측정(품질관문.json 없음)'} — 둘 다 ○ 나아짐, 하나라도 × 나빠짐"}
 
 
-def _cps_cv(lines: list[dict], K) -> float | None:
-    """나레 자막 조각 cps(글자/표시 초)의 변동계수 — 벤치 줄판독·우리 자막표 같은 함수."""
-    xs = []
-    for l in lines:
-        if K._sp(l.get("speaker")) != "나레":
-            continue
-        d = float(l.get("t1") or 0) - float(l.get("t0") or 0)
-        n = K._chars(l.get("text") or "")
-        if d > 0.05 and n:
-            xs.append(n / d)
-    if len(xs) < 3:
+def ours_line_cps(C: "Ctx") -> tuple[dict, str]:
+    """우리 나레 TTS 줄(문장)마다 자/초(⑲ 줄 단위) — 렌더가 적은 render_info.line_cps(주인 render_itssum.line_cps, 나온 소리 기준)를 먼저,
+    없으면(옛 렌더) 같은 식 = 대본 tts 글자(common.nchar) ÷ s_<줄>.wav 길이(관문 '줄별 말속도' 가 쓰던 입력)."""
+    ri = C.R / "render_info.json"
+    t = (_jl(ri).get("line_cps") if ri.exists() else None) or {}
+    if t:
+        return {k: float(v) for k, v in t.items() if isinstance(v, (int, float))}, "render_info.line_cps"
+    from tools.calcopy.hybrid.common import dur_of, nchar
+    S = _jl(C.doc / "대본.json") if (C.doc / "대본.json").exists() else {}
+    out = {}
+    for l in S.get("lines") or []:
+        w = C.R / f"s_{l.get('id')}.wav"
+        if l.get("kind") == "tts" and w.exists() and nchar(l.get("tts") or ""):
+            d = dur_of(w)
+            if d:
+                out[l["id"]] = round(nchar(l["tts"]) / d, 2)
+    return out, "대본 tts 글자 ÷ s_<줄>.wav(render_info.line_cps 없는 옛 렌더)"
+
+
+def speech_target(C: "Ctx") -> dict | None:
+    """말속도 편차 목표(TTS 줄 단위, ⑲) — 판 targets.speech.cps_cv(07) > 상위편_목표.json speech.cps_cv(15). 조각 단위 spread 는 다른 자라 안 쓴다."""
+    t = ((C.st.get("targets") or {}).get("speech") or {}).get("cps_cv")
+    src = "판 targets.speech.cps_cv"
+    if not t:
+        p = ROOT / "channel" / (C.slug or "_") / "_kal" / TARGET_FILE
+        t = ((_jl(p).get("speech") or {}).get("cps_cv") if p.exists() else None)
+        src = f"channel/{C.slug}/_kal/{TARGET_FILE} speech.cps_cv"
+    if not t:
         return None
-    m = statistics.mean(xs)
-    return round(statistics.pstdev(xs) / m, 3) if m else None
+    vals = list((t.get("bench_top_values") or t.get("per_video") or {}).values())
+    return {"goal": t.get("ours_goal") if t.get("ours_goal") is not None else t.get("p25"), "median": _q(vals, 50), "values": t.get("bench_top_values") or t.get("per_video"), "src": src}
 
 
 def m_speech(C: Ctx) -> dict:
-    """말속도 = 나레 조각 cps 변동계수(낮을수록 좋음 — 나아짐 ≤ 상위 편 p25, 나빠짐 > 상위 편 중앙) + 쉼 0.22~0.30(관문 B18 행, × 면 나빠짐)."""
-    K = C.K
-    docs, grp = _top_or_all(C)
-    bcv = {d.get("id"): _cps_cv(d.get("lines") or [], K) for d in docs}
-    bcv = {k: v for k, v in bcv.items() if v is not None}
-    tp = C.R / "자막표.json"
-    ocv = _cps_cv(K._ours_lines({"rows": _jl(tp).get("rows") or []})[0], K) if tp.exists() else None
+    """말속도 = 나레 TTS 줄(문장) 자/초의 변동계수(⑲ 줄 단위 — 변동계수 식은 15 의 script_audit._cv) · 낮을수록 좋음.
+    나아짐 ≤ 목표(상위 편 p25) · 나빠짐 > 상위 편 중앙 · 쉼 0.22~0.30(관문 B18 행) × 면 나빠짐."""
+    from tools.calcopy.hybrid.script_audit import _cv
+    T = speech_target(C)
+    rates, src = ours_line_cps(C)
+    ocv = _cv(list(rates.values()))
     b18 = C.gate_row("B18 쉼")
-    if not bcv or ocv is None:
-        return _miss("미측정 — 조각 cps 한쪽 없음", bcv or None, ocv)
-    g, med = _q(list(bcv.values()), 25), _q(list(bcv.values()), 50)
+    if not T or T["goal"] is None or T["median"] is None:
+        return _miss(f"미측정 — 줄 단위 말속도 목표 없음(판 targets.speech.cps_cv·{TARGET_FILE} speech) · 우리 cv {ocv}", T, ocv)
+    if ocv is None:
+        return _miss(f"미측정 — 우리 나레 줄 자/초 3줄 미만({src})", T, rates or None)
     pause_ok = b18.get("ok") if b18 else None
-    better = ocv <= g and pause_ok is not False
-    worse = ocv > med or pause_ok is False
-    return {"bench": {"group": grp, "cps_cv_per_doc": bcv, "goal_p25": g, "median": med},
-            "ours": {"cps_cv": ocv, "pause_ok": pause_ok, "pause": (b18 or {}).get("value")}, "better": better, "worse": worse,
-            "why": f"나레 조각 cps 편차 우리 {ocv} — 나아짐 ≤{g}(p25) · 나빠짐 >{med}(중앙) · 쉼 0.22~0.30 {('○' if pause_ok else '×') if pause_ok is not None else '미측정'} · {grp}"}
+    better = ocv <= T["goal"] and pause_ok is not False
+    worse = ocv > T["median"] or pause_ok is False
+    return {"bench": T, "ours": {"line_cps_cv": ocv, "line_cps": rates, "src": src, "pause_ok": pause_ok, "pause": (b18 or {}).get("value")},
+            "better": better, "worse": worse,
+            "why": f"나레 TTS 줄 자/초 변동계수 우리 {ocv}({src}) — 나아짐 ≤{T['goal']}(p25) · 나빠짐 >{T['median']}(상위 편 중앙) · 목표 {T['src']} · "
+                   f"쉼 0.22~0.30 {('○' if pause_ok else '×') if pause_ok is not None else '미측정'}"}
 
 
 def _grab(mp4: Path, t: float, dst: Path) -> Path | None:
