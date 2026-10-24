@@ -93,7 +93,7 @@
   "window_radius": 87
  },
  "caption": {
-  "pack": "clean",
+  "pack": "sinbak",
   "pack_default": {
    "narr.first": "cut",
    "narr.rest": "cut",
@@ -126,8 +126,10 @@
   "why": "push 0 = 고정 카메라 대부분"
  },
  "sfx_files": {
+  "whoosh": "팩01/whoosh.wav",
+  "pop": "팩01/pop.wav",
   "gain_db": -8,
-  "why": "효과음 = 공개·창 안 글씨 자리(초안 자리=끝 sfx 7/19 '중'), 종류 귀 미확인(저음 붐·쿵) → 파일 칸 비움, gain 손 상수"
+  "why": "효과음 종류 이름표 → 팩01 slot(whoosh→휙, pop→뽁) — 줄판독 sfx 종류 whoosh 2·pop 1(edT) · NCC 벤치↔팩 ≥0.6 0개(최대 0.418 팩03/click2) → 지문 아닌 이름표 · 종류 미확인(귀로 안 들음, 06 측정 뒤 교체) · gain −8dB = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
  },
  "placement": {
   "rules": {
@@ -528,7 +530,6 @@
  "title_form": "결과 약속형 1줄 — '한 번 보면 절대 안 까먹음'·'너무 쉬워 안 까먹는 아이디어'",
  "_pending": {
   "no_narration": "나레 없는 줄 = 대본 줄 kind:'sub'{id,dur,caps}(02 2차 — TTS 0·배경음 기준 원음) — 판 칸 아님, 대본에서. 박창수 나레는 훅·공개 줄에만(kind tts)",
-  "sfx": "공개 순간 효과음(가장 큰 자리) — 종류 미확인 → 06",
   "drawings": "주황 손그림 X(틀린 행동 줄 6/6 — oT)·빨간 화살표 — 스티커 kind 미등록 → 03"
  },
  "script": {
@@ -550,7 +551,7 @@
  "packs": {
   "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
   "caption": {
-   "pack": "clean",
+   "pack": "sinbak",
    "gap": [
     "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 clean same=False) → 팩요청.md 신박판#1(관제 235) · 그동안 'clean' 임시(stand_in)"
    ],
@@ -613,10 +614,13 @@
    "from": "등장 효과팩 off — render_bench 옛 고정값 그대로(벤치 등장 = 판 caption.pack_default·placement.rules.enter 가 정함) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
   },
   "sfx": {
-   "pack": null,
-   "map": {},
+   "pack": "팩01",
+   "map": {
+    "whoosh": "휙",
+    "pop": "뽁"
+   },
    "gain_db": -8,
-   "why": "효과음 = 공개·창 안 글씨 자리(초안 자리=끝 sfx 7/19 '중'), 종류 귀 미확인(저음 붐·쿵) → 파일 칸 비움, gain 손 상수",
+   "why": "효과음 종류 이름표 → 팩01 slot(whoosh→휙, pop→뽁) — 줄판독 sfx 종류 whoosh 2·pop 1(edT) · NCC 벤치↔팩 ≥0.6 0개(최대 0.418 팩03/click2) → 지문 아닌 이름표 · 종류 미확인(귀로 안 들음, 06 측정 뒤 교체) · gain −8dB = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)",
    "ncc": {
     "measured": true,
     "hits": 6,
@@ -626,9 +630,9 @@
     "max_file": "팩03/click2.wav",
     "mine_max": null
    },
-   "from": "NCC 벤치↔팩 파일 5발 중 ≥0.6 0개(최대 0.418 팩03/click2.wav) → 지문으로 고를 수 없어 종류 이름표로 slot: whoosh→휙 · pop→뽁 · 팩 없음(종류 미측정)",
+   "from": "NCC ≥0.6 없음 → 지문으로 고를 수 없어 종류 이름표로 slot: whoosh→휙 · pop→뽁 · 팩 팩01(잇템로그판과 같은 팩) — 07 채움(10-25, 02 의 '없는 종류면 멈춤' 뒤)",
    "gap": [
-    "효과음 종류 ['whoosh', 'pop'] 팩 미지정 → 06 측정 뒤"
+    "종류 미확인(귀) — 06 이 소리 종류를 재면 slot 다시"
    ]
   },
   "bgm": {

@@ -1776,6 +1776,729 @@
    "y": 67.34,
    "bench": "채움 잉크 y≈1249~1338(가운데 1293/1920) — 2편 같음, 나레·원음 같은 자리"
   }
+ },
+ "banggu": {
+  "label": "방구석 게시글",
+  "desc": "검정 굵은 고딕 · 외곽·상자 없음 · 줄 간격 78 · 전부 즉시",
+  "font": "CcPretendard-Bold",
+  "size": 60.5,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#000000",
+   "style": {
+    "textShadow": "none",
+    "lineHeight": "1.377"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "emph": {
+   "font": "CcPretendard-Bold",
+   "size": 150,
+   "color": "#000000",
+   "style": {
+    "textShadow": "none"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "cont": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": ""
+  },
+  "variants": {},
+  "stickers": {},
+  "bench": "channel/banggu/줄판독(6편 121줄)·스타일분석.md §1 · 렌더 실측 맞춤(tools/caption_pack/check_kal_new_packs.py — 벤치 프레임 같은 글로 렌더해 kal_analyze frame_metrics 잉크 상자 대조)",
+  "place": {
+   "y": 27.48,
+   "bench": "첫 줄 잉크 y504~551(가운데 527/1920) — 2줄째 582~630, 쌓기 자리는 판 caption.stack(y·pitch)이 덮는다"
+  }
+ },
+ "yummyknow": {
+  "label": "맛있는친구들 게시글",
+  "desc": "배민 도현 검정 · 외곽 없음 · 줄 간격 89 · 전부 즉시",
+  "font": "BMDOHYEON",
+  "size": 74.4,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#000000",
+   "style": {
+    "textShadow": "none",
+    "lineHeight": "1.313"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "emph": {
+   "font": "BMDOHYEON",
+   "size": 150,
+   "color": "#000000",
+   "style": {
+    "textShadow": "none"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "cont": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": ""
+  },
+  "variants": {},
+  "stickers": {},
+  "bench": "channel/yummyknow/줄판독(6편 195줄) · 렌더 실측 맞춤(tools/caption_pack/check_kal_new_packs.py — 벤치 프레임 같은 글로 렌더해 kal_analyze frame_metrics 잉크 상자 대조)",
+  "place": {
+   "y": 31.86,
+   "bench": "첫 줄 잉크 y578~631(가운데 605/1920) — 2줄째 668~721"
+  }
+ },
+ "humorshowshow": {
+  "label": "재밌쇼 게시글",
+  "desc": "검정 굵은 고딕 · 외곽 없음 · 줄 간격 76 · 전부 즉시",
+  "font": "NotoSansKRBold",
+  "size": 60.8,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#000000",
+   "style": {
+    "textShadow": "none",
+    "lineHeight": "1.338"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "mark": {
+   "colors": [
+    "#9E3023"
+   ]
+  },
+  "emph": {
+   "font": "NotoSansKRBold",
+   "size": 150,
+   "color": "#000000",
+   "style": {
+    "textShadow": "none"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "cont": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": ""
+  },
+  "variants": {},
+  "stickers": {},
+  "bench": "channel/humorshowshow/줄판독(6편 190줄) · 렌더 실측 맞춤(tools/caption_pack/check_kal_new_packs.py — 벤치 프레임 같은 글로 렌더해 kal_analyze frame_metrics 잉크 상자 대조)",
+  "place": {
+   "y": 27.2,
+   "bench": "첫 줄 잉크 y500~552(가운데 526/1920) — 2줄째 576~629"
+  }
+ },
+ "hottemreport": {
+  "label": "핫템리포트 흰 굵은 고딕",
+  "desc": "흰 굵은 고딕 + 두꺼운 검정 테(13px) · 전부 즉시",
+  "font": "PretendardXBold",
+  "size": 105.7,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.246em #000000",
+    "paintOrder": "stroke fill",
+    "strokeLinejoin": "round",
+    "textShadow": "none"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "emph": {
+   "font": "PretendardXBold",
+   "size": 150,
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.246em #000000",
+    "paintOrder": "stroke fill",
+    "textShadow": "none"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "cont": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": ""
+  },
+  "variants": {},
+  "stickers": {},
+  "bench": "channel/hottemreport/줄판독(6편 123줄) · 렌더 실측 맞춤(tools/caption_pack/check_kal_new_packs.py — 벤치 프레임 같은 글로 렌더해 kal_analyze frame_metrics 잉크 상자 대조)",
+  "place": {
+   "y": 73.19,
+   "bench": "나레 잉크 y1360~1448(가운데 1404/1920)"
+  }
+ },
+ "sinbak": {
+  "label": "신박발견 손글씨",
+  "desc": "둥근 손글씨풍 검정 + 흰 2px 테 · 넓은 띄어쓰기 · 전부 즉시",
+  "font": "BMJUA",
+  "size": 72,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#000000",
+   "style": {
+    "WebkitTextStroke": "0.0556em #FFFFFF",
+    "paintOrder": "stroke fill",
+    "strokeLinejoin": "round",
+    "textShadow": "none",
+    "wordSpacing": "0.45em"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "mark": {
+   "colors": [
+    "#038EFA",
+    "#EEC816",
+    "#F80A50"
+   ]
+  },
+  "emph": {
+   "font": "BMJUA",
+   "size": 150,
+   "color": "#000000",
+   "style": {
+    "WebkitTextStroke": "0.0556em #FFFFFF",
+    "paintOrder": "stroke fill",
+    "textShadow": "none"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "cont": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": ""
+  },
+  "variants": {},
+  "stickers": {},
+  "bench": "channel/sinbak/줄판독(6편 95줄) · 렌더 실측 맞춤(tools/caption_pack/check_kal_new_packs.py — 벤치 프레임 같은 글로 렌더해 kal_analyze frame_metrics 잉크 상자 대조)",
+  "place": {
+   "y": 69.6,
+   "bench": "잉크 y1299~1364(가운데 1331/1920)"
+  }
+ },
+ "uljimatrot": {
+  "label": "울지마트로트 흰 고딕",
+  "desc": "흰 G마켓 굵은 글 + 검정 테(10px) · 줄 간격 105 · 전부 즉시",
+  "font": "GmarketSansBold",
+  "size": 89.9,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.2225em #000000",
+    "paintOrder": "stroke fill",
+    "strokeLinejoin": "round",
+    "textShadow": "none",
+    "lineHeight": "1.168"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "emph": {
+   "font": "GmarketSansBold",
+   "size": 150,
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.2225em #000000",
+    "paintOrder": "stroke fill",
+    "textShadow": "none"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "cont": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": ""
+  },
+  "variants": {},
+  "stickers": {},
+  "bench": "channel/uljimatrot/줄판독(10편 144줄) · 렌더 실측 맞춤(tools/caption_pack/check_kal_new_packs.py — 벤치 프레임 같은 글로 렌더해 kal_analyze frame_metrics 잉크 상자 대조)",
+  "place": {
+   "y": 63.42,
+   "bench": "잉크 y1162~1252(가운데 1207/1920)"
+  }
+ },
+ "mantem": {
+  "label": "만템 화자색",
+  "desc": "원음 흰 G마켓 + 검정 테 5px · 나레 노랑 카페24 아네모네 기울임(위 줄 자리) · 전부 즉시",
+  "font": "GmarketSansBold",
+  "size": 64.9,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#FDFCFD",
+   "style": {
+    "WebkitTextStroke": "0.1541em #000000",
+    "paintOrder": "stroke fill",
+    "strokeLinejoin": "round",
+    "textShadow": "none"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "mark": {
+   "colors": [
+    "#F891B8",
+    "#A8FFE6",
+    "#B0FFC3",
+    "#F9F98F"
+   ]
+  },
+  "emph": {
+   "font": "GmarketSansBold",
+   "size": 150,
+   "color": "#FDFCFD",
+   "style": {
+    "WebkitTextStroke": "0.1541em #000000",
+    "paintOrder": "stroke fill",
+    "textShadow": "none"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "cont": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": ""
+  },
+  "speakers": {
+   "narr": {
+    "font": "Cafe24Ohsquare",
+    "size": 74.3,
+    "text": {
+     "color": "#F5FF16",
+     "style": {
+      "WebkitTextStroke": "0.1346em #000000",
+      "fontStyle": "italic"
+     }
+    },
+    "place": {
+     "y": 64.9,
+     "bench": "나레 잉크 y1195~1290(편마다 1223~1255)"
+    },
+    "enter": ""
+   },
+   "orig": {
+    "enter": ""
+   }
+  },
+  "variants": {},
+  "stickers": {},
+  "bench": "channel/mantem/줄판독(6편 원음 93·나레 24줄)·스타일분석.md §1 · 렌더 실측 맞춤(tools/caption_pack/check_kal_new_packs.py — 벤치 프레임 같은 글로 렌더해 kal_analyze frame_metrics 잉크 상자 대조)",
+  "place": {
+   "y": 71.0,
+   "bench": "원음 잉크 y1321~1390(가운데 1355/1920)"
+  }
+ },
+ "itemhome": {
+  "label": "아이템홈 어그로",
+  "desc": "흰 어그로체 + 검정 테 4px · 전부 즉시",
+  "font": "SBAggroB",
+  "size": 79.4,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#FCFAFA",
+   "style": {
+    "WebkitTextStroke": "0.1008em #000000",
+    "paintOrder": "stroke fill",
+    "strokeLinejoin": "round",
+    "textShadow": "none"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "mark": {
+   "colors": [
+    "#F4F91E",
+    "#F9B4C0",
+    "#EA2634"
+   ]
+  },
+  "emph": {
+   "font": "SBAggroB",
+   "size": 150,
+   "color": "#FCFAFA",
+   "style": {
+    "WebkitTextStroke": "0.1008em #000000",
+    "paintOrder": "stroke fill",
+    "textShadow": "none"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "cont": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": ""
+  },
+  "variants": {},
+  "stickers": {},
+  "bench": "channel/itemhome/줄판독(6편 214줄) · 렌더 실측 맞춤(tools/caption_pack/check_kal_new_packs.py — 벤치 프레임 같은 글로 렌더해 kal_analyze frame_metrics 잉크 상자 대조)",
+  "place": {
+   "y": 66.3,
+   "bench": "잉크 y1228~1303(가운데 1265/1920)"
+  }
+ },
+ "annapick": {
+  "label": "안나픽 흰 고딕",
+  "desc": "흰 G마켓 굵은 글 + 검정 테 5px · 기본 즉시, 일부 줄 서서히(fade)",
+  "font": "GmarketSansBold",
+  "size": 75.6,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#FFFFFD",
+   "style": {
+    "WebkitTextStroke": "0.1323em #000000",
+    "paintOrder": "stroke fill",
+    "strokeLinejoin": "round",
+    "textShadow": "none"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "mark": {
+   "colors": [
+    "#F1FF11",
+    "#F5FF50",
+    "#A7F907"
+   ]
+  },
+  "emph": {
+   "font": "GmarketSansBold",
+   "size": 150,
+   "color": "#FFFFFD",
+   "style": {
+    "WebkitTextStroke": "0.1323em #000000",
+    "paintOrder": "stroke fill",
+    "textShadow": "none"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "cont": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": ""
+  },
+  "variants": {
+   "fade": {
+    "enter": "fade",
+    "why": "벤치 등장 fade 13.7%(18줄) — 판 배치 규칙이 고른 줄만"
+   }
+  },
+  "stickers": {},
+  "bench": "channel/annapick/줄판독(6편 원음 104·나레 19줄) · 렌더 실측 맞춤(tools/caption_pack/check_kal_new_packs.py — 벤치 프레임 같은 글로 렌더해 kal_analyze frame_metrics 잉크 상자 대조)",
+  "place": {
+   "y": 63.2,
+   "bench": "원음 잉크 가운데 y1207/1920(줄판독 중앙 — 편마다 1110~1210)"
+  }
+ },
+ "sseolpulda_a": {
+  "label": "썰풀다 자막만형",
+  "desc": "검정 스포카 굵은 글(흰 바탕 아래) · 외곽 없음 · 전부 즉시",
+  "font": "CcSpoqaHanSansNeo-Bold",
+  "size": 64.4,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#000000",
+   "style": {
+    "textShadow": "none"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "emph": {
+   "font": "CcSpoqaHanSansNeo-Bold",
+   "size": 150,
+   "color": "#000000",
+   "style": {
+    "textShadow": "none"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "cont": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": ""
+  },
+  "variants": {},
+  "stickers": {},
+  "bench": "channel/sseolpulda/줄판독(자막만 3편 18줄) · 렌더 실측 맞춤(tools/caption_pack/check_kal_new_packs.py — 벤치 프레임 같은 글로 렌더해 kal_analyze frame_metrics 잉크 상자 대조)",
+  "place": {
+   "y": 78.17,
+   "bench": "자막만형 잉크 y1468~1528(가운데 1498/1920, ZdeZ)"
+  }
+ },
+ "sseolpulda_b": {
+  "label": "썰풀다 나레형",
+  "desc": "흰 G마켓 굵은 글 + 검정 테 7px · 전부 즉시",
+  "font": "GmarketSansBold",
+  "size": 80.8,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#FFFDFD",
+   "style": {
+    "WebkitTextStroke": "0.1733em #000000",
+    "paintOrder": "stroke fill",
+    "strokeLinejoin": "round",
+    "textShadow": "none"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "mark": {
+   "colors": [
+    "#F278C9"
+   ]
+  },
+  "emph": {
+   "font": "GmarketSansBold",
+   "size": 150,
+   "color": "#FFFDFD",
+   "style": {
+    "WebkitTextStroke": "0.1733em #000000",
+    "paintOrder": "stroke fill",
+    "textShadow": "none"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "cont": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": ""
+  },
+  "variants": {},
+  "stickers": {},
+  "bench": "channel/sseolpulda/줄판독(나레 3편 48줄) · 렌더 실측 맞춤(tools/caption_pack/check_kal_new_packs.py — 벤치 프레임 같은 글로 렌더해 kal_analyze frame_metrics 잉크 상자 대조)",
+  "place": {
+   "y": 66.77,
+   "bench": "나레형 잉크 y1229~1317(가운데 1273/1920, mYxu)"
+  }
+ },
+ "hotpeople": {
+  "label": "뜨거운사람들 주아",
+  "desc": "배민 주아 검정 · 외곽 없음 · 2줄 행 간격 80 · 덩어리 세로 가운데 · 전부 즉시",
+  "font": "BMJUA",
+  "size": 74.7,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#000000",
+   "style": {
+    "textShadow": "none",
+    "lineHeight": "1.158"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "mark": {
+   "colors": [
+    "#E71D21",
+    "#F4FE01"
+   ]
+  },
+  "emph": {
+   "font": "BMJUA",
+   "size": 150,
+   "color": "#000000",
+   "style": {
+    "textShadow": "none"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "cont": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": ""
+  },
+  "variants": {},
+  "stickers": {},
+  "bench": "channel/hotpeople/줄판독(6편 156줄) · 렌더 실측 맞춤(tools/caption_pack/check_kal_new_packs.py — 벤치 프레임 같은 글로 렌더해 kal_analyze frame_metrics 잉크 상자 대조)",
+  "place": {
+   "y": 70.7,
+   "bench": "덩어리 가운데 y≈1350(1줄 1318~1376 · 2줄 1287~1425)"
+  }
+ },
+ "ititemlog_v2": {
+  "label": "잇템로그 화자색(업그레이드)",
+  "desc": "굵은 고딕 + 두꺼운 검정 테 · 화자마다 색(나레 노랑·원음 흰) · 전부 즉시 · 편 첫 나레 줄만 빨강, 그 끝 덩어리 팝+빨강 잔상 · 강조 색 후보 5개(훅 빨강 줄에도 강조가 남게)",
+  "font": "GmarketSansBold",
+  "size": 84,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#FDFCFD",
+   "style": {
+    "WebkitTextStroke": "0.24em #000000",
+    "paintOrder": "stroke fill",
+    "strokeLinejoin": "round",
+    "textShadow": "none"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "mark": {
+   "colors": [
+    "#F07A09",
+    "#E78DC3",
+    "#E23F9A",
+    "#FFFFFF",
+    "#F7EB0E"
+   ]
+  },
+  "emph": {
+   "font": "GmarketSansBold",
+   "size": 84,
+   "color": "#F07A09",
+   "style": {
+    "WebkitTextStroke": "0.24em #000000",
+    "paintOrder": "stroke fill"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "cont": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": ""
+  },
+  "speakers": {
+   "narr": {
+    "text": {
+     "color": "#F7EB0E"
+    },
+    "enter": ""
+   },
+   "orig": {
+    "enter": ""
+   }
+  },
+  "variants": {
+   "hook": {
+    "text": {
+     "color": "#E30004"
+    },
+    "enter": "",
+    "why": "훅 나레 빨강(ro1l #E30004 · aUic #DA0009) — 편 첫 나레 줄 덩어리 전부(판 설정 placement.rules.hook)"
+   },
+   "hook_pop": {
+    "text": {
+     "color": "#E30004"
+    },
+    "enter": "itlHookPop",
+    "why": "훅 줄 끝 덩어리 팝+빨강 잔상(ro1l 1.27초 · aUic 0.70초)"
+   }
+  },
+  "stickers": {},
+  "bench": "ititemlog 팩 + 강조 색 후보(표준 §11-4 ㉚): 벤치 팔레트 강조 #F07A09·#E78DC3·#E23F9A + 흰·노랑 — placement.pick_emph_color(㉒ ΔE·대비 3·LCh 30°) 통과: 나레 노랑·원음 흰 줄 = #F07A09, 훅 빨강 줄 = #E78DC3(#F07A09 는 색상각 20.6° 탈락)",
+  "place": {
+   "y": 67.34,
+   "bench": "채움 잉크 y≈1249~1338(가운데 1293/1920) — 2편 같음, 나레·원음 같은 자리"
+  }
  }
 }/*PACKS*/;
   // 효과마다 붙는 조건(관제 235) — 벤치에서 언제·어느 줄에 붙었나. 판 등록 작업자가 편마다 배치를 계산하는 근거. 코드는 읽지 않는다.

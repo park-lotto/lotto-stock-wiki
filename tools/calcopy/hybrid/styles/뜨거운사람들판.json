@@ -88,7 +88,7 @@
   }
  },
  "caption": {
-  "pack": "clean",
+  "pack": "hotpeople",
   "pack_default": {
    "narr.first": "cut",
    "narr.rest": "cut",
@@ -120,8 +120,9 @@
   "why": "push 손 상수"
  },
  "sfx_files": {
+  "whoosh": "팩01/whoosh.wav",
   "gain_db": -8,
-  "why": "효과음 미측정 — gain 손 상수"
+  "why": "효과음 종류 이름표 → 팩01 slot(whoosh→휙) — broad 후보 BzMW 4.62 '휙' 꼴 7.3kHz(스타일분석 §7) · 귀 미확인 · 종류 미확인(귀로 안 들음, 06 측정 뒤 교체) · gain −8dB = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
  },
  "placement": {
   "rules": {
@@ -526,7 +527,7 @@
  "packs": {
   "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
   "caption": {
-   "pack": "clean",
+   "pack": "hotpeople",
    "gap": [
     "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 clean same=False) → 팩요청.md 뜨거운사람들판#1(관제 235) · 그동안 'clean' 임시(stand_in)"
    ],
@@ -581,16 +582,18 @@
    "from": "등장 효과팩 off — render_bench 옛 고정값 그대로(벤치 등장 = 판 caption.pack_default·placement.rules.enter 가 정함) · 모션그래픽팩 off — 벤치 전환 {'zoomblur': 0.053} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
   },
   "sfx": {
-   "pack": null,
-   "map": {},
+   "pack": "팩01",
+   "map": {
+    "whoosh": "휙"
+   },
    "gain_db": -8,
-   "why": "효과음 미측정 — gain 손 상수",
+   "why": "효과음 종류 이름표 → 팩01 slot(whoosh→휙) — broad 후보 BzMW 4.62 '휙' 꼴 7.3kHz(스타일분석 §7) · 귀 미확인 · 종류 미확인(귀로 안 들음, 06 측정 뒤 교체) · gain −8dB = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)",
    "ncc": {
     "measured": false
    },
-   "from": "NCC 미측정(_kal/sfx_ncc.json 없음) → 지문으로 고를 수 없어 종류 이름표로 slot: whoosh→휙 · 팩 없음(종류 미측정)",
+   "from": "NCC 미측정 → 지문으로 고를 수 없어 종류 이름표로 slot: whoosh→휙 · 팩 팩01(잇템로그판과 같은 팩) — 07 채움(10-25, 02 의 '없는 종류면 멈춤' 뒤)",
    "gap": [
-    "효과음 종류 ['whoosh'] 팩 미지정 → 06 측정 뒤"
+    "종류 미확인(귀) — 06 이 소리 종류를 재면 slot 다시"
    ]
   },
   "bgm": {
