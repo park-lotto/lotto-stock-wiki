@@ -28,3 +28,4 @@
 - 2026-10-24 16:41 상태 병합 → 회귀
 - 2026-10-24 17:50 검사: url /login 로그인
 - 2026-10-24 17:50 라이브 실측: 2026-10-24 18:05 ✅ stmaker.kr 실제 구글 로그인(parklotto21) → dash_auth 쿠키 stmaker.kr · /welcome 도착 / 콜백 stmaker.kr↔duckdns 각자 / 옛 /surl/O/3068 → 302 /pay/toss
+- 2026-10-24 17:50 회귀는 검사 문구 오류(url 에 전체주소 → LIVE_BASE 뒤에 붙어 HTTP 0). 검사를 'url /login 로그인' 으로 바로잡음. 실제 로그인으로 라이브 실측 통과
