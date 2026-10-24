@@ -60,18 +60,29 @@ def channel_profile(slug: str) -> dict | None:
     return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
 
 
-def bands_for(slug: str, layout: dict | None, H: int = 1920) -> dict:
-    """capseg 띠·cutdet 창을 정하는 주인 — 프로필(손으로 정한 값) > 뜯기 layout(caption_band±CAP_PAD · window) > 없음.
-    kal.py step_frames 가 부른다. 돌려줌 {cap_band, window, why}."""
+def bands_for(slug: str, layout: dict | None, H: int = 1920, vid: str | None = None, mp4: str | None = None) -> dict:
+    """capseg 띠·cutdet 창·capseg 모드를 정하는 주인 — kal.py step_frames 가 부른다. 돌려줌 {cap_band, window, mode, why}.
+    띠: 프로필 bands{<편>} > 프로필 capseg_band(손 값) > autoband.find_band(mp4 를 주면 — 편마다 자동) > 뜯기 caption_band±CAP_PAD > 없음.
+    창: 프로필 cutdet_window > 뜯기 layout.window > 전체."""
     prof = channel_profile(slug) or {}
     lay = layout or {}
-    cb, why = prof.get("capseg_band"), []
+    mode = prof.get("capseg_mode", "color")
+    why = []
+    cb = (prof.get("bands") or {}).get(vid) if vid else None
     if cb:
-        why.append(f"capseg 띠 = profiles/{slug}.json")
+        why.append(f"capseg 띠 = profiles/{slug}.json bands[{vid}]")
+    elif prof.get("capseg_band"):
+        cb = prof["capseg_band"]
+        why.append(f"capseg 띠 = profiles/{slug}.json capseg_band(손 값)")
+    elif mp4:
+        from tools.calcopy.engine.readline_tools.autoband import find_band
+        r = find_band(mp4, mode)
+        cb = r["band"]
+        why.append(f"capseg 띠 = autoband 자동(핵 {r['core']}·{r['mask']}) — 손 값 아님, 고치면 profiles/{slug}.json bands 에")
     elif lay.get("caption_band") and len(lay["caption_band"]) == 2:
         c = lay["caption_band"]
         cb = [max(0, int(c[0]) - CAP_PAD), min(H, int(c[1]) + CAP_PAD)]
-        why.append(f"capseg 띠 = 뜯기 caption_band±{CAP_PAD}(프로필 없음 — 손 띠와 결과가 다를 수 있다)")
+        why.append(f"capseg 띠 = 뜯기 caption_band±{CAP_PAD}(프로필·mp4 없음)")
     else:
         why.append("capseg 띠 없음 → 건너뜀")
     win = prof.get("cutdet_window")
@@ -84,7 +95,7 @@ def bands_for(slug: str, layout: dict | None, H: int = 1920) -> dict:
     else:
         win = [0, H]
         why.append("cutdet 창 = 전체")
-    return {"cap_band": cb, "window": win, "why": " · ".join(why)}
+    return {"cap_band": cb, "window": win, "mode": mode, "why": " · ".join(why)}
 
 
 def sfx_ok_of(sfx_raw: dict | None, vid: str) -> list[dict]:

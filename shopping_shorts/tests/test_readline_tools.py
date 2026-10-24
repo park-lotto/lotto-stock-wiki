@@ -121,6 +121,15 @@ def test_bands_for_profile_then_layout():
     assert b["cap_band"] is None and b["window"] == [0, 1920]
 
 
+def test_autoband_finds_caption_rows(synth):
+    """합성 영상 자막 글자 행(약 1240~1360)을 핵으로 잡고, 장면 상자(300~1000)는 안 잡는다."""
+    from tools.calcopy.engine.readline_tools import autoband
+    r = autoband.find_band(synth, "color")
+    c0, c1 = r["core"]
+    assert 1180 <= c0 and c1 <= 1420 and c1 - c0 >= 40, r
+    assert r["band"][0] % 2 == 0 and (r["band"][1] - r["band"][0]) % 2 == 0
+
+
 def test_kal_step_frames_runs_capseg(synth, tmp_path, monkeypatch):
     """kal.py 흐름: 뜯기 layout 의 caption_band 로 capseg·segsheet 까지 돈다(05 뒤 연결)."""
     from tools.calcopy.engine import kal
@@ -141,7 +150,9 @@ def test_kal_step_frames_runs_capseg(synth, tmp_path, monkeypatch):
     state, out, _ = kal.step_frames(St())
     od = Path(out["dirs"]["vv"])
     lst = json.loads((od / "판독목록_vv.json").read_text(encoding="utf-8"))
-    assert (od / "seg_vv.json").exists() and lst["readline"]["band"] == [1130, 1460] and "caption_band" in lst["readline"]["bands_why"]
+    assert (od / "seg_vv.json").exists() and "autoband" in lst["readline"]["bands_why"]          # 프로필 없음 → 편마다 자동 띠
+    b0, b1 = lst["readline"]["band"]
+    assert b0 <= 1220 and b1 >= 1330 and b1 - b0 <= 400, lst["readline"]
     assert any(abs(s["t0"] - 1.0) <= 1 / FPS for s in json.loads((od / "seg_vv.json").read_text()))
 
 
@@ -351,6 +362,20 @@ _EV_OLD = Path("C:/숏템_칼카피/evenshopping/work/tone_detect.json")
 def test_reproduce_evenshopping_tone():
     P = json.loads((TOOLS / "profiles/evenshopping.json").read_text(encoding="utf-8"))["tone"]
     assert tone.tone_events(str(_EV_SRC), **P) == json.loads(_EV_OLD.read_text())["kC8fkx1Ve3Q"]
+
+
+def test_rules_only_no_state_file(tmp_path, monkeypatch):
+    """rules_only: kal_state.json 을 만들지 않고 규칙빈도만 낸다(잇템로그 줄판독 2편 사본으로)."""
+    sys.path.insert(0, str(ROOT / "tools/calcopy/engine"))
+    import kal
+    from tools.calcopy.engine.readline_tools import rules_only
+    ch = tmp_path / "channel/zz"
+    (ch / "줄판독").mkdir(parents=True)
+    for v in ("SbWTqCnleC8", "zOSpeiMw1nA"):
+        shutil.copy(ROOT / f"channel/ititemlog/줄판독/{v}.json", ch / "줄판독" / f"{v}.json")
+    monkeypatch.setattr(kal, "ROOT", tmp_path)
+    st, out, note = rules_only.rules_only("zz", "@zz", ["SbWTqCnleC8", "zOSpeiMw1nA"])
+    assert (ch / "_kal/규칙빈도.json").exists() and not (ch / "kal_state.json").exists()
 
 
 def test_no_scratchpad_reference():

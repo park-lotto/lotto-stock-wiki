@@ -743,7 +743,7 @@ def _sheets_mod():
 
 
 def frames_cmd(mp4: str, out: str, y0: int, y1: int, fps: float, max_strips: int,
-               readline: bool = True, window: tuple | None = None, cap_band: tuple | None = None) -> dict:
+               readline: bool = True, window: tuple | None = None, cap_band: tuple | None = None, cap_mode: str = "color") -> dict:
     import cv2
     import numpy as np
     S = _sheets_mod()
@@ -785,12 +785,12 @@ def frames_cmd(mp4: str, out: str, y0: int, y1: int, fps: float, max_strips: int
     if readline:   # 30fps 픽셀 실측(지시서 13 · 표준 §11 ⑫) — 줄판독 build_lr 의 입력 seg_/cut_ 과 사람 눈용 segsheet
         tall = (y1 - y0) >= 0.4 * H          # 띠가 크면 = 영상 창(kal.py step_frames 가 창을 준다), 작으면 = 자막 띠
         lst["readline"] = readline_measure(mp4, outp, cap_band or (None if tall else (y0, y1)),
-                                           window or ((y0, y1) if tall else (0, H)), W)
+                                           window or ((y0, y1) if tall else (0, H)), W, cap_mode)
     (outp / f"판독목록_{vid}.json").write_text(json.dumps(lst, ensure_ascii=False, indent=1), encoding="utf-8")
     return lst
 
 
-def readline_measure(mp4: str, outp: Path, cap_band: tuple | None, window: tuple, width: int = 1080) -> dict:
+def readline_measure(mp4: str, outp: Path, cap_band: tuple | None, window: tuple, width: int = 1080, mode: str = "color") -> dict:
     """판독 도구(engine/readline_tools) 를 부른다 — 컷 cutdet(창) · 자막 띠 capseg + 구간 시트 segsheet(자막 띠를 알 때만).
     판단은 각 도구가 한 곳에서. 자막 띠를 모르면 capseg 를 짐작 띠로 돌리지 않고 건너뛴다(--cap-band)."""
     from tools.calcopy.engine.readline_tools import capseg as _cs, cutdet as _cd, segsheet as _ss
@@ -803,10 +803,10 @@ def readline_measure(mp4: str, outp: Path, cap_band: tuple | None, window: tuple
         r["capseg"] = "건너뜀: 자막 띠 모름 — kal_analyze frames --cap-band y0,y1 로 다시"
         return r
     y0, y1 = int(cap_band[0]), int(cap_band[1])
-    segs = _cs.capseg(mp4, y0, y1, width=width)
-    (outp / f"seg_{vid}.json").write_text(json.dumps(segs, indent=0), encoding="utf-8")
+    segs = _cs.capseg(mp4, y0, y1, width=width, mode=mode)
+    (outp / f"seg_{vid}.json").write_text(json.dumps(segs, ensure_ascii=False, indent=0), encoding="utf-8")
     sh = _ss.segsheet(mp4, segs, str(outp / f"segsheet_{vid}"), y0, y1)
-    r.update({"seg": str(outp / f"seg_{vid}.json"), "n_seg": len(segs), "segsheets": sh["sheets"], "band": [y0, y1]})
+    r.update({"seg": str(outp / f"seg_{vid}.json"), "n_seg": len(segs), "segsheets": sh["sheets"], "band": [y0, y1], "mode": mode})
     return r
 
 
