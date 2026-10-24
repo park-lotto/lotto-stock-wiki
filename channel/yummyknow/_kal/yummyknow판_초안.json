@@ -82,18 +82,10 @@
     "끝": 0.03
    },
    "strong": [
-    "화자=나레 → enter=instant 195/195",
-    "자리=본문 → enter=instant 151/151",
-    "역할=본문 → enter=instant 75/75",
-    "역할=증거 → enter=instant 34/34",
-    "자리=끝 → enter=instant 29/29",
-    "역할=반전 → enter=instant 27/27",
-    "역할=공개 → enter=instant 26/26",
-    "자리=훅 → enter=instant 15/15",
-    "역할=끝 → enter=instant 13/13",
+    "자리=훅 → enter=instant 12/15",
     "역할=훅 → enter=instant 6/6",
     "화자전환 첫 덩어리=나레 → enter=instant 6/6",
-    "역할=고조 → enter=instant 5/5"
+    "역할=고조 → enter=instant 3/5"
    ]
   },
   "counted": {}
