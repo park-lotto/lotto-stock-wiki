@@ -268,6 +268,181 @@ def test_bed_contrast(tmp_path):
     assert abs(r["narr_vs_gap"] + 8.0) < 0.2, r
 
 
+# ── 2차 장치(07 요청): 구간 틀 · 나레 없는 편 · 자막 쌓기 · 제목 정렬·자간 · 둥근 창 · 컷 그림 칸 · 그림 아이콘·글로우 ──────────
+def _S2():
+    return {"lines": [{"id": "N1", "kind": "tts", "tts": "첫 줄 글.", "caps": ["첫 줄 글"]}, {"id": "O1", "kind": "orig", "src": "a.mp4", "span": [0, 1]},
+                      {"id": "N2", "kind": "tts", "tts": "둘째 줄.", "caps": ["둘째 줄"]}]}
+
+
+def _T2():
+    return {"lines": {"N1": [0.0, 1.62], "O1": [1.72, 2.72], "N2": [2.82, 4.0]}, "end": 4.3333}
+
+
+def test_frame_segments_resolve():
+    st = {"frame": {"kind": "window", "bg": [0, 0, 0], "window": [0, 400, 1080, 1080], "title": [{"px": 50}],
+                    "segments": [{"t0": 0, "t1": "#1.end", "frame": {"kind": "post", "bg": [95, 95, 95], "window": [0, 760, 1080, 1056]},
+                                  "captions": "hide", "body_text": "lines"},
+                                 {"t0": "N2.start", "t1": 99, "frame": {"kind": "full"}}]}}
+    g = RB.frame_segments(_S2(), _T2(), st)
+    assert [(x["t0"], x["t1"], x["kind"]) for x in g] == [(0.0, round(round(1.62 * FPS) / FPS, 4), "post"), (2.8333, 4.3333, "full")]
+    assert g[0]["frame"]["title"] == [{"px": 50}] and "segments" not in g[0]["frame"]        # 판 틀 위에 깊게 덮음(목록은 대신)
+    assert g[0]["window"] == [0, 760, 1080, 1056] and g[1]["window"] == [0, 0, 1080, 1920]
+    assert g[0]["body_text"] == "첫 줄 글." and g[0]["captions"] == "hide" and g[1]["body_text"] is None
+    assert RB.frame_segments(_S2(), _T2(), {"frame": {"window": [0, 0, 1, 1]}}) == []
+    for bad in ([{"t0": 0, "t1": 2}, {"t0": 1, "t1": 3}], [{"t0": 0, "t1": "N9.end"}], [{"t0": 0, "t1": 1, "captions": "x"}], [{"t0": 2, "t1": 1}]):
+        with pytest.raises(RB.StageError):
+            RB.frame_segments(_S2(), _T2(), {"frame": {"window": [0, 0, 1, 1], "segments": bad}})
+
+
+def test_segment_switches_frame_in_render(tmp_path):
+    """구간 틀이 실제로 화면에 그려지나(ffmpeg 진짜로): 0~0.5초 = 구간 틀(바탕 회색 95·창 아래쪽), 그 뒤 = 판 틀(바탕 빨강·창 위쪽)."""
+    win = tmp_path / "win.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"color=c=0x00FF00:s=1080x600:r={FPS}:d=1", "-c:v", "libx264", "-pix_fmt",
+                    "yuv420p", str(win)], check=True, stdin=subprocess.DEVNULL)
+    st = {"frame": {"bg": [255, 0, 0], "window": [0, 200, 1080, 600], "title": [],
+                    "segments": [{"t0": 0, "t1": 0.5, "frame": {"bg": [95, 95, 95], "window": [0, 1000, 1080, 800]}}]}}
+    T = {"cuts": [{"frames": FPS}], "end": 1.0, "lines": {}}
+    out = RB.render_base({"lines": []}, T, st, {}, tmp_path, win, [])
+    fr = subprocess.run(["ffmpeg", "-v", "error", "-i", str(out), "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True,
+                        stdin=subprocess.DEVNULL).stdout
+    v = np.frombuffer(fr, np.uint8).reshape(-1, 1920, 1080, 3).astype(int)
+    a, b = v[5], v[25]                                                     # 0.17초(구간 안) · 0.83초(구간 밖)
+    assert abs(a[100, 540] - [95, 95, 95]).max() < 12 and a[1400, 540][1] > 200 and a[500, 540][1] < 150   # 구간: 회색 바탕·창 아래(초록)
+    assert b[100, 540][0] > 200 and b[500, 540][1] > 200 and b[1400, 540][0] > 200                          # 판: 빨강 바탕·창 위
+    assert int(v[14, 1400, 540][1]) > 200 and int(v[15, 1400, 540][0]) > 200                                # 경계 = 15번째 프레임(0.5초)부터 판 틀
+
+
+def test_caption_hidden_and_stack():
+    rows = [{"line": "N1", "t0": 0.0, "t1": 1.0, "text": "가"}, {"line": "N1", "t0": 1.0, "t1": 2.0, "text": "나", "chars": [1.0, 1.5]},
+            {"line": "N2", "t0": 2.0, "t1": 3.0, "text": "다"}, {"line": "N2", "t0": 3.0, "t1": 4.0, "text": "라"}]
+    h = RB.caption_hidden([dict(r) for r in rows], [{"t0": 0.0, "t1": 1.5, "captions": "hide"}])
+    assert [(r["text"], r["t0"]) for r in h] == [("다", 2.0), ("라", 3.0)]                 # 구간 안에서 시작한 덩어리는 통째로(끝 번쩍임 없음)
+    h = RB.caption_hidden([dict(r) for r in rows], [{"t0": 1.2, "t1": 2.5, "captions": "hide"}])
+    assert [(r["text"], r["t0"], r["t1"]) for r in h] == [("가", 0.0, 1.0), ("나", 1.0, 1.2), ("라", 3.0, 4.0)] and h[1]["chars"] == [1.0]
+    assert RB.caption_hidden([dict(r) for r in rows], [{"t0": 0, "t1": 9, "captions": "show"}]) == rows
+    st = {"caption": {"stack": {"lines": 2, "break": "full"}}}
+    s = RB.stack_rows([dict(r) for r in rows], st)
+    assert [r["text"] for r in s] == ["가", "가\n나", "다", "다\n라"] and "chars" not in s[1] and "place" not in s[0]
+    s = RB.stack_rows([dict(r) for r in rows], {"caption": {"stack": {"lines": 3, "break": "line", "y": 500, "pitch": 100}}})
+    assert [r["text"] for r in s] == ["가", "가\n나", "다", "다\n라"]                # 대본 줄이 바뀌면 지운다
+    assert [r["place"]["y"] for r in s] == [round(500 / 1920 * 100, 3), round(550 / 1920 * 100, 3)] * 2    # 첫 줄 제자리 = 덩어리 가운데 내림
+    assert RB.stack_rows([dict(r) for r in rows], {"caption": {}}) == rows
+    with pytest.raises(RB.StageError):
+        RB.stack_rows([dict(r) for r in rows], {"caption": {"stack": {"lines": 2, "y": 500}}})
+
+
+def test_sub_lines_timeline_no_tts():
+    """나레 없는 자막 줄(kind sub): dur·s0 그대로 시간표 — 컷은 재료 컷(w 비례), 자막은 narr 꼴."""
+    S = {"lines": [{"id": "S1", "kind": "sub", "dur": 2.0, "caps": [{"text": "가나", "s0": 0}, {"text": "다라마", "s0": 0.8}]},
+                   {"id": "S2", "kind": "sub", "dur": 1.5, "caps": ["바사", "아자차카"]}]}
+    M = {"cuts": {"S1": [{"src": "x.mp4", "ss": 1.0}], "S2": [{"src": "x.mp4", "ss": 5.0, "w": 1}, {"src": "x.mp4", "ss": 9.0, "w": 1}]}}
+    st = {"timing": {"gap_after_tts": 0.2, "tail": 0.3}}
+    T = RB.timeline(S, M, st, None, None)
+    assert T["lines"] == {"S1": [0.0, 2.0], "S2": [2.2, 3.7]}
+    assert [(r["text"], r["t0"], r["speaker"]) for r in T["rows"]] == [("가나", 0.0, "narr"), ("다라마", 0.8, "narr"), ("바사", 2.2, "narr"), ("아자차카", 2.7, "narr")]
+    assert [c["t0"] for c in T["cuts"]] == [0.0, 2.2, 3.1] and T["opos"] == []
+    with pytest.raises(RB.StageError):
+        RB.timeline({"lines": [{"id": "Z", "kind": "song"}]}, {"cuts": {}}, st, None, None)
+
+
+def test_audio_without_narration(tmp_path):
+    """나레·원음 0 인 편: 목소리 자리 무음, 배경음 크기 기준 = 판 목표 음량 — 소리가 실제로 나온다(마스터 −14 근처)."""
+    from tools.calcopy.hybrid import styles as ST
+    st = ST.load("잇템로그판")
+    T = {"end": 3.0, "lines": {}, "opos": []}
+    mix, A = RB.audio({}, {"cand_dir": str(tmp_path)}, st, T, [], {"sfx": []}, tmp_path)
+    assert A["bgm_ref"] == "target" and A["narr_lufs"] != A["narr_lufs"]
+    assert abs(A["mix"][0] - st["loudness"]["lufs"]) < 1.5, A["mix"]
+    assert RB.dur_of(mix) == pytest.approx(3.0, abs=0.05)
+
+
+def _ink_box(a, y0, y1, dark=True):
+    m = (a[y0:y1, :, :3].sum(2) < 200) if dark else (a[y0:y1, :, :3].min(2) > 200)
+    ys, xs = np.where(m)
+    return (int(xs.min()), int(ys.min()) + y0, int(xs.max()), int(ys.max()) + y0) if len(xs) else None
+
+
+def test_title_align_and_letter_spacing(tmp_path):
+    base = {"font": "Pretendard-Bold.otf", "px": 70, "center": 300, "color": "#000000", "max_w": 1000}
+    F = lambda sp: {"bg": [255, 255, 255], "window": [0, 600, 1080, 800], "title": [{**base, **sp}]}
+    S = {"title_lines": [[["너무 쉬워 안 까먹는", None]]]}
+    c = _ink_box(_png(F({}), S, tmp_path), 250, 350)
+    l = _ink_box(_png(F({"align": "left", "x": 71}), S, tmp_path), 250, 350)
+    r = _ink_box(_png(F({"align": "right", "x": 1000}), S, tmp_path), 250, 350)
+    w = _ink_box(_png(F({"letter_spacing": 6}), S, tmp_path), 250, 350)
+    assert abs(l[0] - 71) <= 2 and abs(r[2] - 1000) <= 2 and abs((c[0] + c[2]) / 2 - 540) <= 2
+    assert l[2] - l[0] == c[2] - c[0]                                        # 정렬만 바뀌고 글은 같다
+    assert (w[2] - w[0]) - (c[2] - c[0]) == pytest.approx(6 * (len("너무쉬워안까먹는") + 3 - 1), abs=4)   # 글자 사이(빈칸 포함) 10곳 × 6px
+    with pytest.raises(RB.StageError):
+        _png(F({"align": "middle"}), S, tmp_path)
+
+
+def test_window_radius_corners(tmp_path):
+    F = {"bg": [243, 243, 243], "window": [19, 541, 1022, 746], "window_radius": 60, "title": []}
+    a = _png(F, {}, tmp_path)
+    assert a[541, 19][3] == 255 and tuple(a[541, 19][:3]) == (243, 243, 243)       # 모서리 = 틀 바탕
+    assert a[541 + 8, 19 + 8][3] == 255 and a[541 + 30, 19 + 30][3] == 0 and a[541 + 60, 19 + 60][3] == 0   # 곡선 밖 모서리 = 바탕 · 안쪽 = 투명(창)
+    assert a[541, 540][3] == 0 and a[541 + 745, 540][3] == 0                         # 위·아래 가장자리 가운데 = 창
+    b = _png({**F, "window_radius": 0}, {}, tmp_path)
+    assert b[541, 19][3] == 0                                                       # 칸 없으면 옛 네모 창
+
+
+def test_pic_box_clip(tmp_path):
+    """컷 그림 칸: 창 1080×600 중 [200,100,600,400] 에만 그림, 나머지는 pic_bg 색 — 실제 조각 프레임을 본다."""
+    src = tmp_path / "s.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"color=c=0x00FF00:s=640x360:r={FPS}:d=1", "-c:v", "libx264", "-pix_fmt",
+                    "yuv420p", str(src)], check=True, stdin=subprocess.DEVNULL)
+    pb = RB.pic_box({"pic": [200, 100, 601, 401]}, (1080, 600))
+    assert pb == [200, 100, 600, 400]                                               # yuv420 짝수
+    out = tmp_path / "c.mp4"
+    RB.clip(src, 0.0, 10, [0, 0, 640, 360], (1080, 600), out, pic=pb, pic_bg=[30, 30, 200])
+    f = frames_gray(out, 1080, 600)
+    rgb = np.frombuffer(subprocess.run(["ffmpeg", "-v", "error", "-i", str(out), "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
+                                       capture_output=True, stdin=subprocess.DEVNULL).stdout, np.uint8).reshape(600, 1080, 3).astype(int)
+    assert len(f) == 10 and rgb[300, 500][1] > 200 and rgb[50, 50][2] > 170 and rgb[50, 50][1] < 60      # 칸 안 초록 · 칸 밖 파랑 바탕
+    assert rgb[300, 190][2] > 170 and rgb[300, 810][2] > 170 and rgb[300, 790][1] > 200
+    with pytest.raises(RB.StageError):
+        RB.pic_box({"pic": [600, 0, 600, 100]}, (1080, 600))
+    assert RB.pic_box({}, (1080, 600)) is None
+
+
+def test_head_image_icon_glow_stroke(tmp_path):
+    from PIL import Image
+    ic = tmp_path / "i.png"
+    Image.new("RGBA", (10, 10), (250, 10, 10, 255)).save(ic)
+    txt = {"kind": "text", "text": "맛템", "font": "Pretendard-Bold.otf", "px": 80, "color": "#FFFFFF", "cx": 540, "cy": 117}
+    P = lambda extra: {"kind": "post", "bg": [255, 255, 255], "window": [0, 760, 1080, 1056], "title": [],
+                       "post": {"head_bar": {"box": [0, 0, 1080, 234], "color": "#202020", "icons": [{**txt, **extra},
+                                                                                                        {"kind": "image", "src": str(ic), "x": 900, "y": 80, "w": 60, "h": 60}]}}}
+    plain, glow = _png(P({}), {}, tmp_path), _png(P({"glow": {"px": 8, "color": "#2BFFB0", "strength": 2.0}}), {}, tmp_path)
+    assert tuple(plain[110, 930][:3]) == (250, 10, 10)                              # 그림 아이콘 자리
+    halo = lambda a: int(((a[:234, :, 1] - a[:234, :, 0]) > 60).sum())             # 초록빛 번짐 픽셀(바탕 회색·글 흰색에는 없음)
+    assert halo(plain) == 0 and halo(glow) > 2000
+    assert _ink_box(plain, 0, 234, dark=False)[1] == _ink_box(glow, 0, 234, dark=False)[1]          # 글 잉크 자리 그대로(번짐만 밖으로)
+    stroked = _png(P({"stroke": {"px": 4, "color": "#FF0000"}}), {}, tmp_path)
+    assert int(((stroked[:234, :, 0] > 200) & (stroked[:234, :, 1] < 60)).sum()) > int(((plain[:234, :, 0] > 200) & (plain[:234, :, 1] < 60)).sum()) + 500
+    with pytest.raises(RB.StageError):
+        _png({**P({}), "post": {"head_bar": {"box": [0, 0, 1080, 234], "color": "#202020", "icons": [{"kind": "emoji"}]}}}, {}, tmp_path)
+
+
+def test_logo_glow(tmp_path):
+    LG = {"text": "신박리포트", "font": "Pretendard-ExtraBold.otf", "px": 72, "x": 225, "y": 275, "rgba": [0, 0, 0, 255], "stroke": 0}
+    F = lambda lg: {"bg": [243, 243, 243], "window": [19, 541, 1022, 746], "title": [], "logo": lg}
+    a, b = _png(F(LG), {}, tmp_path), _png(F({**LG, "glow": {"px": 6, "color": "#FFD27A", "strength": 1.5}}), {}, tmp_path)
+    warm = lambda x: int(((x[200:450, :, 0] - x[200:450, :, 2]) > 40).sum())
+    assert warm(a) == 0 and warm(b) > 1500
+
+
+def test_devices_marker_second_round():
+    st = {"frame": {"window": [0, 0, 1, 1]}, "caption": {"stack": {"lines": 2}}}
+    T = {"cuts": [{"pic": [0, 0, 10, 10]}, {}]}
+    g = [{"t0": 0.0, "t1": 1.5, "kind": "post", "window": [0, 760, 1080, 1056], "captions": "hide"}]
+    d = RB.devices(st, [], None, g, T, 0)
+    assert d["segments"] == [{"t0": 0.0, "t1": 1.5, "kind": "post", "window": [0, 760, 1080, 1056], "captions": "hide"}]
+    assert d["caption_stack"] == {"lines": 2} and d["pic_cuts"] == 1 and d["narration"] == 0
+    assert set(RB.devices({"frame": {"window": [0, 0, 1, 1]}}, [], None, [], {"cuts": [{}]}, 3)) == {"transition", "duck_narr", "frame_kind"}
+
+
 # ── CLI: 실제 렌더 대조(합격 검사 1·2·3·4) ───────────────────────────────
 def _img(p):
     import cv2

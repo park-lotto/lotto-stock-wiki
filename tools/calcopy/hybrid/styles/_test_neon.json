@@ -1,0 +1,46 @@
+{
+ "name": "_test_neon",
+ "base": "썰템홈샷판",
+ "_note": "시험 판(지시서 02 2차 ⑦) — 썰템홈샷판 위에 머리띠만 손 스크립트 make_썰템홈샷.py 샘플 B(차콜 머리 210·민트 네온 채널명 GmarketSansBold 70·민트 밑줄 120×3 y170) 꼴. 번짐 px 10·strength 1.5 = 손 스크립트 출력(썰템홈샷_외관_바나나맛우유단지.png) 머리띠와 잉크 상자 ±3px·번짐 넓이 −4.5% 로 맞춘 값(10-25 실측). 판 값은 07·05(업그레이드 판) 주인.",
+ "frame": {
+  "post": {
+   "head_bar": {
+    "box": [
+     0,
+     0,
+     1080,
+     210
+    ],
+    "color": "#1C1E22",
+    "icons": [
+     {
+      "kind": "text",
+      "from": "brand",
+      "text": "썰템홈샷",
+      "font": "GmarketSansBold.otf",
+      "px": 70,
+      "color": "#DCFFF4",
+      "cx": 540,
+      "cy": 97,
+      "glow": {
+       "px": 10,
+       "color": "#28E6B4",
+       "strength": 1.5
+      }
+     }
+    ]
+   },
+   "rules": [
+    {
+     "box": [
+      480,
+      170,
+      600,
+      173
+     ],
+     "color": "#28E6B4"
+    }
+   ]
+  }
+ }
+}

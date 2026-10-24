@@ -12,7 +12,8 @@
   · 틀 그림 = frame_png() 한 곳(판 설정 frame 칸) · 마스터 = −14 LUFS 2단 loudnorm(판 설정 loudness)
 
 대본.json: slug · title_lines [[[글, 'hi'|null|'#hex'], …], …] · source_label · (comment{text,likes,from,to}) ·
-  lines[{id, kind:'tts', tts, caps[{text, key?, key_color?, object_src?} | 글]} | {id, kind:'orig', src, spans[[a,b]…] | span, caps_rel[[글, s0, s1, key?]…]}]
+  lines[{id, kind:'tts', tts, caps[{text, key?, key_color?, object_src?} | 글]} | {id, kind:'orig', src, spans[[a,b]…] | span, caps_rel[[글, s0, s1, key?]…]}
+        | {id, kind:'sub', dur, caps[{text, s0?, …} | 글]}]   ← sub = 나레 없는 자막 줄(TTS 없이 dur 초 동안 자막만 — 신박·썰풀다A·숏비타민 꼴, 관제 263 02 2차)
 재료.json: cand_dir · cuts{줄 id: [{src, ss?, crop[x,y,w,h] | 'face', w?, at?, max?, move?, see}]} · blur{src: [[x,y,w,h(,a,b)]…]}(원본에 박힌 글 흐림 — 잘라서 피하지 말고)
   tts 줄 = w(무게) 비례로 줄 칸 [시작, 다음 줄 시작) 을 나눔 · orig 줄 = at(줄 시작부터 초), ss 를 안 적으면 원음 구간에 입을 맞춘 초 · 비어 있으면 구간마다 얼굴 크롭 한 컷
 출력(work/render/): final.mp4 · timeline.json · 자막표.json(배치 결과) · render_info.json · (doc) final_sheet_1s.jpg
@@ -65,14 +66,29 @@ def spans_of(L: dict) -> list[list[float]]:
 
 
 # ── 시간표(판단 주인) ───────────────────────────────────────────────────
+LINE_KINDS = ("tts", "orig", "sub")      # sub = 나레 없는 자막 줄(dur 초) — 시각·컷은 나레 줄과 같은 길(소리만 없다)
+
+
 def gap_between(st: dict, prev: str | None, cur: str) -> float:
     T = st.get("timing") or {}
     if prev is None:
         return 0.0
     if prev == "orig" and cur == "orig" and "gap_oo" in T:
         return T["gap_oo"]
-    key = "gap_after_tts" if prev == "tts" else "gap_after_orig"
+    key = "gap_after_tts" if prev in ("tts", "sub") else "gap_after_orig"
     return T.get(key, T.get("gap", 0.1))
+
+
+def sub_cap_starts(L: dict, dur: float) -> list[float]:
+    """나레 없는 자막 줄(kind sub) 덩어리 시작(줄 시작부터 초): 덩어리에 s0 가 있으면 그것(자막 시간표 그대로), 없으면 글자 수 비례."""
+    caps = caps_of(L)
+    if caps and all(c.get("s0") is not None for c in caps):
+        return [round(float(c["s0"]), 3) for c in caps]
+    w = [max(1, nchar(c["text"])) for c in caps]
+    acc, out = 0, []
+    for x in w:
+        out.append(round(dur * acc / sum(w), 3)); acc += x
+    return out
 
 
 def narr_cap_starts(L: dict, sent: dict | None, align: dict | None, tts_char0: int) -> list[float]:
@@ -108,8 +124,21 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
     t, prev, lines, rows, opos, char0 = 0.0, None, {}, [], [], 0
     est = st.get("cps_target", 7.0)
     for L in S["lines"]:
+        if L["kind"] not in LINE_KINDS:
+            raise StageError(f"줄 {L.get('id')} kind '{L['kind']}' 모름 — {LINE_KINDS}")
         t += gap_between(st, prev, L["kind"])
-        if L["kind"] == "orig":
+        if L["kind"] == "sub":          # 나레 없는 자막 줄 — 자막 시간표(dur·s0)만, 소리 없음
+            d = round(float(L["dur"]), 3)
+            lines[L["id"]] = [round(t, 3), round(t + d, 3)]
+            starts = sub_cap_starts(L, d)
+            caps = caps_of(L)
+            for j, c in enumerate(caps):
+                a = t + starts[j]
+                b = t + (starts[j + 1] if j + 1 < len(caps) else d)
+                rows.append({"line": L["id"], "j": j, "speaker": "narr", "text": c["text"], "t0": round(a, 3), "t1": round(b, 3),
+                             **{k: c[k] for k in CAP_EXTRA if c.get(k)}})
+            t += d
+        elif L["kind"] == "orig":
             t0 = t
             for k, (a, b) in enumerate(spans_of(L)):
                 opos.append({"line": L["id"], "k": k, "src": L["src"], "span": [a, b], "t0": round(t, 3), "t1": round(t + b - a, 3)})
@@ -203,37 +232,81 @@ def frame_window(F: dict) -> list[int]:
     return [0, 0, W, H] if frame_kind(F) == "full" else list(F["window"])
 
 
+def _glow(lay, G: dict):
+    """글자 층 둘레 번짐(네온·글로우) — G{px(번짐 반지름), color, strength(진하기 배수, 기본 1)}. 층 크기 그대로(여백은 부른 쪽이 둔다).
+    머리띠 채널 글·로고가 쓴다(관제 263 02 2차 ⑦ — 손 스크립트 make_썰템홈샷 민트 네온·make_맛템썰템 크림골드 네온 자리)."""
+    from PIL import Image, ImageFilter
+    a = lay.getchannel("A").filter(ImageFilter.GaussianBlur(float(G["px"])))
+    k = float(G.get("strength", 1.0))
+    if k != 1.0:
+        a = a.point(lambda v: min(255, int(v * k)))
+    g = Image.new("RGBA", lay.size, _rgb(G["color"]) + (255,))
+    g.putalpha(a)
+    return Image.alpha_composite(g, lay)
+
+
+def _spaced(dl, xy, text, f, ls: float, **kw) -> float:
+    """글을 그린다 — ls(자간 px, 글자 사이 더 띄우기)가 0 이면 한 번에(옛 그림 그대로), 아니면 글자마다. 반환 = 그린 폭(끝 자간 뺌)."""
+    if not ls:
+        dl.text(xy, text, font=f, **kw)
+        return f.getlength(text)
+    x = xy[0]
+    for ch in text:
+        dl.text((x, xy[1]), ch, font=f, **kw)
+        x += f.getlength(ch) + ls
+    return x - xy[0] - (ls if text else 0)
+
+
+def _text_w(f, text: str, ls: float) -> float:
+    return f.getlength(text) + (ls * (len(text) - 1) if ls and text else 0)
+
+
 def _draw_text(im, T: dict, text: str):
-    """한 줄 글(게시글 작성자·조회수·본문): font·px·color · x(왼쪽 x) 또는 cx(가운데 x) · cy(잉크 가운데 y) 또는 ink_top ·
-    word_spacing(어절 사이 더 띄우기 px) · max_w(넘치면 px 줄임)."""
+    """한 줄 글(게시글 작성자·조회수·본문·머리띠 채널 글): font·px·color · x(왼쪽 x) 또는 cx(가운데 x) · cy(잉크 가운데 y) 또는 ink_top ·
+    word_spacing(어절 사이 더 띄우기 px) · letter_spacing(글자 사이 px, 음수 = 좁힘) · max_w(넘치면 px 줄임) ·
+    선택 stroke{px,color}(외곽선) · glow{px,color,strength}(번짐). 자리(x·cx·cy·ink_top)는 글자 잉크 기준 — 번짐은 밖으로 붙는다."""
     from PIL import Image, ImageDraw
     if not text:
         return
     px = float(T["px"])
     ws = float(T.get("word_spacing", 0))
+    ls = float(T.get("letter_spacing", 0))
     words = text.split(" ")
     while True:
         f = _font(T["font"], px)
-        sp = f.getlength(" ") + ws
-        tw = sum(f.getlength(w_) for w_ in words) + sp * (len(words) - 1)
+        sp = f.getlength(" ") + ws + (2 * ls if ls else 0)
+        tw = sum(_text_w(f, w_, ls) for w_ in words) + sp * (len(words) - 1)
         if tw <= T.get("max_w", W) or px <= 20:
             break
         px -= 2
     asc, desc = f.getmetrics()
-    lay = Image.new("RGBA", (int(tw) + 8, asc + desc + 8), (0, 0, 0, 0))
+    SK, G = T.get("stroke") or {}, T.get("glow")
+    sw = int(SK.get("px", 0))
+    pad = 4 + sw + (int(math.ceil(3 * float(G["px"]))) if G else 0)       # 칸 없으면 4 = 옛 그림 그대로
+    lay = Image.new("RGBA", (int(tw) + 2 * pad, asc + desc + 2 * pad), (0, 0, 0, 0))
     dl = ImageDraw.Draw(lay)
-    xx = 4
+    xx = pad
     col = _rgb(T.get("color", "#000000")) + (255,)
+    kw = {"fill": col, **({"stroke_width": sw, "stroke_fill": _rgb(SK.get("color", "#000000")) + (255,)} if sw else {})}
     for w_ in words:
-        dl.text((xx, 4), w_, font=f, fill=col)
-        xx += f.getlength(w_) + sp
+        _spaced(dl, (xx, pad), w_, f, ls, **kw)
+        xx += _text_w(f, w_, ls) + sp
     bb = lay.getbbox()
     if not bb:
         return
-    lay = lay.crop(bb)
-    left = int(T["x"]) if "cx" not in T else int(T["cx"]) - lay.size[0] // 2
-    top = int(T["ink_top"]) if "ink_top" in T else int(T["cy"]) - lay.size[1] // 2
-    im.alpha_composite(lay, (left, top))
+    if G:
+        lay = _glow(lay, G)
+        gb = lay.getbbox()
+        lay = lay.crop(gb)
+        off = (gb[0] - bb[0], gb[1] - bb[1])          # 자리는 잉크 기준 — 번짐만큼 비켜 붙인다
+        iw, ih = bb[2] - bb[0], bb[3] - bb[1]
+    else:
+        lay = lay.crop(bb)
+        off = (0, 0)
+        iw, ih = lay.size
+    left = int(T["x"]) if "cx" not in T else int(T["cx"]) - iw // 2
+    top = int(T["ink_top"]) if "ink_top" in T else int(T["cy"]) - ih // 2
+    im.alpha_composite(lay, (left + off[0], top + off[1]))
 
 
 def _draw_rect(im, box, color, fade=None, radius=0):
@@ -259,6 +332,17 @@ def _draw_rect(im, box, color, fade=None, radius=0):
     im.alpha_composite(lay, (x0, y0))
 
 
+def _paste_image(im, src, x, y, w, h):
+    """그림 한 장(PNG 투명 그대로)을 [x,y,w,h] 에 늘려 붙인다 — 머리띠 그림 아이콘(관제 263 02 2차 ⑦). src = 저장소 상대 또는 절대 경로."""
+    from PIL import Image
+    p = Path(src)
+    p = p if p.is_absolute() else ROOT / p
+    if not p.exists():
+        raise StageError(f"그림 아이콘 파일 없음: {p}")
+    m = Image.open(p).convert("RGBA").resize((int(w), int(h)), Image.LANCZOS)
+    im.alpha_composite(m, (int(x), int(y)))
+
+
 def _draw_post(im, P: dict, S: dict):
     """게시글형 틀(B1): head_bar{box,color,icons[bars|search|text]} · rules[{box,color}](가는 줄) · author_line ·
     body_box{box,color,fade,radius,rules,text} · views_line · meme_slot{box[x,y,w,h]}.
@@ -280,8 +364,12 @@ def _draw_post(im, P: dict, S: dict):
                 cx, cy, r = ic["x"] + 34 * k, ic["y"] + 34 * k, 28 * k
                 d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=col, width=sw)
                 d.line([ic["x"] + 54 * k, ic["y"] + 54 * k, ic["x"] + 80 * k, ic["y"] + 80 * k], fill=col, width=sw)
-            elif ic["kind"] == "text":      # 머리띠 안 채널 글(브랜드)
+            elif ic["kind"] == "text":      # 머리띠 안 채널 글(브랜드) — stroke·glow 칸이면 외곽선·네온
                 _draw_text(im, ic, SP.get(ic.get("from", "brand")) or ic.get("text"))
+            elif ic["kind"] == "image":     # 그림 아이콘(화살표·포크 접시 등 글꼴에 없는 꼴) — src 를 [x,y,w,h] 에 붙인다
+                _paste_image(im, ic["src"], ic["x"], ic["y"], ic["w"], ic["h"])
+            else:
+                raise StageError(f"머리띠 아이콘 kind '{ic['kind']}' 모름 — bars·search·text·image")
     for r in P.get("rules") or []:
         _draw_rect(im, r["box"], r["color"])
     BB = P.get("body_box")
@@ -312,17 +400,25 @@ def _draw_full(im, FL: dict | None):
         im.alpha_composite(Image.new("RGBA", (W, int(B["h"])), tuple(B["rgba"])), (0, int(B["cy"]) - int(B["h"]) // 2))
 
 
+TITLE_ALIGNS = ("center", "left", "right")
+
+
 def _title_line(im, spec: dict, segs):
-    """제목 한 줄(낱말 색·기울임·박스) 한 곳 — 선택 칸 stroke{px,color}·shadow{dx,dy,color}(게시글형 제목 외곽선·그림자).
-    두 칸이 없으면 외곽선 0·그림자 없음 = 옛 그림과 같은 픽셀(회귀 검사 대상)."""
+    """제목 한 줄(낱말 색·기울임·박스) 한 곳 — 선택 칸 stroke{px,color}·shadow{dx,dy,color}(게시글형 제목 외곽선·그림자) ·
+    align(center 기본|left|right) + x(left = 왼쪽 끝 x · right = 오른쪽 끝 x · center = 가운데 x, 기본 화면 가운데) · letter_spacing(글자 사이 px).
+    칸이 없으면 외곽선 0·그림자 없음·가운데·자간 0 = 옛 그림과 같은 픽셀(회귀 검사 대상)."""
     from PIL import Image, ImageDraw
     d = ImageDraw.Draw(im)
     segs = [(s, None) if isinstance(s, str) else (s[0], s[1] if len(s) > 1 else None) for s in segs]
     col = lambda c: _rgb(spec["hi"]) if c == "hi" else (_rgb(c) if c else _rgb(spec["color"]))
+    al = spec.get("align", "center")
+    if al not in TITLE_ALIGNS:
+        raise StageError(f"제목 align '{al}' 모름 — {TITLE_ALIGNS}")
+    ls = float(spec.get("letter_spacing", 0))
     px = spec["px"]
     while True:
         f = _font(spec["font"], px)
-        tw = sum(f.getlength(t) for t, _ in segs)
+        tw = sum(f.getlength(t) for t, _ in segs) + (ls * (sum(len(t) for t, _ in segs) - 1) if ls else 0)
         if tw <= spec.get("max_w", 1000) or px <= 50:
             break
         px -= 2
@@ -337,13 +433,12 @@ def _title_line(im, spec: dict, segs):
     if SH:
         xx = x0
         for t, c in segs:
-            dl.text((xx + SH["dx"], pad + SH["dy"]), t, font=f, fill=_rgb(SH["color"]) + (255,), stroke_width=sw,
-                    stroke_fill=_rgb(SH["color"]) + (255,))
-            xx += f.getlength(t)
+            xx += _spaced(dl, (xx + SH["dx"], pad + SH["dy"]), t, f, ls, fill=_rgb(SH["color"]) + (255,), stroke_width=sw,
+                          stroke_fill=_rgb(SH["color"]) + (255,)) + (ls if ls and t else 0)
     xx = x0
     for t, c in segs:
-        dl.text((xx, pad), t, font=f, fill=col(c) + (255,), stroke_width=sw, stroke_fill=_rgb(SK.get("color", "#000000")) + (255,))
-        xx += f.getlength(t)
+        xx += _spaced(dl, (xx, pad), t, f, ls, fill=col(c) + (255,), stroke_width=sw,
+                      stroke_fill=_rgb(SK.get("color", "#000000")) + (255,)) + (ls if ls and t else 0)
     if sh:
         lay = lay.transform(lay.size, Image.AFFINE, (1, sh, -sh * lay.size[1] * 0.5, 0, 1, 0), resample=Image.BICUBIC)
     lay = lay.crop(lay.getbbox())
@@ -355,7 +450,79 @@ def _title_line(im, spec: dict, segs):
         top = spec["center"] - lay.size[1] // 2
     else:
         top = spec["ink_top"]
-    im.alpha_composite(lay, (W // 2 - lay.size[0] // 2, int(top)))
+    if al == "left":
+        left = int(spec["x"])
+    elif al == "right":
+        left = int(spec["x"]) - lay.size[0]
+    else:
+        left = int(spec.get("x", W // 2)) - lay.size[0] // 2
+    im.alpha_composite(lay, (left, int(top)))
+
+
+def _seg_time(v, S: dict, T: dict) -> float:
+    """구간 끝 시각: 숫자(초) · '<줄 id>.start|end' · '#<k>.start|end'(k번째 줄, 1부터)."""
+    if isinstance(v, (int, float)) and not isinstance(v, bool):
+        return float(v)
+    m = re.fullmatch(r"(#?)([^.]+)\.(start|end)", str(v))
+    if not m:
+        raise StageError(f"frame.segments 시각 '{v}' 모름 — 초 · '<줄id>.start|end' · '#k.start|end'")
+    ids = [L["id"] for L in S["lines"]]
+    lid = ids[int(m.group(2)) - 1] if m.group(1) else m.group(2)
+    if lid not in T["lines"]:
+        raise StageError(f"frame.segments 줄 '{lid}' 이 대본에 없다")
+    a, b = T["lines"][lid]
+    return a if m.group(3) == "start" else b
+
+
+SEG_CAPTIONS = ("show", "hide")
+
+
+def frame_segments(S: dict, T: dict, st: dict) -> list[dict]:
+    """시간 구간별 틀(관제 263 02 2차 ①) — 판 칸 frame.segments[{t0, t1, frame{…덮을 칸}, captions show|hide, body_text lines|null, why}].
+    구간 밖은 판 frame 그대로, 구간 안은 frame 에 구간 frame 을 깊게 덮은 틀(kind·window·title… 전부 바꿀 수 있다 — 훅 카드 → 본문 틀, A/B 하이브리드).
+    body_text=lines = 그 구간에서 시작하는 나레·자막 줄 글을 게시글 본문(post.body) 자리에 — 훅 카드 가운데 흰 띠 나레 문장.
+    captions=hide = 그 구간 자막팩 자막을 그리지 않는다(훅 카드 띠가 자막을 대신). 시각은 프레임 격자에 맞춘다. 겹치면 멈춘다.
+    판단 주인 = 이 함수 하나(render_base·caption_rows·devices 가 이것만 읽는다)."""
+    F = st.get("frame") or {}
+    segs = F.get("segments") or []
+    if not segs:
+        return []
+    from tools.calcopy.hybrid import styles as ST
+    base = {k: v for k, v in F.items() if k != "segments"}
+    end = T["end"]
+    out = []
+    for i, sg in enumerate(segs):
+        t0 = _seg_time(sg.get("t0", 0.0), S, T)
+        t1 = _seg_time(sg["t1"], S, T)
+        t0 = round(round(max(0.0, t0) * FPS) / FPS, 4)
+        t1 = round(round(min(end, t1) * FPS) / FPS, 4)
+        if t1 <= t0:
+            raise StageError(f"frame.segments[{i}] 길이 0 이하({t0}~{t1})")
+        Fi = ST._merge(base, sg.get("frame") or {})
+        frame_kind(Fi)
+        cap = sg.get("captions", "show")
+        if cap not in SEG_CAPTIONS:
+            raise StageError(f"frame.segments[{i}].captions '{cap}' 모름 — {SEG_CAPTIONS}")
+        bt = sg.get("body_text")
+        text = None
+        if bt == "lines":
+            text = " ".join((L.get("tts") or " ".join(c["text"] for c in caps_of(L))).strip() for L in S["lines"]
+                            if L["kind"] != "orig" and t0 - 1e-3 <= T["lines"][L["id"]][0] < t1 - 1e-3)
+        elif bt is not None:
+            raise StageError(f"frame.segments[{i}].body_text '{bt}' 모름 — lines 또는 비움")
+        out.append({"i": i, "t0": t0, "t1": t1, "frame": Fi, "kind": frame_kind(Fi), "window": frame_window(Fi), "captions": cap,
+                    "body_text": text, "why": sg.get("why")})
+    out.sort(key=lambda g: g["t0"])
+    for a, b in zip(out, out[1:]):
+        if b["t0"] < a["t1"]:
+            raise StageError(f"frame.segments 겹침: {a['t0']}~{a['t1']} · {b['t0']}~{b['t1']}")
+    return out
+
+
+def seg_frame_png(S: dict, st: dict, sg: dict, out: Path) -> Path:
+    """구간 틀 한 장 — 구간 frame + (body_text 가 있으면) 대본 post.body 를 그 글로."""
+    S2 = S if sg.get("body_text") is None else {**S, "post": {**(S.get("post") or {}), "body": sg["body_text"]}}
+    return frame_png(S2, {**st, "frame": sg["frame"]}, out)
 
 
 def frame_png(S: dict, st: dict, out: Path) -> Path:
@@ -366,7 +533,13 @@ def frame_png(S: dict, st: dict, out: Path) -> Path:
     kind = frame_kind(F)
     im = Image.new("RGBA", (W, H), _rgb(F.get("bg", [0, 0, 0])) + (255,))
     x, y, w, h = frame_window(F)
-    im.paste((0, 0, 0, 0), (x, y, x + w, y + h))
+    rad = int(F.get("window_radius") or 0) if kind != "full" else 0
+    if rad:      # 둥근 창(관제 263 02 2차 ⑤) — 모서리는 틀 바탕이 덮는다. 4배로 그려 줄여 가장자리 부드럽게
+        m = Image.new("L", (w * 4, h * 4), 0)
+        ImageDraw.Draw(m).rounded_rectangle([0, 0, w * 4 - 1, h * 4 - 1], radius=rad * 4, fill=255)
+        im.paste(Image.new("RGBA", (w, h), (0, 0, 0, 0)), (x, y), m.resize((w, h), Image.LANCZOS))
+    else:
+        im.paste((0, 0, 0, 0), (x, y, x + w, y + h))
     if kind == "post":
         _draw_post(im, F.get("post") or {}, S)
     elif kind == "full":
@@ -394,9 +567,13 @@ def frame_png(S: dict, st: dict, out: Path) -> Path:
         spr_overlay.logo_layer(im, LG["text"])
     elif LG:
         f = _font(LG["font"], LG["px"])
-        lay = Image.new("RGBA", (W, 160), (0, 0, 0, 0))
-        ImageDraw.Draw(lay).text((LG["x"], 10), LG["text"], font=f, fill=tuple(LG["rgba"]), stroke_width=LG.get("stroke", 0), stroke_fill=tuple(LG.get("stroke_rgba", [0, 0, 0, 255])))
-        im.alpha_composite(lay, (0, LG["y"] - 10))
+        G = LG.get("glow")              # 로고 번짐(네온) — {px,color,strength} · 외곽선 = stroke(px)·stroke_rgba
+        mg = int(math.ceil(3 * float(G["px"]))) if G else 0
+        lay = Image.new("RGBA", (W, 160 + 2 * mg), (0, 0, 0, 0))
+        ImageDraw.Draw(lay).text((LG["x"], 10 + mg), LG["text"], font=f, fill=tuple(LG["rgba"]), stroke_width=LG.get("stroke", 0), stroke_fill=tuple(LG.get("stroke_rgba", [0, 0, 0, 255])))
+        if G:
+            lay = _glow(lay, G)
+        im.alpha_composite(lay, (0, LG["y"] - 10 - mg))
     out.parent.mkdir(parents=True, exist_ok=True)
     im.save(out)
     return out
@@ -543,26 +720,40 @@ def count_frames(p: Path) -> int:
                     "-of", "csv=p=0", p]).stdout.strip().split(",")[0] or 0)   # ICC side_data 면 '78,' (98 #73)
 
 
-def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, push: float = 0.0, move=None, blur=None):
+def pic_box(c: dict, win: tuple[int, int]) -> list[int] | None:
+    """컷 그림 칸(관제 263 02 2차 ⑥) — 재료.json 컷 pic[x,y,w,h](창 안 px). 없으면 None(창 가득, 옛 그림). 창 밖이면 멈춘다."""
+    pb = c.get("pic")
+    if not pb:
+        return None
+    x, y, w, h = (int(v) for v in pb)
+    if x < 0 or y < 0 or w < 16 or h < 16 or x + w > win[0] or y + h > win[1]:
+        raise StageError(f"컷 pic {pb} 가 창 {list(win)} 밖")
+    return [x, y, w - (w & 1), h - (h & 1)]          # yuv420 = 짝수 크기
+
+
+def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, push: float = 0.0, move=None, blur=None, pic=None, pic_bg=None):
+    """컷 조각 하나 — 창 크기(win) 영상. pic[x,y,w,h] 를 주면 그 칸 크기로 그리고 창 나머지는 pic_bg 색(틀 바탕)으로 채운다(컷마다 그림 칸 크기)."""
     ww, wh = win
+    tw, th = (pic[2], pic[3]) if pic else (ww, wh)
+    pad = f",pad={ww}:{wh}:{pic[0]}:{pic[1]}:color=0x{''.join(f'{v:02X}' for v in _rgb(pic_bg or [0, 0, 0]))}" if pic else ""
     if src.suffix.lower() in IMG_EXT:
         from tools.calcopy import narr_video as nv
         x, y, cw, ch = crop
-        mv = nv.still_move(src, crop, ww / wh, n / FPS, move or "in")
+        mv = nv.still_move(src, crop, tw / th, n / FPS, move or "in")
         # 사진(JPG)은 yuvj420p·pc·bt470bg 로 나온다 → 영상 조각(yuv420p·tv·bt709)과 이어 붙이면 render_base 가 그 경계에서
         # 필터를 다시 세우며 틀(제목·로고·출처 줄)을 2~4프레임 빠뜨린다(10-21 장윤주 실측: 쿠팡 사진 컷 앞뒤 2+4프레임 → 고친 뒤 0.
         # 최화정_피부 완성본에도 제목 빠짐 2+2프레임이 있었다 — 원인 대조는 안 함). 영상 조각과 같은 꼴로 맞춘다.
-        vf = (f"crop={cw}:{ch}:{x}:{y},{mv}scale={ww}:{wh}:flags=lanczos:out_range=tv:out_color_matrix=bt709,"
+        vf = (f"crop={cw}:{ch}:{x}:{y},{mv}scale={tw}:{th}:flags=lanczos:out_range=tv:out_color_matrix=bt709{pad},"
               f"format=yuv420p,setsar=1")
         run(["ffmpeg", "-y", "-v", "error", "-loop", "1", "-i", src, "-vf", vf, "-frames:v", n, "-r", FPS, *venc(16), "-pix_fmt", "yuv420p", "-color_range", "tv", "-colorspace", "bt709", out])
         return
     x, y, cw, ch = crop
     bl = blur_vf(blur, ss, n / FPS)
     pre = bl + "," if bl else ""
-    vf = f"{pre}crop={cw}:{ch}:{x}:{y},scale={ww}:{wh}:flags=lanczos,setsar=1,fps={FPS}"
+    vf = f"{pre}crop={cw}:{ch}:{x}:{y},scale={tw}:{th}:flags=lanczos,setsar=1{pad},fps={FPS}"
     if push:
-        vf = (f"{pre}crop={cw}:{ch}:{x}:{y},scale={ww * 2}:{wh * 2}:flags=lanczos,fps={FPS},"
-              f"zoompan=z='1+{push}*on/{max(1, n)}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={ww}x{wh}:fps={FPS},setsar=1")
+        vf = (f"{pre}crop={cw}:{ch}:{x}:{y},scale={tw * 2}:{th * 2}:flags=lanczos,fps={FPS},"
+              f"zoompan=z='1+{push}*on/{max(1, n)}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={tw}x{th}:fps={FPS},setsar=1{pad}")
     run(["ffmpeg", "-y", "-v", "error", "-ss", f"{ss:.3f}", "-i", src, "-an", "-vf", vf, "-frames:v", n, *venc(16), "-pix_fmt", "yuv420p", out])
 
 
@@ -770,19 +961,21 @@ def render_window(T: dict, M: dict, st: dict, R: Path, trans: list[dict] | None 
         c["frames"] = n
         src = src_dir / c["src"]
         crop = c.get("crop", "face")
+        pb = pic_box(c, (ww, wh))          # 컷마다 그림 칸 — 자르기 비율도 그 칸 비율로
+        aw, ah = (pb[2], pb[3]) if pb else (ww, wh)
         if src.suffix.lower() in IMG_EXT and not (isinstance(crop, list) and len(crop) == 4):
             # 사진 재료(쿠팡 상품 사진)는 얼굴 크롭·시작 초가 없다 — 창 비율로 가운데를 자른다(10-22 강주은: 사진 컷에 ss·crop 없음 → KeyError 'ss' 로 렌더 멈춤)
             iw, ih = probe(src)[:2]
-            cw = min(iw, round(ih * ww / wh)); chh = min(ih, round(cw * wh / ww))
+            cw = min(iw, round(ih * aw / ah)); chh = min(ih, round(cw * ah / aw))
             crop = [(iw - cw) // 2, (ih - chh) // 2, cw, chh]
             c["crop_used"] = crop
         elif crop == "face":
-            crop = face_crop(src, float(c.get("ss") or 0.0) + min(0.5, c["dur"] / 2), ww / wh)
+            crop = face_crop(src, float(c.get("ss") or 0.0) + min(0.5, c["dur"] / 2), aw / ah)
             c["crop_used"] = crop
         push = (st.get("cuts") or {}).get("push_orig" if c["kind"] == "orig" else "push_tts", 0.0)
         p = parts / f"c{k:02d}.mp4"
         clip(src, float(c.get("ss", 0.0)), n, crop, (ww, wh), p, push=float(c.get("push", push)), move=c.get("move"),
-             blur=(M.get("blur") or {}).get(c["src"]))
+             blur=(M.get("blur") or {}).get(c["src"]), pic=pb, pic_bg=c.get("pic_bg") or st["frame"].get("bg"))
         got = count_frames(p)
         if got != n:      # 모자라면 뒤 컷이 전부 앞당겨지고 끝이 멈춘다 — 조용히 넘기지 않는다
             raise StageError(f"컷 조각 프레임 모자람: {c['line']} {c['src']}@{c.get('ss')} 계획 {n} · 실제 {got}")
@@ -822,6 +1015,40 @@ def meme_overlays(placed: dict) -> list[dict]:
     return out
 
 
+def _seg_on(g: dict) -> str:
+    """구간 켜짐 식 — [t0, t1) 반 프레임 앞당긴 경계(경계 프레임은 뒤 구간 것)."""
+    e = 0.5 / FPS
+    return f"gte(t,{g['t0'] - e:.4f})*lt(t,{g['t1'] - e:.4f})"
+
+
+def seg_layers(S: dict, st: dict, segs: list[dict], R: Path, ins: list, base_win, end: float) -> str:
+    """구간 틀 합성 식(입력 0 = 검정 바탕 · 1 = 창 영상 · 2 = 판 틀) → 끝 이름 [b]. 구간 밖 = 판 창 자리·판 틀,
+    구간 안 = 구간 창 자리(크기가 다르면 창 영상을 채워 자른다 — 창 하나를 다시 굽지 않는다)·구간 틀. ins 에 구간 틀 PNG 입력을 덧붙인다."""
+    x, y, ww, wh = base_win
+    off = "not(" + "+".join(_seg_on(g) for g in segs) + ")"
+    fc = [f"[1:v]split={len(segs) + 1}" + "".join(f"[w{i}]" for i in range(len(segs) + 1)),
+          f"[0:v][w0]overlay={x}:{y}:shortest=0:enable='{off}'[a0]"]
+    last = "a0"
+    for i, g in enumerate(segs, 1):
+        sx, sy, sw, sh = g["window"]
+        src = f"w{i}"
+        if (sw, sh) != (ww, wh):
+            fc.append(f"[w{i}]scale={sw}:{sh}:force_original_aspect_ratio=increase:flags=lanczos,crop={sw}:{sh},setsar=1[ws{i}]")
+            src = f"ws{i}"
+        fc.append(f"[{last}][{src}]overlay={sx}:{sy}:enable='{_seg_on(g)}'[a{i}]")
+        last = f"a{i}"
+    fc.append(f"[{last}][2:v]overlay=0:0:enable='{off}'[f0]")
+    last = "f0"
+    for i, g in enumerate(segs, 1):
+        p = seg_frame_png(S, st, g, R / f"frame_seg{i}.png")
+        k = len([a for a in ins if a == "-i"])
+        ins += ["-loop", "1", "-t", f"{end:.3f}", "-i", p]
+        fc.append(f"[{last}][{k}:v]overlay=0:0:enable='{_seg_on(g)}'[f{i}]")
+        last = f"f{i}"
+    fc.append(f"[{last}]null[b]")
+    return ";".join(fc)
+
+
 def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, trans: list[dict] | None = None, name: str = "base.mp4") -> Path:
     """틀 + 창 + 댓글 카드 + 짤 + 흰 번쩍임(자막 없는 바탕). 번쩍임 = 전환 목록(transitions_of) kind=flash — 화면 전체.
     짤 = 배치가 검출로 자리를 받은 meme 스티커(자막팩은 짤을 안 그린다 — 여기 한 곳)."""
@@ -831,13 +1058,18 @@ def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, tr
     n = sum(c["frames"] for c in T["cuts"])
     end = n / FPS
     ins = ["-f", "lavfi", "-i", f"color=c=black:s={W}x{H}:r={FPS}:d={end:.3f}", "-i", win, "-loop", "1", "-t", f"{end:.3f}", "-i", png]
-    fc = f"[0:v][1:v]overlay={x}:{y}:shortest=0[a];[a][2:v]overlay=0:0[b]"
+    segs = frame_segments(S, T, st)
+    if not segs:
+        fc = f"[0:v][1:v]overlay={x}:{y}:shortest=0[a];[a][2:v]overlay=0:0[b]"
+    else:
+        fc = seg_layers(S, st, segs, R, ins, (x, y, ww, wh), end)
     last = "b"
     C = placed.get("comment")
     if C:
         cw, ch = comment_png(C, F["comment"]["px"], R / "comment.png")
+        k = len([a for a in ins if a == "-i"])
         ins += ["-loop", "1", "-t", f"{end:.3f}", "-i", R / "comment.png"]
-        fc += f";[b][3:v]overlay={(W - cw) // 2}:{F['comment']['bottom'] - ch}:enable='between(t,{C['t0']:.3f},{C['t1']:.3f})'[c]"
+        fc += f";[b][{k}:v]overlay={(W - cw) // 2}:{F['comment']['bottom'] - ch}:enable='between(t,{C['t0']:.3f},{C['t1']:.3f})'[c]"
         last = "c"
     for j, m in enumerate(meme_overlays(placed)):
         k = len([a for a in ins if a == "-i"])
@@ -860,8 +1092,64 @@ def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, tr
 
 
 # ── 자막(자막팩 길) ──────────────────────────────────────────────────────
-def caption_rows(placed: dict, st: dict) -> list[dict]:
-    """배치 결과 → 자막팩 견본(check_bench_packs.rows_to_timeline) 공통 줄 꼴. 타이핑 덩어리는 글자 시각(판 caption.typing_cps)."""
+STACK_BREAKS = ("full", "line")
+
+
+def stack_rows(rows: list[dict], st: dict) -> list[dict]:
+    """자막 쌓기(관제 263 02 2차 ③ — 누적형 방구석·맛템·썰템쇼): 판 칸 caption.stack{lines(2~3), break full|line}.
+    덩어리마다 앞 덩어리 밑에 한 줄씩 덧붙여(글 = '앞줄\n새줄') lines 줄이 차면 다음 덩어리에서 페이지를 지우고 새로 시작.
+    break=line 이면 대본 줄(문장)이 바뀔 때도 지운다(맛템: 문장 단위 누적). 칸 없으면 그대로(한 줄 교체, 옛 그림).
+    y(첫 줄 가운데 px)·pitch(줄 간격 px)를 적으면 첫 줄이 제자리에 서고 새 줄이 밑으로 붙는다 — 자막팩은 여러 줄 덩어리를 가운데 기준으로
+    세우므로(10-25 실측: clean 팩 place y = 덩어리 가운데) 쌓인 줄 수 k 마다 place y = y + (k−1)·pitch/2. 안 적으면 팩 자리(덩어리 가운데 기준).
+    쌓인 줄의 타이핑 글자 시각은 버린다(새 줄만 치는 표현은 자막팩 몫 — 벤치 셋 다 typing 0)."""
+    SK = (st.get("caption") or {}).get("stack")
+    if not SK:
+        return rows
+    n = int(SK.get("lines", 1))
+    brk = SK.get("break", "full")
+    if brk not in STACK_BREAKS or not 2 <= n <= 4 or (SK.get("y") is None) != (SK.get("pitch") is None):
+        raise StageError(f"caption.stack {SK} — lines 2~4 · break {STACK_BREAKS} · y·pitch 는 짝")
+    page, prev = [], None
+    for r in rows:
+        if len(page) >= n or (brk == "line" and prev is not None and r["line"] != prev):
+            page = []
+        page.append(r["text"])
+        r["text"] = "\n".join(page)
+        r["stack"] = len(page)
+        if SK.get("y") is not None:
+            r["place"] = {"x": 50, "y": round((float(SK["y"]) + (len(page) - 1) * float(SK["pitch"]) / 2) / H * 100, 3)}
+        if len(page) > 1:
+            r.pop("chars", None)
+        prev = r["line"]
+    return rows
+
+
+def caption_hidden(rows: list[dict], segs: list[dict]) -> list[dict]:
+    """구간 틀 captions=hide 구간의 자막을 뺀다(frame_segments 가 주인) — 구간 안에서 **시작한** 덩어리는 통째로 뺀다(그 말은 훅 카드 띠가 대신했다.
+    끝만 잘라 남기면 구간 끝에 몇 프레임 번쩍 뜬다 — 10-25 _test_hook 실측 3.533~3.607초 2프레임) · 구간 앞에서 시작해 걸치면 구간 시작에서 내린다."""
+    hide = [(g["t0"], g["t1"]) for g in segs if g["captions"] == "hide"]
+    if not hide:
+        return rows
+    out = []
+    for r in rows:
+        a, b = r["t0"], r["t1"]
+        if any(h0 - 1e-3 <= a < h1 - 1e-3 for h0, h1 in hide):
+            continue
+        for h0, h1 in hide:
+            if a < h0 < b:
+                b = h0
+        if b - a < 1 / FPS:
+            continue
+        r = {**r, "t1": round(b, 3)}
+        if r.get("chars"):
+            r["chars"] = [c for c in r["chars"] if c < b]
+        out.append(r)
+    return out
+
+
+def caption_rows(placed: dict, st: dict, segs: list[dict] | None = None) -> list[dict]:
+    """배치 결과 → 자막팩 견본(check_bench_packs.rows_to_timeline) 공통 줄 꼴. 타이핑 덩어리는 글자 시각(판 caption.typing_cps).
+    segs(frame_segments) 의 captions=hide 구간은 빼고, 판 caption.stack 이면 쌓는다."""
     cps = float(st["caption"].get("typing_cps", 10.0))
     out = []
     for r in placed["rows"]:
@@ -878,7 +1166,7 @@ def caption_rows(placed: dict, st: dict) -> list[dict]:
             step = min(1.0 / cps, (b - a) * 0.85 / max(1, n))
             row["chars"] = [round(a + k * step, 3) for k in range(n)]
         out.append(row)
-    return out
+    return stack_rows(caption_hidden(out, segs or []), st)
 
 
 def snapshot(pack: str) -> dict:
@@ -927,17 +1215,22 @@ def audio(S: dict, M: dict, st: dict, T: dict, sent: list[dict], placed: dict, R
     _, nI = cat("narr")
     _, oI = cat("orig")
     og = round(nI - oI, 2) if not math.isnan(oI) and not math.isnan(nI) else 0.0      # 원음 = 나레와 같은 크기
-    ins, fc = [], []
-    for k, (p, t, kind) in enumerate(pieces):
-        ins += ["-i", p]
-        fc.append(f"[{k}:a]aresample={SR},aformat=channel_layouts=mono,volume={og if kind == 'orig' else 0}dB,adelay={int(round(t * 1000))}[p{k}]")
-    fc.append("".join(f"[p{k}]" for k in range(len(pieces))) + f"amix=inputs={len(pieces)}:normalize=0,apad,atrim=0:{end:.3f}[n]")
     voice = R / "voice.wav"
-    run(["ffmpeg", "-y", "-v", "error", *ins, "-filter_complex", ";".join(fc), "-map", "[n]", "-ar", SR, voice])
+    if pieces:
+        ins, fc = [], []
+        for k, (p, t, kind) in enumerate(pieces):
+            ins += ["-i", p]
+            fc.append(f"[{k}:a]aresample={SR},aformat=channel_layouts=mono,volume={og if kind == 'orig' else 0}dB,adelay={int(round(t * 1000))}[p{k}]")
+        fc.append("".join(f"[p{k}]" for k in range(len(pieces))) + f"amix=inputs={len(pieces)}:normalize=0,apad,atrim=0:{end:.3f}[n]")
+        run(["ffmpeg", "-y", "-v", "error", *ins, "-filter_complex", ";".join(fc), "-map", "[n]", "-ar", SR, voice])
+    else:          # 나레도 원음도 없는 편(자막 줄만) — 목소리 자리는 무음, 소리는 배경음·효과음뿐
+        run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"anullsrc=r={SR}:cl=mono", "-t", f"{end:.3f}", voice])
     B = st["bgm"]
     bgm = BGM_DIR / f"{S.get('bgm', {}).get('id') or B['id']}.mp3"
     bI = lufs(bgm)[0]
-    g = round((nI - B["db_below_voice"]) - bI, 2)
+    # 배경음 크기 기준 = 나레 크기(옛 그대로). 나레 없는 편(관제 263 02 2차 ②)은 원음 크기, 원음도 없으면 판 목표 음량(마스터가 어차피 맞춘다)
+    ref = nI if not math.isnan(nI) else (oI if not math.isnan(oI) else float(st["loudness"]["lufs"]))
+    g = round((ref - B["db_below_voice"]) - bI, 2)
     k = 10 ** (float(B.get("duck_orig_db", 0.0)) / 20)
     duck = "+".join(f"between(t,{p['t0']:.3f},{p['t1']:.3f})" for p in T["opos"]) or "0"
     vol = f"if({duck},{k:.4f},1)"
@@ -965,7 +1258,7 @@ def audio(S: dict, M: dict, st: dict, T: dict, sent: list[dict], placed: dict, R
     run(["ffmpeg", "-y", "-v", "error", *ins2, "-filter_complex", ";".join(fc2), "-map", "[o]", "-ar", SR, raw])
     mix = R / "mix.wav"
     loud(raw, mix, st["loudness"])
-    return mix, {"narr_lufs": nI, "orig_lufs": oI, "orig_gain": og, "bgm_gain": g, "mix": lufs(mix),
+    return mix, {"narr_lufs": nI, "orig_lufs": oI, "orig_gain": og, "bgm_gain": g, "bgm_ref": "narr" if not math.isnan(nI) else ("orig" if not math.isnan(oI) else "target"), "mix": lufs(mix),
                  "duck_narr_db": dn, "bed": bed_contrast(bed, narr_spans, [[p["t0"], p["t1"]] for p in T["opos"]], end)}
 
 
@@ -1064,13 +1357,24 @@ def plan_rows(S: dict, T: dict, st: dict, locate=None) -> dict:
     return placed
 
 
-def devices(st: dict, trans: list[dict], A: dict | None = None) -> dict:
-    """render_info.devices 표식(지시서 02 → 04 품질 관문이 읽는다): 전환 종류별 개수 · 나레 덕킹 dB·실측 · 틀 종류."""
+def devices(st: dict, trans: list[dict], A: dict | None = None, segs: list[dict] | None = None, T: dict | None = None,
+            n_narr: int | None = None) -> dict:
+    """render_info.devices 표식(지시서 02 → 04 품질 관문이 읽는다): 전환 종류별 개수 · 나레 덕킹 dB·실측 · 틀 종류 ·
+    (2차) 구간 틀 · 자막 쌓기 · 컷 그림 칸 수 · 나레 줄 수(0 = 나레 없는 편). 2차 칸은 값이 있을 때만 붙는다(장치 안 켠 판 표식 그대로)."""
     from collections import Counter
     TR = (st.get("cuts") or {}).get("transition") or {}
-    return {"transition": {"kinds_set": TR.get("kinds") or {"cut": 1.0}, "drawn": dict(Counter(e["kind"] for e in trans)), "n": len(trans)},
-            "duck_narr": {"db": float((st.get("bgm") or {}).get("duck_narr_db") or 0.0), "bed": (A or {}).get("bed")},
-            "frame_kind": frame_kind(st["frame"])}
+    d = {"transition": {"kinds_set": TR.get("kinds") or {"cut": 1.0}, "drawn": dict(Counter(e["kind"] for e in trans)), "n": len(trans)},
+         "duck_narr": {"db": float((st.get("bgm") or {}).get("duck_narr_db") or 0.0), "bed": (A or {}).get("bed")},
+         "frame_kind": frame_kind(st["frame"])}
+    if segs:
+        d["segments"] = [{"t0": g["t0"], "t1": g["t1"], "kind": g["kind"], "window": g["window"], "captions": g["captions"]} for g in segs]
+    if (st.get("caption") or {}).get("stack"):
+        d["caption_stack"] = st["caption"]["stack"]
+    if T and any(c.get("pic") for c in T["cuts"]):
+        d["pic_cuts"] = sum(1 for c in T["cuts"] if c.get("pic"))
+    if n_narr == 0:
+        d["narration"] = 0
+    return d
 
 
 def render_marks(style_name: str, renderer_file: str | Path) -> dict:
@@ -1097,7 +1401,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     R = work / "render"; R.mkdir(parents=True, exist_ok=True)
     if plan_only:
         sm = align = None
-        if tts:      # 계획 때 진짜 목소리 길이로(10-22 선우용여: 어림으로 통과 → 렌더에서 '컷이 원본 샷보다 길다' 2번·완성본 길이 넘침으로 렌더 3번). 합성은 캐시 — 렌더가 그대로 쓴다
+        if tts and any(l["kind"] == "tts" for l in S["lines"]):      # 계획 때 진짜 목소리 길이로(10-22 선우용여: 어림으로 통과 → 렌더에서 '컷이 원본 샷보다 길다' 2번·완성본 길이 넘침으로 렌더 3번). 합성은 캐시 — 렌더가 그대로 쓴다
             tts_S = {**S, "lines": [l for l in S["lines"] if l["kind"] == "tts"]}
             full, align = RI.tts_once(tts_S, R, log)
             sent, _, _ = RI.make_sentences(tts_S, full, R, log, align=align)
@@ -1118,8 +1422,12 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
             raise StageError(msg)
         return {"timeline": T, "placement": placed, "length": length, "over": msg}
     tts_S = {**S, "lines": [l for l in S["lines"] if l["kind"] == "tts"]}
-    full, align = RI.tts_once(tts_S, R, log)
-    sent, tempo, _ = RI.make_sentences(tts_S, full, R, log, align=align)
+    if tts_S["lines"]:
+        full, align = RI.tts_once(tts_S, R, log)
+        sent, tempo, _ = RI.make_sentences(tts_S, full, R, log, align=align)
+    else:           # 나레 없는 편(관제 263 02 2차 ②) — TTS 안 부른다(돈 0). 자막 줄(kind sub) 시간표 + 원음 + 배경음·효과음
+        align, sent, tempo = None, [], None
+        log("[나레 없음] tts 줄 0 — TTS 건너뜀, 자막 시간표(sub)·원음·배경음·효과음만")
     sm = {s["id"]: s for s in sent}
     T = timeline(S, M, st, sm, align)
     over = [c for c in T["cuts"] if c["over"] > 0]
@@ -1133,7 +1441,8 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     win = window_transitions(win0, T, st, R, trans)
     base = render_base(S, T, st, placed, R, win, trans)
     T["end"] = round(sum(c["frames"] for c in T["cuts"]) / FPS, 4)
-    rows = caption_rows(placed, st)
+    segs = frame_segments(S, T, st)
+    rows = caption_rows(placed, st, segs)
     cap = burn_captions(base, rows, st, R, T["end"])
     mix, A = audio(S, M, st, T, sent, placed, R)
     final = R / "final.mp4"
@@ -1150,12 +1459,13 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     jsave(R / "timeline.json", T)
     tab = {"_note": f"배치 결과 — placement.place(판 설정 {style_name}) · 시각은 final.mp4 기준 초", "pack": st["caption"]["pack"], "rows": rows,
            "sfx": placed["sfx"], "flashes": placed["flashes"], "transitions": trans, "memes": meme_overlays(placed), "comment": placed.get("comment"),
+           **({"segments": [{k: g[k] for k in ("t0", "t1", "kind", "window", "captions", "body_text")} for g in segs]} if segs else {}),
            "log": placed["log"], "check": chk}
     jsave(R / "자막표.json", tab)
     jsave(doc / "자막표.json", tab)
     info = {"made_by": "tools/calcopy/hybrid/render_bench.py", "version": style_name, "tempo": tempo, "final": str(final), "final_dur": dur_of(final),
             "final_lufs": lufs(final), "audio": A, "placement_check": chk, "n_cuts": len(T["cuts"]),
-            "devices": devices(st, trans, A), **render_marks(style_name, __file__), "line_cps": RI.line_cps(sent),
+            "devices": devices(st, trans, A, segs, T, len(sent)), **render_marks(style_name, __file__), "line_cps": RI.line_cps(sent),
             "cuts_flat": [{k: c.get(k) for k in ("line", "src", "ss", "t0", "t1", "dur", "see")} for c in T["cuts"]]}
     jsave(R / "render_info.json", info)
     from tools.calcopy.engine.remake import sheet_1s

@@ -47,6 +47,24 @@
 `render_info.json` 표식: `devices{transition{kinds_set,drawn,n}, duck_narr{db,bed}, frame_kind}` · `style_sha`(판 파일 sha256) · `style_sha_effective`(_common·base 합친 설정) · `renderer_sig`(렌더러 파일@sha) · `line_cps{줄: 자/초}` — 표식 주인 `render_bench.render_marks`(itssum·jaemi 도 부른다), 품질 관문(04)이 읽는다. 자막표.json 에 `transitions`(그린 목록).
 시험 판(목록에 안 뜸): `_test_transition`(모든 경계 줌블러 200ms) · `_test_duck`(나레 −8dB) · `_test_post`(게시글형 = banggu 게시글형 훅 틀 좌표).
 
+### 2차 장치 칸(관제 263 02 2차 — 07 `_pending` 요청) — 전부 칸이 없으면 옛 그림 그대로(22판 frame_png 픽셀 차 0 · 잇템로그 ep13 렌더 base·자막·소리 md5 같음)
+
+| 칸 | 값 | 그리는 곳(render_bench) | 요청한 판(07 `_pending`) |
+|---|---|---|---|
+| `frame.segments[]` | `{t0, t1, frame{…덮을 칸}, captions show\|hide, body_text lines\|null, why}` — 시각 = 초 · `'<줄id>.start\|end'` · `'#k.start\|end'`(k번째 줄). 구간 안 틀 = 판 frame 에 구간 frame 을 깊게 덮은 것(kind·window·title·post… 전부) · `body_text:lines` = 그 구간에서 시작하는 나레·자막 줄 글을 게시글 본문(post.body) 자리에(훅 카드 흰 띠) · `captions:hide` = 그 구간 자막팩 자막 안 그림. 겹치면 멈춤 | 판단 주인 `frame_segments` → `seg_layers`(render_base — 구간 창 자리·크기가 다르면 창 영상을 채워 자른다)·`caption_hidden`·`devices.segments`·자막표 `segments` | 썰템홈샷판 hook_card · 맛템썰템판 hook_card · 썰템쇼판 · 트롯파파판 hook · 잇썸홈판·재미썸홈판 ①(A/B) |
+| `caption.stack` | `{lines 2~4, break full\|line, y?, pitch?}` — 덩어리마다 앞 줄 밑에 덧붙이고(글 '앞\n새') lines 가 차면 지움 · `break:line` = 대본 줄이 바뀌어도 지움(문장 단위) · `y`(첫 줄 가운데 px)+`pitch`(그 자막팩 줄 간격 px, 팩 실측) 를 짝으로 적으면 첫 줄이 제자리(자막팩은 여러 줄 덩어리를 가운데 기준으로 세운다 — place y 를 쌓인 줄마다 pitch/2 씩 내림) | `stack_rows`(caption_rows 끝) · `devices.caption_stack` | 썰템홈샷판 page_clear · 맛템썰템판 accumulate · 썰템쇼판 |
+| 대본 줄 `kind:"sub"` | `{id, kind:"sub", dur, caps[{text, s0?}…]}` — 나레 없는 자막 줄(TTS 안 부름). s0 = 줄 시작부터 덩어리 시작 초(없으면 글자 수 비례). 컷·자막 꼴은 나레 줄과 같은 길 | `timeline`(sub 줄) · `render`(tts 줄 0 이면 TTS 건너뜀) · `audio`(목소리 자리 무음 · 배경음 기준 = 원음 크기, 원음도 없으면 판 목표 음량 → `render_info.audio.bgm_ref`) · `devices.narration:0` | 신박판 · 도파민썰템A판 · 숏비타민c판(나레 첫 줄 뒤 원음만 = 지금 꼴로 됨) |
+| `frame.title[].align`·`x`·`letter_spacing` | `align` center(기본)\|left\|right · `x` = left 왼쪽 끝·right 오른쪽 끝·center 가운데(기본 540) — 잉크(외곽선·그림자 포함) 상자 기준 · `letter_spacing` 글자 사이 px(음수 = 좁힘) | `_title_line` | 신박판 title_align_left·props letter_spacing · 맛템썰템판 `_align_left_x` · 썰템홈샷판 title_letter_gap |
+| `frame.window_radius` | 둥근 창 모서리 px(full 은 무시) — 모서리는 틀 바탕이 덮는다(4배로 그려 줄임) | `frame_png` | 신박판 window_radius(frame.json video.radius 87) |
+| 재료 컷 `pic`·`pic_bg` | `pic[x,y,w,h]`(창 안 px, 짝수로 내림) — 그 컷만 그 칸에 그림·나머지는 `pic_bg`(없으면 frame.bg). 자르기 비율도 그 칸 비율(얼굴·사진 가운데) | `pic_box`·`clip`(scale→pad) · `render_window` · `devices.pic_cuts` | 맛템썰템판 pic_box_per_cut |
+| `post.head_bar.icons[] kind:image` | `{kind:"image", src(저장소 상대·절대), x, y, w, h}` — 그림 아이콘(글꼴에 없는 '≫'·포크 접시) | `_paste_image` | 맛템썰템판 head_icons |
+| 글 칸 `stroke`·`glow`(머리띠 text 아이콘·author_line·views_line·body_box.text) | `stroke{px,color}` 외곽선 · `glow{px(번짐 반지름), color, strength}` 네온 — 자리는 글 잉크 기준 그대로 | `_draw_text`·`_glow` | 손 스크립트 make_썰템홈샷 민트 네온·make_맛템썰템 크림골드 네온(업그레이드 판 재료) |
+| `frame.logo.glow` | 로고 번짐 `{px,color,strength}`(외곽선 = 옛 `stroke`·`stroke_rgba`) | `frame_png` 로고 | 같음 |
+
+잇썸홈판·재미썸홈판 → bench 수렴 판단(02 2차, 10-25): **아직 못 옮긴다.** 07 사유 ① A/B 두 틀 = `frame.segments` 로 틀·창 바꾸기는 된다. 남은 것 — ①' 두 구간의 **자막 그리기가 다르다**(A = calcopy_frame 스냅샷 + `narr_video.emph_png` PIL 자막, B = preset_save 프리셋 스냅샷의 가운데 자막) · bench 는 편 하나에 자막팩 스냅샷 하나(`burn_captions` → `scene_style.compose` 한 번) → 구간별 자막팩 칸이 더 필요 ② 대본 꼴(seg·pieces·mute·tts_override·tts_spans·tts_pauses) 변환기(08 flow 와 같이) ③ 소리(원음 조각 pad/gap 묶음·mute 경사·tts_override·줄별 ±10% 당김·−8.6 LUFS 마스터) 가 bench `audio` 에 없음. 셋 다 들어오기 전엔 같은 입력 bench 렌더 대조를 할 수 없다.
+
+2차 시험 판: `_test_hook`(잇템로그판 목소리 + 본문 = 썰템홈샷판 틀 · 0초~첫 줄 끝 = 방구석 훅 카드 · 자막 2줄 쌓기) · `_test_sinbak`(신박판 + 제목 왼쪽 x97·자간 −2.1 · 둥근 창 87) · `_test_neon`(썰템홈샷판 + 손 스크립트 샘플 B 민트 네온 머리띠). 시험 = `shopping_shorts/tests/test_render_bench_devices.py`(2차 11개).
+
 ## `packs` 칸 — 프리셋 = 숏템메이커 팩에서 고른 기본 선택(관제 263 지시서 11 — 표준 §10-2·§10-3)
 
 **packs 가 정본, 옛 칸(`caption.pack`·`sfx_files`·`bgm.id`·`bgm.candidates`·`placement.rules.meme.tone/pack`)은 `styles.load` 가 packs 에서 채운다**(주인 `pack_map.apply_to_style`). 판 파일에 옛 칸도 남아 있으면 같아야 한다 — 다르면 load 가 `PackError`(두 벌 불일치). 칸은 사람이 손으로 적지 않고 `py tools/calcopy/hybrid/pack_map.py <판> --write`(벤치 측정 → 팩 항목, 근거 `from`·없는 것 `gap` + `channel/<slug>/_kal/팩요청.md`).
