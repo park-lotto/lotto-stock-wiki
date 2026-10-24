@@ -148,3 +148,15 @@ def test_fit_judge_is_rubric_shell(tmp_path):
     r = MA.fit_judge([{"img": "", "piece": "x", "line": "x"}], tmp_path, MA.LLM(fake), tag="t")
     assert r[0]["score"] == 7 and seen and all(p.startswith(SF.RUBRIC.split("\n")[0]) for p in seen)
     assert not hasattr(MA, "FIT_PROMPT")
+
+
+def test_outside_source_with_burned_text_rejected(tmp_path):
+    """원본 밖 재료(보충) 샷에 덧씌운 글자가 있거나 판독을 못 했으면 채점 전 제외(text_box) — 10-25 ep13 남의 자막 두 겹 렌더."""
+    table = {"sup_/x.mp4": {"dur": 20.0, "shots": [{"i": 0, "a": 0.0, "b": 10.0}, {"i": 1, "a": 10.0, "b": 20.0}]}}
+    cand = {"src": "sup_/x.mp4", "ss": 2.0, "dur": 2.0, "t0": 0.0, "t1": 2.0, "line": "N1", "shot": "x#0", "_path": tmp_path / "x.mp4"}
+    out = {"sup_/x.mp4"}
+    MF._FACE_LOCK  # 얼굴 검사는 work=None 이면 건너뜀
+    assert "text_box" in MF.constraint_flags(cand, table, [], {}, out, None, {"x#0": True})["reject"]
+    assert "text_box" in MF.constraint_flags(cand, table, [], {}, out, None, {})["reject"]          # 판독 못 함 = 못 씀
+    assert "text_box" not in MF.constraint_flags(cand, table, [], {}, out, None, {"x#0": False})["reject"]
+    assert "text_box" not in MF.constraint_flags({**cand, "src": "d2.mp4"}, {"d2.mp4": table["sup_/x.mp4"]}, [], {}, out, None, {})["reject"]   # 원본은 안 봄

@@ -46,6 +46,9 @@ SHOT_PROMPT = """그림의 노란 번호 칸 = 원본 영상의 장면(샷) 하�
 칸마다 화면에 보이는 것을 한국어 한 줄로: 누가(사람 수·성별) · 무엇을(물건·제품 모양·색) · 어떤 상태·동작인지. 추측 금지, 보이는 것만.
 출력 JSON만: {{"shots":[{{"n":번호,"desc":"한 줄"}}]}}  (번호 {lo}~{hi})"""
 
+TEXT_PROMPT = """그림의 노란 번호 칸 = 남의 영상 장면(샷) 하나 — 처음·가운데·끝 3프레임. 영상 위에 덧씌운 글자(자막·제목·말풍선·로고 글씨)가 **한 프레임이라도** 보이면 true.
+제품 포장에 인쇄된 상표·글씨는 false. 출력 JSON만: {{"shots":[{{"n":번호,"text":true|false}}]}}  (번호 {lo}~{hi})"""
+
 RANK_PROMPT = """숏폼 편집자다. [대사 줄]마다 그 대사가 말하는 동작·상태·대상이 **화면에 보이는** 장면을 [장면 목록]에서 잘 맞는 순서로 최대 {k}개 골라라(장면 id 그대로).
 맞는 게 적으면 적게 골라도 된다. 감탄·반응 대사는 그 반응(표정·몸짓)이 보이는 장면.
 [대사 줄]
@@ -229,6 +232,41 @@ def describe_shots(table: dict, src_dir: Path, crops: dict, fdir: Path, llm, log
     return C
 
 
+def text_shots(table: dict, outside: set, src_dir: Path, crops: dict, fdir: Path, llm, log=print) -> dict:
+    """원본 밖 재료(보충) 샷마다 덧씌운 글자 유무(소넷, 시트 10칸) — {sid: True/False}. 답 없으면 그 샷은 None(= 못 씀).
+    10-25 ep13: 보충 쇼츠 36r475Iwy24 의 남의 자막('내돈 내산…', '쏙쏙 박혀있는 제형')이 우리 자막과 두 겹으로 렌더됐다 — 채점 전 제약(text_box)."""
+    from tools.calcopy.engine.material_auto import _as_int
+    from tools.calcopy.oneshot.scene_fit import _sheet
+    cp = fdir / "shot_text.json"
+    C = jload(cp) if cp.exists() else {}
+    todo = []
+    for s, v in table.items():
+        if s not in outside:
+            continue
+        for sh in v["shots"]:
+            sid = f"{Path(s).stem}#{sh['i']}"
+            k = f"{sid}|{_key(crops.get(s))}"
+            if k not in C:
+                img = strip(src_dir / s, sh["a"], sh["b"] - sh["a"], crops.get(s), fdir / "shots" / f"{Path(s).stem}_{sh['i']:03d}_{_key(crops.get(s))[:6]}.jpg")
+                todo.append({"sid": sid, "k": k, "img": str(img)})
+    for c0 in range(0, len(todo), 10):
+        ch = todo[c0:c0 + 10]
+        sp = _sheet(ch, fdir / f"text_{c0 // 10}.jpg")
+        got = {}
+        for _ in range(2):
+            r, err = llm([sp.read_bytes()], TEXT_PROMPT.format(lo=0, hi=len(ch) - 1), "ma_fit:text")
+            got.update({_as_int(x.get("n")): bool(x.get("text")) for x in (r or {}).get("shots") or [] if isinstance(x, dict) and _as_int(x.get("n")) is not None})
+            if all(j in got for j in range(len(ch))):
+                break
+        for j, it in enumerate(ch):
+            if j in got:
+                C[it["k"]] = got[j]
+            else:
+                log(f"[fit] 글자 판독 답 없음 {it['sid']} — 못 씀으로")
+        jsave(cp, C)
+    return {k.split("|")[0]: v for k, v in C.items() if k.split("|")[1] == _key(crops.get(next((s for s in table if Path(s).stem == k.split("#")[0]), None)))}
+
+
 def rank_shots(slots: list[dict], desc: dict, fdir: Path, llm, k: int = TOP_SHOTS, log=print) -> dict:
     """줄마다 후보 샷 순위(글 1회). {줄 id: [sid…]}. 점수가 아니다 — 후보 줄이기. fdir/rank.json 캐시(입력 열쇠)."""
     lines = {}
@@ -270,10 +308,10 @@ def _new_viol(base: list[dict], cand: dict, src_len: dict) -> list[str]:
     return out
 
 
-def constraint_flags(cand: dict, table: dict, fixed: list[dict], src_len: dict, outside: set, work: Path | None) -> dict:
+def constraint_flags(cand: dict, table: dict, fixed: list[dict], src_len: dict, outside: set, work: Path | None, texts: dict | None = None) -> dict:
     """채점 전 제약(표준 §12-3 ②) — 위반이면 그 이유(reject)를 적고 채점하지 않는다.
     shot_edge = 컷 처음·끝 FLASH 초 안에 원본 샷 경계(번쩍임 — 가운데서 넘는 것은 원본 편집 그대로라 허용) · src_end = 원본 끝을 넘음 · reuse = 고정 컷(원음)과 겹침·거리(quality_gate.reuse_violations_bench) ·
-    face_outside = 원본 밖 재료에 사람 얼굴(runner_ops._cut_faces) · text_box = 박힌 글자 상자(미측정 — 재료 crop 이 피한다)."""
+    face_outside = 원본 밖 재료에 사람 얼굴(runner_ops._cut_faces) · text_box = 원본 밖 재료 샷에 덧씌운 글자(text_shots — 원본은 재료 crop 이 피한다)."""
     s, ss, d = cand["src"], float(cand["ss"]), float(cand["dur"])
     fl = {"shot_edge": False, "src_end": False, "reuse": [], "face_outside": None, "text_box": None, "outside": s in outside}
     v = table.get(s)
@@ -291,12 +329,16 @@ def constraint_flags(cand: dict, table: dict, fixed: list[dict], src_len: dict, 
             except Exception as e:  # noqa: BLE001 — 못 재면 '얼굴 없음'으로 치지 않는다(미측정 = 못 씀)
                 sys.stderr.write(f"[fit] 얼굴 검사 실패 {cand['src']}@{ss}: {type(e).__name__} — 후보에서 뺌\n")
                 fl["face_outside"] = True
-    fl["reject"] = [k for k in ("shot_edge", "src_end", "face_outside") if fl.get(k)] + (["reuse"] if fl["reuse"] else [])
+    if fl["outside"]:
+        sid = cand.get("shot") or (f"{Path(s).stem}#{next((x['i'] for x in v['shots'] if x['a'] - 1e-3 <= ss < x['b']), -1)}" if v else None)
+        tb = (texts or {}).get(sid)
+        fl["text_box"] = True if tb is None else tb          # 판독 못 한 남의 샷 = 글자 있다고 친다(못 씀)
+    fl["reject"] = [k for k in ("shot_edge", "src_end", "face_outside", "text_box") if fl.get(k)] + (["reuse"] if fl["reuse"] else [])
     return fl
 
 
 def candidates(slot: dict, table: dict, ranked: list[str], src_dir: Path, crops: dict, fixed: list[dict], src_len: dict,
-               outside: set | None = None, work: Path | None = None, extra: list[dict] | None = None) -> tuple[list[dict], list[dict]]:
+               outside: set | None = None, work: Path | None = None, extra: list[dict] | None = None, texts: dict | None = None) -> tuple[list[dict], list[dict]]:
     """칸 하나의 후보 [{src, ss, dur, crop, shot, pos, from, flags}] — 사람 컷(있으면) + 순위 샷마다 가운데·처음·끝 + 보충(extra).
     제약 위반은 **점수 전에** 빼고 (rejected) 로 돌려준다. 후보 ≤ MAX_CANDS."""
     outside = outside or set()
@@ -342,7 +384,7 @@ def candidates(slot: dict, table: dict, ranked: list[str], src_dir: Path, crops:
             continue
         seen.add(k2)
         c = {**c, "dur": d, "t0": slot["t0"], "t1": slot["t1"], "line": slot["line"], "_path": src_dir / c["src"]}
-        c["flags"] = constraint_flags(c, table, fixed, src_len, outside, work)
+        c["flags"] = constraint_flags(c, table, fixed, src_len, outside, work, texts)
         if c["flags"]["reject"] and c.get("from") == "human":
             c["blocked"] = True           # 사람 컷은 제약에 걸려도 점수는 낸다(전·후 비교용) — 고르지는 않는다
             keep.append(c)
@@ -617,6 +659,7 @@ def plan(doc, work, version: str, llm=None, apply: bool = False, sign: bool = Fa
         src_len = {s: v["dur"] for s, v in table.items()}
         desc = describe_shots(table, src_dir, crops, fdir, llm, log)
         ranked = rank_shots(slots, desc, fdir, llm, log=log)
+        texts = text_shots(table, outside_all, src_dir, crops, fdir, llm, log) if outside_all else {}
         fixed = [{**s["fixed"], "ss": float(s["fixed"]["ss"])} for s in slots if s["kind"] == "orig"]
 
         def run_slot(s):
@@ -627,7 +670,7 @@ def plan(doc, work, version: str, llm=None, apply: bool = False, sign: bool = Fa
                 s["fixed_scored"] = {**f, **score([c], s, fdir / "slots" / s["id"].replace("#", "_"), llm)[0], "_path": None}
                 return s
             if "cands" not in s:
-                keep, rej = candidates(s, table, ranked.get(s["line"]), src_dir, crops, fixed, src_len, outside_all, work)
+                keep, rej = candidates(s, table, ranked.get(s["line"]), src_dir, crops, fixed, src_len, outside_all, work, texts=texts)
                 s["cands"], s["rejected"] = score(keep, s, fdir / "slots" / f"{s['id'].replace('#', '_')}_{_key(s['text'], s['piece'])}", llm), rej
             return s
         with ThreadPoolExecutor(WORKERS) as ex:
