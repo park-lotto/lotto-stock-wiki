@@ -1,3 +1,4 @@
+# 옮김: tools/calcopy/engine/readline_tools/tone.py (관제 263 지시서 13, 10-25 — 새 작업은 그쪽을 쓴다. 이 파일은 기록용으로 남김)
 # 말 위에 얹힌 지속 순음(띵·딩동) 찾기: 2.5~6kHz 각 칸(±1칸)이 주파수 주변보다 >=14dB 로 0.12초+ 유지 → 0.35초 안은 한 사건
 import sys,subprocess,numpy as np,json
 from scipy.signal import stft

@@ -24,7 +24,7 @@ if str(ROOT) not in sys.path:
 cv2 = pytest.importorskip("cv2")
 np = pytest.importorskip("numpy")
 
-from tools.calcopy.engine.readline_tools import build_lr, capseg, cutdet, px, segsheet  # noqa: E402
+from tools.calcopy.engine.readline_tools import build_lr, capseg, cutdet, measure, px, rangesheet, red, segsheet, tone  # noqa: E402
 
 TOOLS = ROOT / "tools/calcopy/engine/readline_tools"
 FPS = 30
@@ -143,6 +143,64 @@ def test_kal_step_frames_runs_capseg(synth, tmp_path, monkeypatch):
     lst = json.loads((od / "판독목록_vv.json").read_text(encoding="utf-8"))
     assert (od / "seg_vv.json").exists() and lst["readline"]["band"] == [1130, 1460] and "caption_band" in lst["readline"]["bands_why"]
     assert any(abs(s["t0"] - 1.0) <= 1 / FPS for s in json.loads((od / "seg_vv.json").read_text()))
+
+
+def test_measure_white_caption_and_cut(synth):
+    M = measure.measure(synth, *BAND)
+    assert len(M["rows"]) == 90 and M["band"] == list(BAND)
+    S = measure.summarize(M)
+    assert any(abs(c["t"] - 1.5) <= 1 / FPS for c in S["cuts"]), S["cuts"]
+    assert S["segs"] and abs(S["segs"][0]["t0"] - 1.0) <= 1 / FPS, S["segs"]     # 노랑(채도 높음)은 흰 글자가 아니다 → 1.0초부터
+
+
+def test_rangesheet_tiles(synth, tmp_path):
+    r = rangesheet.rangesheet(synth, str(tmp_path / "r.jpg"), 0.5, 1.5, 0.1, 5, 0.1)
+    assert r["tiles"] == 11 and r["shape"][1] == 5 * 108 and (tmp_path / "r.jpg").stat().st_size > 1000
+
+
+def test_tone_finds_ding(tmp_path):
+    sr = 22050
+    t = np.arange(int(sr * 3.0)) / sr
+    rng = np.random.default_rng(0)
+    x = 0.2 * rng.standard_normal(len(t)) * (0.5 + 0.5 * np.sin(2 * np.pi * 3 * t))     # 말 비슷한 넓은 잡음
+    on = (t >= 1.2) & (t < 1.7)
+    x[on] += 0.3 * np.sin(2 * np.pi * 4300 * t[on])                                       # 0.5초 4.3kHz 띵
+    wav = tmp_path / "d.wav"
+    import wave
+    with wave.open(str(wav), "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr)
+        w.writeframes((np.clip(x, -1, 1) * 32767).astype(np.int16).tobytes())
+    ev = tone.tone_events(str(wav))
+    assert len(ev) == 1 and abs(ev[0]["t"] - 1.2) <= 0.1 and 0.35 <= ev[0]["dur"] <= 0.6 and any(abs(h - 4300) <= 50 for h in ev[0]["hz"]), ev
+
+
+def test_red_tracks_mark(tmp_path):
+    mp4 = str(tmp_path / "red.mp4")
+    p = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
+                          "-c:v", "libx264", "-preset", "ultrafast", "-crf", "12", "-pix_fmt", "yuv420p", mp4], stdin=subprocess.PIPE)
+    for i in range(60):
+        f = np.full((H, W, 3), 245, np.uint8)                                              # 흰 카드
+        if i >= 30:
+            cv2.circle(f, (540, 1000), 120, (0, 0, 230), 14)                               # 1.0초부터 빨간 원
+        p.stdin.write(f.tobytes())
+    p.stdin.close()
+    assert p.wait() == 0
+    rows = red.red_track(mp4, 0.0, 2.0, 590, 1220)
+    before = [r for r in rows if r["t"] < 0.95]
+    after = [r for r in rows if r["t"] > 1.05]
+    assert before and after and all(r["box"] is None for r in before) and all(r["box"] for r in after)
+    x0, y0, x1, y1 = after[0]["box"]
+    assert abs((x0 + x1) / 2 - 540) <= 12 and abs((y0 + y1) / 2 - 1000) <= 12 and after[0]["white"] > 0.5
+
+
+_EV_SRC = Path("C:/숏템_칼카피/evenshopping/src/kC8fkx1Ve3Q.mp4")
+_EV_OLD = Path("C:/숏템_칼카피/evenshopping/work/tone_detect.json")
+
+
+@pytest.mark.skipif(not (_EV_SRC.exists() and _EV_OLD.exists()), reason="이븐쇼핑 원본·옛 산출물 없음(집 PC 전용)")
+def test_reproduce_evenshopping_tone():
+    P = json.loads((TOOLS / "profiles/evenshopping.json").read_text(encoding="utf-8"))["tone"]
+    assert tone.tone_events(str(_EV_SRC), **P) == json.loads(_EV_OLD.read_text())["kC8fkx1Ve3Q"]
 
 
 def test_no_scratchpad_reference():

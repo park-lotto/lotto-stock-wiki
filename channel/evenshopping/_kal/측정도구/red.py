@@ -1,3 +1,4 @@
+# 옮김: tools/calcopy/engine/readline_tools/red.py (관제 263 지시서 13, 10-25 — 새 작업은 그쪽을 쓴다. 이 파일은 기록용으로 남김)
 import sys,subprocess,numpy as np,cv2
 vid,t0,t1=sys.argv[1],float(sys.argv[2]),float(sys.argv[3])
 W,H=270,305
