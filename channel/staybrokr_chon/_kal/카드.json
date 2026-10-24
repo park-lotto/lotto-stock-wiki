@@ -1,0 +1,435 @@
+{
+ "slug": "staybrokr_chon",
+ "made_by": "tools/calcopy/preset_card.py build",
+ "built_at": "2026-10-24T23:49:41",
+ "bench": "스테이브로 AVo84VRq55k(촌캉스)",
+ "brand": null,
+ "brand_note": null,
+ "format": "여행쇼츠형",
+ "subformat": "숙소 체험먼저형",
+ "format_options": [],
+ "sound_style": [],
+ "engine": {
+  "style_file": "tools/travel/hotel_copy/refs/AVo84VRq55k.json(track/여행쇼핑쇼츠)",
+  "style_error": "판 파일 없음(또는 hybrid/styles 밖): tools/travel/hotel_copy/refs/AVo84VRq55k.json(track/여행쇼핑쇼츠)",
+  "renderer": "hotel_copy",
+  "entry": null,
+  "hand_scripts": [],
+  "hand_scripts_reference": [],
+  "caption_pack": null,
+  "voice": null,
+  "bgm": null
+ },
+ "sample": {
+  "line_reads": 0,
+  "line_reads_strict_errors": 0,
+  "rules_freq": false,
+  "palette": false,
+  "style_analysis": false,
+  "sfx_events": false,
+  "tteutgi": 0,
+  "min_required": 6
+ },
+ "axes": {
+  "1자막": {
+   "value": "cap_look× cap_enter× cap_emph× cap_exit×",
+   "confidence": "미측정"
+  },
+  "2제목틀": {
+   "value": null,
+   "confidence": "미측정"
+  },
+  "3전환": {
+   "value": "transition× cut_rhythm×",
+   "confidence": "미측정"
+  },
+  "4장면대사": {
+   "value": "scene_fit×",
+   "confidence": "미측정"
+  },
+  "5스토리": {
+   "value": null,
+   "confidence": "미측정"
+  },
+  "6대본언어": {
+   "value": "script× speech×",
+   "confidence": "미측정"
+  },
+  "7소리": {
+   "value": "bgm× sfx×",
+   "confidence": "미측정"
+  },
+  "8스티커짤": {
+   "value": "sticker× meme× pointer×",
+   "confidence": "미측정"
+  },
+  "9썸네일": {
+   "value": "thumb×",
+   "confidence": "미측정"
+  },
+  "10소재": {
+   "value": null,
+   "confidence": "미측정"
+  },
+  "11채널": {
+   "value": "스테이브로 AVo84VRq55k(촌캉스)",
+   "confidence": "장부"
+  }
+ },
+ "elements": {
+  "cap_look": "×",
+  "cap_enter": "×",
+  "cap_emph": "×",
+  "cap_exit": "×",
+  "transition": "×",
+  "cut_rhythm": "×",
+  "scene_fit": "×",
+  "bgm": "×",
+  "sfx": "×",
+  "meme": "×",
+  "sticker": "×",
+  "pointer": "×",
+  "thumb": "×",
+  "speech": "×",
+  "script": "×"
+ },
+ "rules": [
+  {
+   "element": "cap_look",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-staybrokr_chon",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "cap_enter",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-staybrokr_chon",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "cap_emph",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-staybrokr_chon",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "cap_exit",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-staybrokr_chon",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "transition",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-staybrokr_chon",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "cut_rhythm",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-staybrokr_chon",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "scene_fit",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-staybrokr_chon",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "bgm",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-staybrokr_chon",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "sfx",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-staybrokr_chon",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "meme",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-staybrokr_chon",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "sticker",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-staybrokr_chon",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "pointer",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-staybrokr_chon",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "thumb",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-staybrokr_chon",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "speech",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-staybrokr_chon",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "script",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-staybrokr_chon",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  }
+ ],
+ "gates": {
+  "match_first_copy": {
+   "path": null,
+   "ok": null,
+   "pass": null,
+   "fail": null
+  },
+  "upgrade": {
+   "path": null,
+   "items": null,
+   "better": null
+  },
+  "quality_gate": {
+   "path": null,
+   "ok": null
+  }
+ },
+ "member": {
+  "line_json": null,
+  "preset_name": null,
+  "flow_format": "여행형"
+ },
+ "results": {
+  "n": 0,
+  "judged_pass": 0,
+  "latest": null
+ },
+ "facts": {
+  "line_reads": 0,
+  "line_reads_strict_errors": 0,
+  "rules_freq": false,
+  "style_analysis": false,
+  "palette": false,
+  "sfx_events": false,
+  "style_file": "tools/travel/hotel_copy/refs/AVo84VRq55k.json(track/여행쇼핑쇼츠)",
+  "style_file_exists": false,
+  "renderer": "hotel_copy",
+  "caption_pack": null,
+  "caption_pack_ok": false,
+  "counted_n": null,
+  "no_why": null,
+  "hand_scripts": [],
+  "hand_scripts_reference": [],
+  "unmeasured": 15,
+  "quality_gate_ok": false,
+  "match_ok": false,
+  "eye": null,
+  "upgrade": null,
+  "member": {
+   "line_json": null,
+   "preset_name": null,
+   "flow_format": "여행형"
+  },
+  "line_json_exists": false,
+  "member_live_ok": false,
+  "results_n": 0,
+  "results_pass_n": 0,
+  "owner_pass": false
+ },
+ "inputs": {
+  "channel/결과물.json": "142ed78b2435",
+  "channel/브랜드.json": "f2ded5552699",
+  "channel/스타일.json": "3f5625b6c1a2",
+  "channel/프리셋.json": "7d8cdd70c9e9",
+  "shopping_shorts/static/caption-motions.js": "09ac4bd95b42"
+ },
+ "done": {
+  "level": "L0 미달",
+  "missing": [
+   "줄판독≥6",
+   "줄판독 strict 오류0",
+   "규칙빈도",
+   "스타일분석",
+   "팔레트",
+   "sfx_events",
+   "판파일",
+   "renderer=bench",
+   "숫자칸 why",
+   "counted≥6",
+   "자막팩",
+   "rules 미측정0",
+   "품질관문 ○",
+   "재현일치도 ○",
+   "눈검수 E1~E8",
+   "업그레이드 나아짐≥1",
+   "눈검수 E9",
+   "사장님 판정",
+   "member line.json",
+   "member preset_name",
+   "회원실측"
+  ],
+  "rule_unmeasured": 15,
+  "measure_tasks": [
+   "06-staybrokr_chon"
+  ],
+  "complete": false
+ }
+}

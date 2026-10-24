@@ -1,0 +1,1676 @@
+{
+ "slug": "starpickroom",
+ "made_by": "tools/calcopy/preset_card.py build",
+ "built_at": "2026-10-24T23:49:41",
+ "bench": "스타픽룸",
+ "brand": null,
+ "brand_note": "스타픽룸판 = 연예인레시피 채널(사장님 10-21 규칙 10) — 형식은 연예인쇼핑형 체험, 채널은 연예인레시피",
+ "format": "연예인쇼핑형",
+ "subformat": "체험형",
+ "format_options": [],
+ "sound_style": [],
+ "engine": {
+  "style_file": "tools/calcopy/hybrid/styles/스타픽룸판.json",
+  "style_error": null,
+  "renderer": "bench",
+  "entry": "tools/calcopy/hybrid/run.py <키> render --version 스타픽룸판",
+  "hand_scripts": [],
+  "hand_scripts_reference": [
+   "channel/starpickroom/hybrid/render_spr.py(옛)"
+  ],
+  "caption_pack": "starpick",
+  "voice": "미나",
+  "bgm": "otsukare_summer"
+ },
+ "sample": {
+  "line_reads": 8,
+  "line_reads_strict_errors": 486,
+  "rules_freq": true,
+  "palette": true,
+  "style_analysis": true,
+  "sfx_events": false,
+  "tteutgi": 8,
+  "min_required": 6
+ },
+ "axes": {
+  "1자막": {
+   "value": "cap_look○ cap_enter○ cap_emph○ cap_exit×",
+   "confidence": "측정"
+  },
+  "2제목틀": {
+   "value": "1줄 = 연예인 본인 말 인용·훅 구절(노랑 hi = 핵심 낱말) / 2줄 = '이름의 [보라 hi 제품]'",
+   "confidence": "판"
+  },
+  "3전환": {
+   "value": "transition× cut_rhythm○",
+   "confidence": "측정"
+  },
+  "4장면대사": {
+   "value": "scene_fit×",
+   "confidence": "미측정"
+  },
+  "5스토리": {
+   "value": [
+    "역할없음"
+   ],
+   "confidence": "눈"
+  },
+  "6대본언어": {
+   "value": "script○ speech○",
+   "confidence": "측정"
+  },
+  "7소리": {
+   "value": "bgm○ sfx○",
+   "confidence": "측정"
+  },
+  "8스티커짤": {
+   "value": "sticker○ meme○ pointer○",
+   "confidence": "측정"
+  },
+  "9썸네일": {
+   "value": "thumb×",
+   "confidence": "미측정"
+  },
+  "10소재": {
+   "value": null,
+   "confidence": "미측정"
+  },
+  "11채널": {
+   "value": "스타픽룸",
+   "confidence": "장부"
+  }
+ },
+ "elements": {
+  "cap_look": "○",
+  "cap_enter": "○",
+  "cap_emph": "○",
+  "cap_exit": "×",
+  "transition": "×",
+  "cut_rhythm": "○",
+  "scene_fit": "×",
+  "bgm": "○",
+  "sfx": "○",
+  "meme": "○",
+  "sticker": "○",
+  "pointer": "○",
+  "thumb": "×",
+  "speech": "○",
+  "script": "○"
+ },
+ "rules": [
+  {
+   "element": "cap_look",
+   "cond": "역할별",
+   "action": "팔레트 역할 7종",
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [
+    "channel/starpickroom/팔레트.json"
+   ],
+   "confidence": "픽셀",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=본문",
+   "action": "enter=instant",
+   "k": 93,
+   "n": 121,
+   "rate": 0.77,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=본문",
+   "action": "효과 붙은 등장",
+   "k": 28,
+   "n": 121,
+   "rate": 0.23,
+   "base": 0.22,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=본문",
+   "action": "enter=typing",
+   "k": 19,
+   "n": 121,
+   "rate": 0.16,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=본문",
+   "action": "enter=pop",
+   "k": 5,
+   "n": 121,
+   "rate": 0.04,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=본문",
+   "action": "enter=rainbow",
+   "k": 2,
+   "n": 121,
+   "rate": 0.02,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=본문",
+   "action": "enter=기타",
+   "k": 1,
+   "n": 121,
+   "rate": 0.01,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=본문",
+   "action": "enter=wipe",
+   "k": 1,
+   "n": 121,
+   "rate": 0.01,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=원음",
+   "action": "enter=instant",
+   "k": 95,
+   "n": 105,
+   "rate": 0.9,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=원음",
+   "action": "효과 붙은 등장",
+   "k": 10,
+   "n": 105,
+   "rate": 0.1,
+   "base": 0.22,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=원음",
+   "action": "enter=pop",
+   "k": 4,
+   "n": 105,
+   "rate": 0.04,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=원음",
+   "action": "enter=기타",
+   "k": 2,
+   "n": 105,
+   "rate": 0.02,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=원음",
+   "action": "enter=typing",
+   "k": 1,
+   "n": 105,
+   "rate": 0.01,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=원음",
+   "action": "enter=glitch",
+   "k": 1,
+   "n": 105,
+   "rate": 0.01,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=원음",
+   "action": "enter=slide",
+   "k": 1,
+   "n": 105,
+   "rate": 0.01,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=원음",
+   "action": "enter=wipe",
+   "k": 1,
+   "n": 105,
+   "rate": 0.01,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=나레",
+   "action": "효과 붙은 등장",
+   "k": 21,
+   "n": 26,
+   "rate": 0.81,
+   "base": 0.22,
+   "grade": "강",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=나레",
+   "action": "enter=typing",
+   "k": 15,
+   "n": 26,
+   "rate": 0.58,
+   "base": null,
+   "grade": "중",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=나레",
+   "action": "enter=instant",
+   "k": 5,
+   "n": 26,
+   "rate": 0.19,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=나레",
+   "action": "enter=rainbow",
+   "k": 4,
+   "n": 26,
+   "rate": 0.15,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=나레",
+   "action": "enter=기타",
+   "k": 1,
+   "n": 26,
+   "rate": 0.04,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=나레",
+   "action": "enter=pop",
+   "k": 1,
+   "n": 26,
+   "rate": 0.04,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=끝",
+   "action": "enter=instant",
+   "k": 20,
+   "n": 21,
+   "rate": 0.95,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=원음",
+   "action": "enter=instant",
+   "k": 19,
+   "n": 21,
+   "rate": 0.9,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=끝",
+   "action": "enter=기타",
+   "k": 1,
+   "n": 21,
+   "rate": 0.05,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=끝",
+   "action": "효과 붙은 등장",
+   "k": 1,
+   "n": 21,
+   "rate": 0.05,
+   "base": 0.22,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=원음",
+   "action": "enter=glitch",
+   "k": 1,
+   "n": 21,
+   "rate": 0.05,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=원음",
+   "action": "enter=slide",
+   "k": 1,
+   "n": 21,
+   "rate": 0.05,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=제3자",
+   "action": "enter=instant",
+   "k": 15,
+   "n": 15,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=제3자",
+   "action": "효과 붙은 등장",
+   "k": 0,
+   "n": 15,
+   "rate": 0.0,
+   "base": 0.22,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=훅",
+   "action": "enter=instant",
+   "k": 8,
+   "n": 13,
+   "rate": 0.62,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=훅",
+   "action": "효과 붙은 등장",
+   "k": 5,
+   "n": 13,
+   "rate": 0.38,
+   "base": 0.22,
+   "grade": "중",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=훅",
+   "action": "enter=rainbow",
+   "k": 2,
+   "n": 13,
+   "rate": 0.15,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=훅",
+   "action": "enter=glitch",
+   "k": 1,
+   "n": 13,
+   "rate": 0.08,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=훅",
+   "action": "enter=기타",
+   "k": 1,
+   "n": 13,
+   "rate": 0.08,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=훅",
+   "action": "enter=slide",
+   "k": 1,
+   "n": 13,
+   "rate": 0.08,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=나레",
+   "action": "enter=typing",
+   "k": 7,
+   "n": 11,
+   "rate": 0.64,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=나레",
+   "action": "enter=instant",
+   "k": 2,
+   "n": 11,
+   "rate": 0.18,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=나레",
+   "action": "enter=기타",
+   "k": 1,
+   "n": 11,
+   "rate": 0.09,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=나레",
+   "action": "enter=rainbow",
+   "k": 1,
+   "n": 11,
+   "rate": 0.09,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=불명",
+   "action": "enter=instant",
+   "k": 6,
+   "n": 9,
+   "rate": 0.67,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=불명",
+   "action": "enter=typing",
+   "k": 3,
+   "n": 9,
+   "rate": 0.33,
+   "base": null,
+   "grade": "중",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=불명",
+   "action": "효과 붙은 등장",
+   "k": 3,
+   "n": 9,
+   "rate": 0.33,
+   "base": 0.22,
+   "grade": "중",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=불명",
+   "action": "enter=instant",
+   "k": 3,
+   "n": 4,
+   "rate": 0.75,
+   "base": null,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=불명",
+   "action": "enter=typing",
+   "k": 1,
+   "n": 4,
+   "rate": 0.25,
+   "base": null,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=제3자",
+   "action": "enter=instant",
+   "k": 3,
+   "n": 3,
+   "rate": 1.0,
+   "base": null,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "없음",
+   "action": "꾸밈 없는 줄(plain)",
+   "k": 109,
+   "n": 155,
+   "rate": 0.7,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.pack_default",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_emph",
+   "cond": "자리=본문",
+   "action": "emph",
+   "k": 7,
+   "n": 121,
+   "rate": 0.06,
+   "base": 0.06,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.variant_for",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "화자=원음",
+   "action": "emph",
+   "k": 5,
+   "n": 105,
+   "rate": 0.05,
+   "base": 0.06,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.variant_for",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "화자=나레",
+   "action": "emph",
+   "k": 2,
+   "n": 26,
+   "rate": 0.08,
+   "base": 0.06,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.variant_for",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "자리=끝",
+   "action": "emph",
+   "k": 2,
+   "n": 21,
+   "rate": 0.1,
+   "base": 0.06,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.variant_for",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "화자=제3자",
+   "action": "emph",
+   "k": 0,
+   "n": 15,
+   "rate": 0.0,
+   "base": 0.06,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.variant_for",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "자리=훅",
+   "action": "emph",
+   "k": 1,
+   "n": 13,
+   "rate": 0.08,
+   "base": 0.06,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.variant_for",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "화자=불명",
+   "action": "emph",
+   "k": 3,
+   "n": 9,
+   "rate": 0.33,
+   "base": 0.06,
+   "grade": "중",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json caption.variant_for",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_exit",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-starpickroom",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "transition",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-starpickroom",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A1"
+  },
+  {
+   "element": "cut_rhythm",
+   "cond": "편 단위",
+   "action": "컷 중앙 1.58초 · p90 3.92초",
+   "k": 8,
+   "n": 8,
+   "rate": null,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/starpickroom/뜯기 8편"
+   ],
+   "confidence": "신호",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json cuts",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "scene_fit",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-starpickroom",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A5"
+  },
+  {
+   "element": "bgm",
+   "cond": "편 단위",
+   "action": "배경음 있음",
+   "k": 8,
+   "n": 8,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/starpickroom/뜯기 8편"
+   ],
+   "confidence": "신호",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json bgm.db_below_voice",
+   "engine_support": "△",
+   "engine_gap": "A4"
+  },
+  {
+   "element": "sfx",
+   "cond": "자리=본문",
+   "action": "sfx",
+   "k": 0,
+   "n": 121,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "화자=원음",
+   "action": "sfx",
+   "k": 0,
+   "n": 105,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "화자=나레",
+   "action": "sfx",
+   "k": 0,
+   "n": 26,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "자리=끝",
+   "action": "sfx",
+   "k": 0,
+   "n": 21,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "화자=제3자",
+   "action": "sfx",
+   "k": 0,
+   "n": 15,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "자리=훅",
+   "action": "sfx",
+   "k": 0,
+   "n": 13,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "화자=불명",
+   "action": "sfx",
+   "k": 0,
+   "n": 9,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "편 단위",
+   "action": "효과음 후보 중앙 0.46 발/초",
+   "k": 8,
+   "n": 8,
+   "rate": null,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/starpickroom/뜯기 8편"
+   ],
+   "confidence": "신호",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "meme",
+   "cond": "전체 줄",
+   "action": "짤 스티커",
+   "k": 0,
+   "n": 177,
+   "rate": 0.0,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/줄판독 8편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "자리=본문",
+   "action": "sticker",
+   "k": 15,
+   "n": 121,
+   "rate": 0.12,
+   "base": 0.1,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json placement.rules.stickers",
+   "engine_support": "△",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "화자=원음",
+   "action": "sticker",
+   "k": 8,
+   "n": 105,
+   "rate": 0.08,
+   "base": 0.1,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json placement.rules.stickers",
+   "engine_support": "△",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "화자=나레",
+   "action": "sticker",
+   "k": 4,
+   "n": 26,
+   "rate": 0.15,
+   "base": 0.1,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json placement.rules.stickers",
+   "engine_support": "△",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "자리=끝",
+   "action": "sticker",
+   "k": 1,
+   "n": 21,
+   "rate": 0.05,
+   "base": 0.1,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json placement.rules.stickers",
+   "engine_support": "△",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "화자=제3자",
+   "action": "sticker",
+   "k": 1,
+   "n": 15,
+   "rate": 0.07,
+   "base": 0.1,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json placement.rules.stickers",
+   "engine_support": "△",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "자리=훅",
+   "action": "sticker",
+   "k": 0,
+   "n": 13,
+   "rate": 0.0,
+   "base": 0.1,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json placement.rules.stickers",
+   "engine_support": "△",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "화자=불명",
+   "action": "sticker",
+   "k": 3,
+   "n": 9,
+   "rate": 0.33,
+   "base": 0.1,
+   "grade": "중",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json placement.rules.stickers",
+   "engine_support": "△",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "pointer",
+   "cond": "전체 줄",
+   "action": "원·화살표 스티커 (검은 옷 남자 컷아웃(, 초록 화살표, '조개액젓' 라벨+노란)",
+   "k": 3,
+   "n": 177,
+   "rate": 0.02,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/줄판독 8편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "thumb",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-starpickroom",
+   "engine_cell": "render_bench thumb.stamp_video(판 칸 없음)",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "speech",
+   "cond": "화자=나레",
+   "action": "말속도 9.15 자/초 · 덩어리 1.12초",
+   "k": null,
+   "n": 26,
+   "rate": null,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/starpickroom/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json cps_target",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "나레 문장 끝",
+   "action": "어미 ~다는데",
+   "k": 8,
+   "n": 10,
+   "rate": 0.8,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/starpickroom/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "나레 문장 끝",
+   "action": "어미 ~라는데",
+   "k": 2,
+   "n": 10,
+   "rate": 0.2,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/starpickroom/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "스타픽룸판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  }
+ ],
+ "gates": {
+  "match_first_copy": {
+   "path": null,
+   "ok": null,
+   "pass": null,
+   "fail": null
+  },
+  "upgrade": {
+   "path": null,
+   "items": null,
+   "better": null
+  },
+  "quality_gate": {
+   "path": null,
+   "ok": null
+  }
+ },
+ "member": {
+  "line_json": null,
+  "preset_name": null,
+  "flow_format": "연예인형"
+ },
+ "results": {
+  "n": 0,
+  "judged_pass": 0,
+  "latest": null
+ },
+ "facts": {
+  "line_reads": 8,
+  "line_reads_strict_errors": 486,
+  "rules_freq": true,
+  "style_analysis": true,
+  "palette": true,
+  "sfx_events": false,
+  "style_file": "tools/calcopy/hybrid/styles/스타픽룸판.json",
+  "style_file_exists": true,
+  "renderer": "bench",
+  "caption_pack": "starpick",
+  "caption_pack_ok": true,
+  "counted_n": 8,
+  "no_why": [
+   "caption.chunk_max_chars",
+   "caption.typing_cps",
+   "cps_target",
+   "cuts.push_orig",
+   "cuts.push_tts",
+   "frame.bg",
+   "frame.credit.center",
+   "frame.credit.px",
+   "frame.title.0.center",
+   "frame.title.0.max_w",
+   "frame.title.0.px",
+   "frame.title.0.shear",
+   "frame.title.1.center",
+   "frame.title.1.max_w",
+   "frame.title.1.px",
+   "frame.title.1.shear",
+   "frame.watermark.alpha",
+   "frame.watermark.cy",
+   "frame.watermark.px",
+   "frame.watermark.x1",
+   "frame.window",
+   "length.max",
+   "length.min",
+   "loudness.lufs",
+   "loudness.tp",
+   "sfx_files.gain_db",
+   "timing.gap",
+   "timing.gap_oo",
+   "timing.tail"
+  ],
+  "hand_scripts": [],
+  "hand_scripts_reference": [
+   "channel/starpickroom/hybrid/render_spr.py(옛)"
+  ],
+  "unmeasured": 4,
+  "quality_gate_ok": false,
+  "match_ok": false,
+  "eye": null,
+  "upgrade": null,
+  "member": {
+   "line_json": null,
+   "preset_name": null,
+   "flow_format": "연예인형"
+  },
+  "line_json_exists": false,
+  "member_live_ok": false,
+  "results_n": 0,
+  "results_pass_n": 0,
+  "owner_pass": false
+ },
+ "inputs": {
+  "channel/starpickroom/_kal/규칙빈도.json": "8241d2e616a8",
+  "channel/starpickroom/_kal/대본언어.json": "cf2b86e121d5",
+  "channel/starpickroom/뜯기/21VoGAEK_pU/뜯기.json": "eaca272de85e",
+  "channel/starpickroom/뜯기/ASqFulFvhgg/뜯기.json": "60998c9b7f54",
+  "channel/starpickroom/뜯기/EZQlWvvnKPI/뜯기.json": "24c20f4060cc",
+  "channel/starpickroom/뜯기/VbpdNba182M/뜯기.json": "395f8b4bf2c3",
+  "channel/starpickroom/뜯기/dKczVzmdr00/뜯기.json": "35b958ea330e",
+  "channel/starpickroom/뜯기/j5D30T2n0-w/뜯기.json": "0e66ec1023ae",
+  "channel/starpickroom/뜯기/onmwSxfco-A/뜯기.json": "d95d8a98def7",
+  "channel/starpickroom/뜯기/r5XN6Eilfxs/뜯기.json": "825e74ec6381",
+  "channel/starpickroom/줄판독/21VoGAEK_pU.json": "02d8867a6100",
+  "channel/starpickroom/줄판독/ASqFulFvhgg.json": "257005cd03ba",
+  "channel/starpickroom/줄판독/EZQlWvvnKPI.json": "eab23692e611",
+  "channel/starpickroom/줄판독/VbpdNba182M.json": "04b82c11c1c0",
+  "channel/starpickroom/줄판독/dKczVzmdr00.json": "b2d0f8f70019",
+  "channel/starpickroom/줄판독/j5D30T2n0-w.json": "0d59666266e6",
+  "channel/starpickroom/줄판독/onmwSxfco-A.json": "105cd428704f",
+  "channel/starpickroom/줄판독/r5XN6Eilfxs.json": "c402b846afee",
+  "channel/starpickroom/팔레트.json": "d1321e55a523",
+  "channel/결과물.json": "142ed78b2435",
+  "channel/브랜드.json": "f2ded5552699",
+  "channel/스타일.json": "3f5625b6c1a2",
+  "channel/프리셋.json": "7d8cdd70c9e9",
+  "shopping_shorts/static/caption-motions.js": "09ac4bd95b42",
+  "tools/calcopy/hybrid/styles/_common.json": "3c88a2be87ae",
+  "tools/calcopy/hybrid/styles/스타픽룸판.json": "998d56e7f511"
+ },
+ "done": {
+  "level": "L0 미달",
+  "missing": [
+   "줄판독 strict 오류0",
+   "sfx_events",
+   "숫자칸 why",
+   "rules 미측정0",
+   "품질관문 ○",
+   "재현일치도 ○",
+   "눈검수 E1~E8",
+   "업그레이드 나아짐≥1",
+   "눈검수 E9",
+   "사장님 판정",
+   "member line.json",
+   "member preset_name",
+   "회원실측"
+  ],
+  "rule_unmeasured": 4,
+  "measure_tasks": [
+   "06-starpickroom"
+  ],
+  "complete": false
+ }
+}

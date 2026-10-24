@@ -1,0 +1,470 @@
+{
+ "slug": "hottemreport",
+ "made_by": "tools/calcopy/preset_card.py build",
+ "built_at": "2026-10-24T23:49:41",
+ "bench": "핫템리포트(현장썰 1번)",
+ "brand": "숏템리폿",
+ "brand_note": null,
+ "format": "해외원본",
+ "subformat": "나레+원음",
+ "format_options": [],
+ "sound_style": [
+  {
+   "style": "나레썰",
+   "n": 4
+  },
+  {
+   "style": "현장썰",
+   "n": 4
+  }
+ ],
+ "engine": {
+  "style_file": null,
+  "style_error": null,
+  "renderer": "hand",
+  "entry": null,
+  "hand_scripts": [
+   "channel/hottemreport/make_frame_숏템리폿.py",
+   "channel/hottemreport/make_render_숏템리폿.py",
+   "channel/hottemreport/현장썰하이브리드/render_front.py",
+   "channel/hottemreport/현장썰_run.py"
+  ],
+  "hand_scripts_reference": [],
+  "caption_pack": null,
+  "voice": null,
+  "bgm": null
+ },
+ "sample": {
+  "line_reads": 0,
+  "line_reads_strict_errors": 0,
+  "rules_freq": false,
+  "palette": false,
+  "style_analysis": false,
+  "sfx_events": false,
+  "tteutgi": 10,
+  "min_required": 6
+ },
+ "axes": {
+  "1자막": {
+   "value": "cap_look× cap_enter× cap_emph× cap_exit×",
+   "confidence": "미측정"
+  },
+  "2제목틀": {
+   "value": null,
+   "confidence": "미측정"
+  },
+  "3전환": {
+   "value": "transition× cut_rhythm○",
+   "confidence": "측정"
+  },
+  "4장면대사": {
+   "value": "scene_fit×",
+   "confidence": "미측정"
+  },
+  "5스토리": {
+   "value": null,
+   "confidence": "미측정"
+  },
+  "6대본언어": {
+   "value": "script× speech×",
+   "confidence": "미측정"
+  },
+  "7소리": {
+   "value": "bgm○ sfx○",
+   "confidence": "측정"
+  },
+  "8스티커짤": {
+   "value": "sticker× meme× pointer×",
+   "confidence": "미측정"
+  },
+  "9썸네일": {
+   "value": "thumb×",
+   "confidence": "미측정"
+  },
+  "10소재": {
+   "value": null,
+   "confidence": "미측정"
+  },
+  "11채널": {
+   "value": "핫템리포트(현장썰 1번)",
+   "confidence": "장부"
+  }
+ },
+ "elements": {
+  "cap_look": "×",
+  "cap_enter": "×",
+  "cap_emph": "×",
+  "cap_exit": "×",
+  "transition": "×",
+  "cut_rhythm": "○",
+  "scene_fit": "×",
+  "bgm": "○",
+  "sfx": "○",
+  "meme": "×",
+  "sticker": "×",
+  "pointer": "×",
+  "thumb": "×",
+  "speech": "×",
+  "script": "×"
+ },
+ "rules": [
+  {
+   "element": "cap_look",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-hottemreport",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "cap_enter",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-hottemreport",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "cap_emph",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-hottemreport",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "cap_exit",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-hottemreport",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "transition",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-hottemreport",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "cut_rhythm",
+   "cond": "편 단위",
+   "action": "컷 중앙 1.44초 · p90 3.4초",
+   "k": 8,
+   "n": 10,
+   "rate": null,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/hottemreport/뜯기 10편"
+   ],
+   "confidence": "신호",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "scene_fit",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-hottemreport",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "bgm",
+   "cond": "편 단위",
+   "action": "배경음 있음",
+   "k": 10,
+   "n": 10,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/hottemreport/뜯기 10편"
+   ],
+   "confidence": "신호",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "sfx",
+   "cond": "편 단위",
+   "action": "효과음 후보 중앙 0.05 발/초",
+   "k": 10,
+   "n": 10,
+   "rate": null,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/hottemreport/뜯기 10편"
+   ],
+   "confidence": "신호",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "meme",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-hottemreport",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "sticker",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-hottemreport",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "pointer",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-hottemreport",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "thumb",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-hottemreport",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "speech",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-hottemreport",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "script",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-hottemreport",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  }
+ ],
+ "gates": {
+  "match_first_copy": {
+   "path": null,
+   "ok": null,
+   "pass": null,
+   "fail": null
+  },
+  "upgrade": {
+   "path": null,
+   "items": null,
+   "better": null
+  },
+  "quality_gate": {
+   "path": null,
+   "ok": null
+  }
+ },
+ "member": {
+  "line_json": null,
+  "preset_name": "해외핫영상+리뷰형(claude_preset_names hottemreport/검정띠 — 옛 길)",
+  "flow_format": "해외원본형"
+ },
+ "results": {
+  "n": 7,
+  "judged_pass": 2,
+  "latest": "현장썰_05_고양이빵봉지집게"
+ },
+ "facts": {
+  "line_reads": 0,
+  "line_reads_strict_errors": 0,
+  "rules_freq": false,
+  "style_analysis": false,
+  "palette": false,
+  "sfx_events": false,
+  "style_file": null,
+  "style_file_exists": false,
+  "renderer": "hand",
+  "caption_pack": null,
+  "caption_pack_ok": false,
+  "counted_n": null,
+  "no_why": null,
+  "hand_scripts": [
+   "channel/hottemreport/make_frame_숏템리폿.py",
+   "channel/hottemreport/make_render_숏템리폿.py",
+   "channel/hottemreport/현장썰하이브리드/render_front.py",
+   "channel/hottemreport/현장썰_run.py"
+  ],
+  "hand_scripts_reference": [],
+  "unmeasured": 12,
+  "quality_gate_ok": false,
+  "match_ok": false,
+  "eye": null,
+  "upgrade": null,
+  "member": {
+   "line_json": null,
+   "preset_name": "해외핫영상+리뷰형(claude_preset_names hottemreport/검정띠 — 옛 길)",
+   "flow_format": "해외원본형"
+  },
+  "line_json_exists": false,
+  "member_live_ok": false,
+  "results_n": 7,
+  "results_pass_n": 2,
+  "owner_pass": false
+ },
+ "inputs": {
+  "channel/hottemreport/뜯기/01ilCC0jZHk/뜯기.json": "5df374f38327",
+  "channel/hottemreport/뜯기/8ogCjxMJsYo/뜯기.json": "4019d2fb69d0",
+  "channel/hottemreport/뜯기/IRFN5B_2LMo/뜯기.json": "1585e1b4b352",
+  "channel/hottemreport/뜯기/OE-11wb7vdY/뜯기.json": "920093124b70",
+  "channel/hottemreport/뜯기/PIHCaioKSp4/뜯기.json": "47d519c0450b",
+  "channel/hottemreport/뜯기/RWS43GF1A_U/뜯기.json": "49c69bb98958",
+  "channel/hottemreport/뜯기/ZqVgAg99gRI/뜯기.json": "526a7baff5d5",
+  "channel/hottemreport/뜯기/a06yYTgpa_c/뜯기.json": "0f5b7360edb5",
+  "channel/hottemreport/뜯기/eALs7BdBCQ0/뜯기.json": "eea5991ab019",
+  "channel/hottemreport/뜯기/vLcKevaKfNI/뜯기.json": "7912608fcba3",
+  "channel/결과물.json": "142ed78b2435",
+  "channel/브랜드.json": "f2ded5552699",
+  "channel/스타일.json": "3f5625b6c1a2",
+  "channel/프리셋.json": "7d8cdd70c9e9",
+  "shopping_shorts/static/caption-motions.js": "09ac4bd95b42"
+ },
+ "done": {
+  "level": "L0 미달",
+  "missing": [
+   "줄판독≥6",
+   "줄판독 strict 오류0",
+   "규칙빈도",
+   "스타일분석",
+   "팔레트",
+   "sfx_events",
+   "판파일",
+   "renderer=bench",
+   "숫자칸 why",
+   "counted≥6",
+   "자막팩",
+   "rules 미측정0",
+   "품질관문 ○",
+   "재현일치도 ○",
+   "눈검수 E1~E8",
+   "업그레이드 나아짐≥1",
+   "눈검수 E9",
+   "사장님 판정",
+   "member line.json",
+   "회원실측",
+   "손스크립트0"
+  ],
+  "rule_unmeasured": 12,
+  "measure_tasks": [
+   "06-hottemreport"
+  ],
+  "complete": false
+ }
+}
