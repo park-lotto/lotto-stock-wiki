@@ -82,22 +82,22 @@
 - 상속 판(`base`): packs 는 바탕 판과 **다른 요소만** 적는다(`연예인레시피판` = caption 만, `잇템로그판_v2` = 없음). 목록 칸 `script.audit`·`brief` 도 통째로 못 적고 `audit_patch`·`brief_patch{add,remove,replace}` 만(⑰ — 통째면 load 거절).
 - 카드(01) 레코드 키 제안: `pack_item` = `"caption:<packs.caption.pack>"` · `"motion:<pack>/<graphics>"` · `"sfx:<pack>/<map>"` · `"bgm:<id>"` · `"meme:<pack>"`, 임시면 `stand_in` 표시.
 
-## 판 목록(관제 263 지시서 07 — 표 줄만, 칸 문서는 위 02 표가 주인)
-| 판 | 벤치(slug) | 틀 kind | counted 편 | 틀 대조(벤치 프레임 ↔ frame_png) | 손 스크립트 | 큰 _pending |
+## 판 목록(관제 263 지시서 07 — 표 줄만, 칸 문서는 위 02 표가 주인) — 10-25 2차 갱신
+| 판 | 벤치(slug) | 틀 kind · 2차 장치 칸 | counted 편 | 틀 대조(벤치 프레임 ↔ frame_png, 마스크 잉크 y·x) | rules.sfx | 큰 _pending |
 |---|---|---|---|---|---|---|
-| 잇템로그판 | 잇템로그(ititemlog) | window | 6 | ep13 렌더: 줌블러 그림 3.57~3.64초 라플라시안 66→3 · 효과음 pop 1발 | (scratchpad mk_v3·vmake → 08) | targets 는 _v2 · cps_target 근거 칸(뿌리) |
-| 썰템홈샷판 | 방구석(banggu) | post | 6 | 제목 y0 0·h −4 · letter_gap ✗ | make_썰템홈샷.py·하이브리드/make.py `_deprecated` | 자막팩 없음·훅 카드 틀 바꾸기·페이지 쌓기 |
-| 맛템썰템판 | 맛있는 친구들(yummyknow) | post | 6 | 제목 y0 +2·h −3 · cx +95(왼쪽 정렬) | make_맛템썰템·rerender_* `_deprecated` | 자막팩·제목 왼쪽 정렬·게시자 줄 칸·표지 카드 |
-| 썰템쇼판 | 재밌쇼(humorshowshow) | post | 0(옛 꼴) | 제목 y0 −1·h +1 · cx −7 | preset/hs_*.py `_deprecated` | 줄판독 새 꼴(06)·조회수 줄(가짜 지표 → 사장님) |
-| 숏템리폿판 | 핫템리포트(hottemreport) | window | 6 | 제목 1줄 y0 −1·h 0·ΔE 0 / 2줄 y −1·h 0 | make_frame/make_render 숏템리폿·현장썰 `_deprecated` | 원음 색 기울임 자막팩·효과음 종류 |
-| 신박판 | 신박발견(sinbak) | window | 6 | 제목 y0 +1·h +4 · cx +35(왼쪽 정렬) | sinbak_preset·measure·시험편1 `_deprecated` | 나레 없는 편·둥근 창·창 안 색 글씨 |
-| 트롯파파판 | 울지마트로트(uljimatrot) | window | 10 | 줄판독 픽셀: 제목 180~264/322~407 vs 178~265/325~409 | _tools/make_trotpapa.py `_deprecated` | 훅 누끼·CTA·가격 카드(금지선 → 사장님) |
-| 만템판 | 만템(mantem) | window | 0 | 제목 1줄 158~259 vs 158~258 | preset/mt_preset.py `_deprecated` | 줄판독 0(06) |
-| 아이템홈판 | 아이템홈(itemhome) | window | 0 | framecmp 통과급(y0 +3·h −3) | 1편 make_render·ih_preset `_deprecated` | 줄판독 0(06)·브랜드 미정 |
-| 안나픽판 | 안나픽(annapick) | window | 0 | framecmp 통과(y0 −1·h +1) | 1편 make_plan/make_render·ap_preset `_deprecated` | 줄판독 0(06)·브랜드 미정 |
-| 도파민썰템A판 | 썰풀다 자막만(sseolpulda) | window | 0(섞인 폴더) | 제목 223~304/318~398 = 벤치 | — | 갈래별 줄판독 폴더(06)·나레 없는 편 |
-| 도파민썰템B판 | 썰풀다 나레(sseolpulda) | window | 0(섞인 폴더) | 제목 105~227 vs 102~221 · 폭(자간) ✗ | — | 갈래별 폴더·표본 3편 |
-| 뜨거운사람들판 | 뜨거운사람들(hotpeople) | window | 0 | (벤치 영상 로컬 없음) | — | 줄판독 0·목소리·길이 손 상수 |
-| 숏비타민c판 | 숏비타민c(shortvitc) | window(틀만) | 0 | (벤치 영상 로컬 없음) | — | 틀만 — 자막·소리 06 |
-| 잇썸홈판·재미썸홈판 | 두유노·이븐쇼핑 | itssum·jaemi | — | (bench 전환 불가 판단) | — | _pending.bench_migration(A·B 두 틀·대본 꼴·소리 규칙) |
+| 잇템로그판 | 잇템로그(ititemlog) | window · zoomblur 467ms | 6(+top) | ep13 실제 렌더: 줌블러 그림·효과음 pop 1발 | pop ≤1 | targets 는 _v2(speech.spread 0.096) |
+| 썰템홈샷판 | 방구석(banggu) | post · segments 훅 카드 · stack 2줄 | 6 | 본문 제목 275~341 vs 275~342 · 훅 132~229 = 벤치 · **실제 렌더(ep13 재료+유라 캐시)**: 훅 카드 0~3.53초·2줄 쌓기 그려짐 | max 0 | 자막팩(clean 110px 이 제목 줄을 덮음)·본문 제목 join |
+| 맛템썰템판 | 맛있는 친구들(yummyknow) | post · segments 표지 · stack 3줄 break line · 제목 왼쪽 x89 | 6 | 본문 420~480 vs 418~480 · 표지 241~376 vs 244~379 | max 0 | 자막팩·머리 아이콘 그림 파일 |
+| 썰템쇼판 | 재밌쇼(humorshowshow) | post · segments 훅 · stack 3줄 · 제목 x546 | 6(06 새 꼴) | 본문 framecmp 통과 · 훅 146~244 = 벤치 | max 0 | 자막팩·조회수 줄(사장님) |
+| 숏템리폿판 | 핫템리포트 | window · 로고 glow 37 | 6 | 1줄 298~394 vs 298~395 | pop ≤2(종류 임시) | 원음 기울임 자막팩·효과음 종류 |
+| 신박판 | 신박발견 | window · 제목 왼쪽 x97 · 둥근 창 87 | 6 | framecmp 통과(454~519 vs 455~519) | whoosh:pop ≤7 | 대본 sub 줄·창 안 색 글씨 |
+| 트롯파파판 | 울지마트로트 | window(box 띠) | 10 | 줄판독 픽셀 ±3 | max 0 | 훅 누끼·CTA·가격 카드(사장님) |
+| 만템판 | 만템 | window · 자간 −5.5 · 전환 black 267·flash 100 | 6 | 158~259 vs 158~258 | max 0 | 제목 낱말 색 |
+| 아이템홈판 | 아이템홈 | window · 자간 5.25 | 6 | 222~311 vs 222~312 | max 0 | 브랜드 미정 |
+| 안나픽판 | 안나픽 | window · 전환 black 433·zoomblur 267 | 6 | framecmp 통과 | pop ≤1 | 브랜드 미정 |
+| 도파민썰템A판 | 썰풀다 자막만 | window · 대본 sub | 0(섞인 폴더) | 223~304 = 벤치 | pop ≤1 | 갈래별 폴더(06) |
+| 도파민썰템B판 | 썰풀다 나레 | window · 자간 −13 | 0(섞인 폴더) | 105~227 vs 102~221 | pop ≤1 | 갈래별 폴더 |
+| 뜨거운사람들판 | 뜨거운사람들(hotpeople) | window · 대본 sub · zoomblur 0.053·383ms | 6 | 276~352/380~456 vs 274~354/380~457 | whoosh ≤2 | 자막팩(세로 가운데 1350·형광펜)·로고 |
+| 숏비타민c판 | 숏비타민c | window(틀만) | 0 | (06 막힘) | max 0 | 06 막힘(채널 힌디어) |
+| 잇썸홈판·재미썸홈판 | 두유노·이븐쇼핑 | itssum·jaemi | — | — | — | bench 전환 = 02 판단(구간별 자막팩·대본 꼴·소리) |
 판 설정 초안 변환기 = `tools/calcopy/hybrid/frame_import.py <frame.json> --kind post|full|window [--frame body|hook]`(한 번 돌리고 끝, 판 파일이 주인).
