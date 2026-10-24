@@ -1,0 +1,645 @@
+{
+ "id": "J7GxfaVdwSU",
+ "dur": 28.467,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   486,
+   1080,
+   1434
+  ],
+  "caption_band": [
+   1246,
+   1342
+  ],
+  "title_y": null,
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null
+ },
+ "lines": [
+  {
+   "t0": 0.6,
+   "t1": 1.1,
+   "speaker": null,
+   "text": "쯔양 팬사인회에서",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1252,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "찌양 팬사인웨에서 한 외국인 팬이"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 1.1,
+   "t1": 1.6,
+   "speaker": null,
+   "text": "한 외국인 팬이",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1208,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "찌양 팬사인웨에서 한 외국인 팬이"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 1.6,
+   "t1": 2.7,
+   "speaker": null,
+   "text": "궁금했던걸 물어보는데요",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1256,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "찌양 팬사인웨에서 한 외국인 팬이",
+    "궁금했던 걸 물어보는데요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 4.7,
+   "t1": 5.2,
+   "speaker": null,
+   "text": "안녕하세요~",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1257,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "궁금했던 걸 물어보는데요.",
+    "&gt;&gt; 안녕하세요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 7.4,
+   "t1": 8.3,
+   "speaker": null,
+   "text": "저 질문해도 돼요?",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1248,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    7.37
+   ],
+   "_asr": [
+    "궁금했는지"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 8.3,
+   "t1": 9.3,
+   "speaker": null,
+   "text": "냅다 물어보는데요",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1256,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    8.47
+   ],
+   "_asr": [
+    "궁금했는지",
+    "&gt;&gt; 맵다 물어보는데요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 9.3,
+   "t1": 10.3,
+   "speaker": null,
+   "text": "쯔양씨 혹시",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1250,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    9.47
+   ],
+   "_asr": [
+    "&gt;&gt; 맵다 물어보는데요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 10.3,
+   "t1": 10.8,
+   "speaker": null,
+   "text": "틴트 어떤거 쓰세요?",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1217,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "&gt;&gt; 맵다 물어보는데요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 10.8,
+   "t1": 11.3,
+   "speaker": null,
+   "text": "ㅎㅎ",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1268,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "&gt;&gt; 맵다 물어보는데요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 15.4,
+   "t1": 16.4,
+   "speaker": null,
+   "text": "땡큐~~",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1256,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    15.43
+   ],
+   "_asr": [
+    "[음악]"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 16.4,
+   "t1": 16.9,
+   "speaker": null,
+   "text": "이걸 본",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1258,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    16.53
+   ],
+   "_asr": [
+    "[음악]",
+    "이걸 보니 여성은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 16.9,
+   "t1": 17.4,
+   "speaker": null,
+   "text": "이 여성은",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1258,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    17.4
+   ],
+   "_asr": [
+    "이걸 보니 여성은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 17.4,
+   "t1": 18.4,
+   "speaker": null,
+   "text": "내가 한번 테스트 해봄",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1256,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    17.4,
+    18.37
+   ],
+   "_asr": [
+    "이걸 보니 여성은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 18.4,
+   "t1": 19.3,
+   "speaker": null,
+   "text": "직접 실험해보겠다며",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1262,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    18.37,
+    19.3
+   ],
+   "_asr": [
+    "이걸 보니 여성은",
+    "&gt;&gt; 직접 실험해 보겠다면 립을 바르더니"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 20.0,
+   "t1": 20.5,
+   "speaker": null,
+   "text": "오케이~",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1258,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    20.03,
+    20.53
+   ],
+   "_asr": [
+    "&gt;&gt; 직접 실험해 보겠다면 립을 바르더니"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 20.5,
+   "t1": 21.3,
+   "speaker": null,
+   "text": "라면 준비 완료",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1258,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    20.53,
+    21.3
+   ],
+   "_asr": [
+    "&gt;&gt; 직접 실험해 보겠다면 립을 바르더니"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 21.3,
+   "t1": 22.3,
+   "speaker": null,
+   "text": "먹방을 시작하는데요",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1257,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    21.3,
+    22.33
+   ],
+   "_asr": [
+    "&gt;&gt; 직접 실험해 보겠다면 립을 바르더니",
+    "&gt;&gt; 먹방을 시작하는데요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 22.3,
+   "t1": 22.8,
+   "speaker": null,
+   "text": "호로로",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1290,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    22.33,
+    22.83
+   ],
+   "_asr": [
+    "&gt;&gt; 먹방을 시작하는데요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 24.3,
+   "t1": 24.8,
+   "speaker": null,
+   "text": "난 이거",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1241,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "[음악]"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 24.8,
+   "t1": 25.3,
+   "speaker": null,
+   "text": "완전",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1258,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "[음악]",
+    "did a pretty good"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 25.3,
+   "t1": 26.1,
+   "speaker": null,
+   "text": "대박인거같은데?",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1256,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    26.13
+   ],
+   "_asr": [
+    "did a pretty good",
+    "job. No touchups"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 26.1,
+   "t1": 27.2,
+   "speaker": null,
+   "text": "고칠 필요가 없어",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1256,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    26.13,
+    27.23
+   ],
+   "_asr": [
+    "job. No touchups",
+    "needed. He passed"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 27.7,
+   "t1": 28.47,
+   "speaker": null,
+   "text": "테스트 합격~!",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1256,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "needed. He passed",
+    "the test."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  }
+ ],
+ "beats": null,
+ "narr_share": null,
+ "notes": [],
+ "name_evidence": [],
+ "_todo": [
+  "speaker",
+  "layer",
+  "role",
+  "enter",
+  "fill_hex",
+  "emph",
+  "sticker",
+  "sfx",
+  "scene",
+  "fit",
+  "beats",
+  "narr_share"
+ ],
+ "_made_by": "kal_analyze.skeleton(기계값 뼈대 — 판독 전)"
+}
