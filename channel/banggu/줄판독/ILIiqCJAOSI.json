@@ -1,0 +1,2060 @@
+{
+ "id": "ILIiqCJAOSI",
+ "dur": 26.5,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "영업기밀을 빼앗겨버린 아웃백",
+   "colors": [
+    {
+     "word": "영업기밀을 빼앗겨버린 아웃백",
+     "hex": "#000000"
+    }
+   ],
+   "y": [
+    274,
+    342
+   ],
+   "where": "본문 제목 띠(검정 굵은 고딕 1줄, 가운데)"
+  }
+ ],
+ "hook_title_lines": [
+  {
+   "text": "영업기밀을",
+   "colors": [
+    {
+     "word": "영업기밀을",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "where": "훅 카드 1줄(흰 채움+검정 외곽)"
+  },
+  {
+   "text": "빼앗겨버린 아웃백",
+   "colors": [
+    {
+     "word": "빼앗겨버린 아웃백",
+     "hex": "#43A6F7"
+    }
+   ],
+   "where": "훅 카드 2줄(파랑 채움+검정 외곽)"
+  }
+ ],
+ "source_label": "방구석 | 14:25",
+ "layout": {
+  "window": "컷마다 다름(창 위끝 y≈671~786, 가로 0~1080 꽉 참 또는 x≈20~1057 여백) — 30fps 실측 wt 칸",
+  "caption_band": [
+   502,
+   709
+  ],
+  "title_y": [
+   274,
+   342
+  ],
+  "source_y": [
+   378,
+   402
+  ],
+  "logo_y": [
+   0,
+   233
+  ],
+  "rule_y": [
+   446,
+   451
+  ],
+  "watermark": {
+   "present": false,
+   "alpha": null,
+   "note": "채널 워터마크 없음(재료 안 원본 워터마크는 남아 있음 — ILIi ANI-ONE)"
+  },
+  "source_hex": "#595859",
+  "bg_hex": "#FDFDFD",
+  "header_hex": "#42A4F5",
+  "hook_header_hex": "#183B5D",
+  "hook_band": [
+   581,
+   738
+  ],
+  "line_pitch_px": 79
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.633,
+   "speaker": "나레",
+   "text": "영업기밀을 빼앗겨버린 아웃백",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "훅 카드(틀 전체 어둡게·큰 제목 2줄·가운데 흰 띠 y581~738 에 나레 문장)",
+   "y": [
+    635,
+    682
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    229,
+    851
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 46,
+   "letter_gap_px": null,
+   "word_gap_px": null,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "과정",
+   "scene_desc": "어둡게 깐 오븐 유리창 안 빵(훅 카드 아래)",
+   "fit": 6,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 0.0,
+    "t1": 1.633,
+    "diff": 8.3,
+    "scale": 1.023,
+    "tx": -13,
+    "ty": 4
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 1.633,
+   "t1": 2.7,
+   "speaker": "나레",
+   "text": "아웃백에서 사람들이",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    502,
+    552
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    314,
+    761
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "갈색 빵 단면에 칼로 버터 바르는 손",
+   "fit": 7,
+   "cut_at": [
+    1.63
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 1.633,
+    "t1": 2.7,
+    "diff": 34.6,
+    "scale": 1.0,
+    "tx": -1,
+    "ty": -12
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 2.7,
+   "t1": 4.233,
+   "speaker": "나레",
+   "text": "가장 열광한다는 부쉬맨브레드",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    580,
+    630
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    209,
+    870
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 16.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "OUTBACK 부쉬맨 브레드 포장 봉지(제품명 글자 보임)",
+   "fit": 9,
+   "cut_at": [
+    2.7
+   ],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 2.7,
+    "t1": 4.233,
+    "diff": 36.2,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": -42
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 4.233,
+   "t1": 5.033,
+   "speaker": "나레",
+   "text": "똑같은 빵을 사서",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    502,
+    552
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    356,
+    719
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 16.5,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "기타",
+   "scene_desc": "빵집 진열대 크루아상·패스트리",
+   "fit": 6,
+   "cut_at": [
+    4.23
+   ],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 4.233,
+    "t1": 6.0,
+    "diff": 44.5,
+    "scale": 1.043,
+    "tx": -236,
+    "ty": 68
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 5.033,
+   "t1": 6.0,
+   "speaker": "나레",
+   "text": "집에서 먹어보면",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    580,
+    630
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    364,
+    713
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 22.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "기타",
+   "scene_desc": "같은 진열대(장면 그대로)",
+   "fit": 4,
+   "cut_at": [],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 4.233,
+    "t1": 6.0,
+    "diff": 44.5,
+    "scale": 1.043,
+    "tx": -236,
+    "ty": 68
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 6.0,
+   "t1": 7.167,
+   "speaker": "나레",
+   "text": "의외로 퍽퍽한 노맛에",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    502,
+    552
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    307,
+    769
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 5.5,
+   "word_gap_px": 16.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "기타",
+   "scene_desc": "애니 장면: 남자가 펜 들고 놀란 표정(우상단 ANI-ONE 워터마크)",
+   "fit": 6,
+   "cut_at": [
+    6.0,
+    7.0
+   ],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 6.0,
+    "t1": 7.0,
+    "diff": 63.6,
+    "scale": 1.044,
+    "tx": -40,
+    "ty": 4
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 7.167,
+   "t1": 8.4,
+   "speaker": "나레",
+   "text": "사람들이 놀라곤 하는데",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    580,
+    630
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    282,
+    794
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.5,
+   "word_gap_px": 18.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "기타",
+   "scene_desc": "애니 장면: 흰 천 덮인 접시(ANI-ONE)",
+   "fit": 5,
+   "cut_at": [
+    7.33
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 7.333,
+    "t1": 8.4,
+    "diff": 54.7,
+    "scale": 1.007,
+    "tx": -7,
+    "ty": -2
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 8.4,
+   "t1": 9.267,
+   "speaker": "나레",
+   "text": "이 차이는 사실",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    502,
+    552
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    382,
+    695
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 20.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "과정",
+   "scene_desc": "아웃백 주방 조리대 앞 직원 2명",
+   "fit": 6,
+   "cut_at": [
+    8.4
+   ],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 8.4,
+    "t1": 10.033,
+    "diff": 36.5,
+    "scale": 1.0,
+    "tx": -45,
+    "ty": 0
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 9.267,
+   "t1": 10.033,
+   "speaker": "나레",
+   "text": "아웃백에서 쓰는",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    580,
+    630
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    363,
+    716
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 20.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "과정",
+   "scene_desc": "같은 주방 장면",
+   "fit": 8,
+   "cut_at": [],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 8.4,
+    "t1": 10.033,
+    "diff": 36.5,
+    "scale": 1.0,
+    "tx": -45,
+    "ty": 0
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 10.033,
+   "t1": 11.067,
+   "speaker": "나레",
+   "text": "업소용 오븐에 있었음",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 3번째 줄)",
+   "y": [
+    660,
+    709
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    308,
+    772
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 18.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "오븐 철망 위 구운 부쉬맨브레드",
+   "fit": 8,
+   "cut_at": [
+    10.03
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 10.033,
+    "t1": 11.067,
+    "diff": 19.9,
+    "scale": 1.021,
+    "tx": -11,
+    "ty": -9
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 11.067,
+   "t1": 12.067,
+   "speaker": "나레",
+   "text": "아웃백 빵을 못잊은",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    502,
+    551
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    332,
+    747
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.5,
+   "word_gap_px": 18.5,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "빵을 크게 베어 무는 입·손(먹방)",
+   "fit": 7,
+   "cut_at": [
+    11.07
+   ],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 11.067,
+    "t1": 12.7,
+    "diff": 21.5,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": -42
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 12.067,
+   "t1": 12.7,
+   "speaker": "나레",
+   "text": "빵돌이들은",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    580,
+    630
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    419,
+    660
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 5.0,
+   "word_gap_px": null,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 먹방 장면",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 11.067,
+    "t1": 12.7,
+    "diff": 21.5,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": -42
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 12.7,
+   "t1": 14.133,
+   "speaker": "나레",
+   "text": "이 맛을 똑같이 재연하기 위해",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    502,
+    552
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    222,
+    856
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 20.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "빵을 크림수프에 찍어 드는 손",
+   "fit": 5,
+   "cut_at": [
+    12.7
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 12.7,
+    "t1": 15.767,
+    "diff": 67.3
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 14.133,
+   "t1": 15.767,
+   "speaker": "나레",
+   "text": "실험에 실험을 거듭한 결과",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    580,
+    630
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    251,
+    828
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 17.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "같은 장면(수프 묻은 빵)",
+   "fit": 4,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 12.7,
+    "t1": 15.767,
+    "diff": 67.3
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 15.767,
+   "t1": 16.4,
+   "speaker": "나레",
+   "text": "빵을 해동 후",
+   "layer": "채널",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    502,
+    551
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    406,
+    674
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 16.5,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "BREAD 포장 냉동빵 2봉지(정지 사진)",
+   "fit": 7,
+   "cut_at": [
+    15.77
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 15.767,
+    "t1": 16.4,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 16.4,
+   "t1": 18.0,
+   "speaker": "나레",
+   "text": "전자레인지 30초 돌릴 때",
+   "layer": "채널",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    580,
+    630
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    264,
+    813
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 20.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "깨 뿌린 빵 껍질 근접",
+   "fit": 4,
+   "cut_at": [
+    16.4
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 16.4,
+    "t1": 18.0,
+    "diff": 21.1,
+    "scale": 1.023,
+    "tx": -13,
+    "ty": -10
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 18.0,
+   "t1": 19.167,
+   "speaker": "나레",
+   "text": "물 한 컵을 같이 넣으면",
+   "layer": "채널",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 3번째 줄)",
+   "y": [
+    660,
+    709
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    294,
+    782
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 16.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "과정",
+   "scene_desc": "전자레인지 안 물그릇과 빵 접시",
+   "fit": 9,
+   "cut_at": [
+    18.0
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 18.0,
+    "t1": 19.167,
+    "diff": 0.7
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 19.167,
+   "t1": 20.0,
+   "speaker": "나레",
+   "text": "업소용 오븐처럼",
+   "layer": "채널",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    502,
+    552
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    364,
+    712
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 16.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "데운 빵을 손으로 쥠(접시 위)",
+   "fit": 6,
+   "cut_at": [
+    19.17
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 19.167,
+    "t1": 22.434,
+    "diff": 52.2,
+    "scale": 0.993,
+    "tx": -7,
+    "ty": 0
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 20.0,
+   "t1": 21.7,
+   "speaker": "나레",
+   "text": "촉촉하게 빵을 데울 수 있다는 것을",
+   "layer": "채널",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    580,
+    630
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    164,
+    914
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 17.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "빵을 반 갈라 촉촉한 속살 보임",
+   "fit": 8,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 19.167,
+    "t1": 22.434,
+    "diff": 52.2,
+    "scale": 0.993,
+    "tx": -7,
+    "ty": 0
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 21.7,
+   "t1": 22.433,
+   "speaker": "나레",
+   "text": "발견하게 됨",
+   "layer": "채널",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 3번째 줄)",
+   "y": [
+    660,
+    709
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    414,
+    663
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "같은 장면(갈라진 빵 속)",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 19.167,
+    "t1": 22.434,
+    "diff": 52.2,
+    "scale": 0.993,
+    "tx": -7,
+    "ty": 0
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 22.433,
+   "t1": 23.367,
+   "speaker": "나레",
+   "text": "인터넷에서 사면",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    502,
+    552
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    364,
+    713
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "BREAD 포장 빵 묶음(제품 포장 사진)",
+   "fit": 8,
+   "cut_at": [
+    22.43
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 22.434,
+    "t1": 24.467,
+    "diff": 20.3,
+    "scale": 1.036,
+    "tx": -19,
+    "ty": -16
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 23.367,
+   "t1": 24.467,
+   "speaker": "나레",
+   "text": "개당 500원 수준이라",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    580,
+    630
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    301,
+    779
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 17.5,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "같은 포장 묶음",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 22.434,
+    "t1": 24.467,
+    "diff": 20.3,
+    "scale": 1.036,
+    "tx": -19,
+    "ty": -16
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 24.467,
+   "t1": 25.467,
+   "speaker": "나레",
+   "text": "아웃백에 가야 할 이유가",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    502,
+    552
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    276,
+    803
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 18.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "빵 껍질 근접(천천히 옆으로 이동)",
+   "fit": 5,
+   "cut_at": [
+    24.47
+   ],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 24.467,
+    "t1": 26.5,
+    "diff": 30.6,
+    "scale": 1.0,
+    "tx": -66,
+    "ty": 0
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 25.467,
+   "t1": 26.5,
+   "speaker": "나레",
+   "text": "없어져버렸다고ㅋㅋ",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    580,
+    630
+   ],
+   "x": 536,
+   "align": "center",
+   "max_w": 750,
+   "ink_x": [
+    321,
+    752
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 16.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "같은 빵 껍질 근접",
+   "fit": 5,
+   "cut_at": [],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 24.467,
+    "t1": 26.5,
+    "diff": 30.6,
+    "scale": 1.0,
+    "tx": -66,
+    "ty": 0
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  }
+ ],
+ "no_caption": [],
+ "beats": "훅(0.0초 '영업기밀을 빼앗겨버린 아웃백') → 다리(1.6초 '아웃백에서 사람들이') → 본문(4.2초 '똑같은 빵을 사서') → 고조(6.0초 '의외로 퍽퍽한 노맛에') → 다리(8.4초 '이 차이는 사실') → 공개(10.0초 '업소용 오븐에 있었음') → 본문(11.1초 '아웃백 빵을 못잊은') → 답(15.8초 '빵을 해동 후') → 증거(22.4초 '인터넷에서 사면') → 끝(24.5초 '아웃백에 가야 할 이유가')",
+ "narr_share": "나레 24/24줄(원음 0 — 받아쓰기 한 화자·TTS 남성 설명조), 나레 자막 26.50초/26.5초",
+ "notes": [
+  "자막 등장은 전부 instant — 30fps 잉크 마스크에서 새 줄 잉크가 첫 프레임에 90% 이상(팝·타이핑·페이드 0). 페이지가 바뀔 때 윗줄까지 한 프레임에 지워진다(exit cut)",
+  "자막 방식 = 1줄 → 아래 줄 덧붙음(1~3줄) → 페이지째 교체. 덧붙음 행의 윗줄 행 t1 은 덧붙는 시각(같은 층 겹침 금지) — 실제로 윗줄은 페이지 끝까지 남는다",
+  "강조색 낱말 0 · 스티커 0 · 효과음 0 — 채움 #000000, 외곽선·그림자·상자 없음(확대 크롭 픽셀). 꾸밈 없는 자막이 이 채널 스타일",
+  "효과음: sfx_events.py 후보 3개 전부 받아쓰기 낱말 구간 안(치찰음·파열음) → 채택 0. 컷 경계 고립 솟음 없음",
+  "BGM: 있음(신호) — 말 사이 가장 조용한 8% 프레임 스펙트럼 봉우리 1244·81·991·877Hz(돌출 8~17dB) · 말 사이 바닥 −28~−31dB RMS(말 −16dB) → BGM 은 말보다 약 12~15dB 아래(상한 추정). 곡 이름 미식별",
+  "글꼴 이름 미측정(뜯기 fontmatch 가 손글씨체를 1위로 냄 — 눈으로는 고딕). 크기 53px = 잉크 높이 49~50px ÷ 0.93(한글 고딕 잉크비, 눈 추정). 자간 letter_gap_px = 글자 사이 빈 열 중앙값(줄 높이 30% 미만 틈), word_gap_px = 띄어쓰기 틈",
+  "컷 = 뜯기 bench 컷(kal_analyze match 와 같은 자) + 창 diff 솟음 중 눈으로 확인한 것. 전환은 전부 하드 컷(검정·흰 번쩍·줌블러 0, 창 평균밝기·라플라시안으로 ±4프레임 확인)",
+  "motion: pan/zoom 은 대부분 제품 사진에 천천히 움직임(켄번스 꼴) 또는 원본 카메라. cam = 원본 영상 자체 움직임",
+  "재료 애니 컷 2개(6.0~8.4) 우상단 원본 워터마크 'ANI-ONE' 가 그대로 남아 있음(채널이 가리지 않음)",
+  "컷 6.4(애니 안 분홍 광선 효과)·13.967(같은 장면) 은 창 diff 솟음이지만 눈으로 같은 샷 — 컷에서 뺌"
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "훅 카드: 어둡게 깐 틀 위 큰 제목 2줄(흰/파랑) + 가운데 흰 띠 나레 문장, 아래 어두운 오븐 속 빵",
+  "face_frac": 0.0,
+  "text": "영업기밀을 / 빼앗겨버린 아웃백 · 영업기밀을 빼앗겨버린 아웃백"
+ },
+ "hook": {
+  "t0": 0.0,
+  "t1": 1.633,
+  "kind": "훅 카드(틀 어둡게+큰 제목 2줄+흰 띠 나레)",
+  "header_hex": "#183B5D 근처(편마다 #0E3A5E~#1C486C)",
+  "title_hex": [
+   "#FFFFFF",
+   "#43A6F7"
+  ],
+  "exit": "cut(본문 틀로 1프레임에 바뀜, 30fps 띠 확인)"
+ },
+ "cuts": [
+  1.633,
+  2.7,
+  4.233,
+  6.0,
+  7.0,
+  7.333,
+  8.4,
+  10.033,
+  11.067,
+  12.7,
+  15.767,
+  16.4,
+  18.0,
+  19.167,
+  22.434,
+  24.467
+ ],
+ "cuts_extra_confirmed": [
+  7.0,
+  7.333
+ ],
+ "cuts_rejected": [
+  6.4,
+  13.967
+ ],
+ "shots": [
+  {
+   "t0": 0.0,
+   "t1": 1.633,
+   "motion": "cam",
+   "diff": 8.3,
+   "scale": 1.023,
+   "tx": -13,
+   "ty": 4
+  },
+  {
+   "t0": 1.633,
+   "t1": 2.7,
+   "motion": "cam",
+   "diff": 34.6,
+   "scale": 1.0,
+   "tx": -1,
+   "ty": -12
+  },
+  {
+   "t0": 2.7,
+   "t1": 4.233,
+   "motion": "pan",
+   "diff": 36.2,
+   "scale": 1.0,
+   "tx": 0,
+   "ty": -42
+  },
+  {
+   "t0": 4.233,
+   "t1": 6.0,
+   "motion": "zoom_in",
+   "diff": 44.5,
+   "scale": 1.043,
+   "tx": -236,
+   "ty": 68
+  },
+  {
+   "t0": 6.0,
+   "t1": 7.0,
+   "motion": "zoom_in",
+   "diff": 63.6,
+   "scale": 1.044,
+   "tx": -40,
+   "ty": 4
+  },
+  {
+   "t0": 7.0,
+   "t1": 7.333,
+   "motion": "cam",
+   "diff": 31.6,
+   "scale": 1.0,
+   "tx": 0,
+   "ty": -4
+  },
+  {
+   "t0": 7.333,
+   "t1": 8.4,
+   "motion": "cam",
+   "diff": 54.7,
+   "scale": 1.007,
+   "tx": -7,
+   "ty": -2
+  },
+  {
+   "t0": 8.4,
+   "t1": 10.033,
+   "motion": "pan",
+   "diff": 36.5,
+   "scale": 1.0,
+   "tx": -45,
+   "ty": 0
+  },
+  {
+   "t0": 10.033,
+   "t1": 11.067,
+   "motion": "cam",
+   "diff": 19.9,
+   "scale": 1.021,
+   "tx": -11,
+   "ty": -9
+  },
+  {
+   "t0": 11.067,
+   "t1": 12.7,
+   "motion": "pan",
+   "diff": 21.5,
+   "scale": 1.0,
+   "tx": 0,
+   "ty": -42
+  },
+  {
+   "t0": 12.7,
+   "t1": 15.767,
+   "motion": "cam",
+   "diff": 67.3
+  },
+  {
+   "t0": 15.767,
+   "t1": 16.4,
+   "motion": "still",
+   "diff": 0.0
+  },
+  {
+   "t0": 16.4,
+   "t1": 18.0,
+   "motion": "cam",
+   "diff": 21.1,
+   "scale": 1.023,
+   "tx": -13,
+   "ty": -10
+  },
+  {
+   "t0": 18.0,
+   "t1": 19.167,
+   "motion": "still",
+   "diff": 0.7
+  },
+  {
+   "t0": 19.167,
+   "t1": 22.434,
+   "motion": "cam",
+   "diff": 52.2,
+   "scale": 0.993,
+   "tx": -7,
+   "ty": 0
+  },
+  {
+   "t0": 22.434,
+   "t1": 24.467,
+   "motion": "cam",
+   "diff": 20.3,
+   "scale": 1.036,
+   "tx": -19,
+   "ty": -16
+  },
+  {
+   "t0": 24.467,
+   "t1": 26.5,
+   "motion": "pan",
+   "diff": 30.6,
+   "scale": 1.0,
+   "tx": -66,
+   "ty": 0
+  }
+ ],
+ "audio": {
+  "speech_db_rms": -16.8,
+  "pause_floor_db": -41.9,
+  "lead_silence_s": 0.02,
+  "tail_after_speech_s": 0.17,
+  "sfx_candidates": [
+   {
+    "t": 10.86,
+    "kind": "broad",
+    "dur": 0.09,
+    "db": 20.1,
+    "in_word": true,
+    "near": {
+     "cap": 0.24,
+     "sticker": 4.56,
+     "cut": 0.21
+    }
+   },
+   {
+    "t": 11.06,
+    "kind": "broad",
+    "dur": 0.07,
+    "db": 21.4,
+    "in_word": true,
+    "near": {
+     "cap": 0.04,
+     "sticker": 4.76,
+     "cut": 0.01
+    }
+   },
+   {
+    "t": 26.15,
+    "kind": "tonal",
+    "dur": 0.23,
+    "db": 37.1,
+    "in_word": true,
+    "near": {
+     "cap": 0.65,
+     "sticker": 19.85,
+     "cut": 1.68
+    }
+   }
+  ],
+  "sfx_adopted": 0
+ },
+ "_made_by": "banggu 줄판독(오퍼스 눈 + 30fps 픽셀·ORB·소리 실측, 2026-10-25, 관제 263 지시서 06)"
+}

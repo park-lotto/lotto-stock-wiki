@@ -1,0 +1,1813 @@
+{
+ "id": "E9hmVYVa7OY",
+ "dur": 28.233,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "러닝시장 씹어먹은 오픈형 이어폰",
+   "colors": [
+    {
+     "word": "러닝시장 씹어먹은 오픈형 이어폰",
+     "hex": "#000000"
+    }
+   ],
+   "y": [
+    274,
+    342
+   ],
+   "where": "본문 제목 띠(검정 굵은 고딕 1줄, 가운데)"
+  }
+ ],
+ "hook_title_lines": [
+  {
+   "text": "러닝시장 씹어먹은",
+   "colors": [
+    {
+     "word": "러닝시장 씹어먹은",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "where": "훅 카드 1줄(흰 채움+검정 외곽)"
+  },
+  {
+   "text": "오픈형 이어폰",
+   "colors": [
+    {
+     "word": "오픈형 이어폰",
+     "hex": "#43A6F7"
+    }
+   ],
+   "where": "훅 카드 2줄(파랑 채움+검정 외곽)"
+  }
+ ],
+ "source_label": "방구석 | 14:25",
+ "layout": {
+  "window": "컷마다 다름(창 위끝 y≈671~786, 가로 0~1080 꽉 참 또는 x≈20~1057 여백) — 30fps 실측 wt 칸",
+  "caption_band": [
+   502,
+   709
+  ],
+  "title_y": [
+   274,
+   342
+  ],
+  "source_y": [
+   378,
+   402
+  ],
+  "logo_y": [
+   0,
+   233
+  ],
+  "rule_y": [
+   446,
+   451
+  ],
+  "watermark": {
+   "present": false,
+   "alpha": null,
+   "note": "채널 워터마크 없음(재료 안 원본 워터마크는 남아 있음 — ILIi ANI-ONE)"
+  },
+  "source_hex": "#595859",
+  "bg_hex": "#FDFDFD",
+  "header_hex": "#42A4F5",
+  "hook_header_hex": "#183B5D",
+  "hook_band": [
+   584,
+   745
+  ],
+  "line_pitch_px": 79
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.967,
+   "speaker": "나레",
+   "text": "러닝시장을 씹어먹어버린 오픈형 이어폰",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "훅 카드(틀 전체 어둡게·큰 제목 2줄·가운데 흰 띠 y584~745 에 나레 문장)",
+   "y": [
+    636,
+    682
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    128,
+    951
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 46,
+   "letter_gap_px": null,
+   "word_gap_px": null,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "이어폰 케이스를 열어 보여주는 손(어둡게)",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 0.0,
+    "t1": 1.967,
+    "diff": 18.9
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 1.967,
+   "t1": 3.167,
+   "speaker": "나레",
+   "text": "최근에 이 이어폰을 본 사람들이",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    207,
+    869
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.5,
+   "word_gap_px": 18.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "baseus 은색 케이스 열림(이어폰 2짝)",
+   "fit": 8,
+   "cut_at": [
+    1.97
+   ],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 1.967,
+    "t1": 4.133,
+    "diff": 34.5,
+    "scale": 1.094,
+    "tx": -18,
+    "ty": 7
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 3.167,
+   "t1": 4.133,
+   "speaker": "나레",
+   "text": "놀란 부분이 있는데",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    338,
+    738
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 18.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "같은 케이스",
+   "fit": 6,
+   "cut_at": [],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 1.967,
+    "t1": 4.133,
+    "diff": 34.5,
+    "scale": 1.094,
+    "tx": -18,
+    "ty": 7
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 4.133,
+   "t1": 5.567,
+   "speaker": "나레",
+   "text": "바로 착용한 느낌도 안 드는데",
+   "layer": "채널",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    503,
+    551
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    232,
+    846
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 15.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "귀에 이어폰을 끼우는 손(귀 근접)",
+   "fit": 8,
+   "cut_at": [
+    4.13
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 4.133,
+    "t1": 5.567,
+    "diff": 33.5,
+    "scale": 0.984,
+    "tx": 22,
+    "ty": -22
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 5.567,
+   "t1": 7.3,
+   "speaker": "나레",
+   "text": "어떻게 귀에서 안 떨어질 수가 있냐는 거",
+   "layer": "채널",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    123,
+    953
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.5,
+   "word_gap_px": 17.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "귀에 걸린 은색 이어폰",
+   "fit": 8,
+   "cut_at": [
+    5.57
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 5.567,
+    "t1": 7.3,
+    "diff": 40.6
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 7.3,
+   "t1": 8.367,
+   "speaker": "나레",
+   "text": "사실 오픈형 이어폰은",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    503,
+    551
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    314,
+    764
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.5,
+   "word_gap_px": 19.5,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "기타",
+   "scene_desc": "귀 모형에 오픈형 이어폰을 끼움",
+   "fit": 7,
+   "cut_at": [
+    7.3
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 7.3,
+    "t1": 10.1,
+    "diff": 30.5,
+    "scale": 1.001,
+    "tx": -1,
+    "ty": 0
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 8.367,
+   "t1": 10.1,
+   "speaker": "나레",
+   "text": "귀를 압박해 고정되는 방식인데",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    213,
+    863
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 17.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "기타",
+   "scene_desc": "같은 귀 모형(집게처럼 끼움)",
+   "fit": 8,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 7.3,
+    "t1": 10.1,
+    "diff": 30.5,
+    "scale": 1.001,
+    "tx": -1,
+    "ty": 0
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 10.1,
+   "t1": 10.933,
+   "speaker": "나레",
+   "text": "이런 방식 때문에",
+   "layer": "채널",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    364,
+    714
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 20.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "남성 귀의 이어폰을 손가락으로 누름",
+   "fit": 6,
+   "cut_at": [
+    10.1
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 10.1,
+    "t1": 12.834,
+    "diff": 24.4,
+    "scale": 0.998,
+    "tx": 24,
+    "ty": 15
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 10.933,
+   "t1": 12.833,
+   "speaker": "나레",
+   "text": "장시간 착용이 힘들다는 단점이 있었음",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    135,
+    944
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 18.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 장면(귀 누름)",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 10.1,
+    "t1": 12.834,
+    "diff": 24.4,
+    "scale": 0.998,
+    "tx": 24,
+    "ty": 15
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 12.833,
+   "t1": 13.8,
+   "speaker": "나레",
+   "text": "하지만 베이스어스는",
+   "layer": "채널",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    320,
+    758
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 17.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "은색 이어폰 한 짝을 쥔 손",
+   "fit": 8,
+   "cut_at": [
+    12.83
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 12.834,
+    "t1": 14.834,
+    "diff": 16.7,
+    "scale": 1.031,
+    "tx": 30,
+    "ty": -9
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 13.8,
+   "t1": 14.833,
+   "speaker": "나레",
+   "text": "특수 실리콘 패드와",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    338,
+    741
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 15.5,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "같은 이어폰(패드 부분)",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 12.834,
+    "t1": 14.834,
+    "diff": 16.7,
+    "scale": 1.031,
+    "tx": 30,
+    "ty": -9
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 14.833,
+   "t1": 15.767,
+   "speaker": "나레",
+   "text": "휘어지는 본체 설계로",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    503,
+    551
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    315,
+    765
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.5,
+   "word_gap_px": 17.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "이어폰 본체를 양손으로 휨(주황 배경)",
+   "fit": 9,
+   "cut_at": [
+    14.83
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 14.834,
+    "t1": 17.3,
+    "diff": 18.2
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 15.767,
+   "t1": 17.3,
+   "speaker": "나레",
+   "text": "압박이 아닌 밀착에 초점을 둬",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    231,
+    845
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "같은 휨 장면",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 14.834,
+    "t1": 17.3,
+    "diff": 18.2
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 17.3,
+   "t1": 18.533,
+   "speaker": "나레",
+   "text": "압박 없이도 떨어지지 않는",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    261,
+    819
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.5,
+   "word_gap_px": 17.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "남성 귀에 걸린 이어폰(뒤쪽)",
+   "fit": 8,
+   "cut_at": [
+    17.3
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 17.3,
+    "t1": 19.833,
+    "diff": 47.1
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 18.533,
+   "t1": 19.833,
+   "speaker": "나레",
+   "text": "이어폰을 만들어냈다는 거ㄷㄷ",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 537,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    221,
+    853
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 16.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 귀 장면",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 17.3,
+    "t1": 19.833,
+    "diff": 47.1
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 19.833,
+   "t1": 20.8,
+   "speaker": "나레",
+   "text": "그러나 러너들이 꽂힌",
+   "layer": "채널",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    314,
+    762
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 5.5,
+   "word_gap_px": 17.5,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "케이스에 충전 케이블 꽂는 손(주황 배경)",
+   "fit": 4,
+   "cut_at": [
+    19.83
+   ],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 19.833,
+    "t1": 22.133,
+    "diff": 29.0,
+    "scale": 0.988,
+    "tx": 46,
+    "ty": 3
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 20.8,
+   "t1": 22.133,
+   "speaker": "나레",
+   "text": "포인트는 따로 있다는데",
+   "layer": "채널",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    291,
+    786
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 17.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "같은 충전 장면",
+   "fit": 4,
+   "cut_at": [],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 19.833,
+    "t1": 22.133,
+    "diff": 29.0,
+    "scale": 0.988,
+    "tx": 46,
+    "ty": 3
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 22.133,
+   "t1": 23.967,
+   "speaker": "나레",
+   "text": "40시간이라는 긴 사용시간과 방수",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    178,
+    902
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 17.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "물방울 맺힌 이어폰(방수)",
+   "fit": 8,
+   "cut_at": [
+    22.13
+   ],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 22.133,
+    "t1": 23.966,
+    "diff": 20.6,
+    "scale": 1.081,
+    "tx": -43,
+    "ty": -40
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 23.967,
+   "t1": 25.7,
+   "speaker": "나레",
+   "text": "심지어 월등히 저렴한 가격 때문에",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    183,
+    894
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 19.5,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "흰 케이스를 손에 듦(식물 배경)",
+   "fit": 6,
+   "cut_at": [
+    23.97
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 23.966,
+    "t1": 25.7,
+    "diff": 25.6,
+    "scale": 1.032,
+    "tx": -22,
+    "ty": -27
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 25.7,
+   "t1": 26.833,
+   "speaker": "나레",
+   "text": "부담 없이 쓸 수 있어서라고",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    254,
+    825
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.5,
+   "word_gap_px": 16.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "귀에 이어폰 끼우는 손",
+   "fit": 6,
+   "cut_at": [
+    25.7
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 25.7,
+    "t1": 26.833,
+    "diff": 14.6,
+    "scale": 1.004,
+    "tx": -4,
+    "ty": 2
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 26.833,
+   "t1": 28.233,
+   "speaker": "나레",
+   "text": "이제부터 이어폰은 너다 ㅋㅋ",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 537,
+   "align": "center",
+   "max_w": 830,
+   "ink_x": [
+    238,
+    836
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 19.5,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "흰 baseus 케이스를 닫는 손",
+   "fit": 6,
+   "cut_at": [
+    26.83
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 26.833,
+    "t1": 28.233,
+    "diff": 21.6
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  }
+ ],
+ "no_caption": [],
+ "beats": "훅(0.0초 '러닝시장을 씹어먹어버린 오픈형 이어폰') → 다리(2.0초 '최근에 이 이어폰을 본 사람들이') → 질문(4.1초 '바로 착용한 느낌도 안 드는데') → 본문(7.3초 '사실 오픈형 이어폰은') → 이음(10.1초 '이런 방식 때문에') → 본문(10.9초 '장시간 착용이 힘들다는 단점이 있었음') → 반전(12.8초 '하지만 베이스어스는') → 공개(13.8초 '특수 실리콘 패드와') → 증거(17.3초 '압박 없이도 떨어지지 않는') → 이음(19.8초 '그러나 러너들이 꽂힌') → 증거(22.1초 '40시간이라는 긴 사용시간과 방수') → 고조(24.0초 '심지어 월등히 저렴한 가격 때문에') → 끝(25.7초 '부담 없이 쓸 수 있어서라고')",
+ "narr_share": "나레 21/21줄(원음 0 — 받아쓰기 한 화자·TTS 남성 설명조), 나레 자막 28.23초/28.233초",
+ "notes": [
+  "자막 등장은 전부 instant — 30fps 잉크 마스크에서 새 줄 잉크가 첫 프레임에 90% 이상(팝·타이핑·페이드 0). 페이지가 바뀔 때 윗줄까지 한 프레임에 지워진다(exit cut)",
+  "자막 방식 = 1줄 → 아래 줄 덧붙음(1~3줄) → 페이지째 교체. 덧붙음 행의 윗줄 행 t1 은 덧붙는 시각(같은 층 겹침 금지) — 실제로 윗줄은 페이지 끝까지 남는다",
+  "강조색 낱말 0 · 스티커 0 · 효과음 0 — 채움 #000000, 외곽선·그림자·상자 없음(확대 크롭 픽셀). 꾸밈 없는 자막이 이 채널 스타일",
+  "효과음: sfx_events.py 후보 5개 전부 받아쓰기 낱말 구간 안(치찰음·파열음) → 채택 0. 컷 경계 고립 솟음 없음",
+  "BGM: 있음(신호) — 봉우리 161·1244·662·587·350Hz(8~22dB) · 말 사이 바닥 −28~−31dB RMS(말 −16dB) → BGM 은 말보다 약 12~15dB 아래(상한 추정). 곡 이름 미식별",
+  "글꼴 이름 미측정(뜯기 fontmatch 가 손글씨체를 1위로 냄 — 눈으로는 고딕). 크기 53px = 잉크 높이 49~50px ÷ 0.93(한글 고딕 잉크비, 눈 추정). 자간 letter_gap_px = 글자 사이 빈 열 중앙값(줄 높이 30% 미만 틈), word_gap_px = 띄어쓰기 틈",
+  "컷 = 뜯기 bench 컷(kal_analyze match 와 같은 자) + 창 diff 솟음 중 눈으로 확인한 것. 전환은 전부 하드 컷(검정·흰 번쩍·줌블러 0, 창 평균밝기·라플라시안으로 ±4프레임 확인)",
+  "motion: pan/zoom 은 대부분 제품 사진에 천천히 움직임(켄번스 꼴) 또는 원본 카메라. cam = 원본 영상 자체 움직임",
+  "컷 5.267 은 같은 귀 장면 손 움직임 — 뺌(5.567 은 컷)"
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "훅 카드: 어둡게 깐 틀 위 큰 제목 2줄 + 흰 띠 나레 문장, 아래 이어폰 케이스를 여는 손",
+  "face_frac": 0.0,
+  "text": "러닝시장 씹어먹은 / 오픈형 이어폰 · 러닝시장을 씹어먹어버린 오픈형 이어폰"
+ },
+ "hook": {
+  "t0": 0.0,
+  "t1": 1.967,
+  "kind": "훅 카드(틀 어둡게+큰 제목 2줄+흰 띠 나레)",
+  "header_hex": "#183B5D 근처(편마다 #0E3A5E~#1C486C)",
+  "title_hex": [
+   "#FFFFFF",
+   "#43A6F7"
+  ],
+  "exit": "cut(본문 틀로 1프레임에 바뀜, 30fps 띠 확인)"
+ },
+ "cuts": [
+  1.967,
+  4.133,
+  5.567,
+  7.3,
+  10.1,
+  12.834,
+  14.834,
+  17.3,
+  19.833,
+  22.133,
+  23.966,
+  25.7,
+  26.833
+ ],
+ "cuts_extra_confirmed": [
+  5.567
+ ],
+ "cuts_rejected": [
+  5.267
+ ],
+ "shots": [
+  {
+   "t0": 0.0,
+   "t1": 1.967,
+   "motion": "cam",
+   "diff": 18.9
+  },
+  {
+   "t0": 1.967,
+   "t1": 4.133,
+   "motion": "zoom_in",
+   "diff": 34.5,
+   "scale": 1.094,
+   "tx": -18,
+   "ty": 7
+  },
+  {
+   "t0": 4.133,
+   "t1": 5.567,
+   "motion": "cam",
+   "diff": 33.5,
+   "scale": 0.984,
+   "tx": 22,
+   "ty": -22
+  },
+  {
+   "t0": 5.567,
+   "t1": 7.3,
+   "motion": "cam",
+   "diff": 40.6
+  },
+  {
+   "t0": 7.3,
+   "t1": 10.1,
+   "motion": "cam",
+   "diff": 30.5,
+   "scale": 1.001,
+   "tx": -1,
+   "ty": 0
+  },
+  {
+   "t0": 10.1,
+   "t1": 12.834,
+   "motion": "cam",
+   "diff": 24.4,
+   "scale": 0.998,
+   "tx": 24,
+   "ty": 15
+  },
+  {
+   "t0": 12.834,
+   "t1": 14.834,
+   "motion": "cam",
+   "diff": 16.7,
+   "scale": 1.031,
+   "tx": 30,
+   "ty": -9
+  },
+  {
+   "t0": 14.834,
+   "t1": 17.3,
+   "motion": "cam",
+   "diff": 18.2
+  },
+  {
+   "t0": 17.3,
+   "t1": 19.833,
+   "motion": "cam",
+   "diff": 47.1
+  },
+  {
+   "t0": 19.833,
+   "t1": 22.133,
+   "motion": "pan",
+   "diff": 29.0,
+   "scale": 0.988,
+   "tx": 46,
+   "ty": 3
+  },
+  {
+   "t0": 22.133,
+   "t1": 23.966,
+   "motion": "zoom_in",
+   "diff": 20.6,
+   "scale": 1.081,
+   "tx": -43,
+   "ty": -40
+  },
+  {
+   "t0": 23.966,
+   "t1": 25.7,
+   "motion": "cam",
+   "diff": 25.6,
+   "scale": 1.032,
+   "tx": -22,
+   "ty": -27
+  },
+  {
+   "t0": 25.7,
+   "t1": 26.833,
+   "motion": "cam",
+   "diff": 14.6,
+   "scale": 1.004,
+   "tx": -4,
+   "ty": 2
+  },
+  {
+   "t0": 26.833,
+   "t1": 28.233,
+   "motion": "cam",
+   "diff": 21.6
+  }
+ ],
+ "audio": {
+  "speech_db_rms": -16.9,
+  "pause_floor_db": -27.3,
+  "lead_silence_s": 0.08,
+  "tail_after_speech_s": 0.21,
+  "sfx_candidates": [
+   {
+    "t": 4.53,
+    "kind": "broad",
+    "dur": 0.06,
+    "db": 27.0,
+    "in_word": true,
+    "near": {
+     "cap": 0.43,
+     "cut": 0.4
+    }
+   },
+   {
+    "t": 5.68,
+    "kind": "broad",
+    "dur": 0.07,
+    "db": 20.0,
+    "in_word": true,
+    "near": {
+     "cap": 0.08,
+     "cut": 1.55
+    }
+   },
+   {
+    "t": 11.26,
+    "kind": "broad",
+    "dur": 0.06,
+    "db": 19.4,
+    "in_word": true,
+    "near": {
+     "cap": 0.36,
+     "cut": 1.16
+    }
+   },
+   {
+    "t": 17.41,
+    "kind": "broad",
+    "dur": 0.07,
+    "db": 21.0,
+    "in_word": true,
+    "near": {
+     "cap": 0.11,
+     "cut": 0.11
+    }
+   },
+   {
+    "t": 19.75,
+    "kind": "tonal",
+    "dur": 0.22,
+    "db": 35.0,
+    "in_word": true,
+    "near": {
+     "cap": 0.05,
+     "cut": 0.08
+    }
+   }
+  ],
+  "sfx_adopted": 0
+ },
+ "_made_by": "banggu 줄판독(오퍼스 눈 + 30fps 픽셀·ORB·소리 실측, 2026-10-25, 관제 263 지시서 06)"
+}

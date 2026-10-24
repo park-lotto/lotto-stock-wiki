@@ -1,0 +1,1599 @@
+{
+ "id": "8iEhEniPpjE",
+ "dur": 22.833,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "마케팅 천재가 만든 티라미수",
+   "colors": [
+    {
+     "word": "마케팅 천재가 만든 티라미수",
+     "hex": "#000000"
+    }
+   ],
+   "y": [
+    274,
+    342
+   ],
+   "where": "본문 제목 띠(검정 굵은 고딕 1줄, 가운데)"
+  }
+ ],
+ "hook_title_lines": [
+  {
+   "text": "마케팅 천재가",
+   "colors": [
+    {
+     "word": "마케팅 천재가",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "where": "훅 카드 1줄(흰 채움+검정 외곽)"
+  },
+  {
+   "text": "만든 티라미수",
+   "colors": [
+    {
+     "word": "만든 티라미수",
+     "hex": "#43A6F7"
+    }
+   ],
+   "where": "훅 카드 2줄(파랑 채움+검정 외곽)"
+  }
+ ],
+ "source_label": "방구석 | 14:25",
+ "layout": {
+  "window": "컷마다 다름(창 위끝 y≈671~786, 가로 0~1080 꽉 참 또는 x≈20~1057 여백) — 30fps 실측 wt 칸",
+  "caption_band": [
+   502,
+   709
+  ],
+  "title_y": [
+   274,
+   342
+  ],
+  "source_y": [
+   378,
+   402
+  ],
+  "logo_y": [
+   0,
+   233
+  ],
+  "rule_y": [
+   446,
+   451
+  ],
+  "watermark": {
+   "present": false,
+   "alpha": null,
+   "note": "채널 워터마크 없음(재료 안 원본 워터마크는 남아 있음 — ILIi ANI-ONE)"
+  },
+  "source_hex": "#595859",
+  "bg_hex": "#FDFDFD",
+  "header_hex": "#42A4F5",
+  "hook_header_hex": "#183B5D",
+  "hook_band": [
+   584,
+   745
+  ],
+  "line_pitch_px": 79
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.767,
+   "speaker": "나레",
+   "text": "마케팅 천재가 만들었다는 티라미수",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "훅 카드(틀 전체 어둡게·큰 제목 2줄·가운데 흰 띠 y584~745 에 나레 문장)",
+   "y": [
+    635,
+    682
+   ],
+   "x": 541,
+   "align": "center",
+   "max_w": 721,
+   "ink_x": [
+    176,
+    906
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 46,
+   "letter_gap_px": null,
+   "word_gap_px": null,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "숟가락으로 뜬 티라미수 단면(어둡게)",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 0.0,
+    "t1": 1.767,
+    "diff": 23.7,
+    "scale": 1.011,
+    "tx": 49,
+    "ty": 34
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 1.767,
+   "t1": 3.267,
+   "speaker": "나레",
+   "text": "코스트코에 가면 꼭 사야한다는",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 721,
+   "ink_x": [
+    213,
+    866
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 17.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "냉장 진열대의 TIRAMISU 4개입 상자",
+   "fit": 8,
+   "cut_at": [
+    1.77
+   ],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 1.767,
+    "t1": 3.267,
+    "diff": 65.4,
+    "scale": 1.064,
+    "tx": -343,
+    "ty": 264
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 3.267,
+   "t1": 4.333,
+   "speaker": "나레",
+   "text": "EMMI 티라미수",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 721,
+   "ink_x": [
+    369,
+    711
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 20.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "TIRAMISU 상자 앞면 근접(Dessert Italiano)",
+   "fit": 9,
+   "cut_at": [
+    3.27
+   ],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 3.267,
+    "t1": 4.334,
+    "diff": 42.7,
+    "scale": 0.998,
+    "tx": -181,
+    "ty": -49
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 4.333,
+   "t1": 5.1,
+   "speaker": "나레",
+   "text": "하지만 사람들이",
+   "layer": "채널",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 721,
+   "ink_x": [
+    368,
+    707
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": null,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "여성 리뷰어가 티라미수 상자를 들고 말함",
+   "fit": 6,
+   "cut_at": [
+    4.33
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 4.334,
+    "t1": 7.367,
+    "diff": 58.0
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 5.1,
+   "t1": 5.9,
+   "speaker": "나레",
+   "text": "이걸 구매하는 이유는",
+   "layer": "채널",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 721,
+   "ink_x": [
+    316,
+    765
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.5,
+   "word_gap_px": 17.5,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 리뷰어(상자 들어 보임)",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 4.334,
+    "t1": 7.367,
+    "diff": 58.0
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 5.9,
+   "t1": 7.367,
+   "speaker": "나레",
+   "text": "단순히 맛 때문이 아니라는데",
+   "layer": "채널",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 721,
+   "ink_x": [
+    238,
+    840
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 리뷰어",
+   "fit": 6,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 4.334,
+    "t1": 7.367,
+    "diff": 58.0
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 7.367,
+   "t1": 8.4,
+   "speaker": "나레",
+   "text": "패키지를 살펴보니",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 721,
+   "ink_x": [
+    344,
+    731
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 5.5,
+   "word_gap_px": 16.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "컵 뚜껑을 위에서 손으로 만짐",
+   "fit": 8,
+   "cut_at": [
+    7.37
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 7.367,
+    "t1": 10.633,
+    "diff": 57.7
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 8.4,
+   "t1": 9.633,
+   "speaker": "나레",
+   "text": "특이하게도 플라스틱이 아닌",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 721,
+   "ink_x": [
+    243,
+    834
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 18.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "티라미수 컵 옆면 근접(층 보임)",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 7.367,
+    "t1": 10.633,
+    "diff": 57.7
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 9.633,
+   "t1": 10.633,
+   "speaker": "나레",
+   "text": "유리컵에 담겨있고",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 721,
+   "ink_x": [
+    344,
+    734
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 20.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "같은 컵을 돌려 보임",
+   "fit": 8,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 7.367,
+    "t1": 10.633,
+    "diff": 57.7
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 10.633,
+   "t1": 12.067,
+   "speaker": "나레",
+   "text": "문제는 바로 이 컵에 있었음",
+   "layer": "채널",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 721,
+   "ink_x": [
+    254,
+    825
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.5,
+   "word_gap_px": 18.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "빈 유리컵을 손에 듦",
+   "fit": 9,
+   "cut_at": [
+    10.63
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 10.633,
+    "t1": 12.066,
+    "diff": 40.0
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 12.067,
+   "t1": 13.4,
+   "speaker": "나레",
+   "text": "고작 서비스 유리컵이면서",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 721,
+   "ink_x": [
+    267,
+    808
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 7.0,
+   "word_gap_px": 15.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "과정",
+   "scene_desc": "유리컵을 수돗물에 씻음",
+   "fit": 6,
+   "cut_at": [
+    12.07
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 12.066,
+    "t1": 13.4,
+    "diff": 19.7,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 0
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 13.4,
+   "t1": 14.267,
+   "speaker": "나레",
+   "text": "식세기도 견뎌내는",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 721,
+   "ink_x": [
+    345,
+    734
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 7.0,
+   "word_gap_px": 17.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "빈 유리컵을 손으로 돌려 봄",
+   "fit": 6,
+   "cut_at": [
+    13.4
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 13.4,
+    "t1": 15.233,
+    "diff": 32.7,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 0
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 14.267,
+   "t1": 15.233,
+   "speaker": "나레",
+   "text": "단단한 내구성에",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 721,
+   "ink_x": [
+    370,
+    708
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 17.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "같은 유리컵",
+   "fit": 6,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 13.4,
+    "t1": 15.233,
+    "diff": 32.7,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 0
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 15.233,
+   "t1": 16.0,
+   "speaker": "나레",
+   "text": "온 집안 물컵을",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 721,
+   "ink_x": [
+    386,
+    693
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 16.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "과정",
+   "scene_desc": "유리컵을 하나씩 쌓음",
+   "fit": 8,
+   "cut_at": [
+    15.23
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 15.233,
+    "t1": 17.433,
+    "diff": 20.5,
+    "scale": 0.983,
+    "tx": 34,
+    "ty": -13
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 16.0,
+   "t1": 17.433,
+   "speaker": "나레",
+   "text": "이걸로 바꾸는 사람도 있다고 함",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 721,
+   "ink_x": [
+    208,
+    873
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.5,
+   "word_gap_px": 16.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "과정",
+   "scene_desc": "쌓인 유리컵 탑",
+   "fit": 8,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 15.233,
+    "t1": 17.433,
+    "diff": 20.5,
+    "scale": 0.983,
+    "tx": 34,
+    "ty": -13
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 17.433,
+   "t1": 18.333,
+   "speaker": "나레",
+   "text": "하물며 티라미수의",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 721,
+   "ink_x": [
+    344,
+    731
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 22.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "숟가락으로 티라미수를 뜸",
+   "fit": 8,
+   "cut_at": [
+    17.43
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 17.433,
+    "t1": 19.933,
+    "diff": 45.3
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 18.333,
+   "t1": 19.933,
+   "speaker": "나레",
+   "text": "마스카포네 함량도 높은 편이라",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 721,
+   "ink_x": [
+    214,
+    867
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 16.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "같은 장면(크림층 보임)",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 17.433,
+    "t1": 19.933,
+    "diff": 45.3
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 19.933,
+   "t1": 21.8,
+   "speaker": "나레",
+   "text": "맛과 만족감 둘 다 잡은 제품이라며",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 721,
+   "ink_x": [
+    178,
+    899
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.5,
+   "word_gap_px": 16.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "금발 여성 리뷰어 식탁(제품 상자 앞)",
+   "fit": 6,
+   "cut_at": [
+    19.93
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 19.933,
+    "t1": 22.833,
+    "diff": 13.3,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 0
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 21.8,
+   "t1": 22.833,
+   "speaker": "나레",
+   "text": "평가가 아주 좋다고ㄷㄷ",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 536,
+   "align": "center",
+   "max_w": 721,
+   "ink_x": [
+    291,
+    782
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 5.5,
+   "word_gap_px": 16.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 리뷰어가 웃으며 말함",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 19.933,
+    "t1": 22.833,
+    "diff": 13.3,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 0
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  }
+ ],
+ "no_caption": [],
+ "beats": "훅(0.0초 '마케팅 천재가 만들었다는 티라미수') → 다리(1.8초 '코스트코에 가면 꼭 사야한다는') → 이음(4.3초 '하지만 사람들이') → 질문(5.1초 '이걸 구매하는 이유는') → 본문(7.4초 '패키지를 살펴보니') → 공개(8.4초 '특이하게도 플라스틱이 아닌') → 반전(10.6초 '문제는 바로 이 컵에 있었음') → 본문(12.1초 '고작 서비스 유리컵이면서') → 증거(13.4초 '식세기도 견뎌내는') → 고조(17.4초 '하물며 티라미수의') → 끝(19.9초 '맛과 만족감 둘 다 잡은 제품이라며')",
+ "narr_share": "나레 19/19줄(원음 0 — 받아쓰기 한 화자·TTS 남성 설명조), 나레 자막 22.83초/22.833초",
+ "notes": [
+  "자막 등장은 전부 instant — 30fps 잉크 마스크에서 새 줄 잉크가 첫 프레임에 90% 이상(팝·타이핑·페이드 0). 페이지가 바뀔 때 윗줄까지 한 프레임에 지워진다(exit cut)",
+  "자막 방식 = 1줄 → 아래 줄 덧붙음(1~3줄) → 페이지째 교체. 덧붙음 행의 윗줄 행 t1 은 덧붙는 시각(같은 층 겹침 금지) — 실제로 윗줄은 페이지 끝까지 남는다",
+  "강조색 낱말 0 · 스티커 0 · 효과음 0 — 채움 #000000, 외곽선·그림자·상자 없음(확대 크롭 픽셀). 꾸밈 없는 자막이 이 채널 스타일",
+  "효과음: sfx_events.py 후보 2개 전부 받아쓰기 낱말 구간 안(치찰음·파열음) → 채택 0. 컷 경계 고립 솟음 없음",
+  "BGM: 있음(신호) — 봉우리 188·2099·781Hz(9~11dB) · 말 사이 바닥 −28~−31dB RMS(말 −16dB) → BGM 은 말보다 약 12~15dB 아래(상한 추정). 곡 이름 미식별",
+  "글꼴 이름 미측정(뜯기 fontmatch 가 손글씨체를 1위로 냄 — 눈으로는 고딕). 크기 53px = 잉크 높이 49~50px ÷ 0.93(한글 고딕 잉크비, 눈 추정). 자간 letter_gap_px = 글자 사이 빈 열 중앙값(줄 높이 30% 미만 틈), word_gap_px = 띄어쓰기 틈",
+  "컷 = 뜯기 bench 컷(kal_analyze match 와 같은 자) + 창 diff 솟음 중 눈으로 확인한 것. 전환은 전부 하드 컷(검정·흰 번쩍·줌블러 0, 창 평균밝기·라플라시안으로 ±4프레임 확인)",
+  "motion: pan/zoom 은 대부분 제품 사진에 천천히 움직임(켄번스 꼴) 또는 원본 카메라. cam = 원본 영상 자체 움직임",
+  "3.39~3.76 받아쓰기 낱말 없음인데 −12.6dB — 화면 'EMMI' 를 읽는 나레(받아쓰기 누락)로 판단, 효과음 아님",
+  "8.4 페이지 교체 때 창 diff 큰 값은 손이 컵을 돌리는 빠른 움직임(컷 아님, 30fps 연속 확인)"
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "훅 카드: 어둡게 깐 틀 위 큰 제목 2줄 + 흰 띠 나레 문장, 아래 숟가락으로 뜬 티라미수 단면",
+  "face_frac": 0.0,
+  "text": "마케팅 천재가 / 만든 티라미수 · 마케팅 천재가 만들었다는 티라미수"
+ },
+ "hook": {
+  "t0": 0.0,
+  "t1": 1.767,
+  "kind": "훅 카드(틀 어둡게+큰 제목 2줄+흰 띠 나레)",
+  "header_hex": "#183B5D 근처(편마다 #0E3A5E~#1C486C)",
+  "title_hex": [
+   "#FFFFFF",
+   "#43A6F7"
+  ],
+  "exit": "cut(본문 틀로 1프레임에 바뀜, 30fps 띠 확인)"
+ },
+ "cuts": [
+  1.767,
+  3.267,
+  4.334,
+  7.367,
+  10.633,
+  12.066,
+  13.4,
+  15.233,
+  17.433,
+  19.933
+ ],
+ "cuts_extra_confirmed": [
+  15.233,
+  19.933
+ ],
+ "cuts_rejected": [],
+ "shots": [
+  {
+   "t0": 0.0,
+   "t1": 1.767,
+   "motion": "pan",
+   "diff": 23.7,
+   "scale": 1.011,
+   "tx": 49,
+   "ty": 34
+  },
+  {
+   "t0": 1.767,
+   "t1": 3.267,
+   "motion": "zoom_in",
+   "diff": 65.4,
+   "scale": 1.064,
+   "tx": -343,
+   "ty": 264
+  },
+  {
+   "t0": 3.267,
+   "t1": 4.334,
+   "motion": "pan",
+   "diff": 42.7,
+   "scale": 0.998,
+   "tx": -181,
+   "ty": -49
+  },
+  {
+   "t0": 4.334,
+   "t1": 7.367,
+   "motion": "cam",
+   "diff": 58.0
+  },
+  {
+   "t0": 7.367,
+   "t1": 10.633,
+   "motion": "cam",
+   "diff": 57.7
+  },
+  {
+   "t0": 10.633,
+   "t1": 12.066,
+   "motion": "cam",
+   "diff": 40.0
+  },
+  {
+   "t0": 12.066,
+   "t1": 13.4,
+   "motion": "cam",
+   "diff": 19.7,
+   "scale": 1.0,
+   "tx": 0,
+   "ty": 0
+  },
+  {
+   "t0": 13.4,
+   "t1": 15.233,
+   "motion": "cam",
+   "diff": 32.7,
+   "scale": 1.0,
+   "tx": 0,
+   "ty": 0
+  },
+  {
+   "t0": 15.233,
+   "t1": 17.433,
+   "motion": "cam",
+   "diff": 20.5,
+   "scale": 0.983,
+   "tx": 34,
+   "ty": -13
+  },
+  {
+   "t0": 17.433,
+   "t1": 19.933,
+   "motion": "cam",
+   "diff": 45.3
+  },
+  {
+   "t0": 19.933,
+   "t1": 22.833,
+   "motion": "cam",
+   "diff": 13.3,
+   "scale": 1.0,
+   "tx": 0,
+   "ty": 0
+  }
+ ],
+ "audio": {
+  "speech_db_rms": -16.5,
+  "pause_floor_db": -12.6,
+  "lead_silence_s": 0.05,
+  "tail_after_speech_s": 0.1,
+  "sfx_candidates": [
+   {
+    "t": 8.52,
+    "kind": "broad",
+    "dur": 0.06,
+    "db": 21.6,
+    "in_word": true,
+    "near": {
+     "cap": 0.12,
+     "cut": 1.15
+    }
+   },
+   {
+    "t": 11.89,
+    "kind": "broad",
+    "dur": 0.1,
+    "db": 24.0,
+    "in_word": true,
+    "near": {
+     "cap": 0.21,
+     "cut": 0.18
+    }
+   }
+  ],
+  "sfx_adopted": 0
+ },
+ "_made_by": "banggu 줄판독(오퍼스 눈 + 30fps 픽셀·ORB·소리 실측, 2026-10-25, 관제 263 지시서 06)"
+}
