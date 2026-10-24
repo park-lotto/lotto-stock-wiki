@@ -26,8 +26,9 @@
      검출이 없으면(locate=None) 자리는 '받을 것'(target)으로 남기고 check_place 가 미해결로 센다 — 눈대중 좌표로 메우지 않는다.
 
     PYTHONUTF8=1 py tools/calcopy/hybrid/placement.py count <판> [--top] [--dry]  # 벤치 줄판독 → 판 설정 placement.counted 갱신(--dry = 쓰지 않고 출력만)
-                                                                          # --top = 상위 편 묶음 counted.top + channel/<slug>/_kal/상위편_목표.json density·hook(지시서 15)
+                                                                          # --top = 상위 편 묶음 → channel/<slug>/_kal/상위편_목표.json density·hook 만(판 파일 안 바꿈, 지시서 15)
     PYTHONUTF8=1 py tools/calcopy/hybrid/placement.py show <판>           # 센 규칙 표
+    PYTHONUTF8=1 py tools/calcopy/hybrid/placement.py emph-table all      # 강조색 문턱 표(채널마다 벤치 색 강조 쌍 ΔE76 최소, 표준 §11-3 ㉒)
     PYTHONUTF8=1 py tools/calcopy/hybrid/placement.py plan <doc> <work> --version <판>   # 배치만(렌더 없이) → <work>/plan/자막표.json
 """
 from __future__ import annotations
@@ -291,6 +292,9 @@ def top_of(style: dict, counted: dict) -> dict:
         s = K._stats(d.get("lines") or [], float(d.get("dur") or 0))
         per[d["id"]] = {k: s.get(v) for k, v in DENSITY.items()}
     p75 = {k: UT._q([v[k] for v in per.values()], 75) for k in DENSITY}
+    p25 = {k: UT._q([v[k] for v in per.values()], 25) for k in DENSITY}
+    alls = [K._stats(d.get("lines") or [], float(d.get("dur") or 0)) for d in C.bench]
+    first = {k: UT._q([s.get(v) for s in alls], 50) for k, v in DENSITY.items()}     # 1차 판 = 벤치 전체 중앙(§11-3 ⑳ '1차 n')
     mx = {k: (max(x for x in (v[k] for v in per.values()) if isinstance(x, (int, float))) if any(isinstance(v[k], (int, float)) for v in per.values()) else None)
           for k in DENSITY}
     vids = [v for v in counted.get("videos") or [] if v["id"] in ids]
@@ -304,7 +308,7 @@ def top_of(style: dict, counted: dict) -> dict:
             "views": {i: C.views().get(i) for i in ids},
             "slots": {k: {"n": s["n"], "enter": dict(s["enter"]), "emph": s["emph"]} for k, s in slots.items()},
             "stickers": dict(stick), "sfx": [e for v in vids for e in v.get("sfx_lines") or []],
-            "per_video": per, "p75": p75, "max": mx, "hook": hook_of(C, docs)}
+            "per_video": per, "p75": p75, "p25": p25, "max": mx, "first": first, "hook": hook_of(C, docs)}
 
 
 def hook_of(C, docs: list[dict]) -> dict:
@@ -347,7 +351,8 @@ def write_top(style: dict, top: dict) -> Path | None:
     d = json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
     d["density"] = {"made_by": "tools/calcopy/hybrid/placement.py count <판> --top (top_of)", "group": top["group"], "top_ids": top["ids"],
                     "rule": "업그레이드 판 목표 = 상위 편 p75 · 상한 = 상위 편 max(표준 §12-2·§12-4) — upgrade_table.m_density 와 같은 자(kal_analyze._stats)",
-                    **{k: {"p75": top["p75"][k], "max": top["max"][k], "per_video": {i: v[k] for i, v in top["per_video"].items()}} for k in DENSITY}}
+                    **{k: {"p75": top["p75"][k], "p25": top["p25"][k], "max": top["max"][k], "first": top["first"][k],
+                           "per_video": {i: v[k] for i, v in top["per_video"].items()}} for k in DENSITY}}
     d["hook"] = {"made_by": "placement.hook_of", "top_ids": top["ids"], **top["hook"]}
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(d, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
@@ -376,7 +381,8 @@ def density_targets(style: dict) -> dict | None:
         top = ((style.get("placement") or {}).get("counted") or {}).get("top") or {}
         D = {k: {"p75": (top.get("p75") or {}).get(k), "max": (top.get("max") or {}).get(k)} for k in DENSITY} if top else {}
         src = "판 placement.counted.top"
-    out = {k: {"goal": v["p75"], "cap": v.get("max"), "src": src} for k, v in D.items() if k in DENSITY and isinstance(v, dict) and isinstance(v.get("p75"), (int, float))}
+    out = {k: {"goal": v["p75"], "cap": v.get("max"), "p25": v.get("p25"), "first": v.get("first"), "src": src}
+           for k, v in D.items() if k in DENSITY and isinstance(v, dict) and isinstance(v.get("p75"), (int, float))}
     if not out:
         ps = ((T.get("sfx") or {}).get("per_s") or {})
         if isinstance(ps.get("ours_goal"), (int, float)):
@@ -384,13 +390,61 @@ def density_targets(style: dict) -> dict | None:
     return out or {"_none": {"goal": None, "cap": None, "src": f"targets 칸은 있는데 목표 밀도 없음({src} · counted.top · targets.sfx.per_s 다 없음) — count <판> --top"}}
 
 
-def _want(goal: float | None, cap: float | None, n: float) -> tuple[int, int | None]:
-    """목표 비율 × 분모 → 개수(반올림), 상한 비율 × 분모 → 개수(내림 — 상위 편 최대를 넘지 않는다, B14)."""
-    if goal is None or n <= 0:
-        return 0, None
-    c = int(math.floor(cap * n + 1e-9)) if isinstance(cap, (int, float)) else None
-    w = int(round(goal * n))
-    return (min(w, c) if c is not None else w), c
+def _r(x: float) -> int:
+    return int(math.floor(x + 0.5))          # 반올림(파이썬 round 의 짝수 반올림 아님 — 2.5 → 3)
+
+
+def density_goal(rate_stats: dict, dur: float) -> dict:
+    """(판단 주인: 비율 축 목표·판정 — 표준 §11-3 ⑳, placement targets·upgrade_table 둘 다 이 함수) 비율을 편 길이로 환산한 **정수 개수**.
+    rate_stats = {p75, p25, max, first(1차 판 = 벤치 전체 중앙)} · dur = 분모(효과음 = 초, 꾸밈·스티커·짤 = 덩어리 수, 전환 = 컷 경계 수).
+    반환 {n_goal = round(p75×dur), lo = round(p25×dur), hi = round(max×dur), n_first = round(first×dur)}."""
+    g = lambda k: rate_stats.get(k) if isinstance(rate_stats.get(k), (int, float)) else None  # noqa: E731
+    p75, p25, mx, fi = g("p75"), g("p25"), g("max"), g("first")
+    n_goal = _r(p75 * dur) if p75 is not None else None
+    lo = _r(p25 * dur) if p25 is not None else n_goal
+    hi = _r(mx * dur) if mx is not None else n_goal
+    if n_goal is not None and lo is not None and hi is not None:
+        lo, hi = min(lo, n_goal), max(hi, n_goal)
+    return {"n_goal": n_goal, "lo": lo, "hi": hi, "n_first": _r(fi * dur) if fi is not None else None, "dur": round(dur, 3)}
+
+
+def density_judge(n: int, G: dict) -> tuple[bool, bool]:
+    """(better, worse) — 나아짐 = n 이 [lo, hi] 안 ∧ 1차 n 보다 목표에 가깝거나 같음 · 나빠짐 = 범위 밖."""
+    inr = G["lo"] is not None and G["lo"] <= n <= G["hi"]
+    closer = G["n_first"] is None or abs(n - G["n_goal"]) <= abs(G["n_first"] - G["n_goal"])
+    return bool(inr and closer), not inr
+
+
+def ours_denom(key: str, R: Path) -> float | None:
+    """우리 완성본의 비율 분모(render/자막표.json·timeline.json) — kal_analyze.match_from_render 가 그 비율을 낸 분모와 같은 것."""
+    tp, tl = Path(R) / "자막표.json", Path(R) / "timeline.json"
+    rows = (json.loads(tp.read_text(encoding="utf-8")).get("rows") or []) if tp.exists() else []
+    T = json.loads(tl.read_text(encoding="utf-8")) if tl.exists() else {}
+    if key == "sfx.rate":
+        return float(T.get("end") or 0) or None
+    if key == "transition.rate":
+        return float(max(0, len(T.get("cuts") or []) - 1)) or None
+    if key == "fx.rate.나레":
+        return float(sum(1 for r in rows if (r.get("speaker") or r.get("kind")) == "narr")) or None
+    return float(len(rows)) or None
+
+
+def density_axis(key: str, top_vals: dict, all_vals: list, ours_rate: float, R: Path, grp: str) -> dict:
+    """upgrade_table.m_density 가 부르는 한 곳 — 상위 편 비율(top_vals)·벤치 전체(all_vals) → density_goal(우리 분모) → 우리 개수 판정."""
+    from tools.calcopy.engine import upgrade_table as UT
+    vals = list(top_vals.values())
+    st = {"p75": UT._q(vals, 75), "p25": UT._q(vals, 25), "max": max(vals), "first": UT._q(all_vals, 50)}
+    den = ours_denom(key, R)
+    if not den:
+        return {"bench": {"group": grp, "per_doc": top_vals, **st}, "ours": ours_rate, "better": None, "worse": None,
+                "why": f"{key} 우리 분모(자막표·시간표) 없음 — 미측정"}
+    G = density_goal(st, den)
+    n = _r(ours_rate * den)
+    better, worse = density_judge(n, G)
+    return {"bench": {"group": grp, "per_doc": top_vals, **st, "goal": G}, "ours": {"rate": ours_rate, "n": n, "denom": den},
+            "better": better, "worse": worse,
+            "why": f"{key} 우리 {n}개(분모 {den:g}) — 목표 {G['n_goal']} · 허용 {G['lo']}~{G['hi']} · 1차 {G['n_first']} "
+                   f"(나아짐 = 범위 안 ∧ 1차보다 목표에 가깝거나 같음 · 나빠짐 = 범위 밖, 표준 §11-3 ⑳) · {grp}"}
 
 
 def _is_deco(r: dict) -> bool:
@@ -409,7 +463,8 @@ def density_step(out: list[dict], style: dict, tg: dict, log: list) -> dict:
         idx = [i for i, r in enumerate(out) if r["speaker"] == sp]
         if not t or not idx:
             continue
-        want, cap = _want(t["goal"], t["cap"], len(idx))
+        G = density_goal({"p75": t["goal"], "p25": t.get("p25"), "max": t["cap"], "first": t.get("first")}, len(idx))
+        want, cap = G["n_goal"], G["hi"]
         have = sum(_is_deco(out[i]) for i in idx)
         added = []
         if have < want:
@@ -431,7 +486,7 @@ def density_step(out: list[dict], style: dict, tg: dict, log: list) -> dict:
         elif cap is not None and have > cap:
             log.append(f"꾸밈({sp}) {have}개 > 상한 {cap}(상위 편 최대) — 1차 배치 그대로 둠")
         got = have + len(added)
-        rep[key] = {"goal": t["goal"], "cap": t["cap"], "want": want, "cap_n": cap, "n": len(idx), "ours": round(got / len(idx), 3), "src": t["src"]}
+        rep[key] = {"goal": t["goal"], "cap": t["cap"], **G, "n": got, "ours": round(got / len(idx), 3), "src": t["src"]}
         log.append(f"꾸밈({sp}) targets: 목표 {t['goal']}×{len(idx)}={want} · 상한 {cap} · 1차 {have} → {got}"
                    + (f" (+강조 {[out[i]['line'] + '「' + out[i]['text'] + '」' for i in added]})" if added else ""))
     if tg.get("sticker_rate") and not [k for k in ((style["placement"].get("rules") or {}).get("stickers") or {}) if k != "comment_card"]:
@@ -598,13 +653,16 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
     sfx = sfx_step(out, style, ref, transitions, cuts, log, tg=tg, warn=warn)
     if tg and "sfx_rate" in tg:
         dur = max((float(r.get("t1") or 0) for r in out), default=0.0)
-        tg_rep["sfx_rate"] = {**{k: tg["sfx_rate"][k] for k in ("goal", "cap", "src")}, "dur": round(dur, 3), "n": len(sfx),
-                              "ours": round(len(sfx) / dur, 3) if dur else None}
+        t = tg["sfx_rate"]
+        tg_rep["sfx_rate"] = {**{k: t[k] for k in ("goal", "cap", "src")},
+                              **density_goal({"p75": t["goal"], "p25": t.get("p25"), "max": t["cap"], "first": t.get("first")}, dur),
+                              "n": len(sfx), "ours": round(len(sfx) / dur, 3) if dur else None}
     # ⑦ 짤(meme): rules.meme{rate, cond{role,lex}, tone, len_s, pack, target} — rate 0(벤치에 짤 없음)이면 0개(없는 것도 스타일)
     meme_step(out, style, seed, locate, log)
     effects_step(out, style, seed, log)
     for r in out:
         r["variant"] = r.pop("variant_force", None) or variant_of(r, style)
+    emph_color_step(out, style, log)      # 강조색(㉒) — 줄 변형(색)이 정해진 뒤
     tally = Counter(r["enter"] for r in out)
     log.append(f"등장 {dict(tally)} · 강조 {sum(1 for r in out if r.get('emph'))}/{len(out)}")
     log += warn
@@ -616,6 +674,144 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
         res["targets"] = tg_rep
     return res
 
+
+# ── 강조색 고르기(표준 §11-3 ㉒ — 주인 = 여기 하나) ────────────────────────────────
+# 후보 = 자막팩 mark.colors(+ 대본 key_color 가 있으면 맨 앞). ⓐ 같은 줄 기본 글자색과 ΔE76 ≥ 문턱 ⓑ 외곽선(없으면 자막 띠 배경)과 명도 대비 ≥ 3:1
+# ⓒ 줄색과 색상환(CIELCh 색상각) 거리 < 30° 금지(빨강↔주황 — 잇템로그 ep13 R1 훅 빨강 #E30004 위 주황 #F07A09) ⓓ 전부 미달이면 강조 없음 + 로그.
+# 문턱 = 그 채널 벤치 줄판독의 (줄색 fill_hex, 강조 hex) 쌍 ΔE76 최소(ΔE<10 = 색 아닌 강조 — 줄 전체가 그 색·크기 강조 — 는 뺀다), 쌍 없으면 임시 30.
+# 1차 판(벤치 색 쌍 그대로)은 이 규칙을 쓰지 않는다 — 업그레이드 판(upgrades 칸)·회원 맞춤(_member_patch)·rules.emph_color.apply 만.
+EMPH_DE_FALLBACK = 30.0
+EMPH_CONTRAST = 3.0
+EMPH_HUE_MIN = 30.0
+EMPH_COLOR_ONLY = 10.0     # 벤치 쌍 ΔE 가 이보다 작으면 색 강조가 아니다(줄 전체가 그 색·크기 강조·같은 색 측정 흔들림 — 키치잇 #E74264↔#EC335A 7.4·#F17ECA↔#F375CA 5.5, 색상각 < 3°) → 문턱 계산에서 뺀다
+_HEX = re.compile(r"#[0-9A-Fa-f]{6}")
+_thr_cache: dict = {}
+
+
+def emph_pairs(slug: str) -> list[tuple]:
+    """벤치 줄판독의 (ΔE76, 줄색, 강조색, 편 id) — 색 강조 쌍만."""
+    from tools.calcopy.hybrid.pack_map import delta_e
+    out = []
+    for f in sorted((ROOT / "channel" / slug / "줄판독").glob("*.json")):
+        try:
+            d = json.loads(f.read_text(encoding="utf-8"))
+        except Exception as e:  # noqa: BLE001 — 깨진 줄판독은 알리고 건너뛴다
+            print(f"[placement] 줄판독 읽기 실패 {f}: {e}", file=sys.stderr); continue
+        for l in d.get("lines") or []:
+            fh = _HEX.search(str(l.get("fill_hex") or ""))
+            for e in l.get("emph") or []:
+                eh = _HEX.search(str((e.get("hex") or e.get("color") or "") if isinstance(e, dict) else ""))
+                if fh and eh:
+                    de = delta_e(fh.group(0), eh.group(0))
+                    if de >= EMPH_COLOR_ONLY:
+                        out.append((de, fh.group(0).upper(), eh.group(0).upper(), d.get("id") or f.stem))
+    return sorted(out)
+
+
+def emph_threshold(slug: str | None) -> tuple[float, str]:
+    if slug not in _thr_cache:
+        P = emph_pairs(slug) if slug else []
+        _thr_cache[slug] = (P[0][0], f"벤치 줄판독 색 강조 {len(P)}쌍 ΔE76 최소({P[0][1]}↔{P[0][2]} {P[0][3]})") if P else \
+            (EMPH_DE_FALLBACK, f"벤치 색 강조 쌍 없음 → 임시 {EMPH_DE_FALLBACK}")
+    return _thr_cache[slug]
+
+
+def _rgb(h: str) -> tuple[float, float, float]:
+    h = h.lstrip("#")
+    return tuple(int(h[i:i + 2], 16) / 255 for i in (0, 2, 4))
+
+
+def contrast(a: str, b: str) -> float:
+    """WCAG 명도 대비(1~21)."""
+    def L(h):
+        c = [x / 12.92 if x <= 0.03928 else ((x + 0.055) / 1.055) ** 2.4 for x in _rgb(h)]
+        return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+    la, lb = sorted((L(a), L(b)), reverse=True)
+    return round((la + 0.05) / (lb + 0.05), 2)
+
+
+def hue_gap(a: str, b: str) -> float | None:
+    """색상환 거리(도) = CIELCh 색상각(ΔE 와 같은 Lab 공간). 어느 쪽이든 무채색(C* < 15)이면 None(색상 비교 안 함).
+    HSV 색상각을 쓰지 않는 까닭(10-25 실측): ep13 훅 빨강 #E30004↔주황 #F07A09 = HSV 30.4°(30° 문턱을 넘어 못 거름) · LCh 20.6° /
+    벤치 ro1l 노랑 #F7EB0E↔주황 #F07A09(벤치가 실제로 쓴 쌍) = HSV 27.6°(벤치 쌍을 거름) · LCh 39.6°. 눈에 가까운 각이 둘 다 맞게 가른다."""
+    import math
+    from tools.calcopy.hybrid.pack_map import _hex_lab
+    (_, a1, b1), (_, a2, b2) = _hex_lab(a), _hex_lab(b)
+    if min(math.hypot(a1, b1), math.hypot(a2, b2)) < 15:
+        return None
+    d = abs(math.degrees(math.atan2(b1, a1)) - math.degrees(math.atan2(b2, a2))) % 360
+    return round(min(d, 360 - d), 1)
+
+
+def _pack_of(style: dict) -> dict:
+    from tools.calcopy.hybrid import pack_map
+    return pack_map.caption_packs().get((style.get("caption") or {}).get("pack") or "", {})
+
+
+def line_color(r: dict, pack: dict) -> str | None:
+    """그 덩어리 기본 글자색 = 팩 변형(variants[변형].text.color) > 화자(speakers[화자].text.color) > 팩 text.color."""
+    for c in (((pack.get("variants") or {}).get(r.get("variant") or "") or {}).get("text", {}).get("color"),
+              (((pack.get("speakers") or {}).get(r.get("speaker") or "") or {}).get("text") or {}).get("color"),
+              (pack.get("text") or {}).get("color")):
+        if c and _HEX.fullmatch(str(c)):
+            return str(c).upper()
+    return None
+
+
+def outline_color(pack: dict) -> str | None:
+    for s in (((pack.get("emph") or {}).get("style") or {}).get("WebkitTextStroke"), ((pack.get("text") or {}).get("style") or {}).get("WebkitTextStroke")):
+        m = _HEX.search(str(s or ""))
+        if m and not re.match(r"\s*0(\.0+)?(px|em)?\s", str(s)):
+            return m.group(0).upper()
+    return None
+
+
+def pick_emph_color(base: str, cands: list[str], thr: float, back: str | None) -> tuple[str | None, list[str]]:
+    """(판단 주인) 후보 중 ⓐ ΔE ≥ thr ⓑ back(외곽선·배경)과 대비 ≥ 3 ⓒ 색상환 거리 ≥ 30° 를 다 넘는 첫 색 | None. 반환 (색, 탈락 까닭)."""
+    from tools.calcopy.hybrid.pack_map import delta_e
+    why = []
+    for c in cands:
+        c = c.upper()
+        de = delta_e(base, c)
+        if de < thr:
+            why.append(f"{c} ΔE {de}<{thr}"); continue
+        if back and contrast(c, back) < EMPH_CONTRAST:
+            why.append(f"{c} 대비 {contrast(c, back)}<{EMPH_CONTRAST}({back})"); continue
+        hg = hue_gap(base, c)
+        if hg is not None and hg < EMPH_HUE_MIN:
+            why.append(f"{c} 색상환 {hg}°<{EMPH_HUE_MIN}°"); continue
+        return c, why
+    return None, why
+
+
+def emph_color_step(out: list[dict], style: dict, log: list):
+    R = (style["placement"].get("rules") or {}).get("emph_color") or {}
+    if R.get("apply") is False or not (style.get("upgrades") or style.get("_member_patch") or R.get("apply")):
+        return          # 1차 판 = 벤치 색 쌍 그대로(㉒)
+    pack = _pack_of(style)
+    if not pack:
+        log.append(f"⚠ 강조색 규칙: 자막팩 '{(style.get('caption') or {}).get('pack')}' 없음 — 못 잼"); return
+    slug = (style.get("bench") or {}).get("channel")
+    thr, thr_why = (float(R["de_min"]), "판 rules.emph_color.de_min") if isinstance(R.get("de_min"), (int, float)) else emph_threshold(slug)
+    back = outline_color(pack) or (R.get("band_rgb") if _HEX.fullmatch(str(R.get("band_rgb") or "")) else None)
+    if not back:
+        log.append("⚠ 강조색 규칙 ⓑ: 외곽선도 자막 띠 배경색(rules.emph_color.band_rgb)도 없어 명도 대비는 못 쟀다")
+    base_c = [str(c) for c in ((pack.get("mark") or {}).get("colors") or []) if _HEX.fullmatch(str(c))]
+    for r in out:
+        if not r.get("emph"):
+            continue
+        base = line_color(r, pack)
+        if not base:
+            continue
+        keep = []
+        for e in r["emph"]:
+            cands = ([e["color"]] if _HEX.fullmatch(str(e.get("color") or "")) else []) + [c for c in base_c if c.upper() != str(e.get("color") or "").upper()]
+            c, why = pick_emph_color(base, cands, thr, back)
+            if c:
+                keep.append({**e, "color": c})
+            else:
+                log.append(f"강조 없음(㉒): {r['line']}「{r['text']}」 '{e.get('word')}' 줄색 {base} — 후보 전부 미달 {why} (문턱 {thr}: {thr_why})")
+        r["emph"] = keep
 
 # ── 자리(표준 §3-3 A3): 스티커·짤·pointer 는 검출로 자리를 받는다 ─────────────────
 def _site(st: dict, rule: dict, row: dict, locate, log: list) -> dict | None:
@@ -765,7 +961,9 @@ def sfx_step(out: list[dict], style: dict, ref: dict | None, transitions: list[d
     n_tg = None
     if tg and tg.get("sfx_rate"):
         dur = max((float(r.get("t1") or 0) for r in out), default=0.0)
-        n_tg, cap_n = _want(tg["sfx_rate"]["goal"], tg["sfx_rate"]["cap"], dur)
+        t = tg["sfx_rate"]
+        G = density_goal({"p75": t["goal"], "p25": t.get("p25"), "max": t["cap"], "first": t.get("first")}, dur)
+        n_tg, cap_n = G["n_goal"], G["hi"]
         if not lines:
             C = style["placement"].get("counted") or {}
             top = C.get("top") or {}
@@ -1062,18 +1260,15 @@ def check_place(placed: dict, style: dict) -> dict:
     rep["meme"] = {"ours": sum(1 for r in rows for s in r["stickers"] if s["kind"] == "meme")}
     # 조용한 0(⑮): 판 규칙이 없어 0발·전부 컷이 된 것 = ×
     bad += list(placed.get("warn") or [])
-    # 목표 밀도(업그레이드 판 targets, 표준 §12-4): 우리 = 목표(상위 편 p75) ±20%p 안 · 상한(상위 편 max) 이하
+    # 목표 밀도(업그레이드 판 targets, 표준 §11-3 ⑳): 우리 개수 n 이 density_goal 허용 [lo, hi] 안
     T = placed.get("targets") or {}
     if T:
         rep["targets"] = T
         for k, v in T.items():
-            o, g, c = v.get("ours"), v.get("goal"), v.get("cap")
-            if o is None or g is None:
+            if v.get("lo") is None or v.get("n") is None:
                 continue
-            if abs(o - g) > 0.20 + 1e-9:
-                bad.append(f"목표 밀도 {k} 우리 {o} — 목표 {g} ±20%p 밖")
-            if isinstance(c, (int, float)) and o > c + 1e-9:
-                bad.append(f"목표 밀도 {k} 우리 {o} > 상한 {c}(상위 편 최대)")
+            if not v["lo"] <= v["n"] <= v["hi"]:
+                bad.append(f"목표 밀도 {k} 우리 {v['n']}개 — 허용 {v['lo']}~{v['hi']}(목표 {v['n_goal']}) 밖")
     return {"ok": ok and not bad, "reference": placed.get("reference"), "worst_slot_diff": round(worst, 3), "slots": rep, "bad": bad}
 
 
@@ -1112,6 +1307,13 @@ def main():
     if len(sys.argv) < 3:
         print(__doc__); return 2
     cmd, name = sys.argv[1], sys.argv[2]
+    if cmd == "emph-table":         # 강조색 문턱 표(㉒) — name = 채널 slug 또는 all
+        slugs = sorted(p.parent.name for p in (ROOT / "channel").glob("*/줄판독")) if name == "all" else [name]
+        print("| 채널 | 문턱 ΔE76 | 근거 |\n|---|---|---|")
+        for sl in slugs:
+            thr, why = emph_threshold(sl)
+            print(f"| {sl} | {thr} | {why} |")
+        return 0
     if cmd == "plan":
         import argparse
         ap = argparse.ArgumentParser(); ap.add_argument("cmd"); ap.add_argument("doc"); ap.add_argument("work"); ap.add_argument("--version", required=True)
@@ -1123,12 +1325,12 @@ def main():
     st = ST.load(name)
     if cmd == "count":
         c = count(st)
-        if "--top" in sys.argv:          # 상위 편 묶음(지시서 15) — counted.top + channel/<slug>/_kal/상위편_목표.json density·hook
-            c["top"] = top_of(st, c)
+        if "--top" in sys.argv:          # 상위 편 묶음(지시서 15) → channel/<slug>/_kal/상위편_목표.json density·hook 만(정본 §12-5, 판 파일은 안 바꿈)
+            top = top_of(st, c)
+            print(json.dumps({k: top[k] for k in ("ids", "p75", "p25", "max", "first", "hook")}, ensure_ascii=False, indent=1))
             if "--dry" not in sys.argv:
-                print(f"상위편_목표.json ← {write_top(st, c['top'])}")
-        elif (st["placement"].get("counted") or {}).get("top"):
-            c["top"] = st["placement"]["counted"]["top"]       # --top 없이 다시 세도 앞서 잰 상위 편 묶음은 남긴다
+                print(f"상위편_목표.json ← {write_top(st, top)}")
+            return 0
         if "--dry" not in sys.argv:
             ST.save_counted(name, c)
         print(json.dumps({k: v for k, v in c.items() if k != "videos"}, ensure_ascii=False, indent=1))

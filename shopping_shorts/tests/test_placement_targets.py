@@ -299,3 +299,37 @@ def test_placement_counts_kept_candidates_only(tmp_path, monkeypatch):
                              "V2": {"cand": [{"t": 1.0, "near": {"switch": 0.2}}]}}), encoding="utf-8")
     monkeypatch.setattr(PL, "sfx_events_path", lambda s: (p, None))
     assert PL._sfx_table({"bench": {}}) == {"V1": ["cap"], "V2": ["switch"]}
+
+
+# ⑦ 강조색 고르기(표준 §11-3 ㉒) ─────────────────────────────────────────────
+def _emph_rows():
+    return [{"line": "N1", "speaker": "narr", "text": "연어로 만든 한국 크림을", "variant": "hook", "emph": [{"word": "연어"}]},      # ep13 R1 훅 빨강 위 주황
+            {"line": "N2", "speaker": "narr", "text": "분홍 알갱이마다", "variant": "", "emph": [{"word": "분홍"}]}]                # 나레 노랑 위 주황(벤치 ro1l 쌍)
+
+
+def test_emph_color_rule_drops_orange_on_red_hook():
+    from tools.calcopy.hybrid import styles as ST
+    st = ST.load("잇템로그판_v2")
+    assert st.get("upgrades"), "업그레이드 판이어야 규칙이 돈다"
+    out, log = _emph_rows(), []
+    PL.emph_color_step(out, st, log)
+    assert out[0]["emph"] == [] and any("N1" in x and "색상환" in x for x in log), (out, log)
+    assert out[1]["emph"] == [{"word": "분홍", "color": "#F07A09"}]          # 벤치가 쓴 노랑↔주황은 남는다(LCh 39.6°)
+
+
+def test_emph_color_rule_off_for_first_pan():
+    from tools.calcopy.hybrid import styles as ST
+    st = ST.load("잇템로그판")
+    out, log = _emph_rows(), []
+    PL.emph_color_step(out, st, log)
+    assert out == _emph_rows() and not log                                   # 1차 판 = 벤치 색 쌍 그대로
+
+
+def test_pick_emph_color_conditions():
+    assert PL.pick_emph_color("#F7EB0E", ["#101010"], 18.0, "#000000")[0] is None                  # 검정 외곽선과 대비 1.2 < 3
+    assert PL.pick_emph_color("#FFFFFF", ["#F5F5F5"], 18.0, "#000000")[0] is None                  # ΔE < 문턱
+    c, why = PL.pick_emph_color("#E30004", ["#F07A09", "#F7EB0E"], 18.0, "#000000")
+    assert c == "#F7EB0E" and "색상환" in why[0]                                                  # 첫 후보 탈락 → 다음 후보
+    assert PL.emph_threshold("ititemlog")[0] == pytest.approx(17.97, abs=0.01)                      # 벤치 줄판독 색 강조 쌍 최소
+    assert PL.emph_threshold("__없는채널__")[0] == PL.EMPH_DE_FALLBACK
+    assert PL.emph_threshold("kitchit")[0] >= 10                                                   # 같은 색 흔들림(ΔE 5.5·7.4)은 문턱이 아니다
