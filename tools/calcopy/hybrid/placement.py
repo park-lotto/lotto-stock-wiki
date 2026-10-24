@@ -17,8 +17,17 @@
   ③ 강조 낱말 비율·스티커 종류와 개수·효과음 수도 본보기 편 그대로(우리 덩어리에 조건 맞는 자리가 있을 때만).
   ④ 어느 덩어리에 붙나 = 조건(lex: 감탄·고급·값·물음, 대본 key 낱말)이 맞는 덩어리 먼저, 나머지는 고르게 펼침.
 
-    PYTHONUTF8=1 py tools/calcopy/hybrid/placement.py count <판>          # 벤치 줄판독 → 판 설정 placement.counted 갱신
+10-24 표준 §3-3 A1·A2·A3(관제 263, 지시서 03) — 이 함수가 전환·효과음·짤·스티커 자리까지 한 곳에서 정한다:
+  ⑤ 효과음 = 본보기 편 줄판독 sfx{kind,t}·role 이 있으면 역할(훅·공개·반전·끝·본문) 비율 × 종류 비율(rules.sfx.kinds) × 시각 편차(벤치 중앙),
+     없으면 옛 길(효과음 신호표 sfx_events 의 고립 후보 자리). 신호표 = channel/<slug>/_kal/sfx_events.json(engine/sound/sfx_events.py <slug>).
+  ⑥ 전환 = transitions[{t,kind,ms}] — 본보기 편 줄판독 transition 비율을 **컷 경계**에 나눈다(짧은 컷 < cond.min_cut_s 엔 안 붙임,
+     화자 바뀜·공개 줄 앞 먼저). 옛 흰 번쩍(rules.flash)은 transitions kind=flash 로 들어가고 flashes 는 거기서 뽑은 뷰다(한 자리에서만 정한다).
+  ④ 스티커·짤 자리 = rules.stickers.<kind>.target(face|object|caption_side|fixed{x,y}+why) → locate(검출, hybrid/fx_target.locator)로 받는다.
+     검출이 없으면(locate=None) 자리는 '받을 것'(target)으로 남기고 check_place 가 미해결로 센다 — 눈대중 좌표로 메우지 않는다.
+
+    PYTHONUTF8=1 py tools/calcopy/hybrid/placement.py count <판> [--dry]  # 벤치 줄판독 → 판 설정 placement.counted 갱신(--dry = 쓰지 않고 출력만)
     PYTHONUTF8=1 py tools/calcopy/hybrid/placement.py show <판>           # 센 규칙 표
+    PYTHONUTF8=1 py tools/calcopy/hybrid/placement.py plan <doc> <work> --version <판>   # 배치만(렌더 없이) → <work>/plan/자막표.json
 """
 from __future__ import annotations
 
@@ -75,6 +84,72 @@ def slot_of(speaker: str, first: bool) -> str:
     return f"{speaker}.{'first' if first else 'rest'}"
 
 
+# 줄판독 칸 접기(지침서 §6 어휘 + 자유 글) — 세기(count)·배치(place)·검사(check_place)가 같은 접기를 쓴다
+ROLES = ("hook", "reveal", "twist", "end", "body")
+TRANS_DRAWABLE = ("zoomblur", "flash", "black")      # 렌더러가 그릴 전환(표준 §3-3 A1) — cut 은 전환 없음, other(회오리 등)는 못 그림
+TWIST_LEX = r"근데|하지만|그런데|반전|알고 보니|사실은|의외로"
+
+
+def role_key(s) -> str:
+    """줄 역할 자유 글 → hook|reveal|twist|end|body. '사회 반응 끝'·'끝' = end, '공개'·'정체' = reveal."""
+    s = str(s or "").lower()
+    for k, p in (("hook", r"훅|hook"), ("reveal", r"공개|정체|reveal"), ("twist", r"반전|twist"), ("end", r"끝|마무리|ending|^end")):
+        if re.search(p, s):
+            return k
+    return "body"
+
+
+def trans_key(s) -> str:
+    """줄판독 transition 칸 → cut|zoomblur|flash|black|other. none·빈칸·'같은 컷 안' = cut(전환 없음)."""
+    s = str(s if s is not None else "").lower()
+    if re.search(r"zoom|줌", s):
+        return "zoomblur"
+    if re.search(r"flash|번쩍|흰", s):
+        return "flash"
+    if re.search(r"black|검은|암전", s):
+        return "black"
+    if not s or re.search(r"^cut|^none|컷|하드", s):
+        return "cut"
+    return "other"
+
+
+def sfx_key(s) -> str | None:
+    """줄판독 sfx.kind → ding|whoosh|pop|laugh|wow|other. '원본 동작음·타격음' 처럼 원본에 든 소리(벤치가 얹은 게 아님)는 None."""
+    s = str(s or "")
+    if re.search(r"원본|원음|^\d", s):
+        return None
+    for k, p in (("ding", r"띵|띠링|딩|ding|tonal"), ("whoosh", r"휙|슉|whoosh|swish"), ("pop", r"뽁|팝|톡|뿅|pop"),
+                 ("laugh", r"웃음|laugh"), ("wow", r"탄성|wow")):
+        if re.search(p, s, re.I):
+            return k
+    return "other"
+
+
+def row_roles(out: list[dict]) -> list[str]:
+    """우리 덩어리 역할 — 대본 줄 role 이 있으면 그것(접기), 없으면 박자 어림: 첫 줄 = 훅, 끝 줄 = 끝,
+    제품 이름(key)이 훅 밖에서 처음 나온 덩어리 = 공개, 반전 낱말 = 반전, 나머지 = 본문."""
+    if not out:
+        return []
+    first, last = out[0]["line"], out[-1]["line"]
+    roles, seen_key = [], False
+    for r in out:
+        if r.get("role"):
+            roles.append(role_key(r["role"])); continue
+        if r["line"] == first:
+            roles.append("hook")
+        elif r["line"] == last:
+            roles.append("end")
+        elif r.get("key") and not seen_key:
+            roles.append("reveal"); seen_key = True
+        elif re.search(TWIST_LEX, r.get("text") or ""):
+            roles.append("twist")
+        else:
+            roles.append("body")
+        if r.get("key") and r["line"] != first:
+            seen_key = True
+    return roles
+
+
 # ── 세기 ──────────────────────────────────────────────────────────────
 def _bench_rows(path: Path) -> tuple[list[dict], dict]:
     d = json.loads(path.read_text(encoding="utf-8"))
@@ -88,20 +163,44 @@ def _bench_rows(path: Path) -> tuple[list[dict], dict]:
     return rows, d
 
 
-def _sfx_table(style: dict) -> dict:
+def sfx_events_path(style: dict) -> tuple[Path | None, str | None]:
+    """(판단 주인: 벤치 효과음 신호표 자리) 표준 §3-3 A2 — 채널마다 자기 파일 `channel/<slug>/_kal/sfx_events.json`(키 = 편 id).
+    그 파일이 있으면 그것. 없고 판 칸 bench.sfx_events 가 옛 공유 파일(키 `<sfx_key>/<id>`)을 가리키면 그 파일 + 접두(경보 출력 —
+    `py tools/calcopy/engine/sound/sfx_events.py <slug>` 로 1회 변환하라). 반환 (경로, 접두 | None)."""
     B = style["bench"]
-    if not B.get("sfx_events"):
+    slug = B.get("channel") or B.get("sfx_key") or (Path(B["line_reads"]).parts[1] if B.get("line_reads") else None)
+    own = ROOT / "channel" / slug / "_kal" / "sfx_events.json" if slug else None
+    if own and own.exists():
+        return own, None
+    if B.get("sfx_events"):
+        p = ROOT / B["sfx_events"]
+        if p == own:
+            return None, None
+        print(f"[placement] 경보: {slug} 효과음 신호표가 옛 공유 파일({B['sfx_events']}) — "
+              f"`py tools/calcopy/engine/sound/sfx_events.py {slug}` 로 channel/{slug}/_kal/sfx_events.json 을 만들어라", file=sys.stderr)
+        return p, B.get("sfx_key") or slug
+    return None, None
+
+
+def _sfx_table(style: dict) -> dict:
+    p, prefix = sfx_events_path(style)
+    if not p or not p.exists():
         return {}
-    d = json.loads((ROOT / B["sfx_events"]).read_text(encoding="utf-8"))
+    d = json.loads(p.read_text(encoding="utf-8"))
     out = {}
     for k, v in d.items():
-        if k.startswith(B["sfx_key"] + "/"):
-            where = []
-            for e in v.get("cand") or []:
-                near = e.get("near") or {}
-                w = min(near, key=near.get) if near else "none"
-                where.append(w if near.get(w, 9) <= 0.3 else "none")
-            out[k.split("/", 1)[1]] = where
+        if k.startswith("_") or not isinstance(v, dict):
+            continue
+        if prefix:
+            if not k.startswith(prefix + "/"):
+                continue
+            k = k.split("/", 1)[1]
+        where = []
+        for e in v.get("cand") or []:
+            near = e.get("near") or {}
+            w = min(near, key=near.get) if near else "none"
+            where.append(w if near.get(w, 9) <= 0.3 else "none")
+        out[k] = where
     return out
 
 
@@ -120,6 +219,18 @@ def count(style: dict) -> dict:
         sl = defaultdict(lambda: {"n": 0, "enter": Counter(), "emph": 0})
         stick, variants = Counter(), Counter()
         stick_lex = defaultdict(Counter)
+        trans, n_trans, roles, sfx_lines = Counter(), 0, Counter(), []
+        for k_, l in enumerate(rows):
+            roles[role_key(l.get("role"))] += 1
+            if k_ and "transition" in l:              # 칸이 있는 줄만 분모(빈 칸 = 안 잰 것, '전환 없음'과 다르다)
+                n_trans += 1; trans[trans_key(l.get("transition"))] += 1
+            s = l.get("sfx")
+            if isinstance(s, dict) and s.get("kind"):
+                kk = sfx_key(s["kind"])
+                if kk:
+                    t = s.get("t")
+                    off = round(float(t) - float(l.get("t0", 0)), 3) if isinstance(t, (int, float)) and isinstance(l.get("t0"), (int, float)) else None
+                    sfx_lines.append({"kind": kk, "role": role_key(l.get("role")), "t": t, "off": off, "basis": s.get("basis")})
         for l in rows:
             key = slot_of(l["_sp"], l["_first"])
             for s in (sl[key], allslot[key]):
@@ -135,8 +246,13 @@ def count(style: dict) -> dict:
         videos.append({"id": vid, "n": len(rows),
                        "slots": {k: {"n": s["n"], "enter": dict(s["enter"].most_common()), "emph": s["emph"]} for k, s in sl.items()},
                        "stickers": dict(stick), "sticker_lex": {k: dict(c) for k, c in stick_lex.items()}, "variants": dict(variants),
-                       "sfx": sfx.get(vid, []), "no_caption": len(d.get("no_caption") or [])})
+                       "sfx": sfx.get(vid, []), "no_caption": len(d.get("no_caption") or []),
+                       "transitions": dict(trans), "n_trans": n_trans, "roles": dict(roles), "sfx_lines": sfx_lines})
     nv = len(videos)
+    tr_all = Counter(); n_tr_all = sum(v["n_trans"] for v in videos)
+    for v in videos:
+        tr_all.update(v["transitions"])
+    sk_all = Counter(e["kind"] for v in videos for e in v["sfx_lines"])
     out = {"made_by": "tools/calcopy/hybrid/placement.py count", "source": B["line_reads"], "n_videos": nv,
            "slots": {k: {"n": s["n"], "enter": {e: round(c / s["n"], 3) for e, c in s["enter"].most_common()}, "emph": round(s["emph"] / s["n"], 3)}
                      for k, s in sorted(allslot.items())},
@@ -144,6 +260,8 @@ def count(style: dict) -> dict:
                      "typing": round(sum(1 for v in videos if any(s["enter"].get("typing") for s in v["slots"].values())) / nv, 3),
                      "sfx": round(sum(1 for v in videos if v["sfx"]) / nv, 3)},
            "stickers": {k: round(sum(1 for v in videos if v["stickers"].get(k)) / nv, 3) for k in sorted({k for v in videos for k in v["stickers"]})},
+           "transition": {k: round(c / n_tr_all, 3) for k, c in tr_all.most_common()} if n_tr_all else {},     # 줄 경계당 전환 종류 비율(잰 줄만)
+           "sfx_kinds": {k: round(c / sum(sk_all.values()), 3) for k, c in sk_all.most_common()} if sk_all else {},
            "videos": videos}
     return out
 
@@ -194,9 +312,12 @@ def _spread(idx: list[int], k: int) -> list[int]:
     return [idx[int(step * i + step / 2)] for i in range(k)]
 
 
-def place(rows: list[dict], style: dict, seed: str) -> dict:
-    """rows = 자막 덩어리 [{line, j, speaker:'narr'|'orig', text, key?, key_color?, object_src?, t0, t1}] (시간 순).
-    반환 {reference, rows:[…+first, lex, enter, variant, emph, stickers], sfx:[{t, kind, why}], flashes:[t], log:[왜]}."""
+def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = None, locate=None) -> dict:
+    """rows = 자막 덩어리 [{line, j, speaker:'narr'|'orig', text, key?, key_color?, object_src?, role?, t0, t1}] (시간 순).
+    cuts = 화면 컷 [{t0, t1|dur}](render_bench.timeline cuts) — 전환은 컷 경계에만. 없으면 줄 경계로 어림(로그에 남긴다).
+    locate(target, row, sticker) -> {x,y,w,h,conf,…} | None — 스티커·짤 자리 검출(hybrid/fx_target.locator). 없으면 자리는 target 으로 남는다.
+    반환 {reference, rows:[…+first, lex, role_key, enter, variant, emph, stickers], sfx:[{t, kind, why, role?}],
+          transitions:[{t, kind, ms, why}], flashes:[t](= transitions kind=flash 뷰), log:[왜]}."""
     P = style["placement"]; R = P.get("rules") or {}; C = P.get("counted") or {}
     ref = reference(style, seed)
     out = [dict(r) for r in rows]
@@ -206,6 +327,8 @@ def place(rows: list[dict], style: dict, seed: str) -> dict:
         r["lex"] = lex_of(r["text"])
         r["stickers"] = list(r.get("stickers") or [])
         r["slot"] = slot_of(r["speaker"], r["first"])
+    for r, rk in zip(out, row_roles(out)):
+        r["role_key"] = rk
     fixed = R.get("enter") or {}
     # ① 등장: 칸마다 본보기 편 비율을 우리 덩어리에 나눠 준다(타이핑은 감탄 덩어리 먼저)
     for key in SLOTS:
@@ -266,7 +389,9 @@ def place(rows: list[dict], style: dict, seed: str) -> dict:
             st = {"kind": kind, "word": out[i].get("key") or ""}
             if kind == "object_pop":
                 st.update({"src": out[i]["object_src"], "hold": "beat"})
-            st.update({k: rule[k] for k in ("x", "y") if isinstance(rule.get(k), (int, float))})   # 판 설정 스티커 자리(화면 %) — 없으면 그림 쪽 기본 자리
+            st = _site(st, rule, out[i], locate, log)
+            if st is None:
+                continue
             out[i]["stickers"].append(st)
             log.append(f"스티커 {kind} → {out[i]['line']}「{out[i]['text']}」")
         if len(cand) < need:
@@ -277,12 +402,217 @@ def place(rows: list[dict], style: dict, seed: str) -> dict:
         for r in out:
             if r["enter"] == "typing" and r["speaker"] == ty.get("speaker", r["speaker"]):
                 r["stickers"].append({"kind": ty["kind"], "follow": True})
-    # ⑤ 효과음: 본보기 편의 고립 후보 수(판 규칙 max 까지)·자리
-    S = R.get("sfx") or {}
+    # ⑥ 전환(표준 §3-3 A1): 본보기 편 줄판독 transition 비율 → 컷 경계(짧은 컷 제외, 화자 바뀜·공개 앞 먼저). 옛 흰 번쩍(rules.flash)도 여기서.
+    transitions = transitions_step(out, style, seed, ref, cuts, log)
+    flashes = [x["t"] for x in transitions if x["kind"] == "flash"]       # 렌더러가 읽는 뷰 — 정하는 곳은 transitions_step 하나
+    # ⑤ 효과음(A2): 본보기 편 줄판독 sfx·role 이 있으면 역할×종류 비율, 없으면 옛 길(신호표 고립 후보 자리)
+    sfx = sfx_step(out, style, ref, transitions, cuts, log)
+    # ⑦ 짤(meme): rules.meme{rate, cond{role,lex}, tone, len_s, pack, target} — rate 0(벤치에 짤 없음)이면 0개(없는 것도 스타일)
+    meme_step(out, style, seed, locate, log)
+    effects_step(out, style, seed, log)
+    for r in out:
+        r["variant"] = r.pop("variant_force", None) or variant_of(r, style)
+    tally = Counter(r["enter"] for r in out)
+    log.append(f"등장 {dict(tally)} · 강조 {sum(1 for r in out if r.get('emph'))}/{len(out)}")
+    return {"reference": ref["id"] if ref else None, "rows": out, "sfx": sfx, "transitions": transitions, "flashes": flashes,
+            "cut_bounds": len(cut_bounds(out, cuts, [])), "log": log}
+
+
+# ── 자리(표준 §3-3 A3): 스티커·짤·pointer 는 검출로 자리를 받는다 ─────────────────
+def _site(st: dict, rule: dict, row: dict, locate, log: list) -> dict | None:
+    """rule.target = face|object|caption_side|{fixed:{x,y}, why} → 스티커 자리. 반환 st(자리 붙음/받을 것 표시) | None(못 둠 → 안 붙인다).
+    target 없는 옛 규칙(rule.x·y 고정 %)은 그대로 둔다(옛 판 동작 유지 — check_place 가 'legacy_fixed' 로 센다)."""
+    tg = rule.get("target")
+    if tg is None:
+        st.update({k: rule[k] for k in ("x", "y") if isinstance(rule.get(k), (int, float))})   # 판 설정 스티커 자리(화면 %) — 없으면 그림 쪽 기본 자리
+        if any(k in st for k in ("x", "y")):
+            st["site"] = "legacy_fixed"
+        return st
+    if isinstance(tg, dict) and "fixed" in tg:
+        why = tg.get("why") or rule.get("why")
+        fx = tg["fixed"] or {}
+        if not why or not all(isinstance(fx.get(k), (int, float)) for k in ("x", "y")):
+            log.append(f"스티커 {st['kind']} 고정 좌표 거절(벤치 실측 근거 why 없음·좌표 빠짐) → {row['line']} 안 붙임")
+            return None
+        st.update({"x": fx["x"], "y": fx["y"], "site": "fixed", "site_why": why})
+        return st
+    st["target"] = {"kind": tg, "avoid": list(rule.get("avoid") or ["face"])}
+    if locate is None:
+        st["site"] = "pending"          # 검출 전 — 렌더 전에 fx_target.locator 로 받아야 한다(check_place 미해결)
+        return st
+    got = locate(st["target"], row, st)
+    if not got:
+        log.append(f"스티커 {st['kind']} 자리 검출 실패({tg}) → {row['line']}「{row['text']}」 안 붙임(억지로 안 둔다)")
+        return None
+    st.update({k: got[k] for k in ("x", "y", "w", "h", "conf", "face_clear", "how") if k in got})
+    st["site"] = "detected"
+    return st
+
+
+# ── 전환(A1) ─────────────────────────────────────────────────────────────
+def cut_bounds(out: list[dict], cuts: list[dict] | None, log: list) -> list[dict]:
+    """컷 경계 [{t, prev, next, switch, reveal}] — prev/next = 앞·뒤 컷 길이. cuts 가 없으면 줄 경계로 어림(로그)."""
+    if cuts:
+        cs = sorted(cuts, key=lambda c: float(c["t0"]))
+
+        def dur(i):
+            c = cs[i]
+            if c.get("dur") is not None:
+                return float(c["dur"])
+            if c.get("t1") is not None:
+                return float(c["t1"]) - float(c["t0"])
+            return float(cs[i + 1]["t0"]) - float(c["t0"]) if i + 1 < len(cs) else 9.0
+        b = [{"t": round(float(cs[i]["t0"]), 3), "prev": dur(i - 1), "next": dur(i)} for i in range(1, len(cs))]
+    else:
+        st = [r["t0"] for k, r in enumerate(out) if k and r["line"] != out[k - 1]["line"]]
+        st = ([out[0]["t0"]] + st) if out else []
+        end = out[-1]["t1"] if out else 0
+        b = [{"t": round(st[i], 3), "prev": st[i] - st[i - 1], "next": (st[i + 1] if i + 1 < len(st) else end) - st[i]} for i in range(1, len(st))]
+        if b:
+            log.append("전환: 컷 목록 없음 → 줄 경계를 컷 경계로 어림(렌더러는 cuts= 를 넘겨라)")
+    for x in b:
+        nxt = next((k for k, r in enumerate(out) if r["t0"] >= x["t"] - 1e-3), None)
+        prv = max((k for k, r in enumerate(out) if r["t0"] < x["t"] - 1e-3), default=None)
+        x["switch"] = nxt is not None and prv is not None and out[nxt]["speaker"] != out[prv]["speaker"]
+        x["reveal"] = nxt is not None and out[nxt].get("role_key") == "reveal"
+    return b
+
+
+def transitions_step(out: list[dict], style: dict, seed: str, ref: dict | None, cuts, log: list) -> list[dict]:
+    """(판단 주인: 전환 종류·자리) 판 칸 placement.rules.transition{kinds, cond{min_cut_s, prefer}, max_per_video} · cuts.transition.ms(02 와 같은 이름).
+    비율 = 본보기 편 줄판독 transition(잰 줄 기준 k/n) → 없으면 counted.transition(벤치 합계) → 없으면 옛 rules.flash(편 비율 share, 마지막 화자 바뀜)."""
+    R = style["placement"].get("rules") or {}
+    C = style["placement"].get("counted") or {}
+    TR = R.get("transition") or {}
+    cond = TR.get("cond") or {}
+    min_cut = float(cond.get("min_cut_s", 1.2))
+    prefer = cond.get("prefer", ["switch", "reveal"])
+    CT = (style.get("cuts") or {}).get("transition") or {}          # 02 렌더러와 같은 칸(cuts.transition{kinds 비율, ms}) — 그리기는 render_bench, 자리는 여기
+    F = style.get("frame") or {}
+
+    def ms(kind):
+        v = CT.get("ms")
+        v = v.get(kind) if isinstance(v, dict) else v
+        if isinstance(v, (int, float)) and v > 0:
+            return int(v)
+        return int(round(1000 * float(F.get("flash_sec", 0.1)))) if kind == "flash" else None    # None = 렌더러 종류별 기본 길이
+    allowed = [k for k in (TR.get("kinds") or TRANS_DRAWABLE) if k in TRANS_DRAWABLE]
+    share, src = {}, None
+    pan = {k: float(v) for k, v in (CT.get("kinds") or {}).items() if k in TRANS_DRAWABLE and float(v) > 0} if isinstance(CT.get("kinds"), dict) else {}
+    if ref and ref.get("n_trans"):
+        share = {k: c / ref["n_trans"] for k, c in (ref.get("transitions") or {}).items()}
+        src = f"본보기 {ref['id']} 줄판독 {ref['n_trans']}줄"
+    elif C.get("transition"):
+        share = dict(C["transition"])
+        src = "벤치 합계"
+    if not {k: v for k, v in share.items() if k in TRANS_DRAWABLE and v > 0} and pan:
+        share = pan
+        src = "판 cuts.transition.kinds"
+    share = {k: v for k, v in share.items() if k in allowed and v > 0}
+    if src and share:
+        bounds = cut_bounds(out, cuts, log)
+        nb = len(bounds)
+        want = {k: v * nb for k, v in share.items()}
+        total = int(round(sum(want.values())))
+        if TR.get("max_per_video") is not None:
+            total = min(total, int(TR["max_per_video"]))
+        elig = [b for b in bounds if b["prev"] >= min_cut and b["next"] >= min_cut]
+        pref = [b for b in elig if any(b.get(p) for p in prefer)]
+        rest = [b for b in elig if b not in pref]
+        pick = pref[:total] if len(pref) >= total else pref + _spread(rest, total - len(pref))
+        pick.sort(key=lambda b: b["t"])
+        kinds = _alloc(len(pick), want) if pick else []
+        res = [{"t": b["t"], "kind": k, "ms": ms(k), "why": "화자 바뀜" if b["switch"] else "공개 앞" if b["reveal"] else "컷 경계"}
+               for b, k in zip(pick, kinds)]
+        log.append(f"전환 {[(x['t'], x['kind']) for x in res]} ({src} 비율 {({k: round(v, 2) for k, v in share.items()})}, "
+                   f"컷 경계 {nb}·붙일 수 있는 {len(elig)}(≥{min_cut}초))" + (f" — 모자람 {total - len(pick)}" if len(pick) < total else ""))
+        return res
+    Fl = R.get("flash")
+    if Fl and _chance(seed, "flash") < float(Fl.get("share", 0)):
+        cand = [r["t0"] for k, r in enumerate(out) if k and r["speaker"] != out[k - 1]["speaker"]]
+        res = [{"t": cand[-1], "kind": "flash", "ms": ms("flash"), "why": "마지막 화자 바뀜(rules.flash)"}] if cand else []
+        log.append(f"번쩍 {[x['t'] for x in res]}")
+        return res
+    return []
+
+
+# ── 효과음(A2) ───────────────────────────────────────────────────────────
+def _sfx_allowed(style: dict) -> list[str]:
+    S = (style["placement"].get("rules") or {}).get("sfx") or {}
+    if isinstance(S.get("kinds"), dict):
+        return list(S["kinds"])
+    files = [k for k in (style.get("sfx_files") or {}) if k != "gain_db"]
+    return files or [S.get("kind", "ding")]
+
+
+def sfx_step(out: list[dict], style: dict, ref: dict | None, transitions: list[dict], cuts, log: list) -> list[dict]:
+    """(판단 주인: 효과음 수·자리·종류) 판 칸 placement.rules.sfx{max, kinds{이름:비율}, offset, kind(옛 한 종류)}.
+    새 길 = 본보기 편 줄판독 sfx_lines(종류·역할·덩어리 시작 대비 시각) — 역할(훅·공개·반전·끝·본문) 비율 그대로, 역할 안에선 강조 덩어리 먼저,
+    종류 = rules.sfx.kinds 비율(없으면 본보기 편 종류 중 렌더러에 파일 있는 것) — whoosh 는 전환 자리로, 시각 편차 = 벤치 중앙(±0.3초 안).
+    옛 길(sfx_lines 없음) = 신호표 고립 후보 자리(본보기 편 수, max 까지) — 옛 판 그대로 동작."""
+    S = (style["placement"].get("rules") or {}).get("sfx") or {}
+    if not S:
+        log.append("효과음 0발(판 규칙 sfx 없음)")
+        return []
+    allowed = _sfx_allowed(style)
+    default = S.get("kind", allowed[0] if allowed else "ding")
+    lines = list((ref or {}).get("sfx_lines") or [])
     sfx = []
+    if lines:
+        n = min(len(lines), int(S.get("max", len(lines))))
+        offs = sorted(e["off"] for e in lines if isinstance(e.get("off"), (int, float)))
+        off = float(S["offset"]) if isinstance(S.get("offset"), (int, float)) else (max(-0.3, min(0.3, offs[len(offs) // 2])) if offs else 0.0)
+        per_role = Counter(_alloc(n, Counter(e["role"] for e in lines))) if n else Counter()
+        taken = []
+
+        def free(t):
+            return all(abs(t - s) > 0.4 for s in taken)
+        short = 0
+        for role in ROLES:
+            k = per_role.get(role, 0)
+            if not k:
+                continue
+            idx = [i for i, r in enumerate(out) if r["role_key"] == role]
+            idx.sort(key=lambda i: (0 if out[i].get("emph") else 1 if out[i]["first"] else 2, i))      # 강조 낱말 덩어리 → 줄 첫 덩어리 → 나머지
+            got = 0
+            for i in idx:
+                if got >= k:
+                    break
+                t = round(max(0.0, out[i]["t0"] + off), 3)
+                if free(t):
+                    sfx.append({"t": t, "role": role, "why": role + (" 강조" if out[i].get("emph") else "")})
+                    taken.append(t)
+                    got += 1
+            short += k - got
+        if short:      # 그 역할 덩어리가 모자라면 전환·컷 경계 자리로(벤치에서 소리가 붙는 둘째 자리)
+            spots = [(x["t"], "전환") for x in transitions] + [(b["t"], "컷 경계") for b in cut_bounds(out, cuts, [])]
+            for t, why in spots:
+                if not short:
+                    break
+                if free(t):
+                    sfx.append({"t": round(t, 3), "role": None, "why": why})
+                    taken.append(t)
+                    short -= 1
+            if short:
+                log.append(f"효과음 {short}발 자리 모자람(0.4초 간격)")
+        sfx.sort(key=lambda e: e["t"])
+        src_kinds = dict(S["kinds"]) if isinstance(S.get("kinds"), dict) else dict(Counter(e["kind"] for e in lines if e["kind"] in allowed))
+        if not src_kinds:
+            src_kinds = {default: 1}
+        for e, k in zip(sfx, _alloc(len(sfx), src_kinds) if sfx else []):
+            e["kind"] = k
+        # whoosh 는 전환 자리로: 전환 자리에 whoosh 아닌 것, 전환 아닌 자리에 whoosh 가 있으면 맞바꾼다(개수 비율은 그대로)
+        at_tr = [e for e in sfx if any(abs(e["t"] - x["t"]) <= 0.05 for x in transitions)]
+        for e in at_tr:
+            if e["kind"] != "whoosh":
+                o = next((x for x in sfx if x["kind"] == "whoosh" and x not in at_tr), None)
+                if o:
+                    e["kind"], o["kind"] = o["kind"], e["kind"]
+        log.append(f"효과음 {len(sfx)}발(본보기 줄판독 {len(lines)}발 · 역할 {dict(per_role)} · 편차 {off:+.2f}초) {[(s['t'], s['kind'], s['role']) for s in sfx]}")
+        return sfx
     want = (ref or {}).get("sfx") or []
     n = min(len(want), int(S.get("max", 3)))
-    if S and n:
+    if n:
         spots = []
         for w in [w for w, _ in Counter(want).most_common() if w != "none"] + ["cap"]:
             if w == "switch":
@@ -296,23 +626,65 @@ def place(rows: list[dict], style: dict, seed: str) -> dict:
             if len(sfx) >= n:
                 break
             if all(abs(t - s) > 0.4 for s in seen):
-                sfx.append({"t": round(t, 3), "kind": S.get("kind", "ding"), "why": why}); seen.add(t)
+                sfx.append({"t": round(t, 3), "kind": default, "why": why})
+                seen.add(t)
         sfx.sort(key=lambda e: e["t"])
+        if isinstance(S.get("kinds"), dict) and sfx:
+            for e, k in zip(sfx, _alloc(len(sfx), S["kinds"])):
+                e["kind"] = k
     log.append(f"효과음 {len(sfx)}발(본보기 {len(want)}) {[(s['t'], s['why']) for s in sfx]}")
-    # ⑥ 전환 흰 번쩍임(키치잇 BRa·_Wa): 판 규칙 편 비율로 있나 → 있으면 마지막 화자 바뀜
-    F = R.get("flash")
-    flashes = []
-    if F and _chance(seed, "flash") < float(F.get("share", 0)):
-        cand = [r["t0"] for k, r in enumerate(out) if k and r["speaker"] != out[k - 1]["speaker"]]
-        if cand:
-            flashes = [cand[-1]]
-        log.append(f"번쩍 {flashes}")
-    effects_step(out, style, seed, log)
+    return sfx
+
+
+# ── 짤(meme) ─────────────────────────────────────────────────────────────
+def meme_files(tone: str | None = None, pack: str | None = None) -> list[str]:
+    """짤 후보 파일(로고·남의 글자 짤 meme_exclude 제외 — 주인 material_auto.MEME_*). pack = 폴더, tone = 감정 낱말(팩 목록 emotion)."""
+    from tools.calcopy.engine import material_auto as MA
+    ex = set((json.loads(MA.MEME_EXCLUDE.read_text(encoding="utf-8")).get("exclude") or {}) if MA.MEME_EXCLUDE.exists() else ())
+    if pack:
+        d = Path(pack)
+        return sorted(str(p) for p in d.glob("*.mp4") if p.stem not in ex) if d.exists() else []
+    if not MA.MEME_INDEX.exists():
+        return []
+    idx = json.loads(MA.MEME_INDEX.read_text(encoding="utf-8"))
+    return [str(MA.MEME_DIR / f"{m['id']}.mp4") for m in idx
+            if m["id"] not in ex and (not tone or tone in str(m.get("emotion", ""))) and (MA.MEME_DIR / f"{m['id']}.mp4").exists()]
+
+
+def meme_step(out: list[dict], style: dict, seed: str, locate, log: list, files=None):
+    """(판단 주인: 짤 수·자리·파일) 판 칸 placement.rules.meme{rate(줄당 짤 k/n), cond{role[], lex[]}, tone, len_s, pack, target(기본 caption_side)}."""
+    M = (style["placement"].get("rules") or {}).get("meme")
+    if not M:
+        return
+    lines = []
     for r in out:
-        r["variant"] = r.pop("variant_force", None) or variant_of(r, style)
-    tally = Counter(r["enter"] for r in out)
-    log.append(f"등장 {dict(tally)} · 강조 {sum(1 for r in out if r.get('emph'))}/{len(out)}")
-    return {"reference": ref["id"] if ref else None, "rows": out, "sfx": sfx, "flashes": flashes, "log": log}
+        if r["line"] not in lines:
+            lines.append(r["line"])
+    n = int(round(float(M.get("rate", 0)) * len(lines)))
+    if n <= 0:
+        log.append(f"짤 0개(rate {M.get('rate', 0)} — 벤치에 짤 없음도 스타일)")
+        return
+    cond = M.get("cond") or {}
+    cand = [i for i, r in enumerate(out) if r["first"] and (not cond.get("role") or r["role_key"] in cond["role"])
+            and (not cond.get("lex") or set(cond["lex"]) & set(r["lex"]))]
+    fs = files if files is not None else meme_files(M.get("tone"), M.get("pack"))
+    if not fs:
+        log.append(f"짤 {n}개 중 0개 — 짤 팩 없음(tone {M.get('tone')}·pack {M.get('pack')})")
+        return
+    used = set()
+    for k, i in enumerate(_spread(cand, n)):
+        j = _h(seed, f"meme:{k}") % len(fs)
+        while fs[j] in used and len(used) < len(fs):
+            j = (j + 1) % len(fs)
+        used.add(fs[j])
+        st = {"kind": "meme", "src": fs[j], "len_s": float(M.get("len_s", 1.0))}
+        st = _site(st, {"target": M.get("target", "caption_side"), "avoid": M.get("avoid"), "why": M.get("why")}, out[i], locate, log)
+        if st is None:
+            continue
+        out[i]["stickers"].append(st)
+        log.append(f"짤 {Path(fs[j]).name} → {out[i]['line']}「{out[i]['text']}」")
+    if len(cand) < n:
+        log.append(f"짤 {n}개 중 조건 맞는 덩어리 {len(cand)}개뿐")
 
 
 # ── 효과별 붙는 조건(주인 = 자막팩 계약 caption-motions.js CAPTION_EFFECT_RULES, 관제 235) ─────────────
@@ -426,7 +798,76 @@ def check_place(placed: dict, style: dict) -> dict:
     tol = {k: 0.5 / max(1, v["n"]) + 0.15 for k, v in rep.items() if isinstance(v, dict) and "n" in v}
     ok = all(max(abs(v["ours"].get(e, 0) - v["bench"].get(e, 0)) for e in set(v["bench"]) | set(v["ours"])) <= tol[k]
              for k, v in rep.items() if k in tol)
-    return {"ok": ok, "reference": placed.get("reference"), "worst_slot_diff": round(worst, 3), "slots": rep}
+    bad = []
+    # 전환(A1): 본보기 편 줄판독에 전환 칸이 있으면 종류마다 (벤치 비율 × 우리 컷 경계 수) ±1
+    tr = placed.get("transitions") or []
+    ours_tr = Counter(x["kind"] for x in tr)
+    if ref and ref.get("n_trans"):
+        nb = placed.get("cut_bounds") or 0
+        exp = {k: round(c / ref["n_trans"] * nb, 2) for k, c in (ref.get("transitions") or {}).items() if k in TRANS_DRAWABLE}
+        rep["transitions"] = {"bench_expect": exp, "ours": dict(ours_tr), "cut_bounds": nb}
+        bad += [f"전환 {k} 우리 {ours_tr.get(k, 0)} ≠ 벤치 기대 {v}(±1)" for k, v in exp.items() if abs(ours_tr.get(k, 0) - v) > 1]
+    else:
+        rep["transitions"] = {"ours": dict(ours_tr)}
+    # 효과음 종류·역할(A2): 본보기 편 줄판독 sfx 가 있으면 역할 수 ±1 · 종류 수 ±1(판 kinds 가 있으면 그 비율)
+    lines = (ref or {}).get("sfx_lines") or []
+    sx = placed.get("sfx") or []
+    rep["sfx"]["kinds"] = dict(Counter(e.get("kind") for e in sx))
+    if lines and sx:
+        n = len(sx)
+        rr = Counter(e["role"] for e in lines)
+        exp_r = {k: round(v / len(lines) * n, 2) for k, v in rr.items()}
+        ours_r = Counter(e.get("role") for e in sx if e.get("role"))
+        rep["sfx"]["roles"] = {"bench_expect": exp_r, "ours": dict(ours_r)}
+        bad += [f"효과음 역할 {k} 우리 {ours_r.get(k, 0)} ≠ 기대 {v}(±1)" for k, v in exp_r.items() if abs(ours_r.get(k, 0) - v) > 1]
+        too_close = [(a["t"], b["t"]) for a, b in zip(sx, sx[1:]) if b["t"] - a["t"] < 0.3]
+        if too_close:
+            bad.append(f"효과음 0.3초 안 겹침 {too_close}")
+    # 자리(A3): 받을 것(pending)·검출 확신 < 0.6·얼굴 겹침 = ×
+    sites = Counter()
+    for r in rows:
+        for s in r["stickers"]:
+            site = s.get("site")
+            if not site:
+                continue
+            sites[site] += 1
+            if site == "pending":
+                bad.append(f"{s['kind']} 자리 미해결({(s.get('target') or {}).get('kind')}) {r['line']}")
+            elif site == "detected" and (float(s.get("conf", 0)) < 0.6 or s.get("face_clear") is False):
+                bad.append(f"{s['kind']} 자리 검출 확신 {s.get('conf')}·얼굴 안 겹침 {s.get('face_clear')} {r['line']}")
+    rep["sites"] = dict(sites)
+    rep["meme"] = {"ours": sum(1 for r in rows for s in r["stickers"] if s["kind"] == "meme")}
+    return {"ok": ok and not bad, "reference": placed.get("reference"), "worst_slot_diff": round(worst, 3), "slots": rep, "bad": bad}
+
+
+def plan(doc: Path, work: Path, version: str, locate=None) -> dict:
+    """배치만(렌더 없이): 계획 시간표(doc/plan/계획_시간표.json 의 timeline — 없으면 render_bench.timeline 어림) → place(cuts=컷) →
+    <work>/plan/자막표.json(render_bench 자막표와 같은 꼴 + transitions). 대본 줄 role 을 덩어리에 붙인다(효과음 역할·공개 전환)."""
+    from tools.calcopy.hybrid import render_bench as RB, styles as ST
+    st = ST.load(version)
+    doc, work = Path(doc), Path(work)
+    S = json.loads((doc / "대본.json").read_text(encoding="utf-8"))
+    saved = doc / "plan" / "계획_시간표.json"
+    if saved.exists():
+        T = json.loads(saved.read_text(encoding="utf-8"))["timeline"]
+        src = str(saved.relative_to(ROOT) if saved.is_relative_to(ROOT) else saved)
+    else:
+        M = json.loads((doc / "재료.json").read_text(encoding="utf-8"))
+        S.setdefault("cps_target", st.get("cps_target", 7.0))
+        T = RB.timeline(S, M, st, None, None)
+        src = "render_bench.timeline(글자÷cps 어림)"
+    role = {l["id"]: l.get("role") for l in S.get("lines") or [] if l.get("id")}
+    rows = [{**{k: v for k, v in r.items() if k != "show"}, **({"role": role[r["line"]]} if role.get(r["line"]) else {})} for r in T["rows"]]
+    placed = place(rows, st, S.get("slug") or doc.name, cuts=T.get("cuts"), locate=locate)
+    for r, t in zip(placed["rows"], T["rows"]):
+        r["show"] = t.get("show") or [t["t0"], t["t1"]]
+    chk = check_place(placed, st)
+    tab = {"_note": f"배치만(placement.py plan, 판 설정 {version}) · 시간표 = {src} · 렌더 안 함", "pack": st["caption"]["pack"],
+           "rows": RB.caption_rows(placed, st), "sfx": placed["sfx"], "transitions": placed["transitions"], "flashes": placed["flashes"],
+           "log": placed["log"], "check": chk}
+    (work / "plan").mkdir(parents=True, exist_ok=True)
+    (work / "plan" / "자막표.json").write_text(json.dumps(tab, ensure_ascii=False, indent=1), encoding="utf-8")
+    return tab
 
 
 def main():
@@ -434,13 +875,23 @@ def main():
     if len(sys.argv) < 3:
         print(__doc__); return 2
     cmd, name = sys.argv[1], sys.argv[2]
+    if cmd == "plan":
+        import argparse
+        ap = argparse.ArgumentParser(); ap.add_argument("cmd"); ap.add_argument("doc"); ap.add_argument("work"); ap.add_argument("--version", required=True)
+        a = ap.parse_args()
+        tab = plan(Path(a.doc), Path(a.work), a.version)
+        print(json.dumps({"rows": len(tab["rows"]), "sfx": tab["sfx"], "transitions": tab["transitions"], "flashes": tab["flashes"],
+                          "check_ok": tab["check"]["ok"], "bad": tab["check"]["bad"], "out": str(Path(a.work) / "plan" / "자막표.json")}, ensure_ascii=False, indent=1))
+        return 0
     st = ST.load(name)
     if cmd == "count":
         c = count(st)
-        ST.save_counted(name, c)
+        if "--dry" not in sys.argv:
+            ST.save_counted(name, c)
         print(json.dumps({k: v for k, v in c.items() if k != "videos"}, ensure_ascii=False, indent=1))
         for v in c["videos"]:
-            print(v["id"], v["n"], {k: s["enter"] for k, s in v["slots"].items()}, "stk", v["stickers"], "var", v["variants"], "sfx", len(v["sfx"]))
+            print(v["id"], v["n"], {k: s["enter"] for k, s in v["slots"].items()}, "stk", v["stickers"], "var", v["variants"], "sfx", len(v["sfx"]),
+                  "trans", v["transitions"], "sfx_lines", [(e["kind"], e["role"]) for e in v["sfx_lines"]])
     elif cmd == "show":
         print(json.dumps({k: v for k, v in st["placement"].items() if k != "counted"}, ensure_ascii=False, indent=1))
     return 0
