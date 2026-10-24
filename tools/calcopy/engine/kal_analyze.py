@@ -4,7 +4,9 @@
   frames   <mp4> --out <dir> [--y0 0 --y1 1920] [--fps 2] [--max-strips 80]
            2fps 시트 + 10fps 글자 띠 변화(견본 channel/starpickroom/_tools/sheets.py 그대로 부름) → change_<id>.json
            + 바뀌는 지점마다 0.1초 띠(±0.3초) strips/ + 판독목록.json  (판독은 사람 눈 — 이 도구는 볼 프레임만 고른다)
+           + 30fps 픽셀 실측 seg_<id>.json(capseg 자막 띠)·cut_<id>.json(cutdet 컷)·segsheet_<id>_NN.jpg — engine/readline_tools (--no-readline 로 끔)
   skeleton <뜯기.json> [--vtt <id>.ko.vtt] --out 줄판독/<id>.json
+  skeleton <frames 폴더> --spec <spec.py> --mp4 <원본> [--sfx-raw] [--profile] --out 줄판독/<id>.json   (눈 spec + 픽셀 실측 → readline_tools.build_lr)
            줄판독 뼈대: t0·t1·text 는 기계값(뜯기 OCR·vtt), 나머지 칸은 null(=눈으로 채움). _todo 가 남아 있으면 check 가 거절.
   check    <줄판독.json ...> [--strict]
            칸 누락·꾸밈 없는 줄 칸(enter/emph/sticker/sfx)·이름 근거(화면 글자)·시간 겹침·role 어휘. 오류 있으면 종료코드 1.
@@ -725,7 +727,8 @@ def _sheets_mod():
     return m
 
 
-def frames_cmd(mp4: str, out: str, y0: int, y1: int, fps: float, max_strips: int) -> dict:
+def frames_cmd(mp4: str, out: str, y0: int, y1: int, fps: float, max_strips: int,
+               readline: bool = True, window: tuple | None = None, cap_band: tuple | None = None) -> dict:
     import cv2
     import numpy as np
     S = _sheets_mod()
@@ -734,6 +737,7 @@ def frames_cmd(mp4: str, out: str, y0: int, y1: int, fps: float, max_strips: int
     vid = Path(mp4).stem
     cap = cv2.VideoCapture(mp4)
     H = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) or 1920
+    W = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)) or 1080
     cap.release()
     y1 = min(y1, H)
     sys.argv = ["sheets.py", mp4, str(outp), "--fps", str(fps), "--y0", str(y0), "--y1", str(y1)]
@@ -763,8 +767,32 @@ def frames_cmd(mp4: str, out: str, y0: int, y1: int, fps: float, max_strips: int
     lst = {"id": vid, "mp4": mp4, "band": [y0, y1], "fps_sheet": fps, "n_changes": len(ch["changes"]), "n_strips": len(items),
            "sheets": sorted(str(p) for p in outp.glob(f"sheet_{vid}_*.jpg")), "strips": items,
            "note": "판독은 사람 눈 — 시트 0.5초 칸만 보지 말고 strips 의 0.1초 띠에서 바뀌는 프레임을 확대해 본다(지침서 §0 2)"}
+    if readline:   # 30fps 픽셀 실측(지시서 13 · 표준 §11 ⑫) — 줄판독 build_lr 의 입력 seg_/cut_ 과 사람 눈용 segsheet
+        tall = (y1 - y0) >= 0.4 * H          # 띠가 크면 = 영상 창(kal.py step_frames 가 창을 준다), 작으면 = 자막 띠
+        lst["readline"] = readline_measure(mp4, outp, cap_band or (None if tall else (y0, y1)),
+                                           window or ((y0, y1) if tall else (0, H)), W)
     (outp / f"판독목록_{vid}.json").write_text(json.dumps(lst, ensure_ascii=False, indent=1), encoding="utf-8")
     return lst
+
+
+def readline_measure(mp4: str, outp: Path, cap_band: tuple | None, window: tuple, width: int = 1080) -> dict:
+    """판독 도구(engine/readline_tools) 를 부른다 — 컷 cutdet(창) · 자막 띠 capseg + 구간 시트 segsheet(자막 띠를 알 때만).
+    판단은 각 도구가 한 곳에서. 자막 띠를 모르면 capseg 를 짐작 띠로 돌리지 않고 건너뛴다(--cap-band)."""
+    from tools.calcopy.engine.readline_tools import capseg as _cs, cutdet as _cd, segsheet as _ss
+    vid = Path(mp4).stem
+    cd = _cd.cutdet(mp4, int(window[0]), int(window[1]), width=width)
+    (outp / f"cut_{vid}.json").write_text(json.dumps(cd, indent=0), encoding="utf-8")
+    r = {"cut": str(outp / f"cut_{vid}.json"), "n_cut": len(cd["cuts"]), "window": [int(window[0]), int(window[1])],
+         "build_lr": f"py tools/calcopy/engine/readline_tools/build_lr.py <spec.py> <out.json> --work {outp} --mp4 {mp4}"}
+    if not cap_band:
+        r["capseg"] = "건너뜀: 자막 띠 모름 — kal_analyze frames --cap-band y0,y1 로 다시"
+        return r
+    y0, y1 = int(cap_band[0]), int(cap_band[1])
+    segs = _cs.capseg(mp4, y0, y1, width=width)
+    (outp / f"seg_{vid}.json").write_text(json.dumps(segs, indent=0), encoding="utf-8")
+    sh = _ss.segsheet(mp4, segs, str(outp / f"segsheet_{vid}"), y0, y1)
+    r.update({"seg": str(outp / f"seg_{vid}.json"), "n_seg": len(segs), "segsheets": sh["sheets"], "band": [y0, y1]})
+    return r
 
 
 # ---------------------------------------------------------------- palette (채널 색 팔레트 — 역할별 hex·편 수)
@@ -989,7 +1017,9 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("frames"); a.add_argument("mp4"); a.add_argument("--out", required=True)
     a.add_argument("--y0", type=int, default=0); a.add_argument("--y1", type=int, default=1920); a.add_argument("--fps", type=float, default=2); a.add_argument("--max-strips", type=int, default=80)
+    a.add_argument("--no-readline", action="store_true", help="30fps capseg/cutdet/segsheet 건너뜀"); a.add_argument("--window", help="컷 검출 창 y0,y1"); a.add_argument("--cap-band", help="capseg 자막 띠 y0,y1")
     b = sub.add_parser("skeleton"); b.add_argument("tteutgi"); b.add_argument("--vtt"); b.add_argument("--out", required=True); b.add_argument("--id")
+    b.add_argument("--spec", help="눈으로 적은 spec.py — 주면 readline_tools.build_lr 로 줄판독을 조립(tteutgi 자리 = frames 폴더)"); b.add_argument("--mp4"); b.add_argument("--sfx-raw"); b.add_argument("--profile")
     c = sub.add_parser("check"); c.add_argument("paths", nargs="+"); c.add_argument("--strict", action="store_true")
     r = sub.add_parser("rules"); r.add_argument("paths", nargs="+"); r.add_argument("--out"); r.add_argument("--json")
     pa = sub.add_parser("palette"); pa.add_argument("paths", nargs="+"); pa.add_argument("--out", required=True)
@@ -1001,9 +1031,17 @@ def main(argv=None) -> int:
     m.add_argument("--bench-mp4", help="벤치 대표 1편 mp4 — 주면 픽셀·소리 자(compare)까지 한 판정으로(1차 칼카피 관문)")
     A = ap.parse_args(argv)
     if A.cmd == "frames":
-        lst = frames_cmd(A.mp4, A.out, A.y0, A.y1, A.fps, A.max_strips)
+        win = tuple(int(v) for v in A.window.split(",")) if A.window else None
+        cb = tuple(int(v) for v in A.cap_band.split(",")) if A.cap_band else None
+        lst = frames_cmd(A.mp4, A.out, A.y0, A.y1, A.fps, A.max_strips, readline=not A.no_readline, window=win, cap_band=cb)
         print(f"{lst['id']} 시트 {len(lst['sheets'])} 변화 {lst['n_changes']} 띠 {lst['n_strips']} → {A.out}")
         return 0
+    if A.cmd == "skeleton" and A.spec:
+        if not A.mp4:
+            ap.error("skeleton --spec 는 --mp4 가 필요하다")
+        from tools.calcopy.engine.readline_tools import build_lr as _bl
+        return _bl.main([A.spec, A.out, "--work", A.tteutgi, "--mp4", A.mp4] + (["--sfx-raw", A.sfx_raw] if A.sfx_raw else [])
+                        + (["--profile", A.profile] if A.profile else []))
     if A.cmd == "skeleton":
         tt = json.loads(Path(A.tteutgi).read_text(encoding="utf-8"))
         vid = A.id or Path(A.tteutgi).parent.name
