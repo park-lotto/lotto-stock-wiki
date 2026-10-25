@@ -1,0 +1,224 @@
+{
+ "_note": "12편 비행기 마스크팩 — 규칙만 판(10-25 기미크림 시험). 손 v3(ep12_sheetmask_v3) 대신: 판 잇템로그판_v2 brief·audit + 해외원본형 브리프(script_foreign.md) + 기계 재료 초안(ititemlog_make.draft, 확대 1.0 가운데 crop) + 스피치매틱스 원음 낱말 시각(C:/숏템_칼카피/ititemlog/ep12_rule/asr/sm.json). 줄 글·컷 고르기 = Claude 답(회원 흐름의 대본 질문 자리). 브랜드 단정 안 함(Sarah = 링크뿐 미확인).",
+ "slug": "ititemlog_ep12_sheetmask_rule",
+ "brand": "잇템로그판",
+ "pan": "잇템로그판_v2",
+ "product": "투명해지는 콜라겐 하이드로겔 마스크(쿠팡: 정확한 이름 → 같은 제품 → 비슷한 제품)",
+ "title_lines": [
+  [
+   [
+    "비행기에서 붙인 마스크팩"
+   ]
+  ],
+  [
+   [
+    "투명해져서 놀란 외국인"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "sa 0.16~5.24 'Seeing how many hours it takes for my sheet mask to turn clear on a 13 hour flight'(스피치매틱스)",
+  "f2": "sa 5.60~13초 '20 minutes · One hour · Two hours · Three hours' — 화면에서 하얀 마스크가 점점 투명",
+  "f3": "sa 17.0~18.56 'Time to peel it off' · 19.32~ 'It came off in one piece'",
+  "f4": "Biodance 제품 설명(cultbeauty·well.ca): 세럼이 피부로 스며들수록 마스크가 투명해진다",
+  "f5": "ayA 3.00~5.40 'eight hours later the mask had turned completely clear' · 5.44~6.96 'Like what kind of magic did they put in this'",
+  "f6": "ayB 5.56~8.04 'I can't believe that this is our skin right after getting out of bed' · 3.16~5.36 'insane glow'"
+ },
+ "cta": "심리 CTA(혼잣말·다음 비행) — 직접 구매 문장 없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "훅 — 결과 먼저",
+   "tts": "비행기에서 투명해진 마스크팩에 놀란 외국인이 있는데요.",
+   "caps": [
+    {
+     "text": "비행기에서"
+    },
+    {
+     "text": "투명해진 마스크팩에",
+     "key": "투명"
+    },
+    {
+     "text": "놀란 외국인이 있는데요"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(경과 시각)",
+   "src": "saA.mp4",
+   "spans": [
+    [
+     5.6,
+     8.28
+    ]
+   ],
+   "said": "20 minutes. One hour.",
+   "caps_rel": [
+    [
+     "20분 지났어",
+     0.0,
+     1.24
+    ],
+    [
+     "한 시간째",
+     1.68,
+     2.68,
+     "한 시간"
+    ]
+   ],
+   "_why_span": "1차 렌더 32.87초(판 26~31) → 5.16초 선언 대신 2.68초 경과 원음(스피치매틱스 5.60~6.84·7.28~8.28)"
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "경과",
+   "tts": "처음엔 하얗던 마스크가 시간이 갈수록 비치더니,",
+   "caps": [
+    {
+     "text": "처음엔 하얗던 마스크가",
+     "key": "하얗던"
+    },
+    {
+     "text": "시간이 갈수록 비치더니"
+    }
+   ],
+   "_why_tts": "narr_verify 확정: '새하얗던' → '새해에 아톤'으로 읽힘 → '처음엔 하얗던'"
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음(떼기)",
+   "src": "saA.mp4",
+   "spans": [
+    [
+     17.0,
+     21.36
+    ]
+   ],
+   "said": "Time to peel it off. It came off in one piece.",
+   "caps_rel": [
+    [
+     "이제 떼 볼까",
+     0.0,
+     1.56
+    ],
+    [
+     "한 번에 통째로 떨어졌어!",
+     2.32,
+     4.36,
+     "통째로"
+    ]
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "원리",
+   "tts": "세럼이 피부로 스며들수록 투명해지는 원리라는데,",
+   "caps": [
+    {
+     "text": "세럼이 피부로 스며들수록"
+    },
+    {
+     "text": "투명해지는 원리라는데",
+     "key": "원리"
+    }
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "둘째 원본 다리",
+   "tts": "다른 외국인 모녀는 아예 밤새 붙이고 잤더니,",
+   "caps": [
+    {
+     "text": "다른 외국인 모녀는"
+    },
+    {
+     "text": "아예 밤새 붙이고 잤더니",
+     "key": "밤새"
+    }
+   ],
+   "_why_tts": "narr_verify 의심: '자 봤더니' → '잡았더니'로 들림 → '잤더니'"
+  },
+  {
+   "id": "O3",
+   "kind": "orig",
+   "role": "원음(감탄)",
+   "src": "ayA.mp4",
+   "spans": [
+    [
+     3.0,
+     6.95
+    ]
+   ],
+   "said": "eight hours later the mask had turned completely clear. Like what kind of magic did they put in",
+   "caps_rel": [
+    [
+     "여덟 시간 만에 투명해졌어",
+     0.0,
+     2.36,
+     "투명"
+    ],
+    [
+     "무슨 마법을 넣은 거야?",
+     2.44,
+     3.95,
+     "마법"
+    ]
+   ],
+   "_why_span": "관문③ cut_boundary_gate: 원본 장면 경계 7.03초 → 7.04 끝이면 0.07초 조각 → 끝을 6.95(낱말 'this' 앞)로"
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "써 본 사람들은 통째로 떨어지는 게 신기하다던데,",
+   "caps": [
+    {
+     "text": "써 본 사람들은"
+    },
+    {
+     "text": "통째로 떨어지는 게",
+     "key": "통째로"
+    },
+    {
+     "text": "신기하다던데"
+    }
+   ]
+  },
+  {
+   "id": "N6",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "아침에 일어나도 피부가 촉촉하다고 하고.",
+   "caps": [
+    {
+     "text": "아침에 일어나도"
+    },
+    {
+     "text": "피부가 촉촉하다고 하고",
+     "key": "촉촉"
+    }
+   ]
+  },
+  {
+   "id": "N7",
+   "kind": "tts",
+   "role": "끝 — 혼잣말 CTA",
+   "tts": "아, 나도 다음 비행기에선 이거 붙이고 자야겠다.",
+   "caps": [
+    {
+     "text": "아, 나도 다음 비행기에선",
+     "key": "비행기"
+    },
+    {
+     "text": "이거 붙이고 자야겠다"
+    }
+   ]
+  }
+ ]
+}

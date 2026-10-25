@@ -1,0 +1,500 @@
+{
+ "style": "잇템로그판_v2",
+ "base": "잇템로그판",
+ "table": "upgrade_table:v1(2026-10-25)",
+ "upgrades_from": "upgrades",
+ "doc": "channel\\ititemlog\\ep12_sheetmask_rule",
+ "work": "C:\\숏템_칼카피\\ititemlog\\ep12_rule",
+ "bench_ids": [
+  "aUicTeDoW04",
+  "AZ2q07mBzlM",
+  "J7GxfaVdwSU",
+  "ro1l3u734v4",
+  "SbWTqCnleC8",
+  "zOSpeiMw1nA"
+ ],
+ "bench_top_ids": [
+  "ro1l3u734v4",
+  "aUicTeDoW04",
+  "J7GxfaVdwSU"
+ ],
+ "views": {
+  "aUicTeDoW04": 18000000.0,
+  "AZ2q07mBzlM": 8900000.0,
+  "J7GxfaVdwSU": 15000000.0,
+  "ro1l3u734v4": 20000000.0,
+  "SbWTqCnleC8": 8500000.0,
+  "zOSpeiMw1nA": 10000000.0
+ },
+ "items": [
+  {
+   "axis": "script",
+   "what": "결과 먼저 훅 — 첫 나레가 놀람 반응(결과)부터 말하고 과정은 뒤로",
+   "bench": null,
+   "ours": null,
+   "better": "human",
+   "worse": null,
+   "why": "script = 측정 함수 없는 축(표준 §4-2 '못 재는 칸') — 사장님 판정",
+   "item_why": "사장님 10-22 눈 검수 승인 03(선크림)·07(핫도그) — 표준 §8 L2 '눈 검수 = 사장님 승인 03·07' · 벤치 6편 첫 나레 문장은 '한국 ~를 ~하고/~하자 … ~는데요' 꼴 6/6, 그중 결과를 먼저 말한 편은 aUic('마법처럼 타투가 사라졌는데요') 1/6뿐 — 1차는 상황 소개가 기본, v2 는 결과 먼저를 매 편 규칙으로",
+   "source": "d4e963a81(핫도그 v2 시험)·f81989042(선크림 v2 '결과 먼저')",
+   "expect": "첫 3초 이탈↓(E2 훅 3초 — 사람 판정)",
+   "verify": "사람 판정",
+   "evidence_ok": true
+  },
+  {
+   "axis": "script",
+   "what": "끝 3줄 = 후기 전언 2줄('~던데,' / '~고 하고.') + 혼잣말 1줄('아, …겠다.')",
+   "bench": null,
+   "ours": null,
+   "better": "human",
+   "worse": null,
+   "why": "script = 측정 함수 없는 축(표준 §4-2 '못 재는 칸') — 사장님 판정",
+   "item_why": "사장님 10-22 눈 검수 승인 03(선크림)·07(핫도그) — 표준 §8 L2 '눈 검수 = 사장님 승인 03·07' · 사장님 10-22 \"~했다던데·~라는데 / 아 배고프네, 오늘밤 먹어봐야겠네\" · 벤치 끝 = '~하네요' 후일담 3/6(1차 audit last_tts)",
+   "source": "6c7d0121a(v3 끝 3줄) · channel/칼카피_제작순서/07_대본.md §3-1 ★후기 전언 + 혼잣말",
+   "expect": "끝까지 보기·댓글 반응(사람 판정)",
+   "verify": "사람 판정",
+   "evidence_ok": true
+  },
+  {
+   "axis": "script",
+   "what": "심리 CTA — 직접 구매 문장 대신 역전·자기점검·아는 사람만·손실회피·후기 한 줄·열린 고리 중 하나",
+   "bench": null,
+   "ours": null,
+   "better": "human",
+   "worse": null,
+   "why": "script = 측정 함수 없는 축(표준 §4-2 '못 재는 칸') — 사장님 판정",
+   "item_why": "사장님 10-22 눈 검수 승인 03(선크림)·07(핫도그) — 표준 §8 L2 '눈 검수 = 사장님 승인 03·07' · 사장님 10-22 \"대놓고 사라가 아니라 궁금하게\" · 벤치 영상 안 구매 문장 0/6",
+   "source": "f81989042 · 07_대본.md §3-1 심리 CTA 표",
+   "expect": "설명란 클릭(사람 판정)",
+   "verify": "사람 판정",
+   "evidence_ok": true
+  },
+  {
+   "axis": "script",
+   "what": "쿠팡 베스트 후기 소구점 1줄(facts 에 후기 원문) + 어미 다양·티키타카",
+   "bench": null,
+   "ours": null,
+   "better": "human",
+   "worse": null,
+   "why": "script = 측정 함수 없는 축(표준 §4-2 '못 재는 칸') — 사장님 판정",
+   "item_why": "사장님 10-22 눈 검수 승인 03(선크림)·07(핫도그) — 표준 §8 L2 '눈 검수 = 사장님 승인 03·07' · 벤치엔 쿠팡 후기 인용 없음(잇템로그 2편·6편 줄판독)",
+   "source": "d4e963a81(쿠팡 후기 소구점·어미 다양·티키타카)·f81989042(쿠팡 후기)",
+   "expect": "구매 근거가 영상 안에 생김(사람 판정)",
+   "verify": "사람 판정",
+   "evidence_ok": true
+  },
+  {
+   "axis": "scene_fit",
+   "what": "원본 2~3개를 시간순으로 이어 붙임(한 원본 반복 대신)",
+   "bench": {
+    "goal_mean": 7.13,
+    "goal_below": 0.327,
+    "med_mean": 6.93,
+    "med_below": 0.381,
+    "src": "판 targets.scene_fit(중앙 = 상위편_목표.json)",
+    "rubric_src": "channel/ititemlog/_kal/상위편_목표.json · rubric:v2(2026-10-25 앵커2·1컷·3회) · 10-25(14 커밋 508cb6b1a — v1 7.92/0.15 대체)"
+   },
+   "ours": {
+    "frames_same": false
+   },
+   "better": false,
+   "worse": true,
+   "why": "✗ 완성본 컷 ≠ 계획 프레임(장면대사.json plan_frames_check: 15컷 중 같음 14 · 다름 [(4, 'N2', 0.9598)] (창 1−평균차 ≥ 0.97, 최저 0.9598)) — 계획 점수를 완성본 점수로 못 쓴다(㉔)",
+   "item_why": "사장님 10-22 눈 검수 승인 03(선크림)·07(핫도그) — 표준 §8 L2 '눈 검수 = 사장님 승인 03·07' · 07_대본 §3-1 '끝 3줄 화면은 새 원본 장면 — 원본을 하나 더 찾는다(선크림 v3: Namrata 추가)'",
+   "source": "d4e963a81(원본 2개 시간순)·f81989042(원본 2개 VMake Pro)·6c7d0121a(세 번째 원본)",
+   "expect": "scene_fit 평균↑·7 미만 비율↓(벤치 줄판독 fit 대비)",
+   "verify": "측정값",
+   "evidence_ok": true
+  },
+  {
+   "axis": "cut_rhythm",
+   "what": "장면 모자라 느리게 늘린 컷 제거 — 원본을 하나 더 찾아 바꿈",
+   "bench": {
+    "group": "상위 편(조회 상위 50%)",
+    "freezes_per_doc": {
+     "ro1l3u734v4": 0,
+     "aUicTeDoW04": 0,
+     "J7GxfaVdwSU": 3
+    },
+    "median": 0.0
+   },
+   "ours": {
+    "freezes": 0,
+    "spans": []
+   },
+   "better": true,
+   "worse": false,
+   "why": "멈춤(창 안 같은 그림 ≥0.3초) 우리 0건 — 나아짐 = 0건 · 나빠짐 = 상위 편(조회 상위 50%) 중앙 0.0건 초과 · 벤치 {'ro1l3u734v4': 0, 'aUicTeDoW04': 0, 'J7GxfaVdwSU': 3}",
+   "item_why": "사장님 10-22 눈 검수 승인 03(선크림)·07(핫도그) — 표준 §8 L2 '눈 검수 = 사장님 승인 03·07' · 07_대본 §3-1 '장면이 모자라 느리게 늘리는 것 금지'",
+   "source": "6c7d0121a(선크림 세 번째 원본 Namrata 로 느린 컷 제거)",
+   "expect": "창 안 멈춤(quality_gate.freezes ≥0.3초) 0건",
+   "verify": "측정값",
+   "evidence_ok": true
+  }
+ ],
+ "axes": {
+  "scene_fit": {
+   "bench": {
+    "goal_mean": 7.13,
+    "goal_below": 0.327,
+    "med_mean": 6.93,
+    "med_below": 0.381,
+    "src": "판 targets.scene_fit(중앙 = 상위편_목표.json)",
+    "rubric_src": "channel/ititemlog/_kal/상위편_목표.json · rubric:v2(2026-10-25 앵커2·1컷·3회) · 10-25(14 커밋 508cb6b1a — v1 7.92/0.15 대체)"
+   },
+   "ours": {
+    "frames_same": false
+   },
+   "better": false,
+   "worse": true,
+   "why": "✗ 완성본 컷 ≠ 계획 프레임(장면대사.json plan_frames_check: 15컷 중 같음 14 · 다름 [(4, 'N2', 0.9598)] (창 1−평균차 ≥ 0.97, 최저 0.9598)) — 계획 점수를 완성본 점수로 못 쓴다(㉔)"
+  },
+  "cut_rhythm": {
+   "bench": {
+    "group": "상위 편(조회 상위 50%)",
+    "freezes_per_doc": {
+     "ro1l3u734v4": 0,
+     "aUicTeDoW04": 0,
+     "J7GxfaVdwSU": 3
+    },
+    "median": 0.0
+   },
+   "ours": {
+    "freezes": 0,
+    "spans": []
+   },
+   "better": true,
+   "worse": false,
+   "why": "멈춤(창 안 같은 그림 ≥0.3초) 우리 0건 — 나아짐 = 0건 · 나빠짐 = 상위 편(조회 상위 50%) 중앙 0.0건 초과 · 벤치 {'ro1l3u734v4': 0, 'aUicTeDoW04': 0, 'J7GxfaVdwSU': 3}"
+  },
+  "thumb": {
+   "bench": {
+    "group": "상위 편(조회 상위 50%)",
+    "first_cut": {
+     "ro1l3u734v4": 5.07,
+     "aUicTeDoW04": 0.73,
+     "J7GxfaVdwSU": 2.97
+    },
+    "range": [
+     0.73,
+     5.07
+    ],
+    "frame0": "card"
+   },
+   "ours": {
+    "first_cut": 2.83,
+    "frame0": "scene"
+   },
+   "better": false,
+   "worse": true,
+   "why": "첫 컷 우리 2.83초 vs 상위 편(조회 상위 50%) 0.73~5.07초(±0.05) · 0초 우리 scene vs 최빈 card — 둘 다 안이면 나아짐, 아니면 나빠짐 · 0초 얼굴/물건 비율은 미측정"
+  },
+  "bgm": {
+   "bench": {
+    "lufs_per_doc": {
+     "aUicTeDoW04": -11.0,
+     "AZ2q07mBzlM": -13.7,
+     "J7GxfaVdwSU": -14.8,
+     "ro1l3u734v4": -12.8,
+     "SbWTqCnleC8": -14.5,
+     "zOSpeiMw1nA": -14.8
+    }
+   },
+   "ours": {
+    "lufs": -14.1,
+    "tp": -1.4,
+    "asr_ok": null,
+    "asr": "측정 실패: OSError: [WinError 1455] 이 작업을 완료하기 위한 페이징 파일이 너무 작습니다"
+   },
+   "better": null,
+   "worse": null,
+   "why": "LUFS -14.1(목표 -14.0±1.0 ○) · 받아쓰기 미측정(품질관문.json 없음) — 둘 다 ○ 나아짐, 하나라도 × 나빠짐"
+  },
+  "speech": {
+   "bench": {
+    "goal": 0.063,
+    "median": 0.086,
+    "values": {
+     "ro1l": 0.04,
+     "aUic": 0.086,
+     "J7Gx": 0.178
+    },
+    "src": "판 targets.speech.cps_cv"
+   },
+   "ours": {
+    "line_cps_cv": 0.0885,
+    "line_cps": {
+     "N1": 8.67,
+     "N2": 6.9,
+     "N3": 7.77,
+     "N4": 6.49,
+     "N5": 7.75,
+     "N6": 7.74,
+     "N7": 7.13
+    },
+    "src": "render_info.line_cps",
+    "pause_ok": null,
+    "pause": null
+   },
+   "better": false,
+   "worse": true,
+   "why": "나레 TTS 줄 자/초 변동계수 우리 0.0885(render_info.line_cps) — 나아짐 ≤0.063(p25) · 나빠짐 >0.086(상위 편 중앙) · 목표 판 targets.speech.cps_cv · 쉼 0.22~0.30 미측정"
+  },
+  "cap_look": {
+   "bench": {
+    "group": "상위 편(조회 상위 50%)",
+    "h_p75": 95.0,
+    "dE_p75": 121.6,
+    "h_median": 85.0,
+    "dE_median": 119.5,
+    "n": 17
+   },
+   "ours": {
+    "h": 76.0,
+    "dE": 123.65,
+    "n": 4
+   },
+   "better": false,
+   "worse": true,
+   "why": "ΔE 우리 123.65 vs 상위 편(조회 상위 50%) p75 121.6·중앙 119.5 · 높이 우리 76.0px vs p75 95.0·중앙 85.0px — 나빠짐 = 높이 <중앙−4 또는 ΔE <중앙−5.0 (띠 (1213, 1373), 잰 프레임 벤치 17장·우리 4장 / 시도 24장 — 나머지는 글자 못 찾음) · ★외부 팩 대기 잇템로그판_v2#2(channel/ititemlog/_kal/팩요청.md 2026-10-25) — worse_n 에서 빼고 따로 셈(㉜)",
+   "pending_pack": {
+    "req": "잇템로그판_v2#2",
+    "title": "자막 크기 변형 size:large(ititemlog) → 관제 235(자막팩 세션)",
+    "date": "2026-10-25",
+    "src": "channel/ititemlog/_kal/팩요청.md",
+    "by": "제목 낱말"
+   }
+  },
+  "sfx": {
+   "bench": {
+    "group": "상위 편(조회 상위 50%)",
+    "per_doc": {
+     "ro1l3u734v4": 0.067,
+     "aUicTeDoW04": 0.034,
+     "J7GxfaVdwSU": 0.035
+    },
+    "p75": 0.051,
+    "p25": 0.035,
+    "max": 0.067,
+    "first": 0.051,
+    "goal": {
+     "n_goal": 2,
+     "lo": 1,
+     "hi": 2,
+     "n_first": 2,
+     "dur": 30.467
+    }
+   },
+   "ours": {
+    "rate": 0.066,
+    "n": 2,
+    "denom": 30.4667
+   },
+   "better": true,
+   "worse": false,
+   "why": "sfx.rate 우리 2개(분모 30.4667) — 목표 2 · 허용 1~2 · 1차 2 (나아짐 = 범위 안 ∧ 1차보다 목표에 가깝거나 같음 · 나빠짐 = 범위 밖, 표준 §11-3 ⑳) · 상위 편(조회 상위 50%)"
+  },
+  "transition": {
+   "bench": {
+    "group": "상위 편(조회 상위 50%)",
+    "per_doc": {
+     "ro1l3u734v4": 0.0,
+     "aUicTeDoW04": 0.065,
+     "J7GxfaVdwSU": 0.042
+    },
+    "p75": 0.054,
+    "p25": 0.021,
+    "max": 0.065,
+    "first": 0.0,
+    "goal": {
+     "n_goal": 1,
+     "lo": 0,
+     "hi": 1,
+     "n_first": 0,
+     "dur": 13.0
+    }
+   },
+   "ours": {
+    "rate": 0.0,
+    "n": 0,
+    "denom": 13.0
+   },
+   "better": true,
+   "worse": false,
+   "why": "transition.rate 우리 0개(분모 13) — 목표 1 · 허용 0~1 · 1차 0 (나아짐 = 범위 안 ∧ 1차보다 목표에 가깝거나 같음 · 나빠짐 = 범위 밖, 표준 §11-3 ⑳) · 상위 편(조회 상위 50%)"
+  },
+  "sticker": {
+   "bench": {
+    "group": "상위 편(조회 상위 50%)",
+    "per_doc": {
+     "ro1l3u734v4": 0.0,
+     "aUicTeDoW04": 0.065,
+     "J7GxfaVdwSU": 0.057
+    },
+    "p75": 0.061,
+    "p25": 0.029,
+    "max": 0.065,
+    "first": 0.061,
+    "goal": {
+     "n_goal": 1,
+     "lo": 1,
+     "hi": 1,
+     "n_first": 1,
+     "dur": 22.0
+    }
+   },
+   "ours": {
+    "rate": 0.0,
+    "n": 0,
+    "denom": 22.0
+   },
+   "better": false,
+   "worse": true,
+   "why": "sticker.rate 우리 0개(분모 22) — 목표 1 · 허용 1~1 · 1차 1 (나아짐 = 범위 안 ∧ 1차보다 목표에 가깝거나 같음 · 나빠짐 = 범위 밖, 표준 §11-3 ⑳) · 상위 편(조회 상위 50%)"
+  },
+  "meme": {
+   "bench": {
+    "group": "상위 편(조회 상위 50%)",
+    "per_doc": {
+     "ro1l3u734v4": 0.0,
+     "aUicTeDoW04": 0.0,
+     "J7GxfaVdwSU": 0.0
+    },
+    "p75": 0.0,
+    "p25": 0.0,
+    "max": 0.0,
+    "first": 0.0,
+    "goal": {
+     "n_goal": 0,
+     "lo": 0,
+     "hi": 0,
+     "n_first": 0,
+     "dur": 22.0
+    }
+   },
+   "ours": {
+    "rate": 0.0,
+    "n": 0,
+    "denom": 22.0
+   },
+   "better": true,
+   "worse": false,
+   "why": "meme.rate 우리 0개(분모 22) — 목표 0 · 허용 0~0 · 1차 0 (나아짐 = 범위 안 ∧ 1차보다 목표에 가깝거나 같음 · 나빠짐 = 범위 밖, 표준 §11-3 ⑳) · 상위 편(조회 상위 50%)"
+  },
+  "cap_emph": {
+   "bench": {
+    "group": "상위 편(조회 상위 50%)",
+    "per_doc": {
+     "ro1l3u734v4": 0.13,
+     "aUicTeDoW04": 0.111,
+     "J7GxfaVdwSU": 0.231
+    },
+    "p75": 0.18,
+    "p25": 0.12,
+    "max": 0.231,
+    "first": 0.124,
+    "goal": {
+     "n_goal": 3,
+     "lo": 2,
+     "hi": 4,
+     "n_first": 2,
+     "dur": 16.0
+    }
+   },
+   "ours": {
+    "rate": 0.25,
+    "n": 4,
+    "denom": 16.0
+   },
+   "better": true,
+   "worse": false,
+   "why": "fx.rate.나레 우리 4개(분모 16) — 목표 3 · 허용 2~4 · 1차 2 (나아짐 = 범위 안 ∧ 1차보다 목표에 가깝거나 같음 · 나빠짐 = 범위 밖, 표준 §11-3 ⑳) · 상위 편(조회 상위 50%)"
+  },
+  "script": {
+   "bench": null,
+   "ours": null,
+   "better": "human",
+   "worse": null,
+   "why": "script = 측정 함수 없는 축(표준 §4-2 '못 재는 칸') — 사장님 판정"
+  }
+ },
+ "better_n": 5,
+ "worse_n": 4,
+ "measured_n": 10,
+ "l3_ok": false,
+ "human_n": 4,
+ "unmeasured_n": 1,
+ "total": 6,
+ "items_better_n": 1,
+ "items_worse_n": 1,
+ "evidence_ok_n": 6,
+ "l3": {
+  "l3_ok": false,
+  "state": "×",
+  "better_n": 5,
+  "worse_n": 4,
+  "pending_n": 1,
+  "measured_n": 10,
+  "need_better": 5,
+  "better_axes": [
+   "cap_emph",
+   "cut_rhythm",
+   "meme",
+   "sfx",
+   "transition"
+  ],
+  "worse_axes": [
+   "scene_fit",
+   "speech",
+   "sticker",
+   "thumb"
+  ],
+  "pending_pack": [
+   {
+    "axis": "cap_look",
+    "req": "잇템로그판_v2#2",
+    "title": "자막 크기 변형 size:large(ititemlog) → 관제 235(자막팩 세션)",
+    "date": "2026-10-25",
+    "src": "channel/ititemlog/_kal/팩요청.md",
+    "by": "제목 낱말"
+   }
+  ],
+  "human_axes": [
+   "script"
+  ],
+  "unmeasured_axes": [
+   "bgm"
+  ],
+  "rule": "better_n ≥ ceil(측정 축/2) ∧ worse_n = 0 ∧ 팩 대기 0 (비교 = 벤치 상위 편 좋은 쪽 사분위, 표준 §11-2 ⑱·§12-2 · 팩 대기 = §11-5 ㉜)"
+ },
+ "gates": {
+  "upgrade": {
+   "better": "5/10",
+   "better_n": 5,
+   "worse_n": 4,
+   "measured_n": 10,
+   "l3_ok": false,
+   "ok": false,
+   "state": "×",
+   "pending_pack": [
+    {
+     "axis": "cap_look",
+     "req": "잇템로그판_v2#2",
+     "title": "자막 크기 변형 size:large(ititemlog) → 관제 235(자막팩 세션)",
+     "date": "2026-10-25",
+     "src": "channel/ititemlog/_kal/팩요청.md",
+     "by": "제목 낱말"
+    }
+   ],
+   "need_better": 5,
+   "human": 4,
+   "worse_axes": [
+    "scene_fit",
+    "speech",
+    "sticker",
+    "thumb"
+   ],
+   "total": 6
+  }
+ }
+}

@@ -1,0 +1,445 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 잇템로그판_v2) · 시각은 final.mp4 기준 초",
+ "pack": "ititemlog_v2",
+ "rows": [
+  {
+   "line": "N1",
+   "t0": 0.0,
+   "t1": 0.502,
+   "text": "비행기에서",
+   "speaker": "narr",
+   "variant": "hook",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N1",
+   "t0": 0.502,
+   "t1": 1.551,
+   "text": "투명해진 마스크팩에",
+   "speaker": "narr",
+   "variant": "hook",
+   "emph": [],
+   "sticker": "",
+   "stickers": [
+    {
+     "kind": "circle_arrow",
+     "word": "투명",
+     "target": {
+      "kind": "face",
+      "avoid": [],
+      "anchor": "mouth"
+     },
+     "x": 57.27,
+     "y": 46.85,
+     "w": 215,
+     "h": 215,
+     "conf": 0.893,
+     "face_clear": true,
+     "how": "yunet",
+     "site": "detected"
+    }
+   ],
+   "enter": "cut"
+  },
+  {
+   "line": "N1",
+   "t0": 1.551,
+   "t1": 2.848,
+   "text": "놀란 외국인이 있는데요",
+   "speaker": "narr",
+   "variant": "hook_pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O1",
+   "t0": 2.848,
+   "t1": 4.528,
+   "text": "20분 지났어",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O1",
+   "t0": 4.528,
+   "t1": 5.608,
+   "text": "한 시간째",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N2",
+   "t0": 5.608,
+   "t1": 7.076,
+   "text": "처음엔 하얗던 마스크가",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N2",
+   "t0": 7.076,
+   "t1": 8.587,
+   "text": "시간이 갈수록 비치더니",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O2",
+   "t0": 8.587,
+   "t1": 10.907,
+   "text": "이제 떼 볼까",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O2",
+   "t0": 10.907,
+   "t1": 13.027,
+   "text": "한 번에 통째로 떨어졌어!",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N3",
+   "t0": 13.027,
+   "t1": 14.567,
+   "text": "세럼이 피부로 스며들수록",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N3",
+   "t0": 14.567,
+   "t1": 15.811,
+   "text": "투명해지는 원리라는데",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N4",
+   "t0": 15.811,
+   "t1": 17.187,
+   "text": "다른 외국인 모녀는",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N4",
+   "t0": 17.187,
+   "t1": 18.666,
+   "text": "아예 밤새 붙이고 잤더니",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "밤새",
+     "color": "#F07A09"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O3",
+   "t0": 18.666,
+   "t1": 21.106,
+   "text": "여덟 시간 만에 투명해졌어",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O3",
+   "t0": 21.106,
+   "t1": 22.696,
+   "text": "무슨 마법을 넣은 거야?",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N5",
+   "t0": 22.696,
+   "t1": 23.682,
+   "text": "써 본 사람들은",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N5",
+   "t0": 23.682,
+   "t1": 24.543,
+   "text": "통째로 떨어지는 게",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N5",
+   "t0": 24.543,
+   "t1": 25.355,
+   "text": "신기하다던데",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N6",
+   "t0": 25.355,
+   "t1": 26.388,
+   "text": "아침에 일어나도",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N6",
+   "t0": 26.388,
+   "t1": 27.63,
+   "text": "피부가 촉촉하다고 하고",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N7",
+   "t0": 27.63,
+   "t1": 29.228,
+   "text": "아, 나도 다음 비행기에선",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N7",
+   "t0": 29.228,
+   "t1": 30.467,
+   "text": "이거 붙이고 자야겠다",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  }
+ ],
+ "sfx": [
+  {
+   "t": 3.148,
+   "role": "body",
+   "why": "body",
+   "kind": "pop"
+  },
+  {
+   "t": 17.487,
+   "role": "body",
+   "why": "body 강조",
+   "kind": "pop"
+  }
+ ],
+ "flashes": [],
+ "transitions": [],
+ "memes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = J7GxfaVdwSU",
+  "목표 밀도 모드(업그레이드 판 targets): fx_rate_narr 0.18(상한 0.231), fx_rate_orig 0.056(상한 0.111), sfx_rate 0.051(상한 0.067), sticker_rate 0.061(상한 0.065) · 출처 channel/ititemlog/_kal/상위편_목표.json density",
+  "훅 N1 덩어리 3개 → hook (끝 hook_pop)",
+  "스티커 circle_arrow → N1「투명해진 마스크팩에」",
+  "스티커 spark_lines → N4「다른 외국인 모녀는」",
+  "꾸밈 자리 본문 목표 4 중 3개 — key 덩어리·화자 상한 {'narr': 5, 'orig': 1} 모자람",
+  "⚠ conflict {'axis': 'fx_rate_narr', 'need': 5, 'cap': 4, 'cause': 'deco_pos×targets', 'by': {'variant': 3, 'sticker': 1, 'emph': 1}, 'why': '뼈대 최소(deco_pos — 1차 꾸밈 자리) > 업그레이드 상한(상위 편 max) — 어느 쪽도 늘리지 않고 멈춤(표준 §11-5 ㉛), 대본 단계로'}",
+  "전환 [] (본보기 J7GxfaVdwSU 줄판독 34줄 비율 {'zoomblur': 0.03}, 컷 경계 13·붙일 수 있는 9(≥1.2초))",
+  "효과음 targets: 목표 0.051발/초 × 30.29초 = 2발 · 상한 2(상위 편 최대 0.067)",
+  "효과음 2발(본보기 줄판독 1발 · 역할 {'body': 2} · 편차 +0.30초) [(3.148, 'pop', 'body'), (17.487, 'pop', 'body')]",
+  "짤 0개(rate 0.0 — 벤치에 짤 없음도 스타일)",
+  "등장 {'cut': 22} · 강조 1/22",
+  "스티커 spark_lines 자리 50.0%·74.06% — 자막팩이 이 종류는 자리(x·y)를 안 읽어 안 그림(N4)"
+ ],
+ "check": {
+  "ok": false,
+  "reference": "J7GxfaVdwSU",
+  "worst_slot_diff": 0.143,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 7
+   },
+   "narr.rest": {
+    "bench": {
+     "cut": 0.86,
+     "pop": 0.14
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.14,
+    "ours_emph": 0.11,
+    "n": 9
+   },
+   "orig.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 3
+   },
+   "orig.rest": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.06,
+    "ours_emph": 0.0,
+    "n": 3
+   },
+   "stickers": {
+    "bench": {
+     "circle_arrow": 1,
+     "spark_lines": 1
+    },
+    "ours": {
+     "circle_arrow": 1,
+     "spark_lines": 1
+    }
+   },
+   "sfx": {
+    "bench": 1,
+    "ours": 2,
+    "kinds": {
+     "pop": 2
+    },
+    "roles": {
+     "bench_expect": {
+      "body": 2.0
+     },
+     "ours": {
+      "body": 2
+     }
+    }
+   },
+   "transitions": {
+    "bench_expect": {
+     "zoomblur": 0.38
+    },
+    "ours": {},
+    "cut_bounds": 13
+   },
+   "sites": {
+    "detected": 2
+   },
+   "meme": {
+    "ours": 0
+   },
+   "conflict": {
+    "axis": "fx_rate_narr",
+    "need": 5,
+    "cap": 4,
+    "cause": "deco_pos×targets",
+    "by": {
+     "variant": 3,
+     "sticker": 1,
+     "emph": 1
+    },
+    "why": "뼈대 최소(deco_pos — 1차 꾸밈 자리) > 업그레이드 상한(상위 편 max) — 어느 쪽도 늘리지 않고 멈춤(표준 §11-5 ㉛), 대본 단계로"
+   },
+   "targets": {
+    "sfx_rate": {
+     "goal": 0.051,
+     "cap": 0.067,
+     "src": "channel/ititemlog/_kal/상위편_목표.json density",
+     "n_goal": 2,
+     "lo": 1,
+     "hi": 2,
+     "n_first": 2,
+     "dur": 30.294,
+     "n": 2,
+     "ours": 0.066
+    }
+   }
+  },
+  "bad": [
+   "conflict fx_rate_narr 뼈대 최소 5 > 업그레이드 상한 4 — 원인 audit deco_pos×targets"
+  ]
+ }
+}
