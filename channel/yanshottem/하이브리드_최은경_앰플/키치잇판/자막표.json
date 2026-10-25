@@ -1,0 +1,560 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 키치잇판) · 시각은 final.mp4 기준 초",
+ "pack": "kitchit",
+ "rows": [
+  {
+   "line": "N1",
+   "t0": 0.0,
+   "t1": 2.066,
+   "text": "방송인 최은경 씨가",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "N1",
+   "t0": 2.066,
+   "t1": 3.501,
+   "text": "다이소에서 대박이라고",
+   "speaker": "narr",
+   "variant": "typing",
+   "emph": [
+    {
+     "word": "대박"
+    }
+   ],
+   "sticker": "",
+   "stickers": [
+    {
+     "kind": "spark_lines",
+     "word": "대박"
+    }
+   ],
+   "enter": "typing",
+   "chars": [
+    2.066,
+    2.121,
+    2.176,
+    2.231,
+    2.286,
+    2.341,
+    2.396,
+    2.451,
+    2.506,
+    2.561
+   ]
+  },
+  {
+   "line": "N1",
+   "t0": 3.501,
+   "t1": 4.169,
+   "text": "콕 집은 앰플이",
+   "speaker": "narr",
+   "variant": "typing",
+   "emph": [
+    {
+     "word": "앰플"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "typing",
+   "chars": [
+    3.501,
+    3.556,
+    3.611,
+    3.666,
+    3.721,
+    3.776
+   ]
+  },
+  {
+   "line": "N1",
+   "t0": 4.169,
+   "t1": 4.658,
+   "text": "있다네요?",
+   "speaker": "narr",
+   "variant": "typing",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "typing",
+   "chars": [
+    4.169,
+    4.224,
+    4.279,
+    4.334,
+    4.389
+   ]
+  },
+  {
+   "line": "O1",
+   "t0": 4.658,
+   "t1": 5.878,
+   "text": "여기에 진짜",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [
+    {
+     "word": "진짜"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "O1",
+   "t0": 5.878,
+   "t1": 7.378,
+   "text": "훌륭한 비타민C가 있는데",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O1",
+   "t0": 7.378,
+   "t1": 8.498,
+   "text": "이게 대박인데요",
+   "speaker": "orig",
+   "variant": "typing",
+   "emph": [
+    {
+     "word": "대박"
+    }
+   ],
+   "sticker": "",
+   "stickers": [
+    {
+     "kind": "spark_lines",
+     "word": "대박"
+    }
+   ],
+   "enter": "typing",
+   "chars": [
+    7.378,
+    7.433,
+    7.488,
+    7.543,
+    7.598,
+    7.653,
+    7.708
+   ]
+  },
+  {
+   "line": "N2",
+   "t0": 8.498,
+   "t1": 9.129,
+   "text": "도대체 뭐가",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "N2",
+   "t0": 9.129,
+   "t1": 10.022,
+   "text": "그렇게 좋길래?",
+   "speaker": "narr",
+   "variant": "typing",
+   "emph": [
+    {
+     "word": "좋길래?"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "typing",
+   "chars": [
+    9.129,
+    9.184,
+    9.239,
+    9.294,
+    9.349,
+    9.404,
+    9.459
+   ]
+  },
+  {
+   "line": "O2",
+   "t0": 10.022,
+   "t1": 10.802,
+   "text": "그래서 이걸",
+   "speaker": "orig",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "이걸"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O2",
+   "t0": 10.802,
+   "t1": 11.732,
+   "text": "추천을 받고",
+   "speaker": "orig",
+   "variant": "pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "O2",
+   "t0": 11.732,
+   "t1": 13.052,
+   "text": "매일 막 이렇게",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [
+    {
+     "word": "매일"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "O2",
+   "t0": 13.052,
+   "t1": 13.742,
+   "text": "바른 거야",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N3",
+   "t0": 13.742,
+   "t1": 14.65,
+   "text": "저도 보자마자",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "N3",
+   "t0": 14.65,
+   "t1": 15.451,
+   "text": "하나 사서 따라",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "따라"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "N3",
+   "t0": 15.451,
+   "t1": 16.156,
+   "text": "발라 봤어요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "N4",
+   "t0": 16.156,
+   "t1": 17.272,
+   "text": "근데 노란 캡슐을",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "N4",
+   "t0": 17.272,
+   "t1": 18.665,
+   "text": "톡 넣고 흔드는 게",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "N4",
+   "t0": 18.665,
+   "t1": 20.072,
+   "text": "꼭 실험 같더라고요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "실험"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "N5",
+   "t0": 20.072,
+   "t1": 21.168,
+   "text": "심지어 병에",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "N5",
+   "t0": 21.168,
+   "t1": 22.294,
+   "text": "퓨어 레티놀이라고",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "레티놀"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "N5",
+   "t0": 22.294,
+   "t1": 23.2,
+   "text": "적혀 있더라고요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "N6",
+   "t0": 23.2,
+   "t1": 25.374,
+   "text": "방송인 최은경 씨 영상은",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "N6",
+   "t0": 25.374,
+   "t1": 26.73,
+   "text": "조회수 64만이",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "64만이"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "N6",
+   "t0": 26.73,
+   "t1": 27.833,
+   "text": "넘을 만큼 인기래요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "인기래요"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  }
+ ],
+ "sfx": [],
+ "flashes": [],
+ "transitions": [
+  {
+   "t": 8.498,
+   "kind": "zoomblur",
+   "ms": 167.0,
+   "zoom": 0.12,
+   "sigma": 0.5,
+   "why": "화자 바뀜"
+  },
+  {
+   "t": 10.022,
+   "kind": "black",
+   "ms": 33.0,
+   "why": "화자 바뀜"
+  },
+  {
+   "t": 13.742,
+   "kind": "zoomblur",
+   "ms": 167.0,
+   "zoom": 0.12,
+   "sigma": 0.5,
+   "why": "화자 바뀜"
+  }
+ ],
+ "memes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = Ks5kYYKAUlQ",
+  "스티커 spark_lines → N1「다이소에서 대박이라고」",
+  "스티커 spark_lines → O1「이게 대박인데요」",
+  "전환 [(8.498, 'zoomblur'), (10.022, 'black'), (13.742, 'zoomblur')] (판 cuts.transition.kinds 비율 {'zoomblur': 0.1, 'black': 0.07, 'flash': 0.01}, 컷 경계 18·붙일 수 있는 14(≥1.2초))",
+  "효과음 0발(본보기 0) []",
+  "꾸밈 없음 2→2/25(판 plain_share 0.163 → 4) 강조 뺌 [] — 뺄 수 있는 강조만 덩어리 모자람(1)",
+  "등장 {'pop': 8, 'typing': 5, 'fade': 9, 'cut': 3} · 강조 12/25",
+  "꾸밈 답 없음(deco_answers.json)"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "Ks5kYYKAUlQ",
+  "worst_slot_diff": 0.133,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "pop": 0.5,
+     "fade": 0.5
+    },
+    "ours": {
+     "pop": 0.5,
+     "fade": 0.5
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 6
+   },
+   "narr.rest": {
+    "bench": {
+     "fade": 0.33,
+     "pop": 0.33,
+     "typing": 0.33
+    },
+    "ours": {
+     "typing": 0.33,
+     "fade": 0.33,
+     "pop": 0.33
+    },
+    "bench_emph": 0.67,
+    "ours_emph": 0.67,
+    "n": 12
+   },
+   "orig.first": {
+    "bench": {
+     "fade": 0.5,
+     "cut": 0.5
+    },
+    "ours": {
+     "fade": 0.5,
+     "cut": 0.5
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 2
+   },
+   "orig.rest": {
+    "bench": {
+     "cut": 0.33,
+     "pop": 0.33,
+     "fade": 0.17,
+     "typing": 0.17
+    },
+    "ours": {
+     "cut": 0.4,
+     "typing": 0.2,
+     "pop": 0.2,
+     "fade": 0.2
+    },
+    "bench_emph": 0.5,
+    "ours_emph": 0.4,
+    "n": 5
+   },
+   "stickers": {
+    "bench": {
+     "spark_lines": 2
+    },
+    "ours": {
+     "spark_lines": 2
+    },
+    "vs": {
+     "spark_lines": "2/2(벤치 38% 편만 씀 — 모자라도 벤치 범위)"
+    }
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0,
+    "kinds": {}
+   },
+   "transitions": {
+    "ours": {
+     "zoomblur": 2,
+     "black": 1
+    },
+    "plan": {
+     "src": "판 cuts.transition.kinds",
+     "share": {
+      "zoomblur": 0.1,
+      "black": 0.071,
+      "flash": 0.014
+     },
+     "cut_bounds": 18,
+     "want_raw": {
+      "zoomblur": 1.8,
+      "black": 1.278,
+      "flash": 0.252
+     },
+     "want": 3,
+     "eligible": 14,
+     "picked": {
+      "zoomblur": 2,
+      "black": 1
+     },
+     "min_cut": 1.2
+    }
+   },
+   "sites": {},
+   "meme": {
+    "ours": 0
+   }
+  },
+  "bad": []
+ }
+}
