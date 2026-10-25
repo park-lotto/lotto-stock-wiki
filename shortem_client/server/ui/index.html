@@ -56,6 +56,18 @@ input[type=range]{width:100%;accent-color:var(--violet)}
 .fontgrid button small{font-size:10.5px;color:var(--dim);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fontgrid button.on{border-color:var(--mint);color:var(--mint)}
 .grp{font-size:12.5px;font-weight:700;color:var(--violet2);margin:6px 0 -4px}
+.card.scard{grid-template-columns:72px minmax(0,1fr);align-items:start;gap:12px}
+.card.scard>img,.card.scard>.noshot{width:72px;aspect-ratio:9/16;object-fit:cover;border-radius:8px;background:#000}
+.noshot{display:grid;place-content:center;text-align:center;font-size:10.5px;color:var(--dim);border:1px dashed var(--line2);background:var(--bg)}
+.sc-b{display:grid;gap:6px;min-width:0}
+#shotpv{position:absolute;inset:0;z-index:4;background:#05080f;display:grid;grid-template-rows:minmax(0,1fr) auto auto;gap:8px;padding:0 0 10px}
+#shotpv[hidden]{display:none}
+#shotpv>img{width:100%;height:100%;object-fit:contain;min-height:0}
+#shotpv .sp-row{display:flex;gap:6px;justify-content:center}
+#shotpv .sp-row button{padding:0;border:2px solid transparent;border-radius:6px;background:none;cursor:pointer;width:46px}
+#shotpv .sp-row button.on{border-color:var(--mint)}#shotpv .sp-row img{width:100%;border-radius:4px;display:block}
+#shotpv small{text-align:center;color:var(--mute);font-size:11px}
+.noshot.big{position:absolute;inset:0;border:0;font-size:14px;color:var(--mute);gap:6px;padding:20px}.noshot.big small{font-size:12px;color:var(--dim)}
 .bdg{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
 .bdg i{font-style:normal;font-size:11px;padding:2px 7px;border-radius:999px;border:1px solid rgba(63,224,192,.45);color:var(--mint);background:rgba(63,224,192,.08)}
 .bdg i.off{border-color:var(--line2);color:var(--dim);background:none}
@@ -79,6 +91,9 @@ input[type=range]{width:100%;accent-color:var(--violet)}
 .vres{display:grid;gap:6px;max-height:280px;overflow:auto}
 .vrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:8px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px}
 .vrow small{color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.vrow.on{border-color:var(--mint)}
+.vres.tall{max-height:420px}.vrow.v4{grid-template-columns:150px minmax(0,1fr) auto auto}
+.vrow .chips{gap:4px}.vrow .chip{padding:4px 9px;font-size:12px}
+i.best{font-style:normal;font-size:10.5px;color:var(--gold);border:1px solid rgba(245,195,91,.5);border-radius:999px;padding:0 6px;margin-left:4px}
 .reqs{display:grid;gap:6px}
 .req{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:8px;align-items:center;font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:7px 10px}
 .req i{font-style:normal;font-size:11px;padding:1px 7px;border-radius:999px}.req .st-wait{color:var(--gold);border:1px solid rgba(245,195,91,.5)}.req .st-done{color:var(--mint);border:1px solid rgba(63,224,192,.5)}
@@ -93,10 +108,13 @@ input[type=range]{width:100%;accent-color:var(--violet)}
 .phone.editing{position:fixed;inset:16px;z-index:60;aspect-ratio:auto;border-radius:16px;background:#0b1020}
 .phone.editing iframe{pointer-events:auto}
 .edclose{position:fixed;top:24px;right:28px;z-index:61}
-/* 꾸미기 단계: 왼쪽 좁게, 오른쪽 장면꾸미기 화면 크게 */
-.main.lookmode{grid-template-columns:300px minmax(0,1fr)}
-.phone.inline{aspect-ratio:auto;height:calc(100vh - 170px);min-height:560px;border-radius:14px;background:#0b1020}
+/* 꾸미기 단계: 왼쪽 상자 없이 장면꾸미기 화면만 — 숏템메이커처럼 줄이지 않고 폭 100%·화면 높이(scene-style-produce.js 와 같은 비율) */
+.main.lookmode{grid-template-columns:minmax(0,1fr)}
+.main.lookmode .board{display:none}
+.phone.inline{aspect-ratio:auto;height:calc(100vh - 200px);min-height:900px;border-radius:12px;background:#071118;border-color:#35505b}
+.phone.inline iframe{position:static;width:100%!important;height:100%!important;transform:none!important}
 .phone.inline iframe,.phone.drag iframe{pointer-events:auto}
+.looknav{display:none}.main.lookmode .looknav{display:flex;justify-content:space-between;gap:10px}
 .phone.drag{cursor:grab}
 #mvlayer{position:absolute;inset:0;pointer-events:none;z-index:5}
 #mvlayer .mv-from{position:absolute;border:2px dashed rgba(255,255,255,.45);border-radius:6px}
@@ -140,6 +158,7 @@ details.sec summary small{color:var(--mute);font-size:12px}
   <div class="main">
     <section class="board" id="board"></section>
     <aside class="side">
+      <div class="looknav"><button class="btn" data-goto="template">← 템플릿</button><span class="state" id="lookstate"></span><button class="btn pri" data-goto="sound">다음: 소리 →</button></div>
       <div class="phone" id="phone"><iframe id="stage" title="미리보기" src="r/out/scene-style-ui-showcase.html?qa=1"></iframe><span class="busy" id="busy" hidden>그리는 중…</span></div>
       <div class="scenes" id="scenes"></div>
       <div class="nav"><button class="btn" id="play">▶ 5초 재생</button><button class="btn" id="redraw">다시 그리기</button></div>
@@ -195,7 +214,8 @@ function render(){
     const sty=(st.styles||[]).find(x=>x.id===st.style);
     h=`<h2>템플릿 <small>영상의 겉모양(띠·제목 자리·채널명 칸)을 고릅니다 — 누르면 오른쪽에 바로 그립니다</small></h2>
       <div class="sec"><div class="sec-h"><b>프리셋 기본 틀</b><small>${sty?esc(sty.name)+' 원본 모양 그대로':'고른 프리셋의 원본 모양 그대로'}</small></div>
-        <div class="tgrid"><button class="tcard base${!tpl?' on':''}" data-tpl="none"><div class="tbase">${esc(sty?sty.name:'프리셋')}<small>기본 틀</small></div><span>기본</span></button></div></div>
+        ${st.style&&!st.style_has_frame?'<small style="color:var(--gold)">이 프리셋의 기본 틀은 아직 준비 중입니다 — 아래 템플릿 중에서 고르세요</small>'
+          :`<div class="tgrid"><button class="tcard base${!tpl?' on':''}" data-tpl="none">${sty&&(sty.shots||[]).length?`<img alt="" src="${esc(sty.shots[0])}">`:`<div class="tbase">${esc(sty?sty.name:'프리셋')}<small>기본 틀</small></div>`}<span>기본</span></button></div>`}</div>
       ${[['story','썰 스타일'],['continuous','고정 스타일']].map(([m,t])=>`<div class="sec"><div class="sec-h"><b>${t}</b><small>${(cat.templates||[]).filter(x=>x.mode===m).length}개</small></div>
         <div class="tgrid">${(cat.templates||[]).filter(x=>x.mode===m).map(x=>`<button class="tcard${tpl&&tpl.id===x.id?' on':''}" data-tpl="${m}:${esc(x.id)}"><img loading="lazy" alt="" src="${tplThumb(x)}"><span>${esc(x.name.replace(/^(썰|고정) 스타일 /,''))}</span></button>`).join('')}</div></div>`).join('')}
 `;
@@ -226,11 +246,14 @@ function render(){
       ${keyBox(st.keys)}
       <div class="sec"><div class="sec-h"><b>목소리 엔진</b><small>고객님 키로 만듭니다</small></div>
         <div class="chips">${ENG.map(([k,t])=>`<button class="chip${k===curEng?' on':''}" data-eng="${k}">${t}</button>`).join('')}</div></div>
-      ${st.host==='server'&&curEng!=='elevenlabs'?`<div class="sec"><div class="sec-h"><b>성우 찾기</b><small>숏템 성우 검색 그대로 — 이름·느낌으로 찾기</small></div>
+      ${st.host==='server'?voicePresetBox(curEng,tts):''}
+      ${st.host==='server'&&curEng==='typecast'?`<div class="sec"><div class="sec-h"><b>감정</b><small>타입캐스트 성우의 말 느낌</small></div>
+        <div class="chips">${EMO.map(([k,t])=>`<button class="chip${k===((st.extra||{}).tts_emotion||'normal')?' on':''}" data-emo="${k}">${t}</button>`).join('')}</div></div>`:''}
+      ${st.host==='server'?`<div class="sec"><div class="sec-h"><b>성우 찾기</b><small>${curEng==='elevenlabs'?'일레븐랩스 목소리 모음(고객님 키 필요)':'숏템 성우 검색 그대로 — 이름·느낌으로 찾기'}</small></div>
         <div class="inrow"><input type="text" id="vq" placeholder="예) 차분한 여자, 민준, 광고" value="${esc(S.vq||'')}"><button class="btn pri" id="vsearch">찾기</button></div>
         ${S.vres?`<div class="vres">${S.vres.length?S.vres.map(v=>`<div class="vrow${v.voice_id===tts.voice_id?' on':''}"><b>${esc(v.name)}</b><small>${esc([v.gender,v.age,(v.tags||[]).slice(0,3).join(' · ')].filter(Boolean).join(' · '))}</small>
-          ${v.sample_url?`<button class="chip" data-play="${esc(v.sample_url)}">▶ 듣기</button>`:''}<button class="chip" data-pickv="${esc(v.voice_id)}" data-pickn="${esc(v.name)}">고르기</button></div>`).join(''):'<small style="color:var(--mute)">찾은 성우가 없습니다</small>'}</div>`:''}</div>`:''}
-      <div class="sec"><div class="sec-h"><b>${st.host==='server'?'추천 목소리':'목소리'}</b>${badge('tts','voice_id')}</div>
+          ${v.sample_url?`<button class="chip" data-play="${esc(v.sample_url)}">▶ 듣기</button>`:''}<button class="chip" data-pickv="${esc(v.voice_id)}" data-pickn="${esc(v.name)}">고르기</button></div>`).join(''):`<small style="color:var(--mute)">${esc(S.verr||'찾은 성우가 없습니다')}</small>`}</div>`:''}</div>`:''}
+      <div class="sec"><div class="sec-h"><b>${st.host==='server'?'지금 회원 PC 가 바로 쓸 수 있는 목소리':'목소리'}</b>${badge('tts','voice_id')}</div>
         ${vs.length?`<div class="chips">${vs.map(v=>`<button class="chip${v.voice_id===tts.voice_id?' on':''}" data-voice="${esc(v.voice_id)}" title="${esc(v.about)}">${esc(v.name)}</button>`).join('')}</div>`
           :`<div class="note">${curEng==='fishaudio'?'피쉬오디오 목소리는 준비 중입니다 — 회원 PC 엔진에 연결하는 대로 여기에 목록이 뜹니다.':'이 엔진의 목소리가 아직 없습니다.'}</div>`}</div>
       <div class="sec"><div class="row"><b>말 빠르기</b><input type="range" id="tempo" min="0.8" max="1.8" step="0.02" value="${tts.tempo??1.36}"><output>${(tts.tempo??1.36).toFixed(2)}배</output></div></div>
@@ -252,6 +275,13 @@ function render(){
   $('board').innerHTML=h;
   // 꾸미기 단계 = 오른쪽이 장면꾸미기 화면(큰 칸). 다른 단계 = 9:16 그림만
   $('phone').classList.toggle('drag',S.step==='edit');
+  // 프리셋 단계 견본: 실제 완성본 장면 3장(있으면) / 틀도 없으면 '견본 준비 중' — 남의 틀로 대신 그리지 않는다
+  let O=$('shotpv');if(!O){O=document.createElement('div');O.id='shotpv';$('phone').appendChild(O)}
+  const cs=(st.styles||[]).find(x=>x.id===st.style);
+  if(S.step==='preset'&&cs&&(cs.shots||[]).length){O.hidden=false;const k=Math.min(S.shot||0,cs.shots.length-1);
+    O.innerHTML=`<img src="${esc(cs.shots[k])}" alt=""><div class="sp-row">${cs.shots.map((u,i)=>`<button data-shot="${i}" class="${i===k?'on':''}"><img src="${esc(u)}" alt=""></button>`).join('')}</div><small>실제 완성본 장면</small>`}
+  else if(S.step==='preset'&&cs&&!st.style_has_frame){O.hidden=false;O.innerHTML='<div class="noshot big">이 프리셋 견본은 준비 중입니다<br><small>템플릿 단계에서 겉모양을 고르면 그 모양으로 그립니다</small></div>'}
+  else O.hidden=true;
   if(S.step==='edit'&&stage.contentWindow&&stage.contentWindow.sceneStyle)dragIn(stage.contentWindow);
   drawMoves();
   const look=S.step==='look',was=$('phone').classList.contains('inline');
@@ -288,12 +318,32 @@ function deliverBox(d){
     ${(T.linked||G.on)&&(S.st.videos||[]).length?`<button class="btn" data-dl="test">최근 완성본으로 시험 보내기</button>`:''}
     ${S.dlmsg?`<div class="note" id="dlmsg">${esc(S.dlmsg)}</div>`:''}</div>`;
 }
-// 템플릿 견본 그림 — 장면꾸미기 목록과 같은 파일(precision20-ui.js storyThumb/fixedThumb 와 같은 이름 규칙)
+// 숏템 추천 성우(서버 /api/voice-presets — 숏템메이커와 같은 목록) — 엔진별, 샘플 듣기, 톤(variants) 고르기
+const TONE={stable:'차분',natural:'자연스럽게',expressive:'표현 풍부',whisper:'속삭임',bright:'밝게',calm:'차분',default:'기본'};
+const EMO=[['normal','기본'],['happy','기쁨'],['sad','슬픔'],['angry','화남'],['tonedown','차분하게'],['toneup','밝게'],['whisper','속삭임']];
+async function loadVoicePresets(){if(S.vp||S.vpLoading)return;S.vpLoading=true;
+  try{const r=await fetch('/api/voice-presets?lang=KR').then(x=>x.json());S.vp=r.groups||[]}catch(e){S.vp=[]}render()}
+function voicePresetBox(eng,tts){
+  loadVoicePresets();
+  if(!S.vp)return'<div class="sec"><small style="color:var(--mute)">숏템 추천 성우를 불러오는 중…</small></div>';
+  const EN={fish:'fishaudio'};   // 숏템 목록의 엔진 이름(fish) ↔ 이 화면(fishaudio)
+  const gs=S.vp.filter(g=>(EN[g.engine]||g.engine||'typecast')===eng);
+  if(!gs.length)return'';        // 타입캐스트는 숏템도 추천 목록 없이 검색으로 고른다 — 빈 칸을 안 보인다
+  return `<div class="sec"><div class="sec-h"><b>숏템 추천 성우</b><small>${gs.length}명 · 숏템메이커와 같은 목록</small></div><div class="vres tall">${gs.map(g=>{
+    const vv=Object.entries(g.variants||{}),cur=vv.find(([k,v])=>v.voice_id===tts.voice_id||v.preset_id===tts.voice_id||v.preset_id===tts.preset_id);
+    const dv=(g.variants||{})[g.default_variant]||(vv[0]||[])[1]||{};
+    return `<div class="vrow v4${cur?' on':''}"><b>${esc(g.name)}${g.best?' <i class="best">추천</i>':''}</b><small>${esc(g.one_liner||'')}</small>
+      ${dv.sample_url?`<button class="chip" data-play="${esc(dv.sample_url)}">▶ 듣기</button>`:''}
+      <span class="chips">${vv.map(([k,v])=>`<button class="chip${cur&&cur[0]===k?' on':''}" data-vp="${esc(v.preset_id)}" data-vpv="${esc(eng==='elevenlabs'?v.preset_id:v.voice_id)}" data-vpn="${esc(g.name)}">${esc(TONE[k]||k)}</button>`).join('')}</span></div>`}).join('')}</div></div>`;
+}
+// 템플릿 견본 그림 —장면꾸미기 목록과 같은 파일(precision20-ui.js storyThumb/fixedThumb 와 같은 이름 규칙)
 const tplThumb=x=>x.mode==='story'?`r/out/assets/scene-style/thumbnails/story-${x.id}-hook.png`:`r/out/assets/scene-style/thumbnails/fixed-${String(x.id).replace(/^fixed_/,'')}.png`;
 // 프리셋(판) 카드 — 묶음별, 카드마다 목소리·효과음·모션그래픽·배경음악 표시(값은 서버 claude_studio.style_summary — 판 설정 그대로)
 function styleCards(st){
-  const card=x=>`<button class="card${x.id===st.style?' on':''}" data-style="${esc(x.id)}"><b>${esc(x.name)}</b>${x.desc?`<span>${esc(x.desc)}</span>`:''}
-    <div class="bdg">${(x.badges||[]).map(b=>`<i class="${b.on===false?'off':''} b-${esc(b.k)}">${esc(b.t)}</i>`).join('')}</div></button>`;
+  const card=x=>`<button class="card scard${x.id===st.style?' on':''}" data-style="${esc(x.id)}">
+    ${(x.shots||[]).length?`<img loading="lazy" alt="" src="${esc(x.shots[0])}">`:'<div class="noshot">견본<br>준비 중</div>'}
+    <div class="sc-b"><b>${esc(x.name)}</b>${x.desc?`<span>${esc(x.desc)}</span>`:''}
+    <div class="bdg">${(x.badges||[]).map(b=>`<i class="${b.on===false?'off':''} b-${esc(b.k)}">${esc(b.t)}</i>`).join('')}</div></div></button>`;
   const groups=[];for(const x of st.styles){const g=x.group||'';let o=groups.find(y=>y.g===g);if(!o)groups.push(o={g,xs:[]});o.xs.push(x)}
   return groups.map(o=>`${o.g?`<div class="grp">${esc(o.g)}</div>`:''}<div class="cards">${o.xs.map(card).join('')}</div>`).join('');
 }
@@ -408,12 +458,16 @@ $('board').addEventListener('click',async e=>{
   if(t.dataset.eng){S.eng=t.dataset.eng;S.vres=null;render();return}
   // 성우 찾기 — 숏템 기존 검색 API(서버 /api/typecast/voices · /api/fish/voices)를 그대로 부른다(서버판에서만)
   if(t.id==='vsearch'){S.vq=($('vq')||{}).value||'';const eng=S.eng||'typecast';
-    const u=eng==='fishaudio'?'/api/fish/voices?limit=30&q=':'/api/typecast/voices?limit=40&q=';
+    const u=eng==='fishaudio'?'/api/fish/voices?limit=30&q=':eng==='elevenlabs'?'/api/voice-library/search?language=ko&page=0&q=':'/api/typecast/voices?limit=40&q=';
     t.disabled=true;t.textContent='찾는 중…';
-    try{const r=await fetch(u+encodeURIComponent(S.vq)).then(x=>x.json());S.vres=(r.voices||[]).map(v=>({voice_id:v.voice_id||v.id,name:v.name||v.title,gender:v.gender,age:v.age,tags:v.tags||v.use_cases||[],sample_url:v.sample_url}));if(!r.ok&&r.error)state(r.error,true)}
+    try{const r=await fetch(u+encodeURIComponent(S.vq)).then(x=>x.json());S.vres=(r.voices||[]).map(v=>({voice_id:v.voice_id||v.id,name:v.name||v.title,gender:v.gender,age:v.age,tags:v.tags||v.use_cases||[],sample_url:v.sample_url||v.preview_url}));S.verr=r.ok?'':(r.error||'')}
     catch(e){S.vres=[];state('성우 검색을 못 했습니다',true)}
     render();return}
-  if(t.dataset.play){if(S.audio)S.audio.pause();S.audio=new Audio(t.dataset.play);S.audio.play();return}
+  if(t.dataset.play){if(S.audio)S.audio.pause();S.audio=new Audio(t.dataset.play);S.audio.play().catch(()=>state('미리듣기를 못 틀었습니다',true));return}
+  if(t.dataset.vp){const eng=S.eng||'typecast';const r=await api('/api/save',{preset:S.st.current,patch:{tts:{provider:eng,voice_id:t.dataset.vpv,preset_id:t.dataset.vp,name:t.dataset.vpn}}});
+    if(!r.ok){state('이 성우는 아직 회원 PC 엔진 명단에 없습니다 — 엔진 업데이트 뒤 쓸 수 있습니다',true);return}
+    await load(true);return}
+  if(t.dataset.emo){const r=await api('/api/extra',{preset:S.st.current,extra:{tts_emotion:t.dataset.emo}});if(r.ok===false){state(r.msg||'저장 실패',true);return}await load(true);return}
   if(t.dataset.pickv){const eng=S.eng||'typecast';const r=await api('/api/save',{preset:S.st.current,patch:{tts:{provider:eng,voice_id:t.dataset.pickv,name:t.dataset.pickn}}});
     if(!r.ok){state('이 목소리는 아직 회원 PC 엔진이 못 씁니다 — 엔진 업데이트 뒤 고를 수 있습니다',true);return}
     await load(true);return}
@@ -519,6 +573,7 @@ async function preview(patch,presetId){
   if(S.step==='look'){
     // 장면꾸미기 화면 그대로 — 제작소와 같은 길(scene-style-context 로 넣고, '이 영상에 적용'은 scene-style-save 로 받는다)
     w.postMessage({type:'scene-style-context',context:r.context,snapshot:snap},location.origin);
+    const h1=w.document.querySelector('.page-title h1');if(h1)h1.textContent='장면꾸미기';   // 제작소 단계 번호(6 ·)는 여기선 뜻이 없다
     await w.document.fonts.ready;
     $('busy').hidden=true;window.__drawn=(window.__drawn||0)+1;return;
   }
@@ -537,13 +592,15 @@ function settle(w){w.sceneStyle.motionAt&&w.sceneStyle.motionAt(100000);w.sceneD
 function show(i,keep){const w=stage.contentWindow;if(!w.sceneStyle)return;S.scene=i;w.sceneStyle.show(i);settle(w);drawMoves();window.__drawn=(window.__drawn||0)+1;   // 다 그린 횟수(점검 도구 ui_check 가 이걸로 기다린다)
   if(!keep)[...$('scenes').children].forEach((b,k)=>b.classList.toggle('on',k===i))}
 $('scenes').onclick=e=>{const b=e.target.closest('button');if(b)show(+b.dataset.i)};
+$('phone').addEventListener('click',e=>{const b=e.target.closest('[data-shot]');if(b){S.shot=+b.dataset.shot;render()}});
+document.querySelector('.looknav').onclick=e=>{const b=e.target.closest('[data-goto]');if(b){S.step=b.dataset.goto;render()}};
 // 장면꾸미기 '이 영상에 적용' → 꾸민 모양(snapshot)을 계정에 저장(claude_studio.save_look) → 결과를 화면에 돌려준다
 addEventListener('message',async e=>{
   if(e.source!==stage.contentWindow||e.origin!==location.origin||!e.data||e.data.type!=='scene-style-save')return;
   const r=await api('/api/look',{preset:S.st.current,snapshot:e.data.snapshot});
   const ok=r&&r.ok!==false&&!r.error;
   stage.contentWindow.postMessage({type:'scene-style-saved',ok,error:ok?'':(r.msg||r.error||'저장 실패')},location.origin);
-  if(ok){S.lookSaved=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});state('꾸민 모양 저장됨');await load(true,true);render()}
+  if(ok){S.lookSaved=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});state('꾸민 모양 저장됨');$('lookstate').textContent='✓ 꾸민 모양 저장 '+S.lookSaved;await load(true,true);render()}
 });
 $('redraw').onclick=()=>preview();
 $('play').onclick=()=>{   // 5초: 장면을 시간 순서로 넘기며 등장 효과를 그 시각대로(렌더러 render_scene_style.js 와 같은 손잡이)

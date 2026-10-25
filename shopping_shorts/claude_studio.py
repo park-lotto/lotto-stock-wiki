@@ -207,6 +207,13 @@ def _styles_dir() -> Path | None:
         return None
 
 
+def _preview_index() -> dict:
+    try:
+        return json.loads((ROOT / "out" / "assets" / "style-previews" / "index.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
 def style_id(stem: str) -> str:
     import hashlib
     return "s_" + hashlib.sha1(("shortem-style|" + stem).encode()).hexdigest()[:10]
@@ -237,7 +244,9 @@ def style_summary(stem: str, d: dict, names: dict, brands: dict) -> dict:
     badges.append({"k": "bgm", "t": "배경음악" if bgm.get("id") else "배경음악 없음", "on": bool(bgm.get("id"))})
     if d.get("thumb_card_face"):
         badges.append({"k": "face", "t": "연예인 얼굴 썸네일", "on": True})
-    return {"id": style_id(stem), "name": (nm.get("name") if (names.get("_styles") or {}).get(stem) else None) or brand or nm.get("name") or "이름 미정",
+    sid = style_id(stem)
+    shots = (_preview_index().get(sid) or {}).get("files") or []   # 실제 완성본 장면(tools/claude_portal/style_previews.py)
+    return {"id": sid, "shots": [f"r/out/assets/style-previews/{f}" for f in shots], "name":(nm.get("name") if (names.get("_styles") or {}).get(stem) else None) or brand or nm.get("name") or "이름 미정",
             "group": nm.get("group") or "기타", "desc": nm.get("desc") or "", "badges": badges, "_slug": slug}
 
 
@@ -262,14 +271,15 @@ def styles(store=None) -> list:
 
 
 def _style_frame_pid(store, cid, st: dict | None) -> str | None:
-    """판 → 미리보기 바탕 틀(같은 채널의 프리셋 틀). 없으면 첫 프리셋 — 템플릿을 고르면 틀은 템플릿이 덮는다."""
+    """판 → 미리보기 바탕 틀(같은 채널의 프리셋 틀). ★없으면 None — 남의 틀로 대신 그리면 여러 프리셋이 같은 그림으로 보인다
+    (10-25 사장님 '이상해'). 그때 화면은 완성본 견본(shots)만 보여 주고, 템플릿을 고르면 템플릿으로 그린다."""
     plist = _presets(store, cid)
     if st:
         for p in plist:
             pp = CP._preset_by_id(store, p["id"])
             if pp and pp["slug"] == st.get("_slug"):
                 return p["id"]
-    return plist[0]["id"] if plist else None
+    return None
 
 
 # ── 틀 프리셋 ────────────────────────────────────────────────────────────
@@ -306,10 +316,13 @@ def state(store, cid) -> dict:
     cat = catalog()
     own = (s["channels"].get(cur) or {}).get("pack") or {} if cur else {}
     show = {k: v for k, v in cat.items() if k not in ("default_pack", "preset_defaults")}
-    sl = [{k: v for k, v in x.items() if not k.startswith("_")} for x in styles(store)]
+    full = styles(store)
+    sl = [{k: v for k, v in x.items() if not k.startswith("_")} for x in full]
+    cur_st = next((x for x in full if x["id"] == s.get("style")), None)
     return {"host": "server", "presets": plist, "current": cur, "pack": pack_for(cat, cur, own) if cur else None,
-            "styles": sl, "style": s.get("style") if any(x["id"] == s.get("style") for x in sl) else None,
-            "requests": (s.get("requests") or [])[-20:],
+            "styles": sl, "style": cur_st["id"] if cur_st else None,
+            "style_has_frame": bool(cur_st and _style_frame_pid(store, cid, cur_st)),
+            "requests": (s.get("requests") or [])[-20:], "extra": (s.get("extras") or {}).get(cur) or {},
             "changed": own, "catalog": show, "videos": [], "stamp": (s["channels"].get(cur) or {}).get("updated", 0) if cur else 0}
 
 
@@ -319,9 +332,26 @@ def select_style(store, cid, sid) -> dict:
     if not st:
         raise StudioError("bad_request", "모르는 프리셋입니다")
     s = _read(store, cid)
-    s["style"], s["current"], s["current_at"] = sid, _style_frame_pid(store, cid, st), _ms()
+    fp = _style_frame_pid(store, cid, st)
+    # 틀이 없는 판은 설정 칸(채널명·글꼴·템플릿)을 담을 자리만 지금 것 그대로 쓴다 — 화면은 견본 그림을 보이고 '기본 틀'은 못 고른다
+    s["style"], s["current"], s["current_at"] = sid, fp or s.get("current") or ((_presets(store, cid) or [{}])[0].get("id")), _ms()
     _write(store, cid, s)
-    return {"ok": True, "current": s["current"]}
+    return {"ok": True, "current": s["current"], "has_frame": bool(fp)}
+
+
+TTS_EMOTIONS = ("normal", "happy", "sad", "angry", "tonedown", "toneup", "whisper")   # 타입캐스트 감정 프리셋(라이브 /api/typecast/voices emotions 실측 10-25)
+
+
+def save_extra(store, cid, pid, extra) -> dict:
+    """엔진 팩 밖 칸(지금은 감정 하나) — 엔진 check 가 아직 모르는 칸이라 따로 둔다. 회원 PC 엔진이 받게 되면 팩으로 옮긴다."""
+    _check_pid(store, cid, pid)
+    e = extra if isinstance(extra, dict) else {}
+    if set(e) - {"tts_emotion"} or (e.get("tts_emotion") not in TTS_EMOTIONS):
+        raise StudioError("bad_request", "모르는 값입니다")
+    s = _read(store, cid)
+    s.setdefault("extras", {}).setdefault(pid, {}).update(e)
+    _write(store, cid, s)
+    return {"ok": True}
 
 
 LOOK_MAX = 400_000   # 장면꾸미기 스냅샷 한도(글자 수) — 사진·영상은 안 들어간다(그림 자리·글·색·위치만)
