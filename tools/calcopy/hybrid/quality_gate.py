@@ -134,8 +134,8 @@ def _runs(flags, need: int) -> list[tuple[int, int]]:
 def still_spans(fr, min_sec: float = FREEZE_SEC) -> list:
     """(판단 주인) 멈춤 구간 [(시작초, 끝초)] — fr = 회색 프레임 [n, h, w](108폭). 완성본 검사(freezes)·렌더 전 관문 ⑦(render_bench.cut_still_gate)이 같이 부른다.
     ① 완전 정지: 이웃 프레임 평균 차 < FREEZE_DIFF 가 min_sec 이상(옛 freezes 그대로).
-    ② 거의 정지(10-25 관문 ⑦): 안쪽(가장자리 10% 뺌) 0.5초 간격 차 99분위 < NEAR_P99 가 NEAR_RUN 번 — 오푸스 눈 판정 표본(fixtures/cut_still_labels.json)으로 정함.
-       평균 차(<1.5)는 말하는 얼굴·손 움직임(평균 0.3~1)까지 정지로 잡아 못 쓴다(표본에서 오검출 다수)."""
+    ② 거의 정지(10-25 관문 ⑦): 안쪽(가장자리 10% 뺌) 0.5초 간격 차 99분위 < NEAR_P99 가 NEAR_RUN 번 — 오푸스 눈 판정 표본(shopping_shorts/tests/fixtures/cut_still_labels.json)으로 정함.
+       진단 G-9 안(이웃 평균 차 < 1.5 가 1초)은 말하는 얼굴·손 움직임(평균 0.3~1)까지 잡아 표본 정밀도가 낮아 못 쓴다."""
     return spans_from(*still_series(fr), min_sec)
 
 
@@ -154,11 +154,11 @@ def still_series(fr) -> tuple[list, list]:
 
 
 def spans_from(d1: list, p99: list, min_sec: float = FREEZE_SEC) -> list:
-    """두 재료 → 멈춤 구간(판정 문턱은 이 함수에만)."""
+    """두 재료 → 멈춤 구간(문턱은 이 함수에만). 두 판정이 겹치면 한 구간."""
     out = [(round(i / FPS, 2), round((j + 1) / FPS, 2)) for i, j in _runs([x < FREEZE_DIFF for x in d1], max(1, round(min_sec * FPS) - 1))]
     out += [(round(i / FPS, 2), round((j + NEAR_LAG) / FPS, 2)) for i, j in _runs([x < NEAR_P99 for x in p99], NEAR_RUN)]
     merged = []
-    for a, b in sorted(out):                 # 두 판정이 겹치면 한 구간
+    for a, b in sorted(out):
         if merged and a <= merged[-1][1]:
             merged[-1] = (merged[-1][0], max(merged[-1][1], b))
         else:
@@ -218,7 +218,7 @@ def _frames_at(video: Path, frames: list[int], crop) -> dict:
     x, y, w, h = crop
     fs = sorted(set(int(f) for f in frames))
     sel = "+".join(f"eq(n\\,{f})" for f in fs)
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vf", f"select={sel},format=gray,crop={w}:{h}:{x}:{y}", "-fps_mode", "passthrough",
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vf", f"select={sel},crop={w}:{h}:{x}:{y},format=gray", "-fps_mode", "passthrough",
                           "-f", "rawvideo", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
     arr = np.frombuffer(raw, np.uint8).reshape(-1, h, w)
     return dict(zip(fs, arr))
@@ -577,11 +577,8 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
                 v = CK.reuse_violations(cuts, CK.orig_spans_of(S, "잇썸홈판"))
                 return not v, v or "0"
             from tools.calcopy.hybrid.common import dur_of
-            from tools.calcopy.hybrid.render_bench import IMG_EXT
             cd = Path(jload(doc / "재료.json")["cand_dir"])
-            # 그림(정지 사진) 컷은 reuse_violations_bench 가 판정에서 뺀다(B6 몫) — 길이 재기도 안 한다(ffprobe 가 'N/A' 를 줘 B13 이 통째 미측정이 됐다, 관제263)
-            lens = {c["src"]: dur_of(cd / c["src"]) for c in cuts
-                    if Path(str(c["src"])).suffix.lower() not in IMG_EXT and (cd / c["src"]).exists()}
+            lens = {c["src"]: dur_of(cd / c["src"]) for c in cuts if (cd / c["src"]).exists()}
             v = reuse_violations_bench(cuts, lens)
             return not v, (v or "0") if v else f"0 (소스 길이 {{{', '.join(f'{Path(k).stem}:{x:.1f}' for k, x in lens.items())}}})"
         row("재료", "B13 같은 장면 재사용(겹침 ×·거리 min(3, 0.25×길이))", b13, "quality_gate.reuse_violations_bench")
@@ -624,8 +621,8 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
 
         def inline():
             from tools.calcopy.hybrid.common import silences
-            from tools.calcopy.hybrid.render_bench import pause_targets
-            th = pause_targets(st)          # 목표 주인 = render_bench.pause_targets(렌더 fit_voice 가 같은 값으로 맞춘다)
+            sp = st.get("speech") or {}
+            th = {"comma": float(sp.get("pause_comma", 0.22)), "period": float(sp.get("pause_period", 0.30))}
             sil = silences(R / "voice.wav", "-35dB", 0.08)
             items = []
             for l in narr:
