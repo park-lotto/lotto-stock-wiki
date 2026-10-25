@@ -162,10 +162,11 @@
     "circle_arrow": {
      "target": "face",
      "avoid": [],
-     "why": "빨간 원(+화살표) 3/199줄·3/6편(J7Gx·aUic·zOSp) — 역할 훅 3/3 · 자리 = 얼굴·입 둘레(zOSp 0초 이 위 x440 y1140, 줄판독 sticker) → fx_target 얼굴 검출(YuNet, 돈 0) · role 훅 = 벤치 3/3 훅 줄(15 ea3679644 역할 조건 칸)",
+     "why": "빨간 원(+화살표) 3/199줄·3/6편(J7Gx·aUic·zOSp) — 역할 훅 3/3 · 자리 = 얼굴·입 둘레(zOSp 0초 이 위 x440 y1140, 줄판독 sticker) → fx_target 얼굴 검출(YuNet, 돈 0) · role 훅 = 벤치 3/3 훅 줄(15 ea3679644 역할 조건 칸) · anchor mouth = 벤치 판정 1:1(zOSp 입 위 원·aUic 얼굴 가운데 — 15 fx_target.bench_anchor 실측) · 실렌더 ep13 C2·f_V 에서 입 둘레가 벤치 zOSp 와 같은 꼴 — 사람 판정 대기",
      "role": [
       "훅"
-     ]
+     ],
+     "anchor": "mouth"
     },
     "kk_doodle": {
      "target": "caption_side",
