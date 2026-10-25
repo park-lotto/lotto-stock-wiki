@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { homeDir, writeFileIn, jail } from './paths.js';
 import { engineTool } from './engine_bridge.js';
+import { api } from './api.js';
 
 const FILE = 'settings.json';
 export const PID_RE = /^p_[0-9a-f]{10}$/;
@@ -51,7 +52,7 @@ export async function savePack(pid, patch, { select = true } = {}) {
   const s = readSettings();
   const prev = (s.channels[pid] || {}).pack || {};
   s.channels[pid] = { pack: merge(prev, patch || {}), updated: Date.now() };   // 고객이 바꾼 칸만 남긴다(기본값이 바뀌면 따라간다)
-  if (select) s.current = pid;
+  if (select) { s.current = pid; s.current_at = Date.now(); }
   writeSettings(s);
   return { ok: true, pack };
 }
@@ -59,19 +60,38 @@ export async function savePack(pid, patch, { select = true } = {}) {
 export function select(pid) {
   if (!PID_RE.test(String(pid || ''))) return false;
   const s = readSettings();
-  s.current = pid;
+  s.current = pid; s.current_at = Date.now();
   writeSettings(s);
   return true;
 }
 
+// 기본값으로 — 지우지 않고 빈 칸 + 시각(서버·다른 화면과 맞출 때 '되돌림'도 최근 것으로 전해지게, 관제 266)
 export function resetPack(pid) {
   const s = readSettings();
-  delete s.channels[pid];
+  s.channels[pid] = { pack: {}, updated: Date.now() };
   writeSettings(s);
 }
 
-// 엔진 팩 파일(~/.shortem/packs/<pid>.json = {"1": 합친 팩}) — 만들 때마다 지금 설정으로 새로 쓴다
+// 서버 '내 채널 설정'(웹 /claude/studio)과 맞추기(관제 266) — 이 PC 설정을 보내고, 서버가 합친 결과(프리셋마다 더 최근 것)를 그대로 쓴다.
+//   합치는 판단은 서버 claude_studio.sync_merge 한 곳. 서버에 못 닿으면(키 없음·오프라인) 이 PC 설정 그대로 간다.
+let lastSync = 0;
+export async function syncFromServer({ force = false } = {}) {
+  if (!force && Date.now() - lastSync < 30000) return { skipped: true };
+  lastSync = Date.now();
+  const s = readSettings();
+  let r;
+  try { r = await api.studio({ current: s.current || null, current_at: s.current_at || 0, channels: s.channels || {} }); }
+  catch (e) { return { ok: false, why: (e && e.code) || 'network' }; }
+  const got = (r && r.settings) || null;
+  if (!got || typeof got.channels !== 'object') return { ok: false, why: 'bad_reply' };
+  const next = { ...s, current: got.current || s.current || null, current_at: got.current_at || 0, channels: got.channels };
+  if (JSON.stringify(next) !== JSON.stringify(s)) writeSettings(next);
+  return { ok: true };
+}
+
+// 엔진 팩 파일(~/.shortem/packs/<pid>.json = {"1": 합친 팩}) — 만들 때마다 지금 설정으로 새로 쓴다(웹에서 바꾼 것도 먼저 받는다)
 export async function packFile(pid) {
+  await syncFromServer({ force: true });
   const rel = path.join('packs', `${pid}.json`);
   writeFileIn(homeDir(), rel, JSON.stringify({ 1: await packFor(pid) }));
   return path.join(homeDir(), rel);

@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { homeDir, workDir, jail } from './paths.js';
 import { engineRoot, engineTool } from './engine_bridge.js';
-import { readSettings, packFor, savePack, select, resetPack, catalog, PID_RE } from './local_settings.js';
+import { readSettings, packFor, savePack, select, resetPack, catalog, PID_RE, syncFromServer } from './local_settings.js';
 import { rentPreset } from './preset_rent.js';
 import { makeStep } from './make_flow.js';
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
@@ -124,6 +124,7 @@ async function route(req, res, token, port) {
   if (!u.pathname.startsWith('/api/')) return send(res, 404, { error: '없음' });
   if (req.method === 'POST' && req.headers['x-shortem-ui'] !== '1') return send(res, 403, { error: '화면에서만 바꿀 수 있습니다' });
   if (u.pathname === '/api/state' && req.method === 'GET') {
+    await syncFromServer();                     // 웹(/claude/studio)에서 바꾼 것도 이 화면에(30초에 한 번, 못 닿으면 이 PC 것 그대로)
     const s = readSettings();
     const list = presets();
     const cur = s.current && list.some(p => p.id === s.current) ? s.current : (list[0] && list[0].id) || null;

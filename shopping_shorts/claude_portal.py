@@ -459,12 +459,14 @@ def preset_names(store, ids) -> list:
     except ValueError:
         log.warning("claude_portal: 관리자 설정 claude_preset_names 가 깨졌다 — 기본 이름표만 쓴다")
     out = []
+    by_id = {p["id"]: p for p in presets(store)}   # 틀 폴더는 한 번만 훑는다(프리셋마다 훑으면 20×20 — 10-25 설정 화면 0.65초)
     for pid in ids:
-        p = _preset_by_id(store, pid)
+        p = by_id.get(pid)
         if not p:
             continue
         n = names.get(pid) or names.get(p["internal"]) or {}
-        out.append({"id": pid, "name": str(n.get("name") or _style_label(p["style"]))[:40], "desc": str(n.get("desc") or "")[:120]})
+        out.append({"id": pid, "name": str(n.get("name") or _style_label(p["style"]))[:40], "desc": str(n.get("desc") or "")[:120],
+                    "group": str(n.get("group") or "")[:30]})   # 형식 묶음(사장님 10-24) — 설정 화면이 묶어서 보여준다
     return out
 
 
