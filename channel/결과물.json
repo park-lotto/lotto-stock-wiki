@@ -10,7 +10,7 @@
    "seconds": 23.87,
    "commit": "6e717ae1d",
    "rules": "역할 6칸 대본 재작성 · 띄어쓰기 수리(word_spacing +6.8) · 효과음 1발(원본 자리) · compare ① 26/26 · 재료 5/6 대체 · 비용 0",
-   "judge": "페이블 판정 통과",
+   "judge": "[페이블통과] 페이블 판정 통과",
    "date": "2026-10-16",
    "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록",
    "style": "자막썰"
@@ -25,7 +25,7 @@
    "seconds": 30.0,
    "commit": "093a6412c",
    "rules": "영상 0.8·짤 0.2 · 자막당 1.14초(원본 1.0) · 말속도 8.87(8.78) · LUFS −16.2 · 효과음 2발 · 남은 흠 9·10번 컷 480p",
-   "judge": "페이블 판정 통과",
+   "judge": "[페이블통과] 페이블 판정 통과",
    "date": "2026-10-16",
    "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록"
   },
@@ -39,7 +39,7 @@
    "seconds": 28.74,
    "commit": "c9d61e324",
    "rules": "소재 후보 10→5기준 · 댓글 근거 썰 5문장 · 1080p 재료 11컷+짤 3 · 유라 TTS 8.71자/초 · 규칙표 원본 범위 안(컷 p90만 −21%)",
-   "judge": "페이블 판정 통과",
+   "judge": "[페이블통과] 페이블 판정 통과",
    "date": "2026-10-16",
    "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록"
   },
@@ -52,7 +52,7 @@
    "seconds": 23.87,
    "commit": "18db9313f",
    "rules": "원테이크 1080p 6컷 · 역할 6칸 · 원음+BGM · 효과음 원본 자리 · 비용 0",
-   "judge": "페이블 판정 통과",
+   "judge": "[페이블통과] 페이블 판정 통과",
    "date": "2026-10-16",
    "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록",
    "style": "자막썰"
@@ -66,7 +66,7 @@
    "seconds": 20.07,
    "commit": "21406abc5",
    "rules": "검정 띠·여성 나레 문정·흰 자막+외곽선 · 재료 3컷 교체 뒤 줄↔장면 일치 · 자막 83.2px",
-   "judge": "페이블 판정 통과",
+   "judge": "[페이블통과] 페이블 판정 통과",
    "date": "2026-10-16",
    "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록",
    "style": "나레썰"
@@ -80,7 +80,7 @@
    "seconds": 26.25,
    "commit": "3e4d8e2ae",
    "rules": "훅 카드→게시글 틀 · 누적 자막 12장 · 13컷(재편집 0.70·포장 0.13·짤 0.07) · 필재 8.32자/초 · 쉼 제거판",
-   "judge": "페이블 판정 통과",
+   "judge": "[페이블통과] 페이블 판정 통과",
    "date": "2026-10-16",
    "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록",
    "비고": "외관 썰템홈샷으로 교체(10-17) · 새 판 C:/숏템_칼카피/banggu/썰템홈샷/ilii/final.mp4(이전판은 바탕화면 _이전판/)"
@@ -94,7 +94,7 @@
    "seconds": 18.94,
    "commit": "697849a6f",
    "rules": "원음 깔기(3~5줄 관중 소리, 나레보다 17 LU 아래) · 문정 6.52자/초=원본 · 남은 흠 자막 조각 9자·길이 18.9 vs 22.4",
-   "judge": "페이블 판정 통과",
+   "judge": "[페이블통과] 페이블 판정 통과",
    "date": "2026-10-16",
    "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록",
    "style": "현장썰"
@@ -108,7 +108,7 @@
    "seconds": 31.8,
    "commit": "cc134b86f",
    "rules": "검정 띠 틀·초록 글로우 채널명 · 필재+원음 리액션 2구간 · 하늘색 강조 자막 · 8컷 밝은 배경 · 자막 조각 ≤13자",
-   "judge": "페이블 판정 통과",
+   "judge": "[페이블통과] 페이블 판정 통과",
    "date": "2026-10-16",
    "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록",
    "비고": "외관 숏템리폿으로 교체(10-17)",
@@ -123,7 +123,7 @@
    "seconds": 29.44,
    "commit": "a6c318f0b",
    "rules": "실측 샷 18·컷 중앙 1.32초(원본 1.63) · 필재 TTS 1회·쉼 제거 · 페이지 안 다중 컷 요청(narr_video)",
-   "judge": "페이블 판정 통과",
+   "judge": "[페이블통과] 페이블 판정 통과",
    "date": "2026-10-16",
    "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록",
    "비고": "외관 썰템홈샷으로 교체(10-17) · 새 판 C:/숏템_칼카피/banggu/썰템홈샷/banana/final.mp4(이전판은 바탕화면 _이전판/)"
@@ -138,7 +138,7 @@
    "seconds": 27.37,
    "commit": "b621b39a7",
    "rules": "유라 8.82자/초(원본 8.78) · 영상 0.796·짤 0.204 · 컷 중앙 2.00(원본 1.97) · 기사 3건 근거 · 반려 1회",
-   "judge": "페이블 판정 통과",
+   "judge": "[페이블통과] 페이블 판정 통과",
    "date": "2026-10-16",
    "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록"
   },
@@ -151,7 +151,7 @@
    "seconds": 21.2,
    "commit": "(이 커밋)",
    "rules": "문정 TTS 1회+atempo 0.8577 → 6.52자/초(원본 6.52) · 21.2초(원본 22.52, −5.9%) · −17.6 LUFS(원본 −17.9) · 자막 조각 16개 최대 12자 · 컷 중앙 약 2.2초(원본 4.23) · compare ① 15/24 · 소스 720p 근접 확대(4호와 같은 조건)",
-   "judge": "페이블 판정 통과(👍 자리 고친 뒤)",
+   "judge": "[페이블통과] 페이블 판정 통과(👍 자리 고친 뒤)",
    "date": "2026-10-16",
    "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록",
    "비고": "4호(시구 포수 아빠)와 같은 결(야구장·아빠·딸) — 올릴 땐 간격 둘 것",
@@ -168,7 +168,7 @@
    "seconds": 31.63,
    "commit": "(이 커밋)",
    "rules": "필재 TTS 1회(템포 1.24)+atempo 1.06 → 7.92자/초(OE11 7.97) · 31.63초(OE11 31.8, −0.5%) · −15.7 LUFS(OE11 −15.5) · 원음 2구간 −17.4/−16.7(사람 말 없음, 받아쓰기 다회) · 자막 조각 24개 최대 13자 · 컷 8(컷7 2토막) 전부 1080p",
-   "judge": "페이블 판정 통과(10-16, 고칠 것 2회 반영 뒤)",
+   "judge": "[페이블통과] 페이블 판정 통과(10-16, 고칠 것 2회 반영 뒤)",
    "date": "2026-10-16",
    "from": "handoff/칼카피숏템엔진.md 10-16 밤 핫템 2편",
    "비고": "핫템리포트 채널명 판 final_src_v2_hottem.mp4 별도 보관 · 줄 끝/줄 시작 우회 사용(엔진 8·9 수리 뒤 재확인 필요) | 외관 숏템리폿으로 교체(10-17)",
@@ -183,7 +183,7 @@
    "seconds": 23.87,
    "commit": "7fada36ff",
    "rules": "전 컷 원음 끔(remake_video shots[].mute)+BGM qiuqiu · -10.3 LUFS(LED -10.4) · 1080×1920 재료 6컷(nqp6X 5·03jU 1, 겹침 0) · 자막 6줄 원본 글자 범위 안 · 댓글 근거(재난 9,380·설거지 1,095)",
-   "judge": "페이블 판정 통과",
+   "judge": "[페이블통과] 페이블 판정 통과",
    "date": "2026-10-16",
    "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록",
    "비고": "틀 A 소리 변형(원음 없음·효과음 원본 자리 1발, 소재 특성) · compare 20/27(제목 글 차이)",
@@ -200,7 +200,7 @@
    "seconds": 29.37,
    "commit": "(이 커밋)",
    "rules": "필재 TTS 2회(1회째 00원을 '영원'으로 읽음 → TTS 글만 공공원) · '90원은 어 그냥'의 '어'(받아쓰기 2회 확인) ffmpeg로 9.16~9.40초 잘라 냄(크로스페이드 20ms) → 받아쓰기 3회 '어' 없음 · 말속도 8.33자/초(원본 8.12) · −14.1 LUFS(원본 −14.3) · 실제 컷 26 중앙 1.1초 · 시간 비율 재편집 0.72/짤 0.15/포장 0.13 · 한국 매장 가격표 90·70·00·*·+ 전부 화면 · compare ① 21/36 · 줄 시작은 엔진 263ead8e0 받아쓰기 정렬(narr_final3 받아쓰기는 제미나이 빈 답 → narr_final2 받아쓰기를 −0.24초 옮긴 캐시)",
-   "judge": "페이블 판정 통과(시트·비율·LUFS, '어' 처리 조건 반영)",
+   "judge": "[페이블통과] 페이블 판정 통과(시트·비율·LUFS, '어' 처리 조건 반영)",
    "date": "2026-10-16",
    "from": "handoff/칼카피숏템엔진.md 10-16 방구석 3편",
    "비고": "외관 썰템홈샷으로 교체(10-17) · 새 판 C:/숏템_칼카피/banggu/썰템홈샷/costco/final.mp4(이전판은 바탕화면 _이전판/)"
@@ -219,7 +219,7 @@
    "tts": "박창수 1회(atempo 1.185 → 8.32자/초)",
    "rules": "짤 0·효과음 0·원음 끔·BGM honwaka_puppu 나레 −14.4dB·26토막=26컷 중앙 0.95초·자막 최대 10자(공백 뺀)",
    "note": "LUFS −9.6(원본 −7.5는 클리핑) · #18 분사 장면 없음 · 비포 4컷 타제품",
-   "judge": "페이블 판정 통과(15호, 잇썸홈 1호)",
+   "judge": "[페이블통과] 페이블 판정 통과(15호, 잇썸홈 1호)",
    "date": "2026-10-17",
    "from": "handoff/칼카피숏템엔진.md 10-17 잇썸홈"
   },
@@ -237,7 +237,7 @@
    "tts": "필재 2회(2회째 audio_tempo 1.4 → atempo 1.115 → 8.80자/초) — 수정2는 재호출 없음",
    "rules": "BGM 없음 · 효과음 sfx_pack 팩21 density=low 9발 · 컷 26(중앙 1.10초·최소 0.60초) · 같은 소스 ±3초 중복 0(check_overlap.py) · 끝 줄만 atempo 0.698(12.61→8.82자/초) · −13.6 LUFS·최고점 −1.9",
    "note": "수정3(10-17 사장님): 장면 중복(GjAH 20/22초·6XBK 0/4초·Proc 60~63·Z8Jq 24~30) 제거 → 훅=제품, 묶음 단위 재배치 · 효과음 39→9발 · 끝 줄 말속도 줄별 보정(받아쓰기 시각은 매 호출 달라 수정2 판·쉼 실측과 맞는 것 사용) · 1줄 more2(명중하는 순간~) 9.72자/초는 끝 두 줄 밖이라 그대로. 남은 것: 엄마 6XBK 720p 2컷 · 과녁→관혁 귀 확인",
-   "judge": "페이블 판정 통과 후보(16호, 재미썸홈 1호) — 사장님 귀 확인 뒤 확정",
+   "judge": "[확인대기] 페이블 판정 통과 후보(16호, 재미썸홈 1호) — 사장님 귀 확인 뒤 확정",
    "date": "2026-10-17",
    "from": "handoff/칼카피숏템엔진.md 10-17 재미썸홈"
   },
@@ -252,7 +252,7 @@
    "seconds": 27.26,
    "preset": "channel/homedesignnote/preset/전체화면_가운데자막",
    "date": "2026-10-17",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -266,7 +266,7 @@
    "seconds": 25.7,
    "preset": "channel/homedesignnote/preset/전체화면_가운데자막",
    "date": "2026-10-17",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -280,7 +280,7 @@
    "seconds": 28.8,
    "preset": "channel/evenshopping/preset/숏템템플릿",
    "date": "2026-10-17",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -294,7 +294,7 @@
    "seconds": 26.16,
    "preset": "channel/homedesignnote/preset/전체화면_가운데자막",
    "date": "2026-10-17",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -308,7 +308,7 @@
    "seconds": 26.66,
    "preset": "channel/homedesignnote/preset/전체화면_가운데자막",
    "date": "2026-10-17",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -322,7 +322,7 @@
    "seconds": 29.17,
    "preset": "channel/evenshopping/preset/숏템템플릿",
    "date": "2026-10-17",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -336,7 +336,7 @@
    "seconds": 29.29,
    "preset": "channel/evenshopping/preset/숏템템플릿",
    "date": "2026-10-17",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -350,7 +350,7 @@
    "seconds": 29.16,
    "preset": "channel/evenshopping/preset/숏템템플릿",
    "date": "2026-10-17",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -362,7 +362,7 @@
    "seconds": 22.2,
    "commit": "ad9794cf8",
    "rules": "만템 색톤 얜샷템 틀·출처 표기 · 원음 시작·나레 2줄(미나 1회+atempo) · 원음 77% · check_seams 통과(되감김 0·점프줌 드묾) · B표 전부 ○ · compare① 12/24(틀을 만템으로 바꾼 탓)",
-   "judge": "오푸스 검수(B표)+1초 시트 눈 확인 — 사장님 확인 전",
+   "judge": "[확인대기] 오푸스 검수(B표)+1초 시트 눈 확인 — 사장님 확인 전",
    "date": "2026-10-17",
    "from": "handoff/칼카피숏템엔진.md 얜샷템 절"
   },
@@ -375,7 +375,7 @@
    "seconds": 18.9,
    "commit": "1553a96fa",
    "rules": "1판 사장님 지적(15초 남의 팔·17초 되감김)·2판 지적(19초 점프줌·웅얼 원음) 수리 · check_seams 통과 · 원음 2구간 받아쓰기 일치 · compare① 17/24",
-   "judge": "사장님 지적 반영판 — 재확인 전",
+   "judge": "[확인대기] 사장님 지적 반영판 — 재확인 전",
    "date": "2026-10-17",
    "from": "handoff/칼카피숏템엔진.md 얜샷템 절"
   },
@@ -390,7 +390,7 @@
    "seconds": 27.93,
    "preset": "channel/humorshowshow/preset/썰템쇼_화자썰",
    "date": "2026-10-18",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -404,7 +404,7 @@
    "seconds": 28.13,
    "preset": "channel/humorshowshow/preset/썰템쇼_화자썰",
    "date": "2026-10-19",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -418,7 +418,7 @@
    "seconds": 29.27,
    "preset": "channel/humorshowshow/preset/썰템쇼_화자썰",
    "date": "2026-10-18",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -434,7 +434,7 @@
    "seconds": 27.7,
    "preset": "channel/hottemreport/현장썰_02_대용량물병(1편 make_render 그대로 · 현장썰_run.py)",
    "date": "2026-10-18",
-   "judge": "자동 검사만(사람 판정 전)",
+   "judge": "[자동검사만] 자동 검사만(사람 판정 전)",
    "from": "channel/hottemreport/현장썰_run.py"
   },
   {
@@ -449,7 +449,7 @@
    "md5": "3e16d443baa585538b7e15190c45d8b9",
    "seconds": 34.2,
    "rules": "필재 tts_pause 1회(속도 1.1)+줄별 atempo 0.98~1.21 → 7.7~7.85자/초 · 나레 7줄↔원음 4구간 교대(원음 창 나레 겹침 0/209칸) · 원음−나레 −2.1~−2.5dB · −15.6 LUFS·최고점 −0.9dBFS · 받아쓰기 11구간 일치(유사도 0.9~1.0) · check_seams 되감김 0·점프줌 0 · 원본 번인 글자 잘라 냄 · 금액·구매 유도 0",
-   "judge": "자동 검사만(사람 판정 전)",
+   "judge": "[자동검사만] 자동 검사만(사람 판정 전)",
    "date": "2026-10-18",
    "from": "channel/hottemreport/현장썰_01_가짜잠자리/make_render.py · checks.py"
   },
@@ -466,7 +466,7 @@
    "seconds": 34.0,
    "preset": "channel/hottemreport/현장썰_03_AI전동신발(1편 make_render 그대로 · 현장썰_run.py)",
    "date": "2026-10-18",
-   "judge": "자동 검사만(사람 판정 전)",
+   "judge": "[자동검사만] 자동 검사만(사람 판정 전)",
    "from": "channel/hottemreport/현장썰_run.py"
   },
   {
@@ -482,7 +482,7 @@
    "seconds": 48.93,
    "preset": "channel/foreignshowshow/preset/샤크탱크_검정띠2줄 + tools/calcopy/shark/rules.json",
    "date": "2026-10-18",
-   "judge": "효과 정밀 수리(10-18): 0초 원 = 얼굴 검출(원-얼굴 검사 통과)·점선 원 = 사람 검출(움직이면 따라감)·화살표 = 대상 상자·모양 벤치 확대 대조 — check 전 칸 ○·기준표 11/11",
+   "judge": "[자동검사만] 효과 정밀 수리(10-18): 0초 원 = 얼굴 검출(원-얼굴 검사 통과)·점선 원 = 사람 검출(움직이면 따라감)·화살표 = 대상 상자·모양 벤치 확대 대조 — check 전 칸 ○·기준표 11/11",
    "from": "tools/calcopy/shark/render.py"
   },
   {
@@ -498,7 +498,7 @@
    "seconds": 43.13,
    "preset": "channel/foreignshowshow/preset/샤크탱크_검정띠2줄 + tools/calcopy/shark/rules.json",
    "date": "2026-10-18",
-   "judge": "효과 정밀 수리(10-18): 0초 줄 = 투자자 'Woo-ha!'(중간 샷, 얼굴 검출 원)·점선 원 대상 상자·화살표 대상 상자·빨강 번쩍 점선 원 안 — check 전 칸 ○·기준표 11/11",
+   "judge": "[자동검사만] 효과 정밀 수리(10-18): 0초 줄 = 투자자 'Woo-ha!'(중간 샷, 얼굴 검출 원)·점선 원 대상 상자·화살표 대상 상자·빨강 번쩍 점선 원 안 — check 전 칸 ○·기준표 11/11",
    "from": "tools/calcopy/shark/render.py"
   },
   {
@@ -514,7 +514,7 @@
    "seconds": 28.17,
    "preset": "channel/hottemreport/현장썰_04_미니포르쉐(1편 make_render 그대로 · 현장썰_run.py)",
    "date": "2026-10-18",
-   "judge": "자동 검사만(사람 판정 전) · 판매 연결 경계(고가 주문 제작품)",
+   "judge": "[자동검사만] 자동 검사만(사람 판정 전) · 판매 연결 경계(고가 주문 제작품)",
    "from": "channel/hottemreport/현장썰_run.py"
   },
   {
@@ -530,7 +530,7 @@
    "seconds": 25.77,
    "preset": "channel/hottemreport/현장썰_05_고양이빵봉지집게(1편 make_render 그대로 · 현장썰_run.py)",
    "date": "2026-10-18",
-   "judge": "자동 검사만(사람 판정 전)",
+   "judge": "[자동검사만] 자동 검사만(사람 판정 전)",
    "from": "channel/hottemreport/현장썰_run.py"
   },
   {
@@ -546,7 +546,7 @@
    "seconds": 46.37,
    "preset": "channel/foreignshowshow/preset/샤크탱크_검정띠2줄 + tools/calcopy/shark/rules.json",
    "date": "2026-10-18",
-   "judge": "효과 정밀 수리(10-18): 0초 원 = 얼굴 검출(원-얼굴 검사 통과)·점선 원 = 사람 검출(움직이면 따라감)·화살표 = 대상 상자·모양 벤치 확대 대조 — check 전 칸 ○·기준표 11/11",
+   "judge": "[자동검사만] 효과 정밀 수리(10-18): 0초 원 = 얼굴 검출(원-얼굴 검사 통과)·점선 원 = 사람 검출(움직이면 따라감)·화살표 = 대상 상자·모양 벤치 확대 대조 — check 전 칸 ○·기준표 11/11",
    "from": "tools/calcopy/shark/render.py"
   },
   {
@@ -562,7 +562,7 @@
    "seconds": 43.07,
    "preset": "channel/foreignshowshow/preset/샤크탱크_검정띠2줄 + tools/calcopy/shark/rules.json",
    "date": "2026-10-18",
-   "judge": "효과 정밀 수리(10-18): 0초 원 = 얼굴 검출(원-얼굴 검사 통과)·점선 원 = 사람 검출·화살표 = 대상 상자·모양 벤치 확대 대조 — check 전 칸 ○·기준표 11/11",
+   "judge": "[자동검사만] 효과 정밀 수리(10-18): 0초 원 = 얼굴 검출(원-얼굴 검사 통과)·점선 원 = 사람 검출·화살표 = 대상 상자·모양 벤치 확대 대조 — check 전 칸 ○·기준표 11/11",
    "from": "tools/calcopy/shark/render.py"
   },
   {
@@ -578,7 +578,7 @@
    "seconds": 52.4,
    "preset": "channel/foreignshowshow/preset/샤크탱크_검정띠2줄 + tools/calcopy/shark/rules.json",
    "date": "2026-10-18",
-   "judge": "효과 정밀 수리(10-18): 0초 원 = 얼굴 검출(원-얼굴 검사 통과)·점선 원 = 사람 검출·화살표 = 대상 상자·모양 벤치 확대 대조 — check 전 칸 ○·기준표 11/11",
+   "judge": "[자동검사만] 효과 정밀 수리(10-18): 0초 원 = 얼굴 검출(원-얼굴 검사 통과)·점선 원 = 사람 검출·화살표 = 대상 상자·모양 벤치 확대 대조 — check 전 칸 ○·기준표 11/11",
    "from": "tools/calcopy/shark/render.py"
   },
   {
@@ -594,7 +594,7 @@
    "seconds": 51.27,
    "preset": "channel/foreignshowshow/preset/샤크탱크_검정띠2줄 + tools/calcopy/shark/rules.json",
    "date": "2026-10-18",
-   "judge": "효과 정밀 수리(10-18): 0초 원 = 얼굴 검출(원-얼굴 검사 통과)·점선 원 = 사람 검출(움직이면 따라감)·화살표 = 대상 상자·모양 벤치 확대 대조 — check 전 칸 ○·기준표 11/11",
+   "judge": "[자동검사만] 효과 정밀 수리(10-18): 0초 원 = 얼굴 검출(원-얼굴 검사 통과)·점선 원 = 사람 검출(움직이면 따라감)·화살표 = 대상 상자·모양 벤치 확대 대조 — check 전 칸 ○·기준표 11/11",
    "from": "tools/calcopy/shark/render.py"
   },
   {
@@ -608,7 +608,7 @@
    "seconds": 29.13,
    "preset": "channel/homedesignnote/preset/전체화면_가운데자막",
    "date": "2026-10-18",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -622,7 +622,7 @@
    "seconds": 27.93,
    "preset": "channel/homedesignnote/preset/전체화면_가운데자막",
    "date": "2026-10-18",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -636,7 +636,7 @@
    "seconds": 25.57,
    "preset": "channel/evenshopping/preset/숏템템플릿",
    "date": "2026-10-18",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -650,7 +650,7 @@
    "seconds": 27.0,
    "preset": "channel/humorshowshow/preset/썰템쇼_화자썰",
    "date": "2026-10-18",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -664,7 +664,7 @@
    "seconds": 31.03,
    "preset": "channel/evenshopping/preset/숏템템플릿",
    "date": "2026-10-18",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -678,7 +678,7 @@
    "seconds": 26.6,
    "preset": "channel/humorshowshow/preset/썰템쇼_화자썰",
    "date": "2026-10-19",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -692,7 +692,7 @@
    "seconds": 31.16,
    "preset": "channel/humorshowshow/preset/썰템쇼_화자썰",
    "date": "2026-10-19",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -706,7 +706,7 @@
    "seconds": 26.13,
    "preset": "channel/humorshowshow/preset/썰템쇼_화자썰",
    "date": "2026-10-18",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -720,7 +720,7 @@
    "seconds": 30.57,
    "preset": "channel/humorshowshow/preset/썰템쇼_화자썰",
    "date": "2026-10-19",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -734,7 +734,7 @@
    "seconds": 28.33,
    "preset": "channel/humorshowshow/preset/썰템쇼_화자썰",
    "date": "2026-10-19",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -748,7 +748,7 @@
    "seconds": 28.53,
    "preset": "channel/humorshowshow/preset/썰템쇼_화자썰",
    "date": "2026-10-19",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -764,7 +764,7 @@
    "seconds": 30.5,
    "preset": "channel/foreignshowshow/preset/샤크탱크_검정띠2줄 + tools/calcopy/shark/rules.json",
    "date": "2026-10-18",
-   "judge": "페이블 확인 대기 — 앞 12.17초(효과 수리본 9f7ff300) + 뒤 18.33초 · -9.1 LUFS · 최고점 -1.5 · check render 전 칸 ○ · 되감김 0",
+   "judge": "[확인대기] 페이블 확인 대기 — 앞 12.17초(효과 수리본 9f7ff300) + 뒤 18.33초 · -9.1 LUFS · 최고점 -1.5 · check render 전 칸 ○ · 되감김 0",
    "from": "tools/calcopy/shark/hybrid.py",
    "doc": "channel/foreignshowshow/3편_DropStop_하이브리드/"
   },
@@ -781,7 +781,7 @@
    "seconds": 35.37,
    "preset": "channel/foreignshowshow/preset/샤크탱크_검정띠2줄 + tools/calcopy/shark/rules.json",
    "date": "2026-10-18",
-   "judge": "페이블 확인 대기 — 앞 16.40초(효과 수리본 1492dcb4) + 뒤 18.94초 · -9.1 LUFS · 최고점 -1.3 · check render 전 칸 ○ · 되감김 0",
+   "judge": "[확인대기] 페이블 확인 대기 — 앞 16.40초(효과 수리본 1492dcb4) + 뒤 18.94초 · -9.1 LUFS · 최고점 -1.3 · check render 전 칸 ○ · 되감김 0",
    "from": "tools/calcopy/shark/hybrid.py",
    "doc": "channel/foreignshowshow/4편_Spikeball_하이브리드/"
   },
@@ -798,7 +798,7 @@
    "seconds": 30.97,
    "preset": "channel/foreignshowshow/preset/샤크탱크_검정띠2줄 + tools/calcopy/shark/rules.json",
    "date": "2026-10-18",
-   "judge": "페이블 확인 대기 — 앞 11.57초(효과 수리본 c0777311) + 뒤 19.37초 · -9.1 LUFS · 최고점 -1.4 · check render 전 칸 ○ · 되감김 0",
+   "judge": "[확인대기] 페이블 확인 대기 — 앞 11.57초(효과 수리본 c0777311) + 뒤 19.37초 · -9.1 LUFS · 최고점 -1.4 · check render 전 칸 ○ · 되감김 0",
    "from": "tools/calcopy/shark/hybrid.py",
    "doc": "channel/foreignshowshow/5편_BalaBangles_하이브리드/"
   },
@@ -815,7 +815,7 @@
    "seconds": 33.43,
    "preset": "channel/foreignshowshow/preset/샤크탱크_검정띠2줄 + tools/calcopy/shark/rules.json",
    "date": "2026-10-18",
-   "judge": "페이블 확인 대기 — 앞 14.40초(효과 수리본 cf4ae3da) + 뒤 19.02초 · -9.3 LUFS · 최고점 -1.4 · check render 전 칸 ○ · 되감김 0",
+   "judge": "[확인대기] 페이블 확인 대기 — 앞 14.40초(효과 수리본 cf4ae3da) + 뒤 19.02초 · -9.3 LUFS · 최고점 -1.4 · check render 전 칸 ○ · 되감김 0",
    "from": "tools/calcopy/shark/hybrid.py",
    "doc": "channel/foreignshowshow/6편_LARQ_하이브리드/"
   },
@@ -830,7 +830,7 @@
    "seconds": 29.13,
    "preset": "channel/homedesignnote/preset/전체화면_가운데자막",
    "date": "2026-10-19",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -844,7 +844,7 @@
    "seconds": 25.53,
    "preset": "channel/evenshopping/preset/숏템템플릿",
    "date": "2026-10-19",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -858,7 +858,7 @@
    "seconds": 27.9,
    "preset": "channel/homedesignnote/preset/전체화면_가운데자막",
    "date": "2026-10-19",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -872,7 +872,7 @@
    "seconds": 31.03,
    "preset": "channel/evenshopping/preset/숏템템플릿",
    "date": "2026-10-19",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -886,7 +886,7 @@
    "seconds": 31.3,
    "preset": "channel/humorshowshow/preset/썰템쇼_화자썰",
    "date": "2026-10-20",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -900,7 +900,7 @@
    "seconds": 31.03,
    "preset": "channel/humorshowshow/preset/썰템쇼_화자썰",
    "date": "2026-10-20",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -914,7 +914,7 @@
    "seconds": 31.27,
    "preset": "channel/humorshowshow/preset/썰템쇼_화자썰",
    "date": "2026-10-20",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -928,7 +928,7 @@
    "seconds": 32.23,
    "preset": "channel/humorshowshow/preset/썰템쇼_화자썰",
    "date": "2026-10-20",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -942,7 +942,7 @@
    "seconds": 31.8,
    "preset": "channel/humorshowshow/preset/썰템쇼_화자썰",
    "date": "2026-10-20",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -956,7 +956,7 @@
    "seconds": 30.83,
    "preset": "channel/humorshowshow/preset/썰템쇼_화자썰",
    "date": "2026-10-20",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -970,7 +970,7 @@
    "seconds": 33.2,
    "preset": "channel/humorshowshow/preset/썰템쇼_화자썰",
    "date": "2026-10-20",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
   },
   {
@@ -984,8 +984,313 @@
    "seconds": 31.63,
    "preset": "channel/humorshowshow/preset/썰템쇼_화자썰",
    "date": "2026-10-20",
-   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "judge": "[자동검사만] preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
+  },
+  {
+   "n": 68,
+   "channel": "staybrokr",
+   "channel_name": "스테이브로",
+   "brand": "@shortem.stay",
+   "style": "두유노홈디노 체험담 대본 + 스테이브로 촌캉스 화면",
+   "title": "가평숨은계곡핀란드사우나펜션_hdn_AVo84VRq55k틀_3판",
+   "path": "C:/Users/TheRose/숏템자료/여행/hotel_copy/숨은계곡_홈디노/out.mp4",
+   "desktop": "가평숨은계곡핀란드사우나펜션_hdn_AVo84VRq55k틀_3판.mp4",
+   "md5": "9e8e045b7e44a26be057de499af39e7d",
+   "seconds": 25.67,
+   "preset": "tools/travel/hotel_copy/refs/hdn_AVo84VRq55k.json",
+   "date": "2026-10-24",
+   "judge": "[자동검사만] engine check 전 칸 통과(사람 판정 전)",
+   "from": "tools/travel/hotel_copy/engine.py (여행쇼핑쇼츠 트랙)",
+   "doc": "channel/staybrokr/숙소쇼츠_지침서.md",
+   "note": "AI 영상 3컷(Veo Lite 4초, 앞쪽 0~1.2초)"
+  },
+  {
+   "n": 69,
+   "channel": "staybrokr",
+   "channel_name": "스테이브로",
+   "brand": "@shortem.trip(임시 채널명)",
+   "style": "스테이브로 1위 온천편 틀 — 다른 채널판",
+   "title": "가평숨은계곡핀란드사우나펜션_ee3U4FtLb10틀_1판",
+   "path": "C:/Users/TheRose/숏템자료/여행/hotel_copy/숨은계곡_채널2/out.mp4",
+   "desktop": "가평숨은계곡핀란드사우나펜션_ee3U4FtLb10틀_1판.mp4",
+   "md5": "6b4a01919354775e4dfe5139ffe446f8",
+   "seconds": 19.73,
+   "preset": "tools/travel/hotel_copy/refs/ee3U4FtLb10.json",
+   "date": "2026-10-24",
+   "judge": "[자동검사만] engine check 전 칸 통과(사람 판정 전)",
+   "from": "tools/travel/hotel_copy/engine.py (여행쇼핑쇼츠 트랙)",
+   "doc": "channel/staybrokr/숙소쇼츠_지침서.md",
+   "note": "채널1 AI 영상의 뒤쪽 절반 재사용(Veo 0원) · 앞판과 같은 AI 구간 0초 · 대본 겹침 17%"
+  },
+  {
+   "n": 70,
+   "channel": "ititemlog",
+   "channel_name": "잇템로그",
+   "brand": "잇템로그(브랜드.json 미등록)",
+   "style": "해외원본/나레+원음(해외반응 v3)",
+   "title": "02 쿠션(MissDarcei 3편)",
+   "path": "G:/내 드라이브/칼카피영상/6번 잇템라인_998/02_cushion_1024_0014_confirm.mp4",
+   "md5": "f6fdb394e6e82c11ac2bfa9a687d78df",
+   "seconds": 30.67,
+   "preset": "tools/calcopy/hybrid/styles/잇템로그판.json",
+   "date": "2026-10-24",
+   "judge": "[사장님승인] 사장님 승인(드라이브 6번 잇템라인_998 `_confirm` 이름 = 승인 표시, handoff 10-22·10-24)",
+   "from": "tools/calcopy/hybrid/render_bench.py (run.py <키> render --version 잇템로그판) · 대본·재료 scratchpad mk_v3_*.py",
+   "doc": "channel/ititemlog/ep02_cushion_v3/",
+   "note": "줄 끝 쉼표 결함 고친 재합성판 `잇템로그 대기중/02_cushion_1024_1045.mp4`(md5 5607869405a00c89c626a677ce616f5c · 31.40초 · doc 자동검사.json 10/10) = 사장님 교체 판정 대기"
+  },
+  {
+   "n": 71,
+   "channel": "ititemlog",
+   "channel_name": "잇템로그",
+   "brand": "잇템로그(브랜드.json 미등록)",
+   "style": "해외원본/나레+원음(해외반응 v3)",
+   "title": "03 선크림",
+   "path": "G:/내 드라이브/칼카피영상/6번 잇템라인_998/03_sunscreen_1024_0208_confirm.mp4",
+   "md5": "d74d6f26427f723fb6001ac63daf45de",
+   "seconds": 29.43,
+   "preset": "tools/calcopy/hybrid/styles/잇템로그판.json",
+   "date": "2026-10-24",
+   "judge": "[사장님승인] 사장님 승인(드라이브 6번 잇템라인_998 `_confirm` 이름 = 승인 표시, handoff 10-22·10-24)",
+   "from": "tools/calcopy/hybrid/render_bench.py (run.py <키> render --version 잇템로그판) · 대본·재료 scratchpad mk_v3_*.py",
+   "doc": "channel/ititemlog/ep03_sunscreen_v2/"
+  },
+  {
+   "n": 72,
+   "channel": "ititemlog",
+   "channel_name": "잇템로그",
+   "brand": "잇템로그(브랜드.json 미등록)",
+   "style": "해외원본/나레+원음(해외반응 v3)",
+   "title": "04 립·버블티",
+   "path": "G:/내 드라이브/칼카피영상/6번 잇템라인_998/04_lip_bubbletea_1024_0016_confirm.mp4",
+   "md5": "8a4ad0eefc3e91f61df55dc6b538b6ff",
+   "seconds": 27.77,
+   "preset": "tools/calcopy/hybrid/styles/잇템로그판.json",
+   "date": "2026-10-24",
+   "judge": "[사장님승인] 사장님 승인(드라이브 6번 잇템라인_998 `_confirm` 이름 = 승인 표시, handoff 10-22·10-24)",
+   "from": "tools/calcopy/hybrid/render_bench.py (run.py <키> render --version 잇템로그판) · 대본·재료 scratchpad mk_v3_*.py",
+   "doc": "channel/ititemlog/ep04_lip_v3/",
+   "note": "doc 자동검사.json(10-24 00:48)은 ok=false — 컷 끝 번쩍임 3건(N1·O2·N4). 드라이브본(00:16)과 같은 렌더인지 미확인"
+  },
+  {
+   "n": 73,
+   "channel": "ititemlog",
+   "channel_name": "잇템로그",
+   "brand": "잇템로그(브랜드.json 미등록)",
+   "style": "해외원본/나레+원음(해외반응 v3)",
+   "title": "05 쌀 크림",
+   "path": "G:/내 드라이브/칼카피영상/6번 잇템라인_998/05_rice_cream_1024_0033_confirm.mp4",
+   "md5": "2e66163b0bba89c42f5e4a36a899a7b7",
+   "seconds": 27.53,
+   "preset": "tools/calcopy/hybrid/styles/잇템로그판.json",
+   "date": "2026-10-24",
+   "judge": "[사장님승인] 사장님 승인(드라이브 6번 잇템라인_998 `_confirm` 이름 = 승인 표시, handoff 10-22·10-24)",
+   "from": "tools/calcopy/hybrid/render_bench.py (run.py <키> render --version 잇템로그판) · 대본·재료 scratchpad mk_v3_*.py",
+   "doc": "channel/ititemlog/ep05_rice_v3/"
+  },
+  {
+   "n": 74,
+   "channel": "ititemlog",
+   "channel_name": "잇템로그",
+   "brand": "잇템로그(브랜드.json 미등록)",
+   "style": "해외원본/나레+원음(해외반응 v3)",
+   "title": "07 치즈 핫도그",
+   "path": "G:/내 드라이브/칼카피영상/6번 잇템라인_998/07_cheese_corndog_1024_0013_confirm.mp4",
+   "md5": "ee00b9119778c893922db1eeddd49f63",
+   "seconds": 30.9,
+   "preset": "tools/calcopy/hybrid/styles/잇템로그판.json",
+   "date": "2026-10-24",
+   "judge": "[사장님승인] 사장님 승인(드라이브 6번 잇템라인_998 `_confirm` 이름 = 승인 표시, handoff 10-22·10-24)",
+   "from": "tools/calcopy/hybrid/render_bench.py (run.py <키> render --version 잇템로그판) · 대본·재료 scratchpad mk_v3_*.py",
+   "doc": "channel/ititemlog/ep07_corndog_v2/"
+  },
+  {
+   "n": 75,
+   "channel": "ititemlog",
+   "channel_name": "잇템로그",
+   "brand": "잇템로그(브랜드.json 미등록)",
+   "style": "해외원본/나레+원음(해외반응 v3)",
+   "title": "09 딸기 라떼",
+   "path": "G:/내 드라이브/칼카피영상/6번 잇템라인_998/09_strawberry_latte_1024_0053_confirm.mp4",
+   "md5": "2951b5a1e272950dbd8d3944aa94ccce",
+   "seconds": 29.37,
+   "preset": "tools/calcopy/hybrid/styles/잇템로그판.json",
+   "date": "2026-10-24",
+   "judge": "[사장님승인] 사장님 승인(드라이브 6번 잇템라인_998 `_confirm` 이름 = 승인 표시, handoff 10-22·10-24)",
+   "from": "tools/calcopy/hybrid/render_bench.py (run.py <키> render --version 잇템로그판) · 대본·재료 scratchpad mk_v3_*.py",
+   "doc": "channel/ititemlog/ep09_strawberry_latte_v3/",
+   "note": "재합성판 `잇템로그 대기중/09_strawberry_latte_1024_1051.mp4`(md5 a3acee67e1df56980f334f2de4bb780b · 28.87초) = 사장님 교체 판정 대기"
+  },
+  {
+   "n": 76,
+   "channel": "ititemlog",
+   "channel_name": "잇템로그",
+   "brand": "잇템로그(브랜드.json 미등록)",
+   "style": "해외원본/나레+원음(해외반응 v3)",
+   "title": "10 아이스크림 조합",
+   "path": "G:/내 드라이브/칼카피영상/6번 잇템라인_998/10_icecream_combo_1024_0027_confirm.mp4",
+   "md5": "a66bef907f26c78befba106325d53b11",
+   "seconds": 27.97,
+   "preset": "tools/calcopy/hybrid/styles/잇템로그판.json",
+   "date": "2026-10-24",
+   "judge": "[사장님승인] 사장님 승인(드라이브 6번 잇템라인_998 `_confirm` 이름 = 승인 표시, handoff 10-22·10-24)",
+   "from": "tools/calcopy/hybrid/render_bench.py (run.py <키> render --version 잇템로그판) · 대본·재료 scratchpad mk_v3_*.py",
+   "doc": "channel/ititemlog/ep10_icecream_combo_v3/"
+  },
+  {
+   "n": 77,
+   "channel": "ititemlog",
+   "channel_name": "잇템로그",
+   "brand": "잇템로그(브랜드.json 미등록)",
+   "style": "해외원본/나레+원음(해외반응 v3)",
+   "title": "11 편의점 4달러",
+   "path": "G:/내 드라이브/칼카피영상/6번 잇템라인_998/11_cvs_4dollar_1024_0041_confirm.mp4",
+   "md5": "812666aedec70ebc956df134c82ac3af",
+   "seconds": 30.1,
+   "preset": "tools/calcopy/hybrid/styles/잇템로그판.json",
+   "date": "2026-10-24",
+   "judge": "[사장님승인] 사장님 승인(드라이브 6번 잇템라인_998 `_confirm` 이름 = 승인 표시, handoff 10-22·10-24)",
+   "from": "tools/calcopy/hybrid/render_bench.py (run.py <키> render --version 잇템로그판) · 대본·재료 scratchpad mk_v3_*.py",
+   "doc": "channel/ititemlog/ep11_cvs_4dollar_v3/",
+   "note": "재합성판 `잇템로그 대기중/11_cvs_4dollar_1024_1049.mp4`(md5 d41e9b0dc793681fd3539d11788da9b6 · 29.43초) = 사장님 교체 판정 대기"
+  },
+  {
+   "n": 78,
+   "channel": "ititemlog",
+   "channel_name": "잇템로그",
+   "brand": "잇템로그(브랜드.json 미등록)",
+   "style": "해외원본/나레+원음(해외반응 v3)",
+   "title": "12 마스크팩",
+   "path": "G:/내 드라이브/칼카피영상/잇템로그 대기중/12_sheet_mask_1024_1040.mp4",
+   "md5": "0661c19b207453cdff25b7572e49c748",
+   "seconds": 27.07,
+   "preset": "tools/calcopy/hybrid/styles/잇템로그판.json",
+   "date": "2026-10-24",
+   "judge": "[자동검사만] 자동 검사 10/10·받아쓰기 일치·시트 확인(사장님 판정 전)",
+   "from": "tools/calcopy/hybrid/render_bench.py (run.py <키> render --version 잇템로그판) · 대본·재료 scratchpad mk_v3_*.py",
+   "doc": "channel/ititemlog/ep12_sheetmask_v3/"
+  },
+  {
+   "n": 79,
+   "channel": "ititemlog",
+   "channel_name": "잇템로그",
+   "brand": "잇템로그(브랜드.json 미등록)",
+   "style": "해외원본/나레+원음(해외반응 v3)",
+   "title": "13 연어 PDRN 크림",
+   "path": "G:/내 드라이브/칼카피영상/잇템로그 대기중/13_salmon_cream_1024_1037.mp4",
+   "md5": "a0bac26a99d4cf716ce42d4c72da0dda",
+   "seconds": 27.77,
+   "preset": "tools/calcopy/hybrid/styles/잇템로그판.json",
+   "date": "2026-10-24",
+   "judge": "[자동검사만] 자동 검사 10/10·받아쓰기 일치·시트 확인(사장님 판정 전)",
+   "from": "tools/calcopy/hybrid/render_bench.py (run.py <키> render --version 잇템로그판) · 대본·재료 scratchpad mk_v3_*.py",
+   "doc": "channel/ititemlog/ep13_salmon_cream_v3/"
+  },
+  {
+   "n": 80,
+   "channel": "banggu",
+   "channel_name": "썰템홈샷",
+   "brand": "썰템홈샷",
+   "style": "쇼핑형/썰커뮤니티형 하이브리드(이야기판 b)",
+   "title": "하이브리드 01b2 요플레(쉼 고친 판)",
+   "path": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/01b_요플레/upload_final/01b2_yoplait_pause_fixed_hybrid.mp4",
+   "desktop": "01b2_yoplait_pause_fixed_hybrid.mp4",
+   "md5": "d4285e0d70ec53ff3801408d7dfc24d7",
+   "seconds": 36.57,
+   "preset": "channel/banggu/썰템홈샷_하이브리드/make.py",
+   "date": "2026-10-24",
+   "judge": "[자동검사만] make.py 자동 검사(handoff 10-24, 결과 파일 doc 폴더에 없음) · 사장님 판정 전",
+   "from": "channel/banggu/썰템홈샷_하이브리드/make.py",
+   "doc": "channel/banggu/썰템홈샷_하이브리드/01b_요플레/",
+   "note": "로컬 render/final.mp4 = upload_final (md5 같음). 드라이브 `1번 썰템홈샷_994/하이브리드/` 에는 10-25 실측 없음(02b·03b 만)"
+  },
+  {
+   "n": 81,
+   "channel": "banggu",
+   "channel_name": "썰템홈샷",
+   "brand": "썰템홈샷",
+   "style": "쇼핑형/썰커뮤니티형 하이브리드(이야기판 b)",
+   "title": "하이브리드 02b 플라우드 노트핀",
+   "path": "G:/내 드라이브/칼카피영상/1번 썰템홈샷_994/하이브리드/02b_plaud_notepin_story_hybrid.mp4",
+   "desktop": "02b_plaud_notepin_story_hybrid.mp4",
+   "md5": "7f0bcdc3e3504ca26e36107dcbcc9c1f",
+   "seconds": 35.8,
+   "preset": "channel/banggu/썰템홈샷_하이브리드/make.py",
+   "date": "2026-10-24",
+   "judge": "[자동검사만] make.py 자동 검사(결과 파일 doc 폴더에 없음) · 사장님 판정 전",
+   "from": "channel/banggu/썰템홈샷_하이브리드/make.py",
+   "doc": "channel/banggu/썰템홈샷_하이브리드/02b_노트핀/",
+   "note": "드라이브 = 로컬 render/final.mp4 (md5 같음)"
+  },
+  {
+   "n": 82,
+   "channel": "banggu",
+   "channel_name": "썰템홈샷",
+   "brand": "썰템홈샷",
+   "style": "쇼핑형/썰커뮤니티형 하이브리드(이야기판 b)",
+   "title": "하이브리드 03b 골든카레",
+   "path": "G:/내 드라이브/칼카피영상/1번 썰템홈샷_994/하이브리드/03b_golden_curry_story_hybrid.mp4",
+   "desktop": "03b_golden_curry_story_hybrid.mp4",
+   "md5": "f3f4868459b51c5490f642817a859b98",
+   "seconds": 35.82,
+   "preset": "channel/banggu/썰템홈샷_하이브리드/make.py",
+   "date": "2026-10-24",
+   "judge": "[자동검사만] make.py 자동 검사(결과 파일 doc 폴더에 없음) · 사장님 판정 전",
+   "from": "channel/banggu/썰템홈샷_하이브리드/make.py",
+   "doc": "channel/banggu/썰템홈샷_하이브리드/03b_골든카레/",
+   "note": "드라이브 = 로컬 render/final.mp4 (md5 같음)"
+  },
+  {
+   "n": 83,
+   "channel": "hottemreport",
+   "channel_name": "숏템리폿",
+   "brand": "숏템리폿",
+   "style": "현장썰 3차 하이브리드(앞 원음형 + 잇썸홈판)",
+   "title": "3차 01 세로 모니터(Geminos 24)",
+   "path": "G:/내 드라이브/칼카피영상/3번 숏템리폿_950/하이브리드/12_vertical_monitor.mp4",
+   "desktop": "12_vertical_monitor.mp4",
+   "md5": "3183fc11fc2509138dc40f6fb372f74c",
+   "seconds": 31.27,
+   "date": "2026-10-24",
+   "judge": "[확인대기] 자동 검사(LUFS·TP·freeze/black 0·check_seams·script_audit)·페이블 승인 → 사장님 지적(짤 1개·맨 앞 썸네일) 덧입힌 v2 · 사장님 판정 전",
+   "from": "channel/hottemreport/현장썰_run.py · tools/calcopy/hybrid/post_meme_thumb.py(짤·썸네일 덧입힘)",
+   "doc": "channel/hottemreport/현장썰3차/01_Monitor/",
+   "note": "드라이브 = 로컬 C:/숏템_칼카피/hottemreport/현장썰3차_01_Monitor/fix/final_v2.mp4 (md5 같음) · 수정 기록 수정_10-24/수정.md"
+  },
+  {
+   "n": 84,
+   "channel": "hottemreport",
+   "channel_name": "숏템리폿",
+   "brand": "숏템리폿",
+   "style": "현장썰 3차 하이브리드(앞 원음형 + 잇썸홈판)",
+   "title": "3차 02 눕는 의자(LiberNovo Omni Pro)",
+   "path": "G:/내 드라이브/칼카피영상/3번 숏템리폿_950/하이브리드/13_recliner_chair.mp4",
+   "desktop": "13_recliner_chair.mp4",
+   "md5": "0fb95213149f526997895aed82e7f238",
+   "seconds": 32.36,
+   "date": "2026-10-24",
+   "judge": "[확인대기] 자동 검사(LUFS·TP·freeze/black 0·check_seams·script_audit)·페이블 승인 → 사장님 지적(짤 1개·맨 앞 썸네일) 덧입힌 v2 · 사장님 판정 전",
+   "from": "channel/hottemreport/현장썰_run.py · tools/calcopy/hybrid/post_meme_thumb.py(짤·썸네일 덧입힘)",
+   "doc": "channel/hottemreport/현장썰3차/02_Chair/",
+   "note": "드라이브 = 로컬 …/현장썰3차_02_Chair/fix/final_v2.mp4 (md5 같음)"
+  },
+  {
+   "n": 85,
+   "channel": "hottemreport",
+   "channel_name": "숏템리폿",
+   "brand": "숏템리폿",
+   "style": "현장썰 3차 하이브리드(앞 원음형 + 잇썸홈판)",
+   "title": "3차 03 반동 마우스(RAGNOK ErgoStrike7)",
+   "path": "G:/내 드라이브/칼카피영상/3번 숏템리폿_950/하이브리드/14_recoil_gun_mouse.mp4",
+   "desktop": "14_recoil_gun_mouse.mp4",
+   "md5": "febe696549e8c6957889a9fe77e4671a",
+   "seconds": 32.7,
+   "date": "2026-10-24",
+   "judge": "[확인대기] 자동 검사(LUFS·TP·freeze/black 0·check_seams·script_audit)·페이블 승인 → 사장님 지적(짤 1개·맨 앞 썸네일) 덧입힌 v2 · 사장님 판정 전",
+   "from": "channel/hottemreport/현장썰_run.py · tools/calcopy/hybrid/post_meme_thumb.py(짤·썸네일 덧입힘)",
+   "doc": "channel/hottemreport/현장썰3차/03_Mousegun/",
+   "note": "드라이브 = 로컬 …/현장썰3차_03_Mousegun/fix/final_v2.mp4 (md5 같음)"
   }
  ]
 }
