@@ -38,6 +38,7 @@ FAST_GROUPS = ("규격", "화면", "재료", "자막·효과", "표식")
 GAP_TOL = 1 / 30 + 0.02    # 줄 사이 간격 = 판 timing(시간표) ±1프레임+0.02 (표준 §11 ①ⓐ)
 OLD_PAUSE_RENDERERS = ("make", "itssum", "jaemi")   # 고정 PAUSE_LO/HI 는 옛 렌더러 판에서만(표준 §11 ①ⓒ)
 B13_GAP_MAX, B13_GAP_FRAC = 3.0, 0.25            # 거리 문턱 = min(3.0, 0.25 × 소스 길이) (표준 §11 ②)
+SEAM_BOUND_TOL = 0.1                              # B16' 되감김을 계획 컷 경계로 치는 폭(초, 3프레임) — 그 밖은 이어 자른 한 조각 안
 TD_TOL = 0.30                                     # 전환 세기 = 우리 drop 중앙값이 벤치 drop 중앙값 ±30% (표준 ⑯, 측정 주인 render_bench.transition_drop)
 TD_KINDS = ("zoomblur",)
 FREEZE_SEC = 0.3      # 창 안 같은 그림이 이만큼 이어지면 멈춤(벤치 컷 중앙 약 1초 · 실제 촬영 영상은 프레임마다 잡음이 있어 0이 안 나온다)
@@ -356,11 +357,17 @@ def reuse_violations_bench(cuts: list[dict], src_len: dict) -> list[str]:
     rows = sorted([(c["src"], float(c["ss"]), float(c["ss"]) + float(c["dur"]), c) for c in cuts
                    if Path(str(c["src"])).suffix.lower() not in IMG_EXT], key=lambda r: r[3]["t0"])
     bad = []
+    chain = [0] * len(rows)        # 같은 원본을 '이어 붙인 앞으로 가기'로 잇는 컷 사슬(N4 ayA 0.2→1.6 → O3 3.0) — 사슬 안은 재사용이 아니다(이웃 짝만 보면 첫↔끝이 거리 오탐, 10-25 ep12)
+    for k in range(1, len(rows)):
+        sp, _, bp, cp = rows[k - 1]
+        sk, ak, _, ck = rows[k]
+        fwd = sk == sp and abs(float(cp["t1"]) - float(ck["t0"])) < 0.06 and ak >= bp - eps
+        chain[k] = chain[k - 1] if fwd else k
     for i in range(len(rows)):
         for j in range(i + 1, len(rows)):
             s1, a1, b1, c1 = rows[i]
             s2, a2, b2, c2 = rows[j]
-            if s1 != s2:
+            if s1 != s2 or chain[i] == chain[j]:
                 continue
             tag = f"{Path(s1).stem} {a1:.2f}~{b1:.2f}({c1.get('line')}) ↔ {a2:.2f}~{b2:.2f}({c2.get('line')})"
             if a1 < b2 - eps and a2 < b1 - eps:
@@ -374,15 +381,18 @@ def reuse_violations_bench(cuts: list[dict], src_len: dict) -> list[str]:
     return bad
 
 
-def drop_verdict(ours: list, bench: list) -> tuple[bool | None, str]:
-    """전환 세기(표준 ⑯): 우리 경계 drop 중앙값이 벤치 drop 중앙값의 ±TD_TOL 안. 우리 경계 0개 = ×(벤치엔 전환이 있는데 우리는 없다)."""
+def drop_verdict(ours: list, bench: list, planned: int | None = None) -> tuple[bool | None, str]:
+    """전환 세기(표준 ⑯): 우리 경계 drop 중앙값이 벤치 drop 중앙값의 ±TD_TOL 안. 우리 경계 0개 = ×(벤치엔 전환이 있는데 우리는 없다)
+    — 단 planned == 0(개수 주인 placement.transitions_step 이 벤치 비율 × 경계 수로 0개를 정함, 예: 잇템로그 3/193 × 13 → 0)은 잴 세기가 없는 '해당 없음' ○."""
     o = [float(x) for x in ours if x is not None and x == x]
     b = [float(x) for x in bench if x is not None and x == x]
     if not b:
         return None, "벤치 drop 표본 없음(미측정)"
     bm = statistics.median(b)
+    if not o and planned == 0:
+        return True, f"해당 없음 — 배치가 이 편 전환 0개로 정함(placement.transitions_step 벤치 비율) · 벤치 drop 중앙 {bm:.3f}({len(b)}회)"
     if not o:
-        return False, f"우리 전환 경계 0개 — 벤치 drop 중앙 {bm:.3f}({len(b)}회)"
+        return False, f"우리 전환 경계 0개 — 벤치 drop 중앙 {bm:.3f}({len(b)}회)" + (f" · 배치는 {planned}개 정함(그리기 빠짐)" if planned else "")
     om = statistics.median(o)
     ok = abs(om - bm) <= TD_TOL * abs(bm)
     return ok, f"우리 drop 중앙 {om:.3f}({len(o)}경계) vs 벤치 {bm:.3f}({len(b)}회 {[round(x, 3) for x in b]}) · 허용 ±{TD_TOL:.0%}"
@@ -562,7 +572,8 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
                     from tools.calcopy.hybrid.render_bench import render_transition_drop
                     r = render_transition_drop(R, style_name, kinds=TD_KINDS)
                     td["ours"] = r.get("boundaries") or []
-                    return drop_verdict([b.get("drop") for b in td["ours"]], bd["drops"])
+                    planned = sum(1 for e in tab.get("transitions") or [] if e.get("kind") in TD_KINDS)      # 자막표 = 렌더러가 그린 전환(배치 결과 그대로)
+                    return drop_verdict([b.get("drop") for b in td["ours"]], bd["drops"], planned)
                 row("화면", "전환 세기(zoomblur drop 중앙 ±30%)", drop_row, "render_bench.render_transition_drop ↔ bench_transition_drop(채널 _kal 캐시)")
                 row("화면", "전환 길이 ms(참고)", lambda: (True, f"우리 {[b.get('ms') for b in td.get('ours') or []]} · 벤치 {bd['ms']}"),
                     "transition_drop.ms", ref=True)
@@ -592,7 +603,12 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             s = _cached(store, f"seams|{fmd5}|{list(win)}", lambda: check_seams.check(str(final), win, None))
             save_store()
             jsave(R / "seams.json", s)
-            return s["ok"], f"컷 {len(s['컷'])} · 되감김 {len(s['되감김'])} {[r.get('t') for r in s['되감김']]} · 점프줌 {len(s['점프줌'])}({s['점프줌_판정'] or '드묾'})"
+            # 되감김 = 컷 경계에서 원본 시각이 뒤로 가는 것 — 계획 컷 경계(±SEAM_BOUND_TOL)가 아니면 이어 자른 한 조각 안(빠른 움직임 오탐, 10-25 ep12 11.3초 = O2 saA 17~21.36 안)
+            bset = [float(c["t0"]) for c in (T.get("cuts") or [])[1:]]
+            real = [r for r in s["되감김"] if any(abs(float(r["t"]) - b) <= SEAM_BOUND_TOL for b in bset)]
+            inside = [r.get("t") for r in s["되감김"] if r not in real]
+            return (not real and not s["점프줌_판정"]), (f"컷 {len(s['컷'])} · 되감김 {len(real)} {[r.get('t') for r in real]} · 점프줌 {len(s['점프줌'])}({s['점프줌_판정'] or '드묾'})"
+                                                     + (f" · 한 조각 안이라 뺌 {inside}" if inside else ""))
         row("재료", "B16' 되감김·점프줌", seams, "engine/check_seams.check")
     # ── 자막·효과
     lrp = (st.get("bench") or {}).get("line_reads")
