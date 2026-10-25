@@ -1114,7 +1114,7 @@ def tts_cache_miss(W: Path, v: str) -> str:
         return ""
     st = STY.load(v)
     S.setdefault("voice", {k: st["voice"][k] for k in ("name", "voice_id") if k in st["voice"]})
-    key = NA.cache_key(RI.tts_text({**S, "lines": [l for l in S["lines"] if l["kind"] == "tts"]}), S["voice"]["voice_id"], S["voice"].get("tempo"), NA.TTS_MODEL)
+    key = NA.voice_key(RI.tts_text({**S, "lines": [l for l in S["lines"] if l["kind"] == "tts"]}), S["voice"]["voice_id"], S["voice"].get("tempo"), NA.TTS_MODEL, **RI.voice_args(S))
     sc = W / v / "render" / "narr_full.mp3.tts.json"
     have = json.loads(sc.read_text(encoding="utf-8")).get("key") if sc.exists() else None
     return "" if have == key else f"TTS 캐시 없음(SHORTEM_NO_PAID — 돈 드는 합성 막음): 열쇠 {key[:8]} ≠ 캐시 {str(have)[:8]}"
@@ -1419,6 +1419,30 @@ class _TrackedPopen(subprocess.Popen):
     def __init__(self, *a, **k):
         super().__init__(*a, **k)
         _CHILDREN.add(self)
+        _PROG["t"] = time.time()          # 새 하위 프로그램을 띄웠다 = 일이 앞으로 가는 중(계획은 ffprobe·ffmpeg 를 짧게 여러 번 부른다)
+
+
+def _child_cpu() -> float:
+    """살아 있는 하위 프로그램들의 CPU 시간 합(초) — 늘고 있으면 일하는 중(10-26 run4: 계획 199초를 '진행 없음'으로 오판해 끊었다, 98 #125).
+    네트워크에 걸려 멈춘 받기는 CPU 가 안 는다 → 그때만 멈춤으로 본다. 윈도는 GetProcessTimes, 그 밖은 /proc 없으면 0."""
+    tot = 0.0
+    for pr in list(_CHILDREN):
+        if pr.poll() is not None:
+            continue
+        try:
+            if os.name == "nt":
+                import ctypes
+                from ctypes import wintypes
+                ft = [wintypes.FILETIME() for _ in range(4)]
+                if ctypes.windll.kernel32.GetProcessTimes(wintypes.HANDLE(int(pr._handle)), *[ctypes.byref(f) for f in ft]):
+                    tot += sum(((f.dwHighDateTime << 32) | f.dwLowDateTime) / 1e7 for f in ft[2:])
+            else:
+                with open(f"/proc/{pr.pid}/stat") as fh:
+                    x = fh.read().split()
+                tot += (int(x[13]) + int(x[14])) / os.sysconf("SC_CLK_TCK")
+        except Exception:  # noqa: BLE001
+            pass
+    return tot
 
 
 subprocess.Popen = _TrackedPopen
@@ -1478,14 +1502,15 @@ def _watch(W: Path, items: list, run_one, out: dict, log, budget_of, stall: floa
         t = threading.Thread(target=run_one, args=(d,), daemon=True)
         t.start()
         th.append((d, t, time.time()))
-    sig, last = _dir_sig(W), time.time()
+    sig, last, cpu = _dir_sig(W), time.time(), _child_cpu()
     _PROG["t"] = time.time()
     while any(t.is_alive() for _, t, _ in th):
         next((t for _, t, _ in th if t.is_alive()), th[0][1]).join(1.0 if stall > 5 else 0.2)   # 끝나면 바로 깨어난다(잠만 자면 일마다 1초씩 늦는다)
         now = time.time()
-        s2 = _dir_sig(W)
-        if s2 != sig:
-            sig, last = s2, now
+        s2, c2 = _dir_sig(W), _child_cpu()
+        if s2 != sig or c2 > cpu + 0.5:            # 파일이 자라거나 하위 프로그램이 CPU 를 0.5초 넘게 더 쓰면 진행 중
+            sig, last, cpu = s2, now, c2
+        cpu = min(cpu, c2)                        # 하위 프로그램이 끝나 합이 줄면 기준도 내린다
         last = max(last, float(_PROG.get("t") or 0))
         for d, t, t0 in th:
             rid = str(d.get("id") or d.get("cmd"))

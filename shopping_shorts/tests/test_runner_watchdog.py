@@ -28,6 +28,11 @@ def _grow(W, d):          # 파일이 자라며 오래 걸리는 일(받기·렌
     return {"ok": True}
 
 
+def _busy_child(W, d):     # 파일도 안 쓰고 진행 신호도 없지만 하위 프로그램이 CPU 를 쓰며 일하는 중(10-26 run4 계획 199초)
+    subprocess.run([sys.executable, "-c", "import time\nt=time.time()\nwhile time.time()-t<4: pass"])
+    return {"ok": True}
+
+
 def _steps(W, d):
     for i in range(3):
         R.progress(W, "원본 후보 조사", i + 1, 3)
@@ -72,3 +77,9 @@ def test_every_budget_covers_measured_max():
         assert max(R.BUDGET_FLOOR, R.BUDGET.get(k, R.BUDGET_DEFAULT)) >= v, (k, v)
     for k in ("plan", "asr_spans", "orig_heard", "coupang"):   # 10-26 run4: plan·asr_spans 120.2초가 정상이었다(바닥 120초가 끊음)
         assert max(R.BUDGET_FLOOR, R.BUDGET.get(k, R.BUDGET_DEFAULT)) >= 300, k
+
+
+def test_cpu_busy_child_is_progress(tmp_path, monkeypatch):
+    monkeypatch.setitem(R.CMDS, "busy", _busy_child)
+    out = R.run_do(tmp_path, [{"id": "b", "cmd": "busy"}], log=lambda s: None, stall=1.5)
+    assert out["b"] == {"ok": True}, out
