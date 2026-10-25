@@ -134,6 +134,9 @@ HAND_SERVER_ONLY = {
     # 판단 대기(관제 265): runner_ops·render_itssum·screen 이 함수 안에서 부른다 — 회원 PC 에서 그 갈래가 도는지 확인 뒤 HAND 로 옮기거나 여기 둔다
     "tools/calcopy/hybrid/quality_gate.py", "tools/calcopy/hybrid/checks.py", "tools/calcopy/hybrid/script_audit.py",
     "tools/calcopy/hybrid/compare_sheet.py", "tools/calcopy/oneshot/scene_fit.py",
+    # 10-25 엔진 render_bench 가 함수 안(src_dir 있을 때)에서 respace_reuse 를 부른다 — material_fit 이 부르는 quality_gate·checks·script_audit·scene_fit 이
+    #   전부 위 '판단 대기'라 같이 둔다(회원 PC 로 보낼지는 관제 265 판단, 관제 266 병합 막힘 풀기)
+    "tools/calcopy/hybrid/material_fit.py",
     "tools/calcopy/hybrid/server_ai.py", "tools/calcopy/hybrid/gemini_server.py",   # 서버 키·주소 — 보내면 안 됨
     "tools/calcopy/engine/preset_save.py",   # 프리셋 만드는 기술(render_itssum 함수 안) — 회원 PC 엔 안 보낸다
 }
