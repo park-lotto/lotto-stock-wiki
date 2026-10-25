@@ -215,6 +215,7 @@
   presetPane.querySelector('.pane-head').after(modeBar);renderGrid();
   // 왼쪽 맨 위 탭(2026-09-19 사장님): '템플릿 선택' 머리말 자리에 [장면 템플릿 | 폰트 템플릿].
   //   오른쪽 문구/효과 탭과 같은 .tool-tabs 모양. 폰트 템플릿(채널명·제목·자막 한 세트)은 다음 단계 — 지금은 자리만.
+  let lastMineApply=null;   // 관제 252: 새 영상에 '마지막에 적용한 내 프리셋'을 거는 함수(아래 블록이 채운다 · window.sceneStyle.applyLastMine)
   {
     const head=presetPane.querySelector('.pane-head'),leftTabs=document.createElement('div');
     leftTabs.className='tool-tabs left-pane-tabs';
@@ -254,6 +255,7 @@
     const MY_URL='/api/produce/presets/scene_style_my_presets',mineSync=!qaMode&&!labMode;
     const readLocalMine=()=>{try{const v=JSON.parse(localStorage.getItem(MY_KEY)||'[]');return Array.isArray(v)?v:[]}catch{return []}};
     let mineCache=null,mineLoaded=false;   // 서버 목록을 받기 전 저장은 전체 교체 말고 merge(다른 PC에서 저장한 것을 덮지 않게)
+    let mineReadyDone;const mineReady=new Promise(r=>mineReadyDone=r);   // 서버 목록을 받았거나(성공) 못 받았을 때(실패) 풀린다
     const readMine=()=>(mineCache||readLocalMine()).slice();
     const putLocalMine=list=>{mineCache=list;try{localStorage.setItem(MY_KEY,JSON.stringify(list))}catch{}};
     const mineFail=()=>alert('프리셋을 계정에 저장하지 못했습니다. 인터넷 연결을 확인하고 다시 저장해 주세요.');
@@ -270,8 +272,18 @@
         if(!extra.length){markMig();putLocalMine(j.items);drawMine();return;}
         return fetch(MY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({merge:extra})})
           .then(r=>r.ok?r.json():Promise.reject(r.status)).then(m=>{if(m&&m.ok&&Array.isArray(m.items)){markMig();putLocalMine(m.items);drawMine();}});
-      }).catch(e=>console.warn('[내 프리셋] 계정 목록 불러오기 실패 — 이 브라우저 사본으로 보여줍니다',e));}
+      }).catch(e=>console.warn('[내 프리셋] 계정 목록 불러오기 실패 — 이 브라우저 사본으로 보여줍니다',e)).finally(()=>mineReadyDone());}
+    else mineReadyDone();
     const mineHooks={apply:snap=>applyTaste(snap,true),current:()=>window.sceneStyle?.snapshot?.()};   // applyTaste는 아래 함수 선언(호이스팅) — 클릭 시점엔 있다
+    // ★마지막에 적용한 내 프리셋 기억(관제 252, 2026-10-22 사장님 "프리셋을 바꿔놓았는데 마지막 했던 프리셋으로 기억되게").
+    //   주인 = 계정 목록 항목의 usedAt(적용·저장 시각). 브라우저 기억(scene_style_preset)은 PC마다 달라 다른 PC·크롬 정리 뒤엔 잊혔고,
+    //   그나마 취향만(자리·자막박스 모양·로고·채널명 빼고) 되살렸다. 새 영상은 '적용' 버튼을 누른 것과 똑같이 건다.
+    const useMine=it=>{mineHooks.apply(it.snap);try{localStorage.setItem('scene_style_preset',JSON.stringify(it.snap))}catch{}};
+    const touchMine=(list,it)=>{it.usedAt=Date.now();writeMine(list);};
+    lastMineApply=()=>mineReady.then(()=>{
+      const it=readMine().filter(x=>x&&x.snap&&x.usedAt).sort((a,b)=>b.usedAt-a.usedAt)[0];
+      if(!it)return null;useMine(it);drawMine();return it.name;
+    });
     const drawMine=()=>{
       const list=readMine(),cur=mineHooks.current?.(),curId=cur?.presetId;
       const tplName=id=>{const r=[...storyRows,...fixedRows].find(p=>p.id===id);return r?(r.name||r.title||r.label||r.id):(id||'템플릿 없음')};
@@ -295,13 +307,16 @@
         for(const k of ['captionTexts','captionDrags','captionPositions','captionLayouts','fontScales','textOffsets','textDrags'])delete snap[k];
         // ★강조효과는 안 담는다(관제 158, 사장님 "프리셋에 자막이랑 등등 강조효과 빼고 저장") — 장면별 효과(effects)·효과팩 번호·강조효과 프리셋은 따로(효과 탭 강조효과 프리셋)
         delete snap.effects; delete snap.motionPack; delete snap.fxPreset;
+        // ★채널명은 담는다(관제 252, 사장님 "쓸데수집 프리셋을 눌러도 숏템메이커") — 채널마다 프리셋을 두는 쓰임이라 채널명이 곧 그 프리셋이다.
+        //   다른 문구(제목·자막)는 그 작업 것이라 여전히 뺀다. 이 장면만 쓴 채널명이 아니라 공통 채널명을 담는다.
+        {const ch=baseText('channel').trim();if(ch)snap.channel=ch.slice(0,40);}
         const list=readMine();const name=(prompt('프리셋 이름',`프리셋 ${list.length+1}`)||'').trim();if(!name)return;
-        list.unshift({id:Date.now().toString(36),name,at:Date.now(),snap});writeMine(list.slice(0,20));
+        list.unshift({id:Date.now().toString(36),name,at:Date.now(),usedAt:Date.now(),snap});writeMine(list.slice(0,20));
         try{localStorage.setItem('scene_style_preset',JSON.stringify(snap))}catch{}
         drawMine();return;
       }
       const card=event.target.closest('[data-my-id]');if(!card)return;const list=readMine();const it=list.find(x=>x.id===card.dataset.myId);if(!it)return;
-      if(event.target.closest('[data-my-apply]')){mineHooks.apply?.(it.snap);try{localStorage.setItem('scene_style_preset',JSON.stringify(it.snap))}catch{}drawMine();}
+      if(event.target.closest('[data-my-apply]')){useMine(it);touchMine(list,it);drawMine();}
       else if(event.target.closest('[data-my-rename]')){const name=(prompt('새 이름',it.name)||'').trim();if(name){it.name=name;writeMine(list);drawMine();}}
       else if(event.target.closest('[data-my-del]')){if(confirm(`'${it.name}' 프리셋을 지울까요?`)){writeMine(list.filter(x=>x!==it));drawMine();}}
     });
@@ -555,7 +570,7 @@
   if(colorRow)colorRow.innerHTML='<label class="swatch"> <input type="color" data-color-role="white" value="#ffffff"><span>흰색</span></label><label class="swatch"><input type="color" data-color-role="accent" value="#ffe600"><span>강조</span></label><label class="swatch"><input type="color" data-color-role="background" value="#211f19"><span>배경</span></label>';
   const motionPanel=document.createElement('section');
   motionPanel.className='hook-motion';
-  motionPanel.innerHTML='<div class="hook-motion-head"><b>훅 시선집중 모션</b><small>첫 장면에만 적용</small></div><div class="hook-motion-grid"><button type="button" class="active" data-hook-motion="zoom-punch">줌 펀치</button><button type="button" data-hook-motion="pop">팝업</button><button type="button" data-hook-motion="slide">슬라이드</button><button type="button" data-hook-motion="flash">플래시</button><button type="button" data-hook-motion="push-in">천천히 확대</button><button type="button" data-hook-motion="shake">떨림</button></div><div class="hook-speed hook-band-motion"><span>흰 띠</span><button type="button" data-hook-band-motion="">없음</button><button type="button" data-hook-band-motion="rise">스윽 올라오기</button><button type="button" data-hook-band-motion="grow">천천히 확대</button></div><div class="hook-speed"><span>속도</span><button type="button" data-hook-speed="1.35">느림</button><button type="button" data-hook-speed="1">보통</button><button type="button" class="active" data-hook-speed="0.72">빠름</button></div>';
+  motionPanel.innerHTML='<div class="hook-motion-head"><b>훅 시선집중 모션</b><small>첫 장면에만 적용</small></div><div class="hook-motion-grid"><button type="button" class="active" data-hook-motion="zoom-punch">줌 펀치</button><button type="button" data-hook-motion="pop">팝업</button><button type="button" data-hook-motion="slide">슬라이드</button><button type="button" data-hook-motion="flash">플래시</button><button type="button" data-hook-motion="push-in">천천히 확대</button><button type="button" data-hook-motion="shake">떨림</button><button type="button" data-hook-motion="none">없음</button></div><div class="hook-speed hook-band-motion"><span>흰 띠</span><button type="button" data-hook-band-motion="">없음</button><button type="button" data-hook-band-motion="rise">스윽 올라오기</button><button type="button" data-hook-band-motion="grow">천천히 확대</button></div><div class="hook-speed"><span>속도</span><button type="button" data-hook-speed="1.35">느림</button><button type="button" data-hook-speed="1">보통</button><button type="button" class="active" data-hook-speed="0.72">빠름</button></div>';
   const scopeBar=document.createElement('section');scopeBar.className='hook-motion edit-scope';
   scopeBar.innerHTML='<div class="hook-motion-head"><small>자막·제목·채널명의 글자 크기·위치·자막박스가 이 범위로 저장됩니다</small></div><div class="hook-motion-grid" style="grid-template-columns:1fr 1fr"><button type="button" data-edit-scope="all" class="active">모든 장면</button><button type="button" data-edit-scope="one">이 장면만</button></div>';
   scopeBar.addEventListener('click',event=>{const b=event.target.closest('[data-edit-scope]');if(!b)return;editScope=b.dataset.editScope;scopeBar.querySelectorAll('[data-edit-scope]').forEach(x=>x.classList.toggle('active',x===b));});
@@ -888,7 +903,7 @@
     if(hookMotion==='rise'){hookMotion='zoom-punch';hookBandMotion='rise';}   // 잠깐 있던 단독 'rise' 저장값은 조합형으로 옮긴다
     motionPanel.querySelectorAll('[data-hook-band-motion]').forEach(b=>b.classList.toggle('active',b.dataset.hookBandMotion===hookBandMotion));
     const bandLabel=motionPanel.querySelector('.hook-band-motion > span');if(bandLabel)bandLabel.textContent=mode==='continuous'?'자막 등장':'흰 띠';
-    motionPanel.querySelector('.hook-motion-head small').textContent=(hookMotion==='zoom-punch'?'화면 전체 확대 · 짧은 흔들림':hookMotion==='push-in'?'화면 전체가 천천히 확대':hookMotion==='shake'?'화면 전체가 훅 내내 잘게 떨림':'제목에만 적용')+(hookBandMotion==='rise'?' + 흰 띠 스윽':hookBandMotion==='grow'?' + 흰 띠 확대':'');
+    motionPanel.querySelector('.hook-motion-head small').textContent=(hookMotion==='none'?'첫 장면 모션 없음':hookMotion==='zoom-punch'?'화면 전체 확대 · 짧은 흔들림':hookMotion==='push-in'?'화면 전체가 천천히 확대':hookMotion==='shake'?'화면 전체가 훅 내내 잘게 떨림':'제목에만 적용')+(hookBandMotion==='rise'?' + 흰 띠 스윽':hookBandMotion==='grow'?' + 흰 띠 확대':'');
   }
   const minimumFixedTop=frame=>Math.min(46,Math.max(12,Math.ceil((Math.max(0,...(frame?.lines||[]).filter(line=>line.bind!=='caption').map(line=>line.y1))+2)/(frame?.height||1)*100)));
   // 썰쇼핑형은 글자를 안 줄이므로 원래 칸의 85%보다 좁히면 줄끼리 겹친다.
@@ -1043,6 +1058,8 @@
         if(seeking){animation.pause();animation.currentTime=options.time;}else animation.finished.then(()=>animation.cancel()).catch(()=>{});
       }
       return Math.max(total,duration);
+    }else if(hookMotion==='none'){
+      // 없음(관제 262, 강병주 회원 10-24 "훅모션에서 없음 옵션도") — 첫 장면 화면·제목 모션을 안 건다(흰 띠 효과는 따로 고른 대로)
     }else if(hookMotion==='pop'){
       texts.forEach((el,index)=>play(el,[{opacity:0,transform:'scale(.25)'},{opacity:1,transform:'scale(1.14)',offset:.68},{opacity:1,transform:'scale(1)'}],{...timing,duration:time(520),delay:time(index*90)}));
     }else if(hookMotion==='slide'){
@@ -1568,7 +1585,7 @@
     return p.id==='s0101'
       ? (frameKind==='hook'?['channel','hook1','hook2',...(((p.hook?.lines?.length||0)>2||p.hook?.white_box?.text)?['bodyTitle']:[])]:['channel','bodyTitle','caption'])
       : p.id===PLAIN_ID
-        ? (frameKind==='hook'?['hook1','hook2','caption']:['bodyTitle','caption'])   // 원본은 훅에도 자막 칸을 낸다
+        ? ['caption']   // 원본(인스타식)은 처음부터 자막만 — 제목 칸 없음(관제 254, 2026-10-22 사장님)
       : frameKind==='hook'
         ? [...(hasChannel?['channel']:[]),...(lineCount?['hook1']:[]),...(lineCount>1?['hook2']:[]),...(lineCount>2||frame?.white_box?.text?['bodyTitle']:[])]
         : [...(hasChannel?['channel']:[]),...(lineCount?['bodyTitle']:[]),...(lineCount>1||frame?.white_box?.text?['caption']:[])];
@@ -2688,6 +2705,13 @@
       if(force&&saved){applyPresetPositions(saved.positions);markDirty('caption');}   // 자리 없는 옛 프리셋이면 템플릿 기본 자리로
       if(force&&saved&&saved.captionLook)applyCaptionLook(saved.captionLook);
       if(force&&saved&&isLogo(saved.logo)){logoEverywhere(saved.logo);rememberLogo(saved.logo);window.sceneDecorations?.refresh();}   // 관제 131: 프리셋의 로고를 전 장면에. 로고 없는 프리셋은 지금 로고를 안 건드린다
+      // 관제 252: 프리셋의 채널명을 전 장면 공통 채널명으로(장면별로 쓴 채널명은 지운다). 채널명 없는 옛 프리셋은 지금 채널명을 안 건드린다.
+      //   selectPreset 이 채널명을 템플릿 샘플(숏템메이커)·계정 채널명으로 되돌린 뒤라 맨 끝에서 덮는다.
+      if(force&&saved&&typeof saved.channel==='string'&&saved.channel.trim()&&inputs.channel){
+        delete shownBase.channel;for(const k of [...sceneTexts.keys()])if(k.startsWith('channel:'))sceneTexts.delete(k);
+        inputs.channel.value=saved.channel.trim().slice(0,40);markDirty('channel');updateCount(inputs.channel);
+        root.querySelectorAll('[data-preview-channel]').forEach(x=>x.textContent=inputs.channel.value);fittedText.clear();renderEdit();
+      }
       if(keepScene!=null)showScene(Math.max(0,Math.min(keepScene,sceneTotal()-1)));
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
@@ -2822,6 +2846,7 @@
         if(first&&s.moment&&want.has(s.moment)){this.emphAt(i,kind,on);count++;}});
       return count;
     },
+    applyLastMine:()=>lastMineApply?lastMineApply():Promise.resolve(null),   // 관제 252: 새 영상 = 마지막에 적용한 내 프리셋(없으면 null)
     branding(value){if(value!==undefined){branding=value;if(!labMode)try{localStorage.setItem('scene_style_branding',JSON.stringify(value));const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null');if(saved)localStorage.setItem('scene_style_preset',JSON.stringify({...saved,branding:value}));}catch{}}return branding},
     context:()=>sceneContext,
     validation:()=>templateViolations(),
