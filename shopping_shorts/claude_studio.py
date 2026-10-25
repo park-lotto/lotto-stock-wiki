@@ -390,11 +390,15 @@ def save_look(store, cid, pid, snapshot) -> dict:
 
 def ask(store, cid, target, text) -> dict:
     """완성본 고치기 — 회원이 화면에서 짚은 곳(target)에 '이렇게 해 달라'(text)를 남긴다. 처리는 회원 PC 의 Claude(MCP)가 한다(서버는 보관만)."""
-    text = str(text or "").strip()[:500]
+    text = str(text or "").strip()[:4000]
     if not text:
         raise StudioError("bad_request", "무엇을 고칠지 적어 주세요")
     t = target if isinstance(target, dict) else {}
-    t = {k: t[k] for k in ("track", "scene", "at", "label") if k in t}
+    keep = ("track", "scene", "at", "label", "x", "y", "dx", "dy", "video")
+    items = t.get("items") if isinstance(t.get("items"), list) else None   # 묶음(한 번에 보내기) — 칸마다 자리·시각·글
+    t = {k: t[k] for k in keep if k in t}
+    if items:
+        t["items"] = [{**{k: i[k] for k in keep if k in i}, "text": str(i.get("text") or "")[:500]} for i in items[:30] if isinstance(i, dict)]
     s = _read(store, cid)
     req = {"id": f"r{_ms()}", "at": _ms(), "target": t, "text": text, "state": "대기"}
     s["requests"] = ((s.get("requests") or []) + [req])[-50:]
