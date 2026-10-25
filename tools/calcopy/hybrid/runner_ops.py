@@ -1287,19 +1287,15 @@ def c_origin_foreign(W, d):
 
 
 def c_clean_text(W, d):
-    """박힌 글자 지우기 — 회원 VMake 키(VMAKE_API_KEY)가 있고 SHORTEM_NO_PAID 가 아니면 vmake_clean.member_clean, 아니면 **부르지 않고** 흐림으로 대체.
-    흐림 칸은 서버(flow → rules.text_blur_all)가 재료.blur 에 채운다. 호출 수·이유는 <작업>/src/vmake_log.json 에도(돈 든 호출을 셀 수 있게)."""
+    """박힌 글자 지우기 — 판단은 vmake_clean.clean() 한 곳(판 orig_text.mode · 키 출처 · 키 없으면 need_key 멈춤). 여기는 부르기만.
+    d.version 이 오면 그 판 칸을 따르고, 없으면 vmake(사장님 10-25). 호출 수·이유는 <작업>/src/vmake_log.json."""
     from tools.calcopy import vmake_clean as VC
     files = [W / f for f in d.get("files") or [] if (W / f).exists()]
-    key = VC.member_key()
-    if PAID_OFF or not key or not files:
-        why = "SHORTEM_NO_PAID — 돈 드는 호출 막음" if PAID_OFF else ("회원 VMake 키 없음 — 흐림으로 대체" if files else "지울 파일 없음")
-        for f in files:
-            VC.log_entry(f.parent, {"file": f.name, "mode": "blur", "ok": True, "calls": 0, "why": why})
-        sys.stderr.write(f"[clean_text] VMake 호출 0회 — {why} ({[f.name for f in files]})\n")
-        return {"mode": "blur", "cleaned": [], "calls": 0, "why": why}
-    r = VC.member_clean(files, key, log=lambda s: print(s, file=sys.stderr))
-    return {"mode": "vmake", "cleaned": r["cleaned"], "calls": r["calls"], "why": "; ".join(f"{k}: {v}" for k, v in r["fail"].items())[:300]}
+    mode = "blur" if PAID_OFF else VC.style_mode(d.get("version"))
+    r = VC.clean(files, mode, log=lambda s: print(s, file=sys.stderr))
+    if r["calls"] == 0:
+        sys.stderr.write(f"[clean_text] VMake 호출 0회 — {r['mode']}: {r['why']} ({[f.name for f in files]})\n")
+    return r
 
 
 def c_materials_draft(W, d):

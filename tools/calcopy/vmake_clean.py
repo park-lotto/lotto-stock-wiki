@@ -5,10 +5,12 @@
 두 길(둘 다 돈이 든다 — VMake Pro 초당 4크레딧):
   · 우리 PC(사장님 키)  = `server_clean` — 파일을 서버로 보내 서버의 키(mix_pipeline._vmake_keys → keyroute)로 Pro. 40분 제한에 걸려 5400초(10-23 rc=124).
   · 회원 PC(회원 키)    = `member_clean` — 회원 VMake 키('app_key:secret', 환경변수 VMAKE_API_KEY)로 이 PC 에서 바로(vmake_client.remove_subtitles).
-    회원 키·크레딧이 없으면 **부르지 않고** 흐림(재료.blur — rules.text_blur_all)으로 대체한다 — 판단 = runner_ops.c_clean_text(과금 경로 동의 규칙).
+    ★10-25 사장님: 박힌 자막 = VMake 로 지운다(흐림 아님) · 회원 PC = 회원 본인 키(~/.shortem/keys/vmake). 키가 없으면 흐림 대체가 아니라 **멈춤**(why/fix).
+    판단 주인 = 이 파일 clean()(판 칸 orig_text.mode + key_source) — runner_ops.c_clean_text 는 부르기만 한다.
   · SHORTEM_NO_PAID=1 이면 어느 길도 부르지 않는다(시험·개발 완주의 '돈 0' 스위치).
 지운 결과: `<이름>.mp4` = 지운 영상 + 원본 소리(같은 이름이라 대본·재료의 src 가 그대로) · `<이름>_orig.mp4` = 원본 · 장부 `<폴더>/vmake_log.json`(호출마다 한 줄).
 
+    PYTHONUTF8=1 py tools/calcopy/vmake_clean.py clean <판> <a.mp4> [b.mp4 …]  # ★주인 길 — 판 orig_text.mode·키 출처(우리 PC=서버 키 / 회원=~/.shortem/keys/vmake)
     PYTHONUTF8=1 py tools/calcopy/vmake_clean.py server <a.mp4> [b.mp4 …]     # 우리 PC — 서버 Pro(돈 듦). 한 번에 여러 개면 순서대로
     PYTHONUTF8=1 py tools/calcopy/vmake_clean.py fetch <폴더> <이름 …>          # 서버에 끝난 *_clean 만 받아 끼우기(40분 제한으로 끊겼을 때)
     PYTHONUTF8=1 py tools/calcopy/vmake_clean.py log <폴더>                     # 장부 보기
@@ -33,9 +35,61 @@ def paid_off() -> bool:
     return os.environ.get("SHORTEM_NO_PAID") == "1"
 
 
+MEMBER_KEY_FILE = Path.home() / ".shortem" / "keys" / "vmake"     # 회원 VMake 키 파일('app_key:secret' 한 줄) — 타입캐스트 키와 같은 방식(사장님 10-25)
+NO_KEY_WHY = "원본에 박힌 자막을 지우려면 VMake 키가 필요합니다"
+NO_KEY_FIX = "설정 화면 '소리' 칸 옆 VMake 키 칸에 본인 VMake 키를 넣고 다시 시작하세요"
+
+
 def member_key() -> str:
-    """회원 VMake 키 자리 한 곳 — 환경변수 VMAKE_API_KEY('app_key:secret'). 회원 PC 설정 화면 → 실행기 환경(숏템MCP 09 가 넘긴다)."""
-    return (os.environ.get("VMAKE_API_KEY") or "").strip()
+    """회원 VMake 키 자리 한 곳 — 환경변수 VMAKE_API_KEY → ~/.shortem/keys/vmake. 값은 묻지도 출력하지도 않는다(사장님 10-25: 회원 PC = 회원 본인 키)."""
+    v = (os.environ.get("VMAKE_API_KEY") or "").strip()
+    if v:
+        return v
+    return MEMBER_KEY_FILE.read_text(encoding="utf-8").strip() if MEMBER_KEY_FILE.exists() else ""
+
+
+def key_source() -> str:
+    """'server' = 우리 PC(서버의 사장님 키 — 서버 접속 키 파일이 있는 PC) · 'member' = 회원 PC(회원 본인 키). CALCOPY_VMAKE_VIA 로 덮을 수 있다."""
+    v = (os.environ.get("CALCOPY_VMAKE_VIA") or "").strip().lower()
+    if v in ("server", "member"):
+        return v
+    from tools.calcopy.hybrid import server_ai
+    return "server" if Path(server_ai.KEY).exists() else "member"
+
+
+def style_mode(version: str | None) -> str:
+    """판 칸 orig_text.mode — 'vmake'(지운다) | 'blur'(흐림). 판에 없으면 'vmake'(사장님 10-25: 박힌 자막 = VMake 로 지운다)."""
+    if not version:
+        return "vmake"
+    from tools.calcopy.hybrid import styles
+    return str(((styles.load(version).get("orig_text") or {}).get("mode")) or "vmake")
+
+
+def clean(files: list, mode: str = "vmake", log=print) -> dict:
+    """박힌 자막 처리 주인 함수 하나 — 판 mode 와 키 출처만 보고 정한다. 반환 {mode, cleaned, calls, why, (fix)}.
+    mode='blur' → 부르지 않음(흐림은 rules.text_blur_all) · 'vmake' → 우리 PC = server_clean, 회원 PC = 회원 키 member_clean,
+    회원 키가 없으면 mode='need_key' + why/fix 두 줄(멈춤 — 흐림으로 몰래 대신하지 않는다)."""
+    files = [Path(f) for f in files if Path(f).exists()]
+    if not files:
+        return {"mode": "none", "cleaned": [], "calls": 0, "why": "지울 파일 없음"}
+    if mode == "blur" or paid_off():
+        why = "SHORTEM_NO_PAID — 돈 드는 호출 막음" if mode != "blur" else "판 orig_text.mode=blur"
+        for f in files:
+            log_entry(f.parent, {"file": f.name, "mode": "blur", "ok": True, "calls": 0, "why": why})
+        return {"mode": "blur", "cleaned": [], "calls": 0, "why": why}
+    if key_source() == "server":
+        r = server_clean(files, log=log)
+        how = "server"
+    else:
+        key = member_key()
+        if not key:
+            for f in files:
+                log_entry(f.parent, {"file": f.name, "mode": "need_key", "ok": False, "calls": 0, "why": NO_KEY_WHY})
+            return {"mode": "need_key", "cleaned": [], "calls": 0, "why": NO_KEY_WHY, "fix": NO_KEY_FIX}
+        r = member_clean(files, key, log=log)
+        how = "member"
+    return {"mode": "vmake", "via": how, "cleaned": r["cleaned"], "calls": r["calls"],
+            "why": "; ".join(f"{k}: {v}" for k, v in r["fail"].items())[:300]}
 
 
 def log_entry(folder: Path, entry: dict) -> None:
@@ -152,6 +206,9 @@ def main(argv=None) -> int:
     cmd = a.pop(0)
     if cmd == "server":
         print(json.dumps(server_clean(a), ensure_ascii=False))
+        return 0
+    if cmd == "clean":            # clean <판> <a.mp4 …> — 판 orig_text.mode + 키 출처로(주인 clean)
+        print(json.dumps(clean(a[1:], style_mode(a[0])), ensure_ascii=False))
         return 0
     if cmd == "fetch":
         print(fetch(Path(a[0]), a[1:]))
