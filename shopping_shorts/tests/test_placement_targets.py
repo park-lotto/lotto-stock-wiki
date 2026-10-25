@@ -290,31 +290,23 @@ def _emph_rows():
             {"line": "N2", "speaker": "narr", "text": "분홍 알갱이마다", "variant": "", "emph": [{"word": "분홍"}]}]                # 나레 노랑 위 주황(벤치 ro1l 쌍)
 
 
-def test_emph_color_rule_drops_orange_on_red_hook():
-    """1차 팩(ititemlog — 강조 후보 주황 #F07A09 하나)을 쓴 업그레이드 판: 훅 빨강 위 주황은 색상환 30° 미만 → 강조 없음 + 로그."""
+@pytest.mark.parametrize("pack,hook_emph", [("ititemlog", []),                                   # 1차 팩(주황 하나) — 훅 빨강 위 주황 색상각<30° → 강조 없음+로그
+                                            ("ititemlog_v2", [{"word": "연어", "color": "#E78DC3"}])])   # v2 팩 — 다음 후보 분홍(1a6bb76d7)
+def test_emph_color_rule_on_red_hook(pack, hook_emph):
+    """업그레이드 판 강조색(㉒·㉘): 훅 빨강 위 주황은 안 된다 — 팩 후보에 따라 강조 없음(로그) 또는 색상각 ≥30° 다음 후보. 노랑↔주황은 남는다."""
     import copy
     from tools.calcopy.hybrid import styles as ST
     st = copy.deepcopy(ST.load("잇템로그판_v2"))
     assert st.get("upgrades"), "업그레이드 판이어야 규칙이 돈다"
-    st["caption"]["pack"] = "ititemlog"
-    assert (PL._pack_of(st).get("mark") or {}).get("colors") == ["#F07A09"]
+    st["caption"]["pack"] = pack
     out, log = _emph_rows(), []
     PL.emph_color_step(out, st, log)
-    assert out[0]["emph"] == [], (out, log)
-    assert any("N1" in x and "색상환" in x for x in log), log
+    assert out[0]["emph"] == hook_emph, (out, log)
+    for e in out[0]["emph"]:
+        assert e["color"] != "#F07A09" and (PL.hue_gap("#E30004", e["color"]) is None or PL.hue_gap("#E30004", e["color"]) >= 30)
+    if not hook_emph:
+        assert any("N1" in x and "색상환" in x for x in log), log
     assert out[1]["emph"] == [{"word": "분홍", "color": "#F07A09"}]          # 벤치가 쓴 노랑↔주황은 남는다(LCh 39.6°)
-
-
-def test_emph_color_rule_picks_pink_with_v2_pack():
-    """v2 팩(ititemlog_v2 — 후보에 분홍 #E78DC3, 1a6bb76d7): 훅 빨강 위 주황 대신 다음 후보 분홍으로 바뀐다(강조는 남는다)."""
-    from tools.calcopy.hybrid import styles as ST
-    st = ST.load("잇템로그판_v2")
-    assert "#E78DC3" in ((PL._pack_of(st).get("mark") or {}).get("colors") or [])
-    out, log = _emph_rows(), []
-    PL.emph_color_step(out, st, log)
-    assert out[0]["emph"] == [{"word": "연어", "color": "#E78DC3"}], (out, log)
-    assert PL.hue_gap("#E30004", "#E78DC3") is None or PL.hue_gap("#E30004", "#E78DC3") >= 30
-    assert out[1]["emph"] == [{"word": "분홍", "color": "#F07A09"}]
 
 
 def test_emph_color_rule_off_for_first_pan():

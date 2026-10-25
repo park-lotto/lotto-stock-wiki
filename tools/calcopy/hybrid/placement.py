@@ -221,6 +221,31 @@ def _sfx_table(style: dict) -> dict:
     return out
 
 
+def _sfx_counts(style: dict) -> dict:
+    """(판단 주인: 벤치 효과음 수의 하한·상한, 표준 ㉞) 신호표 편마다 sfx_count{sure(확정 — 판독 눈 또는 귀 확인), pending(귀 확인 대기)}.
+    신호표에 sfx_count 가 없으면 cand_kept 의 ear_pending 표시로 세고, 그것도 없으면 남은 후보 전부를 확정으로 본다(옛 신호표).
+    하한 = sure · 상한 = sure+pending. 1차 판은 본보기 편 시각 그대로(_sfx_table 자리 목록 = 상한), 업그레이드 밀도 목표는 줄판독 sfx(눈 = 확정) 기준."""
+    p, prefix = sfx_events_path(style)
+    if not p or not p.exists():
+        return {}
+    out = {}
+    for k, v in json.loads(p.read_text(encoding="utf-8")).items():
+        if k == "_meta" or not isinstance(v, dict):
+            continue
+        if prefix:
+            if not k.startswith(prefix + "/"):
+                continue
+            k = k.split("/", 1)[1]
+        sc = v.get("sfx_count")
+        if isinstance(sc, dict) and isinstance(sc.get("sure"), int):
+            out[k] = {"sure": sc["sure"], "pending": int(sc.get("pending") or 0)}
+            continue
+        kept = v["cand_kept"] if isinstance(v.get("cand_kept"), list) else (v.get("cand") or [])
+        pend = sum(1 for e in kept if isinstance(e, dict) and e.get("ear_pending"))
+        out[k] = {"sure": len(kept) - pend, "pending": pend}
+    return out
+
+
 def count(style: dict) -> dict:
     """벤치 줄판독(덩어리) + 효과음 신호 표 → 편마다·칸마다 빈도. 반환 꼴 = 판 설정 placement.counted."""
     B = style["bench"]
@@ -228,6 +253,7 @@ def count(style: dict) -> dict:
     if not files:
         raise SystemExit(f"줄판독이 없다: {B['line_reads']}")
     sfx = _sfx_table(style)
+    sfx_n = _sfx_counts(style)
     allslot = defaultdict(lambda: {"n": 0, "enter": Counter(), "emph": 0})
     videos = []
     crit = count_filter(style)
@@ -268,7 +294,8 @@ def count(style: dict) -> dict:
         videos.append({"id": vid, "n": len(rows),
                        "slots": {k: {"n": s["n"], "enter": dict(s["enter"].most_common()), "emph": s["emph"]} for k, s in sl.items()},
                        "stickers": dict(stick), "sticker_lex": {k: dict(c) for k, c in stick_lex.items()}, "variants": dict(variants),
-                       "sfx": sfx.get(vid, []), "no_caption": len(d.get("no_caption") or []),
+                       "sfx": sfx.get(vid, []), **({"sfx_count": sfx_n[vid]} if vid in sfx_n else {}),
+                       "no_caption": len(d.get("no_caption") or []),
                        "transitions": dict(trans), "n_trans": n_trans, "roles": dict(roles), "sfx_lines": sfx_lines})
     nv = len(videos)
     tr_all = Counter(); n_tr_all = sum(v["n_trans"] for v in videos)
@@ -1382,11 +1409,18 @@ def check_place(placed: dict, style: dict) -> dict:
                     "bench_emph": round(rs["emph"] / rs["n"], 2), "ours_emph": round(sum(1 for r in mine if r.get("emph")) / len(mine), 2), "n": len(mine)}
     rep["stickers"] = {"bench": (ref or {}).get("stickers"), "ours": dict(Counter(s["kind"] for r in rows for s in r["stickers"]))}
     rep["sfx"] = {"bench": len((ref or {}).get("sfx") or []), "ours": len(placed["sfx"])}
+    sc, sfx_bad = (ref or {}).get("sfx_count"), []
+    if sc and not (ref or {}).get("sfx_lines") and (style["placement"].get("rules") or {}).get("sfx") and not placed.get("targets"):
+        rep["sfx"]["bench_count"] = sc          # 옛 길(신호표 자리) 1차 판: 우리 발 수 = 하한(확정)~상한(확정+대기) 안 · 판 max 로 줄인 건 봐준다(㉞)
+        cap = int(((style["placement"].get("rules") or {}).get("sfx") or {}).get("max", 99))
+        lo, hi = min(sc["sure"], cap), sc["sure"] + sc["pending"]
+        if not lo <= len(placed["sfx"]) <= hi:
+            sfx_bad.append(f"효과음 {len(placed['sfx'])}발 — 본보기 신호표 확정 {sc['sure']}~확정+대기 {hi} 밖(판 max {cap})")
     # 덩어리 수가 적으면 비율이 굵게 갈린다(우리 3덩어리 칸에서 1개 = 33%) → 칸 크기에 맞춘 허용 오차
     tol = {k: 0.5 / max(1, v["n"]) + 0.15 for k, v in rep.items() if isinstance(v, dict) and "n" in v}
     ok = all(max(abs(v["ours"].get(e, 0) - v["bench"].get(e, 0)) for e in set(v["bench"]) | set(v["ours"])) <= tol[k]
              for k, v in rep.items() if k in tol)
-    bad = []
+    bad = list(sfx_bad)
     # 전환(A1): 본보기 편 줄판독에 전환 칸이 있으면 종류마다 (벤치 비율 × 우리 컷 경계 수) ±1
     tr = placed.get("transitions") or []
     ours_tr = Counter(x["kind"] for x in tr)

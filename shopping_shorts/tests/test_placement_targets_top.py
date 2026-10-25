@@ -415,3 +415,22 @@ def test_anchor_reaches_locate_target():
     seen = []
     PL.place(_rows(), st, "ep13", locate=lambda tg, row, s: seen.append(tg) or {"x": 50, "y": 50, "w": 90, "h": 90, "conf": 0.9, "face_clear": True})
     assert seen and seen[0].get("anchor") == "mouth", seen
+
+
+def test_sfx_count_sure_pending_bounds(tmp_path, monkeypatch):
+    """㉞ 신호표 sfx_count{sure, pending} → counted.videos[*].sfx_count · 옛 길(신호표 자리) 1차 판 check = 확정~확정+대기 안."""
+    p = tmp_path / "sfx_events.json"
+    p.write_text(json.dumps({"_meta": {}, "v1": {"cand_kept": [{"t": 1, "near": {"cap": 0.1}}, {"t": 3, "near": {"cap": 0.1}, "ear_pending": True}]},
+                             "v2": {"sfx_count": {"sure": 1, "pending": 2}, "cand_kept": []}}), encoding="utf-8")
+    monkeypatch.setattr(PL, "sfx_events_path", lambda st: (p, None))
+    st = ST.load("잇템로그판")
+    c = PL._sfx_counts(st)
+    assert c == {"v1": {"sure": 1, "pending": 1}, "v2": {"sure": 1, "pending": 2}}
+    ref = {"id": "v1", "sfx": ["cap", "cap"], "sfx_count": {"sure": 1, "pending": 1}, "slots": {}, "stickers": {}}
+    st2 = copy.deepcopy(st)
+    st2["placement"]["counted"] = {"videos": [ref]}
+    st2["placement"]["rules"]["sfx"] = {"max": 3}
+    for n, ok in ((0, False), (1, True), (2, True), (3, False)):
+        placed = {"reference": "v1", "rows": [], "sfx": [{"t": i} for i in range(n)]}
+        bad = [b for b in PL.check_place(placed, st2)["bad"] if "신호표" in b]
+        assert (not bad) == ok, (n, bad)
