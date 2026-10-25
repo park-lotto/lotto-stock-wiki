@@ -742,15 +742,16 @@ def _real_cut(src: Path, t: float, y0: int, y1: int, w: int, corr_max: float = 0
     import numpy as np
     H = max(16, y1 - y0)
     import subprocess
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{max(0.0, t - 1 / FPS):.4f}", "-i", str(src), "-vf",
-                          f"fps={FPS},crop={w}:{H}:0:{y0},scale=90:-2,format=gray", "-frames:v", "2", "-f", "rawvideo", "-"],
+    K = 6      # 경계 앞뒤 6프레임을 읽어 경계 쪽 이웃 쌍 3개(±1프레임) 중 가장 낮은 상관을 쓴다(-ss 찾기가 한두 프레임 어긋나도 경계를 놓치지 않게 — ep09 j2B 14.97 이 같은 프레임 두 장으로 상관 1.00 이 나왔다)
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{max(0.0, t - 3 / FPS):.4f}", "-i", str(src), "-vf",
+                          f"fps={FPS},crop={w}:{H}:0:{y0},scale=90:-2,format=gray", "-frames:v", str(K), "-f", "rawvideo", "-"],
                          capture_output=True, stdin=subprocess.DEVNULL).stdout
-    if len(raw) < 2 or len(raw) % 2:
+    n = len(raw) // K
+    if n < 2 or len(raw) % K:
         return True
-    a, b = (np.frombuffer(raw[:len(raw) // 2], np.uint8).astype(float), np.frombuffer(raw[len(raw) // 2:], np.uint8).astype(float))
-    if a.std() < 1e-6 or b.std() < 1e-6:
-        return True
-    return float(np.corrcoef(a, b)[0, 1]) < corr_max
+    F = [np.frombuffer(raw[k * n:(k + 1) * n], np.uint8).astype(float) for k in range(K)]
+    cs = [float(np.corrcoef(a, b)[0, 1]) for a, b in list(zip(F, F[1:]))[1:4] if a.std() > 1e-6 and b.std() > 1e-6]
+    return (min(cs) < corr_max) if cs else True
 
 
 def _src_cuts(src: Path, y0: int, y1: int, w: int) -> list[float]:
@@ -770,9 +771,12 @@ def _src_cuts(src: Path, y0: int, y1: int, w: int) -> list[float]:
     return ts
 
 
+MIN_PIECE_SEC = 0.4   # 컷을 원본 장면 경계로 나눈 조각이 이보다 짧으면 번쩍임
+
+
 def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
     """렌더 전 관문 ③(10-25 잇템로그 05·09 번쩍임): 계획된 컷마다 원본 [ss, ss+길이] 안(가장자리 포함, 맨 앞 1프레임 제외)에
-    장면 경계가 있으면 막는다. 옛 shot_starts(절대 문턱 25)는 차 22~31 인 진짜 편집점을 놓쳤고 slivers 는 가장자리 0.2초만 봤다.
+    장면 경계로 나눈 조각 중 MIN_PIECE_SEC(0.4초)보다 짧은 것이 있으면 막는다. 옛 shot_starts(절대 문턱 25)는 차 22~31 인 진짜 편집점을 놓쳤고 slivers 는 가장자리 0.2초만 봤다.
     x 크롭은 무시하고 세로 범위만 쓴다(크롭 안 편집점만 보려면 원본 가로 전체와 다를 수 있음 — 거짓 경보는 눈으로 확인)."""
     src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
     if not src_dir:
@@ -790,8 +794,10 @@ def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
         y0, y1 = (int(cr[1]), int(cr[1] + cr[3])) if isinstance(cr, list) and len(cr) == 4 else (0, int(h))
         y1 = min(y1, int(h))
         hit = [t for t in _src_cuts(src, y0, y1, int(w)) if ss + 1.5 / FPS < t <= end - 1 / FPS + 1e-3]
-        if hit:
-            bad.append(f"컷 경계 {c['line']} {c['src']} ss={ss:.2f}~{end:.2f} 안에 원본 장면 경계 {[round(t, 2) for t in hit]}초")
+        pts = [ss] + hit + [end]
+        short = [round(b - a, 2) for a, b in zip(pts, pts[1:]) if b - a < MIN_PIECE_SEC - 1e-3]
+        if hit and short:      # 양쪽이 긴 조각이면 원본 자체의 이어진 편집이라 통과 — 짧은 조각(번쩍임)만 막는다(오류기록 55: 0.3초 꼬리도 결함)
+            bad.append(f"컷 경계 {c['line']} {c['src']} ss={ss:.2f}~{end:.2f} 안 원본 장면 경계 {[round(t, 2) for t in hit]}초 → 짧은 조각 {short}초(<{MIN_PIECE_SEC})")
     return bad
 
 
