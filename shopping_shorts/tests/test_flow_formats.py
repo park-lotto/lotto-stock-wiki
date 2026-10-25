@@ -223,7 +223,7 @@ def test_gate_fail_stops_after_two_fixes():
     assert res["status"] == "stop", tr[-3:]
     assert sum(1 for t in tr if any(r.startswith("final_fix_") for r in t[3])) == 2
     assert sum(1 for t in tr if "check" in t[2]) == 3
-    assert "음량" in res["why"]
+    assert "음량" in st2["stopped"]["detail"] and "음량" not in res["why"]     # 속사정은 기록에만 — 회원 문구엔 검사 항목 안 싣는다(10-26)
     assert not any(t[0] == "done" for t in tr)
 
 
@@ -231,7 +231,7 @@ def test_eye_triangle_is_not_pass():
     eye = {**E_OK, "E3": {"v": "△", "memo": "애매"}}
     st = F.start("https://youtu.be/BENCH1", "키치잇판", "sid")
     tr, res, st2 = walk(F, st, {"eye": eye})
-    assert res["status"] == "stop" and "E3" in res["why"]
+    assert res["status"] == "stop" and "E3" in st2["stopped"]["detail"] and "E3" not in res["why"]
 
 
 def test_runner_check_uses_quality_gate_and_force_fail(tmp_path, monkeypatch):

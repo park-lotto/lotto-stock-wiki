@@ -164,7 +164,7 @@ JSON 하나: {"product_id": "…", "name": "…", "why": "근거 한 줄", "cate
 
 PRODUCT_BEST = """너는 대체 제품 고르기 담당이다(같은 제품이 없으면 쿠팡에서 후기 많고 제일 좋은 제품). 연예인이 쓴 것과 **같은 종류·같은 쓰임**인 쿠팡 후보 중
 후기(rating 의 괄호 숫자) 많고 별점 높은 것 하나를 골라라. 광고(is_ad)·묶음 이상한 것은 뒤로. 같은 종류가 없으면 product_id ''.
-JSON 하나: {"product_id": "…", "name": "…", "why": "고른 이유 한 줄(후기 수·별점)", "category": "화장품|생활용품|식품|의류|의약품|의료기기|기타"}"""
+JSON 하나: {"product_id": "…", "name": "…", "why": "고른 이유 한 줄(후기 수·별점)", "member_why": "회원에게 보일 쉬운 말 한 줄 — 종류·색·모양이 어떻게 비슷한지(예 '같은 기미 앰플이고 용량·병 모양이 비슷해요')", "category": "화장품|생활용품|식품|의류|의약품|의료기기|기타"}"""
 
 RESEARCH_GIVEN = """
 
@@ -288,14 +288,44 @@ def _coupang_down(m: dict, key: str = "coupang") -> None:
     """쿠팡 검색이 아예 안 됐으면(runner c_coupang search_failed — 회선 막힘 등) '제품 없음'으로 고객에게 다른 영상을 권하지 않는다(사장님 10-26).
     멈춤 → 다시 시도(retry)하면 검색한 단계(_asker)부터 이어 간다."""
     if (m.get(key) or {}).get("search_failed"):
-        raise _Stop("쿠팡 검색이 잠시 막혔습니다", "몇 분 뒤 다시 시도하면 제품 확인부터 이어 갑니다")
+        raise _Stop("쿠팡 검색이 잠시 막혀 있어요", "몇 분 뒤 다시 시도해 주시면 제품 확인부터 이어 갈게요", auto=True)
 
 
 class _Stop(Exception):
-    """멈춤. retry = 다시 시도하면 이어 갈 세부 단계(받기 실패처럼 잠깐의 문제 — 앞 단계 유튜브 요청을 다시 쓰지 않게)."""
-    def __init__(self, why: str, fix: str = "", retry: str | None = None, final: bool = False):
+    """멈춤. retry = 다시 시도하면 이어 갈 세부 단계(받기 실패처럼 잠깐의 문제 — 앞 단계 유튜브 요청을 다시 쓰지 않게).
+    auto = 잠깐의 문제라 회원에게 알리기 전에 **스스로 한 번** 다시 해 본다(사장님 10-26 '회원을 당황하게 하지 마라').
+    detail = 속사정(검사 항목·오류 글) — 기록(st.log·stopped.detail)에만, 회원 문구에는 안 싣는다."""
+    def __init__(self, why: str, fix: str = "", retry: str | None = None, final: bool = False, auto: bool = False, detail: str = "",
+                 origin_missing: bool = False):
         super().__init__(why)
-        self.why, self.fix, self.retry, self.final = why, fix, retry, final
+        self.why, self.fix, self.retry, self.final, self.auto, self.detail = why, fix, retry, final, auto, detail
+        self.origin_missing = origin_missing
+
+
+# ── 회원에게 가는 말(사장님 10-26 "회원을 당황하게 하면 안 된다 — 나는 대처가 되지만 회원은 못 한다") ──────────
+# 판단 주인 = member_ok 한 곳: 내부 용어·'멈춤'·다음 행동 없는 문장을 거른다. 걸리면 _out 이 쉬운 일반 문구로 바꾸고 원문은 기록에만.
+AGAIN = "다시 시도해 주시면 이어 갈게요"
+MEMBER_BAD = ("멈춤", "검사", "retry", "shortem_", "렌더", "재료", "검수", "봇 확인", "지문", "개발팀", "부르세요", "확인 답", "판정", "세부 단계",
+              "단계를", "phase", "look", "관문", "runner", "실행기", "Traceback", "error", "Error", "None", "{", "}")
+MEMBER_NEXT = re.compile(r"(주세요|까요|게요|있어요|드릴게요|갑니다)")
+NO_SIMILAR = ("쿠팡에서 비슷한 제품도 찾지 못했어요", "제품 이름을 알려 주시면 그 이름으로 찾아 이어 갈게요 · 다른 소재로 갈까요?")
+NO_ORIGIN = ("원본을 못 찾았어요", "원본 영상 주소를 주시면 바로 만들 수 있어요 · 다른 소재로 갈까요?")
+ALT_NOTICE = "같은 물건을 찾지 못해서 가장 비슷한 제품으로 골랐어요"
+
+
+def member_ok(text: str, need_next: bool = False) -> bool:
+    """회원에게 보여도 되는 문장인가 — 비어 있지 않고, 내부 용어·'멈춤'이 없고, (need_next 면) 다음 행동(…주세요·…까요·…게요)이 있다."""
+    t = str(text or "").strip()
+    if not t or any(b in t for b in MEMBER_BAD):
+        return False
+    return bool(MEMBER_NEXT.search(t)) if need_next else True
+
+
+def member_stop(why: str, fix: str) -> tuple[str, str]:
+    """멈춤 문구를 회원용으로 — 둘 다 괜찮으면 그대로, 아니면 쉬운 일반 문구(원문은 호출한 쪽이 기록에 남긴다)."""
+    w = why if member_ok(why) else "만드는 중에 문제가 생겼어요"
+    f = fix if member_ok(fix, need_next=True) else AGAIN + " · 계속 안 되면 숏템 피드백으로 알려 주세요"
+    return w, f
 
 
 ASKER_IN_MAX = 60_000   # 다시 시도용으로 기억할 입력 크기 상한(글자) — 넘으면 그 단계 입력 없이 다시(대개 do 를 다시 내는 단계라 입력이 필요 없다)
@@ -322,14 +352,26 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
         h = FORMAT_PHASES.get(_fmt(st), {}).get(ph) or PHASES.get(ph)
         m_in, rp_in = m, rp
         if h is None:
-            return _out(st, "stop", ph, why="알 수 없는 단계입니다", fix="")
+            return _out(st, "stop", ph, why="만드는 중에 문제가 생겼어요", fix="숏템 피드백으로 알려 주시면 확인해 드릴게요", detail="알 수 없는 세부 단계 " + str(ph))
         try:
             r = h(st, m, rp, user)
         except _Stop as e:
             # 뿌리(10-22): 멈춤 34곳 중 5곳만 이어 가기 → 고칠 때마다 원본 찾기부터 20~50분 다시. 이제 정한 retry 가 없으면 **마지막으로 일을 시킨 단계**부터(같은 do·질문을 다시)
             retry = None if e.final else (e.retry or st.get("_asker"))
+            if e.detail:
+                st["log"].append(f"멈춤 속사정({ph}): {str(e.detail)[:400]}")
+            ak = f"{retry}:{e.why}"
+            if e.auto and retry and not (st.get("auto_tries") or {}).get(ak):      # 회원에게 알리기 전에 스스로 한 번(잠깐의 문제)
+                st.setdefault("auto_tries", {})[ak] = 1
+                st["log"].append(f"스스로 다시 시도: {e.why} → {retry}")
+                st["phase"] = retry
+                m, rp, user = {}, {}, {}
+                if retry == st.get("_asker") and st.get("_asker_in"):
+                    m, rp = st["_asker_in"].get("m") or {}, st["_asker_in"].get("rp") or {}
+                continue
             st["phase"] = "stopped"
-            st["stopped"] = {"why": e.why, "fix": e.fix, **({"retry": retry} if retry else {})}
+            st["stopped"] = {"why": e.why, "fix": e.fix, **({"retry": retry} if retry else {}), **({"detail": str(e.detail)[:400]} if e.detail else {}),
+                             **({"origin_missing": True} if e.origin_missing else {})}
             return _out(st, "stop", ph, why=e.why, fix=e.fix, retry_ok=True if retry else None)
         m, rp, user = {}, {}, {}           # 한 번 먹은 입력은 다음 단계로 넘기지 않는다
         if "goto" in r:
@@ -353,7 +395,7 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
         if "done" in r:
             st["phase"] = "done"
             return _out(st, "done", "done", **r["done"])
-    return _out(st, "stop", st.get("phase"), why="단계가 돌기만 합니다", fix="")
+    return _out(st, "stop", st.get("phase"), why="만드는 중에 문제가 생겼어요", fix="숏템 피드백으로 알려 주시면 확인해 드릴게요", detail="세부 단계가 40번 돌기만 함")
 
 
 def _out(st: dict, status: str, phase: str, **kw) -> dict:
@@ -361,10 +403,20 @@ def _out(st: dict, status: str, phase: str, **kw) -> dict:
     traps = (TRAPS_FOREIGN if _fmt(st) == "해외원본형" else TRAPS).get(stage["key"], [])
     res = {"status": status, "stage": stage, "message": _msg(st, phase), "traps": traps, "state": st}
     for k, v in kw.items():
-        if v is not None:
+        if v is not None and k != "detail":
             res[k] = v
+    if kw.get("detail"):
+        st["log"].append(f"멈춤 속사정: {str(kw['detail'])[:400]}")
     if status == "stop":
-        res["message"] = f"멈춤: {kw.get('why')}"
+        w, f = member_stop(str(kw.get("why") or ""), str(kw.get("fix") or ""))
+        if (w, f) != (kw.get("why"), kw.get("fix")):
+            st["log"].append(f"회원 문구로 바꿈: {kw.get('why')} / {kw.get('fix')}")
+        res["why"], res["fix"] = w, f
+        res["message"] = f"{w} — {f}"
+    elif st.get("notice") and not st.get("_notice_shown"):     # 회원에게 한 번 알릴 것(비슷한 제품으로 골랐다 등) — 진행 한 줄 뒤에
+        st["_notice_shown"] = True
+        res["message"] = f"{res['message']} · {st['notice']}"
+        res["notice"] = st["notice"]
     return res
 
 
@@ -373,17 +425,17 @@ def _tries(st: dict, key: str, limit: int) -> int:
     st["tries"][key] = n
     if n > limit:
         st["log"].append(f"고치기 한도: {key} {limit}번")
-        raise _Stop("여러 번 고쳐도 통과하지 못했습니다", "다시 시도하면 멈춘 곳부터 이어 갑니다")
+        raise _Stop("여러 번 고쳐 봤지만 아직 마무리가 안 됐어요", "다시 시도해 주시면 멈춘 곳부터 이어 갈게요")
     return n
 
 
 def _reply(rp: dict, rid: str, need: tuple = ()) -> dict:
     a = rp.get(rid)
     if not isinstance(a, dict):
-        raise _Stop("확인 답을 받지 못했습니다", "다시 시도하면 멈춘 곳부터 이어 갑니다")
+        raise _Stop("확인 결과를 받지 못했어요", "다시 시도해 주시면 멈춘 곳부터 이어 갈게요", auto=True)
     miss = [k for k in need if k not in a]
     if miss:
-        raise _Stop("확인 답이 덜 채워졌습니다", "다시 시도하면 멈춘 곳부터 이어 갑니다")
+        raise _Stop("확인 결과가 덜 채워졌어요", "다시 시도해 주시면 멈춘 곳부터 이어 갈게요", auto=True)
     return a
 
 
@@ -406,13 +458,13 @@ def ph_setup_check(st, m, rp, u):
     env = m.get("env") or {}
     if env.get("error"):
         st["log"].append("준비 확인 실패: " + str(env["error"])[:300])
-        raise _Stop("이 PC 준비 확인이 실패했습니다", "숏템 준비 점검(shortem_setup)을 한 번 한 뒤 다시 시도해 주세요")
+        raise _Stop("이 PC 준비가 아직 덜 됐어요", "숏템 준비 점검을 한 번 한 뒤 다시 시도해 주세요")
     voice = (_style(st["version"]).get("voice") or {}).get("voice_id", "")
     need = "elevenlabs" if voice.startswith("kr-mina") else "typecast"
     if not (env.get("keys") or {}).get(need) and not env.get("dev"):
-        raise _Stop("목소리 키가 없습니다", f"설정 화면 '소리' 칸에 {'일레븐랩스' if need == 'elevenlabs' else '타입캐스트'} 키를 넣어 주세요")
+        raise _Stop("목소리 키가 없어요", f"설정 화면 '소리' 칸에 {'일레븐랩스' if need == 'elevenlabs' else '타입캐스트'} 키를 넣어 주세요")
     if float(env.get("disk_gb") or 99) < 1.5:
-        raise _Stop("PC 저장 공간이 모자랍니다(1편에 1.5GB)", "C 드라이브 공간을 비워 주세요")
+        raise _Stop("PC 저장 공간이 모자라요(1편에 1.5GB)", "C 드라이브 공간을 비운 뒤 다시 시도해 주세요")
     st["env"] = {k: env.get(k) for k in ("keys", "dev", "cache", "asr")}
     return {"goto": "bench"}
 
@@ -425,7 +477,7 @@ def ph_bench(st, m, rp, u):
 def ph_bench_got(st, m, rp, u):
     b = m.get("bench") or {}
     if b.get("error"):
-        raise _Stop("영상을 받지 못했습니다", "영상 주소가 맞는지, 또는 유튜브 로그인 연결을 확인해 주세요")
+        raise _Stop("영상을 받지 못했어요", "영상 주소가 맞는지, 유튜브 로그인 연결이 되어 있는지 확인해 주세요", auto=True)
     st["bench"] = {k: b.get(k) for k in ("id", "title", "channel", "date", "dur", "desc", "sheet", "big")}
     st["bench_lines"] = b.get("lines") or []
     return {"review": [_rv("origin_read", ORIGIN_READ + "\n\n제목: " + str(b.get("title")) + "\n채널: " + str(b.get("channel")) +
@@ -438,11 +490,11 @@ def ph_bench_got(st, m, rp, u):
 def ph_origin_read(st, m, rp, u):
     r = _reply(rp, "origin_read", ("celeb", "queries", "is_shopping"))
     if not r.get("is_shopping"):
-        raise _Stop("연예인이 쓰는 물건이 나오는 영상이 아닙니다", "연예인 쇼핑 쇼츠 주소를 주세요", final=True)
+        raise _Stop("연예인이 쓰는 물건이 나오는 영상이 아니에요", "연예인 쇼핑 쇼츠 주소를 주세요", final=True)
     st["read"] = r
     label = re.sub(r"^\s*출처\s*[:：]?\s*", "", r.get("source_label") or "").strip()
     if not label:      # 출처 표기 = 원본으로 가는 길(사장님 10-22 "무조건 표기해야 문제가 안 생긴다 · 없으면 패스")
-        raise _Stop("출처 표기가 없는 쇼츠라 건너뜁니다", "화면이나 설명란에 출처가 적힌 쇼츠 주소를 주세요")
+        raise _Stop("화면과 설명란 어디에도 출처가 없는 쇼츠라 원본을 찾을 수 없어요", "출처가 적힌 다른 쇼츠 주소를 주세요 · 다른 소재로 갈까요?")
     celeb = str(r.get("celeb") or "")
     sk = str(r.get("source_kind") or "")
     if sk.startswith("sns") or re.search(r"인스타|instagram|틱톡|tiktok|블로그|blog", label, re.I):
@@ -470,7 +522,7 @@ def ph_src_got(st, m, rp, u):
     """출처 채널 영상 목록 → 후보 조사(origin_probe: 한 번 요청으로 날짜·자막·스토리보드). 채널을 못 찾으면 검색 길로."""
     f = m.get("src") or {}
     if f.get("blocked"):
-        raise _Stop("유튜브가 지금 이 PC 요청을 막았습니다(봇 확인)", "유튜브 로그인 연결을 확인하거나 잠시 뒤 다시 이어서 부르세요")
+        raise _Stop("유튜브가 잠시 요청을 막았어요", "잠시 뒤 다시 시도해 주시면 이어서 찾을게요 · 유튜브 로그인 연결도 확인해 주세요", auto=True)
     B, r = st["bench"], st["read"]
     cands = [t for t in f.get("titles") or [] if t["id"] != B.get("id") and (t.get("dur") or 0) > (B.get("dur") or 0) + 20]
     # 제목에 연예인 이름·장면·제품 낱말이 든 영상 먼저, 그다음 최신순(98 #58: 선우용여 '여주 아울렛' 원본은 반년 전 영상이라 최신 10편에 없었다 ·
@@ -486,6 +538,8 @@ def ph_src_got(st, m, rp, u):
     st["src_channel"] = {**ch, "how": f.get("how")}
     st["src"] = {**(st.get("src") or {}), "how": f.get("how"), "channel": ch.get("name") or ", ".join(sorted({c.get("channel") or "" for c in cands} - {""}))[:80]}
     st["mixed"] = [{**c, "channel": c.get("channel") or ch.get("name")} for c in cands]
+    st["src_mixed"] = st["mixed"]
+    st.setdefault("origin_tried", []).append("src")
     terms = [w for w in (r.get("scene_words") or []) + (r.get("product_words") or []) if w][:8]
     return {"do": [{"id": "probe", "cmd": "origin_probe", "ids": [c["id"] for c in cands], "before": str(B.get("date") or ""), "terms": terms,
                     "max_sheets": 4}], "then": "probe_got"}
@@ -501,22 +555,48 @@ JSON 하나: {"origin_id": "유튜브 id 또는 ''", "origin_t": [초, …], "wh
 def ph_probe_got(st, m, rp, u):
     p = m.get("probe") or {}
     if p.get("blocked") and not (p.get("matched") or p.get("sheets")):
-        raise _Stop("유튜브가 지금 이 PC 요청을 막았습니다(봇 확인)", "유튜브 로그인 연결을 확인하거나 잠시 뒤 다시 이어서 부르세요")
+        raise _Stop("유튜브가 잠시 요청을 막았어요", "잠시 뒤 다시 시도해 주시면 이어서 찾을게요 · 유튜브 로그인 연결도 확인해 주세요", auto=True)
+    st["probe_sb"] = {"sheets": p.get("sheets") or {}, "hits": p.get("hits") or {}, "dates": p.get("dates") or {}}
     if p.get("matched"):                                     # 벤치 말 = 원본 말 → 지금까지의 판정 그대로
         return ph_subs_got(st, {"subs": {"matched": p["matched"], "hits": p.get("hits") or {}}}, rp, u)
-    sheets = p.get("sheets") or {}
-    if not sheets:
+    if not (p.get("sheets") or {}):
         st["log"].append("출처 채널 후보에 지문·미리보기가 없어 검색 길로")
         return {"goto": "search"}
-    hits = p.get("hits") or {}
+    return _sb_review(st)
+
+
+def _sb_review(st) -> dict:
+    """출처 채널 후보의 미리보기(스토리보드) 시트로 같은 사람·옷·제품·장소 대조(02 §2-1 끝줄)."""
+    pb = st.get("probe_sb") or {}
+    sheets, hits, dates = pb.get("sheets") or {}, pb.get("hits") or {}, pb.get("dates") or {}
+    st.setdefault("origin_tried", []).append("sb")
     order = sorted(sheets, key=lambda v: -len({h["term"] for h in hits.get(v) or []}))[:4]
     st["sb"] = {v: sheets[v] for v in order}
     B = st["bench"]
-    title = {c["id"]: c.get("title") for c in st.get("mixed") or []}
+    title = {c["id"]: c.get("title") for c in (st.get("src_mixed") or st.get("mixed") or [])}
     return {"review": [_rv("origin_sb", ORIGIN_SB + f"\n\n벤치: {B.get('title')} ({B.get('date')})\n후보(그림 순서): " +
-                           " / ".join(f"{v} {title.get(v)} ({(p.get('dates') or {}).get(v)})" for v in order),
+                           " / ".join(f"{v} {title.get(v)} ({dates.get(v)})" for v in order),
                            ([_img(B["sheet"])] if B.get("sheet") else []) + [_img(sheets[v]["file"]) for v in order],
                            need=("origin_id", "origin_t"))], "then": "sb_pick"}
+
+
+def _origin_next(st, why: str) -> dict:
+    """원본 찾기의 한 길이 빈손이면 **02_원본찾기 순서대로 다음 길**(사장님 10-26 '연예인 편은 출처가 다 있어 못 찾을 수가 없다 — 방법을 끝까지').
+    ① 출처 채널 지문(src) → ② 출처 채널 미리보기 대조(sb) → ③ 검색 길(search: 본인 채널·방송사·그 밖) → ④ 화면 대조(vis) → 그래도 없을 때만 회원에게
+    '원본을 못 찾았어요 — 주소를 주시면 바로 · 다른 소재?'(주소를 받으면 ph_stopped → _given_origin 으로 바로 이어 간다)."""
+    st["log"].append(f"원본 찾기: {why} → 다음 길")
+    tried = st.setdefault("origin_tried", [])
+    st.pop("origin", None)
+    pb = st.get("probe_sb") or {}
+    left = {v: x for v, x in (pb.get("sheets") or {}).items() if v not in (st.get("sb") or {})}
+    if "sb" not in tried and left:
+        st["probe_sb"] = {**pb, "sheets": left}
+        return _sb_review(st)
+    if "search" not in tried:
+        return {"goto": "search"}
+    if "vis" not in tried and st.get("vis"):
+        return {"goto": "vis_get"}
+    raise _Stop(*NO_ORIGIN, origin_missing=True, detail="시도한 길: " + ", ".join(tried))
 
 
 def ph_sb_pick(st, m, rp, u):
@@ -524,8 +604,8 @@ def ph_sb_pick(st, m, rp, u):
     oid = str(a.get("origin_id") or "")
     ts = [float(t) for t in a.get("origin_t") or [] if isinstance(t, (int, float))]
     if oid not in (st.get("sb") or {}) or not ts:
-        raise _Stop("출처 채널에서 원본 장면을 찾지 못했습니다", "연예인 본인 원본 영상(유튜브) 주소를 알려 주세요")
-    c = next((c for c in st["mixed"] if c["id"] == oid), {"id": oid})
+        return _origin_next(st, "출처 채널 미리보기 대조에서 같은 장면 없음")
+    c = next((c for c in (st.get("src_mixed") or st.get("mixed") or []) if c["id"] == oid), {"id": oid})
     dur = float(c.get("dur") or max(ts) + 600)
     st["origin"] = {"id": oid, "url": f"https://www.youtube.com/watch?v={oid}", "matched": [{"bench": "(화면 대조)", "origin_t": t} for t in ts],
                     "window": [0.0, dur], "visual": True, "info": {k: c.get(k) for k in ("id", "title", "channel", "dur")}}
@@ -571,6 +651,7 @@ def _queries(st) -> list[str]:
 
 
 def ph_search(st, m, rp, u):
+    st.setdefault("origin_tried", []).append("search")
     return {"do": [{"id": "search", "cmd": "search", "queries": _queries(st), "n": 12}], "then": "search_got"}
 
 
@@ -645,7 +726,7 @@ def ph_subs(st, m, rp, u):
                 seen.add(c["id"]); mixed.append(c)
     st["mixed"] = mixed[:ORIGIN_TRY]
     if not st["mixed"]:
-        raise _Stop("원본 영상 후보를 찾지 못했습니다", "연예인 본인 원본 영상(유튜브) 주소를 알려 주세요")
+        return _origin_next(st, "검색 길 후보 0")
     r = st["read"]
     terms = [w for w in (r.get("scene_words") or []) + (r.get("product_words") or []) if w][:8]
     return {"do": [{"id": "subs", "cmd": "origin_subs", "ids": [c["id"] for c in st["mixed"]], "terms": terms}], "then": "subs_got"}
@@ -655,7 +736,7 @@ def ph_subs_got(st, m, rp, u):
     sub = m.get("subs") or {}
     got = sub.get("matched") or {}        # 지문 대조 = PC 가 rules.fingerprint 로(자막 낱말은 PC 에 남긴다)
     if sub.get("blocked") and not got:
-        raise _Stop("유튜브가 지금 이 PC 요청을 막았습니다(봇 확인)", "유튜브 로그인 연결을 확인하거나 잠시 뒤 다시 이어서 부르세요")
+        raise _Stop("유튜브가 잠시 요청을 막았어요", "잠시 뒤 다시 시도해 주시면 이어서 찾을게요 · 유튜브 로그인 연결도 확인해 주세요", auto=True)
     scored = []
     for c in st.get("mixed") or []:
         mt = got.get(c["id"])
@@ -664,10 +745,10 @@ def ph_subs_got(st, m, rp, u):
     scored.sort(key=lambda c: -len(c["matched"]))
     if not scored:
         vis = _visual_cands(st, sub.get("hits") or {})
-        if vis:
+        if vis and "vis" not in (st.get("origin_tried") or []):
             st["vis"] = vis
             return {"goto": "vis_get"}
-        raise _Stop("원본 영상을 찾지 못했습니다", "연예인 본인 원본 영상(유튜브) 주소를 알려 주세요")
+        return _origin_next(st, "후보 자막에 벤치 말 없음")
     st["scored"] = scored[:5]
     B = st["bench"]
     return {"review": [_rv("origin_pick", ORIGIN_PICK + f"\n\n벤치: {B.get('title')} ({B.get('channel')}, {B.get('date')})\n후보:\n" +
@@ -698,17 +779,18 @@ def _visual_cands(st, hits: dict) -> list[dict]:
 
 
 def ph_vis_get(st, m, rp, u):
+    st.setdefault("origin_tried", []).append("vis")
     c = st["vis"][0]
     a, b = 0.0, float(c.get("dur") or max(c["at"]) + 600)       # 통째로 — 제품 장면은 장면 낱말 시각 앞뒤에 없을 수 있다(10-22 고현정 2차: '서촌'=식당, 가방=다른 시각)
     st["origin"] = {"id": c["id"], "url": f"https://www.youtube.com/watch?v={c['id']}", "matched": [], "window": [a, b], "visual": True,
                     "info": {k: c.get(k) for k in ("id", "title", "channel")}}
-    return {"do": [{"id": "origin", "cmd": "origin_get", "vid": c["id"], "a": a, "b": b, "ts": []}], "then": "vis_got"}
+    return {"do": [{"id": "origin", "cmd": "origin_get", "vid": c["id"], "a": a, "b": b, "ts": [], **({"full": True} if c.get("full") else {})}], "then": "vis_got"}
 
 
 def ph_vis_got(st, m, rp, u):
     o = m.get("origin") or {}
     if o.get("error") or not o.get("files"):
-        raise _Stop("원본 영상을 받지 못했습니다", "잠시 뒤 다시 시도(retry)하면 받기부터 이어 갑니다", retry="vis_get")
+        raise _Stop("원본 영상을 받지 못했어요", "잠시 뒤 다시 시도해 주시면 받기부터 이어 갈게요", auto=True, retry="vis_get")
     st["origin"].update(files=o["files"], offset=o.get("offset"), offset_measured=False)
     dur = float(_origin_file(st).get("dur") or 600)
     step = max(1, math.ceil(dur / VIS_TILES))                   # 원본 전체를 VIS_TILES 칸으로 훑는다(앞뒤 60초만 보여 주자 가방 장면이 빠져 '다르다'로 판정)
@@ -743,14 +825,14 @@ def ph_vis_next(st, m, rp, u):
     if st["vis"]:
         return {"goto": "vis_get"}
     st.pop("origin", None)
-    raise _Stop("원본 영상을 찾지 못했습니다", "연예인 본인 원본 영상(유튜브) 주소를 알려 주세요")
+    return _origin_next(st, "화면 대조 후보 모두 다름")
 
 
 def ph_pick_got(st, m, rp, u):
     p = _reply(rp, "origin_pick", ("origin_id", "self_spoken"))
     oid = str(p.get("origin_id") or "")
     if not oid or not p.get("self_spoken") or oid not in {c["id"] for c in st.get("scored") or []}:
-        raise _Stop("연예인 본인이 말한 원본을 확정하지 못했습니다", "연예인 본인 원본 영상(유튜브) 주소를 알려 주세요")
+        return _origin_next(st, f"지문 후보 확정 못 함({str(p.get('why') or '')[:120]})")
     ts = [float(x["origin_t"]) for x in p.get("matched") or [] if isinstance(x.get("origin_t"), (int, float))]
     if not ts:
         ts = [float(x["origin_t"]) for x in next(c for c in st["scored"] if c["id"] == oid)["matched"]]
@@ -777,10 +859,14 @@ def ph_stopped(st, m, rp, u):
     """멈춘 편 — 다시 시도(retry)할 수 있는 멈춤이면 그 단계부터, 아니면 그대로 멈춤."""
     r = (st.get("stopped") or {}).get("retry")
     why0 = str((st.get("stopped") or {}).get("why") or "")
-    if not r and why0.startswith("원본 영상을 받지 못했습니다"):
+    if not r and why0.startswith("원본 영상을 받지 못했"):
         r = "origin_fetch"                       # 10-21 이전 판이 멈춘 편(retry 칸 없음)도 받기부터 이어 가게
     if not r and why0.startswith("look 단계를"):
         r = "check_retry"
+    vid = _yt_id(str(u.get("origin_url") or "") or str(u.get("revise") or ""))
+    if vid and (st.get("stopped") or {}).get("origin_missing"):      # '원본 주소를 주시면 바로' — 그 주소로 원본 찾기를 끝낸다
+        st.pop("stopped", None)
+        return _given_origin(st, vid)
     if u.get("retry") and r:
         st.pop("stopped", None)
         if r == st.get("_asker") and st.get("_asker_in"):
@@ -788,13 +874,41 @@ def ph_stopped(st, m, rp, u):
             return {"goto": r, "feed": st["_asker_in"]}
         st["tries"] = {k: v for k, v in (st.get("tries") or {}).items() if k == "length"}   # 다시 시도 = 고치기 횟수 새로(길이 고치기만 남긴다 — 사인을 다시 받는다)
         return {"goto": r}
-    raise _Stop((st.get("stopped") or {}).get("why") or "멈춘 편입니다", (st.get("stopped") or {}).get("fix") or "", retry=r)
+    raise _Stop((st.get("stopped") or {}).get("why") or "아직 마무리되지 않은 편이에요", (st.get("stopped") or {}).get("fix") or AGAIN, retry=r)
+
+
+def _yt_id(text: str) -> str:
+    m = re.search(r"(?:youtu\.be/|[?&]v=|/shorts/|/live/)([0-9A-Za-z_-]{11})", text or "")
+    return m.group(1) if m else ""
+
+
+def _given_origin(st, vid: str) -> dict:
+    """회원이 준 원본 주소 — 지문만 재고(유튜브 한 번), 맞으면 그 시각으로·안 맞으면 통째 받아 화면 대조로 제품 장면을 찾는다."""
+    st.setdefault("origin_tried", []).append("given")
+    st["log"].append(f"회원이 준 원본 {vid}")
+    st["mixed"] = [{"id": vid, "title": "", "channel": "", "dur": None}]
+    r = st.get("read") or {}
+    terms = [w for w in (r.get("scene_words") or []) + (r.get("product_words") or []) if w][:8]
+    return {"do": [{"id": "probe", "cmd": "origin_probe", "ids": [vid], "before": "", "terms": terms, "max_sheets": 1}], "then": "given_origin_got"}
+
+
+def ph_given_origin_got(st, m, rp, u):
+    p = m.get("probe") or {}
+    vid = st["mixed"][0]["id"]
+    mt = (p.get("matched") or {}).get(vid) or []
+    if mt:
+        ts = [float(x["origin_t"]) for x in mt]
+        st["origin"] = {"id": vid, "url": f"https://www.youtube.com/watch?v={vid}", "matched": mt, "window": [0.0, max(ts) + 600], "given": True,
+                        "info": {"id": vid}}
+        return {"do": [{"id": "origin", "cmd": "origin_get", "vid": vid, "a": 0.0, "b": max(ts) + 600, "ts": ts, "full": True}], "then": "origin_got"}
+    st["vis"] = [{"id": vid, "title": "", "channel": "", "dur": None, "at": [0.0], "n": 0, "score": 0, "full": True}]
+    return {"goto": "vis_get"}
 
 
 def ph_origin_got(st, m, rp, u):
     o = m.get("origin") or {}
     if o.get("error") or not o.get("files"):
-        raise _Stop("원본 영상을 받지 못했습니다", "잠시 뒤 다시 시도(retry)하면 받기부터 이어 갑니다", retry="origin_fetch")
+        raise _Stop("원본 영상을 받지 못했어요", "잠시 뒤 다시 시도해 주시면 받기부터 이어 갈게요", auto=True, retry="origin_fetch")
     st["origin"].update(files=o["files"], offset=o.get("offset"), offset_measured=o.get("measured"))
     if not o.get("measured"):
         st["log"].append("원본 시작 시각을 재지 못해 요청 구간 시작으로 씀")
@@ -824,7 +938,7 @@ def ph_product_sheet(st, m, rp, u):
 def ph_product_pick(st, m, rp, u):
     sh = (m.get("psheet") or {}).get("file")
     if not sh:
-        raise _Stop("원본 장면을 볼 수 없습니다", "다시 이어서 부르세요")
+        raise _Stop("원본 장면을 열지 못했어요", "다시 시도해 주시면 이어 갈게요", auto=True)
     s0, R0 = st["look_s0"], st["read"]
     return {"review": [_rv("product_pick", PRODUCT_PICK + f"\n\n첫 그림 = 받은 원본 파일 {s0:.0f}초부터 1초 간격(왼쪽 위부터) — 답의 t 는 **파일 초**({s0:.0f} + 칸 번호).\n"
                            f"둘째 그림 = 벤치 쇼츠 1초 시트(그 제품이 무엇인지 보여 준다). 벤치·원본 대사의 제품 낱말: {R0.get('product_words')}",
@@ -837,7 +951,7 @@ def ph_product_pick_wide(st, m, rp, u):
     if not sh:
         if st.get("given"):
             return {"goto": "given"}
-        raise _Stop("원본 영상에 제품이 화면으로 나오지 않습니다(말로만 소개)", "제품이 화면에 나오는 다른 영상 주소로 다시 만들어 주세요", final=True)
+        raise _Stop("원본 영상에 제품이 화면으로 나오지 않아요(말로만 소개)", "제품이 화면에 나오는 다른 영상 주소를 주세요", final=True)
     step, R0 = st["look_step"], st["read"]
     return {"review": [_rv("product_pick", PRODUCT_PICK + f"\n\n첫 그림 = 받은 원본 파일 **전체**를 {step}초 간격으로(왼쪽 위 첫 칸 = 0초, n번째 칸 = (n-1)×{step}초) — 답의 t 는 **파일 초**.\n"
                            f"둘째 그림 = 벤치 쇼츠 1초 시트(그 제품이 무엇인지 보여 준다). 벤치·원본 대사의 제품 낱말: {R0.get('product_words')}",
@@ -858,7 +972,7 @@ def ph_product_cands(st, m, rp, u):
                             "fps": round(1 / step, 4), "cols": 8, "rows": VIS_TILES // 8, "w": 200, "ss": 0, "t": dur}], "then": "product_pick_wide"}
         if st.get("given"):
             return {"goto": "given"}
-        raise _Stop("원본 영상에 제품이 화면으로 나오지 않습니다(말로만 소개)", "제품이 화면에 나오는 다른 영상 주소로 다시 만들어 주세요", final=True)
+        raise _Stop("원본 영상에 제품이 화면으로 나오지 않아요(말로만 소개)", "제품이 화면에 나오는 다른 영상 주소를 주세요", final=True)
     st["product_pick"] = r
     qs = [q for q in r.get("coupang_queries") or [] if q][:4] + [w for w in r.get("brand_words") or [] if w][:2]
     st["coupang_qs"] = qs
@@ -870,7 +984,7 @@ def ph_product_same(st, m, rp, u):
     _coupang_down(m)
     shots = (m.get("shots") or {}).get("files") or []
     if not shots:
-        raise _Stop("제품 장면을 자르지 못했습니다", "다시 이어서 부르세요")
+        raise _Stop("제품 장면을 자르지 못했어요", "다시 시도해 주시면 이어 갈게요", auto=True)
     st["product_shots"] = shots
     cands = (m.get("coupang") or {}).get("items") or []
     st["coupang_cands"] = cands[:16]
@@ -890,7 +1004,7 @@ def _given_query(g: str) -> tuple[str, str]:
 def ph_given(st, m, rp, u):
     q, _ = _given_query(st["given"])
     if not q:
-        raise _Stop("정해 주신 제품 이름을 알 수 없습니다", "쿠팡 상품 이름을 함께 적어 다시 만들어 주세요", final=True)
+        raise _Stop("정해 주신 제품 이름을 알 수 없어요", "쿠팡 상품 이름을 함께 적어 다시 만들어 주세요", final=True)
     st["log"].append("원본에 제품 장면 없음 → 고객이 정한 제품으로")
     return {"do": [{"id": "coupang", "cmd": "coupang", "queries": [q]}], "then": "given_same"}
 
@@ -899,7 +1013,7 @@ def ph_given_same(st, m, rp, u):
     _coupang_down(m)
     cands = (m.get("coupang") or {}).get("items") or []
     if not cands:
-        raise _Stop("정해 주신 제품을 쿠팡에서 찾지 못했습니다", "쿠팡 상품 이름을 정확히 적어 다시 만들어 주세요", final=True)
+        raise _Stop("정해 주신 제품을 쿠팡에서 찾지 못했어요", "쿠팡 상품 이름을 정확히 적어 다시 만들어 주세요", final=True)
     st["given_cands"] = cands[:16]
     return _cand_sheet_do(st, st["given_cands"], "given")
 
@@ -945,20 +1059,28 @@ def ph_product_done(st, m, rp, u):
     mode = "exact" if "product_same" in rp else ("named" if "named_same" in rp else "alt")
     given = "given_same" in rp
     if given and not same.get("product_id"):
-        raise _Stop("정해 주신 제품을 쿠팡 후보에서 찾지 못했습니다", "쿠팡 상품 이름을 정확히 적어 다시 만들어 주세요", final=True)
+        raise _Stop("정해 주신 제품을 쿠팡에서 찾지 못했어요", "쿠팡 상품 이름을 정확히 적어 다시 만들어 주세요", final=True)
     if not same.get("product_id"):
         if mode == "exact":
             return {"goto": "name_find"}
         if mode == "named":
             return {"goto": "best"}
-        raise _Stop("쿠팡에서 같은 종류 제품을 찾지 못했습니다", "제품 이름을 알려 주시면 그 이름으로 찾아 이어 갑니다")
+        st["coupang_cands"], st["named_cands"] = [], []
+        w = _best_wide(st)
+        if w:
+            return w
+        raise _Stop(*NO_SIMILAR)
     if same.get("category") in ("의약품", "의료기기"):
-        raise _Stop("의약품·의료기기는 만들 수 없는 소재입니다", "다른 소재 영상을 주세요", final=True)
+        raise _Stop("의약품·의료기기는 만들 수 없는 소재예요", "다른 소재 영상을 주세요", final=True)
     pool = st.get("given_cands") if given else (st.get("named_cands") if mode == "named" else st.get("coupang_cands"))
     if pool and str(same["product_id"]) not in {str(c.get("product_id") or c.get("productId") or c.get("id") or "") for c in pool}:
         st["log"].append(f"제품 번호 {same['product_id']} 가 후보 표에 없음 — 답 그대로 씀")
     st["product"] = {**{k: same.get(k) for k in ("product_id", "name", "why", "category")}, "mode": mode, **({"given": True} if given else {}),
                      "name_hints": (st.get("name_find") or {}).get("names") or [], "brand_words": (st.get("product_pick") or {}).get("brand_words")}
+    if mode == "alt" and not given:     # 같은 물건이 없어 비슷한 제품 — 회원에게 쉬운 말로 한 번 알린다(대본의 '비슷한 제품' 줄은 script_audit.alt_disclosed 가 강제)
+        mw = str(same.get("member_why") or "").strip()
+        st["notice"] = ALT_NOTICE + (f" — {mw}" if mw and member_ok(mw) else " — 종류와 쓰임이 같은 제품이에요")
+        st.pop("_notice_shown", None)
     return {"goto": "reviews"}
 
 
@@ -1025,10 +1147,32 @@ def ph_named_same(st, m, rp, u):
     return _cand_sheet_do(st, st["named_cands"], "named")
 
 
+def _wide_queries(st) -> list[str]:
+    """비슷한 제품 넓은 검색어 — 연예인 이름 없이 제품 낱말·종류만(같은 종류·쓰임이면 된다)."""
+    r = st.get("read") or {}
+    kind = (st.get("name_find") or {}).get("kind") or (st.get("product_pick") or {}).get("brand_words") or ""
+    qs = [str(w) for w in (r.get("product_words") or []) if w] + ([str(kind)] if isinstance(kind, str) and kind else [])
+    return list(dict.fromkeys(q.strip() for q in qs if q.strip()))[:4]
+
+
+def _best_wide(st) -> dict | None:
+    if st.get("_wide"):
+        return None
+    st["_wide"] = True
+    qs = _wide_queries(st)
+    if not qs:
+        return None
+    st["log"].append(f"비슷한 제품 넓은 검색: {qs}")
+    return {"do": [{"id": "coupang", "cmd": "coupang", "queries": qs, "ratings": True}], "then": "best_rated"}
+
+
 def ph_best(st, m, rp, u):
     cands = st.get("coupang_cands") or st.get("named_cands") or []
     if not cands:
-        raise _Stop("쿠팡에서 같은 종류 제품을 찾지 못했습니다", "제품 이름을 알려 주시면 그 이름으로 찾아 이어 갑니다")
+        w = _best_wide(st)
+        if w:
+            return w
+        raise _Stop(*NO_SIMILAR)
     if not any(c.get("rating") for c in cands) and st.get("coupang_qs") and not st.get("_rated"):
         st["_rated"] = True          # 대체 제품 = 후기 많은 것 — 후기 수는 이때만 채운다(98 #11·#43)
         return {"do": [{"id": "coupang", "cmd": "coupang", "queries": st["coupang_qs"], "ratings": True}], "then": "best_rated"}
@@ -1040,7 +1184,13 @@ def ph_best_rated(st, m, rp, u):
     got = (m.get("coupang") or {}).get("items") or []
     if got:
         st["coupang_cands"] = got[:16]
-    return _cand_sheet_do(st, st.get("coupang_cands") or st.get("named_cands") or [], "best")
+    cands = st.get("coupang_cands") or st.get("named_cands") or []
+    if not cands:
+        w = _best_wide(st)
+        if w:
+            return w
+        raise _Stop(*NO_SIMILAR)
+    return _cand_sheet_do(st, cands, "best")
 
 
 # ── 4 조사 ────────────────────────────────────────────────────────────────
@@ -1068,7 +1218,7 @@ def ph_research_check(st, m, rp, u):
     r = _reply(rp, "research", ("조사_md", "keywords", "queries", "spans"))
     if r.get("stop"):
         st["log"].append("조사 멈춤: " + str(r["stop"])[:400])     # 판정 글은 기록에만 — 고객에겐 이유·해결 두 줄(사장님 10-22)
-        raise _Stop("조사해 보니 이 영상의 제품은 만들 수 없는 소재입니다(의약품·금지 품목 등)", "다른 소재 영상을 주세요", final=True)
+        raise _Stop("조사해 보니 이 제품은 만들 수 없는 소재예요(의약품·금지 품목 등)", "다른 소재 영상을 주세요", final=True)
     md, bad = str(r.get("조사_md") or ""), []
     for h in ("결론", "출처", "원음", "사실", "금지", "확인 못"):
         if h not in md:
@@ -1370,7 +1520,7 @@ def ph_plan_got(st, m, rp, u):
     p = m.get("plan") or {}
     if p.get("error"):                            # 계획 자체가 못 돌았다(실행기 오류·돈 0 모드 TTS 캐시 없음) — 빈 시트로 검수를 묻지 않는다(조용한 통과 금지)
         st["log"].append("계획 실패: " + str(p["error"])[:300])
-        raise _Stop("장면 계획을 만들지 못했습니다: " + str(p["error"])[:160], "다시 시도하면 계획부터 이어 갑니다", retry="plan")
+        raise _Stop("장면 계획을 만들지 못했어요", "다시 시도해 주시면 계획부터 이어 갈게요", retry="plan", auto=True, detail=str(p["error"])[:300])
     if p.get("conflict"):                         # 배치 충돌 = 대본이 1차 audit 밖이라 생긴 증상(표준 §11-5 ㉛) → 대본 단계로
         return _conflict_rewrite(st, p["conflict"])
     ln = p.get("length") or {}
@@ -1419,7 +1569,7 @@ def ph_plan_look(st, m, rp, u):
     _tries(st, "plan", LIMITS["plan"])
     M = _take_fix(st, r)
     if M is None:
-        raise _Stop("장면 검수가 통과하지 않았는데 재료를 고치지 못했습니다", "다시 이어서 부르세요")
+        raise _Stop("장면을 맞추다 막혔어요", "다시 시도해 주시면 이어 갈게요")
     return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "plan"}
 
 
@@ -1484,7 +1634,7 @@ def ph_render_got(st, m, rp, u):
         return {"goto": "check"}
     if r.get("error") and "원본 샷보다 길다" not in str(r["error"]) and not r.get("jumps") and st["tries"].get("render_err", 0) >= 1:
         st["log"].append("렌더 오류: " + str(r["error"])[:300])
-        raise _Stop("영상을 만들다 멈췄습니다", "다시 시도하면 멈춘 곳부터 이어 갑니다", retry="render")
+        raise _Stop("영상을 만들다 멈췄어요", "다시 시도해 주시면 멈춘 곳부터 이어 갈게요", retry="render", auto=True)
     if r.get("error") and "원본 샷보다 길다" not in str(r["error"]) and not r.get("jumps"):
         st["tries"]["render_err"] = st["tries"].get("render_err", 0) + 1   # 처음 보는 렌더 오류도 재료로 한 번 고쳐 본다(10-22 강주은: 사진 컷 ss 없음 KeyError 로 곧장 멈춤)
         why = f"렌더 오류: {str(r['error'])[:300]} — 재료.json 컷의 빠진 칸(src·ss·crop)·형식을 바로잡아라"
@@ -1497,7 +1647,7 @@ def ph_render_fix(st, m, rp, u):
     r = _reply(rp, f"render_fix_{v}", ("ok",))
     M = _take_fix(st, r)
     if M is None:
-        raise _Stop("렌더 뒤 재료를 고치지 못했습니다", "다시 이어서 부르세요")
+        raise _Stop("영상을 다듬다 막혔어요", "다시 시도해 주시면 이어 갈게요")
     return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "render"}
 
 
@@ -1555,7 +1705,7 @@ def ph_check_look(st, m, rp, u):
     rid = f"eye_{v}"
     a = rp.get(rid)
     if not isinstance(a, dict):
-        raise _Stop("확인 답을 받지 못했습니다", "다시 시도하면 멈춘 곳부터 이어 갑니다")
+        raise _Stop("확인 결과를 받지 못했어요", "다시 시도해 주시면 멈춘 곳부터 이어 갈게요", auto=True)
     keys = st.get("eye_keys") or [f"E{k}" for k in range(1, 9)]          # 물은 번호 전부(업그레이드 판은 E9 까지) — 답에 빠진 번호도 ×
     ok, bad = _eye_verdict(a, keys)
     st["eye"] = a
@@ -1582,7 +1732,7 @@ def ph_check_judge(st, m, rp, u):
     if st["tries"].get("look", 0) >= LIMITS["look"]:
         why = _check_fails(st)
         st["log"].append("완성본 검사 멈춤: " + why)
-        raise _Stop(f"완성본 검사를 고쳐도 통과하지 못했습니다({why})", "다시 시도(retry)하면 검사에서 걸린 곳부터 다시 고칩니다", retry="check_retry")
+        raise _Stop("완성본 마무리 확인에서 걸린 곳이 있어요", "다시 시도해 주시면 걸린 곳부터 고쳐서 이어 갈게요", retry="check_retry", detail=why)
     _tries(st, "look", LIMITS["look"])
     probs = json.dumps({"자동 관문 ×": [{k: r.get(k) for k in ("group", "what", "value")} for r in (st.get("auto") or {}).get("rows") or []
                                     if r.get("ok") is not True and not r.get("ref")] if not auto_ok else None,
@@ -1640,7 +1790,7 @@ def ph_check_fix(st, m, rp, u):
     r = _reply(rp, f"final_fix_{v}", ("ok",))
     M = _take_fix(st, r)
     if M is None:
-        raise _Stop("완성본 검사를 통과하지 못했고 재료로 고칠 수 없습니다", "숏템 피드백으로 알려 주세요")
+        raise _Stop("완성본 마무리 확인을 통과하지 못했어요", "숏템 피드백으로 알려 주시면 확인해 드릴게요 · 다른 소재로 갈까요?")
     return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "render"}
 
 
@@ -1652,10 +1802,10 @@ def ph_deliver(st, m, rp, u):
 def ph_finished(st, m, rp, u):
     f = m.get("final") or {}
     if not f.get("video"):
-        raise _Stop("완성본 파일을 찾지 못했습니다", "다시 이어서 부르세요")
+        raise _Stop("완성본 파일을 찾지 못했어요", "다시 시도해 주시면 이어 갈게요", auto=True)
     asr_single = not ((st.get("env") or {}).get("keys") or {}).get("speechmatics")
     if not ((st.get("auto") or {}).get("ok") and (st.get("look") or {}).get("ok")):     # 관문 2단을 안 거친 완성본은 내지 않는다(표준 §5 — 다른 길로 deliver 에 와도)
-        raise _Stop(f"완성본 검사를 통과하지 않은 영상입니다({_check_fails(st)})", "다시 시도하면 검사부터 다시 합니다", retry="check")
+        raise _Stop("완성본 마무리 확인을 아직 통과하지 않았어요", "다시 시도해 주시면 확인부터 다시 할게요", retry="check", detail=_check_fails(st))
     return {"done": {"video": f["video"], "title": script_view(st)["title"], "auto_ok": bool((st.get("auto") or {}).get("ok")),
                      "look_ok": bool((st.get("look") or {}).get("ok")), "gate": (st.get("auto") or {}).get("report"), "asr_single": asr_single,
                      "note": "귀 확인 없음(스피치매틱스 키 없음 — 위스퍼와 눈으로만 대조)" if asr_single else ""}}
@@ -1703,7 +1853,7 @@ JSON 하나: {"scenes": [{"src": "원본 파일 이름", "t": 파일 초, "crop"
 
 PRODUCT_BEST_FOREIGN = """너는 대체 제품 고르기 담당이다(같은 제품이 없으면 쿠팡에서 후기 많고 좋은 비슷한 제품 — 현장썰 규칙). 원본 출연자가 쓴 것과 **같은 종류·같은 쓰임**인 쿠팡 후보 중
 후기(rating 의 괄호 숫자) 많고 별점 높은 것 하나를 골라라. 광고(is_ad)·묶음 이상한 것은 뒤로. 같은 종류가 없으면 product_id ''.
-JSON 하나: {"product_id": "…", "name": "…", "why": "고른 이유 한 줄(후기 수·별점)", "category": "화장품|생활용품|식품|의류|의약품|의료기기|기타"}"""
+JSON 하나: {"product_id": "…", "name": "…", "why": "고른 이유 한 줄(후기 수·별점)", "member_why": "회원에게 보일 쉬운 말 한 줄 — 종류·색·모양이 어떻게 비슷한지(예 '같은 기미 앰플이고 용량·병 모양이 비슷해요')", "category": "화장품|생활용품|식품|의류|의약품|의료기기|기타"}"""
 
 RESEARCH_FOREIGN = """너는 조사 담당이다. 이 편의 `조사.md` 한 파일 내용을 써라. 웹 검색으로 사실을 확인하고 출처 URL 을 적는다.
 ## 할 일
@@ -1800,7 +1950,7 @@ F_PEER_N = 12          # 같은 제품 다른 해외 반응 검색 후보 수
 def f_bench_got(st, m, rp, u):
     b = m.get("bench") or {}
     if b.get("error"):
-        raise _Stop("영상을 받지 못했습니다", "영상 주소가 맞는지, 또는 유튜브 로그인 연결을 확인해 주세요")
+        raise _Stop("영상을 받지 못했어요", "영상 주소가 맞는지, 유튜브 로그인 연결이 되어 있는지 확인해 주세요", auto=True)
     st["bench"] = {k: b.get(k) for k in ("id", "title", "channel", "date", "dur", "desc", "sheet", "big")}
     st["bench_lines"] = b.get("lines") or []
     return {"review": [_rv("ref_read", REF_READ_FOREIGN + "\n\n" + _brief("origin_foreign.md") + "\n\n제목: " + str(b.get("title")) + "\n채널: " + str(b.get("channel")) +
@@ -1813,7 +1963,7 @@ def f_ref_read(st, m, rp, u):
     from tools.calcopy import origin_find as OF
     r = _reply(rp, "ref_read", ("ref_kind", "is_shopping", "product_words", "queries_en"))
     if not r.get("is_shopping"):
-        raise _Stop("제품이 화면에 나오는 영상이 아닙니다", "외국인이 제품을 써 보는 쇼츠 주소를 주세요", final=True)
+        raise _Stop("제품이 화면에 나오는 영상이 아니에요", "외국인이 제품을 써 보는 쇼츠 주소를 주세요", final=True)
     B = st["bench"]
     korean = OF.is_korean(str(B.get("title") or ""), str(B.get("channel") or "")) or r.get("ref_kind") == "korean_reedit"   # 한글 = 규칙(주인 is_korean), 판독은 보탬
     st["read"] = {**r, "celeb": "", "korean": korean}
@@ -1843,7 +1993,7 @@ def f_of_got(st, m, rp, u):
     if o.get("error") or not cands or not o.get("sheets"):
         st["log"].append(f"원본 후보 없음({mode}): {str(o.get('error') or '')[:200]}")
         if mode == "lens":
-            raise _Stop("해외 원본 영상을 찾지 못했습니다", "해외 원본(외국인 본인이 올린 영상) 주소를 직접 주세요")
+            raise _Stop("해외 원본을 못 찾았어요", "원본 영상 주소를 주시면 바로 만들 수 있어요 · 다른 소재로 갈까요?")
         return {"goto": "of_fetch"}
     rows = "\n".join(f"{c['n']}. {c.get('platform')}:{c.get('id')} · {c.get('channel')} · '{str(c.get('title') or '')[:70]}' · {c.get('date')} · 한글 {bool(c.get('korean'))}"
                      for c in cands)
@@ -1873,7 +2023,7 @@ def f_of_pick(st, m, rp, u):
             st["origins"].append({"id": v["id"], "info": {k: v.get(k) for k in ("id", "title", "channel", "date", "dur")}, "how": "렌즈 같은 촬영분"})
         st["log"].append(f"렌즈 같은 영상 {len(same)}개 → 원본 {[o['id'] for o in st['origins']]}: {str(a.get('why'))[:120]}")
         if not st["origins"]:
-            raise _Stop("해외 원본 영상을 확정하지 못했습니다", "해외 원본(외국인 본인이 올린 영상) 주소를 직접 주세요")
+            raise _Stop("해외 원본을 못 찾았어요", "원본 영상 주소를 주시면 바로 만들 수 있어요 · 다른 소재로 갈까요?")
         if len(st["origins"]) < 2 and not st.get("_peers_done"):
             return {"goto": "of_peers"}
         return {"goto": "of_fetch"}
@@ -1909,7 +2059,7 @@ def f_of_fetched(st, m, rp, u):
         keep.append(o)
         files += g["files"]
     if not keep:
-        raise _Stop("해외 원본 영상을 받지 못했습니다", "잠시 뒤 다시 시도(retry)하면 받기부터 이어 갑니다", retry="of_fetch")
+        raise _Stop("해외 원본 영상을 받지 못했어요", "잠시 뒤 다시 시도해 주시면 받기부터 이어 갈게요", retry="of_fetch", auto=True)
     st["origins"] = keep
     o0 = keep[0]
     st["origin"] = {"id": o0["id"], "url": f"https://www.youtube.com/watch?v={o0['id']}", "files": files, "offset": 0.0, "offset_measured": True,
@@ -1930,7 +2080,7 @@ def f_product_pick(st, m, rp, u):
     shs = [(f, (m.get(f"psheet_{k}") or {}).get("file")) for k, f in enumerate(st["origin"]["files"])]
     shs = [(f, x) for f, x in shs if x]
     if not shs:
-        raise _Stop("원본 장면을 볼 수 없습니다", "다시 이어서 부르세요")
+        raise _Stop("원본 장면을 열지 못했어요", "다시 시도해 주시면 이어 갈게요", auto=True)
     note = "\n".join(f"{k + 1}번째 그림 = {f['name']}(길이 {f.get('dur')}초) — 칸 간격 {1 if float(f.get('dur') or 0) <= 36 else round(float(f['dur']) / 36, 2)}초"
                      for k, (f, _) in enumerate(shs))
     R0 = st["read"]
@@ -1944,7 +2094,7 @@ def f_product_cands(st, m, rp, u):
     names = {f["name"] for f in st["origin"]["files"]}
     scenes = [s for s in r.get("scenes") or [] if isinstance(s, dict) and isinstance(s.get("t"), (int, float))][:4]
     if not scenes:
-        raise _Stop("원본 영상에 제품이 화면으로 나오지 않습니다", "제품이 화면에 나오는 다른 영상 주소로 다시 만들어 주세요", final=True)
+        raise _Stop("원본 영상에 제품이 화면으로 나오지 않아요", "제품이 화면에 나오는 다른 영상 주소를 주세요", final=True)
     st["product_pick"] = r
     qs = [q for q in r.get("coupang_queries") or [] if q][:4] + [w for w in r.get("brand_words") or [] if w][:2]
     st["coupang_qs"] = qs
@@ -1988,7 +2138,7 @@ def f_research_check(st, m, rp, u):
     r = _reply(rp, "research", ("조사_md", "keywords", "queries", "spans"))
     if r.get("stop"):
         st["log"].append("조사 멈춤: " + str(r["stop"])[:400])
-        raise _Stop("조사해 보니 이 영상의 제품은 만들 수 없는 소재입니다(의약품·금지 품목 등)", "다른 소재 영상을 주세요", final=True)
+        raise _Stop("조사해 보니 이 제품은 만들 수 없는 소재예요(의약품·금지 품목 등)", "다른 소재 영상을 주세요", final=True)
     md, bad = str(r.get("조사_md") or ""), []
     for h in ("결론", "출처", "원음", "사실", "금지", "확인 못"):
         if h not in md:
@@ -2100,7 +2250,7 @@ def f_render_clean_got(st, m, rp, u):
     st["log"].append(f"박힌 글자 VMake: 쓰는 구간 {c.get('used_sec')}초 중 자막 컷 {c.get('send_sec')}초 · 호출 {c.get('calls')}회 · 보낸 초 {c.get('sent')}"
                      + (f" · ⚠ {c['sent_bad']}" if c.get("sent_bad") else "") + (f" · {c.get('why')}" if c.get("why") else ""))
     if c.get("sent_bad"):
-        raise _Stop("박힌 자막 지우기에 쓰지 않는 구간까지 보냈습니다", "개발팀 확인이 필요합니다", final=True)
+        raise _Stop("자막 지우기에 쓰지 않는 구간까지 보낸 게 보여 멈췄어요", "숏템 피드백으로 알려 주시면 확인해 드릴게요", final=True)
     M = st["script"]["M"]
     nb = RU.blur_minus_spans(M, tf.get("done") or {})
     if nb:
@@ -2135,7 +2285,7 @@ def f_asr_got(st, m, rp, u):
 def s_bench_got(st, m, rp, u):
     b = m.get("bench") or {}
     if b.get("error"):
-        raise _Stop("영상을 받지 못했습니다", "영상 주소가 맞는지, 또는 유튜브 로그인 연결을 확인해 주세요")
+        raise _Stop("영상을 받지 못했어요", "영상 주소가 맞는지, 유튜브 로그인 연결이 되어 있는지 확인해 주세요", auto=True)
     st["bench"] = {k: b.get(k) for k in ("id", "title", "channel", "date", "dur", "desc", "sheet", "big")}
     st["bench_lines"] = b.get("lines") or []
     return {"review": [_rv("topic_read", TOPIC_READ_SHOP + "\n\n제목: " + str(b.get("title")) + "\n채널: " + str(b.get("channel")) + "\n설명: " + str(b.get("desc") or "")[:1500] +
@@ -2146,7 +2296,7 @@ def s_bench_got(st, m, rp, u):
 def s_topic_got(st, m, rp, u):
     r = _reply(rp, "topic_read", ("is_shopping", "product_words", "coupang_queries"))
     if not r.get("is_shopping"):
-        raise _Stop("쿠팡 제품 이야기가 아닌 영상입니다", "제품 썰 영상 주소를 주세요", final=True)
+        raise _Stop("쿠팡 제품 이야기가 아닌 영상이에요", "제품 썰 영상 주소를 주세요", final=True)
     st["read"] = {**r, "celeb": ""}
     st["coupang_qs"] = [q for q in r.get("coupang_queries") or [] if q][:4]
     if st.get("given"):
@@ -2159,7 +2309,7 @@ def s_cands(st, m, rp, u):
     _coupang_down(m)
     cands = (m.get("coupang") or {}).get("items") or []
     if not cands:
-        raise _Stop("쿠팡에서 이 제품을 찾지 못했습니다", "제품 이름을 알려 주시면 그 이름으로 찾아 이어 갑니다")
+        raise _Stop(*NO_SIMILAR)
     st["coupang_cands"] = cands[:16]
     st["product_shots"] = [st["bench"]["sheet"]] if st["bench"].get("sheet") else []
     st["_cand_kind"] = "shop"
@@ -2177,9 +2327,9 @@ def s_cand_look(st, m, rp, u):
 def s_product_done(st, m, rp, u):
     a = _reply(rp, "shop_same", ("product_id", "name", "category"))
     if not a.get("product_id"):
-        raise _Stop("쿠팡에서 같은 종류 제품을 찾지 못했습니다", "제품 이름을 알려 주시면 그 이름으로 찾아 이어 갑니다")
+        raise _Stop(*NO_SIMILAR)
     if a.get("category") in ("의약품", "의료기기"):
-        raise _Stop("의약품·의료기기는 만들 수 없는 소재입니다", "다른 소재 영상을 주세요", final=True)
+        raise _Stop("의약품·의료기기는 만들 수 없는 소재예요", "다른 소재 영상을 주세요", final=True)
     st["product"] = {**{k: a.get(k) for k in ("product_id", "name", "why", "category")}, "mode": "exact" if a.get("mode") != "alt" else "alt"}
     return {"goto": "reviews"}
 
@@ -2197,7 +2347,7 @@ def s_research_check(st, m, rp, u):
     r = _reply(rp, "research", ("조사_md", "keywords", "queries"))
     if r.get("stop"):
         st["log"].append("조사 멈춤: " + str(r["stop"])[:400])
-        raise _Stop("조사해 보니 이 제품은 만들 수 없는 소재입니다(의약품·금지 품목 등)", "다른 소재 영상을 주세요", final=True)
+        raise _Stop("조사해 보니 이 제품은 만들 수 없는 소재예요(의약품·금지 품목 등)", "다른 소재 영상을 주세요", final=True)
     md = str(r.get("조사_md") or "")
     bad = [f"조사.md 에 '{h}' 절이 없다" for h in ("결론", "출처", "사실", "금지", "확인 못") if h not in md]
     bad += [f"사실 {f.get('id')} 에 출처가 없다" for f in r.get("facts") or [] if isinstance(f, dict) and not str(f.get("src") or "").strip()]
@@ -2213,7 +2363,7 @@ def s_research_check(st, m, rp, u):
 def s_material_dl(st, m, rp, u):
     st["material"] = {"files": ((m.get("dl") or {}).get("files") or []) + ((m.get("stills") or {}).get("files") or [])}
     if not st["material"]["files"]:
-        raise _Stop("재료 영상·제품 사진을 하나도 받지 못했습니다", "다시 이어서 부르세요")
+        raise _Stop("영상 조각과 제품 사진을 하나도 받지 못했어요", "다시 시도해 주시면 이어 갈게요", auto=True)
     return {"goto": "script"}
 
 
@@ -2240,7 +2390,7 @@ PHASE_STAGE.update({
 PHASES = {
     "setup": ph_setup, "setup_check": ph_setup_check, "bench": ph_bench, "bench_got": ph_bench_got, "origin_read": ph_origin_read, "src_got": ph_src_got, "probe_got": ph_probe_got, "sb_pick": ph_sb_pick,
     "peer": ph_peer, "peer_read": ph_peer_read, "search": ph_search, "search_got": ph_search_got, "titles": ph_titles,
-    "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped,
+    "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped, "given_origin_got": ph_given_origin_got,
     "vis_get": ph_vis_get, "vis_got": ph_vis_got, "vis_look": ph_vis_look, "vis_pick": ph_vis_pick, "vis_next": ph_vis_next,
     "product_sheet": ph_product_sheet, "product_pick": ph_product_pick, "product_pick_wide": ph_product_pick_wide, "product_cands": ph_product_cands, "product_same": ph_product_same,
     "product_done": ph_product_done, "cand_look": ph_cand_look, "reviews": ph_reviews, "reviews_got": ph_reviews_got, "reviews_naver": ph_reviews_naver, "name_find": ph_name_find, "name_got": ph_name_got, "named_cands": ph_named_cands,
@@ -2251,5 +2401,5 @@ PHASES = {
     "plan_look": ph_plan_look, "thumb": ph_thumb, "thumb_got": ph_thumb_got, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
     "check_got": ph_check_got, "check_look": ph_check_look, "check_judge": ph_check_judge, "check_fix": ph_check_fix, "customize": ph_customize, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
-for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "given": "product", "given_same": "product", "cand_look": "product", "reviews": "product", "reviews_got": "product", "reviews_naver": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():
+for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "given_origin_got": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "given": "product", "given_same": "product", "cand_look": "product", "reviews": "product", "reviews_got": "product", "reviews_naver": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():
     PHASE_STAGE.setdefault(_k, _v)

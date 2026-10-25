@@ -436,7 +436,9 @@ def c_origin_probe(W, d):
     before = str(d.get("before") or "")
     out = {"matched": {}, "hits": {}, "sheets": {}, "dates": {}, "skipped": [], "blocked": []}
     od = W / "origin"; od.mkdir(exist_ok=True)
-    for vid in d.get("ids") or []:
+    ids = list(d.get("ids") or [])
+    for i, vid in enumerate(ids):
+        progress(W, "원본 후보 조사", i + 1, len(ids))
         r = yt(["-J", f"https://www.youtube.com/watch?v={vid}"], timeout=120)
         if _blocked(r):
             out["blocked"].append(vid)
@@ -513,7 +515,9 @@ def c_origin_subs(W, d):
     lines = jload(W / "bench" / "asr.json") if (W / "bench" / "asr.json").exists() else []
     matched, blocked, nosub, hits = {}, [], [], {}
     terms = [t for t in d.get("terms") or [] if t]
-    for vid in d.get("ids") or []:
+    ids = list(d.get("ids") or [])
+    for i, vid in enumerate(ids):
+        progress(W, "원본 후보 조사", i + 1, len(ids))
         words, how = _origin_words(W, vid)
         if how == "blocked":
             blocked.append(vid)
@@ -1371,11 +1375,118 @@ CMDS = {"env": c_env, "bench": c_bench, "search": c_search, "peer_sheet": c_peer
         "origin_foreign": c_origin_foreign, "clean_text": c_clean_text, "materials_draft": c_materials_draft}
 
 
-def run_do(W: Path, do: list[dict], log=print) -> dict:
-    """do 목록을 순서대로 — 허용 목록 밖 cmd 는 돌리지 않는다. 한 cmd 가 실패해도 그 결과에 error 를 담고 다음으로(판정은 서버)."""
+# ── 시간 예산·진행 신호·감시(사장님 10-26 "가만히 있으면 한없이 진행되는 게 제일 문제") ─────────────────────────
+# 주인 = 여기 한 곳(실행기). 예산(초) = 10-21~26 회원 경로 runner 기록 17개 실측 max(120, p90×1.5, 최장×1.1) — 적은 표본이라 최장도 본다.
+#   실측 p90/최장: bench 802/802 · origin_get 209/273 · origin_probe 146/146 · channel_find 110/110 · render 222/701 · download 665/665 ·
+#   screen 282/282 · shot_sheets 219/219 · check 150/150 · coupang 75/75 · coupang_reviews 99/99 · plan 67/79 · origin_words 59/154
+BUDGET = {"bench": 900, "origin_get": 320, "origin_probe": 240, "channel_find": 180, "origin_subs": 180, "search": 180, "channel_list": 180,
+          "render": 780, "download": 740, "screen": 420, "shot_sheets": 330, "check": 240, "coupang": 120, "coupang_reviews": 150,
+          "plan": 120, "origin_words": 180, "orig_heard": 120, "asr_spans": 120, "origin_foreign": 120, "clean_text": 900}
+BUDGET_DEFAULT = 300
+CMD_LABEL = {"env": "준비 확인", "bench": "영상 받기", "channel_find": "출처 채널 찾기", "origin_probe": "원본 후보 조사", "search": "원본 검색",
+             "channel_list": "채널 영상 목록", "origin_subs": "원본 자막 대조", "origin_get": "원본 영상 받기", "coupang": "쿠팡 찾기", "coupang_reviews": "쿠팡 후기",
+             "naver": "자료 찾기", "download": "영상 조각 받기", "screen": "장면 고르기", "shot_sheets": "장면 정리", "plan": "장면 맞추기",
+             "render": "영상 만들기", "check": "완성본 확인", "clean_text": "자막 지우기", "finish": "마무리"}   # 회원 화면 진행 줄(내부 이름 금지)
+STALL_SEC = float(os.environ.get("SHORTEM_STALL_SEC") or 180)    # 진행 신호(명시 progress 또는 작업 폴더 파일 변화)가 이만큼 없으면 멈춘 것
+_PROG: dict = {"t": 0.0}
+_CHILDREN: set = set()
+
+
+class _TrackedPopen(subprocess.Popen):
+    """실행기가 띄운 하위 프로그램(yt-dlp·ffmpeg) 목록 — 감시가 시간 초과 때 끈다(그냥 두면 끊은 뒤에도 받기를 계속한다, 10-26 run3)."""
+    def __init__(self, *a, **k):
+        super().__init__(*a, **k)
+        _CHILDREN.add(self)
+
+
+subprocess.Popen = _TrackedPopen
+
+
+def progress(W: Path, what: str, n: int | None = None, m: int | None = None) -> None:
+    """진행 신호 — '무엇을 하는 중 n/m' 를 작업 폴더 progress.json 에(회원 화면 진행 줄이 읽는다) · 감시의 '멈춤 아님' 신호."""
+    _PROG.update(t=time.time(), what=str(what)[:60], n=n, m=m)
+    try:
+        jsave(Path(W) / "progress.json", {"what": _PROG["what"], "n": n, "m": m, "t": round(_PROG["t"], 1)})
+    except OSError:
+        pass
+
+
+def _dir_sig(W: Path, cap: int = 4000) -> tuple:
+    """작업 폴더 파일 크기 합·개수 — 받기·렌더처럼 파일이 자라면 진행 중(명시 신호 없는 긴 일도 멈춤으로 오판하지 않게)."""
+    tot = cnt = 0
+    stack = [str(W)]
+    while stack and cnt < cap:
+        try:
+            with os.scandir(stack.pop()) as it:
+                for e in it:
+                    if e.is_dir(follow_symlinks=False):
+                        stack.append(e.path)
+                    else:
+                        try:
+                            tot += e.stat().st_size; cnt += 1
+                        except OSError:
+                            pass
+        except OSError:
+            pass
+    return tot, cnt
+
+
+def _kill_children() -> int:
+    n = 0
+    for pr in list(_CHILDREN):
+        if pr.poll() is None:
+            try:
+                if os.name == "nt":
+                    subprocess.run(["taskkill", "/F", "/T", "/PID", str(pr.pid)], capture_output=True, timeout=20)
+                else:
+                    pr.kill()
+                n += 1
+            except Exception:  # noqa: BLE001
+                pass
+        _CHILDREN.discard(pr)
+    return n
+
+
+def _watch(W: Path, items: list, run_one, out: dict, log, budget_of, stall: float) -> None:
+    """items 를 각자 스레드로 돌리고 감시 — 예산 초과·진행 신호 stall 초 없음이면 그 일을 '시간 초과' 오류로 끝내고 하위 프로그램을 끈다.
+    (판정은 서버 flow — 오류를 받으면 스스로 한 번 다시·다음 방법·회원 선택지로. 실행기는 절대 한없이 기다리지 않는다.)"""
+    import threading
+    th = []
+    for d in items:
+        t = threading.Thread(target=run_one, args=(d,), daemon=True)
+        t.start()
+        th.append((d, t, time.time()))
+    sig, last = _dir_sig(W), time.time()
+    _PROG["t"] = time.time()
+    while any(t.is_alive() for _, t, _ in th):
+        next((t for _, t, _ in th if t.is_alive()), th[0][1]).join(1.0 if stall > 5 else 0.2)   # 끝나면 바로 깨어난다(잠만 자면 일마다 1초씩 늦는다)
+        now = time.time()
+        s2 = _dir_sig(W)
+        if s2 != sig:
+            sig, last = s2, now
+        last = max(last, float(_PROG.get("t") or 0))
+        for d, t, t0 in th:
+            rid = str(d.get("id") or d.get("cmd"))
+            if not t.is_alive() or rid in out:
+                continue
+            over = now - t0 > float(d.get("budget") or budget_of(str(d.get("cmd"))))
+            stuck = now - last > stall
+            if over or stuck:
+                why = f"시간 초과({'예산 ' + str(int(now - t0)) + '초' if over else '진행 신호 ' + str(int(now - last)) + '초 없음'})"
+                out[rid] = {"error": why, "timed_out": True}
+                k = _kill_children()
+                log(f"[runner] {d.get('cmd')} {now - t0:.1f}s ERR {why} — 하위 프로그램 {k}개 끔")
+        if all((not t.is_alive()) or (str(d.get("id") or d.get("cmd")) in out) for d, t, _ in th):
+            break
+
+
+def run_do(W: Path, do: list[dict], log=print, stall: float | None = None) -> dict:
+    """do 목록을 순서대로 — 허용 목록 밖 cmd 는 돌리지 않는다. 한 cmd 가 실패해도 그 결과에 error 를 담고 다음으로(판정은 서버).
+    일마다 시간 예산(BUDGET)·진행 감시(STALL_SEC) — 넘으면 '시간 초과' 오류로 끝낸다(멈춘 채 대기 금지)."""
     _guard_cache_mode()
     W.mkdir(parents=True, exist_ok=True)
     out = {}
+    stall = STALL_SEC if stall is None else stall
 
     def one(d):
         fn = CMDS.get(str(d.get("cmd")))
@@ -1384,25 +1495,30 @@ def run_do(W: Path, do: list[dict], log=print) -> dict:
             out[rid] = {"error": f"허용되지 않은 명령: {d.get('cmd')}"}
             return
         t0 = time.time()
+        progress(W, CMD_LABEL.get(str(d.get("cmd")), "만드는 중"))
         try:
-            out[rid] = fn(W, d)
+            res = fn(W, d)
+            if rid not in out:                     # 감시가 이미 '시간 초과'로 끝낸 일은 늦게 온 결과로 덮지 않는다
+                out[rid] = res
+            return
         except CacheMiss as e:
-            out[rid] = {"error": f"cache_miss: {e}"}
+            out.setdefault(rid, {"error": f"cache_miss: {e}"})
         except StageError as e:
-            out[rid] = {"error": str(e)[:600]}
+            out.setdefault(rid, {"error": str(e)[:600]})
         except Exception as e:  # noqa: BLE001 — 실패 이유를 서버에 그대로(조용히 삼키지 않는다)
-            out[rid] = {"error": f"{type(e).__name__}: {str(e)[:500]}"}
-        log(f"[runner] {d.get('cmd')} {time.time() - t0:.1f}s {'ERR ' + out[rid]['error'][:120] if isinstance(out[rid], dict) and out[rid].get('error') else 'ok'}")
+            out.setdefault(rid, {"error": f"{type(e).__name__}: {str(e)[:500]}"})
+        finally:
+            r0 = out.get(rid)
+            if isinstance(r0, dict) and not r0.get("timed_out"):
+                log(f"[runner] {d.get('cmd')} {time.time() - t0:.1f}s {'ERR ' + str(r0.get('error'))[:120] if r0.get('error') else 'ok'}")
 
     batch: list = []
 
+    budget_of = lambda c: BUDGET.get(c, BUDGET_DEFAULT)  # noqa: E731
+
     def flush():
-        if len(batch) == 1:
-            one(batch[0])
-        elif batch:
-            from concurrent.futures import ThreadPoolExecutor
-            with ThreadPoolExecutor(max_workers=len(batch)) as ex:
-                list(ex.map(one, batch))
+        if batch:
+            _watch(W, list(batch), one, out, log, budget_of, stall)
         batch.clear()
 
     for d in do or []:
@@ -1410,7 +1526,7 @@ def run_do(W: Path, do: list[dict], log=print) -> dict:
             batch.append(d)
             continue
         flush()
-        one(d)                                    # 나머지(유튜브·쓰기·계획·렌더)는 차례대로 — 앞 결과를 뒤가 읽는다·유튜브는 한 번에 하나
+        _watch(W, [d], one, out, log, budget_of, stall)   # 나머지(유튜브·쓰기·계획·렌더)는 차례대로 — 앞 결과를 뒤가 읽는다·유튜브는 한 번에 하나
     flush()
     return out
 
