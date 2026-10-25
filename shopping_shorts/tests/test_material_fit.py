@@ -222,3 +222,15 @@ def test_identity_other_person_line_skips_same_person(tmp_path):
     n2 = next(x for x in r["lines"] if x["id"] == "N2#0")
     assert n2["pick"] and 10.0 <= n2["pick"]["ss"] < 15.0, n2["pick"]
     assert any("identity" in c["why"] for c in n2["rejected"])
+
+
+def test_rewrite_check_length_mode_n1():
+    """㉛ 보강: 글자 수 수정 = length 모드(정보 낱말·조사 유지·facts·tts_chars·audit). ep13 N1 ①'(연결어 '만든' 접기) ○ · ①(조사 제거) ×(A13)."""
+    old = "연어로 만든 한국 크림을 얼굴에 바르고 경악한 외국인이 있다는데요?"
+    ok = MF.rewrite_check(old, "한국 연어 크림을 얼굴에 바르고 경악한 외국인이 있다는데요?", mode="length", audit_ok=True, max_chars=26)
+    assert ok["ok"], ok
+    bad = MF.rewrite_check(old, "연어로 만든 한국 크림 얼굴에 바르고 경악한 외국인 있다는데요?", mode="length", audit_ok=True, max_chars=26)
+    assert not bad["ok"] and not bad["checks"]["particles_kept"]
+    assert not MF.rewrite_check(old, "한국 크림을 얼굴에 바르고 경악한 외국인이 있다는데요?", mode="length", audit_ok=True, max_chars=26)["ok"]   # '연어' 빠짐
+    assert not MF.rewrite_check(old, "한국 연어 크림을 얼굴에 바르고 경악한 외국인이 있다는데요?", mode="length", audit_ok=False, max_chars=26)["ok"]
+    assert not MF.rewrite_check(old, "한국 연어 크림을 얼굴에 바르고 경악한 외국인이 있다는데요?", mode="scene")["ok"]                     # 장면 모드는 어순 보존이라 ×

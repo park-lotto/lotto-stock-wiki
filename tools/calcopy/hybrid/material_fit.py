@@ -736,12 +736,31 @@ def _info_tokens(t: str) -> list[str]:
     return out
 
 
-def rewrite_check(old: str, new: str, facts=None, new_facts=None, llm=None) -> dict:
-    """(판단 주인 — 대사 고침 뜻 유지, 표준 §11-4 ㉖) 전부 통과해야 제안으로 낸다:
-    ① 정보 낱말 보존(원문 어절 줄기·수·단위가 새 문장에 순서대로 다 있음 = '원문 + 덧붙임' 꼴) ② facts id 같음 ③ 글자 ±2 ④ Claude 역검증 2/3(같은 사실 ∧ 달라진 낱말 0 — 2회가 갈리면 3회째, ㊳).
-    반환 {ok, checks, missing, reverse}. 10-25 사례: '캡슐은 한두 알이면 충분하다던데' → '이 알갱이가 얼굴에 붙는다던데' 는 ①에서 걸린다."""
+CONNECTORS = ("만든", "만들어진", "만들어", "통한", "이라는", "라는")    # 접어도 되는 연결어(length 모드 — '연어로 만든 한국 크림' → '한국 연어 크림', 10-25 페이블 ①')
+
+
+def rewrite_check(old: str, new: str, facts=None, new_facts=None, llm=None, mode: str = "scene", audit_ok=None, max_chars: int | None = None) -> dict:
+    """(판단 주인 — 대사 고침 뜻 유지 한 함수·두 모드, 표준 §11-4 ㉖ · §11-5 ㉛ 보강)
+    mode="scene"(장면에 맞추는 고침, ㉖): ① 정보 낱말이 원문 순서대로 다 있음(= 원문 + 덧붙임만, 어순·연결어 보존) ② facts 같음 ③ 글자 ±2
+        ④ Claude 역검증 2/3(같은 사실 ∧ 달라진 낱말 0 — 2회가 갈리면 3회째, ㊳).
+    mode="length"(글자 수 위반 수정, ㉛): ① 정보 낱말 보존(순서 무관, 연결어 CONNECTORS 만 접기 허용) ② **조사·어미 유지**(A13 '읽는 글은 조사를 빼지 않는다' —
+        원문 어절은 그대로 남아야, 접은 연결어 바로 앞 어절만 예외) ③ facts 같음 ④ tts_chars ≤ max_chars ⑤ audit 위반 0(audit_ok) — 역검증 없음(4조건 = 페이블 사인 조건).
+    반환 {ok, checks, missing, reverse}. 사례: scene '캡슐은 한두 알이면 충분하다던데' → '이 알갱이가 얼굴에 붙는다던데' ×(①) ·
+        length '연어로 만든 한국 크림을 …' → '한국 연어 크림을 …' ○ · '… 크림 얼굴에 … 외국인 있다는데요?'(조사 제거) ×(②)."""
     from tools.calcopy.hybrid.common import nchar
     o, n = _info_tokens(old), _info_tokens(new)
+    facts_same = (facts or None) == (new_facts if new_facts is not None else facts or None)
+    if mode == "length":
+        ow = re.findall(r"[가-힣A-Za-z0-9]+", old)
+        nw = re.findall(r"[가-힣A-Za-z0-9]+", new)
+        dropped = [i for i, w in enumerate(ow) if w in CONNECTORS and w not in nw]
+        exempt = {i - 1 for i in dropped} | set(dropped)
+        keep_o = [t for i, w in enumerate(ow) if i not in set(dropped) for t in _info_tokens(w)]
+        missing = [t for t in keep_o if t not in n]
+        not_verbatim = [w for i, w in enumerate(ow) if i not in exempt and w not in nw]
+        checks = {"info_kept": not missing, "particles_kept": not not_verbatim, "facts_same": facts_same,
+                  "tts_chars": max_chars is None or nchar(new) <= max_chars, "audit": True if audit_ok is None else bool(audit_ok)}
+        return {"ok": all(checks.values()), "checks": checks, "missing": missing + not_verbatim, "reverse": [], "mode": mode}
     missing, pos = [], 0
     for t in o:                       # 순서대로 다 있어야(덧붙임만 허용)
         k = next((i for i in range(pos, len(n)) if n[i] == t), None)
@@ -749,8 +768,7 @@ def rewrite_check(old: str, new: str, facts=None, new_facts=None, llm=None) -> d
             missing.append(t)
         else:
             pos = k + 1
-    checks = {"info_kept": not missing, "facts_same": (facts or None) == (new_facts if new_facts is not None else facts or None),
-              "chars": abs(nchar(new) - nchar(old)) <= 2}
+    checks = {"info_kept": not missing, "facts_same": facts_same, "chars": abs(nchar(new) - nchar(old)) <= 2}
     rev = []
     if llm is not None and all(checks.values()):
         good = (lambda x: isinstance(x, dict) and x.get("same") is True and not x.get("changed"))
@@ -763,7 +781,7 @@ def rewrite_check(old: str, new: str, facts=None, new_facts=None, llm=None) -> d
         checks["reverse_2of3"] = sum(1 for x in rev if good(x)) >= 2
     elif llm is not None:
         checks["reverse_2of3"] = False            # 앞 검사에서 걸리면 역검증은 안 부른다(호출 아낌)
-    return {"ok": all(checks.values()), "checks": checks, "missing": missing, "reverse": rev}
+    return {"ok": all(checks.values()), "checks": checks, "missing": missing, "reverse": rev, "mode": mode}
 
 
 def propose_fixes(weak_lines: list[str], sel: list[dict], S: dict, llm, version: str | None, work: Path, log=print) -> list[dict]:
