@@ -1,0 +1,113 @@
+{
+ "채널": "재미썸홈",
+ "channel": "재미썸홈",
+ "preset": "channel/evenshopping/preset/숏템템플릿/manifest.json",
+ "topic": "똥 모양 티 인퓨저(나레+원음 혼합형)",
+ "variant": "원음C_혼합",
+ "voice": {
+  "name": "진우",
+  "voice_id": "tc_632293f759d649937b97f323"
+ },
+ "desktop_title": "똥티인퓨저_원음C_혼합",
+ "title_slots": {
+  "hook1": "차 마니아 기립박수",
+  "hook2": "천재의 발명품",
+  "bodyTitle": "똥물 우러나는 티 인퓨저?"
+ },
+ "snapshot": {
+  "presetId": "s0101",
+  "captionPack": "clean",
+  "motionPack": "1",
+  "hookMotion": "zoom-punch",
+  "hookBandMotion": "rise"
+ },
+ "lines": [
+  {
+   "text": "전 세계 차 마니아들 기립박수 치게 만든 천재의 발명품.",
+   "tts": "전 세계 차 마니아들 기립박수 치게 만든 천재의 발명품.",
+   "role": "title",
+   "emph": [
+    "천재의 발명품"
+   ]
+  },
+  {
+   "text": "생긴 건 딱 장난감인데 SNS에서 난리라는데,",
+   "tts": "생긴 건 딱 장난감인데 SNS에서 난리라는데,",
+   "role": "bait",
+   "emph": [
+    "난리"
+   ]
+  },
+  {
+   "text": "근데 반전은 이게 장난감이 아니라 진짜 똥 모양 티 인퓨저라는 거.",
+   "tts": "근데 반전은 이게 장난감이 아니라 진짜 똥 모양 티 인퓨저라는 거.",
+   "role": "reveal",
+   "emph": [
+    "반전은",
+    "티 인퓨저"
+   ]
+  },
+  {
+   "text": "근데 진짜 놀라운 건 컵에 걸면 똥이 변기에 앉은 모양이 된다는 거.",
+   "tts": "근데 진짜 놀라운 건 컵에 걸면 똥이 변기에 앉은 모양이 된다는 거.",
+   "role": "point",
+   "emph": [
+    "변기에 앉은"
+   ]
+  },
+  {
+   "text": "심지어 실리콘이라 펄펄 끓는 물을 부어도 멀쩡하고,",
+   "tts": "심지어 실리콘이라 펄펄 끓는 물을 부어도 멀쩡하고,",
+   "role": "more",
+   "emph": [
+    "실리콘"
+   ]
+  },
+  {
+   "text": "이게 미친 포인트인 게 물 부으면 찻물이 진짜 똥물처럼 스멀스멀 우러나버림.",
+   "tts": "이게 미친 포인트인 게 물 부으면 찻물이 진짜 똥물처럼 스멀스멀 우러나버림.",
+   "role": "climax",
+   "emph": [
+    "똥물처럼",
+    "스멀스멀"
+   ]
+  },
+  {
+   "text": "이 똥물 차를 처음 본 사람 반응은?",
+   "tts": "이 똥물 차를 처음 본 사람 반응은?",
+   "role": "bridge"
+  },
+  {
+   "kind": "orig",
+   "src": "GP6L6Ois1OM.mp4",
+   "spans": [
+    [
+     10.2,
+     12.15
+    ]
+   ],
+   "text": "“와, 소름 돋았어!”",
+   "role": "orig",
+   "orig_en": "I have goosebumps",
+   "emph": [
+    {
+     "word": "소름 돋았어",
+     "color": "#7FD3FF"
+    }
+   ]
+  },
+  {
+   "text": "근데 이 똥물 차로 떼돈을 벌었다고.",
+   "tts": "근데 이 똥물 차로 떼돈을 벌었다고.",
+   "role": "end",
+   "emph": [
+    "떼돈"
+   ]
+  }
+ ],
+ "source_audio": {
+  "keep": true,
+  "volume": 30,
+  "duck_db": 14
+ }
+}

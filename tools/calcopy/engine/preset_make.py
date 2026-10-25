@@ -149,7 +149,8 @@ def load_work(wdir: Path, M: dict, cfg: dict) -> dict:
     data = Path(R.get("cand_dir") or DATA_ROOT / slug / wdir.name)
     raw_lines = S.get("lines") or S.get("spine55") or []
     lines = [{"text": l.get("text") or l.get("line"), "tts": l.get("tts") or l.get("text") or l.get("line"),
-              "slot": l.get("slot") or l.get("role")} for l in raw_lines]
+              "slot": l.get("slot") or l.get("role"),
+              **({"orig": {"src": l["src"], "spans": l["spans"]}} if l.get("kind") == "orig" else {})} for l in raw_lines]   # 원음 줄(engine/orig_audio)
     acc = cfg.get("caption_mode") == "accumulate"
     if acc:   # 화면 줄바꿈 '/' 는 줄 글에서 뺀다(맞춤 검사·줄 시각용). 읽는 글은 tts 칸(없으면 줄 글)
         for l, r in zip(lines, raw_lines):
@@ -189,7 +190,8 @@ def load_work(wdir: Path, M: dict, cfg: dict) -> dict:
         path = meme_dir / f"{src[5:]}.mp4" if src.startswith("meme:") else (data / src if src.endswith(".mp4") else data / f"src_{src}.mp4")
         cuts.append({"src": src, "path": path, "ss": float(r["ss"] if "ss" in r else r["src_t0"]), "crop": r.get("src_crop"),
                      "crop_x": r.get("crop_x"), "kind": r.get("kind") or "", "meme": src.startswith("meme:") or r.get("kind") == "짤",
-                     "seen": r.get("seen") or r.get("ours") or "", "pieces": [k], "move": r.get("move")})
+                     "seen": r.get("seen") or r.get("ours") or "", "pieces": [k], "move": r.get("move"),
+                     **({"bed": True} if r.get("bed") else {}), **({"orig": True} if r.get("orig") else {})})   # 원음 깔기·원음 줄 컷(engine/orig_audio)
     title = S.get("title_slots") or M.get("sample_title") or {}
     voice = (S.get("voice") or {}).get("voice_id") or cfg["voice_id"]
     name = S.get("desktop_title") or re.sub(r"^작품\d+_", "", wdir.name)
@@ -469,7 +471,7 @@ def build_cuts(w, timed, dur, cfg):
         c["f0"], c["f1"] = w["pieces"][c["pieces"][0]]["f0"], w["pieces"][c["pieces"][-1]]["f1"]
         c["n"] = max(1, c["f1"] - c["f0"])
         c["speed"] = 1.0
-        if fit.get("enabled"):
+        if fit.get("enabled") and not c.get("orig"):   # 원음 줄 컷은 입 맞춤 자리 그대로(orig_audio.sync_cuts)
             fit_shot(c, fit)
         if c["ss"] + c["n"] / FPS * c["speed"] > c["src_dur"] + 1e-3:
             raise ValueError(f"소스 길이 부족 {c['src']} {c['ss']}+{c['n'] / FPS * c['speed']:.2f}>{c['src_dur']:.2f}")
@@ -593,7 +595,7 @@ def snapshot_and_timeline(w, M, cfg, pdir: Path):
     elif fr == "template":
         T = w["title"]
         snap = scene_style.validate_snapshot({"mode": "story", "presetId": M["template"]["preset_id"],
-                                              "text": {"channel": M["brand"]["channel_name"], **T}})
+                                              "text": {"channel": M["brand"]["channel_name"], **T}, **(w["S"].get("snapshot") or {})})   # 작품별 꾸미기(썰쇼핑 틀·시작 효과) — 없으면 종전
         head = {"text": f"{T['hook1']}\n{T['hook2']}", "body_title": T["bodyTitle"]}
     else:
         raise ValueError(f"frame.kind 모름: {fr}")
@@ -732,6 +734,7 @@ def sound(w, cfg, narr: Path, total: float, out: Path, log: dict) -> Path:
         pname, pdir = SP.pack_for(sfx.get("pack_customer", 0))
         ring = int(sfx.get("ring_every") or 1)   # 칸 n개마다 한 칸만 울림(나머지는 팩의 mute_beats 로) — 썰템쇼 벤치 밀도. 없으면 종전(전 칸)
         mute = [li for li in range(len(stl)) if li % ring] if ring > 1 else []
+        mute += [li for li, l in enumerate(w["lines"]) if l.get("orig") and li not in mute]   # 원음 위 효과음 금지(규칙서 ⑥)
         pack = {"name": pname, "dir": pdir, "density": sfx.get("density", "normal"), "level": sfx.get("level", "normal"), "mute_beats": mute}
         evs = SP.events(stl, pack)
         (out / "sfx_events.json").write_text(json.dumps({"pack": pname, "density": pack["density"], "events": evs, "timeline": stl},
@@ -802,8 +805,8 @@ def checks(w, cfg, final: Path, narr: Path, sfx_n: int, out: Path, work: Path, p
     add("B1", "길이(초)", round(d, 2), C["length_s"]["allow"][0] <= d <= C["length_s"]["allow"][1], f"{C['length_s']['allow']} {C['length_s']['from']}")
     add("B2", "LUFS", I, C["lufs"]["allow"][0] <= I <= C["lufs"]["allow"][1], f"{C['lufs']['allow']} {C['lufs']['from']}")
     add("B2", "최고점 dBFS", pk, pk <= C["peak_max_dbfs"], f"≤ {C['peak_max_dbfs']}")
-    chars = sum(p["chars"] for p in w["pieces"])
-    cps = round(chars / dur_of(narr), 2)
+    chars = sum(p["chars"] for p in w["pieces"] if not w["lines"][p["line"]].get("orig"))   # 원음 줄(번역 자막)은 말속도에서 뺀다
+    cps = round(chars / dur_of(w.get("narr_only") or narr), 2)
     add("B3", "말속도(자/초)", cps, C["cps"]["allow"][0] <= cps <= C["cps"]["allow"][1], f"{C['cps']['allow']} {C['cps']['from']}")
     cd = sorted(round(c["n"] / FPS, 3) for c in w["cuts"])
     med = cd[len(cd) // 2]
@@ -939,15 +942,22 @@ def make_one(pdir: Path, wdir: Path, a) -> dict:
         fails = [f"{r['B']} {r['항목']} {r['값']}" for r in rows if not r["ok"]]
         return {"work": w["name"], "ok": None, "note": f"계획 시트 {wdir / 'plan' / '계획_시트_자동.jpg'} · " + ("; ".join(fails) or "계획 검사 통과"),
                 "total_s": round(sum(clk.steps.values()), 1)}
-    full = tts(w, cfg, cache, a.tts, a.allow_tts, log)
+    from tools.calcopy.engine import orig_audio as OA     # 원음 줄·원음 깔기 — 칸 없으면 종전 그대로
+    wn = OA.narr_view(w) if OA.has_orig(w) else w
+    full = tts(wn, cfg, cache, a.tts, a.allow_tts, log)
     clk.lap("TTS")
-    narr, tempo = narration(full, w, cfg, out)
+    narr, tempo = narration(full, wn, cfg, out)
     log["atempo"] = tempo
-    timed, dur = timing(w, narr, log, cfg, cache)
-    timed, dur, narr = fix_line_rates(timed, dur, w, cfg, narr, plan)
+    timed, dur = timing(wn, narr, log, cfg, cache)
+    timed, dur, narr = fix_line_rates(timed, dur, wn, cfg, narr, plan)
     log["line_rate"] = plan["line_rate"]
+    if wn is not w:
+        w["narr_only"] = narr
+        timed, dur, narr = OA.splice(w, wn, timed, narr, out, run, run_bytes, dur_of, log)
     clk.lap("나레·줄 시각·줄별 말속도")
     build_cuts(w, timed, dur, cfg)
+    if wn is not w:
+        OA.sync_cuts(w, FPS)
     mat, mat_map = render_parts(w, cfg, cache, out, log)
     clk.lap("컷 조각")
     snap, tl, head = snapshot_and_timeline(w, M, cfg, pdir)
@@ -955,6 +965,8 @@ def make_one(pdir: Path, wdir: Path, a) -> dict:
     compose_cached(mat, mat_map, tl, snap, head, vid, work, cache, log)
     clk.lap("틀 합성")
     total = sum(c["n"] for c in w["cuts"]) / FPS
+    if w["S"].get("source_audio"):
+        narr = OA.bed(w, narr, out, FPS, log)
     mix, sfx_n = sound(w, cfg, narr, total, out, log)
     final = out / "final.mp4"
     # 완성본 인코딩·진짜 최고점 지킴은 engine/master_guard 한 곳(10-18 원샷1_전동칫솔: mix −0.9 → AAC 뒤 +6.3 dBFS)
