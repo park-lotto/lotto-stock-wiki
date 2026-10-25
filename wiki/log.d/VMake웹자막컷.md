@@ -1,0 +1,1 @@
+2026-10-26 — 관제 270 VMake 웹 라인: 보낼 컷 주인 mix_pipeline.vmake_send_cuts + 보내기 직전 관문(_vmake_clean send=, 넘치면 업체 0·경보) + 장부 vmake_sent.json·검사 scripts/vmake_sent_check.py. 원본 소스 통째 길 폐쇄(SHORTS_CLEAN_FINAL 폐지). CLAUDE.md 0순위-D(VMake)·0순위-E(진행 표시). 웹엔 컷별 글자 자동 판정기 없음 — 사장님 결정 대기.

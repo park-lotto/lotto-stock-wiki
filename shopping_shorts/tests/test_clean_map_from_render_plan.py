@@ -15,6 +15,14 @@ import pytest
 
 from shopping_shorts import mix_pipeline as mp, video_assemble as va
 
+
+@pytest.fixture(autouse=True)
+def _vmake_gate_off(monkeypatch):
+    """이 파일은 VMake 전송 관문(10-26 관제 270)이 아닌 다른 판단을 시험한다 — 관문은 test_vmake_send_rule.py 가 잰다."""
+    import shopping_shorts.mix_pipeline as _mpg
+    monkeypatch.setattr(_mpg, "_vmake_gate", lambda *a, **k: None)
+
+
 _DURS = {"s0": 30.0, "s1": 40.0}
 _TTS = {0: "/t/b0.mp3", 1: "/t/b1.mp3", 2: "/t/b2.mp3"}
 
@@ -94,7 +102,7 @@ def test_clean_base_uses_map_of_assembled_file_even_if_plan_changed(tmp_path, en
     env.setattr(mp, "_charge_clean", lambda *a, **k: 0)
     env.setattr(mp, "_clean_final_found", lambda *a, **k: None)
 
-    def fake_vmake(src, keys, out, tier=None, resume_key=None):
+    def fake_vmake(src, keys, out, tier=None, resume_key=None, send=None):
         Path(out).write_bytes(Path(src).read_bytes())
         return out
     env.setattr(mp, "_vmake_clean", fake_vmake)

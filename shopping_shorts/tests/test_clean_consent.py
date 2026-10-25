@@ -116,7 +116,7 @@ def test_render_no_base_and_tier_upgrade_reasons(tmp_path, monkeypatch):
     job, work, store, charges = _setup(tmp_path, monkeypatch, base=False)
     prev = work / "preview.mp4"; prev.write_bytes(b"p" * 2048); job["preview_path"] = str(prev)
     monkeypatch.setattr(mp, "_probe_seconds", lambda p: 30.4)
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", True, raising=False)
     code, d = _status(_render({}, monkeypatch))
     assert code == 409 and d["reason"] == "no_base" and d["seconds"] == 30.4 and d["credits"] == 62
     job2, work2, store2, _ = _setup(tmp_path / "t2", monkeypatch, tier="pro")
@@ -133,7 +133,7 @@ def test_worker_blocks_when_amount_grew(tmp_path, monkeypatch):
     job, work, store, charges = _setup(tmp_path, monkeypatch)
     monkeypatch.setattr(mp, "_synthesize_beats", lambda *a, **k: None)
     monkeypatch.setattr(mp, "_vmake_keys", lambda *a, **k: ["k"])
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", True, raising=False)
     incr = []
     monkeypatch.setattr(mp, "incremental_clean", lambda *a, **k: incr.append(1) or a[6])
     mp.run_clean_sources("jobx", "db", str(tmp_path), confirm_clean=True, confirm_secs=0.3)
@@ -159,7 +159,7 @@ def test_render_worker_without_consent_stops_before_clean(tmp_path, monkeypatch)
 
 def test_button_route_needs_confirm_and_keeps_cuts_unsaved(tmp_path, monkeypatch):
     job, work, store, charges = _setup(tmp_path, monkeypatch)
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", True, raising=False)
     monkeypatch.setattr(A, "_clean_cuts_from_body", lambda job, jid, cuts: ["0|s0|1.00"])
     r = A.api_produce_mix_clean(None, {"job_id": "jobx", "cuts": ["0|s0|1.00"]})
     code, d = _status(r)

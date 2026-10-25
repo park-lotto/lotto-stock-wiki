@@ -77,11 +77,11 @@ def test_clean_route_single_rule(monkeypatch):
     assert mp.clean_route({"subtitle_removal": 1}, base) == "base"
     assert mp.clean_route({"subtitle_removal": 0}, None) == "none"
     assert mp.clean_route({"subtitle_removal": 1}, None, skip_clean=True) == "none"
-    assert mp.clean_route({"subtitle_removal": 1, "clean_sources": {"s0": "/c.mp4"}}, None) == "sources"
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+    assert mp.clean_route({"subtitle_removal": 1, "clean_sources": {"s0": "/c.mp4"}}, None) == "final"   # 10-26 VMake 규칙: 소스별 청소본이 편성 소스를 다 덮지 못하면(여기선 파일 없음) 완성본 경로
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", True, raising=False)
     assert mp.clean_route({"subtitle_removal": 1}, None) == "final"
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", False)
-    assert mp.clean_route({"subtitle_removal": 1}, None) == "sources"          # 렌더: 앞으로 만들 방식(스위치)
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", False, raising=False)
+    assert mp.clean_route({"subtitle_removal": 1}, None) == "final"            # 10-26: 스위치 폐지 — 원본 소스 전송 길 없음
     assert mp.clean_route({"subtitle_removal": 1}, None, made=True) == "final"  # 내보내기: 이미 만든 완성본
     assert mp.clean_route({"subtitle_removal": 1, "clean_sources": {"s0": "/c"}}, None, made=True) == "sources"
 

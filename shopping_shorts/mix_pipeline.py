@@ -2182,7 +2182,7 @@ _CLEAN_MAX_SEC = float(os.environ.get("SHORTS_CLEAN_MAX_SEC", "90"))
 
 
 def _probe_seconds(path):
-    """영상 길이(초). 못 재면 None — 못 쟀다고 막지는 않는다(가드는 아는 것만 막는다)."""
+    """영상 길이(초). 못 재면 None — 길이 상한 가드는 못 쟀다고 막지 않지만, VMake 전송 관문(_vmake_gate, 10-26)은 못 재면 막는다."""
     try:
         out = subprocess.run(
             ["ffprobe", "-v", "error", "-show_entries", "format=duration",
@@ -2193,7 +2193,82 @@ def _probe_seconds(path):
         return None
 
 
-def _vmake_clean(video_path, keys, out_path, tier=None, resume_key=None):
+# ── ★VMake 규칙 주인(웹 라인) — 사장님 10-26 "어떤 영상이든 동일: 장면 편집 뒤 자막 있는 컷만" ─────────────
+# 사고(10-26): 회원 flow 가 원본 524초를 통째로 VMake 에 보냈다(칼카피 쪽 주인 tools/calcopy/vmake_clean.py 로 고침).
+# 웹 라인도 같은 규칙 — 업체로 보내는 초는 **확정된 편집 컷(조립본 컷 지도) ∩ 자막 있는 컷**의 합을 넘지 못한다.
+#   · 보낼 컷 = vmake_send_cuts(컷 지도, 선택) 한 곳. 컷별 '자막 있나' 판정은 웹 라인에선 **고객의 장면 고르기**(clean_cuts)뿐이다
+#     (자동 글자 판정기는 웹 라인·서버에 없다 — 10-26 확인: cv2·onnxruntime 미설치). 판정이 없으면 확정 컷 각각을 보낸다
+#     — 원본 통째·안 쓰는 구간은 어떤 경우에도 보내지 않는다('애매하면 통째' 금지).
+#   · 보내기 직전 관문 = _vmake_clean(send=…) — 보낼 파일 길이 > 허용 초 + VMAKE_SENT_TOL 이면 **업체를 부르지 않고** 멈추고 경보.
+#     send 없이 부르면(주인을 안 거친 새 코드) 역시 멈춘다. 보낸 초는 job 폴더 vmake_sent.json 장부에 남는다(결과물 검사).
+VMAKE_SENT_TOL = 0.5           # 초 — 실측 357개 청소본: 파일 길이 − 컷 지도 합 ≤ 0.02초
+VMAKE_LEDGER = "vmake_sent.json"
+VMAKE_NO_OWNER_MSG = "자막 지우기 대상 구간이 확인되지 않아 중단했습니다(비용 없음) — 관리자에게 알렸어요"
+VMAKE_OVER_MSG = "자막 지우기로 보낼 길이가 편집된 장면보다 길어 중단했습니다(비용 없음) — 관리자에게 알렸어요"
+
+
+def vmake_send_cuts(cuts, sel=None):
+    """VMake 로 보낼 컷 — **판단 주인**. cuts = 확정된 편집 컷(조립본 컷 지도, 완성본 순서), sel = 컷별 '지울 컷' 판정(고객 장면 고르기,
+    None = 판정 없음 → 확정 컷 전부). 반환 = 보낼 컷 목록. 새 판정(자동 글자 판정 등)이 생기면 **여기에만** 교차한다."""
+    return [c for c in (cuts or []) if cut_selected(c, sel)]
+
+
+def vmake_allow_sec(cuts):
+    """보낼 컷들의 초 합(허용 상한) — 컷 지도의 dur 합."""
+    tot = 0.0
+    for c in cuts or []:
+        try:
+            tot += max(0.0, float(c.get("dur") or 0.0))
+        except (TypeError, ValueError):
+            continue
+    return round(tot, 3)
+
+
+def vmake_sent_check(sec, allow, tol=VMAKE_SENT_TOL):
+    """결과물 검사 — 보낸(보낼) 초 sec 가 허용 초 allow(+tol) 이하인가. 반환 = 문제 문장 목록(빈 목록 = 통과).
+    못 잰 값(None)은 통과시키지 않는다(숫자를 지어내지 않는다)."""
+    if sec is None or allow is None:
+        return ["보낸 초 또는 허용 초를 잴 수 없음(sec=%r allow=%r)" % (sec, allow)]
+    if float(sec) > float(allow) + tol:
+        return ["VMake 로 %.2f초 > 보낼 컷 합 %.2f초(+%.1f) — 편집 컷 밖(원본 통째·안 쓰는 구간)까지 보냄" % (float(sec), float(allow), tol)]
+    return []
+
+
+def _vmake_ledger_add(work, row):
+    """job 폴더 장부(vmake_sent.json)에 한 줄 — 실패해도 청소는 막지 않는다(경고만)."""
+    try:
+        p = Path(work) / VMAKE_LEDGER
+        rows = json.loads(p.read_text(encoding="utf-8")) if p.exists() else []
+        rows.append(row)
+        tmp = p.with_suffix(".tmp")
+        tmp.write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding="utf-8")
+        os.replace(str(tmp), str(p))
+    except Exception as e:                          # noqa: BLE001 — 장부 실패가 고객 작업을 막지 않는다
+        print(f"[clean] VMake 장부 기록 실패(무시): {e!r}", file=sys.stderr)
+
+
+def _vmake_gate(video_path, sec, send):
+    """보내기 직전 관문 — send={"kind", "allow", "work"} 가 없거나 길이가 넘치면 업체를 부르지 않고 경보 후 예외."""
+    why = None
+    if not isinstance(send, dict) or send.get("allow") is None:
+        why, msg = "보낼 구간 주인(vmake_send_cuts)을 거치지 않은 VMake 호출", VMAKE_NO_OWNER_MSG
+    else:
+        bad = vmake_sent_check(sec, send.get("allow"))
+        if bad:
+            why, msg = bad[0], VMAKE_OVER_MSG
+    if why is None:
+        return
+    print(f"[clean] ★VMake 관문 거절(업체 호출 0): {why} 파일={Path(video_path).name}", file=sys.stderr)
+    try:
+        from shopping_shorts import ops_alert
+        ops_alert.raise_alert("vmake_send_gate", "VMake 전송 관문 거절 — " + why[:80],
+                              f"파일={video_path} send={send!r}", signature=why[:120])
+    except Exception as _ae:                        # noqa: BLE001
+        print(f"[ops_alert] vmake_send_gate 알림 실패(무해): {_ae!r}", file=sys.stderr)
+    raise RuntimeError(msg)
+
+
+def _vmake_clean(video_path, keys, out_path, tier=None, resume_key=None, send=None):
     """VMake 청소 1회 — **크레딧이 떨어진 키는 건너뛰고 다음 키로** 이어서 시도한다.
 
     ★키를 넘기는 판단은 여기 한 곳에서만 한다(0순위-B). 호출부 셋(_clean_one·
@@ -2211,12 +2286,22 @@ def _vmake_clean(video_path, keys, out_path, tier=None, resume_key=None):
     tier = tier or TIER_BASIC
     # ★돈이 나가기 **전에** 잰다(위 _CLEAN_MAX_SEC 주석 참조).
     sec = _probe_seconds(video_path)
+    # ★VMake 규칙 관문(10-26) — 보낼 길이 ≤ 확정 편집 컷(∩ 자막 컷) 합. 넘치거나 주인을 안 거쳤으면 업체 호출 0.
+    _vmake_gate(video_path, sec, send)
     if sec is not None and sec > _CLEAN_MAX_SEC:
         raise RuntimeError(
             f"자막제거 대상이 너무 깁니다({sec:.0f}초 > 상한 {_CLEAN_MAX_SEC:.0f}초). "
             "비용이 초 단위로 나가므로 중단했습니다.")
     print(f"[clean] tier={tier} 길이={sec if sec is None else round(sec, 1)}초 "
           f"파일={Path(video_path).name}", file=sys.stderr)
+    _snd = send if isinstance(send, dict) else {}
+    # 장부 자리 = job 폴더(send["work"]). 없으면(관문을 끈 시험) 남기지 않는다 — 현재 폴더에 흘리지 않게
+    if _snd.get("work"):
+        _vmake_ledger_add(_snd["work"],
+                          {"at": time.strftime("%Y-%m-%d %H:%M:%S"), "kind": _snd.get("kind"),
+                           "file": Path(video_path).name,
+                           "sec": round(float(sec), 3) if sec is not None else None,
+                           "allow": _snd.get("allow"), "tier": tier})
     from shopping_shorts.vmake_client import is_preprocess_fail
     last = None
     src = video_path
@@ -3020,7 +3105,7 @@ def _join_batches(items, work):
     return batches
 
 
-def _clean_joined(items, keys, work, tag="", tier=None, resume_key=None):
+def _clean_joined(items, keys, work, tag="", tier=None, resume_key=None, allow=None):
     """소스 여러 편을 붙여 **VMake 1콜**로 청소 → {vid: 클린경로}, {vid: region}.
 
     붙이기·청소·자르기 중 어디서 실패하든 예외를 올린다 — 호출부가 옛 방식으로 되돌린다.
@@ -3041,8 +3126,10 @@ def _clean_joined(items, keys, work, tag="", tier=None, resume_key=None):
                     print("[clean] 받아둔 합본 재사용(업체 호출·과금 0): %s" % sub.name, file=sys.stderr)
                     cleaned = out
                     break
-            cleaned = (_vmake_clean(joined, keys, out, tier=tier, resume_key=resume_key) if resume_key
-                       else _vmake_clean(joined, keys, out, tier=tier))
+            # allow = 호출부가 주인 규칙으로 정한 보낼 초(증분 = 바뀐 컷 구간 합). 없으면 관문이 거절한다(원본 통째 금지).
+            _snd = {"kind": "joined" + str(tag), "allow": allow, "work": str(work)} if allow is not None else None
+            cleaned = (_vmake_clean(joined, keys, out, tier=tier, resume_key=resume_key, send=_snd) if resume_key
+                       else _vmake_clean(joined, keys, out, tier=tier, send=_snd))
             break
         except Exception as e:                      # noqa: BLE001 — 재시도 후 상위로
             last = e
@@ -3078,7 +3165,7 @@ def _clean_joined(items, keys, work, tag="", tier=None, resume_key=None):
 #
 # ★재과금을 막는 열쇠는 '편성 서명'이다 — 편성이 그대로면 완성본도 같으니 청소본을 재사용한다.
 #   장면을 진짜로 바꿨을 때만 다시 청소(=5P)한다.
-_FINAL_CLEAN = os.environ.get("SHORTS_CLEAN_FINAL", "0") == "1"   # ★기본 꺼짐 — 실측 후 켠다
+# (SHORTS_CLEAN_FINAL 스위치는 10-26 폐지 — 원본 소스를 보내는 길을 스위치로 되살리지 않는다. VMake 규칙: vmake_send_cuts)
 
 
 def _beat_materials(b):
@@ -3681,9 +3768,21 @@ def _clean_strategy(job):
         569MB를 보내 595초). 같은 판단이 두 군데 적히면 반드시 어긋난다.
       호출부는 이 함수만 부른다 — 새 진입 경로가 생겨도 여기 하나만 보면 된다.
     """
-    if job.get("clean_sources"):
-        return "sources"        # 이미 청소된 소스가 있다 — 재사용한다(재과금 0)
-    return "final" if _FINAL_CLEAN else "sources"
+    # ★VMake 규칙(사장님 10-26 "장면 편집 뒤 자막 있는 컷만"): 소스별 청소는 원본(안 쓰는 구간 포함)을 보내는 길이라
+    #   **새로 보내지 않는다**. 옛 job 의 소스별 청소본이 지금 편성이 쓰는 소스를 **전부** 덮을 때만 재사용(업체 0)하고,
+    #   하나라도 새로 지워야 하면 완성본 경로(확정 컷만)로 간다. SHORTS_CLEAN_FINAL 스위치로 원본 전송 길을 되살리지 않는다.
+    if job.get("clean_sources") and not _sources_todo(job):
+        return "sources"        # 이미 청소된 소스가 다 있다 — 재사용한다(재과금 0)
+    return "final"
+
+
+def _sources_todo(job):
+    """지금 편성이 **화면에 쓰는** 소스 중 소스별 청소본(clean_sources)이 없는 video_id 목록. 편성을 못 읽으면 ['?'](재사용 불가)."""
+    used = _used_spans((job or {}).get("edit_plan") or {})
+    if used is None:
+        return ["?"]
+    cached = (job or {}).get("clean_sources") or {}
+    return [v for v in used if not (cached.get(v) and Path(str(cached[v])).exists())]
 
 
 def clean_route(job, base, skip_clean=False, *, made=False):
@@ -4332,9 +4431,8 @@ def _clean_partial(mix_raw, cuts, sel, keys, out, tier, work, over=None, tag=Non
             raise RuntimeError("이전에 지운 영상과 지금 영상의 길이가 달라 덧지울 수 없습니다(%d != %d프레임) — "
                                "전체 지우기로 다시 해 주세요" % (_onb, nb))
     ranges = []
-    for c in cuts:
-        if not cut_selected(c, sel):
-            continue
+    _send = vmake_send_cuts(cuts, sel)          # ★보낼 컷 = VMake 규칙 주인 한 곳
+    for c in _send:
         a = int(round(float(c["fin"]) * fps))
         b = min(int(round((float(c["fin"]) + float(c["dur"])) * fps)), nb)
         if b <= a:
@@ -4367,8 +4465,11 @@ def _clean_partial(mix_raw, cuts, sel, keys, out, tier, work, over=None, tag=Non
         print("[clean] 받아둔 조각 재사용(업체 호출·과금 0): %s" % cleaned_path.name, file=sys.stderr)
         cleaned = str(cleaned_path)
     else:
+        # 허용 초 = 보낼 컷 합 + 구간마다 프레임 반올림 1프레임
         cleaned = _vmake_clean(str(part), keys, str(cleaned_path), tier=tier,
-                               resume_key="part:" + Path(out).name + ((":" + tag) if tag else ""))
+                               resume_key="part:" + Path(out).name + ((":" + tag) if tag else ""),
+                               send={"kind": "topup" if over is not None else "partial",
+                                     "allow": round(vmake_allow_sec(_send) + len(ranges) / fps, 3), "work": str(work)})
     # 되붙이기 — 원본 틈(g)과 청소 조각(p)을 프레임 번호로 잘라 순서대로 이어 붙인다.
     segs, cur, off = [], 0, 0
     for a, b in ranges:
@@ -4883,7 +4984,10 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
                 # 고른 장면만 — 컷 지도는 조립본을 만든 그 계획(지도가 없으면 위에서 이미 멈췄다 — 다시 계산하지 않는다)
                 res = _clean_partial(str(mix_raw), _map, _sel, keys, str(out), tier, work)
             else:
-                res = _vmake_clean(str(mix_raw), keys, str(out), tier=tier, resume_key="final:" + out.name)
+                # ★보낼 컷 = 주인(vmake_send_cuts) — 판정이 없으면 확정 컷 전부 = 조립본 1편(편집 컷 밖은 애초에 없다)
+                _send = vmake_send_cuts(_map, None)
+                res = _vmake_clean(str(mix_raw), keys, str(out), tier=tier, resume_key="final:" + out.name,
+                                   send={"kind": "final", "allow": vmake_allow_sec(_send), "work": str(work)})
         except Exception:
             if charged:
                 _refund_clean(store, customer_id, charged)
@@ -4968,7 +5072,10 @@ def incremental_clean(store, job, job_id, work, keys, customer_id, base, plan, u
         _rk = "inc:" + hashlib.sha1(json.dumps(sorted(
             (v, [str(x) for x in meta[v][1]], round(meta[v][2], 3)) for v, _ in items),
             ensure_ascii=False).encode("utf-8")).hexdigest()[:16]
-        paths, _regions = _clean_joined(items, keys, str(work), tag="cb", tier=clean_tier_of(job), resume_key=_rk)
+        # 허용 초 = 조각 구간 합(incremental_pieces — 바뀐 컷이 쓰는 원본 구간만) + 조각마다 30fps 정규화 1프레임
+        _allow = round(sum(m[2] for m in meta.values()) + len(items) / 30.0, 3)
+        paths, _regions = _clean_joined(items, keys, str(work), tag="cb", tier=clean_tier_of(job), resume_key=_rk,
+                                        allow=_allow)
     except Exception:
         if charged:
             _refund_clean(store, customer_id, charged)
@@ -5339,6 +5446,12 @@ def _ensure_clean_sources(store, job, job_id, work, keys, customer_id=0):
     regions = dict((job.get("clean_regions") or {}).get("sources") or {})
     todo = [(vid, src) for vid, src in source_map.items()
             if not (cached.get(vid) and Path(cached[vid]).exists())]
+    # ★VMake 규칙(10-26): 원본 소스를 보내는 길은 닫았다 — 새로 지울 소스가 있으면 업체를 부르지 않고 멈춘다(과금 0).
+    #   정상 경로는 _clean_strategy 가 이 경우 "final"(확정 컷만)을 준다. 여기 닿았다면 주인을 안 거친 호출이다.
+    _todo_used = set(_sources_todo(job))
+    todo = [(vid, src) for vid, src in todo if vid in _todo_used or "?" in _todo_used]
+    if todo:
+        _vmake_gate(todo[0][1], None, None)
     # ★쓰이는 구간만 보낸다(2026-08-25, 플래그 뒤 기본 꺼짐).
     #   실측 job e68b1bcf8900: 소스 111.6초를 청소했는데 완성본은 30.3초였다.
     #   VMake 처리 시간은 길이에 비례하므로 안 쓰는 부분을 빼면 그만큼 빨라진다.

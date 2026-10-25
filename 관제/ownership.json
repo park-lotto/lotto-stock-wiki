@@ -952,6 +952,30 @@
    "검사도구": "shortem_client/test/e2e_make.js",
    "과금": false,
    "예외": {}
+  },
+  {
+   "이름": "VMake 로 보낼 구간(장면 편집 뒤 박힌 자막 있는 컷만 — 사장님 10-26, 어떤 영상·경로든)",
+   "주인": [
+    "shopping_shorts/mix_pipeline.py:vmake_send_cuts",
+    "tools/calcopy/vmake_clean.py:used_spans"
+   ],
+   "시그니처": [
+    "def vmake_send_cuts\\b",
+    "def vmake_sent_check\\b",
+    "def _vmake_gate\\b",
+    "VMAKE_SENT_TOL\\s*="
+   ],
+   "소비처": [
+    "완성본 청소(_final_clean_fn)",
+    "골라 지우기(_clean_partial)",
+    "덧지우기",
+    "증분 청소(incremental_clean→_clean_joined)",
+    "보내기 직전 관문(_vmake_clean send=)",
+    "칼카피·회원 MCP(tools/calcopy/vmake_clean.py — 범위 밖 tools/)"
+   ],
+   "검사도구": "shopping_shorts/scripts/vmake_sent_check.py(job 폴더 vmake_sent.json 보낸 초 ≤ 보낼 컷 합) · shopping_shorts/tests/test_vmake_send_rule.py",
+   "과금": true,
+   "예외": {}
   }
  ]
 }

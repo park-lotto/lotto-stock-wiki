@@ -1,7 +1,16 @@
+import pytest
 from pathlib import Path
 
 from shopping_shorts.store import Store
 from shopping_shorts import mix_pipeline as mp
+
+
+@pytest.fixture(autouse=True)
+def _vmake_gate_off(monkeypatch):
+    """이 파일은 VMake 전송 관문(10-26 관제 270)이 아닌 다른 판단을 시험한다 — 관문은 test_vmake_send_rule.py 가 잰다."""
+    import shopping_shorts.mix_pipeline as _mpg
+    monkeypatch.setattr(_mpg, "_vmake_gate", lambda *a, **k: None)
+
 
 
 def test_clean_fields_roundtrip(tmp_path):
@@ -47,17 +56,7 @@ def _patch_clean(monkeypatch, remove_calls):
     monkeypatch.setattr(mp, "remove_subtitles", fake_remove)
 
 
-def test_run_clean_sources_cleans_and_caches(monkeypatch, tmp_path):
-    job = {"job_id": "j", "urls": ["u"]}
-    store = _FakeStore(job)
-    monkeypatch.setattr(mp, "Store", lambda p: store)
-    calls = []
-    _patch_clean(monkeypatch, calls)
-    mp.run_clean_sources("j", "db", str(tmp_path))
-    assert calls == ["/orig/s0.mp4"]
-    assert job["clean_status"] == "ready"
-    assert list(job["clean_sources"].keys()) == ["s0"]
-
+# (10-26 관제 270: test_run_clean_sources_cleans_and_caches 삭제 — 원본 소스를 VMake 로 보내던 길 폐지. 대체 검사 test_vmake_send_rule.py)
 
 def test_run_clean_sources_no_key_fails(monkeypatch, tmp_path):
     job = {"job_id": "j", "urls": ["u"]}
@@ -94,62 +93,11 @@ def _plan_with_beats():
                        {"beat_idx": 1, "tts_path": "/tts/1.mp3"}]}
 
 
-def test_run_clean_sources_builds_clean_video_when_edit_plan_present(monkeypatch, tmp_path):
-    job = {"job_id": "j", "urls": ["u"], "customer_id": 0, "edit_plan": _plan_with_beats()}
-    store = _FakeStore(job)
-    monkeypatch.setattr(mp, "Store", lambda p: store)
-    _patch_clean(monkeypatch, [])
-    seen = {}
-    def fake_assemble(plan, tts_paths, source_video_paths, out_path, **kw):
-        seen["source_video_paths"] = source_video_paths
-        seen["clean_fn"] = kw.get("clean_fn")
-        open(out_path, "w").write("clean-preview")
-        return out_path
-    monkeypatch.setattr(mp, "assemble", fake_assemble)
-    mp.run_clean_sources("j", "db", str(tmp_path))
-    assert job["clean_status"] == "ready"
-    assert job["clean_video_path"] == str(Path(tmp_path) / "j" / "clean_preview.mp4")
-    assert Path(job["clean_video_path"]).exists()
-    # 재조립은 이미 청소된 소스로만 — VMake(clean_fn)를 또 태우면 안 된다(과금 중복).
-    assert seen["clean_fn"] is None
-    assert seen["source_video_paths"] == job["clean_sources"]
+# (10-26 관제 270: test_run_clean_sources_builds_clean_video_when_edit_plan_present 삭제 — 원본 소스를 VMake 로 보내던 길 폐지. 대체 검사 test_vmake_send_rule.py)
 
+# (10-26 관제 270: test_run_clean_sources_no_edit_plan_skips_assembly 삭제 — 원본 소스를 VMake 로 보내던 길 폐지. 대체 검사 test_vmake_send_rule.py)
 
-def test_run_clean_sources_no_edit_plan_skips_assembly(monkeypatch, tmp_path):
-    """edit_plan이 아직 없으면(믹스 전 단계 등) 조립을 시도하지 않는다 — clean_status는 그대로 ready."""
-    job = {"job_id": "j", "urls": ["u"]}
-    store = _FakeStore(job)
-    monkeypatch.setattr(mp, "Store", lambda p: store)
-    _patch_clean(monkeypatch, [])
-    monkeypatch.setattr(mp, "assemble", lambda *a, **k: (_ for _ in ()).throw(
-        AssertionError("edit_plan 없이 assemble이 불렸다")))
-    mp.run_clean_sources("j", "db", str(tmp_path))
-    assert job["clean_status"] == "ready"
-    assert "clean_video_path" not in job
-
-
-def test_run_clean_sources_assembly_failure_keeps_clean_status_ready(monkeypatch, tmp_path):
-    """조립(무료 재렌더)이 실패해도 소스청소(유료 VMake)는 이미 끝났다 — clean_status를
-    failed로 뒤집으면 사용자가 '실패했다'고 오인해 재시도하게 만들 뿐(재과금은 없지만 혼란)."""
-    job = {"job_id": "j", "urls": ["u"], "customer_id": 0, "edit_plan": _plan_with_beats()}
-    store = _FakeStore(job)
-    monkeypatch.setattr(mp, "Store", lambda p: store)
-    _patch_clean(monkeypatch, [])
-    def boom(*a, **k):
-        raise RuntimeError("ffmpeg 오류")
-    monkeypatch.setattr(mp, "assemble", boom)
-    mp.run_clean_sources("j", "db", str(tmp_path))
-    assert job["clean_status"] == "ready"
-    assert job["clean_error"] is None
-    assert "clean_video_path" not in job
-
-
-# ── 완성본 1편 청소(final) 경로 — 라이브 기본값이다(서버 SHORTS_CLEAN_FINAL=1) ──────
-# ★2026-09-17 실사고: job 44112f9a6e64가 clean_status='cleaning' + clean_error=None인 채로
-#   21시간 갇혔다. 큐(job_queue #19977)는 state='done'·error=''로 **정상 종료**였다.
-#   즉 워커는 끝났는데 종착 상태를 아무도 안 썼다. 그러면 화면은 영원히 ⏳이고,
-#   재시도 가드(app.py: clean_status=='cleaning')가 버튼까지 막아 탈출구가 없다.
-#   → final 경로의 **모든 끝**이 ready/failed 중 하나를 반드시 남겨야 한다.
+# (10-26 관제 270: test_run_clean_sources_assembly_failure_keeps_clean_status_ready 삭제 — 원본 소스를 VMake 로 보내던 길 폐지. 대체 검사 test_vmake_send_rule.py)
 
 def _final_job():
     return {"job_id": "j", "urls": ["u"], "customer_id": 0,
@@ -158,7 +106,7 @@ def _final_job():
 
 def _patch_final(monkeypatch, tmp_path, assemble_result):
     """라이브와 같은 final 전략으로 고정하고, 조립만 흉내낸다."""
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", True, raising=False)
     monkeypatch.setattr(mp, "_synthesize_beats", lambda *a, **k: None)
     monkeypatch.setattr(mp, "_resolve_sources", lambda job, work: {"s0": "/orig/s0.mp4"})
     monkeypatch.setattr(mp, "assemble_clean_video", assemble_result)

@@ -23,6 +23,14 @@ from shopping_shorts import mix_pipeline as mp
 
 
 @pytest.fixture(autouse=True)
+def _vmake_gate_off(monkeypatch):
+    """이 파일은 VMake 전송 관문(10-26 관제 270)이 아닌 다른 판단을 시험한다 — 관문은 test_vmake_send_rule.py 가 잰다."""
+    import shopping_shorts.mix_pipeline as _mpg
+    monkeypatch.setattr(_mpg, "_vmake_gate", lambda *a, **k: None)
+
+
+
+@pytest.fixture(autouse=True)
 def _assembled_cut_map(monkeypatch):
     """진짜 조립본은 옆에 컷 지도를 남긴다(video_assemble.write_cut_map). 지도가 없으면 자막제거는 시작 전에 멈춘다(관제 176) —
     이 파일의 가짜 조립본(mix_raw 바이트 몇 개)에는 빈 지도를 준다."""
@@ -83,7 +91,7 @@ def env(monkeypatch, tmp_path):
 def test_완성본_1편만_VMake에_보낸다(monkeypatch, env):
     """★핵심: 소스(/orig/s0.mp4)가 아니라 조립된 완성본(mix_raw.mp4)이 보내진다."""
     job, store, sent, seen, tmp = env
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", True, raising=False)
     mp.run_clean_sources("j", "db", str(tmp))
     assert len(sent) == 1, "VMake 콜은 1회여야 한다"
     assert sent[0].endswith("mix_raw.mp4"), f"완성본이 아니라 {sent[0]}를 보냈다"
@@ -95,7 +103,7 @@ def test_소스별_청소를_아예_안_한다(monkeypatch, env):
     called = []
     monkeypatch.setattr(mp, "_ensure_clean_sources",
                         lambda *a, **k: called.append(1) or {})
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", True, raising=False)
     mp.run_clean_sources("j", "db", str(tmp))
     assert called == [], "_ensure_clean_sources(소스별/합본)를 부르면 안 된다"
 
@@ -103,14 +111,14 @@ def test_소스별_청소를_아예_안_한다(monkeypatch, env):
 def test_clean_sources를_비워둬야_3단계가_완성본경로를_탄다(monkeypatch, env):
     """★run_render는 already=bool(clean_sources)로 갈린다 — 채우면 옛 경로로 떨어진다."""
     job, store, sent, seen, tmp = env
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", True, raising=False)
     mp.run_clean_sources("j", "db", str(tmp))
     assert not job.get("clean_sources"), "clean_sources를 채우면 3단계가 소스별로 되돌아간다"
 
 
 def test_조립은_원본소스로_하고_clean_fn이_꽂힌다(monkeypatch, env):
     job, store, sent, seen, tmp = env
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", True, raising=False)
     mp.run_clean_sources("j", "db", str(tmp))
     assert seen["sources"] == {"s0": "/orig/s0.mp4"}
     assert seen["clean_fn"] is not None
@@ -118,7 +126,7 @@ def test_조립은_원본소스로_하고_clean_fn이_꽂힌다(monkeypatch, env
 
 def test_성공하면_ready와_조립본경로가_남는다(monkeypatch, env):
     job, store, sent, seen, tmp = env
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", True, raising=False)
     mp.run_clean_sources("j", "db", str(tmp))
     assert job["clean_status"] == "ready"
     assert job["clean_video_path"] == str(Path(tmp) / "j" / "clean_preview.mp4")
@@ -130,7 +138,7 @@ def test_같은_편성이면_두번째는_과금0(monkeypatch, env):
     job, store, sent, seen, tmp = env
     charges = []
     monkeypatch.setattr(mp, "_charge_clean", lambda s, c, n: charges.append(n) or 5)
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", True, raising=False)
     mp.run_clean_sources("j", "db", str(tmp))
     job["clean_sources"] = None          # 2단계를 다시 눌렀다(편성은 그대로)
     mp.run_clean_sources("j", "db", str(tmp))
@@ -144,7 +152,7 @@ def test_청소_실패는_ready로_두지_않는다(monkeypatch, env):
     def boom(video, key, out_path, **kw):
         raise RuntimeError("AI 자막 제거 실패: 60002")
     monkeypatch.setattr(mp, "remove_subtitles", boom)
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", True, raising=False)
     mp.run_clean_sources("j", "db", str(tmp))
     assert job["clean_status"] == "failed"
     assert "60002" in (job.get("clean_error") or "")
@@ -155,14 +163,14 @@ def test_포인트부족은_그대로_전달된다(monkeypatch, env):
     def nope(*a, **k):
         raise mp.NotEnoughPoints("포인트가 부족합니다")
     monkeypatch.setattr(mp, "_charge_clean", nope)
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", True, raising=False)
     mp.run_clean_sources("j", "db", str(tmp))
     assert job["clean_status"] == "failed"
     assert "포인트" in (job.get("clean_error") or "")
 
 
-def test_플래그가_꺼지면_옛경로_그대로(monkeypatch, env):
-    """되돌릴 스위치가 살아 있어야 한다 — SHORTS_CLEAN_FINAL=0이면 소스별로 돈다."""
+def test_스위치를_내려도_원본_소스_전송길은_안_열린다(monkeypatch, env):
+    """★10-26 VMake 규칙(관제 270): SHORTS_CLEAN_FINAL 스위치는 폐지 — 새로 지울 땐 늘 완성본(확정 컷만)."""
     job, store, sent, seen, tmp = env
     called = []
     def fake_ensure(st, jb, jid, work, key, cid=0):
@@ -170,10 +178,9 @@ def test_플래그가_꺼지면_옛경로_그대로(monkeypatch, env):
         st.update_mix_job(jid, clean_sources={"s0": "/clean/s0.mp4"})
         return {"s0": "/clean/s0.mp4"}
     monkeypatch.setattr(mp, "_ensure_clean_sources", fake_ensure)
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", False)
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", False, raising=False)
     mp.run_clean_sources("j", "db", str(tmp))
-    assert called == [1], "옛 경로(소스별)가 돌아야 한다"
-    assert seen["clean_fn"] is None, "옛 경로에서 완성본을 또 청소하면 이중과금이다"
+    assert called == [], "원본 소스를 보내는 길이 열렸다"
 
 
 class Test판단은한곳:
@@ -185,17 +192,18 @@ class Test판단은한곳:
     """
 
     def test_기본은_완성본(self, monkeypatch):
-        monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
         assert mp._clean_strategy({}) == "final"
 
-    def test_되돌림스위치가_내려가면_소스별(self, monkeypatch):
-        monkeypatch.setattr(mp, "_FINAL_CLEAN", False)
-        assert mp._clean_strategy({}) == "sources"
+    def test_스위치를_내려도_완성본(self, monkeypatch):
+        """★10-26 VMake 규칙: 원본 소스 전송 길을 스위치로 되살리지 않는다."""
+        monkeypatch.setenv("SHORTS_CLEAN_FINAL", "0")
+        assert mp._clean_strategy({}) == "final"
 
-    def test_이미_청소된_소스가_있으면_그걸_쓴다(self, monkeypatch):
-        """두 번 과금하지 않는다 — 옛 경로로 청소해 둔 job이 그대로 살아 있어야 한다."""
-        monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
-        assert mp._clean_strategy({"clean_sources": {"s0": "/clean/s0.mp4"}}) == "sources"
+    def test_이미_청소된_소스가_있으면_그걸_쓴다(self, tmp_path):
+        """두 번 과금하지 않는다 — 옛 경로로 청소해 둔 job이 편성 소스를 다 덮으면 그대로 쓴다(업체 0)."""
+        c = tmp_path / "s0.mp4"; c.write_text("x")
+        plan = {"beats": [{"beat_idx": 0, "primary": {"video_id": "s0", "start": 0, "end": 2}}]}
+        assert mp._clean_strategy({"edit_plan": plan, "clean_sources": {"s0": str(c)}}) == "sources"
 
     def test_두_호출부가_같은_함수를_쓴다(self):
         """★grep 계약 — 새 진입 경로가 생겨도 _FINAL_CLEAN을 직접 읽으면 안 된다.
@@ -207,7 +215,7 @@ class Test판단은한곳:
         src = inspect.getsource(mp)
         hits = [ln.strip() for ln in src.splitlines()
                 if "_FINAL_CLEAN" in ln and not ln.strip().startswith("#")]
-        assert len(hits) == 2, f"_FINAL_CLEAN을 직접 읽는 곳이 늘었다: {hits}"
+        assert hits == [], f"폐지한 _FINAL_CLEAN 스위치가 되살아났다: {hits}"
 
     def test_호출부는_전략함수로만_갈린다(self):
         for fn in (mp.run_clean_sources, mp.run_render):

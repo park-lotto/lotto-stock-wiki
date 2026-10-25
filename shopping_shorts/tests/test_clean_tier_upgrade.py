@@ -15,6 +15,14 @@ import pytest
 from shopping_shorts import clean_base as cb
 from shopping_shorts import mix_pipeline as mp
 
+
+@pytest.fixture(autouse=True)
+def _vmake_gate_off(monkeypatch):
+    """이 파일은 VMake 전송 관문(10-26 관제 270)이 아닌 다른 판단을 시험한다 — 관문은 test_vmake_send_rule.py 가 잰다."""
+    import shopping_shorts.mix_pipeline as _mpg
+    monkeypatch.setattr(_mpg, "_vmake_gate", lambda *a, **k: None)
+
+
 BASIC_SIG = "0123456789abcdef"            # 16자 편성 서명 = 기본
 PRO_SIG = "0123456789abcdefp"             # 뒤에 'p' = 고급
 
@@ -78,7 +86,7 @@ def test_full_clean_uses_requested_tier_and_charges_once(env, monkeypatch):
     work = tmp / "j"; job = _job(work, BASIC_SIG, "pro")
     tiers = []
 
-    def _vc(src, keys, out, tier=None, resume_key=None):
+    def _vc(src, keys, out, tier=None, resume_key=None, send=None):
         tiers.append(tier); Path(out).write_bytes(b"x" * 2048); return out
     monkeypatch.setattr(mp, "_vmake_clean", _vc)
     monkeypatch.setattr(mp, "_va_read_cut_map", lambda p: [{"video_id": "s0", "beat_idx": 0, "src": 1.0, "fin": 0.0, "dur": 2.0}])
@@ -146,7 +154,7 @@ def test_button_same_rule(env, monkeypatch, base_sig, tier, want):
     monkeypatch.setattr(mp, "Store", lambda p: store)
     monkeypatch.setattr(mp, "_synthesize_beats", lambda *a, **k: None)
     monkeypatch.setattr(mp, "_vmake_keys", lambda *a, **k: ["k"])
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", True, raising=False)
     calls = []
     monkeypatch.setattr(mp, "assemble_clean_video",
                         lambda *a, **k: calls.append("assemble" if k.get("clean_fn") else "reassemble") or None)

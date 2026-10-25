@@ -19,6 +19,14 @@ from shopping_shorts import mix_pipeline as mp
 from shopping_shorts import vmake_client
 
 
+@pytest.fixture(autouse=True)
+def _vmake_gate_off(monkeypatch):
+    """이 파일은 VMake 전송 관문(10-26 관제 270)이 아닌 다른 판단을 시험한다 — 관문은 test_vmake_send_rule.py 가 잰다."""
+    import shopping_shorts.mix_pipeline as _mpg
+    monkeypatch.setattr(_mpg, "_vmake_gate", lambda *a, **k: None)
+
+
+
 NO_CREDIT = "[60002] You don't have enough credits for this API. Purchase a subscription..."
 
 
