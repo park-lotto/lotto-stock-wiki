@@ -474,8 +474,10 @@ def _med(xs):
     return statistics.median(xs) if xs else None
 
 
-def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, bench_media: dict | None) -> dict:
-    """(판단 주인) 벤치 줄판독 모음 ↔ 우리 한 편을 MATCH_RULES 자로. 못 잰 항목은 failed(통과로 치지 않는다)."""
+def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, bench_media: dict | None, own_len: tuple | None = None) -> dict:
+    """(판단 주인) 벤치 줄판독 모음 ↔ 우리 한 편을 MATCH_RULES 자로. 못 잰 항목은 failed(통과로 치지 않는다).
+    own_len = 판 length (min, max). 판 길이 범위가 벤치 편 길이 범위와 **아예 안 겹치면**(하이브리드: 앞 원음 + 뒤 판매 이야기 25~30초 ↔ 벤치 단독 10~21초,
+    판 length.why · channel/kitchit/하이브리드_판설계.md §1) 판이 일부러 정한 다른 길이다 — len.duration 은 그 판 범위로 잰다(관제263). 겹치면 옛 그대로."""
     B = [_stats(d.get("lines") or [], float(d.get("dur") or 0)) for d in bench_docs]
     ol, odur = _ours_lines(ours)
     O = _stats(ol, odur)
@@ -485,6 +487,12 @@ def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, ben
         if key == "len.duration":
             b, o = _med([s["dur"] for s in B]), odur or om.get("duration")
             brange = (min(s["dur"] for s in B), max(s["dur"] for s in B)) if B else None
+            if own_len and brange and (own_len[0] > brange[1] or own_len[1] < brange[0]) and o is not None:
+                lo, hi = float(own_len[0]), float(own_len[1])
+                rows.append({"key": key, "bench": b, "ours": o, "diff": f"판 {lo:g}~{hi:g}(벤치 {brange[0]:g}~{brange[1]:g} 와 안 겹침)",
+                             "judge": "in" if lo <= o <= hi else "out", "core": core,
+                             "why": why + " — 판 길이가 벤치 범위와 안 겹치는 판(하이브리드)은 판 length 범위로(판 length.why)"})
+                continue
         elif key == "cut.median":
             b, o, brange = _med(bm.get("cut_median") or []), om.get("cut_median"), None
         elif key == "mix.lufs":
@@ -748,7 +756,8 @@ def match_from_render(style, doc, work, media: bool = True, frame0_kind_measured
         om = media_of(str(R / "final.mp4"), (x, y, w, h))
         if B.get("src_dir"):
             bm = bench_media_cached(B["src_dir"], [d.get("id") for d in bench], _win_arg(None, bench))
-    Tm = match_table(bench, ours, om, bm)
+    LD = st.get("length") or {}
+    Tm = match_table(bench, ours, om, bm, own_len=(LD["min"], LD["max"]) if "min" in LD and "max" in LD else None)
     Tm.update({"ours_media": om, "bench_media": bm, "bench_ids": [d.get("id") for d in bench], "line_reads": str(lrp) if lrp else None,
                "frame0_from": "완성본 측정" if frame0_kind_measured else "썸네일.json pick(선언)",
                "made_by": "kal_analyze.match_from_render"})

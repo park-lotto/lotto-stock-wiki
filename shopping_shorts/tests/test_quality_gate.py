@@ -367,3 +367,64 @@ def test_emph_kind_color_vs_plain():
     assert emph_kind({"fill_hex": "#FFFFFF", "emph": []}) is None
     d = _decorated({"enter": "cut", "fill_hex": "#FFFFFF", "emph": [{"word": "a", "hex": "#FAFAFA"}]})
     assert d["emph"] and d["emph_plain"] and not d["emph_color"]
+
+
+# ---------------------------------------------------------------- 관제263 관문 구멍 4개(10-25 박정수 선크림 키치잇판)
+def test_gray_seg_odd_window_height(tmp_path):
+    """전환 세기 벤치 창 [0,418,1080,1501](홀수 높이)에서 reshape 가 깨졌다 — yuv420 crop 이 짝수로 내림. 회색 뒤 자르기로 정확한 높이."""
+    import sys
+    sys.path.insert(0, str(ROOT))
+    from tools.calcopy.hybrid.render_bench import _gray_seg
+    v = tmp_path / "v.mp4"
+    _ffmpeg("-f", "lavfi", "-i", "testsrc2=s=1080x1920:r=30:d=0.5", "-pix_fmt", "yuv420p", v)
+    fr, tt = _gray_seg(v, 0.0, 0.3, [0, 419, 1080, 1501])
+    assert fr.shape[1:] == (1501, 1080) and len(fr) == len(tt) > 0
+
+
+def test_match_len_uses_style_length_when_disjoint_from_bench():
+    """하이브리드 판(판 length 25~30 = 벤치 10~21 과 안 겹침, 판 length.why) — len.duration 은 판 범위로. 겹치는 판은 옛 그대로(벤치 기준)."""
+    import sys
+    sys.path.insert(0, str(ROOT))
+    from tools.calcopy.engine.kal_analyze import match_table
+    bench = [{"dur": d, "lines": [{"t0": 0, "t1": 1, "speaker": "나레", "text": "가나다"}]} for d in (12.0, 14.0, 21.0)]
+    ours = {"dur": 27.0, "rows": [{"line": "N1", "j": 0, "speaker": "narr", "text": "가나다", "t0": 0.0, "t1": 1.0, "show": [0.0, 1.0]}]}
+    om = {"duration": 27.0, "cut_median": 1.2, "lufs": -14.0}
+
+    def row(T):
+        return next(r for r in T["rows"] if r["key"] == "len.duration")
+    assert row(match_table(bench, ours, om, None))["judge"] == "out"                       # 옛 자(벤치 길이) — 27초는 밖
+    assert row(match_table(bench, ours, om, None, own_len=(25, 30)))["judge"] == "in"      # 판 범위
+    assert row(match_table(bench, {**ours, "dur": 31.0}, om, None, own_len=(25, 30)))["judge"] == "out"
+    assert row(match_table(bench, ours, om, None, own_len=(10, 28)))["judge"] == "out"     # 겹치는 판 = 옛 자 그대로
+
+
+def test_fit_voice_trims_edges_and_sets_comma_pause(tmp_path):
+    """B18/B18a 렌더 쪽: 줄 소리 앞뒤 무음을 빼고(EDGE_KEEP 남김) 쉼표 자리 무음을 판 목표로 — 관문과 같은 -35dB 자로 다시 잰다."""
+    import sys
+    import wave
+    import numpy as np
+    sys.path.insert(0, str(ROOT))
+    from tools.calcopy.hybrid import render_bench as RB
+    from tools.calcopy.hybrid.common import SR, silences
+    t = np.arange(int(0.6 * SR)) / SR
+    tone = (0.3 * np.sin(2 * np.pi * 220 * t)).astype(np.float32)
+    z = lambda s: np.zeros(int(s * SR), np.float32)   # noqa: E731
+    y = np.concatenate([z(0.3), tone, z(0.40), tone, z(0.25)])
+    p = tmp_path / "s_N1.wav"
+    with wave.open(str(p), "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((y * 32767).astype("<i2").tobytes())
+    text = "가나다,라마바."
+    # 글자 시각(전체 = 이 줄만, 배속 1, raw[0]=0.02 → x0 0) — 쉼표 앞 글자 끝 0.9, 뒤 글자 시작 1.3
+    chars = list(text)
+    st0 = [0.3, 0.5, 0.7, 0.9, 1.3, 1.5, 1.7, 1.9]
+    en0 = [0.5, 0.7, 0.9, 0.9, 1.5, 1.7, 1.9, 1.9]
+    align = {"characters": chars, "character_start_times_seconds": st0, "character_end_times_seconds": en0}
+    S = {"lines": [{"id": "N1", "kind": "tts", "tts": text}]}
+    sent = [{"id": "N1", "wav": str(p), "dur": round(len(y) / SR, 3), "raw": [0.02, 2.0], "tempo": 1.0}]
+    out = RB.fit_voice(S, {"speech": {"pause_comma": 0.22}}, sent, align, log=lambda *a: None)
+    sil = silences(p, "-35dB", 0.02)
+    total = out[0]["dur"]
+    assert abs(total - (0.6 + 0.22 + 0.6 + 2 * RB.EDGE_KEEP)) < 0.03, total
+    inner = [b - a for a, b in sil if a > 0.03 and b < total - 0.03]
+    assert inner and abs(max(inner) - 0.22) < 0.025, sil
+    assert out[0]["tmap"][0] == (0.0, 0.0)
