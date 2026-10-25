@@ -19,7 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 BENCH = Path("C:/숏템_칼카피")
-BOARD = {"썰템홈샷판": "banggu", "맛템썰템판": "yummyknow", "썰템쇼판": "humorshowshow", "숏템리폿판": "hottemreport", "신박판": "sinbak",
+BOARD = {"썰템홈샷판": "banggu", "맛템썰템판": "yummyknow", "썰템쇼판": "humorshowshow", "숏템리폿판": "hottemreport", "신박판": "sinbak", "두유노판": "homedesignnote",
          "트롯파파판": "uljimatrot", "만템판": "mantem", "아이템홈판": "itemhome", "안나픽판": "annapick", "도파민썰템A판": "sseolpulda_a",
          "도파민썰템B판": "sseolpulda_b", "뜨거운사람들판": "hotpeople"}
 # 쌓기 판(판 caption.stack) 벤치 줄 피치 px — 팩 place.y = 첫 줄 자리, 여러 줄은 stack_rows 가 덩어리 가운데를 옮긴다(판 stack.y·pitch 가 이 값이어야 한다)
@@ -203,6 +203,11 @@ CASES = json.loads(r"""{
 ],
 "narr"
 ]
+],
+"homedesignnote": [
+["homedesignnote/src/DCXQjaWcZ-g.mp4", 1.75, "와이프한테 혼났어요", [587, 646], "narr"],
+["homedesignnote/src/SU9YofB1IoI.mp4", 0.9, "이렇게 쓸 거라고는", [532, 597], "narr"],
+["homedesignnote/src/EINoAh8C9rQ.mp4", 1.3, "결혼선물로 이거", [765, 827], "narr"]
 ],
 "sinbak": [
 [

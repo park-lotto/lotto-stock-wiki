@@ -2024,6 +2024,64 @@
    "bench": "잉크 y1299~1364(가운데 1331/1920)"
   }
  },
+ "homedesignnote": {
+  "label": "두유노홈디노 흰 손글씨",
+  "desc": "흰 손글씨(PoorStory) 한 줄 + 얇은 검정 테 + 부드러운 검정 그림자 · 전부 즉시",
+  "font": "CcPoorStory",
+  "size": 68,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.2em #000000",
+    "paintOrder": "stroke fill",
+    "strokeLinejoin": "round",
+    "textShadow": "0 0 8px #000, 0 0 16px rgba(0,0,0,0.9), 0 0 26px rgba(0,0,0,0.6)",
+    "fontWeight": "400",
+    "fontSynthesis": "none"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "mark": {
+   "colors": [
+    "#7FD5E2",
+    "#9DBDCD",
+    "#ECCE18"
+   ]
+  },
+  "emph": {
+   "font": "CcPoorStory",
+   "size": 68,
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.2em #000000",
+    "paintOrder": "stroke fill",
+    "textShadow": "0 0 10px rgba(0,0,0,0.85)"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "cont": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": ""
+  },
+  "variants": {},
+  "stickers": {},
+  "bench": "channel/homedesignnote/줄판독(6편 112 나레줄) · 10-26 픽셀 단면(잉크 둘레 1~7px 검정 · 7~30px 부드러운 그림자 — preset/전체화면_가운데자막 manifest caption_styles notes) · 렌더 실측 맞춤 tools/caption_pack/check_kal_new_packs.py",
+  "place": {
+   "y": 36.8,
+   "bench": "나레 잉크 y678~734 중앙(n 112, handconst caption.band — 편마다 534~996, 위 1/3~가운데)"
+  }
+ },
  "uljimatrot": {
   "label": "울지마트로트 흰 고딕",
   "desc": "흰 에스코어드림 9 굵은 글 + 검정 테(10px) · 줄 간격 105 · 전부 즉시",

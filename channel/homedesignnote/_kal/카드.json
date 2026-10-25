@@ -1,7 +1,7 @@
 {
  "slug": "homedesignnote",
  "made_by": "tools/calcopy/preset_card.py build",
- "built_at": "2026-10-24T23:49:41",
+ "built_at": "2026-10-26T01:33:55",
  "bench": "두유노홈디노",
  "brand": "잇썸홈",
  "brand_note": null,
@@ -10,66 +10,75 @@
  "format_options": [],
  "sound_style": [],
  "engine": {
-  "style_file": "tools/calcopy/hybrid/styles/잇썸홈판.json",
+  "style_file": "tools/calcopy/hybrid/styles/두유노판.json",
   "style_error": null,
-  "renderer": "itssum",
-  "entry": null,
-  "hand_scripts": [
-   "channel/homedesignnote/작품1_식기세척기/make_plan.py",
-   "channel/homedesignnote/작품1_식기세척기/render.py",
-   "channel/homedesignnote/preset/hdn_preset.py"
+  "renderer": "bench",
+  "entry": "tools/calcopy/hybrid/run.py <키> render --version 두유노판",
+  "hand_scripts": [],
+  "hand_scripts_reference": [
+   "channel/homedesignnote/작품1_식기세척기/make_plan.py·render.py(옛, render_bench 두유노판으로 대체 10-26)",
+   "channel/homedesignnote/preset/hdn_preset.py(옛 — 설명서 프리셋 생성기, 회원 옛 길 preset_make 가 읽는 frame.json 만 만든다)"
   ],
-  "hand_scripts_reference": [],
-  "caption_pack": null,
-  "voice": "미나",
+  "caption_pack": "homedesignnote",
+  "voice": "박창수",
   "bgm": "honwaka_puppu"
  },
  "sample": {
-  "line_reads": 0,
+  "line_reads": 6,
   "line_reads_strict_errors": 0,
-  "rules_freq": false,
-  "palette": false,
-  "style_analysis": false,
-  "sfx_events": false,
-  "tteutgi": 8,
+  "rules_freq": true,
+  "palette": true,
+  "style_analysis": true,
+  "sfx_events": true,
+  "tteutgi": 13,
   "min_required": 6
  },
  "axes": {
   "1자막": {
-   "value": "cap_look× cap_enter× cap_emph× cap_exit×",
-   "confidence": "미측정"
+   "value": "cap_look○ cap_enter○ cap_emph○ cap_exit○",
+   "confidence": "측정"
   },
   "2제목틀": {
-   "value": "2줄 '<수식어> <이름>이 요즘 매일 ~' / '<제품 분류>의 비밀' (얜샷템 틀 흰/민트)",
+   "value": "0초 표지 카드만(상시 제목 없음) — 장면 위 굵은 큰 글 2~3줄, 강조 줄 하늘 #7FD5E2 · 경고 '절대 사지 마세요!'·명령 '무조건 이거사세요!'·놀람 질문 '이것도 만든다고?'·사연 '와이프의 취미'·단정 '신혼가전 필수템'(스타일분석 §9 · 6/6 1~3프레임)",
    "confidence": "판"
   },
   "3전환": {
-   "value": "transition× cut_rhythm○",
+   "value": "transition○ cut_rhythm○",
    "confidence": "측정"
   },
   "4장면대사": {
-   "value": "scene_fit×",
-   "confidence": "미측정"
+   "value": "scene_fit○",
+   "confidence": "측정"
   },
   "5스토리": {
-   "value": null,
-   "confidence": "미측정"
+   "value": [
+    "고조",
+    "공개",
+    "끝",
+    "다리",
+    "반전",
+    "본문",
+    "이음",
+    "증거",
+    "훅"
+   ],
+   "confidence": "눈"
   },
   "6대본언어": {
-   "value": "script× speech×",
-   "confidence": "미측정"
+   "value": "script○ speech○",
+   "confidence": "측정"
   },
   "7소리": {
    "value": "bgm○ sfx○",
    "confidence": "측정"
   },
   "8스티커짤": {
-   "value": "sticker× meme× pointer×",
-   "confidence": "미측정"
+   "value": "sticker○ meme○ pointer○",
+   "confidence": "측정"
   },
   "9썸네일": {
-   "value": "thumb×",
-   "confidence": "미측정"
+   "value": "thumb○",
+   "confidence": "측정"
   },
   "10소재": {
    "value": null,
@@ -81,133 +90,1099 @@
   }
  },
  "elements": {
-  "cap_look": "×",
-  "cap_enter": "×",
-  "cap_emph": "×",
-  "cap_exit": "×",
-  "transition": "×",
+  "cap_look": "○",
+  "cap_enter": "○",
+  "cap_emph": "○",
+  "cap_exit": "○",
+  "transition": "○",
   "cut_rhythm": "○",
-  "scene_fit": "×",
+  "scene_fit": "○",
   "bgm": "○",
   "sfx": "○",
-  "meme": "×",
-  "sticker": "×",
-  "pointer": "×",
-  "thumb": "×",
-  "speech": "×",
-  "script": "×"
+  "meme": "○",
+  "sticker": "○",
+  "pointer": "○",
+  "thumb": "○",
+  "speech": "○",
+  "script": "○"
  },
  "rules": [
   {
    "element": "cap_look",
-   "cond": null,
-   "action": null,
+   "cond": "역할별",
+   "action": "팔레트 역할 7종",
    "k": null,
    "n": null,
    "rate": null,
    "base": null,
    "grade": null,
-   "evidence": [],
-   "confidence": "미측정",
-   "measure_task": "06-homedesignnote",
-   "engine_cell": null,
-   "engine_support": "×",
-   "engine_gap": "-"
+   "evidence": [
+    "channel/homedesignnote/팔레트.json"
+   ],
+   "confidence": "픽셀",
+   "measure_task": null,
+   "engine_cell": "두유노판.json caption.pack",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "cap_enter",
-   "cond": null,
-   "action": null,
-   "k": null,
-   "n": null,
-   "rate": null,
-   "base": null,
-   "grade": null,
-   "evidence": [],
-   "confidence": "미측정",
-   "measure_task": "06-homedesignnote",
-   "engine_cell": null,
-   "engine_support": "×",
-   "engine_gap": "-"
-  },
-  {
-   "element": "cap_emph",
-   "cond": null,
-   "action": null,
-   "k": null,
-   "n": null,
-   "rate": null,
-   "base": null,
-   "grade": null,
-   "evidence": [],
-   "confidence": "미측정",
-   "measure_task": "06-homedesignnote",
-   "engine_cell": null,
-   "engine_support": "×",
-   "engine_gap": "-"
-  },
-  {
-   "element": "cap_exit",
-   "cond": null,
-   "action": null,
-   "k": null,
-   "n": null,
-   "rate": null,
-   "base": null,
-   "grade": null,
-   "evidence": [],
-   "confidence": "미측정",
-   "measure_task": "06-homedesignnote",
-   "engine_cell": null,
-   "engine_support": "×",
-   "engine_gap": "-"
-  },
-  {
-   "element": "transition",
-   "cond": null,
-   "action": null,
-   "k": null,
-   "n": null,
-   "rate": null,
-   "base": null,
-   "grade": null,
-   "evidence": [],
-   "confidence": "미측정",
-   "measure_task": "06-homedesignnote",
-   "engine_cell": null,
-   "engine_support": "×",
-   "engine_gap": "A1"
-  },
-  {
-   "element": "cut_rhythm",
-   "cond": "편 단위",
-   "action": "컷 중앙 1.27초 · p90 2.27초",
-   "k": 8,
-   "n": 8,
-   "rate": null,
+   "cond": "화자=나레",
+   "action": "enter=instant",
+   "k": 110,
+   "n": 112,
+   "rate": 0.98,
    "base": null,
    "grade": "강",
    "evidence": [
-    "channel/homedesignnote/뜯기 8편"
+    "channel/homedesignnote/_kal/규칙빈도.json"
    ],
-   "confidence": "신호",
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=나레",
+   "action": "효과 붙은 등장",
+   "k": 2,
+   "n": 112,
+   "rate": 0.02,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=나레",
+   "action": "enter=fade",
+   "k": 1,
+   "n": 112,
+   "rate": 0.01,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=나레",
+   "action": "enter=pop",
+   "k": 1,
+   "n": 112,
+   "rate": 0.01,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=본문",
+   "action": "enter=instant",
+   "k": 76,
+   "n": 76,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=본문",
+   "action": "효과 붙은 등장",
+   "k": 0,
+   "n": 76,
+   "rate": 0.0,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=본문",
+   "action": "enter=instant",
+   "k": 37,
+   "n": 37,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=본문",
+   "action": "효과 붙은 등장",
+   "k": 0,
+   "n": 37,
+   "rate": 0.0,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=훅",
+   "action": "enter=instant",
+   "k": 25,
+   "n": 26,
+   "rate": 0.96,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=훅",
+   "action": "enter=pop",
+   "k": 1,
+   "n": 26,
+   "rate": 0.04,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=훅",
+   "action": "효과 붙은 등장",
+   "k": 1,
+   "n": 26,
+   "rate": 0.04,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=훅",
+   "action": "enter=instant",
+   "k": 22,
+   "n": 23,
+   "rate": 0.96,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=훅",
+   "action": "enter=pop",
+   "k": 1,
+   "n": 23,
+   "rate": 0.04,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=훅",
+   "action": "효과 붙은 등장",
+   "k": 1,
+   "n": 23,
+   "rate": 0.04,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=끝",
+   "action": "enter=instant",
+   "k": 16,
+   "n": 17,
+   "rate": 0.94,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=끝",
+   "action": "enter=fade",
+   "k": 1,
+   "n": 17,
+   "rate": 0.06,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=끝",
+   "action": "효과 붙은 등장",
+   "k": 1,
+   "n": 17,
+   "rate": 0.06,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=공개",
+   "action": "enter=instant",
+   "k": 15,
+   "n": 15,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=공개",
+   "action": "효과 붙은 등장",
+   "k": 0,
+   "n": 15,
+   "rate": 0.0,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=끝",
+   "action": "enter=instant",
+   "k": 12,
+   "n": 13,
+   "rate": 0.92,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=끝",
+   "action": "enter=fade",
+   "k": 1,
+   "n": 13,
+   "rate": 0.08,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=끝",
+   "action": "효과 붙은 등장",
+   "k": 1,
+   "n": 13,
+   "rate": 0.08,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=증거",
+   "action": "enter=instant",
+   "k": 12,
+   "n": 12,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=증거",
+   "action": "효과 붙은 등장",
+   "k": 0,
+   "n": 12,
+   "rate": 0.0,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=불명",
+   "action": "enter=instant",
+   "k": 7,
+   "n": 7,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=다리",
+   "action": "enter=instant",
+   "k": 7,
+   "n": 7,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=불명",
+   "action": "효과 붙은 등장",
+   "k": 0,
+   "n": 7,
+   "rate": 0.0,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=다리",
+   "action": "효과 붙은 등장",
+   "k": 0,
+   "n": 7,
+   "rate": 0.0,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=불명",
+   "action": "enter=instant",
+   "k": 6,
+   "n": 6,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=고조",
+   "action": "enter=instant",
+   "k": 5,
+   "n": 5,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=반전",
+   "action": "enter=instant",
+   "k": 5,
+   "n": 5,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=나레",
+   "action": "enter=instant",
+   "k": 4,
+   "n": 5,
+   "rate": 0.8,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=나레",
+   "action": "enter=pop",
+   "k": 1,
+   "n": 5,
+   "rate": 0.2,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=고조",
+   "action": "효과 붙은 등장",
+   "k": 0,
+   "n": 5,
+   "rate": 0.0,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=반전",
+   "action": "효과 붙은 등장",
+   "k": 0,
+   "n": 5,
+   "rate": 0.0,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=이음",
+   "action": "enter=instant",
+   "k": 2,
+   "n": 2,
+   "rate": 1.0,
+   "base": null,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=이음",
+   "action": "효과 붙은 등장",
+   "k": 0,
+   "n": 2,
+   "rate": 0.0,
+   "base": 0.02,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "없음",
+   "action": "꾸밈 없는 줄(plain)",
+   "k": 94,
+   "n": 119,
+   "rate": 0.79,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_emph",
+   "cond": "화자=나레",
+   "action": "emph",
+   "k": 1,
+   "n": 112,
+   "rate": 0.01,
+   "base": 0.04,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
    "measure_task": null,
    "engine_cell": null,
    "engine_support": "×",
    "engine_gap": "-"
   },
   {
-   "element": "scene_fit",
-   "cond": null,
-   "action": null,
-   "k": null,
-   "n": null,
+   "element": "cap_emph",
+   "cond": "자리=본문",
+   "action": "emph",
+   "k": 0,
+   "n": 76,
+   "rate": 0.0,
+   "base": 0.04,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=본문",
+   "action": "emph",
+   "k": 0,
+   "n": 37,
+   "rate": 0.0,
+   "base": 0.04,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "자리=훅",
+   "action": "emph",
+   "k": 4,
+   "n": 26,
+   "rate": 0.15,
+   "base": 0.04,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=훅",
+   "action": "emph",
+   "k": 4,
+   "n": 23,
+   "rate": 0.17,
+   "base": 0.04,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "자리=끝",
+   "action": "emph",
+   "k": 1,
+   "n": 17,
+   "rate": 0.06,
+   "base": 0.04,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=공개",
+   "action": "emph",
+   "k": 0,
+   "n": 15,
+   "rate": 0.0,
+   "base": 0.04,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=끝",
+   "action": "emph",
+   "k": 1,
+   "n": 13,
+   "rate": 0.08,
+   "base": 0.04,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=증거",
+   "action": "emph",
+   "k": 0,
+   "n": 12,
+   "rate": 0.0,
+   "base": 0.04,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "화자=불명",
+   "action": "emph",
+   "k": 4,
+   "n": 7,
+   "rate": 0.57,
+   "base": 0.04,
+   "grade": "중",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=다리",
+   "action": "emph",
+   "k": 0,
+   "n": 7,
+   "rate": 0.0,
+   "base": 0.04,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=고조",
+   "action": "emph",
+   "k": 0,
+   "n": 5,
+   "rate": 0.0,
+   "base": 0.04,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=반전",
+   "action": "emph",
+   "k": 0,
+   "n": 5,
+   "rate": 0.0,
+   "base": 0.04,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=이음",
+   "action": "emph",
+   "k": 0,
+   "n": 2,
+   "rate": 0.0,
+   "base": 0.04,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_exit",
+   "cond": "전체 줄",
+   "action": "exit=cut",
+   "k": 117,
+   "n": 119,
+   "rate": 0.98,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/줄판독 6편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_exit",
+   "cond": "전체 줄",
+   "action": "exit=기타",
+   "k": 1,
+   "n": 119,
+   "rate": 0.01,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/줄판독 6편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_exit",
+   "cond": "전체 줄",
+   "action": "exit=끝",
+   "k": 1,
+   "n": 119,
+   "rate": 0.01,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/줄판독 6편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "transition",
+   "cond": "전체 줄",
+   "action": "transition=cut",
+   "k": 80,
+   "n": 119,
+   "rate": 0.67,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/줄판독 6편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json cuts.transition",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "transition",
+   "cond": "전체 줄",
+   "action": "transition=none",
+   "k": 39,
+   "n": 119,
+   "rate": 0.33,
+   "base": null,
+   "grade": "중",
+   "evidence": [
+    "channel/homedesignnote/줄판독 6편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json cuts.transition",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cut_rhythm",
+   "cond": "편 단위",
+   "action": "컷 중앙 1.17초 · p90 2.18초",
+   "k": 13,
+   "n": 13,
    "rate": null,
    "base": null,
-   "grade": null,
-   "evidence": [],
-   "confidence": "미측정",
-   "measure_task": "06-homedesignnote",
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/뜯기 13편"
+   ],
+   "confidence": "신호",
+   "measure_task": null,
+   "engine_cell": "두유노판.json cuts",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "scene_fit",
+   "cond": "전체 줄",
+   "action": "대사↔장면 평균 6.33 · 7 미만 0.53",
+   "k": 56,
+   "n": 119,
+   "rate": 0.47,
+   "base": null,
+   "grade": "중",
+   "evidence": [
+    "channel/homedesignnote/줄판독 6편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
    "engine_cell": null,
    "engine_support": "×",
    "engine_gap": "A5"
@@ -222,127 +1197,823 @@
    "base": null,
    "grade": "강",
    "evidence": [
-    "channel/homedesignnote/뜯기 8편"
+    "channel/homedesignnote/뜯기 13편"
    ],
    "confidence": "신호",
    "measure_task": null,
-   "engine_cell": "잇썸홈판.json bgm.db_below_voice",
-   "engine_support": "△",
-   "engine_gap": "A4"
+   "engine_cell": "두유노판.json bgm.duck_narr_db",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "화자=나레",
+   "action": "sfx",
+   "k": 17,
+   "n": 112,
+   "rate": 0.15,
+   "base": 0.14,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "자리=본문",
+   "action": "sfx",
+   "k": 10,
+   "n": 76,
+   "rate": 0.13,
+   "base": 0.14,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=본문",
+   "action": "sfx",
+   "k": 6,
+   "n": 37,
+   "rate": 0.16,
+   "base": 0.14,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "자리=훅",
+   "action": "sfx",
+   "k": 2,
+   "n": 26,
+   "rate": 0.08,
+   "base": 0.14,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=훅",
+   "action": "sfx",
+   "k": 2,
+   "n": 23,
+   "rate": 0.09,
+   "base": 0.14,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "자리=끝",
+   "action": "sfx",
+   "k": 5,
+   "n": 17,
+   "rate": 0.29,
+   "base": 0.14,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=공개",
+   "action": "sfx",
+   "k": 0,
+   "n": 15,
+   "rate": 0.0,
+   "base": 0.14,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=끝",
+   "action": "sfx",
+   "k": 4,
+   "n": 13,
+   "rate": 0.31,
+   "base": 0.14,
+   "grade": "중",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=증거",
+   "action": "sfx",
+   "k": 2,
+   "n": 12,
+   "rate": 0.17,
+   "base": 0.14,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=다리",
+   "action": "sfx",
+   "k": 1,
+   "n": 7,
+   "rate": 0.14,
+   "base": 0.14,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "화자=불명",
+   "action": "sfx",
+   "k": 0,
+   "n": 7,
+   "rate": 0.0,
+   "base": 0.14,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=고조",
+   "action": "sfx",
+   "k": 1,
+   "n": 5,
+   "rate": 0.2,
+   "base": 0.14,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=반전",
+   "action": "sfx",
+   "k": 1,
+   "n": 5,
+   "rate": 0.2,
+   "base": 0.14,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=이음",
+   "action": "sfx",
+   "k": 0,
+   "n": 2,
+   "rate": 0.0,
+   "base": 0.14,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "sfx",
    "cond": "편 단위",
    "action": "효과음 후보 중앙 0.059 발/초",
    "k": 7,
-   "n": 8,
+   "n": 13,
    "rate": null,
    "base": null,
-   "grade": "강",
+   "grade": "중",
    "evidence": [
-    "channel/homedesignnote/뜯기 8편"
+    "channel/homedesignnote/뜯기 13편"
    ],
    "confidence": "신호",
    "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
-   "engine_gap": "A2"
+   "engine_cell": "두유노판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "meme",
-   "cond": null,
-   "action": null,
-   "k": null,
-   "n": null,
-   "rate": null,
+   "cond": "전체 줄",
+   "action": "짤 스티커",
+   "k": 0,
+   "n": 119,
+   "rate": 0.0,
    "base": null,
-   "grade": null,
-   "evidence": [],
-   "confidence": "미측정",
-   "measure_task": "06-homedesignnote",
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/줄판독 6편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json placement.rules.meme",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sticker",
+   "cond": "화자=나레",
+   "action": "sticker",
+   "k": 3,
+   "n": 112,
+   "rate": 0.03,
+   "base": 0.03,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
    "engine_cell": null,
    "engine_support": "×",
    "engine_gap": "A3"
   },
   {
    "element": "sticker",
-   "cond": null,
-   "action": null,
-   "k": null,
-   "n": null,
-   "rate": null,
-   "base": null,
-   "grade": null,
-   "evidence": [],
-   "confidence": "미측정",
-   "measure_task": "06-homedesignnote",
+   "cond": "자리=본문",
+   "action": "sticker",
+   "k": 2,
+   "n": 76,
+   "rate": 0.03,
+   "base": 0.03,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=본문",
+   "action": "sticker",
+   "k": 2,
+   "n": 37,
+   "rate": 0.05,
+   "base": 0.03,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "자리=훅",
+   "action": "sticker",
+   "k": 0,
+   "n": 26,
+   "rate": 0.0,
+   "base": 0.03,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=훅",
+   "action": "sticker",
+   "k": 0,
+   "n": 23,
+   "rate": 0.0,
+   "base": 0.03,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "자리=끝",
+   "action": "sticker",
+   "k": 1,
+   "n": 17,
+   "rate": 0.06,
+   "base": 0.03,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=공개",
+   "action": "sticker",
+   "k": 0,
+   "n": 15,
+   "rate": 0.0,
+   "base": 0.03,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=끝",
+   "action": "sticker",
+   "k": 1,
+   "n": 13,
+   "rate": 0.08,
+   "base": 0.03,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=증거",
+   "action": "sticker",
+   "k": 0,
+   "n": 12,
+   "rate": 0.0,
+   "base": 0.03,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "화자=불명",
+   "action": "sticker",
+   "k": 0,
+   "n": 7,
+   "rate": 0.0,
+   "base": 0.03,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=다리",
+   "action": "sticker",
+   "k": 0,
+   "n": 7,
+   "rate": 0.0,
+   "base": 0.03,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=고조",
+   "action": "sticker",
+   "k": 0,
+   "n": 5,
+   "rate": 0.0,
+   "base": 0.03,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=반전",
+   "action": "sticker",
+   "k": 0,
+   "n": 5,
+   "rate": 0.0,
+   "base": 0.03,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=이음",
+   "action": "sticker",
+   "k": 0,
+   "n": 2,
+   "rate": 0.0,
+   "base": 0.03,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
    "engine_cell": null,
    "engine_support": "×",
    "engine_gap": "A3"
   },
   {
    "element": "pointer",
-   "cond": null,
-   "action": null,
-   "k": null,
-   "n": null,
-   "rate": null,
+   "cond": "전체 줄",
+   "action": "원·화살표 스티커 (없음)",
+   "k": 0,
+   "n": 119,
+   "rate": 0.0,
    "base": null,
-   "grade": null,
-   "evidence": [],
-   "confidence": "미측정",
-   "measure_task": "06-homedesignnote",
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/줄판독 6편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
    "engine_cell": null,
    "engine_support": "×",
    "engine_gap": "A3"
   },
   {
    "element": "thumb",
-   "cond": null,
-   "action": null,
-   "k": null,
-   "n": null,
-   "rate": null,
+   "cond": "0초 프레임",
+   "action": "frame0 기입",
+   "k": 6,
+   "n": 6,
+   "rate": 1.0,
    "base": null,
-   "grade": null,
-   "evidence": [],
-   "confidence": "미측정",
-   "measure_task": "06-homedesignnote",
-   "engine_cell": null,
-   "engine_support": "×",
-   "engine_gap": "A6"
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/줄판독 6편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "render_bench thumb.stamp_video(판 칸 없음)",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "speech",
-   "cond": null,
-   "action": null,
+   "cond": "화자=나레",
+   "action": "말속도 8.47 자/초 · 덩어리 0.87초",
    "k": null,
-   "n": null,
+   "n": 112,
    "rate": null,
    "base": null,
-   "grade": null,
-   "evidence": [],
-   "confidence": "미측정",
-   "measure_task": "06-homedesignnote",
-   "engine_cell": null,
-   "engine_support": "×",
-   "engine_gap": "A7"
+   "grade": "강",
+   "evidence": [
+    "channel/homedesignnote/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json cps_target",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "script",
-   "cond": null,
-   "action": null,
-   "k": null,
-   "n": null,
-   "rate": null,
+   "cond": "나레 문장 끝",
+   "action": "어미 ~더라고요",
+   "k": 6,
+   "n": 28,
+   "rate": 0.21,
    "base": null,
-   "grade": null,
-   "evidence": [],
-   "confidence": "미측정",
-   "measure_task": "06-homedesignnote",
-   "engine_cell": "잇썸홈판.json script.audit",
-   "engine_support": "△",
-   "engine_gap": "-"
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "나레 문장 끝",
+   "action": "어미 ~다",
+   "k": 4,
+   "n": 28,
+   "rate": 0.14,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "나레 문장 끝",
+   "action": "어미 ~어요",
+   "k": 3,
+   "n": 28,
+   "rate": 0.11,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "나레 문장 끝",
+   "action": "어미 ~세요",
+   "k": 3,
+   "n": 28,
+   "rate": 0.11,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "나레 문장 끝",
+   "action": "어미 ~대요",
+   "k": 3,
+   "n": 28,
+   "rate": 0.11,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "나레 문장 끝",
+   "action": "어미 ~지",
+   "k": 2,
+   "n": 28,
+   "rate": 0.07,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "나레 문장 끝",
+   "action": "어미 ~에요",
+   "k": 1,
+   "n": 28,
+   "rate": 0.04,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "나레 문장 끝",
+   "action": "어미 ~돼요",
+   "k": 1,
+   "n": 28,
+   "rate": 0.04,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "나레 문장 끝",
+   "action": "어미 ~혀요",
+   "k": 1,
+   "n": 28,
+   "rate": 0.04,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "나레 문장 끝",
+   "action": "어미 ~잖아요",
+   "k": 1,
+   "n": 28,
+   "rate": 0.04,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "나레 문장 끝",
+   "action": "어미 ~거든요",
+   "k": 1,
+   "n": 28,
+   "rate": 0.04,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "나레 문장 끝",
+   "action": "어미 ~나요",
+   "k": 1,
+   "n": 28,
+   "rate": 0.04,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/homedesignnote/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "두유노판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
   }
  ],
  "gates": {
@@ -373,43 +2044,37 @@
   "latest": "원샷2_RGDS게임기_v2"
  },
  "facts": {
-  "line_reads": 0,
+  "hand_const": [],
+  "line_reads": 6,
   "line_reads_strict_errors": 0,
-  "rules_freq": false,
-  "style_analysis": false,
-  "palette": false,
-  "sfx_events": false,
-  "style_file": "tools/calcopy/hybrid/styles/잇썸홈판.json",
+  "rules_freq": true,
+  "style_analysis": true,
+  "palette": true,
+  "sfx_events": true,
+  "style_file": "tools/calcopy/hybrid/styles/두유노판.json",
   "style_file_exists": true,
-  "renderer": "itssum",
-  "caption_pack": null,
-  "caption_pack_ok": false,
-  "counted_n": null,
-  "no_why": [
-   "bgm.db_below_voice",
-   "bgm.duck_orig_db",
-   "length.max",
-   "length.min",
-   "render.a_end_pad",
-   "render.gap",
-   "render.gap_ab",
-   "render.gap_oo",
-   "render.orig_fade",
-   "render.tail",
-   "render.target_lufs",
-   "render.tp"
+  "renderer": "bench",
+  "caption_pack": "homedesignnote",
+  "caption_pack_ok": true,
+  "counted_n": 6,
+  "no_why": [],
+  "rhythm_missing": [],
+  "hand_scripts": [],
+  "hand_scripts_reference": [
+   "channel/homedesignnote/작품1_식기세척기/make_plan.py·render.py(옛, render_bench 두유노판으로 대체 10-26)",
+   "channel/homedesignnote/preset/hdn_preset.py(옛 — 설명서 프리셋 생성기, 회원 옛 길 preset_make 가 읽는 frame.json 만 만든다)"
   ],
-  "hand_scripts": [
-   "channel/homedesignnote/작품1_식기세척기/make_plan.py",
-   "channel/homedesignnote/작품1_식기세척기/render.py",
-   "channel/homedesignnote/preset/hdn_preset.py"
-  ],
-  "hand_scripts_reference": [],
-  "unmeasured": 12,
+  "unmeasured": 0,
   "quality_gate_ok": false,
   "match_ok": false,
   "eye": null,
-  "upgrade": null,
+  "upgrade": {
+   "better": 0,
+   "worse": null,
+   "l3_ok": false,
+   "need": null,
+   "pending_n": 0
+  },
   "member": {
    "line_json": null,
    "preset_name": null,
@@ -422,51 +2087,58 @@
   "owner_pass": false
  },
  "inputs": {
+  "channel/homedesignnote/_kal/sfx_events.json": "59a3937a28f3",
+  "channel/homedesignnote/_kal/규칙빈도.json": "eb8995ebba37",
+  "channel/homedesignnote/_kal/대본언어.json": "c3c5b2488f2e",
   "channel/homedesignnote/뜯기/7Nj6b0mX4HM/뜯기.json": "ba341c5335b2",
   "channel/homedesignnote/뜯기/DCXQjaWcZ-g/뜯기.json": "49c921637430",
+  "channel/homedesignnote/뜯기/EINoAh8C9rQ/뜯기.json": "4a0a26e91b04",
   "channel/homedesignnote/뜯기/Ez7KsS2K_Pk/뜯기.json": "d2a0baa49322",
   "channel/homedesignnote/뜯기/R0-bfj7JarA/뜯기.json": "728f972deb90",
+  "channel/homedesignnote/뜯기/SU9YofB1IoI/뜯기.json": "9e300a321e98",
+  "channel/homedesignnote/뜯기/WTgQPFfdSOQ/뜯기.json": "764e79d4537d",
+  "channel/homedesignnote/뜯기/_QqLEH4qlFQ/뜯기.json": "2fb9fa1ec626",
   "channel/homedesignnote/뜯기/e15KZ_nO1_Y/뜯기.json": "7cc04b46594d",
   "channel/homedesignnote/뜯기/fQPX6XeXeN0/뜯기.json": "d2e6cc5e0532",
+  "channel/homedesignnote/뜯기/iiBUscncqIk/뜯기.json": "9527ef934d00",
   "channel/homedesignnote/뜯기/orBlWWhejtc/뜯기.json": "10fb760a5436",
   "channel/homedesignnote/뜯기/seFkrVR-nYs/뜯기.json": "591a01780f35",
-  "channel/결과물.json": "142ed78b2435",
+  "channel/homedesignnote/줄판독/DCXQjaWcZ-g.json": "823887f1f6d8",
+  "channel/homedesignnote/줄판독/EINoAh8C9rQ.json": "08822f2c0e46",
+  "channel/homedesignnote/줄판독/SU9YofB1IoI.json": "c5c96a134ff4",
+  "channel/homedesignnote/줄판독/WTgQPFfdSOQ.json": "294b8005fd4c",
+  "channel/homedesignnote/줄판독/_QqLEH4qlFQ.json": "c7cfd13dc37e",
+  "channel/homedesignnote/줄판독/iiBUscncqIk.json": "5a42ddcdada9",
+  "channel/homedesignnote/팔레트.json": "8d0e12bacf40",
+  "channel/결과물.json": "d026be6442ff",
   "channel/브랜드.json": "f2ded5552699",
-  "channel/스타일.json": "3f5625b6c1a2",
-  "channel/프리셋.json": "7d8cdd70c9e9",
-  "shopping_shorts/static/caption-motions.js": "09ac4bd95b42",
-  "tools/calcopy/hybrid/styles/_common.json": "3c88a2be87ae",
-  "tools/calcopy/hybrid/styles/잇썸홈판.json": "43ded8e672da"
+  "channel/스타일.json": "c8a155f5ab8b",
+  "channel/프리셋.json": "bfc5d25ccc86",
+  "shopping_shorts/static/caption-motions.js": "f77b884bdc60",
+  "tools/calcopy/hybrid/styles/_common.json": "5452d68fa811",
+  "tools/calcopy/hybrid/styles/두유노판.json": "b33e7bd90e31"
  },
  "done": {
-  "level": "L0 미달",
+  "level": "L1",
   "missing": [
-   "줄판독≥6",
-   "줄판독 strict 오류0",
-   "규칙빈도",
-   "스타일분석",
-   "팔레트",
-   "sfx_events",
-   "renderer=bench",
-   "숫자칸 why",
-   "counted≥6",
-   "자막팩",
-   "rules 미측정0",
    "품질관문 ○",
    "재현일치도 ○",
    "눈검수 E1~E8",
-   "업그레이드 나아짐≥1",
+   "업그레이드 나아짐≥과반∧나빠짐0",
    "눈검수 E9",
    "사장님 판정",
    "member line.json",
    "member preset_name",
-   "회원실측",
-   "손스크립트0"
+   "회원실측"
   ],
-  "rule_unmeasured": 12,
-  "measure_tasks": [
-   "06-homedesignnote"
-  ],
+  "rule_unmeasured": 0,
+  "measure_tasks": [],
+  "hand_const": [],
   "complete": false
+ },
+ "emph_weak": {
+  "de_min": 28.16,
+  "threshold": 30.0,
+  "label": "벤치 대비 약함"
  }
 }

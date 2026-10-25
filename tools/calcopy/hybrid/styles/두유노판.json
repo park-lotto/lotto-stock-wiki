@@ -1,0 +1,781 @@
+{
+ "name": "두유노판",
+ "renderer": "bench",
+ "thumb_card_face": false,
+ "_thumb_card_face": "연예인 채널 아님 — 카드 얼굴 관문 끔(판마다 명시 필수)",
+ "_note": "두유노홈디노(@두유노홈디노) 칼카피 1차 판 — 쇼핑형 인스타스토리형(전체화면 해외 원본 클립 + 흰 손글씨 한 줄 자막 + 체험담 나레, frame.kind full). 근거 channel/homedesignnote/{스타일분석.md, 줄판독/ 6편, _kal/규칙빈도.json·손상수_실측.json·homedesignnote판_초안.json} · 옛 길 preset/전체화면_가운데자막(preset_make — 회원 옛 길, 지우지 않음)·10-26 그 manifest 에 잰 근거(자막 외곽·y·rhythm·표지 카드)를 이 판으로 옮김. 잇썸홈판.json(itssum = 얜샷템 하이브리드 뒤 체험)과 다른 판",
+ "bench": {
+  "ko": "두유노홈디노",
+  "channel": "homedesignnote",
+  "analysis": "channel/homedesignnote/스타일분석.md",
+  "line_reads": "channel/homedesignnote/줄판독",
+  "src_dir": "C:/숏템_칼카피/homedesignnote/src",
+  "sfx_events": "channel/homedesignnote/_kal/sfx_events.json",
+  "palette": "channel/homedesignnote/팔레트.json"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f",
+  "candidates": [
+   "tc_61f0859907085fc68561c9a1"
+  ],
+  "why": "벤치 남성 나레 45/49(judge voice — manifest channel_rules.sound) · 박창수 = 사장님 확정 남 목소리 명단(칼카피_시작 §12, 필재 금지) · 지훈 후보 · 배속은 cps_target 맞춤 ≤1.25(타입캐스트)"
+ },
+ "cps_target": 8.58,
+ "_why_cps_target": "벤치 5편 나레 글자/자막 초 편 중앙 8.84·7.88·8.58·8.31·8.76 → 8.58(handconst cps_target, iiBU 나레 없음 제외)",
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 11.22,
+  "duck_orig_db": 0.0,
+  "duck_narr_db": 0.0,
+  "fade_out": 0.084,
+  "why": "곡 = honwaka_puppu(사장님 10-17 '차분' 결정 · 제미나이 청취 보컬 없음·차분 7/10 — manifest sound.bgm_candidates; 벤치 곡 미식별) · db_below_voice 11.22 = 말 p50 − 말 사이 바닥 편 중앙(10.12·11.22·11.11·17.57·13.35, handconst) · duck 0 = 원음 줄 0/119·나레 덕킹 비교 편 0 · fade_out 0.084 = 편 중앙(0.038·0.097·0.187·0.034·0.071·0.411)"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 LUFS 통일(사장님 10-18, 지침서 §3-7) · TP −1.5(_common). 벤치 통합 −6.3~−8.2(4편)·WTgQ −21.9·iiBU −10.7(스타일분석 §7)"
+ },
+ "length": {
+  "min": 15,
+  "max": 23,
+  "why": "벤치 6편 14.8·16.1·20.2·21.0·21.6·29.2초 → p17 내림 15 · p83 올림 23(handconst length) · 중앙 20.6"
+ },
+ "timing": {
+  "gap": 0.04,
+  "gap_after_tts": 0.04,
+  "tail": 0.312,
+  "why": "gap 0.04 = 줄 경계 소리 쉼 중앙(n 24, p25 0·p75 0.06 — 붙여 말함) · tail 0.312 = 마지막 말 끝→영상 끝 편 중앙(0.198·0.257·0.367·0.734·0.131, handconst timing.tail; iiBU 10.4 나레 없음)"
+ },
+ "frame": {
+  "kind": "full",
+  "_from": "frame_import.py ← channel/homedesignnote/preset/전체화면_가운데자막/frame.json(calcopy_frame v1 source=fQPX6XeXeN0)",
+  "bg": [
+   0,
+   0,
+   0
+  ],
+  "title": [],
+  "logo": null,
+  "credit": null,
+  "watermark": {
+   "text": "잇썸홈",
+   "font": "HiMelody.ttf",
+   "px": 46,
+   "x1": 596,
+   "cy": 1455,
+   "alpha": 204
+  },
+  "why": "전체화면 창 5/6편(스타일분석 §2 행 밝기) · 상시 제목 0 · 로고·출처 0/6 · 워터마크 = 벤치 반투명 흰 손글씨 '@Maison_HomeDino/@Home_Design_Note' x 373~706·y 1423~1475(25/50편 — manifest watermark) → 우리 '잇썸홈'(사장님 10-17) 같은 자리·HiMelody 46px(frame.json brand 층)·가운데 x540(x1 = 540+글 폭/2)·cy 1455·불투명 0.8(벤치 눈 0.8 — 줄판독 layout.watermark.alpha) · bg 검정 = 전체화면이라 안 보임(frame.json bg 는 편마다 값 — 쓰지 않음)",
+  "_pending": {
+   "caption_enter": "frame.json caption.enter none — 판 placement.rules.enter cut 이 같은 뜻(옮김)"
+  }
+ },
+ "caption": {
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 10.0,
+  "chunk_max_chars": 13,
+  "band": [
+   678,
+   734
+  ],
+  "why": "자막 = 흰 손글씨 한 줄 가운데 · 등장 instant 110/112 · chunk_max_chars 13 = 나레 조각 자수 p90(n 112, 중앙 8·최대 19 — handconst) · band [678,734] = 나레 픽셀 줄 y 중앙(n 112) — 화면 위 1/3~가운데 · typing_cps 10 = 렌더에 안 닿는 값(타이핑 0/119줄)",
+  "_pending": {
+   "look": "모양(PoorStory 계열 흰 손글씨·검정 외곽 6~8px·그림자 ~25px — 10-26 픽셀 단면 실측 preset manifest caption_styles notes) = 자막팩 몫(표준 §11 ㉑) → pack_map gap/팩요청.md"
+  },
+  "pack": "homedesignnote"
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "cut": 1.0
+   },
+   "ms": 0,
+   "why": "전환 = cut 100%(컷 경계 103 중 flash·black·zoomblur 0 — 스타일분석 §3 30fps 밝기)"
+  },
+  "why": "push 0 = 원본 움직임 그대로(나레 줄 motion cam 79·still 20·zoom_in 10/112 — handconst cuts.push_tts)"
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "narr.first": "cut",
+    "narr.rest": "cut",
+    "orig.first": "cut",
+    "orig.rest": "cut",
+    "why": "화자=나레 → instant 110/112 · 자리=본문 76/76(규칙빈도 강)"
+   },
+   "transition": {
+    "kinds": [],
+    "why": "전환 효과 0/103"
+   },
+   "meme": {
+    "rate": 0.0,
+    "why": "짤 0/119(스타일분석 §8)"
+   },
+   "sfx": {
+    "kinds": {},
+    "max": 0,
+    "why": "효과음 확정 0(2차 재측정 귀 대기 37·배경음 박자 6 — 스타일분석 §7, 귀 확인 전 규칙으로 안 씀)"
+   }
+  },
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/homedesignnote/줄판독",
+   "n_videos": 6,
+   "slots": {
+    "narr.first": {
+     "n": 5,
+     "enter": {
+      "cut": 0.8,
+      "pop": 0.2
+     },
+     "emph": 0.0
+    },
+    "narr.rest": {
+     "n": 107,
+     "enter": {
+      "cut": 0.991,
+      "fade": 0.009
+     },
+     "emph": 0.009
+    },
+    "orig.first": {
+     "n": 6,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.667
+    },
+    "orig.rest": {
+     "n": 1,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.0
+    }
+   },
+   "share": {
+    "emph": 0.833,
+    "typing": 0.0,
+    "sfx": 1.0
+   },
+   "stickers": {
+    "other": 0.167,
+    "spark_lines": 0.167
+   },
+   "transition": {
+    "cut": 1.0
+   },
+   "sfx_kinds": {
+    "other": 0.941,
+    "ding": 0.059
+   },
+   "videos": [
+    {
+     "id": "_QqLEH4qlFQ",
+     "n": 19,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 1
+      },
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 17,
+       "enter": {
+        "cut": 17
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "썸네일카드(굵은 고딕 2줄 크게, 윗줄 하늘색·아랫줄 흰색, 검정 외곽)": 1,
+      "기본(흰 손글씨체·검정 외곽+번짐 그림자)": 18
+     },
+     "sfx": [
+      "none"
+     ],
+     "sfx_count": {
+      "sure": 0,
+      "pending": 1
+     },
+     "no_caption": 1,
+     "transitions": {
+      "cut": 18
+     },
+     "n_trans": 18,
+     "roles": {
+      "hook": 6,
+      "body": 9,
+      "reveal": 2,
+      "end": 2
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "end",
+       "t": 15.8,
+       "off": 0.567,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "DCXQjaWcZ-g",
+     "n": 20,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 18,
+       "enter": {
+        "cut": 17,
+        "fade": 1
+       },
+       "emph": 1
+      }
+     },
+     "stickers": {
+      "spark_lines": 1
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "썸네일카드(굵은 고딕 흰 글·검정 두꺼운 외곽, 2줄 크게)": 1,
+      "기본(흰 손글씨체·검정 외곽+번짐 그림자)": 18,
+      "CTA(낱말 하늘색 강조 + 반짝이)": 1
+     },
+     "sfx": [
+      "cap",
+      "cap"
+     ],
+     "sfx_count": {
+      "sure": 0,
+      "pending": 2
+     },
+     "no_caption": 0,
+     "transitions": {
+      "cut": 19
+     },
+     "n_trans": 19,
+     "roles": {
+      "hook": 3,
+      "body": 13,
+      "reveal": 2,
+      "end": 2
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 4.3,
+       "off": 1.067,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 13.56,
+       "off": 1.16,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "EINoAh8C9rQ",
+     "n": 19,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 1
+      },
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 17,
+       "enter": {
+        "cut": 17
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "썸네일카드(굵은 고딕 2줄 크게, 윗줄 흰·아랫줄 하늘색, 검정 외곽)": 1,
+      "기본(흰 손글씨체·검정 외곽+번짐 그림자)": 18
+     },
+     "sfx": [
+      "cap",
+      "cap",
+      "cap",
+      "none"
+     ],
+     "sfx_count": {
+      "sure": 0,
+      "pending": 4
+     },
+     "no_caption": 0,
+     "transitions": {
+      "cut": 18
+     },
+     "n_trans": 18,
+     "roles": {
+      "hook": 4,
+      "body": 11,
+      "reveal": 2,
+      "end": 2
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 3.87,
+       "off": 0.837,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 15.2,
+       "off": 0.333,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "end",
+       "t": 18.24,
+       "off": 0.24,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "end",
+       "t": 20.67,
+       "off": 1.47,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "iiBUscncqIk",
+     "n": 2,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 1
+      },
+      "orig.rest": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "훅 글판(굵은 고딕 3줄 왼쪽 정렬, 첫 줄 흰·아래 2줄 노랑, 검정 외곽)": 1,
+      "상단 고정 제목띠(검정 둥근 박스 + 노랑 굵은 고딕, 끝까지 유지)": 1
+     },
+     "sfx": [
+      "cap",
+      "cut",
+      "cut",
+      "none",
+      "cut",
+      "none",
+      "none",
+      "cut",
+      "cut",
+      "none",
+      "none",
+      "none",
+      "none",
+      "none",
+      "cut",
+      "none",
+      "none",
+      "none",
+      "none",
+      "none"
+     ],
+     "sfx_count": {
+      "sure": 0,
+      "pending": 20
+     },
+     "no_caption": 0,
+     "transitions": {
+      "cut": 1
+     },
+     "n_trans": 1,
+     "roles": {
+      "hook": 1,
+      "body": 1
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "SU9YofB1IoI",
+     "n": 38,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 36,
+       "enter": {
+        "cut": 36
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "썸네일카드(굵은 고딕 2줄 크게, 흰색, 검정 외곽)": 1,
+      "기본(흰 손글씨체·검정 외곽+번짐 그림자)": 37
+     },
+     "sfx": [
+      "none",
+      "cap",
+      "cap",
+      "none",
+      "cap",
+      "cut",
+      "cap"
+     ],
+     "sfx_count": {
+      "sure": 0,
+      "pending": 7
+     },
+     "no_caption": 0,
+     "transitions": {
+      "cut": 37
+     },
+     "n_trans": 37,
+     "roles": {
+      "hook": 4,
+      "reveal": 6,
+      "twist": 5,
+      "body": 21,
+      "end": 2
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "hook",
+       "t": 1.7,
+       "off": 0.367,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "twist",
+       "t": 8.41,
+       "off": 0.043,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 13.8,
+       "off": 1.167,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 15.7,
+       "off": 0.6,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 24.28,
+       "off": 0.213,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 25.24,
+       "off": 0.473,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "end",
+       "t": 28.18,
+       "off": 0.113,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "WTgQPFfdSOQ",
+     "n": 21,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 1
+      },
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "pop": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 19,
+       "enter": {
+        "cut": 19
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "other": 2
+     },
+     "sticker_lex": {
+      "other": {
+       "none": 2
+      }
+     },
+     "variants": {
+      "썸네일카드(굵은 기울임 고딕 3줄 크게, 첫 줄 파랑·아래 흰색, 검정 외곽)": 1,
+      "크게(흰 굵은 기울임 고딕 · 검정 외곽+큰 검정 번짐, 화면 가운데)": 10,
+      "상자 자막(흰 박스 + 검정 고딕, 화면 아래쪽)": 9,
+      "의성어(같은 큰 글 → 퇴장 때 확대·회색 투명)": 1
+     },
+     "sfx": [
+      "cut",
+      "cap",
+      "cut"
+     ],
+     "sfx_count": {
+      "sure": 0,
+      "pending": 3
+     },
+     "no_caption": 1,
+     "transitions": {
+      "cut": 20
+     },
+     "n_trans": 20,
+     "roles": {
+      "hook": 5,
+      "reveal": 3,
+      "body": 8,
+      "end": 5
+     },
+     "sfx_lines": [
+      {
+       "kind": "ding",
+       "role": "hook",
+       "t": 1.63,
+       "off": 0.363,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 6.21,
+       "off": 0.043,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 10.67,
+       "off": 0.603,
+       "basis": "파형 솟음"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "rhythm": {
+  "cut_median": {
+   "v": 1.07,
+   "why": "벤치 6편 원본 컷 길이 중앙: _Qq 0.97·DCXQ 1.15·iiBU 1.8·WTgQ 0.99·EINo 1.3·SU9Y 0.83 → 1.07(범위 0.83~1.8, media_of). rhythm_gate 는 진짜 컷 중앙 > ×1.3(1.39) 이면 멈춘다"
+  },
+  "hook_cuts_3s": {
+   "min": 2,
+   "why": "벤치 6편 0.1~3.0초 안 컷 경계 수: _Qq 3·DCXQ 2·iiBU 1·WTgQ 3·EINo 1·SU9Y 4 → 중앙 2.5 · p25 1.25 → 2(키치잇판·잇템로그판처럼 중앙 쪽 내림)"
+  },
+  "plain_share": {
+   "v": 0.79,
+   "tol": 0.12,
+   "why": "벤치 6편 줄판독 119줄 중 꾸밈 없는 줄 94 = 0.79(편별 DCXQ 0.85·EINo 0.737·SU9Y 0.816·WTgQ 0.667·_Qq 0.895·iiBU 0.5(2줄)) · ±0.12 = 2줄 편 빼고 편별 최대 거리(WTgQ 0.123)"
+  },
+  "photo_share_max": {
+   "v": 0.0,
+   "why": "벤치 6/6편 화면 = 해외 원본 영상 클립(사진·쇼핑몰 그림 컷 0 — 스타일분석 §3·§10 눈)"
+  }
+ },
+ "reuse": {
+  "adjacent_run": true,
+  "why": "사장님 10-26 결정 '가'(한 동작 이어서 반복 컷은 B13 거리에서 뺌, 겹침·사이 컷 낀 재등장은 ×) — 벤치 repeat_measure.py(channel/homedesignnote/preset) · 판정 quality_gate.reuse_violations_bench(adjacent_run) · _pending: quality_gate gate·render_bench 가 이 칸을 아직 안 읽는다(preset_make·material_bank 만)"
+ },
+ "title_form": "0초 표지 카드만(상시 제목 없음) — 장면 위 굵은 큰 글 2~3줄, 강조 줄 하늘 #7FD5E2 · 경고 '절대 사지 마세요!'·명령 '무조건 이거사세요!'·놀람 질문 '이것도 만든다고?'·사연 '와이프의 취미'·단정 '신혼가전 필수템'(스타일분석 §9 · 6/6 1~3프레임)",
+ "script": {
+  "brief": [
+   "두유노홈디노 대본 지침서(origin/track/노바대본설명서 docs/노바대본설명서/두유노홈디노_지침서.html): A 체험형(사람·사건으로 증명, 140~190자 8줄) / B 정보형(만든 사람·원리, 자료조사 2개 이상 확인될 때만)",
+   "잇썸홈 points(channel/homedesignnote/대본설명서/points.json — script_audit itssum 엔진): 잉? 1(앞 1/3) · 와우 3줄(줄 머리 강한 연결어 + 근거 번호, 강한 말 2) · 권위·숫자 줄 1 · 결과 비유 1 · 끝 줄 사회 반응 · 5~8줄 150~246자",
+   "어미 더라고요>어요>대요 · 존댓말 0.75·전언 0.32 · 조각 4~13자(화면 한 덩어리) · CTA·금액·효능 단정 없음(칼카피_시작 14 — 분위기 과장은 허용)"
+  ],
+  "audit": [
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 15,
+    "max": 23,
+    "why": "판 length(벤치 p17~p83)"
+   },
+   {
+    "id": "itssum",
+    "kind": "engine",
+    "name": "itssum"
+   }
+  ]
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "homedesignnote",
+   "gap": [
+    "자기 팩 1위지만 문턱 밖 {'font': '미측정(스타일분석 글꼴 줄에 등록 글꼴 없음 — 06 fontmatch)'}(1.0 = 문턱) → 팩요청.md 두유노판#1(보정 또는 재측정)"
+   ],
+   "rank": [
+    {
+     "pack": "homedesignnote",
+     "d": 0.057,
+     "terms": {
+      "px": 0.16,
+      "fill": 0.0,
+      "y": 0.01
+     }
+    },
+    {
+     "pack": "deal",
+     "d": 1.34,
+     "terms": {
+      "px": 3.02,
+      "fill": 0.0,
+      "y": 1.0
+     }
+    },
+    {
+     "pack": "story",
+     "d": 1.493,
+     "terms": {
+      "px": 3.48,
+      "fill": 0.0,
+      "y": 1.0
+     }
+    }
+   ],
+   "from": "벤치 6편 119줄 실측 [나레 112줄[잉크 높이 60px(112줄 y칸) · 자리 y707 · 채움 #FFFFFF(103줄)]] → 1위 homedesignnote(거리 0.057) · 지금 homedesignnote(거리 0.057, 순위 1)",
+   "enter_cover": {
+    "instant": {
+     "share": 0.983,
+     "n": 117,
+     "item": "정지(팩 불필요)"
+    },
+    "fade": {
+     "share": 0.008,
+     "n": 1,
+     "item": null
+    },
+    "pop": {
+     "share": 0.008,
+     "n": 1,
+     "item": null
+    }
+   }
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — 판 자막팩이 등장까지 정한다(caption-motions.js motionPlan: 팩 motion 이 효과팩 번호보다 이긴다) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": null,
+   "gap": [],
+   "from": "renderer bench — 효과음은 렌더러 자체(render 칸)"
+  },
+  "bgm": {
+   "id": "honwaka_puppu",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)"
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 칼카피 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
+  }
+ }
+}

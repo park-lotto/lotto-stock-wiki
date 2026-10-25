@@ -10,7 +10,7 @@
   },
   "presets": {
     "homedesignnote": {"format": "쇼핑형", "subformat": "인스타스토리형", "bench_option": "두유노홈디노", "brand_ref": "homedesignnote",
-      "engine": {"style_file": "tools/calcopy/hybrid/styles/잇썸홈판.json", "renderer": "itssum", "preset_dir": "channel/homedesignnote/preset/전체화면_가운데자막", "hand_scripts": ["channel/homedesignnote/작품1_식기세척기/make_plan.py", "channel/homedesignnote/작품1_식기세척기/render.py", "channel/homedesignnote/preset/hdn_preset.py"]},
+      "engine": {"style_file": "tools/calcopy/hybrid/styles/두유노판.json", "renderer": "bench", "preset_dir": "channel/homedesignnote/preset/전체화면_가운데자막", "hand_scripts": ["channel/homedesignnote/작품1_식기세척기/make_plan.py·render.py(옛, render_bench 두유노판으로 대체 10-26)", "channel/homedesignnote/preset/hdn_preset.py(옛 — 설명서 프리셋 생성기, 회원 옛 길 preset_make 가 읽는 frame.json 만 만든다)"], "_note": "10-26 잇썸홈판.json(itssum)은 얜샷템 하이브리드 뒤 체험 판으로 그대로 — 두유노 칼카피 1차 판 = 두유노판(bench)"},
       "member": {"line_json": null, "preset_name": null, "flow_format": "쇼핑형"}},
     "evenshopping": {"format": "쇼핑형", "subformat": "썰쇼핑형", "bench_option": "이븐쇼핑", "brand_ref": "evenshopping",
       "engine": {"style_file": "tools/calcopy/hybrid/styles/재미썸홈판.json", "renderer": "jaemi", "preset_dir": "channel/evenshopping/preset/숏템템플릿", "hand_scripts": ["channel/evenshopping/작품1_총알람/make_plan.py", "channel/evenshopping/작품1_총알람/render.py"]},
