@@ -1,0 +1,203 @@
+{
+ "made_by": "quality_gate.plan_frames_check",
+ "min_sim": 0.97,
+ "rows": [
+  {
+   "k": 0,
+   "line": "N1",
+   "src": "IjTVGH5SNZQ_545_605.mp4",
+   "ss": 14.8,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9619,
+   "sims": [
+    0.9813,
+    0.9619,
+    0.9506
+   ],
+   "why": null
+  },
+  {
+   "k": 1,
+   "line": "O1",
+   "src": "IjTVGH5SNZQ_545_605.mp4",
+   "ss": 23.82,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9755,
+   "sims": [
+    0.9855,
+    0.9755,
+    0.9692
+   ],
+   "why": null
+  },
+  {
+   "k": 2,
+   "line": "O1",
+   "src": "IjTVGH5SNZQ_545_605.mp4",
+   "ss": 24.96,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9782,
+   "sims": [
+    0.9886,
+    0.9782,
+    0.9724
+   ],
+   "why": null
+  },
+  {
+   "k": 3,
+   "line": "O1",
+   "src": "IjTVGH5SNZQ_545_605.mp4",
+   "ss": 26.16,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9744,
+   "sims": [
+    0.9847,
+    0.9744,
+    0.9648
+   ],
+   "why": null
+  },
+  {
+   "k": 4,
+   "line": "N2",
+   "src": "IjTVGH5SNZQ_800_830.mp4",
+   "ss": 18.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9581,
+   "sims": [
+    0.9712,
+    0.9581,
+    0.9464
+   ],
+   "why": null
+  },
+  {
+   "k": 5,
+   "line": "O2",
+   "src": "IjTVGH5SNZQ_545_605.mp4",
+   "ss": 31.65,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9693,
+   "sims": [
+    0.9844,
+    0.9693,
+    0.964
+   ],
+   "why": null
+  },
+  {
+   "k": 6,
+   "line": "O2",
+   "src": "IjTVGH5SNZQ_545_605.mp4",
+   "ss": 37.71,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9697,
+   "sims": [
+    0.9852,
+    0.9697,
+    0.9599
+   ],
+   "why": null
+  },
+  {
+   "k": 7,
+   "line": "N3",
+   "src": "cp_7282115714.jpg",
+   "ss": 0,
+   "sim": null,
+   "why": "밀기·움직임·그림 칸 컷 — 원본 프레임과 화면이 다르게 그려짐"
+  },
+  {
+   "k": 8,
+   "line": "N4",
+   "src": "IjTVGH5SNZQ_545_605.mp4",
+   "ss": 40.2,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9477,
+   "sims": [
+    0.9729,
+    0.9477,
+    0.9351
+   ],
+   "why": null
+  },
+  {
+   "k": 9,
+   "line": "N4",
+   "src": "IjTVGH5SNZQ_545_605.mp4",
+   "ss": 44.9,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9595,
+   "sims": [
+    0.9766,
+    0.9595,
+    0.9458
+   ],
+   "why": null
+  },
+  {
+   "k": 10,
+   "line": "N5",
+   "src": "IjTVGH5SNZQ_545_605.mp4",
+   "ss": 29.55,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9733,
+   "sims": [
+    0.9897,
+    0.9733,
+    0.9582
+   ],
+   "why": null
+  },
+  {
+   "k": 11,
+   "line": "N5",
+   "src": "IjTVGH5SNZQ_545_605.mp4",
+   "ss": 26.65,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9597,
+   "sims": [
+    0.9815,
+    0.9597,
+    0.943
+   ],
+   "why": null
+  },
+  {
+   "k": 12,
+   "line": "N6",
+   "src": "cp_7282115714.jpg",
+   "ss": 0,
+   "sim": null,
+   "why": "밀기·움직임·그림 칸 컷 — 원본 프레임과 화면이 다르게 그려짐"
+  },
+  {
+   "k": 13,
+   "line": "N7",
+   "src": "IjTVGH5SNZQ_800_830.mp4",
+   "ss": 8.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9718,
+   "sims": [
+    0.9837,
+    0.9718,
+    0.9611
+   ],
+   "why": null
+  }
+ ],
+ "screen": "base.mp4(자막 전 완성 화면)"
+}
