@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# _deprecated_2026-10-25 → tools/calcopy/hybrid/styles/썰템쇼판.json (관제 263 지시서 07 · 표준 §3-1: 새 편은 공용 렌더러로. 설명서 프리셋 썰템쇼_화자썰 생성기 — 회원 옛 길 preset_make 가 그 결과를 읽으므로 지우지 않는다)
 """썰템쇼_화자썰 하나-빼고 렌더 검증 — 편 하나를 뺀 7편으로 프리셋을 만들고, 뺀 편의 글(제목·라벨·날짜·훅 길이)만 넣어
 실제 렌더 경로(tools/calcopy/check_multi_frame.py → scene_style.compose_still → render_layer_one)로 훅·본문 프레임을 그린 뒤,
 원본 같은 시각 프레임과 같은 재는 함수(hs_measure.measure_hook/measure_body)로 층별 잉크 자리를 대조한다.

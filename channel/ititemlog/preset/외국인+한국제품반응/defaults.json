@@ -1,0 +1,21 @@
+{
+ "_rule": "기본값 = 이 프리셋 원본 영상(사장님 10-20). 글꼴·자막 외곽선은 frame.json 그대로. 회원이 바꾼 칸만 회원 값. 읽는 곳 = tools/calcopy/preview_request.preset_defaults",
+ "_from": "판 잇템로그판.json 한 곳에서 읽음 — voice(유라, 사장님 10-20 '유라가 괜찮고') · bgm.id/db_below_voice(handconst 6편 실측) · caption 쌓기 없음(enter 4칸 cut = replace) · 뜯기 6편 bgm 있음 6/6(제미나이 판독 10-25)",
+ "tts": {
+  "provider": "typecast",
+  "voice_id": "tc_61130d6cf89dd58a4c13295d",
+  "name": "유라",
+  "tempo": 1.25
+ },
+ "bgm": {
+  "candidates": [
+   "sweets",
+   "free_bird",
+   "beggin",
+   "otsukare_summer"
+  ]
+ },
+ "caption": {
+  "mode": "replace"
+ }
+}
