@@ -207,6 +207,8 @@ def test_kitchit_saved_plans_unchanged():
     st = ST.load("키치잇판")
     st_old = copy.deepcopy(st)                 # 10-25 관제263 판 cuts.transition.kinds(벤치 실측 전환) 넣기 전 계획은 그 칸 없이 만든 것
     st_old["cuts"]["transition"]["kinds"] = {"cut": 1.0}
+    for x in (st, st_old):                     # 10-25 관제263 판 rhythm.plain_share(꾸밈 없는 덩어리) 넣기 전 계획은 그 칸 없이 만든 것
+        x.pop("rhythm", None)
     for f in files:
         d = json.loads(f.read_text(encoding="utf-8"))
         S = json.loads((f.parent.parent / "대본.json").read_text(encoding="utf-8"))

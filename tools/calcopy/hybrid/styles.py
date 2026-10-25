@@ -29,6 +29,23 @@ if str(_ROOT) not in sys.path:          # CLI 로 직접 돌릴 때도 tools.cal
 REQUIRED = ("name", "renderer", "voice", "bgm", "loudness", "length", "script", "thumb_card_face")   # thumb_card_face: 연예인 채널이면 true — 판마다 명시(사장님 10-25 "연예인 얼굴 통일·앞으로 칼카피 모두", 관문 ⑥)
 
 
+# ── 판 리듬 실측 4칸(관제263 10-25 페이블 눈검수 E1·E2·E4 — 모든 판 필수, 값은 그 채널 벤치 실측 + why) ──────────────
+#   판 파일 rhythm{cut_median{v,why} · hook_cuts_3s{min,why} · plain_share{v,tol,why} · photo_share_max{v,why}}.
+#   읽는 곳은 rhythm() 하나 — 렌더(render_bench.rhythm_cuts·photo_gate)·배치(placement.plain_step)·관문(quality_gate rhythm 행)·카드(preset_card L1)·재현(kal_analyze.style_targets).
+RHYTHM_KEYS = {"cut_median": "v", "hook_cuts_3s": "min", "plain_share": "v", "photo_share_max": "v"}
+
+
+def rhythm(st: dict) -> dict:
+    """(판단 주인 — 판 리듬 칸 읽기) {키: 칸 dict} — 값 칸·why 가 다 있는 것만. 빠진 키는 rhythm_missing 이 말한다(조용한 기본값 없음)."""
+    R = st.get("rhythm") or {}
+    return {k: R[k] for k, f in RHYTHM_KEYS.items() if isinstance(R.get(k), dict) and isinstance(R[k].get(f), (int, float)) and R[k].get("why")}
+
+
+def rhythm_missing(st: dict) -> list[str]:
+    have = rhythm(st)
+    return [k for k in RHYTHM_KEYS if k not in have]
+
+
 def _merge(a: dict, b: dict) -> dict:
     out = dict(a)
     for k, v in b.items():

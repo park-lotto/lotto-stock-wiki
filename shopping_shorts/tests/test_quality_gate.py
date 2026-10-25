@@ -478,10 +478,11 @@ def test_match_hybrid_own_keys_use_style_target_or_skip():
         return {r["key"]: r for r in T["rows"]}
     R = rows(match_table(bench, ours, om, None, own_len=(25, 30), own_targets=tg))
     assert R["speech.cps.나레"]["judge"] == "in" and R["speech.cps.나레"]["bench"] == 7.0       # 판 목표 7.0 vs 우리 7자/1초
-    for k in ("cut.median", "chunk.sec", "enter.mode.원음"):
+    for k in ("chunk.sec", "enter.mode.원음"):
         assert R[k]["judge"] == "skip" and R[k]["core"] is False
+    assert R["cut.median"]["judge"] == "failed"      # 페이블 10-25 재검토: 컷 중앙은 '비교 안 함' 없음 — 판 rhythm.cut_median 없으면 미달
     old = rows(match_table(bench, ours, om, None, own_len=(10, 28), own_targets=tg))           # 겹치는 판 = 벤치 그대로
     assert old["speech.cps.나레"]["bench"] != 7.0 and old["cut.median"]["judge"] != "skip"
     T = match_table(bench, ours, om, None, own_len=(25, 30), own_targets=tg)
     ok, txt, bad = match_verdict(T, upgrade=True)
-    assert not any(b.startswith(("cut.median", "chunk.sec", "enter.mode.원음")) for b in bad) and "비교 안 함" in txt
+    assert not any(b.startswith(("chunk.sec", "enter.mode.원음")) for b in bad) and "비교 안 함" in txt

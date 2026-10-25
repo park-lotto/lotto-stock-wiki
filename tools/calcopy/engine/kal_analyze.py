@@ -485,7 +485,11 @@ def style_targets(st: dict) -> dict:
     if st.get("cps_target") is not None and st.get("_why_cps_target"):
         out["speech.cps.나레"] = (float(st["cps_target"]), st["_why_cps_target"])
     C, P = st.get("cuts") or {}, st.get("caption") or {}
-    if C.get("cut_median") is not None and C.get("why"):
+    from tools.calcopy.hybrid import styles as _STY       # cut.median 목표 = 판 rhythm.cut_median(읽기 주인 styles.rhythm, 관제263 10-25 — 모든 판 필수 칸)
+    rc = _STY.rhythm(st).get("cut_median")
+    if rc:
+        out["cut.median"] = (float(rc["v"]), rc["why"])
+    elif C.get("cut_median") is not None and C.get("why"):
         out["cut.median"] = (float(C["cut_median"]), C["why"])
     if P.get("chunk_sec") is not None and P.get("why"):
         out["chunk.sec"] = (float(P["chunk_sec"]), P["why"])
@@ -509,6 +513,10 @@ def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, ben
     hybrid = bool(own_len and brange_all and (own_len[0] > brange_all[1] or own_len[1] < brange_all[0]))
     rows = []
     for key, kind, tol, core, why in MATCH_RULES:
+        if hybrid and key == "cut.median" and key not in (own_targets or {}):     # 페이블 10-25 재검토: 컷 길이는 '비교 안 함'이 아니라 판 목표와 비교 — 목표가 없으면 미달
+            rows.append({"key": key, "bench": None, "ours": om.get("cut_median"), "diff": "판 rhythm.cut_median 없음", "judge": "failed", "core": core,
+                         "why": why + " — 하이브리드 판: 판 rhythm.cut_median(벤치 실측 + why)과 비교해야 하는데 칸이 없다(표준 §4-1, 페이블 10-25)"})
+            continue
         if hybrid and key in HYBRID_OWN_KEYS and key not in (own_targets or {}):
             o = {"cut.median": om.get("cut_median")}.get(key, O.get(key))
             rows.append({"key": key, "bench": None, "ours": o, "diff": "비교 안 함", "judge": "skip", "core": False,
@@ -649,9 +657,11 @@ def media_of(mp4: str, win: tuple | None = None) -> dict:
     # 컷 자 = compare 와 같은 함수(bench_one.measure → cuts.scene_detect+merge_close+cut_verify) 한 벌 — 10-23 꿀템노트에서
     # 옛 scene_cuts(창 크롭 scene>0.3)가 같은 원본의 크롭 바꿈 컷을 놓쳐 2.21초(compare 0.867초)로 쟀다. 두 자가 다르면 판정이 둘이 된다.
     from tools.calcopy.engine import bench_one, compare as _cmp
-    lens = [round(x, 3) for x in _cmp._shots(bench_one.measure(mp4, layout_mode="bench"))[0] if x > 0.05]
+    sh, cd = _cmp._shots(bench_one.measure(mp4, layout_mode="bench"))
+    lens = [round(x, 3) for x in sh if x > 0.05]
     e = audio.ebur128(mp4)
     return {"duration": round(dur, 2), "cut_median": round(statistics.median(lens), 2) if lens else None, "n_cuts": len(lens),
+            "cut_at": [round(float(t), 3) for t in (cd.get("cuts") or [])],      # 컷 시각(훅 0.1~3초 경계 수 = 판 rhythm.hook_cuts_3s 자, 관제263 10-25)
             "lufs": e.get("I"), "tp": e.get("TP"), "win": list(win) if win else None,
             "method": "probe.info + bench_one.measure 컷(compare 와 같은 자) + bench.audio.ebur128"}
 

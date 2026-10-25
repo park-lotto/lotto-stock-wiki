@@ -683,6 +683,51 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             return s["ok"], (f"컷 {len(s['컷'])} · 되감김 {len(s['되감김'])} {[r.get('t') for r in s['되감김']]} · 점프줌 {len(s['점프줌'])}({s['점프줌_판정'] or '드묾'})"
                              + (f" · 한 조각 안이라 뺌 {inside}" if inside else "") + ("" if bset else " · 시간표 컷 없음 → 경계 모름(전부 셈)"))
         row("재료", "B16' 되감김·점프줌", seams, "engine/check_seams.check")
+    # ── 판 리듬(관제263 10-25 페이블 E1·E2·E4 — 모든 판 필수 4칸, 읽기 주인 styles.rhythm · 칸 없으면 ×)
+    if want("판 리듬") and not legacy:
+        RH = ST.rhythm(st)
+
+        def media():
+            m = _cached(store, f"media|{fmd5}|{list(win)}", lambda: __import__("tools.calcopy.engine.kal_analyze", fromlist=["x"]).media_of(str(final), win))
+            save_store()
+            return m
+
+        def need(k):
+            if k not in RH:
+                raise LookupError(f"판 rhythm.{k} 없음(그 채널 벤치 실측 + why 로 채울 것 — 표준 §4-1)")
+            return RH[k]
+
+        def cut_med():
+            v, m = float(need("cut_median")["v"]), media()
+            o = m.get("cut_median")
+            if o is None:
+                return None, "완성본 컷 못 잼"
+            return (v * 0.7 <= o <= v * 1.3), f"완성본 컷 중앙 {o}초 vs 판 {v}(±30%, kal_analyze.media_of 같은 자) · 컷 {m.get('n_cuts')}"
+
+        def hook():
+            h = int(need("hook_cuts_3s")["min"])
+            at = media().get("cut_at")
+            if at is None:
+                return None, "완성본 컷 시각 없음(옛 캐시)"
+            b = [t for t in at if 0.1 < t <= 3.0]
+            return len(b) >= h, f"0.1~3초 컷 경계 {len(b)} {b} (판 ≥{h})"
+
+        def plain():
+            from tools.calcopy.hybrid import placement as PL
+            R0 = need("plain_share")
+            o = PL.plain_share(tab.get("rows") or [])
+            return (o is not None and abs(o - float(R0["v"])) <= float(R0.get("tol", 0.1)) + 1e-9), f"꾸밈 없는 덩어리 {o} vs 판 {R0['v']}±{R0.get('tol', 0.1)}(자막표 rows · placement.plain_share)"
+
+        def photo():
+            from tools.calcopy.hybrid.render_bench import photo_share
+            mx = float(need("photo_share_max")["v"])
+            o = photo_share(T.get("cuts") or [], float(T["end"]))
+            return o <= mx + 1e-9, f"그림 컷 비중 {o} (판 ≤{mx}, timeline · render_bench.photo_share)"
+        for what, fn, src in (("컷 길이 중앙(판 rhythm.cut_median ±30%)", cut_med, "kal_analyze.media_of"),
+                              ("훅 0.1~3초 컷 경계(판 rhythm.hook_cuts_3s)", hook, "kal_analyze.media_of cut_at"),
+                              ("꾸밈 없는 덩어리 비율(판 rhythm.plain_share)", plain, "placement.plain_share"),
+                              ("그림 컷 비중(판 rhythm.photo_share_max)", photo, "render_bench.photo_share")):
+            row("판 리듬", what, fn, src)
     # ── 자막·효과
     lrp = (st.get("bench") or {}).get("line_reads")
     lrp = (ROOT / lrp) if lrp and not Path(lrp).is_absolute() else (Path(lrp) if lrp else None)

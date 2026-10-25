@@ -562,6 +562,36 @@ def deco_cause(out: list[dict], style: dict) -> str:
     return "deco_pos×targets"
 
 
+def plain_share(out: list[dict]) -> float | None:
+    """(판단 주인 — 꾸밈 없는 덩어리 비율) _is_deco 아닌 덩어리 ÷ 전체. 배치(plain_step)·품질 관문 rhythm 행이 같이 부른다."""
+    return round(sum(1 for r in out if not _is_deco(r)) / len(out), 3) if out else None
+
+
+def plain_step(out: list[dict], style: dict, log: list) -> None:
+    """(판단 주인 — 판 rhythm.plain_share 를 배치에 적용, 관제263 10-25 페이블 E4) 꾸밈 없는 덩어리가 round(v × 덩어리 수)보다 적으면
+    가장 가벼운 꾸밈(강조 낱말만 붙은 덩어리 — 등장 효과·스티커·변형 없음)에서 강조를 뺀다. 훅 자리(편 첫 줄)는 두고 뒤(끝 → 본문)에서부터 고르게.
+    판에 칸이 없으면 아무것도 안 한다(칸 없음은 카드·관문이 미달로 드러낸다)."""
+    from tools.calcopy.hybrid import styles as _STY
+    R = _STY.rhythm(style).get("plain_share")
+    if not R or not out:
+        return
+    want = int(math.floor(float(R["v"]) * len(out) + 0.5))
+    have = sum(1 for r in out if not _is_deco(r))
+    if have >= want:
+        log.append(f"꾸밈 없음 {have}/{len(out)} ≥ 판 plain_share {R['v']}×{len(out)}={want}")
+        return
+    first = out[0]["line"]
+    cand = [i for i, r in enumerate(out) if r["line"] != first and r.get("emph") and not r.get("stickers") and not r.get("variant_force")
+            and not K_variant(r) and r.get("enter") in ("cut", "instant", "append", None)]
+    take = _spread(list(reversed(cand)), min(want - have, len(cand)))
+    for i in take:
+        out[i]["emph"] = []
+        out[i]["plain_by"] = "rhythm.plain_share"
+    got = sum(1 for r in out if not _is_deco(r))
+    log.append(f"꾸밈 없음 {have}→{got}/{len(out)}(판 plain_share {R['v']} → {want}) 강조 뺌 {[out[i]['line'] + '「' + out[i]['text'] + '」' for i in sorted(take)]}"
+               + ("" if got >= want else f" — 뺄 수 있는 강조만 덩어리 모자람({len(cand)})"))
+
+
 def deco_pos_step(out: list[dict], style: dict, log: list, up_cap: dict | None = None) -> dict | None:
     """up_cap = 업그레이드 판 화자별 꾸밈 상한 개수({narr: hi, orig: hi} — density_goal) — 뼈대 최소가 이를 넘으면 conflict(아무것도 안 더함, ㉛)."""
     return _deco_pos(out, style, log, up_cap)
@@ -866,6 +896,7 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
     if tg and not conflict and any(k.startswith("fx_rate") for k in tg):     # 강조색 규칙이 지운 강조만큼 목표 모드가 다른 덩어리로 다시 채운다(같은 함수, 이미 센 꾸밈은 그대로)
         tg_rep.update(density_step(out, style, tg, log))
         emph_color_step(out, style, log)
+    plain_step(out, style, log)          # 판 rhythm.plain_share — 꾸밈 없는 덩어리 비율(없는 것도 스타일, 페이블 E4) — 마지막에(다른 꾸밈 규칙이 다 정한 뒤)
     tally = Counter(r["enter"] for r in out)
     log.append(f"등장 {dict(tally)} · 강조 {sum(1 for r in out if r.get('emph'))}/{len(out)}")
     log += warn

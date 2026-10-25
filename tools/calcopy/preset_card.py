@@ -458,6 +458,7 @@ def facts(O: dict, recs: list[dict]) -> dict:
         "style_file": eng.get("style_file"), "style_file_exists": O["style"] is not None, "renderer": st.get("renderer") or eng.get("renderer"),
         "caption_pack": pack, "caption_pack_ok": bool(pack) and pack in pack_keys(),
         "counted_n": _get(st, "placement.counted.n_videos"), "no_why": no_why,
+        "rhythm_missing": styles_mod.rhythm_missing(st) if O["style"] else list(styles_mod.RHYTHM_KEYS),     # 판 리듬 4칸(관제263 10-25 — 모든 판 필수, 읽기 주인 styles.rhythm)
         "hand_scripts": [h for h in eng.get("hand_scripts") or [] if not DEPRECATED_RE.search(str(h))],
         "hand_scripts_reference": [h for h in eng.get("hand_scripts") or [] if DEPRECATED_RE.search(str(h))],
         "unmeasured": sum(1 for r in recs if r["confidence"] == "미측정"),
@@ -487,7 +488,7 @@ def level(card: dict) -> tuple[str, list[str]]:
                ("규칙빈도", F["rules_freq"]), ("스타일분석", F["style_analysis"]), ("팔레트", F["palette"]), ("sfx_events", F["sfx_events"])],
         "L1": [("판파일", F["style_file_exists"]), ("renderer=bench", F["renderer"] == "bench"),
                ("숫자칸 why", F["no_why"] == []), (f"counted≥{COUNTED_MIN}", (F["counted_n"] or 0) >= COUNTED_MIN),
-               ("자막팩", F["caption_pack_ok"]), ("rules 미측정0", F["unmeasured"] == 0)],
+               ("자막팩", F["caption_pack_ok"]), ("rules 미측정0", F["unmeasured"] == 0), ("판 리듬 4칸", F.get("rhythm_missing") == [])],
         "L2": [("품질관문 ○", F["quality_gate_ok"]), ("재현일치도 ○", F["match_ok"]), ("눈검수 E1~E8", _eye_ok(F["eye"], [f"E{i}" for i in range(1, 9)]))],
         "L3": [("업그레이드 나아짐≥과반∧나빠짐0", isinstance(F["upgrade"], dict) and F["upgrade"].get("l3_ok") is True and not F["upgrade"].get("pending_n")),
                ("눈검수 E9", _eye_ok(F["eye"], ["E9"])), ("사장님 판정", F["owner_pass"])],

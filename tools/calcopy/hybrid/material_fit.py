@@ -423,6 +423,45 @@ def rank_shots(slots: list[dict], desc: dict, fdir: Path, llm, k: int = TOP_SHOT
 
 
 # ── 후보·제약 ───────────────────────────────────────────────────────────────
+# ── 대사 동작 ↔ 컷 동작(관제263 10-25 페이블 E3: 박정수 N3 '따라 발라 봤어요'에 쿠팡 사진 줌인만) ─────────────────────
+#   동작 낱말(대사 tts·text)의 줄기 → 그 동작이 보인다고 컷 see(재료.json 설명)에 적힌 말. 판단 주인 = action_order 한 곳(render_bench.timeline 이 부른다).
+ACTIONS = {
+    "바르기": (r"바르|발라|발랐|바른|펴 ?발|펴져", r"바르|발라|바른|펴 ?바|문지|얼굴에 (손|손가락)|찍어 ?바"),
+    "뿌리기": (r"뿌리|뿌려|뿌렸|칙칙", r"뿌리|뿌려|분사|칙칙"),
+    "입기": (r"입어|입었|입는|걸쳐|걸쳤|걸치", r"입고|입은|입어|걸쳐|걸치|착용|몸 앞에 대"),
+    "먹기": (r"먹어|먹었|먹는|마셔|마셨|마시", r"먹는|먹어|먹고|마시|마셔|입에 넣|한 입"),
+    "닦기": (r"닦아|닦았|닦는|씻어|씻었|씻는", r"닦|씻|문지"),
+    "붙이기": (r"붙여|붙였|붙이", r"붙이|붙여|붙인"),
+}
+
+
+def action_order(S: dict, M: dict, log=print) -> list[str]:
+    """(판단 주인) 나레 줄 대사에 동작 낱말이 있으면 그 줄 컷 중 see 에 같은 동작이 적힌 컷을 앞으로(우선 — 가장 먼저·가장 길게 보이는 자리).
+    그런 컷이 하나도 없으면 경고 줄을 돌려준다(계획 단계 경고 — 멈추지 않음, 재료를 찾을 일). M['cuts'] 를 제자리에서 바꾼다."""
+    warn = []
+    for L in S.get("lines") or []:
+        if L.get("kind") == "orig":
+            continue
+        say = str(L.get("tts") or L.get("text") or "")
+        cs = (M.get("cuts") or {}).get(L.get("id"))
+        if not cs or not isinstance(cs, list):
+            continue
+        for name, (verb, seen) in ACTIONS.items():
+            if not re.search(verb, say):
+                continue
+            hit = [c for c in cs if re.search(seen, str(c.get("see") or ""))]
+            if hit:
+                if cs[0] not in hit:
+                    rest = [c for c in cs if c not in hit]
+                    M["cuts"][L["id"]] = hit + rest
+                    log(f"[동작] {L['id']} '{name}' — 그 동작 컷을 앞으로({hit[0].get('src')}@{hit[0].get('ss')})")
+            else:
+                warn.append(f"{L['id']} 대사 '{name}'({re.search(verb, say).group(0)}) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)")
+    for w in warn:
+        log(f"⚠ [동작] {w}")
+    return warn
+
+
 def _new_viol(base: list[dict], cand: dict, src_len: dict) -> list[str]:
     """cand 가 base 컷들과 새로 만드는 재사용 위반 — 판정은 quality_gate.reuse_violations_bench(짝마다 판정하는 함수라 짝으로 부른다)."""
     from tools.calcopy.hybrid.quality_gate import reuse_violations_bench
