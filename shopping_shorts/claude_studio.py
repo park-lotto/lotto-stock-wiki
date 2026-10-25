@@ -303,7 +303,9 @@ def pc_sync(ctx: dict, body: dict | None, store=None) -> dict:
             if not isinstance(ch, dict):
                 continue
             r = WORKER_ONE.call({"op": "check", "pack": pack_for(cat, pid, ch.get("pack") or {})})
-            if not r.get("error") and not r.get("errors"):
+            if r.get("error"):     # 검사 자체가 못 돌았다 — 합치지 않는다(PC 는 합친 결과를 그대로 쓰므로 멀쩡한 PC 칸이 지워진다)
+                raise StudioError("disabled", "설정 검사를 지금 못 합니다 — 이 PC 설정 그대로 갑니다")
+            if not r.get("errors"):
                 ok_ch[pid] = ch
             else:
                 log.warning("claude_studio: cid %s PC 설정 %s 거절 — %s", cid, pid, r.get("error") or r.get("errors"))

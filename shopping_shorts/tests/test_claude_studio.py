@@ -105,3 +105,13 @@ def test_applied_lines_hide_bench_text_and_internal_ids(env):
     joined = " ".join(got)
     assert "골방" not in joined and "tc_" not in joined and "편마다" not in joined
     assert any("제목 글꼴" in s for s in got)
+
+
+def test_pc_sync_refuses_when_engine_check_broken(env, monkeypatch):
+    """검사가 못 돌면(엔진 워커 오류) 합치지 않고 거절 — PC 가 서버 결과를 그대로 써서 멀쩡한 칸이 지워지는 것을 막는다."""
+    monkeypatch.setattr(cs.CP, "_front", lambda store, ctx, route: (7, {}, None))
+    monkeypatch.setattr(cs.WORKER_ONE, "call", lambda req: {"error": "엔진 미리보기가 멈췄습니다"})
+    pid = env["ids"][0]
+    with pytest.raises(cp.PortalError):
+        cs.pc_sync({}, {"channels": {pid: {"pack": {"text": {"title_font": "B"}}, "updated": 5}}}, env["st"])
+    assert cs._read(env["st"], 7)["channels"] == {}
