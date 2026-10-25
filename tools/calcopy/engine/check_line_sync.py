@@ -19,6 +19,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 LIMIT = 0.6
+LIMIT_SM = 0.25      # 스피치매틱스 낱말 시각으로 잴 때(관문 quality_gate 나레 행, 10-25 관문 검토 ④) — 실측 |계획−SM| 최대: render_bench 판 ep12_rule 0.061(N4)·박정수 키치잇 0.047 · 기미 flowtest 키치잇판 0.145(한국어 원음 사이),
+                     # 옛 v3 판(ep08~ep13) 0.194(줄 앞 무음으로 목소리가 0.1~0.19초 늦음) · 합성 결함 N3 0.4초 앞당김 = 0.399 · 0.8초 = 0.789 → 둘 다 걸린다.
+                     # whisper small 은 같은 ep12 N3 를 12.12(계획 12.579, 0.46 차)로 들어 0.6 이 필요했다(위스퍼 단독 판정 금지 — 칼카피_시작 12번)
 
 
 def _norm(s: str) -> str:

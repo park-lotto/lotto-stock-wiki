@@ -8,7 +8,8 @@
 판단 주인: 항목마다 **기존 주인 함수를 import** 해서 부른다(복사 금지) — 이 파일이 새로 정하는 것은 '묶음·○×·미측정=×' 뿐.
   규격·화면·썸네일 측정 = 이 파일(옛 bench_check 본문을 옮김 — bench_check.py 는 호출만 남김)
   재료 B13·B16 = checks.reuse_violations·aba_violations · 되감김 = engine/check_seams.check
-  쉼 B18 = checks.pauses_between(문턱 checks.PAUSE_LO/HI) · 받아쓰기 = engine/check_line_sync(asr_segments·line_starts_from_asr·LIMIT)
+  쉼 B18 = checks.pauses_between(문턱 checks.PAUSE_LO/HI) · 받아쓰기 = 스피치매틱스 engine/narr_verify.heard_words(낱말 시각·md5 캐시) → check_line_sync.line_starts_from_asr·LIMIT_SM
+    (칼카피_시작 12번: 위스퍼 small 단독 판정 금지 — 스피치매틱스를 못 쓰면 미측정, 위스퍼는 참고 글로만)
   대본 = script_audit.audit · 배치 = placement.check_place(렌더 때 자막표.check 에 기록) · 1차 자 = kal_analyze.match_from_render
   장면↔대사 = 완성본 컷 ↔ 계획이 고른 원본 프레임 동일성(창 픽셀 대조 ≥0.97, 표준 §11-4 ㉔) + 계획 점수(material_fit 의 루브릭 rubric:v1)를 그대로 보고
     — 완성본을 다시 채점하지 않는다(같은 자를 두 번 돌리면 잡음만 잰다) · 자 = 루브릭 하나(㉕, 상위편_목표.json), 버전 불일치면 ×
@@ -38,7 +39,6 @@ FAST_GROUPS = ("규격", "화면", "재료", "자막·효과", "표식")
 GAP_TOL = 1 / 30 + 0.02    # 줄 사이 간격 = 판 timing(시간표) ±1프레임+0.02 (표준 §11 ①ⓐ)
 OLD_PAUSE_RENDERERS = ("make", "itssum", "jaemi")   # 고정 PAUSE_LO/HI 는 옛 렌더러 판에서만(표준 §11 ①ⓒ)
 B13_GAP_MAX, B13_GAP_FRAC = 3.0, 0.25            # 거리 문턱 = min(3.0, 0.25 × 소스 길이) (표준 §11 ②)
-SEAM_BOUND_TOL = 0.1                              # B16' 되감김을 계획 컷 경계로 치는 폭(초, 3프레임) — 그 밖은 이어 자른 한 조각 안
 TD_TOL = 0.30                                     # 전환 세기 = 우리 drop 중앙값이 벤치 drop 중앙값 ±30% (표준 ⑯, 측정 주인 render_bench.transition_drop)
 TD_KINDS = ("zoomblur",)
 FREEZE_SEC = 0.3      # 창 안 같은 그림이 이만큼 이어지면 멈춤(벤치 컷 중앙 약 1초 · 실제 촬영 영상은 프레임마다 잡음이 있어 0이 안 나온다)
@@ -396,18 +396,30 @@ def reuse_violations_bench(cuts: list[dict], src_len: dict) -> list[str]:
     return bad
 
 
-def drop_verdict(ours: list, bench: list, planned: int | None = None) -> tuple[bool | None, str]:
+def drop_verdict(ours: list, bench: list, plan: dict | None = None, kinds=TD_KINDS) -> tuple[bool | None, str]:
     """전환 세기(표준 ⑯): 우리 경계 drop 중앙값이 벤치 drop 중앙값의 ±TD_TOL 안. 우리 경계 0개 = ×(벤치엔 전환이 있는데 우리는 없다)
-    — 단 planned == 0(개수 주인 placement.transitions_step 이 벤치 비율 × 경계 수로 0개를 정함, 예: 잇템로그 3/193 × 13 → 0)은 잴 세기가 없는 '해당 없음' ○."""
+    — 단 '해당 없음 ○' 은 배치 기록(plan = trans_plan_of, 주인 placement.transitions_step)에 비율 출처가 있고
+    그 종류의 원하는 개수(반올림 전 want_raw 합)를 반올림한 값이 0 일 때만(잇템로그 ep12 1/34×17=0.5 → 0 · ep13 0.02×15=0.3 → 0).
+    출처 없음·기록 없음·원하는 개수 ≥1 인데 1.2초 이상 컷 경계가 모자라 못 고름·골랐는데 그리기 빠짐 = 전부 ×(10-25 키치잇판 기미크림: 출처 없이 0개 → 옛 판 ×, 9a8507108 판 ○)."""
     o = [float(x) for x in ours if x is not None and x == x]
     b = [float(x) for x in bench if x is not None and x == x]
     if not b:
         return None, "벤치 drop 표본 없음(미측정)"
     bm = statistics.median(b)
-    if not o and planned == 0:
-        return True, f"해당 없음 — 배치가 이 편 전환 0개로 정함(placement.transitions_step 벤치 비율) · 벤치 drop 중앙 {bm:.3f}({len(b)}회)"
+    bt = f"벤치 drop 중앙 {bm:.3f}({len(b)}회)"
     if not o:
-        return False, f"우리 전환 경계 0개 — 벤치 drop 중앙 {bm:.3f}({len(b)}회)" + (f" · 배치는 {planned}개 정함(그리기 빠짐)" if planned else "")
+        if not isinstance(plan, dict):
+            return False, f"우리 전환 경계 0개 — 배치 개수 기록 없음(출처 모름) · {bt}"
+        if not plan.get("src"):
+            return False, f"우리 전환 경계 0개 — 배치에 전환 비율 출처 없음({plan.get('why') or plan.get('from')}) · {bt}"
+        raw = sum(float((plan.get("want_raw") or {}).get(k) or 0) for k in kinds)
+        n = 0 if plan.get("want") == 0 else int(round(raw))
+        got = sum(int((plan.get("picked") or {}).get(k) or 0) for k in kinds)
+        head = f"배치 {'·'.join(kinds)} 원하는 {raw:.2f}개 → {n} · 고른 {got} ({plan.get('src')}, 컷 경계 {plan.get('cut_bounds')}, {plan.get('from')})"
+        if n == 0:
+            return True, f"해당 없음 — {head} · {bt}"
+        why = (f"≥{plan.get('min_cut', 1.2)}초 컷 경계가 모자라 못 고름(붙일 수 있는 {plan.get('eligible')})" if got < n else "골랐는데 그리기 빠짐")
+        return False, f"우리 전환 경계 0개 — {head} — {why} · {bt}"
     om = statistics.median(o)
     ok = abs(om - bm) <= TD_TOL * abs(bm)
     return ok, f"우리 drop 중앙 {om:.3f}({len(o)}경계) vs 벤치 {bm:.3f}({len(b)}회 {[round(x, 3) for x in b]}) · 허용 ±{TD_TOL:.0%}"
@@ -451,15 +463,52 @@ def bench_drops(st: dict, kinds=TD_KINDS) -> dict | None:
     return out
 
 
-def narr_only_voice(R: Path, T: dict) -> Path:
-    """나레 받아쓰기 자 = voice.wav 에서 원음 구간(T.opos t0~t1)만 무음으로 한 소리(render/voice_narr.wav). 원음이 없으면 voice.wav 그대로."""
-    op = [p for p in T.get("opos") or [] if p.get("t1") is not None]
-    if not op:
-        return R / "voice.wav"
-    out = R / "voice_narr.wav"
-    expr = "+".join(f"between(t,{float(p['t0']):.3f},{float(p['t1']):.3f})" for p in op)
-    run(["ffmpeg", "-y", "-v", "error", "-i", R / "voice.wav", "-af", f"volume=0:enable='{expr}'", out])
+NARR_LOOK_BEFORE = 1.0    # 나레 줄 시작을 찾는 창 = 계획 시작 −1.0초 ~ 줄 끝 +0.3초(이보다 멀리 밀린 줄 = 못 찾음 ×)
+
+
+def narr_sync_rows(narr: list[dict], lines: dict, words: list[dict]) -> list[dict]:
+    """나레 줄 시작 ↔ 스피치매틱스 낱말 시각(narr_verify.heard_words [{s,e,w}]). 줄마다 따로 — 그 줄 계획 구간(시작 −NARR_LOOK_BEFORE ~ 끝 +0.3) 낱말만으로
+    check_line_sync.line_starts_from_asr. 허용 = check_line_sync.LIMIT_SM.
+    왜 줄마다: 편 전체를 한 줄로 이어 맞추면 한국어 원음(기미 flowtest o1 '하는 게 뭐냐면 …' 30자)이 다음 나레 줄 찾는 창을 넘어 n2~n7 이 전부 못 찾음이 됐고,
+    나레 구간 ±0.3 으로만 거르면 앞당겨진 줄 첫 낱말(합성 N3 −0.4초 '세럼이' 12.18)이 빠져 엉뚱한 곳(7.59)에 붙었다. 원음 무음 처리(옛 whisper 판)는 필요 없다."""
+    from tools.calcopy.engine import check_line_sync as LS
+    out = []
+    for l in narr:
+        t0, t1 = (lines.get(l["id"]) or [None, None])[:2]
+        h = None
+        if t0 is not None:
+            segs = [(float(w["s"]), float(w["e"]), str(w["w"])) for w in words if float(t0) - NARR_LOOK_BEFORE <= float(w["s"]) <= float(t1) + 0.3]
+            h = LS.line_starts_from_asr([l.get("tts") or ""], segs)[0]
+        d = None if h is None or t0 is None else round(float(t0) - h, 3)
+        out.append({"line": l["id"], "said": l.get("tts"), "t0": t0, "heard_t0": h, "diff": d, "ok": d is not None and abs(d) <= LS.LIMIT_SM})
     return out
+
+
+def trans_plan_of(tab: dict) -> dict | None:
+    """전환 개수 기록 — 주인 placement.transitions_step 이 남긴 것을 자막표에서 읽는다(다시 정하지 않는다).
+    새 렌더 = 자막표.check.slots.transitions.plan {src, want_raw{종류: 반올림 전}, want, picked{종류}, eligible, cut_bounds}.
+    옛 렌더(기록 전) = 같은 함수의 로그 줄 '전환 [..] (<출처> 비율 {..}, 컷 경계 N·붙일 수 있는 M(≥x초))' — 반올림 전 개수는
+    check_place 의 bench_expect(소수 둘째)가 있으면 그것, 없으면 로그 비율×경계. 둘 다 없으면 None(출처 모름)."""
+    import ast
+    import re
+    tr = (((tab.get("check") or {}).get("slots") or {}).get("transitions")) or {}
+    if tr.get("plan"):
+        return {**tr["plan"], "from": "자막표 기록"}
+    for ln in tab.get("log") or []:
+        m = re.match(r"전환 \[(.*?)\] \((.+?) 비율 (\{.*?\}), 컷 경계 (\d+)·붙일 수 있는 (\d+)\(≥([\d.]+)초\)\)", str(ln))
+        if not m:
+            continue
+        picked = ast.literal_eval(m.group(1) and f"[{m.group(1)}]" or "[]")
+        share = ast.literal_eval(m.group(3))
+        nb = int(m.group(4))
+        be = tr.get("bench_expect") or {}
+        raw = {k: float(v) for k, v in be.items()} if be else {k: round(float(v) * nb, 3) for k, v in share.items()}
+        pk = {}
+        for _, k in picked:
+            pk[k] = pk.get(k, 0) + 1
+        return {"src": m.group(2), "share": share, "cut_bounds": nb, "want_raw": raw, "want": None, "eligible": int(m.group(5)),
+                "picked": pk, "min_cut": float(m.group(6)), "from": "옛 렌더 로그"}
+    return None
 
 
 def gap_verdict(pairs: list[tuple[str, float, float]]) -> tuple[bool | None, str]:
@@ -598,8 +647,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
                     from tools.calcopy.hybrid.render_bench import render_transition_drop
                     r = render_transition_drop(R, style_name, kinds=TD_KINDS)
                     td["ours"] = r.get("boundaries") or []
-                    planned = sum(1 for e in tab.get("transitions") or [] if e.get("kind") in TD_KINDS)      # 자막표 = 렌더러가 그린 전환(배치 결과 그대로)
-                    return drop_verdict([b.get("drop") for b in td["ours"]], bd["drops"], planned)
+                    return drop_verdict([b.get("drop") for b in td["ours"]], bd["drops"], trans_plan_of(tab))      # 개수 기록 = 배치 주인이 자막표에 남긴 것
                 row("화면", "전환 세기(zoomblur drop 중앙 ±30%)", drop_row, "render_bench.render_transition_drop ↔ bench_transition_drop(채널 _kal 캐시)")
                 row("화면", "전환 길이 ms(참고)", lambda: (True, f"우리 {[b.get('ms') for b in td.get('ours') or []]} · 벤치 {bd['ms']}"),
                     "transition_drop.ms", ref=True)
@@ -626,15 +674,14 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
 
         def seams():
             from tools.calcopy.engine import check_seams
-            s = _cached(store, f"seams|{fmd5}|{list(win)}", lambda: check_seams.check(str(final), win, None))
+            # 어느 되감김을 세나 = check_seams.split_by_bounds(주인) — 계획 컷 경계를 넘기고, 시간표에 컷이 없으면 None(옛 판정: 전부 센다)
+            bset = [float(c["t0"]) for c in (T.get("cuts") or [])[1:]] or None
+            s = _cached(store, f"seams|{fmd5}|{list(win)}|{bset}", lambda: check_seams.check(str(final), win, None, bounds=bset))
             save_store()
             jsave(R / "seams.json", s)
-            # 되감김 = 컷 경계에서 원본 시각이 뒤로 가는 것 — 계획 컷 경계(±SEAM_BOUND_TOL)가 아니면 이어 자른 한 조각 안(빠른 움직임 오탐, 10-25 ep12 11.3초 = O2 saA 17~21.36 안)
-            bset = [float(c["t0"]) for c in (T.get("cuts") or [])[1:]]
-            real = [r for r in s["되감김"] if any(abs(float(r["t"]) - b) <= SEAM_BOUND_TOL for b in bset)]
-            inside = [r.get("t") for r in s["되감김"] if r not in real]
-            return (not real and not s["점프줌_판정"]), (f"컷 {len(s['컷'])} · 되감김 {len(real)} {[r.get('t') for r in real]} · 점프줌 {len(s['점프줌'])}({s['점프줌_판정'] or '드묾'})"
-                                                     + (f" · 한 조각 안이라 뺌 {inside}" if inside else ""))
+            inside = [r.get("t") for r in s.get("되감김_조각안") or []]
+            return s["ok"], (f"컷 {len(s['컷'])} · 되감김 {len(s['되감김'])} {[r.get('t') for r in s['되감김']]} · 점프줌 {len(s['점프줌'])}({s['점프줌_판정'] or '드묾'})"
+                             + (f" · 한 조각 안이라 뺌 {inside}" if inside else "") + ("" if bset else " · 시간표 컷 없음 → 경계 모름(전부 셈)"))
         row("재료", "B16' 되감김·점프줌", seams, "engine/check_seams.check")
     # ── 자막·효과
     lrp = (st.get("bench") or {}).get("line_reads")
@@ -685,22 +732,26 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             if not asr:
                 return None, "받아쓰기 안 함(--no-asr, 미측정)"
             from tools.calcopy.engine import check_line_sync as LS
-            win_n = [tuple(T["lines"][l["id"]]) for l in narr if l["id"] in T["lines"]]
-            vn = narr_only_voice(R, T)          # 원음(영어 등) 구간 무음 — whisper(ko)가 원음 뒤 첫 낱말을 삼키고 시각을 원음 시작에 붙인다(10-25 ep12 N2·N3·N5)
-            vmd5 = md5(vn)
-            allsegs = _cached(store, f"asr|narr|{vmd5}", lambda: [list(x) for x in LS.asr_segments(vn)])
-            save_store()
-            segs = [tuple(s) for s in allsegs if any(a - 0.3 <= s[0] <= b + 0.3 for a, b in win_n)]
-            heard = LS.line_starts_from_asr([l.get("tts") or "" for l in narr], segs)
-            out = []
-            for l, h in zip(narr, heard):
-                t0 = T["lines"].get(l["id"], [None])[0]
-                d = None if h is None or t0 is None else round(float(t0) - h, 2)
-                out.append({"line": l["id"], "said": l.get("tts"), "t0": t0, "heard_t0": h, "diff": d, "ok": d is not None and abs(d) <= LS.LIMIT})
-            cache["asr"] = {"rows": out, "segs": segs}
+            from tools.calcopy.engine import narr_verify as NV
+            voice = R / "voice.wav"
+            try:
+                words = NV.heard_words(voice)       # 스피치매틱스 낱말 시각(md5 캐시 NV.CACHE) — 판정은 이것만(칼카피_시작 12번)
+            except Exception as e:  # noqa: BLE001 — 스피치매틱스를 못 쓰면 미측정. 위스퍼는 참고 글로만(단독 판정 금지)
+                try:
+                    ws = _cached(store, f"asr|whisper|{md5(voice)}", lambda: [list(x) for x in LS.asr_segments(voice)])
+                    save_store()
+                    ref = narr_sync_rows(narr, T["lines"], [{"s": a, "e": b, "w": w} for a, b, w in ws])
+                    ref_txt = " ".join(f"{r['line']}:{r['diff']}" for r in ref)
+                except Exception as e2:  # noqa: BLE001
+                    ref_txt = f"위스퍼도 실패 {type(e2).__name__}"
+                return None, f"스피치매틱스 못 씀({type(e).__name__}: {str(e)[:120]}) — 미측정 · 참고(판정 안 함) whisper 차 {ref_txt}"
+            out = narr_sync_rows(narr, T["lines"], words)
+            cache["asr"] = {"rows": out, "segs": [(w["s"], w["e"], w["w"]) for w in words]}
             bad = [r["line"] for r in out if not r["ok"]]
-            return not bad, f"나레 {len(out)}줄 중 못 찾음·{LS.LIMIT}초 넘게 어긋남 {bad or '0'} (whisper 로컬)"
-        row("소리", "나레 받아쓰기 ↔ 대본", asr_rows, "engine/check_line_sync(whisper)")
+            worst = max((abs(r["diff"]) for r in out if r["diff"] is not None), default=None)
+            return (not bad if out else None), (f"나레 {len(out)}줄 중 못 찾음·{LS.LIMIT_SM}초 넘게 어긋남 {bad or '0'} · 최대 차 {worst} "
+                                                f"(스피치매틱스 낱말 시각) · " + " ".join(f"{r['line']}:{r['t0']}↔{r['heard_t0']}" for r in out))
+        row("소리", "나레 받아쓰기 ↔ 대본", asr_rows, "engine/narr_verify.heard_words(스피치매틱스) → check_line_sync.line_starts_from_asr · LIMIT_SM")
     # ── 대본
     if want("대본") and not legacy:
         def aud():
@@ -868,7 +919,7 @@ def make_eye_pack(style_name: str, doc: Path, work: Path, T: dict, tab: dict, S:
     end = float(T["end"])
     _strip(final, 0.0, min(3.0, end), E / "훅3초_0.1초.jpg")
     _strip(final, max(0.0, end - 2.0), end - 0.05, E / "끝2초_0.1초.jpg")
-    A = ["# 받아쓰기 대조표 (나레 줄 ↔ 완성본 voice.wav 받아쓰기, whisper 로컬)", "",
+    A = ["# 받아쓰기 대조표 (나레 줄 ↔ 완성본 voice.wav 받아쓰기, 스피치매틱스 낱말 시각)", "",
          "| 줄 | 대본(말한 글) | 자막 시작 | 들린 시작 | 차 | ○× |", "|---|---|---|---|---|---|"]
     if asr:
         A += [f"| {r['line']} | {r['said']} | {r['t0']} | {r['heard_t0']} | {r['diff']} | {'○' if r['ok'] else '×'} |" for r in asr["rows"]]
