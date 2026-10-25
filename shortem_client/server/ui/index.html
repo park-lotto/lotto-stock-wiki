@@ -315,7 +315,7 @@ function render(){
   $('phone').classList.toggle('drag',S.step==='edit');
   // 완성본 고치기: 오른쪽 = 완성본 재생(+표시), 그 아래 캡컷 내보내기(사장님 10-25 '오른쪽 썸네일 아래')
   const vid=S.step==='edit'&&made();document.querySelector('.main').classList.toggle('vidmode',vid);videoStage();
-  let C=$('capbar');if(!C){C=document.createElement('div');C.id='capbar';C.className='capbar';$('phone').after(C)}
+  let C=$('capbar');if(!C){C=document.createElement('div');C.id='capbar';C.className='capbar';$('phone').after(C);C.addEventListener('click',e=>{const b=e.target.closest('#capcut');if(b&&!b.disabled)doCapcut(b)})}
   C.hidden=!vid;C.innerHTML=vid?`<button class="btn" id="capcut">캡컷으로 내보내기</button>${S.capmsg?`<small class="${S.capok?'ok':'err'}">${esc(S.capmsg)}</small>`:''}<small style="color:var(--mute)">이 완성본을 캡컷에서 직접 다듬을 수 있는 파일로 내보냅니다</small>`:'';
   // 프리셋 단계 견본: 실제 완성본 장면 3장(있으면) / 틀도 없으면 '견본 준비 중' — 남의 틀로 대신 그리지 않는다
   let O=$('shotpv');if(!O){O=document.createElement('div');O.id='shotpv';$('phone').appendChild(O)}
@@ -480,9 +480,15 @@ function drawVidMarks(live){
     <div class="chips">${VHINT[mv?'move':'pin'].map(x=>`<button class="chip" data-vhint="${esc(x)}">${esc(x)}</button>`).join('')}</div>
     <div class="inrow"><input type="text" maxlength="300" placeholder="어떻게 해 줄까요?"><button class="btn pri" data-vb="send">담기</button></div></div>`);
 }
+// 시간 줄 = 고른 완성본의 것(회원 PC 다리 /bridge/timeline — 렌더 계획 컷·자막 줄). 아직 없거나 못 읽으면 미리보기 장면
+//   (10-26 실측: 26.9초 박정수 편에 미리보기 4장면 12초가 그려졌다)
+function tlLoad(name){S.tl=S.tl||{};if(!name||S.tl[name]||S.st.host!=='server')return;S.tl[name]={loading:true};
+  fetch(BRIDGE+'/bridge/timeline/'+encodeURIComponent(name)).then(x=>x.json()).then(r=>{S.tl[name]=r&&Array.isArray(r.scenes)?r:{scenes:[]};render()}).catch(()=>{S.tl[name]={scenes:[]}})}
+function tlScenes(){const v=made()&&S.pc&&S.pc.ok?curVideo():null;if(v){tlLoad(v.name);const t=(S.tl||{})[v.name];if(t&&t.scenes&&t.scenes.length)return{sc:t.scenes,video:true}}
+  return{sc:(S.preview&&S.preview.context&&S.preview.context.scenes)||[],video:false}}
 function editBoard(st,p){
   pcLoad();
-  const sc=(S.preview&&S.preview.context&&S.preview.context.scenes)||[];
+  const TL=tlScenes(),sc=TL.sc;
   if(!sc.length)return'<h2>완성본 고치기</h2><p class="note">미리보기를 그리는 중입니다…</p>';
   const T=sc[sc.length-1].end||1,W=t=>(t/T*100).toFixed(2);
   const sfx=Object.entries((p.sfx_pool)||{}).filter(([k,v])=>Array.isArray(v)&&v.length);
@@ -566,6 +572,15 @@ async function save(patch){
   await load(true,true);
 }
 
+// 캡컷으로 내보내기 — 단추는 완성본 옆(#capbar, #board 밖)이라 따로 받는다(10-26 실측: 눌러도 아무 일 없었다)
+async function doCapcut(t){t.disabled=true;t.textContent='만드는 중…';let r;
+    try{r=S.st.host==='server'?await fetch(BRIDGE+'/bridge/capcut',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({video:S.pcVideo})}).then(x=>x.json()):{ok:false,why:'회원 PC 화면에서는 준비 중입니다'}}
+    catch(e){r={ok:false,why:'회원 PC 숏템에 연결하지 못했습니다'}}
+    // 결과 = engine_bridge.capcutExport {ok, bad, draft, in_capcut} — 캡컷이 깔려 있으면 캡컷 목록에 바로 뜬다
+    const nm=r.draft?String(r.draft).split(/[\\/]/).pop():'';
+    S.capok=!!r.ok;S.capmsg=r.ok?(r.in_capcut?`✓ 캡컷 목록에 넣었습니다 — 캡컷을 열면 「${nm}」이 보입니다`:`✓ 캡컷 초안을 만들었습니다 — 이 PC 에 캡컷이 없어 작업 폴더에 두었습니다: ${r.draft}`)
+      :((r.bad&&r.bad.length?'초안 검사에서 걸렸습니다: '+r.bad[0]:r.why)||'못 만들었습니다');
+    t.disabled=false;t.textContent='캡컷으로 내보내기';render();}
 $('board').addEventListener('click',async e=>{
   const t=e.target.closest('button');if(!t)return;
   if(t.dataset.go!==undefined){S.step=STEPS[+t.dataset.go].k;render();return}
@@ -593,18 +608,11 @@ $('board').addEventListener('click',async e=>{
     if(!r.ok){await load(true);state(saveErr(r),true);return}   // 다시 읽은 뒤에 오류(load 가 '저장됨'으로 덮던 것 — 10-26 실측: 거절됐는데 '내 계정에 저장됨')
     await load(true);return}
   if(t.id==='editmode'){S.editMode=!S.editMode;render();setEditMode(S.editMode);return}
-  if(t.dataset.clip){const i=+t.dataset.i,sc=S.preview.context.scenes[i];S.pick={track:t.dataset.clip,scene:i,label:t.dataset.label,at:sc&&sc.start};S.askDraft='';show(i);
+  if(t.dataset.clip){const i=+t.dataset.i,TL=tlScenes(),sc=TL.sc[i];S.pick={track:t.dataset.clip,scene:i,label:t.dataset.label,at:sc&&sc.start};S.askDraft='';if(!TL.video)show(i);   // 완성본 줄이면 미리보기 대신 영상을 그 초로
     const v=document.querySelector('#vidpv video');if(v&&sc){try{v.currentTime=sc.start}catch(e){}}
     render();setTimeout(()=>$('asktext')&&$('asktext').focus(),0);return}
   if(t.id==='mvclear'){S.moves=[];preview();render();return}
-  if(t.id==='capcut'){t.disabled=true;t.textContent='만드는 중…';let r;
-    try{r=S.st.host==='server'?await fetch(BRIDGE+'/bridge/capcut',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({video:S.pcVideo})}).then(x=>x.json()):{ok:false,why:'회원 PC 화면에서는 준비 중입니다'}}
-    catch(e){r={ok:false,why:'회원 PC 숏템에 연결하지 못했습니다'}}
-    // 결과 = engine_bridge.capcutExport {ok, bad, draft, in_capcut} — 캡컷이 깔려 있으면 캡컷 목록에 바로 뜬다
-    const nm=r.draft?String(r.draft).split(/[\/]/).pop():'';
-    S.capok=!!r.ok;S.capmsg=r.ok?(r.in_capcut?`✓ 캡컷 목록에 넣었습니다 — 캡컷을 열면 「${nm}」이 보입니다`:`✓ 캡컷 초안을 만들었습니다 — 이 PC 에 캡컷이 없어 작업 폴더에 두었습니다: ${r.draft}`)
-      :((r.bad&&r.bad.length?'초안 검사에서 걸렸습니다: '+r.bad[0]:r.why)||'못 만들었습니다');
-    t.disabled=false;t.textContent='캡컷으로 내보내기';render();return}
+
   if(t.dataset.hint){S.askDraft=t.dataset.hint;render();$('asktext').focus();return}
   if(t.id==='asksend'){const text=($('asktext')||{}).value||'';if(!text.trim()){state('무엇을 고칠지 적어 주세요',true);return}
     const moves=(S.moves||[]).map(m=>({label:m.label,dx:m.dx,dy:m.dy,scene:m.scene,x:m.vx,y:m.vy,t:m.t,kind:m.kind,video:m.vx!=null?S.pcVideo:undefined}));

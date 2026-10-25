@@ -31,8 +31,18 @@ function timelineOf(name) {
   if (!v) return null;
   let meta = {};
   try { meta = JSON.parse(fs.readFileSync(path.join(workDir(), '완성본', name + '.json'), 'utf8')); } catch { /* 표식 없음 */ }
-  let beats = [];
-  try { beats = JSON.parse(fs.readFileSync(path.join(meta.topic_dir || '', 'timeline.json'), 'utf8')).beats || []; } catch { /* 없음 */ }
+  let T = {};
+  try { T = JSON.parse(fs.readFileSync(path.join(meta.topic_dir || '', 'timeline.json'), 'utf8')); } catch { /* 없음 */ }
+  if (Array.isArray(T.cuts) && T.cuts.length) {
+    // render_bench 꼴(10-26 실측 박정수 편: cuts 19 · rows 23 · end 26.9) — 장면 = 렌더 계획 컷, 자막 = 그 컷 안에 보이는 줄
+    const rows = Array.isArray(T.rows) ? T.rows : [];
+    return { name, title: v.title, end: +T.end || null, scenes: T.cuts.map((c, i) => {
+      const t0 = +c.t0 || 0, t1 = +c.t1 || t0 + (+c.dur || 0);
+      const cap = rows.filter(r => (+r.t0 || 0) < t1 && (+r.t1 || 0) > t0).map(r => r.text).filter(Boolean);
+      return { i, start: t0, end: t1, caption: [...new Set(cap)].join(' ') };
+    }) };
+  }
+  const beats = T.beats || [];   // 옛 꼴(엔진 make 의 beats)
   return { name, title: v.title, scenes: beats.map((b, i) => ({ i, start: +b.t0 || 0, end: (+b.t0 || 0) + (+b.dur || 0), caption: (b.caption_lines || [b.narration || '']).join(' ') })) };
 }
 
