@@ -32,7 +32,7 @@ from tools.calcopy.engine.readline_tools.capseg import fps_filter  # noqa: E402
 
 CACHE = Path(os.environ.get("READLINE_CACHE", "C:/숏템_칼카피/_readline_cache")) / "tr"
 SPECIAL = ("zoomblur", "black", "flash")
-G = dict(R=[0.3, 0.35], RI=[1.25, 1.5], R2=[0.45, 0.6], RI2=[1.45, 1.75, 9.0], DDK=[0.3, 0.4], DM=[30.0, 45.0], DEC=[15.0, 25.0], CF=[30.0, 45.0])
+G = dict(DIP=[0.5, 0.6, 0.7], REC=[0.7, 0.8], FLASH=[30.0, 40.0, 50.0], BLACK=[20.0, 30.0])   # LOCO 격자(측정 규칙 숫자 근처만)
 
 
 def window_of(slug: str, vid: str):
@@ -75,7 +75,7 @@ def dump_one(slug: str, mp4: str, vid: str) -> Path | None:
     hd = np.r_[0, [0.5 * np.abs(hist[i] - hist[i - 1]).sum() for i in range(1, n)]]
     r, g, b = cutdet.rgb_means(mp4, y0, y1)
     CACHE.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(out, mean=mean, sh=sh, diff=diff, hd=hd, dark=(F < 20).mean((1, 2)), white=(F > 235).mean((1, 2)), r=r, g=g, b=b,
+    np.savez_compressed(out, mean=mean, sh=sh, diff=diff, hd=hd, dark=(F < 20).mean((1, 2)), white=(F > 235).mean((1, 2)), std=Ff.std((1, 2)), r=r, g=g, b=b,
                         gt=json.dumps(gt, ensure_ascii=False), meta=json.dumps({"y0": y0, "y1": y1, "cb": cb, "n": int(n)}))
     return out
 
@@ -87,7 +87,8 @@ def load_items() -> list[tuple]:
         z = np.load(f)
         slug = f.stem.split("__")[0]
         n = len(z["mean"])
-        A = {k: z[k] for k in ("mean", "sh", "dark", "white")}
+        A = {k: z[k] for k in ("mean", "sh", "dark", "white") if k in z.files}
+        A["std"] = z["std"] if "std" in z.files else None
         m = min(n, len(z["r"]))
         for k in ("r", "g", "b"):
             A[k] = np.r_[z[k][:m], np.full(n - m, z[k][m - 1] if m else 0)]
@@ -95,7 +96,7 @@ def load_items() -> list[tuple]:
         for t, k in json.loads(str(z["gt"])):
             if k not in SPECIAL + ("cut",):
                 continue
-            near = [e for e in ev if e["t"] - 0.15 <= t <= e.get("te", e["t"]) + 0.15 or (k != "cut" and t < 0.2 and e.get("start"))]
+            near = [e for e in ev if (not e.get("start") and e["t"] - 0.15 <= t <= e.get("te", e["t"]) + 0.15) or (k != "cut" and t < 0.2 and e.get("start"))]
             near.sort(key=lambda e: abs(e["t"] - t))
             items.append((slug, k, near, f.stem, t))
     return items
@@ -109,7 +110,7 @@ def evaluate(items, P, slugs) -> dict:
         p = None
         if near:
             e = near[0]
-            p = "zoomblur" if e.get("start") else cutdet.decide(e, P)
+            p = cutdet.decide(e, P)
         c = ch[slug]
         if k != "cut":
             c[1] += 1

@@ -128,12 +128,15 @@ def _masked_sharp(F, h, y0, cap_band):
     return np.array([cv2.Laplacian(f[keep], cv2.CV_32F).var() for f in F])
 
 
-V2 = dict(R=0.30, RI=1.5, R2=0.45, RI2=1.75, DK=0.6, DDK=0.3, DM=30.0, FADE=10.0, DEC=25.0, CF=45.0)
-# ↑ 전환 분류 문턱 — 14채널 98편 눈 정답(특수 79곳·cut 1287줄)으로 '채널 하나 빼고 맞추기'(LOCO)를 돌려 고른 값(10-25, 표는 README).
-#   블러: (같은 샷 바탕 대비 최저 비율 ≤R 이고 다시 선명해짐 ≥RI) 또는 (≤R2 이고 ≥RI2 — 약한 블러는 더 확실히 풀려야)
-#   검정: 창 검정 비율 최고 ≥DK 이고 그 샷의 평소 검정 비율(앞·뒤)보다 DDK 이상 높음 — 원래 어두운 장면(이븐쇼핑) 오탐 막음
-#   밝기 번쩍: 컷에서 +DM 뛰고 서서히 어두워지며(6프레임 단조) 12프레임 뒤 DEC 이상 내려감 — 밝은 장면으로의 그냥 컷과 가른다
-#   색 번쩍: 색편차(G−(R+B)/2·R−(G+B)/2)가 +CF 뛰고 14프레임 안에 절반 넘게 줄어듦(샤크탱크 fsseg 꼴, 문턱만 12→45)
+V2 = dict(WIN=8, DIP=0.60, REC=0.80, LONG=12, FLASH=40.0, FILL_STD=6.0, BLACK=20.0, TINT=45.0)
+# ↑ 전환 4종 측정 규칙 — 표준 §11-8 ㊴(페이블 8차 결정, 10-25). 렌더에 닿는 종류만: cut · flash · zoomblur · black.
+#   zoomblur = 경계 ±WIN 프레임 안 선명도(라플라시안 분산, 창·자막 마스크)가 경계 직전 수준의 ≤DIP 로 떨어지고
+#              양쪽 모두 WIN 프레임 안에 ≥REC 로 회복(직전 쪽 = 직전 수준, 뒤쪽 = 같은 샷 뒤 수준)
+#   cut + blur_tail = 흐림이 LONG 프레임 넘게 이어지거나 한쪽만 회복(소스 자체의 모션 블러·초점 흐림 = 전환 아님)
+#   flash = 경계 1~4프레임 밝기(Y 평균) 피크 ≥ 직전 +FLASH, 또는 단색 채움 프레임(표준편차 ≤FILL_STD, 검정 아님)
+#   black = 경계 1~4프레임 Y 평균 ≤BLACK
+#   (조정 1회, 13 표) 색 채움 = 화면 전체 색편차(G−(R+B)/2·R−(G+B)/2)가 +TINT 뛰고 14프레임 안에 절반 넘게 빠짐 → flash 의 '단색 채움'으로 셈
+#   그 밖(장면이 바뀌며 생긴 색 점프·샷 바뀜만) = cut
 
 
 def _med(x, lo, hi):
@@ -142,62 +145,87 @@ def _med(x, lo, hi):
 
 
 def decide(f: dict, P: dict | None = None) -> str:
-    """특징 → 종류(문턱만). classify_arrays 가 부르고, LOCO 점검이 문턱을 바꿔 가며 부른다."""
+    """특징 → 종류(4종). classify_arrays 가 부르고, 점검 도구가 같은 함수를 부른다. blur_tail 은 classify_arrays 가 따로 붙인다."""
     P = dict(V2, **(P or {}))
-    if f["dark_peak"] >= P["DK"] and f["dark_peak"] - f["dark_around"] >= P["DDK"]:
+    if f["y_min"] <= P["BLACK"]:
         return "black"
-    if (f["bright_jump"] >= P["DM"] and f["fading"] and f["bright_decay"] >= P["DEC"]) or f["color_jump"] >= P["CF"]:
+    if f["y_peak_jump"] >= P["FLASH"] or f["fill"] or f.get("tint", 0.0) >= P["TINT"]:
         return "flash"
-    if (f["blur_rise"] >= P["RI"] and f["blur_ratio"] <= P["R"]) or (f["blur_rise"] >= P["RI2"] and f["blur_ratio"] <= P["R2"]):
+    if f["dip_ratio"] <= P["DIP"] and f["rec_left"] and f["rec_right"] and f["blur_len"] <= P["LONG"]:
         return "zoomblur"
     return "cut"
 
 
 def classify_arrays(A: dict, groups: list[tuple[int, int]], fps: float = 30.0, P: dict | None = None) -> list[dict]:
-    """전환 종류의 주인 함수 — 프레임 배열(A: mean·sh(자막 띠 뺀 선명도)·dark·white·r·g·b)과 컷 묶음(시작,끝 프레임)으로
-    사건마다 {t, te, kind, 특징…}. cutdet --v2 와 점검 도구(LOCO)가 같은 함수를 부른다."""
+    """전환 종류의 주인 함수 — 프레임 배열(A: mean(Y)·sh(자막 띠 뺀 선명도)·std)과 컷 묶음(시작,끝 프레임)으로
+    경계마다 {t, te, kind(4종), blur_tail, 특징…}. cutdet --v2·확인 시트(transsheet)·LOCO 점검이 같은 함수를 부른다."""
     P = dict(V2, **(P or {}))
-    mean, sh, dark = A["mean"], A["sh"], A["dark"]
+    W = int(P["WIN"])
+    mean, sh = A["mean"], A["sh"]
+    std = A.get("std")
     n = len(mean)
-    cutf = [g[0] for g in groups]
     Sg = Sr = None
     if A.get("r") is not None:
         Sg, Sr = A["g"] - (A["r"] + A["b"]) / 2, A["r"] - (A["g"] + A["b"]) / 2
+    cutf = [g[0] for g in groups]
     out = []
     for (s, e) in groups:
         nxt = min([c for c in cutf if c > e + 1] + [n])
         prv = max([c for c in cutf if c < s] + [0])
-        base_in = _med(sh, e + 8, min(nxt, e + 18)) if nxt - (e + 8) >= 3 else _med(sh, e + 8, e + 18)
-        win = sh[s:min(n, e + 7)]
-        ratio = float(win.min() / base_in) if len(win) and base_in == base_in and base_in > 0 else 1.0
-        rise = float(sh[min(n - 1, e + 6)] / (win[:3].mean() + 1e-6)) if len(win) else 1.0
-        pre_mean = _med(mean, max(prv, s - 8), s - 1) if s - 1 > max(prv, s - 8) else float(mean[max(0, s - 3)])
-        pre_dk = _med(dark, max(prv, s - 10), s - 1) if s - 1 > max(prv, s - 10) else float(dark[max(0, s - 3)])
-        post_dk = _med(dark, e + 8, min(nxt, e + 20)) if nxt - (e + 8) >= 3 else float(dark[min(n - 1, e + 8)])
-        w0, w1 = max(1, s - 1), min(n, e + 6)
-        dk_peak = float(dark[w0:w1].max()) if w1 > w0 else 0.0
-        jumps = [float(mean[i] - mean[i - 1]) for i in range(max(1, s - 1), min(n, s + 2))]
-        big = max(jumps, key=abs) if jumps else 0.0
-        pk = int(np.argmax(mean[s:min(n, s + 4)])) + s if s < n else s
-        tail = mean[pk:min(n, pk + 6)]
-        fading = len(tail) >= 6 and bool(np.all(np.diff(tail) < 0.5)) and float(tail[0] - tail[-1]) >= P["FADE"]
-        decay = float(mean[pk] - mean[min(n - 1, pk + 12)])
-        cfl = 0.0
+        pre = _med(sh, max(prv, s - 12), s - 1) if s - 1 > max(prv, s - 12) else float(sh[max(0, s - 1)])
+        post = _med(sh, e + W + 1, min(nxt, e + W + 13)) if nxt - (e + W + 1) >= 3 else _med(sh, e + W + 1, e + W + 13)
+        lo, hi = max(0, s - W), min(n, e + W + 1)
+        seg = sh[lo:hi]
+        k = int(np.argmin(seg)) + lo if len(seg) else s
+        ref_r = post if post == post and post > 0 else (pre if pre == pre and pre > 0 else 1.0)
+        at_start = s <= W and prv == 0                          # 영상 첫머리 경계: 앞 샷이 없다(첫 프레임부터 흐린 시작 블러 — 키치잇 Ks5k·cNo)
+        ref_l = ref_r if at_start else (pre if pre == pre and pre > 0 else 1.0)
+        dip_ratio = float(sh[k] / min(ref_l, ref_r)) if len(seg) else 1.0    # 양쪽 샷 평소 수준 모두보다 낮아야 '움푹' — 선명→흐린 샷으로의 그냥 컷을 빼는 조정(1회)
+        rec_left = True if at_start else (bool(np.any(sh[max(0, k - W):k] >= P["REC"] * ref_l)) if k > 0 else False)
+        rec_right = bool(np.any(sh[k + 1:min(n, k + W + 1)] >= P["REC"] * ref_r))
+        low = sh < P["DIP"] * min(ref_l, ref_r)
+        a = b = k
+        while a > 0 and low[a - 1]:
+            a -= 1
+        while b + 1 < n and low[b + 1]:
+            b += 1
+        blur_len = int(b - a + 1) if low[k] else 0
+        b0, b1 = s, min(n, s + 4)
+        pre_y = _med(mean, max(prv, s - 8), s - 1) if s - 1 > max(prv, s - 8) else float(mean[max(0, s - 1)])
+        y_peak = float(mean[b0:b1].max()) if b1 > b0 else float(mean[min(n - 1, s)])
+        post_y = _med(mean, e + W + 1, min(nxt, e + W + 13)) if nxt - (e + W + 1) >= 3 else _med(mean, e + W + 1, e + W + 13)
+        post_y = post_y if post_y == post_y else pre_y
+        y_min = float(mean[b0:b1].min()) if b1 > b0 else float(mean[min(n - 1, s)])
+        fill = bool(std is not None and b1 > b0 and np.any((std[b0:b1] <= P["FILL_STD"]) & (mean[b0:b1] > P["BLACK"])))
+        tint = 0.0
         for S in ((Sg, Sr) if Sg is not None else ()):
             for i in range(max(1, s - 2), min(len(S) - 15, s + 3)):
                 j = float(S[i] - S[i - 1])
-                if j > cfl and S[i] - S[i + 14] > 0.5 * j and S[i] >= S[i + 1] - 2:
-                    cfl = j
-        f = {"t": round(s / fps, 3), "te": round(e / fps, 3), "blur_ratio": round(ratio, 2), "blur_rise": round(rise, 2),
-             "dark_peak": round(dk_peak, 2), "dark_around": round(max(pre_dk, post_dk), 2), "bright_jump": round(big, 1),
-             "bright_decay": round(decay, 1), "fading": fading, "color_jump": round(cfl, 1)}
+                if j > tint and S[i] - S[i + 14] > 0.5 * j and S[i] >= S[i + 1] - 2:
+                    tint = j
+        f = {"t": round(s / fps, 3), "te": round(e / fps, 3), "dip_ratio": round(dip_ratio, 2), "dip_at": round(k / fps, 3),
+             "rec_left": rec_left, "rec_right": rec_right, "blur_len": blur_len, "y_peak_jump": round(y_peak - max(pre_y, post_y), 1),   # 피크 = 앞·뒤 샷 모두보다 밝음(조정 1회)
+             "y_min": round(y_min, 1), "fill": fill, "tint": round(tint, 1)}
         f["kind"] = decide(f, P)
+        f["blur_tail"] = bool(f["kind"] == "cut" and dip_ratio <= P["DIP"])     # 흐려지긴 했지만 효과 지문(대칭·짧음)이 아님
         out.append(f)
-    if n > 20:                                   # 영상 시작 블러(컷이 없다): 첫 6프레임이 8~20프레임 바탕보다 흐리고 몇 프레임 안에 선명해짐
-        base = float(np.median(sh[8:20]))
-        low = int((sh[:6] < V2_LOW * base).sum())
-        if low >= 2 and float(sh[5:8].mean()) >= 0.85 * base:
-            out.insert(0, {"t": 0.0, "te": 0.0, "kind": "zoomblur", "start": True, "blurfr": low})
+    if n > 2 * W + 13 and not (groups and groups[0][0] <= W):   # 영상 시작도 경계(앞이 없다 → 왼쪽은 회복된 것으로 보고 뒤 수준과 견줌)
+        post = _med(sh, W + 1, W + 13)
+        seg = sh[0:W + 1]
+        k = int(np.argmin(seg))
+        dr = float(sh[k] / post) if post > 0 else 1.0
+        rr = bool(np.any(sh[k + 1:k + W + 1] >= P["REC"] * post))
+        low = sh < P["DIP"] * post
+        b = k
+        while b + 1 < n and low[b + 1]:
+            b += 1
+        f = {"t": 0.0, "te": 0.0, "start": True, "dip_ratio": round(dr, 2), "dip_at": round(k / fps, 3), "rec_left": True, "rec_right": rr,
+             "blur_len": int(b + 1) if low[k] else 0, "y_peak_jump": 0.0, "y_min": round(float(mean[0:4].min()), 1),
+             "fill": bool(std is not None and np.any((std[0:4] <= P["FILL_STD"]) & (mean[0:4] > P["BLACK"]))), "tint": 0.0}
+        f["kind"] = decide(f, P)
+        f["blur_tail"] = False
+        if f["kind"] != "cut":
+            out.insert(0, f)
     return out
 
 
@@ -212,23 +240,23 @@ def rgb_means(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080):
 
 
 def _refine_v2(F, mean, res, shots, fps, h, y0, cap_band, mp4, y1, use_color_flash=False, motion=True):
-    """v2: classify_arrays(주인)로 종류를 다시 매긴다. use_color_flash 는 옛 인자(10-25 LOCO 뒤 색 번쩍은 늘 켬, 문턱 V2['CF'])."""
+    """v2: classify_arrays(주인, 표준 §11-8 4종 규칙)로 종류를 다시 매긴다. use_color_flash 는 옛 인자(색 점프만 = cut, 무시)."""
     n = len(F)
     r_, g_, b_ = rgb_means(mp4, y0, y1, fps)
     m = min(n, len(r_))
-    A = {"mean": mean, "sh": _masked_sharp(F, h, y0, cap_band), "dark": (F < 20).mean((1, 2)), "white": (F > 235).mean((1, 2)),
+    A = {"mean": mean, "sh": _masked_sharp(F, h, y0, cap_band), "std": F.std((1, 2)), "dark": (F < 20).mean((1, 2)), "white": (F > 235).mean((1, 2)),
          "r": np.r_[r_[:m], np.full(n - m, r_[m - 1] if m else 0)], "g": np.r_[g_[:m], np.full(n - m, g_[m - 1] if m else 0)],
          "b": np.r_[b_[:m], np.full(n - m, b_[m - 1] if m else 0)]}
     groups = [(int(round(r["t"] * fps)), int(round(r["t_end"] * fps))) for r in res]
     cls = classify_arrays(A, groups, fps)
-    by_t = {c["t"]: c for c in cls if not c.get("start")}
+    by_t = {c["t"]: c for c in cls}
     for r in res:
         r["kind_v1"] = r["kind"]
         c = by_t.get(round(int(round(r["t"] * fps)) / fps, 3))
         if c:
             r.update({k: v for k, v in c.items() if k not in ("t", "te")})
     if cls and cls[0].get("start"):
-        res.insert(0, {"t": 0.0, "t_end": 0.0, "kind": "zoomblur", "diff": 0.0, "blurfr": cls[0]["blurfr"], "start": True, "kind_v1": None})
+        res.insert(0, {"t": 0.0, "t_end": 0.0, "diff": 0.0, "kind_v1": None, **{k: v for k, v in cls[0].items() if k not in ("t", "te")}})
     if not motion:                               # 전환만 볼 때(점검 도구) — 샷마다 ORB 는 느리다
         return
     from tools.calcopy.engine.readline_tools.shotmotion import shot_motion   # 움직임 주인 = shotmotion(ORB 닮음변환, 유머쇼쇼 워커 motion.py)
