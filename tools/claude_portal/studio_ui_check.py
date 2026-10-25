@@ -40,7 +40,8 @@ def main() -> int:
             sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
             from tools.live_admin import admin_cookie
             host = a.url.split("/")[2]
-            ctx.add_cookies([{"name": "dash_auth", "value": admin_cookie(), "domain": host, "path": "/", "secure": True, "httpOnly": True}])
+            ctx.add_cookies([{"name": "dash_auth", "value": admin_cookie(), "domain": host, "path": "/", "secure": True, "httpOnly": True,
+                              "sameSite": "Lax"}])   # live_admin.admin_page 와 같은 꼴(없으면 쿠키가 안 실려 로그인으로 307 — 10-25 실측)
         pg = ctx.new_page()
         errs: list = []
         pg.on("pageerror", lambda e: errs.append(str(e)))

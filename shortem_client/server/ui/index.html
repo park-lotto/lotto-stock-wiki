@@ -51,7 +51,7 @@ input[type=range]{width:100%;accent-color:var(--violet)}
    최소 높이 0 으로 눌려 글자가 위아래로 잘렸다(10-25 사장님 화면) */
 .fontgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));grid-auto-rows:min-content;gap:8px;max-height:300px;overflow:auto;padding-right:4px}
 .fontgrid button{display:grid;gap:2px;justify-items:center;padding:9px 8px;border-radius:10px;border:1px solid var(--line2);background:var(--bg);color:var(--fg);cursor:pointer;min-width:0}
-.fontgrid button .fs{font-size:19px;line-height:1.3;white-space:nowrap}
+.fontgrid button .fs{font-size:13.5px;line-height:1.4;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .fontgrid button small{font-size:10.5px;color:var(--dim);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fontgrid button.on{border-color:var(--mint);color:var(--mint)}
 .grp{font-size:12.5px;font-weight:700;color:var(--violet2);margin:6px 0 -4px}
@@ -216,9 +216,9 @@ function presetCards(st){
   const groups=[];for(const x of list){const g=x.group||'';let o=groups.find(y=>y.g===g);if(!o)groups.push(o={g,xs:[]});o.xs.push(x)}
   return groups.map(o=>`${o.g?`<div class="grp">${esc(o.g)}</div>`:''}<div class="cards">${o.xs.map(card).join('')}</div>`).join('');
 }
-// 글꼴 칸 — 이름 위에 그 글꼴로 쓴 견본 글자. 글꼴 정의(@font-face)는 미리보기 렌더러에서 빌려 온다(fontsFromStage)
+// 글꼴 칸 — 이름만(글꼴 파일을 칸마다 받으면 120MB). 고른 글꼴은 오른쪽 미리보기(렌더러)에 그대로 나온다
 function fontGrid(key,cur,fonts){
-  return `<div class="fontgrid">${fonts.map(f=>`<button class="${f===cur?'on':''}" data-font="${key}" data-v="${esc(f)}"><span class="fs" style="font-family:'${esc(f)}'">가나다 숏템</span><small>${esc(f)}</small></button>`).join('')}</div>`;
+  return `<div class="fontgrid">${fonts.map(f=>`<button class="${f===cur?'on':''}" data-font="${key}" data-v="${esc(f)}"><span class="fs">${esc(f)}</span></button>`).join('')}</div>`;
 }
 
 async function save(patch){
@@ -289,16 +289,6 @@ addEventListener('resize',fit);fit();
 // 그릴 때마다 렌더러 페이지를 새로 연다 — 공식 렌더러(render_scene_style.js)도 매번 새 페이지에 load 를 한 번만 부른다.
 //   (10-19 실측: 같은 페이지에 load 를 두 번 부르면 앞 틀이 남아 템플릿으로 바꿔도 화면이 그대로였다 — 렌더와 59% 달랐다)
 const STAGE_URL='r/out/scene-style-ui-showcase.html?qa=1';
-// 렌더러 페이지의 @font-face 를 이 화면에도 한 번 옮긴다 — 글꼴 칸 견본 글자가 실제 그 글꼴로 보이게(정의는 렌더러 한 곳)
-function fontsFromStage(w){
-  if(S.fontsCopied)return;
-  const out=[];
-  for(const sh of w.document.styleSheets){let rules;try{rules=sh.cssRules}catch(e){continue}
-    const base=sh.href||w.location.href;
-    for(const r of rules)if(r.type===CSSRule.FONT_FACE_RULE)out.push(r.cssText.replace(/url\(["']?([^"')]+)["']?\)/g,(m,u)=>`url("${new URL(u,base).href}")`))}
-  if(!out.length)return;
-  const s=document.createElement('style');s.textContent=out.join('\n');document.head.appendChild(s);S.fontsCopied=true;
-}
 const freshStage=()=>new Promise(r=>{stage.addEventListener('load',r,{once:true});stage.src=STAGE_URL+'&n='+Date.now()});
 let seq=0;
 async function preview(patch,presetId){
@@ -313,7 +303,8 @@ async function preview(patch,presetId){
   if(my!==seq)return;
   const w=stage.contentWindow;
   asRenderer(w);
-  fontsFromStage(w);
+  // ★글꼴 칸 견본을 실제 글꼴로 그리려고 @font-face 를 옮기면 87개(약 120MB, 한 개 최대 12MB)를 한꺼번에 받는다 —
+  //   10-25 라이브 실측 프리셋 클릭 31초. 견본은 서버 견본 그림으로 바꾸기 전까지 이름만(고르면 미리보기에 그 글꼴로 나온다)
   w.sceneStyleExporting=false;
   w.sceneStyle.load(r.context,r.snapshot);
   await w.document.fonts.ready;w.sceneStyle.refresh&&w.sceneStyle.refresh();w.sceneStyleExporting=true;
