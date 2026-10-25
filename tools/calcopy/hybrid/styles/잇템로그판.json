@@ -1116,5 +1116,24 @@
  },
  "_pending": {
   "stickers_other": "줄판독 sticker '기타' 13줄 = 의성어 '톡' 9(aUic 1편 — 퍼프 따라 자리 이동) · 손글씨 반응 글 4('(빈통)'·'lets do this!'·'????'·'검정색임') — sound_word·aside_line 은 대본 caps 글 칸이 있어야 붙는다(TEXT_NEEDS) → 대본 쪽(08 brief), 판 rules 아님 · 노랑 줄 쌓기 PIP(4/6)는 스티커가 아니라 틀(창 축소)·자막 쌓기 → 02"
+ },
+ "rhythm": {
+  "cut_median": {
+   "v": 1.08,
+   "why": "벤치 6편 원본 컷 길이 중앙(kal_analyze.media_of = 관문·재현과 같은 자, C:/숏템_칼카피/ititemlog/src, 10-25 재측정) 편별 AZ2q 1.0·J7Gx 1.03·SbWT 1.37·aUic 1.13·ro1l 1.27·zOSp 0.98 → 중앙 1.08(범위 0.98~1.37). 키치잇판 rhythm.cut_median 과 같은 자·같은 방법"
+  },
+  "hook_cuts_3s": {
+   "min": 2,
+   "why": "벤치 6편 원본 0.1~3.0초 안 컷 경계 수(media_of cut_at = bench_one.measure 컷): AZ2q 2·J7Gx 1·SbWT 2·aUic 3·ro1l 0·zOSp 2 → 중앙 2 · p25 1.25. 키치잇판처럼 min = 중앙(ro1l·J7Gx 2편은 이 문턱 아래)"
+  },
+  "plain_share": {
+   "v": 0.854,
+   "tol": 0.06,
+   "why": "벤치 6편 줄판독 덩어리 199개 중 꾸밈 없는 것(kal_analyze._decorated 의 등장 효과·강조·스티커·변형 모두 없음 = placement._is_deco 와 같은 칸) 170개 = 0.854(편별 AZ2q 0.8·J7Gx 0.886·SbWT 0.909·aUic 0.839·ro1l 0.844·zOSp 0.842, 중앙 0.843). 허용 ±0.06 = 모은 값에서 편별 최대 거리(0.055) — 벤치 6편이 다 들어오는 폭(키치잇식 '중앙-모은 값 차 두 배'면 0.022라 벤치 편도 떨어져 넓힘)"
+  },
+  "photo_share_max": {
+   "v": 0.0,
+   "why": "벤치 6편 줄판독 scene/scene_desc/notes '사진·화보' 줄 초 ÷ 길이(키치잇판과 같은 정의 — 키치잇 8편 값 재현 확인) = AZ2q 0·J7Gx 0·SbWT 0·aUic 0·ro1l 0·zOSp 0.018(25.47~25.97 레몬 음료 사진 삽입 0.5초) → p75 0.0(중앙 0, 최대 0.018). 잇템로그 벤치는 정지 사진 컷을 거의 안 쓴다 — 우리 그림 파일 컷이 있으면 계획에서 멈춘다(render_bench.photo_gate)"
+  }
  }
 }
