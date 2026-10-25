@@ -1569,6 +1569,16 @@ def ph_plan_look(st, m, rp, u):
     _tries(st, "plan", LIMITS["plan"])
     M = _take_fix(st, r)
     if M is None:
+        probs = [str(p) for p in (r.get("problems") or []) if str(p).strip()]
+        if probs and not over:
+            # 장면은 맞는데 대본·목소리 쪽 문제(예: 한 줄 말속도 이상 → 문장 고치기)를 짚었다 — 재료 답 칸이 없어 멈추던 것(10-26 회원 마스크편)
+            #   → 대본 단계로 되돌린다(배치 충돌과 같은 길, 시도 수는 conflict 한도가 지킨다)
+            st["log"].append("계획 검수 → 대본 다시: " + " / ".join(probs)[:300])
+            _tries(st, "conflict", 2)
+            st["tries"]["script"] = 0
+            st["approved"] = False
+            why = "장면 확인에서 대본·목소리 쪽 문제가 나왔습니다 — 아래만 고치고 내용·결은 그대로: " + " / ".join(probs)[:1200]
+            return {"review": [_script_ask(st, why)], "then": "script_got"}
         raise _Stop("장면을 맞추다 막혔어요", "다시 시도해 주시면 이어 갈게요")
     return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "plan"}
 
