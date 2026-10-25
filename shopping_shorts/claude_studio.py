@@ -265,21 +265,31 @@ def style_summary(stem: str, d: dict, names: dict, brands: dict) -> dict:
             "group": nm.get("group") or "기타", "desc": nm.get("desc") or "", "badges": badges, "_slug": slug}
 
 
+STYLES_FILE = HERE / "claude_styles.json"   # 판 요약(tools/claude_portal/style_catalog.py 가 엔진 판에서 만든다) — 서버엔 판 파일이 없다
+
+
 def styles(store=None) -> list:
+    """프리셋(판) 목록. 판 파일이 있는 곳(엔진 트랙·로컬 시험)은 거기서, 없으면(라이브 서버) 요약 파일에서. 요약도 같은 style_summary 가 만든다."""
     d = _styles_dir()
-    if not d:
-        return []
     names = json.loads((HERE / "claude_preset_names.json").read_text(encoding="utf-8"))
     try:
         brands = json.loads((CP.channel_root() / "channel" / "브랜드.json").read_text(encoding="utf-8")).get("brands") or {}
     except (OSError, ValueError):
         brands = {}
     out = []
-    for f in sorted(d.glob("*판.json")):
+    if d:
+        for f in sorted(d.glob("*판.json")):
+            try:
+                out.append(style_summary(f.stem, json.loads(f.read_text(encoding="utf-8")), names, brands))
+            except (OSError, ValueError):
+                log.warning("claude_studio: 판 %s 를 못 읽었다", f.name)
+    elif STYLES_FILE.is_file():
         try:
-            out.append(style_summary(f.stem, json.loads(f.read_text(encoding="utf-8")), names, brands))
-        except (OSError, ValueError):
-            log.warning("claude_studio: 판 %s 를 못 읽었다", f.name)
+            raw = json.loads(STYLES_FILE.read_text(encoding="utf-8")).get("styles") or {}
+        except ValueError:
+            log.warning("claude_studio: %s 가 깨졌다 — 프리셋 0개", STYLES_FILE.name)
+            raw = {}
+        out = [style_summary(stem, d0, names, brands) for stem, d0 in sorted(raw.items())]
     order = names.get("_groups") or []
     rank = {g: i for i, g in enumerate(order)}
     out = sorted(out, key=lambda s: rank.get(s["group"], len(order)))
@@ -474,6 +484,28 @@ def sync_merge(mine: dict, theirs: dict) -> tuple:
         out["current"], out["current_at"] = theirs["current"], int(theirs["current_at"])
         n += 1
     return out, n
+
+
+REQ_STATES = ("처리 중", "완료", "못 함")
+
+
+def pc_request(ctx: dict, body: dict | None, store=None) -> dict:
+    """POST /api/claude/studio/request — 회원 PC Claude 가 웹 지시 하나의 상태를 알린다({id, state, note}).
+    웹 화면 '보낸 지시'가 대기 → 처리 중 → 완료/못 함 으로 바뀐다. 지시 내용은 바꾸지 않는다."""
+    store = CP._store(store)
+    CP.ensure_schema(store)
+    cid, _, _ = CP._front(store, ctx, "studio")
+    b = body if isinstance(body, dict) else {}
+    rid, state = str(b.get("id") or ""), b.get("state")
+    if state not in REQ_STATES:
+        raise StudioError("bad_request", "상태는 처리 중·완료·못 함 중 하나입니다")
+    s = _read(store, cid)
+    req = next((r for r in s.get("requests") or [] if r.get("id") == rid), None)
+    if not req:
+        raise StudioError("bad_request", "그 지시가 없습니다")
+    req.update(state=state, note=str(b.get("note") or "")[:300], state_at=_ms())
+    _write(store, cid, s)
+    return {"ok": True, "request": req}
 
 
 def pc_sync(ctx: dict, body: dict | None, store=None) -> dict:

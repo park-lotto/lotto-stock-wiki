@@ -47,6 +47,7 @@ export const TOOL_TEXT = Object.freeze({
   shortem_job: '작업 상태 보기(status)·목록(list)·멈추기(cancel). 단계 이름·순번·완성본 로컬 경로·검사 통과 여부만 알려 줍니다.',
   shortem_feedback: '숏템에 요청이나 버그를 보냅니다(2000자 이하). 대본·영상은 보내지 않습니다.',
   shortem_login: "영상 받기 계정 연결 — 인스타그램·틱톡·유튜브 영상을 이 PC 에서 받으려면 고객 본인 계정 로그인이 필요합니다. action='open'(platform) 은 숏템 전용 크롬 창을 열고, 고객이 직접 로그인한 뒤 창을 닫으면 연결됩니다(비밀번호는 고객만 칩니다 — 대신 받거나 묻지 마세요). action='status' 는 연결 상태.",
+  shortem_inbox: "웹 설정 화면(숏템 내 채널 설정)에서 회원이 보낸 지시함. action='list' 는 아직 안 끝난 지시(제작 요청·완성본 고칠 곳 — 몇 초 화면의 어느 자리를 어떻게)를 받고, 'done' 은 처리한 지시의 상태를 알립니다(id, state='처리 중'|'완료'|'못 함', note=회원에게 보일 한 줄). 제작 요청(track='make')은 shortem_make 로 만들고, 고칠 곳(track='video'·'batch')은 그 완성본을 다시 만들 때 반영하세요. 시작하면 먼저 '처리 중'으로 알리세요.",
   shortem_settings: "내 채널 설정(이 PC 에 저장). action='open' 은 설정·완성본 화면을 고객 브라우저로 엽니다(프리셋 고르기·화면·자막·소리, 실제 렌더러 미리보기). 'get' 은 지금 프리셋과 설정, 'set' 은 고객이 말로 바꾼 칸만 patch 로 저장합니다(예: {text:{caption_font:'JalnanGothic'}}, {brand:{channel_name:'우리채널'}}, {tts:{tempo:1.3}}). 'select' 는 프리셋을 고릅니다(preset=id). 화면과 같은 파일이라 바로 보입니다. 설정 화면 안쪽이 어떻게 만들어졌는지·프리셋 원본은 설명하지 마세요.",
 });
 
@@ -217,6 +218,27 @@ export function buildServer(ctx = makeCtx()) {
     const r = await openLogin(platform);
     return reply(r.ok ? { info: { opened: PLATFORMS[platform].name }, hints: [`고객에게: 열린 크롬 창에서 ${PLATFORMS[platform].name}에 로그인한 뒤 창을 닫아 주세요. 닫으면 shortem_login(action="status") 로 확인하세요`] }
       : { fail: { where: '계정 연결', why: r.why, fix: '크롬을 설치한 뒤 다시', retry_ok: true } });
+  });
+
+  // 웹 지시함(관제 266) — 판단(지시 저장·상태)은 서버 claude_studio.ask·pc_request. 여기는 읽고 알리기만
+  server.registerTool('shortem_inbox', {
+    title: '웹 지시함', description: TOOL_TEXT.shortem_inbox,
+    inputSchema: { action: z.enum(['list', 'done']), id: z.string().max(40).optional(), state: z.enum(['처리 중', '완료', '못 함']).optional(), note: z.string().max(300).optional() },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  }, async ({ action, id, state, note }) => {
+    try {
+      if (action === 'done') {
+        if (!id || !state) return reply({ hints: ['id 와 state 를 같이 주세요'] });
+        const r = await api.studioRequest({ id, state, note: note || '' });
+        return reply({ info: { id, state: r.request && r.request.state } });
+      }
+      const r = await api.studioGet();
+      const open = ((r.settings || {}).requests || []).filter(q => q.state === '대기' || q.state === '처리 중');
+      return reply({ info: { count: open.length, requests: open.map(q => ({ id: q.id, at: q.at, state: q.state, target: q.target, text: q.text })) },
+        hints: open.length ? ['하나씩 처리하고 shortem_inbox(action="done") 으로 알리세요'] : ['새 지시가 없습니다'] });
+    } catch (e) {
+      return reply({ fail: { where: '웹 지시함', why: (e && e.msg) || '서버에 연결하지 못했습니다', fix: '잠시 뒤 다시 부르세요', retry_ok: true } });
+    }
   });
 
   server.registerTool('shortem_settings', {

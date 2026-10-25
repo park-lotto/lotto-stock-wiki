@@ -18897,6 +18897,15 @@ async def api_claude_studio_sync(request: Request):
     return _claude_json(await run_in_threadpool(_cs.CP.call, _cs.pc_sync, ctx, body, Store(DB_PATH)))
 
 
+@app.post("/api/claude/studio/request")
+async def api_claude_studio_request(request: Request):
+    """회원 PC Claude → 웹 지시 상태(처리 중·완료·못 함) — 판단은 claude_studio.pc_request."""
+    from shopping_shorts import claude_studio as _cs
+    body = await _claude_body(request)
+    ctx = _cs.CP.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cs.CP.call, _cs.pc_request, ctx, body, Store(DB_PATH)))
+
+
 @app.get("/claude/studio/api/state")
 def _claude_studio_state(request: Request):
     cid, st, denied = _claude_me(request)

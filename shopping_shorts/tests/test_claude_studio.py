@@ -115,3 +115,35 @@ def test_pc_sync_refuses_when_engine_check_broken(env, monkeypatch):
     with pytest.raises(cp.PortalError):
         cs.pc_sync({}, {"channels": {pid: {"pack": {"text": {"title_font": "B"}}, "updated": 5}}}, env["st"])
     assert cs._read(env["st"], 7)["channels"] == {}
+
+
+ENGINE = Path(__file__).resolve().parents[3] / "칼카피숏템엔진"
+
+
+@pytest.mark.skipif(not (ENGINE / "tools" / "calcopy" / "hybrid" / "styles").is_dir(), reason="엔진 트랙 폴더 없음")
+def test_style_summary_file_matches_engine_styles():
+    """라이브 서버는 판 요약(claude_styles.json)만 읽는다 — 엔진 판 원본으로 만든 카드와 같아야 한다(요약이 낡으면 빨강)."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("style_catalog", Path(__file__).resolve().parents[2] / "tools" / "claude_portal" / "style_catalog.py")
+    sc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sc)
+    names = json.loads((Path(cs.__file__).parent / "claude_preset_names.json").read_text(encoding="utf-8"))
+    sd = ENGINE / "tools" / "calcopy" / "hybrid" / "styles"
+    saved = json.loads(cs.STYLES_FILE.read_text(encoding="utf-8"))["styles"]
+    assert set(saved) == {f.stem for f in sd.glob("*판.json")}, "판이 늘거나 줄었다 — style_catalog.py 를 다시 돌려라"
+    for f in sd.glob("*판.json"):
+        full = cs.style_summary(f.stem, json.loads(f.read_text(encoding="utf-8")), names, {})
+        assert cs.style_summary(f.stem, saved[f.stem], names, {}) == full, f.stem
+
+
+def test_pc_request_updates_state_only(env, monkeypatch):
+    """회원 PC Claude 가 웹 지시 상태를 알린다 — 상태 세 가지만, 지시 글은 그대로, 없는 id 는 거절."""
+    monkeypatch.setattr(cs.CP, "_front", lambda store, ctx, route: (7, {}, None))
+    st = env["st"]
+    rid = cs.ask(st, 7, {"track": "video", "at": 3.2, "x": 10, "y": 20, "label": "3.2초"}, "이 글자 더 크게")["request"]["id"]
+    got = cs.pc_request({}, {"id": rid, "state": "완료", "note": "다시 만들었습니다"}, st)["request"]
+    assert got["state"] == "완료" and got["text"] == "이 글자 더 크게" and got["target"]["x"] == 10
+    with pytest.raises(cp.PortalError):
+        cs.pc_request({}, {"id": rid, "state": "지움"}, st)
+    with pytest.raises(cp.PortalError):
+        cs.pc_request({}, {"id": "r0", "state": "완료"}, st)

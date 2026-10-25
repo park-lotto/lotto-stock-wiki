@@ -97,7 +97,7 @@ i.ready{font-style:normal;font-size:10.5px;color:var(--mint);border:1px solid rg
 i.best{font-style:normal;font-size:10.5px;color:var(--gold);border:1px solid rgba(245,195,91,.5);border-radius:999px;padding:0 6px;margin-left:4px}
 .reqs{display:grid;gap:6px}
 .req{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:8px;align-items:center;font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:7px 10px}
-.req i{font-style:normal;font-size:11px;padding:1px 7px;border-radius:999px}.req .st-wait{color:var(--gold);border:1px solid rgba(245,195,91,.5)}.req .st-done{color:var(--mint);border:1px solid rgba(63,224,192,.5)}
+.req i{font-style:normal;font-size:11px;padding:1px 7px;border-radius:999px}.req .st-wait{color:var(--gold);border:1px solid rgba(245,195,91,.5)}.req .st-done{color:var(--mint);border:1px solid rgba(63,224,192,.5)}.req .st-run{color:#7db7ff;border:1px solid rgba(125,183,255,.5)}.req .st-fail{color:var(--rose);border:1px solid rgba(255,107,129,.5)}.req em{display:block;font-style:normal;font-size:11px;color:var(--mute)}
 .req span{color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .drafts .req{grid-template-columns:auto auto minmax(0,1fr) auto}
 .req .x{font:inherit;border:0;background:none;color:var(--mute);cursor:pointer;font-size:13px}
@@ -505,7 +505,7 @@ function editBoard(st,p){
       ${(S.drafts||[]).length?`<div class="reqs">${S.drafts.map((d,i)=>`<div class="req"><i class="st-wait">${i+1}</i><b>${esc(trkName(d.target))}</b><span>${esc(d.text)}</span><button class="x" data-drdel="${i}" title="빼기">✕</button></div>`).join('')}</div>
         <button class="btn pri big" id="sendall">Claude 에게 한 번에 보내기</button>`:'<small style="color:var(--mute)">아직 담은 지시가 없습니다 — 오른쪽 완성본이나 위 줄에서 고칠 곳을 골라 \'담기\'</small>'}</div>
     <div class="sec"><div class="sec-h"><b>보낸 지시</b><small>회원 PC 의 Claude 가 차례대로 처리합니다</small></div>
-      ${reqs.length?`<div class="reqs">${reqs.map(r=>`<div class="req"><i class="st-${r.state==='대기'?'wait':'done'}">${esc(r.state)}</i><b>${esc(({scene:'장면',caption:'자막',sfx:'효과음',bgm:'배경음'})[(r.target||{}).track]||'')} ${esc((r.target||{}).label||'')}</b><span>${esc(r.text)}</span></div>`).join('')}</div>`:'<small style="color:var(--mute)">아직 없습니다</small>'}</div>`;
+      ${reqs.length?`<div class="reqs">${reqs.map(r=>`<div class="req"><i class="st-${({'대기':'wait','처리 중':'run','완료':'done','못 함':'fail'})[r.state]||'wait'}">${esc(r.state)}</i><b>${esc(({scene:'장면',caption:'자막',sfx:'효과음',bgm:'배경음'})[(r.target||{}).track]||'')} ${esc((r.target||{}).label||'')}</b><span>${esc(r.text)}${r.note?`<em>Claude: ${esc(r.note)}</em>`:''}</span></div>`).join('')}</div>`:'<small style="color:var(--mute)">아직 없습니다</small>'}</div>`;
 }
 // 완성본 고치기: 오른쪽 그림에서 글자·띠를 마우스로 끌어 옮긴다 — 실제 저장은 안 하고(렌더는 Claude 가 고친다) 옮긴 값만 지시에 싣는다
 function dragIn(w){

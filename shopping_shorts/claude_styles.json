@@ -1,0 +1,587 @@
+{
+ "_about": "판 요약 — tools/claude_portal/style_catalog.py 가 엔진 판에서 만든다. 손으로 고치지 마라(관제 266).",
+ "styles": {
+  "굿레터판": {
+   "bench": {
+    "channel": "goodletter"
+   },
+   "voice": {
+    "name": "미나",
+    "voice_id": "kr-mina-expressive"
+   },
+   "bgm": {
+    "id": null
+   },
+   "thumb_card_face": true,
+   "packs": {
+    "sfx": {
+     "pack": "팩05",
+     "map": {
+      "pop": "뽁"
+     }
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": null
+    }
+   }
+  },
+  "꿀템노트판": {
+   "bench": {
+    "channel": "kkultemnote"
+   },
+   "voice": {
+    "name": "박창수",
+    "voice_id": "tc_6059dad0b83880769a50502f"
+   },
+   "bgm": {
+    "id": "honwaka_puppu"
+   },
+   "thumb_card_face": true,
+   "packs": {
+    "sfx": {
+     "pack": "팩01",
+     "map": {
+      "ding": "띠링",
+      "whoosh": "휙",
+      "pop": "뽁"
+     }
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "honwaka_puppu"
+    }
+   }
+  },
+  "도파민썰템A판": {
+   "bench": {
+    "channel": "sseolpulda"
+   },
+   "voice": {
+    "name": "박창수",
+    "voice_id": "tc_6059dad0b83880769a50502f"
+   },
+   "bgm": {
+    "id": "sweets"
+   },
+   "thumb_card_face": false,
+   "packs": {
+    "sfx": {
+     "pack": "팩01",
+     "map": {
+      "pop": "뽁"
+     }
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "sweets"
+    }
+   }
+  },
+  "도파민썰템B판": {
+   "bench": {
+    "channel": "sseolpulda"
+   },
+   "voice": {
+    "name": "박창수",
+    "voice_id": "tc_6059dad0b83880769a50502f"
+   },
+   "bgm": {
+    "id": "sweets"
+   },
+   "thumb_card_face": false,
+   "packs": {
+    "sfx": {
+     "pack": "팩01",
+     "map": {
+      "pop": "뽁"
+     }
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "sweets"
+    }
+   }
+  },
+  "뜨거운사람들판": {
+   "bench": {
+    "channel": "hotpeople"
+   },
+   "voice": {
+    "name": "박창수",
+    "voice_id": "tc_6059dad0b83880769a50502f"
+   },
+   "bgm": {
+    "id": "sweets"
+   },
+   "thumb_card_face": false,
+   "packs": {
+    "sfx": {
+     "pack": "팩01",
+     "map": {
+      "whoosh": "휙"
+     }
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "sweets"
+    }
+   }
+  },
+  "만템판": {
+   "bench": {
+    "channel": "mantem"
+   },
+   "voice": {
+    "name": "문정",
+    "voice_id": "tc_68f9c6a72f0f04a417bb136f"
+   },
+   "bgm": {
+    "id": "sweets"
+   },
+   "thumb_card_face": true,
+   "packs": {
+    "sfx": {
+     "pack": null,
+     "map": {}
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "sweets"
+    }
+   }
+  },
+  "맛템썰템판": {
+   "bench": {
+    "channel": "yummyknow"
+   },
+   "voice": {
+    "name": "유라",
+    "voice_id": "tc_61130d6cf89dd58a4c13295d"
+   },
+   "bgm": {
+    "id": "qiuqiu"
+   },
+   "thumb_card_face": false,
+   "packs": {
+    "sfx": {
+     "pack": null,
+     "map": {}
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "qiuqiu"
+    }
+   }
+  },
+  "샥탬판": {
+   "bench": {
+    "channel": "foreignshowshow"
+   },
+   "voice": {
+    "name": "지훈",
+    "voice_id": "tc_61f0859907085fc68561c9a1"
+   },
+   "bgm": {
+    "id": "sweets"
+   },
+   "thumb_card_face": false,
+   "packs": {
+    "sfx": {
+     "pack": "팩01",
+     "map": {
+      "whoosh": "휙",
+      "ding": "띠링"
+     }
+    },
+    "motion": {},
+    "bgm": {}
+   }
+  },
+  "숏비타민c판": {
+   "bench": {
+    "channel": "shortvitc"
+   },
+   "voice": {
+    "name": "유라",
+    "voice_id": "tc_61130d6cf89dd58a4c13295d"
+   },
+   "bgm": {
+    "id": "sweets"
+   },
+   "thumb_card_face": false,
+   "packs": {
+    "sfx": {
+     "pack": null,
+     "map": {}
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "sweets"
+    }
+   }
+  },
+  "숏템리폿판": {
+   "bench": {
+    "channel": "hottemreport"
+   },
+   "voice": {
+    "name": "박창수",
+    "voice_id": "tc_6059dad0b83880769a50502f"
+   },
+   "bgm": {
+    "id": "passo_bem_solto"
+   },
+   "thumb_card_face": false,
+   "packs": {
+    "sfx": {
+     "pack": "팩01",
+     "map": {
+      "pop": "뽁"
+     }
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "passo_bem_solto"
+    }
+   }
+  },
+  "스타픽룸판": {
+   "bench": {
+    "channel": "starpickroom"
+   },
+   "voice": {
+    "name": "미나",
+    "voice_id": "kr-mina-expressive"
+   },
+   "bgm": {
+    "id": "otsukare_summer"
+   },
+   "thumb_card_face": true,
+   "packs": {
+    "sfx": {
+     "pack": "팩01",
+     "map": {
+      "ding": "띠링",
+      "whoosh": "휙",
+      "pop": "뽁"
+     }
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "otsukare_summer"
+    }
+   }
+  },
+  "신박판": {
+   "bench": {
+    "channel": "sinbak"
+   },
+   "voice": {
+    "name": "박창수",
+    "voice_id": "tc_6059dad0b83880769a50502f"
+   },
+   "bgm": {
+    "id": "sweets"
+   },
+   "thumb_card_face": false,
+   "packs": {
+    "sfx": {
+     "pack": "팩01",
+     "map": {
+      "whoosh": "휙",
+      "pop": "뽁"
+     }
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "sweets"
+    }
+   }
+  },
+  "썰템쇼판": {
+   "bench": {
+    "channel": "humorshowshow"
+   },
+   "voice": {
+    "name": "박창수",
+    "voice_id": "tc_6059dad0b83880769a50502f"
+   },
+   "bgm": {
+    "id": "sweets"
+   },
+   "thumb_card_face": false,
+   "packs": {
+    "sfx": {
+     "pack": null,
+     "map": {}
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "sweets"
+    }
+   }
+  },
+  "썰템홈샷판": {
+   "bench": {
+    "channel": "banggu"
+   },
+   "voice": {
+    "name": "박창수",
+    "voice_id": "tc_6059dad0b83880769a50502f"
+   },
+   "bgm": {
+    "id": "honwaka_puppu"
+   },
+   "thumb_card_face": false,
+   "packs": {
+    "sfx": {
+     "pack": null,
+     "map": {}
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "honwaka_puppu"
+    }
+   }
+  },
+  "아이템홈판": {
+   "bench": {
+    "channel": "itemhome"
+   },
+   "voice": {
+    "name": "문정",
+    "voice_id": "tc_68f9c6a72f0f04a417bb136f"
+   },
+   "bgm": {
+    "id": "sweets"
+   },
+   "thumb_card_face": true,
+   "packs": {
+    "sfx": {
+     "pack": null,
+     "map": {}
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "sweets"
+    }
+   }
+  },
+  "안나픽판": {
+   "bench": {
+    "channel": "annapick"
+   },
+   "voice": {
+    "name": "유라",
+    "voice_id": "tc_61130d6cf89dd58a4c13295d"
+   },
+   "bgm": {
+    "id": "sweets"
+   },
+   "thumb_card_face": true,
+   "packs": {
+    "sfx": {
+     "pack": "팩01",
+     "map": {
+      "pop": "뽁"
+     }
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "sweets"
+    }
+   }
+  },
+  "연예인레시피판": {
+   "bench": {},
+   "voice": {},
+   "bgm": {},
+   "thumb_card_face": false,
+   "packs": {
+    "sfx": {},
+    "motion": {},
+    "bgm": {}
+   }
+  },
+  "잇썸홈판": {
+   "bench": {
+    "channel": "homedesignnote"
+   },
+   "voice": {
+    "name": "미나",
+    "voice_id": "kr-mina-expressive"
+   },
+   "bgm": {
+    "id": "honwaka_puppu"
+   },
+   "thumb_card_face": true,
+   "packs": {
+    "sfx": {
+     "pack": null
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "honwaka_puppu"
+    }
+   }
+  },
+  "잇템로그판": {
+   "bench": {
+    "channel": "ititemlog"
+   },
+   "voice": {
+    "name": "유라",
+    "voice_id": "tc_61130d6cf89dd58a4c13295d"
+   },
+   "bgm": {
+    "id": "sweets"
+   },
+   "thumb_card_face": false,
+   "packs": {
+    "sfx": {
+     "pack": "팩01",
+     "map": {
+      "pop": "뽁"
+     }
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "sweets"
+    }
+   }
+  },
+  "재미썸홈판": {
+   "bench": {
+    "channel": "evenshopping"
+   },
+   "voice": {
+    "name": "박창수",
+    "voice_id": "tc_6059dad0b83880769a50502f"
+   },
+   "bgm": {
+    "id": "honwaka_puppu"
+   },
+   "thumb_card_face": true,
+   "packs": {
+    "sfx": {
+     "pack": null
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "honwaka_puppu"
+    }
+   }
+  },
+  "키치잇판": {
+   "bench": {
+    "channel": "kitchit"
+   },
+   "voice": {
+    "name": "미나",
+    "voice_id": "kr-mina-expressive"
+   },
+   "bgm": {
+    "id": "qiuqiu"
+   },
+   "thumb_card_face": true,
+   "packs": {
+    "sfx": {
+     "pack": "팩01",
+     "map": {
+      "ding": "띠링",
+      "whoosh": "휙",
+      "pop": "뽁"
+     }
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "qiuqiu"
+    }
+   }
+  },
+  "트롯파파판": {
+   "bench": {
+    "channel": "uljimatrot"
+   },
+   "voice": {
+    "name": "박창수",
+    "voice_id": "tc_6059dad0b83880769a50502f"
+   },
+   "bgm": {
+    "id": "honwaka_puppu"
+   },
+   "thumb_card_face": false,
+   "packs": {
+    "sfx": {
+     "pack": null,
+     "map": {}
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "honwaka_puppu"
+    }
+   }
+  }
+ }
+}
