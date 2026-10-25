@@ -404,7 +404,7 @@
     "line_rgb": null,
     "line_scale": null,
     "outline": {
-     "px": 16,
+     "px": 7,
      "rgb": [
       0,
       0,
@@ -415,21 +415,14 @@
     "shadow": {
      "dx": 0,
      "dy": 0,
-     "blur": 30,
+     "blur": 24,
      "rgb": [
       0,
       0,
       0
      ]
     },
-    "glow": {
-     "px": 60,
-     "rgb": [
-      0,
-      0,
-      0
-     ]
-    },
+    "glow": null,
     "box": null,
     "italic": false,
     "letter_spacing": 0,
@@ -461,7 +454,8 @@
     "R0-bfj7JarA: 오푸스 HDN 손질본(자막 크기·번짐·글꼴 렌더 대조로 고침, 10-17)",
     "Ez7KsS2K_Pk: 오푸스 HDN 손질본(자막 크기·번짐·글꼴 렌더 대조로 고침, 10-17)",
     "seFkrVR-nYs: 오푸스 HDN 손질본(자막 크기·번짐·글꼴 렌더 대조로 고침, 10-17)",
-    "orBlWWhejtc: 오푸스 HDN 손질본(자막 크기·번짐·글꼴 렌더 대조로 고침, 10-17)"
+    "orBlWWhejtc: 오푸스 HDN 손질본(자막 크기·번짐·글꼴 렌더 대조로 고침, 10-17)",
+    "10-26 벤치 픽셀 대조(사장님 '흰 손글씨 얇은 외곽'): 잉크 둘레 거리별 밝기÷바탕 — 벤치 4편 밝은 바탕 9장 중앙 1~3px .09·3~5 .145·5~7 .17·7~9 .225·9~12 .365·12~16 .495·16~22 .68·22~30 .84·30~40 .92(검정 외곽 6~8px + 부드러운 그림자 ~30px). 옛 판(외곽 16·그림자 30·glow 60) = 0~16px 전부 0(검은 상자처럼 뭉침) 평균 차 0.237 → 외곽 7·그림자 blur 24·glow 없음 0.101(격자 27칸 중 1위권, 렌더러 그림자가 0.46 언저리 평평해 더 못 줄임). 도구 scratchpad hdn/grid.py·prof.py(compose_still 로 그려 잼)"
    ]
   }
  ],
@@ -528,12 +522,12 @@
     "seFkrVR-nYs": 927,
     "orBlWWhejtc": 927
    },
-   "default": 927,
+   "default": 661,
    "range": [
     473,
     927
    ],
-   "how": "편마다 고르는 값 — 기본 = 50편 bench 띠 최빈 무리 936(13/45편)−9. (이 프리셋 8편 중앙값은 두 무리 사이라 쓰지 않는다)"
+   "how": "10-26 기본 = 벤치 손글씨 자막 4편 잉크 위 y 중앙 − 10(DCXQ 587·_Qq 931·EINo 754·SU9Y 534 → 670.5, 렌더 실측 ink_top = y + 10 · 잉크 높이 56). 화면 위 1/3~가운데(사장님). 옛 기본 927(50편 bench 최빈 무리 936 − 9)은 상위 6편과 어긋났다"
   },
   "layers[text:caption].rgb": {
    "values": {
@@ -807,7 +801,7 @@
    "cps": 8.32,
    "atempo_range": [
     0.8,
-    1.35
+    1.25
    ],
    "line_rate": {
     "max_ratio": 1.05,
@@ -877,6 +871,45 @@
     "max_chars": 35,
     "at": ",",
     "why": "페이블 10-17 재발방지: 공백 뺀 35자 넘는 문장은 쉼표 자리에서 나눠 따로 넣는다(알람 끝 문장 53자를 4.2초에 몰아 읽음)"
+   },
+   "atempo_why": "10-26 상한 1.35 → 1.25(타입캐스트 ≤1.25 — 칼카피_시작 §12 '빠르게 돌리면 발음이 이상해진다'). 박창수 tts_tempo 1.2 로 받으면 atempo ≈1.0(15호 실측)",
+   "rhythm": {
+    "_why": "판 리듬 4칸(관제263 페이블 E1·E2·E4, 읽기 주인 hybrid/styles.rhythm · 관문 render_bench.rhythm_gate — preset_gates.to_bench 가 st.rhythm 으로 넘긴다). 벤치 두유노 조회 상위 6편(_QqLEH4qlFQ·DCXQjaWcZ-g·iiBUscncqIk·WTgQPFfdSOQ·EINoAh8C9rQ·SU9YofB1IoI) — kal_analyze.media_of 와 같은 자(scratchpad bench_diff/media.json, 10-26)",
+    "cut_median": {
+     "v": 1.07,
+     "why": "벤치 6편 원본 컷 길이 중앙: _Qq 0.97·DCXQ 1.15·iiBU 1.8·WTgQ 0.99·EINo 1.3·SU9Y 0.83 → 중앙 1.07(범위 0.83~1.8). 옛 잇썸홈 6편(o1~o6) 0.97~1.53(중앙 1.28). rhythm_gate 는 진짜 컷 중앙이 ×1.3(1.39초)을 넘으면 멈춘다"
+    },
+    "hook_cuts_3s": {
+     "min": 2,
+     "why": "벤치 6편 0.1~3.0초 안 컷 경계 수(media_of cut_at): _Qq 3·DCXQ 2·iiBU 1·WTgQ 3·EINo 1·SU9Y 4 → 중앙 2.5 · p25 1.25 → min 2(키치잇판·잇템로그판처럼 중앙 쪽, 내림)"
+    },
+    "plain_share": {
+     "v": 0.79,
+     "tol": 0.12,
+     "why": "벤치 6편 줄판독 119줄 중 꾸밈 없는 줄(kal_analyze._decorated 전부 거짓) 94 = 0.79(편별 DCXQ 0.85·EINo 0.737·SU9Y 0.816·WTgQ 0.667·_Qq 0.895·iiBU 0.5(2줄)). 허용 ±0.12 = 2줄 편 빼고 편별 최대 거리(WTgQ 0.123). preset_make 자막은 등장 효과 없음(instant 110/112) — 0초 표지 카드만 꾸밈"
+    },
+    "photo_share_max": {
+     "v": 0.0,
+     "why": "벤치 6/6편 화면 = 해외 원본 영상 클립(스타일분석 §3·§10 눈 — 사진·쇼핑몰 그림 컷 0). 정지 사진 컷 금지(사장님 '사진·멈춤 없이', 창고판 README)"
+    }
+   },
+   "reuse": {
+    "adjacent_run": true,
+    "why": "사장님 10-26 결정 '가': 한 동작을 이어서 반복하는 컷(같은 원본·화면에서 바로 이어 붙은 컷 줄기)은 B13 거리 검사에서 뺀다 — 겹침(같은 프레임 다시)·사이 컷 낀 재등장은 계속 ×. 벤치 실측(channel/homedesignnote/preset/repeat_measure.py, 6편 컷 짝 그림 상관): 이웃 컷이 같은 촬영 줄기인 짝 EINo 0.88·0.80·DCXQ 0.67 등 · 이웃 짝 중 같은 그림(≥0.95) 0 → 겹침은 계속 ×. 판정 주인 quality_gate.reuse_violations_bench(adjacent_run)"
+   },
+   "cover_card": {
+    "font": "BMDOHYEON.ttf",
+    "px": 112,
+    "stroke": 11,
+    "line_gap": 1.12,
+    "y": 0.42,
+    "main": [
+     255,
+     255,
+     255
+    ],
+    "accent": "#7FD5E2",
+    "why": "0초 표지 카드 — 벤치 6/6편 frame0 = 장면 위 굵은 큰 글 2~3줄(잉크 80~140px, 흰 + 강조 줄 하늘 #7FD5E2 2편·파랑·노랑 각 1, 검정 외곽·그림자), 1프레임(4편)·3프레임(WTgQ) (스타일분석 §2·§9, 줄판독 frame0, work/f0_all.jpg 눈). 칼카피 규칙 '맨 앞 2프레임 썸네일 카드·3안 중 무작위'(thumb.THUMB_FRAMES·pick_option)와 합침: 프레임 수·3안 무작위는 그 규칙, 그림은 벤치 꼴 — 빨간 원·화살표·ㅋㅋ/ㄷㄷ 꼬리표는 벤치 0/6이라 안 쓴다. 문구 꼴 = 벤치 경고('절대 사지 마세요!')·명령('무조건 이거사세요!')·놀람 질문('이것도 만든다고?')·사연('와이프의 취미')·단정('신혼가전 필수템'). y 0.42 = 벤치 카드 가운데 높이(DCXQ 575~795 · f0_all 4편 40~55%) · 글꼴 BMDOHYEON(굵은 둥근 고딕 — 벤치 글꼴 미확정, 눈 대조)"
    }
   }
  },

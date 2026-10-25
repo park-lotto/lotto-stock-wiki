@@ -363,9 +363,12 @@ def line_cps_verdict(table: dict | None, tol: float | None) -> tuple[bool | None
     return (not bad), f"렌더 기록 평균 {mean:.2f}자/초 ±{tol:.0%} · " + " ".join(f"{k}:{v}" for k, v in table.items()) + (f" · 밖 {bad}" if bad else "")
 
 
-def reuse_violations_bench(cuts: list[dict], src_len: dict) -> list[str]:
+def reuse_violations_bench(cuts: list[dict], src_len: dict, adjacent_run: bool = False) -> list[str]:
     """B13(공용 렌더러 판 — 표준 §11 ②): 같은 소스에서 ① 프레임을 하나라도 공유(겹침)하면 항상 × ② 겹치지 않아도 거리 < min(3.0, 0.25×소스 길이)
     이고 이어 붙인 앞으로 가기(앞 컷 끝 = 다음 컷 시작, 원본에서 앞으로)가 아니면 ×. 사진·짤은 B6 몫이라 뺀다.
+    adjacent_run(판 칸 reuse.adjacent_run — 잇썸홈 판만, 사장님 10-26 결정 '가'): 화면에서 **바로 이어 붙은**(사이 컷 0) 같은 소스 컷 줄기 안에서는
+    ②거리를 보지 않는다(한 동작을 각도·순간만 바꿔 이어서 반복 — 벤치 두유노 6편 이웃 컷 같은 촬영 줄기 실측, 이웃 짝 같은 그림 0: repeat_measure.py).
+    ①겹침(같은 프레임을 다시 보임)은 그대로 ×, 사이에 다른 컷이 끼어 몇 초 뒤 같은 장면이 다시 나오는 것도 그대로 ×.
     (옛 길 itssum·jaemi 는 checks.reuse_violations 그대로 — 그쪽 ±3초는 긴 원본 전제)"""
     from tools.calcopy.hybrid.render_bench import IMG_EXT
     eps = 1 / 30
@@ -378,6 +381,14 @@ def reuse_violations_bench(cuts: list[dict], src_len: dict) -> list[str]:
         sk, ak, _, ck = rows[k]
         fwd = sk == sp and abs(float(cp["t1"]) - float(ck["t0"])) < 0.06 and ak >= bp - eps
         chain[k] = chain[k - 1] if fwd else k
+    run = list(range(len(rows)))      # adjacent_run 줄기 — 화면에서 바로 이어 붙은 같은 소스 컷(시각 순서 그대로, 다른 소스 컷이 끼면 끊긴다)
+    if adjacent_run:
+        allc = sorted(cuts, key=lambda c: float(c["t0"]))
+        nxt = {id(a): b for a, b in zip(allc, allc[1:])}
+        for k in range(1, len(rows)):
+            a, b = rows[k - 1][3], rows[k][3]
+            if nxt.get(id(a)) is b and rows[k - 1][0] == rows[k][0] and abs(float(a["t1"]) - float(b["t0"])) < 0.06:
+                run[k] = run[k - 1]
     for i in range(len(rows)):
         for j in range(i + 1, len(rows)):
             s1, a1, b1, c1 = rows[i]
@@ -391,7 +402,7 @@ def reuse_violations_bench(cuts: list[dict], src_len: dict) -> list[str]:
             adjacent = abs(float(c1["t1"]) - float(c2["t0"])) < 0.06 and a2 >= b1 - eps
             th = min(B13_GAP_MAX, B13_GAP_FRAC * float(src_len.get(s1) or 0)) if src_len.get(s1) else B13_GAP_MAX
             gap = max(a1, a2) - min(b1, b2)
-            if not adjacent and gap < th:
+            if not adjacent and gap < th and run[i] != run[j]:
                 bad.append(f"거리 {gap:.2f}초 < {th:.2f}: {tag}")
     return bad
 

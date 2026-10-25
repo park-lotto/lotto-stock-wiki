@@ -12,7 +12,7 @@
         --desktop-dir / --results   바탕화면·결과물 목록 경로 바꾸기(시험용)
 
 판단 주인: 채널 차이 = 프리셋 manifest `channel_rules.make` 한 곳(코드에 채널 이름 분기 없음). 숏템 기능은 부르기만 —
-  틀 렌더 scene_style.compose · 효과음 sfx_pack.events · 줄 시각 narr_video.time_steps · 이음매 check_seams · 중복 check_overlap.py.
+  틀 렌더 scene_style.compose · 효과음 sfx_pack.events · 줄 시각 narr_video.time_steps · 이음매 check_seams · 재사용 quality_gate.reuse_violations_bench(10-26 — 옛 check_overlap.py 대신).
 캐시(이어하기·수정 속도): <자료폴더>/_make_cache/
   tts/   (목소리|속도|글) → mp3             parts/  컷 조각(소스·크기·시각·크롭·프레임·인코딩) → mp4
   layers/ (틀 스냅샷+장면 문맥+렌더러 파일) → 틀 그림   scenes/ 장면 합성 ffmpeg 명령(입력 내용 해시) → mp4
@@ -39,7 +39,6 @@ if str(ROOT) not in sys.path:
 
 FPS = 30
 DATA_ROOT = Path("C:/숏템_칼카피")
-OVERLAP_TOOL = ROOT / "channel/evenshopping/작품1_총알람/check_overlap.py"   # B13 중복 판단 주인(재미썸홈 수정3 담당) — 부르기만
 RESULTS = ROOT / "channel/결과물.json"
 FF_PAR = 2            # 동시 ffmpeg 상한(담당 공통 규칙 ≤4, 지시 ≤2)
 from tools.calcopy.engine.encoder import cpu_retry, venc  # noqa: E402 — 98 #79
@@ -564,6 +563,52 @@ def render_parts(w, cfg, cache: Path, out: Path, log: dict) -> tuple[Path, list]
     return mat, mat_map
 
 
+# ── 4-1) 0초 표지 카드(판 칸 make.cover_card — 켠 판만) ─────────────────────────────
+def cover_card(w, cfg, mat: Path, mat_map: list, vid: Path, out: Path, log: dict) -> dict | None:
+    """(판단 주인 — preset_make 표지 카드) 완성 영상 맨 앞 thumb.THUMB_FRAMES 프레임을 '장면 + 굵은 큰 글 2~3줄' 카드로 덮는다.
+    판 칸 make.cover_card{font, px, stroke, y, main, accent, why} · 편 칸 <작품>/썸네일.json {options:[{id, why, lines:[[글, 'main'|'accent'], …], cut?, t?}], pick}
+    보일 안 = thumb.pick_option(무작위 1안 고정 — 사장님 10-24 '3안 중 랜덤'). 장면 = 그 안의 cut 번째 컷(기본 0 = 첫 장면)의 t 초(굽은 재료 그대로).
+    글 그리기 = thumb._shadow_text(굵은 글 + 검정 외곽 + 번진 그림자 — 썸네일 카드와 같은 그리기). 칸이 없으면 None(종전 그대로)."""
+    C = cfg.get("cover_card")
+    if not C:
+        return None
+    sp = Path(w["dir"]) / "썸네일.json"
+    if not sp.exists():
+        raise SystemExit(f"판이 표지 카드(make.cover_card)를 켰는데 {sp} 가 없다 — 3안(options: id·why·lines)을 먼저 적어라")
+    from PIL import Image
+    from tools.calcopy.hybrid import thumb as TH
+    from tools.calcopy.hybrid.render_bench import _font
+    spec = json.loads(sp.read_text(encoding="utf-8"))
+    pick = TH.pick_option(Path(w["dir"]), spec)
+    W, H = cfg["window"]
+    fonts = _font(C["font"], C["px"])
+    jpgs = {}
+    for o in spec["options"]:
+        k = int(o.get("cut", 0))
+        t = sum(n for _, n in mat_map[:k]) / FPS + float(o.get("t", 0.0))
+        im = Image.open(io.BytesIO(run_bytes(["ffmpeg", "-v", "error", "-ss", f"{t:.3f}", "-i", mat, "-frames:v", "1", "-vf", f"scale={W}:{H}",
+                                              "-f", "image2pipe", "-vcodec", "png", "-"]))).convert("RGBA")
+        lay = Image.new("RGBA", im.size, (0, 0, 0, 0))
+        lines = o["lines"]
+        lh = int(C["px"] * float(C.get("line_gap", 1.12)))
+        y0 = int(H * float(C["y"])) - lh * (len(lines) - 1) // 2
+        for i, (txt, kind) in enumerate(lines):
+            col = tuple(int(C[kind][j:j + 2], 16) for j in (1, 3, 5)) if isinstance(C[kind], str) else tuple(C[kind])
+            TH._shadow_text(lay, (W // 2, y0 + i * lh), [txt], fonts, col, int(C["stroke"]))
+        im.alpha_composite(lay)
+        dst = Path(w["dir"]) / "thumb" / f"{o['id']}.jpg"
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        im.convert("RGB").save(dst, quality=94)
+        jpgs[o["id"]] = dst
+    tmp = vid.with_name("video_cover.mp4")
+    run(["ffmpeg", "-y", "-v", "error", "-i", vid, "-i", jpgs[pick], "-filter_complex",
+         f"[1:v]scale={W}:{H},setsar=1[t];[0:v][t]overlay=0:0:enable='lt(n,{TH.THUMB_FRAMES})',format=yuv420p[v]", "-map", "[v]", *ENC, tmp])
+    tmp.replace(vid)
+    info = {"pick": pick, "frames": TH.THUMB_FRAMES, "jpg": str(jpgs[pick]), "options": [str(p) for p in jpgs.values()]}
+    log["cover_card"] = info
+    return info
+
+
 # ── 5) 틀 합성(숏템 scene_style.compose 를 부르고, 같은 입력의 레이어·장면은 캐시에서) ──────────────
 def _renderer_sig() -> str:
     html = ROOT / "out/scene-style-ui-showcase.html"
@@ -750,9 +795,11 @@ def sound(w, cfg, narr: Path, total: float, out: Path, log: dict) -> Path:
             stl.append({"beat_idx": li, "t0": round(t0, 3), "dur": round(t1 - t0, 3), "narration": " ".join(p["text"] for p in mine),
                         "caption_lines": [p["text"] for p in mine], "cap_durs": [round((p["f1"] - p["f0"]) / FPS, 3) for p in mine],
                         "cap_lead": 0.0, "cap_offset": 0.0, "role": rmap.get(line["slot"], line["slot"])})
-        pname, pdir = SP.pack_for(sfx.get("pack_customer", 0))
+        pname, pdir = SP.pack_for(sfx.get("pack_customer", 0), override=sfx.get("pack_override"))   # pack_override = 팩 번호(1부터) — 벤치 소리에 가장 가까운 팩을 판이 고정(재미썸홈 10-26)
         ring = int(sfx.get("ring_every") or 1)   # 칸 n개마다 한 칸만 울림(나머지는 팩의 mute_beats 로) — 썰템쇼 벤치 밀도. 없으면 종전(전 칸)
         mute = [li for li in range(len(stl)) if li % ring] if ring > 1 else []
+        if sfx.get("mute_first") and 0 not in mute:   # 첫 칸 효과음(오프너) 끔 — 벤치에 오프너 0(재미썸홈 10-26)
+            mute.append(0)
         mute += [li for li, l in enumerate(w["lines"]) if l.get("orig") and li not in mute]   # 원음 위 효과음 금지(규칙서 ⑥)
         pack = {"name": pname, "dir": pdir, "density": sfx.get("density", "normal"), "level": sfx.get("level", "normal"), "mute_beats": mute}
         evs = SP.events(stl, pack)
@@ -850,10 +897,9 @@ def checks(w, cfg, final: Path, narr: Path, sfx_n: int, out: Path, work: Path, p
     add("B6", "같은 짤 최대 컷", mx, mx <= max(C["same_meme_max"], 0) or (C["same_meme_max"] == 0 and mx == 0), f"≤ {C['same_meme_max']}")
     ys = (edge_y(final, 0.1), edge_y(final, d - 0.15))
     add("B9", "첫/끝 밝기 Y", list(ys), min(ys) >= C["edge_y_min"], f"≥ {C['edge_y_min']}")
-    r = subprocess.run([sys.executable, str(OVERLAP_TOOL), str(out)], capture_output=True, text=True, encoding="utf-8", errors="replace",
-                       stdin=subprocess.DEVNULL, env={**__import__("os").environ, "PYTHONUTF8": "1"})
-    nb = re.findall(r"겹침/±3초:\s*(\d+)", r.stdout)
-    add("B13", "같은 소스 중복(±3초)", int(nb[-1]) if nb else f"도구 실패 rc={r.returncode}", r.returncode == 0, "0 (check_overlap.py)")
+    b13 = reuse_rows(w, cfg)
+    add("B13", "같은 소스 재사용(겹침 ×·거리 min(3, 0.25×길이)" + (" · 바로 이어 붙은 같은 소스 줄기 거리 허용" if (cfg.get("reuse") or {}).get("adjacent_run") else "") + ")",
+        b13 or 0, not b13, "0 (quality_gate.reuse_violations_bench)")
     smax = C["sfx_max"] if C.get("sfx_max") is not None else len(w["lines"]) + int(C.get("sfx_max_extra") or 0)
     add("B14", "효과음 발수", sfx_n, sfx_n <= smax, f"≤ {smax}" + (f" (density {cfg['sfx'].get('density')})" if cfg.get("sfx") else ""))
     lr = plan.get("line_rate", {}).get("after") or []
@@ -876,6 +922,16 @@ def checks(w, cfg, final: Path, narr: Path, sfx_n: int, out: Path, work: Path, p
         except Exception as e:  # noqa: BLE001 — 못 쟀으면 통과로 치지 않는다
             add("B17", "자막↔소리 줄 시작(받아쓰기)", f"못 잼: {e}", False, f"≤ {LS.LIMIT}초 (check_line_sync)")
     return rows + plan_rules(w, cfg, plan)
+
+
+def reuse_rows(w, cfg) -> list[str]:
+    """B13 판정 = quality_gate.reuse_violations_bench 한 곳(10-26 — 옛 check_overlap.py ±3초 두 벌을 걷음). 판 칸 reuse.adjacent_run 을 넘긴다.
+    컷 = 원본에서 읽는 구간(ss ~ ss + n/FPS × speed) · 화면 시각 f0/FPS. 짤 컷은 B6 몫이라 뺀다."""
+    from tools.calcopy.hybrid.quality_gate import reuse_violations_bench
+    cuts = [{"src": str(c["path"]), "ss": float(c["ss"]), "dur": c["n"] / FPS * float(c.get("speed", 1.0)), "t0": c["f0"] / FPS,
+             "t1": (c["f0"] + c["n"]) / FPS, "line": f"줄{w['pieces'][c['pieces'][0]]['line'] + 1}"} for c in w["cuts"] if not c["meme"]]
+    lens = {x["src"]: float(c["src_dur"]) for x, c in zip(cuts, [c for c in w["cuts"] if not c["meme"]]) if c.get("src_dur")}
+    return reuse_violations_bench(cuts, lens, bool((cfg.get("reuse") or {}).get("adjacent_run")))
 
 
 def plan_rules(w, cfg, plan) -> list:
@@ -995,6 +1051,7 @@ def make_one(pdir: Path, wdir: Path, a) -> dict:
     snap, tl, head = snapshot_and_timeline(w, M, cfg, pdir)
     vid, work = out / "video.mp4", out / "work"
     compose_cached(mat, mat_map, tl, snap, head, vid, work, cache, log)
+    cover_card(w, cfg, mat, mat_map, vid, out, log)
     clk.lap("틀 합성")
     total = sum(c["n"] for c in w["cuts"]) / FPS
     if w["S"].get("source_audio"):
@@ -1021,7 +1078,7 @@ def make_one(pdir: Path, wdir: Path, a) -> dict:
     sheet_1s(final, out / "sheet_1s.jpg")
     ok = all(r["ok"] for r in rows)
     fm = md5(final)
-    log["gate_record"] = str(PG.record(wdir, fm, rows, ["G-1 대본 글", "② 줄별 받아쓰기", "③ 장면 경계", "⑤ 컷 길이", "⑦ 멈춤", "④ 남의 글자·얼굴", "⑧ 길이", "사진 비중"]))
+    log["gate_record"] = str(PG.record(wdir, fm, rows, ["G-1 대본 글·판 대본 규칙", "② 줄별 받아쓰기", "리듬(판 rhythm)", "③ 장면 경계", "⑤ 컷 길이", "⑦ 멈춤", "④ 남의 글자·얼굴", "⑧ 길이", "사진 비중"]))
     log["final"] = {"path": str(final), "md5": fm, "seconds": round(dur_of(final), 2)}
     brand = (M.get("brand") or {}).get("channel_name") or M.get("channel_rules", {}).get("brand") or M.get("slug")
     desk_name = f"칼카피_{brand}_{w['title_short']}{'_' + a.tag if a.tag else ''}.mp4"

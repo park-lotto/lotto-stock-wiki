@@ -5,7 +5,8 @@
     render_bench 의 렌더 전 관문(남의 글자·멈춤·장면 경계·컷 길이·받아쓰기·대본 글)과 품질 관문 기록이 0건이었다.
     실결함: 작품6 취객선비잔 남의 글자(쇼핑몰 '일시품절' 화면)·멈춤 · 작품9 B·C 읽는 글 영문 'SNS' · 창고판 옥수수커터 검사 미달인데 손으로 납품.
 판단 주인(여기서 새로 정하는 판단 없음 — 부르기만):
-  G-1 대본 글        = hybrid/script_audit.text_defects
+  G-1 대본 글        = hybrid/script_audit.text_defects + script_audit.audit(판 대본 규칙, 10-26)
+  리듬               = render_bench.rhythm_gate(판 rhythm 칸 — manifest make.rhythm, 10-26)
   ② 줄별 받아쓰기    = engine/narr_verify.gate_sent
   ③⑤⑦④ 컷           = hybrid/render_bench.cut_boundary_gate · cut_length_gate · cut_still_gate · cut_content_gate · photo_gate
   ⑧ 길이             = render_bench.plan_length_gate(진짜 목소리 길이일 때만)
@@ -92,9 +93,24 @@ def to_bench(w: dict, cfg: dict, name: str = "") -> dict:
 
 # ── 관문 ─────────────────────────────────────────────────────────────────
 def text_gate(w: dict) -> list[str]:
-    """G-1(TTS 전) — preset_make 는 TTS 를 덩어리마다 따로 합성하므로 joined=False(줄 끝 부호 규칙 없음)."""
+    """G-1(TTS 전) — preset_make 는 TTS 를 덩어리마다 따로 합성하므로 joined=False(줄 끝 부호 규칙 없음).
+    + 판 대본 규칙 = script_audit.audit(대본.json) 의 실패 규칙(10-26 — 재미썸홈 beats·sibling_repeat, 잇썸홈 itssum 엔진·forbid·alt_disclosed).
+    audit 안의 text: 규칙은 joined=True 판정이라 빼고 위 joined=False 판정만 센다(같은 글 규칙 두 번 세지 않게)."""
     from tools.calcopy.hybrid import script_audit as SA
-    return [f"G-1 {x['line']} {x['rule']}: {x['why']}" for x in SA.text_defects(bench_script(w), joined=False)]
+    bad = [f"G-1 {x['line']} {x['rule']}: {x['why']}" for x in SA.text_defects(bench_script(w), joined=False)]
+    sp = Path(w["dir"]) / "대본.json" if w.get("dir") else None
+    if sp and sp.exists():
+        try:
+            r = SA.audit(sp)
+        except Exception as e:  # noqa: BLE001 — 못 쟀으면 통과로 치지 않는다
+            return bad + [f"G-1 대본 규칙 못 잼({type(e).__name__}: {str(e)[:160]})"]
+        for x in r.get("rules") or []:
+            if not x["ok"] and not str(x["kind"]).startswith("text:"):
+                bad.append(f"G-1 대본 규칙 {x['kind']}: {str(x['why'])[:200]}")
+        e = r.get("engine")
+        if e and not e.get("ok"):
+            bad.append(f"G-1 대본 엔진({r['version']}): judge {e.get('judge')} · points {(e.get('points') or {}).get('why')}")
+    return bad
 
 
 def voice_gate(w: dict, cfg: dict, cache: Path, full: Path, out: Path, log=print) -> list[str]:
@@ -141,6 +157,7 @@ def cut_gates(G: dict, doc: Path | None, R: Path, log=print) -> list[str]:
     from tools.calcopy.hybrid import render_bench as RB
     T, Ts, M, st = G["T"], G["Tsrc"], G["M"], G["st"]
     bad = []
+    bad += [f"리듬 {x}" for x in RB.rhythm_gate(T, st, Path(M["cand_dir"]))]    # 판 rhythm 칸(cut_median·hook_cuts_3s) — 판정 주인 render_bench.rhythm_gate(10-26 연결)
     bad += [f"⑤ {x}" for x in RB.cut_length_gate(T, st)]
     bad += [f"⑧ {x}" for x in RB.plan_length_gate(T, st, G["measured"])]
     bad += [f"사진 {x}" for x in RB.photo_gate(T, st)]

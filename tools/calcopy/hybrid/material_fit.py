@@ -462,7 +462,7 @@ def action_order(S: dict, M: dict, log=print) -> list[str]:
     return warn
 
 
-def _new_viol(base: list[dict], cand: dict, src_len: dict) -> list[str]:
+def _new_viol(base: list[dict], cand: dict, src_len: dict, adjacent_run: bool = False) -> list[str]:
     """cand 가 base 컷들과 새로 만드는 재사용 위반 — 판정은 quality_gate.reuse_violations_bench. 같은 원본 컷 **목록 전체**로 한 번씩 부른다
     (9a8507108 부터 그 함수는 '이어 붙인 앞으로 가기' 사슬을 컷 목록으로 본다 — 짝으로 부르면 사슬이 끊겨 이어진 조각끼리 거리 위반으로 오탐,
     기미크림 세션메모 제안 · 10-25 박정수 v2 시험(옛 rhythm_cuts 로 나눈 N7 조각)이 시슬리 쿠션 장면으로 밀려남)."""
@@ -470,8 +470,8 @@ def _new_viol(base: list[dict], cand: dict, src_len: dict) -> list[str]:
     same = sorted([x for x in base if x["src"] == cand["src"]], key=lambda x: float(x.get("t0") or 0))
     if not same:
         return []
-    before = set(reuse_violations_bench(same, src_len))
-    return [v for v in reuse_violations_bench(sorted(same + [cand], key=lambda x: float(x.get("t0") or 0)), src_len) if v not in before]
+    before = set(reuse_violations_bench(same, src_len, adjacent_run))      # adjacent_run = 판 칸 reuse.adjacent_run(잇썸홈 판 '가' — 판정은 그 함수)
+    return [v for v in reuse_violations_bench(sorted(same + [cand], key=lambda x: float(x.get("t0") or 0)), src_len, adjacent_run) if v not in before]
 
 
 def respace_reuse(cuts: list[dict], src_dir: Path | None, log=print) -> list[str]:
