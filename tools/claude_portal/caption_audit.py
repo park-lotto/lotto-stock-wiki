@@ -40,7 +40,7 @@ MEASURE_JS = r"""()=>{
  const pv=document.querySelector('#a-live-preview');if(!pv)return {err:'no preview'};
  const pr=pv.getBoundingClientRect();
  const vis=e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);return r.width>0&&r.height>0&&s.visibility!=='hidden'&&s.display!=='none'&&Number(s.opacity)>0.05};
- const caps=[...pv.querySelectorAll('[data-edit-bind="caption"]')].filter(vis);
+ const caps=[...pv.querySelectorAll('[data-edit-bind="caption"]')].filter(e=>vis(e)&&(e.innerText||'').trim());
  const field=document.querySelector('.layout-a [data-field-key="caption"]');
  const ta=field&&field.querySelector('[data-bind="caption"]');
  const g=window.sceneStyle&&window.sceneStyle.geometry?window.sceneStyle.geometry():{};
@@ -50,7 +50,9 @@ MEASURE_JS = r"""()=>{
    noteShown:!!(document.querySelector('.hook-caption-note')&&!document.querySelector('.hook-caption-note').hidden),caps:[]};
  for(const e of caps){const r=e.getBoundingClientRect(),s=getComputedStyle(e);
    // 글자 색은 자식 span 에 있을 수 있다 — 첫 글자 노드의 부모 색도 같이 본다
-   let inner=e;const w=document.createTreeWalker(e,NodeFilter.SHOW_TEXT);const t=w.nextNode();if(t&&t.parentElement)inner=t.parentElement;const si=getComputedStyle(inner);
+   // 강조 낱말 span 이 첫 글자일 수 있다(실측: 화자 대사 썰형) — 모든 글자 노드 부모의 색·글꼴을 모은다
+   let inner=e;const w=document.createTreeWalker(e,NodeFilter.SHOW_TEXT);const cols=new Set(),fams=new Set();let t;while((t=w.nextNode())){if(!t.textContent.trim()||!t.parentElement)continue;const q=getComputedStyle(t.parentElement);cols.add(q.color);fams.add(q.fontFamily);inner=inner===e?t.parentElement:inner;}
+   const si={color:[...cols].join(' / ')||getComputedStyle(e).color,fontFamily:[...fams].join(' / ')||getComputedStyle(e).fontFamily};
    out.caps.push({cls:e.className,text:(e.innerText||'').trim(),fontSize:s.fontSize,fontFamily:si.fontFamily,color:si.color,
      bg:s.backgroundColor,x:+((r.left-pr.left)/pr.width*100).toFixed(2),y:+((r.top-pr.top)/pr.height*100).toFixed(2),
      w:+(r.width/pr.width*100).toFixed(2),h:+(r.height/pr.height*100).toFixed(2),transform:s.transform});}
@@ -83,7 +85,7 @@ def pix_ratio(a: Path, b: Path) -> float:
     if ia.size != ib.size:
         return 1.0
     diff = ImageChops.difference(ia, ib).convert("L").point(lambda v: 255 if v > 24 else 0)
-    return sum(1 for v in diff.getdata() if v) / (ia.size[0] * ia.size[1])
+    return sum(1 for v in diff.get_flattened_data() if v) / (ia.size[0] * ia.size[1])
 
 
 def changed_keys(m0, m1):
@@ -105,11 +107,24 @@ def changed_keys(m0, m1):
     return ks
 
 
-def audit_preset(pw, base, pid, name, out: Path):
+def open_caption_row(fr, fl, res):
+    """오른쪽 '문구/텍스트' 탭의 '자막' 줄을 펼친다(이미 열려 있으면 그대로 — 다시 누르면 접힌다)"""
+    from playwright.sync_api import TimeoutError as PWTimeout
+    is_open = fr.evaluate("""()=>{const f=document.querySelector('.layout-a [data-field-key="caption"]');if(!f)return null;const d=f.closest('details');return d?d.open:true}""")
+    if is_open:
+        return
+    try:
+        fl.locator("details > summary").filter(has_text="자막").first.click(timeout=3000)
+    except PWTimeout:
+        res["notes"].append("자막 줄 summary 못 찾음")
+
+
+def audit_preset(pw, base, pid, name, out: Path, style_card: str = ""):
     from playwright.sync_api import TimeoutError as PWTimeout
     d = out / pid
     d.mkdir(parents=True, exist_ok=True)
-    http_json(base + "api/select", {"preset": pid})
+    if not style_card:
+        http_json(base + "api/select", {"preset": pid})
     b = pw.chromium.launch()
     ctx = b.new_context(viewport={"width": 1500, "height": 1600})
     pg = ctx.new_page()
@@ -130,6 +145,9 @@ def audit_preset(pw, base, pid, name, out: Path):
         pg.wait_for_timeout(2500)
         fl = pg.frame_locator('iframe[src*="scene-style-ui-showcase"]')
         prev = fl.locator("#a-live-preview")
+        if style_card:   # 대조군: 편집기 왼쪽 '장면' 탭의 기본 틀 카드를 직접 고른다(칼카피 틀이 아닌 고정형)
+            fl.get_by_text(style_card, exact=True).first.click()
+            pg.wait_for_timeout(1500)
         m = lambda: fr.evaluate(MEASURE_JS)   # noqa: E731
         # ② 본문 장면으로
         cur = m()
@@ -141,10 +159,7 @@ def audit_preset(pw, base, pid, name, out: Path):
             pg.wait_for_timeout(1500)
             cur = m()
         # 자막 줄 펼치기(문구/텍스트 탭)
-        try:
-            fl.locator(".edit-pane summary, details > summary").filter(has_text="자막").first.click(timeout=3000)
-        except PWTimeout:
-            res["notes"].append("자막 줄 summary 못 찾음")
+        open_caption_row(fr, fl, res)
         pg.wait_for_timeout(800)
         # 자막박스 크기·색상 접힌 칸 열기(있으면)
         fr.evaluate("""()=>document.querySelectorAll('.layout-a [data-field-key="caption"] details').forEach(x=>x.open=true)""")
@@ -249,6 +264,7 @@ def main() -> int:
     ap.add_argument("--out", default=str(DEF_OUT))
     ap.add_argument("--only", default="")
     ap.add_argument("--json", default="")
+    ap.add_argument("--positive", default="", help="대조군만 돌림: 편집기 왼쪽 기본 틀 카드 이름(예: '고정 스타일 01')")
     a = ap.parse_args()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -256,7 +272,9 @@ def main() -> int:
     orig = st.get("current")
     changed0 = json.dumps(st.get("changed"), sort_keys=True, ensure_ascii=False)
     presets = [(p["id"], p["name"]) for p in st.get("presets", [])]
-    if a.only:
+    if a.positive:
+        presets = [("positive", a.positive)]
+    elif a.only:
         want = set(a.only.split(","))
         presets = [p for p in presets if p[0] in want]
     from playwright.sync_api import sync_playwright
@@ -266,7 +284,7 @@ def main() -> int:
             for pid, name in presets:
                 t = time.time()
                 try:
-                    r = audit_preset(pw, a.base, pid, name, out)
+                    r = audit_preset(pw, a.base, pid, name, out, style_card=a.positive)
                 except Exception as e:
                     r = {"pid": pid, "name": name, "status": f"오류: {str(e)[:200]}", "controls": {}}
                 r["sec"] = round(time.time() - t, 1)
