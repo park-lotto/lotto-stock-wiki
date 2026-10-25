@@ -998,6 +998,9 @@ def _site(st: dict, rule: dict, row: dict, locate, log: list) -> dict | None:
     got = locate(st["target"], row, st)
     if not got:
         why = getattr(locate, "last_why", None)          # fx_target.locator 가 남긴 실패 사유(자막 옆 후보마다 왜 막혔나 등)
+        if why is None and not hasattr(locate, "last_why"):      # 렌더러가 locator 를 감싼 경우(render_bench.make_locate) — 모듈에 남은 마지막 사유
+            from tools.calcopy.hybrid import fx_target as FX
+            why = FX.LAST_WHY
         log.append(f"스티커 {st['kind']} 자리 검출 실패({tg}) → {row['line']}「{row['text']}」 안 붙임(억지로 안 둔다)"
                    + (f" — 사유: {why}" if why else " — 사유 없음(검출기가 안 남김)"))
         return None

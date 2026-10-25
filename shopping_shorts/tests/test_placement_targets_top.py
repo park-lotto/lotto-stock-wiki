@@ -368,3 +368,22 @@ def test_colorflash_vocab_and_placement_for_shark():
     rows = [{"line": f"L{i}", "j": 0, "speaker": "narr" if i % 2 else "orig", "text": "가나다", "t0": i * 1.5, "t1": i * 1.5 + 1.4} for i in range(14)]
     p = PL.place(rows, st, "seed", cuts=[{"t0": i * 1.5, "dur": 1.5} for i in range(14)])
     assert p["transitions"] and all(e["kind"] == "colorflash" for e in p["transitions"]), p["transitions"]
+
+
+def test_fail_reason_reaches_log_through_wrapped_locate(monkeypatch):
+    """render_bench.make_locate 처럼 locator 를 한 번 더 감싸도 실패 사유가 배치 로그에 닿는다(fx_target.LAST_WHY) — ep13 kk_doodle '사유 없음' 실측."""
+    from tools.calcopy.hybrid import fx_target as FX
+    st = copy.deepcopy(ST.load("잇템로그판"))
+    st["placement"]["rules"].pop("deco_pos", None)
+    st["placement"]["rules"]["stickers"] = {"kk_doodle": {"target": "caption_side", "why": "시험"}}
+    rid = PL.reference(st, "ep13")["id"]
+    st["placement"]["reference"] = rid
+    for v in st["placement"]["counted"]["videos"]:
+        if v["id"] == rid:
+            v["stickers"] = {"kk_doodle": 1}
+
+    def wrapped(target, row, s):          # last_why 칸 없는 감싼 함수
+        monkeypatch.setattr(FX, "LAST_WHY", "띠 위 얼굴 겹침(>0.1) · 띠 아래 얼굴 겹침(>0.1)")
+        return None
+    p = PL.place(_rows(), st, "ep13", locate=wrapped)
+    assert any("사유: 띠 위 얼굴 겹침" in l for l in p["log"]), [l for l in p["log"] if "스티커" in l]

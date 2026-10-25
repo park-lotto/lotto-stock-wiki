@@ -234,6 +234,9 @@ def on_target(target_box, size=None, canvas=None, caption_band=None, kind: str =
 
 
 # ── 배치에 꽂기 ──────────────────────────────────────────────────────────
+LAST_WHY: str | None = None          # 마지막 locate 실패 사유(placement._site 가 감싼 locate 에 last_why 가 없을 때 읽는다)
+
+
 def locator(video, win=None, caption_band=None, what_of=None, size_of=None, how: str = "claude", t_of=None, detector=None):
     """placement.place(locate=…) 함수를 만든다. video = 완성본 화면을 그린 영상(렌더 전이면 창 바탕 base.mp4),
     what_of(row, sticker) → 물건 이름(대본 key·object 칸), size_of(sticker) → (w,h), t_of(row) → 프레임 시각(기본 덩어리 시작+0.1)."""
@@ -246,6 +249,8 @@ def locator(video, win=None, caption_band=None, what_of=None, size_of=None, how:
         got = find(target["kind"], video, t, win=win, avoid=("face",) if av is None else tuple(av), what=what, how=how,   # 빈 목록 = 피할 것 없음
                    size=size, caption_band=caption_band, detector=detector, fail=why)
         locate.last_why = None if got else (" · ".join(why) or "사유 없음")      # placement._site 가 로그·자막표에 적는다
+        global LAST_WHY
+        LAST_WHY = locate.last_why          # 렌더러가 locate 를 한 번 더 감싸도(render_bench.make_locate) 사유가 닿게
         return got
     locate.last_why = None
     return locate
