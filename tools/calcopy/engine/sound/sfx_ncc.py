@@ -9,6 +9,7 @@ import sfx_fp as F
 SR=F.SR
 SOS=butter(4,[1500,10000],btype='band',fs=SR,output='sos')
 def bp(x): return sosfiltfilt(SOS,x.astype(np.float64))
+QUIET=1e-4    # 창 에너지가 편 중앙값의 이 배 아래면 판정 안 함(무음 창)
 def templates():
     lib=F.library(); T={}
     for k,v in lib.items():
@@ -27,7 +28,8 @@ def scan(x,T,thr=0.35):
         n=len(t)
         if len(y)<n: continue
         num=irfft(Y*np.conj(rfft(t,N)),N)[:len(y)-n+1]
-        en=np.sqrt(np.maximum(c2[n:]-c2[:-n],1e-12)); c=num/en
+        e2=np.maximum(c2[n:]-c2[:-n],0); en=np.sqrt(np.maximum(e2,1e-12)); c=num/en
+        c[e2<QUIET*np.median(e2)]=0   # 거의 무음 창(디지털 0)은 분모가 0 에 가까워 상관이 거짓으로 솟는다 — 10-25 굿레터 kfmZ 28.66 impact-bass 0.941(−80dB 잡음 깔면 0.38)
         order=np.argsort(-c)[:60]; taken=[]
         for i in order:
             if c[i]<thr: break

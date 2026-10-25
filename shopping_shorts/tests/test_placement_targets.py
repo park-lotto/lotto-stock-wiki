@@ -296,7 +296,10 @@ def test_emph_color_rule_drops_orange_on_red_hook():
     assert st.get("upgrades"), "업그레이드 판이어야 규칙이 돈다"
     out, log = _emph_rows(), []
     PL.emph_color_step(out, st, log)
-    assert out[0]["emph"] == [] and any("N1" in x and "색상환" in x for x in log), (out, log)
+    c0 = (out[0]["emph"] or [{}])[0].get("color")
+    assert c0 != "#F07A09" and (c0 is None or PL.hue_gap("#E30004", c0) is None or PL.hue_gap("#E30004", c0) >= 30), (out, log)   # 훅 빨강 위 주황은 안 된다(팩에 다른 후보가 있으면 그것)
+    if c0 is None:
+        assert any("N1" in x and "색상환" in x for x in log)
     assert out[1]["emph"] == [{"word": "분홍", "color": "#F07A09"}]          # 벤치가 쓴 노랑↔주황은 남는다(LCh 39.6°)
 
 
@@ -322,3 +325,75 @@ def test_hue_rule_skipped_for_low_chroma():
     """㉘: 한쪽 채도 C* < 20 이면 색상각 규칙 건너뜀 — 흰 줄(#FDFCFD) 위 연분홍(#F2D6E0, C*≈11)은 색상각과 무관하게 ΔE·명도만."""
     assert PL.hue_gap("#FDFCFD", "#F2D6E0") is None and PL.hue_gap("#E30004", "#E0B8A8") is None     # C* 11.4·18.1(15~20 사이 — 옛 15 문턱이면 비교했다)
     assert PL.hue_gap("#E30004", "#F07A09") == pytest.approx(20.6, abs=0.1)                          # 둘 다 C* ≥ 20
+
+
+# ⑧ sfx_events 후속 4건 + ㉞(10-25) ──────────────────────────────────────────
+def test_ncc_ignores_digital_silence_window():
+    """굿레터 kfmZ 끝 impact-bass 0.941(28.66) = 디지털 무음 창 분모 거짓 — 무음 창은 판정 안 함(−80dB 잡음 깔면 0.38)."""
+    E = _sfx_events()
+    import sfx_ncc as N
+    import sfx_fp as F
+    w = Path("C:/숏템_칼카피/goodletter/work/wav/kfmZ_t4Bbss.wav")
+    if not w.exists():
+        pytest.skip("굿레터 wav 없음 — 이 PC 전용 시험")
+    T, _ = N.templates()
+    k = next(k for k in T if "impact-bass-2" in k)
+    hits = N.scan(F.load(str(w)), {k: T[k]}, 0.3)
+    assert not [h for h in hits if h["ncc"] >= 0.5], hits
+
+
+def test_meta_asr_dir_reads_own_plain_folder(tmp_path):
+    E = _sfx_events()
+    assert E.meta_asr_dir({"asr_filter": {"asr": str(tmp_path).replace("\\", "/")}}) == str(tmp_path).replace("\\", "/")
+    assert E.meta_asr_dir({"asr_filter": {"asr": "없는/폴더"}}) is None
+
+
+def test_keep_window_follows_cut_density():
+    E = _sfx_events()
+    sparse = {"dur": 30.0, "markers": {"cut": [5.0, 15.0, 25.0]}}
+    dense = {"dur": 30.0, "markers": {"cut": [round(0.4 * k, 2) for k in range(75)]}}          # 0.4초마다 컷(방구석 꼴)
+    assert E.keep_window(sparse)[0] == 0.3
+    w, ch = E.keep_window(dense)
+    assert w < 0.3 and (w == 0 or ch <= E.KEEP_CHANCE)
+    row = {**dense, "cand": [{"t": 6.15, "kind": "broad"}]}
+    E.asr_filter(row, [{"w": "말", "t0": 6.0, "t1": 6.3}])
+    assert not row["cand_kept"] and len(row["cand_in_words"]) == 1                          # 촘촘한 컷 곁 0.15초는 유의하지 않다
+
+
+def test_bgm_beat_chain(monkeypatch):
+    E = _sfx_events()
+    import bgm_fp as B
+    monkeypatch.setattr(B, "tempo", lambda x: {"low": 139.7, "low_ac": 0.5, "all": 69.8, "all_ac": 0.6})   # 옥타브 → 빠른 쪽
+    cand = [{"t": t, "kind": "low"} for t in (8.61, 9.46, 11.19, 11.61, 14.40, 20.0)]
+    E.mark_bgm_beats(cand, None)
+    assert [c["t"] for c in cand if c.get("kind_class") == "bgm_beat"] == [8.61, 9.46, 11.19, 11.61]
+    row = {"dur": 30, "markers": {}, "cand": cand}
+    E.asr_filter(row, [], {"lines": [{"t0": 9.4, "t1": 10, "sfx": {"kind": "쿵", "t": 9.46}}]})
+    assert [c["t"] for c in row["cand_bgm"]] == [8.61, 11.19, 11.61]                          # 판독 자리(9.46)는 박자여도 숨기지 않는다
+    k = {c["t"]: c for c in row["cand_kept"]}
+    assert k[9.46]["ear_pending"] and k[14.40]["confidence"] == "신호" and k[14.40]["ear_pending"]
+    assert row["sfx_count"] == {"sure": 0, "pending": 3}
+
+
+def test_eye_read_wins_over_word_filter():
+    E = _sfx_events()
+    row = {"dur": 20, "markers": {}, "cand": [{"t": 5.0, "kind": "broad"}, {"t": 9.0, "kind": "broad"}, {"t": 12.0, "kind": "tonal"}]}
+    read = {"lines": [{"t0": 4.8, "t1": 6, "sfx": {"kind": "휙", "t": 5.02}}, {"t0": 11.9, "t1": 13, "sfx": {"kind": "띵", "t": 12.05}}]}
+    E.asr_filter(row, [{"w": "그래서", "t0": 4.9, "t1": 5.2}, {"w": "진짜", "t0": 8.9, "t1": 9.2}], read)
+    k = {c["t"]: c for c in row["cand_kept"]}
+    assert set(k) == {5.0, 12.0} and [c["t"] for c in row["cand_in_words"]] == [9.0]
+    assert k[5.0]["confidence"] == "눈" and k[5.0]["ear_pending"] and "판독 우선" in k[5.0]["keep_why"]
+    assert k[12.0]["confidence"] == "눈" and not k[12.0].get("ear_pending")
+    assert row["sfx_count"] == {"sure": 1, "pending": 1}
+
+
+def test_tone_only_for_profiled_channel():
+    E = _sfx_events()
+    assert E.tone_cands("x.mp4", "kitchit") == []                                            # 프로필 없음 = 순음 검출 안 씀
+    f = Path("C:/숏템_칼카피/evenshopping/src/1kfqEB2b1xM.mp4")
+    if not f.exists():
+        pytest.skip("이븐쇼핑 원본 없음 — 이 PC 전용 시험")
+    reads = E._reads("evenshopping")
+    truth = [float(l["sfx"]["t"]) for l in reads["1kfqEB2b1xM"]["lines"] if isinstance(l.get("sfx"), dict) and "띵" in str(l["sfx"].get("kind")) and isinstance(l["sfx"].get("t"), (int, float))]
+    got = [e["t"] for e in E.tone_cands(str(f), "evenshopping")]
+    assert truth and all(any(abs(t - g) <= 0.15 for g in got) for t in truth), (truth, got)

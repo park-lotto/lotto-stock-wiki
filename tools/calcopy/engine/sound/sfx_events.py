@@ -122,11 +122,83 @@ def _near(t, arr):
     return min((abs(t - a) for a in arr), default=9)
 
 
-def table_of(x, mk):
-    """한 편 소리 x + 표식 → 옛 sfx_rules 와 같은 꼴 {strong_n, strong_hits, dur, n_events_all, cand[{…,near}], markers, chance}."""
+TONE_DEDUP = 0.15
+
+
+def tone_profile(slug):
+    """readline_tools/tone 문턱 — 채널 프로필(profiles/<slug>.json 의 tone)을 잰 채널만(None = 이 채널은 순음 검출을 안 쓴다).
+    10-25 실측: 프로필 없는 채널에 기본값을 쓰면 말소리·배경음 선율이 순음으로 쏟아진다(샤크탱크 161·키치잇 36·굿레터 32 — 이븐쇼핑 20발 중 정답 16)."""
+    sys.path.insert(0, os.path.join(ROOT, 'tools', 'calcopy', 'engine', 'readline_tools'))
+    import tone as TN
+    pf = os.path.join(ROOT, 'tools', 'calcopy', 'engine', 'readline_tools', 'profiles', f'{slug}.json')
+    prof = (json.load(open(pf, encoding='utf-8')).get('tone') if slug and os.path.exists(pf) else None)
+    if not prof:
+        return TN, None
+    return TN, {**TN.DEFAULTS, **prof}
+
+
+def tone_cands(path, slug, ev=()):
+    """말 위 순음 → kind 'tone' 후보(같은 자리 tonal 이 이미 있으면 뺀다). 판단 주인 = readline_tools/tone.tone_events(두 벌 금지 — 부르기만)."""
+    TN, P = tone_profile(slug)
+    if P is None:
+        return []
+    out = []
+    for e in TN.tone_events(path, P['lo'], P['hi'], P['prom'], P['min_dur'], P['merge']):
+        if any(o['kind'] == 'tonal' and abs(o['t'] - e['t']) <= TONE_DEDUP for o in ev):
+            continue
+        out.append({'t': e['t'], 'kind': 'tone', 'dur': e['dur'], 'db': e['prom_db'], 'hz': e['hz']})
+    return out
+
+
+BEAT_TOL = 0.03           # ㉞①: BGM 박자 주기와 ±30ms
+BEAT_RUN = 3              # 3연속(간격 둘)이 박자 배수면 배경음 박자
+
+
+def mark_bgm_beats(cand, x):
+    """(판단 주인 ㉞①) 신호 솟음이 BGM 박자(bgm_fp.tempo)와 주기 일치(±30ms·3연속)면 kind_class 'bgm_beat' = 효과음 아님.
+    간격이 박자 주기 T 의 정수배(1~4)에서 ±30ms 안이면 '박자 간격' — 그런 간격이 이어진 3개 이상 묶음을 표시."""
+    import bgm_fp as B
+    if len(cand) < BEAT_RUN:
+        return None
+    tp = B.tempo(x)
+    lo, al = float(tp.get('low') or 0), float(tp.get('all') or 0)
+    if lo and al and abs(max(lo, al) / min(lo, al) - 2) <= 0.06:      # 두 대역이 옥타브(2배) 관계면 빠른 쪽 — 느린 쪽 배수는 빠른 쪽 배수에 들어간다(신박 edT 저역 139.7·전대역 69.8)
+        bpm = max(lo, al)
+    else:
+        bpm = tp.get('low') if tp.get('low_ac', 0) >= tp.get('all_ac', 0) else tp.get('all')
+    if not bpm:
+        return None
+    T = 60.0 / bpm
+    ts = sorted(range(len(cand)), key=lambda i: cand[i]['t'])
+
+    def on_beat(d):
+        m = round(d / T)
+        return 1 <= m <= 4 and abs(d - m * T) <= BEAT_TOL
+    run = [ts[0]]
+    for a, b in zip(ts, ts[1:]):
+        if on_beat(cand[b]['t'] - cand[a]['t']):
+            run.append(b)
+        else:
+            if len(run) >= BEAT_RUN:
+                for i in run:
+                    cand[i]['kind_class'] = 'bgm_beat'; cand[i]['beat'] = {'bpm': bpm, 'T': round(T, 3)}
+            run = [b]
+    if len(run) >= BEAT_RUN:
+        for i in run:
+            cand[i]['kind_class'] = 'bgm_beat'; cand[i]['beat'] = {'bpm': bpm, 'T': round(T, 3)}
+    return bpm
+
+
+def table_of(x, mk, path=None, slug=None):
+    """한 편 소리 x + 표식 → 옛 sfx_rules 와 같은 꼴 {strong_n, strong_hits, dur, n_events_all, cand[{…,near}], markers, chance}.
+    path(원본 파일)를 주면 말 위 순음(tone — 주인 readline_tools/tone.tone_events, 채널 문턱 profiles/<slug>.json)을 더한다:
+    detect 의 tonal 은 유성(말) 구간을 빼서 말과 겹친 띵을 0발로 냈다(이븐쇼핑 줄판독 띵 17발 중 0)."""
     ev = detect(x)
+    if path:
+        ev = sorted(ev + tone_cands(path, slug, ev), key=lambda e: e['t'])
     dur = len(x) / F.SR
-    cand = [{**e, 'near': {k: round(_near(e['t'], v), 2) for k, v in mk.items() if v}} for e in ev if e['kind'] in ('tonal', 'low') or e.get('isolated', 0) >= 0.8]
+    cand = [{**e, 'near': {k: round(_near(e['t'], v), 2) for k, v in mk.items() if v}} for e in ev if e['kind'] in ('tonal', 'low', 'tone') or e.get('isolated', 0) >= 0.8]
+    mark_bgm_beats(cand, x)
     rng = np.random.default_rng(0); rt = rng.uniform(0, dur, 2000)
     chance = {k: round(float(np.mean([_near(t, v) <= TOL for t in rt])), 2) for k, v in mk.items() if v}
     strong = [e for e in ev if e['db'] >= 25]
@@ -182,28 +254,91 @@ def asr_words(path):
     return [w for w in left if float(w['t1']) > float(w['t0'])], ('ok' if not sum(hit) else f'ok(환각 문구 {sum(hit)}낱말 뺌)')
 
 
-def asr_filter(row, words):
-    """신호표 한 편에 cand_kept·cand_in_words·asr_words 를 붙인다(06 sfx_filter 꼴 그대로 + keep_why)."""
+KEEP_WINDOWS = (0.3, 0.2, 0.15, 0.1, 0.05)
+KEEP_CHANCE = 0.1         # 예외 창 안에 임의 시각이 들 확률(우연 기대)이 이 아래일 때만 '전환·스티커 곁' 예외가 뜻이 있다
+
+
+def keep_window(row):
+    """(판단 주인 ② 10-25) 전환·스티커 곁 예외 창 = 그 편 표식 밀도로 우연 기대를 재서 KEEP_CHANCE 아래인 가장 넓은 창.
+    방구석처럼 컷이 촘촘하면(±0.3초 우연 0.25~0.3) 창을 줄이고, 0.05초로도 우연이 크면 예외 없음(0)."""
+    mk = row.get('markers') or {}
+    pts = sorted(float(a) for k in ('cut', 'sticker') for a in mk.get(k) or [])
+    dur = float(row.get('dur') or (max(pts) + 1 if pts else 0))
+    if not pts or dur <= 0:
+        return 0.0, 0.0
+    grid = np.arange(0, dur, 0.01)
+    P = np.array(pts)
+    dist = np.min(np.abs(grid[:, None] - P[None, :]), axis=1)
+    for w in KEEP_WINDOWS:
+        ch = float(np.mean(dist <= w))
+        if ch <= KEEP_CHANCE:
+            return w, round(ch, 3)
+    return 0.0, round(float(np.mean(dist <= KEEP_WINDOWS[-1])), 3)
+
+
+READ_TOL = 0.15
+
+
+def read_sfx_times(read):
+    """줄판독(눈) sfx 시각 — 벤치가 얹은 소리만(sfx_key 가 None 인 '원본 동작음' 류는 뺀다). t 가 없으면 그 줄 t0."""
+    out = []
+    for l in (read or {}).get('lines') or []:
+        s = l.get('sfx')
+        if not s:
+            continue
+        kind = s.get('kind') if isinstance(s, dict) else s
+        if re.search(r'원본|원음', str(kind)):
+            continue
+        t = s.get('t') if isinstance(s, dict) else None
+        t = t if isinstance(t, (int, float)) else l.get('t0')
+        if isinstance(t, (int, float)):
+            out.append(float(t))
+    return out
+
+
+def asr_filter(row, words, read=None):
+    """신호표 한 편에 cand_kept·cand_in_words·asr_words(+ cand_bgm·confidence·ear_pending)를 붙인다.
+    거름: 받아쓰기 낱말 안 = cand_in_words — 단 (a) 전환·스티커 곁(keep_window, 우연 유의할 때만) (b) 말 위 순음 tone (c) 판독(눈) sfx 자리(㉞② 판독 우선)는 남긴다.
+    배경음 박자(kind_class bgm_beat, ㉞①) = cand_bgm(효과음 아님). 남은 후보: 판독 sfx ±0.15초 = confidence '눈', 아니면 '신호' + ear_pending(㉞③)."""
+    w_keep, ch = keep_window(row)
     mk = row.get('markers') or {}
     near_pts = [float(a) for k in ('cut', 'sticker') for a in mk.get(k) or []]
-    kept, inw = [], []
+    eye = read_sfx_times(read)
+    kept, inw, bgm = [], [], []
     for c in row.get('cand') or []:
+        by_eye = any(abs(c['t'] - e) <= READ_TOL for e in eye)
+        if c.get('kind_class') == 'bgm_beat':
+            if not by_eye:
+                bgm.append(c); continue
+            c = {**c, 'keep_why': '배경음 박자 위지만 판독(눈) sfx 자리 — 귀 확인(㉞②)'}      # 판독 우선: 숨기지 않고 대기로
+        c = {k: v for k, v in c.items() if k not in ('word', 'confidence', 'ear_pending') and not (k == 'keep_why' and not str(v).startswith('배경음'))}
         hit = next((w for w in words if float(w['t0']) - ASR_PAD <= c['t'] <= float(w['t1']) + ASR_PAD), None)
-        if hit:
+        if hit and not c.get('keep_why'):
             nb = min((abs(c['t'] - a) for a in near_pts), default=9)
-            if nb <= KEEP_NEAR:
-                kept.append({**c, 'word': hit.get('w'), 'keep_why': f'낱말 안이지만 전환·스티커 {nb:.2f}초 안'})
-                continue
-            inw.append({**c, 'word': hit.get('w')})
-        else:
-            kept.append(c)
-    row['asr_words'] = len(words); row['cand_in_words'] = inw; row['cand_kept'] = kept
+            if by_eye:
+                c.update(word=hit.get('w'), keep_why='낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)')
+            elif c['kind'] == 'tone':
+                c.update(word=hit.get('w'), keep_why='낱말 안이지만 말 위 순음(tone)')
+            elif w_keep and nb <= w_keep:
+                c.update(word=hit.get('w'), keep_why=f'낱말 안이지만 전환·스티커 {nb:.2f}초 안(창 ±{w_keep} · 우연 {ch})')
+            else:
+                inw.append({**c, 'word': hit.get('w')}); continue
+        c['confidence'] = '눈' if by_eye else '신호'
+        if not by_eye or c.get('keep_why', '').startswith(('낱말 안이지만 판독', '배경음 박자')):
+            c['ear_pending'] = True
+        kept.append(c)
+    row['asr_words'] = len(words); row['cand_in_words'] = inw; row['cand_kept'] = kept; row['cand_bgm'] = bgm
+    row['keep_window'] = {'w': w_keep, 'chance': ch}
+    row['sfx_count'] = {'sure': sum(1 for c in kept if not c.get('ear_pending')), 'pending': sum(1 for c in kept if c.get('ear_pending'))}
     return row
 
 
 def meta_asr_dir(meta):
     """저장된 신호표 _meta.asr_filter.asr 글에서 위스퍼 낱말 폴더(…/<id>.json)를 꺼낸다. 다른 꼴(유튜브 vtt·스피치매틱스)이면 None."""
     a = (meta or {}).get('asr_filter')
+    raw = str(a.get('asr') if isinstance(a, dict) else a or '').strip()
+    if raw and os.path.isdir(raw):          # 이 도구가 쓴 꼴 = 폴더 경로만(10-25 06: 자기가 쓴 걸 못 읽어 다시 잴 때 거름이 빠졌다)
+        return raw
     m = re.search(r"([A-Za-z]:[/\\][^\s]+?)[/\\]<id>\.json",str(a.get('asr') if isinstance(a, dict) else a or ''))
     return m.group(1) if m and os.path.isdir(m.group(1)) else None
 
@@ -211,6 +346,7 @@ def meta_asr_dir(meta):
 def filter_channel(rows, slug, asr_dir=None):
     """편마다 받아쓰기 파일을 찾아 거른다. 반환 _meta.asr_filter. 받아쓰기 없는 편은 거르지 않고(cand_kept = cand) 목록에 적는다."""
     dirs = [asr_dir] if asr_dir else asr_dirs(slug)
+    reads = _reads(slug)
     no_speech, no_asr, nk, ni, used = {}, [], 0, 0, None
     for vid, row in rows.items():
         if vid == '_meta' or not isinstance(row, dict):
@@ -218,14 +354,14 @@ def filter_channel(rows, slug, asr_dir=None):
         f = next((os.path.join(d, vid + '.json') for d in dirs if d and os.path.exists(os.path.join(d, vid + '.json'))), None)
         words, why = asr_words(f)
         if words is None:
-            no_asr.append(vid); row['cand_kept'] = list(row.get('cand') or []); row['cand_in_words'] = []; row['asr_words'] = None
+            no_asr.append(vid); asr_filter(row, [], reads.get(vid)); row['asr_words'] = None
             continue
         used = used or os.path.dirname(f)
         if why.startswith('hallucination'):
             no_speech[vid] = why
-        asr_filter(row, words)
+        asr_filter(row, words, reads.get(vid))
         nk += len(row['cand_kept']); ni += len(row['cand_in_words'])
-    return {'how': f'후보 시각이 받아쓰기 낱말 구간[t0−{ASR_PAD}, t1+{ASR_PAD}] 안이면 cand_in_words(치찰음·파열음 오탐) — 단 전환(cut)·스티커 ±{KEEP_NEAR}초 안은 남김(keep_why). 남은 것 = cand_kept',
+    return {'how': f'후보 시각이 받아쓰기 낱말 구간[t0−{ASR_PAD}, t1+{ASR_PAD}] 안이면 cand_in_words(치찰음·파열음 오탐) — 단 전환·스티커 곁(편마다 우연 기대 ≤ {KEEP_CHANCE} 인 창 {KEEP_WINDOWS})·말 위 순음 tone·판독 sfx 자리는 남김(keep_why). 배경음 박자 = cand_bgm. 남은 것 = cand_kept(confidence 눈/신호, ear_pending)',
             'asr': (used or '').replace(os.sep, '/') or None, 'no_speech': no_speech, 'no_asr': no_asr, 'n_kept': nk, 'n_in_words': ni,
             'note': '귀 확인 아님(신호). 무음 환각 = 환각 문구(Thanks for watching·구독과 좋아요·Music…)가 절반 이상이거나 빼고 2낱말 이하, 또는 길이0 낱말 40% 이상'}
 
@@ -252,7 +388,7 @@ def channel(slug, detect_mode=False, src=None, asr_dir=None):
             f = next((p for p in (os.path.join(src, vid + e) for e in ('.wav', '.mp4', '.webm', '.mkv')) if os.path.exists(p)), None)
             if not f:
                 miss.append(vid); continue
-            rows[vid] = table_of(F.load(f), markers(slug, vid, rd))
+            rows[vid] = table_of(F.load(f), markers(slug, vid, rd), f, slug)
             print(slug, vid, '후보', len(rows[vid]['cand']), [(c['t'], c['kind']) for c in rows[vid]['cand']], flush=True)
         if miss:
             print(f'[sfx_events] 원본 없음 {len(miss)}편(재지 않음): {miss} — 폴더 {src}', file=sys.stderr)
@@ -281,7 +417,7 @@ def regress(slug, src=None, asr_dir=None):
     for vid in [k for k in old if k != '_meta']:
         f = next((p for p in (os.path.join(src, vid + e) for e in ('.wav', '.mp4', '.webm', '.mkv')) if os.path.exists(p)), None)
         if f:
-            rows[vid] = table_of(F.load(f), markers(slug, vid, reads.get(vid)))
+            rows[vid] = table_of(F.load(f), markers(slug, vid, reads.get(vid)), f, slug)
     old_filter = isinstance((old.get('_meta') or {}).get('asr_filter'), (dict, str))
     asr_dir = asr_dir or meta_asr_dir(old.get('_meta'))
     meta = filter_channel(rows, slug, asr_dir)
