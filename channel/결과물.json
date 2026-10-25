@@ -1332,6 +1332,24 @@
    "from": "channel/hottemreport/현장썰_run.py · tools/calcopy/hybrid/post_meme_thumb.py(짤·썸네일 덧입힘)",
    "doc": "channel/hottemreport/현장썰3차/03_Mousegun/",
    "note": "드라이브 = 로컬 …/현장썰3차_03_Mousegun/fix/final_v2.mp4 (md5 같음)"
+  },
+  {
+   "n": 86,
+   "channel": "yanshottem",
+   "channel_name": "얜샷템",
+   "brand": "얜샷템",
+   "style": "키치잇판(벤치 kitchit)",
+   "title": "키치잇 01 박정수 이노스킨랩 멀티프로텍션 선크림",
+   "path": "G:/내 드라이브/칼카피영상/얜샷템 (연예인쇼핑) 재미썸홈스타일 대기중/kitchit/01_parkjeongsu_innoskinlab_sunscreen.mp4",
+   "desktop": "01_parkjeongsu_innoskinlab_sunscreen.mp4",
+   "md5": "8a9fd359c505ff8dedeaba751e044539",
+   "seconds": 26.7,
+   "preset": "tools/calcopy/hybrid/styles/키치잇판.json",
+   "date": "2026-10-25",
+   "judge": "[사장님승인] 사장님 2026-10-25 \"박정수 편 영상 OK\" — 드라이브 kitchit/01_parkjeongsu_innoskinlab_sunscreen.mp4 md5 8a9fd359(ffprobe 26.70초) · quality_gate --full 통과(품질관문/8a9fd359….json)",
+   "from": "tools/calcopy/hybrid/render_bench.py → engine/deliver.to_drive(납품.json)",
+   "doc": "channel/yanshottem/하이브리드_박정수_썬크림/키치잇판/",
+   "note": "로컬 완성본 C:/숏템_칼카피/yanshottem/하이브리드_박정수_썬크림/키치잇판/render/final.mp4 (md5 같음 — 납품.json)"
   }
  ]
 }

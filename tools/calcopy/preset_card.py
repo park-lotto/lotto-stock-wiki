@@ -33,6 +33,7 @@ if str(REPO) not in sys.path:
 
 from tools.calcopy.engine import kal_analyze  # noqa: E402  (줄판독 칸 검사 check_doc · MIN_N — 주인 그대로 부른다)
 from tools.calcopy.hybrid import styles as styles_mod  # noqa: E402  (판 설정 읽기 주인)
+from tools.calcopy import work_log  # noqa: E402  (판 편 폴더 위치 규칙 주인 edition_dirs)
 from shopping_shorts.calcopy_board import result_state  # noqa: E402  (결과물 판정 글 읽기 주인 — 표준 §11 ⑧)
 
 MADE_BY = "tools/calcopy/preset_card.py build"
@@ -151,14 +152,16 @@ def load_owners(slug: str) -> dict:
         opt[key] = _json(p)
         if p.exists():
             inputs.append(p)
+    sf = (pre.get("engine") or {}).get("style_file")
+    # 편 폴더 = 벤치 slug 폴더 + 판 편 폴더(위치 규칙 주인 work_log.edition_dirs — 작업정보.json style 칸)
+    eds = [d for d in work_log.edition_dirs(Path(sf).stem if sf else None, ROOT) if ch not in d.parents and d != ch]
     gate = {}
     for name in ("품질관문.json", "재현일치도.json", "눈검수.json", "업그레이드_측정.json"):
-        hits = sorted(ch.rglob(name)) if ch.is_dir() else []
+        hits = sorted([*(ch.rglob(name) if ch.is_dir() else []), *(h for d in eds for h in d.rglob(name))])
         gate[name] = _json(hits[-1]) if hits else None
         gate[name + ".path"] = _rel(hits[-1]) if hits else None
         inputs += hits[-1:]
     style, style_name, style_err = None, None, None
-    sf = (pre.get("engine") or {}).get("style_file")
     if sf:
         sp = ROOT / sf
         if sp.exists() and sp.parent.resolve() == styles_mod.DIR.resolve():
@@ -179,7 +182,13 @@ def load_owners(slug: str) -> dict:
     results = []
     if res_led:
         inputs.append(ROOT / "channel/결과물.json")
-        results = [it for it in res_led.get("items") or [] if it.get("channel") in (slug, pre.get("brand_ref"))]
+        # 이 프리셋 결과물 = 채널 칸이 slug·brand_ref 이거나, doc 칸이 판 편 폴더(eds) 안(우리 채널 이름으로 등록된 판 편 — 10-25 박정수 키치잇판)
+        def _in_eds(doc) -> bool:
+            if not doc:
+                return False
+            dp = (ROOT / str(doc)).resolve()
+            return any(dp == d.resolve() or d.resolve() in dp.parents for d in eds)
+        results = [it for it in res_led.get("items") or [] if it.get("channel") in (slug, pre.get("brand_ref")) or _in_eds(it.get("doc"))]
     return {"slug": slug, "preset": pre, "brand": brand, "sound": sound, "line_reads": line_reads, "line_read_files": lr_files,
             "tteutgi": tteutgi, **opt, "gate": gate, "style": style, "style_name": style_name, "style_raw": _json(ROOT / sf) if style_name else None,
             "style_err": style_err, "style_analysis": (ch / "스타일분석.md").exists(), "results": results,

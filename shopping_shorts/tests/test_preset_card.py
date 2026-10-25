@@ -139,3 +139,19 @@ def test_real_repo_all_presets_build():
     for s in slugs:
         c = pc.build_card(s)
         assert not pc.validate(c), s
+
+
+def test_edition_folder_by_style(fx):
+    """판 편 폴더(우리 채널 폴더 아래, 작업정보.json style=판) 의 품질관문·결과물 장부 doc 을 카드가 읽는다(10-25 박정수 키치잇판 L1 구멍).
+    작업정보 style 이 다른 판이면 안 읽는다 — 위치 규칙 주인 work_log.edition_dirs."""
+    R = fx
+    ed = R / "channel/ours/하이브리드_X/픽스처판"
+    _w(ed / "작업정보.json", {"bench_channel": "fx", "style": "픽스처판"})
+    _w(ed / "품질관문.json", {"ok": True})
+    _w(R / "channel/결과물.json", {"items": [{"channel": "ours", "title": "x", "path": "x", "seconds": 1, "date": "d", "from": "f",
+                                            "doc": "channel/ours/하이브리드_X/픽스처판/", "judge": "[사장님승인] 사장님 OK"}]})
+    F = pc.build_card("fx")["facts"]
+    assert F["quality_gate_ok"] and F["owner_pass"]
+    _w(ed / "작업정보.json", {"bench_channel": "fx", "style": "다른판"})
+    F = pc.build_card("fx")["facts"]
+    assert not F["quality_gate_ok"] and not F["owner_pass"]
