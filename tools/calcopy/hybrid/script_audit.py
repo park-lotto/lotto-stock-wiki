@@ -419,7 +419,7 @@ def _same_item(a: dict, b: dict) -> bool:
     return bool(a.get("topic")) and a.get("topic") == b.get("topic")
 
 
-def siblings(path: Path, d: dict, version: str, only_preset: bool = False) -> list[tuple[Path, dict]]:
+def siblings(path: Path, d: dict, version: str, only_preset: bool = False, versions: list | None = None) -> list[tuple[Path, dict]]:
     """같은 채널 폴더 안의 다른 편 대본 중 같은 판(version_of)인 것 — 같은 제품 변형·자기 자신 제외(only_preset = preset 칸 있는 작품 대본끼리만)."""
     me, out = Path(path).resolve(), []
     root = _channel_root(path)
@@ -430,7 +430,7 @@ def siblings(path: Path, d: dict, version: str, only_preset: bool = False) -> li
             o = json.loads(p.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
-        if not isinstance(o, dict) or version_of(p, None, o) != version or _same_item(d, o):
+        if not isinstance(o, dict) or version_of(p, None, o) not in (versions or [version]) or _same_item(d, o):
             continue
         if only_preset and not o.get("preset"):
             continue
@@ -448,7 +448,8 @@ def sibling_repeat(path: Path, d: dict, r: dict, version: str | None) -> dict:
     heads = [_head(t, n) for t in mine if _head(t, n)]
     roles = [str(l.get("role") or "") for l in d.get("lines") or []]
     worst, bad, pairs = 0.0, [], []
-    sib = siblings(path, d, version or version_of(Path(path), None, d), only_preset=r.get("scope") == "preset")
+    v0 = version or version_of(Path(path), None, d)
+    sib = siblings(path, d, v0, only_preset=r.get("scope") == "preset", versions=r.get("versions"))   # versions = 같은 채널의 옛 판까지 견줄 때(이븐쇼핑판 ↔ 재미썸홈판 작품)
     for p, o in sib:
         other = [_say(l) if not l.get("text") else l["text"] for l in narr_lines(o)]
         oh = {_head(t, n) for t in other}

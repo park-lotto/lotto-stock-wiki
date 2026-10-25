@@ -1,0 +1,325 @@
+{
+ "_note": "작품10 재료 — 해외 유튜브 원본(yt2, src/*.info.json). 컷 = 0.5~1초 시트·샷 경계(render_bench.shot_starts)·계획 접촉 시트 보고 고름. crop = 창 1080×1219 비율(0.886), 남의 글자·로고·자막 띠 밖. 무게 w = 그 컷에 걸친 자막 덩어리 글자 수",
+ "cand_dir": "C:/숏템_칼카피/evenshopping/작품10_개방형빨대/src",
+ "src_urls": {
+  "Q5VrYhJVmo0": "https://www.youtube.com/watch?v=Q5VrYhJVmo0",
+  "kkBUsht0dfI": "https://www.youtube.com/watch?v=kkBUsht0dfI",
+  "qVGVD9u0Fxc": "https://www.youtube.com/watch?v=qVGVD9u0Fxc",
+  "Hgx86Jz4B6U": "https://www.youtube.com/watch?v=Hgx86Jz4B6U",
+  "DQbJeNnu7MQ": "https://www.youtube.com/watch?v=DQbJeNnu7MQ",
+  "Un8dhJ_rgGc": "https://www.youtube.com/watch?v=Un8dhJ_rgGc",
+  "G5oZTlpfPCA": "https://www.youtube.com/watch?v=G5oZTlpfPCA",
+  "7xzvgnv2WjI": "https://www.youtube.com/watch?v=7xzvgnv2WjI"
+ },
+ "cuts": {
+  "N1": [
+   {
+    "src": "Q5VrYhJVmo0.mp4",
+    "ss": 27.0,
+    "crop": [
+     480,
+     0,
+     957,
+     1080
+    ],
+    "w": 6,
+    "see": "두 손으로 빨대를 천에 넣고 문지르는 근접"
+   },
+   {
+    "src": "kkBUsht0dfI.mp4",
+    "ss": 0.1,
+    "crop": [
+     760,
+     60,
+     620,
+     700
+    ],
+    "w": 10,
+    "see": "초록 실리콘 빨대를 두 손으로 벌려 엶"
+   }
+  ],
+  "N2": [
+   {
+    "src": "qVGVD9u0Fxc.mp4",
+    "ss": 298.6,
+    "crop": [
+     650,
+     0,
+     693,
+     782
+    ],
+    "w": 7,
+    "see": "빨대 꽂힌 테이크아웃 커피 컵"
+   },
+   {
+    "src": "Q5VrYhJVmo0.mp4",
+    "ss": 0.0,
+    "crop": [
+     400,
+     0,
+     957,
+     1080
+    ],
+    "w": 9,
+    "see": "남자가 빨대 하나를 들어 보임"
+   },
+   {
+    "src": "Hgx86Jz4B6U.mp4",
+    "ss": 45.0,
+    "crop": [
+     600,
+     380,
+     620,
+     700
+    ],
+    "w": 13,
+    "see": "민트 빨대 안에 솔을 넣는 손"
+   },
+   {
+    "src": "G5oZTlpfPCA.mp4",
+    "ss": 3.0,
+    "crop": [
+     1156,
+     120,
+     744,
+     840
+    ],
+    "w": 6,
+    "see": "빨대 끝 구멍들 — 속이 깜깜"
+   }
+  ],
+  "N3": [
+   {
+    "src": "DQbJeNnu7MQ.mp4",
+    "ss": 16.0,
+    "crop": [
+     800,
+     150,
+     691,
+     780
+    ],
+    "w": 10,
+    "see": "민트 빨대 옆 틈이 벌어지는 근접"
+   },
+   {
+    "src": "Un8dhJ_rgGc.mp4",
+    "ss": 16.6,
+    "crop": [
+     320,
+     0,
+     638,
+     720
+    ],
+    "w": 8,
+    "see": "상자 속 빨대 단면(열리는 홈 모양)"
+   }
+  ],
+  "N4": [
+   {
+    "src": "kkBUsht0dfI.mp4",
+    "ss": 5.0,
+    "crop": [
+     700,
+     0,
+     693,
+     782
+    ],
+    "w": 10,
+    "see": "민트 빨대 단면 — 맞물리는 홈 근접"
+   },
+   {
+    "src": "qVGVD9u0Fxc.mp4",
+    "ss": 256.6,
+    "crop": [
+     760,
+     88,
+     693,
+     782
+    ],
+    "w": 12,
+    "see": "분홍 실리콘 빨대 틈을 손으로 벌림"
+   },
+   {
+    "src": "qVGVD9u0Fxc.mp4",
+    "ss": 260.5,
+    "crop": [
+     420,
+     50,
+     580,
+     654
+    ],
+    "w": 9,
+    "see": "활짝 펼친 분홍 빨대를 물에 씻음"
+   }
+  ],
+  "N5": [
+   {
+    "src": "Q5VrYhJVmo0.mp4",
+    "ss": 15.6,
+    "crop": [
+     963,
+     0,
+     957,
+     1080
+    ],
+    "w": 5,
+    "see": "남자가 일반 빨대 구멍 안을 들여다봄"
+   },
+   {
+    "src": "Hgx86Jz4B6U.mp4",
+    "ss": 21.0,
+    "crop": [
+     600,
+     380,
+     620,
+     700
+    ],
+    "w": 13,
+    "see": "솔을 빨대 안에 밀어 넣음"
+   },
+   {
+    "src": "G5oZTlpfPCA.mp4",
+    "ss": 38.6,
+    "crop": [
+     560,
+     40,
+     691,
+     780
+    ],
+    "w": 9,
+    "see": "싱크대에서 연 빨대를 손가락으로 닦음"
+   },
+   {
+    "src": "Q5VrYhJVmo0.mp4",
+    "ss": 7.0,
+    "crop": [
+     600,
+     0,
+     957,
+     1080
+    ],
+    "w": 4,
+    "see": "수돗물에 빨대를 헹굼"
+   }
+  ],
+  "N6": [
+   {
+    "src": "Q5VrYhJVmo0.mp4",
+    "ss": 36.5,
+    "crop": [
+     600,
+     0,
+     957,
+     1080
+    ],
+    "w": 8,
+    "see": "씻은 빨대를 수건으로 닦는 손"
+   },
+   {
+    "src": "G5oZTlpfPCA.mp4",
+    "ss": 50.3,
+    "crop": [
+     560,
+     40,
+     691,
+     780
+    ],
+    "w": 12,
+    "see": "빨대 틈을 손가락으로 따라 눌러 닫음"
+   },
+   {
+    "src": "kkBUsht0dfI.mp4",
+    "ss": 19.6,
+    "crop": [
+     650,
+     0,
+     693,
+     782
+    ],
+    "w": 10,
+    "see": "닫힌 민트 빨대를 물컵에 꽂음"
+   }
+  ],
+  "N7": [
+   {
+    "src": "DQbJeNnu7MQ.mp4",
+    "ss": 52.6,
+    "crop": [
+     250,
+     0,
+     690,
+     780
+    ],
+    "w": 7,
+    "see": "여러 색 실리콘 빨대 단면이 나란히"
+   },
+   {
+    "src": "7xzvgnv2WjI.mp4",
+    "ss": 8.0,
+    "crop": [
+     320,
+     0,
+     638,
+     720
+    ],
+    "w": 14,
+    "see": "여러 색 실리콘 빨대 세트(해외 판매 영상)"
+   },
+   {
+    "src": "qVGVD9u0Fxc.mp4",
+    "ss": 306.0,
+    "crop": [
+     700,
+     60,
+     693,
+     782
+    ],
+    "w": 12,
+    "see": "분홍 빨대와 전용 케이스(국내 제품 홍보 영상)"
+   }
+  ],
+  "N8": [
+   {
+    "src": "G5oZTlpfPCA.mp4",
+    "ss": 62.4,
+    "crop": [
+     900,
+     120,
+     740,
+     835
+    ],
+    "w": 12,
+    "see": "여성이 빨대 꽂힌 물병으로 마심"
+   },
+   {
+    "src": "Q5VrYhJVmo0.mp4",
+    "ss": 12.0,
+    "crop": [
+     600,
+     0,
+     957,
+     1080
+    ],
+    "w": 5,
+    "see": "싱크대에서 빨대를 문지름"
+   },
+   {
+    "src": "DQbJeNnu7MQ.mp4",
+    "ss": 49.2,
+    "crop": [
+     300,
+     0,
+     700,
+     790
+    ],
+    "w": 9,
+    "see": "여러 색 실리콘 빨대들"
+   }
+  ]
+ },
+ "_fix": [
+  "1차 렌더(md5 72ebfcbb): B13 이 N3 Un8 16.6→15.73 으로 옮겨(N7 Un8 19.7 와 겹침 피하기) 상자 인쇄 글자('Platinum Grade Silicone')가 나옴 → N7 첫 컷을 DQb 52.6 으로 바꿔 Un8 은 N3 한 번만",
+  "1차 품질관문 B16 A-B-A(Q5V→Hgx→Q5V · G5o→Hgx→G5o) → N2 끝 컷 G5o 3.0(구멍 깜깜) · N5 첫 컷 Q5V 15.6(구멍 들여다봄)으로 맞바꿈",
+  "눈검수 E2: 훅 둘째 컷(kkBU 0.1) 빨대가 화면 오른쪽 작게 — crop 을 빨대 둘레 [760,60,620,700]로(자막 띠 y840~ 밖)"
+ ]
+}

@@ -2476,6 +2476,51 @@
    "bench": "덩어리 가운데 y≈1350(1줄 1318~1376 · 2줄 1287~1425)"
   }
  },
+ "evenshopping": {
+  "label": "이븐쇼핑 흰 띠 검정",
+  "desc": "흰 띠(틀) 위 검정 배민 주아 한 줄 · 외곽·그림자 없음 · 전부 즉시",
+  "font": "BMJUA",
+  "size": 72.6,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#000000",
+   "style": {
+    "textShadow": "none",
+    "letterSpacing": "0.003em"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "emph": {
+   "font": "BMJUA",
+   "size": 150,
+   "color": "#000000",
+   "style": {
+    "textShadow": "none"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "cont": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": ""
+  },
+  "variants": {},
+  "stickers": {},
+  "bench": "channel/evenshopping/줄판독(6편 185 나레줄) · 검정 #000000 BMJUA(fontmatch 6/6 1위) · 렌더 실측 맞춤 tools/caption_pack/check_kal_new_packs.py",
+  "place": {
+   "y": 25.55,
+   "bench": "잉크 y457~514(가운데 485.5/1920)"
+  }
+ },
  "ititemlog_v2": {
   "label": "잇템로그 화자색(업그레이드)",
   "desc": "굵은 고딕 + 두꺼운 검정 테 · 화자마다 색(나레 노랑·원음 흰) · 전부 즉시 · 편 첫 나레 줄만 빨강, 그 끝 덩어리 팝+빨강 잔상 · 강조 색 후보 5개(훅 빨강 줄에도 강조가 남게)",

@@ -1,0 +1,2112 @@
+{
+ "timeline": {
+  "lines": {
+   "N1": [
+    0.0,
+    1.958
+   ],
+   "N2": [
+    2.038,
+    6.771
+   ],
+   "N3": [
+    6.851,
+    8.882
+   ],
+   "N4": [
+    8.962,
+    12.918
+   ],
+   "N5": [
+    12.998,
+    16.747
+   ],
+   "N6": [
+    16.827,
+    20.759
+   ],
+   "N7": [
+    20.839,
+    25.323
+   ],
+   "N8": [
+    25.403,
+    28.394
+   ]
+  },
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "빨대 솔질 지옥",
+    "t0": 0.0,
+    "t1": 0.738,
+    "show": [
+     0.0,
+     0.738
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "끝내버린 천재의 발명품?",
+    "t0": 0.738,
+    "t1": 1.958,
+    "show": [
+     0.738,
+     2.038
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "요즘 텀블러 빨대",
+    "t0": 2.038,
+    "t1": 2.885,
+    "show": [
+     2.038,
+     2.885
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "하나씩 다 들고",
+    "t0": 2.885,
+    "t1": 3.543,
+    "show": [
+     2.885,
+     3.543
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 2,
+    "speaker": "narr",
+    "text": "다니는데,",
+    "t0": 3.543,
+    "t1": 4.362,
+    "show": [
+     3.543,
+     4.362
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 3,
+    "speaker": "narr",
+    "text": "안쪽 때는 솔로",
+    "t0": 4.362,
+    "t1": 5.141,
+    "show": [
+     4.362,
+     5.141
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 4,
+    "speaker": "narr",
+    "text": "아무리 문질러도",
+    "t0": 5.141,
+    "t1": 5.894,
+    "show": [
+     5.141,
+     5.894
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 5,
+    "speaker": "narr",
+    "text": "눈에 안 보인다는 거.",
+    "t0": 5.894,
+    "t1": 6.771,
+    "show": [
+     5.894,
+     6.851
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "바로 반으로 쫙 열리는",
+    "t0": 6.851,
+    "t1": 7.928,
+    "show": [
+     6.851,
+     7.928
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "개방형 실리콘 빨대.",
+    "t0": 7.928,
+    "t1": 8.882,
+    "show": [
+     7.928,
+     8.962
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "여기다가",
+    "t0": 8.962,
+    "t1": 9.302,
+    "show": [
+     8.962,
+     9.302
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "말도 안 되는 게,",
+    "t0": 9.302,
+    "t1": 10.182,
+    "show": [
+     9.302,
+     10.182
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "빨대 옆에 난 틈을",
+    "t0": 10.182,
+    "t1": 11.048,
+    "show": [
+     10.182,
+     11.048
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 3,
+    "speaker": "narr",
+    "text": "손으로 벌리면",
+    "t0": 11.048,
+    "t1": 11.831,
+    "show": [
+     11.048,
+     11.831
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 4,
+    "speaker": "narr",
+    "text": "안쪽이 통째로",
+    "t0": 11.831,
+    "t1": 12.458,
+    "show": [
+     11.831,
+     12.458
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 5,
+    "speaker": "narr",
+    "text": "다 보여서,",
+    "t0": 12.458,
+    "t1": 12.918,
+    "show": [
+     12.458,
+     12.998
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "기존 빨대는",
+    "t0": 12.998,
+    "t1": 13.581,
+    "show": [
+     12.998,
+     13.581
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "솔을 넣어도",
+    "t0": 13.581,
+    "t1": 14.09,
+    "show": [
+     13.581,
+     14.09
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "속이 안 보였지만,",
+    "t0": 14.09,
+    "t1": 15.126,
+    "show": [
+     14.09,
+     15.126
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 3,
+    "speaker": "narr",
+    "text": "이건 손가락으로",
+    "t0": 15.126,
+    "t1": 15.744,
+    "show": [
+     15.126,
+     15.744
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 4,
+    "speaker": "narr",
+    "text": "쓱 닦고",
+    "t0": 15.744,
+    "t1": 16.205,
+    "show": [
+     15.744,
+     16.205
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 5,
+    "speaker": "narr",
+    "text": "헹구면 끝.",
+    "t0": 16.205,
+    "t1": 16.747,
+    "show": [
+     16.205,
+     16.827
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "심지어 다 씻은 뒤엔",
+    "t0": 16.827,
+    "t1": 17.826,
+    "show": [
+     16.827,
+     17.826
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "틈을 꾹꾹 눌러서",
+    "t0": 17.826,
+    "t1": 18.625,
+    "show": [
+     17.826,
+     18.625
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "다시 닫아 주면,",
+    "t0": 18.625,
+    "t1": 19.563,
+    "show": [
+     18.625,
+     19.563
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 3,
+    "speaker": "narr",
+    "text": "멀쩡한 빨대로",
+    "t0": 19.563,
+    "t1": 20.244,
+    "show": [
+     19.563,
+     20.244
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 4,
+    "speaker": "narr",
+    "text": "돌아온다고.",
+    "t0": 20.244,
+    "t1": 20.759,
+    "show": [
+     20.244,
+     20.839
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "근데 진짜 반전은,",
+    "t0": 20.839,
+    "t1": 22.003,
+    "show": [
+     20.839,
+     22.003
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "이런 빨대가",
+    "t0": 22.003,
+    "t1": 22.579,
+    "show": [
+     22.003,
+     22.579
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 2,
+    "speaker": "narr",
+    "text": "해외 제품만 있는 게",
+    "t0": 22.579,
+    "t1": 23.413,
+    "show": [
+     22.579,
+     23.413
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 3,
+    "speaker": "narr",
+    "text": "아니라",
+    "t0": 23.413,
+    "t1": 23.939,
+    "show": [
+     23.413,
+     23.939
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 4,
+    "speaker": "narr",
+    "text": "국내에서 만든",
+    "t0": 23.939,
+    "t1": 24.552,
+    "show": [
+     23.939,
+     24.552
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 5,
+    "speaker": "narr",
+    "text": "것까지 나왔다는 거.",
+    "t0": 24.552,
+    "t1": 25.323,
+    "show": [
+     24.552,
+     25.403
+    ]
+   },
+   {
+    "line": "N8",
+    "j": 0,
+    "speaker": "narr",
+    "text": "덕분에 텀블러",
+    "t0": 25.403,
+    "t1": 26.033,
+    "show": [
+     25.403,
+     26.033
+    ]
+   },
+   {
+    "line": "N8",
+    "j": 1,
+    "speaker": "narr",
+    "text": "쓰는 사람들 사이에서",
+    "t0": 26.033,
+    "t1": 26.921,
+    "show": [
+     26.033,
+     26.921
+    ]
+   },
+   {
+    "line": "N8",
+    "j": 2,
+    "speaker": "narr",
+    "text": "빨대 솔질은",
+    "t0": 26.921,
+    "t1": 27.634,
+    "show": [
+     26.921,
+     27.634
+    ]
+   },
+   {
+    "line": "N8",
+    "j": 3,
+    "speaker": "narr",
+    "text": "이제 옛말이라고.",
+    "t0": 27.634,
+    "t1": 28.394,
+    "show": [
+     27.634,
+     28.6
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "src": "Q5VrYhJVmo0.mp4",
+    "ss": 27.0,
+    "crop": [
+     480,
+     0,
+     957,
+     1080
+    ],
+    "w": 6,
+    "see": "두 손으로 빨대를 천에 넣고 문지르는 근접",
+    "line": "N1",
+    "t0": 0.0,
+    "kind": "tts",
+    "t1": 0.764,
+    "dur": 0.764,
+    "over": 0.0
+   },
+   {
+    "src": "kkBUsht0dfI.mp4",
+    "ss": 0.1,
+    "crop": [
+     600,
+     0,
+     693,
+     782
+    ],
+    "w": 10,
+    "see": "초록 실리콘 빨대를 두 손으로 벌려 엶",
+    "line": "N1",
+    "t0": 0.764,
+    "kind": "tts",
+    "t1": 2.038,
+    "dur": 1.274,
+    "over": 0.0
+   },
+   {
+    "src": "qVGVD9u0Fxc.mp4",
+    "ss": 298.6,
+    "crop": [
+     650,
+     0,
+     693,
+     782
+    ],
+    "w": 7,
+    "see": "빨대 꽂힌 테이크아웃 커피 컵",
+    "line": "N2",
+    "t0": 2.038,
+    "kind": "tts",
+    "t1": 2.949,
+    "dur": 0.911,
+    "over": 0.0
+   },
+   {
+    "src": "Q5VrYhJVmo0.mp4",
+    "ss": 0.0,
+    "crop": [
+     400,
+     0,
+     957,
+     1080
+    ],
+    "w": 9,
+    "see": "남자가 빨대 하나를 들어 보임",
+    "line": "N2",
+    "t0": 2.949,
+    "kind": "tts",
+    "t1": 4.119,
+    "dur": 1.17,
+    "over": 0.0
+   },
+   {
+    "src": "Hgx86Jz4B6U.mp4",
+    "ss": 45.0,
+    "crop": [
+     600,
+     380,
+     620,
+     700
+    ],
+    "w": 13,
+    "see": "민트 빨대 안에 솔을 넣는 손",
+    "line": "N2",
+    "t0": 4.119,
+    "kind": "tts",
+    "t1": 5.81,
+    "dur": 1.691,
+    "over": 0.0
+   },
+   {
+    "src": "Q5VrYhJVmo0.mp4",
+    "ss": 15.633,
+    "crop": [
+     963,
+     0,
+     957,
+     1080
+    ],
+    "w": 8,
+    "see": "남자가 빨대 구멍 안을 들여다봄",
+    "line": "N2",
+    "t0": 5.81,
+    "kind": "tts",
+    "t1": 6.851,
+    "dur": 1.041,
+    "over": 0.0,
+    "ss_reuse": 15.1
+   },
+   {
+    "src": "DQbJeNnu7MQ.mp4",
+    "ss": 16.0,
+    "crop": [
+     800,
+     150,
+     691,
+     780
+    ],
+    "w": 10,
+    "see": "민트 빨대 옆 틈이 벌어지는 근접",
+    "line": "N3",
+    "t0": 6.851,
+    "kind": "tts",
+    "t1": 8.024,
+    "dur": 1.173,
+    "over": 0.0
+   },
+   {
+    "src": "Un8dhJ_rgGc.mp4",
+    "ss": 15.733,
+    "crop": [
+     320,
+     0,
+     638,
+     720
+    ],
+    "w": 8,
+    "see": "상자 속 빨대 단면(열리는 홈 모양)",
+    "line": "N3",
+    "t0": 8.024,
+    "kind": "tts",
+    "t1": 8.962,
+    "dur": 0.938,
+    "over": 0.0,
+    "ss_reuse": 16.6
+   },
+   {
+    "src": "kkBUsht0dfI.mp4",
+    "ss": 5.0,
+    "crop": [
+     700,
+     0,
+     693,
+     782
+    ],
+    "w": 10,
+    "see": "민트 빨대 단면 — 맞물리는 홈 근접",
+    "line": "N4",
+    "t0": 8.962,
+    "kind": "tts",
+    "t1": 10.264,
+    "dur": 1.302,
+    "over": 0.0
+   },
+   {
+    "src": "qVGVD9u0Fxc.mp4",
+    "ss": 256.6,
+    "crop": [
+     760,
+     88,
+     693,
+     782
+    ],
+    "w": 12,
+    "see": "분홍 실리콘 빨대 틈을 손으로 벌림",
+    "line": "N4",
+    "t0": 10.264,
+    "kind": "tts",
+    "t1": 11.826,
+    "dur": 1.562,
+    "over": 0.0
+   },
+   {
+    "src": "qVGVD9u0Fxc.mp4",
+    "ss": 260.5,
+    "crop": [
+     420,
+     50,
+     580,
+     654
+    ],
+    "w": 9,
+    "see": "활짝 펼친 분홍 빨대를 물에 씻음",
+    "line": "N4",
+    "t0": 11.826,
+    "kind": "tts",
+    "t1": 12.998,
+    "dur": 1.172,
+    "over": 0.0
+   },
+   {
+    "src": "G5oZTlpfPCA.mp4",
+    "ss": 0.0,
+    "crop": [
+     300,
+     0,
+     850,
+     960
+    ],
+    "w": 5,
+    "see": "테이블 위 일반 빨대들(금속·유리)",
+    "line": "N5",
+    "t0": 12.998,
+    "kind": "tts",
+    "t1": 13.616,
+    "dur": 0.618,
+    "over": 0.0
+   },
+   {
+    "src": "Hgx86Jz4B6U.mp4",
+    "ss": 21.0,
+    "crop": [
+     600,
+     380,
+     620,
+     700
+    ],
+    "w": 13,
+    "see": "솔을 빨대 안에 밀어 넣음",
+    "line": "N5",
+    "t0": 13.616,
+    "kind": "tts",
+    "t1": 15.221,
+    "dur": 1.605,
+    "over": 0.0
+   },
+   {
+    "src": "G5oZTlpfPCA.mp4",
+    "ss": 38.6,
+    "crop": [
+     560,
+     40,
+     691,
+     780
+    ],
+    "w": 9,
+    "see": "싱크대에서 연 빨대를 손가락으로 닦음",
+    "line": "N5",
+    "t0": 15.221,
+    "kind": "tts",
+    "t1": 16.333,
+    "dur": 1.112,
+    "over": 0.0
+   },
+   {
+    "src": "Q5VrYhJVmo0.mp4",
+    "ss": 7.0,
+    "crop": [
+     600,
+     0,
+     957,
+     1080
+    ],
+    "w": 4,
+    "see": "수돗물에 빨대를 헹굼",
+    "line": "N5",
+    "t0": 16.333,
+    "kind": "tts",
+    "t1": 16.827,
+    "dur": 0.494,
+    "over": 0.0
+   },
+   {
+    "src": "Q5VrYhJVmo0.mp4",
+    "ss": 36.5,
+    "crop": [
+     600,
+     0,
+     957,
+     1080
+    ],
+    "w": 8,
+    "see": "씻은 빨대를 수건으로 닦는 손",
+    "line": "N6",
+    "t0": 16.827,
+    "kind": "tts",
+    "t1": 17.897,
+    "dur": 1.07,
+    "over": 0.0
+   },
+   {
+    "src": "G5oZTlpfPCA.mp4",
+    "ss": 50.3,
+    "crop": [
+     560,
+     40,
+     691,
+     780
+    ],
+    "w": 12,
+    "see": "빨대 틈을 손가락으로 따라 눌러 닫음",
+    "line": "N6",
+    "t0": 17.897,
+    "kind": "tts",
+    "t1": 19.502,
+    "dur": 1.605,
+    "over": 0.0
+   },
+   {
+    "src": "kkBUsht0dfI.mp4",
+    "ss": 19.6,
+    "crop": [
+     650,
+     0,
+     693,
+     782
+    ],
+    "w": 10,
+    "see": "닫힌 민트 빨대를 물컵에 꽂음",
+    "line": "N6",
+    "t0": 19.502,
+    "kind": "tts",
+    "t1": 20.839,
+    "dur": 1.337,
+    "over": 0.0
+   },
+   {
+    "src": "Un8dhJ_rgGc.mp4",
+    "ss": 19.7,
+    "crop": [
+     320,
+     0,
+     638,
+     720
+    ],
+    "w": 7,
+    "see": "나란히 놓인 실리콘 빨대 근접",
+    "line": "N7",
+    "t0": 20.839,
+    "kind": "tts",
+    "t1": 21.807,
+    "dur": 0.968,
+    "over": 0.0
+   },
+   {
+    "src": "7xzvgnv2WjI.mp4",
+    "ss": 8.0,
+    "crop": [
+     320,
+     0,
+     638,
+     720
+    ],
+    "w": 14,
+    "see": "여러 색 실리콘 빨대 세트(해외 판매 영상)",
+    "line": "N7",
+    "t0": 21.807,
+    "kind": "tts",
+    "t1": 23.743,
+    "dur": 1.936,
+    "over": 0.0
+   },
+   {
+    "src": "qVGVD9u0Fxc.mp4",
+    "ss": 306.0,
+    "crop": [
+     700,
+     60,
+     693,
+     782
+    ],
+    "w": 12,
+    "see": "분홍 빨대와 전용 케이스(국내 제품 홍보 영상)",
+    "line": "N7",
+    "t0": 23.743,
+    "kind": "tts",
+    "t1": 25.403,
+    "dur": 1.66,
+    "over": 0.0
+   },
+   {
+    "src": "G5oZTlpfPCA.mp4",
+    "ss": 62.4,
+    "crop": [
+     900,
+     120,
+     740,
+     835
+    ],
+    "w": 12,
+    "see": "여성이 빨대 꽂힌 물병으로 마심",
+    "line": "N8",
+    "t0": 25.403,
+    "kind": "tts",
+    "t1": 26.879,
+    "dur": 1.476,
+    "over": 0.0
+   },
+   {
+    "src": "Q5VrYhJVmo0.mp4",
+    "ss": 12.0,
+    "crop": [
+     600,
+     0,
+     957,
+     1080
+    ],
+    "w": 5,
+    "see": "싱크대에서 빨대를 문지름",
+    "line": "N8",
+    "t0": 26.879,
+    "kind": "tts",
+    "t1": 27.493,
+    "dur": 0.614,
+    "over": 0.0
+   },
+   {
+    "src": "DQbJeNnu7MQ.mp4",
+    "ss": 49.2,
+    "crop": [
+     300,
+     0,
+     700,
+     790
+    ],
+    "w": 9,
+    "see": "여러 색 실리콘 빨대들",
+    "line": "N8",
+    "t0": 27.493,
+    "kind": "tts",
+    "t1": 28.6,
+    "dur": 1.107,
+    "over": 0.0
+   }
+  ],
+  "opos": [],
+  "end": 28.6
+ },
+ "placement": {
+  "reference": "Y2YXuAE4J00",
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "빨대 솔질 지옥",
+    "t0": 0.0,
+    "t1": 0.738,
+    "show": [
+     0.0,
+     0.738
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "끝내버린 천재의 발명품?",
+    "t0": 0.738,
+    "t1": 1.958,
+    "show": [
+     0.738,
+     2.038
+    ],
+    "first": false,
+    "lex": [
+     "lux",
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "요즘 텀블러 빨대",
+    "t0": 2.038,
+    "t1": 2.885,
+    "show": [
+     2.038,
+     2.885
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "하나씩 다 들고",
+    "t0": 2.885,
+    "t1": 3.543,
+    "show": [
+     2.885,
+     3.543
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 2,
+    "speaker": "narr",
+    "text": "다니는데,",
+    "t0": 3.543,
+    "t1": 4.362,
+    "show": [
+     3.543,
+     4.362
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 3,
+    "speaker": "narr",
+    "text": "안쪽 때는 솔로",
+    "t0": 4.362,
+    "t1": 5.141,
+    "show": [
+     4.362,
+     5.141
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 4,
+    "speaker": "narr",
+    "text": "아무리 문질러도",
+    "t0": 5.141,
+    "t1": 5.894,
+    "show": [
+     5.141,
+     5.894
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 5,
+    "speaker": "narr",
+    "text": "눈에 안 보인다는 거.",
+    "t0": 5.894,
+    "t1": 6.771,
+    "show": [
+     5.894,
+     6.851
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "바로 반으로 쫙 열리는",
+    "t0": 6.851,
+    "t1": 7.928,
+    "show": [
+     6.851,
+     7.928
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "개방형 실리콘 빨대.",
+    "t0": 7.928,
+    "t1": 8.882,
+    "show": [
+     7.928,
+     8.962
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "여기다가",
+    "t0": 8.962,
+    "t1": 9.302,
+    "show": [
+     8.962,
+     9.302
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "말도 안 되는 게,",
+    "t0": 9.302,
+    "t1": 10.182,
+    "show": [
+     9.302,
+     10.182
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "빨대 옆에 난 틈을",
+    "t0": 10.182,
+    "t1": 11.048,
+    "show": [
+     10.182,
+     11.048
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 3,
+    "speaker": "narr",
+    "text": "손으로 벌리면",
+    "t0": 11.048,
+    "t1": 11.831,
+    "show": [
+     11.048,
+     11.831
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 4,
+    "speaker": "narr",
+    "text": "안쪽이 통째로",
+    "t0": 11.831,
+    "t1": 12.458,
+    "show": [
+     11.831,
+     12.458
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 5,
+    "speaker": "narr",
+    "text": "다 보여서,",
+    "t0": 12.458,
+    "t1": 12.918,
+    "show": [
+     12.458,
+     12.998
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "기존 빨대는",
+    "t0": 12.998,
+    "t1": 13.581,
+    "show": [
+     12.998,
+     13.581
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "솔을 넣어도",
+    "t0": 13.581,
+    "t1": 14.09,
+    "show": [
+     13.581,
+     14.09
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "속이 안 보였지만,",
+    "t0": 14.09,
+    "t1": 15.126,
+    "show": [
+     14.09,
+     15.126
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 3,
+    "speaker": "narr",
+    "text": "이건 손가락으로",
+    "t0": 15.126,
+    "t1": 15.744,
+    "show": [
+     15.126,
+     15.744
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 4,
+    "speaker": "narr",
+    "text": "쓱 닦고",
+    "t0": 15.744,
+    "t1": 16.205,
+    "show": [
+     15.744,
+     16.205
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 5,
+    "speaker": "narr",
+    "text": "헹구면 끝.",
+    "t0": 16.205,
+    "t1": 16.747,
+    "show": [
+     16.205,
+     16.827
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "심지어 다 씻은 뒤엔",
+    "t0": 16.827,
+    "t1": 17.826,
+    "show": [
+     16.827,
+     17.826
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "틈을 꾹꾹 눌러서",
+    "t0": 17.826,
+    "t1": 18.625,
+    "show": [
+     17.826,
+     18.625
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "다시 닫아 주면,",
+    "t0": 18.625,
+    "t1": 19.563,
+    "show": [
+     18.625,
+     19.563
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 3,
+    "speaker": "narr",
+    "text": "멀쩡한 빨대로",
+    "t0": 19.563,
+    "t1": 20.244,
+    "show": [
+     19.563,
+     20.244
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 4,
+    "speaker": "narr",
+    "text": "돌아온다고.",
+    "t0": 20.244,
+    "t1": 20.759,
+    "show": [
+     20.244,
+     20.839
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "근데 진짜 반전은,",
+    "t0": 20.839,
+    "t1": 22.003,
+    "show": [
+     20.839,
+     22.003
+    ],
+    "first": true,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "twist",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "이런 빨대가",
+    "t0": 22.003,
+    "t1": 22.579,
+    "show": [
+     22.003,
+     22.579
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 2,
+    "speaker": "narr",
+    "text": "해외 제품만 있는 게",
+    "t0": 22.579,
+    "t1": 23.413,
+    "show": [
+     22.579,
+     23.413
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 3,
+    "speaker": "narr",
+    "text": "아니라",
+    "t0": 23.413,
+    "t1": 23.939,
+    "show": [
+     23.413,
+     23.939
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 4,
+    "speaker": "narr",
+    "text": "국내에서 만든",
+    "t0": 23.939,
+    "t1": 24.552,
+    "show": [
+     23.939,
+     24.552
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 5,
+    "speaker": "narr",
+    "text": "것까지 나왔다는 거.",
+    "t0": 24.552,
+    "t1": 25.323,
+    "show": [
+     24.552,
+     25.403
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N8",
+    "j": 0,
+    "speaker": "narr",
+    "text": "덕분에 텀블러",
+    "t0": 25.403,
+    "t1": 26.033,
+    "show": [
+     25.403,
+     26.033
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N8",
+    "j": 1,
+    "speaker": "narr",
+    "text": "쓰는 사람들 사이에서",
+    "t0": 26.033,
+    "t1": 26.921,
+    "show": [
+     26.033,
+     26.921
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N8",
+    "j": 2,
+    "speaker": "narr",
+    "text": "빨대 솔질은",
+    "t0": 26.921,
+    "t1": 27.634,
+    "show": [
+     26.921,
+     27.634
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N8",
+    "j": 3,
+    "speaker": "narr",
+    "text": "이제 옛말이라고.",
+    "t0": 27.634,
+    "t1": 28.394,
+    "show": [
+     27.634,
+     28.6
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   }
+  ],
+  "sfx": [
+   {
+    "t": 0.764,
+    "role": null,
+    "why": "컷 경계",
+    "kind": "ding"
+   },
+   {
+    "t": 2.071,
+    "role": "body",
+    "why": "body",
+    "kind": "ding"
+   },
+   {
+    "t": 25.436,
+    "role": "end",
+    "why": "end",
+    "kind": "ding"
+   }
+  ],
+  "transitions": [],
+  "flashes": [],
+  "cut_bounds": 23,
+  "trans_plan": {
+   "src": null,
+   "want_raw": {},
+   "want": null,
+   "picked": {},
+   "why": "비율 출처 없음(본보기 줄판독 transition·counted.transition·판 cuts.transition.kinds 모두 없음)"
+  },
+  "log": [
+   "본보기 벤치 편 = Y2YXuAE4J00",
+   "효과음 3발(본보기 줄판독 3발 · 역할 {'body': 1, 'reveal': 1, 'end': 1} · 편차 +0.03초) [(0.764, 'ding', None), (2.071, 'ding', 'body'), (25.436, 'ding', 'end')]",
+   "꾸밈 없음 37/37 ≥ 판 plain_share 0.886×37=33",
+   "등장 {'cut': 37} · 강조 0/37",
+   "꾸밈 답 없음(deco_answers.json)"
+  ],
+  "_timeline": {
+   "cuts": [
+    {
+     "src": "Q5VrYhJVmo0.mp4",
+     "ss": 27.0,
+     "crop": [
+      480,
+      0,
+      957,
+      1080
+     ],
+     "w": 6,
+     "see": "두 손으로 빨대를 천에 넣고 문지르는 근접",
+     "line": "N1",
+     "t0": 0.0,
+     "kind": "tts",
+     "t1": 0.764,
+     "dur": 0.764,
+     "over": 0.0
+    },
+    {
+     "src": "kkBUsht0dfI.mp4",
+     "ss": 0.1,
+     "crop": [
+      600,
+      0,
+      693,
+      782
+     ],
+     "w": 10,
+     "see": "초록 실리콘 빨대를 두 손으로 벌려 엶",
+     "line": "N1",
+     "t0": 0.764,
+     "kind": "tts",
+     "t1": 2.038,
+     "dur": 1.274,
+     "over": 0.0
+    },
+    {
+     "src": "qVGVD9u0Fxc.mp4",
+     "ss": 298.6,
+     "crop": [
+      650,
+      0,
+      693,
+      782
+     ],
+     "w": 7,
+     "see": "빨대 꽂힌 테이크아웃 커피 컵",
+     "line": "N2",
+     "t0": 2.038,
+     "kind": "tts",
+     "t1": 2.949,
+     "dur": 0.911,
+     "over": 0.0
+    },
+    {
+     "src": "Q5VrYhJVmo0.mp4",
+     "ss": 0.0,
+     "crop": [
+      400,
+      0,
+      957,
+      1080
+     ],
+     "w": 9,
+     "see": "남자가 빨대 하나를 들어 보임",
+     "line": "N2",
+     "t0": 2.949,
+     "kind": "tts",
+     "t1": 4.119,
+     "dur": 1.17,
+     "over": 0.0
+    },
+    {
+     "src": "Hgx86Jz4B6U.mp4",
+     "ss": 45.0,
+     "crop": [
+      600,
+      380,
+      620,
+      700
+     ],
+     "w": 13,
+     "see": "민트 빨대 안에 솔을 넣는 손",
+     "line": "N2",
+     "t0": 4.119,
+     "kind": "tts",
+     "t1": 5.81,
+     "dur": 1.691,
+     "over": 0.0
+    },
+    {
+     "src": "Q5VrYhJVmo0.mp4",
+     "ss": 15.633,
+     "crop": [
+      963,
+      0,
+      957,
+      1080
+     ],
+     "w": 8,
+     "see": "남자가 빨대 구멍 안을 들여다봄",
+     "line": "N2",
+     "t0": 5.81,
+     "kind": "tts",
+     "t1": 6.851,
+     "dur": 1.041,
+     "over": 0.0,
+     "ss_reuse": 15.1
+    },
+    {
+     "src": "DQbJeNnu7MQ.mp4",
+     "ss": 16.0,
+     "crop": [
+      800,
+      150,
+      691,
+      780
+     ],
+     "w": 10,
+     "see": "민트 빨대 옆 틈이 벌어지는 근접",
+     "line": "N3",
+     "t0": 6.851,
+     "kind": "tts",
+     "t1": 8.024,
+     "dur": 1.173,
+     "over": 0.0
+    },
+    {
+     "src": "Un8dhJ_rgGc.mp4",
+     "ss": 15.733,
+     "crop": [
+      320,
+      0,
+      638,
+      720
+     ],
+     "w": 8,
+     "see": "상자 속 빨대 단면(열리는 홈 모양)",
+     "line": "N3",
+     "t0": 8.024,
+     "kind": "tts",
+     "t1": 8.962,
+     "dur": 0.938,
+     "over": 0.0,
+     "ss_reuse": 16.6
+    },
+    {
+     "src": "kkBUsht0dfI.mp4",
+     "ss": 5.0,
+     "crop": [
+      700,
+      0,
+      693,
+      782
+     ],
+     "w": 10,
+     "see": "민트 빨대 단면 — 맞물리는 홈 근접",
+     "line": "N4",
+     "t0": 8.962,
+     "kind": "tts",
+     "t1": 10.264,
+     "dur": 1.302,
+     "over": 0.0
+    },
+    {
+     "src": "qVGVD9u0Fxc.mp4",
+     "ss": 256.6,
+     "crop": [
+      760,
+      88,
+      693,
+      782
+     ],
+     "w": 12,
+     "see": "분홍 실리콘 빨대 틈을 손으로 벌림",
+     "line": "N4",
+     "t0": 10.264,
+     "kind": "tts",
+     "t1": 11.826,
+     "dur": 1.562,
+     "over": 0.0
+    },
+    {
+     "src": "qVGVD9u0Fxc.mp4",
+     "ss": 260.5,
+     "crop": [
+      420,
+      50,
+      580,
+      654
+     ],
+     "w": 9,
+     "see": "활짝 펼친 분홍 빨대를 물에 씻음",
+     "line": "N4",
+     "t0": 11.826,
+     "kind": "tts",
+     "t1": 12.998,
+     "dur": 1.172,
+     "over": 0.0
+    },
+    {
+     "src": "G5oZTlpfPCA.mp4",
+     "ss": 0.0,
+     "crop": [
+      300,
+      0,
+      850,
+      960
+     ],
+     "w": 5,
+     "see": "테이블 위 일반 빨대들(금속·유리)",
+     "line": "N5",
+     "t0": 12.998,
+     "kind": "tts",
+     "t1": 13.616,
+     "dur": 0.618,
+     "over": 0.0
+    },
+    {
+     "src": "Hgx86Jz4B6U.mp4",
+     "ss": 21.0,
+     "crop": [
+      600,
+      380,
+      620,
+      700
+     ],
+     "w": 13,
+     "see": "솔을 빨대 안에 밀어 넣음",
+     "line": "N5",
+     "t0": 13.616,
+     "kind": "tts",
+     "t1": 15.221,
+     "dur": 1.605,
+     "over": 0.0
+    },
+    {
+     "src": "G5oZTlpfPCA.mp4",
+     "ss": 38.6,
+     "crop": [
+      560,
+      40,
+      691,
+      780
+     ],
+     "w": 9,
+     "see": "싱크대에서 연 빨대를 손가락으로 닦음",
+     "line": "N5",
+     "t0": 15.221,
+     "kind": "tts",
+     "t1": 16.333,
+     "dur": 1.112,
+     "over": 0.0
+    },
+    {
+     "src": "Q5VrYhJVmo0.mp4",
+     "ss": 7.0,
+     "crop": [
+      600,
+      0,
+      957,
+      1080
+     ],
+     "w": 4,
+     "see": "수돗물에 빨대를 헹굼",
+     "line": "N5",
+     "t0": 16.333,
+     "kind": "tts",
+     "t1": 16.827,
+     "dur": 0.494,
+     "over": 0.0
+    },
+    {
+     "src": "Q5VrYhJVmo0.mp4",
+     "ss": 36.5,
+     "crop": [
+      600,
+      0,
+      957,
+      1080
+     ],
+     "w": 8,
+     "see": "씻은 빨대를 수건으로 닦는 손",
+     "line": "N6",
+     "t0": 16.827,
+     "kind": "tts",
+     "t1": 17.897,
+     "dur": 1.07,
+     "over": 0.0
+    },
+    {
+     "src": "G5oZTlpfPCA.mp4",
+     "ss": 50.3,
+     "crop": [
+      560,
+      40,
+      691,
+      780
+     ],
+     "w": 12,
+     "see": "빨대 틈을 손가락으로 따라 눌러 닫음",
+     "line": "N6",
+     "t0": 17.897,
+     "kind": "tts",
+     "t1": 19.502,
+     "dur": 1.605,
+     "over": 0.0
+    },
+    {
+     "src": "kkBUsht0dfI.mp4",
+     "ss": 19.6,
+     "crop": [
+      650,
+      0,
+      693,
+      782
+     ],
+     "w": 10,
+     "see": "닫힌 민트 빨대를 물컵에 꽂음",
+     "line": "N6",
+     "t0": 19.502,
+     "kind": "tts",
+     "t1": 20.839,
+     "dur": 1.337,
+     "over": 0.0
+    },
+    {
+     "src": "Un8dhJ_rgGc.mp4",
+     "ss": 19.7,
+     "crop": [
+      320,
+      0,
+      638,
+      720
+     ],
+     "w": 7,
+     "see": "나란히 놓인 실리콘 빨대 근접",
+     "line": "N7",
+     "t0": 20.839,
+     "kind": "tts",
+     "t1": 21.807,
+     "dur": 0.968,
+     "over": 0.0
+    },
+    {
+     "src": "7xzvgnv2WjI.mp4",
+     "ss": 8.0,
+     "crop": [
+      320,
+      0,
+      638,
+      720
+     ],
+     "w": 14,
+     "see": "여러 색 실리콘 빨대 세트(해외 판매 영상)",
+     "line": "N7",
+     "t0": 21.807,
+     "kind": "tts",
+     "t1": 23.743,
+     "dur": 1.936,
+     "over": 0.0
+    },
+    {
+     "src": "qVGVD9u0Fxc.mp4",
+     "ss": 306.0,
+     "crop": [
+      700,
+      60,
+      693,
+      782
+     ],
+     "w": 12,
+     "see": "분홍 빨대와 전용 케이스(국내 제품 홍보 영상)",
+     "line": "N7",
+     "t0": 23.743,
+     "kind": "tts",
+     "t1": 25.403,
+     "dur": 1.66,
+     "over": 0.0
+    },
+    {
+     "src": "G5oZTlpfPCA.mp4",
+     "ss": 62.4,
+     "crop": [
+      900,
+      120,
+      740,
+      835
+     ],
+     "w": 12,
+     "see": "여성이 빨대 꽂힌 물병으로 마심",
+     "line": "N8",
+     "t0": 25.403,
+     "kind": "tts",
+     "t1": 26.879,
+     "dur": 1.476,
+     "over": 0.0
+    },
+    {
+     "src": "Q5VrYhJVmo0.mp4",
+     "ss": 12.0,
+     "crop": [
+      600,
+      0,
+      957,
+      1080
+     ],
+     "w": 5,
+     "see": "싱크대에서 빨대를 문지름",
+     "line": "N8",
+     "t0": 26.879,
+     "kind": "tts",
+     "t1": 27.493,
+     "dur": 0.614,
+     "over": 0.0
+    },
+    {
+     "src": "DQbJeNnu7MQ.mp4",
+     "ss": 49.2,
+     "crop": [
+      300,
+      0,
+      700,
+      790
+     ],
+     "w": 9,
+     "see": "여러 색 실리콘 빨대들",
+     "line": "N8",
+     "t0": 27.493,
+     "kind": "tts",
+     "t1": 28.6,
+     "dur": 1.107,
+     "over": 0.0
+    }
+   ],
+   "end": 28.6
+  },
+  "transitions_drawn": []
+ }
+}

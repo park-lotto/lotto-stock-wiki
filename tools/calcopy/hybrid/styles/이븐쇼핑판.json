@@ -1,0 +1,962 @@
+{
+ "name": "이븐쇼핑판",
+ "renderer": "bench",
+ "thumb_card_face": false,
+ "_thumb_card_face": "연예인 채널 아님 — 카드 얼굴 관문 끔(판마다 명시 필수, styles.REQUIRED)",
+ "_note": "이븐쇼핑(@UClecY6IhcjwmCBJHiZ2-cTg) 칼카피 1차 판 = 우리 브랜드 재미썸홈(사장님 10-26 '잇템로그·키치잇처럼 표준 길로'). 근거 channel/evenshopping/{스타일분석.md, 줄판독/ 6편 185줄, _kal/}. 렌더 = render_bench.py. 1차 = 벤치와 같게(앱 화면 틀·흰 띠 검정 자막·나레만·BGM 없음·띵 효과음). 재미썸홈판.json(jaemi)은 얜샷템 하이브리드 판이라 그대로 둔다. preset/숏템템플릿(preset_make, renderer make)은 회원 옛 길.",
+ "bench": {
+  "ko": "이븐쇼핑",
+  "channel": "evenshopping",
+  "analysis": "channel/evenshopping/스타일분석.md",
+  "line_reads": "channel/evenshopping/줄판독",
+  "src_dir": "C:/숏템_칼카피/evenshopping/src",
+  "sfx_events": "channel/evenshopping/_kal/sfx_events.json",
+  "palette": "channel/evenshopping/팔레트.json"
+ },
+ "voice": {
+  "name": "진우",
+  "voice_id": "tc_632293f759d649937b97f323",
+  "candidates": [],
+  "why": "사장님 10-26 결정 '재미썸홈 = 진우, 배속 ≤1.25'(handoff 10-26 새벽 관문 창) · 벤치 나레 남성 f0 148~166Hz(스타일분석 §6) · 필재 금지(칼카피_시작 §12)"
+ },
+ "cps_target": 8.68,
+ "_why_cps_target": "벤치 6편 나레 글자/자막 초 편 중앙 8.68(8.42·8.69·8.66·8.91·8.62·8.93 — channel/evenshopping/_kal/손상수_실측.json(handconst.py evenshopping) cps_target)",
+ "bgm": {
+  "id": "sweets",
+  "db_below_voice": 90.0,
+  "duck_orig_db": 0.0,
+  "duck_narr_db": 0.0,
+  "fade_out": 0.125,
+  "candidates": [],
+  "why": "벤치 BGM 0/6(스타일분석 §7 — 쉼 구간 바닥이 말보다 30~39dB 낮고 조성 줄 없음, LHe 쉼 p10 −75dB 디지털 무음) → 1차 = 배경음 없음. render_bench.audio 는 bgm.id 가 없으면 '<None>.mp3' 를 찾다 멈춘다(굿레터판 id null 도 같은 결손) → 그동안 곡 칸은 채우고 db_below_voice 90(목소리보다 90dB 아래 = 들리지 않음)으로 끈다(_pending.bgm_none) · fade_out 0.125 = channel/evenshopping/_kal/손상수_실측.json(handconst.py evenshopping) bgm.fade_out"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 통일(사장님 10-18, 지침서 §3-7) · 벤치 −13.2~−13.6(스타일분석 §7)"
+ },
+ "length": {
+  "min": 25,
+  "max": 30,
+  "why": "사장님 10-25 규칙서 '영상 길이 목표 25~30초'(channel/evenshopping/preset/숏템템플릿/규칙서.md) · 벤치 6편 25.9·26.05·26.22·26.32·36.33·36.72(중앙 26.27, channel/evenshopping/_kal/손상수_실측.json(handconst.py evenshopping) length p17 26·p83 37)"
+ },
+ "timing": {
+  "gap": 0.08,
+  "tail": 0.195,
+  "why": "gap 0.08 = 벤치 줄 경계 소리 쉼 중앙(n=20, p25 0.055·p75 0.085) · tail 0.195 = 마지막 말 끝→영상 끝 편 중앙(0.233·0.16·0.317·0.23·0.117·0.157) — channel/evenshopping/_kal/손상수_실측.json(handconst.py evenshopping) timing"
+ },
+ "frame": {
+  "kind": "post",
+  "bg": [
+   67,
+   67,
+   67
+  ],
+  "window": [
+   0,
+   591,
+   1080,
+   1219
+  ],
+  "title": [
+   {
+    "font": "BMDOHYEON.ttf",
+    "px": 81,
+    "center": 260.5,
+    "color": "#FFFFFF",
+    "max_w": 900,
+    "join": " "
+   }
+  ],
+  "post": {
+   "head_bar": {
+    "box": [
+     0,
+     0,
+     1080,
+     174
+    ],
+    "color": "#434343",
+    "icons": [
+     {
+      "kind": "bars",
+      "x": 52,
+      "ys": [
+       23,
+       58,
+       89
+      ],
+      "w": 111,
+      "h": 9,
+      "color": "#FFFFFF"
+     },
+     {
+      "kind": "search",
+      "x": 937,
+      "y": 12,
+      "size": 112,
+      "stroke": 7,
+      "color": "#FFFFFF"
+     },
+     {
+      "kind": "text",
+      "from": "brand",
+      "text": "재미썸홈",
+      "font": "BMDOHYEON.ttf",
+      "px": 114,
+      "letter_spacing": 40,
+      "color": "#FFFFFF",
+      "cx": 540,
+      "cy": 75.5,
+      "max_w": 700
+     }
+    ]
+   },
+   "rules": [
+    {
+     "box": [
+      0,
+      177,
+      1080,
+      179
+     ],
+     "color": "#FFFFFF"
+    },
+    {
+     "box": [
+      0,
+      405,
+      1080,
+      590
+     ],
+     "color": "#FFFFFF"
+    }
+   ]
+  },
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "why": "벤치 ABjQ0YCZoes 3.0초 프레임 픽셀(10-26, 스타일분석 §2 와 같은 꼴 6/6): 머리띠 y0~173 #434343 · 메뉴 막대 3개 x52~162·y23~31/58~66/89~97 흰 · 돋보기 고리 x942~1022·y16~99(지름 84 → size 112) · 머리 글 '이븐쇼핑' 잉크 x311~767·y31~120 → 우리 브랜드 '재미썸홈' BMDOHYEON 114px 자간 40(PIL '이븐쇼핑' 451×86 ↔ 벤치 457×90) · 흰 줄 y177~178 · 제목 띠 y179~404(바탕과 같은 색) · 제목 흰 잉크 x105~977·y229~292 → BMDOHYEON 81px 가운데 260.5(PIL 81px ≈ 873×64) · 자막 띠 흰 y405~589 · 창 y591~1809(1080×1219) · 아래 띠 y1810~1919",
+  "segments": [
+   {
+    "t0": 0,
+    "t1": "#1.end",
+    "frame": {
+     "kind": "post",
+     "bg": [
+      32,
+      32,
+      32
+     ],
+     "window": [
+      0,
+      732,
+      1080,
+      1080
+     ],
+     "title": [
+      {
+       "font": "JalnanGothic.ttf",
+       "px": 108,
+       "center": 275,
+       "color": "#FFFFFF",
+       "max_w": 930,
+       "stroke": {
+        "px": 5,
+        "color": "#000000"
+       }
+      },
+      {
+       "font": "JalnanGothic.ttf",
+       "px": 145,
+       "center": 427,
+       "color": "#00E3F4",
+       "max_w": 920,
+       "stroke": {
+        "px": 5,
+        "color": "#000000"
+       }
+      }
+     ],
+     "post": {
+      "head_bar": {
+       "box": [
+        0,
+        0,
+        1080,
+        174
+       ],
+       "color": "#202020",
+       "icons": [
+        {
+         "kind": "bars",
+         "x": 36,
+         "ys": [
+          50,
+          85,
+          116
+         ],
+         "w": 111,
+         "h": 9,
+         "color": "#9A9A9A"
+        },
+        {
+         "kind": "search",
+         "x": 937,
+         "y": 12,
+         "size": 112,
+         "stroke": 7,
+         "color": "#7B7D7A"
+        }
+       ]
+      },
+      "rules": [
+       {
+        "box": [
+         0,
+         402,
+         1080,
+         732
+        ],
+        "color": "#7E7E7E"
+       }
+      ],
+      "body_box": {
+       "box": [
+        0,
+        584,
+        1080,
+        676
+       ],
+       "color": "#FDFDFD",
+       "fade": [
+        20,
+        20
+       ],
+       "text": {
+        "font": "BMJUA.ttf",
+        "px": 67,
+        "color": "#000000",
+        "cx": 540,
+        "cy": 628.5,
+        "max_w": 1000,
+        "text": ""
+       }
+      }
+     },
+     "logo": null,
+     "credit": null,
+     "watermark": null
+    },
+    "captions": "hide",
+    "body_text": "lines",
+    "why": "훅 틀 6/6편 0초~1.48~2.02초(첫 나레 문장 = 제목 읽기) — ABjQ0YCZoes 0.8초 픽셀: 바탕 #202020 · 머리띠 로고 글 없음(메뉴 x36~146·y50~124 회색, 돋보기 x944~1020·y17~99 회색) · 큰 제목 1줄 흰 잉크 x74~1003·y221~329 / 2줄 하늘 잉크 x80~997·y353~501(스타일분석 §2: #00E3F4 4편·#01FDF2 2편) + 검정 테 · 글꼴 JalnanGothic 추정(fontmatch 0.66 미확정 — PIL 108·145px 폭 대조) · 회색 띠 y402~731 #7E7E7E · 흰 상자 y584~676(가장자리 번짐) 안 검정 BMJUA 잉크 y600~657 = 제목+'?' 다시 읽기(body_text) · 창 y732~1811"
+   }
+  ]
+ },
+ "caption": {
+  "pack": "evenshopping",
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 8.68,
+  "chunk_max_chars": 12,
+  "band": [
+   457,
+   514
+  ],
+  "why": "흰 띠 위 검정 #000000 한 줄 · 외곽·그림자·강조 0 · BMJUA(fontmatch 6/6 1위 0.824) · 잉크 y457~514(나레 185줄 중앙, channel/evenshopping/_kal/손상수_실측.json(handconst.py evenshopping) caption.band) · 등장 instant 185/185 · chunk_max_chars 12 = 나레 조각 자수(공백 뺀) p90(p50 9·최대 16) · typing 0줄(typing_cps 안 쓰임)"
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "cut": 1.0
+   },
+   "ms": 0,
+   "why": "전환 = 하드 컷(줄 첫 컷 cut 164·flash 1·컷 없음 20/185, 스타일분석 §3) — 흰 번쩍 1/6편(증거 카드 진입)은 표본 1이라 규칙 아님"
+  },
+  "why": "push 0 = 원본 카메라 움직임 그대로(motion cam 167·still 18, channel/evenshopping/_kal/손상수_실측.json(handconst.py evenshopping) cuts.push_tts)"
+ },
+ "sfx_files": {
+  "ding": "팩01/ding.wav",
+  "gain_db": -8,
+  "why": "벤치 효과음 = '띵'(4.3+5.8kHz 순음 0.28~1.08초) 편당 1~4발 17발(_kal/sfx_띵_보강.json, 스타일분석 §7) → 팩01 ding(4.6·5.7·4.3kHz — 우리 팩 ding 중 가장 가까움, 10-26 FFT) · gain −8 = 손 상수(귀 확인 전)"
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "narr.first": "cut",
+    "narr.rest": "cut",
+    "why": "등장 instant 185/185(전 자리·전 역할, 스타일분석 §1)"
+   },
+   "sfx": {
+    "kinds": {
+     "ding": 1.0
+    },
+    "max": 4,
+    "why": "띵 편당 1~4발(17/185줄), 13/17 자막 교체 직후 0.06초 안 — 줄 고르는 역할 규칙 없음(약, 스타일분석 §7) → 본보기 편 시각 비율(placement.sfx_step) · 상한 4"
+   }
+  },
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/evenshopping/줄판독",
+   "n_videos": 6,
+   "slots": {
+    "narr.first": {
+     "n": 6,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.0
+    },
+    "narr.rest": {
+     "n": 179,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.0
+    }
+   },
+   "share": {
+    "emph": 0.0,
+    "typing": 0.0,
+    "sfx": 1.0
+   },
+   "stickers": {
+    "circle_arrow": 0.333,
+    "other": 0.333
+   },
+   "transition": {
+    "cut": 0.911,
+    "other": 0.084,
+    "flash": 0.006
+   },
+   "sfx_kinds": {
+    "ding": 0.941,
+    "whoosh": 0.059
+   },
+   "videos": [
+    {
+     "id": "1kfqEB2b1xM",
+     "n": 41,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 40,
+       "enter": {
+        "cut": 40
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "훅 썸네일 틀 — 큰 제목 2줄(흰+하늘) 아래 흰 둥근 상자 자막(작은 글자 · 제목을 물음표로 다시 읽음)": 1
+     },
+     "sfx": [
+      "cap",
+      "none",
+      "none",
+      "none",
+      "none"
+     ],
+     "sfx_count": {
+      "sure": 0,
+      "pending": 5
+     },
+     "no_caption": 0,
+     "transitions": {
+      "cut": 37,
+      "other": 3
+     },
+     "n_trans": 40,
+     "roles": {
+      "hook": 1,
+      "body": 31,
+      "reveal": 1,
+      "twist": 4,
+      "end": 4
+     },
+     "sfx_lines": [
+      {
+       "kind": "ding",
+       "role": "body",
+       "t": 5.78,
+       "off": 0.063,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "ding",
+       "role": "body",
+       "t": 19.45,
+       "off": 0.05,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "ding",
+       "role": "body",
+       "t": 29.66,
+       "off": 0.027,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "ABjQ0YCZoes",
+     "n": 27,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 26,
+       "enter": {
+        "cut": 26
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "훅 썸네일 틀 — 큰 제목 2줄(흰+하늘) 아래 흰 둥근 상자 자막(작은 글자 · 제목을 물음표로 다시 읽음)": 1
+     },
+     "sfx": [
+      "cap",
+      "cut",
+      "none"
+     ],
+     "sfx_count": {
+      "sure": 0,
+      "pending": 3
+     },
+     "no_caption": 0,
+     "transitions": {
+      "cut": 21,
+      "other": 5
+     },
+     "n_trans": 26,
+     "roles": {
+      "hook": 1,
+      "body": 19,
+      "reveal": 1,
+      "twist": 3,
+      "end": 3
+     },
+     "sfx_lines": [
+      {
+       "kind": "ding",
+       "role": "reveal",
+       "t": 7.88,
+       "off": 0.363,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "ding",
+       "role": "body",
+       "t": 19.21,
+       "off": 0.01,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "ding",
+       "role": "end",
+       "t": 25.01,
+       "off": 0.027,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "kC8fkx1Ve3Q",
+     "n": 26,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 25,
+       "enter": {
+        "cut": 25
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "훅 썸네일 틀 — 큰 제목 2줄(흰+하늘) 아래 흰 둥근 상자 자막(작은 글자 · 제목을 물음표로 다시 읽음)": 1
+     },
+     "sfx": [
+      "cut",
+      "cut",
+      "none",
+      "cap"
+     ],
+     "sfx_count": {
+      "sure": 0,
+      "pending": 4
+     },
+     "no_caption": 0,
+     "transitions": {
+      "cut": 24,
+      "other": 1
+     },
+     "n_trans": 25,
+     "roles": {
+      "hook": 1,
+      "body": 18,
+      "reveal": 3,
+      "twist": 3,
+      "end": 1
+     },
+     "sfx_lines": [
+      {
+       "kind": "ding",
+       "role": "body",
+       "t": 2.98,
+       "off": 0.047,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "ding",
+       "role": "body",
+       "t": 23.93,
+       "off": 0.063,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "LHembw8EUU0",
+     "n": 23,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 22,
+       "enter": {
+        "cut": 22
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "훅 썸네일 틀 — 큰 제목 2줄(흰+하늘) 아래 흰 둥근 상자 자막(작은 글자 · 제목을 물음표로 다시 읽음)": 1
+     },
+     "sfx": [
+      "none",
+      "none",
+      "none",
+      "none",
+      "none",
+      "cut",
+      "cap"
+     ],
+     "sfx_count": {
+      "sure": 0,
+      "pending": 7
+     },
+     "no_caption": 0,
+     "transitions": {
+      "cut": 22
+     },
+     "n_trans": 22,
+     "roles": {
+      "hook": 1,
+      "body": 18,
+      "reveal": 1,
+      "twist": 2,
+      "end": 1
+     },
+     "sfx_lines": [
+      {
+       "kind": "whoosh",
+       "role": "hook",
+       "t": 0.19,
+       "off": 0.19,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "ding",
+       "role": "body",
+       "t": 12.83,
+       "off": 0.98,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "tcaIPaGWLrE",
+     "n": 41,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 40,
+       "enter": {
+        "cut": 40
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "other": 4,
+      "circle_arrow": 3
+     },
+     "sticker_lex": {
+      "other": {
+       "none": 4
+      },
+      "circle_arrow": {
+       "none": 3
+      }
+     },
+     "variants": {
+      "훅 썸네일 틀 — 큰 제목 2줄(흰+하늘) 아래 흰 둥근 상자 자막(작은 글자 · 제목을 물음표로 다시 읽음)": 1
+     },
+     "sfx": [
+      "none",
+      "cut",
+      "cap",
+      "cap"
+     ],
+     "sfx_count": {
+      "sure": 0,
+      "pending": 4
+     },
+     "no_caption": 0,
+     "transitions": {
+      "cut": 34,
+      "other": 5,
+      "flash": 1
+     },
+     "n_trans": 40,
+     "roles": {
+      "hook": 1,
+      "body": 35,
+      "reveal": 2,
+      "end": 3
+     },
+     "sfx_lines": [
+      {
+       "kind": "ding",
+       "role": "body",
+       "t": 4.74,
+       "off": 0.057,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "ding",
+       "role": "body",
+       "t": 17.65,
+       "off": 0.033,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "ding",
+       "role": "body",
+       "t": 28.55,
+       "off": 0.117,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "ding",
+       "role": "end",
+       "t": 36.06,
+       "off": 0.043,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "Y2YXuAE4J00",
+     "n": 27,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 26,
+       "enter": {
+        "cut": 26
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "other": 2,
+      "circle_arrow": 1
+     },
+     "sticker_lex": {
+      "other": {
+       "none": 2
+      },
+      "circle_arrow": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "훅 썸네일 틀 — 큰 제목 2줄(흰+하늘) 아래 흰 둥근 상자 자막(작은 글자 · 제목을 물음표로 다시 읽음)": 1
+     },
+     "sfx": [
+      "cap",
+      "none",
+      "cut"
+     ],
+     "sfx_count": {
+      "sure": 0,
+      "pending": 3
+     },
+     "no_caption": 0,
+     "transitions": {
+      "cut": 25,
+      "other": 1
+     },
+     "n_trans": 26,
+     "roles": {
+      "hook": 1,
+      "body": 22,
+      "reveal": 2,
+      "twist": 1,
+      "end": 1
+     },
+     "sfx_lines": [
+      {
+       "kind": "ding",
+       "role": "body",
+       "t": 6.7,
+       "off": 0.05,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "ding",
+       "role": "reveal",
+       "t": 13.75,
+       "off": 0.033,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "ding",
+       "role": "end",
+       "t": 25.01,
+       "off": 0.027,
+       "basis": "파형 솟음"
+      }
+     ]
+    }
+   ]
+  },
+  "reference": "Y2YXuAE4J00",
+  "_why_reference": "본보기 편 고정 = Y2YXuAE4J00(개방형 실리콘 빨대 — 첫 편과 같은 제품, 1차 = 벤치와 똑같이) · 효과음 띵 3발(줄판독 sfx ding body·reveal·end) · 스티커 circle_arrow 1(증거 카드 — _pending.evidence_card)"
+ },
+ "title_form": "제목 = [누가/어디]도 놀란·당황한 + [천재·주부] + [아이디어·활용법·발명품·제품 정체] 6/6 · 훅 2줄(흰/하늘) · 본문 띠 = 같은 글 한 줄",
+ "script": {
+  "brief": [
+   "박자(이븐쇼핑 6편 줄판독, 스타일분석 §5): 훅(제목 읽기 1.5~2초, '?'로 끝) → 다리(최근·해외·SNS·바이럴 '~는데') → 공개 '이건 바로/바로 ~'(길이의 16~51%) → 고조 '이게 말도 안 되는 게' → 본문(사용법 '~고·~면·~서') → 증거 '심지어'+사실 → 반전 '근데 진짜 충격적인 건'(길이의 70~85%) → 끝 '~다고/~이라고'(사회 반응·후일담). CTA 0.",
+   "반말 전언체, 존댓말 0. 자막 기준 8.7자/초. 덩어리 = 낱말 묶음 한 줄 9자 안팎(최대 16, 공백 뺀). 고조 2~3·반전 1~2(사장님 10-25 규칙서 §2). 설명서 = origin/track/노바대본설명서 docs/노바대본설명서/cards_v4/이븐쇼핑.md(틀 돌려 쓰기).",
+   "과장 허용(떼돈·난리·품절 대란) · 성분·효능·과학 근거·안전성·금액은 지어내지 않는다(칼카피_시작 14번)."
+  ],
+  "audit": [
+   {
+    "id": "first_line",
+    "kind": "first_line",
+    "is": "tts",
+    "why": "나레 185/185(원음 0, 스타일분석 §7)"
+   },
+   {
+    "id": "count_orig",
+    "kind": "count",
+    "of": "orig",
+    "min": 0,
+    "max": 0,
+    "why": "원음 0/6"
+   },
+   {
+    "id": "engine",
+    "kind": "engine",
+    "name": "jaemi"
+   },
+   {
+    "id": "beats",
+    "kind": "beats",
+    "head_chars": 16,
+    "max_start": 4,
+    "skip_first": true,
+    "beats": [
+     {
+      "name": "반전",
+      "min": 1,
+      "max": 2,
+      "pattern": "진짜충격|충격적인|근데진짜는|근데진짜(미친|대박|핵심|웃긴)|반전|웃긴(건|게|거|점)|알고보니|사실은|정작|의외로"
+     },
+     {
+      "name": "고조",
+      "min": 2,
+      "max": 3,
+      "pattern": "말도안되|심지어|미친포인트|놀라운(건|게|거|점)|더놀라|거기다|여기다가|뿐만아니라|한술더|그것도모자라|끝이아니|대박인(건|게|거|점)"
+     }
+    ],
+    "why": "사장님 10-25 규칙서(channel/evenshopping/preset/숏템템플릿/규칙서.md §2 8-1·8-2) 고조 2~3·반전 1~2 — '재미의 뼈대 = 고조와 반전'. 무늬 = 이븐쇼핑 6편 줄판독(channel/evenshopping/줄판독/*.json) 고조 줄 머리 '이게 (진짜) 말도 안 되는 게'·'여기다가 말도 안 되는'·증거 '심지어' / 반전 줄 머리 '(근데) 진짜 충격적인 건·포인트는·활용법은'·'근데 진짜는 여기서부터' + 규칙서 예 '근데 반전은'·'웃긴 건'·'이게 미친 포인트인 게'. 같은 자(beat_of)로 벤치 6편 덩어리를 재면 반전 1·1·1·1·1·0 · 고조 1·1·0·1·1·1(줄판독 역할 표시와 어긋남 0) — 벤치는 고조 1개가 보통이고 목표 2~3은 사장님 숫자. 무늬가 줄 머리 앞 4자 안에서 시작해야 박자(벤치 '이게 진짜 말도 안 되는 게' = 4자 · 줄 중간 '…세서 심지어'는 아님). '게다가'는 사장님 10-05 금지 말이라 세지 않는다"
+   },
+   {
+    "id": "sibling_repeat",
+    "kind": "sibling_repeat",
+    "head_chars": 4,
+    "max_share": 0.25,
+    "first_chars": 12,
+    "roles_same": false,
+    "why": "사장님 10-25 '편마다 같은 틀 반복 금지'(작품6·7·8 8줄 역할·줄 머리 똑같음) + 이븐쇼핑 설명서(origin/track/노바대본설명서 docs/노바대본설명서/cards_v4/이븐쇼핑.md '돌림'·'같은 고객 직전 3편과 첫 12자 반복 검사'). 자 = 줄 머리 공백 뺀 앞 4자: 벤치 6편 15쌍 겹침 최대 0.20(1kf↔ABj '이건바로'·'진짜충격', 나머지 14쌍 0.2 미만) · 우리 작품2~8 21쌍 0.50~0.62 → 문턱 0.25. 같은 제품 변형(쿠팡 번호·topic 같음)은 비교 안 함. · versions = 같은 채널 옛 판(재미썸홈판 preset_make 작품2~9)까지 견준다",
+    "versions": [
+     "이븐쇼핑판",
+     "재미썸홈판"
+    ]
+   },
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 25,
+    "max": 30,
+    "why": "판 length(사장님 25~30)"
+   }
+  ]
+ },
+ "rhythm": {
+  "cut_median": {
+   "v": 1.12,
+   "why": "벤치 6편 원본 컷 길이 중앙(kal_analyze.media_of = 관문·재현과 같은 자, 10-26): ABj 1.04·LHe 2.02·tca 1.2·kC8 0.62·1kf 1.99·Y2Y 0.8 → 중앙 1.12. 렌더 전 관문 rhythm_gate ×1.3"
+  },
+  "hook_cuts_3s": {
+   "min": 1,
+   "why": "벤치 6편 0.1~3.0초 안 컷 경계(media_of cut_at): 1·1·1·3·1·1 → 중앙 1 · 첫 컷 1.48~2.02초(훅 틀 → 본문 틀)"
+  },
+  "plain_share": {
+   "v": 0.973,
+   "tol": 0.06,
+   "why": "벤치 6편 줄판독 185덩어리 중 꾸밈 없는 것(kal_analyze._decorated 의 등장 효과·강조·스티커·변형 = placement._is_deco 와 같은 칸, 효과음은 뺌) = 0.973(편별 1.0·1.0·1.0·0.963·1.0·0.902, 10-26). 옛 값 0.886 은 효과음 17줄까지 센 다른 자(스타일분석 §1 '꾸밈 21')였다"
+  },
+  "photo_share_max": {
+   "v": 0.0,
+   "why": "벤치 정지 사진 컷 0(스타일분석 §3 — 증거 카드는 손 영상 위에 얹힘) · 사장님 10-25 작품6 '일시품절' 캡처 사고"
+  }
+ },
+ "_pending": {
+  "bgm_none": "render_bench.audio 에 'bgm.id null = 배경음 없음' 칸이 없다 → db_below_voice 90 으로 끔(02 요청)",
+  "search_handle_red": "벤치 돋보기 손잡이 빨강(x1014~1047·y92~125) — head_bar search 아이콘은 한 색뿐 → 흰 손잡이(02 에 handle_color 칸 요청)",
+  "views_line": "제목 띠 회색 '조회수 235만 | 댓글 697개'(6편 같은 고정 숫자 = 꾸민 지표) — 금지선 '가짜 지표'와 충돌(썰템쇼판 views_line 과 같은 판정, 사장님 확인 전) → 안 켬",
+  "body_title_q": "본문 제목 끝 '?' 6/6 — 제목 줄 칸에 꼬리 글 칸이 없어 훅 2줄을 join 한 글에 '?'가 없다(02 에 title suffix 칸 요청)",
+  "evidence_card": "증거 카드+빨간 원/화살표 5/185줄(2/6편, 약) — 상세페이지 그림 카드 얹기 칸 없음 → 03(fx_target)"
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "evenshopping",
+   "gap": [
+    "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 humorshowshow same=False) → 팩요청.md 이븐쇼핑판#1(관제 235) · 그동안 'evenshopping' 임시(stand_in)"
+   ],
+   "rank": [
+    {
+     "pack": "humorshowshow",
+     "d": 0.293,
+     "terms": {
+      "px": 0.0,
+      "fill": 0.0,
+      "y": 0.88
+     }
+    },
+    {
+     "pack": "evenshopping",
+     "d": 0.35,
+     "terms": {
+      "px": 0.95,
+      "fill": 0.0,
+      "y": 0.1
+     }
+    },
+    {
+     "pack": "banggu",
+     "d": 0.48,
+     "terms": {
+      "px": 0.56,
+      "fill": 0.0,
+      "y": 0.88
+     }
+    }
+   ],
+   "from": "벤치 6편 185줄 실측 [나레 185줄[잉크 높이 57px(185줄 y칸) · 자리 y486 · 채움 #000000(185줄)]] → 1위 humorshowshow(거리 0.293) · 지금 evenshopping(거리 0.35, 순위 2)",
+   "stand_in": true,
+   "enter_cover": {
+    "instant": {
+     "share": 1.0,
+     "n": 185,
+     "item": "정지(팩 불필요)"
+    }
+   },
+   "_why_keep": "정적 거리 1위 humorshowshow(나눔고딕 — 글꼴 다름) 대신 evenshopping(BMJUA) 유지: 렌더 대조 tools/caption_pack/check_kal_new_packs.py evenshopping 2/3 합격(LHe·Y2Y ±3px·높이 ±1·ΔE 0) — ABj 는 벤치 글이 가운데에서 +9.5px 비켜 있어 x ±10(편 차이). 정적 거리 px 항 0.95 는 팩 size→잉크 높이 어림이라 렌더 실측과 다르다"
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — 판 자막팩이 등장까지 정한다(caption-motions.js motionPlan: 팩 motion 이 효과팩 번호보다 이긴다) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": "팩01",
+   "map": {
+    "ding": "띠링"
+   },
+   "gain_db": -8,
+   "why": "벤치 효과음 = '띵'(4.3+5.8kHz 순음 0.28~1.08초) 편당 1~4발 17발(_kal/sfx_띵_보강.json, 스타일분석 §7) → 팩01 ding(4.6·5.7·4.3kHz — 우리 팩 ding 중 가장 가까움, 10-26 FFT) · gain −8 = 손 상수(귀 확인 전)",
+   "ncc": {
+    "measured": false
+   },
+   "from": "NCC 미측정(_kal/sfx_ncc.json 없음) → 지문으로 고를 수 없어 종류 이름표로 slot: ding→띠링 · 팩 팩01",
+   "gap": []
+  },
+  "bgm": {
+   "id": "sweets",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)",
+   "candidates": []
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
+  }
+ }
+}

@@ -473,6 +473,11 @@ CASES = json.loads(r"""{
 "narr"
 ]
 ],
+"evenshopping": [
+["evenshopping/src/ABjQ0YCZoes.mp4", 3.1, "이 여러겹의 네모난", [458, 513], "narr"],
+["evenshopping/src/LHembw8EUU0.mp4", 6.9, "근데 한국에 한 천재가", [455, 513], "narr"],
+["evenshopping/src/Y2YXuAE4J00.mp4", 10.5, "근데 한국의 한 천재가", [455, 513], "narr"]
+],
 "hotpeople": [
 [
 "hotpeople/src/N4VoQUIwb-I.mp4",
@@ -516,6 +521,7 @@ CASES = json.loads(r"""{
 ]
 ]
 }""")
+BOARD["이븐쇼핑판"] = "evenshopping"   # 재미썸홈 1차 판(관제 097 10-26)
 
 
 def _bench_png(video: str, t: float, out: Path) -> Path:
