@@ -782,6 +782,26 @@ def _src_cuts(src: Path, y0: int, y1: int, w: int) -> list[float]:
 
 
 
+def cut_frames_n(c: dict) -> int:
+    """컷이 실제로 뽑히는 프레임 수(render_window 와 같은 셈) — 렌더 전 관문이 같이 쓴다."""
+    return int(c.get("frames") or (round(c["t1"] * FPS) - round(c["t0"] * FPS)))
+
+
+def cut_length_gate(T: dict, st: dict | None = None) -> list[str]:
+    """렌더 전 관문 ⑤ 조각 규격(10-25): 컷 하나가 통째로 MIN_PIECE_SEC(0.4초)보다 짧으면 멈춘다 — 화면에 이어 보이는 조각이 0.4초 미만이면 번쩍임이라는
+    판정(오류기록 55·84·85, 관문 ③ short_pieces)과 같은 상수·같은 판단. 관문 ③은 컷 '안' 경계만 보므로 컷 자체가 짧은 것(잇템로그 13 N5 0.275초 —
+    재료 w 0.12 로 나눈 조각, snap_ss 가 옆 장면으로 밀어 다음 컷 N6 과 같은 통 화면을 0.3초 되감아 보임)은 아무 관문에도 안 걸렸다.
+    벤치 원본 실측(18판 2072샷, render_bench._src_cuts): 0.4초 미만 샷 9% — 대부분 맨 앞 썸네일 카드 2프레임·같은 인물 펀치 줌 몰아치기(J7GxfaVdwSU 4.2~5.1초)로,
+    우리 계획은 그런 몰아치기를 짜지 않는다(계획 511컷 중 0.4 미만 5컷 = 전부 줄 나누기 끝자락·원음 자투리). 문턱을 판마다 바꾸지 않는다 — 관문 ③과 한 상수."""
+    lo = MIN_PIECE_SEC
+    bad = []
+    for k, c in enumerate(T["cuts"]):
+        sec = cut_frames_n(c) / FPS
+        if sec < lo - 1e-3:
+            bad.append(f"컷 길이 {k} {c['line']} {c['src']}@{c.get('ss')}: {sec:.2f}초(<{lo}) — 화면이 번쩍 지나간다. 재료.json 그 줄 컷 수를 줄이거나 w 를 고르게(한 컷 ≥{lo}초)")
+    return bad
+
+
 def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
     """렌더 전 관문 ③(10-25 잇템로그 05·09 번쩍임): 계획된 컷마다 원본 [ss, ss+길이] 안(가장자리 포함, 맨 앞 1프레임 제외)에
     장면 경계로 나눈 조각 중 MIN_PIECE_SEC(0.4초)보다 짧은 것이 있으면 막는다. 옛 shot_starts(절대 문턱 25)는 차 22~31 인 진짜 편집점을 놓쳤고 slivers 는 가장자리 0.2초만 봤다.
@@ -2100,7 +2120,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
             raise StageError(msg)
         from tools.calcopy.hybrid import thumb_rule as TR
         card_bad = (TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"]) + cut_boundary_gate(T, M, st)      # 렌더 전 관문 ⑥ — 계획 때 걸러 렌더를 안 돌린다
-                    + cut_content_gate(T, M, st, doc, R, log))                                                         # 관문 ④ 컷 안 남의 글자·남의 얼굴
+                    + cut_content_gate(T, M, st, doc, R, log) + cut_length_gate(T, st))                                                         # 관문 ④ 컷 안 남의 글자·남의 얼굴
         if card_bad:
             raise StageError(" / ".join(card_bad))
         return {"timeline": T, "placement": placed, "length": length, "over": msg}
@@ -2120,7 +2140,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         raise StageError("컷이 원본 샷보다 길다: " + str([(c["line"], c["src"], c.get("ss"), c["dur"], c.get("max"), {"원본 남음": c["src_left"]} if "src_left" in c else None) for c in over]))
     from tools.calcopy.hybrid import thumb_rule as TR
     card_bad = (TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"]) + cut_boundary_gate(T, M, st)          # 렌더 전 관문 ⑥(10-25): 연예인 판 카드 3안 얼굴 — 영상 굽기 전에 멈춘다
-                + cut_content_gate(T, M, st, doc, R, log))                                                             # 관문 ④ 컷 안 남의 글자·남의 얼굴(조각 뽑기 전)
+                + cut_content_gate(T, M, st, doc, R, log) + cut_length_gate(T, st))                                                             # 관문 ④ 컷 안 남의 글자·남의 얼굴(조각 뽑기 전)
     if card_bad:
         raise StageError(" / ".join(card_bad))
     win0 = render_window(T, M, st, R)                          # 창(전환 없이) — 자리 검출 화면의 재료
