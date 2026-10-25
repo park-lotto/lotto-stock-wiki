@@ -45,7 +45,7 @@ def _mux(video, audio, final):
     _run(["ffmpeg", "-y", "-i", video, "-i", audio, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-t", f"{vd:.3f}", final])
 
 
-def encode_final(video, mix, final, peak_max_db: float = -0.5, log=print) -> dict:
+def encode_final(video, mix, final, peak_max_db: float = -0.5, log=print, renderer: str = "master_guard", script=None) -> dict:
     """(판단 주인) 영상(소리 없음)+mix.wav → final.mp4. 인코딩 뒤 진짜 최고점 > peak_max_db 면 4배 리미터 판 mix 로 다시(한계를 STEP_DB 씩 내려 최대 MAX_TRIES).
     반환 = 표식 {made_by, tries:[{limit_db, lufs, tp}], mix_used, lufs, tp, ok}. 원래 mix.wav 는 건드리지 않는다."""
     video, mix, final = Path(video), Path(mix), Path(final)
@@ -63,5 +63,7 @@ def encode_final(video, mix, final, peak_max_db: float = -0.5, log=print) -> dic
         used, limit = safe, limit - STEP_DB
     from tools.calcopy.engine import ad_mark
     ad = ad_mark.apply_inplace(final, log=log)      # 오른쪽 위 '광고' 표시 — 주인 = engine/ad_mark(사장님 10-22 모든 렌더). 소리는 복사라 최고점 그대로
+    from tools.calcopy.engine import finalize       # 봉인 — 이 뒤에 final 을 고치는 렌더러는 고친 뒤 finalize.seal 을 다시 불러야 납품된다(engine/deliver)
+    sl = finalize.seal(final, renderer, script, log=log)
     return {"made_by": "tools/calcopy/engine/master_guard.encode_final", "tries": tries, "mix_used": str(used), "lufs": I, "tp": tp,
-            "ok": tp <= peak_max_db, "ad_mark": ad}
+            "ok": tp <= peak_max_db, "ad_mark": ad, "seal": {"md5": sl["md5"], "ok": sl["ok"]}}

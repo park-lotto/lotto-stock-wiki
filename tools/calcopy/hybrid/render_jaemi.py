@@ -595,7 +595,7 @@ def render(doc: Path, work: Path, plan_only: bool = False, desktop: Path | None 
         gain += (C["target_lufs"] - oI) * 0.9
     final = R / "final.mp4"
     from tools.calcopy.engine.master_guard import encode_final      # 완성본 인코딩·진짜 최고점 지킴 = engine/master_guard 한 곳
-    guard = encode_final(vid, mix, final, -0.5, log=log)
+    guard = encode_final(vid, mix, final, -0.5, log=log, renderer="render_jaemi", script=doc / "대본.json")
     fI, fpk = lufs(final)
     starts = [next(s["t0"] for s in T["timed"] if s["line"] == li) for li in range(len(S["lines"]))] + [T["ndur"]]
     rates = [round(nchar(S["lines"][i]["tts"]) / (starts[i + 1] - starts[i]), 2) for i in range(len(S["lines"]))]

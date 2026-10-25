@@ -718,9 +718,11 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             rep["eye_pack_dir"] = None
             rep["rows"].append({"group": "표식", "what": "눈 검수 묶음", "ok": False, "value": f"만들기 실패: {e}", "src": "make_eye_pack"})
             rep["ok"] = False
+    rep["final_md5"] = fmd5         # 이 결과가 어느 완성본 것인가 — 납품(engine/deliver)이 봉인 md5 와 대조한다(10-25 잇템로그 04: 결과 ×인데 다른 판이 나갔다)
     if not legacy:
         jsave(doc / "품질관문.json", rep)
     jsave(doc / "자동검사.json", rep)       # 호환(runner_ops·flow 가 이 파일을 읽는다) — 같은 내용
+    jsave(doc / "품질관문" / f"{fmd5}.json", rep)     # 덮지 않고 판마다 쌓는다 — 납품은 이쪽을 본다
     for r in rep["rows"]:
         log(f"  {'참고' if r.get('ref') else '○' if r['ok'] is True else '×' if r['ok'] is False else '미측정'} [{r['group']}] {r['what']} ({r.get('sec')}초): {r['value']}")
     return {"ok": rep["ok"], "report": str(doc / ("자동검사.json" if legacy else "품질관문.json")), "rows": rep["rows"], "match": match, "fit": fit_res,

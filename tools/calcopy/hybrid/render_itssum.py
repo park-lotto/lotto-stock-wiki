@@ -625,7 +625,7 @@ def render(doc: Path, work: Path, plan_only: bool = False, desktop: Path | None 
     final = R / "final.mp4"
     # 완성본 인코딩·진짜 최고점(B2 ≤ −0.5) 지킴은 engine/master_guard 한 곳 — 예전 '리미터 1dB씩 내려 다시 섞기' 루프(10-18 김가연 −0.8 → +0.4)를 대신한다
     from tools.calcopy.engine.master_guard import encode_final
-    A = {**A, "master_guard": encode_final(vid, mix, final, -0.5, log=log)}
+    A = {**A, "master_guard": encode_final(vid, mix, final, -0.5, log=log, renderer="render_itssum", script=doc / "대본.json")}
     from tools.calcopy.hybrid.render_bench import render_marks
     info = {"made_by": "tools/calcopy/hybrid/render_itssum.py", "version": "잇썸홈판", "tempo": tempo, "sentences": sent, "inner_silences": inner,
             **render_marks("잇썸홈판", __file__), "line_cps": line_cps(sent),

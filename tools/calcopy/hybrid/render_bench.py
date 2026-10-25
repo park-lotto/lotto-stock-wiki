@@ -1861,6 +1861,8 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         tc = TH.cards(style_name, doc, work, log=log)
         TH.stamp_video(final, Path(tc["pick_jpg"]))
         log(f"썸네일 {tc['pick']} → 맨 앞 {TH.THUMB_FRAMES}프레임")      # 오른쪽 위 '광고' 표시 — 주인 = engine/ad_mark(사장님 10-22 모든 렌더)
+    from tools.calcopy.engine import finalize
+    finalize.seal(final, "render_bench", doc / "대본.json", log=log)      # final 을 고치는 마지막 단계(썸네일 카드) 뒤 — 납품은 이 봉인 그대로인 파일만(engine/deliver)
     jsave(R / "timeline.json", T)
     tab = {"_note": f"배치 결과 — placement.place(판 설정 {style_name}) · 시각은 final.mp4 기준 초", "pack": st["caption"]["pack"], "rows": rows,
            "sfx": placed["sfx"], "flashes": placed["flashes"], "transitions": trans, "memes": meme_overlays(placed), "comment": placed.get("comment"),
