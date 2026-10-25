@@ -147,3 +147,18 @@ def test_pc_request_updates_state_only(env, monkeypatch):
         cs.pc_request({}, {"id": rid, "state": "지움"}, st)
     with pytest.raises(cp.PortalError):
         cs.pc_request({}, {"id": "r0", "state": "완료"}, st)
+
+
+@pytest.mark.skipif(not (ENGINE / "shopping_shorts" / "scene_style.py").is_file(), reason="엔진 트랙 폴더 없음")
+def test_look_check_uses_engine_scene_style(monkeypatch):
+    """꾸민 모양 검사는 엔진 판 scene_style(워커 'look') — 칼카피 틀(customFrame) 스냅샷을 받는다.
+    서버 판으로 검사하면 '알 수 없는 템플릿'으로 거절된다(10-26 실측 19개 중 17개). 엉뚱한 틀은 엔진 판도 거절."""
+    from shopping_shorts import scene_style
+    snap = json.loads((Path(__file__).parent / "data" / "look_customframe.json").read_text(encoding="utf-8"))
+    assert snap.get("customFrame") and str(snap["presetId"]).startswith("custom_")
+    with pytest.raises(ValueError):
+        scene_style.validate_snapshot(snap)          # 서버 판은 칼카피 틀을 모른다 — 그래서 워커로 보낸다
+    monkeypatch.setattr(cs, "engine_root", lambda: ENGINE)
+    w = cs._Worker()
+    assert w.call({"op": "look", "snapshot": snap}).get("snapshot", {}).get("presetId") == snap["presetId"]
+    assert "invalid" in w.call({"op": "look", "snapshot": {"mode": "story", "presetId": "없는틀"}})

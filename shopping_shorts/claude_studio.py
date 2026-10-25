@@ -397,11 +397,14 @@ def save_look(store, cid, pid, snapshot) -> dict:
     raw = json.dumps(snapshot, ensure_ascii=False)
     if len(raw) > LOOK_MAX:
         raise StudioError("bad_request", "꾸민 모양이 너무 큽니다")
-    from shopping_shorts import scene_style
-    try:
-        snap = scene_style.validate_snapshot(snapshot)
-    except Exception as e:  # noqa: BLE001 — 고객에게 이유 한 줄
-        raise StudioError("bad_request", f"꾸민 모양을 저장할 수 없습니다: {e}")
+    # 검사 = 엔진 판 scene_style.validate_snapshot(워커 'look'). 이 화면이 그리는 칼카피 틀(customFrame)은 엔진 판만 안다 —
+    # 10-26 실측: 서버 판으로 검사하니 19개 중 17개가 '알 수 없는 템플릿'·'최대 12개'로 저장 거절
+    r = WORKER_ONE.call({"op": "look", "snapshot": snapshot})
+    if r.get("error"):
+        raise StudioError("disabled", "꾸민 모양 검사를 지금 못 합니다 — 잠시 뒤 다시 눌러 주세요")
+    if r.get("invalid"):
+        raise StudioError("bad_request", f"꾸민 모양을 저장할 수 없습니다: {r['invalid']}")
+    snap = r["snapshot"]
     s = _read(store, cid)
     s.setdefault("looks", {})[pid] = {"snapshot": snap, "updated": _ms()}
     _write(store, cid, s)
