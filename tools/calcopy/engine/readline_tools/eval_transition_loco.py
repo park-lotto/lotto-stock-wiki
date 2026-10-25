@@ -8,7 +8,7 @@ loco: 컷 묶음(cutdet.cut_groups) → 특징(cutdet.classify_arrays) → 문�
 판정 주인은 cutdet.decide·classify_arrays — 이 도구는 문턱만 바꿔 부른다.
 
     PYTHONUTF8=1 py tools/calcopy/engine/readline_tools/eval_transition_loco.py dump kitchit:src itemhome:원본 ...
-    PYTHONUTF8=1 py tools/calcopy/engine/readline_tools/eval_transition_loco.py loco [--fixed]
+    PYTHONUTF8=1 py tools/calcopy/engine/readline_tools/eval_transition_loco.py loco [--fixed] [--write --labels "재표기 전|재표기 후"]
 """
 from __future__ import annotations
 
@@ -163,7 +163,20 @@ def main(argv=None) -> int:
                     print(slug, f.stem, flush=True)
         return 0
     if a[0] == "loco":
-        loco(load_items(), fixed="--fixed" in a)
+        r = loco(load_items(), fixed="--fixed" in a)
+        if "--write" in a:                                  # 표준 §11-8 ㊵: 채널마다 _kal/transition_loco.json{acc, fp} — acc≥0.90 ∧ fp≤3% 만 자동 단독
+            import time
+            for row in r["rows"]:
+                acc = round(row["hit"] / row["total"], 3) if row["total"] else None
+                fp = round(row["fp"] / row["cut_lines"], 3) if row["cut_lines"] else None
+                d = {"acc": acc, "fp": fp, "hit": row["hit"], "total": row["total"], "fp_n": row["fp"], "cut_lines": row["cut_lines"],
+                     "auto_ok": bool(acc is not None and acc >= 0.90 and fp is not None and fp <= 0.03) if acc is not None else bool(fp is not None and fp <= 0.03),
+                     "mode": "fixed V2" if "--fixed" in a else "LOCO", "V2": dict(cutdet.V2), "labels": a[a.index("--labels") + 1] if "--labels" in a else "",
+                     "made_by": "readline_tools/eval_transition_loco.py", "at": time.strftime("%Y-%m-%d %H:%M")}
+                pth = ROOT / f"channel/{row['channel']}/_kal/transition_loco.json"
+                pth.parent.mkdir(parents=True, exist_ok=True)
+                pth.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
+                print("→", pth)
         return 0
     print(__doc__)
     return 2
