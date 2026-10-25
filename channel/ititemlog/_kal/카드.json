@@ -1,7 +1,7 @@
 {
  "slug": "ititemlog",
  "made_by": "tools/calcopy/preset_card.py build",
- "built_at": "2026-10-25T18:38:13",
+ "built_at": "2026-10-25T23:25:36",
  "bench": "잇템로그(현장썰 2번·화장품)",
  "brand": null,
  "brand_note": "브랜드.json 미등록 — 드라이브 '잇템로그 대기중'·6번 잇템로그_998, 우리 이름 '잇템로그'(01b 문서)",
@@ -2528,6 +2528,7 @@
   "caption_pack_ok": true,
   "counted_n": 6,
   "no_why": [],
+  "rhythm_missing": [],
   "hand_scripts": [],
   "hand_scripts_reference": [
    "(옛 scratchpad) mk_v3_*.py → 판 잇템로그판_v2 brief·audit + tools/calcopy/ititemlog_make.py draft(재료 초안) + flow 해외원본형 대본 질문(10-25)",
@@ -2537,10 +2538,10 @@
   "quality_gate_ok": true,
   "match_ok": true,
   "eye": {
-   "_by": "기미크림(오푸스) 10-25 — 완성본 md5 00224086 · 자료 C:/숏템_칼카피/ititemlog/ep12_rule/eye/ · 사장님 판정 칸(E1·E5 귀·E9 사람 4칸)은 비움",
+   "_by": "기미크림(오푸스) 10-25 — 완성본 md5 00224086 · 자료 C:/숏템_칼카피/ititemlog/ep12_rule/eye/ · 사장님 판정 칸(E1·E5 귀·E9 사람 4칸)은 비움 · 10-25 밤 E1·E5 = 사장님",
    "E1": {
-    "v": "",
-    "memo": "사장님 판정(그 채널에 올려도 되나). 참고: 벤치대조_시트 — 틀(검정 위 제목 흰/노랑 2줄)·자막 띠·컷 박자 같은 결"
+    "v": "○",
+    "memo": "사장님 10-25 \"마스크편은 된거고\" — 바탕화면 판(096d27de 규칙편·f70f50b9 아물결) 보고 판정. 끝 아, 끊김은 아~ 로 수리(506d570c8)"
    },
    "E2": {
     "v": "○",
@@ -2555,12 +2556,12 @@
     "memo": "자막 1~2줄 가운데 띠·강조 노랑/빨강, 원 스티커는 N1「외국인이 있는데요」입 둘레(placement 0ea3970d4 전엔 컷 뒤 옷깃을 가리켰다 — 고침). 꾸밈 없는 줄은 그대로"
    },
    "E5": {
-    "v": "",
-    "memo": "귀 판정 비움(오푸스는 소리를 못 듣는다). 기계 근거: 줄별 스피치매틱스 확정 0·의심 0, 원음 무음 whisper 7줄 전부 0.22초 안·낱말 전부 들림, B18 줄 사이 0.10~0.11(판 0.08), B18a N7 쉼표 0.23, LUFS −14.1/TP −1.5"
+    "v": "○",
+    "memo": "사장님 10-25 같은 판정(귀) — 아, 끊김 지적 → 아~ 선택(TTS 시험 B)"
    },
    "E6": {
     "v": "○",
-    "memo": "N1·N2·O1~O3·N5·N6 = facts f1·f2·f3·f5·f6(원본 출연자 말) · N3 '세럼이 스며들수록 투명' = f4(제품 설명 cultbeauty·well.ca) · N4 '모녀·밤새' = f7(Aylen 'my mom and I slept with the sheet mask overnight') · 금액·질병·CTA 0"
+    "memo": "N1·N2·O1~O3·N5·N6 = facts f1·f2·f3·f5·f6(원본 출연자 말) · N3 '세럼이 스며들수록 투명' = f4(제품 설명 cultbeauty·well.ca) · N4 '모녀·밤새' = ep12_sheetmask_v3/대본.json facts 'ay 28.72~33.40'(Aylen 'my mom and I slept with the sheet mask overnight') · 금액·질병·CTA 0"
    },
    "E7": {
     "v": "○",
@@ -2597,10 +2598,10 @@
   "channel/ititemlog/_kal/sfx_events.json": "c913c0102265",
   "channel/ititemlog/_kal/규칙빈도.json": "9c76c90c5a95",
   "channel/ititemlog/_kal/대본언어.json": "88009f669acd",
-  "channel/ititemlog/ep12_sheetmask_rule/눈검수.json": "77acbdbafef3",
-  "channel/ititemlog/ep12_sheetmask_rule/업그레이드_측정.json": "057f91cc80e0",
-  "channel/ititemlog/ep12_sheetmask_rule/재현일치도.json": "b249021cf732",
-  "channel/ititemlog/ep12_sheetmask_rule/품질관문.json": "4452ab60a9be",
+  "channel/ititemlog/ep12_sheetmask_rule/눈검수.json": "d1674d3c21d1",
+  "channel/ititemlog/ep12_sheetmask_rule/업그레이드_측정.json": "c7bff65373f9",
+  "channel/ititemlog/ep12_sheetmask_rule/재현일치도.json": "9f2d6acb2674",
+  "channel/ititemlog/ep12_sheetmask_rule/품질관문.json": "3743130b39bd",
   "channel/ititemlog/뜯기/AZ2q07mBzlM/뜯기.json": "6f012fd7caa9",
   "channel/ititemlog/뜯기/J7GxfaVdwSU/뜯기.json": "7ba612e05b3d",
   "channel/ititemlog/뜯기/SbWTqCnleC8/뜯기.json": "10a90196b8b7",
@@ -2614,18 +2615,17 @@
   "channel/ititemlog/줄판독/ro1l3u734v4.json": "5ab920b50a5e",
   "channel/ititemlog/줄판독/zOSpeiMw1nA.json": "ca319745033a",
   "channel/ititemlog/팔레트.json": "36ba8f1810fb",
-  "channel/결과물.json": "a14eeef43705",
+  "channel/결과물.json": "d026be6442ff",
   "channel/브랜드.json": "f2ded5552699",
   "channel/스타일.json": "c8a155f5ab8b",
   "channel/프리셋.json": "6f778f0752af",
   "shopping_shorts/static/caption-motions.js": "10ddd0dfe0ef",
   "tools/calcopy/hybrid/styles/_common.json": "5452d68fa811",
-  "tools/calcopy/hybrid/styles/잇템로그판.json": "f87d26da56eb"
+  "tools/calcopy/hybrid/styles/잇템로그판.json": "ab15fc962a42"
  },
  "done": {
-  "level": "L1",
+  "level": "L2",
   "missing": [
-   "눈검수 E1~E8",
    "업그레이드 나아짐≥과반∧나빠짐0",
    "눈검수 E9",
    "회원실측"
