@@ -152,7 +152,7 @@ def split_by_align(S, align) -> list[tuple[float, float]]:
         i += len(NA.punct_marks(l["tts"]))
         if k == len(L) - 1:
             spans.append((start, tail)); break
-        if i == 0 or not NA.punct_marks(l["tts"].rstrip()[-1:]):   # 줄 가운데 쉼표만 있고 끝에 없으면 그 쉼표가 줄 끝이 된다(10-24 잇템로그 09 N3 '…붓고, …따르자' → '따르자'가 N4 로 밀림)
+        if i == 0 or not NA.ends_with_mark(l["tts"]):   # 줄 가운데 쉼표만 있고 끝에 없으면 그 쉼표가 줄 끝이 된다(10-24 잇템로그 09 N3 '…붓고, …따르자' → '따르자'가 N4 로 밀림)
             raise StageError(f"줄 {l['id']} 끝에 문장부호가 없다 — tts 끝을 마침표·쉼표로")
         a, b = slots[i - 1][1], slots[i - 1][2]
         # 글자 시각은 소리보다 늦게 끝나고 늦게 시작한다(10-21 손태영 미나: '벨기에'→'기의', '대체'→'차에', 줄 끝 음절 잘림 —

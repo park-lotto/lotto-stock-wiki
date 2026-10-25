@@ -219,6 +219,13 @@ def punct_marks(text: str) -> list[tuple[str, int]]:
     return out
 
 
+def ends_with_mark(text: str) -> bool:
+    """(판단 주인 — 줄 끝 문장부호) 줄 글이 문장부호(PUNCT_RE)로 끝나나. 이어 붙여 합성한 소리를 글자 시각으로 줄마다 자를 때
+    줄 끝 = 그 줄 마지막 부호라서, 끝에 부호가 없으면 다음 줄 소리가 밀린다(98 #75). 대본 단계(script_audit.text_defects)와
+    합성 뒤 자르기(render_itssum.split_by_align)가 이 함수 하나를 부른다."""
+    return bool(PUNCT_RE.fullmatch((text or "").rstrip()[-1:]))
+
+
 def punct_slots(text: str, align: dict) -> list[tuple[str, float, float]]:
     """align(characters·start·end) 에서 문장부호마다 (종류, 앞 글자 끝, 뒤 글자 시작). 주인은 engine/tts_pause.pause_slots — 글 끝 마침표는 (끝, 끝)."""
     from tools.calcopy.engine import tts_pause as TP

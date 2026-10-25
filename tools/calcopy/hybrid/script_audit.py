@@ -229,8 +229,112 @@ def rule_check(r: dict, d: dict, st: dict) -> tuple[bool, str]:
     return False, f"모르는 규칙 {k}"
 
 
+# ── 관문 G-1 대본 글 소리 위험(TTS 돈 쓰기 전) — 판 설정 밖 **모든 판 공통** 규칙. 판단 주인 = text_defects 한 곳 ──────────
+#   근거 = 10-25 전 편 음성 감사(소리 결함을 낸 대본 줄 ↔ 정상 줄, gate_fixtures/g1_script.json):
+#   ① 줄 끝 부호 없음 → 이어 합성한 소리를 줄마다 자를 때 다음 줄로 밀림(98 #75 잇템로그 02 N4·09 N3·11 N3 납품)
+#   ② 읽는 글 영문 → 타입캐스트가 건너뜀(감사 'AI'×6·'LED' — narr_verify.latin_lines 가 이 결과를 부른다)
+#   ③ 화면 자막 ↔ 읽는 글 엇갈림(98 #17 선우용여 '따라 사 봤는데요' ↔ '하나 사서 따라 해 봤는데요')
+#   넣지 않은 것(근거 없음): 줄 안 되풀이(감사 소리 되풀이 2건 = TTS 탓, 대본 글엔 되풀이 0 · 글 되풀이 2건은 소리 정상) · 숫자(읽은 소리 결함 0)
+ORIG_KINDS = ("orig", "원음", "원본")
+LATIN = re.compile(r"[A-Za-z][A-Za-z0-9\-]*")
+READ_RISKY = re.compile(r"[0-9A-Za-z%]")           # 읽는 글이 화면과 달라도 되는 자리(숫자·영문·기호 읽기 — 제작순서 07 §4)
+_CHO = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ"
+
+
+def _say(l: dict) -> str:
+    """TTS 로 보내는 글 — tts 칸, 없으면 text(옛 대본은 text 를 그대로 읽었다)."""
+    return str(l.get("tts") or l.get("text") or "").strip()
+
+
+def narr_lines(d: dict) -> list[dict]:
+    """나레(읽는) 줄 — 원음·원본 줄 빼고 읽는 글이 있는 줄."""
+    return [l for l in d.get("lines") or [] if isinstance(l, dict) and str(l.get("kind") or "") not in ORIG_KINDS
+            and l.get("id") != "O" and not (not l.get("kind") and "said" in l and not l.get("tts")) and _say(l)]
+
+
+def latin_in(d: dict) -> list[tuple[str, list[str]]]:
+    """(판단 주인 — 읽는 글 영문) 읽는 글에 영문이 든 줄 [(줄, 영문 토막)] — 한글 읽기로 바꿔 보낸다(AI → 에이아이, LED → 엘이디)."""
+    return [(l.get("id"), LATIN.findall(_say(l))) for l in narr_lines(d) if LATIN.search(_say(l))]
+
+
+def _norm(s: str) -> str:
+    return re.sub(r"[^0-9a-z가-힣]", "", (s or "").lower())
+
+
+def _cho(ch: str) -> str:
+    return _CHO[(ord(ch) - 0xAC00) // 588] if "가" <= ch <= "힣" else ch
+
+
+def _shown(l: dict) -> tuple[str | None, list[str]]:
+    """화면에 보이는 글(자막 조각을 띄어 이은 것, 조각이 없으면 tts 가 따로 있을 때의 text)과 조각 목록."""
+    caps = l.get("caps")
+    if isinstance(caps, list) and caps:
+        parts = [str((c.get("text") if isinstance(c, dict) else c if isinstance(c, str) else "") or "") for c in caps]
+        return " ".join(parts), parts
+    if l.get("tts") and l.get("text"):
+        return str(l["text"]), []
+    return None, []
+
+
+def shown_not_said(shown: str, say: str) -> list[str]:
+    """화면 글의 낱말 가운데 **읽는 글에 순서대로 안 나오는 것**. 읽는 글에만 있는 말(자막을 줄이며 뺀 연결어·조사 — 98 #19)은 허용.
+    허용(결함 아님): 숫자·영문·기호가 든 낱말(읽기로 바뀜) · 띄어쓰기·부호 · 낱말 끝 1~2자 차이(조사·어미 '살린'↔'살려낸', '들었대요'↔'들었다는데요') ·
+    한 글자 낱말의 초성 같음('것'↔'거', '걍'↔'그냥') · 이름 발음 고침에 붙는 말('방송인 ○○ 씨' — 읽는 글에만 있으니 허용 쪽)."""
+    hay = _norm(say)
+    pos, miss = 0, []
+    for w in re.split(r"[\s/]+", shown):
+        n = _norm(w)
+        if not n or READ_RISKY.search(w):
+            continue
+        k = hay.find(n, pos)
+        if k < 0:                        # 낱말 끝 1~2자(조사·어미)만 다르면 같은 낱말
+            for cut in range(1, min(2, len(n) - 1) + 1):
+                k = hay.find(n[:-cut], pos)
+                if k >= 0:
+                    n = n[:-cut]; break
+        if k < 0 and len(n) == 1 and pos < len(hay) and _cho(hay[pos]) == _cho(n):
+            k = pos
+        if k < 0:
+            miss.append(w)
+            continue
+        pos = k + len(n)
+    return miss
+
+
+def text_defects(d: dict, joined: bool = True) -> list[dict]:
+    """(판단 주인 — 관문 G-1) 대본 글만 보고 TTS 전에 막는 소리·자막 결함 [{rule, line, why}] (빈 목록 = 통과).
+    joined = 나레 줄을 이어 한 번에 합성하고 글자 시각으로 줄마다 자르는 대본(최상위 lines — render_bench·render_itssum 길).
+    샥탬 final.lines 대본(줄마다 따로 합성)은 joined=False 라 줄 끝 부호 규칙을 안 건다."""
+    from tools.calcopy.engine import narr_align as NA
+    out = []
+    N = narr_lines(d)
+    T = [l for l in N if l.get("kind") == "tts"]
+    if joined:
+        for l in T[:-1]:
+            if not NA.ends_with_mark(_say(l)):
+                out.append({"rule": "end_mark", "line": l.get("id"),
+                            "why": f"줄 끝 문장부호 없음 '…{_say(l)[-12:]}' — 이어 합성한 소리를 줄마다 자를 때 다음 줄로 밀린다(98 #75). 끝에 쉼표·마침표"})
+    for lid, toks in latin_in(d):
+        out.append({"rule": "latin", "line": lid,
+                    "why": f"읽는 글에 영문 {toks} — 타입캐스트가 건너뛴다(감사 'AI'·'LED' 7곳). 한글 읽기로(AI → 에이아이, 자막은 원문)"})
+    for l in N:
+        shown, parts = _shown(l)
+        if shown is None:
+            continue
+        miss_t = shown_not_said(shown, str(l["text"])) if parts and l.get("tts") and l.get("text") else []
+        if miss_t:     # 화면 글(text) 칸에 읽기('육십칠 퍼센트')를 적은 대본도 있어 숫자·영문 낱말은 같은 자로 넘긴다(옛 rules.caps_vs_tts 의 글자 그대로 비교는 3편 오검출)
+            out.append({"rule": "caps_text", "line": l.get("id"),
+                        "why": f"자막 조각을 이으면 '{shown}' — 화면 글(text) '{l['text']}' 에 없는 {miss_t}"})
+        miss = shown_not_said(shown, _say(l))
+        if miss:
+            out.append({"rule": "caps_say", "line": l.get("id"),
+                        "why": f"자막 {miss} 를 목소리가 안 읽는다 — 화면 '{shown}' ↔ 목소리 '{_say(l)}'(98 #17: 자막은 읽는 말 그대로, 발음 고침만 다르게)"})
+    return out
+
+
 def audit(path: Path, version: str | None = None) -> dict:
-    d = as_lines(json.loads(Path(path).read_text(encoding="utf-8")))
+    raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    d = as_lines(raw)
     v = version_of(Path(path), version)
     st = ST.load(v)
     lines = tts_lines(d)
@@ -258,6 +362,8 @@ def audit(path: Path, version: str | None = None) -> dict:
         bad = [l.get("id", k) for k, l in enumerate(sel) if re.search(f["pattern"], (l.get("text") or l.get("tts") or "") + " " + " ".join(_caps(l)))]
         if bad:
             res["rules"].append({"kind": "forbid", "ok": False, "why": f"{f['why']} {bad}"}); ok = False
+    for x in text_defects(d, joined=bool(raw.get("lines"))):     # 관문 G-1 — 판 설정과 상관없이 모든 판
+        res["rules"].append({"kind": "text:" + x["rule"], "ok": False, "why": f"{x['line']} {x['why']}"}); ok = False
     res["narr"] = [SF.narr_rules(l["text"]) for l in lines]
     res["ok"] = bool(ok)
     return res
@@ -287,6 +393,24 @@ def main():
     args = sys.argv[1:]
     if args[:1] == ["fit-model"]:
         print(json.dumps(fit_model(args[1]), ensure_ascii=False))
+        return 0
+    if args[:1] == ["text-scan"]:     # 관문 G-1 전수 훑기: text-scan "channel/**/대본.json" ["C:/숏템_칼카피/**/대본.json" …] — 규칙별 줄·편 수 + 걸린 줄
+        import collections
+        import glob
+        n, cnt, docs = 0, collections.Counter(), collections.defaultdict(set)
+        for pat in args[1:]:
+            for f in sorted(glob.glob(pat, recursive=True)):
+                try:
+                    raw = json.loads(Path(f).read_text(encoding="utf-8"))
+                except (OSError, ValueError):
+                    continue
+                if not isinstance(raw, dict):
+                    continue
+                n += 1
+                for x in text_defects(as_lines(raw), joined=bool(raw.get("lines"))):
+                    cnt[x["rule"]] += 1; docs[x["rule"]].add(f)
+                    print(f"{f} | {x['rule']} | {x['line']} | {x['why'][:160]}")
+        print(json.dumps({"docs": n, "lines": dict(cnt), "docs_hit": {k: len(v) for k, v in docs.items()}}, ensure_ascii=False))
         return 0
     ver = None
     if "--version" in args:

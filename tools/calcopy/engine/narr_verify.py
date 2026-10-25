@@ -19,7 +19,6 @@ from difflib import SequenceMatcher
 from pathlib import Path
 
 CACHE = Path("C:/숏템_칼카피/_cache/asr_sm")
-LATIN = re.compile(r"[A-Za-z][A-Za-z0-9\-]*")
 
 KEEP = re.compile(r"[가-힣A-Za-z0-9]")
 DIG = "영일이삼사오육칠팔구"
@@ -330,8 +329,9 @@ def classify(full, slices):
 
 # ---------------------------------------------------------------- 관문
 def latin_lines(S: dict) -> list[tuple[str, list[str]]]:
-    """대본 단계(TTS 전): tts 글에 영문이 든 줄 — 한글 읽기로 바꿔 보낸다(AI → 에이아이, LED → 엘이디)."""
-    return [(l["id"], LATIN.findall(l.get("tts") or "")) for l in S.get("lines", []) if l.get("kind") == "tts" and LATIN.search(l.get("tts") or "")]
+    """대본 단계(TTS 전): 읽는 글에 영문이 든 줄 — 판단 주인 = hybrid/script_audit.latin_in(관문 G-1, 10-25 한 벌로 모음). 여기는 문만."""
+    from tools.calcopy.hybrid import script_audit as SA
+    return SA.latin_in(S)
 
 
 def verify(lines: list[dict], paths: dict, narr=None, out: Path | None = None) -> dict:

@@ -1244,7 +1244,7 @@ def ph_script_ask(st, m, rp, u):
 
 
 def audit_script(st: dict, S: dict, M: dict) -> dict:
-    """서버 판정 — 대본 검사(script_audit) + 제목 색 + 자막↔목소리 + 출처 규칙 ①②·다른 출연자 샷. 하나라도 걸리면 반려."""
+    """서버 판정 — 대본 검사(script_audit — 자막↔목소리·줄 끝 부호·영문 포함) + 제목 색 + 출처 규칙 ①②·다른 출연자 샷. 하나라도 걸리면 반려."""
     from tools.calcopy.hybrid import script_audit
     v = st["version"]
     with tempfile.TemporaryDirectory() as td:
@@ -1254,7 +1254,7 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
             a = script_audit.audit(p, v)
         except Exception as e:  # noqa: BLE001 — 꼴이 틀린 대본은 검사가 죽는다 → 반려 사유로
             a = {"ok": False, "error": f"대본 꼴이 틀렸다: {type(e).__name__}: {str(e)[:200]}"}
-    extra = {"title": RU.title_colors_bad(S, _style(v)), "caps_vs_tts": RU.caps_vs_tts(S), "claims": RU.script_claim_problems(S),
+    extra = {"title": RU.title_colors_bad(S, _style(v)), "claims": RU.script_claim_problems(S),   # 자막↔목소리 = script_audit(G-1) 안
              "alt_scene": RU.alt_scene_problems(S, M, _origin_names(st)) if (st.get("product") or {}).get("mode") == "alt" else [],
              "source_rule": RU.source_rule_static(M, _origin_names(st), _rule_bench_id(st), st.get("shots") or {})}
     on = _origin_names(st)

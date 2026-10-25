@@ -63,21 +63,10 @@ def word_hits(words: list, terms: list[str], gap: float = 20.0) -> list[dict]:
 
 
 def caps_vs_tts(S: dict) -> list[str]:
-    """나레 줄마다 화면 자막(caps 이어 붙인 글)이 실제로 읽는 글(tts)과 같은가 — 부호·띄어쓰기만 다른 건 같다
-    (10-21 선우용여 N3: 자막 '따라 사 봤는데요' ↔ 목소리 '하나 사서 따라 해 봤는데요' — 완성본 눈 검수가 짚었다).
-    집 PC 옛 대본은 caps 가 글 목록, 회원 라인은 {"text"} 목록 — 둘 다 받는다(98_오류기록 19)."""
-    out = []
-    for l in S.get("lines") or []:
-        if l.get("kind") != "tts" or not l.get("caps"):
-            continue
-        cap = norm("".join(str((c.get("text") if isinstance(c, dict) else c) or "") for c in l["caps"]))
-        shown, say = norm(str(l.get("text") or "")), norm(str(l.get("tts") or ""))
-        if shown and cap != shown:
-            out.append(f"{l.get('id')}: 자막 조각을 이으면 '{cap}' — 화면 글(text) '{shown}' 과 다르다")
-        # 읽는 글은 숫자·영문 읽기·이름 발음 때문에 달라도 된다(제작순서 07 §4) — 숫자·영문 없는 줄에서 말이 4자 넘게 늘거나 줄면 결함
-        if shown and say and not re.search(r"[0-9A-Za-z%]", str(l.get("text") or "")) and abs(len(say) - len(shown)) >= 4:
-            out.append(f"{l.get('id')}: 화면 '{l.get('text')}' ↔ 목소리 '{l.get('tts')}' — 말이 더해지거나 빠졌다(자막은 읽는 말 그대로, 발음 고침만 다르게)")
-    return out
+    """나레 줄마다 화면 자막 ↔ 읽는 글(tts) — 판단 주인 = hybrid/script_audit.text_defects 의 caps_text·caps_say(관문 G-1, 10-25 한 벌로 모음).
+    script_audit.audit 가 이미 이 규칙을 담으니 flow 는 따로 부르지 않는다. 이 문은 옛 호출용."""
+    from tools.calcopy.hybrid import script_audit as SA
+    return [f"{x['line']}: {x['why']}" for x in SA.text_defects(S, joined=False) if x["rule"] in ("caps_text", "caps_say")]
 
 
 def title_colors_bad(S: dict, st: dict) -> list[str]:
