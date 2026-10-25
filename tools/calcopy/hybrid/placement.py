@@ -583,7 +583,27 @@ def plain_step(out: list[dict], style: dict, log: list) -> None:
     first = out[0]["line"]
     cand = [i for i, r in enumerate(out) if r["line"] != first and r.get("emph") and not r.get("stickers") and not r.get("variant_force")
             and not K_variant(r) and r.get("enter") in ("cut", "instant", "append", None)]
-    take = _spread(list(reversed(cand)), min(want - have, len(cand)))
+    # 화자별 꾸밈 비율이 벤치 중앙 − 허용 폭(1차 자 fx.rate 칸) 밑으로 내려가지 않게 — 화자마다 뺄 수 있는 수(10-25 박정수 v2: 원음 5덩어리 중 2개를 빼 0.6 → 재현 fx.rate.원음 −21.8%p 미달)
+    room = {}
+    try:
+        B = bench_fx(style)
+        for sp, nm in (("narr", "나레"), ("orig", "원음")):
+            n_sp = sum(1 for r in out if r["speaker"] == sp)
+            floor = max(0.0, float(B["rate"].get(nm) or 0) - float(B["tol"].get(f"fx.rate.{nm}", 0.2)))
+            deco_sp = sum(1 for r in out if r["speaker"] == sp and _is_deco(r))
+            room[sp] = max(0, deco_sp - int(math.ceil(floor * n_sp - 1e-9)))
+    except Exception as e:  # noqa: BLE001 — 벤치 줄판독을 못 읽으면 화자 제한 없이(로그로 알림)
+        log.append(f"⚠ 꾸밈 없음: 벤치 화자 꾸밈 비율 못 읽음({type(e).__name__}) — 화자 제한 없이 뺌")
+    take = []
+    for i in _spread(list(reversed(cand)), len(cand)):
+        if len(take) >= want - have:
+            break
+        sp = out[i]["speaker"]
+        if sp in room:
+            if room[sp] <= 0:
+                continue
+            room[sp] -= 1
+        take.append(i)
     for i in take:
         out[i]["emph"] = []
         out[i]["plain_by"] = "rhythm.plain_share"

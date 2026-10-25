@@ -1350,6 +1350,24 @@
    "from": "tools/calcopy/hybrid/render_bench.py → engine/deliver.to_drive(납품.json)",
    "doc": "channel/yanshottem/하이브리드_박정수_썬크림/키치잇판/",
    "note": "로컬 완성본 C:/숏템_칼카피/yanshottem/하이브리드_박정수_썬크림/키치잇판/render/final.mp4 (md5 같음 — 납품.json)"
+  },
+  {
+   "n": 87,
+   "channel": "yanshottem",
+   "channel_name": "얜샷템",
+   "brand": "얜샷템",
+   "style": "키치잇판(벤치 kitchit)",
+   "title": "키치잇 01 박정수 이노스킨랩 선크림 v2(페이블 눈검수 △ 수리판)",
+   "path": "G:/내 드라이브/칼카피영상/얜샷템 (연예인쇼핑) 재미썸홈스타일 대기중/kitchit/01_parkjeongsu_innoskinlab_sunscreen_v2.mp4",
+   "desktop": "01_parkjeongsu_innoskinlab_sunscreen_v2.mp4",
+   "md5": "766df9015b3a60acbaef2e7bc5114ea1",
+   "seconds": 26.9,
+   "preset": "tools/calcopy/hybrid/styles/키치잇판.json",
+   "date": "2026-10-25",
+   "judge": "[확인대기] quality_gate --full 통과 33/33(판 리듬 4행 ○: 컷 중앙 1.4·훅 경계 2·꾸밈 없음 0.174·그림 0.085) — 페이블 재검수 대기(v1 = 사장님 승인 86 그대로)",
+   "from": "tools/calcopy/hybrid/render_bench.py → engine/deliver.to_drive(납품.json)",
+   "doc": "channel/yanshottem/하이브리드_박정수_썬크림/키치잇판/",
+   "note": "v1(8a9fd359) 덮어쓰지 않음 · 원본 구간 524~530·656~668·706~718 추가(C:/숏템_칼카피/…/src) · N7 '배우 박정수' 줄만 재합성(줄 캐시 6줄 재사용)"
   }
  ]
 }

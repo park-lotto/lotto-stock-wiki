@@ -85,23 +85,19 @@
   {
    "line": "N2",
    "t0": 5.475,
-   "t1": 6.98,
+   "t1": 7.0,
    "text": "도대체 뭐가 그렇게 좋길래?",
    "speaker": "narr",
    "variant": "cut",
-   "emph": [
-    {
-     "word": "좋길래?"
-    }
-   ],
+   "emph": [],
    "sticker": "",
    "stickers": [],
    "enter": "cut"
   },
   {
    "line": "O2",
-   "t0": 6.98,
-   "t1": 8.542,
+   "t0": 7.0,
+   "t1": 8.562,
    "text": "밀리지 않아서 쓰고",
    "speaker": "orig",
    "variant": "cut",
@@ -116,8 +112,8 @@
   },
   {
    "line": "O2",
-   "t0": 8.542,
-   "t1": 9.952,
+   "t0": 8.562,
+   "t1": 9.972,
    "text": "이게 유기농이고",
    "speaker": "orig",
    "variant": "pop",
@@ -128,24 +124,20 @@
   },
   {
    "line": "O2",
-   "t0": 9.952,
-   "t1": 10.969,
+   "t0": 9.972,
+   "t1": 10.989,
    "text": "이건 안 시려워요",
    "speaker": "orig",
    "variant": "",
-   "emph": [
-    {
-     "word": "안 시려워요"
-    }
-   ],
+   "emph": [],
    "sticker": "",
    "stickers": [],
    "enter": "cut"
   },
   {
    "line": "N3",
-   "t0": 10.969,
-   "t1": 11.991,
+   "t0": 10.989,
+   "t1": 12.021,
    "text": "저도 보자마자",
    "speaker": "narr",
    "variant": "",
@@ -160,8 +152,8 @@
   },
   {
    "line": "N3",
-   "t0": 11.991,
-   "t1": 13.457,
+   "t0": 12.021,
+   "t1": 13.502,
    "text": "하나 사서 따라 발라 봤어요",
    "speaker": "narr",
    "variant": "pop",
@@ -176,8 +168,8 @@
   },
   {
    "line": "N4",
-   "t0": 13.457,
-   "t1": 15.188,
+   "t0": 13.502,
+   "t1": 15.233,
    "text": "로션처럼 얇게 펴져서",
    "speaker": "narr",
    "variant": "",
@@ -192,8 +184,8 @@
   },
   {
    "line": "N4",
-   "t0": 15.188,
-   "t1": 16.117,
+   "t0": 15.233,
+   "t1": 16.162,
    "text": "화장이 정말",
    "speaker": "narr",
    "variant": "pop",
@@ -208,8 +200,8 @@
   },
   {
    "line": "N4",
-   "t0": 16.117,
-   "t1": 16.88,
+   "t0": 16.162,
+   "t1": 16.925,
    "text": "안 밀리더라고요",
    "speaker": "narr",
    "variant": "pop",
@@ -224,8 +216,8 @@
   },
   {
    "line": "N5",
-   "t0": 16.88,
-   "t1": 18.004,
+   "t0": 16.925,
+   "t1": 18.049,
    "text": "심지어 튜브에",
    "speaker": "narr",
    "variant": "",
@@ -240,8 +232,8 @@
   },
   {
    "line": "N5",
-   "t0": 18.004,
-   "t1": 19.604,
+   "t0": 18.049,
+   "t1": 19.649,
    "text": "눈물 안 나는 티어프리라고",
    "speaker": "narr",
    "variant": "pop",
@@ -256,8 +248,8 @@
   },
   {
    "line": "N5",
-   "t0": 19.604,
-   "t1": 20.354,
+   "t0": 19.649,
+   "t1": 20.399,
    "text": "적혀 있더라고요",
    "speaker": "narr",
    "variant": "pop",
@@ -272,24 +264,20 @@
   },
   {
    "line": "N6",
-   "t0": 20.354,
-   "t1": 21.336,
+   "t0": 20.399,
+   "t1": 21.381,
    "text": "민감한 피부용",
    "speaker": "narr",
    "variant": "cut",
-   "emph": [
-    {
-     "word": "민감한"
-    }
-   ],
+   "emph": [],
    "sticker": "",
    "stickers": [],
    "enter": "cut"
   },
   {
    "line": "N6",
-   "t0": 21.336,
-   "t1": 22.433,
+   "t0": 21.381,
+   "t1": 22.478,
    "text": "유기농 인증 원료로",
    "speaker": "narr",
    "variant": "pop",
@@ -304,8 +292,8 @@
   },
   {
    "line": "N6",
-   "t0": 22.433,
-   "t1": 23.129,
+   "t0": 22.478,
+   "t1": 23.174,
    "text": "만든 거래요",
    "speaker": "narr",
    "variant": "pop",
@@ -320,9 +308,9 @@
   },
   {
    "line": "N7",
-   "t0": 23.129,
-   "t1": 24.406,
-   "text": "박정수 영상은",
+   "t0": 23.174,
+   "t1": 24.629,
+   "text": "배우 박정수 영상은",
    "speaker": "narr",
    "variant": "",
    "emph": [
@@ -336,8 +324,8 @@
   },
   {
    "line": "N7",
-   "t0": 24.406,
-   "t1": 25.567,
+   "t0": 24.629,
+   "t1": 25.716,
    "text": "조회수 56만이",
    "speaker": "narr",
    "variant": "pop",
@@ -352,8 +340,8 @@
   },
   {
    "line": "N7",
-   "t0": 25.567,
-   "t1": 26.7,
+   "t0": 25.716,
+   "t1": 26.9,
    "text": "넘을 만큼 인기래요",
    "speaker": "narr",
    "variant": "pop",
@@ -371,7 +359,7 @@
  "flashes": [],
  "transitions": [
   {
-   "t": 6.98,
+   "t": 7.0,
    "kind": "zoomblur",
    "ms": 167.0,
    "zoom": 0.12,
@@ -379,9 +367,17 @@
    "why": "화자 바뀜"
   },
   {
-   "t": 18.27,
+   "t": 13.502,
    "kind": "black",
    "ms": 33.0,
+   "why": "컷 경계"
+  },
+  {
+   "t": 21.787,
+   "kind": "zoomblur",
+   "ms": 167.0,
+   "zoom": 0.12,
+   "sigma": 0.5,
    "why": "컷 경계"
   }
  ],
@@ -390,9 +386,10 @@
  "log": [
   "본보기 벤치 편 = Cs-Ka_S8nDM",
   "스티커 spark_lines 본보기 1개 중 0개만(조건 맞는 덩어리 모자람)",
-  "전환 [(6.98, 'zoomblur'), (18.27, 'black')] (판 cuts.transition.kinds 비율 {'zoomblur': 0.1, 'black': 0.07, 'flash': 0.01}, 컷 경계 11·붙일 수 있는 6(≥1.2초))",
+  "전환 [(7.0, 'zoomblur'), (13.502, 'black'), (21.787, 'zoomblur')] (판 cuts.transition.kinds 비율 {'zoomblur': 0.1, 'black': 0.07, 'flash': 0.01}, 컷 경계 16·붙일 수 있는 7(≥1.2초))",
   "효과음 0발(본보기 0) []",
-  "등장 {'pop': 18, 'cut': 5} · 강조 22/23"
+  "꾸밈 없음 0→3/23(판 plain_share 0.163 → 4) 강조 뺌 ['N2「도대체 뭐가 그렇게 좋길래?」', 'O2「이건 안 시려워요」', 'N6「민감한 피부용」'] — 뺄 수 있는 강조만 덩어리 모자람(5)",
+  "등장 {'pop': 18, 'cut': 5} · 강조 19/23"
  ],
  "check": {
   "ok": true,
@@ -409,7 +406,7 @@
      "cut": 0.29
     },
     "bench_emph": 1.0,
-    "ours_emph": 1.0,
+    "ours_emph": 0.71,
     "n": 7
    },
    "narr.rest": {
@@ -447,7 +444,7 @@
      "pop": 0.33
     },
     "bench_emph": 0.73,
-    "ours_emph": 0.67,
+    "ours_emph": 0.33,
     "n": 3
    },
    "stickers": {
@@ -455,7 +452,11 @@
      "circle_arrow": 1,
      "spark_lines": 1
     },
-    "ours": {}
+    "ours": {},
+    "vs": {
+     "circle_arrow": "0/1(판 규칙 없음 — 안 그림)",
+     "spark_lines": "0/1(벤치 38% 편만 씀 — 모자라도 벤치 범위)"
+    }
    },
    "sfx": {
     "bench": 0,
@@ -464,8 +465,29 @@
    },
    "transitions": {
     "ours": {
-     "zoomblur": 1,
+     "zoomblur": 2,
      "black": 1
+    },
+    "plan": {
+     "src": "판 cuts.transition.kinds",
+     "share": {
+      "zoomblur": 0.1,
+      "black": 0.071,
+      "flash": 0.014
+     },
+     "cut_bounds": 16,
+     "want_raw": {
+      "zoomblur": 1.6,
+      "black": 1.136,
+      "flash": 0.224
+     },
+     "want": 3,
+     "eligible": 7,
+     "picked": {
+      "zoomblur": 2,
+      "black": 1
+     },
+     "min_cut": 1.2
     }
    },
    "sites": {},

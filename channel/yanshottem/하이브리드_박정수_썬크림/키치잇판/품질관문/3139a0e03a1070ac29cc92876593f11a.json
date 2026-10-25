@@ -1,0 +1,407 @@
+{
+ "style": "키치잇판",
+ "ok": false,
+ "gate": "quality_gate:v2(2026-10-25 표준 §11)",
+ "mode": "full",
+ "sec": 84.6,
+ "rows": [
+  {
+   "group": "규격",
+   "what": "길이",
+   "ok": true,
+   "value": "26.90초 (판 25~30)",
+   "src": "판 length · ffprobe",
+   "sec": 0.1
+  },
+  {
+   "group": "규격",
+   "what": "화면=시간표",
+   "ok": true,
+   "value": "26.900 vs 26.9",
+   "src": "timeline.end",
+   "sec": 0.0
+  },
+  {
+   "group": "규격",
+   "what": "음량",
+   "ok": true,
+   "value": "-13.9 LUFS (목표 -14.0)",
+   "src": "ebur128",
+   "sec": 0.7
+  },
+  {
+   "group": "규격",
+   "what": "최고점",
+   "ok": true,
+   "value": "-1.5 dBFS (≤ -1.5+0.5)",
+   "src": "ebur128 peak",
+   "sec": 0.0
+  },
+  {
+   "group": "규격",
+   "what": "1080×1920·30fps",
+   "ok": true,
+   "value": "1080×1920 · 30.0fps",
+   "src": "ffprobe",
+   "sec": 0.1
+  },
+  {
+   "group": "화면",
+   "what": "0초·첫 줄 얼굴",
+   "ok": true,
+   "value": "0.077s:○ 0.1s:○ 0.6s:○ 1.1s:○ 1.6s:○ 2.1s:○ 2.6s:○ 3.1s:○",
+   "src": "thumb.face_check",
+   "sec": 1.8
+  },
+  {
+   "group": "화면",
+   "what": "컷 조각 프레임 = 계획",
+   "ok": true,
+   "value": "전부 같음",
+   "src": "parts/c*.mp4",
+   "sec": 3.4
+  },
+  {
+   "group": "화면",
+   "what": "화면 멈춤 없음",
+   "ok": true,
+   "value": "0건",
+   "src": "창 안 프레임 차",
+   "sec": 0.8
+  },
+  {
+   "group": "화면",
+   "what": "컷 끝 번쩍임 없음(0.2초 안 장면 경계)",
+   "ok": true,
+   "value": "0건",
+   "src": "render_bench.shot_starts",
+   "sec": 1.0
+  },
+  {
+   "group": "화면",
+   "what": "B9 첫·끝 컷 Y≥60",
+   "ok": true,
+   "value": "132 · 196 (≥60)",
+   "src": "checks._ymean",
+   "sec": 0.3
+  },
+  {
+   "group": "화면",
+   "what": "전환 세기(zoomblur drop 중앙 ±30%)",
+   "ok": true,
+   "value": "우리 drop 중앙 0.224(2경계) vs 벤치 0.175(5회 [-0.192, 0.175, 0.136, 0.337, 0.24]) · 허용 ±30%",
+   "src": "render_bench.render_transition_drop ↔ bench_transition_drop(채널 _kal 캐시)",
+   "sec": 3.8
+  },
+  {
+   "group": "화면",
+   "what": "전환 길이 ms(참고)",
+   "ok": true,
+   "value": "우리 [0, 0] · 벤치 [200, 33, 0, 167, 400]",
+   "src": "transition_drop.ms",
+   "sec": 0.0,
+   "ref": true
+  },
+  {
+   "group": "재료",
+   "what": "B13 같은 장면 재사용(겹침 ×·거리 min(3, 0.25×길이))",
+   "ok": true,
+   "value": "0 (소스 길이 {IjTVGH5SNZQ_545_605:60.0, IjTVGH5SNZQ_656_668:12.0, IjTVGH5SNZQ_706_718:12.0, IjTVGH5SNZQ_800_830:30.0, IjTVGH5SNZQ_524_530:6.0})",
+   "src": "quality_gate.reuse_violations_bench",
+   "sec": 1.0
+  },
+  {
+   "group": "재료",
+   "what": "B16 A-B-A 끼움(나레 컷)",
+   "ok": true,
+   "value": "0",
+   "src": "checks.aba_violations",
+   "sec": 0.0
+  },
+  {
+   "group": "재료",
+   "what": "B16' 되감김·점프줌",
+   "ok": true,
+   "value": "컷 39 · 되감김 0 [] · 점프줌 2(드묾)",
+   "src": "engine/check_seams.check",
+   "sec": 8.1
+  },
+  {
+   "group": "판 리듬",
+   "what": "컷 길이 중앙(판 rhythm.cut_median ±30%)",
+   "ok": true,
+   "value": "완성본 컷 중앙 1.4초 vs 판 1.15(±30%, kal_analyze.media_of 같은 자) · 컷 14",
+   "src": "kal_analyze.media_of",
+   "sec": 27.8
+  },
+  {
+   "group": "판 리듬",
+   "what": "훅 0.1~3초 컷 경계(판 rhythm.hook_cuts_3s)",
+   "ok": true,
+   "value": "0.1~3초 컷 경계 2 [1.1, 2.233] (판 ≥2)",
+   "src": "kal_analyze.media_of cut_at",
+   "sec": 0.0
+  },
+  {
+   "group": "판 리듬",
+   "what": "꾸밈 없는 덩어리 비율(판 rhythm.plain_share)",
+   "ok": true,
+   "value": "꾸밈 없는 덩어리 0.174 vs 판 0.163±0.1(자막표 rows · placement.plain_share)",
+   "src": "placement.plain_share",
+   "sec": 0.0
+  },
+  {
+   "group": "판 리듬",
+   "what": "그림 컷 비중(판 rhythm.photo_share_max)",
+   "ok": true,
+   "value": "그림 컷 비중 0.085 (판 ≤0.16, timeline · render_bench.photo_share)",
+   "src": "render_bench.photo_share",
+   "sec": 0.0
+  },
+  {
+   "group": "자막·효과",
+   "what": "배치(본보기 벤치 편 대조)",
+   "ok": true,
+   "value": "본보기 Cs-Ka_S8nDM · 칸 최대 차 0.212",
+   "src": "자막표.check = placement.check_place",
+   "sec": 0.0
+  },
+  {
+   "group": "자막·효과",
+   "what": "B14 효과음 과다(≤ 벤치 p90)",
+   "ok": true,
+   "value": "우리 0발/26.9초 = 0.000/초 · 벤치 p90 0.071/초(편별 [0.0, 0.0, 0.073, 0.0, 0.0, 0.071, 0.0, 0.0])",
+   "src": "자막표.sfx · 줄판독 sfx",
+   "sec": 0.0
+  },
+  {
+   "group": "소리",
+   "what": "줄별 말속도 ±35%(렌더 기록)",
+   "ok": true,
+   "value": "렌더 기록 평균 6.88자/초 ±35% · N1:6.72 N2:7.51 N3:6.93 N4:6.24 N5:7.03 N6:7.0 N7:6.72",
+   "src": "render_info.line_cps · render_itssum.CPS_LINE_TOL",
+   "sec": 0.0
+  },
+  {
+   "group": "소리",
+   "what": "B18 줄 사이 간격 = 판 timing(±1프레임+0.02)",
+   "ok": true,
+   "value": "경계 N1→O1:0.06→0.09 O1→N2:0.06→0.09 N2→O2:0.06→0.09 O2→N3:0.06→0.09 N3→N4:0.06→0.09 N4→N5:0.06→0.09 N5→N6:0.06→0.09 N6→N7:0.06→0.09 (허용 ±0.053)",
+   "src": "timeline.lines(판 timing) · checks.pauses_between(voice.wav)",
+   "sec": 0.3
+  },
+  {
+   "group": "소리",
+   "what": "B18a 줄 안 문장부호 쉼",
+   "ok": true,
+   "value": "N1,0.23 N3,0.23 N4,0.23 N5,0.23 N7,0.23 (쉼표 0.22·마침표 0.3, −0.02/+0.03)",
+   "src": "판 speech.pause_comma/period(없으면 0.22/0.30) · voice.wav 무음",
+   "sec": 0.4
+  },
+  {
+   "group": "소리",
+   "what": "나레 받아쓰기 ↔ 대본",
+   "ok": true,
+   "value": "나레 7줄 중 못 찾음·0.25초 넘게 어긋남 0 · 최대 차 0.062 (스피치매틱스 낱말 시각) · N1:0.0↔0.0 N2:5.475↔5.43 N3:10.989↔10.95 N4:13.502↔13.44 N5:16.925↔16.89 N6:20.399↔20.37 N7:23.174↔23.13",
+   "src": "engine/narr_verify.heard_words(스피치매틱스) → check_line_sync.line_starts_from_asr · LIMIT_SM",
+   "sec": 0.0
+  },
+  {
+   "group": "대본",
+   "what": "script_audit",
+   "ok": true,
+   "value": "규칙 10개 · 미달 0",
+   "src": "hybrid/script_audit.audit",
+   "sec": 0.0
+  },
+  {
+   "group": "썸네일",
+   "what": "썸네일 맨 앞 2프레임",
+   "ok": true,
+   "value": "안 A · 프레임 0·1·2 차 [0.4, 0.4, 20.1]",
+   "src": "썸네일.json · 완성본 0~2프레임",
+   "sec": 0.8
+  },
+  {
+   "group": "썸네일",
+   "what": "thumb_rule.check(3안 규칙)",
+   "ok": true,
+   "value": "통과",
+   "src": "hybrid/thumb_rule.check",
+   "sec": 0.0
+  },
+  {
+   "group": "썸네일",
+   "what": "광고 표시(ad_mark)",
+   "ok": true,
+   "value": "완성본 comment = 'ad_mark:v1'",
+   "src": "engine/ad_mark 표식",
+   "sec": 0.2
+  },
+  {
+   "group": "1차 자",
+   "what": "재현일치도(match_table)",
+   "ok": false,
+   "value": "1차 판 — 기준 칸 전부 필수 · 전체 18칸 ✓14 ✗2 미측정0 비교 안 함2(chunk.sec,enter.mode.원음 — 하이브리드 판 목표 없음) · 필수 14칸 중 미달 ['fx.rate.원음'] · 벤치 8편",
+   "src": "kal_analyze.match_from_render → 재현일치도.json",
+   "sec": 27.5
+  },
+  {
+   "group": "장면↔대사",
+   "what": "완성본 컷 = 계획 프레임(창 대조 ≥0.97)",
+   "ok": true,
+   "value": "17컷 중 같음 17 · 다름 0 (창 1−평균차 ≥ 0.97, 최저 0.9936)",
+   "src": "quality_gate.plan_frames_check(base.mp4 또는 final−자막 띠 ↔ render_bench.plan_frames_gray 계획 그림)",
+   "sec": 6.5
+  },
+  {
+   "group": "장면↔대사",
+   "what": "계획 점수(루브릭)",
+   "ok": true,
+   "value": "계획 점수 없음(material_fit 계획 전 편) · 목표 None/None (None)",
+   "src": "<doc>/장면대사_계획.json(material_fit) · channel/<slug>/_kal/상위편_목표.json",
+   "sec": 0.0,
+   "ref": true
+  },
+  {
+   "group": "표식",
+   "what": "render_info 표식(판 sha·렌더러 sig·reference)",
+   "ok": true,
+   "value": "style_sha 232fed24405f · renderer_sig render_bench@3229f9c10f5f · reference Cs-Ka_S8nDM",
+   "src": "render_info.json",
+   "sec": 0.0
+  }
+ ],
+ "n": 33,
+ "n_ok": 32,
+ "n_bad": 1,
+ "n_unmeasured": 0,
+ "placement": {
+  "ok": true,
+  "reference": "Cs-Ka_S8nDM",
+  "worst_slot_diff": 0.212,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "pop": 0.67,
+     "cut": 0.33
+    },
+    "ours": {
+     "pop": 0.71,
+     "cut": 0.29
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 0.71,
+    "n": 7
+   },
+   "narr.rest": {
+    "bench": {
+     "pop": 1.0
+    },
+    "ours": {
+     "pop": 1.0
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 11
+   },
+   "orig.first": {
+    "bench": {
+     "pop": 0.67,
+     "cut": 0.33
+    },
+    "ours": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 2
+   },
+   "orig.rest": {
+    "bench": {
+     "cut": 0.45,
+     "pop": 0.45,
+     "typing": 0.09
+    },
+    "ours": {
+     "cut": 0.67,
+     "pop": 0.33
+    },
+    "bench_emph": 0.73,
+    "ours_emph": 0.0,
+    "n": 3
+   },
+   "stickers": {
+    "bench": {
+     "circle_arrow": 1,
+     "spark_lines": 1
+    },
+    "ours": {},
+    "vs": {
+     "circle_arrow": "0/1(판 규칙 없음 — 안 그림)",
+     "spark_lines": "0/1(벤치 38% 편만 씀 — 모자라도 벤치 범위)"
+    }
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0,
+    "kinds": {}
+   },
+   "transitions": {
+    "ours": {
+     "zoomblur": 2,
+     "black": 1
+    },
+    "plan": {
+     "src": "판 cuts.transition.kinds",
+     "share": {
+      "zoomblur": 0.1,
+      "black": 0.071,
+      "flash": 0.014
+     },
+     "cut_bounds": 16,
+     "want_raw": {
+      "zoomblur": 1.6,
+      "black": 1.136,
+      "flash": 0.224
+     },
+     "want": 3,
+     "eligible": 7,
+     "picked": {
+      "zoomblur": 2,
+      "black": 1
+     },
+     "min_cut": 1.2
+    }
+   },
+   "sites": {},
+   "meme": {
+    "ours": 0
+   }
+  },
+  "bad": []
+ },
+ "log": [
+  "본보기 벤치 편 = Cs-Ka_S8nDM",
+  "스티커 spark_lines 본보기 1개 중 0개만(조건 맞는 덩어리 모자람)",
+  "전환 [(7.0, 'zoomblur'), (13.502, 'black'), (21.787, 'zoomblur')] (판 cuts.transition.kinds 비율 {'zoomblur': 0.1, 'black': 0.07, 'flash': 0.01}, 컷 경계 16·붙일 수 있는 7(≥1.2초))",
+  "효과음 0발(본보기 0) []",
+  "꾸밈 없음 0→4/23(판 plain_share 0.163 → 4) 강조 뺌 ['O1「선크림 안 씁니다」', 'N2「도대체 뭐가 그렇게 좋길래?」', 'O2「이건 안 시려워요」', 'N6「민감한 피부용」']",
+  "등장 {'pop': 18, 'cut': 5} · 강조 18/23"
+ ],
+ "match": {
+  "verdict": "미달",
+  "file": "channel\\yanshottem\\하이브리드_박정수_썬크림\\키치잇판\\재현일치도.json"
+ },
+ "gates": {
+  "upgrade": null
+ },
+ "fit": {
+  "min_sim": 0.97,
+  "n": 17,
+  "file": "channel\\yanshottem\\하이브리드_박정수_썬크림\\키치잇판\\장면대사.json"
+ },
+ "eye_pack_dir": "C:\\숏템_칼카피\\yanshottem\\하이브리드_박정수_썬크림\\키치잇판\\eye",
+ "final_md5": "3139a0e03a1070ac29cc92876593f11a"
+}

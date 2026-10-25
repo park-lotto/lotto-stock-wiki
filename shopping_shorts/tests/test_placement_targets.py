@@ -207,6 +207,7 @@ def test_kitchit_saved_plans_unchanged():
     st = ST.load("키치잇판")
     st_old = copy.deepcopy(st)                 # 10-25 관제263 판 cuts.transition.kinds(벤치 실측 전환) 넣기 전 계획은 그 칸 없이 만든 것
     st_old["cuts"]["transition"]["kinds"] = {"cut": 1.0}
+    rh = st.get("rhythm")
     for x in (st, st_old):                     # 10-25 관제263 판 rhythm.plain_share(꾸밈 없는 덩어리) 넣기 전 계획은 그 칸 없이 만든 것
         x.pop("rhythm", None)
     for f in files:
@@ -214,7 +215,10 @@ def test_kitchit_saved_plans_unchanged():
         S = json.loads((f.parent.parent / "대본.json").read_text(encoding="utf-8"))
         rows = [{k: v for k, v in r.items() if k != "show"} for r in d["timeline"]["rows"]]
         made_new = any("판 cuts.transition.kinds" in str(x) for x in d["placement"].get("log") or [])
-        p = PL.place(rows, st if made_new else st_old, S.get("slug") or "x", cuts=d["timeline"]["cuts"])
+        use = copy.deepcopy(st if made_new else st_old)
+        if any("판 plain_share" in str(x) for x in d["placement"].get("log") or []):
+            use["rhythm"] = rh
+        p = PL.place(rows, use, S.get("slug") or "x", cuts=d["timeline"]["cuts"])
         assert _summary(p) == _summary(d["placement"]), f.parent.parent.parent.name
 
 

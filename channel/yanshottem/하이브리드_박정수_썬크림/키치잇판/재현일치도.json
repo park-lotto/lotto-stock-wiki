@@ -4,7 +4,7 @@
   {
    "key": "len.duration",
    "bench": 14.1295,
-   "ours": 26.7,
+   "ours": 26.9,
    "diff": "판 25~30(벤치 10.17~21.014 와 안 겹침)",
    "judge": "in",
    "core": true,
@@ -12,18 +12,18 @@
   },
   {
    "key": "cut.median",
-   "bench": null,
-   "ours": 3.33,
-   "diff": "비교 안 함",
-   "judge": "skip",
-   "core": false,
-   "why": "컷 길이 중앙 ±30%, 벤치보다 빠르면 미달 쪽(검수 B4) — 하이브리드 판: 판에 why 붙은 실측 목표값이 없어 비교 안 함(미측정 아님 · 코디네이터 10-25 결정, 페이블 재검토 대기)"
+   "bench": 1.15,
+   "ours": 1.4,
+   "diff": 21.7,
+   "judge": "in",
+   "core": true,
+   "why": "컷 길이 중앙 ±30%, 벤치보다 빠르면 미달 쪽(검수 B4) — 하이브리드 판: 판 목표 1.15(판 why: 벤치 8편 원본 컷 길이 중앙(kal_analyze.media_of = 관문·재현과 같은 자, C:/숏템_칼카피/kitchit/src/_benc…)와 비교"
   },
   {
    "key": "speech.cps.나레",
    "bench": 6.83,
-   "ours": 6.66,
-   "diff": -2.5,
+   "ours": 6.69,
+   "diff": -2.0,
    "judge": "in",
    "core": true,
    "why": "나레 말속도(자막 글자/표시 초) 차 ≤10%(compare speech.cps) — 하이브리드 판: 판 목표 6.83(판 why: 미나(일레븐랩스) 서비스 배속 고정 1.35(narr_align.fixed_tempo) — 이 칸은 배속을 못 바꾸고 대본 길이 어림(scrip…)와 비교"
@@ -40,7 +40,7 @@
   {
    "key": "chunk.sec",
    "bench": null,
-   "ours": 1.13,
+   "ours": 1.12,
    "diff": "비교 안 함",
    "judge": "skip",
    "core": false,
@@ -67,8 +67,8 @@
   {
    "key": "fx.rate.나레",
    "bench": 1.0,
-   "ours": 1.0,
-   "diff": 0.0,
+   "ours": 0.889,
+   "diff": -11.1,
    "judge": "in",
    "core": true,
    "why": "나레 줄 중 꾸밈 붙은 비율 차 ≤20%p(시작문서 §0-1 12-1 ④ '효과 붙은 줄 비율')"
@@ -76,8 +76,8 @@
   {
    "key": "fx.rate.원음",
    "bench": 0.818,
-   "ours": 1.0,
-   "diff": 18.2,
+   "ours": 0.8,
+   "diff": -1.8,
    "judge": "in",
    "core": true,
    "why": "원음 줄 중 꾸밈 붙은 비율 차 ≤20%p"
@@ -90,14 +90,14 @@
     "끝": 0.15
    },
    "ours": {
-    "훅": 0.13,
-    "본문": 0.696,
-    "끝": 0.174
+    "훅": 0.15,
+    "본문": 0.7,
+    "끝": 0.15
    },
    "diff": {
-    "끝": 2.4,
-    "본문": 9.1,
-    "훅": -11.2
+    "끝": 0.0,
+    "본문": 9.5,
+    "훅": -9.2
    },
    "judge": "in",
    "core": true,
@@ -106,8 +106,8 @@
   {
    "key": "plain.rate",
    "bench": 0.108,
-   "ours": 0.0,
-   "diff": -10.8,
+   "ours": 0.13,
+   "diff": 2.2,
    "judge": "in",
    "core": true,
    "why": "꾸밈 없는 줄 비율 차 ≤20%p('없는 것도 스타일')"
@@ -139,15 +139,15 @@
     "zoomblur": 0.1
    },
    "ours": {
-    "cut": 0.818,
-    "zoomblur": 0.091,
-    "black": 0.091
+    "cut": 0.812,
+    "zoomblur": 0.125,
+    "black": 0.062
    },
    "diff": {
-    "black": 9.1,
-    "cut": -4.9,
+    "black": 6.2,
+    "cut": -5.5,
     "flash": 0.0,
-    "zoomblur": -0.9
+    "zoomblur": 2.5
    },
    "judge": "in",
    "core": true,
@@ -193,11 +193,26 @@
  "n_bench": 8,
  "ours_n_lines": 23,
  "ours_media": {
-  "duration": 26.7,
-  "cut_median": 3.33,
-  "n_cuts": 9,
+  "duration": 26.9,
+  "cut_median": 1.4,
+  "n_cuts": 14,
+  "cut_at": [
+   1.1,
+   2.233,
+   3.333,
+   5.467,
+   7.033,
+   11.0,
+   12.233,
+   13.5,
+   15.567,
+   16.933,
+   19.367,
+   20.4,
+   21.833
+  ],
   "lufs": -13.9,
-  "tp": -1.4,
+  "tp": -1.5,
   "win": [
    0,
    420,
