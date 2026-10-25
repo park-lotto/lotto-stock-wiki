@@ -3,7 +3,7 @@
   "made_by": "tools/calcopy/engine/sound/sfx_events.py hotpeople --detect",
   "how": "detect",
   "asr_filter": {
-   "how": "후보 시각이 받아쓰기 낱말 구간[t0−0.05, t1+0.05] 안이면 cand_in_words(치찰음·파열음 오탐) — 단 전환(cut)·스티커 ±0.3초 안은 남김(keep_why). 남은 것 = cand_kept",
+   "how": "후보 시각이 받아쓰기 낱말 구간[t0−0.05, t1+0.05] 안이면 cand_in_words(치찰음·파열음 오탐) — 단 전환·스티커 곁(편마다 우연 기대 ≤ 0.1 인 창 (0.3, 0.2, 0.15, 0.1, 0.05))·말 위 순음 tone·판독 sfx 자리는 남김(keep_why). 배경음 박자 = cand_bgm. 남은 것 = cand_kept(confidence 눈/신호, ear_pending)",
    "asr": "C:/숏템_칼카피/hotpeople/work/asrw",
    "no_speech": {
     "dvJg0By8Luw": "hallucination(문구 2/3)"
@@ -186,7 +186,8 @@
     "near": {
      "cap": 0.09,
      "sticker": 20.18
-    }
+    },
+    "confidence": "눈"
    },
    {
     "t": 18.25,
@@ -197,7 +198,9 @@
     "near": {
      "cap": 0.45,
      "sticker": 6.55
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 18.58,
@@ -208,7 +211,9 @@
     "near": {
      "cap": 0.78,
      "sticker": 6.22
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 18.81,
@@ -219,7 +224,9 @@
     "near": {
      "cap": 1.01,
      "sticker": 5.99
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 22.73,
@@ -232,7 +239,8 @@
     "near": {
      "cap": 0.33,
      "sticker": 2.07
-    }
+    },
+    "confidence": "눈"
    },
    {
     "t": 38.99,
@@ -243,7 +251,9 @@
     "near": {
      "cap": 0.31,
      "sticker": 14.19
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 42.03,
@@ -254,7 +264,9 @@
     "near": {
      "cap": 0.33,
      "sticker": 17.23
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 49.91,
@@ -265,7 +277,9 @@
     "near": {
      "cap": 1.09,
      "sticker": 25.11
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 56.88,
@@ -278,9 +292,20 @@
     "near": {
      "cap": 0.11,
      "sticker": 32.08
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    }
   ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.3,
+   "chance": 0.01
+  },
+  "sfx_count": {
+   "sure": 2,
+   "pending": 7
+  },
   "line_link": {
    "kept_to_line": [
     {
@@ -512,7 +537,9 @@
     "cen_hz": 1572,
     "near": {
      "cap": 0.35
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 18.44,
@@ -522,7 +549,9 @@
     "cen_hz": 1572,
     "near": {
      "cap": 0.21
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 34.54,
@@ -534,9 +563,20 @@
     "voiced": 0.11,
     "near": {
      "cap": 0.79
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    }
   ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.0,
+   "chance": 0.0
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 3
+  },
   "line_link": {
    "kept_to_line": [
     {
@@ -691,7 +731,9 @@
     "cen_hz": 1163,
     "near": {
      "cap": 0.64
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 44.92,
@@ -701,7 +743,9 @@
     "cen_hz": 1055,
     "near": {
      "cap": 0.31
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 48.91,
@@ -711,7 +755,9 @@
     "cen_hz": 1055,
     "near": {
      "cap": 0.91
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 53.82,
@@ -721,7 +767,9 @@
     "cen_hz": 1012,
     "near": {
      "cap": 0.22
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 54.04,
@@ -733,9 +781,19 @@
     "cen_hz": 7723,
     "near": {
      "cap": 0.44
-    }
+    },
+    "confidence": "눈"
    }
   ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.0,
+   "chance": 0.0
+  },
+  "sfx_count": {
+   "sure": 1,
+   "pending": 4
+  },
   "line_link": {
    "kept_to_line": [
     {
@@ -890,7 +948,9 @@
     "cen_hz": 1981,
     "near": {
      "cap": 0.64
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 55.81,
@@ -902,9 +962,20 @@
     "voiced": 0.0,
     "near": {
      "cap": 0.14
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    }
   ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.0,
+   "chance": 0.0
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 2
+  },
   "line_link": {
    "kept_to_line": [
     {
@@ -1042,7 +1113,9 @@
     "cen_hz": 1098,
     "near": {
      "cap": 1.84
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 0.85,
@@ -1052,7 +1125,9 @@
     "cen_hz": 1120,
     "near": {
      "cap": 1.52
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 7.42,
@@ -1062,7 +1137,9 @@
     "cen_hz": 1120,
     "near": {
      "cap": 0.42
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 8.0,
@@ -1072,7 +1149,9 @@
     "cen_hz": 1120,
     "near": {
      "cap": 1.0
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 8.71,
@@ -1082,9 +1161,20 @@
     "cen_hz": 1120,
     "near": {
      "cap": 0.42
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    }
   ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.0,
+   "chance": 0.0
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 5
+  },
   "line_link": {
    "kept_to_line": [
     {
@@ -1271,7 +1361,8 @@
     "cen_hz": 7260,
     "near": {
      "cap": 2.77
-    }
+    },
+    "confidence": "눈"
    },
    {
     "t": 17.88,
@@ -1281,7 +1372,9 @@
     "cen_hz": 1572,
     "near": {
      "cap": 0.55
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 44.57,
@@ -1293,7 +1386,9 @@
     "voiced": 0.12,
     "near": {
      "cap": 1.33
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 49.16,
@@ -1303,7 +1398,9 @@
     "cen_hz": 1960,
     "near": {
      "cap": 1.03
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 58.8,
@@ -1315,9 +1412,20 @@
     "voiced": 0.0,
     "near": {
      "cap": 0.1
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    }
   ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.0,
+   "chance": 0.0
+  },
+  "sfx_count": {
+   "sure": 1,
+   "pending": 4
+  },
   "line_link": {
    "kept_to_line": [
     {
