@@ -650,7 +650,8 @@ def _deco_pos(out: list[dict], style: dict, log: list, up_cap: dict | None) -> d
             if need <= 0:
                 break
             sp = out[i]["speaker"]
-            if deco_sp[sp] >= cap.get(sp, 0):
+            lim = cap.get(sp, 0) if (up_cap or {}).get(sp) is None else min(cap.get(sp, 0), up_cap[sp])   # 화자별 업그레이드 상한도(10-26 회원 마스크편: 합으로만 묶어 나레가 상한 넘음)
+            if deco_sp[sp] >= lim:
                 continue
             deco_sp[sp] += 1; need -= 1; added.append(i)
         if need > 0:
