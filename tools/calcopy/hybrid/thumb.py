@@ -428,6 +428,11 @@ def card_scene_frame(opt: dict, T: dict, cand_dir: Path, win_wh: tuple[int, int]
             k = ks[int(opt.get("nth", 0))]
         c = cuts[int(k)]
         src, t, crop = Path(cand_dir) / c["src"], float(c.get("ss") or 0) + float(opt.get("t", 0.0)), c.get("crop")
+        if not (isinstance(crop, list) and len(crop) == 4):
+            # 'face'·없음·사진 = 렌더 조각과 같은 칸 주인 render_bench.cut_crop(10-26 이미숙 회원편: 렌더 길은 관문 ⑥이 cut_crop 보다 먼저 돌아
+            # crop 'face' 글자가 ffmpeg crop 에 그대로 들어가 '프레임 못 뽑음' → 썸네일 카드 3안 반려로 11/13 멈춤, 98 기록)
+            from tools.calcopy.hybrid.render_bench import cut_crop
+            crop = cut_crop(c, src, (ww, wh))
     img = src.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")
     if img:
         t = 0.0          # 그림 컷(본인 사진·쿠팡 사진)은 한 장 — -ss 를 붙이면 jpg 에 따라 0프레임(10-25 관제263 v3 own_1: -ss 0.000 도 0바이트, cp_ 는 됨)

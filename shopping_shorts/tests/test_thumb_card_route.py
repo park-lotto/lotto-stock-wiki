@@ -1,0 +1,37 @@
+"""10-26 이미숙 회원편(관제263) — 렌더 길 썸네일 카드 관문 두 구멍.
+① card_scene_frame 이 crop 'face' 글자를 ffmpeg crop 에 그대로 넣어 '프레임 못 뽑음'(칸 주인 render_bench.cut_crop 을 안 부름).
+② 카드 반려가 render_fix(재료만 받음)로 가서 회원 AI 가 고친 썸네일이 버려지고 멈춤 → 썸네일 단계로 되돌린다."""
+import subprocess
+from pathlib import Path
+
+import numpy as np
+
+from tools.calcopy.hybrid import flow, render_bench, thumb
+
+
+def test_card_frame_face_crop_goes_through_cut_crop(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(render_bench, "cut_crop", lambda c, src, win: [12, 0, 1080, 1080])
+
+    def fake_run(cmd, **kw):
+        seen["vf"] = cmd[cmd.index("-vf") + 1]
+        return subprocess.CompletedProcess(cmd, 0, stdout=bytes(8 * 8 * 3))
+    monkeypatch.setattr(thumb.subprocess, "run", fake_run)
+    T = {"cuts": [{"line": "O2", "src": "a.mp4", "ss": 119, "crop": "face", "dur": 2.0, "kind": "orig"}]}
+    im, where = thumb.card_scene_frame({"part": 0, "t": 0.6}, T, Path("."), (8, 8))
+    assert "crop=1080:1080:12:0" in seen["vf"]
+    assert im is not None and im.shape == (8, 8, 3)
+
+
+def test_card_only_render_error_returns_to_thumb():
+    st = {"version": "키치잇판", "tries": {}, "log": []}
+    m = {"render": {"error": "썸네일 카드 B: 연예인 얼굴 아님(얼굴 0개 · a.mp4@80.00) — 얼굴이 크게 나온 장면으로 바꾼다"}}
+    out = flow.ph_render_got(st, m, {}, None)
+    assert out == {"goto": "thumb"}
+    assert st["_thumb_bad"][0].startswith("썸네일 카드 B")
+    st["tries"]["thumb"] = 2          # 썸네일 기회를 다 쓰면 예전 길(멈춤 쪽)로
+    try:
+        out2 = flow.ph_render_got(st, m, {}, None)
+    except Exception:          # 예전 길 = 재료 고치기 요청(대본 없는 이 시험 st 에선 KeyError) — 썸네일로 안 가면 된다
+        out2 = None
+    assert out2 != {"goto": "thumb"}

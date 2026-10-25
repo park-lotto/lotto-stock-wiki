@@ -1649,6 +1649,13 @@ def ph_render_got(st, m, rp, u):
         if tl.get("max") and float(tl["max"]) > cap:
             st["log"].append(f"배속 {tl['max']} > {cap - 0.01}")
         return {"goto": "check"}
+    probs = [x.strip() for x in str(r.get("error") or "").split(" / ") if x.strip()]
+    if probs and all(x.startswith("썸네일 카드") for x in probs) and st["tries"].get("thumb", 0) < 2:
+        # 렌더 전 관문 ⑥(카드 얼굴·글자) 반려는 재료가 아니라 썸네일 3안 몫 — 썸네일 단계로 되돌린다(10-26 이미숙 회원편: render_fix 는 재료만 받아
+        # 회원 AI 가 썸네일을 고쳐 보내도 버려지고 '영상을 다듬다 막혔어요'로 멈춤, 98 기록)
+        st["tries"]["thumb"] = st["tries"].get("thumb", 0) + 1
+        st["_thumb_bad"] = probs
+        return {"goto": "thumb"}
     if r.get("error") and "원본 샷보다 길다" not in str(r["error"]) and not r.get("jumps") and st["tries"].get("render_err", 0) >= 1:
         st["log"].append("렌더 오류: " + str(r["error"])[:300])
         raise _Stop("영상을 만들다 멈췄어요", "다시 시도해 주시면 멈춘 곳부터 이어 갈게요", retry="render", auto=True)
