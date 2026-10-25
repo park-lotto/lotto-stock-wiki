@@ -28,17 +28,16 @@ def test_rhythm_reader_and_missing():
     assert ST.rhythm_missing(ST.load("키치잇판")) == []
 
 
-def test_rhythm_cuts_splits_long_and_hook():
-    out = RB.rhythm_cuts(_cuts(), 9.0, R, log=lambda m: None)
-    hook = [c["t0"] for c in out[1:] if 0.1 < c["t0"] <= 3.0]
-    assert len(hook) >= 2
-    n1 = [c for c in out if c["line"] == "N1"]
-    assert len(n1) == 3 and n1[1]["ss"] > n1[0]["ss"] and n1[1]["crop"] != n1[0]["crop"]     # 이어서·칸 바꿈
-    o1 = [c for c in out if c["line"] == "O1"]
-    assert all(abs((c["ss"] - o1[0]["ss"]) - (c["t0"] - o1[0]["t0"])) < 1e-3 for c in o1)      # 원음 입 맞춤 그대로
-    pj = [c for c in out if c["src"] == "p.jpg"]
-    assert all(c["ss"] == 0 for c in pj)                                                       # 그림은 ss 안 옮김
-    assert RB.rhythm_cuts(_cuts(), 9.0, {}, log=lambda m: None) == _cuts()                       # 칸 없으면 그대로
+def test_rhythm_gate_counts_real_cuts_only():
+    """판 cut_median·hook_cuts_3s = 렌더 전 관문(rhythm_gate). 같은 샷 이어 붙이기는 컷이 아니라(완성본 컷 감지가 못 봄 — 10-25 박정수 v2 실측)
+    진짜 컷(다른 파일·그림·다른 원본 장면)만 센다. 긴 화면이면 멈춤 메시지."""
+    T = {"cuts": [{**c, "t1": t1} for c, t1 in zip(_cuts(), (3.6, 5.3, 9.0))], "end": 9.0}
+    bad = RB.rhythm_gate(T, {"rhythm": R}, None)
+    assert len(bad) == 2 and "N1" in bad[0] and "훅" in bad[1]
+    many = [{"line": f"N{k}", "src": f"s{k}.mp4", "ss": 1.0, "t0": round(1.1 * k, 2)} for k in range(9)]
+    T2 = {"cuts": [{**c, "t1": many[k + 1]["t0"] if k + 1 < len(many) else 9.9} for k, c in enumerate(many)], "end": 9.9}
+    assert RB.rhythm_gate(T2, {"rhythm": R}, None) == []
+    assert RB.rhythm_gate(T, {}, None) == []                                                   # 칸 없으면 렌더는 안 막음(카드·관문이 미달로)
 
 
 def test_photo_gate():
@@ -77,3 +76,11 @@ def test_match_cut_median_no_target_fails():
     assert row["judge"] == "failed"
     t2 = K.match_table([doc], ours, {"cut_median": 1.2}, {"cut_median": [1.0]}, own_len=(25, 30), own_targets={"cut.median": (1.15, "w")})
     assert next(r for r in t2["rows"] if r["key"] == "cut.median")["judge"] != "skip"
+
+
+def test_new_viol_sees_chain():
+    """나눈 조각(같은 원본 이어 붙인 앞으로 가기 사슬)은 B13 아님 — _new_viol 이 목록 전체로 판정(짝으로 부르면 첫↔끝 거리 오탐)."""
+    p = [{"src": "a.mp4", "ss": 8.0 + 1.24 * k, "dur": 1.24, "t0": 23.17 + 1.24 * k, "t1": 23.17 + 1.24 * (k + 1), "line": "N7"} for k in range(3)]
+    assert MF._new_viol(p[:2], p[2], {"a.mp4": 30.0}) == []
+    far = {**p[2], "t0": 5.0, "t1": 6.2, "line": "N2"}           # 사슬 밖 가까운 재사용은 그대로 잡는다
+    assert MF._new_viol(p[:2], far, {"a.mp4": 30.0})

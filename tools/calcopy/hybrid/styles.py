@@ -31,7 +31,7 @@ REQUIRED = ("name", "renderer", "voice", "bgm", "loudness", "length", "script", 
 
 # ── 판 리듬 실측 4칸(관제263 10-25 페이블 눈검수 E1·E2·E4 — 모든 판 필수, 값은 그 채널 벤치 실측 + why) ──────────────
 #   판 파일 rhythm{cut_median{v,why} · hook_cuts_3s{min,why} · plain_share{v,tol,why} · photo_share_max{v,why}}.
-#   읽는 곳은 rhythm() 하나 — 렌더(render_bench.rhythm_cuts·photo_gate)·배치(placement.plain_step)·관문(quality_gate rhythm 행)·카드(preset_card L1)·재현(kal_analyze.style_targets).
+#   읽는 곳은 rhythm() 하나 — 렌더 전 관문(render_bench.rhythm_gate·photo_gate)·배치(placement.plain_step)·관문(quality_gate rhythm 행)·카드(preset_card L1)·재현(kal_analyze.style_targets).
 RHYTHM_KEYS = {"cut_median": "v", "hook_cuts_3s": "min", "plain_share": "v", "photo_share_max": "v"}
 
 

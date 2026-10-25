@@ -123,72 +123,47 @@ def narr_cap_starts(L: dict, sent: dict | None, align: dict | None, tts_char0: i
     return out
 
 
-RHYTHM_PUNCH = 0.82      # 나눈 조각 사이 화면 바꿈 = 같은 자리 안쪽 82% 로 당겨 자르기(벤치 '같은 인물 펀치 줌 몰아치기', 0.4초 미만 샷 메모) — 컷 감지가 경계로 본다
-RHYTHM_MIN_PIECE = 0.8   # 나눈 조각 하한(초) — MIN_PIECE_SEC 0.4(번쩍임)의 두 배, 벤치 컷 길이 최소 0.83(편별 중앙) 근처
-
-
-def _punch(crop, k: int):
-    """조각 k 의 칸 — 짝수 = 원래 칸, 홀수 = 같은 가운데 RHYTHM_PUNCH 배 안쪽(픽셀 정수). 칸이 숫자 4개가 아니면 None(나누지 않는다)."""
-    if not (isinstance(crop, (list, tuple)) and len(crop) == 4):
-        return None
-    if k % 2 == 0:
-        return list(crop)
-    x, y, w, h = [float(v) for v in crop]
-    nw, nh = w * RHYTHM_PUNCH, h * RHYTHM_PUNCH
-    return [int(round(x + (w - nw) / 2)), int(round(y + (h - nh) / 2)), int(round(nw)), int(round(nh))]
-
-
-def rhythm_cuts(cuts: list[dict], end: float, R: dict, log=print) -> list[dict]:
-    """(판단 주인 — 판 리듬 cut_median·hook_cuts_3s 를 계획에 적용, 관제263 10-25 페이블 E1·E2) 한 컷이 판 cut_median 의 1.5배보다 길면
-    round(길이 ÷ cut_median) 조각으로 나눈다(조각 ≥ RHYTHM_MIN_PIECE). 조각은 같은 원본을 이어서(ss + 경과, 원음 입 맞춤 그대로) 칸만 번갈아
-    안쪽으로 당겨(_punch) 화면이 바뀐다. 그다음 0.1~3.0초 안 컷 경계가 hook_cuts_3s.min 보다 적으면 그 구간 컷을 더 나눈다.
-    판에 rhythm 칸이 없으면 그대로(칸 없음은 preset_card·quality_gate 가 미달로 드러낸다). 칸이 'face' 같은 글이면 못 나눈다(로그)."""
-    if not cuts or not (R.get("cut_median") or R.get("hook_cuts_3s")):
-        return cuts
-    L = float((R.get("cut_median") or {}).get("v") or 0) or None
-
-    def t1_of(i, cs):
-        return cs[i + 1]["t0"] if i + 1 < len(cs) else end
-
-    def split(c, d, n):
-        if n < 2 or d / n < RHYTHM_MIN_PIECE - 1e-6 or _punch(c.get("crop"), 1) is None:
-            return [c]
-        out = []
-        for k in range(n):
-            dt = round(d * k / n, 3)
-            p = {**c, "t0": round(c["t0"] + dt, 3), "crop": _punch(c["crop"], k), "rhythm": f"{k + 1}/{n}"}
-            if c.get("ss") is not None and Path(str(c.get("src") or "")).suffix.lower() not in IMG_EXT:
-                p["ss"] = round(float(c["ss"]) + dt, 3)
-            if k and "at" in p:
-                p["at"] = round(float(p["at"]) + dt, 3)
-            out.append(p)
-        return out
-
-    out, n_split = [], 0
-    for i, c in enumerate(cuts):
-        d = t1_of(i, cuts) - c["t0"]
-        n = int(round(d / L)) if L and d > 1.5 * L else 1
-        ps = split(c, d, n)
-        n_split += len(ps) > 1
-        if len(ps) == 1 and n > 1:
-            log(f"[리듬] {c['line']} {c.get('src')}@{c.get('ss')} {d:.2f}초 — 칸이 숫자 4개가 아니거나 조각이 {RHYTHM_MIN_PIECE}초 밑이라 못 나눔")
-        out += ps
-    H = (R.get("hook_cuts_3s") or {}).get("min")
-    if H:
-        bounds = lambda cs: [c["t0"] for c in cs[1:] if 0.1 < c["t0"] <= 3.0]  # noqa: E731
-        for _ in range(4):
-            if len(bounds(out)) >= H:
-                break
-            i = max((j for j in range(len(out)) if out[j]["t0"] < 3.0), key=lambda j: min(t1_of(j, out), 3.0) - max(out[j]["t0"], 0.1))
-            d = t1_of(i, out) - out[i]["t0"]
-            ps = split(out[i], d, H - len(bounds(out)) + 1)
-            if len(ps) == 1:
-                break
-            out[i:i + 1] = ps
-        if len(bounds(out)) < H:
-            log(f"[리듬] 훅 0.1~3초 컷 경계 {len(bounds(out))} < 판 {H} — 나눌 수 있는 컷 없음(재료.json 훅 줄에 컷을 더)")
-    log(f"[리듬] 판 cut_median {L} · 나눈 컷 {n_split} · 컷 {len(cuts)}→{len(out)} · 훅 경계 {[c['t0'] for c in out[1:] if 0.1 < c['t0'] <= 3.0]}")
+def real_cut_bounds(cuts: list[dict], src_dir: Path | None) -> list[float]:
+    """(판단 주인 — 계획 컷 중 '진짜 컷' 경계) 이웃 컷이 다른 파일이거나, 그림이거나, 같은 파일이라도 원본 장면(shot_starts)이 다르면 진짜 컷.
+    같은 원본 같은 샷을 이어 붙인 조각·같은 샷 안 건너뛰기는 컷 감지(kal_analyze.media_of)가 경계로 못 본다(10-25 박정수 v2 실측: 칸 당김 조각
+    22경계 → 완성본 컷 11, check_seams 는 점프줌 12 로 잡음) — 그래서 판 리듬 판정은 이 경계만 센다."""
+    out = []
+    for a, b in zip(cuts, cuts[1:]):
+        if a["src"] != b["src"] or Path(str(a["src"])).suffix.lower() in IMG_EXT or a.get("ss") is None or b.get("ss") is None or not src_dir:
+            out.append(float(b["t0"]))
+            continue
+        st = shot_starts(Path(src_dir) / a["src"])
+        sa = max([t for t in st if t <= float(a["ss"]) + 1e-3] or [0.0])
+        sb = max([t for t in st if t <= float(b["ss"]) + 1e-3] or [0.0])
+        if sa != sb:
+            out.append(float(b["t0"]))
     return out
+
+
+def rhythm_gate(T: dict, st: dict, src_dir: Path | None) -> list[str]:
+    """(판단 주인 — 판 rhythm.cut_median·hook_cuts_3s 를 계획에 적용, 관제263 10-25 페이블 E1·E2) 렌더 전 관문: 진짜 컷(real_cut_bounds) 길이 중앙이
+    판 cut_median×1.3(재현 cut.median 과 같은 ±30%)을 넘거나 0.1~3초 안 진짜 컷 경계가 hook_cuts_3s.min 보다 적으면 멈춘다.
+    렌더러가 같은 샷을 잘게 나눠 흉내 내지 않는다(그건 컷으로 안 잡히고 점프줌이 된다 — 10-25 실측) — 재료.json 에 다른 장면 컷을 더해야 한다."""
+    import statistics
+    from tools.calcopy.hybrid import styles as _STY
+    R = _STY.rhythm(st)
+    if not (R.get("cut_median") or R.get("hook_cuts_3s")):
+        return []
+    b = real_cut_bounds(T["cuts"], src_dir)
+    spans = list(zip([0.0] + b, b + [float(T["end"])]))
+    bad = []
+    if R.get("cut_median"):
+        v, med = float(R["cut_median"]["v"]), statistics.median([y - x for x, y in spans])
+        if med > v * 1.3 + 1e-6:
+            line_at = lambda x: next((c["line"] for c in T["cuts"] if abs(float(c["t0"]) - x) < 1e-3), "?")  # noqa: E731
+            long = sorted(spans, key=lambda s: s[0] - s[1])[:5]
+            bad.append(f"진짜 컷 중앙 {med:.2f}초 > 판 cut_median {v}×1.3 — 긴 화면 {[(line_at(x), round(x, 2), round(y - x, 2)) for x, y in long]} "
+                       f"에 다른 장면 컷을 더할 것(재료.json — 같은 샷 이어 붙이기는 컷이 아니다)")
+    if R.get("hook_cuts_3s"):
+        h = [t for t in b if 0.1 < t <= 3.0]
+        if len(h) < int(R["hook_cuts_3s"]["min"]):
+            bad.append(f"훅 0.1~3초 진짜 컷 경계 {len(h)} < 판 {R['hook_cuts_3s']['min']} — 첫 줄 재료에 다른 장면 컷을 더할 것")
+    return bad
 
 
 def photo_share(cuts: list[dict], end: float) -> float:
@@ -314,8 +289,6 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
                 cuts.append({**c, "line": lid, "t0": round(c0, 3), "kind": "tts"})
                 acc += w
     cuts[0]["t0"] = 0.0
-    from tools.calcopy.hybrid import styles as _STY
-    cuts = rhythm_cuts(cuts, end, _STY.rhythm(st), log=lambda m: sys.stderr.write(m + "\n"))
     src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
     for i, c in enumerate(cuts):
         c["t1"] = cuts[i + 1]["t0"] if i + 1 < len(cuts) else end
@@ -2635,7 +2608,8 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
             raise StageError(" / ".join(([msg] if over else []) + len_bad))
         from tools.calcopy.hybrid import thumb_rule as TR
         card_bad = (TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"]) + cut_boundary_gate(T, M, st)      # 렌더 전 관문 ⑥ — 계획 때 걸러 렌더를 안 돌린다
-                    + cut_content_gate(T, M, st, doc, R, log) + cut_length_gate(T, st) + cut_still_gate(T, M, st) + photo_gate(T, st))                                                         # 관문 ④ 컷 안 남의 글자·남의 얼굴
+                    + cut_content_gate(T, M, st, doc, R, log) + cut_length_gate(T, st) + cut_still_gate(T, M, st) + photo_gate(T, st)
+                    + rhythm_gate(T, st, Path(M["cand_dir"]) if M.get("cand_dir") else None))                                                         # 관문 ④ 컷 안 남의 글자·남의 얼굴
         if card_bad:
             raise StageError(" / ".join(card_bad))
         return {"timeline": T, "placement": placed, "length": length, "over": msg, "sheet": str(sheet) if sheet else None}
@@ -2649,7 +2623,8 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         raise StageError("컷이 원본 샷보다 길다: " + str([(c["line"], c["src"], c.get("ss"), c["dur"], c.get("max"), {"원본 남음": c["src_left"]} if "src_left" in c else None) for c in over]))
     from tools.calcopy.hybrid import thumb_rule as TR
     card_bad = (plan_length_gate(T, st, True) + TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"]) + cut_boundary_gate(T, M, st)          # 렌더 전 관문 ⑧ 길이 · ⑥(10-25): 연예인 판 카드 3안 얼굴 — 영상 굽기 전에 멈춘다
-                + cut_content_gate(T, M, st, doc, R, log) + cut_length_gate(T, st) + cut_still_gate(T, M, st) + photo_gate(T, st))                                                             # 관문 ④ 컷 안 남의 글자·남의 얼굴(조각 뽑기 전)
+                + cut_content_gate(T, M, st, doc, R, log) + cut_length_gate(T, st) + cut_still_gate(T, M, st) + photo_gate(T, st)
+                    + rhythm_gate(T, st, Path(M["cand_dir"]) if M.get("cand_dir") else None))                                                             # 관문 ④ 컷 안 남의 글자·남의 얼굴(조각 뽑기 전)
     if card_bad:
         raise StageError(" / ".join(card_bad))
     win0 = render_window(T, M, st, R)                          # 창(전환 없이) — 자리 검출 화면의 재료
