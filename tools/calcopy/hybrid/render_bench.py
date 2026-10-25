@@ -938,6 +938,33 @@ def src_left(src: Path, ss: float) -> float | None:
     return round(_src_len[k] - ss - 1 / FPS, 3)
 
 
+_src_rate: dict[str, tuple[float, float]] = {}
+
+
+def src_start(src: Path, ss: float) -> float:
+    """(판단 주인 — 컷 첫 화면이 원본 몇 초인가) `-ss ss -i src` 는 ss 이상인 첫 원본 프레임부터 낸다 → 그 프레임 초(원본 fps 격자).
+    30fps 원본이면 ss 그대로. 10-26 식기세척기 50.433(23.976fps): 실제 첫 화면 50.467 → 29프레임 컷 끝이 다음 샷(51.4) 1프레임을 끌고 왔는데
+    경계 판정은 ss 부터 쟀다(눈 확인 — 마지막 1프레임이 다음 장면). 경계로 조각 재기(snap_ss·cut_boundary_gate·check_shot_cross)는 이 초부터 잰다."""
+    src = Path(src)
+    if src.suffix.lower() in IMG_EXT or not src.exists():
+        return ss
+    k = str(src)
+    if k not in _src_rate:
+        try:
+            out = run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=r_frame_rate,start_time", "-of", "json", src]).stdout
+        except StageError:      # 못 읽는 파일(시험용 빈 파일 등) — 읽기·렌더 단계가 따로 크게 멈춘다. 여기선 ss 그대로(옛 판과 같음)
+            out = "{}"
+        s0 = (json.loads(out).get("streams") or [{}])[0]
+        num, _, den = str(s0.get("r_frame_rate") or "0/1").partition("/")
+        fr = float(num) / float(den or 1) if float(den or 1) else 0.0
+        _src_rate[k] = (fr, float(s0.get("start_time") or 0.0))
+    fr, t0 = _src_rate[k]
+    if fr <= 0:
+        return ss
+    f = t0 + math.ceil((ss - t0 - 1e-3) * fr) / fr
+    return ss if f - ss < 1e-3 else round(f, 4)
+
+
 MIN_PIECE_SEC = 0.4   # 컷을 원본 장면 경계로 나눈 조각이 이보다 짧으면 번쩍임(오류기록 55·84) — 계획(snap_ss)·관문·품질 검사가 이 한 상수를 쓴다
 SLIVER_SEC = MIN_PIECE_SEC      # 컷 처음·끝 이 안에 장면 경계가 있으면 '번쩍임'(앞뒤 샷이 몇 프레임 끼어 튀어 보인다)
 
@@ -975,12 +1002,16 @@ def snap_ss(src: Path, ss: float, dur: float, reach: float = 0.4) -> float:
     if src.suffix.lower() in IMG_EXT or not src.exists():
         return ss
     st = shot_starts(src)
-    if not short_pieces(st, ss, ss + dur):
+
+    def bad(s):          # 실제 첫 화면(src_start)부터 잰다 — 24fps 원본은 ss 보다 최대 1원본프레임 늦게 시작한다
+        e = src_start(src, s)
+        return short_pieces(st, e, e + dur)
+    if not bad(ss):
         return ss
     for k in range(1, int(reach * FPS) + 1):
         for s in (ss + k / FPS, ss - k / FPS):
             left = src_left(src, s)
-            if s >= 0 and (left is None or dur <= left) and not short_pieces(st, s, s + dur):
+            if s >= 0 and (left is None or dur <= left) and not bad(s):
                 return round(s, 3)
     return ss
 
@@ -1133,9 +1164,10 @@ def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
             continue
         ss = float(c["ss"])
         n = c.get("frames") or (round(c["t1"] * FPS) - round(c["t0"] * FPS))
-        end = ss + n / FPS
-        hit = inner_bounds(shot_starts(src), ss, end)
-        short = short_pieces(hit, ss, end)
+        e = src_start(src, ss)             # 실제 첫 화면 초(24fps 원본은 ss 보다 늦다 — 10-26 식기세척기 끝 1프레임 번쩍)
+        end = e + n / FPS
+        hit = inner_bounds(shot_starts(src), e, end)
+        short = short_pieces(hit, e, end)
         if hit and short:      # 양쪽이 긴 조각이면 원본 자체의 이어진 편집이라 통과 — 짧은 조각(번쩍임)만 막는다(오류기록 55: 0.3초 꼬리도 결함)
             bad.append(f"컷 경계 {c['line']} {c['src']} ss={ss:.2f}~{end:.2f} 안 원본 장면 경계 {[round(t, 2) for t in hit]}초 → 짧은 조각 {short}초(<{MIN_PIECE_SEC})")
     return bad

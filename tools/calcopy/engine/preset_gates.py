@@ -54,7 +54,7 @@ def _fit_est(c: dict, n: int, cfg: dict) -> dict:
     10-25 실측: 태양의맛썬 컷 ss 40.40 은 앞 0.1초 번쩍을 fit_shot 이 렌더 때 40.54 로 옮기는데, 어림 계획은 옮기기 전 자리를 재 ③이 거짓으로 멈췄다."""
     fit = cfg.get("fit_shot") or {}
     c2 = {**c, "n": n, "speed": 1.0}
-    if fit.get("enabled") and not c.get("orig") and "src_dur" in c:
+    if not c.get("orig") and "src_dur" in c:      # 경계 맞춤(snap)은 늘 · 늘림만 fit_shot.enabled — build_cuts 와 같다
         from tools.calcopy.engine import preset_make as PM
         PM.fit_shot(c2, fit)
     return c2

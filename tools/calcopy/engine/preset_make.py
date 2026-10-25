@@ -191,7 +191,8 @@ def load_work(wdir: Path, M: dict, cfg: dict) -> dict:
         cuts.append({"src": src, "path": path, "ss": float(r["ss"] if "ss" in r else r["src_t0"]), "crop": r.get("src_crop"),
                      "crop_x": r.get("crop_x"), "kind": r.get("kind") or "", "meme": src.startswith("meme:") or r.get("kind") == "짤",
                      "seen": r.get("seen") or r.get("ours") or "", "pieces": [k], "move": r.get("move"),
-                     **({"bed": True} if r.get("bed") else {}), **({"orig": True} if r.get("orig") else {})})   # 원음 깔기·원음 줄 컷(engine/orig_audio)
+                     **({"bed": True} if r.get("bed") else {}), **({"orig": True} if r.get("orig") else {}),
+                     **({"no_snap": True} if r.get("no_snap") else {})})   # 원음 깔기·원음 줄 컷(engine/orig_audio) · no_snap = 입 맞춤 컷(ss 고정)
     title = S.get("title_slots") or M.get("sample_title") or {}
     voice = (S.get("voice") or {}).get("voice_id") or cfg["voice_id"]
     name = S.get("desktop_title") or re.sub(r"^작품\d+_", "", wdir.name)
@@ -471,7 +472,7 @@ def build_cuts(w, timed, dur, cfg):
         c["f0"], c["f1"] = w["pieces"][c["pieces"][0]]["f0"], w["pieces"][c["pieces"][-1]]["f1"]
         c["n"] = max(1, c["f1"] - c["f0"])
         c["speed"] = 1.0
-        if fit.get("enabled") and not c.get("orig"):   # 원음 줄 컷은 입 맞춤 자리 그대로(orig_audio.sync_cuts)
+        if not c.get("orig"):   # 원음 줄 컷은 입 맞춤 자리 그대로(orig_audio.sync_cuts) — 나레 컷은 늘 경계 맞춤(늘림만 fit_shot.enabled)
             fit_shot(c, fit)
         if c["ss"] + c["n"] / FPS * c["speed"] > c["src_dur"] + 1e-3:
             raise ValueError(f"소스 길이 부족 {c['src']} {c['ss']}+{c['n'] / FPS * c['speed']:.2f}>{c['src_dur']:.2f}")
@@ -479,23 +480,37 @@ def build_cuts(w, timed, dur, cfg):
 
 
 def fit_shot(c: dict, fit: dict):
-    """컷이 원본 샷(또는 짤 길이)보다 조금 길면 그 샷만 살짝 느리게 늘려 채운다 — 옆 샷이 앞머리·꼬리에 번쩍 끼지 않게(관제 097, 10-18).
-    왜: 썰템쇼를 박창수(느린 말)로 바꾸자 컷이 길어져 원본 샷에 맞춰 고른 컷 16개가 옆 샷 0.06~0.4초를 끌고 들어왔고(check_shot_cross),
-    2초짜리 짤 둘이 0.01~0.1초 모자라 멈췄다. 샷 경계 판단은 check_shot_cross.shot_cuts 한 곳. 늘림은 min_speed(기본 0.75배)까지만 —
-    더 모자라면 그대로 두고(번쩍은 검사가 잡는다) 재료를 사람이 고친다. 결과 = c['ss']·c['speed'](렌더가 setpts 로 늘림)."""
-    from tools.calcopy.engine.check_shot_cross import shot_cuts
-    flash, lo, edge = float(fit.get("flash_s", 0.4)), float(fit.get("min_speed", 0.75)), 0.04
+    """컷 ss 를 원본 장면 경계로 번쩍임 없는 자리로 옮기고(항상), 그래도 남으면 그 샷만 살짝 늘려 채운다(manifest fit_shot.enabled — 관제 097, 10-18).
+    경계·번쩍 판정 주인 = render_bench.shot_starts·inner_bounds·short_pieces, 옮기기 = render_bench.snap_ss(나레 컷 계획과 같은 자·같은 ±0.4초).
+    왜(10-26, 98 #111): 옛 판은 check_shot_cross.shot_cuts(ffmpeg scene>0.25 + 색분포) 자로 골라 관문 ③(shot_starts)과 자가 두 벌이었다 —
+    태양의맛썬 40.50·42.83, 식기세척기 50.43 진짜 편집점을 못 봐 계획이 번쩍임을 못 피한 채 관문에서 멈췄다(옛 완성본 9.47~9.57초 3프레임 번쩍).
+    늘림 = 짤 길이 모자람·꼬리 번쩍(앞머리는 마지막 짧은 경계로 시작을 옮김) · min_speed(기본 0.75배)까지만 — 더 모자라면 그대로(관문 ③이 멈춘다).
+    원음 줄 컷(c['orig'])은 부르지 않고(build_cuts) no_snap 컷은 안 옮기고 안 늘린다(입 맞춤 — render_bench 와 같이 검사만). 결과 = c['ss']·c['speed']·c['ss_planned']."""
+    from tools.calcopy.hybrid.render_bench import MIN_PIECE_SEC, inner_bounds, short_pieces, shot_starts, snap_ss, src_start
+    if c.get("no_snap"):
+        return
     need = c["n"] / FPS
+    if not c["meme"]:
+        s2 = snap_ss(Path(c["path"]), float(c["ss"]), need)
+        if s2 != float(c["ss"]):
+            c["ss_planned"], c["ss"] = c["ss"], s2
+    if not fit.get("enabled"):
+        return
+    lo = float(fit.get("min_speed", 0.75))
     end = c["src_dur"]
     if not c["meme"]:
-        b = [t for t in shot_cuts(c["path"], c["ss"], c["ss"] + need) if c["ss"] + edge < t < c["ss"] + need - edge]
-        hb = [t for t in b if t - c["ss"] < flash]
-        if hb:                                              # 앞머리 번쩍 → 앞 묶음 마지막 경계 뒤에서 시작
-            c["ss"] = round(hb[-1] + edge, 3)
-            b = [t for t in b if t > c["ss"] + edge]
-        tb = [t for t in b if c["ss"] + need - t < flash]
-        if tb:                                              # 꼬리 번쩍 → 꼬리 묶음 첫 경계 앞까지만(10-18 작품8 31.46·31.53·31.63)
-            end = min(end, tb[0] - edge)
+        p = Path(c["path"])
+        st = shot_starts(p)
+        e = src_start(p, c["ss"])                          # 실제 첫 화면 초(render_bench 주인 — 24fps 원본은 ss 보다 늦다)
+        if short_pieces(st, e, e + need):                  # 옮겨서 못 피함 → 앞머리는 시작을 옮기고 꼬리는 늘려서
+            hb = [t for t in inner_bounds(st, e, e + need) if t - e < MIN_PIECE_SEC]
+            if hb:
+                c.setdefault("ss_planned", c["ss"])
+                c["ss"] = round(hb[-1], 3)
+                e = src_start(p, c["ss"])
+            tb = [t for t in inner_bounds(st, e, e + need) if e + need - t < MIN_PIECE_SEC]
+            if tb:
+                end = min(end, tb[0] - (e - c["ss"]))      # 원본에서 읽는 길이 = tb[0] − 첫 화면
     have = end - c["ss"]
     if have < need - 1e-3 and have / need >= lo:
         c["speed"] = round(have / need, 4)

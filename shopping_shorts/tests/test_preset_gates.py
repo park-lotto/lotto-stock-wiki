@@ -2,7 +2,7 @@
 관문이 보는 그림이 굽는 그림(preset_make.part_vf)과 같은지, 멈추면 TTS·조각 굽기 전에 서는지, 납품이 그 판 관문 기록을 보는지.
 
 결함 실례(10-25): 작품6 취객선비잔 남의 글자('일시품절' 쇼핑몰 화면)·멈춤 / 작품9 B·C 읽는 글 영문 'SNS' / 창고판 옥수수커터 B13 미달 손 납품 /
-태양의맛썬 줄6 컷 앞 3프레임 번쩍(완성본 9.47~9.57초 — fit_shot 의 check_shot_cross 는 그 경계를 못 봤다)."""
+태양의맛썬 줄6 컷 앞 3프레임 번쩍(완성본 9.47~9.57초 — fit_shot 의 옛 자 check_shot_cross 는 그 경계를 못 봤다 → 10-26 render_bench 한 벌)."""
 import json
 import subprocess
 import sys
@@ -81,12 +81,13 @@ def test_to_bench_measured_screen_vs_source_frames(tmp_path):
 
 def test_plan_estimate_applies_fit_shot(tmp_path, monkeypatch):
     """--plan 어림 컷에도 build_cuts 의 샷 맞춤(preset_make.fit_shot)을 건 ss 로 잰다 — 렌더 때 옮겨질 자리를 그대로(w 는 안 바꾼다)."""
-    from tools.calcopy.engine import check_shot_cross as CSC
-    monkeypatch.setattr(CSC, "shot_cuts", lambda p, a, b: [1.1])
+    monkeypatch.setattr(RB, "shot_starts", lambda p: [1.1])       # 경계 자 = 관문 ③과 같은 render_bench.shot_starts(10-26 98 #111)
+    _ff("-f", "lavfi", "-i", "testsrc=s=640x480:r=30:d=4", "-pix_fmt", "yuv420p", tmp_path / "a.mp4")
     w = _w(tmp_path, [tmp_path / "a.mp4"], [{"text": "가나다라마바사아자차카타파하", "tts": "가나다라마바사아자차카타파하."}])
-    cfg = {**CFG, "fit_shot": {"enabled": True, "min_speed": 0.75, "flash_s": 0.4}}
-    G = PG.to_bench(w, cfg)
-    assert G["T"]["cuts"][0]["ss"] == pytest.approx(1.14) and w["cuts"][0]["ss"] == 1.0
+    for cfg in ({**CFG, "fit_shot": {"enabled": True, "min_speed": 0.75, "flash_s": 0.4}}, CFG):   # 경계 맞춤은 늘림 설정과 무관
+        G = PG.to_bench(w, cfg)
+        assert G["T"]["cuts"][0]["ss"] == pytest.approx(1.1) and w["cuts"][0]["ss"] == 1.0
+        assert RB.cut_boundary_gate(G["Tsrc"], G["M"]) == []
 
 
 # ── G-1 대본 글 ─────────────────────────────────────────────────────────────
