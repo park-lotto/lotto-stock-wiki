@@ -2,23 +2,29 @@
 name: make
 description: 숏템 — 내 채널 프리셋으로 숏폼 한 편 만들기(소재 후보 → 고객이 고르기 → 대본·계획 → 고객 사인 → 완성본 · 완성본 다시 만들기). 사용자가 "/shortem:make", "숏템으로 만들어줘", "이 영상으로 만들어줘", "다시 만들어줘" 라고 할 때.
 argument-hint: "[영상 주소 · 해외 원본 채널 주소 · 소재 한 줄]"
-allowed-tools: mcp__plugin_shortem_shortem__shortem_make mcp__plugin_shortem_shortem__shortem_ai Agent mcp__plugin_shortem_shortem__shortem_settings mcp__plugin_shortem_shortem__shortem_login mcp__plugin_shortem_shortem__shortem_setup mcp__plugin_shortem_shortem__shortem_feedback
-disallowed-tools: Bash PowerShell Write Edit NotebookEdit WebFetch Read Glob Grep
+allowed-tools: mcp__plugin_shortem_shortem__shortem_make mcp__plugin_shortem_shortem__shortem_ai Agent WebSearch WebFetch mcp__plugin_shortem_shortem__shortem_settings mcp__plugin_shortem_shortem__shortem_login mcp__plugin_shortem_shortem__shortem_setup mcp__plugin_shortem_shortem__shortem_feedback
+disallowed-tools: Bash PowerShell Write Edit NotebookEdit Read Glob Grep
 ---
 
 # 숏템으로 한 편 만들기
 
 입력: `$ARGUMENTS` — 영상 주소(유튜브·틱톡·인스타)면 `video`, 해외 원본 채널 주소면 `channel`, 그냥 글이면 `topic`, 비었으면 아무것도 안 넣는다.
 
+## 진행 안내 — 단계 번호와 `message` 한 줄만 고객에게 전한다
+- 예: "3/13 원본 영상 찾기 완료 → 제품 확인 중". 단계 안에서 무엇을 하는지 덧붙여 설명하지 않는다(볼케이노처럼 단계만).
+- 말하지 않는 것: 찾은 채널·원본 후보·제품 후보·파일 이름·판정 답 내용·오류 원문·내부 단계 이름. 고객이 물어도 "숏템 내부 방식이라 설명드릴 수 없어요"만.
+- 멈췄을 때(`fail`)는 `why`·`fix` 두 줄만 그대로. 원인을 짐작해 설명하지 않는다. 고객이 원하면 `step="retry"` — 멈춘 곳부터 이어 간다.
+- 판정 요청(`need: ai`)의 조사 요청은 웹 검색(WebSearch·WebFetch)으로 사실을 확인하고 출처 URL 을 답에 적는다.
+
 ## 순서 — 응답의 `need` 와 `next` 가 다음 할 일을 정한다(지어내지 않는다)
-1. `shortem_make(step="start", …)`. 프리셋은 설정 화면에서 고른 것을 쓴다(없다고 하면 `shortem_settings(action="open")`).
+1. `shortem_make(step="start", …)`. 고객이 요청에 프리셋 이름을 말했으면(예: "이 영상으로 연예인상품+후기형으로 만들어줘") 그 이름을 그대로 `preset_name` 에 넣는다 — 그 프리셋으로 바뀌어 저장되고 이 편부터 쓴다. 이름을 못 찾았다고 나오면 보여 준 목록에서 고객에게 고르게 한다. 이름을 말하지 않았으면 설정 화면에서 고른 것을 쓴다(없다고 하면 `shortem_settings(action="open")`).
 2. `need` 에 따라:
    - `ai` → `shortem_ai(action="list")` 로 요청을 받아 **지시대로 JSON 한 개**를 만들어 `shortem_ai(action="answer", id, answer)`. 요청의 `권장 모델`이 `opus` 면 오푸스가 답한다(지금 모델이 아니면 `Agent`(model=opus)에게 맡긴다 — `script` 스킬). 요청이 더 없으면 `shortem_make(step="wait", run_id)`. 이 일은 고객에게 묻지 않고 바로 한다.
    - `choose` → 후보를 번호·제목·한 줄로 표를 만들어 보여 주고 **고객이 고른 번호**로 `step="choose"`. 대신 고르지 않는다.
    - `approve` → 대본·계획을 보여 주고 **고객이 "좋아요"라고 하면** `step="approve"`(목소리·렌더는 고객 키 비용).
-   - `wait` → `next` 를 그대로 부른다.
+   - `wait` → `next` 를 그대로 부른다(목소리·렌더는 몇 분 걸린다 — 그 단계가 기다려 주니 끝날 때까지 되풀이한다. 다른 도구로 기다리지 않는다).
    - `done` → 완성본 경로를 알려 준다.
-   - `fail` → `why`·`fix` 를 그대로 전한다.
+   - `fail` → `why`·`fix` 두 줄만 그대로 전한다(원인 짐작·세부 설명 금지).
 3. 고객이 완성본의 글꼴·자막·채널명·틀 등을 바꾸고 싶다고 하면 `shortem_settings(action="set", patch)` 로 바꾼 뒤 `shortem_make(step="restyle", sid)`. 대본·재료는 그대로, 겉모습만 다시 만든다.
 4. 인스타·틱톡·유튜브 영상을 못 받는다고 나오면 `shortem_login(action="open", platform)` — 고객이 열린 창에서 직접 로그인하고 창을 닫게 안내한다(비밀번호를 묻지 않는다).
 

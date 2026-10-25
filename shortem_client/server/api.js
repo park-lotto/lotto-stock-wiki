@@ -1,4 +1,4 @@
-// 우리 서버 REST(계약 §1~§5) — 고객 PC 가 부르는 곳은 license·lease·assets·pack·rent·feedback·blob 뿐(제작 호출 0).
+// 우리 서버 REST(계약 §1~§5) — 고객 PC 가 부르는 곳은 license·lease·assets·pack·rent·feedback·blob·step 뿐(step = 제작 지시만 받는다 — 영상·키는 안 보낸다).
 //   네트워크 허용 목록: SHORTEM_BASE 의 origin + SHORTEM_ASSET_HOSTS(자산 저장소) 만. 밖이면 요청하지 않는다.
 import { readLicense, deviceFingerprint, deviceName, ENGINE_VERSION } from './license.js';
 
@@ -83,4 +83,5 @@ export const api = {
   rent: (profile, job, lease, preset) => call('POST', '/api/claude/rent', { body: { ...(profile ? { profile } : {}), ...(preset ? { preset } : {}), job, lease }, timeoutMs: 60000 }),   // 편마다 프리셋(관제 234)
   update: have => call('GET', '/api/claude/update', { query: { have } }),   // 켤 때 자동 업데이트(관제 234)
   feedback: body => call('POST', '/api/claude/feedback', { body }),
+  step: body => call('POST', '/api/claude/step', { body, timeoutMs: 90000 }),   // 볼케이노형 제작 지시(관제 234, 10-21) — 판단은 서버 지시서
 };

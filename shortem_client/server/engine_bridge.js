@@ -8,7 +8,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { homeDir, ensureDir, jail } from './paths.js';
 import { toolPath, toolsDir, devMode } from './tools_paths.js';
-import { readKey } from './engine/voice.js';
+import { readKey, keyEnv } from './engine/voice.js';
 import { engineCookieEnv } from './logins.js';
 
 export const SID_RE = /^[0-9a-f]{12}$/;
@@ -25,6 +25,7 @@ function pythonExe() {
 }
 export const packRoot = () => path.resolve(process.env.SHORTEM_PACK_ROOT || path.join(toolsDir(), '..', 'packs'));
 const aiRoot = () => ensureDir(homeDir(), 'ai');
+export const aiRootDir = aiRoot;
 export const dataDir = () => ensureDir(homeDir(), '창고');
 
 function engineEnv(queue, packFile, extraEnv) {
@@ -35,8 +36,7 @@ function engineEnv(queue, packFile, extraEnv) {
   if (packFile) env.CALCOPY_PACKS = packFile;
   Object.assign(env, engineCookieEnv());                 // 회원이 연결한 인스타·틱톡·유튜브 로그인(logins.js) — yt-dlp·media_download 가 쓴다
   Object.assign(env, extraEnv || {});
-  const tc = readKey('typecast');                        // 목소리 = 고객 본인 키(~/.shortem/keys) — 값은 출력하지 않는다
-  if (tc) env.TYPECAST_API_KEY = tc;
+  Object.assign(env, keyEnv());                          // 회원 본인 키(타입캐스트·일레븐랩스·쿠팡 파트너스 — voice.js KEY_SERVICES) — 값은 출력하지 않는다
   const sm = readKey('speechmatics');
   if (sm) { env.SPEECHMATICS_API_KEY = sm; env.SHORTEM_ASR = 'speechmatics'; }
   if (!devMode()) {                                      // 설치본: 동봉 도구만 PATH 에(ffmpeg·yt-dlp + 이 MCP 를 돌리는 동봉 node — 엔진 렌더러가 node 를 부른다)
@@ -155,5 +155,31 @@ export function engineTool(cmd, input, { timeoutMs = 60000 } = {}) {
       try { resolve(JSON.parse(s)); } catch { resolve({ error: '엔진 미리보기가 답하지 않았습니다', tail: err.slice(-400) }); }
     });
     proc.stdin.end(input ? JSON.stringify(input) : '');
+  });
+}
+
+// 볼케이노형 실행기(관제 234, 10-21) — 서버 지시서가 준 do 목록을 엔진 hybrid/runner_ops 로 돌리고 measure(JSON)를 돌려준다.
+//   허용 명령 판정은 runner_ops 한 곳. 여기는 띄우고 마지막 줄 JSON 을 읽기만 한다.
+export function runOps(jobDir, doList, { timeoutMs = 3 * 60 * 60 * 1000 } = {}) {
+  fs.mkdirSync(jobDir, { recursive: true });
+  const doFile = path.join(jobDir, '..', `do_${Date.now()}.json`);
+  fs.writeFileSync(doFile, JSON.stringify(doList || []));
+  return new Promise(resolve => {
+    const proc = spawn(pythonExe(), ['-m', 'tools.calcopy.hybrid.runner_ops', jobDir, doFile],
+      { cwd: engineRoot(), env: { ...engineEnv(ensureDir(aiRoot(), '_runner'), null, {}), SHORTEM_HOME: homeDir() }, shell: false, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    const out = [];
+    let err = '';
+    const t = setTimeout(() => { try { proc.kill(); } catch { /* 이미 끝 */ } }, timeoutMs);
+    proc.stdout.on('data', d => out.push(d));
+    proc.stderr.on('data', d => { if (err.length < 200000) err += String(d); });
+    const fail = why => Object.fromEntries((doList || []).map(d => [String(d.id || d.cmd), { error: why }]));
+    proc.on('error', e => { clearTimeout(t); resolve(fail('실행기를 띄우지 못했다: ' + String(e && e.message).slice(0, 200))); });
+    proc.on('close', () => {
+      clearTimeout(t);
+      try { fs.appendFileSync(path.join(jobDir, '..', 'runner.log'), err.slice(-20000)); } catch { /* 기록 실패는 넘어간다 */ }
+      try { fs.unlinkSync(doFile); } catch { /* 이미 */ }
+      const s = Buffer.concat(out).toString('utf8').trim().split('\n').filter(Boolean).pop() || '';
+      try { resolve(JSON.parse(s)); } catch { resolve(fail('실행기 결과를 읽지 못했다: ' + err.slice(-300))); }
+    });
   });
 }

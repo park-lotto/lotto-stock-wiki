@@ -1,5 +1,8 @@
 # 숏템MCP — 고객 PC 클로드형 설치팩·프리셋 옵션 페이지
 
+> ⚠️ **2026-10-21 12시 — 집 PC(CH) 칼카피숏템엔진 세션이 이 트랙을 넘겨받았다(사장님 "그 세션을 덮어서 수정을 싹 하라, 왔다갔다하지 말고").**
+> 볼케이노형(서버 지시서 do/review/next_payload + 회원 Claude 가 손·눈)으로 재설계·구현 중. **TheRose PC 세션은 이 브랜치에 push 하지 말고 이 파일 최신 절을 먼저 읽을 것.**
+
 관제 카드 234(사장님 승인 2026-10-18 "멈추지말고 마지막까지 끝까지해" — 회원 데이터: 라이선스·기기 잠금·탐지 로그·채널 옵션)
 
 - 설계: `docs/superpowers/specs/2026-10-18-숏템MCP-design.md` (4판, 미결 0)
@@ -143,3 +146,75 @@
 - 한 번 실행(사장님 승인): 새 janitor 를 서버 /tmp 에 올려 계획(158.6GB) → --apply: **지움 158.6GB · 실패 0 · 여유 12.1→170.8GB(73%)** · 보고서 서버 ~/disk_janitor/2026-10-20_1142.txt. 사이트 200·서비스 active·5분 오류 0 · 지운 작업 영상 = "7일만 보관해서 정리됐어요" 안내 정상(관리자로 확인).
 - ⏭ 병합(finish) 전까지 매일 04:00 은 옛 규칙. 병합되면 E·F 가 매일 돈다(관제 243 '됐다' = 다음 날 보고서에 E·F).
 - 알아 둘 것: shopping_shorts/disk_cleanup.py(daily_batch)도 따로 이름 목록을 갖고 있다 = 청소 판단 두 벌. 다음에 janitor 한 곳으로 합칠 것.
+
+## 2026-10-20 (오후) — 라이브 설치형 끝까지 성공(1.0.3)
+- 병합(사장님 finish 12:16)·DEPLOY_NOW → 13:03 라이브 /api/claude/install 열림. 서버 디스크 정리(관제 243) 158.6GB → 여유 171GB.
+- 라이브 올리기 도구 upload_release.py(설치 묶음·연결 파일·프리셋 16·자동 업데이트). 1.0.0→1.0.1→1.0.2→1.0.3 올림, 자동 업데이트 실측(1.0.0→1.0.1, 1.0.1→1.0.2).
+- 고객처럼 한 편(live_episode.js, claude -p opus)으로 찾아 고친 결함 7: 틱톡 소재 벤치 0편(참고영상=첫 벤치·검색 넉넉히) · 프리셋 편마다 숫자값(calcopy_frame/per_video.fill_defaults, preset_save 는 고객 묶음 금지라 옮김) · 출처 칸 '$per_video' 글자(칸 뺌) · 원본 영상 없음(원본컷 시트·대조 생략·검사 단계) · ★응답 가르기가 sid·need·next 를 버려 사인 불가(firewall.shape) + 사인 때 대본 보이기 · 목소리 모듈 빠짐(실행 추적 customer_narr) · 나레 받아쓰기가 서버 제미나이 키(고객=위스퍼).
+- 최종: **손대지 않은 새 가짜 고객 PC에 라이브에서 1.0.3 설치(132초) → 한 편 완성 1080x1920 17.1초 소리 있음 → 구글 드라이브 숏템완성본 저장 확인.** 영상 사장님께 틀어 드림.
+- ⏭ ①영상 품질: annapick 자막 흰 글자가 흰 바탕 위(외곽선이 고객 기본 팩 outline_px 로 지워진 것으로 보임 — 미확인) ②텔레그램은 사장님이 마지막에 연결 ③회원 PC 프로그램 수정은 설치 묶음으로 이미 나감 — 이 트랙 남은 커밋(firewall·make_flow·도구) 병합은 다음 finish 때 ④시험 파일이 가끔 통째 실패(rent·assets_lease, 재실행 통과) 원인 조사 ⑤맥 묶음 ⑥다른 PC 설치(사장님).
+
+## 2026-10-20 (저녁) ~ 10-21 (TheRose PC) — 회원 PC 재정비: 집 PC 제작순서 그대로 + 한 줄 요청 + 진행 한 줄
+
+### 사장님 결정(이 구간)
+- "집에서는 한마디면 영상이 만들어지는데 여기서도 똑같애야 된다" / "모든 걸 재정비해" → 회원 PC 도 집 PC 제작순서(`channel/칼카피_제작순서/00~13`) 그대로.
+- 진행 안내 = 볼케이노 MCP 처럼 **지금 단계 한 줄만**(세부 금지).
+- 미나 = 회원 본인 일레븐랩스 키 · 받아쓰기 = 위스퍼만 · 쿠팡 = 회원 파트너스 키, **키 없는 사람만 본인 PC 크롬** · 제작 라인(hybrid 코드) = 프리셋처럼 **편마다 빌려주기**.
+- 프리셋 기본값 = **그 프리셋 원본 영상**(모든 프리셋), 회원이 바꾼 칸만 회원 값. 남 목소리 = 박창수, 얜샷템 = 문정(타입캐스트). 필재 금지.
+- 연예인 장면은 **반드시 찾은 원본에서만** — 다른 채널 연예인 영상 그대로 쓰기 절대 금지. 원본 찾기 = **연예인 본인 채널 1순위**, 남의 쇼츠 '출처:' 글자 활용.
+- 원본에 상표가 안 보이면 포털·유튜브로 이름 찾기 → 그래도 없으면 쿠팡 같은 종류 중 후기 많은 것 + 대본에 "똑같은 건 없어서 후기 많은 걸로 써 봤다".
+- 등장인물 주인공은 화면 가운데.
+- 오류는 그날 바로 `channel/칼카피_제작순서/98_오류기록.md` 에 적는다.
+
+### 이 트랙(숏템MCP)에서 한 것 — 커밋 ca89684f7 ~ 10597b31b
+- 한 줄 요청: `shortem_make(preset_name=…)` — 고객이 말한 프리셋 이름으로 골라 저장 후 시작, 목록이 없으면 서버에서 다시 받기(1.0.5·1.0.6).
+- 프리셋 기본값: 빌드 때 `tools/calcopy/preset_defaults.json`(엔진 `preview_request.preset_defaults` — 글꼴·외곽선 = frame.json, 목소리·빠르기·음악·자막 쌓기 = defaults.json) · `local_settings.packFor` = 엔진 기본 ← 프리셋 ← 회원 칸.
+- 회원 키 칸 4개: `voice.js KEY_SERVICES`(typecast·elevenlabs·coupang_access·coupang_secret) — 화면(`/api/key/<서비스>`)·저장(0600)·엔진 환경변수(`engine_bridge keyEnv`). 실제 크롬으로 4칸 확인(key_ui_check.js).
+- 하이브리드 연결: `make_flow` 가 빌린 프리셋 line.json 이 hybrid 면 엔진 `make.py hybrid start --ref … --version <판>` · 사인(approve)·retry(resume)·status · 진행 `stage/step/step_total` 한 줄(firewall 통과, 세부 없음) · wait 는 셸 sleep 금지.
+- 기술 꾸러미: `preset_pack.tech_files`(hybrid 프리셋이면 엔진 hybrid·yanshot 코드 46파일) · `preset_rent.js` 가 `.rented` 표식으로 풀고 끝나면 지움(진짜 코드는 안 덮음) · `engine_bundle` 목록 추가 · 설치본 파이썬 playwright(해시 고정).
+- 시험 도구: `test/hybrid_dev_run.py`(엔진 회원 모드 + Claude CLI opus 가 AI 요청에 답함). ★10-21 질문을 명령줄로 넘겨 4.2만 자에서 답하는 쪽이 조용히 죽음 → 표준입력으로(10597b31b).
+- 올린 설치본: 1.0.4 ~ 1.0.10(1.0.10 = 그림 칸 box_top). **하이브리드 라인이 든 판은 아직 안 올림.**
+
+### 엔진 트랙(칼카피숏템엔진)에서 한 것 — 회원 라인 `tools/calcopy/hybrid/customer.py` (커밋 5ccac145c ~ f5fbecaa6, 전부 push)
+- 12단계: bench → origin → product → research → material → asr → script → sign(사인) → plan → render → check → done. 입구 `make.py --json hybrid start|approve|resume|status`.
+- 판단 주인 함수: `source_rule_bad`(출처 규칙·남의 영상 장면 전환·다른 출연자 샷) · `origin_offset`(받은 원본 파일 0초 = 원본 몇 초, 잰다) · `shot_table`/`fill_shot_max`(원본 샷 표·샷 끝 max·주인공 가운데 크롭) · `_name_hints`/`PRODUCT_TALK`(상표 없을 때) · `_caps_vs_tts` · `client_llm.PROMPT_MAX`(4만 자).
+- 문서: 제작순서 00·02·03·05 갱신, **98_오류기록.md 신설(18건)**, 트랙 CLAUDE.md 회원 PC 절.
+- 시험: test_source_rule.py · test_client_llm_size.py · test_eleven_direct · test_box_top · test_preset_defaults 등.
+
+### 실물로 만든 것(이 PC, 회원 모드 + 개발용 쿠팡·미나 서버 길)
+1. **이미도 르주르 리무버**(연예인상품+후기형/키치잇판): 29.2초 −14.0 LUFS 자동 6/6 · 드라이브 `칼카피영상/2026-10-21_회원PC_재정비샘플/` 업로드(20,682,904B). 눈 검수 미통과 — 17초 별 전환·장갑 손(둘 다 남의 리뷰 영상 '리뷰여왕'에서) → 출처 규칙이 생긴 계기. 다시 만들지 않았다.
+2. **선우용여 눈청결티슈**(키치잇 7위 cNo91ddBwB8, 원본 KBS Entertain qjqSW39Idsw 옥탑방의 문제아들 2025-06-26): 원본 찾기 4번째에 확정(영어 제목·검색어 흔들림·대조 자리 밀림 수리) · 제품 = 대체(alt) 코튼데이 아이원 눈청결티슈 7510883640 · 사인 → 계획 검수 5번째 ok → 렌더 완성, **눈 검수 미통과**(원음 줄 소리≠자막 = 원본 시작 시각 20초 어긋남 · N3 자막≠목소리 · N4 남의 편집 자막 · N7 화면). 원본 시작 339.82초로 재고 **조사 단계부터 다시 돌릴 준비까지**(done 에서 research 이후 지움, approved 지움) — 아직 다시 안 돌림.
+
+### 왜 집 PC 는 되는데 회원 PC 는 처음처럼 틀리나(사장님 10-21 질문)
+- 집 PC 는 Claude 워커가 문서를 보며 **손·눈으로 판단**(원음 자리·컷·크롭). `run.py` 엔 그 판단이 코드로 없다(원본 시작 시각 재기도 없음 — 확인).
+- 회원 PC 는 그 손 판단을 `customer.py` 가 새로 자동화 → 손 단계를 처음 자동으로 만들 때마다 처음 나는 오류. 문서엔 겪은 함정만 있고 손 판단은 없다.
+- 제안(사장님께 드림): 집 PC 세션이 `customer.py` 를 자기 손 순서와 한 단계씩 대조·소유하고 98_오류기록에 적어 커밋·푸시. 이 트랙은 MCP·설치본·회원 키를 맡는다.
+
+### ⏭ 다음
+1. 선우용여 편 `resume` → 조사부터(잰 원본 시작 사용) → 대본 사인 전 원음 줄 소리·자막 대조 → 렌더 → 눈 검수 ok 확인 → 드라이브 같은 폴더 업로드·틀기.
+2. 이미도 편 새 규칙(원본 제품 장면 먼저·출처 규칙)으로 다시.
+3. 대체 제품 '후기 많은 것': 쿠팡 상품 페이지에서 후기 수 읽기(지금 서버·파트너스 길엔 칸 없음).
+4. 소재 고르기(제작순서 01, 키치잇 인기순·이미 만든 것 빼기)를 회원 엔진에 — 손님이 "다음꺼 만들어줘"가 되게.
+5. 설치본 1.0.11(하이브리드 라인·기술 꾸러미·playwright·얼굴 모델 onnx + CALCOPY_FACE_MODEL) 빌드 → 프리셋 꾸러미 다시(얜샷템+tech) → live_episode 로 진짜 설치본 MCP 경유 완주.
+6. 나머지 프리셋(제품비하인드썰형·샤크탱크·해외핫영상·연예인꿀맛)은 집 PC 제작 문서가 없다 — 집 PC 세션이 프리셋별 제작순서를 적어 올리면 옮긴다.
+7. 회원 키 실제 호출 미실측(일레븐랩스·쿠팡 파트너스) · 크롬 쿠팡 길은 이 PC 가 쿠팡에 막혀 미검증.
+8. 병합: 두 트랙 모아서 한 번(finish 는 사장님). 텔레그램 연결은 사장님이 마지막에.
+
+### 2026-10-21 12:28 — 선우용여 편 완성(회원 모드, 눈 검수 통과)
+- 드라이브 `칼카피영상/2026-10-21_회원PC_재정비샘플/연예인상품후기형_키치잇판_선우용여_눈청결티슈.mp4` (14,564,962B, 크기 대조 같음) · 29.6초 1080x1920 · 자동 검사 통과 · 마지막 눈 검수 ok(1번 고친 뒤).
+- 프레임 직접 확인: 주인공 가운데·다른 출연자는 '출연진도' 줄만·원음 자막 '눈곱'·제품 줄 6개에 코튼데이 상품 사진(움직임 번갈아)·방송 제목 띠·박힌 자막 없음·출처 줄 KBS 옥탑방의 문제아들.
+- 이 편으로 고친 것(엔진 트랙 5142164de~cb9faae18): 원본 샷 표 글자 상자·avoid_text·계획 검수 8번·숫자 칸 안 덮기·ask 다시 묻기·상품 사진 재료·제품 컷 0개면 대본 다시·원음 귀 확인·원본 시작 시각 재기. 오류기록 98 = 26건.
+- 남은 눈 검수 메모(경미): O3 말끝('아이템이야'↔'아이템이에요' 가능) · 상품 사진 크게 확대 때 상자 글자 가장자리 잘림.
+- 드라이브 앱이 G: 를 못 붙이고 있었다 → 제작순서 12 대로 PID 로 끄고 launch.bat(약 100초 뒤 G: 붙음).
+
+## 2026-10-21 낮 (CH 집 PC) — 볼케이노형 재설계·구현 (사장님 "그 세션을 덮어서 수정을 싹 / 설계는 페이블이 다시 / 볼케이노처럼")
+- 설계: `docs/superpowers/specs/2026-10-21-숏템MCP-볼케이노형-design.md`(페이블) + §15 결정 5(사장님 "왔다갔다하지 말고" → 기본값 채택).
+- 구조: 노하우 = 서버 지시서 **엔진 트랙 `tools/calcopy/hybrid/flow.py`** 한 곳 · 서버 창구 `shopping_shorts/claude_flow.py`(`POST /api/claude/step`, 서명 payload `v1.<seq>.<zlib b64>.<hmac>`, 옛 payload stale 거절, 요약만 `claude_flow_runs`) ·
+  회원 PC 손 = 엔진 `hybrid/runner_ops.py`(허용 cmd 만, 유튜브 한 곳 yt() 쉼·캐시 모드) · 눈 = 회원 Claude(`shortem_ai` 요청 폴더) · 고리 = `shortem_client/server/flow_driver.js` · 입구 `make_flow.makeStep`(영상 주소 start → flow, 서버가 '단계 진행 방식 아님'이면 옛 길).
+- 지운 것: 엔진 `hybrid/customer.py`(→ rules·runner_ops·flow 로 분해) · `make.py hybrid` · MCP 옛 하이브리드 길(shapeHybrid·hybridLine·isHybridSid) · `test/hybrid_flow.test.js`·`hybrid_dev_run.py`(→ 엔진 `flow_dev.py`).
+- 묶음: `engine_bundle.HAND`(실행기·렌더·검사만 설치본에, flow·브리프·문서 금지) · `preset_pack.tech_files` = 판 설정·벤치 자료만(코드·문서 임대 없음) · 스피치매틱스 키 칸(`voice.js KEY_SERVICES`) · make SKILL 에 WebSearch 허용·message 한 줄.
+- 시험: 서버 `test_claude_flow.py` 4 통과 · MCP `npm test` 43 중 42(실패 1 = 틱톡 실접속 logins.test — 틱톡이 이 PC 요청 거절, 변경과 무관) · `flow_driver.test.js`(실행기 실제 실행·틀린 꼴 답 재질문·사인).
+- 로컬 시험 서버: `tools/claude_portal/local_server.py --engine <엔진 트랙> --dir <폴더>`(진짜 app, 시험 DB, 키 파일) · 회원처럼 한 편: `shortem_client/test/flow_episode.js`(개발 MCP + claude -p opus).
+- ✅ 회원 경로 완주(10-21): 로컬 시험 서버 + 개발 MCP + claude -p(opus), 성시경 신라면 캐시(유튜브 0회) → 1080×1920 28.8초, 자동 검사 6/6, 눈 검수 ok, 정답지 합격(원본·제품 일치). 진행 안내 = 서버 message 한 줄("장면 맞추기 완료 → 목소리·영상 만들기 중").
+  잡은 결함: 두 번째 사인 안 물음(고침+시험) · 자동 검사 경로만 감 · 우리 로고 오탐 · 길이는 대본으로 · 출처 줄 서버가(엔진 98 #20~24).
+- ⏭ ①설치본 1.0.11 빌드(engine_bundle HAND 포함)·noexe_install_check·test_engine_installed ②유튜브 풀리면 캐시 없이 실전 2편 ③**라이브 배포는 사장님 승인 후**: 두 트랙 finish — 서버에 엔진 hybrid(flow·rules·script_audit·styles·render_bench 의 docstring) 필요 ④upload_release 로 설치본·프리셋 꾸러미(판 설정만) 다시 올리기 ⑤로컬 시험 서버 끝낼 것.

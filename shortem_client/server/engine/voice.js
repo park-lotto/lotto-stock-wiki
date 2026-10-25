@@ -23,10 +23,34 @@ export function readKey(service = 'typecast') {
   try { return fs.readFileSync(keyFile(service), 'utf8').trim(); } catch { return ''; }
 }
 
+// 회원이 넣는 키 목록 — 판단 한 곳(설정 화면·저장·엔진 환경변수가 이 표만 본다). 사장님 10-21: 미나 = 회원 일레븐랩스 키 · 쿠팡 = 회원 파트너스 키(없으면 회원 PC 크롬)
+export const KEY_SERVICES = Object.freeze({
+  typecast: { label: '목소리 키(타입캐스트)', where: 'typecast.ai ▸ 개발자 ▸ API 키', env: 'TYPECAST_API_KEY', need: '없으면 타입캐스트 목소리를 만들 수 없습니다' },
+  elevenlabs: { label: '목소리 키(일레븐랩스)', where: 'elevenlabs.io ▸ 프로필 ▸ API Keys', env: 'ELEVENLABS_API_KEY', need: '미나 목소리 프리셋에 필요합니다' },
+  coupang_access: { label: '쿠팡 파트너스 Access Key', where: '쿠팡 파트너스 ▸ 추가기능 ▸ 오픈API', env: 'COUPANG_ACCESS_KEY', need: '없으면 이 PC 크롬 창으로 쿠팡을 찾습니다' },
+  coupang_secret: { label: '쿠팡 파트너스 Secret Key', where: '쿠팡 파트너스 ▸ 추가기능 ▸ 오픈API', env: 'COUPANG_SECRET_KEY', need: 'Access Key 와 짝으로 넣습니다' },
+  speechmatics: { label: '받아쓰기 키(스피치매틱스)', where: 'speechmatics.com ▸ Settings ▸ API Keys', env: 'SPEECHMATICS_API_KEY', need: '있으면 원음·완성본 받아쓰기를 두 모델로 대조합니다(없으면 위스퍼만)' },
+});
+
+// 고객이 설정 화면에서 넣는 키(관제 234, 10-20: 키 넣는 화면이 없어 고객이 파일을 직접 만들어야 했다) — 값은 파일에만(0600), 응답엔 지문만
+export function saveKey(service, value) {
+  const svc = KEY_SERVICES[service];
+  if (!svc) return { ok: false, why: '모르는 키입니다' };
+  const k = String(value || '').trim();
+  if (k.length < 16 || k.length > 300 || /\s/.test(k)) return { ok: false, why: `키 모양이 아닙니다 — ${svc.where} 의 키 전체를 붙여 넣으세요` };
+  writeFileIn(homeDir(), 'keys/' + service, k, 0o600);
+  return { ok: true, ...keyStatus(service) };
+}
+
 export function keyStatus(service = 'typecast') {
   const k = readKey(service);
   return k ? { present: true, fp: keyPrint(k) } : { present: false };
 }
+
+// 화면용 — 키마다 이름·어디서 받나·지문(값은 없다)
+export const keyStatuses = () => Object.fromEntries(Object.entries(KEY_SERVICES).map(([s, v]) => [s, { label: v.label, where: v.where, need: v.need, ...keyStatus(s) }]));
+// 엔진 환경변수 — 넣은 키만(값은 출력하지 않는다)
+export const keyEnv = () => Object.fromEntries(Object.entries(KEY_SERVICES).map(([s, v]) => [v.env, readKey(s)]).filter(([, k]) => k));
 
 function usage() {
   try { return JSON.parse(fs.readFileSync(jail(homeDir(), 'usage.json'), 'utf8')); } catch { return {}; }

@@ -46,7 +46,8 @@ RENDERER_EXTRA = ("tools/render_scene_style.js", "out/scene-style-ui-showcase.ht
 #   설정 화면 목록이 죽고 완성본 배경음악이 비었다. 폴더는 그 아래 파일 전부.
 DATA_EXTRA = ("shopping_shorts/assets/voice_presets.json", "shopping_shorts/assets/bgm_lib", "shopping_shorts/assets/sfx_packs",
               "shopping_shorts/calcopy_frame/my_packs.json", "shopping_shorts/static/caption-motions.js",
-              "tools/calcopy/engine/warehouse_channels.json")
+              "tools/calcopy/engine/warehouse_channels.json",
+              "shopping_shorts/static/fonts/Pretendard-Bold.otf")        # 완성본 오른쪽 위 '광고' 표시 글꼴(engine/ad_mark, 사장님 10-22)
 
 
 def data_extra(engine: Path) -> list[str]:
@@ -68,7 +69,21 @@ ENTRY = ("tools/calcopy/make.py", "shopping_shorts/calcopy_make.py", "tools/calc
          "tools/calcopy/engine/topic_find.py", "tools/calcopy/engine/script_engine.py", "tools/calcopy/engine/yt_channel.py",
          "shopping_shorts/scene_style.py", "tools/calcopy/preview_request.py",   # 설정 화면 미리보기·검사(관제 234)
          "shopping_shorts/media_download.py", "shopping_shorts/grab_domains.py", "shopping_shorts/frame_extract.py",   # 인스타·틱톡 등 받기(숏템메이커와 같은 주인, 관제 234)
-         "shopping_shorts/instagram_parse.py", "shopping_shorts/douyin_fetch.py", "shopping_shorts/threads_parse.py")
+         "shopping_shorts/instagram_parse.py", "shopping_shorts/douyin_fetch.py", "shopping_shorts/threads_parse.py",
+         # 함수 안에서만 부르는 것(추적이 아직 못 본 것) — ★함수 안 import 를 통째로 따라가면 프리셋 기술·관리 도구까지 딸려 온다(10-20 시험:
+         #   channel_presets·channelkit/bench·live_admin). 그래서 하나씩 적는다. 빠지면 test_engine_installed(변수 많은 프리셋)가 잡는다
+         "shopping_shorts/calcopy_frame/per_video.py",
+         "shopping_shorts/channelkit/providers.py", "tools/calcopy/copy_render.py",   # 나레형 목소리(remake --make-tts, 고객 키 TYPECAST_API_KEY)
+         "shopping_shorts/channel_presets/banggu/rules.py",                          # 제품비하인드썰형(banggu) 대본 검사(script_engine._banggu_lint)
+         # 하이브리드 제작 라인이 부르는 엔진 쪽 — 라인의 손(실행기·렌더)은 아래 HAND, 노하우(지시서)는 서버
+         "tools/calcopy/engine/stage_log.py", "tools/calcopy/engine/yt_fetch.py", "tools/calcopy/engine/narr_align.py",
+         "tools/calcopy/engine/master_guard.py", "tools/calcopy/engine/ad_mark.py", "tools/calcopy/engine/script_frame.py", "tools/calcopy/engine/voices.py",
+         "tools/calcopy/coupang_customer.py", "shopping_shorts/coupang_partners.py", "tools/caption_pack/check_bench_packs.py",
+         # 볼케이노형 실행기(손) — 함수 안 import 가 많아 하나씩 적는다(HAND 와 같은 목록)
+         "tools/calcopy/hybrid/runner_ops.py", "tools/calcopy/hybrid/rules.py", "tools/calcopy/hybrid/render_bench.py",
+         "tools/calcopy/hybrid/render_itssum.py", "tools/calcopy/hybrid/placement.py", "tools/calcopy/hybrid/bench_check.py",
+         "tools/calcopy/hybrid/thumb.py", "tools/calcopy/hybrid/screen.py", "tools/calcopy/hybrid/styles.py",
+         "tools/calcopy/yanshot/common.py", "tools/calcopy/yanshot/plan.py")
 
 
 def top_imports(engine: Path, entries=ENTRY) -> set[str]:
@@ -106,7 +121,66 @@ def top_imports(engine: Path, entries=ENTRY) -> set[str]:
     return seen
 
 
+# 볼케이노형 회원 라인(관제 234, 10-21)의 **손** = 실행기와 그것이 부르는 렌더·검사 — 설치본에 넣는다(hybrid/* 금지의 예외, 이것만).
+#   노하우(지시서 hybrid/flow.py·브리프·문서)는 서버 한 곳 — 아래에 없으면 금지 목록 그대로 막힌다. 판 설정(styles/*.json)은 렌더 단계에만 빌린다.
+HAND = tuple(f"tools/calcopy/hybrid/{m}.py" for m in ("__init__", "runner_ops", "rules", "common", "render_bench", "render_itssum", "placement",
+                                                       "bench_check", "thumb", "screen", "styles",
+                                                       "fx_target", "pack_map", "thumb_rule")) +     ("tools/calcopy/yanshot/__init__.py", "tools/calcopy/yanshot/common.py", "tools/calcopy/yanshot/plan.py")
+
+
+# HAND 가 부르는 hybrid 모듈 중 회원 PC 에 안 보내는 것(서버·개발 전용) — 여기도 HAND 에도 없으면 build 가 멈춘다(관제 265, 10-25:
+#   render_bench 가 fx_target·pack_map·thumb_rule 을 새로 부르는데 HAND 에 없어 회원 PC import 실패 구멍이 났다 — 손 목록은 썩는다).
+HAND_SERVER_ONLY = {
+    # 판단 대기(관제 265): runner_ops·render_itssum·screen 이 함수 안에서 부른다 — 회원 PC 에서 그 갈래가 도는지 확인 뒤 HAND 로 옮기거나 여기 둔다
+    "tools/calcopy/hybrid/quality_gate.py", "tools/calcopy/hybrid/checks.py", "tools/calcopy/hybrid/script_audit.py",
+    "tools/calcopy/hybrid/compare_sheet.py", "tools/calcopy/oneshot/scene_fit.py",
+    "tools/calcopy/hybrid/server_ai.py", "tools/calcopy/hybrid/gemini_server.py",   # 서버 키·주소 — 보내면 안 됨
+    "tools/calcopy/engine/preset_save.py",   # 프리셋 만드는 기술(render_itssum 함수 안) — 회원 PC 엔 안 보낸다
+}
+
+
+def hand_deps(engine: Path) -> dict[str, str]:
+    """HAND 모듈이 (함수 안 포함) 부르는 우리 파일 → 부른 곳. hybrid 안은 따라 들어간다."""
+    import ast
+    def mod_file(name):
+        q = engine / Path(*name.split("."))
+        for c in (q.with_suffix(".py"), q / "__init__.py"):
+            if c.is_file():
+                return c.relative_to(engine).as_posix()
+        return None
+    seen, todo, out = set(), list(HAND), {}
+    while todo:
+        r = todo.pop()
+        if r in seen or not (engine / r).is_file():
+            continue
+        seen.add(r)
+        pkg = r[:-3].replace("/", ".")
+        pkg = pkg if r.endswith("__init__.py") else pkg.rsplit(".", 1)[0]
+        for n in ast.walk(ast.parse((engine / r).read_text(encoding="utf-8"))):
+            names = []
+            if isinstance(n, ast.Import):
+                names = [a.name for a in n.names]
+            elif isinstance(n, ast.ImportFrom):
+                base = (pkg.split(".")[:len(pkg.split(".")) - (n.level - 1)] if n.level else [])
+                mod = ".".join(base + ([n.module] if n.module else []))
+                names = [mod] + [f"{mod}.{a.name}" for a in n.names]
+            for x in names:
+                if x.split(".")[0] in ("shopping_shorts", "tools", "pipeline"):
+                    m = mod_file(x)
+                    if m and m not in seen and m not in HAND_SERVER_ONLY:
+                        out.setdefault(m, r)
+                        if m in HAND:
+                            todo.append(m)
+    return out
+
+
+def hand_unresolved(engine: Path) -> list[str]:
+    """HAND 가 부르는데 묶음 규칙이 막는 파일(HAND·HAND_SERVER_ONLY 어디에도 없음) — 비어야 build 가 간다."""
+    return sorted(f"{m} <- {src} ({forbidden(m)})" for m, src in hand_deps(engine).items() if forbidden(m))
+
 def forbidden(rel: str) -> str | None:
+    if rel in HAND:
+        return None
     for pat in FORBIDDEN:
         if fnmatch.fnmatch(rel, pat) or rel == pat:
             return pat
@@ -157,7 +231,10 @@ def traced(traces: Path, engine: Path | None = None) -> tuple[set[str], set[str]
 
 def build(engine: Path, traces: Path, out: Path) -> dict:
     mods, data = traced(traces, engine)
-    want = sorted(mods | data | top_imports(engine) | set(RENDERER_EXTRA) | set(showcase_deps(engine)) | set(data_extra(engine)))
+    bad = hand_unresolved(engine)
+    if bad:
+        raise SystemExit("[engine_bundle] HAND 가 부르는데 묶음에서 빠지는 파일 — HAND 또는 HAND_SERVER_ONLY 에 정해라:\n  " + "\n  ".join(bad))
+    want = sorted(mods | data | top_imports(engine) | set(hand_deps(engine)) | set(RENDERER_EXTRA) | set(showcase_deps(engine)) | set(data_extra(engine)))
     kept, dropped, missing = [], [], []
     if out.exists():
         shutil.rmtree(out)
