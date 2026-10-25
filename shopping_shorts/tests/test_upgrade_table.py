@@ -204,3 +204,40 @@ def test_scene_fit_post_frames_not_same_is_worse(tmp_path):
     post.unlink()
     m3 = U.measure(_style(lr, [UPS[0]]), d, w)["axes"]["scene_fit"]
     assert (m3["better"], m3["worse"]) == (False, False), m3
+
+
+def test_pending_pack_reads_axis_and_solved_lines(tmp_path, monkeypatch):
+    """팩요청.md 의 '- axis:' 줄이 제목 낱말 짐작보다 우선 · '- 상태: 해결(…)' 항목은 대기 아님(자막팩 작업자 1a6bb76d7·065753d2c 꼴)."""
+    kal = tmp_path / "channel" / "_fx" / "_kal"
+    kal.mkdir(parents=True)
+    (kal / "팩요청.md").write_text("""<!-- 판:_x판 -->
+### _x판#1 자막 크기 변형 size:large → 관제 235
+
+- axis: cap_enter
+
+### _x판#2 자막 크기 변형 size:xl → 관제 235
+
+- axis: cap_look
+- 상태: 해결(fx, abc123)
+
+### _x판#3 자막 줄 간격 line_pitch → 관제 235
+
+- 벤치 실측: …
+<!-- /판:_x판 -->
+""", encoding="utf-8")
+    monkeypatch.setattr(U, "ROOT", tmp_path)
+    C = _PCtx({"name": "_x판"}, "_fx")
+    e = U.pending_pack(C, "cap_enter")
+    assert e and e["req"] == "_x판#1" and e["by"] == "axis 줄", e                 # axis 줄이 제목('자막 크기')보다 우선
+    c = U.pending_pack(C, "cap_look")
+    assert c and c["req"] == "_x판#3" and c["by"] == "제목 낱말", c               # #1 은 axis cap_enter · #2 는 해결 → axis 없는 #3 낱말로
+    (kal / "팩요청.md").write_text((kal / "팩요청.md").read_text(encoding="utf-8").replace("- 벤치 실측: …", "- axis: cap_look\n- 상태: 해결(fx, def456)"), encoding="utf-8")
+    assert U.pending_pack(C, "cap_look") is None                                   # 남은 cap_look 요청이 전부 해결
+
+
+def test_pending_pack_real_annapick_solved():
+    """실제 annapick 팩요청.md: #1 cap_look·#2 cap_enter 는 해결 → 대기 아님, #3 transition(상태 없음) → 대기."""
+    C = _PCtx({"name": "안나픽판"}, "annapick")
+    assert U.pending_pack(C, "cap_look") is None and U.pending_pack(C, "cap_enter") is None
+    t = U.pending_pack(C, "transition")
+    assert t and t["req"] == "안나픽판#3" and t["by"] == "axis 줄", t

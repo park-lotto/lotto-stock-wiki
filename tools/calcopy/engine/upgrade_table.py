@@ -521,24 +521,44 @@ def _file_date(p: Path) -> str:
     return d or time.strftime("%Y-%m-%d", time.localtime(p.stat().st_mtime))
 
 
+def pack_requests(p: Path, names: list[str]) -> list[dict]:
+    """팩요청.md 의 그 판(names 순) 구역 항목 → [{req, title, axis(줄 '- axis: x' — 없으면 None), solved(줄 '- 상태: 해결(…)' 글 — 없으면 None)}].
+    axis·상태 줄 = 자막팩 작업자가 적는 칸(1a6bb76d7·065753d2c)."""
+    txt = p.read_text(encoding="utf-8")
+    out = []
+    for nm in names:
+        m = re.search(rf"<!-- 판:{re.escape(nm)} -->(.*?)<!-- /판:{re.escape(nm)} -->", txt, re.S)
+        if not m:
+            continue
+        for blk in re.split(r"^(?=### )", m.group(1), flags=re.M):
+            h = re.match(r"### (\S+#\d+) (.+)", blk)
+            if not h:
+                continue
+            ax = re.search(r"^- axis:\s*(\S+)", blk, re.M)
+            so = re.search(r"^- 상태:\s*(해결.*)$", blk, re.M)
+            out.append({"req": h.group(1), "title": h.group(2).strip(), "axis": ax.group(1) if ax else None, "solved": so.group(1).strip() if so else None})
+    return out
+
+
 def pending_pack(C: "Ctx", axis: str) -> dict | None:
-    """(판단 주인: 외부 팩 대기 근거) 그 축 요청이 있으면 {req, title, date, src}, 없으면 None(= 나빠짐 그대로)."""
-    A = PACK_AXIS.get(axis)
-    if not A:
-        return None
+    """(판단 주인: 외부 팩 대기 근거) 그 축 요청이 걸려 있으면 {req, title, date, src, by}, 없으면 None(= 나빠짐 그대로).
+    팩요청.md 항목: '상태: 해결(…)' 이면 대기 아님 · 'axis:' 줄이 있으면 그 값으로만 맞춤(낱말 짐작보다 우선) · 없으면 PACK_AXIS 낱말.
+    판 <칸>._pending.pack 문장(07 이 지우는 중)은 PACK_AXIS 축만."""
+    A = PACK_AXIS.get(axis) or {"cells": (), "kw": ()}
     for cell in A["cells"]:
         pk = (((C.st.get(cell) or {}).get("_pending") or {}).get("pack")) if isinstance(C.st.get(cell), dict) else None
         if pk:
-            return {"req": f"{C.st.get('name')}:{cell}._pending.pack", "title": str(pk)[:160], "date": None, "src": f"판 {cell}._pending.pack"}
+            return {"req": f"{C.st.get('name')}:{cell}._pending.pack", "title": str(pk)[:160], "date": None, "src": f"판 {cell}._pending.pack", "by": "판 칸"}
     p = ROOT / "channel" / (C.slug or "_") / "_kal" / PACK_REQ_FILE
     if not p.exists():
         return None
-    txt = p.read_text(encoding="utf-8")
-    for nm in [x for x in (C.st.get("name"), C.st.get("base")) if x]:
-        m = re.search(rf"<!-- 판:{re.escape(nm)} -->(.*?)<!-- /판:{re.escape(nm)} -->", txt, re.S)
-        for h in re.findall(r"^### (\S+#\d+) (.+)$", m.group(1) if m else "", re.M):
-            if any(k in h[1] for k in A["kw"]):
-                return {"req": h[0], "title": h[1][:160], "date": _file_date(p), "src": str(p.relative_to(ROOT)).replace("\\", "/")}
+    for r in pack_requests(p, [x for x in (C.st.get("name"), C.st.get("base")) if x]):
+        if r["solved"]:
+            continue
+        hit = (r["axis"] == axis) if r["axis"] else any(k in r["title"] for k in A["kw"])
+        if hit:
+            return {"req": r["req"], "title": r["title"][:160], "date": _file_date(p), "src": str(p.relative_to(ROOT)).replace("\\", "/"),
+                    "by": "axis 줄" if r["axis"] else "제목 낱말"}
     return None
 
 
