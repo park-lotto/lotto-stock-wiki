@@ -3,7 +3,7 @@
   "made_by": "tools/calcopy/engine/sound/sfx_events.py yummyknow --detect",
   "how": "detect",
   "asr_filter": {
-   "how": "후보 시각이 받아쓰기 낱말 구간[t0−0.05, t1+0.05] 안이면 cand_in_words(치찰음·파열음 오탐) — 단 전환(cut)·스티커 ±0.3초 안은 남김(keep_why). 남은 것 = cand_kept",
+   "how": "후보 시각이 받아쓰기 낱말 구간[t0−0.05, t1+0.05] 안이면 cand_in_words(치찰음·파열음 오탐) — 단 전환·스티커 곁(편마다 우연 기대 ≤ 0.1 인 창 (0.3, 0.2, 0.15, 0.1, 0.05))·말 위 순음 tone·판독 sfx 자리는 남김(keep_why). 배경음 박자 = cand_bgm. 남은 것 = cand_kept(confidence 눈/신호, ear_pending)",
    "asr": "C:/숏템_칼카피/yummyknow/work/asrw",
    "no_speech": {},
    "no_asr": [],
@@ -142,6 +142,15 @@
    }
   ],
   "cand_kept": [],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.15,
+   "chance": 0.095
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 0
+  },
   "line_link": {
    "kept_to_line": [],
    "line_sfx_to_kept": [],
@@ -220,6 +229,15 @@
   "asr_words": 102,
   "cand_in_words": [],
   "cand_kept": [],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.3,
+   "chance": 0.016
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 0
+  },
   "line_link": {
    "kept_to_line": [],
    "line_sfx_to_kept": [],
@@ -304,6 +322,15 @@
   "asr_words": 87,
   "cand_in_words": [],
   "cand_kept": [],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.1,
+   "chance": 0.098
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 0
+  },
   "line_link": {
    "kept_to_line": [],
    "line_sfx_to_kept": [],
@@ -454,6 +481,15 @@
    }
   ],
   "cand_kept": [],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.1,
+   "chance": 0.095
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 0
+  },
   "line_link": {
    "kept_to_line": [],
    "line_sfx_to_kept": [],
@@ -549,6 +585,15 @@
   "asr_words": 104,
   "cand_in_words": [],
   "cand_kept": [],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.05,
+   "chance": 0.057
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 0
+  },
   "line_link": {
    "kept_to_line": [],
    "line_sfx_to_kept": [],
@@ -647,9 +692,20 @@
     "near": {
      "cap": 1.79,
      "cut": 1.76
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    }
   ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.1,
+   "chance": 0.077
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 1
+  },
   "line_link": {
    "kept_to_line": [
     {
