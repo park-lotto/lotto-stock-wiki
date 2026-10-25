@@ -2196,9 +2196,13 @@ def _probe_seconds(path):
 # ── ★VMake 규칙 주인(웹 라인) — 사장님 10-26 "어떤 영상이든 동일: 장면 편집 뒤 자막 있는 컷만" ─────────────
 # 사고(10-26): 회원 flow 가 원본 524초를 통째로 VMake 에 보냈다(칼카피 쪽 주인 tools/calcopy/vmake_clean.py 로 고침).
 # 웹 라인도 같은 규칙 — 업체로 보내는 초는 **확정된 편집 컷(조립본 컷 지도) ∩ 자막 있는 컷**의 합을 넘지 못한다.
-#   · 보낼 컷 = vmake_send_cuts(컷 지도, 선택) 한 곳. 컷별 '자막 있나' 판정은 웹 라인에선 **고객의 장면 고르기**(clean_cuts)뿐이다
-#     (자동 글자 판정기는 웹 라인·서버에 없다 — 10-26 확인: cv2·onnxruntime 미설치). 판정이 없으면 확정 컷 각각을 보낸다
-#     — 원본 통째·안 쓰는 구간은 어떤 경우에도 보내지 않는다('애매하면 통째' 금지).
+#   · 보낼 컷 = vmake_send_cuts(컷 지도, 선택, 글자 판정) 한 곳. 컷별 '자막 있나' 판정은 둘이다(관제 271, 10-26):
+#       ① 고객의 장면 고르기(clean_cuts) — 고객이 고르면 그대로 따른다(고객이 지우라고 고른 컷을 기계가 빼지 않는다)
+#       ② 고르지 않았으면 자동 판정 vmake_cut_text(조립본, 컷 지도) — 판정 주인 = channelkit.vision.burned_text
+#          (칼카피 관문 ④ foreign_text 와 같은 자·같은 문턱, 오푸스 눈 표본 762컷 P 0.90·R 0.92). 글자 없다고 본 컷만 뺀다.
+#          컷 하나를 못 재면(None) 그 컷은 보낸다(자막을 남기느니 그 컷만 보낸다 — 0순위-D '애매하면 그 컷만').
+#          판정기를 못 쓰면(모델·cv2 없음) 확정 컷 전부 + 경보 / 전부 '글자 없음'이면 판정이 이 영상에 안 맞는 것으로 보고 전부 + 경보.
+#     원본 통째·안 쓰는 구간은 어떤 경우에도 보내지 않는다('애매하면 통째' 금지).
 #   · 보내기 직전 관문 = _vmake_clean(send=…) — 보낼 파일 길이 > 허용 초 + VMAKE_SENT_TOL 이면 **업체를 부르지 않고** 멈추고 경보.
 #     send 없이 부르면(주인을 안 거친 새 코드) 역시 멈춘다. 보낸 초는 job 폴더 vmake_sent.json 장부에 남는다(결과물 검사).
 VMAKE_SENT_TOL = 0.5           # 초 — 실측 357개 청소본: 파일 길이 − 컷 지도 합 ≤ 0.02초
@@ -2207,10 +2211,92 @@ VMAKE_NO_OWNER_MSG = "자막 지우기 대상 구간이 확인되지 않아 중�
 VMAKE_OVER_MSG = "자막 지우기로 보낼 길이가 편집된 장면보다 길어 중단했습니다(비용 없음) — 관리자에게 알렸어요"
 
 
-def vmake_send_cuts(cuts, sel=None):
-    """VMake 로 보낼 컷 — **판단 주인**. cuts = 확정된 편집 컷(조립본 컷 지도, 완성본 순서), sel = 컷별 '지울 컷' 판정(고객 장면 고르기,
-    None = 판정 없음 → 확정 컷 전부). 반환 = 보낼 컷 목록. 새 판정(자동 글자 판정 등)이 생기면 **여기에만** 교차한다."""
-    return [c for c in (cuts or []) if cut_selected(c, sel)]
+def vmake_send_cuts(cuts, sel=None, text=None):
+    """VMake 로 보낼 컷 — **판단 주인**. cuts = 확정된 편집 컷(조립본 컷 지도, 완성본 순서), sel = 고객이 고른 '지울 컷'(None = 안 고름),
+    text = 컷별 자동 글자 판정(vmake_cut_text — cuts 와 같은 순서 True/False/None, None 이면 판정 없음).
+    반환 = 보낼 컷 목록. 고객이 골랐으면 그 선택이 이긴다. 안 골랐으면 글자 없다고 판정된(False) 컷만 뺀다(못 잰 None 은 보낸다).
+    전부 False 면 판정을 믿지 않고 확정 컷 전부(고객은 자막을 지우려고 눌렀다 — 경보는 vmake_cut_text 쪽)."""
+    cuts = list(cuts or [])
+    if sel is not None or not text or len(text) != len(cuts) or not any(t is not False for t in text):
+        return [c for c in cuts if cut_selected(c, sel)]
+    return [c for c, t in zip(cuts, text) if t is not False]
+
+
+VMAKE_TEXT_VER = 1                  # 자동 글자 판정(burned_text 자·문턱)이 바뀌면 올린다 — 캐시 열쇠
+VMAKE_TEXT_CACHE = "vmake_cut_text.json"
+
+
+def vmake_cut_text(video_path, cuts, work=None):
+    """조립본(video_path)의 컷 지도 cuts 마다 '남의 박힌 글자(자막)가 있나' → [True/False/None …](cuts 순서). 판정기를 못 쓰면 None.
+    재기·판정 = channelkit.vision.burned_text(video_cut_feats·cut_hit) — 여기는 부르기만 한다(0순위-B).
+    결과는 job 폴더 vmake_cut_text.json 에 캐시(파일 크기·수정시각·컷·판정 판 열쇠). 못 쓰면 ops_alert(조용한 폴백 금지)."""
+    try:
+        from shopping_shorts.channelkit.vision import burned_text as _bt
+        from shopping_shorts.channelkit import vision as _vis
+        _miss = [m for m in _vis.models_missing() if m.endswith(_vis.OCRDET)]
+        if _miss:
+            raise RuntimeError("글자 모델 없음 %s" % _miss[0])
+        import cv2  # noqa: F401 — 판정기 의존 확인
+    except Exception as e:                          # noqa: BLE001 — 판정기 없음 = 확정 컷 전부(경보)
+        _vmake_text_alert("판정기를 못 씀: %r" % (e,), video_path)
+        return None
+    vp = Path(video_path)
+    try:
+        st = vp.stat()
+        key = hashlib.md5(json.dumps([vp.name, st.st_size, int(st.st_mtime),
+                                      [[c.get("fin"), c.get("dur")] for c in cuts or []], VMAKE_TEXT_VER]).encode()).hexdigest()[:16]
+    except OSError as e:
+        _vmake_text_alert("조립본을 못 읽음: %r" % (e,), video_path)
+        return None
+    cp = Path(work) / VMAKE_TEXT_CACHE if work else None
+    try:
+        if cp and cp.exists():
+            d = json.loads(cp.read_text(encoding="utf-8"))
+            if d.get("key") == key and isinstance(d.get("text"), list) and len(d["text"]) == len(cuts or []):
+                return d["text"]
+    except Exception:                               # noqa: BLE001 — 캐시는 다시 재면 된다
+        pass
+    t0 = time.time()
+    out, wh = [], None
+    for c in cuts or []:
+        try:
+            wh = wh or _bt._probe_wh(vp)
+            out.append(bool(_bt.cut_hit(_bt.video_cut_feats(vp, float(c["fin"]), float(c["dur"]), wh))))
+        except Exception as e:                      # noqa: BLE001 — 컷 하나 못 잼 = 그 컷은 보낸다
+            print("[clean] 글자 판정 실패(그 컷은 보냄) fin=%s: %r" % (c.get("fin"), e), file=sys.stderr)
+            out.append(None)
+    print("[clean] 자동 글자 판정: %d컷 중 글자 %d · 없음 %d · 못 잼 %d (%.1f초)" % (
+        len(out), sum(1 for x in out if x is True), sum(1 for x in out if x is False), sum(1 for x in out if x is None),
+        time.time() - t0), file=sys.stderr)
+    if out and not any(x is not False for x in out):
+        _vmake_text_alert("모든 컷이 '글자 없음' — 판정을 믿지 않고 확정 컷 전부 보냄", video_path)
+    if out and sum(1 for x in out if x is None) * 2 > len(out):
+        _vmake_text_alert("절반 넘는 컷을 못 잼(%d/%d)" % (sum(1 for x in out if x is None), len(out)), video_path)
+    if cp:
+        try:
+            cp.write_text(json.dumps({"key": key, "ver": VMAKE_TEXT_VER, "text": out}, ensure_ascii=False), encoding="utf-8")
+        except OSError:
+            pass
+    return out
+
+
+def vmake_text_info(cuts, text, send):
+    """장부(vmake_sent.json)에 남길 자동 판정 요약 — 컷 수·보낸 컷·뺀 컷(fin 초)·못 잰 컷."""
+    if text is None:
+        return {"judge": "none", "cuts": len(cuts or []), "sent": len(send or [])}
+    ids = {id(c) for c in send or []}
+    return {"judge": "burned_text v%d" % VMAKE_TEXT_VER, "cuts": len(cuts or []), "sent": len(send or []),
+            "skipped": [round(float(c.get("fin") or 0), 2) for c in cuts or [] if id(c) not in ids],
+            "unsure": sum(1 for t in text if t is None)}
+
+
+def _vmake_text_alert(why, video_path):
+    print("[clean] ★자동 글자 판정 경보: %s 파일=%s" % (why, Path(str(video_path)).name), file=sys.stderr)
+    try:
+        from shopping_shorts import ops_alert
+        ops_alert.raise_alert("vmake_text_judge", "VMake 자동 자막 판정 — " + why[:80], "파일=%s" % video_path, signature=why[:60])
+    except Exception as _ae:                        # noqa: BLE001
+        print(f"[ops_alert] vmake_text_judge 알림 실패(무해): {_ae!r}", file=sys.stderr)
 
 
 def vmake_allow_sec(cuts):
@@ -2301,7 +2387,7 @@ def _vmake_clean(video_path, keys, out_path, tier=None, resume_key=None, send=No
                           {"at": time.strftime("%Y-%m-%d %H:%M:%S"), "kind": _snd.get("kind"),
                            "file": Path(video_path).name,
                            "sec": round(float(sec), 3) if sec is not None else None,
-                           "allow": _snd.get("allow"), "tier": tier})
+                           "allow": _snd.get("allow"), "tier": tier, "text": _snd.get("text")})
     from shopping_shorts.vmake_client import is_preprocess_fail
     last = None
     src = video_path
@@ -4412,7 +4498,7 @@ def _probe_fps_frames(path):
     return "%d/1000" % int(round(fps * 1000)), fps, nb
 
 
-def _clean_partial(mix_raw, cuts, sel, keys, out, tier, work, over=None, tag=None):
+def _clean_partial(mix_raw, cuts, sel, keys, out, tier, work, over=None, tag=None, text_info=None):
     """조립본 mix_raw에서 **고른 컷 구간만** 업체로 지우고, 같은 프레임 자리에 되붙여 out에 쓴다.
 
     ★결과 길이·프레임 수 = mix_raw 그대로(검사한다). 소리는 mix_raw 것을 그대로 복사한다.
@@ -4469,7 +4555,8 @@ def _clean_partial(mix_raw, cuts, sel, keys, out, tier, work, over=None, tag=Non
         cleaned = _vmake_clean(str(part), keys, str(cleaned_path), tier=tier,
                                resume_key="part:" + Path(out).name + ((":" + tag) if tag else ""),
                                send={"kind": "topup" if over is not None else "partial",
-                                     "allow": round(vmake_allow_sec(_send) + len(ranges) / fps, 3), "work": str(work)})
+                                     "allow": round(vmake_allow_sec(_send) + len(ranges) / fps, 3), "work": str(work),
+                                     "text": text_info})
     # 되붙이기 — 원본 틈(g)과 청소 조각(p)을 프레임 번호로 잘라 순서대로 이어 붙인다.
     segs, cur, off = [], 0, 0
     for a, b in ranges:
@@ -4984,10 +5071,19 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
                 # 고른 장면만 — 컷 지도는 조립본을 만든 그 계획(지도가 없으면 위에서 이미 멈췄다 — 다시 계산하지 않는다)
                 res = _clean_partial(str(mix_raw), _map, _sel, keys, str(out), tier, work)
             else:
-                # ★보낼 컷 = 주인(vmake_send_cuts) — 판정이 없으면 확정 컷 전부 = 조립본 1편(편집 컷 밖은 애초에 없다)
-                _send = vmake_send_cuts(_map, None)
-                res = _vmake_clean(str(mix_raw), keys, str(out), tier=tier, resume_key="final:" + out.name,
-                                   send={"kind": "final", "allow": vmake_allow_sec(_send), "work": str(work)})
+                # ★보낼 컷 = 주인(vmake_send_cuts) — 고객이 안 골랐으면 자동 글자 판정(관제 271)으로 글자 없는 컷을 뺀다.
+                #   판정이 없거나 전부 글자면 확정 컷 전부 = 조립본 1편(편집 컷 밖은 애초에 없다)
+                _txt = vmake_cut_text(str(mix_raw), _map, work)
+                _send = vmake_send_cuts(_map, None, _txt)
+                _ti = vmake_text_info(_map, _txt, _send)
+                if 0 < len(_send) < len(_map):
+                    _auto = ["%s|%s|%s" % (c.get("beat_idx"), c.get("video_id"), c.get("src")) for c in _send]
+                    print("[clean] 자동 판정: %d컷 중 글자 있는 %d컷만 보냄" % (len(_map), len(_send)), file=sys.stderr)
+                    _tag = "a%d" % VMAKE_TEXT_VER + hashlib.sha1("|".join(sorted(_auto)).encode("utf-8")).hexdigest()[:8]
+                    res = _clean_partial(str(mix_raw), _map, _auto, keys, str(out), tier, work, tag=_tag, text_info=_ti)
+                else:
+                    res = _vmake_clean(str(mix_raw), keys, str(out), tier=tier, resume_key="final:" + out.name,
+                                       send={"kind": "final", "allow": vmake_allow_sec(_send), "work": str(work), "text": _ti})
         except Exception:
             if charged:
                 _refund_clean(store, customer_id, charged)

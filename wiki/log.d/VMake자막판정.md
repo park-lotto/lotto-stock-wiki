@@ -1,0 +1,1 @@
+- 2026-10-26 관제271: 웹 VMake 자동 자막 판정(channelkit.vision.burned_text = 칼카피 관문④ 공용) — 고객 미선택 시 글자 있는 컷만 전송. 서버 cv2 4.14·onnxruntime 1.31·PP-OCR det 모델 설치.

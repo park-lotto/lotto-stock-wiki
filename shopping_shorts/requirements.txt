@@ -10,3 +10,6 @@ yt-dlp  # 유튜브/틱톡 무료 다운로드(media_download)
 python-multipart  # /api/lens/search 프레임 캡처 업로드(UploadFile)
 Pillow  # 단어별 강조(highlight_rules) 폰트 폭 측정(video_assemble._segmented_drawtext)
 cryptography  # BYOK 키 암복호(keycrypt.py) — Fernet
+numpy  # 자동 자막 판정(channelkit.vision.burned_text) — 서버엔 이미 2.x
+opencv-python-headless<5  # 자동 자막 판정(관제 271) — 5.x 는 볼케이노 venv 에서 반려된 적 있어 4.x 고정
+onnxruntime  # 자동 자막 판정 PP-OCRv5 det(모델 ~/.shortem/models/ppocrv5_server_det.onnx — git 밖, 서버에 따로 둔다)

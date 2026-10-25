@@ -976,6 +976,24 @@
    "검사도구": "shopping_shorts/scripts/vmake_sent_check.py(job 폴더 vmake_sent.json 보낸 초 ≤ 보낼 컷 합) · shopping_shorts/tests/test_vmake_send_rule.py",
    "과금": true,
    "예외": {}
+  },
+  {
+   "이름": "컷 안 남의 박힌 글자(자막·워터마크·제목 띠) 판정 — VMake 자동 판정·칼카피 관문 ④ 공용(관제 271)",
+   "주인": [
+    "shopping_shorts/channelkit/vision/burned_text.py:foreign_text"
+   ],
+   "시그니처": [
+    "def foreign_text\\b",
+    "TEXT_GLYPH_STILL\\s*=",
+    "TEXT_STILL_RATIO\\s*="
+   ],
+   "소비처": [
+    "웹 라인 VMake 보낼 컷(mix_pipeline.vmake_cut_text → vmake_send_cuts)",
+    "칼카피 관문 ④(tools/calcopy/hybrid/render_bench.py — 지금은 같은 코드 사본, 칼카피 트랙에서 import 로 바꾼다: handoff/VMake자막판정.md)"
+   ],
+   "검사도구": "shopping_shorts/tests/test_vmake_text_judge.py(합성 자막 영상 실판정 · 칼카피 표본 P/R) · job 폴더 vmake_sent.json 의 text 요약",
+   "과금": true,
+   "예외": {}
   }
  ]
 }
