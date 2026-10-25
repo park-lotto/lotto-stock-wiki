@@ -62,7 +62,7 @@ input[type=range]{width:100%;accent-color:var(--violet)}
 .sc-b{display:grid;gap:6px;min-width:0}
 #shotpv{position:absolute;inset:0;z-index:4;background:#05080f;display:grid;grid-template-rows:minmax(0,1fr) auto auto;gap:8px;padding:0 0 10px}
 #shotpv[hidden]{display:none}
-#shotpv>img{width:100%;height:100%;object-fit:contain;min-height:0}
+#shotpv>img,#shotpv>video{width:100%;height:100%;object-fit:contain;min-height:0;background:#000}
 #shotpv .sp-row{display:flex;gap:6px;justify-content:center}
 #shotpv .sp-row button{padding:0;border:2px solid transparent;border-radius:6px;background:none;cursor:pointer;width:46px}
 #shotpv .sp-row button.on{border-color:var(--mint)}#shotpv .sp-row img{width:100%;border-radius:4px;display:block}
@@ -315,10 +315,13 @@ function render(){
   // 프리셋 단계 견본: 실제 완성본 장면 3장(있으면) / 틀도 없으면 '견본 준비 중' — 남의 틀로 대신 그리지 않는다
   let O=$('shotpv');if(!O){O=document.createElement('div');O.id='shotpv';$('phone').appendChild(O)}
   const cs=(st.styles||[]).find(x=>x.id===st.style);
-  if(S.step==='preset'&&cs&&(cs.shots||[]).length){O.hidden=false;const k=Math.min(S.shot||0,cs.shots.length-1);
+  if(S.step==='preset'&&cs&&cs.video){O.hidden=false;
+    // 샘플 영상 한 편(사장님 10-25) — 같은 프리셋이면 다시 그리지 않는다(재생 중 끊기지 않게)
+    if(O.dataset.sid!==cs.id){O.dataset.sid=cs.id;O.innerHTML=`<video src="${esc(cs.video)}" poster="${esc((cs.shots||[])[0]||'')}" controls playsinline preload="metadata"></video><small>샘플 영상 · ${esc(cs.name)}</small>`}}
+  else if(S.step==='preset'&&cs&&(cs.shots||[]).length){O.hidden=false;O.dataset.sid='';const k=Math.min(S.shot||0,cs.shots.length-1);
     O.innerHTML=`<img src="${esc(cs.shots[k])}" alt=""><div class="sp-row">${cs.shots.map((u,i)=>`<button data-shot="${i}" class="${i===k?'on':''}"><img src="${esc(u)}" alt=""></button>`).join('')}</div><small>실제 완성본 장면</small>`}
-  else if(S.step==='preset'&&cs&&!st.style_has_frame){O.hidden=false;O.innerHTML='<div class="noshot big">이 프리셋 견본은 준비 중입니다<br><small>템플릿 단계에서 겉모양을 고르면 그 모양으로 그립니다</small></div>'}
-  else O.hidden=true;
+  else if(S.step==='preset'&&cs&&!st.style_has_frame){O.hidden=false;O.dataset.sid='';O.innerHTML='<div class="noshot big">이 프리셋 견본은 준비 중입니다<br><small>템플릿 단계에서 겉모양을 고르면 그 모양으로 그립니다</small></div>'}
+  else{O.hidden=true;const ov=O.querySelector('video');if(ov)ov.pause()}
   if(S.step==='edit'&&stage.contentWindow&&stage.contentWindow.sceneStyle)dragIn(stage.contentWindow);
   drawMoves();
   const look=S.step==='look',was=$('phone').classList.contains('inline');
@@ -402,6 +405,7 @@ function voicePresetBox(eng,tts,cat){
 const tplThumb=x=>x.mode==='story'?`r/out/assets/scene-style/thumbnails/story-${x.id}-hook.png`:`r/out/assets/scene-style/thumbnails/fixed-${String(x.id).replace(/^fixed_/,'')}.png`;
 // 프리셋(판) 카드 — 묶음별, 카드마다 목소리·효과음·모션그래픽·배경음악 표시(값은 서버 claude_studio.style_summary — 판 설정 그대로)
 function styleCards(st){
+  // ★카드 이름 = '묶음 + 번호'(서버 claude_studio.styles) — 채널명(맛템썰템 등)은 화면에 안 나간다
   const card=x=>`<button class="card scard${x.id===st.style?' on':''}" data-style="${esc(x.id)}">
     ${(x.shots||[]).length?`<img loading="lazy" alt="" src="${esc(x.shots[0])}">`:'<div class="noshot">견본<br>준비 중</div>'}
     <div class="sc-b"><b>${esc(x.name)}</b>${x.desc?`<span>${esc(x.desc)}</span>`:''}

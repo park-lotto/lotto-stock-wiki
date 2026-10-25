@@ -32,7 +32,8 @@ ROOT = HERE.parent
 WORKER = ROOT / "shortem_client" / "server" / "engine_worker.py"   # 회원 PC engine_bridge 와 같은 파일
 UI_FILE = ROOT / "shortem_client" / "server" / "ui" / "index.html"
 # 렌더러 정적 파일(화면·글꼴만) — 회원 PC local_ui.STATIC_OK 와 같은 범위
-STATIC_OK = __import__("re").compile(r"^(out|shopping_shorts/static)/[0-9A-Za-z가-힣_.\-/]+\.(html|js|css|woff2?|ttf|otf|png|jpe?g|webp|gif|svg|json)$")
+STATIC_OK = __import__("re").compile(r"^(out|shopping_shorts/static)/[0-9A-Za-z가-힣_.\-/]+\.(html|js|css|woff2?|ttf|otf|png|jpe?g|webp|gif|svg|json)$"
+                                     r"|^out/assets/style-previews/s_[0-9a-f]{10}\.mp4$")   # 프리셋 샘플 영상(style_previews.py)만 영상 허용
 _PID_RE = __import__("re").compile(r"^p_[0-9a-f]{10}$")
 
 _SCHEMA = """CREATE TABLE IF NOT EXISTS claude_studio (
@@ -257,8 +258,10 @@ def style_summary(stem: str, d: dict, names: dict, brands: dict) -> dict:
     if d.get("thumb_card_face"):
         badges.append({"k": "face", "t": "연예인 얼굴 썸네일", "on": True})
     sid = style_id(stem)
-    shots = (_preview_index().get(sid) or {}).get("files") or []   # 실제 완성본 장면(tools/claude_portal/style_previews.py)
-    return {"id": sid, "shots": [f"r/out/assets/style-previews/{f}" for f in shots], "name": _style_name(stem, names, brand),
+    pv = _preview_index().get(sid) or {}
+    shots = pv.get("files") or []   # 실제 완성본 장면(tools/claude_portal/style_previews.py)
+    video = f"r/out/assets/style-previews/{pv['video']}" if pv.get("video") else None   # 샘플 영상 한 편
+    return {"id": sid, "shots": [f"r/out/assets/style-previews/{f}" for f in shots], "video": video, "name": _style_name(stem, names, brand),
             "group": nm.get("group") or "기타", "desc": nm.get("desc") or "", "badges": badges, "_slug": slug}
 
 
@@ -279,7 +282,14 @@ def styles(store=None) -> list:
             log.warning("claude_studio: 판 %s 를 못 읽었다", f.name)
     order = names.get("_groups") or []
     rank = {g: i for i, g in enumerate(order)}
-    return sorted(out, key=lambda s: rank.get(s["group"], len(order)))
+    out = sorted(out, key=lambda s: rank.get(s["group"], len(order)))
+    # 고객에게 보이는 이름 = '묶음 + 번호'(사장님 10-25 '맛템썰템 이런 건 다 채널명이니 썰커뮤니티형 1·2 이런 식으로').
+    #   판 이름(우리 채널명·벤치명)은 _name 에만 — 화면에 안 나간다
+    seen: dict = {}
+    for s in out:
+        seen[s["group"]] = seen.get(s["group"], 0) + 1
+        s["_name"], s["name"] = s["name"], f"{s['group']} {seen[s['group']]}"
+    return out
 
 
 def _style_frame_pid(store, cid, st: dict | None) -> str | None:
@@ -494,7 +504,7 @@ def pc_sync(ctx: dict, body: dict | None, store=None) -> dict:
     return {"ok": True, "settings": mine}
 
 
-def preview(store, cid, pid, patch=None) -> dict:
+def preview(store, cid, pid, patch=None, flags=None) -> dict:
     """그 프리셋 틀 + 회원 설정(+아직 저장 전 patch) → 렌더러 입력(snapshot·context). 계산은 엔진 preview 그대로."""
     p = _check_pid(store, cid, pid)
     s = _read(store, cid)
@@ -505,7 +515,10 @@ def preview(store, cid, pid, patch=None) -> dict:
     if r.get("error"):
         return {"error": "미리보기를 그리지 못했습니다: " + r["error"]}
     look = ((s.get("looks") or {}).get(pid) or {}).get("snapshot")
-    return {"snapshot": r["snapshot"], "context": r["context"], "applied": _applied_for_member(r.get("applied") or []),
+    ctx = r["context"]
+    if isinstance(flags, dict):   # 편집기 스위치(app._scene_editor_flags — 제작소와 같은 함수). 설정 화면은 새 작업이 아니라 자동 배치 끔
+        ctx = {**ctx, **flags, "autoNew": False}
+    return {"snapshot": r["snapshot"], "context": ctx, "applied": _applied_for_member(r.get("applied") or []),
             "title": r.get("title"), "look": look}
 
 

@@ -57,7 +57,11 @@ def build(src: Path, only: str | None = None) -> dict:
             subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{max(0.5, dur * p):.2f}", "-i", str(mp4), "-frames:v", "1",
                             "-vf", "scale=360:-2", "-q:v", "4", str(dst)], check=True, stdin=subprocess.DEVNULL)
             files.append(dst.name)
-        index[sid] = {"files": files, "from": mp4.name}
+        # 샘플 영상 한 편(사장님 10-25 '샘플 영상 하나씩 재생 가능하게') — 540 폭·가볍게, 웹에서 바로 재생(faststart)
+        vdst = OUT / f"{sid}.mp4"
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(mp4), "-vf", "scale=540:-2", "-c:v", "libx264", "-preset", "veryfast",
+                        "-crf", "30", "-c:a", "aac", "-b:a", "64k", "-movflags", "+faststart", str(vdst)], check=True, stdin=subprocess.DEVNULL)
+        index[sid] = {"files": files, "video": vdst.name, "from": mp4.name}
         print(f"  {stem} → {sid}: {mp4.name} ({dur:.1f}초)")
     old = {}
     if (OUT / "index.json").is_file() and only:
