@@ -3,12 +3,12 @@
   "made_by": "tools/calcopy/engine/sound/sfx_events.py foreignshowshow --detect",
   "how": "detect",
   "asr_filter": {
-   "how": "후보 시각이 받아쓰기 낱말 구간[t0−0.05, t1+0.05] 안이면 cand_in_words(치찰음·파열음 오탐) — 단 전환(cut)·스티커 ±0.3초 안은 남김(keep_why). 남은 것 = cand_kept",
+   "how": "후보 시각이 받아쓰기 낱말 구간[t0−0.05, t1+0.05] 안이면 cand_in_words(치찰음·파열음 오탐) — 단 전환·스티커 곁(편마다 우연 기대 ≤ 0.1 인 창 (0.3, 0.2, 0.15, 0.1, 0.05))·말 위 순음 tone·판독 sfx 자리는 남김(keep_why). 배경음 박자 = cand_bgm. 남은 것 = cand_kept(confidence 눈/신호, ear_pending)",
    "asr": "C:/숏템_칼카피/foreignshowshow/work/asrw",
    "no_speech": {},
    "no_asr": [],
-   "n_kept": 32,
-   "n_in_words": 37,
+   "n_kept": 27,
+   "n_in_words": 42,
    "note": "귀 확인 아님(신호). 무음 환각 = 환각 문구(Thanks for watching·구독과 좋아요·Music…)가 절반 이상이거나 빼고 2낱말 이하, 또는 길이0 낱말 40% 이상"
   },
   "from": "C:/숏템_칼카피\\foreignshowshow\\src",
@@ -341,21 +341,6 @@
     "word": "땅콩버터를"
    },
    {
-    "t": 24.74,
-    "kind": "broad",
-    "dur": 0.08,
-    "db": 22.9,
-    "voiced": 0.08,
-    "isolated": 0.95,
-    "cen_hz": 6130,
-    "near": {
-     "cap": 4.56,
-     "switch": 1.27,
-     "cut": 0.57
-    },
-    "word": "the"
-   },
-   {
     "t": 24.95,
     "kind": "broad",
     "dur": 0.09,
@@ -386,19 +371,34 @@
     "word": "it"
    },
    {
-    "t": 35.2,
+    "t": 32.74,
     "kind": "broad",
-    "dur": 0.15,
-    "db": 26.3,
-    "voiced": 0.21,
-    "isolated": 1.0,
-    "cen_hz": 6810,
+    "dur": 0.07,
+    "db": 21.8,
+    "voiced": 0.42,
+    "isolated": 0.95,
+    "cen_hz": 6930,
     "near": {
-     "cap": 3.6,
-     "switch": 1.23,
-     "cut": 0.83
+     "cap": 1.14,
+     "switch": 1.07,
+     "cut": 0.16
     },
-    "word": "for"
+    "word": "냉철한"
+   },
+   {
+    "t": 33.02,
+    "kind": "broad",
+    "dur": 0.07,
+    "db": 21.5,
+    "voiced": 0.08,
+    "isolated": 0.95,
+    "cen_hz": 6454,
+    "near": {
+     "cap": 1.42,
+     "switch": 0.95,
+     "cut": 0.12
+    },
+    "word": "냉철한"
    },
    {
     "t": 54.69,
@@ -431,61 +431,74 @@
   ],
   "cand_kept": [
    {
-    "t": 32.74,
+    "t": 24.74,
     "kind": "broad",
-    "dur": 0.07,
-    "db": 21.8,
-    "voiced": 0.42,
-    "isolated": 0.95,
-    "cen_hz": 6930,
-    "near": {
-     "cap": 1.14,
-     "switch": 1.07,
-     "cut": 0.16
-    },
-    "word": "냉철한",
-    "keep_why": "낱말 안이지만 전환·스티커 0.16초 안"
-   },
-   {
-    "t": 33.02,
-    "kind": "broad",
-    "dur": 0.07,
-    "db": 21.5,
+    "dur": 0.08,
+    "db": 22.9,
     "voiced": 0.08,
     "isolated": 0.95,
-    "cen_hz": 6454,
+    "cen_hz": 6130,
     "near": {
-     "cap": 1.42,
-     "switch": 0.95,
-     "cut": 0.12
+     "cap": 4.56,
+     "switch": 1.27,
+     "cut": 0.57
     },
-    "word": "냉철한",
-    "keep_why": "낱말 안이지만 전환·스티커 0.12초 안"
+    "word": "the",
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
+   },
+   {
+    "t": 35.2,
+    "kind": "broad",
+    "dur": 0.15,
+    "db": 26.3,
+    "voiced": 0.21,
+    "isolated": 1.0,
+    "cen_hz": 6810,
+    "near": {
+     "cap": 3.6,
+     "switch": 1.23,
+     "cut": 0.83
+    },
+    "word": "for",
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
    }
   ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.05,
+   "chance": 0.065
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 2
+  },
   "line_link": {
    "kept_to_line": [
     {
-     "t": 32.74,
+     "t": 24.74,
      "kind": "broad",
      "lines": [
-      20
+      16
      ],
      "line_sfx": [
-      false
+      true
      ],
      "line_sticker": [
       0
      ]
     },
     {
-     "t": 33.02,
+     "t": 35.2,
      "kind": "broad",
      "lines": [
-      20
+      22
      ],
      "line_sfx": [
-      false
+      true
      ],
      "line_sticker": [
       0
@@ -496,27 +509,27 @@
     {
      "line": 16,
      "t": 24.74,
-     "nearest_kept_s": 8.0,
-     "match": false
+     "nearest_kept_s": 0.0,
+     "match": true
     },
     {
      "line": 22,
      "t": 35.2,
-     "nearest_kept_s": 2.18,
-     "match": false
+     "nearest_kept_s": 0.0,
+     "match": true
     }
    ],
    "sticker_to_kept": [
     {
      "line": 0,
      "t_in": 0.0,
-     "nearest_kept_s": 32.74,
+     "nearest_kept_s": 24.74,
      "match": false
     },
     {
      "line": 17,
      "t_in": 29.233,
-     "nearest_kept_s": 3.51,
+     "nearest_kept_s": 4.49,
      "match": false
     }
    ]
@@ -797,6 +810,49 @@
     "word": "쌓아두는"
    },
    {
+    "t": 7.26,
+    "kind": "broad",
+    "dur": 0.2,
+    "db": 18.2,
+    "voiced": 0.09,
+    "isolated": 1.0,
+    "cen_hz": 9165,
+    "near": {
+     "cap": 4.46,
+     "switch": 1.49,
+     "cut": 0.19
+    },
+    "word": "모래주머니를"
+   },
+   {
+    "t": 7.36,
+    "kind": "tonal",
+    "dur": 0.39,
+    "db": 37.0,
+    "cen_hz": 5448,
+    "near": {
+     "cap": 4.56,
+     "switch": 1.59,
+     "cut": 0.29
+    },
+    "word": "모래주머니를"
+   },
+   {
+    "t": 20.48,
+    "kind": "broad",
+    "dur": 0.23,
+    "db": 18.0,
+    "voiced": 0.62,
+    "isolated": 0.8,
+    "cen_hz": 6831,
+    "near": {
+     "cap": 0.08,
+     "switch": 0.05,
+     "cut": 0.11
+    },
+    "word": "홍수"
+   },
+   {
     "t": 23.7,
     "kind": "broad",
     "dur": 0.12,
@@ -844,36 +900,6 @@
   ],
   "cand_kept": [
    {
-    "t": 7.26,
-    "kind": "broad",
-    "dur": 0.2,
-    "db": 18.2,
-    "voiced": 0.09,
-    "isolated": 1.0,
-    "cen_hz": 9165,
-    "near": {
-     "cap": 4.46,
-     "switch": 1.49,
-     "cut": 0.19
-    },
-    "word": "모래주머니를",
-    "keep_why": "낱말 안이지만 전환·스티커 0.19초 안"
-   },
-   {
-    "t": 7.36,
-    "kind": "tonal",
-    "dur": 0.39,
-    "db": 37.0,
-    "cen_hz": 5448,
-    "near": {
-     "cap": 4.56,
-     "switch": 1.59,
-     "cut": 0.29
-    },
-    "word": "모래주머니를",
-    "keep_why": "낱말 안이지만 전환·스티커 0.29초 안"
-   },
-   {
     "t": 13.6,
     "kind": "broad",
     "dur": 0.06,
@@ -885,7 +911,8 @@
      "cap": 6.8,
      "switch": 0.6,
      "cut": 0.57
-    }
+    },
+    "confidence": "눈"
    },
    {
     "t": 13.7,
@@ -899,23 +926,8 @@
      "cap": 6.7,
      "switch": 0.5,
      "cut": 0.47
-    }
-   },
-   {
-    "t": 20.48,
-    "kind": "broad",
-    "dur": 0.23,
-    "db": 18.0,
-    "voiced": 0.62,
-    "isolated": 0.8,
-    "cen_hz": 6831,
-    "near": {
-     "cap": 0.08,
-     "switch": 0.05,
-     "cut": 0.11
     },
-    "word": "홍수",
-    "keep_why": "낱말 안이지만 전환·스티커 0.11초 안"
+    "confidence": "눈"
    },
    {
     "t": 29.45,
@@ -929,7 +941,9 @@
      "cap": 1.35,
      "switch": 0.05,
      "cut": 0.05
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 33.7,
@@ -943,37 +957,21 @@
      "cap": 5.6,
      "switch": 1.7,
      "cut": 0.2
-    }
+    },
+    "confidence": "눈"
    }
   ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.05,
+   "chance": 0.063
+  },
+  "sfx_count": {
+   "sure": 3,
+   "pending": 1
+  },
   "line_link": {
    "kept_to_line": [
-    {
-     "t": 7.26,
-     "kind": "broad",
-     "lines": [
-      8
-     ],
-     "line_sfx": [
-      false
-     ],
-     "line_sticker": [
-      0
-     ]
-    },
-    {
-     "t": 7.36,
-     "kind": "tonal",
-     "lines": [
-      8
-     ],
-     "line_sfx": [
-      false
-     ],
-     "line_sticker": [
-      0
-     ]
-    },
     {
      "t": 13.6,
      "kind": "broad",
@@ -997,22 +995,6 @@
       true
      ],
      "line_sticker": [
-      0
-     ]
-    },
-    {
-     "t": 20.48,
-     "kind": "broad",
-     "lines": [
-      15,
-      16
-     ],
-     "line_sfx": [
-      false,
-      false
-     ],
-     "line_sticker": [
-      1,
       0
      ]
     },
@@ -1064,19 +1046,19 @@
     {
      "line": 0,
      "t_in": 0.0,
-     "nearest_kept_s": 7.26,
+     "nearest_kept_s": 13.6,
      "match": false
     },
     {
      "line": 0,
      "t_in": 0.567,
-     "nearest_kept_s": 6.69,
+     "nearest_kept_s": 13.03,
      "match": false
     },
     {
      "line": 10,
      "t_in": 9.267,
-     "nearest_kept_s": 1.91,
+     "nearest_kept_s": 4.33,
      "match": false
     },
     {
@@ -1088,8 +1070,8 @@
     {
      "line": 15,
      "t_in": 20.367,
-     "nearest_kept_s": 0.11,
-     "match": true
+     "nearest_kept_s": 6.67,
+     "match": false
     },
     {
      "line": 29,
@@ -1451,21 +1433,6 @@
     "word": "롬커파쓰커파쓰커파"
    },
    {
-    "t": 20.25,
-    "kind": "broad",
-    "dur": 0.14,
-    "db": 19.2,
-    "voiced": 0.0,
-    "isolated": 1.0,
-    "cen_hz": 7463,
-    "near": {
-     "cap": 0.05,
-     "switch": 2.55,
-     "cut": 0.82
-    },
-    "word": "롬커파쓰커파쓰커파"
-   },
-   {
     "t": 21.65,
     "kind": "low",
     "dur": 0.13,
@@ -1526,7 +1493,9 @@
      "cut": 0.07
     },
     "word": "프로도타입에",
-    "keep_why": "낱말 안이지만 전환·스티커 0.07초 안"
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
    },
    {
     "t": 17.41,
@@ -1542,7 +1511,27 @@
      "cut": 0.01
     },
     "word": "이",
-    "keep_why": "낱말 안이지만 전환·스티커 0.01초 안"
+    "keep_why": "낱말 안이지만 전환·스티커 0.01초 안(창 ±0.05 · 우연 0.051)",
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 20.25,
+    "kind": "broad",
+    "dur": 0.14,
+    "db": 19.2,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 7463,
+    "near": {
+     "cap": 0.05,
+     "switch": 2.55,
+     "cut": 0.82
+    },
+    "word": "롬커파쓰커파쓰커파",
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
    },
    {
     "t": 31.39,
@@ -1556,9 +1545,20 @@
      "cap": 2.91,
      "switch": 0.11,
      "cut": 2.74
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    }
   ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.05,
+   "chance": 0.051
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 4
+  },
   "line_link": {
    "kept_to_line": [
     {
@@ -1579,6 +1579,19 @@
      "kind": "low",
      "lines": [
       11
+     ],
+     "line_sfx": [
+      true
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
+    {
+     "t": 20.25,
+     "kind": "broad",
+     "lines": [
+      13
      ],
      "line_sfx": [
       true
@@ -1617,8 +1630,8 @@
     {
      "line": 13,
      "t": 20.25,
-     "nearest_kept_s": 2.84,
-     "match": false
+     "nearest_kept_s": 0.0,
+     "match": true
     }
    ],
    "sticker_to_kept": [
@@ -1921,6 +1934,21 @@
     "word": "문명"
    },
    {
+    "t": 15.26,
+    "kind": "broad",
+    "dur": 0.15,
+    "db": 20.0,
+    "voiced": 0.11,
+    "isolated": 1.0,
+    "cen_hz": 9463,
+    "near": {
+     "cap": 0.24,
+     "switch": 0.71,
+     "cut": 0.23
+    },
+    "word": "위생적이라는데"
+   },
+   {
     "t": 15.5,
     "kind": "tonal",
     "dur": 0.22,
@@ -1945,6 +1973,21 @@
      "cut": 0.73
     },
     "word": "것과는"
+   },
+   {
+    "t": 30.73,
+    "kind": "broad",
+    "dur": 0.08,
+    "db": 18.9,
+    "voiced": 0.54,
+    "isolated": 0.85,
+    "cen_hz": 6822,
+    "near": {
+     "cap": 0.27,
+     "switch": 1.57,
+     "cut": 0.27
+    },
+    "word": "조회수가"
    }
   ],
   "cand_kept": [
@@ -1960,23 +2003,9 @@
      "cut": 0.24
     },
     "word": "폭발하고",
-    "keep_why": "낱말 안이지만 전환·스티커 0.24초 안"
-   },
-   {
-    "t": 15.26,
-    "kind": "broad",
-    "dur": 0.15,
-    "db": 20.0,
-    "voiced": 0.11,
-    "isolated": 1.0,
-    "cen_hz": 9463,
-    "near": {
-     "cap": 0.24,
-     "switch": 0.71,
-     "cut": 0.23
-    },
-    "word": "위생적이라는데",
-    "keep_why": "낱말 안이지만 전환·스티커 0.23초 안"
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
    },
    {
     "t": 19.89,
@@ -1990,7 +2019,8 @@
      "cap": 0.81,
      "switch": 3.92,
      "cut": 0.78
-    }
+    },
+    "confidence": "눈"
    },
    {
     "t": 23.53,
@@ -2004,7 +2034,9 @@
      "cap": 0.07,
      "switch": 4.34,
      "cut": 1.46
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 23.96,
@@ -2018,7 +2050,9 @@
      "cap": 0.14,
      "switch": 3.91,
      "cut": 1.11
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 24.4,
@@ -2032,23 +2066,9 @@
      "cap": 0.2,
      "switch": 3.47,
      "cut": 0.67
-    }
-   },
-   {
-    "t": 30.73,
-    "kind": "broad",
-    "dur": 0.08,
-    "db": 18.9,
-    "voiced": 0.54,
-    "isolated": 0.85,
-    "cen_hz": 6822,
-    "near": {
-     "cap": 0.27,
-     "switch": 1.57,
-     "cut": 0.27
     },
-    "word": "조회수가",
-    "keep_why": "낱말 안이지만 전환·스티커 0.27초 안"
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 35.57,
@@ -2062,9 +2082,19 @@
      "cap": 0.07,
      "switch": 0.04,
      "cut": 0.04
-    }
+    },
+    "confidence": "눈"
    }
   ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.05,
+   "chance": 0.058
+  },
+  "sfx_count": {
+   "sure": 2,
+   "pending": 4
+  },
   "line_link": {
    "kept_to_line": [
     {
@@ -2075,19 +2105,6 @@
      ],
      "line_sfx": [
       true
-     ],
-     "line_sticker": [
-      0
-     ]
-    },
-    {
-     "t": 15.26,
-     "kind": "broad",
-     "lines": [
-      14
-     ],
-     "line_sfx": [
-      false
      ],
      "line_sticker": [
       0
@@ -2146,19 +2163,6 @@
      ]
     },
     {
-     "t": 30.73,
-     "kind": "broad",
-     "lines": [
-      25
-     ],
-     "line_sfx": [
-      false
-     ],
-     "line_sticker": [
-      1
-     ]
-    },
-    {
      "t": 35.57,
      "kind": "broad",
      "lines": [
@@ -2211,13 +2215,13 @@
     {
      "line": 25,
      "t_in": 29.933,
-     "nearest_kept_s": 0.8,
+     "nearest_kept_s": 5.53,
      "match": false
     },
     {
      "line": 27,
      "t_in": 32.7,
-     "nearest_kept_s": 1.97,
+     "nearest_kept_s": 2.87,
      "match": false
     }
    ]
@@ -2486,7 +2490,9 @@
      "cut": 0.02
     },
     "word": "목에",
-    "keep_why": "낱말 안이지만 전환·스티커 0.02초 안"
+    "keep_why": "낱말 안이지만 전환·스티커 0.02초 안(창 ±0.05 · 우연 0.071)",
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 47.48,
@@ -2498,7 +2504,9 @@
      "cap": 0.38,
      "switch": 1.22,
      "cut": 0.29
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 47.79,
@@ -2512,9 +2520,20 @@
      "cap": 0.69,
      "switch": 0.91,
      "cut": 0.02
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    }
   ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.05,
+   "chance": 0.071
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 3
+  },
   "line_link": {
    "kept_to_line": [
     {
@@ -2941,6 +2960,21 @@
     "word": "디스크를"
    },
    {
+    "t": 13.39,
+    "kind": "broad",
+    "dur": 0.09,
+    "db": 20.5,
+    "voiced": 0.36,
+    "isolated": 1.0,
+    "cen_hz": 7505,
+    "near": {
+     "cap": 0.09,
+     "switch": 0.09,
+     "cut": 0.09
+    },
+    "word": "디스크"
+   },
+   {
     "t": 17.83,
     "kind": "broad",
     "dur": 0.1,
@@ -3014,23 +3048,9 @@
      "cap": 0.11,
      "switch": 1.22,
      "cut": 0.12
-    }
-   },
-   {
-    "t": 13.39,
-    "kind": "broad",
-    "dur": 0.09,
-    "db": 20.5,
-    "voiced": 0.36,
-    "isolated": 1.0,
-    "cen_hz": 7505,
-    "near": {
-     "cap": 0.09,
-     "switch": 0.09,
-     "cut": 0.09
     },
-    "word": "디스크",
-    "keep_why": "낱말 안이지만 전환·스티커 0.09초 안"
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 27.45,
@@ -3044,7 +3064,9 @@
      "cap": 0.15,
      "switch": 2.15,
      "cut": 0.62
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 27.45,
@@ -3058,7 +3080,9 @@
      "cap": 0.15,
      "switch": 2.15,
      "cut": 0.62
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 27.45,
@@ -3072,7 +3096,9 @@
      "cap": 0.15,
      "switch": 2.15,
      "cut": 0.62
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 29.32,
@@ -3084,7 +3110,8 @@
      "cap": 0.08,
      "switch": 4.02,
      "cut": 0.05
-    }
+    },
+    "confidence": "눈"
    },
    {
     "t": 33.45,
@@ -3100,7 +3127,9 @@
      "cut": 0.18
     },
     "word": "사주는",
-    "keep_why": "낱말 안이지만 전환·스티커 0.18초 안"
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
    },
    {
     "t": 34.86,
@@ -3114,7 +3143,9 @@
      "cut": 0.23
     },
     "word": "와우",
-    "keep_why": "낱말 안이지만 전환·스티커 0.23초 안"
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
    },
    {
     "t": 39.08,
@@ -3128,9 +3159,20 @@
      "cap": 0.78,
      "switch": 13.78,
      "cut": 0.85
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    }
   ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.05,
+   "chance": 0.062
+  },
+  "sfx_count": {
+   "sure": 1,
+   "pending": 7
+  },
   "line_link": {
    "kept_to_line": [
     {
@@ -3138,19 +3180,6 @@
      "kind": "low",
      "lines": [
       6
-     ],
-     "line_sfx": [
-      false
-     ],
-     "line_sticker": [
-      0
-     ]
-    },
-    {
-     "t": 13.39,
-     "kind": "broad",
-     "lines": [
-      9
      ],
      "line_sfx": [
       false
