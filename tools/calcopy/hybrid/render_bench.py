@@ -1080,11 +1080,13 @@ def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
 # 판정 주인 = cut_content_gate 한 곳. 프레임은 렌더 조각과 같은 자리(cut_crop)·같은 흐림(blur_vf)으로 thumb.card_scene_frame 이 원본에서 뽑는다.
 # 자 = channelkit.vision(PP-OCRv5 det 글자 상자 · YuNet 얼굴 · SFace 동일성). 문턱 표본 = shopping_shorts/tests/fixtures/cut_content_labels.json.
 CONTENT_PAIR = 2 / FPS            # 글자 '붙박이' 재기 짝 프레임 간격 — 박힌 글은 2프레임 동안 그대로, 장면 속 글(포장·간판)은 화면과 같이 움직인다
-CONTENT_VER = 3                   # 판정(자·문턱)이 바뀌면 올린다 — 캐시 열쇠
+CONTENT_VER = 4                   # 판정(자·문턱)이 바뀌면 올린다 — 캐시 열쇠
 # 글자 문턱 — 표본 762컷(10-25 494컷 + 10-25 오검출 수리 268컷: 원본 무작위 구간·잇템로그 ep12·박정수·샤크탱크 원편) 오푸스 눈 라벨.
 #   pos 132(원본 쇼츠 가격·자막·제목 띠·방송사 자막·로고·광고 글) / neg 630(제품 포장·상자·라벨·간판·화면 속 글).
 #   id crc32 짝수로 정하고 홀수로 잰 값(정직한 값): 옛 판정 P 0.857·R 0.677 → 지금 P 0.900·R 0.726. 옛 494컷만: P 0.808→0.863 · R 0.94 그대로.
 #   ★재현율이 0.9 아래인 까닭 = 새로 넣은 틱톡형 작은 자막(창 높이 2.5~3.5%·흰 글 얇은 테) 29컷 — 옛 판정도 0.554(그대로 못 잡던 것). 남는 오검출 = 손에 든 포장 글(ep10 컷 5)·멈춘 화면 큰 제품 글(트럭·캔).
+#   10-25 획 붙박이(d_gl, 98 #99): 틱톡형 작은 자막은 얇은 글씨라 상자 넓이 대부분이 글자 사이 배경 — 상자 평균(d_in)이 배경을 따라 움직여 붙박이로 안 잡혔다.
+#     획 픽셀(오츠 적은 쪽)만 재면 박힌 글은 0 근처. 짝수 반으로 정하고 홀수 반으로 잰 값: P 0.900→0.917 · R 0.726→0.887(오검출 그대로 5) · 옛 494컷 P 0.863·R 0.94 그대로 · 전체 오검출 13 그대로.
 TEXT_SCORE_MIN = 0.9              # 상자 점수(윤곽 안 확률 평균)
 TEXT_FILL_MIN = 0.8               # 윤곽 넓이/사각형 넓이(얼굴·유리 질감을 따라 번진 가짜 윤곽 거르기 — 박힌 글은 0.85~0.95)
 TEXT_ASPECT_MIN = 1.6             # 가로/세로 — 글줄 모양
@@ -1097,6 +1099,10 @@ TEXT_FAR_RING = 5.0               # 긴 간격(같은 컷 다른 잴 프레임) 
 TEXT_SCENE_RATIO = (0.6, 1.3)     # 멈춘 화면 글: 긴 간격 짝에서 안/둘레 가 이 범위 = 글이 주변과 같이 변함 = 장면 속 글(카레 상자 팬·전구 무늬·성시경 간판). 표본 0.5~0.7 / 1.2~1.5 어디서나 같은 결과
 TEXT_SMALL_H = 0.03               # 창 3~3.5% 작은 글줄은 긴 간격 짝 전부에서 안/둘레 < TEXT_SMALL_STILL 일 때만(배경이 바뀌는 동안 그대로 = 박힌 자막 — 진열대 가격표는 같이 움직인다)
 TEXT_SMALL_STILL = 0.6
+TEXT_GLYPH_STILL = 0.3            # 획 픽셀 변화(d_gl) / 둘레 변화 < 이 값 = 획이 그대로인 박힌 글(자막 줄). 짝수 반 0.3~0.5 같은 결과(0.2 는 R 0.91), 홀수 반 오검출 +0
+TEXT_GLYPH_FILL = 0.65            # 획 판정 상자 채움 하한 — 작은 자막 줄은 낱말 사이 틈 때문에 0.70~0.79(TEXT_FILL_MIN 0.8 밖). 0.6~0.7 같은 결과
+TEXT_GLYPH_ASPECT = 3.0           # 획 판정은 글줄(가로/세로 ≥ 3)만 — 1.6 이면 짝수 반 오검출 +4
+TEXT_GLYPH_RING = 2.0             # 둘레 변화가 이 이상(배경이 실제로 움직인 짝)일 때만 획 판정
 FACE_OTHER_COS = 0.25             # 기준 얼굴(카드 통과 얼굴들) 중 가장 닮은 것과 SFace 코사인이 이 아래면 다른 사람(표본 286얼굴: 0.25 P 0.96·R 0.90, 0.20 P 0.98·R 0.83)
 FACE_MIN_H = 0.12                 # 잴 얼굴 높이 / 창 높이 하한 — 표본에서 0.12~0.2 연예인 얼굴도 코사인 0.65~0.97 로 맞았다(vision.JUDGE_H 0.2 는 자라 모델·콜라주 얼굴을 놓친다)
 TEXT_MIN_HITS = 1                 # 컷 3장 중 글자 걸린 장 수 — 1(2로 올리면 표본 R 0.78: 짧게 지나가는 자막을 놓친다)
@@ -1147,6 +1153,25 @@ def _in_ring(diff, box) -> list[float]:
     return [round(float(inner.mean()), 2) if inner.size else 0.0, round(float((ring.sum() - inner.sum()) / max(1, ring.size - inner.size)), 2)]
 
 
+def _glyph_diff(g, diffs, box) -> list[float]:
+    """상자 안 '획 픽셀'(오츠 두 무리 중 적은 쪽 = 글자 획) 위 평균 변화 — diffs 마다 하나.
+    얇은 글씨(틱톡형 작은 자막·흰 글 얇은 테)는 상자 넓이 대부분이 글자 사이 배경이라 상자 평균(d_in)이 배경 움직임을 따라간다 — 획만 보면 박힌 글은 0 근처."""
+    import cv2
+    import numpy as np
+    x0, y0, x1, y1 = box
+    p = g[y0:y1, x0:x1]
+    if p.size < 16:
+        return [0.0 for _ in diffs]
+    u = p.astype(np.uint8)
+    _, m = cv2.threshold(u, 0, 1, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    m = m.astype(bool)
+    if m.mean() > 0.5:
+        m = ~m
+    if not m.any():
+        return [0.0 for _ in diffs]
+    return [round(float(d[y0:y1, x0:x1][m].mean()), 2) for d in diffs]
+
+
 def text_feats(a, b, regs=None, crop=None, win=None, t: float = 0.0, far=()) -> list[dict]:
     """한 프레임(a)의 글자 상자마다 잰 값 — 판정은 foreign_text. b = CONTENT_PAIR 뒤(또는 앞) 프레임(붙박이 재기).
     far = 같은 컷의 다른 잴 프레임들(긴 간격 0.4초+ — 천천히 훑는 화면·멈춘 듯한 화면에서도 글이 주변과 같이 변하는지 본다) → fi = [[안, 둘레]…]."""
@@ -1164,9 +1189,10 @@ def text_feats(a, b, regs=None, crop=None, win=None, t: float = 0.0, far=()) -> 
         x0, y0, x1, y1 = q["box"]
         bw, bh = max(1, x1 - x0), max(1, y1 - y0)
         d_in, d_ring = _in_ring(diff, (x0, y0, x1, y1))
+        gl = _glyph_diff(ga, [diff] + dfar, (x0, y0, x1, y1))
         out.append({"box": [x0, y0, x1, y1], "score": q["score"], "fill": q["fill"], "aspect": round(bw / bh, 2), "h": round(bh / H, 4),
                     "cx": round((x0 + x1) / 2 / W, 3), "cy": round((y0 + y1) / 2 / H, 3),
-                    "d_in": d_in, "d_ring": d_ring,
+                    "d_in": d_in, "d_ring": d_ring, "d_gl": gl[0], "fg": gl[1:],
                     "fi": [_in_ring(d, (x0, y0, x1, y1)) for d in dfar],
                     "blur": blur_cover(regs, crop, win, (x0, y0, x1, y1), t) if regs else 0.0})
     return out
@@ -1194,9 +1220,12 @@ def cut_content_feats(src: Path, ss: float, n: int, crop, win: tuple[int, int], 
 
 def foreign_text(f: dict) -> bool:
     """글자 상자 하나가 '남의 박힌 글자(자막·워터마크·로고 글)'인가 — 판정 주인. 표본(오푸스 눈) 정밀도·재현율은 test_cut_content_labels.
-    fi(긴 간격 짝) 가 없는 옛 값은 긴 간격 판정을 건너뛴다(옛 판정 그대로)."""
+    fi(긴 간격 짝)·d_gl(획 변화) 가 없는 옛 값은 그 판정을 건너뛴다(옛 판정 그대로)."""
     if f["blur"] > TEXT_BLUR_MAX:
         return False
+    if (f.get("d_gl") is not None and f["score"] >= TEXT_SCORE_MIN and f["fill"] >= TEXT_GLYPH_FILL and f["aspect"] >= TEXT_GLYPH_ASPECT
+            and TEXT_SMALL_H <= f["h"] <= TEXT_H_RANGE[1] and f["d_ring"] >= TEXT_GLYPH_RING and f["d_gl"] < TEXT_GLYPH_STILL * f["d_ring"]):
+        return True               # 획 붙박이 — 움직이는 배경 위 획이 그대로인 글줄(틱톡형 작은 자막 포함). d_gl 없는 옛 값은 건너뜀
     if f["score"] < TEXT_SCORE_MIN or f["fill"] < TEXT_FILL_MIN or f["aspect"] < TEXT_ASPECT_MIN:
         return False
     if not (TEXT_SMALL_H <= f["h"] <= TEXT_H_RANGE[1]):

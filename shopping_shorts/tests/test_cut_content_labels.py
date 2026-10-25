@@ -71,6 +71,34 @@ def test_static_scene_text_vetoed_by_long_interval():
         assert rows[cid]["label"] == "pos" and _cut_hit(rows[cid], foreign_text), cid
 
 
+SMALL_SUBS = ("rnd_ep04_v3_acC_orig@3.82", "rnd_ep11_v3_a1C_orig@1.49", "rnd_ep12_v3_ayB_orig@1.35", "rnd_ep12_v3_saA_orig@3.79",
+              "rnd_ep12_v3_ayA_orig@2.71", "rnd_ep09_v3_j2A_orig@0.67", "rnd_ep02_hair_su_hair1@11.63")
+
+
+def test_small_subtitle_caught_by_glyph_stillness():
+    """틱톡형 작은 자막(창 2.8~4.5%·얇은 흰 글) — 상자 평균 변화(d_in)는 글자 사이 배경을 따라가 붙박이로 안 잡히고(옛 판정 통과),
+    획 픽셀 변화(d_gl)로는 걸린다(98 #99). d_gl 을 빼면 다시 통과 = 이 시험이 실제로 그 차이를 잰다."""
+    from tools.calcopy.hybrid.render_bench import foreign_text
+    rows = {x["id"]: x for x in _fx()["text"]["rows"]}
+    no_gl = lambda b: foreign_text({k: v for k, v in b.items() if k != "d_gl"})
+    for cid in SMALL_SUBS:
+        r = rows[cid]
+        assert r["label"] == "pos"
+        assert not _cut_hit(r, no_gl), cid
+        assert _cut_hit(r, foreign_text), cid
+    for cid in ("ep08_cvs_onigiri_v3#02", "ep08_cvs_onigiri_v3#03", "ep08_cvs_onigiri_v3#04",
+                "ep08_cvs_onigiri_v3#12", "ep08_cvs_onigiri_v3#13", "ep08_cvs_onigiri_v3#14"):   # 08 가격 자막은 그대로 걸린다
+        assert _cut_hit(rows[cid], foreign_text), cid
+
+
+def test_glyph_rule_adds_no_false_positive():
+    """획 판정이 neg(제품 포장·간판)를 새로 걸지 않는다 — 표본 전체에서 d_gl 있을 때와 없을 때 걸린 neg 컷이 같다."""
+    from tools.calcopy.hybrid.render_bench import foreign_text
+    rows = [x for x in _fx()["text"]["rows"] if x["label"] == "neg"]
+    no_gl = lambda b: foreign_text({k: v for k, v in b.items() if k != "d_gl"})
+    assert [r["id"] for r in rows if _cut_hit(r, foreign_text)] == [r["id"] for r in rows if _cut_hit(r, no_gl)]
+
+
 def test_text_without_still_check_is_worse():
     """붙박이(상자 안 변화 < 둘레 변화)·크기 조건을 빼면 제품 포장·간판 글이 걸려 정밀도가 무너진다 — 표본이 그 차이를 실제로 잡는지."""
     from tools.calcopy.hybrid import render_bench as RB
