@@ -1,0 +1,536 @@
+{
+ "id": "HJDTrU3wjN0",
+ "dur": 24.938,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "꽂고, 붙이고, 꺾고!",
+   "colors": [
+    {
+     "word": "꽂고, 붙이고, 꺾고!",
+     "hex": "#000000"
+    }
+   ]
+  },
+  {
+   "text": "미친 음향 꿀템 3대장",
+   "colors": [
+    {
+     "word": "미친 음향 꿀템 3대장",
+     "hex": "#F03CA0"
+    }
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   350,
+   1080,
+   1620
+  ],
+  "bg_hex": "#FFFFFF",
+  "caption_band": [
+   1330,
+   1400
+  ],
+  "title_y": [
+   [
+    120,
+    220
+   ],
+   [
+    240,
+    350
+   ]
+  ],
+  "ad_mark": {
+   "text": "[광고]",
+   "xy": [
+    930,
+    10,
+    1070,
+    60
+   ],
+   "hex": "회색 기울임(눈)"
+  },
+  "source_y": null,
+  "logo_y": null,
+  "source_hex": null,
+  "watermark": null,
+  "note": "틀 A(흰 바탕 + 위 제목 2줄 검정/분홍(흰 외곽) + 창 350~1620 + 아래 흰 여백). 자막은 창 안 아래 y≈1330~1400, 제품마다 채움색이 바뀜(연두→분홍→청록)"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.667,
+   "speaker": "불명",
+   "text": "원래는 귀 통증에 빡친",
+   "layer": null,
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(제품마다 채움색: 연두/분홍/청록, 짙은 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1312,
+    1395
+   ],
+   "fill_hex": "#ACFF86",
+   "outline": "짙은 회색~검정 약 3~4px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 0.12,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +29.0dB(유성 0.06·고립 0.83) — 귀 확인 못 함"
+   },
+   "scene": "손·제품 근접",
+   "scene_desc": "검은 헤드폰을 들고 귀 컵을 만짐",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~1px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 1.667,
+   "t1": 3.233,
+   "speaker": "불명",
+   "text": "테크 덕후가 만든 변신형 헤드폰",
+   "layer": null,
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(제품마다 채움색: 연두/분홍/청록, 짙은 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1322,
+    1386
+   ],
+   "fill_hex": "#9CFF8C",
+   "outline": "짙은 회색~검정 약 3~4px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 1.59,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +20.5dB(유성 0.0·고립 0.55) — 귀 확인 못 함"
+   },
+   "scene": "손·제품 근접",
+   "scene_desc": "나무 탁자 위 헤드폰 귀 컵을 손으로 돌림",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~1px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.233,
+   "t1": 4.633,
+   "speaker": "불명",
+   "text": "귀 컵을 밖으로 꺾으면",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(제품마다 채움색: 연두/분홍/청록, 짙은 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1323,
+    1386
+   ],
+   "fill_hex": "#9BFF8C",
+   "outline": "짙은 회색~검정 약 3~4px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "귀 컵을 바깥쪽으로 꺾는 손",
+   "fit": 9,
+   "cut_at": [
+    3.3
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~1px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.633,
+   "t1": 8.3,
+   "speaker": "불명",
+   "text": "앰프 스피커 모드로 자동 전환",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(제품마다 채움색: 연두/분홍/청록, 짙은 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1314,
+    1394
+   ],
+   "fill_hex": "#A2FF93",
+   "outline": "짙은 회색~검정 약 3~4px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 5.34,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +32.2dB(유성 0.17·고립 0.8) — 귀 확인 못 함"
+   },
+   "scene": "손·제품 근접",
+   "scene_desc": "꺾은 귀 컵이 둥근 스피커 모양 → 다시 헤드폰으로",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~1px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.3,
+   "t1": 11.733,
+   "speaker": "불명",
+   "text": "박스나 거울에 붙이기만 하면",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(제품마다 채움색: 연두/분홍/청록, 짙은 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1324,
+    1385
+   ],
+   "fill_hex": "#F05AB9",
+   "outline": "짙은 회색~검정 약 3~4px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 8.43,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +27.2dB(유성 0.27·고립 0.7) — 귀 확인 못 함"
+   },
+   "scene": "손·제품 근접",
+   "scene_desc": "기차 창가에서 작은 원통 스피커를 들고 창틀에 붙임",
+   "fit": 8,
+   "cut_at": [
+    8.367
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~1px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.733,
+   "t1": 15.3,
+   "speaker": "불명",
+   "text": "표면 전체를 울려버리는 골전도 사운드",
+   "layer": null,
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(제품마다 채움색: 연두/분홍/청록, 짙은 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1321,
+    1386
+   ],
+   "fill_hex": "#F05DB9",
+   "outline": "짙은 회색~검정 약 3~4px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(필름 카운트다운 원 3·2·1 — 베이지 원판+흰 십자선+검정 숫자)",
+     "t_in": 11.733,
+     "t_out": 13.27,
+     "x": 405,
+     "y": 795,
+     "w": 270,
+     "h": 270,
+     "anim": "자막 교체와 같은 프레임에 등장, 3(11.73)→2(12.27)→1(12.80) 숫자만 바뀜, 13.27 사라짐(30fps 띠 work2/fr/hj_cd.jpg)"
+    }
+   ],
+   "sfx": {
+    "kind": "기타",
+    "t": 13.26,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +23.5dB(유성 0.0·고립 0.9) — 귀 확인 못 함"
+   },
+   "scene": "손·제품 근접",
+   "scene_desc": "카운트다운 3·2·1 뒤 기차 유리창에 붙인 스피커",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~1px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 15.3,
+   "t1": 18.633,
+   "speaker": "불명",
+   "text": "아무 데나 붙이면 붙인 물체 전체가",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(제품마다 채움색: 연두/분홍/청록, 짙은 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1322,
+    1385
+   ],
+   "fill_hex": "#EE5FB7",
+   "outline": "짙은 회색~검정 약 3~4px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "파란 빛 스피커를 들고 어두운 방문에 붙임",
+   "fit": 7,
+   "cut_at": [
+    15.467
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~1px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 18.633,
+   "t1": 21.133,
+   "speaker": "불명",
+   "text": "진동하면서 미친 스피커로 변신함",
+   "layer": null,
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(제품마다 채움색: 연두/분홍/청록, 짙은 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1323,
+    1385
+   ],
+   "fill_hex": "#F159BA",
+   "outline": "짙은 회색~검정 약 3~4px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 19.93,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +30.0dB(유성 0.14·고립 0.55) — 귀 확인 못 함"
+   },
+   "scene": "손·제품 근접",
+   "scene_desc": "문에 붙은 보라 빛 스피커",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~1px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 21.133,
+   "t1": 22.967,
+   "speaker": "불명",
+   "text": "스마트폰 C타입 단자에 꽂자마자",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(제품마다 채움색: 연두/분홍/청록, 짙은 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1313,
+    1394
+   ],
+   "fill_hex": "#4AFFE9",
+   "outline": "짙은 회색~검정 약 3~4px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "스마트폰 단자에 꽂힌 투명 초소형 스피커",
+   "fit": 9,
+   "cut_at": [
+    21.233
+   ],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~1px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 22.967,
+   "t1": 24.8,
+   "speaker": "불명",
+   "text": "앰프급 소리 터지는 초미니 직결 스피커",
+   "layer": null,
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(제품마다 채움색: 연두/분홍/청록, 짙은 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1313,
+    1395
+   ],
+   "fill_hex": "#4DFFE8",
+   "outline": "짙은 회색~검정 약 3~4px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "꽂힌 초소형 스피커 근접",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~1px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  }
+ ],
+ "no_caption": [
+  [
+   24.8,
+   24.94
+  ]
+ ],
+ "beats": "제목 '3대장'(순위 없는 나열) → 1번 헤드폰(0~8.3 훅 '원래는 귀 통증에 빡친' → 공개 '테크 덕후가 만든 변신형 헤드폰' → '귀 컵을 밖으로 꺾으면 / 앰프 스피커 모드로 자동 전환', 연두) → 2번 골전도 스피커(8.3~21.13 '붙이기만 하면' → 카운트다운 3·2·1 + '표면 전체를 울려버리는 골전도 사운드' → '아무 데나 붙이면…미친 스피커로 변신함', 분홍) → 3번 C타입 스피커(21.13~24.8 '꽂자마자 / 앰프급 소리 터지는 초미니 직결 스피커', 청록, CTA 없음)",
+ "narr_share": "나레 줄 0/10, 나레 0초/24.938초",
+ "notes": [
+  "말 없음: 위스퍼(VAD) 언어 판정 en·한국어 낱말 0(영어 10낱말 = 원본 영상 속 말 조각). 스펙트럼 work2/spec/all.jpg 1행 오른쪽 = 원본 현장음·음악, 나레 말소리 띠 없음.",
+  "자막 10줄 · 줄 길이 1.5~3.7초(중앙 2.5초) · 자막만 갈래의 긴 한 문장 꼴(12~19자). 등장 효과 0.",
+  "제품 3개를 채움색으로 가름: 연두 #99FB87(헤드폰 4줄) → 분홍 #FB70BA(골전도 4줄) → 청록 #35F9EB(C타입 2줄) — 낱말 강조가 아니라 제품 묶음 색이라 emph [].",
+  "필름 카운트다운 원(3·2·1, 11.73~13.27) — 채널이 얹은 그림. '붙이는 순간'을 기다리게 하는 장치.",
+  "제품 사이 교체(8.3·21.13)는 원본 컷(8.367·21.233)보다 0.07~0.1초 먼저 — 자막이 장면을 앞서 바뀐다.",
+  "제목 분홍 hex 는 눈(흰 외곽 분홍 글을 px clusters 가 못 잡음)."
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "검은 헤드폰을 두 손으로 든 사람(얼굴 안 보임) + 제목 2줄 + 첫 자막이 0초부터",
+  "face_frac": 0.0,
+  "text": "꽂고, 붙이고, 꺾고! / 미친 음향 꿀템 3대장 / 원래는 귀 통증에 빡친"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈: 1초 시트·구간 시트·30fps 띠·원본 프레임 확대 / 픽셀: seg2(capseg 양극 변형)·cutdet·boxm·colk / 신호: sfx_events) 2026-10-25 (관제 263 지시서 06 · sseolpulda)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr",
+ "sound_mode": "자막만",
+ "title_mode": "상시 고정 2줄",
+ "sound_detail": "말 없음(한국어 낱말 0, 위스퍼 lang=en) · 원본 현장음·음악(신호)"
+}
