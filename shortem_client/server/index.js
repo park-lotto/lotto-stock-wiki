@@ -23,6 +23,7 @@ import { requestContent, answer as aiAnswer, engineRoot } from './engine_bridge.
 import { sweep as sweepRented } from './preset_rent.js';
 import { checkUpdate } from './updater.js';
 import { startUi, openBrowser } from './local_ui.js';
+import { startBridge } from './web_bridge.js';
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
 import { readSettings, packFor, savePack, select as selectPreset, PID_RE } from './local_settings.js';
 
@@ -258,6 +259,8 @@ async function main() {
   await server.connect(new StdioServerTransport());
   // 켤 때 새 판을 뒤에서 받아 둔다 — 바꾸기는 다음에 켤 때 연결기가(돌고 있는 파일을 안 건드린다)
   setTimeout(() => { checkUpdate().catch(e => audit('update_fail', { result: String(e && e.message || e).slice(0, 80) })); }, 5000).unref();
+  // 웹 설정 화면 다리(관제 266) — 웹 '완성본 고치기'가 이 PC 완성본을 재생·시간 줄로 보게(서버를 안 거친다)
+  startBridge().then(r => { if (r.error) audit('bridge_fail', { result: r.error }); }).catch(() => { /* 다리 없이도 제작은 된다 */ });
 }
 
 let isMain = false;

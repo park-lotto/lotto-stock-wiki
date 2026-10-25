@@ -18914,6 +18914,9 @@ async def _claude_studio_op(request: Request, op: str):
     from shopping_shorts import claude_studio as _cs
     b = await _claude_body(request)
     fn = {"select": lambda: _cs.select(st, cid, b.get("preset")),
+          "style": lambda: _cs.select_style(st, cid, b.get("style")),
+          "ask": lambda: _cs.ask(st, cid, b.get("target"), b.get("text")),
+          "look": lambda: _cs.save_look(st, cid, b.get("preset"), b.get("snapshot")),
           "save": lambda: _cs.save(st, cid, b.get("preset"), b.get("patch")),
           "reset": lambda: _cs.reset(st, cid, b.get("preset")),
           "preview": lambda: _cs.preview(st, cid, b.get("preset"), b.get("patch"))}.get(op)
