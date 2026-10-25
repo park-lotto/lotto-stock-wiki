@@ -21,7 +21,7 @@
   ],
   "why": "벤치 나레 여성(f0 202~258Hz). 후보 tc-yura 는 사장님 귀 확인 뒤에만 바꾼다(이 칸 한 곳)"
  },
- "cps_target": 6.9,
+ "cps_target": 7.45,
  "bgm": {
   "id": "otsukare_summer",
   "db_below_voice": 14.4,
@@ -42,15 +42,15 @@
   "why": "−14 LUFS·TP −1.5 통일(사장님 10-18) · 벤치 −19.4(중앙) — 하이브리드_판설계.md §5"
  },
  "length": {
-  "min": 28,
+  "min": 30,
   "max": 38,
-  "why": "길이 목표 30~38초(벤치 중앙 37.4 — 하이브리드_판설계.md §1) · 판 28~38 의 하한 28 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
+  "why": "길이 목표 30~38초(벤치 중앙 37.4 — 하이브리드_판설계.md §1) · 하한 30 = 벤치 8편 길이 p17 30.3초 내림(24.1·30.3·34.0·37.0·37.8·38.0·43.7·48.9 — handconst.py starpickroom length)"
  },
  "timing": {
-  "gap": 0.2,
-  "gap_oo": 0.25,
-  "tail": 0.5,
-  "why": "gap 0.2·gap_oo 0.25·tail 0.5 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
+  "gap": 0.18,
+  "gap_oo": 0.14,
+  "tail": 0.65,
+  "why": "벤치 8편 원본 소리 실측(handconst.py starpickroom → _kal/손상수_실측.json): 줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙 — gap 0.18(원음→원음 뺀 경계 n=21, p25 0.12·p75 0.28) · gap_oo 0.14(원음→원음 n=22, p25 0.065·p75 0.25) (경계 ±0.15초 창 안 가장 긴 쉼, 쉼 문턱 = 편별 (말 p50+p5)/2) · tail 0.65 = 마지막 말 소리 끝→영상 끝 편 중앙 0.645초(0.21~1.81, 로컬 위스퍼 마지막 낱말 끝)"
  },
  "frame": {
   "bg": [
@@ -121,14 +121,14 @@
    "pop": "pop",
    "typing": "heart"
   },
-  "typing_cps": 12.5,
+  "typing_cps": 10.4,
   "chunk_max_chars": 15,
   "band": [
    1105,
    1175
   ],
   "why_band": "자막 잉크 y1105~1175(starpick place — 8편 같음) — caption_side 짤·스티커 자리용(fx_target)",
-  "why": "자막팩 starpick(§3) · band = 자막 잉크 y1105~1175(why_band) · chunk_max_chars 15 = 자막 조각 ≤15자(§1) · typing_cps 12.5 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
+  "why": "자막팩 starpick(§3) · band = 자막 잉크 y1105~1175(why_band) · chunk_max_chars 15 = 자막 조각 ≤15자(§1 · 같은 값 = 벤치 나레 조각 자수 p90 15, n=29) · typing_cps 10.4 = 벤치 타이핑 줄 19/155 type_cps 중앙 10.4자/초 — handconst.py starpickroom caption.*"
  },
  "cuts": {
   "push_tts": 0.0,
@@ -774,5 +774,5 @@
    "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
   }
  },
- "_why_cps_target": "6.9 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
+ "_why_cps_target": "미나(일레븐랩스) 서비스 배속 고정 1.35(narr_align.fixed_tempo) — 배속을 못 바꾸고 대본 길이 어림·B3 목표로만 쓰이므로 값 = 이 판으로 낸 미나 실측 7.45자/초(starpickroom/hybrid_sungsikyung 렌더 render_info.sentences 7줄 184자/24.71초, 줄별 7.3~7.7) · 참고 벤치 나레 자/초 중앙 9.29(8편 7.6~10.2, handconst.py starpickroom cps_target) — 미나 고정 배속으로는 벤치 말속도에 못 닿음(목소리 칸 몫)"
 }
