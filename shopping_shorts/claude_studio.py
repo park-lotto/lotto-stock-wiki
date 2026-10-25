@@ -223,6 +223,18 @@ def _voice_engine(vid: str) -> str:
     return "타입캐스트" if str(vid).startswith("tc_") else "일레븐랩스" if str(vid).startswith("kr-") else ""
 
 
+def _style_name(stem: str, names: dict, brand: str | None) -> str:
+    """이름 = 실제 프리셋 이름 한 가지(사장님 10-25 '위는 프리셋 이름, 아래는 스타일 이름' — 섞지 않는다).
+    이름표 _styles.name(실제 이름이 확인된 것) → 브랜드 장부 이름(+A/B 판 구분) → 판 이름 그대로."""
+    own = ((names.get("_styles") or {}).get(stem) or {}).get("name")
+    if own:
+        return own
+    base = stem.removesuffix("판")
+    if brand:
+        return brand + (f" {base[-1]}" if base[-1:] in ("A", "B") and not brand.endswith(base[-1]) else "")
+    return base
+
+
 def style_summary(stem: str, d: dict, names: dict, brands: dict) -> dict:
     """판 하나 → 고객 카드(이름·묶음·뱃지). 뱃지 값은 판 설정을 그대로 읽는다(새 판단 없음)."""
     slug = ((d.get("bench") or {}).get("channel") or "")
@@ -246,7 +258,7 @@ def style_summary(stem: str, d: dict, names: dict, brands: dict) -> dict:
         badges.append({"k": "face", "t": "연예인 얼굴 썸네일", "on": True})
     sid = style_id(stem)
     shots = (_preview_index().get(sid) or {}).get("files") or []   # 실제 완성본 장면(tools/claude_portal/style_previews.py)
-    return {"id": sid, "shots": [f"r/out/assets/style-previews/{f}" for f in shots], "name":(nm.get("name") if (names.get("_styles") or {}).get(stem) else None) or brand or nm.get("name") or "이름 미정",
+    return {"id": sid, "shots": [f"r/out/assets/style-previews/{f}" for f in shots], "name": _style_name(stem, names, brand),
             "group": nm.get("group") or "기타", "desc": nm.get("desc") or "", "badges": badges, "_slug": slug}
 
 

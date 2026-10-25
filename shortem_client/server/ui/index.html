@@ -111,10 +111,8 @@ i.best{font-style:normal;font-size:10.5px;color:var(--gold);border:1px solid rgb
 /* 꾸미기 단계: 왼쪽 상자 없이 장면꾸미기 화면만 — 숏템메이커처럼 줄이지 않고 폭 100%·화면 높이(scene-style-produce.js 와 같은 비율) */
 .main.lookmode{grid-template-columns:minmax(0,1fr)}
 .main.lookmode .board{display:none}
-/* 장면꾸미기는 상자에 가두지 않고 화면 끝까지(사장님 10-25 '좌우위아래 넓게') */
-body.lookwide .wrap{max-width:none;padding:10px 8px 8px}
-body.lookwide .head{display:none}
-.phone.inline{aspect-ratio:auto;height:calc(100vh - 150px);min-height:760px;border-radius:0;border:0;box-shadow:none;background:#071118}
+/* 장면꾸미기: 테두리 상자 없이 — 폭은 다른 단계와 같게(사장님 10-25 '모든 단계 동일') */
+.phone.inline{aspect-ratio:auto;height:calc(100vh - 210px);min-height:760px;border-radius:0;border:0;box-shadow:none;background:#071118}
 .phone.inline iframe{position:static;width:100%!important;height:100%!important;transform:none!important}
 .phone.inline iframe,.phone.drag iframe{pointer-events:auto}
 .looknav{display:none}.main.lookmode .looknav{display:flex;justify-content:space-between;gap:10px}
@@ -133,6 +131,9 @@ body.lookwide .head{display:none}
 #vidpv .vmarks{position:absolute;left:0;right:0;top:0;bottom:56px;cursor:crosshair}
 #vidpv .pin{position:absolute;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:var(--mint);color:#06281f;font-size:11px;display:grid;place-items:center;box-shadow:0 0 0 3px rgba(0,0,0,.45);pointer-events:none}
 #vidpv .pin.to{background:var(--gold);width:14px;height:14px}
+#vidpv .vbub{position:absolute;left:4%;right:4%;background:rgba(16,23,43,.96);border:1px solid var(--violet);border-radius:12px;padding:10px;display:grid;gap:8px;cursor:default;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#vidpv .vbub .sec-h button{border:0;background:none;color:var(--mute);cursor:pointer;font-size:14px}
+#vidpv .vbub .chip{font-size:11.5px;padding:4px 8px}
 #vidpv svg.arrow{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}#vidpv svg.arrow line{stroke:var(--gold);stroke-width:6;stroke-dasharray:18 10}
 .main.vidmode .scenes,.main.vidmode .side>.nav,.main.vidmode #applied{display:none}
 .capbar[hidden]{display:none}
@@ -173,7 +174,7 @@ details.sec summary small{color:var(--mute);font-size:12px}
   <div class="main">
     <section class="board" id="board"></section>
     <aside class="side">
-      <div class="looknav"><button class="btn" data-goto="template">← 템플릿</button><span class="state" id="lookstate"></span><button class="btn pri" data-goto="sound">다음: 소리 →</button></div>
+      <div class="looknav"><button class="btn" data-goto="preset">← 프리셋</button><span class="state" id="lookstate"></span><button class="btn pri" data-goto="sound">다음: 소리 →</button></div>
       <div class="phone" id="phone"><iframe id="stage" title="미리보기" src="r/out/scene-style-ui-showcase.html?qa=1"></iframe><span class="busy" id="busy" hidden>그리는 중…</span></div>
       <div class="scenes" id="scenes"></div>
       <div class="nav"><button class="btn" id="play">▶ 5초 재생</button><button class="btn" id="redraw">다시 그리기</button></div>
@@ -184,7 +185,8 @@ details.sec summary small{color:var(--mute);font-size:12px}
 <script>
 'use strict';
 // 단계(사장님 10-25): 프리셋(칼카피 영상 스타일) → 템플릿(겉모양) → 꾸미기 → 소리 → 완성본 고치기(캡컷 쉬운 판, 회원 Claude 에게 지시)
-const STEPS=[{k:'preset',ic:'◆',t:'프리셋'},{k:'template',ic:'▦',t:'템플릿'},{k:'look',ic:'✎',t:'꾸미기'},{k:'sound',ic:'♪',t:'소리'},{k:'edit',ic:'▶',t:'완성본 고치기'}];
+// 템플릿 단계는 뺐다 — 꾸미기(장면꾸미기)에 템플릿 고르기가 이미 있다(사장님 10-25)
+const STEPS=[{k:'preset',ic:'◆',t:'프리셋'},{k:'look',ic:'✎',t:'꾸미기'},{k:'sound',ic:'♪',t:'소리'},{k:'edit',ic:'▶',t:'완성본 고치기'}];
 const S={step:'preset',st:null,scene:0,preview:null,video:null,stamp:-1,saving:0};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -272,13 +274,10 @@ function render(){
       <div class="sec"><div class="sec-h"><b>목소리 엔진</b><small>고객님 키로 만듭니다</small></div>
         <div class="chips">${ENG.map(([k,t])=>`<button class="chip${k===curEng?' on':''}" data-eng="${k}">${t}</button>`).join('')}</div></div>
       ${st.host==='server'?voicePresetBox(curEng,tts):''}
-      ${st.host==='server'&&curEng==='typecast'?`<div class="sec"><div class="sec-h"><b>감정</b><small>타입캐스트 성우의 말 느낌</small></div>
-        <div class="chips">${emos.map(([k,t])=>`<button class="chip${k===((st.extra||{}).tts_emotion||'normal')?' on':''}" data-emo="${k}">${t}</button>`).join('')}</div></div>`:''}
       ${st.host==='server'?`<div class="sec"><div class="sec-h"><b>성우 찾기</b><small>${curEng==='elevenlabs'?'일레븐랩스 목소리 모음(고객님 키 필요)':'숏템 성우 검색 그대로 — 이름·느낌으로 찾기'}</small></div>
         <div class="inrow"><input type="text" id="vq" placeholder="예) 차분한 여자, 민준, 광고" value="${esc(S.vq||'')}"><button class="btn pri" id="vsearch">찾기</button>${curEng==='typecast'?'<button class="btn" id="tcmine">내가 만든 목소리</button>':''}</div>
         ${S.vres&&S.vresEng===curEng&&S.vres.length?`<small style="color:var(--mute)">${S.vmine?'내가 만든 목소리':'전체 '+S.vtotal+'명 중 '+S.vres.length+'명'}</small>`:''}
-        ${S.vres&&S.vresEng===curEng?`<div class="vres">${S.vres.length?S.vres.map(v=>`<div class="vrow${v.voice_id===tts.voice_id?' on':''}"><b>${esc(v.name)}</b><small>${esc([v.model,v.emotions&&v.emotions.length?'감정 '+v.emotions.length+'종':'',v.gender,v.age,(v.tags||[]).slice(0,3).join(' · ')].filter(Boolean).join(' · '))}</small>
-          ${v.sample_url?`<button class="chip" data-play="${esc(v.sample_url)}">▶ 듣기</button>`:''}<button class="chip" data-pickv="${esc(v.voice_id)}" data-pickn="${esc(v.name)}">고르기</button></div>`).join(''):`<small style="color:var(--mute)">${esc(S.verr||'찾은 성우가 없습니다')}</small>`}</div>`:''}</div>`:''}
+        ${S.vres&&S.vresEng===curEng?`<div class="vres tall">${S.vres.length?S.vres.map(v=>voiceRow(v,curEng,tts,st)).join(''):`<small style="color:var(--mute)">${esc(S.verr||'찾은 성우가 없습니다')}</small>`}</div>`:''}</div>`:''}
       <div class="sec"><div class="sec-h"><b>${st.host==='server'?'지금 회원 PC 가 바로 쓸 수 있는 목소리':'목소리'}</b>${badge('tts','voice_id')}</div>
         ${vs.length?`<div class="chips">${vs.map(v=>`<button class="chip${v.voice_id===tts.voice_id?' on':''}" data-voice="${esc(v.voice_id)}" title="${esc(v.about)}">${esc(v.name)}</button>`).join('')}</div>`
           :`<div class="note">${curEng==='fishaudio'?'피쉬오디오 목소리는 준비 중입니다 — 회원 PC 엔진에 연결하는 대로 여기에 목록이 뜹니다.':'이 엔진의 목소리가 아직 없습니다.'}</div>`}</div>
@@ -308,7 +307,7 @@ function render(){
   // 완성본 고치기: 오른쪽 = 완성본 재생(+표시), 그 아래 캡컷 내보내기(사장님 10-25 '오른쪽 썸네일 아래')
   const vid=S.step==='edit'&&made();document.querySelector('.main').classList.toggle('vidmode',vid);videoStage();
   let C=$('capbar');if(!C){C=document.createElement('div');C.id='capbar';C.className='capbar';$('phone').after(C)}
-  C.hidden=!vid;C.innerHTML=vid?`<button class="btn" id="capcut">캡컷으로 내보내기</button>${S.capmsg?`<small class="err">${esc(S.capmsg)}</small>`:''}<small style="color:var(--mute)">영상 위를 끌면 '이것을 저기로', 누르면 '여기' 표시가 지시에 들어갑니다</small>`:'';
+  C.hidden=!vid;C.innerHTML=vid?`<button class="btn" id="capcut">캡컷으로 내보내기</button>${S.capmsg?`<small class="err">${esc(S.capmsg)}</small>`:''}<small style="color:var(--mute)">이 완성본을 캡컷에서 직접 다듬을 수 있는 파일로 내보냅니다</small>`:'';
   // 프리셋 단계 견본: 실제 완성본 장면 3장(있으면) / 틀도 없으면 '견본 준비 중' — 남의 틀로 대신 그리지 않는다
   let O=$('shotpv');if(!O){O=document.createElement('div');O.id='shotpv';$('phone').appendChild(O)}
   const cs=(st.styles||[]).find(x=>x.id===st.style);
@@ -319,7 +318,7 @@ function render(){
   if(S.step==='edit'&&stage.contentWindow&&stage.contentWindow.sceneStyle)dragIn(stage.contentWindow);
   drawMoves();
   const look=S.step==='look',was=$('phone').classList.contains('inline');
-  document.querySelector('.main').classList.toggle('lookmode',look);$('phone').classList.toggle('inline',look);document.body.classList.toggle('lookwide',look);
+  document.querySelector('.main').classList.toggle('lookmode',look);$('phone').classList.toggle('inline',look);
   if(look!==was){fit();if(S.preview)preview()}
 }
 
@@ -359,6 +358,16 @@ async function voiceSearch(eng,q,mine){
     S.verr=r.ok?'':(r.error||'');S.vtotal=r.total||S.vres.length;S.vresEng=eng;S.vmine=!!mine}
   catch(e){S.vres=[];S.verr='성우 검색을 못 했습니다'}
   render();
+}
+// 찾은 성우 한 줄 — 추천 성우와 같은 모양(이름 · 설명 · 듣기 · 단추). 타입캐스트는 톤 대신 그 성우의 감정 단추(누르면 성우+감정을 같이 고른다)
+function voiceRow(v,eng,tts,st){
+  const on=v.voice_id===tts.voice_id,emo=(st.extra||{}).tts_emotion||'normal';
+  const info=[v.model,v.emotions&&v.emotions.length?'감정 '+v.emotions.length+'종':'',v.gender,v.age,(v.tags||[]).slice(0,3).join(' · ')].filter(Boolean).join(' · ');
+  const btns=eng==='typecast'&&(v.emotions||[]).length
+    ?EMO.filter(([k])=>v.emotions.includes(k)).map(([k,t])=>`<button class="chip${on&&emo===k?' on':''}" data-pickv="${esc(v.voice_id)}" data-pickn="${esc(v.name)}" data-pemo="${k}">${t}</button>`).join('')
+    :`<button class="chip${on?' on':''}" data-pickv="${esc(v.voice_id)}" data-pickn="${esc(v.name)}">고르기</button>`;
+  return `<div class="vrow v4${on?' on':''}"><b>${esc(v.name)}</b><small>${esc(info)}</small>
+    ${v.sample_url?`<button class="chip" data-play="${esc(v.sample_url)}">▶ 듣기</button>`:'<span></span>'}<span class="chips">${btns}</span></div>`;
 }
 // 숏템 추천 성우(서버 /api/voice-presets — 숏템메이커와 같은 목록) — 엔진별, 샘플 듣기, 톤(variants) 고르기
 const TONE={stable:'차분',natural:'자연스럽게',expressive:'표현 풍부',whisper:'속삭임',bright:'밝게',calm:'차분',default:'기본'};
@@ -420,20 +429,36 @@ function videoStage(){
 function vidDrag(V){
   const L=V.querySelector('.vmarks'),v=V.querySelector('video');let st=null;
   const pt=e=>{const r=L.getBoundingClientRect();return{x:Math.round((e.clientX-r.left)/r.width*1080),y:Math.round((e.clientY-r.top)/r.height*1920)}};
-  L.addEventListener('pointerdown',e=>{const p=pt(e);if(p.y>1920-150)return;v.pause();st={...p,t:+v.currentTime.toFixed(1)};L.setPointerCapture(e.pointerId);e.preventDefault()});
+  L.addEventListener('pointerdown',e=>{if(e.target.closest('.vbub'))return;const p=pt(e);if(p.y>1920-150)return;v.pause();st={...p,t:+v.currentTime.toFixed(1)};L.setPointerCapture(e.pointerId);e.preventDefault()});
   L.addEventListener('pointermove',e=>{if(!st)return;const p=pt(e);st.dx=p.x-st.x;st.dy=p.y-st.y;drawVidMarks(st)});
+  // ★표시는 한 번에 하나 — 찍은 자리에 바로 말풍선(무엇을 어떻게)을 띄우고, 보내면 사라진다(10-25 사장님 '이렇게 하면 어떻게 쓰라는 건가' — 점이 쌓이기만 했다)
   L.addEventListener('pointerup',()=>{if(!st)return;const m=st;st=null;const far=Math.abs(m.dx||0)+Math.abs(m.dy||0)>25;
-    const label=`${m.t}초 ${far?'이것':'여기'}`;S.moves=(S.moves||[]).concat([{label,vx:m.x,vy:m.y,dx:far?m.dx:0,dy:far?m.dy:0,t:m.t,kind:far?'move':'pin'}]);
-    if(!S.pick)S.pick={track:'scene',scene:sceneAt(m.t),label:`${m.t}초 지점`,at:m.t};render()});
+    S.mark={vx:m.x,vy:m.y,dx:far?m.dx:0,dy:far?m.dy:0,t:m.t,kind:far?'move':'pin'};S.markText='';drawVidMarks();setTimeout(()=>{const i=document.querySelector('#vidpv .vbub input');i&&i.focus()},0)});
+  V.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;
+    if(b.dataset.vb==='x'){S.mark=null;drawVidMarks();return}
+    if(b.dataset.vhint){const i=V.querySelector('.vbub input');i.value=b.dataset.vhint;i.focus();return}
+    if(b.dataset.vb==='send'){const text=(V.querySelector('.vbub input').value||'').trim();if(!text){state('무엇을 어떻게 할지 적어 주세요',true);return}
+      const m=S.mark,where=m.kind==='move'?`${m.t}초 화면의 (${m.vx},${m.vy}) 것을 (${m.vx+m.dx},${m.vy+m.dy})로`:`${m.t}초 화면의 (${m.vx},${m.vy}) 자리`;
+      const r=await api('/api/ask',{target:{track:'video',label:`${m.t}초`,at:m.t,x:m.vx,y:m.vy,dx:m.dx,dy:m.dy,video:S.pcVideo},text:`${where} — ${text}`});
+      if(r.ok===false||r.error){state(r.msg||r.error||'못 보냈습니다',true);return}
+      S.mark=null;state('Claude 에게 보냈습니다');await load(true,true);render()}});
+  V.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.closest('.vbub')){e.preventDefault();V.querySelector('[data-vb=send]').click()}});
 }
+const VHINT={move:['이것을 여기로 옮겨 줘','여기로 옮기고 조금 크게'],pin:['이 글자 더 크게','이 부분 빼 줘','여기 다른 컷으로','색 바꿔 줘']};
 const sceneAt=t=>{const sc=(S.preview&&S.preview.context&&S.preview.context.scenes)||[];const i=sc.findIndex(s=>t>=s.start&&t<s.end);return i<0?0:i};
 function drawVidMarks(live){
   const L=document.querySelector('#vidpv .vmarks');if(!L)return;
-  const ms=(S.moves||[]).filter(m=>m.vx!=null).concat(live?[{...live,vx:live.x,vy:live.y,kind:'live'}]:[]);
+  const m=live?{...live,vx:live.x,vy:live.y}:S.mark;
   const X=x=>(x/1080*100)+'%',Y=y=>(y/1920*100)+'%';
-  L.innerHTML=ms.map((m,i)=>{const n=live&&i===ms.length-1?'':`<b>${i+1}</b>`;
-    if(!(m.dx||m.dy))return`<span class="pin" style="left:${X(m.vx)};top:${Y(m.vy)}">${n}</span>`;
-    return `<svg class="arrow" viewBox="0 0 1080 1920" preserveAspectRatio="none"><line x1="${m.vx}" y1="${m.vy}" x2="${m.vx+m.dx}" y2="${m.vy+m.dy}"/></svg><span class="pin from" style="left:${X(m.vx)};top:${Y(m.vy)}">${n}</span><span class="pin to" style="left:${X(m.vx+m.dx)};top:${Y(m.vy+m.dy)}"></span>`}).join('');
+  if(!m){L.innerHTML='';return}
+  const mv=m.dx||m.dy,ex=m.vx+(m.dx||0),ey=m.vy+(m.dy||0);
+  const mark=mv?`<svg class="arrow" viewBox="0 0 1080 1920" preserveAspectRatio="none"><line x1="${m.vx}" y1="${m.vy}" x2="${ex}" y2="${ey}"/></svg><span class="pin from" style="left:${X(m.vx)};top:${Y(m.vy)}"></span><span class="pin to" style="left:${X(ex)};top:${Y(ey)}"></span>`
+    :`<span class="pin" style="left:${X(m.vx)};top:${Y(m.vy)}"></span>`;
+  // 말풍선은 화면 안쪽에 — 아래 절반이면 위로, 위 절반이면 아래로
+  const by=ey>960?`bottom:${(100-ey/19.2+3).toFixed(1)}%`:`top:${(ey/19.2+3).toFixed(1)}%`;
+  L.innerHTML=mark+(live?'':`<div class="vbub" style="${by}"><div class="sec-h"><b>${esc(m.t)}초 · ${mv?'이것을 여기로':'여기'}</b><button data-vb="x" title="취소">✕</button></div>
+    <div class="chips">${VHINT[mv?'move':'pin'].map(x=>`<button class="chip" data-vhint="${esc(x)}">${esc(x)}</button>`).join('')}</div>
+    <div class="inrow"><input type="text" maxlength="300" placeholder="어떻게 해 줄까요?"><button class="btn pri" data-vb="send">보내기</button></div></div>`);
 }
 function editBoard(st,p){
   pcLoad();
@@ -448,7 +473,7 @@ function editBoard(st,p){
   const mv=(S.moves||[]);
   return `<h2>완성본 고치기 <small>고칠 곳을 누르고 '어떻게' 해 달라고 적으면 Claude 가 고쳐서 다시 만듭니다</small></h2>
     ${pcBox()}
-    <div class="note">${made()?'오른쪽 완성본 위를 <b>끌면 ‘이것을 저기로’</b>, <b>누르면 ‘여기’</b> 표시가':'오른쪽 화면의 글자·띠를 <b>끌어 옮기면</b> 옮긴 값이'} 지시에 같이 들어갑니다.${mv.length?` 지금 ${mv.length}개 — 하나씩 ✕ 로 되돌리거나 <button class="chip" id="mvclear">전부 되돌리기</button>`:''}</div>
+    <div class="note">${made()?'오른쪽 완성본을 멈추고 고칠 곳을 <b>누르면 ‘여기’</b>, <b>끌면 ‘이것을 저기로’</b> — 그 자리에 바로 지시 칸이 뜹니다. 아래 줄에서 장면·자막·소리를 골라 시킬 수도 있습니다.':'오른쪽 화면의 글자·띠를 <b>끌어 옮기면</b> 옮긴 값이 지시에 같이 들어갑니다.'}${mv.length?` 지금 ${mv.length}개 — 하나씩 ✕ 로 되돌리거나 <button class="chip" id="mvclear">전부 되돌리기</button>`:''}</div>
     <div class="tl">
       <div class="tl-ruler">${sc.map((s,i)=>`<span style="left:${W(s.start)}%">${s.start.toFixed(0)}초</span>`).join('')}</div>
       <div class="tl-row"><b>장면</b><div class="tl-track">${sc.map((s,i)=>clip('scene',i,s.start,s.end,i?`장면 ${i+1}`:'훅','c-scene')).join('')}</div></div>
@@ -537,8 +562,10 @@ $('board').addEventListener('click',async e=>{
     S.makeSent=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});S.pcTried=false;state('Claude 에게 제작을 맡겼습니다');await load(true,true);render();return}
   if(t.dataset.mvdel!==undefined){S.moves.splice(+t.dataset.mvdel,1);render();return}   // 옮긴 것 하나만 되돌리기
   if(t.dataset.emo){const r=await api('/api/extra',{preset:S.st.current,extra:{tts_emotion:t.dataset.emo}});if(r.ok===false){state(r.msg||'저장 실패',true);return}await load(true);return}
-  if(t.dataset.pickv){const eng=S.eng||'typecast';const r=await api('/api/save',{preset:S.st.current,patch:{tts:{provider:eng,voice_id:t.dataset.pickv,name:t.dataset.pickn}}});
-    if(!r.ok){state('이 목소리는 아직 회원 PC 엔진이 못 씁니다 — 엔진 업데이트 뒤 고를 수 있습니다',true);return}
+  if(t.dataset.pickv){const eng=S.eng||'typecast';
+    if(t.dataset.pemo)await api('/api/extra',{preset:S.st.current,extra:{tts_emotion:t.dataset.pemo}});   // 감정은 엔진 팩 밖 칸(claude_studio.save_extra)
+    const r=await api('/api/save',{preset:S.st.current,patch:{tts:{provider:eng,voice_id:t.dataset.pickv,name:t.dataset.pickn}}});
+    if(!r.ok){state('이 목소리는 아직 회원 PC 엔진 명단에 없습니다 — 엔진 업데이트 뒤 쓸 수 있습니다',true);await load(true);return}
     await load(true);return}
   if(t.id==='editmode'){S.editMode=!S.editMode;render();setEditMode(S.editMode);return}
   if(t.dataset.clip){const i=+t.dataset.i,sc=S.preview.context.scenes[i];S.pick={track:t.dataset.clip,scene:i,label:t.dataset.label,at:sc&&sc.start};S.askDraft='';show(i);
