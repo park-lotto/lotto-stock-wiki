@@ -3,12 +3,12 @@
   "made_by": "tools/calcopy/engine/sound/sfx_events.py uljimatrot --detect",
   "how": "detect",
   "asr_filter": {
-   "how": "후보 시각이 받아쓰기 낱말 구간[t0−0.05, t1+0.05] 안이면 cand_in_words(치찰음·파열음 오탐) — 단 전환(cut)·스티커 ±0.3초 안은 남김(keep_why). 남은 것 = cand_kept",
+   "how": "후보 시각이 받아쓰기 낱말 구간[t0−0.05, t1+0.05] 안이면 cand_in_words(치찰음·파열음 오탐) — 단 전환·스티커 곁(편마다 우연 기대 ≤ 0.1 인 창 (0.3, 0.2, 0.15, 0.1, 0.05))·말 위 순음 tone·판독 sfx 자리는 남김(keep_why). 배경음 박자 = cand_bgm. 남은 것 = cand_kept(confidence 눈/신호, ear_pending)",
    "asr": "C:/숏템_칼카피/uljimatrot/work/asrw",
    "no_speech": {},
    "no_asr": [],
-   "n_kept": 2,
-   "n_in_words": 8,
+   "n_kept": 1,
+   "n_in_words": 9,
    "note": "귀 확인 아님(신호). 무음 환각 = 환각 문구(Thanks for watching·구독과 좋아요·Music…)가 절반 이상이거나 빼고 2낱말 이하, 또는 길이0 낱말 40% 이상"
   },
   "from": "C:/숏템_칼카피\\uljimatrot\\src",
@@ -66,6 +66,15 @@
   "asr_words": 45,
   "cand_in_words": [],
   "cand_kept": [],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.15,
+   "chance": 0.082
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 0
+  },
   "line_link": {
    "kept_to_line": [],
    "line_sfx_to_kept": [],
@@ -187,6 +196,15 @@
    }
   ],
   "cand_kept": [],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.2,
+   "chance": 0.082
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 0
+  },
   "line_link": {
    "kept_to_line": [],
    "line_sfx_to_kept": [],
@@ -289,6 +307,15 @@
    }
   ],
   "cand_kept": [],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.2,
+   "chance": 0.1
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 0
+  },
   "line_link": {
    "kept_to_line": [],
    "line_sfx_to_kept": [],
@@ -339,6 +366,15 @@
   "asr_words": 45,
   "cand_in_words": [],
   "cand_kept": [],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.2,
+   "chance": 0.084
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 0
+  },
   "line_link": {
    "kept_to_line": [],
    "line_sfx_to_kept": [],
@@ -437,6 +473,15 @@
    }
   ],
   "cand_kept": [],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.15,
+   "chance": 0.082
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 0
+  },
   "line_link": {
    "kept_to_line": [],
    "line_sfx_to_kept": [],
@@ -510,8 +555,7 @@
    "cut": 0.08
   },
   "asr_words": 50,
-  "cand_in_words": [],
-  "cand_kept": [
+  "cand_in_words": [
    {
     "t": 18.97,
     "kind": "low",
@@ -524,26 +568,21 @@
      "cap": 0.27,
      "cut": 0.27
     },
-    "word": "골프장의",
-    "keep_why": "낱말 안이지만 전환·스티커 0.27초 안"
+    "word": "골프장의"
    }
   ],
+  "cand_kept": [],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.15,
+   "chance": 0.086
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 0
+  },
   "line_link": {
-   "kept_to_line": [
-    {
-     "t": 18.97,
-     "kind": "low",
-     "lines": [
-      12
-     ],
-     "line_sfx": [
-      false
-     ],
-     "line_sticker": [
-      0
-     ]
-    }
-   ],
+   "kept_to_line": [],
    "line_sfx_to_kept": [],
    "sticker_to_kept": []
   }
@@ -607,6 +646,15 @@
   "asr_words": 50,
   "cand_in_words": [],
   "cand_kept": [],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.2,
+   "chance": 0.083
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 0
+  },
   "line_link": {
    "kept_to_line": [],
    "line_sfx_to_kept": [],
@@ -663,6 +711,15 @@
   "asr_words": 46,
   "cand_in_words": [],
   "cand_kept": [],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.15,
+   "chance": 0.089
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 0
+  },
   "line_link": {
    "kept_to_line": [],
    "line_sfx_to_kept": [],
@@ -744,9 +801,20 @@
      "cut": 0.14
     },
     "word": "멋있게",
-    "keep_why": "낱말 안이지만 전환·스티커 0.14초 안"
+    "keep_why": "낱말 안이지만 전환·스티커 0.14초 안(창 ±0.2 · 우연 0.095)",
+    "confidence": "신호",
+    "ear_pending": true
    }
   ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.2,
+   "chance": 0.095
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 1
+  },
   "line_link": {
    "kept_to_line": [
     {
@@ -941,6 +1009,15 @@
    }
   ],
   "cand_kept": [],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.2,
+   "chance": 0.097
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 0
+  },
   "line_link": {
    "kept_to_line": [],
    "line_sfx_to_kept": [],
