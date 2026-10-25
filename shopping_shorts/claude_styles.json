@@ -124,7 +124,7 @@
     "voice_id": "tc_6059dad0b83880769a50502f"
    },
    "bgm": {
-    "id": "honwaka_puppu"
+    "id": null
    },
    "thumb_card_face": false,
    "packs": {
@@ -136,7 +136,7 @@
      "graphics": "off"
     },
     "bgm": {
-     "id": "honwaka_puppu"
+     "id": null
     }
    }
   },
@@ -472,6 +472,34 @@
     "sfx": {},
     "motion": {},
     "bgm": {}
+   }
+  },
+  "이븐쇼핑판": {
+   "bench": {
+    "channel": "evenshopping"
+   },
+   "voice": {
+    "name": "진우",
+    "voice_id": "tc_632293f759d649937b97f323"
+   },
+   "bgm": {
+    "id": "sweets"
+   },
+   "thumb_card_face": false,
+   "packs": {
+    "sfx": {
+     "pack": "팩01",
+     "map": {
+      "ding": "띠링"
+     }
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "sweets"
+    }
    }
   },
   "잇썸홈판": {
