@@ -87,6 +87,7 @@ def main():
     ap.add_argument("--cache")
     ap.add_argument("--approve", action="store_true", help="대본 사인을 자동으로(개발)")
     ap.add_argument("--resume", action="store_true")
+    ap.add_argument("--retry", action="store_true", help="멈춘 편(stopped)을 다시 시도(서버 retry 와 같다 — 멈춘 단계부터)")
     ap.add_argument("--fmt", help="형식(연예인형·해외원본형·쇼핑형·레시피형) — 프리셋 장부와 다르면 거절")
     ap.add_argument("--no-paid", action="store_true", help="돈 드는 호출 0(TTS 캐시만·스피치매틱스·VMake 안 부름)")
     ap.add_argument("--tts-seed", help="narr_full.mp3(+.tts.json) 가 있는 렌더 폴더 — 작업 폴더 <판>/render/ 로 복사")
@@ -129,10 +130,12 @@ def main():
         sp.write_text(json.dumps(st, ensure_ascii=False, indent=1), encoding="utf-8")
         measure, replies = {}, {}
     measure, replies, user = {}, {}, {}
-    if a.resume and (W / "pending.json").exists():
+    if a.resume and not a.from_plan and (W / "pending.json").exists():
         pend = json.loads((W / "pending.json").read_text(encoding="utf-8"))
         measure, replies = pend.get("measure") or {}, pend.get("replies") or {}
     calls, t_all = 0, time.time()
+    if a.retry:
+        user = {"retry": True}
     while True:
         res = flow.step(st, measure, replies, user)
         calls += 1
