@@ -114,7 +114,11 @@ def narr_cap_starts(L: dict, sent: dict | None, align: dict | None, tts_char0: i
             k = min(k, len(idx) - 1)
             t_raw = float(st[idx[k]])
             x0 = max(0.0, sent["raw"][0] - 0.02)
-            out.append(round(max(0.0, min(dur - 0.15, (t_raw - x0) / sent["tempo"])), 3))
+            t_out = (t_raw - x0) / sent["tempo"]
+            if sent.get("tmap"):          # fit_voice 가 앞뒤 무음·문장부호 쉼을 고친 줄 — 고치기 전 시각 → 고친 뒤 시각
+                xs, ys = zip(*sent["tmap"])
+                t_out = float(__import__("numpy").interp(t_out, xs, ys))
+            out.append(round(max(0.0, min(dur - 0.15, t_out)), 3))
         acc += x
     return out
 
@@ -122,6 +126,7 @@ def narr_cap_starts(L: dict, sent: dict | None, align: dict | None, tts_char0: i
 def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) -> dict:
     """sent = {줄 id: {dur, raw, tempo}} (None 이면 글자÷cps 어림). 반환 = lines(줄 시각)·rows(자막 덩어리)·cuts(화면)·opos(원음 조각)·end."""
     t, prev, lines, rows, opos, char0 = 0.0, None, {}, [], [], 0
+    orig_trim = {}           # 원음 줄 앞 무음을 뺀 초 — 재료.json 의 그 줄 컷 at·ss 를 같이 옮긴다(입 맞춤 그대로)
     est = st.get("cps_target", 7.0)
     for L in S["lines"]:
         if L["kind"] not in LINE_KINDS:
@@ -140,12 +145,19 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
             t += d
         elif L["kind"] == "orig":
             t0 = t
-            for k, (a, b) in enumerate(spans_of(L)):
+            sp = spans_of(L)
+            h, tl = orig_edges(Path(M["cand_dir"]) / L["src"], sp) if M.get("cand_dir") else (0.0, 0.0)
+            if h or tl:            # 줄 사이 '소리 쉼' = 판 timing — 원음 조각 앞뒤 무음은 빼고 붙인다(관제263 B18: 잘라 온 구간 끝 무음 0.59초가 쉼에 얹혔다)
+                sp[0][0] = round(sp[0][0] + h, 3)
+                sp[-1][1] = round(sp[-1][1] - tl, 3)
+                orig_trim[L["id"]] = h
+            for k, (a, b) in enumerate(sp):
                 opos.append({"line": L["id"], "k": k, "src": L["src"], "span": [a, b], "t0": round(t, 3), "t1": round(t + b - a, 3)})
                 t += b - a
             lines[L["id"]] = [round(t0, 3), round(t, 3)]
             for j, c in enumerate(caps_of(L)):
-                rows.append({"line": L["id"], "j": j, "speaker": "orig", "text": c["text"], "t0": round(t0 + c["s0"], 3), "t1": round(t0 + c["s1"], 3),
+                c0, c1 = max(0.0, c["s0"] - h), min(t - t0, max(0.0, c["s1"] - h))
+                rows.append({"line": L["id"], "j": j, "speaker": "orig", "text": c["text"], "t0": round(t0 + c0, 3), "t1": round(t0 + c1, 3),
                              **{k: c[k] for k in CAP_EXTRA if c.get(k)}})
         else:
             s = (sent or {}).get(L["id"])
@@ -165,7 +177,7 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
     end = round(round(end * FPS) / FPS, 4)
     order = [L["id"] for L in S["lines"]]
     Lm = {L["id"]: L for L in S["lines"]}
-    cuts = []
+    cuts, log_drop = [], []
     for i, lid in enumerate(order):
         a = lines[lid][0]
         nxt = lines[order[i + 1]][0] if i + 1 < len(order) else end
@@ -175,6 +187,23 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
             if not cs:
                 cs = [{"at": round(p["t0"] - a, 3), "src": p["src"], "ss": p["span"][0], "crop": "face", "see": "원음 구간(자동 얼굴 크롭)"}
                       for p in opos if p["line"] == lid]
+            h = orig_trim.get(lid, 0.0)
+            if h and (M.get("cuts") or {}).get(lid):      # 손 컷(at 은 잘라 오기 전 줄 시작 기준) → 앞 무음 뺀 만큼 당기고, 0 밑으로 가면 ss 를 그만큼 뒤로(입 맞춤)
+                L_len = lines[lid][1] - a
+                moved = []
+                for c in cs:
+                    if "at" not in c:
+                        moved.append(c); continue
+                    at = float(c["at"]) - h
+                    c = {**c, "at": round(max(0.0, at), 3)}
+                    if at < 0 and c.get("ss") is not None:
+                        c["ss"] = round(float(c["ss"]) - at, 3)
+                    if at >= L_len - 1 / FPS:                 # 뺀 끝 무음 안에서만 보이던 컷 — 빼고 기록
+                        log_drop.append((lid, c.get("src"), c.get("ss"), round(at, 3)))
+                        continue
+                    moved.append(c)
+                head = [c for c in moved if "at" in c and c["at"] <= 0.0]
+                cs = ([head[-1]] if head else []) + [c for c in moved if not ("at" in c and c["at"] <= 0.0)]
             for c in cs:
                 if "at" not in c and c.get("ss") is not None:   # ss 만 적은 컷 = 원음 초 → 그 초가 들리는 줄 안 시각(입 맞춤 그대로, 10-23 꿀템노트 재료)
                     p = next((p for p in opos if p["line"] == lid and p["span"][0] - 1e-3 <= float(c["ss"]) < p["span"][1]), None)
@@ -213,7 +242,166 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
                 c["over"] = max(c["over"], round(c["dur"] - left, 3))
     for i, r in enumerate(rows):      # 자막은 다음 덩어리 시작까지(줄 사이 틈도 앞 자막이 덮는다 — 벤치: 자막 없는 틈 거의 없음)
         r["show"] = [r["t0"], round(rows[i + 1]["t0"] if i + 1 < len(rows) else end, 3)]
-    return {"lines": lines, "rows": rows, "cuts": cuts, "opos": opos, "end": end}
+    out = {"lines": lines, "rows": rows, "cuts": cuts, "opos": opos, "end": end}
+    if orig_trim or log_drop:
+        out["orig_trim"] = {"head": orig_trim, "dropped_cuts": log_drop}
+    return out
+
+
+# ── 줄 사이 쉼·문장부호 쉼(판단 주인 — 판 timing·speech 를 소리에 맞춘다, 관제263 B18/B18a) ─────────────
+EDGE_NOISE, EDGE_MIN = "-35dB", 0.02      # 무음 판정 = 품질 관문 B18 과 같은 문턱(-35dB) · 앞뒤 무음은 0.02초부터 본다
+EDGE_KEEP = 0.015                         # 말 앞뒤에 남기는 숨(초) — 0이면 자음 첫소리가 깎인다. 줄 사이 실측 쉼 = 판 gap + 2×이 값
+_EDGE_CACHE: dict = {}
+
+
+def pause_targets(st: dict) -> dict:
+    """한 줄 안 문장부호 쉼 목표(초) — 판 speech.pause_comma/period, 없으면 표준 §11 ①ⓑ 0.22/0.30. 렌더(fit_voice)·관문(B18a)이 같이 부른다."""
+    sp = st.get("speech") or {}
+    return {"comma": float(sp.get("pause_comma", 0.22)), "period": float(sp.get("pause_period", 0.30))}
+
+
+EDGE_BLIP = 0.03      # 줄 조각 맨 앞·뒤 이 안의 짧은 소리(앞 줄 꼬리·자르기 딸깍)는 무음 판정에서 무음으로 친다(10-25 박정수 N7: 0.02초 소리 뒤 무음 0.18초)
+
+
+def _edge_sil(sil: list, total: float) -> tuple[float, float]:
+    head = next((e for a, e in sil if a <= EDGE_BLIP), 0.0)
+    tail = next((total - a for a, e in reversed(sil) if e >= total - EDGE_BLIP), 0.0)
+    return max(0.0, head - EDGE_KEEP), max(0.0, tail - EDGE_KEEP)
+
+
+def orig_edges(src: Path, spans: list) -> tuple[float, float]:
+    """원음 줄(조각들)의 맨 앞 무음·맨 뒤 무음 중 뺄 초(EDGE_KEEP 남김). 원본이 없거나 소리가 늘 깔려 무음이 안 잡히면 0(안 자른다)."""
+    import subprocess
+    from tools.calcopy.hybrid.common import silences
+    if not Path(src).exists() or not spans:
+        return 0.0, 0.0
+    out = []
+    for (a, b), which in ((spans[0], 0), (spans[-1], 1)):
+        key = (str(src), round(a, 3), round(b, 3), Path(src).stat().st_mtime)
+        if key not in _EDGE_CACHE:
+            tmp = Path(src).parent / f"_edge_{Path(src).stem}_{int(a * 1000)}_{int(b * 1000)}.wav"
+            subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{a:.3f}", "-t", f"{b - a:.3f}", "-i", str(src), "-vn", "-ac", "1", "-ar", str(SR),
+                            "-af", "highpass=f=90", str(tmp)], capture_output=True, stdin=subprocess.DEVNULL)
+            if not tmp.exists():
+                _EDGE_CACHE[key] = (0.0, 0.0)
+            else:
+                _EDGE_CACHE[key] = _edge_sil(silences(tmp, EDGE_NOISE, EDGE_MIN), b - a)
+                tmp.unlink(missing_ok=True)
+        out.append(_EDGE_CACHE[key][which])
+    h, tl = out
+    if spans[0][1] - spans[0][0] - h < 0.2 or spans[-1][1] - spans[-1][0] - tl < 0.2:     # 남는 소리가 너무 짧으면 무음 판정을 믿지 않는다
+        return 0.0, 0.0
+    return round(h, 3), round(tl, 3)
+
+
+def fit_voice(S: dict, st: dict, sent: list, align: dict | None, log=print) -> list:
+    """나레 줄 소리(s_<줄>.wav)를 판에 맞춘다 — ① 앞뒤 무음을 EDGE_KEEP 만 남기고 뺀다(줄 사이 '소리 쉼' = 판 timing.gap 이 되게 — 판 gap 은 벤치 소리 쉼 실측)
+    ② 줄 안 쉼표·마침표 자리 무음을 pause_targets(판 speech) 길이로(길면 가운데를 자르고, 짧으면 그 무음 가운데를 이어 늘린다 — 디지털 무음 금지).
+    자리 = 글자 시각(align) → 줄 소리 시각(make_sentences 와 같은 x0·배속). 손 쉼(tts_pauses)·대체 소리(tts_override) 줄은 ②를 건너뛴다.
+    반환 sent(dur·tmap 갱신) — tmap = [(고치기 전 시각, 고친 뒤 시각)] → narr_cap_starts 가 자막 시작을 옮긴다."""
+    import subprocess
+    import wave
+    import numpy as np
+    from tools.calcopy.hybrid.common import silences
+    th = pause_targets(st)
+    L = {l["id"]: l for l in S["lines"] if l["kind"] == "tts"}
+    order = [l["id"] for l in S["lines"] if l["kind"] == "tts"]
+    char0, pos = {}, 0
+    for i in order:
+        char0[i] = pos
+        pos += len(L[i]["tts"]) + 1
+    P = S.get("tts_pauses") or {}
+    xf = int(0.005 * SR)
+    logs = []
+    for s in sent:
+        p = Path(s["wav"])
+        x = np.frombuffer(subprocess.run(["ffmpeg", "-v", "error", "-i", str(p), "-ac", "1", "-ar", str(SR), "-f", "f32le", "-"], capture_output=True,
+                                         stdin=subprocess.DEVNULL).stdout, np.float32).copy()
+        total = len(x) / SR
+        sil = silences(p, EDGE_NOISE, EDGE_MIN)
+        hc, tc = _edge_sil(sil, total)
+        regs = []                                   # (시작초, 끝초, 새 길이초, 종류)
+        if hc > 0:
+            regs.append((0.0, hc, 0.0, "head"))
+        inner_log = []
+        l = L.get(s["id"])
+        if l and align and not P.get(s["id"]) and not s.get("override"):
+            ch, a0, e0 = align["characters"], align["character_start_times_seconds"], align["character_end_times_seconds"]
+            body = l["tts"].rstrip(" .,?!~…")
+            x0 = max(0.0, s["raw"][0] - 0.02)
+            inner = [(a, b) for a, b in sil if a > EDGE_BLIP and b < total - EDGE_BLIP]
+            for i, c in enumerate(body):
+                if c not in ",.?!":
+                    continue
+                kind = "comma" if c == "," else "period"
+                g = char0[s["id"]] + i
+                j, k = g - 1, g + 1
+                while j >= 0 and (ch[j].isspace() or ch[j] in ",.?!"):
+                    j -= 1
+                while k < len(ch) and (ch[k].isspace() or ch[k] in ",.?!"):
+                    k += 1
+                if j < 0 or k >= len(ch):
+                    continue
+                m = ((float(e0[j]) + float(a0[k])) / 2 - x0) / s["tempo"]
+                near = min(inner, key=lambda r: abs((r[0] + r[1]) / 2 - m), default=None)
+                if not near or abs((near[0] + near[1]) / 2 - m) > 0.15:      # 그 자리에 무음이 없다(쉼 없이 읽음) — 글자 사이 가장 조용한 10ms 에 쉼을 넣는다(engine/tts_pause 와 같은 규칙)
+                    w = int(0.01 * SR)
+                    c0 = max(w, int((m - 0.06) * SR)); c1 = min(len(x) - w, int((m + 0.06) * SR))
+                    if c1 <= c0:
+                        continue
+                    e = [float(np.mean(x[i:i + w] ** 2)) for i in range(c0, c1, w // 2)]
+                    at = (c0 + int(np.argmin(e)) * (w // 2) + w // 2) / SR
+                    regs.append((at, at, th[kind] + 0.005, kind))
+                    inner_log.append({"kind": kind, "at": round(m, 3), "was": 0.0, "now": th[kind], "insert": round(at, 3)})
+                    continue
+                regs.append((near[0], near[1], th[kind] + 0.005, kind))
+                inner_log.append({"kind": kind, "at": round(m, 3), "was": round(near[1] - near[0], 3), "now": th[kind]})
+        if tc > 0:
+            regs.append((total - tc, total, 0.0, "tail"))
+        regs = sorted(regs)
+        if not regs:
+            logs.append({"id": s["id"], "head": 0.0, "tail": 0.0, "inner": inner_log, "dur": [s["dur"], s["dur"]]})
+            continue
+        out, tmap, last, tn = [], [(0.0, 0.0)], 0, 0.0
+        for a, b, want, kind in regs:
+            i0, i1 = int(round(a * SR)), int(round(b * SR))
+            if i0 < last:
+                continue
+            out.append(x[last:i0]); tn += (i0 - last) / SR
+            tmap.append((a, tn))
+            gap = x[i0:i1]
+            n = int(round(want * SR))
+            if kind in ("head", "tail"):
+                ng = gap[:0]
+            elif n <= len(gap):
+                h = n // 2
+                ng = np.concatenate([gap[:h], gap[len(gap) - (n - h):]]) if n else gap[:0]
+                if h > xf and len(gap) - (n - h) - xf >= h:            # 이음매 5ms 겹침(딸깍 소리 방지)
+                    r = np.linspace(0, 1, xf, dtype=np.float32)
+                    ng[h - xf:h] = ng[h - xf:h] * (1 - r) + gap[len(gap) - (n - h) - xf:len(gap) - (n - h)] * r
+            else:
+                core = gap[len(gap) // 4: 3 * len(gap) // 4]
+                if len(core) < int(0.02 * SR) or (len(core) and float(np.max(np.abs(core))) > 0.01):     # 틈이 없거나 말 꼬리가 섞임 → 방 잡음(가장 조용한 40ms, 디지털 무음 금지)
+                    rw = int(0.04 * SR)
+                    en = [float(np.mean(x[i:i + rw] ** 2)) for i in range(0, max(1, len(x) - rw), rw // 4)]
+                    i_q = int(np.argmin(en)) * (rw // 4)
+                    core = x[i_q:i_q + rw] if len(x) >= rw else np.zeros(rw, np.float32)
+                fill = np.tile(core, int(np.ceil((n - len(gap)) / max(1, len(core)))) + 1)[:n - len(gap)]
+                h = len(gap) // 2
+                ng = np.concatenate([gap[:h], fill, gap[h:]])
+            out.append(ng); tn += len(ng) / SR
+            tmap.append((b, tn))
+            last = i1
+        out.append(x[last:]); tn += (len(x) - last) / SR
+        tmap.append((total, tn))
+        y = np.concatenate(out)
+        with wave.open(str(p), "wb") as w:
+            w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((np.clip(y, -1, 1) * 32767).astype("<i2").tobytes())
+        s["dur_before_fit"], s["dur"] = s["dur"], round(len(y) / SR, 3)
+        s["tmap"] = [(round(a, 4), round(b, 4)) for a, b in tmap]
+        logs.append({"id": s["id"], "head": round(hc, 3), "tail": round(tc, 3), "inner": inner_log, "dur": [s["dur_before_fit"], s["dur"]]})
+    log("[쉼 맞춤] " + " ".join(f"{g['id']}:앞{g['head']}·뒤{g['tail']}" + "".join(f"·{'.' if q['kind'] == 'period' else ','}{q['was']}→{q['now']}" for q in g["inner"]) for g in logs))
+    return sent
 
 
 # ── 틀 그림(판단 주인: 판 설정 frame) ─────────────────────────────────────
@@ -802,6 +990,41 @@ def cut_length_gate(T: dict, st: dict | None = None) -> list[str]:
     return bad
 
 
+def cut_gray(c: dict, src: Path, st: dict, M: dict):
+    """컷 조각이 될 그림을 렌더 없이 회색 108폭 프레임으로 — clip_cmd(조각 굽기와 같은 필터·크롭·움직임·흐림) 그대로 ffmpeg 로 읽기만."""
+    import numpy as np
+    import subprocess
+    _, _, ww, wh = frame_window(st["frame"])
+    n = cut_frames_n(c)
+    push = (st.get("cuts") or {}).get("push_orig" if c["kind"] == "orig" else "push_tts", 0.0)
+    inp, vf, extra = clip_cmd(src, float(c.get("ss") or 0.0), n, cut_crop(c, src, (ww, wh)), (ww, wh), float(c.get("push", push)), c.get("move"),
+                              (M.get("blur") or {}).get(c["src"]), pic_box(c, (ww, wh)), c.get("pic_bg") or st["frame"].get("bg"))
+    sh = max(8, round(108 * wh / ww / 2) * 2)
+    raw = subprocess.run(["ffmpeg", "-v", "error", *map(str, inp), "-vf", f"{vf},scale=108:{sh},format=gray", "-frames:v", str(n), *map(str, extra),
+                          "-f", "rawvideo", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
+    return np.frombuffer(raw[:len(raw) - len(raw) % (108 * sh)], np.uint8).reshape(-1, sh, 108).astype(np.int16)
+
+
+def cut_still_gate(T: dict, M: dict, st: dict) -> list[str]:
+    """렌더 전 관문 ⑦ 멈춤·거의 멈춤(10-25): 컷마다 조각이 될 그림(cut_gray)에서 정지 구간을 quality_gate.still_spans(완성본 '화면 멈춤 없음'과 같은 판정)로 잰다.
+    감사 눈7 정지 47건(확정 18: 골든카레 흑백 트럭 2.2초·S&B 로고·카레 캔·거즈 잠옷 등)은 원본 자체가 멈춘 그림인 컷이었고 렌더 전에는 아무 관문도 안 봤다.
+    원본 끝을 넘어 마지막 프레임이 굳는 멈춤은 계획의 src_left('컷이 원본 샷보다 길다')가 이미 멈춘다(98 #61) — 여기서 다시 적지 않는다.
+    사진 컷은 clip_cmd 가 still_move(확대·흐름)를 넣은 그대로 재므로 '움직임 없는 사진'만 걸린다(벤치 판에 의도된 정지 사진 칸 없음 — 사장님 10-18 '이미지를 쓰려면 계속 움직이게')."""
+    from tools.calcopy.hybrid import quality_gate as QG
+    src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
+    if not src_dir:
+        return []
+    bad = []
+    for k, c in enumerate(T["cuts"]):
+        src = src_dir / c["src"]
+        if not src.exists():
+            continue
+        sp = QG.still_spans(cut_gray(c, src, st, M))
+        if sp:
+            bad.append(f"컷 멈춤 {k} {c['line']} {c['src']}@{c.get('ss')}: 컷 안 {[(round(a, 2), round(b, 2)) for a, b in sp]}초가 멈춘 그림 — 움직이는 장면으로 바꾸거나(ss·원본) 사진이면 move 를 준다")
+    return bad
+
+
 def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
     """렌더 전 관문 ③(10-25 잇템로그 05·09 번쩍임): 계획된 컷마다 원본 [ss, ss+길이] 안(가장자리 포함, 맨 앞 1프레임 제외)에
     장면 경계로 나눈 조각 중 MIN_PIECE_SEC(0.4초)보다 짧은 것이 있으면 막는다. 옛 shot_starts(절대 문턱 25)는 차 22~31 인 진짜 편집점을 놓쳤고 slivers 는 가장자리 0.2초만 봤다.
@@ -1025,6 +1248,12 @@ def pic_box(c: dict, win: tuple[int, int]) -> list[int] | None:
 
 def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, push: float = 0.0, move=None, blur=None, pic=None, pic_bg=None):
     """컷 조각 하나 — 창 크기(win) 영상. pic[x,y,w,h] 를 주면 그 칸 크기로 그리고 창 나머지는 pic_bg 색(틀 바탕)으로 채운다(컷마다 그림 칸 크기)."""
+    inp, vf, extra = clip_cmd(src, ss, n, crop, win, push, move, blur, pic, pic_bg)
+    run(["ffmpeg", "-y", "-v", "error", *inp, "-vf", vf, "-frames:v", n, *extra, *venc(16), "-pix_fmt", "yuv420p", *(["-color_range", "tv", "-colorspace", "bt709"] if src.suffix.lower() in IMG_EXT else []), out])
+
+
+def clip_cmd(src: Path, ss: float, n: int, crop, win: tuple[int, int], push: float = 0.0, move=None, blur=None, pic=None, pic_bg=None) -> tuple[list, str, list]:
+    """(판단 주인) 컷 조각이 어떤 그림이 되나 — (입력 인자, 필터, 출력 인자). clip(조각 굽기)·cut_still_gate(관문 ⑦ 멈춤 재기)가 같이 부른다."""
     ww, wh = win
     tw, th = (pic[2], pic[3]) if pic else (ww, wh)
     pad = f",pad={ww}:{wh}:{pic[0]}:{pic[1]}:color=0x{''.join(f'{v:02X}' for v in _rgb(pic_bg or [0, 0, 0]))}" if pic else ""
@@ -1037,8 +1266,7 @@ def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, pu
         # 최화정_피부 완성본에도 제목 빠짐 2+2프레임이 있었다 — 원인 대조는 안 함). 영상 조각과 같은 꼴로 맞춘다.
         vf = (f"crop={cw}:{ch}:{x}:{y},{mv}scale={tw}:{th}:flags=lanczos:out_range=tv:out_color_matrix=bt709{pad},"
               f"format=yuv420p,setsar=1")
-        run(["ffmpeg", "-y", "-v", "error", "-loop", "1", "-i", src, "-vf", vf, "-frames:v", n, "-r", FPS, *venc(16), "-pix_fmt", "yuv420p", "-color_range", "tv", "-colorspace", "bt709", out])
-        return
+        return ["-loop", "1", "-i", src], vf, ["-r", FPS]
     x, y, cw, ch = crop
     bl = blur_vf(blur, ss, n / FPS)
     pre = bl + "," if bl else ""
@@ -1046,7 +1274,7 @@ def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, pu
     if push:
         vf = (f"{pre}crop={cw}:{ch}:{x}:{y},scale={tw * 2}:{th * 2}:flags=lanczos,fps={FPS},"
               f"zoompan=z='1+{push}*on/{max(1, n)}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={tw}x{th}:fps={FPS},setsar=1{pad}")
-    run(["ffmpeg", "-y", "-v", "error", "-ss", f"{ss:.3f}", "-i", src, "-an", "-vf", vf, "-frames:v", n, *venc(16), "-pix_fmt", "yuv420p", out])
+    return ["-ss", f"{ss:.3f}", "-i", src, "-an"], vf, []
 
 
 # ── 장면 전환(A1) — 종류·자리 결정 = placement.place(placed["transitions"]), 여기는 읽기·그리기만 ──────────────
@@ -1245,8 +1473,10 @@ def _gray_seg(video: Path, t0: float, t1: float, crop) -> tuple:
     t0 = max(0.0, t0)
     # 시각 → 프레임은 trim(start_frame) 으로(입력 -ss 는 파일마다 시작 pts 가 달라 한 프레임씩 어긋났다 — 완성본(광고 표시 다시 굽기)↔captioned 마스크가 1프레임 밀림, 10-25 실측)
     f0, f1 = round(t0 * FPS), round(t1 * FPS)
+    # 회색으로 바꾼 뒤 자른다 — yuv420p 에서 먼저 자르면 ffmpeg 가 홀수 높이·위치를 짝수로 내려 1501 줄 창이 1500 줄로 나와 reshape 가 깨졌다
+    # (키치잇 벤치 vSEaZ-BCELY 창 [0,418,1080,1501], 관제263). 짝수 창은 결과가 같다.
     raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vf",
-                          f"trim=start_frame={f0}:end_frame={f1},setpts=PTS-STARTPTS,crop={w}:{h}:{x}:{y},format=gray", "-fps_mode", "passthrough",
+                          f"trim=start_frame={f0}:end_frame={f1},setpts=PTS-STARTPTS,format=gray,crop={w}:{h}:{x}:{y}", "-fps_mode", "passthrough",
                           "-f", "rawvideo", "-"],
                          capture_output=True, stdin=subprocess.DEVNULL).stdout
     fr = np.frombuffer(raw, np.uint8).reshape(-1, h, w)
@@ -2103,6 +2333,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
             full, align = tts_by_line(tts_S, R, log)
             sent, _, _ = RI.make_sentences(tts_S, full, R, log, align=align, spread=RI.spread_of(st))
             _voice_gate_audio(S, sent, R, log)
+            sent = fit_voice(S, st, sent, align, log)      # 줄 사이·문장부호 쉼 = 판(B18·B18a) — 계획 길이도 고친 소리로
             sm = {x["id"]: x for x in sent}
         T = timeline(S, M, st, sm, align)
         placed = plan_rows(S, T, st)
@@ -2120,7 +2351,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
             raise StageError(msg)
         from tools.calcopy.hybrid import thumb_rule as TR
         card_bad = (TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"]) + cut_boundary_gate(T, M, st)      # 렌더 전 관문 ⑥ — 계획 때 걸러 렌더를 안 돌린다
-                    + cut_content_gate(T, M, st, doc, R, log) + cut_length_gate(T, st))                                                         # 관문 ④ 컷 안 남의 글자·남의 얼굴
+                    + cut_content_gate(T, M, st, doc, R, log) + cut_length_gate(T, st) + cut_still_gate(T, M, st))                                                         # 관문 ④ 컷 안 남의 글자·남의 얼굴
         if card_bad:
             raise StageError(" / ".join(card_bad))
         return {"timeline": T, "placement": placed, "length": length, "over": msg}
@@ -2130,6 +2361,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         full, align = tts_by_line(tts_S, R, log)
         sent, tempo, _ = RI.make_sentences(tts_S, full, R, log, align=align, spread=RI.spread_of(st))
         _voice_gate_audio(S, sent, R, log)   # 판 targets.speech 목표가 있으면 타입캐스트 줄별 ±8% 미세(미나 그대로, 지시서 15)
+        sent = fit_voice(S, st, sent, align, log)   # 줄 사이·문장부호 쉼 = 판(B18 timing.gap · B18a speech) — 관제263
     else:           # 나레 없는 편(관제 263 02 2차 ②) — TTS 안 부른다(돈 0). 자막 줄(kind sub) 시간표 + 원음 + 배경음·효과음
         align, sent, tempo = None, [], None
         log("[나레 없음] tts 줄 0 — TTS 건너뜀, 자막 시간표(sub)·원음·배경음·효과음만")
@@ -2140,7 +2372,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         raise StageError("컷이 원본 샷보다 길다: " + str([(c["line"], c["src"], c.get("ss"), c["dur"], c.get("max"), {"원본 남음": c["src_left"]} if "src_left" in c else None) for c in over]))
     from tools.calcopy.hybrid import thumb_rule as TR
     card_bad = (TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"]) + cut_boundary_gate(T, M, st)          # 렌더 전 관문 ⑥(10-25): 연예인 판 카드 3안 얼굴 — 영상 굽기 전에 멈춘다
-                + cut_content_gate(T, M, st, doc, R, log) + cut_length_gate(T, st))                                                             # 관문 ④ 컷 안 남의 글자·남의 얼굴(조각 뽑기 전)
+                + cut_content_gate(T, M, st, doc, R, log) + cut_length_gate(T, st) + cut_still_gate(T, M, st))                                                             # 관문 ④ 컷 안 남의 글자·남의 얼굴(조각 뽑기 전)
     if card_bad:
         raise StageError(" / ".join(card_bad))
     win0 = render_window(T, M, st, R)                          # 창(전환 없이) — 자리 검출 화면의 재료
