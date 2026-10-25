@@ -55,6 +55,15 @@ PRODUCT_PROMPT = """찾는 제품: {product}{ref}
 함께 쓰는 도구(미용 기기·주걱·브러시)와 얼굴·손에 바른 내용물은 '다른 제품'으로 치지 않는다 — 용기로만 판정한다.
 출력 JSON만: {{"shots":[{{"n":번호,"p":"same"|"other"|"none"}}]}}  (번호 {lo}~{hi})"""
 
+IDENT_PROMPT = """그림 = 원본 영상 장면(샷)들의 가운데 프레임 모음(노란 번호 = 샷 번호). 아래 [대사 줄]도 함께 본다.
+① 샷마다: person = 화면의 주 인물 표식 — **같은 사람은 모든 샷에서 같은 표식**(P1, P2, …), 사람이 없으면 "0" · objects = 보이는 대상 표식 목록(아래 ② 에서 쓰는 이름과 같은 글자)
+② 대사 줄마다 needs: person = "same"(앞 원음 줄 인물과 같은 사람이어야) | "other"(앞에 나온 인물과 **다른** 사람이어야 — '다른 외국인도' 등) | "any" | "none"(사람 없어야)
+   object = 그 줄이 화면에 꼭 보여야 하는 대상 표식(①의 objects 이름 중 하나) 또는 "none"(아무거나) · scene = 과정|결과|반응|기타
+대상 표식은 짧은 한국어 명사로(예: "분홍 캡슐 통", "얼굴의 알갱이", "미용 기기", "손바닥 위 캡슐"). 줄의 object 는 꼭 필요할 때만(감탄·전언 줄은 보통 none).
+[대사 줄]
+{lines}
+출력 JSON만: {{"shots":[{{"n":번호,"person":"P1"|"0","objects":["…"]}}],"lines":[{{"id":"줄 id","person":"same|other|any|none","object":"…|none","scene":"…"}}]}}"""
+
 RANK_PROMPT = """숏폼 편집자다. [대사 줄]마다 그 대사가 말하는 동작·상태·대상이 **화면에 보이는** 장면을 [장면 목록]에서 잘 맞는 순서로 최대 {k}개 골라라(장면 id 그대로).
 맞는 게 적으면 적게 골라도 된다. 감탄·반응 대사는 그 반응(표정·몸짓)이 보이는 장면.
 [대사 줄]
@@ -316,6 +325,73 @@ def product_shots(table: dict, product: str, src_dir: Path, crops: dict, fdir: P
     return out
 
 
+def identity(table: dict, S: dict, src_dir: Path, crops: dict, fdir: Path, llm, log=print) -> dict:
+    """(표준 §11-7 ㊱) 인물·대상 동일성 표 — 샷마다 {person, objects} + 대본 줄마다 needs{person, object, scene}, 한 번에(같은 표식을 쓰게).
+    모든 샷 가운데 프레임 한 장 모음(10열) + 대사 줄 → 소넷 1회(답이 비면 1회 더). 캐시 = fdir/identity.json(샷 그림·대사 열쇠).
+    루브릭은 동일성을 못 가린다(10-25 ep13 N4 '다른 외국인도'에 같은 여성 컷 10점) — 채점이 아니라 제약으로."""
+    from PIL import Image, ImageDraw, ImageFont
+    from tools.calcopy.engine.material_auto import FONT_B
+    sids = [(s, x) for s, v in table.items() for x in v["shots"]]
+    lines = [(l["id"], l.get("tts") or " ".join(c[0] if isinstance(c, list) else c.get("text", "") for c in (l.get("caps_rel") or l.get("caps") or [])), l["kind"])
+             for l in S["lines"]]
+    key = _key([f"{Path(s).stem}#{x['i']}|{x['a']}|{x['b']}|{_key(crops.get(s))}" for s, x in sids], lines, IDENT_PROMPT)
+    cp = fdir / "identity.json"
+    C = jload(cp) if cp.exists() else {}
+    if key in C:
+        return C[key]
+    W, H, cols = 160, 284, 10
+    sh = Image.new("RGB", (cols * W, ((len(sids) + cols - 1) // cols) * H), "white")
+    d = ImageDraw.Draw(sh)
+    font = ImageFont.truetype(FONT_B, 22)
+    for j, (s, x) in enumerate(sids):
+        im = _frame(src_dir / s, (x["a"] + x["b"]) / 2, crops.get(s), h=H)
+        im.thumbnail((W, H))
+        sh.paste(im, ((j % cols) * W, (j // cols) * H))
+        d.rectangle([(j % cols) * W, (j // cols) * H, (j % cols) * W + 40, (j // cols) * H + 26], fill="black")
+        d.text(((j % cols) * W + 3, (j // cols) * H + 1), str(j), font=font, fill="yellow")
+    sp = fdir / "identity_sheet.jpg"
+    sh.save(sp, quality=85)
+    body = IDENT_PROMPT.format(lines="\n".join(f"{i} ({'원음' if k == 'orig' else '나레'}): {t}" for i, t, k in lines))
+    from tools.calcopy.engine.material_auto import _as_int
+    out = None
+    for _ in range(2):
+        r, err = llm([sp.read_bytes()], body, "ma_fit:ident")
+        if r and isinstance(r.get("shots"), list) and isinstance(r.get("lines"), list):
+            shots = {}
+            for x in r["shots"]:
+                n = _as_int((x or {}).get("n"))
+                if n is not None and 0 <= n < len(sids):
+                    s, sh_ = sids[n]
+                    shots[f"{Path(s).stem}#{sh_['i']}"] = {"person": str(x.get("person") or "0"), "objects": [str(o) for o in x.get("objects") or []]}
+            needs = {str(x.get("id")): {"person": x.get("person") or "any", "object": x.get("object") or "none", "scene": x.get("scene")}
+                     for x in r["lines"] if isinstance(x, dict) and x.get("id")}
+            if len(shots) == len(sids):
+                out = {"shots": shots, "needs": needs}
+                break
+        log(f"[fit] 동일성 표 답 불완전({err}) — 한 번 더")
+    if out is None:
+        log("[fit] 동일성 표 못 만듦 — 인물·대상 제약 없이 간다(경고)")
+        return {"shots": {}, "needs": {}, "failed": True}
+    C[key] = out
+    jsave(cp, C)
+    return out
+
+
+def identity_ref(slots: list[dict], ident: dict) -> dict:
+    """줄마다 '앞 인물' = 그 줄 앞의 가장 가까운 원음 줄 고정 컷 샷의 person(원음 = 그 편의 주인공 목소리). {줄 id: person}."""
+    ref, cur = {}, None
+    for s in slots:
+        if s["kind"] == "orig":
+            f = s["fixed"]
+            sid = s.get("fixed_sid")
+            p = (ident.get("shots") or {}).get(sid or "", {}).get("person")
+            if p and p != "0":
+                cur = p
+        else:
+            ref.setdefault(s["line"], cur)
+    return ref
+
+
 def rank_shots(slots: list[dict], desc: dict, fdir: Path, llm, k: int = TOP_SHOTS, log=print) -> dict:
     """줄마다 후보 샷 순위(글 1회). {줄 id: [sid…]}. 점수가 아니다 — 후보 줄이기. fdir/rank.json 캐시(입력 열쇠)."""
     lines = {}
@@ -358,7 +434,7 @@ def _new_viol(base: list[dict], cand: dict, src_len: dict) -> list[str]:
 
 
 def constraint_flags(cand: dict, table: dict, fixed: list[dict], src_len: dict, outside: set, work: Path | None, texts: dict | None = None,
-                     prod: dict | None = None, exclude: list | None = None) -> dict:
+                     prod: dict | None = None, exclude: list | None = None, ident: dict | None = None, ref_person: str | None = None) -> dict:
     """채점 전 제약(표준 §12-3 ②) — 위반이면 그 이유(reject)를 적고 채점하지 않는다.
     shot_edge = 컷 처음·끝 FLASH 초 안에 원본 샷 경계(번쩍임 — 가운데서 넘는 것은 원본 편집 그대로라 허용) · src_end = 원본 끝을 넘음 · reuse = 고정 컷(원음)과 겹침·거리(quality_gate.reuse_violations_bench) ·
     face_outside = 원본 밖 재료에 사람 얼굴(runner_ops._cut_faces) · text_box = 원본 밖 재료 샷에 덧씌운 글자(text_shots — 원본은 재료 crop 이 피한다)."""
@@ -391,14 +467,32 @@ def constraint_flags(cand: dict, table: dict, fixed: list[dict], src_len: dict, 
         over = [f"{Path(s).stem}#{x['i']}" for x in v["shots"] if x["a"] < ss + d - EDGE and ss + EDGE < x["b"]]
         vs = [prod.get(k) for k in over]
         fl["other_product"] = "other" in vs or (fl["outside"] and any(x != "same" for x in vs))
-    fl["reject"] = ([k for k in ("shot_edge", "src_end", "face_outside", "text_box", "other_product") if fl.get(k)]
+    # 인물·대상 동일성(㊱) — 줄 needs 를 컷이 걸친 샷 표식으로
+    nd = ((ident or {}).get("needs") or {}).get(cand.get("line")) or {}
+    if v and ident and ident.get("shots") and nd:
+        over = [f"{Path(s).stem}#{x['i']}" for x in v["shots"] if x["a"] < ss + d - EDGE and ss + EDGE < x["b"]]
+        info = [ident["shots"].get(k) for k in over]
+        pers = [i.get("person") for i in info if i]
+        bad = []
+        if nd.get("person") == "other" and ref_person and (not pers or any(p in (ref_person, "0") for p in pers)):
+            bad.append(f"인물: '다른 사람' 줄인데 {pers} (앞 인물 {ref_person})")
+        if nd.get("person") == "same" and ref_person and any(p != ref_person for p in pers):
+            bad.append(f"인물: '같은 사람' 줄인데 {pers} (앞 인물 {ref_person})")
+        if nd.get("person") == "none" and any(p != "0" for p in pers):
+            bad.append(f"인물: '사람 없음' 줄인데 {pers}")
+        ob = nd.get("object")
+        if ob and ob != "none" and not any(ob in (i or {}).get("objects", []) for i in info):
+            bad.append(f"대상: '{ob}' 이 안 보이는 샷")
+        fl["identity"] = bad
+    fl["reject"] = ([k for k in ("shot_edge", "src_end", "face_outside", "text_box", "other_product", "identity") if fl.get(k)]
                     + (["reuse"] if fl["reuse"] else []) + (["excluded"] if fl.get("excluded") else []))
     return fl
 
 
 def candidates(slot: dict, table: dict, ranked: list[str], src_dir: Path, crops: dict, fixed: list[dict], src_len: dict,
                outside: set | None = None, work: Path | None = None, extra: list[dict] | None = None, texts: dict | None = None,
-               prod: dict | None = None, exclude: list | None = None, expand: bool = False) -> tuple[list[dict], list[dict]]:
+               prod: dict | None = None, exclude: list | None = None, expand: bool = False, ident: dict | None = None,
+               ref_person: str | None = None) -> tuple[list[dict], list[dict]]:
     """칸 하나의 후보 [{src, ss, dur, crop, shot, pos, from, flags}] — 사람 컷(있으면) + 순위 샷마다 가운데·처음·끝 + 보충(extra).
     제약 위반은 **점수 전에** 빼고 (rejected) 로 돌려준다. 후보 ≤ MAX_CANDS."""
     outside = outside or set()
@@ -451,7 +545,7 @@ def candidates(slot: dict, table: dict, ranked: list[str], src_dir: Path, crops:
             continue
         seen.add(k2)
         c = {**c, "dur": d, "t0": slot["t0"], "t1": slot["t1"], "line": slot["line"], "_path": src_dir / c["src"]}
-        c["flags"] = constraint_flags(c, table, fixed, src_len, outside, work, texts, prod, exclude)
+        c["flags"] = constraint_flags(c, table, fixed, src_len, outside, work, texts, prod, exclude, ident, ref_person)
         if c["flags"]["reject"] and c.get("from") == "human":
             c["blocked"] = True           # 사람 컷은 제약에 걸려도 점수는 낸다(전·후 비교용) — 고르지는 않는다
             keep.append(c)
@@ -644,7 +738,7 @@ def _info_tokens(t: str) -> list[str]:
 
 def rewrite_check(old: str, new: str, facts=None, new_facts=None, llm=None) -> dict:
     """(판단 주인 — 대사 고침 뜻 유지, 표준 §11-4 ㉖) 전부 통과해야 제안으로 낸다:
-    ① 정보 낱말 보존(원문 어절 줄기·수·단위가 새 문장에 순서대로 다 있음 = '원문 + 덧붙임' 꼴) ② facts id 같음 ③ 글자 ±2 ④ Claude 역검증 2/2(같은 사실 ∧ 달라진 낱말 0).
+    ① 정보 낱말 보존(원문 어절 줄기·수·단위가 새 문장에 순서대로 다 있음 = '원문 + 덧붙임' 꼴) ② facts id 같음 ③ 글자 ±2 ④ Claude 역검증 2/3(같은 사실 ∧ 달라진 낱말 0 — 2회가 갈리면 3회째, ㊳).
     반환 {ok, checks, missing, reverse}. 10-25 사례: '캡슐은 한두 알이면 충분하다던데' → '이 알갱이가 얼굴에 붙는다던데' 는 ①에서 걸린다."""
     from tools.calcopy.hybrid.common import nchar
     o, n = _info_tokens(old), _info_tokens(new)
@@ -659,12 +753,16 @@ def rewrite_check(old: str, new: str, facts=None, new_facts=None, llm=None) -> d
               "chars": abs(nchar(new) - nchar(old)) <= 2}
     rev = []
     if llm is not None and all(checks.values()):
+        good = (lambda x: isinstance(x, dict) and x.get("same") is True and not x.get("changed"))
         for _ in range(2):
             r, err = llm([], REWRITE_CHECK_PROMPT.format(old=old, new=new), "ma_fit:rewrite")
             rev.append(r or {"err": err})
-        checks["reverse_2of2"] = all(isinstance(x, dict) and x.get("same") is True and not x.get("changed") for x in rev)
+        if good(rev[0]) != good(rev[1]):          # 갈리면 3회째 → 2/3(표준 §11-7 ㊳, ㉔ⓒ 와 같은 꼴)
+            r, err = llm([], REWRITE_CHECK_PROMPT.format(old=old, new=new), "ma_fit:rewrite")
+            rev.append(r or {"err": err})
+        checks["reverse_2of3"] = sum(1 for x in rev if good(x)) >= 2
     elif llm is not None:
-        checks["reverse_2of2"] = False            # 앞 검사에서 걸리면 역검증은 안 부른다(호출 아낌)
+        checks["reverse_2of3"] = False            # 앞 검사에서 걸리면 역검증은 안 부른다(호출 아낌)
     return {"ok": all(checks.values()), "checks": checks, "missing": missing, "reverse": rev}
 
 
@@ -737,7 +835,7 @@ def _retext(slots: list[dict], S: dict, T: dict) -> None:
 
 # ── 계획 ───────────────────────────────────────────────────────────────────
 def plan(doc, work, version: str, llm=None, apply: bool = False, sign: bool = False, do_supplement: bool = True, floors: dict | None = None,
-         max_rounds: int = MAX_ROUNDS, log=print) -> dict:
+         max_rounds: int = MAX_ROUNDS, use_identity: bool = True, log=print) -> dict:
     """줄마다 최고점 후보 → 재료_계획.json · 미달 → (a) 보충 → (b) 대사 고침(sign 이면 받아들여 다시) — 최대 max_rounds 회 → 장면대사_계획.json."""
     from tools.calcopy.engine import material_auto as MA
     from tools.calcopy.hybrid import styles as STY
@@ -780,6 +878,17 @@ def plan(doc, work, version: str, llm=None, apply: bool = False, sign: bool = Fa
         ranked = rank_shots(slots, desc, fdir, llm, log=log)
         texts = text_shots(table, outside_all, src_dir, crops, fdir, llm, log) if outside_all else {}
         prod = product_shots(table, product, src_dir, crops, fdir, llm, ref=ref, log=log) if product else None
+        ident = identity(table, S, src_dir, crops, fdir, llm, log) if use_identity else None
+        if ident:
+            for x in slots:
+                if x["kind"] == "orig":
+                    f = x["fixed"]
+                    v = table.get(f["src"])
+                    sh = next((y for y in (v or {}).get("shots", []) if y["a"] - 1e-3 <= float(f["ss"]) + x["dur"] / 2 < y["b"]), None)
+                    x["fixed_sid"] = f"{Path(f['src']).stem}#{sh['i']}" if sh else None
+            refp = identity_ref(slots, ident)
+        else:
+            refp = {}
         if prod is not None:
             for f in [x for x in table if x in outside_all]:        # 보충 재료 = 찾는 제품이 보이는 샷이 하나도 없으면 통째로 뺀다(10-25 톤업 선크림·콜라겐 마스크팩)
                 if not any(prod.get(f"{Path(f).stem}#{x['i']}") == "same" for x in table[f]["shots"]):
@@ -798,7 +907,7 @@ def plan(doc, work, version: str, llm=None, apply: bool = False, sign: bool = Fa
                 return s
             if "cands" not in s:
                 keep, rej = candidates(s, table, ranked.get(s["line"]), src_dir, crops, fixed, src_len, outside_all, work, texts=texts,
-                                       prod=prod, exclude=exclude, expand=bool(s.get("expand")))
+                                       prod=prod, exclude=exclude, expand=bool(s.get("expand")), ident=ident, ref_person=refp.get(s["line"]))
                 s["cands"], s["rejected"] = score(keep, s, fdir / "slots" / f"{s['id'].replace('#', '_')}_{_key(s['text'], s['piece'])}", llm), rej
             return s
         with ThreadPoolExecutor(WORKERS) as ex:

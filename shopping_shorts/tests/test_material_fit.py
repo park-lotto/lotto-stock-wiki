@@ -201,4 +201,7 @@ def test_rewrite_check_keeps_info_words():
         assert not MF.rewrite_check(old, new)["ok"], new
     def no(parts, prompt, tag):
         return {"same": False, "changed": ["충분"]}, None
-    assert not MF.rewrite_check("캡슐은 두 알이면 충분", "이 캡슐은 두 알이면 충분", llm=MA.LLM(no))["ok"]    # 역검증 2/2 실패
+    assert not MF.rewrite_check("캡슐은 두 알이면 충분", "이 캡슐은 두 알이면 충분", llm=MA.LLM(no))["ok"]    # 역검증 0/2 실패
+    seq = iter([{"same": True, "changed": []}, {"same": False, "changed": ["얼굴에"]}, {"same": True, "changed": []}])
+    r = MF.rewrite_check("캡슐은 두 알이면 충분", "이 캡슐은 두 알이면 충분", llm=MA.LLM(lambda p, q, t: (next(seq), None)))
+    assert r["ok"] and len(r["reverse"]) == 3                                                          # 1/2 로 갈리면 3회째 → 2/3 통과(㊳)
