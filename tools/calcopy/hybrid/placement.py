@@ -800,7 +800,8 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
             continue
         cand = [i for i, r in enumerate(out) if (not rule.get("lex") or set(rule["lex"]) & set(r["lex"])) and (not rule.get("speaker") or r["speaker"] == rule["speaker"])
                 and (not rule.get("needs_key") or r.get("key")) and (kind != "object_pop" or r.get("object_src"))
-                and (not rule.get("role") or r["role_key"] in _roles_of(rule["role"]))]      # 역할 조건(벤치 원 스티커 훅 3/3 — 07 15a9f46ed 쪽지)
+                and (not rule.get("role") or r["role_key"] in _roles_of(rule["role"]))      # 역할 조건(벤치 원 스티커 훅 3/3 — 07 15a9f46ed 쪽지)
+                and not (rule.get("target") in ("face", "object") and _cut_inside(r, cuts))]      # 화면 자리 스티커 = 덩어리 안에 컷이 바뀌면 자리가 빗나간다(10-25 ep12 N1 원·화살표가 컷 뒤 옷깃)
         for i in _spread(cand, need):
             st = {"kind": kind, "word": out[i].get("key") or ""}
             if kind == "object_pop":
@@ -845,7 +846,8 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
             log.append(f"⚠ conflict {conflict}")
     tg_rep = density_step(out, style, tg, log) if tg and not conflict else {}      # conflict 면 목표 모드도 늘리지 않는다
     # ⑥ 전환(표준 §3-3 A1): 본보기 편 줄판독 transition 비율 → 컷 경계(짧은 컷 제외, 화자 바뀜·공개 앞 먼저). 옛 흰 번쩍(rules.flash)도 여기서.
-    transitions = transitions_step(out, style, seed, ref, cuts, log)
+    trans_plan: dict = {}
+    transitions = transitions_step(out, style, seed, ref, cuts, log, trans_plan)
     flashes = [x["t"] for x in transitions if x["kind"] == "flash"]       # 렌더러가 읽는 뷰 — 정하는 곳은 transitions_step 하나
     # ⑤ 효과음(A2): 본보기 편 줄판독 sfx·role 이 있으면 역할×종류 비율, 없으면 옛 길(신호표 고립 후보 자리)
     sfx = sfx_step(out, style, ref, transitions, cuts, log, tg=tg, warn=warn)
@@ -868,7 +870,7 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
     log.append(f"등장 {dict(tally)} · 강조 {sum(1 for r in out if r.get('emph'))}/{len(out)}")
     log += warn
     res = {"reference": ref["id"] if ref else None, "rows": out, "sfx": sfx, "transitions": transitions, "flashes": flashes,
-           "cut_bounds": len(cut_bounds(out, cuts, [])), "log": log}
+           "cut_bounds": len(cut_bounds(out, cuts, [])), "trans_plan": trans_plan, "log": log}
     if warn:
         res["warn"] = warn
     if tg_rep:
@@ -1020,6 +1022,15 @@ def emph_color_step(out: list[dict], style: dict, log: list):
         r["emph"] = keep
 
 # ── 자리(표준 §3-3 A3): 스티커·짤·pointer 는 검출로 자리를 받는다 ─────────────────
+def _cut_inside(row: dict, cuts, edge: float = 0.05) -> bool:
+    """덩어리 시각(t0~t1) 안쪽에 화면 컷 경계(cuts[1:].t0)가 있나 — 자리를 화면에서 찾는 스티커(face·object)는 덩어리 시작+0.1초 프레임에서 자리를 정하므로
+    컷이 바뀌면 다른 그림을 가리킨다. cuts 가 없으면(계획 전) False."""
+    if not cuts:
+        return False
+    a, b = float(row["t0"]), float(row["t1"])
+    return any(a + edge < float(c["t0"]) < b - edge for c in list(cuts)[1:])
+
+
 def _site(st: dict, rule: dict, row: dict, locate, log: list) -> dict | None:
     """rule.target = face|object|caption_side|{fixed:{x,y}, why} → 스티커 자리. 반환 st(자리 붙음/받을 것 표시) | None(못 둠 → 안 붙인다).
     target 없는 옛 규칙(rule.x·y 고정 %)은 그대로 둔다(옛 판 동작 유지 — check_place 가 'legacy_fixed' 로 센다)."""
@@ -1087,9 +1098,13 @@ def cut_bounds(out: list[dict], cuts: list[dict] | None, log: list) -> list[dict
     return b
 
 
-def transitions_step(out: list[dict], style: dict, seed: str, ref: dict | None, cuts, log: list) -> list[dict]:
+def transitions_step(out: list[dict], style: dict, seed: str, ref: dict | None, cuts, log: list, rec: dict | None = None) -> list[dict]:
     """(판단 주인: 전환 종류·자리) 판 칸 placement.rules.transition{kinds, cond{min_cut_s, prefer}, max_per_video} · cuts.transition.ms(02 와 같은 이름).
-    비율 = 본보기 편 줄판독 transition(잰 줄 기준 k/n) → 없으면 counted.transition(벤치 합계) → 없으면 옛 rules.flash(편 비율 share, 마지막 화자 바뀜)."""
+    비율 = 본보기 편 줄판독 transition(잰 줄 기준 k/n) → 없으면 counted.transition(벤치 합계) → 없으면 옛 rules.flash(편 비율 share, 마지막 화자 바뀜).
+    rec(있으면 채움) = 개수 기록 {src(비율 출처, 없으면 None), share, cut_bounds, want_raw{종류: 비율×경계 — 반올림 전}, want(반올림·max_per_video 뒤),
+    eligible(≥min_cut 경계), picked{종류: 고른 개수}, min_cut} — 자막표.check.slots.transitions.plan 으로 남아 관문 전환 세기 행이 읽는다
+    (10-25: 기록 없이 '고른 개수 0' 만 보고 '해당 없음 ○' 을 주자 비율 출처가 아예 없던 키치잇판(벤치 0.175)도 ○ 가 됐다)."""
+    rec = rec if rec is not None else {}
     R = style["placement"].get("rules") or {}
     C = style["placement"].get("counted") or {}
     TR = R.get("transition") or {}
@@ -1133,6 +1148,8 @@ def transitions_step(out: list[dict], style: dict, seed: str, ref: dict | None, 
         kinds = _alloc(len(pick), want) if pick else []
         res = [{"t": b["t"], "kind": k, "ms": ms(k), "why": "화자 바뀜" if b["switch"] else "공개 앞" if b["reveal"] else "컷 경계"}
                for b, k in zip(pick, kinds)]
+        rec.update({"src": src, "share": {k: round(v, 4) for k, v in share.items()}, "cut_bounds": nb, "want_raw": {k: round(v, 3) for k, v in want.items()},
+                    "want": total, "eligible": len(elig), "picked": dict(Counter(x["kind"] for x in res)), "min_cut": min_cut})
         log.append(f"전환 {[(x['t'], x['kind']) for x in res]} ({src} 비율 {({k: round(v, 2) for k, v in share.items()})}, "
                    f"컷 경계 {nb}·붙일 수 있는 {len(elig)}(≥{min_cut}초))" + (f" — 모자람 {total - len(pick)}" if len(pick) < total else ""))
         return res
@@ -1141,7 +1158,9 @@ def transitions_step(out: list[dict], style: dict, seed: str, ref: dict | None, 
         cand = [r["t0"] for k, r in enumerate(out) if k and r["speaker"] != out[k - 1]["speaker"]]
         res = [{"t": cand[-1], "kind": "flash", "ms": ms("flash"), "why": "마지막 화자 바뀜(rules.flash)"}] if cand else []
         log.append(f"번쩍 {[x['t'] for x in res]}")
+        rec.update({"src": "rules.flash", "want_raw": {"flash": float(len(res))}, "want": len(res), "picked": {"flash": len(res)} if res else {}})
         return res
+    rec.update({"src": None, "want_raw": {}, "want": None, "picked": {}, "why": "비율 출처 없음(본보기 줄판독 transition·counted.transition·판 cuts.transition.kinds 모두 없음)"})
     return []
 
 
@@ -1409,6 +1428,32 @@ def variant_of(r: dict, style: dict) -> str:
     return (cap.get("variant_for") or {}).get(r["enter"], "")
 
 
+STICKER_REQ_SHARE = 0.5      # 벤치 편 중 이 비율 이상이 쓰는 종류만 '꼭 있어야 할 꾸밈'(그 밑은 0개도 벤치 범위) — sticker_short 근거 참고
+
+
+def sticker_short(bench: dict | None, ours: dict, drawable, share: dict | None = None) -> tuple[list[str], dict]:
+    """(판단 주인: 스티커 모자람) 본보기 편 종류별 개수(bench) 중 ① 판이 그릴 수 있고(drawable = rules.stickers 의 kind, 댓글 카드 뺌)
+    ② 채널 벤치 편의 STICKER_REQ_SHARE 이상이 쓰는(share = counted.stickers, 그 종류가 있는 편 비율) 종류는 우리 개수가 본보기 수 이상이어야 한다 — 모자라면 bad.
+    판 규칙에 없는 종류(other·heart 등 세기 어휘만)는 못 그리므로 '안 그림', 벤치 절반 미만이 쓰는 종류는 '벤치 범위'로 적기만 한다.
+    근거(10-25 렌더 21판 자막표 실측): 잇템로그 ep12_rule(J7G 원·화살표 1/1·강조선 1/1)·ep13_v3(zOS 원 1/1·ㅋㅋ 2/2) ○ · 원·화살표(잇템로그 벤치 6편 중 3편)를
+    하나도 안 붙인 ep13_fit_human/plan/plan6·옛 v3 4편(aUic 0/1) × · 키치잇판 강조선(벤치 8편 중 3편 = 0.375) 0/1 인 박정수(납품 ○)·기미 flowtest 는 벤치에 0개 편이 5편이라 ○ ·
+    잇템로그 ㅋㅋ(6편 중 2편) 1/2 인 L2B ○. share 를 모르면(옛 판) 그릴 수 있는 종류 전부 꼭 있어야 한다. 반환 (bad, {kind: '우리/본보기 …'})."""
+    bench = bench or {}
+    dr = {k for k in drawable or [] if k != "comment_card"}
+    bad, tab = [], {}
+    for k, need in sorted(bench.items()):
+        need = int(need or 0)
+        if need <= 0:
+            continue
+        got = int((ours or {}).get(k, 0))
+        sh = None if share is None else float(share.get(k) or 0)
+        req = k in dr and (sh is None or sh >= STICKER_REQ_SHARE)
+        tab[k] = f"{got}/{need}" + ("" if k in dr else "(판 규칙 없음 — 안 그림)") + ("" if req or k not in dr else f"(벤치 {sh:.0%} 편만 씀 — 모자라도 벤치 범위)")
+        if req and got < need:
+            bad.append(f"스티커 {k} 우리 {got} < 본보기 {need}(벤치 {'?' if sh is None else format(sh, '.0%')} 편이 씀)")
+    return bad, tab
+
+
 def check_place(placed: dict, style: dict) -> dict:
     """배치 결과 ↔ 본보기 벤치 편 대조(검사): 칸마다 등장 비율 차이(최대 절댓값)·강조 비율·스티커·효과음 수."""
     ref = next((v for v in (style["placement"].get("counted") or {}).get("videos") or [] if v["id"] == placed.get("reference")), None)
@@ -1428,6 +1473,9 @@ def check_place(placed: dict, style: dict) -> dict:
         rep[key] = {"bench": {e: round(v, 2) for e, v in bd.items()}, "ours": {e: round(c / len(mine), 2) for e, c in ours.items()},
                     "bench_emph": round(rs["emph"] / rs["n"], 2), "ours_emph": round(sum(1 for r in mine if r.get("emph")) / len(mine), 2), "n": len(mine)}
     rep["stickers"] = {"bench": (ref or {}).get("stickers"), "ours": dict(Counter(s["kind"] for r in rows for s in r["stickers"]))}
+    stk_bad, rep["stickers"]["vs"] = sticker_short(rep["stickers"]["bench"], rep["stickers"]["ours"],
+                                                    list(((style["placement"].get("rules") or {}).get("stickers") or {}).keys()),
+                                                    (style["placement"].get("counted") or {}).get("stickers"))
     rep["sfx"] = {"bench": len((ref or {}).get("sfx") or []), "ours": len(placed["sfx"])}
     sc, sfx_bad = (ref or {}).get("sfx_count"), []
     if sc and not (ref or {}).get("sfx_lines") and (style["placement"].get("rules") or {}).get("sfx") and not placed.get("targets"):
@@ -1440,17 +1488,17 @@ def check_place(placed: dict, style: dict) -> dict:
     tol = {k: 0.5 / max(1, v["n"]) + 0.15 for k, v in rep.items() if isinstance(v, dict) and "n" in v}
     ok = all(max(abs(v["ours"].get(e, 0) - v["bench"].get(e, 0)) for e in set(v["bench"]) | set(v["ours"])) <= tol[k]
              for k, v in rep.items() if k in tol)
-    bad = list(sfx_bad)
+    bad = list(sfx_bad) + stk_bad
     # 전환(A1): 본보기 편 줄판독에 전환 칸이 있으면 종류마다 (벤치 비율 × 우리 컷 경계 수) ±1
     tr = placed.get("transitions") or []
     ours_tr = Counter(x["kind"] for x in tr)
     if ref and ref.get("n_trans"):
         nb = placed.get("cut_bounds") or 0
         exp = {k: round(c / ref["n_trans"] * nb, 2) for k, c in (ref.get("transitions") or {}).items() if k in TRANS_DRAWABLE}
-        rep["transitions"] = {"bench_expect": exp, "ours": dict(ours_tr), "cut_bounds": nb}
+        rep["transitions"] = {"bench_expect": exp, "ours": dict(ours_tr), "cut_bounds": nb, "plan": placed.get("trans_plan")}
         bad += [f"전환 {k} 우리 {ours_tr.get(k, 0)} ≠ 벤치 기대 {v}(±1)" for k, v in exp.items() if abs(ours_tr.get(k, 0) - v) > 1]
     else:
-        rep["transitions"] = {"ours": dict(ours_tr)}
+        rep["transitions"] = {"ours": dict(ours_tr), "plan": placed.get("trans_plan")}
     # 효과음 종류·역할(A2): 본보기 편 줄판독 sfx 가 있으면 역할 수 ±1 · 종류 수 ±1(판 kinds 가 있으면 그 비율)
     lines = (ref or {}).get("sfx_lines") or []
     sx = placed.get("sfx") or []

@@ -1247,6 +1247,9 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
     """서버 판정 — 대본 검사(script_audit — 자막↔목소리·줄 끝 부호·영문 포함) + 제목 색 + 출처 규칙 ①②·다른 출연자 샷. 하나라도 걸리면 반려."""
     from tools.calcopy.hybrid import script_audit
     v = st["version"]
+    PR = st.get("product") or {}
+    if PR:     # 제품 판정을 대본에 싣는다 — script_audit.alt_disclosed 가 alt 면 '비슷한 제품' 밝히는 줄을 요구(03 · 사장님 10-25)
+        S["product_mode"] = "given" if PR.get("given") else (PR.get("mode") or "exact")
     with tempfile.TemporaryDirectory() as td:
         p = Path(td) / "대본.json"
         p.write_text(json.dumps(S, ensure_ascii=False), encoding="utf-8")

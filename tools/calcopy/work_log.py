@@ -121,6 +121,23 @@ def find(person: str | None = None, product: str | None = None, *more: str, path
     return [r for r in list_(path, member) if all(w in _text(r) for w in ws)]
 
 
+def edition_dirs(style: str | None, root: Path | None = None) -> list[Path]:
+    """(편 폴더 위치 규칙 — 주인 여기 하나) 판(style) 편 폴더 = channel/ 아래 작업정보.json(INFO_FILE) 이 있고 그 style 칸이 판 이름인 폴더.
+    판 편은 벤치 slug 폴더가 아니라 우리 채널 폴더(예: channel/yanshottem/하이브리드_박정수_썬크림/키치잇판)에 산다 —
+    preset_card 가 관문 산출물·결과물 장부를 이 목록으로 찾는다(10-25 박정수 품질관문을 못 읽은 L1 구멍)."""
+    if not style:
+        return []
+    base = Path(root or ROOT) / "channel"
+    out = []
+    for f in sorted(base.rglob(INFO_FILE)) if base.is_dir() else []:
+        try:
+            if json.loads(f.read_text(encoding="utf-8")).get("style") == style:
+                out.append(f.parent)
+        except (OSError, ValueError) as e:
+            print(f"[편 폴더] {f} 읽기 실패 {type(e).__name__}: {e} — 건너뜀", file=sys.stderr)
+    return out
+
+
 def _dur_from_seal(rec: dict | None):
     for c in (rec or {}).get("checks") or []:
         m = re.search(r"영상\s+([\d.]+)", str(c.get("value") or "")) if c.get("what") == "영상=소리 길이" else None

@@ -240,6 +240,9 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
             if left is not None and c["dur"] > left:
                 c["src_left"] = left
                 c["over"] = max(c["over"], round(c["dur"] - left, 3))
+    if src_dir:              # B13(같은 원본 가까운 구간) — 계획이 처음부터 피한다(주인 material_fit.respace_reuse, 판정 = quality_gate.reuse_violations_bench)
+        from tools.calcopy.hybrid.material_fit import respace_reuse
+        respace_reuse(cuts, src_dir, log=lambda m: sys.stderr.write(m + "\n"))
     for i, r in enumerate(rows):      # 자막은 다음 덩어리 시작까지(줄 사이 틈도 앞 자막이 덮는다 — 벤치: 자막 없는 틈 거의 없음)
         r["show"] = [r["t0"], round(rows[i + 1]["t0"] if i + 1 < len(rows) else end, 3)]
     out = {"lines": lines, "rows": rows, "cuts": cuts, "opos": opos, "end": end}
@@ -961,7 +964,7 @@ def _src_cuts(src: Path, y0: int, y1: int, w: int) -> list[float]:
     except Exception:
         pass
     from tools.calcopy.engine.readline_tools.cutdet import cutdet
-    ts = [t for t in (float(r["t"]) for r in cutdet(str(src), y0, y1, float(FPS), w)["cuts"]) if _real_cut(src, t, y0, y1, w)]
+    ts = [t for t in (float(r["t"]) for r in cutdet(str(src), y0, y1, float(FPS), w, shots=False)["cuts"]) if _real_cut(src, t, y0, y1, w)]   # shots=False = 프레임을 쌓지 않음(1592초 원본 23GiB MemoryError, 98 #101)
     try:
         jsave(cp, ts)
     except Exception:
@@ -990,15 +993,41 @@ def cut_length_gate(T: dict, st: dict | None = None) -> list[str]:
     return bad
 
 
+def clip_args(c: dict, src: Path, st: dict, M: dict) -> dict:
+    """(판단 주인) 컷 하나를 clip_cmd 에 넘길 인자 — 시작 초·프레임 수·칸·판 밀기(cuts.push_tts/push_orig)·움직임·흐림·그림 칸.
+    render_window(조각 굽기)·cut_gray(관문 ⑦)·plan_frames_gray(완성본 = 계획 프레임 대조)가 같이 부른다 — 셋이 다른 그림을 상상하지 않게(관제263 10-25:
+    대조가 판 push 를 모르고 안 민 원본과 비교해 0.946 으로 떨어졌다)."""
+    _, _, ww, wh = frame_window(st["frame"])
+    push = (st.get("cuts") or {}).get("push_orig" if c["kind"] == "orig" else "push_tts", 0.0)
+    return {"ss": float(c.get("ss") or 0.0), "n": cut_frames_n(c), "crop": cut_crop(c, src, (ww, wh)), "win": (ww, wh),
+            "push": float(c.get("push", push)), "move": c.get("move"), "blur": (M.get("blur") or {}).get(c["src"]),
+            "pic": pic_box(c, (ww, wh)), "pic_bg": c.get("pic_bg") or st["frame"].get("bg")}
+
+
+def plan_frames_gray(c: dict, src: Path, st: dict, M: dict, idx: list[int]) -> dict:
+    """계획 프레임 = 조각이 될 그림(clip_cmd, 판 밀기·사진 움직임·흐림 포함)의 컷 안 프레임 번호 idx 를 창 크기 회색으로 {i: 배열}."""
+    import numpy as np
+    import subprocess
+    a = clip_args(c, src, st, M)
+    ww, wh = a["win"]
+    inp, vf, extra = clip_cmd(src, a["ss"], a["n"], a["crop"], a["win"], a["push"], a["move"], a["blur"], a["pic"], a["pic_bg"])
+    fs = sorted({int(i) for i in idx if 0 <= int(i) < a["n"]})
+    if not fs:
+        return {}
+    sel = "+".join(f"eq(n\\,{i})" for i in fs)
+    raw = subprocess.run(["ffmpeg", "-v", "error", *map(str, inp), "-vf", f"{vf},select={sel},format=gray", "-frames:v", str(len(fs)), "-fps_mode", "passthrough",
+                          "-f", "rawvideo", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout      # extra(사진 -r)는 뺀다 — 고른 프레임만 그대로(passthrough)
+    arr = np.frombuffer(raw[:len(raw) - len(raw) % (ww * wh)], np.uint8).reshape(-1, wh, ww)
+    return dict(zip(fs, arr))
+
+
 def cut_gray(c: dict, src: Path, st: dict, M: dict):
     """컷 조각이 될 그림을 렌더 없이 회색 108폭 프레임으로 — clip_cmd(조각 굽기와 같은 필터·크롭·움직임·흐림) 그대로 ffmpeg 로 읽기만."""
     import numpy as np
     import subprocess
-    _, _, ww, wh = frame_window(st["frame"])
-    n = cut_frames_n(c)
-    push = (st.get("cuts") or {}).get("push_orig" if c["kind"] == "orig" else "push_tts", 0.0)
-    inp, vf, extra = clip_cmd(src, float(c.get("ss") or 0.0), n, cut_crop(c, src, (ww, wh)), (ww, wh), float(c.get("push", push)), c.get("move"),
-                              (M.get("blur") or {}).get(c["src"]), pic_box(c, (ww, wh)), c.get("pic_bg") or st["frame"].get("bg"))
+    a = clip_args(c, src, st, M)
+    (ww, wh), n = a["win"], a["n"]
+    inp, vf, extra = clip_cmd(src, a["ss"], n, a["crop"], a["win"], a["push"], a["move"], a["blur"], a["pic"], a["pic_bg"])
     sh = max(8, round(108 * wh / ww / 2) * 2)
     raw = subprocess.run(["ffmpeg", "-v", "error", *map(str, inp), "-vf", f"{vf},scale=108:{sh},format=gray", "-frames:v", str(n), *map(str, extra),
                           "-f", "rawvideo", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
@@ -1051,9 +1080,13 @@ def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
 # 판정 주인 = cut_content_gate 한 곳. 프레임은 렌더 조각과 같은 자리(cut_crop)·같은 흐림(blur_vf)으로 thumb.card_scene_frame 이 원본에서 뽑는다.
 # 자 = channelkit.vision(PP-OCRv5 det 글자 상자 · YuNet 얼굴 · SFace 동일성). 문턱 표본 = shopping_shorts/tests/fixtures/cut_content_labels.json.
 CONTENT_PAIR = 2 / FPS            # 글자 '붙박이' 재기 짝 프레임 간격 — 박힌 글은 2프레임 동안 그대로, 장면 속 글(포장·간판)은 화면과 같이 움직인다
-CONTENT_VER = 1                   # 판정(자·문턱)이 바뀌면 올린다 — 캐시 열쇠
-# 글자 문턱 — 표본 494컷(pos 67: 원본 쇼츠 가격·자막·제목 띠·방송사 로고·광고 글 / neg 427: 제품 포장·간판·화면 속 글) 오푸스 눈 라벨로 정함.
-#   전체 P 0.81·R 0.94 · 반으로 갈라 짝수로 정하고 홀수로 잰 값 P 0.72·R 0.91(정직한 값). 남는 오검출 = 멈춘 화면의 큰 제품 글(카레 상자·영양 성분 그림).
+CONTENT_VER = 4                   # 판정(자·문턱)이 바뀌면 올린다 — 캐시 열쇠
+# 글자 문턱 — 표본 762컷(10-25 494컷 + 10-25 오검출 수리 268컷: 원본 무작위 구간·잇템로그 ep12·박정수·샤크탱크 원편) 오푸스 눈 라벨.
+#   pos 132(원본 쇼츠 가격·자막·제목 띠·방송사 자막·로고·광고 글) / neg 630(제품 포장·상자·라벨·간판·화면 속 글).
+#   id crc32 짝수로 정하고 홀수로 잰 값(정직한 값): 옛 판정 P 0.857·R 0.677 → 지금 P 0.900·R 0.726. 옛 494컷만: P 0.808→0.863 · R 0.94 그대로.
+#   ★재현율이 0.9 아래인 까닭 = 새로 넣은 틱톡형 작은 자막(창 높이 2.5~3.5%·흰 글 얇은 테) 29컷 — 옛 판정도 0.554(그대로 못 잡던 것). 남는 오검출 = 손에 든 포장 글(ep10 컷 5)·멈춘 화면 큰 제품 글(트럭·캔).
+#   10-25 획 붙박이(d_gl, 98 #99): 틱톡형 작은 자막은 얇은 글씨라 상자 넓이 대부분이 글자 사이 배경 — 상자 평균(d_in)이 배경을 따라 움직여 붙박이로 안 잡혔다.
+#     획 픽셀(오츠 적은 쪽)만 재면 박힌 글은 0 근처. 짝수 반으로 정하고 홀수 반으로 잰 값: P 0.900→0.917 · R 0.726→0.887(오검출 그대로 5) · 옛 494컷 P 0.863·R 0.94 그대로 · 전체 오검출 13 그대로.
 TEXT_SCORE_MIN = 0.9              # 상자 점수(윤곽 안 확률 평균)
 TEXT_FILL_MIN = 0.8               # 윤곽 넓이/사각형 넓이(얼굴·유리 질감을 따라 번진 가짜 윤곽 거르기 — 박힌 글은 0.85~0.95)
 TEXT_ASPECT_MIN = 1.6             # 가로/세로 — 글줄 모양
@@ -1062,9 +1095,19 @@ TEXT_BLUR_MAX = 0.3               # 흐림 칸이 이만큼 넘게 덮으면 이
 TEXT_STILL_RATIO = 0.5            # 상자 안 변화 / 둘레 변화 < 이 값이면 붙박이(박힌 글) — 움직이는 화면 위 자막
 TEXT_RING_MIN = 1.0               # 둘레 변화가 이보다 작으면(멈춘 화면) 붙박이를 잴 수 없다 → 크기로만(TEXT_STATIC_H)
 TEXT_STATIC_H = 0.05              # 멈춘 화면에서는 높이 ≥ 창 5% 글줄만(제목 띠·큰 자막)
+TEXT_FAR_RING = 5.0               # 긴 간격(같은 컷 다른 잴 프레임) 둘레 변화가 이 이상이어야 그 짝을 쓴다(화면이 실제로 바뀐 짝만)
+TEXT_SCENE_RATIO = (0.6, 1.3)     # 멈춘 화면 글: 긴 간격 짝에서 안/둘레 가 이 범위 = 글이 주변과 같이 변함 = 장면 속 글(카레 상자 팬·전구 무늬·성시경 간판). 표본 0.5~0.7 / 1.2~1.5 어디서나 같은 결과
+TEXT_SMALL_H = 0.03               # 창 3~3.5% 작은 글줄은 긴 간격 짝 전부에서 안/둘레 < TEXT_SMALL_STILL 일 때만(배경이 바뀌는 동안 그대로 = 박힌 자막 — 진열대 가격표는 같이 움직인다)
+TEXT_SMALL_STILL = 0.6
+TEXT_GLYPH_STILL = 0.3            # 획 픽셀 변화(d_gl) / 둘레 변화 < 이 값 = 획이 그대로인 박힌 글(자막 줄). 짝수 반 0.3~0.5 같은 결과(0.2 는 R 0.91), 홀수 반 오검출 +0
+TEXT_GLYPH_FILL = 0.65            # 획 판정 상자 채움 하한 — 작은 자막 줄은 낱말 사이 틈 때문에 0.70~0.79(TEXT_FILL_MIN 0.8 밖). 0.6~0.7 같은 결과
+TEXT_GLYPH_ASPECT = 3.0           # 획 판정은 글줄(가로/세로 ≥ 3)만 — 1.6 이면 짝수 반 오검출 +4
+TEXT_GLYPH_RING = 2.0             # 둘레 변화가 이 이상(배경이 실제로 움직인 짝)일 때만 획 판정
 FACE_OTHER_COS = 0.25             # 기준 얼굴(카드 통과 얼굴들) 중 가장 닮은 것과 SFace 코사인이 이 아래면 다른 사람(표본 286얼굴: 0.25 P 0.96·R 0.90, 0.20 P 0.98·R 0.83)
 FACE_MIN_H = 0.12                 # 잴 얼굴 높이 / 창 높이 하한 — 표본에서 0.12~0.2 연예인 얼굴도 코사인 0.65~0.97 로 맞았다(vision.JUDGE_H 0.2 는 자라 모델·콜라주 얼굴을 놓친다)
 TEXT_MIN_HITS = 1                 # 컷 3장 중 글자 걸린 장 수 — 1(2로 올리면 표본 R 0.78: 짧게 지나가는 자막을 놓친다)
+FACE_NEST = 0.7                   # 더 큰 얼굴 상자 안에 넓이 70%+ 들어간 얼굴 = 같은 얼굴 겹친 검출(표본: 옛 5개 전부 바깥 얼굴과 같은 사람 · 박정수 컷 8)
+FACE_YAW_MAX = 1.0                # |코−눈가운데|/눈사이 > 1 = 코가 눈 폭 밖(손 가림·고개 돌림) — 관문 창 표본 연예인 3·남 0, 옛 표본 둘 다 0(남 최대 0.97)
 FACE_MIN_HITS = 2                 # 컷 3장 중 남 얼굴 걸린 장 수 — 한 장 오검출로 렌더를 막지 않게
 
 
@@ -1100,54 +1143,133 @@ def blur_cover(regs, crop, win: tuple[int, int], box, t: float) -> float:
     return round(float(m.mean()), 3)
 
 
-def text_feats(a, b, regs=None, crop=None, win=None, t: float = 0.0) -> list[dict]:
-    """한 프레임(a)의 글자 상자마다 잰 값 — 판정은 foreign_text. b = CONTENT_PAIR 뒤(또는 앞) 프레임(붙박이 재기)."""
+def _in_ring(diff, box) -> list[float]:
+    """상자 안 평균 변화 · 둘레(상자 높이만큼 넓힌 테) 평균 변화."""
+    H, W = diff.shape
+    x0, y0, x1, y1 = box
+    bh = max(1, y1 - y0)
+    ring = diff[max(0, y0 - bh):min(H, y1 + bh), max(0, x0 - bh):min(W, x1 + bh)]
+    inner = diff[y0:y1, x0:x1]
+    return [round(float(inner.mean()), 2) if inner.size else 0.0, round(float((ring.sum() - inner.sum()) / max(1, ring.size - inner.size)), 2)]
+
+
+def _glyph_diff(g, diffs, box) -> list[float]:
+    """상자 안 '획 픽셀'(오츠 두 무리 중 적은 쪽 = 글자 획) 위 평균 변화 — diffs 마다 하나.
+    얇은 글씨(틱톡형 작은 자막·흰 글 얇은 테)는 상자 넓이 대부분이 글자 사이 배경이라 상자 평균(d_in)이 배경 움직임을 따라간다 — 획만 보면 박힌 글은 0 근처."""
+    import cv2
+    import numpy as np
+    x0, y0, x1, y1 = box
+    p = g[y0:y1, x0:x1]
+    if p.size < 16:
+        return [0.0 for _ in diffs]
+    u = p.astype(np.uint8)
+    _, m = cv2.threshold(u, 0, 1, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    m = m.astype(bool)
+    if m.mean() > 0.5:
+        m = ~m
+    if not m.any():
+        return [0.0 for _ in diffs]
+    return [round(float(d[y0:y1, x0:x1][m].mean()), 2) for d in diffs]
+
+
+def text_feats(a, b, regs=None, crop=None, win=None, t: float = 0.0, far=()) -> list[dict]:
+    """한 프레임(a)의 글자 상자마다 잰 값 — 판정은 foreign_text. b = CONTENT_PAIR 뒤(또는 앞) 프레임(붙박이 재기).
+    far = 같은 컷의 다른 잴 프레임들(긴 간격 0.4초+ — 천천히 훑는 화면·멈춘 듯한 화면에서도 글이 주변과 같이 변하는지 본다) → fi = [[안, 둘레]…]."""
     import cv2
     import numpy as np
     from shopping_shorts.channelkit import vision as V
-    ga = cv2.cvtColor(a, cv2.COLOR_BGR2GRAY).astype(np.float32)
-    gb = cv2.cvtColor(b, cv2.COLOR_BGR2GRAY).astype(np.float32) if b is not None else ga
+    gray = lambda im: cv2.cvtColor(im, cv2.COLOR_BGR2GRAY).astype(np.float32)
+    ga = gray(a)
+    gb = gray(b) if b is not None else ga
     diff = np.abs(ga - gb)
+    dfar = [np.abs(ga - gray(x)) for x in far if x is not None and x.shape == a.shape]
     H, W = ga.shape
     out = []
     for q in V.text_boxes_scored(a):
         x0, y0, x1, y1 = q["box"]
         bw, bh = max(1, x1 - x0), max(1, y1 - y0)
-        ring = diff[max(0, y0 - bh):min(H, y1 + bh), max(0, x0 - bh):min(W, x1 + bh)]
-        inner = diff[y0:y1, x0:x1]
+        d_in, d_ring = _in_ring(diff, (x0, y0, x1, y1))
+        gl = _glyph_diff(ga, [diff] + dfar, (x0, y0, x1, y1))
         out.append({"box": [x0, y0, x1, y1], "score": q["score"], "fill": q["fill"], "aspect": round(bw / bh, 2), "h": round(bh / H, 4),
-                    "d_in": round(float(inner.mean()), 2) if inner.size else 0.0,
-                    "d_ring": round(float((ring.sum() - inner.sum()) / max(1, ring.size - inner.size)), 2),
+                    "cx": round((x0 + x1) / 2 / W, 3), "cy": round((y0 + y1) / 2 / H, 3),
+                    "d_in": d_in, "d_ring": d_ring, "d_gl": gl[0], "fg": gl[1:],
+                    "fi": [_in_ring(d, (x0, y0, x1, y1)) for d in dfar],
                     "blur": blur_cover(regs, crop, win, (x0, y0, x1, y1), t) if regs else 0.0})
     return out
 
 
+def cut_content_feats(src: Path, ss: float, n: int, crop, win: tuple[int, int], regs=None, anchors=()) -> dict:
+    """관문 ④가 재는 값(판정 전) — 컷 하나의 잴 프레임 3장(look_times)마다 글자 상자 값(text_feats)·얼굴 값(face_feats).
+    표본 수집(test_cut_content_labels 표본)도 이 함수를 그대로 부른다 — 관문과 표본이 같은 자."""
+    ss = float(ss)
+    d = n / FPS
+    ts = [ss + dt for dt in look_times(n)]
+    A = [cut_frame(src, t, crop, win, regs) for t in ts]
+    r = {"text": [], "face": []}
+    for i, (t, a) in enumerate(zip(ts, A)):
+        if a is None:
+            continue
+        dt = t - ss
+        t2 = t + CONTENT_PAIR if dt + CONTENT_PAIR < d else t - CONTENT_PAIR
+        b = cut_frame(src, t2, crop, win, regs)
+        r["text"].append(text_feats(a, b, regs, crop, win, t, far=[x for j, x in enumerate(A) if j != i]))
+        if anchors:
+            r["face"].append(face_feats(a, anchors))
+    return r
+
+
 def foreign_text(f: dict) -> bool:
-    """글자 상자 하나가 '남의 박힌 글자(자막·워터마크·로고 글)'인가 — 판정 주인. 표본(오푸스 눈) 정밀도·재현율은 test_cut_content_labels."""
+    """글자 상자 하나가 '남의 박힌 글자(자막·워터마크·로고 글)'인가 — 판정 주인. 표본(오푸스 눈) 정밀도·재현율은 test_cut_content_labels.
+    fi(긴 간격 짝)·d_gl(획 변화) 가 없는 옛 값은 그 판정을 건너뛴다(옛 판정 그대로)."""
     if f["blur"] > TEXT_BLUR_MAX:
         return False
+    if (f.get("d_gl") is not None and f["score"] >= TEXT_SCORE_MIN and f["fill"] >= TEXT_GLYPH_FILL and f["aspect"] >= TEXT_GLYPH_ASPECT
+            and TEXT_SMALL_H <= f["h"] <= TEXT_H_RANGE[1] and f["d_ring"] >= TEXT_GLYPH_RING and f["d_gl"] < TEXT_GLYPH_STILL * f["d_ring"]):
+        return True               # 획 붙박이 — 움직이는 배경 위 획이 그대로인 글줄(틱톡형 작은 자막 포함). d_gl 없는 옛 값은 건너뜀
     if f["score"] < TEXT_SCORE_MIN or f["fill"] < TEXT_FILL_MIN or f["aspect"] < TEXT_ASPECT_MIN:
         return False
-    if not (TEXT_H_RANGE[0] <= f["h"] <= TEXT_H_RANGE[1]):
+    if not (TEXT_SMALL_H <= f["h"] <= TEXT_H_RANGE[1]):
+        return False
+    far = [i / r for i, r in (f.get("fi") or []) if r >= TEXT_FAR_RING]
+    small = f["h"] < TEXT_H_RANGE[0]
+    if small and not (far and max(far) < TEXT_SMALL_STILL):
         return False
     if f["d_ring"] < TEXT_RING_MIN:
-        return f["h"] >= TEXT_STATIC_H
+        if any(TEXT_SCENE_RATIO[0] <= q <= TEXT_SCENE_RATIO[1] for q in far):
+            return False          # 2프레임 사이엔 멈췄지만 같은 컷 안 긴 간격에서 주변과 같이 변한 글 = 장면 속 글
+        return f["h"] >= TEXT_STATIC_H or small
     return f["d_in"] < TEXT_STILL_RATIO * f["d_ring"]
 
 
 def other_face(f: dict) -> bool:
     """얼굴 하나가 연예인(기준 얼굴)이 아닌 다른 사람인가 — 판정 주인. f = {h(창 높이 비), cos(기준 얼굴 중 최댓값) | None}.
     표본 = 감사 결함 완성본 8편(함익병 도브·박세리 라프레리 2·안유진·함익병 비누·강민경·최은경) + 얼지마트롯 원본 4편, 오푸스 눈 라벨."""
+    if f.get("nest") or (f.get("yaw") is not None and abs(f["yaw"]) > FACE_YAW_MAX):
+        return False      # 겹친 검출·정렬 깨진 얼굴은 동일성을 잴 수 없다(표본 face 행 nest·yaw — 없으면 옛 판정 그대로)
     return f["h"] >= FACE_MIN_H and f.get("cos") is not None and f["cos"] < FACE_OTHER_COS
 
 
 def face_feats(im, anchors: list) -> list[dict]:
-    """잴 얼굴(높이 ≥ FACE_MIN_H)마다 {h, cos = 기준 얼굴 중 최댓값}."""
+    """잴 얼굴(높이 ≥ FACE_MIN_H)마다 {h, box, cos = 기준 얼굴 중 최댓값, nest, yaw}.
+    nest = 더 큰 얼굴 상자 안에 넓이 FACE_NEST 이상 들어간 얼굴(같은 얼굴의 겹친 검출 — 10-25 박정수 컷 8 근접 크롭 코 둘레 상자 cos 0.18)
+    yaw  = (코 x − 두 눈 가운데 x) / 눈 사이 — 임베딩 정렬(alignCrop)에 쓰는 YuNet 랜드마크 그대로. |yaw| > FACE_YAW_MAX 면 코가 눈 폭 밖 = 손에 가림·옆얼굴로 정렬이 깨진 얼굴."""
     from shopping_shorts.channelkit import vision as V
+    fs = V.faces_all(im, min_h=FACE_MIN_H)
+    raw = V._raw_rows(im) if fs else None
+    Hh, Ww = im.shape[:2]
     out = []
-    for f, e in V.faces_all(im, min_h=FACE_MIN_H):
+    for f, e in fs:
+        yaw = None
+        if raw is not None and len(raw):
+            fx, fy = (f["x"] + f["w"] / 2) * Ww, (f["y"] + f["h"] / 2) * Hh
+            row = min(raw, key=lambda r: (r[0] + r[2] / 2 - fx) ** 2 + (r[1] + r[3] / 2 - fy) ** 2)      # vision.embedding 과 같은 행 고르기
+            yaw = round(float((row[8] - (row[4] + row[6]) / 2) / (abs(row[6] - row[4]) + 1e-6)), 3)
+        a = f["w"] * f["h"]
+        nest = any(g is not f and g["w"] * g["h"] > a and
+                   max(0, min(f["x"] + f["w"], g["x"] + g["w"]) - max(f["x"], g["x"])) * max(0, min(f["y"] + f["h"], g["y"] + g["h"]) - max(f["y"], g["y"])) >= FACE_NEST * a
+                   for g, _ in fs)
         out.append({"h": round(f["h"], 3), "box": [f["x"], f["y"], f["w"], f["h"]],
-                    "cos": round(max(V.cos(a, e) for a in anchors), 3) if (e is not None and anchors) else None})
+                    "cos": round(max(V.cos(a_, e) for a_ in anchors), 3) if (e is not None and anchors) else None, "nest": nest, "yaw": yaw})
     return out
 
 
@@ -1204,17 +1326,8 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
         key = hashlib.md5(json.dumps([c["src"], round(float(c["ss"]), 3), n, crop, regs, ak, CONTENT_VER, ww, wh]).encode()).hexdigest()[:16]
         r = cache.get(key)
         if r is None:
-            r = {"text": [], "face": []}
-            for dt in look_times(n):
-                t = float(c["ss"]) + dt
-                a = cut_frame(src, t, crop, (ww, wh), regs)
-                if a is None:
-                    continue
-                t2 = t + CONTENT_PAIR if dt + CONTENT_PAIR < n / FPS else t - CONTENT_PAIR
-                b = cut_frame(src, t2, crop, (ww, wh), regs)
-                r["text"].append([f for f in text_feats(a, b, regs, crop, (ww, wh), t) if foreign_text(f)])
-                if anchors:
-                    r["face"].append([f for f in face_feats(a, anchors) if other_face(f)])
+            m = cut_content_feats(src, c["ss"], n, crop, (ww, wh), regs, anchors)
+            r = {"text": [[f for f in fr if foreign_text(f)] for fr in m["text"]], "face": [[f for f in fr if other_face(f)] for fr in m["face"]]}
         rows[key] = r
         nt = sum(1 for x in r["text"] if x)
         nf = sum(1 for x in r["face"] if x)
@@ -1344,6 +1457,10 @@ def transitions_of(T: dict, st: dict, placed: dict, log=None) -> list[dict]:
         out = {"t": round(float(e["t"]), 3), "kind": k, "ms": float(m)}
         if k in ("flash", "edge_glow"):
             out.update(flash_color_of(e, st, ncf.setdefault(k, [0])))
+        if k == "zoomblur":           # 세기 = 판 cuts.transition.zoomblur{zoom, sigma}(벤치 drop 에 맞춘 값 — 관제263 10-25) · 없으면 옛 상수
+            Z = ((st.get("cuts") or {}).get("transition") or {}).get("zoomblur") or {}
+            out["zoom"] = float(e.get("zoom", Z.get("zoom", ZOOMBLUR_ZOOM)))
+            out["sigma"] = float(e.get("sigma", Z.get("sigma", ZOOMBLUR_SIGMA)))
         if e.get("sec") is not None:
             out["sec"] = float(e["sec"])
         if e.get("why"):
@@ -1485,10 +1602,12 @@ def window_fx(trans: list[dict], ww: int, wh: int) -> str:
         return ""
     fc, last = [], "0:v"
     if zb:
+        zoom = zb[0].get("zoom", ZOOMBLUR_ZOOM)        # 한 편 안 줌블러 세기는 판 한 값(transitions_of)
+        sigma = zb[0].get("sigma", ZOOMBLUR_SIGMA)
         terms = "+".join(f"max(0,1-abs(in/{FPS}-{e['t']:.3f})/{e['ms'] / 2000:.3f})" for e in zb)
         en = "+".join(f"between(t,{max(0.0, e['t'] - e['ms'] / 2000):.3f},{e['t'] + e['ms'] / 2000:.3f})" for e in zb)
-        fc.append(f"[0:v]split[zm][zc];[zc]zoompan=z='1+{ZOOMBLUR_ZOOM}*({terms})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:"
-                  f"s={ww}x{wh}:fps={FPS},gblur=sigma={ZOOMBLUR_SIGMA}[zb];[zm][zb]overlay=0:0:enable='{en}'[z]")
+        fc.append(f"[0:v]split[zm][zc];[zc]zoompan=z='1+{zoom}*({terms})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:"
+                  f"s={ww}x{wh}:fps={FPS},gblur=sigma={sigma}[zb];[zm][zb]overlay=0:0:enable='{en}'[z]")
         last = "z"
     if bk:
         rng = []
@@ -1666,12 +1785,9 @@ def render_window(T: dict, M: dict, st: dict, R: Path, trans: list[dict] | None 
         n = round(c["t1"] * FPS) - round(c["t0"] * FPS)
         c["frames"] = n
         src = src_dir / c["src"]
-        pb = pic_box(c, (ww, wh))          # 컷마다 그림 칸 — 자르기 비율도 그 칸 비율로
-        crop = cut_crop(c, src, (ww, wh))
-        push = (st.get("cuts") or {}).get("push_orig" if c["kind"] == "orig" else "push_tts", 0.0)
+        a = clip_args(c, src, st, M)       # 칸·밀기·그림 칸·흐림 = 주인 한 곳(계획 프레임 대조·관문 ⑦과 같은 인자)
         p = parts / f"c{k:02d}.mp4"
-        clip(src, float(c.get("ss", 0.0)), n, crop, (ww, wh), p, push=float(c.get("push", push)), move=c.get("move"),
-             blur=(M.get("blur") or {}).get(c["src"]), pic=pb, pic_bg=c.get("pic_bg") or st["frame"].get("bg"))
+        clip(src, a["ss"], n, a["crop"], a["win"], p, push=a["push"], move=a["move"], blur=a["blur"], pic=a["pic"], pic_bg=a["pic_bg"])
         got = count_frames(p)
         if got != n:      # 모자라면 뒤 컷이 전부 앞당겨지고 끝이 멈춘다 — 조용히 넘기지 않는다
             raise StageError(f"컷 조각 프레임 모자람: {c['line']} {c['src']}@{c.get('ss')} 계획 {n} · 실제 {got}")

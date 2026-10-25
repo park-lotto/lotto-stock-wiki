@@ -332,6 +332,25 @@ def text_defects(d: dict, joined: bool = True) -> list[dict]:
     return out
 
 
+# ── 대체(비슷한) 제품 밝히기 — 판 설정 밖 **모든 판 공통**. 판단 주인 = alt_disclosed 한 곳 ──────────────────────
+#   사장님 10-25 "쿠팡에 같은 제품이 없으면 비슷한 제품으로 가되, 영상에서 분명히 말해야 한다"(제작순서 03 · rules.PRODUCT_TALK alt).
+#   대본.json 의 product_mode(exact·named·alt·given — 03 제품 판정, 회원 flow 는 st.product.mode 를 넣는다)가 'alt' 일 때만 잰다.
+#   목소리(읽는 글)로 '같은 제품이 아니다'(똑같은 건 없어서·같은 제품은 아니고) 또는 '비슷한 걸/제품'을 말하는 줄이 하나는 있어야 한다.
+ALT_SAY = re.compile(r"(똑\s*같은|같은)\s*(제품|건|게|거|걸|것)\s*[은는이가을]?\s*(없|아니|아닌|못\s*찾)|비슷한\s*(걸|거|것|제품|게|건|[^.,!?]{1,12}?(으로|로|을|를))")
+
+
+def alt_disclosed(d: dict) -> dict | None:
+    """(판단 주인) product_mode 'alt' 대본에 '같은 제품이 아니라 비슷한 제품' 이라고 말하는 나레 줄이 있나 → 걸리면 {rule, line, why}, 아니면 None."""
+    if str(d.get("product_mode") or "") != "alt":
+        return None
+    hit = [l.get("id") for l in narr_lines(d) if ALT_SAY.search(_say(l))]
+    if hit:
+        return None
+    return {"rule": "alt_say", "line": None,
+            "why": "product_mode alt(쿠팡에 같은 제품 없음 → 비슷한 제품)인데 목소리로 그걸 밝히는 줄이 없다 — "
+                   "예 '영상 보고 쿠팡에서 찾아봤는데 똑같은 건 없어서 비슷한 걸로 써 봤어요'(제작순서 03 · 사장님 10-25)"}
+
+
 def audit(path: Path, version: str | None = None) -> dict:
     raw = json.loads(Path(path).read_text(encoding="utf-8"))
     d = as_lines(raw)
@@ -364,6 +383,9 @@ def audit(path: Path, version: str | None = None) -> dict:
             res["rules"].append({"kind": "forbid", "ok": False, "why": f"{f['why']} {bad}"}); ok = False
     for x in text_defects(d, joined=bool(raw.get("lines"))):     # 관문 G-1 — 판 설정과 상관없이 모든 판
         res["rules"].append({"kind": "text:" + x["rule"], "ok": False, "why": f"{x['line']} {x['why']}"}); ok = False
+    ad = alt_disclosed(d)     # 대체 제품 밝히기 — 판과 상관없이 모든 판
+    if ad:
+        res["rules"].append({"kind": "product:" + ad["rule"], "ok": False, "why": ad["why"]}); ok = False
     res["narr"] = [SF.narr_rules(l["text"]) for l in lines]
     res["ok"] = bool(ok)
     return res

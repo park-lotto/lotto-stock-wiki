@@ -203,12 +203,16 @@ def test_kitchit_saved_plans_unchanged():
     files = sorted((ROOT / "channel/yanshottem").glob("*/키치잇판/plan/계획_시간표.json"))
     if not files:
         pytest.skip("키치잇판 계획 시간표 없음 — 이 PC 전용 시험")
+    import copy
     st = ST.load("키치잇판")
+    st_old = copy.deepcopy(st)                 # 10-25 관제263 판 cuts.transition.kinds(벤치 실측 전환) 넣기 전 계획은 그 칸 없이 만든 것
+    st_old["cuts"]["transition"]["kinds"] = {"cut": 1.0}
     for f in files:
         d = json.loads(f.read_text(encoding="utf-8"))
         S = json.loads((f.parent.parent / "대본.json").read_text(encoding="utf-8"))
         rows = [{k: v for k, v in r.items() if k != "show"} for r in d["timeline"]["rows"]]
-        p = PL.place(rows, st, S.get("slug") or "x", cuts=d["timeline"]["cuts"])
+        made_new = any("판 cuts.transition.kinds" in str(x) for x in d["placement"].get("log") or [])
+        p = PL.place(rows, st if made_new else st_old, S.get("slug") or "x", cuts=d["timeline"]["cuts"])
         assert _summary(p) == _summary(d["placement"]), f.parent.parent.parent.name
 
 

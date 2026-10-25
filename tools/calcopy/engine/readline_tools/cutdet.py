@@ -43,23 +43,68 @@ def cut_groups(diff, hd) -> list[tuple[int, int]]:
     return [(g[0], g[-1]) for g in cm]
 
 
+CHUNK = 256      # 한 번에 받는 프레임 수(360×640 회색이면 약 59MB) — 판정과 무관, 메모리만 정한다
+
+
+def _gray_chunks(cmd: list, w: int, h: int, chunk: int = CHUNK):
+    """ffmpeg rawvideo(gray) 출력을 chunk 장씩 (k,h,w) uint8 로 차례로 내준다. 끝의 모자란 바이트(반쪽 프레임)는 옛 판처럼 버린다."""
+    fs = w * h
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+    try:
+        while True:
+            buf = p.stdout.read(fs * chunk)
+            k = len(buf) // fs
+            if k:
+                yield np.frombuffer(buf, np.uint8, count=k * fs).reshape(k, h, w)
+            if len(buf) < fs * chunk:
+                break
+    finally:
+        p.stdout.close()
+        p.wait()
+
+
+def frame_feats(chunks, h: int, w: int, keep: bool) -> tuple:
+    """프레임 특징의 주인 — 밝기 평균·선명도(위 55% 라플라시안)·이웃 프레임 밝기차·히스토그램차를 조각마다 차례로 잰다.
+    keep=False 면 프레임을 버려 메모리가 영상 길이와 무관하다(10-25 기미 flowtest 1592초 가로 원본: 통째로 float32 23GiB 배열 → MemoryError).
+    keep=True 면 F(n,h,w float32)를 옛 판과 같게 돌려준다(v2·샷 움직임이 쓴다). 값은 옛 통째 계산과 비트까지 같다(시험 test_cutdet_stream)."""
+    mean, sharp, diff, hist, kept = [], [], [], [], []
+    prev = None
+    hs = int(h * 0.55)
+    for U in chunks:
+        Fc = U.astype(np.float32)
+        mean.append(Fc.mean((1, 2)))
+        for j in range(len(Fc)):
+            f = Fc[j]
+            sharp.append(cv2.Laplacian(f[:hs], cv2.CV_32F).var())
+            if prev is not None:
+                diff.append(np.abs(f - prev).mean((0, 1)))
+            prev = f
+            x = cv2.calcHist([U[j]], [0], None, [32], [0, 256]).ravel()
+            hist.append(x / x.sum())
+        if keep:
+            kept.append(U)
+        else:
+            prev = prev.copy()                  # 조각을 버려도 다음 조각 첫 프레임 차를 잴 수 있게
+    n = len(sharp)
+    mean = np.concatenate(mean) if mean else np.zeros(0, np.float32)
+    sharp = np.array(sharp)
+    diff = np.r_[0, diff] if n > 1 else np.zeros(n)
+    hd = np.r_[0, [0.5 * np.abs(hist[i] - hist[i - 1]).sum() for i in range(1, n)]]
+    F = (np.concatenate(kept).astype(np.float32) if kept else np.zeros((0, h, w), np.float32)) if keep else None
+    return n, mean, sharp, diff, hd, F
+
+
 def cutdet(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080, v2: bool = False, cap_band: tuple | None = None,
-           use_color_flash: bool = False, motion: bool = True) -> dict:
+           use_color_flash: bool = False, motion: bool = True, shots: bool = True) -> dict:
     """v2=False = 옛 도구 그대로(재현). v2=True = 자막 띠를 뺀 선명도로 전환 종류를 다시 가르고(kind, 옛 값은 kind_v1),
-    영상 시작 블러를 사건으로 더하고, 샷마다 shotmotion 움직임(motion: still/cam/zoom_in/zoom_out/pan)을 붙인다(06 키치잇 10-25 결손)."""
+    영상 시작 블러를 사건으로 더하고, 샷마다 shotmotion 움직임(motion: still/cam/zoom_in/zoom_out/pan)을 붙인다(06 키치잇 10-25 결손).
+    shots=False(v2 아님) = 샷 목록(chg)을 안 만들고 프레임을 쌓지 않는다 — 경계(cuts)만 쓰는 render_bench._src_cuts 가 긴 원본(1592초)에서 쓴다. cuts 는 같다."""
     H = y1 - y0
     w, h = 360, int(H / 3)
     from tools.calcopy.engine.readline_tools.capseg import fps_filter      # 60fps 원본 → 30 (주인 = capseg.fps_filter)
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", mp4, "-vf", fps_filter(mp4, fps) + f"crop={width}:{H}:0:{y0}:exact=1,scale={w}:{h}", "-f", "rawvideo", "-pix_fmt", "gray", "-"],
-                         capture_output=True).stdout
-    n = len(raw) // (w * h)
-    F = np.frombuffer(raw, np.uint8)[:n * w * h].reshape(n, h, w).astype(np.float32)
-    mean = F.mean((1, 2))
-    sharp = np.array([cv2.Laplacian(f[:int(h * 0.55)], cv2.CV_32F).var() for f in F])
-    diff = np.r_[0, [np.abs(F[i] - F[i - 1]).mean((0, 1)) for i in range(1, n)]] if n > 1 else np.zeros(n)   # 프레임마다(긴 영상 통째 빼기는 메모리 2배 — 56초 편에서 MemoryError)
-    hist = [cv2.calcHist([f.astype(np.uint8)], [0], None, [32], [0, 256]).ravel() for f in F]
-    hist = [x / x.sum() for x in hist]
-    hd = np.r_[0, [0.5 * np.abs(hist[i] - hist[i - 1]).sum() for i in range(1, n)]]
+    cmd = ["ffmpeg", "-v", "error", "-i", mp4, "-vf", fps_filter(mp4, fps) + f"crop={width}:{H}:0:{y0}:exact=1,scale={w}:{h}", "-f", "rawvideo", "-pix_fmt", "gray", "-"]
+    keep = bool(v2 or shots)
+    n, mean, sharp, diff, hd, F = frame_feats(_gray_chunks(cmd, w, h), h, w, keep)
     res = []
     for a, b in cut_groups(diff, hd):
         lo = max(0, a - 4)
@@ -80,19 +125,19 @@ def cutdet(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080, v2:
         res.append({"t": round(a / fps, 3), "t_end": round(b / fps, 3), "kind": kind, "diff": round(float(diff[a:b + 1].max()), 1),
                     "blurfr": lowblur if kind not in ("black", "flash") else 0})
     bounds = [0] + [int(r["t"] * fps) for r in res] + [n]
-    shots = []
-    for i in range(len(bounds) - 1):
+    shots_out = []
+    for i in range(len(bounds) - 1) if keep else ():
         a, b = bounds[i], bounds[i + 1] - 1
         if b - a < 3:
-            shots.append({"t0": round(a / fps, 3), "t1": round((b + 1) / fps, 3), "motion": "still?", "chg": 0})
+            shots_out.append({"t0": round(a / fps, 3), "t1": round((b + 1) / fps, 3), "motion": "still?", "chg": 0})
             continue
         A = F[a + 1]
         B = F[b - 1]
         chg = float(np.abs(A - B).mean())
-        shots.append({"t0": round(a / fps, 3), "t1": round((b + 1) / fps, 3), "chg": round(chg, 1)})
+        shots_out.append({"t0": round(a / fps, 3), "t1": round((b + 1) / fps, 3), "chg": round(chg, 1)})
     if v2:
-        _refine_v2(F, mean, res, shots, fps, h, y0, cap_band, mp4, y1, use_color_flash, motion)
-    return {"n": n, "cuts": res, "shots": shots, **({"v2": True} if v2 else {})}
+        _refine_v2(F, mean, res, shots_out, fps, h, y0, cap_band, mp4, y1, use_color_flash, motion)
+    return {"n": n, "cuts": res, "shots": shots_out if keep else None, **({"v2": True} if v2 else {})}
 
 
 def color_flash(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080) -> list[dict]:

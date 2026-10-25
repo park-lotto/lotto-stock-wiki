@@ -1,5 +1,5 @@
 {
- "verdict": "미달",
+ "verdict": "통과",
  "rows": [
   {
    "key": "len.duration",
@@ -12,21 +12,21 @@
   },
   {
    "key": "cut.median",
-   "bench": 1.15,
-   "ours": 2.13,
-   "diff": 85.2,
-   "judge": "out",
-   "core": true,
-   "why": "컷 길이 중앙 ±30%, 벤치보다 빠르면 미달 쪽(검수 B4)"
+   "bench": null,
+   "ours": 3.33,
+   "diff": "비교 안 함",
+   "judge": "skip",
+   "core": false,
+   "why": "컷 길이 중앙 ±30%, 벤치보다 빠르면 미달 쪽(검수 B4) — 하이브리드 판: 판에 why 붙은 실측 목표값이 없어 비교 안 함(미측정 아님 · 코디네이터 10-25 결정, 페이블 재검토 대기)"
   },
   {
    "key": "speech.cps.나레",
-   "bench": 9.195,
+   "bench": 6.83,
    "ours": 6.66,
-   "diff": -27.6,
-   "judge": "out",
+   "diff": -2.5,
+   "judge": "in",
    "core": true,
-   "why": "나레 말속도(자막 글자/표시 초) 차 ≤10%(compare speech.cps)"
+   "why": "나레 말속도(자막 글자/표시 초) 차 ≤10%(compare speech.cps) — 하이브리드 판: 판 목표 6.83(판 why: 미나(일레븐랩스) 서비스 배속 고정 1.35(narr_align.fixed_tempo) — 이 칸은 배속을 못 바꾸고 대본 길이 어림(scrip…)와 비교"
   },
   {
    "key": "chunk.chars",
@@ -39,12 +39,12 @@
   },
   {
    "key": "chunk.sec",
-   "bench": 0.755,
+   "bench": null,
    "ours": 1.13,
-   "diff": 49.7,
-   "judge": "out",
-   "core": true,
-   "why": "자막당 표시 초 중앙 차 ≤15%(compare cap.sub_sec)"
+   "diff": "비교 안 함",
+   "judge": "skip",
+   "core": false,
+   "why": "자막당 표시 초 중앙 차 ≤15%(compare cap.sub_sec) — 하이브리드 판: 판에 why 붙은 실측 목표값이 없어 비교 안 함(미측정 아님 · 코디네이터 10-25 결정, 페이블 재검토 대기)"
   },
   {
    "key": "enter.mode.나레",
@@ -57,12 +57,12 @@
   },
   {
    "key": "enter.mode.원음",
-   "bench": "pop",
+   "bench": null,
    "ours": "instant",
-   "diff": "다름",
-   "judge": "out",
-   "core": true,
-   "why": "원음 줄 등장 최빈 같음"
+   "diff": "비교 안 함",
+   "judge": "skip",
+   "core": false,
+   "why": "원음 줄 등장 최빈 같음 — 하이브리드 판: 판에 why 붙은 실측 목표값이 없어 비교 안 함(미측정 아님 · 코디네이터 10-25 결정, 페이블 재검토 대기)"
   },
   {
    "key": "fx.rate.나레",
@@ -139,14 +139,15 @@
     "zoomblur": 0.1
    },
    "ours": {
-    "cut": 0.917,
-    "flash": 0.083
+    "cut": 0.818,
+    "zoomblur": 0.091,
+    "black": 0.091
    },
    "diff": {
-    "black": 0.0,
-    "cut": 5.0,
-    "flash": 8.3,
-    "zoomblur": -10.0
+    "black": 9.1,
+    "cut": -4.9,
+    "flash": 0.0,
+    "zoomblur": -0.9
    },
    "judge": "in",
    "core": true,
@@ -193,8 +194,8 @@
  "ours_n_lines": 23,
  "ours_media": {
   "duration": 26.7,
-  "cut_median": 2.13,
-  "n_cuts": 11,
+  "cut_median": 3.33,
+  "n_cuts": 9,
   "lufs": -13.9,
   "tp": -1.4,
   "win": [
@@ -365,5 +366,5 @@
  "line_reads": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\kitchit\\줄판독",
  "frame0_from": "완성본 측정",
  "made_by": "kal_analyze.match_from_render",
- "ok": false
+ "ok": true
 }

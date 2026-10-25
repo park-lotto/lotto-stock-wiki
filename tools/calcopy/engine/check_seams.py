@@ -46,6 +46,7 @@ REWIND_LOOKBACK = 0.8    # 컷 앞 몇 초까지 대 보나
 REWIND_MIN_S = 0.12      # 가장 잘 맞는 앞 프레임이 마지막보다 이만큼 이상 앞이면 되감김
 REWIND_INLIERS = 100     # 그 일치점 하한 — 10-17 재보정: 사람 편집(만템 8·아이템홈 1)의 멀티캠 각도 전환은 최대 7.6배·일치점<100
 REWIND_RATIO = 5.0       # 마지막 프레임 일치점의 이 배수 이상(우리 1판 진짜 되감김 13~33배)
+BOUND_TOL = 0.1          # 계획 컷 경계(bounds)를 아는 호출: 이 폭(초, 3프레임) 밖 되감김 = 이어 자른 한 조각 안(빠른 움직임 오탐, 10-25 ep12 11.3초 = O2 saA 17~21.36 안)
 STATIC_ROW_STD = 4.0     # 영상 내내 거의 안 변하는 줄(제목 띠·검은 여백)은 가린다 — 고정 글자가 일치점을 부풀려 되감김을 가림
 JUMP_ZOOM_INLIERS = 40    # 컷 앞뒤가 같은 그림(이어지는 한 장면)인데
 JUMP_ZOOM_SCALE = 0.06    # 배율만 이만큼 넘게 바뀌면 '점프 줌'(1.67배↔2.0배 = 1.19/0.84)
@@ -156,20 +157,30 @@ def from_frame(frame_json: str) -> tuple[tuple | None, tuple | None]:
     return win, mask
 
 
-def check(path: str, win=None, mask=None) -> dict:
+def split_by_bounds(rw: list[dict], bounds: list[float] | None, tol: float = BOUND_TOL) -> tuple[list[dict], list[dict]]:
+    """(판단 주인: 어느 되감김을 세나) bounds = 계획 컷 경계 시각(완성본 초). None·빈 목록 = 경계를 모름 → 전부 센다(옛 판정 그대로 —
+    10-25 관문이 timeline 에 cuts 가 없을 때 빈 경계로 걸러 되감김을 통째로 뺐다). 경계를 알면 ±tol 안 것만 센다. 반환 (센 것, 한 조각 안이라 뺀 것)."""
+    if not bounds:
+        return list(rw), []
+    real = [r for r in rw if any(abs(float(r["t"]) - float(b)) <= tol for b in bounds)]
+    return real, [r for r in rw if r not in real]
+
+
+def check(path: str, win=None, mask=None, bounds: list[float] | None = None) -> dict:
+    """bounds(선택) = 계획 컷 경계 — 주면 경계 밖 되감김은 '되감김_조각안'으로 빼고 판정 밖(split_by_bounds). 안 주면 옛 판정."""
     inf = probe.info(path)
     fps = inf.get("fps") or 30.0
     win = win or (0, 0, inf["width"], inf["height"])
     fr = _gray_frames(path, win, mask)
     cuts = find_cuts(fr)
     cut_ts = [round(c / fps, 3) for c in cuts]
-    rw = rewinds(fr, cuts, fps)
+    rw, inside = split_by_bounds(rewinds(fr, cuts, fps), bounds)
     jz = jump_zooms(fr, cuts, fps)
     jp = jumps(rms_db(path), cut_ts)
     dur = len(fr) / fps if fps else 0
     jz_bad = jz_verdict(jz, dur)
     return {"file": str(path), "fps": fps, "컷": cut_ts, "되감김": rw, "점프줌": jz, "점프줌_판정": jz_bad,
-            "소리급변_참고": jp, "ok": not rw and not jz_bad}
+            "소리급변_참고": jp, "ok": not rw and not jz_bad, **({"되감김_조각안": inside, "경계": "계획 컷 경계 ±" + str(BOUND_TOL)} if bounds else {})}
 
 
 def jz_verdict(jz: list[dict], dur: float) -> str:

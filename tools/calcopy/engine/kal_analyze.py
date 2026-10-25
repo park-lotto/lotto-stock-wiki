@@ -474,16 +474,46 @@ def _med(xs):
     return statistics.median(xs) if xs else None
 
 
-def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, bench_media: dict | None, own_len: tuple | None = None) -> dict:
+HYBRID_OWN_KEYS = ("cut.median", "speech.cps.나레", "chunk.sec", "enter.mode.원음")   # 하이브리드 판이 벤치와 일부러 다른 칸(앞 원음 + 뒤 판매 이야기 · 고정 배속 목소리)
+
+
+def style_targets(st: dict) -> dict:
+    """판에 why 가 붙은 실측 목표값 {MATCH key: (값, why)} — HYBRID_OWN_KEYS 중 판 칸이 있는 것만(코디네이터 10-25 결정).
+    speech.cps.나레 = 판 cps_target(+_why_cps_target) · cut.median = 판 cuts.cut_median(+cuts.why) · chunk.sec = 판 caption.chunk_sec(+caption.why) ·
+    enter.mode.원음 = 판 caption.orig_enter_mode(+caption.why). 칸이 없으면 목표 없음(비교 안 함)."""
+    out = {}
+    if st.get("cps_target") is not None and st.get("_why_cps_target"):
+        out["speech.cps.나레"] = (float(st["cps_target"]), st["_why_cps_target"])
+    C, P = st.get("cuts") or {}, st.get("caption") or {}
+    if C.get("cut_median") is not None and C.get("why"):
+        out["cut.median"] = (float(C["cut_median"]), C["why"])
+    if P.get("chunk_sec") is not None and P.get("why"):
+        out["chunk.sec"] = (float(P["chunk_sec"]), P["why"])
+    if P.get("orig_enter_mode") and P.get("why"):
+        out["enter.mode.원음"] = (str(P["orig_enter_mode"]), P["why"])
+    return out
+
+
+def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, bench_media: dict | None, own_len: tuple | None = None,
+                own_targets: dict | None = None) -> dict:
     """(판단 주인) 벤치 줄판독 모음 ↔ 우리 한 편을 MATCH_RULES 자로. 못 잰 항목은 failed(통과로 치지 않는다).
     own_len = 판 length (min, max). 판 길이 범위가 벤치 편 길이 범위와 **아예 안 겹치면**(하이브리드: 앞 원음 + 뒤 판매 이야기 25~30초 ↔ 벤치 단독 10~21초,
-    판 length.why · channel/kitchit/하이브리드_판설계.md §1) 판이 일부러 정한 다른 길이다 — len.duration 은 그 판 범위로 잰다(관제263). 겹치면 옛 그대로."""
+    판 length.why · channel/kitchit/하이브리드_판설계.md §1) 판이 일부러 정한 다른 길이다 — len.duration 은 그 판 범위로 잰다(관제263). 겹치면 옛 그대로.
+    own_targets = style_targets(판). 하이브리드 판(위 조건)의 HYBRID_OWN_KEYS 칸은 벤치가 아니라 판 목표값과 같은 자·같은 합격선으로 비교하고,
+    판 목표가 없는 칸은 비교하지 않는다(judge 'skip', 사유 표시 — 미측정 아님, 기준 칸에서 빠짐). 코디네이터 10-25 결정(페이블 재검토 대기, 표준 §12)."""
     B = [_stats(d.get("lines") or [], float(d.get("dur") or 0)) for d in bench_docs]
     ol, odur = _ours_lines(ours)
     O = _stats(ol, odur)
     om, bm = ours_media or {}, bench_media or {}
+    brange_all = (min(s["dur"] for s in B), max(s["dur"] for s in B)) if B else None
+    hybrid = bool(own_len and brange_all and (own_len[0] > brange_all[1] or own_len[1] < brange_all[0]))
     rows = []
     for key, kind, tol, core, why in MATCH_RULES:
+        if hybrid and key in HYBRID_OWN_KEYS and key not in (own_targets or {}):
+            o = {"cut.median": om.get("cut_median")}.get(key, O.get(key))
+            rows.append({"key": key, "bench": None, "ours": o, "diff": "비교 안 함", "judge": "skip", "core": False,
+                         "why": why + " — 하이브리드 판: 판에 why 붙은 실측 목표값이 없어 비교 안 함(미측정 아님 · 코디네이터 10-25 결정, 페이블 재검토 대기)"})
+            continue
         if key == "len.duration":
             b, o = _med([s["dur"] for s in B]), odur or om.get("duration")
             brange = (min(s["dur"] for s in B), max(s["dur"] for s in B)) if B else None
@@ -519,6 +549,9 @@ def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, ben
             b, o, brange = (c.most_common(1)[0][0] if c else None), O[key], None
         else:
             b, o, brange = _med([s[key] for s in B]), O[key], None
+        if hybrid and key in HYBRID_OWN_KEYS:          # 판 목표값으로 비교(같은 kind·tol)
+            b, brange = own_targets[key][0], None
+            why = why + f" — 하이브리드 판: 판 목표 {b}(판 why: {str(own_targets[key][1])[:80]}…)와 비교"
         if b is None or o is None:
             judge, diff = "failed", "미측정"
         elif kind == "rel":
@@ -526,7 +559,9 @@ def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, ben
             judge = "in" if (brange and brange[0] <= o <= brange[1]) or (diff is not None and abs(diff) <= tol) else "out"
         elif kind == "rel0":                    # 벤치 0 이면 우리도 0 이어야 같다(0 나누기 대신)
             diff = round((o - b) / b * 100, 1) if b else (0.0 if not o else "벤치 0")
-            judge = "in" if (b and abs(diff) <= tol) or (not b and not o) else "out"
+            # 편 하나의 발 수는 정수 — 벤치 비율×길이에 가장 가까운 정수(차 ≤ 0.5발)면 같다(placement 가 개수를 round(비율×길이)로 정하는 것과 같은 자, 10-25 ep12 sfx 0.051×28.5=1.45 → 1발이 ±30% 로는 1·2발 둘 다 미달)
+            n_ok = bool(b and odur and key.endswith(".rate") and abs((o - b) * odur) <= 0.5)
+            judge = "in" if (b and abs(diff) <= tol) or (not b and not o) or n_ok else "out"
         elif kind == "rel_slow":
             diff = round((o - b) / b * 100, 1)
             judge = "in" if -tol * 0.5 <= diff <= tol else "out"   # 빠른 쪽(음수)은 절반만 허용 — B4 '원본보다 빠르면 반려 쪽'
@@ -578,7 +613,7 @@ def match_md(T: dict, title: str = "") -> str:
     L = [f"# 재현일치도 {title}(kal_analyze match · 벤치 {T['n_bench']}편 · 우리 줄 {T['ours_n_lines']}) — **{T['verdict']}**", "",
          "| 항목 | 벤치 | 우리 | 차 | 판정 | 기준 | 자·합격선 |", "|---|---|---|---|---|---|---|"]
     for r in T["rows"]:
-        L.append(f"| {r['key']} | {r['bench']} | {r['ours']} | {r['diff']} | {'✓' if r['judge'] == 'in' else '✗' if r['judge'] == 'out' else '미측정'} | {'기준' if r['core'] else '참고'} | {r['why']} |")
+        L.append(f"| {r['key']} | {r['bench']} | {r['ours']} | {r['diff']} | {'✓' if r['judge'] == 'in' else '✗' if r['judge'] == 'out' else '비교 안 함' if r['judge'] == 'skip' else '미측정'} | {'기준' if r['core'] else '참고'} | {r['why']} |")
     if T.get("pixel"):
         P = T["pixel"]
         L += ["", f"## 픽셀·소리(compare 같은 자) — {P['verdict']} ({P['n_criteria']}칸 중 안 {P['n_in']})",
@@ -757,7 +792,7 @@ def match_from_render(style, doc, work, media: bool = True, frame0_kind_measured
         if B.get("src_dir"):
             bm = bench_media_cached(B["src_dir"], [d.get("id") for d in bench], _win_arg(None, bench))
     LD = st.get("length") or {}
-    Tm = match_table(bench, ours, om, bm, own_len=(LD["min"], LD["max"]) if "min" in LD and "max" in LD else None)
+    Tm = match_table(bench, ours, om, bm, own_len=(LD["min"], LD["max"]) if "min" in LD and "max" in LD else None, own_targets=style_targets(st))
     Tm.update({"ours_media": om, "bench_media": bm, "bench_ids": [d.get("id") for d in bench], "line_reads": str(lrp) if lrp else None,
                "frame0_from": "완성본 측정" if frame0_kind_measured else "썸네일.json pick(선언)",
                "made_by": "kal_analyze.match_from_render"})

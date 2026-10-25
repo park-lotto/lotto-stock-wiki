@@ -433,6 +433,54 @@ def _new_viol(base: list[dict], cand: dict, src_len: dict) -> list[str]:
     return out
 
 
+def respace_reuse(cuts: list[dict], src_dir: Path | None, log=print) -> list[str]:
+    """(판단 주인: 계획 컷 B13 피하기 — 관제263 10-25) 렌더 시간표 컷(render_bench.timeline, snap_ss 뒤)에서 같은 원본 가까운 구간 재사용(B13)이 생긴
+    나레 컷을 **그 컷이 있던 원본 샷 안에서** 가장 덜 움직여 피한다. 판정 = quality_gate.reuse_violations_bench(_new_viol — 다시 적지 않는다) ·
+    조각·번쩍임 = render_bench.short_pieces(snap_ss 와 같은 경계·같은 자) · 원본 끝 = render_bench.src_left.
+    원음 컷(입 맞춤)·그림 컷·no_snap 은 안 옮긴다. 샷 안에서 못 피하면 그대로 두고 c['reuse_unfixed'] 에 적는다(관문·재료 몫 — 다른 장면을 골라야 한다).
+    재료.json 을 손으로 고른 편(우리 PC)·material_fit 이 고른 편(회원) 모두 이 시간표를 거치므로 한 곳에서 피한다(material_fit 은 snap 전 ss 로 골랐다).
+    반환 = 로그 글 목록."""
+    if not src_dir:
+        return []
+    from tools.calcopy.hybrid.render_bench import FPS, IMG_EXT, shot_starts, short_pieces, src_left
+    from tools.calcopy.hybrid.common import dur_of
+    vid = [c for c in cuts if c.get("ss") is not None and Path(str(c["src"])).suffix.lower() not in IMG_EXT and (Path(src_dir) / c["src"]).exists()]
+    lens = {s: dur_of(Path(src_dir) / s) for s in {c["src"] for c in vid}}
+    out = []
+    for c in vid:
+        if c.get("kind") != "tts" or c.get("no_snap"):
+            continue
+        others = [x for x in vid if x is not c]
+        if not _new_viol(others, c, lens):
+            continue
+        src = Path(src_dir) / c["src"]
+        ss0, d = float(c["ss"]), (round(float(c["t1"]) * FPS) - round(float(c["t0"]) * FPS)) / FPS
+        st = shot_starts(src)
+        mid = ss0 + d / 2
+        a = max([t for t in st if t <= mid] or [0.0])
+        b = min([t for t in st if t > mid] or [lens[c["src"]]])
+        n0, n1 = int(math.ceil(a * FPS - 1e-6)), int(math.floor((b - d) * FPS + 1e-6))
+        cand = sorted(range(n0, n1 + 1), key=lambda k: abs(k / FPS - ss0))
+        got = None
+        for k in cand:
+            s = round(k / FPS, 3)
+            left = src_left(src, s)
+            if s < 0 or (left is not None and d > left) or short_pieces(st, s, s + d):
+                continue
+            if not _new_viol(others, {**c, "ss": s}, lens):
+                got = s
+                break
+        if got is None:
+            c["reuse_unfixed"] = _new_viol(others, c, lens)
+            out.append(f"[B13] {c.get('line')} {Path(c['src']).stem}@{ss0:.2f} — 샷 [{a:.2f},{b:.2f}] 안에서 못 피함 → 다른 장면(재료.json): {c['reuse_unfixed'][0]}")
+        else:
+            c["ss_reuse"], c["ss"] = ss0, got
+            out.append(f"[B13] {c.get('line')} {Path(c['src']).stem} ss {ss0:.2f} → {got:.2f}(같은 샷 [{a:.2f},{b:.2f}] 안)")
+    for m in out:
+        log(m)
+    return out
+
+
 def constraint_flags(cand: dict, table: dict, fixed: list[dict], src_len: dict, outside: set, work: Path | None, texts: dict | None = None,
                      prod: dict | None = None, exclude: list | None = None, ident: dict | None = None, ref_person: str | None = None) -> dict:
     """채점 전 제약(표준 §12-3 ②) — 위반이면 그 이유(reject)를 적고 채점하지 않는다.
