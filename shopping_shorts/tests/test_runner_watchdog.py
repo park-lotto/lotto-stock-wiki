@@ -83,3 +83,16 @@ def test_cpu_busy_child_is_progress(tmp_path, monkeypatch):
     monkeypatch.setitem(R.CMDS, "busy", _busy_child)
     out = R.run_do(tmp_path, [{"id": "b", "cmd": "busy"}], log=lambda s: None, stall=1.5)
     assert out["b"] == {"ok": True}, out
+
+
+def _beating(W, d):         # 예산보다 오래 걸리지만 진행 신호를 내며 일하는 중(계획의 30초 박동처럼)
+    for i in range(6):
+        R.progress(W, "장면 맞추기")
+        time.sleep(0.5)
+    return {"ok": True}
+
+
+def test_over_budget_but_progressing_is_not_cut(tmp_path, monkeypatch):
+    monkeypatch.setitem(R.CMDS, "beat", _beating)
+    out = R.run_do(tmp_path, [{"id": "b", "cmd": "beat", "budget": 1.5}], log=lambda s: None, stall=1.0)
+    assert out["b"] == {"ok": True}, out

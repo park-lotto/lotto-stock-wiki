@@ -1516,7 +1516,10 @@ def _watch(W: Path, items: list, run_one, out: dict, log, budget_of, stall: floa
             rid = str(d.get("id") or d.get("cmd"))
             if not t.is_alive() or rid in out:
                 continue
-            over = now - t0 > float(d.get("budget") or budget_of(str(d.get("cmd"))))
+            bud = float(d.get("budget") or budget_of(str(d.get("cmd"))))
+            # 예산을 넘어도 일하는 중(진행 신호·파일·CPU)이면 끊지 않는다 — 넘은 뒤엔 60초만 조용해도 끊고, 예산 3배면 무조건
+            #   (10-26 run4: 계획 600.8초를 예산으로 끊어 같은 편이 10/13 에서 세 번 멈췄다 — 98 #126)
+            over = (now - t0 > bud and now - last > min(stall, 60.0)) or now - t0 > 3 * bud
             stuck = now - last > stall
             if over or stuck:
                 why = f"시간 초과({'예산 ' + str(int(now - t0)) + '초' if over else '진행 신호 ' + str(int(now - last)) + '초 없음'})"
