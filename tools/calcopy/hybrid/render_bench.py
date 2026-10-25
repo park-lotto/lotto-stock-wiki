@@ -682,38 +682,25 @@ def src_left(src: Path, ss: float) -> float | None:
     return round(_src_len[k] - ss - 1 / FPS, 3)
 
 
-SLIVER_SEC = 0.2      # 컷 처음·끝 이 안에 장면 경계가 있으면 '번쩍임'(앞뒤 샷이 몇 프레임 끼어 튀어 보인다)
-_shots: dict[str, list] = {}
+MIN_PIECE_SEC = 0.4   # 컷을 원본 장면 경계로 나눈 조각이 이보다 짧으면 번쩍임(오류기록 55·84) — 계획(snap_ss)·관문·품질 검사가 이 한 상수를 쓴다
+SLIVER_SEC = MIN_PIECE_SEC      # 컷 처음·끝 이 안에 장면 경계가 있으면 '번쩍임'(앞뒤 샷이 몇 프레임 끼어 튀어 보인다)
 
 
 def shot_starts(video: Path) -> list[float]:
-    """영상의 장면 경계(새 샷이 시작하는 초, 30fps 격자). 프레임 차(108폭 회색 평균) > max(25, 중앙값×4).
-    10-23 사장님 "중간중간 튄다": 원본이 1초 안팎 잘린 쇼츠라 컷 끝에 이웃 샷 1~5프레임이 끼었다(02 c09 웹페이지 3프레임 등)."""
-    import subprocess
-    import numpy as np
-    k = str(video)
-    if k not in _shots:
-        # 조각으로 읽는다(10-24: 26분 원본 47,760프레임을 한 번에 int16 로 바꾸다 1.84GiB 할당 실패 — 렌더·검사가 MemoryError 로 죽었다).
-        # 프레임 쌍마다 같은 식(|차| 평균)이라 값은 통째 계산과 같다.
-        FB, CH = 192 * 108, 1024
-        pr = subprocess.Popen(["ffmpeg", "-v", "error", "-i", k, "-vf", f"fps={FPS},scale=108:192,format=gray", "-f", "rawvideo", "-"],
-                              stdout=subprocess.PIPE, stdin=subprocess.DEVNULL)
-        ds, prev = [], None
-        while True:
-            buf = pr.stdout.read(FB * CH)
-            if not buf:
-                break
-            fr = np.frombuffer(buf[:len(buf) // FB * FB], np.uint8).reshape(-1, 192, 108).astype(np.int16)
-            if prev is not None:
-                fr = np.concatenate([prev, fr])
-            if len(fr) > 1:
-                ds.append(np.abs(np.diff(fr, axis=0)).mean(axis=(1, 2)))
-            prev = fr[-1:]
-        pr.wait()
-        d = np.concatenate(ds) if ds else np.zeros(0)
-        lim = max(25.0, 4 * float(np.median(d))) if len(d) else 25.0
-        _shots[k] = [round((i + 1) / FPS, 4) for i, x in enumerate(d) if x > lim]
-    return _shots[k]
+    """영상의 장면 경계(새 샷이 시작하는 초, 30fps 격자) — '경계가 어디냐'의 주인 한 곳(오류기록 84).
+    후보 = readline_tools.cutdet(상대 문턱 max(12, 3.5×이웃 중앙값) 또는 히스토그램차), 확정 = 경계 앞뒤 프레임 상관 < 0.6(_real_cut).
+    snap_ss(계획)·cut_boundary_gate(관문)·quality_gate.part_slivers(완성본 검사) 모두 이걸 부른다. 파일 옆 json 캐시.
+    (옛 판은 절대 문턱 max(25, 4×중앙값)이라 차 22~31 인 진짜 편집점을 놓쳤다 — 10-25 잇템로그 05·09 번쩍임.)"""
+    w, h = probe(Path(video))[:2]
+    return _src_cuts(Path(video), 0, int(h), int(w))
+
+
+def short_pieces(starts: list[float], a: float, b: float) -> list[float]:
+    """구간 [a,b) 를 경계(첫 프레임 직후·마지막 프레임 이후는 제외)로 쪼갠 조각 중 MIN_PIECE_SEC 보다 짧은 것의 길이."""
+    pts = [a] + [t for t in starts if a + 1.5 / FPS < t <= b - 1 / FPS + 1e-3] + [b]
+    if len(pts) == 2:
+        return []
+    return [round(y - x, 2) for x, y in zip(pts, pts[1:]) if y - x < MIN_PIECE_SEC - 1e-3]
 
 
 def slivers(starts: list[float], a: float, b: float, edge: float = SLIVER_SEC) -> list[float]:
@@ -726,12 +713,12 @@ def snap_ss(src: Path, ss: float, dur: float, reach: float = 0.4) -> float:
     if src.suffix.lower() in IMG_EXT or not src.exists():
         return ss
     st = shot_starts(src)
-    if not slivers(st, ss, ss + dur):
+    if not short_pieces(st, ss, ss + dur):
         return ss
     for k in range(1, int(reach * FPS) + 1):
         for s in (ss + k / FPS, ss - k / FPS):
             left = src_left(src, s)
-            if s >= 0 and (left is None or dur <= left) and not slivers(st, s, s + dur):
+            if s >= 0 and (left is None or dur <= left) and not short_pieces(st, s, s + dur):
                 return round(s, 3)
     return ss
 
@@ -777,7 +764,7 @@ MIN_PIECE_SEC = 0.4   # 컷을 원본 장면 경계로 나눈 조각이 이보�
 def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
     """렌더 전 관문 ③(10-25 잇템로그 05·09 번쩍임): 계획된 컷마다 원본 [ss, ss+길이] 안(가장자리 포함, 맨 앞 1프레임 제외)에
     장면 경계로 나눈 조각 중 MIN_PIECE_SEC(0.4초)보다 짧은 것이 있으면 막는다. 옛 shot_starts(절대 문턱 25)는 차 22~31 인 진짜 편집점을 놓쳤고 slivers 는 가장자리 0.2초만 봤다.
-    x 크롭은 무시하고 세로 범위만 쓴다(크롭 안 편집점만 보려면 원본 가로 전체와 다를 수 있음 — 거짓 경보는 눈으로 확인)."""
+    경계는 shot_starts(원본 전체 화면) — 크롭 밖 편집점도 센다. 계획(snap_ss)이 같은 경계로 먼저 피하고 이 관문은 확인만 한다."""
     src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
     if not src_dir:
         return []
@@ -789,13 +776,8 @@ def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
         ss = float(c["ss"])
         n = c.get("frames") or (round(c["t1"] * FPS) - round(c["t0"] * FPS))
         end = ss + n / FPS
-        w, h = probe(src)[:2]
-        cr = c.get("crop")
-        y0, y1 = (int(cr[1]), int(cr[1] + cr[3])) if isinstance(cr, list) and len(cr) == 4 else (0, int(h))
-        y1 = min(y1, int(h))
-        hit = [t for t in _src_cuts(src, y0, y1, int(w)) if ss + 1.5 / FPS < t <= end - 1 / FPS + 1e-3]
-        pts = [ss] + hit + [end]
-        short = [round(b - a, 2) for a, b in zip(pts, pts[1:]) if b - a < MIN_PIECE_SEC - 1e-3]
+        hit = [t for t in shot_starts(src) if ss + 1.5 / FPS < t <= end - 1 / FPS + 1e-3]
+        short = short_pieces(hit, ss, end)
         if hit and short:      # 양쪽이 긴 조각이면 원본 자체의 이어진 편집이라 통과 — 짧은 조각(번쩍임)만 막는다(오류기록 55: 0.3초 꼬리도 결함)
             bad.append(f"컷 경계 {c['line']} {c['src']} ss={ss:.2f}~{end:.2f} 안 원본 장면 경계 {[round(t, 2) for t in hit]}초 → 짧은 조각 {short}초(<{MIN_PIECE_SEC})")
     return bad
