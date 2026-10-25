@@ -51,7 +51,8 @@ TEXT_PROMPT = """그림의 노란 번호 칸 = 남의 영상 장면(샷) 하나 
 
 PRODUCT_PROMPT = """찾는 제품: {product}{ref}
 그림의 노란 번호 칸 = 영상 장면(샷) 하나 — 처음·가운데·끝 3프레임. 칸마다 화면의 제품을 판정:
-"same" = 찾는 제품(색·모양·용기가 같은 것)만 보인다 · "other" = 찾는 제품이 아닌 다른 제품(다른 색 캡슐·다른 용기·세럼·튜브 등)이 **하나라도 또렷이** 보인다 · "none" = 제품이 안 보인다(사람·손만).
+"same" = 찾는 제품(색·모양·용기가 같은 것)이 보이고 다른 제품 용기는 없다 · "other" = 찾는 제품과 **같은 종류의 다른 제품 용기**(다른 색 캡슐 통·다른 크림 통·세럼 병·튜브 등)가 **하나라도 또렷이** 보인다 · "none" = 제품 용기가 안 보인다(사람·손·얼굴만).
+함께 쓰는 도구(미용 기기·주걱·브러시)와 얼굴·손에 바른 내용물은 '다른 제품'으로 치지 않는다 — 용기로만 판정한다.
 출력 JSON만: {{"shots":[{{"n":번호,"p":"same"|"other"|"none"}}]}}  (번호 {lo}~{hi})"""
 
 RANK_PROMPT = """숏폼 편집자다. [대사 줄]마다 그 대사가 말하는 동작·상태·대상이 **화면에 보이는** 장면을 [장면 목록]에서 잘 맞는 순서로 최대 {k}개 골라라(장면 id 그대로).
@@ -280,7 +281,7 @@ def product_shots(table: dict, product: str, src_dir: Path, crops: dict, fdir: P
     from tools.calcopy.oneshot.scene_fit import _sheet
     cp = fdir / "shot_product.json"
     C = jload(cp) if cp.exists() else {}
-    pk = _key(product, str(ref or ""))[:8]
+    pk = _key(product, str(ref or ""), PRODUCT_PROMPT)[:8]     # 프롬프트가 바뀌면 다시 판정
     todo = []
     for s, v in table.items():
         for sh in v["shots"]:
@@ -541,14 +542,19 @@ def goal_of(st: dict, slug: str | None, log=print) -> dict | None:
     t = ((st.get("targets") or {}).get("scene_fit") or {})
     tm = t.get("mean_goal", (t.get("mean") or {}).get("ours_goal") if isinstance(t.get("mean"), dict) else None)
     tb = t.get("below7_goal", (t.get("below7") or {}).get("ours_goal") if isinstance(t.get("below7"), dict) else None)
-    same_ruler = "상위편_목표" in json.dumps(t, ensure_ascii=False)
+    from tools.calcopy.oneshot.scene_fit import RUBRIC_V
+    tj = json.dumps(t, ensure_ascii=False)
+    same_ruler = "상위편_목표" in tj and RUBRIC_V in tj          # 출처가 상위편_목표 ∧ 같은 RUBRIC_V(㉕ — 버전이 다르면 자 불일치)
     p = ROOT / "channel" / (slug or "_") / "_kal" / "상위편_목표.json"
     top = (jload(p).get("scene_fit") or {}) if p.exists() else {}
+    if top and top.get("rubric") != RUBRIC_V:
+        log(f"[fit] 경고: 상위편_목표.json rubric {top.get('rubric')} ≠ {RUBRIC_V} — 자 불일치, 벤치 재측정 필요(scene_fit.py bench)")
+        top = {}
     if tm is not None and tb is not None and same_ruler:
         return {"mean": float(tm), "below7": float(tb), "src": "판 targets.scene_fit(상위편_목표 출처)"}
     if top.get("p75_mean") is not None:
         if tm is not None:
-            log(f"[fit] 경고: 판 targets.scene_fit({tm}/{tb})는 같은 자 재측정 전 값 — 상위편_목표.json({top['p75_mean']}/{top['p25_below7']})을 쓴다(07 이 판에 옮겨 적을 것)")
+            log(f"[fit] 경고: 판 targets.scene_fit({tm}/{tb})는 {RUBRIC_V} 값이 아님 — 상위편_목표.json({top['p75_mean']}/{top['p25_below7']})을 쓴다(07 이 판에 옮겨 적을 것)")
         else:
             log("[fit] 경고: 판 targets.scene_fit 없음 — 상위편_목표.json 을 직접 읽는다(07 이 판에 적을 것)")
         return {"mean": float(top["p75_mean"]), "below7": float(top["p25_below7"]), "src": str(p.relative_to(ROOT))}
@@ -797,6 +803,12 @@ def plan(doc, work, version: str, llm=None, apply: bool = False, sign: bool = Fa
             return s
         with ThreadPoolExecutor(WORKERS) as ex:
             list(ex.map(run_slot, slots))
+        mute = [x["id"] for x in slots if x["kind"] == "tts" and x.get("cands") and all(c.get("score") is None for c in x["cands"])]
+        if mute:                 # 채점 답이 하나도 없는 칸 = 모델 호출 실패(한도·오류) — 막다른 칸으로 오판하지 않는다(10-25 사용량 한도 때 실측)
+            stop = f"멈춤(사유: 채점 답 없음 — 모델 호출 실패 {mute}, 다시 돌리면 캐시 밖만 다시 묻는다)"
+            log(f"[fit] {stop}")
+            rounds.append({"round": rnd, "ok": False, "mute": mute})
+            break
         sel = select(slots, src_len, floors)
         dead = [x for x in sel if x.get("dead")]
         if dead:                 # 막다른 칸 → 그 칸과 같은 줄 칸 후보를 넓힌다(모든 샷 1초 간격) → 다시 채점·고르기
