@@ -386,6 +386,65 @@ def test_reproduce_evenshopping_tone():
     assert tone.tone_events(str(_EV_SRC), **P) == json.loads(_EV_OLD.read_text())["kC8fkx1Ve3Q"]
 
 
+def _tex(seed, cell=8):
+    rng = np.random.default_rng(seed)
+    return cv2.resize(rng.integers(0, 255, (H // cell, W // cell, 3), dtype=np.uint8), (W, H), interpolation=cv2.INTER_NEAREST)
+
+
+def test_cutdet_v2_same_shot_base_and_rise(tmp_path):
+    """① 컷 뒤 샷이 원래 조금 흐리고(σ2.4→1.6) 12프레임 뒤 아주 선명한 샷으로 넘어가면: 같은 샷 바탕으로 재야 cut(다음 샷 바탕이면 zoomblur 오탐).
+    ② 컷 뒤 8프레임 내내 흐리다 그 뒤에야 선명(6프레임째에 안 풀림): rise 조건이 있어야 cut."""
+    A, B, C2 = _tex(11), _tex(12), _tex(13)
+    fr = [A] * 30
+    fr += [cv2.GaussianBlur(B, (0, 0), 2.4 - 0.8 * min(j, 6) / 6) for j in range(12)]   # 같은 샷 비율 0.47·rise 1.87 · 다음 샷 바탕이면 0.20
+    fr += [C2] * 30
+    p1 = tmp_path / "base.mp4"
+    _write_mp4(p1, fr)
+    d = cutdet.cutdet(str(p1), 0, H, v2=True, motion=False)
+    c = [x for x in d["cuts"] if abs(x["t"] - 1.0) <= 1 / FPS]
+    assert c and c[0]["kind"] == "cut", d["cuts"]
+    fr = [A] * 30 + [cv2.GaussianBlur(B, (0, 0), 6) for _ in range(8)] + [B] * 30
+    p2 = tmp_path / "rise.mp4"
+    _write_mp4(p2, fr)
+    d = cutdet.cutdet(str(p2), 0, H, v2=True, motion=False)
+    c = [x for x in d["cuts"] if abs(x["t"] - 1.0) <= 1 / FPS]
+    assert c and c[0]["kind"] == "cut" and c[0]["blur_ratio"] <= cutdet.V2_RATIO, d["cuts"]
+
+
+def test_cutdet_v2_flash_needs_fade(tmp_path):
+    """밝은 장면으로 그냥 컷(+60, 안 어두워짐) = cut · 흰 번쩍 뒤 서서히 어두워짐 = flash."""
+    A = (_tex(21) * 0.4).astype(np.uint8)
+    Bb = np.clip(A.astype(int) + 90, 0, 255).astype(np.uint8)
+    p1 = tmp_path / "bright.mp4"
+    _write_mp4(p1, [A] * 30 + [Bb] * 30)
+    d = cutdet.cutdet(str(p1), 0, H, v2=True, motion=False)
+    c = [x for x in d["cuts"] if abs(x["t"] - 1.0) <= 2 / FPS]
+    assert c and c[0]["kind"] != "flash", d["cuts"]
+    fl = [np.clip(A.astype(int) + int(150 * (0.8 ** j)), 0, 255).astype(np.uint8) for j in range(30)]
+    p2 = tmp_path / "flash.mp4"
+    _write_mp4(p2, [A] * 30 + fl)
+    d = cutdet.cutdet(str(p2), 0, H, v2=True, motion=False)
+    c = [x for x in d["cuts"] if abs(x["t"] - 1.0) <= 2 / FPS]
+    assert c and c[0]["kind"] == "flash", d["cuts"]
+
+
+def test_thumbmatch_landscape_crop(tmp_path):
+    """가로 썸네일(16:9, 가운데 세로 프레임 + 양옆 다른 그림): 가운데 9:16 을 잘라야 맞는 프레임(1.5초)·상관 0.9 넘음."""
+    from tools.calcopy.engine.readline_tools import thumbmatch
+    frames = [_tex(30 + i // 15, 16) for i in range(60)]                 # 0.5초마다 다른 그림
+    mp4 = tmp_path / "v.mp4"
+    _write_mp4(mp4, frames)
+    side = _tex(99, 16)
+    tw = int(H * 16 / 9)
+    canvas = cv2.resize(side, (tw, H))
+    x0 = (tw - W) // 2
+    canvas[:, x0:x0 + W] = frames[45]
+    tp = tmp_path / "t.jpg"
+    cv2.imencode(".jpg", canvas)[1].tofile(str(tp))
+    r = thumbmatch.thumbmatch(str(mp4), str(tp))
+    assert 1.5 - 0.2 <= r["best_t"] <= 2.0 and r["best_corr"] > 0.9, r
+
+
 def test_rules_only_no_state_file(tmp_path, monkeypatch):
     """rules_only: kal_state.json 을 만들지 않고 규칙빈도만 낸다(잇템로그 줄판독 2편 사본으로)."""
     sys.path.insert(0, str(ROOT / "tools/calcopy/engine"))
@@ -396,8 +455,22 @@ def test_rules_only_no_state_file(tmp_path, monkeypatch):
     for v in ("SbWTqCnleC8", "zOSpeiMw1nA"):
         shutil.copy(ROOT / f"channel/ititemlog/줄판독/{v}.json", ch / "줄판독" / f"{v}.json")
     monkeypatch.setattr(kal, "ROOT", tmp_path)
+    real = kal.step_rules
+
+    def saving_step(S):                                    # 단계가 저장까지 부른다고 쳐도(kal 본류는 mark→save) 파일이 안 생겨야 한다
+        r = real(S)
+        S.save()
+        return r
+    monkeypatch.setattr(kal, "step_rules", saving_step)
+    (ch / "_kal").mkdir()
+    hand = {"name": "zz판", "bench": {"channel": "@진짜채널", "ko": "진짜"}, "frame": {"window": [0, 486, 1080, 1434], "title": [{"text": "손"}]},
+            "voice": {"name": "문정", "voice_id": "tc_abc", "candidates": [], "why": "사장님"}, "caption": {"pack": "손팩"}}
+    (ch / "_kal/zz판_초안.json").write_text(json.dumps(hand, ensure_ascii=False), encoding="utf-8")
     st, out, note = rules_only.rules_only("zz", "@zz", ["SbWTqCnleC8", "zOSpeiMw1nA"])
     assert (ch / "_kal/규칙빈도.json").exists() and not (ch / "kal_state.json").exists()
+    plan = json.loads((ch / "_kal/zz판_초안.json").read_text(encoding="utf-8"))   # 손칸은 그대로(06 보고: 재집계가 ref·창·목소리를 비웠다)
+    assert plan["bench"]["channel"] == "@진짜채널" and plan["frame"]["window"] == [0, 486, 1080, 1434] and plan["voice"]["voice_id"] == "tc_abc"
+    assert plan["frame"]["title"] == [{"text": "손"}] and plan["caption"]["pack"] == "손팩" and plan["placement"]["rules"]["fx_rate"]
 
 
 def test_no_scratchpad_reference():

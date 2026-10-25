@@ -75,8 +75,8 @@ def bands_for(slug: str, layout: dict | None, H: int = 1920, vid: str | None = N
         cb = prof["capseg_band"]
         why.append(f"capseg 띠 = profiles/{slug}.json capseg_band(손 값)")
     elif mp4:
-        from tools.calcopy.engine.readline_tools.autoband import find_band
-        r = find_band(mp4, mode)
+        from tools.calcopy.engine.readline_tools.autoband import band_in_channel
+        r = band_in_channel(mp4, mode)
         cb = r["band"]
         why.append(f"capseg 띠 = autoband 자동(핵 {r['core']}·{r['mask']}) — 손 값 아님, 고치면 profiles/{slug}.json bands 에")
     elif lay.get("caption_band") and len(lay["caption_band"]) == 2:

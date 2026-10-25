@@ -409,6 +409,27 @@ def step_readlines(S: State):
     return "done", {"ids": ids}, f"줄판독 {len(ids)}편 strict 통과"
 
 
+HAND_KEYS = {("bench", "channel"), ("bench", "ko"), ("frame", "window"), ("voice",)}   # 사람이 고른 값 — 있으면 새 초안 값이 이기지 못한다
+
+
+def _empty(v) -> bool:
+    return v is None or v == [] or v == {} or v == ""
+
+
+def _keep_hand(old, new, path=()):
+    """판 초안 병합: 새 값이 비었으면 옛 값(사람이 채운 칸)을 쓰고, HAND_KEYS 칸은 옛 값이 있으면 언제나 옛 값. 그 밖엔 새 집계 값."""
+    if path == ("voice",):                         # 목소리는 고른 id 가 있을 때만 옛 값(미정 칸은 새 추천으로)
+        return old if isinstance(old, dict) and old.get("voice_id") and not (isinstance(new, dict) and new.get("voice_id")) else new
+    if path in HAND_KEYS and not _empty(old):
+        return old
+    if isinstance(old, dict) and isinstance(new, dict):
+        out = dict(new)
+        for k, ov in old.items():
+            out[k] = _keep_hand(ov, new[k], path + (k,)) if k in new else ov
+        return out
+    return old if _empty(new) and not _empty(old) else new
+
+
 def step_rules(S: State):
     kd = S.dir / "_kal"
     kd.mkdir(parents=True, exist_ok=True)      # --from rules(이미 분석한 채널)에서도 돈다
@@ -464,7 +485,13 @@ def step_rules(S: State):
                                     "strong": [f"{c['cond']} → {c['effect']} {c['k']}/{c['n']}" for c in R["rules"] if c["grade"] == "강"][:20]},
                           "counted": {}},
             "_todo": ["voice·bgm·sfx = engine/sound 결과", "frame.title/logo/credit = 스타일분석 §틀", "caption.pack = caption-motions.js 팩 이름(없으면 요청서)", "timing·cuts·sfx_files = 견본 styles/키치잇판.json 꼴"]}
-    (kd / f"{S.d['slug']}판_초안.json").write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
+    pp = kd / f"{S.d['slug']}판_초안.json"
+    if pp.exists():                                # 다시 돌 때 사람이 채운 손칸(ref·창·목소리·제목…)을 비우지 않는다(06 보고 10-25 — rules_only 재집계가 덮어썼다)
+        try:
+            plan = _keep_hand(json.loads(pp.read_text(encoding="utf-8")), plan)
+        except (ValueError, OSError):
+            pass
+    pp.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
     if not (S.dir / "스타일분석.md").exists():
         return "waiting_human", {"draft": str(draft), "plan_draft": str(kd / f"{S.d['slug']}판_초안.json")}, HUMAN["rules"]
     return "done", {"draft": str(draft), "palette": str(S.dir / "팔레트.json"), "plan_draft": str(kd / f"{S.d['slug']}판_초안.json")}, "규칙빈도·대본언어·팔레트·판 설정 초안 + 스타일분석.md 있음"
