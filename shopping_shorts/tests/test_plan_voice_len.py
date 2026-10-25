@@ -47,6 +47,7 @@ def _stub(monkeypatch, durs, called):
     monkeypatch.setattr(RB, "fit_voice", lambda S, st, sent, align, log=print: sent)
     monkeypatch.setattr(RB, "plan_rows", lambda S, T, st, locate=None: {"log": "", "transitions": []})
     monkeypatch.setattr(RB, "transitions_of", lambda T, st, placed, log=None: [])
+    monkeypatch.setattr(RB, "contact_sheet", lambda *a, **k: None, raising=False)      # G-10 시트는 test_contact_sheet 몫
     for name in ("cut_boundary_gate", "cut_content_gate", "cut_length_gate", "cut_still_gate"):
         monkeypatch.setattr(RB, name, lambda *a, **k: [])
     monkeypatch.setattr(TR, "card_text_gate", lambda doc: [])

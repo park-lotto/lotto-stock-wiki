@@ -1230,6 +1230,50 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
     return bad
 
 
+SHEET_W = 360      # 접촉 시트 한 장 폭(px) — 98 #63 "0.5초 시트(220px)로는 컵·워터마크가 안 보였다"
+
+
+def contact_sheet(T: dict, M: dict, st: dict, out: Path, S: dict | None = None) -> Path | None:
+    """G-10 렌더 없는 눈 검사 — 계획 컷마다 처음·가운데·끝 3장(look_times)을 렌더 조각과 같은 그림(cut_frame·cut_crop·재료 blur = 관문 ④와 같은 프레임)으로
+    원본에서 뽑아 한 줄씩. 칸 머리 = 컷 번호·줄·시각·원본@ss + 그 줄 글. 남의 글자·얼굴·다른 제품·술·같은 장면 반복을 렌더 전에 눈으로 본다.
+    반환 = 쓴 jpg(컷 없으면 None)."""
+    import numpy as np
+    from PIL import Image, ImageDraw
+    src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
+    if not src_dir or not T.get("cuts"):
+        return None
+    _, _, ww, wh = frame_window(st["frame"])
+    th = round(SHEET_W * wh / ww)
+    head = 44
+    text = {L["id"]: L.get("tts") or " ".join(c["text"] for c in caps_of(L)) for L in (S or {}).get("lines", [])}
+    f1, f2 = _font("Pretendard-Regular.otf", 20), _font("Pretendard-Regular.otf", 17)
+    rows = []
+    for k, c in enumerate(T["cuts"]):
+        src = src_dir / c["src"]
+        row = Image.new("RGB", (SHEET_W * 3, head + th), (20, 20, 20))
+        dr = ImageDraw.Draw(row)
+        dr.text((6, 2), f"#{k} {c['line']} {c['t0']:.2f}~{c['t1']:.2f}s  {c['src']}@{c.get('ss')}", font=f1, fill=(255, 220, 0))
+        dr.text((6, 24), str(text.get(c["line"], ""))[:60], font=f2, fill=(230, 230, 230))
+        if src.exists():
+            img = src.suffix.lower() in IMG_EXT
+            n = c.get("frames") or (round(c["t1"] * FPS) - round(c["t0"] * FPS))
+            crop = cut_crop(c, src, (ww, wh))
+            regs = (M.get("blur") or {}).get(c["src"])
+            for j, dt in enumerate([0.0] if img else look_times(n)):
+                a = cut_frame(src, 0.0 if img else float(c.get("ss") or 0) + dt, crop, (ww, wh), regs)
+                if a is None:
+                    continue
+                row.paste(Image.fromarray(np.ascontiguousarray(a[:, :, ::-1])).resize((SHEET_W, th)), (j * SHEET_W, head))
+        rows.append(row)
+    sheet = Image.new("RGB", (SHEET_W * 3, sum(r.height for r in rows)), (0, 0, 0))
+    y = 0
+    for r in rows:
+        sheet.paste(r, (0, y)); y += r.height
+    out = Path(out); out.parent.mkdir(parents=True, exist_ok=True)
+    sheet.save(out, quality=88)
+    return out
+
+
 def count_frames(p: Path) -> int:
     return int(run(["ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0", "-show_entries", "stream=nb_read_frames",
                     "-of", "csv=p=0", p]).stdout.strip().split(",")[0] or 0)   # ICC side_data 면 '78,' (98 #73)
@@ -2369,6 +2413,9 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         placed = plan_rows(S, T, st)
         placed["transitions_drawn"] = transitions_of(T, st, placed, log)
         jsave(doc / "plan/계획_시간표.json", {"timeline": T, "placement": placed})
+        sheet = contact_sheet(T, M, st, doc / "plan/계획_접촉시트.jpg", S)      # G-10 렌더 없는 눈 검사(관문이 멈춰도 볼 수 있게 관문 앞에서)
+        if sheet:
+            log(f"접촉 시트(컷마다 처음·가운데·끝, 렌더 칸 그대로) → {sheet}")
         over = [c for c in T["cuts"] if c["over"] > 0]
         for c in T["cuts"]:
             log(f"  {c['line']:4s} {c['t0']:6.2f}~{c['t1']:6.2f} {c['dur']:.2f}s max {c.get('max')} {c['src']}@{c.get('ss')}")
@@ -2385,7 +2432,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
                     + cut_content_gate(T, M, st, doc, R, log) + cut_length_gate(T, st) + cut_still_gate(T, M, st))                                                         # 관문 ④ 컷 안 남의 글자·남의 얼굴
         if card_bad:
             raise StageError(" / ".join(card_bad))
-        return {"timeline": T, "placement": placed, "length": length, "over": msg}
+        return {"timeline": T, "placement": placed, "length": length, "over": msg, "sheet": str(sheet) if sheet else None}
     sent, tempo, align = voice_plan(S, st, R, log)      # 관문 ⑧ 주인 — 계획과 같은 함수(같은 소리·같은 길이)
     if not sent:    # 나레 없는 편(관제 263 02 2차 ②) — TTS 안 부른다(돈 0). 자막 줄(kind sub) 시간표 + 원음 + 배경음·효과음
         log("[나레 없음] tts 줄 0 — TTS 건너뜀, 자막 시간표(sub)·원음·배경음·효과음만")
