@@ -116,13 +116,23 @@ def tts_lines(d: dict) -> list[dict]:
     return out
 
 
-def version_of(path: Path, given: str | None) -> str:
+def version_of(path: Path, given: str | None, doc: dict | None = None) -> str:
+    """판 정하기: --version → 경로 안 판 폴더 이름 → 대본의 채널 이름 + '판'(재미썸홈 → 재미썸홈판) → 경로에 '재미썸홈' → 잇썸홈판.
+    대본 채널 칸(10-26): preset_make 작품(channel/evenshopping/작품N/대본.json '채널: 재미썸홈')이 옛 규칙으론 잇썸홈판으로 재지던 것을 바로잡는다."""
     if given:
         return given
     names = ST.names()
     for part in reversed(Path(path).parts):
         if part in names:
             return part
+    if doc is None:
+        try:
+            doc = json.loads(Path(path).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            doc = {}
+    ch = str((doc or {}).get("채널") or (doc or {}).get("channel") or "").strip() if isinstance(doc, dict) else ""
+    if ch and f"{ch}판" in names:
+        return f"{ch}판"
     return "재미썸홈판" if "재미썸홈" in str(path) else "잇썸홈판"
 
 
@@ -216,6 +226,15 @@ def rule_check(r: dict, d: dict, st: dict) -> tuple[bool, str]:
         ok = R["cv"] <= r["max"]
         tip = "" if ok else " · 제안 " + " / ".join(f"{x['line']} {x['why']}" for x in R["suggest"][:3])
         return ok, f"줄 예상 cps 변동계수 {R['cv']} (≤{r['max']}){tip}"
+    if k == "beats":
+        got = beats_count(d, r)
+        bad = [f"{b['name']} {len(got[b['name']])}줄({b['min']}~{b['max']})" for b in r["beats"] if not b["min"] <= len(got[b["name"]]) <= b["max"]]
+        info = " · ".join(f"{n} {v}" for n, v in got.items())
+        return not bad, (f"박자 모자람/넘침 {bad} — " if bad else "") + f"줄 머리 박자 {info}"
+    if k == "sibling_repeat":
+        R = sibling_repeat(Path(d.get("__path__") or ""), d, r, d.get("__version__"))
+        ok = not R["bad"]
+        return ok, (" / ".join(R["bad"]) if not ok else f"편끼리 첫마디 겹침 최대 {R['worst']}(≤{r['max_share']}) · 비교 {R['n']}편")
     if k in ("narr_share", "est_length"):
         cps = st.get("cps_target", 7.0)
         tn = sum(nchar(txt(l)) for l in T) / cps
@@ -351,10 +370,108 @@ def alt_disclosed(d: dict) -> dict | None:
                    "예 '영상 보고 쿠팡에서 찾아봤는데 똑같은 건 없어서 비슷한 걸로 써 봤어요'(제작순서 03 · 사장님 10-25)"}
 
 
+# ── 박자(고조·반전) 세기 · 편끼리 첫마디 겹침 — 판 설정 script.audit 규칙 'beats'·'sibling_repeat' ─────────────────
+#   사장님 10-25(규칙서 숏템템플릿 §2 8·8-1·8-2): 편마다 같은 틀 반복 금지(작품6·7·8 이 8줄 역할·줄 머리 말이 똑같았다) ·
+#   고조 2~3 · 반전 1~2. 기준 숫자·연결어 무늬는 판 설정에만(여기서 정하지 않는다). 판단 주인 = beat_of · sibling_repeat.
+def _head(text: str, n: int) -> str:
+    return _norm(text)[:n]
+
+
+def beat_of(text: str, beats: list[dict], head_chars: int = 16, max_start: int = 4) -> str | None:
+    """(판단 주인 — 줄 박자) 줄 머리(공백·부호 뺀 앞 head_chars 자)에서 판 beats 무늬가 **앞 max_start 자 안에서 시작**하면 그 박자 이름
+    (목록 순서 = 우선) / 없으면 None. '이게 진짜 말도 안 되는 게'(4자 뒤 시작)는 박자, '화력이 세서 심지어 …'(5자 뒤)는 줄 중간 말이라 아니다.
+    역할 칸(role)은 쓴 사람이 붙인 이름이라 믿지 않고 글로 잰다(points_check 와 같은 생각)."""
+    h = _head(text, head_chars)
+    for b in beats:
+        m = re.search(b["pattern"], h)
+        if m and m.start() <= max_start:
+            return b["name"]
+    return None
+
+
+def beats_count(d: dict, r: dict) -> dict:
+    """나레 줄(첫 줄 = 제목 줄 뺌)마다 beat_of → {박자 이름: [줄 id…]}."""
+    out = {b["name"]: [] for b in r["beats"]}
+    for k, l in enumerate(narr_lines(d)):
+        if k == 0 and r.get("skip_first", True):
+            continue
+        b = beat_of(_say(l) if not l.get("text") else l["text"], r["beats"], int(r.get("head_chars", 16)), int(r.get("max_start", 4)))
+        if b:
+            out[b].append(l.get("id", k))
+    return out
+
+
+def _channel_root(path: Path) -> Path:
+    """편 폴더들을 담은 채널 폴더 — channel/<slug>, 없으면(시험 등) 대본 폴더의 부모."""
+    p = Path(path).resolve()
+    for a in p.parents:
+        if a.parent.name == "channel":
+            return a
+    return p.parent.parent
+
+
+def _same_item(a: dict, b: dict) -> bool:
+    """같은 제품의 변형 판(작품9 원음 A·B·C)은 서로 비교하지 않는다 — 쿠팡 상품번호 또는 topic 이 같으면 같은 편."""
+    pa, pb = (a.get("coupang") or {}).get("product_id"), (b.get("coupang") or {}).get("product_id")
+    if pa and pb and str(pa) == str(pb):
+        return True
+    return bool(a.get("topic")) and a.get("topic") == b.get("topic")
+
+
+def siblings(path: Path, d: dict, version: str, only_preset: bool = False) -> list[tuple[Path, dict]]:
+    """같은 채널 폴더 안의 다른 편 대본 중 같은 판(version_of)인 것 — 같은 제품 변형·자기 자신 제외(only_preset = preset 칸 있는 작품 대본끼리만)."""
+    me, out = Path(path).resolve(), []
+    root = _channel_root(path)
+    for p in sorted(root.glob("**/대본.json")):
+        if p.resolve() == me:
+            continue
+        try:
+            o = json.loads(p.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if not isinstance(o, dict) or version_of(p, None, o) != version or _same_item(d, o):
+            continue
+        if only_preset and not o.get("preset"):
+            continue
+        out.append((p, as_lines(o)))
+    return out
+
+
+def sibling_repeat(path: Path, d: dict, r: dict, version: str | None) -> dict:
+    """(판단 주인 — 편끼리 첫마디 겹침) 이 편 나레 줄 머리(앞 head_chars 자) 가운데 다른 편 줄 머리에도 있는 비율의 최대(편 하나와 견줌)
+    + 첫 줄 앞 first_chars 자가 같은 편 + 줄 역할 순서가 통째로 같은 편. 반환 {worst, n, bad[], pairs[]}."""
+    if not path or not Path(path).exists():
+        return {"worst": 0.0, "n": 0, "bad": [], "pairs": []}
+    n, fc = int(r.get("head_chars", 4)), int(r.get("first_chars", 12))
+    mine = [_say(l) if not l.get("text") else l["text"] for l in narr_lines(d)]
+    heads = [_head(t, n) for t in mine if _head(t, n)]
+    roles = [str(l.get("role") or "") for l in d.get("lines") or []]
+    worst, bad, pairs = 0.0, [], []
+    sib = siblings(path, d, version or version_of(Path(path), None, d), only_preset=r.get("scope") == "preset")
+    for p, o in sib:
+        other = [_say(l) if not l.get("text") else l["text"] for l in narr_lines(o)]
+        oh = {_head(t, n) for t in other}
+        same = [h for h in heads if h in oh]
+        sh = round(len(same) / max(1, len(heads)), 3)
+        name = p.parent.name
+        pairs.append({"doc": name, "share": sh, "same": same})
+        if sh > worst:
+            worst = sh
+        if sh > float(r["max_share"]) + 1e-9:
+            bad.append(f"'{name}'와 줄 첫마디 {len(same)}/{len(heads)}={sh} 겹침(≤{r['max_share']}) {same} — 연결어 틀을 돌려 쓴다(설명서 '돌림')")
+        if mine and other and fc and _head(mine[0], fc) == _head(other[0], fc):
+            bad.append(f"'{name}'와 첫 줄 앞 {fc}자 같음 '{mine[0][:20]}'")
+        o_roles = [str(l.get("role") or "") for l in o.get("lines") or []]
+        if r.get("roles_same") is False and any(roles) and roles == o_roles:
+            bad.append(f"'{name}'와 줄 역할 순서가 통째로 같다 {roles}")
+    return {"worst": worst, "n": len(sib), "bad": bad, "pairs": sorted(pairs, key=lambda x: -x["share"])[:5]}
+
+
 def audit(path: Path, version: str | None = None) -> dict:
     raw = json.loads(Path(path).read_text(encoding="utf-8"))
     d = as_lines(raw)
-    v = version_of(Path(path), version)
+    v = version_of(Path(path), version, raw)
+    d = {**d, "__path__": str(path), "__version__": v}       # 편끼리 규칙(sibling_repeat)이 자기 자리·판을 안다
     st = ST.load(v)
     lines = tts_lines(d)
     res = {"file": str(path), "version": v, "n_lines": len(lines), "chars": sum(nchar(l["text"]) for l in lines), "rules": []}
@@ -363,6 +480,8 @@ def audit(path: Path, version: str | None = None) -> dict:
     if not any(r.get("kind") == "tts_cps_spread" for r in rules) and speech_rule(st):
         rules.append(speech_rule(st))
     for r in rules:
+        if r.get("scope") == "preset" and not raw.get("preset"):      # 'preset' = preset_make 작품 대본만(채널 폴더 작품N — 하이브리드 판 대본은 안 잰다)
+            continue
         if r["kind"] == "engine":
             e = engine(r["name"], d, lines)
             res["engine"] = e
