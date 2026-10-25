@@ -1,0 +1,735 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 키치잇판) · 시각은 final.mp4 기준 초",
+ "pack": "kitchit",
+ "rows": [
+  {
+   "line": "N1",
+   "t0": 0.0,
+   "t1": 1.13,
+   "text": "배우 이영애가",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "이영애가"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "N1",
+   "t0": 1.13,
+   "t1": 1.92,
+   "text": "메이크업을 해도",
+   "speaker": "narr",
+   "variant": "typing",
+   "emph": [
+    {
+     "word": "메이크업을"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "typing",
+   "chars": [
+    1.13,
+    1.185,
+    1.24,
+    1.295,
+    1.35,
+    1.405,
+    1.46
+   ]
+  },
+  {
+   "line": "N1",
+   "t0": 1.92,
+   "t1": 2.677,
+   "text": "클렌징 오일을",
+   "speaker": "narr",
+   "variant": "typing",
+   "emph": [
+    {
+     "word": "오일을"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "typing",
+   "chars": [
+    1.92,
+    1.975,
+    2.03,
+    2.085,
+    2.14,
+    2.195
+   ]
+  },
+  {
+   "line": "N1",
+   "t0": 2.677,
+   "t1": 3.421,
+   "text": "안 쓴다네요?",
+   "speaker": "narr",
+   "variant": "typing",
+   "emph": [
+    {
+     "word": "안 쓴다네요?"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "typing",
+   "chars": [
+    2.677,
+    2.732,
+    2.787,
+    2.842,
+    2.897,
+    2.952
+   ]
+  },
+  {
+   "line": "O1",
+   "t0": 3.421,
+   "t1": 4.671,
+   "text": "나 같은 경우엔",
+   "speaker": "orig",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O1",
+   "t0": 4.671,
+   "t1": 5.821,
+   "text": "메이크업해도",
+   "speaker": "orig",
+   "variant": "typing",
+   "emph": [
+    {
+     "word": "메이크업해도"
+    }
+   ],
+   "sticker": "heart",
+   "stickers": [],
+   "enter": "typing",
+   "chars": [
+    4.671,
+    4.726,
+    4.781,
+    4.836,
+    4.891,
+    4.946
+   ]
+  },
+  {
+   "line": "O1",
+   "t0": 5.821,
+   "t1": 6.521,
+   "text": "따로 클렌저",
+   "speaker": "orig",
+   "variant": "typing",
+   "emph": [
+    {
+     "word": "클렌저"
+    }
+   ],
+   "sticker": "heart",
+   "stickers": [],
+   "enter": "typing",
+   "chars": [
+    5.821,
+    5.876,
+    5.931,
+    5.986,
+    6.041
+   ]
+  },
+  {
+   "line": "O1",
+   "t0": 6.521,
+   "t1": 7.171,
+   "text": "안 해요",
+   "speaker": "orig",
+   "variant": "typing",
+   "emph": [],
+   "sticker": "heart",
+   "stickers": [],
+   "enter": "typing",
+   "chars": [
+    6.521,
+    6.576,
+    6.631
+   ]
+  },
+  {
+   "line": "N2",
+   "t0": 7.171,
+   "t1": 7.79,
+   "text": "도대체 뭘로",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "뭘로"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N2",
+   "t0": 7.79,
+   "t1": 8.432,
+   "text": "지우길래?",
+   "speaker": "narr",
+   "variant": "typing",
+   "emph": [
+    {
+     "word": "지우길래?"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "typing",
+   "chars": [
+    7.79,
+    7.845,
+    7.9,
+    7.955,
+    8.01
+   ]
+  },
+  {
+   "line": "O2",
+   "t0": 8.432,
+   "t1": 8.912,
+   "text": "클렌저",
+   "speaker": "orig",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O2",
+   "t0": 8.912,
+   "t1": 9.572,
+   "text": "이걸로 그냥",
+   "speaker": "orig",
+   "variant": "typing",
+   "emph": [
+    {
+     "word": "이걸로"
+    }
+   ],
+   "sticker": "heart",
+   "stickers": [],
+   "enter": "typing",
+   "chars": [
+    8.912,
+    8.967,
+    9.022,
+    9.077,
+    9.132
+   ]
+  },
+  {
+   "line": "O2",
+   "t0": 9.572,
+   "t1": 10.322,
+   "text": "세수하시고",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [
+    {
+     "word": "세수하시고"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O2",
+   "t0": 10.322,
+   "t1": 11.222,
+   "text": "포밍 다 돼요",
+   "speaker": "orig",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "다 돼요"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "N3",
+   "t0": 11.222,
+   "t1": 11.923,
+   "text": "알고 보니",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "알고 보니"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "N3",
+   "t0": 11.923,
+   "t1": 12.811,
+   "text": "본인 브랜드인",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "본인 브랜드"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "N3",
+   "t0": 12.811,
+   "t1": 13.582,
+   "text": "리아네이처의",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "리아네이처의"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N3",
+   "t0": 13.582,
+   "t1": 14.348,
+   "text": "클렌저였대요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "클렌저였대요"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "N4",
+   "t0": 14.348,
+   "t1": 15.449,
+   "text": "저도 보자마자",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "보자마자"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N4",
+   "t0": 15.449,
+   "t1": 15.927,
+   "text": "하나 사서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "하나"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N4",
+   "t0": 15.927,
+   "t1": 16.72,
+   "text": "따라 해 봤어요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "따라"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "N5",
+   "t0": 16.72,
+   "t1": 18.356,
+   "text": "약산성 폼클렌저라",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "약산성"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "N5",
+   "t0": 18.356,
+   "t1": 19.038,
+   "text": "거품 한 번에",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "거품"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N5",
+   "t0": 19.038,
+   "t1": 20.149,
+   "text": "세안이 끝나더라고요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "끝나더라고요"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "N6",
+   "t0": 20.149,
+   "t1": 21.179,
+   "text": "심지어 임신하고",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "심지어"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N6",
+   "t0": 21.179,
+   "t1": 22.088,
+   "text": "나서 순한",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "순한"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N6",
+   "t0": 22.088,
+   "t1": 23.313,
+   "text": "화장품을 찾다가",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "화장품을"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "N6",
+   "t0": 23.313,
+   "t1": 23.866,
+   "text": "직접 만든",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N6",
+   "t0": 23.866,
+   "t1": 24.467,
+   "text": "브랜드래요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "브랜드래요"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "N7",
+   "t0": 24.467,
+   "t1": 25.078,
+   "text": "배우 이영애",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "이영애"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "N7",
+   "t0": 25.078,
+   "t1": 26.285,
+   "text": "영상은 조회수",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N7",
+   "t0": 26.285,
+   "t1": 27.569,
+   "text": "111만이 넘을 만큼",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "111만이"
+    }
+   ],
+   "sticker": "",
+   "stickers": [
+    {
+     "kind": "gem",
+     "word": "111만이"
+    }
+   ],
+   "enter": "pop"
+  },
+  {
+   "line": "N7",
+   "t0": 27.569,
+   "t1": 28.1,
+   "text": "인기래요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  }
+ ],
+ "sfx": [
+  {
+   "t": 1.13,
+   "kind": "ding",
+   "why": "cap"
+  }
+ ],
+ "flashes": [],
+ "transitions": [
+  {
+   "t": 7.171,
+   "kind": "zoomblur",
+   "ms": 167.0,
+   "zoom": 0.12,
+   "sigma": 0.5,
+   "why": "화자 바뀜"
+  },
+  {
+   "t": 8.432,
+   "kind": "black",
+   "ms": 33.0,
+   "why": "화자 바뀜"
+  },
+  {
+   "t": 23.028,
+   "kind": "zoomblur",
+   "ms": 167.0,
+   "zoom": 0.12,
+   "sigma": 0.5,
+   "why": "컷 경계"
+  }
+ ],
+ "memes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = BRa5Iv4A3Y8",
+  "스티커 gem → N7「111만이 넘을 만큼」",
+  "스티커 gem 본보기 3개 중 1개만(조건 맞는 덩어리 모자람)",
+  "스티커 spark_lines 본보기 2개 중 0개만(조건 맞는 덩어리 모자람)",
+  "전환 [(7.171, 'zoomblur'), (8.432, 'black'), (23.028, 'zoomblur')] (판 cuts.transition.kinds 비율 {'zoomblur': 0.1, 'black': 0.07, 'flash': 0.01}, 컷 경계 18·붙일 수 있는 10(≥1.2초))",
+  "효과음 1발(본보기 1) [(1.13, 'cap')]",
+  "꾸밈 없음 2→5/33(판 plain_share 0.163 → 5) 강조 뺌 ['N6「직접 만든」', 'N7「영상은 조회수」', 'N7「인기래요」']",
+  "등장 {'pop': 12, 'typing': 8, 'cut': 13} · 강조 27/33",
+  "꾸밈 답 없음(deco_answers.json)"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "BRa5Iv4A3Y8",
+  "worst_slot_diff": 0.09,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "ours": {
+     "pop": 0.57,
+     "cut": 0.43
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 7
+   },
+   "narr.rest": {
+    "bench": {
+     "pop": 0.4,
+     "cut": 0.4,
+     "typing": 0.2
+    },
+    "ours": {
+     "typing": 0.22,
+     "pop": 0.39,
+     "cut": 0.39
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 0.83,
+    "n": 18
+   },
+   "orig.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 2
+   },
+   "orig.rest": {
+    "bench": {
+     "typing": 0.69,
+     "cut": 0.23,
+     "pop": 0.08
+    },
+    "ours": {
+     "typing": 0.67,
+     "cut": 0.17,
+     "pop": 0.17
+    },
+    "bench_emph": 0.77,
+    "ours_emph": 0.83,
+    "n": 6
+   },
+   "stickers": {
+    "bench": {
+     "spark_lines": 2,
+     "heart": 3,
+     "gem": 3
+    },
+    "ours": {
+     "heart": 4,
+     "gem": 1
+    },
+    "vs": {
+     "gem": "1/3(벤치 12% 편만 씀 — 모자라도 벤치 범위)",
+     "heart": "4/3(판 규칙 없음 — 안 그림)",
+     "spark_lines": "0/2(벤치 38% 편만 씀 — 모자라도 벤치 범위)"
+    }
+   },
+   "sfx": {
+    "bench": 1,
+    "ours": 1,
+    "kinds": {
+     "ding": 1
+    }
+   },
+   "transitions": {
+    "ours": {
+     "zoomblur": 2,
+     "black": 1
+    },
+    "plan": {
+     "src": "판 cuts.transition.kinds",
+     "share": {
+      "zoomblur": 0.1,
+      "black": 0.071,
+      "flash": 0.014
+     },
+     "cut_bounds": 18,
+     "want_raw": {
+      "zoomblur": 1.8,
+      "black": 1.278,
+      "flash": 0.252
+     },
+     "want": 3,
+     "eligible": 10,
+     "picked": {
+      "zoomblur": 2,
+      "black": 1
+     },
+     "min_cut": 1.2
+    }
+   },
+   "sites": {},
+   "meme": {
+    "ours": 0
+   }
+  },
+  "bad": []
+ }
+}
