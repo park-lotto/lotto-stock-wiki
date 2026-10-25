@@ -26,9 +26,9 @@
   "db_below_voice": 16.5,
   "duck_orig_db": -6.0,
   "duck_narr_db": 0.0,
-  "fade_out": 0.4,
+  "fade_out": 0.09,
   "candidates": [],
-  "why": "BGM 6/6 추정(뜯기 bgm_rules present 5/5, 경쾌) · 곡 passo_bem_solto·비율 0.15(≈−16.5dB) = defaults.json(칼카피_OE11 계획.md:100) · 원음 구간 덕킹 OE 6.6·IRFN 5.4dB → −6 · 나레 덕킹 측정 없음 0 · fade 0.4 손 상수"
+  "why": "BGM 6/6 추정(뜯기 bgm_rules present 5/5, 경쾌) · 곡 passo_bem_solto·비율 0.15(≈−16.5dB) = defaults.json(칼카피_OE11 계획.md:100) · 원음 구간 덕킹 OE 6.6·IRFN 5.4dB → −6 · 나레 덕킹 측정 없음 0 · fade_out 0.09 = 벤치 6편 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.085초(0.04~0.22 — handconst.py hottemreport bgm.fade_out, 원본 소리 신호급)"
  },
  "loudness": {
   "lufs": -14.0,
@@ -41,9 +41,9 @@
   "why": "벤치 6편 25.22~36.22초(규칙빈도.json episodes.dur)"
  },
  "timing": {
-  "gap": 0.1,
-  "tail": 0.3,
-  "why": "손 상수 — 벤치 줄 사이 쉼 미측정(06)"
+  "gap": 0.08,
+  "tail": 0.31,
+  "why": "벤치 6편 원본 소리 실측(handconst.py hottemreport → _kal/손상수_실측.json): gap 0.08 = 줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙(모든 줄 경계 n=51, p25 0.04·p75 0.16 — 경계 ±0.15초 창 안 가장 긴 쉼, 쉼 문턱 = 편별 (말 p50+p5)/2) · tail 0.31 = 마지막 말 소리 끝→영상 끝 편 중앙 0.312초(3.465·0.307·0.257·0.317·0.403·0.1 — 로컬 위스퍼 마지막 낱말 끝 p≥0.4)"
  },
  "frame": {
   "kind": "window",
@@ -111,13 +111,13 @@
    "orig.rest": "cut"
   },
   "variant_for": {},
-  "typing_cps": 10.0,
+  "typing_cps": 27.0,
   "chunk_max_chars": 8,
   "band": [
    1393,
    1492
   ],
-  "why": "나레 흰 #FFFFFF 123줄·검정 외곽 8~13px · 원음 = 편마다 다른 기울임 색 · 한 줄 가운데 잉크 y≈1393~1492(편마다 1365~1492) 73px · 등장 instant 141/170 · 조각 자수 중앙 6~8(규칙빈도 episodes) → 8 · typing 13줄(70~1030ms) — typing_cps 10 손 상수"
+  "why": "나레 흰 #FFFFFF 123줄·검정 외곽 8~13px · 원음 = 편마다 다른 기울임 색 · 한 줄 가운데 잉크 y≈1393~1492(편마다 1365~1492) 73px · 등장 instant 141/170 · 조각 자수 중앙 6~8(규칙빈도 episodes) → 8 · typing 13줄(70~1030ms) — typing_cps 27 = 그 13/170줄 글자÷등장 ms 중앙 27.0자/초(handconst.py hottemreport caption.typing_cps) · 판 enter 칸에 typing 없음(지금은 렌더에 안 닿음)"
  },
  "cuts": {
   "push_tts": 0.0,

@@ -20,12 +20,12 @@
  "_why_cps_target": "벤치 화면 글자/초 4.55~5.92(6편 규칙빈도.json episodes.narr_cps — 나레 없음, 자막 읽는 속도) · 초안 5.36",
  "bgm": {
   "id": "sweets",
-  "db_below_voice": 12.0,
-  "duck_orig_db": -6.0,
+  "db_below_voice": 0.0,
+  "duck_orig_db": -4.0,
   "duck_narr_db": 0.0,
-  "fade_out": 0.4,
+  "fade_out": 0.01,
   "candidates": [],
-  "why": "배경음악 낮게 −17~−30dB(스타일분석 §0) — 곡 미측정 → 손 상수 sweets·12dB·원음 −6·fade 0.4(06 bgm_fp 뒤 교체)"
+  "why": "배경음악 낮게 −17~−30dB(스타일분석 §0) · 곡 sweets = 곡 미식별(사람이 고른다) · 벤치 원본 소리 실측(handconst.py sinbak · ebur128): db_below_voice 0 = 목소리 없는 채널(자막만, 원음 줄 2/104·1편) → 배경음이 곧 전체 소리(벤치 통합 −13.9·−16.6·−14.5·−17.2·−18.8·−14.8 LUFS) — 판 기준(나레 없음·원음 없음 → 판 목표 음량)에서 0dB 아래 · duck_orig_db −4.0 = 원음 나온 편 1/6(CnRW 원음 조각 바닥 − 자막 구간 바닥 −4.03dB, 표본 1편) · fade_out 0.01 = 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.007초(0~0.1 — 페이드 없음) · duck_narr_db 0 = 나레 없음 → 나레 구간 0(안 쓰임)"
  },
  "loudness": {
   "lufs": -14.0,
@@ -39,8 +39,8 @@
  },
  "timing": {
   "gap": 0.0,
-  "tail": 0.5,
-  "why": "손 상수 — 나레 없는 채널이라 줄 사이 = 컷 경계(본문 자막 바뀜 45/54 가 컷 ±0.05초)"
+  "tail": 0.0,
+  "why": "gap 0 = 나레 없는 채널이라 줄 사이 = 컷 경계(본문 자막 바뀜 45/54 가 컷 ±0.05초 · handconst 자막 틈 중앙 0.0 n=23) · tail 0 = 벤치 6편 마지막 자막 끝→영상 끝 0.0초 6/6(자막이 영상 끝까지 — handconst.py sinbak timing.tail caption_tail; 목소리 없어 위스퍼 꼬리는 못 씀)"
  },
  "frame": {
   "kind": "window",
@@ -107,7 +107,7 @@
    1298,
    1370
   ],
-  "why": "본문 자막 = 창 아래 y1298~1370 가운데 1줄 · 검정 #000000+흰 2px 테 · instant · 자수 중앙 13(5~18) → 18 · 줄 길이 중앙 1.98초(스타일분석 §2-1) · typing_cps 손 상수(벤치 typing 0)",
+  "why": "본문 자막 = 창 아래 y1298~1370 가운데 1줄 · 검정 #000000+흰 2px 테 · instant · 자수 중앙 13(5~18) → 18 · 줄 길이 중앙 1.98초(스타일분석 §2-1) · typing_cps 10 = 렌더에 안 닿는 값: 벤치 타이핑 0/104줄 · 판 칸 어디에도 enter typing 없음 → caption_rows 가 이 값을 안 읽음(handconst.py sinbak caption.typing_cps)",
   "_pending": {
    "in_window_text": "창 안 글씨(rAt 12·edT 16·CnR 9·fzo 7줄) = 자리 검출(동작 옆) + 색 뜻 규칙 → 03(placement·fx_target)·02"
   }

@@ -24,12 +24,12 @@
  "_why_cps_target": "자막 읽기 속도 5.26~8.2자/초(편 중앙 7.4, 스타일분석 §1) — sub 줄 dur 계산 기준",
  "bgm": {
   "id": "sweets",
-  "db_below_voice": 14.0,
-  "duck_orig_db": -6.0,
+  "db_below_voice": 0.0,
+  "duck_orig_db": 0.0,
   "duck_narr_db": 0.0,
-  "fade_out": 0.4,
+  "fade_out": 0.04,
   "candidates": [],
-  "why": "BGM 한 곡 4/6편 같음(템포 74.9 BPM — 스타일분석 §7) · 곡 이름 미확인 → sweets 손 상수 · 목소리 없음 → 배경음 기준 = 판 목표 음량(02 2차 bgm_ref target) · dB·덕킹 근거 없음"
+  "why": "BGM 한 곡 4/6편 같음(템포 74.9 BPM — 스타일분석 §7) · 곡 이름 미확인 → sweets(사람이 고른다) · 목소리 없음 → 배경음 기준 = 판 목표 음량(02 2차 bgm_ref target) · 벤치 원본 소리 실측(handconst.py hotpeople · ebur128): db_below_voice 0 = 목소리·원음 없는 채널 → 배경음이 곧 전체 소리(벤치 통합 −12.7·−12.7·−11.1·−13.9·−13.2·−12.1 LUFS) — 판 목표 음량 기준 0dB 아래 · duck_orig_db 0 = 원음 줄 0(안 쓰임) · duck_narr_db 0 = 나레 없음(안 쓰임) · fade_out 0.04 = 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.04초(0.015~0.128 — 페이드 없음)"
  },
  "loudness": {
   "lufs": -14.0,
@@ -43,8 +43,8 @@
  },
  "timing": {
   "gap": 0.0,
-  "tail": 0.5,
-  "why": "자막 교체 = 컷 교체(144/156) — 줄 사이 틈 0 · tail 손 상수"
+  "tail": 0.06,
+  "why": "자막 교체 = 컷 교체(144/156) — 줄 사이 틈 0(handconst 자막 틈 중앙 0.0 n=41) · tail 0.06 = 벤치 6편 마지막 자막 끝→영상 끝 편 중앙 0.054초(0.055·0.08·0.049·0.053·0.079·0.055 — handconst.py hotpeople timing.tail caption_tail; 목소리 없어 위스퍼 꼬리는 못 씀)"
  },
  "frame": {
   "kind": "window",
@@ -114,7 +114,7 @@
    "ms": 383,
    "why": "벤치 줄 경계 152 중 zoomblur 8(5편, 자리 = 훅 뒤 1~2번째 자막 교체 5/6 · 본문 1~2 · 끝 1 — 스타일분석 §3) · ms 383 = bench_transition_drop 8회 길이 중앙(200~567, drop 중앙 0.921)"
   },
-  "why": "push 손 상수"
+  "why": "push 0 = 재료 움직임 그대로 — 벤치 자막 줄 motion 156개(zoom_in 58, cam 51, pan 21, zoom_out 21, still 5) — zoom_in 과반 아님(58/156 = 37%) · 원음 줄 0개(push_orig 안 쓰임) — handconst.py hotpeople cuts.*"
  },
  "sfx_files": {
   "whoosh": "팩01/whoosh.wav",

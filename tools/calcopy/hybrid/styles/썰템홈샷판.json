@@ -26,9 +26,9 @@
   "db_below_voice": 13.0,
   "duck_orig_db": 0.0,
   "duck_narr_db": 0.0,
-  "fade_out": 0.4,
+  "fade_out": 0.01,
   "candidates": [],
-  "why": "BGM 있음(신호 — 말 사이 조용한 프레임 음 높이 봉우리 991·1244·662·781Hz 3~4편 반복 = 같은 곡 추정) · 말 사이 바닥 −28~−31dB RMS vs 말 −16dB → 12~15dB 아래 → 13 · 곡 = honwaka_puppu(칼카피_ILIi/audio.json 비율 0.22 ≈ −13.2dB, defaults.json) · 원음 0(나레 100%)이라 duck_orig 0 · 나레 덕킹 근거 없음(말 사이만 잼) 0 · fade_out 0.4 = 손 상수 · candidates = bgm_pick 미실행(_pending)"
+  "why": "BGM 있음(신호 — 말 사이 조용한 프레임 음 높이 봉우리 991·1244·662·781Hz 3~4편 반복 = 같은 곡 추정) · 말 사이 바닥 −28~−31dB RMS vs 말 −16dB → 12~15dB 아래 → 13 · 곡 = honwaka_puppu(칼카피_ILIi/audio.json 비율 0.22 ≈ −13.2dB, defaults.json) · 원음 0(나레 100%)이라 duck_orig 0 · 나레 덕킹 근거 없음(말 사이만 잼) 0 · fade_out 0.01 = 벤치 6편 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.013초(0~0.16 — 페이드 없음, handconst.py banggu bgm.fade_out) · candidates = bgm_pick 미실행(_pending)"
  },
  "loudness": {
   "lufs": -14.0,

@@ -21,12 +21,12 @@
  "_why_cps_target": "벤치 나레 6.1~7.5자/초 중앙 6.7(스타일분석 §3·규칙빈도 episodes) — make_trotpapa CPS 6.7",
  "bgm": {
   "id": "honwaka_puppu",
-  "db_below_voice": 14.0,
-  "duck_orig_db": -6.0,
-  "duck_narr_db": 0.0,
-  "fade_out": 0.4,
+  "db_below_voice": 10.3,
+  "duck_orig_db": 0.0,
+  "duck_narr_db": -6.0,
+  "fade_out": 0.24,
   "candidates": [],
-  "why": "BGM 깔림(BFT 관찰) · 곡·dB 미측정 → make_trotpapa BGM honwaka_puppu · 14dB·원음 −6·fade 0.4 손 상수(06 bgm_fp 뒤 교체)"
+  "why": "BGM 깔림(BFT 관찰) · 곡 = make_trotpapa BGM honwaka_puppu(곡 미식별 — 사람이 고른다) · 벤치 10편 원본 소리 실측(handconst.py uljimatrot → _kal/손상수_실측.json bgm.* · 신호급 — 섞인 소리, 분리 없음): db_below_voice 10.3 = 말 p50 − 말 없는 구간(≥1초 — 끝 카드 등) 바닥 p10 편 중앙 10.33dB(10.4·6.2·10.1·6.0·11.8·11.2·10.2·10.8·10.8·10.0) · duck_narr_db −6.0 = 말 사이 바닥 − 말 없는 구간 바닥 편 중앙 −6.0dB(−9.5·−6.2·−7.6·−16.3·0·−5.9·−5.8·−7.7·−3.2·0 — 말할 때 배경음이 내려가 있음, 10/10편 비교) · duck_orig_db 0 = 원음 줄 0(안 쓰임) · fade_out 0.24 = 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.24초(0.07~0.77)"
  },
  "loudness": {
   "lufs": -14.0,
@@ -41,7 +41,7 @@
  "timing": {
   "gap": 0.1,
   "tail": 1.2,
-  "why": "gap 손 상수(벤치 줄 사이 쉼 미측정) · tail 1.2 = 끝 공개 카드 1~1.5초 말 없음(스타일분석 §1) — 카드 그리기는 _pending"
+  "why": "gap 0.1 = 벤치 10편 줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙 0.10초(n=29, p25 0.08·p75 0.14 — handconst.py uljimatrot timing.gap, 경계 ±0.15초 창 안 가장 긴 쉼) · tail 1.2 = 끝 공개 카드 1~1.5초 말 없음(스타일분석 §1 · handconst 마지막 낱말 끝→영상 끝 편 중앙 0.89초 0.75~2.17) — 카드 그리기는 _pending"
  },
  "frame": {
   "kind": "window",
