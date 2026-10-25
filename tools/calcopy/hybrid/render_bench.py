@@ -2010,16 +2010,23 @@ def seg_layers(S: dict, st: dict, segs: list[dict], R: Path, ins: list, base_win
 
 
 def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, trans: list[dict] | None = None, name: str = "base.mp4",
-                color: str | None = None) -> Path:
+                color: str | None = None, look: bool = False) -> Path:
     """틀 + 창 + 댓글 카드 + 짤 + 흰 번쩍임(자막 없는 바탕). 번쩍임 = 전환 목록(transitions_of) kind=flash — 화면 전체.
-    짤 = 배치가 검출로 자리를 받은 meme 스티커(자막팩은 짤을 안 그린다 — 여기 한 곳)."""
+    짤 = 배치가 검출로 자리를 받은 meme 스티커(자막팩은 짤을 안 그린다 — 여기 한 곳).
+    look=True(회원 꾸민 모양, 관제 266): 판 틀 그림·구간 틀을 안 그리고 창 자리만 잘라 낸 영상(창 크기)을 돌려준다 — 틀은 compose 가
+    회원 스냅샷(web.look)으로 그리고 이 영상을 그 스냅샷의 영상 칸에 앉힌다. 짤·꾸밈·번쩍임은 창 안 그대로 따라간다."""
     F = st["frame"]
     x, y, ww, wh = frame_window(F)
-    png = frame_png(S, st, R / "frame.png")
+    if look:
+        from PIL import Image
+        png = R / "frame_look_blank.png"
+        Image.new("RGBA", (W, H), (0, 0, 0, 0)).save(png)
+    else:
+        png = frame_png(S, st, R / "frame.png")
     n = sum(c["frames"] for c in T["cuts"])
     end = n / FPS
     ins = ["-f", "lavfi", "-i", f"color=c=black:s={W}x{H}:r={FPS}:d={end:.3f}", "-i", win, "-loop", "1", "-t", f"{end:.3f}", "-i", png]
-    segs = frame_segments(S, T, st)
+    segs = [] if look else frame_segments(S, T, st)
     if not segs:
         fc = f"[0:v][1:v]overlay={x}:{y}:shortest=0[a];[a][2:v]overlay=0:0[b]"
     else:
@@ -2057,9 +2064,38 @@ def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, tr
         last = "f"
     out = R / name
     cf = f"{color.strip()}," if color and color.strip() else ""          # 모션그래픽팩 색감(자막 전 — 고객 엔진 video_assemble 과 같은 순서)
+    if look:
+        cf = f"crop={ww}:{wh}:{x}:{y}," + cf                             # 회원 꾸민 모양: 창 자리만(틀은 compose 가)
     run(["ffmpeg", "-y", "-v", "error", *ins, "-filter_complex", fc + f";[{last}]{cf}format=yuv420p[v]", "-map", "[v]", "-frames:v", n, "-r", FPS,
          *venc(16), out])
     return out
+
+
+def member_look(pack: Path | str | None) -> dict | None:
+    """회원 팩 파일(~/.shortem/packs/<pid>.json = {"1": 합친 팩, "web": {"look": 스냅샷|null}}, 주인 shortem_client local_settings.packFile)의
+    꾸민 모양(web.look — 설정 화면 장면꾸미기에서 '이 영상에 적용'한 것, 저장 주인 claude_studio.save_look). 없으면 None(판 틀 그대로).
+    검사 = 렌더러와 같은 scene_style.validate_snapshot — 틀리면 멈춘다(조용히 판 틀로 되돌아가지 않는다)."""
+    if not pack:
+        return None
+    look = ((jload(Path(pack)).get("web") or {}).get("look"))
+    if not look:
+        return None
+    from shopping_shorts import scene_style
+    try:
+        return scene_style.validate_snapshot(look)
+    except Exception as e:  # noqa: BLE001 — 검사 실패 사유를 그대로 올린다
+        raise StageError(f"회원 꾸민 모양(web.look) 검사 실패: {e}") from None
+
+
+def look_snapshot(st: dict, look: dict) -> dict:
+    """회원 꾸민 모양 + 판 자막팩 — 틀·글·색·자리는 회원 것, 자막팩·움직임팩은 회원이 안 정했으면(없음·'off') 판 것(snapshot(st) 의 칸)."""
+    from shopping_shorts import scene_style
+    base = snapshot(st)
+    snap = dict(look)
+    for k in ("captionPack", "motionPack"):
+        if (not snap.get(k) or snap.get(k) == "off") and base.get(k):
+            snap[k] = base[k]
+    return scene_style.validate_snapshot(snap)
 
 
 # ── 자막(자막팩 길) ──────────────────────────────────────────────────────
@@ -2230,7 +2266,7 @@ def draw_motion_layers(video: Path, MG: dict | None, R: Path) -> Path:
     return out
 
 
-def burn_captions(base: Path, rows: list[dict], st: dict, R: Path, end: float) -> Path:
+def burn_captions(base: Path, rows: list[dict], st: dict, R: Path, end: float, snap: dict | None = None) -> Path:
     from shopping_shorts import scene_style
     from tools.caption_pack.check_bench_packs import rows_to_timeline
     tts = R / "silence.wav"
@@ -2240,7 +2276,7 @@ def burn_captions(base: Path, rows: list[dict], st: dict, R: Path, end: float) -
     jsave(R / "caption_timeline.json", tl)
     out = R / "captioned.mp4"
     shutil.rmtree(R / "cw", ignore_errors=True)
-    scene_style.compose(str(base), tl, snapshot(st), str(out), R / "cw", {"text": ""})
+    scene_style.compose(str(base), tl, snap or snapshot(st), str(out), R / "cw", {"text": ""})
     return out
 
 
@@ -2662,7 +2698,8 @@ def plan_length_gate(T: dict, st: dict, measured: bool) -> list[str]:
             + ("줄이거나 쉼을 덜어" if T["end"] > LD["max"] else "늘려") + " 다시(렌더 전에 멈춤)"]
 
 
-def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=print, tts: bool = True, report: bool = False, locate: bool = False) -> dict:
+def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=print, tts: bool = True, report: bool = False, locate: bool = False,
+           pack: Path | str | None = None) -> dict:
     """plan_only: 계획만(조각·영상 안 만듦). tts=True(기본) = 진짜 목소리 길이로 계획(합성은 줄 캐시 — 렌더가 그대로 쓴다), False = 어림(--guess, 관문 ⑧ 안 봄).
     report=True: 계획에서 컷 넘침·길이를 멈추지 않고 돌려준다(회원 c_plan 이 재료 고치기 안내로 쓴다)."""
     from tools.calcopy.hybrid import render_itssum as RI
@@ -2736,11 +2773,15 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         log(f"[모션그래픽] {MG['id']} — bench 자막팩이라 안 그리는 칸: {MG['not_drawn']}")
     trans = transitions_of(T, st, placed, log)
     win = window_transitions(win0, T, st, R, trans)
-    base = render_base(S, T, st, placed, R, win, trans, color=(MG or {}).get("color_filter"))
+    look = member_look(pack)                                  # 회원 꾸민 모양(관제 266) — 있으면 판 틀 대신
+    if look:
+        log(f"[회원 꾸민 모양] {look.get('presetId')} — 판 틀 그림 대신 회원 스냅샷으로 틀·자막(창 영상만 넘김)"
+            + (" · 댓글 카드는 창 밖이면 잘린다" if placed.get("comment") else ""))
+    base = render_base(S, T, st, placed, R, win, trans, color=(MG or {}).get("color_filter"), look=bool(look))
     T["end"] = round(sum(c["frames"] for c in T["cuts"]) / FPS, 4)
-    segs = frame_segments(S, T, st)
+    segs = [] if look else frame_segments(S, T, st)
     rows = caption_rows(placed, st, segs)
-    cap = draw_motion_layers(burn_captions(base, rows, st, R, T["end"]), MG, R)
+    cap = draw_motion_layers(burn_captions(base, rows, st, R, T["end"], snap=look_snapshot(st, look) if look else None), MG, R)
     mix, A = audio(S, M, st, T, sent, placed, R)
     final = R / "final.mp4"
     run(["ffmpeg", "-y", "-v", "error", "-i", cap, "-i", mix, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
@@ -2762,7 +2803,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
            "log": placed["log"], "check": chk}
     jsave(R / "자막표.json", tab)
     jsave(doc / "자막표.json", tab)
-    info = {"made_by": "tools/calcopy/hybrid/render_bench.py", "version": style_name, "tempo": tempo, "final": str(final), "final_dur": dur_of(final),
+    info = {"made_by": "tools/calcopy/hybrid/render_bench.py", "version": style_name, **({"member_look": look.get("presetId")} if look else {}), "tempo": tempo, "final": str(final), "final_dur": dur_of(final),
             "final_lufs": lufs(final), "audio": A, "placement_check": chk, "n_cuts": len(T["cuts"]),
             "devices": {**devices(st, trans, A, segs, T, len(sent)),
                         **({"motion_graphics": {"id": MG["id"], "layers": len(MG["layers"]), "color": MG["color_filter"], "not_drawn": MG["not_drawn"]}} if MG else {})},
@@ -2780,5 +2821,6 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("style"); ap.add_argument("doc"); ap.add_argument("work"); ap.add_argument("--plan", action="store_true")
     ap.add_argument("--guess", action="store_true", help="--plan 을 어림(글자÷cps)으로 — 합성 안 함, 길이 관문(⑧) 안 봄")
     ap.add_argument("--locate", action="store_true", help="--plan 에서 스티커 자리·원/화살표 대상(fx_target.aim, 오푸스 눈)까지 — 렌더 없이 계획 프레임으로")
+    ap.add_argument("--pack", help="회원 팩 파일(~/.shortem/packs/<pid>.json) — web.look(꾸민 모양)이 있으면 판 틀 대신")
     a = ap.parse_args()
-    render(a.style, Path(a.doc), Path(a.work), plan_only=a.plan or a.guess, tts=not a.guess, locate=a.locate)
+    render(a.style, Path(a.doc), Path(a.work), plan_only=a.plan or a.guess, tts=not a.guess, locate=a.locate, pack=a.pack)
