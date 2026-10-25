@@ -194,9 +194,24 @@ def load_work(wdir: Path, M: dict, cfg: dict) -> dict:
                      **({"no_snap": True} if r.get("no_snap") else {})})   # 원음 깔기·원음 줄 컷(engine/orig_audio) · no_snap = 입 맞춤 컷(ss 고정)
     title = S.get("title_slots") or M.get("sample_title") or {}
     voice = (S.get("voice") or {}).get("voice_id") or cfg["voice_id"]
+    prov, emo = voice_spec(S.get("voice") or {}, cfg, voice)
     name = S.get("desktop_title") or re.sub(r"^작품\d+_", "", wdir.name)
     return {"dir": wdir, "name": wdir.name, "title_short": name, "data": data, "lines": lines, "pieces": pieces, "cuts": cuts,
-            "title": {k: title.get(k, "") for k in ("hook1", "hook2", "bodyTitle")}, "voice": voice, "S": S}
+            "title": {k: title.get(k, "") for k in ("hook1", "hook2", "bodyTitle")}, "voice": voice, "S": S,
+            "tts_provider": prov, "tts_emotion": emo}
+
+
+def voice_spec(v: dict, cfg: dict, voice: str) -> tuple:
+    """(provider, emotion) — 작품 대본 voice 칸(회원 팩 tts 가 들어오는 자리) → 없으면 프리셋 make 칸(tts_provider·tts_emotion).
+    검사 주인 = engine/voices.check_tts(필재 금지는 저장 관문이 맡는다 — 여기선 옛 작품을 막지 않게 allow_banned). 틀리면 멈춘다(조용히 바꾸지 않는다)."""
+    from tools.calcopy.engine import voices as VO
+    emo = v["emotion"] if "emotion" in v else cfg.get("tts_emotion")
+    t = {"voice_id": voice, **({"provider": v.get("provider") or cfg.get("tts_provider")} if (v.get("provider") or cfg.get("tts_provider")) else {}),
+         **({"emotion": emo} if emo is not None else {})}
+    bad = VO.check_tts(t, allow_banned=True)
+    if bad:
+        raise SystemExit("목소리 설정 오류 — " + "; ".join(bad))
+    return VO.provider_of(t), VO.emotion_of(t)
 
 
 def plan_check(w: dict, cfg: dict) -> dict:
@@ -229,6 +244,57 @@ def plan_check(w: dict, cfg: dict) -> dict:
 
 
 # ── 2) TTS (캐시·재호출 금지 기본) ─────────────────────────────────────────
+def tts_key(w: dict, tempo, body) -> str:
+    """TTS 캐시 키 주인 한 곳(tts·chunk_line_starts·preset_gates.voice_gate 가 부른다). provider·voice_id·emotion·tempo·글 포함.
+    ★타입캐스트 무감정 = 옛 키 sha([목소리, 속도, 글]) 그대로 — 받아 둔 캐시를 무효로 만들지 않는다(관제 266)."""
+    prov, emo = w.get("tts_provider") or "typecast", w.get("tts_emotion")
+    return sha([w["voice"], tempo, body] + ([prov, emo] if prov != "typecast" or emo else []))
+
+
+def _member_key(name: str) -> str:
+    """회원 키 자리 — 환경변수 → ~/.shortem/keys/<name>(vmake_clean.MEMBER_KEY_FILE 과 같은 방식). 값은 출력하지 않는다."""
+    import os
+    v = os.environ.get({"elevenlabs": "ELEVENLABS_API_KEY", "fish": "FISH_API_KEY", "typecast": "TYPECAST_API_KEY"}[name], "").strip()
+    if v:
+        return v
+    p = Path.home() / ".shortem" / "keys" / name
+    return p.read_text(encoding="utf-8").strip() if p.is_file() else ""
+
+
+def make_synth(provider: str, voice: str, tempo, emotion):
+    """provider 분기 → synth(text, out_path). 타입캐스트 = 기존 providers.typecast_synth 그대로(+감정) · 일레븐 = narr_align.eleven_direct
+    (회원 키 직접, 추천 프리셋·검색 성우) · 피쉬 = fish_tts 요청 꼴(build_payload·headers)을 회원 키로. 일레븐·피쉬는 1.0 으로 받고 narration() atempo 가 맞춘다."""
+    if provider == "typecast":
+        import os
+        from shopping_shorts.channelkit import providers
+        kf = Path.home() / ".shortem" / "keys" / "typecast"     # 회원 키가 있으면 그것(없으면 기존 자리 ~/.volcano/keys/typecast 그대로)
+        base = providers.typecast_synth(voice, tempo=tempo, key_file=str(kf) if kf.is_file() and not os.environ.get("TYPECAST_API_KEY") else None)
+        return (lambda text, out: base(text, out, emotion=emotion)) if emotion else base
+    if provider == "elevenlabs":
+        key = _member_key("elevenlabs")
+        if not key:
+            raise RuntimeError("일레븐랩스 키가 없습니다 — ~/.shortem/keys/elevenlabs 에 회원 키를 넣어 주세요")
+        from tools.calcopy.engine import narr_align as NA
+        return lambda text, out: NA.eleven_direct(text, voice, Path(out), key)
+    if provider == "fish":
+        key = _member_key("fish")
+        if not key:
+            raise RuntimeError("피쉬 키가 없습니다 — ~/.shortem/keys/fish 에 회원 키를 넣어 주세요")
+        from tools.calcopy.engine import voices as VO
+        ref = (VO.preset_row(voice) or {}).get("base_voice_id") or voice      # 'fs-…' 추천 프리셋 → reference_id
+
+        def fish(text, out):
+            import requests
+            from shopping_shorts import fish_tts as FT
+            r = requests.post(FT._ENDPOINT, headers=FT.headers(key, FT.DEFAULT_MODEL_ID), json=FT.build_payload(text, ref), timeout=120)
+            FT.raise_with_body(r)
+            if not r.content:
+                raise RuntimeError("피쉬 응답에 음성이 없습니다")
+            Path(out).write_bytes(r.content)
+        return fish
+    raise ValueError(f"모르는 목소리 엔진: {provider}")
+
+
 def tts_chunks(lines: list[str], rule: dict | None) -> list[str]:
     """TTS 에 넣는 덩어리 — 공백 뺀 max_chars 넘는 문장은 쉼표 자리에서 나눈다(한 번에 넣으면 긴 문장을 몰아 빨리 읽는다).
     쉼표가 없으면 그 문장은 그대로(지어서 끊지 않는다)."""
@@ -251,8 +317,8 @@ def tts(w: dict, cfg: dict, cache: Path, adopt: str | None, allow: bool, log: di
     whole = " ".join(l["tts"] for l in w["lines"])
     if ND.names_in(whole):
         log["tts_name_dict"] = {n: ND.spelling(n, w["voice"]) for n in ND.names_in(whole)}
-    adopted = cache / "tts" / f"{sha([w['voice'], 'adopted', whole])}.mp3"
-    joined = cache / "tts" / f"{sha([w['voice'], tempo, chunks])}.wav"
+    adopted = cache / "tts" / f"{tts_key(w, 'adopted', whole)}.mp3"
+    joined = cache / "tts" / f"{tts_key(w, tempo, chunks)}.wav"
     if adopt:
         copy_atomic(Path(adopt), adopted)
         log["tts"] = {"calls": 0, "from": f"들인 파일 {adopt}(덩어리 나누기 전 판)", "chunks": 1}
@@ -263,13 +329,12 @@ def tts(w: dict, cfg: dict, cache: Path, adopt: str | None, allow: bool, log: di
             return p
     files, calls = [], 0
     for ch in chunks:
-        p = cache / "tts" / "chunk" / f"{sha([w['voice'], tempo, ch])}.mp3"
+        p = cache / "tts" / "chunk" / f"{tts_key(w, tempo, ch)}.mp3"
         if not p.exists():
             if not allow:
                 raise SystemExit("TTS 캐시 없음 — 페이블 OK 뒤 --allow-tts 로 부르거나 --tts 로 받은 파일을 들여라")
             if synth is None:
-                from shopping_shorts.channelkit import providers
-                synth = providers.typecast_synth(w["voice"], tempo=tempo)
+                synth = make_synth(w.get("tts_provider") or "typecast", w["voice"], tempo, w.get("tts_emotion"))
             p.parent.mkdir(parents=True, exist_ok=True)
             tmp = p.with_name(p.stem + ".part.mp3")
             synth(ch, str(tmp))
@@ -284,7 +349,8 @@ def tts(w: dict, cfg: dict, cache: Path, adopt: str | None, allow: bool, log: di
     run(["ffmpeg", "-y", *ins, "-filter_complex", ";".join(flt) + ";" + "".join(f"[c{i}]" for i in range(len(files))) + f"concat=n={len(files)}:v=0:a=1[o]",
          "-map", "[o]", tmp])
     tmp.replace(joined)
-    log["tts"] = {"calls": calls, "from": f"Typecast {w['voice']} tempo {tempo}", "chunks": len(chunks), "chunk_text": chunks}
+    log["tts"] = {"calls": calls, "from": f"{w.get('tts_provider') or 'typecast'} {w['voice']} tempo {tempo}" + (f" 감정 {w['tts_emotion']}" if w.get("tts_emotion") else ""),
+                  "chunks": len(chunks), "chunk_text": chunks}
     return joined
 
 
@@ -334,7 +400,7 @@ def chunk_line_starts(w: dict, cfg: dict, cache: Path, tempo: float, narr: Path)
     mid = "silenceremove=stop_periods=-1:stop_duration=0.15:stop_threshold=-45dB:stop_silence=0.1"
     ds = []
     for ln in lines:
-        src = cache / "tts" / "chunk" / f"{sha([w['voice'], t, ND.apply_all(ln, w['voice'])])}.mp3"
+        src = cache / "tts" / "chunk" / f"{tts_key(w, t, ND.apply_all(ln, w['voice']))}.mp3"
         if not src.exists():
             CHUNK_WHY.append(f"덩어리 캐시 없음 {src.name}"); return None
         tmp = narr.with_name(f"_chunk_{len(ds)}.wav")

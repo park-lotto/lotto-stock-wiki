@@ -157,6 +157,8 @@ def eleven_direct(text: str, preset_id: str, out: Path, api_key: str) -> dict | 
     d = json.loads((ROOT / "shopping_shorts/assets/voice_presets.json").read_text(encoding="utf-8"))
     rows = d if isinstance(d, list) else next(iter(d.values()))
     p = next((x for x in rows if x.get("preset_id") == preset_id), None)
+    if not p and re.fullmatch(r"[A-Za-z0-9]{20}", str(preset_id or "")):   # 일레븐 검색 성우 id(관제 266) — 추천 프리셋 밖. 모델 = 숏템 tts.py 기본값(실합성 미확인)
+        p = {"base_voice_id": preset_id, "model_id": "eleven_multilingual_v2"}
     if not p:
         raise RuntimeError(f"voice_presets 에 없는 일레븐랩스 성우: {preset_id}")
     settings = dict(p.get("voice_settings") or {})

@@ -122,7 +122,7 @@ def voice_gate(w: dict, cfg: dict, cache: Path, full: Path, out: Path, log=print
     R.mkdir(parents=True, exist_ok=True)
     tempo = cfg.get("tts_tempo")
     chunks = [ND.apply_all(c, w["voice"]) for c in PM.tts_chunks([l["tts"] for l in w["lines"]], cfg.get("tts_split"))]
-    files = [cache / "tts" / "chunk" / f"{PM.sha([w['voice'], tempo, ch])}.mp3" for ch in chunks]
+    files = [cache / "tts" / "chunk" / f"{PM.tts_key(w, tempo, ch)}.mp3" for ch in chunks]
     if all(f.exists() for f in files):
         S = {"lines": [{"id": f"덩어리{i + 1}", "kind": "tts", "tts": ch} for i, ch in enumerate(chunks)]}
         sent = [{"id": f"덩어리{i + 1}", "wav": str(f)} for i, f in enumerate(files)]

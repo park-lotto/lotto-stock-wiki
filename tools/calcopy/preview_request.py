@@ -65,7 +65,7 @@ def catalog() -> dict:
     fonts = sorted({m.group(1) for m in re.finditer(r'@font-face\s*\{[^}]*?font-family:\s*"?([A-Za-z0-9_-]+)"?;', html)})
     # 목소리 = 칼카피 명단(engine/voices.py — 사장님 10-20 확정, 필재 금지)만. 10-21 실측: 설정 화면에 필재·명단 밖(김건·용식이·발키리)이 나오고 미나가 없었다.
     #   타입캐스트 = 회원 타입캐스트 키 · 미나(일레븐랩스) = 회원 일레븐랩스 키(사장님 10-21)
-    from tools.calcopy.engine.voices import KNOWN_VOICES, BANNED_VOICES
+    from tools.calcopy.engine.voices import KNOWN_VOICES, BANNED_VOICES, PROVIDERS, TC_EMOTIONS
     presets = json.loads((ROOT / "shopping_shorts" / "assets" / "voice_presets.json").read_text(encoding="utf-8"))
     voices = []
     for k in KNOWN_VOICES:
@@ -75,7 +75,7 @@ def catalog() -> dict:
         voices.append({"voice_id": k["voice_id"], "name": k["name"], "preset_id": p.get("preset_id") or k["voice_id"],
                        "engine": "elevenlabs" if k["engine"] == "일레븐랩스" else "typecast", "about": p.get("one_liner") or k.get("note") or ""})
     return {"fonts": fonts, "caption_enter": list(schema.CAPTION_ENTER_KINDS), "emphasis": list(schema.EMPH_STYLES),
-            "caption_mode": ["accumulate", "replace"], "voices": voices, "bgm": bgm_lib.list_tracks(), "default_pack": default_pack(),
+            "caption_mode": ["accumulate", "replace"], "voices": voices, "tts_emotions": list(TC_EMOTIONS), "tts_providers": list(PROVIDERS), "bgm": bgm_lib.list_tracks(), "default_pack": default_pack(),
             "preset_defaults": preset_defaults_table(),   # 프리셋마다 기본값(원본 영상 기준) — packFor 가 엔진 기본 팩 위에 얹는다
             # 숏템메이커 템플릿(썰20·고정20) — 이름만(견본 그림은 벤치 화면이라 고객에게 안 보낸다). 고르면 렌더러가 그 자리에서 그린다
             "templates": [{"mode": m, "id": r["id"], "name": r["name"]} for m in ("story", "continuous") for r in to_snapshot.template_rows(m)]}
@@ -153,7 +153,7 @@ def preset_defaults_table() -> dict:
 
 
 EDITABLE = {"brand": ("channel_name", "colors"), "text": ("title_font", "caption_font", "caption"),
-            "tts": ("provider", "voice_id", "name", "preset_id", "tempo", "alternates"), "bgm": ("candidates", "gain"),
+            "tts": ("provider", "voice_id", "name", "preset_id", "tempo", "alternates", "emotion"), "bgm": ("candidates", "gain"),
             "sfx_pool": ("start", "point", "end"), "meme_pool": ("kinds", "ids"), "template": None}
 
 
@@ -193,8 +193,10 @@ def check(pack: dict, cat: dict | None = None) -> list:
         err.append(f"모르는 낱말 강조: {m}")
     if "outline_px" in cap and not (isinstance(cap["outline_px"], (int, float)) and 0 <= cap["outline_px"] <= 20):
         err.append("자막 외곽선은 0~20px")   # 화면 막대는 0~12(넘으면 글자가 뭉개진다), Claude 가 말로 키우는 건 20까지
-    if tts.get("voice_id") and tts["voice_id"] not in {v["voice_id"] for v in cat["voices"]}:
-        err.append(f"모르는 목소리: {tts.get('name') or tts['voice_id']}")
+    # 목소리 = provider 별 검증(관제 266, 사장님 10-26 — 추천 성우·세 엔진 검색 성우·타입캐스트 감정까지). 명단(cat voices)은 추천일 뿐.
+    #   판단 주인 = engine/voices.check_tts(필재는 어느 provider 든 거절·voice_id 형식·provider 값·emotion 허용 값)
+    from tools.calcopy.engine.voices import check_tts
+    err += check_tts(tts)
     if tts.get("tempo") is not None and not (isinstance(tts["tempo"], (int, float)) and 0.8 <= tts["tempo"] <= 1.8):
         err.append("말 빠르기는 0.8~1.8")
     ids = {x["id"] for x in cat["bgm"]}
