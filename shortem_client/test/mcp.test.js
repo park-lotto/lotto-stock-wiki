@@ -37,6 +37,8 @@ test('setup: 라이선스 확인·기기 등록, 키 값은 응답에 없음', a
   assert.equal(p.structuredContent.info.profiles.length, 3);
   const bad = await client.callTool({ name: 'shortem_make', arguments: { step: 'rm -rf' } });
   assert.equal(bad.isError, true);
+  const nm = await client.callTool({ name: 'shortem_make', arguments: { step: 'start', preset_name: '없는프리셋형', video: 'https://youtu.be/x' } });
+  assert.ok(nm.structuredContent.hints.some(h => /찾지 못했습니다/.test(h)), JSON.stringify(nm.structuredContent));
   const fb = await client.callTool({ name: 'shortem_feedback', arguments: { kind: 'bug', text: '시험' } });
   assert.equal(fb.structuredContent.info.sent, true);
 });

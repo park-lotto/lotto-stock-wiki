@@ -10,11 +10,12 @@ import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { homeDir, workDir, jail } from './paths.js';
 import { engineRoot, engineTool } from './engine_bridge.js';
-import { readSettings, packFor, savePack, select, resetPack, catalog, PID_RE } from './local_settings.js';
+import { readSettings, packFor, savePack, select, resetPack, catalog, PID_RE, syncFromServer } from './local_settings.js';
 import { rentPreset } from './preset_rent.js';
 import { makeStep } from './make_flow.js';
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
 import { deliverStatus, linkTelegram, confirmTelegram, setDeliver, deliverFinal } from './deliver.js';
+import { keyStatuses, saveKey } from './engine/voice.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const STATIC_OK = /^(out|shopping_shorts\/static)\/[0-9A-Za-z가-힣_.\-/]+\.(html|js|css|woff2?|ttf|otf|png|jpe?g|webp|gif|svg|json)$/;
@@ -123,13 +124,14 @@ async function route(req, res, token, port) {
   if (!u.pathname.startsWith('/api/')) return send(res, 404, { error: '없음' });
   if (req.method === 'POST' && req.headers['x-shortem-ui'] !== '1') return send(res, 403, { error: '화면에서만 바꿀 수 있습니다' });
   if (u.pathname === '/api/state' && req.method === 'GET') {
+    await syncFromServer();                     // 웹(/claude/studio)에서 바꾼 것도 이 화면에(30초에 한 번, 못 닿으면 이 PC 것 그대로)
     const s = readSettings();
     const list = presets();
     const cur = s.current && list.some(p => p.id === s.current) ? s.current : (list[0] && list[0].id) || null;
     let cat = null, pack = null, err = null;
     try { cat = await catalog(); pack = cur ? await packFor(cur) : null; } catch (e) { err = String(e.message || e); }
     const changed = cur ? ((s.channels[cur] || {}).pack || {}) : {};
-    return send(res, 200, { presets: list, current: cur, pack, changed, catalog: cat && { ...cat, default_pack: undefined }, videos: videos(), error: err, logins: loginStatus(), deliver: deliverStatus(),
+    return send(res, 200, { presets: list, current: cur, pack, changed, catalog: cat && { ...cat, default_pack: undefined, preset_defaults: undefined }, videos: videos(), error: err, logins: loginStatus(), deliver: deliverStatus(), keys: keyStatuses(),
       stamp: (s.channels[cur] || {}).updated || 0 });
   }
   const body = await readBody(req);
@@ -140,6 +142,8 @@ async function route(req, res, token, port) {
   if (u.pathname === '/api/preview') return send(res, 200, await preview(body));
   if (u.pathname === '/api/login') return send(res, 200, PLATFORMS[body.platform] ? await openLogin(body.platform) : { ok: false, why: '모르는 곳입니다' });
   // 완성본 받기(텔레그램·구글 드라이브) — 판단은 deliver.js. 봇 토큰은 이 화면에만 넣는다(채팅에 붙여 넣지 않게)
+  const km = u.pathname.match(/^\/api\/key\/([a-z_]{2,20})$/);
+  if (km) return send(res, 200, saveKey(km[1], body.key));   // 회원 본인 키(목록 = voice.js KEY_SERVICES)
   if (u.pathname === '/api/deliver/link') return send(res, 200, await linkTelegram(body.token));
   if (u.pathname === '/api/deliver/confirm') return send(res, 200, await confirmTelegram());
   if (u.pathname === '/api/deliver/set') return send(res, 200, { ok: true, deliver: setDeliver(body) });

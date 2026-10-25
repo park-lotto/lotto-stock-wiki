@@ -18817,6 +18817,15 @@ async def api_claude_rent(request: Request):
                                                 body.get("lease") or None, Store(DB_PATH), str(body.get("preset") or "") or None))
 
 
+@app.post("/api/claude/step")
+async def api_claude_step(request: Request):
+    """볼케이노형 제작 지시(관제 234, 2026-10-21) — 판단은 엔진 hybrid/flow.py, 관문·서명·기록은 claude_flow.step."""
+    from shopping_shorts import claude_flow as _cf, claude_portal as _cp
+    body = await _claude_body(request)
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cp.call, _cf.step, ctx, body, Store(DB_PATH)))
+
+
 @app.get("/api/claude/pack/{asset_id:path}")
 def api_claude_pack(request: Request, asset_id: str, job: str = ""):
     from shopping_shorts import claude_portal as _cp
@@ -18847,6 +18856,70 @@ def api_claude_blob(token: str):
 def _claude_page(request: Request):
     return FileResponse(Path(__file__).parent / "static" / "claude.html",
                         media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
+# ── 숏템 설정 화면 서버판(관제 266) — 판단은 claude_studio, 화면은 회원 PC 와 같은 파일 ──
+@app.get("/claude/studio")
+def _claude_studio_slash(request: Request):
+    return RedirectResponse("/claude/studio/", status_code=307)   # 화면이 상대 주소(api/·r/)를 쓴다
+
+
+@app.get("/claude/studio/", response_class=HTMLResponse)
+def _claude_studio_page(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_studio as _cs
+    return FileResponse(_cs.UI_FILE, media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
+@app.get("/claude/studio/r/{rel:path}")
+def _claude_studio_static(request: Request, rel: str):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_studio as _cs
+    try:
+        f = _cs.static_file(rel)
+    except _cs.StudioError as e:
+        return JSONResponse(e.body(), status_code=e.status)
+    if not f:
+        return JSONResponse({"error": "없음"}, status_code=404)
+    return FileResponse(str(f), headers={"Cache-Control": "private, max-age=3600"})
+
+
+@app.api_route("/api/claude/studio", methods=["GET", "POST"])
+async def api_claude_studio_sync(request: Request):
+    """회원 PC ↔ 서버 설정 맞추기(라이선스 키) — 합치기는 claude_studio.sync_merge 한 곳."""
+    from shopping_shorts import claude_studio as _cs
+    body = await _claude_body(request) if request.method == "POST" else None
+    ctx = _cs.CP.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cs.CP.call, _cs.pc_sync, ctx, body, Store(DB_PATH)))
+
+
+@app.get("/claude/studio/api/state")
+def _claude_studio_state(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_studio as _cs
+    return _claude_json(_cs.CP.call(_cs.state, st, cid))
+
+
+@app.post("/claude/studio/api/{op}")
+async def _claude_studio_op(request: Request, op: str):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_studio as _cs
+    b = await _claude_body(request)
+    fn = {"select": lambda: _cs.select(st, cid, b.get("preset")),
+          "save": lambda: _cs.save(st, cid, b.get("preset"), b.get("patch")),
+          "reset": lambda: _cs.reset(st, cid, b.get("preset")),
+          "preview": lambda: _cs.preview(st, cid, b.get("preset"), b.get("patch"))}.get(op)
+    if not fn:
+        return JSONResponse({"error": "없음"}, status_code=404)
+    return _claude_json(await run_in_threadpool(_cs.CP.call, fn))
 
 
 @app.get("/api/claude/me/home")

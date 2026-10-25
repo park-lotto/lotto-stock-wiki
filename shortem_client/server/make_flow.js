@@ -9,17 +9,33 @@ import { refreshCookies } from './logins.js';
 import { packFile as localPackFile, PID_RE } from './local_settings.js';
 import { homeDir, writeFileIn, workDir, ensureDir } from './paths.js';
 import { deliverInBackground } from './deliver.js';
+import { logFinal } from './work_log.js';
+import { startFlow, waitFlow, approveFlow, retryFlow, isFlowSid, loadFlow, shapeFlow } from './flow_driver.js';
+import { ApiError } from './api.js';
 
 export const waitMs = () => Number(process.env.SHORTEM_WAIT_SEC || 45) * 1000;
 
 function aiNeed(runId) {
   const n = pending().length;
+  // 물을 것이 없는데 아직 도는 중(목소리·렌더) — 'AI 0건에 답하라'고 하면 Claude 가 헤매다 셸 sleep 으로 기다렸다(10-20 회원 한 줄 실시험)
+  if (!n) return { need: 'wait', run_id: runId, next: `shortem_make(step="wait", run_id="${runId}")`,
+    hints: ['아직 만드는 중입니다(목소리·렌더는 몇 분 걸립니다) — 같은 wait 를 다시 부르면 끝날 때까지 이어서 기다립니다. 셸·sleep 으로 기다리지 마세요'] };
   return { need: 'ai', ai_requests: n, run_id: runId,
     next: `shortem_ai(action="list") 로 요청을 받아 하나씩 답한 뒤(answer), shortem_make(step="wait", run_id="${runId}") 를 부르세요`,
     hints: [`엔진이 AI 판독 ${n}건을 기다립니다 — 사람에게 묻지 말고 바로 답하세요`] };
 }
 
 const cand = c => ({ n: c.n, title: c.title, total: c.total, line: c.line, scores: c.scores, made: c.made || 0 });
+
+// 고객이 사인하기 전에 볼 대본(제목·줄) — 엔진이 쓴 소재 폴더 대본.json 의 final(관제 234, 10-20: 파일 이름만 줘서 고객이 대본을 못 봤다)
+function scriptOf(S) {
+  if (S.topic_id == null) return undefined;
+  try {
+    const d = JSON.parse(fs.readFileSync(path.join(dataDir(), 'calcopy', 'topics', String(S.topic_id), '대본.json'), 'utf8'));
+    const f = d.final || {};
+    return { title: String(f.title || d.title || ''), lines: (f.lines || []).map(l => String(l.text || '')) };
+  } catch { return undefined; }
+}
 
 // 엔진 세션 → 응답
 // 엔진 오류 글 → 고객용(경로·내부 파일 이름·벤치 경로를 지우고 짧게) — 숏템 내부를 설명하지 않는다(관제 234)
@@ -41,23 +57,17 @@ export function shapeSession(S) {
   }
   const t = S.topic || {};
   if (S.state === 'failed' || S.state === 'stopped') return { ...base, fail: { why: cleanWhy(S.error || '만들기가 멈췄습니다'), fix: '같은 단계를 다시 부르거나 다른 후보를 고르세요' } };
-  if ((t.state || '') === 'plan_review') {
+  if ((t.state || '') === 'plan_review' || S.state === 'plan_review') {
     const files = (S.files || []).map(f => f.name);
-    return { ...base, need: 'approve', plan_files: files,
-      next: `고객에게 대본·계획을 보여 주고 사인을 받으면 shortem_make(step="approve", sid="${S.sid}")`,
+    return { ...base, need: 'approve', plan_files: files, script: scriptOf(S),
+      next: `고객에게 script(제목·대본 줄)를 그대로 보여 주고 사인을 받으면 shortem_make(step="approve", sid="${S.sid}")`,
       hints: ['사인 전에는 목소리 합성·렌더를 하지 않습니다(고객 키 비용)'] };
   }
   if ((t.state || '') === 'final_review' || S.state === 'final_review') {
     // 완성본 = 엔진 소재 폴더(창고/calcopy/topics/<id>/final.mp4) → 고객이 보는 작업 폴더(바탕화면 숏템작업)에 한 벌 복사
     const src = S.topic_id != null ? path.join(dataDir(), 'calcopy', 'topics', String(S.topic_id), 'final.mp4') : null;
-    let video = null;
-    if (src && fs.existsSync(src)) {
-      const name = `${String((t.name || 'shortem')).replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 40)}_${S.sid}.mp4`;
-      video = path.join(ensureDir(workDir(), '완성본'), name);
-      if (!fs.existsSync(video) || fs.statSync(src).mtimeMs > fs.statSync(video).mtimeMs) fs.copyFileSync(src, video);   // 다시 만들기(restyle) 뒤엔 새 완성본으로
-      try { fs.writeFileSync(video + '.json', JSON.stringify({ sid: S.sid, title: String(t.name || ''), preset: S.preset_id || null, topic_dir: path.dirname(src) })); } catch { /* 표식 없이도 영상은 본다 */ }
-      deliverInBackground(video, { title: String(t.name || '') });   // 텔레그램·구글 드라이브(켜 둔 곳만, 이미 보낸 것은 건너뜀) — deliver.js
-    }
+    const video = src && fs.existsSync(src)
+      ? keepFinal(src, { sid: S.sid, title: String(t.name || ''), marker: { preset: S.preset_id || null, topic_dir: path.dirname(src) } }) : null;
     if (!video) return { ...base, fail: { why: '완성본 파일을 찾지 못했습니다', fix: 'shortem_make(step="status") 로 다시 보세요' } };
     return { ...base, need: 'done', video, hints: ['완성본 경로를 고객에게 알려 주세요(파일을 열어 보라고 안내)', `겉모습을 바꾸고 싶다고 하면 shortem_settings 로 바꾼 뒤 shortem_make(step="restyle", sid="${S.sid}") — 대본·재료는 그대로, 렌더만 다시`] };
   }
@@ -101,7 +111,46 @@ function originalsFile(channel) {
   return path.join(homeDir(), rel);
 }
 
-export async function makeStep({ step, sid, n, run_id, preset, topic, channel, video }) {
+// 완성본 한 편 → 작업 폴더(바탕화면 숏템작업/완성본)에 한 벌 + 표식(<영상>.json) + 보내기 + 작업 기록지 — 엔진 길·볼케이노형 길이 같이 부르는 한 곳.
+//   다시 만들기(restyle) 뒤엔 새 완성본으로 덮는다. 기록지(~/.shortem/작업기록.jsonl, work_log.js)는 새로 복사했을 때만 1줄.
+//   marker = 표식 파일에 그대로 적을 칸(옛 꼴 유지) · preset = 기록지 style 칸(없으면 marker.preset)
+function keepFinal(src, { sid, title = '', marker = {}, preset = null }) {
+  const name = `${String(title || 'shortem').replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 40)}_${sid}.mp4`;
+  const video = path.join(ensureDir(workDir(), '완성본'), name);
+  const fresh = !fs.existsSync(video) || fs.statSync(src).mtimeMs > fs.statSync(video).mtimeMs;
+  if (fresh) fs.copyFileSync(src, video);
+  try { fs.writeFileSync(video + '.json', JSON.stringify({ sid, title, ...marker })); } catch { /* 표식 없이도 영상은 본다 */ }
+  if (fresh) logFinal(video, { title, preset: preset || marker.preset || null, sid });
+  deliverInBackground(video, { title });   // 텔레그램·구글 드라이브(켜 둔 곳만, 이미 보낸 것은 건너뜀) — deliver.js
+  return video;
+}
+
+// 볼케이노형 편(서버 지시서) — 완성이면 작업 폴더 완성본으로 한 벌 + 보내기(deliver.js), 응답은 flow_driver.shapeFlow 한 곳
+function flowOut(s) {
+  if (!s || s.need !== 'done' || !s.video || !fs.existsSync(s.video)) return s;
+  const f = loadFlow(s.sid) || {};
+  const video = keepFinal(s.video, { sid: s.sid, title: String(s.title || ''), marker: { line: 'flow' }, preset: f.preset || null });
+  return { ...s, video, hints: ['완성본 경로를 고객에게 알려 주세요', ...(s.note ? [s.note] : [])] };
+}
+
+export async function makeStep({ step, sid, n, run_id, preset, topic, channel, video, product }) {
+  if (sid && isFlowSid(sid)) {     // 볼케이노형 편 — 서버 지시서를 따라 돈다(판단은 서버)
+    if (step === 'approve') approveFlow(sid);
+    else if (step === 'retry') retryFlow(sid);
+    else if (step === 'restyle') return { hints: ['이 프리셋은 다시 만들기를 아직 못 합니다 — 같은 영상 주소로 새로 만들어 주세요'] };
+    return flowOut(await waitFlow(sid, waitMs()));
+  }
+  if (step === 'start' && video && preset && !process.env.SHORTEM_DEV_PRESET) {
+    try {
+      const f = await startFlow({ preset, video, product });
+      return flowOut(await waitFlow(f.sid, waitMs()));
+    } catch (e) {
+      // 단계 진행 방식이 아닌 프리셋(옛 엔진 라인)만 아래 옛 길로 — 그 밖의 거절은 그대로 알린다
+      if (!(e instanceof ApiError && e.code === 'bad_request' && /단계 진행/.test(e.msg))) {
+        return { fail: { why: e instanceof ApiError ? (e.msg || e.code) : '서버에 연결하지 못했습니다', code: e.code || 'step', fix: '잠시 뒤 같은 단계를 다시 부르세요' } };
+      }
+    }
+  }
   if (step === 'wait') {
     const r = getRun(run_id) || activeRuns()[0];
     if (!r) return { hints: ['기다릴 작업이 없습니다 — shortem_make(step="status", sid=…) 로 보세요'] };

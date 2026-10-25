@@ -41,13 +41,20 @@ body{margin:0;background:radial-gradient(1200px 600px at 70% -200px,#1d1840 0%,t
 .chips{display:flex;flex-wrap:wrap;gap:7px}
 .chip{font:inherit;font-size:13px;border-radius:10px;padding:7px 12px;border:1px solid var(--line2);background:var(--bg);color:var(--fg);cursor:pointer}
 .chip.on{border-color:var(--mint);background:rgba(63,224,192,.12);color:var(--mint)}
-select,input[type=text]{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:8px 10px;width:100%}
+select,input[type=text],input[type=password]{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:8px 10px;width:100%}
 .row{display:grid;grid-template-columns:120px minmax(0,1fr) 54px;gap:10px;align-items:center}
+.inrow{display:flex;gap:10px;align-items:center}.inrow input{flex:1;min-width:0}.inrow .btn{flex:0 0 auto}   /* 글 넣기 + 단추 한 줄(키·토큰) */
+.krow{margin:10px 0}.krow .sec-h{margin-bottom:6px}   /* 키 한 줄씩 */
 .row output{color:var(--mute);font-size:12.5px;text-align:right}
 input[type=range]{width:100%;accent-color:var(--violet)}
-.fontgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;max-height:260px;overflow:auto;padding-right:4px}
-.fontgrid button{font-size:17px;padding:10px 8px;border-radius:10px;border:1px solid var(--line2);background:var(--bg);color:var(--fg);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 글꼴 칸: 줄 높이를 내용대로(min-content) — 높이 제한(max-height)이 있는 그리드에서 버튼(overflow:hidden)이
+   최소 높이 0 으로 눌려 글자가 위아래로 잘렸다(10-25 사장님 화면) */
+.fontgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));grid-auto-rows:min-content;gap:8px;max-height:300px;overflow:auto;padding-right:4px}
+.fontgrid button{display:grid;gap:2px;justify-items:center;padding:9px 8px;border-radius:10px;border:1px solid var(--line2);background:var(--bg);color:var(--fg);cursor:pointer;min-width:0}
+.fontgrid button .fs{font-size:19px;line-height:1.3;white-space:nowrap}
+.fontgrid button small{font-size:10.5px;color:var(--dim);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fontgrid button.on{border-color:var(--mint);color:var(--mint)}
+.grp{font-size:12.5px;font-weight:700;color:var(--violet2);margin:6px 0 -4px}
 .nav{display:flex;justify-content:space-between;gap:10px}
 .btn{font:inherit;font-weight:700;border-radius:12px;padding:10px 18px;border:1px solid var(--line2);background:var(--panel2);color:var(--fg);cursor:pointer}
 .btn.pri{background:linear-gradient(145deg,#7d5cff,#5b3fd8);border-color:#a48bff}
@@ -79,7 +86,7 @@ input[type=range]{width:100%;accent-color:var(--violet)}
   <div class="main">
     <section class="board" id="board"></section>
     <aside class="side">
-      <div class="phone" id="phone"><iframe id="stage" title="미리보기" src="/r/out/scene-style-ui-showcase.html?qa=1"></iframe><span class="busy" id="busy" hidden>그리는 중…</span></div>
+      <div class="phone" id="phone"><iframe id="stage" title="미리보기" src="r/out/scene-style-ui-showcase.html?qa=1"></iframe><span class="busy" id="busy" hidden>그리는 중…</span></div>
       <div class="scenes" id="scenes"></div>
       <div class="nav"><button class="btn" id="play">▶ 5초 재생</button><button class="btn" id="redraw">다시 그리기</button></div>
       <div class="note" id="applied"></div>
@@ -92,7 +99,8 @@ const STEPS=[{k:'preset',ic:'◆',t:'프리셋'},{k:'screen',ic:'▣',t:'화면'
 const S={step:'preset',st:null,scene:0,preview:null,video:null,stamp:-1,saving:0};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const api=(p,b)=>fetch(p,b?{method:'POST',headers:{'Content-Type':'application/json','X-Shortem-UI':'1'},body:JSON.stringify(b)}:{}).then(r=>r.json());
+// 주소는 상대로 — 같은 화면이 회원 PC(127.0.0.1/)와 서버(/claude/studio/) 두 곳에서 뜬다(관제 266)
+const api=(p,b)=>fetch(p.replace(/^\//,''),b?{method:'POST',headers:{'Content-Type':'application/json','X-Shortem-UI':'1'},body:JSON.stringify(b)}:{}).then(r=>r.json());
 const pk=()=>S.st&&S.st.pack||{};
 const ch=()=>S.st&&S.st.changed||{};
 const isChg=(a,b)=>{const o=ch()[a];return !!o&&(b===undefined||o[b]!==undefined)};
@@ -100,15 +108,22 @@ const badge=(a,b)=>isChg(a,b)?'<span class="chg">바꾼 칸</span>':'<small>프�
 
 function state(msg,bad){const e=$('state');e.className='state'+(bad?' err':'');e.lastElementChild.textContent=msg}
 
-async function load(force){
+async function load(force,drawn){   // drawn: 미리보기는 이미 그렸다(저장과 같이 그림) — 판만 다시 그린다
   const st=await api('/api/state');
   if(st.error)state(st.error,true);
-  const changed=!S.st||force||st.stamp!==S.stamp||st.current!==S.st.current||st.videos.length!==S.st.videos.length||JSON.stringify(st.logins)!==JSON.stringify(S.st.logins)||JSON.stringify(st.deliver)!==JSON.stringify(S.st.deliver);
+  const changed=!S.st||force||st.stamp!==S.stamp||st.current!==S.st.current||st.videos.length!==S.st.videos.length||JSON.stringify(st.logins)!==JSON.stringify(S.st.logins)||JSON.stringify(st.deliver)!==JSON.stringify(S.st.deliver)||JSON.stringify(st.keys)!==JSON.stringify(S.st.keys);
   S.st=st;S.stamp=st.stamp;
-  if(changed&&!S.saving){render();preview()}
-  if(!st.error)state('이 PC 에 저장됨');
+  if(st.host==='server'&&!S.hosted){S.hosted=true;hostServer()}
+  if(changed&&!S.saving){render();if(!drawn)preview()}
+  if(!st.error)state(st.host==='server'?'내 계정에 저장됨':'이 PC 에 저장됨');
 }
 
+// 서버판: 완성본·계정 연결·키·받기 칸은 회원 PC 에만 있다 → 단계에서 뺀다
+function hostServer(){
+  const i=STEPS.findIndex(s=>s.k==='videos');if(i>=0)STEPS.splice(i,1);
+  $('steps').style.gridTemplateColumns=`repeat(${STEPS.length},minmax(0,1fr))`;
+  document.querySelector('.head p').textContent='여기서 고른 것은 내 계정에 저장되고, 영상을 만들 때 그대로 씁니다.';
+}
 function steps(){$('steps').innerHTML=STEPS.map(s=>`<button class="step${s.k===S.step?' on':''}" data-k="${s.k}"><span class="ic">${s.ic}</span><span>${s.t}</span></button>`).join('')}
 $('steps').onclick=e=>{const b=e.target.closest('.step');if(b){S.step=b.dataset.k;render()}};
 
@@ -120,7 +135,7 @@ function render(){
   if(S.step==='preset'){
     h=`<h2>프리셋 고르기 <small>고르면 화면·자막·소리 기본값이 그 프리셋 완본대로 들어갑니다</small></h2>
       ${loginsBox(st.logins)}
-      <div class="cards">${(st.presets||[]).map(x=>`<button class="card${x.id===st.current?' on':''}" data-preset="${esc(x.id)}"><b>${esc(x.name)}</b><span>${esc(x.desc||'')}</span></button>`).join('')||'<p class="err">쓸 수 있는 프리셋이 없습니다 — Claude 에게 "숏템 준비 점검"을 부탁하세요</p>'}</div>`;
+      ${presetCards(st)}`;
   }else if(S.step==='screen'){
     h=`<h2>화면 <small>바꾼 칸만 바뀌고 나머지는 프리셋 그대로</small></h2>
       <div class="sec"><div class="sec-h"><b>채널명</b>${badge('brand','channel_name')}</div><input type="text" id="cname" maxlength="30" value="${esc((p.brand||{}).channel_name||'')}"></div>
@@ -143,7 +158,8 @@ function render(){
         <div class="row"><b>외곽선 색</b><input type="color" id="olcolor" value="#${(cap.outline_rgb||[0,0,0]).map(v=>v.toString(16).padStart(2,'0')).join('')}"><output></output></div></div>
       <div class="sec"><div class="sec-h"><b>자막 쌓기</b></div><div class="chips">${cat.caption_mode.map(k=>`<button class="chip${k===(cap.mode||'accumulate')?' on':''}" data-mode="${k}">${({accumulate:'한 줄씩 쌓기',replace:'한 줄씩 바꾸기'})[k]}</button>`).join('')}</div></div>`;
   }else if(S.step==='sound'){
-    h=`<h2>소리 <small>목소리는 고객님 타입캐스트 키로 만듭니다</small></h2>
+    h=`<h2>소리 <small>목소리는 고객님 키(타입캐스트·일레븐랩스)로 만듭니다</small></h2>
+      ${keyBox(st.keys)}
       <div class="sec"><div class="sec-h"><b>목소리</b>${badge('tts','voice_id')}</div>
         <div class="chips">${cat.voices.map(v=>`<button class="chip${v.voice_id===tts.voice_id?' on':''}" data-voice="${esc(v.voice_id)}" title="${esc(v.about)}">${esc(v.name)}</button>`).join('')}</div></div>
       <div class="sec"><div class="row"><b>말 빠르기</b><input type="range" id="tempo" min="0.8" max="1.8" step="0.02" value="${tts.tempo??1.36}"><output>${(tts.tempo??1.36).toFixed(2)}배</output></div></div>
@@ -153,7 +169,7 @@ function render(){
   }else{
     h=`<h2>완성본 <small>Claude 가 만든 영상 — 바탕화면 숏템작업/완성본</small></h2>
       ${deliverBox(st.deliver)}
-      <div class="vlist">${(st.videos||[]).map(v=>`<div class="vcard${v.name===S.video?' on':''}"><video src="/v/${encodeURIComponent(v.name)}?t=${Math.round(v.at)}" controls preload="metadata"></video><b>${esc(v.title)}</b>
+      <div class="vlist">${(st.videos||[]).map(v=>`<div class="vcard${v.name===S.video?' on':''}"><video src="v/${encodeURIComponent(v.name)}?t=${Math.round(v.at)}" controls preload="metadata"></video><b>${esc(v.title)}</b>
         <button class="btn" data-vid="${esc(v.name)}">${v.sid?'지금 설정으로 미리보기':'(옛 영상 — 미리보기 없음)'}</button>
         ${v.sid?`<button class="btn pri" data-restyle="${esc(v.name)}">지금 설정으로 다시 만들기</button>`:''}</div>`).join('')||'<p class="note">아직 완성본이 없습니다. Claude 에게 "숏템으로 한 편 만들어줘"라고 하세요.</p>'}</div>
       <div class="note">고치고 싶으면 이 화면에서 바꾸거나 Claude 에게 말하세요 — 예: <code>숏템 자막 글꼴 잘난고딕으로 바꿔줘</code>. 같은 설정 파일이라 여기에도 바로 보입니다.</div>`;
@@ -170,13 +186,20 @@ function loginsBox(l){
     <div class="chips">${Object.keys(P).map(k=>`<button class="chip${l.connected[k]?' on':''}" data-login="${k}">${l.connected[k]?'✓ ':''}${P[k]} ${l.connected[k]?'연결됨':'연결하기'}</button>`).join('')}</div>
     ${l.waiting?`<div class="note">열린 크롬 창에서 ${P[l.waiting]}에 로그인한 뒤 <b>창을 닫아 주세요</b>. 닫으면 여기에 '연결됨'이 뜹니다.</div>`:''}</div>`;
 }
+// 회원 본인 키(타입캐스트·일레븐랩스·쿠팡 파트너스) — 목록·이름은 서버(voice.js KEY_SERVICES). 값은 이 PC 파일에만, 화면엔 지문만
+function keyBox(k){
+  return `<div class="sec"><div class="sec-h"><b>내 키</b><small>값은 이 PC 에만 저장되고 화면엔 지문만 보입니다</small></div>
+    ${Object.entries(k||{}).map(([s,t])=>`<div class="krow"><div class="sec-h"><b>${esc(t.label)}</b>${t.present?`<span class="chg">✓ 넣음 · ${esc(t.fp||'')}</span>`:`<small>${esc(t.need)}</small>`}</div>
+    <div class="inrow"><input type="password" id="key_${s}" placeholder="${t.present?'바꾸려면 새 키를 붙여 넣으세요':esc(t.where)+' 를 붙여 넣으세요'}" autocomplete="off"><button class="btn pri" data-key="${s}">저장</button></div></div>`).join('')}
+    ${S.keymsg?`<div class="note">${esc(S.keymsg)}</div>`:''}</div>`;
+}
 // 완성본 받기 — 판단은 server/deliver.js. 봇 토큰은 여기에만 넣는다
 function deliverBox(d){
   if(!d)return'';
   const T=d.telegram,G=d.drive;
   const tg=T.linked?`<button class="chip${T.on?' on':''}" data-dl="tg">${T.on?'✓ ':''}텔레그램 @${esc(T.bot||'')} 으로 받기</button> <button class="chip" data-dl="tgoff">연결 끊기</button>`
     :T.waiting?`<div class="note">텔레그램에서 <b>@${esc(T.bot||'')}</b> 을 찾아 <b>시작</b>(또는 아무 말)을 보낸 뒤 → <button class="btn pri" data-dl="confirm">확인</button></div>`
-    :`<div class="row"><input type="password" id="tgtoken" placeholder="텔레그램 @BotFather 가 준 봇 토큰(숫자:글자)" autocomplete="off" style="flex:1"><button class="btn pri" data-dl="link">연결</button></div>
+    :`<div class="inrow"><input type="password" id="tgtoken" placeholder="텔레그램 @BotFather 가 준 봇 토큰(숫자:글자)" autocomplete="off"><button class="btn pri" data-dl="link">연결</button></div>
       <small style="color:var(--mute)">텔레그램에서 @BotFather → /newbot → 이름 두 번 → 받은 토큰을 붙여 넣으세요. 고객님 봇이라 영상은 고객님께만 갑니다.</small>`;
   const gd=G.found?`<button class="chip${G.on?' on':''}" data-dl="drive">${G.on?'✓ ':''}구글 드라이브에 자동 저장</button> <small style="color:var(--mute)">${esc(G.folder||'')}</small>`
     :`<small style="color:var(--mute)">이 PC 에 'Google Drive 데스크톱'이 없습니다 — <a href="https://www.google.com/drive/download/" target="_blank" rel="noopener">설치</a>하고 로그인하면 여기에 켜는 칸이 생깁니다.</small>`;
@@ -185,23 +208,34 @@ function deliverBox(d){
     ${(T.linked||G.on)&&(S.st.videos||[]).length?`<button class="btn" data-dl="test">최근 완성본으로 시험 보내기</button>`:''}
     ${S.dlmsg?`<div class="note" id="dlmsg">${esc(S.dlmsg)}</div>`:''}</div>`;
 }
+// 프리셋 카드 — 형식 묶음(group)별로(사장님 10-24 '프리셋 = 형식'). 묶음이 없으면 한 덩어리
+function presetCards(st){
+  const list=st.presets||[];
+  if(!list.length)return'<p class="err">쓸 수 있는 프리셋이 없습니다 — Claude 에게 "숏템 준비 점검"을 부탁하세요</p>';
+  const card=x=>`<button class="card${x.id===st.current?' on':''}" data-preset="${esc(x.id)}"><b>${esc(x.name)}</b><span>${esc(x.desc||'')}</span></button>`;
+  const groups=[];for(const x of list){const g=x.group||'';let o=groups.find(y=>y.g===g);if(!o)groups.push(o={g,xs:[]});o.xs.push(x)}
+  return groups.map(o=>`${o.g?`<div class="grp">${esc(o.g)}</div>`:''}<div class="cards">${o.xs.map(card).join('')}</div>`).join('');
+}
+// 글꼴 칸 — 이름 위에 그 글꼴로 쓴 견본 글자. 글꼴 정의(@font-face)는 미리보기 렌더러에서 빌려 온다(fontsFromStage)
 function fontGrid(key,cur,fonts){
-  return `<div class="fontgrid">${fonts.map(f=>`<button class="${f===cur?'on':''}" data-font="${key}" data-v="${esc(f)}" style="font-family:'${esc(f)}'">${esc(f)}</button>`).join('')}</div>`;
+  return `<div class="fontgrid">${fonts.map(f=>`<button class="${f===cur?'on':''}" data-font="${key}" data-v="${esc(f)}"><span class="fs" style="font-family:'${esc(f)}'">가나다 숏템</span><small>${esc(f)}</small></button>`).join('')}</div>`;
 }
 
 async function save(patch){
+  // 바로 반영: 저장을 기다리지 않고 바꾼 값(patch)을 실어 미리보기부터 그린다 — 저장은 같이 간다(10-25 사장님 '버퍼링')
   S.saving++;state('저장 중…');
+  preview(patch);
   const r=await api('/api/save',{preset:S.st.current,patch});
   S.saving--;
-  if(!r.ok){state((r.errors||['저장 실패']).join(' / '),true);return}
-  await load(true);
+  if(!r.ok){state((r.errors||['저장 실패']).join(' / '),true);preview();return}
+  await load(true,true);
 }
 
 $('board').addEventListener('click',async e=>{
   const t=e.target.closest('button');if(!t)return;
   if(t.dataset.go!==undefined){S.step=STEPS[+t.dataset.go].k;render();return}
   if(t.dataset.login){const r=await api('/api/login',{platform:t.dataset.login});if(!r.ok)state(r.why,true);await load(true);return}
-  if(t.dataset.preset){await api('/api/select',{preset:t.dataset.preset});S.video=null;await load(true);S.step='screen';render();return}
+  if(t.dataset.preset){const id=t.dataset.preset;S.video=null;preview(null,id);await api('/api/select',{preset:id});await load(true,true);S.step='screen';render();return}
   if(t.id==='reset'){await api('/api/reset',{preset:S.st.current});await load(true);return}
   if(t.dataset.font)return save({text:{[t.dataset.font]:t.dataset.v}});
   if(t.dataset.enter)return save({text:{caption:{enter:t.dataset.enter==='none'?'none':{kind:t.dataset.enter,ms:300}}}});
@@ -209,6 +243,7 @@ $('board').addEventListener('click',async e=>{
   if(t.dataset.mode)return save({text:{caption:{mode:t.dataset.mode}}});
   if(t.dataset.tpl){const [m,id]=t.dataset.tpl.split(':');return save({template:t.dataset.tpl==='none'?'none':{mode:m,id}})}
   if(t.dataset.voice){const v=S.st.catalog.voices.find(x=>x.voice_id===t.dataset.voice);return save({tts:{voice_id:v.voice_id,name:v.name,preset_id:v.preset_id}})}
+  if(t.dataset.key){const s=t.dataset.key;const r=await api('/api/key/'+s,{key:($('key_'+s)||{}).value||''});S.keymsg=r.ok?'저장했습니다 — 다음 영상부터 이 키를 씁니다':r.why;await load(true);return}
   if(t.dataset.dl){const k=t.dataset.dl;let r;
     if(k==='link')r=await api('/api/deliver/link',{token:($('tgtoken')||{}).value||''});
     else if(k==='confirm')r=await api('/api/deliver/confirm',{});
@@ -253,13 +288,23 @@ function fit(){const w=$('phone').clientWidth;stage.style.transform=`scale(${w/1
 addEventListener('resize',fit);fit();
 // 그릴 때마다 렌더러 페이지를 새로 연다 — 공식 렌더러(render_scene_style.js)도 매번 새 페이지에 load 를 한 번만 부른다.
 //   (10-19 실측: 같은 페이지에 load 를 두 번 부르면 앞 틀이 남아 템플릿으로 바꿔도 화면이 그대로였다 — 렌더와 59% 달랐다)
-const STAGE_URL='/r/out/scene-style-ui-showcase.html?qa=1';
+const STAGE_URL='r/out/scene-style-ui-showcase.html?qa=1';
+// 렌더러 페이지의 @font-face 를 이 화면에도 한 번 옮긴다 — 글꼴 칸 견본 글자가 실제 그 글꼴로 보이게(정의는 렌더러 한 곳)
+function fontsFromStage(w){
+  if(S.fontsCopied)return;
+  const out=[];
+  for(const sh of w.document.styleSheets){let rules;try{rules=sh.cssRules}catch(e){continue}
+    const base=sh.href||w.location.href;
+    for(const r of rules)if(r.type===CSSRule.FONT_FACE_RULE)out.push(r.cssText.replace(/url\(["']?([^"')]+)["']?\)/g,(m,u)=>`url("${new URL(u,base).href}")`))}
+  if(!out.length)return;
+  const s=document.createElement('style');s.textContent=out.join('\n');document.head.appendChild(s);S.fontsCopied=true;
+}
 const freshStage=()=>new Promise(r=>{stage.addEventListener('load',r,{once:true});stage.src=STAGE_URL+'&n='+Date.now()});
 let seq=0;
-async function preview(){
-  if(!S.st||!S.st.current)return;
+async function preview(patch,presetId){
+  const pid=presetId||(S.st&&S.st.current);if(!pid)return;
   const my=++seq;$('busy').hidden=false;
-  const r=await api('/api/preview',{preset:S.st.current,video:S.video});
+  const r=await api('/api/preview',{preset:pid,video:S.video,...(patch?{patch}:{})});
   if(my!==seq)return;
   $('busy').hidden=true;
   if(r.error){$('applied').innerHTML=`<span class="err">${esc(r.error)}</span>`;return}
@@ -268,6 +313,7 @@ async function preview(){
   if(my!==seq)return;
   const w=stage.contentWindow;
   asRenderer(w);
+  fontsFromStage(w);
   w.sceneStyleExporting=false;
   w.sceneStyle.load(r.context,r.snapshot);
   await w.document.fonts.ready;w.sceneStyle.refresh&&w.sceneStyle.refresh();w.sceneStyleExporting=true;

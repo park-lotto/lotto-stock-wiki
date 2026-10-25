@@ -548,7 +548,7 @@ def test_rent_로컬설정은_프리셋id로_빌리고_이름목록은_관리자
     c = env["client"]
     k = _two_devices(env)
     lic = c.get("/api/claude/license", headers=_h(k)).json()
-    assert lic["presets"] == [{"id": env["preset"], "name": "흰바탕창 · 창아래 검정", "desc": ""}]
+    assert lic["presets"] == [{"id": env["preset"], "name": "흰바탕창 · 창아래 검정", "desc": "", "group": ""}]   # group = 형식 묶음(관제 266)
     assert "benchslug" not in _json.dumps(lic["presets"]), "벤치 slug 가 이름에 새면 안 된다"
     env["store"].set_setting("claude_preset_names", _json.dumps({"benchslug/A_흰바탕창/창아래_검정": {"name": "제품비하인드썰형", "desc": "뒷이야기 썰"}}))
     assert c.get("/api/claude/license", headers=_h(k)).json()["presets"][0]["name"] == "제품비하인드썰형"
