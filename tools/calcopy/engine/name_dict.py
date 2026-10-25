@@ -108,13 +108,17 @@ _JOSA = {w: p for p in _PAIRS for w in p.split("/")}
 _JOSA_RE = "(?P<j>" + "|".join(sorted(map(re.escape, _JOSA), key=len, reverse=True)) + ")?"
 
 
-def apply_all(text: str, voice_id: str | None = None) -> str:
-    """읽는 글에서 사전에 있는 모든 이름을 표기로. 긴 이름부터(겹침 방지). 사전에 없는 글은 그대로 돌아온다."""
+def apply_all(text: str, voice_id: str | None = None, voice_only: bool = False) -> str:
+    """읽는 글에서 사전에 있는 모든 이름을 표기로. 긴 이름부터(겹침 방지). 사전에 없는 글은 그대로 돌아온다.
+    voice_only=True: 그 목소리로 확인한 표기(voices[voice_id])가 있는 이름만 — 공통 표기(tts)는 안 쓴다. render_bench 가 이렇게 부른다(관제 266, 10-26):
+    공통 표기를 다 걸면 이미 만든 편 5줄의 읽는 글이 바뀌어(재합성·돈) 한혜진 줄은 '씨가,가'로 깨졌다(전수 실측)."""
     if not text:
         return text
     d = load()
     out = text
     for name in sorted(d["names"], key=len, reverse=True):
+        if voice_only and not ((d["names"][name].get("voices") or {}).get(voice_id or "")):
+            continue
         if name in out:
             out = apply(out, name, voice_id, d)
     return out

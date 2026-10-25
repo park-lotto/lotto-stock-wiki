@@ -346,6 +346,31 @@ def verify(lines: list[dict], paths: dict, narr=None, out: Path | None = None) -
     return rep
 
 
+NAME_GAP_MAX = 0.15      # 인물 이름 글자 사이 쉼 상한(초) — 넘으면 '최 은경'처럼 끊겨 들린다(관제 266 키치잇 04: 쉼표 표기 '최, 은경' 틈 0.16초)
+
+
+def name_breaks(S: dict, align: dict | None) -> list[str]:
+    """렌더 전 관문(이름 끊김) — 합성 글자 시각(align, 줄을 이은 전체)에서 인물 이름(대본 celeb + 발음 사전 이름) 글자 사이 쉼이 NAME_GAP_MAX 를 넘는 자리.
+    이름 글자 사이에 쉼표·띄어쓰기가 끼어 있어도(사전 표기 '최, 은경') 같은 이름으로 찾는다. 글자 시각이 없으면 판정 못 함 → 빈 목록(부른 쪽이 로그)."""
+    import re as _re
+    from tools.calcopy.engine import name_dict as ND
+    if not align or not align.get("characters"):
+        return []
+    ch = align["characters"]
+    st, en = align["character_start_times_seconds"], align["character_end_times_seconds"]
+    names = sorted({n for n in ([S.get("celeb")] + list(ND.load()["names"])) if n and len(n) >= 2}, key=len, reverse=True)
+    txt = "".join(ch)
+    out = []
+    for n in names:
+        for m in _re.finditer(r"[\s,]*".join(map(_re.escape, n)), txt):
+            idx = [i for i in range(m.start(), m.end()) if ch[i] not in " ,"]
+            for a, b in zip(idx, idx[1:]):
+                gap = st[b] - en[a]
+                if gap > NAME_GAP_MAX:
+                    out.append(f"이름 '{n}' {ch[a]}↔{ch[b]} 쉼 {gap:.2f}초(>{NAME_GAP_MAX}) @{st[a]:.2f}s — 읽는 글 '{txt[m.start():m.end()]}' 를 끊김 없는 표기로(사전 name_dict 목소리별 표기)")
+    return out
+
+
 def gate_sent(S: dict, sent: list[dict], R: Path, log=print) -> list[str]:
     """(판단 주인 — 렌더 전 관문 ②) make_sentences 결과(sent: id·wav)로 줄별 대조. 문제 목록(빈 목록 = 통과). 결과 = R/narr_verify.json."""
     txt = {l["id"]: l["tts"] for l in S["lines"] if l.get("kind") == "tts"}

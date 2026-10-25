@@ -2635,6 +2635,12 @@ def voice_plan(S: dict, st: dict, R: Path, log=print) -> tuple[list, dict | None
         return [], None, None
     _voice_gate_text(S)
     full, align = tts_by_line(tts_S, R, log)
+    from tools.calcopy.engine import narr_verify as NV
+    nb = NV.name_breaks(S, align)      # 관문(이름 끊김, 관제 266) — 합성 글자 시각으로 인물 이름 안 쉼 > 0.15초면 영상 굽기 전에 멈춘다
+    if nb:
+        raise StageError(" / ".join(nb))
+    if not align:
+        log("[이름 끊김] 글자 시각 없음 — 판정 못 함(받아쓰기 관문 ②만)")
     sent, tempo, _ = RI.make_sentences(tts_S, full, R, log, align=align, spread=RI.spread_of(st))
     _voice_gate_audio(S, sent, R, log)   # 판 targets.speech 목표가 있으면 타입캐스트 줄별 ±8% 미세(미나 그대로, 지시서 15)
     sent = fit_voice(S, st, sent, align, log)   # 줄 사이·문장부호 쉼 = 판(B18 timing.gap · B18a speech) — 관제263
@@ -2666,6 +2672,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     S, M = jload(doc / "대본.json"), jload(doc / "재료.json")
     S.setdefault("voice", {k: st["voice"][k] for k in ("name", "voice_id", "provider", "emotion") if k in st["voice"]})
     RI.voice_args(S, check=True)          # 목소리 칸 검사(provider·감정 — 주인 engine/voices.check_tts). 틀리면 합성 전에 멈춘다
+    RI.read_names(S, log)                 # 이름 발음 사전(engine/name_dict — preset_make.tts 와 같은 주인 apply_all, 그 목소리로 확인한 표기만)
     S.setdefault("cps_target", st.get("cps_target", 7.0))
     R = work / "render"; R.mkdir(parents=True, exist_ok=True)
     if plan_only:

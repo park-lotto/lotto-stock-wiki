@@ -102,6 +102,22 @@ def voice_args(S, check: bool = False) -> dict:
     return out
 
 
+def read_names(S, log=print) -> list:
+    """읽는 글(tts 줄)에 이름 발음 사전을 건다 — 주인 engine/name_dict.apply_all(preset_make.tts 와 같은 함수). 그 목소리로 확인한 표기(voices)만
+    (voice_only — 공통 표기까지 걸면 이미 만든 편 5줄이 바뀌어 재합성·한혜진 줄 깨짐, 10-26 전수). 자막(caps)은 그대로. 반환 = 바뀐 줄 id."""
+    from tools.calcopy.engine import name_dict as ND
+    v = (S.get("voice") or {}).get("voice_id")
+    got = []
+    for l in S.get("lines") or []:
+        if l.get("kind") == "tts" and l.get("tts"):
+            t = ND.apply_all(l["tts"], v, voice_only=True)
+            if t != l["tts"]:
+                got.append(l.get("id"))
+                log(f"[이름 사전] {l.get('id')}: '{l['tts']}' → '{t}'")
+                l["tts"] = t
+    return got
+
+
 def tts_once(S, R: Path, log=print) -> tuple[Path, dict | None]:
     """Typecast 1회(캐시 열쇠 = 글·목소리·배속 — 글이 바뀌면 다시 합성) → (narr_full.mp3, 글자 시각 align|None). 주인 engine/narr_align."""
     from tools.calcopy.engine import narr_align as NA

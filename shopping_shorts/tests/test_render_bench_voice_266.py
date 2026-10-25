@@ -65,3 +65,28 @@ def test_voice_args_from_script_and_check():
     assert RI.voice_args({"voice": {"voice_id": TC, "provider": "typecast", "emotion": "happy"}}, check=True) == {"provider": "typecast", "emotion": "happy"}
     with pytest.raises(StageError):
         RI.voice_args({"voice": {"voice_id": "kr-mina-expressive", "provider": "elevenlabs", "emotion": "happy"}}, check=True)   # 감정은 타입캐스트만
+
+
+def test_name_breaks_catches_comma_spelling_gap():
+    """관제 266 키치잇 04: '방송인, 최, 은경 씨' — 최↔은 틈 0.16초를 잡고, 붙여 읽으면(틈 0.02) 통과."""
+    from tools.calcopy.engine import narr_verify as NV
+
+    def al(text, gaps):
+        st, en, t = [], [], 0.0
+        for i, c in enumerate(text):
+            t += gaps.get(i, 0.0)
+            st.append(round(t, 3)); t += 0.1; en.append(round(t, 3))
+        return {"characters": list(text), "character_start_times_seconds": st, "character_end_times_seconds": en}
+    bad = NV.name_breaks({"celeb": "최은경"}, al("방송인, 최, 은경 씨가", {7: 0.16}))   # 7 = '은' 앞(쉼표·띄어쓰기 칸 뒤)
+    assert len(bad) == 1 and "최↔은" in bad[0]
+    assert NV.name_breaks({"celeb": "최은경"}, al("방송인 최은경 씨가", {5: 0.02})) == []
+    assert NV.name_breaks({"celeb": "최은경"}, None) == []
+
+
+def test_read_names_voice_only():
+    """사전 표기는 그 목소리로 확인한 것만 — 미나는 '최은경' 그대로, 공통 표기('방송인 최화정 씨')는 안 건다(이미 만든 편 재합성 방지)."""
+    S = {"voice": {"voice_id": "kr-mina-expressive"}, "lines": [{"id": "a", "kind": "tts", "tts": "방송인 최은경 씨가 산"},
+                                                                 {"id": "b", "kind": "tts", "tts": "최화정이, 성시경한테"}]}
+    assert RI.read_names(S, log=lambda *_: None) == [] and S["lines"][0]["tts"] == "방송인 최은경 씨가 산" and S["lines"][1]["tts"] == "최화정이, 성시경한테"
+    S2 = {"voice": {"voice_id": TC}, "lines": [{"id": "a", "kind": "tts", "tts": "최은경이 산"}]}
+    assert RI.read_names(S2, log=lambda *_: None) == ["a"] and S2["lines"][0]["tts"] != "최은경이 산"   # 타입캐스트 tc_6059 = 확인한 표기 '최, 은경'
