@@ -1297,6 +1297,7 @@ def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, tr
 
 
 # ── 자막(자막팩 길) ──────────────────────────────────────────────────────
+PACK_XY_KINDS = ("circle_arrow", "object_pop", "hearts", "sound_word", "small_text")   # 자막팩 그리기(out/precision20-ui.js renderStickers)가 s.x·s.y 를 읽는 종류(10-25 코드 실측) — 나머지(gem·spark_lines·kk_doodle·comic_burst·aside_line·append_text·comment_card)는 자막·낱말 기준 고정 자리
 STACK_BREAKS = ("full", "line")
 
 
@@ -1365,6 +1366,11 @@ def caption_rows(placed: dict, st: dict, segs: list[dict] | None = None) -> list
             if s["kind"] == "heart":
                 row["sticker"] = "heart"
             elif s["kind"] not in ("comment_card", "meme") + FX_STICKERS and s.get("site") != "pending":   # 짤·꾸밈 스티커 = render_base · 자리 못 받은 것 = 안 그림(눈대중 금지, 03)
+                if s.get("site") in ("detected", "fixed") and s["kind"] not in PACK_XY_KINDS:
+                    # 배치가 자리(x·y)를 정했는데 자막팩 그리기(편집기 renderStickers)가 이 종류는 x·y 를 안 읽고 자막 옆 고정 자리에 그린다 →
+                    # 엉뚱한 곳에 그리느니 안 그린다(10-25 15 ep13: kk_doodle 자리 91.5%·60.7% 인데 화면 x240~555). 편집기 쪽 수리 = 그 파일 주인.
+                    placed.setdefault("log", []).append(f"스티커 {s['kind']} 자리 {s.get('x')}%·{s.get('y')}% — 자막팩이 이 종류는 자리(x·y)를 안 읽어 안 그림({r['line']})")
+                    continue
                 row["stickers"].append({k: v for k, v in s.items() if k != "follow"})
         if r["enter"] == "typing":
             n = len(r["text"].replace(" ", ""))

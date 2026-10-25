@@ -588,6 +588,17 @@ def test_fx_stickers_drawn_by_shark_fx(tmp_path):
     assert RB.caption_rows(placed, {"caption": {}})[0]["stickers"] == []      # 자막팩에는 안 감(두 번 그리기 금지)
 
 
+def test_site_sticker_not_drawn_where_pack_ignores_xy():
+    """배치가 자리(x·y)를 정한 스티커는 자리대로 그릴 수 있는 종류만 자막팩에 — kk_doodle 은 편집기가 x·y 를 안 읽으니 안 보낸다(로그). 자리 없는(낱말 붙음) 스티커는 그대로."""
+    placed = {"log": [], "rows": [{"line": "N2", "t0": 7.0, "show": [7.0, 8.3], "text": "분홍", "speaker": "narr", "enter": "cut", "stickers": [
+        {"kind": "kk_doodle", "x": 91.48, "y": 60.73, "site": "detected"},
+        {"kind": "circle_arrow", "x": 50.0, "y": 40.0, "site": "detected"},
+        {"kind": "gem", "word": "분홍"}]}]}
+    rows = RB.caption_rows(placed, {"caption": {}})
+    assert [s["kind"] for s in rows[0]["stickers"]] == ["circle_arrow", "gem"]
+    assert any("kk_doodle" in l and "안 그림" in l for l in placed["log"])
+
+
 # ── CLI: 실제 렌더 대조(합격 검사 1·2·3·4) ───────────────────────────────
 def _img(p):
     import cv2
