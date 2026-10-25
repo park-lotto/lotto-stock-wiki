@@ -110,6 +110,18 @@
      "engine": "○",
      "style_cell": "script.brief + 대본 lines kind=orig(spans)",
      "axis": "script"
+    },
+    {
+     "what": "장면 전환에 가장자리 빛(edge_glow) — 화면 테두리만 빛났다가 감속으로 사라짐(전면 색 번쩍 flash 의 고급화판)",
+     "channel": "해외쇼츠 @foreignshowshow (우리 브랜드 샥탬스토리)",
+     "source": "샥탬 R4(사장님 고급화)",
+     "date": "2026-10-25",
+     "evidence": "사장님 R4 고급화 지시로 샥탬에 쓴 번쩍 꼴 — tools/calcopy/shark/fx.py flash style=edge(_edge_mask 타원 가장자리·edge_alpha0×(1−u)² 감속) · 표준 §11-6 ㉝(커밋 78e4bb42b): 1차 판 = 벤치 전면 색 flash, edge_glow = 업그레이드 전용 · 벤치 실측 근거 아님(우리 쪽 결정) — 조회 근거 없음",
+     "strength": "약",
+     "element": "transition",
+     "axis": "transition",
+     "engine": "○",
+     "style_cell": "cuts.transition.kinds.edge_glow · placement.rules.transition(render_bench transition.kind edge_glow — 02 이식 작업 중)"
     }
    ],
    "bench": {
