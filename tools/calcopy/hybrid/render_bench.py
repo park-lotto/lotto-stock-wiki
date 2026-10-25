@@ -2316,7 +2316,40 @@ def _voice_gate_audio(S: dict, sent: list, R: Path, log=print) -> None:
         raise StageError("나레 줄별 받아쓰기 확정 결함: " + " / ".join(bad) + " — 그 줄 문장을 바꿔 다시 합성(줄 캐시라 바뀐 줄만). 상세 render/narr_verify.json")
 
 
-def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=print, tts: bool = False) -> dict:
+def voice_plan(S: dict, st: dict, R: Path, log=print) -> tuple[list, dict | None, dict | None]:
+    """나레 목소리 길이 주인(관문 ⑧ · G-3) — 계획(--plan)과 렌더가 같이 부른다(10-25 전엔 두 벌).
+    영문 관문 → 줄 캐시 합성(tts_by_line, 바뀐 줄만 돈) → 줄 자르기(make_sentences) → 받아쓰기 관문 → 쉼 맞춤(fit_voice).
+    반환 (sent, tempo, align) · tts 줄이 없으면 ([], None, None)."""
+    from tools.calcopy.hybrid import render_itssum as RI
+    tts_S = {**S, "lines": [l for l in S["lines"] if l["kind"] == "tts"]}
+    if not tts_S["lines"]:
+        return [], None, None
+    _voice_gate_text(S)
+    full, align = tts_by_line(tts_S, R, log)
+    sent, tempo, _ = RI.make_sentences(tts_S, full, R, log, align=align, spread=RI.spread_of(st))
+    _voice_gate_audio(S, sent, R, log)   # 판 targets.speech 목표가 있으면 타입캐스트 줄별 ±8% 미세(미나 그대로, 지시서 15)
+    sent = fit_voice(S, st, sent, align, log)   # 줄 사이·문장부호 쉼 = 판(B18 timing.gap · B18a speech) — 관제263
+    return sent, tempo, align
+
+
+LENGTH_TOL = 0.5      # 판 length 허용 폭(초) — bench_check '길이'·계획 length.ok 와 같은 범위
+
+
+def plan_length_gate(T: dict, st: dict, measured: bool) -> list[str]:
+    """렌더 전 관문 ⑧ — 완성본 길이가 판 length(±LENGTH_TOL) 밖이면 영상 굽기 전에 멈춘다. 진짜 목소리 길이일 때만 본다:
+    어림(글자÷cps)은 이미 만든 12편 실측 0.13~3.40초 짧아 5편을 거짓으로 '짧다' 했다(fixtures/plan_voice_len.json)."""
+    if not measured:
+        return []
+    LD = st["length"]
+    if LD["min"] - LENGTH_TOL <= T["end"] <= LD["max"] + LENGTH_TOL:
+        return []
+    return [f"길이 {T['end']:.2f}초 — 판 '{st.get('name')}' {LD['min']}~{LD['max']}초(±{LENGTH_TOL}) 밖. 대본 줄을 "
+            + ("줄이거나 쉼을 덜어" if T["end"] > LD["max"] else "늘려") + " 다시(렌더 전에 멈춤)"]
+
+
+def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=print, tts: bool = True, report: bool = False) -> dict:
+    """plan_only: 계획만(조각·영상 안 만듦). tts=True(기본) = 진짜 목소리 길이로 계획(합성은 줄 캐시 — 렌더가 그대로 쓴다), False = 어림(--guess, 관문 ⑧ 안 봄).
+    report=True: 계획에서 컷 넘침·길이를 멈추지 않고 돌려준다(회원 c_plan 이 재료 고치기 안내로 쓴다)."""
     from tools.calcopy.hybrid import render_itssum as RI
     from tools.calcopy.hybrid import styles as ST
     st = ST.load(style_name)
@@ -2327,14 +2360,11 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     R = work / "render"; R.mkdir(parents=True, exist_ok=True)
     if plan_only:
         sm = align = None
-        if tts and any(l["kind"] == "tts" for l in S["lines"]):      # 계획 때 진짜 목소리 길이로(10-22 선우용여: 어림으로 통과 → 렌더에서 '컷이 원본 샷보다 길다' 2번·완성본 길이 넘침으로 렌더 3번). 합성은 캐시 — 렌더가 그대로 쓴다
-            tts_S = {**S, "lines": [l for l in S["lines"] if l["kind"] == "tts"]}
-            _voice_gate_text(S)
-            full, align = tts_by_line(tts_S, R, log)
-            sent, _, _ = RI.make_sentences(tts_S, full, R, log, align=align, spread=RI.spread_of(st))
-            _voice_gate_audio(S, sent, R, log)
-            sent = fit_voice(S, st, sent, align, log)      # 줄 사이·문장부호 쉼 = 판(B18·B18a) — 계획 길이도 고친 소리로
+        if tts:      # 계획 때 진짜 목소리 길이로(관문 ⑧ — 10-22 선우용여: 어림으로 통과 → 렌더 3번 · 10-25 이미 만든 12편 어림이 0.13~3.40초 짧음). 합성은 캐시 — 렌더가 그대로 쓴다
+            sent, _, align = voice_plan(S, st, R, log)
             sm = {x["id"]: x for x in sent}
+        else:
+            log("[어림] --guess: 글자÷cps 길이 — 길이 관문(⑧)은 안 본다. 렌더 전 판정은 --plan(진짜 목소리)으로")
         T = timeline(S, M, st, sm, align)
         placed = plan_rows(S, T, st)
         placed["transitions_drawn"] = transitions_of(T, st, placed, log)
@@ -2343,27 +2373,21 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         for c in T["cuts"]:
             log(f"  {c['line']:4s} {c['t0']:6.2f}~{c['t1']:6.2f} {c['dur']:.2f}s max {c.get('max')} {c['src']}@{c.get('ss')}")
         LD = st["length"]
-        length = {"sec": round(T["end"], 2), "min": LD["min"], "max": LD["max"], "measured": bool(sm),
-                  "ok": LD["min"] - 0.5 <= T["end"] <= LD["max"] + 0.5}      # 판정 = bench_check '길이'와 같은 범위(±0.5)
-        log(f"{'목소리 실측' if sm else '어림'} 길이 {T['end']}초 · 배치 {placed['log']}")
-        msg = ("계획에서 컷이 원본 샷보다 길다" + ("" if sm else "(어림)") + ": " + str([(c["line"], c["src"], c.get("ss"), c["dur"], c.get("max"), {"원본 남음": c["src_left"]} if "src_left" in c else None) for c in over])) if over else ""
-        if over and not tts:
-            raise StageError(msg)
+        len_bad = plan_length_gate(T, st, tts)
+        length = {"sec": round(T["end"], 2), "min": LD["min"], "max": LD["max"], "measured": bool(tts),
+                  "ok": LD["min"] - LENGTH_TOL <= T["end"] <= LD["max"] + LENGTH_TOL}      # 판정 = bench_check '길이'와 같은 범위(±0.5)
+        log(f"{'목소리 실측' if tts else '어림'} 길이 {T['end']}초 · 배치 {placed['log']}")
+        msg = ("계획에서 컷이 원본 샷보다 길다" + ("" if tts else "(어림)") + ": " + str([(c["line"], c["src"], c.get("ss"), c["dur"], c.get("max"), {"원본 남음": c["src_left"]} if "src_left" in c else None) for c in over])) if over else ""
+        if (over or len_bad) and not report:
+            raise StageError(" / ".join(([msg] if over else []) + len_bad))
         from tools.calcopy.hybrid import thumb_rule as TR
         card_bad = (TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"]) + cut_boundary_gate(T, M, st)      # 렌더 전 관문 ⑥ — 계획 때 걸러 렌더를 안 돌린다
                     + cut_content_gate(T, M, st, doc, R, log) + cut_length_gate(T, st) + cut_still_gate(T, M, st))                                                         # 관문 ④ 컷 안 남의 글자·남의 얼굴
         if card_bad:
             raise StageError(" / ".join(card_bad))
         return {"timeline": T, "placement": placed, "length": length, "over": msg}
-    tts_S = {**S, "lines": [l for l in S["lines"] if l["kind"] == "tts"]}
-    if tts_S["lines"]:
-        _voice_gate_text(S)
-        full, align = tts_by_line(tts_S, R, log)
-        sent, tempo, _ = RI.make_sentences(tts_S, full, R, log, align=align, spread=RI.spread_of(st))
-        _voice_gate_audio(S, sent, R, log)   # 판 targets.speech 목표가 있으면 타입캐스트 줄별 ±8% 미세(미나 그대로, 지시서 15)
-        sent = fit_voice(S, st, sent, align, log)   # 줄 사이·문장부호 쉼 = 판(B18 timing.gap · B18a speech) — 관제263
-    else:           # 나레 없는 편(관제 263 02 2차 ②) — TTS 안 부른다(돈 0). 자막 줄(kind sub) 시간표 + 원음 + 배경음·효과음
-        align, sent, tempo = None, [], None
+    sent, tempo, align = voice_plan(S, st, R, log)      # 관문 ⑧ 주인 — 계획과 같은 함수(같은 소리·같은 길이)
+    if not sent:    # 나레 없는 편(관제 263 02 2차 ②) — TTS 안 부른다(돈 0). 자막 줄(kind sub) 시간표 + 원음 + 배경음·효과음
         log("[나레 없음] tts 줄 0 — TTS 건너뜀, 자막 시간표(sub)·원음·배경음·효과음만")
     sm = {s["id"]: s for s in sent}
     T = timeline(S, M, st, sm, align)
@@ -2371,7 +2395,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     if over:
         raise StageError("컷이 원본 샷보다 길다: " + str([(c["line"], c["src"], c.get("ss"), c["dur"], c.get("max"), {"원본 남음": c["src_left"]} if "src_left" in c else None) for c in over]))
     from tools.calcopy.hybrid import thumb_rule as TR
-    card_bad = (TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"]) + cut_boundary_gate(T, M, st)          # 렌더 전 관문 ⑥(10-25): 연예인 판 카드 3안 얼굴 — 영상 굽기 전에 멈춘다
+    card_bad = (plan_length_gate(T, st, True) + TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"]) + cut_boundary_gate(T, M, st)          # 렌더 전 관문 ⑧ 길이 · ⑥(10-25): 연예인 판 카드 3안 얼굴 — 영상 굽기 전에 멈춘다
                 + cut_content_gate(T, M, st, doc, R, log) + cut_length_gate(T, st) + cut_still_gate(T, M, st))                                                             # 관문 ④ 컷 안 남의 글자·남의 얼굴(조각 뽑기 전)
     if card_bad:
         raise StageError(" / ".join(card_bad))
@@ -2427,5 +2451,6 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
 if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser(); ap.add_argument("style"); ap.add_argument("doc"); ap.add_argument("work"); ap.add_argument("--plan", action="store_true")
+    ap.add_argument("--guess", action="store_true", help="--plan 을 어림(글자÷cps)으로 — 합성 안 함, 길이 관문(⑧) 안 봄")
     a = ap.parse_args()
-    render(a.style, Path(a.doc), Path(a.work), plan_only=a.plan)
+    render(a.style, Path(a.doc), Path(a.work), plan_only=a.plan or a.guess, tts=not a.guess)

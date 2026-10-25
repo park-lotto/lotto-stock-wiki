@@ -1098,7 +1098,7 @@ def c_plan(W, d):
     if miss:
         return {"error": miss}
     try:
-        res = render_bench.render(v, W / "doc" / v, W / v, plan_only=True, tts=True)      # 진짜 목소리 길이로 계획(합성은 캐시 — 렌더가 그대로 쓴다)
+        res = render_bench.render(v, W / "doc" / v, W / v, plan_only=True, tts=True, report=True)      # 진짜 목소리 길이로 계획 · report = 넘침·길이를 멈추지 않고 돌려받아 재료 고치기 안내(관문 ⑧)(합성은 캐시 — 렌더가 그대로 쓴다)
         over = res.get("over") or ""
     except StageError as e:          # 컷이 원본 샷보다 길다 → 재료를 고치게 한다
         res, over = {"timeline": {"cuts": []}}, str(e)
