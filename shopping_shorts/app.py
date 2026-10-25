@@ -18897,6 +18897,15 @@ async def api_claude_studio_sync(request: Request):
     return _claude_json(await run_in_threadpool(_cs.CP.call, _cs.pc_sync, ctx, body, Store(DB_PATH)))
 
 
+@app.post("/api/claude/studio/request")
+async def api_claude_studio_request(request: Request):
+    """회원 PC Claude → 웹 지시 상태(처리 중·완료·못 함) — 판단은 claude_studio.pc_request."""
+    from shopping_shorts import claude_studio as _cs
+    body = await _claude_body(request)
+    ctx = _cs.CP.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cs.CP.call, _cs.pc_request, ctx, body, Store(DB_PATH)))
+
+
 @app.get("/claude/studio/api/state")
 def _claude_studio_state(request: Request):
     cid, st, denied = _claude_me(request)
@@ -18914,9 +18923,12 @@ async def _claude_studio_op(request: Request, op: str):
     from shopping_shorts import claude_studio as _cs
     b = await _claude_body(request)
     fn = {"select": lambda: _cs.select(st, cid, b.get("preset")),
+          "style": lambda: _cs.select_style(st, cid, b.get("style")),
+          "ask": lambda: _cs.ask(st, cid, b.get("target"), b.get("text")),
+          "look": lambda: _cs.save_look(st, cid, b.get("preset"), b.get("snapshot")),
           "save": lambda: _cs.save(st, cid, b.get("preset"), b.get("patch")),
           "reset": lambda: _cs.reset(st, cid, b.get("preset")),
-          "preview": lambda: _cs.preview(st, cid, b.get("preset"), b.get("patch"))}.get(op)
+          "preview": lambda: _cs.preview(st, cid, b.get("preset"), b.get("patch"), flags=_scene_editor_flags(cid))}.get(op)
     if not fn:
         return JSONResponse({"error": "없음"}, status_code=404)
     return _claude_json(await run_in_threadpool(_cs.CP.call, fn))
@@ -23539,8 +23551,7 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     if copy_family:
         headcopy["copy_family"] = headcopy_gen.normalize_family(copy_family)
     context = context_for(timeline, headcopy, snapshot, job_id)
-    # 구매링크 안내(관제 133): 스위치가 열어 준 계정에만 편집기가 유튜브 화면 자리·새 세트 디자인을 보여 준다(out/scene-style-decorations.js guideOn).
-    context["linkGuide"] = bool(_setting_gate(Store(DB_PATH), "link_guide_enabled", _cid(request)))
+    context.update(_scene_editor_flags(_cid(request)))   # 편집기 스위치(관제 133·124·127·222) — 설정 화면(/claude/studio)과 같은 함수
     # ★페이지 그림 = **그 페이지 시간 한가운데**의 실제 화면(2026-10-03 관제 101, 황선희님 817308da1647).
     #   종전엔 모든 페이지에 칸 대표 그림 한 장(beatframe/<칸>)을 줘서, 장면 앞 1초에만 지나가는 원본 자막이
     #   편집기에 안 보였다 → 고객이 가림막을 못 넣고 완성본에서야 자막을 봤다. 시각 → 그림은 _beatframe_file(at=) 한 곳.
@@ -23562,12 +23573,6 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
         scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_at:.2f}{_fq}"
         # 페이지 안 앞·가운데·뒤(관제 104) — 창 안에서 잠깐만 지나가는 원본 자막도 볼 수 있게. 가운데는 위 media 와 같은 주소.
         scene["media_points"] = [f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_t:.2f}{_fq}" for _t in _scene_page_points(scene)]
-    # 장면 효과(관제 124) 스위치 — 꺼진 계정은 편집기가 '강조 효과' 상자·자동 배치를 안 띄운다(고객 화면 불변)
-    context["fxEnabled"] = bool(_setting_gate(Store(DB_PATH), "scene_fx_enabled", _cid(request)))
-    # 자막팩(관제 127) 스위치 — 꺼진 계정은 편집기가 팩 카드·새 등장 효과·새 강조 방식 버튼을 안 띄운다(고객 화면 불변)
-    context["captionPackEnabled"] = bool(_setting_gate(Store(DB_PATH), "caption_pack_enabled", _cid(request)))
-    # 모션그래픽팩(관제 222) 스위치 — 꺼진 계정은 효과 탭에 '🎞 모션그래픽' 칸이 안 뜬다(고객 화면 불변). 저장값·렌더는 스위치와 무관하게 받는다
-    context["mographEnabled"] = bool(_setting_gate(Store(DB_PATH), "mograph_enabled", _cid(request)))
     # 등장 효과팩 자동 번호(관제 144) — 그 작업 회원의 번호(관리자가 남의 작업을 열어도 그 회원 번호). 스위치가 꺼졌으면 안 준다(고객 화면 불변)
     # 자동 배치는 새 영상에만(2026-10-06 사장님 "기존영상은 하지말고") — 장면 효과 자동 배치·등장 효과팩 자동 번호가 같은 기준(scene_style.auto_new_job)
     from .scene_style import auto_new_job, caption_motion_pack_for
@@ -23575,6 +23580,17 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     if context["captionPackEnabled"] and context["autoNew"]:
         context["motionPackAuto"] = caption_motion_pack_for(job.get("customer_id"))
     return {"context": context, "snapshot": snapshot}
+
+
+def _scene_editor_flags(cid) -> dict:
+    """장면꾸미기 편집기 스위치 — 제작소(scene-style context)와 설정 화면(/claude/studio)이 같이 쓴다(판단 한 곳).
+      linkGuide(관제 133 구매링크 안내) · fxEnabled(관제 124 장면 효과) · captionPackEnabled(관제 127 자막팩) · mographEnabled(관제 222 모션그래픽).
+    꺼진 계정은 편집기가 그 칸을 안 띄운다(고객 화면 불변). 저장값·렌더는 스위치와 무관하게 받는다."""
+    st = Store(DB_PATH)
+    return {"linkGuide": bool(_setting_gate(st, "link_guide_enabled", cid)),
+            "fxEnabled": bool(_setting_gate(st, "scene_fx_enabled", cid)),
+            "captionPackEnabled": bool(_setting_gate(st, "caption_pack_enabled", cid)),
+            "mographEnabled": bool(_setting_gate(st, "mograph_enabled", cid))}
 
 
 def _scene_page_points(scene):

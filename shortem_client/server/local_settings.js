@@ -84,7 +84,9 @@ export async function syncFromServer({ force = false } = {}) {
   catch (e) { return { ok: false, why: (e && e.code) || 'network' }; }
   const got = (r && r.settings) || null;
   if (!got || typeof got.channels !== 'object') return { ok: false, why: 'bad_reply' };
-  const next = { ...s, current: got.current || s.current || null, current_at: got.current_at || 0, channels: got.channels };
+  // 꾸민 모양(looks)은 웹 화면에서만 정한다 — 서버 것을 그대로 받는다(합치기 없음, 주인 = 서버 claude_studio.save_look)
+  const next = { ...s, current: got.current || s.current || null, current_at: got.current_at || 0, channels: got.channels,
+    looks: (got.looks && typeof got.looks === 'object') ? got.looks : (s.looks || {}) };
   if (JSON.stringify(next) !== JSON.stringify(s)) writeSettings(next);
   return { ok: true };
 }
@@ -93,6 +95,8 @@ export async function syncFromServer({ force = false } = {}) {
 export async function packFile(pid) {
   await syncFromServer({ force: true });
   const rel = path.join('packs', `${pid}.json`);
-  writeFileIn(homeDir(), rel, JSON.stringify({ 1: await packFor(pid) }));
+  const st = readSettings();
+  const web = { look: ((st.looks || {})[pid] || {}).snapshot || null };   // 엔진이 읽는 웹 설정(꾸민 모양) — 팩 검사 밖 칸. 감정은 팩 tts.emotion
+  writeFileIn(homeDir(), rel, JSON.stringify({ 1: await packFor(pid), web }));
   return path.join(homeDir(), rel);
 }

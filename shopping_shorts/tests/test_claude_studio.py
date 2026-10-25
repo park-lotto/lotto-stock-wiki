@@ -115,3 +115,51 @@ def test_pc_sync_refuses_when_engine_check_broken(env, monkeypatch):
     with pytest.raises(cp.PortalError):
         cs.pc_sync({}, {"channels": {pid: {"pack": {"text": {"title_font": "B"}}, "updated": 5}}}, env["st"])
     assert cs._read(env["st"], 7)["channels"] == {}
+
+
+ENGINE = Path(__file__).resolve().parents[3] / "칼카피숏템엔진"
+
+
+@pytest.mark.skipif(not (ENGINE / "tools" / "calcopy" / "hybrid" / "styles").is_dir(), reason="엔진 트랙 폴더 없음")
+def test_style_summary_file_matches_engine_styles():
+    """라이브 서버는 판 요약(claude_styles.json)만 읽는다 — 엔진 판 원본으로 만든 카드와 같아야 한다(요약이 낡으면 빨강)."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("style_catalog", Path(__file__).resolve().parents[2] / "tools" / "claude_portal" / "style_catalog.py")
+    sc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sc)
+    names = json.loads((Path(cs.__file__).parent / "claude_preset_names.json").read_text(encoding="utf-8"))
+    saved = json.loads(cs.STYLES_FILE.read_text(encoding="utf-8"))["styles"]
+    src = sc.committed_styles(ENGINE, saved_ref := "HEAD")      # 커밋된 판만(작업 트리의 만드는 중 판은 아니다)
+    assert len(src) >= 20 and len(saved) >= 20, (len(src), len(saved))   # 0개끼리 같아서 통과하는 것 막기(10-26 실측: 이름 따옴표로 0개)
+    if set(saved) != set(src):
+        pytest.skip(f"엔진 {saved_ref} 의 판 목록이 요약과 다르다(엔진이 새 판을 커밋) — style_catalog.py 를 다시 돌려라: {sorted(set(src) ^ set(saved))}")
+    for stem, d in src.items():
+        assert cs.style_summary(stem, saved[stem], names, {}) == cs.style_summary(stem, d, names, {}), stem
+
+
+def test_pc_request_updates_state_only(env, monkeypatch):
+    """회원 PC Claude 가 웹 지시 상태를 알린다 — 상태 세 가지만, 지시 글은 그대로, 없는 id 는 거절."""
+    monkeypatch.setattr(cs.CP, "_front", lambda store, ctx, route: (7, {}, None))
+    st = env["st"]
+    rid = cs.ask(st, 7, {"track": "video", "at": 3.2, "x": 10, "y": 20, "label": "3.2초"}, "이 글자 더 크게")["request"]["id"]
+    got = cs.pc_request({}, {"id": rid, "state": "완료", "note": "다시 만들었습니다"}, st)["request"]
+    assert got["state"] == "완료" and got["text"] == "이 글자 더 크게" and got["target"]["x"] == 10
+    with pytest.raises(cp.PortalError):
+        cs.pc_request({}, {"id": rid, "state": "지움"}, st)
+    with pytest.raises(cp.PortalError):
+        cs.pc_request({}, {"id": "r0", "state": "완료"}, st)
+
+
+@pytest.mark.skipif(not (ENGINE / "shopping_shorts" / "scene_style.py").is_file(), reason="엔진 트랙 폴더 없음")
+def test_look_check_uses_engine_scene_style(monkeypatch):
+    """꾸민 모양 검사는 엔진 판 scene_style(워커 'look') — 칼카피 틀(customFrame) 스냅샷을 받는다.
+    서버 판으로 검사하면 '알 수 없는 템플릿'으로 거절된다(10-26 실측 19개 중 17개). 엉뚱한 틀은 엔진 판도 거절."""
+    from shopping_shorts import scene_style
+    snap = json.loads((Path(__file__).parent / "fixtures" / "look_customframe.json").read_text(encoding="utf-8"))
+    assert snap.get("customFrame") and str(snap["presetId"]).startswith("custom_")
+    with pytest.raises(ValueError):
+        scene_style.validate_snapshot(snap)          # 서버 판은 칼카피 틀을 모른다 — 그래서 워커로 보낸다
+    monkeypatch.setattr(cs, "engine_root", lambda: ENGINE)
+    w = cs._Worker()
+    assert w.call({"op": "look", "snapshot": snap}).get("snapshot", {}).get("presetId") == snap["presetId"]
+    assert "invalid" in w.call({"op": "look", "snapshot": {"mode": "story", "presetId": "없는틀"}})

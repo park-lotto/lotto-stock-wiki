@@ -32,7 +32,8 @@ ROOT = HERE.parent
 WORKER = ROOT / "shortem_client" / "server" / "engine_worker.py"   # 회원 PC engine_bridge 와 같은 파일
 UI_FILE = ROOT / "shortem_client" / "server" / "ui" / "index.html"
 # 렌더러 정적 파일(화면·글꼴만) — 회원 PC local_ui.STATIC_OK 와 같은 범위
-STATIC_OK = __import__("re").compile(r"^(out|shopping_shorts/static)/[0-9A-Za-z가-힣_.\-/]+\.(html|js|css|woff2?|ttf|otf|png|jpe?g|webp|gif|svg|json)$")
+STATIC_OK = __import__("re").compile(r"^(out|shopping_shorts/static)/[0-9A-Za-z가-힣_.\-/]+\.(html|js|css|woff2?|ttf|otf|png|jpe?g|webp|gif|svg|json)$"
+                                     r"|^out/assets/style-previews/s_[0-9a-f]{10}\.mp4$")   # 프리셋 샘플 영상(style_previews.py)만 영상 허용
 _PID_RE = __import__("re").compile(r"^p_[0-9a-f]{10}$")
 
 _SCHEMA = """CREATE TABLE IF NOT EXISTS claude_studio (
@@ -192,7 +193,128 @@ def pack_for(cat: dict, pid: str, own: dict) -> dict:
     return _merge(_merge(cat["default_pack"], (cat.get("preset_defaults") or {}).get(pid) or {}), own or {})
 
 
-# ── 프리셋 ───────────────────────────────────────────────────────────────
+# ── 프리셋 = 칼카피 영상 스타일(판, 사장님 10-25 '프리셋은 칼카피 영상 스타일') ──────────────
+#   판 설정(엔진 tools/calcopy/hybrid/styles/*판.json — 목소리·배경음·효과음·모션·자막팩·짤)이 주인. 여기는 고객용 요약만 만든다.
+#   ★벤치 채널 이름은 내보내지 않는다 — 이름·묶음은 이름표(claude_preset_names.json, 채널 slug 기준)·브랜드 장부에서.
+def _styles_dir() -> Path | None:
+    for d in (Path(os.environ["CLAUDE_STUDIO_STYLES"]) if os.environ.get("CLAUDE_STUDIO_STYLES") else None,
+              CP.channel_root() / "tools" / "calcopy" / "hybrid" / "styles"):
+        if d and d.is_dir():
+            return d
+    try:
+        d = engine_root() / "tools" / "calcopy" / "hybrid" / "styles"
+        return d if d.is_dir() else None
+    except CP.PortalError:
+        return None
+
+
+def _preview_index() -> dict:
+    try:
+        return json.loads((ROOT / "out" / "assets" / "style-previews" / "index.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def style_id(stem: str) -> str:
+    import hashlib
+    return "s_" + hashlib.sha1(("shortem-style|" + stem).encode()).hexdigest()[:10]
+
+
+def _voice_engine(vid: str) -> str:
+    return "타입캐스트" if str(vid).startswith("tc_") else "일레븐랩스" if str(vid).startswith("kr-") else ""
+
+
+def _style_name(stem: str, names: dict, brand: str | None) -> str:
+    """이름 = 실제 프리셋 이름 한 가지(사장님 10-25 '위는 프리셋 이름, 아래는 스타일 이름' — 섞지 않는다).
+    이름표 _styles.name(실제 이름이 확인된 것) → 브랜드 장부 이름(+A/B 판 구분) → 판 이름 그대로."""
+    own = ((names.get("_styles") or {}).get(stem) or {}).get("name")
+    if own:
+        return own
+    base = stem.removesuffix("판")
+    if brand:
+        return brand + (f" {base[-1]}" if base[-1:] in ("A", "B") and not brand.endswith(base[-1]) else "")
+    return base
+
+
+def style_summary(stem: str, d: dict, names: dict, brands: dict) -> dict:
+    """판 하나 → 고객 카드(이름·묶음·뱃지). 뱃지 값은 판 설정을 그대로 읽는다(새 판단 없음)."""
+    slug = ((d.get("bench") or {}).get("channel") or "")
+    # 판 이름표(_styles, 판 파일 이름 기준)가 먼저 — 없으면 같은 채널 틀의 이름표
+    nm = (names.get("_styles") or {}).get(stem) or next((v for k, v in names.items() if isinstance(v, dict) and k.split("/")[0] == slug), {})
+    brand = (brands.get(slug) or {}).get("brand")
+    packs = d.get("packs") or {}
+    v = d.get("voice") or {}
+    sfx = packs.get("sfx") or {}
+    mo = packs.get("motion") or {}
+    bgm = packs.get("bgm") or d.get("bgm") or {}
+    badges = []
+    if v.get("name"):
+        badges.append({"k": "voice", "t": f"{v['name']}" + (f" · {_voice_engine(v.get('voice_id'))}" if _voice_engine(v.get("voice_id")) else "")})
+    kinds = sorted({str(x) for x in (sfx.get("map") or {}).values()})
+    badges.append({"k": "sfx", "t": ("효과음 " + "·".join(kinds)) if kinds else "효과음 없음", "on": bool(kinds)})
+    on_mo = (mo.get("graphics") not in (None, "off")) or (mo.get("pack") not in (None, "off"))
+    badges.append({"k": "motion", "t": "모션그래픽" if on_mo else "모션그래픽 없음", "on": on_mo})
+    badges.append({"k": "bgm", "t": "배경음악" if bgm.get("id") else "배경음악 없음", "on": bool(bgm.get("id"))})
+    if d.get("thumb_card_face"):
+        badges.append({"k": "face", "t": "연예인 얼굴 썸네일", "on": True})
+    sid = style_id(stem)
+    pv = _preview_index().get(sid) or {}
+    shots = pv.get("files") or []   # 실제 완성본 장면(tools/claude_portal/style_previews.py)
+    video = f"r/out/assets/style-previews/{pv['video']}" if pv.get("video") else None   # 샘플 영상 한 편
+    return {"id": sid, "shots": [f"r/out/assets/style-previews/{f}" for f in shots], "video": video, "name": _style_name(stem, names, brand),
+            "group": nm.get("group") or "기타", "desc": nm.get("desc") or "", "badges": badges, "_slug": slug}
+
+
+STYLES_FILE = HERE / "claude_styles.json"   # 판 요약(tools/claude_portal/style_catalog.py 가 엔진 판에서 만든다) — 서버엔 판 파일이 없다
+
+
+def styles(store=None) -> list:
+    """프리셋(판) 목록. 판 파일이 있는 곳(엔진 트랙·로컬 시험)은 거기서, 없으면(라이브 서버) 요약 파일에서. 요약도 같은 style_summary 가 만든다."""
+    d = _styles_dir()
+    names = json.loads((HERE / "claude_preset_names.json").read_text(encoding="utf-8"))
+    try:
+        brands = json.loads((CP.channel_root() / "channel" / "브랜드.json").read_text(encoding="utf-8")).get("brands") or {}
+    except (OSError, ValueError):
+        brands = {}
+    out = []
+    if d:
+        for f in sorted(d.glob("*판.json")):
+            try:
+                out.append(style_summary(f.stem, json.loads(f.read_text(encoding="utf-8")), names, brands))
+            except (OSError, ValueError):
+                log.warning("claude_studio: 판 %s 를 못 읽었다", f.name)
+    elif STYLES_FILE.is_file():
+        try:
+            raw = json.loads(STYLES_FILE.read_text(encoding="utf-8")).get("styles") or {}
+        except ValueError:
+            log.warning("claude_studio: %s 가 깨졌다 — 프리셋 0개", STYLES_FILE.name)
+            raw = {}
+        out = [style_summary(stem, d0, names, brands) for stem, d0 in sorted(raw.items())]
+    order = names.get("_groups") or []
+    rank = {g: i for i, g in enumerate(order)}
+    out = sorted(out, key=lambda s: rank.get(s["group"], len(order)))
+    # 고객에게 보이는 이름 = '묶음 + 번호'(사장님 10-25 '맛템썰템 이런 건 다 채널명이니 썰커뮤니티형 1·2 이런 식으로').
+    #   판 이름(우리 채널명·벤치명)은 _name 에만 — 화면에 안 나간다
+    seen: dict = {}
+    for s in out:
+        seen[s["group"]] = seen.get(s["group"], 0) + 1
+        s["_name"], s["name"] = s["name"], f"{s['group']} {seen[s['group']]}"
+    return out
+
+
+def _style_frame_pid(store, cid, st: dict | None) -> str | None:
+    """판 → 미리보기 바탕 틀(같은 채널의 프리셋 틀). ★없으면 None — 남의 틀로 대신 그리면 여러 프리셋이 같은 그림으로 보인다
+    (10-25 사장님 '이상해'). 그때 화면은 완성본 견본(shots)만 보여 주고, 템플릿을 고르면 템플릿으로 그린다."""
+    plist = _presets(store, cid)
+    if st:
+        for p in plist:
+            pp = CP._preset_by_id(store, p["id"])
+            if pp and pp["slug"] == st.get("_slug"):
+                return p["id"]
+    return None
+
+
+# ── 틀 프리셋 ────────────────────────────────────────────────────────────
 def _presets(store, cid) -> list:
     _ensure(store)
     with CP._tx(store) as c:
@@ -226,8 +348,73 @@ def state(store, cid) -> dict:
     cat = catalog()
     own = (s["channels"].get(cur) or {}).get("pack") or {} if cur else {}
     show = {k: v for k, v in cat.items() if k not in ("default_pack", "preset_defaults")}
+    full = styles(store)
+    sl = [{k: v for k, v in x.items() if not k.startswith("_")} for x in full]
+    cur_st = next((x for x in full if x["id"] == s.get("style")), None)
     return {"host": "server", "presets": plist, "current": cur, "pack": pack_for(cat, cur, own) if cur else None,
+            "styles": sl, "style": cur_st["id"] if cur_st else None,
+            "style_has_frame": bool(cur_st and _style_frame_pid(store, cid, cur_st)),
+            "requests": (s.get("requests") or [])[-20:],
             "changed": own, "catalog": show, "videos": [], "stamp": (s["channels"].get(cur) or {}).get("updated", 0) if cur else 0}
+
+
+def select_style(store, cid, sid) -> dict:
+    """프리셋(판) 고르기 — 판을 기억하고, 미리보기 바탕 틀은 그 판 채널의 틀로 맞춘다(템플릿을 고르면 템플릿이 덮는다)."""
+    st = next((x for x in styles(store) if x["id"] == sid), None)
+    if not st:
+        raise StudioError("bad_request", "모르는 프리셋입니다")
+    s = _read(store, cid)
+    fp = _style_frame_pid(store, cid, st)
+    # 틀이 없는 판은 설정 칸(채널명·글꼴·템플릿)을 담을 자리만 지금 것 그대로 쓴다 — 화면은 견본 그림을 보이고 '기본 틀'은 못 고른다
+    s["style"], s["current"], s["current_at"] = sid, fp or s.get("current") or ((_presets(store, cid) or [{}])[0].get("id")), _ms()
+    _write(store, cid, s)
+    return {"ok": True, "current": s["current"], "has_frame": bool(fp)}
+
+
+# 감정은 팩 tts.emotion 한 곳(엔진 preview_request.check 가 검사 — 타입캐스트만). 10-26 엔진 창과 합의, 따로 두던 save_extra 는 뺐다
+
+
+LOOK_MAX = 400_000   # 장면꾸미기 스냅샷 한도(글자 수) — 사진·영상은 안 들어간다(그림 자리·글·색·위치만)
+
+
+def save_look(store, cid, pid, snapshot) -> dict:
+    """꾸미기 단계 — 장면꾸미기 화면에서 '이 영상에 적용'한 모양(snapshot)을 프리셋별로 저장. 검사 = 렌더러와 같은 scene_style.validate_snapshot."""
+    _check_pid(store, cid, pid)
+    if not isinstance(snapshot, dict):
+        raise StudioError("bad_request", "꾸민 모양을 받지 못했습니다")
+    raw = json.dumps(snapshot, ensure_ascii=False)
+    if len(raw) > LOOK_MAX:
+        raise StudioError("bad_request", "꾸민 모양이 너무 큽니다")
+    # 검사 = 엔진 판 scene_style.validate_snapshot(워커 'look'). 이 화면이 그리는 칼카피 틀(customFrame)은 엔진 판만 안다 —
+    # 10-26 실측: 서버 판으로 검사하니 19개 중 17개가 '알 수 없는 템플릿'·'최대 12개'로 저장 거절
+    r = WORKER_ONE.call({"op": "look", "snapshot": snapshot})
+    if r.get("error"):
+        raise StudioError("disabled", "꾸민 모양 검사를 지금 못 합니다 — 잠시 뒤 다시 눌러 주세요")
+    if r.get("invalid"):
+        raise StudioError("bad_request", f"꾸민 모양을 저장할 수 없습니다: {r['invalid']}")
+    snap = r["snapshot"]
+    s = _read(store, cid)
+    s.setdefault("looks", {})[pid] = {"snapshot": snap, "updated": _ms()}
+    _write(store, cid, s)
+    return {"ok": True}
+
+
+def ask(store, cid, target, text) -> dict:
+    """완성본 고치기 — 회원이 화면에서 짚은 곳(target)에 '이렇게 해 달라'(text)를 남긴다. 처리는 회원 PC 의 Claude(MCP)가 한다(서버는 보관만)."""
+    text = str(text or "").strip()[:4000]
+    if not text:
+        raise StudioError("bad_request", "무엇을 고칠지 적어 주세요")
+    t = target if isinstance(target, dict) else {}
+    keep = ("track", "scene", "at", "label", "x", "y", "dx", "dy", "video")
+    items = t.get("items") if isinstance(t.get("items"), list) else None   # 묶음(한 번에 보내기) — 칸마다 자리·시각·글
+    t = {k: t[k] for k in keep if k in t}
+    if items:
+        t["items"] = [{**{k: i[k] for k in keep if k in i}, "text": str(i.get("text") or "")[:500]} for i in items[:30] if isinstance(i, dict)]
+    s = _read(store, cid)
+    req = {"id": f"r{_ms()}", "at": _ms(), "target": t, "text": text, "state": "대기"}
+    s["requests"] = ((s.get("requests") or []) + [req])[-50:]
+    _write(store, cid, s)
+    return {"ok": True, "request": req}
 
 
 def _ms():
@@ -266,6 +453,7 @@ def reset(store, cid, pid) -> dict:
     _check_pid(store, cid, pid)
     s = _read(store, cid)
     s["channels"][pid] = {"pack": {}, "updated": _ms()}
+    (s.get("looks") or {}).pop(pid, None)          # 직접 꾸민 모양도 같이 되돌린다
     _write(store, cid, s)
     return {"ok": True}
 
@@ -273,7 +461,8 @@ def reset(store, cid, pid) -> dict:
 # ── 회원 PC 와 맞추기(라이선스 키로 부른다) — 프리셋마다 더 최근에 바꾼 쪽이 이긴다 ──
 def sync_merge(mine: dict, theirs: dict) -> tuple:
     """두 설정을 합친다(주인 함수 하나 — PC local_settings.syncFromServer 는 이 결과를 그대로 쓴다). (합친 것, 바뀐 칸 수)"""
-    out = {"current": mine.get("current"), "current_at": mine.get("current_at") or 0, "channels": dict(mine.get("channels") or {})}
+    out = {**mine, "current": mine.get("current"), "current_at": mine.get("current_at") or 0,   # 판(style)·지시(requests)는 웹 쪽 칸 — 그대로 둔다
+           "channels": dict(mine.get("channels") or {})}
     n = 0
     for pid, ch in (theirs.get("channels") or {}).items():
         if not _PID_RE.match(str(pid)) or not isinstance(ch, dict) or not isinstance(ch.get("pack", {}), dict):
@@ -286,6 +475,28 @@ def sync_merge(mine: dict, theirs: dict) -> tuple:
         out["current"], out["current_at"] = theirs["current"], int(theirs["current_at"])
         n += 1
     return out, n
+
+
+REQ_STATES = ("처리 중", "완료", "못 함")
+
+
+def pc_request(ctx: dict, body: dict | None, store=None) -> dict:
+    """POST /api/claude/studio/request — 회원 PC Claude 가 웹 지시 하나의 상태를 알린다({id, state, note}).
+    웹 화면 '보낸 지시'가 대기 → 처리 중 → 완료/못 함 으로 바뀐다. 지시 내용은 바꾸지 않는다."""
+    store = CP._store(store)
+    CP.ensure_schema(store)
+    cid, _, _ = CP._front(store, ctx, "studio")
+    b = body if isinstance(body, dict) else {}
+    rid, state = str(b.get("id") or ""), b.get("state")
+    if state not in REQ_STATES:
+        raise StudioError("bad_request", "상태는 처리 중·완료·못 함 중 하나입니다")
+    s = _read(store, cid)
+    req = next((r for r in s.get("requests") or [] if r.get("id") == rid), None)
+    if not req:
+        raise StudioError("bad_request", "그 지시가 없습니다")
+    req.update(state=state, note=str(b.get("note") or "")[:300], state_at=_ms())
+    _write(store, cid, s)
+    return {"ok": True, "request": req}
 
 
 def pc_sync(ctx: dict, body: dict | None, store=None) -> dict:
@@ -316,7 +527,7 @@ def pc_sync(ctx: dict, body: dict | None, store=None) -> dict:
     return {"ok": True, "settings": mine}
 
 
-def preview(store, cid, pid, patch=None) -> dict:
+def preview(store, cid, pid, patch=None, flags=None) -> dict:
     """그 프리셋 틀 + 회원 설정(+아직 저장 전 patch) → 렌더러 입력(snapshot·context). 계산은 엔진 preview 그대로."""
     p = _check_pid(store, cid, pid)
     s = _read(store, cid)
@@ -326,8 +537,12 @@ def preview(store, cid, pid, patch=None) -> dict:
     r = WORKER_ONE.call({"op": "preview", "preset": str(p["dir"]), "pack": pack_for(catalog(), pid, own)})
     if r.get("error"):
         return {"error": "미리보기를 그리지 못했습니다: " + r["error"]}
-    return {"snapshot": r["snapshot"], "context": r["context"], "applied": _applied_for_member(r.get("applied") or []),
-            "title": r.get("title")}
+    look = ((s.get("looks") or {}).get(pid) or {}).get("snapshot")
+    ctx = r["context"]
+    if isinstance(flags, dict):   # 편집기 스위치(app._scene_editor_flags — 제작소와 같은 함수). 설정 화면은 새 작업이 아니라 자동 배치 끔
+        ctx = {**ctx, **flags, "autoNew": False}
+    return {"snapshot": r["snapshot"], "context": ctx, "applied": _applied_for_member(r.get("applied") or []),
+            "title": r.get("title"), "look": look}
 
 
 def _applied_for_member(lines: list) -> list:
@@ -349,8 +564,9 @@ def static_file(rel: str) -> Path | None:
     """렌더러 정적 파일 — 엔진 묶음 안, 허용 범위만."""
     if not STATIC_OK.match(rel) or ".." in rel:
         return None
-    root = engine_root().resolve()
-    f = (root / rel).resolve()
-    if root not in f.parents or not f.is_file():
-        return None
-    return f
+    # 엔진 묶음 먼저, 없으면 저장소(템플릿 견본 그림 out/assets/scene-style/thumbnails 는 묶음에 없고 저장소에 있다 — 10-25 실측)
+    for root in (engine_root().resolve(), ROOT.resolve()):
+        f = (root / rel).resolve()
+        if root in f.parents and f.is_file():
+            return f
+    return None

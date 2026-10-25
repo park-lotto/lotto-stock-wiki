@@ -85,4 +85,6 @@ export const api = {
   feedback: body => call('POST', '/api/claude/feedback', { body }),
   step: body => call('POST', '/api/claude/step', { body, timeoutMs: 90000 }),   // 볼케이노형 제작 지시(관제 234, 10-21) — 판단은 서버 지시서
   studio: settings => call('POST', '/api/claude/studio', { body: settings }),   // 내 채널 설정 맞추기(관제 266) — 합치기는 서버 claude_studio.sync_merge
+  studioGet: () => call('GET', '/api/claude/studio'),                            // 웹 설정·지시 읽기만
+  studioRequest: body => call('POST', '/api/claude/studio/request', { body }),   // 웹 지시 상태 알리기(처리 중·완료·못 함)
 };

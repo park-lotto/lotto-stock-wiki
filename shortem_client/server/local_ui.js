@@ -42,13 +42,13 @@ export function videos() {
   }).sort((a, b) => b.at - a.at);
 }
 
-function send(res, code, body, type = 'application/json; charset=utf-8', extra = {}) {
+export function send(res, code, body, type = 'application/json; charset=utf-8', extra = {}) {
   const b = Buffer.isBuffer(body) ? body : Buffer.from(typeof body === 'string' ? body : JSON.stringify(body));
   res.writeHead(code, { 'Content-Type': type, 'Content-Length': b.length, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', ...extra });
   res.end(b);
 }
 
-async function readBody(req) {
+export async function readBody(req) {
   const ch = [];
   let n = 0;
   for await (const d of req) { n += d.length; if (n > 200000) return null; ch.push(d); }
@@ -60,7 +60,7 @@ function cookieOk(req, token) {
   return !!m && crypto.timingSafeEqual(Buffer.from(m[1]), Buffer.from(token));
 }
 
-function serveFile(req, res, file, type) {
+export function serveFile(req, res, file, type) {
   let st;
   try { st = fs.statSync(file); } catch { return send(res, 404, { error: '없음' }); }
   const range = String(req.headers.range || '').match(/^bytes=(\d*)-(\d*)$/);

@@ -227,3 +227,36 @@ export function runOps(jobDir, doList, { timeoutMs = 3 * 60 * 60 * 1000 } = {}) 
     });
   });
 }
+
+// 완성본 → 캡컷 초안(관제 266) — 판단·꼴은 엔진 tools/calcopy/engine/capcut_export.export 한 곳. 여기는 띄우고 마지막 줄 JSON 을 읽기만 한다.
+//   이 PC 에 캡컷이 깔려 있으면 캡컷 초안 폴더에 바로(캡컷 목록에 뜬다), 없으면 그 편 작업 폴더/capcut 아래.
+const CAPCUT_PY = [
+  'import json, sys',
+  'from pathlib import Path',
+  'from tools.calcopy.engine import capcut_export as C',
+  'work, name = sys.argv[1], sys.argv[2]',
+  'root = C.capcut_drafts_root()',
+  'p = C.export(work, root or (Path(work) / "capcut"), None, name or None, log=lambda *a, **k: None)',
+  'r = C.check(p, work)',
+  'print(json.dumps({"ok": r["ok"], "bad": r["bad"], "draft": str(p), "in_capcut": bool(root)}, ensure_ascii=False))',
+].join('\n');
+export function capcutExport(workDir, name, { timeoutMs = 10 * 60 * 1000 } = {}) {
+  return new Promise(resolve => {
+    const proc = spawn(pythonExe(), ['-c', CAPCUT_PY, workDir, name || ''],
+      { cwd: engineRoot(), env: { ...engineEnv(ensureDir(aiRoot(), '_ui'), null, {}), PYTHONPATH: engineRoot() }, shell: false, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    const out = [];
+    let err = '';
+    const t = setTimeout(() => { try { proc.kill(); } catch { /* 이미 끝 */ } }, timeoutMs);
+    proc.stdout.on('data', d => out.push(d));
+    proc.stderr.on('data', d => { if (err.length < 20000) err += String(d); });
+    proc.on('error', e => { clearTimeout(t); resolve({ ok: false, why: String(e && e.message) }); });
+    proc.on('close', () => {
+      clearTimeout(t);
+      const s = Buffer.concat(out).toString('utf8').trim().split('\n').filter(Boolean).pop() || '';
+      try { resolve(JSON.parse(s)); } catch {
+        const last = err.trim().split('\n').filter(Boolean).pop() || '';   // 엔진이 거절한 이유(렌더 안 끝남 등) 한 줄
+        resolve({ ok: false, why: last.replace(/^\w+Error:\s*/, '') || '캡컷 초안을 만들지 못했습니다' });
+      }
+    });
+  });
+}

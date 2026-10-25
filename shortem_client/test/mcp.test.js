@@ -16,7 +16,7 @@ test.after(async () => { await client.close(); await fake.close(); });
 
 test('도구 9개 · 고정 설명 · annotations · 셸 실행 도구 없음', async () => {
   const { tools } = await client.listTools();
-  assert.deepEqual(tools.map(t => t.name).sort(), ['shortem_ai', 'shortem_feedback', 'shortem_job', 'shortem_login', 'shortem_make', 'shortem_presets', 'shortem_profile', 'shortem_settings', 'shortem_setup']);
+  assert.deepEqual(tools.map(t => t.name).sort(), ['shortem_ai', 'shortem_feedback', 'shortem_inbox', 'shortem_job', 'shortem_login', 'shortem_make', 'shortem_presets', 'shortem_profile', 'shortem_settings', 'shortem_setup']);   // shortem_inbox = 웹 지시함(관제 266)
   const by = Object.fromEntries(tools.map(t => [t.name, t]));
   assert.equal(by.shortem_presets.annotations.readOnlyHint, true);
   assert.equal(by.shortem_profile.annotations.readOnlyHint, true);

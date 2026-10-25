@@ -1,7 +1,7 @@
 """숏템 설정 화면 상주 워커(관제 266) — 엔진 preview_request 를 한 프로세스에 띄워 두고 줄마다 부른다.
 
   python engine_worker.py <엔진 폴더>   (회원 PC engine_bridge.engineTool · 서버 claude_studio._Worker 공용)
-  표준입력 한 줄 = {"op": "catalog"|"check"|"preview", ...} → 표준출력 한 줄 = 결과 JSON
+  표준입력 한 줄 = {"op": "catalog"|"check"|"preview"|"look", ...} → 표준출력 한 줄 = 결과 JSON
 
 왜: 클릭마다 엔진 프로세스를 새로 띄우면 import 만 1~5초(10-25 실측 클릭 1번 10.8초).
     띄워 둔 프로세스는 preview 0.004초(서버 실측). 판단은 엔진(preview_request) 그대로 — 여기는 부르기만 한다.
@@ -34,6 +34,12 @@ def main(engine: str) -> int:
                 out = {"errors": P.check(req.get("pack") or {}, cat)}
             elif op == "preview":
                 out = P.preview(req)
+            elif op == "look":   # 꾸민 모양 검사 = 엔진 판 scene_style(칼카피 틀 customFrame 을 설명서 규칙으로 따로 검사한다 — 렌더러와 같은 판)
+                from shopping_shorts import scene_style as SS
+                try:
+                    out = {"snapshot": SS.validate_snapshot(req.get("snapshot"))}
+                except ValueError as e:
+                    out = {"invalid": str(e)}
             else:
                 out = {"error": f"모르는 일: {op}"}
         except Exception as e:  # noqa: BLE001 — 화면에 이유 한 줄(조용한 실패 금지), 워커는 계속 산다
