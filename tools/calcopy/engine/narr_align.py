@@ -45,6 +45,27 @@ def cache_key(text: str, voice_id: str, tempo: float | None, model: str = TTS_MO
     return hashlib.md5(f"{text}|{voice_id}|{tempo}|{model}".encode("utf-8")).hexdigest()
 
 
+def voice_of(voice_id: str, provider: str | None = None, emotion: str | None = None) -> tuple[str | None, str | None]:
+    """(provider, emotion) — 판단 주인은 engine/voices(provider_of·emotion_of: 명시 provider 우선, 없으면 voice_id 꼴 · 'normal'=감정 없음)."""
+    from tools.calcopy.engine import voices as VO
+    return VO.provider_of({"voice_id": voice_id, **({"provider": provider} if provider else {})}), VO.emotion_of({"emotion": emotion})
+
+
+def old_path(voice_id: str, provider: str | None = None, emotion: str | None = None) -> bool:
+    """이 파일이 원래 합성하던 길인가 — 타입캐스트 tc_ / 일레븐 미나 kr-(서버·회원 키 _synth_eleven), 감정 없음. 그 밖(감정·피쉬·일레븐 검색 성우)은
+    회원 목소리 넓히기(관제 266)의 provider 분기 주인 preset_make.make_synth 로 간다(타입캐스트 감정만 글자 시각 때문에 여기 typecast_tts 로)."""
+    prov, emo = voice_of(voice_id, provider, emotion)
+    return emo is None and (prov is None or (prov == "typecast" and not is_eleven(voice_id)) or (prov == "elevenlabs" and is_eleven(voice_id)))   # 꼴 모르는 옛 id = 옛 타입캐스트 길 그대로
+
+
+def voice_key(text: str, voice_id: str, tempo: float | None, model: str = TTS_MODEL, provider: str | None = None, emotion: str | None = None) -> str:
+    """캐시 열쇠 주인(이 파일 캐시) — 옛 길(old_path)은 옛 cache_key 그대로(받아 둔 캐시 무효 금지, preset_make.tts_key 와 같은 원칙), 그 밖은 provider·감정까지."""
+    if old_path(voice_id, provider, emotion):
+        return cache_key(text, voice_id, tempo, model)
+    prov, emo = voice_of(voice_id, provider, emotion)
+    return hashlib.md5(f"{text}|{voice_id}|{tempo}|{model}|{prov}|{emo}".encode("utf-8")).hexdigest()
+
+
 def sidecar_of(mp3) -> Path:
     return Path(str(mp3) + ".tts.json")
 
@@ -76,11 +97,13 @@ def _proc_slots() -> list:
         time.sleep(1.0)
 
 
-def synth_cached(text: str, voice_id: str, tempo: float | None, out_mp3, model: str = TTS_MODEL, log=print) -> dict | None:
+def synth_cached(text: str, voice_id: str, tempo: float | None, out_mp3, model: str = TTS_MODEL, log=print,
+                 provider: str | None = None, emotion: str | None = None) -> dict | None:
     """합성 1회(캐시) → align|None. 캐시 열쇠가 다르면(글·목소리·배속 바뀜) 다시 합성하고 그 사실을 로그에 적는다.
-    사이드카 없는 옛 mp3 는 '그 글로 만든 것'으로 받아들여 사이드카만 적는다(유료 재합성 금지 — 10-18 진행 중인 편들)."""
+    사이드카 없는 옛 mp3 는 '그 글로 만든 것'으로 받아들여 사이드카만 적는다(유료 재합성 금지 — 10-18 진행 중인 편들).
+    provider·emotion(회원 팩 tts, 관제 266): 옛 길(old_path)이면 옛 그대로, 아니면 열쇠에 넣고 합성은 아래 _synth_member."""
     out = Path(out_mp3)
-    key = cache_key(text, voice_id, tempo, model)
+    key = voice_key(text, voice_id, tempo, model, provider, emotion)
     sc = sidecar_of(out)
     if out.exists() and out.stat().st_size > 1000:
         if sc.exists():
@@ -102,6 +125,8 @@ def synth_cached(text: str, voice_id: str, tempo: float | None, out_mp3, model: 
             sc.write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
             log(f"[tts] 옛 합성본 재사용(글자 시각 없음): {out.name}")
             return None
+    if not old_path(voice_id, provider, emotion):
+        return _synth_member(text, voice_id, tempo, out, key, model, log, *voice_of(voice_id, provider, emotion))
     if is_eleven(voice_id):
         return _synth_eleven(text, voice_id, tempo, out, key, model, log)
     from shopping_shorts import typecast_tts
@@ -177,6 +202,38 @@ def eleven_direct(text: str, preset_id: str, out: Path, api_key: str) -> dict | 
         raise RuntimeError("일레븐랩스 응답에 소리가 없습니다")
     Path(out).write_bytes(base64.b64decode(data["audio_base64"]))
     return data.get("alignment")
+
+
+def _synth_member(text: str, voice_id: str, tempo, out: Path, key: str, model: str, log, prov: str | None, emo: str | None) -> dict | None:
+    """옛 길 밖 목소리(관제 266) — 타입캐스트 감정 = 타임스탬프 엔드포인트(typecast_tts.synthesize, 글자 시각 유지 · 요청 꼴 주인 typecast_tts.build_payload)
+    · 일레븐 검색 성우·피쉬 = preset_make.make_synth(provider 분기 주인, 회원 키). make_synth 가 글자 시각을 돌려주면(일레븐) 그대로, 아니면 None(소리 틈 어림)."""
+    locks = _proc_slots()
+    try:
+        with _TTS_SEM:
+            t0 = time.time()
+            if prov == "typecast":
+                from shopping_shorts import typecast_tts
+                from shopping_shorts.channelkit import providers
+                key_tc = providers.typecast_key(None)
+                if not key_tc:
+                    raise RuntimeError("Typecast 키가 없다(~/.volcano/keys/typecast 또는 TYPECAST_API_KEY)")
+                typecast_tts.api_key = lambda *a, **k: key_tc
+                align = typecast_tts.synthesize(text, str(out), voice_id=voice_id, speed=tempo, model_id=model, emotion=emo)
+            else:
+                from tools.calcopy.engine import preset_make as PM
+                r = PM.make_synth(prov, voice_id, tempo, emo)(text, str(out))
+                align = r if isinstance(r, dict) else None
+    finally:
+        for lk in locks:
+            try:
+                lk.unlink()
+            except OSError:
+                pass
+    meta = {"key": key, "text": text, "voice": voice_id, "tempo": tempo, "model": model, "provider": prov, "emotion": emo, "align": align, "legacy": False,
+            "at": time.strftime("%Y-%m-%d %H:%M:%S"), "sec": round(time.time() - t0, 1)}
+    sidecar_of(out).write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+    log(f"[tts] {prov} {voice_id}" + (f" 감정 {emo}" if emo else "") + f" 1회 {meta['sec']}초 → {out.name} (글자 시각 {'있음' if align else '없음'})")
+    return align
 
 
 def _synth_eleven(text: str, preset_id: str, tempo, out: Path, key: str, model: str, log) -> dict | None:

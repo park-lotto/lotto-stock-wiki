@@ -89,11 +89,24 @@ def tts_text(S) -> str:
     return " ".join(l["tts"] for l in tts_lines(S))
 
 
+def voice_args(S, check: bool = False) -> dict:
+    """대본 voice 칸의 provider·감정(회원 팩 tts 가 들어오는 자리, 관제 266) → narr_align.synth_cached/voice_key 인자. 없으면 {}(옛 그대로).
+    check=True: engine/voices.check_tts 로 검사(필재 금지는 저장 관문 몫 — 옛 편을 막지 않게 allow_banned). 틀리면 StageError."""
+    v = S.get("voice") or {}
+    out = {k: v[k] for k in ("provider", "emotion") if v.get(k) is not None}
+    if check and out:
+        from tools.calcopy.engine import voices as VO
+        bad = VO.check_tts({"voice_id": v.get("voice_id"), **out}, allow_banned=True)
+        if bad:
+            raise StageError("목소리 설정 오류 — " + "; ".join(bad))
+    return out
+
+
 def tts_once(S, R: Path, log=print) -> tuple[Path, dict | None]:
     """Typecast 1회(캐시 열쇠 = 글·목소리·배속 — 글이 바뀌면 다시 합성) → (narr_full.mp3, 글자 시각 align|None). 주인 engine/narr_align."""
     from tools.calcopy.engine import narr_align as NA
     full = R / "narr_full.mp3"
-    align = NA.synth_cached(tts_text(S), S["voice"]["voice_id"], S["voice"].get("tempo"), full, log=log)
+    align = NA.synth_cached(tts_text(S), S["voice"]["voice_id"], S["voice"].get("tempo"), full, log=log, **voice_args(S))
     return full, align
 
 

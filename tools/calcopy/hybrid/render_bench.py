@@ -2492,9 +2492,10 @@ def tts_by_line(S: dict, R: Path, log=print) -> tuple[Path, dict | None]:
     full = R / "narr_full.mp3"
     LD = R / "tts_lines"
     lines = [l for l in S["lines"] if l["kind"] == "tts"]
-    key_full = NA.cache_key(RI.tts_text(S), voice, tempo)
+    VA = RI.voice_args(S)                                          # 회원 팩 provider·감정(관제 266) — 옛 길이면 열쇠·합성 모두 옛 그대로(NA.old_path)
+    key_full = NA.voice_key(RI.tts_text(S), voice, tempo, **VA)
     meta = json.loads(NA.sidecar_of(full).read_text(encoding="utf-8")) if NA.sidecar_of(full).exists() else {}
-    lkey = {l["id"]: NA.cache_key(l["tts"], voice, tempo) for l in lines}
+    lkey = {l["id"]: NA.voice_key(l["tts"], voice, tempo, **VA) for l in lines}
     have = {i for i, k in lkey.items() if (LD / f"{k}.mp3").exists() and NA.sidecar_of(LD / f"{k}.mp3").exists()}
     if (full.exists() and meta.get("key") == key_full) or not have:
         full, align = RI.tts_once(S, R, log)                      # ①(캐시 적중) 또는 ②(새 대본 = 전체 1회)
@@ -2506,7 +2507,7 @@ def tts_by_line(S: dict, R: Path, log=print) -> tuple[Path, dict | None]:
     for l in lines:
         f = LD / f"{lkey[l['id']]}.mp3"
         if l["id"] not in have:
-            NA.synth_cached(l["tts"], voice, tempo, f, log=log)
+            NA.synth_cached(l["tts"], voice, tempo, f, log=log, **VA)
             made.append(l["id"])
     log(f"[tts] 줄 캐시: 재사용 {len(lines) - len(made)}줄 · 새로 합성 {made}")
     import subprocess
@@ -2551,6 +2552,7 @@ def tts_split_lines(S: dict, full: Path, align: dict | None, LD: Path, log=print
     if not align:
         return 0
     voice, tempo = S["voice"]["voice_id"], S["voice"].get("tempo")
+    VA = RI.voice_args(S)
     lines = [l for l in S["lines"] if l["kind"] == "tts"]
     try:
         spans = RI.split_by_align(S, align)
@@ -2562,13 +2564,13 @@ def tts_split_lines(S: dict, full: Path, align: dict | None, LD: Path, log=print
     for l, (a, b) in zip(lines, spans):
         i0, i1 = pos, pos + len(l["tts"])
         pos = i1 + 1
-        f = LD / f"{NA.cache_key(l['tts'], voice, tempo)}.mp3"
+        f = LD / f"{NA.voice_key(l['tts'], voice, tempo, **VA)}.mp3"
         if f.exists() and NA.sidecar_of(f).exists():
             continue
         run(["ffmpeg", "-y", "-v", "error", "-ss", f"{a:.3f}", "-t", f"{b - a:.3f}", "-i", full, "-c:a", "libmp3lame", "-b:a", "192k", "-ar", "44100", "-ac", "1", f])
         la = {k: [round(v - a, 3) for v in align[k][i0:i1]] for k in ("character_start_times_seconds", "character_end_times_seconds")}
         la["characters"] = align["characters"][i0:i1]
-        NA.sidecar_of(f).write_text(json.dumps({"key": NA.cache_key(l["tts"], voice, tempo), "text": l["tts"], "voice": voice, "tempo": tempo,
+        NA.sidecar_of(f).write_text(json.dumps({"key": NA.voice_key(l["tts"], voice, tempo, **VA), "text": l["tts"], "voice": voice, "tempo": tempo, **VA,
                                                 "model": NA.TTS_MODEL, "align": la, "legacy": False, "split_from": full.name}, ensure_ascii=False), encoding="utf-8")
         n += 1
     return n
@@ -2662,7 +2664,8 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     st = ST.load(style_name)
     doc, work = Path(doc), Path(work)
     S, M = jload(doc / "대본.json"), jload(doc / "재료.json")
-    S.setdefault("voice", {k: st["voice"][k] for k in ("name", "voice_id") if k in st["voice"]})
+    S.setdefault("voice", {k: st["voice"][k] for k in ("name", "voice_id", "provider", "emotion") if k in st["voice"]})
+    RI.voice_args(S, check=True)          # 목소리 칸 검사(provider·감정 — 주인 engine/voices.check_tts). 틀리면 합성 전에 멈춘다
     S.setdefault("cps_target", st.get("cps_target", 7.0))
     R = work / "render"; R.mkdir(parents=True, exist_ok=True)
     if plan_only:
