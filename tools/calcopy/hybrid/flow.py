@@ -39,8 +39,8 @@ STAGE_TEXT = dict(STAGES)
 FORMAT_STAGES = {
     "연예인형": STAGES,
     "해외원본형": [("setup", "준비 확인"), ("bench", "영상 확인"), ("origin", "해외 원본 찾기"), ("product", "제품 확인"), ("research", "자료 조사"),
-                ("material", "원본 정리·글자 지우기"), ("asr", "원음 정리"), ("script", "대본 쓰기"), ("sign", "대본 확인"), ("plan", "장면 맞추기"),
-                ("render", "목소리·영상 만들기"), ("check", "완성본 검사"), ("done", "완성")],
+                ("material", "원본 정리"), ("asr", "원음 정리"), ("script", "대본 쓰기"), ("sign", "대본 확인"), ("plan", "장면 맞추기"),
+                ("render", "글자 지우기·영상 만들기"), ("check", "완성본 검사"), ("done", "완성")],   # 글자 지우기 = 장면 맞추기 뒤 자막 있는 컷만(f_render, 사장님 10-26)
     "쇼핑형": [("setup", "준비 확인"), ("bench", "소재 확인"), ("product", "제품 확인"), ("research", "자료 조사"), ("material", "재료 영상 모으기"),
              ("script", "대본 쓰기"), ("sign", "대본 확인"), ("plan", "장면 맞추기"), ("render", "목소리·영상 만들기"), ("check", "완성본 검사"), ("done", "완성")],
     "레시피형": STAGES,          # 연예인형 단계 + 재료 스티커(판 placement·brief 가 정한다 — flow 는 판을 읽을 뿐)
