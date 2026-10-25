@@ -60,8 +60,8 @@ def _ep(tmp: Path, n2_role="본문"):
 class Fake:
     """샷 설명·순위·채점·고침을 흉내 — 채점 칸마다 그림 띠를 기록한다(점수 전에 빠졌나 보려고)."""
 
-    def __init__(self, score=7, fix=True, prod=None):
-        self.score, self.fix, self.sheets, self.fit_rows, self.prod = score, fix, 0, [], prod or {}
+    def __init__(self, score=7, fix=True, prod=None, ident=None):
+        self.score, self.fix, self.sheets, self.fit_rows, self.prod, self.ident = score, fix, 0, [], prod or {}, ident
 
     def __call__(self, parts, prompt, tag):
         if tag == "ma_fit:shot":
@@ -70,6 +70,10 @@ class Fake:
         if tag == "ma_fit:product":
             hi = int(re.search(r"번호 0~(\d+)", prompt).group(1))
             return {"shots": [{"n": i, "p": self.prod.get(i, "same")} for i in range(hi + 1)]}, None
+        if tag == "ma_fit:ident":
+            if not self.ident:
+                return None, "no"
+            return self.ident, None
         if tag == "ma_fit:rewrite":
             return {"same": True, "changed": []}, None
         if tag == "ma_fit:rank":
@@ -205,3 +209,16 @@ def test_rewrite_check_keeps_info_words():
     seq = iter([{"same": True, "changed": []}, {"same": False, "changed": ["얼굴에"]}, {"same": True, "changed": []}])
     r = MF.rewrite_check("캡슐은 두 알이면 충분", "이 캡슐은 두 알이면 충분", llm=MA.LLM(lambda p, q, t: (next(seq), None)))
     assert r["ok"] and len(r["reverse"]) == 3                                                          # 1/2 로 갈리면 3회째 → 2/3 통과(㊳)
+
+
+def test_identity_other_person_line_skips_same_person(tmp_path):
+    """㊱ 인물 동일성 = 점수 전 제약: '다른 사람' 줄(N2)엔 앞 원음(O1, 파랑 샷 = P1)과 같은 사람 샷이 못 온다 → P2(초록 10~15초)만."""
+    D, W = _ep(tmp_path)
+    ident = {"shots": [{"n": 0, "person": "P1", "objects": []}, {"n": 1, "person": "P1", "objects": []},
+                       {"n": 2, "person": "P2", "objects": []}, {"n": 3, "person": "P1", "objects": []}],
+             "lines": [{"id": "N1", "person": "any", "object": "none"}, {"id": "O1", "person": "any", "object": "none"},
+                       {"id": "N2", "person": "other", "object": "none"}]}
+    r = MF.plan(D, W, "잇템로그판", llm=MA.LLM(Fake(score=10, ident=ident)), do_supplement=False)
+    n2 = next(x for x in r["lines"] if x["id"] == "N2#0")
+    assert n2["pick"] and 10.0 <= n2["pick"]["ss"] < 15.0, n2["pick"]
+    assert any("identity" in c["why"] for c in n2["rejected"])
