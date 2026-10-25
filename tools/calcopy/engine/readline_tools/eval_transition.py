@@ -49,7 +49,7 @@ def eval_video(slug: str, vid: str, mp4: str) -> dict:
             k = near[0]["kind"] if near else None
             hit += k == g
             rows.append({"t0": l["t0"], "정답": g, "도구": k, "옛": near[0].get("kind_v1") if near else None,
-                         **({k2: near[0].get(k2) for k2 in ("blur_ratio", "blur_rise")} if near else {})})
+                         **({k2: near[0].get(k2) for k2 in ("dip_ratio", "blur_tail", "border")} if near else {})})
         elif g == "cut":
             near = sorted([c for c in r["cuts"] if c["t"] - 0.15 <= l["t0"] <= c.get("t_end", c["t"]) + 0.15], key=lambda c: abs(c["t"] - l["t0"]))
             if near:
@@ -57,7 +57,7 @@ def eval_video(slug: str, vid: str, mp4: str) -> dict:
                 if near[0]["kind"] != "cut":
                     fp += 1
                     rows.append({"t0": l["t0"], "정답": "cut", "도구": near[0]["kind"], "옛": near[0].get("kind_v1"),
-                                 "blur_ratio": near[0].get("blur_ratio"), "blur_rise": near[0].get("blur_rise")})
+                                 **{k2: near[0].get(k2) for k2 in ("dip_ratio", "blur_tail", "border")}})
     return {"id": vid, "hit": hit, "total": tot, "fp": fp, "cut_lines": ncut, "rows": rows}
 
 

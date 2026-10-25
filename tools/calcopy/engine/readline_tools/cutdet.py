@@ -156,6 +156,16 @@ def decide(f: dict, P: dict | None = None) -> str:
     return "cut"
 
 
+BORDER = dict(DIP=(0.50, 0.60), FLASH=(40.0, 55.0))   # 경계 띠 — 이 안이면 초안에 border:true(06 시트에서 눈 확정, 자동 단독 금지 ㊵)
+
+
+def _border(f: dict, P: dict) -> bool:
+    """경계 띠(움푹 0.5~0.6 · Y 피크 40~55) 또는 종류 조건이 둘 이상 겹침(검정·번쩍·블러)."""
+    hits = [f["y_min"] <= P["BLACK"], f["y_peak_jump"] >= P["FLASH"] or f["fill"] or f.get("tint", 0.0) >= P["TINT"],
+            f["dip_ratio"] <= P["DIP"] and f["rec_left"] and f["rec_right"] and f["blur_len"] <= P["LONG"]]
+    return bool(BORDER["DIP"][0] < f["dip_ratio"] <= BORDER["DIP"][1] or BORDER["FLASH"][0] <= f["y_peak_jump"] < BORDER["FLASH"][1] or sum(hits) >= 2)
+
+
 def classify_arrays(A: dict, groups: list[tuple[int, int]], fps: float = 30.0, P: dict | None = None) -> list[dict]:
     """전환 종류의 주인 함수 — 프레임 배열(A: mean(Y)·sh(자막 띠 뺀 선명도)·std)과 컷 묶음(시작,끝 프레임)으로
     경계마다 {t, te, kind(4종), blur_tail, 특징…}. cutdet --v2·확인 시트(transsheet)·LOCO 점검이 같은 함수를 부른다."""
@@ -208,6 +218,7 @@ def classify_arrays(A: dict, groups: list[tuple[int, int]], fps: float = 30.0, P
              "y_min": round(y_min, 1), "fill": fill, "tint": round(tint, 1)}
         f["kind"] = decide(f, P)
         f["blur_tail"] = bool(f["kind"] == "cut" and dip_ratio <= P["DIP"])     # 흐려지긴 했지만 효과 지문(대칭·짧음)이 아님
+        f["border"] = _border(f, P)
         out.append(f)
     if n > 2 * W + 13 and not (groups and groups[0][0] <= W):   # 영상 시작도 경계(앞이 없다 → 왼쪽은 회복된 것으로 보고 뒤 수준과 견줌)
         post = _med(sh, W + 1, W + 13)
@@ -224,6 +235,7 @@ def classify_arrays(A: dict, groups: list[tuple[int, int]], fps: float = 30.0, P
              "fill": bool(std is not None and np.any((std[0:4] <= P["FILL_STD"]) & (mean[0:4] > P["BLACK"]))), "tint": 0.0}
         f["kind"] = decide(f, P)
         f["blur_tail"] = False
+        f["border"] = _border(f, P)
         if f["kind"] != "cut":
             out.insert(0, f)
     return out

@@ -89,7 +89,7 @@ def sheet(slug: str, src_dir: str, out_dir: str, vid: str) -> dict:
             thumbs.append(t)
         strip = np.hstack(thumbs[:11] + [np.zeros((TH, TW, 3), np.uint8)] * max(0, 11 - len(thumbs)))
         txt = np.full((TH, 360, 3), 255, np.uint8)
-        draft = e["kind"] + (" +blur_tail" if e.get("blur_tail") else "")
+        draft = e["kind"] + (" +blur_tail" if e.get("blur_tail") else "") + (" [BORDER]" if e.get("border") else "")
         cur = now[0].split("(")[0] if now else "(줄 없음)"
         col = (0, 0, 0) if cur == e["kind"] or (cur == "none" and e["kind"] == "cut") else (0, 0, 220)
         for j, line in enumerate([f"{e['t']:.3f}s  DRAFT {draft}", f"NOW {cur if cur.isascii() else '?'}",
@@ -97,7 +97,7 @@ def sheet(slug: str, src_dir: str, out_dir: str, vid: str) -> dict:
                                   f"Ypk {e['y_peak_jump']:+} Ymin {e['y_min']} fill {int(e['fill'])} tint {e.get('tint', 0)}"]):
             cv2.putText(txt, line, (4, 20 + 22 * j), cv2.FONT_HERSHEY_SIMPLEX, 0.45, col if j < 2 else (40, 40, 40), 1)   # 그림 글은 영문(cv2 는 한글을 못 쓴다), json 에 같은 값
         rows.append(np.hstack([strip, _plot(A, s, en, e, P), txt]))
-        recs.append({"t": e["t"], "te": e["te"], "draft": e["kind"], "blur_tail": e.get("blur_tail", False), "now": cur,
+        recs.append({"t": e["t"], "te": e["te"], "draft": e["kind"], "blur_tail": e.get("blur_tail", False), "border": e.get("border", False), "now": cur,
                      "features": {k: e[k] for k in ("dip_ratio", "rec_left", "rec_right", "blur_len", "y_peak_jump", "y_min", "fill", "tint") if k in e},
                      "confirm": None})
     cap.release()
@@ -109,7 +109,7 @@ def sheet(slug: str, src_dir: str, out_dir: str, vid: str) -> dict:
         cv2.imencode(".jpg", np.vstack(rows[k:k + 12]), [cv2.IMWRITE_JPEG_QUALITY, 85])[1].tofile(str(p))
         sheets.append(str(p))
     doc = {"id": vid, "slug": slug, "rule": "표준 §11-8 ㊴ · cutdet.V2", "V2": P, "boundaries": recs, "sheets": sheets,
-           "how": "confirm 칸에 확정 종류(cut/flash/zoomblur/black, 블러 꼬리면 'cut+blur_tail')를 적고 줄판독 transition 에 옮긴다. 규칙 밖 사건(경계 없음)은 눈으로 추가."}
+           "how": "confirm 칸에 확정 종류(cut/flash/zoomblur/black)를 적고 줄판독 transition 에 옮긴다. blur_tail:true 는 줄판독 줄의 blur_tail 칸(종류는 cut). border:true(경계 띠·겹침)는 반드시 눈으로 확정(자동 단독 금지). 규칙 밖 사건(경계 없음)은 눈으로 추가."}
     (out / f"{vid}_trans.json").write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding="utf-8")
     return doc
 

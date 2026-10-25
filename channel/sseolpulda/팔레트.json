@@ -1,38 +1,47 @@
 {
- "n_docs": 6,
+ "n_docs": 12,
  "roles": {
   "본문": [
    {
     "hex": "#FFFFFF",
-    "n_lines": 51,
-    "n_docs": 5,
+    "n_lines": 94,
+    "n_docs": 10,
     "docs": [
+     "1_VtwOkbbVE",
+     "6iW_aMG_-L0",
      "D3Pc6HZ6t6c",
      "GqSkDhM_bV0",
+     "Tn9sfqSnZYw",
+     "WTEcTWd9eqM",
      "fnZNougO6NQ",
      "iZ-TprLYezA",
-     "mYxuF1A74j4"
+     "mYxuF1A74j4",
+     "s9RVpN6MzX4"
     ],
     "members": [
      "#FFFFFF",
+     "#FEFFFF",
      "#FFFDFD",
+     "#FCFCFC",
      "#FDFDFD",
      "#FFFDFC",
-     "#FFFEFD",
      "#FDFEFF",
-     "#FEFFFF",
+     "#FEFEFF",
+     "#FAF9FA",
+     "#FFFEFD",
+     "#F6F8FA",
+     "#FEFCFE",
+     "#F6F6FB",
+     "#FDFFFF",
      "#FDFDFF",
      "#FBFAFB",
      "#FDFCFD",
      "#FEFDFD",
      "#FEFDFE",
-     "#FEFEFF",
      "#FDFDFE",
      "#FCFAFA",
      "#FCFDFC",
-     "#FAF9FA",
      "#FEFCFD",
-     "#FCFCFC",
      "#F9FAFA",
      "#FDFAF9",
      "#FFFBFB",
@@ -43,20 +52,132 @@
      "#FFFBFA",
      "#FEFBF9",
      "#FEFCFB",
-     "#FFFDFA"
+     "#FFFDFA",
+     "#FBFAFA",
+     "#F9F8F9",
+     "#F9F9F9",
+     "#FBFBFB",
+     "#FDFCFC",
+     "#FEFEFD",
+     "#FBF9FB",
+     "#FFFEFF",
+     "#FFFDFF",
+     "#FDF9F9"
     ]
    },
    {
     "hex": "#000000",
-    "n_lines": 12,
-    "n_docs": 3,
+    "n_lines": 15,
+    "n_docs": 4,
     "docs": [
+     "WTEcTWd9eqM",
      "ZdeZRtCeAC4",
      "fnZNougO6NQ",
      "iZ-TprLYezA"
     ],
     "members": [
      "#000000"
+    ]
+   },
+   {
+    "hex": "#8DFFF1",
+    "n_lines": 3,
+    "n_docs": 1,
+    "docs": [
+     "1_VtwOkbbVE"
+    ],
+    "members": [
+     "#8DFFF1",
+     "#82FFF4"
+    ]
+   },
+   {
+    "hex": "#ED8AC9",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "1_VtwOkbbVE"
+    ],
+    "members": [
+     "#ED8AC9"
+    ]
+   },
+   {
+    "hex": "#C6FFC1",
+    "n_lines": 2,
+    "n_docs": 1,
+    "docs": [
+     "1_VtwOkbbVE"
+    ],
+    "members": [
+     "#C6FFC1",
+     "#C7FFCA"
+    ]
+   },
+   {
+    "hex": "#EAD02E",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "1_VtwOkbbVE"
+    ],
+    "members": [
+     "#EAD02E"
+    ]
+   },
+   {
+    "hex": "#1AFF25",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "1_VtwOkbbVE"
+    ],
+    "members": [
+     "#1AFF25"
+    ]
+   },
+   {
+    "hex": "#44FF4E",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "1_VtwOkbbVE"
+    ],
+    "members": [
+     "#44FF4E"
+    ]
+   },
+   {
+    "hex": "#B4E0F5",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "1_VtwOkbbVE"
+    ],
+    "members": [
+     "#B4E0F5"
+    ]
+   },
+   {
+    "hex": "#F0D2EA",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "1_VtwOkbbVE"
+    ],
+    "members": [
+     "#F0D2EA"
+    ]
+   },
+   {
+    "hex": "#EA7E1B",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "1_VtwOkbbVE"
+    ],
+    "members": [
+     "#EA7E1B"
     ]
    },
    {
@@ -91,18 +212,190 @@
     "members": [
      "#F6ECEF"
     ]
+   },
+   {
+    "hex": "#ACFF86",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "HJDTrU3wjN0"
+    ],
+    "members": [
+     "#ACFF86"
+    ]
+   },
+   {
+    "hex": "#9CFF8C",
+    "n_lines": 3,
+    "n_docs": 1,
+    "docs": [
+     "HJDTrU3wjN0"
+    ],
+    "members": [
+     "#9CFF8C",
+     "#9BFF8C",
+     "#A2FF93"
+    ]
+   },
+   {
+    "hex": "#F05AB9",
+    "n_lines": 4,
+    "n_docs": 1,
+    "docs": [
+     "HJDTrU3wjN0"
+    ],
+    "members": [
+     "#F05AB9",
+     "#F05DB9",
+     "#EE5FB7",
+     "#F159BA"
+    ]
+   },
+   {
+    "hex": "#4AFFE9",
+    "n_lines": 2,
+    "n_docs": 1,
+    "docs": [
+     "HJDTrU3wjN0"
+    ],
+    "members": [
+     "#4AFFE9",
+     "#4DFFE8"
+    ]
+   },
+   {
+    "hex": "#EECF49",
+    "n_lines": 2,
+    "n_docs": 1,
+    "docs": [
+     "s9RVpN6MzX4"
+    ],
+    "members": [
+     "#EECF49",
+     "#F1D94A"
+    ]
+   },
+   {
+    "hex": "#E6245C",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "s9RVpN6MzX4"
+    ],
+    "members": [
+     "#E6245C"
+    ]
    }
   ],
   "강조": [
    {
-    "hex": "#F278C9",
-    "n_lines": 2,
+    "hex": "#78FFF3",
+    "n_lines": 3,
     "n_docs": 1,
     "docs": [
+     "1_VtwOkbbVE"
+    ],
+    "members": [
+     "#78FFF3",
+     "#7BFFF3"
+    ]
+   },
+   {
+    "hex": "#F278C9",
+    "n_lines": 3,
+    "n_docs": 2,
+    "docs": [
+     "1_VtwOkbbVE",
      "GqSkDhM_bV0"
     ],
     "members": [
-     "#F278C9"
+     "#F278C9",
+     "#F179C7"
+    ]
+   },
+   {
+    "hex": "#C3FFBC",
+    "n_lines": 3,
+    "n_docs": 2,
+    "docs": [
+     "1_VtwOkbbVE",
+     "GqSkDhM_bV0"
+    ],
+    "members": [
+     "#C3FFBC",
+     "#C5FFBD",
+     "#C4FFB8"
+    ]
+   },
+   {
+    "hex": "#E9CF1B",
+    "n_lines": 3,
+    "n_docs": 3,
+    "docs": [
+     "1_VtwOkbbVE",
+     "6iW_aMG_-L0",
+     "GqSkDhM_bV0"
+    ],
+    "members": [
+     "#E9CF1B",
+     "#EACF1F",
+     "#F1D51F"
+    ]
+   },
+   {
+    "hex": "#14FF20",
+    "n_lines": 2,
+    "n_docs": 1,
+    "docs": [
+     "1_VtwOkbbVE"
+    ],
+    "members": [
+     "#14FF20",
+     "#15FF21"
+    ]
+   },
+   {
+    "hex": "#B1DEF3",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "1_VtwOkbbVE"
+    ],
+    "members": [
+     "#B1DEF3"
+    ]
+   },
+   {
+    "hex": "#F2D4EA",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "1_VtwOkbbVE"
+    ],
+    "members": [
+     "#F2D4EA"
+    ]
+   },
+   {
+    "hex": "#EF7A09",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "1_VtwOkbbVE"
+    ],
+    "members": [
+     "#EF7A09"
+    ]
+   },
+   {
+    "hex": "#7EBAE7",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "6iW_aMG_-L0"
+    ],
+    "members": [
+     "#7EBAE7"
     ]
    },
    {
@@ -117,28 +410,6 @@
     ]
    },
    {
-    "hex": "#F1D51F",
-    "n_lines": 1,
-    "n_docs": 1,
-    "docs": [
-     "GqSkDhM_bV0"
-    ],
-    "members": [
-     "#F1D51F"
-    ]
-   },
-   {
-    "hex": "#C4FFB8",
-    "n_lines": 1,
-    "n_docs": 1,
-    "docs": [
-     "GqSkDhM_bV0"
-    ],
-    "members": [
-     "#C4FFB8"
-    ]
-   },
-   {
     "hex": "#16FFEC",
     "n_lines": 1,
     "n_docs": 1,
@@ -148,16 +419,67 @@
     "members": [
      "#16FFEC"
     ]
+   },
+   {
+    "hex": "#F1CB64",
+    "n_lines": 2,
+    "n_docs": 1,
+    "docs": [
+     "s9RVpN6MzX4"
+    ],
+    "members": [
+     "#F1CB64",
+     "#F3D36C"
+    ]
+   },
+   {
+    "hex": "#F56064",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "s9RVpN6MzX4"
+    ],
+    "members": [
+     "#F56064"
+    ]
+   },
+   {
+    "hex": "#EEC071",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "Tn9sfqSnZYw"
+    ],
+    "members": [
+     "#EEC071"
+    ]
    }
   ],
   "외곽선": [],
   "글로우": [],
   "제목": [
    {
-    "hex": "#FFFFFF",
-    "n_lines": 3,
-    "n_docs": 3,
+    "hex": "#000000",
+    "n_lines": 7,
+    "n_docs": 6,
     "docs": [
+     "1_VtwOkbbVE",
+     "HJDTrU3wjN0",
+     "Tn9sfqSnZYw",
+     "WTEcTWd9eqM",
+     "ZdeZRtCeAC4",
+     "iZ-TprLYezA"
+    ],
+    "members": [
+     "#000000"
+    ]
+   },
+   {
+    "hex": "#FFFFFF",
+    "n_lines": 4,
+    "n_docs": 4,
+    "docs": [
+     "6iW_aMG_-L0",
      "D3Pc6HZ6t6c",
      "GqSkDhM_bV0",
      "mYxuF1A74j4"
@@ -179,27 +501,28 @@
     ]
    },
    {
-    "hex": "#000000",
-    "n_lines": 3,
-    "n_docs": 2,
+    "hex": "#AE0074",
+    "n_lines": 1,
+    "n_docs": 1,
     "docs": [
-     "ZdeZRtCeAC4",
-     "iZ-TprLYezA"
+     "1_VtwOkbbVE"
     ],
     "members": [
-     "#000000"
+     "#AE0074"
     ]
    },
    {
-    "hex": "#ECCE1A",
-    "n_lines": 3,
-    "n_docs": 3,
+    "hex": "#EBCE1B",
+    "n_lines": 4,
+    "n_docs": 4,
     "docs": [
+     "6iW_aMG_-L0",
      "D3Pc6HZ6t6c",
      "GqSkDhM_bV0",
      "mYxuF1A74j4"
     ],
     "members": [
+     "#EBCE1B",
      "#ECCE1A",
      "#F2D10F",
      "#ECCD19"
@@ -215,9 +538,54 @@
     "members": [
      "#0C94F8"
     ]
+   },
+   {
+    "hex": "#F03CA0",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "HJDTrU3wjN0"
+    ],
+    "members": [
+     "#F03CA0"
+    ]
+   },
+   {
+    "hex": "#E3141B",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "Tn9sfqSnZYw"
+    ],
+    "members": [
+     "#E3141B"
+    ]
+   },
+   {
+    "hex": "#E8145A",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "WTEcTWd9eqM"
+    ],
+    "members": [
+     "#E8145A"
+    ]
    }
   ],
   "스티커": [],
-  "출처": []
+  "출처": [
+   {
+    "hex": "#000000",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "WTEcTWd9eqM"
+    ],
+    "members": [
+     "#000000"
+    ]
+   }
+  ]
  }
 }

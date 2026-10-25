@@ -266,8 +266,8 @@ def test_cutdet_v2_blur_start_zoom(blurzoom):
     v2 = cutdet.cutdet(blurzoom, 0, H, v2=True)
     c1 = [c for c in v1["cuts"] if abs(c["t"] - 1.0) <= 1 / FPS]
     c2 = [c for c in v2["cuts"] if abs(c["t"] - 1.0) <= 1 / FPS]
-    assert c1 and "kind_v1" not in c1[0]                        # v2 없이 = 옛 출력 꼴 그대로(옛 분류가 놓치는 실물은 키치잇 대조 — 합성으로는 재현 못 함)
-    assert c2 and c2[0]["kind"] == "zoomblur" and c2[0]["blur_ratio"] <= cutdet.V2["R2"] and c2[0]["blur_rise"] >= cutdet.V2["RI"]
+    assert c1 and "kind_v1" not in c1[0]                        # v2 없이 = 옛 출력 꼴 그대로
+    assert c2 and c2[0]["kind"] == "zoomblur" and c2[0]["dip_ratio"] <= cutdet.V2["DIP"] and c2[0]["rec_left"] and c2[0]["rec_right"]
     assert v2["cuts"][0].get("start") and v2["cuts"][0]["kind"] == "zoomblur"
     after = [s for s in v2["shots"] if s["t0"] >= 0.99]
     assert after and after[-1]["motion"] == "zoom_in", v2["shots"]
@@ -328,13 +328,13 @@ _KC = Path("C:/숏템_칼카피/kitchit/src")
 
 @pytest.mark.skipif(not (_KC / "vSEaZ-BCELY.mp4").exists(), reason="키치잇 원본 없음(집 PC 전용)")
 def test_kitchit_transition_v2():
-    """키치잇 눈 정답: vSE 2.467 zoomblur 는 옛 분류가 cut 으로 본 자리 · Ks5k 시작 블러·black 2·zoomblur 1."""
+    """키치잇(표준 §11-8 4종 규칙): Ks5k 시작 블러·black 2·zoomblur 1 은 맞고, vSE 2.467 은 회복이 8프레임 밖이라 규칙상 cut + blur_tail(정답 재표기 후보)."""
     from tools.calcopy.engine.readline_tools import eval_transition as E
-    tot = hit = fp = 0
-    for vid in ("vSEaZ-BCELY", "Ks5kYYKAUlQ"):
-        e = E.eval_video("kitchit", vid, str(_KC / f"{vid}.mp4"))
-        tot += e["total"]; hit += e["hit"]; fp += e["fp"]
-    assert tot == 5 and hit == 5 and fp <= 3                       # 10-25 LOCO 규칙(컷 묶음 끝까지 맞춤): 이 두 편 오탐 3(전체 14채널 오탐 2.9%)
+    ks = E.eval_video("kitchit", "Ks5kYYKAUlQ", str(_KC / "Ks5kYYKAUlQ.mp4"))
+    assert ks["total"] == 4 and ks["hit"] == 4
+    vs = E.eval_video("kitchit", "vSEaZ-BCELY", str(_KC / "vSEaZ-BCELY.mp4"))
+    r = [x for x in vs["rows"] if abs(x["t0"] - 2.467) < 0.01][0]
+    assert r["도구"] == "cut" and r["blur_tail"] is True
 
 
 _KK = Path("C:/숏템_칼카피/kkultemnote/src")
@@ -342,22 +342,22 @@ _KK = Path("C:/숏템_칼카피/kkultemnote/src")
 
 @pytest.mark.skipif(not (_KK / "cLk6fJly6OY.mp4").exists(), reason="꿀템노트 원본 없음(집 PC 전용)")
 def test_kkultemnote_60fps_and_radial_zoomblur():
-    """60fps 원본: 30 으로 맞춰 컷 18(옛 72) · 방사 줌블러(cLk 12.0, 옛 flash)·검정 1프레임+페이드인(KCx 13.4, 옛 zoomblur) — 꿀템노트 눈 정답."""
+    """60fps 원본: 30 으로 맞춰 컷 18(옛 72) · KCx 13.4 검정 1프레임+페이드인 = black · cLk 12.0 방사 줌블러는 밝기 피크와 겹쳐 border(눈 확정 대상)."""
     from tools.calcopy.engine.readline_tools import eval_transition as E
     assert len(cutdet.cutdet(str(_KK / "m0Ex0y1DN5s.mp4"), 0, 1920)["cuts"]) == 18
-    tot = hit = 0
-    for vid in ("cLk6fJly6OY", "KCxJ5qJft38"):
-        e = E.eval_video("kkultemnote", vid, str(_KK / f"{vid}.mp4"))
-        tot += e["total"]; hit += e["hit"]
-    assert tot == 3 and hit == 3
+    kc = E.eval_video("kkultemnote", "KCxJ5qJft38", str(_KK / "KCxJ5qJft38.mp4"))
+    assert [x for x in kc["rows"] if abs(x["t0"] - 13.4) < 0.01][0]["도구"] == "black"
+    cl = E.eval_video("kkultemnote", "cLk6fJly6OY", str(_KK / "cLk6fJly6OY.mp4"))
+    assert [x for x in cl["rows"] if abs(x["t0"] - 12.0) < 0.01][0]["border"] is True
 
 
 @pytest.mark.skipif(not Path("C:/숏템_칼카피/itemhome/원본/cLxEI_U1e_E.mp4").exists(), reason="아이템홈 원본 없음(집 PC 전용)")
 def test_itemhome_softfocus_not_zoomblur():
-    """소프트포커스 원본(아이템홈 cLx): 옛 v2 규칙(바탕을 다음 컷 넘어 잡음)은 cut 3곳을 zoomblur 로 봤다 → 0."""
+    """아이템홈 cLx: 4종 규칙이 zoomblur 로 본 자리는 전부 규칙 조건(움푹 ≤0.6·양쪽 8프레임 회복·12프레임 이하)을 채운다 — 정답 cut 과 다르면 '정답 오류 후보' 또는 border(06 시트 확정)."""
     from tools.calcopy.engine.readline_tools import eval_transition as E
     e = E.eval_video("itemhome", "cLxEI_U1e_E", "C:/숏템_칼카피/itemhome/원본/cLxEI_U1e_E.mp4")
-    assert not [r for r in e["rows"] if r["정답"] == "cut" and r["도구"] == "zoomblur"] and e["cut_lines"] >= 10, e   # 소프트포커스를 블러로 안 본다
+    zb = [r for r in e["rows"] if r["도구"] == "zoomblur"]
+    assert e["cut_lines"] >= 10 and all(r["dip_ratio"] <= cutdet.V2["DIP"] for r in zb)
 
 
 _FS = Path("C:/숏템_칼카피/foreignshowshow")
@@ -399,37 +399,35 @@ def _tex(seed, cell=8):
     return cv2.resize(rng.integers(0, 255, (H // cell, W // cell, 3), dtype=np.uint8), (W, H), interpolation=cv2.INTER_NEAREST)
 
 
-def test_cutdet_v2_same_shot_base_and_rise(tmp_path):
-    """① 컷 뒤 샷이 원래 조금 흐리고(σ2.4→1.6) 12프레임 뒤 아주 선명한 샷으로 넘어가면: 같은 샷 바탕으로 재야 cut(다음 샷 바탕이면 zoomblur 오탐).
-    ② 컷 뒤 8프레임 내내 흐리다 그 뒤에야 선명(6프레임째에 안 풀림): rise 조건이 있어야 cut."""
-    A, B, C2 = _tex(11), _tex(12), _tex(13)
-    fr = [A] * 30
-    fr += [cv2.GaussianBlur(B, (0, 0), 2.4 - 0.8 * min(j, 6) / 6) for j in range(12)]   # 같은 샷 비율 0.47·rise 1.87 · 다음 샷 바탕이면 0.20
-    fr += [C2] * 30
-    p1 = tmp_path / "base.mp4"
-    _write_mp4(p1, fr)
+def test_cutdet_rule_blur_tail(tmp_path):
+    """표준 §11-8 ㊴: 경계에 묶인 짧고 대칭인 움푹 = zoomblur · 흐림이 12프레임 넘게 이어지면 cut + blur_tail(소스 자체 흐림)."""
+    A, B = _tex(11), _tex(12)
+    short = [A] * 30 + [cv2.GaussianBlur(B, (0, 0), 6.0 - j) for j in range(6)] + [B] * 30
+    p1 = tmp_path / "short.mp4"
+    _write_mp4(p1, short)
     d = cutdet.cutdet(str(p1), 0, H, v2=True, motion=False)
     c = [x for x in d["cuts"] if abs(x["t"] - 1.0) <= 1 / FPS]
-    assert c and c[0]["kind"] == "cut", d["cuts"]
-    fr = [A] * 30 + [cv2.GaussianBlur(B, (0, 0), 6) for _ in range(8)] + [B] * 30
-    p2 = tmp_path / "rise.mp4"
-    _write_mp4(p2, fr)
+    assert c and c[0]["kind"] == "zoomblur" and not c[0]["blur_tail"], d["cuts"]
+    long = [A] * 30 + [cv2.GaussianBlur(B, (0, 0), 6.0) for _ in range(20)] + [B] * 30
+    p2 = tmp_path / "long.mp4"
+    _write_mp4(p2, long)
     d = cutdet.cutdet(str(p2), 0, H, v2=True, motion=False)
     c = [x for x in d["cuts"] if abs(x["t"] - 1.0) <= 1 / FPS]
-    assert c and c[0]["kind"] == "cut" and c[0]["blur_ratio"] <= cutdet.V2["R"], d["cuts"]
+    assert c and c[0]["kind"] == "cut" and c[0]["blur_tail"] and c[0]["blur_len"] > cutdet.V2["LONG"], d["cuts"]
 
 
 def test_decide_rules():
-    """전환 종류 주인(cutdet.decide) 규칙 — 06 보고 꼴별: 원래 어두운 장면은 검정 아님(이븐쇼핑) · 밝은 장면 그냥 컷은 번쩍 아님 · 약한 블러는 더 확실히 풀려야."""
-    base = dict(blur_ratio=1.0, blur_rise=1.0, dark_peak=0.0, dark_around=0.0, bright_jump=0.0, bright_decay=0.0, fading=False, color_jump=0.0)
+    """전환 4종 주인(cutdet.decide·_border) — 표준 §11-8 ㊴ 숫자."""
+    base = dict(dip_ratio=1.0, rec_left=True, rec_right=True, blur_len=0, y_peak_jump=0.0, y_min=100.0, fill=False, tint=0.0)
     D = cutdet.decide
-    assert D(dict(base, dark_peak=0.9, dark_around=0.05)) == "black"
-    assert D(dict(base, dark_peak=0.8, dark_around=0.7)) == "cut"                       # 원래 어두운 샷
-    assert D(dict(base, bright_jump=60, fading=True, bright_decay=40)) == "flash"
-    assert D(dict(base, bright_jump=60, fading=True, bright_decay=2)) == "cut"          # 밝은 장면으로 그냥 컷
-    assert D(dict(base, color_jump=60)) == "flash"
-    assert D(dict(base, blur_ratio=0.2, blur_rise=2.0)) == "zoomblur"
-    assert D(dict(base, blur_ratio=0.4, blur_rise=1.5)) == "cut" and D(dict(base, blur_ratio=0.4, blur_rise=2.0)) == "zoomblur"
+    assert D(dict(base, y_min=15)) == "black"
+    assert D(dict(base, y_peak_jump=45)) == "flash" and D(dict(base, fill=True)) == "flash" and D(dict(base, tint=60)) == "flash"
+    assert D(dict(base, y_peak_jump=30)) == "cut"
+    assert D(dict(base, dip_ratio=0.4, blur_len=5)) == "zoomblur"
+    assert D(dict(base, dip_ratio=0.4, blur_len=20)) == "cut"                         # 12프레임 넘음 → blur_tail
+    assert D(dict(base, dip_ratio=0.4, blur_len=5, rec_right=False)) == "cut"         # 한쪽만 회복
+    assert cutdet._border(dict(base, dip_ratio=0.55, blur_len=4), cutdet.V2) and cutdet._border(dict(base, y_peak_jump=45), cutdet.V2)
+    assert cutdet._border(dict(base, y_min=15, y_peak_jump=60), cutdet.V2) and not cutdet._border(base, cutdet.V2)
 
 
 def test_cutdet_v2_flash_needs_fade(tmp_path):
