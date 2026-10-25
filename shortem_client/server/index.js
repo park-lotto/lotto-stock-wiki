@@ -54,7 +54,7 @@ const secretFor = job => (job && job.bundle ? secretNumbers(job.bundle.frame, jo
 
 function profilesCache() { try { return JSON.parse(fs.readFileSync(jail(homeDir(), 'profiles.json'), 'utf8')); } catch { return null; } }
 function saveProfiles(lic) {
-  const v = { at: Date.now(), entitled_presets: lic.entitled_presets || [], presets: (lic.presets || []).map(p => ({ id: p.id, name: p.name, desc: p.desc || '' })), profiles: (lic.profiles || []).map(p => ({ profile_id: p.profile_id, name: p.name, preset_id: p.preset_id, version: p.version, preset_path: p.preset_path, pack: p.pack })) };
+  const v = { at: Date.now(), entitled_presets: lic.entitled_presets || [], presets: (lic.presets || []).map(p => ({ id: p.id, name: p.name, desc: p.desc || '', aliases: (p.aliases || []).slice(0, 8) })), profiles: (lic.profiles || []).map(p => ({ profile_id: p.profile_id, name: p.name, preset_id: p.preset_id, version: p.version, preset_path: p.preset_path, pack: p.pack })) };
   writeFileIn(homeDir(), 'profiles.json', JSON.stringify(v));
   return v;
 }
@@ -66,7 +66,11 @@ export function presetByName(list, name) {
   const same = list.filter(p => normName(p.name) === q);
   if (same.length === 1) return same[0];
   const part = list.filter(p => { const n = normName(p.name); return n && (n.includes(q) || q.includes(n)); });
-  return part.length === 1 ? part[0] : null;
+  if (part.length === 1) return part[0];
+  if (part.length > 1) return null;
+  // 별칭 = 회원이 부르는 채널 이름('키치잇 스타일로' — 서버가 channel/프리셋.json bench_option 에서 준다, 10-26)
+  const al = list.filter(p => (p.aliases || []).some(a => { const n = normName(a); return n.length >= 2 && (n === q || q.includes(n)); }));
+  return al.length === 1 ? al[0] : null;
 }
 const presetLabel = id => String(id || '').split('/').slice(1).join(' · ') || String(id || '');
 

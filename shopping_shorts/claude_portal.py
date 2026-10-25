@@ -464,7 +464,32 @@ def preset_names(store, ids) -> list:
         if not p:
             continue
         n = names.get(pid) or names.get(p["internal"]) or {}
-        out.append({"id": pid, "name": str(n.get("name") or _style_label(p["style"]))[:40], "desc": str(n.get("desc") or "")[:120]})
+        name = str(n.get("name") or _style_label(p["style"]))[:40]
+        out.append({"id": pid, "name": name, "desc": str(n.get("desc") or "")[:120],
+                    **({"aliases": al[:8]} if (al := preset_aliases().get(_name_key(name))) else {})})
+    return out
+
+
+def _name_key(s: str) -> str:
+    return re.sub(r"[\s+·_\-()]", "", str(s or "").split("(")[0]).lower()
+
+
+def preset_aliases() -> dict:
+    """프리셋 이름 → 회원이 부르는 다른 이름(10-26 회원 '<URL> 이걸로 키치잇 스타일로' 가 '키치잇 프리셋 없음'으로 시작 못 함).
+    주인 = 엔진 channel/프리셋.json presets.<slug>.bench_option(채널 이름)·member.preset_name — 여기는 읽기만. 괄호 설명은 뺀다."""
+    try:
+        d = json.loads((channel_root() / "channel" / "프리셋.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        log.warning("claude_portal: channel/프리셋.json 을 못 읽어 프리셋 별칭 없이 간다")
+        return {}
+    out: dict = {}
+    for slug, x in (d.get("presets") or {}).items():
+        pn = ((x or {}).get("member") or {}).get("preset_name") if isinstance(x, dict) else None
+        bo = re.split(r"[(（]", str((x or {}).get("bench_option") or ""))[0].strip() if isinstance(x, dict) else ""
+        if pn and bo:
+            out.setdefault(_name_key(pn), [])
+            if bo not in out[_name_key(pn)]:
+                out[_name_key(pn)].append(bo)
     return out
 
 

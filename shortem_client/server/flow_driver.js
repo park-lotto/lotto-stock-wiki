@@ -163,9 +163,19 @@ export function retryFlow(sid) {
   return f;
 }
 
+function progressLine(f) {
+  try {
+    const p = JSON.parse(fs.readFileSync(path.join(flowRoot(), f.sid, 'job', 'progress.json'), 'utf8'));
+    const what = String(p.what || '').slice(0, 40);
+    if (!what) return '';
+    return p.n && p.m ? `${what} ${p.n}/${p.m}` : `${what} 중`;
+  } catch { return ''; }
+}
+
 // MCP 응답 꼴 — 회원에게는 message 한 줄만(세부 금지). need 로 다음 할 일.
 export function shapeFlow(f) {
-  const base = { sid: f.sid, message: f.message, ...(f.stage ? { stage: f.stage.text, step: f.stage.no, step_total: f.stage.total } : {}) };
+  const doing = f.status === 'execute' ? progressLine(f) : '';   // 실행기 진행 신호('원본 후보 조사 3/8') — 회원이 멈춘 줄 모르게(10-26)
+  const base = { sid: f.sid, message: doing ? `${f.message} · ${doing}` : f.message, ...(doing ? { doing } : {}), ...(f.stage ? { stage: f.stage.text, step: f.stage.no, step_total: f.stage.total } : {}) };
   if (f.fail) return { ...base, need: 'fail', fail: { why: f.fail.why, fix: f.fail.fix || '', retry_ok: !!f.fail.retry_ok }, ...(f.fail.retry_ok ? { next: `shortem_make(step="retry", sid="${f.sid}")` } : {}) };
   if (f.status === 'done') return { ...base, need: 'done', video: f.video, title: f.title, note: f.note || undefined };
   if (f.status === 'wait_user' && f.wait && f.wait.kind === 'approve' && f.approved !== 'sent' && f.approved !== true) {
