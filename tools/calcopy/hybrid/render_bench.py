@@ -2416,7 +2416,7 @@ def deco_apply(placed: dict, doc: Path, st: dict, log=print) -> None:
 def deco_gate(placed: dict, doc: Path, st: dict, log=print) -> list[str]:
     """렌더 전 관문: 꾸밈 결과(배치 rows + 계획 컷)가 판 deco 범위 안인가. 판정 주인 = deco.check(부르기만). 판에 deco 칸이 없으면 안 본다."""
     from tools.calcopy.hybrid import deco as DC
-    if not st.get("deco"):
+    if not st.get("deco") or DC.load_answers(doc) is None:      # WIP(10-26): 답 파일이 있는 편만 멈춘다 — 새 편 연달아 만들기를 막지 않게(사장님 '새 편 우선')
         return []
     T = placed.get("_timeline") or {}
     v = DC.check(doc, st, rows=placed["rows"], cuts=T.get("cuts") or [], end=T.get("end") or 0)

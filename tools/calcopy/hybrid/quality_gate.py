@@ -743,7 +743,8 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
                 v = DC.check(doc, st, rows=tab.get("rows") or [], cuts=T.get("cuts") or [], end=float(T["end"]))
                 got = {r["kind"]: r["got"] for r in v["rows"] if r["got"]}
                 return v["ok"], f"꾸밈 {got} · 포인트 {v.get('accents')} · 본인 사진 {v.get('own_photo_share')}" + (f" · 걸린 것 {v['bad']}" if v["bad"] else "")
-            if st.get("deco"):        # 판에 deco 칸이 있을 때만(모든 판 필수 = 다음 일 — 사장님 10-26 간소화)
+            from tools.calcopy.hybrid.deco import load_answers as _deco_ans
+            if st.get("deco") and _deco_ans(doc) is not None:        # 판 deco 칸 + 편 답이 있을 때만(모든 편·판 필수 = 다음 일 — 사장님 10-26 '새 편 우선')
                 row("자막·효과", "꾸밈 종류·횟수(판 deco)", deco_row, "자막표 rows·timeline cuts · deco.check")
     # ── 소리
     if (want("소리") or mode == "fast") and not legacy:      # 줄별 cps = render_info 표 읽기라 빠르다 → --fast 에도
