@@ -137,6 +137,48 @@ def test_frame_a_render_layer_has_ink_where_spec_says(tmp_path):
 
 
 @pytest.mark.skipif(not _renderer_ready(), reason="node·puppeteer 없음 — 실제 렌더 불가")
+def test_spec_caption_user_size_color_reach_render(tmp_path):
+    """관제 266: 칼카피 틀 자막에 고객이 정한 크기(fontScales)·글자색(captionLayouts colorUser)·자막박스색(bgUser)·위치(textOffsets)가
+    렌더 레이어(render_layer_one — 렌더·캡컷·썸네일이 찍는 같은 페이지)에 실제로 나오는가. 값 없으면 설명서 그대로(옛 그림)."""
+    frame = frame_a()
+    spec = schema.validate(frame)
+    cap = text_layer(spec, "caption")
+    base = to_snapshot.to_snapshot(frame)
+    pid = base["presetId"]
+    timeline = [{"beat_idx": 0, "t0": 0, "dur": 8, "narration": "자막 크기 색 시험", "caption_lines": ["자막 크기 색 시험"], "role": "hook",
+                 "primary": {"video_id": "s0", "start": 0, "end": 8}}]
+
+    def shot(extra, tag):
+        snap = scene_style.validate_snapshot({**base, **extra})
+        return Image.open(scene_style.render_layer_one(timeline, snap, tmp_path / tag, 0, {"text": "제목"}, tag)).convert("RGBA")
+
+    def stats(im, y0, y1):
+        px = im.load(); dark = red = blue = 0; xs = []; ys = []
+        for y in range(int(y0), int(y1), 2):
+            for x in range(0, 1080, 2):
+                r, g, b, a = px[x, y]
+                if a < 200:
+                    continue
+                if r > 180 and g < 80 and b < 80:
+                    red += 1; xs.append(x)
+                elif b > 180 and r < 80 and g < 120:
+                    blue += 1
+                elif r + g + b < 200:
+                    dark += 1; xs.append(x); ys.append(y)
+        return {"dark": dark, "red": red, "blue": blue, "span": (max(xs) - min(xs)) if xs else 0, "cy": sum(ys) / len(ys) if ys else 0}
+    y0, y1 = cap["y"] - 60, cap["y"] + cap["line_h"] + 160
+    d = stats(shot({}, "d"), y0, y1)
+    assert d["dark"] > 300 and d["red"] == 0 and d["blue"] == 0, d          # 기본 = 설명서 검정 글자, 상자 없음
+    u = stats(shot({"fontScales": {f"{pid}:frame:caption:0": 1.5},
+                    "captionLayouts": {f"{pid}:continuous:0:caption": {"placement": "free", "color": "#ff2020", "colorUser": True,
+                                                                       "background": "#2050ff", "bgUser": True}}}, "u"), y0, y1)
+    assert u["red"] > 300 and u["blue"] > 300, u                           # 고객 글자색·자막박스색이 렌더에 나온다
+    assert u["span"] > d["span"] * 1.2, (d, u)                             # 크기 1.5배 → 글자 폭이 넓어진다
+    m = shot({"textOffsets": {f"{pid}:frame:caption:0": 5}}, "m")          # 위치 ↓ 5% = 96px
+    assert abs(stats(m, y0, y1)["cy"] - d["cy"] - 96) < 12, (d, stats(m, y0, y1))
+
+
+@pytest.mark.skipif(not _renderer_ready(), reason="node·puppeteer 없음 — 실제 렌더 불가")
 def test_template_off_tail_scene_draws_nothing(tmp_path):
     """원본 끝(21.8초~)은 틀이 사라지고 영상이 전체 화면 — template_off 에 걸린 장면은 레이어가 전부 투명, 영상 칸은 전체."""
     snap = scene_style.validate_snapshot(to_snapshot.to_snapshot(frame_a()))
@@ -192,6 +234,19 @@ def test_frames_with_time_spans_and_video_cuts():
     bad = copy.deepcopy(f); bad["frames"][0]["span"] = [3, 2]
     with pytest.raises(schema.FrameError):
         schema.validate(bad)
+
+
+def test_row_lines_cover_caption_in_later_frame():
+    """관제 266: 훅 틀(제목)·본문 틀(자막)로 나뉜 설명서 — 편집기 입력칸 힌트(frame.lines)가 첫 틀만 보면 자막 칸이 숨었다
+    (제품비하인드썰형·화자 대사 썰형·연예인꿀맛, caption_audit '자막 칸 숨김'). 칸마다 처음 나온 층 하나, 첫 틀 먼저."""
+    title = {"kind": "text", "role": "title", "x": 540, "y": 200, "w": 980, "lines": 2, "font": "JalnanGothic", "size": 100, "line_h": 120, "rgb": [255, 255, 255]}
+    cap = {"kind": "text", "role": "caption", "x": 540, "y": 554, "w": 1000, "lines": 2, "font": "BMDOHYEON", "size": 67.5, "line_h": 94, "rgb": [0, 0, 0]}
+    f = {"canvas": [1080, 1920], "frames": [{"id": "hook", "span": [0, 1.5], "layers": [{"kind": "bg", "rgb": [0, 0, 0]}, title]},
+                                             {"id": "body", "span": [1.5, None], "layers": [{"kind": "bg", "rgb": [255, 255, 255]}, dict(title, y=60), cap]}]}
+    lines = to_snapshot.build_row(f)["frame"]["lines"]
+    assert [l["bind"] for l in lines] == ["hook1", "hook2", "caption"]
+    assert lines[0]["y0"] == 200 and lines[1]["y0"] == 320          # 제목 칸은 첫 틀 층(본문 틀의 y=60 제목이 덮지 않는다)
+    assert lines[2]["y0"] == 554 and lines[2]["font_family"] == "BMDOHYEON"
 
 
 def test_line_scale_schema_and_snapshot_font_size():

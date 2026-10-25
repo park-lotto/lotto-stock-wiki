@@ -1829,6 +1829,28 @@
       Object.assign(s.style,e.style==='underline'?{textDecoration:`underline ${c}`,textDecorationThickness:'.1em',textUnderlineOffset:'.12em',color:c}:{color:c,...(e.style==='grow'?{fontSize:'1.15em'}:{})});
       ink.append(s);});
   }
+  // ★설명서 글자에 고객이 바꾼 값(관제 266, 10-26 caption_audit: 칼카피 틀은 크기·위치·색·자막박스·글꼴을 바꿔도 미리보기·렌더가 그대로였다).
+  //   읽는 값과 규칙은 기본 틀(addText·renderCaption)과 같은 저장소·같은 키 — fontScales/textOffsets/textDrags(readKey)·captionLayouts(captionKey)·
+  //   captionDrags·fontPick(textLookGroup)·colorOverrides(colorKey). 고객이 안 바꾼 칸은 설명서 값 그대로(기본값을 여기서 다시 정하지 않는다).
+  //   고정 문구(brand·label 등 spec-*)는 입력칸이 없어 바꿀 값도 없다 — 그대로 둔다.
+  function specUserLook(bind){
+    if(!['hook1','hook2','caption'].includes(bind))return null;
+    const k=fontScales.get(readKey(fontScales,bind)),own=fontPick[textLookGroup(bind)];
+    const out={scale:k||1,manual:!!k,font:own&&FONT_LIST.some(f=>f.fam===own)?own:'',dx:0,dy:textOffset(bind),color:'',bg:'',alpha:1,w:null};
+    if(bind==='caption'){
+      const saved=captionLayouts.get(captionKey())||{},drag=captionDrags.get(captionKey())||{x:0,y:0};
+      out.dy+=(drag.y||0)+(captionPositions.get(captionKey())||0)*6;out.dx=drag.x||0;
+      if(saved.colorUser&&saved.color)out.color=saved.color;
+      if(saved.bgUser&&saved.background)out.bg=saved.background;
+      if(saved.boxClear>0)out.alpha=1-Math.min(90,saved.boxClear)/100;
+      if(Number(saved.w)>0&&Number(saved.w)<100)out.w=Number(saved.w);
+    }else{
+      const moved=textDrags.get(readKey(textDrags,bind))||{x:0,y:0};out.dx=moved.x||0;out.dy+=moved.y||0;
+      out.color=colorOverrides.get(colorKey(bind==='hook2'?'accent':'white'))||'';
+    }
+    return out;
+  }
+  const specAlpha=(c,a)=>{if(a>=1)return c;const m=String(c).match(/^#([0-9a-f]{6})$/i);if(m){const n=parseInt(m[1],16);return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`;}const r=String(c).match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);return r?`rgba(${r[1]},${r[2]},${r[3]},${a})`:c;};
   function specTexts(l,frame,scale){
     const W=frame.width,H=frame.height,pct=(n,d)=>n/d*100,fixed=String(l.text||'').split('\n');
     const items=[];
@@ -1837,25 +1859,29 @@
     else if(l.role==='title'){for(let n=0;n<l.lines;n++){const bind=n===0?'hook1':n===1?'hook2':'';items.push({bind:bind||'spec-title',text:bind?String(value(bind)).trim():(fixed[n]||''),n,rows:1});}}
     else if(l.role==='caption'){if(captionVisible())items.push({bind:'caption',text:specCaption().trim(),n:0,rows:l.lines});}
     else items.push({bind:'spec-'+l.role,text:fixed.join(' '),n:0,rows:1});
-    const x0=l.align==='center'?l.x-l.w/2:l.align==='left'?l.x:l.x-l.w;
     for(const it of items){
       if(!it.text)continue;   // 글이 없으면 그리지 않는다(빈 상자·빈 줄 없음)
-      const color=specRgb(l.line_rgb&&l.line_rgb[it.n]?l.line_rgb[it.n]:l.rgb);
+      const u=specUserLook(it.bind)||{scale:1,manual:false,font:'',dx:0,dy:0,color:'',bg:'',alpha:1,w:null};
+      const lw=u.w!=null?Math.min(l.w,W*u.w/100):l.w;   // 자막박스 너비(고객이 줄인 때만) — 칸 가운데를 지킨 채 폭만 줄인다
+      const x0=(l.align==='center'?l.x-l.w/2:l.align==='left'?l.x:l.x-l.w)+(l.w-lw)/2;
+      const color=u.color||specRgb(l.line_rgb&&l.line_rgb[it.n]?l.line_rgb[it.n]:l.rgb);
       const el=document.createElement('div');el.className='precision-text spec-text';el.dataset.editBind=it.bind;el.dataset.specRole=l.role;
-      Object.assign(el.style,{left:pct(x0,W)+'%',right:'auto',width:pct(l.w,W)+'%',top:pct(l.y+it.n*l.line_h,H)+'%',height:pct(l.line_h*it.rows,H)+'%',
-        fontFamily:`"${l.font}",sans-serif`,fontWeight:'400',fontStyle:l.italic?'italic':'normal',fontSynthesis:l.italic?'style':'none',fontSize:l.size*((l.line_scale&&l.line_scale[it.n])||1)*scale+'px',
+      Object.assign(el.style,{left:pct(x0,W)+u.dx+'%',right:'auto',width:pct(lw,W)+'%',top:pct(l.y+it.n*l.line_h,H)+u.dy+'%',height:pct(l.line_h*it.rows,H)+'%',
+        fontFamily:`"${u.font||l.font}",sans-serif`,fontWeight:'400',fontStyle:l.italic?'italic':'normal',fontSynthesis:l.italic?'style':'none',fontSize:l.size*((l.line_scale&&l.line_scale[it.n])||1)*u.scale*scale+'px',
         letterSpacing:l.letter_spacing*scale+'px',wordSpacing:(l.word_spacing||0)*scale+'px',lineHeight:l.line_h*scale+'px',color,textAlign:l.align,
         justifyContent:{left:'flex-start',center:'center',right:'flex-end'}[l.align],alignItems:l.valign==='top'?'flex-start':'center',whiteSpace:it.rows>1?'pre-line':'nowrap',wordBreak:'keep-all',
         webkitTextStroke:(o=>o&&o.px>0?`${2*o.px*scale}px ${specRgb(o.rgb)}`:'0px')(specOutline(l,it.n)),paintOrder:'stroke fill',
         textShadow:[l.shadow?`${l.shadow.dx*scale}px ${l.shadow.dy*scale}px ${l.shadow.blur*scale}px ${specRgb(l.shadow.rgb)}`:'',...(l.glow?[.25,.5,1].map(k=>`0 0 ${l.glow.px*k*scale}px ${specRgb(l.glow.rgb)}`):[])].filter(Boolean).join(',')||'none'});
       let ink=el;
-      if(l.box){ink=document.createElement('span');Object.assign(ink.style,{background:specRgb(l.box.rgb),padding:`0 ${l.box.pad*scale}px`,borderRadius:l.box.radius*scale+'px'});el.append(ink);}
+      const boxBg=u.bg||(l.box?specRgb(l.box.rgb):'');   // 고객이 고른 자막박스 색이 이긴다(기본 틀 bgUser 와 같은 규칙) — 설명서에 상자가 없어도 고르면 생긴다
+      if(boxBg){const bx=l.box||{pad:16,radius:0};ink=document.createElement('span');Object.assign(ink.style,{background:specAlpha(boxBg,u.alpha),padding:`0 ${bx.pad*scale}px`,borderRadius:bx.radius*scale+'px'});if(u.w!=null)Object.assign(ink.style,{width:'100%',boxSizing:'border-box',textAlign:l.align});el.append(ink);}   // 너비를 정했으면 상자가 그 폭을 채운다(기본 틀 자막박스 patch 와 같다)
       ink.textContent=it.text;
       if(l.role==='caption'&&Array.isArray(l.emphasis?.words))specEmph(ink,it.text,l.emphasis,scale);
+      if(u.color)ink.querySelectorAll('span').forEach(s=>s.style.color=u.color);   // 고객 글자색 = 강조 낱말까지 한 색(기본 틀 renderCaption 과 같다)
       layer.insertBefore(el,badge);
-      // 칸 폭(w)을 넘으면 넘지 않을 때까지 줄인다 — 잘리거나 칸 밖으로 나가는 일은 없다(바닥 40%)
-      const size0=l.size*((l.line_scale&&l.line_scale[it.n])||1)*scale,over=()=>{if(it.rows>1)return el.scrollHeight>el.clientHeight+1;const r=document.createRange();r.selectNodeContents(el);return Math.max(el.scrollWidth,r.getBoundingClientRect().width)>el.clientWidth+1;};
-      let size=size0;while(over()&&size>size0*.4){size*=.97;el.style.fontSize=size+'px';}
+      // 칸 폭(w)을 넘으면 넘지 않을 때까지 줄인다 — 잘리거나 칸 밖으로 나가는 일은 없다(바닥 40%). 손으로 정한 크기는 줄이지 않는다(기본 틀 addText 와 같은 규칙)
+      const size0=l.size*((l.line_scale&&l.line_scale[it.n])||1)*u.scale*scale,over=()=>{if(it.rows>1)return el.scrollHeight>el.clientHeight+1;const r=document.createRange();r.selectNodeContents(el);return Math.max(el.scrollWidth,r.getBoundingClientRect().width)>el.clientWidth+1;};
+      let size=size0;while(!u.manual&&over()&&size>size0*.4){size*=.97;el.style.fontSize=size+'px';}
       el.dataset.specFit=String(Math.round(size/size0*100));
     }
   }

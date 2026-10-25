@@ -75,14 +75,20 @@ def build_row(frame) -> dict:
     W, H = spec["canvas"]
     rid = frame_id(spec)
     lines, sample = [], {"channel": "숏템메이커", "hook1": "", "hook2": "", "bodyTitle": "", "caption": ""}
-    first = schema.layers_at(spec)          # 틀 여러 장이면 첫 틀(편집기 입력칸 힌트·영상 시작용)
+    first = schema.layers_at(spec)          # 틀 여러 장이면 첫 틀(영상 시작용)
     video = next((l for l in first if l["kind"] == "video"), None)
-    for layer in first:
+    # 입력칸 힌트 = 틀 전체(첫 틀 먼저, 칸마다 처음 나온 층) — 첫 틀만 보면 훅 틀 뒤 본문 틀에만 있는 자막 칸이 편집기에서 숨었다
+    #   (관제 266 caption_audit 10-26: 제품비하인드썰형·화자 대사 썰형·연예인꿀맛 '자막 칸 숨김'). 편집기 frameKeys 는 이 lines 의 bind 만 본다.
+    seen = set()
+    for layer in first + [l for l in schema.all_layers(spec) if not any(l is f for f in first)]:
         if layer["kind"] != "text" or layer["role"] not in ("title", "caption"):
             continue
         binds = ["hook1", "hook2"][:layer["lines"]] if layer["role"] == "title" else ["caption"]
         texts = (layer["text"] or "").split("\n")
         for n, bind in enumerate(binds):
+            if bind in seen:
+                continue
+            seen.add(bind)
             x0, x1, y0, y1 = _text_box(layer, n)
             color = (layer["line_rgb"][n] if layer["line_rgb"] and n < len(layer["line_rgb"]) else layer["rgb"])
             lines.append({"bind": bind, "x0": x0, "x1": x1, "y0": y0, "y1": y1, "h": y1 - y0,
