@@ -779,8 +779,8 @@ def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, pu
 
 
 # ── 장면 전환(A1) — 종류·자리 결정 = placement.place(placed["transitions"]), 여기는 읽기·그리기만 ──────────────
-TRANSITION_KINDS = ("cut", "flash", "zoomblur", "black", "colorflash")
-TRANSITION_MS = {"flash": 100, "zoomblur": 200, "black": 33, "colorflash": 450}     # 판 칸 cuts.transition.ms 가 0/없을 때 종류별 기본 길이 · colorflash 450 = 샤크탱크 QMJ 실측(0.45초에 0)
+TRANSITION_KINDS = ("cut", "flash", "zoomblur", "black", "edge_glow")
+TRANSITION_MS = {"flash": 100, "zoomblur": 200, "black": 33, "edge_glow": 450}     # 판 칸 cuts.transition.ms 가 0/없을 때 종류별 기본 길이 · edge_glow 450 = shark rules flash.dur(사건 길이, α 는 dur 칸)
 ZOOMBLUR_ZOOM, ZOOMBLUR_SIGMA = 0.12, 14.0                         # 줌블러: 경계에서 최대 12% 확대 + gblur(가림 흐림 BLUR_SIGMA 와 별개 — 움직임 번짐)
 
 
@@ -791,7 +791,7 @@ def transitions_of(T: dict, st: dict, placed: dict, log=None) -> list[dict]:
     placed 에 transitions 칸이 없는 옛 배치 결과(03 전)는 옛 키 flashes 를 kind=flash 로 읽는다(변환만 — 흰 번쩍 그림 그대로)."""
     F = st.get("frame") or {}
     ms_set = (st.get("cuts") or {}).get("transition", {}).get("ms") or 0
-    ncf = [0]
+    ncf: dict = {}
 
     def norm(e):
         k = e.get("kind", "cut")
@@ -799,9 +799,8 @@ def transitions_of(T: dict, st: dict, placed: dict, log=None) -> list[dict]:
             raise StageError(f"전환 종류 '{k}' 모름 — {TRANSITION_KINDS}")
         m = e.get("ms") or (ms_set.get(k) if isinstance(ms_set, dict) else ms_set) or TRANSITION_MS.get(k, 0)
         out = {"t": round(float(e["t"]), 3), "kind": k, "ms": float(m)}
-        if k == "colorflash":
-            out.update(colorflash_of(e, st, ncf[0]))
-            ncf[0] += 1
+        if k in ("flash", "edge_glow"):
+            out.update(flash_color_of(e, st, ncf.setdefault(k, [0])))
         if e.get("sec") is not None:
             out["sec"] = float(e["sec"])
         if e.get("why"):
@@ -815,15 +814,123 @@ def transitions_of(T: dict, st: dict, placed: dict, log=None) -> list[dict]:
     return [{"t": t, "kind": "flash", "ms": round(fsec * 1000), "sec": fsec, "why": "placement flashes(옛 키)"} for t in placed.get("flashes") or []]
 
 
-def colorflash_of(e: dict, st: dict, i: int) -> dict:
-    """색 번쩍(colorflash) 색·세기 — 사건 칸 rgb·alpha 가 먼저(자리·색을 정하는 쪽 = placement, 03), 없으면 판 칸 cuts.transition.colorflash
-    {alpha, colors[[r,g,b]…]} — colors 는 사건 차례대로 돌림(사건이 색을 안 줬을 때만). 둘 다 없으면 멈춘다(숨은 기본 색 금지)."""
-    CF = ((st.get("cuts") or {}).get("transition") or {}).get("colorflash") or {}
-    rgb = e.get("rgb") or ((CF.get("colors") or [None])[i % len(CF["colors"])] if CF.get("colors") else None)
-    alpha = e.get("alpha", CF.get("alpha"))
-    if rgb is None or alpha is None:
-        raise StageError(f"colorflash {e.get('t')} 에 rgb·alpha 가 없다 — 사건 칸 또는 판 cuts.transition.colorflash{{alpha, colors}}")
-    return {"rgb": [int(v) for v in rgb], "alpha": float(alpha)}
+def flash_color_of(e: dict, st: dict, cnt: list) -> dict:
+    """번쩍 두 종류의 색·세기(표준 §11-6 ㉝ — 그리기 정본 = render_bench).
+    flash = 창 전체 색 덮기(벤치 실측: 경계 프레임 α → ms 뒤 0, 선형). 색 = 사건 칸 rgb(자리·색 = placement 03) > 판 cuts.transition.flash.colors(사건 차례 돌림),
+      α = 사건 alpha > 판 flash.alpha. 둘 다 색이 없으면 {} = 옛 흰 번쩍(화면 전체 밝히기, 그림 그대로 — 흰 번쩍은 이 경우).
+    edge_glow = 가장자리 빛(사장님 R4 — shark/fx.py 에서 옮김) · 업그레이드 판 전용(판에 base 가 없으면 멈춘다). 칸 = 판 cuts.transition.edge_glow
+      {alpha0, dur, clear, soft, tint, bright{luma,alpha_gain}, colors} · 색 = 사건 rgb > colors 돌림. 빠진 칸은 멈춘다(숨은 기본 금지)."""
+    k = e.get("kind")
+    C = ((st.get("cuts") or {}).get("transition") or {}).get(k) or {}
+    cols = C.get("colors")
+    rgb = e.get("rgb") or (cols[cnt[0] % len(cols)] if cols else None)
+    if rgb is not None and not e.get("rgb"):
+        cnt[0] += 1
+    if k == "flash":
+        if rgb is None:
+            return {}
+        alpha = e.get("alpha", C.get("alpha"))
+        if alpha is None:
+            raise StageError(f"flash {e.get('t')} 색 {rgb} 에 alpha 가 없다 — 사건 칸 또는 판 cuts.transition.flash.alpha")
+        return {"rgb": [int(v) for v in rgb], "alpha": float(alpha)}
+    if not st.get("base"):
+        raise StageError(f"edge_glow({e.get('t')}) 는 업그레이드 판 전용(표준 §11-6 ㉝, 벤치에 없음) — 판 '{st.get('name')}' 은 1차 판(base 없음)")
+    miss = [x for x in ("alpha0", "dur", "clear", "soft", "tint") if C.get(x) is None]
+    if rgb is None or miss:
+        raise StageError(f"edge_glow({e.get('t')}) 칸 모자람 {miss + ([] if rgb is not None else ['rgb/colors'])} — 판 cuts.transition.edge_glow")
+    return {"rgb": [int(v) for v in rgb], "edge": {x: C[x] for x in ("alpha0", "dur", "clear", "soft", "tint", "bright") if C.get(x) is not None}}
+
+
+# ── 가장자리 빛(edge_glow) — tools/calcopy/shark/fx.py(_edge_mask·flash_look·flash_image·pose flash edge)를 인자 그대로 옮김(㉝) ──
+def edge_mask(w: int, h: int, clear: float, soft: float):
+    """번쩍 가장자리 빛 모양(0~1) — 타원 거리 clear 안쪽 0, 가장자리 1(부드럽게). = shark fx._edge_mask(rules flash.clear·soft)."""
+    import numpy as np
+    ys, xs = np.mgrid[0:h, 0:w]
+    dd = np.sqrt(((xs - w / 2) / (w / 2)) ** 2 + ((ys - h / 2) / (h / 2)) ** 2) / math.sqrt(2)   # 모서리 = 1, 변 가운데 = 0.71
+    c0 = clear * 0.7071
+    u = np.clip((dd - c0) / max(1e-6, (0.7071 - c0) * (1 + soft)), 0, 1)
+    return (u * u * (3 - 2 * u)).astype(np.float32)
+
+
+def edge_look(luma, tint: float, bright: dict | None) -> tuple[float, float]:
+    """장면 밝기 luma(0~255, 없으면 None) → (tint, α 배율) = shark fx.flash_look(rules flash.bright)."""
+    if luma is None or not bright:
+        return tint, 1.0
+    u = min(1.0, max(0.0, (luma - bright["luma"][0]) / (bright["luma"][1] - bright["luma"][0])))
+    return tint * (1 - u), 1.0 + bright["alpha_gain"] * u
+
+
+def edge_glow_image(rgb, alpha: float, w: int, h: int, clear: float, soft: float, tint: float):
+    """가장자리 빛 한 장(PIL RGBA, 곧은 알파) = shark fx.flash_image(style edge)."""
+    import numpy as np
+    from PIL import Image
+    col = np.array(rgb, float)
+    col = col + (255 - col) * tint
+    a = (edge_mask(w, h, clear, soft) * alpha * 255).astype(np.uint8)
+    return Image.fromarray(np.dstack([np.broadcast_to(col.astype(np.uint8), (h, w, 3)), a]), "RGBA")
+
+
+def edge_glow_alpha(dt: float, alpha0: float, dur: float) -> float:
+    """사건 시작에서 dt 초 뒤 α = alpha0·(1−u)², u = dt/dur(감속으로 사라짐) = shark fx.pose(flash edge)."""
+    u = min(1.0, dt / dur)
+    return max(0.0, alpha0 * (1 - u) ** 2)
+
+
+def edge_scene_luma(video: Path, t: float, w: int, h: int, clear: float, soft: float) -> float | None:
+    """번쩍 얹기 전 창 영상의 그 시각(+0.02초) 가장자리(mask>0.5) 평균 밝기 = shark fx.flash_scene_luma."""
+    import numpy as np
+    import subprocess
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t + 0.02:.3f}", "-i", str(video), "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
+                         capture_output=True, stdin=subprocess.DEVNULL).stdout
+    if len(raw) != w * h * 3:
+        return None
+    f = np.frombuffer(raw, np.uint8).reshape(h, w, 3)[edge_mask(w, h, clear, soft) > 0.5].astype(float)
+    return round(float((f @ np.array([0.299, 0.587, 0.114])).mean()), 1)
+
+
+def flash_layers(trans: list[dict], rect, R: Path, ins: list, last: str, n: int, win_video: Path | None) -> tuple[str, str]:
+    """창 자리에 색 번쩍(flash+rgb)·가장자리 빛(edge_glow)을 얹는 식 조각(render_base — 꾸밈 스티커 위·자막 아래, shark rules flash.order 와 같음).
+    반환 (덧붙일 filter_complex 조각, 끝 이름). 색 없는 flash(옛 흰 번쩍)는 여기서 안 그린다(render_base 옛 길)."""
+    x, y, ww, wh = rect
+    fc = ""
+    for j, e in enumerate(e for e in trans if e["kind"] == "flash" and e.get("rgb")):
+        n0 = round(e["t"] * FPS)
+        k = max(1, round(e["ms"] / 1000 * FPS))
+        hexc = "".join(f"{v:02X}" for v in e["rgb"])
+        fc += (f";color=c=0x{hexc}:s={ww}x{wh}:r={FPS}:d={k / FPS:.4f},format=rgba,"
+               f"geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='255*{e['alpha']:.3f}*(1-N/{k})',setpts=PTS-STARTPTS+{n0}/({FPS}*TB)[cf{j}];"
+               f"[{last}][cf{j}]overlay={x}:{y}:eof_action=pass:enable='between(n,{n0},{n0 + k - 1})'[cfo{j}]")
+        last = f"cfo{j}"
+    eg = [e for e in trans if e["kind"] == "edge_glow"]
+    if eg:
+        import subprocess
+        spans = [(round(e["t"] * FPS), min(n, round(e["t"] * FPS) + max(1, round(e["ms"] / 1000 * FPS)))) for e in eg]
+        f0, f1 = min(a for a, _ in spans), max(b for _, b in spans)
+        for e in eg:
+            E = e["edge"]
+            e["scene_luma"] = edge_scene_luma(win_video, e["t"], ww, wh, E["clear"], E["soft"]) if win_video else None
+        out = R / "edge_glow.mov"
+        pr = subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgba", "-s", f"{ww}x{wh}", "-r", str(FPS), "-i", "-",
+                               "-c:v", "qtrle", str(out)], stdin=subprocess.PIPE)
+        from PIL import Image
+        for f in range(f0, f1):
+            cv = Image.new("RGBA", (ww, wh), (0, 0, 0, 0))
+            for e, (a, b) in zip(eg, spans):
+                if a <= f < b:
+                    E = e["edge"]
+                    tint, gain = edge_look(e["scene_luma"], E["tint"], E.get("bright"))
+                    al = edge_glow_alpha((f - a) / FPS, E["alpha0"], E["dur"])
+                    cv.alpha_composite(edge_glow_image(e["rgb"], round(min(1.0, al * gain), 3), ww, wh, E["clear"], E["soft"], round(tint, 3)))
+            pr.stdin.write(cv.tobytes())
+        pr.stdin.close()
+        if pr.wait() != 0:
+            raise StageError("가장자리 빛 층 인코딩 실패")
+        k = len([a for a in ins if a == "-i"])
+        ins += ["-i", out]
+        fc += (f";[{k}:v]setpts=PTS-STARTPTS+{f0}/({FPS}*TB)[egl];"
+               f"[{last}][egl]overlay={x}:{y}:eof_action=pass:enable='between(n,{f0},{f1 - 1})'[ego]")
+        last = "ego"
+    return fc, last
 
 
 def window_fx(trans: list[dict], ww: int, wh: int) -> str:
@@ -831,8 +938,7 @@ def window_fx(trans: list[dict], ww: int, wh: int) -> str:
     그릴 것이 없으면 '' (창 영상을 다시 굽지 않는다 — 장치 끈 판은 그림이 그대로)."""
     zb = [e for e in trans if e["kind"] == "zoomblur"]
     bk = [e for e in trans if e["kind"] == "black"]
-    cf = [e for e in trans if e["kind"] == "colorflash"]
-    if not (zb or bk or cf):
+    if not (zb or bk):
         return ""
     fc, last = [], "0:v"
     if zb:
@@ -849,14 +955,6 @@ def window_fx(trans: list[dict], ww: int, wh: int) -> str:
             rng.append(f"between(n,{n0},{n0 + k - 1})")
         fc.append(f"[{last}]drawbox=x=0:y=0:w=iw:h=ih:color=black:t=fill:enable='{'+'.join(rng)}'[k]")
         last = "k"
-    for j, e in enumerate(cf):        # 색 번쩍 = 창 전체 색 덮기, 경계 프레임 α → ms 뒤 0(선형) — 샤크탱크 벤치 '창 전체 색 α≈0.55 → 0.45초에 0'
-        n0 = round(e["t"] * FPS)
-        k = max(1, round(e["ms"] / 1000 * FPS))
-        hexc = "".join(f"{v:02X}" for v in e["rgb"])
-        fc.append(f"color=c=0x{hexc}:s={ww}x{wh}:r={FPS}:d={k / FPS:.4f},format=rgba,"
-                  f"geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='255*{e['alpha']:.3f}*(1-N/{k})',setpts=PTS-STARTPTS+{n0}/({FPS}*TB)[cf{j}]")
-        fc.append(f"[{last}][cf{j}]overlay=0:0:eof_action=pass:enable='between(n,{n0},{n0 + k - 1})'[c{j}]")
-        last = f"c{j}"
     fc.append(f"[{last}]format=yuv420p[v]")
     return ";".join(fc)
 
@@ -1183,8 +1281,10 @@ def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, tr
         fc += (f";[{k}:v]setpts=PTS-STARTPTS+{FL[1]}/({FPS}*TB)[fxl];"
                f"[{last}][fxl]overlay=0:0:eof_action=pass:enable='between(n,{FL[1]},{FL[2] - 1})'[fxo]")
         last = "fxo"
-    fl = [(e["t"], e["sec"] if "sec" in e else e["ms"] / 1000) for e in (trans if trans is not None else transitions_of(T, st, placed))
-          if e["kind"] == "flash"]
+    trs = trans if trans is not None else transitions_of(T, st, placed)
+    add, last = flash_layers(trs, (x, y, ww, wh), R, ins, last, n, win)
+    fc += add
+    fl = [(e["t"], e["sec"] if "sec" in e else e["ms"] / 1000) for e in trs if e["kind"] == "flash" and not e.get("rgb")]     # 옛 흰 번쩍(색 없는 flash)
     if fl:
         e = "+".join(f"between(T,{t:.3f},{t + dsec:.3f})*(1-(T-{t:.3f})/{dsec})" for t, dsec in fl)
         fc += f";[{last}]geq=lum='min(255,lum(X,Y)+255*({e}))':cb='cb(X,Y)':cr='cr(X,Y)'[f]"

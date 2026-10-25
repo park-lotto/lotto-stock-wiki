@@ -517,21 +517,55 @@ def test_render_passes_speech_spread(monkeypatch, tmp_path):
         assert got["spread"] == want, (name, got)
 
 
-def test_colorflash_curve_and_colors(tmp_path):
-    """색 번쩍: 경계 프레임 α → ms 뒤 0(선형), 창 전체 색. 색·α 는 사건 칸 > 판 cuts.transition.colorflash, 없으면 멈춤."""
-    st = {"frame": {"window": [0, 0, 216, 216]}, "cuts": {"transition": {"colorflash": {"alpha": 0.5, "colors": [[0, 255, 0], [255, 0, 0]]}}}}
-    tr = RB.transitions_of({}, st, {"transitions": [{"t": 1.0, "kind": "colorflash"}, {"t": 1.5, "kind": "colorflash", "rgb": [0, 0, 255], "alpha": 0.3}]})
-    assert [(e["rgb"], e["alpha"], e["ms"]) for e in tr] == [([0, 255, 0], 0.5, 450.0), ([0, 0, 255], 0.3, 450.0)]
-    with pytest.raises(RB.StageError):
-        RB.transitions_of({}, {"frame": {}}, {"transitions": [{"t": 1.0, "kind": "colorflash"}]})
-    src = tmp_path / "g.mp4"
-    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"color=c=0x808080:s=216x216:r={FPS}:d=2", "-c:v", "libx264", "-crf", "8",
-                    "-pix_fmt", "yuv420p", str(src)], check=True, stdin=subprocess.DEVNULL)
-    out = _apply(src, RB.window_fx([{"t": 1.0, "kind": "colorflash", "ms": 300.0, "rgb": [0, 255, 0], "alpha": 0.5}], 216, 216), tmp_path / "cf.mp4")
+def _base_frames(tmp_path, trans, st_extra=None, t_list=()):
+    win = tmp_path / "w.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"color=c=0x808080:s=1080x1052:r={FPS}:d=2", "-c:v", "libx264", "-crf", "8",
+                    "-pix_fmt", "yuv420p", str(win)], check=True, stdin=subprocess.DEVNULL)
+    st = {"frame": {"bg": [0, 0, 0], "window": [0, 434, 1080, 1052], "title": []}, **(st_extra or {})}
+    out = RB.render_base({}, {"cuts": [{"frames": 2 * FPS}]}, st, {}, tmp_path, win, trans)
     raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(out), "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
-    g = np.frombuffer(raw, np.uint8).reshape(-1, 216, 216, 3).astype(float)[:, 100, 100]
-    a = (g[:, 1] - g[:, 0]) / 255.0                                          # 초록 덮기 세기 ≈ α(회색 바탕)
+    return np.frombuffer(raw, np.uint8).reshape(-1, 1920, 1080, 3)
+
+
+def test_flash_color_curve_and_colors(tmp_path):
+    """㉝ flash = 창 전체 색 덮기(경계 프레임 α → ms 뒤 0, 선형) — 색·α = 사건 칸 > 판 cuts.transition.flash. 색 없으면 옛 흰 번쩍(화면 전체 더하기)."""
+    st = {"frame": {"window": [0, 0, 216, 216]}, "cuts": {"transition": {"flash": {"alpha": 0.5, "colors": [[0, 255, 0], [255, 0, 0]]}}}}
+    tr = RB.transitions_of({}, st, {"transitions": [{"t": 1.0, "kind": "flash", "ms": 300}, {"t": 1.5, "kind": "flash", "rgb": [0, 0, 255], "alpha": 0.3}]})
+    assert [(e["rgb"], e["alpha"], e["ms"]) for e in tr] == [([0, 255, 0], 0.5, 300.0), ([0, 0, 255], 0.3, 100.0)]
+    assert "rgb" not in RB.transitions_of({}, {"frame": {}}, {"transitions": [{"t": 1.0, "kind": "flash"}]})[0]      # 판 색 없음 = 옛 흰 번쩍
+    with pytest.raises(RB.StageError):
+        RB.transitions_of({}, {"frame": {}}, {"transitions": [{"t": 1.0, "kind": "flash", "rgb": [0, 255, 0]}]})     # 색만 있고 α 없음
+    v = _base_frames(tmp_path, [{"t": 1.0, "kind": "flash", "ms": 300.0, "rgb": [0, 255, 0], "alpha": 0.5}])
+    a = (v[:, 960, 540, 1].astype(float) - v[:, 960, 540, 0]) / 255.0                       # 창 가운데 초록 세기 ≈ α(회색 바탕)
     assert abs(a[29]) < 0.03 and abs(a[30] - 0.5) < 0.05 and abs(a[35] - 0.5 * (1 - 5 / 9)) < 0.05 and abs(a[39]) < 0.03
+    assert abs(v[30, 200, 540].astype(int) - v[29, 200, 540]).max() < 3                    # 창 밖(틀)은 안 물듦
+
+
+def test_edge_glow_same_as_shark(tmp_path):
+    """㉝ edge_glow = shark fx 가장자리 빛을 인자 그대로 옮긴 것 — 같은 인자로 그림 픽셀 같음 · α 곡선 같음 · 밝기 맞춤 같음. 1차 판(base 없음)은 거절."""
+    from tools.calcopy.shark import fx as FXS
+    F = FXS.R()["effects"]["flash"]
+    E = {"alpha0": F["edge_alpha0"], "dur": F["edge_dur"], "clear": F["clear"], "soft": F["soft"], "tint": F["tint"], "bright": F["bright"]}
+    for luma in (None, 60.0, 130.0, 200.0):
+        assert RB.edge_look(luma, E["tint"], E["bright"]) == FXS.flash_look(luma)
+    for al, tint in ((0.38, 0.25), (0.2, 0.1)):
+        a = np.asarray(RB.edge_glow_image([0, 255, 0], al, 1080, 1044, E["clear"], E["soft"], tint))
+        b = np.asarray(FXS.flash_image([0, 255, 0], al, 1080, 1044, tint))
+        assert np.array_equal(a, b)
+    ev = {"kind": "flash", "T": [1.0, 1.0 + F["dur"]]}
+    for k in range(0, 14):
+        t = 1.0 + k / FPS
+        assert abs(RB.edge_glow_alpha(t - 1.0, E["alpha0"], E["dur"]) - FXS.pose(ev, t)["alpha"]) < 1e-9
+    up = {"name": "x", "base": "잇템로그판", "frame": {}, "cuts": {"transition": {"edge_glow": {**E, "colors": [[0, 255, 0]]}}}}
+    tr = RB.transitions_of({}, up, {"transitions": [{"t": 1.0, "kind": "edge_glow"}]})
+    assert tr[0]["rgb"] == [0, 255, 0] and tr[0]["edge"]["alpha0"] == E["alpha0"] and tr[0]["ms"] == 450.0
+    with pytest.raises(RB.StageError, match="업그레이드 판 전용"):
+        RB.transitions_of({}, {**up, "base": None}, {"transitions": [{"t": 1.0, "kind": "edge_glow"}]})
+    with pytest.raises(RB.StageError, match="칸 모자람"):
+        RB.transitions_of({}, {**up, "cuts": {"transition": {"edge_glow": {"colors": [[0, 255, 0]]}}}}, {"transitions": [{"t": 1.0, "kind": "edge_glow"}]})
+    v = _base_frames(tmp_path, tr)
+    g = v[30, 434:1486].astype(int) - v[29, 434:1486]
+    assert g[10, 10, 1] > 40 and abs(g[526, 540]).max() < 3                   # 가장자리는 초록빛, 가운데는 그대로
 
 
 def test_fx_stickers_drawn_by_shark_fx(tmp_path):
