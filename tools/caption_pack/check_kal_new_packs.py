@@ -582,7 +582,7 @@ def check_pack(pack: str, work: Path) -> list[dict]:
         sp = ((P.get("speakers") or {}).get(who) or {})
         fill = ((sp.get("text") or {}).get("color")) or P["text"]["color"]
         dark = _hex_lab(fill)[0] < 50
-        r = {"pack": pack, "i": i, "video": video, "t": t, "text": text, "band": band, "bench_box": B.get("box"), "ours_box": O.get("box"),
+        r = {"pack": pack, "i": i, "video": video, "t": t, "text": text, "who": who, "band": band, "bench_box": B.get("box"), "ours_box": O.get("box"),
              "bench_h": B.get("h"), "ours_h": O.get("h")}
         if B.get("box") and O.get("box"):
             r["d"] = [O["box"][k] - B["box"][k] for k in range(4)]
@@ -597,6 +597,50 @@ def check_pack(pack: str, work: Path) -> list[dict]:
             r["lines"] = {"bench": lb, "ours": lo}
             if len(lb) >= 2 and len(lo) >= 2:
                 r["pitch"] = [lb[-1][0] - lb[-2][0], lo[-1][0] - lo[-2][0]]
+        out.append(r)
+    return out
+
+
+# 팩 → 벤치 편 분포를 잴 줄판독 칸: (채널, 화자 앞글자들, 채움색 앞 3자 | None, 줄 고르기)
+SPREAD = {"banggu": ("banggu", ("나레",), None, "first"), "yummyknow": ("yummyknow", ("나레",), None, "first"),
+          "humorshowshow": ("humorshowshow", ("나레",), None, "first"), "hottemreport": ("hottemreport", ("나레",), "#FF", "one"),
+          "sinbak": ("sinbak", ("나레",), "#00", "one"), "uljimatrot": ("uljimatrot", ("나레",), None, "one"),
+          "mantem:orig": ("mantem", ("원음",), None, "one"), "mantem:narr": ("mantem", ("나레",), None, "one"),
+          "itemhome": ("itemhome", ("나레", "원음"), None, "one"), "annapick": ("annapick", ("나레", "원음"), "#FF", "one"),
+          "sseolpulda_a": ("sseolpulda", ("불명",), "#00", "one"), "sseolpulda_b": ("sseolpulda", ("나레",), None, "one"),
+          "hotpeople": ("hotpeople", ("나레",), None, "one")}
+
+
+def episode_spread(frames: list[dict], tol: int = 4) -> list[dict]:
+    """(b) 벤치가 편마다 자리를 바꾸는 판 — 우리 한 줄 잉크 가운데(x·y)가 '벤치 편별 중앙값 범위 ±tol' 안에 드나.
+    팩 자리는 한 값이라 편마다 다른 자리는 엄격 대조(같은 편 ±4)로 못 맞춘다 — 판 쪽 편별 자리 칸(07)이 없으면 이 표가 기준."""
+    import statistics as S
+    out = []
+    for key, (slug, whos, fill, pick) in SPREAD.items():
+        pack, _, who = key.partition(":")
+        per = {}
+        for f in sorted((ROOT / f"channel/{slug}/줄판독").glob("*.json")):
+            L = [x for x in json.loads(f.read_text(encoding="utf-8")).get("lines") or [] if isinstance(x, dict)
+                 and str(x.get("speaker", "")).startswith(whos) and isinstance(x.get("y"), list) and len(x["y"]) == 2
+                 and all(isinstance(v, (int, float)) for v in x["y"]) and 30 < x["y"][1] - x["y"][0] < 110
+                 and (fill is None or str(x.get("fill_hex", "")).upper().startswith(fill))]
+            if pick == "first" and L:
+                y0 = min(x["y"][0] for x in L)
+                L = [x for x in L if x["y"][0] < y0 + 20]
+            if len(L) >= 2:
+                xs = [(x["ink_x"][0] + x["ink_x"][1]) / 2 if isinstance(x.get("ink_x"), list) and len(x["ink_x"]) == 2 else x.get("x")
+                      for x in L]
+                xs = [v for v in xs if isinstance(v, (int, float))]
+                per[f.stem] = (S.median((x["y"][0] + x["y"][1]) / 2 for x in L), S.median(xs) if xs else None)
+        ours = [((r["ours_box"][1] + r["ours_box"][3]) / 2, (r["ours_box"][0] + r["ours_box"][2]) / 2) for r in frames
+                if r["pack"] == pack and r.get("ours_box") and "\n" not in r["text"] and (not who or r.get("who") == who)]
+        if not per or not ours:
+            continue
+        ys = [v[0] for v in per.values()]; xs = [v[1] for v in per.values() if v[1] is not None]
+        oy, ox = S.median(o[0] for o in ours), S.median(o[1] for o in ours)
+        r = {"pack": key, "docs": len(per), "bench_y": [min(ys), max(ys)], "bench_x": [min(xs), max(xs)] if xs else None, "ours_y": oy, "ours_x": ox}
+        r["y_in"] = min(ys) - tol <= oy <= max(ys) + tol
+        r["x_in"] = (min(xs) - tol <= ox <= max(xs) + tol) if xs else None
         out.append(r)
     return out
 
@@ -624,12 +668,16 @@ def main():
     rep = {"frames": [], "distance": distances()}
     for p in packs:
         rep["frames"] += check_pack(p, od)
+    rep["spread"] = episode_spread(rep["frames"])
     (od / "report.json").write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")
     for b, d in rep["distance"].items():
         print(f"{b:10s} {d['pack']:14s} 거리 {d['d']:.3f} {d['terms']}")
     for r in rep["frames"]:
         print(f"{r['pack']:14s} {Path(r['video']).stem:12s} {r['t']:7} d{r.get('d')} dh{r.get('dh')} ΔE{r.get('dE')} {'✓' if r.get('pass') else '✗'}"
               + (f" 피치 벤치/우리 {r['pitch']}" if r.get("pitch") else ""))
+    for r in rep["spread"]:
+        print(f"편 분포 {r['pack']:14s} 편 {r['docs']} 벤치 y {r['bench_y']} 우리 {r['ours_y']:.0f} {'✓' if r['y_in'] else '✗'} · "
+              f"x {r['bench_x']} 우리 {r['ours_x']:.0f} {'✓' if r['x_in'] else '✗' if r['x_in'] is False else '-'}")
     n = sum(bool(r.get("pass")) for r in rep["frames"])
     print(f"합격 {n}/{len(rep['frames'])} → {od / 'report.json'}")
 

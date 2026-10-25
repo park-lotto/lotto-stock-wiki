@@ -1870,15 +1870,15 @@
  "humorshowshow": {
   "label": "재밌쇼 게시글",
   "desc": "검정 굵은 고딕 · 외곽 없음 · 줄 간격 76 · 전부 즉시",
-  "font": "NotoSansKRBold",
-  "size": 60.8,
+  "font": "CcNanumGothic-Bold",
+  "size": 60.1,
   "flat": true,
   "look": "none",
   "text": {
    "color": "#000000",
    "style": {
     "textShadow": "none",
-    "lineHeight": "1.338"
+    "lineHeight": "1.354"
    }
   },
   "wordFx": {
@@ -1892,7 +1892,7 @@
    ]
   },
   "emph": {
-   "font": "NotoSansKRBold",
+   "font": "CcNanumGothic-Bold",
    "size": 150,
    "color": "#000000",
    "style": {
@@ -1913,7 +1913,7 @@
   "stickers": {},
   "bench": "channel/humorshowshow/줄판독(6편 190줄) · 렌더 실측 맞춤(tools/caption_pack/check_kal_new_packs.py — 벤치 프레임 같은 글로 렌더해 kal_analyze frame_metrics 잉크 상자 대조)",
   "place": {
-   "y": 27.2,
+   "y": 27.49,
    "bench": "첫 줄 잉크 y500~552(가운데 526/1920) — 2줄째 576~629"
   }
  },
@@ -1980,7 +1980,8 @@
     "paintOrder": "stroke fill",
     "strokeLinejoin": "round",
     "textShadow": "none",
-    "wordSpacing": "0.45em"
+    "wordSpacing": "0.45em",
+    "paddingLeft": "8px"
    }
   },
   "wordFx": {
@@ -2025,15 +2026,15 @@
  },
  "uljimatrot": {
   "label": "울지마트로트 흰 고딕",
-  "desc": "흰 G마켓 굵은 글 + 검정 테(10px) · 줄 간격 105 · 전부 즉시",
-  "font": "GmarketSansBold",
-  "size": 89.9,
+  "desc": "흰 에스코어드림 9 굵은 글 + 검정 테(10px) · 줄 간격 105 · 전부 즉시",
+  "font": "Scene223",
+  "size": 89.7,
   "flat": true,
   "look": "none",
   "text": {
    "color": "#FFFFFF",
    "style": {
-    "WebkitTextStroke": "0.2225em #000000",
+    "WebkitTextStroke": "0.223em #000000",
     "paintOrder": "stroke fill",
     "strokeLinejoin": "round",
     "textShadow": "none",
@@ -2046,11 +2047,11 @@
    "grow": ""
   },
   "emph": {
-   "font": "GmarketSansBold",
+   "font": "Scene223",
    "size": 150,
    "color": "#FFFFFF",
    "style": {
-    "WebkitTextStroke": "0.2225em #000000",
+    "WebkitTextStroke": "0.223em #000000",
     "paintOrder": "stroke fill",
     "textShadow": "none"
    }
@@ -2069,7 +2070,7 @@
   "stickers": {},
   "bench": "channel/uljimatrot/줄판독(10편 144줄) · 렌더 실측 맞춤(tools/caption_pack/check_kal_new_packs.py — 벤치 프레임 같은 글로 렌더해 kal_analyze frame_metrics 잉크 상자 대조)",
   "place": {
-   "y": 63.42,
+   "y": 62.85,
    "bench": "잉크 y1162~1252(가운데 1207/1920)"
   }
  },
@@ -2209,15 +2210,15 @@
  },
  "annapick": {
   "label": "안나픽 흰 고딕",
-  "desc": "흰 G마켓 굵은 글 + 검정 테 5px · 기본 즉시, 일부 줄 서서히(fade)",
-  "font": "GmarketSansBold",
-  "size": 75.6,
+  "desc": "흰 잘난고딕 + 검정 테 5px · 기본 즉시, 일부 줄 서서히(fade)",
+  "font": "JalnanGothic",
+  "size": 72.3,
   "flat": true,
   "look": "none",
   "text": {
    "color": "#FFFFFD",
    "style": {
-    "WebkitTextStroke": "0.1323em #000000",
+    "WebkitTextStroke": "0.1383em #000000",
     "paintOrder": "stroke fill",
     "strokeLinejoin": "round",
     "textShadow": "none"
@@ -2236,11 +2237,11 @@
    ]
   },
   "emph": {
-   "font": "GmarketSansBold",
+   "font": "JalnanGothic",
    "size": 150,
    "color": "#FFFFFD",
    "style": {
-    "WebkitTextStroke": "0.1323em #000000",
+    "WebkitTextStroke": "0.1383em #000000",
     "paintOrder": "stroke fill",
     "textShadow": "none"
    }
@@ -2264,7 +2265,7 @@
   "stickers": {},
   "bench": "channel/annapick/줄판독(6편 원음 104·나레 19줄) · 렌더 실측 맞춤(tools/caption_pack/check_kal_new_packs.py — 벤치 프레임 같은 글로 렌더해 kal_analyze frame_metrics 잉크 상자 대조)",
   "place": {
-   "y": 63.2,
+   "y": 63.1,
    "bench": "원음 잉크 가운데 y1207/1920(줄판독 중앙 — 편마다 1110~1210)"
   }
  },
@@ -2314,15 +2315,15 @@
  },
  "sseolpulda_b": {
   "label": "썰풀다 나레형",
-  "desc": "흰 G마켓 굵은 글 + 검정 테 7px · 전부 즉시",
-  "font": "GmarketSansBold",
-  "size": 80.8,
+  "desc": "흰 잘난고딕 + 검정 테 7px · 전부 즉시",
+  "font": "JalnanGothic",
+  "size": 77.7,
   "flat": true,
   "look": "none",
   "text": {
    "color": "#FFFDFD",
    "style": {
-    "WebkitTextStroke": "0.1733em #000000",
+    "WebkitTextStroke": "0.1802em #000000",
     "paintOrder": "stroke fill",
     "strokeLinejoin": "round",
     "textShadow": "none"
@@ -2339,11 +2340,11 @@
    ]
   },
   "emph": {
-   "font": "GmarketSansBold",
+   "font": "JalnanGothic",
    "size": 150,
    "color": "#FFFDFD",
    "style": {
-    "WebkitTextStroke": "0.1733em #000000",
+    "WebkitTextStroke": "0.1802em #000000",
     "paintOrder": "stroke fill",
     "textShadow": "none"
    }
@@ -2362,7 +2363,7 @@
   "stickers": {},
   "bench": "channel/sseolpulda/줄판독(나레 3편 48줄) · 렌더 실측 맞춤(tools/caption_pack/check_kal_new_packs.py — 벤치 프레임 같은 글로 렌더해 kal_analyze frame_metrics 잉크 상자 대조)",
   "place": {
-   "y": 66.77,
+   "y": 66.65,
    "bench": "나레형 잉크 y1229~1317(가운데 1273/1920, mYxu)"
   }
  },
