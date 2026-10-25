@@ -87,18 +87,18 @@
   "_why": "벤치 상위 편 = 조회 상위 50%(6편 중 ro1l 2,006만·aUic 1,832만·J7Gx 1,561만, 스타일분석 머리말) · 값 = 줄판독 칸(눈 점수 fit·enter/sticker/emph·sfx·나레 문장 cps)으로 잰 것 — §12-5 같은 자 재측정(상위편_목표.json, 지시서 14·15) 전 임시 · n=3 사분위는 선형 보간 · 꾸밈·효과음 밀도 목표 = channel/ititemlog/_kal/상위편_목표.json density(placement.py count --top, 15 — 같은 자 kal_analyze._stats) — 옛 targets.fx.deco_rate(줄판독 눈 셈, 다른 자)는 지움 · speech.spread(조각 자) 지움 — 표준 §11-3 ⑲ 말속도 편차 = TTS 줄 단위 cps_cv 만",
   "scene_fit": {
    "mean": {
-    "bench_top_q": 7.92,
-    "ours_goal": 7.92,
-    "cap": 7.97,
+    "bench_top_q": 7.13,
+    "ours_goal": 7.13,
+    "cap": 7.33,
     "why": "상위 편 루브릭 평균 p75"
    },
    "below7": {
-    "bench_top_q": 0.15,
-    "ours_goal": 0.15,
+    "bench_top_q": 0.327,
+    "ours_goal": 0.327,
     "cap": null,
     "why": "상위 편 루브릭 7 미만 비율 p25"
    },
-   "_from": "channel/ititemlog/_kal/상위편_목표.json scene_fit · RUBRIC_V rubric:v1(2026-10-25) · made_by tools/calcopy/oneshot/scene_fit.bench_measure · 복사 2026-10-25(표준 §11-4 ㉕ — 자는 루브릭 하나, 줄판독 눈 fit 은 목표로 안 씀)"
+   "_from": "channel/ititemlog/_kal/상위편_목표.json · rubric:v2(2026-10-25 앵커2·1컷·3회) · 10-25(14 커밋 508cb6b1a — v1 7.92/0.15 대체)"
   },
   "sfx": {
    "per_s": {
