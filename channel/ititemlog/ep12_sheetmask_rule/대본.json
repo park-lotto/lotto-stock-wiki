@@ -158,8 +158,13 @@
    "said": "eight hours later the mask had turned completely clear. Like what kind of magic did they put in",
    "caps_rel": [
     [
-     "여덟 시간 만에 투명해졌어",
+     "여덟 시간 뒤엔",
      0.0,
+     0.8
+    ],
+    [
+     "완전 투명해졌어",
+     0.8,
      2.36,
      "투명"
     ],
@@ -170,7 +175,8 @@
      "마법"
     ]
    ],
-   "_why_span": "관문③ cut_boundary_gate: 원본 장면 경계 7.03초 → 7.04 끝이면 0.07초 조각 → 끝을 6.95(낱말 'this' 앞)로"
+   "_why_span": "관문③ cut_boundary_gate: 원본 장면 경계 7.03초 → 7.04 끝이면 0.07초 조각 → 끝을 6.95(낱말 'this' 앞)로",
+   "caps_why": "원본 장면 경계 3.8초(_cutbounds v2) 전엔 마스크가 하얗다 — 투명 자막은 경계 뒤부터(장면↔대사, 눈 확인 10-25)"
   },
   {
    "id": "N5",
