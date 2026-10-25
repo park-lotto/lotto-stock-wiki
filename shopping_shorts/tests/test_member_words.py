@@ -126,3 +126,19 @@ def test_transient_stop_retries_itself_once():
     assert res["status"] == "execute" and res["do"][0]["cmd"] == "origin_get"      # 스스로 한 번 다시 받기
     res2 = F.step(st, {"origin": {"error": "또 끊김"}}, {}, {})
     assert res2["status"] == "stop" and F.member_ok(res2["fix"], need_next=True)
+
+
+def test_going_back_stage_words_and_number():
+    """⑦ 되돌아감(10-26 이미숙 회원편: 카드 반려로 썸네일 다시 → '목소리·영상 만들기 완료 → 장면 맞추기 중' + 11/13 → 10/13).
+    '완료' 없이 무엇을 다시 하는지 쉬운 말, 단계 번호는 이미 보인 번호 그대로 · 다시 앞으로 가면 평소 문구."""
+    st = {"sid": "t", "version": "키치잇판", "fmt": "연예인형", "phase": "render", "tries": {}, "log": []}
+    r1 = F._out(st, "execute", "render")
+    r2 = F._out(st, "review", "thumb")
+    assert "완료" not in r2["message"] and "썸네일" in r2["message"] and F.member_ok(r2["message"])
+    assert r2["stage"]["no"] == r1["stage"]["no"], (r1["stage"], r2["stage"])
+    r3 = F._out(st, "review", "plan")                     # 썸네일 말고 다른 되돌아감 = 일반 쉬운 말
+    assert "완료" not in r3["message"] and "다시" in r3["message"] and r3["stage"]["no"] == r1["stage"]["no"]
+    r4 = F._out(st, "execute", "render")
+    assert r4["message"] == r1["message"].split(" → ")[-1] and "완료" not in r4["message"]
+    r5 = F._out(st, "execute", "check")                   # 앞으로 가면 평소대로 'OO 완료 → 다음'
+    assert "완료 →" in r5["message"] and r5["stage"]["no"] > r1["stage"]["no"]

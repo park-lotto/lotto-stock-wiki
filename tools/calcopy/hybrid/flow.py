@@ -261,9 +261,21 @@ def _stage(phase: str, st: dict | None = None) -> dict:
     return {"no": keys.index(k) + 1, "total": len(lst), "text": dict(lst)[k], "key": k}
 
 
+REDO_WORDS = {"thumb": "썸네일을 더 잘 나오게 다시 고르는 중이에요", "thumb_got": "썸네일을 더 잘 나오게 다시 고르는 중이에요"}   # 앞 단계로 되돌아갈 때 회원 문구(세부 단계별)
+
+
+def _went_back(st: dict, k: str) -> str | None:
+    """이미 보인 단계보다 앞 단계로 되돌아갔으면 이미 보인 단계 키(번호·'완료'를 거꾸로 안 보이게), 아니면 None."""
+    prev = st.get("_shown_stage")
+    keys = [x for x, _ in _stage_list(st)]
+    return prev if prev in keys and k in keys and keys.index(k) < keys.index(prev) else None
+
+
 def _msg(st: dict, phase: str) -> str:
     sg = _stage(phase, st)
     k, text = sg["key"], dict(_stage_list(st))
+    if _went_back(st, k):          # 되돌아감(10-26 이미숙 회원편 '목소리·영상 만들기 완료 → 장면 맞추기 중' — 회원이 당황) = 무엇을 다시 하는지 쉬운 말, 보인 단계는 그대로
+        return REDO_WORDS.get(phase) or f"더 잘 나오게 {text[k]}부터 다시 하는 중이에요"
     prev = st.get("_shown_stage")
     st["_shown_stage"] = k
     now = text[k] + (" 중" if k not in ("done", "sign") else "")
@@ -401,7 +413,12 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
 def _out(st: dict, status: str, phase: str, **kw) -> dict:
     stage = _stage(phase, st)
     traps = (TRAPS_FOREIGN if _fmt(st) == "해외원본형" else TRAPS).get(stage["key"], [])
-    res = {"status": status, "stage": stage, "message": _msg(st, phase), "traps": traps, "state": st}
+    back = _went_back(st, stage["key"])
+    msg = _msg(st, phase)
+    if back:                       # 단계 번호는 이미 보인 단계 그대로(11/13 → 10/13 처럼 거꾸로 안 보이게)
+        lst = _stage_list(st)
+        stage = {**stage, "no": [x for x, _ in lst].index(back) + 1, "text": dict(lst)[back], "key": back}
+    res = {"status": status, "stage": stage, "message": msg, "traps": traps, "state": st}
     for k, v in kw.items():
         if v is not None and k != "detail":
             res[k] = v
