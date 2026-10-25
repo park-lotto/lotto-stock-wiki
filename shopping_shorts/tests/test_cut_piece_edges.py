@@ -40,3 +40,31 @@ def test_snap_ss_는_앞샷_1프레임_자리로_가지_않는다(tmp_path, monk
     s = RB.snap_ss(src, 8.5, n / FPS)
     assert s != 8.367
     assert RB.short_pieces(AYB, s, s + n / FPS) == []
+
+
+# ── 10-25 ep12 --plan 멈춤(98 #105): 원음 줄 안 원본 자체 편집점은 양쪽이 길면 통과, 같은 원음을 잘게 나누면 짧은 조각이 생겨 막힌다 ──
+SAA = [19.567]                    # saA.mp4 원본 경계(shot_starts 실측) — O2 원음 spans 17.0~21.44 안
+AYA = [3.8, 5.433, 7.033]         # ayA.mp4 — O3 원음 3.0~7.03 안
+
+
+def _gate(cuts, starts, tmp_path, monkeypatch):
+    for c in cuts:
+        (tmp_path / c["src"]).write_bytes(b"x")
+    monkeypatch.setattr(RB, "shot_starts", lambda p: starts)
+    return RB.cut_boundary_gate({"cuts": cuts}, {"cand_dir": str(tmp_path)})
+
+
+def test_원음_한컷_안_원본편집점은_통과(tmp_path, monkeypatch):
+    """096d27de 완성본 O2(10.71초)·O3(18.33·19.96초)는 원본 자체 편집 — 양쪽 조각 0.8초 이상, 눈으로 번쩍임 없음."""
+    o2 = [{"line": "O2", "src": "saA.mp4", "ss": 17.0, "t0": 8.139, "t1": 12.579, "kind": "orig"}]
+    o3 = [{"line": "O3", "src": "ayA.mp4", "ss": 3.0, "t0": 17.53, "t1": 21.56, "kind": "orig"}]
+    assert _gate(o2, SAA, tmp_path, monkeypatch) == []
+    assert _gate(o3, AYA, tmp_path, monkeypatch) == []
+
+
+def test_원음을_고르게_나눈_조각은_막힌다(tmp_path, monkeypatch):
+    """옛 rhythm_cuts(6c16825e6)가 O2 를 1.11초 4조각으로 나눠 19.22~20.33 조각 안 19.567 경계 → 0.35초 조각(번쩍임) — 관문 ③이 잡는 게 맞다."""
+    ps = [{"line": "O2", "src": "saA.mp4", "ss": round(17.0 + 1.11 * k, 3), "t0": round(8.14 + 1.11 * k, 3),
+           "t1": round(8.14 + 1.11 * (k + 1), 3), "kind": "orig"} for k in range(4)]
+    bad = _gate(ps, SAA, tmp_path, monkeypatch)
+    assert len(bad) == 1 and "0.35" in bad[0]
