@@ -964,7 +964,7 @@ def _src_cuts(src: Path, y0: int, y1: int, w: int) -> list[float]:
     except Exception:
         pass
     from tools.calcopy.engine.readline_tools.cutdet import cutdet
-    ts = [t for t in (float(r["t"]) for r in cutdet(str(src), y0, y1, float(FPS), w)["cuts"]) if _real_cut(src, t, y0, y1, w)]
+    ts = [t for t in (float(r["t"]) for r in cutdet(str(src), y0, y1, float(FPS), w, shots=False)["cuts"]) if _real_cut(src, t, y0, y1, w)]   # shots=False = 프레임을 쌓지 않음(1592초 원본 23GiB MemoryError, 98 #101)
     try:
         jsave(cp, ts)
     except Exception:
