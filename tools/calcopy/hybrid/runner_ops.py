@@ -1131,6 +1131,14 @@ def _conflict_of(res) -> dict | None:
     return None
 
 
+def _log_beat(W, what: str):
+    """render_bench 로그 한 줄 = 진행 신호(감시의 '멈춤 아님') + stderr 에 시각과 함께 — 어느 칸에서 오래 걸렸는지 남긴다(10-26 계획 무음 180초 끔)."""
+    def f(msg=""):
+        progress(W, what)
+        sys.stderr.write(f"[{time.strftime('%H:%M:%S')}] {str(msg)[:300]}\n")
+    return f
+
+
 def c_plan(W, d):
     from tools.calcopy.hybrid import render_bench
     v = d["version"]
@@ -1138,7 +1146,7 @@ def c_plan(W, d):
     if miss:
         return {"error": miss}
     try:
-        res = render_bench.render(v, W / "doc" / v, W / v, plan_only=True, tts=True, report=True)      # 진짜 목소리 길이로 계획 · report = 넘침·길이를 멈추지 않고 돌려받아 재료 고치기 안내(관문 ⑧)(합성은 캐시 — 렌더가 그대로 쓴다)
+        res = render_bench.render(v, W / "doc" / v, W / v, plan_only=True, tts=True, report=True, log=_log_beat(W, "장면 맞추기"))      # 진짜 목소리 길이로 계획 · report = 넘침·길이를 멈추지 않고 돌려받아 재료 고치기 안내(관문 ⑧)(합성은 캐시 — 렌더가 그대로 쓴다)
         over = res.get("over") or ""
     except StageError as e:          # 컷이 원본 샷보다 길다 → 재료를 고치게 한다
         res, over = {"timeline": {"cuts": []}}, str(e)
