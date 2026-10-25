@@ -240,6 +240,9 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
             if left is not None and c["dur"] > left:
                 c["src_left"] = left
                 c["over"] = max(c["over"], round(c["dur"] - left, 3))
+    if src_dir:              # B13(같은 원본 가까운 구간) — 계획이 처음부터 피한다(주인 material_fit.respace_reuse, 판정 = quality_gate.reuse_violations_bench)
+        from tools.calcopy.hybrid.material_fit import respace_reuse
+        respace_reuse(cuts, src_dir, log=lambda m: sys.stderr.write(m + "\n"))
     for i, r in enumerate(rows):      # 자막은 다음 덩어리 시작까지(줄 사이 틈도 앞 자막이 덮는다 — 벤치: 자막 없는 틈 거의 없음)
         r["show"] = [r["t0"], round(rows[i + 1]["t0"] if i + 1 < len(rows) else end, 3)]
     out = {"lines": lines, "rows": rows, "cuts": cuts, "opos": opos, "end": end}
@@ -990,15 +993,41 @@ def cut_length_gate(T: dict, st: dict | None = None) -> list[str]:
     return bad
 
 
+def clip_args(c: dict, src: Path, st: dict, M: dict) -> dict:
+    """(판단 주인) 컷 하나를 clip_cmd 에 넘길 인자 — 시작 초·프레임 수·칸·판 밀기(cuts.push_tts/push_orig)·움직임·흐림·그림 칸.
+    render_window(조각 굽기)·cut_gray(관문 ⑦)·plan_frames_gray(완성본 = 계획 프레임 대조)가 같이 부른다 — 셋이 다른 그림을 상상하지 않게(관제263 10-25:
+    대조가 판 push 를 모르고 안 민 원본과 비교해 0.946 으로 떨어졌다)."""
+    _, _, ww, wh = frame_window(st["frame"])
+    push = (st.get("cuts") or {}).get("push_orig" if c["kind"] == "orig" else "push_tts", 0.0)
+    return {"ss": float(c.get("ss") or 0.0), "n": cut_frames_n(c), "crop": cut_crop(c, src, (ww, wh)), "win": (ww, wh),
+            "push": float(c.get("push", push)), "move": c.get("move"), "blur": (M.get("blur") or {}).get(c["src"]),
+            "pic": pic_box(c, (ww, wh)), "pic_bg": c.get("pic_bg") or st["frame"].get("bg")}
+
+
+def plan_frames_gray(c: dict, src: Path, st: dict, M: dict, idx: list[int]) -> dict:
+    """계획 프레임 = 조각이 될 그림(clip_cmd, 판 밀기·사진 움직임·흐림 포함)의 컷 안 프레임 번호 idx 를 창 크기 회색으로 {i: 배열}."""
+    import numpy as np
+    import subprocess
+    a = clip_args(c, src, st, M)
+    ww, wh = a["win"]
+    inp, vf, extra = clip_cmd(src, a["ss"], a["n"], a["crop"], a["win"], a["push"], a["move"], a["blur"], a["pic"], a["pic_bg"])
+    fs = sorted({int(i) for i in idx if 0 <= int(i) < a["n"]})
+    if not fs:
+        return {}
+    sel = "+".join(f"eq(n\\,{i})" for i in fs)
+    raw = subprocess.run(["ffmpeg", "-v", "error", *map(str, inp), "-vf", f"{vf},select={sel},format=gray", "-frames:v", str(len(fs)), "-fps_mode", "passthrough",
+                          "-f", "rawvideo", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout      # extra(사진 -r)는 뺀다 — 고른 프레임만 그대로(passthrough)
+    arr = np.frombuffer(raw[:len(raw) - len(raw) % (ww * wh)], np.uint8).reshape(-1, wh, ww)
+    return dict(zip(fs, arr))
+
+
 def cut_gray(c: dict, src: Path, st: dict, M: dict):
     """컷 조각이 될 그림을 렌더 없이 회색 108폭 프레임으로 — clip_cmd(조각 굽기와 같은 필터·크롭·움직임·흐림) 그대로 ffmpeg 로 읽기만."""
     import numpy as np
     import subprocess
-    _, _, ww, wh = frame_window(st["frame"])
-    n = cut_frames_n(c)
-    push = (st.get("cuts") or {}).get("push_orig" if c["kind"] == "orig" else "push_tts", 0.0)
-    inp, vf, extra = clip_cmd(src, float(c.get("ss") or 0.0), n, cut_crop(c, src, (ww, wh)), (ww, wh), float(c.get("push", push)), c.get("move"),
-                              (M.get("blur") or {}).get(c["src"]), pic_box(c, (ww, wh)), c.get("pic_bg") or st["frame"].get("bg"))
+    a = clip_args(c, src, st, M)
+    (ww, wh), n = a["win"], a["n"]
+    inp, vf, extra = clip_cmd(src, a["ss"], n, a["crop"], a["win"], a["push"], a["move"], a["blur"], a["pic"], a["pic_bg"])
     sh = max(8, round(108 * wh / ww / 2) * 2)
     raw = subprocess.run(["ffmpeg", "-v", "error", *map(str, inp), "-vf", f"{vf},scale=108:{sh},format=gray", "-frames:v", str(n), *map(str, extra),
                           "-f", "rawvideo", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
@@ -1399,6 +1428,10 @@ def transitions_of(T: dict, st: dict, placed: dict, log=None) -> list[dict]:
         out = {"t": round(float(e["t"]), 3), "kind": k, "ms": float(m)}
         if k in ("flash", "edge_glow"):
             out.update(flash_color_of(e, st, ncf.setdefault(k, [0])))
+        if k == "zoomblur":           # 세기 = 판 cuts.transition.zoomblur{zoom, sigma}(벤치 drop 에 맞춘 값 — 관제263 10-25) · 없으면 옛 상수
+            Z = ((st.get("cuts") or {}).get("transition") or {}).get("zoomblur") or {}
+            out["zoom"] = float(e.get("zoom", Z.get("zoom", ZOOMBLUR_ZOOM)))
+            out["sigma"] = float(e.get("sigma", Z.get("sigma", ZOOMBLUR_SIGMA)))
         if e.get("sec") is not None:
             out["sec"] = float(e["sec"])
         if e.get("why"):
@@ -1540,10 +1573,12 @@ def window_fx(trans: list[dict], ww: int, wh: int) -> str:
         return ""
     fc, last = [], "0:v"
     if zb:
+        zoom = zb[0].get("zoom", ZOOMBLUR_ZOOM)        # 한 편 안 줌블러 세기는 판 한 값(transitions_of)
+        sigma = zb[0].get("sigma", ZOOMBLUR_SIGMA)
         terms = "+".join(f"max(0,1-abs(in/{FPS}-{e['t']:.3f})/{e['ms'] / 2000:.3f})" for e in zb)
         en = "+".join(f"between(t,{max(0.0, e['t'] - e['ms'] / 2000):.3f},{e['t'] + e['ms'] / 2000:.3f})" for e in zb)
-        fc.append(f"[0:v]split[zm][zc];[zc]zoompan=z='1+{ZOOMBLUR_ZOOM}*({terms})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:"
-                  f"s={ww}x{wh}:fps={FPS},gblur=sigma={ZOOMBLUR_SIGMA}[zb];[zm][zb]overlay=0:0:enable='{en}'[z]")
+        fc.append(f"[0:v]split[zm][zc];[zc]zoompan=z='1+{zoom}*({terms})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:"
+                  f"s={ww}x{wh}:fps={FPS},gblur=sigma={sigma}[zb];[zm][zb]overlay=0:0:enable='{en}'[z]")
         last = "z"
     if bk:
         rng = []
@@ -1721,12 +1756,9 @@ def render_window(T: dict, M: dict, st: dict, R: Path, trans: list[dict] | None 
         n = round(c["t1"] * FPS) - round(c["t0"] * FPS)
         c["frames"] = n
         src = src_dir / c["src"]
-        pb = pic_box(c, (ww, wh))          # 컷마다 그림 칸 — 자르기 비율도 그 칸 비율로
-        crop = cut_crop(c, src, (ww, wh))
-        push = (st.get("cuts") or {}).get("push_orig" if c["kind"] == "orig" else "push_tts", 0.0)
+        a = clip_args(c, src, st, M)       # 칸·밀기·그림 칸·흐림 = 주인 한 곳(계획 프레임 대조·관문 ⑦과 같은 인자)
         p = parts / f"c{k:02d}.mp4"
-        clip(src, float(c.get("ss", 0.0)), n, crop, (ww, wh), p, push=float(c.get("push", push)), move=c.get("move"),
-             blur=(M.get("blur") or {}).get(c["src"]), pic=pb, pic_bg=c.get("pic_bg") or st["frame"].get("bg"))
+        clip(src, a["ss"], n, a["crop"], a["win"], p, push=a["push"], move=a["move"], blur=a["blur"], pic=a["pic"], pic_bg=a["pic_bg"])
         got = count_frames(p)
         if got != n:      # 모자라면 뒤 컷이 전부 앞당겨지고 끝이 멈춘다 — 조용히 넘기지 않는다
             raise StageError(f"컷 조각 프레임 모자람: {c['line']} {c['src']}@{c.get('ss')} 계획 {n} · 실제 {got}")

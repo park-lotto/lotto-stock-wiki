@@ -368,15 +368,21 @@
   }
  ],
  "sfx": [],
- "flashes": [
-  10.969
- ],
+ "flashes": [],
  "transitions": [
   {
-   "t": 10.969,
-   "kind": "flash",
-   "ms": 100.0,
-   "why": "마지막 화자 바뀜(rules.flash)"
+   "t": 6.98,
+   "kind": "zoomblur",
+   "ms": 167.0,
+   "zoom": 0.12,
+   "sigma": 0.5,
+   "why": "화자 바뀜"
+  },
+  {
+   "t": 18.27,
+   "kind": "black",
+   "ms": 33.0,
+   "why": "컷 경계"
   }
  ],
  "memes": [],
@@ -384,7 +390,7 @@
  "log": [
   "본보기 벤치 편 = Cs-Ka_S8nDM",
   "스티커 spark_lines 본보기 1개 중 0개만(조건 맞는 덩어리 모자람)",
-  "번쩍 [10.969]",
+  "전환 [(6.98, 'zoomblur'), (18.27, 'black')] (판 cuts.transition.kinds 비율 {'zoomblur': 0.1, 'black': 0.07, 'flash': 0.01}, 컷 경계 11·붙일 수 있는 6(≥1.2초))",
   "효과음 0발(본보기 0) []",
   "등장 {'pop': 18, 'cut': 5} · 강조 22/23"
  ],
@@ -458,7 +464,8 @@
    },
    "transitions": {
     "ours": {
-     "flash": 1
+     "zoomblur": 1,
+     "black": 1
     }
    },
    "sites": {},

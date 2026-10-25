@@ -342,6 +342,36 @@ def test_plan_frames_same_and_sabotage(tmp_path):
     assert plan_frames_verdict(plan_frames_check(R, T3, src_dir, [0, 0, 180, 320]))[0] is False
 
 
+def test_plan_frames_uses_style_push_and_picture(tmp_path):
+    """관제263 10-25: 완성본 = 계획 프레임 대조가 판 cuts.push_tts(천천히 밀기)·사진 움직임을 몰라 안 민 원본과 비교했다(박정수 0.9466) ·
+    그림 칸 컷은 늘 '대조 밖'. 계획 프레임 = render_bench.plan_frames_gray(clip_cmd 같은 인자)로 그리면 밀기·사진 컷도 같음."""
+    import sys
+    sys.path.insert(0, str(ROOT))
+    from tools.calcopy.hybrid import render_bench as RB
+    from tools.calcopy.hybrid.quality_gate import plan_frames_check, plan_frames_verdict
+    src_dir, R = tmp_path / "src", tmp_path / "render"
+    src_dir.mkdir(); R.mkdir()
+    _ffmpeg("-f", "lavfi", "-i", "testsrc2=s=360x640:r=30:d=6", "-pix_fmt", "yuv420p", src_dir / "a.mp4")
+    _ffmpeg("-f", "lavfi", "-i", "testsrc2=s=400x400:r=1:d=1", "-frames:v", "1", src_dir / "p.jpg")
+    st = {"frame": {"kind": "window", "window": [0, 0, 180, 320], "bg": [0, 0, 0]}, "cuts": {"push_tts": 0.2}}
+    M = {"cand_dir": str(src_dir)}
+    T = {"cuts": [{"src": "a.mp4", "ss": 1.0, "t0": 0.0, "t1": 1.5, "crop": [0, 0, 360, 640], "line": "N1", "kind": "tts"},
+                  {"src": "p.jpg", "ss": 0, "t0": 1.5, "t1": 3.0, "crop": [0, 0, 225, 400], "move": "in", "line": "N2", "kind": "tts"}]}
+    parts = []
+    for k, c in enumerate(T["cuts"]):             # 렌더와 같은 조각 굽기
+        a = RB.clip_args(c, src_dir / c["src"], st, M)
+        p = R / f"c{k}.mp4"
+        RB.clip(src_dir / c["src"], a["ss"], a["n"], a["crop"], a["win"], p, push=a["push"], move=a["move"], blur=a["blur"], pic=a["pic"], pic_bg=a["pic_bg"])
+        parts.append(f"file '{p.as_posix()}'")
+    (R / "l.txt").write_text(chr(10).join(parts), encoding="utf-8")
+    _ffmpeg("-f", "concat", "-safe", "0", "-i", R / "l.txt", "-c", "copy", R / "base.mp4")
+    new = plan_frames_check(R, T, src_dir, [0, 0, 180, 320], st=st, M=M)
+    ok, msg = plan_frames_verdict(new)
+    assert ok is True and all(r["sim"] >= 0.97 for r in new), msg
+    old = plan_frames_check(R, T, src_dir, [0, 0, 180, 320])           # 옛 대조(판 모름) — 밀기 컷은 떨어지고 사진 컷도 같음이 아니다
+    assert plan_frames_verdict(old)[0] is False, old
+
+
 def test_plan_score_ruler_must_match(tmp_path, monkeypatch):
     from tools.calcopy.hybrid import quality_gate as QG
     from tools.calcopy.oneshot.scene_fit import RUBRIC_V
@@ -428,3 +458,30 @@ def test_fit_voice_trims_edges_and_sets_comma_pause(tmp_path):
     inner = [b - a for a, b in sil if a > 0.03 and b < total - 0.03]
     assert inner and abs(max(inner) - 0.22) < 0.025, sil
     assert out[0]["tmap"][0] == (0.0, 0.0)
+
+
+def test_match_hybrid_own_keys_use_style_target_or_skip():
+    """코디네이터 10-25 결정: 하이브리드 판(판 length 가 벤치와 안 겹침)의 컷 중앙·나레 말속도·자막 표시 초·원음 등장 칸은
+    판에 why 붙은 목표값이 있으면 그 값과 비교, 없으면 비교 안 함(skip — 미측정 아님, 기준에서 빠짐). 겹치는 판은 옛 그대로(벤치)."""
+    import sys
+    sys.path.insert(0, str(ROOT))
+    from tools.calcopy.engine.kal_analyze import match_table, style_targets
+    from tools.calcopy.hybrid.quality_gate import match_verdict
+    bench = [{"dur": d, "lines": [{"t0": 0, "t1": 0.5, "speaker": "나레", "text": "가나다라마바사아자"}]} for d in (12.0, 14.0, 21.0)]
+    ours = {"dur": 27.0, "rows": [{"line": "N1", "j": 0, "speaker": "narr", "text": "가나다라마바사", "t0": 0.0, "t1": 1.0, "show": [0.0, 1.0]}]}
+    om = {"duration": 27.0, "cut_median": 2.1, "lufs": -14.0}
+    st = {"cps_target": 7.0, "_why_cps_target": "미나 실측"}
+    tg = style_targets(st)
+    assert set(tg) == {"speech.cps.나레"}
+
+    def rows(T):
+        return {r["key"]: r for r in T["rows"]}
+    R = rows(match_table(bench, ours, om, None, own_len=(25, 30), own_targets=tg))
+    assert R["speech.cps.나레"]["judge"] == "in" and R["speech.cps.나레"]["bench"] == 7.0       # 판 목표 7.0 vs 우리 7자/1초
+    for k in ("cut.median", "chunk.sec", "enter.mode.원음"):
+        assert R[k]["judge"] == "skip" and R[k]["core"] is False
+    old = rows(match_table(bench, ours, om, None, own_len=(10, 28), own_targets=tg))           # 겹치는 판 = 벤치 그대로
+    assert old["speech.cps.나레"]["bench"] != 7.0 and old["cut.median"]["judge"] != "skip"
+    T = match_table(bench, ours, om, None, own_len=(25, 30), own_targets=tg)
+    ok, txt, bad = match_verdict(T, upgrade=True)
+    assert not any(b.startswith(("cut.median", "chunk.sec", "enter.mode.원음")) for b in bad) and "비교 안 함" in txt

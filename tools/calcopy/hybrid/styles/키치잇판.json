@@ -148,6 +148,23 @@
  "cuts": {
   "push_tts": 0.06,
   "push_orig": 0.03,
+  "transition": {
+   "kinds": {
+    "zoomblur": 0.1,
+    "black": 0.071,
+    "flash": 0.014
+   },
+   "ms": {
+    "zoomblur": 167,
+    "black": 33
+   },
+   "zoomblur": {
+    "zoom": 0.12,
+    "sigma": 0.5,
+    "why": "세기 = 벤치 줌블러 drop(라플라시안 하락) 5회 중앙 0.175(±30% 0.12~0.23, _kal/transition_drop.json)에 맞춤 — 10-25 관제263 박정수 편 같은 경계(6.98초) 실측: sigma 14(옛 상수) 0.701 · 1.0 0.360 · 0.6 0.233 · 0.5 0.223 → 0.5. 줌 0.12 는 옛 상수(창 크기 튐 = 스타일분석 §2, 배율 실측 없음). 주의: 같은 경계 맨 컷도 0.255 라 이 자로는 벤치 줌블러가 컷과 거의 안 갈린다(세기 자 한계)"
+   },
+   "why": "벤치 8편 줄판독 135줄 중 컷이 바뀌는 줄 시작 70곳(cut 57 + 특수 13) — zoomblur 7 · black 5 · flash 1 → 컷 경계당 0.1·0.071·0.014(스타일분석 §3, 5/8편, 13곳 전부 나레 줄 시작·9곳 훅). placement 는 이 비율 × 우리 컷 경계 수로 자리를 정한다(본보기 편에 특수 전환이 없을 때). ms: zoomblur = bench_transition_drop(channel/kitchit/_kal/transition_drop.json) 5회 ms 0·33·167·200·400 중앙 167 · black = '검은 1프레임'(스타일분석 §3) 33. 10-25 관제263: 이 칸이 없어 박정수 편 전환 0개(관문 ⑯ '우리 경계 0개')"
+  },
   "why": "컷마다 천천히 밀기 줌 3~6%(하이브리드_판설계.md §4) → 나레 0.06·원음 0.03"
  },
  "sfx_files": {
@@ -743,7 +760,7 @@
   ]
  },
  "_pending": {
-  "transition_counted": "줄판독 transition 비율(placement.py count --dry 10-25): {'cut': 0.913, 'black': 0.039, 'zoomblur': 0.039, 'flash': 0.008} — cuts.transition.kinds·placement.rules.transition 에 넣으면 전환이 실제로 그려진다(지금 판 렌더와 달라짐) → 같은 편 렌더 전/후 대조 뒤 넣는다. 길이 ms 는 02 의 bench_transition_drop 같은 자로 재야 한다(표준 §11 ⑯)"
+  "transition_counted": "반영됨 10-25 관제263 → cuts.transition(분모 = 컷 경계 70곳 — 줄 135 분모 0.039 는 '같은 컷 안 자막 교체' 줄까지 세어 우리 컷 경계에 곱하면 반으로 줄었다)"
  },
  "packs": {
   "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",

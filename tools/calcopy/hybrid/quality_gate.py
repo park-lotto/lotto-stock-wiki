@@ -225,13 +225,17 @@ def _frames_at(video: Path, frames: list[int], crop) -> dict:
     return dict(zip(fs, arr))
 
 
-def plan_frames_check(R: Path, T: dict, cand_dir: Path, win: list, mask_of=None) -> list[dict]:
-    """(판단 주인 — 완성본 컷 = 계획 프레임, ㉔) 컷마다 처음·가운데·끝 3시각에서 화면 창 ↔ 원본(ss+경과)을 렌더 칸(crop_used>crop)으로.
+def plan_frames_check(R: Path, T: dict, cand_dir: Path, win: list, mask_of=None, st: dict | None = None, M: dict | None = None) -> list[dict]:
+    """(판단 주인 — 완성본 컷 = 계획 프레임, ㉔) 컷마다 처음·가운데·끝 3시각에서 화면 창 ↔ 계획 프레임을 대조.
+    계획 프레임 = render_bench.plan_frames_gray — 조각 굽기(clip_cmd)와 같은 인자(clip_args: 칸·판 밀기 cuts.push_tts/push_orig·사진 움직임·흐림·그림 칸)로
+    그린 그림(관제263 10-25: 옛 판은 판 밀기를 모르고 안 민 원본과 대조해 컷 끝으로 갈수록 0.95 대로 떨어졌고, 그림 칸·움직임 컷은 늘 '대조 밖 = ×'였다).
+    st·M(판·재료.json)이 없으면 옛 대조(원본 ss+경과, 밀기·움직임·그림 칸 컷은 대조 밖).
     화면 = render/base.mp4(완성본에서 자막만 뺀 바탕 — 틀·창·전환 그대로)가 있으면 그것, 없으면 final.mp4 + mask_of(자막 띠 빼기).
-    칸이 '얼굴 자동'인데 렌더 기록(crop_used)이 없거나 밀기·움직임·그림 칸이 있는 컷은 대조 밖(sim None + 사유)."""
+    칸이 '얼굴 자동'인데 렌더 기록(crop_used)이 없는 컷은 대조 밖(sim None + 사유)."""
     video = R / "base.mp4" if (R / "base.mp4").exists() else R / "final.mp4"
     if video.name == "base.mp4":
         mask_of = None
+    drawn = st is not None and M is not None
     plan = []
     out = []
     for k, c in enumerate(T.get("cuts") or []):
@@ -239,8 +243,8 @@ def plan_frames_check(R: Path, T: dict, cand_dir: Path, win: list, mask_of=None)
         why = None
         if not (isinstance(crop, list) and len(crop) == 4):
             why = f"칸 '{crop}' — 렌더가 쓴 칸(crop_used) 기록 없음"
-        elif c.get("push") or c.get("move") or c.get("pic"):
-            why = "밀기·움직임·그림 칸 컷 — 원본 프레임과 화면이 다르게 그려짐"
+        elif not drawn and (c.get("push") or c.get("move") or c.get("pic")):
+            why = "밀기·움직임·그림 칸 컷 — 원본 프레임과 화면이 다르게 그려짐(판·재료 없이 부름)"
         src = Path(cand_dir) / str(c.get("src"))
         if not why and not src.exists():
             why = f"원본 없음 {src.name}"
@@ -254,15 +258,24 @@ def plan_frames_check(R: Path, T: dict, cand_dir: Path, win: list, mask_of=None)
         out.append(None)
     got = _frames_at(video, [f for *_, fs in plan for f in fs], win)
     for k, c, src, crop, fs in plan:
+        f0 = round(float(c["t0"]) * FPS)
+        if drawn:
+            from tools.calcopy.hybrid.render_bench import plan_frames_gray
+            pg = plan_frames_gray({**c, "crop": crop}, src, st, M, [f - f0 for f in fs])
         sims = []
         for f in fs:
             fr = got.get(f)
-            g = _src_gray(src, float(c.get("ss") or 0) + (f - round(float(c["t0"]) * FPS)) / FPS, crop, (win[2], win[3]))
-            if fr is None or g is None:
+            if drawn:
+                g = pg.get(f - f0)
+                g = g[:win[3], :win[2]] if g is not None else None
+            else:
+                g = _src_gray(src, float(c.get("ss") or 0) + (f - f0) / FPS, crop, (win[2], win[3]))
+            if fr is None or g is None or g.shape != fr.shape:
                 continue
             sims.append(frame_same(fr, g, mask_of(f / FPS, fr.shape) if mask_of else None))
         sims = [x for x in sims if x == x]
         out[k] = {"k": k, "line": c.get("line"), "src": c.get("src"), "ss": c.get("ss"), "fit": c.get("fit"), "screen": video.name,
+                  "plan": "clip_cmd(판 밀기·움직임·흐림 포함)" if drawn else "원본 ss+경과",
                   "sim": round(statistics.median(sims), 4) if sims else None, "sims": sims, "why": None if sims else "프레임 못 읽음"}
     return [r for r in out if r is not None]
 
@@ -300,14 +313,16 @@ def plan_score_report(doc: Path, slug: str | None) -> tuple[bool | None, str, bo
 def match_verdict(T: dict, upgrade: bool) -> tuple[bool | None, str, list]:
     """1차 자 판정 — 1차 판 = MATCH_RULES 기준(core) 칸 전부 in · 업그레이드 판(base) = 뼈대 칸(MATCH_SKELETON)만. 미측정(failed) = ×."""
     from tools.calcopy.engine.kal_analyze import MATCH_SKELETON
-    need = [r for r in T["rows"] if (r["key"] in MATCH_SKELETON if upgrade else r["core"])]
+    need = [r for r in T["rows"] if (r["key"] in MATCH_SKELETON if upgrade else r["core"]) and r["judge"] != "skip"]   # skip = 판정 주인(match_table)이 '비교 안 함'으로 뺀 칸(하이브리드 판 목표 없음)
     if not need:
         return None, "필수 칸 없음(미측정)", []
     bad = [r["key"] + ("(미측정)" if r["judge"] == "failed" else "") for r in need if r["judge"] != "in"]
     n_in = sum(r["judge"] == "in" for r in T["rows"])
     n_out = sum(r["judge"] == "out" for r in T["rows"])
     n_fail = sum(r["judge"] == "failed" for r in T["rows"])
-    return (not bad), (f"{'업그레이드 판 — 뼈대 칸만 필수' if upgrade else '1차 판 — 기준 칸 전부 필수'} · 전체 {len(T['rows'])}칸 ✓{n_in} ✗{n_out} 미측정{n_fail} · "
+    n_skip = sum(r["judge"] == "skip" for r in T["rows"])
+    return (not bad), (f"{'업그레이드 판 — 뼈대 칸만 필수' if upgrade else '1차 판 — 기준 칸 전부 필수'} · 전체 {len(T['rows'])}칸 ✓{n_in} ✗{n_out} 미측정{n_fail}"
+                       + (f" 비교 안 함{n_skip}" + "(" + ",".join(r["key"] for r in T["rows"] if r["judge"] == "skip") + " — 하이브리드 판 목표 없음)" if n_skip else "") + " · "
                        f"필수 {len(need)}칸 중 미달 {bad or '없음'} · 벤치 {T.get('n_bench')}편"), bad
 
 
@@ -758,12 +773,13 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
                 if cb:
                     m[max(0, cb[0] - 40 - wv[1]):max(0, cb[1] + 40 - wv[1]), :] = True
                 return m
-            rows_ = plan_frames_check(R, T, Path(jload(doc / "재료.json")["cand_dir"]), wv, band)
+            M_ = jload(doc / "재료.json")
+            rows_ = plan_frames_check(R, T, Path(M_["cand_dir"]), wv, band, st=st, M=M_)
             fit_res = {"made_by": "quality_gate.plan_frames_check", "min_sim": FRAME_SAME_MIN, "rows": rows_,
                        "screen": "base.mp4(자막 전 완성 화면)" if (R / "base.mp4").exists() else "final.mp4 − 벤치 자막 띠 ±40"}
             jsave(doc / "장면대사.json", fit_res)
             return plan_frames_verdict(rows_)
-        row("장면↔대사", "완성본 컷 = 계획 프레임(창 대조 ≥0.97)", same, "quality_gate.plan_frames_check(base.mp4 또는 final−자막 띠 ↔ 원본 ss)")
+        row("장면↔대사", "완성본 컷 = 계획 프레임(창 대조 ≥0.97)", same, "quality_gate.plan_frames_check(base.mp4 또는 final−자막 띠 ↔ render_bench.plan_frames_gray 계획 그림)")
         pr = plan_score_report(doc, (st.get("bench") or {}).get("channel"))
         row("장면↔대사", "계획 점수(루브릭)", lambda: pr[:2], "<doc>/장면대사_계획.json(material_fit) · channel/<slug>/_kal/상위편_목표.json", ref=pr[2])
     # ── 표식

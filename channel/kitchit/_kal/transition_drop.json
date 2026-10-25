@@ -1,0 +1,96 @@
+{
+ "BRa5Iv4A3Y8|zoomblur|47801:1792862645|5271410": {
+  "id": "BRa5Iv4A3Y8",
+  "kind": "zoomblur",
+  "window": [
+   0,
+   420,
+   1080,
+   1500
+  ],
+  "boundaries": [
+   {
+    "t": 2.0,
+    "drop": -0.192,
+    "ms": 200,
+    "band_var": 163.6,
+    "around_var": 137.2
+   },
+   {
+    "t": 18.067,
+    "drop": 0.175,
+    "ms": 33,
+    "band_var": 149.3,
+    "around_var": 180.9
+   }
+  ]
+ },
+ "cNo91ddBwB8|zoomblur|36999:1792862694|3409944": {
+  "id": "cNo91ddBwB8",
+  "kind": "zoomblur",
+  "window": [
+   0,
+   420,
+   1080,
+   1500
+  ],
+  "boundaries": []
+ },
+ "Ks5kYYKAUlQ|zoomblur|30731:1792862665|2507185": {
+  "id": "Ks5kYYKAUlQ",
+  "kind": "zoomblur",
+  "window": [
+   0,
+   420,
+   1080,
+   1500
+  ],
+  "boundaries": [
+   {
+    "t": 1.467,
+    "drop": 0.136,
+    "ms": 0,
+    "band_var": 141.2,
+    "around_var": 163.5
+   }
+  ]
+ },
+ "Nv99RyxmrfU|zoomblur|35076:1792862675|3461639": {
+  "id": "Nv99RyxmrfU",
+  "kind": "zoomblur",
+  "window": [
+   0,
+   420,
+   1080,
+   1500
+  ],
+  "boundaries": [
+   {
+    "t": 8.833,
+    "drop": 0.337,
+    "ms": 167,
+    "band_var": 191.2,
+    "around_var": 288.2
+   }
+  ]
+ },
+ "vSEaZ-BCELY|zoomblur|42311:1792862708|5076016": {
+  "id": "vSEaZ-BCELY",
+  "kind": "zoomblur",
+  "window": [
+   0,
+   418,
+   1080,
+   1501
+  ],
+  "boundaries": [
+   {
+    "t": 2.433,
+    "drop": 0.24,
+    "ms": 400,
+    "band_var": 90.8,
+    "around_var": 119.5
+   }
+  ]
+ }
+}
