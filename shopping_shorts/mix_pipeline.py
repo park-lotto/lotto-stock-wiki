@@ -6314,7 +6314,7 @@ def _render_inputs_core(store, job, job_id, work, keys, customer_id=0, *, allow_
     return plan2, _cpaths, base
 
 
-INTRO_SEC_DEFAULT = 1.2      # 썸네일 인트로 기본 길이(초) — 이 값을 아는 곳은 여기 한 곳
+INTRO_SEC_DEFAULT = 0.1      # 썸네일 인트로 기본 길이(초) — 이 값을 아는 곳은 여기 한 곳
 
 
 def _intro_thumb(thumb):
