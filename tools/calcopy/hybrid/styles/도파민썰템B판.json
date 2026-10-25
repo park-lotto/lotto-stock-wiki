@@ -22,12 +22,12 @@
  "_why_cps_target": "규칙빈도_나레 3편 6.38~7.46(중앙 6.96)",
  "bgm": {
   "id": "sweets",
-  "db_below_voice": 14.0,
-  "duck_orig_db": -6.0,
+  "db_below_voice": 8.1,
+  "duck_orig_db": 0.0,
   "duck_narr_db": 0.0,
-  "fade_out": 0.4,
+  "fade_out": 0.04,
   "candidates": [],
-  "why": "BGM 미측정(초안 bgm null — engine/sound/bgm_fp.py 06) → 손 상수"
+  "why": "곡 sweets = 곡 미식별(곡은 사람이 고른다 — bgm_pick) · 벤치 9편 원본 소리 실측(handconst.py sseolpulda → _kal/손상수_실측.json bgm.* · 신호급 — 나레·원음·BGM 섞인 소리, 분리 없음): db_below_voice 8.1 = 말 p50 − 말 사이 바닥(줄 경계 쉼 프레임 중앙, 말 없는 구간 ≥1초 편은 그 p10) 편 중앙 8.12dB(5.82·38.45·8.12·10.04·7.75, n=5) · duck_orig_db 0 = 원음·나레가 같이 나온 편 0(원음 줄 없음 → 원음 구간 덕킹 칸 안 쓰임) · fade_out 0.04 = 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.036초(0.023~0.614) · duck_narr_db 0 = 말 사이 바닥 − 말 없는 구간(≥1초) 바닥 편 중앙(비교 편 1/9: 0, 3dB 미만 차 = 0)"
  },
  "loudness": {
   "lufs": -14.0,
@@ -40,9 +40,9 @@
   "why": "나레 갈래 3편 9.78~22.52초(규칙빈도_나레.json)"
  },
  "timing": {
-  "gap": 0.1,
-  "tail": 0.3,
-  "why": "손 상수 — 벤치 줄 사이 쉼 미측정"
+  "gap": 0.12,
+  "tail": 0.43,
+  "why": "벤치 9편 원본 소리 실측(handconst.py sseolpulda → _kal/손상수_실측.json): 줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙 — gap 0.12(모든 줄 경계 n=16, p25 0.03·p75 0.24) (경계 ±0.15초 창 안 가장 긴 쉼, 쉼 문턱 = 편별 (말 p50+p5)/2) · tail 0.43 = 마지막 말 소리 끝→영상 끝 편 중앙 0.434초(0.186~0.723, 4/9편 — 로컬 위스퍼 마지막 낱말 끝 p≥0.4)"
  },
  "frame": {
   "kind": "window",
@@ -94,12 +94,12 @@
   },
   "variant_for": {},
   "typing_cps": 10.0,
-  "chunk_max_chars": 12,
+  "chunk_max_chars": 9,
   "band": [
    1222,
    1316
   ],
-  "why": "frame.json caption 층(Pretendard 81.3 흰·검정 외곽 4·등장 rise 300ms) y1222 · 조각 자수 중앙 6~7(나레 3편) → 12 상한 손 상수 · typing_cps 손 상수(벤치 등장 instant 66/66)"
+  "why": "frame.json caption 층(Pretendard 81.3 흰·검정 외곽 4·등장 rise 300ms) y1222 · chunk_max_chars 9 = 벤치 나레 조각 자수(공백 뺀) p90 9(n=99, 중앙 7·최대 13) · typing_cps 10 = 렌더에 안 닿는 값: 벤치 타이핑 0/117줄 · 판 칸 어디에도 enter typing 없음 → caption_rows 가 이 값을 안 읽음 · band [1222,1316] = frame.json caption 층 y1222~1316(줄판독 나레 픽셀 y 중앙 1229~1315 n=99 — 같은 자리) — handconst.py sseolpulda caption.*"
  },
  "cuts": {
   "push_tts": 0.0,
@@ -111,7 +111,7 @@
    "ms": 0,
    "why": "전환 미측정 칸 — 1차 = 컷(06 줄판독 transition 칸으로 교체)"
   },
-  "why": "push 0 손 상수"
+  "why": "push 0 = 재료 움직임 그대로 — 벤치 나레 줄 motion 99개(cam 71, pan 13, still 10, zoom_out 3, zoom_in 2) · 벤치 원음 줄 0개(원음 컷 없음 → push_orig 안 쓰임) — zoom_in 과반 아님(나레 2/99) → 우리 밀기 0, handconst.py sseolpulda cuts.*"
  },
  "sfx_files": {
   "pop": "팩01/pop.wav",

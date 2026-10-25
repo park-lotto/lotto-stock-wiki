@@ -22,12 +22,12 @@
  "_why_cps_target": "뜯기 voice_rules.cps 중앙 8.6(받아쓰기 된 2편 8.92·8.28 — manifest.channel_rules.sound)",
  "bgm": {
   "id": "sweets",
-  "db_below_voice": 12.0,
+  "db_below_voice": 12.9,
   "duck_orig_db": 0.0,
   "duck_narr_db": 0.0,
-  "fade_out": 0.4,
+  "fade_out": 0.11,
   "candidates": [],
-  "why": "BGM 있음·경쾌(NBdm 판독) — 곡·dB 미측정(measure_task 06-humorshowshow bgm_fp) → 손 상수 sweets·12dB·fade 0.4 · 원음 0 · 덕킹 근거 없음"
+  "why": "BGM 있음·경쾌(NBdm 판독) · 곡 sweets = 곡 미식별(사람이 고른다) · 벤치 6편 원본 소리 실측(handconst.py humorshowshow → _kal/손상수_실측.json bgm.* · 신호급 — 나레·원음·BGM 섞인 소리, 분리 없음): db_below_voice 12.9 = 말 p50 − 말 사이 바닥(줄 경계 쉼 프레임 중앙, 말 없는 구간 ≥1초 편은 그 p10) 편 중앙 12.875dB(13.55·28.59·13.92·12.2·11.05·11.58, n=6) · duck_orig_db 0 = 원음·나레가 같이 나온 편 0(원음 줄 없음 → 원음 구간 덕킹 칸 안 쓰임) · fade_out 0.11 = 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.114초(0.034~0.174) · duck_narr_db 0 = 말 없는 구간 ≥1초 편 0/6 — 말이 처음부터 끝까지 깔려 비교할 빈 구간이 없고 db_below_voice 가 이미 말 사이 바닥 기준"
  },
  "loudness": {
   "lufs": -14.0,
@@ -40,9 +40,9 @@
   "why": "벤치 8편 길이 26.33~32.33(중앙 28.392, manifest shot_contract.rows)"
  },
  "timing": {
-  "gap": 0.05,
-  "tail": 0.2,
-  "why": "손 상수 — 벤치 줄 사이 쉼 미측정(06 measure_task)"
+  "gap": 0.08,
+  "tail": 0.22,
+  "why": "벤치 6편 원본 소리 실측(handconst.py humorshowshow → _kal/손상수_실측.json): 줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙 — gap 0.08(모든 줄 경계 n=26, p25 0.06·p75 0.1) (경계 ±0.15초 창 안 가장 긴 쉼, 쉼 문턱 = 편별 (말 p50+p5)/2) · tail 0.22 = 마지막 말 소리 끝→영상 끝 편 중앙 0.224초(0.114~0.354, 6/6편 — 로컬 위스퍼 마지막 낱말 끝 p≥0.4)"
  },
  "frame": {
   "kind": "post",
@@ -291,12 +291,12 @@
   },
   "variant_for": {},
   "typing_cps": 8.6,
-  "chunk_max_chars": 12,
+  "chunk_max_chars": 16,
   "band": [
    488,
    716
   ],
-  "why": "자막 = frame.json caption 층(Pretendard-Bold 60.1 검정·외곽 0·가운데·3줄 칸 y488 줄 76 = 488~716) · 조각 초 중앙 1.4(뜯기 8편) · chunk_max_chars 12 = 손 상수(조각 자수 미측정 — 06)",
+  "why": "자막 = frame.json caption 층(Pretendard-Bold 60.1 검정·외곽 0·가운데·3줄 칸 y488 줄 76 = 488~716) · 조각 초 중앙 1.4(뜯기 8편) · chunk_max_chars 16 = 벤치 나레 조각 자수(공백 뺀) p90 16(n=190, 중앙 10·최대 32) · typing_cps 8.6 = 렌더에 안 닿는 값: 벤치 타이핑 0/190줄 · 판 칸 어디에도 enter typing 없음 → caption_rows 가 이 값을 안 읽음 · band [488,716] = 3줄 칸 전체(frame.json — 줄판독 나레 줄 y 중앙 576~628 n=190 은 한 줄 자리, 칸 안) — handconst.py humorshowshow caption.*",
   "stack": {
    "lines": 3,
    "break": "full",

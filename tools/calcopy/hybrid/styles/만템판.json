@@ -23,11 +23,11 @@
  "bgm": {
   "id": "sweets",
   "db_below_voice": 14.0,
-  "duck_orig_db": -10.0,
+  "duck_orig_db": 0.0,
   "duck_narr_db": 0.0,
-  "fade_out": 0.4,
+  "fade_out": 0.12,
   "candidates": [],
-  "why": "BGM 있음·경쾌(뜯기 bgm_rules 8편) · 곡 sweets(defaults.json·itemhome 1편 근거.md:88) · 원음 창 −10dB(itemhome make_render DUCK_DB) · 14dB·fade 손 상수"
+  "why": "BGM 있음·경쾌(뜯기 bgm_rules 8편) · 곡 sweets(defaults.json·itemhome 1편 근거.md:88) · 벤치 6편 원본 소리 실측(handconst.py mantem → _kal/손상수_실측.json bgm.* · 신호급 — 나레·원음·BGM 섞인 소리, 분리 없음): db_below_voice 14 = 말 p50 − 말 사이 바닥(줄 경계 쉼 프레임 중앙, 말 없는 구간 ≥1초 편은 그 p10) 편 중앙 13.96dB(14.37·11.58·13.55·32.88·24.12·10.99, n=6) · duck_orig_db 0 = 원음 조각 바닥 p5 − 나레 조각 바닥 p5 편 중앙(0·0·0·-23.99·-4.49·0, 3dB 미만 차 = 0) · fade_out 0.12 = 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.121초(0.068~0.403) · duck_narr_db 0 = 말 사이 바닥 − 말 없는 구간(≥1초) 바닥 편 중앙(비교 편 1/6: 0, 3dB 미만 차 = 0)"
  },
  "loudness": {
   "lufs": -14.0,
@@ -41,8 +41,8 @@
  },
  "timing": {
   "gap": 0.1,
-  "tail": 0.3,
-  "why": "손 상수 — 줄판독 0편(벤치 줄 사이 쉼 미측정, 06 측정 뒤 교체)"
+  "tail": 0.23,
+  "why": "벤치 6편 원본 소리 실측(handconst.py mantem → _kal/손상수_실측.json): 줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙 — gap 0.1(모든 줄 경계 n=38, p25 0.04·p75 0.16) (경계 ±0.15초 창 안 가장 긴 쉼, 쉼 문턱 = 편별 (말 p50+p5)/2) · tail 0.23 = 마지막 말 소리 끝→영상 끝 편 중앙 0.231초(0.168~1.323, 6/6편 — 로컬 위스퍼 마지막 낱말 끝 p≥0.4)"
  },
  "frame": {
   "kind": "window",
@@ -102,13 +102,13 @@
    "orig.rest": "cut"
   },
   "variant_for": {},
-  "typing_cps": 10.0,
-  "chunk_max_chars": 12,
+  "typing_cps": 26.1,
+  "chunk_max_chars": 11,
   "band": [
    1206,
    1280
   ],
-  "why": "frame.json caption 층(Cafe24Ohsquare 64 노랑 #F5FF16·검정 외곽 5·기울임) y1206 · 자막 replace(defaults) · chunk_max_chars 12·typing_cps 10 = 손 상수(줄판독 0편 — 06)"
+  "why": "frame.json caption 층(Cafe24Ohsquare 64 노랑 #F5FF16·검정 외곽 5·기울임) y1206 · 자막 replace(defaults) · chunk_max_chars 11 = 벤치 나레 조각 자수(공백 뺀) p90 11(n=24, 중앙 8·최대 12) · typing_cps 26.1 = 벤치 타이핑 줄 26/118 type_cps(없으면 글자÷등장 ms) 중앙 26.135자/초 — 판 enter 칸에 typing 없음(지금은 렌더에 안 닿음) · band [1206,1280] = frame.json caption 층 y1206(줄판독 나레 픽셀 y 중앙 1222~1291 n=24 — 16px 아래, 띠 높이 같음) — handconst.py mantem caption.*"
  },
  "cuts": {
   "push_tts": 0.0,
@@ -124,7 +124,7 @@
    },
    "why": "벤치 줄 경계 비율 black 0.018·flash 0.009(other 0.045 는 못 그림, 줄판독 count) · ms = bench_transition_drop: black 133·400(중앙 267) · flash 100 (3Xb8·9Fc)"
   },
-  "why": "push 0 = 손 상수(줄판독 0편)"
+  "why": "push 0 = 재료 움직임 그대로 — 벤치 나레 줄 motion 24개(cam 22, still 2) · 원음 줄 93개(cam 93) — zoom_in 과반 아님(나레 0/24·원음 0/93) → 우리 밀기 0, handconst.py mantem cuts.*"
  },
  "sfx_files": {
   "gain_db": -8,

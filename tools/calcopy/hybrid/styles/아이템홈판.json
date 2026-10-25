@@ -22,12 +22,12 @@
  "_why_cps_target": "뜯기 voice_rules.cps 8편 7.29~8.82(중앙 7.92)",
  "bgm": {
   "id": "sweets",
-  "db_below_voice": 14.0,
-  "duck_orig_db": -10.0,
+  "db_below_voice": 12.9,
+  "duck_orig_db": 0.0,
   "duck_narr_db": 0.0,
-  "fade_out": 0.4,
+  "fade_out": 0.14,
   "candidates": [],
-  "why": "BGM 경쾌(뜯기 8편) · 1편 make_render BGM sweets·통합 −24.5 LUFS·원음 창 −10dB(DUCK_DB) · 14dB·fade 손 상수"
+  "why": "BGM 경쾌(뜯기 8편) · 1편 make_render BGM sweets · 벤치 6편 원본 소리 실측(handconst.py itemhome → _kal/손상수_실측.json bgm.* · 신호급 — 나레·원음·BGM 섞인 소리, 분리 없음): db_below_voice 12.9 = 말 p50 − 말 사이 바닥(줄 경계 쉼 프레임 중앙, 말 없는 구간 ≥1초 편은 그 p10) 편 중앙 12.86dB(15.09·13.44·12.61·8.9·13.11·9.87, n=6) · duck_orig_db 0 = 원음 조각 바닥 p5 − 나레 조각 바닥 p5 편 중앙(-6.46·0·0·0·0·0, 3dB 미만 차 = 0) · fade_out 0.14 = 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.137초(0.037~0.325) · duck_narr_db 0 = 말 없는 구간 ≥1초 편 0/6 — 말이 처음부터 끝까지 깔려 비교할 빈 구간이 없고 db_below_voice 가 이미 말 사이 바닥 기준"
  },
  "loudness": {
   "lufs": -14.0,
@@ -40,9 +40,9 @@
   "why": "뜯기 probe.duration 8편 15.17~42.3초"
  },
  "timing": {
-  "gap": 0.1,
-  "tail": 0.3,
-  "why": "손 상수 — 줄판독 0편(벤치 줄 사이 쉼 미측정, 06 측정 뒤 교체)"
+  "gap": 0.06,
+  "tail": 0.33,
+  "why": "벤치 6편 원본 소리 실측(handconst.py itemhome → _kal/손상수_실측.json): 줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙 — gap 0.06(모든 줄 경계 n=63, p25 0.02·p75 0.1) (경계 ±0.15초 창 안 가장 긴 쉼, 쉼 문턱 = 편별 (말 p50+p5)/2) · tail 0.33 = 마지막 말 소리 끝→영상 끝 편 중앙 0.332초(0.207~0.617, 6/6편 — 로컬 위스퍼 마지막 낱말 끝 p≥0.4)"
  },
  "frame": {
   "kind": "window",
@@ -97,12 +97,12 @@
   },
   "variant_for": {},
   "typing_cps": 10.0,
-  "chunk_max_chars": 12,
+  "chunk_max_chars": 9,
   "band": [
    1222,
    1308
   ],
-  "why": "frame.json caption 층(SBAggroB 75 흰·검정 외곽 4) y1222 · chunk_max_chars 12·typing_cps 10 = 손 상수(줄판독 0편 — 06)"
+  "why": "frame.json caption 층(SBAggroB 75 흰·검정 외곽 4) y1222 · chunk_max_chars 9 = 벤치 나레 조각 자수(공백 뺀) p90 9(n=82, 중앙 7·최대 10) · typing_cps 10 = 렌더에 안 닿는 값: 벤치 타이핑 0/214줄 · 판 칸 어디에도 enter typing 없음 → caption_rows 가 이 값을 안 읽음 · band [1222,1308] = frame.json caption 층 y1222(줄판독 나레 픽셀 y 중앙 1228~1302 n=82 — 같은 자리) — handconst.py itemhome caption.*"
  },
  "cuts": {
   "push_tts": 0.0,
@@ -114,7 +114,7 @@
    "ms": 0,
    "why": "전환 미측정(줄판독 0편) — 1차 = 컷(06 뒤 교체)"
   },
-  "why": "push 0 = 손 상수(줄판독 0편)"
+  "why": "push 0 = 재료 움직임 그대로 — 벤치 나레 줄 motion 82개(cam 45, zoom_out 18, zoom_in 15, pan 3, still 1) · 원음 줄 132개(cam 84, zoom_out 18, zoom_in 16, pan 10, still 4) — zoom_in 과반 아님(나레 15/82·원음 16/132) → 우리 밀기 0, handconst.py itemhome cuts.*"
  },
  "sfx_files": {
   "gain_db": -8,
