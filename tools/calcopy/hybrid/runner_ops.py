@@ -1384,6 +1384,7 @@ BUDGET = {"bench": 900, "origin_get": 320, "origin_probe": 240, "channel_find": 
           "render": 780, "download": 740, "screen": 420, "shot_sheets": 330, "check": 240, "coupang": 120, "coupang_reviews": 150,
           "plan": 600, "origin_words": 180, "orig_heard": 120, "asr_spans": 120, "origin_foreign": 120, "clean_text": 900}
 BUDGET_DEFAULT = 300
+BUDGET_FLOOR = 600   # 바닥(10-26 run4: 바닥 120초로 plan 120.2초·asr_spans 120.2초를 끊어 멀쩡한 편을 멈췄다 — 98 #124). 한없이 도는 일은 STALL_SEC 가 잡는다
 CMD_LABEL = {"env": "준비 확인", "bench": "영상 받기", "channel_find": "출처 채널 찾기", "origin_probe": "원본 후보 조사", "search": "원본 검색",
              "channel_list": "채널 영상 목록", "origin_subs": "원본 자막 대조", "origin_get": "원본 영상 받기", "coupang": "쿠팡 찾기", "coupang_reviews": "쿠팡 후기",
              "naver": "자료 찾기", "download": "영상 조각 받기", "screen": "장면 고르기", "shot_sheets": "장면 정리", "plan": "장면 맞추기",
@@ -1515,7 +1516,7 @@ def run_do(W: Path, do: list[dict], log=print, stall: float | None = None) -> di
 
     batch: list = []
 
-    budget_of = lambda c: BUDGET.get(c, BUDGET_DEFAULT)  # noqa: E731
+    budget_of = lambda c: max(BUDGET_FLOOR, BUDGET.get(c, BUDGET_DEFAULT))  # noqa: E731
 
     def flush():
         if batch:

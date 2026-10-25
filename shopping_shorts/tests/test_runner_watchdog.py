@@ -69,4 +69,6 @@ def test_every_budget_covers_measured_max():
     """예산이 실측 최장보다 짧으면 정상 일을 끊는다 — 근거 숫자(주석)와 같이 묶어 둔다."""
     measured_max = {"bench": 802, "origin_get": 273, "origin_probe": 146, "render": 701, "download": 665, "screen": 282, "check": 150}
     for k, v in measured_max.items():
-        assert R.BUDGET[k] >= v, (k, R.BUDGET[k], v)
+        assert max(R.BUDGET_FLOOR, R.BUDGET.get(k, R.BUDGET_DEFAULT)) >= v, (k, v)
+    for k in ("plan", "asr_spans", "orig_heard", "coupang"):   # 10-26 run4: plan·asr_spans 120.2초가 정상이었다(바닥 120초가 끊음)
+        assert max(R.BUDGET_FLOOR, R.BUDGET.get(k, R.BUDGET_DEFAULT)) >= 300, k
