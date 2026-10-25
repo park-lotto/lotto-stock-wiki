@@ -1,0 +1,112 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 486,
+   "w": 1080,
+   "h": 1434,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "w": 1020,
+   "align": "center",
+   "y": 202.5,
+   "lines": 2,
+   "font": "TmonMonsori",
+   "size": 132.0,
+   "line_h": 137,
+   "rgb": [
+    253,
+    253,
+    253
+   ],
+   "line_rgb": [
+    [
+     253,
+     253,
+     253
+    ],
+    [
+     253,
+     222,
+     1
+    ]
+   ],
+   "line_scale": [
+    1.0,
+    0.909
+   ],
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "enter": null,
+   "text": "한국 화장품 쓰고\n커버력에 당황한 외국인"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 1239,
+   "lines": 1,
+   "font": "CcPretendard-Bold",
+   "size": 62.8,
+   "line_h": 72,
+   "rgb": [
+    252,
+    225,
+    5
+   ],
+   "line_rgb": null,
+   "outline": {
+    "px": 11,
+    "rgb": [
+     201,
+     175,
+     43
+    ]
+   },
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": {
+    "kind": "rise",
+    "ms": 300
+   },
+   "emphasis": null
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "aUicTeDoW04",
+ "made_from": {
+  "tool": "ititemlog_preset.hand",
+  "from": "frames/frame_aUicTeDoW04.json",
+  "notes": [
+   "제목 = 판 잇템로그판.json frame.title(흰/노랑 2줄 6/6) — 자동은 한 색 한 덩어리로 잡음",
+   "자막 층 = 자동 그대로(렌더는 자막팩 ititemlog)"
+  ]
+ }
+}
