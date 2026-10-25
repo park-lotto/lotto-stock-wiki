@@ -9,6 +9,7 @@ import { refreshCookies } from './logins.js';
 import { packFile as localPackFile, PID_RE } from './local_settings.js';
 import { homeDir, writeFileIn, workDir, ensureDir } from './paths.js';
 import { deliverInBackground } from './deliver.js';
+import { logFinal } from './work_log.js';
 import { startFlow, waitFlow, approveFlow, retryFlow, isFlowSid, loadFlow, shapeFlow } from './flow_driver.js';
 import { ApiError } from './api.js';
 
@@ -65,14 +66,8 @@ export function shapeSession(S) {
   if ((t.state || '') === 'final_review' || S.state === 'final_review') {
     // 완성본 = 엔진 소재 폴더(창고/calcopy/topics/<id>/final.mp4) → 고객이 보는 작업 폴더(바탕화면 숏템작업)에 한 벌 복사
     const src = S.topic_id != null ? path.join(dataDir(), 'calcopy', 'topics', String(S.topic_id), 'final.mp4') : null;
-    let video = null;
-    if (src && fs.existsSync(src)) {
-      const name = `${String((t.name || 'shortem')).replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 40)}_${S.sid}.mp4`;
-      video = path.join(ensureDir(workDir(), '완성본'), name);
-      if (!fs.existsSync(video) || fs.statSync(src).mtimeMs > fs.statSync(video).mtimeMs) fs.copyFileSync(src, video);   // 다시 만들기(restyle) 뒤엔 새 완성본으로
-      try { fs.writeFileSync(video + '.json', JSON.stringify({ sid: S.sid, title: String(t.name || ''), preset: S.preset_id || null, topic_dir: path.dirname(src) })); } catch { /* 표식 없이도 영상은 본다 */ }
-      deliverInBackground(video, { title: String(t.name || '') });   // 텔레그램·구글 드라이브(켜 둔 곳만, 이미 보낸 것은 건너뜀) — deliver.js
-    }
+    const video = src && fs.existsSync(src)
+      ? keepFinal(src, { sid: S.sid, title: String(t.name || ''), marker: { preset: S.preset_id || null, topic_dir: path.dirname(src) } }) : null;
     if (!video) return { ...base, fail: { why: '완성본 파일을 찾지 못했습니다', fix: 'shortem_make(step="status") 로 다시 보세요' } };
     return { ...base, need: 'done', video, hints: ['완성본 경로를 고객에게 알려 주세요(파일을 열어 보라고 안내)', `겉모습을 바꾸고 싶다고 하면 shortem_settings 로 바꾼 뒤 shortem_make(step="restyle", sid="${S.sid}") — 대본·재료는 그대로, 렌더만 다시`] };
   }
@@ -116,14 +111,25 @@ function originalsFile(channel) {
   return path.join(homeDir(), rel);
 }
 
+// 완성본 한 편 → 작업 폴더(바탕화면 숏템작업/완성본)에 한 벌 + 표식(<영상>.json) + 보내기 + 작업 기록지 — 엔진 길·볼케이노형 길이 같이 부르는 한 곳.
+//   다시 만들기(restyle) 뒤엔 새 완성본으로 덮는다. 기록지(~/.shortem/작업기록.jsonl, work_log.js)는 새로 복사했을 때만 1줄.
+//   marker = 표식 파일에 그대로 적을 칸(옛 꼴 유지) · preset = 기록지 style 칸(없으면 marker.preset)
+function keepFinal(src, { sid, title = '', marker = {}, preset = null }) {
+  const name = `${String(title || 'shortem').replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 40)}_${sid}.mp4`;
+  const video = path.join(ensureDir(workDir(), '완성본'), name);
+  const fresh = !fs.existsSync(video) || fs.statSync(src).mtimeMs > fs.statSync(video).mtimeMs;
+  if (fresh) fs.copyFileSync(src, video);
+  try { fs.writeFileSync(video + '.json', JSON.stringify({ sid, title, ...marker })); } catch { /* 표식 없이도 영상은 본다 */ }
+  if (fresh) logFinal(video, { title, preset: preset || marker.preset || null, sid });
+  deliverInBackground(video, { title });   // 텔레그램·구글 드라이브(켜 둔 곳만, 이미 보낸 것은 건너뜀) — deliver.js
+  return video;
+}
+
 // 볼케이노형 편(서버 지시서) — 완성이면 작업 폴더 완성본으로 한 벌 + 보내기(deliver.js), 응답은 flow_driver.shapeFlow 한 곳
 function flowOut(s) {
   if (!s || s.need !== 'done' || !s.video || !fs.existsSync(s.video)) return s;
-  const name = `${String(s.title || 'shortem').replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 40)}_${s.sid}.mp4`;
-  const video = path.join(ensureDir(workDir(), '완성본'), name);
-  if (!fs.existsSync(video) || fs.statSync(s.video).mtimeMs > fs.statSync(video).mtimeMs) fs.copyFileSync(s.video, video);
-  try { fs.writeFileSync(video + '.json', JSON.stringify({ sid: s.sid, title: String(s.title || ''), line: 'flow' })); } catch { /* 표식 없이도 영상은 본다 */ }
-  deliverInBackground(video, { title: String(s.title || '') });
+  const f = loadFlow(s.sid) || {};
+  const video = keepFinal(s.video, { sid: s.sid, title: String(s.title || ''), marker: { line: 'flow' }, preset: f.preset || null });
   return { ...s, video, hints: ['완성본 경로를 고객에게 알려 주세요', ...(s.note ? [s.note] : [])] };
 }
 
