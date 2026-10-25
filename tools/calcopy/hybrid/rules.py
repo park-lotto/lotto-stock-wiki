@@ -27,15 +27,23 @@ def fingerprint(bench_lines: list[dict], words: list) -> list[dict]:
                 chunks.append(n[:14]); n = n[10:]
             if len(n) >= 6:
                 chunks.append(n)
+    # 비교 창 길이는 토막 길이 -2~+4 중 가장 맞는 것(98 #117 — 옛 판은 늘 +4 고정이라 11자 토막은 글자가 다 맞아도 0.85,
+    # 받아쓰기 한 낱말만 달라도 0.69 로 떨어져 진짜 원본(이미숙 uOj3ix7qCj8)이 1줄만 맞았다)
     for q in dict.fromkeys(chunks):
         if not words:
             break
         best = (0.0, None)
+        sm = difflib.SequenceMatcher(None)
+        sm.set_seq2(q)
         for i in range(len(words)):
             acc, j = "", i
             while j < len(words) and len(acc) < len(q) + 4:
                 acc += words[j][1]; j += 1
-            r = difflib.SequenceMatcher(None, q, acc[:len(q) + 4]).ratio()
+            r = 0.0
+            for k in range(max(1, len(q) - 2), min(len(acc), len(q) + 4) + 1):
+                sm.set_seq1(acc[:k])
+                if sm.real_quick_ratio() > r and sm.quick_ratio() > r:
+                    r = max(r, sm.ratio())
             if r > best[0]:
                 best = (r, words[i][0])
         if best[0] >= 0.7:
