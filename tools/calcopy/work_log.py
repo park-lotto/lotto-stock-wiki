@@ -178,7 +178,11 @@ def main(argv: list[str]) -> int:
             print(json.dumps(r, ensure_ascii=False))
         return 1 if hits else 0
     rec = {k: getattr(ns, k) for k in FIELDS if getattr(ns, k) is not None}
-    row = append(rec, Path(ns.log) if ns.log else None)
+    try:
+        row = append(rec, Path(ns.log) if ns.log else None)
+    except ValueError as e:
+        print(f"× 기록 안 함: {e}")
+        return 2
     print(json.dumps(row, ensure_ascii=False))
     return 0
 
