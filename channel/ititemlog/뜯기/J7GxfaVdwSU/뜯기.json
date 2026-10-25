@@ -2107,15 +2107,283 @@
    }
   },
   "ok": true,
+  "asr_extra": {
+   "sfx": [
+    {
+     "t": 3.9,
+     "kind": "탄성"
+    },
+    {
+     "t": 15.2,
+     "kind": "웃음"
+    }
+   ],
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "밝은",
+     "흥미로운"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "voice_tone": "차분하고 담백한 남성 나레이션과 활기찬 외국인 팬, 아이돌의 대화",
+   "speakers": [
+    {
+     "id": "S1",
+     "gender": "male",
+     "voice": "human"
+    },
+    {
+     "id": "S2",
+     "gender": "female",
+     "voice": "human"
+    },
+    {
+     "id": "S3",
+     "gender": "female",
+     "voice": "human"
+    },
+    {
+     "id": "S4",
+     "gender": "female",
+     "voice": "human"
+    }
+   ]
+  },
   "transcript": {
-   "failed": "소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스"
+   "model": "gemini-3.5-flash",
+   "warnings": [],
+   "segments": [
+    {
+     "start": 0.0,
+     "end": 2.0,
+     "text": "유진 팬싸인회에서 한 외국인 팬이 궁금했던 걸 물어보는데요.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 2.0,
+     "end": 3.6,
+     "text": "안녕하세요.",
+     "speaker": "S2",
+     "lang": "ko",
+     "kind": "dialog"
+    },
+    {
+     "start": 5.0,
+     "end": 8.0,
+     "text": "먹방을 해도 항상 유지되는 립이 궁금했는지",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 8.0,
+     "end": 10.0,
+     "text": "몇 번을 물어보는데요.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 8.0,
+     "end": 10.3,
+     "text": "What is the lip stain that...",
+     "speaker": "S2",
+     "lang": "en",
+     "kind": "dialog"
+    },
+    {
+     "start": 13.9,
+     "end": 15.6,
+     "text": "어! Thank you!",
+     "speaker": "S3",
+     "lang": "en",
+     "kind": "dialog"
+    },
+    {
+     "start": 16.5,
+     "end": 18.0,
+     "text": "이걸 본 여성은",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 18.0,
+     "end": 21.0,
+     "text": "직접 실험해 보겠다며 립을 바르더니",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 18.1,
+     "end": 21.2,
+     "text": "We're going to test out. Okay, I got my ramen.",
+     "speaker": "S4",
+     "lang": "en",
+     "kind": "dialog"
+    },
+    {
+     "start": 21.0,
+     "end": 23.2,
+     "text": "먹방을 시작하는데요.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 23.5,
+     "end": 27.8,
+     "text": "I think it did a pretty good job. No touch ups needed. It passed the test.",
+     "speaker": "S4",
+     "lang": "en",
+     "kind": "dialog"
+    }
+   ],
+   "n": 11,
+   "langs": [
+    "en",
+    "ko"
+   ],
+   "ambient": "팬사인회 소음, 웅성거리는 소리",
+   "speech_sec_all": 26.7,
+   "ko_speech_sec": 15.3,
+   "speech_share_ko": 0.537,
+   "chars_nospace_ko": 91,
+   "cps": 5.95,
+   "pause_median": 3.95,
+   "pauses": 2,
+   "narration": "한국어 말소리 있음",
+   "method": "한국어 구절만: cps = 공백 뺀 글자 ÷ 구절 길이 합, 쉼 = 이웃 구절 사이 >0.05s"
   },
   "composition": {
-   "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+   "method": "받아쓰기(제미나이 speaker·lang·kind) + bench audio.mono 20ms RMS(분리 없음)",
+   "dict": [
+    "나레 1명",
+    "나레+역할 2명",
+    "역할극만",
+    "해외 원음+한국어 나레+자막",
+    "원음만+자막",
+    "나레 없음"
+   ],
+   "speakers": [
+    {
+     "n": "S1",
+     "gender": "male",
+     "voice_guess": "human",
+     "share": 0.513,
+     "kinds": [
+      "narration"
+     ],
+     "langs": [
+      "ko"
+     ]
+    },
+    {
+     "n": "S4",
+     "gender": "female",
+     "voice_guess": "human",
+     "share": 0.277,
+     "kinds": [
+      "dialog"
+     ],
+     "langs": [
+      "en"
+     ]
+    },
+    {
+     "n": "S2",
+     "gender": "female",
+     "voice_guess": "human",
+     "share": 0.146,
+     "kinds": [
+      "dialog"
+     ],
+     "langs": [
+      "en",
+      "ko"
+     ]
+    },
+    {
+     "n": "S3",
+     "gender": "female",
+     "voice_guess": "human",
+     "share": 0.064,
+     "kinds": [
+      "dialog"
+     ],
+     "langs": [
+      "en"
+     ]
+    }
+   ],
+   "narration": "human",
+   "narration_metrics": {
+    "pitch": {
+     "voiced_frames": 456,
+     "f0_median_hz": 216.2,
+     "semitone_std": 6.31
+    },
+    "pause_cv": null,
+    "method": "narration = 제미나이 귀 추정(tts/human). 피치 반음 표준편차·쉼 변동계수는 참고 지표(문턱 미검증)"
+   },
+   "source_audio_kept": true,
+   "source_evidence": {
+    "foreign_or_source_segments": 4,
+    "ambient": "팬사인회 소음, 웅성거리는 소리"
+   },
+   "duck_db": 5.06,
+   "duck_method": "나레 구간 RMS 중앙값 − 말 없는 구간 RMS 중앙값(dB). 원음이 나레 밑에서 얼마나 눌렸는지의 근사(분리 없음)",
+   "caption_eq_narration": 0.423,
+   "caption_eq_method": "자막 글자(공백·부호 뺌) 중 한국어 말소리 글자와 겹치는 비율(difflib 일치 블록)",
+   "sfx_per_sec": 0.176,
+   "sfx": {
+    "count": 5,
+    "outside_speech": 1,
+    "outside_per_sec": 0.035,
+    "times": [
+     [
+      0.14,
+      0.16
+     ],
+     [
+      22.24,
+      0.12
+     ],
+     [
+      26.2,
+      0.2
+     ],
+     [
+      26.96,
+      0.08
+     ],
+     [
+      28.1,
+      0.06
+     ]
+    ],
+    "method": "20ms RMS가 1.5s 이동중앙값+10.0dB 넘고 길이 (0.05, 1.5)s (문턱 미검증, 말소리 음절도 섞일 수 있음)"
+   },
+   "kind": "해외 원음+한국어 나레+자막"
   }
  },
  "script_tone": {
-  "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+  "ok": true,
+  "method": "tools/calcopy/script_text_stats.tone (한국어 받아쓰기 구절 단위)",
+  "n": 7,
+  "endings": {
+   "그 밖": 1.0
+  },
+  "polite_ratio": 0.571,
+  "hearsay": 1,
+  "person_1st": 0,
+  "person_2nd": 0
  },
  "cuts": {
   "ok": true,
@@ -2658,16 +2926,36 @@
   "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
  },
  "bgm_rules": {
-  "failed": "제미나이 배경음악 판독 없음",
+  "ok": true,
+  "present": true,
+  "mood": [
+   "경쾌한",
+   "밝은",
+   "흥미로운"
+  ],
+  "start_s": 0.0,
+  "fade_out_said": false,
+  "duck_db": 5.06,
   "end": {
    "fade": false,
    "last0.5s_db": -25.2,
    "prev_db": -19.4,
    "method": "마지막 0.5초 RMS가 끝 2~1초 전보다 6dB 넘게 낮으면 페이드(전체 섞인 소리, 미검증)"
-  }
+  },
+  "method": "있음·분위기·시작 = 제미나이 오디오 판독 / 덕킹 = audio.composition.duck_db 재사용 / 끝 페이드 = RMS 실측"
  },
  "voice_rules": {
-  "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+  "ok": true,
+  "genders": [
+   "male",
+   "female"
+  ],
+  "roles": 2,
+  "speakers_all": 4,
+  "cps": 5.95,
+  "narration": "human",
+  "tone": "차분하고 담백한 남성 나레이션과 활기찬 외국인 팬, 아이돌의 대화",
+  "method": "audio.composition 화자(한국어 화자 = 역할) + 받아쓰기 cps + 제미나이 톤 한 줄"
  },
  "overlay_rules": {
   "failed": "건너뜀(--no-materials)"
@@ -2693,5 +2981,13 @@
   "cuts_materials": 23.1,
   "rules": 0.4,
   "total": 204.2
- }
+ },
+ "_redo": [
+  {
+   "what": "audio·bgm_rules·voice_rules 제미나이 재판독",
+   "when": "2026-10-25",
+   "model": "gemini-3.5-flash",
+   "via": "gemini_free.ask"
+  }
+ ]
 }

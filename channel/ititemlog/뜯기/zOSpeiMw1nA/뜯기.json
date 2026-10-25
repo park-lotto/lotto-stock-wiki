@@ -2145,15 +2145,270 @@
    }
   },
   "ok": true,
+  "asr_extra": {
+   "sfx": [
+    {
+     "t": 8.2,
+     "kind": "탄성"
+    },
+    {
+     "t": 26.5,
+     "kind": "띵"
+    }
+   ],
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "유쾌한",
+     "밝은"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "voice_tone": "빠르고 경쾌하며 위트 있게 설명하는 20대 남성 나레이션",
+   "speakers": [
+    {
+     "id": "S1",
+     "gender": "male",
+     "voice": "human"
+    },
+    {
+     "id": "S2",
+     "gender": "female",
+     "voice": "human"
+    },
+    {
+     "id": "S3",
+     "gender": "female",
+     "voice": "human"
+    }
+   ]
+  },
   "transcript": {
-   "failed": "소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스"
+   "model": "gemini-3.5-flash",
+   "warnings": [],
+   "segments": [
+    {
+     "start": 0.0,
+     "end": 1.3,
+     "text": "한국 틴트를 바르고",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 1.3,
+     "end": 2.3,
+     "text": "Is that normal?",
+     "speaker": "S2",
+     "lang": "en",
+     "kind": "source"
+    },
+    {
+     "start": 2.3,
+     "end": 5.9,
+     "text": "색이 이상하다며 당황하는 외국인이 있는데요. 일단 계속 발라보기로 하는데",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 5.9,
+     "end": 8.5,
+     "text": "I look like I have a mustache. Oh my god.",
+     "speaker": "S2",
+     "lang": "en",
+     "kind": "source"
+    },
+    {
+     "start": 8.5,
+     "end": 10.0,
+     "text": "이 여성도 발라보더니",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 10.0,
+     "end": 13.1,
+     "text": "Oh, this is kind of a look. I feel like I look good with black lips.",
+     "speaker": "S3",
+     "lang": "en",
+     "kind": "source"
+    },
+    {
+     "start": 13.1,
+     "end": 14.5,
+     "text": "잠시 후 이걸 제거하는데요.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 14.5,
+     "end": 16.7,
+     "text": "Oh my days. Look at this madness.",
+     "speaker": "S3",
+     "lang": "en",
+     "kind": "source"
+    },
+    {
+     "start": 16.7,
+     "end": 23.5,
+     "text": "사실 이건 립 타투 틴트인데 입술에 발라주고 10분 정도 뒤에 떼어주면 틴트 색상이 착색되고 묻어남 없이 오랜 시간 지속된다는데요. 이걸 쓰고 제일 좋았던 점은",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 23.5,
+     "end": 25.8,
+     "text": "Especially after eating, drinking, or...",
+     "speaker": "S3",
+     "lang": "en",
+     "kind": "source"
+    },
+    {
+     "start": 25.8,
+     "end": 27.2,
+     "text": "뭐요?",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    }
+   ],
+   "n": 11,
+   "langs": [
+    "en",
+    "ko"
+   ],
+   "ambient": "",
+   "speech_sec_all": 27.2,
+   "ko_speech_sec": 16.0,
+   "speech_share_ko": 0.577,
+   "chars_nospace_ko": 130,
+   "cps": 8.12,
+   "pause_median": 2.3,
+   "pauses": 5,
+   "narration": "한국어 말소리 있음",
+   "method": "한국어 구절만: cps = 공백 뺀 글자 ÷ 구절 길이 합, 쉼 = 이웃 구절 사이 >0.05s"
   },
   "composition": {
-   "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+   "method": "받아쓰기(제미나이 speaker·lang·kind) + bench audio.mono 20ms RMS(분리 없음)",
+   "dict": [
+    "나레 1명",
+    "나레+역할 2명",
+    "역할극만",
+    "해외 원음+한국어 나레+자막",
+    "원음만+자막",
+    "나레 없음"
+   ],
+   "speakers": [
+    {
+     "n": "S1",
+     "gender": "male",
+     "voice_guess": "human",
+     "share": 0.588,
+     "kinds": [
+      "narration"
+     ],
+     "langs": [
+      "ko"
+     ]
+    },
+    {
+     "n": "S3",
+     "gender": "female",
+     "voice_guess": "human",
+     "share": 0.279,
+     "kinds": [
+      "source"
+     ],
+     "langs": [
+      "en"
+     ]
+    },
+    {
+     "n": "S2",
+     "gender": "female",
+     "voice_guess": "human",
+     "share": 0.132,
+     "kinds": [
+      "source"
+     ],
+     "langs": [
+      "en"
+     ]
+    }
+   ],
+   "narration": "human",
+   "narration_metrics": {
+    "pitch": {
+     "voiced_frames": 552,
+     "f0_median_hz": 158.4,
+     "semitone_std": 6.08
+    },
+    "pause_cv": 0.31,
+    "method": "narration = 제미나이 귀 추정(tts/human). 피치 반음 표준편차·쉼 변동계수는 참고 지표(문턱 미검증)"
+   },
+   "source_audio_kept": true,
+   "source_evidence": {
+    "foreign_or_source_segments": 5,
+    "ambient": ""
+   },
+   "duck_db": 15.37,
+   "duck_method": "나레 구간 RMS 중앙값 − 말 없는 구간 RMS 중앙값(dB). 원음이 나레 밑에서 얼마나 눌렸는지의 근사(분리 없음)",
+   "caption_eq_narration": 0.64,
+   "caption_eq_method": "자막 글자(공백·부호 뺌) 중 한국어 말소리 글자와 겹치는 비율(difflib 일치 블록)",
+   "sfx_per_sec": 0.216,
+   "sfx": {
+    "count": 6,
+    "outside_speech": 1,
+    "outside_per_sec": 0.036,
+    "times": [
+     [
+      0.1,
+      0.12
+     ],
+     [
+      9.06,
+      0.06
+     ],
+     [
+      16.84,
+      0.08
+     ],
+     [
+      23.04,
+      0.06
+     ],
+     [
+      27.12,
+      0.1
+     ],
+     [
+      27.34,
+      0.1
+     ]
+    ],
+    "method": "20ms RMS가 1.5s 이동중앙값+10.0dB 넘고 길이 (0.05, 1.5)s (문턱 미검증, 말소리 음절도 섞일 수 있음)"
+   },
+   "kind": "해외 원음+한국어 나레+자막"
   }
  },
  "script_tone": {
-  "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+  "ok": true,
+  "method": "tools/calcopy/script_text_stats.tone (한국어 받아쓰기 구절 단위)",
+  "n": 6,
+  "endings": {
+   "그 밖": 0.833,
+   "~는데(다음 문장으로 넘김)": 0.167
+  },
+  "polite_ratio": 0.333,
+  "hearsay": 2,
+  "person_1st": 0,
+  "person_2nd": 0
  },
  "cuts": {
   "ok": true,
@@ -2607,16 +2862,35 @@
   "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
  },
  "bgm_rules": {
-  "failed": "제미나이 배경음악 판독 없음",
+  "ok": true,
+  "present": true,
+  "mood": [
+   "경쾌한",
+   "유쾌한",
+   "밝은"
+  ],
+  "start_s": 0.0,
+  "fade_out_said": false,
+  "duck_db": 15.37,
   "end": {
    "fade": false,
    "last0.5s_db": -19.4,
    "prev_db": -25.6,
    "method": "마지막 0.5초 RMS가 끝 2~1초 전보다 6dB 넘게 낮으면 페이드(전체 섞인 소리, 미검증)"
-  }
+  },
+  "method": "있음·분위기·시작 = 제미나이 오디오 판독 / 덕킹 = audio.composition.duck_db 재사용 / 끝 페이드 = RMS 실측"
  },
  "voice_rules": {
-  "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+  "ok": true,
+  "genders": [
+   "male"
+  ],
+  "roles": 1,
+  "speakers_all": 3,
+  "cps": 8.12,
+  "narration": "human",
+  "tone": "빠르고 경쾌하며 위트 있게 설명하는 20대 남성 나레이션",
+  "method": "audio.composition 화자(한국어 화자 = 역할) + 받아쓰기 cps + 제미나이 톤 한 줄"
  },
  "overlay_rules": {
   "failed": "건너뜀(--no-materials)"
@@ -2642,5 +2916,13 @@
   "cuts_materials": 13.5,
   "rules": 0.1,
   "total": 345.8
- }
+ },
+ "_redo": [
+  {
+   "what": "audio·bgm_rules·voice_rules 제미나이 재판독",
+   "when": "2026-10-25",
+   "model": "gemini-3.5-flash",
+   "via": "gemini_free.ask"
+  }
+ ]
 }

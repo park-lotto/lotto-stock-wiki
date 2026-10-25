@@ -2100,15 +2100,360 @@
    }
   },
   "ok": true,
+  "asr_extra": {
+   "sfx": [
+    {
+     "t": 1.0,
+     "kind": "휙"
+    },
+    {
+     "t": 5.1,
+     "kind": "탄성"
+    },
+    {
+     "t": 8.5,
+     "kind": "휙"
+    }
+   ],
+   "bgm": {
+    "present": true,
+    "mood": [
+     "밝은",
+     "유쾌한",
+     "흥미진진한"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "voice_tone": "빠르고 경쾌하며 흥미진진한 남성 해설 톤",
+   "speakers": [
+    {
+     "id": "S1",
+     "gender": "male",
+     "voice": "human"
+    },
+    {
+     "id": "S2",
+     "gender": "female",
+     "voice": "human"
+    },
+    {
+     "id": "S3",
+     "gender": "female",
+     "voice": "human"
+    }
+   ]
+  },
   "transcript": {
-   "failed": "소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스"
+   "model": "gemini-3.5-flash",
+   "warnings": [
+    "길이 초과 28.0~29.5"
+   ],
+   "segments": [
+    {
+     "start": 0.0,
+     "end": 1.83,
+     "text": "한국 화장품을 타투 위에 바르자",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 1.83,
+     "end": 3.86,
+     "text": "마법처럼 타투가 사라졌는데요.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 3.86,
+     "end": 5.15,
+     "text": "남은 부분도 발라주자니",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 5.15,
+     "end": 8.0,
+     "text": "미친 커버력에 감탄해 버리고 마는데,",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 8.0,
+     "end": 9.87,
+     "text": "이걸 보니 여성은 믿을 수가 없다며",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 9.87,
+     "end": 11.2,
+     "text": "cover my tattoos.",
+     "speaker": "S2",
+     "lang": "en",
+     "kind": "dialog"
+    },
+    {
+     "start": 11.8,
+     "end": 13.0,
+     "text": "직접 실험해 보기로 하고",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 13.0,
+     "end": 14.6,
+     "text": "일단 한번 발라보더니 좀 부족해 보였는지",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 14.6,
+     "end": 15.8,
+     "text": "Time for the second layer.",
+     "speaker": "S2",
+     "lang": "en",
+     "kind": "dialog"
+    },
+    {
+     "start": 15.8,
+     "end": 17.5,
+     "text": "바로 두 겹째 시도해보는데",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 17.8,
+     "end": 20.0,
+     "text": "So weird to look at myself like this.",
+     "speaker": "S2",
+     "lang": "en",
+     "kind": "dialog"
+    },
+    {
+     "start": 20.0,
+     "end": 20.9,
+     "text": "더 충격적인 건",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 20.9,
+     "end": 22.0,
+     "text": "It disappeared.",
+     "speaker": "S2",
+     "lang": "en",
+     "kind": "dialog"
+    },
+    {
+     "start": 21.8,
+     "end": 24.3,
+     "text": "타투를 다 가리고 엄마한테 보여주자 나온 반응이라는데",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 24.0,
+     "end": 25.5,
+     "text": "Let's get my mom's reaction.",
+     "speaker": "S2",
+     "lang": "en",
+     "kind": "dialog"
+    },
+    {
+     "start": 25.5,
+     "end": 26.6,
+     "text": "Oh, dear boy.",
+     "speaker": "S3",
+     "lang": "en",
+     "kind": "dialog"
+    },
+    {
+     "start": 26.6,
+     "end": 27.5,
+     "text": "You prefer tattoos?",
+     "speaker": "S2",
+     "lang": "en",
+     "kind": "dialog"
+    },
+    {
+     "start": 27.5,
+     "end": 28.0,
+     "text": "Yeah.",
+     "speaker": "S3",
+     "lang": "en",
+     "kind": "dialog"
+    },
+    {
+     "start": 28.0,
+     "end": 29.367,
+     "text": "바로 지워버렸다고 하네요.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    }
+   ],
+   "n": 19,
+   "langs": [
+    "en",
+    "ko"
+   ],
+   "ambient": "",
+   "speech_sec_all": 28.97,
+   "ko_speech_sec": 19.14,
+   "speech_share_ko": 0.652,
+   "chars_nospace_ko": 146,
+   "cps": 7.63,
+   "pause_median": 1.93,
+   "pauses": 5,
+   "narration": "한국어 말소리 있음",
+   "method": "한국어 구절만: cps = 공백 뺀 글자 ÷ 구절 길이 합, 쉼 = 이웃 구절 사이 >0.05s"
   },
   "composition": {
-   "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+   "method": "받아쓰기(제미나이 speaker·lang·kind) + bench audio.mono 20ms RMS(분리 없음)",
+   "dict": [
+    "나레 1명",
+    "나레+역할 2명",
+    "역할극만",
+    "해외 원음+한국어 나레+자막",
+    "원음만+자막",
+    "나레 없음"
+   ],
+   "speakers": [
+    {
+     "n": "S1",
+     "gender": "male",
+     "voice_guess": "human",
+     "share": 0.661,
+     "kinds": [
+      "narration"
+     ],
+     "langs": [
+      "ko"
+     ]
+    },
+    {
+     "n": "S2",
+     "gender": "female",
+     "voice_guess": "human",
+     "share": 0.284,
+     "kinds": [
+      "dialog"
+     ],
+     "langs": [
+      "en"
+     ]
+    },
+    {
+     "n": "S3",
+     "gender": "female",
+     "voice_guess": "human",
+     "share": 0.055,
+     "kinds": [
+      "dialog"
+     ],
+     "langs": [
+      "en"
+     ]
+    }
+   ],
+   "narration": "human",
+   "narration_metrics": {
+    "pitch": {
+     "voiced_frames": 674,
+     "f0_median_hz": 158.4,
+     "semitone_std": 6.31
+    },
+    "pause_cv": 0.49,
+    "method": "narration = 제미나이 귀 추정(tts/human). 피치 반음 표준편차·쉼 변동계수는 참고 지표(문턱 미검증)"
+   },
+   "source_audio_kept": true,
+   "source_evidence": {
+    "foreign_or_source_segments": 8,
+    "ambient": ""
+   },
+   "duck_db": 14.22,
+   "duck_method": "나레 구간 RMS 중앙값 − 말 없는 구간 RMS 중앙값(dB). 원음이 나레 밑에서 얼마나 눌렸는지의 근사(분리 없음)",
+   "caption_eq_narration": 0.629,
+   "caption_eq_method": "자막 글자(공백·부호 뺌) 중 한국어 말소리 글자와 겹치는 비율(difflib 일치 블록)",
+   "sfx_per_sec": 0.375,
+   "sfx": {
+    "count": 11,
+    "outside_speech": 0,
+    "outside_per_sec": 0.0,
+    "times": [
+     [
+      0.14,
+      0.12
+     ],
+     [
+      0.34,
+      0.06
+     ],
+     [
+      11.2,
+      0.1
+     ],
+     [
+      15.48,
+      0.06
+     ],
+     [
+      16.58,
+      0.08
+     ],
+     [
+      18.24,
+      0.12
+     ],
+     [
+      26.5,
+      0.08
+     ],
+     [
+      26.9,
+      0.16
+     ],
+     [
+      27.8,
+      0.06
+     ],
+     [
+      28.2,
+      0.06
+     ],
+     [
+      29.28,
+      0.12
+     ]
+    ],
+    "method": "20ms RMS가 1.5s 이동중앙값+10.0dB 넘고 길이 (0.05, 1.5)s (문턱 미검증, 말소리 음절도 섞일 수 있음)"
+   },
+   "kind": "해외 원음+한국어 나레+자막"
   }
  },
  "script_tone": {
-  "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+  "ok": true,
+  "method": "tools/calcopy/script_text_stats.tone (한국어 받아쓰기 구절 단위)",
+  "n": 11,
+  "endings": {
+   "그 밖": 0.818,
+   "~는데(다음 문장으로 넘김)": 0.182
+  },
+  "polite_ratio": 0.182,
+  "hearsay": 3,
+  "person_1st": 0,
+  "person_2nd": 0
  },
  "cuts": {
   "ok": true,
@@ -2651,16 +2996,35 @@
   "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
  },
  "bgm_rules": {
-  "failed": "제미나이 배경음악 판독 없음",
+  "ok": true,
+  "present": true,
+  "mood": [
+   "밝은",
+   "유쾌한",
+   "흥미진진한"
+  ],
+  "start_s": 0.0,
+  "fade_out_said": false,
+  "duck_db": 14.22,
   "end": {
    "fade": false,
    "last0.5s_db": -10.2,
    "prev_db": -16.8,
    "method": "마지막 0.5초 RMS가 끝 2~1초 전보다 6dB 넘게 낮으면 페이드(전체 섞인 소리, 미검증)"
-  }
+  },
+  "method": "있음·분위기·시작 = 제미나이 오디오 판독 / 덕킹 = audio.composition.duck_db 재사용 / 끝 페이드 = RMS 실측"
  },
  "voice_rules": {
-  "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+  "ok": true,
+  "genders": [
+   "male"
+  ],
+  "roles": 1,
+  "speakers_all": 3,
+  "cps": 7.63,
+  "narration": "human",
+  "tone": "빠르고 경쾌하며 흥미진진한 남성 해설 톤",
+  "method": "audio.composition 화자(한국어 화자 = 역할) + 받아쓰기 cps + 제미나이 톤 한 줄"
  },
  "overlay_rules": {
   "failed": "건너뜀(--no-materials)"
@@ -2686,5 +3050,13 @@
   "cuts_materials": 67.1,
   "rules": 1.1,
   "total": 539.5
- }
+ },
+ "_redo": [
+  {
+   "what": "audio·bgm_rules·voice_rules 제미나이 재판독",
+   "when": "2026-10-25",
+   "model": "gemini-3.5-flash",
+   "via": "gemini_free.ask"
+  }
+ ]
 }

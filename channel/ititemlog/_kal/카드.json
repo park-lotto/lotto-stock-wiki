@@ -1,7 +1,7 @@
 {
  "slug": "ititemlog",
  "made_by": "tools/calcopy/preset_card.py build",
- "built_at": "2026-10-24T23:49:41",
+ "built_at": "2026-10-25T12:48:11",
  "bench": "잇템로그(현장썰 2번·화장품)",
  "brand": null,
  "brand_note": "브랜드.json 미등록 — 드라이브 '잇템로그 대기중'·6번 잇템로그_998, 우리 이름 '잇템로그'(01b 문서)",
@@ -24,13 +24,13 @@
   "bgm": "sweets"
  },
  "sample": {
-  "line_reads": 2,
+  "line_reads": 6,
   "line_reads_strict_errors": 0,
   "rules_freq": true,
   "palette": true,
   "style_analysis": true,
-  "sfx_events": false,
-  "tteutgi": 4,
+  "sfx_events": true,
+  "tteutgi": 6,
   "min_required": 6
  },
  "axes": {
@@ -43,7 +43,7 @@
    "confidence": "판"
   },
   "3전환": {
-   "value": "transition○ cut_rhythm△",
+   "value": "transition○ cut_rhythm○",
    "confidence": "측정"
   },
   "4장면대사": {
@@ -71,7 +71,7 @@
    "confidence": "측정"
   },
   "7소리": {
-   "value": "bgm× sfx○",
+   "value": "bgm○ sfx○",
    "confidence": "측정"
   },
   "8스티커짤": {
@@ -79,7 +79,7 @@
    "confidence": "측정"
   },
   "9썸네일": {
-   "value": "thumb△",
+   "value": "thumb○",
    "confidence": "측정"
   },
   "10소재": {
@@ -97,14 +97,14 @@
   "cap_emph": "○",
   "cap_exit": "○",
   "transition": "○",
-  "cut_rhythm": "△",
+  "cut_rhythm": "○",
   "scene_fit": "○",
-  "bgm": "×",
+  "bgm": "○",
   "sfx": "○",
   "meme": "○",
   "sticker": "○",
   "pointer": "○",
-  "thumb": "△",
+  "thumb": "○",
   "speech": "○",
   "script": "○"
  },
@@ -131,9 +131,9 @@
    "element": "cap_enter",
    "cond": "자리=본문",
    "action": "enter=instant",
-   "k": 45,
-   "n": 45,
-   "rate": 1.0,
+   "k": 135,
+   "n": 143,
+   "rate": 0.94,
    "base": null,
    "grade": "강",
    "evidence": [
@@ -148,11 +148,65 @@
   {
    "element": "cap_enter",
    "cond": "자리=본문",
+   "action": "enter=append",
+   "k": 5,
+   "n": 143,
+   "rate": 0.03,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=본문",
    "action": "효과 붙은 등장",
-   "k": 0,
-   "n": 45,
-   "rate": 0.0,
-   "base": 0.05,
+   "k": 3,
+   "n": 143,
+   "rate": 0.02,
+   "base": 0.07,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=본문",
+   "action": "enter=pop",
+   "k": 2,
+   "n": 143,
+   "rate": 0.01,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=본문",
+   "action": "enter=typing",
+   "k": 1,
+   "n": 143,
+   "rate": 0.01,
+   "base": null,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
@@ -167,9 +221,9 @@
    "element": "cap_enter",
    "cond": "화자=나레",
    "action": "enter=instant",
-   "k": 39,
-   "n": 41,
-   "rate": 0.95,
+   "k": 92,
+   "n": 103,
+   "rate": 0.89,
    "base": null,
    "grade": "강",
    "evidence": [
@@ -184,10 +238,10 @@
   {
    "element": "cap_enter",
    "cond": "화자=나레",
-   "action": "enter=pop",
-   "k": 2,
-   "n": 41,
-   "rate": 0.05,
+   "action": "enter=append",
+   "k": 6,
+   "n": 103,
+   "rate": 0.06,
    "base": null,
    "grade": "약",
    "evidence": [
@@ -203,10 +257,46 @@
    "element": "cap_enter",
    "cond": "화자=나레",
    "action": "효과 붙은 등장",
-   "k": 2,
-   "n": 41,
+   "k": 5,
+   "n": 103,
    "rate": 0.05,
-   "base": 0.05,
+   "base": 0.07,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=나레",
+   "action": "enter=pop",
+   "k": 4,
+   "n": 103,
+   "rate": 0.04,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=나레",
+   "action": "enter=기타",
+   "k": 1,
+   "n": 103,
+   "rate": 0.01,
+   "base": null,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
@@ -221,8 +311,62 @@
    "element": "cap_enter",
    "cond": "화자=원음",
    "action": "enter=instant",
-   "k": 17,
-   "n": 17,
+   "k": 74,
+   "n": 75,
+   "rate": 0.99,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=원음",
+   "action": "enter=wipe",
+   "k": 1,
+   "n": 75,
+   "rate": 0.01,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=원음",
+   "action": "효과 붙은 등장",
+   "k": 1,
+   "n": 75,
+   "rate": 0.01,
+   "base": 0.07,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=본문",
+   "action": "enter=instant",
+   "k": 43,
+   "n": 43,
    "rate": 1.0,
    "base": null,
    "grade": "강",
@@ -237,12 +381,12 @@
   },
   {
    "element": "cap_enter",
-   "cond": "화자=원음",
+   "cond": "역할=본문",
    "action": "효과 붙은 등장",
    "k": 0,
-   "n": 17,
+   "n": 43,
    "rate": 0.0,
-   "base": 0.05,
+   "base": 0.07,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
@@ -255,7 +399,619 @@
   },
   {
    "element": "cap_enter",
-   "cond": "역할=본문",
+   "cond": "화자전환 첫 덩어리=나레",
+   "action": "enter=instant",
+   "k": 37,
+   "n": 39,
+   "rate": 0.95,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=나레",
+   "action": "enter=기타",
+   "k": 1,
+   "n": 39,
+   "rate": 0.03,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=나레",
+   "action": "enter=pop",
+   "k": 1,
+   "n": 39,
+   "rate": 0.03,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=원음",
+   "action": "enter=instant",
+   "k": 33,
+   "n": 33,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=끝",
+   "action": "enter=instant",
+   "k": 28,
+   "n": 29,
+   "rate": 0.97,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=끝",
+   "action": "enter=wipe",
+   "k": 1,
+   "n": 29,
+   "rate": 0.03,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=끝",
+   "action": "효과 붙은 등장",
+   "k": 1,
+   "n": 29,
+   "rate": 0.03,
+   "base": 0.07,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=증거",
+   "action": "enter=instant",
+   "k": 28,
+   "n": 28,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=증거",
+   "action": "효과 붙은 등장",
+   "k": 0,
+   "n": 28,
+   "rate": 0.0,
+   "base": 0.07,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=훅",
+   "action": "enter=instant",
+   "k": 17,
+   "n": 27,
+   "rate": 0.63,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=훅",
+   "action": "효과 붙은 등장",
+   "k": 9,
+   "n": 27,
+   "rate": 0.33,
+   "base": 0.07,
+   "grade": "중",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=훅",
+   "action": "enter=기타",
+   "k": 5,
+   "n": 27,
+   "rate": 0.19,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=훅",
+   "action": "enter=pop",
+   "k": 4,
+   "n": 27,
+   "rate": 0.15,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=훅",
+   "action": "enter=append",
+   "k": 1,
+   "n": 27,
+   "rate": 0.04,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=훅",
+   "action": "enter=instant",
+   "k": 15,
+   "n": 25,
+   "rate": 0.6,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=훅",
+   "action": "효과 붙은 등장",
+   "k": 9,
+   "n": 25,
+   "rate": 0.36,
+   "base": 0.07,
+   "grade": "중",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=훅",
+   "action": "enter=기타",
+   "k": 5,
+   "n": 25,
+   "rate": 0.2,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=훅",
+   "action": "enter=pop",
+   "k": 4,
+   "n": 25,
+   "rate": 0.16,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=훅",
+   "action": "enter=append",
+   "k": 1,
+   "n": 25,
+   "rate": 0.04,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=고조",
+   "action": "enter=instant",
+   "k": 18,
+   "n": 21,
+   "rate": 0.86,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=불명",
+   "action": "enter=instant",
+   "k": 14,
+   "n": 21,
+   "rate": 0.67,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=불명",
+   "action": "효과 붙은 등장",
+   "k": 7,
+   "n": 21,
+   "rate": 0.33,
+   "base": 0.07,
+   "grade": "중",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=불명",
+   "action": "enter=기타",
+   "k": 4,
+   "n": 21,
+   "rate": 0.19,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=고조",
+   "action": "효과 붙은 등장",
+   "k": 3,
+   "n": 21,
+   "rate": 0.14,
+   "base": 0.07,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=불명",
+   "action": "enter=pop",
+   "k": 2,
+   "n": 21,
+   "rate": 0.1,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=고조",
+   "action": "enter=pop",
+   "k": 2,
+   "n": 21,
+   "rate": 0.1,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=불명",
+   "action": "enter=typing",
+   "k": 1,
+   "n": 21,
+   "rate": 0.05,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=고조",
+   "action": "enter=typing",
+   "k": 1,
+   "n": 21,
+   "rate": 0.05,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=다리",
+   "action": "enter=instant",
+   "k": 14,
+   "n": 19,
+   "rate": 0.74,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=다리",
+   "action": "enter=append",
+   "k": 5,
+   "n": 19,
+   "rate": 0.26,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=다리",
+   "action": "효과 붙은 등장",
+   "k": 0,
+   "n": 19,
+   "rate": 0.0,
+   "base": 0.07,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=불명",
+   "action": "enter=instant",
+   "k": 11,
+   "n": 16,
+   "rate": 0.69,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=불명",
+   "action": "enter=기타",
+   "k": 4,
+   "n": 16,
+   "rate": 0.25,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=불명",
+   "action": "enter=pop",
+   "k": 1,
+   "n": 16,
+   "rate": 0.06,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=질문",
    "action": "enter=instant",
    "k": 14,
    "n": 14,
@@ -273,12 +1029,12 @@
   },
   {
    "element": "cap_enter",
-   "cond": "역할=본문",
+   "cond": "역할=질문",
    "action": "효과 붙은 등장",
    "k": 0,
    "n": 14,
    "rate": 0.0,
-   "base": 0.05,
+   "base": 0.07,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
@@ -291,10 +1047,10 @@
   },
   {
    "element": "cap_enter",
-   "cond": "화자전환 첫 덩어리=나레",
+   "cond": "역할=공개",
    "action": "enter=instant",
-   "k": 13,
-   "n": 13,
+   "k": 12,
+   "n": 12,
    "rate": 1.0,
    "base": null,
    "grade": "강",
@@ -309,10 +1065,10 @@
   },
   {
    "element": "cap_enter",
-   "cond": "자리=끝",
+   "cond": "역할=이음",
    "action": "enter=instant",
-   "k": 10,
-   "n": 10,
+   "k": 12,
+   "n": 12,
    "rate": 1.0,
    "base": null,
    "grade": "강",
@@ -327,12 +1083,30 @@
   },
   {
    "element": "cap_enter",
-   "cond": "자리=끝",
+   "cond": "역할=답",
+   "action": "enter=instant",
+   "k": 12,
+   "n": 12,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=공개",
    "action": "효과 붙은 등장",
    "k": 0,
-   "n": 10,
+   "n": 12,
    "rate": 0.0,
-   "base": 0.05,
+   "base": 0.07,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
@@ -345,11 +1119,47 @@
   },
   {
    "element": "cap_enter",
-   "cond": "화자전환 첫 덩어리=원음",
+   "cond": "역할=이음",
+   "action": "효과 붙은 등장",
+   "k": 0,
+   "n": 12,
+   "rate": 0.0,
+   "base": 0.07,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=답",
+   "action": "효과 붙은 등장",
+   "k": 0,
+   "n": 12,
+   "rate": 0.0,
+   "base": 0.07,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=끝",
    "action": "enter=instant",
-   "k": 9,
+   "k": 8,
    "n": 9,
-   "rate": 1.0,
+   "rate": 0.89,
    "base": null,
    "grade": "강",
    "evidence": [
@@ -363,444 +1173,12 @@
   },
   {
    "element": "cap_enter",
-   "cond": "자리=훅",
-   "action": "enter=instant",
-   "k": 5,
-   "n": 8,
-   "rate": 0.62,
-   "base": null,
-   "grade": "강",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "자리=훅",
-   "action": "효과 붙은 등장",
-   "k": 3,
-   "n": 8,
-   "rate": 0.38,
-   "base": 0.05,
-   "grade": "중",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "자리=훅",
-   "action": "enter=pop",
-   "k": 2,
-   "n": 8,
-   "rate": 0.25,
-   "base": null,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "자리=훅",
-   "action": "enter=기타",
+   "cond": "역할=끝",
+   "action": "enter=wipe",
    "k": 1,
-   "n": 8,
-   "rate": 0.12,
+   "n": 9,
+   "rate": 0.11,
    "base": null,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=다리",
-   "action": "enter=instant",
-   "k": 7,
-   "n": 7,
-   "rate": 1.0,
-   "base": null,
-   "grade": "강",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=질문",
-   "action": "enter=instant",
-   "k": 7,
-   "n": 7,
-   "rate": 1.0,
-   "base": null,
-   "grade": "강",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=훅",
-   "action": "enter=instant",
-   "k": 4,
-   "n": 7,
-   "rate": 0.57,
-   "base": null,
-   "grade": "중",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=훅",
-   "action": "효과 붙은 등장",
-   "k": 3,
-   "n": 7,
-   "rate": 0.43,
-   "base": 0.05,
-   "grade": "중",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=훅",
-   "action": "enter=pop",
-   "k": 2,
-   "n": 7,
-   "rate": 0.29,
-   "base": null,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=훅",
-   "action": "enter=기타",
-   "k": 1,
-   "n": 7,
-   "rate": 0.14,
-   "base": null,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=다리",
-   "action": "효과 붙은 등장",
-   "k": 0,
-   "n": 7,
-   "rate": 0.0,
-   "base": 0.05,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=질문",
-   "action": "효과 붙은 등장",
-   "k": 0,
-   "n": 7,
-   "rate": 0.0,
-   "base": 0.05,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=공개",
-   "action": "enter=instant",
-   "k": 5,
-   "n": 5,
-   "rate": 1.0,
-   "base": null,
-   "grade": "강",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=고조",
-   "action": "enter=instant",
-   "k": 5,
-   "n": 5,
-   "rate": 1.0,
-   "base": null,
-   "grade": "강",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=이음",
-   "action": "enter=instant",
-   "k": 5,
-   "n": 5,
-   "rate": 1.0,
-   "base": null,
-   "grade": "강",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=증거",
-   "action": "enter=instant",
-   "k": 5,
-   "n": 5,
-   "rate": 1.0,
-   "base": null,
-   "grade": "강",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "화자=불명",
-   "action": "enter=instant",
-   "k": 4,
-   "n": 5,
-   "rate": 0.8,
-   "base": null,
-   "grade": "강",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "화자전환 첫 덩어리=불명",
-   "action": "enter=instant",
-   "k": 4,
-   "n": 5,
-   "rate": 0.8,
-   "base": null,
-   "grade": "강",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "화자=불명",
-   "action": "enter=기타",
-   "k": 1,
-   "n": 5,
-   "rate": 0.2,
-   "base": null,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "화자=불명",
-   "action": "효과 붙은 등장",
-   "k": 1,
-   "n": 5,
-   "rate": 0.2,
-   "base": 0.05,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "화자전환 첫 덩어리=불명",
-   "action": "enter=기타",
-   "k": 1,
-   "n": 5,
-   "rate": 0.2,
-   "base": null,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=공개",
-   "action": "효과 붙은 등장",
-   "k": 0,
-   "n": 5,
-   "rate": 0.0,
-   "base": 0.05,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=고조",
-   "action": "효과 붙은 등장",
-   "k": 0,
-   "n": 5,
-   "rate": 0.0,
-   "base": 0.05,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=이음",
-   "action": "효과 붙은 등장",
-   "k": 0,
-   "n": 5,
-   "rate": 0.0,
-   "base": 0.05,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=증거",
-   "action": "효과 붙은 등장",
-   "k": 0,
-   "n": 5,
-   "rate": 0.0,
-   "base": 0.05,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
@@ -814,6 +1192,24 @@
   {
    "element": "cap_enter",
    "cond": "역할=끝",
+   "action": "효과 붙은 등장",
+   "k": 1,
+   "n": 9,
+   "rate": 0.11,
+   "base": 0.07,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=반전",
    "action": "enter=instant",
    "k": 4,
    "n": 4,
@@ -831,84 +1227,12 @@
   },
   {
    "element": "cap_enter",
-   "cond": "역할=끝",
+   "cond": "역할=반전",
    "action": "효과 붙은 등장",
    "k": 0,
    "n": 4,
    "rate": 0.0,
-   "base": 0.05,
-   "grade": "표본부족",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=반전",
-   "action": "enter=instant",
-   "k": 2,
-   "n": 2,
-   "rate": 1.0,
-   "base": null,
-   "grade": "표본부족",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=답",
-   "action": "enter=instant",
-   "k": 2,
-   "n": 2,
-   "rate": 1.0,
-   "base": null,
-   "grade": "표본부족",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=반전",
-   "action": "효과 붙은 등장",
-   "k": 0,
-   "n": 2,
-   "rate": 0.0,
-   "base": 0.05,
-   "grade": "표본부족",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.enter",
-   "engine_support": "○",
-   "engine_gap": null
-  },
-  {
-   "element": "cap_enter",
-   "cond": "역할=답",
-   "action": "효과 붙은 등장",
-   "k": 0,
-   "n": 2,
-   "rate": 0.0,
-   "base": 0.05,
+   "base": 0.07,
    "grade": "표본부족",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
@@ -923,9 +1247,9 @@
    "element": "cap_enter",
    "cond": "없음",
    "action": "꾸밈 없는 줄(plain)",
-   "k": 56,
-   "n": 63,
-   "rate": 0.89,
+   "k": 157,
+   "n": 199,
+   "rate": 0.79,
    "base": null,
    "grade": "강",
    "evidence": [
@@ -941,8 +1265,8 @@
    "element": "cap_emph",
    "cond": "자리=본문",
    "action": "emph",
-   "k": 1,
-   "n": 45,
+   "k": 3,
+   "n": 143,
    "rate": 0.02,
    "base": 0.02,
    "grade": "약",
@@ -959,9 +1283,9 @@
    "element": "cap_emph",
    "cond": "화자=나레",
    "action": "emph",
-   "k": 1,
-   "n": 41,
-   "rate": 0.02,
+   "k": 3,
+   "n": 103,
+   "rate": 0.03,
    "base": 0.02,
    "grade": "약",
    "evidence": [
@@ -977,9 +1301,9 @@
    "element": "cap_emph",
    "cond": "화자=원음",
    "action": "emph",
-   "k": 0,
-   "n": 17,
-   "rate": 0.0,
+   "k": 1,
+   "n": 75,
+   "rate": 0.01,
    "base": 0.02,
    "grade": "약",
    "evidence": [
@@ -996,7 +1320,7 @@
    "cond": "역할=본문",
    "action": "emph",
    "k": 0,
-   "n": 14,
+   "n": 43,
    "rate": 0.0,
    "base": 0.02,
    "grade": "약",
@@ -1014,151 +1338,7 @@
    "cond": "자리=끝",
    "action": "emph",
    "k": 0,
-   "n": 10,
-   "rate": 0.0,
-   "base": 0.02,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.hook",
-   "engine_support": "△",
-   "engine_gap": "-"
-  },
-  {
-   "element": "cap_emph",
-   "cond": "자리=훅",
-   "action": "emph",
-   "k": 0,
-   "n": 8,
-   "rate": 0.0,
-   "base": 0.02,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.hook",
-   "engine_support": "△",
-   "engine_gap": "-"
-  },
-  {
-   "element": "cap_emph",
-   "cond": "역할=훅",
-   "action": "emph",
-   "k": 0,
-   "n": 7,
-   "rate": 0.0,
-   "base": 0.02,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.hook",
-   "engine_support": "△",
-   "engine_gap": "-"
-  },
-  {
-   "element": "cap_emph",
-   "cond": "역할=다리",
-   "action": "emph",
-   "k": 0,
-   "n": 7,
-   "rate": 0.0,
-   "base": 0.02,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.hook",
-   "engine_support": "△",
-   "engine_gap": "-"
-  },
-  {
-   "element": "cap_emph",
-   "cond": "역할=질문",
-   "action": "emph",
-   "k": 0,
-   "n": 7,
-   "rate": 0.0,
-   "base": 0.02,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.hook",
-   "engine_support": "△",
-   "engine_gap": "-"
-  },
-  {
-   "element": "cap_emph",
-   "cond": "역할=공개",
-   "action": "emph",
-   "k": 1,
-   "n": 5,
-   "rate": 0.2,
-   "base": 0.02,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.hook",
-   "engine_support": "△",
-   "engine_gap": "-"
-  },
-  {
-   "element": "cap_emph",
-   "cond": "화자=불명",
-   "action": "emph",
-   "k": 0,
-   "n": 5,
-   "rate": 0.0,
-   "base": 0.02,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.hook",
-   "engine_support": "△",
-   "engine_gap": "-"
-  },
-  {
-   "element": "cap_emph",
-   "cond": "역할=고조",
-   "action": "emph",
-   "k": 0,
-   "n": 5,
-   "rate": 0.0,
-   "base": 0.02,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.hook",
-   "engine_support": "△",
-   "engine_gap": "-"
-  },
-  {
-   "element": "cap_emph",
-   "cond": "역할=이음",
-   "action": "emph",
-   "k": 0,
-   "n": 5,
+   "n": 29,
    "rate": 0.0,
    "base": 0.02,
    "grade": "약",
@@ -1176,7 +1356,169 @@
    "cond": "역할=증거",
    "action": "emph",
    "k": 0,
-   "n": 5,
+   "n": 28,
+   "rate": 0.0,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.hook",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "자리=훅",
+   "action": "emph",
+   "k": 1,
+   "n": 27,
+   "rate": 0.04,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.hook",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=훅",
+   "action": "emph",
+   "k": 1,
+   "n": 25,
+   "rate": 0.04,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.hook",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "화자=불명",
+   "action": "emph",
+   "k": 0,
+   "n": 21,
+   "rate": 0.0,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.hook",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=고조",
+   "action": "emph",
+   "k": 0,
+   "n": 21,
+   "rate": 0.0,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.hook",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=다리",
+   "action": "emph",
+   "k": 0,
+   "n": 19,
+   "rate": 0.0,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.hook",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=질문",
+   "action": "emph",
+   "k": 1,
+   "n": 14,
+   "rate": 0.07,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.hook",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=공개",
+   "action": "emph",
+   "k": 2,
+   "n": 12,
+   "rate": 0.17,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.hook",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=이음",
+   "action": "emph",
+   "k": 0,
+   "n": 12,
+   "rate": 0.0,
+   "base": 0.02,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.hook",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=답",
+   "action": "emph",
+   "k": 0,
+   "n": 12,
    "rate": 0.0,
    "base": 0.02,
    "grade": "약",
@@ -1194,10 +1536,10 @@
    "cond": "역할=끝",
    "action": "emph",
    "k": 0,
-   "n": 4,
+   "n": 9,
    "rate": 0.0,
    "base": 0.02,
-   "grade": "표본부족",
+   "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
@@ -1212,25 +1554,7 @@
    "cond": "역할=반전",
    "action": "emph",
    "k": 0,
-   "n": 2,
-   "rate": 0.0,
-   "base": 0.02,
-   "grade": "표본부족",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json placement.rules.hook",
-   "engine_support": "△",
-   "engine_gap": "-"
-  },
-  {
-   "element": "cap_emph",
-   "cond": "역할=답",
-   "action": "emph",
-   "k": 0,
-   "n": 2,
+   "n": 4,
    "rate": 0.0,
    "base": 0.02,
    "grade": "표본부족",
@@ -1247,13 +1571,13 @@
    "element": "cap_exit",
    "cond": "전체 줄",
    "action": "exit=cut",
-   "k": 31,
-   "n": 31,
+   "k": 199,
+   "n": 199,
    "rate": 1.0,
    "base": null,
    "grade": "강",
    "evidence": [
-    "channel/ititemlog/줄판독 2편"
+    "channel/ititemlog/줄판독 6편"
    ],
    "confidence": "눈",
    "measure_task": null,
@@ -1265,49 +1589,67 @@
    "element": "transition",
    "cond": "전체 줄",
    "action": "transition=cut",
-   "k": 48,
-   "n": 50,
-   "rate": 0.96,
+   "k": 156,
+   "n": 199,
+   "rate": 0.78,
    "base": null,
    "grade": "강",
    "evidence": [
-    "channel/ititemlog/줄판독 2편"
+    "channel/ititemlog/줄판독 6편"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": "잇템로그판.json frame.flash_sec",
-   "engine_support": "△",
-   "engine_gap": "A1"
+   "engine_cell": "잇템로그판.json cuts.transition",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "transition",
+   "cond": "전체 줄",
+   "action": "transition=none",
+   "k": 40,
+   "n": 199,
+   "rate": 0.2,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/줄판독 6편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json cuts.transition",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "transition",
    "cond": "전체 줄",
    "action": "transition=zoomblur",
-   "k": 2,
-   "n": 50,
-   "rate": 0.04,
+   "k": 3,
+   "n": 199,
+   "rate": 0.02,
    "base": null,
    "grade": "약",
    "evidence": [
-    "channel/ititemlog/줄판독 2편"
+    "channel/ititemlog/줄판독 6편"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": "잇템로그판.json frame.flash_sec",
-   "engine_support": "△",
-   "engine_gap": "A1"
+   "engine_cell": "잇템로그판.json cuts.transition",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "cut_rhythm",
    "cond": "편 단위",
    "action": "컷 중앙 1.08초 · p90 2.41초",
-   "k": 4,
-   "n": 4,
+   "k": 6,
+   "n": 6,
    "rate": null,
    "base": null,
-   "grade": "표본부족",
+   "grade": "강",
    "evidence": [
-    "channel/ititemlog/뜯기 4편"
+    "channel/ititemlog/뜯기 6편"
    ],
    "confidence": "신호",
    "measure_task": null,
@@ -1318,14 +1660,14 @@
   {
    "element": "scene_fit",
    "cond": "전체 줄",
-   "action": "대사↔장면 평균 7.27 · 7 미만 0.33",
-   "k": 42,
-   "n": 63,
-   "rate": 0.67,
+   "action": "대사↔장면 평균 7.49 · 7 미만 0.26",
+   "k": 147,
+   "n": 199,
+   "rate": 0.74,
    "base": null,
    "grade": "강",
    "evidence": [
-    "channel/ititemlog/줄판독 2편"
+    "channel/ititemlog/줄판독 6편"
    ],
    "confidence": "눈",
    "measure_task": null,
@@ -1335,522 +1677,434 @@
   },
   {
    "element": "bgm",
-   "cond": null,
-   "action": null,
-   "k": null,
-   "n": null,
-   "rate": null,
+   "cond": "편 단위",
+   "action": "배경음 있음",
+   "k": 6,
+   "n": 6,
+   "rate": 1.0,
    "base": null,
-   "grade": null,
-   "evidence": [],
-   "confidence": "미측정",
-   "measure_task": "06-ititemlog",
-   "engine_cell": "잇템로그판.json bgm.db_below_voice",
-   "engine_support": "△",
-   "engine_gap": "A4"
+   "grade": "강",
+   "evidence": [
+    "channel/ititemlog/뜯기 6편"
+   ],
+   "confidence": "신호",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json bgm.duck_narr_db",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "sfx",
    "cond": "자리=본문",
    "action": "sfx",
-   "k": 1,
-   "n": 45,
-   "rate": 0.02,
-   "base": 0.05,
+   "k": 12,
+   "n": 143,
+   "rate": 0.08,
+   "base": 0.08,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": "잇템로그판.json sfx_files",
-   "engine_support": "△",
-   "engine_gap": "A2"
+   "engine_cell": "잇템로그판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "sfx",
    "cond": "화자=나레",
    "action": "sfx",
-   "k": 2,
-   "n": 41,
+   "k": 5,
+   "n": 103,
    "rate": 0.05,
-   "base": 0.05,
+   "base": 0.08,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": "잇템로그판.json sfx_files",
-   "engine_support": "△",
-   "engine_gap": "A2"
+   "engine_cell": "잇템로그판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "sfx",
    "cond": "화자=원음",
    "action": "sfx",
-   "k": 0,
-   "n": 17,
-   "rate": 0.0,
-   "base": 0.05,
+   "k": 10,
+   "n": 75,
+   "rate": 0.13,
+   "base": 0.08,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": "잇템로그판.json sfx_files",
-   "engine_support": "△",
-   "engine_gap": "A2"
+   "engine_cell": "잇템로그판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "sfx",
    "cond": "역할=본문",
    "action": "sfx",
-   "k": 0,
-   "n": 14,
-   "rate": 0.0,
-   "base": 0.05,
+   "k": 5,
+   "n": 43,
+   "rate": 0.12,
+   "base": 0.08,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": "잇템로그판.json sfx_files",
-   "engine_support": "△",
-   "engine_gap": "A2"
+   "engine_cell": "잇템로그판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "sfx",
    "cond": "자리=끝",
    "action": "sfx",
-   "k": 0,
-   "n": 10,
-   "rate": 0.0,
-   "base": 0.05,
+   "k": 1,
+   "n": 29,
+   "rate": 0.03,
+   "base": 0.08,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": "잇템로그판.json sfx_files",
-   "engine_support": "△",
-   "engine_gap": "A2"
+   "engine_cell": "잇템로그판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=증거",
+   "action": "sfx",
+   "k": 4,
+   "n": 28,
+   "rate": 0.14,
+   "base": 0.08,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "sfx",
    "cond": "자리=훅",
    "action": "sfx",
-   "k": 2,
-   "n": 8,
-   "rate": 0.25,
-   "base": 0.05,
+   "k": 3,
+   "n": 27,
+   "rate": 0.11,
+   "base": 0.08,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": "잇템로그판.json sfx_files",
-   "engine_support": "△",
-   "engine_gap": "A2"
+   "engine_cell": "잇템로그판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "sfx",
    "cond": "역할=훅",
    "action": "sfx",
+   "k": 3,
+   "n": 25,
+   "rate": 0.12,
+   "base": 0.08,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=고조",
+   "action": "sfx",
    "k": 2,
-   "n": 7,
-   "rate": 0.29,
-   "base": 0.05,
+   "n": 21,
+   "rate": 0.1,
+   "base": 0.08,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": "잇템로그판.json sfx_files",
-   "engine_support": "△",
-   "engine_gap": "A2"
-  },
-  {
-   "element": "sfx",
-   "cond": "역할=다리",
-   "action": "sfx",
-   "k": 0,
-   "n": 7,
-   "rate": 0.0,
-   "base": 0.05,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json sfx_files",
-   "engine_support": "△",
-   "engine_gap": "A2"
-  },
-  {
-   "element": "sfx",
-   "cond": "역할=질문",
-   "action": "sfx",
-   "k": 0,
-   "n": 7,
-   "rate": 0.0,
-   "base": 0.05,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json sfx_files",
-   "engine_support": "△",
-   "engine_gap": "A2"
+   "engine_cell": "잇템로그판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "sfx",
    "cond": "화자=불명",
    "action": "sfx",
    "k": 1,
-   "n": 5,
-   "rate": 0.2,
-   "base": 0.05,
+   "n": 21,
+   "rate": 0.05,
+   "base": 0.08,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": "잇템로그판.json sfx_files",
-   "engine_support": "△",
-   "engine_gap": "A2"
+   "engine_cell": "잇템로그판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "sfx",
-   "cond": "역할=증거",
+   "cond": "역할=다리",
    "action": "sfx",
-   "k": 1,
-   "n": 5,
-   "rate": 0.2,
-   "base": 0.05,
+   "k": 0,
+   "n": 19,
+   "rate": 0.0,
+   "base": 0.08,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": "잇템로그판.json sfx_files",
-   "engine_support": "△",
-   "engine_gap": "A2"
+   "engine_cell": "잇템로그판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=질문",
+   "action": "sfx",
+   "k": 1,
+   "n": 14,
+   "rate": 0.07,
+   "base": 0.08,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=이음",
+   "action": "sfx",
+   "k": 1,
+   "n": 12,
+   "rate": 0.08,
+   "base": 0.08,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "sfx",
    "cond": "역할=공개",
    "action": "sfx",
    "k": 0,
-   "n": 5,
+   "n": 12,
    "rate": 0.0,
-   "base": 0.05,
+   "base": 0.08,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": "잇템로그판.json sfx_files",
-   "engine_support": "△",
-   "engine_gap": "A2"
-  },
-  {
-   "element": "sfx",
-   "cond": "역할=고조",
-   "action": "sfx",
-   "k": 0,
-   "n": 5,
-   "rate": 0.0,
-   "base": 0.05,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json sfx_files",
-   "engine_support": "△",
-   "engine_gap": "A2"
-  },
-  {
-   "element": "sfx",
-   "cond": "역할=이음",
-   "action": "sfx",
-   "k": 0,
-   "n": 5,
-   "rate": 0.0,
-   "base": 0.05,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json sfx_files",
-   "engine_support": "△",
-   "engine_gap": "A2"
-  },
-  {
-   "element": "sfx",
-   "cond": "역할=끝",
-   "action": "sfx",
-   "k": 0,
-   "n": 4,
-   "rate": 0.0,
-   "base": 0.05,
-   "grade": "표본부족",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json sfx_files",
-   "engine_support": "△",
-   "engine_gap": "A2"
-  },
-  {
-   "element": "sfx",
-   "cond": "역할=반전",
-   "action": "sfx",
-   "k": 0,
-   "n": 2,
-   "rate": 0.0,
-   "base": 0.05,
-   "grade": "표본부족",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": "잇템로그판.json sfx_files",
-   "engine_support": "△",
-   "engine_gap": "A2"
+   "engine_cell": "잇템로그판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "sfx",
    "cond": "역할=답",
    "action": "sfx",
    "k": 0,
-   "n": 2,
+   "n": 12,
    "rate": 0.0,
-   "base": 0.05,
+   "base": 0.08,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=끝",
+   "action": "sfx",
+   "k": 0,
+   "n": 9,
+   "rate": 0.0,
+   "base": 0.08,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=반전",
+   "action": "sfx",
+   "k": 0,
+   "n": 4,
+   "rate": 0.0,
+   "base": 0.08,
    "grade": "표본부족",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": "잇템로그판.json sfx_files",
-   "engine_support": "△",
-   "engine_gap": "A2"
+   "engine_cell": "잇템로그판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "meme",
    "cond": "전체 줄",
    "action": "짤 스티커",
    "k": 0,
-   "n": 63,
+   "n": 199,
    "rate": 0.0,
    "base": null,
    "grade": "약",
    "evidence": [
-    "channel/ititemlog/줄판독 2편"
+    "channel/ititemlog/줄판독 6편"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
-   "engine_gap": "A3"
+   "engine_cell": "잇템로그판.json placement.rules.meme",
+   "engine_support": "○",
+   "engine_gap": null
   },
   {
    "element": "sticker",
    "cond": "자리=본문",
    "action": "sticker",
-   "k": 1,
-   "n": 45,
-   "rate": 0.02,
-   "base": 0.03,
+   "k": 5,
+   "n": 143,
+   "rate": 0.03,
+   "base": 0.06,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
+   "engine_cell": "잇템로그판.json placement.rules.stickers",
+   "engine_support": "△",
    "engine_gap": "A3"
   },
   {
    "element": "sticker",
    "cond": "화자=나레",
    "action": "sticker",
-   "k": 0,
-   "n": 41,
-   "rate": 0.0,
-   "base": 0.03,
+   "k": 3,
+   "n": 103,
+   "rate": 0.03,
+   "base": 0.06,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
+   "engine_cell": "잇템로그판.json placement.rules.stickers",
+   "engine_support": "△",
    "engine_gap": "A3"
   },
   {
    "element": "sticker",
    "cond": "화자=원음",
    "action": "sticker",
-   "k": 0,
-   "n": 17,
-   "rate": 0.0,
-   "base": 0.03,
+   "k": 2,
+   "n": 75,
+   "rate": 0.03,
+   "base": 0.06,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
+   "engine_cell": "잇템로그판.json placement.rules.stickers",
+   "engine_support": "△",
    "engine_gap": "A3"
   },
   {
    "element": "sticker",
    "cond": "역할=본문",
    "action": "sticker",
-   "k": 0,
-   "n": 14,
-   "rate": 0.0,
-   "base": 0.03,
+   "k": 1,
+   "n": 43,
+   "rate": 0.02,
+   "base": 0.06,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
+   "engine_cell": "잇템로그판.json placement.rules.stickers",
+   "engine_support": "△",
    "engine_gap": "A3"
   },
   {
    "element": "sticker",
    "cond": "자리=끝",
    "action": "sticker",
-   "k": 0,
-   "n": 10,
-   "rate": 0.0,
-   "base": 0.03,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
-   "engine_gap": "A3"
-  },
-  {
-   "element": "sticker",
-   "cond": "자리=훅",
-   "action": "sticker",
-   "k": 1,
-   "n": 8,
-   "rate": 0.12,
-   "base": 0.03,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
-   "engine_gap": "A3"
-  },
-  {
-   "element": "sticker",
-   "cond": "역할=훅",
-   "action": "sticker",
-   "k": 1,
-   "n": 7,
-   "rate": 0.14,
-   "base": 0.03,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
-   "engine_gap": "A3"
-  },
-  {
-   "element": "sticker",
-   "cond": "역할=다리",
-   "action": "sticker",
-   "k": 0,
-   "n": 7,
-   "rate": 0.0,
-   "base": 0.03,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
-   "engine_gap": "A3"
-  },
-  {
-   "element": "sticker",
-   "cond": "역할=질문",
-   "action": "sticker",
-   "k": 0,
-   "n": 7,
-   "rate": 0.0,
-   "base": 0.03,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
-   "engine_gap": "A3"
-  },
-  {
-   "element": "sticker",
-   "cond": "화자=불명",
-   "action": "sticker",
    "k": 2,
-   "n": 5,
-   "rate": 0.4,
-   "base": 0.03,
-   "grade": "중",
+   "n": 29,
+   "rate": 0.07,
+   "base": 0.06,
+   "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
+   "engine_cell": "잇템로그판.json placement.rules.stickers",
+   "engine_support": "△",
    "engine_gap": "A3"
   },
   {
@@ -1858,17 +2112,125 @@
    "cond": "역할=증거",
    "action": "sticker",
    "k": 1,
-   "n": 5,
-   "rate": 0.2,
-   "base": 0.03,
+   "n": 28,
+   "rate": 0.04,
+   "base": 0.06,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
+   "engine_cell": "잇템로그판.json placement.rules.stickers",
+   "engine_support": "△",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "자리=훅",
+   "action": "sticker",
+   "k": 4,
+   "n": 27,
+   "rate": 0.15,
+   "base": 0.06,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.stickers",
+   "engine_support": "△",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=훅",
+   "action": "sticker",
+   "k": 4,
+   "n": 25,
+   "rate": 0.16,
+   "base": 0.06,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.stickers",
+   "engine_support": "△",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "화자=불명",
+   "action": "sticker",
+   "k": 6,
+   "n": 21,
+   "rate": 0.29,
+   "base": 0.06,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.stickers",
+   "engine_support": "△",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=고조",
+   "action": "sticker",
+   "k": 3,
+   "n": 21,
+   "rate": 0.14,
+   "base": 0.06,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.stickers",
+   "engine_support": "△",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=다리",
+   "action": "sticker",
+   "k": 0,
+   "n": 19,
+   "rate": 0.0,
+   "base": 0.06,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.stickers",
+   "engine_support": "△",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=질문",
+   "action": "sticker",
+   "k": 0,
+   "n": 14,
+   "rate": 0.0,
+   "base": 0.06,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.stickers",
+   "engine_support": "△",
    "engine_gap": "A3"
   },
   {
@@ -1876,35 +2238,17 @@
    "cond": "역할=공개",
    "action": "sticker",
    "k": 0,
-   "n": 5,
+   "n": 12,
    "rate": 0.0,
-   "base": 0.03,
+   "base": 0.06,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
-   "engine_gap": "A3"
-  },
-  {
-   "element": "sticker",
-   "cond": "역할=고조",
-   "action": "sticker",
-   "k": 0,
-   "n": 5,
-   "rate": 0.0,
-   "base": 0.03,
-   "grade": "약",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
+   "engine_cell": "잇템로그판.json placement.rules.stickers",
+   "engine_support": "△",
    "engine_gap": "A3"
   },
   {
@@ -1912,53 +2256,17 @@
    "cond": "역할=이음",
    "action": "sticker",
    "k": 0,
-   "n": 5,
+   "n": 12,
    "rate": 0.0,
-   "base": 0.03,
+   "base": 0.06,
    "grade": "약",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
-   "engine_gap": "A3"
-  },
-  {
-   "element": "sticker",
-   "cond": "역할=끝",
-   "action": "sticker",
-   "k": 0,
-   "n": 4,
-   "rate": 0.0,
-   "base": 0.03,
-   "grade": "표본부족",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
-   "engine_gap": "A3"
-  },
-  {
-   "element": "sticker",
-   "cond": "역할=반전",
-   "action": "sticker",
-   "k": 0,
-   "n": 2,
-   "rate": 0.0,
-   "base": 0.03,
-   "grade": "표본부족",
-   "evidence": [
-    "channel/ititemlog/_kal/규칙빈도.json"
-   ],
-   "confidence": "눈",
-   "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
+   "engine_cell": "잇템로그판.json placement.rules.stickers",
+   "engine_support": "△",
    "engine_gap": "A3"
   },
   {
@@ -1966,48 +2274,84 @@
    "cond": "역할=답",
    "action": "sticker",
    "k": 0,
-   "n": 2,
+   "n": 12,
    "rate": 0.0,
-   "base": 0.03,
+   "base": 0.06,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.stickers",
+   "engine_support": "△",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=끝",
+   "action": "sticker",
+   "k": 2,
+   "n": 9,
+   "rate": 0.22,
+   "base": 0.06,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json placement.rules.stickers",
+   "engine_support": "△",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=반전",
+   "action": "sticker",
+   "k": 0,
+   "n": 4,
+   "rate": 0.0,
+   "base": 0.06,
    "grade": "표본부족",
    "evidence": [
     "channel/ititemlog/_kal/규칙빈도.json"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
+   "engine_cell": "잇템로그판.json placement.rules.stickers",
+   "engine_support": "△",
    "engine_gap": "A3"
   },
   {
    "element": "pointer",
    "cond": "전체 줄",
-   "action": "원·화살표 스티커 (빨간원)",
-   "k": 1,
-   "n": 63,
+   "action": "원·화살표 스티커 (빨간원, 기타(손글씨 'lets, 빨간원+화살표, 빨간원+화살표)",
+   "k": 4,
+   "n": 199,
    "rate": 0.02,
    "base": null,
    "grade": "약",
    "evidence": [
-    "channel/ititemlog/줄판독 2편"
+    "channel/ititemlog/줄판독 6편"
    ],
    "confidence": "눈",
    "measure_task": null,
-   "engine_cell": null,
-   "engine_support": "×",
+   "engine_cell": "잇템로그판.json placement.rules.stickers.circle_arrow",
+   "engine_support": "△",
    "engine_gap": "A3"
   },
   {
    "element": "thumb",
    "cond": "0초 프레임",
    "action": "frame0 기입",
-   "k": 2,
-   "n": 2,
+   "k": 6,
+   "n": 6,
    "rate": 1.0,
    "base": null,
-   "grade": "표본부족",
+   "grade": "강",
    "evidence": [
-    "channel/ititemlog/줄판독 2편"
+    "channel/ititemlog/줄판독 6편"
    ],
    "confidence": "눈",
    "measure_task": null,
@@ -2018,9 +2362,9 @@
   {
    "element": "speech",
    "cond": "화자=나레",
-   "action": "말속도 8.66 자/초 · 덩어리 0.9초",
+   "action": "말속도 8.66 자/초 · 덩어리 0.87초",
    "k": null,
-   "n": 41,
+   "n": 103,
    "rate": null,
    "base": null,
    "grade": "강",
@@ -2037,9 +2381,9 @@
    "element": "script",
    "cond": "나레 문장 끝",
    "action": "어미 ~는데요",
-   "k": 3,
-   "n": 9,
-   "rate": 0.33,
+   "k": 12,
+   "n": 22,
+   "rate": 0.55,
    "base": null,
    "grade": "중",
    "evidence": [
@@ -2055,9 +2399,9 @@
    "element": "script",
    "cond": "나레 문장 끝",
    "action": "어미 ~네요",
-   "k": 2,
-   "n": 9,
-   "rate": 0.22,
+   "k": 3,
+   "n": 22,
+   "rate": 0.14,
    "base": null,
    "grade": "약",
    "evidence": [
@@ -2073,9 +2417,9 @@
    "element": "script",
    "cond": "나레 문장 끝",
    "action": "어미 ~데요",
-   "k": 2,
-   "n": 9,
-   "rate": 0.22,
+   "k": 3,
+   "n": 22,
+   "rate": 0.14,
    "base": null,
    "grade": "약",
    "evidence": [
@@ -2091,9 +2435,27 @@
    "element": "script",
    "cond": "나레 문장 끝",
    "action": "어미 ~지",
+   "k": 2,
+   "n": 22,
+   "rate": 0.09,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/ititemlog/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "잇템로그판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "나레 문장 끝",
+   "action": "어미 ~다",
    "k": 1,
-   "n": 9,
-   "rate": 0.11,
+   "n": 22,
+   "rate": 0.05,
    "base": null,
    "grade": "약",
    "evidence": [
@@ -2110,8 +2472,8 @@
    "cond": "나레 문장 끝",
    "action": "어미 ~야",
    "k": 1,
-   "n": 9,
-   "rate": 0.11,
+   "n": 22,
+   "rate": 0.05,
    "base": null,
    "grade": "약",
    "evidence": [
@@ -2147,56 +2509,41 @@
   "flow_format": "해외원본형"
  },
  "results": {
-  "n": 0,
+  "n": 10,
   "judged_pass": 0,
-  "latest": null
+  "latest": "13 연어 PDRN 크림"
  },
  "facts": {
-  "line_reads": 2,
+  "hand_const": [],
+  "line_reads": 6,
   "line_reads_strict_errors": 0,
   "rules_freq": true,
   "style_analysis": true,
   "palette": true,
-  "sfx_events": false,
+  "sfx_events": true,
   "style_file": "tools/calcopy/hybrid/styles/잇템로그판.json",
   "style_file_exists": true,
   "renderer": "bench",
   "caption_pack": "ititemlog",
   "caption_pack_ok": true,
-  "counted_n": 2,
-  "no_why": [
-   "caption.chunk_max_chars",
-   "caption.typing_cps",
-   "cps_target",
-   "cuts.push_orig",
-   "cuts.push_tts",
-   "frame.bg",
-   "frame.flash_sec",
-   "frame.title.0.center",
-   "frame.title.0.max_w",
-   "frame.title.0.px",
-   "frame.title.1.center",
-   "frame.title.1.max_w",
-   "frame.title.1.px",
-   "frame.window",
-   "length.max",
-   "length.min",
-   "loudness.lufs",
-   "loudness.tp",
-   "sfx_files.gain_db",
-   "timing.gap",
-   "timing.tail"
-  ],
+  "counted_n": 6,
+  "no_why": [],
   "hand_scripts": [
    "(scratchpad) mk_v3_*.py — 대본·재료 생성",
    "(scratchpad) vmake.py — 자막 지우기(VMake Pro 서버)"
   ],
   "hand_scripts_reference": [],
-  "unmeasured": 1,
+  "unmeasured": 0,
   "quality_gate_ok": false,
   "match_ok": false,
   "eye": null,
-  "upgrade": null,
+  "upgrade": {
+   "better": 0,
+   "worse": null,
+   "l3_ok": false,
+   "need": null,
+   "pending_n": 0
+  },
   "member": {
    "line_json": null,
    "preset_name": null,
@@ -2204,51 +2551,56 @@
   },
   "line_json_exists": false,
   "member_live_ok": false,
-  "results_n": 0,
+  "results_n": 10,
   "results_pass_n": 0,
-  "owner_pass": false
+  "owner_pass": true
  },
  "inputs": {
-  "channel/ititemlog/_kal/규칙빈도.json": "849666e4ad84",
-  "channel/ititemlog/_kal/대본언어.json": "96f67de93673",
-  "channel/ititemlog/뜯기/J7GxfaVdwSU/뜯기.json": "1b77b996ac31",
-  "channel/ititemlog/뜯기/aUicTeDoW04/뜯기.json": "ba13dee71405",
-  "channel/ititemlog/뜯기/ro1l3u734v4/뜯기.json": "5fa70c7090a7",
-  "channel/ititemlog/뜯기/zOSpeiMw1nA/뜯기.json": "39a7216d5a6b",
+  "channel/ititemlog/_kal/sfx_events.json": "c913c0102265",
+  "channel/ititemlog/_kal/규칙빈도.json": "9c76c90c5a95",
+  "channel/ititemlog/_kal/대본언어.json": "88009f669acd",
+  "channel/ititemlog/뜯기/AZ2q07mBzlM/뜯기.json": "6f012fd7caa9",
+  "channel/ititemlog/뜯기/J7GxfaVdwSU/뜯기.json": "7ba612e05b3d",
+  "channel/ititemlog/뜯기/SbWTqCnleC8/뜯기.json": "10a90196b8b7",
+  "channel/ititemlog/뜯기/aUicTeDoW04/뜯기.json": "aa7d9db5b4c8",
+  "channel/ititemlog/뜯기/ro1l3u734v4/뜯기.json": "50608a8c0f30",
+  "channel/ititemlog/뜯기/zOSpeiMw1nA/뜯기.json": "3ef922f28710",
+  "channel/ititemlog/줄판독/AZ2q07mBzlM.json": "c6ad1bbd4c70",
+  "channel/ititemlog/줄판독/J7GxfaVdwSU.json": "75a252314e8c",
+  "channel/ititemlog/줄판독/SbWTqCnleC8.json": "017b910846dd",
   "channel/ititemlog/줄판독/aUicTeDoW04.json": "d72c14fb4958",
-  "channel/ititemlog/줄판독/ro1l3u734v4.json": "8e0be80b4339",
-  "channel/ititemlog/팔레트.json": "c867306982ff",
-  "channel/결과물.json": "142ed78b2435",
+  "channel/ititemlog/줄판독/ro1l3u734v4.json": "5ab920b50a5e",
+  "channel/ititemlog/줄판독/zOSpeiMw1nA.json": "ca319745033a",
+  "channel/ititemlog/팔레트.json": "36ba8f1810fb",
+  "channel/결과물.json": "888a73224044",
   "channel/브랜드.json": "f2ded5552699",
-  "channel/스타일.json": "3f5625b6c1a2",
-  "channel/프리셋.json": "7d8cdd70c9e9",
-  "shopping_shorts/static/caption-motions.js": "09ac4bd95b42",
-  "tools/calcopy/hybrid/styles/_common.json": "3c88a2be87ae",
-  "tools/calcopy/hybrid/styles/잇템로그판.json": "e6f91cf78374"
+  "channel/스타일.json": "c8a155f5ab8b",
+  "channel/프리셋.json": "3d2f71d1b0f4",
+  "shopping_shorts/static/caption-motions.js": "10ddd0dfe0ef",
+  "tools/calcopy/hybrid/styles/_common.json": "5452d68fa811",
+  "tools/calcopy/hybrid/styles/잇템로그판.json": "6325896f55e8"
  },
  "done": {
-  "level": "L0 미달",
+  "level": "L1",
   "missing": [
-   "줄판독≥6",
-   "sfx_events",
-   "숫자칸 why",
-   "counted≥6",
-   "rules 미측정0",
    "품질관문 ○",
    "재현일치도 ○",
    "눈검수 E1~E8",
-   "업그레이드 나아짐≥1",
+   "업그레이드 나아짐≥과반∧나빠짐0",
    "눈검수 E9",
-   "사장님 판정",
    "member line.json",
    "member preset_name",
    "회원실측",
    "손스크립트0"
   ],
-  "rule_unmeasured": 1,
-  "measure_tasks": [
-   "06-ititemlog"
-  ],
+  "rule_unmeasured": 0,
+  "measure_tasks": [],
+  "hand_const": [],
   "complete": false
+ },
+ "emph_weak": {
+  "de_min": 17.97,
+  "threshold": 30.0,
+  "label": "벤치 대비 약함"
  }
 }
