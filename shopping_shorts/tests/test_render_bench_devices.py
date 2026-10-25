@@ -599,6 +599,38 @@ def test_site_sticker_not_drawn_where_pack_ignores_xy():
     assert any("kk_doodle" in l and "안 그림" in l for l in placed["log"])
 
 
+def test_pack_place_x(tmp_path):
+    """자막팩 place.x → 줄 place 표식(변형 > 화자 > 팩) · x 없는 팩은 그대로 · 실제 그림에서 자막 가운데가 그 x 로 간다."""
+    rows = lambda: [{"line": "N1", "t0": 0.0, "t1": 1.0, "text": "가운데 자막", "speaker": "narr", "variant": ""},
+                    {"line": "O1", "t0": 1.0, "t1": 2.0, "text": "원음 자막", "speaker": "orig", "variant": "big"}]
+    packs = {"p": {"place": {"y": 70.0, "x": 30.0}, "speakers": {"orig": {"place": {"x": 60.0}}}, "variants": {"big": {"place": {"x": 70.0}}}},
+             "q": {"place": {"y": 70.0}}}
+    r = RB.pack_place_x(rows(), {"caption": {"pack": "p"}}, packs)
+    assert [x.get("place") for x in r] == [{"x": 30.0, "y": 70.0}, {"x": 70.0, "y": 70.0}]
+    assert all("place" not in x for x in RB.pack_place_x(rows(), {"caption": {"pack": "q"}}, packs))
+    assert all("place" not in x for x in RB.pack_place_x(rows(), {"caption": {"pack": "clean"}}))      # 지금 팩들엔 x 가 없다(회귀 0)
+    with pytest.raises(RB.StageError):
+        RB.pack_place_x(rows(), {"caption": {"pack": "z"}}, {"z": {"place": {"x": 40.0}}})
+    s = RB.pack_place_x([{**rows()[0], "place": {"x": 50, "y": 30.0}}], {"caption": {"pack": "p"}}, packs)
+    assert s[0]["place"] == {"x": 30.0, "y": 30.0}                                                     # 쌓기 y 는 그대로
+    base = tmp_path / "b.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"color=c=0x808080:s=1080x1920:r={FPS}:d=1", "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                    str(base)], check=True, stdin=subprocess.DEVNULL)
+    one = [{"line": "N1", "t0": 0.0, "t1": 1.0, "text": "가운데", "speaker": "narr", "variant": "", "emph": [], "sticker": "", "stickers": [], "enter": "cut"}]
+    cx = []
+    for x in (None, 30.0):
+        rr = RB.pack_place_x([dict(one[0])], {"caption": {"pack": "clean"}}, {"clean": {"place": {"x": x, "y": 70.0}}} if x else {})
+        R = tmp_path / f"r{x}"
+        R.mkdir()
+        out = RB.burn_captions(base, rr, {"caption": {"pack": "clean"}}, R, 1.0)
+        raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", "0.5", "-i", str(out), "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "gray", "-"],
+                             capture_output=True, stdin=subprocess.DEVNULL).stdout
+        g = np.frombuffer(raw, np.uint8).reshape(1920, 1080).astype(int)
+        xs = np.where((g < 40).any(0))[0]
+        cx.append((xs.min() + xs.max()) / 2)
+    assert abs(cx[0] - 540) < 15 and abs(cx[1] - 324) < 20, cx                                          # 30% = 324px
+
+
 # ── CLI: 실제 렌더 대조(합격 검사 1·2·3·4) ───────────────────────────────
 def _img(p):
     import cv2

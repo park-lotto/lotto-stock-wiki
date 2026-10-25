@@ -1377,7 +1377,38 @@ def caption_rows(placed: dict, st: dict, segs: list[dict] | None = None) -> list
             step = min(1.0 / cps, (b - a) * 0.85 / max(1, n))
             row["chars"] = [round(a + k * step, 3) for k in range(n)]
         out.append(row)
-    return stack_rows(caption_hidden(out, segs or []), st)
+    return pack_place_x(stack_rows(caption_hidden(out, segs or []), st), st)
+
+
+def caption_packs() -> dict:
+    """자막팩 계약 파일(shopping_shorts/static/caption-motions.js /*PACKS*/ 사이 json) — 자막 모양의 주인(표준 ㉑)."""
+    t = (ROOT / "shopping_shorts/static/caption-motions.js").read_text(encoding="utf-8")
+    return json.loads(t.split("/*PACKS*/")[1])
+
+
+def pack_place_x(rows: list[dict], st: dict, packs: dict | None = None) -> list[dict]:
+    """자막팩 가로 자리 place.x(화면 %, 자막 가운데)를 줄마다 place 표식으로 싣는다 — 편집기 renderCaption 은 가로 자리를 장면 place.x 에서만 읽어
+    팩 place.x 가 렌더에 안 먹었다(10-25 자막팩 작업자 보고). 우선 = 줄 변형(variants) > 화자(speakers) > 팩. 팩에 x 가 없으면 아무것도 안 바꾼다
+    (장면 자리 표식은 y 가 함께여야 받아지므로 y = 쌓기(stack)가 정한 y, 없으면 팩 place.y — 팩 세로 자리와 같다)."""
+    P = (packs if packs is not None else caption_packs()).get((st.get("caption") or {}).get("pack")) or {}
+
+    def get(r, k):
+        for sec, key in (("variants", r.get("variant")), ("speakers", r.get("speaker"))):
+            pl = (((P.get(sec) or {}).get(key) or {}) if key else {}).get("place") or {}
+            if isinstance(pl.get(k), (int, float)):
+                return float(pl[k])
+        pl = P.get("place") or {}
+        return float(pl[k]) if isinstance(pl.get(k), (int, float)) else None
+    for r in rows:
+        x = get(r, "x")
+        if x is None:
+            continue
+        y = (r.get("place") or {}).get("y")
+        y = y if isinstance(y, (int, float)) else get(r, "y")
+        if y is None:      # 장면 자리 표식은 y 가 있어야 받아진다(scene_style 줄 자리 칸) — x 만 있는 팩은 그릴 수 없다
+            raise StageError(f"자막팩 '{st['caption'].get('pack')}' place.x 만 있고 y 가 없다 — 팩에 place.y 를 같이 적는다")
+        r["place"] = {**(r.get("place") or {}), "x": x, "y": y}
+    return rows
 
 
 def snapshot(st: dict) -> dict:
