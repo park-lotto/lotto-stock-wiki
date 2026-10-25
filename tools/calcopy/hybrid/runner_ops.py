@@ -1146,7 +1146,19 @@ def c_plan(W, d):
     if miss:
         return {"error": miss}
     try:
-        res = render_bench.render(v, W / "doc" / v, W / v, plan_only=True, tts=True, report=True, log=_log_beat(W, "장면 맞추기"))      # 진짜 목소리 길이로 계획 · report = 넘침·길이를 멈추지 않고 돌려받아 재료 고치기 안내(관문 ⑧)(합성은 캐시 — 렌더가 그대로 쓴다)
+        # 계획 안 관문(장면 경계·컷 내용 — 긴 원본 프레임 읽기)은 로그 없이 수 분 걸린다(10-26 524초 원본: 로그 끝 뒤 180초+ 무음으로 꺼짐).
+        #   같은 프로세스 안 계산이라 무음 = 멈춤이 아니다 → 계산이 살아 있는 동안 30초마다 진행 신호. 끝없는 계산은 예산(plan 600초)이 끊는다.
+        import threading
+        alive = threading.Event()
+
+        def _beat():
+            while not alive.wait(30):
+                progress(W, "장면 맞추기")
+        threading.Thread(target=_beat, daemon=True).start()
+        try:
+            res = render_bench.render(v, W / "doc" / v, W / v, plan_only=True, tts=True, report=True, log=_log_beat(W, "장면 맞추기"))
+        finally:
+            alive.set()      # 진짜 목소리 길이로 계획 · report = 넘침·길이를 멈추지 않고 돌려받아 재료 고치기 안내(관문 ⑧)(합성은 캐시 — 렌더가 그대로 쓴다)
         over = res.get("over") or ""
     except StageError as e:          # 컷이 원본 샷보다 길다 → 재료를 고치게 한다
         res, over = {"timeline": {"cuts": []}}, str(e)
