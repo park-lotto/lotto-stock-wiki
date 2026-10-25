@@ -1022,6 +1022,48 @@
    "from": "tools/travel/hotel_copy/engine.py (여행쇼핑쇼츠 트랙)",
    "doc": "channel/staybrokr/숙소쇼츠_지침서.md",
    "note": "채널1 AI 영상의 뒤쪽 절반 재사용(Veo 0원) · 앞판과 같은 AI 구간 0초 · 대본 겹침 17%"
+  },
+  {
+   "n": 70,
+   "channel": "evenshopping",
+   "channel_name": "재미썸홈",
+   "title": "작품6_취객선비잔",
+   "path": "C:/숏템_칼카피/evenshopping/작품6_취객선비잔/src/make/final.mp4",
+   "desktop": "칼카피_재미썸홈_취객선비잔.mp4",
+   "md5": "a1a65cf3af43e4546a8f457388903b97",
+   "seconds": 32.97,
+   "preset": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\5e171611-469e-473f-bd3f-9d8dc538717f\\scratchpad\\preset6",
+   "date": "2026-10-24",
+   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "from": "tools/calcopy/engine/preset_make.py"
+  },
+  {
+   "n": 71,
+   "channel": "evenshopping",
+   "channel_name": "재미썸홈",
+   "title": "작품7_신라미소소스볼",
+   "path": "C:/숏템_칼카피/evenshopping/작품7_신라미소소스볼/src/make/final.mp4",
+   "desktop": "칼카피_재미썸홈_신라미소소스볼.mp4",
+   "md5": "d0d516acab7c9212d0bd738364972b6c",
+   "seconds": 30.7,
+   "preset": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\5e171611-469e-473f-bd3f-9d8dc538717f\\scratchpad\\preset7",
+   "date": "2026-10-24",
+   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "from": "tools/calcopy/engine/preset_make.py"
+  },
+  {
+   "n": 72,
+   "channel": "evenshopping",
+   "channel_name": "재미썸홈",
+   "title": "작품8_호작도와인마개",
+   "path": "C:/숏템_칼카피/evenshopping/작품8_호작도와인마개/src/make/final.mp4",
+   "desktop": "칼카피_재미썸홈_호작도와인마개.mp4",
+   "md5": "7fca50a08df04554690dba4cdf8eba6c",
+   "seconds": 31.8,
+   "preset": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\5e171611-469e-473f-bd3f-9d8dc538717f\\scratchpad\\preset7",
+   "date": "2026-10-24",
+   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "from": "tools/calcopy/engine/preset_make.py"
   }
  ]
 }
