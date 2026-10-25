@@ -800,7 +800,8 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
             continue
         cand = [i for i, r in enumerate(out) if (not rule.get("lex") or set(rule["lex"]) & set(r["lex"])) and (not rule.get("speaker") or r["speaker"] == rule["speaker"])
                 and (not rule.get("needs_key") or r.get("key")) and (kind != "object_pop" or r.get("object_src"))
-                and (not rule.get("role") or r["role_key"] in _roles_of(rule["role"]))]      # 역할 조건(벤치 원 스티커 훅 3/3 — 07 15a9f46ed 쪽지)
+                and (not rule.get("role") or r["role_key"] in _roles_of(rule["role"]))      # 역할 조건(벤치 원 스티커 훅 3/3 — 07 15a9f46ed 쪽지)
+                and not (rule.get("target") in ("face", "object") and _cut_inside(r, cuts))]      # 화면 자리 스티커 = 덩어리 안에 컷이 바뀌면 자리가 빗나간다(10-25 ep12 N1 원·화살표가 컷 뒤 옷깃)
         for i in _spread(cand, need):
             st = {"kind": kind, "word": out[i].get("key") or ""}
             if kind == "object_pop":
@@ -1020,6 +1021,15 @@ def emph_color_step(out: list[dict], style: dict, log: list):
         r["emph"] = keep
 
 # ── 자리(표준 §3-3 A3): 스티커·짤·pointer 는 검출로 자리를 받는다 ─────────────────
+def _cut_inside(row: dict, cuts, edge: float = 0.05) -> bool:
+    """덩어리 시각(t0~t1) 안쪽에 화면 컷 경계(cuts[1:].t0)가 있나 — 자리를 화면에서 찾는 스티커(face·object)는 덩어리 시작+0.1초 프레임에서 자리를 정하므로
+    컷이 바뀌면 다른 그림을 가리킨다. cuts 가 없으면(계획 전) False."""
+    if not cuts:
+        return False
+    a, b = float(row["t0"]), float(row["t1"])
+    return any(a + edge < float(c["t0"]) < b - edge for c in list(cuts)[1:])
+
+
 def _site(st: dict, rule: dict, row: dict, locate, log: list) -> dict | None:
     """rule.target = face|object|caption_side|{fixed:{x,y}, why} → 스티커 자리. 반환 st(자리 붙음/받을 것 표시) | None(못 둠 → 안 붙인다).
     target 없는 옛 규칙(rule.x·y 고정 %)은 그대로 둔다(옛 판 동작 유지 — check_place 가 'legacy_fixed' 로 센다)."""
