@@ -736,6 +736,65 @@ def snap_ss(src: Path, ss: float, dur: float, reach: float = 0.4) -> float:
     return ss
 
 
+def _real_cut(src: Path, t: float, y0: int, y1: int, w: int, corr_max: float = 0.6) -> bool:
+    """cutdet 후보가 진짜 편집점인지 확인: 경계 앞뒤 두 프레임의 회색 상관 < corr_max. 빠른 손 움직임은 차가 커도 구도가 남아 상관 0.78~0.89,
+    진짜 편집점은 -0.43~0.34 (10-25 실측 잇템로그 05·09·13 눈 대조). 못 재면 진짜로 본다(놓치는 쪽이 번쩍임을 통과시키므로)."""
+    import numpy as np
+    H = max(16, y1 - y0)
+    import subprocess
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{max(0.0, t - 1 / FPS):.4f}", "-i", str(src), "-vf",
+                          f"fps={FPS},crop={w}:{H}:0:{y0},scale=90:-2,format=gray", "-frames:v", "2", "-f", "rawvideo", "-"],
+                         capture_output=True, stdin=subprocess.DEVNULL).stdout
+    if len(raw) < 2 or len(raw) % 2:
+        return True
+    a, b = (np.frombuffer(raw[:len(raw) // 2], np.uint8).astype(float), np.frombuffer(raw[len(raw) // 2:], np.uint8).astype(float))
+    if a.std() < 1e-6 or b.std() < 1e-6:
+        return True
+    return float(np.corrcoef(a, b)[0, 1]) < corr_max
+
+
+def _src_cuts(src: Path, y0: int, y1: int, w: int) -> list[float]:
+    """원본 한 파일의 장면 경계 초(주인 = readline_tools.cutdet.cutdet — 상대 문턱 max(12, 3.5×이웃 중앙값) 또는 히스토그램차, 불러 쓴다). 파일 옆 json 캐시."""
+    cp = src.parent / f"_cutbounds_{src.stem}_{y0}_{y1}.json"
+    try:
+        if cp.exists() and cp.stat().st_mtime >= src.stat().st_mtime:
+            return jload(cp)
+    except Exception:
+        pass
+    from tools.calcopy.engine.readline_tools.cutdet import cutdet
+    ts = [t for t in (float(r["t"]) for r in cutdet(str(src), y0, y1, float(FPS), w)["cuts"]) if _real_cut(src, t, y0, y1, w)]
+    try:
+        jsave(cp, ts)
+    except Exception:
+        pass
+    return ts
+
+
+def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
+    """렌더 전 관문 ③(10-25 잇템로그 05·09 번쩍임): 계획된 컷마다 원본 [ss, ss+길이] 안(가장자리 포함, 맨 앞 1프레임 제외)에
+    장면 경계가 있으면 막는다. 옛 shot_starts(절대 문턱 25)는 차 22~31 인 진짜 편집점을 놓쳤고 slivers 는 가장자리 0.2초만 봤다.
+    x 크롭은 무시하고 세로 범위만 쓴다(크롭 안 편집점만 보려면 원본 가로 전체와 다를 수 있음 — 거짓 경보는 눈으로 확인)."""
+    src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
+    if not src_dir:
+        return []
+    bad = []
+    for c in T["cuts"]:
+        src = src_dir / c["src"]
+        if c.get("ss") is None or src.suffix.lower() in IMG_EXT or not src.exists():
+            continue
+        ss = float(c["ss"])
+        n = c.get("frames") or (round(c["t1"] * FPS) - round(c["t0"] * FPS))
+        end = ss + n / FPS
+        w, h = probe(src)[:2]
+        cr = c.get("crop")
+        y0, y1 = (int(cr[1]), int(cr[1] + cr[3])) if isinstance(cr, list) and len(cr) == 4 else (0, int(h))
+        y1 = min(y1, int(h))
+        hit = [t for t in _src_cuts(src, y0, y1, int(w)) if ss + 1.5 / FPS < t <= end - 1 / FPS + 1e-3]
+        if hit:
+            bad.append(f"컷 경계 {c['line']} {c['src']} ss={ss:.2f}~{end:.2f} 안에 원본 장면 경계 {[round(t, 2) for t in hit]}초")
+    return bad
+
+
 def count_frames(p: Path) -> int:
     return int(run(["ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0", "-show_entries", "stream=nb_read_frames",
                     "-of", "csv=p=0", p]).stdout.strip().split(",")[0] or 0)   # ICC side_data 면 '78,' (98 #73)
@@ -1840,7 +1899,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         if over and not tts:
             raise StageError(msg)
         from tools.calcopy.hybrid import thumb_rule as TR
-        card_bad = TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"])      # 렌더 전 관문 ⑥ — 계획 때 걸러 렌더를 안 돌린다
+        card_bad = TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"]) + cut_boundary_gate(T, M, st)      # 렌더 전 관문 ⑥ — 계획 때 걸러 렌더를 안 돌린다
         if card_bad:
             raise StageError(" / ".join(card_bad))
         return {"timeline": T, "placement": placed, "length": length, "over": msg}
@@ -1859,7 +1918,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     if over:
         raise StageError("컷이 원본 샷보다 길다: " + str([(c["line"], c["src"], c.get("ss"), c["dur"], c.get("max"), {"원본 남음": c["src_left"]} if "src_left" in c else None) for c in over]))
     from tools.calcopy.hybrid import thumb_rule as TR
-    card_bad = TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"])          # 렌더 전 관문 ⑥(10-25): 연예인 판 카드 3안 얼굴 — 영상 굽기 전에 멈춘다
+    card_bad = TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"]) + cut_boundary_gate(T, M, st)          # 렌더 전 관문 ⑥(10-25): 연예인 판 카드 3안 얼굴 — 영상 굽기 전에 멈춘다
     if card_bad:
         raise StageError(" / ".join(card_bad))
     win0 = render_window(T, M, st, R)                          # 창(전환 없이) — 자리 검출 화면의 재료

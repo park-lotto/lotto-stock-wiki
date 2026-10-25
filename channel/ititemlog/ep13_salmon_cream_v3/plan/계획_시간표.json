@@ -1,0 +1,1198 @@
+{
+ "timeline": {
+  "lines": {
+   "N1": [
+    0.0,
+    2.907
+   ],
+   "O1": [
+    2.987,
+    6.3
+   ],
+   "N2": [
+    6.38,
+    8.822
+   ],
+   "N3": [
+    8.902,
+    11.576
+   ],
+   "O2": [
+    11.656,
+    13.81
+   ],
+   "N4": [
+    13.89,
+    16.099
+   ],
+   "O3": [
+    16.179,
+    18.219
+   ],
+   "N5": [
+    18.299,
+    20.508
+   ],
+   "N6": [
+    20.588,
+    22.565
+   ],
+   "N7": [
+    22.645,
+    25.087
+   ]
+  },
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한국 연어 크림을",
+    "t0": 0.0,
+    "t1": 1.0,
+    "key": "연어",
+    "show": [
+     0.0,
+     1.0
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "얼굴에 바르고",
+    "t0": 1.0,
+    "t1": 1.857,
+    "show": [
+     1.0,
+     1.857
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "경악한 외국인이 있다는데요?",
+    "t0": 1.857,
+    "t1": 2.907,
+    "show": [
+     1.857,
+     2.987
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "진짜야, 연어로 만든 거래",
+    "t0": 2.987,
+    "t1": 5.82,
+    "key": "연어",
+    "show": [
+     2.987,
+     5.82
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "뭐?",
+    "t0": 5.82,
+    "t1": 6.3,
+    "show": [
+     5.82,
+     6.38
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "분홍 알갱이마다",
+    "t0": 6.38,
+    "t1": 7.38,
+    "key": "분홍",
+    "show": [
+     6.38,
+     7.38
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "연어에서 뽑은 성분이 들었다는데",
+    "t0": 7.38,
+    "t1": 8.822,
+    "key": "연어",
+    "show": [
+     7.38,
+     8.902
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "얼굴에 올리고 문지르자",
+    "t0": 8.902,
+    "t1": 10.331,
+    "show": [
+     8.902,
+     10.331
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "알갱이가 스르르 녹아 버렸어요",
+    "t0": 10.331,
+    "t1": 11.576,
+    "key": "녹아",
+    "show": [
+     10.331,
+     11.656
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "어머, 세상에!",
+    "t0": 11.656,
+    "t1": 12.596,
+    "show": [
+     11.656,
+     12.596
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "진짜 세상에!",
+    "t0": 12.596,
+    "t1": 13.81,
+    "key": "세상에",
+    "show": [
+     12.596,
+     13.89
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "다른 외국인도",
+    "t0": 13.89,
+    "t1": 14.747,
+    "show": [
+     13.89,
+     14.747
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "처음 보고는 소리부터 질렀는데",
+    "t0": 14.747,
+    "t1": 16.099,
+    "key": "소리",
+    "show": [
+     14.747,
+     16.179
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "우와!",
+    "t0": 16.179,
+    "t1": 16.779,
+    "show": [
+     16.179,
+     16.979
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "이게 뭐야?",
+    "t0": 16.979,
+    "t1": 18.219,
+    "key": "뭐야?",
+    "show": [
+     16.979,
+     18.299
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "댓글 보니까",
+    "t0": 18.299,
+    "t1": 19.013,
+    "show": [
+     18.299,
+     19.013
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "캡슐은 한두 알이면 충분하다던데",
+    "t0": 19.013,
+    "t1": 20.508,
+    "key": "한두 알",
+    "show": [
+     19.013,
+     20.588
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "딸기 버블티 펄 같다는",
+    "t0": 20.588,
+    "t1": 21.874,
+    "key": "버블티",
+    "show": [
+     20.588,
+     21.874
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "사람도 있다고 하고",
+    "t0": 21.874,
+    "t1": 22.565,
+    "show": [
+     21.874,
+     22.645
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "아, 나도 오늘 밤엔",
+    "t0": 22.645,
+    "t1": 23.645,
+    "show": [
+     22.645,
+     23.645
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "분홍 캡슐 딱 두 알만",
+    "t0": 23.645,
+    "t1": 24.788,
+    "key": "두 알",
+    "show": [
+     23.645,
+     24.788
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 2,
+    "speaker": "narr",
+    "text": "발라 봐야겠다",
+    "t0": 24.788,
+    "t1": 25.087,
+    "show": [
+     24.788,
+     25.233
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "src": "d2.mp4",
+    "ss": 0.3,
+    "w": 1,
+    "crop": [
+     0,
+     100,
+     1080,
+     1434
+    ],
+    "see": "얼굴 가득 분홍·노랑 캡슐(한 사람)",
+    "line": "N1",
+    "t0": 0.0,
+    "kind": "tts",
+    "t1": 2.987,
+    "dur": 2.987,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     0,
+     100,
+     1080,
+     1434
+    ],
+    "see": "분홍 캡슐 통 들고(입 맞춤)",
+    "line": "O1",
+    "ss": 8.567,
+    "src": "d2.mp4",
+    "t0": 2.987,
+    "kind": "orig",
+    "t1": 6.38,
+    "dur": 3.393,
+    "over": 0.0
+   },
+   {
+    "src": "d2.mp4",
+    "ss": 12.2,
+    "w": 1,
+    "crop": [
+     0,
+     100,
+     1080,
+     1434
+    ],
+    "see": "분홍 캡슐 통 가까이",
+    "line": "N2",
+    "t0": 6.38,
+    "kind": "tts",
+    "t1": 7.641,
+    "dur": 1.261,
+    "over": 0.0
+   },
+   {
+    "src": "d2.mp4",
+    "ss": 15.0,
+    "w": 1,
+    "crop": [
+     0,
+     100,
+     1080,
+     1434
+    ],
+    "see": "통 들고 설명",
+    "line": "N2",
+    "t0": 7.641,
+    "kind": "tts",
+    "t1": 8.902,
+    "dur": 1.261,
+    "over": 0.0
+   },
+   {
+    "src": "d2.mp4",
+    "ss": 26.3,
+    "w": 1,
+    "crop": [
+     0,
+     100,
+     1080,
+     1434
+    ],
+    "see": "볼에 캡슐 문지름",
+    "line": "N3",
+    "t0": 8.902,
+    "kind": "tts",
+    "t1": 10.279,
+    "dur": 1.377,
+    "over": 0.0,
+    "ss_planned": 26.2
+   },
+   {
+    "src": "d2.mp4",
+    "ss": 28.2,
+    "w": 1,
+    "crop": [
+     0,
+     100,
+     1080,
+     1434
+    ],
+    "see": "녹아 퍼짐",
+    "line": "N3",
+    "t0": 10.279,
+    "kind": "tts",
+    "t1": 11.656,
+    "dur": 1.377,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     0,
+     100,
+     1080,
+     1434
+    ],
+    "see": "캡슐 얼굴로 감탄(입 맞춤)",
+    "line": "O2",
+    "ss": 31.1,
+    "src": "d2.mp4",
+    "t0": 11.656,
+    "kind": "orig",
+    "t1": 13.89,
+    "dur": 2.234,
+    "over": 0.0
+   },
+   {
+    "src": "mkA.mp4",
+    "ss": 0.0,
+    "w": 1,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "얼굴에 분홍 캡슐 붙인 다른 외국인",
+    "line": "N4",
+    "t0": 13.89,
+    "kind": "tts",
+    "t1": 16.179,
+    "dur": 2.289,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "기겁(입 맞춤)",
+    "line": "O3",
+    "ss": 1.2,
+    "src": "mkA.mp4",
+    "t0": 16.179,
+    "kind": "orig",
+    "t1": 18.299,
+    "dur": 2.12,
+    "over": 0.0
+   },
+   {
+    "src": "d2.mp4",
+    "ss": 24.12,
+    "w": 0.88,
+    "crop": [
+     0,
+     100,
+     1080,
+     1434
+    ],
+    "see": "주걱으로 분홍 캡슐 떠서 코에 올림(d2 24.07~26.3 한 장면)",
+    "line": "N5",
+    "t0": 18.299,
+    "kind": "tts",
+    "t1": 20.313,
+    "dur": 2.014,
+    "over": 0.0
+   },
+   {
+    "src": "mkA.mp4",
+    "ss": 6.787,
+    "w": 0.12,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "볼에 분홍 캡슐 몇 알(7.1~7.5)",
+    "line": "N5",
+    "t0": 20.313,
+    "kind": "tts",
+    "t1": 20.588,
+    "dur": 0.275,
+    "over": 0.0,
+    "ss_planned": 7.12
+   },
+   {
+    "src": "mkA.mp4",
+    "ss": 6.49,
+    "w": 0.28,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "통 안 분홍 캡슐 = 버블티 펄(6.47~7.1)",
+    "line": "N6",
+    "t0": 20.588,
+    "kind": "tts",
+    "t1": 21.164,
+    "dur": 0.576,
+    "over": 0.0
+   },
+   {
+    "src": "mkA.mp4",
+    "ss": 2.99,
+    "w": 0.5,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "볼에 녹은 분홍 알갱이(2.97~4.07)",
+    "line": "N6",
+    "t0": 21.164,
+    "kind": "tts",
+    "t1": 22.192,
+    "dur": 1.028,
+    "over": 0.0
+   },
+   {
+    "src": "mkA.mp4",
+    "ss": 6.0,
+    "w": 0.22,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "분홍 젤 흘러내리는 볼(6.0~6.47)",
+    "line": "N6",
+    "t0": 22.192,
+    "kind": "tts",
+    "t1": 22.645,
+    "dur": 0.453,
+    "over": 0.0
+   },
+   {
+    "src": "d2.mp4",
+    "ss": 73.0,
+    "w": 1,
+    "crop": [
+     0,
+     100,
+     1080,
+     1434
+    ],
+    "see": "바른 뒤 윤기 나는 얼굴",
+    "line": "N7",
+    "t0": 22.645,
+    "kind": "tts",
+    "t1": 23.939,
+    "dur": 1.294,
+    "over": 0.0
+   },
+   {
+    "src": "d2.mp4",
+    "ss": 75.6,
+    "w": 1,
+    "crop": [
+     0,
+     100,
+     1080,
+     1434
+    ],
+    "see": "얼굴 보여 주며",
+    "line": "N7",
+    "t0": 23.939,
+    "kind": "tts",
+    "t1": 25.2333,
+    "dur": 1.294,
+    "over": 0.0
+   }
+  ],
+  "opos": [
+   {
+    "line": "O1",
+    "k": 0,
+    "src": "d2.mp4",
+    "span": [
+     8.567,
+     11.88
+    ],
+    "t0": 2.987,
+    "t1": 6.3
+   },
+   {
+    "line": "O2",
+    "k": 0,
+    "src": "d2.mp4",
+    "span": [
+     31.1,
+     33.254
+    ],
+    "t0": 11.656,
+    "t1": 13.81
+   },
+   {
+    "line": "O3",
+    "k": 0,
+    "src": "mkA.mp4",
+    "span": [
+     1.2,
+     3.24
+    ],
+    "t0": 16.179,
+    "t1": 18.219
+   }
+  ],
+  "end": 25.2333
+ },
+ "placement": {
+  "reference": "zOSpeiMw1nA",
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한국 연어 크림을",
+    "t0": 0.0,
+    "t1": 1.0,
+    "key": "연어",
+    "show": [
+     0.0,
+     1.0
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": "hook"
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "얼굴에 바르고",
+    "t0": 1.0,
+    "t1": 1.857,
+    "show": [
+     1.0,
+     1.857
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [
+     {
+      "kind": "circle_arrow",
+      "word": "",
+      "target": {
+       "kind": "face",
+       "avoid": [],
+       "anchor": "mouth"
+      },
+      "site": "pending"
+     }
+    ],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": "hook"
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "경악한 외국인이 있다는데요?",
+    "t0": 1.857,
+    "t1": 2.907,
+    "show": [
+     1.857,
+     2.987
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": "hook_pop"
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "진짜야, 연어로 만든 거래",
+    "t0": 2.987,
+    "t1": 5.82,
+    "key": "연어",
+    "show": [
+     2.987,
+     5.82
+    ],
+    "first": true,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "reveal",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "연어"
+     }
+    ],
+    "emph_by": "deco_pos",
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "뭐?",
+    "t0": 5.82,
+    "t1": 6.3,
+    "show": [
+     5.82,
+     6.38
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "분홍 알갱이마다",
+    "t0": 6.38,
+    "t1": 7.38,
+    "key": "분홍",
+    "show": [
+     6.38,
+     7.38
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [
+     {
+      "kind": "kk_doodle",
+      "word": "분홍",
+      "target": {
+       "kind": "caption_side",
+       "avoid": [
+        "face"
+       ]
+      },
+      "site": "pending"
+     }
+    ],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "연어에서 뽑은 성분이 들었다는데",
+    "t0": 7.38,
+    "t1": 8.822,
+    "key": "연어",
+    "show": [
+     7.38,
+     8.902
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "얼굴에 올리고 문지르자",
+    "t0": 8.902,
+    "t1": 10.331,
+    "show": [
+     8.902,
+     10.331
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "알갱이가 스르르 녹아 버렸어요",
+    "t0": 10.331,
+    "t1": 11.576,
+    "key": "녹아",
+    "show": [
+     10.331,
+     11.656
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "어머, 세상에!",
+    "t0": 11.656,
+    "t1": 12.596,
+    "show": [
+     11.656,
+     12.596
+    ],
+    "first": true,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "진짜 세상에!",
+    "t0": 12.596,
+    "t1": 13.81,
+    "key": "세상에",
+    "show": [
+     12.596,
+     13.89
+    ],
+    "first": false,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "다른 외국인도",
+    "t0": 13.89,
+    "t1": 14.747,
+    "show": [
+     13.89,
+     14.747
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "처음 보고는 소리부터 질렀는데",
+    "t0": 14.747,
+    "t1": 16.099,
+    "key": "소리",
+    "show": [
+     14.747,
+     16.179
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "소리"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "우와!",
+    "t0": 16.179,
+    "t1": 16.779,
+    "show": [
+     16.179,
+     16.979
+    ],
+    "first": true,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "이게 뭐야?",
+    "t0": 16.979,
+    "t1": 18.219,
+    "key": "뭐야?",
+    "show": [
+     16.979,
+     18.299
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "댓글 보니까",
+    "t0": 18.299,
+    "t1": 19.013,
+    "show": [
+     18.299,
+     19.013
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "캡슐은 한두 알이면 충분하다던데",
+    "t0": 19.013,
+    "t1": 20.508,
+    "key": "한두 알",
+    "show": [
+     19.013,
+     20.588
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [
+     {
+      "kind": "kk_doodle",
+      "word": "한두 알",
+      "target": {
+       "kind": "caption_side",
+       "avoid": [
+        "face"
+       ]
+      },
+      "site": "pending"
+     }
+    ],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "딸기 버블티 펄 같다는",
+    "t0": 20.588,
+    "t1": 21.874,
+    "key": "버블티",
+    "show": [
+     20.588,
+     21.874
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "사람도 있다고 하고",
+    "t0": 21.874,
+    "t1": 22.565,
+    "show": [
+     21.874,
+     22.645
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "아, 나도 오늘 밤엔",
+    "t0": 22.645,
+    "t1": 23.645,
+    "show": [
+     22.645,
+     23.645
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "분홍 캡슐 딱 두 알만",
+    "t0": 23.645,
+    "t1": 24.788,
+    "key": "두 알",
+    "show": [
+     23.645,
+     24.788
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 2,
+    "speaker": "narr",
+    "text": "발라 봐야겠다",
+    "t0": 24.788,
+    "t1": 25.087,
+    "show": [
+     24.788,
+     25.233
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   }
+  ],
+  "sfx": [
+   {
+    "t": 15.047,
+    "role": "body",
+    "why": "body 강조",
+    "kind": "pop"
+   }
+  ],
+  "transitions": [],
+  "flashes": [],
+  "cut_bounds": 15,
+  "log": [
+   "본보기 벤치 편 = zOSpeiMw1nA",
+   "훅 N1 덩어리 3개 → hook (끝 hook_pop)",
+   "스티커 circle_arrow → N1「얼굴에 바르고」",
+   "스티커 kk_doodle → N2「분홍 알갱이마다」",
+   "스티커 kk_doodle → N5「캡슐은 한두 알이면 충분하다던데」",
+   "꾸밈 자리(rules.deco_pos): 벤치 {'훅': 0.354, '본문': 0.508, '끝': 0.038} · 정해진 {'훅': 3, '본문': 3} → 목표 {'훅': 3, '본문': 4, '끝': 0} · 우리 {'훅': 3, '본문': 4} (+강조 ['O1「진짜야, 연어로 만든 거래」'])",
+   "전환 [] (판 cuts.transition.kinds 비율 {'zoomblur': 0.02}, 컷 경계 15·붙일 수 있는 10(≥1.2초))",
+   "효과음 1발(본보기 줄판독 2발 · 역할 {'body': 1} · 편차 +0.30초) [(15.047, 'pop', 'body')]",
+   "짤 0개(rate 0.0 — 벤치에 짤 없음도 스타일)",
+   "등장 {'cut': 22} · 강조 2/22"
+  ],
+  "deco_pos": {
+   "bench_pos": {
+    "훅": 0.354,
+    "본문": 0.508,
+    "끝": 0.038
+   },
+   "want": {
+    "훅": 3,
+    "본문": 4,
+    "끝": 0
+   },
+   "have_before": {
+    "훅": 3,
+    "본문": 3
+   },
+   "ours": {
+    "훅": 3,
+    "본문": 4
+   },
+   "ours_share": {
+    "훅": 0.429,
+    "본문": 0.571,
+    "끝": 0.0
+   },
+   "speaker_cap": {
+    "narr": 5,
+    "orig": 1
+   }
+  },
+  "transitions_drawn": []
+ }
+}

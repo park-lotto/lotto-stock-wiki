@@ -1,0 +1,47 @@
+{
+ "aUicTeDoW04|zoomblur|43389:1792451840|10006184": {
+  "id": "aUicTeDoW04",
+  "kind": "zoomblur",
+  "window": [
+   0,
+   486,
+   1080,
+   1434
+  ],
+  "boundaries": [
+   {
+    "t": 7.533,
+    "drop": 0.923,
+    "ms": 467,
+    "band_var": 19.1,
+    "around_var": 246.8
+   },
+   {
+    "t": 19.833,
+    "drop": 0.587,
+    "ms": 167,
+    "band_var": 23.6,
+    "around_var": 57.0
+   }
+  ]
+ },
+ "J7GxfaVdwSU|zoomblur|46169:1792854852|11128796": {
+  "id": "J7GxfaVdwSU",
+  "kind": "zoomblur",
+  "window": [
+   0,
+   486,
+   1080,
+   1434
+  ],
+  "boundaries": [
+   {
+    "t": 24.333,
+    "drop": 0.72,
+    "ms": 500,
+    "band_var": 19.7,
+    "around_var": 70.4
+   }
+  ]
+ }
+}

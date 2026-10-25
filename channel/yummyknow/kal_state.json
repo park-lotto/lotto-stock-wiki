@@ -1,0 +1,68 @@
+{
+ "slug": "yummyknow",
+ "ref": "https://www.youtube.com/@yummyknow-x1x",
+ "steps": {
+  "tteutgi": {
+   "state": "done",
+   "outputs": {
+    "ids": [
+     "rGFXQlS9Cp4",
+     "PFvCfu1ECK4",
+     "gBVXQdbzwJU",
+     "76uZKOpnlqQ",
+     "8f9T8Jeo-gQ",
+     "g7cxCPWMI5M"
+    ],
+    "dir": "channel/yummyknow/뜯기"
+   },
+   "note": "수동 seed(관제 263 지시서 06) — 8f9T 는 뜯기 없음(줄판독 직접)"
+  },
+  "rules": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-25 01:20",
+   "outputs": {
+    "draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\yummyknow\\_kal\\스타일분석_초안.md",
+    "palette": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\yummyknow\\팔레트.json",
+    "plan_draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\yummyknow\\_kal\\yummyknow판_초안.json"
+   },
+   "note": "규칙빈도·대본언어·팔레트·판 설정 초안 + 스타일분석.md 있음"
+  },
+  "copy": {
+   "state": "done",
+   "sec": 54.1,
+   "at": "2026-10-25 01:17",
+   "outputs": {
+    "frames": [
+     "PFvCfu1ECK4",
+     "76uZKOpnlqQ",
+     "g7cxCPWMI5M"
+    ],
+    "preset": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\yummyknow\\preset\\게시글형"
+   },
+   "note": "자동 설명서 3편 · 프리셋 게시글형"
+  },
+  "make": {
+   "state": "waiting_human",
+   "sec": 0.0,
+   "at": "2026-10-25 01:20",
+   "outputs": {},
+   "note": "제작 — 소재·대본·재료 준비 뒤 preset_make 로 시험편 1편(TTS 과금은 허락됨) → --ours-mp4/--ours-lines 로 다시 실행"
+  }
+ },
+ "asked": {},
+ "channel": {
+  "name": "맛있는 친구들",
+  "top_ids": [
+   "rGFXQlS9Cp4",
+   "PFvCfu1ECK4",
+   "gBVXQdbzwJU",
+   "76uZKOpnlqQ",
+   "8f9T8Jeo-gQ",
+   "g7cxCPWMI5M"
+  ]
+ },
+ "brand": "맛템썰템",
+ "n": 6,
+ "hybrid": "아니오"
+}
