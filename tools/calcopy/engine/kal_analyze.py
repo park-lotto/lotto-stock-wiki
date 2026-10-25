@@ -526,7 +526,9 @@ def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, ben
             judge = "in" if (brange and brange[0] <= o <= brange[1]) or (diff is not None and abs(diff) <= tol) else "out"
         elif kind == "rel0":                    # 벤치 0 이면 우리도 0 이어야 같다(0 나누기 대신)
             diff = round((o - b) / b * 100, 1) if b else (0.0 if not o else "벤치 0")
-            judge = "in" if (b and abs(diff) <= tol) or (not b and not o) else "out"
+            # 편 하나의 발 수는 정수 — 벤치 비율×길이에 가장 가까운 정수(차 ≤ 0.5발)면 같다(placement 가 개수를 round(비율×길이)로 정하는 것과 같은 자, 10-25 ep12 sfx 0.051×28.5=1.45 → 1발이 ±30% 로는 1·2발 둘 다 미달)
+            n_ok = bool(b and odur and key.endswith(".rate") and abs((o - b) * odur) <= 0.5)
+            judge = "in" if (b and abs(diff) <= tol) or (not b and not o) or n_ok else "out"
         elif kind == "rel_slow":
             diff = round((o - b) / b * 100, 1)
             judge = "in" if -tol * 0.5 <= diff <= tol else "out"   # 빠른 쪽(음수)은 절반만 허용 — B4 '원본보다 빠르면 반려 쪽'

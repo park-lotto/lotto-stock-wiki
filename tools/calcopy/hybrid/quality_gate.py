@@ -436,6 +436,17 @@ def bench_drops(st: dict, kinds=TD_KINDS) -> dict | None:
     return out
 
 
+def narr_only_voice(R: Path, T: dict) -> Path:
+    """나레 받아쓰기 자 = voice.wav 에서 원음 구간(T.opos t0~t1)만 무음으로 한 소리(render/voice_narr.wav). 원음이 없으면 voice.wav 그대로."""
+    op = [p for p in T.get("opos") or [] if p.get("t1") is not None]
+    if not op:
+        return R / "voice.wav"
+    out = R / "voice_narr.wav"
+    expr = "+".join(f"between(t,{float(p['t0']):.3f},{float(p['t1']):.3f})" for p in op)
+    run(["ffmpeg", "-y", "-v", "error", "-i", R / "voice.wav", "-af", f"volume=0:enable='{expr}'", out])
+    return out
+
+
 def gap_verdict(pairs: list[tuple[str, float, float]]) -> tuple[bool | None, str]:
     """B18 줄 사이 간격(표준 §11 ①ⓐ): [(경계, 계획 간격=시간표, 실측 무음)] — |실측−계획| ≤ 1프레임+0.02."""
     if not pairs:
@@ -660,8 +671,9 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
                 return None, "받아쓰기 안 함(--no-asr, 미측정)"
             from tools.calcopy.engine import check_line_sync as LS
             win_n = [tuple(T["lines"][l["id"]]) for l in narr if l["id"] in T["lines"]]
-            vmd5 = md5(R / "voice.wav")
-            allsegs = _cached(store, f"asr|{vmd5}", lambda: [list(x) for x in LS.asr_segments(R / "voice.wav")])
+            vn = narr_only_voice(R, T)          # 원음(영어 등) 구간 무음 — whisper(ko)가 원음 뒤 첫 낱말을 삼키고 시각을 원음 시작에 붙인다(10-25 ep12 N2·N3·N5)
+            vmd5 = md5(vn)
+            allsegs = _cached(store, f"asr|narr|{vmd5}", lambda: [list(x) for x in LS.asr_segments(vn)])
             save_store()
             segs = [tuple(s) for s in allsegs if any(a - 0.3 <= s[0] <= b + 0.3 for a, b in win_n)]
             heard = LS.line_starts_from_asr([l.get("tts") or "" for l in narr], segs)
