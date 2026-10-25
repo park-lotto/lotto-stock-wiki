@@ -85,9 +85,9 @@
      "id": "has_line_honjamal",
      "kind": "has_line",
      "of": "tts",
-     "pattern": "^\\s*아\\s*,",
+     "pattern": "^\\s*아\\s*[,~]",
      "min": 1,
-     "why": "v2 끝 혼잣말 '아, …야겠다.' — 손 v3 11/11편 첫 글자 '아,'(upgrades[1])"
+     "why": "v2 끝 혼잣말 '아~ …야겠다.' — 손 v3 11/11편 첫 글자 '아,'(upgrades[1]). 10-25 사장님 TTS 시험: '아,' 는 Typecast 글자 시각이 '아' 길이 0이라 쉼표 쉼 넣기가 '아~' 소리를 잘라 끊김 → '아~' 선택(B). '아,' 도 통과"
     }
    ],
    "replace": {
