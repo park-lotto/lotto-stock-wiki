@@ -990,6 +990,13 @@ def checks(w, cfg, final: Path, narr: Path, sfx_n: int, out: Path, work: Path, p
     return rows + plan_rules(w, cfg, plan)
 
 
+def aba_list(cs: list[dict], near: float) -> list[str]:
+    """(판단 주인 — A12 A-B-A 끼움) 같은 소스 ±near 초 사이에 다른 컷 하나가 끼었다 돌아오는 자리. cs = [{src, ss}] 화면 순서.
+    plan_rules(계획·완성 검사)와 material_bank.place(재료 고르기)가 같이 부른다."""
+    return [f"#{i}~#{i + 2} {cs[i - 1]['src']}({cs[i - 1]['ss']:.1f})→{cs[i]['src']}→({cs[i + 1]['ss']:.1f})" for i in range(1, len(cs) - 1)
+            if cs[i - 1]["src"] == cs[i + 1]["src"] != cs[i]["src"] and abs(cs[i + 1]["ss"] - cs[i - 1]["ss"]) <= near]
+
+
 def reuse_rows(w, cfg) -> list[str]:
     """B13 판정 = quality_gate.reuse_violations_bench 한 곳(10-26 — 옛 check_overlap.py ±3초 두 벌을 걷음). 판 칸 reuse.adjacent_run 을 넘긴다.
     컷 = 원본에서 읽는 구간(ss ~ ss + n/FPS × speed) · 화면 시각 f0/FPS. 짤 컷은 B6 몫이라 뺀다."""
@@ -1007,8 +1014,7 @@ def plan_rules(w, cfg, plan) -> list:
     rows.append({"B": "A4", "항목": "재료 ≥720p·확대 ≤2.3", "값": a4["값"] + (f" 흠 {a4['흠']}" if a4["흠"] else ""), "기준": "흠 0", "ok": a4["ok"]})
     cs = w["cuts"]
     near = float(C.get("aba_same_scene_s", 1e9))   # 같은 소스라도 이만큼 넘게 떨어진 구간이면 다른 장면 — 번갈아 허용
-    aba = [f"#{i}~#{i + 2} {cs[i - 1]['src']}({cs[i - 1]['ss']:.1f})→{cs[i]['src']}→({cs[i + 1]['ss']:.1f})" for i in range(1, len(cs) - 1)
-           if cs[i - 1]["src"] == cs[i + 1]["src"] != cs[i]["src"] and abs(cs[i + 1]["ss"] - cs[i - 1]["ss"]) <= near]
+    aba = aba_list(cs, near)
     rows.append({"B": "A12", "항목": f"A-B-A 끼움(같은 소스 ±{near:g}초 사이 다른 컷 하나)", "값": aba or 0, "ok": not aba,
                  "기준": "0 — 같은 인물은 이어 붙이고 끼운 컷은 묶음 앞·뒤로(표시만, 자동 재배치 안 함)"})
     mc = max(len(re.sub(r"^[^:\n]{1,10} : ", "", x)) for p in w["pieces"] for x in p["text"].split("\n"))   # 화면 줄마다(누적 2줄은 줄별, '화자 : ' 머리 뺌)
