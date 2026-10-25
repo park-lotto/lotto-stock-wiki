@@ -3,14 +3,14 @@
   "made_by": "tools/calcopy/engine/sound/sfx_events.py homedesignnote --detect",
   "how": "detect",
   "asr_filter": {
-   "how": "후보 시각이 받아쓰기 낱말 구간[t0−0.05, t1+0.05] 안이면 cand_in_words(치찰음·파열음 오탐) — 단 전환(cut)·스티커 ±0.3초 안은 남김(keep_why). 남은 것 = cand_kept",
+   "how": "후보 시각이 받아쓰기 낱말 구간[t0−0.05, t1+0.05] 안이면 cand_in_words(치찰음·파열음 오탐) — 단 전환·스티커 곁(편마다 우연 기대 ≤ 0.1 인 창 (0.3, 0.2, 0.15, 0.1, 0.05))·말 위 순음 tone·판독 sfx 자리는 남김(keep_why). 배경음 박자 = cand_bgm. 남은 것 = cand_kept(confidence 눈/신호, ear_pending)",
    "asr": "C:/숏템_칼카피/homedesignnote/work/asrw",
    "no_speech": {
     "iiBUscncqIk": "hallucination(문구 2/3)"
    },
    "no_asr": [],
-   "n_kept": 40,
-   "n_in_words": 15,
+   "n_kept": 37,
+   "n_in_words": 12,
    "note": "귀 확인 아님(신호). 무음 환각 = 환각 문구(Thanks for watching·구독과 좋아요·Music…)가 절반 이상이거나 빼고 2낱말 이하, 또는 길이0 낱말 40% 이상"
   },
   "from": "C:/숏템_칼카피\\homedesignnote\\src",
@@ -203,6 +203,20 @@
     "word": "티비까지도"
    },
    {
+    "t": 14.04,
+    "kind": "low",
+    "dur": 0.09,
+    "db": 13.4,
+    "rel_db": -0.4,
+    "low_mid_db": 15.9,
+    "voiced": 0.64,
+    "near": {
+     "cap": 0.24,
+     "cut": 0.21
+    },
+    "word": "선전이까지"
+   },
+   {
     "t": 19.88,
     "kind": "low",
     "dur": 0.09,
@@ -231,7 +245,9 @@
      "cut": 0.13
     },
     "word": "해서",
-    "keep_why": "낱말 안이지만 전환·스티커 0.13초 안"
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
    },
    {
     "t": 13.56,
@@ -246,24 +262,20 @@
      "cut": 0.27
     },
     "word": "있어서",
-    "keep_why": "낱말 안이지만 전환·스티커 0.27초 안"
-   },
-   {
-    "t": 14.04,
-    "kind": "low",
-    "dur": 0.09,
-    "db": 13.4,
-    "rel_db": -0.4,
-    "low_mid_db": 15.9,
-    "voiced": 0.64,
-    "near": {
-     "cap": 0.24,
-     "cut": 0.21
-    },
-    "word": "선전이까지",
-    "keep_why": "낱말 안이지만 전환·스티커 0.21초 안"
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
    }
   ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.05,
+   "chance": 0.069
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 2
+  },
   "line_link": {
    "kept_to_line": [
     {
@@ -291,19 +303,6 @@
      "line_sticker": [
       0
      ]
-    },
-    {
-     "t": 14.04,
-     "kind": "low",
-     "lines": [
-      13
-     ],
-     "line_sfx": [
-      false
-     ],
-     "line_sticker": [
-      0
-     ]
     }
    ],
    "line_sfx_to_kept": [
@@ -324,7 +323,7 @@
     {
      "line": 19,
      "t_in": 20.6,
-     "nearest_kept_s": 6.56,
+     "nearest_kept_s": 7.04,
      "match": false
     }
    ]
@@ -439,36 +438,7 @@
    "cut": 0.17
   },
   "asr_words": 53,
-  "cand_in_words": [
-   {
-    "t": 15.2,
-    "kind": "broad",
-    "dur": 0.09,
-    "db": 27.3,
-    "voiced": 0.29,
-    "isolated": 0.95,
-    "cen_hz": 7988,
-    "near": {
-     "cap": 0.3,
-     "cut": 0.47
-    },
-    "word": "알아서"
-   },
-   {
-    "t": 20.67,
-    "kind": "broad",
-    "dur": 0.12,
-    "db": 29.6,
-    "voiced": 0.0,
-    "isolated": 0.9,
-    "cen_hz": 8065,
-    "near": {
-     "cap": 1.47,
-     "cut": 2.67
-    },
-    "word": "되겠어요"
-   }
-  ],
+  "cand_in_words": [],
   "cand_kept": [
    {
     "t": 3.87,
@@ -483,7 +453,26 @@
      "cut": 0.03
     },
     "word": "SNS에서",
-    "keep_why": "낱말 안이지만 전환·스티커 0.03초 안"
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
+   },
+   {
+    "t": 15.2,
+    "kind": "broad",
+    "dur": 0.09,
+    "db": 27.3,
+    "voiced": 0.29,
+    "isolated": 0.95,
+    "cen_hz": 7988,
+    "near": {
+     "cap": 0.3,
+     "cut": 0.47
+    },
+    "word": "알아서",
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
    },
    {
     "t": 18.24,
@@ -498,9 +487,37 @@
      "cut": 0.24
     },
     "word": "이제",
-    "keep_why": "낱말 안이지만 전환·스티커 0.24초 안"
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
+   },
+   {
+    "t": 20.67,
+    "kind": "broad",
+    "dur": 0.12,
+    "db": 29.6,
+    "voiced": 0.0,
+    "isolated": 0.9,
+    "cen_hz": 8065,
+    "near": {
+     "cap": 1.47,
+     "cut": 2.67
+    },
+    "word": "되겠어요",
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
    }
   ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.05,
+   "chance": 0.056
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 4
+  },
   "line_link": {
    "kept_to_line": [
     {
@@ -520,10 +537,36 @@
      ]
     },
     {
+     "t": 15.2,
+     "kind": "broad",
+     "lines": [
+      14
+     ],
+     "line_sfx": [
+      true
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
+    {
      "t": 18.24,
      "kind": "broad",
      "lines": [
       17
+     ],
+     "line_sfx": [
+      true
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
+    {
+     "t": 20.67,
+     "kind": "broad",
+     "lines": [
+      18
      ],
      "line_sfx": [
       true
@@ -543,8 +586,8 @@
     {
      "line": 14,
      "t": 15.2,
-     "nearest_kept_s": 3.04,
-     "match": false
+     "nearest_kept_s": 0.0,
+     "match": true
     },
     {
      "line": 17,
@@ -555,8 +598,8 @@
     {
      "line": 18,
      "t": 20.67,
-     "nearest_kept_s": 2.43,
-     "match": false
+     "nearest_kept_s": 0.0,
+     "match": true
     }
    ],
    "sticker_to_kept": []
@@ -798,20 +841,6 @@
   "asr_words": 82,
   "cand_in_words": [
    {
-    "t": 1.7,
-    "kind": "broad",
-    "dur": 0.06,
-    "db": 26.6,
-    "voiced": 0.45,
-    "isolated": 0.8,
-    "cen_hz": 7763,
-    "near": {
-     "cap": 0.4,
-     "cut": 0.37
-    },
-    "word": "못했대요"
-   },
-   {
     "t": 8.97,
     "kind": "broad",
     "dur": 0.13,
@@ -824,20 +853,6 @@
      "cut": 0.6
     },
     "word": "쓰기"
-   },
-   {
-    "t": 15.7,
-    "kind": "broad",
-    "dur": 0.08,
-    "db": 28.8,
-    "voiced": 0.0,
-    "isolated": 0.95,
-    "cen_hz": 6415,
-    "near": {
-     "cap": 0.4,
-     "cut": 0.37
-    },
-    "word": "같지만"
    },
    {
     "t": 22.37,
@@ -854,21 +869,38 @@
     "word": "마실수록"
    },
    {
-    "t": 28.18,
-    "kind": "broad",
-    "dur": 0.07,
-    "db": 34.3,
-    "voiced": 0.0,
-    "isolated": 0.8,
-    "cen_hz": 7320,
+    "t": 27.48,
+    "kind": "low",
+    "dur": 0.1,
+    "db": 15.5,
+    "rel_db": 0.0,
+    "low_mid_db": 18.8,
+    "voiced": 0.6,
     "near": {
      "cap": 0.08,
-     "cut": 0.78
+     "cut": 0.08
     },
-    "word": "미쳤다고"
+    "word": "홈카페"
    }
   ],
   "cand_kept": [
+   {
+    "t": 1.7,
+    "kind": "broad",
+    "dur": 0.06,
+    "db": 26.6,
+    "voiced": 0.45,
+    "isolated": 0.8,
+    "cen_hz": 7763,
+    "near": {
+     "cap": 0.4,
+     "cut": 0.37
+    },
+    "word": "못했대요",
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
+   },
    {
     "t": 8.41,
     "kind": "broad",
@@ -882,7 +914,9 @@
      "cut": 0.04
     },
     "word": "집에서",
-    "keep_why": "낱말 안이지만 전환·스티커 0.04초 안"
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
    },
    {
     "t": 13.8,
@@ -897,7 +931,26 @@
      "cut": 0.03
     },
     "word": "있대요",
-    "keep_why": "낱말 안이지만 전환·스티커 0.03초 안"
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
+   },
+   {
+    "t": 15.7,
+    "kind": "broad",
+    "dur": 0.08,
+    "db": 28.8,
+    "voiced": 0.0,
+    "isolated": 0.95,
+    "cen_hz": 6415,
+    "near": {
+     "cap": 0.4,
+     "cut": 0.37
+    },
+    "word": "같지만",
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
    },
    {
     "t": 24.28,
@@ -912,7 +965,9 @@
      "cut": 0.21
     },
     "word": "수",
-    "keep_why": "낱말 안이지만 전환·스티커 0.21초 안"
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
    },
    {
     "t": 25.24,
@@ -927,26 +982,52 @@
      "cut": 0.03
     },
     "word": "과일",
-    "keep_why": "낱말 안이지만 전환·스티커 0.03초 안"
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
    },
    {
-    "t": 27.48,
-    "kind": "low",
-    "dur": 0.1,
-    "db": 15.5,
-    "rel_db": 0.0,
-    "low_mid_db": 18.8,
-    "voiced": 0.6,
+    "t": 28.18,
+    "kind": "broad",
+    "dur": 0.07,
+    "db": 34.3,
+    "voiced": 0.0,
+    "isolated": 0.8,
+    "cen_hz": 7320,
     "near": {
      "cap": 0.08,
-     "cut": 0.08
+     "cut": 0.78
     },
-    "word": "홈카페",
-    "keep_why": "낱말 안이지만 전환·스티커 0.08초 안"
+    "word": "미쳤다고",
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
    }
   ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.0,
+   "chance": 0.1
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 7
+  },
   "line_link": {
    "kept_to_line": [
+    {
+     "t": 1.7,
+     "kind": "broad",
+     "lines": [
+      3
+     ],
+     "line_sfx": [
+      true
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
     {
      "t": 8.41,
      "kind": "broad",
@@ -980,6 +1061,19 @@
      ]
     },
     {
+     "t": 15.7,
+     "kind": "broad",
+     "lines": [
+      22
+     ],
+     "line_sfx": [
+      true
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
+    {
      "t": 24.28,
      "kind": "broad",
      "lines": [
@@ -1009,13 +1103,13 @@
      ]
     },
     {
-     "t": 27.48,
-     "kind": "low",
+     "t": 28.18,
+     "kind": "broad",
      "lines": [
-      36
+      37
      ],
      "line_sfx": [
-      false
+      true
      ],
      "line_sticker": [
       0
@@ -1026,8 +1120,8 @@
     {
      "line": 3,
      "t": 1.7,
-     "nearest_kept_s": 6.71,
-     "match": false
+     "nearest_kept_s": 0.0,
+     "match": true
     },
     {
      "line": 13,
@@ -1044,8 +1138,8 @@
     {
      "line": 22,
      "t": 15.7,
-     "nearest_kept_s": 1.9,
-     "match": false
+     "nearest_kept_s": 0.0,
+     "match": true
     },
     {
      "line": 31,
@@ -1062,8 +1156,8 @@
     {
      "line": 37,
      "t": 28.18,
-     "nearest_kept_s": 0.7,
-     "match": false
+     "nearest_kept_s": 0.0,
+     "match": true
     }
    ],
    "sticker_to_kept": []
@@ -1252,21 +1346,6 @@
     "word": "방식의"
    },
    {
-    "t": 6.21,
-    "kind": "broad",
-    "dur": 0.09,
-    "db": 25.6,
-    "voiced": 0.0,
-    "isolated": 0.95,
-    "cen_hz": 7107,
-    "near": {
-     "cap": 0.01,
-     "switch": 6.04,
-     "cut": 2.28
-    },
-    "word": "것보다"
-   },
-   {
     "t": 6.77,
     "kind": "low",
     "dur": 0.09,
@@ -1295,6 +1374,36 @@
      "cut": 2.45
     },
     "word": "거치대와"
+   },
+   {
+    "t": 12.14,
+    "kind": "broad",
+    "dur": 0.06,
+    "db": 21.3,
+    "voiced": 0.09,
+    "isolated": 0.85,
+    "cen_hz": 7047,
+    "near": {
+     "cap": 0.26,
+     "switch": 11.97,
+     "cut": 0.16
+    },
+    "word": "상단"
+   },
+   {
+    "t": 17.51,
+    "kind": "broad",
+    "dur": 0.08,
+    "db": 21.9,
+    "voiced": 0.23,
+    "isolated": 0.8,
+    "cen_hz": 6970,
+    "near": {
+     "cap": 0.41,
+     "switch": 17.34,
+     "cut": 0.19
+    },
+    "word": "이제"
    }
   ],
   "cand_kept": [
@@ -1310,7 +1419,27 @@
      "cut": 0.17
     },
     "word": "죽겠나요?",
-    "keep_why": "낱말 안이지만 전환·스티커 0.17초 안"
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
+   },
+   {
+    "t": 6.21,
+    "kind": "broad",
+    "dur": 0.09,
+    "db": 25.6,
+    "voiced": 0.0,
+    "isolated": 0.95,
+    "cen_hz": 7107,
+    "near": {
+     "cap": 0.01,
+     "switch": 6.04,
+     "cut": 2.28
+    },
+    "word": "것보다",
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
    },
    {
     "t": 10.67,
@@ -1326,41 +1455,20 @@
      "cut": 0.13
     },
     "word": "책상이",
-    "keep_why": "낱말 안이지만 전환·스티커 0.13초 안"
-   },
-   {
-    "t": 12.14,
-    "kind": "broad",
-    "dur": 0.06,
-    "db": 21.3,
-    "voiced": 0.09,
-    "isolated": 0.85,
-    "cen_hz": 7047,
-    "near": {
-     "cap": 0.26,
-     "switch": 11.97,
-     "cut": 0.16
-    },
-    "word": "상단",
-    "keep_why": "낱말 안이지만 전환·스티커 0.16초 안"
-   },
-   {
-    "t": 17.51,
-    "kind": "broad",
-    "dur": 0.08,
-    "db": 21.9,
-    "voiced": 0.23,
-    "isolated": 0.8,
-    "cen_hz": 6970,
-    "near": {
-     "cap": 0.41,
-     "switch": 17.34,
-     "cut": 0.19
-    },
-    "word": "이제",
-    "keep_why": "낱말 안이지만 전환·스티커 0.19초 안"
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
    }
   ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.05,
+   "chance": 0.062
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 3
+  },
   "line_link": {
    "kept_to_line": [
     {
@@ -1377,6 +1485,22 @@
      ]
     },
     {
+     "t": 6.21,
+     "kind": "broad",
+     "lines": [
+      8,
+      9
+     ],
+     "line_sfx": [
+      false,
+      true
+     ],
+     "line_sticker": [
+      0,
+      0
+     ]
+    },
+    {
      "t": 10.67,
      "kind": "broad",
      "lines": [
@@ -1384,32 +1508,6 @@
      ],
      "line_sfx": [
       true
-     ],
-     "line_sticker": [
-      0
-     ]
-    },
-    {
-     "t": 12.14,
-     "kind": "broad",
-     "lines": [
-      12
-     ],
-     "line_sfx": [
-      true
-     ],
-     "line_sticker": [
-      0
-     ]
-    },
-    {
-     "t": 17.51,
-     "kind": "broad",
-     "lines": [
-      16
-     ],
-     "line_sfx": [
-      false
      ],
      "line_sticker": [
       0
@@ -1426,8 +1524,8 @@
     {
      "line": 9,
      "t": 6.21,
-     "nearest_kept_s": 4.46,
-     "match": false
+     "nearest_kept_s": 0.0,
+     "match": true
     },
     {
      "line": 12,
@@ -1440,13 +1538,13 @@
     {
      "line": 10,
      "t_in": 7.8,
-     "nearest_kept_s": 2.87,
+     "nearest_kept_s": 1.59,
      "match": false
     },
     {
      "line": 11,
      "t_in": 7.8,
-     "nearest_kept_s": 2.87,
+     "nearest_kept_s": 1.59,
      "match": false
     }
    ]
@@ -1524,7 +1622,8 @@
    "cut": 0.27
   },
   "asr_words": 41,
-  "cand_in_words": [
+  "cand_in_words": [],
+  "cand_kept": [
    {
     "t": 15.8,
     "kind": "broad",
@@ -1537,18 +1636,43 @@
      "cap": 0.6,
      "cut": 0.57
     },
-    "word": "대만족이에요"
+    "word": "대만족이에요",
+    "keep_why": "낱말 안이지만 판독(눈) sfx 자리 — 판독 우선(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
    }
   ],
-  "cand_kept": [],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.05,
+   "chance": 0.094
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 1
+  },
   "line_link": {
-   "kept_to_line": [],
+   "kept_to_line": [
+    {
+     "t": 15.8,
+     "kind": "broad",
+     "lines": [
+      18
+     ],
+     "line_sfx": [
+      true
+     ],
+     "line_sticker": [
+      0
+     ]
+    }
+   ],
    "line_sfx_to_kept": [
     {
      "line": 18,
      "t": 15.8,
-     "nearest_kept_s": null,
-     "match": false
+     "nearest_kept_s": 0.0,
+     "match": true
     }
    ],
    "sticker_to_kept": []
@@ -1745,6 +1869,11 @@
     "near": {
      "cap": 6.01,
      "cut": 0.96
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 123.0,
+     "T": 0.488
     }
    },
    {
@@ -1758,6 +1887,11 @@
     "near": {
      "cap": 6.99,
      "cut": 0.02
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 123.0,
+     "T": 0.488
     }
    },
    {
@@ -1771,6 +1905,11 @@
     "near": {
      "cap": 7.95,
      "cut": 0.68
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 123.0,
+     "T": 0.488
     }
    },
    {
@@ -1797,6 +1936,11 @@
     "near": {
      "cap": 8.47,
      "cut": 0.16
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 123.0,
+     "T": 0.488
     }
    },
    {
@@ -1810,6 +1954,11 @@
     "near": {
      "cap": 8.93,
      "cut": 0.3
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 123.0,
+     "T": 0.488
     }
    },
    {
@@ -1823,6 +1972,11 @@
     "near": {
      "cap": 9.88,
      "cut": 0.35
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 123.0,
+     "T": 0.488
     }
    },
    {
@@ -1938,7 +2092,9 @@
     "near": {
      "cap": 0.21,
      "cut": 0.22
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 2.04,
@@ -1951,7 +2107,9 @@
     "near": {
      "cap": 0.54,
      "cut": 0.11
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 2.23,
@@ -1964,7 +2122,9 @@
     "near": {
      "cap": 0.73,
      "cut": 0.3
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 2.68,
@@ -1977,7 +2137,9 @@
     "near": {
      "cap": 1.18,
      "cut": 0.75
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 3.63,
@@ -1990,7 +2152,9 @@
     "near": {
      "cap": 2.13,
      "cut": 0.16
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 3.98,
@@ -2003,7 +2167,9 @@
     "near": {
      "cap": 2.48,
      "cut": 0.51
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 4.62,
@@ -2016,7 +2182,9 @@
     "near": {
      "cap": 3.12,
      "cut": 1.05
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 5.58,
@@ -2029,7 +2197,9 @@
     "near": {
      "cap": 4.08,
      "cut": 0.09
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 5.92,
@@ -2042,7 +2212,9 @@
     "near": {
      "cap": 4.42,
      "cut": 0.25
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 6.12,
@@ -2055,7 +2227,9 @@
     "near": {
      "cap": 4.62,
      "cut": 0.45
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 6.55,
@@ -2068,7 +2242,9 @@
     "near": {
      "cap": 5.05,
      "cut": 0.88
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 6.58,
@@ -2081,7 +2257,9 @@
     "near": {
      "cap": 5.08,
      "cut": 0.91
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
    {
     "t": 7.07,
@@ -2094,8 +2272,117 @@
     "near": {
      "cap": 5.57,
      "cut": 1.4
-    }
+    },
+    "confidence": "신호",
+    "ear_pending": true
    },
+   {
+    "t": 9.79,
+    "kind": "broad",
+    "dur": 0.1,
+    "db": 20.9,
+    "voiced": 0.07,
+    "isolated": 1.0,
+    "cen_hz": 6811,
+    "near": {
+     "cap": 8.29,
+     "cut": 0.34
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 11.73,
+    "kind": "broad",
+    "dur": 0.09,
+    "db": 18.2,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 6734,
+    "near": {
+     "cap": 10.23,
+     "cut": 0.0
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 12.35,
+    "kind": "broad",
+    "dur": 0.15,
+    "db": 25.4,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 6826,
+    "near": {
+     "cap": 10.85,
+     "cut": 0.42
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 13.33,
+    "kind": "broad",
+    "dur": 0.14,
+    "db": 24.3,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 6847,
+    "near": {
+     "cap": 11.83,
+     "cut": 0.56
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 13.85,
+    "kind": "low",
+    "dur": 0.05,
+    "db": 13.3,
+    "rel_db": -1.1,
+    "low_mid_db": 10.5,
+    "voiced": 0.0,
+    "near": {
+     "cap": 12.35,
+     "cut": 1.08
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 14.3,
+    "kind": "broad",
+    "dur": 0.12,
+    "db": 20.6,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 6723,
+    "near": {
+     "cap": 12.8,
+     "cut": 1.53
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 14.33,
+    "kind": "low",
+    "dur": 0.22,
+    "db": 26.8,
+    "rel_db": -0.4,
+    "low_mid_db": 8.7,
+    "voiced": 0.0,
+    "near": {
+     "cap": 12.83,
+     "cut": 1.56
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   }
+  ],
+  "cand_bgm": [
    {
     "t": 7.51,
     "kind": "broad",
@@ -2107,6 +2394,11 @@
     "near": {
      "cap": 6.01,
      "cut": 0.96
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 123.0,
+     "T": 0.488
     }
    },
    {
@@ -2120,6 +2412,11 @@
     "near": {
      "cap": 6.99,
      "cut": 0.02
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 123.0,
+     "T": 0.488
     }
    },
    {
@@ -2133,19 +2430,11 @@
     "near": {
      "cap": 7.95,
      "cut": 0.68
-    }
-   },
-   {
-    "t": 9.79,
-    "kind": "broad",
-    "dur": 0.1,
-    "db": 20.9,
-    "voiced": 0.07,
-    "isolated": 1.0,
-    "cen_hz": 6811,
-    "near": {
-     "cap": 8.29,
-     "cut": 0.34
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 123.0,
+     "T": 0.488
     }
    },
    {
@@ -2159,6 +2448,11 @@
     "near": {
      "cap": 8.47,
      "cut": 0.16
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 123.0,
+     "T": 0.488
     }
    },
    {
@@ -2172,6 +2466,11 @@
     "near": {
      "cap": 8.93,
      "cut": 0.3
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 123.0,
+     "T": 0.488
     }
    },
    {
@@ -2185,87 +2484,22 @@
     "near": {
      "cap": 9.88,
      "cut": 0.35
-    }
-   },
-   {
-    "t": 11.73,
-    "kind": "broad",
-    "dur": 0.09,
-    "db": 18.2,
-    "voiced": 0.0,
-    "isolated": 1.0,
-    "cen_hz": 6734,
-    "near": {
-     "cap": 10.23,
-     "cut": 0.0
-    }
-   },
-   {
-    "t": 12.35,
-    "kind": "broad",
-    "dur": 0.15,
-    "db": 25.4,
-    "voiced": 0.0,
-    "isolated": 1.0,
-    "cen_hz": 6826,
-    "near": {
-     "cap": 10.85,
-     "cut": 0.42
-    }
-   },
-   {
-    "t": 13.33,
-    "kind": "broad",
-    "dur": 0.14,
-    "db": 24.3,
-    "voiced": 0.0,
-    "isolated": 1.0,
-    "cen_hz": 6847,
-    "near": {
-     "cap": 11.83,
-     "cut": 0.56
-    }
-   },
-   {
-    "t": 13.85,
-    "kind": "low",
-    "dur": 0.05,
-    "db": 13.3,
-    "rel_db": -1.1,
-    "low_mid_db": 10.5,
-    "voiced": 0.0,
-    "near": {
-     "cap": 12.35,
-     "cut": 1.08
-    }
-   },
-   {
-    "t": 14.3,
-    "kind": "broad",
-    "dur": 0.12,
-    "db": 20.6,
-    "voiced": 0.0,
-    "isolated": 1.0,
-    "cen_hz": 6723,
-    "near": {
-     "cap": 12.8,
-     "cut": 1.53
-    }
-   },
-   {
-    "t": 14.33,
-    "kind": "low",
-    "dur": 0.22,
-    "db": 26.8,
-    "rel_db": -0.4,
-    "low_mid_db": 8.7,
-    "voiced": 0.0,
-    "near": {
-     "cap": 12.83,
-     "cut": 1.56
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 123.0,
+     "T": 0.488
     }
    }
   ],
+  "keep_window": {
+   "w": 0.1,
+   "chance": 0.095
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 20
+  },
   "line_link": {
    "kept_to_line": [
     {
@@ -2438,85 +2672,7 @@
      ]
     },
     {
-     "t": 7.51,
-     "kind": "broad",
-     "lines": [
-      1
-     ],
-     "line_sfx": [
-      false
-     ],
-     "line_sticker": [
-      0
-     ]
-    },
-    {
-     "t": 8.49,
-     "kind": "broad",
-     "lines": [
-      1
-     ],
-     "line_sfx": [
-      false
-     ],
-     "line_sticker": [
-      0
-     ]
-    },
-    {
-     "t": 9.45,
-     "kind": "broad",
-     "lines": [
-      1
-     ],
-     "line_sfx": [
-      false
-     ],
-     "line_sticker": [
-      0
-     ]
-    },
-    {
      "t": 9.79,
-     "kind": "broad",
-     "lines": [
-      1
-     ],
-     "line_sfx": [
-      false
-     ],
-     "line_sticker": [
-      0
-     ]
-    },
-    {
-     "t": 9.97,
-     "kind": "low",
-     "lines": [
-      1
-     ],
-     "line_sfx": [
-      false
-     ],
-     "line_sticker": [
-      0
-     ]
-    },
-    {
-     "t": 10.43,
-     "kind": "broad",
-     "lines": [
-      1
-     ],
-     "line_sfx": [
-      false
-     ],
-     "line_sticker": [
-      0
-     ]
-    },
-    {
-     "t": 11.38,
      "kind": "broad",
      "lines": [
       1
