@@ -354,7 +354,7 @@ def state(store, cid) -> dict:
     return {"host": "server", "presets": plist, "current": cur, "pack": pack_for(cat, cur, own) if cur else None,
             "styles": sl, "style": cur_st["id"] if cur_st else None,
             "style_has_frame": bool(cur_st and _style_frame_pid(store, cid, cur_st)),
-            "requests": (s.get("requests") or [])[-20:], "extra": (s.get("extras") or {}).get(cur) or {},
+            "requests": (s.get("requests") or [])[-20:],
             "changed": own, "catalog": show, "videos": [], "stamp": (s["channels"].get(cur) or {}).get("updated", 0) if cur else 0}
 
 
@@ -371,19 +371,7 @@ def select_style(store, cid, sid) -> dict:
     return {"ok": True, "current": s["current"], "has_frame": bool(fp)}
 
 
-TTS_EMOTIONS = ("normal", "happy", "sad", "angry", "tonedown", "toneup", "whisper")   # 타입캐스트 감정 프리셋(라이브 /api/typecast/voices emotions 실측 10-25)
-
-
-def save_extra(store, cid, pid, extra) -> dict:
-    """엔진 팩 밖 칸(지금은 감정 하나) — 엔진 check 가 아직 모르는 칸이라 따로 둔다. 회원 PC 엔진이 받게 되면 팩으로 옮긴다."""
-    _check_pid(store, cid, pid)
-    e = extra if isinstance(extra, dict) else {}
-    if set(e) - {"tts_emotion"} or (e.get("tts_emotion") not in TTS_EMOTIONS):
-        raise StudioError("bad_request", "모르는 값입니다")
-    s = _read(store, cid)
-    s.setdefault("extras", {}).setdefault(pid, {}).update(e)
-    _write(store, cid, s)
-    return {"ok": True}
+# 감정은 팩 tts.emotion 한 곳(엔진 preview_request.check 가 검사 — 타입캐스트만). 10-26 엔진 창과 합의, 따로 두던 save_extra 는 뺐다
 
 
 LOOK_MAX = 400_000   # 장면꾸미기 스냅샷 한도(글자 수) — 사진·영상은 안 들어간다(그림 자리·글·색·위치만)

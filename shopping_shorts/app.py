@@ -18926,7 +18926,6 @@ async def _claude_studio_op(request: Request, op: str):
           "style": lambda: _cs.select_style(st, cid, b.get("style")),
           "ask": lambda: _cs.ask(st, cid, b.get("target"), b.get("text")),
           "look": lambda: _cs.save_look(st, cid, b.get("preset"), b.get("snapshot")),
-          "extra": lambda: _cs.save_extra(st, cid, b.get("preset"), b.get("extra")),
           "save": lambda: _cs.save(st, cid, b.get("preset"), b.get("patch")),
           "reset": lambda: _cs.reset(st, cid, b.get("preset")),
           "preview": lambda: _cs.preview(st, cid, b.get("preset"), b.get("patch"), flags=_scene_editor_flags(cid))}.get(op)

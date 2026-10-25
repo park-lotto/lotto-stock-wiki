@@ -201,8 +201,13 @@ const ch=()=>S.st&&S.st.changed||{};
 const isChg=(a,b)=>{const o=ch()[a];return !!o&&(b===undefined||o[b]!==undefined)};
 const badge=(a,b)=>isChg(a,b)?'<span class="chg">바꾼 칸</span>':'<small>프리셋 그대로</small>';
 
-function state(msg,bad){const e=$('state');e.className='state'+(bad?' err':'');e.lastElementChild.textContent=msg}
+// 오류 줄은 8초 동안 남긴다 — 3초마다 다시 읽는 load 의 '저장됨'이 거절 이유를 덮지 않게(10-26 실측: 거절됐는데 '내 계정에 저장됨')
+let errUntil=0;
+function state(msg,bad){if(!bad&&Date.now()<errUntil)return;if(bad)errUntil=Date.now()+8000;const e=$('state');e.className='state'+(bad?' err':'');e.lastElementChild.textContent=msg}
 
+// 저장 거절 이유 한 줄 — 엔진 check 의 말을 회원 말로(엔진이 아직 모르는 칸·목소리 = 회원 PC 엔진 업데이트가 필요)
+function saveErr(r){const e=(r&&r.errors)||[];const t=e.join(' / ')||(r&&(r.msg||r.error))||'저장하지 못했습니다';
+  if(/모르는 목소리|모르는 칸/.test(t))return '이 설정은 아직 회원 PC 엔진이 모릅니다 — 엔진 업데이트 뒤 쓸 수 있습니다 ('+t+')';return t}
 async function load(force,drawn){   // drawn: 미리보기는 이미 그렸다(저장과 같이 그림) — 판만 다시 그린다
   const st=await api('/api/state');
   if(st.error)state(st.error,true);
@@ -368,7 +373,7 @@ async function voiceSearch(eng,q,mine){
 }
 // 찾은 성우 한 줄 — 추천 성우와 같은 모양(이름 · 설명 · 듣기 · 단추). 타입캐스트는 톤 대신 그 성우의 감정 단추(누르면 성우+감정을 같이 고른다)
 function voiceRow(v,eng,tts,st){
-  const on=v.voice_id===tts.voice_id,emo=(st.extra||{}).tts_emotion||'normal';
+  const on=v.voice_id===tts.voice_id,emo=tts.emotion||'normal';
   const info=[v.model,v.emotions&&v.emotions.length?'감정 '+v.emotions.length+'종':'',v.gender,v.age,(v.tags||[]).slice(0,3).join(' · ')].filter(Boolean).join(' · ');
   const btns=eng==='typecast'&&(v.emotions||[]).length
     ?EMO.filter(([k])=>v.emotions.includes(k)).map(([k,t])=>`<button class="chip${on&&emo===k?' on':''}" data-pickv="${esc(v.voice_id)}" data-pickn="${esc(v.name)}" data-pemo="${k}">${t}</button>`).join('')
@@ -564,7 +569,7 @@ async function save(patch){
 $('board').addEventListener('click',async e=>{
   const t=e.target.closest('button');if(!t)return;
   if(t.dataset.go!==undefined){S.step=STEPS[+t.dataset.go].k;render();return}
-  if(t.dataset.login){const r=await api('/api/login',{platform:t.dataset.login});if(!r.ok)state(r.why,true);await load(true);return}
+  if(t.dataset.login){const r=await api('/api/login',{platform:t.dataset.login});await load(true);if(!r.ok)state(r.why,true);return}   // 다시 읽은 뒤에 오류를 띄운다(load 가 '저장됨'으로 덮는다)
   // 고르기만 하고 다음 단계로 안 넘어간다(사장님 10-25 '내가 누르면 넘어가게')
   if(t.dataset.preset){const id=t.dataset.preset;S.video=null;preview(null,id);await api('/api/select',{preset:id});await load(true,true);return}
   if(t.dataset.style){const r=await api('/api/style',{style:t.dataset.style});if(r.current)preview(null,r.current);await load(true,true);return}
@@ -582,11 +587,10 @@ $('board').addEventListener('click',async e=>{
     if(r.ok===false||r.error){state(r.msg||r.error||'못 보냈습니다',true);return}
     S.makeSent=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});S.pcTried=false;state('Claude 에게 제작을 맡겼습니다');await load(true,true);render();return}
   if(t.dataset.mvdel!==undefined){S.moves.splice(+t.dataset.mvdel,1);render();return}   // 옮긴 것 하나만 되돌리기
-  if(t.dataset.emo){const r=await api('/api/extra',{preset:S.st.current,extra:{tts_emotion:t.dataset.emo}});if(r.ok===false){state(r.msg||'저장 실패',true);return}await load(true);return}
+  if(t.dataset.emo){const r=await api('/api/save',{preset:S.st.current,patch:{tts:{emotion:t.dataset.emo}}});if(r.ok===false){await load(true);state(saveErr(r),true);return}await load(true);return}   // 감정 = 팩 tts.emotion(엔진이 받는 한 곳, 타입캐스트만)
   if(t.dataset.pickv){const eng=S.eng||'typecast';
-    if(t.dataset.pemo)await api('/api/extra',{preset:S.st.current,extra:{tts_emotion:t.dataset.pemo}});   // 감정은 엔진 팩 밖 칸(claude_studio.save_extra)
-    const r=await api('/api/save',{preset:S.st.current,patch:{tts:{provider:eng,voice_id:t.dataset.pickv,name:t.dataset.pickn}}});
-    if(!r.ok){state('이 목소리는 아직 회원 PC 엔진 명단에 없습니다 — 엔진 업데이트 뒤 쓸 수 있습니다',true);await load(true);return}
+    const r=await api('/api/save',{preset:S.st.current,patch:{tts:{provider:eng,voice_id:t.dataset.pickv,name:t.dataset.pickn,emotion:(eng==='typecast'&&t.dataset.pemo)||null}}});   // 감정 = 팩 tts.emotion — 타입캐스트 밖 엔진은 비운다(엔진이 거절)
+    if(!r.ok){await load(true);state(saveErr(r),true);return}   // 다시 읽은 뒤에 오류(load 가 '저장됨'으로 덮던 것 — 10-26 실측: 거절됐는데 '내 계정에 저장됨')
     await load(true);return}
   if(t.id==='editmode'){S.editMode=!S.editMode;render();setEditMode(S.editMode);return}
   if(t.dataset.clip){const i=+t.dataset.i,sc=S.preview.context.scenes[i];S.pick={track:t.dataset.clip,scene:i,label:t.dataset.label,at:sc&&sc.start};S.askDraft='';show(i);
