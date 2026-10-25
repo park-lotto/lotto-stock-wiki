@@ -695,9 +695,15 @@ def shot_starts(video: Path) -> list[float]:
     return _src_cuts(Path(video), 0, int(h), int(w))
 
 
+def inner_bounds(starts: list[float], a: float, b: float) -> list[float]:
+    """구간 [a,b) 화면 안에 보이는 장면 경계 — 첫 프레임부터 새 샷이면(t ≤ a+반 프레임) 경계 아님, 마지막 프레임까지 옛 샷이면(t > b−1프레임) 경계 아님.
+    10-25 ep12 N7 ayB: 옛 판은 첫 1.5프레임 안을 빼서 ss 8.367·경계 8.4(= 둘째 프레임부터 새 샷)를 못 봐, snap_ss 가 앞 샷 1프레임 번쩍임 자리로 옮겼다(눈 확인)."""
+    return [t for t in starts if a + 0.5 / FPS < t <= b - 1 / FPS + 1e-3]
+
+
 def short_pieces(starts: list[float], a: float, b: float) -> list[float]:
-    """구간 [a,b) 를 경계(첫 프레임 직후·마지막 프레임 이후는 제외)로 쪼갠 조각 중 MIN_PIECE_SEC 보다 짧은 것의 길이."""
-    pts = [a] + [t for t in starts if a + 1.5 / FPS < t <= b - 1 / FPS + 1e-3] + [b]
+    """구간 [a,b) 를 경계(inner_bounds)로 쪼갠 조각 중 MIN_PIECE_SEC 보다 짧은 것의 길이."""
+    pts = [a] + inner_bounds(starts, a, b) + [b]
     if len(pts) == 2:
         return []
     return [round(y - x, 2) for x, y in zip(pts, pts[1:]) if y - x < MIN_PIECE_SEC - 1e-3]
@@ -791,7 +797,7 @@ def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
         ss = float(c["ss"])
         n = c.get("frames") or (round(c["t1"] * FPS) - round(c["t0"] * FPS))
         end = ss + n / FPS
-        hit = [t for t in shot_starts(src) if ss + 1.5 / FPS < t <= end - 1 / FPS + 1e-3]
+        hit = inner_bounds(shot_starts(src), ss, end)
         short = short_pieces(hit, ss, end)
         if hit and short:      # 양쪽이 긴 조각이면 원본 자체의 이어진 편집이라 통과 — 짧은 조각(번쩍임)만 막는다(오류기록 55: 0.3초 꼬리도 결함)
             bad.append(f"컷 경계 {c['line']} {c['src']} ss={ss:.2f}~{end:.2f} 안 원본 장면 경계 {[round(t, 2) for t in hit]}초 → 짧은 조각 {short}초(<{MIN_PIECE_SEC})")

@@ -553,7 +553,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
     bench_docs = [jload(p) for p in sorted(lrp.glob("*.json"))] if lrp and lrp.exists() else []
     if want("자막·효과"):
         row("자막·효과", "배치(본보기 벤치 편 대조)",
-             lambda: (tab["check"]["ok"], f"본보기 {tab['check']['reference']} · 칸 최대 차 {tab['check']['worst_slot_diff']}"), "자막표.check = placement.check_place")
+             lambda: (tab["check"]["ok"], f"본보기 {tab['check']['reference']} · 칸 최대 차 {tab['check']['worst_slot_diff']}" + (f" · 걸린 것 {tab['check'].get('bad')}" if tab['check'].get('bad') else "")), "자막표.check = placement.check_place")
         if not legacy:
             row("자막·효과", "B14 효과음 과다(≤ 벤치 p90)", lambda: sfx_excess(len(tab.get("sfx") or []), float(T["end"]), bench_docs), "자막표.sfx · 줄판독 sfx")
     # ── 소리
