@@ -99,10 +99,7 @@
    1222,
    1316
   ],
-  "why": "frame.json caption 층(Pretendard 81.3 흰·검정 외곽 4·등장 rise 300ms) y1222 · 조각 자수 중앙 6~7(나레 3편) → 12 상한 손 상수 · typing_cps 손 상수(벤치 등장 instant 66/66)",
-  "_pending": {
-   "pack": "썰풀다 자막 팩 없음 → 관제 235 요청(자막 층 {\"font\": \"Pretendard-Bold.otf\", \"px\": 81.3, \"color\": \"#FFFDFD\", \"y_top\": 1222, \"line_h\": 94, \"lines\": 1, \"cx\": 540, \"max_w\": 1000}). 그동안 clean"
-  }
+  "why": "frame.json caption 층(Pretendard 81.3 흰·검정 외곽 4·등장 rise 300ms) y1222 · 조각 자수 중앙 6~7(나레 3편) → 12 상한 손 상수 · typing_cps 손 상수(벤치 등장 instant 66/66)"
  },
  "cuts": {
   "push_tts": 0.0,

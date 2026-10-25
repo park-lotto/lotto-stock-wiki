@@ -108,10 +108,7 @@
    1206,
    1280
   ],
-  "why": "frame.json caption 층(Cafe24Ohsquare 64 노랑 #F5FF16·검정 외곽 5·기울임) y1206 · 자막 replace(defaults) · chunk_max_chars 12·typing_cps 10 = 손 상수(줄판독 0편 — 06)",
-  "_pending": {
-   "pack": "만템 자막 팩 없음 → 관제 235 요청(자막 층 = {\"font\": \"Cafe24Ohsquare.ttf\", \"px\": 64, \"color\": \"#F5FF16\", \"y_top\": 1206, \"line_h\": 74, \"lines\": 1, \"cx\": 540, \"max_w\": 1000}). 그동안 kitchit(흰+검정 외곽)"
-  }
+  "why": "frame.json caption 층(Cafe24Ohsquare 64 노랑 #F5FF16·검정 외곽 5·기울임) y1206 · 자막 replace(defaults) · chunk_max_chars 12·typing_cps 10 = 손 상수(줄판독 0편 — 06)"
  },
  "cuts": {
   "push_tts": 0.0,

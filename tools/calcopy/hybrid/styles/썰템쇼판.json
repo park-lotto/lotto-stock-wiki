@@ -297,15 +297,12 @@
    716
   ],
   "why": "자막 = frame.json caption 층(Pretendard-Bold 60.1 검정·외곽 0·가운데·3줄 칸 y488 줄 76 = 488~716) · 조각 초 중앙 1.4(뜯기 8편) · chunk_max_chars 12 = 손 상수(조각 자수 미측정 — 06)",
-  "_pending": {
-   "pack": "재밌쇼 게시글 자막 팩 없음 → 관제 235 요청: Pretendard-Bold 60.1 검정 외곽 0 · place 1줄 위 y488(25.4%)·줄 76 · 누적 2~3줄 · 화자대사줄 「화자 : 대사」 꼴. 그동안 clean · 줄 간격 벤치 76px vs 임시 clean 110px(지시서 11)"
-  },
   "stack": {
    "lines": 3,
    "break": "full",
    "y": 526,
-   "pitch": 110,
-   "why": "자막 칸 = frame.json caption 3줄(y488·줄 76) 덧붙음 누적(manifest.differences '2줄째 덧붙음') → lines 3 · 첫 줄 가운데 488+76/2=526 · 임시 clean 팩 줄 간격 110(벤치 76 은 팩 몫) — break 는 줄판독 새 꼴로 확인 전 full"
+   "pitch": 76,
+   "why": "자막 칸 = frame.json caption 3줄(y488·줄 76) 덧붙음 누적(manifest.differences '2줄째 덧붙음') → lines 3 · frame.json caption 3줄 y488·줄 76 → 첫 줄 가운데 526 — 새 팩 humorshowshow(1a6bb76d7) 렌더 피치 76(팩요청.md 해결)"
   }
  },
  "cuts": {

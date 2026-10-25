@@ -127,10 +127,7 @@
    1201,
    1279
   ],
-  "why": "흰 #FFFFFF+검정 외곽 7~11px · 굵은 고딕 잉크 78~84px · 창 안 아래 한 줄 y1201~1279(Jlgd SPEC cap) · instant 130/144 · 꾸밈 없는 줄 136/150 · 조각 자수 중앙 8(p90 11) → 11 · typing 0(typing_cps 안 쓰임)",
-  "_pending": {
-   "pack": "울지마트로트 자막 팩 없음 → 관제 235 요청: GmarketSansBold 흰·검정 외곽 7px(#19191F) place y≈64.6% · CTA·공개 2줄 위로(y918~996). 그동안 kitchit(흰+검정 외곽)"
-  }
+  "why": "흰 #FFFFFF+검정 외곽 7~11px · 굵은 고딕 잉크 78~84px · 창 안 아래 한 줄 y1201~1279(Jlgd SPEC cap) · instant 130/144 · 꾸밈 없는 줄 136/150 · 조각 자수 중앙 8(p90 11) → 11 · typing 0(typing_cps 안 쓰임)"
  },
  "cuts": {
   "push_tts": 0.0,

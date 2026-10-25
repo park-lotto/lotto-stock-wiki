@@ -97,10 +97,7 @@
    1462,
    1538
   ],
-  "why": "frame.json caption 층(SpoqaHanSansNeo-Bold 66 검정) 창 아래 y1462 · 조각 자수 중앙 11.5~18·초 3.5~4.6(자막만 3편) → 상한 12 손 상수(긴 자막은 _pending) · typing_cps 손 상수(벤치 등장 instant 66/66)",
-  "_pending": {
-   "pack": "썰풀다 자막 팩 없음 → 관제 235 요청(자막 층 {\"font\": \"SpoqaHanSansNeo-Bold.otf\", \"px\": 66, \"color\": \"#000000\", \"y_top\": 1462, \"line_h\": 76, \"lines\": 1, \"cx\": 540, \"max_w\": 1000}). 그동안 clean"
-  }
+  "why": "frame.json caption 층(SpoqaHanSansNeo-Bold 66 검정) 창 아래 y1462 · 조각 자수 중앙 11.5~18·초 3.5~4.6(자막만 3편) → 상한 12 손 상수(긴 자막은 _pending) · typing_cps 손 상수(벤치 등장 instant 66/66)"
  },
  "cuts": {
   "push_tts": 0.0,

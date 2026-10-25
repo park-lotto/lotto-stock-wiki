@@ -102,10 +102,7 @@
    1222,
    1308
   ],
-  "why": "frame.json caption 층(SBAggroB 75 흰·검정 외곽 4) y1222 · chunk_max_chars 12·typing_cps 10 = 손 상수(줄판독 0편 — 06)",
-  "_pending": {
-   "pack": "아이템홈 자막 팩 없음 → 관제 235 요청(자막 층 = {\"font\": \"SBAggroB.ttf\", \"px\": 75, \"color\": \"#FCFAFA\", \"y_top\": 1222, \"line_h\": 86, \"lines\": 1, \"cx\": 540, \"max_w\": 1000}). 그동안 kitchit(흰+검정 외곽)"
-  }
+  "why": "frame.json caption 층(SBAggroB 75 흰·검정 외곽 4) y1222 · chunk_max_chars 12·typing_cps 10 = 손 상수(줄판독 0편 — 06)"
  },
  "cuts": {
   "push_tts": 0.0,
