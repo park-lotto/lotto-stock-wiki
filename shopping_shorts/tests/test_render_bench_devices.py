@@ -631,6 +631,47 @@ def test_pack_place_x(tmp_path):
     assert abs(cx[0] - 540) < 15 and abs(cx[1] - 324) < 20, cx                                          # 30% = 324px
 
 
+def test_tts_by_line_resynth_only_changed(monkeypatch, tmp_path):
+    """결정 ㉗: 줄 캐시 — 새 대본 = 전체 1회 합성(옛 그대로)+줄 캐시 쪼개 저장 · 같은 대본 = 0회 · 한 줄 바뀜 = 그 줄만 1회. 돈 드는 합성 대신 가짜(호출 수 단언)."""
+    from tools.calcopy.engine import narr_align as NA
+    from tools.calcopy.hybrid import render_itssum as RI
+    calls = []
+
+    def fake(text, voice_id, tempo, out_mp3, model=NA.TTS_MODEL, log=print):
+        out = Path(out_mp3)
+        key = NA.cache_key(text, voice_id, tempo, model)
+        sc = NA.sidecar_of(out)
+        if out.exists() and sc.exists() and json.loads(sc.read_text(encoding="utf-8")).get("key") == key:
+            return json.loads(sc.read_text(encoding="utf-8"))["align"]
+        calls.append(text)
+        n = len(text)
+        dur = 0.2 + 0.12 * n
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"sine=f=300:d={dur:.3f}:sample_rate=44100", "-ac", "1", "-c:a", "libmp3lame",
+                        str(out)], check=True, stdin=subprocess.DEVNULL)
+        st = [round(0.1 + 0.12 * i, 3) for i in range(n)]
+        al = {"characters": list(text), "character_start_times_seconds": st, "character_end_times_seconds": [round(v + 0.1, 3) for v in st]}
+        sc.write_text(json.dumps({"key": key, "text": text, "align": al}, ensure_ascii=False), encoding="utf-8")
+        return al
+    monkeypatch.setattr(NA, "synth_cached", fake)
+    S = {"voice": {"voice_id": "tc_x", "tempo": None}, "lines": [{"id": "N1", "kind": "tts", "tts": "첫 줄이다."}, {"id": "O1", "kind": "orig"},
+                                                                {"id": "N2", "kind": "tts", "tts": "둘째 줄이다."}, {"id": "N3", "kind": "tts", "tts": "셋째 줄."}]}
+    R = tmp_path / "r"
+    R.mkdir()
+    full, al = RB.tts_by_line(S, R, log=lambda *_: None)
+    assert calls == ["첫 줄이다. 둘째 줄이다. 셋째 줄."] and len(list((R / "tts_lines").glob("*.mp3"))) == 3        # 새 대본 = 전체 1회 + 줄 3개 쪼갬
+    RB.tts_by_line(S, R, log=lambda *_: None)
+    assert len(calls) == 1                                                                                               # 같은 대본 = 0회
+    S2 = json.loads(json.dumps(S))
+    S2["lines"][2]["tts"] = "바뀐 둘째 줄이다."
+    full2, al2 = RB.tts_by_line(S2, R, log=lambda *_: None)
+    assert calls[1:] == ["바뀐 둘째 줄이다."]                                                                            # 바뀐 줄만 1회
+    assert "".join(al2["characters"]) == RI.tts_text(S2)
+    assert json.loads(NA.sidecar_of(full2).read_text(encoding="utf-8"))["key"] == NA.cache_key(RI.tts_text(S2), "tc_x", None)
+    RB.tts_by_line(S2, R, log=lambda *_: None)
+    assert len(calls) == 2                                                                                               # 다시 = 0회(이은 전체가 캐시)
+    assert RB.dur_of(full2) > RB.dur_of(R / "tts_lines" / f"{NA.cache_key('바뀐 둘째 줄이다.', 'tc_x', None)}.mp3")
+
+
 # ── CLI: 실제 렌더 대조(합격 검사 1·2·3·4) ───────────────────────────────
 def _img(p):
     import cv2

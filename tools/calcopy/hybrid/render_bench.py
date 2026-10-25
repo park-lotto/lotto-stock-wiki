@@ -1660,6 +1660,104 @@ def plan_rows(S: dict, T: dict, st: dict, locate=None) -> dict:
     return placed
 
 
+# ── 나레 합성 줄 캐시(결정 ㉗ '바뀐 줄만 재합성') — 합성 주인은 그대로 engine/narr_align.synth_cached(돈 드는 곳 한 곳) ──────────────
+TTS_LINE_GAP = 0.25        # 줄 합성본을 이어 붙일 때 줄 사이 무음(초) — 전체 한 번 합성의 문장 끝 쉼 자리. 뒤 make_sentences 가 줄 경계를 글자 시각으로 다시 자른다
+
+
+def tts_by_line(S: dict, R: Path, log=print) -> tuple[Path, dict | None]:
+    """나레 합성(narr_full.mp3 + 글자 시각)을 줄 캐시로. 반환은 RI.tts_once 와 같은 꼴(그 뒤 make_sentences 는 그대로).
+      ① 전체 캐시(narr_full.mp3 사이드카 열쇠 = 전체 글·목소리·배속)가 맞으면 그대로 쓴다(옛 렌더와 같은 소리 — 회귀 0) + 줄 캐시로 쪼개 저장.
+      ② 안 맞는데 줄 캐시가 하나도 없으면(새 대본) 옛처럼 전체 1회 합성(RI.tts_once) + 줄 캐시로 쪼개 저장.
+      ③ 줄 캐시가 하나라도 있으면 바뀐 줄만 합성(synth_cached, 열쇠 = 목소리·줄 글·배속·모델)하고 줄들을 이어 narr_full 을 다시 만든다(사이드카 열쇠 = 새 전체 글).
+    줄 캐시 = R/tts_lines/<열쇠>.mp3(+ .tts.json, align = 그 줄 글자 시각)."""
+    from tools.calcopy.engine import narr_align as NA
+    from tools.calcopy.hybrid import render_itssum as RI
+    voice, tempo = S["voice"]["voice_id"], S["voice"].get("tempo")
+    full = R / "narr_full.mp3"
+    LD = R / "tts_lines"
+    lines = [l for l in S["lines"] if l["kind"] == "tts"]
+    key_full = NA.cache_key(RI.tts_text(S), voice, tempo)
+    meta = json.loads(NA.sidecar_of(full).read_text(encoding="utf-8")) if NA.sidecar_of(full).exists() else {}
+    lkey = {l["id"]: NA.cache_key(l["tts"], voice, tempo) for l in lines}
+    have = {i for i, k in lkey.items() if (LD / f"{k}.mp3").exists() and NA.sidecar_of(LD / f"{k}.mp3").exists()}
+    if (full.exists() and meta.get("key") == key_full) or not have:
+        full, align = RI.tts_once(S, R, log)                      # ①(캐시 적중) 또는 ②(새 대본 = 전체 1회)
+        tts_split_lines(S, full, align, LD, log)
+        return full, align
+    # ③ 바뀐 줄만 합성
+    LD.mkdir(parents=True, exist_ok=True)
+    made = []
+    for l in lines:
+        f = LD / f"{lkey[l['id']]}.mp3"
+        if l["id"] not in have:
+            NA.synth_cached(l["tts"], voice, tempo, f, log=log)
+            made.append(l["id"])
+    log(f"[tts] 줄 캐시: 재사용 {len(lines) - len(made)}줄 · 새로 합성 {made}")
+    import subprocess
+    import numpy as np
+    pcm, chars, st0, en0, t = [], [], [], [], 0.0
+    gap = np.zeros(int(round(TTS_LINE_GAP * 44100)), np.float32)
+    for k, l in enumerate(lines):
+        f = LD / f"{lkey[l['id']]}.mp3"
+        x = np.frombuffer(subprocess.run(["ffmpeg", "-v", "error", "-i", str(f), "-ac", "1", "-ar", "44100", "-f", "f32le", "-"], capture_output=True,
+                                         stdin=subprocess.DEVNULL).stdout, np.float32)
+        a = NA.load_align(f)
+        if not a or len(a["characters"]) != len(l["tts"]):
+            raise StageError(f"줄 캐시 {f.name} 글자 시각이 줄 글({len(l['tts'])}자)과 안 맞는다 — 줄 캐시를 지우고 다시")
+        if k:
+            pcm.append(gap); chars.append(" "); st0.append(round(t - TTS_LINE_GAP / 2, 3)); en0.append(round(t - TTS_LINE_GAP / 2, 3))
+        chars += list(a["characters"])
+        st0 += [round(t + v, 3) for v in a["character_start_times_seconds"]]
+        en0 += [round(t + v, 3) for v in a["character_end_times_seconds"]]
+        pcm.append(x)
+        t += len(x) / 44100 + TTS_LINE_GAP
+    wav = R / "narr_full_lines.wav"
+    import wave
+    y = np.concatenate(pcm)
+    with wave.open(str(wav), "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(44100); w.writeframes((np.clip(y, -1, 1) * 32767).astype("<i2").tobytes())
+    if full.exists():
+        full.replace(full.with_name(f"narr_full_old_{str(meta.get('key', 'x'))[:8]}.mp3"))
+    run(["ffmpeg", "-y", "-v", "error", "-i", wav, "-c:a", "libmp3lame", "-b:a", "192k", "-ar", "44100", "-ac", "1", full])
+    align = {"characters": chars, "character_start_times_seconds": st0, "character_end_times_seconds": en0}
+    if "".join(chars) != RI.tts_text(S):
+        raise StageError("줄 캐시로 이은 글자 시각이 전체 글과 다르다")
+    NA.sidecar_of(full).write_text(json.dumps({"key": key_full, "text": RI.tts_text(S), "voice": voice, "tempo": tempo, "model": NA.TTS_MODEL,
+                                               "align": align, "legacy": False, "from_lines": {l["id"]: lkey[l["id"]] for l in lines}, "made": made,
+                                               "at": __import__("time").strftime("%Y-%m-%d %H:%M:%S")}, ensure_ascii=False), encoding="utf-8")
+    return full, align
+
+
+def tts_split_lines(S: dict, full: Path, align: dict | None, LD: Path, log=print) -> int:
+    """전체 합성본을 줄 캐시로 쪼개 저장(글자 시각이 있을 때만 — 줄 경계 = RI.split_by_align 과 같은 자리). 이미 있는 줄은 건너뜀. 반환 = 새로 쓴 줄 수."""
+    from tools.calcopy.engine import narr_align as NA
+    from tools.calcopy.hybrid import render_itssum as RI
+    if not align:
+        return 0
+    voice, tempo = S["voice"]["voice_id"], S["voice"].get("tempo")
+    lines = [l for l in S["lines"] if l["kind"] == "tts"]
+    try:
+        spans = RI.split_by_align(S, align)
+    except StageError as e:
+        log(f"[tts] 줄 캐시 쪼개기 건너뜀: {e}")
+        return 0
+    LD.mkdir(parents=True, exist_ok=True)
+    pos, n = 0, 0
+    for l, (a, b) in zip(lines, spans):
+        i0, i1 = pos, pos + len(l["tts"])
+        pos = i1 + 1
+        f = LD / f"{NA.cache_key(l['tts'], voice, tempo)}.mp3"
+        if f.exists() and NA.sidecar_of(f).exists():
+            continue
+        run(["ffmpeg", "-y", "-v", "error", "-ss", f"{a:.3f}", "-t", f"{b - a:.3f}", "-i", full, "-c:a", "libmp3lame", "-b:a", "192k", "-ar", "44100", "-ac", "1", f])
+        la = {k: [round(v - a, 3) for v in align[k][i0:i1]] for k in ("character_start_times_seconds", "character_end_times_seconds")}
+        la["characters"] = align["characters"][i0:i1]
+        NA.sidecar_of(f).write_text(json.dumps({"key": NA.cache_key(l["tts"], voice, tempo), "text": l["tts"], "voice": voice, "tempo": tempo,
+                                                "model": NA.TTS_MODEL, "align": la, "legacy": False, "split_from": full.name}, ensure_ascii=False), encoding="utf-8")
+        n += 1
+    return n
+
+
 def devices(st: dict, trans: list[dict], A: dict | None = None, segs: list[dict] | None = None, T: dict | None = None,
             n_narr: int | None = None) -> dict:
     """render_info.devices 표식(지시서 02 → 04 품질 관문이 읽는다): 전환 종류별 개수 · 나레 덕킹 dB·실측 · 틀 종류 ·
@@ -1706,7 +1804,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         sm = align = None
         if tts and any(l["kind"] == "tts" for l in S["lines"]):      # 계획 때 진짜 목소리 길이로(10-22 선우용여: 어림으로 통과 → 렌더에서 '컷이 원본 샷보다 길다' 2번·완성본 길이 넘침으로 렌더 3번). 합성은 캐시 — 렌더가 그대로 쓴다
             tts_S = {**S, "lines": [l for l in S["lines"] if l["kind"] == "tts"]}
-            full, align = RI.tts_once(tts_S, R, log)
+            full, align = tts_by_line(tts_S, R, log)
             sent, _, _ = RI.make_sentences(tts_S, full, R, log, align=align, spread=RI.spread_of(st))
             sm = {x["id"]: x for x in sent}
         T = timeline(S, M, st, sm, align)
@@ -1726,7 +1824,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         return {"timeline": T, "placement": placed, "length": length, "over": msg}
     tts_S = {**S, "lines": [l for l in S["lines"] if l["kind"] == "tts"]}
     if tts_S["lines"]:
-        full, align = RI.tts_once(tts_S, R, log)
+        full, align = tts_by_line(tts_S, R, log)
         sent, tempo, _ = RI.make_sentences(tts_S, full, R, log, align=align, spread=RI.spread_of(st))   # 판 targets.speech 목표가 있으면 타입캐스트 줄별 ±8% 미세(미나 그대로, 지시서 15)
     else:           # 나레 없는 편(관제 263 02 2차 ②) — TTS 안 부른다(돈 0). 자막 줄(kind sub) 시간표 + 원음 + 배경음·효과음
         align, sent, tempo = None, [], None
