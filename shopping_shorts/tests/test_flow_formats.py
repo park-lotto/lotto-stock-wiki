@@ -393,3 +393,9 @@ def test_shot_at_float_boundary():
     S = {"lines": [{"id": "O3", "kind": "orig", "src": "m.mp4", "spans": [[1.2, 3.24]]}]}
     RU.fill_shot_max(M, S, {"m.mp4": [1080, 1920]}, {"m": shots}, 1080 / 1434)
     assert M["cuts"]["O3"][0]["max"] > 2
+
+
+def test_shot_at_start_just_before_boundary_is_next_shot():
+    """실전 10-25 L2B: ss 0.93 · 샷 경계 0.933 → 앞 샷 max 0.003 → 렌더 '샷보다 길다' 3번(렌더는 ss 를 경계 뒤로 옮긴다)."""
+    shots = [{"i": 1, "a": 0.6, "b": 0.933}, {"i": 2, "a": 0.933, "b": 1.867}]
+    assert RU.shot_at(shots, 0.93)["i"] == 2 and RU.shot_at(shots, 0.85)["i"] == 1
