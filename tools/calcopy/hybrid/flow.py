@@ -284,6 +284,13 @@ def _txt(s: str) -> dict:
     return {"text": s}
 
 
+def _coupang_down(m: dict, key: str = "coupang") -> None:
+    """쿠팡 검색이 아예 안 됐으면(runner c_coupang search_failed — 회선 막힘 등) '제품 없음'으로 고객에게 다른 영상을 권하지 않는다(사장님 10-26).
+    멈춤 → 다시 시도(retry)하면 검색한 단계(_asker)부터 이어 간다."""
+    if (m.get(key) or {}).get("search_failed"):
+        raise _Stop("쿠팡 검색이 잠시 막혔습니다", "몇 분 뒤 다시 시도하면 제품 확인부터 이어 갑니다")
+
+
 class _Stop(Exception):
     """멈춤. retry = 다시 시도하면 이어 갈 세부 단계(받기 실패처럼 잠깐의 문제 — 앞 단계 유튜브 요청을 다시 쓰지 않게)."""
     def __init__(self, why: str, fix: str = "", retry: str | None = None, final: bool = False):
@@ -860,6 +867,7 @@ def ph_product_cands(st, m, rp, u):
 
 
 def ph_product_same(st, m, rp, u):
+    _coupang_down(m)
     shots = (m.get("shots") or {}).get("files") or []
     if not shots:
         raise _Stop("제품 장면을 자르지 못했습니다", "다시 이어서 부르세요")
@@ -888,6 +896,7 @@ def ph_given(st, m, rp, u):
 
 
 def ph_given_same(st, m, rp, u):
+    _coupang_down(m)
     cands = (m.get("coupang") or {}).get("items") or []
     if not cands:
         raise _Stop("정해 주신 제품을 쿠팡에서 찾지 못했습니다", "쿠팡 상품 이름을 정확히 적어 다시 만들어 주세요", final=True)
@@ -942,7 +951,7 @@ def ph_product_done(st, m, rp, u):
             return {"goto": "name_find"}
         if mode == "named":
             return {"goto": "best"}
-        raise _Stop("쿠팡에서 같은 종류 제품을 찾지 못했습니다", "제품 이름을 알려 주시거나 다른 영상 주소로 다시 만들어 주세요")
+        raise _Stop("쿠팡에서 같은 종류 제품을 찾지 못했습니다", "제품 이름을 알려 주시면 그 이름으로 찾아 이어 갑니다")
     if same.get("category") in ("의약품", "의료기기"):
         raise _Stop("의약품·의료기기는 만들 수 없는 소재입니다", "다른 소재 영상을 주세요", final=True)
     pool = st.get("given_cands") if given else (st.get("named_cands") if mode == "named" else st.get("coupang_cands"))
@@ -1008,6 +1017,7 @@ def ph_named_cands(st, m, rp, u):
 
 
 def ph_named_same(st, m, rp, u):
+    _coupang_down(m, "coupang2")
     c2 = (m.get("coupang2") or {}).get("items") or []
     if not c2:
         return {"goto": "best"}
@@ -1018,7 +1028,7 @@ def ph_named_same(st, m, rp, u):
 def ph_best(st, m, rp, u):
     cands = st.get("coupang_cands") or st.get("named_cands") or []
     if not cands:
-        raise _Stop("쿠팡에서 같은 종류 제품을 찾지 못했습니다", "제품 이름을 알려 주시거나 다른 영상 주소로 다시 만들어 주세요")
+        raise _Stop("쿠팡에서 같은 종류 제품을 찾지 못했습니다", "제품 이름을 알려 주시면 그 이름으로 찾아 이어 갑니다")
     if not any(c.get("rating") for c in cands) and st.get("coupang_qs") and not st.get("_rated"):
         st["_rated"] = True          # 대체 제품 = 후기 많은 것 — 후기 수는 이때만 채운다(98 #11·#43)
         return {"do": [{"id": "coupang", "cmd": "coupang", "queries": st["coupang_qs"], "ratings": True}], "then": "best_rated"}
@@ -1026,6 +1036,7 @@ def ph_best(st, m, rp, u):
 
 
 def ph_best_rated(st, m, rp, u):
+    _coupang_down(m)
     got = (m.get("coupang") or {}).get("items") or []
     if got:
         st["coupang_cands"] = got[:16]
@@ -2145,9 +2156,10 @@ def s_topic_got(st, m, rp, u):
 
 
 def s_cands(st, m, rp, u):
+    _coupang_down(m)
     cands = (m.get("coupang") or {}).get("items") or []
     if not cands:
-        raise _Stop("쿠팡에서 이 제품을 찾지 못했습니다", "제품 이름을 알려 주시거나 다른 영상 주소로 다시 만들어 주세요")
+        raise _Stop("쿠팡에서 이 제품을 찾지 못했습니다", "제품 이름을 알려 주시면 그 이름으로 찾아 이어 갑니다")
     st["coupang_cands"] = cands[:16]
     st["product_shots"] = [st["bench"]["sheet"]] if st["bench"].get("sheet") else []
     st["_cand_kind"] = "shop"
@@ -2165,7 +2177,7 @@ def s_cand_look(st, m, rp, u):
 def s_product_done(st, m, rp, u):
     a = _reply(rp, "shop_same", ("product_id", "name", "category"))
     if not a.get("product_id"):
-        raise _Stop("쿠팡에서 같은 종류 제품을 찾지 못했습니다", "제품 이름을 알려 주시거나 다른 영상 주소로 다시 만들어 주세요")
+        raise _Stop("쿠팡에서 같은 종류 제품을 찾지 못했습니다", "제품 이름을 알려 주시면 그 이름으로 찾아 이어 갑니다")
     if a.get("category") in ("의약품", "의료기기"):
         raise _Stop("의약품·의료기기는 만들 수 없는 소재입니다", "다른 소재 영상을 주세요", final=True)
     st["product"] = {**{k: a.get(k) for k in ("product_id", "name", "why", "category")}, "mode": "exact" if a.get("mode") != "alt" else "alt"}

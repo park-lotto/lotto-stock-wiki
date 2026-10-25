@@ -738,7 +738,9 @@ def c_coupang(W, d):
             k = str(it.get("product_id") or it.get("productId") or it.get("id") or it.get("name"))
             if k not in seen:
                 seen.add(k); items.append(it)
-    return {"items": items[:16]}
+    # 검색어가 하나도 성공 못 했으면(쿠팡이 회선을 막음·창 실패) '제품 없음'이 아니다 — flow 가 '막힘·다시 시도'로 멈추게 표시(10-26)
+    failed = bool(found) and not any((v or {}).get("ok") for v in found.values())
+    return {"items": items[:16], **({"search_failed": True} if failed and not items else {})}
 
 
 def _naver_text(q: str, limit: int = 2500) -> str:
