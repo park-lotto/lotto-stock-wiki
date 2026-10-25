@@ -120,11 +120,12 @@ def test_목록패치_없는_id_는_거절(tmp_styles):
         ST.load("잇템로그판_v2")
 
 
-def test_모션그래픽팩은_render_bench_가_거절():
+def test_모션그래픽팩은_스냅샷_칸이_아니다():
+    """02 2차(468380769)부터 render_bench.motion_graphics 가 모션그래픽팩을 그린다 — snapshot_fields 는 거절하지 않고 팩 칸만 준다(07 10-25 거절 삭제)."""
     st = ST.load("키치잇판")
     st["packs"]["motion"]["graphics"] = "dynamic_pop"
-    with pytest.raises(PM.PackError, match="그리는 길 없음"):
-        PM.snapshot_fields(st)
+    f = PM.snapshot_fields(st)
+    assert set(f) == {"captionPack", "motionPack"} and "graphics" not in f
 
 
 def test_snapshot_fields_는_validate_snapshot_통과():

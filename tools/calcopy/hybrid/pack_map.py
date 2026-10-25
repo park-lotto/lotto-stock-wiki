@@ -273,12 +273,20 @@ def _norm(s: str) -> str:
 
 
 def font_file(family: str) -> Path | None:
+    """글꼴 이름 → 파일. 렌더 글꼴 이름의 'Cc' 접두(calcopy_frame 등록 이름 'CcPretendard-Bold')·'XBold'(=ExtraBold)·'EB' 를 푼다(07, 10-25)."""
     n = _norm(family)
-    if n.endswith("eb"):
-        n = n[:-2] + "extrabold"
-    for p in sorted(FONT_DIR.glob("*.[ot]tf")):
-        if _norm(p.stem) == n:
-            return p
+    cands = [n] + ([n[2:]] if n.startswith("cc") else [])
+    out = []
+    for c in cands:
+        if c.endswith("eb"):
+            c = c[:-2] + "extrabold"
+        c = c.replace("xbold", "extrabold")
+        out.append(c)
+    files = sorted(FONT_DIR.glob("*.[ot]tf"))
+    for c in out:
+        for p in files:
+            if _norm(p.stem) == c:
+                return p
     return None
 
 
@@ -320,10 +328,18 @@ _UNKNOWN = re.compile(r"미확정|미측정|추정|계열|근사|확인|\(|/")
 
 
 def _outline_px(o) -> float | None:
+    """줄판독 outline 칸 → 테 px. '없음(… ring3-7px = 글 자체)' 처럼 외곽선 없음이라 적힌 칸은 0(괄호 속 측정 숫자를 테로 읽지 않는다 — 뜨거운사람들 7px 오독, 07 10-25) ·
+    '8~13px'·'3-7px' 같은 범위는 가운데 값."""
     if isinstance(o, dict):
         v = o.get("px")
         return float(v) if isinstance(v, (int, float)) else None
-    m = re.search(r"([\d.]+)\s*px", str(o or ""))
+    s = str(o or "")
+    if re.match(r"\s*(없음|없다|0\s*px|none)", s):
+        return 0.0
+    m = re.search(r"([\d.]+)\s*[~\-–]\s*([\d.]+)\s*px", s)
+    if m:
+        return (float(m.group(1)) + float(m.group(2))) / 2
+    m = re.search(r"([\d.]+)\s*px", s)
     return float(m.group(1)) if m else None
 
 
@@ -364,7 +380,8 @@ def _who(sp) -> str | None:
 
 def _agg(L: list[dict]) -> dict:
     out: dict = {"n": len(L), "basis": []}
-    spans = [x["y"][1] - x["y"][0] for x in L if isinstance(x.get("y"), list) and len(x["y"]) == 2
+    one = [x for x in L if chr(10) not in str(x.get("text") or "")]        # 2줄 덩어리 y칸 = 두 줄 높이 — 잉크 높이는 1줄 덩어리로만(07 10-25 뜨거운사람들 2줄 121/156)
+    spans = [x["y"][1] - x["y"][0] for x in (one if len(one) >= 5 else L) if isinstance(x.get("y"), list) and len(x["y"]) == 2
              and all(isinstance(v, (int, float)) for v in x["y"]) and 20 < x["y"][1] - x["y"][0] < 150]
     if len(spans) >= 5:
         out["span"] = float(stt.median(spans))
@@ -389,10 +406,16 @@ def bench_caption(slug: str, st: dict | None = None) -> dict:
     """벤치 자막 실측 — 줄판독 줄 칸(y·fill_hex·outline)을 화자별(나레·원음)로 + 스타일분석 '글꼴' 줄 + 판 caption._pending.pack 측정 층.
     ※ 줄판독 size_px 는 채널마다 뜻이 달라(채움 잉크 / 글자 크기) 안 쓴다 — y칸 높이를 팩의 채움·테 포함 잉크 둘 다와 대조."""
     L, docs = [], 0
+    crit = {}
+    if st:
+        from tools.calcopy.hybrid import placement as _PL
+        crit = {k: v for k, v in _PL.count_filter(st).items() if k not in ("ids", "how", "made_by")}     # 한 폴더 두 갈래(도파민썰템 A 자막만·B 나레) — 그 판 편만(07 10-25)
     for f in sorted(glob.glob(str(ROOT / f"channel/{slug}/줄판독/*.json"))):
         try:
             d = json.loads(Path(f).read_text(encoding="utf-8"))
         except Exception:     # noqa: BLE001 — 깨진 줄판독은 docs 수에서 빠진다(표에 보임)
+            continue
+        if crit and any(d.get(k) != v for k, v in crit.items()):
             continue
         docs += 1
         L += [x for x in d.get("lines") or [] if isinstance(x, dict)]
