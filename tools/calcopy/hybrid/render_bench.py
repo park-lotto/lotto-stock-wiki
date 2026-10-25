@@ -1821,6 +1821,10 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         msg = ("계획에서 컷이 원본 샷보다 길다" + ("" if sm else "(어림)") + ": " + str([(c["line"], c["src"], c.get("ss"), c["dur"], c.get("max"), {"원본 남음": c["src_left"]} if "src_left" in c else None) for c in over])) if over else ""
         if over and not tts:
             raise StageError(msg)
+        from tools.calcopy.hybrid import thumb_rule as TR
+        card_bad = TR.card_face_gate(st, doc, T, M["cand_dir"])      # 렌더 전 관문 ⑥ — 계획 때 걸러 렌더를 안 돌린다
+        if card_bad:
+            raise StageError(" / ".join(card_bad))
         return {"timeline": T, "placement": placed, "length": length, "over": msg}
     tts_S = {**S, "lines": [l for l in S["lines"] if l["kind"] == "tts"]}
     if tts_S["lines"]:
@@ -1834,6 +1838,10 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     over = [c for c in T["cuts"] if c["over"] > 0]
     if over:
         raise StageError("컷이 원본 샷보다 길다: " + str([(c["line"], c["src"], c.get("ss"), c["dur"], c.get("max"), {"원본 남음": c["src_left"]} if "src_left" in c else None) for c in over]))
+    from tools.calcopy.hybrid import thumb_rule as TR
+    card_bad = TR.card_face_gate(st, doc, T, M["cand_dir"])          # 렌더 전 관문 ⑥(10-25): 연예인 판 카드 3안 얼굴 — 영상 굽기 전에 멈춘다
+    if card_bad:
+        raise StageError(" / ".join(card_bad))
     win0 = render_window(T, M, st, R)                          # 창(전환 없이) — 자리 검출 화면의 재료
     placed = plan_rows(S, T, st, make_locate(S, T, st, R, win0, log))
     from tools.calcopy.hybrid import placement as PL

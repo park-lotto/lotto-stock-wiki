@@ -1,6 +1,8 @@
 {
  "name": "키치잇판",
  "renderer": "bench",
+ "thumb_card_face": true,
+ "_thumb_card_face": "썸네일 카드 3안 전부 연예인 얼굴(얜샷템 = 연예인 얼굴 규칙 · 렌더 전 관문 ⑥ thumb_rule.card_face_gate, 10-25 메디필 카드 = 제품)",
  "_note": "얜샷템 하이브리드 — 키치잇(@키치잇) 칼카피 판. 근거 channel/kitchit/{스타일분석.md, 하이브리드_판설계.md, 줄판독/}. 렌더 = render_bench.py(이 파일만 보고 그린다).",
  "bench": {
   "ko": "키치잇",

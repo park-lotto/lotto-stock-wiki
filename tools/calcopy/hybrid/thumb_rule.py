@@ -90,3 +90,14 @@ def check(spec: dict, cuts: list[dict] | None = None, n_parts: int | None = None
     if "인물순간" not in axes and not str(spec.get("no_person_why") or "").strip():
         bad.append("인물순간 안이 없다 — scene_search 로 찾아보고, 그래도 없으면 no_person_why 에 무엇을 검색했고 왜 없는지 적는다")
     return bad
+
+
+def card_face_gate(st: dict, doc, T: dict, cand_dir) -> list[str]:
+    """(렌더 전 관문 ⑥, 10-25) 연예인 채널 판(st["thumb_card_face"] = true)이면 카드 3안 **전부** 장면에 연예인 얼굴(thumb.judge 와 같은 자) —
+    안은 무작위로 하나가 보이니 하나라도 얼굴이 없으면 반려. 렌더 전에 원본에서 잰다(thumb.card_faces). 문제 목록(빈 목록 = 통과).
+    왜: 10-24 얜샷템 메디필(기미크림) 0프레임 카드 = 제품 튜브(얼굴 0개)인데 자동검사 10/10 — 얼굴 검사가 카드 뒤(0.077초)부터 재서 못 봤다(10-25 감사)."""
+    if not st.get("thumb_card_face"):
+        return []
+    from tools.calcopy.hybrid import thumb
+    return [f"썸네일 카드 {r['id']}: 연예인 얼굴 아님({r['why']} · {r['where']}) — 얼굴이 크게 나온 장면으로 바꾼다(얜샷템 썸네일 = 연예인 얼굴)"
+            for r in thumb.card_faces(st, doc, T, cand_dir) if not r["ok"]]
