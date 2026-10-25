@@ -481,7 +481,8 @@ def constraint_flags(cand: dict, table: dict, fixed: list[dict], src_len: dict, 
         if nd.get("person") == "none" and any(p != "0" for p in pers):
             bad.append(f"인물: '사람 없음' 줄인데 {pers}")
         ob = nd.get("object")
-        if ob and ob != "none" and not any(ob in (i or {}).get("objects", []) for i in info):
+        head = (lambda t: (re.findall(r"[가-힣A-Za-z]+", str(t)) or [""])[-1])     # 대상 표식은 끝 명사로 맞춘다('분홍 알갱이' = '얼굴의 알갱이' — 표식 글자가 샷마다 달라 10-25 ep13 N6 막다른 칸)
+        if ob and ob != "none" and not any(head(ob) == head(o) for i in info for o in (i or {}).get("objects", [])):
             bad.append(f"대상: '{ob}' 이 안 보이는 샷")
         fl["identity"] = bad
     fl["reject"] = ([k for k in ("shot_edge", "src_end", "face_outside", "text_box", "other_product", "identity") if fl.get(k)]
@@ -949,13 +950,8 @@ def plan(doc, work, version: str, llm=None, apply: bool = False, sign: bool = Fa
                 list(ex.map(run_slot, slots))
             sel = select(slots, src_len, floors)
             dead = [x for x in sel if x.get("dead")]
-        if dead:
-            stop = f"멈춤(사유: 막다른 칸 — 후보를 넓혀도 재사용·A-B-A·다른 제품 제약 안 후보 0: {[x['id'] for x in dead]})"
-            ok, sm, weak = verdict(sel, goal)
-            rounds.append({"round": rnd, "mean": sm["mean"], "below7": sm["below_rate"], "below_n": sm["below_min"], "ok": False,
-                           "weak": [x["id"] for x in weak], "dead": [x["id"] for x in dead], "supplement": [], "fixes": []})
-            log(f"[fit] {stop}")
-            break
+        if dead:                 # 넓혀도 막다른 칸 → 미달로 보고 다음 수단(② 보충 재료 → ③ 대사 고침, ㊱)으로 — 끝까지 안 풀리면 멈춤 사유에 남는다
+            log(f"[fit] 넓혀도 막다른 칸 {[x['id'] for x in dead]} — 보충 재료·대사 고침으로")
         ok, sm, weak = verdict(sel, goal)
         rounds.append({"round": rnd, "mean": sm["mean"], "below7": sm["below_rate"], "below_n": sm["below_min"], "ok": ok,
                        "weak": [s["id"] for s in weak], "supplement": [], "fixes": []})
@@ -1006,7 +1002,8 @@ def plan(doc, work, version: str, llm=None, apply: bool = False, sign: bool = Fa
     ok, sm, weak = verdict(sel, goal)
     if any(x.get("dead") for x in sel):
         ok = False
-        stop = stop or f"멈춤(사유: 막다른 칸 {[x['id'] for x in sel if x.get('dead')]})"
+        dd = [x['id'] for x in sel if x.get('dead')]
+        stop = (stop + f" · 막다른 칸(제약 안 후보 0) {dd}") if stop else f"멈춤(사유: 막다른 칸(제약 안 후보 0) {dd})"
     # 재료_계획.json
     M2 = json.loads(json.dumps({k: v for k, v in M.items()}))
     cuts = dict(M2.get("cuts") or {})
