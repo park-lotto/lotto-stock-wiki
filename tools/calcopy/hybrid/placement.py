@@ -852,7 +852,13 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
                 and (not rule.get("needs_key") or r.get("key")) and (kind != "object_pop" or r.get("object_src"))
                 and (not rule.get("role") or r["role_key"] in _roles_of(rule["role"]))      # 역할 조건(벤치 원 스티커 훅 3/3 — 07 15a9f46ed 쪽지)
                 and not (rule.get("target") in ("face", "object") and _cut_inside(r, cuts))]      # 화면 자리 스티커 = 덩어리 안에 컷이 바뀌면 자리가 빗나간다(10-25 ep12 N1 원·화살표가 컷 뒤 옷깃)
-        for i in _spread(cand, need):
+        pick = _spread(cand, need)
+        if kind == "circle_arrow":      # 원·화살표 = 대상이 그 덩어리 내내 화면에 있어야 붙는다(fx_target.aim) — 못 붙으면 다음 후보 덩어리로(10-25 ep12 N1 마스크가 덩어리 중간에 화면 밖)
+            pick += [i for i in cand if i not in pick]
+        got_n = 0
+        for i in pick:
+            if got_n >= need:
+                break
             st = {"kind": kind, "word": out[i].get("key") or ""}
             if kind == "object_pop":
                 st.update({"src": out[i]["object_src"], "hold": "beat"})
@@ -860,6 +866,7 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
             if st is None:
                 continue
             out[i]["stickers"].append(st)
+            got_n += 1
             log.append(f"스티커 {kind} → {out[i]['line']}「{out[i]['text']}」")
         if len(cand) < need:
             log.append(f"스티커 {kind} 본보기 {need}개 중 {len(cand)}개만(조건 맞는 덩어리 모자람)")
@@ -1115,7 +1122,7 @@ def _site(st: dict, rule: dict, row: dict, locate, log: list) -> dict | None:
         log.append(f"스티커 {st['kind']} 자리 검출 실패({tg}) → {row['line']}「{row['text']}」 안 붙임(억지로 안 둔다)"
                    + (f" — 사유: {why}" if why else " — 사유 없음(검출기가 안 남김)"))
         return None
-    st.update({k: got[k] for k in ("x", "y", "w", "h", "conf", "face_clear", "how") if k in got})
+    st.update({k: got[k] for k in ("x", "y", "w", "h", "conf", "face_clear", "how", "r", "aim") if k in got})   # r·aim = 원·화살표 대상(fx_target.aim, 10-25)
     st["site"] = "detected"
     return st
 

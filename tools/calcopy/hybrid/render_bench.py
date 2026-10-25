@@ -2349,20 +2349,47 @@ def needs_locate(st: dict) -> bool:
     return bool(Mm and float(Mm.get("rate", 0)) > 0 and not isinstance(Mm.get("target"), dict))
 
 
-def make_locate(S: dict, T: dict, st: dict, R: Path, win: Path, log=print):
+def plan_canvas(T: dict, M: dict, st: dict):
+    """렌더 없이 시각 t 의 화면(1080×1920, 창 자리에 렌더 조각과 같은 그림 cut_frame — contact_sheet·관문 ④와 같은 프레임)을 돌려주는 함수.
+    --plan --locate 에서 자리 검출(fx_target.locator/aim)이 detect_base.mp4 대신 쓴다(10-25 원·화살표 대상 좌표 — 렌더 금지 중 확인 길)."""
+    import numpy as np
+    src_dir = Path(M["cand_dir"])
+    x, y, ww, wh = frame_window(st["frame"])
+
+    def at(t):
+        t = float(t or 0)
+        c = next((c for c in T["cuts"] if c["t0"] <= t < c["t1"]), T["cuts"][-1])
+        src = src_dir / c["src"]
+        img = src.suffix.lower() in IMG_EXT
+        a = cut_frame(src, 0.0 if img else float(c.get("ss") or 0) + (t - c["t0"]), cut_crop(c, src, (ww, wh)), (ww, wh), (M.get("blur") or {}).get(c["src"]))
+        cv = np.zeros((H, W, 3), np.uint8)
+        if a is not None:
+            cv[y:y + wh, x:x + ww] = a[:, :, ::-1]
+        return cv
+    return at
+
+
+def make_locate(S: dict, T: dict, st: dict, R: Path, win: Path, log=print, det=None):
     """placement.place(locate=…) 에 꽂을 자리 검출기(주인 = fx_target.locator/find). 검출 화면 = 틀+창(자막·전환 없이) detect_base.mp4.
     caption_side 는 판 칸 caption.band(y0,y1 — 자막 띠)가 있어야 한다. 크기 = 판 규칙 size([w,h]) · 없으면 스티커 160 · 짤 420."""
     if not needs_locate(st):
         return None
     from tools.calcopy.hybrid import fx_target as FX
-    det = render_base(S, T, st, {}, R, win, [], name="detect_base.mp4")
+    det = det if det is not None else render_base(S, T, st, {}, R, win, [], name="detect_base.mp4")      # det = plan_canvas(--plan --locate) 면 렌더 없이
     Rl = st["placement"].get("rules") or {}
     band = (st.get("caption") or {}).get("band")
 
     def size_of(s):
         rule = Rl.get("meme") if s.get("kind") == "meme" else (Rl.get("stickers") or {}).get(s.get("kind")) or {}
         return tuple((rule or {}).get("size") or ((420, 420) if s.get("kind") == "meme" else (160, 160)))
-    loc = FX.locator(det, win=frame_window(st["frame"]), caption_band=tuple(band) if band else None, size_of=size_of)
+    lines: dict = {}            # 줄 글 전체·줄 key — 원·화살표 대상 질문 재료(fx_target.aim, 10-25)
+    for r in T["rows"]:
+        L = lines.setdefault(r["line"], {"text": "", "keys": []})
+        L["text"] = (L["text"] + " " + r["text"]).strip()
+        if r.get("key"):
+            L["keys"].append(r["key"])
+    loc = FX.locator(det, win=frame_window(st["frame"]), caption_band=tuple(band) if band else None, size_of=size_of,
+                     cuts=T["cuts"], lines=lines, channel=(st.get("bench") or {}).get("channel"))
 
     def locate(target, row, s):
         try:
@@ -2570,7 +2597,7 @@ def plan_length_gate(T: dict, st: dict, measured: bool) -> list[str]:
             + ("줄이거나 쉼을 덜어" if T["end"] > LD["max"] else "늘려") + " 다시(렌더 전에 멈춤)"]
 
 
-def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=print, tts: bool = True, report: bool = False) -> dict:
+def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=print, tts: bool = True, report: bool = False, locate: bool = False) -> dict:
     """plan_only: 계획만(조각·영상 안 만듦). tts=True(기본) = 진짜 목소리 길이로 계획(합성은 줄 캐시 — 렌더가 그대로 쓴다), False = 어림(--guess, 관문 ⑧ 안 봄).
     report=True: 계획에서 컷 넘침·길이를 멈추지 않고 돌려준다(회원 c_plan 이 재료 고치기 안내로 쓴다)."""
     from tools.calcopy.hybrid import render_itssum as RI
@@ -2589,7 +2616,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         else:
             log("[어림] --guess: 글자÷cps 길이 — 길이 관문(⑧)은 안 본다. 렌더 전 판정은 --plan(진짜 목소리)으로")
         T = timeline(S, M, st, sm, align)
-        placed = plan_rows(S, T, st)
+        placed = plan_rows(S, T, st, make_locate(S, T, st, R, None, log, det=plan_canvas(T, M, st)) if locate else None)   # --locate = 스티커 자리·원 대상까지 계획에서(렌더 없이)
         placed["transitions_drawn"] = transitions_of(T, st, placed, log)
         jsave(doc / "plan/계획_시간표.json", {"timeline": T, "placement": placed})
         sheet = contact_sheet(T, M, st, doc / "plan/계획_접촉시트.jpg", S)      # G-10 렌더 없는 눈 검사(관문이 멈춰도 볼 수 있게 관문 앞에서)
@@ -2680,5 +2707,6 @@ if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser(); ap.add_argument("style"); ap.add_argument("doc"); ap.add_argument("work"); ap.add_argument("--plan", action="store_true")
     ap.add_argument("--guess", action="store_true", help="--plan 을 어림(글자÷cps)으로 — 합성 안 함, 길이 관문(⑧) 안 봄")
+    ap.add_argument("--locate", action="store_true", help="--plan 에서 스티커 자리·원/화살표 대상(fx_target.aim, 오푸스 눈)까지 — 렌더 없이 계획 프레임으로")
     a = ap.parse_args()
-    render(a.style, Path(a.doc), Path(a.work), plan_only=a.plan or a.guess, tts=not a.guess)
+    render(a.style, Path(a.doc), Path(a.work), plan_only=a.plan or a.guess, tts=not a.guess, locate=a.locate)

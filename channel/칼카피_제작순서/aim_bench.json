@@ -1,0 +1,1232 @@
+[
+ {
+  "ch": "annapick",
+  "id": "itYwQVyuCcc",
+  "t": 17.85,
+  "dur": 0.9,
+  "what": "빨간 화살표 + 빨간 글자 '채소 보관 용기'",
+  "text": "어느날 TV에서",
+  "src": "C:\\숏템_칼카피\\annapick\\원본\\itYwQVyuCcc.mp4",
+  "mark": "arrow",
+  "mark_box": [
+   600,
+   905,
+   790,
+   1060
+  ],
+  "target": "스테인리스 채소 보관 용기",
+  "target_box": [
+   440,
+   1075,
+   850,
+   1440
+  ],
+  "whole": "스테인리스 채소 보관 용기",
+  "whole_box": [
+   440,
+   1075,
+   850,
+   1440
+  ],
+  "part": false,
+  "confidence": 0.85,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.072,
+  "whole_frac": 0.072,
+  "mark_over_target": 0.46
+ },
+ {
+  "ch": "annapick",
+  "id": "rF_-X8jLkdU",
+  "t": 17.7,
+  "dur": 1.0,
+  "what": "빨간 화살표(치약 상자 가리킴)",
+  "text": "얘 덕분이라고 생각합니다",
+  "src": "C:\\숏템_칼카피\\annapick\\원본\\rF_-X8jLkdU.mp4",
+  "mark": "arrow",
+  "mark_box": [
+   325,
+   685,
+   495,
+   985
+  ],
+  "target": "콜게이트 옵틱화이트 치약 상자",
+  "target_box": [
+   512,
+   905,
+   700,
+   1500
+  ],
+  "whole": "콜게이트 옵틱화이트 치약 상자",
+  "whole_box": [
+   512,
+   905,
+   700,
+   1500
+  ],
+  "part": false,
+  "confidence": 0.8,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.054,
+  "whole_frac": 0.054,
+  "mark_over_target": 0.5
+ },
+ {
+  "ch": "annapick",
+  "id": "wweUXE86oMM",
+  "t": 1.3,
+  "dur": 0.4,
+  "what": "흰 아래 화살표 ↓↓(튜브 위)",
+  "text": "이거 넥 크림!",
+  "src": "C:\\숏템_칼카피\\annapick\\원본\\wweUXE86oMM.mp4",
+  "mark": "arrow",
+  "mark_box": [
+   60,
+   575,
+   360,
+   728
+  ],
+  "target": "손에 든 빨간 넥 크림 통",
+  "target_box": [
+   130,
+   1150,
+   335,
+   1315
+  ],
+  "whole": "빨간 넥 크림 통",
+  "whole_box": [
+   130,
+   1150,
+   335,
+   1315
+  ],
+  "part": false,
+  "confidence": 0.6,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.016,
+  "whole_frac": 0.016,
+  "mark_over_target": 1.46
+ },
+ {
+  "ch": "evenshopping",
+  "id": "Y2YXuAE4J00",
+  "t": 23.835,
+  "dur": 0.47,
+  "what": "빨간 화살표(손그림 · 도장을 가리킴)",
+  "text": "100% 국내산에",
+  "src": null,
+  "skip": "원본 없음"
+ },
+ {
+  "ch": "evenshopping",
+  "id": "tcaIPaGWLrE",
+  "t": 29.21,
+  "dur": 1.48,
+  "what": "빨간원(손그림 · '99.9% 감소' 위)",
+  "text": "99.9% 삭제시키는",
+  "src": null,
+  "skip": "원본 없음"
+ },
+ {
+  "ch": "evenshopping",
+  "id": "tcaIPaGWLrE",
+  "t": 29.575,
+  "dur": 0.75,
+  "what": "빨간원(손그림 · 아래 '99.9% 감소' 위)",
+  "text": "99.9% 삭제시키는",
+  "src": null,
+  "skip": "원본 없음"
+ },
+ {
+  "ch": "evenshopping",
+  "id": "tcaIPaGWLrE",
+  "t": 33.1,
+  "dur": 0.74,
+  "what": "빨간원(손그림 · '0.00' 위)",
+  "text": "0.00으로",
+  "src": null,
+  "skip": "원본 없음"
+ },
+ {
+  "ch": "foreignshowshow",
+  "id": "2jJoIbdciDY",
+  "t": 0.9,
+  "dur": 1.8,
+  "what": "빨간원",
+  "text": "펌프로 땅콩버터를",
+  "src": "C:\\숏템_칼카피\\foreignshowshow\\src\\2jJoIbdciDY.mp4",
+  "mark": "circle",
+  "mark_box": [
+   230,
+   565,
+   735,
+   1070
+  ],
+  "target": "손 위의 땅콩버터 덩어리",
+  "target_box": [
+   295,
+   700,
+   700,
+   1040
+  ],
+  "whole": "땅콩버터를 담은 손",
+  "whole_box": [
+   280,
+   470,
+   1080,
+   1140
+  ],
+  "part": false,
+  "confidence": 0.6,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.066,
+  "whole_frac": 0.258,
+  "mark_over_target": 1.25
+ },
+ {
+  "ch": "foreignshowshow",
+  "id": "2jJoIbdciDY",
+  "t": 30.45,
+  "dur": 2.434,
+  "what": "기타(초록 오른쪽 화살표)",
+  "text": "그리고 땅콩 버터 커뮤니티에선 / 논쟁이 뜨거운데",
+  "src": "C:\\숏템_칼카피\\foreignshowshow\\src\\2jJoIbdciDY.mp4",
+  "mark": "arrow",
+  "mark_box": [
+   265,
+   710,
+   485,
+   860
+  ],
+  "target": "땅콩버터 병 위 교반기 손잡이·막대",
+  "target_box": [
+   405,
+   570,
+   800,
+   1090
+  ],
+  "whole": "땅콩버터 교반 용기(병+교반기)",
+  "whole_box": [
+   405,
+   570,
+   815,
+   1480
+  ],
+  "part": true,
+  "confidence": 0.6,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.099,
+  "whole_frac": 0.18,
+  "mark_over_target": 0.42
+ },
+ {
+  "ch": "foreignshowshow",
+  "id": "QMJtjJz4M6w",
+  "t": 0.267,
+  "dur": 0.533,
+  "what": "빨간원",
+  "text": "뭐라고 ?!",
+  "src": "C:\\숏템_칼카피\\foreignshowshow\\src\\QMJtjJz4M6w.mp4",
+  "mark": "circle",
+  "mark_box": [
+   283,
+   460,
+   717,
+   893
+  ],
+  "target": "놀란 표정의 남자 얼굴",
+  "target_box": [
+   295,
+   495,
+   600,
+   885
+  ],
+  "whole": "남색 셔츠를 입은 남자",
+  "whole_box": [
+   50,
+   480,
+   900,
+   1485
+  ],
+  "part": true,
+  "confidence": 0.9,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.057,
+  "whole_frac": 0.412,
+  "mark_over_target": 1.11
+ },
+ {
+  "ch": "foreignshowshow",
+  "id": "QMJtjJz4M6w",
+  "t": 0.917,
+  "dur": 0.7,
+  "what": "기타(초록 아래 화살표)",
+  "text": "뭐라고 ?!",
+  "src": "C:\\숏템_칼카피\\foreignshowshow\\src\\QMJtjJz4M6w.mp4",
+  "mark": "arrow",
+  "mark_box": [
+   435,
+   612,
+   570,
+   815
+  ],
+  "target": "StormBag 모래 주머니(마대)",
+  "target_box": [
+   280,
+   690,
+   765,
+   1430
+  ],
+  "whole": "StormBag 모래 주머니(마대)",
+  "whole_box": [
+   280,
+   690,
+   765,
+   1430
+  ],
+  "part": false,
+  "confidence": 0.8,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.173,
+  "whole_frac": 0.173,
+  "mark_over_target": 0.27
+ },
+ {
+  "ch": "foreignshowshow",
+  "id": "QMJtjJz4M6w",
+  "t": 12.9,
+  "dur": 1.866,
+  "what": "기타(분홍 위 화살표, 도트)",
+  "text": "기존 모래주머니는 / 허리가 작살이 나죠",
+  "src": "C:\\숏템_칼카피\\foreignshowshow\\src\\QMJtjJz4M6w.mp4",
+  "mark": "arrow",
+  "mark_box": [
+   445,
+   1082,
+   622,
+   1380
+  ],
+  "target": "화살표 위쪽의 모래주머니",
+  "target_box": [
+   100,
+   820,
+   1060,
+   1110
+  ],
+  "whole": "쌓여 있는 모래주머니 더미",
+  "whole_box": [
+   0,
+   435,
+   1080,
+   1485
+  ],
+  "part": false,
+  "confidence": 0.55,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.134,
+  "whole_frac": 0.547,
+  "mark_over_target": 0.31
+ },
+ {
+  "ch": "foreignshowshow",
+  "id": "QMJtjJz4M6w",
+  "t": 21.684,
+  "dur": 2.633,
+  "what": "기타(빨간 곡선 화살표)",
+  "text": "그냥 물만 부으면 됩니다",
+  "src": "C:\\숏템_칼카피\\foreignshowshow\\src\\QMJtjJz4M6w.mp4",
+  "mark": "arrow",
+  "mark_box": [
+   240,
+   1130,
+   475,
+   1345
+  ],
+  "target": "모래주머니 바로 앞 젖은 바닥의 물",
+  "target_box": [
+   380,
+   1095,
+   560,
+   1200
+  ],
+  "whole": "현관 앞 물에 젖은 바닥",
+  "whole_box": [
+   110,
+   1090,
+   1080,
+   1480
+  ],
+  "part": true,
+  "confidence": 0.45,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.009,
+  "whole_frac": 0.182,
+  "mark_over_target": 1.31
+ },
+ {
+  "ch": "foreignshowshow",
+  "id": "hZgCO9PEnO8",
+  "t": 0.416,
+  "dur": 0.833,
+  "what": "빨간원",
+  "text": "진짜 미쳤는데?!",
+  "src": "C:\\숏템_칼카피\\foreignshowshow\\src\\hZgCO9PEnO8.mp4",
+  "mark": "circle",
+  "mark_box": [
+   280,
+   483,
+   712,
+   912
+  ],
+  "target": "남성의 얼굴(찡그린 표정)",
+  "target_box": [
+   290,
+   500,
+   625,
+   885
+  ],
+  "whole": "정장 차림의 남성",
+  "whole_box": [
+   0,
+   450,
+   990,
+   1485
+  ],
+  "part": true,
+  "confidence": 0.9,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.062,
+  "whole_frac": 0.494,
+  "mark_over_target": 1.12
+ },
+ {
+  "ch": "foreignshowshow",
+  "id": "hZgCO9PEnO8",
+  "t": 6.15,
+  "dur": 3.234,
+  "what": "기타(초록 오른쪽위 화살표)",
+  "text": "손을 크게 베었었다는 이 남자",
+  "src": "C:\\숏템_칼카피\\foreignshowshow\\src\\hZgCO9PEnO8.mp4",
+  "mark": "arrow",
+  "mark_box": [
+   165,
+   1100,
+   340,
+   1280
+  ],
+  "target": "상어 입으로 이어진 낚싯줄",
+  "target_box": [
+   240,
+   1000,
+   430,
+   1150
+  ],
+  "whole": "낚싯줄",
+  "whole_box": [
+   20,
+   960,
+   430,
+   1450
+  ],
+  "part": false,
+  "confidence": 0.5,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.014,
+  "whole_frac": 0.097,
+  "mark_over_target": 0.95
+ },
+ {
+  "ch": "foreignshowshow",
+  "id": "hZgCO9PEnO8",
+  "t": 9.233,
+  "dur": 1.867,
+  "what": "기타(분홍 왼쪽 화살표)",
+  "text": "칼을 손가락에 끼고 / 쓸 순 없을까 ?!",
+  "src": "C:\\숏템_칼카피\\foreignshowshow\\src\\hZgCO9PEnO8.mp4",
+  "mark": "arrow",
+  "mark_box": [
+   415,
+   555,
+   660,
+   695
+  ],
+  "target": "손가락에 낀 연두색 반지형 커터",
+  "target_box": [
+   265,
+   550,
+   410,
+   725
+  ],
+  "whole": "손가락에 반지형 커터를 낀 손",
+  "whole_box": [
+   0,
+   435,
+   680,
+   900
+  ],
+  "part": true,
+  "confidence": 0.8,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.012,
+  "whole_frac": 0.152,
+  "mark_over_target": 1.4
+ },
+ {
+  "ch": "foreignshowshow",
+  "id": "kmQGQNJgSVo",
+  "t": 0.45,
+  "dur": 0.9,
+  "what": "기타(초록 아래 화살표)",
+  "text": "옷을 뒤집자",
+  "src": "C:\\숏템_칼카피\\foreignshowshow\\src\\kmQGQNJgSVo.mp4",
+  "mark": "arrow",
+  "mark_box": [
+   468,
+   1032,
+   608,
+   1238
+  ],
+  "target": "비닐 땀복 아랫부분(배 쪽)",
+  "target_box": [
+   400,
+   1230,
+   720,
+   1480
+  ],
+  "whole": "남자가 입은 파란 비닐 땀복",
+  "whole_box": [
+   70,
+   720,
+   1080,
+   1480
+  ],
+  "part": true,
+  "confidence": 0.55,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.039,
+  "whole_frac": 0.37,
+  "mark_over_target": 0.64
+ },
+ {
+  "ch": "foreignshowshow",
+  "id": "kmQGQNJgSVo",
+  "t": 1.3,
+  "dur": 0.8,
+  "what": "빨간원",
+  "text": "으악",
+  "src": "C:\\숏템_칼카피\\foreignshowshow\\src\\kmQGQNJgSVo.mp4",
+  "mark": "circle",
+  "mark_box": [
+   246,
+   1300,
+   517,
+   1487
+  ],
+  "target": "나무 기둥(진열대) 아랫부분",
+  "target_box": [
+   328,
+   1310,
+   392,
+   1485
+  ],
+  "whole": "나무 진열대 기둥",
+  "whole_box": [
+   325,
+   1000,
+   400,
+   1485
+  ],
+  "part": true,
+  "confidence": 0.35,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.005,
+  "whole_frac": 0.018,
+  "mark_over_target": 1.55
+ },
+ {
+  "ch": "foreignshowshow",
+  "id": "mVzrvBpMu3E",
+  "t": 0.317,
+  "dur": 0.633,
+  "what": "빨간원",
+  "text": "와우",
+  "src": "C:\\숏템_칼카피\\foreignshowshow\\src\\mVzrvBpMu3E.mp4",
+  "mark": "circle",
+  "mark_box": [
+   323,
+   560,
+   757,
+   978
+  ],
+  "target": "대머리 남성의 얼굴",
+  "target_box": [
+   320,
+   495,
+   728,
+   1005
+  ],
+  "whole": "검은 정장을 입은 대머리 남성",
+  "whole_box": [
+   0,
+   495,
+   1010,
+   1490
+  ],
+  "part": true,
+  "confidence": 0.85,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.1,
+  "whole_frac": 0.485,
+  "mark_over_target": 0.85
+ },
+ {
+  "ch": "foreignshowshow",
+  "id": "vbxJ_v132ao",
+  "t": 0.067,
+  "dur": 0.133,
+  "what": "빨간원",
+  "text": "벽에 구멍을 뚫는 남자",
+  "src": "C:\\숏템_칼카피\\foreignshowshow\\src\\vbxJ_v132ao.mp4",
+  "mark": "circle",
+  "mark_box": [
+   0,
+   826,
+   217,
+   1077
+  ],
+  "target": "벽을 치는 남자의 주먹(손)",
+  "target_box": [
+   0,
+   850,
+   205,
+   1055
+  ],
+  "whole": "흰 가운을 입은 남자",
+  "whole_box": [
+   0,
+   440,
+   1080,
+   1485
+  ],
+  "part": true,
+  "confidence": 0.8,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.02,
+  "whole_frac": 0.544,
+  "mark_over_target": 1.22
+ },
+ {
+  "ch": "foreignshowshow",
+  "id": "vbxJ_v132ao",
+  "t": 0.933,
+  "dur": 1.0,
+  "what": "빨간원",
+  "text": "벽에 구멍을 뚫는 남자",
+  "src": "C:\\숏템_칼카피\\foreignshowshow\\src\\vbxJ_v132ao.mp4",
+  "mark": "circle",
+  "mark_box": [
+   178,
+   768,
+   432,
+   1020
+  ],
+  "target": "망치",
+  "target_box": [
+   205,
+   845,
+   450,
+   910
+  ],
+  "whole": "망치",
+  "whole_box": [
+   205,
+   845,
+   450,
+   910
+  ],
+  "part": false,
+  "confidence": 0.8,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.008,
+  "whole_frac": 0.008,
+  "mark_over_target": 1.04
+ },
+ {
+  "ch": "hotpeople",
+  "id": "BzMWncGDhnY",
+  "t": 25.7,
+  "dur": 1.8,
+  "what": "빨간원+화살표",
+  "text": "맨손으로 출발선에 섰음.",
+  "src": "C:\\숏템_칼카피\\hotpeople\\src\\BzMWncGDhnY.mp4",
+  "mark": "both",
+  "mark_box": [
+   228,
+   1003,
+   842,
+   1272
+  ],
+  "target": "핸들을 잡은 맨손",
+  "target_box": [
+   585,
+   1130,
+   710,
+   1272
+  ],
+  "whole": "자전거 타는 선수",
+  "whole_box": [
+   585,
+   483,
+   1080,
+   1272
+  ],
+  "part": true,
+  "confidence": 0.85,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.009,
+  "whole_frac": 0.188,
+  "mark_over_target": 4.32
+ },
+ {
+  "ch": "itemhome",
+  "id": "cLxEI_U1e_E",
+  "t": 1.75,
+  "dur": 0.834,
+  "what": "빨간 화살표(제품 가리킴, 손그림 꼴)",
+  "text": "수영이가 15년째",
+  "src": "C:\\숏템_칼카피\\itemhome\\원본\\cLxEI_U1e_E.mp4",
+  "mark": "arrow",
+  "mark_box": [
+   672,
+   990,
+   852,
+   1168
+  ],
+  "target": "립밤(분홍 튜브·검은 뚜껑)",
+  "target_box": [
+   480,
+   1130,
+   705,
+   1735
+  ],
+  "whole": "립밤",
+  "whole_box": [
+   480,
+   1130,
+   705,
+   1735
+  ],
+  "part": false,
+  "confidence": 0.75,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.066,
+  "whole_frac": 0.066,
+  "mark_over_target": 0.3
+ },
+ {
+  "ch": "ititemlog",
+  "id": "J7GxfaVdwSU",
+  "t": 0.933,
+  "dur": 1.733,
+  "what": "빨간원+화살표",
+  "text": "쯔양 팬사인회에서",
+  "src": "C:\\숏템_칼카피\\ititemlog\\src\\J7GxfaVdwSU.mp4",
+  "mark": "circle",
+  "mark_box": [
+   172,
+   495,
+   602,
+   928
+  ],
+  "target": "금발 단발 여성(쯔양)의 머리·얼굴",
+  "target_box": [
+   295,
+   580,
+   500,
+   860
+  ],
+  "whole": "의자에 앉은 금발 단발 여성(쯔양)",
+  "whole_box": [
+   240,
+   580,
+   595,
+   1520
+  ],
+  "part": false,
+  "confidence": 0.72,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.028,
+  "whole_frac": 0.161,
+  "mark_over_target": 1.55
+ },
+ {
+  "ch": "ititemlog",
+  "id": "aUicTeDoW04",
+  "t": 0.034,
+  "dur": 0.067,
+  "what": "빨간원",
+  "text": "이거 맞아..??!",
+  "src": "C:\\숏템_칼카피\\ititemlog\\src\\aUicTeDoW04.mp4",
+  "skip": "판독 실패 {'found': False, 'mark': 'other', 'mark_box': [0, 0, 0, 0], 'target': '', 'target_box': [0, 0, 0, 0], 'whole': '', 'whole_box': [0, 0, 0, 0], 'part': False, 'confidence': 0.6}"
+ },
+ {
+  "ch": "ititemlog",
+  "id": "zOSpeiMw1nA",
+  "t": 0.034,
+  "dur": 0.067,
+  "what": "빨간원+화살표",
+  "text": "이거 맞아??",
+  "src": "C:\\숏템_칼카피\\ititemlog\\src\\zOSpeiMw1nA.mp4",
+  "skip": "판독 실패 {'found': False, 'mark': 'other', 'mark_box': [0, 0, 0, 0], 'target': '', 'target_box': [0, 0, 0, 0], 'whole': '', 'whole_box': [0, 0, 0, 0], 'part': False, 'confidence': 0.8}"
+ },
+ {
+  "ch": "kitchit",
+  "id": "Cs-Ka_S8nDM",
+  "t": 0.65,
+  "dur": 0.3,
+  "what": "빨간원+화살표",
+  "text": "여기꺼만 맸다고?",
+  "src": "C:\\숏템_칼카피\\kitchit\\src\\Cs-Ka_S8nDM.mp4",
+  "mark": "both",
+  "mark_box": [
+   285,
+   940,
+   658,
+   1305
+  ],
+  "target": "검은색 핸드백",
+  "target_box": [
+   430,
+   1095,
+   578,
+   1268
+  ],
+  "whole": "검은색 핸드백",
+  "whole_box": [
+   430,
+   1095,
+   578,
+   1268
+  ],
+  "part": false,
+  "confidence": 0.8,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.012,
+  "whole_frac": 0.012,
+  "mark_over_target": 2.16
+ },
+ {
+  "ch": "kitchit",
+  "id": "oTi41R74WIY",
+  "t": 0.075,
+  "dur": 0.15,
+  "what": "빨간원+화살표",
+  "text": "고현정이",
+  "src": "C:\\숏템_칼카피\\kitchit\\src\\oTi41R74WIY.mp4",
+  "mark": "both",
+  "mark_box": [
+   530,
+   805,
+   1000,
+   1510
+  ],
+  "target": "고현정의 갈색 토트백(에르메스 가방)",
+  "target_box": [
+   600,
+   1080,
+   830,
+   1465
+  ],
+  "whole": "갈색 토트백",
+  "whole_box": [
+   600,
+   1080,
+   830,
+   1465
+  ],
+  "part": false,
+  "confidence": 0.88,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.043,
+  "whole_frac": 0.043,
+  "mark_over_target": 1.83
+ },
+ {
+  "ch": "sinbak",
+  "id": "fzoZc7V_hDM",
+  "t": 1.2,
+  "dur": 1.734,
+  "what": "빨간 화살표(#E6000F, 오른쪽 위→왼쪽 아래로 틈을 가리킴)",
+  "text": "역대급 간단한 마감 방법인데",
+  "src": "C:\\숏템_칼카피\\sinbak\\src\\fzoZc7V_hDM.mp4",
+  "mark": "arrow",
+  "mark_box": [
+   398,
+   840,
+   605,
+   1003
+  ],
+  "target": "엣지 테이프와 판재 사이 틈(손끝이 누르는 곳)",
+  "target_box": [
+   330,
+   920,
+   460,
+   1040
+  ],
+  "whole": "나뭇결 엣지 테이프(마감재)",
+  "whole_box": [
+   272,
+   540,
+   410,
+   1000
+  ],
+  "part": true,
+  "confidence": 0.55,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.008,
+  "whole_frac": 0.031,
+  "mark_over_target": 1.59
+ },
+ {
+  "ch": "sseolpulda",
+  "id": "GqSkDhM_bV0",
+  "t": 0.683,
+  "dur": 1.367,
+  "what": "빨간 화살표",
+  "text": "이거 보고 소름 돋았습니다",
+  "src": "C:\\숏템_칼카피\\sseolpulda\\mp4\\GqSkDhM_bV0.mp4",
+  "mark": "arrow",
+  "mark_box": [
+   225,
+   1165,
+   395,
+   1395
+  ],
+  "target": "파란 원통 기둥 하나",
+  "target_box": [
+   255,
+   1340,
+   530,
+   1480
+  ],
+  "whole": "파란 원통 기둥",
+  "whole_box": [
+   255,
+   1340,
+   530,
+   1480
+  ],
+  "part": false,
+  "confidence": 0.55,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.019,
+  "whole_frac": 0.019,
+  "mark_over_target": 0.84
+ },
+ {
+  "ch": "sseolpulda",
+  "id": "mYxuF1A74j4",
+  "t": 1.185,
+  "dur": 0.37,
+  "what": "빨간 화살표",
+  "text": "선수가 퍽을",
+  "src": "C:\\숏템_칼카피\\sseolpulda\\mp4\\mYxuF1A74j4.mp4",
+  "mark": "arrow",
+  "mark_box": [
+   900,
+   1050,
+   975,
+   1185
+  ],
+  "target": "선수 헬멧 위의 퍽",
+  "target_box": [
+   875,
+   1180,
+   950,
+   1210
+  ],
+  "whole": "퍽",
+  "whole_box": [
+   875,
+   1180,
+   950,
+   1210
+  ],
+  "part": false,
+  "confidence": 0.55,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.001,
+  "whole_frac": 0.001,
+  "mark_over_target": 1.8
+ },
+ {
+  "ch": "sseolpulda",
+  "id": "mYxuF1A74j4",
+  "t": 1.6,
+  "dur": 0.34,
+  "what": "빨간원",
+  "text": "선수가 퍽을",
+  "src": "C:\\숏템_칼카피\\sseolpulda\\mp4\\mYxuF1A74j4.mp4",
+  "mark": "circle",
+  "mark_box": [
+   453,
+   474,
+   630,
+   654
+  ],
+  "target": "공중에 날아가는 퍽(추정)",
+  "target_box": [
+   505,
+   550,
+   545,
+   630
+  ],
+  "whole": "공중에 날아가는 퍽(추정)",
+  "whole_box": [
+   505,
+   550,
+   545,
+   630
+  ],
+  "part": false,
+  "confidence": 0.45,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.002,
+  "whole_frac": 0.002,
+  "mark_over_target": 2.25
+ },
+ {
+  "ch": "sseolpulda",
+  "id": "mYxuF1A74j4",
+  "t": 5.149,
+  "dur": 0.363,
+  "what": "빨간 화살표",
+  "text": "사실 이 어린 소녀가",
+  "src": "C:\\숏템_칼카피\\sseolpulda\\mp4\\mYxuF1A74j4.mp4",
+  "mark": "arrow",
+  "mark_box": [
+   553,
+   1283,
+   672,
+   1367
+  ],
+  "target": "어린 소녀",
+  "target_box": [
+   245,
+   1335,
+   600,
+   1800
+  ],
+  "whole": "빨간 유니폼을 입은 어린 소녀",
+  "whole_box": [
+   245,
+   1335,
+   600,
+   1800
+  ],
+  "part": false,
+  "confidence": 0.8,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.08,
+  "whole_frac": 0.08,
+  "mark_over_target": 0.26
+ },
+ {
+  "ch": "sseolpulda",
+  "id": "s9RVpN6MzX4",
+  "t": 0.7,
+  "dur": 1.4,
+  "what": "빨간 화살표",
+  "text": "믿을 놈 하나 없다더니",
+  "src": "C:\\숏템_칼카피\\sseolpulda\\mp4\\s9RVpN6MzX4.mp4",
+  "mark": "arrow",
+  "mark_box": [
+   665,
+   1295,
+   970,
+   1400
+  ],
+  "target": "보조하는 사람(스포터)",
+  "target_box": [
+   880,
+   1060,
+   1080,
+   1800
+  ],
+  "whole": "보조하는 사람(스포터)",
+  "whole_box": [
+   880,
+   1060,
+   1080,
+   1800
+  ],
+  "part": false,
+  "confidence": 0.75,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.071,
+  "whole_frac": 0.071,
+  "mark_over_target": 0.41
+ },
+ {
+  "ch": "starpickroom",
+  "id": "j5D30T2n0-w",
+  "t": 16.5,
+  "dur": 1.0,
+  "what": "초록 화살표",
+  "text": "청양고추 · 홍고추",
+  "src": "C:\\숏템_칼카피\\starpickroom\\src\\j5D30T2n0-w.mp4",
+  "mark": "arrow",
+  "mark_box": [
+   350,
+   1210,
+   595,
+   1330
+  ],
+  "target": "손에 든 용기 속 청양고추·홍고추",
+  "target_box": [
+   285,
+   1265,
+   410,
+   1385
+  ],
+  "whole": "고추가 담긴 플라스틱 용기",
+  "whole_box": [
+   285,
+   1265,
+   410,
+   1385
+  ],
+  "part": false,
+  "confidence": 0.6,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.007,
+  "whole_frac": 0.007,
+  "mark_over_target": 1.96
+ },
+ {
+  "ch": "starpickroom",
+  "id": "j5D30T2n0-w",
+  "t": 19.05,
+  "dur": 1.1,
+  "what": "'조개액젓' 라벨+노란 화살표",
+  "text": "조개 액젓을 살짝 넣을게",
+  "src": "C:\\숏템_칼카피\\starpickroom\\src\\j5D30T2n0-w.mp4",
+  "mark": "arrow",
+  "mark_box": [
+   0,
+   780,
+   480,
+   895
+  ],
+  "target": "조개 액젓 병",
+  "target_box": [
+   518,
+   705,
+   760,
+   1040
+  ],
+  "whole": "조개 액젓 병",
+  "whole_box": [
+   518,
+   705,
+   760,
+   1040
+  ],
+  "part": false,
+  "confidence": 0.8,
+  "frame": [
+   1080,
+   1920
+  ],
+  "target_frac": 0.039,
+  "whole_frac": 0.039,
+  "mark_over_target": 1.43
+ }
+]

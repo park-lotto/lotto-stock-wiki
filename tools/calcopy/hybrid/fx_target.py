@@ -40,6 +40,8 @@ def frame_of(src, t: float | None = None) -> np.ndarray:
     """RGB 배열. src = ndarray | 그림 파일(png/jpg — 한글 경로라 bytes 로 연다) | 영상(t 초 프레임, ffmpeg)."""
     if isinstance(src, np.ndarray):
         return src
+    if callable(src):          # 시각 → RGB 함수(render_bench.plan_canvas — 렌더 없는 계획 프레임)
+        return src(t)
     from PIL import Image
     p = Path(src)
     if p.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp"):
@@ -301,14 +303,270 @@ def on_target(target_box, size=None, canvas=None, caption_band=None, kind: str =
     return None
 
 
+# ── 강조 표시(원·화살표) 대상 좌표·머무는 시간 — 판단 주인(사장님 10-25 "정확히 어디를 강조할지 좌표로, 머무는 시간도 장면에 맞게") ──
+#   무엇 = 덩어리 key → 같은 줄 key → 컷 see(재료 장면 설명) · 줄 글 전체를 같이 준다.
+#   어디 = 덩어리 시작·가운데·끝 프레임 3장을 오푸스 눈에 한 번에 물어 대상 상자(얼굴 YuNet 상자는 후보로만 보여 준다 — 기계 검출은 후보 제시용).
+#   원 = 중심이 대상 상자 가운데, r = 상자 반대각(자막팩 s.r, 1080 폭 %) — 화살표는 원에 붙어 같은 중심을 가리킨다(out/precision20-ui.js renderStickers).
+#   머무는 시간 = 덩어리 show(자막팩이 덩어리 동안 그린다) — 한 샷 안 · 3장 모두 대상이 원 중심을 덮음 · 벤치 줄판독 원/화살표 t_out−t_in 실측 자 안. 아니면 안 붙인다.
+#   회원 flow 검수도 같은 질문(aim_prompt)을 부른다 — 질문을 두 벌 적지 않는다.
+AIM_KINDS = ("circle_arrow",)
+AIM_EDGE = 0.05            # 샷 경계 여유(초) — placement._cut_inside 와 같은 값
+AIM_R_MIN, AIM_R_MAX = 55.0, 245.0      # 원 반지름 px — 벤치 줄판독 빨간원 지름 w 110~487 실측(ititemlog zOSp 110 · foreignshowshow 487)의 반
+AIM_MODEL = "opus"         # 눈 판정 = 오푸스(사장님 10-25)
+# 대상 크기별 강조 방식(벤치 실측 — channel/칼카피_제작순서/aim_bench.json, fx_target.py bench-aim, 30개 · 10-25):
+#   원(원·원+화살표 12개)은 대상이 화면의 10% 이하일 때만(최대 0.100) · 원 지름 = 대상 긴 변 × 0.85~2.25(중앙 1.4).
+#   화살표만(18개)은 대상 0.173 까지 — 우리 자막팩은 원+화살표 한 꼴뿐이라 화살표만 꼴은 아직 못 그린다(남은 것).
+#   대상이 속한 전체(사람·물건)가 화면 15% 넘는 13개 중 9개는 전체가 아니라 특징 부위(얼굴·손·틈·젖은 바닥 등, 화면 0.9~10%)를 가리켰다.
+#   화면 17.3% 넘는 대상을 통째로 강조한 벤치 표시는 0개 → 큰 대상은 자막이 말하는 성질이 보이는 부위(10% 이하)를 고르고, 없으면 안 붙인다.
+AIM_CIRCLE_FRAC_MAX = 0.10        # 원으로 감쌀 대상 상자 넓이 ÷ 화면(1080×1920) 상한 — 벤치 원 대상 최대 0.100
+AIM_DIAM_OVER_TARGET = 1.4        # 원 지름 ÷ 대상 긴 변 — 벤치 원 중앙값(0.85~2.25)
+_HOLD_CACHE: dict = {}
+
+
+def hold_rule(channel: str | None) -> dict:
+    """벤치 줄판독(channel/*/줄판독/*.json) 원·화살표 스티커 t_out−t_in 실측 → {lo, hi, n, src}. 그 채널 측정 3개↑면 그 채널, 아니면 전 채널."""
+    if channel in _HOLD_CACHE:
+        return _HOLD_CACHE[channel]
+    import glob
+    from tools.calcopy.hybrid.placement import sticker_kind
+    own, alls = [], []
+    for fp in glob.glob(str(ROOT / "channel" / "*" / "줄판독" / "*.json")):
+        try:
+            d = json.loads(Path(fp).read_text(encoding="utf-8"))
+        except (OSError, ValueError):      # 깨진 줄판독은 자에서 뺀다(측정 아님)
+            continue
+        ch = Path(fp).parent.parent.name
+        for l in d.get("lines") or []:
+            for s in l.get("sticker") or []:
+                if (isinstance(s, dict) and sticker_kind(s.get("what", "")) == "circle_arrow" and isinstance(s.get("t_in"), (int, float))
+                        and isinstance(s.get("t_out"), (int, float)) and s["t_out"] > s["t_in"]):
+                    v = round(float(s["t_out"]) - float(s["t_in"]), 3)
+                    alls.append(v)
+                    if ch == channel:
+                        own.append(v)
+    use, src = (own, f"벤치 {channel} 줄판독 {len(own)}개") if len(own) >= 3 else (alls, f"벤치 전 채널 줄판독 {len(alls)}개")
+    out = {"lo": min(use), "hi": max(use), "n": len(use), "src": src} if use else {"lo": None, "hi": None, "n": 0, "src": "벤치 측정 없음"}
+    _HOLD_CACHE[channel] = out
+    return out
+
+
+def aim_what(row: dict, line_text: str | None = None, line_keys=(), see: str | None = None) -> dict:
+    """무엇을 가리키나(질문 재료) — {key, line, chunk, see}. key = 덩어리 key → 같은 줄 key 첫 것. 대상 결정은 aim_prompt 의 눈이 한다."""
+    key = row.get("key") or next((k for k in line_keys if k), None)
+    return {"key": key, "line": line_text or row.get("text") or "", "chunk": row.get("text") or "", "see": see or ""}
+
+
+def aim_prompt(W: dict, n: int, w: int, h: int, cands: list | None = None) -> str:
+    """눈 판정 질문(우리 PC Claude · 회원 flow 검수 공용) — 프레임 n장에서 강조 대상 하나와 장마다 상자."""
+    c = f" 기계 검출 후보(참고만, 맞지 않으면 무시): {json.dumps(cands, ensure_ascii=False)}." if cands else ""
+    return (f"그림 {n}장은 같은 숏폼 장면의 시작·가운데·끝 프레임이다. 각 그림은 {w}x{h} 픽셀, 하늘색 선은 {GRID}px 격자, 노란 숫자는 그 선의 픽셀 좌표다.\n"
+            f"이 장면에 빨간 원+화살표 강조를 하나 붙인다. 자막 줄 전체: \"{W['line']}\" / 지금 덩어리: \"{W['chunk']}\""
+            + (f" / 강조 낱말: \"{W['key']}\"" if W.get("key") else "") + (f" / 장면 설명: \"{W['see']}\"" if W.get("see") else "") + ".\n"
+            "시청자 눈을 끌어야 할 대상 하나를 정하라 — 자막이 말하는 제품·놀라운 변화·핵심 물건(강조 낱말이 있으면 그것)이 우선이고, "
+            "그런 것이 화면에 없을 때만 자막이 말하는 사람의 얼굴. 의미 없는 곳(옷깃·빈 배경·아무 얼굴 부위)은 고르지 않는다.\n"
+            f"대상이 화면 넓이의 {int(AIM_CIRCLE_FRAC_MAX * 100)}%를 넘게 크면(얼굴 전체에 붙은 마스크팩처럼) 전체를 감싸지 말고, 자막이 말하는 성질이 보이는 특징 부위"
+            f"(예: 투명해진 부분·떼는 손끝·틈, 화면 {int(AIM_CIRCLE_FRAC_MAX * 100)}% 이하) 하나를 대상으로 삼는다. 그런 부위가 없으면 confidence 0.\n"
+            "그 대상을 빈틈없이 감싸는 상자를 장마다 격자 눈금으로 읽어 픽셀 좌표로 답한다. 그 장에 대상이 안 보이면 그 장 상자 = null. 확실하지 않으면 confidence 를 낮게." + c
+            + '\n답 꼴: {"target": "대상 짧게", "why": "왜 이것인가 한 줄", "boxes": [[x0,y0,x1,y1] 또는 null, … 장 순서대로 ' + str(n)
+            + '개], "confidence": 0~1}')
+
+
+def _cut_end(c: dict) -> float:
+    return float(c["t1"]) if c.get("t1") is not None else float(c["t0"]) + float(c.get("dur") or 0)
+
+
+def aim(video, row: dict, cuts: list | None, win=None, caption_band=None, line_text: str | None = None, line_keys=(), channel: str | None = None,
+        ask=None, model: str = AIM_MODEL, fail: list | None = None) -> dict | None:
+    """원·화살표 하나의 대상 좌표·머무는 시간(판단 주인). 반환 {x,y,r,w,h,box,conf,how,why,aim{…,hold}} | None(fail 에 사유).
+    ask(jpgs, prompt) -> (dict|None, err) 를 주면 그것으로 묻는다(시험·회원 flow 주입), 없으면 Claude CLI(오푸스)."""
+    fail = fail if fail is not None else []
+    a = float(row["t0"])
+    b = float((row.get("show") or [None, row["t1"]])[1])
+    cut = next((c for c in cuts or [] if float(c["t0"]) - AIM_EDGE <= a < _cut_end(c) - AIM_EDGE), None)
+    if cuts and cut is None:
+        fail.append(f"덩어리 {a}초가 든 샷 없음"); return None
+    if cut is not None and b > _cut_end(cut) + AIM_EDGE:
+        fail.append(f"머무는 구간 {a}~{b} 이 샷 경계 {round(_cut_end(cut), 3)} 를 넘음"); return None
+    HR = hold_rule(channel)
+    if HR["lo"] is not None and not HR["lo"] <= b - a <= HR["hi"]:
+        fail.append(f"머무는 길이 {round(b - a, 2)}초 — 벤치 자 {HR['lo']}~{HR['hi']}초({HR['src']}) 밖"); return None
+    ts = [round(a + 0.1, 3), round((a + b) / 2, 3), round(max(a + 0.1, b - 0.1), 3)]
+    W = aim_what(row, line_text, line_keys, (cut or {}).get("see"))
+    jpgs, cands = [], []
+    x = y = w = h = 0
+    for k, t in enumerate(ts):
+        rgb = frame_of(video, t)
+        jpg, (x, y, w, h) = _grid_jpg(rgb, win)
+        jpgs.append(jpg)
+        if k == 0:
+            cands = [{"얼굴": [round(f["face"][0] - x), round(f["face"][1] - y), round(f["face"][2] - x), round(f["face"][3] - y)]} for f in faces(rgb, win)][:3]
+    if ask is None:
+        from tools.calcopy.engine import claude_cli as CC
+        ask = lambda parts, pr: CC.ask(parts, pr, tag="fx_target_aim", model=model)   # noqa: E731
+    d, err = ask(jpgs, aim_prompt(W, len(ts), w, h, cands))
+    if d is None:
+        fail.append(f"눈 판정 실패 {err}"); return None
+    conf = float(d.get("confidence") or 0)
+    bx = d.get("boxes") or []
+    if conf < CONF_MIN or len(bx) != len(ts):
+        fail.append(f"눈 판정 확신 {conf}<{CONF_MIN} 또는 상자 수 {len(bx)}≠{len(ts)} ('{d.get('target')}')"); return None
+    boxes = []
+    for t, q in zip(ts, bx):
+        if not (isinstance(q, list) and len(q) == 4):
+            fail.append(f"대상 '{d.get('target')}' 이 {t}초 프레임에 안 보임 — 머무는 동안 대상이 사라짐"); return None
+        boxes.append([x + float(q[0]), y + float(q[1]), x + float(q[2]), y + float(q[3])])
+    b0 = boxes[0]
+    cx, cy = (b0[0] + b0[2]) / 2, (b0[1] + b0[3]) / 2
+    for t, q in zip(ts, boxes):
+        if not (q[0] <= cx <= q[2] and q[1] <= cy <= q[3]):
+            fail.append(f"대상 '{d.get('target')}' 이 {t}초에 원 중심({round(cx)},{round(cy)}) 밖으로 움직임 {[round(v) for v in q]}"); return None
+    frac = (b0[2] - b0[0]) * (b0[3] - b0[1]) / (CANVAS[0] * CANVAS[1])
+    if frac > AIM_CIRCLE_FRAC_MAX:
+        fail.append(f"대상 '{d.get('target')}' 이 화면 {round(frac * 100, 1)}% — 벤치 원은 {int(AIM_CIRCLE_FRAC_MAX * 100)}% 이하 대상에만(큰 대상은 특징 부위를 못 찾음)"); return None
+    r = min(AIM_R_MAX, max(AIM_R_MIN, AIM_DIAM_OVER_TARGET * max(b0[2] - b0[0], b0[3] - b0[1]) / 2))
+    if caption_band and cy + r > caption_band[0] and cy - r < caption_band[1]:
+        fail.append(f"원(중심 {round(cx)},{round(cy)} r{round(r)})이 자막 띠 {tuple(caption_band)} 를 덮음"); return None
+    out = _pack(b0, conf, f"claude-{model}", f"눈 판정 '{d.get('target')}' — {d.get('why')}", None)
+    out["r"] = round(r / CANVAS[0] * 100, 2)
+    out["aim"] = {"what": d.get("target"), "why": d.get("why"), "asked": W, "box": [round(v) for v in b0], "frac": round(frac, 4),
+                  "frames": [{"t": t, "box": [round(v) for v in q]} for t, q in zip(ts, boxes)]}
+    out["aim"]["hold"] = {"t0": a, "t1": b, "shot": [float(cut["t0"]), round(_cut_end(cut), 3)] if cut else None, "rule": HR["src"]}
+    return out
+
+
+AIM_BENCH = ROOT / "channel" / "칼카피_제작순서" / "aim_bench.json"      # bench_aim 실측 표(대상 크기별 강조 방식 근거)
+
+
+def _bench_srcs() -> dict:
+    """채널 → 벤치 원본 폴더(판 bench.src_dir)."""
+    import glob
+    m = {}
+    for f in glob.glob(str(ROOT / "tools/calcopy/hybrid/styles/*.json")):
+        try:
+            b = json.loads(Path(f).read_text(encoding="utf-8")).get("bench") or {}
+        except (OSError, ValueError):
+            continue
+        if b.get("channel") and b.get("src_dir"):
+            m[b["channel"]] = b["src_dir"]
+    return m
+
+
+def bench_aim(workers: int = 6) -> list[dict]:
+    """벤치 줄판독의 원·화살표마다 원본 프레임(표시가 그려진 채)을 오푸스 눈에 물어 — 표시 모양·표시 상자·가리키는 대상 상자·그 대상이 속한 전체 물건 상자.
+    → 대상 넓이 몫(화면 대비)·표시 지름÷대상 긴 변·'부위를 가리켰나'(대상 ≠ 전체 물건). 강조 방식 규칙(aim_mode)의 근거 표."""
+    import glob
+    from concurrent.futures import ThreadPoolExecutor
+    from tools.calcopy.engine import claude_cli as CC
+    from tools.calcopy.hybrid.placement import sticker_kind
+    srcs = _bench_srcs()
+    jobs = []
+    for fp in sorted(glob.glob(str(ROOT / "channel" / "*" / "줄판독" / "*.json"))):
+        ch = Path(fp).parent.parent.name
+        try:
+            d = json.loads(Path(fp).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        for l in d.get("lines") or []:
+            for s in l.get("sticker") or []:
+                if not (isinstance(s, dict) and sticker_kind(s.get("what", "")) == "circle_arrow" and isinstance(s.get("t_in"), (int, float))):
+                    continue
+                vid = next((p for p in glob.glob(str(Path(srcs.get(ch, "")) / f"{d.get('id')}*.mp4"))), None) if srcs.get(ch) else None
+                to = s.get("t_out") if isinstance(s.get("t_out"), (int, float)) else s["t_in"] + 0.1
+                jobs.append({"ch": ch, "id": d.get("id"), "t": round((float(s["t_in"]) + float(to)) / 2, 3), "dur": round(float(to) - float(s["t_in"]), 3),
+                             "what": s.get("what", ""), "text": l.get("text", ""), "src": vid})
+
+    def one(j):
+        if not j["src"]:
+            return {**j, "skip": "원본 없음"}
+        try:
+            rgb = frame_of(j["src"], j["t"])
+        except ValueError as e:
+            return {**j, "skip": str(e)}
+        h0, w0 = rgb.shape[:2]
+        jpg, _ = _grid_jpg(rgb, None)
+        pr = (f"이 그림은 {w0}x{h0} 픽셀 숏폼 프레임이다(하늘색 {GRID}px 격자, 노란 숫자 = 픽셀 좌표). 편집자가 그린 강조 표시(빨간 원·화살표 등, 줄판독 설명: \"{j['what']}\")가 있다. "
+              f"그때 자막: \"{j['text']}\".\n"
+              "1) mark: 표시 모양 circle|arrow|both|other, mark_box = 표시 전체(원·화살표)를 감싸는 상자. 2) target = 표시가 가리키는 것 짧게, target_box = 그것을 감싸는 상자. "
+              "3) whole = 그 대상이 속한 전체 물건·사람(대상이 전체면 같은 것), whole_box. 4) part = 대상이 전체의 한 부위(특징 부분)이면 true. "
+              "표시가 안 보이면 found=false.\n"
+              '답 꼴: {"found": true, "mark": "circle", "mark_box": [x0,y0,x1,y1], "target": "", "target_box": [..], "whole": "", "whole_box": [..], "part": false, "confidence": 0~1}')
+        d, err = CC.ask([jpg], pr, tag="fx_target_bench_aim", model=AIM_MODEL)
+        if d is None or not d.get("found"):
+            return {**j, "skip": f"판독 실패 {err or d}"}
+        out = {**j, **{k: d.get(k) for k in ("mark", "mark_box", "target", "target_box", "whole", "whole_box", "part", "confidence")}, "frame": [w0, h0]}
+        try:
+            mb, tb, wb = d["mark_box"], d["target_box"], d["whole_box"]
+            area = lambda b: max(0, b[2] - b[0]) * max(0, b[3] - b[1])   # noqa: E731
+            out["target_frac"] = round(area(tb) / (w0 * h0), 3)
+            out["whole_frac"] = round(area(wb) / (w0 * h0), 3)
+            out["mark_over_target"] = round(max(mb[2] - mb[0], mb[3] - mb[1]) / max(1, tb[2] - tb[0], tb[3] - tb[1]), 2)
+        except (KeyError, TypeError, IndexError):
+            out["skip"] = "상자 꼴 이상"
+        return out
+    with ThreadPoolExecutor(workers) as ex:
+        rows = list(ex.map(one, jobs))
+    AIM_BENCH.write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding="utf-8")
+    return rows
+
+
+def aim_check(rows: list[dict], cuts: list | None, channel: str | None = None) -> dict:
+    """결과물 검사 — 자막표 rows(t0·t1 = show)의 원·화살표마다: 대상(aim) 있음 · 원 중심이 대상 상자(프레임마다) 안 · show 가 한 샷 안 · 길이가 벤치 자 안.
+    대상이 무엇인지 계획에 없으면 ×(무엇을 가리키는지 모르는 원 = 의미 없는 원). 반환 {ok, n, bad:[…], rows:[…], hold_rule}."""
+    HR = hold_rule(channel)
+    res, bad = [], []
+    bounds = [float(c["t0"]) for c in (cuts or [])[1:]]
+    for r in rows:
+        for s in r.get("stickers") or []:
+            if s.get("kind") not in AIM_KINDS:
+                continue
+            a, b = float(r["t0"]), float(r["t1"])
+            why = []
+            A = s.get("aim") or {}
+            if not A.get("box") or not A.get("what"):
+                why.append(f"대상 없음 — 무엇을 가리키는지 계획에 없다(자리 how={s.get('how')} site={s.get('site')})")
+            elif not all(isinstance(s.get(k), (int, float)) for k in ("x", "y")):
+                why.append("원 자리(x·y) 없음")
+            else:
+                cx, cy = float(s["x"]) / 100 * CANVAS[0], float(s["y"]) / 100 * CANVAS[1]
+                for f in A.get("frames") or [{"t": a, "box": A["box"]}]:
+                    q = f["box"]
+                    if not (q[0] <= cx <= q[2] and q[1] <= cy <= q[3]):
+                        why.append(f"원 중심({round(cx)},{round(cy)})이 {f['t']}초 대상 '{A['what']}' 상자 {q} 밖")
+            if A.get("box"):
+                q = A["box"]
+                fr = (q[2] - q[0]) * (q[3] - q[1]) / (CANVAS[0] * CANVAS[1])
+                if fr > AIM_CIRCLE_FRAC_MAX:
+                    why.append(f"대상 상자가 화면 {round(fr * 100, 1)}% — 벤치 원 대상 상한 {int(AIM_CIRCLE_FRAC_MAX * 100)}% 초과(큰 대상은 특징 부위로)")
+            cross = [t for t in bounds if a + AIM_EDGE < t < b - AIM_EDGE]
+            if cross:
+                why.append(f"머무는 구간 {a}~{b} 안에 샷 경계 {cross}")
+            if HR["lo"] is not None and not HR["lo"] <= b - a <= HR["hi"]:
+                why.append(f"머무는 길이 {round(b - a, 2)}초 — 벤치 자 {HR['lo']}~{HR['hi']}({HR['src']}) 밖")
+            res.append({"line": r.get("line"), "text": r.get("text"), "t": [a, b], "what": A.get("what"), "xy": [s.get("x"), s.get("y")], "ok": not why, "why": why})
+            if why:
+                bad.append(f"{r.get('line')}「{r.get('text')}」 " + " · ".join(why))
+    return {"ok": not bad, "n": len(res), "bad": bad, "rows": res, "hold_rule": HR}
+
+
 # ── 배치에 꽂기 ──────────────────────────────────────────────────────────
 LAST_WHY: str | None = None          # 마지막 locate 실패 사유(placement._site 가 감싼 locate 에 last_why 가 없을 때 읽는다)
 
 
-def locator(video, win=None, caption_band=None, what_of=None, size_of=None, how: str = "claude", t_of=None, detector=None):
+def locator(video, win=None, caption_band=None, what_of=None, size_of=None, how: str = "claude", t_of=None, detector=None,
+            cuts=None, lines: dict | None = None, channel: str | None = None, ask=None):
     """placement.place(locate=…) 함수를 만든다. video = 완성본 화면을 그린 영상(렌더 전이면 창 바탕 base.mp4),
-    what_of(row, sticker) → 물건 이름(대본 key·object 칸), size_of(sticker) → (w,h), t_of(row) → 프레임 시각(기본 덩어리 시작+0.1)."""
+    what_of(row, sticker) → 물건 이름(대본 key·object 칸), size_of(sticker) → (w,h), t_of(row) → 프레임 시각(기본 덩어리 시작+0.1).
+    원·화살표(AIM_KINDS)는 aim()(대상·좌표·머무는 시간) — cuts = 화면 컷, lines = {줄: {text, keys}}, channel = 벤치 자 채널, ask = 눈 판정 주입."""
     def locate(target: dict, row: dict, st: dict):
+        global LAST_WHY
+        if st.get("kind") in AIM_KINDS:
+            why: list = []
+            L = (lines or {}).get(row.get("line")) or {}
+            got = aim(video, row, cuts, win=win, caption_band=caption_band, line_text=L.get("text"), line_keys=L.get("keys") or (),
+                      channel=channel, ask=ask, fail=why)
+            locate.last_why = None if got else (" · ".join(why) or "사유 없음")
+            LAST_WHY = locate.last_why
+            return got
         t = t_of(row) if t_of else float(row["t0"]) + 0.1
         what = what_of(row, st) if what_of else (row.get("key") or st.get("word"))
         size = size_of(st) if size_of else (160, 160)
@@ -317,7 +575,6 @@ def locator(video, win=None, caption_band=None, what_of=None, size_of=None, how:
         got = find(target["kind"], video, t, win=win, avoid=("face",) if av is None else tuple(av), what=what, how=how,   # 빈 목록 = 피할 것 없음
                    size=size, caption_band=caption_band, detector=detector, fail=why, anchor=target.get("anchor"))
         locate.last_why = None if got else (" · ".join(why) or "사유 없음")      # placement._site 가 로그·자막표에 적는다
-        global LAST_WHY
         LAST_WHY = locate.last_why          # 렌더러가 locate 를 한 번 더 감싸도(render_bench.make_locate) 사유가 닿게
         return got
     locate.last_why = None
@@ -397,6 +654,25 @@ def main():
         from collections import Counter
         print("anchor 표:", dict(Counter(r.get("anchor") for r in rows if r.get("anchor"))))
         return 0
+    if a[0] == "bench-aim":       # fx_target.py bench-aim — 벤치 원·화살표가 대상 크기별로 어떻게 그려졌나(오푸스 눈) → channel/칼카피_제작순서/aim_bench.json
+        rows = bench_aim()
+        print(f"{len([r for r in rows if 'skip' not in r])}/{len(rows)} 잼 → {AIM_BENCH}")
+        return 0
+    if a[0] == "aim-check":       # fx_target.py aim-check <편 폴더> [판] — 자막표 원·화살표의 대상 좌표·머무는 시간(결과물 검사, 실패면 rc 1)
+        doc = Path(a[1])
+        zm = json.loads((doc / "자막표.json").read_text(encoding="utf-8"))
+        pf = doc / "plan" / "계획_시간표.json"
+        cuts = json.loads(pf.read_text(encoding="utf-8"))["timeline"].get("cuts") if pf.exists() else None
+        ch = None
+        if len(a) > 2 and not a[2].startswith("--"):
+            from tools.calcopy.hybrid import styles as ST
+            ch = (ST.load(a[2]).get("bench") or {}).get("channel")
+        rows = zm["rows"]
+        if "--plan" in a and pf.exists():       # 렌더 전: 계획 배치(show = 화면에 머무는 구간)로
+            rows = [{**r, "t0": r["show"][0], "t1": r["show"][1]} for r in json.loads(pf.read_text(encoding="utf-8"))["placement"]["rows"]]
+        r = aim_check(rows, cuts, ch)
+        print(json.dumps(r, ensure_ascii=False, indent=1))
+        return 0 if r["ok"] else 1
     print(__doc__); return 2
 
 
