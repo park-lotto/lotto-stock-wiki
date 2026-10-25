@@ -196,6 +196,39 @@ def text_boxes(bgr):
     return _ocr().boxes(np.ascontiguousarray(bgr[:, :, ::-1]))
 
 
+def text_boxes_scored(bgr):
+    """PP-OCR det 글자 상자 + 상자 점수 → [{"box": (x0,y0,x1,y1) 픽셀, "score", "fill"}].
+    text_boxes 와 같은 확률지도·같은 문턱(ocrdet.THRESH)·같은 unclip 이고, 덧붙여 재는 것만 둘:
+      score = 윤곽 안 확률 평균(PaddleOCR box_score_fast 와 같은 뜻 — Paddle 기본 det_db_box_thresh 0.6)
+      fill  = 윤곽 넓이 / 바깥 사각형 넓이(얼굴 가장자리·질감을 따라 번진 가짜 윤곽은 낮다).
+    ★왜: text_boxes 는 점수 없이 문턱 0.3 윤곽을 전부 상자로 준다 — 10-25 잇템로그 05 얼굴 컷에서 얼굴 크기 가짜 상자가 나왔다(관문 ④ 표본).
+    ocrdet.py 는 볼케이노 팩과 바이트 동일이라 고치지 않고 여기서 prob_map 을 불러 잰다."""
+    import cv2
+    from . import ocrdet
+    det = _ocr()
+    rgb = np.ascontiguousarray(bgr[:, :, ::-1])
+    p, ratio = det.prob_map(rgb)
+    bina = (p >= ocrdet.THRESH).astype(np.uint8) * 255
+    cont, _ = cv2.findContours(bina, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    h, w = bgr.shape[:2]
+    out = []
+    for c in cont:
+        area = abs(cv2.contourArea(c))
+        if area < ocrdet.MIN_AREA:
+            continue
+        per = cv2.arcLength(c, True)
+        d = (area / per) * ocrdet.UNCLIP_RATIO if per > 0 else 0.0
+        x, y, bw, bh = cv2.boundingRect(c)
+        m = np.zeros((bh, bw), np.uint8)
+        cv2.drawContours(m, [c - [x, y]], -1, 1, -1)
+        sc = float(p[y:y + bh, x:x + bw][m > 0].mean()) if m.any() else 0.0
+        x0, y0 = (x - d) / ratio, (y - d) / ratio
+        x1, y1 = (x + bw + d) / ratio, (y + bh + d) / ratio
+        out.append({"box": (max(0, int(np.floor(x0))), max(0, int(np.floor(y0))), min(w, int(np.ceil(x1))), min(h, int(np.ceil(y1)))),
+                    "score": round(sc, 3), "fill": round(area / max(1.0, bw * bh), 3)})
+    return out
+
+
 def subtitle_like_text(bgr, boxes=None):
     """자막처럼 생긴 박힌 글자 줄 목록(합친 줄 dict). 빈 목록 = 없음."""
     H, W = bgr.shape[:2]

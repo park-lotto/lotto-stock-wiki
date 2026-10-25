@@ -409,9 +409,10 @@ def cards(style_name: str, doc: Path, work: Path, log=print) -> dict:
     return {"sheet": str(sp), "cards": [str(p) for _, p in outs], "pick": pk, "pick_jpg": str(doc / "thumb" / f"{pk}.jpg")}
 
 
-def card_scene_frame(opt: dict, T: dict, cand_dir: Path, win_wh: tuple[int, int]):
+def card_scene_frame(opt: dict, T: dict, cand_dir: Path, win_wh: tuple[int, int], blur=None):
     """렌더 전에 카드 장면 그림(창 크기 BGR)을 원본에서 — 카드가 쓰는 자리(file·ss·crop / part / line·nth + t)를 시간표 컷의 원본·ss·crop 으로 풀어 뽑는다.
-    컷 조각(render/parts)이 아직 없어도 된다. 반환 = (그림 또는 None, 어디서 뽑았나)."""
+    컷 조각(render/parts)이 아직 없어도 된다. 반환 = (그림 또는 None, 어디서 뽑았나).
+    blur = 재료.json blur[src](원본 좌표 흐림 칸) — 주면 렌더 조각(render_bench.clip)과 같은 흐림 필터(render_bench.blur_vf)를 자르기 전에 건다(관문 ④가 렌더와 같은 그림을 보게)."""
     import numpy as np
     ww, wh = win_wh
     if opt.get("file"):
@@ -426,7 +427,12 @@ def card_scene_frame(opt: dict, T: dict, cand_dir: Path, win_wh: tuple[int, int]
             k = ks[int(opt.get("nth", 0))]
         c = cuts[int(k)]
         src, t, crop = Path(cand_dir) / c["src"], float(c.get("ss") or 0) + float(opt.get("t", 0.0)), c.get("crop")
-    vf = (f"crop={crop[2]}:{crop[3]}:{crop[0]}:{crop[1]}," if crop else "") + f"scale={ww}:{wh}:flags=lanczos"
+    pre = ""
+    if blur:
+        from tools.calcopy.hybrid.render_bench import blur_vf
+        bl = blur_vf(blur, t, 1.0 / FPS)
+        pre = bl + "," if bl else ""
+    vf = pre + (f"crop={crop[2]}:{crop[3]}:{crop[0]}:{crop[1]}," if crop else "") + f"scale={ww}:{wh}:flags=lanczos"
     raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t:.3f}", "-i", str(src), "-frames:v", "1", "-vf", vf, "-f", "rawvideo", "-pix_fmt", "bgr24", "-"],
                          capture_output=True, stdin=subprocess.DEVNULL).stdout
     if len(raw) != ww * wh * 3:

@@ -798,6 +798,189 @@ def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
     return bad
 
 
+# ── 렌더 전 관문 ④ — 컷 안 남의 글자·남의 얼굴(10-25 감사: 남의 글자 확정 33 · 남 얼굴 확정 15 — 전부 완성본 눈 검사에서야 보였다) ──
+# 판정 주인 = cut_content_gate 한 곳. 프레임은 렌더 조각과 같은 자리(cut_crop)·같은 흐림(blur_vf)으로 thumb.card_scene_frame 이 원본에서 뽑는다.
+# 자 = channelkit.vision(PP-OCRv5 det 글자 상자 · YuNet 얼굴 · SFace 동일성). 문턱 표본 = shopping_shorts/tests/fixtures/cut_content_labels.json.
+CONTENT_PAIR = 2 / FPS            # 글자 '붙박이' 재기 짝 프레임 간격 — 박힌 글은 2프레임 동안 그대로, 장면 속 글(포장·간판)은 화면과 같이 움직인다
+CONTENT_VER = 1                   # 판정(자·문턱)이 바뀌면 올린다 — 캐시 열쇠
+# 글자 문턱 — 표본 494컷(pos 67: 원본 쇼츠 가격·자막·제목 띠·방송사 로고·광고 글 / neg 427: 제품 포장·간판·화면 속 글) 오푸스 눈 라벨로 정함.
+#   전체 P 0.81·R 0.94 · 반으로 갈라 짝수로 정하고 홀수로 잰 값 P 0.72·R 0.91(정직한 값). 남는 오검출 = 멈춘 화면의 큰 제품 글(카레 상자·영양 성분 그림).
+TEXT_SCORE_MIN = 0.9              # 상자 점수(윤곽 안 확률 평균)
+TEXT_FILL_MIN = 0.8               # 윤곽 넓이/사각형 넓이(얼굴·유리 질감을 따라 번진 가짜 윤곽 거르기 — 박힌 글은 0.85~0.95)
+TEXT_ASPECT_MIN = 1.6             # 가로/세로 — 글줄 모양
+TEXT_H_RANGE = (0.035, 0.25)      # 상자 높이 / 창 높이 — 진열대 가격표(0.01~0.03)는 밖
+TEXT_BLUR_MAX = 0.3               # 흐림 칸이 이만큼 넘게 덮으면 이미 가린 글
+TEXT_STILL_RATIO = 0.5            # 상자 안 변화 / 둘레 변화 < 이 값이면 붙박이(박힌 글) — 움직이는 화면 위 자막
+TEXT_RING_MIN = 1.0               # 둘레 변화가 이보다 작으면(멈춘 화면) 붙박이를 잴 수 없다 → 크기로만(TEXT_STATIC_H)
+TEXT_STATIC_H = 0.05              # 멈춘 화면에서는 높이 ≥ 창 5% 글줄만(제목 띠·큰 자막)
+FACE_OTHER_COS = 0.25             # 기준 얼굴(카드 통과 얼굴들) 중 가장 닮은 것과 SFace 코사인이 이 아래면 다른 사람(표본 286얼굴: 0.25 P 0.96·R 0.90, 0.20 P 0.98·R 0.83)
+FACE_MIN_H = 0.12                 # 잴 얼굴 높이 / 창 높이 하한 — 표본에서 0.12~0.2 연예인 얼굴도 코사인 0.65~0.97 로 맞았다(vision.JUDGE_H 0.2 는 자라 모델·콜라주 얼굴을 놓친다)
+TEXT_MIN_HITS = 1                 # 컷 3장 중 글자 걸린 장 수 — 1(2로 올리면 표본 R 0.78: 짧게 지나가는 자막을 놓친다)
+FACE_MIN_HITS = 2                 # 컷 3장 중 남 얼굴 걸린 장 수 — 한 장 오검출로 렌더를 막지 않게
+
+
+def look_times(n: int) -> list[float]:
+    """컷 안 재는 시각(컷 시작부터 초) — 처음·가운데·끝 근처 3장."""
+    d = n / FPS
+    return [round(x, 3) for x in (min(0.2, d / 4), d / 2, max(d - 0.2, 3 * d / 4))]
+
+
+def cut_frame(src: Path, t: float, crop, win: tuple[int, int], blur=None):
+    """렌더 조각과 같은 그림(창 크기 BGR) — 주인 thumb.card_scene_frame(file 자리) + 같은 흐림."""
+    from tools.calcopy.hybrid import thumb as TH
+    return TH.card_scene_frame({"file": str(src), "ss": t, "crop": crop}, {}, Path("."), win, blur=blur)[0]
+
+
+def blur_cover(regs, crop, win: tuple[int, int], box, t: float) -> float:
+    """창 좌표 상자 넓이 중 그 시각(원본 초 t) 켜진 흐림 칸이 덮는 비율. 흐린 글도 글자 검출기는 글로 본다(표본 08 blurtest 점수 0.99) — 그래서 덮인 상자는 뺀다."""
+    import numpy as np
+    if not regs:
+        return 0.0
+    cx, cy, cw, ch = crop
+    sx, sy = win[0] / cw, win[1] / ch
+    x0, y0, x1, y1 = box
+    m = np.zeros((max(1, y1 - y0), max(1, x1 - x0)), bool)
+    for r in regs:
+        if len(r) >= 6 and not (float(r[4]) <= t <= float(r[5])):
+            continue
+        bx0, by0 = (r[0] - cx) * sx, (r[1] - cy) * sy
+        a0, b0 = int(max(0, bx0 - x0)), int(max(0, by0 - y0))
+        a1, b1 = int(min(x1 - x0, bx0 + r[2] * sx - x0)), int(min(y1 - y0, by0 + r[3] * sy - y0))
+        if a1 > a0 and b1 > b0:
+            m[b0:b1, a0:a1] = True
+    return round(float(m.mean()), 3)
+
+
+def text_feats(a, b, regs=None, crop=None, win=None, t: float = 0.0) -> list[dict]:
+    """한 프레임(a)의 글자 상자마다 잰 값 — 판정은 foreign_text. b = CONTENT_PAIR 뒤(또는 앞) 프레임(붙박이 재기)."""
+    import cv2
+    import numpy as np
+    from shopping_shorts.channelkit import vision as V
+    ga = cv2.cvtColor(a, cv2.COLOR_BGR2GRAY).astype(np.float32)
+    gb = cv2.cvtColor(b, cv2.COLOR_BGR2GRAY).astype(np.float32) if b is not None else ga
+    diff = np.abs(ga - gb)
+    H, W = ga.shape
+    out = []
+    for q in V.text_boxes_scored(a):
+        x0, y0, x1, y1 = q["box"]
+        bw, bh = max(1, x1 - x0), max(1, y1 - y0)
+        ring = diff[max(0, y0 - bh):min(H, y1 + bh), max(0, x0 - bh):min(W, x1 + bh)]
+        inner = diff[y0:y1, x0:x1]
+        out.append({"box": [x0, y0, x1, y1], "score": q["score"], "fill": q["fill"], "aspect": round(bw / bh, 2), "h": round(bh / H, 4),
+                    "d_in": round(float(inner.mean()), 2) if inner.size else 0.0,
+                    "d_ring": round(float((ring.sum() - inner.sum()) / max(1, ring.size - inner.size)), 2),
+                    "blur": blur_cover(regs, crop, win, (x0, y0, x1, y1), t) if regs else 0.0})
+    return out
+
+
+def foreign_text(f: dict) -> bool:
+    """글자 상자 하나가 '남의 박힌 글자(자막·워터마크·로고 글)'인가 — 판정 주인. 표본(오푸스 눈) 정밀도·재현율은 test_cut_content_labels."""
+    if f["blur"] > TEXT_BLUR_MAX:
+        return False
+    if f["score"] < TEXT_SCORE_MIN or f["fill"] < TEXT_FILL_MIN or f["aspect"] < TEXT_ASPECT_MIN:
+        return False
+    if not (TEXT_H_RANGE[0] <= f["h"] <= TEXT_H_RANGE[1]):
+        return False
+    if f["d_ring"] < TEXT_RING_MIN:
+        return f["h"] >= TEXT_STATIC_H
+    return f["d_in"] < TEXT_STILL_RATIO * f["d_ring"]
+
+
+def other_face(f: dict) -> bool:
+    """얼굴 하나가 연예인(기준 얼굴)이 아닌 다른 사람인가 — 판정 주인. f = {h(창 높이 비), cos(기준 얼굴 중 최댓값) | None}.
+    표본 = 감사 결함 완성본 8편(함익병 도브·박세리 라프레리 2·안유진·함익병 비누·강민경·최은경) + 얼지마트롯 원본 4편, 오푸스 눈 라벨."""
+    return f["h"] >= FACE_MIN_H and f.get("cos") is not None and f["cos"] < FACE_OTHER_COS
+
+
+def face_feats(im, anchors: list) -> list[dict]:
+    """잴 얼굴(높이 ≥ FACE_MIN_H)마다 {h, cos = 기준 얼굴 중 최댓값}."""
+    from shopping_shorts.channelkit import vision as V
+    out = []
+    for f, e in V.faces_all(im, min_h=FACE_MIN_H):
+        out.append({"h": round(f["h"], 3), "box": [f["x"], f["y"], f["w"], f["h"]],
+                    "cos": round(max(V.cos(a, e) for a in anchors), 3) if (e is not None and anchors) else None})
+    return out
+
+
+def face_anchors(st: dict, doc: Path, T: dict, cand_dir: Path) -> list:
+    """연예인 기준 얼굴 = 썸네일 카드 3안 장면 중 thumb.card_faces 를 통과한 안의 가장 큰 얼굴 SFace 임베딩(카드 얼굴 관문 ⑥과 같은 장면)."""
+    from shopping_shorts.channelkit import vision as V
+    from tools.calcopy.hybrid import thumb as TH
+    sp = Path(doc) / "썸네일.json"
+    if not sp.exists():
+        return []
+    ok = {r["id"] for r in TH.card_faces(st, doc, T, cand_dir) if r["ok"]}
+    _, _, ww, wh = frame_window(st["frame"])
+    out = []
+    for o in jload(sp).get("options") or []:
+        if o.get("id") not in ok:
+            continue
+        im, _ = TH.card_scene_frame(o, T, cand_dir, (ww, wh))
+        fs = V.faces_all(im) if im is not None else []
+        if fs:
+            f, e = max(fs, key=lambda z: z[0]["h"])
+            if e is not None:
+                out.append(e)
+    return out
+
+
+def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Path | None = None, log=print) -> list[str]:
+    """렌더 전 관문 ④(10-25 감사 남의 글자 33·남 얼굴 15): 계획의 컷마다 렌더 조각과 같은 프레임 3장(cut_crop·blur)을 원본에서 뽑아
+      ① 글자: 흐림 밖에 남의 박힌 글자(자막·워터마크·로고 글)가 TEXT_MIN_HITS 장 이상이면 멈춤(foreign_text)
+      ② 얼굴(연예인 판 thumb_card_face=true): 기준 얼굴(카드 통과 얼굴)과 다른 사람의 큰 얼굴이 FACE_MIN_HITS 장 이상이면 멈춤(other_face)
+    문제 목록(빈 목록 = 통과). 잰 값은 R/cut_content.json 캐시(열쇠 = 원본·ss·프레임 수·crop·blur·기준 얼굴·CONTENT_VER).
+    다른 제품(감사 눈3 24건)은 기계로 잴 자가 없어 이 관문 밖 — 접촉 시트 눈 검사 몫."""
+    import hashlib
+    src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
+    if not src_dir:
+        return []
+    _, _, ww, wh = frame_window(st["frame"])
+    anchors = face_anchors(st, doc, T, src_dir) if (st.get("thumb_card_face") and doc) else []
+    if st.get("thumb_card_face") and not anchors:
+        log("[관문④] 연예인 판인데 기준 얼굴 없음(썸네일.json 없음 또는 카드 얼굴 통과 0) — 얼굴 판정 건너뜀, 글자만 잰다")
+    ak = hashlib.md5(b"".join(a.tobytes() for a in anchors)).hexdigest()[:8] if anchors else "-"
+    cp = (R / "cut_content.json") if R else None
+    try:
+        cache = jload(cp) if (cp and cp.exists()) else {}
+    except Exception:
+        cache = {}
+    bad, rows = [], {}
+    for k, c in enumerate(T["cuts"]):
+        src = src_dir / c["src"]
+        if c.get("ss") is None or src.suffix.lower() in IMG_EXT or not src.exists():
+            continue
+        n = c.get("frames") or (round(c["t1"] * FPS) - round(c["t0"] * FPS))
+        crop = cut_crop(c, src, (ww, wh))
+        regs = (M.get("blur") or {}).get(c["src"])
+        key = hashlib.md5(json.dumps([c["src"], round(float(c["ss"]), 3), n, crop, regs, ak, CONTENT_VER, ww, wh]).encode()).hexdigest()[:16]
+        r = cache.get(key)
+        if r is None:
+            r = {"text": [], "face": []}
+            for dt in look_times(n):
+                t = float(c["ss"]) + dt
+                a = cut_frame(src, t, crop, (ww, wh), regs)
+                if a is None:
+                    continue
+                t2 = t + CONTENT_PAIR if dt + CONTENT_PAIR < n / FPS else t - CONTENT_PAIR
+                b = cut_frame(src, t2, crop, (ww, wh), regs)
+                r["text"].append([f for f in text_feats(a, b, regs, crop, (ww, wh), t) if foreign_text(f)])
+                if anchors:
+                    r["face"].append([f for f in face_feats(a, anchors) if other_face(f)])
+        rows[key] = r
+        nt = sum(1 for x in r["text"] if x)
+        nf = sum(1 for x in r["face"] if x)
+        where = f"{c['line']} {c['src']}@{float(c['ss']):.2f}"
+        if nt >= TEXT_MIN_HITS:
+            boxes = [f["box"] for x in r["text"] for f in x][:3]
+            bad.append(f"컷 {k} {where}: 흐림 밖 남의 박힌 글자 {nt}/{len(r['text'])}장(창 좌표 {boxes}) — 재료.json blur[{c['src']}] 에 그 칸을 넣거나 crop·ss 를 옮긴다")
+        if nf >= FACE_MIN_HITS:
+            cs = [f["cos"] for x in r["face"] for f in x][:3]
+            bad.append(f"컷 {k} {where}: 연예인 아닌 얼굴 {nf}/{len(r['face'])}장(기준 얼굴 코사인 {cs} < {FACE_OTHER_COS}) — 연예인이 나오는 장면으로 바꾼다")
+    if cp:
+        jsave(cp, rows)
+    return bad
+
+
 def count_frames(p: Path) -> int:
     return int(run(["ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0", "-show_entries", "stream=nb_read_frames",
                     "-of", "csv=p=0", p]).stdout.strip().split(",")[0] or 0)   # ICC side_data 면 '78,' (98 #73)
@@ -1156,6 +1339,24 @@ def render_transition_drop(R: Path, style_name: str, kinds=("zoomblur",)) -> dic
     return {"style": style_name, "window": crop, "boundaries": transition_drop(R / "final.mp4", ts, crop, overlay_mask_of(R / "base.mp4", R / "captioned.mp4", crop))}
 
 
+def cut_crop(c: dict, src: Path, win: tuple[int, int]) -> list[int]:
+    """컷 하나의 원본 자르기 칸 [x, y, w, h] — 판단 주인 한 곳(render_window 조각 뽑기 · cut_content_gate 관문 프레임이 같이 부른다).
+    재료 crop 이 4칸이면 그대로 · 사진 재료에 crop 이 없으면 창(또는 그림 칸) 비율로 가운데 · 'face'(또는 없음)면 face_crop. 정한 값은 c["crop_used"]."""
+    crop = c.get("crop", "face")
+    pb = pic_box(c, win)
+    aw, ah = (pb[2], pb[3]) if pb else win
+    if src.suffix.lower() in IMG_EXT and not (isinstance(crop, list) and len(crop) == 4):
+        # 사진 재료(쿠팡 상품 사진)는 얼굴 크롭·시작 초가 없다 — 창 비율로 가운데를 자른다(10-22 강주은: 사진 컷에 ss·crop 없음 → KeyError 'ss' 로 렌더 멈춤)
+        iw, ih = probe(src)[:2]
+        cw = min(iw, round(ih * aw / ah)); chh = min(ih, round(cw * ah / aw))
+        crop = [(iw - cw) // 2, (ih - chh) // 2, cw, chh]
+        c["crop_used"] = crop
+    elif crop == "face":
+        crop = c.get("crop_used") or face_crop(src, float(c.get("ss") or 0.0) + min(0.5, c["dur"] / 2), aw / ah)
+        c["crop_used"] = crop
+    return crop
+
+
 def render_window(T: dict, M: dict, st: dict, R: Path, trans: list[dict] | None = None) -> Path:
     src_dir = Path(M["cand_dir"])
     x, y, ww, wh = frame_window(st["frame"])
@@ -1165,18 +1366,8 @@ def render_window(T: dict, M: dict, st: dict, R: Path, trans: list[dict] | None 
         n = round(c["t1"] * FPS) - round(c["t0"] * FPS)
         c["frames"] = n
         src = src_dir / c["src"]
-        crop = c.get("crop", "face")
         pb = pic_box(c, (ww, wh))          # 컷마다 그림 칸 — 자르기 비율도 그 칸 비율로
-        aw, ah = (pb[2], pb[3]) if pb else (ww, wh)
-        if src.suffix.lower() in IMG_EXT and not (isinstance(crop, list) and len(crop) == 4):
-            # 사진 재료(쿠팡 상품 사진)는 얼굴 크롭·시작 초가 없다 — 창 비율로 가운데를 자른다(10-22 강주은: 사진 컷에 ss·crop 없음 → KeyError 'ss' 로 렌더 멈춤)
-            iw, ih = probe(src)[:2]
-            cw = min(iw, round(ih * aw / ah)); chh = min(ih, round(cw * ah / aw))
-            crop = [(iw - cw) // 2, (ih - chh) // 2, cw, chh]
-            c["crop_used"] = crop
-        elif crop == "face":
-            crop = face_crop(src, float(c.get("ss") or 0.0) + min(0.5, c["dur"] / 2), aw / ah)
-            c["crop_used"] = crop
+        crop = cut_crop(c, src, (ww, wh))
         push = (st.get("cuts") or {}).get("push_orig" if c["kind"] == "orig" else "push_tts", 0.0)
         p = parts / f"c{k:02d}.mp4"
         clip(src, float(c.get("ss", 0.0)), n, crop, (ww, wh), p, push=float(c.get("push", push)), move=c.get("move"),
@@ -1902,7 +2093,8 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         if over and not tts:
             raise StageError(msg)
         from tools.calcopy.hybrid import thumb_rule as TR
-        card_bad = TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"]) + cut_boundary_gate(T, M, st)      # 렌더 전 관문 ⑥ — 계획 때 걸러 렌더를 안 돌린다
+        card_bad = (TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"]) + cut_boundary_gate(T, M, st)      # 렌더 전 관문 ⑥ — 계획 때 걸러 렌더를 안 돌린다
+                    + cut_content_gate(T, M, st, doc, R, log))                                                         # 관문 ④ 컷 안 남의 글자·남의 얼굴
         if card_bad:
             raise StageError(" / ".join(card_bad))
         return {"timeline": T, "placement": placed, "length": length, "over": msg}
@@ -1921,7 +2113,8 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     if over:
         raise StageError("컷이 원본 샷보다 길다: " + str([(c["line"], c["src"], c.get("ss"), c["dur"], c.get("max"), {"원본 남음": c["src_left"]} if "src_left" in c else None) for c in over]))
     from tools.calcopy.hybrid import thumb_rule as TR
-    card_bad = TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"]) + cut_boundary_gate(T, M, st)          # 렌더 전 관문 ⑥(10-25): 연예인 판 카드 3안 얼굴 — 영상 굽기 전에 멈춘다
+    card_bad = (TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"]) + cut_boundary_gate(T, M, st)          # 렌더 전 관문 ⑥(10-25): 연예인 판 카드 3안 얼굴 — 영상 굽기 전에 멈춘다
+                + cut_content_gate(T, M, st, doc, R, log))                                                             # 관문 ④ 컷 안 남의 글자·남의 얼굴(조각 뽑기 전)
     if card_bad:
         raise StageError(" / ".join(card_bad))
     win0 = render_window(T, M, st, R)                          # 창(전환 없이) — 자리 검출 화면의 재료
