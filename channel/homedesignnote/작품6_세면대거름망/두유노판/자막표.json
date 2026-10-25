@@ -1,0 +1,345 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 두유노판) · 시각은 final.mp4 기준 초",
+ "pack": "homedesignnote",
+ "rows": [
+  {
+   "line": "L1",
+   "t0": 0.0,
+   "t1": 0.815,
+   "text": "세면대 막혀서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L1",
+   "t0": 0.815,
+   "t1": 1.668,
+   "text": "업체 부르려다",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L1",
+   "t0": 1.668,
+   "t1": 2.522,
+   "text": "와이프한테 혼났어요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L2",
+   "t0": 2.522,
+   "t1": 3.197,
+   "text": "머리카락이 엉켜서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L2",
+   "t0": 3.197,
+   "t1": 4.132,
+   "text": "물이 안 내려갔는데",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L2",
+   "t0": 4.132,
+   "t1": 4.46,
+   "text": "와이프가",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L2",
+   "t0": 4.46,
+   "t1": 5.442,
+   "text": "이걸 쓱 꺼내 오더라고요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L3",
+   "t0": 5.442,
+   "t1": 5.804,
+   "text": "해외에서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L3",
+   "t0": 5.804,
+   "t1": 6.961,
+   "text": "조회수 2000만 찍은",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L3",
+   "t0": 6.961,
+   "t1": 7.637,
+   "text": "세면대 팝업",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L3",
+   "t0": 7.637,
+   "t1": 8.223,
+   "text": "거름망이었어요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L4",
+   "t0": 8.223,
+   "t1": 9.283,
+   "text": "진짜 핵심은 이건데",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L4",
+   "t0": 9.283,
+   "t1": 10.146,
+   "text": "꾹 누르면 닫히고",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L4",
+   "t0": 10.146,
+   "t1": 10.924,
+   "text": "또 누르면 열려요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L5",
+   "t0": 10.924,
+   "t1": 11.927,
+   "text": "심지어 물은 내려가고",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L5",
+   "t0": 11.927,
+   "t1": 12.316,
+   "text": "머리카락만",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L5",
+   "t0": 12.316,
+   "t1": 13.109,
+   "text": "망에 걸리는데",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L5",
+   "t0": 13.109,
+   "t1": 13.606,
+   "text": "쏙 뽑아서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L5",
+   "t0": 13.606,
+   "t1": 14.237,
+   "text": "털면 끝이에요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L6",
+   "t0": 14.237,
+   "t1": 15.16,
+   "text": "더 말도 안 되는 건",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L6",
+   "t0": 15.16,
+   "t1": 15.506,
+   "text": "젓가락으로",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L6",
+   "t0": 15.506,
+   "t1": 16.682,
+   "text": "파내던 것보다 깔끔해서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L6",
+   "t0": 16.682,
+   "t1": 17.566,
+   "text": "요즘 자취생들 사이에서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "L6",
+   "t0": 17.566,
+   "t1": 18.4,
+   "text": "필수템이래요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  }
+ ],
+ "sfx": [],
+ "flashes": [],
+ "transitions": [],
+ "memes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = iiBUscncqIk",
+  "효과음 0발(본보기 20) []",
+  "짤 0개(rate 0.0 — 벤치에 짤 없음도 스타일)",
+  "꾸밈 없음 24/24 ≥ 판 plain_share 0.933×24=22",
+  "등장 {'cut': 24} · 강조 0/24",
+  "꾸밈 답 없음(deco_answers.json)"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "iiBUscncqIk",
+  "worst_slot_diff": 0.0,
+  "slots": {
+   "stickers": {
+    "bench": {},
+    "ours": {},
+    "vs": {}
+   },
+   "sfx": {
+    "bench": 20,
+    "ours": 0,
+    "bench_count": {
+     "sure": 0,
+     "pending": 20
+    },
+    "kinds": {}
+   },
+   "transitions": {
+    "bench_expect": {},
+    "ours": {},
+    "cut_bounds": 16,
+    "plan": {
+     "src": null,
+     "want_raw": {},
+     "want": null,
+     "picked": {},
+     "why": "비율 출처 없음(본보기 줄판독 transition·counted.transition·판 cuts.transition.kinds 모두 없음)"
+    }
+   },
+   "sites": {},
+   "meme": {
+    "ours": 0
+   }
+  },
+  "bad": []
+ }
+}

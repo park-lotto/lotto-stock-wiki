@@ -1,0 +1,1428 @@
+{
+ "timeline": {
+  "lines": {
+   "L1": [
+    0.0,
+    2.482
+   ],
+   "L2": [
+    2.522,
+    5.402
+   ],
+   "L3": [
+    5.442,
+    8.183
+   ],
+   "L4": [
+    8.223,
+    10.884
+   ],
+   "L5": [
+    10.924,
+    14.197
+   ],
+   "L6": [
+    14.237,
+    18.089
+   ]
+  },
+  "rows": [
+   {
+    "line": "L1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "세면대 막혀서",
+    "t0": 0.0,
+    "t1": 0.815,
+    "show": [
+     0.0,
+     0.815
+    ]
+   },
+   {
+    "line": "L1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "업체 부르려다",
+    "t0": 0.815,
+    "t1": 1.668,
+    "show": [
+     0.815,
+     1.668
+    ]
+   },
+   {
+    "line": "L1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "와이프한테 혼났어요.",
+    "t0": 1.668,
+    "t1": 2.482,
+    "show": [
+     1.668,
+     2.522
+    ]
+   },
+   {
+    "line": "L2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "머리카락이 엉켜서",
+    "t0": 2.522,
+    "t1": 3.197,
+    "show": [
+     2.522,
+     3.197
+    ]
+   },
+   {
+    "line": "L2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "물이 안 내려갔는데",
+    "t0": 3.197,
+    "t1": 4.132,
+    "show": [
+     3.197,
+     4.132
+    ]
+   },
+   {
+    "line": "L2",
+    "j": 2,
+    "speaker": "narr",
+    "text": "와이프가",
+    "t0": 4.132,
+    "t1": 4.46,
+    "show": [
+     4.132,
+     4.46
+    ]
+   },
+   {
+    "line": "L2",
+    "j": 3,
+    "speaker": "narr",
+    "text": "이걸 쓱 꺼내 오더라고요.",
+    "t0": 4.46,
+    "t1": 5.402,
+    "show": [
+     4.46,
+     5.442
+    ]
+   },
+   {
+    "line": "L3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "해외에서",
+    "t0": 5.442,
+    "t1": 5.804,
+    "show": [
+     5.442,
+     5.804
+    ]
+   },
+   {
+    "line": "L3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "조회수 2000만 찍은",
+    "t0": 5.804,
+    "t1": 6.961,
+    "show": [
+     5.804,
+     6.961
+    ]
+   },
+   {
+    "line": "L3",
+    "j": 2,
+    "speaker": "narr",
+    "text": "세면대 팝업",
+    "t0": 6.961,
+    "t1": 7.637,
+    "show": [
+     6.961,
+     7.637
+    ]
+   },
+   {
+    "line": "L3",
+    "j": 3,
+    "speaker": "narr",
+    "text": "거름망이었어요.",
+    "t0": 7.637,
+    "t1": 8.183,
+    "show": [
+     7.637,
+     8.223
+    ]
+   },
+   {
+    "line": "L4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "진짜 핵심은 이건데,",
+    "t0": 8.223,
+    "t1": 9.283,
+    "show": [
+     8.223,
+     9.283
+    ]
+   },
+   {
+    "line": "L4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "꾹 누르면 닫히고",
+    "t0": 9.283,
+    "t1": 10.146,
+    "show": [
+     9.283,
+     10.146
+    ]
+   },
+   {
+    "line": "L4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "또 누르면 열려요.",
+    "t0": 10.146,
+    "t1": 10.884,
+    "show": [
+     10.146,
+     10.924
+    ]
+   },
+   {
+    "line": "L5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "심지어 물은 내려가고",
+    "t0": 10.924,
+    "t1": 11.927,
+    "show": [
+     10.924,
+     11.927
+    ]
+   },
+   {
+    "line": "L5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "머리카락만",
+    "t0": 11.927,
+    "t1": 12.316,
+    "show": [
+     11.927,
+     12.316
+    ]
+   },
+   {
+    "line": "L5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "망에 걸리는데,",
+    "t0": 12.316,
+    "t1": 13.109,
+    "show": [
+     12.316,
+     13.109
+    ]
+   },
+   {
+    "line": "L5",
+    "j": 3,
+    "speaker": "narr",
+    "text": "쏙 뽑아서",
+    "t0": 13.109,
+    "t1": 13.606,
+    "show": [
+     13.109,
+     13.606
+    ]
+   },
+   {
+    "line": "L5",
+    "j": 4,
+    "speaker": "narr",
+    "text": "털면 끝이에요.",
+    "t0": 13.606,
+    "t1": 14.197,
+    "show": [
+     13.606,
+     14.237
+    ]
+   },
+   {
+    "line": "L6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "더 말도 안 되는 건,",
+    "t0": 14.237,
+    "t1": 15.16,
+    "show": [
+     14.237,
+     15.16
+    ]
+   },
+   {
+    "line": "L6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "젓가락으로",
+    "t0": 15.16,
+    "t1": 15.506,
+    "show": [
+     15.16,
+     15.506
+    ]
+   },
+   {
+    "line": "L6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "파내던 것보다 깔끔해서",
+    "t0": 15.506,
+    "t1": 16.682,
+    "show": [
+     15.506,
+     16.682
+    ]
+   },
+   {
+    "line": "L6",
+    "j": 3,
+    "speaker": "narr",
+    "text": "요즘 자취생들 사이에서",
+    "t0": 16.682,
+    "t1": 17.566,
+    "show": [
+     16.682,
+     17.566
+    ]
+   },
+   {
+    "line": "L6",
+    "j": 4,
+    "speaker": "narr",
+    "text": "필수템이래요.",
+    "t0": 17.566,
+    "t1": 18.089,
+    "show": [
+     17.566,
+     18.4
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "src": "e-LfRPbnImo.mp4",
+    "ss": 28.7,
+    "crop": [
+     657,
+     0,
+     606,
+     1080
+    ],
+    "cap": 0,
+    "see": "마개 근접 — 열린 마개 근접(카메라가 다가감)",
+    "line": "L1",
+    "t0": 0.0,
+    "kind": "tts",
+    "t1": 0.815,
+    "dur": 0.815,
+    "over": 0.0
+   },
+   {
+    "src": "1PMEBOTD_d0.mp4",
+    "ss": 11.4,
+    "crop": [
+     0,
+     0,
+     1080,
+     1920
+    ],
+    "cap": 1,
+    "see": "누르기 — 배수구 마개 근접·손가락으로 꾹",
+    "line": "L1",
+    "t0": 0.815,
+    "kind": "tts",
+    "t1": 1.668,
+    "dur": 0.853,
+    "over": 0.0
+   },
+   {
+    "src": "UYj6q-XRSlE.mp4",
+    "ss": 15.3,
+    "crop": [
+     177,
+     0,
+     606,
+     1080
+    ],
+    "cap": 2,
+    "see": "제품 보여주기 — 손에 든 마개·원통 돌려 보여줌",
+    "line": "L1",
+    "t0": 1.668,
+    "kind": "tts",
+    "t1": 2.522,
+    "dur": 0.854,
+    "over": 0.0
+   },
+   {
+    "src": "UYj6q-XRSlE.mp4",
+    "ss": 17.0,
+    "crop": [
+     273,
+     0,
+     606,
+     1080
+    ],
+    "cap": 0,
+    "see": "분해 — 마개와 원통을 나눠 손에 / 망 거름망 끼웠다 뺐다",
+    "line": "L2",
+    "t0": 2.522,
+    "kind": "tts",
+    "t1": 3.197,
+    "dur": 0.675,
+    "over": 0.0
+   },
+   {
+    "src": "UYj6q-XRSlE.mp4",
+    "ss": 50.5,
+    "crop": [
+     465,
+     0,
+     606,
+     1080
+    ],
+    "cap": 1,
+    "see": "물 받기 — 세면대에 물 틀어 마개 시험(멀리, 사람 팔)",
+    "line": "L2",
+    "t0": 3.197,
+    "kind": "tts",
+    "t1": 4.132,
+    "dur": 0.935,
+    "over": 0.0
+   },
+   {
+    "src": "UYj6q-XRSlE.mp4",
+    "ss": 18.1,
+    "crop": [
+     273,
+     0,
+     606,
+     1080
+    ],
+    "cap": 2,
+    "see": "분해 — 마개와 원통을 나눠 손에 / 망 거름망 끼웠다 뺐다",
+    "line": "L2",
+    "t0": 4.132,
+    "kind": "tts",
+    "t1": 5.442,
+    "dur": 1.31,
+    "over": 0.0
+   },
+   {
+    "src": "UYj6q-XRSlE.mp4",
+    "ss": 9.0,
+    "crop": [
+     81,
+     0,
+     606,
+     1080
+    ],
+    "cap": 0,
+    "see": "망 거름망 근접 — 망 거름망 근접(손가락)",
+    "line": "L3",
+    "t0": 5.442,
+    "kind": "tts",
+    "t1": 6.961,
+    "dur": 1.519,
+    "over": 0.0
+   },
+   {
+    "src": "e-LfRPbnImo.mp4",
+    "ss": 35.6,
+    "crop": [
+     465,
+     0,
+     606,
+     1080
+    ],
+    "cap": 2,
+    "see": "제품 보여주기 — 손에 든 마개를 돌려 보임(뒤에 제품 상자) / 마개 눌러 여닫고 망 보여줌(뒤에 제품 상자)",
+    "line": "L3",
+    "t0": 6.961,
+    "kind": "tts",
+    "t1": 8.223,
+    "dur": 1.262,
+    "over": 0.0
+   },
+   {
+    "src": "e-LfRPbnImo.mp4",
+    "ss": 17.4,
+    "crop": [
+     657,
+     0,
+     606,
+     1080
+    ],
+    "cap": 0,
+    "see": "마개 근접 — 세면대에 끼운 마개(닫힘) 근접",
+    "line": "L4",
+    "t0": 8.223,
+    "kind": "tts",
+    "t1": 9.283,
+    "dur": 1.06,
+    "over": 0.0
+   },
+   {
+    "src": "e-LfRPbnImo.mp4",
+    "ss": 19.0,
+    "crop": [
+     657,
+     0,
+     606,
+     1080
+    ],
+    "cap": 1,
+    "see": "누르기 — 손가락으로 마개 꾹 눌러 여닫기",
+    "line": "L4",
+    "t0": 9.283,
+    "kind": "tts",
+    "t1": 10.924,
+    "dur": 1.641,
+    "over": 0.0
+   },
+   {
+    "src": "1PMEBOTD_d0.mp4",
+    "ss": 15.7,
+    "crop": [
+     0,
+     0,
+     1080,
+     1920
+    ],
+    "cap": 0,
+    "see": "물 빠짐·머리카락 걸림 — 물은 빠지고 머리카락은 마개 둘레에 남음 / 물을 세게 부어도 쏙 내려감",
+    "line": "L5",
+    "t0": 10.924,
+    "kind": "tts",
+    "t1": 11.927,
+    "dur": 1.003,
+    "over": 0.0
+   },
+   {
+    "src": "1PMEBOTD_d0.mp4",
+    "ss": 16.9,
+    "crop": [
+     0,
+     0,
+     1080,
+     1920
+    ],
+    "cap": 1,
+    "see": "물 빠짐·머리카락 걸림 — 물은 빠지고 머리카락은 마개 둘레에 남음 / 물을 세게 부어도 쏙 내려감",
+    "line": "L5",
+    "t0": 11.927,
+    "kind": "tts",
+    "t1": 13.109,
+    "dur": 1.182,
+    "over": 0.0
+   },
+   {
+    "src": "1PMEBOTD_d0.mp4",
+    "ss": 22.9,
+    "crop": [
+     0,
+     0,
+     1080,
+     1920
+    ],
+    "cap": 3,
+    "see": "머리카락 빼기 — 망에서 머리카락 뭉치를 빼냄",
+    "line": "L5",
+    "t0": 13.109,
+    "kind": "tts",
+    "t1": 14.237,
+    "dur": 1.128,
+    "over": 0.0
+   },
+   {
+    "src": "e-LfRPbnImo.mp4",
+    "ss": 24.0,
+    "crop": [
+     657,
+     0,
+     606,
+     1080
+    ],
+    "cap": 0,
+    "see": "마개 근접 — 열린 마개 근접(카메라가 다가감)",
+    "line": "L6",
+    "t0": 14.237,
+    "kind": "tts",
+    "t1": 15.506,
+    "dur": 1.269,
+    "over": 0.0
+   },
+   {
+    "src": "e-LfRPbnImo.mp4",
+    "ss": 41.133,
+    "crop": [
+     465,
+     0,
+     606,
+     1080
+    ],
+    "cap": 2,
+    "see": "제품 보여주기 — 손에 든 마개를 돌려 보임(뒤에 제품 상자) / 마개 눌러 여닫고 망 보여줌(뒤에 제품 상자)",
+    "line": "L6",
+    "t0": 15.506,
+    "kind": "tts",
+    "t1": 16.682,
+    "dur": 1.176,
+    "over": 0.0,
+    "ss_reuse": 41.1
+   },
+   {
+    "src": "e-LfRPbnImo.mp4",
+    "ss": 0.0,
+    "crop": [
+     503,
+     0,
+     606,
+     1080
+    ],
+    "cap": 3,
+    "see": "제품 놓임 — 바닥에 놓인 마개·망(뒤에 제품 상자 — 제 포장, 남의 글자 아님: ④ 관문 표본 neg '제품 포장·상자')",
+    "line": "L6",
+    "t0": 16.682,
+    "kind": "tts",
+    "t1": 17.566,
+    "dur": 0.884,
+    "over": 0.0
+   },
+   {
+    "src": "e-LfRPbnImo.mp4",
+    "ss": 40.3,
+    "crop": [
+     465,
+     0,
+     606,
+     1080
+    ],
+    "cap": 4,
+    "see": "제품 보여주기 — 손에 든 마개를 돌려 보임(뒤에 제품 상자) / 마개 눌러 여닫고 망 보여줌(뒤에 제품 상자)",
+    "line": "L6",
+    "t0": 17.566,
+    "kind": "tts",
+    "t1": 18.4,
+    "dur": 0.834,
+    "over": 0.0
+   }
+  ],
+  "opos": [],
+  "end": 18.4
+ },
+ "placement": {
+  "reference": "iiBUscncqIk",
+  "rows": [
+   {
+    "line": "L1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "세면대 막혀서",
+    "t0": 0.0,
+    "t1": 0.815,
+    "show": [
+     0.0,
+     0.815
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "업체 부르려다",
+    "t0": 0.815,
+    "t1": 1.668,
+    "show": [
+     0.815,
+     1.668
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "와이프한테 혼났어요.",
+    "t0": 1.668,
+    "t1": 2.482,
+    "show": [
+     1.668,
+     2.522
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "머리카락이 엉켜서",
+    "t0": 2.522,
+    "t1": 3.197,
+    "show": [
+     2.522,
+     3.197
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "물이 안 내려갔는데",
+    "t0": 3.197,
+    "t1": 4.132,
+    "show": [
+     3.197,
+     4.132
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L2",
+    "j": 2,
+    "speaker": "narr",
+    "text": "와이프가",
+    "t0": 4.132,
+    "t1": 4.46,
+    "show": [
+     4.132,
+     4.46
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L2",
+    "j": 3,
+    "speaker": "narr",
+    "text": "이걸 쓱 꺼내 오더라고요.",
+    "t0": 4.46,
+    "t1": 5.402,
+    "show": [
+     4.46,
+     5.442
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "해외에서",
+    "t0": 5.442,
+    "t1": 5.804,
+    "show": [
+     5.442,
+     5.804
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "조회수 2000만 찍은",
+    "t0": 5.804,
+    "t1": 6.961,
+    "show": [
+     5.804,
+     6.961
+    ],
+    "first": false,
+    "lex": [
+     "price"
+    ],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L3",
+    "j": 2,
+    "speaker": "narr",
+    "text": "세면대 팝업",
+    "t0": 6.961,
+    "t1": 7.637,
+    "show": [
+     6.961,
+     7.637
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L3",
+    "j": 3,
+    "speaker": "narr",
+    "text": "거름망이었어요.",
+    "t0": 7.637,
+    "t1": 8.183,
+    "show": [
+     7.637,
+     8.223
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "진짜 핵심은 이건데,",
+    "t0": 8.223,
+    "t1": 9.283,
+    "show": [
+     8.223,
+     9.283
+    ],
+    "first": true,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "꾹 누르면 닫히고",
+    "t0": 9.283,
+    "t1": 10.146,
+    "show": [
+     9.283,
+     10.146
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "또 누르면 열려요.",
+    "t0": 10.146,
+    "t1": 10.884,
+    "show": [
+     10.146,
+     10.924
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "심지어 물은 내려가고",
+    "t0": 10.924,
+    "t1": 11.927,
+    "show": [
+     10.924,
+     11.927
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "머리카락만",
+    "t0": 11.927,
+    "t1": 12.316,
+    "show": [
+     11.927,
+     12.316
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "망에 걸리는데,",
+    "t0": 12.316,
+    "t1": 13.109,
+    "show": [
+     12.316,
+     13.109
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L5",
+    "j": 3,
+    "speaker": "narr",
+    "text": "쏙 뽑아서",
+    "t0": 13.109,
+    "t1": 13.606,
+    "show": [
+     13.109,
+     13.606
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L5",
+    "j": 4,
+    "speaker": "narr",
+    "text": "털면 끝이에요.",
+    "t0": 13.606,
+    "t1": 14.197,
+    "show": [
+     13.606,
+     14.237
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "더 말도 안 되는 건,",
+    "t0": 14.237,
+    "t1": 15.16,
+    "show": [
+     14.237,
+     15.16
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "젓가락으로",
+    "t0": 15.16,
+    "t1": 15.506,
+    "show": [
+     15.16,
+     15.506
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "파내던 것보다 깔끔해서",
+    "t0": 15.506,
+    "t1": 16.682,
+    "show": [
+     15.506,
+     16.682
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L6",
+    "j": 3,
+    "speaker": "narr",
+    "text": "요즘 자취생들 사이에서",
+    "t0": 16.682,
+    "t1": 17.566,
+    "show": [
+     16.682,
+     17.566
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "L6",
+    "j": 4,
+    "speaker": "narr",
+    "text": "필수템이래요.",
+    "t0": 17.566,
+    "t1": 18.089,
+    "show": [
+     17.566,
+     18.4
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   }
+  ],
+  "sfx": [],
+  "transitions": [],
+  "flashes": [],
+  "cut_bounds": 16,
+  "trans_plan": {
+   "src": null,
+   "want_raw": {},
+   "want": null,
+   "picked": {},
+   "why": "비율 출처 없음(본보기 줄판독 transition·counted.transition·판 cuts.transition.kinds 모두 없음)"
+  },
+  "log": [
+   "본보기 벤치 편 = iiBUscncqIk",
+   "효과음 0발(본보기 20) []",
+   "짤 0개(rate 0.0 — 벤치에 짤 없음도 스타일)",
+   "꾸밈 없음 24/24 ≥ 판 plain_share 0.79×24=19",
+   "등장 {'cut': 24} · 강조 0/24",
+   "꾸밈 답 없음(deco_answers.json)"
+  ],
+  "_timeline": {
+   "cuts": [
+    {
+     "src": "e-LfRPbnImo.mp4",
+     "ss": 28.7,
+     "crop": [
+      657,
+      0,
+      606,
+      1080
+     ],
+     "cap": 0,
+     "see": "마개 근접 — 열린 마개 근접(카메라가 다가감)",
+     "line": "L1",
+     "t0": 0.0,
+     "kind": "tts",
+     "t1": 0.815,
+     "dur": 0.815,
+     "over": 0.0
+    },
+    {
+     "src": "1PMEBOTD_d0.mp4",
+     "ss": 11.4,
+     "crop": [
+      0,
+      0,
+      1080,
+      1920
+     ],
+     "cap": 1,
+     "see": "누르기 — 배수구 마개 근접·손가락으로 꾹",
+     "line": "L1",
+     "t0": 0.815,
+     "kind": "tts",
+     "t1": 1.668,
+     "dur": 0.853,
+     "over": 0.0
+    },
+    {
+     "src": "UYj6q-XRSlE.mp4",
+     "ss": 15.3,
+     "crop": [
+      177,
+      0,
+      606,
+      1080
+     ],
+     "cap": 2,
+     "see": "제품 보여주기 — 손에 든 마개·원통 돌려 보여줌",
+     "line": "L1",
+     "t0": 1.668,
+     "kind": "tts",
+     "t1": 2.522,
+     "dur": 0.854,
+     "over": 0.0
+    },
+    {
+     "src": "UYj6q-XRSlE.mp4",
+     "ss": 17.0,
+     "crop": [
+      273,
+      0,
+      606,
+      1080
+     ],
+     "cap": 0,
+     "see": "분해 — 마개와 원통을 나눠 손에 / 망 거름망 끼웠다 뺐다",
+     "line": "L2",
+     "t0": 2.522,
+     "kind": "tts",
+     "t1": 3.197,
+     "dur": 0.675,
+     "over": 0.0
+    },
+    {
+     "src": "UYj6q-XRSlE.mp4",
+     "ss": 50.5,
+     "crop": [
+      465,
+      0,
+      606,
+      1080
+     ],
+     "cap": 1,
+     "see": "물 받기 — 세면대에 물 틀어 마개 시험(멀리, 사람 팔)",
+     "line": "L2",
+     "t0": 3.197,
+     "kind": "tts",
+     "t1": 4.132,
+     "dur": 0.935,
+     "over": 0.0
+    },
+    {
+     "src": "UYj6q-XRSlE.mp4",
+     "ss": 18.1,
+     "crop": [
+      273,
+      0,
+      606,
+      1080
+     ],
+     "cap": 2,
+     "see": "분해 — 마개와 원통을 나눠 손에 / 망 거름망 끼웠다 뺐다",
+     "line": "L2",
+     "t0": 4.132,
+     "kind": "tts",
+     "t1": 5.442,
+     "dur": 1.31,
+     "over": 0.0
+    },
+    {
+     "src": "UYj6q-XRSlE.mp4",
+     "ss": 9.0,
+     "crop": [
+      81,
+      0,
+      606,
+      1080
+     ],
+     "cap": 0,
+     "see": "망 거름망 근접 — 망 거름망 근접(손가락)",
+     "line": "L3",
+     "t0": 5.442,
+     "kind": "tts",
+     "t1": 6.961,
+     "dur": 1.519,
+     "over": 0.0
+    },
+    {
+     "src": "e-LfRPbnImo.mp4",
+     "ss": 35.6,
+     "crop": [
+      465,
+      0,
+      606,
+      1080
+     ],
+     "cap": 2,
+     "see": "제품 보여주기 — 손에 든 마개를 돌려 보임(뒤에 제품 상자) / 마개 눌러 여닫고 망 보여줌(뒤에 제품 상자)",
+     "line": "L3",
+     "t0": 6.961,
+     "kind": "tts",
+     "t1": 8.223,
+     "dur": 1.262,
+     "over": 0.0
+    },
+    {
+     "src": "e-LfRPbnImo.mp4",
+     "ss": 17.4,
+     "crop": [
+      657,
+      0,
+      606,
+      1080
+     ],
+     "cap": 0,
+     "see": "마개 근접 — 세면대에 끼운 마개(닫힘) 근접",
+     "line": "L4",
+     "t0": 8.223,
+     "kind": "tts",
+     "t1": 9.283,
+     "dur": 1.06,
+     "over": 0.0
+    },
+    {
+     "src": "e-LfRPbnImo.mp4",
+     "ss": 19.0,
+     "crop": [
+      657,
+      0,
+      606,
+      1080
+     ],
+     "cap": 1,
+     "see": "누르기 — 손가락으로 마개 꾹 눌러 여닫기",
+     "line": "L4",
+     "t0": 9.283,
+     "kind": "tts",
+     "t1": 10.924,
+     "dur": 1.641,
+     "over": 0.0
+    },
+    {
+     "src": "1PMEBOTD_d0.mp4",
+     "ss": 15.7,
+     "crop": [
+      0,
+      0,
+      1080,
+      1920
+     ],
+     "cap": 0,
+     "see": "물 빠짐·머리카락 걸림 — 물은 빠지고 머리카락은 마개 둘레에 남음 / 물을 세게 부어도 쏙 내려감",
+     "line": "L5",
+     "t0": 10.924,
+     "kind": "tts",
+     "t1": 11.927,
+     "dur": 1.003,
+     "over": 0.0
+    },
+    {
+     "src": "1PMEBOTD_d0.mp4",
+     "ss": 16.9,
+     "crop": [
+      0,
+      0,
+      1080,
+      1920
+     ],
+     "cap": 1,
+     "see": "물 빠짐·머리카락 걸림 — 물은 빠지고 머리카락은 마개 둘레에 남음 / 물을 세게 부어도 쏙 내려감",
+     "line": "L5",
+     "t0": 11.927,
+     "kind": "tts",
+     "t1": 13.109,
+     "dur": 1.182,
+     "over": 0.0
+    },
+    {
+     "src": "1PMEBOTD_d0.mp4",
+     "ss": 22.9,
+     "crop": [
+      0,
+      0,
+      1080,
+      1920
+     ],
+     "cap": 3,
+     "see": "머리카락 빼기 — 망에서 머리카락 뭉치를 빼냄",
+     "line": "L5",
+     "t0": 13.109,
+     "kind": "tts",
+     "t1": 14.237,
+     "dur": 1.128,
+     "over": 0.0
+    },
+    {
+     "src": "e-LfRPbnImo.mp4",
+     "ss": 24.0,
+     "crop": [
+      657,
+      0,
+      606,
+      1080
+     ],
+     "cap": 0,
+     "see": "마개 근접 — 열린 마개 근접(카메라가 다가감)",
+     "line": "L6",
+     "t0": 14.237,
+     "kind": "tts",
+     "t1": 15.506,
+     "dur": 1.269,
+     "over": 0.0
+    },
+    {
+     "src": "e-LfRPbnImo.mp4",
+     "ss": 41.133,
+     "crop": [
+      465,
+      0,
+      606,
+      1080
+     ],
+     "cap": 2,
+     "see": "제품 보여주기 — 손에 든 마개를 돌려 보임(뒤에 제품 상자) / 마개 눌러 여닫고 망 보여줌(뒤에 제품 상자)",
+     "line": "L6",
+     "t0": 15.506,
+     "kind": "tts",
+     "t1": 16.682,
+     "dur": 1.176,
+     "over": 0.0,
+     "ss_reuse": 41.1
+    },
+    {
+     "src": "e-LfRPbnImo.mp4",
+     "ss": 0.0,
+     "crop": [
+      503,
+      0,
+      606,
+      1080
+     ],
+     "cap": 3,
+     "see": "제품 놓임 — 바닥에 놓인 마개·망(뒤에 제품 상자 — 제 포장, 남의 글자 아님: ④ 관문 표본 neg '제품 포장·상자')",
+     "line": "L6",
+     "t0": 16.682,
+     "kind": "tts",
+     "t1": 17.566,
+     "dur": 0.884,
+     "over": 0.0
+    },
+    {
+     "src": "e-LfRPbnImo.mp4",
+     "ss": 40.3,
+     "crop": [
+      465,
+      0,
+      606,
+      1080
+     ],
+     "cap": 4,
+     "see": "제품 보여주기 — 손에 든 마개를 돌려 보임(뒤에 제품 상자) / 마개 눌러 여닫고 망 보여줌(뒤에 제품 상자)",
+     "line": "L6",
+     "t0": 17.566,
+     "kind": "tts",
+     "t1": 18.4,
+     "dur": 0.834,
+     "over": 0.0
+    }
+   ],
+   "end": 18.4
+  },
+  "transitions_drawn": []
+ }
+}

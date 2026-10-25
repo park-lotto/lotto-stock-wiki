@@ -2340,7 +2340,27 @@ def audio(S: dict, M: dict, st: dict, T: dict, sent: list[dict], placed: dict, R
     else:          # 나레도 원음도 없는 편(자막 줄만) — 목소리 자리는 무음, 소리는 배경음·효과음뿐
         run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"anullsrc=r={SR}:cl=mono", "-t", f"{end:.3f}", voice])
     B = st["bgm"]
-    bgm = BGM_DIR / f"{S.get('bgm', {}).get('id') or B['id']}.mp3"
+    bid = S.get('bgm', {}).get('id') or B.get('id')
+    SF = st.get("sfx_files") or {}
+    check_sfx(st, placed)
+    narr_spans = [T["lines"][s["id"]] for s in sent]
+    if not bid:        # 배경음 없는 판(판 bgm.id null — 두유노판 10-26 사장님 귀 확인 '배경음·효과음 없음') — 목소리(+효과음)만, 배경음 층·덕킹 없음
+        ins2, fc2, mix_in = ["-i", voice], [], "[0:a]"
+        for j, e in enumerate(placed.get("sfx") or []):
+            ins2 += ["-i", SFX_DIR / SF[e["kind"]]]
+            fc2.append(f"[{j + 1}:a]aresample={SR},aformat=channel_layouts=mono,volume={SF.get('gain_db', -8)}dB,adelay={int(round(e['t'] * 1000))}[s{j}]")
+            mix_in += f"[s{j}]"
+        raw = R / "mix_raw.wav"
+        if fc2:
+            fc2.append(f"{mix_in}amix=inputs={1 + len(placed.get('sfx') or [])}:normalize=0:duration=first[o]")
+            run(["ffmpeg", "-y", "-v", "error", *ins2, "-filter_complex", ";".join(fc2), "-map", "[o]", "-ar", SR, raw])
+        else:
+            run(["ffmpeg", "-y", "-v", "error", "-i", voice, "-ar", SR, raw])
+        mix = R / "mix.wav"
+        loud(raw, mix, st["loudness"])
+        return mix, {"narr_lufs": nI, "orig_lufs": oI, "orig_gain": og, "bgm_gain": None, "bgm_ref": "없음(판 bgm.id null)", "mix": lufs(mix),
+                     "duck_narr_db": 0.0, "bed": None}
+    bgm = BGM_DIR / f"{bid}.mp3"
     bI = lufs(bgm)[0]
     # 배경음 크기 기준 = 나레 크기(옛 그대로). 나레 없는 편(관제 263 02 2차 ②)은 원음 크기, 원음도 없으면 판 목표 음량(마스터가 어차피 맞춘다)
     ref = nI if not math.isnan(nI) else (oI if not math.isnan(oI) else float(st["loudness"]["lufs"]))

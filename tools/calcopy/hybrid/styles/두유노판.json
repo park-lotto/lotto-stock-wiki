@@ -25,12 +25,12 @@
  "cps_target": 8.58,
  "_why_cps_target": "벤치 5편 나레 글자/자막 초 편 중앙 8.84·7.88·8.58·8.31·8.76 → 8.58(handconst cps_target, iiBU 나레 없음 제외)",
  "bgm": {
-  "id": "honwaka_puppu",
-  "db_below_voice": 11.22,
+  "id": null,
+  "db_below_voice": 0.0,
   "duck_orig_db": 0.0,
   "duck_narr_db": 0.0,
-  "fade_out": 0.084,
-  "why": "곡 = honwaka_puppu(사장님 10-17 '차분' 결정 · 제미나이 청취 보컬 없음·차분 7/10 — manifest sound.bgm_candidates; 벤치 곡 미식별) · db_below_voice 11.22 = 말 p50 − 말 사이 바닥 편 중앙(10.12·11.22·11.11·17.57·13.35, handconst) · duck 0 = 원음 줄 0/119·나레 덕킹 비교 편 0 · fade_out 0.084 = 편 중앙(0.038·0.097·0.187·0.034·0.071·0.411)"
+  "fade_out": 0.0,
+  "why": "사장님 귀 확인 10-26 '두유노는 배경음·효과음이 없다' → 배경음 없음(render_bench 배경음 층 생략 — 판 bgm.id null). 옛 값(honwaka_puppu·−11.22dB = handconst '말 p50 − 말 사이 바닥' 은 말소리 잔향을 배경음으로 잰 것)은 버림"
  },
  "loudness": {
   "lufs": -14.0,
@@ -126,7 +126,7 @@
    "sfx": {
     "kinds": {},
     "max": 0,
-    "why": "효과음 확정 0(2차 재측정 귀 대기 37·배경음 박자 6 — 스타일분석 §7, 귀 확인 전 규칙으로 안 씀)"
+    "why": "사장님 귀 확인 10-26 '두유노는 배경음·효과음이 없다' — 효과음 0 · 줄판독 sfx 신호 17줄은 거짓 신호(sfx_false 로 옮김, 10-26)"
    }
   },
   "counted": {
@@ -670,9 +670,9 @@
    "why": "벤치 6편 0.1~3.0초 안 컷 경계 수: _Qq 3·DCXQ 2·iiBU 1·WTgQ 3·EINo 1·SU9Y 4 → 중앙 2.5 · p25 1.25 → 2(키치잇판·잇템로그판처럼 중앙 쪽 내림)"
   },
   "plain_share": {
-   "v": 0.79,
-   "tol": 0.12,
-   "why": "벤치 6편 줄판독 119줄 중 꾸밈 없는 줄 94 = 0.79(편별 DCXQ 0.85·EINo 0.737·SU9Y 0.816·WTgQ 0.667·_Qq 0.895·iiBU 0.5(2줄)) · ±0.12 = 2줄 편 빼고 편별 최대 거리(WTgQ 0.123)"
+   "v": 0.933,
+   "tol": 0.13,
+   "why": "벤치 6편 줄판독 119줄 중 꾸밈 없는 줄 111 = 0.933(편별 DCXQ 0.95·EINo 0.947·SU9Y 1.0·WTgQ 0.81·_Qq 0.947·iiBU 0.5(2줄)) — 사장님 귀 확인 10-26 '두유노는 배경음·효과음이 없다' 로 sfx 신호 17줄을 거짓 신호로 뺀 뒤 다시 잼(옛 0.79 는 그 신호를 꾸밈으로 셈) · ±0.13 = 2줄 편 빼고 편별 최대 거리(WTgQ 0.123)"
   },
   "photo_share_max": {
    "v": 0.0,
@@ -780,8 +780,8 @@
    "from": "renderer bench — 효과음은 렌더러 자체(render 칸)"
   },
   "bgm": {
-   "id": "honwaka_puppu",
-   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)"
+   "id": null,
+   "from": "사장님 귀 확인 10-26 '두유노는 배경음·효과음이 없다' — 배경음 없음"
   },
   "meme": {
    "pack": "local",
