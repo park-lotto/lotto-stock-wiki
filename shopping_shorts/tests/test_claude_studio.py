@@ -154,7 +154,7 @@ def test_look_check_uses_engine_scene_style(monkeypatch):
     """꾸민 모양 검사는 엔진 판 scene_style(워커 'look') — 칼카피 틀(customFrame) 스냅샷을 받는다.
     서버 판으로 검사하면 '알 수 없는 템플릿'으로 거절된다(10-26 실측 19개 중 17개). 엉뚱한 틀은 엔진 판도 거절."""
     from shopping_shorts import scene_style
-    snap = json.loads((Path(__file__).parent / "data" / "look_customframe.json").read_text(encoding="utf-8"))
+    snap = json.loads((Path(__file__).parent / "fixtures" / "look_customframe.json").read_text(encoding="utf-8"))
     assert snap.get("customFrame") and str(snap["presetId"]).startswith("custom_")
     with pytest.raises(ValueError):
         scene_style.validate_snapshot(snap)          # 서버 판은 칼카피 틀을 모른다 — 그래서 워커로 보낸다
