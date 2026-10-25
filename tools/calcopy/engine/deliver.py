@@ -89,6 +89,7 @@ def to_drive(final, dest_dir, name: str, doc=None, log=print, drive_root: Path =
     rows = json.loads(book.read_text(encoding="utf-8")) if book.exists() else []
     book.write_text(json.dumps(rows + [row], ensure_ascii=False, indent=1), encoding="utf-8")
     log(f"[납품] {dst} · md5 {got[:8]} 일치 · 기록 {book}")
+    __import__("tools.calcopy.work_log", fromlist=["x"]).from_delivery(final, dst, rec, doc, drive_root, log)   # 작업 기록지 1줄(관제 263/265) — 주인 work_log, 실패해도 납품은 그대로
     return {"ok": True, "why": [], "dest": str(dst), "md5": got}
 
 
