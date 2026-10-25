@@ -36,7 +36,7 @@
    "line_rgb": null,
    "line_scale": null,
    "outline": {
-    "px": 16,
+    "px": 7,
     "rgb": [
      0,
      0,
@@ -47,21 +47,14 @@
    "shadow": {
     "dx": 0,
     "dy": 0,
-    "blur": 30,
+    "blur": 24,
     "rgb": [
      0,
      0,
      0
     ]
    },
-   "glow": {
-    "px": 60,
-    "rgb": [
-     0,
-     0,
-     0
-    ]
-   },
+   "glow": null,
    "box": "$per_video",
    "italic": false,
    "letter_spacing": 0,
