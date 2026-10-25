@@ -98,7 +98,9 @@ def slot_of(speaker: str, first: bool) -> str:
 
 # 줄판독 칸 접기(지침서 §6 어휘 + 자유 글) — 세기(count)·배치(place)·검사(check_place)가 같은 접기를 쓴다
 ROLES = ("hook", "reveal", "twist", "end", "body")
-TRANS_DRAWABLE = ("zoomblur", "flash", "black")      # 렌더러가 그릴 전환(표준 §3-3 A1) — cut 은 전환 없음, other(회오리 등)는 못 그림
+TRANS_DRAWABLE = ("zoomblur", "flash", "black", "colorflash")      # 렌더러가 그릴 전환(표준 §3-3 A1) — cut 은 전환 없음, other(회오리 등)는 못 그림
+                                                                  # colorflash = 창 색 덮기 α→0(02 468380769 render_bench, 판 cuts.transition.colorflash{alpha, colors})
+COLOR_FLASH_LEX = r"빨강|초록|분홍|노랑|파랑|주황|보라|색\s*덮기|컬러|color"
 TWIST_LEX = r"근데|하지만|그런데|반전|알고 보니|사실은|의외로"
 
 
@@ -112,10 +114,13 @@ def role_key(s) -> str:
 
 
 def trans_key(s) -> str:
-    """줄판독 transition 칸 → cut|zoomblur|flash|black|other. none·빈칸·'같은 컷 안' = cut(전환 없음)."""
+    """줄판독 transition 칸 → cut|zoomblur|flash|colorflash|black|other. none·빈칸·'같은 컷 안' = cut(전환 없음).
+    번쩍인데 흰 아닌 색(빨강·초록 덮기 — 샥탬 'flash(빨강 덮기 → 0.45초 사라짐)') = colorflash."""
     s = str(s if s is not None else "").lower()
     if re.search(r"zoom|줌", s):
         return "zoomblur"
+    if re.search(r"flash|번쩍|덮기", s) and not re.search(r"흰|white", s) and re.search(COLOR_FLASH_LEX, s):
+        return "colorflash"
     if re.search(r"flash|번쩍|흰", s):
         return "flash"
     if re.search(r"black|검은|암전", s):

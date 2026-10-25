@@ -354,3 +354,17 @@ def test_sticker_role_condition_avoid_empty_and_fail_reason():
     from tools.calcopy.hybrid import fx_target as FX
     why = []
     assert FX.caption_side((160, 160), (1258, 1330), (0, 1250, 1080, 90), (), why=why) is None and len(why) == 2, why
+
+
+def test_colorflash_vocab_and_placement_for_shark():
+    """02 468380769 colorflash 장치 — 줄판독 'flash(빨강 덮기 …)' = colorflash(흰 번쩍 flash 와 다름), 샥탬판 전환 배치에 나온다."""
+    assert PL.trans_key("flash(빨강 덮기 → 0.45초 사라짐)") == "colorflash"
+    assert PL.trans_key("flash(흰 번쩍)") == "flash" and PL.trans_key("flash") == "flash"
+    assert "colorflash" in PL.TRANS_DRAWABLE
+    st = copy.deepcopy(ST.load("샥탬판"))
+    st["placement"]["counted"] = PL.count(st)
+    assert st["placement"]["counted"]["transition"].get("colorflash", 0) > 0.1
+    st["placement"]["rules"]["transition"] = {"kinds": ["colorflash"], "cond": {"min_cut_s": 0.5}}
+    rows = [{"line": f"L{i}", "j": 0, "speaker": "narr" if i % 2 else "orig", "text": "가나다", "t0": i * 1.5, "t1": i * 1.5 + 1.4} for i in range(14)]
+    p = PL.place(rows, st, "seed", cuts=[{"t0": i * 1.5, "dur": 1.5} for i in range(14)])
+    assert p["transitions"] and all(e["kind"] == "colorflash" for e in p["transitions"]), p["transitions"]
