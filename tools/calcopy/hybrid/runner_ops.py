@@ -644,7 +644,12 @@ def c_coupang_reviews(W, d):
     pid = str(d.get("product_id") or "")
     if not pid.isdigit():
         return {"reviews": [], "error": "상품 번호가 없다"}
-    prof = Path(os.environ.get("SHORTEM_HOME") or (W.parent / "_home")) / "browser" / "coupang"
+    home = Path(os.environ.get("SHORTEM_HOME") or (W.parent / "_home"))
+    got = _cp_cached(_cp_cache(home, "reviews", pid))         # 같은 상품 페이지는 저장본(TTL 안) — 다시 열지 않는다
+    if got:
+        jsave(W / "look" / f"reviews_{pid}.json", got)
+        return {"reviews": got, "cached": True}
+    prof = home / "browser" / "coupang"
     prof.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as p:
         ctx = p.chromium.launch_persistent_context(str(prof), headless=False, channel="chrome", locale="ko-KR", viewport={"width": 1366, "height": 900},
@@ -676,6 +681,8 @@ def c_coupang_reviews(W, d):
     rows.sort(key=lambda r: -int(r.get("helpful") or 0))
     out = [{"id": f"r{i + 1}", **r} for i, r in enumerate(rows[:10])]
     jsave(W / "look" / f"reviews_{pid}.json", out)
+    if out:
+        jsave(_cp_cache(home, "reviews", pid), out)
     return {"reviews": out}
 
 
@@ -713,13 +720,34 @@ def c_cand_sheet(W, d):
     return {"file": rel(W, out), "n": len(tiles)}
 
 
+COUPANG_TTL = 24 * 3600      # 쿠팡 결과 저장본 유효 시간 — 같은 검색어·같은 상품 페이지는 이 안에선 다시 요청하지 않는다(사장님 10-26 '한 번 불러 저장')
+
+
+def _cp_cache(home: Path, kind: str, key: str) -> Path:
+    import hashlib
+    return home / "coupang_cache" / kind / (hashlib.md5(key.encode("utf-8")).hexdigest()[:16] + ".json")
+
+
+def _cp_cached(f: Path):
+    """저장본이 있고 TTL 안이면 그 값 — 실패(ok 아님·빈 결과)는 저장하지 않으니 여기 있는 건 성공한 것만."""
+    if f.exists() and time.time() - f.stat().st_mtime < COUPANG_TTL:
+        try:
+            return jload(f)
+        except Exception:  # noqa: BLE001 — 깨진 저장본은 무시하고 새로 부른다
+            return None
+    return None
+
+
 def c_coupang(W, d):
     from tools.calcopy import coupang_customer as C
     qs = [q for q in d.get("queries") or [] if q][:6]
-    found = C.search(qs)
     home = Path(os.environ.get("SHORTEM_HOME") or (W.parent / "_home"))
+    rated = bool(d.get("ratings"))
+    hit = {q: v for q in qs if (v := _cp_cached(_cp_cache(home, "search_r" if rated else "search", q)))}
+    miss = [q for q in qs if q not in hit]
+    found = C.search(miss) if miss else {}
     if any((v or {}).get("need") == "chrome" for v in found.values()):
-        found = coupang_chrome(qs, home)
+        found = coupang_chrome(miss, home)
     elif d.get("ratings") and not any(it.get("rating") for v in found.values() for it in (v or {}).get("items") or []):
         # 후기 수는 대체 제품 고를 때만(flow.ph_best 가 ratings 로 부른다) — 같은 제품 찾기마다 크롬을 띄우면 검색어 3개에 18초(10-22 실측, API 는 2.9초)
         # 파트너스 API 는 후기 수 칸이 없다(98 #11) → 같은 검색어 크롬 카드에서 후기 수만 product_id 로 채운다. 막히면 빈 채로(대본에 '후기 많은'을 못 쓴다)
@@ -731,6 +759,12 @@ def c_coupang(W, d):
         for v in found.values():
             for it in (v or {}).get("items") or []:
                 it["rating"] = rate.get(str(it.get("product_id")), it.get("rating") or "")
+    for q, v in found.items():                  # 성공한 검색어만 저장본으로(막힘·빈 결과는 다음에 다시 부른다)
+        if (v or {}).get("ok") and (v or {}).get("items"):
+            jsave(_cp_cache(home, "search_r" if rated else "search", q), v)
+    if hit:
+        sys.stderr.write(f"[coupang] 저장본 재사용 {len(hit)}개 · 새로 부름 {len(miss)}개\n")
+    found = {**hit, **found}
     jsave(W / "look" / f"coupang_{int(time.time())}.json", found)
     items, seen = [], set()
     for v in found.values():
