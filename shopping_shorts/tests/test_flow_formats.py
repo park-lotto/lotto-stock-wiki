@@ -299,27 +299,102 @@ def test_thumb_uses_find_order_of_slug():
     assert "참고(상위 편" in r["review"][0]["ask"]
 
 
-# ── 5. clean_text — 회원 키 없으면 서버·VMake 호출 0, 흐림 대체 ─────────────────
-def test_clean_text_no_key_no_call(tmp_path, monkeypatch):
+# ── 5. clean_text — 사장님 10-26: 장면 편집 뒤 자막 있는 컷 구간만 VMake(통째 금지) · 키 없으면 멈춤 · 돈 0 스위치 ─────
+def _fake_vmake(VC, monkeypatch, calls):
+    def fake(files, *a, **k):
+        for f in files:
+            calls.append((Path(f).name, VC._dur(Path(f))))
+            VC.log_entry(Path(f).parent, {"file": Path(f).name, "mode": "member", "ok": True, "calls": 1, **VC._sent(Path(f))})
+        return {"cleaned": [Path(f).name for f in files], "calls": len(files), "fail": {}}
+    monkeypatch.setattr(VC, "member_clean", fake)
+    monkeypatch.setattr(VC, "server_clean", fake)
+
+
+def _mk_video(p, sec):
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", f"testsrc=size=320x240:rate=30:duration={sec}", "-f", "lavfi", "-i",
+                    f"sine=duration={sec}", "-shortest", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", str(p)], check=True)
+
+
+def test_clean_text_check_only_no_key_stops(tmp_path, monkeypatch):
     from tools.calcopy import vmake_clean as VC
     from tools.calcopy.hybrid import runner_ops as R
-    (tmp_path / "src").mkdir()
-    (tmp_path / "src" / "a.mp4").write_bytes(b"x")
-    calls = []
-    monkeypatch.setattr(VC, "member_clean", lambda *a, **k: calls.append(a) or {"cleaned": ["a.mp4"], "calls": 1, "fail": {}})
-    monkeypatch.setattr(VC, "server_clean", lambda *a, **k: calls.append(a) or {})
-    monkeypatch.delenv("VMAKE_API_KEY", raising=False)
     monkeypatch.setattr(R, "PAID_OFF", False)
-    out = R.c_clean_text(tmp_path, {"files": ["src/a.mp4"]})
-    assert out["mode"] == "blur" and out["calls"] == 0 and not calls
-    led = json.loads((tmp_path / "src" / "vmake_log.json").read_text(encoding="utf-8"))
-    assert led[-1]["calls"] == 0 and led[-1]["mode"] == "blur"
-    monkeypatch.setenv("VMAKE_API_KEY", "ak:sk")                       # 키가 있으면 부른다(가짜) — 검사가 호출을 잡는지
-    out = R.c_clean_text(tmp_path, {"files": ["src/a.mp4"]})
-    assert out["mode"] == "vmake" and len(calls) == 1
-    monkeypatch.setattr(R, "PAID_OFF", True)                          # 돈 0 스위치면 키가 있어도 안 부른다
-    out = R.c_clean_text(tmp_path, {"files": ["src/a.mp4"]})
-    assert out["calls"] == 0 and len(calls) == 1
+    monkeypatch.setenv("CALCOPY_VMAKE_VIA", "member")
+    monkeypatch.delenv("VMAKE_API_KEY", raising=False)
+    monkeypatch.setattr(VC, "MEMBER_KEY_FILE", tmp_path / "none")
+    assert R.c_clean_text(tmp_path, {"check": True})["mode"] == "need_key"
+    monkeypatch.setenv("VMAKE_API_KEY", "ak:sk")
+    assert R.c_clean_text(tmp_path, {"check": True})["mode"] == "vmake"
+    monkeypatch.setattr(R, "PAID_OFF", True)                          # 돈 0 스위치면 키가 있어도 지우지 않는다
+    assert R.c_clean_text(tmp_path, {"check": True})["mode"] == "blur"
+
+
+def test_used_spans_only_text_cuts():
+    from tools.calcopy import vmake_clean as VC
+    T = {"cuts": [{"src": "a.mp4", "ss": 1.0, "t0": 0, "t1": 2}, {"src": "a.mp4", "ss": 3.2, "t0": 2, "t1": 3},
+                  {"src": "a.mp4", "ss": 50.0, "t0": 3, "t1": 4}, {"src": "b.mp4", "ss": 10.0, "t0": 4, "t1": 5}, {"src": "p.jpg", "ss": 0, "t0": 5, "t1": 6}]}
+    durs = {"a.mp4": 100.0, "b.mp4": 524.0}
+    assert VC.used_spans(T, durs, {"a.mp4": [[0, 2.5]]}) == {"a.mp4": [[0.8, 2.7]]}      # 글자 샷 밖 컷(a 50초·b) = 호출 0
+    assert VC.used_spans(T, durs, {}) == {}                                              # 글자 샷 없음 = 호출 0
+    assert VC.used_spans(T, durs, None, text_cuts={3}) == {"b.mp4": [[9.8, 11.2]]}         # 관문 ④ 판정 컷 번호만
+    assert VC.used_spans(T, durs, {"a.mp4": [[0, 2.5]]}, {"a.mp4": [[0.8, 2.7]]}) == {}   # 이미 지운 구간은 다시 안 보냄
+    used = VC.used_spans(T, durs)
+    assert VC.span_sec(used) < 10
+    # 결과물 검사: 옛 길(원본 통째 a 100초·b 524초)이면 걸린다 · 쓰는 구간만이면 통과
+    assert len(VC.sent_check({"a.mp4": 100.0, "b.mp4": 524.0}, used)) == 2
+    assert VC.sent_check({"a.mp4": 1.9}, used) == []
+
+
+def test_clean_used_sends_only_spans_and_splices(tmp_path, monkeypatch):
+    from tools.calcopy import vmake_clean as VC
+    from tools.calcopy.hybrid import rules as RU
+    src = tmp_path / "src"
+    src.mkdir()
+    _mk_video(src / "a.mp4", 20)
+    (src / "_cutbounds_a_0_240_v2.json").write_text("[5.0]", encoding="utf-8")
+    calls = []
+    _fake_vmake(VC, monkeypatch, calls)
+    monkeypatch.setenv("CALCOPY_VMAKE_VIA", "member")
+    monkeypatch.setenv("VMAKE_API_KEY", "ak:sk")
+    monkeypatch.delenv("SHORTEM_NO_PAID", raising=False)
+    t0 = "0000"
+    r = VC.clean_used(src, {"a.mp4": [[2.0, 4.0], [10.0, 11.5]]})
+    assert r["calls"] == 2 and r["done"] == {"a.mp4": [[2.0, 4.0], [10.0, 11.5]]}
+    assert [round(s, 1) for _, s in calls] == [2.0, 1.5]                # VMake 로 간 것 = 구간 조각뿐(원본 20초 아님)
+    assert abs(VC._dur(src / "a.mp4") - 20.0) < 0.2 and (src / "a_orig.mp4").exists()   # 같은 이름·같은 길이로 끼움, 원본 보존
+    assert not list(src.glob("*__vm_*"))                                # 조각은 치운다
+    assert (src / "_cutbounds_a_0_240_v2.json").stat().st_mtime >= (src / "a.mp4").stat().st_mtime   # 경계 캐시 그대로 씀
+    sent = VC.sent_from_ledger(src, t0)
+    assert sent == {"a.mp4": pytest.approx(3.5, abs=0.15)}
+    M = {"blur": {"a.mp4": [[1, 2, 3, 4, 0.0, 20.0]]}}
+    assert RU.blur_minus_spans(M, r["done"]) == 1
+    assert [x[4:] for x in M["blur"]["a.mp4"]] == [[0.0, 2.0], [4.0, 10.0], [11.5, 20.0]]
+
+
+def test_flow_foreign_vmake_at_render(monkeypatch):
+    """f_clean = 준비만(돈 0) → 렌더 직전 f_render 가 clean_text(version·shots) 를 한 번 — 재료가 같으면 다시 안 부른다."""
+    st = F.start("u", "잇템로그판_v2", "s")
+    st["fmt"] = "해외원본형"
+    st["origin"] = {"files": [{"name": "a.mp4", "w": 1080, "h": 1920}]}
+    st["shots"] = {"a": [{"a": 0, "b": 3, "text": [[0.1, 0.7, 0.9, 0.8]]}]}
+    r = F.f_clean(st, {}, {}, {})
+    assert r["do"][0]["check"] is True and "files" not in r["do"][0]
+    with pytest.raises(F._Stop):
+        F.f_clean_got(st, {"clean": {"mode": "need_key", "why": "키", "fix": "넣기"}}, {}, {})
+    F.f_clean_got(st, {"clean": {"mode": "vmake"}}, {}, {})
+    st["script"] = {"S": {}, "M": {"cuts": {"N1": [{"src": "a.mp4", "ss": 0.5}]}, "blur": {"a.mp4": [[1, 2, 3, 4, 0, 3]]}}}
+    F.f_plan(st, {}, {}, {})
+    r = F.f_render(st, {}, {}, {})
+    assert r["do"][0]["cmd"] == "clean_text" and r["do"][0]["shots"] and r["do"][0]["replan"] is False
+    r = F.f_render_clean_got(st, {"clean": {"mode": "vmake", "done": {"a.mp4": [[0.3, 2.0]]}, "calls": 1, "send_sec": 1.7, "used_sec": 1.7, "sent": {"a.mp4": 1.7}, "sent_bad": []}}, {}, {})
+    assert r["then"] == "render" and st["text_fix"]["calls"] == 1
+    assert [x[4:] for x in st["script"]["M"]["blur"]["a.mp4"]] == [[0, 0.3], [2.0, 3]]
+    assert F.f_render(st, {}, {}, {})["do"][0]["cmd"] == "render"        # 재료 그대로 = 다시 안 부름
+    st["script"]["M"]["cuts"]["N1"][0]["ss"] = 2.5                      # 렌더 고치기로 재료가 바뀌면 → 새 시간표로 다시(뺀 구간만)
+    r = F.f_render(st, {}, {}, {})
+    assert r["do"][0]["cmd"] == "clean_text" and r["do"][0]["replan"] is True and r["do"][0]["done"] == {"a.mp4": [[0.3, 2.0]]}
+    with pytest.raises(F._Stop):                                        # 보낸 초 검사가 걸리면 멈춤
+        F.f_render_clean_got(st, {"clean": {"mode": "vmake", "done": {}, "sent_bad": ["a.mp4: 524초"]}}, {}, {})
 
 
 def test_vmake_paid_off_guard(monkeypatch):

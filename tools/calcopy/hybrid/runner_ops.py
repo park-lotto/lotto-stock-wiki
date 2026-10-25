@@ -1287,14 +1287,26 @@ def c_origin_foreign(W, d):
 
 
 def c_clean_text(W, d):
-    """박힌 글자 지우기 — 판단은 vmake_clean.clean() 한 곳(판 orig_text.mode · 키 출처 · 키 없으면 need_key 멈춤). 여기는 부르기만.
-    d.version 이 오면 그 판 칸을 따르고, 없으면 vmake(사장님 10-25). 호출 수·이유는 <작업>/src/vmake_log.json."""
+    """박힌 글자 지우기 — 판단은 vmake_clean 한 곳(사장님 10-26: 장면 편집 뒤 자막 있는 컷 구간만 VMake). 여기는 부르기만.
+    d.check = 돈 없이 준비만(ready — 키 없으면 need_key) · 아니면 d.version 판의 확정 계획(doc/<판>/plan/계획_시간표.json, d.replan 이면 계획을 다시 써서)에서
+    d.shots(샷 표 글자 샷) 와 겹치는 컷 구간만 잘라 VMake → 원본에 덮어 끼움(d.done = 이미 지운 구간). 장부 = <작업>/src/vmake_log.json(구간·보낸 초)."""
     from tools.calcopy import vmake_clean as VC
-    files = [W / f for f in d.get("files") or [] if (W / f).exists()]
     mode = "blur" if PAID_OFF else VC.style_mode(d.get("version"))
-    r = VC.clean(files, mode, log=lambda s: print(s, file=sys.stderr))
-    if r["calls"] == 0:
-        sys.stderr.write(f"[clean_text] VMake 호출 0회 — {r['mode']}: {r['why']} ({[f.name for f in files]})\n")
+    if d.get("check"):
+        return VC.ready(mode)
+    v = d["version"]
+    if d.get("replan"):                     # 재료가 계획 뒤에 바뀌었다(렌더 고치기) — 같은 계획 함수로 시간표만 새로(합성은 캐시)
+        from tools.calcopy.hybrid import render_bench
+        try:
+            render_bench.render(v, W / "doc" / v, W / v, plan_only=True, tts=True, report=True)
+        except StageError:
+            pass                            # 관문 멈춤이어도 시간표는 관문 앞에서 저장된다
+    t0 = time.strftime("%Y-%m-%d %H:%M:%S")
+    src, send, used = VC.plan_spans(W / "doc" / v, d.get("shots") or {}, d.get("done") or {})
+    r = VC.clean_used(src, send, mode, log=lambda s: print(s, file=sys.stderr))
+    sent = VC.sent_from_ledger(src, t0)
+    r.update({"send": send, "used_sec": VC.span_sec(used), "send_sec": VC.span_sec(send), "sent": sent, "sent_bad": VC.sent_check(sent, used)})
+    sys.stderr.write(f"[clean_text] 쓰는 구간 {r['used_sec']}초 중 자막 컷 {r['send_sec']}초 → VMake {r['calls']}회 · 보낸 초 {sent} · {r['mode']}: {r.get('why')}\n")
     return r
 
 

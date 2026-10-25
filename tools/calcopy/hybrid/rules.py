@@ -253,6 +253,29 @@ def merge_blur(M: dict, blur: dict) -> int:
     return n
 
 
+def blur_minus_spans(M: dict, done: dict) -> int:
+    """VMake 로 지운 구간(done = {파일 이름: [[a,b]…]} 원본 초 — vmake_clean.clean_used)의 흐림을 뺀다. 흐림 칸 [x,y,w,h,a,b] 를 지운 구간 밖 조각만 남긴다.
+    지우기 전·실패 구간은 그대로 흐림(대체 길 유지). 바뀐 칸 수."""
+    n = 0
+    for name, iv in (done or {}).items():
+        rows = (M.get("blur") or {}).get(name)
+        if not rows or not iv:
+            continue
+        out = []
+        for r in rows:
+            if len(r) < 6:
+                out.append(r); continue
+            parts = [[float(r[4]), float(r[5])]]
+            for a, b in iv:
+                parts = [q for s0, s1 in parts for q in (([[s0, s1]] if b <= s0 or a >= s1 else []) + ([[s0, a]] if s0 < a < s1 else []) + ([[b, s1]] if s0 < b < s1 else []))
+                         if q[1] - q[0] > 1e-3]
+            if parts != [[float(r[4]), float(r[5])]]:
+                n += 1
+            out += [list(r[:4]) + [round(s0, 3), round(s1, 3)] + list(r[6:]) for s0, s1 in parts]
+        M["blur"][name] = out
+    return n
+
+
 def fill_shot_max(M: dict, S: dict | None, origin_dims: dict, shots_by_src: dict, ar: float | None) -> dict:
     """원본 컷마다 샷 표로 칸을 채운다(판단 주인 — 집 PC 에선 손으로 적던 칸). origin_dims = {파일 이름: [가로, 세로]}(PC 가 잰 값).
     ① max = 그 샷 끝 − ss — 렌더러의 '컷이 원본 샷보다 길다' 검사가 다른 출연자로 넘어가는 컷을 잡게 한다

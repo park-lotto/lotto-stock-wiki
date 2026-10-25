@@ -1774,7 +1774,8 @@ def _foreign_script_ctx(st: dict) -> str:
     O = [f"- {o.get('id')} · {(o.get('info') or {}).get('channel')} · '{(o.get('info') or {}).get('title')}' · 날짜 {(o.get('info') or {}).get('date')} · 파일 "
          + ", ".join(f"{x['name']}({x.get('w')}x{x.get('h')}, {x.get('dur')}초)" for x in o.get("files") or []) for o in st.get("origins") or []]
     tf = st.get("text_fix") or {}
-    fix = (f"지운 파일(그대로 씀): {tf.get('cleaned')}" if tf.get("cleaned") else "지운 파일 없음") + f" · 나머지 글자 샷 = 엔진이 재료.blur 로 흐림(방식 {tf.get('mode') or '-'}: {tf.get('why') or ''})"
+    fix = ((f"VMake 로 지움(렌더 전, 고른 컷 중 박힌 글자 있는 구간만): {tf.get('need')} — 글자 샷도 그대로 골라 써도 된다" if tf.get("mode") == "vmake" else "지울 파일 없음")
+           + f" · 지우기 전·실패 구간 = 엔진이 재료.blur 로 흐림(방식 {tf.get('mode') or '-'}: {tf.get('why') or ''})")
     dr = st.get("mat_draft") or {}
     return ("\n\n## 해외 원본(시간순 — 이 순서로 쓴다)\n" + "\n".join(O) + "\n\n## 박힌 글자 처리\n" + fix +
             "\n\n## 재료 초안(materials_draft — 원본별 시간순·재사용 0·확대 1.0 구간표, 줄마다 이 안에서 고른다)\n" + json.dumps(dr, ensure_ascii=False)[:5000])
@@ -2030,26 +2031,76 @@ def f_shots_got(st, m, rp, u):
 
 
 def f_clean(st, m, rp, u):
-    """박힌 글자 샷이 있는 원본 → clean_text(회원 VMake 키 있으면 지우고, 없으면 지우지 않고 흐림 — 서버는 VMake 를 부르지 않는다, 과금 경로 동의 규칙)."""
+    """박힌 글자 — 여기서는 **준비만**(돈 0: 판 칸·키 확인, 키 없으면 일찍 멈춤). 실제 VMake 는 장면 맞추기(컷 확정) 뒤·렌더 전 f_render 가
+    자막 있는 컷 구간만(사장님 10-26 — 주인 vmake_clean.used_spans·clean_used). 원본 통째로 보내지 않는다."""
     dims = _origin_dims(st)
     need = sorted(n for n in dims if any(s.get("text") for s in (st.get("shots") or {}).get(n.rsplit(".", 1)[0]) or []))
     if not need:
-        st["text_fix"] = {"mode": "none", "cleaned": [], "calls": 0, "why": "박힌 글자 샷 없음"}
+        st["text_fix"] = {"mode": "none", "need": [], "cleaned": [], "done": {}, "calls": 0, "sec": 0.0, "why": "박힌 글자 샷 없음"}
         return {"goto": "f_draft"}
-    return {"do": [{"id": "clean", "cmd": "clean_text", "files": ["src/" + n for n in need]}], "then": "f_clean_got"}
+    st["text_fix"] = {"need": need}
+    return {"do": [{"id": "clean", "cmd": "clean_text", "check": True, "version": st["version"]}], "then": "f_clean_got"}
 
 
 def f_clean_got(st, m, rp, u):
     c = m.get("clean") or {}
-    st["text_fix"] = {"mode": c.get("mode") or ("error" if c.get("error") else "blur"), "cleaned": c.get("cleaned") or [], "calls": int(c.get("calls") or 0),
-                      "why": str(c.get("why") or c.get("error") or "")[:200]}
-    st["log"].append(f"박힌 글자: {st['text_fix']['mode']} · 지운 파일 {st['text_fix']['cleaned']} · VMake 호출 {st['text_fix']['calls']}회 · {st['text_fix']['why']}")
+    if c.get("mode") == "need_key":
+        raise _Stop(str(c.get("why")), str(c.get("fix") or ""), retry="f_clean")
+    st["text_fix"] = {"mode": c.get("mode") or ("error" if c.get("error") else "blur"), "need": (st.get("text_fix") or {}).get("need") or [],
+                      "cleaned": [], "done": {}, "calls": 0, "sec": 0.0, "why": str(c.get("why") or c.get("error") or "")[:200]}
+    st["log"].append(f"박힌 글자: {st['text_fix']['mode']} 준비 · 글자 원본 {st['text_fix']['need']} — VMake 는 장면 맞추기 뒤 자막 있는 컷 구간만")
     return {"goto": "f_draft"}
+
+
+def _cuts_key(st) -> str:
+    import hashlib
+    return hashlib.md5(json.dumps(((st.get("script") or {}).get("M") or {}).get("cuts") or {}, ensure_ascii=False, sort_keys=True).encode()).hexdigest()[:12]
+
+
+def f_plan(st, m, rp, u):
+    st["_plan_key"] = _cuts_key(st)          # 계획 시간표가 어느 재료로 만들어졌나 — 렌더 고치기 뒤 VMake 구간을 새 시간표로 다시 재기 위해
+    return ph_plan(st, m, rp, u)
+
+
+def f_render(st, m, rp, u):
+    """렌더 전 박힌 글자 지우기(사장님 10-26 '장면 편집 후 자막 있는 컷만') — 재료(컷)가 지난 지우기 뒤 바뀌었을 때만 clean_text.
+    구간 계산·자르기·덮기 = vmake_clean(주인), 여기는 순서만. 지운 구간 = 재료.blur 에서 뺀다(rules.blur_minus_spans)."""
+    tf = st.get("text_fix") or {}
+    if tf.get("mode") != "vmake" or tf.get("key") == _cuts_key(st):
+        return ph_render(st, m, rp, u)
+    return {"do": [{"id": "clean", "cmd": "clean_text", "version": st["version"], "shots": st.get("shots") or {}, "done": tf.get("done") or {},
+                    "replan": st.get("_plan_key") != _cuts_key(st)}], "then": "f_render_clean_got"}
+
+
+def f_render_clean_got(st, m, rp, u):
+    c = m.get("clean") or {}
+    tf = st["text_fix"]
+    if c.get("mode") == "need_key":
+        raise _Stop(str(c.get("why")), str(c.get("fix") or ""), retry="render")
+    if c.get("error"):
+        st["log"].append("박힌 글자 지우기 실패(흐림 그대로 렌더): " + str(c["error"])[:200])
+    for n, iv in (c.get("done") or {}).items():
+        tf.setdefault("done", {}).setdefault(n, []).extend(iv)
+        if n not in tf.setdefault("cleaned", []):
+            tf["cleaned"].append(n)
+    tf["calls"] = int(tf.get("calls") or 0) + int(c.get("calls") or 0)
+    tf["sec"] = round(float(tf.get("sec") or 0) + float(c.get("send_sec") or 0), 3)
+    tf["key"] = _cuts_key(st)
+    st["log"].append(f"박힌 글자 VMake: 쓰는 구간 {c.get('used_sec')}초 중 자막 컷 {c.get('send_sec')}초 · 호출 {c.get('calls')}회 · 보낸 초 {c.get('sent')}"
+                     + (f" · ⚠ {c['sent_bad']}" if c.get("sent_bad") else "") + (f" · {c.get('why')}" if c.get("why") else ""))
+    if c.get("sent_bad"):
+        raise _Stop("박힌 자막 지우기에 쓰지 않는 구간까지 보냈습니다", "개발팀 확인이 필요합니다", final=True)
+    M = st["script"]["M"]
+    nb = RU.blur_minus_spans(M, tf.get("done") or {})
+    if nb:
+        st["log"].append(f"지운 구간의 흐림 {nb}칸 뺌(재료.blur)")
+    v = st["version"]
+    return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "render"}
 
 
 def f_draft(st, m, rp, u):
     return {"do": [{"id": "draft", "cmd": "materials_draft", "version": st["version"], "files": [f["name"] for f in st["origin"]["files"]],
-                    "shots": st.get("shots") or {}, "cleaned": (st.get("text_fix") or {}).get("cleaned") or []}], "then": "f_draft_got"}
+                    "shots": st.get("shots") or {}, "cleaned": (st.get("text_fix") or {}).get("need") or [] if (st.get("text_fix") or {}).get("mode") == "vmake" else []}], "then": "f_draft_got"}
 
 
 def f_draft_got(st, m, rp, u):
@@ -2159,7 +2210,8 @@ FORMAT_PHASES = {   # 형식별 세부 단계 처리기 — 없는 세부 단계
                 "of_fetched": f_of_fetched, "f_product_sheet": f_product_sheet, "f_product_pick": f_product_pick, "f_product_cands": f_product_cands,
                 "f_product_same": f_product_same, "research": f_research, "f_research_got": f_research_got, "f_research_check": f_research_check,
                 "f_material": f_material, "material": f_material, "f_material_got": f_material_got, "f_shots_got": f_shots_got, "f_clean": f_clean,
-                "f_clean_got": f_clean_got, "f_draft": f_draft, "f_draft_got": f_draft_got, "f_asr": f_asr, "f_asr_got": f_asr_got},
+                "f_clean_got": f_clean_got, "f_draft": f_draft, "f_draft_got": f_draft_got, "f_asr": f_asr, "f_asr_got": f_asr_got,
+                "plan": f_plan, "render": f_render, "f_render_clean_got": f_render_clean_got},
     "쇼핑형": {"bench_got": s_bench_got, "topic_got": s_topic_got, "s_cands": s_cands, "s_cand_look": s_cand_look, "s_product_done": s_product_done,
              "research": s_research, "s_research_check": s_research_check, "material_dl": s_material_dl},
     "레시피형": {},      # 연예인형 처리기 그대로(재료 스티커 = 판)
@@ -2169,7 +2221,7 @@ PHASE_STAGE.update({
     "f_product_sheet": "product", "f_product_pick": "product", "f_product_cands": "product", "f_product_same": "product", "s_cands": "product", "s_cand_look": "product",
     "s_product_done": "product", "f_research_got": "research", "f_research_check": "research", "s_research_check": "research", "f_material": "material",
     "f_material_got": "material", "f_shots_got": "material", "f_clean": "material", "f_clean_got": "material", "f_draft": "material", "f_draft_got": "material",
-    "f_asr": "asr", "f_asr_got": "asr", "customize": "sign", "check_judge": "check",
+    "f_asr": "asr", "f_asr_got": "asr", "customize": "sign", "check_judge": "check", "f_render_clean_got": "render",
 })
 
 
