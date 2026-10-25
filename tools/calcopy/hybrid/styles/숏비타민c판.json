@@ -1,6 +1,8 @@
 {
  "name": "숏비타민c판",
  "renderer": "bench",
+ "thumb_card_face": false,
+ "_thumb_card_face": "연예인 채널 아님 — 카드 얼굴 관문 끔(판마다 명시 필수, styles.REQUIRED)",
  "_note": "숏비타민c(shortvitc) 칼카피 1차 판 — 틀만(지시서 07 '숏비타민c판(틀만)'): 해외원본 자막+배경음. 근거 channel/shortvitc/{역분석_2026-10-03.md, bench_2026-10-03.json}. 나레 = 첫 한 줄뿐(Whisper 4편) · 줄판독 0편(06)",
  "bench": {
   "ko": "숏비타민c",

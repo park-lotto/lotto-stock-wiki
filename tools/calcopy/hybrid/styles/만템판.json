@@ -1,6 +1,8 @@
 {
  "name": "만템판",
  "renderer": "bench",
+ "thumb_card_face": true,
+ "_thumb_card_face": "연예인 채널 — 썸네일 카드 3안 전부 연예인 얼굴(사장님 10-25 '연예인 얼굴 통일')",
  "_note": "만템 칼카피 1차 판 — 연예인쇼핑형 나레+원음(검정 바탕·2줄 제목·1080 정사각 창, window). 근거 = 설명서 프리셋 channel/mantem/preset/얜샷템(8편 실측)·뜯기 8편. 손 스크립트 preset/mt_preset.py(설명서 생성기 — 회원 옛 길이 읽음)",
  "bench": {
   "ko": "만템",

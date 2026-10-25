@@ -1,6 +1,8 @@
 {
  "name": "샥탬판",
  "renderer": "bench",
+ "thumb_card_face": false,
+ "_thumb_card_face": "연예인 채널 아님 — 카드 얼굴 관문 끔(판마다 명시 필수, styles.REQUIRED)",
  "_note": "해외쇼츠(@foreignshowshow) 샤크탱크 쇼핑 편 칼카피 1차 판 — 우리 브랜드 샥탬스토리(브랜드.json). 근거 channel/foreignshowshow/{스타일분석.md(06, 10-25), 줄판독/ 6편 208줄, _kal/규칙빈도.json·sfx_events.json·sfx_거름.json} + 프리셋 preset/샤크탱크_검정띠2줄. 손 스크립트 = tools/calcopy/shark/render.py·fx_place.py + 편마다 make_plan.py(샥탬 세션 독자 — 읽기만, 표식 안 붙임). 값 출처 tools/calcopy/shark/rules.json(샥탬 세션 정본)은 읽어서 옮김",
  "bench": {
   "ko": "해외쇼츠",

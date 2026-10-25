@@ -1,6 +1,8 @@
 {
  "name": "도파민썰템B판",
  "renderer": "bench",
+ "thumb_card_face": false,
+ "_thumb_card_face": "연예인 채널 아님 — 카드 얼굴 관문 끔(판마다 명시 필수, styles.REQUIRED)",
  "_note": "썰풀다 칼카피 1차 판 B — 나레 썰(검정 띠 틀, window). 우리 브랜드 도파민썰템(브랜드.json). 근거 = 설명서 프리셋 channel/sseolpulda/preset/B_검정띠(mYxu)·_kal/규칙빈도_나레.json(3편 — 표본부족 n<5, 06 에 3편 더 필요)",
  "bench": {
   "ko": "썰풀다",

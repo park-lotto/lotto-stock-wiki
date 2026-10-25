@@ -1791,6 +1791,22 @@ def render_marks(style_name: str, renderer_file: str | Path) -> dict:
             "renderer_sig": f"{rf.stem}@{hashlib.sha256(rf.read_bytes()).hexdigest()[:12]}"}
 
 
+def _voice_gate_text(S: dict) -> None:
+    """렌더 전 관문 ② 앞 — tts 글에 영문이 있으면 TTS 돈 쓰기 전에 멈춘다(주인 engine/narr_verify.latin_lines)."""
+    from tools.calcopy.engine import narr_verify as NV
+    bad = NV.latin_lines(S)
+    if bad:
+        raise StageError(f"tts 글에 영문 {bad} — 타입캐스트가 건너뛴다(감사 'AI'·'LED' 7곳). 한글 읽기로 바꿔 보낸다(AI → 에이아이)")
+
+
+def _voice_gate_audio(S: dict, sent: list, R: Path, log=print) -> None:
+    """렌더 전 관문 ② — 합성 직후 줄별 받아쓰기 ↔ 그 줄 글(주인 engine/narr_verify.gate_sent). 확정 결함이면 영상 굽기 전에 멈춘다."""
+    from tools.calcopy.engine import narr_verify as NV
+    bad = NV.gate_sent(S, sent, R, log)
+    if bad:
+        raise StageError("나레 줄별 받아쓰기 확정 결함: " + " / ".join(bad) + " — 그 줄 문장을 바꿔 다시 합성(줄 캐시라 바뀐 줄만). 상세 render/narr_verify.json")
+
+
 def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=print, tts: bool = False) -> dict:
     from tools.calcopy.hybrid import render_itssum as RI
     from tools.calcopy.hybrid import styles as ST
@@ -1804,8 +1820,10 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         sm = align = None
         if tts and any(l["kind"] == "tts" for l in S["lines"]):      # 계획 때 진짜 목소리 길이로(10-22 선우용여: 어림으로 통과 → 렌더에서 '컷이 원본 샷보다 길다' 2번·완성본 길이 넘침으로 렌더 3번). 합성은 캐시 — 렌더가 그대로 쓴다
             tts_S = {**S, "lines": [l for l in S["lines"] if l["kind"] == "tts"]}
+            _voice_gate_text(S)
             full, align = tts_by_line(tts_S, R, log)
             sent, _, _ = RI.make_sentences(tts_S, full, R, log, align=align, spread=RI.spread_of(st))
+            _voice_gate_audio(S, sent, R, log)
             sm = {x["id"]: x for x in sent}
         T = timeline(S, M, st, sm, align)
         placed = plan_rows(S, T, st)
@@ -1822,14 +1840,16 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         if over and not tts:
             raise StageError(msg)
         from tools.calcopy.hybrid import thumb_rule as TR
-        card_bad = TR.card_face_gate(st, doc, T, M["cand_dir"])      # 렌더 전 관문 ⑥ — 계획 때 걸러 렌더를 안 돌린다
+        card_bad = TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"])      # 렌더 전 관문 ⑥ — 계획 때 걸러 렌더를 안 돌린다
         if card_bad:
             raise StageError(" / ".join(card_bad))
         return {"timeline": T, "placement": placed, "length": length, "over": msg}
     tts_S = {**S, "lines": [l for l in S["lines"] if l["kind"] == "tts"]}
     if tts_S["lines"]:
+        _voice_gate_text(S)
         full, align = tts_by_line(tts_S, R, log)
-        sent, tempo, _ = RI.make_sentences(tts_S, full, R, log, align=align, spread=RI.spread_of(st))   # 판 targets.speech 목표가 있으면 타입캐스트 줄별 ±8% 미세(미나 그대로, 지시서 15)
+        sent, tempo, _ = RI.make_sentences(tts_S, full, R, log, align=align, spread=RI.spread_of(st))
+        _voice_gate_audio(S, sent, R, log)   # 판 targets.speech 목표가 있으면 타입캐스트 줄별 ±8% 미세(미나 그대로, 지시서 15)
     else:           # 나레 없는 편(관제 263 02 2차 ②) — TTS 안 부른다(돈 0). 자막 줄(kind sub) 시간표 + 원음 + 배경음·효과음
         align, sent, tempo = None, [], None
         log("[나레 없음] tts 줄 0 — TTS 건너뜀, 자막 시간표(sub)·원음·배경음·효과음만")
@@ -1839,7 +1859,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     if over:
         raise StageError("컷이 원본 샷보다 길다: " + str([(c["line"], c["src"], c.get("ss"), c["dur"], c.get("max"), {"원본 남음": c["src_left"]} if "src_left" in c else None) for c in over]))
     from tools.calcopy.hybrid import thumb_rule as TR
-    card_bad = TR.card_face_gate(st, doc, T, M["cand_dir"])          # 렌더 전 관문 ⑥(10-25): 연예인 판 카드 3안 얼굴 — 영상 굽기 전에 멈춘다
+    card_bad = TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"])          # 렌더 전 관문 ⑥(10-25): 연예인 판 카드 3안 얼굴 — 영상 굽기 전에 멈춘다
     if card_bad:
         raise StageError(" / ".join(card_bad))
     win0 = render_window(T, M, st, R)                          # 창(전환 없이) — 자리 검출 화면의 재료

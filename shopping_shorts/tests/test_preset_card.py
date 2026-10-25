@@ -43,7 +43,7 @@ def fx(tmp_path):
                                        "lines": [_line(i, i + 0.9, sticker=[{"what": "빨간원"}] if i == 0 else []) for i in range(6)]})
     _w(R / "tools/calcopy/hybrid/styles/_common.json", {"script": {"audit": []}})
     _w(R / "tools/calcopy/hybrid/styles/픽스처판.json", {
-        "name": "픽스처판", "renderer": "bench", "voice": {"name": "유라", "why": "x"}, "bgm": {"id": "sweets", "db_below_voice": 12, "why": "x"},
+        "name": "픽스처판", "renderer": "bench", "thumb_card_face": False, "voice": {"name": "유라", "why": "x"}, "bgm": {"id": "sweets", "db_below_voice": 12, "why": "x"},
         "loudness": {"lufs": -14, "why": "x"}, "length": {"min": 26, "max": 31, "why": "x"}, "cps_target": 8.6,
         "script": {"audit": [{"kind": "count"}]}, "caption": {"pack": "fxpack", "why": "x"},
         "placement": {"rules": {"enter": {"narr.first": "cut"}, "sfx": {"why": "x"}}, "counted": {"made_by": "p", "n_videos": 6}}})

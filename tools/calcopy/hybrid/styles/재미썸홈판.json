@@ -1,6 +1,8 @@
 {
  "name": "재미썸홈판",
  "renderer": "jaemi",
+ "thumb_card_face": true,
+ "_thumb_card_face": "연예인 채널 — 썸네일 카드 3안 전부 연예인 얼굴(사장님 10-25 '연예인 얼굴 통일')",
  "_note": "얜샷템 하이브리드 2번 판 — 이븐쇼핑(재미썸홈) 결. 렌더러 render_jaemi.py 는 render 칸을 기본값(DEF)으로 읽는다(값 주인 = 이 파일).",
  "bench": {
   "channel": "evenshopping",

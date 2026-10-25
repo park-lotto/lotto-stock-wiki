@@ -1,6 +1,8 @@
 {
  "name": "트롯파파판",
  "renderer": "bench",
+ "thumb_card_face": false,
+ "_thumb_card_face": "연예인 채널 아님 — 카드 얼굴 관문 끔(판마다 명시 필수, styles.REQUIRED)",
  "_note": "울지마트로트(@울지마트롯) 칼카피 1차 판 — 트로트 가수 물건 가격·사연(검정 틀·빨강 띠 제목, window). 근거 channel/uljimatrot/{스타일분석.md, 줄판독/ 10편 150줄, _kal/규칙빈도.json·narr_report.json}. 손 스크립트 _tools/make_trotpapa.py(틀·훅 누끼·CTA·공개 카드를 PIL 로 직접 그림, --senior 업그레이드) = 읽기 전용 참고물",
  "bench": {
   "ko": "울지마트로트",

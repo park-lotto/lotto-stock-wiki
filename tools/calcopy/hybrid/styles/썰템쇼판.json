@@ -1,6 +1,8 @@
 {
  "name": "썰템쇼판",
  "renderer": "bench",
+ "thumb_card_face": false,
+ "_thumb_card_face": "연예인 채널 아님 — 카드 얼굴 관문 끔(판마다 명시 필수, styles.REQUIRED)",
  "_note": "재밌쇼(@humorshowshow) 칼카피 1차 판 — 쇼핑형>썰커뮤니티형 + 화자대사줄 옵션(「화자 : 대사」). 근거 = 설명서 프리셋 channel/humorshowshow/preset/썰템쇼_화자썰/{frame.json,manifest.json}(hs_preset.py 가 만든 것, 8편 실측) · 줄판독 21편(옛 꼴 줄판독/_옛꼴 — 06 새 꼴 미변환이라 placement.count·규칙빈도 없음 → measure_task 06-humorshowshow). 손 스크립트 preset/hs_preset.py·hs_loo.py·hs_measure.py = 설명서 프리셋 생성기(회원 옛 길 preset_make 가 읽음 — 지우지 않는다)",
  "bench": {
   "ko": "재밌쇼",

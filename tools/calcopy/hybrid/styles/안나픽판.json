@@ -1,6 +1,8 @@
 {
  "name": "안나픽판",
  "renderer": "bench",
+ "thumb_card_face": true,
+ "_thumb_card_face": "연예인 채널 — 썸네일 카드 3안 전부 연예인 얼굴(사장님 10-25 '연예인 얼굴 통일')",
  "_note": "안나픽 칼카피 1차 판 — 연예인쇼핑형(검정 띠 2줄+출처 줄, window). 근거 = 설명서 프리셋 channel/annapick/preset/검정띠2줄_출처(6편 실측)·뜯기 6편. 손 스크립트 1편_한고은채소통/make_plan.py·make_render.py·preset/ap_preset.py = 참고물",
  "bench": {
   "ko": "안나픽",

@@ -26,7 +26,7 @@ DIR = Path(__file__).with_name("styles")
 _ROOT = Path(__file__).resolve().parents[3]
 if str(_ROOT) not in sys.path:          # CLI 로 직접 돌릴 때도 tools.calcopy… 가 잡히게(pack_map import)
     sys.path.insert(0, str(_ROOT))
-REQUIRED = ("name", "renderer", "voice", "bgm", "loudness", "length", "script")
+REQUIRED = ("name", "renderer", "voice", "bgm", "loudness", "length", "script", "thumb_card_face")   # thumb_card_face: 연예인 채널이면 true — 판마다 명시(사장님 10-25 "연예인 얼굴 통일·앞으로 칼카피 모두", 관문 ⑥)
 
 
 def _merge(a: dict, b: dict) -> dict:

@@ -1,6 +1,8 @@
 {
  "name": "숏템리폿판",
  "renderer": "bench",
+ "thumb_card_face": false,
+ "_thumb_card_face": "연예인 채널 아님 — 카드 얼굴 관문 끔(판마다 명시 필수, styles.REQUIRED)",
  "_note": "핫템리포트(@핫템리포트) 칼카피 1차 판 — 해외 화제템 소개(검정 띠 틀, frame.kind window). 근거 channel/hottemreport/{스타일분석.md, 줄판독/ 6편 170줄, _kal/규칙빈도.json}. 손 스크립트 make_frame_숏템리폿.py·make_render_숏템리폿.py(10-17 외관 B 분홍)·현장썰하이브리드/render_front.py·현장썰_run.py(현장썰 하이브리드) = 업그레이드 재료(_pending.upgrade_from_hand_scripts) — 1차 = 벤치 100%",
  "bench": {
   "ko": "핫템리포트",

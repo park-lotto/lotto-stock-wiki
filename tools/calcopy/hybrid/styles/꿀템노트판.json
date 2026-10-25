@@ -1,6 +1,8 @@
 {
  "name": "꿀템노트판",
  "renderer": "bench",
+ "thumb_card_face": true,
+ "_thumb_card_face": "연예인 채널 — 썸네일 카드 3안 전부 연예인 얼굴(사장님 10-25 '연예인 얼굴 통일')",
  "_note": "얜샷템 하이브리드 — 꿀템노트(@꿀템노트-g1z) 칼카피 판: 나레가 묻고 연예인 원음이 답하는 가짜 대화. 근거 channel/kkultemnote/{스타일분석.md, 하이브리드_판설계.md, 줄판독/}.",
  "bench": {
   "ko": "꿀템노트",

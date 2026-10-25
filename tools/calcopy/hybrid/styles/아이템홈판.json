@@ -1,6 +1,8 @@
 {
  "name": "아이템홈판",
  "renderer": "bench",
+ "thumb_card_face": true,
+ "_thumb_card_face": "연예인 채널 — 썸네일 카드 3안 전부 연예인 얼굴(사장님 10-25 '연예인 얼굴 통일')",
  "_note": "아이템홈 칼카피 1차 판 — 연예인쇼핑형 나레+원음(검정 띠 2줄, window). 근거 = 설명서 프리셋 channel/itemhome/preset/검정띠2줄(8편 실측)·뜯기 8편. 손 스크립트 1편_안유진로션/make_render.py(narr_video+원음 덕킹 손 섞기)·preset/ih_preset.py = 참고물",
  "bench": {
   "ko": "아이템홈",
