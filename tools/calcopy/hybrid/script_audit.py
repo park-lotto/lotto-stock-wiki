@@ -211,7 +211,8 @@ def rule_check(r: dict, d: dict, st: dict) -> tuple[bool, str]:
         return not bad, f"금지 '{r.get('why', r['pattern'])}' {bad}"
     if k == "cap_chars":     # max "chunk_max_chars" = 판 caption.chunk_max_chars 를 그대로(조각 자수 판단은 그 칸 하나)
         mx = (st.get("caption") or {}).get("chunk_max_chars") if r["max"] == "chunk_max_chars" else r["max"]
-        bad = [(l["id"], c) for l in L for c in _caps(l) if nchar(c) > mx]
+        sel = [l for l in L if (l.get("kind") == "orig") == (r.get("of") == "orig")] if r.get("of") in ("tts", "orig") else L   # of = 나레/원음 번역 자막 따로(자수 자가 다르다)
+        bad = [(l["id"], c) for l in sel for c in _caps(l) if nchar(c) > mx]
         return not bad, f"자막 덩어리 {mx}자 넘음 {bad}"
     if k == "orig_span":
         if not O:
