@@ -79,7 +79,9 @@ def faces(rgb: np.ndarray, win=None) -> list[dict]:
     for f in TH.faces_of(TH._detector(), bgr):
         b = [f["x"], f["y"] - 0.35 * f["h"], f["x"] + f["w"], f["y"] + f["h"]]
         if _in_win(b, win):
-            out.append({"box": [round(v, 1) for v in b], "conf": f["conf"]})
+            out.append({"box": [round(v, 1) for v in b], "conf": f["conf"],
+                        "face": [round(v, 1) for v in (f["x"], f["y"], f["x"] + f["w"], f["y"] + f["h"])],   # 정수리 늘림 없는 얼굴 상자
+                        "lm": [[round(a, 1), round(c, 1)] for a, c in f.get("lm") or []]})                       # 오른눈·왼눈·코·오른입·왼입(YuNet)
     return sorted(out, key=lambda d: -(d["box"][2] - d["box"][0]) * (d["box"][3] - d["box"][1]))
 
 
@@ -127,6 +129,62 @@ def object_claude(rgb: np.ndarray, what: str, win=None, model: str = "sonnet") -
     return [round(v) for v in bx], conf, f"Claude {model} '{d.get('label')}' 확신 {conf}"
 
 
+MOUTH_PAD = 1.6       # 입 둘레 상자 한 변 = 입 양끝 거리 × 1.6(입술·이를 감싸는 원 — 손 상수, 벤치 원 크기 실측 전. 판 anchor:"mouth" 일 때만)
+ANCHORS = ("face_center", "mouth")
+
+
+def mouth_box(f: dict) -> list | None:
+    """얼굴(faces 한 개)의 입 둘레 상자 [x0,y0,x1,y1] — 중심 = 입 양끝(YuNet lm 3·4) 가운데, 한 변 = 입 폭 × MOUTH_PAD(최소 얼굴 높이 0.2)."""
+    lm = f.get("lm") or []
+    if len(lm) < 5:
+        return None
+    (rx, ry), (lx, ly) = lm[3], lm[4]
+    cx, cy = (rx + lx) / 2, (ry + ly) / 2
+    fh = (f.get("face") or f["box"])[3] - (f.get("face") or f["box"])[1]
+    side = max(((rx - lx) ** 2 + (ry - ly) ** 2) ** 0.5 * MOUTH_PAD, 0.2 * fh)
+    return [cx - side / 2, cy - side / 2, cx + side / 2, cy + side / 2]
+
+
+def bench_anchor(style: dict) -> list[dict]:
+    """벤치 줄판독의 빨간 원(sticker x,y,w) ↔ 그 프레임 얼굴 랜드마크 — 원 중심이 입·얼굴 가운데 중 어디에 가까운가(얼굴 높이로 나눈 거리).
+    줄판독 x,y 가 왼위인지 가운데인지 채널마다 달라(샥탬 bench_rings = 가운데, 잇템로그 = 왼위) 두 해석 중 얼굴에 더 가까운 쪽을 쓴다(how 칸).
+    판 anchor 칸(07)을 정하는 근거 표 — 원본 영상(판 bench.src_dir)이 있어야 잰다."""
+    import glob
+    from tools.calcopy.hybrid import thumb as TH
+    from tools.calcopy.hybrid.placement import sticker_kind
+    B = style.get("bench") or {}
+    src, lr = B.get("src_dir"), B.get("line_reads")
+    out = []
+    for fp in sorted(glob.glob(str(ROOT / lr / "*.json"))) if lr and src else []:
+        d = json.loads(Path(fp).read_text(encoding="utf-8"))
+        for l in d.get("lines") or []:
+            for s in l.get("sticker") or []:
+                if not isinstance(s, dict) or sticker_kind(s.get("what", "")) != "circle_arrow" or not isinstance(s.get("x"), (int, float)):
+                    continue
+                t = float(s.get("t_in", l.get("t0") or 0)) + 0.03
+                try:
+                    rgb = frame_of(str(Path(src) / f"{d['id']}.mp4"), t)
+                except Exception as e:  # noqa: BLE001 — 못 잰 편은 표에 사유로
+                    out.append({"id": d["id"], "t": t, "why": f"프레임 없음 {type(e).__name__}"}); continue
+                fs = TH.faces_of(TH._detector(), np.ascontiguousarray(rgb[:, :, ::-1]))
+                if not fs:
+                    out.append({"id": d["id"], "t": round(t, 2), "why": "얼굴 없음(물건 원)"}); continue
+                f = max(fs, key=lambda f: f["w"] * f["h"])
+                m = ((f["lm"][3][0] + f["lm"][4][0]) / 2, (f["lm"][3][1] + f["lm"][4][1]) / 2)
+                c = (f["x"] + f["w"] / 2, f["y"] + f["h"] / 2)
+                best = None
+                for how, (cx, cy) in (("가운데", (s["x"], s["y"])), ("왼위", (s["x"] + s["w"] / 2, s["y"] + s["w"] / 2))):
+                    dm = ((cx - m[0]) ** 2 + (cy - m[1]) ** 2) ** 0.5 / f["h"]
+                    dc = ((cx - c[0]) ** 2 + (cy - c[1]) ** 2) ** 0.5 / f["h"]
+                    if best is None or min(dm, dc) < min(best[1], best[2]):
+                        best = (how, dm, dc)
+                how, dm, dc = best
+                near = "mouth" if dm < dc else "face_center"
+                out.append({"id": d["id"], "t": round(t, 2), "xy": how, "d_mouth": round(dm, 2), "d_center": round(dc, 2),
+                            "anchor": near if min(dm, dc) <= 1.0 else None, "what": s.get("what", "")[:30]})
+    return out
+
+
 # ── 자막 옆 ──────────────────────────────────────────────────────────────
 def caption_side(size, caption_band, win=None, face_boxes=(), why: list | None = None) -> list | None:
     """자막 띠(y0,y1) 바깥 가장 가까운 빈 자리(가운데 정렬, 띠 위 먼저 → 아래) — 얼굴과 겹치거나 창 밖이면 다음 후보, 다 막히면 None.
@@ -135,8 +193,11 @@ def caption_side(size, caption_band, win=None, face_boxes=(), why: list | None =
     x, y, ww, wh = win or (0, 0, *CANVAS)
     cx = x + ww / 2
     gap = 12
-    for side, top in (("위", caption_band[0] - gap - h), ("아래", caption_band[1] + gap)):
-        b = [cx - w / 2, top, cx + w / 2, top + h]
+    up, down = caption_band[0] - gap - h, caption_band[1] + gap
+    left, right = x + gap + w / 2, x + ww - gap - w / 2          # 좌우 자리(얼굴이 가운데를 덮는 화면 — ep13 kk_doodle 가운데 둘 다 얼굴 겹침, 15)
+    for side, top, ccx in (("위", up, cx), ("아래", down, cx), ("위 왼쪽", up, left), ("위 오른쪽", up, right),
+                           ("아래 왼쪽", down, left), ("아래 오른쪽", down, right)):
+        b = [ccx - w / 2, top, ccx + w / 2, top + h]
         if b[0] < x or b[2] > x + ww or b[1] < y or b[3] > y + wh:
             if why is not None:
                 why.append(f"띠 {side} {[round(v) for v in b]} 창 {[x, y, x + ww, y + wh]} 밖")
@@ -151,7 +212,7 @@ def caption_side(size, caption_band, win=None, face_boxes=(), why: list | None =
 
 # ── 찾기(판단 주인) ───────────────────────────────────────────────────────
 def find(kind: str, src, t: float | None = None, win=None, avoid=("face",), what: str | None = None, box=None, how: str = "claude",
-         size=(160, 160), caption_band=None, detector=None, fail: list | None = None) -> dict | None:
+         size=(160, 160), caption_band=None, detector=None, fail: list | None = None, anchor: str | None = None) -> dict | None:
     """kind = face | object | caption_side → {x,y,w,h(픽셀 상자), box, conf, how, why, face_clear} | None(못 찾음·확신 낮음·얼굴 겹침).
     object: box(손 상자)를 주면 그것, 아니면 detector(rgb, what, win)(시험용 주입) 또는 Claude CLI. avoid 에 'face' 면 얼굴 겹친 상자 = None."""
     rgb = frame_of(src, t)
@@ -163,6 +224,13 @@ def find(kind: str, src, t: float | None = None, win=None, avoid=("face",), what
                 fail.append(f"얼굴 0개(t={t})")
             return None
         b = fs[0]["box"]
+        if anchor == "mouth":
+            m = mouth_box(fs[0])
+            if m is None:
+                if fail is not None:
+                    fail.append("입 랜드마크 없음(YuNet lm) — 입 둘레 자리 못 잼")
+                return None
+            return _pack(m, fs[0]["conf"], "yunet", f"얼굴 {len(fs)}개 중 가장 큰 것의 입 둘레(입 양끝 랜드마크)", True)
         return _pack(b, fs[0]["conf"], "yunet", f"얼굴 {len(fs)}개 중 가장 큰 것", True)
     if kind == "caption_side":
         if not caption_band:
@@ -247,7 +315,7 @@ def locator(video, win=None, caption_band=None, what_of=None, size_of=None, how:
         av = target.get("avoid")
         why: list = []
         got = find(target["kind"], video, t, win=win, avoid=("face",) if av is None else tuple(av), what=what, how=how,   # 빈 목록 = 피할 것 없음
-                   size=size, caption_band=caption_band, detector=detector, fail=why)
+                   size=size, caption_band=caption_band, detector=detector, fail=why, anchor=target.get("anchor"))
         locate.last_why = None if got else (" · ".join(why) or "사유 없음")      # placement._site 가 로그·자막표에 적는다
         global LAST_WHY
         LAST_WHY = locate.last_why          # 렌더러가 locate 를 한 번 더 감싸도(render_bench.make_locate) 사유가 닿게
@@ -319,6 +387,15 @@ def main():
             Path(a[a.index("--out") + 1]).write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding="utf-8")
         hit = [r for r in rows if r.get("iou", 0) >= 0.5]
         print(f"적중(IoU≥0.5) {len(hit)}/{len([r for r in rows if 'skip' not in r])}")
+        return 0
+    if a[0] == "anchor":          # fx_target.py anchor <판> — 벤치 빨간 원이 입·얼굴 가운데 중 어디(판 rules.stickers.circle_arrow.anchor 근거, 07)
+        sys.path.insert(0, str(ROOT))
+        from tools.calcopy.hybrid import styles as ST
+        rows = bench_anchor(ST.load(a[1]))
+        for r in rows:
+            print(json.dumps(r, ensure_ascii=False))
+        from collections import Counter
+        print("anchor 표:", dict(Counter(r.get("anchor") for r in rows if r.get("anchor"))))
         return 0
     print(__doc__); return 2
 

@@ -992,6 +992,8 @@ def _site(st: dict, rule: dict, row: dict, locate, log: list) -> dict | None:
         return st
     av = rule.get("avoid")
     st["target"] = {"kind": tg, "avoid": ["face"] if av is None else list(av)}      # 빈 목록 [] = 피할 것 없음(판에 적은 그대로) · 칸이 없을 때만 기본 얼굴
+    if rule.get("anchor"):        # face 자리 기준점 = mouth(입 양끝 랜드마크) | face_center(얼굴 상자, 기본) — 판 칸(07), 근거 fx_target.py anchor <판>
+        st["target"]["anchor"] = rule["anchor"]
     if locate is None:
         st["site"] = "pending"          # 검출 전 — 렌더 전에 fx_target.locator 로 받아야 한다(check_place 미해결)
         return st

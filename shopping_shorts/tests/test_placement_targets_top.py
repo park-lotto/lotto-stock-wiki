@@ -353,7 +353,7 @@ def test_sticker_role_condition_avoid_empty_and_fail_reason():
     assert any("사유: 띠 위" in l for l in p2["log"]), [l for l in p2["log"] if "스티커" in l]
     from tools.calcopy.hybrid import fx_target as FX
     why = []
-    assert FX.caption_side((160, 160), (1258, 1330), (0, 1250, 1080, 90), (), why=why) is None and len(why) == 2, why
+    assert FX.caption_side((160, 160), (1258, 1330), (0, 1250, 1080, 90), (), why=why) is None and len(why) == 6, why   # 가운데·좌·우 × 위·아래
 
 
 def test_colorflash_vocab_and_placement_for_shark():
@@ -387,3 +387,31 @@ def test_fail_reason_reaches_log_through_wrapped_locate(monkeypatch):
         return None
     p = PL.place(_rows(), st, "ep13", locate=wrapped)
     assert any("사유: 띠 위 얼굴 겹침" in l for l in p["log"]), [l for l in p["log"] if "스티커" in l]
+
+
+def test_mouth_anchor_box_and_caption_side_sides():
+    """① 얼굴 자리 기준점 anchor:'mouth' = 입 양끝 랜드마크 가운데(미간 아님) ② caption_side 가운데가 얼굴로 막히면 좌우 자리."""
+    from tools.calcopy.hybrid import fx_target as FX
+    f = {"box": [300, 365, 700, 1100], "face": [300, 600, 700, 1100], "lm": [[420, 780], [580, 780], [500, 880], [440, 990], [560, 990]]}
+    b = FX.mouth_box(f)
+    assert abs((b[0] + b[2]) / 2 - 500) < 1e-6 and abs((b[1] + b[3]) / 2 - 990) < 1e-6        # 입 가운데
+    assert FX.mouth_box({"box": [0, 0, 10, 10]}) is None
+    face = [200, 900, 880, 1700]                          # 가운데를 덮는 큰 얼굴
+    why = []
+    got = FX.caption_side((160, 160), (1258, 1330), (0, 486, 1080, 1434), (face,), why=why)
+    assert got is not None and (got[2] <= 200 or got[0] >= 880), (got, why)               # 왼쪽 또는 오른쪽 끝
+    assert len(why) >= 2 and all("얼굴 겹침" in w for w in why[:2])                         # 가운데 위·아래는 막혔다고 적힘
+
+
+def test_anchor_reaches_locate_target():
+    st = copy.deepcopy(ST.load("잇템로그판"))
+    st["placement"]["rules"].pop("deco_pos", None)
+    st["placement"]["rules"]["stickers"] = {"circle_arrow": {"target": "face", "avoid": [], "role": ["훅"], "anchor": "mouth", "why": "시험"}}
+    rid = PL.reference(st, "ep13")["id"]
+    st["placement"]["reference"] = rid
+    for v in st["placement"]["counted"]["videos"]:
+        if v["id"] == rid:
+            v["stickers"] = {"circle_arrow": 1}
+    seen = []
+    PL.place(_rows(), st, "ep13", locate=lambda tg, row, s: seen.append(tg) or {"x": 50, "y": 50, "w": 90, "h": 90, "conf": 0.9, "face_clear": True})
+    assert seen and seen[0].get("anchor") == "mouth", seen
