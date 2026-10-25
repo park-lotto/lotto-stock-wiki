@@ -40,7 +40,7 @@
   "bgm_dir": "shopping_shorts/assets/bgm_lib",
   "preset_b": "channel/homedesignnote/preset/전체화면_가운데자막",
   "frame_a": "channel/mantem/frame_얜샷템.json",
-  "why": "render_itssum DEF 주인 칸(옛 판 동작 그대로 옮김, 10-19): target_lufs −8.6·tp −3.2 = loudness.why 와 같음(⑨) · gap 0.2·gap_ab 0.2·gap_oo 0.25·tail 0.5·a_end_pad 0·orig_fade 0.015 = 4편 손질에서 정한 렌더 상수(박세리 pieces·최은경 gap_before 등 — render_itssum docstring) — 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
+  "why": {"target_lufs": "−8.6 = loudness.lufs 와 같음(⑨ — 옛 렌더러 마스터, 렌더 대조 없이 −14 로 안 바꿈: loudness.why)", "tp": "−3.2 = loudness.tp 와 같음(⑨)", "gap": "0.2 = 손 상수 — 4편 통과본 손질(render_itssum docstring). 벤치 B 결(홈디자인노트 6편) 줄 경계 소리 쉼 중앙 0.04초(n=24, p25 0·p75 0.06 — handconst.py homedesignnote → channel/homedesignnote/_kal/손상수_실측.json timing.gap) — 값을 바꾸면 통과본 B 리듬이 바뀌므로 렌더 대조(TTS 캐시 편) 뒤 교체 · measure_task 06-homedesignnote", "tail": "0.5 = 손 상수 — 4편 통과본 손질. 벤치 B 결 마지막 말 소리 끝→영상 끝 편 중앙 0.31초(0.13~0.73, 나레 없는 iiBU 10.4 빼면 같은 결 — handconst.py homedesignnote timing.tail) — 렌더 대조 뒤 교체 · measure_task 06-homedesignnote", "gap_ab": "0.2 = 손 상수 — 하이브리드 전용 칸(앞 연예인 원음 A → 뒤 나레 B 이음). 벤치(홈디자인노트)는 원음 줄 0개라 원음→나레 쉼이 없다 → 잴 곳 = 앞 결 벤치(연예인 원본 쇼츠) 줄판독의 원음→나레 경계(handconst gap_after_orig_x_oo) · measure_task 06-homedesignnote", "gap_oo": "0.25 = 손 상수 — 하이브리드 전용(A 원음 줄 사이, 최은경 gap_before). 벤치 원음→원음 경계 0개 → 잴 곳 = 앞 결 벤치 줄판독 원음→원음 경계(handconst gap_oo) · measure_task 06-homedesignnote", "a_end_pad": "0 = A 끝 여유 없음 — A→B 쉼은 gap_ab 한 칸이 맡는다(두 칸 합 = 원음→나레 쉼, 같은 판단 두 칸 금지)", "orig_fade": "0.015 = 원음 조각 이음매 클릭 방지 — 엔진 이음매 표준 tts_pause.XF_SEC 0.015 와 같음(벤치로 잴 양이 아님)"}
  },
  "title_form": "2줄 '<수식어> <이름>이 요즘 매일 ~' / '<제품 분류>의 비밀' (얜샷템 틀 흰/민트)",
  "script": {

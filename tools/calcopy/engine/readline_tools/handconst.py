@@ -226,7 +226,7 @@ def measure(slug: str, src_dir: str | None, asr_dir: str | None = None) -> dict:
     if len(bl) < KA.MIN_N:
         bl, bwho = [l for l in allL if isinstance(l.get("y"), list) and len(l["y"]) == 2 and _pix(l)], "전체"
     if bl:
-        op = [(l["outline"].get("px") or 0) if isinstance(l.get("outline"), dict) else 0 for l in bl]
+        op = [l["outline"]["px"] if isinstance(l.get("outline"), dict) and isinstance(l["outline"].get("px"), (int, float)) else 0 for l in bl]
         o = statistics.median(op)
         y0, y1 = statistics.median(l["y"][0] for l in bl), statistics.median(l["y"][1] for l in bl)
         C["caption.band"] = {"value": [int(round(y0 + o)), int(round(y1 - o))], "n": len(bl), "who": bwho, "bbox_med": [y0, y1], "outline_med": o,
