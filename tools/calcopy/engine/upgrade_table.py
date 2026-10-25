@@ -8,7 +8,7 @@
 판에 `upgrades` 칸이 없고 `_diff`(옛 변형판 꼴, 예 연예인레시피판)만 있으면 `_diff` 칸을 upgrades 꼴로 바꿔 읽는다(판 파일은 안 고친다).
 
 판단 주인: '나아짐' 판정 = 이 파일 BETTER(축마다 한 줄). 측정은 **새로 재지 않고 기존 주인 함수를 부른다** — 벤치·우리 같은 함수:
-  장면↔대사 = 루브릭 자 하나(scene_fit.RUBRIC_V, 표준 §11-4 ㉕) — 벤치 = fit_target(판 targets.scene_fit > channel/<slug>/_kal/상위편_목표.json) · 우리 = <doc>/장면대사.json(scene_fit.measure_render). 자 어긋나면 ✗. 줄판독 눈 fit 은 안 씀
+  장면↔대사 = 루브릭 자 하나(scene_fit.RUBRIC_V, 표준 §11-4 ㉕) — 벤치 = fit_target(판 targets.scene_fit > channel/<slug>/_kal/상위편_목표.json) · 우리 = <doc>/장면대사_계획.json(계획 점수, ㉔) + 사후 <doc>/장면대사.json(plan_frames_check 같음 × = 나빠짐). 자 어긋나면 ✗. 줄판독 눈 fit 은 안 씀
   정지 = quality_gate.freezes(우리 완성본 · 벤치 원본 — 같은 함수·같은 문턱)
   효과 밀도 = kal_analyze._stats(벤치 상위 편 편마다) · kal_analyze.match_from_render(우리, media=False) → 같은 칸(sfx.rate·transition.rate·sticker.rate·meme.rate·fx.rate.나레)
   훅 = kal_analyze.scene_cuts(첫 컷 — 벤치 원본·우리 완성본) · kal_analyze.frame0_kind(줄판독) / 썸네일 표식(관문 0초 측정)
@@ -221,37 +221,43 @@ def fit_target(C: "Ctx") -> dict | None:
             "rubric_ok": _rubric_ok(sf.get("rubric")), "rubric_src": sf.get("rubric"), "src": str(p.relative_to(ROOT)).replace("\\", "/")}
 
 
+PLAN_FILE = "장면대사_계획.json"      # <doc>/ — material_fit 계획 점수(㉔ 채점은 계획에서 한 번 · quality_gate.plan_score_report 가 보고)
+POST_FILE = "장면대사.json"           # <doc>/ — quality_gate.plan_frames_check(완성본 컷 = 계획 프레임, 점수 아님)
+
+
 def m_scene_fit(C: Ctx) -> dict:
-    """장면↔대사 = 루브릭 자 하나(scene_fit RUBRIC_V) — 벤치 = fit_target(판 targets > 상위편_목표.json) · 우리 = <doc>/장면대사.json(scene_fit.measure_render).
-    나아짐 = 평균 ≥ 목표(p75) ∧ 7 미만 ≤ 목표(p25) · 나빠짐 = 평균 < 상위 편 중앙 ∨ 미만 > 중앙. ★자(RUBRIC_V)가 어긋나면 미측정이 아니라 ✗(㉕)."""
+    """장면↔대사 = 루브릭 자 하나(scene_fit RUBRIC_V, ㉕) — 벤치 = fit_target(판 targets > 상위편_목표.json) · 우리 = <doc>/장면대사_계획.json(계획 점수, ㉔).
+    나아짐 = 평균 ≥ 목표(p75) ∧ 7 미만 ≤ 목표(p25) · 나빠짐 = 평균 < 상위 편 중앙 ∨ 미만 > 중앙.
+    ★자가 어긋나면 ✗ · ★사후 <doc>/장면대사.json(plan_frames_check) 이 '같음 ×' 면 계획 점수와 상관없이 나빠짐(완성본이 계획 컷이 아니면 계획 점수는 완성본 점수가 아니다).
+    계획 파일이 없으면 미측정."""
     from tools.calcopy.oneshot.scene_fit import RUBRIC_V
+    from tools.calcopy.hybrid import quality_gate as QG
     T = fit_target(C)
-    p = C.doc / "장면대사.json"
-    if p.exists():
-        O = _jl(p)
-        ours, orub, src = O.get("summary"), O.get("rubric"), f"{p.name}(scene_fit.measure_render — 관문이 남긴 것)"
-    elif C.allow_llm and C.has_final():
-        from tools.calcopy.oneshot import scene_fit
-        O = scene_fit.measure_render(C.work, out=p)
-        ours, orub, src = O["summary"], O.get("rubric"), "scene_fit.measure_render(지금 잼)"
-    else:
-        ours, orub, src = None, None, "장면대사.json 없음(--fit 으로 재면 Claude 호출)"
+    pp, qp = C.doc / PLAN_FILE, C.doc / POST_FILE
+    P = _jl(pp) if pp.exists() else None
+    Q = _jl(qp) if qp.exists() else None
+    same, same_msg = (QG.plan_frames_verdict(Q.get("rows") or []) if Q and Q.get("made_by") == "quality_gate.plan_frames_check" else (None, "사후 프레임 대조 없음"))
+    ours = {"mean": P.get("mean"), "below_rate": P.get("below7"), "rubric": P.get("rubric"), "plan_ok": P.get("ok"), "frames_same": same} if P else None
     if not T:
-        return _miss(f"미측정 — 벤치 목표 없음(판 targets.scene_fit·channel/{C.slug}/_kal/{TARGET_FILE} 둘 다 없음) · 우리 {src}", None, ours)
+        return _miss(f"미측정 — 벤치 목표 없음(판 targets.scene_fit·channel/{C.slug}/_kal/{TARGET_FILE} 둘 다 없음)", None, ours)
     bench = {k: T[k] for k in ("goal_mean", "goal_below", "med_mean", "med_below", "src", "rubric_src")}
-    if not ours or ours.get("mean") is None:
-        return _miss(f"미측정 — 우리 {src}", bench, ours)
-    bad = [w for w, ok in ((f"벤치 목표({T['src']}) 자 {T['rubric_src']!r}", T["rubric_ok"]), (f"우리 장면대사.json 자 {orub!r}", RUBRIC_V == orub)) if not ok]
+    if same is False:
+        return {"bench": bench, "ours": ours or {"frames_same": False}, "better": False, "worse": True,
+                "why": f"✗ 완성본 컷 ≠ 계획 프레임({POST_FILE} plan_frames_check: {same_msg}) — 계획 점수를 완성본 점수로 못 쓴다(㉔)"}
+    if not P or P.get("mean") is None or P.get("below7") is None:
+        return _miss(f"미측정 — {PLAN_FILE} {'없음(material_fit 계획 전 편)' if not P else '평균·7 미만 칸 없음'} · 사후 {same_msg}", bench, ours)
+    bad = [w for w, ok in ((f"벤치 목표({T['src']}) 자 {T['rubric_src']!r}", T["rubric_ok"]), (f"우리 {PLAN_FILE} 자 {P.get('rubric')!r}", RUBRIC_V == P.get("rubric"))) if not ok]
     if bad:
-        return {"bench": bench, "ours": {"mean": ours["mean"], "below_rate": ours.get("below_rate"), "rubric": orub}, "better": False, "worse": True,
+        return {"bench": bench, "ours": ours, "better": False, "worse": True,
                 "why": f"✗ 자 불일치(표준 §11-4 ㉕ — 미측정이 아니라 ✗): {' · '.join(bad)} ≠ {RUBRIC_V}"}
     if None in (T["goal_mean"], T["goal_below"], T["med_mean"], T["med_below"]):
         return _miss(f"미측정 — 벤치 목표 칸 빠짐({T['src']})", bench, ours)
-    better = ours["mean"] >= T["goal_mean"] and ours["below_rate"] <= T["goal_below"]
-    worse = ours["mean"] < T["med_mean"] or ours["below_rate"] > T["med_below"]
-    return {"bench": bench, "ours": {"mean": ours["mean"], "below_rate": ours["below_rate"], "judged": ours.get("judged"), "rubric": orub}, "better": better, "worse": worse,
-            "why": f"{RUBRIC_V} · 우리 평균 {ours['mean']}·7 미만 {ours['below_rate']} — 나아짐 = 평균 ≥{T['goal_mean']} ∧ 미만 ≤{T['goal_below']} · "
-                   f"나빠짐 = 평균 <{T['med_mean']} 또는 미만 >{T['med_below']}(상위 편 중앙) · 벤치 {T['src']} · 우리 {src}"}
+    m, b = float(P["mean"]), float(P["below7"])
+    better = m >= T["goal_mean"] and b <= T["goal_below"] and same is True
+    worse = m < T["med_mean"] or b > T["med_below"]
+    return {"bench": bench, "ours": ours, "better": better, "worse": worse,
+            "why": f"{RUBRIC_V} · 계획 평균 {m}·7 미만 {b} — 나아짐 = 평균 ≥{T['goal_mean']} ∧ 미만 ≤{T['goal_below']} ∧ 완성본 컷 = 계획 프레임 · "
+                   f"나빠짐 = 평균 <{T['med_mean']} 또는 미만 >{T['med_below']}(상위 편 중앙) · 사후 {same_msg} · 벤치 {T['src']}"}
 
 
 def m_cut_rhythm(C: Ctx) -> dict:
@@ -641,7 +647,7 @@ def main(argv=None) -> int:
     ap.add_argument("--base-doc", help="1차 판 완성본 doc(같은 축의 1차 값 참고 — --base-work 와 함께)"); ap.add_argument("--base-work")
     ap.add_argument("--axes", default="", help="(측정 가능한 축은 기본으로 다 잰다) 더 잴 축(쉼표) — 표준 15종 이름")
     ap.add_argument("--items-only", action="store_true", help="판 upgrades 항목 축만(L3 는 측정 가능한 축 전부가 기준 — 시험용)")
-    ap.add_argument("--fit", action="store_true", help="장면대사.json 이 없으면 scene_fit.measure_render 로 잰다(Claude 호출)")
+    ap.add_argument("--fit", action="store_true", help="(쓰지 않음 — ㉔ 이후 장면↔대사 점수는 material_fit 계획이 만든 장면대사_계획.json 을 읽는다. 옛 명령 호환용)")
     ap.add_argument("--no-write", action="store_true")
     A = ap.parse_args(argv)
     doc = Path(A.doc) if Path(A.doc).is_absolute() else ROOT / A.doc

@@ -58,7 +58,8 @@ def _episode(tmp: Path, tag: str, fit_mean: float, below: float, freeze: bool) -
     doc, work = tmp / f"doc_{tag}", tmp / f"work_{tag}"
     doc.mkdir(parents=True)
     _mp4(work / "render" / "final.mp4", freeze)
-    (doc / "장면대사.json").write_text(json.dumps({"rubric": RUBRIC_V, "summary": {"n": 8, "judged": 8, "mean": fit_mean, "below_rate": below}}), encoding="utf-8")
+    (doc / "장면대사_계획.json").write_text(json.dumps({"rubric": RUBRIC_V, "mean": fit_mean, "below7": below, "ok": True}), encoding="utf-8")   # ㉔ 계획 점수(material_fit)
+    (doc / "장면대사.json").write_text(json.dumps({"made_by": "quality_gate.plan_frames_check", "rows": [{"k": 0, "line": "N1", "sim": 0.99}]}), encoding="utf-8")   # 사후 = 계획 프레임 같음
     return doc, work
 
 
@@ -96,7 +97,7 @@ def test_axis_outside_15_rejected(tmp_path):
 def test_human_and_unmeasured_counted_apart(tmp_path):
     lr = _bench(tmp_path)
     d, w = _episode(tmp_path, "h", 7.5, 0.1, freeze=False)
-    (d / "장면대사.json").unlink()                                       # 장면대사 없음 → 미측정(나아짐으로 안 친다)
+    (d / "장면대사_계획.json").unlink()                                  # 계획 점수 없음 → 미측정(나아짐으로 안 친다)
     ups = [{"axis": "script", "what": "끝 혼잣말", "why": "사장님 컨펌", "source": "커밋"}, {"axis": "scene_fit", "what": "fit", "why": "x", "source": "x"}]
     r = U.measure(_style(lr, ups), d, w)
     assert [x["better"] for x in r["items"]] == ["human", None]
@@ -135,8 +136,8 @@ def test_scene_fit_rubric_mismatch_is_x_not_unmeasured(tmp_path):
     eye = {"scene_fit": {**TGT_FIT, "_from": "줄판독 눈 fit(7.814/0.206)"}}         # 옛 눈 점수 targets
     m = U.measure(_style(lr, ups, eye), d, w)["axes"]["scene_fit"]
     assert (m["better"], m["worse"]) == (False, True) and "자 불일치" in m["why"], m
-    sp = d / "장면대사.json"
-    sp.write_text(json.dumps({"rubric": "rubric:v0", "summary": {"mean": 7.5, "below_rate": 0.125}}), encoding="utf-8")
+    sp = d / "장면대사_계획.json"
+    sp.write_text(json.dumps({"rubric": "rubric:v0", "mean": 7.5, "below7": 0.125}), encoding="utf-8")
     m2 = U.measure(_style(lr, ups), d, w)["axes"]["scene_fit"]
     assert (m2["better"], m2["worse"]) == (False, True), m2
     m3 = U.measure(_style(lr, ups, {}), d, w)["axes"]["scene_fit"]                   # 목표 없음(targets·상위편_목표.json 둘 다) = 미측정
@@ -187,3 +188,19 @@ def test_pending_pack_evidence_only_when_requested():
     C2 = _PCtx({"name": "_x", "caption": {"_pending": {"pack": "자막 팩 없음 → 관제 235 요청"}}}, "_fixture_none")
     assert U.pending_pack(C2, "cap_look")["src"] == "판 caption._pending.pack"
     assert U.pending_pack(_PCtx({"name": "_x"}, "_fixture_none"), "cap_look") is None
+
+
+def test_scene_fit_post_frames_not_same_is_worse(tmp_path):
+    """㉔: 사후 장면대사.json(plan_frames_check) 같음 × 면 계획 점수가 좋아도 나빠짐 · 같음 ○ 이어야 나아짐 · 사후 없으면 나아짐 아님(계획만으론 완성본 확인 전)."""
+    lr = _bench(tmp_path)
+    d, w = _episode(tmp_path, "pf", 7.5, 0.125, freeze=False)
+    post = d / "장면대사.json"
+    post.write_text(json.dumps({"made_by": "quality_gate.plan_frames_check", "rows": [{"k": 0, "line": "N1", "sim": 0.99}, {"k": 1, "line": "N2", "sim": 0.6}]}), encoding="utf-8")
+    m = U.measure(_style(lr, [UPS[0]]), d, w)["axes"]["scene_fit"]
+    assert (m["better"], m["worse"]) == (False, True) and "계획 프레임" in m["why"], m
+    post.write_text(json.dumps({"made_by": "quality_gate.plan_frames_check", "rows": [{"k": 0, "line": "N1", "sim": 0.99}]}), encoding="utf-8")
+    m2 = U.measure(_style(lr, [UPS[0]]), d, w)["axes"]["scene_fit"]
+    assert (m2["better"], m2["worse"]) == (True, False), m2
+    post.unlink()
+    m3 = U.measure(_style(lr, [UPS[0]]), d, w)["axes"]["scene_fit"]
+    assert (m3["better"], m3["worse"]) == (False, False), m3
