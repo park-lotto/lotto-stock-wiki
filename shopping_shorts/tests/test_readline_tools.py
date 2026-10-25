@@ -267,7 +267,7 @@ def test_cutdet_v2_blur_start_zoom(blurzoom):
     c1 = [c for c in v1["cuts"] if abs(c["t"] - 1.0) <= 1 / FPS]
     c2 = [c for c in v2["cuts"] if abs(c["t"] - 1.0) <= 1 / FPS]
     assert c1 and "kind_v1" not in c1[0]                        # v2 없이 = 옛 출력 꼴 그대로(옛 분류가 놓치는 실물은 키치잇 대조 — 합성으로는 재현 못 함)
-    assert c2 and c2[0]["kind"] == "zoomblur" and c2[0]["blur_ratio"] <= cutdet.V2_RATIO and c2[0]["blur_rise"] >= cutdet.V2_RISE
+    assert c2 and c2[0]["kind"] == "zoomblur" and c2[0]["blur_ratio"] <= cutdet.V2["R2"] and c2[0]["blur_rise"] >= cutdet.V2["RI"]
     assert v2["cuts"][0].get("start") and v2["cuts"][0]["kind"] == "zoomblur"
     after = [s for s in v2["shots"] if s["t0"] >= 0.99]
     assert after and after[-1]["motion"] == "zoom_in", v2["shots"]
@@ -334,7 +334,7 @@ def test_kitchit_transition_v2():
     for vid in ("vSEaZ-BCELY", "Ks5kYYKAUlQ"):
         e = E.eval_video("kitchit", vid, str(_KC / f"{vid}.mp4"))
         tot += e["total"]; hit += e["hit"]; fp += e["fp"]
-    assert tot == 5 and hit == 5 and fp <= 1                       # Ks5k 4.27 cut 을 flash 로 보는 1곳(10-25 실측, 전체 8편 오탐 2/57)
+    assert tot == 5 and hit == 5 and fp <= 3                       # 10-25 LOCO 규칙(컷 묶음 끝까지 맞춤): 이 두 편 오탐 3(전체 14채널 오탐 2.9%)
 
 
 _KK = Path("C:/숏템_칼카피/kkultemnote/src")
@@ -357,7 +357,7 @@ def test_itemhome_softfocus_not_zoomblur():
     """소프트포커스 원본(아이템홈 cLx): 옛 v2 규칙(바탕을 다음 컷 넘어 잡음)은 cut 3곳을 zoomblur 로 봤다 → 0."""
     from tools.calcopy.engine.readline_tools import eval_transition as E
     e = E.eval_video("itemhome", "cLxEI_U1e_E", "C:/숏템_칼카피/itemhome/원본/cLxEI_U1e_E.mp4")
-    assert e["fp"] == 0 and e["cut_lines"] >= 10, e
+    assert not [r for r in e["rows"] if r["정답"] == "cut" and r["도구"] == "zoomblur"] and e["cut_lines"] >= 10, e   # 소프트포커스를 블러로 안 본다
 
 
 _FS = Path("C:/숏템_칼카피/foreignshowshow")
@@ -416,7 +416,20 @@ def test_cutdet_v2_same_shot_base_and_rise(tmp_path):
     _write_mp4(p2, fr)
     d = cutdet.cutdet(str(p2), 0, H, v2=True, motion=False)
     c = [x for x in d["cuts"] if abs(x["t"] - 1.0) <= 1 / FPS]
-    assert c and c[0]["kind"] == "cut" and c[0]["blur_ratio"] <= cutdet.V2_RATIO, d["cuts"]
+    assert c and c[0]["kind"] == "cut" and c[0]["blur_ratio"] <= cutdet.V2["R"], d["cuts"]
+
+
+def test_decide_rules():
+    """전환 종류 주인(cutdet.decide) 규칙 — 06 보고 꼴별: 원래 어두운 장면은 검정 아님(이븐쇼핑) · 밝은 장면 그냥 컷은 번쩍 아님 · 약한 블러는 더 확실히 풀려야."""
+    base = dict(blur_ratio=1.0, blur_rise=1.0, dark_peak=0.0, dark_around=0.0, bright_jump=0.0, bright_decay=0.0, fading=False, color_jump=0.0)
+    D = cutdet.decide
+    assert D(dict(base, dark_peak=0.9, dark_around=0.05)) == "black"
+    assert D(dict(base, dark_peak=0.8, dark_around=0.7)) == "cut"                       # 원래 어두운 샷
+    assert D(dict(base, bright_jump=60, fading=True, bright_decay=40)) == "flash"
+    assert D(dict(base, bright_jump=60, fading=True, bright_decay=2)) == "cut"          # 밝은 장면으로 그냥 컷
+    assert D(dict(base, color_jump=60)) == "flash"
+    assert D(dict(base, blur_ratio=0.2, blur_rise=2.0)) == "zoomblur"
+    assert D(dict(base, blur_ratio=0.4, blur_rise=1.5)) == "cut" and D(dict(base, blur_ratio=0.4, blur_rise=2.0)) == "zoomblur"
 
 
 def test_cutdet_v2_flash_needs_fade(tmp_path):

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """전환 종류 점검(eval_transition) — cutdet --v2 가 줄판독(눈으로 고친 정답)의 transition 칸과 얼마나 맞나.
 
-정답 = channel/<slug>/줄판독/<편>.json 줄의 transition 이 zoomblur/black/flash 인 줄(줄 t0 ±0.15초 안 컷, 영상 시작 줄은 start 사건) +
+정답 = channel/<slug>/줄판독/<편>.json 줄의 transition 이 zoomblur/black/flash 인 줄(컷 묶음 [시작−0.15, 끝+0.15] 안, 영상 시작 줄은 start 사건) +
        transition=cut 인 줄을 특수 전환으로 잘못 본 수(오탐).
 창 = 줄판독 layout.window 세로, 자막 띠(빼기) = 뜯기 layout.caption_band ±20.
 10-25 실측(키치잇 8편): 특수 전환 12/13 일치(92.3%) · cut 57줄 중 오탐 0 — 남은 1곳은 BRa 0.80 flash 를 zoomblur 로 봄(옛 분류도 같음).
@@ -38,19 +38,20 @@ def eval_video(slug: str, vid: str, mp4: str) -> dict:
     prof = json.loads(pf.read_text(encoding="utf-8")) if pf.exists() else {}
     if prof.get("cutdet_window"):
         y0, y1 = prof["cutdet_window"]
-    r = cutdet.cutdet(mp4, y0, y1, v2=True, cap_band=cb, use_color_flash=bool(prof.get("color_flash")), motion=False)
+    r = cutdet.cutdet(mp4, y0, y1, v2=True, cap_band=cb, motion=False)
     rows, hit, tot, fp, ncut = [], 0, 0, 0, 0
     for l in d["lines"]:
         g = str(l.get("transition") or "none").split("(")[0]
         if g in SPECIAL:
             tot += 1
-            near = [c for c in r["cuts"] if abs(c["t"] - l["t0"]) <= 0.15 or (l["t0"] < 0.2 and c.get("start"))]
+            near = sorted([c for c in r["cuts"] if c["t"] - 0.15 <= l["t0"] <= c.get("t_end", c["t"]) + 0.15 or (l["t0"] < 0.2 and c.get("start"))],
+                          key=lambda c: abs(c["t"] - l["t0"]))
             k = near[0]["kind"] if near else None
             hit += k == g
             rows.append({"t0": l["t0"], "정답": g, "도구": k, "옛": near[0].get("kind_v1") if near else None,
                          **({k2: near[0].get(k2) for k2 in ("blur_ratio", "blur_rise")} if near else {})})
         elif g == "cut":
-            near = [c for c in r["cuts"] if abs(c["t"] - l["t0"]) <= 0.15]
+            near = sorted([c for c in r["cuts"] if c["t"] - 0.15 <= l["t0"] <= c.get("t_end", c["t"]) + 0.15], key=lambda c: abs(c["t"] - l["t0"]))
             if near:
                 ncut += 1
                 if near[0]["kind"] != "cut":
