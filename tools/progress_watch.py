@@ -72,7 +72,7 @@ def main() -> None:
                 last[f], changed[f] = cur, now
             age = int((now - changed[f]) / 60)
             warn = " ⚠ 오래 그대로 — 멈췄는지 확인" if age >= STALL_MIN else ""
-            print(f"\033[96m[{f.parent.name if f.suffix in ('.out', '.jsonl') else f.stem}]\033[0m 마지막 변화 {age}분 전{warn}")
+            print(f"\033[96m[{f.stem}]\033[0m 마지막 변화 {age}분 전{warn}")
             for line in cur:
                 print(f"  \033[94m{line}\033[0m")
         sys.stdout.flush()
