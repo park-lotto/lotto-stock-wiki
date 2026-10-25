@@ -688,7 +688,7 @@ SLIVER_SEC = MIN_PIECE_SEC      # 컷 처음·끝 이 안에 장면 경계가 �
 
 def shot_starts(video: Path) -> list[float]:
     """영상의 장면 경계(새 샷이 시작하는 초, 30fps 격자) — '경계가 어디냐'의 주인 한 곳(오류기록 84).
-    후보 = readline_tools.cutdet(상대 문턱 max(12, 3.5×이웃 중앙값) 또는 히스토그램차), 확정 = 경계 앞뒤 프레임 상관 < 0.6(_real_cut).
+    후보 = readline_tools.cutdet(상대 문턱 max(12, 3.5×이웃 중앙값) 또는 히스토그램차), 확정 = 경계 앞뒤 프레임 상관 < CUT_CORR_MAX(_real_cut, 오류기록 85).
     snap_ss(계획)·cut_boundary_gate(관문)·quality_gate.part_slivers(완성본 검사) 모두 이걸 부른다. 파일 옆 json 캐시.
     (옛 판은 절대 문턱 max(25, 4×중앙값)이라 차 22~31 인 진짜 편집점을 놓쳤다 — 10-25 잇템로그 05·09 번쩍임.)"""
     w, h = probe(Path(video))[:2]
@@ -723,27 +723,44 @@ def snap_ss(src: Path, ss: float, dur: float, reach: float = 0.4) -> float:
     return ss
 
 
-def _real_cut(src: Path, t: float, y0: int, y1: int, w: int, corr_max: float = 0.6) -> bool:
-    """cutdet 후보가 진짜 편집점인지 확인: 경계 앞뒤 두 프레임의 회색 상관 < corr_max. 빠른 손 움직임은 차가 커도 구도가 남아 상관 0.78~0.89,
-    진짜 편집점은 -0.43~0.34 (10-25 실측 잇템로그 05·09·13 눈 대조). 못 재면 진짜로 본다(놓치는 쪽이 번쩍임을 통과시키므로)."""
+CUT_CORR_MAX = 0.86   # 경계 앞뒤 프레임 회색 상관이 이보다 낮으면 진짜 편집점(오류기록 85: 146개 오푸스 눈 판정 P 0.94·R 0.97, 0.6 이면 R 0.43)
+CUTBOUNDS_VER = 2     # 경계 판정(문턱·읽는 법)이 바뀌면 올린다 — 파일 옆 캐시 이름에 들어가 옛 판정 캐시를 안 쓴다
+
+
+def _cut_corr(src: Path, t: float, y0: int, y1: int, w: int) -> float | None:
+    """cutdet 후보 t(새 샷 첫 프레임) 앞뒤 이웃 프레임 쌍 3개(t-2→t-1, t-1→t, t→t+1) 회색 상관 중 최솟값. 못 재면 None.
+    ±1프레임을 보는 건 -ss 찾기가 한두 프레임 어긋나도 경계를 놓치지 않게(ep09 j2B 14.97 이 같은 프레임 두 장으로 1.00 이 나왔다).
+    영상 첫 3프레임 안 후보는 읽기 시작을 0 으로 당기고 쌍 위치를 그만큼 옮긴다(옛 판은 경계 뒤 프레임끼리 재서 0.95~0.99 로 놓쳤다)."""
     import numpy as np
-    H = max(16, y1 - y0)
     import subprocess
-    K = 6      # 경계 앞뒤 6프레임을 읽어 경계 쪽 이웃 쌍 3개(±1프레임) 중 가장 낮은 상관을 쓴다(-ss 찾기가 한두 프레임 어긋나도 경계를 놓치지 않게 — ep09 j2B 14.97 이 같은 프레임 두 장으로 상관 1.00 이 나왔다)
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{max(0.0, t - 3 / FPS):.4f}", "-i", str(src), "-vf",
+    H = max(16, y1 - y0)
+    k = round(t * FPS)
+    s0 = max(0, k - 3)
+    c = k - s0                       # 읽은 프레임 중 t 의 자리
+    K = c + 2
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{s0 / FPS:.4f}", "-i", str(src), "-vf",
                           f"fps={FPS},crop={w}:{H}:0:{y0},scale=90:-2,format=gray", "-frames:v", str(K), "-f", "rawvideo", "-"],
                          capture_output=True, stdin=subprocess.DEVNULL).stdout
     n = len(raw) // K
     if n < 2 or len(raw) % K:
-        return True
-    F = [np.frombuffer(raw[k * n:(k + 1) * n], np.uint8).astype(float) for k in range(K)]
-    cs = [float(np.corrcoef(a, b)[0, 1]) for a, b in list(zip(F, F[1:]))[1:4] if a.std() > 1e-6 and b.std() > 1e-6]
-    return (min(cs) < corr_max) if cs else True
+        return None
+    F = [np.frombuffer(raw[q * n:(q + 1) * n], np.uint8).astype(float) for q in range(K)]
+    cs = [float(np.corrcoef(F[q], F[q + 1])[0, 1]) for q in range(max(0, c - 2), c + 1) if F[q].std() > 1e-6 and F[q + 1].std() > 1e-6]
+    return min(cs) if cs else None
+
+
+def _real_cut(src: Path, t: float, y0: int, y1: int, w: int) -> bool:
+    """cutdet 후보가 진짜 편집점(다른 샷·각도·점프컷)인지 — 판정 주인 한 곳. 상관 < CUT_CORR_MAX.
+    10-25 오푸스 눈 판정 146개(잇템로그 05·09·13 + 키칫·꿀템노트·스타픽룸·성시경 가로 원본): 같은 배경 점프컷이 0.6~0.85 에 몰려 있어
+    옛 0.6 은 진짜 편집점 절반 이상을 놓쳤다. 같은 샷(걷기·손·자막만 바뀜·번쩍 효과)은 대부분 0.86 이상. 표본: readline_tools/fixtures/cut_corr_labels.json.
+    못 재면 진짜로 본다(놓치는 쪽이 번쩍임을 통과시키므로)."""
+    r = _cut_corr(src, t, y0, y1, w)
+    return True if r is None else r < CUT_CORR_MAX
 
 
 def _src_cuts(src: Path, y0: int, y1: int, w: int) -> list[float]:
     """원본 한 파일의 장면 경계 초(주인 = readline_tools.cutdet.cutdet — 상대 문턱 max(12, 3.5×이웃 중앙값) 또는 히스토그램차, 불러 쓴다). 파일 옆 json 캐시."""
-    cp = src.parent / f"_cutbounds_{src.stem}_{y0}_{y1}.json"
+    cp = src.parent / f"_cutbounds_{src.stem}_{y0}_{y1}_v{CUTBOUNDS_VER}.json"
     try:
         if cp.exists() and cp.stat().st_mtime >= src.stat().st_mtime:
             return jload(cp)
@@ -757,8 +774,6 @@ def _src_cuts(src: Path, y0: int, y1: int, w: int) -> list[float]:
         pass
     return ts
 
-
-MIN_PIECE_SEC = 0.4   # 컷을 원본 장면 경계로 나눈 조각이 이보다 짧으면 번쩍임
 
 
 def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
