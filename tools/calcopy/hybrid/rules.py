@@ -96,7 +96,11 @@ def title_colors_bad(S: dict, st: dict) -> list[str]:
 
 
 def shot_at(shots: list[dict], t: float) -> dict | None:
-    return next((s for s in shots or [] if s["a"] - 0.05 <= t < s["b"]), None)
+    """t 초가 든 샷. 샷 경계는 소수 셋째 자리라 t 도 셋째 자리로(1.2+1.767=2.96699… 가 앞 샷 끝으로 떨어져 max 0.0 → '샷보다 길다' 9번 반려,
+    관제 263 08 실전 10-25) · 경계 안에 든 샷이 먼저, 없을 때만 0.05초 앞 여유."""
+    t = round(float(t), 3)
+    return (next((s for s in shots or [] if s["a"] <= t < s["b"]), None)
+            or next((s for s in shots or [] if s["a"] - 0.05 <= t < s["b"]), None))
 
 
 def shot_text(shots: list[dict]) -> str:

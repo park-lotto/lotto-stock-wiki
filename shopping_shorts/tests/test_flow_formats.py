@@ -164,9 +164,10 @@ def _no_heavy(monkeypatch):
 
 
 def _old_flow():
-    """고치기 전 flow.py(git HEAD) — 이 커밋 전 판. 이미 이 커밋이 HEAD 면 HEAD~ 에서 FORMAT_STAGES 없는 판을 찾는다."""
-    for rev in ("HEAD", "HEAD~1", "HEAD~2", "HEAD~3", "HEAD~4", "HEAD~5"):
-        r = subprocess.run(["git", "-C", str(ROOT), "show", f"{rev}:tools/calcopy/hybrid/flow.py"], capture_output=True, text=True, encoding="utf-8")
+    """고치기 전 flow.py — flow.py 를 바꾼 커밋들 중 FORMAT_STAGES 가 없는 가장 최근 판(08 이전)."""
+    revs = subprocess.run(["git", "-C", str(ROOT), "log", "-n", "12", "--format=%H", "--", "tools/calcopy/hybrid/flow.py"], capture_output=True, text=True).stdout.split()
+    for rev in revs:
+        r = subprocess.run(["git", "-C", str(ROOT), "show", f"{rev}~1:tools/calcopy/hybrid/flow.py"], capture_output=True, text=True, encoding="utf-8")
         if r.returncode == 0 and "FORMAT_STAGES" not in r.stdout:
             mod = types.ModuleType("flow_old")
             mod.__file__ = str(ROOT / "tools/calcopy/hybrid/flow.py")
@@ -382,3 +383,13 @@ def test_runner_conflict_passthrough():
     from tools.calcopy.hybrid import runner_ops as R
     assert R._conflict_of({"placement": {"conflict": {"axis": "a", "cause": "tts_chars"}}})["cause"] == "tts_chars"
     assert R._conflict_of({"placement": {}}) is None
+
+
+def test_shot_at_float_boundary():
+    """실전 10-25 L2: 원음 컷 ss = 1.2 + 1.767 = 2.96699… → 앞 샷(끝 2.967)으로 잡혀 max 0.0 → 계획 반려 9번."""
+    shots = [{"i": 4, "a": 2.5, "b": 2.967}, {"i": 5, "a": 2.967, "b": 5.167}]
+    assert RU.shot_at(shots, 1.2 + 1.767)["i"] == 5
+    M = {"cuts": {"O3": [{"at": 1.767, "src": "m.mp4"}]}}
+    S = {"lines": [{"id": "O3", "kind": "orig", "src": "m.mp4", "spans": [[1.2, 3.24]]}]}
+    RU.fill_shot_max(M, S, {"m.mp4": [1080, 1920]}, {"m": shots}, 1080 / 1434)
+    assert M["cuts"]["O3"][0]["max"] > 2
