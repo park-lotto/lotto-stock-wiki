@@ -95,7 +95,7 @@
   }
  },
  "caption": {
-  "pack": "kitchit",
+  "pack": "annapick",
   "pack_default": {
    "narr.first": "cut",
    "narr.rest": "cut",
@@ -689,7 +689,7 @@
  "packs": {
   "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
   "caption": {
-   "pack": "kitchit",
+   "pack": "annapick",
    "gap": [
     "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 deal same=False) → 팩요청.md 안나픽판#1(관제 235) · 그동안 'kitchit' 임시(stand_in)",
     "벤치 등장 ['fade'](줄 5% 이상) 팩 'kitchit' 에 없음 → 팩요청.md 안나픽판#2"
