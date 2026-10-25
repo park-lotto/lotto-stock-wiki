@@ -1570,7 +1570,10 @@ def ph_plan_look(st, m, rp, u):
     M = _take_fix(st, r)
     if M is None:
         probs = [str(p) for p in (r.get("problems") or []) if str(p).strip()]
-        if probs and not over:
+        voice = [str(o) for o in over if "말속도" in str(o) or "목소리" in str(o) or "TTS" in str(o)]
+        if voice:      # 엔진이 짚은 목소리 이상(줄 말속도 ±35% 밖 — 되풀이·빠뜨림)은 재료로 못 고친다 → 문장 고치기(10-26 회원 마스크편 L8)
+            probs = voice
+        if probs and (voice or not over):
             # 장면은 맞는데 대본·목소리 쪽 문제(예: 한 줄 말속도 이상 → 문장 고치기)를 짚었다 — 재료 답 칸이 없어 멈추던 것(10-26 회원 마스크편)
             #   → 대본 단계로 되돌린다(배치 충돌과 같은 길, 시도 수는 conflict 한도가 지킨다)
             st["log"].append("계획 검수 → 대본 다시: " + " / ".join(probs)[:300])
