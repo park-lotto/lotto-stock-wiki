@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# _deprecated_2026-10-25 → tools/calcopy/hybrid/styles/썰템홈샷판.json (관제 263 지시서 07 · 표준 §3-1: 새 편은 공용 렌더러 run.py/render_bench 로. 이 파일은 옛 영상 재현용 읽기 전용 참고물 — 규칙은 판 칸·_pending.upgrade_from_hand_scripts 로 옮김)
 """방구석 3편 외관만 바꿔 재렌더(10-17): 채널명 썰템홈샷 · 코랄 머리띠 + 아이보리 바탕 · 둥근 제목 카드 · 둥근 자막 박스(SBAggroB) · 둥근 그림 칸(엔진 shot_clip 이 창 x=0·폭 1080 만 받아 위 모서리만 둥글다).
 내용·컷·나레·자막 글은 그대로 — 나레(TTS) 파일은 기존 것 그대로 쓰고(재호출 없음), 컷·자막 시각은 통과본 timeline.json 에 고정한다.
 usage: py make_썰템홈샷.py frames|render  ilii|banana|costco   (frames=틀 json 만 / render=틀+재렌더)"""

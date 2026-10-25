@@ -1,0 +1,1410 @@
+{
+ "id": "_QqLEH4qlFQ",
+ "dur": 16.091,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "와이프의 취미",
+   "colors": [
+    {
+     "word": "와이프의 취미",
+     "hex": "#7FD5E2"
+    }
+   ]
+  },
+  {
+   "text": "셀프 인테리어",
+   "colors": [
+    {
+     "word": "셀프 인테리어",
+     "hex": "#FFFFFF"
+    }
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   0,
+   1080,
+   1920
+  ],
+  "caption_band": [
+   936,
+   996
+  ],
+  "title_y": [
+   [
+    781,
+    923
+   ],
+   [
+    949,
+    1096
+   ]
+  ],
+  "title_note": "제목은 0초 1프레임 표지 카드에만",
+  "bg_hex": null,
+  "source_y": null,
+  "logo_y": null,
+  "source_hex": null,
+  "ad_label": {
+   "text": "[광고]",
+   "x": [
+    820,
+    890
+   ],
+   "y": [
+    140,
+    180
+   ],
+   "hex": "#E0E0E0",
+   "basis": "눈(f0.png)"
+  },
+  "watermark": {
+   "text": "@Home_Design_Note",
+   "x": [
+    340,
+    660
+   ],
+   "y": [
+    1310,
+    1360
+   ],
+   "alpha": "약 0.6(반투명 흰 손글씨, 눈)",
+   "basis": "눈(f0.png)"
+  }
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 0.033,
+   "speaker": "불명",
+   "text": "와이프의 취미 셀프 인테리어",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "썸네일카드(굵은 고딕 2줄 크게, 윗줄 하늘색·아랫줄 흰색, 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    781,
+    1096
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": "약 10(눈)",
+    "hex": "#000000"
+   },
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "굵은 둥근 고딕(미확정)",
+    "basis": "눈"
+   },
+   "size_px": "약 140(줄 잉크 높이, px 행 범위)",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [
+    {
+     "word": "와이프의 취미",
+     "hex": "#7FD5E2"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "화보",
+   "scene_desc": "복도 벽 코너에 불 켜진 세로 미니어처 진열장, 뒤로 걸어오는 여자",
+   "fit": 8,
+   "motion": "still",
+   "motion_signal": null,
+   "transition": "none(첫 프레임)",
+   "exit": "cut(1프레임)",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)",
+   "notes": "0초 1프레임 표지 카드 — 말하지 않음"
+  },
+  {
+   "t0": 0.033,
+   "t1": 0.733,
+   "speaker": "나레",
+   "text": "저희 와이프가",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 손글씨체·검정 외곽+번짐 그림자)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    945,
+    991
+   ],
+   "fill_hex": "#F7F3F0",
+   "outline": {
+    "px": "약 6~8(글자 밖 3~7px 고리 중앙값 #01~#16 검정 — px)",
+    "hex": "#000000",
+    "ring_median_hex_3_7px": "#110E0A",
+    "at": 0.38
+   },
+   "x": "가운데",
+   "ink_x": [
+    374,
+    683
+   ],
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "PoorStory 계열 손글씨체(기존 프리셋 preset/전체화면_가운데자막 CcPoorStory · 뜯기 fontmatch 후보 HiMelody·NanumPenScript·GamjaFlower·PoorStory 점수 0.14~0.17 낮음)",
+    "basis": "눈 대조(확대 크롭) + 기존 _hand 프리셋 — 확정 아님"
+   },
+   "size_px": "글자 잉크 높이 약 55~60px(받침 포함, px 측정) → 프리셋 size 64",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "화보",
+   "scene_desc": "복도 코너 세로 진열장(조명) + 여자가 걸어옴",
+   "fit": 7,
+   "motion": "cam",
+   "motion_signal": {
+    "div": -0.05,
+    "tr": 0.02,
+    "sd": 2.4
+   },
+   "transition": "none(같은 샷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 0.733,
+   "t1": 1.1,
+   "speaker": "나레",
+   "text": "벽코너에",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 손글씨체·검정 외곽+번짐 그림자)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    936,
+    996
+   ],
+   "fill_hex": "#F7F4F2",
+   "outline": {
+    "px": "약 6~8(글자 밖 3~7px 고리 중앙값 #01~#16 검정 — px)",
+    "hex": "#000000",
+    "ring_median_hex_3_7px": "#1A1815",
+    "at": 0.92
+   },
+   "x": "가운데",
+   "ink_x": [
+    353,
+    810
+   ],
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "PoorStory 계열 손글씨체(기존 프리셋 preset/전체화면_가운데자막 CcPoorStory · 뜯기 fontmatch 후보 HiMelody·NanumPenScript·GamjaFlower·PoorStory 점수 0.14~0.17 낮음)",
+    "basis": "눈 대조(확대 크롭) + 기존 _hand 프리셋 — 확정 아님"
+   },
+   "size_px": "글자 잉크 높이 약 55~60px(받침 포함, px 측정) → 프리셋 size 64",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "냉장고 옆 벽 코너의 세로 진열장",
+   "fit": 8,
+   "motion": "cam",
+   "motion_signal": {
+    "div": 0.28,
+    "tr": 0.28,
+    "sd": 3.0
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)",
+   "_px_raw": {
+    "y": [
+     927,
+     1011
+    ],
+    "fill": "#F4F2EE"
+   },
+   "notes": "y·채움은 밝은 배경 섞임으로 원값 버리고 같은 편 깨끗한 줄 대표값(_px_raw 에 원값)"
+  },
+  {
+   "t0": 1.1,
+   "t1": 2.1,
+   "speaker": "나레",
+   "text": "이런 걸 해놨는데",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 손글씨체·검정 외곽+번짐 그림자)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    934,
+    994
+   ],
+   "fill_hex": "#F7F4F2",
+   "outline": {
+    "px": "약 6~8(글자 밖 3~7px 고리 중앙값 #01~#16 검정 — px)",
+    "hex": "#000000",
+    "ring_median_hex_3_7px": "#14120F",
+    "at": 1.6
+   },
+   "x": "가운데",
+   "ink_x": [
+    350,
+    862
+   ],
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "PoorStory 계열 손글씨체(기존 프리셋 preset/전체화면_가운데자막 CcPoorStory · 뜯기 fontmatch 후보 HiMelody·NanumPenScript·GamjaFlower·PoorStory 점수 0.14~0.17 낮음)",
+    "basis": "눈 대조(확대 크롭) + 기존 _hand 프리셋 — 확정 아님"
+   },
+   "size_px": "글자 잉크 높이 약 55~60px(받침 포함, px 측정) → 프리셋 size 64",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "같은 샷 — 진열장을 위로 훑음",
+   "fit": 8,
+   "motion": "cam",
+   "motion_signal": {
+    "div": 0.37,
+    "tr": 0.25,
+    "sd": 3.7
+   },
+   "transition": "none(같은 샷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 2.1,
+   "t1": 2.733,
+   "speaker": "나레",
+   "text": "보는 사람마다",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 손글씨체·검정 외곽+번짐 그림자)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    936,
+    996
+   ],
+   "fill_hex": "#F7F4F2",
+   "outline": {
+    "px": "약 6~8(글자 밖 3~7px 고리 중앙값 #01~#16 검정 — px)",
+    "hex": "#000000",
+    "ring_median_hex_3_7px": "#211C18",
+    "at": 2.42
+   },
+   "x": "가운데",
+   "ink_x": [
+    114,
+    1037
+   ],
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "PoorStory 계열 손글씨체(기존 프리셋 preset/전체화면_가운데자막 CcPoorStory · 뜯기 fontmatch 후보 HiMelody·NanumPenScript·GamjaFlower·PoorStory 점수 0.14~0.17 낮음)",
+    "basis": "눈 대조(확대 크롭) + 기존 _hand 프리셋 — 확정 아님"
+   },
+   "size_px": "글자 잉크 높이 약 55~60px(받침 포함, px 측정) → 프리셋 size 64",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "미니어처 방 안(인형·식탁) 근접",
+   "fit": 3,
+   "motion": "cam",
+   "motion_signal": {
+    "div": 0.07,
+    "tr": 0.36,
+    "sd": 5.4
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)",
+   "_px_raw": {
+    "y": [
+     920,
+     1011
+    ],
+    "fill": "#E1BFB6"
+   },
+   "notes": "y·채움은 밝은 배경 섞임으로 원값 버리고 같은 편 깨끗한 줄 대표값(_px_raw 에 원값)"
+  },
+  {
+   "t0": 2.733,
+   "t1": 3.9,
+   "speaker": "나레",
+   "text": "깜짝 놀라더라고요",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 손글씨체·검정 외곽+번짐 그림자)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    936,
+    996
+   ],
+   "fill_hex": "#F7F4F2",
+   "outline": {
+    "px": "약 6~8(글자 밖 3~7px 고리 중앙값 #01~#16 검정 — px)",
+    "hex": "#000000",
+    "ring_median_hex_3_7px": "#1A130E",
+    "at": 3.32
+   },
+   "x": "가운데",
+   "ink_x": [
+    328,
+    848
+   ],
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "PoorStory 계열 손글씨체(기존 프리셋 preset/전체화면_가운데자막 CcPoorStory · 뜯기 fontmatch 후보 HiMelody·NanumPenScript·GamjaFlower·PoorStory 점수 0.14~0.17 낮음)",
+    "basis": "눈 대조(확대 크롭) + 기존 _hand 프리셋 — 확정 아님"
+   },
+   "size_px": "글자 잉크 높이 약 55~60px(받침 포함, px 측정) → 프리셋 size 64",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "미니어처 주방 근접(곰 인형)",
+   "fit": 3,
+   "motion": "cam",
+   "motion_signal": {
+    "div": 0.13,
+    "tr": 1.16,
+    "sd": 13.5
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)",
+   "_px_raw": {
+    "y": [
+     939,
+     1010
+    ],
+    "fill": "#F9F4EF"
+   },
+   "notes": "y·채움은 밝은 배경 섞임으로 원값 버리고 같은 편 깨끗한 줄 대표값(_px_raw 에 원값)"
+  },
+  {
+   "t0": 3.9,
+   "t1": 4.2,
+   "speaker": "나레",
+   "text": "평소에",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 손글씨체·검정 외곽+번짐 그림자)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    936,
+    996
+   ],
+   "fill_hex": "#F7F4F2",
+   "outline": {
+    "px": "약 6~8(글자 밖 3~7px 고리 중앙값 #01~#16 검정 — px)",
+    "hex": "#000000",
+    "ring_median_hex_3_7px": "#160F0D",
+    "at": 4.05
+   },
+   "x": "가운데",
+   "ink_x": [
+    70,
+    1079
+   ],
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "PoorStory 계열 손글씨체(기존 프리셋 preset/전체화면_가운데자막 CcPoorStory · 뜯기 fontmatch 후보 HiMelody·NanumPenScript·GamjaFlower·PoorStory 점수 0.14~0.17 낮음)",
+    "basis": "눈 대조(확대 크롭) + 기존 _hand 프리셋 — 확정 아님"
+   },
+   "size_px": "글자 잉크 높이 약 55~60px(받침 포함, px 측정) → 프리셋 size 64",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "손바닥 위 미니어처 상자",
+   "fit": 4,
+   "motion": "cam",
+   "motion_signal": {
+    "div": 0.75,
+    "tr": 0.76,
+    "sd": 5.6
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)",
+   "_px_raw": {
+    "y": [
+     928,
+     1009
+    ],
+    "fill": "#E7E2DE"
+   },
+   "notes": "y·채움은 밝은 배경 섞임으로 원값 버리고 같은 편 깨끗한 줄 대표값(_px_raw 에 원값)"
+  },
+  {
+   "t0": 4.2,
+   "t1": 5.733,
+   "speaker": "나레",
+   "text": "rolife 미니어처 하우스 만들기를",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 손글씨체·검정 외곽+번짐 그림자)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    935,
+    996
+   ],
+   "fill_hex": "#F9F4F2",
+   "outline": {
+    "px": "약 6~8(글자 밖 3~7px 고리 중앙값 #01~#16 검정 — px)",
+    "hex": "#000000",
+    "ring_median_hex_3_7px": "#0D0A07",
+    "at": 5.0
+   },
+   "x": "가운데",
+   "ink_x": [
+    182,
+    893
+   ],
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "PoorStory 계열 손글씨체(기존 프리셋 preset/전체화면_가운데자막 CcPoorStory · 뜯기 fontmatch 후보 HiMelody·NanumPenScript·GamjaFlower·PoorStory 점수 0.14~0.17 낮음)",
+    "basis": "눈 대조(확대 크롭) + 기존 _hand 프리셋 — 확정 아님"
+   },
+   "size_px": "글자 잉크 높이 약 55~60px(받침 포함, px 측정) → 프리셋 size 64",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    4.533
+   ],
+   "scene": "손·제품 근접",
+   "scene_desc": "손으로 미니어처 조립 → 바닥에 앉아 키트 조립하는 여자",
+   "fit": 9,
+   "motion": "still",
+   "motion_signal": {
+    "div": -0.01,
+    "tr": 0.02,
+    "sd": 0.3
+   },
+   "transition": "none(같은 샷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 5.733,
+   "t1": 6.633,
+   "speaker": "나레",
+   "text": "너무 좋아하는데",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 손글씨체·검정 외곽+번짐 그림자)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    937,
+    996
+   ],
+   "fill_hex": "#F8F6F4",
+   "outline": {
+    "px": "약 6~8(글자 밖 3~7px 고리 중앙값 #01~#16 검정 — px)",
+    "hex": "#000000",
+    "ring_median_hex_3_7px": "#12110F",
+    "at": 6.18
+   },
+   "x": "가운데",
+   "ink_x": [
+    365,
+    714
+   ],
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "PoorStory 계열 손글씨체(기존 프리셋 preset/전체화면_가운데자막 CcPoorStory · 뜯기 fontmatch 후보 HiMelody·NanumPenScript·GamjaFlower·PoorStory 점수 0.14~0.17 낮음)",
+    "basis": "눈 대조(확대 크롭) + 기존 _hand 프리셋 — 확정 아님"
+   },
+   "size_px": "글자 잉크 높이 약 55~60px(받침 포함, px 측정) → 프리셋 size 64",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "바닥에 놓인 완성 미니어처 집들 + 진열장",
+   "fit": 7,
+   "motion": "cam",
+   "motion_signal": {
+    "div": -0.83,
+    "tr": 0.86,
+    "sd": 10.0
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 6.633,
+   "t1": 7.433,
+   "speaker": "나레",
+   "text": "그게 세로로 쌓으면",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 손글씨체·검정 외곽+번짐 그림자)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    936,
+    996
+   ],
+   "fill_hex": "#F7F4F2",
+   "outline": {
+    "px": "약 6~8(글자 밖 3~7px 고리 중앙값 #01~#16 검정 — px)",
+    "hex": "#000000",
+    "ring_median_hex_3_7px": "#151213",
+    "at": 7.03
+   },
+   "x": "가운데",
+   "ink_x": [
+    256,
+    752
+   ],
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "PoorStory 계열 손글씨체(기존 프리셋 preset/전체화면_가운데자막 CcPoorStory · 뜯기 fontmatch 후보 HiMelody·NanumPenScript·GamjaFlower·PoorStory 점수 0.14~0.17 낮음)",
+    "basis": "눈 대조(확대 크롭) + 기존 _hand 프리셋 — 확정 아님"
+   },
+   "size_px": "글자 잉크 높이 약 55~60px(받침 포함, px 측정) → 프리셋 size 64",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "여자가 진열장 칸에 미니어처를 꽂아 쌓음",
+   "fit": 9,
+   "motion": "still",
+   "motion_signal": {
+    "div": -0.06,
+    "tr": 0.08,
+    "sd": 1.2
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)",
+   "_px_raw": {
+    "y": [
+     920,
+     1011
+    ],
+    "fill": "#E6E5E7"
+   },
+   "notes": "y·채움은 밝은 배경 섞임으로 원값 버리고 같은 편 깨끗한 줄 대표값(_px_raw 에 원값)"
+  },
+  {
+   "t0": 7.433,
+   "t1": 8.467,
+   "speaker": "나레",
+   "text": "이렇게 할 수 있다면서",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 손글씨체·검정 외곽+번짐 그림자)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    934,
+    997
+   ],
+   "fill_hex": "#F8F4F0",
+   "outline": {
+    "px": "약 6~8(글자 밖 3~7px 고리 중앙값 #01~#16 검정 — px)",
+    "hex": "#000000",
+    "ring_median_hex_3_7px": "#1A1611",
+    "at": 7.95
+   },
+   "x": "가운데",
+   "ink_x": [
+    290,
+    789
+   ],
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "PoorStory 계열 손글씨체(기존 프리셋 preset/전체화면_가운데자막 CcPoorStory · 뜯기 fontmatch 후보 HiMelody·NanumPenScript·GamjaFlower·PoorStory 점수 0.14~0.17 낮음)",
+    "basis": "눈 대조(확대 크롭) + 기존 _hand 프리셋 — 확정 아님"
+   },
+   "size_px": "글자 잉크 높이 약 55~60px(받침 포함, px 측정) → 프리셋 size 64",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "미니어처 방 속 인형 근접",
+   "fit": 6,
+   "motion": "cam",
+   "motion_signal": {
+    "div": -0.66,
+    "tr": 2.92,
+    "sd": 20.9
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 8.467,
+   "t1": 9.867,
+   "speaker": "나레",
+   "text": "조명까지 달아서 설치해두니까",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 손글씨체·검정 외곽+번짐 그림자)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    935,
+    995
+   ],
+   "fill_hex": "#F6F4F2",
+   "outline": {
+    "px": "약 6~8(글자 밖 3~7px 고리 중앙값 #01~#16 검정 — px)",
+    "hex": "#000000",
+    "ring_median_hex_3_7px": "#0B0906",
+    "at": 9.17
+   },
+   "x": "가운데",
+   "ink_x": [
+    195,
+    883
+   ],
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "PoorStory 계열 손글씨체(기존 프리셋 preset/전체화면_가운데자막 CcPoorStory · 뜯기 fontmatch 후보 HiMelody·NanumPenScript·GamjaFlower·PoorStory 점수 0.14~0.17 낮음)",
+    "basis": "눈 대조(확대 크롭) + 기존 _hand 프리셋 — 확정 아님"
+   },
+   "size_px": "글자 잉크 높이 약 55~60px(받침 포함, px 측정) → 프리셋 size 64",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "화보",
+   "scene_desc": "조명 켜진 세로 진열장 전체(어두운 집)",
+   "fit": 9,
+   "motion": "still",
+   "motion_signal": {
+    "div": 0.16,
+    "tr": 0.05,
+    "sd": 0.9
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 9.867,
+   "t1": 10.967,
+   "speaker": "나레",
+   "text": "너무 예쁘더라고요",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 손글씨체·검정 외곽+번짐 그림자)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    940,
+    991
+   ],
+   "fill_hex": "#F6F4F2",
+   "outline": {
+    "px": "약 6~8(글자 밖 3~7px 고리 중앙값 #01~#16 검정 — px)",
+    "hex": "#000000",
+    "ring_median_hex_3_7px": "#13110F",
+    "at": 10.42
+   },
+   "x": "가운데",
+   "ink_x": [
+    343,
+    736
+   ],
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "PoorStory 계열 손글씨체(기존 프리셋 preset/전체화면_가운데자막 CcPoorStory · 뜯기 fontmatch 후보 HiMelody·NanumPenScript·GamjaFlower·PoorStory 점수 0.14~0.17 낮음)",
+    "basis": "눈 대조(확대 크롭) + 기존 _hand 프리셋 — 확정 아님"
+   },
+   "size_px": "글자 잉크 높이 약 55~60px(받침 포함, px 측정) → 프리셋 size 64",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "화보",
+   "scene_desc": "해바라기 그림 복도의 조명 진열장",
+   "fit": 7,
+   "motion": "still",
+   "motion_signal": {
+    "div": 0.14,
+    "tr": 0.07,
+    "sd": 1.1
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 10.967,
+   "t1": 11.633,
+   "speaker": "나레",
+   "text": "이미 해외에서는",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 손글씨체·검정 외곽+번짐 그림자)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    936,
+    996
+   ],
+   "fill_hex": "#F7F4F2",
+   "outline": {
+    "px": "약 6~8(글자 밖 3~7px 고리 중앙값 #01~#16 검정 — px)",
+    "hex": "#000000",
+    "ring_median_hex_3_7px": "#120F0C",
+    "at": 11.3
+   },
+   "x": "가운데",
+   "ink_x": [
+    364,
+    1022
+   ],
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "PoorStory 계열 손글씨체(기존 프리셋 preset/전체화면_가운데자막 CcPoorStory · 뜯기 fontmatch 후보 HiMelody·NanumPenScript·GamjaFlower·PoorStory 점수 0.14~0.17 낮음)",
+    "basis": "눈 대조(확대 크롭) + 기존 _hand 프리셋 — 확정 아님"
+   },
+   "size_px": "글자 잉크 높이 약 55~60px(받침 포함, px 측정) → 프리셋 size 64",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "화보",
+   "scene_desc": "검은 벽면 대형 미니어처 진열 + 아이",
+   "fit": 6,
+   "motion": "cam",
+   "motion_signal": {
+    "div": 0.35,
+    "tr": 0.16,
+    "sd": 2.8
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)",
+   "_px_raw": {
+    "y": [
+     920,
+     992
+    ],
+    "fill": "#EFECE9"
+   },
+   "notes": "y·채움은 밝은 배경 섞임으로 원값 버리고 같은 편 깨끗한 줄 대표값(_px_raw 에 원값)"
+  },
+  {
+   "t0": 11.633,
+   "t1": 12.467,
+   "speaker": "나레",
+   "text": "취미생활도 하고",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 손글씨체·검정 외곽+번짐 그림자)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    936,
+    996
+   ],
+   "fill_hex": "#F7F4F2",
+   "outline": {
+    "px": "약 6~8(글자 밖 3~7px 고리 중앙값 #01~#16 검정 — px)",
+    "hex": "#000000",
+    "ring_median_hex_3_7px": "#0E0D0A",
+    "at": 12.05
+   },
+   "x": "가운데",
+   "ink_x": [
+    363,
+    1057
+   ],
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "PoorStory 계열 손글씨체(기존 프리셋 preset/전체화면_가운데자막 CcPoorStory · 뜯기 fontmatch 후보 HiMelody·NanumPenScript·GamjaFlower·PoorStory 점수 0.14~0.17 낮음)",
+    "basis": "눈 대조(확대 크롭) + 기존 _hand 프리셋 — 확정 아님"
+   },
+   "size_px": "글자 잉크 높이 약 55~60px(받침 포함, px 측정) → 프리셋 size 64",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "화보",
+   "scene_desc": "꽃병 뒤 대형 진열벽(다른 집)",
+   "fit": 5,
+   "motion": "cam",
+   "motion_signal": {
+    "div": -0.2,
+    "tr": 0.8,
+    "sd": 10.0
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)",
+   "_px_raw": {
+    "y": [
+     920,
+     1011
+    ],
+    "fill": "#E5E0E0"
+   },
+   "notes": "y·채움은 밝은 배경 섞임으로 원값 버리고 같은 편 깨끗한 줄 대표값(_px_raw 에 원값)"
+  },
+  {
+   "t0": 12.467,
+   "t1": 12.933,
+   "speaker": "나레",
+   "text": "집 꾸미는",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 손글씨체·검정 외곽+번짐 그림자)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    936,
+    996
+   ],
+   "fill_hex": "#F7F4F2",
+   "outline": {
+    "px": "약 6~8(글자 밖 3~7px 고리 중앙값 #01~#16 검정 — px)",
+    "hex": "#000000",
+    "ring_median_hex_3_7px": "#18110D",
+    "at": 12.7
+   },
+   "x": "가운데",
+   "ink_x": [
+    247,
+    967
+   ],
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "PoorStory 계열 손글씨체(기존 프리셋 preset/전체화면_가운데자막 CcPoorStory · 뜯기 fontmatch 후보 HiMelody·NanumPenScript·GamjaFlower·PoorStory 점수 0.14~0.17 낮음)",
+    "basis": "눈 대조(확대 크롭) + 기존 _hand 프리셋 — 확정 아님"
+   },
+   "size_px": "글자 잉크 높이 약 55~60px(받침 포함, px 측정) → 프리셋 size 64",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "화보",
+   "scene_desc": "여러 층 미니어처 건물 진열 근접",
+   "fit": 6,
+   "motion": "zoom_in",
+   "motion_signal": {
+    "div": 1.54,
+    "tr": 0.37,
+    "sd": 11.2
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)",
+   "_px_raw": {
+    "y": [
+     920,
+     992
+    ],
+    "fill": "#F4EDE9"
+   },
+   "notes": "y·채움은 밝은 배경 섞임으로 원값 버리고 같은 편 깨끗한 줄 대표값(_px_raw 에 원값)"
+  },
+  {
+   "t0": 12.933,
+   "t1": 14.2,
+   "speaker": "나레",
+   "text": "방법으로도 유명하다는데",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 손글씨체·검정 외곽+번짐 그림자)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    936,
+    995
+   ],
+   "fill_hex": "#F5F0EE",
+   "outline": {
+    "px": "약 6~8(글자 밖 3~7px 고리 중앙값 #01~#16 검정 — px)",
+    "hex": "#000000",
+    "ring_median_hex_3_7px": "#0D0906",
+    "at": 13.5
+   },
+   "x": "가운데",
+   "ink_x": [
+    271,
+    808
+   ],
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "PoorStory 계열 손글씨체(기존 프리셋 preset/전체화면_가운데자막 CcPoorStory · 뜯기 fontmatch 후보 HiMelody·NanumPenScript·GamjaFlower·PoorStory 점수 0.14~0.17 낮음)",
+    "basis": "눈 대조(확대 크롭) + 기존 _hand 프리셋 — 확정 아님"
+   },
+   "size_px": "글자 잉크 높이 약 55~60px(받침 포함, px 측정) → 프리셋 size 64",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "화보",
+   "scene_desc": "여러 층 미니어처 건물 진열을 훑음",
+   "fit": 6,
+   "motion": "zoom_in",
+   "motion_signal": {
+    "div": 1.14,
+    "tr": 0.92,
+    "sd": 14.4
+   },
+   "transition": "none(같은 샷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 14.2,
+   "t1": 15.233,
+   "speaker": "나레",
+   "text": "보니까 너무 예뻐서",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 손글씨체·검정 외곽+번짐 그림자)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    936,
+    996
+   ],
+   "fill_hex": "#F7F4F2",
+   "outline": {
+    "px": "약 6~8(글자 밖 3~7px 고리 중앙값 #01~#16 검정 — px)",
+    "hex": "#000000",
+    "ring_median_hex_3_7px": "#110D0C",
+    "at": 14.72
+   },
+   "x": "가운데",
+   "ink_x": [
+    324,
+    1030
+   ],
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "PoorStory 계열 손글씨체(기존 프리셋 preset/전체화면_가운데자막 CcPoorStory · 뜯기 fontmatch 후보 HiMelody·NanumPenScript·GamjaFlower·PoorStory 점수 0.14~0.17 낮음)",
+    "basis": "눈 대조(확대 크롭) + 기존 _hand 프리셋 — 확정 아님"
+   },
+   "size_px": "글자 잉크 높이 약 55~60px(받침 포함, px 측정) → 프리셋 size 64",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "화보",
+   "scene_desc": "진열장 옆에 앉아 간식 먹는 여자",
+   "fit": 6,
+   "motion": "still",
+   "motion_signal": {
+    "div": 0.02,
+    "tr": 0.01,
+    "sd": 0.3
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)",
+   "_px_raw": {
+    "y": [
+     940,
+     1011
+    ],
+    "fill": "#E8E8E7"
+   },
+   "notes": "y·채움은 밝은 배경 섞임으로 원값 버리고 같은 편 깨끗한 줄 대표값(_px_raw 에 원값)"
+  },
+  {
+   "t0": 15.233,
+   "t1": 15.9,
+   "speaker": "나레",
+   "text": "대만족이에요",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 손글씨체·검정 외곽+번짐 그림자)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    936,
+    996
+   ],
+   "fill_hex": "#F7F4F2",
+   "outline": {
+    "px": "약 6~8(글자 밖 3~7px 고리 중앙값 #01~#16 검정 — px)",
+    "hex": "#000000",
+    "ring_median_hex_3_7px": "#130F0C",
+    "at": 15.5
+   },
+   "x": "가운데",
+   "ink_x": [
+    0,
+    721
+   ],
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "PoorStory 계열 손글씨체(기존 프리셋 preset/전체화면_가운데자막 CcPoorStory · 뜯기 fontmatch 후보 HiMelody·NanumPenScript·GamjaFlower·PoorStory 점수 0.14~0.17 낮음)",
+    "basis": "눈 대조(확대 크롭) + 기존 _hand 프리셋 — 확정 아님"
+   },
+   "size_px": "글자 잉크 높이 약 55~60px(받침 포함, px 측정) → 프리셋 size 64",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타(신호만 — 5~10kHz 고립 솟음 broad, 26.3dB, 귀 미확인)",
+    "t": 15.8,
+    "basis": "파형 솟음"
+   },
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "미니어처 주방 방 근접",
+   "fit": 5,
+   "motion": "cam",
+   "motion_signal": {
+    "div": 0.43,
+    "tr": 0.71,
+    "sd": 12.0
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)",
+   "_px_raw": {
+    "y": [
+     938,
+     1011
+    ],
+    "fill": "#EDEAE6"
+   },
+   "notes": "y·채움은 밝은 배경 섞임으로 원값 버리고 같은 편 깨끗한 줄 대표값(_px_raw 에 원값)"
+  }
+ ],
+ "no_caption": [
+  [
+   15.9,
+   16.091
+  ]
+ ],
+ "beats": "표지(0~0.03 '와이프의 취미 셀프 인테리어', 윗줄 하늘색) → 훅(0.03~3.9 와이프가 벽 코너에 해놓은 것·보는 사람마다 놀람) → 도입(3.9~6.6 평소 rolife 미니어처 만들기 좋아함) → 공개(6.6~8.5 세로로 쌓으면 이렇게) → 효과(8.5~11.0 조명·예쁨) → 증거(11.0~14.2 해외에서 유명하다는데) → 끝(14.2~15.9 대만족, CTA 없음)",
+ "narr_share": "나레 줄 18/19, 나레 15.87초/16.091초",
+ "notes": [
+  "자막 한 컷 한 덩어리(컷 15개 중 14개가 자막 교체와 ±0.07초). 컷 4.53 은 한 덩어리 안(rolife… 줄).",
+  "본 자막 전부 instant(0.1초 띠). 강조·스티커 0. CTA 없음(이 편은 끝에 댓글 유도 없음).",
+  "효과음: 귀로 못 들음 — 신호(고립 솟음) 15.8초 1개뿐, 종류 미확인.",
+  "글꼴 확정 안 됨(DCXQ 와 같은 손글씨체로 보임 — 눈)."
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "표지 카드 1프레임: 복도 코너 조명 진열장 + 큰 글 2줄(하늘/흰) + [광고] + 워터마크",
+  "face_frac": "0(작은 인물 뒤쪽, 얼굴 비중 없음)",
+  "text": "와이프의 취미 셀프 인테리어"
+ },
+ "cuts_measured": [
+  0.733,
+  2.1,
+  2.733,
+  3.9,
+  4.533,
+  5.733,
+  6.633,
+  7.433,
+  8.467,
+  9.867,
+  10.967,
+  11.633,
+  12.467,
+  14.2,
+  15.233
+ ],
+ "sfx_candidates": [
+  {
+   "t": 15.8,
+   "kind": "broad",
+   "db": 26.3
+  }
+ ],
+ "_made_by": "오푸스 실행자 줄판독(눈: 0.1초 자막띠·2fps 시트·원본 프레임 / 픽셀: 30fps 잉크·장면차·광류·채움 hex / 신호: sfx_events.detect) 2026-10-25 (관제 263 지시서 06)",
+ "_tools": "scratchpad hdn/measure.py·seg.py·strip.py·px.py·build.py — 그림 C:/숏템_칼카피/homedesignnote/work/lr_<id>/"
+}

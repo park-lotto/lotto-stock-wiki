@@ -1,0 +1,875 @@
+{
+ "name": "샥탬판",
+ "renderer": "bench",
+ "thumb_card_face": false,
+ "_thumb_card_face": "연예인 채널 아님 — 카드 얼굴 관문 끔(판마다 명시 필수, styles.REQUIRED)",
+ "_note": "해외쇼츠(@foreignshowshow) 샤크탱크 쇼핑 편 칼카피 1차 판 — 우리 브랜드 샥탬스토리(브랜드.json). 근거 channel/foreignshowshow/{스타일분석.md(06, 10-25), 줄판독/ 6편 208줄, _kal/규칙빈도.json·sfx_events.json·sfx_거름.json} + 프리셋 preset/샤크탱크_검정띠2줄. 손 스크립트 = tools/calcopy/shark/render.py·fx_place.py + 편마다 make_plan.py(샥탬 세션 독자 — 읽기만, 표식 안 붙임). 값 출처 tools/calcopy/shark/rules.json(샥탬 세션 정본)은 읽어서 옮김",
+ "bench": {
+  "ko": "해외쇼츠",
+  "channel": "foreignshowshow",
+  "analysis": "channel/foreignshowshow/스타일분석.md",
+  "line_reads": "channel/foreignshowshow/줄판독",
+  "src_dir": "C:/숏템_칼카피/foreignshowshow/src",
+  "sfx_events": "channel/foreignshowshow/_kal/sfx_events.json",
+  "palette": "channel/foreignshowshow/팔레트.json",
+  "design": "tools/calcopy/shark/rules.json"
+ },
+ "voice": {
+  "name": "지훈",
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "candidates": [
+   "박창수"
+  ],
+  "why": "벤치 나레 한국어 TTS 남성 꼴(앞 세션 지훈 f0 116~129Hz 최근접 — 원리 §8) · 지훈 = 사장님 10-19 확정(preset/샤크탱크_검정띠2줄/defaults.json, 샥탬스토리_시작.md:16,28)"
+ },
+ "cps_target": 7.35,
+ "_why_cps_target": "벤치 6편 나레 자/초 6.8~7.79(중앙 7.35, 규칙빈도.json episodes.narr_cps)",
+ "bgm": {
+  "id": "sweets",
+  "db_below_voice": 6.5,
+  "duck_orig_db": 0.0,
+  "duck_narr_db": 0.0,
+  "fade_out": 0.03,
+  "candidates": [
+   "sweets",
+   "qiuqiu"
+  ],
+  "why": "BGM 깔림 6/6: 쉼 바닥 −12.1~−15.9 vs 중앙 −6.8~−8.2dB → 5~8dB 밑(가운데 6.5) · 곡 식별 신뢰 낮음 — bgm_fp 최근접 sweets 3편·qiuqiu 3편(스타일분석 §7) → sweets(defaults.json·shark/render.py:55) · 덕킹 근거 없음 0 · fade_out 0.03 = 벤치 6편 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.034초(0.014~0.094 — 페이드 없음, handconst.py foreignshowshow bgm.fade_out · 같은 자 db_below 중앙 7.9 = 판 6.5 와 같은 결)"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "tools/calcopy/shark/rules.json loudness(사장님 10-19 '음량이 너무커' → −14·TP ≤ −1.5) · 벤치 −7.1~−8.2 LUFS 는 따라가지 않음"
+ },
+ "length": {
+  "min": 36.5,
+  "max": 60.5,
+  "why": "벤치 6편 36.53~60.45초(규칙빈도.json episodes.dur)"
+ },
+ "timing": {
+  "gap": 0.06,
+  "tail": 0.16,
+  "why": "벤치 6편 원본 소리 실측(handconst.py foreignshowshow → _kal/손상수_실측.json): gap 0.06 = 줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙(n=108, p25 0.03·p75 0.1 — 경계 ±0.15초 창 안 가장 긴 쉼, 쉼 문턱 = 편별 (말 p50+p5)/2 · 줄이 문장 중간에서 끊겨 이어짐 — 스타일분석 §6) · tail 0.16 = 마지막 말 소리 끝→영상 끝 편 중앙 0.164초(0.074·0.034·0.234·5.734·0.094·14.054 — 로컬 위스퍼 마지막 낱말 끝 p≥0.4; 5.7·14.1 두 편은 자막 꼬리 0.03초라 위스퍼가 끝 말을 놓친 것으로 보임(확인 안 함) — 중앙값엔 영향 없음)"
+ },
+ "frame": {
+  "kind": "window",
+  "_from": "frame_import.py ← calcopy_frame v1 source=QMJtjJz4M6w frame=only span=None",
+  "bg": [
+   0,
+   0,
+   0
+  ],
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "title": [
+   {
+    "font": "GmarketSansBold.otf",
+    "px": 104.9,
+    "center": 257.5,
+    "color": "#FFF922",
+    "max_w": 1000
+   },
+   {
+    "font": "GmarketSansBold.otf",
+    "px": 104.9,
+    "center": 362.5,
+    "color": "#FFFFFF",
+    "max_w": 1000
+   }
+  ],
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "why": "frame_import.py ← channel/foreignshowshow/preset/샤크탱크_검정띠2줄/frame.json(QMJ 측정, manifest default) + 줄판독 QMJ layout 픽셀: 검정 · 창 [0,434,1080,1052](6/6 같은 자리, 스타일분석 §2) · 제목 2줄 GmarketSansBold(fontmatch 1위 6/6) 1줄 연노랑 #FFFF83(QMJ)·2줄 흰 · 잉크 1줄 212~304(가운데 258)·2줄 318~407(가운데 362.5) — 글자 수 따라 크기가 변함(줄당 12자 넘으면 100px 밑, 원리 §2-1 → max_w 1000 이 줄임) · 로고·출처·워터마크 0/6 · px 117.05→104.9 = QMJ 5초 1줄 잉크 높이 95 vs 우리 106 · 1줄 색 #FFF922 = kal_analyze framecmp 채움(관문 자, QMJ 5초 — 스타일분석 표의 #FFFF83 은 다른 자)",
+  "_pending": {
+   "title_ls": "['title.letter_spacing=0.4', \"caption.enter={'kind': 'none', 'ms': 300}\"]"
+  }
+ },
+ "caption": {
+  "pack": "clean",
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 20.9,
+  "chunk_max_chars": 12,
+  "band": [
+   895,
+   1022
+  ],
+  "why": "창 가운데 1줄 잉크 y929~988·2줄 895~953/963~1022(shark/rules.json caption · 스타일분석 §1) → band 895~1022 · GmarketSansBold 68 흰 #FDFAFA+그림자(dx3·dy3·흐림6)·형광 7색 · 조각 자수 중앙 9(최대 22) → 12 · 타자 5/208 — typing_cps 20.9 = 그 5줄 글자÷등장 ms 중앙 20.91자/초(handconst.py foreignshowshow caption.typing_cps) · 판 enter 칸에 typing 없음(지금은 렌더에 안 닿음)",
+  "_pending": {
+   "pack": "샤크탱크 자막 팩 없음(샥탬 세션 shark/render.py 가 직접 그림) → 관제 235·지시서 11 요청: GmarketSansBold 68 흰+그림자 · 형광 7색 덩어리 강조(200/208줄, 색 돌림) · 크게 ×1.25 반응 줄 21 · 넘김 가로 흐림(old 28·new 36px) · place y≈958(49.9%). 그동안 clean"
+  }
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "colorflash": 0.178
+   },
+   "ms": 450,
+   "colorflash": {
+    "alpha": 0.62,
+    "colors": [
+     [
+      15,
+      246,
+      3
+     ]
+    ]
+   },
+   "why": "색 번쩍 = 창 전체 색 덮기 α→0 선형(02 colorflash, 468380769) · 비율 0.178 = 15 줄판독 재집계(줄 경계당, d663f72e2) · α 0.62·초록 [15,246,3] = 02 실측 QMJ 38.667 · ms 450 = 스타일분석 §3 '약 0.45초에 0'(벤치 색: 초록·빨강·분홍·노랑 — 다른 색은 팩/02 실측 뒤)"
+  },
+  "why": "push 0 — motion cam 196·still 12, 편집 줌 미측정"
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "why": "고정 안 함 — 본보기 편 비율(instant 149·가로 흐림 넘김 54·타자 5)을 placement 가 나눔(팩 변형 필요)"
+   },
+   "sfx": {
+    "kinds": {
+     "whoosh": 0.86,
+     "ding": 0.14
+    },
+    "max": 4,
+    "why": "받아쓰기 거름 뒤 남은 효과음 22발/6편(편당 0~7, 줄판독 sfx 14줄) · broad(5~10kHz 휙·틱) 19 : tonal(띵) 3 → whoosh:ding = 0.86:0.14 · 상한 4 = 줄판독 sfx 편당 최대(count 10-25: 2·3·3·0·2·4 — 스타일분석 §7 거름 뒤 0~7 은 줄 밖 후보 포함) · 파일 = 팩01 기본(packs.sfx 는 11)"
+   },
+   "transition": {
+    "kinds": [
+     "colorflash"
+    ],
+    "why": "그릴 전환 = 색 번쩍(줄 시작 flash 36/208 — 컷 첫 프레임) · 자리 = 본보기 편 줄판독(placement)"
+   },
+   "meme": {
+    "rate": 0.0,
+    "why": "짤 0 — 스티커만(빨간 원·화살표 19/208)"
+   }
+  },
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/foreignshowshow/줄판독",
+   "n_videos": 6,
+   "slots": {
+    "narr.first": {
+     "n": 42,
+     "enter": {
+      "cut": 0.667,
+      "other": 0.333
+     },
+     "emph": 0.929
+    },
+    "narr.rest": {
+     "n": 58,
+     "enter": {
+      "cut": 0.655,
+      "other": 0.345
+     },
+     "emph": 0.983
+    },
+    "orig.first": {
+     "n": 41,
+     "enter": {
+      "cut": 0.732,
+      "other": 0.22,
+      "typing": 0.049
+     },
+     "emph": 1.0
+    },
+    "orig.rest": {
+     "n": 67,
+     "enter": {
+      "cut": 0.791,
+      "other": 0.164,
+      "typing": 0.045
+     },
+     "emph": 0.94
+    }
+   },
+   "share": {
+    "emph": 1.0,
+    "typing": 0.333,
+    "sfx": 1.0
+   },
+   "stickers": {
+    "circle_arrow": 1.0,
+    "other": 0.5
+   },
+   "transition": {
+    "cut": 0.817,
+    "flash": 0.178,
+    "zoomblur": 0.005
+   },
+   "sfx_kinds": {
+    "other": 1.0
+   },
+   "videos": [
+    {
+     "id": "2jJoIbdciDY",
+     "n": 35,
+     "slots": {
+      "narr.first": {
+       "n": 9,
+       "enter": {
+        "other": 5,
+        "cut": 4
+       },
+       "emph": 8
+      },
+      "narr.rest": {
+       "n": 10,
+       "enter": {
+        "other": 7,
+        "cut": 3
+       },
+       "emph": 10
+      },
+      "orig.first": {
+       "n": 8,
+       "enter": {
+        "cut": 5,
+        "other": 3
+       },
+       "emph": 8
+      },
+      "orig.rest": {
+       "n": 8,
+       "enter": {
+        "cut": 7,
+        "other": 1
+       },
+       "emph": 8
+      }
+     },
+     "stickers": {
+      "circle_arrow": 2
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "none": 2
+      }
+     },
+     "variants": {
+      "줄 전체 한 색(노랑)": 2,
+      "줄 전체 한 색(민트)": 2,
+      "기본(흰+형광 낱말)": 23,
+      "기본(흰, 강조 없음)": 1,
+      "줄 전체 한 색(파랑)": 1,
+      "줄 전체 한 색(초록)": 1,
+      "줄 전체 한 색(주황)": 2,
+      "줄 전체 한 색(빨강)": 2,
+      "크게(약 ×1.25, 잉크 높이 73px)": 1
+     },
+     "sfx": [
+      "cap",
+      "cap",
+      "none",
+      "none",
+      "none",
+      "none",
+      "none",
+      "cut",
+      "cut",
+      "none",
+      "none",
+      "none"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "flash": 10,
+      "cut": 24
+     },
+     "n_trans": 34,
+     "roles": {
+      "hook": 3,
+      "body": 22,
+      "twist": 4,
+      "end": 6
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 24.74,
+       "off": 1.273,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 35.2,
+       "off": 0.767,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "hZgCO9PEnO8",
+     "n": 26,
+     "slots": {
+      "orig.first": {
+       "n": 5,
+       "enter": {
+        "cut": 3,
+        "other": 1,
+        "typing": 1
+       },
+       "emph": 5
+      },
+      "narr.first": {
+       "n": 5,
+       "enter": {
+        "other": 3,
+        "cut": 2
+       },
+       "emph": 5
+      },
+      "narr.rest": {
+       "n": 7,
+       "enter": {
+        "other": 4,
+        "cut": 3
+       },
+       "emph": 7
+      },
+      "orig.rest": {
+       "n": 9,
+       "enter": {
+        "cut": 6,
+        "typing": 2,
+        "other": 1
+       },
+       "emph": 9
+      }
+     },
+     "stickers": {
+      "circle_arrow": 3,
+      "other": 1
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "excl": 2,
+       "ask": 2,
+       "none": 1
+      },
+      "other": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "크게(약 ×1.25, 잉크 높이 71px)": 1,
+      "줄 전체 한 색(민트)": 3,
+      "기본(흰+형광 낱말)": 12,
+      "줄 전체 한 색(빨강)": 4,
+      "줄 전체 한 색(노랑)": 2,
+      "크게(약 ×1.25, 잉크 높이 73px)": 2,
+      "줄 전체 한 색(초록)": 1,
+      "크게(약 ×1.25, 잉크 높이 74px)": 1
+     },
+     "sfx": [
+      "none",
+      "none",
+      "cap",
+      "cut",
+      "switch",
+      "none",
+      "cap",
+      "none",
+      "switch"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "flash": 9,
+      "cut": 16
+     },
+     "n_trans": 25,
+     "roles": {
+      "hook": 2,
+      "body": 20,
+      "reveal": 2,
+      "end": 2
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "reveal",
+       "t": 16.0,
+       "off": 2.433,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 16.0,
+       "off": -0.1,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 20.25,
+       "off": 0.083,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "kmQGQNJgSVo",
+     "n": 35,
+     "slots": {
+      "narr.first": {
+       "n": 6,
+       "enter": {
+        "cut": 6
+       },
+       "emph": 4
+      },
+      "orig.first": {
+       "n": 6,
+       "enter": {
+        "cut": 5,
+        "typing": 1
+       },
+       "emph": 6
+      },
+      "narr.rest": {
+       "n": 11,
+       "enter": {
+        "cut": 11
+       },
+       "emph": 10
+      },
+      "orig.rest": {
+       "n": 12,
+       "enter": {
+        "cut": 11,
+        "typing": 1
+       },
+       "emph": 9
+      }
+     },
+     "stickers": {
+      "circle_arrow": 2,
+      "other": 2
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "none": 2
+      },
+      "other": {
+       "none": 1,
+       "lux": 1
+      }
+     },
+     "variants": {
+      "줄 전체 한 색(노랑)": 1,
+      "크게(약 ×1.25, 잉크 높이 79px)": 1,
+      "기본(흰+형광 낱말)": 20,
+      "줄 전체 한 색(빨강)": 4,
+      "크게(약 ×1.25, 잉크 높이 72px)": 1,
+      "줄 전체 한 색(주황)": 1,
+      "기본(흰, 강조 없음)": 6,
+      "줄 전체 한 색(초록)": 1
+     },
+     "sfx": [
+      "cap",
+      "cap",
+      "cut",
+      "cap",
+      "none",
+      "cap",
+      "none",
+      "cap",
+      "switch"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 31,
+      "flash": 3
+     },
+     "n_trans": 34,
+     "roles": {
+      "hook": 4,
+      "body": 24,
+      "reveal": 4,
+      "twist": 2,
+      "end": 1
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 12.69,
+       "off": 1.157,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 19.89,
+       "off": 0.99,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 35.57,
+       "off": 0.037,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "mVzrvBpMu3E",
+     "n": 44,
+     "slots": {
+      "orig.first": {
+       "n": 8,
+       "enter": {
+        "cut": 6,
+        "other": 2
+       },
+       "emph": 8
+      },
+      "narr.first": {
+       "n": 8,
+       "enter": {
+        "cut": 6,
+        "other": 2
+       },
+       "emph": 8
+      },
+      "narr.rest": {
+       "n": 11,
+       "enter": {
+        "cut": 8,
+        "other": 3
+       },
+       "emph": 11
+      },
+      "orig.rest": {
+       "n": 17,
+       "enter": {
+        "cut": 11,
+        "other": 6
+       },
+       "emph": 17
+      }
+     },
+     "stickers": {
+      "circle_arrow": 1
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "excl": 1
+      }
+     },
+     "variants": {
+      "줄 전체 한 색(노랑)": 2,
+      "기본(흰+형광 낱말)": 30,
+      "줄 전체 한 색(분홍)": 2,
+      "줄 전체 한 색(초록)": 3,
+      "줄 전체 한 색(빨강)": 1,
+      "크게(약 ×1.25, 잉크 높이 70px)": 2,
+      "줄 전체 한 색(민트)": 2,
+      "줄 전체 한 색(파랑)": 1,
+      "크게(약 ×1.25, 잉크 높이 71px)": 1
+     },
+     "sfx": [
+      "none",
+      "cap",
+      "cut",
+      "cut"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 39,
+      "flash": 4
+     },
+     "n_trans": 43,
+     "roles": {
+      "hook": 3,
+      "body": 22,
+      "reveal": 7,
+      "twist": 8,
+      "end": 4
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "QMJtjJz4M6w",
+     "n": 40,
+     "slots": {
+      "orig.first": {
+       "n": 9,
+       "enter": {
+        "cut": 6,
+        "other": 3
+       },
+       "emph": 9
+      },
+      "narr.first": {
+       "n": 9,
+       "enter": {
+        "cut": 5,
+        "other": 4
+       },
+       "emph": 9
+      },
+      "narr.rest": {
+       "n": 13,
+       "enter": {
+        "cut": 7,
+        "other": 6
+       },
+       "emph": 13
+      },
+      "orig.rest": {
+       "n": 9,
+       "enter": {
+        "cut": 6,
+        "other": 3
+       },
+       "emph": 9
+      }
+     },
+     "stickers": {
+      "circle_arrow": 4,
+      "other": 2
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "excl": 2,
+       "ask": 2,
+       "none": 2
+      },
+      "other": {
+       "none": 2
+      }
+     },
+     "variants": {
+      "크게(약 ×1.25, 잉크 높이 71px)": 4,
+      "기본(흰+형광 낱말)": 23,
+      "줄 전체 한 색(주황)": 1,
+      "줄 전체 한 색(빨강)": 1,
+      "크게(약 ×1.25, 잉크 높이 70px)": 1,
+      "크게(약 ×1.25, 잉크 높이 73px)": 2,
+      "줄 전체 한 색(민트)": 2,
+      "크게(약 ×1.25, 잉크 높이 72px)": 2,
+      "줄 전체 한 색(노랑)": 1,
+      "줄 전체 한 색(분홍)": 1,
+      "줄 전체 한 색(초록)": 1,
+      "크게(약 ×1.25, 잉크 높이 76px)": 1
+     },
+     "sfx": [
+      "switch",
+      "none",
+      "cut",
+      "cut",
+      "none",
+      "none",
+      "switch",
+      "none",
+      "cap",
+      "cut",
+      "none"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 31,
+      "flash": 7,
+      "zoomblur": 1
+     },
+     "n_trans": 39,
+     "roles": {
+      "hook": 3,
+      "reveal": 8,
+      "body": 26,
+      "end": 3
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 13.6,
+       "off": 1.567,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 33.7,
+       "off": 1.233,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "vbxJ_v132ao",
+     "n": 28,
+     "slots": {
+      "narr.first": {
+       "n": 5,
+       "enter": {
+        "cut": 5
+       },
+       "emph": 5
+      },
+      "orig.first": {
+       "n": 5,
+       "enter": {
+        "cut": 5
+       },
+       "emph": 5
+      },
+      "orig.rest": {
+       "n": 12,
+       "enter": {
+        "cut": 12
+       },
+       "emph": 11
+      },
+      "narr.rest": {
+       "n": 6,
+       "enter": {
+        "cut": 6
+       },
+       "emph": 6
+      }
+     },
+     "stickers": {
+      "circle_arrow": 2
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "none": 2
+      }
+     },
+     "variants": {
+      "기본(흰+형광 낱말)": 17,
+      "줄 전체 한 색(초록)": 3,
+      "줄 전체 한 색(노랑)": 2,
+      "크게(약 ×1.25, 잉크 높이 74px)": 1,
+      "줄 전체 한 색(파랑)": 1,
+      "줄 전체 한 색(민트)": 2,
+      "기본(흰, 강조 없음)": 1,
+      "줄 전체 한 색(빨강)": 1
+     },
+     "sfx": [
+      "cap",
+      "none",
+      "cap",
+      "cap",
+      "none",
+      "none",
+      "none",
+      "cap",
+      "cap",
+      "cap",
+      "cut",
+      "cap",
+      "cut",
+      "none"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 24,
+      "flash": 3
+     },
+     "n_trans": 27,
+     "roles": {
+      "hook": 3,
+      "body": 20,
+      "reveal": 4,
+      "end": 1
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 29.32,
+       "off": 0.687,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 29.32,
+       "off": -0.047,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 33.45,
+       "off": 0.183,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 34.86,
+       "off": 0.227,
+       "basis": "파형 솟음"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "title_form": "2줄 1줄 연노랑 = 대상·상황('홍수를 막을 수 있는') / 2줄 흰 = 반응·정체('역대급 모래 주머니?!') — 끝 '?!' 4/6",
+ "_pending": {
+  "stickers": "빨간 실선 원 7(얼굴 훅 3편 r209·선 10~11px)·점선 원 3·초록 화살표 4 — 훅 줄 7/18. 자리 검출(fx_target face)·종류 circle_arrow 로 넣을 수 있으나 점선·회전·크기 r 칸 없음 → 03·02, 지금은 안 넣음(조용한 다른 그림 금지)",
+  "caption_blur_exit": "넘김 가로 흐림 4/6편(kmQ·vbx 0) — 자막팩 몫",
+  "big_caption": "반응 한 마디 ×1.25 21줄 — 자막팩 변형 몫"
+ },
+ "script": {
+  "brief": [
+   "박자(6/6): 0~1초 훅 = 결말 반응(놀란 투자자+빨간 원) 또는 제품 시연 → 나레 제품 소개 → 원음 설명·약속 → 기존 불편/사연 → 숫자(판매량·매출·가격) → 투자자 질문·답 → 제안·경쟁 → 결과 → 후일담 나레. CTA 0/6.",
+   "나레 반말 전언형(존댓 0) · 줄 끝 '~고'·'~는데'·'~다고' — 줄이 문장 중간에서 끊겨 다음 컷으로 이어짐 · 원음 번역 반말·존댓 섞임 · 별표 상황 자막 '*거래 성공*'",
+   "⚠ 벤치 나레 사실은 그대로 믿지 않는다(STORMBAG 정정 3건) — 숫자는 원음·출처로 확인. 금액은 우리 금지선(_common forbid)이 이긴다"
+  ],
+  "audit": [
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 36.5,
+    "max": 60.5,
+    "why": "벤치 6편 길이"
+   }
+  ]
+ },
+ "sfx_files": {
+  "whoosh": "팩01/whoosh.wav",
+  "ding": "팩01/ding.wav",
+  "gain_db": -8,
+  "why": "효과음 종류 이름표 → 팩01 slot(whoosh→휙, ding→띠링) — broad(5~10kHz 휙·틱) 19 · tonal(띵) 3(스타일분석 §7) · 귀 미확인 · 종류 미확인(귀로 안 들음, 06 측정 뒤 교체) · gain −8dB = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
+ },
+ "packs": {
+  "sfx": {
+   "pack": "팩01",
+   "map": {
+    "whoosh": "휙",
+    "ding": "띠링"
+   },
+   "gain_db": -8,
+   "why": "효과음 종류 이름표 → 팩01 slot(whoosh→휙, ding→띠링) — broad(5~10kHz 휙·틱) 19 · tonal(띵) 3(스타일분석 §7) · 귀 미확인 · 종류 미확인(귀로 안 들음, 06 측정 뒤 교체) · gain −8dB = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)",
+   "ncc": {
+    "measured": false
+   },
+   "from": "NCC 미측정 → 지문으로 고를 수 없어 종류 이름표로 slot: whoosh→휙 · ding→띠링 · 팩 팩01(잇템로그판과 같은 팩) — 07 채움(10-25, 02 의 '없는 종류면 멈춤' 뒤)",
+   "gap": [
+    "종류 미확인(귀) — 06 이 소리 종류를 재면 slot 다시"
+   ]
+  }
+ }
+}

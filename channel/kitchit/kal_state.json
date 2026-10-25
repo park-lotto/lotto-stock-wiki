@@ -1,0 +1,38 @@
+{
+ "slug": "kitchit",
+ "ref": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ",
+ "steps": {
+  "tteutgi": {
+   "state": "done",
+   "outputs": {
+    "ids": [
+     "Cs-Ka_S8nDM",
+     "BRa5Iv4A3Y8",
+     "Ks5kYYKAUlQ",
+     "Nv99RyxmrfU",
+     "oTi41R74WIY",
+     "cNo91ddBwB8",
+     "vSEaZ-BCELY",
+     "_Wa4IehA6yE"
+    ],
+    "dir": "channel/kitchit/뜯기"
+   },
+   "note": "수동 seed(관제 263 지시서 06, 10-25) — 10-18 관제 097 에서 뜯기 8편 이미 있음(조회순). collect·frames 는 kal.py 밖에서 했음"
+  },
+  "rules": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-25 02:27",
+   "outputs": {
+    "draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\kitchit\\_kal\\스타일분석_초안.md",
+    "palette": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\kitchit\\팔레트.json",
+    "plan_draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\kitchit\\_kal\\kitchit판_초안.json"
+   },
+   "note": "규칙빈도·대본언어·팔레트·판 설정 초안 + 스타일분석.md 있음 (kal.step_rules 직접 호출 — 뒤 단계 copy/make 는 이 지시서 범위 밖이라 안 돌림)"
+  }
+ },
+ "asked": {},
+ "brand": "얜샷템",
+ "n": 8,
+ "hybrid": "예"
+}

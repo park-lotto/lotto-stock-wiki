@@ -1,0 +1,140 @@
+{
+ "n_docs": 6,
+ "roles": {
+  "본문": [
+   {
+    "hex": "#000000",
+    "n_lines": 195,
+    "n_docs": 6,
+    "docs": [
+     "76uZKOpnlqQ",
+     "8f9T8Jeo-gQ",
+     "PFvCfu1ECK4",
+     "g7cxCPWMI5M",
+     "gBVXQdbzwJU",
+     "rGFXQlS9Cp4"
+    ],
+    "members": [
+     "#000000",
+     "#080808",
+     "#010101",
+     "#020202"
+    ]
+   }
+  ],
+  "강조": [],
+  "외곽선": [],
+  "글로우": [],
+  "제목": [
+   {
+    "hex": "#FFFFFF",
+    "n_lines": 6,
+    "n_docs": 6,
+    "docs": [
+     "76uZKOpnlqQ",
+     "8f9T8Jeo-gQ",
+     "PFvCfu1ECK4",
+     "g7cxCPWMI5M",
+     "gBVXQdbzwJU",
+     "rGFXQlS9Cp4"
+    ],
+    "members": [
+     "#FFFFFF"
+    ]
+   },
+   {
+    "hex": "#8EF885",
+    "n_lines": 4,
+    "n_docs": 4,
+    "docs": [
+     "76uZKOpnlqQ",
+     "g7cxCPWMI5M",
+     "gBVXQdbzwJU",
+     "rGFXQlS9Cp4"
+    ],
+    "members": [
+     "#8EF885",
+     "#8CFC82",
+     "#8BFC82"
+    ]
+   },
+   {
+    "hex": "#FFE168",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "8f9T8Jeo-gQ"
+    ],
+    "members": [
+     "#FFE168"
+    ]
+   },
+   {
+    "hex": "#FBE37B",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "PFvCfu1ECK4"
+    ],
+    "members": [
+     "#FBE37B"
+    ]
+   }
+  ],
+  "스티커": [
+   {
+    "hex": "#000000",
+    "n_lines": 6,
+    "n_docs": 4,
+    "docs": [
+     "76uZKOpnlqQ",
+     "8f9T8Jeo-gQ",
+     "g7cxCPWMI5M",
+     "gBVXQdbzwJU"
+    ],
+    "members": [
+     "#000000"
+    ]
+   },
+   {
+    "hex": "#EFFC05",
+    "n_lines": 4,
+    "n_docs": 3,
+    "docs": [
+     "76uZKOpnlqQ",
+     "g7cxCPWMI5M",
+     "gBVXQdbzwJU"
+    ],
+    "members": [
+     "#EFFC05",
+     "#EDFD05",
+     "#FAFE08",
+     "#F7FE0A"
+    ]
+   },
+   {
+    "hex": "#FEF000",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "8f9T8Jeo-gQ"
+    ],
+    "members": [
+     "#FEF000"
+    ]
+   },
+   {
+    "hex": "#FAFF1D",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "gBVXQdbzwJU"
+    ],
+    "members": [
+     "#FAFF1D"
+    ]
+   }
+  ],
+  "출처": []
+ }
+}

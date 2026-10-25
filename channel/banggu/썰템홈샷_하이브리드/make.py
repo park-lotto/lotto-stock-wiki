@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# _deprecated_2026-10-25 → tools/calcopy/hybrid/styles/썰템홈샷판.json (관제 263 지시서 07 · 표준 §3-1: 새 편은 공용 렌더러 run.py/render_bench 로. 이 파일은 옛 영상 재현용 읽기 전용 참고물 — 규칙은 판 칸·_pending.upgrade_from_hand_scripts 로 옮김)
 """썰템홈샷 하이브리드 한 편 제작기 (관제 097, 2026-10-22 사장님 "썰템홈샷 스타일 영상 · 방구석이랑 다르게 · 표절 안 걸리게").
 
     PYTHONUTF8=1 py channel/banggu/썰템홈샷_하이브리드/make.py <단계> <편>

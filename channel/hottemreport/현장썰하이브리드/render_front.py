@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# _deprecated_2026-10-25 → tools/calcopy/hybrid/styles/숏템리폿판.json (관제 263 지시서 07 · 표준 §3-1: 새 편은 공용 렌더러로. 옛 영상 재현용 읽기 전용 참고물 — 규칙은 판 칸·_pending.upgrade_from_hand_scripts 로 옮김)
 """현장썰 하이브리드 렌더 — 앞 = 이미 만든 현장썰 완성본 0~cut 초 그대로, 뒤 = 잇썸홈판 나레(하이브리드 렌더러 B 부분을 그대로 부름).
 
     PYTHONUTF8=1 py channel/hottemreport/현장썰하이브리드/render_front.py <doc_dir> <work_dir> [--plan] [--desktop <mp4>]

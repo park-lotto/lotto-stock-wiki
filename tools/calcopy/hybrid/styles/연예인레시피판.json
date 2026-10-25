@@ -14,25 +14,100 @@
   "그대로": "voice 미나 · bgm otsukare_summer · timing · length 28~38 · script(brief·audit) · placement.counted/sfx · sfx_files · caption.pack_default/variant_for/typing_cps/chunk_max_chars"
  },
  "frame": {
-  "bg": [0, 0, 0],
-  "window": [60, 400, 960, 940],
-  "title": [
-   {"font": "Jalnan2.ttf", "px": 84, "center": 212, "shear": 0, "color": "#FFFFFF", "hi": "#FF8A3D", "max_w": 980},
-   {"font": "Jalnan2.ttf", "px": 84, "center": 308, "shear": 0, "color": "#FFFFFF", "hi": "#3DE0B4", "max_w": 980}
+  "bg": [
+   0,
+   0,
+   0
   ],
-  "watermark": {"text": "연예인레시피", "font": "JalnanGothic.ttf", "px": 40, "x1": 330, "cy": 448, "alpha": 120},
-  "logo": {"kind": "text", "text": "연예인레시피", "font": "JalnanGothic.ttf", "px": 46, "x": 60, "y": 70, "rgba": [61, 224, 180, 255], "stroke": 0},
-  "credit": {"font": "Pretendard-SemiBold.otf", "px": 32, "color": "#B4B4AE", "center": 1538}
+  "window": [
+   60,
+   400,
+   960,
+   940
+  ],
+  "title": [
+   {
+    "font": "Jalnan2.ttf",
+    "px": 84,
+    "center": 212,
+    "shear": 0,
+    "color": "#FFFFFF",
+    "hi": "#FF8A3D",
+    "max_w": 980,
+    "why": "사장님 10-20 '벤치랑 너무 똑같다, 위치·템플릿 약간 바꿔' → 스타픽룸판 위에 의도해 바꾼 설계 값(벤치 실측 아님) — 벤치→우리는 _diff · Cafe24Ohsquare 92px 기울임 0.1763 · 가운데 y288/392 · 흰+노랑 #FDF702/보라 #CF04FC 낱말 → Jalnan2 84px 바로 세움 · y212/308 · 흰+주황 #FF8A3D/민트 #3DE0B4 낱말"
+   },
+   {
+    "font": "Jalnan2.ttf",
+    "px": 84,
+    "center": 308,
+    "shear": 0,
+    "color": "#FFFFFF",
+    "hi": "#3DE0B4",
+    "max_w": 980,
+    "why": "사장님 10-20 '벤치랑 너무 똑같다, 위치·템플릿 약간 바꿔' → 스타픽룸판 위에 의도해 바꾼 설계 값(벤치 실측 아님) — 벤치→우리는 _diff · Cafe24Ohsquare 92px 기울임 0.1763 · 가운데 y288/392 · 흰+노랑 #FDF702/보라 #CF04FC 낱말 → Jalnan2 84px 바로 세움 · y212/308 · 흰+주황 #FF8A3D/민트 #3DE0B4 낱말"
+   }
+  ],
+  "watermark": {
+   "text": "연예인레시피",
+   "font": "JalnanGothic.ttf",
+   "px": 40,
+   "x1": 330,
+   "cy": 448,
+   "alpha": 120,
+   "why": "사장님 10-20 '벤치랑 너무 똑같다, 위치·템플릿 약간 바꿔' → 스타픽룸판 위에 의도해 바꾼 설계 값(벤치 실측 아님) — 벤치→우리는 _diff · 창 오른쪽 위 x1 1030 cy550 56px 흰 55% → 창 왼쪽 위 x1 330 cy448 40px 흰 47%"
+  },
+  "logo": {
+   "kind": "text",
+   "text": "연예인레시피",
+   "font": "JalnanGothic.ttf",
+   "px": 46,
+   "x": 60,
+   "y": 70,
+   "rgba": [
+    61,
+    224,
+    180,
+    255
+   ],
+   "stroke": 0,
+   "why": "사장님 10-20 '벤치랑 너무 똑같다, 위치·템플릿 약간 바꿔' → 스타픽룸판 위에 의도해 바꾼 설계 값(벤치 실측 아님) — 벤치→우리는 _diff · 아래 y1666~1919 금색 큰 그라데이션 로고(spr_gold) → 위 왼쪽 y70 JalnanGothic 46px 민트 글자 로고(작게)"
+  },
+  "credit": {
+   "font": "Pretendard-SemiBold.otf",
+   "px": 32,
+   "color": "#B4B4AE",
+   "center": 1538,
+   "why": "사장님 10-20 '벤치랑 너무 똑같다, 위치·템플릿 약간 바꿔' → 스타픽룸판 위에 의도해 바꾼 설계 값(벤치 실측 아님) — 벤치→우리는 _diff · Pretendard-Bold 36 회색 #8B8B88 y1626 → Pretendard-SemiBold 32 밝은 회색 #B4B4AE y1538(자막 아래)"
+  },
+  "why": "사장님 10-20 '벤치랑 너무 똑같다, 위치·템플릿 약간 바꿔' → 스타픽룸판 위에 의도해 바꾼 설계 값(벤치 실측 아님) — 벤치→우리는 _diff · 창: x0 y483 1080×1058(좌우 꽉, 위 483·아래 379) → x60 y400 960×940(좌우 60 검정 테, 위 400·아래 580) — 비율 1.021 같게(재료 crop 그대로 씀) · 바탕 검정 = 바탕 판(스타픽룸) 그대로"
  },
  "caption": {
-  "pack": "recipe"
+  "pack": "recipe",
+  "band": [
+   1400,
+   1480
+  ],
+  "why_band": "자막 잉크 가운데 1440(recipe place — 창 아래 검정 띠) ±40(잉크 높이 미기입) — caption_side 짤·스티커 자리용(fx_target)",
+  "why": "band = 자막 잉크 가운데 1440(recipe 팩 place 75% — 창 아래 검정 띠) ±40(잉크 높이 미기입) · starpick(GmarketSansBold · 검정 테 0.22em · 창 안 y1140) → recipe(JalnanGothic · 진갈색 #2B1708 테 0.15em · 창 아래 검정 띠 y1440). 등장 효과 종류(나레 타이핑 typeGlow·원음 즉시·cut/pop/heart/cursor/glitch/wipe/rainbow 변형)·강조 사물 색 규칙은 그대로"
  },
  "placement": {
   "rules": {
    "stickers": {
-    "object_pop": {"x": 62, "y": 54}
+    "object_pop": {
+     "x": 62,
+     "y": 54,
+     "why": "사장님 10-20 '벤치랑 너무 똑같다, 위치·템플릿 약간 바꿔' → 스타픽룸판 위에 의도해 바꾼 설계 값(벤치 실측 아님) — 벤치→우리는 _diff · 3D 재료 스티커 자막 왼쪽 아래 x180(창 안) → 창 오른쪽 아래 x62% y54%(670·1037px). 붙는 조건(needs_key·object_src)·개수(counted)는 그대로"
+    }
    }
   }
  },
- "title_form": "1줄 = 연예인 본인 말 인용·훅 구절(주황 hi = 핵심 낱말) / 2줄 = '이름의 [민트 hi 요리]'"
+ "title_form": "1줄 = 연예인 본인 말 인용·훅 구절(주황 hi = 핵심 낱말) / 2줄 = '이름의 [민트 hi 요리]'",
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "recipe",
+   "gap": [],
+   "from": "변형판(base 스타픽룸판) — 사람이 고른 우리 변형 팩 'recipe'(벤치 없음: 자막팩 recipe.bench = 우리 값 note) · 측정 거리 해당 없음"
+  }
+ }
 }

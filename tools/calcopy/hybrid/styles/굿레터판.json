@@ -1,6 +1,8 @@
 {
  "name": "굿레터판",
  "renderer": "bench",
+ "thumb_card_face": true,
+ "_thumb_card_face": "연예인 채널 — 썸네일 카드 3안 전부 연예인 얼굴(사장님 10-25 '연예인 얼굴 통일')",
  "_note": "초안(2026-10-20, 관제 097) — 연예인레시피 벤치 굿레터(@굿레터) 칼카피 판. 박자 = 원음 훅 → (선택) 나레 다리 1~2조각 '~래요' → 원음 과정·요령 → 원음 맛 반응 → 원음 끝 판정 한 줄. 자막 = 말 조각마다 빠른 팝, 줄 전체 강조색(새 틀 호박 1색). 근거 channel/goodletter/{스타일분석.md, 판설계.md, 줄판독/}. ★자막팩 키 goodletter 는 계약에 아직 없다(자막팩_보강안.json → 자막팩 담당) · frame.product_tag·frame.ps_line 은 스키마에 없는 새 칸(스키마 주인 관제 235 에 요청) · 렌더 시험 전(C 여유 부족·지시상 제작 안 함).",
  "bench": {
   "ko": "굿레터",
@@ -22,17 +24,25 @@
   ],
   "why": "나레는 8편 중 2편·1~2조각뿐(여성 추정 f0 174~193Hz, 억양 평평). 여성 → 미나(분석지침서 §1 2 추천). candidates 는 X9mR 나레와 신호상 가까운 우리 목소리(거리 3.8, 신뢰 낮음) — 사장님 귀 확인 뒤에만 바꾼다(이 칸 한 곳)"
  },
- "cps_target": 6.0,
+ "cps_target": 7.18,
  "bgm": {
   "id": null,
   "db_below_voice": null,
   "duck_orig_db": 0.0,
   "fade_out": 0.0,
-  "why": "굿레터 자체 BGM 없음 추정 — 옛 틀 끝 디지털 무음 kfmZ 1.3·m4m5 0.9·j-fB 0.5초(깔린 음악이면 0 이 안 된다). 원본 영상 안 음악만 그대로. 렌더러가 id null 을 'BGM 없음'으로 받는지 확인 필요(받지 못하면 렌더러 요청)"
+  "why": "굿레터 자체 BGM 없음 추정 — 옛 틀 끝 디지털 무음 kfmZ 1.3·m4m5 0.9·j-fB 0.5초(깔린 음악이면 0 이 안 된다). 원본 영상 안 음악만 그대로. 렌더러가 id null 을 'BGM 없음'으로 받는지 확인 필요(받지 못하면 렌더러 요청)",
+  "candidates": [
+   "otsukare_summer",
+   "beggin",
+   "passo_bem_solto"
+  ],
+  "duck_narr_db": 0.0,
+  "why_02": "candidates = bgm_pick.py recommend 굿레터판(벤치 8편 146.3 BPM·766Hz, 거리 0.655/0.854/0.952) — 곡은 사람이 고른다(id 그대로) · duck_narr_db 0 = 나레 덕킹 실측 없음"
  },
  "loudness": {
   "lufs": -14.0,
-  "tp": -1.5
+  "tp": -1.5,
+  "why": "−14 LUFS 통일(벤치 −22.7~−9.4 들쭉날쭉 — 따라 하지 않음, 사장님 결정 · 판설계.md)"
  },
  "length": {
   "min": 24,
@@ -64,29 +74,39 @@
     "ink_top": 173,
     "shear": 0,
     "color": "#FFFFFF",
-    "max_w": 1040
+    "max_w": 1040,
+    "why": "제목 1줄 흰 Jalnan2(훅 ≤9자 — 판설계.md) · px 100·ink_top 173·max_w·shear 0 = 프리셋 검정틀_주황상자_팝자막"
    },
    {
     "font": "Jalnan2.ttf",
     "px": 96,
-    "box": true,
+    "box": [
+     182,
+     288,
+     897,
+     411
+    ],
     "box_color": "#FE7813",
     "center": 350,
     "shear": 0,
     "color": "#0B0F0F",
-    "max_w": 900
+    "max_w": 900,
+    "why_box": "주황 둥근 상자 #FE7813 sMx9 x182~897 y288~411(스타일분석 §2 — 글 길이 따라 폭, 렌더러 상자는 고정 칸 → 02) · 옛 값 box:true 는 frame_png TypeError(10-25 02 보고)",
+    "why": "주황 둥근 상자 #FE7813 sMx9 x182~897 y288~411(스타일분석 §2 — 글 길이 따라 폭, 렌더러 상자는 고정 칸 → 02) · 옛 값 box:true 는 frame_png TypeError(10-25 02 보고) · px 96·center 350·max_w 900·shear 0 = 프리셋 검정틀_주황상자_팝자막"
    }
   ],
   "rules": [
    {
     "y": 464,
     "h": 12,
-    "color": "#FE7813"
+    "color": "#FE7813",
+    "why": "주황 #FE7813 12px y464~475·y1546~1557(스타일분석 §2)"
    },
    {
     "y": 1546,
     "h": 12,
-    "color": "#FE7813"
+    "color": "#FE7813",
+    "why": "주황 #FE7813 12px y464~475·y1546~1557(스타일분석 §2)"
    }
   ],
   "watermark": {
@@ -104,7 +124,8 @@
    "px": 40,
    "color": "#BEBEBE",
    "center": 1604,
-   "form": "출처 · {채널} (YouTube)"
+   "form": "출처 · {채널} (YouTube)",
+   "why": "출처 줄(판설계.md 틀) · px 40·center 1604 = 프리셋 값"
   },
   "product_tag": {
    "form": "● {제품}",
@@ -127,7 +148,8 @@
    "why": "새 틀 3/3편 편 길이 45% 지점부터 끝까지 즉시 — 스키마에 없는 새 칸"
   },
   "link_line": null,
-  "_link_why": "벤치 '프로필 링크에서 N번' = CTA — 우리 판 CTA 없음(얜샷템 §12·_common forbid)"
+  "_link_why": "벤치 '프로필 링크에서 N번' = CTA — 우리 판 CTA 없음(얜샷템 §12·_common forbid)",
+  "why": "판설계.md 틀: 검정 · 창 (6,464) 1068×1096 · 주황 가로선 y464/1546(12px — 스타일분석 §2 #FE7813 12px y464~475·y1546~1557) · 출처 '출처 · <채널> (YouTube)'"
  },
  "caption": {
   "pack": "goodletter",
@@ -142,7 +164,12 @@
    "cut": "big"
   },
   "chunk_max_chars": 12,
-  "why": "말 줄 210 중 팝 209 · 조각 공백 뺀 자수 p50 6·p90 9·최대 12"
+  "why": "말 줄 210 중 팝 209 · 조각 공백 뺀 자수 p50 6·p90 9·최대 12",
+  "band": [
+   1288,
+   1353
+  ],
+  "why_band": "자막 잉크 y1288~1353(goodletter place — 새 틀 sMx9) — caption_side 짤·스티커 자리용(fx_target)"
  },
  "cuts": {
   "push_tts": 0.0,
@@ -563,5 +590,109 @@
     "max": 30
    }
   ]
- }
+ },
+ "_pending": {
+  "transition_counted": "줄판독 transition 칸 비어 있음(06) — 그릴 전환 없음"
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "goodletter",
+   "gap": [
+    "자기 팩 1위지만 문턱 밖 {'px': 1.56, 'y': 1.57}(1.0 = 문턱) → 팩요청.md 굿레터판#1(보정 또는 재측정)"
+   ],
+   "rank": [
+    {
+     "pack": "goodletter",
+     "d": 0.792,
+     "terms": {
+      "px": 1.56,
+      "fill": 0.0,
+      "stroke": 0.83,
+      "y": 1.57,
+      "font": 0.0
+     }
+    },
+    {
+     "pack": "kitchit",
+     "d": 0.814,
+     "terms": {
+      "px": 1.1,
+      "fill": 0.14,
+      "stroke": 0.4,
+      "y": 0.93,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "recipe",
+     "d": 0.842,
+     "terms": {
+      "px": 0.44,
+      "fill": 0.14,
+      "stroke": 1.2,
+      "y": 0.93,
+      "font": 1.5
+     }
+    }
+   ],
+   "from": "벤치 8편 214줄 실측 [글꼴 Binggrae-Bold(스타일분석 §1) · 원음 192줄[잉크 높이 65px(191줄 y칸) · 자리 y1396 · 채움 #FDFDFD(120줄) · 테 9px]] → 1위 goodletter(거리 0.792) · 지금 goodletter(거리 0.792, 순위 1)",
+   "enter_cover": {
+    "pop": {
+     "share": 0.981,
+     "n": 210,
+     "item": "glPop"
+    },
+    "instant": {
+     "share": 0.019,
+     "n": 4,
+     "item": "정지(팩 불필요)"
+    }
+   }
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — 판 자막팩이 등장까지 정한다(caption-motions.js motionPlan: 팩 motion 이 효과팩 번호보다 이긴다) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": "팩05",
+   "map": {
+    "pop": "뽁"
+   },
+   "outside": {
+    "impact": "meme_sfx:research/sfx_census/meme_sfx/충격_입막/sfx__impact-bass-2.mp3"
+   },
+   "gain_db": -6,
+   "ncc": {
+    "measured": true,
+    "hits": 95,
+    "pack_hits": 75,
+    "ge06": 0,
+    "max": 0.571,
+    "max_file": "팩05/pop.wav",
+    "mine_max": 0.571
+   },
+   "from": "NCC 벤치↔팩 파일 75발 중 ≥0.6 0개(최대 0.571 팩05/pop.wav) → 지문으로 고를 수 없어 종류 이름표로 slot: pop→뽁 · 팩 팩05",
+   "gap": [
+    "팩 밖 효과음 ['impact'] — slot 없음 → 팩요청.md 굿레터판#2"
+   ]
+  },
+  "bgm": {
+   "id": null,
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)",
+   "candidates": [
+    "otsukare_summer",
+    "beggin",
+    "passo_bem_solto"
+   ]
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
+  }
+ },
+ "_why_cps_target": "미나(일레븐랩스) 서비스 배속 고정 1.35(narr_align.fixed_tempo) — 배속을 못 바꾸고 대본 길이 어림·B3 목표로만 쓰이므로 값 = 미나 실측 7.18자/초(이 판 렌더 없음 → 같은 목소리·같은 배속 렌더 2편 합: 키치잇판 flowtest 9a584318 나레 7줄 133자/19.47초 + 스타픽룸판 hybrid_sungsikyung 7줄 184자/24.71초) · 참고 벤치 나레 자/초 5.96(나레 있는 편 2/8·조각 6개, handconst.py goodletter cps_target — 원음 위주 채널)"
 }

@@ -9,6 +9,8 @@ import json
 import shutil
 import subprocess
 from pathlib import Path
+from tools.calcopy.engine.encoder import venc  # noqa: E402 — 인코더 주인(GPU 있으면 NVENC, 화질 같게, 98 #79)
+from tools.calcopy.engine import encoder as ENC  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[3]
 FONT = ROOT / "shopping_shorts/static/fonts/Pretendard-Bold.otf"
@@ -51,9 +53,9 @@ def apply_inplace(final: Path, log=print) -> dict:
         return {"applied": False, "why": "이미 있음"}
     png, m = badge(w, final.with_name("_ad_mark.png"))
     tmp = final.with_name(final.stem + "_ad.mp4")
-    r = subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(final), "-i", str(png),
+    r = ENC.run(["ffmpeg", "-y", "-v", "error", "-i", str(final), "-i", str(png),
                         "-filter_complex", f"[0:v][1:v]overlay=x=W-w-{m}:y={m}:format=auto,format=yuv420p[v]",
-                        "-map", "[v]", "-map", "0:a?", "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-c:a", "copy",
+                        "-map", "[v]", "-map", "0:a?", *venc(16), "-c:a", "copy",
                         "-metadata", f"comment={(comment + ' ' if comment else '') + MARK}", "-movflags", "+faststart", str(tmp)],
                        capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode != 0 or not tmp.exists():

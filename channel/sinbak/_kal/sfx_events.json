@@ -1,0 +1,2136 @@
+{
+ "_meta": {
+  "made_by": "tools/calcopy/engine/sound/sfx_events.py sinbak --detect",
+  "how": "detect",
+  "asr_filter": {
+   "how": "후보 시각이 받아쓰기 낱말 구간[t0−0.05, t1+0.05] 안이면 cand_in_words(치찰음·파열음 오탐) — 단 전환·스티커 곁(편마다 우연 기대 ≤ 0.1 인 창 (0.3, 0.2, 0.15, 0.1, 0.05))·말 위 순음 tone·판독 sfx 자리는 남김(keep_why). 배경음 박자 = cand_bgm. 남은 것 = cand_kept(confidence 눈/신호, ear_pending)",
+   "asr": "C:/숏템_칼카피/sinbak/work/asrw_auto",
+   "no_speech": {
+    "bpjoacs2S6Q": "hallucination(길이0 낱말 55%)",
+    "edTkyQKrqMk": "hallucination(문구 4/4)",
+    "fzoZc7V_hDM": "hallucination(문구 3/3)",
+    "oT-SxFJcQ-4": "hallucination(문구 1/1)",
+    "rAt34vkQ0OY": "hallucination(문구 8/11)"
+   },
+   "no_asr": [],
+   "n_kept": 23,
+   "n_in_words": 0,
+   "note": "귀 확인 아님(신호). 무음 환각 = 환각 문구(Thanks for watching·구독과 좋아요·Music…)가 절반 이상이거나 빼고 2낱말 이하, 또는 길이0 낱말 40% 이상"
+  },
+  "from": "C:/숏템_칼카피\\sinbak\\src",
+  "n_videos": 6,
+  "n_cand": 38,
+  "line_link_how": "line_link = 남은 후보(cand_kept)가 든 줄의 sfx·sticker 유무 + 줄판독 sfx 시각(t, 없으면 줄 t0)·스티커 t_in 에서 가장 가까운 후보 거리(≤0.15초 = match). 줄판독 sfx 칸은 바꾸지 않았다(1판 파형 판독 근거가 따로 있다) — 10-25 재측정(03 low·낱말 거름 내장 뒤) 다시 붙임"
+ },
+ "CnRWZ3scVfk": {
+  "strong_n": 1,
+  "strong_hits": {
+   "cap": [],
+   "switch": [],
+   "cut": []
+  },
+  "dur": 17.4,
+  "n_events_all": 4,
+  "cand": [
+   {
+    "t": 7.2,
+    "kind": "tonal",
+    "dur": 0.21,
+    "db": 36.6,
+    "cen_hz": 2132,
+    "near": {
+     "cap": 0.2,
+     "switch": 5.78,
+     "cut": 1.73
+    }
+   },
+   {
+    "t": 15.96,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 14.1,
+    "rel_db": 0.0,
+    "low_mid_db": 5.9,
+    "voiced": 0.44,
+    "near": {
+     "cap": 0.16,
+     "switch": 14.54,
+     "cut": 0.27
+    }
+   },
+   {
+    "t": 16.65,
+    "kind": "low",
+    "dur": 0.02,
+    "db": 14.5,
+    "rel_db": -0.0,
+    "low_mid_db": 9.0,
+    "voiced": 0.25,
+    "near": {
+     "cap": 0.85,
+     "switch": 15.23,
+     "cut": 0.42
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    2.4,
+    3.9,
+    5.6,
+    7.4,
+    8.9,
+    11.0,
+    12.9,
+    13.9,
+    14.3,
+    15.3,
+    15.8
+   ],
+   "sticker": [],
+   "switch": [
+    1.42
+   ],
+   "cut": [
+    2.43,
+    3.87,
+    8.93,
+    12.93,
+    13.9,
+    16.23
+   ]
+  },
+  "chance": {
+   "cap": 0.18,
+   "switch": 0.02,
+   "cut": 0.09
+  },
+  "asr_words": 29,
+  "cand_in_words": [],
+  "cand_kept": [
+   {
+    "t": 7.2,
+    "kind": "tonal",
+    "dur": 0.21,
+    "db": 36.6,
+    "cen_hz": 2132,
+    "near": {
+     "cap": 0.2,
+     "switch": 5.78,
+     "cut": 1.73
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 15.96,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 14.1,
+    "rel_db": 0.0,
+    "low_mid_db": 5.9,
+    "voiced": 0.44,
+    "near": {
+     "cap": 0.16,
+     "switch": 14.54,
+     "cut": 0.27
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 16.65,
+    "kind": "low",
+    "dur": 0.02,
+    "db": 14.5,
+    "rel_db": -0.0,
+    "low_mid_db": 9.0,
+    "voiced": 0.25,
+    "near": {
+     "cap": 0.85,
+     "switch": 15.23,
+     "cut": 0.42
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   }
+  ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.1,
+   "chance": 0.068
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 3
+  },
+  "line_link": {
+   "kept_to_line": [
+    {
+     "t": 7.2,
+     "kind": "tonal",
+     "lines": [
+      3
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
+    {
+     "t": 15.96,
+     "kind": "low",
+     "lines": [
+      8,
+      17
+     ],
+     "line_sfx": [
+      true,
+      false
+     ],
+     "line_sticker": [
+      0,
+      0
+     ]
+    },
+    {
+     "t": 16.65,
+     "kind": "low",
+     "lines": [
+      9,
+      18
+     ],
+     "line_sfx": [
+      false,
+      false
+     ],
+     "line_sticker": [
+      0,
+      0
+     ]
+    }
+   ],
+   "line_sfx_to_kept": [
+    {
+     "line": 8,
+     "t": 13.9,
+     "nearest_kept_s": 2.06,
+     "match": false
+    }
+   ],
+   "sticker_to_kept": []
+  }
+ },
+ "bpjoacs2S6Q": {
+  "strong_n": 0,
+  "strong_hits": {
+   "cap": [],
+   "cut": []
+  },
+  "dur": 24.0,
+  "n_events_all": 2,
+  "cand": [
+   {
+    "t": 0.05,
+    "kind": "broad",
+    "dur": 0.12,
+    "db": 19.4,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 7304,
+    "near": {
+     "cap": 2.55,
+     "cut": 2.55
+    }
+   },
+   {
+    "t": 14.74,
+    "kind": "low",
+    "dur": 0.09,
+    "db": 18.3,
+    "rel_db": 0.0,
+    "low_mid_db": 5.0,
+    "voiced": 0.0,
+    "near": {
+     "cap": 0.14,
+     "cut": 0.49
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    2.6,
+    4.5,
+    6.8,
+    8.3,
+    10.7,
+    12.5,
+    14.6,
+    16.4,
+    17.6,
+    20.0,
+    22.4
+   ],
+   "sticker": [],
+   "switch": [],
+   "cut": [
+    2.6,
+    4.5,
+    6.77,
+    8.3,
+    10.7,
+    12.53,
+    13.67,
+    15.23,
+    16.37,
+    17.6,
+    18.9,
+    19.97,
+    20.6,
+    21.63,
+    22.37
+   ]
+  },
+  "chance": {
+   "cap": 0.14,
+   "cut": 0.19
+  },
+  "asr_words": 0,
+  "cand_in_words": [],
+  "cand_kept": [
+   {
+    "t": 0.05,
+    "kind": "broad",
+    "dur": 0.12,
+    "db": 19.4,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 7304,
+    "near": {
+     "cap": 2.55,
+     "cut": 2.55
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 14.74,
+    "kind": "low",
+    "dur": 0.09,
+    "db": 18.3,
+    "rel_db": 0.0,
+    "low_mid_db": 5.0,
+    "voiced": 0.0,
+    "near": {
+     "cap": 0.14,
+     "cut": 0.49
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   }
+  ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.05,
+   "chance": 0.061
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 2
+  },
+  "line_link": {
+   "kept_to_line": [
+    {
+     "t": 0.05,
+     "kind": "broad",
+     "lines": [
+      0
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
+    {
+     "t": 14.74,
+     "kind": "low",
+     "lines": [
+      7
+     ],
+     "line_sfx": [
+      true
+     ],
+     "line_sticker": [
+      0
+     ]
+    }
+   ],
+   "line_sfx_to_kept": [
+    {
+     "line": 7,
+     "t": 14.73,
+     "nearest_kept_s": 0.01,
+     "match": true
+    }
+   ],
+   "sticker_to_kept": []
+  }
+ },
+ "edTkyQKrqMk": {
+  "strong_n": 8,
+  "strong_hits": {
+   "cap": [],
+   "cut": []
+  },
+  "dur": 19.2,
+  "n_events_all": 29,
+  "cand": [
+   {
+    "t": 8.61,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 15.7,
+    "rel_db": -0.3,
+    "low_mid_db": 11.3,
+    "voiced": 0.11,
+    "near": {
+     "cap": 1.89,
+     "cut": 0.18
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 9.46,
+    "kind": "broad",
+    "dur": 0.09,
+    "db": 22.8,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 7073,
+    "near": {
+     "cap": 1.04,
+     "cut": 0.39
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 11.19,
+    "kind": "low",
+    "dur": 0.12,
+    "db": 28.1,
+    "rel_db": -0.9,
+    "low_mid_db": 11.9,
+    "voiced": 0.62,
+    "near": {
+     "cap": 0.69,
+     "cut": 2.11
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 11.61,
+    "kind": "low",
+    "dur": 0.02,
+    "db": 14.0,
+    "rel_db": -0.4,
+    "low_mid_db": 10.2,
+    "voiced": 0.0,
+    "near": {
+     "cap": 1.11,
+     "cut": 1.69
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 12.04,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 13.8,
+    "rel_db": -0.6,
+    "low_mid_db": 10.6,
+    "voiced": 0.56,
+    "near": {
+     "cap": 1.26,
+     "cut": 1.26
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 14.4,
+    "kind": "low",
+    "dur": 0.05,
+    "db": 31.2,
+    "rel_db": -0.6,
+    "low_mid_db": 9.9,
+    "voiced": 0.5,
+    "near": {
+     "cap": 0.6,
+     "cut": 0.57
+    }
+   },
+   {
+    "t": 14.62,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 14.0,
+    "rel_db": -0.2,
+    "low_mid_db": 11.7,
+    "voiced": 0.56,
+    "near": {
+     "cap": 0.38,
+     "cut": 0.35
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 15.05,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 13.3,
+    "rel_db": -0.5,
+    "low_mid_db": 12.3,
+    "voiced": 0.0,
+    "near": {
+     "cap": 0.05,
+     "cut": 0.08
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 15.48,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 13.4,
+    "rel_db": -0.8,
+    "low_mid_db": 12.4,
+    "voiced": 0.0,
+    "near": {
+     "cap": 0.48,
+     "cut": 0.51
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 16.95,
+    "kind": "broad",
+    "dur": 0.06,
+    "db": 26.6,
+    "voiced": 0.18,
+    "isolated": 0.8,
+    "cen_hz": 7141,
+    "near": {
+     "cap": 0.55,
+     "cut": 0.42
+    }
+   },
+   {
+    "t": 17.17,
+    "kind": "broad",
+    "dur": 0.1,
+    "db": 24.6,
+    "voiced": 0.07,
+    "isolated": 0.9,
+    "cen_hz": 7207,
+    "near": {
+     "cap": 0.77,
+     "cut": 0.64
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 18.04,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 14.8,
+    "rel_db": -0.3,
+    "low_mid_db": 10.6,
+    "voiced": 0.56,
+    "near": {
+     "cap": 0.04,
+     "cut": 1.51
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 18.47,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 13.6,
+    "rel_db": -0.1,
+    "low_mid_db": 11.1,
+    "voiced": 0.0,
+    "near": {
+     "cap": 0.47,
+     "cut": 1.94
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    2.5,
+    4.7,
+    6.7,
+    10.5,
+    13.3,
+    15.0,
+    16.4,
+    18.0
+   ],
+   "sticker": [],
+   "switch": [],
+   "cut": [
+    8.43,
+    9.07,
+    13.3,
+    13.83,
+    14.97,
+    16.53
+   ]
+  },
+  "chance": {
+   "cap": 0.12,
+   "cut": 0.09
+  },
+  "asr_words": 0,
+  "cand_in_words": [],
+  "cand_kept": [
+   {
+    "t": 14.4,
+    "kind": "low",
+    "dur": 0.05,
+    "db": 31.2,
+    "rel_db": -0.6,
+    "low_mid_db": 9.9,
+    "voiced": 0.5,
+    "near": {
+     "cap": 0.6,
+     "cut": 0.57
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 15.05,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 13.3,
+    "rel_db": -0.5,
+    "low_mid_db": 12.3,
+    "voiced": 0.0,
+    "near": {
+     "cap": 0.05,
+     "cut": 0.08
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    },
+    "keep_why": "배경음 박자 위지만 판독(눈) sfx 자리 — 귀 확인(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
+   },
+   {
+    "t": 16.95,
+    "kind": "broad",
+    "dur": 0.06,
+    "db": 26.6,
+    "voiced": 0.18,
+    "isolated": 0.8,
+    "cen_hz": 7141,
+    "near": {
+     "cap": 0.55,
+     "cut": 0.42
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 18.04,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 14.8,
+    "rel_db": -0.3,
+    "low_mid_db": 10.6,
+    "voiced": 0.56,
+    "near": {
+     "cap": 0.04,
+     "cut": 1.51
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    },
+    "keep_why": "배경음 박자 위지만 판독(눈) sfx 자리 — 귀 확인(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
+   }
+  ],
+  "cand_bgm": [
+   {
+    "t": 8.61,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 15.7,
+    "rel_db": -0.3,
+    "low_mid_db": 11.3,
+    "voiced": 0.11,
+    "near": {
+     "cap": 1.89,
+     "cut": 0.18
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 9.46,
+    "kind": "broad",
+    "dur": 0.09,
+    "db": 22.8,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 7073,
+    "near": {
+     "cap": 1.04,
+     "cut": 0.39
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 11.19,
+    "kind": "low",
+    "dur": 0.12,
+    "db": 28.1,
+    "rel_db": -0.9,
+    "low_mid_db": 11.9,
+    "voiced": 0.62,
+    "near": {
+     "cap": 0.69,
+     "cut": 2.11
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 11.61,
+    "kind": "low",
+    "dur": 0.02,
+    "db": 14.0,
+    "rel_db": -0.4,
+    "low_mid_db": 10.2,
+    "voiced": 0.0,
+    "near": {
+     "cap": 1.11,
+     "cut": 1.69
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 12.04,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 13.8,
+    "rel_db": -0.6,
+    "low_mid_db": 10.6,
+    "voiced": 0.56,
+    "near": {
+     "cap": 1.26,
+     "cut": 1.26
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 14.62,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 14.0,
+    "rel_db": -0.2,
+    "low_mid_db": 11.7,
+    "voiced": 0.56,
+    "near": {
+     "cap": 0.38,
+     "cut": 0.35
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 15.48,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 13.4,
+    "rel_db": -0.8,
+    "low_mid_db": 12.4,
+    "voiced": 0.0,
+    "near": {
+     "cap": 0.48,
+     "cut": 0.51
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 17.17,
+    "kind": "broad",
+    "dur": 0.1,
+    "db": 24.6,
+    "voiced": 0.07,
+    "isolated": 0.9,
+    "cen_hz": 7207,
+    "near": {
+     "cap": 0.77,
+     "cut": 0.64
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 18.47,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 13.6,
+    "rel_db": -0.1,
+    "low_mid_db": 11.1,
+    "voiced": 0.0,
+    "near": {
+     "cap": 0.47,
+     "cut": 1.94
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   }
+  ],
+  "keep_window": {
+   "w": 0.15,
+   "chance": 0.091
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 4
+  },
+  "line_link": {
+   "kept_to_line": [
+    {
+     "t": 14.4,
+     "kind": "low",
+     "lines": [
+      5,
+      20
+     ],
+     "line_sfx": [
+      true,
+      false
+     ],
+     "line_sticker": [
+      0,
+      0
+     ]
+    },
+    {
+     "t": 15.05,
+     "kind": "low",
+     "lines": [
+      6,
+      21
+     ],
+     "line_sfx": [
+      true,
+      false
+     ],
+     "line_sticker": [
+      0,
+      0
+     ]
+    },
+    {
+     "t": 16.95,
+     "kind": "broad",
+     "lines": [
+      7,
+      24
+     ],
+     "line_sfx": [
+      true,
+      false
+     ],
+     "line_sticker": [
+      0,
+      0
+     ]
+    },
+    {
+     "t": 18.04,
+     "kind": "low",
+     "lines": [
+      8,
+      22
+     ],
+     "line_sfx": [
+      true,
+      false
+     ],
+     "line_sticker": [
+      0,
+      0
+     ]
+    }
+   ],
+   "line_sfx_to_kept": [
+    {
+     "line": 3,
+     "t": 6.9,
+     "nearest_kept_s": 7.5,
+     "match": false
+    },
+    {
+     "line": 4,
+     "t": 10.467,
+     "nearest_kept_s": 3.93,
+     "match": false
+    },
+    {
+     "line": 5,
+     "t": 13.3,
+     "nearest_kept_s": 1.1,
+     "match": false
+    },
+    {
+     "line": 6,
+     "t": 14.967,
+     "nearest_kept_s": 0.08,
+     "match": true
+    },
+    {
+     "line": 7,
+     "t": 16.533,
+     "nearest_kept_s": 0.42,
+     "match": false
+    },
+    {
+     "line": 8,
+     "t": 17.967,
+     "nearest_kept_s": 0.07,
+     "match": true
+    }
+   ],
+   "sticker_to_kept": []
+  }
+ },
+ "fzoZc7V_hDM": {
+  "strong_n": 3,
+  "strong_hits": {
+   "cap": [
+    11.19
+   ],
+   "cut": []
+  },
+  "dur": 12.6,
+  "n_events_all": 11,
+  "cand": [
+   {
+    "t": 1.44,
+    "kind": "broad",
+    "dur": 0.07,
+    "db": 25.4,
+    "voiced": 0.0,
+    "isolated": 0.95,
+    "cen_hz": 7860,
+    "near": {
+     "cap": 0.66,
+     "cut": 5.46
+    }
+   },
+   {
+    "t": 7.45,
+    "kind": "broad",
+    "dur": 0.13,
+    "db": 18.2,
+    "voiced": 0.0,
+    "isolated": 0.9,
+    "cen_hz": 6652,
+    "near": {
+     "cap": 0.55,
+     "cut": 0.55
+    }
+   },
+   {
+    "t": 8.61,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 15.3,
+    "rel_db": -0.2,
+    "low_mid_db": 11.0,
+    "voiced": 0.0,
+    "near": {
+     "cap": 0.09,
+     "cut": 0.09
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 9.46,
+    "kind": "broad",
+    "dur": 0.08,
+    "db": 20.0,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 7140,
+    "near": {
+     "cap": 0.74,
+     "cut": 0.76
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 11.19,
+    "kind": "low",
+    "dur": 0.12,
+    "db": 27.1,
+    "rel_db": -0.8,
+    "low_mid_db": 12.1,
+    "voiced": 0.56,
+    "near": {
+     "cap": 0.09,
+     "cut": 2.49
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 11.61,
+    "kind": "low",
+    "dur": 0.02,
+    "db": 13.6,
+    "rel_db": -0.3,
+    "low_mid_db": 10.0,
+    "voiced": 0.0,
+    "near": {
+     "cap": 0.51,
+     "cut": 2.91
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 12.04,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 14.2,
+    "rel_db": 0.0,
+    "low_mid_db": 10.9,
+    "voiced": 0.11,
+    "near": {
+     "cap": 0.94,
+     "cut": 3.34
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    2.1,
+    3.5,
+    4.8,
+    6.9,
+    8.7,
+    10.2,
+    11.1
+   ],
+   "sticker": [],
+   "switch": [],
+   "cut": [
+    6.9,
+    8.7
+   ]
+  },
+  "chance": {
+   "cap": 0.16,
+   "cut": 0.05
+  },
+  "asr_words": 0,
+  "cand_in_words": [],
+  "cand_kept": [
+   {
+    "t": 1.44,
+    "kind": "broad",
+    "dur": 0.07,
+    "db": 25.4,
+    "voiced": 0.0,
+    "isolated": 0.95,
+    "cen_hz": 7860,
+    "near": {
+     "cap": 0.66,
+     "cut": 5.46
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 7.45,
+    "kind": "broad",
+    "dur": 0.13,
+    "db": 18.2,
+    "voiced": 0.0,
+    "isolated": 0.9,
+    "cen_hz": 6652,
+    "near": {
+     "cap": 0.55,
+     "cut": 0.55
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   }
+  ],
+  "cand_bgm": [
+   {
+    "t": 8.61,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 15.3,
+    "rel_db": -0.2,
+    "low_mid_db": 11.0,
+    "voiced": 0.0,
+    "near": {
+     "cap": 0.09,
+     "cut": 0.09
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 9.46,
+    "kind": "broad",
+    "dur": 0.08,
+    "db": 20.0,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 7140,
+    "near": {
+     "cap": 0.74,
+     "cut": 0.76
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 11.19,
+    "kind": "low",
+    "dur": 0.12,
+    "db": 27.1,
+    "rel_db": -0.8,
+    "low_mid_db": 12.1,
+    "voiced": 0.56,
+    "near": {
+     "cap": 0.09,
+     "cut": 2.49
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 11.61,
+    "kind": "low",
+    "dur": 0.02,
+    "db": 13.6,
+    "rel_db": -0.3,
+    "low_mid_db": 10.0,
+    "voiced": 0.0,
+    "near": {
+     "cap": 0.51,
+     "cut": 2.91
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   },
+   {
+    "t": 12.04,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 14.2,
+    "rel_db": 0.0,
+    "low_mid_db": 10.9,
+    "voiced": 0.11,
+    "near": {
+     "cap": 0.94,
+     "cut": 3.34
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 139.7,
+     "T": 0.429
+    }
+   }
+  ],
+  "keep_window": {
+   "w": 0.3,
+   "chance": 0.096
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 2
+  },
+  "line_link": {
+   "kept_to_line": [
+    {
+     "t": 1.44,
+     "kind": "broad",
+     "lines": [
+      0,
+      8
+     ],
+     "line_sfx": [
+      false,
+      false
+     ],
+     "line_sticker": [
+      1,
+      0
+     ]
+    },
+    {
+     "t": 7.45,
+     "kind": "broad",
+     "lines": [
+      4,
+      11
+     ],
+     "line_sfx": [
+      true,
+      true
+     ],
+     "line_sticker": [
+      0,
+      0
+     ]
+    }
+   ],
+   "line_sfx_to_kept": [
+    {
+     "line": 1,
+     "t": 2.067,
+     "nearest_kept_s": 0.63,
+     "match": false
+    },
+    {
+     "line": 4,
+     "t": 6.9,
+     "nearest_kept_s": 0.55,
+     "match": false
+    },
+    {
+     "line": 5,
+     "t": 8.7,
+     "nearest_kept_s": 1.25,
+     "match": false
+    },
+    {
+     "line": 7,
+     "t": 11.1,
+     "nearest_kept_s": 3.65,
+     "match": false
+    },
+    {
+     "line": 11,
+     "t": 7.333,
+     "nearest_kept_s": 0.12,
+     "match": true
+    },
+    {
+     "line": 12,
+     "t": 8.7,
+     "nearest_kept_s": 1.25,
+     "match": false
+    },
+    {
+     "line": 13,
+     "t": 11.1,
+     "nearest_kept_s": 3.65,
+     "match": false
+    }
+   ],
+   "sticker_to_kept": [
+    {
+     "line": 0,
+     "t_in": 0.333,
+     "nearest_kept_s": 1.11,
+     "match": false
+    }
+   ]
+  }
+ },
+ "oT-SxFJcQ-4": {
+  "strong_n": 6,
+  "strong_hits": {
+   "cap": [],
+   "switch": [],
+   "cut": []
+  },
+  "dur": 28.0,
+  "n_events_all": 20,
+  "cand": [
+   {
+    "t": 0.38,
+    "kind": "broad",
+    "dur": 0.13,
+    "db": 23.2,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 6836,
+    "near": {
+     "cap": 1.32,
+     "switch": 5.22,
+     "cut": 1.29
+    }
+   },
+   {
+    "t": 0.72,
+    "kind": "broad",
+    "dur": 0.1,
+    "db": 22.3,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 7045,
+    "near": {
+     "cap": 0.98,
+     "switch": 4.88,
+     "cut": 0.95
+    }
+   },
+   {
+    "t": 1.15,
+    "kind": "low",
+    "dur": 0.14,
+    "db": 15.0,
+    "rel_db": 0.0,
+    "low_mid_db": 13.0,
+    "voiced": 0.61,
+    "near": {
+     "cap": 0.55,
+     "switch": 4.45,
+     "cut": 0.52
+    }
+   },
+   {
+    "t": 1.49,
+    "kind": "broad",
+    "dur": 0.35,
+    "db": 19.3,
+    "voiced": 0.11,
+    "isolated": 0.9,
+    "cen_hz": 6853,
+    "near": {
+     "cap": 0.21,
+     "switch": 4.11,
+     "cut": 0.18
+    }
+   },
+   {
+    "t": 2.77,
+    "kind": "tonal",
+    "dur": 0.23,
+    "db": 34.6,
+    "cen_hz": 1055,
+    "near": {
+     "cap": 0.93,
+     "switch": 2.83,
+     "cut": 0.9
+    }
+   },
+   {
+    "t": 3.02,
+    "kind": "tonal",
+    "dur": 0.21,
+    "db": 31.6,
+    "cen_hz": 1055,
+    "near": {
+     "cap": 0.68,
+     "switch": 2.58,
+     "cut": 0.65
+    }
+   },
+   {
+    "t": 6.25,
+    "kind": "tonal",
+    "dur": 0.27,
+    "db": 47.3,
+    "cen_hz": 1314,
+    "near": {
+     "cap": 0.65,
+     "switch": 0.65,
+     "cut": 0.65
+    }
+   },
+   {
+    "t": 23.21,
+    "kind": "tonal",
+    "dur": 0.26,
+    "db": 45.4,
+    "cen_hz": 1249,
+    "near": {
+     "cap": 0.59,
+     "switch": 17.61,
+     "cut": 0.59
+    }
+   },
+   {
+    "t": 24.5,
+    "kind": "tonal",
+    "dur": 0.26,
+    "db": 51.9,
+    "cen_hz": 1787,
+    "near": {
+     "cap": 0.7,
+     "switch": 18.9,
+     "cut": 0.7
+    }
+   },
+   {
+    "t": 25.54,
+    "kind": "tonal",
+    "dur": 0.28,
+    "db": 49.8,
+    "cen_hz": 1055,
+    "near": {
+     "cap": 0.36,
+     "switch": 19.94,
+     "cut": 0.36
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    1.7,
+    3.7,
+    5.6,
+    7.6,
+    9.7,
+    11.7,
+    13.7,
+    15.8,
+    17.8,
+    19.8,
+    21.8,
+    23.8,
+    25.9
+   ],
+   "sticker": [],
+   "switch": [
+    5.6
+   ],
+   "cut": [
+    1.67,
+    3.67,
+    4.9,
+    5.6,
+    7.63,
+    9.73,
+    11.73,
+    12.83,
+    13.73,
+    15.3,
+    15.8,
+    17.8,
+    19.8,
+    21.8,
+    23.8,
+    25.9,
+    26.83
+   ]
+  },
+  "chance": {
+   "cap": 0.14,
+   "switch": 0.01,
+   "cut": 0.18
+  },
+  "asr_words": 0,
+  "cand_in_words": [],
+  "cand_kept": [
+   {
+    "t": 0.38,
+    "kind": "broad",
+    "dur": 0.13,
+    "db": 23.2,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 6836,
+    "near": {
+     "cap": 1.32,
+     "switch": 5.22,
+     "cut": 1.29
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 0.72,
+    "kind": "broad",
+    "dur": 0.1,
+    "db": 22.3,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 7045,
+    "near": {
+     "cap": 0.98,
+     "switch": 4.88,
+     "cut": 0.95
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 1.15,
+    "kind": "low",
+    "dur": 0.14,
+    "db": 15.0,
+    "rel_db": 0.0,
+    "low_mid_db": 13.0,
+    "voiced": 0.61,
+    "near": {
+     "cap": 0.55,
+     "switch": 4.45,
+     "cut": 0.52
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 1.49,
+    "kind": "broad",
+    "dur": 0.35,
+    "db": 19.3,
+    "voiced": 0.11,
+    "isolated": 0.9,
+    "cen_hz": 6853,
+    "near": {
+     "cap": 0.21,
+     "switch": 4.11,
+     "cut": 0.18
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 2.77,
+    "kind": "tonal",
+    "dur": 0.23,
+    "db": 34.6,
+    "cen_hz": 1055,
+    "near": {
+     "cap": 0.93,
+     "switch": 2.83,
+     "cut": 0.9
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 3.02,
+    "kind": "tonal",
+    "dur": 0.21,
+    "db": 31.6,
+    "cen_hz": 1055,
+    "near": {
+     "cap": 0.68,
+     "switch": 2.58,
+     "cut": 0.65
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 6.25,
+    "kind": "tonal",
+    "dur": 0.27,
+    "db": 47.3,
+    "cen_hz": 1314,
+    "near": {
+     "cap": 0.65,
+     "switch": 0.65,
+     "cut": 0.65
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 23.21,
+    "kind": "tonal",
+    "dur": 0.26,
+    "db": 45.4,
+    "cen_hz": 1249,
+    "near": {
+     "cap": 0.59,
+     "switch": 17.61,
+     "cut": 0.59
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 24.5,
+    "kind": "tonal",
+    "dur": 0.26,
+    "db": 51.9,
+    "cen_hz": 1787,
+    "near": {
+     "cap": 0.7,
+     "switch": 18.9,
+     "cut": 0.7
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   },
+   {
+    "t": 25.54,
+    "kind": "tonal",
+    "dur": 0.28,
+    "db": 49.8,
+    "cen_hz": 1055,
+    "near": {
+     "cap": 0.36,
+     "switch": 19.94,
+     "cut": 0.36
+    },
+    "confidence": "신호",
+    "ear_pending": true
+   }
+  ],
+  "cand_bgm": [],
+  "keep_window": {
+   "w": 0.05,
+   "chance": 0.06
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 10
+  },
+  "line_link": {
+   "kept_to_line": [
+    {
+     "t": 0.38,
+     "kind": "broad",
+     "lines": [
+      0
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
+    {
+     "t": 0.72,
+     "kind": "broad",
+     "lines": [
+      0
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
+    {
+     "t": 1.15,
+     "kind": "low",
+     "lines": [
+      0
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
+    {
+     "t": 1.49,
+     "kind": "broad",
+     "lines": [
+      0
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
+    {
+     "t": 2.77,
+     "kind": "tonal",
+     "lines": [
+      1
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
+    {
+     "t": 3.02,
+     "kind": "tonal",
+     "lines": [
+      1
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
+    {
+     "t": 6.25,
+     "kind": "tonal",
+     "lines": [
+      3,
+      14
+     ],
+     "line_sfx": [
+      false,
+      false
+     ],
+     "line_sticker": [
+      0,
+      0
+     ]
+    },
+    {
+     "t": 23.21,
+     "kind": "tonal",
+     "lines": [
+      11
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      0
+     ]
+    },
+    {
+     "t": 24.5,
+     "kind": "tonal",
+     "lines": [
+      12
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      1
+     ]
+    },
+    {
+     "t": 25.54,
+     "kind": "tonal",
+     "lines": [
+      12
+     ],
+     "line_sfx": [
+      false
+     ],
+     "line_sticker": [
+      1
+     ]
+    }
+   ],
+   "line_sfx_to_kept": [],
+   "sticker_to_kept": [
+    {
+     "line": 2,
+     "t_in": 3.667,
+     "nearest_kept_s": 0.65,
+     "match": false
+    },
+    {
+     "line": 4,
+     "t_in": 7.633,
+     "nearest_kept_s": 1.38,
+     "match": false
+    },
+    {
+     "line": 6,
+     "t_in": 11.733,
+     "nearest_kept_s": 5.48,
+     "match": false
+    },
+    {
+     "line": 8,
+     "t_in": 15.8,
+     "nearest_kept_s": 7.41,
+     "match": false
+    },
+    {
+     "line": 10,
+     "t_in": 19.8,
+     "nearest_kept_s": 3.41,
+     "match": false
+    },
+    {
+     "line": 12,
+     "t_in": 23.8,
+     "nearest_kept_s": 0.59,
+     "match": false
+    }
+   ]
+  }
+ },
+ "rAt34vkQ0OY": {
+  "strong_n": 2,
+  "strong_hits": {
+   "cap": [],
+   "cut": []
+  },
+  "dur": 11.5,
+  "n_events_all": 10,
+  "cand": [
+   {
+    "t": 7.74,
+    "kind": "broad",
+    "dur": 0.07,
+    "db": 19.2,
+    "voiced": 0.0,
+    "isolated": 0.8,
+    "cen_hz": 7782,
+    "near": {
+     "cap": 0.34,
+     "cut": 0.37
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 69.8,
+     "T": 0.86
+    }
+   },
+   {
+    "t": 8.61,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 15.6,
+    "rel_db": 0.0,
+    "low_mid_db": 11.6,
+    "voiced": 0.0,
+    "near": {
+     "cap": 0.69,
+     "cut": 1.24
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 69.8,
+     "T": 0.86
+    }
+   },
+   {
+    "t": 11.19,
+    "kind": "low",
+    "dur": 0.21,
+    "db": 37.4,
+    "rel_db": -0.6,
+    "low_mid_db": 12.3,
+    "voiced": 0.58,
+    "near": {
+     "cap": 0.69,
+     "cut": 0.69
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 69.8,
+     "T": 0.86
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    2.2,
+    4.3,
+    5.9,
+    7.4,
+    9.3,
+    10.5
+   ],
+   "sticker": [],
+   "switch": [],
+   "cut": [
+    2.17,
+    4.27,
+    5.67,
+    7.37,
+    10.5
+   ]
+  },
+  "chance": {
+   "cap": 0.15,
+   "cut": 0.13
+  },
+  "asr_words": 0,
+  "cand_in_words": [],
+  "cand_kept": [
+   {
+    "t": 8.61,
+    "kind": "low",
+    "dur": 0.03,
+    "db": 15.6,
+    "rel_db": 0.0,
+    "low_mid_db": 11.6,
+    "voiced": 0.0,
+    "near": {
+     "cap": 0.69,
+     "cut": 1.24
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 69.8,
+     "T": 0.86
+    },
+    "keep_why": "배경음 박자 위지만 판독(눈) sfx 자리 — 귀 확인(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
+   },
+   {
+    "t": 11.19,
+    "kind": "low",
+    "dur": 0.21,
+    "db": 37.4,
+    "rel_db": -0.6,
+    "low_mid_db": 12.3,
+    "voiced": 0.58,
+    "near": {
+     "cap": 0.69,
+     "cut": 0.69
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 69.8,
+     "T": 0.86
+    },
+    "keep_why": "배경음 박자 위지만 판독(눈) sfx 자리 — 귀 확인(㉞②)",
+    "confidence": "눈",
+    "ear_pending": true
+   }
+  ],
+  "cand_bgm": [
+   {
+    "t": 7.74,
+    "kind": "broad",
+    "dur": 0.07,
+    "db": 19.2,
+    "voiced": 0.0,
+    "isolated": 0.8,
+    "cen_hz": 7782,
+    "near": {
+     "cap": 0.34,
+     "cut": 0.37
+    },
+    "kind_class": "bgm_beat",
+    "beat": {
+     "bpm": 69.8,
+     "T": 0.86
+    }
+   }
+  ],
+  "keep_window": {
+   "w": 0.1,
+   "chance": 0.088
+  },
+  "sfx_count": {
+   "sure": 0,
+   "pending": 2
+  },
+  "line_link": {
+   "kept_to_line": [
+    {
+     "t": 8.61,
+     "kind": "low",
+     "lines": [
+      4,
+      16
+     ],
+     "line_sfx": [
+      false,
+      true
+     ],
+     "line_sticker": [
+      0,
+      0
+     ]
+    },
+    {
+     "t": 11.19,
+     "kind": "low",
+     "lines": [
+      6,
+      18
+     ],
+     "line_sfx": [
+      false,
+      true
+     ],
+     "line_sticker": [
+      0,
+      0
+     ]
+    }
+   ],
+   "line_sfx_to_kept": [
+    {
+     "line": 5,
+     "t": 9.62,
+     "nearest_kept_s": 1.01,
+     "match": false
+    },
+    {
+     "line": 8,
+     "t": 1.72,
+     "nearest_kept_s": 6.89,
+     "match": false
+    },
+    {
+     "line": 9,
+     "t": 2.58,
+     "nearest_kept_s": 6.03,
+     "match": false
+    },
+    {
+     "line": 12,
+     "t": 4.8,
+     "nearest_kept_s": 3.81,
+     "match": false
+    },
+    {
+     "line": 13,
+     "t": 6.1,
+     "nearest_kept_s": 2.51,
+     "match": false
+    },
+    {
+     "line": 16,
+     "t": 8.6,
+     "nearest_kept_s": 0.01,
+     "match": true
+    },
+    {
+     "line": 18,
+     "t": 11.15,
+     "nearest_kept_s": 0.04,
+     "match": true
+    }
+   ],
+   "sticker_to_kept": []
+  }
+ }
+}

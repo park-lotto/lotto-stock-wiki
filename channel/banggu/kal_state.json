@@ -1,0 +1,148 @@
+{
+ "slug": "banggu",
+ "ref": "https://www.youtube.com/@방구석친구들D",
+ "steps": {
+  "tteutgi": {
+   "state": "done",
+   "sec": 1.7,
+   "at": "2026-10-25 00:01",
+   "outputs": {
+    "ids": [
+     "ILIiqCJAOSI",
+     "8iEhEniPpjE",
+     "48PbLQ5az6k",
+     "Kz8KlJoQ1Vc",
+     "E9hmVYVa7OY",
+     "ayNy6CSSrIQ"
+    ],
+    "dir": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\banggu\\뜯기"
+   },
+   "note": "뜯기 6편 (LLM=claude_cli, 받아쓰기 칸은 vtt 로)"
+  },
+  "select": {
+   "state": "done",
+   "sec": 13.7,
+   "at": "2026-10-25 00:01",
+   "outputs": {
+    "top": "C:\\숏템_칼카피\\banggu\\top.json"
+   },
+   "note": "방구석 친구들 구독 21700 편 107 조회중앙 37,000 최대 10,000,000 (구독 대비 중앙 1.71)"
+  },
+  "collect": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-25 00:01",
+   "outputs": {
+    "src": "C:\\숏템_칼카피\\banggu\\src",
+    "ids": [
+     "ILIiqCJAOSI",
+     "8iEhEniPpjE",
+     "48PbLQ5az6k",
+     "Kz8KlJoQ1Vc",
+     "E9hmVYVa7OY",
+     "ayNy6CSSrIQ"
+    ]
+   },
+   "note": "받음 6/6(1080p, C 여유 22.4GB)"
+  },
+  "frames": {
+   "state": "done",
+   "sec": 543.3,
+   "at": "2026-10-25 00:10",
+   "outputs": {
+    "dirs": {
+     "ILIiqCJAOSI": "C:\\숏템_칼카피\\banggu\\kal\\frames_ILIiqCJAOSI",
+     "8iEhEniPpjE": "C:\\숏템_칼카피\\banggu\\kal\\frames_8iEhEniPpjE",
+     "48PbLQ5az6k": "C:\\숏템_칼카피\\banggu\\kal\\frames_48PbLQ5az6k",
+     "Kz8KlJoQ1Vc": "C:\\숏템_칼카피\\banggu\\kal\\frames_Kz8KlJoQ1Vc",
+     "E9hmVYVa7OY": "C:\\숏템_칼카피\\banggu\\kal\\frames_E9hmVYVa7OY",
+     "ayNy6CSSrIQ": "C:\\숏템_칼카피\\banggu\\kal\\frames_ayNy6CSSrIQ"
+    }
+   },
+   "note": "시트·0.1초 띠 6편"
+  },
+  "skeleton": {
+   "state": "done",
+   "sec": 0.1,
+   "at": "2026-10-25 00:10",
+   "outputs": {
+    "skeletons": [
+     "ILIiqCJAOSI",
+     "8iEhEniPpjE",
+     "48PbLQ5az6k",
+     "Kz8KlJoQ1Vc",
+     "E9hmVYVa7OY",
+     "ayNy6CSSrIQ"
+    ],
+    "bundle": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\banggu\\_kal\\워커묶음.json",
+    "brief": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\banggu\\_kal\\줄판독_브리프.md"
+   },
+   "note": "뼈대 6편 새로, 묶음 6편"
+  },
+  "readlines": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-25 00:55",
+   "outputs": {
+    "ids": [
+     "ILIiqCJAOSI",
+     "8iEhEniPpjE",
+     "48PbLQ5az6k",
+     "Kz8KlJoQ1Vc",
+     "E9hmVYVa7OY",
+     "ayNy6CSSrIQ"
+    ]
+   },
+   "note": "줄판독 6편 strict 통과"
+  },
+  "rules": {
+   "state": "done",
+   "sec": 0.1,
+   "at": "2026-10-25 01:07",
+   "outputs": {
+    "draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\banggu\\_kal\\스타일분석_초안.md",
+    "palette": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\banggu\\팔레트.json",
+    "plan_draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\banggu\\_kal\\banggu판_초안.json"
+   },
+   "note": "규칙빈도·대본언어·팔레트·판 설정 초안 + 스타일분석.md 있음"
+  },
+  "copy": {
+   "state": "done",
+   "sec": 86.0,
+   "at": "2026-10-25 01:08",
+   "outputs": {
+    "frames": [],
+    "preset": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\banggu\\preset\\게시글형"
+   },
+   "note": "자동 설명서 0편 · 프리셋 게시글형"
+  },
+  "make": {
+   "state": "waiting_human",
+   "sec": 0.0,
+   "at": "2026-10-25 01:08",
+   "outputs": {},
+   "note": "제작 — 소재·대본·재료 준비 뒤 preset_make 로 시험편 1편(TTS 과금은 허락됨) → --ours-mp4/--ours-lines 로 다시 실행"
+  }
+ },
+ "asked": {},
+ "brand": "썰템홈샷",
+ "n": 6,
+ "hybrid": "아니오",
+ "channel": {
+  "name": "방구석 친구들",
+  "url": "https://www.youtube.com/@방구석친구들D/shorts",
+  "subs": 21700,
+  "total": 107,
+  "view_median": 37000,
+  "view_max": 10000000,
+  "top_ids": [
+   "ILIiqCJAOSI",
+   "8iEhEniPpjE",
+   "48PbLQ5az6k",
+   "Kz8KlJoQ1Vc",
+   "E9hmVYVa7OY",
+   "ayNy6CSSrIQ"
+  ],
+  "views_per_sub": 1.71
+ }
+}

@@ -49,12 +49,26 @@
    1680,
    1919
   ],
-  "watermark": "창 오른쪽 위 반투명 '스타픽룸'(x 약 790~1030, y 약 530~560)",
+  "watermark": {
+   "text": "스타픽룸",
+   "where": "창 오른쪽 위 반투명 '스타픽룸'(x 약 790~1030, y 약 530~560)",
+   "alpha": 0.55,
+   "alpha_basis": "눈(1판 스타일분석 §3 약 55%)"
+  },
   "caption_y": [
    1112,
    1168
   ],
-  "title_fill_white": "#FDFDFD"
+  "title_fill_white": "#FDFDFD",
+  "source_hex": "#8B8B88",
+  "caption_band_measure": [
+   1090,
+   1190
+  ],
+  "cut_window_measure": [
+   484,
+   1540
+  ]
  },
  "lines": [
   {
@@ -80,7 +94,15 @@
     5.47
    ],
    "type_cps": 10.0,
-   "type_note": "5.5 '윤' → 6.5 '신', 11자/1.0초, 글자마다 0.1초"
+   "type_note": "5.5 '윤' → 6.5 '신', 11자/1.0초, 글자마다 0.1초",
+   "role": "다리",
+   "fit": 7,
+   "scene_desc": "남자가 젓가락으로 핫도그 먹음·케첩 병",
+   "transition": "cut",
+   "transition_t": 5.467,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 7.0,
@@ -109,7 +131,14 @@
    "scene": "요리 과정",
    "cut_at": [],
    "effect": "먹는다는(·20개씩 가장자리)에 RGB 색분리 글리치 약 7.2~7.8초",
-   "y_note": "20개씩 글자 y 약 1118~1179로 다른 줄보다 큼"
+   "y_note": "20개씩 글자 y 약 1118~1179로 다른 줄보다 큼",
+   "role": "다리",
+   "fit": 6,
+   "scene_desc": "젓가락 들고 그릇 앞",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 8.0,
@@ -134,12 +163,19 @@
     9.0
    ],
    "type_cps": 19.7,
-   "type_note": "7.97 '최' → 8.63 '?', 13자/0.66초. 앞 두 줄(0.1초/글자)보다 약 2배 빠름"
+   "type_note": "7.97 '최' → 8.63 '?', 13자/0.66초. 앞 두 줄(0.1초/글자)보다 약 2배 빠름",
+   "role": "다리",
+   "fit": 5,
+   "scene_desc": "먹는 얼굴 근접",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 9.0,
    "t1": 10.6,
-   "speaker": "원음:연예인(윤남노일 가능성 — 나레 글자 '윤남노' 지목, 화면 이름표 없음)",
+   "speaker": "원음:윤남노",
    "text": "제가 인제 아침 루틴이",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -157,12 +193,21 @@
    "scene": "얼굴",
    "cut_at": [
     9.0
-   ]
+   ],
+   "speaker_basis": "원음:연예인(윤남노일 가능성 — 나레 글자 '윤남노' 지목, 화면 이름표 없음)",
+   "role": "공개",
+   "fit": 5,
+   "scene_desc": "양복 차림 스튜디오 말하는 얼굴",
+   "transition": "cut",
+   "transition_t": 9.0,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 13.9,
    "t1": 15.8,
-   "speaker": "원음:연예인(윤남노일 가능성 — 나레 글자 '윤남노' 지목, 화면 이름표 없음)",
+   "speaker": "원음:윤남노",
    "text": "이거 진짜 개 맛있습니다",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -176,19 +221,32 @@
    "glow": null,
    "emph": [],
    "sticker": [],
-   "sfx": null,
+   "sfx": {
+    "kind": "broad",
+    "t": 14.0,
+    "basis": "신호(_kal/sfx_events.json 고립 솟음 19.0dB · 귀 확인 못 함 — 원본 조리·말소리일 수 있음)"
+   },
    "scene": "손·제품 근접",
    "cut_at": [
     13.8,
     14.47,
     15.3
    ],
-   "note": "창 안 손글씨 '\"진짜 개 맛있어요!\"'는 원본 소품"
+   "speaker_basis": "원음:연예인(윤남노일 가능성 — 나레 글자 '윤남노' 지목, 화면 이름표 없음)",
+   "role": "고조",
+   "fit": 8,
+   "scene_desc": "핫도그 봉지 들고 웃음",
+   "notes": "창 안 손글씨 '\"진짜 개 맛있어요!\"'는 원본 소품",
+   "transition": "cut",
+   "transition_t": 13.8,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 16.7,
    "t1": 18.0,
-   "speaker": "원음:연예인(윤남노일 가능성 — 나레 글자 '윤남노' 지목, 화면 이름표 없음)",
+   "speaker": "원음:윤남노",
    "text": "핫도그 한 입에 들어오는 게",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -206,12 +264,21 @@
    "scene": "손·제품 근접",
    "cut_at": [
     16.57
-   ]
+   ],
+   "speaker_basis": "원음:연예인(윤남노일 가능성 — 나레 글자 '윤남노' 지목, 화면 이름표 없음)",
+   "role": "증거",
+   "fit": 7,
+   "scene_desc": "한입핫도그 봉지·먹는 동작",
+   "transition": "cut",
+   "transition_t": 16.567,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 18.1,
    "t1": 19.4,
-   "speaker": "원음:연예인(윤남노일 가능성 — 나레 글자 '윤남노' 지목, 화면 이름표 없음)",
+   "speaker": "원음:윤남노",
    "text": "너무 완벽한 럭셔리 아니야",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -227,12 +294,20 @@
    "sticker": [],
    "sfx": null,
    "scene": "얼굴",
-   "cut_at": []
+   "cut_at": [],
+   "speaker_basis": "원음:연예인(윤남노일 가능성 — 나레 글자 '윤남노' 지목, 화면 이름표 없음)",
+   "role": "고조",
+   "fit": 6,
+   "scene_desc": "봉지 든 채 말하는 얼굴",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 19.5,
    "t1": 21.0,
-   "speaker": "원음:연예인(윤남노일 가능성 — 나레 글자 '윤남노' 지목, 화면 이름표 없음)",
+   "speaker": "원음:윤남노",
    "text": "이게 랩을 싸면 촉촉해져요",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -251,12 +326,21 @@
    "cut_at": [
     19.4,
     20.87
-   ]
+   ],
+   "speaker_basis": "원음:연예인(윤남노일 가능성 — 나레 글자 '윤남노' 지목, 화면 이름표 없음)",
+   "role": "증거",
+   "fit": 4,
+   "scene_desc": "그릇 들고 손짓(랩 안 보임)",
+   "transition": "cut",
+   "transition_t": 19.4,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 21.1,
    "t1": 22.4,
-   "speaker": "원음:연예인(윤남노일 가능성 — 나레 글자 '윤남노' 지목, 화면 이름표 없음)",
+   "speaker": "원음:윤남노",
    "text": "근데 이거 그냥 돌리면은 바삭해져",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -270,14 +354,26 @@
    "glow": null,
    "emph": [],
    "sticker": [],
-   "sfx": null,
+   "sfx": {
+    "kind": "broad",
+    "t": 22.04,
+    "basis": "신호(_kal/sfx_events.json 고립 솟음 23.8dB · 귀 확인 못 함 — 원본 조리·말소리일 수 있음)"
+   },
    "scene": "요리 과정",
-   "cut_at": []
+   "cut_at": [],
+   "speaker_basis": "원음:연예인(윤남노일 가능성 — 나레 글자 '윤남노' 지목, 화면 이름표 없음)",
+   "role": "증거",
+   "fit": 4,
+   "scene_desc": "주방에 서서 말함(전자레인지 안 보임)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 25.1,
    "t1": 26.5,
-   "speaker": "제3자(진행자 추정 — 자동자막 '>>' 화자 전환 표시 근거, 화면 이름표 없음)",
+   "speaker": "제3자",
    "text": "저는 셰프님이 아침마다",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -295,12 +391,21 @@
    "scene": "요리 과정",
    "cut_at": [
     25.07
-   ]
+   ],
+   "speaker_basis": "제3자(진행자 추정 — 자동자막 '>>' 화자 전환 표시 근거, 화면 이름표 없음)",
+   "role": "이음",
+   "fit": 6,
+   "scene_desc": "젓가락 핫도그 근접",
+   "transition": "cut",
+   "transition_t": 25.067,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 26.6,
    "t1": 27.7,
-   "speaker": "제3자(진행자 추정 — 자동자막 '>>' 화자 전환 표시 근거, 화면 이름표 없음)",
+   "speaker": "제3자",
    "text": "한 입 핫도그 드시고 온다그래서",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -316,12 +421,20 @@
    "sticker": [],
    "sfx": null,
    "scene": "요리 과정",
-   "cut_at": []
+   "cut_at": [],
+   "speaker_basis": "제3자(진행자 추정 — 자동자막 '>>' 화자 전환 표시 근거, 화면 이름표 없음)",
+   "role": "이음",
+   "fit": 8,
+   "scene_desc": "핫도그 집어 먹음",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 27.9,
    "t1": 29.2,
-   "speaker": "제3자(진행자 추정 — 자동자막 '>>' 화자 전환 표시 근거, 화면 이름표 없음)",
+   "speaker": "제3자",
    "text": "한 입 핫도그 하나 딱!",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -339,12 +452,21 @@
    "scene": "얼굴",
    "cut_at": [
     27.97
-   ]
+   ],
+   "speaker_basis": "제3자(진행자 추정 — 자동자막 '>>' 화자 전환 표시 근거, 화면 이름표 없음)",
+   "role": "본문",
+   "fit": 9,
+   "scene_desc": "핫도그 하나 입에 넣음",
+   "transition": "cut",
+   "transition_t": 27.967,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 30.4,
    "t1": 32.0,
-   "speaker": "제3자(진행자 추정 — 자동자막 '>>' 화자 전환 표시 근거, 화면 이름표 없음)",
+   "speaker": "제3자",
    "text": "밥공기 잔뜩 드실 줄 몰랐어요",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -360,12 +482,21 @@
    "sticker": [],
    "sfx": null,
    "scene": "요리 과정",
-   "cut_at": []
+   "cut_at": [],
+   "speaker_basis": "제3자(진행자 추정 — 자동자막 '>>' 화자 전환 표시 근거, 화면 이름표 없음)",
+   "role": "반전",
+   "fit": 7,
+   "scene_desc": "그릇에 핫도그 쏟아 담음",
+   "transition": "cut",
+   "transition_t": 30.3,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 33.4,
    "t1": 34.2,
-   "speaker": "원음:연예인(윤남노일 가능성 — 나레 글자 '윤남노' 지목, 화면 이름표 없음)",
+   "speaker": "원음:윤남노",
    "text": "아침 식사 정도 아닌가?",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -384,12 +515,20 @@
    "cut_at": [
     32.9,
     34.23
-   ]
+   ],
+   "speaker_basis": "원음:연예인(윤남노일 가능성 — 나레 글자 '윤남노' 지목, 화면 이름표 없음)",
+   "role": "답",
+   "fit": 6,
+   "scene_desc": "먹는 얼굴 근접",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 34.4,
    "t1": 35.0,
-   "speaker": "제3자(진행자 추정 — 자동자막 '>>' 화자 전환 표시 근거, 화면 이름표 없음)",
+   "speaker": "제3자",
    "text": "이거는 많이도 사다놨네",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -405,12 +544,20 @@
    "sticker": [],
    "sfx": null,
    "scene": "손·제품 근접",
-   "cut_at": []
+   "cut_at": [],
+   "speaker_basis": "제3자(진행자 추정 — 자동자막 '>>' 화자 전환 표시 근거, 화면 이름표 없음)",
+   "role": "끝",
+   "fit": 9,
+   "scene_desc": "냉동실 가득 찬 핫도그 봉지",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 35.5,
    "t1": 36.2,
-   "speaker": "제3자(진행자 추정 — 자동자막 '>>' 화자 전환 표시 근거, 화면 이름표 없음)",
+   "speaker": "제3자",
    "text": "아침엔 이걸 먹어요?",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -428,7 +575,15 @@
    "scene": "손·제품 근접",
    "cut_at": [
     36.23
-   ]
+   ],
+   "speaker_basis": "제3자(진행자 추정 — 자동자막 '>>' 화자 전환 표시 근거, 화면 이름표 없음)",
+   "role": "끝",
+   "fit": 7,
+   "scene_desc": "핫도그 봉지 근접",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   }
  ],
  "original_layer_lines": [
@@ -659,5 +814,15 @@
   "뜯기.json 없어 효과음(sfx)은 안 봄(null)",
   "cut_at 은 창(y520~1220) 장면 전환 감지(scene>0.3) 근사 — 자막 교체·그래픽도 섞임",
   "전체 컷 후보: 0.03,0.67,1.13,1.8,2.9,3.93,5.47,9.0,10.47,11.4,12.67,13.8,14.47,15.3,16.57,19.4,20.87,22.43,25.07,27.97,32.9,34.23,36.23,36.93"
- ]
+ ],
+ "name_evidence": [
+  "윤남노: 제목 2줄 '윤남노 셰프의 최애 간식' · 나레 줄0 '윤남노 셰프가' — 화자=같은 남자 얼굴 컷(얼굴 대조 아님, 눈)"
+ ],
+ "frame0": {
+  "what": "양복 차림 윤남노 얼굴(방송 스튜디오, 손 들어 말함)",
+  "face_frac": 0.09,
+  "text": "고정 제목 2줄만(스타픽룸 자막 없음)"
+ },
+ "_made_by_v2": "오푸스 실행자 보강 2026-10-25(관제 263 지시서 06): role·fit·scene_desc 눈 · transition/cut_at/motion = readline_tools/cutdet 30fps · sfx = _kal/sfx_events.json 연결 · speaker 이름은 화면 글자 근거만(speaker_basis 에 옛 글)",
+ "_tools_v2": "tools/calcopy/engine/readline_tools/{capseg 1090~1190, cutdet 484~1540, rangesheet} → C:/숏템_칼카피/starpickroom/work/lr6/"
 }

@@ -1,0 +1,835 @@
+{
+ "_meta": {
+  "made_by": "tools/calcopy/engine/sound/sfx_events.py annapick --detect",
+  "how": "detect",
+  "asr_filter": {
+   "how": "후보 시각이 받아쓰기 낱말 구간[t0−0.05, t1+0.05] 안이면 cand_in_words(치찰음·파열음 오탐) — 단 전환(cut)·스티커 ±0.3초 안은 남김(keep_why). 남은 것 = cand_kept",
+   "asr": "C:/숏템_칼카피/annapick/asr",
+   "no_speech": {},
+   "no_asr": [],
+   "n_kept": 5,
+   "n_in_words": 7,
+   "note": "귀 확인 아님(신호). 무음 환각 = 환각 문구(Thanks for watching·구독과 좋아요·Music…)가 절반 이상이거나 빼고 2낱말 이하, 또는 길이0 낱말 40% 이상"
+  },
+  "from": "C:/숏템_칼카피/annapick/원본",
+  "n_videos": 6,
+  "n_cand": 12
+ },
+ "Ww0IZLSL7mY": {
+  "strong_n": 12,
+  "strong_hits": {
+   "cap": [
+    1.57,
+    6.3,
+    11.58,
+    13.2,
+    21.15
+   ],
+   "sticker": [
+    2.41
+   ],
+   "switch": [
+    6.3
+   ],
+   "cut": [
+    1.57,
+    11.58
+   ]
+  },
+  "dur": 21.5,
+  "n_events_all": 26,
+  "cand": [
+   {
+    "t": 9.76,
+    "kind": "broad",
+    "dur": 0.06,
+    "db": 28.8,
+    "voiced": 0.0,
+    "isolated": 0.95,
+    "cen_hz": 6256,
+    "near": {
+     "cap": 0.26,
+     "sticker": 7.26,
+     "switch": 3.46,
+     "cut": 0.29
+    }
+   },
+   {
+    "t": 15.1,
+    "kind": "low",
+    "dur": 0.06,
+    "db": 18.2,
+    "rel_db": -5.9,
+    "low_mid_db": 4.8,
+    "voiced": 0.36,
+    "near": {
+     "cap": 0.2,
+     "sticker": 12.6,
+     "switch": 8.8,
+     "cut": 3.6
+    }
+   },
+   {
+    "t": 17.53,
+    "kind": "broad",
+    "dur": 0.21,
+    "db": 18.0,
+    "voiced": 0.08,
+    "isolated": 1.0,
+    "cen_hz": 6749,
+    "near": {
+     "cap": 0.03,
+     "sticker": 15.03,
+     "switch": 11.23,
+     "cut": 3.44
+    }
+   },
+   {
+    "t": 21.15,
+    "kind": "broad",
+    "dur": 0.1,
+    "db": 46.8,
+    "voiced": 0.13,
+    "isolated": 0.95,
+    "cen_hz": 5797,
+    "near": {
+     "cap": 0.15,
+     "sticker": 18.65,
+     "switch": 14.85,
+     "cut": 0.18
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    1.5,
+    2.7,
+    3.8,
+    4.5,
+    5.1,
+    6.3,
+    7.1,
+    8.0,
+    8.9,
+    9.5,
+    10.9,
+    11.5,
+    12.7,
+    13.1,
+    14.1,
+    14.9,
+    16.3,
+    17.5,
+    18.1,
+    18.7,
+    20.0,
+    21.0
+   ],
+   "sticker": [
+    2.5
+   ],
+   "switch": [
+    3.77,
+    6.3
+   ],
+   "cut": [
+    1.53,
+    3.77,
+    8.03,
+    9.47,
+    11.5,
+    20.97
+   ]
+  },
+  "chance": {
+   "cap": 0.31,
+   "sticker": 0.02,
+   "switch": 0.03,
+   "cut": 0.09
+  },
+  "asr_words": 54,
+  "cand_in_words": [
+   {
+    "t": 15.1,
+    "kind": "low",
+    "dur": 0.06,
+    "db": 18.2,
+    "rel_db": -5.9,
+    "low_mid_db": 4.8,
+    "voiced": 0.36,
+    "near": {
+     "cap": 0.2,
+     "sticker": 12.6,
+     "switch": 8.8,
+     "cut": 3.6
+    },
+    "word": " 극강이"
+   },
+   {
+    "t": 17.53,
+    "kind": "broad",
+    "dur": 0.21,
+    "db": 18.0,
+    "voiced": 0.08,
+    "isolated": 1.0,
+    "cen_hz": 6749,
+    "near": {
+     "cap": 0.03,
+     "sticker": 15.03,
+     "switch": 11.23,
+     "cut": 3.44
+    },
+    "word": " 깔끔하고"
+   }
+  ],
+  "cand_kept": [
+   {
+    "t": 9.76,
+    "kind": "broad",
+    "dur": 0.06,
+    "db": 28.8,
+    "voiced": 0.0,
+    "isolated": 0.95,
+    "cen_hz": 6256,
+    "near": {
+     "cap": 0.26,
+     "sticker": 7.26,
+     "switch": 3.46,
+     "cut": 0.29
+    },
+    "word": " 제가",
+    "keep_why": "낱말 안이지만 전환·스티커 0.29초 안"
+   },
+   {
+    "t": 21.15,
+    "kind": "broad",
+    "dur": 0.1,
+    "db": 46.8,
+    "voiced": 0.13,
+    "isolated": 0.95,
+    "cen_hz": 5797,
+    "near": {
+     "cap": 0.15,
+     "sticker": 18.65,
+     "switch": 14.85,
+     "cut": 0.18
+    }
+   }
+  ]
+ },
+ "hj9O7LmPZjo": {
+  "strong_n": 9,
+  "strong_hits": {
+   "cap": [
+    2.53,
+    10.76
+   ],
+   "sticker": [],
+   "cut": [
+    2.53
+   ]
+  },
+  "dur": 12.3,
+  "n_events_all": 15,
+  "cand": [
+   {
+    "t": 1.29,
+    "kind": "broad",
+    "dur": 0.16,
+    "db": 19.0,
+    "voiced": 0.05,
+    "isolated": 0.95,
+    "cen_hz": 6192,
+    "near": {
+     "cap": 0.19,
+     "sticker": 2.21,
+     "cut": 0.16
+    }
+   },
+   {
+    "t": 1.68,
+    "kind": "low",
+    "dur": 0.06,
+    "db": 14.9,
+    "rel_db": 0.0,
+    "low_mid_db": 7.6,
+    "voiced": 0.55,
+    "near": {
+     "cap": 0.58,
+     "sticker": 1.82,
+     "cut": 0.55
+    }
+   },
+   {
+    "t": 2.53,
+    "kind": "broad",
+    "dur": 0.19,
+    "db": 29.7,
+    "voiced": 0.0,
+    "isolated": 0.85,
+    "cen_hz": 6030,
+    "near": {
+     "cap": 0.03,
+     "sticker": 0.97,
+     "cut": 0.06
+    }
+   },
+   {
+    "t": 7.31,
+    "kind": "broad",
+    "dur": 0.09,
+    "db": 26.3,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 6702,
+    "near": {
+     "cap": 0.61,
+     "sticker": 0.21,
+     "cut": 0.28
+    }
+   },
+   {
+    "t": 8.48,
+    "kind": "low",
+    "dur": 0.09,
+    "db": 12.0,
+    "rel_db": -1.1,
+    "low_mid_db": 6.6,
+    "voiced": 0.57,
+    "near": {
+     "cap": 0.38,
+     "sticker": 1.38,
+     "cut": 0.45
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    1.1,
+    2.5,
+    3.5,
+    4.8,
+    5.8,
+    6.7,
+    8.1,
+    9.4,
+    10.4,
+    10.9
+   ],
+   "sticker": [
+    3.5,
+    7.1
+   ],
+   "switch": [],
+   "cut": [
+    1.13,
+    2.47,
+    3.47,
+    4.8,
+    7.03,
+    8.03,
+    9.4,
+    10.93
+   ]
+  },
+  "chance": {
+   "cap": 0.24,
+   "sticker": 0.06,
+   "cut": 0.2
+  },
+  "asr_words": 34,
+  "cand_in_words": [
+   {
+    "t": 1.68,
+    "kind": "low",
+    "dur": 0.06,
+    "db": 14.9,
+    "rel_db": 0.0,
+    "low_mid_db": 7.6,
+    "voiced": 0.55,
+    "near": {
+     "cap": 0.58,
+     "sticker": 1.82,
+     "cut": 0.55
+    },
+    "word": " 이렇게"
+   },
+   {
+    "t": 8.48,
+    "kind": "low",
+    "dur": 0.09,
+    "db": 12.0,
+    "rel_db": -1.1,
+    "low_mid_db": 6.6,
+    "voiced": 0.57,
+    "near": {
+     "cap": 0.38,
+     "sticker": 1.38,
+     "cut": 0.45
+    },
+    "word": " 30대"
+   }
+  ],
+  "cand_kept": [
+   {
+    "t": 1.29,
+    "kind": "broad",
+    "dur": 0.16,
+    "db": 19.0,
+    "voiced": 0.05,
+    "isolated": 0.95,
+    "cen_hz": 6192,
+    "near": {
+     "cap": 0.19,
+     "sticker": 2.21,
+     "cut": 0.16
+    },
+    "word": " 이렇게",
+    "keep_why": "낱말 안이지만 전환·스티커 0.16초 안"
+   },
+   {
+    "t": 2.53,
+    "kind": "broad",
+    "dur": 0.19,
+    "db": 29.7,
+    "voiced": 0.0,
+    "isolated": 0.85,
+    "cen_hz": 6030,
+    "near": {
+     "cap": 0.03,
+     "sticker": 0.97,
+     "cut": 0.06
+    },
+    "word": " 진짜",
+    "keep_why": "낱말 안이지만 전환·스티커 0.06초 안"
+   },
+   {
+    "t": 7.31,
+    "kind": "broad",
+    "dur": 0.09,
+    "db": 26.3,
+    "voiced": 0.0,
+    "isolated": 1.0,
+    "cen_hz": 6702,
+    "near": {
+     "cap": 0.61,
+     "sticker": 0.21,
+     "cut": 0.28
+    },
+    "word": " 최애?",
+    "keep_why": "낱말 안이지만 전환·스티커 0.21초 안"
+   }
+  ]
+ },
+ "iS0la2aQyl8": {
+  "strong_n": 3,
+  "strong_hits": {
+   "cap": [],
+   "sticker": [],
+   "switch": [],
+   "cut": [
+    4.13
+   ]
+  },
+  "dur": 26.0,
+  "n_events_all": 17,
+  "cand": [
+   {
+    "t": 20.41,
+    "kind": "low",
+    "dur": 0.09,
+    "db": 18.7,
+    "rel_db": -5.2,
+    "low_mid_db": 7.7,
+    "voiced": 0.64,
+    "near": {
+     "cap": 0.31,
+     "sticker": 0.59,
+     "switch": 11.38,
+     "cut": 0.56
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    1.1,
+    1.7,
+    2.3,
+    2.7,
+    3.4,
+    3.9,
+    5.9,
+    6.5,
+    9.3,
+    10.3,
+    11.1,
+    11.5,
+    12.7,
+    13.7,
+    14.5,
+    15.3,
+    16.5,
+    17.4,
+    18.0,
+    18.9,
+    19.7,
+    20.1,
+    21.1,
+    21.6,
+    22.1,
+    23.1,
+    24.6,
+    25.6
+   ],
+   "sticker": [
+    13.8,
+    17.4,
+    18.5,
+    21.0
+   ],
+   "switch": [
+    6.73,
+    9.03
+   ],
+   "cut": [
+    1.23,
+    1.73,
+    3.43,
+    4.2,
+    6.7,
+    7.03,
+    7.93,
+    8.87,
+    10.3,
+    11.8,
+    12.73,
+    13.7,
+    16.47,
+    17.97,
+    19.7,
+    20.97
+   ]
+  },
+  "chance": {
+   "cap": 0.31,
+   "sticker": 0.04,
+   "switch": 0.02,
+   "cut": 0.17
+  },
+  "asr_words": 73,
+  "cand_in_words": [
+   {
+    "t": 20.41,
+    "kind": "low",
+    "dur": 0.09,
+    "db": 18.7,
+    "rel_db": -5.2,
+    "low_mid_db": 7.7,
+    "voiced": 0.64,
+    "near": {
+     "cap": 0.31,
+     "sticker": 0.59,
+     "switch": 11.38,
+     "cut": 0.56
+    },
+    "word": " 스파이스라고"
+   }
+  ],
+  "cand_kept": []
+ },
+ "itYwQVyuCcc": {
+  "strong_n": 2,
+  "strong_hits": {
+   "cap": [
+    16.67
+   ],
+   "sticker": [
+    5.94
+   ],
+   "switch": [],
+   "cut": [
+    16.67
+   ]
+  },
+  "dur": 25.2,
+  "n_events_all": 7,
+  "cand": [
+   {
+    "t": 22.63,
+    "kind": "broad",
+    "dur": 0.07,
+    "db": 20.4,
+    "voiced": 0.75,
+    "isolated": 0.85,
+    "cen_hz": 5786,
+    "near": {
+     "cap": 0.43,
+     "sticker": 5.13,
+     "switch": 15.7,
+     "cut": 1.4
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    1.1,
+    2.0,
+    2.7,
+    3.3,
+    4.1,
+    4.9,
+    5.7,
+    6.7,
+    7.2,
+    7.7,
+    8.6,
+    9.6,
+    10.4,
+    10.8,
+    11.3,
+    12.1,
+    13.6,
+    15.1,
+    16.7,
+    17.5,
+    18.0,
+    19.2,
+    20.1,
+    21.2,
+    22.2,
+    23.1,
+    24.1
+   ],
+   "sticker": [
+    3.3,
+    4.2,
+    4.2,
+    5.9,
+    17.5
+   ],
+   "switch": [
+    4.13,
+    6.93
+   ],
+   "cut": [
+    2.67,
+    3.27,
+    4.13,
+    6.8,
+    9.57,
+    12.13,
+    14.9,
+    16.67,
+    18.37,
+    20.1,
+    24.03
+   ]
+  },
+  "chance": {
+   "cap": 0.32,
+   "sticker": 0.04,
+   "switch": 0.02,
+   "cut": 0.13
+  },
+  "asr_words": 68,
+  "cand_in_words": [
+   {
+    "t": 22.63,
+    "kind": "broad",
+    "dur": 0.07,
+    "db": 20.4,
+    "voiced": 0.75,
+    "isolated": 0.85,
+    "cen_hz": 5786,
+    "near": {
+     "cap": 0.43,
+     "sticker": 5.13,
+     "switch": 15.7,
+     "cut": 1.4
+    },
+    "word": " 싶을"
+   }
+  ],
+  "cand_kept": []
+ },
+ "rF_-X8jLkdU": {
+  "strong_n": 4,
+  "strong_hits": {
+   "cap": [
+    11.96
+   ],
+   "sticker": [],
+   "switch": [],
+   "cut": []
+  },
+  "dur": 18.8,
+  "n_events_all": 10,
+  "cand": [
+   {
+    "t": 2.82,
+    "kind": "low",
+    "dur": 0.08,
+    "db": 16.0,
+    "rel_db": -4.5,
+    "low_mid_db": 7.5,
+    "voiced": 0.62,
+    "near": {
+     "cap": 0.12,
+     "sticker": 1.32,
+     "switch": 0.12,
+     "cut": 0.89
+    }
+   }
+  ],
+  "markers": {
+   "cap": [
+    0.6,
+    1.6,
+    2.1,
+    2.7,
+    3.6,
+    4.5,
+    5.0,
+    5.4,
+    5.9,
+    6.5,
+    7.9,
+    8.6,
+    9.0,
+    10.3,
+    11.3,
+    12.0,
+    13.1,
+    14.5,
+    15.6,
+    17.1,
+    17.6
+   ],
+   "sticker": [
+    1.5,
+    5.2,
+    17.1
+   ],
+   "switch": [
+    2.7,
+    5.92
+   ],
+   "cut": [
+    1.03,
+    1.93,
+    5.13,
+    9.2,
+    11.3,
+    17.07
+   ]
+  },
+  "chance": {
+   "cap": 0.33,
+   "sticker": 0.06,
+   "switch": 0.03,
+   "cut": 0.09
+  },
+  "asr_words": 50,
+  "cand_in_words": [
+   {
+    "t": 2.82,
+    "kind": "low",
+    "dur": 0.08,
+    "db": 16.0,
+    "rel_db": -4.5,
+    "low_mid_db": 7.5,
+    "voiced": 0.62,
+    "near": {
+     "cap": 0.12,
+     "sticker": 1.32,
+     "switch": 0.12,
+     "cut": 0.89
+    },
+    "word": " PPL"
+   }
+  ],
+  "cand_kept": []
+ },
+ "wweUXE86oMM": {
+  "strong_n": 6,
+  "strong_hits": {
+   "cap": [
+    4.4,
+    15.85,
+    16.24
+   ],
+   "sticker": [
+    4.4
+   ],
+   "switch": [
+    4.4
+   ],
+   "cut": [
+    4.4
+   ]
+  },
+  "dur": 16.8,
+  "n_events_all": 15,
+  "cand": [],
+  "markers": {
+   "cap": [
+    1.1,
+    1.6,
+    2.1,
+    2.7,
+    4.4,
+    5.1,
+    5.5,
+    6.3,
+    6.7,
+    7.2,
+    7.7,
+    8.2,
+    8.6,
+    9.8,
+    10.8,
+    11.5,
+    12.5,
+    13.0,
+    14.3,
+    15.3,
+    15.9,
+    16.3
+   ],
+   "sticker": [
+    1.1,
+    4.5,
+    8.7
+   ],
+   "switch": [
+    4.43,
+    6.5,
+    14.43,
+    14.5,
+    15.43
+   ],
+   "cut": [
+    1.1,
+    2.23,
+    2.73,
+    4.43,
+    5.33,
+    6.3,
+    7.17,
+    11.8,
+    12.5,
+    14.33,
+    16.07
+   ]
+  },
+  "chance": {
+   "cap": 0.38,
+   "sticker": 0.05,
+   "switch": 0.08,
+   "cut": 0.19
+  },
+  "asr_words": 49,
+  "cand_in_words": [],
+  "cand_kept": []
+ }
+}

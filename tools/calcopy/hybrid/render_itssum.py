@@ -28,6 +28,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from tools.calcopy.hybrid.common import (FPS, FRAME_A_DEFAULT, PRESET_ITSSUM_B, ROOT, SR, StageError, dur_of, frame_png, jload, jsave,  # noqa: E402
                                          lufs, nchar, run, silences)
+from tools.calcopy.engine.encoder import venc  # noqa: E402 — 인코더 주인(GPU 있으면 NVENC, 화질 같게, 98 #79)
 
 # 기본값 주인 = 판 설정 styles/잇썸홈판.json render 칸(판 등록 한 곳, 10-19). 대본 render 칸이 이긴다.
 def _style_def(name: str) -> dict:
@@ -97,7 +98,47 @@ def tts_once(S, R: Path, log=print) -> tuple[Path, dict | None]:
 
 
 END_PAD, HEAD_PAD = 0.15, 0.25      # 줄 경계 여유(초) — split_by_align 한 곳
+CPS_LINE_TOL = 0.35                 # 줄 말속도 허용 폭(평균 ±35%) 주인 — 넘으면 렌더를 멈춘다(문장 자르기·TTS 되풀이 의심). 품질 관문(quality_gate.cps_tol)이 이 이름을 읽는다(표준 §11 ⑤)
+
+
+def line_cps(sent: list[dict]) -> dict:
+    """render_info.line_cps = {줄: 자/초}(나온 소리 기준 — make_sentences 의 chars/dur) — 관문은 재계산 없이 이 표만 본다."""
+    return {s["id"]: round(s["chars"] / s["dur"], 2) for s in sent if s.get("dur") and s.get("chars") is not None}
+
+
 TEMPO_MAX = 1.25                    # 고정 배속이 아닌 목소리(타입캐스트)의 배속 상한 — 기본·줄별 모두(사장님 10-21). 미나 1.35 는 narr_align.fixed_tempo 가 정한다
+CPS_FINE_TOL = 0.08                 # 업그레이드 판 줄별 미세 보정 폭(±8%, 표준 §12-4 ⓑ · 지시서 15) — 타입캐스트만, TEMPO_MAX 안. 미나(고정 배속)는 손대지 않는다
+
+
+def fine_tempos(rates: list[float], tempo: float, spread: float | None, mean: float, base: list[float]) -> list[float] | None:
+    """(판단 주인: 줄별 말속도 미세 보정) rates = 기본 배속에서 줄마다 자/초 · mean = 글자 가중 평균 · base = 옛 줄별 배속(±10% 규칙, B17).
+    spread = 목표 변동계수(판 targets.speech — 업그레이드 판만, 없으면 None = 안 함). 옛 배속으로 낸 편차가 목표 이하면 안 한다.
+    아니면 줄마다 평균 쪽으로 더 당기고 늦추되 기본 배속의 ±CPS_FINE_TOL 안(상한 TEMPO_MAX) — 옛 규칙이 이미 더 멀리 고친 줄(빠른 줄 −10%)은 그대로.
+    (10-25 ep13 실측: 중앙값 쪽 ±8% 만 쓰면 옛 −10% 보다 덜 고쳐 편차가 0.0571 → 0.0636 으로 나빠졌다 — 옛 보정 위에 얹는다)"""
+    import statistics
+    if spread is None or len(rates) < 3:
+        return None
+    est = [r * tl / tempo for r, tl in zip(rates, base)]
+    m0 = statistics.mean(est)
+    if not m0 or statistics.pstdev(est) / m0 <= spread:
+        return None
+    out = []
+    for r, tl in zip(rates, base):
+        want = tempo * mean / r
+        lo = min(tl, tempo * (1 - CPS_FINE_TOL))
+        hi = max(tl, min(tempo * (1 + CPS_FINE_TOL), TEMPO_MAX))
+        out.append(round(min(hi, max(lo, want)), 4))
+    return out
+
+
+def spread_of(st: dict | None) -> float | None:
+    """판 targets.speech.cps_cv(나레 문장 = TTS 줄 단위 자, §11-3 ⑲ — 07 이 적는 칸) — 1차 판(targets 없음)은 None. spread(자막 조각 자)는 안 쓴다."""
+    sp = ((st or {}).get("targets") or {}).get("speech") or {}
+    for k in ("cps_cv",):
+        g = (sp.get(k) or {}).get("ours_goal")
+        if isinstance(g, (int, float)):
+            return float(g)
+    return None
 
 
 def split_by_align(S, align) -> list[tuple[float, float]]:
@@ -111,7 +152,7 @@ def split_by_align(S, align) -> list[tuple[float, float]]:
         i += len(NA.punct_marks(l["tts"]))
         if k == len(L) - 1:
             spans.append((start, tail)); break
-        if i == 0 or not NA.punct_marks(l["tts"].rstrip()[-1:]):   # 줄 가운데 쉼표만 있고 끝에 없으면 그 쉼표가 줄 끝이 된다(10-24 잇템로그 09 N3 '…붓고, …따르자' → '따르자'가 N4 로 밀림)
+        if i == 0 or not NA.ends_with_mark(l["tts"]):   # 줄 가운데 쉼표만 있고 끝에 없으면 그 쉼표가 줄 끝이 된다(10-24 잇템로그 09 N3 '…붓고, …따르자' → '따르자'가 N4 로 밀림)
             raise StageError(f"줄 {l['id']} 끝에 문장부호가 없다 — tts 끝을 마침표·쉼표로")
         a, b = slots[i - 1][1], slots[i - 1][2]
         # 글자 시각은 소리보다 늦게 끝나고 늦게 시작한다(10-21 손태영 미나: '벨기에'→'기의', '대체'→'차에', 줄 끝 음절 잘림 —
@@ -164,15 +205,17 @@ def split_sentences(full, n, chars: list[int] | None = None):
     if chars:
         rates = [c / max(b - a, 0.1) for c, (a, b) in zip(chars, spans)]
         mean = sum(chars) / sum(b - a for a, b in spans)
-        bad = [(i, round(r, 2)) for i, r in enumerate(rates) if not (0.65 * mean <= r <= 1.35 * mean)]
+        bad = [(i, round(r, 2)) for i, r in enumerate(rates) if not ((1 - CPS_LINE_TOL) * mean <= r <= (1 + CPS_LINE_TOL) * mean)]
         if bad:
-            raise StageError(f"문장 자르기 의심(줄 말속도 평균 {mean:.2f}자/초의 ±35% 밖: {bad}) — tts_spans 를 손으로 확인")
+            raise StageError(f"문장 자르기 의심(줄 말속도 평균 {mean:.2f}자/초의 ±{CPS_LINE_TOL:.0%} 밖: {bad}) — tts_spans 를 손으로 확인")
     return spans, inner
 
 
-def make_sentences(S, full: Path, R: Path, log=print, align: dict | None = None):
+def make_sentences(S, full: Path, R: Path, log=print, align: dict | None = None, spread: float | None = None):
     """문장 자르기(손 tts_spans > 글자 시각 align > 소리 틈 어림) → 쉼 고치기(tts_pauses) → atempo. atempo 는 전체 한 값(B17), 빠른 줄은 평균까지 늦추고(≤10%)
-    느린 줄(평균의 90% 미만)은 ≤10% 당긴다(장윤정 편). 줄별 tts_override 가 있으면 그 파일을 그 줄 소스로(최은경 이름 발음)."""
+    느린 줄(평균의 90% 미만)은 ≤10% 당긴다(장윤정 편). 줄별 tts_override 가 있으면 그 파일을 그 줄 소스로(최은경 이름 발음).
+    spread = 업그레이드 판 말속도 목표 변동계수(spread_of(판)) — 있고 타입캐스트면 줄별 배속을 fine_tempos(±8%) 로 바꾸고 보정 전·후를 R/line_cps_fix.json 에.
+    None(1차 판)이면 옛 동작 그대로."""
     from tools.calcopy.engine import narr_align as NA
     L = tts_lines(S)
     if S.get("tts_spans"):
@@ -199,13 +242,18 @@ def make_sentences(S, full: Path, R: Path, log=print, align: dict | None = None)
             tempo = round(min(TEMPO_MAX, max(0.85, S["cps_target"] / (sum(chars) / speech))), 4)
     durs = [eff(l, a, b, tempo) / tempo for l, (a, b) in zip(L, spans)]
     mean = sum(chars) / sum(durs)
-    out = []
-    for l, (a, b), c, d in zip(L, spans, chars, durs):
+    base_tl = []
+    for c, d in zip(chars, durs):
         tl = tempo
         if c / d > mean * 1.03:
             tl = round(max(tempo * 0.9001, tempo * mean / (c / d)), 4)   # ±10% 경계는 반올림이 넘지 않게(10-18 김가연 1.3713/1.2466=+10.003% → B17 ×)
         elif c / d < mean * 0.9 and not fixed:   # 고정 배속 목소리는 더 빠르게 돌리지 않는다(사장님 10-20 '빠르면 발음 뭉개짐' — 레시피 3편 1.48배)
             tl = round(min(tempo * 1.0999, tempo * mean * 0.95 / (c / d), TEMPO_MAX), 4)   # 줄별 당김도 1.25 넘지 않게(사장님 10-21 "1.25가 자연스러우면 그렇게")
+        base_tl.append(tl)
+    fine = None if fixed else fine_tempos([c / d for c, d in zip(chars, durs)], tempo, spread, mean, base_tl)
+    out = []
+    for k_l, (l, (a, b), c, d) in enumerate(zip(L, spans, chars, durs)):
+        tl = fine[k_l] if fine else base_tl[k_l]
         x = max(0, a - 0.02)
         cuts = sorted(P.get(l["id"], []))
         fc, lab = [], []
@@ -221,10 +269,22 @@ def make_sentences(S, full: Path, R: Path, log=print, align: dict | None = None)
         out.append({"id": l["id"], "wav": str(p), "dur": round(dur_of(p), 3), "chars": c, "raw": [round(a, 3), round(b, 3)], "tempo": tl, "pauses": cuts,
                     "override": str(src_l) if src_l is not full else None})
     log(f"atempo 기본 {tempo} · 평균 {mean:.2f}자/초 · " + " ".join(f"{o['id']}:{o['chars'] / o['dur']:.2f}@{o['tempo']}" for o in out))
+    if spread is not None:
+        import statistics
+        before = {l["id"]: round(c / d * tl / tempo, 3) for l, c, d, tl in zip(L, chars, durs, base_tl)}     # 옛 줄별 배속(±10%)으로 낸 예상
+        after = {o["id"]: round(o["chars"] / o["dur"], 3) for o in out}                                     # 나온 소리 실측(line_cps 와 같은 셈)
+        after_est = {l["id"]: round(c / d * o["tempo"] / tempo, 3) for l, c, d, o in zip(L, chars, durs, out)}  # 같은 어림으로 바꾼 뒤(전과 바로 비교)
+        cv = lambda xs: round(statistics.pstdev(xs) / statistics.mean(xs), 4) if len(xs) > 1 and statistics.mean(xs) else None   # noqa: E731
+        fix = {"made_by": "render_itssum.make_sentences(spread) — fine_tempos ±CPS_FINE_TOL", "spread_goal": spread, "fixed_voice": fixed,
+               "applied": bool(fine), "tempo": tempo, "tol": CPS_FINE_TOL, "before": before, "after": after, "tempos": {o["id"]: o["tempo"] for o in out}, "tempos_before": {l["id"]: tl for l, tl in zip(L, base_tl)},
+               "after_est": after_est, "cv_before": cv(list(before.values())), "cv_after_est": cv(list(after_est.values())), "cv_after": cv(list(after.values())),
+               "note": "before·after_est = 같은 어림(기본 배속 자/초 × 줄 배속) · after = 나온 소리 실측 — 옛 동작의 실측은 1차 렌더 render_info.line_cps 로 비교"}
+        jsave(R / "line_cps_fix.json", fix)
+        log(f"줄 말속도 미세 보정({'적용' if fine else '안 함 — ' + ('고정 배속 목소리' if fixed else '이미 목표 이하')}) 변동계수(어림) {fix['cv_before']} → {fix['cv_after_est']} · 실측 {fix['cv_after']} (목표 {spread})")
     if how == "align":   # 글자 시각은 '보낸 글' 기준이라 TTS 가 문장을 되풀이·누락해도 경계가 맞아 보인다 → 줄 말속도로 잡는다(10-24 잇템로그 12편 N3 4.90자/초 = 반복 '…원리라는데 다른 외국인 모녀는' 그대로 통과)
-        bad = [(o["id"], round(o["chars"] / o["dur"], 2)) for o in out if not (0.65 * mean <= o["chars"] / o["dur"] <= 1.35 * mean)]
+        bad = [(o["id"], round(o["chars"] / o["dur"], 2)) for o in out if not ((1 - CPS_LINE_TOL) * mean <= o["chars"] / o["dur"] <= (1 + CPS_LINE_TOL) * mean)]
         if bad:
-            raise StageError(f"TTS 줄 말속도 이상(평균 {mean:.2f}자/초의 ±35% 밖: {bad}) — 되풀이·빠뜨림 의심. s_<줄>.wav 받아쓰기로 확인 후 문장을 바꾸고 "
+            raise StageError(f"TTS 줄 말속도 이상(평균 {mean:.2f}자/초의 ±{CPS_LINE_TOL:.0%} 밖: {bad}) — 되풀이·빠뜨림 의심. s_<줄>.wav 받아쓰기로 확인 후 문장을 바꾸고 "
                              f"narr_full.mp3 와 .tts.json 을 함께 치워 다시 합성(사이드카만 치우면 옛 소리를 그대로 받아들인다)")
     out[0]["split_how"] = how
     return out, tempo, inner
@@ -381,7 +441,7 @@ def render_a(S, M, T, fr, R: Path):
         c["frames"] = nf
         p = parts / f"a{k:02d}.mp4"
         run(["ffmpeg", "-y", "-ss", f"{c['ss']:.3f}", "-i", src / c["src"], "-an", "-vf", crop_vf(c["crop"], 1080, 1080), "-frames:v", nf,
-             "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", p])
+             *venc(16), "-pix_fmt", "yuv420p", p])
         lst.append(f"file '{p.as_posix()}'")
     (parts / "list.txt").write_text("\n".join(lst), encoding="utf-8")
     mat = R / "a_mat.mp4"
@@ -404,7 +464,7 @@ def render_a(S, M, T, fr, R: Path):
         last = f"e{k}"
     out = R / "a_final.mp4"
     run(["ffmpeg", "-y", "-i", seg, *ins, "-filter_complex", fc + f";[{last}]format=yuv420p[v]", "-map", "[v]", "-frames:v", n,
-         "-r", FPS, "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", out])
+         "-r", FPS, *venc(16), out])
     return out, n
 
 
@@ -421,7 +481,7 @@ def render_b(S, M, T, R: Path):
         c["frames"] = n
         p = parts / f"p{k:02d}.mp4"
         run(["ffmpeg", "-y", "-ss", f"{c['ss']:.3f}", "-i", src / c["src"], "-an", "-vf", crop_vf(c["crop"], 1080, 1920), "-frames:v", n,
-             "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", p])
+             *venc(16), "-pix_fmt", "yuv420p", p])
         lst.append(f"file '{p.as_posix()}'")
     (parts / "list.txt").write_text("\n".join(lst), encoding="utf-8")
     mat = R / "b_mat.mp4"
@@ -548,7 +608,8 @@ def render(doc: Path, work: Path, plan_only: bool = False, desktop: Path | None 
             raise StageError("계획에서 컷이 원본 샷보다 길다(어림): " + str([(c["line"], c["src"], c["dur"], c["max"]) for c in over]))
         return {"plan": str(doc / "plan/계획_시트.jpg"), "timeline": T, "tight": [(c["line"], c["src"], c["dur"], c["max"]) for c in tight]}
     full, align = tts_once(S, R, log)
-    sent, tempo, inner = make_sentences(S, full, R, log, align=align)
+    from tools.calcopy.hybrid import styles as ST
+    sent, tempo, inner = make_sentences(S, full, R, log, align=align, spread=spread_of(ST.load("잇썸홈판")))   # 잇썸홈판 = 1차(targets 없음) → None, 옛 동작
     T = timeline(S, M, {s["id"]: s["dur"] for s in sent})
     over = [c for c in T["cuts"] if c["over"] > 0]
     if over:
@@ -557,15 +618,17 @@ def render(doc: Path, work: Path, plan_only: bool = False, desktop: Path | None 
     b_mp4, nb = render_b(S, M, T, R)
     (R / "ab.txt").write_text(f"file '{a_mp4.as_posix()}'\nfile '{b_mp4.as_posix()}'\n", encoding="utf-8")
     vid = R / "video.mp4"
-    run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", R / "ab.txt", "-an", "-r", FPS, "-c:v", "libx264", "-crf", "16", "-preset", "veryfast",
+    run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", R / "ab.txt", "-an", "-r", FPS, *venc(16),
          "-pix_fmt", "yuv420p", vid])
     T["end"] = round((na + nb) / FPS, 3)
     mix, A = audio(S, M, T, sent, R)
     final = R / "final.mp4"
     # 완성본 인코딩·진짜 최고점(B2 ≤ −0.5) 지킴은 engine/master_guard 한 곳 — 예전 '리미터 1dB씩 내려 다시 섞기' 루프(10-18 김가연 −0.8 → +0.4)를 대신한다
     from tools.calcopy.engine.master_guard import encode_final
-    A = {**A, "master_guard": encode_final(vid, mix, final, -0.5, log=log)}
+    A = {**A, "master_guard": encode_final(vid, mix, final, -0.5, log=log, renderer="render_itssum", script=doc / "대본.json")}
+    from tools.calcopy.hybrid.render_bench import render_marks
     info = {"made_by": "tools/calcopy/hybrid/render_itssum.py", "version": "잇썸홈판", "tempo": tempo, "sentences": sent, "inner_silences": inner,
+            **render_marks("잇썸홈판", __file__), "line_cps": line_cps(sent),
             "split_how": sent[0].get("split_how"), "tts_align": bool(align),
             "timeline": T, "audio": A, "final": str(final), "final_dur": dur_of(final), "final_lufs": lufs(final),
             "cuts_flat": [{"src": c["src"], "ss": c["ss"], "t0": c["t0"], "t1": c["t1"], "dur": c["dur"], "seg": "B", "line": c["line"], "see": c.get("see", "")} for c in T["cuts"]]

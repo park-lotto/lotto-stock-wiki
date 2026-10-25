@@ -1,0 +1,31 @@
+{
+ "_what": "itemhome 판독 도구 채널 값 — 06 워커 10-25 channel/itemhome/_kal/readline_profile.json 을 옮김(지시서 13). 원래 파일은 06 주인이라 그대로 둔다. (원래 설명: 아이템홈(itemhome) 줄판독 build_lr 채널 값 — 06 워커 10-25(관제 263). readline_tools/profiles 는 tools/ 라 손대지 않고(지시서 06 '만질 파일') 이 파일을 --profile 로 넘긴다. 07/13 이 profiles/itemho)",
+ "_bands": "capseg 띠 1180~1340(나레·원음 같은 자리, 잉크 y≈1209~1325) · cutdet 창 480~1920(영상 창 0,480,1080×1440, 뜯기 layout.window)",
+ "layer": "아이템홈",
+ "measure_band": [
+  1180,
+  1340
+ ],
+ "font": {
+  "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+  "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+ },
+ "hand_font": {
+  "name": "해당 없음",
+  "basis": "손글씨 줄 없음"
+ },
+ "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+ "hand_outline": null,
+ "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+ "made_by": "오푸스 실행자 줄판독(눈+픽셀: capseg 자막띠 30fps·cutdet --v2 컷/전환/광류 motion·px 채움색·rangesheet 0.2초/1프레임 시트) 2026-10-25 (관제 263 지시서 06)",
+ "capseg_band": [
+  1180,
+  1340
+ ],
+ "cutdet_window": [
+  480,
+  1920
+ ],
+ "fill": "dominant",
+ "_fill": "강조색 섞인 줄: 바탕 글자색 = 최빈 색 묶음(06 보고 ⑬ — 중앙값이면 흰+노랑이 섞여 번짐)"
+}

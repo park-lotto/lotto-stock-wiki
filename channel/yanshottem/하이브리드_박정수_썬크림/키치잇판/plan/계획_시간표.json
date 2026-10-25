@@ -1,0 +1,1242 @@
+{
+ "timeline": {
+  "lines": {
+   "N1": [
+    0.0,
+    3.276
+   ],
+   "O1": [
+    3.336,
+    5.415
+   ],
+   "N2": [
+    5.475,
+    6.92
+   ],
+   "O2": [
+    6.98,
+    10.909
+   ],
+   "N3": [
+    10.969,
+    13.397
+   ],
+   "N4": [
+    13.457,
+    16.82
+   ],
+   "N5": [
+    16.88,
+    20.294
+   ],
+   "N6": [
+    20.354,
+    23.069
+   ],
+   "N7": [
+    23.129,
+    26.547
+   ]
+  },
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "배우 박정수가",
+    "t0": 0.0,
+    "t1": 1.161,
+    "key": "박정수가",
+    "show": [
+     0.0,
+     1.161
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "시슬리 선크림 대신",
+    "t0": 1.161,
+    "t1": 2.435,
+    "key": "시슬리",
+    "show": [
+     1.161,
+     2.435
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "쓴다는 게 있다네요?",
+    "t0": 2.435,
+    "t1": 3.276,
+    "key": "있다네요?",
+    "show": [
+     2.435,
+     3.336
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "나는 여기 거",
+    "t0": 3.336,
+    "t1": 4.343,
+    "key": "여기 거",
+    "show": [
+     3.336,
+     4.343
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "선크림 안 씁니다",
+    "t0": 4.343,
+    "t1": 5.415,
+    "key": "안 씁니다",
+    "show": [
+     4.343,
+     5.475
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "도대체 뭐가 그렇게 좋길래?",
+    "t0": 5.475,
+    "t1": 6.92,
+    "key": "좋길래?",
+    "show": [
+     5.475,
+     6.98
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "밀리지 않아서 쓰고",
+    "t0": 6.98,
+    "t1": 8.542,
+    "key": "밀리지",
+    "show": [
+     6.98,
+     8.542
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "이게 유기농이고",
+    "t0": 8.542,
+    "t1": 9.952,
+    "key": "유기농이고",
+    "show": [
+     8.542,
+     9.952
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 2,
+    "speaker": "orig",
+    "text": "이건 안 시려워요",
+    "t0": 9.952,
+    "t1": 10.909,
+    "key": "안 시려워요",
+    "show": [
+     9.952,
+     10.969
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "저도 보자마자",
+    "t0": 10.969,
+    "t1": 11.991,
+    "key": "보자마자",
+    "show": [
+     10.969,
+     11.991
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "하나 사서 따라 발라 봤어요",
+    "t0": 11.991,
+    "t1": 13.397,
+    "key": "따라",
+    "show": [
+     11.991,
+     13.457
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "로션처럼 얇게 펴져서",
+    "t0": 13.457,
+    "t1": 15.188,
+    "key": "로션처럼",
+    "show": [
+     13.457,
+     15.188
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "화장이 정말",
+    "t0": 15.188,
+    "t1": 16.117,
+    "key": "화장이",
+    "show": [
+     15.188,
+     16.117
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "안 밀리더라고요",
+    "t0": 16.117,
+    "t1": 16.82,
+    "key": "안 밀리더라고요",
+    "show": [
+     16.117,
+     16.88
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "심지어 튜브에",
+    "t0": 16.88,
+    "t1": 18.004,
+    "key": "심지어",
+    "show": [
+     16.88,
+     18.004
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "눈물 안 나는 티어프리라고",
+    "t0": 18.004,
+    "t1": 19.604,
+    "key": "티어프리",
+    "show": [
+     18.004,
+     19.604
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "적혀 있더라고요",
+    "t0": 19.604,
+    "t1": 20.294,
+    "key": "적혀",
+    "show": [
+     19.604,
+     20.354
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "민감한 피부용",
+    "t0": 20.354,
+    "t1": 21.336,
+    "key": "민감한",
+    "show": [
+     20.354,
+     21.336
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "유기농 인증 원료로",
+    "t0": 21.336,
+    "t1": 22.433,
+    "key": "유기농",
+    "show": [
+     21.336,
+     22.433
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "만든 거래요",
+    "t0": 22.433,
+    "t1": 23.069,
+    "key": "만든 거래요",
+    "show": [
+     22.433,
+     23.129
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "박정수 영상은",
+    "t0": 23.129,
+    "t1": 24.406,
+    "key": "박정수",
+    "show": [
+     23.129,
+     24.406
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "조회수 56만이",
+    "t0": 24.406,
+    "t1": 25.567,
+    "key": "56만이",
+    "show": [
+     24.406,
+     25.567
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 2,
+    "speaker": "narr",
+    "text": "넘을 만큼 인기래요",
+    "t0": 25.567,
+    "t1": 26.547,
+    "key": "인기래요",
+    "show": [
+     25.567,
+     26.7
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "src": "IjTVGH5SNZQ_545_605.mp4",
+    "ss": 14.8,
+    "crop": [
+     480,
+     0,
+     840,
+     840
+    ],
+    "max": 6.0,
+    "see": "박정수 정면 민얼굴로 말함(침실, 본인 손짓) — 0초 얼굴 · 아래 자막 크롭 밖",
+    "line": "N1",
+    "t0": 0.0,
+    "kind": "tts",
+    "t1": 3.336,
+    "dur": 3.336,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "ss": 23.953,
+    "crop": [
+     300,
+     60,
+     860,
+     860
+    ],
+    "see": "박정수 화장대 앞 옆얼굴, '나는 여기 거'(입 맞음)",
+    "line": "O1",
+    "src": "IjTVGH5SNZQ_545_605.mp4",
+    "t0": 3.336,
+    "kind": "orig",
+    "t1": 4.313,
+    "dur": 0.977,
+    "over": 0.0
+   },
+   {
+    "at": 0.977,
+    "ss": 24.96,
+    "crop": [
+     380,
+     0,
+     760,
+     760
+    ],
+    "see": "박정수 '선크림 안 씁니다'(큰 자막 크롭 밖)",
+    "line": "O1",
+    "src": "IjTVGH5SNZQ_545_605.mp4",
+    "t0": 4.313,
+    "kind": "orig",
+    "t1": 5.475,
+    "dur": 1.162,
+    "over": 0.0
+   },
+   {
+    "src": "IjTVGH5SNZQ_800_830.mp4",
+    "ss": 18.0,
+    "crop": [
+     560,
+     60,
+     820,
+     820
+    ],
+    "max": 1.95,
+    "see": "박정수 화장대 앞에서 말함(얼굴)",
+    "line": "N2",
+    "t0": 5.475,
+    "kind": "tts",
+    "t1": 6.98,
+    "dur": 1.505,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "ss": 31.768,
+    "crop": [
+     420,
+     20,
+     860,
+     860
+    ],
+    "see": "박정수 튜브를 가리키며 '밀리지 않아서 쓰고 이게 유기농이고'(입 맞음)",
+    "line": "O2",
+    "src": "IjTVGH5SNZQ_545_605.mp4",
+    "t0": 6.98,
+    "kind": "orig",
+    "t1": 9.952,
+    "dur": 2.972,
+    "over": 0.0
+   },
+   {
+    "at": 2.972,
+    "ss": 37.71,
+    "crop": [
+     420,
+     20,
+     860,
+     860
+    ],
+    "see": "박정수 '이건 안 시려워요'(입 맞음, 튜브 든 손)",
+    "line": "O2",
+    "src": "IjTVGH5SNZQ_545_605.mp4",
+    "t0": 9.952,
+    "kind": "orig",
+    "t1": 10.969,
+    "dur": 1.017,
+    "over": 0.0
+   },
+   {
+    "src": "cp_7282115714.jpg",
+    "ss": 0,
+    "crop": [
+     0,
+     0,
+     541,
+     541
+    ],
+    "move": "in",
+    "see": "쿠팡 7282115714 상품 사진 — 같은 튜브",
+    "line": "N3",
+    "t0": 10.969,
+    "kind": "tts",
+    "t1": 13.457,
+    "dur": 2.488,
+    "over": 0.0
+   },
+   {
+    "src": "IjTVGH5SNZQ_545_605.mp4",
+    "ss": 40.2,
+    "crop": [
+     520,
+     40,
+     840,
+     840
+    ],
+    "max": 3.5,
+    "w": 1.0,
+    "see": "박정수 튜브를 들어 올려 보이며 말함('굉장히 좋아요')",
+    "line": "N4",
+    "t0": 13.457,
+    "kind": "tts",
+    "t1": 15.596,
+    "dur": 2.139,
+    "over": 0.0
+   },
+   {
+    "src": "IjTVGH5SNZQ_545_605.mp4",
+    "ss": 44.9,
+    "crop": [
+     580,
+     0,
+     520,
+     520
+    ],
+    "max": 3.2,
+    "w": 0.6,
+    "see": "박정수 정면으로 말함(침실, 자막 크롭 밖)",
+    "line": "N4",
+    "t0": 15.596,
+    "kind": "tts",
+    "t1": 16.88,
+    "dur": 1.284,
+    "over": 0.0
+   },
+   {
+    "src": "IjTVGH5SNZQ_545_605.mp4",
+    "ss": 29.55,
+    "crop": [
+     640,
+     0,
+     800,
+     800
+    ],
+    "max": 1.75,
+    "w": 0.8,
+    "see": "튜브 근접(주황 띠·ORGANIC 표시, 아래 큰 자막 크롭 밖)",
+    "line": "N5",
+    "t0": 16.88,
+    "kind": "tts",
+    "t1": 18.424,
+    "dur": 1.544,
+    "over": 0.0
+   },
+   {
+    "src": "IjTVGH5SNZQ_545_605.mp4",
+    "ss": 26.65,
+    "crop": [
+     360,
+     0,
+     820,
+     820
+    ],
+    "max": 2.6,
+    "w": 1.0,
+    "see": "박정수 튜브를 들고 가리킴",
+    "line": "N5",
+    "t0": 18.424,
+    "kind": "tts",
+    "t1": 20.354,
+    "dur": 1.93,
+    "over": 0.0
+   },
+   {
+    "src": "cp_7282115714.jpg",
+    "ss": 0,
+    "crop": [
+     150,
+     170,
+     280,
+     280
+    ],
+    "move": "in",
+    "see": "쿠팡 사진 튜브 글자 근접(UVA/UVB·CENTELLA·CERTIFIED ORGANIC)",
+    "line": "N6",
+    "t0": 20.354,
+    "kind": "tts",
+    "t1": 23.129,
+    "dur": 2.775,
+    "over": 0.0
+   },
+   {
+    "src": "IjTVGH5SNZQ_800_830.mp4",
+    "ss": 8.0,
+    "crop": [
+     460,
+     20,
+     860,
+     860
+    ],
+    "max": 5.0,
+    "see": "박정수 정면 얼굴로 말함(끝)",
+    "line": "N7",
+    "t0": 23.129,
+    "kind": "tts",
+    "t1": 26.7,
+    "dur": 3.571,
+    "over": 0.0
+   }
+  ],
+  "opos": [
+   {
+    "line": "O1",
+    "k": 0,
+    "src": "IjTVGH5SNZQ_545_605.mp4",
+    "span": [
+     23.953,
+     26.032
+    ],
+    "t0": 3.336,
+    "t1": 5.415
+   },
+   {
+    "line": "O2",
+    "k": 0,
+    "src": "IjTVGH5SNZQ_545_605.mp4",
+    "span": [
+     31.768,
+     34.74
+    ],
+    "t0": 6.98,
+    "t1": 9.952
+   },
+   {
+    "line": "O2",
+    "k": 1,
+    "src": "IjTVGH5SNZQ_545_605.mp4",
+    "span": [
+     37.71,
+     38.667
+    ],
+    "t0": 9.952,
+    "t1": 10.909
+   }
+  ],
+  "end": 26.7,
+  "orig_trim": {
+   "head": {
+    "O1": 0.133,
+    "O2": 0.118
+   },
+   "dropped_cuts": [
+    [
+     "O1",
+     null,
+     26.16,
+     2.147
+    ]
+   ]
+  }
+ },
+ "placement": {
+  "reference": "Cs-Ka_S8nDM",
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "배우 박정수가",
+    "t0": 0.0,
+    "t1": 1.161,
+    "key": "박정수가",
+    "show": [
+     0.0,
+     1.161
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "hook",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "박정수가"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "시슬리 선크림 대신",
+    "t0": 1.161,
+    "t1": 2.435,
+    "key": "시슬리",
+    "show": [
+     1.161,
+     2.435
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "시슬리"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "쓴다는 게 있다네요?",
+    "t0": 2.435,
+    "t1": 3.276,
+    "key": "있다네요?",
+    "show": [
+     2.435,
+     3.336
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "있다네요?"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "나는 여기 거",
+    "t0": 3.336,
+    "t1": 4.343,
+    "key": "여기 거",
+    "show": [
+     3.336,
+     4.343
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "reveal",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "여기 거"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "선크림 안 씁니다",
+    "t0": 4.343,
+    "t1": 5.415,
+    "key": "안 씁니다",
+    "show": [
+     4.343,
+     5.475
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "안 씁니다"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "도대체 뭐가 그렇게 좋길래?",
+    "t0": 5.475,
+    "t1": 6.92,
+    "key": "좋길래?",
+    "show": [
+     5.475,
+     6.98
+    ],
+    "first": true,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "좋길래?"
+     }
+    ],
+    "variant": "cut"
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "밀리지 않아서 쓰고",
+    "t0": 6.98,
+    "t1": 8.542,
+    "key": "밀리지",
+    "show": [
+     6.98,
+     8.542
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "밀리지"
+     }
+    ],
+    "variant": "cut"
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "이게 유기농이고",
+    "t0": 8.542,
+    "t1": 9.952,
+    "key": "유기농이고",
+    "show": [
+     8.542,
+     9.952
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "pop",
+    "variant": "pop"
+   },
+   {
+    "line": "O2",
+    "j": 2,
+    "speaker": "orig",
+    "text": "이건 안 시려워요",
+    "t0": 9.952,
+    "t1": 10.909,
+    "key": "안 시려워요",
+    "show": [
+     9.952,
+     10.969
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "안 시려워요"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "저도 보자마자",
+    "t0": 10.969,
+    "t1": 11.991,
+    "key": "보자마자",
+    "show": [
+     10.969,
+     11.991
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "보자마자"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "하나 사서 따라 발라 봤어요",
+    "t0": 11.991,
+    "t1": 13.397,
+    "key": "따라",
+    "show": [
+     11.991,
+     13.457
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "따라"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "로션처럼 얇게 펴져서",
+    "t0": 13.457,
+    "t1": 15.188,
+    "key": "로션처럼",
+    "show": [
+     13.457,
+     15.188
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "로션처럼"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "화장이 정말",
+    "t0": 15.188,
+    "t1": 16.117,
+    "key": "화장이",
+    "show": [
+     15.188,
+     16.117
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "화장이"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "안 밀리더라고요",
+    "t0": 16.117,
+    "t1": 16.82,
+    "key": "안 밀리더라고요",
+    "show": [
+     16.117,
+     16.88
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "안 밀리더라고요"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "심지어 튜브에",
+    "t0": 16.88,
+    "t1": 18.004,
+    "key": "심지어",
+    "show": [
+     16.88,
+     18.004
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "심지어"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "눈물 안 나는 티어프리라고",
+    "t0": 18.004,
+    "t1": 19.604,
+    "key": "티어프리",
+    "show": [
+     18.004,
+     19.604
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "티어프리"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "적혀 있더라고요",
+    "t0": 19.604,
+    "t1": 20.294,
+    "key": "적혀",
+    "show": [
+     19.604,
+     20.354
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "적혀"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "민감한 피부용",
+    "t0": 20.354,
+    "t1": 21.336,
+    "key": "민감한",
+    "show": [
+     20.354,
+     21.336
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "민감한"
+     }
+    ],
+    "variant": "cut"
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "유기농 인증 원료로",
+    "t0": 21.336,
+    "t1": 22.433,
+    "key": "유기농",
+    "show": [
+     21.336,
+     22.433
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "유기농"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "만든 거래요",
+    "t0": 22.433,
+    "t1": 23.069,
+    "key": "만든 거래요",
+    "show": [
+     22.433,
+     23.129
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "만든 거래요"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "박정수 영상은",
+    "t0": 23.129,
+    "t1": 24.406,
+    "key": "박정수",
+    "show": [
+     23.129,
+     24.406
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "end",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "박정수"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "조회수 56만이",
+    "t0": 24.406,
+    "t1": 25.567,
+    "key": "56만이",
+    "show": [
+     24.406,
+     25.567
+    ],
+    "first": false,
+    "lex": [
+     "price"
+    ],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "56만이"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N7",
+    "j": 2,
+    "speaker": "narr",
+    "text": "넘을 만큼 인기래요",
+    "t0": 25.567,
+    "t1": 26.547,
+    "key": "인기래요",
+    "show": [
+     25.567,
+     26.7
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "인기래요"
+     }
+    ],
+    "variant": "pop"
+   }
+  ],
+  "sfx": [],
+  "transitions": [
+   {
+    "t": 10.969,
+    "kind": "flash",
+    "ms": 100,
+    "why": "마지막 화자 바뀜(rules.flash)"
+   }
+  ],
+  "flashes": [
+   10.969
+  ],
+  "cut_bounds": 12,
+  "log": [
+   "본보기 벤치 편 = Cs-Ka_S8nDM",
+   "스티커 spark_lines 본보기 1개 중 0개만(조건 맞는 덩어리 모자람)",
+   "번쩍 [10.969]",
+   "효과음 0발(본보기 0) []",
+   "등장 {'pop': 18, 'cut': 5} · 강조 22/23"
+  ],
+  "transitions_drawn": [
+   {
+    "t": 10.969,
+    "kind": "flash",
+    "ms": 100.0,
+    "why": "마지막 화자 바뀜(rules.flash)"
+   }
+  ]
+ }
+}

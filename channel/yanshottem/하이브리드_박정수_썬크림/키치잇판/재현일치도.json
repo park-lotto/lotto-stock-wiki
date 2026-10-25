@@ -1,0 +1,369 @@
+{
+ "verdict": "미달",
+ "rows": [
+  {
+   "key": "len.duration",
+   "bench": 14.1295,
+   "ours": 26.7,
+   "diff": "판 25~30(벤치 10.17~21.014 와 안 겹침)",
+   "judge": "in",
+   "core": true,
+   "why": "길이 차 ≤15%(검수 B1·compare len.duration) — 판 길이가 벤치 범위와 안 겹치는 판(하이브리드)은 판 length 범위로(판 length.why)"
+  },
+  {
+   "key": "cut.median",
+   "bench": 1.15,
+   "ours": 2.13,
+   "diff": 85.2,
+   "judge": "out",
+   "core": true,
+   "why": "컷 길이 중앙 ±30%, 벤치보다 빠르면 미달 쪽(검수 B4)"
+  },
+  {
+   "key": "speech.cps.나레",
+   "bench": 9.195,
+   "ours": 6.66,
+   "diff": -27.6,
+   "judge": "out",
+   "core": true,
+   "why": "나레 말속도(자막 글자/표시 초) 차 ≤10%(compare speech.cps)"
+  },
+  {
+   "key": "chunk.chars",
+   "bench": 6.5,
+   "ours": 7,
+   "diff": 7.7,
+   "judge": "in",
+   "core": true,
+   "why": "자막 조각 자수 중앙 차 ≤15%(검수 A9 범위)"
+  },
+  {
+   "key": "chunk.sec",
+   "bench": 0.755,
+   "ours": 1.13,
+   "diff": 49.7,
+   "judge": "out",
+   "core": true,
+   "why": "자막당 표시 초 중앙 차 ≤15%(compare cap.sub_sec)"
+  },
+  {
+   "key": "enter.mode.나레",
+   "bench": "pop",
+   "ours": "pop",
+   "diff": "",
+   "judge": "in",
+   "core": true,
+   "why": "나레 줄 등장 최빈 같음(compare cap.anim)"
+  },
+  {
+   "key": "enter.mode.원음",
+   "bench": "pop",
+   "ours": "instant",
+   "diff": "다름",
+   "judge": "out",
+   "core": true,
+   "why": "원음 줄 등장 최빈 같음"
+  },
+  {
+   "key": "fx.rate.나레",
+   "bench": 1.0,
+   "ours": 1.0,
+   "diff": 0.0,
+   "judge": "in",
+   "core": true,
+   "why": "나레 줄 중 꾸밈 붙은 비율 차 ≤20%p(시작문서 §0-1 12-1 ④ '효과 붙은 줄 비율')"
+  },
+  {
+   "key": "fx.rate.원음",
+   "bench": 0.818,
+   "ours": 1.0,
+   "diff": 18.2,
+   "judge": "in",
+   "core": true,
+   "why": "원음 줄 중 꾸밈 붙은 비율 차 ≤20%p"
+  },
+  {
+   "key": "fx.pos",
+   "bench": {
+    "훅": 0.242,
+    "본문": 0.605,
+    "끝": 0.15
+   },
+   "ours": {
+    "훅": 0.13,
+    "본문": 0.696,
+    "끝": 0.174
+   },
+   "diff": {
+    "끝": 2.4,
+    "본문": 9.1,
+    "훅": -11.2
+   },
+   "judge": "in",
+   "core": true,
+   "why": "꾸밈 붙은 줄의 자리(훅/본문/끝) 분포 칸마다 차 ≤20%p(compare sfx.after_event 와 같은 폭)"
+  },
+  {
+   "key": "plain.rate",
+   "bench": 0.108,
+   "ours": 0.0,
+   "diff": -10.8,
+   "judge": "in",
+   "core": true,
+   "why": "꾸밈 없는 줄 비율 차 ≤20%p('없는 것도 스타일')"
+  },
+  {
+   "key": "mix.lufs",
+   "bench": -15.7,
+   "ours": -13.9,
+   "diff": 1.8,
+   "judge": "out",
+   "core": false,
+   "why": "통합 LUFS 차 ≤1.5dB(검수 B2) — 하이브리드는 −14 통일이라 참고"
+  },
+  {
+   "key": "narr.share",
+   "bench": 0.2915,
+   "ours": 0.783,
+   "diff": "벤치 0.222~1.0",
+   "judge": "in",
+   "core": false,
+   "why": "나레 줄 비율이 벤치 min~max 안 — 하이브리드는 설계상 다름, 참고"
+  },
+  {
+   "key": "transition.rate",
+   "bench": {
+    "black": 0.0,
+    "cut": 0.867,
+    "flash": 0.0,
+    "zoomblur": 0.1
+   },
+   "ours": {
+    "cut": 0.917,
+    "flash": 0.083
+   },
+   "diff": {
+    "black": 0.0,
+    "cut": 5.0,
+    "flash": 8.3,
+    "zoomblur": -10.0
+   },
+   "judge": "in",
+   "core": true,
+   "why": "컷 전환 종류 분포(cut·flash·zoomblur·black·기타) 칸마다 차 ≤20%p(표준 §4-1 A1)"
+  },
+  {
+   "key": "sfx.rate",
+   "bench": 0.0,
+   "ours": 0.0,
+   "diff": 0.0,
+   "judge": "in",
+   "core": true,
+   "why": "효과음 발/초 차 ≤30%, 벤치 0이면 우리도 0(표준 §4-1 A2)"
+  },
+  {
+   "key": "sticker.rate",
+   "bench": 0.0645,
+   "ours": 0.0,
+   "diff": -6.5,
+   "judge": "in",
+   "core": true,
+   "why": "스티커 붙은 줄 비율 차 ≤20%p(표준 §4-1 A3)"
+  },
+  {
+   "key": "meme.rate",
+   "bench": 0.0,
+   "ours": 0.0,
+   "diff": 0.0,
+   "judge": "in",
+   "core": true,
+   "why": "짤 화면 줄 비율 차 ≤20%p(표준 §4-1 A3 · 줄판독 screen/scene 에 '짤')"
+  },
+  {
+   "key": "thumb.frame0",
+   "bench": "card",
+   "ours": "card",
+   "diff": "",
+   "judge": "in",
+   "core": true,
+   "why": "0초 첫 화면 종류(card=글 얹은 표지 2프레임 / scene=그냥 장면) 벤치 최빈과 같음(표준 §4-1 A6)"
+  }
+ ],
+ "n_bench": 8,
+ "ours_n_lines": 23,
+ "ours_media": {
+  "duration": 26.7,
+  "cut_median": 2.13,
+  "n_cuts": 11,
+  "lufs": -13.9,
+  "tp": -1.4,
+  "win": [
+   0,
+   420,
+   1080,
+   1080
+  ],
+  "method": "probe.info + bench_one.measure 컷(compare 와 같은 자) + bench.audio.ebur128"
+ },
+ "bench_media": {
+  "cut_median": [
+   1.37,
+   1.0,
+   0.98,
+   1.0,
+   0.83,
+   1.7,
+   1.3,
+   1.97
+  ],
+  "lufs": [
+   -17.5,
+   -18.5,
+   -15.2,
+   -14.8,
+   -16.2,
+   -12.9,
+   -17.3,
+   -12.9
+  ],
+  "ids": [
+   "_Wa4IehA6yE",
+   "BRa5Iv4A3Y8",
+   "cNo91ddBwB8",
+   "Cs-Ka_S8nDM",
+   "Ks5kYYKAUlQ",
+   "Nv99RyxmrfU",
+   "oTi41R74WIY",
+   "vSEaZ-BCELY"
+  ],
+  "per": {
+   "_Wa4IehA6yE": {
+    "duration": 14.07,
+    "cut_median": 1.37,
+    "n_cuts": 9,
+    "lufs": -17.5,
+    "tp": -2.7,
+    "win": [
+     0,
+     420,
+     1080,
+     1080
+    ],
+    "method": "probe.info + bench_one.measure 컷(compare 와 같은 자) + bench.audio.ebur128"
+   },
+   "BRa5Iv4A3Y8": {
+    "duration": 20.93,
+    "cut_median": 1.0,
+    "n_cuts": 13,
+    "lufs": -18.5,
+    "tp": -3.5,
+    "win": [
+     0,
+     420,
+     1080,
+     1080
+    ],
+    "method": "probe.info + bench_one.measure 컷(compare 와 같은 자) + bench.audio.ebur128"
+   },
+   "cNo91ddBwB8": {
+    "duration": 13.63,
+    "cut_median": 0.98,
+    "n_cuts": 12,
+    "lufs": -15.2,
+    "tp": -3.3,
+    "win": [
+     0,
+     420,
+     1080,
+     1080
+    ],
+    "method": "probe.info + bench_one.measure 컷(compare 와 같은 자) + bench.audio.ebur128"
+   },
+   "Cs-Ka_S8nDM": {
+    "duration": 14.27,
+    "cut_median": 1.0,
+    "n_cuts": 13,
+    "lufs": -14.8,
+    "tp": -0.4,
+    "win": [
+     0,
+     420,
+     1080,
+     1080
+    ],
+    "method": "probe.info + bench_one.measure 컷(compare 와 같은 자) + bench.audio.ebur128"
+   },
+   "Ks5kYYKAUlQ": {
+    "duration": 10.27,
+    "cut_median": 0.83,
+    "n_cuts": 11,
+    "lufs": -16.2,
+    "tp": -3.3,
+    "win": [
+     0,
+     420,
+     1080,
+     1080
+    ],
+    "method": "probe.info + bench_one.measure 컷(compare 와 같은 자) + bench.audio.ebur128"
+   },
+   "Nv99RyxmrfU": {
+    "duration": 14.03,
+    "cut_median": 1.7,
+    "n_cuts": 9,
+    "lufs": -12.9,
+    "tp": -1.0,
+    "win": [
+     0,
+     420,
+     1080,
+     1080
+    ],
+    "method": "probe.info + bench_one.measure 컷(compare 와 같은 자) + bench.audio.ebur128"
+   },
+   "oTi41R74WIY": {
+    "duration": 10.1,
+    "cut_median": 1.3,
+    "n_cuts": 8,
+    "lufs": -17.3,
+    "tp": -3.5,
+    "win": [
+     0,
+     420,
+     1080,
+     1080
+    ],
+    "method": "probe.info + bench_one.measure 컷(compare 와 같은 자) + bench.audio.ebur128"
+   },
+   "vSEaZ-BCELY": {
+    "duration": 17.8,
+    "cut_median": 1.97,
+    "n_cuts": 9,
+    "lufs": -12.9,
+    "tp": 0.0,
+    "win": [
+     0,
+     420,
+     1080,
+     1080
+    ],
+    "method": "probe.info + bench_one.measure 컷(compare 와 같은 자) + bench.audio.ebur128"
+   }
+  },
+  "method": "media_of(같은 자) — 편별 캐시 _bench_media_cache.json"
+ },
+ "bench_ids": [
+  "_Wa4IehA6yE",
+  "BRa5Iv4A3Y8",
+  "cNo91ddBwB8",
+  "Cs-Ka_S8nDM",
+  "Ks5kYYKAUlQ",
+  "Nv99RyxmrfU",
+  "oTi41R74WIY",
+  "vSEaZ-BCELY"
+ ],
+ "line_reads": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\kitchit\\줄판독",
+ "frame0_from": "완성본 측정",
+ "made_by": "kal_analyze.match_from_render",
+ "ok": false
+}

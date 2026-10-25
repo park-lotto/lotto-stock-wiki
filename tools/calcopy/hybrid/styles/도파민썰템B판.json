@@ -1,0 +1,452 @@
+{
+ "name": "도파민썰템B판",
+ "renderer": "bench",
+ "thumb_card_face": false,
+ "_thumb_card_face": "연예인 채널 아님 — 카드 얼굴 관문 끔(판마다 명시 필수, styles.REQUIRED)",
+ "_note": "썰풀다 칼카피 1차 판 B — 나레 썰(검정 띠 틀, window). 우리 브랜드 도파민썰템(브랜드.json). 근거 = 설명서 프리셋 channel/sseolpulda/preset/B_검정띠(mYxu)·_kal/규칙빈도_나레.json(3편 — 표본부족 n<5, 06 에 3편 더 필요)",
+ "bench": {
+  "ko": "썰풀다",
+  "channel": "sseolpulda",
+  "analysis": "channel/sseolpulda/_kal/스타일분석_초안.md",
+  "line_reads": "channel/sseolpulda/줄판독",
+  "src_dir": "C:/숏템_칼카피/sseolpulda/mp4",
+  "sfx_events": "channel/sseolpulda/_kal/sfx_events.json"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f",
+  "candidates": [
+   "지훈"
+  ],
+  "why": "벤치 나레 화자 남 4/4(kal.py 추천 박창수/지훈) — 박창수 손 상수(사장님 확인 필요)"
+ },
+ "cps_target": 6.9,
+ "_why_cps_target": "규칙빈도_나레 3편 6.38~7.46(중앙 6.96)",
+ "bgm": {
+  "id": "sweets",
+  "db_below_voice": 8.1,
+  "duck_orig_db": 0.0,
+  "duck_narr_db": 0.0,
+  "fade_out": 0.04,
+  "candidates": [],
+  "why": "곡 sweets = 곡 미식별(곡은 사람이 고른다 — bgm_pick) · 벤치 9편 원본 소리 실측(handconst.py sseolpulda → _kal/손상수_실측.json bgm.* · 신호급 — 나레·원음·BGM 섞인 소리, 분리 없음): db_below_voice 8.1 = 말 p50 − 말 사이 바닥(줄 경계 쉼 프레임 중앙, 말 없는 구간 ≥1초 편은 그 p10) 편 중앙 8.12dB(5.82·38.45·8.12·10.04·7.75, n=5) · duck_orig_db 0 = 원음·나레가 같이 나온 편 0(원음 줄 없음 → 원음 구간 덕킹 칸 안 쓰임) · fade_out 0.04 = 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.036초(0.023~0.614) · duck_narr_db 0 = 말 사이 바닥 − 말 없는 구간(≥1초) 바닥 편 중앙(비교 편 1/9: 0, 3dB 미만 차 = 0)"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 통일(사장님 10-18)"
+ },
+ "length": {
+  "min": 9.8,
+  "max": 22.5,
+  "why": "나레 갈래 3편 9.78~22.52초(규칙빈도_나레.json)"
+ },
+ "timing": {
+  "gap": 0.12,
+  "tail": 0.43,
+  "why": "벤치 9편 원본 소리 실측(handconst.py sseolpulda → _kal/손상수_실측.json): 줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙 — gap 0.12(모든 줄 경계 n=16, p25 0.03·p75 0.24) (경계 ±0.15초 창 안 가장 긴 쉼, 쉼 문턱 = 편별 (말 p50+p5)/2) · tail 0.43 = 마지막 말 소리 끝→영상 끝 편 중앙 0.434초(0.186~0.723, 4/9편 — 로컬 위스퍼 마지막 낱말 끝 p≥0.4)"
+ },
+ "frame": {
+  "kind": "window",
+  "_from": "frame_import.py ← calcopy_frame v1 source=mYxuF1A74j4 frame=only span=None",
+  "bg": [
+   0,
+   0,
+   0
+  ],
+  "window": [
+   0,
+   347,
+   1080,
+   1573
+  ],
+  "title": [
+   {
+    "font": "BlackHanSans.ttf",
+    "px": 159.4,
+    "center": 166,
+    "color": "#FFFFFF",
+    "max_w": 1000,
+    "letter_spacing": -13
+   },
+   {
+    "font": "BlackHanSans.ttf",
+    "px": 159.4,
+    "center": 311.5,
+    "color": "#F0C612",
+    "max_w": 1000,
+    "letter_spacing": -13
+   }
+  ],
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "why": "frame_import.py ← channel/sseolpulda/preset/B_검정띠/frame.json(mYxuF1A74j4 측정, manifest default) — 검정 바탕·창 y347~1920·제목 2줄 흰/노랑 #F0C612 BlackHanSans · 제목 가운데 177/319 → 166/311.5 = mYxu 6초 프레임 잉크(1줄 102~221·2줄 244~339) 대조 보정 · 폭은 벤치가 좁음(850 vs 937px — 자간 −18.1 칸 없음 → 02) · 제목 자간 −18.1(frame.json title.letter_spacing — mYxu 폭 850 vs 자간 0 우리 937px) · 자간 −18.1→−13(mYxu 6초 줄 폭 850 vs 우리 792 보정)",
+  "_pending": {
+   "props": "['title.letter_spacing=-18.1', \"caption.enter={'kind': 'rise', 'ms': 300}\"]"
+  }
+ },
+ "caption": {
+  "pack": "sseolpulda_b",
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 10.0,
+  "chunk_max_chars": 9,
+  "band": [
+   1222,
+   1316
+  ],
+  "why": "frame.json caption 층(Pretendard 81.3 흰·검정 외곽 4·등장 rise 300ms) y1222 · chunk_max_chars 9 = 벤치 나레 조각 자수(공백 뺀) p90 9(n=99, 중앙 7·최대 13) · typing_cps 10 = 렌더에 안 닿는 값: 벤치 타이핑 0/117줄 · 판 칸 어디에도 enter typing 없음 → caption_rows 가 이 값을 안 읽음 · band [1222,1316] = frame.json caption 층 y1222~1316(줄판독 나레 픽셀 y 중앙 1229~1315 n=99 — 같은 자리) — handconst.py sseolpulda caption.*"
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "cut": 1.0
+   },
+   "ms": 0,
+   "why": "전환 미측정 칸 — 1차 = 컷(06 줄판독 transition 칸으로 교체)"
+  },
+  "why": "push 0 = 재료 움직임 그대로 — 벤치 나레 줄 motion 99개(cam 71, pan 13, still 10, zoom_out 3, zoom_in 2) · 벤치 원음 줄 0개(원음 컷 없음 → push_orig 안 쓰임) — zoom_in 과반 아님(나레 2/99) → 우리 밀기 0, handconst.py sseolpulda cuts.*"
+ },
+ "sfx_files": {
+  "pop": "팩01/pop.wav",
+  "gain_db": -8,
+  "why": "효과음 종류 이름표 → 팩01 slot(pop→뽁) — 벤치 효과음 편당 0·0·1(나레 갈래) · 종류 귀 미확인('기타') · 종류 미확인(귀로 안 들음, 06 측정 뒤 교체) · gain −8dB = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "narr.first": "cut",
+    "narr.rest": "cut",
+    "orig.first": "cut",
+    "orig.rest": "cut",
+    "why": "등장 instant 66/66(나레 48·불명 18)"
+   },
+   "meme": {
+    "rate": 0.0,
+    "why": "짤 미측정"
+   },
+   "sfx": {
+    "kinds": {
+     "pop": 1.0
+    },
+    "max": 1,
+    "why": "벤치 효과음 줄 편당 0·0·1(나레 갈래 D3Pc·GqSk·mYxu) — 갈래별 counted(10-25) · 종류 미확인('기타') → 팩01 pop 임시 · 상한 1"
+   }
+  },
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/sseolpulda/줄판독",
+   "n_videos": 3,
+   "slots": {
+    "narr.first": {
+     "n": 3,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.333
+    },
+    "narr.rest": {
+     "n": 45,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.089
+    }
+   },
+   "share": {
+    "emph": 0.333,
+    "typing": 0.0,
+    "sfx": 0.667
+   },
+   "stickers": {
+    "circle_arrow": 0.667,
+    "comment_card": 0.333,
+    "cursor": 0.333,
+    "other": 0.333
+   },
+   "transition": {
+    "cut": 1.0
+   },
+   "sfx_kinds": {
+    "other": 1.0
+   },
+   "videos": [
+    {
+     "id": "D3Pc6HZ6t6c",
+     "n": 11,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 10,
+       "enter": {
+        "cut": 10
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "comment_card": 1
+     },
+     "sticker_lex": {
+      "comment_card": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "기본(흰 글 검정 외곽)": 11
+     },
+     "sfx": [
+      "cut"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 10
+     },
+     "n_trans": 10,
+     "roles": {
+      "hook": 2,
+      "body": 7,
+      "reveal": 1,
+      "end": 1
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "GqSkDhM_bV0",
+     "n": 18,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 1
+      },
+      "narr.rest": {
+       "n": 17,
+       "enter": {
+        "cut": 17
+       },
+       "emph": 4
+      }
+     },
+     "stickers": {
+      "circle_arrow": 1,
+      "cursor": 1
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "none": 1
+      },
+      "cursor": {
+       "ask": 1
+      }
+     },
+     "variants": {
+      "기본(흰 기울인 글 검정 외곽) + 낱말 강조색": 5,
+      "기본(흰 기울인 글 검정 외곽)": 13
+     },
+     "sfx": [],
+     "no_caption": 6,
+     "transitions": {
+      "cut": 17
+     },
+     "n_trans": 17,
+     "roles": {
+      "hook": 1,
+      "body": 13,
+      "reveal": 2,
+      "end": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "mYxuF1A74j4",
+     "n": 19,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 18,
+       "enter": {
+        "cut": 18
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "circle_arrow": 3,
+      "other": 1
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "none": 3
+      },
+      "other": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "기본(흰 글 검정 외곽)": 19
+     },
+     "sfx": [
+      "cut",
+      "none"
+     ],
+     "no_caption": 8,
+     "transitions": {
+      "cut": 18
+     },
+     "n_trans": 18,
+     "roles": {
+      "hook": 3,
+      "body": 10,
+      "twist": 3,
+      "reveal": 1,
+      "end": 2
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "end",
+       "t": 22.14,
+       "off": 1.173,
+       "basis": "파형 솟음"
+      }
+     ]
+    }
+   ],
+   "filter": {
+    "sound_mode": "나레",
+    "ids": [
+     "D3Pc6HZ6t6c",
+     "GqSkDhM_bV0",
+     "mYxuF1A74j4"
+    ],
+    "how": "07 이 줄판독 sound_mode 로 골라 placement.count 를 그 편들에만 돌림(10-25) — placement 편 필터 칸 없음 → 15 쪽지",
+    "made_by": "tools/calcopy/hybrid/placement.py count(편 필터 = 07 임시 묶음)"
+   }
+  }
+ },
+ "_pending": {
+  "counted": "갈래별 counted = 줄판독 sound_mode 로 3편만(표본부족 n<5 — L1 counted≥6 미달) · placement.count 편 필터 칸 없음 → 07 이 임시 묶음으로 셈(counted.filter) — 15 에 편 필터 칸 쪽지 · 06 에 갈래마다 3편 더",
+  "enter_rise": "자막 등장 rise 300ms(manifest default) vs 줄판독 instant — 06 재확인"
+ },
+ "script": {
+  "brief": [
+   "나레 갈래(썰 나레 100%) — 박자·말투 미측정(대본언어.json 참고, 06 뒤)"
+  ],
+  "audit": [
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 9.8,
+    "max": 22.5,
+    "why": "나레 갈래 3편 9.78~22.52초(규칙빈도_나레.json)"
+   }
+  ]
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "sseolpulda_b",
+   "gap": [
+    "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 kitchit same=False) → 팩요청.md 도파민썰템B판#1(관제 235) · 그동안 'clean' 임시(stand_in)"
+   ],
+   "rank": [
+    {
+     "pack": "kitchit",
+     "d": 0.674,
+     "terms": {
+      "px": 0.18,
+      "fill": 0.0,
+      "stroke": 0.07,
+      "y": 1.62,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "goodletter",
+     "d": 0.69,
+     "terms": {
+      "px": 0.33,
+      "fill": 0.14,
+      "stroke": 0.5,
+      "y": 0.98,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "deal",
+     "d": 0.798,
+     "terms": {
+      "px": 0.12,
+      "fill": 0.0,
+      "stroke": 1.37,
+      "y": 1.0,
+      "font": 1.5
+     }
+    }
+   ],
+   "from": "벤치 6편 66줄 실측 [나레 48줄[잉크 높이 87px(47줄 y칸) · 자리 y1273 · 채움 #FFFFFF(45줄) · 테 8px] · 글꼴 Pretendard-Bold(판 _pending 측정 층) · 글자 크기 81.3px(판 _pending 측정 층)] → 1위 kitchit(거리 0.674) · 지금 clean(거리 4.832, 순위 12)",
+   "stand_in": true,
+   "enter_cover": {
+    "instant": {
+     "share": 1.0,
+     "n": 66,
+     "item": "정지(팩 불필요)"
+    }
+   }
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — render_bench 옛 고정값 그대로(벤치 등장 = 판 caption.pack_default·placement.rules.enter 가 정함) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": "팩01",
+   "map": {
+    "pop": "뽁"
+   },
+   "gain_db": -8,
+   "why": "효과음 종류 이름표 → 팩01 slot(pop→뽁) — 벤치 효과음 편당 0·0·1(나레 갈래) · 종류 귀 미확인('기타') · 종류 미확인(귀로 안 들음, 06 측정 뒤 교체) · gain −8dB = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)",
+   "ncc": {
+    "measured": false
+   },
+   "from": "NCC 미측정 → 지문으로 고를 수 없어 종류 이름표로 slot: pop→뽁 · 팩 팩01(잇템로그판과 같은 팩) — 07 채움(10-25, 02 의 '없는 종류면 멈춤' 뒤)",
+   "gap": [
+    "종류 미확인(귀) — 06 이 소리 종류를 재면 slot 다시"
+   ]
+  },
+  "bgm": {
+   "id": "sweets",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)",
+   "candidates": []
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 칼카피 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
+  }
+ }
+}

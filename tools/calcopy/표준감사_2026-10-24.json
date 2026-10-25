@@ -1,0 +1,1809 @@
+{
+ "_about": "표준감사 2026-10-24(페이블) — 23 프리셋 × 표준 칸(tools/calcopy/칼카피_공통규칙표준.md §6 L0~L4·§2-3 요소 15종). 파일 칸은 저장소 실측, 요소 칸은 카드·스타일분석·규칙빈도·판 파일을 읽은 판정(○ 실측 k/n 또는 픽셀 · △ 일부/눈/신호 · × 미측정). 정식 자동 판정 = preset_card.py check(지시서 01)가 대체한다.",
+ "made_by": "scratchpad/audit_gen.py (일회성)",
+ "summary": {
+  "n_presets": 23,
+  "levels": {
+   "L0 미달": 19,
+   "L0(sfx_events만 빠짐)": 4
+  },
+  "line_reads_ge6": 7,
+  "rules_freq": 5,
+  "style_file_bench": 6,
+  "hand_scripts_total": 33,
+  "match_run": 0,
+  "member_ready": 2,
+  "elements_unmeasured_total": 137,
+  "card_errors_total": 15
+ },
+ "presets": {
+  "homedesignnote": {
+   "format": "쇼핑형",
+   "subformat": "인스타스토리형",
+   "brand": "잇썸홈",
+   "L0": {
+    "line_reads": 0,
+    "line_reads_ok": false,
+    "rules_freq": false,
+    "style_analysis": false,
+    "palette": false,
+    "sfx_events": false,
+    "calcopy_json": true
+   },
+   "L1": {
+    "style_file": "tools/calcopy/hybrid/styles/잇썸홈판.json",
+    "style_file_exists": true,
+    "renderer": "itssum",
+    "caption_pack": null,
+    "caption_pack_ok": false,
+    "preset_dir": "channel/homedesignnote/preset/전체화면_가운데자막",
+    "hand_scripts_n": 3,
+    "hand_scripts": [
+     "channel/homedesignnote/작품1_식기세척기/make_plan.py",
+     "channel/homedesignnote/작품1_식기세척기/render.py",
+     "channel/homedesignnote/preset/hdn_preset.py"
+    ],
+    "lufs_two_copies": "잇썸홈판 −8.6(옛 판 그대로) / 통일 −14"
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 9,
+    "results_pass_n": 1
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": null,
+    "flow_format": "쇼핑형",
+    "flow_supported": false,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "△",
+    "cap_enter": "×",
+    "cap_emph": "×",
+    "cap_exit": "×",
+    "transition": "×",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "△",
+    "sfx": "△",
+    "meme": "○",
+    "sticker": "○",
+    "pointer": "○",
+    "thumb": "×",
+    "speech": "○",
+    "script": "○"
+   },
+   "elements_count": {
+    "○": 6,
+    "△": 3,
+    "×": 6
+   },
+   "card_errors": [],
+   "level": "L0 미달",
+   "missing": [
+    "줄판독≥6",
+    "규칙빈도",
+    "스타일분석",
+    "팔레트",
+    "sfx_events",
+    "renderer=bench",
+    "자막팩",
+    "손스크립트0"
+   ]
+  },
+  "evenshopping": {
+   "format": "쇼핑형",
+   "subformat": "썰쇼핑형",
+   "brand": "재미썸홈",
+   "L0": {
+    "line_reads": 0,
+    "line_reads_ok": false,
+    "rules_freq": false,
+    "style_analysis": false,
+    "palette": false,
+    "sfx_events": false,
+    "calcopy_json": true
+   },
+   "L1": {
+    "style_file": "tools/calcopy/hybrid/styles/재미썸홈판.json",
+    "style_file_exists": true,
+    "renderer": "jaemi",
+    "caption_pack": null,
+    "caption_pack_ok": false,
+    "preset_dir": "channel/evenshopping/preset/숏템템플릿",
+    "hand_scripts_n": 2,
+    "hand_scripts": [
+     "channel/evenshopping/작품1_총알람/make_plan.py",
+     "channel/evenshopping/작품1_총알람/render.py"
+    ],
+    "lufs_two_copies": null
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 9,
+    "results_pass_n": 1
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": null,
+    "flow_format": "쇼핑형",
+    "flow_supported": false,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "×",
+    "cap_enter": "×",
+    "cap_emph": "×",
+    "cap_exit": "×",
+    "transition": "×",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "△",
+    "sfx": "△",
+    "meme": "○",
+    "sticker": "×",
+    "pointer": "×",
+    "thumb": "×",
+    "speech": "○",
+    "script": "○"
+   },
+   "elements_count": {
+    "○": 4,
+    "△": 2,
+    "×": 9
+   },
+   "card_errors": [
+    "status '장부 9편' ○ · 'BGM 금지(사장님)' 와 판 bgm.id honwaka_puppu 가 어긋남 — 판 파일(주인) 기준으로 카드 고칠 것"
+   ],
+   "level": "L0 미달",
+   "missing": [
+    "줄판독≥6",
+    "규칙빈도",
+    "스타일분석",
+    "팔레트",
+    "sfx_events",
+    "renderer=bench",
+    "자막팩",
+    "손스크립트0"
+   ]
+  },
+  "banggu": {
+   "format": "쇼핑형",
+   "subformat": "썰커뮤니티형",
+   "brand": "썰템홈샷",
+   "L0": {
+    "line_reads": 0,
+    "line_reads_ok": false,
+    "rules_freq": false,
+    "style_analysis": false,
+    "palette": false,
+    "sfx_events": false,
+    "calcopy_json": true
+   },
+   "L1": {
+    "style_file": null,
+    "style_file_exists": false,
+    "renderer": "make",
+    "caption_pack": null,
+    "caption_pack_ok": false,
+    "preset_dir": "channel/banggu/preset/게시글형",
+    "hand_scripts_n": 2,
+    "hand_scripts": [
+     "channel/banggu/make_썰템홈샷.py",
+     "channel/banggu/썰템홈샷_하이브리드/make.py"
+    ],
+    "lufs_two_copies": null
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 3,
+    "results_pass_n": 3
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": "제품비하인드썰형(claude_preset_names banggu/게시글형 — 옛 preset_make 길)",
+    "flow_format": "쇼핑형",
+    "flow_supported": false,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "△",
+    "cap_enter": "△",
+    "cap_emph": "×",
+    "cap_exit": "×",
+    "transition": "×",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "×",
+    "sfx": "△",
+    "meme": "△",
+    "sticker": "○",
+    "pointer": "○",
+    "thumb": "×",
+    "speech": "○",
+    "script": "○"
+   },
+   "elements_count": {
+    "○": 5,
+    "△": 4,
+    "×": 6
+   },
+   "card_errors": [
+    "status '장부 3편 전부 페이블 통과' → 결과물.json 실측: 페이블 통과 3(2+1 시트·비) ○ · 10-22 썰템홈샷 하이브리드 3편(요플레·노트핀·골든카레) 드라이브 납품은 장부 미기재"
+   ],
+   "level": "L0 미달",
+   "missing": [
+    "줄판독≥6",
+    "규칙빈도",
+    "스타일분석",
+    "팔레트",
+    "sfx_events",
+    "판파일",
+    "renderer=bench",
+    "자막팩",
+    "손스크립트0"
+   ]
+  },
+  "yummyknow": {
+   "format": "쇼핑형",
+   "subformat": "썰커뮤니티형",
+   "brand": "맛템썰템",
+   "L0": {
+    "line_reads": 0,
+    "line_reads_ok": false,
+    "rules_freq": false,
+    "style_analysis": false,
+    "palette": false,
+    "sfx_events": false,
+    "calcopy_json": true
+   },
+   "L1": {
+    "style_file": null,
+    "style_file_exists": false,
+    "renderer": "make",
+    "caption_pack": null,
+    "caption_pack_ok": false,
+    "preset_dir": "channel/yummyknow/preset/게시글형",
+    "hand_scripts_n": 3,
+    "hand_scripts": [
+     "channel/yummyknow/make_맛템썰템.py",
+     "channel/yummyknow/rerender_v2.py",
+     "channel/yummyknow/rerender_맛템썰템.py"
+    ],
+    "lufs_two_copies": null
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 3,
+    "results_pass_n": 3
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": "연예인꿀맛(claude_preset_names yummyknow/게시글형 — 짝 확인 필요)",
+    "flow_format": "쇼핑형",
+    "flow_supported": false,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "△",
+    "cap_enter": "×",
+    "cap_emph": "×",
+    "cap_exit": "×",
+    "transition": "×",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "×",
+    "sfx": "×",
+    "meme": "△",
+    "sticker": "×",
+    "pointer": "×",
+    "thumb": "×",
+    "speech": "○",
+    "script": "○"
+   },
+   "elements_count": {
+    "○": 3,
+    "△": 2,
+    "×": 10
+   },
+   "card_errors": [],
+   "level": "L0 미달",
+   "missing": [
+    "줄판독≥6",
+    "규칙빈도",
+    "스타일분석",
+    "팔레트",
+    "sfx_events",
+    "판파일",
+    "renderer=bench",
+    "자막팩",
+    "손스크립트0"
+   ]
+  },
+  "humorshowshow": {
+   "format": "쇼핑형",
+   "subformat": "썰커뮤니티형",
+   "brand": "썰템쇼",
+   "L0": {
+    "line_reads": 21,
+    "line_reads_ok": true,
+    "rules_freq": false,
+    "style_analysis": false,
+    "palette": false,
+    "sfx_events": false,
+    "calcopy_json": true
+   },
+   "L1": {
+    "style_file": null,
+    "style_file_exists": false,
+    "renderer": "make",
+    "caption_pack": null,
+    "caption_pack_ok": false,
+    "preset_dir": "channel/humorshowshow/preset/썰템쇼_화자썰",
+    "hand_scripts_n": 3,
+    "hand_scripts": [
+     "channel/humorshowshow/preset/hs_preset.py",
+     "channel/humorshowshow/preset/hs_loo.py",
+     "channel/humorshowshow/preset/hs_measure.py"
+    ],
+    "lufs_two_copies": null
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 18,
+    "results_pass_n": 0
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": null,
+    "flow_format": "쇼핑형",
+    "flow_supported": false,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "△",
+    "cap_enter": "△",
+    "cap_emph": "△",
+    "cap_exit": "×",
+    "transition": "×",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "△",
+    "sfx": "△",
+    "meme": "○",
+    "sticker": "△",
+    "pointer": "△",
+    "thumb": "×",
+    "speech": "△",
+    "script": "○"
+   },
+   "elements_count": {
+    "○": 3,
+    "△": 8,
+    "×": 4
+   },
+   "card_errors": [
+    "how_copied '판 설정 파일 없음' ○ · 추가: 줄판독 21편(356줄)이 있는데 _kal/규칙빈도.json 이 없다(kal_analyze rules 미실행) — 세어 둔 것을 규칙으로 안 뽑음"
+   ],
+   "level": "L0 미달",
+   "missing": [
+    "규칙빈도",
+    "스타일분석",
+    "팔레트",
+    "sfx_events",
+    "판파일",
+    "renderer=bench",
+    "자막팩",
+    "손스크립트0"
+   ]
+  },
+  "hottemreport": {
+   "format": "해외원본",
+   "subformat": "나레+원음",
+   "brand": "숏템리폿",
+   "L0": {
+    "line_reads": 0,
+    "line_reads_ok": false,
+    "rules_freq": false,
+    "style_analysis": false,
+    "palette": false,
+    "sfx_events": false,
+    "calcopy_json": true
+   },
+   "L1": {
+    "style_file": null,
+    "style_file_exists": false,
+    "renderer": "hand",
+    "caption_pack": null,
+    "caption_pack_ok": false,
+    "preset_dir": "channel/hottemreport/preset/검정띠",
+    "hand_scripts_n": 4,
+    "hand_scripts": [
+     "channel/hottemreport/make_frame_숏템리폿.py",
+     "channel/hottemreport/make_render_숏템리폿.py",
+     "channel/hottemreport/현장썰하이브리드/render_front.py",
+     "channel/hottemreport/현장썰_run.py"
+    ],
+    "lufs_two_copies": null
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 7,
+    "results_pass_n": 2
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": "해외핫영상+리뷰형(claude_preset_names hottemreport/검정띠 — 옛 길)",
+    "flow_format": "해외원본형",
+    "flow_supported": false,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "△",
+    "cap_enter": "△",
+    "cap_emph": "×",
+    "cap_exit": "×",
+    "transition": "×",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "△",
+    "sfx": "×",
+    "meme": "△",
+    "sticker": "△",
+    "pointer": "×",
+    "thumb": "×",
+    "speech": "△",
+    "script": "○"
+   },
+   "elements_count": {
+    "○": 2,
+    "△": 6,
+    "×": 7
+   },
+   "card_errors": [
+    "how_copied '판 파일 make_frame/make_render_숏템리폿.py' → 그건 손 스크립트지 판 파일이 아님. styles/<판>.json 없음"
+   ],
+   "level": "L0 미달",
+   "missing": [
+    "줄판독≥6",
+    "규칙빈도",
+    "스타일분석",
+    "팔레트",
+    "sfx_events",
+    "판파일",
+    "renderer=bench",
+    "자막팩",
+    "손스크립트0"
+   ]
+  },
+  "foreignshowshow": {
+   "format": "해외원본",
+   "subformat": "나레+원음",
+   "brand": "샥탬스토리",
+   "L0": {
+    "line_reads": 0,
+    "line_reads_ok": false,
+    "rules_freq": false,
+    "style_analysis": false,
+    "palette": false,
+    "sfx_events": false,
+    "calcopy_json": true
+   },
+   "L1": {
+    "style_file": null,
+    "style_file_exists": false,
+    "renderer": "hand",
+    "caption_pack": null,
+    "caption_pack_ok": false,
+    "preset_dir": "channel/foreignshowshow/preset/샤크탱크_검정띠2줄",
+    "hand_scripts_n": 3,
+    "hand_scripts": [
+     "tools/calcopy/shark/render.py",
+     "tools/calcopy/shark/fx_place.py",
+     "channel/foreignshowshow/<편>/make_plan.py(편마다)"
+    ],
+    "lufs_two_copies": null
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 10,
+    "results_pass_n": 0
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": "샤크탱크+리뷰형(claude_preset_names foreignshowshow/샤크탱크_검정띠2줄 — 옛 길)",
+    "flow_format": "해외원본형",
+    "flow_supported": false,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "○",
+    "cap_enter": "△",
+    "cap_emph": "△",
+    "cap_exit": "×",
+    "transition": "×",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "×",
+    "sfx": "×",
+    "meme": "△",
+    "sticker": "○",
+    "pointer": "○",
+    "thumb": "○",
+    "speech": "△",
+    "script": "○"
+   },
+   "elements_count": {
+    "○": 6,
+    "△": 4,
+    "×": 5
+   },
+   "card_errors": [],
+   "level": "L0 미달",
+   "missing": [
+    "줄판독≥6",
+    "규칙빈도",
+    "스타일분석",
+    "팔레트",
+    "sfx_events",
+    "판파일",
+    "renderer=bench",
+    "자막팩",
+    "손스크립트0"
+   ]
+  },
+  "ititemlog": {
+   "format": "해외원본",
+   "subformat": "나레+원음",
+   "brand": "브랜드.json 미등록 — 드라이브 '잇템로그 대기중'·6번 잇템로그_998, 우리 이름 '잇템로그'(01b 문서)",
+   "L0": {
+    "line_reads": 2,
+    "line_reads_ok": false,
+    "rules_freq": true,
+    "style_analysis": true,
+    "palette": true,
+    "sfx_events": false,
+    "calcopy_json": false
+   },
+   "L1": {
+    "style_file": "tools/calcopy/hybrid/styles/잇템로그판.json",
+    "style_file_exists": true,
+    "renderer": "bench",
+    "caption_pack": "ititemlog",
+    "caption_pack_ok": true,
+    "preset_dir": null,
+    "hand_scripts_n": 2,
+    "hand_scripts": [
+     "(scratchpad) mk_v3_*.py — 대본·재료 생성",
+     "(scratchpad) vmake.py — 자막 지우기(VMake Pro 서버)"
+    ],
+    "lufs_two_copies": null
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 0,
+    "results_pass_n": 0
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": null,
+    "flow_format": "해외원본형",
+    "flow_supported": false,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "○",
+    "cap_enter": "○",
+    "cap_emph": "○",
+    "cap_exit": "×",
+    "transition": "×",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "×",
+    "sfx": "△",
+    "meme": "○",
+    "sticker": "○",
+    "pointer": "○",
+    "thumb": "○",
+    "speech": "○",
+    "script": "○"
+   },
+   "elements_count": {
+    "○": 10,
+    "△": 1,
+    "×": 4
+   },
+   "card_errors": [
+    "how_copied 에 제작 스크립트가 scratchpad(mk_v3_*.py·vmake.py) 라는 사실 빠짐 — 저장소엔 렌더·검사만",
+    "status 'v3 7편' → 10-24 12·13 추가로 대기중 9편 + 02·09·11 재합성판(handoff 10-24)",
+    "sound '효과음은 훅 팝·의성어 톡만 근거' ○ 맞음 — 단 판 파일 placement.counted n_videos=2 라 모든 규칙이 표본부족 등급임을 적어야 한다"
+   ],
+   "level": "L0 미달",
+   "missing": [
+    "줄판독≥6",
+    "sfx_events",
+    "손스크립트0"
+   ]
+  },
+  "sseolpulda": {
+   "format": "해외원본",
+   "subformat": "나레",
+   "brand": "도파민썰템",
+   "L0": {
+    "line_reads": 0,
+    "line_reads_ok": false,
+    "rules_freq": false,
+    "style_analysis": false,
+    "palette": false,
+    "sfx_events": false,
+    "calcopy_json": true
+   },
+   "L1": {
+    "style_file": null,
+    "style_file_exists": false,
+    "renderer": "make",
+    "caption_pack": null,
+    "caption_pack_ok": false,
+    "preset_dir": "channel/sseolpulda/preset/A_흰바탕창 · B_검정띠",
+    "hand_scripts_n": 0,
+    "hand_scripts": [],
+    "lufs_two_copies": null
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 6,
+    "results_pass_n": 6
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": null,
+    "flow_format": "해외원본형",
+    "flow_supported": false,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "△",
+    "cap_enter": "×",
+    "cap_emph": "×",
+    "cap_exit": "×",
+    "transition": "×",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "×",
+    "sfx": "△",
+    "meme": "×",
+    "sticker": "△",
+    "pointer": "△",
+    "thumb": "×",
+    "speech": "△",
+    "script": "△"
+   },
+   "elements_count": {
+    "○": 1,
+    "△": 6,
+    "×": 8
+   },
+   "card_errors": [],
+   "level": "L0 미달",
+   "missing": [
+    "줄판독≥6",
+    "규칙빈도",
+    "스타일분석",
+    "팔레트",
+    "sfx_events",
+    "판파일",
+    "renderer=bench",
+    "자막팩"
+   ]
+  },
+  "sinbak": {
+   "format": "해외원본",
+   "subformat": "자막+배경음",
+   "brand": "미등록",
+   "L0": {
+    "line_reads": 6,
+    "line_reads_ok": true,
+    "rules_freq": true,
+    "style_analysis": true,
+    "palette": true,
+    "sfx_events": false,
+    "calcopy_json": false
+   },
+   "L1": {
+    "style_file": null,
+    "style_file_exists": false,
+    "renderer": null,
+    "caption_pack": null,
+    "caption_pack_ok": false,
+    "preset_dir": "channel/sinbak/preset/연회색틀_둥근창_창아래자막",
+    "hand_scripts_n": 3,
+    "hand_scripts": [
+     "channel/sinbak/preset/sinbak_preset.py",
+     "channel/sinbak/preset/sinbak_measure.py",
+     "channel/sinbak/시험편1/make.py"
+    ],
+    "lufs_two_copies": null
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 0,
+    "results_pass_n": 0
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": null,
+    "flow_format": "해외원본형",
+    "flow_supported": false,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "○",
+    "cap_enter": "○",
+    "cap_emph": "○",
+    "cap_exit": "△",
+    "transition": "×",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "△",
+    "sfx": "△",
+    "meme": "○",
+    "sticker": "○",
+    "pointer": "○",
+    "thumb": "×",
+    "speech": "○",
+    "script": "○"
+   },
+   "elements_count": {
+    "○": 9,
+    "△": 3,
+    "×": 3
+   },
+   "card_errors": [],
+   "level": "L0(sfx_events만 빠짐)",
+   "missing": [
+    "판파일",
+    "renderer=bench",
+    "자막팩",
+    "손스크립트0"
+   ]
+  },
+  "shortvitc": {
+   "format": "해외원본",
+   "subformat": "자막+배경음",
+   "brand": "미등록",
+   "L0": {
+    "line_reads": 0,
+    "line_reads_ok": false,
+    "rules_freq": false,
+    "style_analysis": false,
+    "palette": false,
+    "sfx_events": false,
+    "calcopy_json": true
+   },
+   "L1": {
+    "style_file": null,
+    "style_file_exists": false,
+    "renderer": null,
+    "caption_pack": null,
+    "caption_pack_ok": false,
+    "preset_dir": null,
+    "hand_scripts_n": 0,
+    "hand_scripts": [],
+    "lufs_two_copies": null
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 0,
+    "results_pass_n": 0
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": null,
+    "flow_format": "해외원본형",
+    "flow_supported": false,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "×",
+    "cap_enter": "×",
+    "cap_emph": "×",
+    "cap_exit": "×",
+    "transition": "×",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "×",
+    "sfx": "×",
+    "meme": "×",
+    "sticker": "×",
+    "pointer": "×",
+    "thumb": "×",
+    "speech": "×",
+    "script": "△"
+   },
+   "elements_count": {
+    "○": 1,
+    "△": 1,
+    "×": 13
+   },
+   "card_errors": [],
+   "level": "L0 미달",
+   "missing": [
+    "줄판독≥6",
+    "규칙빈도",
+    "스타일분석",
+    "팔레트",
+    "sfx_events",
+    "판파일",
+    "renderer=bench",
+    "자막팩"
+   ]
+  },
+  "kitchit": {
+   "format": "연예인쇼핑형",
+   "subformat": "후기형",
+   "brand": "우리 채널 = 얜샷템(키치잇판 = 얜샷템 채널, 시작문서 10)",
+   "L0": {
+    "line_reads": 8,
+    "line_reads_ok": true,
+    "rules_freq": false,
+    "style_analysis": true,
+    "palette": false,
+    "sfx_events": false,
+    "calcopy_json": false
+   },
+   "L1": {
+    "style_file": "tools/calcopy/hybrid/styles/키치잇판.json",
+    "style_file_exists": true,
+    "renderer": "bench",
+    "caption_pack": "kitchit",
+    "caption_pack_ok": true,
+    "preset_dir": "channel/kitchit/preset/검정창_노랑박스제목",
+    "hand_scripts_n": 0,
+    "hand_scripts": [],
+    "lufs_two_copies": "판 −14 / 설계 −16"
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 0,
+    "results_pass_n": 0
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": "channel/mantem/preset/얜샷템/line.json",
+    "preset_name": "연예인상품+후기형",
+    "flow_format": "연예인형",
+    "flow_supported": true,
+    "live_episode": true
+   },
+   "elements": {
+    "cap_look": "○",
+    "cap_enter": "○",
+    "cap_emph": "○",
+    "cap_exit": "△",
+    "transition": "△",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "△",
+    "sfx": "△",
+    "meme": "○",
+    "sticker": "○",
+    "pointer": "○",
+    "thumb": "△",
+    "speech": "○",
+    "script": "○"
+   },
+   "elements_count": {
+    "○": 9,
+    "△": 5,
+    "×": 1
+   },
+   "card_errors": [
+    "status '장부 0편·1편 성시경 자막 전 렌더' → 틀림: 키치잇판 완성편 9편이 channel/yanshottem/하이브리드_*/키치잇판/자동검사.json 에 있다(10-21 5편 묶음 포함) + 회원 모드 선우용여 완성(숏템MCP handoff 10-21)",
+    "gaps 'LUFS 두 벌(−14/−16)' → 판 파일이 주인(−14), 설계 문서 −16 은 '벤치 실측값' 표기로 고칠 것(지시서 10)"
+   ],
+   "level": "L0 미달",
+   "missing": [
+    "규칙빈도",
+    "팔레트",
+    "sfx_events"
+   ]
+  },
+  "kkultemnote": {
+   "format": "연예인쇼핑형",
+   "subformat": "대화형",
+   "brand": "우리 채널 = 얜샷템(꿀템노트판)",
+   "L0": {
+    "line_reads": 8,
+    "line_reads_ok": true,
+    "rules_freq": false,
+    "style_analysis": true,
+    "palette": false,
+    "sfx_events": false,
+    "calcopy_json": false
+   },
+   "L1": {
+    "style_file": "tools/calcopy/hybrid/styles/꿀템노트판.json",
+    "style_file_exists": true,
+    "renderer": "bench",
+    "caption_pack": "kkultemnote",
+    "caption_pack_ok": true,
+    "preset_dir": "channel/kkultemnote/preset/검정2줄_분홍파랑_출처",
+    "hand_scripts_n": 0,
+    "hand_scripts": [],
+    "lufs_two_copies": "판 −14 / 설계 −15.3"
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 0,
+    "results_pass_n": 0
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": null,
+    "flow_format": "연예인형",
+    "flow_supported": true,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "○",
+    "cap_enter": "○",
+    "cap_emph": "○",
+    "cap_exit": "△",
+    "transition": "×",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "△",
+    "sfx": "△",
+    "meme": "○",
+    "sticker": "○",
+    "pointer": "×",
+    "thumb": "△",
+    "speech": "○",
+    "script": "○"
+   },
+   "elements_count": {
+    "○": 8,
+    "△": 4,
+    "×": 3
+   },
+   "card_errors": [
+    "status 에 10-23 공용 렌더러 첫 시험(성시경 17.1초) 관문 미달(지침서 §10) 빠짐 · yanshottem 꿀템노트판 자동검사 1편 있음"
+   ],
+   "level": "L0 미달",
+   "missing": [
+    "규칙빈도",
+    "팔레트",
+    "sfx_events"
+   ]
+  },
+  "starpickroom": {
+   "format": "연예인쇼핑형",
+   "subformat": "체험형",
+   "brand": "스타픽룸판 = 연예인레시피 채널(사장님 10-21 규칙 10) — 형식은 연예인쇼핑형 체험, 채널은 연예인레시피",
+   "L0": {
+    "line_reads": 8,
+    "line_reads_ok": true,
+    "rules_freq": true,
+    "style_analysis": true,
+    "palette": true,
+    "sfx_events": false,
+    "calcopy_json": false
+   },
+   "L1": {
+    "style_file": "tools/calcopy/hybrid/styles/스타픽룸판.json",
+    "style_file_exists": true,
+    "renderer": "bench",
+    "caption_pack": "starpick",
+    "caption_pack_ok": true,
+    "preset_dir": "channel/starpickroom/preset/검정틀_금색로고_타이핑나레",
+    "hand_scripts_n": 0,
+    "hand_scripts": [],
+    "lufs_two_copies": "판 −14 / 설계 −9"
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 0,
+    "results_pass_n": 0
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": null,
+    "flow_format": "연예인형",
+    "flow_supported": true,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "○",
+    "cap_enter": "○",
+    "cap_emph": "○",
+    "cap_exit": "△",
+    "transition": "×",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "△",
+    "sfx": "△",
+    "meme": "○",
+    "sticker": "○",
+    "pointer": "×",
+    "thumb": "△",
+    "speech": "○",
+    "script": "○"
+   },
+   "elements_count": {
+    "○": 8,
+    "△": 4,
+    "×": 3
+   },
+   "card_errors": [
+    "our_channel '얜샷템(하위 스타일 스타픽룸판) — 제작순서 표엔 연예인레시피' → 00_공통 표가 정답: 스타픽룸판 = 연예인레시피 채널(사장님 10-21 규칙 10). 얜샷템 아님",
+    "status '1편 성시경 자막 직전' → yanshottem/하이브리드_*/스타픽룸판 자동검사 1편 있음"
+   ],
+   "level": "L0(sfx_events만 빠짐)",
+   "missing": [
+    "sfx_events"
+   ]
+  },
+  "mantem": {
+   "format": "연예인쇼핑형",
+   "subformat": "나레+원음형",
+   "brand": "얜샷템 옛 틀 — 지금 얜샷템 제작은 키치잇판",
+   "L0": {
+    "line_reads": 0,
+    "line_reads_ok": false,
+    "rules_freq": false,
+    "style_analysis": false,
+    "palette": false,
+    "sfx_events": false,
+    "calcopy_json": true
+   },
+   "L1": {
+    "style_file": null,
+    "style_file_exists": false,
+    "renderer": "make",
+    "caption_pack": null,
+    "caption_pack_ok": false,
+    "preset_dir": "channel/mantem/preset/얜샷템",
+    "hand_scripts_n": 1,
+    "hand_scripts": [
+     "channel/mantem/preset/mt_preset.py"
+    ],
+    "lufs_two_copies": null
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 0,
+    "results_pass_n": 0
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": "channel/mantem/preset/얜샷템/line.json",
+    "preset_name": "연예인상품+후기형",
+    "flow_format": "연예인형",
+    "flow_supported": true,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "△",
+    "cap_enter": "△",
+    "cap_emph": "△",
+    "cap_exit": "×",
+    "transition": "△",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "×",
+    "sfx": "×",
+    "meme": "○",
+    "sticker": "×",
+    "pointer": "×",
+    "thumb": "×",
+    "speech": "○",
+    "script": "△"
+   },
+   "elements_count": {
+    "○": 3,
+    "△": 5,
+    "×": 7
+   },
+   "card_errors": [
+    "판=키치잇판(line.json) ○ — 다만 '만템 틀 프리셋(얜샷템)' 자체는 renderer make(preset_make 옛 길)·회원 옛 길 preset_name 연예인상품+후기형이 가리키는 것이 이 틀(mantem/얜샷템)이고 실제 라인은 line.json 키치잇판 → 두 길이 한 이름에 걸려 있음(지시서 09 정리)"
+   ],
+   "level": "L0 미달",
+   "missing": [
+    "줄판독≥6",
+    "규칙빈도",
+    "스타일분석",
+    "팔레트",
+    "sfx_events",
+    "판파일",
+    "renderer=bench",
+    "자막팩",
+    "손스크립트0"
+   ]
+  },
+  "itemhome": {
+   "format": "연예인쇼핑형",
+   "subformat": "나레+원음형",
+   "brand": "미등록",
+   "L0": {
+    "line_reads": 0,
+    "line_reads_ok": false,
+    "rules_freq": false,
+    "style_analysis": false,
+    "palette": false,
+    "sfx_events": false,
+    "calcopy_json": true
+   },
+   "L1": {
+    "style_file": null,
+    "style_file_exists": false,
+    "renderer": "hand",
+    "caption_pack": null,
+    "caption_pack_ok": false,
+    "preset_dir": "channel/itemhome/preset/검정띠2줄",
+    "hand_scripts_n": 2,
+    "hand_scripts": [
+     "channel/itemhome/1편_안유진로션/make_render.py",
+     "channel/itemhome/preset/ih_preset.py"
+    ],
+    "lufs_two_copies": null
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 0,
+    "results_pass_n": 0
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": null,
+    "flow_format": "연예인형",
+    "flow_supported": true,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "△",
+    "cap_enter": "×",
+    "cap_emph": "△",
+    "cap_exit": "×",
+    "transition": "×",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "△",
+    "sfx": "×",
+    "meme": "×",
+    "sticker": "×",
+    "pointer": "×",
+    "thumb": "×",
+    "speech": "○",
+    "script": "△"
+   },
+   "elements_count": {
+    "○": 2,
+    "△": 4,
+    "×": 9
+   },
+   "card_errors": [],
+   "level": "L0 미달",
+   "missing": [
+    "줄판독≥6",
+    "규칙빈도",
+    "스타일분석",
+    "팔레트",
+    "sfx_events",
+    "판파일",
+    "renderer=bench",
+    "자막팩",
+    "손스크립트0"
+   ]
+  },
+  "annapick": {
+   "format": "연예인쇼핑형",
+   "subformat": "나레+원음형",
+   "brand": "미등록",
+   "L0": {
+    "line_reads": 0,
+    "line_reads_ok": false,
+    "rules_freq": false,
+    "style_analysis": false,
+    "palette": false,
+    "sfx_events": false,
+    "calcopy_json": true
+   },
+   "L1": {
+    "style_file": null,
+    "style_file_exists": false,
+    "renderer": "hand",
+    "caption_pack": null,
+    "caption_pack_ok": false,
+    "preset_dir": "channel/annapick/preset/검정띠2줄_출처",
+    "hand_scripts_n": 3,
+    "hand_scripts": [
+     "channel/annapick/1편_한고은채소통/make_plan.py",
+     "channel/annapick/1편_한고은채소통/make_render.py",
+     "channel/annapick/preset/ap_preset.py"
+    ],
+    "lufs_two_copies": null
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 0,
+    "results_pass_n": 0
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": null,
+    "flow_format": "연예인형",
+    "flow_supported": true,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "△",
+    "cap_enter": "△",
+    "cap_emph": "△",
+    "cap_exit": "×",
+    "transition": "×",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "×",
+    "sfx": "×",
+    "meme": "×",
+    "sticker": "×",
+    "pointer": "×",
+    "thumb": "×",
+    "speech": "○",
+    "script": "△"
+   },
+   "elements_count": {
+    "○": 2,
+    "△": 4,
+    "×": 9
+   },
+   "card_errors": [],
+   "level": "L0 미달",
+   "missing": [
+    "줄판독≥6",
+    "규칙빈도",
+    "스타일분석",
+    "팔레트",
+    "sfx_events",
+    "판파일",
+    "renderer=bench",
+    "자막팩",
+    "손스크립트0"
+   ]
+  },
+  "uljimatrot": {
+   "format": "연예인쇼핑형",
+   "subformat": "가격공개형",
+   "brand": "미등록",
+   "L0": {
+    "line_reads": 10,
+    "line_reads_ok": true,
+    "rules_freq": true,
+    "style_analysis": true,
+    "palette": true,
+    "sfx_events": false,
+    "calcopy_json": false
+   },
+   "L1": {
+    "style_file": null,
+    "style_file_exists": false,
+    "renderer": "hand",
+    "caption_pack": null,
+    "caption_pack_ok": false,
+    "preset_dir": null,
+    "hand_scripts_n": 1,
+    "hand_scripts": [
+     "channel/uljimatrot/_tools/make_trotpapa.py"
+    ],
+    "lufs_two_copies": null
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 0,
+    "results_pass_n": 0
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": null,
+    "flow_format": "연예인형",
+    "flow_supported": true,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "△",
+    "cap_enter": "○",
+    "cap_emph": "○",
+    "cap_exit": "×",
+    "transition": "△",
+    "cut_rhythm": "×",
+    "scene_fit": "×",
+    "bgm": "×",
+    "sfx": "×",
+    "meme": "○",
+    "sticker": "○",
+    "pointer": "○",
+    "thumb": "×",
+    "speech": "○",
+    "script": "○"
+   },
+   "elements_count": {
+    "○": 7,
+    "△": 2,
+    "×": 6
+   },
+   "card_errors": [
+    "our_channel '트롯파파' → 브랜드.json 미등록(장부에 없음) 적어야 함"
+   ],
+   "level": "L0(sfx_events만 빠짐)",
+   "missing": [
+    "판파일",
+    "renderer=bench",
+    "자막팩",
+    "손스크립트0"
+   ]
+  },
+  "recipe_variant": {
+   "format": "연예인레시피형",
+   "subformat": "레시피 체험형",
+   "brand": "연예인레시피(이름 미정)",
+   "L0": {
+    "line_reads": 0,
+    "line_reads_ok": false,
+    "rules_freq": false,
+    "style_analysis": false,
+    "palette": false,
+    "sfx_events": false,
+    "calcopy_json": false
+   },
+   "L1": {
+    "style_file": "tools/calcopy/hybrid/styles/연예인레시피판.json",
+    "style_file_exists": true,
+    "renderer": "bench",
+    "caption_pack": "recipe",
+    "caption_pack_ok": true,
+    "preset_dir": null,
+    "hand_scripts_n": 0,
+    "hand_scripts": [],
+    "lufs_two_copies": null
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 0,
+    "results_pass_n": 0
+   },
+   "L3": {
+    "upgrade_items": 1,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": null,
+    "flow_format": "레시피형",
+    "flow_supported": false,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "○",
+    "cap_enter": "○",
+    "cap_emph": "○",
+    "cap_exit": "△",
+    "transition": "×",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "△",
+    "sfx": "△",
+    "meme": "○",
+    "sticker": "○",
+    "pointer": "×",
+    "thumb": "○",
+    "speech": "○",
+    "script": "○"
+   },
+   "elements_count": {
+    "○": 9,
+    "△": 3,
+    "×": 3
+   },
+   "card_errors": [],
+   "level": "L0 미달",
+   "missing": [
+    "줄판독≥6",
+    "규칙빈도",
+    "스타일분석",
+    "팔레트",
+    "sfx_events"
+   ]
+  },
+  "goodletter": {
+   "format": "연예인레시피형",
+   "subformat": "레시피 원음형",
+   "brand": "미등록",
+   "L0": {
+    "line_reads": 8,
+    "line_reads_ok": true,
+    "rules_freq": true,
+    "style_analysis": true,
+    "palette": true,
+    "sfx_events": false,
+    "calcopy_json": false
+   },
+   "L1": {
+    "style_file": "tools/calcopy/hybrid/styles/굿레터판.json",
+    "style_file_exists": true,
+    "renderer": "bench",
+    "caption_pack": "goodletter",
+    "caption_pack_ok": true,
+    "preset_dir": "channel/goodletter/preset/검정틀_주황상자_팝자막 · 검정틀_3색팝자막",
+    "hand_scripts_n": 1,
+    "hand_scripts": [
+     "channel/goodletter/preset/gl_preset.py"
+    ],
+    "lufs_two_copies": null
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 0,
+    "results_pass_n": 0
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": null,
+    "flow_format": "레시피형",
+    "flow_supported": false,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "○",
+    "cap_enter": "○",
+    "cap_emph": "○",
+    "cap_exit": "△",
+    "transition": "×",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "△",
+    "sfx": "△",
+    "meme": "○",
+    "sticker": "○",
+    "pointer": "×",
+    "thumb": "×",
+    "speech": "△",
+    "script": "○"
+   },
+   "elements_count": {
+    "○": 7,
+    "△": 4,
+    "×": 4
+   },
+   "card_errors": [
+    "sources 팔레트 → 파일 이름은 _kal/색규칙.json(팔레트.json 아님) — 판 bench.palette 가 그 이름을 가리킴"
+   ],
+   "level": "L0(sfx_events만 빠짐)",
+   "missing": [
+    "손스크립트0"
+   ]
+  },
+  "staybrokr_hotel": {
+   "format": "여행쇼츠형",
+   "subformat": "숙소 따라걷기형",
+   "brand": "@shortem.trip(임시)",
+   "L0": {
+    "line_reads": 0,
+    "line_reads_ok": false,
+    "rules_freq": false,
+    "style_analysis": false,
+    "palette": false,
+    "sfx_events": false,
+    "calcopy_json": false
+   },
+   "L1": {
+    "style_file": "tools/travel/hotel_copy/refs/ee3U4FtLb10.json(track/여행쇼핑쇼츠)",
+    "style_file_exists": null,
+    "renderer": "hotel_copy",
+    "caption_pack": null,
+    "caption_pack_ok": false,
+    "preset_dir": null,
+    "hand_scripts_n": 0,
+    "hand_scripts": [],
+    "lufs_two_copies": null
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 0,
+    "results_pass_n": 0
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": null,
+    "flow_format": "여행형",
+    "flow_supported": false,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "○",
+    "cap_enter": "△",
+    "cap_emph": "×",
+    "cap_exit": "×",
+    "transition": "△",
+    "cut_rhythm": "○",
+    "scene_fit": "△",
+    "bgm": "△",
+    "sfx": "×",
+    "meme": "○",
+    "sticker": "△",
+    "pointer": "×",
+    "thumb": "○",
+    "speech": "△",
+    "script": "○"
+   },
+   "elements_count": {
+    "○": 5,
+    "△": 6,
+    "×": 4
+   },
+   "card_errors": [],
+   "level": "L0 미달",
+   "missing": [
+    "줄판독≥6",
+    "규칙빈도",
+    "스타일분석",
+    "팔레트",
+    "sfx_events",
+    "판파일",
+    "renderer=bench",
+    "자막팩"
+   ]
+  },
+  "staybrokr_chon": {
+   "format": "여행쇼츠형",
+   "subformat": "숙소 체험먼저형",
+   "brand": "미등록",
+   "L0": {
+    "line_reads": 0,
+    "line_reads_ok": false,
+    "rules_freq": false,
+    "style_analysis": false,
+    "palette": false,
+    "sfx_events": false,
+    "calcopy_json": false
+   },
+   "L1": {
+    "style_file": "tools/travel/hotel_copy/refs/AVo84VRq55k.json(track/여행쇼핑쇼츠)",
+    "style_file_exists": null,
+    "renderer": "hotel_copy",
+    "caption_pack": null,
+    "caption_pack_ok": false,
+    "preset_dir": null,
+    "hand_scripts_n": 0,
+    "hand_scripts": [],
+    "lufs_two_copies": null
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 0,
+    "results_pass_n": 0
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": null,
+    "flow_format": "여행형",
+    "flow_supported": false,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "○",
+    "cap_enter": "△",
+    "cap_emph": "×",
+    "cap_exit": "×",
+    "transition": "△",
+    "cut_rhythm": "○",
+    "scene_fit": "△",
+    "bgm": "△",
+    "sfx": "×",
+    "meme": "○",
+    "sticker": "△",
+    "pointer": "×",
+    "thumb": "○",
+    "speech": "△",
+    "script": "○"
+   },
+   "elements_count": {
+    "○": 5,
+    "△": 6,
+    "×": 4
+   },
+   "card_errors": [],
+   "level": "L0 미달",
+   "missing": [
+    "줄판독≥6",
+    "규칙빈도",
+    "스타일분석",
+    "팔레트",
+    "sfx_events",
+    "판파일",
+    "renderer=bench",
+    "자막팩"
+   ]
+  },
+  "hotpeople": {
+   "format": "인물형",
+   "subformat": "인물썰형",
+   "brand": "미등록",
+   "L0": {
+    "line_reads": 0,
+    "line_reads_ok": false,
+    "rules_freq": false,
+    "style_analysis": false,
+    "palette": false,
+    "sfx_events": false,
+    "calcopy_json": true
+   },
+   "L1": {
+    "style_file": null,
+    "style_file_exists": false,
+    "renderer": "hand",
+    "caption_pack": null,
+    "caption_pack_ok": false,
+    "preset_dir": "shopping_shorts/channel_presets/hotpeople",
+    "hand_scripts_n": 0,
+    "hand_scripts": [],
+    "lufs_two_copies": null
+   },
+   "L2": {
+    "match_run": false,
+    "quality_gate_run": false,
+    "results_n": 0,
+    "results_pass_n": 0
+   },
+   "L3": {
+    "upgrade_items": 0,
+    "upgrade_measured": false
+   },
+   "L4": {
+    "line_json": null,
+    "preset_name": null,
+    "flow_format": "인물형",
+    "flow_supported": false,
+    "live_episode": false
+   },
+   "elements": {
+    "cap_look": "○",
+    "cap_enter": "×",
+    "cap_emph": "×",
+    "cap_exit": "×",
+    "transition": "×",
+    "cut_rhythm": "○",
+    "scene_fit": "×",
+    "bgm": "○",
+    "sfx": "×",
+    "meme": "○",
+    "sticker": "×",
+    "pointer": "×",
+    "thumb": "×",
+    "speech": "○",
+    "script": "○"
+   },
+   "elements_count": {
+    "○": 6,
+    "△": 0,
+    "×": 9
+   },
+   "card_errors": [],
+   "level": "L0 미달",
+   "missing": [
+    "줄판독≥6",
+    "규칙빈도",
+    "스타일분석",
+    "팔레트",
+    "sfx_events",
+    "판파일",
+    "renderer=bench",
+    "자막팩"
+   ]
+  }
+ }
+}

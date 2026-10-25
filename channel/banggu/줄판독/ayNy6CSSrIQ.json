@@ -1,0 +1,1940 @@
+{
+ "id": "ayNy6CSSrIQ",
+ "dur": 27.9,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "약사가 알려준 블랙헤드의 정체",
+   "colors": [
+    {
+     "word": "약사가 알려준 블랙헤드의 정체",
+     "hex": "#000000"
+    }
+   ],
+   "y": [
+    274,
+    342
+   ],
+   "where": "본문 제목 띠(검정 굵은 고딕 1줄, 가운데)"
+  }
+ ],
+ "hook_title_lines": [
+  {
+   "text": "약사가 알려준",
+   "colors": [
+    {
+     "word": "약사가 알려준",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "where": "훅 카드 1줄(흰 채움+검정 외곽)"
+  },
+  {
+   "text": "블랙헤드의 정체",
+   "colors": [
+    {
+     "word": "블랙헤드의 정체",
+     "hex": "#43A6F7"
+    }
+   ],
+   "where": "훅 카드 2줄(파랑 채움+검정 외곽)"
+  }
+ ],
+ "source_label": "방구석 | 14:25",
+ "layout": {
+  "window": "컷마다 다름(창 위끝 y≈671~786, 가로 0~1080 꽉 참 또는 x≈20~1057 여백) — 30fps 실측 wt 칸",
+  "caption_band": [
+   502,
+   709
+  ],
+  "title_y": [
+   274,
+   342
+  ],
+  "source_y": [
+   378,
+   402
+  ],
+  "logo_y": [
+   0,
+   233
+  ],
+  "rule_y": [
+   446,
+   451
+  ],
+  "watermark": {
+   "present": false,
+   "alpha": null,
+   "note": "채널 워터마크 없음(재료 안 원본 워터마크는 남아 있음 — ILIi ANI-ONE)"
+  },
+  "source_hex": "#595859",
+  "bg_hex": "#FDFDFD",
+  "header_hex": "#42A4F5",
+  "hook_header_hex": "#183B5D",
+  "hook_band": [
+   584,
+   745
+  ],
+  "line_pitch_px": 79
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.567,
+   "speaker": "나레",
+   "text": "약사가 알려준 블랙헤드의 정체",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "훅 카드(틀 전체 어둡게·큰 제목 2줄·가운데 흰 띠 y584~745 에 나레 문장)",
+   "y": [
+    635,
+    682
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    221,
+    857
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 46,
+   "letter_gap_px": null,
+   "word_gap_px": null,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "코 피부 근접(어둡게)",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 0.0,
+    "t1": 1.567,
+    "diff": 11.8,
+    "scale": 1.046,
+    "tx": -115,
+    "ty": 83
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 1.567,
+   "t1": 2.567,
+   "speaker": "나레",
+   "text": "블랙헤드 관리를 해봐도",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    290,
+    788
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 15.5,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "손톱으로 코를 짜는 여성",
+   "fit": 8,
+   "cut_at": [
+    1.57
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 1.567,
+    "t1": 2.567,
+    "diff": 21.4,
+    "scale": 0.982,
+    "tx": 7,
+    "ty": -9
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 2.567,
+   "t1": 3.8,
+   "speaker": "나레",
+   "text": "없어지지 않는 검은 피지",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    285,
+    791
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 16.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "검은 점 많은 코 근접",
+   "fit": 9,
+   "cut_at": [
+    2.57
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 2.567,
+    "t1": 3.8,
+    "diff": 6.6,
+    "scale": 1.025,
+    "tx": -13,
+    "ty": -7
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 3.8,
+   "t1": 5.133,
+   "speaker": "나레",
+   "text": "사실 없어지지 않는 이유는",
+   "layer": "채널",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    260,
+    819
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "다른 코 피부 근접",
+   "fit": 6,
+   "cut_at": [
+    3.8
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 3.8,
+    "t1": 7.533,
+    "diff": 29.0
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 5.133,
+   "t1": 5.933,
+   "speaker": "나레",
+   "text": "따로 있었는데",
+   "layer": "채널",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    393,
+    684
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 16.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 코 근접",
+   "fit": 5,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 3.8,
+    "t1": 7.533,
+    "diff": 29.0
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 5.933,
+   "t1": 7.533,
+   "speaker": "나레",
+   "text": "이 정체는 사실 블랙헤드가 아닌",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    208,
+    870
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 17.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "기타",
+   "scene_desc": "모공 확대 그림(빨간 곡선이 그림 안에 있음)",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 3.8,
+    "t1": 7.533,
+    "diff": 29.0
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 7.533,
+   "t1": 8.467,
+   "speaker": "나레",
+   "text": "피지필라멘트라는",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    351,
+    728
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": null,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "모공 보이는 붉은 코 근접",
+   "fit": 7,
+   "cut_at": [
+    7.53
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 7.533,
+    "t1": 9.967,
+    "diff": 24.7
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 8.467,
+   "t1": 9.967,
+   "speaker": "나레",
+   "text": "정상적인 피지 통로였던 거ㄷㄷ",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 536,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    213,
+    860
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 18.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 코 근접",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 7.533,
+    "t1": 9.967,
+    "diff": 24.7
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 9.967,
+   "t1": 11.067,
+   "speaker": "나레",
+   "text": "문제는 압출로 제거 시",
+   "layer": "채널",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    308,
+    767
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 16.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "파란 네일 손톱으로 코를 압출",
+   "fit": 9,
+   "cut_at": [
+    9.97
+   ],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 9.967,
+    "t1": 11.733,
+    "diff": 41.3,
+    "scale": 0.967,
+    "tx": -80,
+    "ty": 120
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 11.067,
+   "t1": 11.733,
+   "speaker": "나레",
+   "text": "모공이 늘어져",
+   "layer": "채널",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    392,
+    683
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 20.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 압출 장면",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 9.967,
+    "t1": 11.733,
+    "diff": 41.3,
+    "scale": 0.967,
+    "tx": -80,
+    "ty": 120
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 11.733,
+   "t1": 12.733,
+   "speaker": "나레",
+   "text": "깨끗하게 관리하는 게",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    314,
+    762
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.5,
+   "word_gap_px": 17.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "눈 감고 화장솜으로 코를 닦는 여성",
+   "fit": 7,
+   "cut_at": [
+    11.73
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 11.733,
+    "t1": 14.133,
+    "diff": 36.9
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 12.733,
+   "t1": 14.133,
+   "speaker": "나레",
+   "text": "생각보다 어렵다는 건데",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    290,
+    786
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 16.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 장면",
+   "fit": 6,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 11.733,
+    "t1": 14.133,
+    "diff": 36.9
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 14.133,
+   "t1": 15.6,
+   "speaker": "나레",
+   "text": "이 문제를 완벽히 해결해버린",
+   "layer": "채널",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    238,
+    840
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "곱슬머리 여성이 말하는 얼굴(셀카)",
+   "fit": 7,
+   "cut_at": [
+    14.13
+   ],
+   "motion": "zoom_out",
+   "motion_info": {
+    "t0": 14.133,
+    "t1": 16.7,
+    "diff": 23.0,
+    "scale": 0.874,
+    "tx": 112,
+    "ty": 17
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 15.6,
+   "t1": 16.7,
+   "speaker": "나레",
+   "text": "약사의 루틴이 있음",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    339,
+    741
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 19.5,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 여성 얼굴",
+   "fit": 8,
+   "cut_at": [],
+   "motion": "zoom_out",
+   "motion_info": {
+    "t0": 14.133,
+    "t1": 16.7,
+    "diff": 23.0,
+    "scale": 0.874,
+    "tx": 112,
+    "ty": 17
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 16.7,
+   "t1": 18.3,
+   "speaker": "나레",
+   "text": "이 두 제품을 순서대로 사용하면",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    208,
+    870
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 16.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "clean it zero 클렌징밤 + 노란 튜브 제품 사진",
+   "fit": 9,
+   "cut_at": [
+    16.7
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 16.7,
+    "t1": 18.3,
+    "diff": 0.1
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 18.3,
+   "t1": 19.567,
+   "speaker": "나레",
+   "text": "피지 제거와 조절이 가능하고",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    237,
+    842
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "초록 클렌징밤 뚜껑 열고 주걱으로 뜸",
+   "fit": 6,
+   "cut_at": [
+    18.3
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 18.3,
+    "t1": 21.4,
+    "diff": 15.9,
+    "scale": 0.999,
+    "tx": 18,
+    "ty": 20
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 19.567,
+   "t1": 21.4,
+   "speaker": "나레",
+   "text": "특히 살리실산이 있는 클렌징 밤을",
+   "layer": "채널",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    182,
+    896
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.5,
+   "word_gap_px": 19.5,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "같은 클렌징밤 뜨기",
+   "fit": 8,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 18.3,
+    "t1": 21.4,
+    "diff": 15.9,
+    "scale": 0.999,
+    "tx": 18,
+    "ty": 20
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 21.4,
+   "t1": 22.267,
+   "speaker": "나레",
+   "text": "화장솜에 묻힌 뒤",
+   "layer": "채널",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    362,
+    713
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 18.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "과정",
+   "scene_desc": "화장솜 위에 크림을 바름",
+   "fit": 8,
+   "cut_at": [
+    21.4
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 21.4,
+    "t1": 22.267,
+    "diff": 20.3
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 22.267,
+   "t1": 23.2,
+   "speaker": "나레",
+   "text": "전자레인지10초",
+   "layer": "채널",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    368,
+    711
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 5.0,
+   "word_gap_px": null,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "과정",
+   "scene_desc": "전자레인지 회전판 위 화장솜",
+   "fit": 9,
+   "cut_at": [
+    22.27
+   ],
+   "motion": "zoom_out",
+   "motion_info": {
+    "t0": 22.267,
+    "t1": 23.2,
+    "diff": 50.7,
+    "scale": 0.908,
+    "tx": 170,
+    "ty": -24
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 23.2,
+   "t1": 24.8,
+   "speaker": "나레",
+   "text": "코 위 1분, 유화 과정1분루틴을",
+   "layer": "채널",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    636
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    221,
+    858
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "코에 화장솜을 붙인 여성",
+   "fit": 9,
+   "cut_at": [
+    23.2
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 23.2,
+    "t1": 24.8,
+    "diff": 24.6,
+    "scale": 1.009,
+    "tx": -16,
+    "ty": 21
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 24.8,
+   "t1": 25.7,
+   "speaker": "나레",
+   "text": "주기적으로 할 시",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    503,
+    551
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    362,
+    713
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.5,
+   "word_gap_px": 15.5,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "코를 손가락으로 문지름(근접)",
+   "fit": 6,
+   "cut_at": [
+    24.8
+   ],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 24.8,
+    "t1": 26.8,
+    "diff": 20.3,
+    "scale": 0.976,
+    "tx": 47,
+    "ty": 35
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 25.7,
+   "t1": 26.8,
+   "speaker": "나레",
+   "text": "없애기 힘든 요철에서도",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(윗줄 유지, 2번째 줄)",
+   "y": [
+    582,
+    630
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    291,
+    789
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 17.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 장면",
+   "fit": 6,
+   "cut_at": [],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 24.8,
+    "t1": 26.8,
+    "diff": 20.3,
+    "scale": 0.976,
+    "tx": 47,
+    "ty": 35
+   },
+   "transition": "none(같은 컷 안)",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 26.8,
+   "t1": 27.9,
+   "speaker": "나레",
+   "text": "효과를 볼 수 있다고ㄷㄷ",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    504,
+    551
+   ],
+   "x": 536,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    284,
+    788
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(제목보다 가늘다)",
+    "basis": "눈(뜯기 fontmatch 상위 5가 손글씨체로 엇나가 쓰지 않음)"
+   },
+   "size_px": 53,
+   "letter_gap_px": 2.0,
+   "word_gap_px": 16.5,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "코를 만지는 여성 옆얼굴",
+   "fit": 6,
+   "cut_at": [
+    26.8
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 26.8,
+    "t1": 27.9,
+    "diff": 36.5
+   },
+   "transition": "cut",
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크·확대 크롭)",
+    "글": "눈(자막 띠 크롭)",
+    "컷": "신호(뜯기 bench 컷 + 창 diff 솟음, 솟음은 눈으로 확인)",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role": "눈",
+    "sfx": "신호(sfx_events 후보 전부 낱말 안 — 채택 0)",
+    "font·size": "눈"
+   },
+   "notes": ""
+  }
+ ],
+ "no_caption": [],
+ "beats": "훅(0.0초 '약사가 알려준 블랙헤드의 정체') → 다리(1.6초 '블랙헤드 관리를 해봐도') → 질문(3.8초 '사실 없어지지 않는 이유는') → 공개(5.9초 '이 정체는 사실 블랙헤드가 아닌') → 반전(10.0초 '문제는 압출로 제거 시') → 본문(11.7초 '깨끗하게 관리하는 게') → 이음(14.1초 '이 문제를 완벽히 해결해버린') → 공개(15.6초 '약사의 루틴이 있음') → 증거(18.3초 '피지 제거와 조절이 가능하고') → 답(19.6초 '특히 살리실산이 있는 클렌징 밤을') → 끝(24.8초 '주기적으로 할 시')",
+ "narr_share": "나레 23/23줄(원음 0 — 받아쓰기 한 화자·TTS 남성 설명조), 나레 자막 27.90초/27.9초",
+ "notes": [
+  "자막 등장은 전부 instant — 30fps 잉크 마스크에서 새 줄 잉크가 첫 프레임에 90% 이상(팝·타이핑·페이드 0). 페이지가 바뀔 때 윗줄까지 한 프레임에 지워진다(exit cut)",
+  "자막 방식 = 1줄 → 아래 줄 덧붙음(1~3줄) → 페이지째 교체. 덧붙음 행의 윗줄 행 t1 은 덧붙는 시각(같은 층 겹침 금지) — 실제로 윗줄은 페이지 끝까지 남는다",
+  "강조색 낱말 0 · 스티커 0 · 효과음 0 — 채움 #000000, 외곽선·그림자·상자 없음(확대 크롭 픽셀). 꾸밈 없는 자막이 이 채널 스타일",
+  "효과음: sfx_events.py 후보 3개 전부 받아쓰기 낱말 구간 안(치찰음·파열음) → 채택 0. 컷 경계 고립 솟음 없음",
+  "BGM: 있음(신호) — 봉우리 129Hz 하나(13dB) — 음 높이 봉우리 약함 · 말 사이 바닥 −28~−31dB RMS(말 −16dB) → BGM 은 말보다 약 12~15dB 아래(상한 추정). 곡 이름 미식별",
+  "글꼴 이름 미측정(뜯기 fontmatch 가 손글씨체를 1위로 냄 — 눈으로는 고딕). 크기 53px = 잉크 높이 49~50px ÷ 0.93(한글 고딕 잉크비, 눈 추정). 자간 letter_gap_px = 글자 사이 빈 열 중앙값(줄 높이 30% 미만 틈), word_gap_px = 띄어쓰기 틈",
+  "컷 = 뜯기 bench 컷(kal_analyze match 와 같은 자) + 창 diff 솟음 중 눈으로 확인한 것. 전환은 전부 하드 컷(검정·흰 번쩍·줌블러 0, 창 평균밝기·라플라시안으로 ±4프레임 확인)",
+  "motion: pan/zoom 은 대부분 제품 사진에 천천히 움직임(켄번스 꼴) 또는 원본 카메라. cam = 원본 영상 자체 움직임",
+  "5.93~7.53 창 안 모공 그림의 빨간 곡선은 재료(원본 그래픽) 안에 있다고 판단 — 창 밖으로 안 나오고 다른 5편엔 없음(눈, 확신 중간). 스티커로 세지 않음",
+  "14.13~16.7 말하는 여성(약사로 소개되는 장면)의 원음은 안 들린다 — 받아쓰기 한 화자뿐이라 나레만"
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "훅 카드: 어둡게 깐 틀 위 큰 제목 2줄 + 흰 띠 나레 문장, 아래 코 피부 근접",
+  "face_frac": 0.0,
+  "text": "약사가 알려준 / 블랙헤드의 정체 · 약사가 알려준 블랙헤드의 정체"
+ },
+ "hook": {
+  "t0": 0.0,
+  "t1": 1.567,
+  "kind": "훅 카드(틀 어둡게+큰 제목 2줄+흰 띠 나레)",
+  "header_hex": "#183B5D 근처(편마다 #0E3A5E~#1C486C)",
+  "title_hex": [
+   "#FFFFFF",
+   "#43A6F7"
+  ],
+  "exit": "cut(본문 틀로 1프레임에 바뀜, 30fps 띠 확인)"
+ },
+ "cuts": [
+  1.567,
+  2.567,
+  3.8,
+  7.533,
+  9.967,
+  11.733,
+  14.133,
+  16.7,
+  18.3,
+  21.4,
+  22.267,
+  23.2,
+  24.8,
+  26.8
+ ],
+ "cuts_extra_confirmed": [
+  2.567,
+  3.8,
+  7.533,
+  9.967,
+  11.733,
+  21.4
+ ],
+ "cuts_rejected": [],
+ "shots": [
+  {
+   "t0": 0.0,
+   "t1": 1.567,
+   "motion": "zoom_in",
+   "diff": 11.8,
+   "scale": 1.046,
+   "tx": -115,
+   "ty": 83
+  },
+  {
+   "t0": 1.567,
+   "t1": 2.567,
+   "motion": "cam",
+   "diff": 21.4,
+   "scale": 0.982,
+   "tx": 7,
+   "ty": -9
+  },
+  {
+   "t0": 2.567,
+   "t1": 3.8,
+   "motion": "still",
+   "diff": 6.6,
+   "scale": 1.025,
+   "tx": -13,
+   "ty": -7
+  },
+  {
+   "t0": 3.8,
+   "t1": 7.533,
+   "motion": "cam",
+   "diff": 29.0
+  },
+  {
+   "t0": 7.533,
+   "t1": 9.967,
+   "motion": "cam",
+   "diff": 24.7
+  },
+  {
+   "t0": 9.967,
+   "t1": 11.733,
+   "motion": "pan",
+   "diff": 41.3,
+   "scale": 0.967,
+   "tx": -80,
+   "ty": 120
+  },
+  {
+   "t0": 11.733,
+   "t1": 14.133,
+   "motion": "cam",
+   "diff": 36.9
+  },
+  {
+   "t0": 14.133,
+   "t1": 16.7,
+   "motion": "zoom_out",
+   "diff": 23.0,
+   "scale": 0.874,
+   "tx": 112,
+   "ty": 17
+  },
+  {
+   "t0": 16.7,
+   "t1": 18.3,
+   "motion": "still",
+   "diff": 0.1
+  },
+  {
+   "t0": 18.3,
+   "t1": 21.4,
+   "motion": "cam",
+   "diff": 15.9,
+   "scale": 0.999,
+   "tx": 18,
+   "ty": 20
+  },
+  {
+   "t0": 21.4,
+   "t1": 22.267,
+   "motion": "cam",
+   "diff": 20.3
+  },
+  {
+   "t0": 22.267,
+   "t1": 23.2,
+   "motion": "zoom_out",
+   "diff": 50.7,
+   "scale": 0.908,
+   "tx": 170,
+   "ty": -24
+  },
+  {
+   "t0": 23.2,
+   "t1": 24.8,
+   "motion": "cam",
+   "diff": 24.6,
+   "scale": 1.009,
+   "tx": -16,
+   "ty": 21
+  },
+  {
+   "t0": 24.8,
+   "t1": 26.8,
+   "motion": "pan",
+   "diff": 20.3,
+   "scale": 0.976,
+   "tx": 47,
+   "ty": 35
+  },
+  {
+   "t0": 26.8,
+   "t1": 27.9,
+   "motion": "cam",
+   "diff": 36.5
+  }
+ ],
+ "audio": {
+  "speech_db_rms": -16.0,
+  "pause_floor_db": null,
+  "lead_silence_s": 0.08,
+  "tail_after_speech_s": 0.1,
+  "sfx_candidates": [
+   {
+    "t": 2.84,
+    "kind": "broad",
+    "dur": 0.06,
+    "db": 21.0,
+    "in_word": true,
+    "near": {
+     "cap": 0.24,
+     "sticker": 3.26,
+     "cut": 1.27
+    }
+   },
+   {
+    "t": 3.67,
+    "kind": "broad",
+    "dur": 0.07,
+    "db": 18.7,
+    "in_word": true,
+    "near": {
+     "cap": 0.13,
+     "sticker": 2.43,
+     "cut": 2.1
+    }
+   },
+   {
+    "t": 3.91,
+    "kind": "broad",
+    "dur": 0.06,
+    "db": 19.3,
+    "in_word": true,
+    "near": {
+     "cap": 0.11,
+     "sticker": 2.19,
+     "cut": 2.34
+    }
+   }
+  ],
+  "sfx_adopted": 0
+ },
+ "_made_by": "banggu 줄판독(오퍼스 눈 + 30fps 픽셀·ORB·소리 실측, 2026-10-25, 관제 263 지시서 06)"
+}

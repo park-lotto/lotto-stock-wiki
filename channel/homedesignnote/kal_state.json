@@ -1,0 +1,128 @@
+{
+ "slug": "homedesignnote",
+ "ref": "https://www.youtube.com/@두유노홈디노",
+ "steps": {
+  "tteutgi": {
+   "state": "done",
+   "sec": 2340.0,
+   "at": "2026-10-25 00:41",
+   "outputs": {
+    "ids": [
+     "_QqLEH4qlFQ",
+     "DCXQjaWcZ-g",
+     "iiBUscncqIk",
+     "WTgQPFfdSOQ",
+     "EINoAh8C9rQ",
+     "SU9YofB1IoI"
+    ],
+    "dir": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\뜯기"
+   },
+   "note": "뜯기 6편 (LLM=claude_cli, 받아쓰기 칸은 vtt 로)"
+  },
+  "select": {
+   "state": "done",
+   "sec": 55.5,
+   "at": "2026-10-25 00:02",
+   "outputs": {
+    "top": "C:\\숏템_칼카피\\homedesignnote\\top.json"
+   },
+   "note": "Home_Design_Note 구독 37900 편 600 조회중앙 22,000 최대 6,000,000 (구독 대비 중앙 0.58)"
+  },
+  "collect": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-25 00:02",
+   "outputs": {
+    "src": "C:\\숏템_칼카피\\homedesignnote\\src",
+    "ids": [
+     "_QqLEH4qlFQ",
+     "DCXQjaWcZ-g",
+     "iiBUscncqIk",
+     "WTgQPFfdSOQ",
+     "EINoAh8C9rQ",
+     "SU9YofB1IoI"
+    ]
+   },
+   "note": "받음 6/6(1080p, C 여유 22.3GB)"
+  },
+  "frames": {
+   "state": "done",
+   "sec": 390.7,
+   "at": "2026-10-25 00:47",
+   "outputs": {
+    "dirs": {
+     "_QqLEH4qlFQ": "C:\\숏템_칼카피\\homedesignnote\\kal\\frames__QqLEH4qlFQ",
+     "DCXQjaWcZ-g": "C:\\숏템_칼카피\\homedesignnote\\kal\\frames_DCXQjaWcZ-g",
+     "iiBUscncqIk": "C:\\숏템_칼카피\\homedesignnote\\kal\\frames_iiBUscncqIk",
+     "WTgQPFfdSOQ": "C:\\숏템_칼카피\\homedesignnote\\kal\\frames_WTgQPFfdSOQ",
+     "EINoAh8C9rQ": "C:\\숏템_칼카피\\homedesignnote\\kal\\frames_EINoAh8C9rQ",
+     "SU9YofB1IoI": "C:\\숏템_칼카피\\homedesignnote\\kal\\frames_SU9YofB1IoI"
+    }
+   },
+   "note": "시트·0.1초 띠 6편"
+  },
+  "skeleton": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-25 00:47",
+   "outputs": {
+    "skeletons": [
+     "WTgQPFfdSOQ",
+     "EINoAh8C9rQ",
+     "SU9YofB1IoI"
+    ],
+    "bundle": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\_kal\\워커묶음.json",
+    "brief": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\_kal\\줄판독_브리프.md"
+   },
+   "note": "뼈대 3편 새로, 묶음 6편"
+  },
+  "readlines": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-25 01:14",
+   "outputs": {
+    "ids": [
+     "_QqLEH4qlFQ",
+     "DCXQjaWcZ-g",
+     "iiBUscncqIk",
+     "WTgQPFfdSOQ",
+     "EINoAh8C9rQ",
+     "SU9YofB1IoI"
+    ]
+   },
+   "note": "줄판독 6편 strict 통과"
+  },
+  "rules": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-25 01:18",
+   "outputs": {
+    "draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\_kal\\스타일분석_초안.md",
+    "palette": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\팔레트.json",
+    "plan_draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\_kal\\homedesignnote판_초안.json"
+   },
+   "note": "규칙빈도·대본언어·팔레트·판 설정 초안 + 스타일분석.md 있음"
+  }
+ },
+ "asked": {},
+ "brand": "잇썸홈",
+ "n": 6,
+ "hybrid": "아니오",
+ "channel": {
+  "name": "Home_Design_Note",
+  "url": "https://www.youtube.com/@두유노홈디노/shorts",
+  "subs": 37900,
+  "total": 600,
+  "view_median": 22000,
+  "view_max": 6000000,
+  "top_ids": [
+   "_QqLEH4qlFQ",
+   "DCXQjaWcZ-g",
+   "iiBUscncqIk",
+   "WTgQPFfdSOQ",
+   "EINoAh8C9rQ",
+   "SU9YofB1IoI"
+  ],
+  "views_per_sub": 0.58
+ }
+}

@@ -1,0 +1,158 @@
+{
+ "n_docs": 6,
+ "roles": {
+  "본문": [
+   {
+    "hex": "#FFFCFA",
+    "n_lines": 188,
+    "n_docs": 6,
+    "docs": [
+     "2uPIHITVEX8",
+     "MfptnwqlGKs",
+     "agEwVlDn25U",
+     "cLxEI_U1e_E",
+     "dNthcAKrj5U",
+     "mtMtHzG1GHk"
+    ],
+    "members": [
+     "#FFFCFA"
+    ]
+   },
+   {
+    "hex": "#F4F91E",
+    "n_lines": 24,
+    "n_docs": 6,
+    "docs": [
+     "2uPIHITVEX8",
+     "MfptnwqlGKs",
+     "agEwVlDn25U",
+     "cLxEI_U1e_E",
+     "dNthcAKrj5U",
+     "mtMtHzG1GHk"
+    ],
+    "members": [
+     "#F4F91E"
+    ]
+   },
+   {
+    "hex": "#F9B4C0",
+    "n_lines": 2,
+    "n_docs": 2,
+    "docs": [
+     "cLxEI_U1e_E",
+     "mtMtHzG1GHk"
+    ],
+    "members": [
+     "#F9B4C0"
+    ]
+   }
+  ],
+  "강조": [
+   {
+    "hex": "#F4F91E",
+    "n_lines": 95,
+    "n_docs": 6,
+    "docs": [
+     "2uPIHITVEX8",
+     "MfptnwqlGKs",
+     "agEwVlDn25U",
+     "cLxEI_U1e_E",
+     "dNthcAKrj5U",
+     "mtMtHzG1GHk"
+    ],
+    "members": [
+     "#F4F91E"
+    ]
+   },
+   {
+    "hex": "#F9B4C0",
+    "n_lines": 15,
+    "n_docs": 6,
+    "docs": [
+     "2uPIHITVEX8",
+     "MfptnwqlGKs",
+     "agEwVlDn25U",
+     "cLxEI_U1e_E",
+     "dNthcAKrj5U",
+     "mtMtHzG1GHk"
+    ],
+    "members": [
+     "#F9B4C0"
+    ]
+   },
+   {
+    "hex": "#EA2634",
+    "n_lines": 2,
+    "n_docs": 1,
+    "docs": [
+     "agEwVlDn25U"
+    ],
+    "members": [
+     "#EA2634"
+    ]
+   },
+   {
+    "hex": "#E74939",
+    "n_lines": 3,
+    "n_docs": 2,
+    "docs": [
+     "2uPIHITVEX8",
+     "cLxEI_U1e_E"
+    ],
+    "members": [
+     "#E74939",
+     "#EA4435"
+    ]
+   },
+   {
+    "hex": "#F93E3D",
+    "n_lines": 1,
+    "n_docs": 1,
+    "docs": [
+     "MfptnwqlGKs"
+    ],
+    "members": [
+     "#F93E3D"
+    ]
+   }
+  ],
+  "외곽선": [],
+  "글로우": [],
+  "제목": [
+   {
+    "hex": "#FCFAFB",
+    "n_lines": 6,
+    "n_docs": 6,
+    "docs": [
+     "2uPIHITVEX8",
+     "MfptnwqlGKs",
+     "agEwVlDn25U",
+     "cLxEI_U1e_E",
+     "dNthcAKrj5U",
+     "mtMtHzG1GHk"
+    ],
+    "members": [
+     "#FCFAFB"
+    ]
+   },
+   {
+    "hex": "#FBED03",
+    "n_lines": 6,
+    "n_docs": 6,
+    "docs": [
+     "2uPIHITVEX8",
+     "MfptnwqlGKs",
+     "agEwVlDn25U",
+     "cLxEI_U1e_E",
+     "dNthcAKrj5U",
+     "mtMtHzG1GHk"
+    ],
+    "members": [
+     "#FBED03"
+    ]
+   }
+  ],
+  "스티커": [],
+  "출처": []
+ }
+}

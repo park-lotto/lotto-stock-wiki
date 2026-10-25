@@ -1,0 +1,3274 @@
+{
+ "id": "tcaIPaGWLrE",
+ "dur": 36.717,
+ "fps": 60.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "천재 아이디어를 해킹",
+   "colors": [
+    {
+     "word": "천재 아이디어를 해킹",
+     "hex": "#FFFEFF"
+    }
+   ],
+   "y": [
+    252,
+    354
+   ],
+   "where": "훅 틀(0~1.90초)",
+   "font": {
+    "name": "JalnanGothic(추정)",
+    "basis": "fontmatch 하늘 줄 3편 raw 0.66, 2/3 — 외곽·그림자 탓에 낮음"
+   }
+  },
+  {
+   "text": "한국 제품의 정체",
+   "colors": [
+    {
+     "word": "한국 제품의 정체",
+     "hex": "#00E3F4"
+    }
+   ],
+   "y": [
+    381,
+    511
+   ],
+   "where": "훅 틀",
+   "outline": {
+    "px": null,
+    "hex": "#000000",
+    "note": "어두운 외곽+그림자(눈)"
+   }
+  },
+  {
+   "text": "천재 아이디어 해킹한 한국 제품?",
+   "colors": [
+    {
+     "word": "천재 아이디어 해킹한 한국 제품?",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "y": [
+    231,
+    300
+   ],
+   "where": "본문 틀 제목 띠(배경 #424242)",
+   "font": {
+    "name": "BMDOHYEON",
+    "basis": "fontmatch 3편 3/3 1위 raw 0.869"
+   }
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   591,
+   1080,
+   1219
+  ],
+  "caption_band": [
+   405,
+   590
+  ],
+  "title_y": [
+   179,
+   402
+  ],
+  "source_y": null,
+  "source_hex": null,
+  "logo_y": [
+   0,
+   173
+  ],
+  "logo": "머리띠 #424242 가운데 '이븐쇼핑' 흰 글자 + 왼쪽 햄버거 · 오른쪽 돋보기(빨간 손잡이) — 앱 화면 흉내",
+  "counter": {
+   "text": "조회수 235만 | 댓글 697개",
+   "y": [
+    336,
+    373
+   ],
+   "note": "6편 모두 같은 숫자(틀에 박힌 가짜 지표 — 편마다 안 바뀜)"
+  },
+  "bottom_bar": {
+   "y": [
+    1810,
+    1920
+   ],
+   "hex": "#424242"
+  },
+  "watermark": {
+   "present": false,
+   "alpha": null
+  },
+  "bg_hex": "#424242",
+  "band_hex": "#FFFFFF",
+  "hook_frame": {
+   "t": [
+    0,
+    1.9
+   ],
+   "title_white_y": [
+    252,
+    354
+   ],
+   "title_cyan_y": [
+    381,
+    511
+   ],
+   "caption_y": [
+    601,
+    700
+   ]
+  }
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.9,
+   "speaker": "나레",
+   "text": "천재 아이디어를 해킹한 한국 제품?",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "훅 썸네일 틀 — 큰 제목 2줄(흰+하늘) 아래 흰 둥근 상자 자막(작은 글자 · 제목을 물음표로 다시 읽음)",
+   "font": {
+    "name": "BMJUA(추정 — 본문 자막과 같은 모양, 크기만 작음)",
+    "basis": "눈"
+   },
+   "size_px": null,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "note": "상자 아래 흐린 그림자(눈)"
+   },
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": "둥근(눈)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "y": [
+    601,
+    700
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "면봉 생산 라인",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "없음",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "눈",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "font": "눈"
+   },
+   "notes": "0~1.90초 훅 틀(머리띠에 '이븐쇼핑' 글자 없음 · 조회수 줄 없음). 그 뒤 본문 틀로 1프레임 컷 전환"
+  },
+  {
+   "t0": 1.9,
+   "t1": 2.45,
+   "speaker": "나레",
+   "text": "한때 해외",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 62,
+   "x": 538,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    1.9
+   ],
+   "y": [
+    456,
+    513
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "면봉 꺾는 손",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 241,
+   "notes": null
+  },
+  {
+   "t0": 2.45,
+   "t1": 3.467,
+   "speaker": "나레",
+   "text": "국내 SNS에서",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 60,
+   "x": 538,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    2.467,
+    2.583
+   ],
+   "y": [
+    458,
+    513
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "용액 든 면봉",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 359,
+   "notes": null
+  },
+  {
+   "t0": 3.467,
+   "t1": 4.683,
+   "speaker": "나레",
+   "text": "정신 나갈듯이 바이럴 되며",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 61,
+   "x": 539,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    3.467
+   ],
+   "y": [
+    458,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "얼굴",
+   "scene_desc": "놀란 얼굴 남자+면봉 묶음",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 658,
+   "notes": null
+  },
+  {
+   "t0": 4.683,
+   "t1": 5.867,
+   "speaker": "나레",
+   "text": "수백억 매출을 달성했던",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 64,
+   "x": 538,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "띵(4.3kHz 순음)",
+    "t": 4.74,
+    "basis": "파형 솟음"
+   },
+   "cut_at": [
+    4.683
+   ],
+   "y": [
+    455,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "면봉 묶음",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 585,
+   "notes": null
+  },
+  {
+   "t0": 5.867,
+   "t1": 6.45,
+   "speaker": "나레",
+   "text": "소독 면봉",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 61,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    5.867
+   ],
+   "y": [
+    458,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "소독 면봉 묶음",
+   "fit": 9,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 231,
+   "notes": null
+  },
+  {
+   "t0": 6.45,
+   "t1": 7.317,
+   "speaker": "나레",
+   "text": "이게 말도 안 되는게",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 61,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    6.45,
+    6.7,
+    7.217
+   ],
+   "y": [
+    458,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "면봉 꺾기",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 497,
+   "notes": null
+  },
+  {
+   "t0": 7.317,
+   "t1": 8.083,
+   "speaker": "나레",
+   "text": "면봉 안에 요오드",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 60,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    7.4
+   ],
+   "y": [
+    458,
+    513
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "요오드 든 면봉",
+   "fit": 9,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 418,
+   "notes": null
+  },
+  {
+   "t0": 8.083,
+   "t1": 9.133,
+   "speaker": "나레",
+   "text": "소독 용액이 들어가 있어",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 61,
+   "x": 538,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    8.433
+   ],
+   "y": [
+    458,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "용액 든 면봉 대롱",
+   "fit": 9,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 598,
+   "notes": null
+  },
+  {
+   "t0": 9.133,
+   "t1": 9.917,
+   "speaker": "나레",
+   "text": "한쪽을 꺾어주면",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 63,
+   "x": 539,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    9.133
+   ],
+   "y": [
+    456,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "면봉 한쪽 꺾기",
+   "fit": 9,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 400,
+   "notes": null
+  },
+  {
+   "t0": 9.917,
+   "t1": 11.133,
+   "speaker": "나레",
+   "text": "반대쪽 솜이 용액에 적셔져",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 63,
+   "x": 538,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    9.917,
+    10.033
+   ],
+   "y": [
+    456,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "솜이 갈색으로 젖음",
+   "fit": 9,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 645,
+   "notes": null
+  },
+  {
+   "t0": 11.133,
+   "t1": 12.033,
+   "speaker": "나레",
+   "text": "즉각 사용할 수 있고",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 63,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    11.133
+   ],
+   "y": [
+    456,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "팔에 바르기",
+   "fit": 9,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 497,
+   "notes": null
+  },
+  {
+   "t0": 12.033,
+   "t1": 12.483,
+   "speaker": "나레",
+   "text": "이게 기존에",
+   "layer": "채널",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 61,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    12.033
+   ],
+   "y": [
+    458,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "팔에 바르기",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 289,
+   "notes": null
+  },
+  {
+   "t0": 12.483,
+   "t1": 13.233,
+   "speaker": "나레",
+   "text": "무거운 소독약을",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 62,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    12.5,
+    13.167
+   ],
+   "y": [
+    457,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "팔에 바른 자국",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 403,
+   "notes": null
+  },
+  {
+   "t0": 13.233,
+   "t1": 14.4,
+   "speaker": "나레",
+   "text": "들고 다닐 필요도 없는 데다가",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 61,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    13.75,
+    14.25
+   ],
+   "y": [
+    458,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "케이스에 든 면봉",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 735,
+   "notes": null
+  },
+  {
+   "t0": 14.4,
+   "t1": 15.1,
+   "speaker": "나레",
+   "text": "필요할 때 하나씩만",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 63,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    14.4
+   ],
+   "y": [
+    456,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "면봉 하나 꺼냄",
+   "fit": 8,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 488,
+   "notes": null
+  },
+  {
+   "t0": 15.1,
+   "t1": 15.767,
+   "speaker": "나레",
+   "text": "사용하면 되니",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 62,
+   "x": 538,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "y": [
+    456,
+    513
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "면봉 꺼내 쓰기",
+   "fit": 8,
+   "motion": "cam",
+   "transition": "없음",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 344,
+   "notes": null
+  },
+  {
+   "t0": 15.767,
+   "t1": 16.85,
+   "speaker": "나레",
+   "text": "위생,안전,편리 삼박자를",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 60,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    15.767
+   ],
+   "y": [
+    458,
+    513
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "면봉 사용",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 613,
+   "notes": null
+  },
+  {
+   "t0": 16.85,
+   "t1": 17.617,
+   "speaker": "나레",
+   "text": "다 갖춘 최고의",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 64,
+   "x": 539,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    16.85
+   ],
+   "y": [
+    455,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "면봉 묶음",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 368,
+   "notes": null
+  },
+  {
+   "t0": 17.617,
+   "t1": 18.517,
+   "speaker": "나레",
+   "text": "응급 비상 도구였는데",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 61,
+   "x": 538,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "띵(4.3kHz 순음)",
+    "t": 17.65,
+    "basis": "파형 솟음"
+   },
+   "cut_at": [
+    17.617
+   ],
+   "y": [
+    458,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "상처에 바름",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 526,
+   "notes": null
+  },
+  {
+   "t0": 18.517,
+   "t1": 19.75,
+   "speaker": "나레",
+   "text": "이 기가 막힌 아이디어에다가",
+   "layer": "채널",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 64,
+   "x": 550,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    18.517,
+    19.533
+   ],
+   "y": [
+    455,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "손목에 바름·면봉 묶음",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 726,
+   "notes": null
+  },
+  {
+   "t0": 19.75,
+   "t1": 20.767,
+   "speaker": "나레",
+   "text": "한국의 제약 회사만의",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 62,
+   "x": 538,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    19.75,
+    20.083
+   ],
+   "y": [
+    456,
+    513
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "귀 면봉 묶음",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 544,
+   "notes": null
+  },
+  {
+   "t0": 20.767,
+   "t1": 21.683,
+   "speaker": "나레",
+   "text": "특별한 기술을 첨가한",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 65,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    20.767
+   ],
+   "y": [
+    455,
+    515
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "장갑 낀 손 면봉(실험 느낌)",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 541,
+   "notes": null
+  },
+  {
+   "t0": 21.683,
+   "t1": 22.283,
+   "speaker": "나레",
+   "text": "국산 제품이",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 60,
+   "x": 538,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    21.683
+   ],
+   "y": [
+    458,
+    513
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "귀 면봉 묶음",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 290,
+   "notes": null
+  },
+  {
+   "t0": 22.283,
+   "t1": 23.117,
+   "speaker": "나레",
+   "text": "떼돈을 벌고 있다고",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 62,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    22.283
+   ],
+   "y": [
+    457,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "면봉 꺾기",
+   "fit": 5,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 476,
+   "notes": null
+  },
+  {
+   "t0": 23.117,
+   "t1": 24.017,
+   "speaker": "나레",
+   "text": "바로 귀 청결제 면봉",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 61,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    23.117
+   ],
+   "y": [
+    457,
+    513
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "귀 청결 면봉 꺾기",
+   "fit": 9,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 491,
+   "notes": null
+  },
+  {
+   "t0": 24.017,
+   "t1": 24.683,
+   "speaker": "나레",
+   "text": "기존 제품이랑",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 61,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    24.017
+   ],
+   "y": [
+    458,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "귀 면봉 묶음",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 352,
+   "notes": null
+  },
+  {
+   "t0": 24.683,
+   "t1": 25.367,
+   "speaker": "나레",
+   "text": "별반 다를 거 없네",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 61,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    24.683
+   ],
+   "y": [
+    458,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "면봉 묶음",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 439,
+   "notes": null
+  },
+  {
+   "t0": 25.367,
+   "t1": 25.783,
+   "speaker": "나레",
+   "text": "하겠지만",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 62,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "y": [
+    456,
+    513
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "면봉 묶음",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "없음",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 223,
+   "notes": null
+  },
+  {
+   "t0": 25.783,
+   "t1": 26.433,
+   "speaker": "나레",
+   "text": "이 면봉에는",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 60,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    25.783
+   ],
+   "y": [
+    458,
+    513
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "면봉 묶음",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 286,
+   "notes": null
+  },
+  {
+   "t0": 26.433,
+   "t1": 27.217,
+   "speaker": "나레",
+   "text": "황색 포도 상구균,",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 65,
+   "x": 538,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [
+    {
+     "what": "증거카드(황색포도상구균 배양 접시 사진)",
+     "x": 20,
+     "y": 590,
+     "w": 1016,
+     "t_in": 26.43,
+     "t_out": 27.22,
+     "anim": "컷(한 번에 · 손 영상 위에 덮음)"
+    }
+   ],
+   "sfx": null,
+   "cut_at": [],
+   "y": [
+    454,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "증거 이미지",
+   "scene_desc": "황색포도상구균 배양 접시 카드",
+   "fit": 10,
+   "motion": "cam",
+   "transition": "없음",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈+픽셀",
+    "font": "픽셀"
+   },
+   "ink_w_px": 438,
+   "notes": null
+  },
+  {
+   "t0": 27.217,
+   "t1": 28.433,
+   "speaker": "나레",
+   "text": "대장균 등 각종 세균을",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 62,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [
+    {
+     "what": "증거카드(대장균 배양 접시 사진)",
+     "x": 20,
+     "y": 590,
+     "w": 1016,
+     "t_in": 27.22,
+     "t_out": 27.85,
+     "anim": "컷"
+    },
+    {
+     "what": "증거카드(전후 배양 접시 4칸 · 99.9% 감소)",
+     "x": 20,
+     "y": 590,
+     "w": 1016,
+     "t_in": 27.9,
+     "t_out": 29.95,
+     "anim": "흰 번쩍 전환 뒤 등장"
+    }
+   ],
+   "sfx": null,
+   "cut_at": [
+    27.217,
+    27.85
+   ],
+   "y": [
+    457,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "증거 이미지",
+   "scene_desc": "대장균 배양 접시 카드",
+   "fit": 10,
+   "motion": "cam",
+   "transition": "flash",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈+픽셀",
+    "font": "픽셀"
+   },
+   "ink_w_px": 551,
+   "notes": null
+  },
+  {
+   "t0": 28.433,
+   "t1": 29.95,
+   "speaker": "나레",
+   "text": "99.9% 삭제시키는",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 62,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [
+    {
+     "what": "빨간원(손그림 · '99.9% 감소' 위)",
+     "x": 600,
+     "y": 1010,
+     "w": 340,
+     "t_in": 28.47,
+     "t_out": 29.95,
+     "anim": "그려짐(획이 0.5초에 걸쳐 늘어남)"
+    },
+    {
+     "what": "빨간원(손그림 · 아래 '99.9% 감소' 위)",
+     "x": 610,
+     "y": 1610,
+     "w": 370,
+     "t_in": 29.2,
+     "t_out": 29.95,
+     "anim": "그려짐(0.5초)"
+    }
+   ],
+   "sfx": {
+    "kind": "띵(4.3kHz 순음)",
+    "t": 28.55,
+    "basis": "파형 솟음"
+   },
+   "cut_at": [],
+   "y": [
+    458,
+    515
+   ],
+   "fill_hex": "#000000",
+   "scene": "증거 이미지",
+   "scene_desc": "전후 배양 접시 4칸 카드+빨간 원 2개",
+   "fit": 10,
+   "motion": "still",
+   "transition": "없음",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈+픽셀",
+    "font": "픽셀"
+   },
+   "ink_w_px": 476,
+   "notes": null
+  },
+  {
+   "t0": 29.95,
+   "t1": 31.067,
+   "speaker": "나레",
+   "text": "특수한 용액이 들어가는데",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 63,
+   "x": 538,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    29.95
+   ],
+   "y": [
+    456,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "파란 용액 머금은 솜 근접",
+   "fit": 8,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 638,
+   "notes": null
+  },
+  {
+   "t0": 31.067,
+   "t1": 31.583,
+   "speaker": "나레",
+   "text": "심지어",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 60,
+   "x": 538,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    31.067
+   ],
+   "y": [
+    458,
+    513
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "면봉 꺼냄",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 156,
+   "notes": null
+  },
+  {
+   "t0": 31.583,
+   "t1": 32.683,
+   "speaker": "나레",
+   "text": "피부 1차 자극 지수도",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 62,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    31.583,
+    32.583
+   ],
+   "y": [
+    456,
+    513
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "팔에 면봉",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 519,
+   "notes": null
+  },
+  {
+   "t0": 32.683,
+   "t1": 33.467,
+   "speaker": "나레",
+   "text": "0.00으로",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 60,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [
+    {
+     "what": "증거카드(피부 일차자극 평가 0.00 인증 표)",
+     "x": 336,
+     "y": 620,
+     "w": 408,
+     "t_in": 32.68,
+     "t_out": 33.47,
+     "anim": "컷"
+    },
+    {
+     "what": "빨간원(손그림 · '0.00' 위)",
+     "x": 350,
+     "y": 1310,
+     "w": 390,
+     "t_in": 32.73,
+     "t_out": 33.47,
+     "anim": "그려짐(0.5초)"
+    }
+   ],
+   "sfx": null,
+   "cut_at": [],
+   "y": [
+    460,
+    515
+   ],
+   "fill_hex": "#000000",
+   "scene": "증거 이미지",
+   "scene_desc": "피부 자극 지수 0.00 인증 카드+빨간 원",
+   "fit": 10,
+   "motion": "cam",
+   "transition": "없음",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈+픽셀",
+    "font": "픽셀"
+   },
+   "ink_w_px": 245,
+   "notes": null
+  },
+  {
+   "t0": 33.467,
+   "t1": 34.467,
+   "speaker": "나레",
+   "text": "안전하게 사용할 수 있어서",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 64,
+   "x": 538,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    33.467,
+    33.95
+   ],
+   "y": [
+    455,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "손바닥에 면봉",
+   "fit": 8,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 660,
+   "notes": null
+  },
+  {
+   "t0": 34.467,
+   "t1": 35.0,
+   "speaker": "나레",
+   "text": "사용 해보면",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 60,
+   "x": 539,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    34.467
+   ],
+   "y": [
+    458,
+    513
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "면봉 사용",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 290,
+   "notes": null
+  },
+  {
+   "t0": 35.0,
+   "t1": 36.017,
+   "speaker": "나레",
+   "text": "귀로 상쾌한 민트껌을",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 64,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    35.0
+   ],
+   "y": [
+    455,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "면봉 묶음",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 537,
+   "notes": null
+  },
+  {
+   "t0": 36.017,
+   "t1": 36.717,
+   "speaker": "나레",
+   "text": "씹는 기분이라고",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "font": {
+    "name": "BMJUA",
+    "basis": "fontmatch.pooled_rank 6줄(3편) 6/6 1위 raw 0.824 · 2위 BMDOHYEON 0.54"
+   },
+   "size_px": 61,
+   "x": 540,
+   "align": "center",
+   "max_w": 1040,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": null,
+    "radius": 0,
+    "band_y": [
+     405,
+     590
+    ],
+    "note": "화면 폭 전체 흰 띠(고정 틀)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "띵(4.3kHz 순음)",
+    "t": 36.06,
+    "basis": "파형 솟음"
+   },
+   "cut_at": [
+    36.017
+   ],
+   "y": [
+    458,
+    514
+   ],
+   "fill_hex": "#000000",
+   "scene": "손·제품 근접",
+   "scene_desc": "면봉 든 손",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": {
+    "t": "픽셀",
+    "text": "눈",
+    "enter": "픽셀",
+    "fill_hex": "픽셀",
+    "size_px": "픽셀(잉크 높이 근사)",
+    "speaker": "신호(받아쓰기=자막)",
+    "role": "눈",
+    "fit": "눈",
+    "motion": "신호",
+    "transition": "픽셀+눈",
+    "sfx": "신호",
+    "sticker": "눈",
+    "font": "픽셀"
+   },
+   "ink_w_px": 405,
+   "notes": null
+  }
+ ],
+ "no_caption": [],
+ "beats": "훅(0.0~) → 다리(1.9~) → 공개(5.9~) → 고조(6.5~) → 본문(7.3~) → 이음(12.0~) → 증거(25.8~) → 끝(34.5~)",
+ "narr_share": "나레 41/41줄 · 나레 자막 36.72/36.717초(원음 줄 0 — 받아쓰기가 자막과 같고 원본 소리 안 들림)",
+ "narr_cps": 8.93,
+ "frame0": {
+  "what": "훅 썸네일 틀: 머리띠(햄버거·돋보기, 로고 글자 없음)+큰 제목 2줄(흰 #FFFEFF / 하늘 #00E3F4)+흰 상자 부제+제품 시연 영상",
+  "face_frac": 0.0,
+  "text": "천재 아이디어를 해킹 한국 제품의 정체"
+ },
+ "sfx_events": [
+  {
+   "kind": "띵(4.3kHz 순음)",
+   "t": 4.74,
+   "basis": "파형 솟음",
+   "dur": 0.58,
+   "hz": [
+    4250,
+    4300,
+    5800,
+    5850
+   ]
+  },
+  {
+   "kind": "띵(4.3kHz 순음)",
+   "t": 17.65,
+   "basis": "파형 솟음",
+   "dur": 0.74,
+   "hz": [
+    4250,
+    4300,
+    5800,
+    5850
+   ]
+  },
+  {
+   "kind": "띵(4.3kHz 순음)",
+   "t": 28.55,
+   "basis": "파형 솟음",
+   "dur": 0.37,
+   "hz": [
+    4250,
+    4300,
+    5800
+   ]
+  },
+  {
+   "kind": "띵(4.3kHz 순음)",
+   "t": 36.06,
+   "basis": "파형 솟음",
+   "dur": 0.62,
+   "hz": [
+    4250,
+    4300,
+    5800,
+    5850
+   ]
+  }
+ ],
+ "bgm": {
+  "present": false,
+  "basis": "쉼 구간(말 p95 −25dB 아래 ≥40ms) 바닥이 말보다 30~39dB 낮고 스펙트로그램 쉼이 전 대역 어둡다(조성 줄 없음) — work/bgm_check.json·spec_*.png"
+ },
+ "name_evidence": [],
+ "notes": [
+  "자막 등장은 전부 instant: 60fps 띠 마스크 차이가 1프레임에 끝남(chg_frames=1, 첫 6프레임 잉크량 변화 ≤5px) — 퇴장도 다음 덩어리로 1프레임 교체(exit cut)",
+  "강조 낱말 색 0줄: 자막 띠 안 유채색 잉크 0px(1kf 6번 94px 는 띠 아래 회색 선 — 글자 아님)",
+  "transition: 컷 감지(창 히스토그램+밝기차 지역 최대) 뒤 컷 시트(cuts.jpg, 컷마다 -2·-1·0·+1·+3 프레임)로 눈 확인. 흐림 의심(blur_check)은 원본 움직임 번짐이었고 전부 하드 컷. 줄 안에 컷이 없으면 '없음'",
+  "motion: 샷마다 LK 추적 전역 닮음변환 — 손떨림 0.25px 미만이면 still, 그 외 cam(원본 촬영 움직임). 편집 확대·이동 효과는 시트에서 안 보임(원본 그대로)",
+  "효과음: 4.3kHz(+5.8kHz 배음) 순음 '띵' 0.28~1.08초 — tone.py(2.5~6kHz 칸이 주변보다 ≥14dB 0.12초+) · 스펙트로그램 가로 줄로 확인. sfx_events.py broad 는 이 편에서 db≥25 고립 후보만 채택",
+  "BGM 없음(0/6 편 공통 측정) · 원음 0 · 나레 한 목소리(받아쓰기 엔진 gemini-free, 기존 asr/ 파일 재사용 — 이번 호출 0)",
+  "size_px = 잉크 높이/0.92 근사(BMJUA 한글 잉크≈0.92em 가정, 렌더 대조 안 함) · letter_gap_px 0 = 글꼴 폭 맞춤 점수(종횡비 벌점 포함) 1위 기준 근사"
+ ],
+ "_made_by": "evenshopping 줄판독 워커(클로드 눈 + 픽셀 측정 measure/capsheet/cutsheet/tone/red, 2026-10-25, 관제 263 지시서 06)"
+}

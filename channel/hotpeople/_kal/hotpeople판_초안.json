@@ -1,0 +1,104 @@
+{
+ "name": "hotpeople판",
+ "renderer": "bench",
+ "_note": "kal.py rules 초안(2026-10-25) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
+ "bench": {
+  "ko": "뜨거운 사람들",
+  "channel": "https://www.youtube.com/channel/UCOBFcuUxgsE3wJyFAJCteiA",
+  "analysis": "channel/hotpeople/스타일분석.md",
+  "line_reads": "channel/hotpeople/줄판독/",
+  "src_dir": "C:\\숏템_칼카피\\hotpeople\\src",
+  "sfx_events": null,
+  "sfx_key": null,
+  "palette": "channel/hotpeople/팔레트.json",
+  "rules_counted": "channel/hotpeople/_kal/규칙빈도.json"
+ },
+ "voice": {
+  "name": null,
+  "voice_id": null,
+  "candidates": [],
+  "why": "미정 — 사장님께(kal.py 시작 질문, 추천: 미측정(뜯기에 화자 성별 없음 — 줄판독 뒤 engine/sound/narr_report.py 닮은 목소리 순위로))"
+ },
+ "cps_target": 7.42,
+ "bgm": {
+  "id": null,
+  "db_below_voice": null,
+  "duck_orig_db": null,
+  "fade_out": null,
+  "why": "engine/sound/bgm_fp.py·뜯기 audio"
+ },
+ "loudness": {
+  "lufs": -14,
+  "tp": -1.5
+ },
+ "length": {
+  "min": 53.3,
+  "max": 73.3
+ },
+ "script": {
+  "brief": [
+   "나레: 어미 지, 었음, 였음, 거임 · 존댓말 0.0 · 전언 0.0 · 자수 중앙 16.0"
+  ],
+  "example": [
+   "한국 자전거 대회 역사상\n가장 충격적인 사건이 터짐.",
+   "빚 100억, 회사는 파산 직전",
+   "\"달리기 꼴찌,\n어깨 파워 최하위 평가\""
+  ],
+  "audit": []
+ },
+ "frame": {
+  "window": null,
+  "title": [],
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "comment": null
+ },
+ "caption": {
+  "pack": null,
+  "pack_default": null,
+  "variant_for": {},
+  "typing_cps": 7.0
+ },
+ "timing": null,
+ "cuts": null,
+ "sfx_files": null,
+ "placement": {
+  "rules": {
+   "narr_enter": "instant",
+   "orig_enter": null,
+   "fx_rate": {
+    "나레": 0.04
+   },
+   "plain_rate": 0.96,
+   "by_pos": {
+    "훅": 0.17,
+    "본문": 0.05,
+    "끝": 0.0
+   },
+   "strong": [
+    "화자=나레 → enter=instant 156/156",
+    "자리=본문 → enter=instant 124/124",
+    "역할=본문 → enter=instant 47/47",
+    "역할=고조 → enter=instant 28/28",
+    "자리=끝 → enter=instant 26/26",
+    "역할=증거 → enter=instant 21/21",
+    "역할=끝 → enter=instant 17/17",
+    "역할=반전 → enter=instant 13/13",
+    "역할=훅 → enter=instant 10/10",
+    "역할=공개 → enter=instant 10/10",
+    "자리=훅 → enter=instant 6/6",
+    "화자전환 첫 덩어리=나레 → enter=instant 6/6",
+    "역할=다리 → enter=instant 5/5",
+    "역할=이음 → enter=instant 5/5"
+   ]
+  },
+  "counted": {}
+ },
+ "_todo": [
+  "voice·bgm·sfx = engine/sound 결과",
+  "frame.title/logo/credit = 스타일분석 §틀",
+  "caption.pack = caption-motions.js 팩 이름(없으면 요청서)",
+  "timing·cuts·sfx_files = 견본 styles/키치잇판.json 꼴"
+ ]
+}

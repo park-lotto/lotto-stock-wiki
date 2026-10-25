@@ -1,6 +1,8 @@
 {
  "name": "꿀템노트판",
  "renderer": "bench",
+ "thumb_card_face": true,
+ "_thumb_card_face": "연예인 채널 — 썸네일 카드 3안 전부 연예인 얼굴(사장님 10-25 '연예인 얼굴 통일')",
  "_note": "얜샷템 하이브리드 — 꿀템노트(@꿀템노트-g1z) 칼카피 판: 나레가 묻고 연예인 원음이 답하는 가짜 대화. 근거 channel/kkultemnote/{스타일분석.md, 하이브리드_판설계.md, 줄판독/}.",
  "bench": {
   "ko": "꿀템노트",
@@ -9,34 +11,45 @@
   "design": "channel/kkultemnote/하이브리드_판설계.md",
   "line_reads": "channel/kkultemnote/줄판독",
   "src_dir": "C:/숏템_칼카피/kkultemnote/src",
-  "sfx_events": "channel/starpickroom/_tools/결과/sfx_events_rules.json",
-  "sfx_key": "kkultemnote"
+  "sfx_events": "channel/kkultemnote/_kal/sfx_events.json",
+  "sfx_key": "kkultemnote",
+  "why_sfx_events": "채널 자기 신호표(표준 §3-3 A2) — placement.sfx_events_path 는 이미 이 파일을 먼저 읽는다(옛 칸 channel/starpickroom/_tools/결과/sfx_events_rules.json 은 표시만 낡아 있었음, 렌더 동작 같음)"
  },
  "voice": {
   "name": "박창수",
   "voice_id": "tc_6059dad0b83880769a50502f",
   "why": "벤치 최근 편(09-25~) 나레 남자 f0 124~166Hz → 박창수(사장님 규칙: 남자면 박창수)"
  },
- "cps_target": 10.5,
+ "cps_target": 9.86,
  "bgm": {
   "id": "honwaka_puppu",
   "db_below_voice": 12.0,
   "duck_orig_db": 0.0,
   "fade_out": 0.4,
-  "why": "벤치 7/8편 BGM 경쾌·처음~끝·페이드 없음"
+  "why": "벤치 7/8편 BGM 경쾌·처음~끝·페이드 없음",
+  "candidates": [
+   "otsukare_summer",
+   "sweets",
+   "beggin"
+  ],
+  "duck_narr_db": 0.0,
+  "why_02": "candidates = bgm_pick.py recommend 꿀템노트판(벤치 8편 148.1 BPM·747Hz, 거리 0.713/0.870/0.990) — 곡은 사람이 고른다(id 그대로) · duck_narr_db 0 = 나레 덕킹 실측 없음"
  },
  "loudness": {
   "lufs": -14.0,
-  "tp": -1.5
+  "tp": -1.5,
+  "why": "−14 LUFS·TP −1.5 통일(사장님 10-18) · 벤치 −15.3(1위 BpU)·8편 중앙 −15.7 — 하이브리드_판설계.md 소리"
  },
  "length": {
   "min": 15,
-  "max": 22
+  "max": 22,
+  "why": "15~22초(벤치 중앙 16.8, 1편 21.6 — 하이브리드_판설계.md 표)"
  },
  "timing": {
   "gap_after_tts": 0.06,
-  "gap_after_orig": 0.04,
-  "tail": 0.3
+  "gap_after_orig": 0.06,
+  "tail": 0.11,
+  "why": "벤치 8편 원본 소리 실측(handconst.py kkultemnote → _kal/손상수_실측.json): 줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙 — gap_after_tts 0.06(앞 나레 n=29, p25 0.04·p75 0.12) · gap_after_orig 0.06(앞 원음 n=54, p25 0·p75 0.08) (경계 ±0.15초 창 안 가장 긴 쉼, 쉼 문턱 = 편별 (말 p50+p5)/2) · tail 0.11 = 마지막 말 소리 끝→영상 끝 편 중앙 0.107초(0.03~0.91, 로컬 위스퍼 마지막 낱말 끝)"
  },
  "frame": {
   "bg": [
@@ -57,7 +70,8 @@
     "ink_top": 176,
     "color": "#FFFFFF",
     "hi": "#FCB9CE",
-    "max_w": 960
+    "max_w": 960,
+    "why": "제목 2줄 SBAggroB 98/112px y176·287(하이브리드_판설계.md 틀) · max_w 960 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
    },
    {
     "font": "SBAggroB.ttf",
@@ -65,7 +79,8 @@
     "ink_top": 287,
     "color": "#FFFFFF",
     "hi": "#0091FD",
-    "max_w": 960
+    "max_w": 960,
+    "why": "제목 2줄 SBAggroB 98/112px y176·287(하이브리드_판설계.md 틀) · max_w 960 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
    }
   ],
   "logo": null,
@@ -73,12 +88,15 @@
    "font": "Pretendard-Regular.otf",
    "px": 40,
    "color": "#FAFAFA",
-   "ink_top": 1615
+   "ink_top": 1615,
+   "why": "출처 40px y1615(틀)"
   },
   "comment": {
    "bottom": 1505,
-   "px": 30
-  }
+   "px": 30,
+   "why": "댓글 카드 아래변 y1505(틀) · px 30 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
+  },
+  "why": "하이브리드_판설계.md 틀: 바탕 검정 · 창 [0,420,1080,1080] · 출처 Pretendard Regular 40px #FAFAFA y1615 · 댓글 카드 아래변 y1505(벤치 5/8편)"
  },
  "caption": {
   "pack": "kkultemnote",
@@ -92,11 +110,18 @@
    "pop": "orig_pop",
    "cut": "cut"
   },
-  "chunk_max_chars": 15
+  "chunk_max_chars": 13,
+  "band": [
+   1245,
+   1328
+  ],
+  "why_band": "자막 잉크 y1245~1328(kkultemnote place — 8편 중 7편) — caption_side 짤·스티커 자리용(fx_target)",
+  "why": "자막팩 kkultemnote(자막) · band = 자막 잉크 y1245~1328(why_band) · chunk_max_chars 13 = 벤치 나레 조각 자수(공백 뺀) p90 13(n=54, 중앙 10·최대 14 — handconst.py kkultemnote caption.chunk_max_chars)"
  },
  "cuts": {
   "push_tts": 0.0,
-  "push_orig": 0.0
+  "push_orig": 0.0,
+  "why": "하드컷(하이브리드_판설계.md 장면) · push 0(제품 그릇 컷 느린 확대 1.0→1.08~1.10 은 재료 move 칸)"
  },
  "sfx_files": {
   "ding": "팩01/ding.wav",
@@ -755,5 +780,118 @@
     "max": 22
    }
   ]
- }
+ },
+ "_pending": {
+  "transition_counted": "줄판독 transition 비율(placement.py count --dry 10-25): {'cut': 0.979, 'black': 0.014, 'zoomblur': 0.007} — cuts.transition.kinds·placement.rules.transition 에 넣으면 전환이 실제로 그려진다(지금 판 렌더와 달라짐) → 같은 편 렌더 전/후 대조 뒤 넣는다. 길이 ms 는 02 의 bench_transition_drop 같은 자로 재야 한다(표준 §11 ⑯)"
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "kkultemnote",
+   "gap": [
+    "자기 팩 1위지만 문턱 밖 {'px': 1.29}(1.0 = 문턱) → 팩요청.md 꿀템노트판#1(보정 또는 재측정)",
+    "벤치 등장 ['fade'](줄 5% 이상) 팩 'kkultemnote' 에 없음 → 팩요청.md 꿀템노트판#2"
+   ],
+   "rank": [
+    {
+     "pack": "kkultemnote",
+     "d": 0.33,
+     "terms": {
+      "px": 1.29,
+      "fill": 0.0,
+      "y": 0.03,
+      "font": 0.0
+     }
+    },
+    {
+     "pack": "deal",
+     "d": 0.655,
+     "terms": {
+      "px": 0.12,
+      "fill": 0.0,
+      "y": 1.0,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "goodletter",
+     "d": 0.72,
+     "terms": {
+      "px": 0.56,
+      "fill": 0.14,
+      "y": 0.68,
+      "font": 1.5
+     }
+    }
+   ],
+   "from": "벤치 8편 149줄 실측 [글꼴 Kkubulim(스타일분석 §1) · 나레 54줄[잉크 높이 85px(54줄 y칸) · 자리 y1288 · 채움 #FFFFFF(53줄)] · 원음 94줄[잉크 높이 85px(92줄 y칸) · 자리 y1288 · 채움 #FFFFFF(78줄)]] → 1위 kkultemnote(거리 0.33) · 지금 kkultemnote(거리 0.33, 순위 1)",
+   "enter_cover": {
+    "cut": {
+     "share": 0.49,
+     "n": 73,
+     "item": "정지(팩 불필요)"
+    },
+    "fade": {
+     "share": 0.362,
+     "n": 54,
+     "item": null
+    },
+    "pop": {
+     "share": 0.081,
+     "n": 12,
+     "item": "overPopBig"
+    },
+    "append": {
+     "share": 0.027,
+     "n": 4,
+     "item": "정지(팩 불필요)"
+    },
+    "기타": {
+     "share": 0.02,
+     "n": 3,
+     "item": null
+    },
+    "typing": {
+     "share": 0.02,
+     "n": 3,
+     "item": null
+    }
+   }
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — 판 자막팩이 등장까지 정한다(caption-motions.js motionPlan: 팩 motion 이 효과팩 번호보다 이긴다) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": "팩01",
+   "map": {
+    "ding": "띠링",
+    "whoosh": "휙",
+    "pop": "뽁"
+   },
+   "gain_db": -8,
+   "ncc": {
+    "measured": false
+   },
+   "from": "NCC 미측정(_kal/sfx_ncc.json 없음) → 지문으로 고를 수 없어 종류 이름표로 slot: ding→띠링 · 팩 팩01",
+   "gap": []
+  },
+  "bgm": {
+   "id": "honwaka_puppu",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)",
+   "candidates": [
+    "otsukare_summer",
+    "sweets",
+    "beggin"
+   ]
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
+  }
+ },
+ "_why_cps_target": "9.86 = 벤치 8편 나레 글자/자막 초 편 중앙(8.3·9.71·10.68·10.0·11.17·8.08·8.61·12.14 — kal_analyze.rules_of episodes.narr_cps, handconst.py kkultemnote cps_target) · 박창수(타입캐스트) 배속 = 이 값 맞춤(render_itssum, 0.85~1.25)"
 }

@@ -1,0 +1,194 @@
+{
+ "starpickroom__21VoGAEK_pU": {
+  "tempo": {
+   "low": 112.3,
+   "low_ac": 0.11,
+   "all": 114.8,
+   "all_ac": 0.19
+  },
+  "centroid_hz": 729.0,
+  "match": [
+   [
+    "lets_go",
+    0.755
+   ],
+   [
+    "no_batidao",
+    0.747
+   ],
+   [
+    "here_with_me",
+    0.733
+   ]
+  ],
+  "dur": 37.9
+ },
+ "starpickroom__ASqFulFvhgg": {
+  "tempo": {
+   "low": 105.5,
+   "low_ac": 0.07,
+   "all": 184.6,
+   "all_ac": 0.21
+  },
+  "centroid_hz": 765.0,
+  "match": [
+   [
+    "sweets",
+    0.762
+   ],
+   [
+    "qiuqiu",
+    0.709
+   ],
+   [
+    "chubina",
+    0.677
+   ]
+  ],
+  "dur": 33.9
+ },
+ "starpickroom__EZQlWvvnKPI": {
+  "tempo": {
+   "low": 156.6,
+   "low_ac": 0.14,
+   "all": 143.6,
+   "all_ac": 0.23
+  },
+  "centroid_hz": 645.0,
+  "match": [
+   [
+    "buttercup",
+    0.798
+   ],
+   [
+    "free_bird",
+    0.638
+   ],
+   [
+    "everything",
+    0.593
+   ]
+  ],
+  "dur": 48.9
+ },
+ "starpickroom__VbpdNba182M": {
+  "tempo": {
+   "low": 79.5,
+   "low_ac": 0.09,
+   "all": 99.4,
+   "all_ac": 0.07
+  },
+  "centroid_hz": 829.0,
+  "match": [
+   [
+    "everything",
+    0.71
+   ],
+   [
+    "here_with_me",
+    0.637
+   ],
+   [
+    "no_surprises",
+    0.637
+   ]
+  ],
+  "dur": 38.0
+ },
+ "starpickroom__dKczVzmdr00": {
+  "tempo": {
+   "low": 69.8,
+   "low_ac": 0.1,
+   "all": 184.6,
+   "all_ac": 0.16
+  },
+  "centroid_hz": 700.0,
+  "match": [
+   [
+    "otsukare_summer",
+    0.802
+   ],
+   [
+    "lets_go",
+    0.737
+   ],
+   [
+    "no_batidao",
+    0.634
+   ]
+  ],
+  "dur": 36.6
+ },
+ "starpickroom__j5D30T2n0-w": {
+  "tempo": {
+   "low": 97.5,
+   "low_ac": 0.08,
+   "all": 123.0,
+   "all_ac": 0.22
+  },
+  "centroid_hz": 793.0,
+  "match": [
+   [
+    "beggin",
+    0.73
+   ],
+   [
+    "sweets",
+    0.597
+   ],
+   [
+    "qiuqiu",
+    0.568
+   ]
+  ],
+  "dur": 30.3
+ },
+ "starpickroom__onmwSxfco-A": {
+  "tempo": {
+   "low": 147.7,
+   "low_ac": 0.08,
+   "all": 178.2,
+   "all_ac": 0.4
+  },
+  "centroid_hz": 573.0,
+  "match": [
+   [
+    "sweets",
+    0.689
+   ],
+   [
+    "no_surprises",
+    0.508
+   ],
+   [
+    "chubina",
+    0.507
+   ]
+  ],
+  "dur": 43.8
+ },
+ "starpickroom__r5XN6Eilfxs": {
+  "tempo": {
+   "low": 73.8,
+   "low_ac": 0.14,
+   "all": 74.9,
+   "all_ac": 0.14
+  },
+  "centroid_hz": 794.0,
+  "match": [
+   [
+    "no_surprises",
+    0.871
+   ],
+   [
+    "sweets",
+    0.803
+   ],
+   [
+    "beggin",
+    0.709
+   ]
+  ],
+  "dur": 24.1
+ }
+}

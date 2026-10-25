@@ -1,201 +1,2146 @@
 {
  "id": "jECuoRljWj0",
- "title_card": "한국인들이 공식/깨부셨다는 디저트",
- "post_title": "한국인들이 공식 깨부셨다는 디저트",
- "dur": 28.33,
+ "views": 4300000,
+ "dur": 28.334,
+ "fps": 60.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "한국인들이 공식 깨부셨다는 디저트",
+   "colors": [
+    {
+     "word": "한국인들이 공식 깨부셨다는 디저트",
+     "hex": "#000000"
+    }
+   ],
+   "y": [
+    282,
+    352
+   ],
+   "where": "본문 게시글 제목(검정 굵은 고딕 1줄, 가운데, 영상 내내 고정)"
+  }
+ ],
+ "hook_title_lines": [
+  {
+   "text": "한국인들이 공식",
+   "colors": [
+    {
+     "word": "한국인들이 공식",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "y": [
+    138,
+    251
+   ],
+   "where": "훅 카드 큰 제목 1줄(흰 채움+짙은 외곽)"
+  },
+  {
+   "text": "깨부셨다는 디저트",
+   "colors": [
+    {
+     "word": "깨부셨다는 디저트",
+     "hex": "#83FD44"
+    }
+   ],
+   "y": [
+    268,
+    377
+   ],
+   "where": "훅 카드 큰 제목 2줄(연두 채움+짙은 외곽)"
+  }
+ ],
+ "source_label": "익명 추천891 조회 1,954,556 26.03.31 09:18 댓글 7544",
+ "layout": {
+  "header": [
+   0,
+   238
+  ],
+  "title_y": [
+   282,
+   352
+  ],
+  "meta_y": [
+   379,
+   396
+  ],
+  "rule_y": [
+   402,
+   403
+  ],
+  "caption_lines_y": [
+   [
+    500,
+    552
+   ],
+   [
+    576,
+    628
+   ]
+  ],
+  "line_pitch_px": 76,
+  "window": [
+   0,
+   672,
+   1080,
+   1550
+  ],
+  "window_note": "고정 전폭 1080×878(컷 대부분), 작은 캡처 그림은 가운데 여백",
+  "below_window": [
+   1550,
+   1920
+  ],
+  "header_hex": "#E4F2D4",
+  "bg_hex": "#FDFDFA",
+  "source_hex": "#8C8C8C",
+  "comment_count_hex": "#B0384A",
+  "logo": "가운데 '재밌쇼' 손글씨 로고(연두+검정 외곽) · 왼쪽 '<' · 오른쪽 초록 북마크",
+  "watermark": {
+   "present": false,
+   "alpha": null,
+   "note": "채널 워터마크 없음"
+  }
+ },
  "lines": [
   {
    "t0": 0.0,
-   "t1": 2.0,
-   "caption": "한국인들이 공식 깨부셨다는 디저트",
-   "narration": "한국인들이 공식 깨부셨다는 디저트?",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "찰떡 속 크림치즈 단면(훅 카드)",
-   "effect": null,
-   "ending": "~저트"
+   "t1": 1.833,
+   "speaker": "나레",
+   "text": "한국인들이 공식 깨부셨다는 디저트",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "훅 카드 라벨 줄(회색 띠 안 검은 글 = 큰 제목과 같은 문장, 카드째 천천히 위로 이동)",
+   "y": [
+    612,
+    658
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 706,
+   "ink_x": [
+    186,
+    892
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 49,
+   "letter_gap_px": 5.5,
+   "word_gap_px": 19.0,
+   "line_gap_px": 30,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "찰떡 속 크림치즈 단면(훅 카드 아래 창)",
+   "fit": 8,
+   "cut_at": [],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 0.0,
+    "t1": 1.833,
+    "diff": 21.9,
+    "scale": 1.169,
+    "tx": -92,
+    "ty": -108
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 168.3,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": "훅 카드 동안 라벨 줄이 천천히 올라감(카드째 확대 움직임, 덩어리 4개 합침)"
   },
   {
-   "t0": 2.0,
-   "t1": 4.8,
-   "caption": "본체보다 껍질이 더/유명한 치즈회사 벨(Bel)",
-   "narration": "본체보다 껍질이 더 유명한 치즈 회사",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품영상",
-   "screen_desc": "빨간 왁스 껍질 치즈를 입으로 무는 장면",
-   "effect": null,
-   "ending": "~el)"
+   "t0": 1.833,
+   "t1": 2.867,
+   "speaker": "나레",
+   "text": "본체보다 껍질이 더",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    550
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 426,
+   "ink_x": [
+    326,
+    752
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 20.5,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "빨간 왁스 껍질 치즈를 입으로 무는 장면",
+   "fit": 8,
+   "cut_at": [
+    1.833
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 1.833,
+    "t1": 3.867,
+    "diff": 51.5
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 218.3,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 4.8,
-   "t1": 6.0,
-   "caption": "한국에서 황당한/제안을 받아버렸는데",
-   "narration": "한국에서 황당한 제안을 받아버렸는데.",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "밈짤",
-   "screen_desc": "당황한 표정 서양 남성(추정: 미드 오피스 배우, 화면 글자 없음)",
-   "effect": null,
-   "ending": "~는데"
+   "t0": 2.867,
+   "t1": 3.867,
+   "speaker": "나레",
+   "text": "유명한 치즈회사 벨(Bel)",
+   "layer": "채널",
+   "role": "다리",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    576,
+    628
+   ],
+   "x": 547,
+   "align": "center",
+   "max_w": 554,
+   "ink_x": [
+    270,
+    824
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 17.5,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "빨간 왁스 껍질 치즈를 입으로 무는 장면",
+   "fit": 8,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 1.833,
+    "t1": 3.867,
+    "diff": 51.5
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 140.5,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 6.0,
-   "t1": 7.9,
-   "caption": "한국업체 : 너네꺼 크림치즈/찰떡에 넣어보는거 어떰?",
-   "narration": "너네 거 크림 치즈 찰떡에 넣어 보는 거 어떰?",
-   "kind": "화자대사",
-   "speaker": "한국업체",
-   "screen": "제품영상",
-   "screen_desc": "크림치즈를 칼로 뜨는 장면",
-   "effect": null,
-   "ending": "~어떰?"
+   "t0": 3.867,
+   "t1": 4.733,
+   "speaker": "나레",
+   "text": "한국에서 황당한",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    552
+   ],
+   "x": 549,
+   "align": "center",
+   "max_w": 366,
+   "ink_x": [
+    366,
+    732
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 21.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "당황한 표정 서양 남성 짤(이름 글자 없음)",
+   "fit": 6,
+   "cut_at": [
+    3.867
+   ],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 3.867,
+    "t1": 5.8,
+    "diff": 62.1,
+    "scale": 1.409,
+    "tx": -114,
+    "ty": -6
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 210.0,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 7.9,
-   "t1": 9.4,
-   "caption": "벨 : 엥 빵이 아니구 떡에?",
-   "narration": "얜 빵이 아니고 떡이.",
-   "kind": "화자대사",
-   "speaker": "벨",
-   "screen": "밈짤",
-   "screen_desc": "눈 감은 남성 얼굴 클로즈업(이름 표기 없음). cap 행에 빠져 1초 프레임으로 찾음",
-   "effect": null,
-   "ending": "~떡에?"
+   "t0": 4.733,
+   "t1": 5.8,
+   "speaker": "나레",
+   "text": "제안을 받아버렸는데",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    576,
+    626
+   ],
+   "x": 547,
+   "align": "center",
+   "max_w": 466,
+   "ink_x": [
+    314,
+    780
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "당황한 표정 서양 남성 짤(이름 글자 없음)",
+   "fit": 6,
+   "cut_at": [],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 3.867,
+    "t1": 5.8,
+    "diff": 62.1,
+    "scale": 1.409,
+    "tx": -114,
+    "ty": -6
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 143.2,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 9.4,
-   "t1": 10.6,
-   "caption": "크림치즈는 빵에 발라먹는게",
-   "narration": "크림 치즈는 빵에 발라 먹는 게",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품영상",
-   "screen_desc": "베이글에 크림치즈 바름",
-   "effect": null,
-   "ending": "~는게"
+   "t0": 5.8,
+   "t1": 6.833,
+   "speaker": "나레",
+   "text": "한국업체 : 너네꺼 크림치즈",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    550
+   ],
+   "x": 549,
+   "align": "center",
+   "max_w": 618,
+   "ink_x": [
+    240,
+    858
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 5.5,
+   "word_gap_px": 25.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "크림치즈를 칼로 뜨는 장면",
+   "fit": 7,
+   "cut_at": [
+    5.8
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 5.8,
+    "t1": 8.1,
+    "diff": 40.4
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "한국업체",
+    "form": "이름 : 대사",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": true
+   },
+   "f0_med": 210.0,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 10.6,
-   "t1": 12.6,
-   "caption": "크림치즈는 빵에 발라먹는게/전세계 공식으로 통하는데",
-   "narration": "크림 치즈는 빵에 발라 먹는 게 전 세계 공식으로 통하는데",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품영상",
-   "screen_desc": "베이글 크림치즈 숟가락",
-   "effect": null,
-   "ending": "~는데"
+   "t0": 6.833,
+   "t1": 8.1,
+   "speaker": "나레",
+   "text": "찰떡에 넣어보는거 어떰?",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    576,
+    628
+   ],
+   "x": 548,
+   "align": "center",
+   "max_w": 560,
+   "ink_x": [
+    268,
+    828
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 22.5,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "크림치즈를 칼로 뜨는 장면",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 5.8,
+    "t1": 8.1,
+    "diff": 40.4
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": {
+    "who": "한국업체",
+    "form": "이름 : 대사",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": false
+   },
+   "f0_med": 228.5,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 12.6,
+   "t0": 8.1,
+   "t1": 9.467,
+   "speaker": "나레",
+   "text": "벨 : 엥 빵이 아니구 떡에?",
+   "layer": "채널",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    552
+   ],
+   "x": 541,
+   "align": "center",
+   "max_w": 574,
+   "ink_x": [
+    254,
+    828
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 23.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "눈 감은 남성 얼굴 클로즈업 짤",
+   "fit": 6,
+   "cut_at": [
+    8.1
+   ],
+   "motion": "zoom_out",
+   "motion_info": {
+    "t0": 8.1,
+    "t1": 9.467,
+    "diff": 17.0,
+    "scale": 0.883,
+    "tx": 88,
+    "ty": 84
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "벨",
+    "form": "이름 : 대사",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": true
+   },
+   "f0_med": 261.0,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 9.467,
+   "t1": 11.0,
+   "speaker": "나레",
+   "text": "크림치즈는 빵에 발라먹는게",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    552
+   ],
+   "x": 548,
+   "align": "center",
+   "max_w": 632,
+   "ink_x": [
+    232,
+    864
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 19.5,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "베이글에 크림치즈 바름",
+   "fit": 8,
+   "cut_at": [
+    9.467,
+    10.533
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 9.467,
+    "t1": 10.533,
+    "diff": 42.7,
+    "scale": 0.998,
+    "tx": -14,
+    "ty": -8
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 200.5,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 11.0,
+   "t1": 12.333,
+   "speaker": "나레",
+   "text": "전세계 공식으로 통하는데",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    576,
+    628
+   ],
+   "x": 548,
+   "align": "center",
+   "max_w": 580,
+   "ink_x": [
+    258,
+    838
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 18.5,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "베이글에 크림치즈 바름",
+   "fit": 8,
+   "cut_at": [
+    11.167
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 11.167,
+    "t1": 12.333,
+    "diff": 59.3,
+    "scale": 0.992,
+    "tx": 3,
+    "ty": -9
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 152.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 12.333,
+   "t1": 13.667,
+   "speaker": "나레",
+   "text": "찰떡에 넣어보겠단 나라는",
+   "layer": "채널",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    552
+   ],
+   "x": 549,
+   "align": "center",
+   "max_w": 582,
+   "ink_x": [
+    258,
+    840
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 21.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "흰 찰떡 제품",
+   "fit": 8,
+   "cut_at": [
+    12.333
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 12.333,
+    "t1": 14.567,
+    "diff": 30.4
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 182.2,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 13.667,
+   "t1": 14.567,
+   "speaker": "나레",
+   "text": "한국이 유일했던것 ㄷㄷ",
+   "layer": "채널",
+   "role": "반전",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    576,
+    626
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 524,
+   "ink_x": [
+    276,
+    800
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 5.5,
+   "word_gap_px": 21.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "흰 찰떡 제품",
+   "fit": 8,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 12.333,
+    "t1": 14.567,
+    "diff": 30.4
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 192.6,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 14.567,
    "t1": 15.6,
-   "caption": "찰떡에 넣어보겠단 나라는/한국이 유일했던것 ㄷㄷ",
-   "narration": "찰떡에 넣어 보겠단 나라는 한국이 유일했던 거.",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "흰 찰떡 제품",
-   "effect": null,
-   "ending": "ㄷㄷ"
+   "speaker": "나레",
+   "text": "한국업체 : 아 쫀득한건 우리가",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    550
+   ],
+   "x": 548,
+   "align": "center",
+   "max_w": 684,
+   "ink_x": [
+    206,
+    890
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 22.5,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "찰떡 늘어나는 장면",
+   "fit": 7,
+   "cut_at": [
+    14.567
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 14.567,
+    "t1": 16.933,
+    "diff": 16.5
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "한국업체",
+    "form": "이름 : 대사",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": true
+   },
+   "f0_med": 252.0,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
    "t0": 15.6,
-   "t1": 17.2,
-   "caption": "한국업체 : 아 쫀득한건 우리가/기가막히게 잘만든다고 ㅋㅋ",
-   "narration": "아 쫀득한 건 우리가 기가 막히게 잘 만든다고.",
-   "kind": "화자대사",
-   "speaker": "한국업체",
-   "screen": "제품영상",
-   "screen_desc": "찰떡 늘어나는 장면",
-   "effect": null,
-   "ending": "ㅋㅋ"
+   "t1": 16.9,
+   "speaker": "나레",
+   "text": "기가막히게 잘만든다고 ㅋㅋ",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    576,
+    626
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 624,
+   "ink_x": [
+    226,
+    850
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 4.5,
+   "word_gap_px": 20.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "찰떡 늘어나는 장면",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 14.567,
+    "t1": 16.933,
+    "diff": 16.5
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": {
+    "who": "한국업체",
+    "form": "이름 : 대사",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": false
+   },
+   "f0_med": 270.6,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 17.2,
-   "t1": 18.6,
-   "caption": "벨 : 하..그래 일단 만들어봐ㄱㄱ",
-   "narration": "하크 일단 만들어 봐.",
-   "kind": "화자대사",
-   "speaker": "벨",
-   "screen": "밈짤",
-   "screen_desc": "엄지 든 서양 남성(추정: 미드 배우, 화면 글자 없음)",
-   "effect": null,
-   "ending": "ㄱㄱ"
+   "t0": 16.9,
+   "t1": 18.433,
+   "speaker": "나레",
+   "text": "벨 : 하..그래 일단 만들어봐ㄱㄱ",
+   "layer": "채널",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    550
+   ],
+   "x": 545,
+   "align": "center",
+   "max_w": 714,
+   "ink_x": [
+    188,
+    902
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 21.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "엄지 든 서양 남성 짤(이름 글자 없음)",
+   "fit": 6,
+   "cut_at": [
+    16.933
+   ],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 16.933,
+    "t1": 18.433,
+    "diff": 26.1,
+    "scale": 1.002,
+    "tx": 36,
+    "ty": 4
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "벨",
+    "form": "이름 : 대사",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": true
+   },
+   "f0_med": 219.4,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 18.6,
-   "t1": 22.4,
-   "caption": "이게 쪼온득한 찰떡에/크림치즈가 잔뜩 박혀있는데",
-   "narration": "이게 쫀득한 찰떡에 크림 치즈가 잔뜩 박혀 있는데",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품영상",
-   "screen_desc": "찰떡 반 갈라 늘어나는 단면",
-   "effect": null,
-   "ending": "~는데"
+   "t0": 18.433,
+   "t1": 19.6,
+   "speaker": "나레",
+   "text": "이게 쪼온득한 찰떡에",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    550
+   ],
+   "x": 548,
+   "align": "center",
+   "max_w": 476,
+   "ink_x": [
+    310,
+    786
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 18.5,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "찰떡 반 갈라 늘어나는 단면",
+   "fit": 9,
+   "cut_at": [
+    18.433
+   ],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 18.433,
+    "t1": 21.133,
+    "diff": 18.0,
+    "scale": 1.009,
+    "tx": -47,
+    "ty": -66
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 195.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 22.4,
-   "t1": 24.0,
-   "caption": "양옆에 치즈케이크까지/꽉 차있어서 꾸덕함이 걍 도랏",
-   "narration": "양 옆에 치즈 케이크까지 꽉 차 있어서 꾸덕함이 걍 돌아.",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "찰떡 단면 노란 치즈케이크층",
-   "effect": "빨간 화살표 + 반짝 표시",
-   "ending": "~도랏"
+   "t0": 19.6,
+   "t1": 21.133,
+   "speaker": "나레",
+   "text": "크림치즈가 잔뜩 박혀있는데",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    576,
+    626
+   ],
+   "x": 548,
+   "align": "center",
+   "max_w": 632,
+   "ink_x": [
+    232,
+    864
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 18.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "찰떡 반 갈라 늘어나는 단면",
+   "fit": 9,
+   "cut_at": [],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 18.433,
+    "t1": 21.133,
+    "diff": 18.0,
+    "scale": 1.009,
+    "tx": -47,
+    "ty": -66
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 156.4,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 24.0,
-   "t1": 27.4,
-   "caption": "얼먹하면 아이스크림마냥/씹어먹기 딱 좋다고 ㄷㄷ",
-   "narration": "얼먹하면 아이스크림 마냥 씹어 먹기 딱 좋다고.",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품영상",
-   "screen_desc": "언 찰떡 단면",
-   "effect": null,
-   "ending": "ㄷㄷ"
+   "t0": 21.133,
+   "t1": 22.367,
+   "speaker": "나레",
+   "text": "양옆에 치즈케이크까지",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    552
+   ],
+   "x": 547,
+   "align": "center",
+   "max_w": 514,
+   "ink_x": [
+    290,
+    804
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [
+    {
+     "what": "빨간 화살표+흰 반짝",
+     "hex": "#FD0000",
+     "t_in": 21.1,
+     "t_out": 23.8,
+     "x": 776,
+     "y": 746,
+     "w": 293,
+     "h": 282,
+     "anim": "slide(대상 쪽으로 찌르듯 왕복 ~60px)",
+     "basis": "픽셀(30fps 순빨강 bbox)"
+    }
+   ],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 20.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "찰떡 단면 노란 치즈케이크층 + 빨간 화살표·흰 반짝",
+   "fit": 9,
+   "cut_at": [
+    21.133
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 21.133,
+    "t1": 23.833,
+    "diff": 8.9,
+    "scale": 1.003,
+    "tx": 9,
+    "ty": -14
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 160.9,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 27.4,
-   "t1": 28.4,
-   "caption": "아 찰떡아이스의 민족이/이걸 어케 참냐고 ㅋㅋ",
-   "narration": "아 찰떡 아이스의 민족이 이걸 어떻게 참냐고?",
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품영상",
-   "screen_desc": "찰떡을 칼로 자름",
-   "effect": null,
-   "ending": "ㅋㅋ"
+   "t0": 22.367,
+   "t1": 23.833,
+   "speaker": "나레",
+   "text": "꽉 차있어서 꾸덕함이 걍 도랏",
+   "layer": "채널",
+   "role": "증거",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    576,
+    628
+   ],
+   "x": 549,
+   "align": "center",
+   "max_w": 662,
+   "ink_x": [
+    218,
+    880
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "화보",
+   "scene_desc": "찰떡 단면 노란 치즈케이크층 + 빨간 화살표·흰 반짝",
+   "fit": 9,
+   "cut_at": [],
+   "motion": "still",
+   "motion_info": {
+    "t0": 21.133,
+    "t1": 23.833,
+    "diff": 8.9,
+    "scale": 1.003,
+    "tx": 9,
+    "ty": -14
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 204.2,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 23.833,
+   "t1": 25.1,
+   "speaker": "나레",
+   "text": "얼먹하면 아이스크림마냥",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    552
+   ],
+   "x": 550,
+   "align": "center",
+   "max_w": 568,
+   "ink_x": [
+    266,
+    834
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 22.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "언 찰떡 단면",
+   "fit": 8,
+   "cut_at": [
+    23.833
+   ],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 23.833,
+    "t1": 26.233,
+    "diff": 19.0,
+    "scale": 0.99,
+    "tx": -39,
+    "ty": 26
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 183.8,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 25.1,
+   "t1": 26.233,
+   "speaker": "나레",
+   "text": "씹어먹기 딱 좋다고 ㄷㄷ",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    576,
+    628
+   ],
+   "x": 545,
+   "align": "center",
+   "max_w": 538,
+   "ink_x": [
+    276,
+    814
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 7.0,
+   "word_gap_px": 19.5,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "언 찰떡 단면",
+   "fit": 8,
+   "cut_at": [],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 23.833,
+    "t1": 26.233,
+    "diff": 19.0,
+    "scale": 0.99,
+    "tx": -39,
+    "ty": 26
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 160.4,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 26.233,
+   "t1": 27.433,
+   "speaker": "나레",
+   "text": "아 찰떡아이스의 민족이",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    500,
+    550
+   ],
+   "x": 547,
+   "align": "center",
+   "max_w": 526,
+   "ink_x": [
+    284,
+    810
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 20.5,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "찰떡을 칼로 자름",
+   "fit": 6,
+   "cut_at": [
+    26.233
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 26.233,
+    "t1": 28.333,
+    "diff": 25.8
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 205.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 27.433,
+   "t1": 28.333,
+   "speaker": "나레",
+   "text": "이걸 어케 참냐고 ㅋㅋ",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(영상 끝)",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    576,
+    626
+   ],
+   "x": 547,
+   "align": "center",
+   "max_w": 486,
+   "ink_x": [
+    304,
+    790
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 21.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "찰떡을 칼로 자름",
+   "fit": 6,
+   "cut_at": [],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 26.233,
+    "t1": 28.333,
+    "diff": 25.8
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 167.7,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   }
  ],
- "structure": "훅 질문 → 회사 소개(벨) → 황당 제안(밈짤) → 한국업체↔벨 대화 → 상식 대비(빵에 바름) → 한국 유일 → 대화 결론(만들어봐) → 제품 단면 묘사 ×3 → 한국인 정체성 마무리",
- "celeb_scenes": [
+ "no_caption": [],
+ "beats": "훅(0.0초 '한국인들이 공식 깨부셨다는 디저트') → 다리(1.8초 '본체보다 껍질이 더') → 고조(3.9초 '한국에서 황당한') → 본문(5.8초 '한국업체 : 너네꺼 크림치즈') → 반전(8.1초 '벨 : 엥 빵이 아니구 떡에?') → 본문(9.5초 '크림치즈는 빵에 발라먹는게') → 반전(12.3초 '찰떡에 넣어보겠단 나라는') → 본문(14.6초 '한국업체 : 아 쫀득한건 우리가') → 답(16.9초 '벨 : 하..그래 일단 만들어봐ㄱ') → 공개(18.4초 '이게 쪼온득한 찰떡에') → 증거(21.1초 '양옆에 치즈케이크까지') → 본문(23.8초 '얼먹하면 아이스크림마냥') → 끝(26.2초 '아 찰떡아이스의 민족이')",
+ "narr_share": "나레 23/23줄(원음 0 — 한 목소리가 화자 대사 줄까지 읽음), 자막 표시 28.33초/28.334초",
+ "dialog_summary": {
+  "rows": 6,
+  "of": 23,
+  "turns": 4,
+  "who": [
+   "벨",
+   "한국업체"
+  ],
+  "forms": [
+   "이름 : 대사"
+  ],
+  "meme_rows": 2,
+  "f0_med_dialog": 240.2,
+  "f0_med_other": 182.2
+ },
+ "notes": [
+  "원본 60fps — 판독은 30fps 로 다시 뽑은 사본(work/lr6/jECuoRljWj0_30.mp4)으로 했다(시각은 같은 초)",
+  "훅 카드 0~1.833초(연두 #83FD44)",
+  "LUFS −16.4 로 다른 5편(−13.7~−14.6)보다 낮음",
+  "자막 등장은 전부 instant/append — 30fps 잉크 마스크에서 새 줄 잉크가 첫 프레임에 완성(팝·타이핑·페이드 0). enter_ms 0(훅 라벨 2줄·pY2z 6.1초에서 잉크 증가가 잡혔으나 프레임 확인 결과 카드 확대·그림 잉크 섞임 — 등장은 1프레임)",
+  "채움 #000000(외곽선·그림자·상자 0), 강조색 낱말은 Lr2 훅 2낱말(#9E3023 근처 빨강)뿐",
+  "컷 = cutdet(창 프레임차) − 연속 움직임 잡음(0.25초 안 diff<30 묶음) − 같은 그림(ORB 닮음변환 inlier≥40·배율±3%) — 특수 전환은 프레임을 직접 봄",
+  "효과음: sfx_events 후보를 위스퍼(로컬 small) 낱말 구간·말소리 세기로 거름 → 이 편 채택 0(_kal/sfx_events.json)",
+  "화자 대사 줄(dialog 칸)도 같은 나레 목소리가 읽는다(원음 0) — f0 가 대사 줄에서 크게 바뀜(제조사·한국업체·벨 240~272Hz / 한국인들 143Hz / 나레 줄 176~190Hz): TTS 를 톤 바꿔 읽게 했거나 다른 TTS 목소리 — 귀로 못 들음(measure_task: narr_report 를 대사 줄만 잘라 비교)",
+  "소리: LUFS -16.4 · 말 -19.4dB · 무성 p20 -33.4dB · 전체 p5 -38.1dB(BGM 바닥) · 나레 f0 중앙 193.4Hz · 첫 소리 0.0초 · 끝 꼬리 0.14초"
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "훅 카드: 본문 틀을 짙은 회색으로 깔고 큰 제목 2줄(흰/연두) + 회색 띠 안 검은 라벨 문장 + 아래 큰 그림 창",
+  "face_frac": 0.0,
+  "text": "한국인들이 공식 / 깨부셨다는 디저트"
+ },
+ "hook": {
+  "t0": 0.0,
+  "t1": 1.833,
+  "kind": "훅 카드(본문 틀 어둡게 + 큰 제목 2줄 흰/연두 + 회색 띠 라벨 = 나레 첫 문장)",
+  "bg_hex": "#575F50 근처(편마다 #565C4F~#5B5E52)",
+  "exit": "cut(본문 틀로 1프레임에 바뀜)"
+ },
+ "cuts": [
+  1.833,
+  3.867,
+  5.8,
+  8.1,
+  9.467,
+  10.533,
+  11.167,
+  12.333,
+  14.567,
+  16.933,
+  18.433,
+  21.133,
+  23.833,
+  26.233
+ ],
+ "cuts_detail": [
   {
-   "t0": 4.8,
-   "t1": 6.0,
-   "who": "추정: 존 크래신스키(얼굴 추정, 화면 글자 없음)",
-   "program": "추정: 오피스(미드)",
-   "why_here": "\"황당한 제안\" 받은 회사의 당황 표정"
+   "t": 1.833,
+   "t_end": 1.833,
+   "kind": "cut",
+   "diff": 53.1,
+   "blurfr": 0
   },
   {
-   "t0": 7.9,
-   "t1": 9.4,
-   "who": "불명",
-   "program": null,
-   "why_here": "\"벨\" 대사의 얼굴 — 어이없음 표정"
+   "t": 3.867,
+   "t_end": 3.867,
+   "kind": "cut",
+   "diff": 65.0,
+   "blurfr": 0
   },
   {
-   "t0": 17.2,
-   "t1": 18.6,
-   "who": "추정: 찰리 데이(얼굴 추정, 화면 글자 없음)",
-   "program": "추정: 미드",
-   "why_here": "\"벨\" 대사의 얼굴 — 엄지 승낙"
+   "t": 5.8,
+   "t_end": 5.8,
+   "kind": "cut",
+   "diff": 80.6,
+   "blurfr": 0
+  },
+  {
+   "t": 8.1,
+   "t_end": 8.1,
+   "kind": "cut",
+   "diff": 85.2,
+   "blurfr": 0
+  },
+  {
+   "t": 9.467,
+   "t_end": 9.467,
+   "kind": "cut",
+   "diff": 61.1,
+   "blurfr": 0
+  },
+  {
+   "t": 10.533,
+   "t_end": 10.533,
+   "kind": "cut",
+   "diff": 62.9,
+   "blurfr": 0
+  },
+  {
+   "t": 11.167,
+   "t_end": 11.167,
+   "kind": "cut",
+   "diff": 58.0,
+   "blurfr": 0
+  },
+  {
+   "t": 12.333,
+   "t_end": 12.333,
+   "kind": "cut",
+   "diff": 51.2,
+   "blurfr": 0
+  },
+  {
+   "t": 14.567,
+   "t_end": 14.567,
+   "kind": "cut",
+   "diff": 44.2,
+   "blurfr": 0
+  },
+  {
+   "t": 16.933,
+   "t_end": 16.933,
+   "kind": "cut",
+   "diff": 115.1,
+   "blurfr": 0
+  },
+  {
+   "t": 18.433,
+   "t_end": 18.433,
+   "kind": "cut",
+   "diff": 112.8,
+   "blurfr": 0
+  },
+  {
+   "t": 21.133,
+   "t_end": 21.133,
+   "kind": "cut",
+   "diff": 44.3,
+   "blurfr": 0
+  },
+  {
+   "t": 23.833,
+   "t_end": 23.833,
+   "kind": "cut",
+   "diff": 41.6,
+   "blurfr": 0
+  },
+  {
+   "t": 26.233,
+   "t_end": 26.233,
+   "kind": "cut",
+   "diff": 40.2,
+   "blurfr": 0
   }
  ],
- "kangjueun": "없음 — 14줄 + 1초 간격 프레임 전부 확인. 사람 얼굴은 서양 남성 밈짤 3컷과 입 클로즈업 1컷뿐"
+ "cuts_rejected_same_picture": [
+  9.933,
+  11.833
+ ],
+ "shots": [
+  {
+   "t0": 0.0,
+   "t1": 1.833,
+   "diff": 21.9,
+   "scale": 1.169,
+   "tx": -92,
+   "ty": -108,
+   "inl": 444,
+   "motion": "zoom_in"
+  },
+  {
+   "t0": 1.833,
+   "t1": 3.867,
+   "diff": 51.5,
+   "motion": "cam"
+  },
+  {
+   "t0": 3.867,
+   "t1": 5.8,
+   "diff": 62.1,
+   "scale": 1.409,
+   "tx": -114,
+   "ty": -6,
+   "inl": 41,
+   "motion": "zoom_in"
+  },
+  {
+   "t0": 5.8,
+   "t1": 8.1,
+   "diff": 40.4,
+   "motion": "cam"
+  },
+  {
+   "t0": 8.1,
+   "t1": 9.467,
+   "diff": 17.0,
+   "scale": 0.883,
+   "tx": 88,
+   "ty": 84,
+   "inl": 16,
+   "motion": "zoom_out"
+  },
+  {
+   "t0": 9.467,
+   "t1": 10.533,
+   "diff": 42.7,
+   "scale": 0.998,
+   "tx": -14,
+   "ty": -8,
+   "inl": 54,
+   "motion": "cam"
+  },
+  {
+   "t0": 10.533,
+   "t1": 11.167,
+   "diff": 56.7,
+   "scale": 1.003,
+   "tx": 0,
+   "ty": -2,
+   "inl": 296,
+   "motion": "cam"
+  },
+  {
+   "t0": 11.167,
+   "t1": 12.333,
+   "diff": 59.3,
+   "scale": 0.992,
+   "tx": 3,
+   "ty": -9,
+   "inl": 173,
+   "motion": "cam"
+  },
+  {
+   "t0": 12.333,
+   "t1": 14.567,
+   "diff": 30.4,
+   "motion": "cam"
+  },
+  {
+   "t0": 14.567,
+   "t1": 16.933,
+   "diff": 16.5,
+   "motion": "cam"
+  },
+  {
+   "t0": 16.933,
+   "t1": 18.433,
+   "diff": 26.1,
+   "scale": 1.002,
+   "tx": 36,
+   "ty": 4,
+   "inl": 180,
+   "motion": "pan"
+  },
+  {
+   "t0": 18.433,
+   "t1": 21.133,
+   "diff": 18.0,
+   "scale": 1.009,
+   "tx": -47,
+   "ty": -66,
+   "inl": 318,
+   "motion": "pan"
+  },
+  {
+   "t0": 21.133,
+   "t1": 23.833,
+   "diff": 8.9,
+   "scale": 1.003,
+   "tx": 9,
+   "ty": -14,
+   "inl": 476,
+   "motion": "still"
+  },
+  {
+   "t0": 23.833,
+   "t1": 26.233,
+   "diff": 19.0,
+   "scale": 0.99,
+   "tx": -39,
+   "ty": 26,
+   "inl": 90,
+   "motion": "pan"
+  },
+  {
+   "t0": 26.233,
+   "t1": 28.333,
+   "diff": 25.8,
+   "motion": "cam"
+  }
+ ],
+ "_made_by": "humorshowshow 줄판독 2판(오퍼스 눈 + 30fps 잉크 마스크·cutdet·ORB·f0·sfx 실측, 2026-10-25, 관제 263 지시서 06) — 옛 1판은 줄판독/_옛꼴/"
 }

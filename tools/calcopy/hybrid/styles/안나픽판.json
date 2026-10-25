@@ -1,0 +1,807 @@
+{
+ "name": "안나픽판",
+ "renderer": "bench",
+ "thumb_card_face": true,
+ "_thumb_card_face": "연예인 채널 — 썸네일 카드 3안 전부 연예인 얼굴(사장님 10-25 '연예인 얼굴 통일')",
+ "_note": "안나픽 칼카피 1차 판 — 연예인쇼핑형(검정 띠 2줄+출처 줄, window). 근거 = 설명서 프리셋 channel/annapick/preset/검정띠2줄_출처(6편 실측)·뜯기 6편. 손 스크립트 1편_한고은채소통/make_plan.py·make_render.py·preset/ap_preset.py = 참고물",
+ "bench": {
+  "ko": "안나픽",
+  "channel": "annapick",
+  "analysis": "channel/annapick/뜯기",
+  "line_reads": "channel/annapick/줄판독",
+  "src_dir": "C:/숏템_칼카피/annapick/원본",
+  "design": "channel/annapick/preset/검정띠2줄_출처/manifest.json"
+ },
+ "voice": {
+  "name": "유라",
+  "voice_id": "tc_61130d6cf89dd58a4c13295d",
+  "candidates": [
+   "문정"
+  ],
+  "why": "벤치 화자 여 2(뜯기 voice_rules, narration none — 원음 위주) · 1편 한고은 미나(일레븐 — 회원 PC 불가) → 유라(손 상수, 사장님 확인)"
+ },
+ "cps_target": 8.0,
+ "_why_cps_target": "뜯기 voice_rules.cps 6편 6.21~9.45(중앙 8.04)",
+ "bgm": {
+  "id": "sweets",
+  "db_below_voice": 13.2,
+  "duck_orig_db": 0.0,
+  "duck_narr_db": 0.0,
+  "fade_out": 0.07,
+  "candidates": [],
+  "why": "BGM 경쾌·일상(뜯기 6편) · 곡 sweets = 곡 미식별(사람이 고른다) · 벤치 6편 원본 소리 실측(handconst.py annapick → _kal/손상수_실측.json bgm.* · 신호급 — 나레·원음·BGM 섞인 소리, 분리 없음): db_below_voice 13.2 = 말 p50 − 말 사이 바닥(줄 경계 쉼 프레임 중앙, 말 없는 구간 ≥1초 편은 그 p10) 편 중앙 13.155dB(13.71·14.73·11.43·12.79·10.78·13.52, n=6) · duck_orig_db 0 = 원음 조각 바닥 p5 − 나레 조각 바닥 p5 편 중앙(0·-3.87·0·0·0, 3dB 미만 차 = 0) · fade_out 0.07 = 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.072초(0.003~0.282) · duck_narr_db 0 = 말 사이 바닥 − 말 없는 구간(≥1초) 바닥 편 중앙(비교 편 1/6: 0, 3dB 미만 차 = 0)"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 통일(사장님 10-18)"
+ },
+ "length": {
+  "min": 12.2,
+  "max": 26.0,
+  "why": "뜯기 probe.duration 6편 12.23~25.97초"
+ },
+ "timing": {
+  "gap": 0.08,
+  "tail": 0.2,
+  "why": "벤치 6편 원본 소리 실측(handconst.py annapick → _kal/손상수_실측.json): 줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙 — gap 0.08(모든 줄 경계 n=40, p25 0.04·p75 0.15) (경계 ±0.15초 창 안 가장 긴 쉼, 쉼 문턱 = 편별 (말 p50+p5)/2) · tail 0.2 = 마지막 말 소리 끝→영상 끝 편 중앙 0.202초(0.023~0.682, 6/6편 — 로컬 위스퍼 마지막 낱말 끝 p≥0.4)"
+ },
+ "frame": {
+  "kind": "window",
+  "_from": "frame_import.py ← calcopy_frame v1 source=itYwQVyuCcc frame=only span=None",
+  "bg": [
+   0,
+   0,
+   0
+  ],
+  "window": [
+   0,
+   419,
+   1080,
+   1082
+  ],
+  "title": [
+   {
+    "font": "Cafe24Ohsquare.ttf",
+    "px": 94.2,
+    "center": 260,
+    "color": "#FFFFFF",
+    "max_w": 1000,
+    "letter_spacing": -2.9
+   },
+   {
+    "font": "Cafe24Ohsquare.ttf",
+    "px": 94.2,
+    "center": 360.0,
+    "color": "#FDE282",
+    "max_w": 1000,
+    "letter_spacing": -2.9
+   }
+  ],
+  "logo": null,
+  "credit": {
+   "font": "Pretendard-Regular.otf",
+   "px": 34,
+   "center": 1535.0,
+   "color": "#7D7D7D"
+  },
+  "watermark": null,
+  "why": "frame_import.py ← channel/annapick/preset/검정띠2줄_출처/frame.json + manifest.variable_stats default(편마다 값 중앙 — 6편 itYw·Ww0I·hj9O·iS0l·wweU·rF_-) · 제목 px 98.65→94.2·1줄 가운데 260 = itYw 6초 프레임 잉크(218~302, 84px) 대조로 보정 · 제목 자간 -2.9(frame.json title.letter_spacing)",
+  "_pending": {
+   "props": "['title.letter_spacing=-2.9', 'title.line_scale=[0.97, 1.031]', \"caption.enter={'kind': 'pop', 'ms': 300}\"]",
+   "per_video_unfilled": [
+    "layers[text:title].text",
+    "layers[text:label].text"
+   ],
+   "title_word_color": "제목 2줄째 낱말별 색(분홍 '채소보관법') — title[].hi 미기입(06)"
+  }
+ },
+ "caption": {
+  "pack": "annapick",
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 58.8,
+  "chunk_max_chars": 10,
+  "band": [
+   1142,
+   1228
+  ],
+  "why": "frame.json caption 층($per_video → manifest default: KirangHaerang 75.2 흰·검정 외곽 6, 등장 pop 300ms) y1142 · chunk_max_chars 10 = 벤치 나레 조각 자수(공백 뺀) p90 10(n=19, 중앙 7·최대 12) · typing_cps 58.8 = 벤치 타이핑 줄 7/122 type_cps(없으면 글자÷등장 ms) 중앙 58.82자/초 — 판 enter 칸에 typing 없음(지금은 렌더에 안 닿음) · band [1142,1228] = frame.json caption 층 y1142(줄판독 나레 픽셀 y 중앙 1156~1208 n=19 — 띠 안) — handconst.py annapick caption.*"
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "black": 0.017,
+    "zoomblur": 0.009
+   },
+   "ms": {
+    "black": 433,
+    "zoomblur": 267
+   },
+   "why": "벤치 줄 경계 비율 black 0.017·zoomblur 0.009(줄판독 count) · ms = bench_transition_drop: black 2회 400·467(중앙 433) · zoomblur 1회 267 (wweU)"
+  },
+  "why": "push 0 = 재료 움직임 그대로 — 벤치 나레 줄 motion 19개(cam 11, zoom_out 5, zoom_in 2, pan 1) · 원음 줄 100개(cam 74, pan 10, zoom_in 8, zoom_out 7, still 1) — zoom_in 과반 아님(나레 2/19·원음 8/100) → 우리 밀기 0, handconst.py annapick cuts.*"
+ },
+ "sfx_files": {
+  "pop": "팩01/pop.wav",
+  "gain_db": -8,
+  "why": "효과음 종류 이름표 → 팩01 slot(pop→뽁) — 벤치 효과음 1발/6편 · 종류 귀 미확인('기타') · 종류 미확인(귀로 안 들음, 06 측정 뒤 교체) · gain −8dB = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "why": "줄판독 0편 — counted 없음(06 줄판독 6편 뒤 placement.py count)"
+   },
+   "meme": {
+    "rate": 0.0,
+    "why": "짤 미측정 — 0(06 뒤 교체)"
+   },
+   "sfx": {
+    "kinds": {
+     "pop": 1.0
+    },
+    "max": 1,
+    "why": "벤치 효과음 1발/6편(줄판독 count) — 종류 미확인 → 팩01 pop 임시 · 상한 1"
+   },
+   "transition": {
+    "kinds": [
+     "black",
+     "zoomblur"
+    ],
+    "why": "그릴 종류 = 벤치에서 본 것 · 자리 = 본보기 편 줄판독(placement)"
+   }
+  },
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/annapick/줄판독",
+   "n_videos": 6,
+   "slots": {
+    "narr.first": {
+     "n": 6,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.333
+    },
+    "narr.rest": {
+     "n": 13,
+     "enter": {
+      "cut": 0.692,
+      "typing": 0.154,
+      "fade": 0.154
+     },
+     "emph": 0.308
+    },
+    "orig.first": {
+     "n": 11,
+     "enter": {
+      "pop": 0.455,
+      "fade": 0.182,
+      "typing": 0.182,
+      "cut": 0.182
+     },
+     "emph": 0.455
+    },
+    "orig.rest": {
+     "n": 92,
+     "enter": {
+      "cut": 0.674,
+      "fade": 0.152,
+      "other": 0.076,
+      "pop": 0.065,
+      "typing": 0.033
+     },
+     "emph": 0.326
+    }
+   },
+   "share": {
+    "emph": 0.833,
+    "typing": 0.5,
+    "sfx": 0.333
+   },
+   "stickers": {
+    "circle_arrow": 0.5,
+    "heart": 0.333,
+    "object_pop": 0.167,
+    "other": 0.833,
+    "spark_lines": 0.667
+   },
+   "transition": {
+    "cut": 0.974,
+    "black": 0.017,
+    "zoomblur": 0.009
+   },
+   "sfx_kinds": {
+    "other": 1.0
+   },
+   "videos": [
+    {
+     "id": "hj9O7LmPZjo",
+     "n": 12,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "fade": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 11,
+       "enter": {
+        "cut": 8,
+        "fade": 2,
+        "other": 1
+       },
+       "emph": 5
+      }
+     },
+     "stickers": {
+      "object_pop": 1,
+      "other": 1,
+      "spark_lines": 1
+     },
+     "sticker_lex": {
+      "object_pop": {
+       "excl": 1,
+       "lux": 1
+      },
+      "other": {
+       "excl": 1,
+       "lux": 1
+      },
+      "spark_lines": {
+       "excl": 1
+      }
+     },
+     "variants": {
+      "기본(굵은 흰 고딕+검정 외곽)": 3,
+      "'허옇고' 굵은 기울임 크게": 1,
+      "가는 고딕 크게": 1,
+      "손글씨 가는체(흰)": 2,
+      "네온(흰 글자+분홍 빛 #9E3174) 크게": 1,
+      "작은 괄호 줄(흰 가는체, 본 자막 위)": 1,
+      "노랑 가는 글자": 1,
+      "가는 고딕(흰)": 2
+     },
+     "sfx": [
+      "cut",
+      "cap",
+      "sticker"
+     ],
+     "no_caption": 4,
+     "transitions": {
+      "cut": 11
+     },
+     "n_trans": 11,
+     "roles": {
+      "hook": 3,
+      "body": 6,
+      "reveal": 2,
+      "end": 1
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "iS0la2aQyl8",
+     "n": 28,
+     "slots": {
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "pop": 1,
+        "fade": 1
+       },
+       "emph": 1
+      },
+      "orig.rest": {
+       "n": 24,
+       "enter": {
+        "cut": 21,
+        "fade": 3
+       },
+       "emph": 10
+      },
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 1
+      },
+      "narr.rest": {
+       "n": 1,
+       "enter": {
+        "typing": 1
+       },
+       "emph": 1
+      }
+     },
+     "stickers": {
+      "other": 7,
+      "spark_lines": 1,
+      "heart": 1
+     },
+     "sticker_lex": {
+      "other": {
+       "excl": 2,
+       "none": 5
+      },
+      "spark_lines": {
+       "none": 1
+      },
+      "heart": {
+       "excl": 1
+      }
+     },
+     "variants": {
+      "기본(굵은 흰 고딕+검정 외곽)": 19,
+      "빨강 굵은 기울임": 2,
+      "손글씨 가는체(흰)": 2,
+      "굵은 흰(물결로 흔들림)": 1,
+      "노랑 손글씨(창 가운데 높이)": 2,
+      "손글씨 + 분홍 낱말": 1,
+      "노랑 글자": 1
+     },
+     "sfx": [],
+     "no_caption": 8,
+     "transitions": {
+      "cut": 27
+     },
+     "n_trans": 27,
+     "roles": {
+      "hook": 6,
+      "body": 16,
+      "reveal": 4,
+      "end": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "itYwQVyuCcc",
+     "n": 27,
+     "slots": {
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "pop": 1,
+        "typing": 1
+       },
+       "emph": 2
+      },
+      "orig.rest": {
+       "n": 22,
+       "enter": {
+        "cut": 13,
+        "fade": 4,
+        "other": 3,
+        "typing": 1,
+        "pop": 1
+       },
+       "emph": 5
+      },
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 1
+      },
+      "narr.rest": {
+       "n": 2,
+       "enter": {
+        "cut": 1,
+        "typing": 1
+       },
+       "emph": 1
+      }
+     },
+     "stickers": {
+      "spark_lines": 1,
+      "other": 1,
+      "circle_arrow": 1
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "none": 1
+      },
+      "other": {
+       "none": 1
+      },
+      "circle_arrow": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "기본(굵은 흰 고딕+검정 외곽)": 14,
+      "손글씨 가는체(흰)": 6,
+      "하늘 글자+파란 외곽": 1,
+      "손글씨 + '풀' 초록 크게": 1,
+      "초록 글자 기울임": 1,
+      "기울임(흰)": 2,
+      "작은 괄호 줄(흰 가는체, 본 자막 위)": 1,
+      "노랑 글자 기울임": 1
+     },
+     "sfx": [],
+     "no_caption": 9,
+     "transitions": {
+      "cut": 26
+     },
+     "n_trans": 26,
+     "roles": {
+      "hook": 3,
+      "body": 20,
+      "reveal": 3,
+      "end": 1
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "rF_-X8jLkdU",
+     "n": 18,
+     "slots": {
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "cut": 1,
+        "typing": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 12,
+       "enter": {
+        "cut": 4,
+        "pop": 3,
+        "fade": 3,
+        "typing": 2
+       },
+       "emph": 5
+      },
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 3,
+       "enter": {
+        "cut": 2,
+        "fade": 1
+       },
+       "emph": 2
+      }
+     },
+     "stickers": {
+      "other": 1,
+      "spark_lines": 1,
+      "circle_arrow": 1
+     },
+     "sticker_lex": {
+      "other": {
+       "none": 1
+      },
+      "spark_lines": {
+       "none": 1
+      },
+      "circle_arrow": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "기본(굵은 흰 고딕+검정 외곽)": 12,
+      "노랑 손글씨": 1,
+      "연노랑 기울임": 1,
+      "빨강 낱말 기울임": 1,
+      "노랑 글자(아래 자리)": 1,
+      "기울임(흰)": 1,
+      "손글씨 가는체(흰)": 1
+     },
+     "sfx": [],
+     "no_caption": 9,
+     "transitions": {
+      "cut": 17
+     },
+     "n_trans": 17,
+     "roles": {
+      "hook": 3,
+      "body": 13,
+      "reveal": 1,
+      "end": 1
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "Ww0IZLSL7mY",
+     "n": 22,
+     "slots": {
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "pop": 2
+       },
+       "emph": 2
+      },
+      "orig.rest": {
+       "n": 17,
+       "enter": {
+        "cut": 10,
+        "other": 3,
+        "fade": 2,
+        "pop": 2
+       },
+       "emph": 5
+      },
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 2,
+       "enter": {
+        "cut": 2
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "heart": 1
+     },
+     "sticker_lex": {
+      "heart": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "노랑 굵은 글자": 1,
+      "기본(굵은 흰 고딕+검정 외곽)": 14,
+      "손글씨 가는체(흰)": 5,
+      "괄호 가는체 + '들짜!' 굵게": 1,
+      "굵게 크게": 1
+     },
+     "sfx": [
+      "cap",
+      "cap"
+     ],
+     "no_caption": 10,
+     "transitions": {
+      "cut": 21
+     },
+     "n_trans": 21,
+     "roles": {
+      "hook": 3,
+      "body": 15,
+      "reveal": 3,
+      "end": 1
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "end",
+       "t": 21.15,
+       "off": 0.183,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "wweUXE86oMM",
+     "n": 15,
+     "slots": {
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "pop": 1,
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 6,
+       "enter": {
+        "cut": 6
+       },
+       "emph": 0
+      },
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "cut": 2
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 5,
+       "enter": {
+        "cut": 4,
+        "fade": 1
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "circle_arrow": 1,
+      "other": 1
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "excl": 1
+      },
+      "other": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "기본(굵은 흰 고딕+검정 외곽)": 15
+     },
+     "sfx": [],
+     "no_caption": 4,
+     "transitions": {
+      "cut": 11,
+      "black": 2,
+      "zoomblur": 1
+     },
+     "n_trans": 14,
+     "roles": {
+      "hook": 1,
+      "reveal": 1,
+      "body": 10,
+      "end": 3
+     },
+     "sfx_lines": []
+    }
+   ]
+  }
+ },
+ "_pending": {
+  "line_reads": "줄판독 0편 → 06-annapick(6편)·규칙빈도·sfx_events 뒤 counted·rules 채움 — 지금 판은 L1 미달(counted<6)",
+  "brand": "벤치 브랜드 글 'anna pick' 2줄(아래 y1745 회색) — 우리 브랜드 미정 → logo 없음",
+  "caption_pop": "자막 등장 pop 300ms(manifest default) — 팩·placement rules.enter 필요(06 뒤)"
+ },
+ "script": {
+  "brief": [
+   "박자·말투 = 줄판독 0편이라 미측정(06 뒤 교체)",
+   "벤치 narration none — 원음(연예인 말) 위주, 나레는 짧게"
+  ],
+  "audit": [
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 12.2,
+    "max": 26.0,
+    "why": "뜯기 probe.duration 6편 12.23~25.97초"
+   }
+  ]
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "annapick",
+   "gap": [
+    "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 deal same=False) → 팩요청.md 안나픽판#1(관제 235) · 그동안 'kitchit' 임시(stand_in)",
+    "벤치 등장 ['fade'](줄 5% 이상) 팩 'kitchit' 에 없음 → 팩요청.md 안나픽판#2"
+   ],
+   "rank": [
+    {
+     "pack": "deal",
+     "d": 0.836,
+     "terms": {
+      "px": 1.11,
+      "fill": 0.2,
+      "stroke": 0.37,
+      "y": 1.0,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "starpick",
+     "d": 0.868,
+     "terms": {
+      "px": 0.31,
+      "fill": 0.2,
+      "stroke": 0.97,
+      "y": 1.36,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "kkultemnote",
+     "d": 0.934,
+     "terms": {
+      "px": 0.36,
+      "fill": 0.2,
+      "stroke": 0.93,
+      "y": 1.68,
+      "font": 1.5
+     }
+    }
+   ],
+   "from": "벤치 6편 131줄 실측 [나레 19줄[잉크 높이 79px(19줄 y칸) · 자리 y1194 · 채움 #FFFFFD(16줄) · 테 5px] · 원음 104줄[잉크 높이 76px(103줄 y칸) · 자리 y1208 · 채움 #FFFFFD(95줄) · 테 5px] · 글꼴 KirangHaerang(판 _pending 측정 층) · 글자 크기 75.2px(판 _pending 측정 층)] → 1위 deal(거리 0.836) · 지금 kitchit(거리 1.226, 순위 7)",
+   "stand_in": true,
+   "enter_cover": {
+    "cut": {
+     "share": 0.672,
+     "n": 88,
+     "item": "정지(팩 불필요)"
+    },
+    "fade": {
+     "share": 0.137,
+     "n": 18,
+     "item": null
+    },
+    "pop": {
+     "share": 0.084,
+     "n": 11,
+     "item": "overPop"
+    },
+    "typing": {
+     "share": 0.053,
+     "n": 7,
+     "item": "typeFlash"
+    },
+    "기타": {
+     "share": 0.046,
+     "n": 6,
+     "item": null
+    },
+    "slide": {
+     "share": 0.008,
+     "n": 1,
+     "item": null
+    }
+   }
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [
+    "전환 black 0.017 — 모션그래픽팩 항목 없음(있는 것 ['swipe_left']) · 그리기는 엔진 cuts.transition(02)이 하지만 회원이 팩으로 못 바꾼다 → 팩요청.md 안나픽판#3",
+    "전환 zoomblur 0.009 — 모션그래픽팩 항목 없음(있는 것 ['swipe_left']) · 그리기는 엔진 cuts.transition(02)이 하지만 회원이 팩으로 못 바꾼다 → 팩요청.md 안나픽판#4"
+   ],
+   "from": "등장 효과팩 off — 판 자막팩이 등장까지 정한다(caption-motions.js motionPlan: 팩 motion 이 효과팩 번호보다 이긴다) · 모션그래픽팩 off — 벤치 전환 {'black': 0.017, 'zoomblur': 0.009} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": "팩01",
+   "map": {
+    "pop": "뽁"
+   },
+   "gain_db": -8,
+   "why": "효과음 종류 이름표 → 팩01 slot(pop→뽁) — 벤치 효과음 1발/6편 · 종류 귀 미확인('기타') · 종류 미확인(귀로 안 들음, 06 측정 뒤 교체) · gain −8dB = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)",
+   "ncc": {
+    "measured": true,
+    "hits": 19,
+    "pack_hits": 14,
+    "ge06": 1,
+    "max": 0.737,
+    "max_file": "팩21_사장님/ding.wav",
+    "mine_max": null
+   },
+   "from": "NCC ≥0.6 없음 → 지문으로 고를 수 없어 종류 이름표로 slot: pop→뽁 · 팩 팩01(잇템로그판과 같은 팩) — 07 채움(10-25, 02 의 '없는 종류면 멈춤' 뒤)",
+   "gap": [
+    "종류 미확인(귀) — 06 이 소리 종류를 재면 slot 다시"
+   ]
+  },
+  "bgm": {
+   "id": "sweets",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)",
+   "candidates": []
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 칼카피 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
+  }
+ }
+}

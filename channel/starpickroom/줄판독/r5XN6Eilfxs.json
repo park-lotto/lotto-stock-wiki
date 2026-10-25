@@ -47,13 +47,27 @@
    1660,
    1920
   ],
-  "watermark": "창 오른쪽 위 반투명 '스타픽룸'(VbpdN와 같은 자리)"
+  "watermark": {
+   "text": "스타픽룸",
+   "where": "창 오른쪽 위 반투명 '스타픽룸'(VbpdN와 같은 자리)",
+   "alpha": 0.55,
+   "alpha_basis": "눈(1판 스타일분석 §3 약 55%)"
+  },
+  "source_hex": "#8B8B88",
+  "caption_band_measure": [
+   1090,
+   1190
+  ],
+  "cut_window_measure": [
+   484,
+   1540
+  ]
  },
  "lines": [
   {
    "t0": 0.0,
    "t1": 1.45,
-   "speaker": "원음:연예인(남성·검정 셔츠, 화면 이름 없음)",
+   "speaker": "원음:주상욱",
    "text": "강남에 모든 순댓국집",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -70,12 +84,20 @@
    "cursor": false,
    "emph": [],
    "sticker": [],
-   "type_cps": null
+   "type_cps": null,
+   "speaker_basis": "원음:연예인(남성·검정 셔츠, 화면 이름 없음)",
+   "role": "훅",
+   "fit": 5,
+   "scene_desc": "손짓하는 남자",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 1.5,
    "t1": 1.95,
-   "speaker": "원음:연예인(남성·검정 셔츠, 화면 이름 없음)",
+   "speaker": "원음:주상욱",
    "text": "다~~~단골집!",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -93,12 +115,20 @@
    "cursor": false,
    "emph": [],
    "sticker": [],
-   "type_cps": null
+   "type_cps": null,
+   "speaker_basis": "원음:연예인(남성·검정 셔츠, 화면 이름 없음)",
+   "role": "훅",
+   "fit": 5,
+   "scene_desc": "말하는 남자",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 2.0,
    "t1": 2.95,
-   "speaker": "원음:연예인(남성·검정 셔츠, 화면 이름 없음)",
+   "speaker": "원음:주상욱",
    "text": "단골 부심",
    "layer": "원본박힘(추정)",
    "enter": "instant + 파랑 글로우, 글자가 좌우 가장자리로 벌어져 화면 밖으로 잘림",
@@ -116,12 +146,21 @@
    "cursor": false,
    "emph": [],
    "sticker": [],
-   "type_cps": null
+   "type_cps": null,
+   "speaker_basis": "원음:연예인(남성·검정 셔츠, 화면 이름 없음)",
+   "role": "훅",
+   "fit": 5,
+   "scene_desc": "남자+원본 큰 글씨",
+   "transition": "cut",
+   "transition_t": 1.933,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 3.0,
    "t1": 3.95,
-   "speaker": "원음:연예인(여성, 화면 이름 없음)",
+   "speaker": "원음:차예련",
    "text": "순댓국 제일 좋아해",
    "layer": "원본박힘(추정)",
    "enter": "instant + 핑크 파편 폭발 가림(3.0~3.2)",
@@ -142,7 +181,15 @@
    "cursor": false,
    "emph": [],
    "sticker": [],
-   "type_cps": null
+   "type_cps": null,
+   "speaker_basis": "원음:연예인(여성, 화면 이름 없음)",
+   "role": "훅",
+   "fit": 6,
+   "scene_desc": "순댓국 먹는 여성",
+   "transition": "none",
+   "motion": "still",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 4.0,
@@ -167,7 +214,15 @@
    "sfx": null,
    "cursor": false,
    "emph": [],
-   "sticker": []
+   "sticker": [],
+   "role": "다리",
+   "fit": 8,
+   "scene_desc": "순댓국 먹는 여성",
+   "transition": "cut",
+   "transition_t": 3.933,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 5.2,
@@ -190,12 +245,19 @@
    "cut_at": [],
    "cursor": false,
    "emph": [],
-   "sticker": []
+   "sticker": [],
+   "role": "다리",
+   "fit": 6,
+   "scene_desc": "그릇 든 여성",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 6.6,
    "t1": 7.95,
-   "speaker": "원음:연예인(여성, 화면 이름 없음)",
+   "speaker": "원음:차예련",
    "text": "아침에 딱 이거",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -212,12 +274,21 @@
    "cursor": false,
    "emph": [],
    "sticker": [],
-   "type_cps": null
+   "type_cps": null,
+   "speaker_basis": "원음:연예인(여성, 화면 이름 없음)",
+   "role": "본문",
+   "fit": 6,
+   "scene_desc": "먹는 여성",
+   "transition": "cut",
+   "transition_t": 6.533,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 8.0,
    "t1": 8.45,
-   "speaker": "원음:연예인(여성, 화면 이름 없음)",
+   "speaker": "원음:차예련",
    "text": "밥에다가 말아서",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -234,12 +305,20 @@
    "cursor": false,
    "emph": [],
    "sticker": [],
-   "type_cps": null
+   "type_cps": null,
+   "speaker_basis": "원음:연예인(여성, 화면 이름 없음)",
+   "role": "본문",
+   "fit": 7,
+   "scene_desc": "먹는 여성",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 8.5,
    "t1": 9.25,
-   "speaker": "원음:연예인(여성, 화면 이름 없음)",
+   "speaker": "원음:차예련",
    "text": "딱 먹고가면 든든하고",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -256,7 +335,15 @@
    "cursor": false,
    "emph": [],
    "sticker": [],
-   "type_cps": null
+   "type_cps": null,
+   "speaker_basis": "원음:연예인(여성, 화면 이름 없음)",
+   "role": "본문",
+   "fit": 6,
+   "scene_desc": "말하는 여성",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 9.3,
@@ -291,7 +378,15 @@
    "sfx": null,
    "cursor": false,
    "emph": [],
-   "type_cps": null
+   "type_cps": null,
+   "role": "다리",
+   "fit": 6,
+   "scene_desc": "코스트코 매장 여성+만화 폭발",
+   "transition": "cut",
+   "transition_t": 9.267,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 10.3,
@@ -313,12 +408,19 @@
    "cursor": false,
    "emph": [],
    "sticker": [],
-   "type_cps": null
+   "type_cps": null,
+   "role": "다리",
+   "fit": 5,
+   "scene_desc": "코스트코 매장 여성",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 11.4,
    "t1": 12.95,
-   "speaker": "원음:연예인(여성, 화면 이름 없음)",
+   "speaker": "원음:차예련",
    "text": "내가 제일 좋아하는 건",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -335,12 +437,21 @@
    "cursor": false,
    "emph": [],
    "sticker": [],
-   "type_cps": null
+   "type_cps": null,
+   "speaker_basis": "원음:연예인(여성, 화면 이름 없음)",
+   "role": "이음",
+   "fit": 5,
+   "scene_desc": "매대 앞 여성",
+   "transition": "cut",
+   "transition_t": 11.433,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 13.0,
    "t1": 13.7,
-   "speaker": "원음:연예인(여성, 화면 이름 없음)",
+   "speaker": "원음:차예련",
    "text": "순댓국이야!!",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -357,7 +468,15 @@
    "cursor": false,
    "emph": [],
    "sticker": [],
-   "type_cps": null
+   "type_cps": null,
+   "speaker_basis": "원음:연예인(여성, 화면 이름 없음)",
+   "role": "공개",
+   "fit": 6,
+   "scene_desc": "매대 앞 여성",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 14.0,
@@ -380,12 +499,19 @@
    "cursor": false,
    "emph": [],
    "sticker": [],
-   "type_cps": null
+   "type_cps": null,
+   "role": "공개",
+   "fit": 8,
+   "scene_desc": "순댓국 봉지+원본 글씨",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 15.0,
    "t1": 15.95,
-   "speaker": "원음:연예인(여성, 화면 이름 없음)",
+   "speaker": "원음:차예련",
    "text": "국밥이 너무 좋아",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -402,12 +528,20 @@
    "cursor": false,
    "emph": [],
    "sticker": [],
-   "type_cps": null
+   "type_cps": null,
+   "speaker_basis": "원음:연예인(여성, 화면 이름 없음)",
+   "role": "고조",
+   "fit": 6,
+   "scene_desc": "봉지 든 여성",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 16.0,
    "t1": 17.45,
-   "speaker": "원음:연예인(여성, 화면 이름 없음)",
+   "speaker": "원음:차예련",
    "text": "이 갈비탕도 되게 많이 먹던데",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -424,12 +558,20 @@
    "cursor": false,
    "emph": [],
    "sticker": [],
-   "type_cps": null
+   "type_cps": null,
+   "speaker_basis": "원음:연예인(여성, 화면 이름 없음)",
+   "role": "증거",
+   "fit": 5,
+   "scene_desc": "매대 고르는 여성",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 16.0,
    "t1": 18.45,
-   "speaker": "해당없음(덧붙인 설명 글)",
+   "speaker": "불명",
    "text": "(폭주하는 국밥 러버..)",
    "layer": "원본박힘(추정)",
    "enter": "instant",
@@ -447,7 +589,15 @@
    "cursor": false,
    "emph": [],
    "sticker": [],
-   "type_cps": null
+   "type_cps": null,
+   "speaker_basis": "해당없음(덧붙인 설명 글)",
+   "role": "고조",
+   "fit": 5,
+   "scene_desc": "매대 여성+원본 글씨",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 17.5,
@@ -470,12 +620,20 @@
    "cursor": false,
    "emph": [],
    "sticker": [],
-   "type_cps": null
+   "type_cps": null,
+   "role": "증거",
+   "fit": 8,
+   "scene_desc": "갈비탕 봉지",
+   "transition": "cut",
+   "transition_t": 17.367,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 19.5,
    "t1": 19.95,
-   "speaker": "원음:연예인(여성, 화면 이름 없음)",
+   "speaker": "원음:차예련",
    "text": "국밥이 너무 좋아",
    "layer": "스타픽룸",
    "enter": "instant(화면 오른쪽 아래, 자막 자리가 다름)",
@@ -493,7 +651,15 @@
    "cursor": false,
    "emph": [],
    "sticker": [],
-   "type_cps": null
+   "type_cps": null,
+   "speaker_basis": "원음:연예인(여성, 화면 이름 없음)",
+   "role": "고조",
+   "fit": 6,
+   "scene_desc": "봉지 꺼내는 여성",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 20.0,
@@ -516,7 +682,14 @@
    "cursor": false,
    "emph": [],
    "sticker": [],
-   "type_cps": null
+   "type_cps": null,
+   "role": "증거",
+   "fit": 8,
+   "scene_desc": "한우 국밥 봉지",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 21.5,
@@ -539,7 +712,15 @@
    "cursor": false,
    "emph": [],
    "sticker": [],
-   "type_cps": null
+   "type_cps": null,
+   "role": "끝",
+   "fit": 6,
+   "scene_desc": "묻는 여성 얼굴",
+   "transition": "cut",
+   "transition_t": 21.4,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 23.0,
@@ -562,7 +743,14 @@
    "cursor": false,
    "emph": [],
    "sticker": [],
-   "type_cps": null
+   "type_cps": null,
+   "role": "끝",
+   "fit": 5,
+   "scene_desc": "웃는 여성",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   }
  ],
  "beats": "훅(0~3.95초 원음: 강남 순댓국집·단골 부심·순댓국 제일 좋아해, 원본박힘 효과 2개) → 나레 타이핑 2줄(4.0~6.55: 순댓국에 진심인 주상욱.차혜련 부부) → 원음 3줄(6.6~9.25) → 나레 2줄 즉시표시+만화 효과(9.3~11.35: 코스트코에 가서도 이것부터 찾는다는데?) → 코스트코 원음(11.4~24.1, 상품 태그 3개·노란 설명 글 1개) → 끝('네 다 잘드실것 같아요' 얼굴 컷, 맺음 나레 없음). 제목은 '3가지'인데 화면 상품 태그는 순댓국(부추 고기)·왕 갈비탕·안동식 한우 국밥 3개",
@@ -576,5 +764,16 @@
   "원음 줄 시각은 0.5초 칸 기준 ±0.1~0.2초; 나레 타이핑 2줄과 8.9~11.8은 0.1초 띠 확인",
   "y 좌표 중 원본박힘·태그 자리는 눈대중. 19.5 '국밥이 너무 좋아' 위치 불확실, 13.7~14.0 사이 자막 없는 칸 있음",
   "'다 사도 될 거 같지?' '네 다 잘드실것 같아요' 화자·입 모양 미확인"
- ]
+ ],
+ "name_evidence": [
+  "차예련: 제목 1줄 '국밥 마니아 차예련이'·출처 '차장금 차예련' — 여성 화자",
+  "주상욱: 나레 줄5 '주상욱.차혜련 부부' — 남성 화자(얼굴 대조 아님)"
+ ],
+ "frame0": {
+  "what": "주상욱 말하는 상반신(노란 커튼 앞)",
+  "face_frac": 0.03,
+  "text": "제목 2줄 + 첫 자막 '강남에 모든 순댓국집'"
+ },
+ "_made_by_v2": "오푸스 실행자 보강 2026-10-25(관제 263 지시서 06): role·fit·scene_desc 눈 · transition/cut_at/motion = readline_tools/cutdet 30fps · sfx = _kal/sfx_events.json 연결 · speaker 이름은 화면 글자 근거만(speaker_basis 에 옛 글)",
+ "_tools_v2": "tools/calcopy/engine/readline_tools/{capseg 1090~1190, cutdet 484~1540, rangesheet} → C:/숏템_칼카피/starpickroom/work/lr6/"
 }

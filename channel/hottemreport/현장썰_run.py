@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# _deprecated_2026-10-25 → tools/calcopy/hybrid/styles/숏템리폿판.json (관제 263 지시서 07 · 표준 §3-1: 새 편은 공용 렌더러로. 옛 영상 재현용 읽기 전용 참고물 — 규칙은 판 칸·_pending.upgrade_from_hand_scripts 로 옮김)
 """숏템리폿 현장썰 2편~ 실행기 — 1편(현장썰_01_가짜잠자리) make_render.py·checks.py 를 **그대로** 불러 편 폴더 경로만 바꿔 끼운다 (관제 097, 2026-10-18).
     PYTHONUTF8=1 py channel/hottemreport/현장썰_run.py <편 폴더 이름> tts|dry|render|checks
 

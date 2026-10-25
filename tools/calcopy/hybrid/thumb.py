@@ -26,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from tools.calcopy.hybrid.common import FPS, StageError, dur_of, jload, jsave, run  # noqa: E402
 
 from tools.calcopy.hybrid.common import FACE_MODEL as _FM  # noqa: E402 — 주인 = common.FACE_MODEL
+from tools.calcopy.engine.encoder import venc  # noqa: E402 — 인코더 주인(GPU 있으면 NVENC, 화질 같게, 98 #79)
 MODEL = Path(_FM)
 MODEL_SRC = "https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx"
 FACE_MIN_FRAC = 0.20          # 얼굴 높이 / 창 높이 하한 — 10-18 실측: 바탕화면 15판 첫 프레임 0.28~1.0 · 옛 장윤정 재미썸 전신 0.12(작다·반려) · 옛 최은경 재미썸 0.27(얼굴 큼·통과)
@@ -408,6 +409,59 @@ def cards(style_name: str, doc: Path, work: Path, log=print) -> dict:
     return {"sheet": str(sp), "cards": [str(p) for _, p in outs], "pick": pk, "pick_jpg": str(doc / "thumb" / f"{pk}.jpg")}
 
 
+def card_scene_frame(opt: dict, T: dict, cand_dir: Path, win_wh: tuple[int, int], blur=None):
+    """렌더 전에 카드 장면 그림(창 크기 BGR)을 원본에서 — 카드가 쓰는 자리(file·ss·crop / part / line·nth + t)를 시간표 컷의 원본·ss·crop 으로 풀어 뽑는다.
+    컷 조각(render/parts)이 아직 없어도 된다. 반환 = (그림 또는 None, 어디서 뽑았나).
+    blur = 재료.json blur[src](원본 좌표 흐림 칸) — 주면 렌더 조각(render_bench.clip)과 같은 흐림 필터(render_bench.blur_vf)를 자르기 전에 건다(관문 ④가 렌더와 같은 그림을 보게)."""
+    import numpy as np
+    ww, wh = win_wh
+    if opt.get("file"):
+        src, t, crop = Path(opt["file"]), float(opt.get("ss", 0)), opt["crop"]
+    else:
+        cuts = T["cuts"]
+        k = opt.get("part")
+        if opt.get("line"):
+            ks = [i for i, c in enumerate(cuts) if c["line"] == opt["line"]]
+            if len(ks) <= int(opt.get("nth", 0)):
+                return None, f"줄 {opt['line']} 에 {opt.get('nth', 0)}번째 컷이 없다"
+            k = ks[int(opt.get("nth", 0))]
+        c = cuts[int(k)]
+        src, t, crop = Path(cand_dir) / c["src"], float(c.get("ss") or 0) + float(opt.get("t", 0.0)), c.get("crop")
+    pre = ""
+    if blur:
+        from tools.calcopy.hybrid.render_bench import blur_vf
+        bl = blur_vf(blur, t, 1.0 / FPS)
+        pre = bl + "," if bl else ""
+    vf = pre + (f"crop={crop[2]}:{crop[3]}:{crop[0]}:{crop[1]}," if crop else "") + f"scale={ww}:{wh}:flags=lanczos"
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t:.3f}", "-i", str(src), "-frames:v", "1", "-vf", vf, "-f", "rawvideo", "-pix_fmt", "bgr24", "-"],
+                         capture_output=True, stdin=subprocess.DEVNULL).stdout
+    if len(raw) != ww * wh * 3:
+        return None, f"프레임 못 뽑음 {src.name}@{t:.2f}"
+    im = np.frombuffer(raw, np.uint8).reshape(wh, ww, 3).copy()
+    if opt.get("zoom"):
+        import cv2
+        zx, zy, zw, zh = opt["zoom"]
+        im = cv2.resize(im[zy:zy + zh, zx:zx + zw], (ww, wh), interpolation=cv2.INTER_LANCZOS4)
+    return im, f"{src.name}@{t:.2f}"
+
+
+def card_faces(st: dict, doc: Path, T: dict, cand_dir: Path) -> list[dict]:
+    """썸네일.json 3안마다 카드 장면의 얼굴 판정(judge 와 같은 자 — 얼굴 1개·높이≥FACE_MIN_FRAC·가운데·눈입 안). 렌더 전에 원본에서 잰다."""
+    sp = Path(doc) / "썸네일.json"
+    if not sp.exists():
+        return []
+    det = _detector()
+    _, _, ww, wh = st["frame"]["window"]
+    rows = []
+    for o in jload(sp).get("options") or []:
+        im, where = card_scene_frame(o, T, cand_dir, (ww, wh))
+        if im is None:
+            rows.append({"id": o.get("id"), "ok": False, "why": where, "where": where}); continue
+        ok, why, info = judge(faces_of(det, im), ww, wh)
+        rows.append({"id": o.get("id"), "ok": ok, "why": why, "where": where, **info})
+    return rows
+
+
 THUMB_FRAMES = 2      # 벤치 실측: 0초 첫 2프레임(약 0.07초)만 썸네일 그림
 
 
@@ -424,7 +478,7 @@ def stamp_video(video: Path, jpg: Path, frames: int = THUMB_FRAMES) -> None:
     im.convert("RGB").save(card_png)
     run(["ffmpeg", "-y", "-v", "error", "-i", video, "-i", card_png, "-filter_complex",
          f"[1:v]scale=1080:1920,setsar=1[t];[0:v][t]overlay=0:0:enable='lt(n,{frames})',format=yuv420p[v]", "-map", "[v]", "-map", "0:a",
-         "-map_metadata", "0", "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-c:a", "copy", "-movflags", "+faststart", tmp])
+         "-map_metadata", "0", *venc(16), "-c:a", "copy", "-movflags", "+faststart", tmp])
     shutil.move(str(tmp), str(video))
     card_png.unlink(missing_ok=True); Path(bp).unlink(missing_ok=True)
 

@@ -1,0 +1,1067 @@
+{
+ "id": "Ww0IZLSL7mY",
+ "dur": 21.502,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "짠순이 장윤정이",
+   "colors": [
+    {
+     "word": "짠순이",
+     "hex": "#CEFFFC"
+    },
+    {
+     "word": "장윤정이",
+     "hex": "#FCFFB7"
+    }
+   ]
+  },
+  {
+   "text": "돈 아끼지 않는것",
+   "colors": [
+    {
+     "word": "돈 아끼지 않는것",
+     "hex": "#FFFFFF"
+    }
+   ]
+  }
+ ],
+ "source_label": "출처 : 장공장장윤정",
+ "layout": {
+  "window": [
+   0,
+   419,
+   1080,
+   1082
+  ],
+  "caption_band": [
+   1068,
+   1150
+  ],
+  "title_y": [
+   [
+    208,
+    295
+   ],
+   [
+    311,
+    398
+   ]
+  ],
+  "bg_hex": "#000000",
+  "source_y": [
+   1518,
+   1551
+  ],
+  "logo_y": [
+   1748,
+   1830
+  ],
+  "watermark": null,
+  "source_hex": "#7D7D7D",
+  "credit_text": "출처 : 장공장장윤정",
+  "logo_text": "anna pick(회색 2줄)",
+  "note": "검정 바탕 + 위 2줄 제목(1줄 흰 “ ”, 2줄 노랑 인물+분홍 제품) + 정사각 창 y419~1501 + 창 안 자막 1줄(자리는 편마다·줄마다 다름) + 창 아래 회색 '출처 : <원본 채널>' + 맨 아래 회색 'anna pick'"
+ },
+ "lines": [
+  {
+   "t0": 0.2,
+   "t1": 1.567,
+   "speaker": "원음:장윤정",
+   "text": "되게 비싼거 써요 저",
+   "layer": "안나픽",
+   "role": "훅",
+   "enter": "pop(노랑 빛 번짐)",
+   "enter_ms": 100,
+   "variant": "노랑 굵은 글자",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1066,
+    1151
+   ],
+   "fill_hex": "#F1FF11",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "되게 비싼거 써요 저",
+     "hex": "#F1FF11",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장윤정 얼굴 근접(말하는 중)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 1.567,
+   "t1": 2.933,
+   "speaker": "원음:장윤정",
+   "text": "제가 돈을 쓰는 포인트들이",
+   "layer": "안나픽",
+   "role": "훅",
+   "enter": "rotate-in(기울어 들어옴 + ✦)",
+   "enter_ms": 170,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1079,
+    1149
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "돈",
+     "hex": "#A7F907",
+     "grow": "크게",
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장윤정 상반신(소파)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.933,
+   "t1": 3.767,
+   "speaker": "원음:장윤정",
+   "text": "몇개가 있는데",
+   "layer": "안나픽",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1078,
+    1149
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장윤정 얼굴",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.767,
+   "t1": 4.5,
+   "speaker": "나레",
+   "text": "짠순이 장윤정이",
+   "layer": "안나픽",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "손글씨 가는체(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1072,
+    1147
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 2px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장윤정 얼굴(말하는 중)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨 가는체(예능 손글씨 계열, 이름 미확정)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.5,
+   "t1": 5.067,
+   "speaker": "나레",
+   "text": "이것만큼은",
+   "layer": "안나픽",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "손글씨 가는체(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1063,
+    1145
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 2px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장윤정 얼굴",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨 가는체(예능 손글씨 계열, 이름 미확정)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.067,
+   "t1": 6.267,
+   "speaker": "나레",
+   "text": "돈을 아끼지 않는다는데",
+   "layer": "안나픽",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "손글씨 가는체(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1072,
+    1145
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 2px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장윤정 얼굴(옆을 봄)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨 가는체(예능 손글씨 계열, 이름 미확정)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 6.3,
+   "t1": 7.067,
+   "speaker": "원음:장윤정",
+   "text": "치약에다 나 돈을",
+   "layer": "안나픽",
+   "role": "공개",
+   "enter": "pop(노랑 빛 번짐)",
+   "enter_ms": 100,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1069,
+    1147
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "치약",
+     "hex": "#F1FF11",
+     "grow": "크게",
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장윤정 얼굴(말하는 중)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 7.1,
+   "t1": 8.033,
+   "speaker": "원음:장윤정",
+   "text": "진짜 많이 쓰는 편이거든",
+   "layer": "안나픽",
+   "role": "본문",
+   "enter": "wipe(흰 빛줄기 왼→오)",
+   "enter_ms": 170,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1078,
+    1149
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장윤정 얼굴",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.1,
+   "t1": 8.9,
+   "speaker": "원음:장윤정",
+   "text": "입 안에 들어가는",
+   "layer": "안나픽",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1066,
+    1154
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "입 안",
+     "hex": "#F1FF11",
+     "grow": "크게",
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장윤정 얼굴(입 가리킴)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.9,
+   "t1": 9.467,
+   "speaker": "원음:장윤정",
+   "text": "거기 때문에",
+   "layer": "안나픽",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1078,
+    1141
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장윤정 얼굴",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 9.5,
+   "t1": 10.933,
+   "speaker": "원음:장윤정",
+   "text": "이거 제가 쓰고 있는건데",
+   "layer": "안나픽",
+   "role": "공개",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1078,
+    1141
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "투명 파우치에서 치약을 꺼내는 손",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 10.933,
+   "t1": 11.5,
+   "speaker": "원음:장윤정",
+   "text": "얘는",
+   "layer": "안나픽",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1078,
+    1141
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "치약을 든 장윤정",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.533,
+   "t1": 12.7,
+   "speaker": "원음:장윤정",
+   "text": "(소금치약이지만) 들짜!",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "괄호 가는체 + '들짜!' 굵게",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1070,
+    1152
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "치약 든 장윤정(눈 감고 말함)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 12.733,
+   "t1": 14.067,
+   "speaker": "원음:장윤정",
+   "text": "역한 짠맛이 아니에요",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "fade",
+   "enter_ms": 70,
+   "variant": "손글씨 가는체(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1072,
+    1140
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 2px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "치약 튜브 든 장윤정",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨 가는체(예능 손글씨 계열, 이름 미확정)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 14.067,
+   "t1": 14.933,
+   "speaker": "원음:장윤정",
+   "text": "근데 얘가",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1078,
+    1147
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "치약 튜브를 얼굴 옆에 든 장윤정",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 15.033,
+   "t1": 16.267,
+   "speaker": "원음:장윤정",
+   "text": "극강의 개운함이 있다",
+   "layer": "안나픽",
+   "role": "고조",
+   "enter": "burst(노랑 폭발 그림 + ✦)",
+   "enter_ms": 70,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1065,
+    1153
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "개운함",
+     "hex": "#F1FF11",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "치약 든 장윤정(웃음)",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 16.3,
+   "t1": 17.467,
+   "speaker": "원음:장윤정",
+   "text": "정말 개운하고",
+   "layer": "안나픽",
+   "role": "고조",
+   "enter": "pop",
+   "enter_ms": 70,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1073,
+    1151
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "개운",
+     "hex": "#D2F8F8",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "치약 든 장윤정",
+   "fit": 6,
+   "cut_at": [
+    16.4,
+    17.367
+   ],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 17.533,
+   "t1": 18.133,
+   "speaker": "원음:장윤정",
+   "text": "깔끔하고",
+   "layer": "안나픽",
+   "role": "고조",
+   "enter": "pop(반짝 고리)",
+   "enter_ms": 100,
+   "variant": "굵게 크게",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1070,
+    1150
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "치약 든 장윤정(고개 돌림)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 18.133,
+   "t1": 18.7,
+   "speaker": "원음:장윤정",
+   "text": "그리고 이게",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1078,
+    1139
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "치약 든 장윤정",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 18.7,
+   "t1": 20.033,
+   "speaker": "원음:장윤정",
+   "text": "소금 때문에 그런지",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1074,
+    1144
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "소금",
+     "hex": "#F1FF11",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장윤정 얼굴(손 입가)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 20.033,
+   "t1": 20.967,
+   "speaker": "원음:장윤정",
+   "text": "입이 마르질 않아",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1069,
+    1150
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "장윤정 얼굴",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 20.967,
+   "t1": 21.433,
+   "speaker": "원음:장윤정",
+   "text": "개운~~",
+   "layer": "안나픽",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "손글씨 가는체(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1075,
+    1145
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 2px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "[💙] 파란 하트 이모지(괄호 안, 얼굴 왼쪽)",
+     "x": 200,
+     "y": 900,
+     "w": 120,
+     "t_in": 20.967,
+     "t_out": 21.433,
+     "anim": "컷과 함께 나타나 머묾"
+    }
+   ],
+   "sfx": {
+    "kind": "기타",
+    "t": 21.15,
+    "basis": "파형 솟음",
+    "note": "5~10kHz 고립 솟음 +46.8dB(유성 0.13·고립 0.95) — 귀 확인 못 함"
+   },
+   "scene": "얼굴",
+   "scene_desc": "크게 웃는 장윤정 근접 + [💙]",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨 가는체(예능 손글씨 계열, 이름 미확정)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  }
+ ],
+ "no_caption": [
+  [
+   0.0,
+   0.2,
+   "첫 6프레임"
+  ],
+  [
+   6.267,
+   6.3,
+   "1프레임"
+  ],
+  [
+   7.067,
+   7.1,
+   "1프레임"
+  ],
+  [
+   8.033,
+   8.1,
+   "컷 직후"
+  ],
+  [
+   9.467,
+   9.5,
+   "1프레임"
+  ],
+  [
+   11.5,
+   11.533,
+   "1프레임"
+  ],
+  [
+   12.7,
+   12.733,
+   "1프레임"
+  ],
+  [
+   14.933,
+   15.033,
+   "덩어리 사이"
+  ],
+  [
+   16.267,
+   16.3,
+   "1프레임"
+  ],
+  [
+   17.467,
+   17.533,
+   "덩어리 사이"
+  ]
+ ],
+ "beats": "원음 훅(0.2~3.77 '되게 비싼거 써요 저·제가 돈을 쓰는 포인트들이 몇개가 있는데') → 나레 다리(3.77~6.27 '짠순이 장윤정이 이것만큼은 돈을 아끼지 않는다는데', 손글씨) → 원음 공개(6.3~12.7 치약에다 나 돈을·입 안에 들어가는 거기 때문에·이거 제가 쓰고 있는건데 얘는 들짜!) → 원음 증거·고조(12.73~20.97 역한 짠맛 아님·극강의 개운함·소금 때문에 입이 마르질 않아) → 원음 끝('개운~~' + [💙])",
+ "narr_share": "나레 줄 3/22, 나레 2.5초/21.502초",
+ "notes": [
+  "나레 3줄은 손글씨 가는체(원음 줄은 대부분 굵은 고딕) — 이 편은 나레를 글꼴로 갈랐다.",
+  "등장 꾸밈 9종(빛 번짐·기울어 들어옴·빛줄기·폭발·반짝 고리 등)이 줄마다 바뀜."
+ ],
+ "name_evidence": [
+  "제목 '짠순이 장윤정이'",
+  "나레 자막 '짠순이 장윤정이'",
+  "출처 줄 '장공장장윤정'"
+ ],
+ "frame0": {
+  "what": "장윤정 얼굴 근접(초록 야상, 흰 소파) — 자막 0.17초부터(노랑 빛 번짐)",
+  "face_frac": "약 0.20(창 대비 얼굴, 눈)",
+  "text": "짠순이 장윤정이 / 돈 아끼지 않는것(제목)"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈+픽셀: capseg 30fps·cutdet --v2·px·rangesheet 0.2초/1프레임 등장 시트) 2026-10-25 (관제 263 지시서 06)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr"
+}

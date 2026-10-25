@@ -1,6 +1,8 @@
 {
  "name": "스타픽룸판",
  "renderer": "bench",
+ "thumb_card_face": true,
+ "_thumb_card_face": "연예인 채널 — 썸네일 카드 3안 전부 연예인 얼굴(사장님 10-25 '연예인 얼굴 통일')",
  "_note": "얜샷템 하이브리드 — 스타픽룸 칼카피 판: 원음 훅 → 나레 다리(타이핑, 전언 '~있다는데..?') → 우리 체험 나레 → 원음 끝. 근거 channel/starpickroom/{스타일분석.md, 하이브리드_판설계.md, 줄판독/}.",
  "bench": {
   "ko": "스타픽룸",
@@ -9,8 +11,9 @@
   "design": "channel/starpickroom/하이브리드_판설계.md",
   "line_reads": "channel/starpickroom/줄판독",
   "src_dir": "C:/숏템_칼카피/starpickroom/src",
-  "sfx_events": "channel/starpickroom/_tools/결과/sfx_events_rules.json",
-  "sfx_key": "starpickroom"
+  "sfx_events": "channel/starpickroom/_kal/sfx_events.json",
+  "sfx_key": "starpickroom",
+  "why_sfx_events": "채널 자기 신호표(표준 §3-3 A2) — placement.sfx_events_path 는 이미 이 파일을 먼저 읽는다(옛 칸 channel/starpickroom/_tools/결과/sfx_events_rules.json 은 표시만 낡아 있었음, 렌더 동작 같음)"
  },
  "voice": {
   "name": "미나",
@@ -20,26 +23,36 @@
   ],
   "why": "벤치 나레 여성(f0 202~258Hz). 후보 tc-yura 는 사장님 귀 확인 뒤에만 바꾼다(이 칸 한 곳)"
  },
- "cps_target": 6.9,
+ "cps_target": 7.45,
  "bgm": {
   "id": "otsukare_summer",
   "db_below_voice": 14.4,
   "duck_orig_db": 0.0,
   "fade_out": 0.4,
-  "why": "벤치 밝은 여름곡 내내, 덕킹 없음"
+  "why": "벤치 밝은 여름곡 내내, 덕킹 없음",
+  "candidates": [
+   "beggin",
+   "otsukare_summer",
+   "sweets"
+  ],
+  "duck_narr_db": 0.0,
+  "why_02": "candidates = bgm_pick.py recommend 스타픽룸판(벤치 8편 133.3 BPM·747Hz, 거리 0.631/0.827/1.124) — 곡은 사람이 고른다(id 그대로) · duck_narr_db 0 = 나레 덕킹 실측 없음"
  },
  "loudness": {
   "lufs": -14.0,
-  "tp": -1.5
+  "tp": -1.5,
+  "why": "−14 LUFS·TP −1.5 통일(사장님 10-18) · 벤치 −19.4(중앙) — 하이브리드_판설계.md §5"
  },
  "length": {
-  "min": 28,
-  "max": 38
+  "min": 30,
+  "max": 38,
+  "why": "길이 목표 30~38초(벤치 중앙 37.4 — 하이브리드_판설계.md §1) · 하한 30 = 벤치 8편 길이 p17 30.3초 내림(24.1·30.3·34.0·37.0·37.8·38.0·43.7·48.9 — handconst.py starpickroom length)"
  },
  "timing": {
-  "gap": 0.2,
-  "gap_oo": 0.25,
-  "tail": 0.5
+  "gap": 0.18,
+  "gap_oo": 0.14,
+  "tail": 0.65,
+  "why": "벤치 8편 원본 소리 실측(handconst.py starpickroom → _kal/손상수_실측.json): 줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙 — gap 0.18(원음→원음 뺀 경계 n=21, p25 0.12·p75 0.28) · gap_oo 0.14(원음→원음 n=22, p25 0.065·p75 0.25) (경계 ±0.15초 창 안 가장 긴 쉼, 쉼 문턱 = 편별 (말 p50+p5)/2) · tail 0.65 = 마지막 말 소리 끝→영상 끝 편 중앙 0.645초(0.21~1.81, 로컬 위스퍼 마지막 낱말 끝)"
  },
  "frame": {
   "bg": [
@@ -61,7 +74,8 @@
     "shear": 0.1763,
     "color": "#FCFCFC",
     "hi": "#FDF702",
-    "max_w": 1030
+    "max_w": 1030,
+    "why": "제목 2줄 Cafe24Ohsquare 기울임 92px(§2) · center·shear 0.1763(=tan 10°)·max_w = _tools/spr_overlay.py 값"
    },
    {
     "font": "Cafe24Ohsquare.ttf",
@@ -70,7 +84,8 @@
     "shear": 0.1763,
     "color": "#FCFCFC",
     "hi": "#CF04FC",
-    "max_w": 1030
+    "max_w": 1030,
+    "why": "제목 2줄 Cafe24Ohsquare 기울임 92px(§2) · center·shear 0.1763(=tan 10°)·max_w = _tools/spr_overlay.py 값"
    }
   ],
   "watermark": {
@@ -79,7 +94,8 @@
    "px": 56,
    "x1": 1030,
    "cy": 550,
-   "alpha": 140
+   "alpha": 140,
+   "why": "창 오른쪽 위 '얜샷템' 흰 반투명(§2) · px·x1·cy·alpha = spr_overlay.py 값"
   },
   "logo": {
    "kind": "spr_gold",
@@ -89,8 +105,10 @@
    "font": "Pretendard-Bold.otf",
    "px": 36,
    "color": "#8B8B88",
-   "center": 1626
-  }
+   "center": 1626,
+   "why": "출처 회색 y1604(§2) · px 36 = 프리셋 frame.json"
+  },
+  "why": "하이브리드_판설계.md §2 · 프리셋 channel/starpickroom/preset/검정틀_금색로고_타이핑나레/: 검정 · 창 x0 y483 1080×1058 · 출처 회색 y1604(판 center 1626 = 잉크 가운데)"
  },
  "caption": {
   "pack": "starpick",
@@ -105,12 +123,19 @@
    "pop": "pop",
    "typing": "heart"
   },
-  "typing_cps": 12.5,
-  "chunk_max_chars": 15
+  "typing_cps": 10.4,
+  "chunk_max_chars": 15,
+  "band": [
+   1105,
+   1175
+  ],
+  "why_band": "자막 잉크 y1105~1175(starpick place — 8편 같음) — caption_side 짤·스티커 자리용(fx_target)",
+  "why": "자막팩 starpick(§3) · band = 자막 잉크 y1105~1175(why_band) · chunk_max_chars 15 = 자막 조각 ≤15자(§1 · 같은 값 = 벤치 나레 조각 자수 p90 15, n=29) · typing_cps 10.4 = 벤치 타이핑 줄 19/155 type_cps 중앙 10.4자/초 — handconst.py starpickroom caption.*"
  },
  "cuts": {
   "push_tts": 0.0,
-  "push_orig": 0.0
+  "push_orig": 0.0,
+  "why": "컷 전환 = 자름(효과 없음, §4) · push 0 = 밀기 없음"
  },
  "sfx_files": {
   "ding": "팩01/ding.wav",
@@ -647,5 +672,109 @@
     "max": 38
    }
   ]
- }
+ },
+ "_pending": {
+  "transition_counted": "줄판독 transition {'cut': 1.0} — 그릴 전환 없음"
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "starpick",
+   "gap": [],
+   "rank": [
+    {
+     "pack": "starpick",
+     "d": 0.316,
+     "terms": {
+      "px": 0.95,
+      "fill": 0.0,
+      "stroke": 0.63,
+      "y": 0.0,
+      "font": 0.0
+     }
+    },
+    {
+     "pack": "deal",
+     "d": 1.314,
+     "terms": {
+      "px": 3.37,
+      "fill": 0.0,
+      "stroke": 0.7,
+      "y": 1.0,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "story",
+     "d": 1.406,
+     "terms": {
+      "px": 3.8,
+      "fill": 0.0,
+      "stroke": 0.73,
+      "y": 1.0,
+      "font": 1.5
+     }
+    }
+   ],
+   "from": "벤치 8편 193줄 실측 [글꼴 GmarketSansBold(스타일분석 §1) · 나레 29줄[잉크 높이 57px(29줄 y칸) · 자리 y1140 · 채움 #FFFFFF(24줄) · 테 6px] · 원음 118줄[잉크 높이 57px(116줄 y칸) · 자리 y1140 · 채움 #FFFFFF(110줄) · 테 6px]] → 1위 starpick(거리 0.316) · 지금 starpick(거리 0.316, 순위 1)",
+   "enter_cover": {
+    "instant": {
+     "share": 0.617,
+     "n": 119,
+     "item": "정지(팩 불필요)"
+    },
+    "기타": {
+     "share": 0.285,
+     "n": 55,
+     "item": null
+    },
+    "typing": {
+     "share": 0.098,
+     "n": 19,
+     "item": "typeCursor"
+    }
+   }
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — 판 자막팩이 등장까지 정한다(caption-motions.js motionPlan: 팩 motion 이 효과팩 번호보다 이긴다) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": "팩01",
+   "map": {
+    "ding": "띠링",
+    "whoosh": "휙",
+    "pop": "뽁"
+   },
+   "gain_db": -6,
+   "ncc": {
+    "measured": true,
+    "hits": 113,
+    "pack_hits": 92,
+    "ge06": 0,
+    "max": 0.472,
+    "max_file": "팩02/pop.wav",
+    "mine_max": 0.44
+   },
+   "from": "NCC 벤치↔팩 파일 92발 중 ≥0.6 0개(최대 0.472 팩02/pop.wav) → 지문으로 고를 수 없어 종류 이름표로 slot: pop→뽁 · 팩 팩01",
+   "gap": []
+  },
+  "bgm": {
+   "id": "otsukare_summer",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)",
+   "candidates": [
+    "beggin",
+    "otsukare_summer",
+    "sweets"
+   ]
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
+  }
+ },
+ "_why_cps_target": "미나(일레븐랩스) 서비스 배속 고정 1.35(narr_align.fixed_tempo) — 배속을 못 바꾸고 대본 길이 어림·B3 목표로만 쓰이므로 값 = 이 판으로 낸 미나 실측 7.45자/초(starpickroom/hybrid_sungsikyung 렌더 render_info.sentences 7줄 184자/24.71초, 줄별 7.3~7.7) · 참고 벤치 나레 자/초 중앙 9.29(8편 7.6~10.2, handconst.py starpickroom cps_target) — 미나 고정 배속으로는 벤치 말속도에 못 닿음(목소리 칸 몫)"
 }

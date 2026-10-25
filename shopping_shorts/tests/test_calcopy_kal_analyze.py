@@ -19,7 +19,7 @@ from tools.calcopy.engine import kal_analyze as K  # noqa: E402
 def _line(t0, t1, speaker="나레", text="가나다라", enter="instant", emph=None, sticker=None, sfx=None, role=None):
     d = {"t0": t0, "t1": t1, "speaker": speaker, "text": text, "layer": "채널", "enter": enter,
          "y": [1100, 1160], "fill_hex": "#FFFFFF", "emph": emph or [], "sticker": sticker or [], "sfx": sfx,
-         "scene": "얼굴", "cut_at": []}
+         "scene": "얼굴", "cut_at": [], "transition": "cut"}
     if role:
         d["role"] = role
     return d
@@ -32,7 +32,8 @@ def _doc(id_="v1", dur=10.0, lines=None, title="차예련 비빔국수"):
                 _line(2.1, 4.0, "나레", "비빔국수가 있다는데", "typing", emph=[{"word": "비빔국수", "hex": "#FF0000"}]),
                 _line(4.1, 6.0, "원음:차예련", "이렇게 비벼요", "instant"),
                 _line(8.6, 9.8, "원음:차예련", "눈물 나는 맛", "instant", sticker=[{"what": "하트", "t_in": 8.7}], sfx="띵 8.7"),   # 85% 이후 = 끝
-            ], "beats": "훅→나레→본문→끝", "narr_share": "1/4", "notes": []}
+            ], "beats": "훅→나레→본문→끝", "narr_share": "1/4", "notes": [],
+            "frame0": {"what": "얼굴+글", "text": "맛있어"}}       # 표준 §4-1 thumb.frame0 칸(관제 263 04)
 
 
 # ---------- check_doc ----------
@@ -109,7 +110,8 @@ def _ours(dur=10.0):
         {"line": "B1", "t0": 4.1, "t1": 6.0, "text": "이렇게 비벼요", "speaker": "원음(성시경)", "enter": "instant", "emph": [], "sticker": []},
         {"line": "B2", "t0": 8.6, "t1": 9.8, "text": "눈물 나는 맛", "speaker": "원음(성시경)", "enter": "instant", "emph": [],
          "sticker": [{"what": "하트"}]},
-    ], "sfx_in_video": [{"t": 8.7, "file": "ding.wav"}], "dur": dur}
+    ], "sfx_in_video": [{"t": 8.7, "file": "ding.wav"}], "dur": dur,
+        "transition_rate": {"cut": 1.0}, "frame0_kind": "card"}   # 표준 §4-1 추가 칸(관제 263 04) — 렌더 기록에서 match_from_render 가 채우는 값
 
 
 def test_match_same_numbers_pass_and_sabotage_fail():

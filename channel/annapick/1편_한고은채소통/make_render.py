@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# _deprecated_2026-10-25 → tools/calcopy/hybrid/styles/안나픽판.json (관제 263 지시서 07 · 표준 §3-1: 새 편은 공용 렌더러로. 읽기 전용 참고물 — 설명서 프리셋 생성기는 회원 옛 길이 결과를 읽으므로 지우지 않는다)
 """얜샷템 한고은 채소 보관통 — 렌더 감싸기(엔진 코드는 안 고친다, 관제 097, 2026-10-17).
     PYTHONUTF8=1 py channel/annapick/1편_한고은채소통/make_render.py [--dry] [--gain 6,6,6]
 

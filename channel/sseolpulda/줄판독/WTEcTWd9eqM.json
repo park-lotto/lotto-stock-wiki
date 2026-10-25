@@ -1,0 +1,413 @@
+{
+ "id": "WTEcTWd9eqM",
+ "dur": 12.632,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "자전거로 빨래 끝내는",
+   "colors": [
+    {
+     "word": "자전거로 빨래 끝내는",
+     "hex": "#000000"
+    }
+   ]
+  },
+  {
+   "text": "고수의 정체?!",
+   "colors": [
+    {
+     "word": "고수의 정체?!",
+     "hex": "#E8145A"
+    }
+   ]
+  }
+ ],
+ "source_label": "@demunershow",
+ "layout": {
+  "window": [
+   0,
+   345,
+   1080,
+   1785
+  ],
+  "bg_hex": "#FFFFFF",
+  "caption_band": [
+   1300,
+   1372
+  ],
+  "title_y": [
+   [
+    140,
+    220
+   ],
+   [
+    240,
+    320
+   ]
+  ],
+  "top_band": {
+   "y": [
+    420,
+    500
+   ],
+   "box_hex": "#000000",
+   "ink_hex": "#FFFFFF",
+   "ink_h": 46,
+   "note": "창 윗머리에 겹친 검정 상자 흰 글 설명띠(두 번째 자막 줄)"
+  },
+  "ad_mark": {
+   "text": "[광고]",
+   "xy": [
+    930,
+    10,
+    1070,
+    60
+   ],
+   "hex": "회색 기울임(눈)"
+  },
+  "source_y": [
+   1830,
+   1872
+  ],
+  "logo_y": null,
+  "watermark": null,
+  "source_hex": "#000000",
+  "note": "틀 A'(흰 바탕+제목 2줄 검정/빨강+창 345~1785) + 창 위 검정 설명띠 + 창 아래쪽 흰 상자 본 자막 — 자막 두 겹(fnZNougO6NQ 와 같은 꼴) · 창 아래 흰 여백에 원작자 '@demunershow' · 12.0 부터 틀 없이 전체화면"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 6.5,
+   "speaker": "불명",
+   "text": "버려진 자전거와 바구니의 놀라운 변신!",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 상자 검정 글)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1305,
+    1355
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "거품 대야 속 하늘색 바구니가 자전거 바퀴 동력으로 돎·남자가 세제를 붓고 자전거를 굴림",
+   "fit": 8,
+   "cut_at": [
+    1.1,
+    2.033,
+    3.067,
+    3.8,
+    4.7,
+    6.0
+   ],
+   "font": {
+    "name": "미확정(각진 굵은 고딕, 획 끝 둥긂)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 2~4px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "말 없음(자막만) — 소리는 음악",
+   "size_px": 50,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": "좌우 약 14px·위아래 약 22px(상자 y 1280~1375, 눈 확대 work2/fr/wt_ul.png)",
+    "radius": 0
+   }
+  },
+  {
+   "t0": 6.5,
+   "t1": 10.3,
+   "speaker": "불명",
+   "text": "거품 폭발 세탁에 생수통 탈수기까지 완벽!",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 상자 검정 글)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1305,
+    1355
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "생수통에 빨래를 넣고 나무 틀 손잡이로 눌러 짬",
+   "fit": 9,
+   "cut_at": [
+    7.267,
+    9.033
+   ],
+   "font": {
+    "name": "미확정(각진 굵은 고딕, 획 끝 둥긂)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 2~4px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "교체 6.5 는 원본 컷 6.533 보다 1프레임 먼저",
+   "size_px": 50,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": "좌우 약 14px·위아래 약 22px(상자 y 1280~1375, 눈 확대 work2/fr/wt_ul.png)",
+    "radius": 0
+   }
+  },
+  {
+   "t0": 10.3,
+   "t1": 12.0,
+   "speaker": "불명",
+   "text": "빨래 건조까지 단번에 해결!",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 상자 검정 글)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1305,
+    1355
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "자전거 바퀴 도르래 빨랫줄에 옷이 걸려 움직임",
+   "fit": 9,
+   "cut_at": [
+    10.9,
+    11.833
+   ],
+   "font": {
+    "name": "미확정(각진 굵은 고딕, 획 끝 둥긂)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 2~4px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "size_px": 50,
+   "box": {
+    "hex": "#FFFFFF",
+    "alpha": 1.0,
+    "pad": "좌우 약 14px·위아래 약 22px(상자 y 1280~1375, 눈 확대 work2/fr/wt_ul.png)",
+    "radius": 0
+   }
+  },
+  {
+   "t0": 0.0,
+   "t1": 6.5,
+   "speaker": "불명",
+   "text": "방구석 발명가의 무전력 세탁 시스템",
+   "layer": "채널(위 설명띠)",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기타(창 위 검정 상자 흰 글 설명띠)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    435,
+    485
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "자전거 동력 세탁통",
+   "fit": 8,
+   "cut_at": [
+    1.1,
+    2.033,
+    3.067,
+    3.8,
+    4.7,
+    6.0
+   ],
+   "font": {
+    "name": "미확정(각진 굵은 고딕, 획 끝 둥긂)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 2~4px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "size_px": 50,
+   "box": {
+    "hex": "#000000",
+    "alpha": 1.0,
+    "pad": "좌우 약 16px·위아래 약 15px(상자 y 420~508, 눈 확대)",
+    "radius": 0
+   }
+  },
+  {
+   "t0": 6.5,
+   "t1": 10.3,
+   "speaker": "불명",
+   "text": "강력한 회전력 + 압착 탈수",
+   "layer": "채널(위 설명띠)",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기타(창 위 검정 상자 흰 글 설명띠)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    435,
+    485
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "나무 틀 압착 탈수기",
+   "fit": 8,
+   "cut_at": [
+    7.267,
+    9.033
+   ],
+   "font": {
+    "name": "미확정(각진 굵은 고딕, 획 끝 둥긂)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 2~4px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "size_px": 50,
+   "box": {
+    "hex": "#000000",
+    "alpha": 1.0,
+    "pad": "좌우 약 16px·위아래 약 15px(상자 y 420~508, 눈 확대)",
+    "radius": 0
+   }
+  },
+  {
+   "t0": 10.3,
+   "t1": 12.0,
+   "speaker": "불명",
+   "text": "건조까지 자전거가 다 함",
+   "layer": "채널(위 설명띠)",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기타(창 위 검정 상자 흰 글 설명띠)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    435,
+    485
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "자전거 바퀴 빨랫줄",
+   "fit": 8,
+   "cut_at": [
+    10.9,
+    11.833
+   ],
+   "font": {
+    "name": "미확정(각진 굵은 고딕, 획 끝 둥긂)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 2~4px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "size_px": 50,
+   "box": {
+    "hex": "#000000",
+    "alpha": 1.0,
+    "pad": "좌우 약 16px·위아래 약 15px(상자 y 420~508, 눈 확대)",
+    "radius": 0
+   }
+  }
+ ],
+ "no_caption": [
+  [
+   12.0,
+   12.632
+  ]
+ ],
+ "beats": "훅(0~6.5 위 '방구석 발명가의 무전력 세탁 시스템' + 아래 '버려진 자전거와 바구니의 놀라운 변신!', 자전거 동력 세탁통) → 본문(6.5~10.3 '강력한 회전력 + 압착 탈수' / '거품 폭발 세탁에 생수통 탈수기까지 완벽!') → 끝(10.3~12.0 '건조까지 자전거가 다 함' / '빨래 건조까지 단번에 해결!') → 12.0~ 틀 없이 전체화면 0.6초(CTA 없음)",
+ "narr_share": "나레 줄 0/6, 나레 0초/12.632초",
+ "notes": [
+  "자막 두 겹: 창 위 검정 설명띠(흰 글)와 창 아래 흰 상자(검정 글)가 **같은 프레임에 함께** 바뀐다(6.5·10.3, capseg dark·bright 두 띠가 같은 경계) — 3덩어리×2층. fnZNougO6NQ 와 같은 꼴.",
+  "말 없음: 위스퍼(VAD) 받아쓰기 0낱말 — 소리는 음악(스펙트럼 work2/spec/all.jpg 3행 왼쪽 = 음계 계단 띠). 말소리 띠 없음.",
+  "12.0 에 제목·설명띠·자막·흰 바탕이 한꺼번에 사라지고 전체화면 0.63초(30fps 띠 work2/fr/wt_end.jpg) — ZdeZ·iZ 와 같은 '끝 틀 사라짐'.",
+  "창 아래 흰 여백에 원작자 손글씨 '@demunershow'(출처 표기) — 이번 자막만 표본 중 처음.",
+  "효과음·스티커·강조색 0. 오른쪽 위 [광고]. 제목 빨강 hex 는 눈."
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "거품 가득한 대야 속 하늘색 바구니(자전거 동력 세탁통) 근접 + 제목·설명띠·본 자막이 0초부터 다 떠 있음",
+  "face_frac": 0.0,
+  "text": "자전거로 빨래 끝내는 / 고수의 정체?! / 방구석 발명가의 무전력 세탁 시스템 / 버려진 자전거와 바구니의 놀라운 변신!"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈: 1초 시트·구간 시트·30fps 띠·원본 프레임 확대 / 픽셀: seg2(capseg 양극 변형)·cutdet·boxm·colk / 신호: sfx_events) 2026-10-25 (관제 263 지시서 06 · sseolpulda)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr",
+ "sound_mode": "자막만",
+ "title_mode": "상시 고정 2줄(12.0 까지)",
+ "sound_detail": "말 없음(받아쓰기 0낱말) · 음악 BGM(신호)"
+}

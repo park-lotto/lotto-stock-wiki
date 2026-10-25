@@ -1,0 +1,199 @@
+{
+ "id": "BlA9f8rBPuc",
+ "title_card": "오뚜기에서/절대 안 파는 이것",
+ "post_title": "오뚜기가 절대 안파는 이것",
+ "dur": 27.95,
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 2.2,
+   "caption": "오뚜기가 일반인한테는 절대 안 파는 것",
+   "narration": "오뚜기가 일반인한테는 절대 안 파는 거?",
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "OUTBACK 망고스프레드 포장(훅 카드)",
+   "effect": null,
+   "ending": "것"
+  },
+  {
+   "t0": 2.2,
+   "t1": 3.8,
+   "caption": "아웃백에 이거 먹으러 갈 정도로",
+   "narration": "아웃백에 이거 먹으러 갈 정도로",
+   "kind": "나레",
+   "speaker": null,
+   "screen": "기타",
+   "screen_desc": "아웃백 빨간 간판",
+   "effect": null,
+   "ending": "~도로"
+  },
+  {
+   "t0": 3.8,
+   "t1": 5.6,
+   "caption": "아웃백에 이거 먹으러 갈 정도로/사람들이 환장하는 부시맨빵과 버터",
+   "narration": "아웃백에 이거 먹으러 갈 정도로 사람들이 환장하는 부시맨 빵과 버터.",
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "부시맨빵에 버터 바름",
+   "effect": null,
+   "ending": "~버터"
+  },
+  {
+   "t0": 5.6,
+   "t1": 6.4,
+   "caption": "부시맨빵은 이제",
+   "narration": "부시맨 빵은 이제",
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "부시맨빵 칼로 자름",
+   "effect": null,
+   "ending": "~이제"
+  },
+  {
+   "t0": 6.4,
+   "t1": 8.2,
+   "caption": "부시맨빵은 이제/대체품이 어느 정도 유명해졌지만",
+   "narration": "부시맨 빵은 이제 대체품이 어느 정도 유명해졌지만",
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "시판 부시맨빵 포장 더미",
+   "effect": null,
+   "ending": "~지만"
+  },
+  {
+   "t0": 8.2,
+   "t1": 10.2,
+   "caption": "같이 나오는 망고스프레드는/분명 오뚜기 제조인데",
+   "narration": "같이 나오는 망고 스프레드는 분명 오뚜기 제조인데",
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "망고스프레드 소포장 → 라벨 \"제조원:주식회사 오뚜기\"",
+   "effect": "빨간 화살표",
+   "ending": "~인데"
+  },
+  {
+   "t0": 10.2,
+   "t1": 13.0,
+   "caption": "아무리 찾아도 안 보이고/고객센터에 문의하면",
+   "narration": "아무리 찾아도 안 보이고 고객센터에 문의하면",
+   "kind": "나레",
+   "speaker": null,
+   "screen": "캡처(댓글·성분표·기사·문의답변)",
+   "screen_desc": "네이버 지식인 \"아웃백 버터 파는곳\" → 문의 글 \"아웃백 망고 스프레드 개별 구매 가능…\"",
+   "effect": null,
+   "ending": "~하면"
+  },
+  {
+   "t0": 13.0,
+   "t1": 16.0,
+   "caption": "아웃백 전용이라 절대 안판다며/칼차단 답변만 돌아옴",
+   "narration": "아웃백 전용이라 절대 안 판다며 칼차단 답변만 돌아옴.",
+   "kind": "나레",
+   "speaker": null,
+   "screen": "밈짤",
+   "screen_desc": "아웃백 간판 → 선글라스 남성 손사래(추정: 잭 니콜슨, 화면 글자 없음)",
+   "effect": null,
+   "ending": "~아옴"
+  },
+  {
+   "t0": 16.0,
+   "t1": 17.6,
+   "caption": "하지만 맛잘알들은 결국",
+   "narration": "하지만 맛잘알들은 결국",
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "토스트에 버터 녹음",
+   "effect": null,
+   "ending": "~결국"
+  },
+  {
+   "t0": 17.6,
+   "t1": 19.0,
+   "caption": "하지만 맛잘알들은 결국/상위버전 대체품을 찾아냈는데",
+   "narration": "하지만 맛잘알들은 결국 상위 버전 대체품을 찾아냈는데",
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "토스트에 버터 바름",
+   "effect": null,
+   "ending": "~는데"
+  },
+  {
+   "t0": 19.0,
+   "t1": 20.6,
+   "caption": "바로 무스 메이플버터",
+   "narration": "바로 무스 메이플 버터.",
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "MOOSE MAPLE BUTTER 통 뚜껑",
+   "effect": null,
+   "ending": "~버터"
+  },
+  {
+   "t0": 20.6,
+   "t1": 22.0,
+   "caption": "아웃백 버터보다/한스푼 고급진맛으로",
+   "narration": "아웃백 버터보다 한 스푼 고급진 맛으로",
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "통 속 버터를 숟가락으로 뜸",
+   "effect": null,
+   "ending": "~으로"
+  },
+  {
+   "t0": 22.0,
+   "t1": 24.8,
+   "caption": "베이글 크래커 식빵/뭐든 발라먹으면",
+   "narration": "베이글 크래커 식빵 모든 발라 먹으면",
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "구운 빵에 버터 바름",
+   "effect": null,
+   "ending": "~으면"
+  },
+  {
+   "t0": 24.8,
+   "t1": 26.0,
+   "caption": "맛없는 빵도 살려내는/치트키 된다고 ㄷㄷ",
+   "narration": "맛없는 빵도 살려내는 치트키 된답니다.",
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "식빵에 버터 찍어 먹음",
+   "effect": null,
+   "ending": "ㄷㄷ"
+  },
+  {
+   "t0": 26.0,
+   "t1": 28.0,
+   "caption": "이제 아웃백 갈 이유가/진짜 없어졌는데 ㅋㅋ",
+   "narration": "이제 아웃백 갈 이유가 진짜 없어졌는데",
+   "kind": "나레",
+   "speaker": null,
+   "screen": "밈짤",
+   "screen_desc": "캥거루 얼굴 클로즈업",
+   "effect": null,
+   "ending": "ㅋㅋ"
+  }
+ ],
+ "structure": "훅 질문 → 아웃백 인기(빵·버터) → 빵은 대체품 있음 → 스프레드는 오뚜기 제조 근거(라벨) → 구매 시도 실패(지식인·문의 캡처 + 거절 밈짤) → 대체품 공개 → 맛 묘사 → 캥거루 밈으로 마무리",
+ "celeb_scenes": [
+  {
+   "t0": 13.0,
+   "t1": 16.0,
+   "who": "추정: 잭 니콜슨(얼굴 추정, 화면 글자 없음)",
+   "program": null,
+   "why_here": "\"칼차단 답변\"을 손사래 리액션으로 표현"
+  }
+ ],
+ "kangjueun": "없음 — 15줄 + 1초 간격 프레임 전부 확인. 사람 얼굴은 13~16초 남성 밈짤 1컷뿐"
+}

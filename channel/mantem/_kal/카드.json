@@ -1,0 +1,452 @@
+{
+ "slug": "mantem",
+ "made_by": "tools/calcopy/preset_card.py build",
+ "built_at": "2026-10-24T23:49:41",
+ "bench": "만템",
+ "brand": null,
+ "brand_note": "얜샷템 옛 틀 — 지금 얜샷템 제작은 키치잇판",
+ "format": "연예인쇼핑형",
+ "subformat": "나레+원음형",
+ "format_options": [],
+ "sound_style": [],
+ "engine": {
+  "style_file": null,
+  "style_error": null,
+  "renderer": "make",
+  "entry": null,
+  "hand_scripts": [
+   "channel/mantem/preset/mt_preset.py"
+  ],
+  "hand_scripts_reference": [],
+  "caption_pack": null,
+  "voice": null,
+  "bgm": null
+ },
+ "sample": {
+  "line_reads": 0,
+  "line_reads_strict_errors": 0,
+  "rules_freq": false,
+  "palette": false,
+  "style_analysis": false,
+  "sfx_events": false,
+  "tteutgi": 8,
+  "min_required": 6
+ },
+ "axes": {
+  "1자막": {
+   "value": "cap_look× cap_enter× cap_emph× cap_exit×",
+   "confidence": "미측정"
+  },
+  "2제목틀": {
+   "value": null,
+   "confidence": "미측정"
+  },
+  "3전환": {
+   "value": "transition× cut_rhythm○",
+   "confidence": "측정"
+  },
+  "4장면대사": {
+   "value": "scene_fit×",
+   "confidence": "미측정"
+  },
+  "5스토리": {
+   "value": null,
+   "confidence": "미측정"
+  },
+  "6대본언어": {
+   "value": "script× speech×",
+   "confidence": "미측정"
+  },
+  "7소리": {
+   "value": "bgm○ sfx○",
+   "confidence": "측정"
+  },
+  "8스티커짤": {
+   "value": "sticker× meme× pointer×",
+   "confidence": "미측정"
+  },
+  "9썸네일": {
+   "value": "thumb×",
+   "confidence": "미측정"
+  },
+  "10소재": {
+   "value": null,
+   "confidence": "미측정"
+  },
+  "11채널": {
+   "value": "만템",
+   "confidence": "장부"
+  }
+ },
+ "elements": {
+  "cap_look": "×",
+  "cap_enter": "×",
+  "cap_emph": "×",
+  "cap_exit": "×",
+  "transition": "×",
+  "cut_rhythm": "○",
+  "scene_fit": "×",
+  "bgm": "○",
+  "sfx": "○",
+  "meme": "×",
+  "sticker": "×",
+  "pointer": "×",
+  "thumb": "×",
+  "speech": "×",
+  "script": "×"
+ },
+ "rules": [
+  {
+   "element": "cap_look",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-mantem",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "cap_enter",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-mantem",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "cap_emph",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-mantem",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "cap_exit",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-mantem",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "transition",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-mantem",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "cut_rhythm",
+   "cond": "편 단위",
+   "action": "컷 중앙 1.4초 · p90 2.27초",
+   "k": 8,
+   "n": 8,
+   "rate": null,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/mantem/뜯기 8편"
+   ],
+   "confidence": "신호",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "scene_fit",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-mantem",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "bgm",
+   "cond": "편 단위",
+   "action": "배경음 있음",
+   "k": 8,
+   "n": 8,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/mantem/뜯기 8편"
+   ],
+   "confidence": "신호",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "sfx",
+   "cond": "편 단위",
+   "action": "효과음 후보 중앙 0.272 발/초",
+   "k": 8,
+   "n": 8,
+   "rate": null,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/mantem/뜯기 8편"
+   ],
+   "confidence": "신호",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "meme",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-mantem",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "sticker",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-mantem",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "pointer",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-mantem",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "thumb",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-mantem",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "speech",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-mantem",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  },
+  {
+   "element": "script",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-mantem",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "판 파일 없음(B1·지시서 07)"
+  }
+ ],
+ "gates": {
+  "match_first_copy": {
+   "path": null,
+   "ok": null,
+   "pass": null,
+   "fail": null
+  },
+  "upgrade": {
+   "path": null,
+   "items": null,
+   "better": null
+  },
+  "quality_gate": {
+   "path": null,
+   "ok": null
+  }
+ },
+ "member": {
+  "line_json": "channel/mantem/preset/얜샷템/line.json",
+  "preset_name": "연예인상품+후기형",
+  "flow_format": "연예인형"
+ },
+ "results": {
+  "n": 0,
+  "judged_pass": 0,
+  "latest": null
+ },
+ "facts": {
+  "line_reads": 0,
+  "line_reads_strict_errors": 0,
+  "rules_freq": false,
+  "style_analysis": false,
+  "palette": false,
+  "sfx_events": false,
+  "style_file": null,
+  "style_file_exists": false,
+  "renderer": "make",
+  "caption_pack": null,
+  "caption_pack_ok": false,
+  "counted_n": null,
+  "no_why": null,
+  "hand_scripts": [
+   "channel/mantem/preset/mt_preset.py"
+  ],
+  "hand_scripts_reference": [],
+  "unmeasured": 12,
+  "quality_gate_ok": false,
+  "match_ok": false,
+  "eye": null,
+  "upgrade": null,
+  "member": {
+   "line_json": "channel/mantem/preset/얜샷템/line.json",
+   "preset_name": "연예인상품+후기형",
+   "flow_format": "연예인형"
+  },
+  "line_json_exists": true,
+  "member_live_ok": false,
+  "results_n": 0,
+  "results_pass_n": 0,
+  "owner_pass": false
+ },
+ "inputs": {
+  "channel/mantem/뜯기/0LOyszI-Z0U/뜯기.json": "935b95143c92",
+  "channel/mantem/뜯기/3Xb8hDoRiU4/뜯기.json": "b2de94917b88",
+  "channel/mantem/뜯기/9FcPMZtJVB0/뜯기.json": "acd98a263d4c",
+  "channel/mantem/뜯기/BDAjUIBTjfY/뜯기.json": "9c509917114b",
+  "channel/mantem/뜯기/Pfvwjggi7UA/뜯기.json": "8bf056e1f2f8",
+  "channel/mantem/뜯기/S_CXTCRKFVg/뜯기.json": "e41c9304938d",
+  "channel/mantem/뜯기/Sq-kzCh0Xds/뜯기.json": "bc5c5f4813ea",
+  "channel/mantem/뜯기/qBPnRzR-VaQ/뜯기.json": "cf8149421e65",
+  "channel/결과물.json": "142ed78b2435",
+  "channel/브랜드.json": "f2ded5552699",
+  "channel/스타일.json": "3f5625b6c1a2",
+  "channel/프리셋.json": "7d8cdd70c9e9",
+  "shopping_shorts/static/caption-motions.js": "09ac4bd95b42"
+ },
+ "done": {
+  "level": "L0 미달",
+  "missing": [
+   "줄판독≥6",
+   "줄판독 strict 오류0",
+   "규칙빈도",
+   "스타일분석",
+   "팔레트",
+   "sfx_events",
+   "판파일",
+   "renderer=bench",
+   "숫자칸 why",
+   "counted≥6",
+   "자막팩",
+   "rules 미측정0",
+   "품질관문 ○",
+   "재현일치도 ○",
+   "눈검수 E1~E8",
+   "업그레이드 나아짐≥1",
+   "눈검수 E9",
+   "사장님 판정",
+   "회원실측",
+   "손스크립트0"
+  ],
+  "rule_unmeasured": 12,
+  "measure_tasks": [
+   "06-mantem"
+  ],
+  "complete": false
+ }
+}

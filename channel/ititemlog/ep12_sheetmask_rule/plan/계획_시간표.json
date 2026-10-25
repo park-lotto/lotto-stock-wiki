@@ -1,0 +1,1176 @@
+{
+ "timeline": {
+  "lines": {
+   "N1": [
+    0.0,
+    2.791
+   ],
+   "O1": [
+    2.871,
+    7.951
+   ],
+   "N2": [
+    8.031,
+    10.124
+   ],
+   "O2": [
+    10.204,
+    14.564
+   ],
+   "N3": [
+    14.644,
+    17.086
+   ],
+   "N4": [
+    17.166,
+    19.375
+   ],
+   "O3": [
+    19.455,
+    23.405
+   ],
+   "N5": [
+    23.485,
+    25.811
+   ],
+   "N6": [
+    25.891,
+    27.868
+   ],
+   "N7": [
+    27.948,
+    30.157
+   ]
+  },
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "비행기에서",
+    "t0": 0.0,
+    "t1": 0.714,
+    "show": [
+     0.0,
+     0.714
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "투명해진 마스크팩에",
+    "t0": 0.714,
+    "t1": 2.0,
+    "key": "투명",
+    "show": [
+     0.714,
+     2.0
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "놀란 외국인이 있는데요",
+    "t0": 2.0,
+    "t1": 2.791,
+    "show": [
+     2.0,
+     2.871
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "열세 시간 비행 동안",
+    "t0": 2.871,
+    "t1": 5.271,
+    "show": [
+     2.871,
+     5.271
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "언제 투명해지나 볼게",
+    "t0": 5.271,
+    "t1": 7.951,
+    "key": "투명",
+    "show": [
+     5.271,
+     8.031
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "새하얗던 마스크가",
+    "t0": 8.031,
+    "t1": 9.174,
+    "key": "새하얗던",
+    "show": [
+     8.031,
+     9.174
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "시간이 갈수록 비치더니",
+    "t0": 9.174,
+    "t1": 10.124,
+    "show": [
+     9.174,
+     10.204
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "이제 떼 볼까",
+    "t0": 10.204,
+    "t1": 11.764,
+    "show": [
+     10.204,
+     12.524
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "한 번에 통째로 떨어졌어!",
+    "t0": 12.524,
+    "t1": 14.564,
+    "key": "통째로",
+    "show": [
+     12.524,
+     14.644
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "세럼이 피부로 스며들수록",
+    "t0": 14.644,
+    "t1": 16.215,
+    "show": [
+     14.644,
+     16.215
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "투명해지는 원리라는데",
+    "t0": 16.215,
+    "t1": 17.086,
+    "key": "원리",
+    "show": [
+     16.215,
+     17.166
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "다른 외국인 모녀는",
+    "t0": 17.166,
+    "t1": 18.309,
+    "show": [
+     17.166,
+     18.309
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "아예 밤새 붙이고 자 봤더니",
+    "t0": 18.309,
+    "t1": 19.375,
+    "key": "밤새",
+    "show": [
+     18.309,
+     19.455
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "여덟 시간 만에 투명해졌어",
+    "t0": 19.455,
+    "t1": 21.815,
+    "key": "투명",
+    "show": [
+     19.455,
+     21.895
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "무슨 마법을 넣은 거야?",
+    "t0": 21.895,
+    "t1": 23.405,
+    "key": "마법",
+    "show": [
+     21.895,
+     23.485
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "써 본 사람들은",
+    "t0": 23.485,
+    "t1": 24.342,
+    "show": [
+     23.485,
+     24.342
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "통째로 떨어지는 게",
+    "t0": 24.342,
+    "t1": 25.485,
+    "key": "통째로",
+    "show": [
+     24.342,
+     25.485
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "신기하다던데",
+    "t0": 25.485,
+    "t1": 25.811,
+    "show": [
+     25.485,
+     25.891
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "아침에 일어나도",
+    "t0": 25.891,
+    "t1": 26.891,
+    "show": [
+     25.891,
+     26.891
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "피부가 촉촉하다고 하고",
+    "t0": 26.891,
+    "t1": 27.868,
+    "key": "촉촉",
+    "show": [
+     26.891,
+     27.948
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "아, 나도 다음 비행기에선",
+    "t0": 27.948,
+    "t1": 29.377,
+    "key": "비행기",
+    "show": [
+     27.948,
+     29.377
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "이거 붙이고 자야겠다",
+    "t0": 29.377,
+    "t1": 30.157,
+    "show": [
+     29.377,
+     30.333
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "src": "saA.mp4",
+    "ss": 15.6,
+    "crop": [
+     0,
+     243,
+     1080,
+     1434
+    ],
+    "see": "6시간 — 거의 투명해진 마스크(결과 먼저)",
+    "line": "N1",
+    "t0": 0.0,
+    "kind": "tts",
+    "t1": 2.871,
+    "dur": 2.871,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     0,
+     243,
+     1080,
+     1434
+    ],
+    "see": "하얀 마스크 붙인 얼굴, 도전 말함(입 맞춤)",
+    "line": "O1",
+    "ss": 0.16,
+    "src": "saA.mp4",
+    "t0": 2.871,
+    "kind": "orig",
+    "t1": 8.031,
+    "dur": 5.16,
+    "over": 0.0
+   },
+   {
+    "src": "saA.mp4",
+    "ss": 5.6,
+    "crop": [
+     0,
+     243,
+     1080,
+     1434
+    ],
+    "see": "20분 — 아직 하얌",
+    "line": "N2",
+    "t0": 8.031,
+    "kind": "tts",
+    "t1": 8.755,
+    "dur": 0.724,
+    "over": 0.0
+   },
+   {
+    "src": "saA.mp4",
+    "ss": 7.3,
+    "crop": [
+     0,
+     243,
+     1080,
+     1434
+    ],
+    "see": "1시간 — 비치기 시작",
+    "line": "N2",
+    "t0": 8.755,
+    "kind": "tts",
+    "t1": 9.48,
+    "dur": 0.725,
+    "over": 0.0
+   },
+   {
+    "src": "saA.mp4",
+    "ss": 11.6,
+    "crop": [
+     0,
+     243,
+     1080,
+     1434
+    ],
+    "see": "3시간 — 더 투명",
+    "line": "N2",
+    "t0": 9.48,
+    "kind": "tts",
+    "t1": 10.204,
+    "dur": 0.724,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     0,
+     243,
+     1080,
+     1434
+    ],
+    "see": "투명 마스크 떼서 들기(입 맞춤)",
+    "line": "O2",
+    "ss": 17.0,
+    "src": "saA.mp4",
+    "t0": 10.204,
+    "kind": "orig",
+    "t1": 14.644,
+    "dur": 4.44,
+    "over": 0.0
+   },
+   {
+    "src": "daA.mp4",
+    "ss": 3.767,
+    "crop": [
+     0,
+     243,
+     1080,
+     1434
+    ],
+    "see": "비행기 좌석 — 반쯤 투명해진 마스크",
+    "line": "N3",
+    "t0": 14.644,
+    "kind": "tts",
+    "t1": 15.905,
+    "dur": 1.261,
+    "over": 0.0,
+    "ss_planned": 3.5
+   },
+   {
+    "src": "daA.mp4",
+    "ss": 4.7,
+    "crop": [
+     0,
+     243,
+     1080,
+     1434
+    ],
+    "see": "2시간 — 투명",
+    "line": "N3",
+    "t0": 15.905,
+    "kind": "tts",
+    "t1": 17.166,
+    "dur": 1.261,
+    "over": 0.0
+   },
+   {
+    "src": "ayA.mp4",
+    "ss": 0.267,
+    "crop": [
+     0,
+     243,
+     1080,
+     1434
+    ],
+    "see": "모녀 마스크 붙인 모습",
+    "line": "N4",
+    "t0": 17.166,
+    "kind": "tts",
+    "t1": 18.31,
+    "dur": 1.144,
+    "over": 0.0,
+    "ss_planned": 0.0
+   },
+   {
+    "src": "ayA.mp4",
+    "ss": 1.0,
+    "crop": [
+     0,
+     243,
+     1080,
+     1434
+    ],
+    "see": "밤새 붙이고 잔 뒤",
+    "line": "N4",
+    "t0": 18.31,
+    "kind": "tts",
+    "t1": 19.455,
+    "dur": 1.145,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     0,
+     243,
+     1080,
+     1434
+    ],
+    "see": "투명 마스크 모녀 놀람(입 맞춤)",
+    "line": "O3",
+    "ss": 3.0,
+    "src": "ayA.mp4",
+    "t0": 19.455,
+    "kind": "orig",
+    "t1": 23.485,
+    "dur": 4.03,
+    "over": 0.0
+   },
+   {
+    "src": "ayB.mp4",
+    "ss": 1.733,
+    "crop": [
+     0,
+     243,
+     1080,
+     1434
+    ],
+    "see": "마스크 떼기",
+    "line": "N5",
+    "t0": 23.485,
+    "kind": "tts",
+    "t1": 25.891,
+    "dur": 2.406,
+    "over": 0.0,
+    "ss_planned": 1.6
+   },
+   {
+    "src": "ayB.mp4",
+    "ss": 5.8,
+    "crop": [
+     0,
+     243,
+     1080,
+     1434
+    ],
+    "see": "윤기 나는 얼굴",
+    "line": "N6",
+    "t0": 25.891,
+    "kind": "tts",
+    "t1": 26.919,
+    "dur": 1.028,
+    "over": 0.0
+   },
+   {
+    "src": "ayB.mp4",
+    "ss": 8.5,
+    "crop": [
+     0,
+     243,
+     1080,
+     1434
+    ],
+    "see": "얼굴 만지며",
+    "line": "N6",
+    "t0": 26.919,
+    "kind": "tts",
+    "t1": 27.948,
+    "dur": 1.029,
+    "over": 0.0
+   },
+   {
+    "src": "daA.mp4",
+    "ss": 10.233,
+    "crop": [
+     0,
+     243,
+     1080,
+     1434
+    ],
+    "see": "4시간 — 비행기에서 마스크 거의 다 스며듦",
+    "line": "N7",
+    "t0": 27.948,
+    "kind": "tts",
+    "t1": 30.3333,
+    "dur": 2.385,
+    "over": 0.0,
+    "ss_planned": 10.3
+   }
+  ],
+  "opos": [
+   {
+    "line": "O1",
+    "k": 0,
+    "src": "saA.mp4",
+    "span": [
+     0.16,
+     5.24
+    ],
+    "t0": 2.871,
+    "t1": 7.951
+   },
+   {
+    "line": "O2",
+    "k": 0,
+    "src": "saA.mp4",
+    "span": [
+     17.0,
+     21.36
+    ],
+    "t0": 10.204,
+    "t1": 14.564
+   },
+   {
+    "line": "O3",
+    "k": 0,
+    "src": "ayA.mp4",
+    "span": [
+     3.0,
+     6.95
+    ],
+    "t0": 19.455,
+    "t1": 23.405
+   }
+  ],
+  "end": 30.3333
+ },
+ "placement": {
+  "reference": "J7GxfaVdwSU",
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "비행기에서",
+    "t0": 0.0,
+    "t1": 0.714,
+    "show": [
+     0.0,
+     0.714
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": "hook"
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "투명해진 마스크팩에",
+    "t0": 0.714,
+    "t1": 2.0,
+    "key": "투명",
+    "show": [
+     0.714,
+     2.0
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [
+     {
+      "kind": "circle_arrow",
+      "word": "투명",
+      "target": {
+       "kind": "face",
+       "avoid": [],
+       "anchor": "mouth"
+      },
+      "site": "pending"
+     }
+    ],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": "hook"
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "놀란 외국인이 있는데요",
+    "t0": 2.0,
+    "t1": 2.791,
+    "show": [
+     2.0,
+     2.871
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": "hook_pop"
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "열세 시간 비행 동안",
+    "t0": 2.871,
+    "t1": 5.271,
+    "show": [
+     2.871,
+     5.271
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "언제 투명해지나 볼게",
+    "t0": 5.271,
+    "t1": 7.951,
+    "key": "투명",
+    "show": [
+     5.271,
+     8.031
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "reveal",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "새하얗던 마스크가",
+    "t0": 8.031,
+    "t1": 9.174,
+    "key": "새하얗던",
+    "show": [
+     8.031,
+     9.174
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "시간이 갈수록 비치더니",
+    "t0": 9.174,
+    "t1": 10.124,
+    "show": [
+     9.174,
+     10.204
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "이제 떼 볼까",
+    "t0": 10.204,
+    "t1": 11.764,
+    "show": [
+     10.204,
+     12.524
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "한 번에 통째로 떨어졌어!",
+    "t0": 12.524,
+    "t1": 14.564,
+    "key": "통째로",
+    "show": [
+     12.524,
+     14.644
+    ],
+    "first": false,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "세럼이 피부로 스며들수록",
+    "t0": 14.644,
+    "t1": 16.215,
+    "show": [
+     14.644,
+     16.215
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "투명해지는 원리라는데",
+    "t0": 16.215,
+    "t1": 17.086,
+    "key": "원리",
+    "show": [
+     16.215,
+     17.166
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "다른 외국인 모녀는",
+    "t0": 17.166,
+    "t1": 18.309,
+    "show": [
+     17.166,
+     18.309
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [
+     {
+      "kind": "spark_lines",
+      "word": "",
+      "target": {
+       "kind": "caption_side",
+       "avoid": [
+        "face"
+       ]
+      },
+      "site": "pending"
+     }
+    ],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "아예 밤새 붙이고 자 봤더니",
+    "t0": 18.309,
+    "t1": 19.375,
+    "key": "밤새",
+    "show": [
+     18.309,
+     19.455
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "밤새",
+      "color": "#F07A09"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "여덟 시간 만에 투명해졌어",
+    "t0": 19.455,
+    "t1": 21.815,
+    "key": "투명",
+    "show": [
+     19.455,
+     21.895
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "무슨 마법을 넣은 거야?",
+    "t0": 21.895,
+    "t1": 23.405,
+    "key": "마법",
+    "show": [
+     21.895,
+     23.485
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "써 본 사람들은",
+    "t0": 23.485,
+    "t1": 24.342,
+    "show": [
+     23.485,
+     24.342
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "통째로 떨어지는 게",
+    "t0": 24.342,
+    "t1": 25.485,
+    "key": "통째로",
+    "show": [
+     24.342,
+     25.485
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "신기하다던데",
+    "t0": 25.485,
+    "t1": 25.811,
+    "show": [
+     25.485,
+     25.891
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "아침에 일어나도",
+    "t0": 25.891,
+    "t1": 26.891,
+    "show": [
+     25.891,
+     26.891
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "피부가 촉촉하다고 하고",
+    "t0": 26.891,
+    "t1": 27.868,
+    "key": "촉촉",
+    "show": [
+     26.891,
+     27.948
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "아, 나도 다음 비행기에선",
+    "t0": 27.948,
+    "t1": 29.377,
+    "key": "비행기",
+    "show": [
+     27.948,
+     29.377
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "이거 붙이고 자야겠다",
+    "t0": 29.377,
+    "t1": 30.157,
+    "show": [
+     29.377,
+     30.333
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   }
+  ],
+  "sfx": [
+   {
+    "t": 3.171,
+    "role": "body",
+    "why": "body",
+    "kind": "pop"
+   },
+   {
+    "t": 18.609,
+    "role": "body",
+    "why": "body 강조",
+    "kind": "pop"
+   }
+  ],
+  "transitions": [],
+  "flashes": [],
+  "cut_bounds": 14,
+  "log": [
+   "본보기 벤치 편 = J7GxfaVdwSU",
+   "목표 밀도 모드(업그레이드 판 targets): fx_rate_narr 0.18(상한 0.231), fx_rate_orig 0.056(상한 0.111), sfx_rate 0.051(상한 0.067), sticker_rate 0.061(상한 0.065) · 출처 channel/ititemlog/_kal/상위편_목표.json density",
+   "훅 N1 덩어리 3개 → hook (끝 hook_pop)",
+   "스티커 circle_arrow → N1「투명해진 마스크팩에」",
+   "스티커 spark_lines → N4「다른 외국인 모녀는」",
+   "꾸밈 자리 본문 목표 4 중 3개 — key 덩어리·화자 상한 {'narr': 5, 'orig': 1} 모자람",
+   "⚠ conflict {'axis': 'fx_rate_narr', 'need': 5, 'cap': 4, 'cause': 'deco_pos×targets', 'by': {'variant': 3, 'sticker': 1, 'emph': 1}, 'why': '뼈대 최소(deco_pos — 1차 꾸밈 자리) > 업그레이드 상한(상위 편 max) — 어느 쪽도 늘리지 않고 멈춤(표준 §11-5 ㉛), 대본 단계로'}",
+   "전환 [] (본보기 J7GxfaVdwSU 줄판독 34줄 비율 {'zoomblur': 0.03}, 컷 경계 14·붙일 수 있는 4(≥1.2초))",
+   "효과음 targets: 목표 0.051발/초 × 30.16초 = 2발 · 상한 2(상위 편 최대 0.067)",
+   "효과음 2발(본보기 줄판독 1발 · 역할 {'body': 2} · 편차 +0.30초) [(3.171, 'pop', 'body'), (18.609, 'pop', 'body')]",
+   "짤 0개(rate 0.0 — 벤치에 짤 없음도 스타일)",
+   "등장 {'cut': 22} · 강조 1/22"
+  ],
+  "targets": {
+   "sfx_rate": {
+    "goal": 0.051,
+    "cap": 0.067,
+    "src": "channel/ititemlog/_kal/상위편_목표.json density",
+    "n_goal": 2,
+    "lo": 1,
+    "hi": 2,
+    "n_first": 2,
+    "dur": 30.157,
+    "n": 2,
+    "ours": 0.066
+   }
+  },
+  "deco_pos": {
+   "bench_pos": {
+    "훅": 0.354,
+    "본문": 0.508,
+    "끝": 0.038
+   },
+   "want": {
+    "훅": 3,
+    "본문": 4,
+    "끝": 0
+   },
+   "have_before": {
+    "훅": 3,
+    "본문": 2
+   },
+   "conflict": {
+    "axis": "fx_rate_narr",
+    "need": 5,
+    "cap": 4,
+    "cause": "deco_pos×targets",
+    "by": {
+     "variant": 3,
+     "sticker": 1,
+     "emph": 1
+    },
+    "why": "뼈대 최소(deco_pos — 1차 꾸밈 자리) > 업그레이드 상한(상위 편 max) — 어느 쪽도 늘리지 않고 멈춤(표준 §11-5 ㉛), 대본 단계로"
+   }
+  },
+  "conflict": {
+   "axis": "fx_rate_narr",
+   "need": 5,
+   "cap": 4,
+   "cause": "deco_pos×targets",
+   "by": {
+    "variant": 3,
+    "sticker": 1,
+    "emph": 1
+   },
+   "why": "뼈대 최소(deco_pos — 1차 꾸밈 자리) > 업그레이드 상한(상위 편 max) — 어느 쪽도 늘리지 않고 멈춤(표준 §11-5 ㉛), 대본 단계로"
+  },
+  "transitions_drawn": []
+ }
+}

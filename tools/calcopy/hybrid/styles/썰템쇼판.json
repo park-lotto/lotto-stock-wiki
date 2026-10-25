@@ -1,0 +1,809 @@
+{
+ "name": "썰템쇼판",
+ "renderer": "bench",
+ "thumb_card_face": false,
+ "_thumb_card_face": "연예인 채널 아님 — 카드 얼굴 관문 끔(판마다 명시 필수, styles.REQUIRED)",
+ "_note": "재밌쇼(@humorshowshow) 칼카피 1차 판 — 쇼핑형>썰커뮤니티형 + 화자대사줄 옵션(「화자 : 대사」). 근거 = 설명서 프리셋 channel/humorshowshow/preset/썰템쇼_화자썰/{frame.json,manifest.json}(hs_preset.py 가 만든 것, 8편 실측) · 줄판독 21편(옛 꼴 줄판독/_옛꼴 — 06 새 꼴 미변환이라 placement.count·규칙빈도 없음 → measure_task 06-humorshowshow). 손 스크립트 preset/hs_preset.py·hs_loo.py·hs_measure.py = 설명서 프리셋 생성기(회원 옛 길 preset_make 가 읽음 — 지우지 않는다)",
+ "bench": {
+  "ko": "재밌쇼",
+  "channel": "humorshowshow",
+  "analysis": "channel/humorshowshow/스타일분석_2026-10-17.md",
+  "line_reads": "channel/humorshowshow/줄판독",
+  "src_dir": "C:/숏템_칼카피/humorshowshow/mp4",
+  "design": "channel/humorshowshow/preset/썰템쇼_화자썰/manifest.json"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f",
+  "candidates": [
+   "지훈"
+  ],
+  "why": "벤치 '빠르고 위트 있는 20대 남성 TTS 해설 톤'(NBdm 판독) · 사장님 10-17 '목소리는 따라가지 않는다' → 남 = 박창수·지훈(CLAUDE.md 10-20, 필재 금지) 중 박창수(손 상수 — 귀 확인 필요)"
+ },
+ "cps_target": 8.6,
+ "_why_cps_target": "뜯기 voice_rules.cps 중앙 8.6(받아쓰기 된 2편 8.92·8.28 — manifest.channel_rules.sound)",
+ "bgm": {
+  "id": "sweets",
+  "db_below_voice": 12.9,
+  "duck_orig_db": 0.0,
+  "duck_narr_db": 0.0,
+  "fade_out": 0.11,
+  "candidates": [],
+  "why": "BGM 있음·경쾌(NBdm 판독) · 곡 sweets = 곡 미식별(사람이 고른다) · 벤치 6편 원본 소리 실측(handconst.py humorshowshow → _kal/손상수_실측.json bgm.* · 신호급 — 나레·원음·BGM 섞인 소리, 분리 없음): db_below_voice 12.9 = 말 p50 − 말 사이 바닥(줄 경계 쉼 프레임 중앙, 말 없는 구간 ≥1초 편은 그 p10) 편 중앙 12.875dB(13.55·28.59·13.92·12.2·11.05·11.58, n=6) · duck_orig_db 0 = 원음·나레가 같이 나온 편 0(원음 줄 없음 → 원음 구간 덕킹 칸 안 쓰임) · fade_out 0.11 = 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.114초(0.034~0.174) · duck_narr_db 0 = 말 없는 구간 ≥1초 편 0/6 — 말이 처음부터 끝까지 깔려 비교할 빈 구간이 없고 db_below_voice 가 이미 말 사이 바닥 기준"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 통일(사장님 10-18) · 벤치 I 중앙 −13.8(8편)"
+ },
+ "length": {
+  "min": 26.3,
+  "max": 32.3,
+  "why": "벤치 8편 길이 26.33~32.33(중앙 28.392, manifest shot_contract.rows)"
+ },
+ "timing": {
+  "gap": 0.08,
+  "tail": 0.22,
+  "why": "벤치 6편 원본 소리 실측(handconst.py humorshowshow → _kal/손상수_실측.json): 줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙 — gap 0.08(모든 줄 경계 n=26, p25 0.06·p75 0.1) (경계 ±0.15초 창 안 가장 긴 쉼, 쉼 문턱 = 편별 (말 p50+p5)/2) · tail 0.22 = 마지막 말 소리 끝→영상 끝 편 중앙 0.224초(0.114~0.354, 6/6편 — 로컬 위스퍼 마지막 낱말 끝 p≥0.4)"
+ },
+ "frame": {
+  "kind": "post",
+  "_from": "frame_import.py ← calcopy_frame v1 source=NBdmq90aJus frame=body span=$per_video",
+  "bg": [
+   255,
+   255,
+   255
+  ],
+  "window": [
+   0,
+   673,
+   1080,
+   878
+  ],
+  "title": [
+   {
+    "font": "Pretendard-ExtraBold.otf",
+    "px": 76.9,
+    "center": 316.0,
+    "color": "#000000",
+    "max_w": 980,
+    "x": 546
+   }
+  ],
+  "post": {
+   "head_bar": {
+    "box": [
+     0,
+     0,
+     1080,
+     239
+    ],
+    "color": "#E2EED2",
+    "icons": [
+     {
+      "font": "BMJUA.ttf",
+      "px": 92.7,
+      "color": "#AFDA81",
+      "cx": 460,
+      "cy": 189.5,
+      "max_w": 120,
+      "text": "썰",
+      "kind": "text",
+      "from": "_fixed"
+     },
+     {
+      "font": "BMJUA.ttf",
+      "px": 92.7,
+      "color": "#FFFFFF",
+      "cx": 541,
+      "cy": 189.5,
+      "max_w": 120,
+      "text": "템",
+      "kind": "text",
+      "from": "_fixed"
+     },
+     {
+      "font": "BMJUA.ttf",
+      "px": 92.7,
+      "color": "#AFDA81",
+      "cx": 622,
+      "cy": 189.5,
+      "max_w": 120,
+      "text": "쇼",
+      "kind": "text",
+      "from": "_fixed"
+     }
+    ]
+   },
+   "author_line": {
+    "font": "SUIT-Bold.otf",
+    "px": 23.3,
+    "color": "#020000",
+    "x": 80,
+    "cy": 387.5,
+    "max_w": 200,
+    "text": "익명"
+   },
+   "rules": [
+    {
+     "box": [
+      0,
+      402,
+      1080,
+      404
+     ],
+     "color": "#6E666D"
+    }
+   ]
+  },
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "why": "frame_import.py ← channel/humorshowshow/preset/썰템쇼_화자썰/frame.json(body, 8편 실측 hs_measure → preset_save 중앙값, manifest.variable_stats) 픽셀 그대로 · 로고 '재밌쇼'→'썰템쇼' 글자마다 색(사장님 10-18 '로고만 바꾼다') · 창 [0,673,1080,878] = 프리셋 고정 창(벤치는 컷마다 그림 높이 489~933 — manifest.differences) · 제목 가운데 x 546(framecmp 벤치 NBdm 8초 cx 546)",
+  "_pending": {
+   "unmapped_layers": "머리띠 svg 아이콘 2(x172·x834)·로고 밑 장식 선 svg(x419 y137)·조회수 줄 2칸(SUIT-Bold 23.3 회색·20 빨강, $per_video) — post 칸에 그림(image) 아이콘·메타 2색 칸 없음 → 02 쪽지",
+   "views_line": "벤치 메타 줄 '추천891 조회 1,954,556 <날짜> 09:18 댓글 7544'(21편 같은 꾸민 값) — 사장님 10-18 '켜 둔다' ↔ 금지선 '가짜 지표' 충돌(manifest.meta_line.caution) → 판엔 안 켬, 대본 post.views 가 있을 때만 그려짐. 사장님 확인 필요",
+   "logo_rotate": "벤치 로고 글자마다 기울인 손글씨 — 렌더러 글자 회전 칸 없음(manifest.differences) → 02",
+   "pic_box_per_cut": "그림 높이 컷마다 489~933 — 창 고정만 → 02",
+   "logo_stroke": "벤치 로고 굵은 어두운 외곽+그림자 — head_bar 글 아이콘(_draw_text)에 외곽·그림자 칸 없음 → 02"
+  },
+  "segments": [
+   {
+    "t0": 0,
+    "t1": "#1.end",
+    "frame": {
+     "kind": "post",
+     "bg": [
+      97,
+      97,
+      97
+     ],
+     "window": [
+      0,
+      748,
+      1080,
+      1172
+     ],
+     "title": [
+      {
+       "font": "GmarketSansBold.otf",
+       "px": 113.6,
+       "center": 198,
+       "color": "#FFFFFF",
+       "max_w": 1060,
+       "stroke": {
+        "px": 3,
+        "color": "#000000"
+       },
+       "shadow": {
+        "dx": 6,
+        "dy": 6,
+        "color": "#141414"
+       }
+      },
+      {
+       "font": "GmarketSansBold.otf",
+       "px": 113.6,
+       "center": 324,
+       "color": "#84FD46",
+       "max_w": 1060,
+       "stroke": {
+        "px": 3,
+        "color": "#000000"
+       },
+       "shadow": {
+        "dx": 6,
+        "dy": 6,
+        "color": "#141414"
+       }
+      }
+     ],
+     "post": {
+      "head_bar": {
+       "box": [
+        0,
+        0,
+        1080,
+        239
+       ],
+       "color": "#565D50",
+       "icons": []
+      },
+      "rules": [
+       {
+        "box": [
+         0,
+         530,
+         1080,
+         533
+        ],
+        "color": "#373737"
+       },
+       {
+        "box": [
+         0,
+         640,
+         1080,
+         704
+        ],
+        "color": "#EDEDED"
+       },
+       {
+        "box": [
+         0,
+         704,
+         1080,
+         707
+        ],
+        "color": "#323232"
+       },
+       {
+        "box": [
+         0,
+         707,
+         1080,
+         733
+        ],
+        "color": "#CDCDCD"
+       },
+       {
+        "box": [
+         0,
+         733,
+         1080,
+         748
+        ],
+        "color": "#343434"
+       }
+      ],
+      "body_box": {
+       "box": [
+        0,
+        533,
+        1080,
+        640
+       ],
+       "color": "#FDFDFD",
+       "text": {
+        "font": "Pretendard-SemiBold.otf",
+        "px": 59.6,
+        "color": "#000000",
+        "cx": 540,
+        "cy": 612,
+        "max_w": 1040,
+        "text": ""
+       }
+      }
+     },
+     "logo": null,
+     "credit": null,
+     "watermark": null
+    },
+    "captions": "hide",
+    "body_text": "lines",
+    "why": "훅 카드(0~2초, manifest.roles[0] — 첫 컷 1.83~2.2초 8편) = 첫 나레 문장 → 본문 게시글 틀 · 틀 = frame.json hook(NBdm, 8편 중앙: 바탕 97·머리띠 자리 #565D50·큰 제목 2줄 GmarketSans 113.6 흰/연두 #84FD46 외곽 3+그림자 6·흰 띠 y533~640 Pretendard-SemiBold 59.6 같은 문장) · 제목 가운데 208/334→198/324(NBdm 0.5초 잉크 y0 +10 보정)"
+   }
+  ]
+ },
+ "caption": {
+  "pack": "humorshowshow",
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 8.6,
+  "chunk_max_chars": 16,
+  "band": [
+   488,
+   716
+  ],
+  "why": "자막 = frame.json caption 층(Pretendard-Bold 60.1 검정·외곽 0·가운데·3줄 칸 y488 줄 76 = 488~716) · 조각 초 중앙 1.4(뜯기 8편) · chunk_max_chars 16 = 벤치 나레 조각 자수(공백 뺀) p90 16(n=190, 중앙 10·최대 32) · typing_cps 8.6 = 렌더에 안 닿는 값: 벤치 타이핑 0/190줄 · 판 칸 어디에도 enter typing 없음 → caption_rows 가 이 값을 안 읽음 · band [488,716] = 3줄 칸 전체(frame.json — 줄판독 나레 줄 y 중앙 576~628 n=190 은 한 줄 자리, 칸 안) — handconst.py humorshowshow caption.*",
+  "stack": {
+   "lines": 3,
+   "break": "full",
+   "y": 526,
+   "pitch": 76,
+   "why": "자막 칸 = frame.json caption 3줄(y488·줄 76) 덧붙음 누적(manifest.differences '2줄째 덧붙음') → lines 3 · frame.json caption 3줄 y488·줄 76 → 첫 줄 가운데 526 — 새 팩 humorshowshow(1a6bb76d7) 렌더 피치 76(팩요청.md 해결)"
+  }
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "black": 0.005
+   },
+   "ms": 67,
+   "why": "벤치 줄 경계 비율 black 0.005(1회, bfKk 3.8초 — 줄판독 count) · ms 67 = bench_transition_drop(drop 0.228)"
+  },
+  "why": "push 0 — 벤치 줌인 컷 비율 0.368(뜯기 8편)이나 세기·조건 미측정 → _pending"
+ },
+ "sfx_files": {
+  "gain_db": -8,
+  "why": "벤치 효과음 휙·띵(NBdm 받아쓰기 6개/28초 — 1편, 신호표 sfx_events 없음) → 규칙 없음, 06 측정 뒤(손 상수)"
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "narr.first": "cut",
+    "narr.rest": "cut",
+    "why": "꾸밈 등장 미측정(옛 꼴) — 설명서 프리셋 캡션 enter null(즉시) 그대로"
+   },
+   "meme": {
+    "rate": 0.0,
+    "why": "반응 짤은 그림 칸 재료 자체(17/21편) — 얹는 짤 아님"
+   },
+   "sfx": {
+    "max": 0,
+    "why": "효과음 0 — 줄판독(06 새 꼴) 6편 sfx 0/6(10-25 count) · 옛 manifest '휙·띵 NBdm 6개'는 받아쓰기 1편 표시라 줄판독이 이긴다"
+   },
+   "transition": {
+    "kinds": [
+     "black"
+    ],
+    "why": "그릴 종류 = 벤치에서 본 것 · 자리 = 본보기 편 줄판독(placement)"
+   }
+  },
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/humorshowshow/줄판독",
+   "n_videos": 6,
+   "slots": {
+    "narr.first": {
+     "n": 6,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.167
+    },
+    "narr.rest": {
+     "n": 184,
+     "enter": {
+      "cut": 0.565,
+      "append": 0.435
+     },
+     "emph": 0.0
+    }
+   },
+   "share": {
+    "emph": 0.167,
+    "typing": 0.0,
+    "sfx": 0.667
+   },
+   "stickers": {
+    "other": 0.333,
+    "spark_lines": 0.667
+   },
+   "transition": {
+    "cut": 0.995,
+    "black": 0.005
+   },
+   "sfx_kinds": {},
+   "videos": [
+    {
+     "id": "bfKkNmVTGPs",
+     "n": 20,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 19,
+       "enter": {
+        "cut": 10,
+        "append": 9
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "spark_lines": 1,
+      "other": 1
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "lux": 1
+      },
+      "other": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "훅 카드 라벨 줄(회색 띠 안 검은 글 = 큰 제목과 같은 문장, 카드째 천천히 위로 이동)": 1,
+      "기본(새 페이지 첫 줄)": 10,
+      "덧붙음(2번째 줄)": 9
+     },
+     "sfx": [
+      "none",
+      "cap"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 18,
+      "black": 1
+     },
+     "n_trans": 19,
+     "roles": {
+      "hook": 1,
+      "body": 10,
+      "reveal": 3,
+      "twist": 4,
+      "end": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "BlA9f8rBPuc",
+     "n": 22,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 21,
+       "enter": {
+        "cut": 11,
+        "append": 10
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "spark_lines": 1
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "훅 카드 라벨 줄(회색 띠 안 검은 글 = 큰 제목과 같은 문장, 카드째 천천히 위로 이동)": 1,
+      "기본(새 페이지 첫 줄)": 11,
+      "덧붙음(2번째 줄)": 10
+     },
+     "sfx": [],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 21
+     },
+     "n_trans": 21,
+     "roles": {
+      "hook": 1,
+      "body": 12,
+      "reveal": 3,
+      "twist": 4,
+      "end": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "jECuoRljWj0",
+     "n": 23,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 22,
+       "enter": {
+        "cut": 12,
+        "append": 10
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "spark_lines": 1
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "훅 카드 라벨 줄(회색 띠 안 검은 글 = 큰 제목과 같은 문장, 카드째 천천히 위로 이동)": 1,
+      "기본(새 페이지 첫 줄)": 12,
+      "덧붙음(2번째 줄)": 10
+     },
+     "sfx": [],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 22
+     },
+     "n_trans": 22,
+     "roles": {
+      "hook": 1,
+      "body": 15,
+      "twist": 3,
+      "reveal": 2,
+      "end": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "Lr2Hwd0PeKM",
+     "n": 35,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 1
+      },
+      "narr.rest": {
+       "n": 34,
+       "enter": {
+        "cut": 30,
+        "append": 4
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "other": 1
+     },
+     "sticker_lex": {
+      "other": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "기본(새 페이지 첫 줄) — 2줄이 한 번에": 13,
+      "기본(새 페이지 첫 줄)": 18,
+      "덧붙음(2번째 줄)": 4
+     },
+     "sfx": [
+      "none",
+      "cap",
+      "none",
+      "none"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 34
+     },
+     "n_trans": 34,
+     "roles": {
+      "hook": 1,
+      "body": 31,
+      "end": 3
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "NBdmq90aJus",
+     "n": 25,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 24,
+       "enter": {
+        "cut": 12,
+        "append": 12
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "spark_lines": 1
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "훅 카드 라벨 줄(회색 띠 안 검은 글 = 큰 제목과 같은 문장, 카드째 천천히 위로 이동)": 1,
+      "기본(새 페이지 첫 줄)": 12,
+      "덧붙음(2번째 줄)": 12
+     },
+     "sfx": [
+      "none"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 24
+     },
+     "n_trans": 24,
+     "roles": {
+      "hook": 1,
+      "body": 16,
+      "twist": 4,
+      "reveal": 2,
+      "end": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "pY2zNE5A1m4",
+     "n": 65,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 64,
+       "enter": {
+        "append": 35,
+        "cut": 29
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "기본(새 페이지 첫 줄)": 21,
+      "덧붙음(2번째 줄)": 14,
+      "덧붙음(3번째 줄)": 12,
+      "기본(새 페이지 첫 줄) — 2줄이 한 번에": 7,
+      "덧붙음(3번째 줄까지)": 4,
+      "덧붙음(4번째 줄)": 5,
+      "기본(새 페이지 첫 줄) — 3줄이 한 번에": 2
+     },
+     "sfx": [
+      "cap",
+      "cap"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 64
+     },
+     "n_trans": 64,
+     "roles": {
+      "hook": 3,
+      "body": 49,
+      "twist": 7,
+      "end": 6
+     },
+     "sfx_lines": []
+    }
+   ]
+  }
+ },
+ "title_form": "게시글 제목 1줄(Pretendard-ExtraBold 76.9) = 훅 문장 · 훅 카드 2줄(흰/연두)은 _pending.hook_card",
+ "_pending": {
+  "counted": "줄판독 21편이 옛 꼴(줄판독/_옛꼴) — placement.count 가 못 읽음 → 06-humorshowshow 새 꼴 6편 뒤 count",
+  "speaker_lines": {
+   "rule": "「화자 : 대사」 자막 줄 0~3개/편 — 화자 = 의인화한 집단·회사·나라(한국인들·제조사·벨·코스트코·프랑스…)",
+   "narration_reads": "나레는 화자 이름을 빼고 대사만 읽는다(78p9·jECu 받아쓰기 대조)",
+   "count_from": "21편 356줄: 화자대사 48 · 2인대화 8 (15/21편에 있음)",
+   "max_per_video": 3
+  },
+  "last_line": {
+   "rule": "1인칭 혼잣말 드립 + ㅋㅋ 또는 ㅎㅎ 로 끝 — 편마다 둘 중 하나(사장님 10-18 ㅎㅎ 추가, 벤치는 ㅋㅋ 16/16·ㅎㅎ 0)",
+   "from": "훅 카드 꼴 16/16편 ㅋㅋ 끝, 그중 12편 '아/하 ~' 시작"
+  }
+ },
+ "script": {
+  "brief": [
+   "박자: 훅 카드(0~2초): [주체] + [센 동사] + [정체 숨긴 대상]? — 2줄째 연두, 아래 띠에 같은 문장 → 대상 소개·배경(회사·시장·문제, ~는데로 넘김) → 충격 사실·장애물(숫자·ㄷㄷ) → 화자 대사 1~3줄(「화자 : 대사」 + 반응 짤) → 정체 공개·해결(바로 ○○ / 대체품·먹는 법) → 근거(성분표·문의답변·댓글·인터뷰 캡처 + 빨간 화살표·밑줄) → 맛·이득 묘사 2~4줄(꾸덕·도른 조합·쟁여두기) → 끝줄 = 1인칭 혼잣말 드립 + ㅋㅋ 또는 ㅎㅎ(아/하 ~ 로 시작)",
+   "반말 전언체(존댓말 0) · 자막 끝 ㄷㄷ 27·~는데 17·ㅋㅋ 16·명사 10(21편) · 훅 = [주체]+[센 동사]+[정체 숨긴 대상]",
+   "화자대사줄(옵션): 「화자 : 대사」 0~3줄/편 — 화자 = 의인화한 집단·회사·나라, 나레는 화자 이름 빼고 대사만 읽는다 · 끝줄 = 1인칭 혼잣말 드립 + ㅋㅋ/ㅎㅎ"
+  ],
+  "audit": [
+   {
+    "id": "first_line",
+    "kind": "first_line",
+    "is": "tts",
+    "why": "나레 1명(뜯기 판정 2편)"
+   },
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 26.3,
+    "max": 32.3,
+    "why": "벤치 8편 길이"
+   }
+  ]
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "humorshowshow",
+   "gap": [
+    "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 clean same=False) → 팩요청.md 썰템쇼판#1(관제 235) · 그동안 'clean' 임시(stand_in)",
+    "자막 줄 간격 변형 line_pitch(clean) → 팩요청.md 썰템쇼판#2(관제 235) · 판 caption 에 크기·간격 칸 안 만듦(㉑) — 그동안 팩 기본값"
+   ],
+   "rank": [
+    {
+     "pack": "clean",
+     "d": 1.507,
+     "terms": {
+      "px": 4.02,
+      "fill": 1.01,
+      "stroke": 0.0,
+      "y": 1.0
+     }
+    },
+    {
+     "pack": "soft",
+     "d": 2.665,
+     "terms": {
+      "px": 5.0,
+      "fill": 4.66,
+      "stroke": 0.0,
+      "y": 1.0
+     }
+    },
+    {
+     "pack": "premium",
+     "d": 6.165,
+     "terms": {
+      "px": 4.64,
+      "fill": 19.02,
+      "stroke": 0.0,
+      "y": 1.0
+     }
+    }
+   ],
+   "from": "벤치 6편 190줄 실측 [나레 190줄[잉크 높이 52px(175줄 y칸) · 자리 y602 · 채움 #000000(190줄) · 테 0px]] → 1위 clean(거리 1.507) · 지금 clean(거리 1.507, 순위 1)",
+   "stand_in": true,
+   "enter_cover": {
+    "instant": {
+     "share": 0.579,
+     "n": 110,
+     "item": "정지(팩 불필요)"
+    },
+    "append": {
+     "share": 0.421,
+     "n": 80,
+     "item": "정지(팩 불필요)"
+    }
+   }
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [
+    "전환 black 0.005 — 모션그래픽팩 항목 없음(있는 것 ['swipe_left']) · 그리기는 엔진 cuts.transition(02)이 하지만 회원이 팩으로 못 바꾼다 → 팩요청.md 썰템쇼판#3"
+   ],
+   "from": "등장 효과팩 off — render_bench 옛 고정값 그대로(벤치 등장 = 판 caption.pack_default·placement.rules.enter 가 정함) · 모션그래픽팩 off — 벤치 전환 {'black': 0.005} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": null,
+   "map": {},
+   "gain_db": -8,
+   "why": "벤치 효과음 휙·띵(NBdm 받아쓰기 6개/28초 — 1편, 신호표 sfx_events 없음) → 규칙 없음, 06 측정 뒤(손 상수)",
+   "ncc": {
+    "measured": false
+   },
+   "from": "NCC 미측정(_kal/sfx_ncc.json 없음) → 지문으로 고를 수 없어 종류 이름표로 slot: 없음 · 팩 없음(종류 미측정)",
+   "gap": []
+  },
+  "bgm": {
+   "id": "sweets",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)",
+   "candidates": []
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 칼카피 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
+  }
+ }
+}

@@ -63,21 +63,10 @@ def word_hits(words: list, terms: list[str], gap: float = 20.0) -> list[dict]:
 
 
 def caps_vs_tts(S: dict) -> list[str]:
-    """나레 줄마다 화면 자막(caps 이어 붙인 글)이 실제로 읽는 글(tts)과 같은가 — 부호·띄어쓰기만 다른 건 같다
-    (10-21 선우용여 N3: 자막 '따라 사 봤는데요' ↔ 목소리 '하나 사서 따라 해 봤는데요' — 완성본 눈 검수가 짚었다).
-    집 PC 옛 대본은 caps 가 글 목록, 회원 라인은 {"text"} 목록 — 둘 다 받는다(98_오류기록 19)."""
-    out = []
-    for l in S.get("lines") or []:
-        if l.get("kind") != "tts" or not l.get("caps"):
-            continue
-        cap = norm("".join(str((c.get("text") if isinstance(c, dict) else c) or "") for c in l["caps"]))
-        shown, say = norm(str(l.get("text") or "")), norm(str(l.get("tts") or ""))
-        if shown and cap != shown:
-            out.append(f"{l.get('id')}: 자막 조각을 이으면 '{cap}' — 화면 글(text) '{shown}' 과 다르다")
-        # 읽는 글은 숫자·영문 읽기·이름 발음 때문에 달라도 된다(제작순서 07 §4) — 숫자·영문 없는 줄에서 말이 4자 넘게 늘거나 줄면 결함
-        if shown and say and not re.search(r"[0-9A-Za-z%]", str(l.get("text") or "")) and abs(len(say) - len(shown)) >= 4:
-            out.append(f"{l.get('id')}: 화면 '{l.get('text')}' ↔ 목소리 '{l.get('tts')}' — 말이 더해지거나 빠졌다(자막은 읽는 말 그대로, 발음 고침만 다르게)")
-    return out
+    """나레 줄마다 화면 자막 ↔ 읽는 글(tts) — 판단 주인 = hybrid/script_audit.text_defects 의 caps_text·caps_say(관문 G-1, 10-25 한 벌로 모음).
+    script_audit.audit 가 이미 이 규칙을 담으니 flow 는 따로 부르지 않는다. 이 문은 옛 호출용."""
+    from tools.calcopy.hybrid import script_audit as SA
+    return [f"{x['line']}: {x['why']}" for x in SA.text_defects(S, joined=False) if x["rule"] in ("caps_text", "caps_say")]
 
 
 def title_colors_bad(S: dict, st: dict) -> list[str]:
@@ -96,7 +85,16 @@ def title_colors_bad(S: dict, st: dict) -> list[str]:
 
 
 def shot_at(shots: list[dict], t: float) -> dict | None:
-    return next((s for s in shots or [] if s["a"] - 0.05 <= t < s["b"]), None)
+    """t 초가 든 샷. 샷 경계는 소수 셋째 자리라 t 도 셋째 자리로(1.2+1.767=2.96699… 가 앞 샷 끝으로 떨어져 max 0.0 → '샷보다 길다' 9번 반려,
+    관제 263 08 실전 10-25) · 경계 안에 든 샷이 먼저, 없을 때만 0.05초 앞 여유."""
+    t = round(float(t), 3)
+    s = next((s for s in shots or [] if s["a"] <= t < s["b"]), None)
+    if s and s["b"] - t < SLIVER_START:          # 샷 끝 0.05초 안에서 시작 = 다음 샷 컷(렌더 snap_ss 도 경계 뒤로 옮긴다 — ss 0.93/경계 0.933 → max 0.003 반려 3번, 08 실전)
+        s = next((x for x in shots if abs(x["a"] - s["b"]) < 1e-3), s)
+    return s or next((s for s in shots or [] if s["a"] - 0.05 <= t < s["b"]), None)
+
+
+SLIVER_START = 0.05
 
 
 def shot_text(shots: list[dict]) -> str:
@@ -128,10 +126,19 @@ def source_rule_static(M: dict, origin_names: set, bench_id: str, shots_by_src: 
     return out
 
 
-def material_problems(M: dict, known: set, orig_lines: set, dims: dict | None = None) -> list[str]:
+def fit_height(sw: int, sh: int, ar: float | None) -> float:
+    """확대 1.0 칸의 높이 = 원본 안에 창 비율(ar = 가로/세로)로 들어가는 가장 큰 칸의 높이. ar 이 없으면 원본 높이(가로 원본 기준 옛 판정).
+    가로 원본(1920x1080, ar 0.75) = 1080(원본 높이) · 세로 원본(1080x1920, 창 1080x1434) = 1080/0.753 = 1434 — 해외 쇼츠 원본은 폭 전체가 확대 1.0(관제 263 08)."""
+    if not ar:
+        return float(sh)
+    return min(float(sh), float(sw) / float(ar))
+
+
+def material_problems(M: dict, known: set, orig_lines: set, dims: dict | None = None, ar: float | None = None) -> list[str]:
     """재료.json 컷의 꼴 검사(판정 답을 받은 즉시 — 렌더에서 터지기 전에, 뿌리 10-22). 서버 지시서 계획 단계가 부른다.
     src 가 받은 파일인가 · 영상 컷에 ss(원음 줄은 렌더가 채운다)·숫자인가 · crop 이 'face' 또는 [x,y,w,h] 인가 · dur 이 숫자인가.
-    10-22 강주은: 사진 컷 ss·crop 없음 → 렌더 KeyError 'ss' 로 멈춤(칸 있음만 보던 검사가 못 잡음)."""
+    10-22 강주은: 사진 컷 ss·crop 없음 → 렌더 KeyError 'ss' 로 멈춤(칸 있음만 보던 검사가 못 잡음).
+    ar = 판 창 비율(가로/세로) — 있으면 확대 판정을 fit_height 로(세로 원본 폭 전체 칸을 확대로 오판하지 않게, 관제 263 08)."""
     out = []
     for line, cuts in (M.get("cuts") or {}).items():
         for i, c in enumerate(cuts if isinstance(cuts, list) else [cuts]):
@@ -153,8 +160,9 @@ def material_problems(M: dict, known: set, orig_lines: set, dims: dict | None = 
             if cr is not None and cr != "face" and not (isinstance(cr, list) and len(cr) == 4 and all(isinstance(v, (int, float)) for v in cr)):
                 out.append(f"{tag}: crop 은 'face' 또는 [x, y, w, h](원본 픽셀 정수)여야 한다({cr!r})")
             wh = (dims or {}).get(src)
-            if not still and wh and isinstance(cr, list) and len(cr) == 4 and all(isinstance(v, (int, float)) for v in cr) and cr[3] < wh[1] * ZOOM_MIN_H:
-                out.append(f"{tag}: 영상 {src}({wh[0]}x{wh[1]}) 를 높이 {int(cr[3])}px 로 잘라 {wh[1] / max(1, cr[3]):.2f}배 확대 — 확대는 1.0(높이 {wh[1]}px 그대로), "
+            fh = fit_height(wh[0], wh[1], ar) if wh else 0
+            if not still and wh and isinstance(cr, list) and len(cr) == 4 and all(isinstance(v, (int, float)) for v in cr) and cr[3] < fh * ZOOM_MIN_H:
+                out.append(f"{tag}: 영상 {src}({wh[0]}x{wh[1]}) 를 높이 {int(cr[3])}px 로 잘라 {fh / max(1, cr[3]):.2f}배 확대 — 확대는 1.0(높이 {int(fh)}px 그대로), "
                            f"원본에 박힌 글자는 잘라서 피하지 말고 재료.blur 로 흐린다(사장님 10-22)")
             if still and wh and isinstance(cr, list) and len(cr) == 4 and all(isinstance(v, (int, float)) for v in cr):
                 iw, ih = wh
@@ -216,6 +224,35 @@ def text_blur(boxes: list, a: float, b: float) -> list:
     return out
 
 
+def text_blur_all(shots_by_src: dict, dims: dict, skip: set | None = None) -> dict:
+    """샷 표의 박힌 글자 상자(0~1 비율, 판독 shot_*) → 렌더러 흐림 칸 {파일 이름: [[x,y,w,h,a,b]…]}(원본 픽셀·원본 초 = 그 샷).
+    해외원본형 자막 지우기의 대체 길(회원 VMake 키·크레딧 없음 → 서버 호출 없이 흐림, 관제 263 08) — 컷이 주인공 컷이든 아니든 글자 샷 전부.
+    skip = 이미 글자를 지운 파일 이름(clean 끼움)."""
+    out: dict = {}
+    for stem, shots in (shots_by_src or {}).items():
+        name = next((n for n in dims if n.rsplit(".", 1)[0] == stem), None)
+        if not name or name in (skip or set()):
+            continue
+        sw, sh = dims[name]
+        for s in shots or []:
+            boxes = [[b[0] * sw, b[1] * sh, b[2] * sw, b[3] * sh] for b in s.get("text") or [] if isinstance(b, list) and len(b) == 4]
+            rows = text_blur(boxes, s["a"], s["b"])
+            if rows:
+                out.setdefault(name, []).extend(r for r in rows if r not in out.get(name, []))
+    return out
+
+
+def merge_blur(M: dict, blur: dict) -> int:
+    """재료.blur 에 흐림 칸을 더한다(같은 칸은 한 번). 더한 수."""
+    n = 0
+    for name, rows in (blur or {}).items():
+        bl = M.setdefault("blur", {}).setdefault(name, [])
+        for r in rows:
+            if r not in bl:
+                bl.append(r); n += 1
+    return n
+
+
 def fill_shot_max(M: dict, S: dict | None, origin_dims: dict, shots_by_src: dict, ar: float | None) -> dict:
     """원본 컷마다 샷 표로 칸을 채운다(판단 주인 — 집 PC 에선 손으로 적던 칸). origin_dims = {파일 이름: [가로, 세로]}(PC 가 잰 값).
     ① max = 그 샷 끝 − ss — 렌더러의 '컷이 원본 샷보다 길다' 검사가 다른 출연자로 넘어가는 컷을 잡게 한다
@@ -250,8 +287,9 @@ def fill_shot_max(M: dict, S: dict | None, origin_dims: dict, shots_by_src: dict
                 continue
             sw, sh = origin_dims[src]
             cw = min(sw, int(round(sh * ar)))
+            ch = int(round(fit_height(sw, sh, ar))) // 2 * 2 if cw == sw and sw < sh * ar else sh   # 세로 원본(해외 쇼츠)은 폭 전체 × 창 비율 높이(관제 263 08)
             fx = s["cx"] * sw if s.get("cx") is not None else sw / 2
-            crop = [max(0, min(sw - cw, int(round(fx - cw / 2)))), 0, cw, sh]
+            crop = [max(0, min(sw - cw, int(round(fx - cw / 2)))), (sh - ch) // 2, cw, ch]
             boxes = [[b[0] * sw, b[1] * sh, b[2] * sw, b[3] * sh] for b in s.get("text") or []]
             c["crop"] = crop
             if boxes:
@@ -292,4 +330,12 @@ PRODUCT_TALK = {   # 제품을 어떻게 찾았나 → 대본이 제품을 말�
             "후기 제일 많은 걸로 써 봤는데 좋더라'. ★이 제품을 연예인이 쓴다고 말하지 마라(연예인이 쓴 건 '이런 ○○'까지만)."),
     "given": ("원본엔 제품이 말로만 나와 고객이 정한 쿠팡 제품을 쓴다(연예인이 말한 바로 그 제품인지 확인되지 않았다). ★대본에 이 사실을 말한다 — 예: '영상 보고 비슷한 걸 찾아봤는데 "
               "저는 이걸로 써 봤어요'. ★이 제품을 연예인이 쓴다·추천했다고 말하지 마라. 연예인 말(효능·방법)은 그 사람이 말한 것까지만 전언으로, 이 제품의 효과처럼 잇지 않는다."),
+}
+
+PRODUCT_TALK_FOREIGN = {   # 해외원본형 — 해외 원본 출연자가 쓴 제품 ↔ 쿠팡 제품을 대본이 말하는 법(관제 263 08 · 현장썰 '비슷한 제품 허용')
+    "exact": "원본 출연자가 쓴 것과 포장·로고가 같은 제품이다 — 제품 이름을 그대로 말해도 된다.",
+    "named": "원본 화면엔 상표가 또렷하지 않아 글로 이름을 찾았다 — 근거 글이 가리키는 만큼만 말한다(지어 붙이지 않는다).",
+    "alt": ("같은 제품을 쿠팡에서 못 찾아 같은 종류·같은 쓰임 중 후기 많은 비슷한 제품을 골랐다(현장썰 규칙). ★원본 출연자가 이 제품을 썼다고 말하지 마라 — "
+            "원본은 '이런 ○○'까지만, 쿠팡 제품은 '비슷한 걸 찾아봤는데'로 갈라 말한다."),
+    "given": ("고객이 정한 쿠팡 제품을 쓴다(원본 제품과 같은지 확인되지 않았다). ★원본 출연자가 이 제품을 썼다고 말하지 마라 — 원본 반응은 원본 제품 이야기로만."),
 }

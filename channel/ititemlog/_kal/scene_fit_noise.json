@@ -1,0 +1,82 @@
+{
+ "rubric": "rubric:v2(2026-10-25 앵커2·1컷·3회)",
+ "made_by": "tools/calcopy/oneshot/scene_fit.measure_noise",
+ "gold": "shopping_shorts\\tests\\fixtures\\scene_fit_gold.json",
+ "runs": 5,
+ "per_cut": [
+  [
+   7,
+   10,
+   7,
+   7,
+   7
+  ],
+  [
+   7,
+   5,
+   7,
+   7,
+   7
+  ],
+  [
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  [
+   5,
+   5,
+   5,
+   5,
+   5
+  ],
+  [
+   10,
+   10,
+   10,
+   10,
+   10
+  ],
+  [
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  [
+   10,
+   10,
+   10,
+   10,
+   10
+  ],
+  [
+   5,
+   7,
+   5,
+   5,
+   5
+  ],
+  [
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  [
+   7,
+   7,
+   3,
+   5,
+   7
+  ]
+ ],
+ "sigma_item": 0.727,
+ "var_below": 0.056,
+ "calls": 150,
+ "_how": "편 n컷의 여유: 평균 2σ = 2·sigma_item/√n · 7미만 비율 2σ = 2·√(var_below/n) (noise_margin)"
+}

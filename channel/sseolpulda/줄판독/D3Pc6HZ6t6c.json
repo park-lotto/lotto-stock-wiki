@@ -1,0 +1,540 @@
+{
+ "id": "D3Pc6HZ6t6c",
+ "dur": 9.776,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "집 좁은 사람 필독!",
+   "colors": [
+    {
+     "word": "집 좁은 사람 필독!",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "t": [
+    0.0,
+    0.833
+   ]
+  },
+  {
+   "text": "이거 하나로 거실 2배",
+   "colors": [
+    {
+     "word": "이거 하나로 거실 2배",
+     "hex": "#ECCE1A"
+    }
+   ],
+   "t": [
+    0.0,
+    0.833
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   0,
+   1080,
+   1920
+  ],
+  "bg_hex": null,
+  "caption_band": [
+   1030,
+   1130
+  ],
+  "title_y": [
+   [
+    245,
+    360
+   ],
+   [
+    428,
+    521
+   ]
+  ],
+  "title_t": [
+   0.0,
+   0.833
+  ],
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null,
+  "source_hex": null,
+  "note": "틀 C(전체화면 영상). 제목 2줄(흰/노랑 #ECCE1A, 기울인 굵은 고딕+검정 외곽)은 0~0.833(25프레임)만, 그 뒤 자막만"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.133,
+   "speaker": "나레",
+   "text": "이게 식탁이라고?",
+   "layer": null,
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1035,
+    1128
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "길쭉하게 접힌 식탁 위에 음식 접시를 늘어놓음",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 1.133,
+   "t1": 1.9,
+   "speaker": "나레",
+   "text": "미쳤다 진짜!",
+   "layer": null,
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1031,
+    1127
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "원형으로 펼쳐진 식탁",
+   "fit": 5,
+   "cut_at": [
+    1.733
+   ],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 1.9,
+   "t1": 3.233,
+   "speaker": "나레",
+   "text": "평소엔 딱 접어두고",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1036,
+    1128
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "벽에 붙인 콘솔처럼 접힌 식탁",
+   "fit": 8,
+   "cut_at": [
+    2.567
+   ],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.233,
+   "t1": 3.833,
+   "speaker": "나레",
+   "text": "손님 오면",
+   "layer": null,
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1028,
+    1128
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "접힌 상판 근접",
+   "fit": 4,
+   "cut_at": [
+    3.5
+   ],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.833,
+   "t1": 4.4,
+   "speaker": "나레",
+   "text": "촤악~ 펼치면",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1035,
+    1137
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "상판을 펼치기 시작",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.4,
+   "t1": 5.6,
+   "speaker": "나레",
+   "text": "6인용 테이블 완성",
+   "layer": null,
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1026,
+    1137
+   ],
+   "fill_hex": "#FDFEFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "여성이 상판을 펼쳐 큰 원탁이 됨",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.6,
+   "t1": 6.367,
+   "speaker": "나레",
+   "text": "바퀴 달려서",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1025,
+    1127
+   ],
+   "fill_hex": "#FEFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "바퀴 달린 다리의 원탁을 미는 여성",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 6.367,
+   "t1": 7.2,
+   "speaker": "나레",
+   "text": "이동도 껌이지",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1025,
+    1136
+   ],
+   "fill_hex": "#FDFDFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "원탁을 밀어 옮김",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 7.2,
+   "t1": 8.3,
+   "speaker": "나레",
+   "text": "디자인까지 예뻐서",
+   "layer": null,
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1035,
+    1126
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(흰 둥근 상자 '제품정보->고정댓글')",
+     "t_in": 8.2,
+     "t_out": 9.775,
+     "x": 94,
+     "y": 333,
+     "w": 892,
+     "h": 194,
+     "anim": "cut(1프레임에 완성)"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "음식이 차려진 흰 대리석 무늬 원탁",
+   "fit": 7,
+   "cut_at": [
+    7.633
+   ],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "8.2 에 위쪽 흰 상자 '제품정보->고정댓글' 등장(끝까지)"
+  },
+  {
+   "t0": 8.3,
+   "t1": 9.2,
+   "speaker": "나레",
+   "text": "인스타 갬성",
+   "layer": null,
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1035,
+    1126
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "차려진 원탁과 여성",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 9.2,
+   "t1": 9.775,
+   "speaker": "나레",
+   "text": "뿜뿜이야",
+   "layer": null,
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(흰 글 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1035,
+    1126
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 6~8px(눈, 확대 크롭)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "차려진 원탁 앞에 선 여성",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(굵은 둥근 고딕)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "약 0~2px(눈)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  }
+ ],
+ "no_caption": [],
+ "beats": "훅(0~1.9 '이게 식탁이라고?'·'미쳤다 진짜!' + 제목 0.83초) → 원리(1.9~4.4 '평소엔 딱 접어두고 / 손님 오면 / 촤악~ 펼치면') → 공개(4.4~5.6 '6인용 테이블 완성') → 덤(5.6~8.3 바퀴·이동·디자인) → 끝(8.3~9.78 '인스타 갬성 뿜뿜이야' + 8.2~ '제품정보->고정댓글' 상자 = CTA)",
+ "narr_share": "나레 줄 11/11, 나레 9.8초/9.776초",
+ "notes": [
+  "나레 1명(스피치매틱스 19단어가 자막과 낱말 단위로 일치 — '확 펼치면'은 화면 '촤악~ 펼치면'). 나레 덩어리 = 자막 덩어리, 줄당 0.57~1.33초.",
+  "자막 교체 11번 중 원본 컷과 같은 프레임 0~1(컷 1.733·2.567·3.5·4.367·7.633) — 자막은 말 박자, 컷은 원본 박자.",
+  "꾸밈: 강조색 0·등장 효과 0(30fps 띠 abcd.jpg 2행 1.133 한 프레임에 완성). 그림은 끝 CTA 상자 하나."
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "접이식 원형 식탁에 음식 놓는 여성(얼굴 안 보임, 허리 아래) + 제목 2줄 + 첫 자막",
+  "face_frac": 0.0,
+  "text": "집 좁은 사람 필독! / 이거 하나로 거실 2배 / 이게 식탁이라고?"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈: 1초 시트·구간 시트·30fps 띠·원본 프레임 확대 / 픽셀: seg2(capseg 양극 변형)·cutdet·boxm·colk / 신호: sfx_events) 2026-10-25 (관제 263 지시서 06 · sseolpulda)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr",
+ "sound_mode": "나레",
+ "title_mode": "첫 0.833초만",
+ "sound_detail": "한국어 나레 1명(남, judge·스피치매틱스) + 배경음 신호는 bgm_fp 표"
+}

@@ -27,6 +27,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from tools.calcopy.hybrid.common import (FPS, FRAME_A_DEFAULT, PRESET_JAEMI_B, ROOT, SR, StageError, dur_of, frame_png, jload, jsave,  # noqa: E402
                                          lufs, nchar, probe, run, silences)
+from tools.calcopy.engine.encoder import venc  # noqa: E402 — 인코더 주인(GPU 있으면 NVENC, 화질 같게, 98 #79)
 
 WIN_A = 1080
 WIN_B = (1080, 1407)
@@ -502,7 +503,7 @@ def render(doc: Path, work: Path, plan_only: bool = False, desktop: Path | None 
         last = f"e{k}"
     matA2 = work_ / "matA_emph.mp4"
     run(["ffmpeg", "-y", "-i", matA, *ins, "-filter_complex", fc + f";[{last}]format=yuv420p[v]", "-map", "[v]", "-t", f"{A_end:.3f}",
-         "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-color_range", "tv", matA2])
+         *venc(16), "-color_range", "tv", matA2])
     tlA = [{"beat_idx": 0, "t0": 0.0, "dur": A_end, "narration": "", "caption_lines": [], "role": "hook", "primary": {"video_id": "s0", "start": 0.0, "end": A_end}}]
     vidA = work_ / "vidA.mp4"
     scene_style.compose(str(matA2), tlA, scene_style.validate_snapshot(to_snapshot.to_snapshot(frame)), str(vidA), work_ / "composeA", {"text": S["title"]})
@@ -514,7 +515,7 @@ def render(doc: Path, work: Path, plan_only: bool = False, desktop: Path | None 
         out = work_ / f"b{gi:02d}.mp4"
         run(["ffmpeg", "-y", "-ss", f"{g['ss']:.3f}", "-i", SRC / g["src"], "-an", "-vf",
              f"crop={w}:{h}:{x}:{y},scale={WIN_B[0]}:{WIN_B[1] + 1}:flags=lanczos,setsar=1,fps={FPS}", "-frames:v", nf,
-             "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", out])
+             *venc(16), "-pix_fmt", "yuv420p", out])
         lst.append(f"file '{out.as_posix()}'")
         g.update({"frames": nf, "dur": round(nf / FPS, 3), "src_end": round(g["ss"] + nf / FPS, 3), "t0_final": round(A_end + g["t0"], 3), "t1_final": round(A_end + g["t1"], 3)})
     (work_ / "b.txt").write_text("\n".join(lst), encoding="utf-8")
@@ -529,7 +530,7 @@ def render(doc: Path, work: Path, plan_only: bool = False, desktop: Path | None 
     scene_style.compose(str(matB), tlB, snapB, str(vidB), work_ / "composeB", {"text": "", "body_title": S["body_title"]})
     vid = work_ / "video.mp4"
     (work_ / "v.txt").write_text(f"file '{vidA.as_posix()}'\nfile '{vidB.as_posix()}'\n", encoding="utf-8")
-    run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", work_ / "v.txt", "-an", "-r", FPS, "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", vid])
+    run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", work_ / "v.txt", "-an", "-r", FPS, *venc(16), "-pix_fmt", "yuv420p", vid])
     total = dur_of(vid)
     # ── 소리
     oparts, ot = [], 0.0
@@ -594,7 +595,7 @@ def render(doc: Path, work: Path, plan_only: bool = False, desktop: Path | None 
         gain += (C["target_lufs"] - oI) * 0.9
     final = R / "final.mp4"
     from tools.calcopy.engine.master_guard import encode_final      # 완성본 인코딩·진짜 최고점 지킴 = engine/master_guard 한 곳
-    guard = encode_final(vid, mix, final, -0.5, log=log)
+    guard = encode_final(vid, mix, final, -0.5, log=log, renderer="render_jaemi", script=doc / "대본.json")
     fI, fpk = lufs(final)
     starts = [next(s["t0"] for s in T["timed"] if s["line"] == li) for li in range(len(S["lines"]))] + [T["ndur"]]
     rates = [round(nchar(S["lines"][i]["tts"]) / (starts[i + 1] - starts[i]), 2) for i in range(len(S["lines"]))]
@@ -604,7 +605,9 @@ def render(doc: Path, work: Path, plan_only: bool = False, desktop: Path | None 
            "mix_gain": round(gain, 2), "max_caption": max(len(p["caption"]) for p in S["pieces"]), "master_guard": guard}
     cuts_flat = [{"src": g["src"], "ss": g["ss"], "t0": g["t0_final"], "t1": g["t1_final"], "dur": g["dur"], "seg": "B", "line": pl[g["pieces"][0]], "see": g.get("seen", "")} for g in gs]
     cuts_flat += [{"src": s["src"], "ss": s["ss"], "t0": s["t0"], "t1": s["t1"], "dur": s["dur"], "seg": "A", "line": s["who"], "see": s.get("see", "")} for s in T["a_shots"]]
-    info = {"report": rep, "pieces": T["pieces"], "a_shots": T["a_shots"], "a_caps": ev, "b_groups": gs, "timed": T["timed"], "cut": cut, "cuts_flat": cuts_flat,
+    from tools.calcopy.hybrid.render_bench import render_marks
+    info = {**render_marks("재미썸홈판", __file__), "line_cps": {str(S["lines"][i].get("slot") or i): r for i, r in enumerate(rates)},   # 표식·줄 말속도 표(표준 §11 ⑤)
+            "report": rep, "pieces": T["pieces"], "a_shots": T["a_shots"], "a_caps": ev, "b_groups": gs, "timed": T["timed"], "cut": cut, "cuts_flat": cuts_flat,
             "lines": [{"slot": l["slot"], "text": l["text"], "tts": l["tts"], "chars": nchar(l["tts"])} for l in S["lines"]]}
     jsave(R / "render_info.json", info)
     jsave(R / "timeline.json", info)

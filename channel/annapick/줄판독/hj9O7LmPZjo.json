@@ -1,0 +1,655 @@
+{
+ "id": "hj9O7LmPZjo",
+ "dur": 12.283,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "허연~발뒤꿈치",
+   "colors": [
+    {
+     "word": "허연~발뒤꿈치",
+     "hex": "#FFFFFF"
+    }
+   ]
+  },
+  {
+   "text": "5천원으로 아기발 되기",
+   "colors": [
+    {
+     "word": "5천원으로",
+     "hex": "#CEFFFC"
+    },
+    {
+     "word": "아기발 되기",
+     "hex": "#FCFFB7"
+    }
+   ]
+  }
+ ],
+ "source_label": "출처: 백지영 Baek Z Young",
+ "layout": {
+  "window": [
+   0,
+   419,
+   1080,
+   1082
+  ],
+  "caption_band": [
+   1334,
+   1408
+  ],
+  "title_y": [
+   [
+    207,
+    294
+   ],
+   [
+    310,
+    397
+   ]
+  ],
+  "bg_hex": "#000000",
+  "source_y": [
+   1518,
+   1551
+  ],
+  "logo_y": [
+   1748,
+   1830
+  ],
+  "watermark": null,
+  "source_hex": "#7D7D7D",
+  "credit_text": "출처: 백지영 Baek Z Young",
+  "logo_text": "anna pick(회색 2줄)",
+  "note": "검정 바탕 + 위 2줄 제목(1줄 흰 “ ”, 2줄 노랑 인물+분홍 제품) + 정사각 창 y419~1501 + 창 안 자막 1줄(자리는 편마다·줄마다 다름) + 창 아래 회색 '출처 : <원본 채널>' + 맨 아래 회색 'anna pick'"
+ },
+ "lines": [
+  {
+   "t0": 0.1,
+   "t1": 1.133,
+   "speaker": "원음:백지영",
+   "text": "발뒤꿈치가",
+   "layer": "안나픽",
+   "role": "훅",
+   "enter": "fade",
+   "enter_ms": 70,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1328,
+    1392
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "바닥에 앉아 발뒤꿈치를 만지는 백지영",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 1.167,
+   "t1": 2.467,
+   "speaker": "원음:백지영",
+   "text": "허옇고 막 이러잖아?",
+   "layer": "안나픽",
+   "role": "훅",
+   "enter": "fade(흐림→선명 + 반짝 점)",
+   "enter_ms": 100,
+   "variant": "'허옇고' 굵은 기울임 크게",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1317,
+    1402
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "허옇고",
+     "hex": "#FFFFFD",
+     "grow": "크게",
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "백지영 얼굴(말하는 중)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.467,
+   "t1": 3.467,
+   "speaker": "원음:백지영",
+   "text": "진짜 별로야",
+   "layer": "안나픽",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "가는 고딕 크게",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1340,
+    1463
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "발뒤꿈치 근접(바닥)",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.5,
+   "t1": 4.8,
+   "speaker": "원음:백지영",
+   "text": "이거는 내가 꼭 소개해야돼",
+   "layer": "안나픽",
+   "role": "본문",
+   "enter": "stretch(✦ 빛줄기에서 펴짐)",
+   "enter_ms": 200,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1323,
+    1385
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "이거",
+     "hex": "#BEB5D1",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    },
+    {
+     "word": "소개",
+     "hex": "#BEB5D1",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "백지영 얼굴(검정 티)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.8,
+   "t1": 5.833,
+   "speaker": "원음:백지영",
+   "text": "좋다는 거 진짜 비싼 것도",
+   "layer": "안나픽",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "손글씨 가는체(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1342,
+    1405
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 2px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "제품 누끼(크림 통, 가슴 앞 가운데)",
+     "x": 540,
+     "y": 950,
+     "w": 270,
+     "t_in": 4.8,
+     "t_out": 8.033,
+     "anim": "컷과 함께 붙어 머묾"
+    },
+    {
+     "what": "글자 딱지 '(현금 5천원짜리)' 손글씨(오른쪽 위)",
+     "x": 780,
+     "y": 790,
+     "w": 220,
+     "t_in": 4.8,
+     "t_out": 7.033,
+     "anim": "컷과 함께 나타남"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "백지영 + 가운데 크림 통 누끼 + '(현금 5천원짜리)' 딱지",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨 가는체(예능 손글씨 계열, 이름 미확정)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.833,
+   "t1": 7.033,
+   "speaker": "원음:백지영",
+   "text": "진짜 많이 써봤어 근데",
+   "layer": "안나픽",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "손글씨 가는체(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1341,
+    1405
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 2px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "백지영 + 크림 통 누끼",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨 가는체(예능 손글씨 계열, 이름 미확정)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 7.033,
+   "t1": 8.033,
+   "speaker": "원음:백지영",
+   "text": "이게 최고야",
+   "layer": "안나픽",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "네온(흰 글자+분홍 빛 #9E3174) 크게",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1234,
+    1273
+   ],
+   "fill_hex": "#FFFCFF",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": {
+    "hex": "#9E3174",
+    "sec": null
+   },
+   "emph": [
+    {
+     "word": "이게 최고야",
+     "hex": "#FFFCFF",
+     "grow": "크게",
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [
+    {
+     "what": "강조선 빗금 두 쌍(괄호 줄 양옆)",
+     "x": 540,
+     "y": 1180,
+     "w": 300,
+     "t_in": 7.033,
+     "t_out": 8.0,
+     "anim": "컷과 함께 나타남"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "백지영 얼굴 + 아래 크림 통 + 강조선",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 7.033,
+   "t1": 8.033,
+   "speaker": "불명",
+   "text": "(그중에 이게 짱!)",
+   "layer": "안나픽-괄호",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "작은 괄호 줄(흰 가는체, 본 자막 위)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1180,
+    1215
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "본 자막 위 작은 줄",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "말소리 없는 제작자 덧말(화자 = 불명)"
+  },
+  {
+   "t0": 8.067,
+   "t1": 9.4,
+   "speaker": "원음:백지영",
+   "text": "적어도 한 30개는 써본거 같아",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "fade",
+   "enter_ms": 70,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1333,
+    1386
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "30개",
+     "hex": "#6DBEF1",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "백지영 얼굴(화장실)",
+   "fit": 4,
+   "cut_at": [
+    8.233
+   ],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 9.4,
+   "t1": 10.367,
+   "speaker": "제3자",
+   "text": "좀 끈적하지 않아요?",
+   "layer": "안나픽",
+   "role": "질문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "노랑 가는 글자",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1346,
+    1414
+   ],
+   "fill_hex": "#F5FF50",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "좀 끈적하지 않아요?",
+     "hex": "#F5FF50",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "발뒤꿈치에 크림 바르는 손",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "화면 밖 다른 사람 질문 — 노랑 글자로 화자 구분"
+  },
+  {
+   "t0": 10.367,
+   "t1": 10.933,
+   "speaker": "원음:백지영",
+   "text": "안 끈적해",
+   "layer": "안나픽",
+   "role": "답",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "가는 고딕(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1343,
+    1405
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "발에 크림 문지르는 손",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 10.933,
+   "t1": 12.233,
+   "speaker": "원음:백지영",
+   "text": "내가 진짜 많이 써봤다니까",
+   "layer": "안나픽",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "가는 고딕(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1342,
+    1406
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "크림 통 들고 앉은 백지영",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  }
+ ],
+ "no_caption": [
+  [
+   0.0,
+   0.1,
+   "첫 3프레임"
+  ],
+  [
+   1.133,
+   1.167,
+   "1프레임"
+  ],
+  [
+   3.467,
+   3.5,
+   "1프레임"
+  ],
+  [
+   8.033,
+   8.067,
+   "1프레임"
+  ]
+ ],
+ "beats": "원음 훅(0.1~3.47 '발뒤꿈치가 허옇고 막 이러잖아? 진짜 별로야') → 원음 본문(3.5~7.03 이거는 꼭 소개해야돼·비싼 것도 많이 써봤어 + 크림 통 누끼·'현금 5천원짜리') → 원음 공개('이게 최고야' 네온 + '(그중에 이게 짱!)') → 원음 증거('30개는 써본거 같아') → 제3자 질문·답('좀 끈적하지 않아요?'→'안 끈적해') → 원음 끝('내가 진짜 많이 써봤다니까'). 나레 0줄.",
+ "narr_share": "나레 줄 0/12, 나레 0초/12.283초",
+ "notes": [
+  "나레 0줄(원음 100%, 1판 원음_실측과 같음) — 6편 중 유일.",
+  "제품 이름은 화면 글로 안 쓰고 크림 통 누끼(라벨)로만."
+ ],
+ "name_evidence": [
+  "출처 줄 '백지영 Baek Z Young'"
+ ],
+ "frame0": {
+  "what": "주황 모자 백지영이 바닥에 앉아 발뒤꿈치를 만짐(얼굴 반쯤 가림) — 자막 0.1초부터",
+  "face_frac": "약 0.05(창 대비 얼굴, 눈)",
+  "text": "허연~발뒤꿈치 / 5천원으로 아기발 되기(제목)"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈+픽셀: capseg 30fps·cutdet --v2·px·rangesheet 0.2초/1프레임 등장 시트) 2026-10-25 (관제 263 지시서 06)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr"
+}

@@ -1,0 +1,88 @@
+{
+ "slug": "humorshowshow",
+ "ref": "https://www.youtube.com/@humorshowshow",
+ "brand": "썰템쇼",
+ "hybrid": "아니오",
+ "n": 6,
+ "steps": {
+  "select": {
+   "state": "done",
+   "sec": 0,
+   "at": "2026-10-25 02:46",
+   "outputs": {
+    "top": "C:/숏템_칼카피/humorshowshow/top20.json"
+   },
+   "note": "10-18 수동 선정(조회 상위 20 + 최근 1, 쇼츠 134편 조회 중앙 24.6만) — kal.py select 로 돈 것 아님"
+  },
+  "collect": {
+   "state": "done",
+   "sec": 0,
+   "at": "2026-10-25 02:46",
+   "outputs": {
+    "src": "C:/숏템_칼카피/humorshowshow/mp4",
+    "ids": [
+     "Lr2Hwd0PeKM",
+     "NBdmq90aJus",
+     "pY2zNE5A1m4",
+     "BlA9f8rBPuc",
+     "jECuoRljWj0",
+     "bfKkNmVTGPs"
+    ]
+   },
+   "note": "원본 21편 이미 받음(mp4/ 폴더 — src/ 아님). 벤치 6편 = 조회 상위 6"
+  },
+  "tteutgi": {
+   "state": "done",
+   "sec": 0,
+   "at": "2026-10-25 02:46",
+   "outputs": {
+    "ids": [
+     "Lr2Hwd0PeKM",
+     "NBdmq90aJus",
+     "pY2zNE5A1m4",
+     "BlA9f8rBPuc",
+     "jECuoRljWj0",
+     "bfKkNmVTGPs"
+    ],
+    "dir": "C:/숏템_칼카피/humorshowshow/뜯기"
+   },
+   "note": "뜯기 1판은 NBdm·BlA9·jECu 등 8편만(C:/숏템_칼카피/humorshowshow/뜯기) — 이번 2판 줄판독은 뜯기 없이 30fps 직접 실측"
+  },
+  "frames": {
+   "state": "done",
+   "sec": 0,
+   "at": "2026-10-25 02:46",
+   "outputs": {
+    "dir": "C:/숏템_칼카피/humorshowshow/work/lr6"
+   },
+   "note": "30fps 자막 덩어리(seg)·cutdet·ORB 움직임·덩어리 시트 — scratchpad 판독 스크립트(seg2/seg3/align/motion/build) 결과"
+  },
+  "skeleton": {
+   "state": "done",
+   "sec": 0,
+   "at": "2026-10-25 02:46",
+   "outputs": {},
+   "note": "뼈대 = 옛 1판 줄판독 캡션 + 30fps 덩어리 줄 수 정렬(align)"
+  },
+  "readlines": {
+   "state": "done",
+   "sec": 0,
+   "at": "2026-10-25 02:46",
+   "outputs": {
+    "dir": "channel/humorshowshow/줄판독"
+   },
+   "note": "6편 190줄 check --strict 0(관제 263 지시서 06, 2026-10-25)"
+  },
+  "rules": {
+   "state": "done",
+   "sec": 0.1,
+   "at": "2026-10-25 03:00",
+   "outputs": {
+    "draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\humorshowshow\\_kal\\스타일분석_초안.md",
+    "plan_draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\humorshowshow\\_kal\\humorshowshow판_초안.json"
+   },
+   "note": "규칙빈도·대본언어·팔레트·판 초안(kal.py --from rules) + 스타일분석.md(사람, 11축·채택표·화자대사줄 5-1) — 2026-10-25 03:06 · 다음 copy 는 07(판 파일 주인)·사장님 지시 때"
+  }
+ },
+ "asked": {}
+}

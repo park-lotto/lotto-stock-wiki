@@ -7,6 +7,10 @@
   engine(잇썸홈 두유노 judge·points / 재미썸홈 이븐쇼핑 points — 판단 주인 engine/script_frame, 옛 동작 그대로)
   first_line · last_line · count · tts_chars · tts_total_chars · no_adjacent · ending(which=first_tts|last_tts|all_tts|rest_tts, min_share)
   has_line · forbid_in · cap_chars · orig_span · narr_share · est_length — 기준 숫자는 판 설정에만 있다(여기서 새로 정하지 않는다).
+  tts_cps_spread(지시서 15, 표준 §12-4·§11-3 ⑲) — 나레 TTS 줄(문장) 예상 말속도 변동계수 ≤ max(줄 단위 — 자막 조각 나누기는 뼈대라 안 건드림).
+    판에 규칙이 없어도 판 `targets.speech`(업그레이드 판, 07 주인)가 있으면 그 목표로 잰다. 걸리면 어느 줄을 몇 자 늘리거나 줄일지 제안.
+
+    PYTHONUTF8=1 py tools/calcopy/hybrid/script_audit.py fit-model "C:/숏템_칼카피/<slug>/*/render/자막표.json"   # 줄 시간 모형 다시 맞추기
 """
 from __future__ import annotations
 
@@ -26,6 +30,71 @@ FRAME = {"itssum": ROOT / "channel/homedesignnote/대본설명서/script_frame.j
 
 
 KIND = {"나레": "tts", "원음": "orig"}
+
+# 나레 TTS 줄(문장) 소리 초 예상 모형(판단 주인: tts_cps_spread 의 '예상 cps', 표준 §11-3 ⑲ — 말속도 편차는 **줄 단위** 자) —
+#   줄 초 = base + per_char×글자 + punct×(줄 안 쉼표·마침표, 끝 부호 뺌). 근거 = 잇템로그 렌더 14편 나레 줄 99개(render/자막표.json 줄의 첫 조각 t0 ~ 끝 조각 t1)
+#   최소제곱 r² 0.761(10-25 `script_audit.py fit-model "C:/숏템_칼카피/ititemlog/*/render/자막표.json"`). 자막 조각(caps) 나누기는 판 chunk_max_chars(뼈대) 몫 — 여기서 안 건드린다.
+LINE_MODEL = {"base": 0.154, "per_char": 0.127, "punct": 0.412}
+PUNCT_IN = r"[,，.!?…]"
+
+
+def _punct_in(t: str) -> int:
+    return len(re.findall(PUNCT_IN, t.rstrip(" ?!.…,")))
+
+
+def _cv(xs: list[float]) -> float | None:
+    import statistics
+    if len(xs) < 3:
+        return None
+    m = statistics.mean(xs)
+    return round(statistics.pstdev(xs) / m, 4) if m else None
+
+
+def _model(r: dict) -> dict:
+    return {**LINE_MODEL, **(r.get("model") or {})}
+
+
+def cps_spread(d: dict, r: dict, st: dict | None = None) -> dict:
+    """(판단 주인: 대본 단계 말속도 편차, 줄 단위) 나레 줄마다 예상 자/초 = 글자 ÷ 예상 초(LINE_MODEL) → 변동계수 + 고칠 제안
+    (평균에서 먼 줄부터: 글자 몇 자 늘리기/줄이기 — 판 tts_chars 범위 안에서만, 줄 안 쉼표 빼기). 자막 나누기는 안 건드린다(⑲)."""
+    import statistics
+    M = _model(r)
+    lines = {}
+    for l in d.get("lines") or []:
+        if l.get("kind") == "orig" or l.get("id") == "O":
+            continue
+        t = (l.get("tts") or l.get("text") or "").strip()
+        n = nchar(t)
+        if n:
+            sec = M["base"] + M["per_char"] * n + M["punct"] * _punct_in(t)
+            lines[l.get("id")] = {"chars": n, "punct": _punct_in(t), "sec": round(sec, 3), "cps": round(n / sec, 3)}
+    cv = _cv([v["cps"] for v in lines.values()])
+    rng = next((x for x in ((st or {}).get("script") or {}).get("audit") or [] if x.get("kind") == "tts_chars"), None)
+    sug = []
+    if cv is not None and cv > float(r.get("max") or 0):
+        m = statistics.mean(v["cps"] for v in lines.values())
+        for lid, v in sorted(lines.items(), key=lambda kv: -abs(kv[1]["cps"] - m)):
+            S = M["base"] + M["punct"] * v["punct"]           # 글자에 안 붙는 초
+            k = round((m * S) / (1 - m * M["per_char"]) - v["chars"]) if abs(1 - m * M["per_char"]) > 1e-6 else 0
+            if rng:
+                k = max(rng["min"] - v["chars"], min(rng["max"] - v["chars"], k))
+            tip = f"글자 {k:+d}자" if k else "글자 그대로(범위 끝)"
+            if v["punct"] and v["cps"] < m:
+                tip += f" 또는 줄 안 쉼표 {v['punct']}개 빼기(하나 = {M['punct']:.2f}초)"
+            sug.append({"line": lid, "cps": v["cps"], "mean": round(m, 2), "chars": v["chars"], "add_chars": k,
+                        "why": f"예상 {v['cps']:.2f}자/초 vs 평균 {m:.2f} — {tip}"})
+    return {"level": "line", "cv": cv, "max": r.get("max"), "lines": lines, "suggest": sug[:5], "model": M}
+
+
+def speech_rule(st: dict) -> dict | None:
+    """판에 tts_cps_spread 규칙이 없을 때 판 targets.speech(업그레이드 판 목표, 07 주인)로 만드는 규칙 — 줄 단위(⑲) = `cps_cv`(나레 문장 자).
+    `spread`(자막 조각 표시 자)는 다른 자라 쓰지 않는다(§11-3 ⑲ 자를 섞지 않는다)."""
+    sp = (st.get("targets") or {}).get("speech") or {}
+    for key in ("cps_cv",):
+        g = (sp.get(key) or {}).get("ours_goal")
+        if isinstance(g, (int, float)):
+            return {"kind": "tts_cps_spread", "max": g, "why": f"판 targets.speech.{key}.ours_goal(상위 편 p25 — TTS 줄 단위)"}
+    return None
 
 
 def as_lines(d: dict) -> dict:
@@ -130,15 +199,23 @@ def rule_check(r: dict, d: dict, st: dict) -> tuple[bool, str]:
     if k == "forbid_in":
         bad = [l["id"] for l in (T if r["of"] == "tts" else L) if re.search(r["pattern"], txt(l))]
         return not bad, f"금지 '{r.get('why', r['pattern'])}' {bad}"
-    if k == "cap_chars":
-        bad = [(l["id"], c) for l in L for c in _caps(l) if nchar(c) > r["max"]]
-        return not bad, f"자막 덩어리 {r['max']}자 넘음 {bad}"
+    if k == "cap_chars":     # max "chunk_max_chars" = 판 caption.chunk_max_chars 를 그대로(조각 자수 판단은 그 칸 하나)
+        mx = (st.get("caption") or {}).get("chunk_max_chars") if r["max"] == "chunk_max_chars" else r["max"]
+        bad = [(l["id"], c) for l in L for c in _caps(l) if nchar(c) > mx]
+        return not bad, f"자막 덩어리 {mx}자 넘음 {bad}"
     if k == "orig_span":
         if not O:
             return False, "원음 줄 없음"
         l = O[0] if r["which"] == "first" else O[-1]
         s = _orig_sec(l)
         return s <= r["max"], f"{r['which']} 원음 {s:.2f}초 (≤{r['max']})"
+    if k == "tts_cps_spread":
+        R = cps_spread(d, r, st)
+        if R["cv"] is None:
+            return False, "나레 줄이 3개 미만 — 편차 못 잼"
+        ok = R["cv"] <= r["max"]
+        tip = "" if ok else " · 제안 " + " / ".join(f"{x['line']} {x['why']}" for x in R["suggest"][:3])
+        return ok, f"줄 예상 cps 변동계수 {R['cv']} (≤{r['max']}){tip}"
     if k in ("narr_share", "est_length"):
         cps = st.get("cps_target", 7.0)
         tn = sum(nchar(txt(l)) for l in T) / cps
@@ -152,14 +229,121 @@ def rule_check(r: dict, d: dict, st: dict) -> tuple[bool, str]:
     return False, f"모르는 규칙 {k}"
 
 
+# ── 관문 G-1 대본 글 소리 위험(TTS 돈 쓰기 전) — 판 설정 밖 **모든 판 공통** 규칙. 판단 주인 = text_defects 한 곳 ──────────
+#   근거 = 10-25 전 편 음성 감사(소리 결함을 낸 대본 줄 ↔ 정상 줄, gate_fixtures/g1_script.json):
+#   ① 줄 끝 부호 없음 → 이어 합성한 소리를 줄마다 자를 때 다음 줄로 밀림(98 #75 잇템로그 02 N4·09 N3·11 N3 납품)
+#   ② 읽는 글 영문 → 타입캐스트가 건너뜀(감사 'AI'×6·'LED' — narr_verify.latin_lines 가 이 결과를 부른다)
+#   ③ 화면 자막 ↔ 읽는 글 엇갈림(98 #17 선우용여 '따라 사 봤는데요' ↔ '하나 사서 따라 해 봤는데요')
+#   넣지 않은 것(근거 없음): 줄 안 되풀이(감사 소리 되풀이 2건 = TTS 탓, 대본 글엔 되풀이 0 · 글 되풀이 2건은 소리 정상) · 숫자(읽은 소리 결함 0)
+ORIG_KINDS = ("orig", "원음", "원본")
+LATIN = re.compile(r"[A-Za-z][A-Za-z0-9\-]*")
+READ_RISKY = re.compile(r"[0-9A-Za-z%]")           # 읽는 글이 화면과 달라도 되는 자리(숫자·영문·기호 읽기 — 제작순서 07 §4)
+_CHO = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ"
+
+
+def _say(l: dict) -> str:
+    """TTS 로 보내는 글 — tts 칸, 없으면 text(옛 대본은 text 를 그대로 읽었다)."""
+    return str(l.get("tts") or l.get("text") or "").strip()
+
+
+def narr_lines(d: dict) -> list[dict]:
+    """나레(읽는) 줄 — 원음·원본 줄 빼고 읽는 글이 있는 줄."""
+    return [l for l in d.get("lines") or [] if isinstance(l, dict) and str(l.get("kind") or "") not in ORIG_KINDS
+            and l.get("id") != "O" and not (not l.get("kind") and "said" in l and not l.get("tts")) and _say(l)]
+
+
+def latin_in(d: dict) -> list[tuple[str, list[str]]]:
+    """(판단 주인 — 읽는 글 영문) 읽는 글에 영문이 든 줄 [(줄, 영문 토막)] — 한글 읽기로 바꿔 보낸다(AI → 에이아이, LED → 엘이디)."""
+    return [(l.get("id"), LATIN.findall(_say(l))) for l in narr_lines(d) if LATIN.search(_say(l))]
+
+
+def _norm(s: str) -> str:
+    return re.sub(r"[^0-9a-z가-힣]", "", (s or "").lower())
+
+
+def _cho(ch: str) -> str:
+    return _CHO[(ord(ch) - 0xAC00) // 588] if "가" <= ch <= "힣" else ch
+
+
+def _shown(l: dict) -> tuple[str | None, list[str]]:
+    """화면에 보이는 글(자막 조각을 띄어 이은 것, 조각이 없으면 tts 가 따로 있을 때의 text)과 조각 목록."""
+    caps = l.get("caps")
+    if isinstance(caps, list) and caps:
+        parts = [str((c.get("text") if isinstance(c, dict) else c if isinstance(c, str) else "") or "") for c in caps]
+        return " ".join(parts), parts
+    if l.get("tts") and l.get("text"):
+        return str(l["text"]), []
+    return None, []
+
+
+def shown_not_said(shown: str, say: str) -> list[str]:
+    """화면 글의 낱말 가운데 **읽는 글에 순서대로 안 나오는 것**. 읽는 글에만 있는 말(자막을 줄이며 뺀 연결어·조사 — 98 #19)은 허용.
+    허용(결함 아님): 숫자·영문·기호가 든 낱말(읽기로 바뀜) · 띄어쓰기·부호 · 낱말 끝 1~2자 차이(조사·어미 '살린'↔'살려낸', '들었대요'↔'들었다는데요') ·
+    한 글자 낱말의 초성 같음('것'↔'거', '걍'↔'그냥') · 이름 발음 고침에 붙는 말('방송인 ○○ 씨' — 읽는 글에만 있으니 허용 쪽)."""
+    hay = _norm(say)
+    pos, miss = 0, []
+    for w in re.split(r"[\s/]+", shown):
+        n = _norm(w)
+        if not n or READ_RISKY.search(w):
+            continue
+        k = hay.find(n, pos)
+        if k < 0:                        # 낱말 끝 1~2자(조사·어미)만 다르면 같은 낱말
+            for cut in range(1, min(2, len(n) - 1) + 1):
+                k = hay.find(n[:-cut], pos)
+                if k >= 0:
+                    n = n[:-cut]; break
+        if k < 0 and len(n) == 1 and pos < len(hay) and _cho(hay[pos]) == _cho(n):
+            k = pos
+        if k < 0:
+            miss.append(w)
+            continue
+        pos = k + len(n)
+    return miss
+
+
+def text_defects(d: dict, joined: bool = True) -> list[dict]:
+    """(판단 주인 — 관문 G-1) 대본 글만 보고 TTS 전에 막는 소리·자막 결함 [{rule, line, why}] (빈 목록 = 통과).
+    joined = 나레 줄을 이어 한 번에 합성하고 글자 시각으로 줄마다 자르는 대본(최상위 lines — render_bench·render_itssum 길).
+    샥탬 final.lines 대본(줄마다 따로 합성)은 joined=False 라 줄 끝 부호 규칙을 안 건다."""
+    from tools.calcopy.engine import narr_align as NA
+    out = []
+    N = narr_lines(d)
+    T = [l for l in N if l.get("kind") == "tts"]
+    if joined:
+        for l in T[:-1]:
+            if not NA.ends_with_mark(_say(l)):
+                out.append({"rule": "end_mark", "line": l.get("id"),
+                            "why": f"줄 끝 문장부호 없음 '…{_say(l)[-12:]}' — 이어 합성한 소리를 줄마다 자를 때 다음 줄로 밀린다(98 #75). 끝에 쉼표·마침표"})
+    for lid, toks in latin_in(d):
+        out.append({"rule": "latin", "line": lid,
+                    "why": f"읽는 글에 영문 {toks} — 타입캐스트가 건너뛴다(감사 'AI'·'LED' 7곳). 한글 읽기로(AI → 에이아이, 자막은 원문)"})
+    for l in N:
+        shown, parts = _shown(l)
+        if shown is None:
+            continue
+        miss_t = shown_not_said(shown, str(l["text"])) if parts and l.get("tts") and l.get("text") else []
+        if miss_t:     # 화면 글(text) 칸에 읽기('육십칠 퍼센트')를 적은 대본도 있어 숫자·영문 낱말은 같은 자로 넘긴다(옛 rules.caps_vs_tts 의 글자 그대로 비교는 3편 오검출)
+            out.append({"rule": "caps_text", "line": l.get("id"),
+                        "why": f"자막 조각을 이으면 '{shown}' — 화면 글(text) '{l['text']}' 에 없는 {miss_t}"})
+        miss = shown_not_said(shown, _say(l))
+        if miss:
+            out.append({"rule": "caps_say", "line": l.get("id"),
+                        "why": f"자막 {miss} 를 목소리가 안 읽는다 — 화면 '{shown}' ↔ 목소리 '{_say(l)}'(98 #17: 자막은 읽는 말 그대로, 발음 고침만 다르게)"})
+    return out
+
+
 def audit(path: Path, version: str | None = None) -> dict:
-    d = as_lines(json.loads(Path(path).read_text(encoding="utf-8")))
+    raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    d = as_lines(raw)
     v = version_of(Path(path), version)
     st = ST.load(v)
     lines = tts_lines(d)
     res = {"file": str(path), "version": v, "n_lines": len(lines), "chars": sum(nchar(l["text"]) for l in lines), "rules": []}
     ok = True
-    for r in st["script"].get("audit") or []:
+    rules = list(st["script"].get("audit") or [])
+    if not any(r.get("kind") == "tts_cps_spread" for r in rules) and speech_rule(st):
+        rules.append(speech_rule(st))
+    for r in rules:
         if r["kind"] == "engine":
             e = engine(r["name"], d, lines)
             res["engine"] = e
@@ -178,13 +362,56 @@ def audit(path: Path, version: str | None = None) -> dict:
         bad = [l.get("id", k) for k, l in enumerate(sel) if re.search(f["pattern"], (l.get("text") or l.get("tts") or "") + " " + " ".join(_caps(l)))]
         if bad:
             res["rules"].append({"kind": "forbid", "ok": False, "why": f"{f['why']} {bad}"}); ok = False
+    for x in text_defects(d, joined=bool(raw.get("lines"))):     # 관문 G-1 — 판 설정과 상관없이 모든 판
+        res["rules"].append({"kind": "text:" + x["rule"], "ok": False, "why": f"{x['line']} {x['why']}"}); ok = False
     res["narr"] = [SF.narr_rules(l["text"]) for l in lines]
     res["ok"] = bool(ok)
     return res
 
 
+def fit_model(pattern: str) -> dict:
+    """렌더 자막표의 나레 줄(첫 조각 t0 ~ 끝 조각 t1)로 LINE_MODEL 을 다시 맞춘다 — 최소제곱. 결과를 보고 LINE_MODEL 을 근거 줄과 같이 손으로 고친다."""
+    import glob
+    import numpy as np
+    X, Y, n_ep = [], [], 0
+    for f in sorted(glob.glob(pattern)):
+        rows = [r for r in json.loads(Path(f).read_text(encoding="utf-8")).get("rows") or [] if (r.get("speaker") or r.get("kind")) == "narr"]
+        n_ep += bool(rows)
+        by: dict = {}
+        for r in rows:
+            by.setdefault(r.get("line"), []).append(r)
+        for v in by.values():
+            t = " ".join(x.get("text") or "" for x in v)
+            X.append([1, nchar(t), _punct_in(t)]); Y.append(float(v[-1]["t1"]) - float(v[0]["t0"]))
+    X, Y = np.array(X, float), np.array(Y, float)
+    co, *_ = np.linalg.lstsq(X, Y, rcond=None)
+    r2 = 1 - float(((Y - X @ co) ** 2).sum()) / float(((Y - Y.mean()) ** 2).sum())
+    return {"episodes": n_ep, "lines": len(Y), "r2": round(r2, 3), **dict(zip(("base", "per_char", "punct"), (round(float(c), 3) for c in co)))}
+
+
 def main():
     args = sys.argv[1:]
+    if args[:1] == ["fit-model"]:
+        print(json.dumps(fit_model(args[1]), ensure_ascii=False))
+        return 0
+    if args[:1] == ["text-scan"]:     # 관문 G-1 전수 훑기: text-scan "channel/**/대본.json" ["C:/숏템_칼카피/**/대본.json" …] — 규칙별 줄·편 수 + 걸린 줄
+        import collections
+        import glob
+        n, cnt, docs = 0, collections.Counter(), collections.defaultdict(set)
+        for pat in args[1:]:
+            for f in sorted(glob.glob(pat, recursive=True)):
+                try:
+                    raw = json.loads(Path(f).read_text(encoding="utf-8"))
+                except (OSError, ValueError):
+                    continue
+                if not isinstance(raw, dict):
+                    continue
+                n += 1
+                for x in text_defects(as_lines(raw), joined=bool(raw.get("lines"))):
+                    cnt[x["rule"]] += 1; docs[x["rule"]].add(f)
+                    print(f"{f} | {x['rule']} | {x['line']} | {x['why'][:160]}")
+        print(json.dumps({"docs": n, "lines": dict(cnt), "docs_hit": {k: len(v) for k, v in docs.items()}}, ensure_ascii=False))
+        return 0
     ver = None
     if "--version" in args:
         i = args.index("--version"); ver = args[i + 1]; del args[i:i + 2]

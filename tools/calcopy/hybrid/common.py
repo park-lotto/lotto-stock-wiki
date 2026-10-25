@@ -34,6 +34,12 @@ class StageError(RuntimeError):
 def run(cmd, check=True, timeout=None):
     r = subprocess.run([str(c) for c in cmd], check=False, stdin=subprocess.DEVNULL, capture_output=True, text=True,
                        encoding="utf-8", errors="replace", timeout=timeout)
+    if r.returncode != 0:
+        from tools.calcopy.engine.encoder import cpu_retry      # GPU 인코딩 실패(세션 한도 등) → 같은 명령 CPU 로 한 번 더(98 #79)
+        alt = cpu_retry(cmd)
+        if alt:
+            r = subprocess.run(alt, check=False, stdin=subprocess.DEVNULL, capture_output=True, text=True,
+                               encoding="utf-8", errors="replace", timeout=timeout)
     if check and r.returncode != 0:
         raise StageError(f"명령 실패 rc={r.returncode}: {' '.join(str(c) for c in cmd)[:240]}\n{r.stderr[-1200:]}")
     return r

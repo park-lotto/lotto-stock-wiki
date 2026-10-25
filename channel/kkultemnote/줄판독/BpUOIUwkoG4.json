@@ -48,7 +48,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "0.0 점만 → 0.1 완성 + 흐린 큰 사본이 0.4까지 남음(번짐 페이드)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "훅",
+   "fit": 8,
+   "scene_desc": "소파를 손으로 들어 올림(가벼움 시연)",
+   "transition": "none(첫 프레임)",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.005·양수 0.50·sd 3.84·|tx| 0.11(n20)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 0.6,
@@ -69,7 +83,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "앞 글 두고 맞아! 굵게 붙임(orig_append)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "훅",
+   "fit": 8,
+   "scene_desc": "같은 소파 드는 손",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "cam",
+   "motion_basis": "div중앙 -0.030·양수 0.29·sd 3.58·|tx| 0.20(n14)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 1.1,
@@ -90,7 +118,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "이음",
+   "fit": 5,
+   "scene_desc": "장윤정 서서 손짓(앉는 장면 아님)",
+   "transition": "cut",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.075·양수 0.00·sd 3.54·|tx| 0.34(n12)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 1.7,
@@ -116,7 +158,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "스타일분석은 1.7~4.0 한 줄로 봤으나 2.6에서 새 덩어리",
-   "cut_at": []
+   "cut_at": [],
+   "role": "본문",
+   "fit": 7,
+   "scene_desc": "사람들이 소파를 들어 올리려 손 뻗음",
+   "transition": "cut",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.427·양수 0.03·sd 6.60·|tx| 0.14(n29)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 2.6,
@@ -142,7 +198,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "본문",
+   "fit": 8,
+   "scene_desc": "소파를 한 손으로 드는 장면",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.072·양수 0.62·sd 4.55·|tx| 0.23(n42)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 3.9,
@@ -182,7 +252,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "3.9 작고 흐리게 → 4.0 완성. ✦ 반짝 2번(글 오른쪽 끝, 왼쪽 아래)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "본문",
+   "fit": 5,
+   "scene_desc": "장윤정 매장 설명(브랜드는 안 보임)",
+   "transition": "cut",
+   "motion": "still",
+   "motion_basis": "div중앙 0.019·양수 0.67·sd 0.69·|tx| 0.04(n33)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 5.0,
@@ -208,7 +292,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "질문",
+   "fit": 4,
+   "scene_desc": "장윤정 뒷모습",
+   "transition": "cut",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.119·양수 0.00·sd 3.12·|tx| 0.26(n21)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 5.8,
@@ -229,7 +327,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "5.8 아주 작게 → 5.9 크게 → 6.0~6.1 회색 테 번짐 → 6.2 정상(orig_pop)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "답",
+   "fit": 7,
+   "scene_desc": "소파에 앉은 장윤정",
+   "transition": "cut",
+   "motion": "still",
+   "motion_basis": "div중앙 0.002·양수 0.62·sd 0.78·|tx| 0.04(n21)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 6.5,
@@ -250,7 +362,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "답",
+   "fit": 6,
+   "scene_desc": "앉아서 말함",
+   "transition": "cut",
+   "motion": "still",
+   "motion_basis": "div중앙 0.003·양수 0.52·sd 0.57·|tx| 0.01(n23)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 7.3,
@@ -271,7 +397,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "7.3 회색 반투명",
-   "cut_at": []
+   "cut_at": [],
+   "role": "답",
+   "fit": 7,
+   "scene_desc": "앉아 손짓하며 앉는 느낌 설명",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.022·양수 0.67·sd 4.16·|tx| 0.17(n18)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 8.03,
@@ -292,7 +432,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "본문",
+   "fit": 7,
+   "scene_desc": "앉아 웃는 장윤정(감싸는 소파)",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 -0.069·양수 0.40·sd 6.60·|tx| 0.69(n25)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 9.0,
@@ -313,7 +467,21 @@
    ],
    "fill_hex": "#E10116",
    "notes": "빨강 꾸불림 + 검정 테, 자간 넓음(orig_red)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "고조",
+   "fit": 5,
+   "scene_desc": "가슴에 손 얹고 혹하는 표정",
+   "transition": "cut",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.096·양수 0.11·sd 3.41·|tx| 0.32(n27)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 10.0,
@@ -334,7 +502,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "이음",
+   "fit": 4,
+   "scene_desc": "서서 손짓",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.034·양수 0.50·sd 3.62·|tx| 0.49(n12)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 10.6,
@@ -362,7 +544,21 @@
    "notes": "",
    "cut_at": [
     11.433
-   ]
+   ],
+   "role": "질문",
+   "fit": 3,
+   "scene_desc": "소파 일부+팔(가격 정보 없음)",
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.516·양수 0.90·sd 4.28·|tx| 0.27(n21)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 11.5,
@@ -383,7 +579,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "고조",
+   "fit": 5,
+   "scene_desc": "다른 영상 행사장 리액션(귀 막는 동작)",
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.288·양수 0.94·sd 5.70·|tx| 0.81(n18)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 12.1,
@@ -404,7 +614,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "고조",
+   "fit": 5,
+   "scene_desc": "같은 리액션 컷",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.096·양수 0.81·sd 6.62·|tx| 0.30(n16)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 12.75,
@@ -425,7 +649,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "끝",
+   "fit": 4,
+   "scene_desc": "서 있는 장윤정",
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.511·양수 1.00·sd 5.07·|tx| 0.27(n29)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 13.8,
@@ -446,7 +684,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "13.8 회색 → 13.9 굵게 완성",
-   "cut_at": []
+   "cut_at": [],
+   "role": "끝",
+   "fit": 4,
+   "scene_desc": "가슴에 손 얹고 웃음",
+   "transition": "cut",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.077·양수 0.00·sd 0.86·|tx| 0.08(n10)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 14.3,
@@ -467,7 +719,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "끝",
+   "fit": 6,
+   "scene_desc": "소파 단독(둘러보고)",
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.157·양수 0.93·sd 6.25·|tx| 0.38(n28)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   }
  ],
  "no_caption": [],
@@ -481,5 +747,89 @@
   "BpU: 스타일분석 원음 등장=컷인 과 달리 원음 덩어리 다수가 fade(반투명 1~3프레임)로 들어옴 — 컷인은 0.6 맞아!·9.0 혹하는·10.0 앉아보셔야죠 등",
   "효과음: 뜯기 후보 0, 파형 솟음은 말 시작과 겹쳐 구분 못 함 → 전부 null",
   "11.5~12.7 장면은 다른 영상 행사장 — 화자 이름 글자 없음"
- ]
+ ],
+ "frame0": {
+  "what": "소파를 드는 손(얼굴 없음)",
+  "face_frac": 0.0,
+  "text": "사악한 가격? 장윤정도 / 혹하게 만드는 쇼파",
+  "basis": "0.02초 프레임 창(0,420,1080,1080) YuNet 얼굴 높이/창 높이 · what=눈"
+ },
+ "transitions": [
+  {
+   "t": 1.133,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 1.667,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 3.867,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 4.967,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 5.8,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 6.467,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 7.267,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 8.033,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 9.0,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 10.0,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 10.6,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 11.433,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 12.7,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 13.767,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 14.267,
+   "kind": "cut",
+   "note": null
+  }
+ ],
+ "_made_by": "오푸스 실행자 보강(관제 263 지시서 06, 2026-10-25): role·fit·scene_desc=눈(work/lr7/fit_*.jpg) · transition·cut_at=cutdet 30fps(work/lr7/cut_*.json, 60fps 원본을 30fps 사본으로) + rangesheet 눈 정정 · motion=measure 광류(work/lr7/m_*.json) · frame0 face_frac=thumb.faces_of(YuNet, 창 1080²)"
 }

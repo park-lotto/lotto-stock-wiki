@@ -1,16 +1,51 @@
 {
  "name": "재미썸홈판",
  "renderer": "jaemi",
+ "thumb_card_face": true,
+ "_thumb_card_face": "연예인 채널 — 썸네일 카드 3안 전부 연예인 얼굴(사장님 10-25 '연예인 얼굴 통일')",
  "_note": "얜샷템 하이브리드 2번 판 — 이븐쇼핑(재미썸홈) 결. 렌더러 render_jaemi.py 는 render 칸을 기본값(DEF)으로 읽는다(값 주인 = 이 파일).",
- "bench": {"channel": "evenshopping", "analysis": "channel/evenshopping/대본설명서/points.json"},
- "voice": {"name": "박창수", "voice_id": "tc_6059dad0b83880769a50502f", "why": "사장님 10-18 밤 확정 — 재미썸홈판 = 박창수(필재 금지)"},
- "bgm": {"id": "honwaka_puppu"},
- "loudness": {"lufs": -14.0, "tp": -1.5},
- "length": {"min": 25, "max": 35},
- "render": {"end_pad": 0.7, "gap_o_f1": 0.12, "duck_db": -10.0, "bgm_a_rms": -31.5, "voice_rms": -17.5, "target_lufs": -14.0, "silence_d": 0.08,
-            "voice_af": "highpass=f=90,acompressor=threshold=0.03:ratio=2:attack=10:release=150:makeup=1", "sfx_density": "low",
-            "tempo_max": 1.27, "tempo_min": 0.85, "last_tempo_tol": 0.10, "pause_long": 0.28, "pause_comma": 0.235, "pause_period": 0.315,
-            "opener_at": -0.25, "preset_b": "channel/evenshopping/preset/숏템템플릿/manifest.json"},
+ "bench": {
+  "channel": "evenshopping",
+  "analysis": "channel/evenshopping/대본설명서/points.json"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f",
+  "why": "사장님 10-18 밤 확정 — 재미썸홈판 = 박창수(필재 금지)"
+ },
+ "bgm": {
+  "id": "honwaka_puppu"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 LUFS·TP −1.5 통일(사장님 10-18)"
+ },
+ "length": {
+  "min": 25,
+  "max": 35,
+  "why": "25~35초 = 재미썸홈 하이브리드 통과본 범위 — 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
+ },
+ "render": {
+  "end_pad": 0.7,
+  "gap_o_f1": 0.12,
+  "duck_db": -10.0,
+  "bgm_a_rms": -31.5,
+  "voice_rms": -17.5,
+  "target_lufs": -14.0,
+  "silence_d": 0.08,
+  "voice_af": "highpass=f=90,acompressor=threshold=0.03:ratio=2:attack=10:release=150:makeup=1",
+  "sfx_density": "low",
+  "tempo_max": 1.27,
+  "tempo_min": 0.85,
+  "last_tempo_tol": 0.1,
+  "pause_long": 0.28,
+  "pause_comma": 0.235,
+  "pause_period": 0.315,
+  "opener_at": -0.25,
+  "preset_b": "channel/evenshopping/preset/숏템템플릿/manifest.json",
+  "why": {"pause_comma": "0.235·pause_period 0.315 = 쉼표 0.22·마침표 0.30 + 이음매 겹침 15ms 보정(엔진 tts_pause.shape·B18, render_jaemi 255줄)", "pause_period": "pause_comma 와 같은 근거", "end_pad": "0.7 = 끝 컷 늘림 B4 ≥1.5초", "opener_at": "−0.25 = 장윤정 '저 영상' 덮임 수리", "last_tempo_tol": "0.1 = 끝 문장 atempo ±10%(B15)", "tempo_max": "1.27·tempo_min 0.85 = 배속 범위", "tempo_min": "tempo_max 와 같은 근거", "target_lufs": "−14 = loudness", "silence_d": "0.08 = 검사 자와 같은 최소 무음 길이(checks.pauses_between → silences(..., 0.08) — B18 쉼을 재는 자와 쉼을 찾는 자를 한 값으로)", "voice_rms": "−17.5 = 나레·원음 크기 맞춤 기준점(ngain·ogain 이 이 값에 맞춘다) — 마스터(target_lufs −14)가 전체를 다시 맞추므로 절대값은 결과에 안 닿고 bgm_a_rms 와의 차만 닿는다", "bgm_a_rms": "−31.5 = voice_rms − 14.0dB · 벤치(이븐쇼핑 6편) 말 p50 − 말 사이 바닥 편 중앙 13.99dB(11.9·18.7·28.7·16.1·11.4·11.3 — handconst.py evenshopping bgm.db_below_voice, 신호급) → −17.5 − 14.0 = −31.5(값 그대로 일치)", "duck_db": "−10 = 손 상수 — 하이브리드 전용(A 원음 구간 BGM 줄임). 벤치(이븐쇼핑)는 원음 줄 0개라 원음 구간 덕킹이 없다 → 잴 곳 = 앞 결 벤치 원음 조각 바닥 − 나레 조각 바닥(handconst bgm.duck_orig_db) · measure_task 06-evenshopping", "gap_o_f1": "0.12 = 손 상수 — 하이브리드 전용(A 원음 끝 → 첫 나레 줄). 벤치 원음→나레 경계 0개 → 잴 곳 = 앞 결 벤치 줄판독 원음→나레 경계(handconst gap_after_orig_x_oo) · measure_task 06-evenshopping", "pause_long": "0.28 = 손 상수 — TTS 안 긴 쉼을 이 길이로 줄이는 상한(silenceremove stop_duration, render_jaemi 231줄). 벤치(이븐쇼핑) 줄 경계 소리 쉼 최대 0.14·p90 0.14초(n=20, handconst.py evenshopping) — 상한을 벤치 최대로 내리면 문장부호 쉼(pause_period 0.315)과 부딪혀 렌더 대조 뒤 교체 · measure_task 06-evenshopping"}
+ },
  "title_form": "body_title 한 줄(이븐쇼핑 t11 틀)",
  "script": {
   "brief": [
@@ -18,6 +53,44 @@
    "결 = channel/evenshopping/대본설명서/points.json(이븐쇼핑 8칸 title→bait→reveal→solve→more→more2→twist→land, 반말 전언체 '~다는 거·~다고').",
    "tts_tempo·punct_at 은 비워 둔다(자동). 렌더가 '문장부호 근처 무음 없음'으로 멈추면 그때만 손으로."
   ],
-  "audit": [{"kind": "engine", "name": "jaemi"}]
+  "audit": [
+   {
+    "kind": "engine",
+    "name": "jaemi"
+   }
+  ]
+ },
+ "_pending": {
+  "bench_migration": "renderer=bench 로 아직 못 옮김(07 판단 10-25): ① 한 편이 A(얜샷템 틀 1080² 창 + 원음)·B(다른 프리셋 틀) 두 틀 — render_bench.frame_png 는 편 하나에 틀 하나(시간 구간별 틀 칸 없음, 방구석·맛템썰템·썰템쇼 훅 카드와 같은 결손) → 02 에 frame.segments[{t0,t1,frame}] 요청 ② 대본 꼴이 다르다(seg A/B · slot·pieces·orig_caps ) — render_bench 대본(lines[kind tts|orig, caps]) 로 바꾸는 변환기 필요(08 flow 와 같이) ③ 소리 규칙(원음 조각 pieces·mute·tts_override·쉼 모양)이 render_itssum/jaemi 안 — bench 의 audio 칸에 없음. 세 가지가 들어오면 같은 편(함익병) 대본으로 옛 렌더 ↔ bench 렌더 프레임·LUFS 대조 뒤 전환"
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": null,
+   "gap": [
+    "자막팩 길 아님(itssum/jaemi 렌더러) — bench 전환 뒤 pack_map 다시"
+   ],
+   "from": "renderer jaemi — 자막은 렌더러 자체(render 칸)가 그린다, 자막팩 층 밖(_pending.bench_migration)"
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — render_bench 옛 고정값 그대로(벤치 등장 = 판 caption.pack_default·placement.rules.enter 가 정함) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": null,
+   "gap": [],
+   "from": "renderer jaemi — 효과음은 렌더러 자체(render 칸)"
+  },
+  "bgm": {
+   "id": "honwaka_puppu",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)"
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
+  }
  }
 }

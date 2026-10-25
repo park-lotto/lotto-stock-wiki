@@ -1,7 +1,7 @@
 {
  "name": "uljimatrot판",
  "renderer": "bench",
- "_note": "kal.py rules 초안(2026-10-23) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
+ "_note": "kal.py rules 초안(2026-10-25) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
  "bench": {
   "ko": "울지마트로트",
   "channel": "https://www.youtube.com/@울지마트롯",

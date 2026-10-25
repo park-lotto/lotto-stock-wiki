@@ -96,10 +96,17 @@
    "sfx": null,
    "scene": "먹는 장면",
    "cut_at": [],
-   "confidence": "눈",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "눈",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "note": "모자 쓴 여성 출연자 입 움직임(1.6·1.9초 프레임)·vtt 첫 줄 뒤 >> — 이름 화면 글 없음",
    "role_detail": "훅",
-   "fit": 9
+   "fit": 9,
+   "transition": "none(첫 프레임)",
+   "motion": "cam",
+   "motion_basis": "cutdet v2 샷 0.0~2.2 cam chg 60.3"
   },
   {
    "t0": 1.233,
@@ -129,9 +136,16 @@
    "sfx": null,
    "scene": "먹는 장면",
    "cut_at": [],
-   "confidence": "눈",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "눈",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "role_detail": "훅",
-   "fit": 8
+   "fit": 8,
+   "transition": "none(같은 컷 안)",
+   "motion": "cam",
+   "motion_basis": "cutdet v2 샷 0.0~2.2 cam chg 60.3"
   },
   {
    "t0": 2.233,
@@ -156,10 +170,17 @@
    "cut_at": [
     2.233
    ],
-   "confidence": "눈",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "눈",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "note": "vtt >> 화자 바뀜 시작점. MFCC 거리: 강주은 얼굴 구간들과 0.84~0.96(강주은끼리 0.38~0.51) → 다른 목소리",
    "role_detail": "훅",
-   "fit": 9
+   "fit": 9,
+   "transition": "cut",
+   "motion": "pan",
+   "motion_basis": "cutdet v2 샷 2.2~5.0 pan chg 28.1"
   },
   {
    "t0": 3.55,
@@ -189,10 +210,17 @@
    "sfx": null,
    "scene": "완성 음식",
    "cut_at": [],
-   "confidence": "눈",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "눈",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "note": "3인칭 전언 ~래요 + 앞 줄과 같은 목소리 결 → 나레",
    "role_detail": "훅",
-   "fit": 9
+   "fit": 9,
+   "transition": "none(같은 컷 안)",
+   "motion": "pan",
+   "motion_basis": "cutdet v2 샷 2.2~5.0 pan chg 28.1"
   },
   {
    "t0": 5.0,
@@ -217,10 +245,17 @@
    "cut_at": [
     5.0
    ],
-   "confidence": "눈",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "눈",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "note": "얼굴 없음(단면 근접). vtt 는 앞 나레 줄과 >> 없이 이어짐. MFCC 어느 구간과도 0.67 이상 — 나레/강주은 판정 못 함",
    "role_detail": "상황",
-   "fit": 9
+   "fit": 9,
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "cutdet v2 샷 5.0~7.3 cam chg 43.6"
   },
   {
    "t0": 6.083,
@@ -243,10 +278,17 @@
    "sfx": null,
    "scene": "완성 음식",
    "cut_at": [],
-   "confidence": "눈",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "눈",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "note": "반말 끝. vtt 는 되어 있어요",
    "role_detail": "상황",
-   "fit": 9
+   "fit": 9,
+   "transition": "none(같은 컷 안)",
+   "motion": "cam",
+   "motion_basis": "cutdet v2 샷 5.0~7.3 cam chg 43.6"
   },
   {
    "t0": 7.317,
@@ -271,9 +313,16 @@
    "cut_at": [
     7.317
    ],
-   "confidence": "픽셀",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "픽셀",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "role_detail": "상황",
-   "fit": 10
+   "fit": 10,
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "cutdet v2 샷 7.3~10.067 cam chg 23.4"
   },
   {
    "t0": 8.083,
@@ -296,9 +345,16 @@
    "sfx": null,
    "scene": "얼굴",
    "cut_at": [],
-   "confidence": "픽셀",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "픽셀",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "role_detail": "상황",
-   "fit": 10
+   "fit": 10,
+   "transition": "none(같은 컷 안)",
+   "motion": "cam",
+   "motion_basis": "cutdet v2 샷 7.3~10.067 cam chg 23.4"
   },
   {
    "t0": 9.167,
@@ -328,9 +384,16 @@
    "sfx": null,
    "scene": "얼굴",
    "cut_at": [],
-   "confidence": "픽셀",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "픽셀",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "role_detail": "반전",
-   "fit": 9
+   "fit": 9,
+   "transition": "none(같은 컷 안)",
+   "motion": "cam",
+   "motion_basis": "cutdet v2 샷 7.3~10.067 cam chg 23.4"
   },
   {
    "t0": 10.05,
@@ -362,10 +425,17 @@
    "cut_at": [
     10.05
    ],
-   "confidence": "픽셀",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "픽셀",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "note": "vtt 받아쓰기는 904시간 — 화면 504, 설명란 504",
    "role_detail": "재료",
-   "fit": 7
+   "fit": 7,
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "cutdet v2 샷 10.067~12.9 zoom_in chg 27.0"
   },
   {
    "t0": 11.117,
@@ -388,9 +458,16 @@
    "sfx": null,
    "scene": "얼굴",
    "cut_at": [],
-   "confidence": "픽셀",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "픽셀",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "role_detail": "재료",
-   "fit": 9
+   "fit": 9,
+   "transition": "none(같은 컷 안)",
+   "motion": "zoom_in",
+   "motion_basis": "cutdet v2 샷 10.067~12.9 zoom_in chg 27.0"
   },
   {
    "t0": 12.05,
@@ -413,9 +490,16 @@
    "sfx": null,
    "scene": "얼굴",
    "cut_at": [],
-   "confidence": "픽셀",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "픽셀",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "role_detail": "재료",
-   "fit": 9
+   "fit": 9,
+   "transition": "none(같은 컷 안)",
+   "motion": "zoom_in",
+   "motion_basis": "cutdet v2 샷 10.067~12.9 zoom_in chg 27.0"
   },
   {
    "t0": 12.9,
@@ -447,10 +531,17 @@
    "cut_at": [
     12.9
    ],
-   "confidence": "픽셀",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "픽셀",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "note": "줄자로 두께 재는 장면",
    "role_detail": "재료",
-   "fit": 10
+   "fit": 10,
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "cutdet v2 샷 12.9~15.1 cam chg 68.4"
   },
   {
    "t0": 14.0,
@@ -473,9 +564,16 @@
    "sfx": null,
    "scene": "손·재료 근접",
    "cut_at": [],
-   "confidence": "픽셀",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "픽셀",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "role_detail": "재료",
-   "fit": 10
+   "fit": 10,
+   "transition": "none(같은 컷 안)",
+   "motion": "cam",
+   "motion_basis": "cutdet v2 샷 12.9~15.1 cam chg 68.4"
   },
   {
    "t0": 15.083,
@@ -500,10 +598,17 @@
    "cut_at": [
     15.083
    ],
-   "confidence": "눈",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "눈",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "note": "굽는 소리 묘사 자막 — 말 아님",
    "role_detail": "과정",
-   "fit": 6
+   "fit": 6,
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "cutdet v2 샷 15.1~16.5 cam chg 23.0"
   },
   {
    "t0": 16.5,
@@ -528,10 +633,17 @@
    "cut_at": [
     16.5
    ],
-   "confidence": "눈",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "눈",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "note": "오븐 장면(얼굴 없음). MFCC 강주은 얼굴 구간과 0.41~0.51 → 신호로 강주은",
    "role_detail": "과정",
-   "fit": 8
+   "fit": 8,
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "cutdet v2 샷 16.5~19.4 zoom_in chg 78.8"
   },
   {
    "t0": 17.85,
@@ -561,10 +673,17 @@
    "sfx": null,
    "scene": "조리 과정",
    "cut_at": [],
-   "confidence": "눈",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "눈",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "note": "오븐→도마 앞 화면 한 컷(카메라 당김, 컷 아님). 신호로 강주은",
    "role_detail": "맛반응",
-   "fit": 9
+   "fit": 9,
+   "transition": "none(같은 컷 안)",
+   "motion": "zoom_in",
+   "motion_basis": "cutdet v2 샷 16.5~19.4 zoom_in chg 78.8"
   },
   {
    "t0": 19.4,
@@ -589,10 +708,17 @@
    "cut_at": [
     19.4
    ],
-   "confidence": "눈",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "눈",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "note": "vtt >>. MFCC 가 2.2~3.5 나레 구간과 0.31 로 가장 가까움 — 나레일 가능성 있으나 33프레임 짧은 구간이라 확정 못 함",
    "role_detail": "맛반응",
-   "fit": 7
+   "fit": 7,
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "cutdet v2 샷 19.4~22.967 cam chg 77.5"
   },
   {
    "t0": 20.317,
@@ -615,10 +741,17 @@
    "sfx": null,
    "scene": "먹는 장면",
    "cut_at": [],
-   "confidence": "눈",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "눈",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "note": "vtt >>. 강주은 구간과 MFCC 0.65~0.88 — 식탁 출연자",
    "role_detail": "맛반응",
-   "fit": 9
+   "fit": 9,
+   "transition": "none(같은 컷 안)",
+   "motion": "cam",
+   "motion_basis": "cutdet v2 샷 19.4~22.967 cam chg 77.5"
   },
   {
    "t0": 21.85,
@@ -641,9 +774,16 @@
    "sfx": null,
    "scene": "먹는 장면",
    "cut_at": [],
-   "confidence": "눈",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "눈",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "role_detail": "맛반응",
-   "fit": 9
+   "fit": 9,
+   "transition": "none(같은 컷 안)",
+   "motion": "cam",
+   "motion_basis": "cutdet v2 샷 19.4~22.967 cam chg 77.5"
   },
   {
    "t0": 22.4,
@@ -673,9 +813,16 @@
    "sfx": null,
    "scene": "먹는 장면",
    "cut_at": [],
-   "confidence": "눈",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "눈",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "role_detail": "맛반응",
-   "fit": 9
+   "fit": 9,
+   "transition": "none(같은 컷 안)",
+   "motion": "cam",
+   "motion_basis": "cutdet v2 샷 19.4~22.967 cam chg 77.5"
   },
   {
    "t0": 23.0,
@@ -700,10 +847,17 @@
    "cut_at": [
     23.0
    ],
-   "confidence": "픽셀",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "픽셀",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "note": "앞치마 차림 인터뷰 컷",
    "role_detail": "끝",
-   "fit": 9
+   "fit": 9,
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "cutdet v2 샷 22.967~26.133 cam chg 15.5"
   },
   {
    "t0": 24.55,
@@ -726,9 +880,16 @@
    "sfx": null,
    "scene": "얼굴",
    "cut_at": [],
-   "confidence": "픽셀",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "픽셀",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "role_detail": "끝",
-   "fit": 9
+   "fit": 9,
+   "transition": "none(같은 컷 안)",
+   "motion": "cam",
+   "motion_basis": "cutdet v2 샷 22.967~26.133 cam chg 15.5"
   },
   {
    "t0": 25.083,
@@ -758,10 +919,17 @@
    "sfx": null,
    "scene": "얼굴",
    "cut_at": [],
-   "confidence": "픽셀",
+   "confidence": {
+    "기존(시각·y·채움·글·역할·fit)": "픽셀",
+    "transition": "픽셀(readline_tools/cutdet.py --v2, 60fps 원본을 30fps 로 바꿔 잼 — 도구가 30fps 고정) · 프레임차 diff<17 컷은 버림(kfmZ 28.97~29.83·m4m5 23.23~24.07 묶음을 rangesheet 로 눈 확인 = 같은 샷 손 움직임 오탐) · v2 zoomblur 8건(E6SX 13.5·X9mR 19.4·kfmZ 9.43·sMx9 10.73/13.43/18.7·vcb 11.47/14.03) 전부 눈 확인 = 원본 움직임 흐림·심도 흐림 뒤 하드컷 → cut · 줄 시작 ±0.05초(build_lr.trans_at)",
+    "motion": "신호(cutdet --v2 샷 광류 Farneback: still/cam/zoom_in/zoom_out/pan, still? = 표본 적은 still)"
+   },
    "note": "영상 끝까지 유지",
    "role_detail": "끝",
-   "fit": 9
+   "fit": 9,
+   "transition": "none(같은 컷 안)",
+   "motion": "cam",
+   "motion_basis": "cutdet v2 샷 22.967~26.133 cam chg 15.5"
   }
  ],
  "no_caption": [],
@@ -777,5 +945,6 @@
   "emph 칸 통일(지휘 10-20): 줄 전체 강조색 줄은 emph=[{word: 줄 전체, whole_line: true}] — placement.count·kal_analyze rules 가 강조로 세게"
  ],
  "role_note": "role=검사 어휘(지침서 §6), role_detail=브리프 어휘(훅|상황|재료|과정|팁|맛반응|반전|끝). 맛반응→증거, 상황·재료·과정·팁→본문",
- "fit_note": "fit=대사↔화면 맞음 0~10 눈 판정(말하는 얼굴·말하는 대상이 보이면 9~10, 얼굴 없는 원음·소리 자막 6~8)"
+ "fit_note": "fit=대사↔화면 맞음 0~10 눈 판정(말하는 얼굴·말하는 대상이 보이면 9~10, 얼굴 없는 원음·소리 자막 6~8)",
+ "_tr_motion_by": "tools/calcopy/engine/readline_tools/cutdet.py --v2 --cap-band 1350,1440 (창 = layout.window 세로) + build_lr.trans_at — 관제 263 지시서 06 (10-25)"
 }

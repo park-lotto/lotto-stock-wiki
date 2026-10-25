@@ -48,7 +48,21 @@
    ],
    "fill_hex": "#F5DC1F",
    "notes": "0.0 작게 → 0.2~0.3 가로 번짐 꼬리 → 0.4 완성",
-   "cut_at": []
+   "cut_at": [],
+   "role": "훅",
+   "fit": 8,
+   "scene_desc": "매장 진열된 원목 조리대",
+   "transition": "none(첫 프레임)",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.155·양수 0.04·sd 3.36·|tx| 0.02(n27)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 0.85,
@@ -80,11 +94,7 @@
      "anim": "반짝"
     }
    ],
-   "sfx": {
-    "kind": "띵",
-    "t": 0.89,
-    "basis": "파형 솟음"
-   },
+   "sfx": null,
    "scene": "손·제품 근접",
    "y": [
     1245,
@@ -92,7 +102,27 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "✦ 오른쪽 끝(0.9)·왼쪽 아래(1.1). 파형 0.89 솟음은 말 시작과 구분 못 함",
-   "cut_at": []
+   "cut_at": [],
+   "role": "훅",
+   "fit": 7,
+   "scene_desc": "같은 진열 조리대",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "cam",
+   "motion_basis": "div중앙 -0.052·양수 0.15·sd 1.73·|tx| 0.03(n26)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   },
+   "sfx_unverified": {
+    "kind": "띵",
+    "t": 0.89,
+    "basis": "파형 솟음",
+    "why": "1판(10-18) 값 — 뜯기 후보(제미나이 청취)·말 시작과 겹친 파형 솟음·사람 소리(탄성·웃음). sfx_events --detect(10-25) 고립 후보에 없음 → 규칙 분모에서 뺌"
+   }
   },
   {
    "t0": 1.6,
@@ -113,7 +143,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "다리",
+   "fit": 5,
+   "scene_desc": "이미숙 뒷모습 + 매장 진열대",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.034·양수 0.58·sd 1.65·|tx| 0.11(n31)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 2.7,
@@ -139,7 +183,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "공개",
+   "fit": 7,
+   "scene_desc": "이케아 매장 조리대 가격판",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.048·양수 0.91·sd 2.53·|tx| 0.17(n22)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 3.4,
@@ -160,7 +218,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "본문",
+   "fit": 5,
+   "scene_desc": "이미숙 웃음(활용 장면 아님)",
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.154·양수 1.00·sd 2.54·|tx| 0.08(n24)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 4.4,
@@ -181,7 +253,21 @@
    ],
    "fill_hex": "#F5DC1F",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "본문",
+   "fit": 4,
+   "scene_desc": "두 사람 매장 이동",
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.244·양수 1.00·sd 3.79·|tx| 0.36(n14)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 5.0,
@@ -202,7 +288,21 @@
    ],
    "fill_hex": "#F5DC1F",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "본문",
+   "fit": 4,
+   "scene_desc": "두 사람 대화",
+   "transition": "cut",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.094·양수 0.19·sd 1.31·|tx| 0.07(n52)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 6.8,
@@ -228,7 +328,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "본문",
+   "fit": 5,
+   "scene_desc": "이미숙+매장 조리대(바퀴 안 보임)",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.055·양수 0.58·sd 10.79·|tx| 1.22(n33)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 8.0,
@@ -249,7 +363,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "본문",
+   "fit": 5,
+   "scene_desc": "이미숙 매장",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.182·양수 0.00·sd 5.92·|tx| 0.41(n10)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 8.3,
@@ -270,7 +398,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "본문",
+   "fit": 5,
+   "scene_desc": "이미숙 매장",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "cam",
+   "motion_basis": "div중앙 -0.040·양수 0.06·sd 1.78·|tx| 0.03(n18)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 8.9,
@@ -293,7 +435,21 @@
    "notes": "",
    "cut_at": [
     9.633
-   ]
+   ],
+   "role": "본문",
+   "fit": 7,
+   "scene_desc": "집 안 조리대 단독",
+   "transition": "cut",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.135·양수 0.00·sd 2.09·|tx| 0.39(n16)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 10.0,
@@ -314,7 +470,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "본문",
+   "fit": 8,
+   "scene_desc": "커피머신 올린 조리대(홈카페)",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "still",
+   "motion_basis": "div중앙 0.005·양수 0.75·sd 0.95·|tx| 0.01(n4)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 10.8,
@@ -340,7 +510,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "10.8 글 번짐 반투명 → 10.9 완성",
-   "cut_at": []
+   "cut_at": [],
+   "role": "고조",
+   "fit": 4,
+   "scene_desc": "바닥 정리하는 이미숙(제품 없음)",
+   "transition": "cut",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.121·양수 0.34·sd 3.44·|tx| 0.24(n47)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 12.3,
@@ -361,7 +545,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "끝",
+   "fit": 3,
+   "scene_desc": "같은 바닥 정리 장면",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.160·양수 0.21·sd 6.37·|tx| 0.04(n19)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 13.0,
@@ -398,11 +596,7 @@
      "anim": "반짝"
     }
    ],
-   "sfx": {
-    "kind": "띵",
-    "t": 13.06,
-    "basis": "파형 솟음"
-   },
+   "sfx": null,
    "scene": "기타(조리대 단독 컷)",
    "y": [
     1245,
@@ -410,14 +604,34 @@
    ],
    "fill_hex": "#F47AAD",
    "notes": "분홍 #F47AAD. 파형 13.06 솟음은 말 시작과 구분 못 함",
-   "cut_at": []
+   "cut_at": [],
+   "role": "고조",
+   "fit": 7,
+   "scene_desc": "조리대 단독 완성 모습",
+   "transition": "cut",
+   "motion": "still",
+   "motion_basis": "div중앙 0.006·양수 0.75·sd 0.11·|tx| 0.01(n8)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   },
+   "sfx_unverified": {
+    "kind": "띵",
+    "t": 13.06,
+    "basis": "파형 솟음",
+    "why": "1판(10-18) 값 — 뜯기 후보(제미나이 청취)·말 시작과 겹친 파형 솟음·사람 소리(탄성·웃음). sfx_events --detect(10-25) 고립 후보에 없음 → 규칙 분모에서 뺌"
+   }
   },
   {
    "t0": 14.3,
    "t1": 16.2,
    "speaker": "나레",
    "text": "(이동식 보조 조리대)",
-   "layer": "채널",
+   "layer": "채널-괄호",
    "enter": "cut",
    "enter_ms": 0,
    "variant": "기타(괄호 보충 줄, 노랑 꾸불림, 글 위 따로)",
@@ -430,8 +644,22 @@
     1215
    ],
    "fill_hex": "#F6DC23",
-   "notes": "14.3~16.2 두 줄 중 윗줄. 띠 위쪽(y 1165~1215)",
-   "cut_at": []
+   "notes": "14.3~16.2 두 줄 중 윗줄. 띠 위쪽(y 1165~1215) · 괄호 보충 줄은 본 자막 띠 위 y1165~1215 에 따로 겹쳐 놓임 → 층 '채널-괄호'(같은 층 겹침 아님)",
+   "cut_at": [],
+   "role": "끝",
+   "fit": 4,
+   "scene_desc": "이미숙 얼굴 근접(괄호 보충 줄)",
+   "transition": "cut",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.774·양수 0.02·sd 5.33·|tx| 0.35(n59)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 14.3,
@@ -452,7 +680,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "끝",
+   "fit": 3,
+   "scene_desc": "이미숙 얼굴 근접",
+   "transition": "cut",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.901·양수 0.03·sd 5.71·|tx| 0.39(n38)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 15.6,
@@ -473,7 +715,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "끝",
+   "fit": 3,
+   "scene_desc": "이미숙 옆머리",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.132·양수 0.00·sd 2.51·|tx| 0.16(n19)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   }
  ],
  "no_caption": [
@@ -501,5 +757,64 @@
   "653b: 4.4~6.8 이동으로(하면서) / 밀고 다니면서? 는 노랑 꾸불림이라 원음으로 분류했으나 말투는 질문형(화자 확정 못 함)",
   "효과음: 뜯기 후보 0, 반짝 ✦ 자리와 겹치는 파형 솟음 0.89·13.06 두 곳 — 말 시작과 구분 못 함",
   "괄호 보충 줄 (이동식 보조 조리대) 가 띠(y1245~1330)가 아니라 그 위 y 1165~1215에 따로 놓임"
- ]
+ ],
+ "frame0": {
+  "what": "매장 진열 원목 조리대(사람 없음)",
+  "face_frac": 0.0,
+  "text": "이미숙이 첫눈에 반해 / 결국 사버린 이것",
+  "basis": "0.02초 프레임 창(0,420,1080,1080) YuNet 얼굴 높이/창 높이 · what=눈"
+ },
+ "transitions": [
+  {
+   "t": 1.533,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 3.433,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 4.367,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 5.0,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 6.767,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 8.933,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 9.633,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 10.8,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 12.933,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 14.3,
+   "kind": "cut",
+   "note": null
+  }
+ ],
+ "_made_by": "오푸스 실행자 보강(관제 263 지시서 06, 2026-10-25): role·fit·scene_desc=눈(work/lr7/fit_*.jpg) · transition·cut_at=cutdet 30fps(work/lr7/cut_*.json, 60fps 원본을 30fps 사본으로) + rangesheet 눈 정정 · motion=measure 광류(work/lr7/m_*.json) · frame0 face_frac=thumb.faces_of(YuNet, 창 1080²)"
 }

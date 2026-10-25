@@ -2043,15 +2043,221 @@
    }
   },
   "ok": true,
+  "asr_extra": {
+   "sfx": [],
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "흥미로운"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "voice_tone": "빠르고 명확한 정보 전달 스타일의 남성 톤",
+   "speakers": [
+    {
+     "id": "S1",
+     "gender": "male",
+     "voice": "human"
+    },
+    {
+     "id": "S2",
+     "gender": "female",
+     "voice": "human"
+    }
+   ]
+  },
   "transcript": {
-   "failed": "소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스"
+   "model": "gemini-3.5-flash",
+   "warnings": [],
+   "segments": [
+    {
+     "start": 0.0,
+     "end": 0.06,
+     "text": "한국 콜라겐 마스크를 쓰고 충격받은 외국인이 있는데요.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 0.04,
+     "end": 0.06,
+     "text": "콜라겐 마스크를 처음 써본 이 여성은",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 0.06,
+     "end": 0.09,
+     "text": "sit for an hour and it like disappears into your skin",
+     "speaker": "S2",
+     "lang": "en",
+     "kind": "source"
+    },
+    {
+     "start": 0.09,
+     "end": 0.13,
+     "text": "2시간을 붙여놓았는데도 그대로라며 뭔가 잘못된 것 같다는데",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 0.13,
+     "end": 0.17,
+     "text": "Smooth part supposed to be touching your face, or put the side with the ridges?",
+     "speaker": "S2",
+     "lang": "en",
+     "kind": "source"
+    },
+    {
+     "start": 0.17,
+     "end": 0.2,
+     "text": "알고 보니 거꾸로 붙여놓았던 것인데요.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 0.2,
+     "end": 0.23,
+     "text": "사실 이건 한국 연예인들도 중요한 촬영 전날 꼭 쓴다는 콜라겐 마스크인데",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 0.23,
+     "end": 0.26,
+     "text": "피부에 수분을 전달하면서 시간이 갈수록 투명해진다는데요.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 0.26,
+     "end": 0.3,
+     "text": "최소 3시간은 붙여놓아야 효과를 제대로 볼 수 있고 잠들기 전 수면팩처럼 붙여놓는 게 제일 좋다고 하네요.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    }
+   ],
+   "n": 9,
+   "langs": [
+    "en",
+    "ko"
+   ],
+   "ambient": "",
+   "speech_sec_all": 0.32,
+   "ko_speech_sec": 0.25,
+   "speech_share_ko": 0.008,
+   "chars_nospace_ko": 182,
+   "cps": 728.0,
+   "pause_median": null,
+   "pauses": 0,
+   "narration": "한국어 말소리 있음",
+   "method": "한국어 구절만: cps = 공백 뺀 글자 ÷ 구절 길이 합, 쉼 = 이웃 구절 사이 >0.05s"
   },
   "composition": {
-   "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+   "method": "받아쓰기(제미나이 speaker·lang·kind) + bench audio.mono 20ms RMS(분리 없음)",
+   "dict": [
+    "나레 1명",
+    "나레+역할 2명",
+    "역할극만",
+    "해외 원음+한국어 나레+자막",
+    "원음만+자막",
+    "나레 없음"
+   ],
+   "speakers": [
+    {
+     "n": "S1",
+     "gender": "male",
+     "voice_guess": "human",
+     "share": 0.781,
+     "kinds": [
+      "narration"
+     ],
+     "langs": [
+      "ko"
+     ]
+    },
+    {
+     "n": "S2",
+     "gender": "female",
+     "voice_guess": "human",
+     "share": 0.219,
+     "kinds": [
+      "source"
+     ],
+     "langs": [
+      "en"
+     ]
+    }
+   ],
+   "narration": "human",
+   "narration_metrics": {
+    "pitch": {
+     "failed": "유성음 프레임 20개 미만"
+    },
+    "pause_cv": null,
+    "method": "narration = 제미나이 귀 추정(tts/human). 피치 반음 표준편차·쉼 변동계수는 참고 지표(문턱 미검증)"
+   },
+   "source_audio_kept": true,
+   "source_evidence": {
+    "foreign_or_source_segments": 2,
+    "ambient": ""
+   },
+   "duck_db": -8.13,
+   "duck_method": "나레 구간 RMS 중앙값 − 말 없는 구간 RMS 중앙값(dB). 원음이 나레 밑에서 얼마나 눌렸는지의 근사(분리 없음)",
+   "caption_eq_narration": 0.67,
+   "caption_eq_method": "자막 글자(공백·부호 뺌) 중 한국어 말소리 글자와 겹치는 비율(difflib 일치 블록)",
+   "sfx_per_sec": 0.167,
+   "sfx": {
+    "count": 5,
+    "outside_speech": 4,
+    "outside_per_sec": 0.133,
+    "times": [
+     [
+      0.12,
+      0.16
+     ],
+     [
+      0.4,
+      0.14
+     ],
+     [
+      5.24,
+      0.08
+     ],
+     [
+      12.44,
+      0.08
+     ],
+     [
+      29.62,
+      0.1
+     ]
+    ],
+    "method": "20ms RMS가 1.5s 이동중앙값+10.0dB 넘고 길이 (0.05, 1.5)s (문턱 미검증, 말소리 음절도 섞일 수 있음)"
+   },
+   "kind": "해외 원음+한국어 나레+자막"
   }
  },
  "script_tone": {
-  "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+  "ok": true,
+  "method": "tools/calcopy/script_text_stats.tone (한국어 받아쓰기 구절 단위)",
+  "n": 7,
+  "endings": {
+   "그 밖": 0.714,
+   "~는데(다음 문장으로 넘김)": 0.286
+  },
+  "polite_ratio": 0.571,
+  "hearsay": 5,
+  "person_1st": 0,
+  "person_2nd": 0
  },
  "cuts": {
   "ok": true,
@@ -2480,16 +2686,34 @@
   "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
  },
  "bgm_rules": {
-  "failed": "제미나이 배경음악 판독 없음",
+  "ok": true,
+  "present": true,
+  "mood": [
+   "경쾌한",
+   "흥미로운"
+  ],
+  "start_s": 0.0,
+  "fade_out_said": false,
+  "duck_db": -8.13,
   "end": {
    "fade": false,
    "last0.5s_db": -16.8,
    "prev_db": -15.1,
    "method": "마지막 0.5초 RMS가 끝 2~1초 전보다 6dB 넘게 낮으면 페이드(전체 섞인 소리, 미검증)"
-  }
+  },
+  "method": "있음·분위기·시작 = 제미나이 오디오 판독 / 덕킹 = audio.composition.duck_db 재사용 / 끝 페이드 = RMS 실측"
  },
  "voice_rules": {
-  "failed": "받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)"
+  "ok": true,
+  "genders": [
+   "male"
+  ],
+  "roles": 1,
+  "speakers_all": 2,
+  "cps": 728.0,
+  "narration": "human",
+  "tone": "빠르고 명확한 정보 전달 스타일의 남성 톤",
+  "method": "audio.composition 화자(한국어 화자 = 역할) + 받아쓰기 cps + 제미나이 톤 한 줄"
  },
  "overlay_rules": {
   "failed": "건너뜀(--no-materials)"
@@ -2514,5 +2738,13 @@
   "cuts_materials": 31.1,
   "rules": 0.3,
   "total": 505.1
- }
+ },
+ "_redo": [
+  {
+   "what": "audio·bgm_rules·voice_rules 제미나이 재판독",
+   "when": "2026-10-25",
+   "model": "gemini-3.5-flash",
+   "via": "gemini_free.ask"
+  }
+ ]
 }

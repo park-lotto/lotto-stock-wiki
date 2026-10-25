@@ -1,0 +1,194 @@
+{
+ "kitchit__BRa5Iv4A3Y8": {
+  "tempo": {
+   "low": 73.8,
+   "low_ac": 0.16,
+   "all": 147.7,
+   "all_ac": 0.06
+  },
+  "centroid_hz": 987.0,
+  "match": [
+   [
+    "buttercup",
+    0.809
+   ],
+   [
+    "sweets",
+    0.696
+   ],
+   [
+    "free_bird",
+    0.643
+   ]
+  ],
+  "dur": 21.0
+ },
+ "kitchit__Cs-Ka_S8nDM": {
+  "tempo": {
+   "low": 117.5,
+   "low_ac": 0.2,
+   "all": 152.0,
+   "all_ac": 0.07
+  },
+  "centroid_hz": 553.0,
+  "match": [
+   [
+    "yoru_no_odoriko",
+    0.786
+   ],
+   [
+    "otsukare_summer",
+    0.751
+   ],
+   [
+    "beggin",
+    0.686
+   ]
+  ],
+  "dur": 14.3
+ },
+ "kitchit__Ks5kYYKAUlQ": {
+  "tempo": {
+   "low": 114.8,
+   "low_ac": 0.11,
+   "all": 184.6,
+   "all_ac": 0.12
+  },
+  "centroid_hz": 906.0,
+  "match": [
+   [
+    "otsukare_summer",
+    0.718
+   ],
+   [
+    "free_bird",
+    0.713
+   ],
+   [
+    "buttercup",
+    0.638
+   ]
+  ],
+  "dur": 10.4
+ },
+ "kitchit__Nv99RyxmrfU": {
+  "tempo": {
+   "low": 89.1,
+   "low_ac": 0.1,
+   "all": 178.2,
+   "all_ac": 0.19
+  },
+  "centroid_hz": 641.0,
+  "match": [
+   [
+    "here_with_me",
+    0.679
+   ],
+   [
+    "beggin",
+    0.667
+   ],
+   [
+    "sweets",
+    0.625
+   ]
+  ],
+  "dur": 14.1
+ },
+ "kitchit___Wa4IehA6yE": {
+  "tempo": {
+   "low": 97.5,
+   "low_ac": 0.12,
+   "all": 63.0,
+   "all_ac": 0.11
+  },
+  "centroid_hz": 781.0,
+  "match": [
+   [
+    "qiuqiu",
+    0.763
+   ],
+   [
+    "sweets",
+    0.734
+   ],
+   [
+    "chubina",
+    0.713
+   ]
+  ],
+  "dur": 14.1
+ },
+ "kitchit__cNo91ddBwB8": {
+  "tempo": {
+   "low": 77.1,
+   "low_ac": 0.11,
+   "all": 156.6,
+   "all_ac": 0.14
+  },
+  "centroid_hz": 808.0,
+  "match": [
+   [
+    "yoru_no_odoriko",
+    0.569
+   ],
+   [
+    "beggin",
+    0.564
+   ],
+   [
+    "passo_bem_solto",
+    0.514
+   ]
+  ],
+  "dur": 13.7
+ },
+ "kitchit__oTi41R74WIY": {
+  "tempo": {
+   "low": 66.3,
+   "low_ac": 0.11,
+   "all": 184.6,
+   "all_ac": 0.1
+  },
+  "centroid_hz": 600.0,
+  "match": [
+   [
+    "yoru_no_odoriko",
+    0.885
+   ],
+   [
+    "lets_go",
+    0.655
+   ],
+   [
+    "every_breath_you_take",
+    0.629
+   ]
+  ],
+  "dur": 10.2
+ },
+ "kitchit__vSEaZ-BCELY": {
+  "tempo": {
+   "low": 80.7,
+   "low_ac": 0.09,
+   "all": 147.7,
+   "all_ac": 0.1
+  },
+  "centroid_hz": 728.0,
+  "match": [
+   [
+    "pretty_little_baby",
+    0.752
+   ],
+   [
+    "sweets",
+    0.654
+   ],
+   [
+    "chubina",
+    0.622
+   ]
+  ],
+  "dur": 17.9
+ }
+}

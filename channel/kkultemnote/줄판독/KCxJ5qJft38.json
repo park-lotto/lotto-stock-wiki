@@ -58,7 +58,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "화면 폭 가득 거대 흰 고딕(오른쪽 끝 넘침), 1.0에 왼쪽으로 밀려 나감. 하트는 0~1.5초",
-   "cut_at": []
+   "cut_at": [],
+   "role": "훅",
+   "fit": 6,
+   "scene_desc": "정재형 + 하트 + 빨간 선물상자",
+   "transition": "none(첫 프레임)",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.138·양수 1.00·sd 1.81·|tx| 0.03(n30)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 1.1,
@@ -84,7 +98,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "1.1 회색 반투명",
-   "cut_at": []
+   "cut_at": [],
+   "role": "훅",
+   "fit": 5,
+   "scene_desc": "정재형 옆얼굴",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 -0.007·양수 0.39·sd 1.28·|tx| 0.07(n38)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 2.2,
@@ -105,7 +133,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "훅",
+   "fit": 4,
+   "scene_desc": "정재형 옆얼굴",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.010·양수 0.50·sd 1.47·|tx| 0.04(n22)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 2.9,
@@ -136,7 +178,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "흰 굵은 고딕, 강조색 없음",
-   "cut_at": []
+   "cut_at": [],
+   "role": "다리",
+   "fit": 8,
+   "scene_desc": "카리나 쇼핑백 들고",
+   "transition": "cut",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.474·양수 0.13·sd 5.69·|tx| 0.05(n31)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 3.9,
@@ -157,7 +213,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "다리",
+   "fit": 8,
+   "scene_desc": "선물 건네는 손",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.263·양수 0.94·sd 5.54·|tx| 0.27(n16)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 4.4,
@@ -183,7 +253,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "강조색이 노랑이 아니라 주황",
-   "cut_at": []
+   "cut_at": [],
+   "role": "질문",
+   "fit": 4,
+   "scene_desc": "카리나 화보(다른 영상)",
+   "transition": "cut",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.068·양수 0.32·sd 2.57·|tx| 0.12(n25)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 5.5,
@@ -214,7 +298,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "5.5 회색 반투명으로 들어옴",
-   "cut_at": []
+   "cut_at": [],
+   "role": "본문",
+   "fit": 3,
+   "scene_desc": "냉장고 문(인물 거의 안 보임)",
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.105·양수 0.80·sd 4.79·|tx| 0.28(n51)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 6.9,
@@ -250,7 +348,21 @@
    ],
    "fill_hex": "#EF7A07",
    "notes": "주황 굵은 꾸불림+검정 테, 6.9 작게 → 7.0 큼 → 7.1~7.2 가로 번짐 꼬리 → 7.3 정상",
-   "cut_at": []
+   "cut_at": [],
+   "role": "공개",
+   "fit": 8,
+   "scene_desc": "잔 들고 보는 정재형",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.511·양수 0.97·sd 5.17·|tx| 0.20(n30)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 7.6,
@@ -271,7 +383,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "본문",
+   "fit": 4,
+   "scene_desc": "정재형 말함",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 -0.011·양수 0.47·sd 1.95·|tx| 0.06(n15)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 8.2,
@@ -298,8 +424,23 @@
    "fill_hex": "#FFFFFF",
    "notes": "",
    "cut_at": [
-    8.483
-   ]
+    8.5,
+    8.633
+   ],
+   "role": "본문",
+   "fit": 7,
+   "scene_desc": "잔 들고 설명",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.265·양수 0.12·sd 4.59·|tx| 0.21(n40)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 9.8,
@@ -320,7 +461,21 @@
    ],
    "fill_hex": "#EF7A07",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "고조",
+   "fit": 8,
+   "scene_desc": "잔 들어 감탄",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.004·양수 0.58·sd 2.17·|tx| 0.09(n19)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 10.5,
@@ -356,7 +511,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "사실 주황",
-   "cut_at": []
+   "cut_at": [],
+   "role": "반전",
+   "fit": 3,
+   "scene_desc": "카리나 웃음(잔 없음)",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 -0.004·양수 0.50·sd 2.04·|tx| 0.11(n16)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 11.2,
@@ -392,7 +561,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "글 뒤에 확대 사본 잔상(11.2~12.3 유지)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "반전",
+   "fit": 7,
+   "scene_desc": "잔 두 개 + 카리나 화보",
+   "transition": "cut",
+   "motion": "still",
+   "motion_basis": "div중앙 -0.010·양수 0.25·sd 0.37·|tx| 0.00(n57)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 12.4,
@@ -405,11 +588,7 @@
    "variant": "기본",
    "emph": [],
    "sticker": [],
-   "sfx": {
-    "kind": "탄성",
-    "t": 12.4,
-    "basis": "둘다"
-   },
+   "sfx": null,
    "scene": "얼굴",
    "y": [
     1245,
@@ -417,7 +596,27 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "뜯기 효과음 후보 12.4(탄성) + 파형 솟음 12.41 — 단 아~ 목소리 시작과 같은 자리라 효과음인지 목소리인지 구분 못 함",
-   "cut_at": []
+   "cut_at": [],
+   "role": "고조",
+   "fit": 3,
+   "scene_desc": "정재형 겹침 잔상(검정 전환 직전)",
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.460·양수 0.92·sd 5.15·|tx| 0.82(n26)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   },
+   "sfx_unverified": {
+    "kind": "탄성",
+    "t": 12.4,
+    "basis": "둘다",
+    "why": "1판(10-18) 값 — 뜯기 후보(제미나이 청취)·말 시작과 겹친 파형 솟음·사람 소리(탄성·웃음). sfx_events --detect(10-25) 고립 후보에 없음 → 규칙 분모에서 뺌"
+   }
   },
   {
    "t0": 13.4,
@@ -453,7 +652,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "반전",
+   "fit": 4,
+   "scene_desc": "제니 화보 + 댓글카드",
+   "transition": "black(13.40 검정 1프레임 → 13.47~13.73 검정에서 밝아짐(페이드 인), rs_KCx_trans.jpg)",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.004·양수 0.62·sd 2.51·|tx| 0.01(n24)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)+눈(rangesheet)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 14.3,
@@ -474,7 +687,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "왼쪽 정렬로 들어옴",
-   "cut_at": []
+   "cut_at": [],
+   "role": "본문",
+   "fit": 5,
+   "scene_desc": "제니·정재형 함께",
+   "transition": "cut",
+   "motion": "zoom_in",
+   "motion_basis": "div중앙 0.103·양수 0.77·sd 2.29·|tx| 0.06(n13)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 14.7,
@@ -500,7 +727,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "14.7 작은 분홍 글 → 14.8 가운데 정렬로 재배치 → 14.9 분홍 번짐 1프레임",
-   "cut_at": []
+   "cut_at": [],
+   "role": "고조",
+   "fit": 5,
+   "scene_desc": "제니·정재형 함께",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "zoom_out",
+   "motion_basis": "div중앙 -0.269·양수 0.17·sd 3.29·|tx| 0.09(n35)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   },
   {
    "t0": 16.1,
@@ -513,7 +754,11 @@
    "variant": "기타(대괄호 보충 줄, 굵은 흰 고딕 + 회색 외곽)",
    "emph": [],
    "sticker": [],
-   "sfx": null,
+   "sfx": {
+    "kind": "기타(broad 고주파 솟음 7045Hz·0.16초 — 휙·틱 류 추정)",
+    "t": 15.88,
+    "basis": "신호(sfx_events --detect 고립 후보, 귀 미확인)"
+   },
    "scene": "손·제품 근접",
    "y": [
     1245,
@@ -521,7 +766,21 @@
    ],
    "fill_hex": "#FFFFFF",
    "notes": "괄호 보충 줄 — 화자 나레 추정(글꼴 근거)",
-   "cut_at": []
+   "cut_at": [],
+   "role": "끝",
+   "fit": 7,
+   "scene_desc": "빨간 잔 들고 놀란 정재형",
+   "transition": "none(같은 컷 안 자막 교체)",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.053·양수 0.78·sd 2.74·|tx| 0.17(n45)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호(_kal/sfx_events.json cand)"
+   }
   },
   {
    "t0": 17.2,
@@ -542,7 +801,21 @@
    ],
    "fill_hex": "#EF7A07",
    "notes": "",
-   "cut_at": []
+   "cut_at": [],
+   "role": "끝",
+   "fit": 8,
+   "scene_desc": "빨간 잔 두 개 든 정재형",
+   "transition": "cut",
+   "motion": "cam",
+   "motion_basis": "div중앙 0.044·양수 0.80·sd 4.03·|tx| 0.21(n15)",
+   "exit": "cut",
+   "confidence": {
+    "t0t1·y·fill_hex·enter": "픽셀/눈(1판 10~30fps 띠, 10-18)",
+    "transition·cut_at": "픽셀(cutdet 30fps)",
+    "motion": "신호(measure 광류)",
+    "role·fit·scene_desc": "눈(가운데 프레임 1장)",
+    "sfx": "신호 없음(sfx_events 고립 후보 0)"
+   }
   }
  ],
  "no_caption": [
@@ -561,5 +834,89 @@
   "KCx: 강조색이 노랑이 아니라 분홍·주황 — 원음 선물 분홍, 나레 미안해 한 이유·사실 주황, 나레 제니도 선물·쓰러졌었다는데 분홍",
   "하트 0~1.5초는 확인(띠 밖 얼굴 둘레), 감동 큰 글씨는 스타일분석에 없는 새 항목",
   "효과음: 12.4 한 곳만 후보+솟음이 겹치나 목소리와 구분 못 함"
- ]
+ ],
+ "frame0": {
+  "what": "정재형 + 하트 스티커 + 빨간 선물상자",
+  "face_frac": 0.24,
+  "text": "카리나, 제니 선물로 / 쓰러져버린 정재형",
+  "basis": "0.02초 프레임 창(0,420,1080,1080) YuNet 얼굴 높이/창 높이 · what=눈"
+ },
+ "transitions": [
+  {
+   "t": 1.033,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 2.9,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 4.4,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 5.467,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 7.6,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 8.5,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 8.633,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 9.833,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 10.5,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 11.2,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 12.367,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 13.4,
+   "kind": "black",
+   "note": "13.40 검정 1프레임 → 13.47~13.73 검정에서 밝아짐(페이드 인), rs_KCx_trans.jpg"
+  },
+  {
+   "t": 14.267,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 15.533,
+   "kind": "cut",
+   "note": null
+  },
+  {
+   "t": 17.233,
+   "kind": "cut",
+   "note": null
+  }
+ ],
+ "_made_by": "오푸스 실행자 보강(관제 263 지시서 06, 2026-10-25): role·fit·scene_desc=눈(work/lr7/fit_*.jpg) · transition·cut_at=cutdet 30fps(work/lr7/cut_*.json, 60fps 원본을 30fps 사본으로) + rangesheet 눈 정정 · motion=measure 광류(work/lr7/m_*.json) · frame0 face_frac=thumb.faces_of(YuNet, 창 1080²)"
 }

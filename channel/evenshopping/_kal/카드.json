@@ -1,0 +1,462 @@
+{
+ "slug": "evenshopping",
+ "made_by": "tools/calcopy/preset_card.py build",
+ "built_at": "2026-10-24T23:49:41",
+ "bench": "이븐쇼핑",
+ "brand": "재미썸홈",
+ "brand_note": null,
+ "format": "쇼핑형",
+ "subformat": "썰쇼핑형",
+ "format_options": [],
+ "sound_style": [],
+ "engine": {
+  "style_file": "tools/calcopy/hybrid/styles/재미썸홈판.json",
+  "style_error": null,
+  "renderer": "jaemi",
+  "entry": null,
+  "hand_scripts": [
+   "channel/evenshopping/작품1_총알람/make_plan.py",
+   "channel/evenshopping/작품1_총알람/render.py"
+  ],
+  "hand_scripts_reference": [],
+  "caption_pack": null,
+  "voice": "박창수",
+  "bgm": "honwaka_puppu"
+ },
+ "sample": {
+  "line_reads": 0,
+  "line_reads_strict_errors": 0,
+  "rules_freq": false,
+  "palette": false,
+  "style_analysis": false,
+  "sfx_events": false,
+  "tteutgi": 0,
+  "min_required": 6
+ },
+ "axes": {
+  "1자막": {
+   "value": "cap_look× cap_enter× cap_emph× cap_exit×",
+   "confidence": "미측정"
+  },
+  "2제목틀": {
+   "value": "body_title 한 줄(이븐쇼핑 t11 틀)",
+   "confidence": "판"
+  },
+  "3전환": {
+   "value": "transition× cut_rhythm×",
+   "confidence": "미측정"
+  },
+  "4장면대사": {
+   "value": "scene_fit×",
+   "confidence": "미측정"
+  },
+  "5스토리": {
+   "value": null,
+   "confidence": "미측정"
+  },
+  "6대본언어": {
+   "value": "script× speech×",
+   "confidence": "미측정"
+  },
+  "7소리": {
+   "value": "bgm× sfx×",
+   "confidence": "미측정"
+  },
+  "8스티커짤": {
+   "value": "sticker× meme× pointer×",
+   "confidence": "미측정"
+  },
+  "9썸네일": {
+   "value": "thumb×",
+   "confidence": "미측정"
+  },
+  "10소재": {
+   "value": null,
+   "confidence": "미측정"
+  },
+  "11채널": {
+   "value": "이븐쇼핑",
+   "confidence": "장부"
+  }
+ },
+ "elements": {
+  "cap_look": "×",
+  "cap_enter": "×",
+  "cap_emph": "×",
+  "cap_exit": "×",
+  "transition": "×",
+  "cut_rhythm": "×",
+  "scene_fit": "×",
+  "bgm": "×",
+  "sfx": "×",
+  "meme": "×",
+  "sticker": "×",
+  "pointer": "×",
+  "thumb": "×",
+  "speech": "×",
+  "script": "×"
+ },
+ "rules": [
+  {
+   "element": "cap_look",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-evenshopping",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_enter",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-evenshopping",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-evenshopping",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_exit",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-evenshopping",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "transition",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-evenshopping",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A1"
+  },
+  {
+   "element": "cut_rhythm",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-evenshopping",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "scene_fit",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-evenshopping",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A5"
+  },
+  {
+   "element": "bgm",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-evenshopping",
+   "engine_cell": "재미썸홈판.json bgm.id",
+   "engine_support": "△",
+   "engine_gap": "A4"
+  },
+  {
+   "element": "sfx",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-evenshopping",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A2"
+  },
+  {
+   "element": "meme",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-evenshopping",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-evenshopping",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "pointer",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-evenshopping",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "thumb",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-evenshopping",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A6"
+  },
+  {
+   "element": "speech",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-evenshopping",
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A7"
+  },
+  {
+   "element": "script",
+   "cond": null,
+   "action": null,
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [],
+   "confidence": "미측정",
+   "measure_task": "06-evenshopping",
+   "engine_cell": "재미썸홈판.json script.audit",
+   "engine_support": "△",
+   "engine_gap": "-"
+  }
+ ],
+ "gates": {
+  "match_first_copy": {
+   "path": null,
+   "ok": null,
+   "pass": null,
+   "fail": null
+  },
+  "upgrade": {
+   "path": null,
+   "items": null,
+   "better": null
+  },
+  "quality_gate": {
+   "path": null,
+   "ok": null
+  }
+ },
+ "member": {
+  "line_json": null,
+  "preset_name": null,
+  "flow_format": "쇼핑형"
+ },
+ "results": {
+  "n": 9,
+  "judged_pass": 1,
+  "latest": "원샷2_RGDS게임기_v2"
+ },
+ "facts": {
+  "line_reads": 0,
+  "line_reads_strict_errors": 0,
+  "rules_freq": false,
+  "style_analysis": false,
+  "palette": false,
+  "sfx_events": false,
+  "style_file": "tools/calcopy/hybrid/styles/재미썸홈판.json",
+  "style_file_exists": true,
+  "renderer": "jaemi",
+  "caption_pack": null,
+  "caption_pack_ok": false,
+  "counted_n": null,
+  "no_why": [
+   "length.max",
+   "length.min",
+   "loudness.lufs",
+   "loudness.tp",
+   "render.bgm_a_rms",
+   "render.duck_db",
+   "render.end_pad",
+   "render.gap_o_f1",
+   "render.last_tempo_tol",
+   "render.opener_at",
+   "render.pause_comma",
+   "render.pause_long",
+   "render.pause_period",
+   "render.silence_d",
+   "render.target_lufs",
+   "render.tempo_max",
+   "render.tempo_min",
+   "render.voice_rms"
+  ],
+  "hand_scripts": [
+   "channel/evenshopping/작품1_총알람/make_plan.py",
+   "channel/evenshopping/작품1_총알람/render.py"
+  ],
+  "hand_scripts_reference": [],
+  "unmeasured": 15,
+  "quality_gate_ok": false,
+  "match_ok": false,
+  "eye": null,
+  "upgrade": null,
+  "member": {
+   "line_json": null,
+   "preset_name": null,
+   "flow_format": "쇼핑형"
+  },
+  "line_json_exists": false,
+  "member_live_ok": false,
+  "results_n": 9,
+  "results_pass_n": 1,
+  "owner_pass": false
+ },
+ "inputs": {
+  "channel/결과물.json": "142ed78b2435",
+  "channel/브랜드.json": "f2ded5552699",
+  "channel/스타일.json": "3f5625b6c1a2",
+  "channel/프리셋.json": "7d8cdd70c9e9",
+  "shopping_shorts/static/caption-motions.js": "09ac4bd95b42",
+  "tools/calcopy/hybrid/styles/_common.json": "3c88a2be87ae",
+  "tools/calcopy/hybrid/styles/재미썸홈판.json": "541777b4c598"
+ },
+ "done": {
+  "level": "L0 미달",
+  "missing": [
+   "줄판독≥6",
+   "줄판독 strict 오류0",
+   "규칙빈도",
+   "스타일분석",
+   "팔레트",
+   "sfx_events",
+   "renderer=bench",
+   "숫자칸 why",
+   "counted≥6",
+   "자막팩",
+   "rules 미측정0",
+   "품질관문 ○",
+   "재현일치도 ○",
+   "눈검수 E1~E8",
+   "업그레이드 나아짐≥1",
+   "눈검수 E9",
+   "사장님 판정",
+   "member line.json",
+   "member preset_name",
+   "회원실측",
+   "손스크립트0"
+  ],
+  "rule_unmeasured": 15,
+  "measure_tasks": [
+   "06-evenshopping"
+  ],
+  "complete": false
+ }
+}

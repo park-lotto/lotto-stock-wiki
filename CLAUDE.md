@@ -736,6 +736,11 @@ log.md에 `투경 해제 예측 검증` / `종가배팅 시스템` 키워드 있
     10-21 실사고: 이미도 편 17초 별 전환·장갑 손 = 리뷰여왕 영상에서 딸려 옴(원본 전체 862초에는 별 0번, 원본 672~675초에 튜브 근접이 있었다)
 □ ★만들다 난 오류는 그날 바로 channel/칼카피_제작순서/98_오류기록.md 표에 적는다(무엇이·왜·고친 곳·장치) — 편 시작 전에 훑는다(사장님 10-21)
 □ 회원 PC 결과물 확인 = shortem_client/test/live_episode.js --say "<회원이 친 한 줄>"(설치본·라이브 서버·진짜 키) → 완성본을 눈으로
+□ ★렌더 인코딩 = 그래픽카드 우선, 없으면 CPU — 우리 PC·회원 PC 같은 코드(사장님 10-25 "화질 같게, GPU 있으면 우선, 없으면 CPU")
+    주인 = tools/calcopy/engine/encoder.venc() 하나. 렌더 코드에 '-c:v libx264' 를 새로 적지 마라 — venc() 를 부른다
+    NVENC 가 실제로 돌면 GPU(cq22 = x264 crf16 과 VMAF 같거나 높음), 아니면 CPU 그대로. GPU 가 실패하면 같은 명령을 CPU 로 한 번 더(경보 1줄)
+    강제 = 환경변수 SHORTEM_ENCODER=cpu|gpu · 회원 PC 는 shortem_setup 의 video_encoder 와 flow env 단계 encoder 로 알린다
+    근거 = 98 #79(기미크림 편 CPU 607초 → GPU 254초, 서로 VMAF 96.6, 자동검사 둘 다 통과)
 ```
 
 ---

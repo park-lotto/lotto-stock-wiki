@@ -1,396 +1,5895 @@
 {
  "id": "pY2zNE5A1m4",
- "title_card": null,
- "post_title": "여권 만료됐는데 비행기 탄 방법",
- "dur": 59.69,
+ "views": 6400000,
+ "dur": 59.694,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "여권 만료됐는데 비행기 탄 방법",
+   "colors": [
+    {
+     "word": "여권 만료됐는데 비행기 탄 방법",
+     "hex": "#000000"
+    }
+   ],
+   "y": [
+    399,
+    470
+   ],
+   "where": "본문 게시글 제목(검정 굵은 고딕 1줄, 가운데, 영상 내내 고정)"
+  }
+ ],
+ "hook_title_lines": [],
+ "source_label": "익명 추천891 조회 1,954,556 25.04.23 09:18 댓글 7544",
+ "layout": {
+  "header": [
+   0,
+   330
+  ],
+  "title_y": [
+   399,
+   470
+  ],
+  "meta_y": [
+   497,
+   505
+  ],
+  "rule_y": [
+   524,
+   524
+  ],
+  "caption_lines_y": [
+   [
+    570,
+    620
+   ],
+   [
+    646,
+    696
+   ],
+   [
+    722,
+    772
+   ],
+   [
+    798,
+    848
+   ]
+  ],
+  "line_pitch_px": 76,
+  "window": [
+   null,
+   "자막 마지막 줄 아래 ~20px",
+   null,
+   "~1500"
+  ],
+  "window_note": "창 위끝이 자막 줄 수(1~4)에 따라 내려감 — 그림 폭·높이도 컷마다 다름(작은 그림은 가운데)",
+  "below_window": null,
+  "header_hex": "#E4F2D4",
+  "bg_hex": "#FDFDFA",
+  "source_hex": "#8C8C8C",
+  "comment_count_hex": "#B0384A",
+  "logo": "가운데 '재밌쇼' 손글씨 로고(연두+검정 외곽) · 왼쪽 '<' · 오른쪽 초록 북마크",
+  "watermark": {
+   "present": false,
+   "alpha": null,
+   "note": "채널 워터마크 없음"
+  }
+ },
  "lines": [
   {
    "t0": 0.0,
+   "t1": 0.933,
+   "speaker": "나레",
+   "text": "셀프체크인 하려는데",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    574,
+    624
+   ],
+   "x": 541,
+   "align": "center",
+   "max_w": 466,
+   "ink_x": [
+    308,
+    774
+   ],
+   "fill_hex": "#010101",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 21.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "매장·건물",
+   "scene_desc": "공항 셀프체크인 기계 → 여권 만료일 '17 JUL 2024'",
+   "fit": 9,
+   "cut_at": [],
+   "motion": "still",
+   "motion_info": {
+    "t0": 0.0,
+    "t1": 1.3,
+    "diff": 34.1,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 50,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 196.9,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 0.933,
+   "t1": 1.3,
+   "speaker": "나레",
+   "text": "어?",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    650,
+    698
+   ],
+   "x": 542,
+   "align": "center",
+   "max_w": 72,
+   "ink_x": [
+    506,
+    578
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 52,
+   "letter_gap_px": 5.5,
+   "word_gap_px": null,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "매장·건물",
+   "scene_desc": "공항 셀프체크인 기계 → 여권 만료일 '17 JUL 2024'",
+   "fit": 9,
+   "cut_at": [],
+   "motion": "still",
+   "motion_info": {
+    "t0": 0.0,
+    "t1": 1.3,
+    "diff": 34.1,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 50,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": null,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 1.3,
    "t1": 2.0,
-   "caption": "셀프체크인 하려는데/어?/여권이 만료됨",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "기타",
-   "screen_desc": "공항 셀프체크인 기계 → 여권 만료일 \"17 JUL 2024\" 사진",
-   "effect": "만료일 빨간 밑줄",
-   "ending": "~료됨"
+   "speaker": "나레",
+   "text": "여권이 만료됨",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(3번째 줄)",
+   "y": [
+    726,
+    776
+   ],
+   "x": 541,
+   "align": "center",
+   "max_w": 310,
+   "ink_x": [
+    386,
+    696
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 24.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "매장·건물",
+   "scene_desc": "공항 셀프체크인 기계 → 여권 만료일 '17 JUL 2024'",
+   "fit": 9,
+   "cut_at": [
+    1.3
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 1.3,
+    "t1": 2.0,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 177.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
    "t0": 2.0,
-   "t1": 4.0,
-   "caption": "망했다/신여권 두고/구여권 가져옴",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "밈짤",
-   "screen_desc": "얼굴 감싼 남성 → 여권 사진",
-   "effect": null,
-   "ending": "~져옴"
+   "t1": 2.4,
+   "speaker": "나레",
+   "text": "망했다",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    574,
+    624
+   ],
+   "x": 543,
+   "align": "center",
+   "max_w": 146,
+   "ink_x": [
+    470,
+    616
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 3.0,
+   "word_gap_px": null,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "얼굴 감싼 남성 → 남색·초록 여권",
+   "fit": 7,
+   "cut_at": [
+    2.0
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 2.0,
+    "t1": 2.4,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": null,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 4.0,
-   "t1": 7.0,
-   "caption": "출발 2시간반 남았는데/우리집은 잠실/공항은 인천....",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "캡처(댓글·성분표·기사·문의답변)",
-   "screen_desc": "대한항공 카운터 → 지도 앱 경로(1시간 21분)",
-   "effect": null,
-   "ending": "~인천...."
+   "t0": 2.4,
+   "t1": 3.0,
+   "speaker": "나레",
+   "text": "신여권 두고",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    650,
+    698
+   ],
+   "x": 543,
+   "align": "center",
+   "max_w": 262,
+   "ink_x": [
+    412,
+    674
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 52,
+   "letter_gap_px": 5.5,
+   "word_gap_px": 20.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "얼굴 감싼 남성 → 남색·초록 여권",
+   "fit": 7,
+   "cut_at": [
+    2.4
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 2.4,
+    "t1": 3.0,
+    "diff": 0.4
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 207.0,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 7.0,
-   "t1": 8.0,
-   "caption": "총알 택시 타도/불가능",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "기타",
-   "screen_desc": "흐릿하게 달리는 택시",
-   "effect": null,
-   "ending": "~가능"
+   "t0": 3.0,
+   "t1": 3.667,
+   "speaker": "나레",
+   "text": "구여권 가져옴",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(3번째 줄)",
+   "y": [
+    726,
+    776
+   ],
+   "x": 535,
+   "align": "center",
+   "max_w": 314,
+   "ink_x": [
+    378,
+    692
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 6.5,
+   "word_gap_px": 22.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "얼굴 감싼 남성 → 남색·초록 여권",
+   "fit": 7,
+   "cut_at": [
+    3.0
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 3.0,
+    "t1": 3.667,
+    "diff": 0.3
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 158.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 8.0,
-   "t1": 9.0,
-   "caption": "하.../긴급여권이라도/받아볼까?",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "캡처(댓글·성분표·기사·문의답변)",
-   "screen_desc": "\"긴급여권 접수 전 유의사항 안내\" 문서",
-   "effect": null,
-   "ending": "~볼까?"
+   "t0": 3.667,
+   "t1": 4.833,
+   "speaker": "나레",
+   "text": "출발 2시간반 남았는데",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    568,
+    620
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 512,
+   "ink_x": [
+    282,
+    794
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 4.5,
+   "word_gap_px": 18.5,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "캡처",
+   "scene_desc": "대한항공 카운터 → 지도 앱 경로",
+   "fit": 8,
+   "cut_at": [
+    3.667
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 3.667,
+    "t1": 4.833,
+    "diff": 0.5
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 183.8,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 9.0,
-   "t1": 11.0,
-   "caption": "망했다/센터 9시에 염/현재시각 8시",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "기타",
-   "screen_desc": "외교부 여권민원실 간판 → 8시 가리키는 시계",
-   "effect": null,
-   "ending": "~8시"
+   "t0": 4.833,
+   "t1": 5.533,
+   "speaker": "나레",
+   "text": "우리집은 잠실",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    646,
+    696
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 312,
+   "ink_x": [
+    382,
+    694
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 18.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "캡처",
+   "scene_desc": "대한항공 카운터 → 지도 앱 경로",
+   "fit": 8,
+   "cut_at": [
+    4.833
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 4.833,
+    "t1": 6.1,
+    "diff": 22.4,
+    "scale": 1.0,
+    "tx": 1,
+    "ty": 62,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 192.6,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 11.0,
-   "t1": 14.0,
-   "caption": "멘붕와서/친구들한테 헬프쳤더니/\"퀵으로 여권 받아보는건?\"",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "캡처(댓글·성분표·기사·문의답변)",
-   "screen_desc": "카톡 단체방 대화 캡처",
-   "effect": null,
-   "ending": "~는건?\""
+   "t0": 5.533,
+   "t1": 6.1,
+   "speaker": "나레",
+   "text": "공항은 인천....",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(3번째 줄)",
+   "y": [
+    722,
+    774
+   ],
+   "x": 537,
+   "align": "center",
+   "max_w": 334,
+   "ink_x": [
+    370,
+    704
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 9.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "캡처",
+   "scene_desc": "대한항공 카운터 → 지도 앱 경로",
+   "fit": 8,
+   "cut_at": [],
+   "motion": "still",
+   "motion_info": {
+    "t0": 4.833,
+    "t1": 6.1,
+    "diff": 22.4,
+    "scale": 1.0,
+    "tx": 1,
+    "ty": 62,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 162.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 14.0,
-   "t1": 15.0,
-   "caption": "어?/안될거 없을 거 같은데?",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "밈짤",
-   "screen_desc": "눈 굴리는 남성 얼굴 클로즈업(이름 표기 없음)",
-   "effect": null,
-   "ending": "~은데?"
+   "t0": 6.1,
+   "t1": 7.167,
+   "speaker": "나레",
+   "text": "총알 택시 타도 / 불가능",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    568,
+    698
+   ],
+   "x": 535,
+   "align": "center",
+   "max_w": 326,
+   "ink_x": [
+    372,
+    698
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 57,
+   "letter_gap_px": 3.5,
+   "word_gap_px": 21.0,
+   "line_gap_px": 23,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "기타",
+   "scene_desc": "흐릿하게 달리는 택시",
+   "fit": 7,
+   "cut_at": [
+    6.1
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 6.1,
+    "t1": 7.167,
+    "diff": 21.9
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 192.6,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 15.0,
-   "t1": 17.0,
-   "caption": "최후의 시도/남은시간 2시간 20분/(바로 퀵 전화해봄)",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "기타",
-   "screen_desc": "헬멧 쓴 오토바이 퀵 기사",
-   "effect": null,
-   "ending": "~해봄)"
+   "t0": 7.167,
+   "t1": 7.9,
+   "speaker": "나레",
+   "text": "하... / 긴급여권이라도",
+   "layer": "채널",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    574,
+    698
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 350,
+   "ink_x": [
+    364,
+    714
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 52,
+   "letter_gap_px": 7.0,
+   "word_gap_px": null,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "캡처",
+   "scene_desc": "'긴급여권 접수 전 유의사항 안내' 문서",
+   "fit": 8,
+   "cut_at": [
+    7.167
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 7.167,
+    "t1": 8.367,
+    "diff": 46.2,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 75,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 207.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 17.0,
-   "t1": 20.0,
-   "caption": "\"여보세요?/저 집에 여권을 두고 왔는데,,,,,/이제 2시간 뒤 출발이에요ㅠ",
-   "narration": null,
-   "kind": "화자대사",
-   "speaker": "나(글쓴이)",
-   "screen": "제품사진",
-   "screen_desc": "남색 대한민국 여권",
-   "effect": null,
-   "ending": "ㅠ"
+   "t0": 7.9,
+   "t1": 8.367,
+   "speaker": "나레",
+   "text": "받아볼까?",
+   "layer": "채널",
+   "role": "질문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(3번째 줄)",
+   "y": [
+    726,
+    776
+   ],
+   "x": 545,
+   "align": "center",
+   "max_w": 226,
+   "ink_x": [
+    432,
+    658
+   ],
+   "fill_hex": "#010101",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 3.0,
+   "word_gap_px": null,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "캡처",
+   "scene_desc": "'긴급여권 접수 전 유의사항 안내' 문서",
+   "fit": 8,
+   "cut_at": [],
+   "motion": "still",
+   "motion_info": {
+    "t0": 7.167,
+    "t1": 8.367,
+    "diff": 46.2,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 75,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 136.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 20.0,
-   "t1": 23.0,
-   "caption": "\"고객님,/제가 무조건 갖다드릴게요.\"/수화기 너머로/묵직한 비장함이 느껴짐.....",
-   "narration": null,
-   "kind": "화자대사",
-   "speaker": "퀵 기사님",
-   "screen": "밈짤",
-   "screen_desc": "오토바이 퀵 → 비장한 남성 눈 클로즈업(이름 표기 없음)",
-   "effect": null,
-   "ending": "~껴짐....."
+   "t0": 8.367,
+   "t1": 8.8,
+   "speaker": "나레",
+   "text": "망했다",
+   "layer": "채널",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    574,
+    624
+   ],
+   "x": 547,
+   "align": "center",
+   "max_w": 146,
+   "ink_x": [
+    474,
+    620
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 3.0,
+   "word_gap_px": null,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "매장·건물",
+   "scene_desc": "얼굴 감싼 남성 → 외교부 여권민원실 간판 → 8시 시계",
+   "fit": 8,
+   "cut_at": [
+    8.367
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 8.367,
+    "t1": 8.8,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": null,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 23.0,
-   "t1": 25.0,
-   "caption": "\"네네 ㅠㅠㅠㅠㅠㅠㅠ/오토바이로/오시는거죠???????\"",
-   "narration": null,
-   "kind": "화자대사",
-   "speaker": "나(글쓴이)",
-   "screen": "기타",
-   "screen_desc": "상자 잔뜩 실은 오토바이",
-   "effect": null,
-   "ending": "~거죠???????\""
+   "t0": 8.8,
+   "t1": 9.6,
+   "speaker": "나레",
+   "text": "센터 9시에 염",
+   "layer": "채널",
+   "role": "반전",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    650,
+    698
+   ],
+   "x": 544,
+   "align": "center",
+   "max_w": 308,
+   "ink_x": [
+    390,
+    698
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 52,
+   "letter_gap_px": 4.5,
+   "word_gap_px": 21.0,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "매장·건물",
+   "scene_desc": "얼굴 감싼 남성 → 외교부 여권민원실 간판 → 8시 시계",
+   "fit": 8,
+   "cut_at": [
+    8.8
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 8.8,
+    "t1": 9.6,
+    "diff": 0.2
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 185.3,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 25.0,
-   "t1": 26.0,
-   "caption": "다마스요???????????",
-   "narration": null,
-   "kind": "화자대사",
-   "speaker": "나(글쓴이)",
-   "screen": "기타",
-   "screen_desc": "파란 다마스 차량",
-   "effect": null,
-   "ending": "~스요???????????"
+   "t0": 9.6,
+   "t1": 10.433,
+   "speaker": "나레",
+   "text": "현재시각 8시",
+   "layer": "채널",
+   "role": "반전",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(3번째 줄)",
+   "y": [
+    724,
+    776
+   ],
+   "x": 537,
+   "align": "center",
+   "max_w": 294,
+   "ink_x": [
+    390,
+    684
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 5.5,
+   "word_gap_px": 18.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "매장·건물",
+   "scene_desc": "얼굴 감싼 남성 → 외교부 여권민원실 간판 → 8시 시계",
+   "fit": 8,
+   "cut_at": [
+    9.6
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 9.6,
+    "t1": 10.433,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 214.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 26.0,
-   "t1": 28.0,
-   "caption": "다마스도 퀵 하는지 처음 앎/뭔가 불안하지만 방법 없음.....",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "밈짤",
-   "screen_desc": "\"전국정확배송 다마스·오토바이\" 간판 → 컵 들고 마시는 안경 남성",
-   "effect": null,
-   "ending": "~없음....."
+   "t0": 10.433,
+   "t1": 10.867,
+   "speaker": "나레",
+   "text": "멘붕와서",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    574,
+    624
+   ],
+   "x": 544,
+   "align": "center",
+   "max_w": 192,
+   "ink_x": [
+    448,
+    640
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 3.0,
+   "word_gap_px": null,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "빈 칸",
+   "scene_desc": "그림 없음 — 흰 바탕에 자막만(다음 그림 전 잠깐)",
+   "fit": 0,
+   "cut_at": [
+    10.433
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 10.433,
+    "t1": 10.867,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 213.0,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": " · 빈 칸(그림 없음, 픽셀 비흰 <1%)"
   },
   {
-   "t0": 28.0,
-   "t1": 30.0,
-   "caption": "(30분 후 불안해서 전화)/\"혹시 어디쯤 오셨을까요...?\"",
-   "narration": null,
-   "kind": "화자대사",
-   "speaker": "나(글쓴이)",
-   "screen": "밈짤",
-   "screen_desc": "손톱 무는 사제복 남성(이름 표기 없음)",
-   "effect": null,
-   "ending": "~까요...?\""
+   "t0": 10.867,
+   "t1": 12.033,
+   "speaker": "나레",
+   "text": "친구들한테 헬프쳤더니",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    648,
+    700
+   ],
+   "x": 544,
+   "align": "center",
+   "max_w": 512,
+   "ink_x": [
+    288,
+    800
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "캡처",
+   "scene_desc": "빈 칸 → 카톡 단체방 대화 캡처",
+   "fit": 8,
+   "cut_at": [
+    10.867
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 10.867,
+    "t1": 12.033,
+    "diff": 0.2
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 194.3,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 30.0,
-   "t1": 34.0,
-   "caption": "\"가고 있습니다!/도착예정시간은/30분 더 걸린다고 뜨네요./어떻게든 빨리 가볼게요.\"",
-   "narration": null,
-   "kind": "화자대사",
-   "speaker": "퀵 기사님",
-   "screen": "밈짤",
-   "screen_desc": "도로 위 흰 승합차 → 비장한 남성 얼굴(이름 표기 없음)",
-   "effect": null,
-   "ending": "~게요.\""
+   "t0": 12.033,
+   "t1": 13.267,
+   "speaker": "나레",
+   "text": "\"퀵으로 여권 받아보는건?\"",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(3번째 줄)",
+   "y": [
+    726,
+    776
+   ],
+   "x": 545,
+   "align": "center",
+   "max_w": 606,
+   "ink_x": [
+    242,
+    848
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 4.5,
+   "word_gap_px": 20.5,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "캡처",
+   "scene_desc": "빈 칸 → 카톡 단체방 대화 캡처",
+   "fit": 8,
+   "cut_at": [
+    12.033
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 12.033,
+    "t1": 13.267,
+    "diff": 6.8,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": -6
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 188.5,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 34.0,
-   "t1": 35.0,
-   "caption": "하...../초조핑/불안핑 됨;;;;;;",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "밈짤",
-   "screen_desc": "머리 감싸 쥔 사람",
-   "effect": null,
-   "ending": "됨;;;;;;"
+   "t0": 13.267,
+   "t1": 14.533,
+   "speaker": "나레",
+   "text": "어? / 안될거 없을 거 같은데?",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    570,
+    696
+   ],
+   "x": 546,
+   "align": "center",
+   "max_w": 524,
+   "ink_x": [
+    284,
+    808
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 4.8,
+   "word_gap_px": 22.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "눈 굴리는 남성 얼굴 클로즈업 짤",
+   "fit": 6,
+   "cut_at": [
+    13.267
+   ],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 13.267,
+    "t1": 14.533,
+    "diff": 4.8,
+    "scale": 1.056,
+    "tx": -31,
+    "ty": -17
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 196.9,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 35.0,
-   "t1": 38.0,
-   "caption": "(20분 후 기사님 전화옴)/\"예정시간보다/10분 일찍 도착할 것 같아요!/받을 준비하고 계세요!!!!!!\"",
-   "narration": null,
-   "kind": "화자대사",
-   "speaker": "퀵 기사님",
-   "screen": "밈짤",
-   "screen_desc": "다마스 → 선글라스·태극기 유니폼 선수가 여권을 건네는 합성(이름 표기 없음)",
-   "effect": "여권 합성",
-   "ending": "~세요!!!!!!\""
+   "t0": 14.533,
+   "t1": 15.033,
+   "speaker": "나레",
+   "text": "최후의 시도",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    572,
+    622
+   ],
+   "x": 545,
+   "align": "center",
+   "max_w": 262,
+   "ink_x": [
+    414,
+    676
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 22.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "빈 칸",
+   "scene_desc": "그림 없음 — 흰 바탕에 자막만(다음 그림 전 잠깐)",
+   "fit": 0,
+   "cut_at": [
+    14.533
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 14.533,
+    "t1": 15.033,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 199.6,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": " · 빈 칸(그림 없음, 픽셀 비흰 <1%)"
   },
   {
-   "t0": 38.0,
-   "t1": 39.0,
-   "caption": "뭐야/거의 다보르기니의 기적임;;",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "밈짤",
-   "screen_desc": "바퀴 들린 채 달리는 다마스",
-   "effect": null,
-   "ending": "~적임;;"
+   "t0": 15.033,
+   "t1": 16.067,
+   "speaker": "나레",
+   "text": "남은시간 2시간 20분 / (바로 퀵 전화해봄)",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(3번째 줄까지)",
+   "y": [
+    650,
+    776
+   ],
+   "x": 546,
+   "align": "center",
+   "max_w": 480,
+   "ink_x": [
+    306,
+    786
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 53,
+   "letter_gap_px": 4.2,
+   "word_gap_px": 19.0,
+   "line_gap_px": 27,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "기타",
+   "scene_desc": "빈 칸 → 헬멧 쓴 오토바이 퀵 기사",
+   "fit": 7,
+   "cut_at": [
+    15.033
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 15.033,
+    "t1": 16.067,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 186.9,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 39.0,
-   "t1": 41.0,
-   "caption": "손에 여권들고/뛰어오시는 기사님이 보임",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "밈짤",
-   "screen_desc": "여권 들고 뛰는 남성 합성",
-   "effect": "여권 합성",
-   "ending": "~보임"
+   "t0": 16.067,
+   "t1": 16.467,
+   "speaker": "나레",
+   "text": "\"여보세요?",
+   "layer": "채널",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    572,
+    622
+   ],
+   "x": 545,
+   "align": "center",
+   "max_w": 250,
+   "ink_x": [
+    420,
+    670
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 4.0,
+   "word_gap_px": null,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "빈 칸",
+   "scene_desc": "그림 없음 — 흰 바탕에 자막만(다음 그림 전 잠깐)",
+   "fit": 0,
+   "cut_at": [
+    16.067
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 16.067,
+    "t1": 16.467,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "나(글쓴이)",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": true
+   },
+   "f0_med": 214.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": " · 빈 칸(그림 없음, 픽셀 비흰 <1%)"
   },
   {
-   "t0": 41.0,
-   "t1": 43.0,
-   "caption": "\"정말 감사합니다/진짜 진짜 감사합니다/ㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠ\"",
-   "narration": null,
-   "kind": "화자대사",
-   "speaker": "나(글쓴이)",
-   "screen": "밈짤",
-   "screen_desc": "잔디에 엎드려 절하는 사람들",
-   "effect": null,
-   "ending": "ㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠ\""
+   "t0": 16.467,
+   "t1": 17.867,
+   "speaker": "나레",
+   "text": "저 집에 여권을 두고 왔는데,,,,,",
+   "layer": "채널",
+   "role": "질문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    648,
+    700
+   ],
+   "x": 543,
+   "align": "center",
+   "max_w": 702,
+   "ink_x": [
+    192,
+    894
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 7.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "빈 칸 → 남색 대한민국 여권 → 두 손 모은 짤",
+   "fit": 6,
+   "cut_at": [
+    16.467
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 16.467,
+    "t1": 19.1,
+    "diff": 47.3,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 77,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "나(글쓴이)",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": false
+   },
+   "f0_med": 158.6,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 43.0,
-   "t1": 45.0,
-   "caption": "(미리) 계좌이체 +/현금 팁 드리고/나도 미친듯이 뜀",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "밈짤",
-   "screen_desc": "5만원권 → 트랙 질주하는 단거리 선수",
-   "effect": null,
-   "ending": "뜀"
+   "t0": 17.867,
+   "t1": 19.1,
+   "speaker": "나레",
+   "text": "이제 2시간 뒤 출발이에요ㅠ",
+   "layer": "채널",
+   "role": "질문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "덧붙음(3번째 줄)",
+   "y": [
+    724,
+    774
+   ],
+   "x": 546,
+   "align": "center",
+   "max_w": 628,
+   "ink_x": [
+    232,
+    860
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 20.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "빈 칸 → 남색 대한민국 여권 → 두 손 모은 짤",
+   "fit": 6,
+   "cut_at": [],
+   "motion": "still",
+   "motion_info": {
+    "t0": 16.467,
+    "t1": 19.1,
+    "diff": 47.3,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 77,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": {
+    "who": "나(글쓴이)",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": false
+   },
+   "f0_med": 162.7,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 45.0,
-   "t1": 47.0,
-   "caption": "탑승구 질주하고 있는데/내 이름 부르는 파이널콜 들림;",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "기타",
-   "screen_desc": "공항 무빙워크 통로",
-   "effect": null,
-   "ending": "~들림;"
+   "t0": 19.1,
+   "t1": 19.6,
+   "speaker": "나레",
+   "text": "가능할까요????????\"",
+   "layer": "채널",
+   "role": "질문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(4번째 줄)",
+   "y": [
+    800,
+    852
+   ],
+   "x": 545,
+   "align": "center",
+   "max_w": 518,
+   "ink_x": [
+    286,
+    804
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 5.0,
+   "word_gap_px": null,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "빈 칸 → 남색 대한민국 여권 → 두 손 모은 짤",
+   "fit": 6,
+   "cut_at": [
+    19.1
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 19.1,
+    "t1": 19.6,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "나(글쓴이)",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": false
+   },
+   "f0_med": 152.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 47.0,
-   "t1": 50.0,
-   "caption": "간신히 탑승해서/좌석 찾는데/저 멀리 엄마가 통로에서/불안하게 서 계셨음",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "기타",
-   "screen_desc": "비행기 객실 좌석·통로",
-   "effect": null,
-   "ending": "~셨음"
+   "t0": 19.6,
+   "t1": 20.033,
+   "speaker": "나레",
+   "text": "\"고객님,",
+   "layer": "채널",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    570,
+    622
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 184,
+   "ink_x": [
+    446,
+    630
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 4.0,
+   "word_gap_px": null,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "빈 칸",
+   "scene_desc": "그림 없음 — 흰 바탕에 자막만(다음 그림 전 잠깐)",
+   "fit": 0,
+   "cut_at": [
+    19.6
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 19.6,
+    "t1": 20.033,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "퀵 기사님",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": true
+   },
+   "f0_med": 196.9,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": " · 빈 칸(그림 없음, 픽셀 비흰 <1%)"
   },
   {
-   "t0": 50.0,
-   "t1": 52.0,
-   "caption": "\"나 혼자 버려질까봐/불안해 죽는줄 알았다..\"",
-   "narration": null,
-   "kind": "화자대사",
-   "speaker": "엄마",
-   "screen": "밈짤",
-   "screen_desc": "손수건으로 눈물 닦는 안경 쓴 사람(이름 표기 없음)",
-   "effect": null,
-   "ending": "~았다..\""
+   "t0": 20.033,
+   "t1": 21.267,
+   "speaker": "나레",
+   "text": "제가 무조건 갖다드릴게요.\"",
+   "layer": "채널",
+   "role": "답",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    646,
+    696
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 624,
+   "ink_x": [
+    226,
+    850
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "빈 칸 → 오토바이 퀵 → 비장한 남성 눈 클로즈업",
+   "fit": 6,
+   "cut_at": [
+    20.033
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 20.033,
+    "t1": 21.8,
+    "diff": 56.3,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 89,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "퀵 기사님",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": false
+   },
+   "f0_med": 203.2,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 52.0,
+   "t0": 21.267,
+   "t1": 21.8,
+   "speaker": "나레",
+   "text": "수화기 너머로",
+   "layer": "채널",
+   "role": "답",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "덧붙음(3번째 줄)",
+   "y": [
+    722,
+    772
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 314,
+   "ink_x": [
+    382,
+    696
+   ],
+   "fill_hex": "#010101",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 24.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "빈 칸 → 오토바이 퀵 → 비장한 남성 눈 클로즈업",
+   "fit": 6,
+   "cut_at": [],
+   "motion": "still",
+   "motion_info": {
+    "t0": 20.033,
+    "t1": 21.8,
+    "diff": 56.3,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 89,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 216.2,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 21.8,
+   "t1": 22.967,
+   "speaker": "나레",
+   "text": "묵직한 비장함이 느껴짐.....",
+   "layer": "채널",
+   "role": "답",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(4번째 줄)",
+   "y": [
+    798,
+    850
+   ],
+   "x": 537,
+   "align": "center",
+   "max_w": 622,
+   "ink_x": [
+    226,
+    848
+   ],
+   "fill_hex": "#010101",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 8.0,
+   "word_gap_px": 21.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "빈 칸 → 오토바이 퀵 → 비장한 남성 눈 클로즈업",
+   "fit": 6,
+   "cut_at": [
+    21.8
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 21.8,
+    "t1": 22.967,
+    "diff": 2.0
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 159.8,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 22.967,
+   "t1": 24.133,
+   "speaker": "나레",
+   "text": "\"네네 ㅠㅠㅠㅠㅠㅠㅠㅠㅠ / 오토바이로 / 오시는거죠???????\"",
+   "layer": "채널",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄) — 3줄이 한 번에",
+   "y": [
+    570,
+    772
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 490,
+   "ink_x": [
+    294,
+    784
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "기타",
+   "scene_desc": "상자 잔뜩 실은 오토바이",
+   "fit": 7,
+   "cut_at": [
+    22.967
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 22.967,
+    "t1": 24.133,
+    "diff": 0.4
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "나(글쓴이)",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": true
+   },
+   "f0_med": 163.3,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 24.133,
+   "t1": 24.967,
+   "speaker": "나레",
+   "text": "\"아뇨, 다마스요.\"",
+   "layer": "채널",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    570,
+    622
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 394,
+   "ink_x": [
+    342,
+    736
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 4.5,
+   "word_gap_px": 23.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "기타",
+   "scene_desc": "파란 다마스 차량",
+   "fit": 9,
+   "cut_at": [
+    24.133
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 24.133,
+    "t1": 24.967,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "퀵 기사님",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": true
+   },
+   "f0_med": 206.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 24.967,
+   "t1": 25.467,
+   "speaker": "나레",
+   "text": "다마스요???????????",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    570,
+    620
+   ],
+   "x": 547,
+   "align": "center",
+   "max_w": 538,
+   "ink_x": [
+    278,
+    816
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 5.0,
+   "word_gap_px": null,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "기타",
+   "scene_desc": "파란 다마스 차량(같은 그림 다른 컷)",
+   "fit": 8,
+   "cut_at": [
+    24.967
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 24.967,
+    "t1": 25.467,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 192.6,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 25.467,
+   "t1": 26.633,
+   "speaker": "나레",
+   "text": "다마스도 퀵 하는지 처음 앎",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    570,
+    620
+   ],
+   "x": 546,
+   "align": "center",
+   "max_w": 608,
+   "ink_x": [
+    242,
+    850
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 19.5,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "'전국정확배송 다마스·오토바이' 간판 → 컵 들고 마시는 안경 남성",
+   "fit": 6,
+   "cut_at": [
+    25.467
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 25.467,
+    "t1": 26.633,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 202.3,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 26.633,
+   "t1": 27.967,
+   "speaker": "나레",
+   "text": "뭔가 불안하지만 방법 없음.....",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    646,
+    698
+   ],
+   "x": 543,
+   "align": "center",
+   "max_w": 686,
+   "ink_x": [
+    200,
+    886
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "'전국정확배송 다마스·오토바이' 간판 → 컵 들고 마시는 안경 남성",
+   "fit": 6,
+   "cut_at": [
+    26.633
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 26.633,
+    "t1": 27.967,
+    "diff": 0.1
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 176.4,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 27.967,
+   "t1": 29.4,
+   "speaker": "나레",
+   "text": "(30분 후 불안해서 전화) / \"혹시 어디쯤 오셨을까요...?\"",
+   "layer": "채널",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    568,
+    696
+   ],
+   "x": 546,
+   "align": "center",
+   "max_w": 664,
+   "ink_x": [
+    214,
+    878
+   ],
+   "fill_hex": "#010101",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 57,
+   "letter_gap_px": 4.5,
+   "word_gap_px": 19.0,
+   "line_gap_px": 23,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "손톱 무는 사제복 남성 짤",
+   "fit": 6,
+   "cut_at": [
+    27.967
+   ],
+   "motion": "zoom_out",
+   "motion_info": {
+    "t0": 27.967,
+    "t1": 29.4,
+    "diff": 10.6,
+    "scale": 0.972,
+    "tx": 30,
+    "ty": 11
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "나(글쓴이)",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": true
+   },
+   "f0_med": 155.8,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 29.4,
+   "t1": 29.967,
+   "speaker": "나레",
+   "text": "\"가고 있습니다!",
+   "layer": "채널",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    570,
+    620
+   ],
+   "x": 543,
+   "align": "center",
+   "max_w": 350,
+   "ink_x": [
+    368,
+    718
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "빈 칸",
+   "scene_desc": "그림 없음 — 흰 바탕에 자막만(다음 그림 전 잠깐)",
+   "fit": 0,
+   "cut_at": [
+    29.4
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 29.4,
+    "t1": 29.967,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "퀵 기사님",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": true
+   },
+   "f0_med": 200.5,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": " · 빈 칸(그림 없음, 픽셀 비흰 <1%)"
+  },
+  {
+   "t0": 29.967,
+   "t1": 30.733,
+   "speaker": "나레",
+   "text": "도착예정시간은",
+   "layer": "채널",
+   "role": "답",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    646,
+    698
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 352,
+   "ink_x": [
+    362,
+    714
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 4.0,
+   "word_gap_px": null,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "빈 칸 → 도로 위 흰 승합차 → 비장한 남성 얼굴",
+   "fit": 6,
+   "cut_at": [
+    29.967
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 29.967,
+    "t1": 32.067,
+    "diff": 40.3,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 68,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "퀵 기사님",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": false
+   },
+   "f0_med": 176.4,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 30.733,
+   "t1": 32.067,
+   "speaker": "나레",
+   "text": "30분 더 걸린다고 뜨네요.",
+   "layer": "채널",
+   "role": "답",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "덧붙음(3번째 줄)",
+   "y": [
+    722,
+    772
+   ],
+   "x": 543,
+   "align": "center",
+   "max_w": 578,
+   "ink_x": [
+    254,
+    832
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 20.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "빈 칸 → 도로 위 흰 승합차 → 비장한 남성 얼굴",
+   "fit": 6,
+   "cut_at": [],
+   "motion": "still",
+   "motion_info": {
+    "t0": 29.967,
+    "t1": 32.067,
+    "diff": 40.3,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 68,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": {
+    "who": "퀵 기사님",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": false
+   },
+   "f0_med": 195.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 32.067,
+   "t1": 33.267,
+   "speaker": "나레",
+   "text": "어떻게든 빨리 가볼게요.\"",
+   "layer": "채널",
+   "role": "답",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(4번째 줄)",
+   "y": [
+    798,
+    850
+   ],
+   "x": 545,
+   "align": "center",
+   "max_w": 570,
+   "ink_x": [
+    260,
+    830
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 20.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "빈 칸 → 도로 위 흰 승합차 → 비장한 남성 얼굴",
+   "fit": 6,
+   "cut_at": [
+    32.067
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 32.067,
+    "t1": 33.267,
+    "diff": 0.1
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "퀵 기사님",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": false
+   },
+   "f0_med": 214.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 33.267,
+   "t1": 34.1,
+   "speaker": "나레",
+   "text": "하..... / 초조핑 / 불안핑 됨;;;;;;;",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄) — 3줄이 한 번에",
+   "y": [
+    574,
+    776
+   ],
+   "x": 543,
+   "align": "center",
+   "max_w": 366,
+   "ink_x": [
+    360,
+    726
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 12.0,
+   "word_gap_px": 23.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "머리 감싸 쥔 사람 짤",
+   "fit": 6,
+   "cut_at": [
+    33.267
+   ],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 33.267,
+    "t1": 34.1,
+    "diff": 11.3,
+    "scale": 1.061,
+    "tx": -33,
+    "ty": -21
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 179.3,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 34.1,
+   "t1": 34.933,
+   "speaker": "나레",
+   "text": "(20분 후 기사님 전화옴) / \"예정시간보다",
+   "layer": "채널",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    568,
+    698
+   ],
+   "x": 546,
+   "align": "center",
+   "max_w": 552,
+   "ink_x": [
+    270,
+    822
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 57,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 20.0,
+   "line_gap_px": 23,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "빈 칸",
+   "scene_desc": "그림 없음 — 흰 바탕에 자막만(다음 그림 전 잠깐)",
+   "fit": 0,
+   "cut_at": [
+    34.1
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 34.1,
+    "t1": 34.933,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "퀵 기사님",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": true
+   },
+   "f0_med": 193.4,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": " · 빈 칸(그림 없음, 픽셀 비흰 <1%)"
+  },
+  {
+   "t0": 34.933,
+   "t1": 36.267,
+   "speaker": "나레",
+   "text": "10분 일찍 도착할 것 같아요!",
+   "layer": "채널",
+   "role": "반전",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "덧붙음(3번째 줄)",
+   "y": [
+    722,
+    774
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 640,
+   "ink_x": [
+    220,
+    860
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 19.5,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "빈 칸 → 다마스 → 태극기 유니폼 선수가 여권을 건네는 합성",
+   "fit": 7,
+   "cut_at": [
+    34.933
+   ],
+   "motion": "zoom_out",
+   "motion_info": {
+    "t0": 34.933,
+    "t1": 36.267,
+    "diff": 29.3,
+    "scale": 0.974,
+    "tx": -141,
+    "ty": -11
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "퀵 기사님",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": false
+   },
+   "f0_med": 190.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 36.267,
+   "t1": 37.333,
+   "speaker": "나레",
+   "text": "받을 준비하고 계세요!!!!!!!\"",
+   "layer": "채널",
+   "role": "반전",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(4번째 줄)",
+   "y": [
+    798,
+    850
+   ],
+   "x": 547,
+   "align": "center",
+   "max_w": 626,
+   "ink_x": [
+    234,
+    860
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 6.5,
+   "word_gap_px": 17.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "빈 칸 → 다마스 → 태극기 유니폼 선수가 여권을 건네는 합성",
+   "fit": 7,
+   "cut_at": [
+    36.267
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 36.267,
+    "t1": 37.333,
+    "diff": 0.6
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "퀵 기사님",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": false
+   },
+   "f0_med": 220.5,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 37.333,
+   "t1": 38.7,
+   "speaker": "나레",
+   "text": "뭐야 / 거의 다보르기니의 기적임;;",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    574,
+    700
+   ],
+   "x": 544,
+   "align": "center",
+   "max_w": 620,
+   "ink_x": [
+    234,
+    854
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 53,
+   "letter_gap_px": 7.0,
+   "word_gap_px": 23.5,
+   "line_gap_px": 27,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "바퀴 들린 채 달리는 다마스",
+   "fit": 8,
+   "cut_at": [
+    37.333
+   ],
+   "motion": "pan",
+   "motion_info": {
+    "t0": 37.333,
+    "t1": 38.7,
+    "diff": 21.7,
+    "scale": 0.992,
+    "tx": 147,
+    "ty": -3
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 200.5,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 38.7,
+   "t1": 39.367,
+   "speaker": "나레",
+   "text": "손에 여권들고",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    574,
+    624
+   ],
+   "x": 545,
+   "align": "center",
+   "max_w": 314,
+   "ink_x": [
+    388,
+    702
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 4.5,
+   "word_gap_px": 22.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "여권 들고 뛰는 남성 합성",
+   "fit": 8,
+   "cut_at": [
+    38.7
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 38.7,
+    "t1": 39.367,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 200.5,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 39.367,
+   "t1": 40.533,
+   "speaker": "나레",
+   "text": "뛰어오시는 기사님이 보임",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    650,
+    698
+   ],
+   "x": 543,
+   "align": "center",
+   "max_w": 578,
+   "ink_x": [
+    254,
+    832
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 52,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 20.5,
+   "line_gap_px": 28,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "여권 들고 뛰는 남성 합성",
+   "fit": 8,
+   "cut_at": [
+    39.367
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 39.367,
+    "t1": 40.533,
+    "diff": 0.4
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 175.0,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 40.533,
+   "t1": 41.2,
+   "speaker": "나레",
+   "text": "\"정말 감사합니다",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    570,
+    622
+   ],
+   "x": 546,
+   "align": "center",
+   "max_w": 388,
+   "ink_x": [
+    352,
+    740
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 17.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "잔디에 엎드려 절하는 사람들 짤",
+   "fit": 7,
+   "cut_at": [
+    40.533
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 40.533,
+    "t1": 42.2,
+    "diff": 74.0,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 168,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "나(글쓴이)",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": true
+   },
+   "f0_med": 227.3,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 41.2,
+   "t1": 42.2,
+   "speaker": "나레",
+   "text": "진짜 진짜 감사합니다 / ㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠ\"",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(3번째 줄까지)",
+   "y": [
+    646,
+    770
+   ],
+   "x": 544,
+   "align": "center",
+   "max_w": 780,
+   "ink_x": [
+    154,
+    934
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 51,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 17.5,
+   "line_gap_px": 29,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "잔디에 엎드려 절하는 사람들 짤",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "still",
+   "motion_info": {
+    "t0": 40.533,
+    "t1": 42.2,
+    "diff": 74.0,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 168,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": {
+    "who": "나(글쓴이)",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": false
+   },
+   "f0_med": 217.2,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 42.2,
+   "t1": 43.633,
+   "speaker": "나레",
+   "text": "(미리) 계좌이체 + / 현금 팁 드리고",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄) — 2줄이 한 번에",
+   "y": [
+    574,
+    698
+   ],
+   "x": 546,
+   "align": "center",
+   "max_w": 400,
+   "ink_x": [
+    346,
+    746
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 6.5,
+   "word_gap_px": 20.8,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "5만원권 → 트랙 질주하는 단거리 선수",
+   "fit": 7,
+   "cut_at": [
+    42.2
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 42.2,
+    "t1": 43.633,
+    "diff": 0.8
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 203.2,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 43.633,
+   "t1": 44.467,
+   "speaker": "나레",
+   "text": "나도 미친듯이 뜀",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(3번째 줄)",
+   "y": [
+    724,
+    776
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 372,
+   "ink_x": [
+    352,
+    724
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 6.5,
+   "word_gap_px": 21.5,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "5만원권 → 트랙 질주하는 단거리 선수",
+   "fit": 7,
+   "cut_at": [
+    43.633
+   ],
+   "motion": "cam",
+   "motion_info": {
+    "t0": 43.633,
+    "t1": 44.467,
+    "diff": 17.2
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 150.0,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 44.467,
+   "t1": 45.567,
+   "speaker": "나레",
+   "text": "탑승구 질주하고 있는데",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    570,
+    622
+   ],
+   "x": 545,
+   "align": "center",
+   "max_w": 526,
+   "ink_x": [
+    282,
+    808
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 3.5,
+   "word_gap_px": 19.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "매장·건물",
+   "scene_desc": "공항 무빙워크 통로",
+   "fit": 7,
+   "cut_at": [
+    44.467
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 44.467,
+    "t1": 46.967,
+    "diff": 33.0,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 60,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 182.2,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 45.567,
+   "t1": 46.967,
+   "speaker": "나레",
+   "text": "내 이름 부르는 파이널콜 들림;",
+   "layer": "채널",
+   "role": "고조",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    646,
+    696
+   ],
+   "x": 543,
+   "align": "center",
+   "max_w": 678,
+   "ink_x": [
+    204,
+    882
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 17.5,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "매장·건물",
+   "scene_desc": "공항 무빙워크 통로",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "still",
+   "motion_info": {
+    "t0": 44.467,
+    "t1": 46.967,
+    "diff": 33.0,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 60,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 197.8,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 46.967,
+   "t1": 47.667,
+   "speaker": "나레",
+   "text": "간신히 탑승해서",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    570,
+    622
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 360,
+   "ink_x": [
+    358,
+    718
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 3.5,
+   "word_gap_px": 23.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "빈 칸",
+   "scene_desc": "그림 없음 — 흰 바탕에 자막만(다음 그림 전 잠깐)",
+   "fit": 0,
+   "cut_at": [
+    46.967
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 46.967,
+    "t1": 47.667,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 203.2,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": " · 빈 칸(그림 없음, 픽셀 비흰 <1%)"
+  },
+  {
+   "t0": 47.667,
+   "t1": 48.3,
+   "speaker": "나레",
+   "text": "좌석 찾는데",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    646,
+    696
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 260,
+   "ink_x": [
+    408,
+    668
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 2.5,
+   "word_gap_px": 23.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "매장·건물",
+   "scene_desc": "빈 칸 → 비행기 객실 좌석·통로",
+   "fit": 7,
+   "cut_at": [
+    47.667
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 47.667,
+    "t1": 48.3,
+    "diff": 0.6
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 150.0,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 48.3,
+   "t1": 49.433,
+   "speaker": "나레",
+   "text": "저 멀리 엄마가 통로에서",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "덧붙음(3번째 줄)",
+   "y": [
+    722,
+    774
+   ],
+   "x": 537,
+   "align": "center",
+   "max_w": 542,
+   "ink_x": [
+    266,
+    808
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 22.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "매장·건물",
+   "scene_desc": "빈 칸 → 비행기 객실 좌석·통로",
+   "fit": 7,
+   "cut_at": [
+    48.3
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 48.3,
+    "t1": 50.4,
+    "diff": 48.9,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 72,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 198.6,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 49.433,
+   "t1": 50.4,
+   "speaker": "나레",
+   "text": "불안하게 서 계셨음",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(4번째 줄)",
+   "y": [
+    798,
+    850
+   ],
+   "x": 532,
+   "align": "center",
+   "max_w": 428,
+   "ink_x": [
+    318,
+    746
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 20.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "매장·건물",
+   "scene_desc": "빈 칸 → 비행기 객실 좌석·통로",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "still",
+   "motion_info": {
+    "t0": 48.3,
+    "t1": 50.4,
+    "diff": 48.9,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 72,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 191.7,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 50.4,
+   "t1": 51.567,
+   "speaker": "나레",
+   "text": "\"나 혼자 버려질까봐",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    568,
+    620
+   ],
+   "x": 538,
+   "align": "center",
+   "max_w": 452,
+   "ink_x": [
+    312,
+    764
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 18.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "손수건으로 눈물 닦는 사람 짤",
+   "fit": 6,
+   "cut_at": [
+    50.4
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 50.4,
+    "t1": 53.0,
+    "diff": 24.2,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 79,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "cut",
+   "dialog": {
+    "who": "엄마",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": true
+   },
+   "f0_med": 218.3,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 51.567,
    "t1": 53.0,
-   "caption": "순간 너무 죄송했음.....",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "밈짤",
-   "screen_desc": "두 손으로 눈 가리고 우는 남성(이름 표기 없음)",
-   "effect": null,
-   "ending": "~했음....."
+   "speaker": "나레",
+   "text": "불안해 죽는줄 알았다..\"",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    646,
+    696
+   ],
+   "x": 544,
+   "align": "center",
+   "max_w": 540,
+   "ink_x": [
+    274,
+    814
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 19.0,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "손수건으로 눈물 닦는 사람 짤",
+   "fit": 6,
+   "cut_at": [],
+   "motion": "still",
+   "motion_info": {
+    "t0": 50.4,
+    "t1": 53.0,
+    "diff": 24.2,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 79,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": {
+    "who": "엄마",
+    "form": "따옴표",
+    "voice": "나레 목소리(톤 올림 — f0 실측)",
+    "first_row_of_turn": false
+   },
+   "f0_med": 232.1,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
    "t0": 53.0,
-   "t1": 55.0,
-   "caption": "다행히 어머니 모시고/프라하 여행 잘 다녀옴",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "인물",
-   "screen_desc": "얼굴 이모지로 가린 어머니 여행 사진(유럽 성당 앞)",
-   "effect": null,
-   "ending": "~녀옴"
+   "t1": 53.933,
+   "speaker": "나레",
+   "text": "순간 너무 죄송했음.....",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    574,
+    624
+   ],
+   "x": 537,
+   "align": "center",
+   "max_w": 522,
+   "ink_x": [
+    276,
+    798
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 7.0,
+   "word_gap_px": 19.5,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "두 손으로 눈 가리고 우는 남성 짤",
+   "fit": 7,
+   "cut_at": [
+    53.0
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 53.0,
+    "t1": 53.933,
+    "diff": 0.0
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 183.8,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 55.0,
-   "t1": 57.0,
-   "caption": "비행기 놓쳤으면/최소 300만원/날릴뻔 함",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "밈짤",
-   "screen_desc": "선글라스 남성이 돈 뿌리는 짤(추정: 영화 울프 오브 월스트리트, 화면 글자 없음)",
-   "effect": null,
-   "ending": "함"
+   "t0": 53.933,
+   "t1": 54.7,
+   "speaker": "나레",
+   "text": "다행히 어머니 모시고",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    570,
+    622
+   ],
+   "x": 541,
+   "align": "center",
+   "max_w": 478,
+   "ink_x": [
+    302,
+    780
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 22.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "얼굴을 이모지로 가린 어머니 여행 사진(유럽 성당 앞)",
+   "fit": 9,
+   "cut_at": [
+    53.933
+   ],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 53.933,
+    "t1": 54.7,
+    "diff": 21.2,
+    "scale": 1.091,
+    "tx": -50,
+    "ty": -35
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 185.3,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   },
   {
-   "t0": 57.0,
-   "t1": 59.7,
-   "caption": "다들 공항갈 때/여권은/두번 세번 확인하자",
-   "narration": null,
-   "kind": "나레",
-   "speaker": null,
-   "screen": "제품사진",
-   "screen_desc": "공항 표지판 앞 남색 여권",
-   "effect": null,
-   "ending": "~하자"
+   "t0": 54.7,
+   "t1": 55.767,
+   "speaker": "나레",
+   "text": "프라하 여행 잘 다녀옴",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(2번째 줄)",
+   "y": [
+    646,
+    698
+   ],
+   "x": 539,
+   "align": "center",
+   "max_w": 494,
+   "ink_x": [
+    292,
+    786
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 4.0,
+   "word_gap_px": 20.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "얼굴",
+   "scene_desc": "얼굴을 이모지로 가린 어머니 여행 사진(유럽 성당 앞)",
+   "fit": 9,
+   "cut_at": [
+    54.7
+   ],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 54.7,
+    "t1": 55.767,
+    "diff": 33.3,
+    "scale": 1.136,
+    "tx": -73,
+    "ty": -62
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 156.4,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 55.767,
+   "t1": 56.433,
+   "speaker": "나레",
+   "text": "비행기 놓쳤으면",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    570,
+    622
+   ],
+   "x": 542,
+   "align": "center",
+   "max_w": 356,
+   "ink_x": [
+    364,
+    720
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 6.0,
+   "word_gap_px": 21.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "선글라스 남성이 돈 뿌리는 짤(이름 글자 없음)",
+   "fit": 7,
+   "cut_at": [
+    55.767
+   ],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 55.767,
+    "t1": 57.733,
+    "diff": 19.8,
+    "scale": 1.104,
+    "tx": -56,
+    "ty": -35
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 180.7,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 56.433,
+   "t1": 57.733,
+   "speaker": "나레",
+   "text": "최소 300만원 / 날릴뻔 함",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "덧붙음(3번째 줄까지)",
+   "y": [
+    646,
+    772
+   ],
+   "x": 534,
+   "align": "center",
+   "max_w": 312,
+   "ink_x": [
+    378,
+    690
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 5.5,
+   "word_gap_px": 19.5,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "짤",
+   "scene_desc": "선글라스 남성이 돈 뿌리는 짤(이름 글자 없음)",
+   "fit": 7,
+   "cut_at": [],
+   "motion": "zoom_in",
+   "motion_info": {
+    "t0": 55.767,
+    "t1": 57.733,
+    "diff": 19.8,
+    "scale": 1.104,
+    "tx": -56,
+    "ty": -35
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 213.0,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 57.733,
+   "t1": 58.267,
+   "speaker": "나레",
+   "text": "다들 공항갈 때",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "stay(다음 줄이 아래에 덧붙음)",
+   "variant": "기본(새 페이지 첫 줄)",
+   "y": [
+    570,
+    622
+   ],
+   "x": 542,
+   "align": "center",
+   "max_w": 324,
+   "ink_x": [
+    380,
+    704
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 56,
+   "letter_gap_px": 3.0,
+   "word_gap_px": 18.0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "공항 표지판 앞 남색 여권",
+   "fit": 8,
+   "cut_at": [
+    57.733
+   ],
+   "motion": "still",
+   "motion_info": {
+    "t0": 57.733,
+    "t1": 59.667,
+    "diff": 49.5,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 126,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "cut",
+   "dialog": null,
+   "f0_med": 169.6,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
+  },
+  {
+   "t0": 58.267,
+   "t1": 59.667,
+   "speaker": "나레",
+   "text": "여권은 / 두번 세번 확인하자",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "append",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(영상 끝)",
+   "variant": "덧붙음(3번째 줄까지)",
+   "y": [
+    646,
+    772
+   ],
+   "x": 543,
+   "align": "center",
+   "max_w": 430,
+   "ink_x": [
+    328,
+    758
+   ],
+   "fill_hex": "#000000",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "font": {
+    "name": "미측정 — 굵은 고딕 산세리프(뜯기 fontmatch SUIT-Bold·Pretendard-Bold·SpoqaHanSansNeo-Bold 0.65 근소 경합)",
+    "basis": "뜯기 fontmatch(NBdm·jECu) + 눈"
+   },
+   "size_px": 54,
+   "letter_gap_px": 5.0,
+   "word_gap_px": 20.5,
+   "line_gap_px": 26,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "공항 표지판 앞 남색 여권",
+   "fit": 8,
+   "cut_at": [],
+   "motion": "still",
+   "motion_info": {
+    "t0": 57.733,
+    "t1": 59.667,
+    "diff": 49.5,
+    "scale": 1.0,
+    "tx": 0,
+    "ty": 126,
+    "note": "그림은 고정 — 자막 줄이 덧붙으며 창이 아래로 밀린 것(ty)"
+   },
+   "transition": "none(같은 컷 안)",
+   "dialog": null,
+   "f0_med": 188.5,
+   "confidence": "픽셀",
+   "confidence_by": {
+    "시각·등장·자리·색": "픽셀(30fps 잉크 마스크 — 흰 행 안 검정 V<100)",
+    "글": "눈(덩어리 시트 확대 크롭)",
+    "컷·전환": "신호(cutdet 창 프레임차 + 같은그림 ORB 판정) · 특수 전환은 눈으로 프레임 확인",
+    "motion": "신호(샷 처음↔끝 ORB 닮음변환)",
+    "scene·fit·role·dialog": "눈",
+    "sfx": "신호(sfx_events 후보 − 위스퍼 낱말 구간)",
+    "font": "눈+뜯기 fontmatch",
+    "size_px": "픽셀(잉크 높이 ÷ 0.93 — 한글 고딕 잉크비, 눈 추정)"
+   },
+   "notes": ""
   }
  ],
- "structure": "글쓴이 1인칭 사연 게시글형(나레 음성 없음): 사고(만료 여권) → 막힘 3연속(거리·택시·센터 시간) → 친구 제안 → 퀵 통화(나↔기사님) → 다마스 반전·불안 → 조기 도착 반전 → 질주·탑승 → 엄마 대사 → 다행 결말 → 교훈 한 줄",
- "celeb_scenes": [
+ "no_caption": [],
+ "beats": "훅(0.0초 '셀프체크인 하려는데') → 고조(2.0초 '망했다') → 본문(3.7초 '출발 2시간반 남았는데') → 질문(7.2초 '하... / 긴급여권이라도') → 반전(8.4초 '망했다') → 본문(10.4초 '멘붕와서') → 고조(13.3초 '어? / 안될거 없을 거 같은데?') → 본문(14.5초 '최후의 시도') → 질문(16.1초 '\"여보세요?') → 답(19.6초 '\"고객님,') → 질문(23.0초 '\"네네 ㅠㅠㅠㅠㅠㅠㅠㅠㅠ / 오토') → 반전(24.1초 '\"아뇨, 다마스요.\"') → 고조(25.0초 '다마스요???????????') → 본문(25.5초 '다마스도 퀵 하는지 처음 앎') → 질문(28.0초 '(30분 후 불안해서 전화) / ') → 답(29.4초 '\"가고 있습니다!') → 고조(33.3초 '하..... / 초조핑 / 불안핑') → 반전(34.1초 '(20분 후 기사님 전화옴) / ') → 고조(37.3초 '뭐야 / 거의 다보르기니의 기적임') → 본문(38.7초 '손에 여권들고') → 고조(44.5초 '탑승구 질주하고 있는데') → 본문(47.0초 '간신히 탑승해서') → 끝(53.9초 '다행히 어머니 모시고')",
+ "narr_share": "나레 65/65줄(원음 0 — 한 목소리가 화자 대사 줄까지 읽음), 자막 표시 59.67초/59.694초",
+ "dialog_summary": {
+  "rows": 20,
+  "of": 65,
+  "turns": 9,
+  "who": [
+   "나(글쓴이)",
+   "엄마",
+   "퀵 기사님"
+  ],
+  "forms": [
+   "따옴표"
+  ],
+  "meme_rows": 11,
+  "f0_med_dialog": 198.7,
+  "f0_med_other": 190.1
+ },
+ "notes": [
+  "훅 카드 없음 — 0초부터 본문. 글쓴이 1인칭 사연 게시글형(커뮤니티 썰 그대로)",
+  "자막이 1~4줄까지 쌓이고(피치 76px, y570/646/722/798) 그림 창 위끝이 마지막 줄 아래로 따라 내려간다 — 그림이 아래로 밀린 컷은 motion still(ty 이동) 로 적음",
+  "따옴표 대사 줄 20/65 — 나·퀵 기사님·엄마의 통화를 따옴표로 쌓는다",
+  "1판 노트의 '나레 음성 없음'은 틀림 — 위스퍼 낱말 182개·유성 비율 0.59(다른 편과 같음) → 나레가 자막을 읽는다",
+  "자막 등장은 전부 instant/append — 30fps 잉크 마스크에서 새 줄 잉크가 첫 프레임에 완성(팝·타이핑·페이드 0). enter_ms 0(훅 라벨 2줄·pY2z 6.1초에서 잉크 증가가 잡혔으나 프레임 확인 결과 카드 확대·그림 잉크 섞임 — 등장은 1프레임)",
+  "채움 #000000(외곽선·그림자·상자 0), 강조색 낱말은 Lr2 훅 2낱말(#9E3023 근처 빨강)뿐",
+  "컷 = cutdet(창 프레임차) − 연속 움직임 잡음(0.25초 안 diff<30 묶음) − 같은 그림(ORB 닮음변환 inlier≥40·배율±3%) — 특수 전환은 프레임을 직접 봄",
+  "효과음: sfx_events 후보를 위스퍼(로컬 small) 낱말 구간·말소리 세기로 거름 → 이 편 채택 0(_kal/sfx_events.json)",
+  "화자 대사 줄(dialog 칸)도 같은 나레 목소리가 읽는다(원음 0) — f0 가 대사 줄에서 크게 바뀜(제조사·한국업체·벨 240~272Hz / 한국인들 143Hz / 나레 줄 176~190Hz): TTS 를 톤 바꿔 읽게 했거나 다른 TTS 목소리 — 귀로 못 들음(measure_task: narr_report 를 대사 줄만 잘라 비교)",
+  "소리: LUFS -13.7 · 말 -16.2dB · 무성 p20 -30.3dB · 전체 p5 -33.9dB(BGM 바닥) · 나레 f0 중앙 191.7Hz · 첫 소리 0.0초 · 끝 꼬리 0.17초"
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "훅 카드 없음 — 0초부터 게시글 본문 틀(머리띠·제목·메타) + 자막 + 그림",
+  "face_frac": 0.0,
+  "text": "여권 만료됐는데 비행기 탄 방법"
+ },
+ "hook": null,
+ "cuts": [
+  1.3,
+  2.0,
+  2.4,
+  3.0,
+  3.667,
+  4.833,
+  6.1,
+  7.167,
+  8.367,
+  8.8,
+  9.6,
+  10.433,
+  10.867,
+  12.033,
+  13.267,
+  14.533,
+  15.033,
+  16.067,
+  16.467,
+  19.1,
+  19.6,
+  20.033,
+  21.8,
+  22.967,
+  24.133,
+  24.967,
+  25.467,
+  26.633,
+  27.967,
+  29.4,
+  29.967,
+  32.067,
+  33.267,
+  34.1,
+  34.933,
+  36.267,
+  37.333,
+  38.7,
+  39.367,
+  40.533,
+  42.2,
+  43.633,
+  44.467,
+  46.967,
+  47.667,
+  48.3,
+  50.4,
+  53.0,
+  53.933,
+  54.7,
+  55.767,
+  57.733
+ ],
+ "cuts_detail": [
   {
-   "t0": 20.0,
-   "t1": 23.0,
-   "who": "불명",
-   "program": "불명",
-   "why_here": "기사님 \"무조건 갖다드릴게요\" 비장함"
+   "t": 1.3,
+   "t_end": 1.3,
+   "kind": "cut",
+   "diff": 51.8,
+   "blurfr": 0
   },
   {
-   "t0": 28.0,
-   "t1": 30.0,
-   "who": "불명(사제복 남성)",
-   "program": "불명(드라마 추정)",
-   "why_here": "불안해서 전화하는 \"나\"의 초조함"
+   "t": 2.0,
+   "t_end": 2.0,
+   "kind": "cut",
+   "diff": 59.1,
+   "blurfr": 0
   },
   {
-   "t0": 30.0,
-   "t1": 34.0,
-   "who": "불명",
-   "program": "불명",
-   "why_here": "기사님 \"어떻게든 빨리 가볼게요\" 비장함"
+   "t": 2.4,
+   "t_end": 2.4,
+   "kind": "cut",
+   "diff": 102.6,
+   "blurfr": 0
   },
   {
-   "t0": 35.0,
-   "t1": 38.0,
-   "who": "불명(태극기 유니폼 선수)",
-   "program": null,
-   "why_here": "여권 건네기를 계주 터치로 비유"
+   "t": 3.0,
+   "t_end": 3.0,
+   "kind": "cut",
+   "diff": 36.2,
+   "blurfr": 0
   },
   {
-   "t0": 55.0,
-   "t1": 57.0,
-   "who": "추정: 레오나르도 디카프리오(얼굴 추정)",
-   "program": "추정: 울프 오브 월스트리트",
-   "why_here": "\"300만원 날릴뻔\" 돈 뿌리기"
+   "t": 3.667,
+   "t_end": 3.667,
+   "kind": "cut",
+   "diff": 106.4,
+   "blurfr": 0
+  },
+  {
+   "t": 4.833,
+   "t_end": 4.833,
+   "kind": "cut",
+   "diff": 84.9,
+   "blurfr": 0
+  },
+  {
+   "t": 6.1,
+   "t_end": 6.1,
+   "kind": "cut",
+   "diff": 75.4,
+   "blurfr": 0
+  },
+  {
+   "t": 7.167,
+   "t_end": 7.167,
+   "kind": "cut",
+   "diff": 58.1,
+   "blurfr": 0
+  },
+  {
+   "t": 8.367,
+   "t_end": 8.367,
+   "kind": "cut",
+   "diff": 71.6,
+   "blurfr": 0
+  },
+  {
+   "t": 8.8,
+   "t_end": 8.8,
+   "kind": "cut",
+   "diff": 34.3,
+   "blurfr": 0
+  },
+  {
+   "t": 9.6,
+   "t_end": 9.6,
+   "kind": "cut",
+   "diff": 59.7,
+   "blurfr": 0
+  },
+  {
+   "t": 10.433,
+   "t_end": 10.433,
+   "kind": "cut",
+   "diff": 39.9,
+   "blurfr": 0
+  },
+  {
+   "t": 10.867,
+   "t_end": 10.867,
+   "kind": "cut",
+   "diff": 54.9,
+   "blurfr": 0
+  },
+  {
+   "t": 12.033,
+   "t_end": 12.033,
+   "kind": "cut",
+   "diff": 43.2,
+   "blurfr": 0
+  },
+  {
+   "t": 13.267,
+   "t_end": 13.267,
+   "kind": "cut",
+   "diff": 68.3,
+   "blurfr": 0
+  },
+  {
+   "t": 14.533,
+   "t_end": 14.533,
+   "kind": "cut",
+   "diff": 78.7,
+   "blurfr": 0
+  },
+  {
+   "t": 15.033,
+   "t_end": 15.033,
+   "kind": "cut",
+   "diff": 112.2,
+   "blurfr": 0
+  },
+  {
+   "t": 16.067,
+   "t_end": 16.067,
+   "kind": "cut",
+   "diff": 112.2,
+   "blurfr": 0
+  },
+  {
+   "t": 16.467,
+   "t_end": 16.467,
+   "kind": "cut",
+   "diff": 105.0,
+   "blurfr": 0
+  },
+  {
+   "t": 19.1,
+   "t_end": 19.1,
+   "kind": "cut",
+   "diff": 80.7,
+   "blurfr": 0
+  },
+  {
+   "t": 19.6,
+   "t_end": 19.6,
+   "kind": "cut",
+   "diff": 56.9,
+   "blurfr": 0
+  },
+  {
+   "t": 20.033,
+   "t_end": 20.033,
+   "kind": "cut",
+   "diff": 108.7,
+   "blurfr": 0
+  },
+  {
+   "t": 21.8,
+   "t_end": 21.8,
+   "kind": "cut",
+   "diff": 46.2,
+   "blurfr": 0
+  },
+  {
+   "t": 22.967,
+   "t_end": 22.967,
+   "kind": "cut",
+   "diff": 56.8,
+   "blurfr": 0
+  },
+  {
+   "t": 24.133,
+   "t_end": 24.133,
+   "kind": "cut",
+   "diff": 34.9,
+   "blurfr": 0
+  },
+  {
+   "t": 24.967,
+   "t_end": 24.967,
+   "kind": "cut",
+   "diff": 26.6,
+   "blurfr": 0
+  },
+  {
+   "t": 25.467,
+   "t_end": 25.467,
+   "kind": "cut",
+   "diff": 45.8,
+   "blurfr": 0
+  },
+  {
+   "t": 26.633,
+   "t_end": 26.633,
+   "kind": "cut",
+   "diff": 53.3,
+   "blurfr": 0
+  },
+  {
+   "t": 27.967,
+   "t_end": 27.967,
+   "kind": "cut",
+   "diff": 39.6,
+   "blurfr": 0
+  },
+  {
+   "t": 29.4,
+   "t_end": 29.4,
+   "kind": "cut",
+   "diff": 123.4,
+   "blurfr": 0
+  },
+  {
+   "t": 29.967,
+   "t_end": 29.967,
+   "kind": "cut",
+   "diff": 91.4,
+   "blurfr": 0
+  },
+  {
+   "t": 32.067,
+   "t_end": 32.067,
+   "kind": "cut",
+   "diff": 59.9,
+   "blurfr": 0
+  },
+  {
+   "t": 33.267,
+   "t_end": 33.267,
+   "kind": "cut",
+   "diff": 59.8,
+   "blurfr": 0
+  },
+  {
+   "t": 34.1,
+   "t_end": 34.1,
+   "kind": "cut",
+   "diff": 68.5,
+   "blurfr": 0
+  },
+  {
+   "t": 34.933,
+   "t_end": 34.933,
+   "kind": "cut",
+   "diff": 110.1,
+   "blurfr": 0
+  },
+  {
+   "t": 36.267,
+   "t_end": 36.267,
+   "kind": "cut",
+   "diff": 65.6,
+   "blurfr": 0
+  },
+  {
+   "t": 37.333,
+   "t_end": 37.333,
+   "kind": "cut",
+   "diff": 90.8,
+   "blurfr": 0
+  },
+  {
+   "t": 38.7,
+   "t_end": 38.7,
+   "kind": "cut",
+   "diff": 85.4,
+   "blurfr": 0
+  },
+  {
+   "t": 39.367,
+   "t_end": 39.367,
+   "kind": "cut",
+   "diff": 59.0,
+   "blurfr": 0
+  },
+  {
+   "t": 40.533,
+   "t_end": 40.533,
+   "kind": "cut",
+   "diff": 52.2,
+   "blurfr": 0
+  },
+  {
+   "t": 42.2,
+   "t_end": 42.2,
+   "kind": "cut",
+   "diff": 97.0,
+   "blurfr": 0
+  },
+  {
+   "t": 43.633,
+   "t_end": 43.633,
+   "kind": "cut",
+   "diff": 84.2,
+   "blurfr": 0
+  },
+  {
+   "t": 44.467,
+   "t_end": 44.467,
+   "kind": "cut",
+   "diff": 48.7,
+   "blurfr": 0
+  },
+  {
+   "t": 46.967,
+   "t_end": 46.967,
+   "kind": "cut",
+   "diff": 86.4,
+   "blurfr": 0
+  },
+  {
+   "t": 47.667,
+   "t_end": 47.667,
+   "kind": "cut",
+   "diff": 98.7,
+   "blurfr": 0
+  },
+  {
+   "t": 48.3,
+   "t_end": 48.3,
+   "kind": "cut",
+   "diff": 51.2,
+   "blurfr": 0
+  },
+  {
+   "t": 50.4,
+   "t_end": 50.4,
+   "kind": "cut",
+   "diff": 84.0,
+   "blurfr": 0
+  },
+  {
+   "t": 53.0,
+   "t_end": 53.0,
+   "kind": "cut",
+   "diff": 29.4,
+   "blurfr": 0
+  },
+  {
+   "t": 53.933,
+   "t_end": 53.933,
+   "kind": "cut",
+   "diff": 77.6,
+   "blurfr": 0
+  },
+  {
+   "t": 54.7,
+   "t_end": 54.7,
+   "kind": "cut",
+   "diff": 42.9,
+   "blurfr": 0
+  },
+  {
+   "t": 55.767,
+   "t_end": 55.767,
+   "kind": "cut",
+   "diff": 51.7,
+   "blurfr": 0
+  },
+  {
+   "t": 57.733,
+   "t_end": 57.733,
+   "kind": "cut",
+   "diff": 98.9,
+   "blurfr": 0
   }
  ],
- "kangjueun": "없음 — 받아쓰기 없음, 1초 간격 60프레임 전부 확인. 여성일 수 있는 얼굴은 50~52초 눈물 닦는 사람(이름 표기 없음, 강주은으로 볼 근거 없음)과 얼굴 가린 어머니 사진뿐",
- "note": "asr 파일 없음 — narration 전부 null. cap 행이 크게 묶여(8.4~23.0 등) 1초 간격 프레임으로 자막 단위를 다시 나눔, 경계 ±1초"
+ "cuts_rejected_same_picture": [
+  0.933,
+  5.533,
+  7.9,
+  17.867,
+  21.267,
+  30.733,
+  37.833,
+  41.2,
+  45.567,
+  49.433,
+  51.567,
+  58.267
+ ],
+ "shots": [
+  {
+   "t0": 0.0,
+   "t1": 1.3,
+   "diff": 34.1,
+   "scale": 1.0,
+   "tx": 0,
+   "ty": 50,
+   "inl": 1147,
+   "motion": "pan"
+  },
+  {
+   "t0": 1.3,
+   "t1": 2.0,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 2.0,
+   "t1": 2.4,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 2.4,
+   "t1": 3.0,
+   "diff": 0.4,
+   "motion": "still"
+  },
+  {
+   "t0": 3.0,
+   "t1": 3.667,
+   "diff": 0.3,
+   "motion": "still"
+  },
+  {
+   "t0": 3.667,
+   "t1": 4.833,
+   "diff": 0.5,
+   "motion": "still"
+  },
+  {
+   "t0": 4.833,
+   "t1": 6.1,
+   "diff": 22.4,
+   "scale": 1.0,
+   "tx": 1,
+   "ty": 62,
+   "inl": 1046,
+   "motion": "pan"
+  },
+  {
+   "t0": 6.1,
+   "t1": 7.167,
+   "diff": 21.9,
+   "motion": "cam"
+  },
+  {
+   "t0": 7.167,
+   "t1": 8.367,
+   "diff": 46.2,
+   "scale": 1.0,
+   "tx": 0,
+   "ty": 75,
+   "inl": 1157,
+   "motion": "pan"
+  },
+  {
+   "t0": 8.367,
+   "t1": 8.8,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 8.8,
+   "t1": 9.6,
+   "diff": 0.2,
+   "motion": "still"
+  },
+  {
+   "t0": 9.6,
+   "t1": 10.433,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 10.433,
+   "t1": 10.867,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 10.867,
+   "t1": 12.033,
+   "diff": 0.2,
+   "motion": "still"
+  },
+  {
+   "t0": 12.033,
+   "t1": 13.267,
+   "diff": 6.8,
+   "scale": 1.0,
+   "tx": 0,
+   "ty": -6,
+   "inl": 760,
+   "motion": "still"
+  },
+  {
+   "t0": 13.267,
+   "t1": 14.533,
+   "diff": 4.8,
+   "scale": 1.056,
+   "tx": -31,
+   "ty": -17,
+   "inl": 55,
+   "motion": "zoom_in"
+  },
+  {
+   "t0": 14.533,
+   "t1": 15.033,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 15.033,
+   "t1": 16.067,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 16.067,
+   "t1": 16.467,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 16.467,
+   "t1": 19.1,
+   "diff": 47.3,
+   "scale": 1.0,
+   "tx": 0,
+   "ty": 77,
+   "inl": 1030,
+   "motion": "pan"
+  },
+  {
+   "t0": 19.1,
+   "t1": 19.6,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 19.6,
+   "t1": 20.033,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 20.033,
+   "t1": 21.8,
+   "diff": 56.3,
+   "scale": 1.0,
+   "tx": 0,
+   "ty": 89,
+   "inl": 948,
+   "motion": "pan"
+  },
+  {
+   "t0": 21.8,
+   "t1": 22.967,
+   "diff": 2.0,
+   "motion": "still"
+  },
+  {
+   "t0": 22.967,
+   "t1": 24.133,
+   "diff": 0.4,
+   "motion": "still"
+  },
+  {
+   "t0": 24.133,
+   "t1": 24.967,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 24.967,
+   "t1": 25.467,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 25.467,
+   "t1": 26.633,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 26.633,
+   "t1": 27.967,
+   "diff": 0.1,
+   "motion": "still"
+  },
+  {
+   "t0": 27.967,
+   "t1": 29.4,
+   "diff": 10.6,
+   "scale": 0.972,
+   "tx": 30,
+   "ty": 11,
+   "inl": 34,
+   "motion": "zoom_out"
+  },
+  {
+   "t0": 29.4,
+   "t1": 29.967,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 29.967,
+   "t1": 32.067,
+   "diff": 40.3,
+   "scale": 1.0,
+   "tx": 0,
+   "ty": 68,
+   "inl": 922,
+   "motion": "pan"
+  },
+  {
+   "t0": 32.067,
+   "t1": 33.267,
+   "diff": 0.1,
+   "motion": "still"
+  },
+  {
+   "t0": 33.267,
+   "t1": 34.1,
+   "diff": 11.3,
+   "scale": 1.061,
+   "tx": -33,
+   "ty": -21,
+   "inl": 691,
+   "motion": "zoom_in"
+  },
+  {
+   "t0": 34.1,
+   "t1": 34.933,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 34.933,
+   "t1": 36.267,
+   "diff": 29.3,
+   "scale": 0.974,
+   "tx": -141,
+   "ty": -11,
+   "inl": 30,
+   "motion": "zoom_out"
+  },
+  {
+   "t0": 36.267,
+   "t1": 37.333,
+   "diff": 0.6,
+   "motion": "still"
+  },
+  {
+   "t0": 37.333,
+   "t1": 38.7,
+   "diff": 21.7,
+   "scale": 0.992,
+   "tx": 147,
+   "ty": -3,
+   "inl": 129,
+   "motion": "pan"
+  },
+  {
+   "t0": 38.7,
+   "t1": 39.367,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 39.367,
+   "t1": 40.533,
+   "diff": 0.4,
+   "motion": "still"
+  },
+  {
+   "t0": 40.533,
+   "t1": 42.2,
+   "diff": 74.0,
+   "scale": 1.0,
+   "tx": 0,
+   "ty": 168,
+   "inl": 415,
+   "motion": "pan"
+  },
+  {
+   "t0": 42.2,
+   "t1": 43.633,
+   "diff": 0.8,
+   "motion": "still"
+  },
+  {
+   "t0": 43.633,
+   "t1": 44.467,
+   "diff": 17.2,
+   "motion": "cam"
+  },
+  {
+   "t0": 44.467,
+   "t1": 46.967,
+   "diff": 33.0,
+   "scale": 1.0,
+   "tx": 0,
+   "ty": 60,
+   "inl": 1065,
+   "motion": "pan"
+  },
+  {
+   "t0": 46.967,
+   "t1": 47.667,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 47.667,
+   "t1": 48.3,
+   "diff": 0.6,
+   "motion": "still"
+  },
+  {
+   "t0": 48.3,
+   "t1": 50.4,
+   "diff": 48.9,
+   "scale": 1.0,
+   "tx": 0,
+   "ty": 72,
+   "inl": 561,
+   "motion": "pan"
+  },
+  {
+   "t0": 50.4,
+   "t1": 53.0,
+   "diff": 24.2,
+   "scale": 1.0,
+   "tx": 0,
+   "ty": 79,
+   "inl": 313,
+   "motion": "pan"
+  },
+  {
+   "t0": 53.0,
+   "t1": 53.933,
+   "diff": 0.0,
+   "motion": "still"
+  },
+  {
+   "t0": 53.933,
+   "t1": 54.7,
+   "diff": 21.2,
+   "scale": 1.091,
+   "tx": -50,
+   "ty": -35,
+   "inl": 592,
+   "motion": "zoom_in"
+  },
+  {
+   "t0": 54.7,
+   "t1": 55.767,
+   "diff": 33.3,
+   "scale": 1.136,
+   "tx": -73,
+   "ty": -62,
+   "inl": 613,
+   "motion": "zoom_in"
+  },
+  {
+   "t0": 55.767,
+   "t1": 57.733,
+   "diff": 19.8,
+   "scale": 1.104,
+   "tx": -56,
+   "ty": -35,
+   "inl": 799,
+   "motion": "zoom_in"
+  },
+  {
+   "t0": 57.733,
+   "t1": 59.667,
+   "diff": 49.5,
+   "scale": 1.0,
+   "tx": 0,
+   "ty": 126,
+   "inl": 1040,
+   "motion": "pan"
+  }
+ ],
+ "_made_by": "humorshowshow 줄판독 2판(오퍼스 눈 + 30fps 잉크 마스크·cutdet·ORB·f0·sfx 실측, 2026-10-25, 관제 263 지시서 06) — 옛 1판은 줄판독/_옛꼴/"
 }

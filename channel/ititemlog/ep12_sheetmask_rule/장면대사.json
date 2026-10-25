@@ -1,0 +1,217 @@
+{
+ "made_by": "quality_gate.plan_frames_check",
+ "min_sim": 0.97,
+ "rows": [
+  {
+   "k": 0,
+   "line": "N1",
+   "src": "daA.mp4",
+   "ss": 10.3,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9843,
+   "sims": [
+    0.8976,
+    0.9973,
+    0.9843
+   ],
+   "why": null
+  },
+  {
+   "k": 1,
+   "line": "O1",
+   "src": "saA.mp4",
+   "ss": 5.6,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9969,
+   "sims": [
+    0.9939,
+    0.9969,
+    0.9969
+   ],
+   "why": null
+  },
+  {
+   "k": 2,
+   "line": "N2",
+   "src": "saA.mp4",
+   "ss": 9.1,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9967,
+   "sims": [
+    0.9967,
+    0.9965,
+    0.9971
+   ],
+   "why": null
+  },
+  {
+   "k": 3,
+   "line": "N2",
+   "src": "saA.mp4",
+   "ss": 11.7,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.997,
+   "sims": [
+    0.9973,
+    0.997,
+    0.9679
+   ],
+   "why": null
+  },
+  {
+   "k": 4,
+   "line": "N2",
+   "src": "saA.mp4",
+   "ss": 14.2,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9598,
+   "sims": [
+    0.9967,
+    0.9598,
+    0.9551
+   ],
+   "why": null
+  },
+  {
+   "k": 5,
+   "line": "O2",
+   "src": "saA.mp4",
+   "ss": 17.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9968,
+   "sims": [
+    0.9968,
+    0.9968,
+    0.9734
+   ],
+   "why": null
+  },
+  {
+   "k": 6,
+   "line": "N3",
+   "src": "daA.mp4",
+   "ss": 3.633,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9969,
+   "sims": [
+    0.9969,
+    0.9968,
+    0.9969
+   ],
+   "why": null
+  },
+  {
+   "k": 7,
+   "line": "N3",
+   "src": "daA.mp4",
+   "ss": 4.7,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9781,
+   "sims": [
+    0.9644,
+    0.9781,
+    0.9972
+   ],
+   "why": null
+  },
+  {
+   "k": 8,
+   "line": "N4",
+   "src": "ayA.mp4",
+   "ss": 0.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.997,
+   "sims": [
+    0.9971,
+    0.997,
+    0.997
+   ],
+   "why": null
+  },
+  {
+   "k": 9,
+   "line": "N4",
+   "src": "ayA.mp4",
+   "ss": 1.5,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9862,
+   "sims": [
+    0.9972,
+    0.9862,
+    0.9735
+   ],
+   "why": null
+  },
+  {
+   "k": 10,
+   "line": "O3",
+   "src": "ayA.mp4",
+   "ss": 3.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.997,
+   "sims": [
+    0.997,
+    0.9972,
+    0.997
+   ],
+   "why": null
+  },
+  {
+   "k": 11,
+   "line": "N5",
+   "src": "ayB.mp4",
+   "ss": 1.8,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.984,
+   "sims": [
+    0.989,
+    0.9792,
+    0.984
+   ],
+   "why": null
+  },
+  {
+   "k": 12,
+   "line": "N6",
+   "src": "ayB.mp4",
+   "ss": 5.8,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.997,
+   "sims": [
+    0.9971,
+    0.997,
+    0.997
+   ],
+   "why": null
+  },
+  {
+   "k": 13,
+   "line": "N7",
+   "src": "ayB.mp4",
+   "ss": 8.367,
+   "fit": null,
+   "screen": "base.mp4",
+   "sim": 0.9756,
+   "sims": [
+    0.997,
+    0.9733,
+    0.9756
+   ],
+   "why": null
+  }
+ ],
+ "screen": "base.mp4(자막 전 완성 화면)"
+}

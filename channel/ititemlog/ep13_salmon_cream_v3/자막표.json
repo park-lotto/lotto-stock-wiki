@@ -5,8 +5,8 @@
   {
    "line": "N1",
    "t0": 0.0,
-   "t1": 1.221,
-   "text": "연어로 만든 한국 크림을",
+   "t1": 0.978,
+   "text": "한국 연어 크림을",
    "speaker": "narr",
    "variant": "hook",
    "emph": [],
@@ -16,20 +16,38 @@
   },
   {
    "line": "N1",
-   "t0": 1.221,
-   "t1": 2.082,
+   "t0": 0.978,
+   "t1": 1.832,
    "text": "얼굴에 바르고",
    "speaker": "narr",
    "variant": "hook",
    "emph": [],
    "sticker": "",
-   "stickers": [],
+   "stickers": [
+    {
+     "kind": "circle_arrow",
+     "word": "",
+     "target": {
+      "kind": "face",
+      "avoid": [],
+      "anchor": "mouth"
+     },
+     "x": 50.6,
+     "y": 87.16,
+     "w": 567,
+     "h": 567,
+     "conf": 0.938,
+     "face_clear": true,
+     "how": "yunet",
+     "site": "detected"
+    }
+   ],
    "enter": "cut"
   },
   {
    "line": "N1",
-   "t0": 2.082,
-   "t1": 3.607,
+   "t0": 1.832,
+   "t1": 3.359,
    "text": "경악한 외국인이 있다는데요?",
    "speaker": "narr",
    "variant": "hook_pop",
@@ -40,20 +58,24 @@
   },
   {
    "line": "O1",
-   "t0": 3.607,
-   "t1": 6.44,
+   "t0": 3.359,
+   "t1": 6.192,
    "text": "진짜야, 연어로 만든 거래",
    "speaker": "orig",
    "variant": "",
-   "emph": [],
+   "emph": [
+    {
+     "word": "연어"
+    }
+   ],
    "sticker": "",
    "stickers": [],
    "enter": "cut"
   },
   {
    "line": "O1",
-   "t0": 6.44,
-   "t1": 7.0,
+   "t0": 6.192,
+   "t1": 6.752,
    "text": "뭐?",
    "speaker": "orig",
    "variant": "",
@@ -64,8 +86,8 @@
   },
   {
    "line": "N2",
-   "t0": 7.0,
-   "t1": 8.286,
+   "t0": 6.752,
+   "t1": 7.976,
    "text": "분홍 알갱이마다",
    "speaker": "narr",
    "variant": "",
@@ -76,8 +98,8 @@
   },
   {
    "line": "N2",
-   "t0": 8.286,
-   "t1": 9.879,
+   "t0": 7.976,
+   "t1": 9.585,
    "text": "연어에서 뽑은 성분이 들었다는데",
    "speaker": "narr",
    "variant": "",
@@ -88,8 +110,8 @@
   },
   {
    "line": "N3",
-   "t0": 9.879,
-   "t1": 11.239,
+   "t0": 9.585,
+   "t1": 11.082,
    "text": "얼굴에 올리고 문지르자",
    "speaker": "narr",
    "variant": "",
@@ -100,8 +122,8 @@
   },
   {
    "line": "N3",
-   "t0": 11.239,
-   "t1": 12.773,
+   "t0": 11.082,
+   "t1": 12.652,
    "text": "알갱이가 스르르 녹아 버렸어요",
    "speaker": "narr",
    "variant": "",
@@ -112,8 +134,8 @@
   },
   {
    "line": "O2",
-   "t0": 12.773,
-   "t1": 13.713,
+   "t0": 12.652,
+   "t1": 13.592,
    "text": "어머, 세상에!",
    "speaker": "orig",
    "variant": "",
@@ -124,8 +146,8 @@
   },
   {
    "line": "O2",
-   "t0": 13.713,
-   "t1": 15.007,
+   "t0": 13.592,
+   "t1": 14.886,
    "text": "진짜 세상에!",
    "speaker": "orig",
    "variant": "",
@@ -136,8 +158,8 @@
   },
   {
    "line": "N4",
-   "t0": 15.007,
-   "t1": 15.872,
+   "t0": 14.886,
+   "t1": 15.806,
    "text": "다른 외국인도",
    "speaker": "narr",
    "variant": "",
@@ -148,20 +170,24 @@
   },
   {
    "line": "N4",
-   "t0": 15.872,
-   "t1": 17.493,
+   "t0": 15.806,
+   "t1": 17.51,
    "text": "처음 보고는 소리부터 질렀는데",
    "speaker": "narr",
    "variant": "",
-   "emph": [],
+   "emph": [
+    {
+     "word": "소리"
+    }
+   ],
    "sticker": "",
    "stickers": [],
    "enter": "cut"
   },
   {
    "line": "O3",
-   "t0": 17.493,
-   "t1": 18.293,
+   "t0": 17.51,
+   "t1": 18.31,
    "text": "우와!",
    "speaker": "orig",
    "variant": "",
@@ -172,8 +198,8 @@
   },
   {
    "line": "O3",
-   "t0": 18.293,
-   "t1": 19.613,
+   "t0": 18.31,
+   "t1": 19.63,
    "text": "이게 뭐야?",
    "speaker": "orig",
    "variant": "",
@@ -184,8 +210,8 @@
   },
   {
    "line": "N5",
-   "t0": 19.613,
-   "t1": 20.476,
+   "t0": 19.63,
+   "t1": 20.516,
    "text": "댓글 보니까",
    "speaker": "narr",
    "variant": "",
@@ -196,8 +222,8 @@
   },
   {
    "line": "N5",
-   "t0": 20.476,
-   "t1": 22.106,
+   "t0": 20.516,
+   "t1": 22.247,
    "text": "캡슐은 한두 알이면 충분하다던데",
    "speaker": "narr",
    "variant": "",
@@ -208,8 +234,8 @@
   },
   {
    "line": "N6",
-   "t0": 22.106,
-   "t1": 23.399,
+   "t0": 22.247,
+   "t1": 23.44,
    "text": "딸기 버블티 펄 같다는",
    "speaker": "narr",
    "variant": "",
@@ -220,8 +246,8 @@
   },
   {
    "line": "N6",
-   "t0": 23.399,
-   "t1": 24.345,
+   "t0": 23.44,
+   "t1": 25.152,
    "text": "사람도 있다고 하고",
    "speaker": "narr",
    "variant": "",
@@ -232,8 +258,8 @@
   },
   {
    "line": "N7",
-   "t0": 24.345,
-   "t1": 25.771,
+   "t0": 25.152,
+   "t1": 26.088,
    "text": "아, 나도 오늘 밤엔",
    "speaker": "narr",
    "variant": "",
@@ -244,8 +270,8 @@
   },
   {
    "line": "N7",
-   "t0": 25.771,
-   "t1": 26.687,
+   "t0": 26.088,
+   "t1": 27.209,
    "text": "분홍 캡슐 딱 두 알만",
    "speaker": "narr",
    "variant": "",
@@ -256,8 +282,8 @@
   },
   {
    "line": "N7",
-   "t0": 26.687,
-   "t1": 27.767,
+   "t0": 27.209,
+   "t1": 28.133,
    "text": "발라 봐야겠다",
    "speaker": "narr",
    "variant": "",
@@ -267,19 +293,36 @@
    "enter": "cut"
   }
  ],
- "sfx": [],
+ "sfx": [
+  {
+   "t": 16.106,
+   "role": "body",
+   "why": "body 강조",
+   "kind": "pop"
+  }
+ ],
  "flashes": [],
+ "transitions": [],
+ "memes": [],
  "comment": null,
  "log": [
-  "본보기 벤치 편 = ro1l3u734v4",
+  "본보기 벤치 편 = zOSpeiMw1nA",
   "훅 N1 덩어리 3개 → hook (끝 hook_pop)",
-  "효과음 0발(본보기 0) []",
-  "등장 {'cut': 22} · 강조 0/22"
+  "스티커 circle_arrow → N1「얼굴에 바르고」",
+  "스티커 kk_doodle → N2「분홍 알갱이마다」",
+  "스티커 kk_doodle → N5「캡슐은 한두 알이면 충분하다던데」",
+  "꾸밈 자리(rules.deco_pos): 벤치 {'훅': 0.354, '본문': 0.508, '끝': 0.038} · 정해진 {'훅': 3, '본문': 3} → 목표 {'훅': 3, '본문': 4, '끝': 0} · 우리 {'훅': 3, '본문': 4} (+강조 ['O1「진짜야, 연어로 만든 거래」'])",
+  "전환 [] (판 cuts.transition.kinds 비율 {'zoomblur': 0.02}, 컷 경계 15·붙일 수 있는 10(≥1.2초))",
+  "효과음 1발(본보기 줄판독 2발 · 역할 {'body': 1} · 편차 +0.30초) [(16.106, 'pop', 'body')]",
+  "짤 0개(rate 0.0 — 벤치에 짤 없음도 스타일)",
+  "등장 {'cut': 22} · 강조 2/22",
+  "스티커 kk_doodle 자리 91.48%·60.73% — 자막팩이 이 종류는 자리(x·y)를 안 읽어 안 그림(N2)",
+  "스티커 kk_doodle 자리 91.48%·60.73% — 자막팩이 이 종류는 자리(x·y)를 안 읽어 안 그림(N5)"
  ],
  "check": {
   "ok": true,
-  "reference": "ro1l3u734v4",
-  "worst_slot_diff": 0.056,
+  "reference": "zOSpeiMw1nA",
+  "worst_slot_diff": 0.077,
   "slots": {
    "narr.first": {
     "bench": {
@@ -294,14 +337,13 @@
    },
    "narr.rest": {
     "bench": {
-     "cut": 0.94,
-     "pop": 0.06
+     "cut": 1.0
     },
     "ours": {
      "cut": 1.0
     },
-    "bench_emph": 0.06,
-    "ours_emph": 0.0,
+    "bench_emph": 0.07,
+    "ours_emph": 0.11,
     "n": 9
    },
    "orig.first": {
@@ -312,12 +354,13 @@
      "cut": 1.0
     },
     "bench_emph": 0.0,
-    "ours_emph": 0.0,
+    "ours_emph": 0.33,
     "n": 3
    },
    "orig.rest": {
     "bench": {
-     "cut": 1.0
+     "cut": 0.92,
+     "pop": 0.08
     },
     "ours": {
      "cut": 1.0
@@ -327,13 +370,43 @@
     "n": 3
    },
    "stickers": {
-    "bench": {},
-    "ours": {}
+    "bench": {
+     "kk_doodle": 2,
+     "circle_arrow": 1,
+     "other": 1
+    },
+    "ours": {
+     "circle_arrow": 1,
+     "kk_doodle": 2
+    }
    },
    "sfx": {
-    "bench": 0,
+    "bench": 2,
+    "ours": 1,
+    "kinds": {
+     "pop": 1
+    },
+    "roles": {
+     "bench_expect": {
+      "body": 1.0
+     },
+     "ours": {
+      "body": 1
+     }
+    }
+   },
+   "transitions": {
+    "bench_expect": {},
+    "ours": {},
+    "cut_bounds": 15
+   },
+   "sites": {
+    "detected": 3
+   },
+   "meme": {
     "ours": 0
    }
-  }
+  },
+  "bad": []
  }
 }

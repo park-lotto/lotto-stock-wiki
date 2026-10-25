@@ -1,0 +1,1406 @@
+{
+ "id": "WTgQPFfdSOQ",
+ "dur": 20.214,
+ "fps": 60.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "책상이 좁아",
+   "colors": [
+    {
+     "word": "책상이 좁아",
+     "hex": "#5E8CAC"
+    }
+   ]
+  },
+  {
+   "text": "죽겠다면",
+   "colors": [
+    {
+     "word": "죽겠다면",
+     "hex": "#FFFFFF"
+    }
+   ]
+  },
+  {
+   "text": "무조건 이거사세요!",
+   "colors": [
+    {
+     "word": "무조건 이거사세요!",
+     "hex": "#FFFFFF"
+    }
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   0,
+   1080,
+   1920
+  ],
+  "caption_band": [
+   905,
+   1005
+  ],
+  "caption_band_small": [
+   1456,
+   1538
+  ],
+  "title_y": [
+   [
+    740,
+    859
+   ],
+   [
+    873,
+    999
+   ],
+   [
+    1000,
+    1129
+   ]
+  ],
+  "title_note": "제목은 0초 3프레임 표지 카드에만. 자막이 두 벌: 처음·끝 훅/CTA = 큰 기울임 흰 글(가운데), 설명 구간 = 흰 박스 검정 글(아래)",
+  "bg_hex": null,
+  "source_y": null,
+  "logo_y": null,
+  "source_hex": null,
+  "ad_label": null,
+  "watermark": {
+   "text": "@Home_Design_Note",
+   "x": [
+    370,
+    710
+   ],
+   "y": [
+    60,
+    95
+   ],
+   "alpha": "약 0.9(흰 굵은 고딕, 눈)",
+   "basis": "눈(f0.png)"
+  }
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 0.067,
+   "speaker": "불명",
+   "text": "책상이 좁아 죽겠다면 무조건 이거사세요!",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "썸네일카드(굵은 기울임 고딕 3줄 크게, 첫 줄 파랑·아래 흰색, 검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    740,
+    1129
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": "약 8(눈)",
+    "hex": "#000000"
+   },
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄(줄바꿈 0) · 잉크 폭 270~900px",
+   "font": {
+    "name": "굵은 기울임 고딕(좁은 폭 — 여기어때잘난체·Black Han Sans 기울임 계열로 보임, 미확정)",
+    "basis": "눈(big_2.9.png 확대)"
+   },
+   "size_px": "약 115(줄 잉크 높이, px 행)",
+   "letter_gap_px": "0(손글씨체 기본 자간 — 눈, 프리셋 letter_spacing 0)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "blur_px": "약 25~30(글자 밖 13~25px 고리가 배경보다 어두움 — px)",
+    "basis": "px"
+   },
+   "glow": null,
+   "box": null,
+   "enter_curve": null,
+   "emph": [
+    {
+     "word": "책상이 좁아",
+     "hex": "#5E8CAC"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "화보",
+   "scene_desc": "페그보드·모니터·의자가 놓인 흰 책상 세팅 전체",
+   "fit": 8,
+   "motion": "still",
+   "motion_signal": {
+    "div": 0.63,
+    "tr": 0.09,
+    "sd": 5.1
+   },
+   "transition": "none(첫 프레임)",
+   "exit": "cut(3프레임 뒤 2프레임 빈 화면)",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)",
+   "notes": "0초 3프레임(0~0.067) 표지 카드 — 말하지 않음. 파랑은 배경 섞임 가능(px 중앙값)"
+  },
+  {
+   "t0": 0.167,
+   "t1": 0.667,
+   "speaker": "나레",
+   "text": "와! 여러분",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "pop(화면을 넘칠 만큼 크게 → 7프레임에 걸쳐 줄어들며 자리 잡음, 30fps 띠 0.167~0.4)",
+   "enter_ms": 233,
+   "variant": "크게(흰 굵은 기울임 고딕 · 검정 외곽+큰 검정 번짐, 화면 가운데)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    905,
+    1005
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": "약 4(눈)",
+    "hex": "#000000"
+   },
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 잉크 폭 250~830px",
+   "font": {
+    "name": "굵은 기울임 고딕(좁은 폭 — 여기어때잘난체·Black Han Sans 기울임 계열로 보임, 미확정)",
+    "basis": "눈(big_2.9.png 확대)"
+   },
+   "size_px": "약 100(잉크 높이 905~1005, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": {
+    "hex": "#000000",
+    "px": "약 40(검정 번짐 — 글자 밖 13~25px 고리 #14~#57, px)"
+   },
+   "box": null,
+   "enter_curve": [
+    [
+     0.0,
+     600,
+     100,
+     0
+    ],
+    [
+     0.1,
+     250,
+     100,
+     0
+    ],
+    [
+     0.2,
+     115,
+     100,
+     0
+    ],
+    [
+     0.233,
+     100,
+     100,
+     0
+    ]
+   ],
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "화보",
+   "scene_desc": "페그보드 책상 세팅 전체",
+   "fit": 5,
+   "motion": "zoom_in",
+   "motion_signal": {
+    "div": 0.7,
+    "tr": 0.06,
+    "sd": 6.1
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)",
+   "notes": "scale% 는 30fps 띠 잉크 폭 눈 추정(정밀 측정 아님)"
+  },
+  {
+   "t0": 0.667,
+   "t1": 1.067,
+   "speaker": "나레",
+   "text": "책상이",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "크게(흰 굵은 기울임 고딕 · 검정 외곽+큰 검정 번짐, 화면 가운데)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    905,
+    1005
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": "약 4(눈)",
+    "hex": "#000000"
+   },
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 잉크 폭 250~830px",
+   "font": {
+    "name": "굵은 기울임 고딕(좁은 폭 — 여기어때잘난체·Black Han Sans 기울임 계열로 보임, 미확정)",
+    "basis": "눈(big_2.9.png 확대)"
+   },
+   "size_px": "약 100(잉크 높이 905~1005, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": {
+    "hex": "#000000",
+    "px": "약 40(검정 번짐 — 글자 밖 13~25px 고리 #14~#57, px)"
+   },
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    0.967
+   ],
+   "scene": "화보",
+   "scene_desc": "같은 책상 세팅(약간 다른 각도)",
+   "fit": 6,
+   "motion": "zoom_in",
+   "motion_signal": {
+    "div": 0.68,
+    "tr": 0.03,
+    "sd": 5.0
+   },
+   "transition": "none(같은 샷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 1.067,
+   "t1": 1.267,
+   "speaker": "나레",
+   "text": "좁아",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "크게(흰 굵은 기울임 고딕 · 검정 외곽+큰 검정 번짐, 화면 가운데)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    905,
+    1005
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": "약 4(눈)",
+    "hex": "#000000"
+   },
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 잉크 폭 250~830px",
+   "font": {
+    "name": "굵은 기울임 고딕(좁은 폭 — 여기어때잘난체·Black Han Sans 기울임 계열로 보임, 미확정)",
+    "basis": "눈(big_2.9.png 확대)"
+   },
+   "size_px": "약 100(잉크 높이 905~1005, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": {
+    "hex": "#000000",
+    "px": "약 40(검정 번짐 — 글자 밖 13~25px 고리 #14~#57, px)"
+   },
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "화보",
+   "scene_desc": "같은 책상 세팅",
+   "fit": 6,
+   "motion": "cam",
+   "motion_signal": {
+    "div": 0.02,
+    "tr": 0.81,
+    "sd": 7.0
+   },
+   "transition": "none(같은 샷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 1.267,
+   "t1": 1.8,
+   "speaker": "나레",
+   "text": "죽겠나요?",
+   "layer": "채널",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "크게(흰 굵은 기울임 고딕 · 검정 외곽+큰 검정 번짐, 화면 가운데)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    905,
+    1005
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": "약 4(눈)",
+    "hex": "#000000"
+   },
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 잉크 폭 250~830px",
+   "font": {
+    "name": "굵은 기울임 고딕(좁은 폭 — 여기어때잘난체·Black Han Sans 기울임 계열로 보임, 미확정)",
+    "basis": "눈(big_2.9.png 확대)"
+   },
+   "size_px": "약 100(잉크 높이 905~1005, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": {
+    "hex": "#000000",
+    "px": "약 40(검정 번짐 — 글자 밖 13~25px 고리 #14~#57, px)"
+   },
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타(신호만 — 고음 지속 tonal, 52.5dB, 귀 미확인)",
+    "t": 1.63,
+    "basis": "파형 솟음"
+   },
+   "cut_at": [],
+   "scene": "화보",
+   "scene_desc": "같은 책상 세팅",
+   "fit": 5,
+   "motion": "cam",
+   "motion_signal": {
+    "div": -0.01,
+    "tr": 0.7,
+    "sd": 6.5
+   },
+   "transition": "none(같은 샷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 1.8,
+   "t1": 2.567,
+   "speaker": "나레",
+   "text": "그러면 무조건",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "크게(흰 굵은 기울임 고딕 · 검정 외곽+큰 검정 번짐, 화면 가운데)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    905,
+    1005
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": "약 4(눈)",
+    "hex": "#000000"
+   },
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 잉크 폭 250~830px",
+   "font": {
+    "name": "굵은 기울임 고딕(좁은 폭 — 여기어때잘난체·Black Han Sans 기울임 계열로 보임, 미확정)",
+    "basis": "눈(big_2.9.png 확대)"
+   },
+   "size_px": "약 100(잉크 높이 905~1005, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": {
+    "hex": "#000000",
+    "px": "약 40(검정 번짐 — 글자 밖 13~25px 고리 #14~#57, px)"
+   },
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    2.533
+   ],
+   "scene": "화보",
+   "scene_desc": "모니터 달린 책상 근접",
+   "fit": 6,
+   "motion": "cam",
+   "motion_signal": {
+    "div": 0.0,
+    "tr": 0.79,
+    "sd": 5.7
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 2.567,
+   "t1": 3.133,
+   "speaker": "나레",
+   "text": "이거 쓰세요",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "크게(흰 굵은 기울임 고딕 · 검정 외곽+큰 검정 번짐, 화면 가운데)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    905,
+    1005
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": "약 4(눈)",
+    "hex": "#000000"
+   },
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 잉크 폭 250~830px",
+   "font": {
+    "name": "굵은 기울임 고딕(좁은 폭 — 여기어때잘난체·Black Han Sans 기울임 계열로 보임, 미확정)",
+    "basis": "눈(big_2.9.png 확대)"
+   },
+   "size_px": "약 100(잉크 높이 905~1005, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": {
+    "hex": "#000000",
+    "px": "약 40(검정 번짐 — 글자 밖 13~25px 고리 #14~#57, px)"
+   },
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "책상 가장자리 레일을 손으로 누름",
+   "fit": 6,
+   "motion": "cam",
+   "motion_signal": {
+    "div": -0.02,
+    "tr": 0.55,
+    "sd": 3.4
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 3.167,
+   "t1": 5.367,
+   "speaker": "나레",
+   "text": "이건 책상에 마운팅하는 방식의 페그보드인데",
+   "layer": "채널",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "상자 자막(흰 박스 + 검정 고딕, 화면 아래쪽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1476,
+    1511
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 박스 폭 340~750px",
+   "font": {
+    "name": "굵은 고딕(본고딕 Bold 계열, 미확정)",
+    "basis": "눈(strip_bot 확대)"
+   },
+   "size_px": "약 36(잉크 높이 1476~1511, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#F5F3F1",
+    "alpha": "1.0(뒤 배경 안 비침, px 중앙값 #F3EFED~#FCF9F7)",
+    "pad": "위아래 약 20px(박스 y1456~1538 / 글 y1476~1511, px)",
+    "radius": "약 4(거의 각진 사각, 눈)"
+   },
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    3.933
+   ],
+   "scene": "손·제품 근접",
+   "scene_desc": "페그보드 판을 레일에 끼워 누르는 손",
+   "fit": 9,
+   "motion": "still",
+   "motion_signal": {
+    "div": 0.06,
+    "tr": 0.08,
+    "sd": 0.9
+   },
+   "transition": "none(같은 샷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 5.367,
+   "t1": 6.167,
+   "speaker": "나레",
+   "text": "그동안 나온 것보다",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "상자 자막(흰 박스 + 검정 고딕, 화면 아래쪽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1476,
+    1511
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 박스 폭 340~750px",
+   "font": {
+    "name": "굵은 고딕(본고딕 Bold 계열, 미확정)",
+    "basis": "눈(strip_bot 확대)"
+   },
+   "size_px": "약 36(잉크 높이 1476~1511, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#F5F3F1",
+    "alpha": "1.0(뒤 배경 안 비침, px 중앙값 #F3EFED~#FCF9F7)",
+    "pad": "위아래 약 20px(박스 y1456~1538 / 글 y1476~1511, px)",
+    "radius": "약 4(거의 각진 사각, 눈)"
+   },
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    5.433
+   ],
+   "scene": "손·제품 근접",
+   "scene_desc": "페그보드 판 근접",
+   "fit": 7,
+   "motion": "still",
+   "motion_signal": {
+    "div": 0.01,
+    "tr": 0.07,
+    "sd": 0.6
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 6.167,
+   "t1": 7.567,
+   "speaker": "나레",
+   "text": "사이즈도 훨씬 크고",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "상자 자막(흰 박스 + 검정 고딕, 화면 아래쪽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1476,
+    1511
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 박스 폭 340~750px",
+   "font": {
+    "name": "굵은 고딕(본고딕 Bold 계열, 미확정)",
+    "basis": "눈(strip_bot 확대)"
+   },
+   "size_px": "약 36(잉크 높이 1476~1511, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#F5F3F1",
+    "alpha": "1.0(뒤 배경 안 비침, px 중앙값 #F3EFED~#FCF9F7)",
+    "pad": "위아래 약 20px(박스 y1456~1538 / 글 y1476~1511, px)",
+    "radius": "약 4(거의 각진 사각, 눈)"
+   },
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타(신호만 — 5~10kHz 고립 솟음 broad, 25.6dB, 귀 미확인)",
+    "t": 6.21,
+    "basis": "파형 솟음"
+   },
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "레일 위 큰 페그보드 판",
+   "fit": 7,
+   "motion": "still",
+   "motion_signal": {
+    "div": 0.01,
+    "tr": 0.02,
+    "sd": 0.3
+   },
+   "transition": "none(같은 샷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 7.567,
+   "t1": 8.567,
+   "speaker": "나레",
+   "text": "폴타입 모니터 거치대와",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "상자 자막(흰 박스 + 검정 고딕, 화면 아래쪽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1476,
+    1511
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 박스 폭 340~750px",
+   "font": {
+    "name": "굵은 고딕(본고딕 Bold 계열, 미확정)",
+    "basis": "눈(strip_bot 확대)"
+   },
+   "size_px": "약 36(잉크 높이 1476~1511, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#F5F3F1",
+    "alpha": "1.0(뒤 배경 안 비침, px 중앙값 #F3EFED~#FCF9F7)",
+    "pad": "위아래 약 20px(박스 y1456~1538 / 글 y1476~1511, px)",
+    "radius": "약 4(거의 각진 사각, 눈)"
+   },
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(상품 목록 화면 캡처 카드 — 모니터 거치대 쇼핑 검색 결과, 스크롤되며 바뀜)",
+     "x": 26,
+     "y": 675,
+     "w": 520,
+     "t_in": 7.8,
+     "t_out": 10.067,
+     "anim": "없음(컷 등장, 안에서 스크롤)"
+    }
+   ],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "기둥 거치대를 끼우는 손 + 왼쪽 상품목록 캡처",
+   "fit": 8,
+   "motion": "zoom_out",
+   "motion_signal": {
+    "div": -0.56,
+    "tr": 0.36,
+    "sd": 2.5
+   },
+   "transition": "none(같은 샷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 8.567,
+   "t1": 10.067,
+   "speaker": "나레",
+   "text": "호환되는 하드웨어도 달려있어서",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "상자 자막(흰 박스 + 검정 고딕, 화면 아래쪽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1476,
+    1511
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 박스 폭 340~750px",
+   "font": {
+    "name": "굵은 고딕(본고딕 Bold 계열, 미확정)",
+    "basis": "눈(strip_bot 확대)"
+   },
+   "size_px": "약 36(잉크 높이 1476~1511, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#F5F3F1",
+    "alpha": "1.0(뒤 배경 안 비침, px 중앙값 #F3EFED~#FCF9F7)",
+    "pad": "위아래 약 20px(박스 y1456~1538 / 글 y1476~1511, px)",
+    "radius": "약 4(거의 각진 사각, 눈)"
+   },
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(상품 목록 화면 캡처 카드 — 모니터 거치대 쇼핑 검색 결과, 스크롤되며 바뀜)",
+     "x": 26,
+     "y": 675,
+     "w": 520,
+     "t_in": 7.8,
+     "t_out": 10.067,
+     "anim": "없음(컷 등장, 안에서 스크롤)",
+     "note": "앞 줄 스티커 이어짐"
+    }
+   ],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "기둥에 모니터 암 장착 + 상품목록 캡처 계속",
+   "fit": 9,
+   "motion": "cam",
+   "motion_signal": {
+    "div": -0.39,
+    "tr": 0.33,
+    "sd": 3.9
+   },
+   "transition": "none(같은 샷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 10.067,
+   "t1": 12.367,
+   "speaker": "나레",
+   "text": "이거 하나면 책상이 정말 깔끔해집니다",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "상자 자막(흰 박스 + 검정 고딕, 화면 아래쪽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1476,
+    1511
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 박스 폭 340~750px",
+   "font": {
+    "name": "굵은 고딕(본고딕 Bold 계열, 미확정)",
+    "basis": "눈(strip_bot 확대)"
+   },
+   "size_px": "약 36(잉크 높이 1476~1511, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#F5F3F1",
+    "alpha": "1.0(뒤 배경 안 비침, px 중앙값 #F3EFED~#FCF9F7)",
+    "pad": "위아래 약 20px(박스 y1456~1538 / 글 y1476~1511, px)",
+    "radius": "약 4(거의 각진 사각, 눈)"
+   },
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타(신호만 — 5~10kHz 고립 솟음 broad, 27.5dB, 귀 미확인)",
+    "t": 10.67,
+    "basis": "파형 솟음"
+   },
+   "cut_at": [
+    10.8,
+    11.983
+   ],
+   "scene": "손·제품 근접",
+   "scene_desc": "모니터를 암에 거는 장면 → 커튼 방의 페그보드",
+   "fit": 7,
+   "motion": "cam",
+   "motion_signal": {
+    "div": -0.05,
+    "tr": 0.2,
+    "sd": 2.4
+   },
+   "transition": "none(같은 샷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 12.367,
+   "t1": 14.567,
+   "speaker": "나레",
+   "text": "상단 선반도 기본 포함되어 있는 건 물론이고",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "상자 자막(흰 박스 + 검정 고딕, 화면 아래쪽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1476,
+    1511
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 박스 폭 340~750px",
+   "font": {
+    "name": "굵은 고딕(본고딕 Bold 계열, 미확정)",
+    "basis": "눈(strip_bot 확대)"
+   },
+   "size_px": "약 36(잉크 높이 1476~1511, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#F5F3F1",
+    "alpha": "1.0(뒤 배경 안 비침, px 중앙값 #F3EFED~#FCF9F7)",
+    "pad": "위아래 약 20px(박스 y1456~1538 / 글 y1476~1511, px)",
+    "radius": "약 4(거의 각진 사각, 눈)"
+   },
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    13.933,
+    14.517
+   ],
+   "scene": "손·제품 근접",
+   "scene_desc": "상단 선반을 끼우고 책을 올림",
+   "fit": 9,
+   "motion": "still",
+   "motion_signal": {
+    "div": -0.02,
+    "tr": 0.07,
+    "sd": 0.7
+   },
+   "transition": "none(같은 샷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 14.567,
+   "t1": 15.567,
+   "speaker": "나레",
+   "text": "악세사리까지 달아주면",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "상자 자막(흰 박스 + 검정 고딕, 화면 아래쪽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1476,
+    1511
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 박스 폭 340~750px",
+   "font": {
+    "name": "굵은 고딕(본고딕 Bold 계열, 미확정)",
+    "basis": "눈(strip_bot 확대)"
+   },
+   "size_px": "약 36(잉크 높이 1476~1511, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#F5F3F1",
+    "alpha": "1.0(뒤 배경 안 비침, px 중앙값 #F3EFED~#FCF9F7)",
+    "pad": "위아래 약 20px(박스 y1456~1538 / 글 y1476~1511, px)",
+    "radius": "약 4(거의 각진 사각, 눈)"
+   },
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "메쉬 수납 바구니 두 개를 들어 보임",
+   "fit": 9,
+   "motion": "cam",
+   "motion_signal": {
+    "div": 0.56,
+    "tr": 1.22,
+    "sd": 3.2
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 15.567,
+   "t1": 17.333,
+   "speaker": "나레",
+   "text": "책상 면적 2배는 넓어집니다",
+   "layer": "채널",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "상자 자막(흰 박스 + 검정 고딕, 화면 아래쪽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1476,
+    1511
+   ],
+   "fill_hex": "#000000",
+   "outline": null,
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 박스 폭 340~750px",
+   "font": {
+    "name": "굵은 고딕(본고딕 Bold 계열, 미확정)",
+    "basis": "눈(strip_bot 확대)"
+   },
+   "size_px": "약 36(잉크 높이 1476~1511, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#F5F3F1",
+    "alpha": "1.0(뒤 배경 안 비침, px 중앙값 #F3EFED~#FCF9F7)",
+    "pad": "위아래 약 20px(박스 y1456~1538 / 글 y1476~1511, px)",
+    "radius": "약 4(거의 각진 사각, 눈)"
+   },
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    16.567,
+    17.217
+   ],
+   "scene": "손·제품 근접",
+   "scene_desc": "페그보드에 바구니·헤드폰 걸이 장착",
+   "fit": 8,
+   "motion": "cam",
+   "motion_signal": {
+    "div": 0.01,
+    "tr": 0.08,
+    "sd": 1.3
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 17.333,
+   "t1": 17.833,
+   "speaker": "나레",
+   "text": "이제 책상",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "크게(흰 굵은 기울임 고딕 · 검정 외곽+큰 검정 번짐, 화면 가운데)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    905,
+    1005
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": "약 4(눈)",
+    "hex": "#000000"
+   },
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 잉크 폭 250~830px",
+   "font": {
+    "name": "굵은 기울임 고딕(좁은 폭 — 여기어때잘난체·Black Han Sans 기울임 계열로 보임, 미확정)",
+    "basis": "눈(big_2.9.png 확대)"
+   },
+   "size_px": "약 100(잉크 높이 905~1005, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": {
+    "hex": "#000000",
+    "px": "약 40(검정 번짐 — 글자 밖 13~25px 고리 #14~#57, px)"
+   },
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    17.7
+   ],
+   "scene": "손·제품 근접",
+   "scene_desc": "책상 위 모니터 받침 선반을 만지는 손",
+   "fit": 5,
+   "motion": "cam",
+   "motion_signal": {
+    "div": 0.01,
+    "tr": 0.17,
+    "sd": 0.8
+   },
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 17.833,
+   "t1": 18.167,
+   "speaker": "나레",
+   "text": "좁다고",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "크게(흰 굵은 기울임 고딕 · 검정 외곽+큰 검정 번짐, 화면 가운데)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    905,
+    1005
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": "약 4(눈)",
+    "hex": "#000000"
+   },
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 잉크 폭 250~830px",
+   "font": {
+    "name": "굵은 기울임 고딕(좁은 폭 — 여기어때잘난체·Black Han Sans 기울임 계열로 보임, 미확정)",
+    "basis": "눈(big_2.9.png 확대)"
+   },
+   "size_px": "약 100(잉크 높이 905~1005, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": {
+    "hex": "#000000",
+    "px": "약 40(검정 번짐 — 글자 밖 13~25px 고리 #14~#57, px)"
+   },
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "선반 아래 맥미니",
+   "fit": 4,
+   "motion": "still",
+   "motion_signal": {
+    "div": 0.08,
+    "tr": 0.11,
+    "sd": 0.9
+   },
+   "transition": "none(같은 샷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 18.167,
+   "t1": 18.667,
+   "speaker": "나레",
+   "text": "울지 마시고",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "크게(흰 굵은 기울임 고딕 · 검정 외곽+큰 검정 번짐, 화면 가운데)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    905,
+    1005
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": "약 4(눈)",
+    "hex": "#000000"
+   },
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 잉크 폭 250~830px",
+   "font": {
+    "name": "굵은 기울임 고딕(좁은 폭 — 여기어때잘난체·Black Han Sans 기울임 계열로 보임, 미확정)",
+    "basis": "눈(big_2.9.png 확대)"
+   },
+   "size_px": "약 100(잉크 높이 905~1005, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": {
+    "hex": "#000000",
+    "px": "약 40(검정 번짐 — 글자 밖 13~25px 고리 #14~#57, px)"
+   },
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    18.35
+   ],
+   "scene": "손·제품 근접",
+   "scene_desc": "맥미니를 선반 밑으로 밀어 넣음",
+   "fit": 4,
+   "motion": "cam",
+   "motion_signal": {
+    "div": -0.38,
+    "tr": 0.56,
+    "sd": 4.0
+   },
+   "transition": "none(같은 샷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 18.667,
+   "t1": 19.367,
+   "speaker": "나레",
+   "text": "이거 쓰세요!",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "크게(흰 굵은 기울임 고딕 · 검정 외곽+큰 검정 번짐, 화면 가운데)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    905,
+    1005
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": "약 4(눈)",
+    "hex": "#000000"
+   },
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 잉크 폭 250~830px",
+   "font": {
+    "name": "굵은 기울임 고딕(좁은 폭 — 여기어때잘난체·Black Han Sans 기울임 계열로 보임, 미확정)",
+    "basis": "눈(big_2.9.png 확대)"
+   },
+   "size_px": "약 100(잉크 높이 905~1005, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": {
+    "hex": "#000000",
+    "px": "약 40(검정 번짐 — 글자 밖 13~25px 고리 #14~#57, px)"
+   },
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    18.85
+   ],
+   "scene": "손·제품 근접",
+   "scene_desc": "선반에 멀티탭을 놓는 손",
+   "fit": 6,
+   "motion": "cam",
+   "motion_signal": {
+    "div": -0.03,
+    "tr": 0.17,
+    "sd": 1.1
+   },
+   "transition": "none(같은 샷 안 자막 교체)",
+   "exit": "cut",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)"
+  },
+  {
+   "t0": 19.367,
+   "t1": 19.567,
+   "speaker": "나레",
+   "text": "뽕!",
+   "layer": "채널",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "의성어(같은 큰 글 → 퇴장 때 확대·회색 투명)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    905,
+    1005
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": "약 4(눈)",
+    "hex": "#000000"
+   },
+   "x": "가운데",
+   "align": "center",
+   "max_w": "한 줄 · 잉크 폭 250~830px",
+   "font": {
+    "name": "굵은 기울임 고딕(좁은 폭 — 여기어때잘난체·Black Han Sans 기울임 계열로 보임, 미확정)",
+    "basis": "눈(big_2.9.png 확대)"
+   },
+   "size_px": "약 100(잉크 높이 905~1005, px)",
+   "letter_gap_px": "약 0(눈)",
+   "line_gap_px": null,
+   "ring": null,
+   "shadow": null,
+   "glow": {
+    "hex": "#000000",
+    "px": "약 40(검정 번짐 — 글자 밖 13~25px 고리 #14~#57, px)"
+   },
+   "box": null,
+   "enter_curve": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "멀티탭 놓인 선반",
+   "fit": 3,
+   "motion": "still",
+   "motion_signal": {
+    "div": 3.37,
+    "tr": 1.78,
+    "sd": 10.0
+   },
+   "transition": "none(같은 샷 안 자막 교체)",
+   "exit": "기타(커지며 회색 반투명으로 흩어짐 — 30fps 19.4~19.53, 약 5프레임)",
+   "confidence": "픽셀(시각 30fps 잉크·장면차, y·채움 hex·고리 hex) / 눈(글·화자·역할·fit·장면·등장 0.1초 띠) / 신호(motion 광류·sfx 파형) / 미측정(글꼴 확정·자간)",
+   "notes": "받아쓰기 \"용\" — 나레 끝 의성어로 판단"
+  }
+ ],
+ "no_caption": [
+  [
+   19.567,
+   20.214
+  ]
+ ],
+ "beats": "표지(0~0.07 '책상이 좁아 죽겠다면 무조건 이거사세요!') → 훅 질문(0.17~1.8 '와! 여러분 책상이 좁아 죽겠나요?' 큰 글, 첫 줄만 크게→작게 팝) → 공개(1.8~5.4 '그러면 무조건 이거 쓰세요' → '마운팅 방식 페그보드') → 설명(5.4~12.4 사이즈·폴타입 거치대 호환(상품목록 캡처 7.8~10.1)·깔끔) → 효과(12.4~17.3 상단 선반·악세사리·면적 2배) → 끝 CTA(17.3~19.6 '이제 책상 좁다고 울지 마시고 이거 쓰세요! 뽕!' 큰 글)",
+ "narr_share": "나레 줄 20/21, 나레 19.37초/20.214초",
+ "notes": [
+  "6편 중 유일하게 자막 두 벌: 큰 기울임 글(훅·끝 11줄, 0.2~0.8초 단위로 짧게 끊음) / 흰 박스 작은 글(설명 9줄, 1~2.3초 길게). 채널 기본 손글씨 자막 아님 — 다른 편집 꼴(워터마크도 위쪽 굵은 고딕).",
+  "꾸밈: 첫 큰 줄 팝(233ms), 상품목록 캡처 스티커 1개(2줄 걸침), 끝 의성어 퇴장 1번. 나머지 instant.",
+  "효과음: 1.63초 tonal 52.5dB(강한 고음 지속 — 띵류 가능성) 외 broad 5개, 귀 미확인.",
+  "컷 측정 + 뜯기 컷 합침."
+ ],
+ "name_evidence": [],
+ "frame0": {
+  "what": "표지 카드 3프레임: 페그보드 책상 세팅 + 큰 기울임 글 3줄(첫 줄 파랑) + 상단 워터마크",
+  "face_frac": "0",
+  "text": "책상이 좁아 죽겠다면 무조건 이거사세요!"
+ },
+ "cuts_measured": [
+  0.217,
+  0.967,
+  1.8,
+  2.533,
+  3.933,
+  5.433,
+  10.8,
+  11.983,
+  13.933,
+  14.517,
+  15.55,
+  16.567,
+  17.217,
+  17.35,
+  17.7,
+  18.35,
+  18.85,
+  19.55
+ ],
+ "sfx_candidates": [
+  {
+   "t": 1.63,
+   "kind": "tonal",
+   "db": 52.5
+  },
+  {
+   "t": 6.21,
+   "kind": "broad",
+   "db": 25.6
+  },
+  {
+   "t": 10.67,
+   "kind": "broad",
+   "db": 27.5
+  }
+ ],
+ "_made_by": "오푸스 실행자 줄판독(눈: 0.1초 자막띠·2fps 시트·원본 프레임 / 픽셀: 30fps 잉크·장면차·광류·채움 hex / 신호: sfx_events.detect) 2026-10-25 (관제 263 지시서 06)",
+ "_tools": "scratchpad hdn/measure.py·seg.py·strip.py·px.py·build.py — 그림 C:/숏템_칼카피/homedesignnote/work/lr_<id>/"
+}

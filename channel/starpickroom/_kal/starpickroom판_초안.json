@@ -1,14 +1,14 @@
 {
  "name": "starpickroom판",
  "renderer": "bench",
- "_note": "kal.py rules 초안(2026-10-20) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
+ "_note": "kal.py rules 초안(2026-10-25) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
  "bench": {
-  "ko": null,
+  "ko": "스타픽룸",
   "channel": "@스타픽룸",
   "analysis": "channel/starpickroom/스타일분석.md",
   "line_reads": "channel/starpickroom/줄판독/",
   "src_dir": "C:\\숏템_칼카피\\starpickroom\\src",
-  "sfx_events": null,
+  "sfx_events": "channel/starpickroom/_kal/sfx_events.json",
   "sfx_key": null,
   "palette": "channel/starpickroom/팔레트.json",
   "rules_counted": "channel/starpickroom/_kal/규칙빈도.json"
@@ -17,9 +17,9 @@
   "name": null,
   "voice_id": null,
   "candidates": [],
-  "why": "engine/sound/narr_report.py 닮은 목소리 순위로 채움"
+  "why": "미정 — 사장님께. 근거: engine/sound/narr_report 10-25 닮은 우리 목소리 1위 tc-yura 4/8편(21Vo 1.55·VbpdN 1.85·EZQl 2.01·onmw 2.31) — 스타일분석.md §7"
  },
- "cps_target": 9.36,
+ "cps_target": 9.29,
  "bgm": {
   "id": null,
   "db_below_voice": null,
@@ -37,8 +37,8 @@
  },
  "script": {
   "brief": [
-   "나레: 어미 다는데, 라는데 · 존댓말 0.0 · 전언 0.5 · 자수 중앙 10.0",
-   "원음: 어미 어요, 야, 아요, 다 · 존댓말 0.6 · 전언 0.0 · 자수 중앙 9"
+   "나레: 어미 다는데, 라는데 · 존댓말 0.0 · 전언 0.45 · 자수 중앙 10",
+   "원음: 어미 어요, 야, 아요, 다 · 존댓말 0.6 · 전언 0.0 · 자수 중앙 9.0"
   ],
   "example": [
    "윤남노 셰프가 아침밥 대신",
@@ -73,27 +73,37 @@
    "narr_enter": "typing",
    "orig_enter": "instant",
    "fx_rate": {
-    "나레": 0.96,
-    "원음": 0.16,
+    "나레": 0.97,
+    "원음": 0.22,
     "제3자": 0.07,
-    "불명": 0.33
+    "불명": 0.0
    },
-   "plain_rate": 0.7,
+   "plain_rate": 0.66,
    "by_pos": {
-    "본문": 0.32,
+    "본문": 0.37,
     "끝": 0.1,
     "훅": 0.38
    },
    "strong": [
     "자리=본문 → enter=instant 93/121",
-    "화자=원음 → enter=instant 95/105",
-    "화자=나레 → enter_fx 21/26",
+    "화자=원음 → enter=instant 94/104",
+    "역할=증거 → enter=instant 42/44",
+    "화자=나레 → enter_fx 24/29",
+    "화자=나레 → enter=typing 18/29",
+    "역할=다리 → enter_fx 21/26",
+    "역할=다리 → enter=typing 18/26",
+    "역할=훅 → enter=instant 15/23",
     "자리=끝 → enter=instant 20/21",
     "화자전환 첫 덩어리=원음 → enter=instant 19/21",
     "화자=제3자 → enter=instant 15/15",
+    "역할=본문 → enter=instant 14/14",
+    "역할=끝 → enter=instant 13/14",
     "자리=훅 → enter=instant 8/13",
-    "화자전환 첫 덩어리=나레 → enter=typing 7/11",
-    "화자=불명 → enter=instant 6/9"
+    "화자전환 첫 덩어리=나레 → enter=typing 8/12",
+    "역할=고조 → enter=instant 11/11",
+    "역할=공개 → enter=instant 10/11",
+    "역할=이음 → enter=instant 9/9",
+    "화자=불명 → enter=instant 7/7"
    ]
   },
   "counted": {}

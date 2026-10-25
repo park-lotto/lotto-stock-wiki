@@ -752,6 +752,8 @@ def build(plan: dict):
                                                   ensure_ascii=False, indent=1), encoding="utf-8")
     (out / "audio.json").write_text(json.dumps({"tts": plan["tts"], "bgm": plan.get("bgm"), "bgm_ratio": plan.get("bgm_ratio", 0.15),
                                                 "target_lufs": target, "sfx": [(str(fp), t, db) for fp, t, db in sfx], "final": _lufs(final)}, ensure_ascii=False, indent=1), encoding="utf-8")
+    from tools.calcopy.engine import finalize       # 광고 표시(없으면 입힘)+봉인 — 이 길은 광고 표시가 없었다(10-25 감사). 뒤에 final 을 고치는 손 스크립트는 다시 seal 해야 납품된다
+    finalize.seal(final, "narr_video", plan["script"])
     print("final:", final)
     return final
 

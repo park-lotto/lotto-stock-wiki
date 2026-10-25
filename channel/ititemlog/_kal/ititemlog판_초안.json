@@ -1,7 +1,7 @@
 {
  "name": "ititemlog판",
  "renderer": "bench",
- "_note": "kal.py rules 초안(2026-10-20) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
+ "_note": "kal.py rules 초안(2026-10-25) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
  "bench": {
   "ko": "잇템로그",
   "channel": "@it_item_log",
@@ -19,7 +19,7 @@
   "candidates": [],
   "why": "미정 — 사장님께(kal.py 시작 질문, 추천: 미측정(뜯기에 화자 성별 없음 — 줄판독 뒤 engine/sound/narr_report.py 닮은 목소리 순위로))"
  },
- "cps_target": 8.63,
+ "cps_target": 8.41,
  "bgm": {
   "id": null,
   "db_below_voice": null,
@@ -32,15 +32,17 @@
   "tp": -1.5
  },
  "length": {
-  "min": 29.4,
-  "max": 30.0
+  "min": 24.6,
+  "max": 32.5
  },
  "script": {
   "brief": [
-   "나레: 어미 는데요, 네요, 데요, 지 · 존댓말 0.78 · 전언 0.33 · 자수 중앙 8",
-   "원음: 어미 해바, 지네, 다, 예뻐 · 존댓말 0.0 · 전언 0.0 · 자수 중앙 9"
+   "나레: 어미 는데요, 네요, 데요, 지 · 존댓말 0.82 · 전언 0.23 · 자수 중앙 8",
+   "원음: 어미 지, 맞아, 야, 리고 · 존댓말 0.08 · 전언 0.0 · 자수 중앙 6"
   ],
-  "example": [],
+  "example": [
+   "먹방을 해도 항상 유지되는 립이"
+  ],
   "audit": []
  },
  "frame": {
@@ -70,33 +72,36 @@
    "narr_enter": "instant",
    "orig_enter": "instant",
    "fx_rate": {
-    "불명": 0.6,
-    "나레": 0.1,
-    "원음": 0.0
+    "불명": 0.43,
+    "나레": 0.18,
+    "원음": 0.17
    },
-   "plain_rate": 0.89,
+   "plain_rate": 0.79,
    "by_pos": {
-    "훅": 0.62,
-    "본문": 0.04,
-    "끝": 0.0
+    "훅": 0.48,
+    "본문": 0.17,
+    "끝": 0.1
    },
    "strong": [
-    "자리=본문 → enter=instant 45/45",
-    "화자=나레 → enter=instant 39/41",
-    "화자=원음 → enter=instant 17/17",
-    "역할=본문 → enter=instant 14/14",
-    "화자전환 첫 덩어리=나레 → enter=instant 13/13",
-    "자리=끝 → enter=instant 10/10",
-    "화자전환 첫 덩어리=원음 → enter=instant 9/9",
-    "자리=훅 → enter=instant 5/8",
-    "역할=다리 → enter=instant 7/7",
-    "역할=질문 → enter=instant 7/7",
-    "역할=공개 → enter=instant 5/5",
-    "역할=고조 → enter=instant 5/5",
-    "역할=이음 → enter=instant 5/5",
-    "역할=증거 → enter=instant 5/5",
-    "화자=불명 → enter=instant 4/5",
-    "화자전환 첫 덩어리=불명 → enter=instant 4/5"
+    "자리=본문 → enter=instant 135/143",
+    "화자=나레 → enter=instant 92/103",
+    "화자=원음 → enter=instant 74/75",
+    "역할=본문 → enter=instant 43/43",
+    "화자전환 첫 덩어리=나레 → enter=instant 37/39",
+    "화자전환 첫 덩어리=원음 → enter=instant 33/33",
+    "자리=끝 → enter=instant 28/29",
+    "역할=증거 → enter=instant 28/28",
+    "자리=훅 → enter=instant 17/27",
+    "역할=훅 → enter=instant 15/25",
+    "역할=고조 → enter=instant 18/21",
+    "화자=불명 → enter=instant 14/21",
+    "역할=다리 → enter=instant 14/19",
+    "화자전환 첫 덩어리=불명 → enter=instant 11/16",
+    "역할=질문 → enter=instant 14/14",
+    "역할=공개 → enter=instant 12/12",
+    "역할=이음 → enter=instant 12/12",
+    "역할=답 → enter=instant 12/12",
+    "역할=끝 → enter=instant 8/9"
    ]
   },
   "counted": {}

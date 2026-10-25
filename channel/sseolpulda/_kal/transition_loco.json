@@ -1,0 +1,23 @@
+{
+ "acc": 0.667,
+ "fp": 0.176,
+ "hit": 2,
+ "total": 3,
+ "fp_n": 3,
+ "cut_lines": 17,
+ "auto_ok": false,
+ "mode": "fixed V2",
+ "V2": {
+  "WIN": 8,
+  "DIP": 0.6,
+  "REC": 0.8,
+  "LONG": 12,
+  "FLASH": 40.0,
+  "FILL_STD": 6.0,
+  "BLACK": 20.0,
+  "TINT": 45.0
+ },
+ "labels": "재표기 전(10-25, 06 재표기 대기)",
+ "made_by": "readline_tools/eval_transition_loco.py",
+ "at": "2026-10-25 10:20"
+}

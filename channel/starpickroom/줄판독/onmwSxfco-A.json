@@ -49,13 +49,27 @@
    1655,
    1900
   ],
-  "watermark": "창 오른쪽 위 x≈790~1030 y≈520~580 반투명 흰 '스타픽룸'"
+  "watermark": {
+   "text": "스타픽룸",
+   "where": "창 오른쪽 위 x≈790~1030 y≈520~580 반투명 흰 '스타픽룸'",
+   "alpha": 0.55,
+   "alpha_basis": "눈(1판 스타일분석 §3 약 55%)"
+  },
+  "source_hex": "#8B8B88",
+  "caption_band_measure": [
+   1090,
+   1190
+  ],
+  "cut_window_measure": [
+   484,
+   1540
+  ]
  },
  "lines": [
   {
    "t0": 0.9,
    "t1": 3.2,
-   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "speaker": "원음:오연수",
    "text": "그냥 빵 사먹는 것보다 훨씬",
    "layer": "스타픽룸",
    "enter": "기타: 좌→우 슬라이드인(최종 글상자 왼쪽 끝에서 잘려 나오며 0.9~1.75초에 제자리, 타이핑 아님)",
@@ -71,12 +85,20 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "role": "훅",
+   "fit": 5,
+   "scene_desc": "말하는 오연수",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 3.2,
    "t1": 4.7,
-   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "speaker": "원음:오연수",
    "text": "영양가도 좋고",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -92,12 +114,20 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "role": "훅",
+   "fit": 6,
+   "scene_desc": "빵 든 숟가락+얼굴",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 4.7,
    "t1": 6.5,
-   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "speaker": "원음:오연수",
    "text": "진짜 빵 먹는 거 같아서",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -113,12 +143,20 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "role": "훅",
+   "fit": 6,
+   "scene_desc": "빵 먹는 얼굴",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 6.5,
    "t1": 8.1,
-   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "speaker": "원음:오연수",
    "text": "너무 좋아요",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -134,12 +172,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "role": "훅",
+   "fit": 5,
+   "scene_desc": "웃는 얼굴",
+   "transition": "cut",
+   "transition_t": 6.5,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 8.1,
    "t1": 9.6,
-   "speaker": "나레(추정: 타이핑+자막이 원음 받아쓰기('다이어트 때 바나나…')와 다름+음량 0.06~0.08로 앞뒤 0.02~0.03의 2.5~4배)",
+   "speaker": "나레",
    "text": "잘 익은 바나나 하나만 있으면",
    "layer": "스타픽룸",
    "enter": "typing",
@@ -158,12 +205,21 @@
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
    "glow": "짙은 초록 약 #2B5C2B 번짐(9.1초부터 보임)",
-   "type_cps": 12.0
+   "type_cps": 12.0,
+   "speaker_basis": "나레(추정: 타이핑+자막이 원음 받아쓰기('다이어트 때 바나나…')와 다름+음량 0.06~0.08로 앞뒤 0.02~0.03의 2.5~4배)",
+   "role": "다리",
+   "fit": 8,
+   "scene_desc": "잘 익은 바나나",
+   "transition": "cut",
+   "transition_t": 8.1,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 9.6,
    "t1": 11.2,
-   "speaker": "나레(추정, 위와 같은 근거)",
+   "speaker": "나레",
    "text": "맛있는 빵을 먹을 수 있다는데..?",
    "layer": "스타픽룸",
    "enter": "typing",
@@ -180,12 +236,20 @@
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
    "glow": "짙은 초록 약 #2B5C2B 번짐",
-   "type_cps": 13.6
+   "type_cps": 13.6,
+   "speaker_basis": "나레(추정, 위와 같은 근거)",
+   "role": "다리",
+   "fit": 6,
+   "scene_desc": "바나나 근접(빵 안 보임)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 11.2,
    "t1": 12.4,
-   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "speaker": "원음:오연수",
    "text": "바나나 하나하고요",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -203,12 +267,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "role": "공개",
+   "fit": 8,
+   "scene_desc": "바나나 담긴 그릇",
+   "transition": "cut",
+   "transition_t": 11.233,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 12.4,
    "t1": 14.2,
-   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "speaker": "원음:오연수",
    "text": "계란 하나",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -226,12 +299,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "role": "증거",
+   "fit": 4,
+   "scene_desc": "얼굴(계란 안 보임)",
+   "transition": "cut",
+   "transition_t": 12.4,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 14.2,
    "t1": 15.9,
-   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "speaker": "원음:오연수",
    "text": "마구 으깨볼게요",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -249,12 +331,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "role": "증거",
+   "fit": 9,
+   "scene_desc": "그릇에 으깬 바나나",
+   "transition": "cut",
+   "transition_t": 14.233,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 15.9,
    "t1": 18.5,
-   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "speaker": "원음:오연수",
    "text": "으깬 견과류",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -274,12 +365,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "role": "증거",
+   "fit": 8,
+   "scene_desc": "견과류 넣는 손",
+   "transition": "cut",
+   "transition_t": 15.9,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 18.5,
    "t1": 19.6,
-   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "speaker": "원음:오연수",
    "text": "땅콩버터 한 스푼",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -297,12 +397,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "role": "증거",
+   "fit": 9,
+   "scene_desc": "땅콩버터 숟가락",
+   "transition": "cut",
+   "transition_t": 18.5,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 24.6,
    "t1": 25.4,
-   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "speaker": "원음:오연수",
    "text": "전자레인지 3분 30초",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -318,12 +427,20 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "role": "증거",
+   "fit": 9,
+   "scene_desc": "전자레인지 3:30",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 26.4,
    "t1": 27.5,
-   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "speaker": "원음:오연수",
    "text": "음...바나나 냄새",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -339,12 +456,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "role": "고조",
+   "fit": 8,
+   "scene_desc": "완성된 빵",
+   "transition": "cut",
+   "transition_t": 26.4,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 35.9,
    "t1": 37.1,
-   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "speaker": "원음:오연수",
    "text": "이렇게 맛있고 보슬보슬한 빵이",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -362,12 +488,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "role": "끝",
+   "fit": 7,
+   "scene_desc": "빵 먹는 얼굴",
+   "transition": "cut",
+   "transition_t": 35.933,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 37.1,
    "t1": 38.4,
-   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "speaker": "원음:오연수",
    "text": "갑자기 완성이 됐어요",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -383,12 +518,20 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "role": "끝",
+   "fit": 6,
+   "scene_desc": "빵 먹는 얼굴",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 38.4,
    "t1": 40.8,
-   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "speaker": "원음:오연수",
    "text": "아침에 돌려놓고",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -406,12 +549,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "role": "끝",
+   "fit": 5,
+   "scene_desc": "말하는 얼굴",
+   "transition": "cut",
+   "transition_t": 38.267,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 40.8,
    "t1": 41.4,
-   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "speaker": "원음:오연수",
    "text": "준비하고",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -427,12 +579,20 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "role": "끝",
+   "fit": 4,
+   "scene_desc": "말하는 얼굴",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 41.4,
    "t1": 43.7,
-   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "speaker": "원음:오연수",
    "text": "딱 먹고 나가면 좋아요",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -448,7 +608,15 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "role": "끝",
+   "fit": 6,
+   "scene_desc": "숟가락 든 얼굴",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 30.4,
@@ -462,7 +630,20 @@
     1460
    ],
    "scene": "-",
-   "note": "스타픽룸 자막과 글꼴·굵기·외곽선 다름, 반투명"
+   "role": "증거",
+   "fit": 4,
+   "scene_desc": "말하는 얼굴+재료 손글씨",
+   "notes": "스타픽룸 자막과 글꼴·굵기·외곽선 다름, 반투명",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "fill_hex": "#F0F0F0",
+   "_fill_basis": "눈(원본 층 글자 — 시트 0.5초 칸, 픽셀 실측 아님)",
+   "transition": "none",
+   "motion": "still",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 33.5,
@@ -476,7 +657,23 @@
     1510
    ],
    "scene": "-",
-   "note": "반투명 페이드, 얇은 손글씨체"
+   "role": "증거",
+   "fit": 4,
+   "scene_desc": "말하는 얼굴",
+   "notes": "반투명 페이드, 얇은 손글씨체",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    33.567
+   ],
+   "fill_hex": "#F0F0F0",
+   "_fill_basis": "눈(원본 층 글자 — 시트 0.5초 칸, 픽셀 실측 아님)",
+   "transition": "cut",
+   "transition_t": 33.567,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 34.0,
@@ -490,7 +687,20 @@
     1510
    ],
    "scene": "-",
-   "note": "왼쪽 아래, 얇은 글씨, 맞춤법이 스타픽룸 줄('전자레인지 3분 30초')과 다름"
+   "role": "증거",
+   "fit": 4,
+   "scene_desc": "말하는 얼굴+전자렌지 글씨",
+   "notes": "왼쪽 아래, 얇은 글씨, 맞춤법이 스타픽룸 줄('전자레인지 3분 30초')과 다름",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "fill_hex": "#F0F0F0",
+   "_fill_basis": "눈(원본 층 글자 — 시트 0.5초 칸, 픽셀 실측 아님)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   }
  ],
  "beats": "훅(0~8.1초 얼굴 원음 4줄: 빵 대신 먹는 영양가 좋은 빵) → 나레(8.1~11.2초 타이핑 2줄, 바나나 접사 b-roll '…있다는데..?') → 원음 조리 설명(11.2~19.6초 얼굴·요리 컷, 줄마다 컷) → 소리 있는 요리 과정(19.6~29초 자막 거의 없음, 24.6·26.4 두 줄만) → 원본 박힌 글씨만 나오는 얼굴(29~35.9초) → 원음 마무리(35.9~43.7초 5줄) → 끝: 웃는 얼굴",
@@ -503,5 +713,15 @@
   "효과음은 귀로 확인 못 함(뜯기 sfx 목록도 비어 있음)",
   "컷 시각은 프레임 차이 감지(자막 변화 섞임) — 16.83·17.6 등은 눈 확인 못 함",
   "dur 43.7은 뜯기 기록(ffprobe)"
- ]
+ ],
+ "name_evidence": [
+  "오연수: 제목 2줄 '오연수의 초간단 건강빵'·출처 '오연수 Yun Soo Oh'"
+ ],
+ "frame0": {
+  "what": "숟가락 빵을 입에 넣는 오연수 근접",
+  "face_frac": 0.12,
+  "text": "제목 2줄만"
+ },
+ "_made_by_v2": "오푸스 실행자 보강 2026-10-25(관제 263 지시서 06): role·fit·scene_desc 눈 · transition/cut_at/motion = readline_tools/cutdet 30fps · sfx = _kal/sfx_events.json 연결 · speaker 이름은 화면 글자 근거만(speaker_basis 에 옛 글)",
+ "_tools_v2": "tools/calcopy/engine/readline_tools/{capseg 1090~1190, cutdet 484~1540, rangesheet} → C:/숏템_칼카피/starpickroom/work/lr6/"
 }

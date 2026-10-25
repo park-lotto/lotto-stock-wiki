@@ -49,13 +49,27 @@
    1655,
    1900
   ],
-  "watermark": "우상단 x≈790~1030 y≈520~580 반투명 '스타픽룸' + 12.0초 프레임에서 몸통 가운데(x≈480~660,y≈1190~1260) 더 옅은 두 번째 '스타픽룸'(onmw 5·31초 프레임에선 안 보임)"
+  "watermark": {
+   "text": "스타픽룸",
+   "where": "우상단 x≈790~1030 y≈520~580 반투명 '스타픽룸' + 12.0초 프레임에서 몸통 가운데(x≈480~660,y≈1190~1260) 더 옅은 두 번째 '스타픽룸'(onmw 5·31초 프레임에선 안 보임)",
+   "alpha": 0.55,
+   "alpha_basis": "눈(1판 스타일분석 §3 약 55%)"
+  },
+  "source_hex": "#8B8B88",
+  "caption_band_measure": [
+   1090,
+   1190
+  ],
+  "cut_window_measure": [
+   484,
+   1540
+  ]
  },
  "lines": [
   {
    "t0": 0.2,
    "t1": 1.5,
-   "speaker": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "speaker": "원음:이민정",
    "text": "내가 까야 되나 말아야 되나",
    "layer": "스타픽룸",
    "enter": "기타: RGB분리 글리치 입장(0.2 조각, 0.4 작은 글자, 0.6 색분리, 0.8 정상)",
@@ -71,12 +85,20 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "role": "훅",
+   "fit": 6,
+   "scene_desc": "향 시향지 든 이민정",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 1.6,
    "t1": 2.5,
-   "speaker": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "speaker": "원음:이민정",
    "text": "이걸 까는 순간",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -92,12 +114,20 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "role": "훅",
+   "fit": 7,
+   "scene_desc": "시향지 냄새 맡음",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 2.6,
    "t1": 4.2,
-   "speaker": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "speaker": "원음:이민정",
    "text": "또 또 쿠팡에 품절뜨고 이런....",
    "layer": "스타픽룸",
    "enter": "기타: 단어 단위로 아래에서 커진 채 올라와 제자리(워드 팝), 끝 점 3개 하얀 반짝",
@@ -116,12 +146,20 @@
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
    "glow": null,
-   "type_cps": 10.0
+   "type_cps": 10.0,
+   "speaker_basis": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "role": "훅",
+   "fit": 5,
+   "scene_desc": "시향지 든 얼굴",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 4.4,
    "t1": 5.7,
-   "speaker": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "speaker": "원음:이민정",
    "text": "되게 쉬쉬하고 쓰고 있었죠",
    "layer": "스타픽룸",
    "enter": "기타: 작은 글자에서 0.2초에 확대",
@@ -137,12 +175,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "role": "훅",
+   "fit": 5,
+   "scene_desc": "말하는 얼굴",
+   "transition": "cut",
+   "transition_t": 4.3,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 5.9,
    "t1": 7.1,
-   "speaker": "불명(3인칭 소개, 음량 0.05~0.08로 전후 0.13대보다 낮음 → 화면 밖 음성 추정, 확인 못 함)",
+   "speaker": "나레",
    "text": "이민정이 품절될까",
    "layer": "스타픽룸",
    "enter": "typing",
@@ -179,12 +226,21 @@
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
    "glow": null,
-   "type_cps": 8.0
+   "type_cps": 8.0,
+   "speaker_basis": "불명(3인칭 소개, 음량 0.05~0.08로 전후 0.13대보다 낮음 → 화면 밖 음성 추정, 확인 못 함)",
+   "role": "다리",
+   "fit": 4,
+   "scene_desc": "두 사람 탁자 와이드",
+   "transition": "cut",
+   "transition_t": 5.8,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 7.2,
    "t1": 7.9,
-   "speaker": "불명(위와 같음)",
+   "speaker": "나레",
    "text": "공개를 고민한",
    "layer": "스타픽룸",
    "enter": "typing",
@@ -217,12 +273,20 @@
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
    "glow": null,
-   "type_cps": 10.0
+   "type_cps": 10.0,
+   "speaker_basis": "불명(위와 같음)",
+   "role": "다리",
+   "fit": 6,
+   "scene_desc": "병 든 손",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 7.9,
    "t1": 9.15,
-   "speaker": "불명(위와 같음)",
+   "speaker": "나레",
    "text": "가성비 향기템이 있다는데...?",
    "layer": "스타픽룸",
    "enter": "typing",
@@ -255,12 +319,20 @@
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
    "glow": null,
-   "type_cps": 12.5
+   "type_cps": 12.5,
+   "speaker_basis": "불명(위와 같음)",
+   "role": "다리",
+   "fit": 7,
+   "scene_desc": "향기템 병 든 손",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 9.2,
    "t1": 10.3,
-   "speaker": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "speaker": "원음:이민정",
    "text": "레스토랑 같은 데에서",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -278,12 +350,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "role": "본문",
+   "fit": 4,
+   "scene_desc": "말하는 얼굴",
+   "transition": "cut",
+   "transition_t": 9.133,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 10.4,
    "t1": 11.3,
-   "speaker": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "speaker": "원음:이민정",
    "text": "화장실에 있길래",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -299,12 +380,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "role": "본문",
+   "fit": 5,
+   "scene_desc": "병 든 손",
+   "transition": "cut",
+   "transition_t": 10.367,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 11.4,
    "t1": 12.7,
-   "speaker": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "speaker": "원음:이민정",
    "text": "그냥 한번 뿌려봤다가",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -320,12 +410,20 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "role": "본문",
+   "fit": 5,
+   "scene_desc": "병 든 손",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 12.8,
    "t1": 14.1,
-   "speaker": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "speaker": "원음:이민정",
    "text": "이거 꽤 괜찮네...? 라고 해서",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -341,12 +439,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "role": "본문",
+   "fit": 5,
+   "scene_desc": "시향지 든 얼굴",
+   "transition": "cut",
+   "transition_t": 12.7,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 14.2,
    "t1": 16.3,
-   "speaker": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "speaker": "원음:이민정",
    "text": "제가 직접 서치해서 사게 됐어요",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -364,12 +471,20 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "role": "본문",
+   "fit": 6,
+   "scene_desc": "병 든 얼굴",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 16.4,
    "t1": 18.3,
-   "speaker": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "speaker": "원음:이민정",
    "text": "가격 대비 꽤 괜찮아요",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -387,12 +502,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "role": "증거",
+   "fit": 5,
+   "scene_desc": "두 사람 탁자",
+   "transition": "cut",
+   "transition_t": 16.267,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 18.4,
    "t1": 19.1,
-   "speaker": "제3자(긴 검정머리 인터뷰어 추정, 화면 글자 이름 없음)",
+   "speaker": "제3자",
    "text": "어~와우~~",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -401,12 +525,14 @@
    "sticker": [
     {
      "what": "보라·핑크 불꽃놀이 효과(글자 뒤)",
-     "x": 340,
-     "y": 1060,
-     "w": 400,
+     "x": 382,
+     "y": 962,
+     "w": 325,
      "t_in": 18.3,
-     "t_out": 19.0,
-     "anim": "터지며 사라짐(스타픽룸 층인지는 추정)"
+     "t_out": 18.8,
+     "anim": "터지며 사라짐(스타픽룸 층인지는 추정)",
+     "h": 375,
+     "basis": "픽셀(rangesheet 프레임 환산 ±10px, x·y=왼쪽 위)"
     }
    ],
    "sfx": null,
@@ -420,12 +546,20 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": "핑크 번짐"
+   "glow": "핑크 번짐",
+   "speaker_basis": "제3자(긴 검정머리 인터뷰어 추정, 화면 글자 이름 없음)",
+   "role": "고조",
+   "fit": 7,
+   "scene_desc": "시향지 맡는 인터뷰어+불꽃",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 19.2,
    "t1": 20.1,
-   "speaker": "제3자(긴 검정머리 인터뷰어 추정, 화면 글자 이름 없음)",
+   "speaker": "제3자",
    "text": "둘 다 좋은데...",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -443,12 +577,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "제3자(긴 검정머리 인터뷰어 추정, 화면 글자 이름 없음)",
+   "role": "고조",
+   "fit": 5,
+   "scene_desc": "인터뷰어 얼굴",
+   "transition": "cut",
+   "transition_t": 19.2,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 20.2,
    "t1": 21.1,
-   "speaker": "제3자(긴 검정머리 인터뷰어 추정, 화면 글자 이름 없음)(말 이어짐 추정)",
+   "speaker": "제3자",
    "text": "호불호 안 갈릴 거 같은 향",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -464,12 +607,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "제3자(긴 검정머리 인터뷰어 추정, 화면 글자 이름 없음)(말 이어짐 추정)",
+   "role": "증거",
+   "fit": 8,
+   "scene_desc": "향 병 두 개",
+   "transition": "cut",
+   "transition_t": 20.067,
+   "motion": "still",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 21.2,
    "t1": 21.7,
-   "speaker": "제3자(긴 검정머리 인터뷰어 추정, 화면 글자 이름 없음)(추정)",
+   "speaker": "제3자",
    "text": "포레스트 우드는",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -487,12 +639,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "제3자(긴 검정머리 인터뷰어 추정, 화면 글자 이름 없음)(추정)",
+   "role": "증거",
+   "fit": 9,
+   "scene_desc": "포레스트 우드 병 든 손",
+   "transition": "cut",
+   "transition_t": 21.2,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 21.8,
    "t1": 22.5,
-   "speaker": "제3자(긴 검정머리 인터뷰어 추정, 화면 글자 이름 없음)(추정)",
+   "speaker": "제3자",
    "text": "묵직해가지고",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -508,12 +669,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "제3자(긴 검정머리 인터뷰어 추정, 화면 글자 이름 없음)(추정)",
+   "role": "증거",
+   "fit": 7,
+   "scene_desc": "병 근접",
+   "transition": "cut",
+   "transition_t": 21.7,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 22.6,
    "t1": 23.5,
-   "speaker": "제3자(긴 검정머리 인터뷰어 추정, 화면 글자 이름 없음)(추정)",
+   "speaker": "제3자",
    "text": "안방에 뿌리기 좋을 것 같아",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -531,12 +701,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "제3자(긴 검정머리 인터뷰어 추정, 화면 글자 이름 없음)(추정)",
+   "role": "증거",
+   "fit": 8,
+   "scene_desc": "안방 일러스트",
+   "transition": "cut",
+   "transition_t": 22.467,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 23.6,
    "t1": 24.3,
-   "speaker": "제3자(긴 검정머리 인터뷰어 추정, 화면 글자 이름 없음)(추정)",
+   "speaker": "제3자",
    "text": "프레쉬 그라스는",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -554,12 +733,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "제3자(긴 검정머리 인터뷰어 추정, 화면 글자 이름 없음)(추정)",
+   "role": "증거",
+   "fit": 9,
+   "scene_desc": "프레쉬 그라스 병",
+   "transition": "cut",
+   "transition_t": 23.567,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 24.4,
    "t1": 25.5,
-   "speaker": "제3자(긴 검정머리 인터뷰어 추정, 화면 글자 이름 없음)(추정)",
+   "speaker": "제3자",
    "text": "잔디밭을 걷는 거 같은데...",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -577,12 +765,20 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "제3자(긴 검정머리 인터뷰어 추정, 화면 글자 이름 없음)(추정)",
+   "role": "증거",
+   "fit": 8,
+   "scene_desc": "잔디밭 일러스트",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 29.4,
    "t1": 31.1,
-   "speaker": "제3자(긴 검정머리 인터뷰어 추정, 화면 글자 이름 없음)",
+   "speaker": "제3자",
    "text": "만원대면 진짜 싸긴하네요",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -600,12 +796,21 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "제3자(긴 검정머리 인터뷰어 추정, 화면 글자 이름 없음)",
+   "role": "공개",
+   "fit": 6,
+   "scene_desc": "시향지 맡는 인터뷰어",
+   "transition": "cut",
+   "transition_t": 29.4,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 31.2,
    "t1": 32.1,
-   "speaker": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "speaker": "원음:이민정",
    "text": "얘가 또 뭔가",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -623,12 +828,20 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "role": "이음",
+   "fit": 5,
+   "scene_desc": "말하는 이민정",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 32.2,
    "t1": 33.5,
-   "speaker": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "speaker": "원음:이민정",
    "text": "가구가 새로 오거나 이런 것들도",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -646,12 +859,20 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "role": "증거",
+   "fit": 7,
+   "scene_desc": "병 두 개 근접",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 33.6,
    "t1": 34.3,
-   "speaker": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "speaker": "원음:이민정",
    "text": "종 잘 잡아 주는 거 같아서",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -667,12 +888,20 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "role": "증거",
+   "fit": 7,
+   "scene_desc": "병 두 개 근접",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 34.4,
    "t1": 36.9,
-   "speaker": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "speaker": "원음:이민정",
    "text": "가성비템으로 엄청나게 추천합니다",
    "layer": "스타픽룸",
    "enter": "기타: 글자가 한 자씩 위로 튀어 핑크로 바뀌며 순서대로 내려앉음(34.4 가→36.4 다)",
@@ -706,7 +935,16 @@
    ],
    "fill_hex": "#FDF9F8",
    "outline": "검정 약 8px",
-   "glow": null
+   "glow": null,
+   "speaker_basis": "원음:이민정(출처 '이민정 MJ' 라벨·제목 근거, 입모양 대조는 일부만)",
+   "role": "끝",
+   "fit": 7,
+   "scene_desc": "추천하는 얼굴+하트",
+   "transition": "cut",
+   "transition_t": 34.5,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 0.5,
@@ -720,7 +958,20 @@
     1520
    ],
    "scene": "-",
-   "note": "하단 작은 글씨"
+   "role": "훅",
+   "fit": 6,
+   "scene_desc": "시향지 든 얼굴",
+   "notes": "하단 작은 글씨",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "fill_hex": "#FFFFFF",
+   "_fill_basis": "눈(원본 층 글자 — 시트 0.5초 칸, 픽셀 실측 아님)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 2.0,
@@ -734,7 +985,20 @@
     1520
    ],
    "scene": "-",
-   "note": "빨간 바 흰 글자"
+   "role": "훅",
+   "fit": 5,
+   "scene_desc": "시향지 든 얼굴+빨간 띠",
+   "notes": "빨간 바 흰 글자",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "fill_hex": "#FFFFFF",
+   "_fill_basis": "눈(원본 층 글자 — 시트 0.5초 칸, 픽셀 실측 아님)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 4.5,
@@ -748,7 +1012,20 @@
     1520
    ],
    "scene": "-",
-   "note": "왼쪽 아래 큰 손글씨"
+   "role": "훅",
+   "fit": 5,
+   "scene_desc": "말하는 얼굴+손글씨",
+   "notes": "왼쪽 아래 큰 손글씨",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "fill_hex": "#FFFFFF",
+   "_fill_basis": "눈(원본 층 글자 — 시트 0.5초 칸, 픽셀 실측 아님)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 5.8,
@@ -762,7 +1039,23 @@
     1520
    ],
    "scene": "-",
-   "note": "상품 컷 위 라벨+아래 손글씨"
+   "role": "다리",
+   "fit": 7,
+   "scene_desc": "제품 병 세 개",
+   "notes": "상품 컷 위 라벨+아래 손글씨",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    6.167
+   ],
+   "fill_hex": "#FFFFFF",
+   "_fill_basis": "눈(원본 층 글자 — 시트 0.5초 칸, 픽셀 실측 아님)",
+   "transition": "cut",
+   "transition_t": 5.8,
+   "motion": "still",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 9.5,
@@ -776,7 +1069,23 @@
     1520
    ],
    "scene": "-",
-   "note": "검정 박스 흰 글씨"
+   "role": "본문",
+   "fit": 5,
+   "scene_desc": "병 든 얼굴",
+   "notes": "검정 박스 흰 글씨",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    10.367,
+    12.233
+   ],
+   "fill_hex": "#FFFFFF",
+   "_fill_basis": "눈(원본 층 글자 — 시트 0.5초 칸, 픽셀 실측 아님)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 13.0,
@@ -790,7 +1099,20 @@
     1520
    ],
    "scene": "-",
-   "note": "큰 손글씨"
+   "role": "본문",
+   "fit": 5,
+   "scene_desc": "말하는 얼굴",
+   "notes": "큰 손글씨",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "fill_hex": "#FFFFFF",
+   "_fill_basis": "눈(원본 층 글자 — 시트 0.5초 칸, 픽셀 실측 아님)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 14.5,
@@ -804,7 +1126,20 @@
     1520
    ],
    "scene": "-",
-   "note": "작은 손글씨"
+   "role": "본문",
+   "fit": 6,
+   "scene_desc": "병 든 얼굴",
+   "notes": "작은 손글씨",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "fill_hex": "#FFFFFF",
+   "_fill_basis": "눈(원본 층 글자 — 시트 0.5초 칸, 픽셀 실측 아님)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 16.5,
@@ -818,7 +1153,20 @@
     1520
    ],
    "scene": "-",
-   "note": "크롤링 글씨"
+   "role": "증거",
+   "fit": 5,
+   "scene_desc": "두 사람 탁자",
+   "notes": "크롤링 글씨",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "fill_hex": "#FFFFFF",
+   "_fill_basis": "눈(원본 층 글자 — 시트 0.5초 칸, 픽셀 실측 아님)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 20.5,
@@ -832,7 +1180,20 @@
     1520
    ],
    "scene": "-",
-   "note": "하단 2줄"
+   "role": "증거",
+   "fit": 8,
+   "scene_desc": "병 두 개",
+   "notes": "하단 2줄",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "fill_hex": "#FFFFFF",
+   "_fill_basis": "눈(원본 층 글자 — 시트 0.5초 칸, 픽셀 실측 아님)",
+   "transition": "none",
+   "motion": "still",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 26.0,
@@ -846,7 +1207,23 @@
     1520
    ],
    "scene": "-",
-   "note": "회색 박스, 29.0 빨간 라벨 '핵심을 짚었네'"
+   "role": "본문",
+   "fit": 4,
+   "scene_desc": "턱 괸 얼굴",
+   "notes": "회색 박스, 29.0 빨간 라벨 '핵심을 짚었네'",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    28.8,
+    28.9
+   ],
+   "fill_hex": "#111111",
+   "_fill_basis": "눈(원본 층 글자 — 시트 0.5초 칸, 픽셀 실측 아님)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 29.5,
@@ -860,7 +1237,24 @@
     1520
    ],
    "scene": "-",
-   "note": "하단"
+   "role": "공개",
+   "fit": 6,
+   "scene_desc": "인터뷰어 시향",
+   "notes": "하단",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    31.0,
+    31.833
+   ],
+   "fill_hex": "#FFFFFF",
+   "_fill_basis": "눈(원본 층 글자 — 시트 0.5초 칸, 픽셀 실측 아님)",
+   "transition": "cut",
+   "transition_t": 29.4,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 32.0,
@@ -874,7 +1268,20 @@
     1520
    ],
    "scene": "-",
-   "note": "하단"
+   "role": "증거",
+   "fit": 7,
+   "scene_desc": "병 두 개",
+   "notes": "하단",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "fill_hex": "#FFFFFF",
+   "_fill_basis": "눈(원본 층 글자 — 시트 0.5초 칸, 픽셀 실측 아님)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   },
   {
    "t0": 34.5,
@@ -888,7 +1295,21 @@
     1520
    ],
    "scene": "-",
-   "note": "하단 2줄"
+   "role": "끝",
+   "fit": 7,
+   "scene_desc": "추천하는 얼굴",
+   "notes": "하단 2줄",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "fill_hex": "#FFFFFF",
+   "_fill_basis": "눈(원본 층 글자 — 시트 0.5초 칸, 픽셀 실측 아님)",
+   "transition": "cut",
+   "transition_t": 34.5,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "눈(원본 층 — 시각·y·글은 1판 0.5초 시트, 색 눈)/신호(transition·motion: cutdet 30fps)"
   }
  ],
  "beats": "훅(0.2~5.7초 이민정 원음 4줄, 글리치·워드팝 입장) → 3인칭 소개(5.9~9.15초 타이핑+핑크 하트 3토막) → 이민정 후기(9.2~18.3초 8줄 instant) → 인터뷰어 반응(18.4~25.5초 8줄) → 자막 없는 PD 구간(25.5~29.4초, 원본 박힌 PD 자막만) → 대화 마무리(29.4~34.3초 4줄) → 끝: 추천 문장 하트 효과(34.4~36.9초)",
@@ -902,5 +1323,15 @@
   "효과음 귀로 확인 못 함, 뜯기 폴더 없음(뜯기.json 미생성)",
   "음량: 5~8초와 26~28초가 전후보다 작음(음원 구분 근거로만 사용)",
   "캡션 y 대역은 onmw 뜯기 값(1112~1169)을 대표로 적용, 이 편은 12초 프레임 눈대중"
- ]
+ ],
+ "name_evidence": [
+  "이민정: 제목 2줄 '이민정 만원대 최애 향기템'·출처 '이민정 MJ'·나레 줄4"
+ ],
+ "frame0": {
+  "what": "시향지 든 이민정 말하는 얼굴",
+  "face_frac": 0.05,
+  "text": "제목 2줄 + 원본 손글씨 '내 꿀템 지켜'"
+ },
+ "_made_by_v2": "오푸스 실행자 보강 2026-10-25(관제 263 지시서 06): role·fit·scene_desc 눈 · transition/cut_at/motion = readline_tools/cutdet 30fps · sfx = _kal/sfx_events.json 연결 · speaker 이름은 화면 글자 근거만(speaker_basis 에 옛 글)",
+ "_tools_v2": "tools/calcopy/engine/readline_tools/{capseg 1090~1190, cutdet 484~1540, rangesheet} → C:/숏템_칼카피/starpickroom/work/lr6/"
 }

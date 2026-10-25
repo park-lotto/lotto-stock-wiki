@@ -31,6 +31,8 @@ if str(ROOT) not in sys.path:
 from tools.calcopy.hybrid import thumb as TH  # noqa: E402
 from tools.calcopy.hybrid import thumb_rule  # noqa: E402
 from tools.calcopy.hybrid.render_bench import _font  # noqa: E402
+from tools.calcopy.engine.encoder import venc  # noqa: E402 — 인코더 주인(GPU 있으면 NVENC, 화질 같게, 98 #79)
+from tools.calcopy.engine import encoder as ENC  # noqa: E402
 
 W, H = 1080, 1920
 
@@ -150,8 +152,8 @@ def apply(fix_path: Path) -> None:
     fc.append(f"{''.join(a_in)}amix=inputs={len(a_in)}:normalize=0:duration=first,alimiter=limit=0.82:level=false[aout]")
     out = Path(fix["out"])
     out.parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run(["ffmpeg", "-y", "-v", "error", *ins, "-filter_complex", ";".join(fc), "-map", "[vout]", "-map", "[aout]",
-                    "-c:v", "libx264", "-crf", "16", "-preset", "medium", "-r", "30", "-c:a", "aac", "-b:a", "192k",
+    ENC.run(["ffmpeg", "-y", "-v", "error", *ins, "-filter_complex", ";".join(fc), "-map", "[vout]", "-map", "[aout]",
+                    *venc(16, "medium"), "-r", "30", "-c:a", "aac", "-b:a", "192k",
                     "-movflags", "+faststart", str(out)], check=True)
     sheet = out.with_name(out.stem + "_sheet_1s.jpg")
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(out), "-vf", "fps=2,scale=216:-1,tile=8x9", "-frames:v", "1", str(sheet)], check=True)

@@ -1,0 +1,106 @@
+{
+ "name": "mantem판",
+ "renderer": "bench",
+ "_note": "kal.py rules 초안(2026-10-25) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
+ "bench": {
+  "ko": null,
+  "channel": "https://www.youtube.com/channel/UCNVXvKAeo3mM3toKsg-Mqog",
+  "analysis": "channel/mantem/스타일분석.md",
+  "line_reads": "channel/mantem/줄판독/",
+  "src_dir": "C:\\숏템_칼카피\\mantem\\src",
+  "sfx_events": null,
+  "sfx_key": null,
+  "palette": "channel/mantem/팔레트.json",
+  "rules_counted": "channel/mantem/_kal/규칙빈도.json"
+ },
+ "voice": {
+  "name": null,
+  "voice_id": null,
+  "candidates": [],
+  "why": "미정 — 사장님께(kal.py 시작 질문, 추천: 미나 / 문정 / 유라 중에서 (벤치 화자 여 12/13))"
+ },
+ "cps_target": 8.02,
+ "bgm": {
+  "id": null,
+  "db_below_voice": null,
+  "duck_orig_db": null,
+  "fade_out": null,
+  "why": "engine/sound/bgm_fp.py·뜯기 audio"
+ },
+ "loudness": {
+  "lufs": -14,
+  "tp": -1.5
+ },
+ "length": {
+  "min": 13.8,
+  "max": 27.3
+ },
+ "script": {
+  "brief": [
+   "나레: 어미 다네요, 라네요 · 존댓말 1.0 · 전언 1.0 · 자수 중앙 8.0",
+   "원음: 어미 어요, 다, 입니다, 세요 · 존댓말 0.53 · 전언 0.0 · 자수 중앙 6"
+  ],
+  "example": [],
+  "audit": []
+ },
+ "frame": {
+  "window": [
+   0,
+   420,
+   1080,
+   1080
+  ],
+  "title": [],
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "comment": null
+ },
+ "caption": {
+  "pack": null,
+  "pack_default": null,
+  "variant_for": {},
+  "typing_cps": 8.02
+ },
+ "timing": null,
+ "cuts": null,
+ "sfx_files": null,
+ "placement": {
+  "rules": {
+   "narr_enter": "instant",
+   "orig_enter": "instant",
+   "fx_rate": {
+    "원음": 0.47,
+    "나레": 0.04,
+    "제3자": 0.0
+   },
+   "plain_rate": 0.62,
+   "by_pos": {
+    "훅": 0.67,
+    "본문": 0.35,
+    "끝": 0.25
+   },
+   "strong": [
+    "화자=원음 → enter=instant 60/93",
+    "자리=본문 → enter=instant 65/84",
+    "역할=증거 → enter=instant 26/31",
+    "화자=나레 → enter=instant 24/24",
+    "역할=본문 → enter=instant 15/22",
+    "자리=훅 → enter_fx 11/18",
+    "자리=끝 → enter=instant 13/16",
+    "역할=다리 → enter=instant 15/15",
+    "역할=훅 → enter_fx 12/15",
+    "역할=훅 → enter=typing 9/15",
+    "역할=끝 → enter=instant 12/12",
+    "화자전환 첫 덩어리=나레 → enter=instant 11/11"
+   ]
+  },
+  "counted": {}
+ },
+ "_todo": [
+  "voice·bgm·sfx = engine/sound 결과",
+  "frame.title/logo/credit = 스타일분석 §틀",
+  "caption.pack = caption-motions.js 팩 이름(없으면 요청서)",
+  "timing·cuts·sfx_files = 견본 styles/키치잇판.json 꼴"
+ ]
+}

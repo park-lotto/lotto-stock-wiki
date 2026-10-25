@@ -13,72 +13,90 @@
   },
   "collect": {
    "state": "done",
-   "sec": 42.9,
-   "at": "2026-10-20 00:30",
+   "sec": 29.3,
+   "at": "2026-10-24 23:36",
    "outputs": {
     "src": "C:\\숏템_칼카피\\ititemlog\\src",
     "ids": [
      "ro1l3u734v4",
-     "aUicTeDoW04"
+     "aUicTeDoW04",
+     "J7GxfaVdwSU",
+     "zOSpeiMw1nA",
+     "AZ2q07mBzlM",
+     "SbWTqCnleC8"
     ]
    },
-   "note": "받음 2/2"
+   "note": "받음 6/6(1080p, C 여유 27.7GB)"
   },
   "tteutgi": {
    "state": "done",
-   "sec": 1047.3,
-   "at": "2026-10-20 01:08",
+   "sec": 1183.5,
+   "at": "2026-10-24 23:56",
    "outputs": {
     "ids": [
      "ro1l3u734v4",
-     "aUicTeDoW04"
+     "aUicTeDoW04",
+     "J7GxfaVdwSU",
+     "zOSpeiMw1nA",
+     "AZ2q07mBzlM",
+     "SbWTqCnleC8"
     ],
     "dir": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ititemlog\\뜯기"
    },
-   "note": "뜯기 2편 (LLM=claude_cli, 받아쓰기 칸은 vtt 로)"
+   "note": "뜯기 6편 (LLM=claude_cli, 받아쓰기 칸은 vtt 로)"
   },
   "frames": {
    "state": "done",
-   "sec": 174.4,
-   "at": "2026-10-20 01:11",
+   "sec": 102.9,
+   "at": "2026-10-24 23:58",
    "outputs": {
     "dirs": {
      "ro1l3u734v4": "C:\\숏템_칼카피\\ititemlog\\kal\\frames_ro1l3u734v4",
-     "aUicTeDoW04": "C:\\숏템_칼카피\\ititemlog\\kal\\frames_aUicTeDoW04"
+     "aUicTeDoW04": "C:\\숏템_칼카피\\ititemlog\\kal\\frames_aUicTeDoW04",
+     "J7GxfaVdwSU": "C:\\숏템_칼카피\\ititemlog\\kal\\frames_J7GxfaVdwSU",
+     "zOSpeiMw1nA": "C:\\숏템_칼카피\\ititemlog\\kal\\frames_zOSpeiMw1nA",
+     "AZ2q07mBzlM": "C:\\숏템_칼카피\\ititemlog\\kal\\frames_AZ2q07mBzlM",
+     "SbWTqCnleC8": "C:\\숏템_칼카피\\ititemlog\\kal\\frames_SbWTqCnleC8"
     }
    },
-   "note": "시트·0.1초 띠 2편"
+   "note": "시트·0.1초 띠 6편"
   },
   "skeleton": {
    "state": "done",
-   "sec": 0.1,
-   "at": "2026-10-20 01:11",
+   "sec": 0.0,
+   "at": "2026-10-24 23:58",
    "outputs": {
     "skeletons": [
-     "ro1l3u734v4",
-     "aUicTeDoW04"
+     "J7GxfaVdwSU",
+     "zOSpeiMw1nA",
+     "AZ2q07mBzlM",
+     "SbWTqCnleC8"
     ],
     "bundle": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ititemlog\\_kal\\워커묶음.json",
     "brief": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ititemlog\\_kal\\줄판독_브리프.md"
    },
-   "note": "뼈대 2편 새로, 묶음 2편"
+   "note": "뼈대 4편 새로, 묶음 6편"
   },
   "readlines": {
    "state": "done",
    "sec": 0.0,
-   "at": "2026-10-20 08:17",
+   "at": "2026-10-25 00:21",
    "outputs": {
     "ids": [
      "ro1l3u734v4",
-     "aUicTeDoW04"
+     "aUicTeDoW04",
+     "J7GxfaVdwSU",
+     "zOSpeiMw1nA",
+     "AZ2q07mBzlM",
+     "SbWTqCnleC8"
     ]
    },
-   "note": "줄판독 2편 strict 통과"
+   "note": "줄판독 6편 strict 통과"
   },
   "rules": {
    "state": "done",
-   "sec": 0.0,
-   "at": "2026-10-20 08:18",
+   "sec": 0.3,
+   "at": "2026-10-25 00:21",
    "outputs": {
     "draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ititemlog\\_kal\\스타일분석_초안.md",
     "palette": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ititemlog\\팔레트.json",
@@ -114,7 +132,11 @@
   "view_max": 20000000,
   "top_ids": [
    "ro1l3u734v4",
-   "aUicTeDoW04"
+   "aUicTeDoW04",
+   "J7GxfaVdwSU",
+   "zOSpeiMw1nA",
+   "AZ2q07mBzlM",
+   "SbWTqCnleC8"
   ],
   "views_per_sub": 2.43
  }

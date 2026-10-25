@@ -4,7 +4,9 @@
   frames   <mp4> --out <dir> [--y0 0 --y1 1920] [--fps 2] [--max-strips 80]
            2fps 시트 + 10fps 글자 띠 변화(견본 channel/starpickroom/_tools/sheets.py 그대로 부름) → change_<id>.json
            + 바뀌는 지점마다 0.1초 띠(±0.3초) strips/ + 판독목록.json  (판독은 사람 눈 — 이 도구는 볼 프레임만 고른다)
+           + 30fps 픽셀 실측 seg_<id>.json(capseg 자막 띠)·cut_<id>.json(cutdet 컷)·segsheet_<id>_NN.jpg — engine/readline_tools (--no-readline 로 끔)
   skeleton <뜯기.json> [--vtt <id>.ko.vtt] --out 줄판독/<id>.json
+  skeleton <frames 폴더> --spec <spec.py> --mp4 <원본> [--sfx-raw] [--profile] --out 줄판독/<id>.json   (눈 spec + 픽셀 실측 → readline_tools.build_lr)
            줄판독 뼈대: t0·t1·text 는 기계값(뜯기 OCR·vtt), 나머지 칸은 null(=눈으로 채움). _todo 가 남아 있으면 check 가 거절.
   check    <줄판독.json ...> [--strict]
            칸 누락·꾸밈 없는 줄 칸(enter/emph/sticker/sfx)·이름 근거(화면 글자)·시간 겹침·role 어휘. 오류 있으면 종료코드 1.
@@ -33,7 +35,8 @@ if str(ROOT) not in sys.path:
 
 # ---------------------------------------------------------------- 줄판독 칸 (지침서 §2 와 짝)
 LINE_REQUIRED = ("t0", "t1", "speaker", "text", "layer", "enter", "emph", "sticker", "sfx", "scene", "cut_at")
-LINE_STRICT = ("role", "y", "fill_hex", "fit")           # --strict 에서만 오류(10-20 이후 새 줄판독은 strict 로 검사)
+LINE_STRICT = ("role", "y", "fill_hex", "fit", "transition", "motion", "confidence")   # transition·motion·confidence = 표준 §11 ⑩(06 이 채우는 칸을 검사가 봐야 미측정이 안 숨는다) · --strict 에서만 오류
+STRICT_NONNULL = ("transition", "motion", "confidence")   # null 도 미측정으로 센다(표준 §11 ⑩ — transition null 이 숨었다)
 DOC_REQUIRED = ("id", "dur", "title_lines", "source_label", "lines", "beats", "narr_share", "notes")
 ROLE_VOCAB = ("훅", "다리", "고조", "공개", "증거", "반전", "질문", "답", "끝", "이음", "본문")
 SPEAKER_RE = re.compile(r"^(나레|원음|제3자|불명|연예인|본인)")
@@ -62,8 +65,8 @@ def _has(v) -> bool:
     return bool(v) if not isinstance(v, str) else bool(v.strip())
 
 
-ENTER_VOCAB = ("instant", "typing", "pop", "glitch", "wipe", "slide", "rainbow", "fade", "shake", "기타")
-_ENTER_KO = (("타이핑", "typing"), ("글리치", "glitch"), ("rgb", "glitch"), ("무지개", "rainbow"), ("색 순환", "rainbow"), ("색순환", "rainbow"),
+ENTER_VOCAB = ("instant", "append", "typing", "pop", "glitch", "wipe", "slide", "rainbow", "fade", "shake", "기타")   # append = 쌓기(렌더는 cut 과 같지만 측정은 따로 — 표준 §11 ⑪)
+_ENTER_KO = (("쌓기", "append"), ("쌓이", "append"), ("타이핑", "typing"), ("글리치", "glitch"), ("rgb", "glitch"), ("무지개", "rainbow"), ("색 순환", "rainbow"), ("색순환", "rainbow"),
              ("와이프", "wipe"), ("닦아", "wipe"), ("슬라이드", "slide"), ("팝", "pop"), ("확대", "pop"), ("커진", "pop"), ("페이드", "fade"),
              ("흔들", "shake"), ("한 번에", "instant"), ("즉시", "instant"), ("컷인", "instant"))
 
@@ -89,11 +92,42 @@ def enter_key(v) -> str:
     return "기타"
 
 
+VARIANT_FX = ("빨강", "팝", "글리치", "hook", "pop", "glitch")   # 꾸밈인 자막 변형(훅 빨강·팝+글리치) — 벤치 줄판독 한국어 서술·우리 자막표 변형 키 둘 다(15 ⓑ, 10-25)
+VARIANT_NOT = ("썸네일",)                                         # 0~2프레임 표지 카드 = thumb.frame0 칸이 잰다(자막 꾸밈 아님)
+
+
+def variant_fx(v) -> bool:
+    s = str(v or "").strip().lower()
+    return bool(s) and not s.startswith(VARIANT_NOT) and any(k in s for k in VARIANT_FX)
+
+
+EMPH_PLAIN_DE = 10.0      # 강조 낱말 색 ↔ 줄 채움색 ΔE76 이 이보다 작으면 '색 아닌 강조'(크기·굵기·밑줄·움직임) — 표준 §11-4 ㉙
+
+
+def emph_kind(l: dict) -> str | None:
+    """강조 종류(한 곳): 'color'(강조색이 줄 채움색과 ΔE ≥ 10) · 'plain'(색 아닌 강조 — ΔE < 10 또는 색을 안 바꿈) · None(강조 없음·줄색 모름)."""
+    em = [e for e in (l.get("emph") or []) if e]
+    if not em:
+        return None
+    fill = l.get("fill_hex")
+    if not (isinstance(fill, str) and re.fullmatch(r"#[0-9A-Fa-f]{6}", fill)):
+        return None
+    import numpy as np
+    f = _lab([int(fill[i:i + 2], 16) for i in (1, 3, 5)])
+    des = []
+    for e in em:
+        h = e.get("hex") if isinstance(e, dict) else None
+        if isinstance(h, str) and re.fullmatch(r"#[0-9A-Fa-f]{6}", h):
+            des.append(float(np.linalg.norm(_lab([int(h[i:i + 2], 16) for i in (1, 3, 5)]) - f)))
+    return "color" if any(d >= EMPH_PLAIN_DE for d in des) else "plain"
+
+
 def _decorated(l: dict) -> dict:
-    """줄 하나의 꾸밈 유무 — 분모 계산의 기준(한 곳)."""
+    """줄 하나의 꾸밈 유무 — 분모 계산의 기준(한 곳). variant = 훅 빨강·팝 같은 변형(기본·기본(흰/노랑)·손글씨는 꾸밈 아님)."""
     enter = enter_key(l.get("enter"))
-    return {"enter_fx": enter not in ("instant", "cut", None), "emph": _has(l.get("emph")),
-            "sticker": _has(l.get("sticker")), "sfx": _has(l.get("sfx"))}
+    return {"enter_fx": enter not in ("instant", "append", "cut", None), "emph": _has(l.get("emph")),   # append(쌓기)는 꾸밈이 아니라 등장 방식 — 비율은 enter 로 따로 센다
+            "sticker": _has(l.get("sticker")), "sfx": _has(l.get("sfx")), "variant": variant_fx(l.get("variant")),
+            "emph_color": emph_kind(l) == "color", "emph_plain": emph_kind(l) == "plain"}   # emph 의 갈래(색 강조 / 색 아닌 강조, ㉙) — any 는 emph 가 이미 센다
 
 
 def _pos(l: dict, dur: float) -> str:
@@ -131,6 +165,8 @@ def check_doc(d: dict, strict: bool = False) -> dict:
         for k in LINE_STRICT:
             if k not in l:
                 (errs if strict else warns).append(f"{tag} 칸 누락(strict): {k}")
+            elif l[k] is None and k in STRICT_NONNULL:
+                (errs if strict else warns).append(f"{tag} 칸 비어 있음(strict): {k} — 없으면 'none'(전환 없음)·값을 적는다")
         t0, t1 = l.get("t0"), l.get("t1")
         if isinstance(t0, (int, float)) and isinstance(t1, (int, float)):
             if t1 <= t0:
@@ -217,7 +253,7 @@ def _norm_line(l: dict, dur: float) -> dict:
 
 def rules_of(docs: list[dict]) -> dict:
     """(판단 주인) 줄판독 모음 → 붙는 조건 규칙 + 빈도. 분모를 항상 같이 낸다."""
-    FX = ("enter_fx", "emph", "sticker", "sfx")
+    FX = ("enter_fx", "emph", "emph_color", "emph_plain", "sticker", "sfx", "variant")   # variant = 훅 빨강·팝 변형(15 ⓑ) · emph_color/plain = ㉙ 강조 갈래
     by_sp = defaultdict(lambda: {"n": 0, "enter": Counter(), "chars": [], "sec": [], **{k: 0 for k in FX}, "any": 0})
     by_pos = defaultdict(lambda: {"n": 0, "enter": Counter(), **{k: 0 for k in FX}, "any": 0})
     by_role = defaultdict(lambda: {"n": 0, "enter": Counter(), **{k: 0 for k in FX}, "any": 0})
@@ -339,7 +375,56 @@ MATCH_RULES = [
     ("plain.rate", "pctp", 20, True, "꾸밈 없는 줄 비율 차 ≤20%p('없는 것도 스타일')"),
     ("mix.lufs", "db", 1.5, False, "통합 LUFS 차 ≤1.5dB(검수 B2) — 하이브리드는 −14 통일이라 참고"),
     ("narr.share", "range", None, False, "나레 줄 비율이 벤치 min~max 안 — 하이브리드는 설계상 다름, 참고"),
+    # ↓ 표준 §4-1 추가 칸(관제 263 지시서 04, 2026-10-24). 우리 쪽 값은 match_from_render 가 렌더 기록(자막표·시간표·썸네일)에서 채운다.
+    ("transition.rate", "pctp", 20, True, "컷 전환 종류 분포(cut·flash·zoomblur·black·기타) 칸마다 차 ≤20%p(표준 §4-1 A1)"),
+    ("sfx.rate", "rel0", 30, True, "효과음 발/초 차 ≤30%, 벤치 0이면 우리도 0(표준 §4-1 A2)"),
+    ("sticker.rate", "pctp", 20, True, "스티커 붙은 줄 비율 차 ≤20%p(표준 §4-1 A3)"),
+    ("meme.rate", "pctp", 20, True, "짤 화면 줄 비율 차 ≤20%p(표준 §4-1 A3 · 줄판독 screen/scene 에 '짤')"),
+    ("thumb.frame0", "eq", None, True, "0초 첫 화면 종류(card=글 얹은 표지 2프레임 / scene=그냥 장면) 벤치 최빈과 같음(표준 §4-1 A6)"),
 ]
+# 업그레이드 판(base 있음)에서도 필수인 뼈대 칸 — 표준 §11 ③(페이블 10-25). 겉모양(바꿔도 됨) = framecmp·mix.lufs·narr.share·thumb.frame0·meme.rate·스티커 종류
+MATCH_SKELETON = ("len.duration", "cut.median", "speech.cps.나레", "chunk.chars", "chunk.sec", "enter.mode.나레", "enter.mode.원음",
+                  "fx.rate.나레", "fx.rate.원음", "fx.pos", "plain.rate", "sfx.rate", "transition.rate", "sticker.rate")
+TRANS_VOCAB = ("cut", "flash", "zoomblur", "black", "기타")
+
+
+def transition_key(v) -> str | None:
+    """줄판독 transition 칸 어휘 정규화(한 곳). None·'none(같은 컷 안…)' = 전환 없음(None)."""
+    if v is None:
+        return None
+    s = str(v).strip().lower()
+    if not s or s.startswith(("none", "없음", "-")):
+        return None
+    if s.startswith("cut") or s.startswith("컷"):
+        return "cut"
+    if any(k in s for k in ("flash", "흰", "번쩍", "white")):
+        return "flash"
+    if any(k in s for k in ("zoom", "blur", "줌", "블러")):
+        return "zoomblur"
+    if any(k in s for k in ("black", "검은", "검정", "암전")):
+        return "black"
+    return "기타"
+
+
+def _is_meme(l: dict) -> bool:
+    if l.get("meme"):
+        return True
+    return any("짤" in str(l.get(k) or "") for k in ("screen", "scene"))
+
+
+def _sfx_n(l: dict) -> int:
+    v = l.get("sfx")
+    if isinstance(v, list):
+        return len([x for x in v if x])
+    return 1 if _has(v) else 0
+
+
+def frame0_kind(d: dict) -> str | None:
+    """줄판독 frame0(0초 첫 화면) → card(글 얹은 표지) / scene(그냥 장면). 칸 없으면 None(미측정)."""
+    f0 = d.get("frame0")
+    if not isinstance(f0, dict):
+        return None
+    return "card" if str(f0.get("text") or "").strip() else "scene"
 
 
 def _ours_lines(o: dict) -> tuple[list[dict], float]:
@@ -356,7 +441,7 @@ def _ours_lines(o: dict) -> tuple[list[dict], float]:
         t0, t1 = float(r.get("t0") or 0), float(r.get("t1") or 0)
         rows.append({"t0": t0, "t1": t1, "speaker": r.get("speaker") or r.get("kind"), "text": r.get("text"),
                      "enter": r.get("enter") or "instant", "emph": emph, "sticker": st,
-                     "sfx": next((f"{t}" for t in sfx_t if t0 <= t < t1), None), "role": r.get("role"), "layer": "채널"})
+                     "sfx": next((f"{t}" for t in sfx_t if t0 <= t < t1), None), "role": r.get("role"), "layer": "채널", "variant": r.get("variant")})
     return rows, float(o.get("dur") or (max((r["t1"] for r in rows), default=0)))
 
 
@@ -374,6 +459,13 @@ def _stats(lines: list[dict], dur: float) -> dict:
     fx = [n for n in N if n["any"]]
     s["fx.pos"] = {k: round(sum(n["pos"] == k for n in fx) / len(fx), 3) for k in ("훅", "본문", "끝")} if fx else None
     s["narr.share"] = round(sum(n["sp"] == "나레" for n in N) / len(N), 3) if N else None
+    # 표준 §4-1 추가 칸(04) — 원본박힘 층 뺀 같은 줄 모음에서
+    L = [l for l in lines if (l.get("layer") or "채널") != "원본박힘"]
+    tr = [k for k in (transition_key(l.get("transition")) for l in L) if k]
+    s["transition.rate"] = {k: round(tr.count(k) / len(tr), 3) for k in TRANS_VOCAB if k in tr} if tr else None
+    s["sfx.rate"] = round(sum(_sfx_n(l) for l in L) / dur, 3) if dur else None
+    s["sticker.rate"] = round(sum(_has(l.get("sticker")) for l in L) / len(L), 3) if L else None
+    s["meme.rate"] = round(sum(_is_meme(l) for l in L) / len(L), 3) if L else None
     return s
 
 
@@ -382,8 +474,10 @@ def _med(xs):
     return statistics.median(xs) if xs else None
 
 
-def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, bench_media: dict | None) -> dict:
-    """(판단 주인) 벤치 줄판독 모음 ↔ 우리 한 편을 MATCH_RULES 자로. 못 잰 항목은 failed(통과로 치지 않는다)."""
+def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, bench_media: dict | None, own_len: tuple | None = None) -> dict:
+    """(판단 주인) 벤치 줄판독 모음 ↔ 우리 한 편을 MATCH_RULES 자로. 못 잰 항목은 failed(통과로 치지 않는다).
+    own_len = 판 length (min, max). 판 길이 범위가 벤치 편 길이 범위와 **아예 안 겹치면**(하이브리드: 앞 원음 + 뒤 판매 이야기 25~30초 ↔ 벤치 단독 10~21초,
+    판 length.why · channel/kitchit/하이브리드_판설계.md §1) 판이 일부러 정한 다른 길이다 — len.duration 은 그 판 범위로 잰다(관제263). 겹치면 옛 그대로."""
     B = [_stats(d.get("lines") or [], float(d.get("dur") or 0)) for d in bench_docs]
     ol, odur = _ours_lines(ours)
     O = _stats(ol, odur)
@@ -393,6 +487,12 @@ def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, ben
         if key == "len.duration":
             b, o = _med([s["dur"] for s in B]), odur or om.get("duration")
             brange = (min(s["dur"] for s in B), max(s["dur"] for s in B)) if B else None
+            if own_len and brange and (own_len[0] > brange[1] or own_len[1] < brange[0]) and o is not None:
+                lo, hi = float(own_len[0]), float(own_len[1])
+                rows.append({"key": key, "bench": b, "ours": o, "diff": f"판 {lo:g}~{hi:g}(벤치 {brange[0]:g}~{brange[1]:g} 와 안 겹침)",
+                             "judge": "in" if lo <= o <= hi else "out", "core": core,
+                             "why": why + " — 판 길이가 벤치 범위와 안 겹치는 판(하이브리드)은 판 length 범위로(판 length.why)"})
+                continue
         elif key == "cut.median":
             b, o, brange = _med(bm.get("cut_median") or []), om.get("cut_median"), None
         elif key == "mix.lufs":
@@ -404,6 +504,16 @@ def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, ben
         elif key == "narr.share":
             vals = [s["narr.share"] for s in B if s["narr.share"] is not None]
             b, o, brange = _med(vals), O["narr.share"], ((min(vals), max(vals)) if vals else None)
+        elif key == "transition.rate":          # 분포(dict) — 벤치는 편마다 분포의 칸별 중앙값
+            bs = [s[key] for s in B if s.get(key)]
+            ks = sorted({k for x in bs for k in x})
+            b = {k: round(_med([x.get(k, 0.0) for x in bs]), 3) for k in ks} if bs else None
+            o, brange = (ours.get("transition_rate") or O.get(key)), None
+        elif key == "thumb.frame0":
+            c = Counter(k for k in (frame0_kind(d) for d in bench_docs) if k)
+            b, o, brange = (c.most_common(1)[0][0] if c else None), ours.get("frame0_kind"), None
+        elif key == "sfx.rate" and ours.get("sfx_rate") is not None:   # 렌더 기록(자막표.sfx 발 수 / 길이) — 줄에 접으면 한 줄 여러 발을 놓친다
+            b, o, brange = _med([s[key] for s in B]), ours["sfx_rate"], None
         elif kind == "eq":
             c = Counter(s[key] for s in B if s[key])
             b, o, brange = (c.most_common(1)[0][0] if c else None), O[key], None
@@ -414,6 +524,9 @@ def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, ben
         elif kind == "rel":
             diff = round((o - b) / b * 100, 1) if b else None
             judge = "in" if (brange and brange[0] <= o <= brange[1]) or (diff is not None and abs(diff) <= tol) else "out"
+        elif kind == "rel0":                    # 벤치 0 이면 우리도 0 이어야 같다(0 나누기 대신)
+            diff = round((o - b) / b * 100, 1) if b else (0.0 if not o else "벤치 0")
+            judge = "in" if (b and abs(diff) <= tol) or (not b and not o) else "out"
         elif kind == "rel_slow":
             diff = round((o - b) / b * 100, 1)
             judge = "in" if -tol * 0.5 <= diff <= tol else "out"   # 빠른 쪽(음수)은 절반만 허용 — B4 '원본보다 빠르면 반려 쪽'
@@ -422,7 +535,7 @@ def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, ben
             judge = "in" if abs(diff) <= tol else "out"
         elif kind == "pctp":
             if isinstance(b, dict):
-                diff = {k: round((o[k] - b[k]) * 100, 1) for k in b}
+                diff = {k: round((o.get(k, 0.0) - b.get(k, 0.0)) * 100, 1) for k in sorted(set(b) | set(o))}   # 한쪽에만 있는 칸은 0으로(분포 비교)
                 judge = "in" if all(abs(v) <= tol for v in diff.values()) else "out"
             else:
                 diff = round((o - b) * 100, 1)
@@ -559,6 +672,98 @@ def bench_media_of(tteutgi_dir: str, ids: list[str]) -> dict:
     return out
 
 
+def _abs(p: str | None) -> Path | None:
+    if not p:
+        return None
+    return Path(p) if Path(p).is_absolute() else ROOT / p
+
+
+def upgrade_table(st, doc, work) -> dict:
+    """업그레이드 자 — 주인은 engine/upgrade_table.py(지시서 05). quality_gate 가 이 이름으로 부른다(한 줄 연결, 순환 import 피해 늦게 부름)."""
+    from tools.calcopy.engine import upgrade_table as _U
+    return _U.upgrade_table(st, doc, work)
+
+
+BENCH_MEDIA_CACHE = "_bench_media_cache.json"
+
+
+def bench_media_cached(src_dir: str, ids: list[str], win: tuple | None) -> dict:
+    """bench_media_src 와 같은 값·같은 꼴 — 벤치 원본 한 편 측정(media_of, 편당 2~3분)을 src_dir/_bench_media_cache.json 에 남겨 다시 안 잰다.
+    열쇠 = 편 id·파일 크기·수정 시각·창 — 원본이 바뀌면 다시 잰다(10-24 실측: 관문 한 번 20분 중 대부분이 벤치 6편 재측정)."""
+    cp = Path(src_dir) / BENCH_MEDIA_CACHE
+    try:
+        cache = json.loads(cp.read_text(encoding="utf-8")) if cp.exists() else {}
+    except (OSError, ValueError):
+        cache = {}
+    out = {"cut_median": [], "lufs": [], "ids": [], "per": {}}
+    for vid in ids:
+        p = Path(src_dir) / f"{vid}.mp4"
+        if not p.exists():
+            continue
+        key = f"{vid}|{p.stat().st_size}|{int(p.stat().st_mtime)}|{list(win) if win else None}"
+        m = cache.get(key) or media_of(str(p), win)
+        cache[key] = m
+        out["per"][vid] = m
+        out["ids"].append(vid)
+        if isinstance(m["cut_median"], (int, float)):
+            out["cut_median"].append(m["cut_median"])
+        if isinstance(m["lufs"], (int, float)):
+            out["lufs"].append(m["lufs"])
+    try:
+        cp.write_text(json.dumps(cache, ensure_ascii=False, indent=1), encoding="utf-8")
+    except OSError:
+        pass                                # 캐시를 못 써도 값은 그대로(다음에 다시 잴 뿐)
+    out["method"] = "media_of(같은 자) — 편별 캐시 " + BENCH_MEDIA_CACHE
+    return out
+
+
+def match_from_render(style, doc, work, media: bool = True, frame0_kind_measured: str | None = None) -> dict:
+    """(어댑터 — 관제 263 지시서 04) 공용 렌더러(render_bench) 산출 → match_table. 판단은 match_table 한 곳(여기서 새로 판정하지 않는다).
+    style = 판 이름 또는 판 dict · 벤치 = 판 bench.line_reads(줄판독) + bench.src_dir(같은 자로 컷·LUFS) ·
+    우리 = work/render/자막표.json(rows·sfx·transitions·flashes) + timeline.json(cuts·end) + final.mp4 + doc/썸네일.json.
+    frame0_kind_measured = 품질 관문이 완성본에서 잰 0초 종류(card/scene) — 없으면 썸네일.json 의 pick 으로(선언값, rows 에 표시)."""
+    from tools.calcopy.hybrid import styles as ST
+    st = ST.load(style) if isinstance(style, str) else style
+    doc, R = Path(doc), Path(work) / "render"
+    B = st.get("bench") or {}
+    lrp = _abs(B.get("line_reads"))
+    bench = _load_docs([str(lrp)]) if lrp and lrp.exists() else []
+    tab = json.loads((R / "자막표.json").read_text(encoding="utf-8"))
+    T = json.loads((R / "timeline.json").read_text(encoding="utf-8"))
+    dur = float(T.get("end") or 0)
+    lines, _ = _ours_lines({"rows": tab.get("rows") or [], "dur": dur})
+    # 짤: 시간표 컷에 meme 표시가 있으면 그 컷과 겹치는 줄 = 짤 화면
+    memes = [(float(c["t0"]), float(c["t1"])) for c in T.get("cuts") or [] if c.get("meme") or c.get("kind") == "meme"]
+    for l in lines:
+        if any(a < l["t1"] and l["t0"] < b for a, b in memes):
+            l["screen"] = "밈짤"
+    # 전환: 컷 경계마다 하나 — 종류 = 자막표 transitions(렌더러가 실제로 그린 것) > flashes(옛 키) > cut
+    marks = [(float(e["t"]), e.get("kind", "cut")) for e in tab.get("transitions") or [] if isinstance(e, dict)]
+    marks += [(float(f.get("t") if isinstance(f, dict) else f), "flash") for f in tab.get("flashes") or []]
+    kinds = []
+    for c in (T.get("cuts") or [])[1:]:
+        t = float(c["t0"])
+        kinds.append(next((k for tt, k in marks if abs(tt - t) <= 0.05), "cut"))
+    tr = {k: round(kinds.count(k) / len(kinds), 3) for k in TRANS_VOCAB if k in kinds} if kinds else None
+    sp = doc / "썸네일.json"
+    declared = ("card" if json.loads(sp.read_text(encoding="utf-8")).get("pick") else "scene") if sp.exists() else "scene"
+    ours = {"lines": lines, "dur": dur, "transition_rate": tr,
+            "sfx_rate": round(len(tab.get("sfx") or []) / dur, 3) if dur else None,
+            "frame0_kind": frame0_kind_measured or declared}
+    om = bm = None
+    if media:
+        x, y, w, h = (st.get("frame") or {}).get("window") or (0, 0, 1080, 1920)
+        om = media_of(str(R / "final.mp4"), (x, y, w, h))
+        if B.get("src_dir"):
+            bm = bench_media_cached(B["src_dir"], [d.get("id") for d in bench], _win_arg(None, bench))
+    LD = st.get("length") or {}
+    Tm = match_table(bench, ours, om, bm, own_len=(LD["min"], LD["max"]) if "min" in LD and "max" in LD else None)
+    Tm.update({"ours_media": om, "bench_media": bm, "bench_ids": [d.get("id") for d in bench], "line_reads": str(lrp) if lrp else None,
+               "frame0_from": "완성본 측정" if frame0_kind_measured else "썸네일.json pick(선언)",
+               "made_by": "kal_analyze.match_from_render"})
+    return Tm
+
+
 # ---------------------------------------------------------------- frames (견본 sheets.py 를 그대로 부른다)
 def _sheets_mod():
     p = ROOT / "channel/starpickroom/_tools/sheets.py"
@@ -568,7 +773,8 @@ def _sheets_mod():
     return m
 
 
-def frames_cmd(mp4: str, out: str, y0: int, y1: int, fps: float, max_strips: int) -> dict:
+def frames_cmd(mp4: str, out: str, y0: int, y1: int, fps: float, max_strips: int,
+               readline: bool = True, window: tuple | None = None, cap_band: tuple | None = None, cap_mode: str = "color") -> dict:
     import cv2
     import numpy as np
     S = _sheets_mod()
@@ -577,6 +783,7 @@ def frames_cmd(mp4: str, out: str, y0: int, y1: int, fps: float, max_strips: int
     vid = Path(mp4).stem
     cap = cv2.VideoCapture(mp4)
     H = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) or 1920
+    W = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)) or 1080
     cap.release()
     y1 = min(y1, H)
     sys.argv = ["sheets.py", mp4, str(outp), "--fps", str(fps), "--y0", str(y0), "--y1", str(y1)]
@@ -606,8 +813,32 @@ def frames_cmd(mp4: str, out: str, y0: int, y1: int, fps: float, max_strips: int
     lst = {"id": vid, "mp4": mp4, "band": [y0, y1], "fps_sheet": fps, "n_changes": len(ch["changes"]), "n_strips": len(items),
            "sheets": sorted(str(p) for p in outp.glob(f"sheet_{vid}_*.jpg")), "strips": items,
            "note": "판독은 사람 눈 — 시트 0.5초 칸만 보지 말고 strips 의 0.1초 띠에서 바뀌는 프레임을 확대해 본다(지침서 §0 2)"}
+    if readline:   # 30fps 픽셀 실측(지시서 13 · 표준 §11 ⑫) — 줄판독 build_lr 의 입력 seg_/cut_ 과 사람 눈용 segsheet
+        tall = (y1 - y0) >= 0.4 * H          # 띠가 크면 = 영상 창(kal.py step_frames 가 창을 준다), 작으면 = 자막 띠
+        lst["readline"] = readline_measure(mp4, outp, cap_band or (None if tall else (y0, y1)),
+                                           window or ((y0, y1) if tall else (0, H)), W, cap_mode)
     (outp / f"판독목록_{vid}.json").write_text(json.dumps(lst, ensure_ascii=False, indent=1), encoding="utf-8")
     return lst
+
+
+def readline_measure(mp4: str, outp: Path, cap_band: tuple | None, window: tuple, width: int = 1080, mode: str = "color") -> dict:
+    """판독 도구(engine/readline_tools) 를 부른다 — 컷 cutdet(창) · 자막 띠 capseg + 구간 시트 segsheet(자막 띠를 알 때만).
+    판단은 각 도구가 한 곳에서. 자막 띠를 모르면 capseg 를 짐작 띠로 돌리지 않고 건너뛴다(--cap-band)."""
+    from tools.calcopy.engine.readline_tools import capseg as _cs, cutdet as _cd, segsheet as _ss
+    vid = Path(mp4).stem
+    cd = _cd.cutdet(mp4, int(window[0]), int(window[1]), width=width)
+    (outp / f"cut_{vid}.json").write_text(json.dumps(cd, indent=0), encoding="utf-8")
+    r = {"cut": str(outp / f"cut_{vid}.json"), "n_cut": len(cd["cuts"]), "window": [int(window[0]), int(window[1])],
+         "build_lr": f"py tools/calcopy/engine/readline_tools/build_lr.py <spec.py> <out.json> --work {outp} --mp4 {mp4}"}
+    if not cap_band:
+        r["capseg"] = "건너뜀: 자막 띠 모름 — kal_analyze frames --cap-band y0,y1 로 다시"
+        return r
+    y0, y1 = int(cap_band[0]), int(cap_band[1])
+    segs = _cs.capseg(mp4, y0, y1, width=width, mode=mode)
+    (outp / f"seg_{vid}.json").write_text(json.dumps(segs, ensure_ascii=False, indent=0), encoding="utf-8")
+    sh = _ss.segsheet(mp4, segs, str(outp / f"segsheet_{vid}"), y0, y1)
+    r.update({"seg": str(outp / f"seg_{vid}.json"), "n_seg": len(segs), "segsheets": sh["sheets"], "band": [y0, y1], "mode": mode})
+    return r
 
 
 # ---------------------------------------------------------------- palette (채널 색 팔레트 — 역할별 hex·편 수)
@@ -781,9 +1012,12 @@ def frame_metrics(png: str, band: tuple) -> dict:
     gaps_r = [len(g) for g in re.findall(r"0+", "".join(map(str, rows[int(ys.min()):int(ys.max()) + 1])))]
     cols = (m[int(ys.min()):int(ys.max()) + 1].sum(0) > 2).astype(int)
     gaps_c = [len(g) for g in re.findall(r"0+", "".join(map(str, cols[int(xs.min()):int(xs.max()) + 1])))]
+    letters = [g for g in gaps_c if g <= 40]       # 40px 넘는 빈 칸 = 어절·줄 끝 — 글자 사이가 아니다. 전부 넘으면 표본 0(미측정 — median([]) 로 죽지 않는다, 10-25)
     return {"ink": int(m.sum()), "box": box, "h": box[3] - box[1], "cx": (box[0] + box[2]) // 2,
             "fill_hex": med(fill), "outline_hex": med(dark),
-            "line_gap_px": statistics.median(gaps_r) if gaps_r else 0, "letter_gap_px": statistics.median([g for g in gaps_c if g <= 40]) if gaps_c else 0}
+            "line_gap_px": statistics.median(gaps_r) if gaps_r else 0,
+            "letter_gap_px": statistics.median(letters) if letters else (0 if not gaps_c else None),
+            "letter_gap_n": len(letters), "letter_gap_dropped": len(gaps_c) - len(letters)}
 
 
 SKIN_DIFF = {"y_px": 12, "dE": 10.0}   # 업그레이드 뒤 "얼마나 달라졌나" 측정 기준(지침서 §2-6-1 — 목표·합격선이 아니다)
@@ -808,7 +1042,11 @@ def frame_compare(bench_png: str, ours_png: str, band: tuple, skin: bool = False
         rows.append({"key": "cx(가운데 x)", "bench": a["cx"], "ours": b["cx"], "diff": b["cx"] - a["cx"], "pass": abs(b["cx"] - a["cx"]) <= FRAME_PASS["xy_px"]})
         rows.append({"key": "y0(잉크 위)", "bench": a["box"][1], "ours": b["box"][1], "diff": b["box"][1] - a["box"][1], "pass": abs(b["box"][1] - a["box"][1]) <= FRAME_PASS["xy_px"]})
         rows.append({"key": "h(잉크 높이)", "bench": a["h"], "ours": b["h"], "diff": b["h"] - a["h"], "pass": abs(b["h"] - a["h"]) <= FRAME_PASS["h_px"]})
-        rows.append({"key": "letter_gap_px", "bench": a["letter_gap_px"], "ours": b["letter_gap_px"], "diff": b["letter_gap_px"] - a["letter_gap_px"], "pass": abs(b["letter_gap_px"] - a["letter_gap_px"]) <= 2})
+        if a["letter_gap_px"] is None or b["letter_gap_px"] is None:      # 글자 사이 표본 0 — 이 칸은 미측정(통과 아님), 장수는 letter_gap_n 에
+            rows.append({"key": "letter_gap_px", "bench": a["letter_gap_px"], "ours": b["letter_gap_px"], "diff": "표본 없음(미측정)", "pass": False})
+        else:
+            rows.append({"key": "letter_gap_px", "bench": a["letter_gap_px"], "ours": b["letter_gap_px"], "diff": b["letter_gap_px"] - a["letter_gap_px"],
+                         "pass": abs(b["letter_gap_px"] - a["letter_gap_px"]) <= 2})
         for k in ("fill_hex", "outline_hex"):
             if a.get(k) and b.get(k):
                 dE = float(np.linalg.norm(_lab([int(a[k][i:i + 2], 16) for i in (1, 3, 5)]) - _lab([int(b[k][i:i + 2], 16) for i in (1, 3, 5)])))
@@ -832,7 +1070,9 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("frames"); a.add_argument("mp4"); a.add_argument("--out", required=True)
     a.add_argument("--y0", type=int, default=0); a.add_argument("--y1", type=int, default=1920); a.add_argument("--fps", type=float, default=2); a.add_argument("--max-strips", type=int, default=80)
+    a.add_argument("--no-readline", action="store_true", help="30fps capseg/cutdet/segsheet 건너뜀"); a.add_argument("--window", help="컷 검출 창 y0,y1"); a.add_argument("--cap-band", help="capseg 자막 띠 y0,y1")
     b = sub.add_parser("skeleton"); b.add_argument("tteutgi"); b.add_argument("--vtt"); b.add_argument("--out", required=True); b.add_argument("--id")
+    b.add_argument("--spec", help="눈으로 적은 spec.py — 주면 readline_tools.build_lr 로 줄판독을 조립(tteutgi 자리 = frames 폴더)"); b.add_argument("--mp4"); b.add_argument("--sfx-raw"); b.add_argument("--profile")
     c = sub.add_parser("check"); c.add_argument("paths", nargs="+"); c.add_argument("--strict", action="store_true")
     r = sub.add_parser("rules"); r.add_argument("paths", nargs="+"); r.add_argument("--out"); r.add_argument("--json")
     pa = sub.add_parser("palette"); pa.add_argument("paths", nargs="+"); pa.add_argument("--out", required=True)
@@ -844,9 +1084,17 @@ def main(argv=None) -> int:
     m.add_argument("--bench-mp4", help="벤치 대표 1편 mp4 — 주면 픽셀·소리 자(compare)까지 한 판정으로(1차 칼카피 관문)")
     A = ap.parse_args(argv)
     if A.cmd == "frames":
-        lst = frames_cmd(A.mp4, A.out, A.y0, A.y1, A.fps, A.max_strips)
+        win = tuple(int(v) for v in A.window.split(",")) if A.window else None
+        cb = tuple(int(v) for v in A.cap_band.split(",")) if A.cap_band else None
+        lst = frames_cmd(A.mp4, A.out, A.y0, A.y1, A.fps, A.max_strips, readline=not A.no_readline, window=win, cap_band=cb)
         print(f"{lst['id']} 시트 {len(lst['sheets'])} 변화 {lst['n_changes']} 띠 {lst['n_strips']} → {A.out}")
         return 0
+    if A.cmd == "skeleton" and A.spec:
+        if not A.mp4:
+            ap.error("skeleton --spec 는 --mp4 가 필요하다")
+        from tools.calcopy.engine.readline_tools import build_lr as _bl
+        return _bl.main([A.spec, A.out, "--work", A.tteutgi, "--mp4", A.mp4] + (["--sfx-raw", A.sfx_raw] if A.sfx_raw else [])
+                        + (["--profile", A.profile] if A.profile else []))
     if A.cmd == "skeleton":
         tt = json.loads(Path(A.tteutgi).read_text(encoding="utf-8"))
         vid = A.id or Path(A.tteutgi).parent.name

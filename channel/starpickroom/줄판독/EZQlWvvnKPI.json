@@ -49,17 +49,31 @@
    1680,
    1919
   ],
-  "watermark": "창 오른쪽 위 반투명 '스타픽룸'",
+  "watermark": {
+   "text": "스타픽룸",
+   "where": "창 오른쪽 위 반투명 '스타픽룸'",
+   "alpha": 0.55,
+   "alpha_basis": "눈(1판 스타일분석 §3 약 55%)"
+  },
   "caption_y": [
    1112,
    1168
+  ],
+  "source_hex": "#8B8B88",
+  "caption_band_measure": [
+   1090,
+   1190
+  ],
+  "cut_window_measure": [
+   484,
+   1540
   ]
  },
  "lines": [
   {
    "t0": 2.0,
    "t1": 3.2,
-   "speaker": "원음:연예인(이름표 없음)",
+   "speaker": "원음:백지영",
    "text": "너무 맛있어",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -79,12 +93,21 @@
     1.93,
     2.0
    ],
-   "effect": "RGB 색분리 글리치(2.5초 프레임 확대에서 확인)"
+   "effect": "RGB 색분리 글리치(2.5초 프레임 확대에서 확인)",
+   "speaker_basis": "원음:연예인(이름표 없음)",
+   "role": "훅",
+   "fit": 7,
+   "scene_desc": "남자 먹고 여자 반응",
+   "transition": "cut",
+   "transition_t": 1.933,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 3.3,
    "t1": 5.3,
-   "speaker": "원음:연예인(이름표 없음)",
+   "speaker": "원음",
    "text": "보쌈 식당인데요 완전",
    "layer": "스타픽룸",
    "enter": "기타(오른쪽 끝 '완전'부터 왼쪽으로 늘어나듯 나타남 3.3→3.9초, 0.6초)",
@@ -103,7 +126,16 @@
    "cut_at": [
     3.27,
     5.17
-   ]
+   ],
+   "speaker_basis": "원음:연예인(이름표 없음)",
+   "role": "훅",
+   "fit": 6,
+   "scene_desc": "고기 써는 칼 근접",
+   "transition": "cut",
+   "transition_t": 3.267,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 5.5,
@@ -128,7 +160,15 @@
     5.37
    ],
    "type_cps": 10.0,
-   "type_note": "5.5 '수' → 6.8 '이', 13자/1.3초"
+   "type_note": "5.5 '수' → 6.8 '이', 13자/1.3초",
+   "role": "다리",
+   "fit": 6,
+   "scene_desc": "수육 써는 칼",
+   "transition": "cut",
+   "transition_t": 5.367,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 7.0,
@@ -151,7 +191,14 @@
    "scene": "손·제품 근접",
    "cut_at": [],
    "type_cps": 10.0,
-   "type_note": "7.0 '백' → 7.9 '도', 11자/0.9초"
+   "type_note": "7.0 '백' → 7.9 '도', 11자/0.9초",
+   "role": "다리",
+   "fit": 5,
+   "scene_desc": "수육 써는 칼",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 8.1,
@@ -177,12 +224,19 @@
     9.53
    ],
    "type_cps": 10.0,
-   "type_note": "8.1 '이' → 9.5 '?', 15자/1.4초; 8.0 은 빈 칸"
+   "type_note": "8.1 '이' → 9.5 '?', 15자/1.4초; 8.0 은 빈 칸",
+   "role": "다리",
+   "fit": 5,
+   "scene_desc": "집게로 무언가 집음(팩 안 보임)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 13.4,
    "t1": 15.8,
-   "speaker": "원음:연예인(이름표 없음)",
+   "speaker": "원음:백지영",
    "text": "근데 오늘 준비한 재료는",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -200,12 +254,20 @@
    "scene": "얼굴",
    "cut_at": [
     13.13
-   ]
+   ],
+   "speaker_basis": "원음:연예인(이름표 없음)",
+   "role": "이음",
+   "fit": 5,
+   "scene_desc": "남녀 얼굴",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 15.8,
    "t1": 18.3,
-   "speaker": "원음:연예인(이름표 없음)",
+   "speaker": "원음:백지영",
    "text": "고기랑 딱 요거야",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -223,12 +285,20 @@
    "scene": "얼굴",
    "cut_at": [
     18.27
-   ]
+   ],
+   "speaker_basis": "원음:연예인(이름표 없음)",
+   "role": "공개",
+   "fit": 5,
+   "scene_desc": "말하는 여성 얼굴(재료 안 보임)",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 18.4,
    "t1": 20.3,
-   "speaker": "원음:연예인(이름표 없음)",
+   "speaker": "원음",
    "text": "고기 1kg~1.2kg 정도를",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -244,12 +314,21 @@
    "sticker": [],
    "sfx": null,
    "scene": "요리 과정",
-   "cut_at": []
+   "cut_at": [],
+   "speaker_basis": "원음:연예인(이름표 없음)",
+   "role": "증거",
+   "fit": 9,
+   "scene_desc": "고기 든 냄비에 소스 붓기",
+   "transition": "cut",
+   "transition_t": 18.267,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 20.4,
    "t1": 21.5,
-   "speaker": "원음:연예인(이름표 없음)",
+   "speaker": "원음",
    "text": "팩 하나만 넣으면 돼",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -267,7 +346,15 @@
    "scene": "요리 과정",
    "cut_at": [
     21.47
-   ]
+   ],
+   "speaker_basis": "원음:연예인(이름표 없음)",
+   "role": "증거",
+   "fit": 8,
+   "scene_desc": "소스 팩+냄비 고기",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 21.6,
@@ -290,12 +377,20 @@
    "scene": "얼굴",
    "cut_at": [],
    "type_cps": 10.4,
-   "type_note": "21.6 '그' → 24.0 '?', 25자/2.4초; 중간 한 줄 안에 계속 늘어남"
+   "type_note": "21.6 '그' → 24.0 '?', 25자/2.4초; 중간 한 줄 안에 계속 늘어남",
+   "role": "다리",
+   "fit": 5,
+   "scene_desc": "검정 조리복 셰프 말함",
+   "transition": "cut",
+   "transition_t": 21.467,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 24.2,
    "t1": 24.7,
-   "speaker": "원음:연예인(이름표 없음)",
+   "speaker": "원음:이원일",
    "text": "구수한 수육을",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -313,12 +408,21 @@
    "scene": "얼굴",
    "cut_at": [
     24.1
-   ]
+   ],
+   "speaker_basis": "원음:연예인(이름표 없음)",
+   "role": "본문",
+   "fit": 4,
+   "scene_desc": "셰프 말하는 상반신",
+   "transition": "cut",
+   "transition_t": 24.1,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 24.8,
    "t1": 25.9,
-   "speaker": "원음:연예인(이름표 없음)",
+   "speaker": "원음:이원일",
    "text": "드시고 싶으신 분들은",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -334,12 +438,20 @@
    "sticker": [],
    "sfx": null,
    "scene": "얼굴",
-   "cut_at": []
+   "cut_at": [],
+   "speaker_basis": "원음:연예인(이름표 없음)",
+   "role": "이음",
+   "fit": 4,
+   "scene_desc": "셰프 손짓",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 26.0,
    "t1": 27.7,
-   "speaker": "원음:연예인(이름표 없음)",
+   "speaker": "원음:이원일",
    "text": "센불에서 노릇노릇",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -357,12 +469,21 @@
    "scene": "요리 과정",
    "cut_at": [
     26.07
-   ]
+   ],
+   "speaker_basis": "원음:연예인(이름표 없음)",
+   "role": "증거",
+   "fit": 8,
+   "scene_desc": "팬에 고기 올림",
+   "transition": "cut",
+   "transition_t": 26.067,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 27.8,
    "t1": 29.1,
-   "speaker": "원음:연예인(이름표 없음)",
+   "speaker": "원음:이원일",
    "text": "한번 기름 부분만 지져주면 돼요",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -378,12 +499,20 @@
    "sticker": [],
    "sfx": null,
    "scene": "요리 과정",
-   "cut_at": []
+   "cut_at": [],
+   "speaker_basis": "원음:연예인(이름표 없음)",
+   "role": "증거",
+   "fit": 9,
+   "scene_desc": "집게로 고기 지짐",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 29.2,
    "t1": 30.5,
-   "speaker": "원음:연예인(이름표 없음)",
+   "speaker": "원음:이원일",
    "text": "맛있게 구워지면",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -397,17 +526,30 @@
    "glow": null,
    "emph": [],
    "sticker": [],
-   "sfx": null,
+   "sfx": {
+    "kind": "broad",
+    "t": 29.48,
+    "basis": "신호(_kal/sfx_events.json 고립 솟음 19.9dB · 귀 확인 못 함 — 원본 조리·말소리일 수 있음)"
+   },
    "scene": "요리 과정",
    "cut_at": [
     29.2,
     30.57
-   ]
+   ],
+   "speaker_basis": "원음:연예인(이름표 없음)",
+   "role": "증거",
+   "fit": 9,
+   "scene_desc": "노릇하게 구워진 고기",
+   "transition": "cut",
+   "transition_t": 29.2,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 30.6,
    "t1": 31.7,
-   "speaker": "원음:연예인(이름표 없음)",
+   "speaker": "원음:이원일",
    "text": "부워주고",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -426,12 +568,21 @@
    "cut_at": [
     31.77
    ],
-   "note": "화면 글자 그대로('부워주고', 맞춤법 '부어주고')"
+   "speaker_basis": "원음:연예인(이름표 없음)",
+   "role": "증거",
+   "fit": 8,
+   "scene_desc": "냄비 뚜껑·소스+물 원본 글씨",
+   "notes": "화면 글자 그대로('부워주고', 맞춤법 '부어주고')",
+   "transition": "cut",
+   "transition_t": 30.567,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 33.9,
    "t1": 34.7,
-   "speaker": "원음:연예인(이름표 없음)",
+   "speaker": "원음:이원일",
    "text": "30분 끓인 다음에",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -445,16 +596,28 @@
    "glow": null,
    "emph": [],
    "sticker": [],
-   "sfx": null,
+   "sfx": {
+    "kind": "broad",
+    "t": 33.92,
+    "basis": "신호(_kal/sfx_events.json 고립 솟음 18.3dB · 귀 확인 못 함 — 원본 조리·말소리일 수 있음)"
+   },
    "scene": "요리 과정",
    "cut_at": [
     34.77
-   ]
+   ],
+   "speaker_basis": "원음:연예인(이름표 없음)",
+   "role": "증거",
+   "fit": 8,
+   "scene_desc": "끓는 냄비 속 고기",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 45.8,
    "t1": 47.3,
-   "speaker": "원음:연예인(이름표 없음)",
+   "speaker": "원음",
    "text": "수육에 정성을 안 들였는데",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -472,12 +635,21 @@
    "scene": "얼굴",
    "cut_at": [
     45.7
-   ]
+   ],
+   "speaker_basis": "원음:연예인(이름표 없음)",
+   "role": "끝",
+   "fit": 6,
+   "scene_desc": "식탁에서 먹는 두 사람",
+   "transition": "cut",
+   "transition_t": 45.7,
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   },
   {
    "t0": 47.4,
    "t1": 48.6,
-   "speaker": "원음:연예인(이름표 없음)",
+   "speaker": "원음",
    "text": "정성 드린 맛이 나지",
    "layer": "스타픽룸",
    "enter": "instant",
@@ -495,7 +667,15 @@
    "scene": "얼굴",
    "cut_at": [
     48.67
-   ]
+   ],
+   "speaker_basis": "원음:연예인(이름표 없음)",
+   "role": "끝",
+   "fit": 6,
+   "scene_desc": "식탁에서 먹는 두 사람",
+   "transition": "none",
+   "motion": "cam",
+   "exit": "cut",
+   "confidence": "픽셀(transition·cut_at: cutdet 30fps 창 484~1540)/눈(시각 1판 0.1초 띠 ±0.1·y·fill_hex 1판·글·화자·역할·fit·스티커)/신호(motion 샷 chg·sfx 신호표)"
   }
  ],
  "original_layer_lines": [
@@ -836,5 +1016,16 @@
   "오른쪽부터 늘어나는 등장은 이 편 3.3초 줄에서만 확인",
   "cut_at 은 창 장면 전환 감지(scene>0.3) 근사, 자막·그래픽 교체 섞임",
   "전체 컷 후보: 1.93,2.0,3.27,5.17,5.37,8.57,9.53,13.13,18.27,21.47,24.1,26.07,29.2,30.57,31.77,34.77,36.2,39.67,43.77,45.7,48.67"
- ]
+ ],
+ "name_evidence": [
+  "백지영: 제목 2줄·출처 '백지영' — 화자=말하는 여성 컷(줄 0·5·6, 얼굴 대조 아님)",
+  "이원일: 제목 2줄·출처 '셰프이원일'·나레 줄9 '이원일 셰프' 직후 검정 조리복 남성 컷(줄 10~16, 얼굴 대조 아님)"
+ ],
+ "frame0": {
+  "what": "앞치마 백지영 반응 얼굴",
+  "face_frac": 0.06,
+  "text": "제목 2줄 + 원본 박힘 분홍 '어디 한번'"
+ },
+ "_made_by_v2": "오푸스 실행자 보강 2026-10-25(관제 263 지시서 06): role·fit·scene_desc 눈 · transition/cut_at/motion = readline_tools/cutdet 30fps · sfx = _kal/sfx_events.json 연결 · speaker 이름은 화면 글자 근거만(speaker_basis 에 옛 글)",
+ "_tools_v2": "tools/calcopy/engine/readline_tools/{capseg 1090~1190, cutdet 484~1540, rangesheet} → C:/숏템_칼카피/starpickroom/work/lr6/"
 }

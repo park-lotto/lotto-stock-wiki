@@ -10,7 +10,12 @@ _common.json 은 모든 판에 먼저 깔린다(대본 금지어 등) — 판 �
 
     PYTHONUTF8=1 py tools/calcopy/hybrid/styles.py list
     PYTHONUTF8=1 py tools/calcopy/hybrid/styles.py brief <판>      # 대본 쓰기 지시문의 판별 절(briefs/script.md 가 부른다)
-"""
+
+상속 판(base) 목록 칸(표준 §11-2 ⑰, 관제 263 지시서 11): `script.audit`·`script.brief` 는 1차 판이 유일 주인 — 상속 판은 통째로 적지 않고
+`script.audit_patch{add:[규칙], remove:[id], replace:{id: 규칙}}` · `script.brief_patch{add:[줄], remove:[앞 12자], replace:{앞 12자: 줄}}` 만 적는다.
+load 가 바탕 목록에 패치를 적용한다(통째 목록이 있으면 거절 — 조용한 두 벌 금지). audit 규칙 id 없으면 `kind:순번` 자동.
+팩 칸(표준 §10-2): `packs` 가 정본 — load 가 pack_map.apply_to_style 로 옛 칸(caption.pack·sfx_files·bgm.id/candidates)을 채운다(다르면 오류).
+회원 patch(load(name, patch=…)): 지금은 `packs` 만(합치기 주인 pack_map.merge) — 다른 칸은 지시서 12 apply_patch 몫이라 거절."""
 from __future__ import annotations
 
 import json
@@ -18,7 +23,10 @@ import sys
 from pathlib import Path
 
 DIR = Path(__file__).with_name("styles")
-REQUIRED = ("name", "renderer", "voice", "bgm", "loudness", "length", "script")
+_ROOT = Path(__file__).resolve().parents[3]
+if str(_ROOT) not in sys.path:          # CLI 로 직접 돌릴 때도 tools.calcopy… 가 잡히게(pack_map import)
+    sys.path.insert(0, str(_ROOT))
+REQUIRED = ("name", "renderer", "voice", "bgm", "loudness", "length", "script", "thumb_card_face")   # thumb_card_face: 연예인 채널이면 true — 판마다 명시(사장님 10-25 "연예인 얼굴 통일·앞으로 칼카피 모두", 관문 ⑥)
 
 
 def _merge(a: dict, b: dict) -> dict:
@@ -39,23 +47,95 @@ def path_of(name: str) -> Path:
     return p
 
 
+class StyleError(ValueError):
+    """판 설정 오류 — 상속 판 통째 목록·패치 대상 없음 등(조용히 넘기지 않는다)."""
+
+
+def audit_ids(audit: list) -> list:
+    """audit 규칙마다 id(없으면 `kind:순번`) — 패치가 규칙 단위로 가리키는 이름."""
+    out = []
+    for i, a in enumerate(audit or []):
+        a = dict(a)
+        a.setdefault("id", f"{a.get('kind')}:{i}")
+        out.append(a)
+    return out
+
+
+def apply_list_patch(base: list, patch: dict, kind: str, where: str) -> list:
+    """목록 패치 하나(audit = id 단위 · brief = 앞 12자 단위). 가리킨 대상이 없거나 id 가 겹치면 StyleError."""
+    if kind == "audit":
+        cur = audit_ids(base)
+        key = lambda x: x["id"]          # noqa: E731
+        norm = lambda x: x               # noqa: E731
+    else:
+        cur = list(base or [])
+        key = lambda x: str(x)[:12]      # noqa: E731
+        norm = lambda x: str(x)[:12]     # noqa: E731
+    bad = set(patch) - {"add", "remove", "replace"}
+    if bad:
+        raise StyleError(f"{where}: {kind}_patch 에 모르는 칸 {sorted(bad)} — add·remove·replace")
+    have = [key(x) for x in cur]
+    for r in patch.get("remove") or []:
+        if norm(r) not in have:
+            raise StyleError(f"{where}: {kind}_patch.remove '{r}' — 바탕 목록에 없음(있는 것 {have})")
+    cur = [x for x in cur if key(x) not in {norm(r) for r in patch.get("remove") or []}]
+    for k, v in (patch.get("replace") or {}).items():
+        idx = [i for i, x in enumerate(cur) if key(x) == norm(k)]
+        if not idx:
+            raise StyleError(f"{where}: {kind}_patch.replace '{k}' — 바탕 목록에 없음")
+        if kind == "audit":
+            v = dict(v)
+            if v.setdefault("id", k) != k:
+                raise StyleError(f"{where}: audit_patch.replace '{k}' 의 규칙 id '{v['id']}' 가 다르다")
+        cur[idx[0]] = v
+    for v in patch.get("add") or []:
+        if kind == "audit":
+            v = audit_ids([v])[0] if "id" in v else {**v, "id": f"{v.get('kind')}:{len(cur)}"}
+        if key(v) in [key(x) for x in cur]:
+            raise StyleError(f"{where}: {kind}_patch.add '{key(v)}' — 이미 있는 {'id' if kind == 'audit' else '줄'}")
+        cur.append(v)
+    return cur
+
+
 def _raw(name: str, seen: tuple = ()) -> dict:
-    """판 파일 한 장 — `base`(바탕 판 이름)가 있으면 바탕 판을 먼저 깔고 이 파일이 덮는다(변형판: 뼈대는 바탕 판 그대로, 겉모양만 덮기, 10-20)."""
+    """판 파일 한 장 — `base`(바탕 판 이름)가 있으면 바탕 판을 먼저 깔고 이 파일이 덮는다(변형판: 뼈대는 바탕 판 그대로, 겉모양만 덮기, 10-20).
+    목록 칸 script.audit·brief 는 상속 판이 통째로 못 적는다 — *_patch 로만(⑰)."""
     if name in seen:
         raise SystemExit(f"판 설정 base 가 돌고 돈다: {' → '.join(seen + (name,))}")
     raw = json.loads(path_of(name).read_text(encoding="utf-8"))
-    if raw.get("base"):
-        return _merge(_raw(raw["base"], seen + (name,)), raw)
-    return raw
+    if not raw.get("base"):
+        return raw
+    S = raw.get("script") or {}
+    whole = [k for k in ("audit", "brief") if k in S]
+    if whole:
+        raise StyleError(f"상속 판 {name}(base {raw['base']}) 이 script.{whole} 를 통째로 적었다 — 1차 판 목록의 두 벌. "
+                         f"script.audit_patch / brief_patch{{add,remove,replace}} 로 바꿔 적어라(표준 §11-2 ⑰)")
+    base = _raw(raw["base"], seen + (name,))
+    st = _merge(base, raw)
+    SS = st.get("script") or {}
+    for kind in ("audit", "brief"):
+        pt = SS.pop(f"{kind}_patch", None)
+        if pt is not None:
+            SS[kind] = apply_list_patch((base.get("script") or {}).get(kind) or [], pt, kind, f"판 {name}")
+            SS.setdefault("_patched", []).append(f"{kind} ← {name}.{kind}_patch")
+    return st
 
 
-def load(name: str) -> dict:
+def load(name: str, patch: dict | None = None, _skip_packs: bool = False) -> dict:
+    """판 설정(_common ← base ← 판 파일 ← 목록 패치) + 팩 칸 변환(pack_map.apply_to_style). patch = 회원 맞춤(지금은 packs 만 — 12)."""
     raw = _raw(name)
     common = json.loads((DIR / "_common.json").read_text(encoding="utf-8")) if (DIR / "_common.json").exists() else {}
     st = _merge(common, raw)
     miss = [k for k in REQUIRED if k not in st]
     if miss:
         raise SystemExit(f"판 설정 {name} 에 칸이 없다: {miss}")
+    if patch:
+        bad = sorted(set(patch) - {"packs"})
+        if bad:
+            raise StyleError(f"회원 patch 칸 {bad} — 지금은 packs 만 받는다(나머지는 지시서 12 styles.apply_patch 몫, 조용히 무시하지 않음)")
+    if not _skip_packs:
+        from tools.calcopy.hybrid import pack_map
+        pack_map.apply_to_style(st, (patch or {}).get("packs"), name)
     return st
 
 
@@ -83,7 +163,10 @@ def main():
     if len(sys.argv) < 2 or sys.argv[1] == "list":
         for n in names():
             st = load(n)
-            print(f"{n:8s} renderer={st['renderer']:6s} voice={st['voice'].get('name')} length={st['length']['min']}~{st['length']['max']}")
+            P = st.get("packs") or {}
+            pk = f"cap={P['caption'].get('pack')} motion={P['motion'].get('pack')} sfx={P['sfx'].get('pack')} bgm={P['bgm'].get('id')} meme={P['meme'].get('pack')}"
+            gap = sum(len((P.get(k) or {}).get("gap") or []) for k in P if not k.startswith("_"))
+            print(f"{n:8s} renderer={st['renderer']:6s} voice={st['voice'].get('name')} length={st['length']['min']}~{st['length']['max']} | packs {pk} gap={gap}")
         return
     if sys.argv[1] == "brief":
         print(brief(sys.argv[2]))

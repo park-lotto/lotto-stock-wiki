@@ -1,0 +1,920 @@
+{
+ "id": "rF_-X8jLkdU",
+ "dur": 18.785,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "류혜영의 하얀 치아",
+   "colors": [
+    {
+     "word": "류혜영의 하얀 치아",
+     "hex": "#FFFFFF"
+    }
+   ]
+  },
+  {
+   "text": "10년넘게쓴 얘덕분",
+   "colors": [
+    {
+     "word": "10년넘게쓴",
+     "hex": "#FCFFB7"
+    },
+    {
+     "word": "얘덕분",
+     "hex": "#F375CB"
+    }
+   ]
+  }
+ ],
+ "source_label": "출처: 류혜영레몬과밀치회",
+ "layout": {
+  "window": [
+   0,
+   419,
+   1080,
+   1082
+  ],
+  "caption_band": [
+   1067,
+   1146
+  ],
+  "title_y": [
+   [
+    224,
+    300
+   ],
+   [
+    316,
+    396
+   ]
+  ],
+  "bg_hex": "#000000",
+  "source_y": [
+   1518,
+   1551
+  ],
+  "logo_y": [
+   1748,
+   1830
+  ],
+  "watermark": null,
+  "source_hex": "#7D7D7D",
+  "credit_text": "출처: 류혜영레몬과밀치회",
+  "logo_text": "anna pick(회색 2줄)",
+  "note": "검정 바탕 + 위 2줄 제목(1줄 흰 “ ”, 2줄 노랑 인물+분홍 제품) + 정사각 창 y419~1501 + 창 안 자막 1줄(자리는 편마다·줄마다 다름) + 창 아래 회색 '출처 : <원본 채널>' + 맨 아래 회색 'anna pick'"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 0.567,
+   "speaker": "원음:류혜영",
+   "text": "어? 나 이거",
+   "layer": "안나픽",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1065,
+    1144
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "드럭스토어 진열대 앞 류혜영(옆얼굴)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 0.667,
+   "t1": 1.933,
+   "speaker": "원음:류혜영",
+   "text": "진짜 추천하고 싶거든?",
+   "layer": "안나픽",
+   "role": "훅",
+   "enter": "pop(노랑 빛 번짐)",
+   "enter_ms": 100,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1063,
+    1152
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "추천",
+     "hex": "#F1FF10",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "치약 진열대를 가리키는 손",
+   "fit": 7,
+   "cut_at": [
+    1.033
+   ],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.0,
+   "t1": 2.7,
+   "speaker": "원음:류혜영",
+   "text": "너무 좋아",
+   "layer": "안나픽",
+   "role": "훅",
+   "enter": "fade",
+   "enter_ms": 70,
+   "variant": "노랑 손글씨",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1061,
+    1145
+   ],
+   "fill_hex": "#F1FF10",
+   "outline": "검정 약 2px(눈)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "너무 좋아",
+     "hex": "#F1FF10",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "손뼉 치듯 모은 두 손",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨 가는체(예능 손글씨 계열, 이름 미확정)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.7,
+   "t1": 3.633,
+   "speaker": "나레",
+   "text": "PPL(광고) 안받고",
+   "layer": "안나픽",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1074,
+    1146
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "류혜영 얼굴(초록 벽 앞)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.633,
+   "t1": 4.533,
+   "speaker": "나레",
+   "text": "류혜영이 10년 넘게",
+   "layer": "안나픽",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "연노랑 기울임",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1066,
+    1149
+   ],
+   "fill_hex": "#EFDDB9",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "류혜영이 10년 넘게",
+     "hex": "#EFDDB9",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "류혜영 얼굴(웃음)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.533,
+   "t1": 5.133,
+   "speaker": "나레",
+   "text": "쓰고있다는",
+   "layer": "안나픽",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1065,
+    1144
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "류혜영 얼굴(손짓)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.167,
+   "t1": 5.917,
+   "speaker": "나레",
+   "text": "찐템이 있다는데",
+   "layer": "안나픽",
+   "role": "공개",
+   "enter": "fade",
+   "enter_ms": 70,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1055,
+    1152
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "찐템",
+     "hex": "#FFFFFD",
+     "grow": "크게",
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "콜게이트 치약 진열대를 짚는 손",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.917,
+   "t1": 7.767,
+   "speaker": "원음:류혜영",
+   "text": "다른 미백치약들이",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "typing",
+   "enter_ms": 130,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1064,
+    1153
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "치약 진열대 → 류혜영 얼굴",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 7.85,
+   "t1": 8.767,
+   "speaker": "원음:류혜영",
+   "text": "콜게이트를 못 따라가요",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "typing",
+   "enter_ms": 200,
+   "variant": "빨강 낱말 기울임",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1070,
+    1145
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "콜게이트",
+     "hex": "#DD0920",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "류혜영 얼굴(진열대 앞)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.767,
+   "t1": 9.2,
+   "speaker": "원음:류혜영",
+   "text": "그래서 저는",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1065,
+    1144
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "류혜영 얼굴",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 9.2,
+   "t1": 10.3,
+   "speaker": "원음:류혜영",
+   "text": "한 10년 넘게",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1068,
+    1148
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "10년",
+     "hex": "#FFFFFD",
+     "grow": "크게",
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "진열대로 손 뻗는 류혜영",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 10.367,
+   "t1": 11.3,
+   "speaker": "원음:류혜영",
+   "text": "콜게이트만 쓰고 있어요",
+   "layer": "안나픽",
+   "role": "증거",
+   "enter": "typing",
+   "enter_ms": 100,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1064,
+    1136
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "흰 밑줄(글자 아래 손그림 선)",
+     "x": 540,
+     "y": 1180,
+     "w": 500,
+     "t_in": 10.4,
+     "t_out": 11.3,
+     "anim": "그려지듯 나타남"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "진열대 앞 류혜영 + 밑줄",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.367,
+   "t1": 11.967,
+   "speaker": "원음:류혜영",
+   "text": "이거이거",
+   "layer": "안나픽",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 70,
+   "variant": "노랑 글자(아래 자리)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1192,
+    1275
+   ],
+   "fill_hex": "#F1FF10",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [
+    {
+     "word": "이거이거",
+     "hex": "#F1FF10",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [
+    {
+     "what": "흰 반짝이 ✦(치아 둘레)",
+     "x": 540,
+     "y": 1000,
+     "w": 400,
+     "t_in": 11.4,
+     "t_out": 13.1,
+     "anim": "깜빡임"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "이를 드러내고 웃는 류혜영 근접 + 반짝이",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.967,
+   "t1": 13.1,
+   "speaker": "원음:류혜영",
+   "text": "화이트닝 한지",
+   "layer": "안나픽",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기울임(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1064,
+    1147
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "웃는 류혜영 치아 근접 + 반짝이",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 13.167,
+   "t1": 14.467,
+   "speaker": "원음:류혜영",
+   "text": "한 5년은 된거 같은데",
+   "layer": "안나픽",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1074,
+    1136
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "류혜영 얼굴(손가락 V)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 14.533,
+   "t1": 15.567,
+   "speaker": "원음:류혜영",
+   "text": "계속이정도로",
+   "layer": "안나픽",
+   "role": "고조",
+   "enter": "fade",
+   "enter_ms": 70,
+   "variant": "손글씨 가는체(흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1069,
+    1147
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 2px(눈)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "치아 가리키는 류혜영",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "손글씨 가는체(예능 손글씨 계열, 이름 미확정)",
+    "basis": "눈"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 15.633,
+   "t1": 17.067,
+   "speaker": "원음:류혜영",
+   "text": "유지가 되고 있다는거는",
+   "layer": "안나픽",
+   "role": "고조",
+   "enter": "fade",
+   "enter_ms": 70,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1063,
+    1146
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "치아 가리키는 류혜영",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 17.133,
+   "t1": 18.733,
+   "speaker": "원음:류혜영",
+   "text": "얘 덕분이라고 생각합니다",
+   "layer": "안나픽",
+   "role": "끝",
+   "enter": "pop(노랑 빛 번짐)",
+   "enter_ms": 100,
+   "variant": "기본(굵은 흰 고딕+검정 외곽)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1066,
+    1146
+   ],
+   "fill_hex": "#FFFFFD",
+   "outline": "검정 약 3~5px(눈) · 색 글자는 같은 검정 외곽",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "빨간 화살표(치약 상자 가리킴)",
+     "x": 420,
+     "y": 1050,
+     "w": 300,
+     "t_in": 17.2,
+     "t_out": 18.2,
+     "anim": "그려지듯 나타남"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "콜게이트 치약 진열 + 빨간 화살표",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "줄마다 다름(예능 자막 갈래) — 굵은 흰 고딕+검정 외곽(기본) · 손글씨 가는체 · 기울임 · 색 글자(노랑·초록·하늘) — variant 칸에 줄마다",
+    "basis": "0.2초 띠 눈 판독(10-25) — 원본(고은언니 LcQv9yOh3Wc 12:40~12:52)의 자막과 글·모양이 달라 안나픽이 다시 단 자막임을 확인(work/srcchk/src_sheet.jpg)"
+   },
+   "letter_gap_px": "기본(굵은 고딕 외곽끼리 거의 붙음, px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  }
+ ],
+ "no_caption": [
+  [
+   0.567,
+   0.667,
+   "덩어리 사이"
+  ],
+  [
+   1.933,
+   2.0,
+   "컷 직후"
+  ],
+  [
+   5.133,
+   5.167,
+   "1프레임"
+  ],
+  [
+   7.767,
+   7.85,
+   "덩어리 사이"
+  ],
+  [
+   10.3,
+   10.367,
+   "덩어리 사이"
+  ],
+  [
+   11.3,
+   11.367,
+   "컷 직후"
+  ],
+  [
+   14.467,
+   14.533,
+   "덩어리 사이"
+  ],
+  [
+   15.567,
+   15.633,
+   "덩어리 사이"
+  ],
+  [
+   17.067,
+   17.133,
+   "컷 직후"
+  ]
+ ],
+ "beats": "원음 훅(0~2.7 '어? 나 이거 진짜 추천하고 싶거든? 너무 좋아') → 나레 다리·공개(2.7~5.92 'PPL(광고) 안받고 류혜영이 10년 넘게 쓰고있다는 찐템이 있다는데') → 원음 증거(5.92~11.3 다른 미백치약들이 콜게이트를 못 따라가요·10년 넘게 콜게이트만) → 원음 본문·고조(11.37~17.07 이거이거 화이트닝 한지 5년·계속 이정도로 유지, 치아 반짝이) → 원음 끝('얘 덕분이라고 생각합니다' + 빨간 화살표)",
+ "narr_share": "나레 줄 4/18, 나레 3.2초/18.785초",
+ "notes": [
+  "나레 4줄(2.7~5.92) — 받아쓰기상 나레 'PPL 안 받고 류혜영이 10년 넘게 쓰고 있다는 찐템이 있다는데'.",
+  "제품 이름 '콜게이트'를 원음 자막 빨강 낱말로 보여 줌(6편 중 유일하게 화면 글자로 제품명)."
+ ],
+ "name_evidence": [
+  "제목 '류혜영의 하얀 치아'",
+  "나레 자막 '류혜영이 10년 넘게'",
+  "출처 줄 '류혜영레몬과밀치회'"
+ ],
+ "frame0": {
+  "what": "류혜영 옆얼굴(회색 티, 드럭스토어) + 자막 '어? 나 이거' 0초부터",
+  "face_frac": "약 0.08(창 대비 얼굴, 눈)",
+  "text": "류혜영의 하얀 치아 / 10년넘게쓴 얘덕분(제목) + '어? 나 이거'"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈+픽셀: capseg 30fps·cutdet --v2·px·rangesheet 0.2초/1프레임 등장 시트) 2026-10-25 (관제 263 지시서 06)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr"
+}

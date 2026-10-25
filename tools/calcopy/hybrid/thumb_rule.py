@@ -34,6 +34,23 @@ GOOD = """좋은 썸네일 조건(본보기 channel/banggu/썰템홈샷_하이�
 3안은 서로 다른 axis 로(인물순간 / 물건근접·정체숨김 / 황당사실·짤반응). 맨 앞 2프레임(0.067초)만 — 늘리지 않는다."""
 
 
+def find_order(slug: str | None = None) -> str:
+    """FIND_ORDER + 그 채널 상위 편 훅 3초 참고 한 줄(channel/<slug>/_kal/상위편_목표.json hook — placement.py count <판> --top 이 잰다, 지시서 15).
+    판정 규칙(check)은 안 바뀐다 — 장면 고를 때 참고하는 추천일 뿐. 파일·칸이 없으면 FIND_ORDER 그대로."""
+    import json
+    p = Path(__file__).resolve().parents[3] / "channel" / str(slug or "_") / "_kal" / "상위편_목표.json"
+    h = (json.loads(p.read_text(encoding="utf-8")).get("hook") or {}) if slug and p.exists() else {}
+    if not h:
+        return FIND_ORDER
+    return FIND_ORDER + (f"\n참고(상위 편 {len(h.get('top_ids') or [])}편 훅 실측 — 판정 아님): 첫 컷 중앙 {h.get('first_cut_sec_p50')}초 · "
+                         f"0초 화면 얼굴 비율 중앙 {h.get('face_or_object_frac')} · 첫 꾸밈 {h.get('first_fx_t')}초 — 0초부터 얼굴/물건이 크게 보이는 장면을 앞에.")
+
+
+def tag_in(line: str) -> bool:
+    """카드 글에 꼬리표를 직접 썼나 — 엔진(thumb.mood_tag)이 붙이니 쓰면 두 번 찍힌다(10-25 기미크림 'ㄷㄷ ㄷㄷ')."""
+    return any(g in line for g in TAGS)
+
+
 def _n(s: str) -> int:
     return len(re.sub(r"\s", "", s or ""))
 
@@ -62,7 +79,7 @@ def check(spec: dict, cuts: list[dict] | None = None, n_parts: int | None = None
             for line in t.get("lines") or []:
                 if _n(line) > TEXT_MAX:
                     bad.append(f"{i}: 글 '{line}' {_n(line)}자 > {TEXT_MAX}자 — 설명하지 말고 되묻는 한 마디로")
-                if any(g in line for g in TAGS):
+                if tag_in(line):
                     bad.append(f"{i}: 꼬리표(ㅋㅋ·ㅎㅎ·ㄷㄷ)는 엔진이 붙인다 — 글에서 뺀다")
         if not (o.get("circle") or o.get("arrow") or o.get("q") or o.get("hide")):
             bad.append(f"{i}: 궁금 장치(빨간 원·화살표·?·흐림)가 하나도 없다")
@@ -78,3 +95,25 @@ def check(spec: dict, cuts: list[dict] | None = None, n_parts: int | None = None
     if "인물순간" not in axes and not str(spec.get("no_person_why") or "").strip():
         bad.append("인물순간 안이 없다 — scene_search 로 찾아보고, 그래도 없으면 no_person_why 에 무엇을 검색했고 왜 없는지 적는다")
     return bad
+
+
+def card_face_gate(st: dict, doc, T: dict, cand_dir) -> list[str]:
+    """(렌더 전 관문 ⑥, 10-25) 연예인 채널 판(st["thumb_card_face"] = true)이면 카드 3안 **전부** 장면에 연예인 얼굴(thumb.judge 와 같은 자) —
+    안은 무작위로 하나가 보이니 하나라도 얼굴이 없으면 반려. 렌더 전에 원본에서 잰다(thumb.card_faces). 문제 목록(빈 목록 = 통과).
+    왜: 10-24 얜샷템 메디필(기미크림) 0프레임 카드 = 제품 튜브(얼굴 0개)인데 자동검사 10/10 — 얼굴 검사가 카드 뒤(0.077초)부터 재서 못 봤다(10-25 감사)."""
+    if not st.get("thumb_card_face"):
+        return []
+    from tools.calcopy.hybrid import thumb
+    return [f"썸네일 카드 {r['id']}: 연예인 얼굴 아님({r['why']} · {r['where']}) — 얼굴이 크게 나온 장면으로 바꾼다(얜샷템 썸네일 = 연예인 얼굴)"
+            for r in thumb.card_faces(st, doc, T, cand_dir) if not r["ok"]]
+
+
+def card_text_gate(doc) -> list[str]:
+    """(렌더 전, 모든 판) 썸네일.json 카드 글에 꼬리표를 직접 쓴 안 — check() 의 같은 규칙(tag_in)을 공용 렌더러 길에서도.
+    왜: render_bench 길은 check() 를 안 불러 손으로 고친 썸네일.json 이 그대로 통과 → 완성본 카드 'ㄷㄷ ㄷㄷ'(10-25 기미크림 16번)."""
+    import json
+    sp = Path(doc) / "썸네일.json"
+    if not sp.exists():
+        return []
+    return [f"썸네일 카드 {o.get('id')}: 글 '{line}' 에 꼬리표(ㅋㅋ·ㅎㅎ·ㄷㄷ) — 엔진이 붙이니 글에서 뺀다"
+            for o in json.loads(sp.read_text(encoding="utf-8")).get("options") or [] for t in o.get("text") or [] for line in t.get("lines") or [] if tag_in(line)]

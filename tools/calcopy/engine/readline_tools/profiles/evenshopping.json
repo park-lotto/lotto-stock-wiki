@@ -1,0 +1,5 @@
+{
+ "_what": "이븐쇼핑(evenshopping) 판독 도구 채널 값 — 06 워커 10-25 channel/evenshopping/_kal/측정도구/tone.py·red.py 에 박혀 있던 상수를 그대로 옮김.",
+ "tone": {"lo": 2500, "hi": 6000, "prom": 14.0, "min_dur": 0.12, "merge": 0.35},
+ "red": {"crop_y": 590, "crop_h": 1220}
+}

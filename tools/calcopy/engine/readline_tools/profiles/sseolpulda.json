@@ -1,0 +1,5 @@
+{
+ "_what": "썰풀다(sseolpulda) 판독 도구 채널 값 — 06 워커 10-25 mk.py(build_lr 덧붙임)·seg2.py(capseg 양극 변형) 에 박혀 있던 값을 옮김. 글꼴·외곽·측정 띠는 편마다 spec PROFILE 에 있다.",
+ "_capseg_mode": "편마다 다름: D3Pc·mYxu·GqSk = bright(흰 글+검정 외곽) / ZdeZ·iZ-T = dark(검정 글) / fnZN = both — capseg --mode",
+ "made_by": "오푸스 실행자 줄판독(눈: 1초 시트·구간 시트·30fps 띠·원본 프레임 확대 / 픽셀: seg2(capseg 양극 변형)·cutdet·boxm·colk / 신호: sfx_events) 2026-10-25 (관제 263 지시서 06 · sseolpulda)"
+}
