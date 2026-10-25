@@ -433,6 +433,10 @@ def _reply(rp: dict, rid: str, need: tuple = ()) -> dict:
     a = rp.get(rid)
     if not isinstance(a, dict):
         raise _Stop("확인 결과를 받지 못했어요", "다시 시도해 주시면 멈춘 곳부터 이어 갈게요", auto=True)
+    for k in [k for k in list(a) if isinstance(k, str) and k not in need and re.sub(r"\.(json|md)$", "", k) in need]:
+        a[re.sub(r"\.(json|md)$", "", k)] = a.pop(k)      # 회원 Claude 가 파일 이름으로 답한 칸('대본.json'·'근거.md') = 같은 칸(10-26 회원 마스크편)
+    if "근거.md" in a and "근거_md" not in a:
+        a["근거_md"] = a.pop("근거.md")
     miss = [k for k in need if k not in a]
     if miss:
         raise _Stop("확인 결과가 덜 채워졌어요", "다시 시도해 주시면 멈춘 곳부터 이어 갈게요", auto=True)
