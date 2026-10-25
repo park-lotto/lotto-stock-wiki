@@ -532,6 +532,11 @@ def bench_fx(style: dict) -> dict:
     return _bench_fx_cache[lr]
 
 
+def K_variant(r: dict) -> bool:
+    from tools.calcopy.engine import kal_analyze as K
+    return bool(K.variant_fx(r.get("variant_force") or r.get("variant")))
+
+
 def deco_by(out: list[dict], sp: str) -> dict:
     """그 화자 꾸밈 덩어리를 종류별로(훅 변형·스티커·강조·등장) — conflict 를 받은 쪽이 어느 규칙을 줄일지 보게."""
     from tools.calcopy.engine import kal_analyze as K
@@ -579,9 +584,13 @@ def _deco_pos(out: list[dict], style: dict, log: list, up_cap: dict | None) -> d
     if not sum(have.values()):
         log.append("꾸밈 자리: 정해진 꾸밈 0 — 맞출 기준 없음"); return {"have": {}}
     base = max((have[k] / share[k] for k in have if share.get(k)), default=0)
-    want = {k: int(math.floor(share[k] * base + 0.5)) for k in share}
     cap = {sp: int(math.floor(((B["rate"].get(nm) or 0) + B["tol"].get(f"fx.rate.{nm}", 0.2)) * sum(1 for r in out if r["speaker"] == sp) + 1e-9))
            for sp, nm in (("narr", "나레"), ("orig", "원음"))}
+    # 목표 총량 = 화자 상한(벤치 중앙+허용 폭)·업그레이드 상한 안 — 정해진 꾸밈이 한 자리(훅)에 몰리면 base 가 그 자리 비율로 부풀어
+    #   본문·끝 목표가 덩어리 수를 넘던 것(잇템로그 ep12: 훅 변형 3 → 본문 13·훅 9 목표, 나레 덩어리 24) — 10-25 기미크림
+    room = sum(min(c, up_cap[sp]) if (up_cap or {}).get(sp) is not None else c for sp, c in cap.items())
+    base = min(base, max(sum(have.values()), room))
+    want = {k: int(math.floor(share[k] * base + 0.5)) for k in share}
     deco_sp = Counter(r["speaker"] for r in out if _is_deco(r))
     added = []
     for k in ("본문", "끝", "훅"):          # 먼저 계획만(덩어리를 아직 안 바꾼다) — 업그레이드 상한과 부딪히면 아무것도 안 더한다(㉛)
@@ -814,6 +823,17 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
         up_cap = {sp: density_goal({"p75": t["goal"], "p25": t.get("p25"), "max": t["cap"], "first": t.get("first")},
                                    sum(1 for r in out if r["speaker"] == sp))["hi"]
                   for sp, key in (("narr", "fx_rate_narr"), ("orig", "fx_rate_orig")) if (t := tg.get(key))}
+    if up_cap:      # 1차 강조(본보기 편 칸 비율)는 꾸밈 중 가장 가벼운 것 — 훅 변형·스티커와 합쳐 업그레이드 상한을 넘으면 강조만 뒤에서부터 덜어 상한에 맞춘다
+        #   (잇템로그 ep12: 본보기 J7Gx 는 훅이 노랑이라 꾸밈을 강조에 썼는데 판 훅 규칙이 빨강 3을 더해 상한 초과 — 10-25 기미크림)
+        for sp, c in up_cap.items():
+            n = sum(1 for r in out if r["speaker"] == sp and _is_deco(r))
+            drop = [i for i, r in reversed(list(enumerate(out))) if r["speaker"] == sp and r.get("emph") and not r.get("stickers")
+                    and not K_variant(r) and r.get("enter") in ("cut", "instant", "append", None)]
+            cut_n = max(0, n - c) if c is not None else 0
+            for i in drop[:cut_n]:
+                out[i]["emph"] = []
+            if cut_n and drop:
+                log.append(f"강조 {min(cut_n, len(drop))}개 덜어 {sp} 꾸밈 상한 {c} 안으로(훅 변형·스티커 우선)")
     dp_rep = deco_pos_step(out, style, log, up_cap)
     conflict = (dp_rep or {}).get("conflict")
     if up_cap and not conflict:      # deco_pos 없이도 1차 규칙(훅 변형·스티커·강조)만으로 상한을 넘으면 같은 conflict(㉛ '뼈대 최소 > 상한')
