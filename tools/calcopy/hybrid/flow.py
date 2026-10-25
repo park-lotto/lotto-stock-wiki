@@ -1687,6 +1687,10 @@ def ph_render_fix(st, m, rp, u):
     v = st["version"]
     r = _reply(rp, f"render_fix_{v}", ("ok",))
     M = _take_fix(st, r)
+    if M is None and r.get("ok") is True and st["tries"].get("render", 0) < LIMITS["render"]:
+        # 검수가 '재료 이상 없음'(고칠 것 없음)이면 같은 재료로 다시 굽는다 — 멈추면 '다시 시도'가 이 질문만 되풀이해 렌더를 영영 안 돈다
+        # (10-26 이미숙 회원편: 렌더 오류가 PC 쪽 파일 문제였는데 다시 시도 2번이 둘 다 render_fix → 같은 멈춤, 98 기록)
+        return {"goto": "render"}
     if M is None:
         raise _Stop("영상을 다듬다 막혔어요", "다시 시도해 주시면 이어 갈게요")
     return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "render"}

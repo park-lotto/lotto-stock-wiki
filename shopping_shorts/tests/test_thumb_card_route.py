@@ -35,3 +35,25 @@ def test_card_only_render_error_returns_to_thumb():
     except Exception:          # 예전 길 = 재료 고치기 요청(대본 없는 이 시험 st 에선 KeyError) — 썸네일로 안 가면 된다
         out2 = None
     assert out2 != {"goto": "thumb"}
+
+
+def test_render_fix_nothing_to_fix_renders_again(monkeypatch):
+    """③ 검수가 '재료 이상 없음'(ok true, 재료 null)이면 같은 재료로 다시 굽는다 — 예전엔 멈춰서 '다시 시도'가 이 질문만 되풀이했다."""
+    st = {"version": "키치잇판", "tries": {"render": 1}, "log": []}
+    monkeypatch.setattr(flow, "_reply", lambda rp, rid, need=(): {"ok": True, "problems": [], "재료": None})
+    assert flow.ph_render_fix(st, {}, {}, None) == {"goto": "render"}
+    st["tries"]["render"] = flow.LIMITS["render"]          # 렌더 기회를 다 쓰면 예전처럼 멈춤
+    try:
+        flow.ph_render_fix(st, {}, {}, None)
+        stopped = False
+    except flow._Stop:
+        stopped = True
+    assert stopped
+    monkeypatch.setattr(flow, "_reply", lambda rp, rid, need=(): {"ok": False, "problems": ["x"], "재료": None})
+    st["tries"]["render"] = 1                               # 고칠 게 있다면서 재료를 안 주면 멈춤 그대로
+    try:
+        flow.ph_render_fix(st, {}, {}, None)
+        stopped = False
+    except flow._Stop:
+        stopped = True
+    assert stopped
