@@ -722,11 +722,11 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             from tools.calcopy.hybrid.render_bench import photo_share
             mx = float(need("photo_share_max")["v"])
             o = photo_share(T.get("cuts") or [], float(T["end"]))
-            return o <= mx + 1e-9, f"그림 컷 비중 {o} (판 ≤{mx}, timeline · render_bench.photo_share)"
+            return o <= mx + 1e-9, f"쿠팡·상품 그림 컷 비중 {o} (판 ≤{mx}, 본인 사진 own_ 은 뺌 — timeline · render_bench.photo_share)"
         for what, fn, src in (("컷 길이 중앙(판 rhythm.cut_median ±30%)", cut_med, "kal_analyze.media_of"),
                               ("훅 0.1~3초 컷 경계(판 rhythm.hook_cuts_3s)", hook, "kal_analyze.media_of cut_at"),
                               ("꾸밈 없는 덩어리 비율(판 rhythm.plain_share)", plain, "placement.plain_share"),
-                              ("그림 컷 비중(판 rhythm.photo_share_max)", photo, "render_bench.photo_share")):
+                              ("쿠팡·상품 그림 컷 비중(판 rhythm.photo_share_max)", photo, "render_bench.photo_share")):
             row("판 리듬", what, fn, src)
     # ── 자막·효과
     lrp = (st.get("bench") or {}).get("line_reads")
@@ -737,6 +737,14 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
              lambda: (tab["check"]["ok"], f"본보기 {tab['check']['reference']} · 칸 최대 차 {tab['check']['worst_slot_diff']}" + (f" · 걸린 것 {tab['check'].get('bad')}" if tab['check'].get('bad') else "")), "자막표.check = placement.check_place")
         if not legacy:
             row("자막·효과", "B14 효과음 과다(≤ 벤치 p90)", lambda: sfx_excess(len(tab.get("sfx") or []), float(T["end"]), bench_docs), "자막표.sfx · 줄판독 sfx")
+
+            def deco_row():       # 관제263 10-26 사장님 '키치잇 꾸밈이 우리 편엔 없다'(페이블 E4 가 '같음'으로 놓침) — 판 deco 종류·횟수
+                from tools.calcopy.hybrid import deco as DC
+                v = DC.check(doc, st, rows=tab.get("rows") or [], cuts=T.get("cuts") or [], end=float(T["end"]))
+                got = {r["kind"]: r["got"] for r in v["rows"] if r["got"]}
+                return v["ok"], f"꾸밈 {got} · 포인트 {v.get('accents')} · 본인 사진 {v.get('own_photo_share')}" + (f" · 걸린 것 {v['bad']}" if v["bad"] else "")
+            if st.get("deco"):        # 판에 deco 칸이 있을 때만(모든 판 필수 = 다음 일 — 사장님 10-26 간소화)
+                row("자막·효과", "꾸밈 종류·횟수(판 deco)", deco_row, "자막표 rows·timeline cuts · deco.check")
     # ── 소리
     if (want("소리") or mode == "fast") and not legacy:      # 줄별 cps = render_info 표 읽기라 빠르다 → --fast 에도
         row("소리", "줄별 말속도 ±35%(렌더 기록)", lambda: line_cps_verdict(info.get("line_cps"), cps_tol()), "render_info.line_cps · render_itssum.CPS_LINE_TOL")

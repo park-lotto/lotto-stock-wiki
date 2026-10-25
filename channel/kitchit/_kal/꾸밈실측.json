@@ -1,0 +1,683 @@
+{
+ "_made_by": "tools/calcopy/hybrid/deco.py measure 키치잇판",
+ "videos": [
+  {
+   "id": "_Wa4IehA6yE",
+   "dur": 14.141,
+   "lines": 17,
+   "from": "줄판독/_Wa4IehA6yE.json",
+   "counts": {
+    "multi_color": 1,
+    "tilt": 2,
+    "chunk_color": 7,
+    "word_color": 7,
+    "big": 2,
+    "sound_word": 1,
+    "photo": 1
+   },
+   "photo_s": 0.38,
+   "photo_share": 0.027,
+   "photo_hook": false,
+   "accents": [
+    "big",
+    "chunk_color",
+    "multi_color",
+    "sound_word",
+    "tilt"
+   ]
+  },
+  {
+   "id": "BRa5Iv4A3Y8",
+   "dur": 21.014,
+   "lines": 21,
+   "from": "줄판독/BRa5Iv4A3Y8.json",
+   "counts": {
+    "word_color": 13,
+    "letter_pop": 3,
+    "spark_lines": 1,
+    "tilt": 1,
+    "heart": 3,
+    "chunk_color": 4,
+    "big": 1,
+    "gem": 3,
+    "photo": 5
+   },
+   "photo_s": 3.9,
+   "photo_share": 0.186,
+   "photo_hook": true,
+   "accents": [
+    "big",
+    "chunk_color",
+    "gem",
+    "heart",
+    "letter_pop",
+    "spark_lines",
+    "tilt"
+   ]
+  },
+  {
+   "id": "cNo91ddBwB8",
+   "dur": 13.723,
+   "lines": 16,
+   "from": "줄판독/cNo91ddBwB8.json",
+   "counts": {
+    "photo": 1
+   },
+   "photo_s": 0.63,
+   "photo_share": 0.046,
+   "photo_hook": false,
+   "accents": []
+  },
+  {
+   "id": "Cs-Ka_S8nDM",
+   "dur": 14.35,
+   "lines": 18,
+   "from": "줄판독/Cs-Ka_S8nDM.json",
+   "counts": {
+    "chunk_color": 4,
+    "word_color": 11,
+    "tilt": 3,
+    "circle_arrow": 1,
+    "letter_pop": 1,
+    "spark_lines": 1
+   },
+   "photo_s": 0.0,
+   "photo_share": 0.0,
+   "photo_hook": false,
+   "accents": [
+    "chunk_color",
+    "circle_arrow",
+    "letter_pop",
+    "spark_lines",
+    "tilt"
+   ]
+  },
+  {
+   "id": "Ks5kYYKAUlQ",
+   "dur": 10.356,
+   "lines": 13,
+   "from": "줄판독/Ks5kYYKAUlQ.json",
+   "counts": {
+    "word_color": 6,
+    "letter_pop": 2,
+    "spark_lines": 2,
+    "chunk_color": 1,
+    "photo": 4
+   },
+   "photo_s": 2.89,
+   "photo_share": 0.279,
+   "photo_hook": true,
+   "accents": [
+    "chunk_color",
+    "letter_pop",
+    "spark_lines"
+   ]
+  },
+  {
+   "id": "Nv99RyxmrfU",
+   "dur": 14.118,
+   "lines": 16,
+   "from": "줄판독/Nv99RyxmrfU.json",
+   "counts": {
+    "word_color": 1,
+    "big": 1,
+    "photo": 3
+   },
+   "photo_s": 1.97,
+   "photo_share": 0.14,
+   "photo_hook": true,
+   "accents": [
+    "big"
+   ]
+  },
+  {
+   "id": "oTi41R74WIY",
+   "dur": 10.17,
+   "lines": 15,
+   "from": "줄판독/oTi41R74WIY.json",
+   "counts": {
+    "word_color": 7,
+    "circle_arrow": 1,
+    "multi_color": 1,
+    "chunk_color": 2
+   },
+   "photo_s": 0.0,
+   "photo_share": 0.0,
+   "photo_hook": false,
+   "accents": [
+    "chunk_color",
+    "circle_arrow",
+    "multi_color"
+   ]
+  },
+  {
+   "id": "vSEaZ-BCELY",
+   "dur": 17.879,
+   "lines": 19,
+   "from": "줄판독/vSEaZ-BCELY.json",
+   "counts": {
+    "word_color": 3,
+    "chunk_color": 6
+   },
+   "photo_s": 0.0,
+   "photo_share": 0.0,
+   "photo_hook": false,
+   "accents": [
+    "chunk_color"
+   ]
+  },
+  {
+   "id": "Ybyas9oI9lI",
+   "dur": 12.394,
+   "lines": 19,
+   "from": "_kal/꾸밈_추가판독.json",
+   "counts": {
+    "chunk_color": 4,
+    "word_color": 7,
+    "big": 1,
+    "photo": 3
+   },
+   "photo_s": 1.4,
+   "photo_share": 0.113,
+   "photo_hook": true,
+   "accents": [
+    "big",
+    "chunk_color"
+   ]
+  },
+  {
+   "id": "04xwiT9bj2s",
+   "dur": 16.208,
+   "lines": 25,
+   "from": "_kal/꾸밈_추가판독.json",
+   "counts": {
+    "word_color": 12,
+    "chunk_color": 3,
+    "hand_big": 1,
+    "big": 2,
+    "comment_card": 1,
+    "multi_color": 1,
+    "photo": 3
+   },
+   "photo_s": 1.4,
+   "photo_share": 0.086,
+   "photo_hook": true,
+   "accents": [
+    "big",
+    "chunk_color",
+    "comment_card",
+    "hand_big",
+    "multi_color"
+   ]
+  }
+ ],
+ "kinds": {
+  "word_color": {
+   "videos": 9,
+   "share": 0.9,
+   "per_video": [
+    7,
+    13,
+    0,
+    11,
+    6,
+    1,
+    7,
+    3,
+    7,
+    12
+   ],
+   "users_median": 7,
+   "users_max": 13,
+   "rate_per_10s_median": 5.721,
+   "rate_per_10s_p75": 6.709,
+   "roles": {
+    "증거": 21,
+    "끝": 11,
+    "훅": 11,
+    "공개": 8,
+    "본문": 6,
+    "답": 4,
+    "질문": 3,
+    "반전": 3
+   },
+   "shapes": {
+    "기본": 55,
+    "#00FD0B": 15,
+    "#17FFF1": 8,
+    "#15FF17": 7,
+    "#15FF12": 4,
+    "#BFB2F8": 4,
+    "#15FF21": 4,
+    "#F05D7D": 2
+   }
+  },
+  "multi_color": {
+   "videos": 3,
+   "share": 0.3,
+   "per_video": [
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1
+   ],
+   "users_median": 1,
+   "users_max": 1,
+   "rate_per_10s_median": 0.0,
+   "rate_per_10s_p75": 0.463,
+   "roles": {
+    "훅": 2,
+    "공개": 1
+   },
+   "shapes": {
+    "기울임": 1,
+    "연분홍(측정 안 됨)": 1,
+    "#17FFF1": 1,
+    "기본": 1,
+    "#16FFE9": 1,
+    "#C1B1F8": 1,
+    "여러 색(같은 낱말 두 번 = 다른 색 둘)": 1,
+    "#65FEFB": 1
+   }
+  },
+  "chunk_color": {
+   "videos": 8,
+   "share": 0.8,
+   "per_video": [
+    7,
+    4,
+    0,
+    4,
+    1,
+    0,
+    2,
+    6,
+    4,
+    3
+   ],
+   "users_median": 4.0,
+   "users_max": 7,
+   "rate_per_10s_median": 1.935,
+   "rate_per_10s_p75": 3.117,
+   "roles": {
+    "증거": 9,
+    "본문": 7,
+    "훅": 3,
+    "답": 3,
+    "반전": 3,
+    "공개": 3,
+    "질문": 1,
+    "고조": 1,
+    "가격": 1
+   },
+   "shapes": {
+    "기타(덩어리 전체 초록)": 5,
+    "기타(덩어리 전체 분홍)": 5,
+    "#00FD0B": 5,
+    "#F7D3EF": 4,
+    "기타(덩어리 전체 연보라)": 3,
+    "기본": 3,
+    "#F2FF0E": 2,
+    "#15FF12": 2
+   }
+  },
+  "big": {
+   "videos": 5,
+   "share": 0.5,
+   "per_video": [
+    2,
+    1,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    2
+   ],
+   "users_median": 1,
+   "users_max": 2,
+   "rate_per_10s_median": 0.238,
+   "rate_per_10s_p75": 0.782,
+   "roles": {
+    "증거": 3,
+    "본문": 1,
+    "공개": 1,
+    "가격": 1,
+    "반전": 1
+   },
+   "shapes": {
+    "#F2FF0E": 2,
+    "기타(덩어리 전체 노랑, 주황 테두리·크게)": 1,
+    "기타(덩어리 전체 노랑, 크게)": 1,
+    "기타(음절마다 튀어 나옴 '내음' 크게 출렁)": 1,
+    "#F05D7D": 1,
+    "크게 튀어나옴(만원만 다른 줄보다 1.3배쯤 크고 노랑)": 1,
+    "#F3FF0C": 1,
+    "크게(끝 글자 '아' 커지며 출렁)": 1
+   }
+  },
+  "hand_big": {
+   "videos": 1,
+   "share": 0.1,
+   "per_video": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1
+   ],
+   "users_median": 1,
+   "users_max": 1,
+   "rate_per_10s_median": 0.0,
+   "rate_per_10s_p75": 0.0,
+   "roles": {
+    "가격": 1
+   },
+   "shapes": {
+    "손글씨 크게(얇은 붓 손글씨 검정 + 흰 테, 창 폭 거의 전체 ~100": 1
+   }
+  },
+  "tilt": {
+   "videos": 3,
+   "share": 0.3,
+   "per_video": [
+    2,
+    1,
+    0,
+    3,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "users_median": 2,
+   "users_max": 3,
+   "rate_per_10s_median": 0.0,
+   "rate_per_10s_p75": 0.357,
+   "roles": {
+    "증거": 3,
+    "훅": 2,
+    "답": 1
+   },
+   "shapes": {
+    "#17FFF1": 3,
+    "기울임": 2,
+    "연분홍(측정 안 됨)": 1,
+    "#15FF12": 1,
+    "기울임+라일락 흰빛(색 강조 낱말 없음, 글씨 전체가 연함)": 1,
+    "기울임(약 11° 기울임)": 1,
+    "기울임+분홍 전체색": 1,
+    "#EC335A": 1
+   }
+  },
+  "letter_pop": {
+   "videos": 3,
+   "share": 0.3,
+   "per_video": [
+    0,
+    3,
+    0,
+    1,
+    2,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "users_median": 2,
+   "users_max": 3,
+   "rate_per_10s_median": 0.0,
+   "rate_per_10s_p75": 0.523,
+   "roles": {
+    "증거": 2,
+    "본문": 2,
+    "질문": 1,
+    "답": 1
+   },
+   "shapes": {
+    "#15FF17": 2,
+    "기타(글자마다 튀어 나옴)": 1,
+    "#ED3259": 1,
+    "기타(전체 하늘색, 글자마다 튀며 마지막에 하늘 터짐)": 1,
+    "#74FFFA": 1,
+    "기타(음절마다 튀어 나옴 '내음' 크게 출렁)": 1,
+    "#F05D7D": 1,
+    "기타(글자마다 위로 튀며 기울어 나타남)": 1
+   }
+  },
+  "sound_word": {
+   "videos": 1,
+   "share": 0.1,
+   "per_video": [
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "users_median": 1,
+   "users_max": 1,
+   "rate_per_10s_median": 0.0,
+   "rate_per_10s_p75": 0.0,
+   "roles": {
+    "증거": 1
+   },
+   "shapes": {
+    "작게 튀어나와 약 0.13초(4프레임)에 큰 크기, 흰 손글씨 'ㅋㅋㅋ' 자막 왼쪽 위, ": 1
+   }
+  },
+  "circle_arrow": {
+   "videos": 2,
+   "share": 0.2,
+   "per_video": [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0
+   ],
+   "users_median": 1.0,
+   "users_max": 1,
+   "rate_per_10s_median": 0.0,
+   "rate_per_10s_p75": 0.0,
+   "roles": {
+    "훅": 2
+   },
+   "shapes": {
+    "뜯기 box 기준(원 x382~654 y1027~1330, 화살표 x242~370 y893": 1,
+    "첫 프레임부터 있음(등장 곡선 못 봄) — 가방 둘레 빨간 원 + 흰 화살표": 1
+   }
+  },
+  "spark_lines": {
+   "videos": 3,
+   "share": 0.3,
+   "per_video": [
+    0,
+    1,
+    0,
+    1,
+    2,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "users_median": 1,
+   "users_max": 2,
+   "rate_per_10s_median": 0.0,
+   "rate_per_10s_p75": 0.357,
+   "roles": {
+    "증거": 2,
+    "질문": 1,
+    "답": 1
+   },
+   "shapes": {
+    "흰 짧은 선 2~3개 + 흰 점이 '찐' 오른쪽 위에서 번쩍(격자 4.2 눈대중)": 1,
+    "흰 짧은 선 3개 '\\ | /' 이(10.1)·오른쪽 아래 2~3개(10.2~10.3)+흰": 1,
+    "흰 짧은 선 3개 + 점, 글 오른쪽 위에서 번쩍(격자 5.2 눈대중)": 1,
+    "흰 짧은 선 3개 + 흰 점, 글 오른쪽에서 번쩍(격자 9.8 눈대중)": 1
+   }
+  },
+  "gem": {
+   "videos": 1,
+   "share": 0.1,
+   "per_video": [
+    0,
+    3,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "users_median": 3,
+   "users_max": 3,
+   "rate_per_10s_median": 0.0,
+   "rate_per_10s_p75": 0.0,
+   "roles": {
+    "끝": 2,
+    "본문": 1
+   },
+   "shapes": {
+    "튀어나온 뒤 흰 반짝임 쓸고 감, 글 오른쪽 위": 1,
+    "글 왼쪽 앞, 튀어나옴+흰 반짝임": 1,
+    "왼쪽 아래로 미끄러지며 사라짐": 1
+   }
+  },
+  "heart": {
+   "videos": 1,
+   "share": 0.1,
+   "per_video": [
+    0,
+    3,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "users_median": 3,
+   "users_max": 3,
+   "rate_per_10s_median": 0.0,
+   "rate_per_10s_p75": 0.0,
+   "roles": {
+    "고조": 2,
+    "본문": 1
+   },
+   "shapes": {
+    "첫 글자 아래 분홍 하트": 2,
+    "흰 테두리 빈 하트, 글 끝 오른쪽 아래": 2,
+    "마지막 친 글자 아래에서 따라 움직이다 다 치면 사라짐(스타일분석과 같음)": 1
+   }
+  },
+  "comment_card": {
+   "videos": 1,
+   "share": 0.1,
+   "per_video": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1
+   ],
+   "users_median": 1,
+   "users_max": 1,
+   "rate_per_10s_median": 0.0,
+   "rate_per_10s_p75": 0.0,
+   "roles": {
+    "반전": 1
+   },
+   "shapes": {
+    "유튜브 댓글 카드 흰 상자(창 왼쪽 위) — 컷인": 1
+   }
+  },
+  "photo": {
+   "videos": 7,
+   "share": 0.7,
+   "per_video": [
+    1,
+    5,
+    1,
+    0,
+    4,
+    3,
+    0,
+    0,
+    3,
+    3
+   ],
+   "users_median": 3,
+   "users_max": 5,
+   "rate_per_10s_median": 1.29,
+   "rate_per_10s_p75": 2.316,
+   "roles": {
+    "훅": 10,
+    "질문": 3,
+    "끝": 3,
+    "공개": 3,
+    "반전": 1
+   },
+   "shapes": {}
+  }
+ },
+ "n": 10,
+ "accent_kinds_per_video": {
+  "values": [
+   5,
+   7,
+   0,
+   5,
+   3,
+   1,
+   3,
+   1,
+   2,
+   5
+  ],
+  "median": 3.0
+ },
+ "photo": {
+  "share_median": 0.066,
+  "share_p75": 0.133,
+  "videos": 7,
+  "hook": 5
+ }
+}

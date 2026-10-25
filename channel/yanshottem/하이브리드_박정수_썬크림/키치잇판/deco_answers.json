@@ -1,0 +1,77 @@
+{
+ "_why": "관제263 10-25 v3 — deco.questions(plan/deco_questions.json) 답. 판 키치잇판 deco: core 낱말색 8~24·덩어리색 3~8·본인 사진 2~5, 포인트 2~6가지. 최근 키치잇 편 deco 기록 0(작업기록에 deco 칸이 오늘 생김) → 반복 금지 대상 없음 · 10-26 사장님 간소화: 렌더러가 이미 그리는 종류만(원+화살표·소리 글자·자막팩 강조 색·본인 사진) — 큰 손글씨는 다음",
+ "_by": "관제263(오푸스) — 대본·계획 시간표·계획 프레임(cut13·cut14 plan_frames_gray) 보고 답함",
+ "accents": [
+  "multi_color",
+  "sound_word",
+  "circle_arrow"
+ ],
+ "items": [
+  {
+   "kind": "multi_color",
+   "line": "N4",
+   "text": "로션처럼 얇게 펴져서",
+   "words": [
+    {
+     "word": "로션처럼",
+     "color": "#65FEFB"
+    },
+    {
+     "word": "얇게",
+     "color": "#FD6B7B"
+    }
+   ],
+   "why": "비유(로션처럼)·질감(얇게) 두 낱말 — 벤치 '이거 바르고 이거 발라!'처럼 한 덩어리 두 색"
+  },
+  {
+   "kind": "chunk_color",
+   "line": "N1",
+   "text": "배우 박정수가",
+   "color": "#65FEFB",
+   "why": "훅 첫 덩어리 인물 — 벤치 Ybyas '눈 안 시린' 훅 덩어리 전체 하늘"
+  },
+  {
+   "kind": "chunk_color",
+   "line": "N7",
+   "text": "넘을 만큼 인기래요",
+   "color": "#FD6B7B",
+   "why": "끝 사회 반응 — 벤치 Ybyas '굉장히 좋아요' 끝 덩어리 전체 분홍"
+  },
+  {
+   "kind": "sound_word",
+   "line": "N5",
+   "text": "심지어 튜브에",
+   "word": "두둥",
+   "x": 22,
+   "y": 31,
+   "why": "반전 공개 순간(심지어) — 계획 프레임 cut13: 얼굴이 창 오른쪽(x≥660)·위 왼쪽 흰 벽 비어 있음(창 x50~500·y50~400)"
+  },
+  {
+   "kind": "circle_arrow",
+   "line": "N5",
+   "text": "적혀 있더라고요",
+   "what": "튜브의 Tear-Free 글자",
+   "box": [
+    680,
+    650,
+    920,
+    750
+   ],
+   "why": "계획 프레임 cut14(쿠팡 사진 근접, 19.36~20.40) 9·30번 프레임 'Tear-Free' 글자 합 상자(창 x690~920·y240~320 → 화면 y+420) — 덩어리 19.65~20.40 이 한 컷 안"
+  },
+  {
+   "kind": "photo",
+   "line": "N1",
+   "file": "own_1_4JvHykA-gbw.jpg",
+   "from": "본인 유튜브 채널 썸네일 4JvHykA-gbw",
+   "why": "훅 첫 1초 본인 사진(벤치 5/10편)"
+  },
+  {
+   "kind": "photo",
+   "line": "N7",
+   "file": "own_2_7jB2U7PaOqc.jpg",
+   "from": "본인 유튜브 채널 썸네일 7jB2U7PaOqc",
+   "why": "N6b·N7 같은 구도 끊기(페이블 E1)"
+  }
+ ]
+}

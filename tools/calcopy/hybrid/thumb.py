@@ -427,13 +427,16 @@ def card_scene_frame(opt: dict, T: dict, cand_dir: Path, win_wh: tuple[int, int]
             k = ks[int(opt.get("nth", 0))]
         c = cuts[int(k)]
         src, t, crop = Path(cand_dir) / c["src"], float(c.get("ss") or 0) + float(opt.get("t", 0.0)), c.get("crop")
+    img = src.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")
+    if img:
+        t = 0.0          # 그림 컷(본인 사진·쿠팡 사진)은 한 장 — -ss 를 붙이면 jpg 에 따라 0프레임(10-25 관제263 v3 own_1: -ss 0.000 도 0바이트, cp_ 는 됨)
     pre = ""
     if blur:
         from tools.calcopy.hybrid.render_bench import blur_vf
         bl = blur_vf(blur, t, 1.0 / FPS)
         pre = bl + "," if bl else ""
     vf = pre + (f"crop={crop[2]}:{crop[3]}:{crop[0]}:{crop[1]}," if crop else "") + f"scale={ww}:{wh}:flags=lanczos"
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t:.3f}", "-i", str(src), "-frames:v", "1", "-vf", vf, "-f", "rawvideo", "-pix_fmt", "bgr24", "-"],
+    raw = subprocess.run(["ffmpeg", "-v", "error", *([] if img else ["-ss", f"{t:.3f}"]), "-i", str(src), "-frames:v", "1", "-vf", vf, "-f", "rawvideo", "-pix_fmt", "bgr24", "-"],
                          capture_output=True, stdin=subprocess.DEVNULL).stdout
     if len(raw) != ww * wh * 3:
         return None, f"프레임 못 뽑음 {src.name}@{t:.2f}"

@@ -167,10 +167,12 @@ def rhythm_gate(T: dict, st: dict, src_dir: Path | None) -> list[str]:
 
 
 def photo_share(cuts: list[dict], end: float) -> float:
-    """(판단 주인 — 그림 파일 컷 비중) 그림(jpg·png·webp) 컷 초 합 ÷ 길이. 렌더 전 관문(photo_gate)·품질 관문 rhythm 행이 같이 부른다."""
+    """(판단 주인 — 쿠팡·상품 그림 컷 비중) 그림(jpg·png·webp) 컷 초 합 ÷ 길이 — 연예인 본인 사진(파일 앞머리 own_, deco.is_own_photo)은 뺀다
+    (사장님 10-25 "사진 비중 상한은 쿠팡 사진에만" — 본인 사진은 판 deco.photo 가 따로 센다). 렌더 전 관문(photo_gate)·품질 관문 rhythm 행이 같이 부른다."""
+    from tools.calcopy.hybrid.deco import is_own_photo
     if not end:
         return 0.0
-    s = sum((c.get("t1", end) - c["t0"]) for c in cuts if Path(str(c.get("src") or "")).suffix.lower() in IMG_EXT)
+    s = sum((c.get("t1", end) - c["t0"]) for c in cuts if Path(str(c.get("src") or "")).suffix.lower() in IMG_EXT and not is_own_photo(c.get("src")))
     return round(s / end, 3)
 
 
@@ -2400,12 +2402,35 @@ def make_locate(S: dict, T: dict, st: dict, R: Path, win: Path, log=print, det=N
     return locate
 
 
+def deco_apply(placed: dict, doc: Path, st: dict, log=print) -> None:
+    """꾸밈 답(doc/deco_answers.json — 편마다 정해진 질문 deco.questions 의 답)을 배치 rows 에 얹는다. 주인 = deco.apply(여기선 부르기만)."""
+    from tools.calcopy.hybrid import deco as DC
+    ans = DC.load_answers(doc)
+    try:
+        DC.apply(placed["rows"], ans, st, log)
+    except DC.DecoError as e:
+        raise StageError(str(e))
+    placed.setdefault("log", []).append(f"꾸밈 답 {len((ans or {}).get('items') or [])}개" if ans else "꾸밈 답 없음(deco_answers.json)")
+
+
+def deco_gate(placed: dict, doc: Path, st: dict, log=print) -> list[str]:
+    """렌더 전 관문: 꾸밈 결과(배치 rows + 계획 컷)가 판 deco 범위 안인가. 판정 주인 = deco.check(부르기만). 판에 deco 칸이 없으면 안 본다."""
+    from tools.calcopy.hybrid import deco as DC
+    if not st.get("deco"):
+        return []
+    T = placed.get("_timeline") or {}
+    v = DC.check(doc, st, rows=placed["rows"], cuts=T.get("cuts") or [], end=T.get("end") or 0)
+    log(f"[꾸밈 관문] {'통과' if v['ok'] else '멈춤'} 포인트 {v.get('accents')} · {v['bad']}")
+    return [f"꾸밈 {x}" for x in v["bad"]]
+
+
 def plan_rows(S: dict, T: dict, st: dict, locate=None) -> dict:
     """배치(placement.place) — 씨앗 = 편 slug(같은 편은 늘 같은 배치). locate = make_locate(스티커·짤 자리 검출, 없으면 자리는 pending)."""
     from tools.calcopy.hybrid import placement as PL
     placed = PL.place(T["rows"], st, S.get("slug") or "x", cuts=T["cuts"], locate=locate)      # 전환·효과음 자리 = 화면 컷 경계(03)
     for r, t in zip(placed["rows"], T["rows"]):
         r["show"] = t["show"]
+    placed["_timeline"] = {"cuts": T["cuts"], "end": T["end"]}      # 꾸밈 관문(deco_gate)이 본인 사진 컷·길이를 센다
     # 댓글 카드 = 배치가 고르고(벤치 편 비율) 대본에 원본 댓글이 있을 때만
     C = S.get("comment")
     rule = (st["placement"]["rules"].get("stickers") or {}).get("comment_card")
@@ -2617,6 +2642,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
             log("[어림] --guess: 글자÷cps 길이 — 길이 관문(⑧)은 안 본다. 렌더 전 판정은 --plan(진짜 목소리)으로")
         T = timeline(S, M, st, sm, align)
         placed = plan_rows(S, T, st, make_locate(S, T, st, R, None, log, det=plan_canvas(T, M, st)) if locate else None)   # --locate = 스티커 자리·원 대상까지 계획에서(렌더 없이)
+        deco_apply(placed, doc, st, log)
         placed["transitions_drawn"] = transitions_of(T, st, placed, log)
         jsave(doc / "plan/계획_시간표.json", {"timeline": T, "placement": placed})
         sheet = contact_sheet(T, M, st, doc / "plan/계획_접촉시트.jpg", S)      # G-10 렌더 없는 눈 검사(관문이 멈춰도 볼 수 있게 관문 앞에서)
@@ -2636,7 +2662,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         from tools.calcopy.hybrid import thumb_rule as TR
         card_bad = (TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"]) + cut_boundary_gate(T, M, st)      # 렌더 전 관문 ⑥ — 계획 때 걸러 렌더를 안 돌린다
                     + cut_content_gate(T, M, st, doc, R, log) + cut_length_gate(T, st) + cut_still_gate(T, M, st) + photo_gate(T, st)
-                    + rhythm_gate(T, st, Path(M["cand_dir"]) if M.get("cand_dir") else None))                                                         # 관문 ④ 컷 안 남의 글자·남의 얼굴
+                    + rhythm_gate(T, st, Path(M["cand_dir"]) if M.get("cand_dir") else None) + deco_gate(placed, doc, st, log))                       # 관문 ④ 컷 안 남의 글자·남의 얼굴 · 꾸밈(deco)
         if card_bad:
             raise StageError(" / ".join(card_bad))
         return {"timeline": T, "placement": placed, "length": length, "over": msg, "sheet": str(sheet) if sheet else None}
@@ -2656,6 +2682,10 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         raise StageError(" / ".join(card_bad))
     win0 = render_window(T, M, st, R)                          # 창(전환 없이) — 자리 검출 화면의 재료
     placed = plan_rows(S, T, st, make_locate(S, T, st, R, win0, log))
+    deco_apply(placed, doc, st, log)
+    bad = deco_gate(placed, doc, st, log)
+    if bad:
+        raise StageError(" / ".join(bad))
     from tools.calcopy.hybrid import placement as PL
     chk = PL.check_place(placed, st)
     check_sfx(st, placed)

@@ -893,5 +893,278 @@
    "v": 0.16,
    "why": "벤치 8편 줄판독 scene/scene_desc '사진·화보' 줄 초 ÷ 길이 = BRa 0.222·Cs-Ka 0·Ks5k 0.279·Nv99 0.14·_Wa 0.027·cNo 0.046·oTi 0·vSEa 0.041 → p75 0.16(중앙 0.044). 벤치 정지 화면은 전부 연예인 화보 — 쇼핑몰 상품 사진 0/8(페이블 눈검수 E1). 우리 그림 파일(jpg·png) 컷 초 ÷ 길이가 이걸 넘으면 계획에서 멈춘다(render_bench.photo_gate). 박정수 편 0.27"
   }
+ },
+ "deco": {
+  "_why": "벤치 10편 실측(tools/calcopy/hybrid/deco.py measure → _kal/꾸밈실측.json — 줄판독 8편 + 꾸밈_추가판독 2편). core = 벤치 편 50% 넘게 쓰는 종류(매 편 횟수 범위 안), accent = 나머지(편마다 accent_min 가지 이상, 최근 편과 같은 소리 글자·문구·조합 금지). core 횟수 = 벤치 10초당 중앙 × 우리 길이 27.5초 / 10 의 ×0.5~×1.5",
+  "made_by": "tools/calcopy/hybrid/deco.py board <판> (measure → board_deco — 기계 산출, 숫자 근거 = _kal/꾸밈실측.json)",
+  "length_s": 27.5,
+  "kinds": {
+   "word_color": {
+    "need": "core",
+    "min": 8,
+    "max": 24,
+    "drawn": true,
+    "bench_videos": "9/10",
+    "per_10s": 5.721,
+    "roles": [
+     "증거",
+     "끝",
+     "훅",
+     "공개"
+    ],
+    "shape": [
+     "기본",
+     "#00FD0B",
+     "#17FFF1",
+     "#15FF17"
+    ],
+    "how": "emph(낱말 1개, 팩 5색 돌림)"
+   },
+   "multi_color": {
+    "need": "accent",
+    "min": 0,
+    "max": 1,
+    "drawn": true,
+    "bench_videos": "3/10",
+    "per_10s": 0.0,
+    "roles": [
+     "훅",
+     "공개"
+    ],
+    "shape": [
+     "기울임",
+     "연분홍(측정 안 됨)",
+     "#17FFF1",
+     "기본"
+    ],
+    "how": "emph(낱말 2개+ 각자 색 — 어절 단위)"
+   },
+   "chunk_color": {
+    "need": "core",
+    "min": 3,
+    "max": 8,
+    "drawn": true,
+    "bench_videos": "8/10",
+    "per_10s": 1.935,
+    "roles": [
+     "증거",
+     "본문",
+     "훅",
+     "답"
+    ],
+    "shape": [
+     "기타(덩어리 전체 초록)",
+     "기타(덩어리 전체 분홍)",
+     "#00FD0B",
+     "#F7D3EF"
+    ],
+    "how": "emph(덩어리 전체 낱말, 색 하나)"
+   },
+   "big": {
+    "need": "accent",
+    "min": 0,
+    "max": 2,
+    "drawn": false,
+    "bench_videos": "5/10",
+    "per_10s": 0.238,
+    "roles": [
+     "증거",
+     "본문",
+     "공개",
+     "가격"
+    ],
+    "shape": [
+     "#F2FF0E",
+     "기타(덩어리 전체 노랑, 주황 테두리·크게)",
+     "기타(덩어리 전체 노랑, 크게)",
+     "기타(음절마다 튀어 나옴 '내음' 크게 출렁)"
+    ],
+    "how": null
+   },
+   "hand_big": {
+    "need": "accent",
+    "min": 0,
+    "max": 1,
+    "drawn": false,
+    "bench_videos": "1/10",
+    "per_10s": 0.0,
+    "roles": [
+     "가격"
+    ],
+    "shape": [
+     "손글씨 크게(얇은 붓 손글씨 검정 + 흰 테, 창 폭 거의 전체 ~100"
+    ],
+    "how": null
+   },
+   "tilt": {
+    "need": "accent",
+    "min": 0,
+    "max": 3,
+    "drawn": false,
+    "bench_videos": "3/10",
+    "per_10s": 0.0,
+    "roles": [
+     "증거",
+     "훅",
+     "답"
+    ],
+    "shape": [
+     "#17FFF1",
+     "기울임",
+     "연분홍(측정 안 됨)",
+     "#15FF12"
+    ],
+    "how": null
+   },
+   "letter_pop": {
+    "need": "accent",
+    "min": 0,
+    "max": 3,
+    "drawn": false,
+    "bench_videos": "3/10",
+    "per_10s": 0.0,
+    "roles": [
+     "증거",
+     "본문",
+     "질문",
+     "답"
+    ],
+    "shape": [
+     "#15FF17",
+     "기타(글자마다 튀어 나옴)",
+     "#ED3259",
+     "기타(전체 하늘색, 글자마다 튀며 마지막에 하늘 터짐)"
+    ],
+    "how": null
+   },
+   "sound_word": {
+    "need": "accent",
+    "min": 0,
+    "max": 1,
+    "drawn": true,
+    "bench_videos": "1/10",
+    "per_10s": 0.0,
+    "roles": [
+     "증거"
+    ],
+    "shape": [
+     "작게 튀어나와 약 0.13초(4프레임)에 큰 크기, 흰 손글씨 'ㅋㅋㅋ' 자막 왼쪽 위, "
+    ],
+    "how": "스티커 sound_word(편집기 renderStickers — 빨강 BMJUA 고정)"
+   },
+   "circle_arrow": {
+    "need": "accent",
+    "min": 0,
+    "max": 1,
+    "drawn": true,
+    "bench_videos": "2/10",
+    "per_10s": 0.0,
+    "roles": [
+     "훅"
+    ],
+    "shape": [
+     "뜯기 box 기준(원 x382~654 y1027~1330, 화살표 x242~370 y893",
+     "첫 프레임부터 있음(등장 곡선 못 봄) — 가방 둘레 빨간 원 + 흰 화살표"
+    ],
+    "how": "스티커 circle_arrow(fx_target.aim 좌표 — 빨강 고정)"
+   },
+   "spark_lines": {
+    "need": "accent",
+    "min": 0,
+    "max": 2,
+    "drawn": true,
+    "bench_videos": "3/10",
+    "per_10s": 0.0,
+    "roles": [
+     "증거",
+     "질문",
+     "답"
+    ],
+    "shape": [
+     "흰 짧은 선 2~3개 + 흰 점이 '찐' 오른쪽 위에서 번쩍(격자 4.2 눈대중)",
+     "흰 짧은 선 3개 '\\ | /' 이(10.1)·오른쪽 아래 2~3개(10.2~10.3)+흰",
+     "흰 짧은 선 3개 + 점, 글 오른쪽 위에서 번쩍(격자 5.2 눈대중)",
+     "흰 짧은 선 3개 + 흰 점, 글 오른쪽에서 번쩍(격자 9.8 눈대중)"
+    ],
+    "how": "스티커 spark_lines"
+   },
+   "gem": {
+    "need": "accent",
+    "min": 0,
+    "max": 3,
+    "drawn": true,
+    "bench_videos": "1/10",
+    "per_10s": 0.0,
+    "roles": [
+     "끝",
+     "본문"
+    ],
+    "shape": [
+     "튀어나온 뒤 흰 반짝임 쓸고 감, 글 오른쪽 위",
+     "글 왼쪽 앞, 튀어나옴+흰 반짝임",
+     "왼쪽 아래로 미끄러지며 사라짐"
+    ],
+    "how": "스티커 gem"
+   },
+   "heart": {
+    "need": "accent",
+    "min": 0,
+    "max": 3,
+    "drawn": true,
+    "bench_videos": "1/10",
+    "per_10s": 0.0,
+    "roles": [
+     "고조",
+     "본문"
+    ],
+    "shape": [
+     "첫 글자 아래 분홍 하트",
+     "흰 테두리 빈 하트, 글 끝 오른쪽 아래",
+     "마지막 친 글자 아래에서 따라 움직이다 다 치면 사라짐(스타일분석과 같음)"
+    ],
+    "how": "스티커 heart(타이핑 덩어리)"
+   },
+   "comment_card": {
+    "need": "accent",
+    "min": 0,
+    "max": 1,
+    "drawn": true,
+    "bench_videos": "1/10",
+    "per_10s": 0.0,
+    "roles": [
+     "반전"
+    ],
+    "shape": [
+     "유튜브 댓글 카드 흰 상자(창 왼쪽 위) — 컷인"
+    ],
+    "how": "스티커 comment_card"
+   },
+   "photo": {
+    "need": "core",
+    "min": 2,
+    "max": 5,
+    "drawn": true,
+    "bench_videos": "7/10",
+    "per_10s": 1.29,
+    "roles": [
+     "훅",
+     "질문",
+     "끝",
+     "공개"
+    ],
+    "shape": [],
+    "how": "재료.json 그림 컷(본인 출처 — 02 원본찾기)"
+   }
+  },
+  "accent_min": 2,
+  "accent_max": 6,
+  "_why_accent": "편마다 포인트 종류 수(벤치 편별 [4, 6, 0, 4, 2, 1, 2, 0, 1, 4]) 중앙 2 · 최대 6 — 그리지 못하는 ['big', 'hand_big', 'tilt', 'letter_pop'] 는 벤치에 있어도 고를 수 없다(편집기 주인 몫으로 보고)",
+  "photo": {
+   "own_share_max": 0.279,
+   "hook_share": 0.5,
+   "why": "벤치 본인 사진(화보·방송 사진) 줄 초 ÷ 길이 편별 최대 0.279 · 중앙 0.066 · 5/10편이 첫 1초 안에 사진(훅). 쿠팡·상품 사진 상한은 따로 rhythm.photo_share_max(본인 사진 own_ 은 그 셈에서 뺀다)"
+  },
+  "repeat_n": 5,
+  "_why_repeat": "작업기록(channel/작업기록.jsonl deco 칸) 최근 5편과 같은 소리 글자·손글씨 글·여러 색 덩어리 글·같은 포인트 조합을 다시 쓰지 않는다(사장님 10-25 '같은 걸 반복하지 말고 응용·발전')"
  }
 }
