@@ -30,7 +30,7 @@ class Test판단은_각각_한곳:
         text = inspect.getsource(mp)
         reads = [l.strip() for l in text.splitlines()
                  if "_FINAL_CLEAN" in l and not l.strip().startswith("#")]
-        assert len(reads) == 2, f"_FINAL_CLEAN을 직접 읽는 곳이 늘었다: {reads}"
+        assert reads == [], f"폐지한 _FINAL_CLEAN 스위치(10-26 VMake 규칙)가 되살아났다: {reads}"
 
     def test_화면재료_판정은_beat_materials만(self):
         """scene_override 우선 + alternates 포함 규칙을 손으로 또 적으면 안 된다."""

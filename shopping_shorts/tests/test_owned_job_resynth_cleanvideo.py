@@ -133,7 +133,7 @@ def test_정본_증분_뒤_clean_video_path는_extras_조각으로_조립(tmp_pa
     monkeypatch.setattr(mp, "Store", lambda p: store)
     monkeypatch.setattr(mp, "_synthesize_beats", lambda *a, **k: None)
     monkeypatch.setattr(mp, "_vmake_keys", lambda *a, **k: ["k"])
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", True, raising=False)
     monkeypatch.setattr(mp, "_charge_clean", lambda *a, **k: 1)
     monkeypatch.setattr(mp, "_refund_clean", lambda *a, **k: None)
     got = []
@@ -168,7 +168,7 @@ def test_정본_그대로_버튼도_clean_video_path를_채운다(tmp_path, monk
     monkeypatch.setattr(mp, "Store", lambda p: store)
     monkeypatch.setattr(mp, "_synthesize_beats", lambda *a, **k: None)
     monkeypatch.setattr(mp, "_vmake_keys", lambda *a, **k: ["k"])
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", True, raising=False)
     monkeypatch.setattr(mp, "_charge_clean", lambda *a, **k: pytest.fail("정본이 덮는데 과금했다"))
     got = []
     monkeypatch.setattr(mp, "assemble",

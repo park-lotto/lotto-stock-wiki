@@ -122,7 +122,7 @@ def _button(monkeypatch, tmp_path, job):
     monkeypatch.setattr(mp, "Store", lambda p: store)
     monkeypatch.setattr(mp, "_synthesize_beats", lambda *a, **k: None)
     monkeypatch.setattr(mp, "_vmake_keys", lambda *a, **k: ["k"])
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", True, raising=False)
     calls = []
     monkeypatch.setattr(mp, "_charge_clean", lambda *a, **k: calls.append("charge") or 1)
     monkeypatch.setattr(mp, "_refund_clean", lambda *a, **k: None)

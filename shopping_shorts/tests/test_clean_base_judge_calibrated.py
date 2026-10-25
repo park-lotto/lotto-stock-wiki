@@ -105,7 +105,7 @@ def test_버튼은_렌더와_같은_판정으로_증분(short_a, monkeypatch, tm
     from shopping_shorts import video_assemble as _va
     monkeypatch.setattr(_va, "_apply_hook_inpoint", lambda *a, **k: None)   # 훅 시작점 이동은 여기 주제가 아니다
     monkeypatch.setattr(mp, "_vmake_keys", lambda *a, **k: ["k"])
-    monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", True, raising=False)
     assert _uncal_uncovered(work, job) == []                  # 보정 없이 판정하면 버튼은 '과금 0'으로 끝났을 것
     calls, sent = [], []
     monkeypatch.setattr(mp, "_charge_clean", lambda *a, **k: calls.append("charge") or 1)
