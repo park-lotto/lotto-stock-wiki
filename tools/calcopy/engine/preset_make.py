@@ -509,6 +509,13 @@ def _move(c, W, H) -> str:
     return "," + move_vf(c["move"], c["n"], W, H)
 
 
+def part_vf(c, W, H2) -> str:
+    """(판단 주인) 컷 조각이 어떤 그림이 되나 — 늘림(setpts)·크롭·창 크기·fps·move. render_parts(굽기)·preset_gates(멈춤 재기)가 같이 부른다."""
+    x, y, cw, ch = c["box"]
+    return ((f"setpts=PTS/{c['speed']}," if c.get("speed", 1.0) != 1.0 else "") +
+            f"crop={cw}:{ch}:{x}:{y},scale={W}:{H2}:flags=lanczos,setsar=1,fps={FPS}" + _move(c, W, H2))
+
+
 def render_parts(w, cfg, cache: Path, out: Path, log: dict) -> tuple[Path, list]:
     W, H = cfg["window"]
     H2 = H + (H % 2)
@@ -528,11 +535,8 @@ def render_parts(w, cfg, cache: Path, out: Path, log: dict) -> tuple[Path, list]
 
     def one(job):
         c, dst = job
-        x, y, cw, ch = c["box"]
         tmp = dst.with_name(dst.stem + ".part.mp4")
-        run(["ffmpeg", "-y", "-ss", f"{c['ss']:.3f}", "-i", c["path"], "-an", "-vf",
-             (f"setpts=PTS/{c['speed']}," if c.get("speed", 1.0) != 1.0 else "") +
-             f"crop={cw}:{ch}:{x}:{y},scale={W}:{H2}:flags=lanczos,setsar=1,fps={FPS}" + _move(c, W, H2), "-frames:v", c["n"], *ENC, tmp])
+        run(["ffmpeg", "-y", "-ss", f"{c['ss']:.3f}", "-i", c["path"], "-an", "-vf", part_vf(c, W, H2), "-frames:v", c["n"], *ENC, tmp])
         tmp.replace(dst)
     with cf.ThreadPoolExecutor(FF_PAR) as ex:
         list(ex.map(one, jobs))
@@ -934,18 +938,27 @@ def make_one(pdir: Path, wdir: Path, a) -> dict:
     out.mkdir(parents=True, exist_ok=True)
     plan = plan_check(w, cfg)
     clk.lap("읽기·재료 확인")
+    from tools.calcopy.engine import preset_gates as PG   # 렌더 전 관문(판정 주인 = script_audit·narr_verify·render_bench — 부르기만)
+    g1 = PG.text_gate(w)                                  # G-1 대본 글(TTS 전)
     if a.plan:
         plan_sheet(w, cfg, wdir / "plan" / "계획_시트_자동.jpg")
         clk.lap("계획 시트")
         rows = plan_rules(w, cfg, plan)
+        pr = PG.pre_render(w, cfg, out, wdir, pdir.name, sheet_to=wdir / "plan" / "계획_접촉시트.jpg")   # 어림 시각(글자÷cps) — 길이 ⑧은 안 봄
+        clk.lap("렌더 전 관문(어림 시각)")
+        rows += [{"B": "관문", "항목": "렌더 전 관문(G-1·③⑤⑦④, 어림 시각)", "값": (g1 + pr["bad"]) or 0, "기준": "0 — preset_gates", "ok": not (g1 + pr["bad"])}]
         print_table(w["name"] + " (계획 단계)", rows)
         fails = [f"{r['B']} {r['항목']} {r['값']}" for r in rows if not r["ok"]]
-        return {"work": w["name"], "ok": None, "note": f"계획 시트 {wdir / 'plan' / '계획_시트_자동.jpg'} · " + ("; ".join(fails) or "계획 검사 통과"),
+        return {"work": w["name"], "ok": False if (g1 + pr["bad"]) else None,
+                "note": f"계획 시트 {wdir / 'plan' / '계획_시트_자동.jpg'} · " + ("; ".join(fails) or "계획 검사 통과"),
                 "total_s": round(sum(clk.steps.values()), 1)}
+    PG._stop("G-1 대본 글(TTS 전)", g1)
     from tools.calcopy.engine import orig_audio as OA     # 원음 줄·원음 깔기 — 칸 없으면 종전 그대로
     wn = OA.narr_view(w) if OA.has_orig(w) else w
     full = tts(wn, cfg, cache, a.tts, a.allow_tts, log)
     clk.lap("TTS")
+    PG._stop("② 줄별 받아쓰기(합성 직후)", PG.voice_gate(wn, cfg, cache, full, out))
+    clk.lap("받아쓰기 관문")
     narr, tempo = narration(full, wn, cfg, out)
     log["atempo"] = tempo
     timed, dur = timing(wn, narr, log, cfg, cache)
@@ -958,6 +971,10 @@ def make_one(pdir: Path, wdir: Path, a) -> dict:
     build_cuts(w, timed, dur, cfg)
     if wn is not w:
         OA.sync_cuts(w, FPS)
+    pr = PG.pre_render(w, cfg, out, wdir, pdir.name)     # 진짜 목소리 시각 — 멈추면 조각 굽기 전에 GateStop
+    log["pre_render_gate"] = pr
+    PG._stop("렌더 전 컷(③⑤⑦④·⑧)", pr["bad"])
+    clk.lap("렌더 전 관문")
     mat, mat_map = render_parts(w, cfg, cache, out, log)
     clk.lap("컷 조각")
     snap, tl, head = snapshot_and_timeline(w, M, cfg, pdir)
@@ -971,7 +988,7 @@ def make_one(pdir: Path, wdir: Path, a) -> dict:
     final = out / "final.mp4"
     # 완성본 인코딩·진짜 최고점 지킴은 engine/master_guard 한 곳(10-18 원샷1_전동칫솔: mix −0.9 → AAC 뒤 +6.3 dBFS)
     from tools.calcopy.engine.master_guard import encode_final
-    log["master_guard"] = encode_final(vid, mix, final, float(cfg["checks"]["peak_max_dbfs"]))
+    log["master_guard"] = encode_final(vid, mix, final, float(cfg["checks"]["peak_max_dbfs"]), renderer="preset_make", script=wdir / "대본.json")   # 봉인 렌더러 = preset_make → 납품은 관문 기록을 본다(engine/deliver GATED)
     clk.lap("소리·완성본")
     groups, t = [], 0.0
     for c in w["cuts"]:
@@ -989,6 +1006,7 @@ def make_one(pdir: Path, wdir: Path, a) -> dict:
     sheet_1s(final, out / "sheet_1s.jpg")
     ok = all(r["ok"] for r in rows)
     fm = md5(final)
+    log["gate_record"] = str(PG.record(wdir, fm, rows, ["G-1 대본 글", "② 줄별 받아쓰기", "③ 장면 경계", "⑤ 컷 길이", "⑦ 멈춤", "④ 남의 글자·얼굴", "⑧ 길이", "사진 비중"]))
     log["final"] = {"path": str(final), "md5": fm, "seconds": round(dur_of(final), 2)}
     brand = (M.get("brand") or {}).get("channel_name") or M.get("channel_rules", {}).get("brand") or M.get("slug")
     desk_name = f"칼카피_{brand}_{w['title_short']}{'_' + a.tag if a.tag else ''}.mp4"

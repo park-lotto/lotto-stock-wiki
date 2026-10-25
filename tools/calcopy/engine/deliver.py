@@ -6,7 +6,7 @@
 받는 조건(하나라도 아니면 올리지 않는다):
   ① 봉인(engine/finalize.seal) 그대로 — 봉인 없음·봉인 뒤 바뀜·봉인 때 기본 검사(광고 표시·크기·소리·길이) 실패면 거절
   ② 대본이 렌더 뒤 바뀌지 않았다 — 봉인의 대본 md5 = 지금 대본.json md5
-  ③ 품질 관문이 있는 렌더 길(render_bench)이면 <doc>/품질관문/<봉인 md5>.json 이 ok — 그 판을 잰 결과여야 한다(마지막 결과 덮어쓰기 금지)
+  ③ 관문 렌더 길(GATED: render_bench·preset_make·이름 없는 master_guard 봉인)이면 <doc>/품질관문/<봉인 md5>.json 이 ok — 그 판을 잰 결과여야 한다(마지막 결과 덮어쓰기 금지)
   ④ 파일 이름 = NN_영어 소문자·숫자·밑줄.mp4(칼카피_시작 §0-2) · 드라이브 칼카피영상 아래 이미 있는 폴더 · 같은 이름 없음(새 판은 옛 파일을 _이전판으로 옮긴 뒤)
 올리기 = PowerShell Copy-Item(드라이브 G: 는 Bash cp 금지 — 폴더를 파일로 덮은 사고) → 올린 파일 md5 대조 → <doc>/납품.json 에 쌓기.
 왜: 10-25 전 편 감사 — 광고 없음 7편·검사 × 판 납품(잇템로그 04)·대본 판 불일치가 전부 '아무 파일이나 손으로 올릴 수 있어서' 나갔다.
@@ -25,7 +25,9 @@ from tools.calcopy.engine import finalize as FZ  # noqa: E402
 
 DRIVE_ROOT = Path("G:/내 드라이브/칼카피영상")
 NAME_RE = re.compile(r"^\d{2}_[a-z0-9]+(?:_[a-z0-9]+)*\.mp4$")      # 칼카피_시작 §0-2: NN_영어소문자(_MMDD_HHMM·_confirm·_hybrid) — 한글 금지
-GATED = {"render_bench"}      # 품질 관문(quality_gate)이 도는 렌더 길 — 그 판의 관문 기록까지 본다
+GATED = {"render_bench", "preset_make", "master_guard"}      # 관문 기록(<doc>/품질관문/<md5>.json)이 있어야 나가는 렌더 길 —
+# render_bench = quality_gate · preset_make = preset_gates.record(10-25: 렌더 전 관문 0건인 채 남의 글자·멈춤 편이 나갔다) ·
+# master_guard = 렌더러 이름 없이 encode_final 로 봉인된 판(10-25 전 preset_make 판·render_spr) — 기록이 없으니 다시 렌더해야 나간다
 
 
 def check(final, dest_dir, name: str, doc=None, drive_root: Path = DRIVE_ROOT) -> tuple[bool, list[str], dict | None]:
@@ -55,7 +57,7 @@ def check(final, dest_dir, name: str, doc=None, drive_root: Path = DRIVE_ROOT) -
             else:
                 gp = Path(doc) / "품질관문" / f"{rec['md5']}.json"
                 if not gp.exists():
-                    why.append(f"이 판을 잰 품질 관문 기록이 없다({gp.name}) — 봉인된 이 파일로 관문(bench_check)을 돌려라")
+                    why.append(f"이 판을 잰 품질 관문 기록이 없다({gp.name}) — render_bench 판은 봉인된 이 파일로 quality_gate 를, preset_make 판은 preset_make 로 다시 만들어(관문 기록이 같이 남는다) 올린다")
                 else:
                     g = json.loads(gp.read_text(encoding="utf-8"))
                     if not g.get("ok"):

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""납품 자물쇠 자가 시험(10-25) — 봉인·관문 ○ 인 새 렌더 1편으로 통과/거절 13가지를 잰다. 잠금을 바꾸면 다시 돌린다.
+"""납품 자물쇠 자가 시험(10-25) — 봉인·관문 ○ 인 새 렌더 1편으로 통과/거절 20가지를 잰다(10-25 밤 preset_make·master_guard GATED 7가지 더함). 잠금을 바꾸면 다시 돌린다.
 
     PYTHONUTF8=1 py tools/calcopy/engine/deliver_selftest.py <빈 시험 폴더> <봉인된 final.mp4> <그 편 doc 폴더>
 
@@ -39,7 +39,28 @@ d3 = SP / "doc3"; shutil.rmtree(d3, ignore_errors=True); shutil.copytree(DOC, d3
 gp = d3 / "품질관문" / f"{rec['md5']}.json"; g = json.loads(gp.read_text(encoding="utf-8")); g["ok"] = False; g["rows"][7]["ok"] = False; gp.write_text(json.dumps(g, ensure_ascii=False), encoding="utf-8")
 show("관문 × 인 판", FIN, DEST, "13_salmon_cream_1025_0900.mp4", d3)
 gp.unlink(); show("관문 기록 없음", FIN, DEST, "13_salmon_cream_1025_0900.mp4", d3)
+# GATED 확장(10-25 밤): preset_make 판·이름 없는 master_guard 판도 그 판의 관문 기록(preset_gates.record)이 ok 여야 나간다
+from tools.calcopy.engine import preset_gates as PG
+def as_renderer(tag, renderer):
+    t = SP / f"mod_{tag}" / "final.mp4"; t.parent.mkdir(exist_ok=True); shutil.copy(FIN, t)
+    r = dict(rec); r["renderer"] = renderer; FZ.seal_path(t).write_text(json.dumps(r, ensure_ascii=False), encoding="utf-8")
+    return t
+d4 = SP / "doc4"; shutil.rmtree(d4, ignore_errors=True); shutil.copytree(DOC, d4, dirs_exist_ok=True); shutil.rmtree(d4 / "품질관문", ignore_errors=True)
+rec = json.loads(FZ.seal_path(FIN).read_text(encoding="utf-8")); rec["script"] = str(d4 / "대본.json")
+tp = as_renderer("pm", "preset_make")
+show("preset_make 판 · 관문 기록 없음(10-25 전 판)", tp, DEST, "13_salmon_cream_1025_0900.mp4", d4)
+show("preset_make 판 · --doc 없음", tp, DEST, "13_salmon_cream_1025_0900.mp4", None)
+okrows = [{"B": "B1", "항목": "길이", "값": 28.0, "기준": "23~33", "ok": True}]
+PG.record(d4, rec["md5"], okrows + [{"B": "B13", "항목": "같은 소스 ±3초", "값": 20, "기준": "0", "ok": False}], ["⑦ 멈춤"], log=lambda m: None)
+show("preset_make 판 · 관문 ×(B13 미달 — 창고판 옥수수커터 꼴)", tp, DEST, "13_salmon_cream_1025_0900.mp4", d4)
+PG.record(d4, rec["md5"], okrows, ["G-1 대본 글", "④ 남의 글자·얼굴"], log=lambda m: None)
+show("preset_make 판 · 관문 ○", tp, DEST, "13_salmon_cream_1025_0900.mp4", d4)
+tm = as_renderer("mg", "master_guard")
+show("master_guard(렌더러 이름 없음) 판 · 관문 ○ 기록", tm, DEST, "13_salmon_cream_1025_0900.mp4", d4)
+shutil.rmtree(d4 / "품질관문")
+show("master_guard(렌더러 이름 없음) 판 · 기록 없음", tm, DEST, "13_salmon_cream_1025_0900.mp4", d4)
+show("관문 길 밖 렌더러(make_py) 판 · 기록 없음 — 봉인만 본다", as_renderer("mk", "make_py"), DEST, "13_salmon_cream_1025_0900.mp4", d4)
 # 실제 복사(가짜 드라이브 뿌리)
 r = D.to_drive(FIN, DEST, "13_salmon_cream_1025_0900.mp4", DOC, drive_root=ROOT); print("복사:", r["ok"], r.get("dest"))
 show("같은 이름 또 올리기", FIN, DEST, "13_salmon_cream_1025_0900.mp4", DOC)
-print("※ 시험 기록 납품.json 은 doc 에 남는다 — 지워라:", DOC / "납품.json")
+print("※ 시험 기록 납품.json 은 doc 에 남는다 — 지워라:", DOC / "납품.json", "· channel/작업기록.jsonl 맨 끝 시험 1줄(final_path 가 시험 폴더)도 지운다")
