@@ -275,10 +275,10 @@ def pick_option(doc: Path, spec: dict) -> str:
     return spec["pick"]
 
 
-def _part_frame(work: Path, part: int, t: float):
+def _part_frame(work: Path, part: int, t: float, wh: tuple[int, int] = (1080, 1434)):
     from PIL import Image
     p = Path(work) / "render/parts" / f"c{part:02d}.mp4"
-    w, h = 1080, 1434
+    w, h = wh          # 창 크기(부른 쪽이 frame_window 로 — full 판은 1080×1920, 10-26 두유노판)
     raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t:.3f}", "-i", str(p), "-frames:v", "1", "-vf", f"scale={w}:{h}:flags=lanczos",
                           "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
     if len(raw) != w * h * 3:
@@ -331,7 +331,8 @@ def card(style_name: str, doc: Path, work: Path, opt: dict, out: Path) -> Path:
     from tools.calcopy.hybrid.render_bench import _font, frame_png
     st = ST.load(style_name)
     S = jload(Path(doc) / "대본.json")
-    x0, y0, ww, wh = st["frame"]["window"]
+    from tools.calcopy.hybrid.render_bench import frame_window
+    x0, y0, ww, wh = frame_window(st["frame"])      # 창 주인 = render_bench.frame_window(full 판은 window 칸 없음 — 10-26 두유노판)
     if opt.get("file"):      # 컷 조각이 없을 때(작업 폴더 정리 뒤) = 본편이 쓴 원본 영상 그 자리·같은 크롭
         from PIL import Image as _I
         fx, fy, fw, fh = opt["crop"]
@@ -349,7 +350,7 @@ def card(style_name: str, doc: Path, work: Path, opt: dict, out: Path) -> Path:
             if len(ks) <= int(opt.get("nth", 0)):
                 raise StageError(f"썸네일 장면 줄 {opt['line']} 에 {opt.get('nth', 0)}번째 컷이 없다")
             part = ks[int(opt.get("nth", 0))]
-        scene = _part_frame(work, int(part), float(opt.get("t", 0.0)))
+        scene = _part_frame(work, int(part), float(opt.get("t", 0.0)), (ww, wh))
     if opt.get("zoom"):
         zx, zy, zw, zh = opt["zoom"]
         scene = scene.crop((zx, zy, zx + zw, zy + zh)).resize((ww, wh), Image.LANCZOS)
@@ -454,7 +455,8 @@ def card_faces(st: dict, doc: Path, T: dict, cand_dir: Path) -> list[dict]:
     if not sp.exists():
         return []
     det = _detector()
-    _, _, ww, wh = st["frame"]["window"]
+    from tools.calcopy.hybrid.render_bench import frame_window
+    _, _, ww, wh = frame_window(st["frame"])
     rows = []
     for o in jload(sp).get("options") or []:
         im, where = card_scene_frame(o, T, cand_dir, (ww, wh))

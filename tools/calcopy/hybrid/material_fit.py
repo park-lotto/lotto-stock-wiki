@@ -474,7 +474,7 @@ def _new_viol(base: list[dict], cand: dict, src_len: dict, adjacent_run: bool = 
     return [v for v in reuse_violations_bench(sorted(same + [cand], key=lambda x: float(x.get("t0") or 0)), src_len, adjacent_run) if v not in before]
 
 
-def respace_reuse(cuts: list[dict], src_dir: Path | None, log=print) -> list[str]:
+def respace_reuse(cuts: list[dict], src_dir: Path | None, log=print, adjacent_run: bool = False) -> list[str]:
     """(판단 주인: 계획 컷 B13 피하기 — 관제263 10-25) 렌더 시간표 컷(render_bench.timeline, snap_ss 뒤)에서 같은 원본 가까운 구간 재사용(B13)이 생긴
     나레 컷을 **그 컷이 있던 원본 샷 안에서** 가장 덜 움직여 피한다. 판정 = quality_gate.reuse_violations_bench(_new_viol — 다시 적지 않는다) ·
     조각·번쩍임 = render_bench.short_pieces(snap_ss 와 같은 경계·같은 자) · 원본 끝 = render_bench.src_left.
@@ -492,7 +492,7 @@ def respace_reuse(cuts: list[dict], src_dir: Path | None, log=print) -> list[str
         if c.get("kind") != "tts" or c.get("no_snap"):
             continue
         others = [x for x in vid if x is not c]
-        if not _new_viol(others, c, lens):
+        if not _new_viol(others, c, lens, adjacent_run):
             continue
         src = Path(src_dir) / c["src"]
         ss0, d = float(c["ss"]), (round(float(c["t1"]) * FPS) - round(float(c["t0"]) * FPS)) / FPS
@@ -508,11 +508,11 @@ def respace_reuse(cuts: list[dict], src_dir: Path | None, log=print) -> list[str
             left = src_left(src, s)
             if s < 0 or (left is not None and d > left) or short_pieces(st, s, s + d):
                 continue
-            if not _new_viol(others, {**c, "ss": s}, lens):
+            if not _new_viol(others, {**c, "ss": s}, lens, adjacent_run):
                 got = s
                 break
         if got is None:
-            c["reuse_unfixed"] = _new_viol(others, c, lens)
+            c["reuse_unfixed"] = _new_viol(others, c, lens, adjacent_run)
             out.append(f"[B13] {c.get('line')} {Path(c['src']).stem}@{ss0:.2f} — 샷 [{a:.2f},{b:.2f}] 안에서 못 피함 → 다른 장면(재료.json): {c['reuse_unfixed'][0]}")
         else:
             c["ss_reuse"], c["ss"] = ss0, got
@@ -966,7 +966,8 @@ def plan(doc, work, version: str, llm=None, apply: bool = False, sign: bool = Fa
     for s in slots:
         if s["kind"] == "orig":
             crops.setdefault(s["fixed"]["src"], s["fixed"].get("crop") if isinstance(s["fixed"].get("crop"), list) else None)
-    _, _, ww, wh = st["frame"]["window"]
+    from tools.calcopy.hybrid.render_bench import frame_window
+    _, _, ww, wh = frame_window(st["frame"])
     aspect = ww / wh
     for sname in list({(s.get("human") or {}).get("src") for s in slots} | {s["fixed"]["src"] for s in slots if s["kind"] == "orig"}) :
         if sname and not crops.get(sname):

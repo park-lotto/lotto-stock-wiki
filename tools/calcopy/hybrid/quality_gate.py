@@ -587,7 +587,8 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
     info = jload(R / "render_info.json") if (R / "render_info.json").exists() else {}
     S = jload(doc / "대본.json") if (doc / "대본.json").exists() else {}
     L, LD = st["loudness"], st["length"]
-    win = tuple(st["frame"]["window"])
+    from tools.calcopy.hybrid.render_bench import frame_window
+    win = tuple(frame_window(st["frame"]))      # 창 주인 한 곳(full 판 = 화면 전체)
     legacy = only == "legacy10"
     if mode == "fast" and not only:
         only = FAST_GROUPS
@@ -678,7 +679,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             # 그림(정지 사진) 컷은 reuse_violations_bench 가 판정에서 뺀다(B6 몫) — 길이 재기도 안 한다(ffprobe 가 'N/A' 를 줘 B13 이 통째 미측정이 됐다, 관제263)
             lens = {c["src"]: dur_of(cd / c["src"]) for c in cuts
                     if Path(str(c["src"])).suffix.lower() not in IMG_EXT and (cd / c["src"]).exists()}
-            v = reuse_violations_bench(cuts, lens)
+            v = reuse_violations_bench(cuts, lens, bool((st.get("reuse") or {}).get("adjacent_run")))      # 판 칸 reuse.adjacent_run(10-26 두유노판)
             return not v, (v or "0") if v else f"0 (소스 길이 {{{', '.join(f'{Path(k).stem}:{x:.1f}' for k, x in lens.items())}}})"
         row("재료", "B13 같은 장면 재사용(겹침 ×·거리 min(3, 0.25×길이))", b13, "quality_gate.reuse_violations_bench")
         row("재료", "B16 A-B-A 끼움(나레 컷)", lambda: (lambda v: (not v, v or "0"))(CK.aba_violations([c for c in cuts if c["seg"] == "B"])), "checks.aba_violations")

@@ -560,7 +560,9 @@ def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, ben
         if hybrid and key in HYBRID_OWN_KEYS:          # 판 목표값으로 비교(같은 kind·tol)
             b, brange = own_targets[key][0], None
             why = why + f" — 하이브리드 판: 판 목표 {b}(판 why: {str(own_targets[key][1])[:80]}…)와 비교"
-        if b is None or o is None:
+        if b is None and o is None and key.endswith((".원음", ".나레")) and B and all(s.get("n") for s in B):
+            judge, diff = "in", "둘 다 그 화자 줄 0(해당 없음)"      # 벤치 전 편에 그 화자 줄이 없고 우리도 없다 = 같다(10-26 두유노: 원음 0/119 — 옛 판정은 '미측정'으로 미달)
+        elif b is None or o is None:
             judge, diff = "failed", "미측정"
         elif kind == "rel":
             diff = round((o - b) / b * 100, 1) if b else None

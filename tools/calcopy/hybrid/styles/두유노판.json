@@ -19,7 +19,8 @@
   "candidates": [
    "tc_61f0859907085fc68561c9a1"
   ],
-  "why": "벤치 남성 나레 45/49(judge voice — manifest channel_rules.sound) · 박창수 = 사장님 확정 남 목소리 명단(칼카피_시작 §12, 필재 금지) · 지훈 후보 · 배속은 cps_target 맞춤 ≤1.25(타입캐스트)"
+  "why": "벤치 남성 나레 45/49(judge voice — manifest channel_rules.sound) · 박창수 = 사장님 확정 남 목소리 명단(칼카피_시작 §12, 필재 금지) · 지훈 후보 · 배속은 cps_target 맞춤 ≤1.25(타입캐스트) · tempo 1.2 = 타입캐스트에 1.2배로 받는다(옛 길 manifest tts_tempo 1.2, 15호 실측: 원속도 박창수는 atempo 1.185 필요) — 10-26 첫 편 원속도로 받으니 줄마다 atempo 상한 1.25 에 붙고 '마개예요→막이에요'·'거름망이에요→걸어망해요' 뭉개짐(받아쓰기 관문 ②). 대본.json voice 로 옮기는 곳 = material_bank.emit_bench",
+  "tempo": 1.2
  },
  "cps_target": 8.58,
  "_why_cps_target": "벤치 5편 나레 글자/자막 초 편 중앙 8.84·7.88·8.58·8.31·8.76 → 8.58(handconst cps_target, iiBU 나레 없음 제외)",
@@ -89,7 +90,9 @@
   "_pending": {
    "look": "모양(PoorStory 계열 흰 손글씨·검정 외곽 6~8px·그림자 ~25px — 10-26 픽셀 단면 실측 preset manifest caption_styles notes) = 자막팩 몫(표준 §11 ㉑) → pack_map gap/팩요청.md"
   },
-  "pack": "homedesignnote"
+  "pack": "homedesignnote",
+  "strip_punct": true,
+  "_why_strip_punct": "벤치 나레 자막 112줄 중 문장부호(. , ! ?) 있는 줄 7(6%) — 자막은 마침표·쉼표 없이(줄판독 text 실측 10-26). 10-26 1·2판은 조각에 마침표·쉼표를 그대로 둬 화면이 달랐고 재현 자 speech.cps(자막 글자/초 — kal_analyze._chars 는 문장부호도 센다)가 +11.5% 로 미달. 읽는 글(tts)은 그대로 — 쉼 규칙(B18a)이 쓴다. 적용 = material_bank.emit_bench"
  },
  "cuts": {
   "push_tts": 0.0,
@@ -699,6 +702,14 @@
     "id": "itssum",
     "kind": "engine",
     "name": "itssum"
+   },
+   {
+    "id": "sentences",
+    "kind": "count",
+    "of": "tts",
+    "min": 5,
+    "max": 6,
+    "why": "10-26 상위 10편 대조(bench_compare_script_scene — 받아쓰기 문장): 벤치 나레 9편 문장 3·4·4·4·4·4·5·6·6(중앙 4) · points 엔진 줄 수 5~8 과 겹치는 5~6. 우리 1판 8문장 = 범위 밖"
    }
   ]
  },

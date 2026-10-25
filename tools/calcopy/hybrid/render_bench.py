@@ -135,9 +135,27 @@ def real_cut_bounds(cuts: list[dict], src_dir: Path | None) -> list[float]:
         st = shot_starts(Path(src_dir) / a["src"])
         sa = max([t for t in st if t <= float(a["ss"]) + 1e-3] or [0.0])
         sb = max([t for t in st if t <= float(b["ss"]) + 1e-3] or [0.0])
-        if sa != sb:
+        if sa != sb or _jump_cut(Path(src_dir) / a["src"], float(a["ss"]) + float(a.get("dur") or (float(b["t0"]) - float(a["t0"]))), float(b["ss"])):
             out.append(float(b["t0"]))
     return out
+
+
+def _jump_cut(src: Path, t_end: float, t_next: float) -> bool:
+    """같은 원본·같은 샷 안 건너뛰기가 화면에서 컷으로 보이나 — 앞 컷 마지막 프레임 ↔ 다음 컷 첫 프레임 회색 상관 < CUT_CORR_MAX(샷 경계와 같은 문턱·같은 자,
+    오류기록 85 '같은 배경 점프컷 0.6~0.85 = 진짜 편집점'). 10-26 두유노판: 끊김 없는 44초 한 샷(e-LfR) 안 12초 건너뛰기(마개 근접 → 손에 든 제품)를
+    옛 판정이 '같은 샷'이라 컷으로 안 세서 rhythm_gate 가 컷 중앙 1.46초로 멈췄다. 1초 안 건너뛰기(칸 당김 조각)는 그대로 컷 아님. 못 재면 컷 아님(옛 동작)."""
+    import subprocess
+    import numpy as np
+    if abs(t_next - t_end) < 1.0:
+        return False
+    fr = []
+    for t in (max(0.0, t_end - 1 / FPS), t_next):
+        raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t:.4f}", "-i", str(src), "-vf", "scale=90:-2,format=gray", "-frames:v", "1", "-f", "rawvideo", "-"],
+                             capture_output=True, stdin=subprocess.DEVNULL).stdout
+        fr.append(np.frombuffer(raw, np.uint8).astype(float))
+    if not all(len(f) for f in fr) or len(fr[0]) != len(fr[1]) or fr[0].std() < 1e-6 or fr[1].std() < 1e-6:
+        return False
+    return float(np.corrcoef(fr[0], fr[1])[0, 1]) < CUT_CORR_MAX
 
 
 def rhythm_gate(T: dict, st: dict, src_dir: Path | None) -> list[str]:
@@ -287,7 +305,13 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
             ws = [float(c.get("w", 1)) for c in cs]
             acc = 0.0
             for c, w in zip(cs, ws):
-                c0 = a + float(c["at"]) if "at" in c else a + (nxt - a) * acc / sum(ws)
+                if "cap" in c:        # 자막 덩어리 j 가 뜨는 순간에 컷(자막 한 덩어리 = 컷 하나 — 두유노 벤치 cut_eq_sub 94%, 10-26 material_bank)
+                    hit = [r["t0"] for r in rows if r["line"] == lid and r["j"] == int(c["cap"])]
+                    if not hit:
+                        raise StageError(f"{lid} 컷 cap {c['cap']} — 그 줄에 자막 덩어리 {c['cap']} 이 없다")
+                    c0 = hit[0]
+                else:
+                    c0 = a + float(c["at"]) if "at" in c else a + (nxt - a) * acc / sum(ws)
                 cuts.append({**c, "line": lid, "t0": round(c0, 3), "kind": "tts"})
                 acc += w
     cuts[0]["t0"] = 0.0
@@ -307,7 +331,7 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
                 c["over"] = max(c["over"], round(c["dur"] - left, 3))
     if src_dir:              # B13(같은 원본 가까운 구간) — 계획이 처음부터 피한다(주인 material_fit.respace_reuse, 판정 = quality_gate.reuse_violations_bench)
         from tools.calcopy.hybrid.material_fit import respace_reuse
-        respace_reuse(cuts, src_dir, log=lambda m: sys.stderr.write(m + "\n"))
+        respace_reuse(cuts, src_dir, log=lambda m: sys.stderr.write(m + "\n"), adjacent_run=bool((st.get("reuse") or {}).get("adjacent_run")))   # 판 칸 reuse.adjacent_run(두유노판 — 사장님 10-26 '가')
     for i, r in enumerate(rows):      # 자막은 다음 덩어리 시작까지(줄 사이 틈도 앞 자막이 덮는다 — 벤치: 자막 없는 틈 거의 없음)
         r["show"] = [r["t0"], round(rows[i + 1]["t0"] if i + 1 < len(rows) else end, 3)]
     out = {"lines": lines, "rows": rows, "cuts": cuts, "opos": opos, "end": end}
