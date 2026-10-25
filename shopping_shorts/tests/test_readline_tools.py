@@ -144,6 +144,14 @@ def test_autoband_finds_caption_rows(synth):
     assert r["band"][1] - r["band"][0] >= autoband.TARGET_H - 2 and r["band"][0] < c0 and r["band"][1] > c1   # 한 줄 핵 → 두 줄 자리까지 넓힘
 
 
+def test_autoband_trims_static_title_rows():
+    """넓힌 띠가 고정 글자 행(제목·조회수 줄)에 걸리면 그 바깥까지 줄인다(이븐쇼핑: 띠 370 → 412, 줄판독 경계 0.875 → 1.0)."""
+    from tools.calcopy.engine.readline_tools import autoband
+    assert autoband._trim_static([370, 602], [452, 520], list(range(330, 402, 2))) == [406, 602]
+    assert autoband._trim_static([370, 602], [452, 520], []) == [370, 602]
+    assert autoband._trim_static([370, 602], [452, 520], list(range(560, 580, 2)))[1] == 554
+
+
 def test_kal_step_frames_runs_capseg(synth, tmp_path, monkeypatch):
     """kal.py 흐름: 뜯기 layout 의 caption_band 로 capseg·segsheet 까지 돈다(05 뒤 연결)."""
     from tools.calcopy.engine import kal

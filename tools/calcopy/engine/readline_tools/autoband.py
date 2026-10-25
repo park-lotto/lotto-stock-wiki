@@ -112,13 +112,38 @@ def _shape(c0: int, c1: int, mode: str, H: int, target_h: int | None, pad_min: i
     return [y0, y1], pad
 
 
+def static_rows(R: np.ndarray) -> list[int]:
+    """늘 있고 거의 안 바뀌는 글자 행(제목·로고·조회수 줄) — 절반 크기 행 번호. 띠를 넓힐 때 이 행은 넣지 않는다."""
+    c = np.abs(np.diff(R, axis=0)).mean(0)
+    p = (R > 4).mean(0)
+    return [int(y) for y in np.where((p >= 0.7) & (c < 0.15 * max(1e-6, float(c.max()))))[0]]
+
+
 def candidates(mp4: str, mode: str = "color", H: int = 1920) -> list[dict]:
     k = H / SH
     out = []
     for m in MASKS_OF_MODE.get(mode, ("color",)):
-        for sc, a, b in core_candidates(row_profile(mp4, m)):
-            out.append({"score": round(float(sc), 2), "core": [int(a * k), int(b * k)], "mask": m})
+        R = row_profile(mp4, m)
+        st = [int(y * k) for y in static_rows(R)]
+        for sc, a, b in core_candidates(R):
+            out.append({"score": round(float(sc), 2), "core": [int(a * k), int(b * k)], "mask": m, "static": st})
     return sorted(out, key=lambda c: -c["score"])
+
+
+def _trim_static(band: list[int], core: list[int], static: list[int]) -> list[int]:
+    """넓힌 띠 위·아래 끝이 고정 글자 행(제목 등)에 걸리면 그 행 바깥까지 줄인다(핵은 안 건드림) — 이븐쇼핑: 제목·조회수 줄이 띠에 들어가 경계를 놓쳤다."""
+    y0, y1 = band
+    st = set(static)
+    above = [y for y in st if y0 <= y < core[0]]
+    below = [y for y in st if core[1] < y <= y1]
+    if above:
+        y0 = max(above) + 6
+    if below:
+        y1 = min(below) - 6
+    y0 += y0 % 2
+    if (y1 - y0) % 2:
+        y1 -= 1
+    return [y0, y1]
 
 
 def find_band(mp4: str, mode: str = "color", pad_min: int | None = None, target_h: int | None = None, H: int = 1920,
@@ -133,6 +158,7 @@ def find_band(mp4: str, mode: str = "color", pad_min: int | None = None, target_
         if near is not best and abs((near["core"][0] + near["core"][1]) / 2 - prior[0]) < abs((best["core"][0] + best["core"][1]) / 2 - prior[0]):
             best, why = near, f"채널 무리 가운데 y≈{prior[0]} 에 가까운 후보(점수 {near['score']} ≥ 최고의 절반)"
     band, pad = _shape(best["core"][0], best["core"][1], mode, H, target_h, pad_min)
+    band = _trim_static(band, best["core"], best.get("static") or [])
     return {"band": band, "core": best["core"], "mask": best["mask"], "score": best["score"], "pad": pad, "why": why}
 
 

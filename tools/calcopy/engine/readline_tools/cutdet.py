@@ -42,7 +42,7 @@ def cutdet(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080, v2:
     F = np.frombuffer(raw, np.uint8)[:n * w * h].reshape(n, h, w).astype(np.float32)
     mean = F.mean((1, 2))
     sharp = np.array([cv2.Laplacian(f[:int(h * 0.55)], cv2.CV_32F).var() for f in F])
-    diff = np.r_[0, np.abs(F[1:] - F[:-1]).mean((1, 2))]
+    diff = np.r_[0, [np.abs(F[i] - F[i - 1]).mean((0, 1)) for i in range(1, n)]] if n > 1 else np.zeros(n)   # 프레임마다(긴 영상 통째 빼기는 메모리 2배 — 56초 편에서 MemoryError)
     hist = [cv2.calcHist([f.astype(np.uint8)], [0], None, [32], [0, 256]).ravel() for f in F]
     hist = [x / x.sum() for x in hist]
     hd = np.r_[0, [0.5 * np.abs(hist[i] - hist[i - 1]).sum() for i in range(1, n)]]

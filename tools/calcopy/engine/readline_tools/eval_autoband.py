@@ -99,7 +99,10 @@ def evaluate(channels=None, ids=None) -> list[dict]:
             if L:
                 lh = _match(L, R, 2 / 30 + 1e-6) / len(L)
                 la = _match(L, A, 2 / 30 + 1e-6) / len(L)
-            rows.append({"slug": slug, "id": vid, "mode": mode, "hand": list(hb), "auto": ab, "recall": round(rc, 3), "prec": round(pr, 3),
+            real = isinstance(H["bands"], dict)                   # 06 워커가 그 띠로 실제 분할을 돌린 채널(손 띠 결과 자체가 기준)
+            f1 = 2 * rc * pr / max(1e-9, rc + pr)
+            ok = f1 >= 0.95 if real else (la is not None and lh is not None and la >= 0.95 * lh)
+            rows.append({"slug": slug, "id": vid, "mode": mode, "hand": list(hb), "auto": ab, "ok": ok, "기준": "F1" if real else "줄판독", "recall": round(rc, 3), "prec": round(pr, 3),
                          "f1": round(2 * rc * pr / max(1e-9, rc + pr), 3), "lines_hand": lh and round(lh, 3), "lines_auto": la and round(la, 3)})
             print(rows[-1], flush=True)
     return rows
@@ -114,7 +117,7 @@ def main(argv=None) -> int:
     ok = sum(r["f1"] >= 0.95 for r in rows)
     lo = [r for r in rows if r["lines_hand"]]
     lok = sum(r["lines_auto"] >= 0.95 * r["lines_hand"] for r in lo)
-    print(f"F1≥0.95 {ok}/{len(rows)} · 줄판독 경계(자동 ≥ 손×0.95) {lok}/{len(lo)}")
+    print(f"F1≥0.95 {ok}/{len(rows)} · 줄판독 경계(자동 ≥ 손×0.95) {lok}/{len(lo)} · 합격(손 띠 채널=F1, layout 띠 채널=줄판독) {sum(r['ok'] for r in rows)}/{len(rows)}")
     return 0
 
 
