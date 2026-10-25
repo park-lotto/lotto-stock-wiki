@@ -1,0 +1,1314 @@
+{
+ "timeline": {
+  "lines": {
+   "N1": [
+    0.0,
+    3.514
+   ],
+   "O1": [
+    3.574,
+    5.206
+   ],
+   "N2": [
+    5.266,
+    7.023
+   ],
+   "O2": [
+    7.083,
+    10.953
+   ],
+   "N3": [
+    11.013,
+    13.941
+   ],
+   "N4": [
+    14.001,
+    16.929
+   ],
+   "N5": [
+    16.989,
+    19.917
+   ],
+   "N6": [
+    19.977,
+    23.052
+   ],
+   "N7": [
+    23.112,
+    26.626
+   ]
+  },
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "방송인 강주은 씨가",
+    "t0": 0.0,
+    "t1": 1.143,
+    "key": "강주은",
+    "show": [
+     0.0,
+     1.143
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "30년을 원했다는",
+    "t0": 1.143,
+    "t1": 2.286,
+    "key": "30년을",
+    "show": [
+     1.143,
+     2.286
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "가디건이 있다네요?",
+    "t0": 2.286,
+    "t1": 3.514,
+    "key": "가디건이",
+    "show": [
+     2.286,
+     3.574
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "이거는 에르메스",
+    "t0": 3.574,
+    "t1": 5.206,
+    "key": "에르메스",
+    "show": [
+     3.574,
+     5.266
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "근데 왜 하필",
+    "t0": 5.266,
+    "t1": 5.98,
+    "key": "하필",
+    "show": [
+     5.266,
+     5.98
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "흑백 무늬였길래?",
+    "t0": 5.98,
+    "t1": 7.023,
+    "key": "흑백",
+    "show": [
+     5.98,
+     7.083
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "블랙 앤 화이트",
+    "t0": 7.083,
+    "t1": 7.825,
+    "key": "블랙 앤 화이트",
+    "show": [
+     7.083,
+     8.515
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "스타일링하기가",
+    "t0": 8.515,
+    "t1": 9.535,
+    "key": "스타일링",
+    "show": [
+     8.515,
+     9.565
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 2,
+    "speaker": "orig",
+    "text": "그렇게 어렵지",
+    "t0": 9.565,
+    "t1": 10.255,
+    "key": "어렵지",
+    "show": [
+     9.565,
+     10.285
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 3,
+    "speaker": "orig",
+    "text": "않을 것 같은데",
+    "t0": 10.285,
+    "t1": 10.953,
+    "key": "않을",
+    "show": [
+     10.285,
+     11.013
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "저도 쿠팡에서",
+    "t0": 11.013,
+    "t1": 11.87,
+    "key": "쿠팡에서",
+    "show": [
+     11.013,
+     11.87
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "찾아봤는데",
+    "t0": 11.87,
+    "t1": 12.584,
+    "key": "찾아봤는데",
+    "show": [
+     11.87,
+     12.584
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 2,
+    "speaker": "narr",
+    "text": "똑같은 건 없더라고요",
+    "t0": 12.584,
+    "t1": 13.941,
+    "key": "똑같은 건",
+    "show": [
+     12.584,
+     14.001
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그래서 비슷한",
+    "t0": 14.001,
+    "t1": 14.858,
+    "key": "비슷한",
+    "show": [
+     14.001,
+     14.858
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "흑백 가디건으로",
+    "t0": 14.858,
+    "t1": 15.858,
+    "key": "흑백",
+    "show": [
+     14.858,
+     15.858
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "따라 사 봤는데요",
+    "t0": 15.858,
+    "t1": 16.929,
+    "key": "따라",
+    "show": [
+     15.858,
+     16.989
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "청바지에 툭 걸쳐도",
+    "t0": 16.989,
+    "t1": 18.132,
+    "key": "청바지에",
+    "show": [
+     16.989,
+     18.132
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "바로 꾸민 느낌이",
+    "t0": 18.132,
+    "t1": 19.132,
+    "key": "꾸민",
+    "show": [
+     18.132,
+     19.132
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "나더라고요",
+    "t0": 19.132,
+    "t1": 19.917,
+    "key": "나더라고요",
+    "show": [
+     19.132,
+     19.977
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "브이넥에 루즈핏이라",
+    "t0": 19.977,
+    "t1": 21.263,
+    "key": "루즈핏",
+    "show": [
+     19.977,
+     21.263
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "편하게 입는",
+    "t0": 21.263,
+    "t1": 21.977,
+    "key": "편하게",
+    "show": [
+     21.263,
+     21.977
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "헤링본 니트래요",
+    "t0": 21.977,
+    "t1": 23.052,
+    "key": "헤링본",
+    "show": [
+     21.977,
+     23.112
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그 명품 공개 영상은",
+    "t0": 23.112,
+    "t1": 24.255,
+    "key": "명품",
+    "show": [
+     23.112,
+     24.255
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "조회수 85만이",
+    "t0": 24.255,
+    "t1": 25.255,
+    "key": "85만이",
+    "show": [
+     24.255,
+     25.255
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 2,
+    "speaker": "narr",
+    "text": "넘을 만큼 인기래요",
+    "t0": 25.255,
+    "t1": 26.626,
+    "key": "인기래요",
+    "show": [
+     25.255,
+     26.767
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "src": "JwE4ru46TR8_1535_1605.mp4",
+    "ss": 4.5,
+    "crop": [
+     420,
+     0,
+     820,
+     820
+    ],
+    "max": 4.3,
+    "see": "강주은 얼굴 크게 웃으며 말함(뒤 옷걸이에 흰 가디건) — 0초 얼굴 · 빨간 자막(y≥860) 크롭 밖",
+    "line": "N1",
+    "t0": 0.0,
+    "kind": "tts",
+    "t1": 3.574,
+    "dur": 3.574,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "ss": 23.318,
+    "crop": [
+     640,
+     0,
+     800,
+     800
+    ],
+    "see": "강주은이 흰 바탕·검정 무늬 가디건을 들고 '이거는 에르메스'(입 맞음) · 작은 자막 크롭 밖",
+    "line": "O1",
+    "src": "JwE4ru46TR8_1535_1605.mp4",
+    "t0": 3.574,
+    "kind": "orig",
+    "t1": 5.266,
+    "dur": 1.692,
+    "over": 0.0
+   },
+   {
+    "src": "JwE4ru46TR8_1535_1605.mp4",
+    "ss": 33.0,
+    "crop": [
+     560,
+     20,
+     780,
+     780
+    ],
+    "max": 5.4,
+    "see": "강주은 가디건 뒤판(검정 무늬)을 들고 말함 · 작은 자막(y≈930) 크롭 밖",
+    "line": "N2",
+    "t0": 5.266,
+    "kind": "tts",
+    "t1": 7.083,
+    "dur": 1.817,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "ss": 45.448,
+    "crop": [
+     380,
+     0,
+     820,
+     820
+    ],
+    "see": "흰 바탕 검정 무늬 가디건 근접(소매를 들어 보임) — '블랙 앤 화이트'",
+    "line": "O2",
+    "src": "JwE4ru46TR8_1535_1605.mp4",
+    "t0": 7.083,
+    "kind": "orig",
+    "t1": 9.645,
+    "dur": 2.562,
+    "over": 0.0
+   },
+   {
+    "at": 2.562,
+    "ss": 48.0,
+    "crop": [
+     460,
+     0,
+     840,
+     840
+    ],
+    "see": "강주은이 가디건을 몸 앞에 대고 손짓 — '어렵지 않을 것 같은데'",
+    "line": "O2",
+    "src": "JwE4ru46TR8_1535_1605.mp4",
+    "t0": 9.645,
+    "kind": "orig",
+    "t1": 11.013,
+    "dur": 1.368,
+    "over": 0.0
+   },
+   {
+    "src": "cp_9772032774.jpg",
+    "ss": 0,
+    "crop": [
+     0,
+     0,
+     800,
+     800
+    ],
+    "move": "in",
+    "see": "쿠팡 9772032774 상품 사진 전체 — 흑백 헤링본 가디건",
+    "line": "N3",
+    "t0": 11.013,
+    "kind": "tts",
+    "t1": 14.001,
+    "dur": 2.988,
+    "over": 0.0
+   },
+   {
+    "src": "cp_9772032774.jpg",
+    "ss": 0,
+    "crop": [
+     440,
+     240,
+     320,
+     320
+    ],
+    "move": "left",
+    "see": "쿠팡 사진 흑백 헤링본 무늬 근접 — '비슷한 흑백 가디건'",
+    "line": "N4",
+    "t0": 14.001,
+    "kind": "tts",
+    "t1": 16.989,
+    "dur": 2.988,
+    "over": 0.0
+   },
+   {
+    "src": "cp_9772032774.jpg",
+    "ss": 0,
+    "crop": [
+     160,
+     0,
+     480,
+     480
+    ],
+    "move": "out",
+    "see": "쿠팡 사진 윗몸(아이보리 브이넥·흑백 몸판) — '툭 걸쳐도'",
+    "line": "N5",
+    "t0": 16.989,
+    "kind": "tts",
+    "t1": 19.977,
+    "dur": 2.988,
+    "over": 0.0
+   },
+   {
+    "src": "cp_9772032774.jpg",
+    "ss": 0,
+    "crop": [
+     230,
+     40,
+     340,
+     340
+    ],
+    "move": "in",
+    "see": "쿠팡 사진 브이넥 배색 깃 근접 — '브이넥'",
+    "line": "N6",
+    "t0": 19.977,
+    "kind": "tts",
+    "t1": 21.544,
+    "dur": 1.567,
+    "over": 0.0
+   },
+   {
+    "src": "cp_9772032774.jpg",
+    "ss": 0,
+    "crop": [
+     290,
+     380,
+     260,
+     260
+    ],
+    "move": "right",
+    "see": "쿠팡 사진 단추·몸판 근접 — '루즈핏 니트'",
+    "line": "N6",
+    "t0": 21.544,
+    "kind": "tts",
+    "t1": 23.112,
+    "dur": 1.568,
+    "over": 0.0
+   },
+   {
+    "src": "cp_9772032774.jpg",
+    "ss": 0,
+    "crop": [
+     40,
+     40,
+     720,
+     720
+    ],
+    "move": "out",
+    "see": "쿠팡 사진 전체(끝)",
+    "line": "N7",
+    "t0": 23.112,
+    "kind": "tts",
+    "t1": 26.7667,
+    "dur": 3.655,
+    "over": 0.0
+   }
+  ],
+  "opos": [
+   {
+    "line": "O1",
+    "k": 0,
+    "src": "JwE4ru46TR8_1535_1605.mp4",
+    "span": [
+     23.318,
+     24.95
+    ],
+    "t0": 3.574,
+    "t1": 5.206
+   },
+   {
+    "line": "O2",
+    "k": 0,
+    "src": "JwE4ru46TR8_1535_1605.mp4",
+    "span": [
+     45.448,
+     49.318
+    ],
+    "t0": 7.083,
+    "t1": 10.953
+   }
+  ],
+  "end": 26.7667,
+  "orig_trim": {
+   "head": {
+    "O1": 0.078,
+    "O2": 0.038
+   },
+   "dropped_cuts": []
+  }
+ },
+ "placement": {
+  "reference": "BRa5Iv4A3Y8",
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "방송인 강주은 씨가",
+    "t0": 0.0,
+    "t1": 1.143,
+    "key": "강주은",
+    "show": [
+     0.0,
+     1.143
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "hook",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "강주은"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "30년을 원했다는",
+    "t0": 1.143,
+    "t1": 2.286,
+    "key": "30년을",
+    "show": [
+     1.143,
+     2.286
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "typing",
+    "emph": [
+     {
+      "word": "30년을"
+     }
+    ],
+    "variant": "typing"
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "가디건이 있다네요?",
+    "t0": 2.286,
+    "t1": 3.514,
+    "key": "가디건이",
+    "show": [
+     2.286,
+     3.574
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "typing",
+    "emph": [
+     {
+      "word": "가디건이"
+     }
+    ],
+    "variant": "typing"
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "이거는 에르메스",
+    "t0": 3.574,
+    "t1": 5.206,
+    "key": "에르메스",
+    "show": [
+     3.574,
+     5.266
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "reveal",
+    "enter": "cut",
+    "variant": "cut"
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "근데 왜 하필",
+    "t0": 5.266,
+    "t1": 5.98,
+    "key": "하필",
+    "show": [
+     5.266,
+     5.98
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "twist",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "하필"
+     }
+    ],
+    "variant": "cut"
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "흑백 무늬였길래?",
+    "t0": 5.98,
+    "t1": 7.023,
+    "key": "흑백",
+    "show": [
+     5.98,
+     7.083
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "typing",
+    "emph": [
+     {
+      "word": "흑백"
+     }
+    ],
+    "variant": "typing"
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "블랙 앤 화이트",
+    "t0": 7.083,
+    "t1": 7.825,
+    "key": "블랙 앤 화이트",
+    "show": [
+     7.083,
+     8.515
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": "cut"
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "스타일링하기가",
+    "t0": 8.515,
+    "t1": 9.535,
+    "key": "스타일링",
+    "show": [
+     8.515,
+     9.565
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [
+     {
+      "kind": "heart",
+      "follow": true
+     }
+    ],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "typing",
+    "emph": [
+     {
+      "word": "스타일링"
+     }
+    ],
+    "variant": "typing"
+   },
+   {
+    "line": "O2",
+    "j": 2,
+    "speaker": "orig",
+    "text": "그렇게 어렵지",
+    "t0": 9.565,
+    "t1": 10.255,
+    "key": "어렵지",
+    "show": [
+     9.565,
+     10.285
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [
+     {
+      "kind": "heart",
+      "follow": true
+     }
+    ],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "typing",
+    "variant": "typing"
+   },
+   {
+    "line": "O2",
+    "j": 3,
+    "speaker": "orig",
+    "text": "않을 것 같은데",
+    "t0": 10.285,
+    "t1": 10.953,
+    "key": "않을",
+    "show": [
+     10.285,
+     11.013
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "않을"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "저도 쿠팡에서",
+    "t0": 11.013,
+    "t1": 11.87,
+    "key": "쿠팡에서",
+    "show": [
+     11.013,
+     11.87
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "쿠팡에서"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "찾아봤는데",
+    "t0": 11.87,
+    "t1": 12.584,
+    "key": "찾아봤는데",
+    "show": [
+     11.87,
+     12.584
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "찾아봤는데"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N3",
+    "j": 2,
+    "speaker": "narr",
+    "text": "똑같은 건 없더라고요",
+    "t0": 12.584,
+    "t1": 13.941,
+    "key": "똑같은 건",
+    "show": [
+     12.584,
+     14.001
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "똑같은 건"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그래서 비슷한",
+    "t0": 14.001,
+    "t1": 14.858,
+    "key": "비슷한",
+    "show": [
+     14.001,
+     14.858
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "비슷한"
+     }
+    ],
+    "variant": "cut"
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "흑백 가디건으로",
+    "t0": 14.858,
+    "t1": 15.858,
+    "key": "흑백",
+    "show": [
+     14.858,
+     15.858
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "흑백"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "따라 사 봤는데요",
+    "t0": 15.858,
+    "t1": 16.929,
+    "key": "따라",
+    "show": [
+     15.858,
+     16.989
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "따라"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "청바지에 툭 걸쳐도",
+    "t0": 16.989,
+    "t1": 18.132,
+    "key": "청바지에",
+    "show": [
+     16.989,
+     18.132
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "청바지에"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "바로 꾸민 느낌이",
+    "t0": 18.132,
+    "t1": 19.132,
+    "key": "꾸민",
+    "show": [
+     18.132,
+     19.132
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "꾸민"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "나더라고요",
+    "t0": 19.132,
+    "t1": 19.917,
+    "key": "나더라고요",
+    "show": [
+     19.132,
+     19.977
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "나더라고요"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "브이넥에 루즈핏이라",
+    "t0": 19.977,
+    "t1": 21.263,
+    "key": "루즈핏",
+    "show": [
+     19.977,
+     21.263
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "루즈핏"
+     }
+    ],
+    "variant": "cut"
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "편하게 입는",
+    "t0": 21.263,
+    "t1": 21.977,
+    "key": "편하게",
+    "show": [
+     21.263,
+     21.977
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "편하게"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "헤링본 니트래요",
+    "t0": 21.977,
+    "t1": 23.052,
+    "key": "헤링본",
+    "show": [
+     21.977,
+     23.112
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "헤링본"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그 명품 공개 영상은",
+    "t0": 23.112,
+    "t1": 24.255,
+    "key": "명품",
+    "show": [
+     23.112,
+     24.255
+    ],
+    "first": true,
+    "lex": [
+     "lux"
+    ],
+    "stickers": [
+     {
+      "kind": "gem",
+      "word": "명품"
+     }
+    ],
+    "slot": "narr.first",
+    "role_key": "end",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "명품"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "조회수 85만이",
+    "t0": 24.255,
+    "t1": 25.255,
+    "key": "85만이",
+    "show": [
+     24.255,
+     25.255
+    ],
+    "first": false,
+    "lex": [
+     "price"
+    ],
+    "stickers": [
+     {
+      "kind": "gem",
+      "word": "85만이"
+     }
+    ],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "85만이"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N7",
+    "j": 2,
+    "speaker": "narr",
+    "text": "넘을 만큼 인기래요",
+    "t0": 25.255,
+    "t1": 26.626,
+    "key": "인기래요",
+    "show": [
+     25.255,
+     26.767
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "인기래요"
+     }
+    ],
+    "variant": ""
+   }
+  ],
+  "sfx": [
+   {
+    "t": 1.143,
+    "kind": "ding",
+    "why": "cap"
+   }
+  ],
+  "transitions": [
+   {
+    "t": 3.574,
+    "kind": "zoomblur",
+    "ms": 167,
+    "why": "화자 바뀜"
+   },
+   {
+    "t": 5.266,
+    "kind": "black",
+    "ms": 33,
+    "why": "화자 바뀜"
+   }
+  ],
+  "flashes": [],
+  "cut_bounds": 10,
+  "trans_plan": {
+   "src": "판 cuts.transition.kinds",
+   "share": {
+    "zoomblur": 0.1,
+    "black": 0.071,
+    "flash": 0.014
+   },
+   "cut_bounds": 10,
+   "want_raw": {
+    "zoomblur": 1.0,
+    "black": 0.71,
+    "flash": 0.14
+   },
+   "want": 2,
+   "eligible": 10,
+   "picked": {
+    "zoomblur": 1,
+    "black": 1
+   },
+   "min_cut": 1.2
+  },
+  "log": [
+   "본보기 벤치 편 = BRa5Iv4A3Y8",
+   "스티커 gem → N7「그 명품 공개 영상은」",
+   "스티커 gem → N7「조회수 85만이」",
+   "스티커 gem 본보기 3개 중 2개만(조건 맞는 덩어리 모자람)",
+   "스티커 spark_lines 본보기 2개 중 0개만(조건 맞는 덩어리 모자람)",
+   "전환 [(3.574, 'zoomblur'), (5.266, 'black')] (판 cuts.transition.kinds 비율 {'zoomblur': 0.1, 'black': 0.07, 'flash': 0.01}, 컷 경계 10·붙일 수 있는 10(≥1.2초))",
+   "효과음 1발(본보기 1) [(1.143, 'cap')]",
+   "등장 {'pop': 9, 'typing': 5, 'cut': 11} · 강조 22/25"
+  ],
+  "transitions_drawn": [
+   {
+    "t": 3.574,
+    "kind": "zoomblur",
+    "ms": 167.0,
+    "zoom": 0.12,
+    "sigma": 0.5,
+    "why": "화자 바뀜"
+   },
+   {
+    "t": 5.266,
+    "kind": "black",
+    "ms": 33.0,
+    "why": "화자 바뀜"
+   }
+  ]
+ }
+}
