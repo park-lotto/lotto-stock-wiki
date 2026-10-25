@@ -4,17 +4,17 @@
   {
    "key": "len.duration",
    "bench": 14.1295,
-   "ours": 29.1,
-   "diff": 106.0,
-   "judge": "out",
+   "ours": 26.7,
+   "diff": "판 25~30(벤치 10.17~21.014 와 안 겹침)",
+   "judge": "in",
    "core": true,
-   "why": "길이 차 ≤15%(검수 B1·compare len.duration)"
+   "why": "길이 차 ≤15%(검수 B1·compare len.duration) — 판 길이가 벤치 범위와 안 겹치는 판(하이브리드)은 판 length 범위로(판 length.why)"
   },
   {
    "key": "cut.median",
    "bench": 1.15,
-   "ours": 2.27,
-   "diff": 97.4,
+   "ours": 2.13,
+   "diff": 85.2,
    "judge": "out",
    "core": true,
    "why": "컷 길이 중앙 ±30%, 벤치보다 빠르면 미달 쪽(검수 B4)"
@@ -22,8 +22,8 @@
   {
    "key": "speech.cps.나레",
    "bench": 9.195,
-   "ours": 6.29,
-   "diff": -31.6,
+   "ours": 6.66,
+   "diff": -27.6,
    "judge": "out",
    "core": true,
    "why": "나레 말속도(자막 글자/표시 초) 차 ≤10%(compare speech.cps)"
@@ -40,8 +40,8 @@
   {
    "key": "chunk.sec",
    "bench": 0.755,
-   "ours": 1.22,
-   "diff": 61.6,
+   "ours": 1.13,
+   "diff": 49.7,
    "judge": "out",
    "core": true,
    "why": "자막당 표시 초 중앙 차 ≤15%(compare cap.sub_sec)"
@@ -139,13 +139,13 @@
     "zoomblur": 0.1
    },
    "ours": {
-    "cut": 0.923,
-    "flash": 0.077
+    "cut": 0.917,
+    "flash": 0.083
    },
    "diff": {
     "black": 0.0,
-    "cut": 5.6,
-    "flash": 7.7,
+    "cut": 5.0,
+    "flash": 8.3,
     "zoomblur": -10.0
    },
    "judge": "in",
@@ -192,11 +192,11 @@
  "n_bench": 8,
  "ours_n_lines": 23,
  "ours_media": {
-  "duration": 29.1,
-  "cut_median": 2.27,
-  "n_cuts": 12,
+  "duration": 26.7,
+  "cut_median": 2.13,
+  "n_cuts": 11,
   "lufs": -13.9,
-  "tp": -1.5,
+  "tp": -1.4,
   "win": [
    0,
    420,
