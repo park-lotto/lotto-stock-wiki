@@ -1287,6 +1287,16 @@ def sfx_step(out: list[dict], style: dict, ref: dict | None, transitions: list[d
                 continue
             idx = [i for i, r in enumerate(out) if r["role_key"] == role]
             idx.sort(key=lambda i: (0 if out[i].get("emph") else 1 if out[i]["first"] else 2, i))      # 강조 낱말 덩어리 → 줄 첫 덩어리 → 나머지
+            want = sorted(float(e["t"]) for e in lines if e.get("role") == role and isinstance(e.get("t"), (int, float)))
+            if len(want) >= k and not tg:
+                # 본보기 편 sfx_lines 에 그 역할 시각이 있으면 시각마다 가장 가까운 덩어리(강조 덩어리 먼저) — 벤치 자리 분포(match fx.pos)와 같게.
+                # 10-26 이븐쇼핑판: 옛 순서는 본문 첫 덩어리(2.04초)를 골라 kal_analyze 자로 '훅'(첫 3초)이 됐다(본보기 Y2Y 본문 띵 6.7초)
+                order = []
+                for w in want[:k]:
+                    rest = [i for i in idx if i not in order]
+                    if rest:
+                        order.append(min(rest, key=lambda i: (0 if out[i].get("emph") else 1, abs(float(out[i]["t0"]) - w))))
+                idx = order + [i for i in idx if i not in order]
             got = 0
             for i in idx:
                 if got >= k:

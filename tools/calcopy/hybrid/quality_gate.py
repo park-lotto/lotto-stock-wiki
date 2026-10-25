@@ -225,6 +225,12 @@ def _frames_at(video: Path, frames: list[int], crop) -> dict:
     return dict(zip(fs, arr))
 
 
+def face_needed(st: dict) -> bool:
+    """(판단 주인 — '0초·첫 줄 얼굴' 칸을 잴지) 연예인 얼굴 검사(thumb.face_check)는 판 thumb_card_face=true(연예인 판, styles.REQUIRED)일 때만.
+    사장님 10-25 '남 얼굴 금지·얼굴 통일은 연예인 판만' · 10-26 이븐쇼핑 벤치 0초 얼굴 0/6(스타일분석 §9) — 비연예인 판은 해당 없음."""
+    return bool(st.get("thumb_card_face"))
+
+
 def plan_frames_check(R: Path, T: dict, cand_dir: Path, win: list, mask_of=None, st: dict | None = None, M: dict | None = None) -> list[dict]:
     """(판단 주인 — 완성본 컷 = 계획 프레임, ㉔) 컷마다 처음·가운데·끝 3시각에서 화면 창 ↔ 계획 프레임을 대조.
     계획 프레임 = render_bench.plan_frames_gray — 조각 굽기(clip_cmd)와 같은 인자(clip_args: 칸·판 밀기 cuts.push_tts/push_orig·사진 움직임·흐림·그림 칸)로
@@ -256,7 +262,24 @@ def plan_frames_check(R: Path, T: dict, cand_dir: Path, win: list, mask_of=None,
         ts = [t0 + d / 2] if d < 0.4 else [t0 + d * 0.2, t0 + d / 2, t1 - d * 0.2]
         plan.append((k, c, src, crop, [round(t * FPS) for t in ts]))
         out.append(None)
-    got = _frames_at(video, [f for *_, fs in plan for f in fs], win)
+    # 구간 틀(frame.segments — 훅 카드처럼 창 자리·크기가 다른 구간): 그 구간 프레임은 구간 창에서 읽고, 계획 그림도 렌더(seg_layers)와 같게
+    # '채워 자르기'(scale increase + 가운데 crop)해서 견준다(10-26 이븐쇼핑판 훅 0~1.97초 — 판 창으로 읽어 N1 두 컷이 0.85·0.91 로 거짓 ×)
+    tab = R / "자막표.json"
+    segs = [g for g in ((jload(tab).get("segments") or []) if tab.exists() else []) if list(g.get("window") or [])[2:] != list(win)[2:]]
+    seg_of = lambda f: next((g for g in segs if float(g["t0"]) * FPS - 1e-6 <= f < float(g["t1"]) * FPS - 1e-6), None)  # noqa: E731
+    all_f = [f for *_, fs in plan for f in fs]
+    got = _frames_at(video, [f for f in all_f if not seg_of(f)], win)
+    for g in segs:
+        got.update(_frames_at(video, [f for f in all_f if seg_of(f) is g], g["window"]))
+
+    def fill_crop(a, wh):            # render_bench.seg_layers 의 scale=…:force_original_aspect_ratio=increase,crop 과 같은 꼴
+        import numpy as np
+        from PIL import Image
+        w2, h2 = int(wh[0]), int(wh[1])
+        k_ = max(w2 / a.shape[1], h2 / a.shape[0])
+        im = Image.fromarray(a).resize((max(w2, round(a.shape[1] * k_)), max(h2, round(a.shape[0] * k_))), Image.LANCZOS)
+        l_, t_ = (im.size[0] - w2) // 2, (im.size[1] - h2) // 2
+        return np.asarray(im.crop((l_, t_, l_ + w2, t_ + h2)))
     for k, c, src, crop, fs in plan:
         f0 = round(float(c["t0"]) * FPS)
         if drawn:
@@ -270,6 +293,9 @@ def plan_frames_check(R: Path, T: dict, cand_dir: Path, win: list, mask_of=None,
                 g = g[:win[3], :win[2]] if g is not None else None
             else:
                 g = _src_gray(src, float(c.get("ss") or 0) + (f - f0) / FPS, crop, (win[2], win[3]))
+            sg = seg_of(f)
+            if sg is not None and g is not None:
+                g = fill_crop(g, sg["window"][2:])
             if fr is None or g is None or g.shape != fr.shape:
                 continue
             sims.append(frame_same(fr, g, mask_of(f / FPS, fr.shape) if mask_of else None))
@@ -634,6 +660,8 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
         first = T["lines"][next(iter(T["lines"]))]
 
         def face():
+            if not face_needed(st):
+                return True, "해당 없음(판 thumb_card_face false — 연예인 판 아님)"
             f = thumb.face_check(final, win, tuple(first), log=log)
             return f["ok"], " ".join(f"{x['t']}s:{'○' if x['ok'] else x['why']}" for x in f["frames"])
         row("화면", "0초·첫 줄 얼굴", face, "thumb.face_check")

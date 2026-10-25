@@ -778,7 +778,7 @@ def match_from_render(style, doc, work, media: bool = True, frame0_kind_measured
     tab = json.loads((R / "자막표.json").read_text(encoding="utf-8"))
     T = json.loads((R / "timeline.json").read_text(encoding="utf-8"))
     dur = float(T.get("end") or 0)
-    lines, _ = _ours_lines({"rows": tab.get("rows") or [], "dur": dur})
+    lines, _ = _ours_lines({"rows": tab.get("rows") or [], "dur": dur, "sfx_in_video": tab.get("sfx") or []})   # 효과음 = 덩어리 꾸밈(벤치 _decorated 와 같은 자 — 10-26 전엔 안 넘겨 우리 fx.rate 가 늘 0 이었다)
     # 짤: 시간표 컷에 meme 표시가 있으면 그 컷과 겹치는 줄 = 짤 화면
     memes = [(float(c["t0"]), float(c["t1"])) for c in T.get("cuts") or [] if c.get("meme") or c.get("kind") == "meme"]
     for l in lines:
