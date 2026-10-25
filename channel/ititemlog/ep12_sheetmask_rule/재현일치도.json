@@ -1,11 +1,11 @@
 {
- "verdict": "미달",
+ "verdict": "통과",
  "rows": [
   {
    "key": "len.duration",
    "bench": 28.951999999999998,
-   "ours": 30.4667,
-   "diff": 5.2,
+   "ours": 28.6667,
+   "diff": -1.0,
    "judge": "in",
    "core": true,
    "why": "길이 차 ≤15%(검수 B1·compare len.duration)"
@@ -13,36 +13,36 @@
   {
    "key": "cut.median",
    "bench": 1.08,
-   "ours": 1.7,
-   "diff": 57.4,
-   "judge": "out",
+   "ours": 1.23,
+   "diff": 13.9,
+   "judge": "in",
    "core": true,
    "why": "컷 길이 중앙 ±30%, 벤치보다 빠르면 미달 쪽(검수 B4)"
   },
   {
    "key": "speech.cps.나레",
    "bench": 8.405000000000001,
-   "ours": 7.28,
-   "diff": -13.4,
-   "judge": "out",
+   "ours": 8.03,
+   "diff": -4.5,
+   "judge": "in",
    "core": true,
    "why": "나레 말속도(자막 글자/표시 초) 차 ≤10%(compare speech.cps)"
   },
   {
    "key": "chunk.chars",
    "bench": 7.0,
-   "ours": 9.5,
-   "diff": 35.7,
-   "judge": "out",
+   "ours": 6,
+   "diff": -14.3,
+   "judge": "in",
    "core": true,
    "why": "자막 조각 자수 중앙 차 ≤15%(검수 A9 범위)"
   },
   {
    "key": "chunk.sec",
    "bench": 0.865,
-   "ours": 1.34,
-   "diff": 54.9,
-   "judge": "out",
+   "ours": 0.8,
+   "diff": -7.5,
+   "judge": "in",
    "core": true,
    "why": "자막당 표시 초 중앙 차 ≤15%(compare cap.sub_sec)"
   },
@@ -67,8 +67,8 @@
   {
    "key": "fx.rate.나레",
    "bench": 0.124,
-   "ours": 0.25,
-   "diff": 12.6,
+   "ours": 0.192,
+   "diff": 6.8,
    "judge": "in",
    "core": true,
    "why": "나레 줄 중 꾸밈 붙은 비율 차 ≤20%p(시작문서 §0-1 12-1 ④ '효과 붙은 줄 비율')"
@@ -76,8 +76,8 @@
   {
    "key": "fx.rate.원음",
    "bench": 0.0555,
-   "ours": 0.0,
-   "diff": -5.5,
+   "ours": 0.143,
+   "diff": 8.8,
    "judge": "in",
    "core": true,
    "why": "원음 줄 중 꾸밈 붙은 비율 차 ≤20%p"
@@ -90,16 +90,16 @@
     "끝": 0.038
    },
    "ours": {
-    "훅": 0.75,
-    "본문": 0.25,
+    "훅": 0.5,
+    "본문": 0.5,
     "끝": 0.0
    },
    "diff": {
     "끝": -3.8,
-    "본문": -25.8,
-    "훅": 39.6
+    "본문": -0.8,
+    "훅": 14.6
    },
-   "judge": "out",
+   "judge": "in",
    "core": true,
    "why": "꾸밈 붙은 줄의 자리(훅/본문/끝) 분포 칸마다 차 ≤20%p(compare sfx.after_event 와 같은 폭)"
   },
@@ -124,7 +124,7 @@
   {
    "key": "narr.share",
    "bench": 0.5335,
-   "ours": 0.727,
+   "ours": 0.788,
    "diff": "벤치 0.371~0.719",
    "judge": "out",
    "core": false,
@@ -150,8 +150,8 @@
   {
    "key": "sfx.rate",
    "bench": 0.051000000000000004,
-   "ours": 0.066,
-   "diff": 29.4,
+   "ours": 0.035,
+   "diff": -31.4,
    "judge": "in",
    "core": true,
    "why": "효과음 발/초 차 ≤30%, 벤치 0이면 우리도 0(표준 §4-1 A2)"
@@ -177,21 +177,21 @@
   {
    "key": "thumb.frame0",
    "bench": "card",
-   "ours": "scene",
-   "diff": "다름",
-   "judge": "out",
+   "ours": "card",
+   "diff": "",
+   "judge": "in",
    "core": true,
    "why": "0초 첫 화면 종류(card=글 얹은 표지 2프레임 / scene=그냥 장면) 벤치 최빈과 같음(표준 §4-1 A6)"
   }
  ],
  "n_bench": 6,
- "ours_n_lines": 22,
+ "ours_n_lines": 33,
  "ours_media": {
-  "duration": 30.47,
-  "cut_median": 1.7,
-  "n_cuts": 16,
+  "duration": 28.67,
+  "cut_median": 1.23,
+  "n_cuts": 21,
   "lufs": -14.1,
-  "tp": -1.4,
+  "tp": -1.5,
   "win": [
    0,
    486,
@@ -322,7 +322,7 @@
   "zOSpeiMw1nA"
  ],
  "line_reads": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ititemlog\\줄판독",
- "frame0_from": "썸네일.json pick(선언)",
+ "frame0_from": "완성본 측정",
  "made_by": "kal_analyze.match_from_render",
- "ok": false
+ "ok": true
 }

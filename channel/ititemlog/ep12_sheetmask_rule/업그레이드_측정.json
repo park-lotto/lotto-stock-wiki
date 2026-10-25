@@ -94,12 +94,10 @@
     "src": "판 targets.scene_fit(중앙 = 상위편_목표.json)",
     "rubric_src": "channel/ititemlog/_kal/상위편_목표.json · rubric:v2(2026-10-25 앵커2·1컷·3회) · 10-25(14 커밋 508cb6b1a — v1 7.92/0.15 대체)"
    },
-   "ours": {
-    "frames_same": false
-   },
-   "better": false,
-   "worse": true,
-   "why": "✗ 완성본 컷 ≠ 계획 프레임(장면대사.json plan_frames_check: 15컷 중 같음 14 · 다름 [(4, 'N2', 0.9598)] (창 1−평균차 ≥ 0.97, 최저 0.9598)) — 계획 점수를 완성본 점수로 못 쓴다(㉔)",
+   "ours": null,
+   "better": null,
+   "worse": null,
+   "why": "미측정 — 장면대사_계획.json 없음(material_fit 계획 전 편) · 사후 18컷 중 같음 18 · 다름 0 (창 1−평균차 ≥ 0.97, 최저 0.9968)",
    "item_why": "사장님 10-22 눈 검수 승인 03(선크림)·07(핫도그) — 표준 §8 L2 '눈 검수 = 사장님 승인 03·07' · 07_대본 §3-1 '끝 3줄 화면은 새 원본 장면 — 원본을 하나 더 찾는다(선크림 v3: Namrata 추가)'",
    "source": "d4e963a81(원본 2개 시간순)·f81989042(원본 2개 VMake Pro)·6c7d0121a(세 번째 원본)",
    "expect": "scene_fit 평균↑·7 미만 비율↓(벤치 줄판독 fit 대비)",
@@ -142,12 +140,10 @@
     "src": "판 targets.scene_fit(중앙 = 상위편_목표.json)",
     "rubric_src": "channel/ititemlog/_kal/상위편_목표.json · rubric:v2(2026-10-25 앵커2·1컷·3회) · 10-25(14 커밋 508cb6b1a — v1 7.92/0.15 대체)"
    },
-   "ours": {
-    "frames_same": false
-   },
-   "better": false,
-   "worse": true,
-   "why": "✗ 완성본 컷 ≠ 계획 프레임(장면대사.json plan_frames_check: 15컷 중 같음 14 · 다름 [(4, 'N2', 0.9598)] (창 1−평균차 ≥ 0.97, 최저 0.9598)) — 계획 점수를 완성본 점수로 못 쓴다(㉔)"
+   "ours": null,
+   "better": null,
+   "worse": null,
+   "why": "미측정 — 장면대사_계획.json 없음(material_fit 계획 전 편) · 사후 18컷 중 같음 18 · 다름 0 (창 1−평균차 ≥ 0.97, 최저 0.9968)"
   },
   "cut_rhythm": {
    "bench": {
@@ -182,12 +178,12 @@
     "frame0": "card"
    },
    "ours": {
-    "first_cut": 2.83,
-    "frame0": "scene"
+    "first_cut": 1.33,
+    "frame0": "card"
    },
-   "better": false,
-   "worse": true,
-   "why": "첫 컷 우리 2.83초 vs 상위 편(조회 상위 50%) 0.73~5.07초(±0.05) · 0초 우리 scene vs 최빈 card — 둘 다 안이면 나아짐, 아니면 나빠짐 · 0초 얼굴/물건 비율은 미측정"
+   "better": true,
+   "worse": false,
+   "why": "첫 컷 우리 1.33초 vs 상위 편(조회 상위 50%) 0.73~5.07초(±0.05) · 0초 우리 card vs 최빈 card — 둘 다 안이면 나아짐, 아니면 나빠짐 · 0초 얼굴/물건 비율은 미측정"
   },
   "bgm": {
    "bench": {
@@ -202,13 +198,13 @@
    },
    "ours": {
     "lufs": -14.1,
-    "tp": -1.4,
-    "asr_ok": null,
-    "asr": "측정 실패: OSError: [WinError 1455] 이 작업을 완료하기 위한 페이징 파일이 너무 작습니다"
+    "tp": -1.5,
+    "asr_ok": true,
+    "asr": "나레 7줄 중 못 찾음·0.6초 넘게 어긋남 0 (whisper 로컬)"
    },
-   "better": null,
-   "worse": null,
-   "why": "LUFS -14.1(목표 -14.0±1.0 ○) · 받아쓰기 미측정(품질관문.json 없음) — 둘 다 ○ 나아짐, 하나라도 × 나빠짐"
+   "better": true,
+   "worse": false,
+   "why": "LUFS -14.1(목표 -14.0±1.0 ○) · 받아쓰기 ○ — 둘 다 ○ 나아짐, 하나라도 × 나빠짐"
   },
   "speech": {
    "bench": {
@@ -222,23 +218,23 @@
     "src": "판 targets.speech.cps_cv"
    },
    "ours": {
-    "line_cps_cv": 0.0885,
+    "line_cps_cv": 0.0556,
     "line_cps": {
-     "N1": 8.67,
-     "N2": 6.9,
-     "N3": 7.77,
-     "N4": 6.49,
-     "N5": 7.75,
-     "N6": 7.74,
-     "N7": 7.13
+     "N1": 8.7,
+     "N2": 8.13,
+     "N3": 8.53,
+     "N4": 7.73,
+     "N5": 8.57,
+     "N6": 8.82,
+     "N7": 7.54
     },
     "src": "render_info.line_cps",
     "pause_ok": null,
     "pause": null
    },
-   "better": false,
-   "worse": true,
-   "why": "나레 TTS 줄 자/초 변동계수 우리 0.0885(render_info.line_cps) — 나아짐 ≤0.063(p25) · 나빠짐 >0.086(상위 편 중앙) · 목표 판 targets.speech.cps_cv · 쉼 0.22~0.30 미측정"
+   "better": true,
+   "worse": false,
+   "why": "나레 TTS 줄 자/초 변동계수 우리 0.0556(render_info.line_cps) — 나아짐 ≤0.063(p25) · 나빠짐 >0.086(상위 편 중앙) · 목표 판 targets.speech.cps_cv · 쉼 0.22~0.30 미측정"
   },
   "cap_look": {
    "bench": {
@@ -251,12 +247,12 @@
    },
    "ours": {
     "h": 76.0,
-    "dE": 123.65,
+    "dE": 123.80000000000001,
     "n": 4
    },
    "better": false,
    "worse": true,
-   "why": "ΔE 우리 123.65 vs 상위 편(조회 상위 50%) p75 121.6·중앙 119.5 · 높이 우리 76.0px vs p75 95.0·중앙 85.0px — 나빠짐 = 높이 <중앙−4 또는 ΔE <중앙−5.0 (띠 (1213, 1373), 잰 프레임 벤치 17장·우리 4장 / 시도 24장 — 나머지는 글자 못 찾음) · ★외부 팩 대기 잇템로그판_v2#2(channel/ititemlog/_kal/팩요청.md 2026-10-25) — worse_n 에서 빼고 따로 셈(㉜)",
+   "why": "ΔE 우리 123.80000000000001 vs 상위 편(조회 상위 50%) p75 121.6·중앙 119.5 · 높이 우리 76.0px vs p75 95.0·중앙 85.0px — 나빠짐 = 높이 <중앙−4 또는 ΔE <중앙−5.0 (띠 (1213, 1373), 잰 프레임 벤치 17장·우리 4장 / 시도 24장 — 나머지는 글자 못 찾음) · ★외부 팩 대기 잇템로그판_v2#2(channel/ititemlog/_kal/팩요청.md 2026-10-25) — worse_n 에서 빼고 따로 셈(㉜)",
    "pending_pack": {
     "req": "잇템로그판_v2#2",
     "title": "자막 크기 변형 size:large(ititemlog) → 관제 235(자막팩 세션)",
@@ -278,21 +274,21 @@
     "max": 0.067,
     "first": 0.051,
     "goal": {
-     "n_goal": 2,
+     "n_goal": 1,
      "lo": 1,
      "hi": 2,
-     "n_first": 2,
-     "dur": 30.467
+     "n_first": 1,
+     "dur": 28.667
     }
    },
    "ours": {
-    "rate": 0.066,
-    "n": 2,
-    "denom": 30.4667
+    "rate": 0.035,
+    "n": 1,
+    "denom": 28.6667
    },
    "better": true,
    "worse": false,
-   "why": "sfx.rate 우리 2개(분모 30.4667) — 목표 2 · 허용 1~2 · 1차 2 (나아짐 = 범위 안 ∧ 1차보다 목표에 가깝거나 같음 · 나빠짐 = 범위 밖, 표준 §11-3 ⑳) · 상위 편(조회 상위 50%)"
+   "why": "sfx.rate 우리 1개(분모 28.6667) — 목표 1 · 허용 1~2 · 1차 1 (나아짐 = 범위 안 ∧ 1차보다 목표에 가깝거나 같음 · 나빠짐 = 범위 밖, 표준 §11-3 ⑳) · 상위 편(조회 상위 50%)"
   },
   "transition": {
    "bench": {
@@ -311,17 +307,17 @@
      "lo": 0,
      "hi": 1,
      "n_first": 0,
-     "dur": 13.0
+     "dur": 17.0
     }
    },
    "ours": {
     "rate": 0.0,
     "n": 0,
-    "denom": 13.0
+    "denom": 17.0
    },
    "better": true,
    "worse": false,
-   "why": "transition.rate 우리 0개(분모 13) — 목표 1 · 허용 0~1 · 1차 0 (나아짐 = 범위 안 ∧ 1차보다 목표에 가깝거나 같음 · 나빠짐 = 범위 밖, 표준 §11-3 ⑳) · 상위 편(조회 상위 50%)"
+   "why": "transition.rate 우리 0개(분모 17) — 목표 1 · 허용 0~1 · 1차 0 (나아짐 = 범위 안 ∧ 1차보다 목표에 가깝거나 같음 · 나빠짐 = 범위 밖, 표준 §11-3 ⑳) · 상위 편(조회 상위 50%)"
   },
   "sticker": {
    "bench": {
@@ -336,21 +332,21 @@
     "max": 0.065,
     "first": 0.061,
     "goal": {
-     "n_goal": 1,
+     "n_goal": 2,
      "lo": 1,
-     "hi": 1,
-     "n_first": 1,
-     "dur": 22.0
+     "hi": 2,
+     "n_first": 2,
+     "dur": 33.0
     }
    },
    "ours": {
     "rate": 0.0,
     "n": 0,
-    "denom": 22.0
+    "denom": 33.0
    },
    "better": false,
    "worse": true,
-   "why": "sticker.rate 우리 0개(분모 22) — 목표 1 · 허용 1~1 · 1차 1 (나아짐 = 범위 안 ∧ 1차보다 목표에 가깝거나 같음 · 나빠짐 = 범위 밖, 표준 §11-3 ⑳) · 상위 편(조회 상위 50%)"
+   "why": "sticker.rate 우리 0개(분모 33) — 목표 2 · 허용 1~2 · 1차 2 (나아짐 = 범위 안 ∧ 1차보다 목표에 가깝거나 같음 · 나빠짐 = 범위 밖, 표준 §11-3 ⑳) · 상위 편(조회 상위 50%)"
   },
   "meme": {
    "bench": {
@@ -369,17 +365,17 @@
      "lo": 0,
      "hi": 0,
      "n_first": 0,
-     "dur": 22.0
+     "dur": 33.0
     }
    },
    "ours": {
     "rate": 0.0,
     "n": 0,
-    "denom": 22.0
+    "denom": 33.0
    },
    "better": true,
    "worse": false,
-   "why": "meme.rate 우리 0개(분모 22) — 목표 0 · 허용 0~0 · 1차 0 (나아짐 = 범위 안 ∧ 1차보다 목표에 가깝거나 같음 · 나빠짐 = 범위 밖, 표준 §11-3 ⑳) · 상위 편(조회 상위 50%)"
+   "why": "meme.rate 우리 0개(분모 33) — 목표 0 · 허용 0~0 · 1차 0 (나아짐 = 범위 안 ∧ 1차보다 목표에 가깝거나 같음 · 나빠짐 = 범위 밖, 표준 §11-3 ⑳) · 상위 편(조회 상위 50%)"
   },
   "cap_emph": {
    "bench": {
@@ -394,21 +390,21 @@
     "max": 0.231,
     "first": 0.124,
     "goal": {
-     "n_goal": 3,
-     "lo": 2,
-     "hi": 4,
-     "n_first": 2,
-     "dur": 16.0
+     "n_goal": 5,
+     "lo": 3,
+     "hi": 6,
+     "n_first": 3,
+     "dur": 26.0
     }
    },
    "ours": {
-    "rate": 0.25,
-    "n": 4,
-    "denom": 16.0
+    "rate": 0.192,
+    "n": 5,
+    "denom": 26.0
    },
    "better": true,
    "worse": false,
-   "why": "fx.rate.나레 우리 4개(분모 16) — 목표 3 · 허용 2~4 · 1차 2 (나아짐 = 범위 안 ∧ 1차보다 목표에 가깝거나 같음 · 나빠짐 = 범위 밖, 표준 §11-3 ⑳) · 상위 편(조회 상위 50%)"
+   "why": "fx.rate.나레 우리 5개(분모 26) — 목표 5 · 허용 3~6 · 1차 3 (나아짐 = 범위 안 ∧ 1차보다 목표에 가깝거나 같음 · 나빠짐 = 범위 밖, 표준 §11-3 ⑳) · 상위 편(조회 상위 50%)"
   },
   "script": {
    "bench": null,
@@ -418,36 +414,36 @@
    "why": "script = 측정 함수 없는 축(표준 §4-2 '못 재는 칸') — 사장님 판정"
   }
  },
- "better_n": 5,
- "worse_n": 4,
+ "better_n": 8,
+ "worse_n": 1,
  "measured_n": 10,
  "l3_ok": false,
  "human_n": 4,
  "unmeasured_n": 1,
  "total": 6,
  "items_better_n": 1,
- "items_worse_n": 1,
+ "items_worse_n": 0,
  "evidence_ok_n": 6,
  "l3": {
   "l3_ok": false,
   "state": "×",
-  "better_n": 5,
-  "worse_n": 4,
+  "better_n": 8,
+  "worse_n": 1,
   "pending_n": 1,
   "measured_n": 10,
   "need_better": 5,
   "better_axes": [
+   "bgm",
    "cap_emph",
    "cut_rhythm",
    "meme",
    "sfx",
+   "speech",
+   "thumb",
    "transition"
   ],
   "worse_axes": [
-   "scene_fit",
-   "speech",
-   "sticker",
-   "thumb"
+   "sticker"
   ],
   "pending_pack": [
    {
@@ -463,15 +459,15 @@
    "script"
   ],
   "unmeasured_axes": [
-   "bgm"
+   "scene_fit"
   ],
   "rule": "better_n ≥ ceil(측정 축/2) ∧ worse_n = 0 ∧ 팩 대기 0 (비교 = 벤치 상위 편 좋은 쪽 사분위, 표준 §11-2 ⑱·§12-2 · 팩 대기 = §11-5 ㉜)"
  },
  "gates": {
   "upgrade": {
-   "better": "5/10",
-   "better_n": 5,
-   "worse_n": 4,
+   "better": "8/10",
+   "better_n": 8,
+   "worse_n": 1,
    "measured_n": 10,
    "l3_ok": false,
    "ok": false,
@@ -489,10 +485,7 @@
    "need_better": 5,
    "human": 4,
    "worse_axes": [
-    "scene_fit",
-    "speech",
-    "sticker",
-    "thumb"
+    "sticker"
    ],
    "total": 6
   }
