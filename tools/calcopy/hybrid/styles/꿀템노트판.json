@@ -18,7 +18,7 @@
   "voice_id": "tc_6059dad0b83880769a50502f",
   "why": "벤치 최근 편(09-25~) 나레 남자 f0 124~166Hz → 박창수(사장님 규칙: 남자면 박창수)"
  },
- "cps_target": 10.5,
+ "cps_target": 9.86,
  "bgm": {
   "id": "honwaka_puppu",
   "db_below_voice": 12.0,
@@ -45,9 +45,9 @@
  },
  "timing": {
   "gap_after_tts": 0.06,
-  "gap_after_orig": 0.04,
-  "tail": 0.3,
-  "why": "gap_after_tts 0.06·gap_after_orig 0.04·tail 0.3 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
+  "gap_after_orig": 0.06,
+  "tail": 0.11,
+  "why": "벤치 8편 원본 소리 실측(handconst.py kkultemnote → _kal/손상수_실측.json): 줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙 — gap_after_tts 0.06(앞 나레 n=29, p25 0.04·p75 0.12) · gap_after_orig 0.06(앞 원음 n=54, p25 0·p75 0.08) (경계 ±0.15초 창 안 가장 긴 쉼, 쉼 문턱 = 편별 (말 p50+p5)/2) · tail 0.11 = 마지막 말 소리 끝→영상 끝 편 중앙 0.107초(0.03~0.91, 로컬 위스퍼 마지막 낱말 끝)"
  },
  "frame": {
   "bg": [
@@ -108,13 +108,13 @@
    "pop": "orig_pop",
    "cut": "cut"
   },
-  "chunk_max_chars": 15,
+  "chunk_max_chars": 13,
   "band": [
    1245,
    1328
   ],
   "why_band": "자막 잉크 y1245~1328(kkultemnote place — 8편 중 7편) — caption_side 짤·스티커 자리용(fx_target)",
-  "why": "자막팩 kkultemnote(자막) · band = 자막 잉크 y1245~1328(why_band) · chunk_max_chars 15 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
+  "why": "자막팩 kkultemnote(자막) · band = 자막 잉크 y1245~1328(why_band) · chunk_max_chars 13 = 벤치 나레 조각 자수(공백 뺀) p90 13(n=54, 중앙 10·최대 14 — handconst.py kkultemnote caption.chunk_max_chars)"
  },
  "cuts": {
   "push_tts": 0.0,
@@ -891,5 +891,5 @@
    "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
   }
  },
- "_why_cps_target": "10.5 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체) (박창수 배속 맞춤 값 — 벤치 나레 자/초는 06 재측정 뒤)"
+ "_why_cps_target": "9.86 = 벤치 8편 나레 글자/자막 초 편 중앙(8.3·9.71·10.68·10.0·11.17·8.08·8.61·12.14 — kal_analyze.rules_of episodes.narr_cps, handconst.py kkultemnote cps_target) · 박창수(타입캐스트) 배속 = 이 값 맞춤(render_itssum, 0.85~1.25)"
 }

@@ -22,10 +22,10 @@
  "cps_target": 8.6,
  "bgm": {
   "id": "sweets",
-  "db_below_voice": 12.0,
-  "duck_orig_db": -6.0,
-  "fade_out": 0.4,
-  "why": "db_below_voice 12·duck_orig_db −6·fade_out 0.4 = 손 상수 — 벤치 BGM 미측정(스타일분석 §7, measure_task 06-ititemlog bgm_fp + 원음 끈 구간 LUFS 바닥) · duck_narr_db 0 = 나레 덕킹 근거 없음(BGM 미측정이라 '말할 때 줄어듦' 못 셈) · candidates = bgm_pick.py recommend 잇템로그판(벤치 6편 템포 중앙 139.8 BPM·밝기 555Hz, 거리 0.834/0.882/0.915) — 곡은 사람이 고른다, id sweets 그대로",
+  "db_below_voice": 13.0,
+  "duck_orig_db": -4.0,
+  "fade_out": 0.13,
+  "why": "벤치 6편 원본 소리 실측(handconst.py ititemlog → _kal/손상수_실측.json bgm.* · 신호급 — 나레·원음·BGM 섞인 소리, 분리 없음): db_below_voice 13.0 = 말 p50 − 말 사이 바닥(줄 경계 쉼 프레임 중앙, 말 없는 구간 ≥1초 편은 그 p10) 편 중앙 13.04dB(15.7·10.0·8.8·14.5·14.5·11.6) · duck_orig_db −4.0 = 원음 조각 바닥 p5 − 나레 조각 바닥 p5 편 중앙 −4.0(−6.0·0·−5.2·−3.5·−4.5·−3.3, 3dB 미만 차 = 0) · fade_out 0.13 = 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.127초(0.01~0.25 — 긴 페이드 없음) · duck_narr_db 0 = 말 없는 구간 ≥1초 편 1/6(J7G 쉼 바닥 −28.6 vs 빈 구간 −27.8, 차 0.8dB < 3 → 0) — db_below_voice 가 이미 말 사이 바닥 기준이라 따로 안 줄임 · candidates = bgm_pick.py recommend 잇템로그판(벤치 6편 템포 중앙 139.8 BPM·밝기 555Hz, 거리 0.834/0.882/0.915) — 곡은 사람이 고른다, id sweets 그대로",
   "duck_narr_db": 0.0,
   "candidates": [
    "free_bird",
@@ -45,8 +45,8 @@
  },
  "timing": {
   "gap": 0.08,
-  "tail": 0.3,
-  "why": "gap 0.08 = 벤치 줄 사이 붙여 말함(표준 §11 ① — 잇템로그 0.08 실측, 자막 교체 ≈ 컷 경계) · tail 0.3 = 손 상수(끝 여운, 벤치 근거 없음 — 06 측정 뒤 교체)"
+  "tail": 0.16,
+  "why": "gap 0.08 = 벤치 줄 사이 붙여 말함(표준 §11 ① — 잇템로그 0.08 실측, 자막 교체 ≈ 컷 경계 · handconst 같은 자 줄 경계 소리 쉼 중앙 0.04 n=84·원음 뒤 0.08 n=44) · tail 0.16 = 벤치 6편 마지막 말 소리 끝→영상 끝 편 중앙 0.157초(0.19·0.12·1.82·0.13·0.13·0.63 — 로컬 위스퍼 asrwords 마지막 낱말 끝 p≥0.4, handconst.py ititemlog timing.tail · 자막은 끝까지 붙들어 자막 꼬리 0/6)"
  },
  "frame": {
   "bg": [
@@ -96,7 +96,7 @@
    1258,
    1330
   ],
-  "why": "chunk_max_chars 12→9(표준 §11 ⑦ⓐ: 벤치 조각 자수 중앙 7·7·6·9·7·5.5, 조각 초 중앙 0.73~0.97 — 규칙빈도.json episodes 6편; ep13 1차 match chunk.sec +43%) · band [1258,1330] = 자막 채움 잉크 y 6편 공통(스타일분석 §1 픽셀, 잉크 72px) — caption_side 짤·스티커 자리용 · typing_cps 10 = 손 상수(벤치 typing 1/199줄, 06 측정 뒤 교체)"
+  "why": "chunk_max_chars 12→9(표준 §11 ⑦ⓐ: 벤치 조각 자수 중앙 7·7·6·9·7·5.5, 조각 초 중앙 0.73~0.97 — 규칙빈도.json episodes 6편; ep13 1차 match chunk.sec +43%) · band [1258,1330] = 자막 채움 잉크 y 6편 공통(스타일분석 §1 픽셀, 잉크 72px) — caption_side 짤·스티커 자리용 · typing_cps 10 = 렌더에 안 닿는 값: 벤치 타이핑 1/199줄(표본부족 <5 — 그 1줄 30.3자/초, handconst.py ititemlog caption.typing_cps) · 판 enter 규칙 4칸 전부 cut → ep13 렌더 배치 등장 {cut: 22}(10-25) — 타이핑 덩어리 0개라 caption_rows 가 이 값을 안 읽음"
  },
  "cuts": {
   "push_tts": 0.0,

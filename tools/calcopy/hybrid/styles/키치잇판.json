@@ -21,7 +21,7 @@
   ],
   "why": "벤치 나레 여자 밝은 톤(F0 204~298Hz). 10-19 신호 재측정: 미나 닮음 74개 중 13~52위 — 후보 kr-keleek-stable(3/8편 1위)은 사장님 귀 확인 뒤에만 바꾼다(이 칸 한 곳)"
  },
- "cps_target": 6.9,
+ "cps_target": 6.83,
  "bgm": {
   "id": "qiuqiu",
   "db_below_voice": 9.0,
@@ -47,9 +47,9 @@
   "why": "하이브리드 25~28초(앞 원음 12~14 + 뒤 12~14) — 하이브리드_판설계.md §1 · 벤치 단독 10~21초와 다른 점"
  },
  "timing": {
-  "gap": 0.1,
-  "tail": 0.35,
-  "why": "gap 0.1·tail 0.35 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
+  "gap": 0.06,
+  "tail": 0.15,
+  "why": "벤치 8편 원본 소리 실측(handconst.py kitchit → _kal/손상수_실측.json): gap 0.06 = 줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙 0.06초(n=47, p25 0·p75 0.08 — 경계 ±0.15초 창 안 가장 긴 쉼, 쉼 문턱 = 편별 (말 p50+p5)/2) · tail 0.15 = 마지막 말 소리 끝→영상 끝 편 중앙 0.152초(0.08~0.26, 로컬 위스퍼 마지막 낱말 끝)"
  },
  "frame": {
   "bg": [
@@ -134,14 +134,14 @@
    "typing": "typing"
   },
   "typing_variant": "typing",
-  "typing_cps": 10.0,
-  "chunk_max_chars": 12,
+  "typing_cps": 18.2,
+  "chunk_max_chars": 8,
   "band": [
    1311,
    1391
   ],
   "why_band": "자막 잉크 가운데 y1351(caption-motions.js kitchit place — 스타일분석 §1 8편 같음) ±40(잉크 높이 미기입) — caption_side 짤·스티커 자리용(fx_target)",
-  "why": "자막팩 kitchit(§3) · band = 자막 잉크 가운데 y1351 ±40(why_band) · chunk_max_chars 12·typing_cps 10 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
+  "why": "자막팩 kitchit(§3) · band = 자막 잉크 가운데 y1351 ±40(why_band) · chunk_max_chars 8 = 벤치 나레 조각 자수(공백 뺀) p90 8(n=51, 중앙 6·최대 10) · typing_cps 18.2 = 벤치 타이핑 줄 13/135(3편, BRa5 10줄) 글자÷등장 ms 중앙 18.18자/초 — handconst.py kitchit caption.*"
  },
  "cuts": {
   "push_tts": 0.06,
@@ -855,5 +855,5 @@
    "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
   }
  },
- "_why_cps_target": "미나(일레븐랩스) 서비스 배속 고정 — README cps_target '일레븐랩스는 서비스 배속 고정' · 6.9 = 손 상수(벤치 나레 자/초는 스타일분석 참고, 06)"
+ "_why_cps_target": "미나(일레븐랩스) 서비스 배속 고정 1.35(narr_align.fixed_tempo) — 이 칸은 배속을 못 바꾸고 대본 길이 어림(script_audit)·B3 목표로만 쓰이므로 값 = 이 판으로 낸 미나 실측: 6.83자/초(flowtest real20_gimi 9a584318 키치잇판 렌더 timeline 나레 7줄 133자/19.47초, 줄별 6.55~7.25) · 참고 벤치 나레 자/초 중앙 9.2(8편 7.9~10.2, handconst.py kitchit cps_target) — 미나 고정 배속으로는 벤치 말속도에 못 닿음(목소리 칸 몫)"
 }
