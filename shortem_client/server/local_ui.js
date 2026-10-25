@@ -48,7 +48,7 @@ export function send(res, code, body, type = 'application/json; charset=utf-8', 
   res.end(b);
 }
 
-async function readBody(req) {
+export async function readBody(req) {
   const ch = [];
   let n = 0;
   for await (const d of req) { n += d.length; if (n > 200000) return null; ch.push(d); }

@@ -7,7 +7,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { workDir } from './paths.js';
 import { baseUrl } from './api.js';
-import { videos, send, serveFile } from './local_ui.js';
+import { videos, send, serveFile, readBody } from './local_ui.js';
+import { capcutExport } from './engine_bridge.js';
 
 export const BRIDGE_PORT = Number(process.env.SHORTEM_BRIDGE_PORT || 17842);
 const VERSION = 1;
@@ -57,8 +58,15 @@ async function route(req, res) {
     return serveFile(req, res, path.join(workDir(), '완성본', name), 'video/mp4');
   }
   if (u.pathname === '/bridge/capcut' && req.method === 'POST') {
-    // 캡컷 내보내기 — 회원 PC 엔진에 캡컷 묶음 만들기가 아직 없다(서버 숏템메이커에만 있음). 붙이기 전까지 이유를 그대로 돌려준다
-    return send(res, 200, { ok: false, why: '캡컷 내보내기는 회원 PC 엔진에 붙이는 중입니다' }, undefined, h);
+    // 캡컷 내보내기 — 그 완성본을 만든 렌더 폴더(표식 topic_dir)를 엔진 capcut_export 에 넘긴다(engine_bridge.capcutExport)
+    const body = (await readBody(req)) || {};
+    const name = String(body.video || '');
+    if (!videos().some(v => v.name === name)) return send(res, 404, { ok: false, why: '그 완성본이 없습니다' }, undefined, h);
+    let meta = {};
+    try { meta = JSON.parse(fs.readFileSync(path.join(workDir(), '완성본', name + '.json'), 'utf8')); } catch { /* 표식 없음 */ }
+    if (!meta.topic_dir || !fs.existsSync(meta.topic_dir)) return send(res, 200, { ok: false, why: '이 완성본을 만든 작업 폴더를 찾지 못했습니다(엔진으로 만든 편만 캡컷으로 보낼 수 있습니다)' }, undefined, h);
+    const r = await capcutExport(meta.topic_dir, name.replace(/\.mp4$/i, ''));
+    return send(res, 200, r, undefined, h);
   }
   return send(res, 404, { error: '없음' }, undefined, h);
 }

@@ -316,7 +316,7 @@ function render(){
   // 완성본 고치기: 오른쪽 = 완성본 재생(+표시), 그 아래 캡컷 내보내기(사장님 10-25 '오른쪽 썸네일 아래')
   const vid=S.step==='edit'&&made();document.querySelector('.main').classList.toggle('vidmode',vid);videoStage();
   let C=$('capbar');if(!C){C=document.createElement('div');C.id='capbar';C.className='capbar';$('phone').after(C)}
-  C.hidden=!vid;C.innerHTML=vid?`<button class="btn" id="capcut">캡컷으로 내보내기</button>${S.capmsg?`<small class="err">${esc(S.capmsg)}</small>`:''}<small style="color:var(--mute)">이 완성본을 캡컷에서 직접 다듬을 수 있는 파일로 내보냅니다</small>`:'';
+  C.hidden=!vid;C.innerHTML=vid?`<button class="btn" id="capcut">캡컷으로 내보내기</button>${S.capmsg?`<small class="${S.capok?'ok':'err'}">${esc(S.capmsg)}</small>`:''}<small style="color:var(--mute)">이 완성본을 캡컷에서 직접 다듬을 수 있는 파일로 내보냅니다</small>`:'';
   // 프리셋 단계 견본: 실제 완성본 장면 3장(있으면) / 틀도 없으면 '견본 준비 중' — 남의 틀로 대신 그리지 않는다
   let O=$('shotpv');if(!O){O=document.createElement('div');O.id='shotpv';$('phone').appendChild(O)}
   const cs=(st.styles||[]).find(x=>x.id===st.style);
@@ -600,7 +600,11 @@ $('board').addEventListener('click',async e=>{
   if(t.id==='capcut'){t.disabled=true;t.textContent='만드는 중…';let r;
     try{r=S.st.host==='server'?await fetch(BRIDGE+'/bridge/capcut',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({video:S.pcVideo})}).then(x=>x.json()):{ok:false,why:'회원 PC 화면에서는 준비 중입니다'}}
     catch(e){r={ok:false,why:'회원 PC 숏템에 연결하지 못했습니다'}}
-    S.capmsg=r.ok?'✓ 캡컷 파일을 만들었습니다 — '+(r.where||''):(r.why||'못 만들었습니다');render();return}
+    // 결과 = engine_bridge.capcutExport {ok, bad, draft, in_capcut} — 캡컷이 깔려 있으면 캡컷 목록에 바로 뜬다
+    const nm=r.draft?String(r.draft).split(/[\/]/).pop():'';
+    S.capok=!!r.ok;S.capmsg=r.ok?(r.in_capcut?`✓ 캡컷 목록에 넣었습니다 — 캡컷을 열면 「${nm}」이 보입니다`:`✓ 캡컷 초안을 만들었습니다 — 이 PC 에 캡컷이 없어 작업 폴더에 두었습니다: ${r.draft}`)
+      :((r.bad&&r.bad.length?'초안 검사에서 걸렸습니다: '+r.bad[0]:r.why)||'못 만들었습니다');
+    t.disabled=false;t.textContent='캡컷으로 내보내기';render();return}
   if(t.dataset.hint){S.askDraft=t.dataset.hint;render();$('asktext').focus();return}
   if(t.id==='asksend'){const text=($('asktext')||{}).value||'';if(!text.trim()){state('무엇을 고칠지 적어 주세요',true);return}
     const moves=(S.moves||[]).map(m=>({label:m.label,dx:m.dx,dy:m.dy,scene:m.scene,x:m.vx,y:m.vy,t:m.t,kind:m.kind,video:m.vx!=null?S.pcVideo:undefined}));
