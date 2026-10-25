@@ -602,9 +602,12 @@ $('board').addEventListener('click',async e=>{
     if(r.ok===false||r.error){state(r.msg||r.error||'못 보냈습니다',true);return}
     S.makeSent=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});S.pcTried=false;state('Claude 에게 제작을 맡겼습니다');await load(true,true);render();return}
   if(t.dataset.mvdel!==undefined){S.moves.splice(+t.dataset.mvdel,1);render();return}   // 옮긴 것 하나만 되돌리기
-  if(t.dataset.emo){const r=await api('/api/save',{preset:S.st.current,patch:{tts:{emotion:t.dataset.emo}}});if(r.ok===false){await load(true);state(saveErr(r),true);return}await load(true);return}   // 감정 = 팩 tts.emotion(엔진이 받는 한 곳, 타입캐스트만)
+  if(t.dataset.emo){const r=await api('/api/save',{preset:S.st.current,patch:{tts:{emotion:t.dataset.emo==='normal'?null:t.dataset.emo}}});if(r.ok===false){await load(true);state(saveErr(r),true);return}await load(true);return}   // 감정 = 팩 tts.emotion(엔진이 받는 한 곳, 타입캐스트만)
   if(t.dataset.pickv){const eng=S.eng||'typecast';
-    const r=await api('/api/save',{preset:S.st.current,patch:{tts:{provider:eng,voice_id:t.dataset.pickv,name:t.dataset.pickn,emotion:(eng==='typecast'&&t.dataset.pemo)||null}}});   // 감정 = 팩 tts.emotion — 타입캐스트 밖 엔진은 비운다(엔진이 거절)
+    // 감정 = 팩 tts.emotion — 고를 때만 싣고, 이미 있던 감정을 지울 때만 null(늘 싣으면 감정 칸을 모르는 옛 엔진 묶음이 모든 목소리를 거절한다 — 10-26 실측)
+    const tts={provider:eng,voice_id:t.dataset.pickv,name:t.dataset.pickn};const emo=eng==='typecast'&&t.dataset.pemo!=='normal'&&t.dataset.pemo;   // '보통' = 감정 없음
+    if(emo)tts.emotion=emo;else if(((S.st.pack||{}).tts||{}).emotion)tts.emotion=null;
+    const r=await api('/api/save',{preset:S.st.current,patch:{tts}});
     if(!r.ok){await load(true);state(saveErr(r),true);return}   // 다시 읽은 뒤에 오류(load 가 '저장됨'으로 덮던 것 — 10-26 실측: 거절됐는데 '내 계정에 저장됨')
     await load(true);return}
   if(t.id==='editmode'){S.editMode=!S.editMode;render();setEditMode(S.editMode);return}

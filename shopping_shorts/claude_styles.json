@@ -115,6 +115,31 @@
     }
    }
   },
+  "두유노판": {
+   "bench": {
+    "channel": "homedesignnote"
+   },
+   "voice": {
+    "name": "박창수",
+    "voice_id": "tc_6059dad0b83880769a50502f"
+   },
+   "bgm": {
+    "id": "honwaka_puppu"
+   },
+   "thumb_card_face": false,
+   "packs": {
+    "sfx": {
+     "pack": null
+    },
+    "motion": {
+     "pack": "off",
+     "graphics": "off"
+    },
+    "bgm": {
+     "id": "honwaka_puppu"
+    }
+   }
+  },
   "뜨거운사람들판": {
    "bench": {
     "channel": "hotpeople"
