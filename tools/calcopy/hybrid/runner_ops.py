@@ -202,7 +202,7 @@ def need_list(version: str, url: str = "", fmt: str = "") -> list[dict]:
             if customer and not os.environ.get("ELEVENLABS_API_KEY") and os.environ.get("CALCOPY_DEV_MINA_SERVER") != "1":
                 out.append({"id": "elevenlabs", "label": "목소리 키(일레븐랩스)", "how": "setting"})
         elif prov == "fish":
-            from tools.calcopy.engine import preset_make as PM
+            from tools.calcopy.engine import voice_synth as PM
             if not PM._member_key("fish"):
                 out.append({"id": "fish", "label": "목소리 키(피쉬)", "how": "setting"})
     if not PAID_OFF and not have_speechmatics():     # 받아쓰기(원음·완성본 줄별 대조 narr_verify·asr_cross) — 사장님 10-26 '스피치매틱스도 무료 API 필요'. 키 자리 = asr_local.speechmatics_key

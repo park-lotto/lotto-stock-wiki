@@ -220,7 +220,7 @@ def _synth_member(text: str, voice_id: str, tempo, out: Path, key: str, model: s
                 typecast_tts.api_key = lambda *a, **k: key_tc
                 align = typecast_tts.synthesize(text, str(out), voice_id=voice_id, speed=tempo, model_id=model, emotion=emo)
             else:
-                from tools.calcopy.engine import preset_make as PM
+                from tools.calcopy.engine import voice_synth as PM
                 r = PM.make_synth(prov, voice_id, tempo, emo)(text, str(out))
                 align = r if isinstance(r, dict) else None
     finally:
