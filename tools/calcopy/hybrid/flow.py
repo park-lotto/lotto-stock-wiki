@@ -1696,6 +1696,9 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
     tfix = RU.title_colors_fix(S, _style(v))      # 판 틀에 없는 제목 강조색은 형식 — 반려 말고 바로 고친다(10-26 같은 반려 3번 멈춤)
     if tfix:
         st["log"].append("제목 색 자동 정리: " + "; ".join(tfix))
+    cfix = RU.caps_split_fix(S, _style(v))        # 자막 덩어리 자수도 형식 — 반려 말고 바로 나눈다(10-27 립글로스 회원편)
+    if cfix:
+        st["log"].append("자막 덩어리 자동 나눔: " + "; ".join(cfix)[:400])
     with tempfile.TemporaryDirectory() as td:
         p = Path(td) / "대본.json"
         p.write_text(json.dumps(S, ensure_ascii=False), encoding="utf-8")

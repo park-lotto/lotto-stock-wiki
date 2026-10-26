@@ -77,6 +77,74 @@ def caps_vs_tts(S: dict) -> list[str]:
     return [f"{x['line']}: {x['why']}" for x in SA.text_defects(S, joined=False) if x["rule"] in ("caps_text", "caps_say")]
 
 
+CAP_END = re.compile(r"(은|는|이|가|을|를|에|에서|도|만|고|서|며|면|니|데|자|게|지|요|다|죠|네|!|\?|,|\.|~)$")     # 말 덩어리가 끝나는 낱말(조사·어미·부호)
+
+
+def _cap_cut(words: list, mx: int, nchar) -> list[str]:
+    """낱말들을 가장 적은 조각 수로, 조각마다 mx 자 이하로 나눈다 — 같은 조각 수면 ① 끊는 자리 앞 낱말이 조사·어미로 끝나는 것(CAP_END) 많은 쪽
+    ② 조각 길이가 고른 쪽. 못 나누면 [원문]."""
+    from functools import lru_cache
+    n = len(words)
+
+    @lru_cache(None)
+    def best(i):                 # words[i:] 를 나눈 (조각 수, -끝말 수, 최대 길이, 조각들)
+        if i == n:
+            return (0, 0, 0, ())
+        out = None
+        for j in range(i + 1, n + 1):
+            p = " ".join(words[i:j])
+            if nchar(p) > mx and j > i + 1:
+                break
+            if nchar(p) > mx:
+                return None
+            r = best(j)
+            if r is None:
+                continue
+            good = 1 if (j < n and CAP_END.search(words[j - 1])) else 0
+            cand = (r[0] + 1, r[1] - good, max(r[2], nchar(p)), (p,) + r[3])
+            if out is None or cand[:3] < out[:3]:
+                out = cand
+        return out
+    r = best(0)
+    return list(r[3]) if r else [" ".join(words)]
+
+
+def caps_split_fix(S: dict, st: dict) -> list[str]:
+    """(완주 — 자막 덩어리 자수는 형식 일, 사장님 10-27 '걸림이 생기는 걸 없애라') 판 script.audit 의 cap_chars 상한(나레 = caption.chunk_max_chars,
+    원음 번역 = 그 칸 max)을 넘는 덩어리를 띄어쓰기 자리에서 앞에서부터 상한 안으로 나눈다 — 대본을 다시 쓰게 돌려보내지 않는다
+    (10-27 립글로스 회원편 '자막이 길어서 나누는 중' 반려). 낱말 하나가 상한보다 길면 그대로(검사가 잡는다). 강조(key)는 그 낱말이 든 조각에.
+    자 = common.nchar(script_audit cap_chars 와 같은 셈). 시각이 붙은 caps_rel 은 건드리지 않는다. 반환 = 나눈 기록."""
+    from tools.calcopy.hybrid.common import nchar
+    rules = [r for r in ((st.get("script") or {}).get("audit") or []) if isinstance(r, dict) and r.get("kind") == "cap_chars"]
+    lim = {}
+    for r in rules:
+        mx = (st.get("caption") or {}).get("chunk_max_chars") if r.get("max") == "chunk_max_chars" else r.get("max")
+        if isinstance(mx, (int, float)):
+            for of in (("tts", "orig") if r.get("of") not in ("tts", "orig") else (r["of"],)):
+                lim[of] = min(lim.get(of, mx), mx)
+    out = []
+    for l in S.get("lines") or []:
+        mx = lim.get("orig" if l.get("kind") == "orig" else "tts")
+        if not mx or not isinstance(l.get("caps"), list):
+            continue
+        new = []
+        for c in l["caps"]:
+            text = c["text"] if isinstance(c, dict) else c if isinstance(c, str) else None
+            if text is None or nchar(text) <= mx:
+                new.append(c)
+                continue
+            parts = _cap_cut(text.split(), mx, nchar)
+            if len(parts) < 2:
+                new.append(c)
+                continue
+            key = c.get("key") if isinstance(c, dict) else None
+            for p in parts:
+                new.append({**c, "text": p} if isinstance(c, dict) and key and key in p else p)
+            out.append(f"{l.get('id')} '{text}' → {parts}")
+        l["caps"] = new
+    return out
+
+
 def title_colors_fix(S: dict, st: dict) -> list[str]:
     """(판단 주인 — title_colors_bad 와 같은 판 틀 읽기) 그 줄 틀에 없는 'hi' 를 null 로 바꾼다 — 형식 일이라 대본을 다시 쓰게 하지 않는다
     (10-26 까르보: 'hi' 를 2줄→1줄로 옮겨 붙이며 같은 반려 3번에 멈춤). 반환 = 바꾼 칸 글."""
