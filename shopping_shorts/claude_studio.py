@@ -341,6 +341,20 @@ def _check_pid(store, cid, pid) -> dict:
 
 
 # ── 화면 API ─────────────────────────────────────────────────────────────
+def typecast_presets(store, cid) -> list:
+    """설정 화면 '숏템 추천 성우'(타입캐스트) = 숏템메이커 성우 카드 그대로(voice_presets.groups 한 곳) — 서버에서 타입캐스트를 꺼 둔 것과
+    상관없이(회원 PC 는 회원 키로 만든다) · 엔진이 막은 목소리(BANNED_VOICES, 필재)만 뺀다. (10-26 실측: 서버가 타입캐스트를 꺼 둬 0개 →
+    칼카피 명단 4명만 보였다)"""
+    from shopping_shorts import voice_presets
+    try:
+        banned = set(WORKER_ONE.call({"op": "banned"}).get("banned") or [])
+    except Exception:  # noqa: BLE001 — 못 물으면 다 보여 주고 저장 때 엔진 검사가 거른다
+        banned = set()
+    rows = store.list_voice_presets(lang="KR", customer_id=cid)
+    return [g for g in voice_presets.groups(rows, skip=lambda p: p.get("base_voice_id") in banned)
+            if g["engine"] == "typecast"]
+
+
 def state(store, cid) -> dict:
     s = _read(store, cid)
     plist = _presets(store, cid)
@@ -354,7 +368,7 @@ def state(store, cid) -> dict:
     return {"host": "server", "presets": plist, "current": cur, "pack": pack_for(cat, cur, own) if cur else None,
             "styles": sl, "style": cur_st["id"] if cur_st else None,
             "style_has_frame": bool(cur_st and _style_frame_pid(store, cid, cur_st)),
-            "requests": (s.get("requests") or [])[-20:],
+            "requests": (s.get("requests") or [])[-20:], "tc_presets": typecast_presets(store, cid),
             "changed": own, "catalog": show, "videos": [], "stamp": (s["channels"].get(cur) or {}).get("updated", 0) if cur else 0}
 
 

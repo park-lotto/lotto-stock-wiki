@@ -408,7 +408,8 @@ function voicePresetBox(eng,tts,cat){
   loadVoicePresets();
   if(!S.vp)return'<div class="sec"><small style="color:var(--mute)">숏템 추천 성우를 불러오는 중…</small></div>';
   const EN={fish:'fishaudio'};   // 숏템 목록의 엔진 이름(fish) ↔ 이 화면(fishaudio)
-  const gs=S.vp.filter(g=>(EN[g.engine]||g.engine||'typecast')===eng);
+  // 타입캐스트 = 서버(숏템메이커)가 타입캐스트를 꺼 둬 목록에 없다 → 설정 화면이 따로 받은 숏템 성우 카드(claude_studio.typecast_presets — 필재 뺌)
+  const gs=eng==='typecast'&&(S.st.tc_presets||[]).length?S.st.tc_presets:S.vp.filter(g=>(EN[g.engine]||g.engine||'typecast')===eng);
   const ready=new Set((cat.voices||[]).map(v=>v.voice_id));   // 회원 PC 엔진 명단(지금 바로 만들 수 있는 목소리)
   if(!gs.length){
     // 타입캐스트 = 숏템 목록에 추천 묶음이 없다 → 칼카피 명단을 같은 줄 모양(이름·설명·감정 단추)으로(사장님 10-25 '타입캐스트만 왜 다르냐')
@@ -442,13 +443,14 @@ function styleCards(st){
 const BRIDGE='http://127.0.0.1:17842';
 // 설정 단계 자료 — 서버 화면이면 이 PC 다리, 회원 PC 화면이면 그 화면 자료(state.keys·logins). 값은 안 오고 지문·연결 여부만
 async function setupLoad(){
-  if(S.setup||S.setupLoading)return;
+  // 못 붙었으면 5초마다 다시 본다 — 한 번 실패를 붙들고 있으면 숏템을 켠 뒤에도 '꺼져 있다'가 남았다(10-26 사장님 제보)
+  if(S.setupLoading||(S.setup&&(S.setup.ok||Date.now()-(S.setupAt||0)<5000)))return;
   if(S.st.host!=='server'){S.setup={ok:true,keys:S.st.keys,logins:S.st.logins};return}
   S.setupLoading=true;
   try{const r=await fetch(BRIDGE+'/bridge/setup').then(x=>x.json());S.setup=r&&r.ok?r:{ok:false,why:'이 PC 숏템이 답하지 않았습니다'}}
   catch(e){const l=await lnaState();S.setup={ok:false,why:l==='denied'?'크롬이 이 PC 숏템 연결을 막았습니다 — 주소창 왼쪽 사이트 정보 → 로컬 네트워크 → 허용 뒤 새로고침':
     l==='prompt'?'크롬이 "로컬 네트워크의 기기에 접근"을 물으면 허용을 눌러 주세요(안 뜨면 새로고침)':'이 PC 숏템이 꺼져 있습니다 — Claude 를 켜고 숏템을 한 번 부른 뒤 새로고침하세요'}}
-  S.setupLoading=false;render();
+  S.setupAt=Date.now();S.setupLoading=false;render();
 }
 // 회원 PC 로 보내기 — 서버 화면이면 PC 다리(값이 서버를 안 거친다), 회원 PC 화면이면 그 화면 주소
 async function pcPost(bridgePath,localPath,body){
@@ -801,7 +803,7 @@ $('play').onclick=()=>{   // 5초: 장면을 시간 순서로 넘기며 등장 �
   requestAnimationFrame(tick);
 };
 load(true);
-setInterval(()=>{if(!document.hidden)load(false)},3000);   // Claude 가 같은 설정 파일을 고치면 여기에도 보인다
+setInterval(()=>{if(!document.hidden){load(false);if(S.step==='setup'&&S.setup&&!S.setup.ok)setupLoad()}},3000);   // Claude 가 같은 설정 파일을 고치면 여기에도 보인다
 </script>
 </body>
 </html>
