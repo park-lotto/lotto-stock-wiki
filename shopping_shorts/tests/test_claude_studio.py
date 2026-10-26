@@ -163,3 +163,17 @@ def test_look_check_uses_engine_scene_style(monkeypatch):
     w = cs._Worker()
     assert w.call({"op": "look", "snapshot": snap}).get("snapshot", {}).get("presetId") == snap["presetId"]
     assert "invalid" in w.call({"op": "look", "snapshot": {"mode": "story", "presetId": "없는틀"}})
+
+
+def test_pc_keys_only_own_registered(env, monkeypatch):
+    """회원 PC 로 가는 키 = 그 회원이 숏템메이커에 등록한 것만(PC_KEY_SERVICES 안), 버텍스는 마지막 등록분."""
+    monkeypatch.setattr(cs.CP, "_front", lambda store, ctx, route: (7, {}, None))
+    have = {"typecast": ["tc-key-1"], "coupang": ["AK:SK"], "vertex_sa": ['{"old":1}', '{"new":1}'], "gemini": ["g-should-not-go"]}
+    seen = []
+    def plain(cid, svc):
+        seen.append((cid, svc))
+        return list(have.get(svc, []))
+    monkeypatch.setattr(env["st"], "get_customer_keys_plain", plain, raising=False)
+    got = cs.pc_keys({}, env["st"])["keys"]
+    assert got == {"typecast": "tc-key-1", "coupang": "AK:SK", "vertex_sa": '{"new":1}'}
+    assert all(c == 7 for c, _ in seen) and ("gemini" not in {s for _, s in seen})

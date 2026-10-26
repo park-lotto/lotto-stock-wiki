@@ -359,8 +359,11 @@ function loginsBox(l){
 // 회원 본인 키(타입캐스트·일레븐랩스·쿠팡 파트너스) — 목록·이름은 서버(voice.js KEY_SERVICES). 값은 이 PC 파일에만, 화면엔 지문만
 function keyBox(k){
   return `<div class="sec"><div class="sec-h"><b>내 키</b><small>값은 이 PC 에만 저장되고 화면엔 지문만 보입니다</small></div>
+    ${S.st.host==='server'?`<div class="inrow"><button class="btn pri" id="importkeys">숏템메이커에 등록한 키 가져오기</button><small style="color:var(--mute)">숏템메이커 설정에 넣어 둔 내 키를 이 PC 로 그대로 옮깁니다(웹 화면엔 안 보이고 PC 로 곧장 갑니다)</small></div>`:''}
     ${Object.entries(k||{}).map(([s,t])=>`<div class="krow"><div class="sec-h"><b>${esc(t.label)}</b>${t.present?`<span class="chg">✓ 넣음 · ${esc(t.fp||'')}</span>`:`<small>${esc(t.need)}</small>`}</div>
-    <div class="inrow"><input type="password" id="key_${s}" placeholder="${t.present?'바꾸려면 새 키를 붙여 넣으세요':esc(t.where)+' 를 붙여 넣으세요'}" autocomplete="off"><button class="btn pri" data-key="${s}">저장</button></div></div>`).join('')}
+    ${t.json?`<div class="inrow"><textarea id="key_${s}" rows="3" placeholder="${t.present?'바꾸려면 새 JSON 을 붙여 넣으세요':esc(t.where)+' — 받은 .json 파일 내용을 통째로 붙여 넣거나 파일을 고르세요'}" spellcheck="false" style="flex:1;min-height:60px;font:12px monospace"></textarea>
+      <label class="btn">파일 고르기<input type="file" accept=".json,application/json" data-keyfile="${s}" hidden></label><button class="btn pri" data-key="${s}">저장</button></div>`
+    :`<div class="inrow"><input type="password" id="key_${s}" placeholder="${t.present?'바꾸려면 새 키를 붙여 넣으세요':esc(t.where)+' 를 붙여 넣으세요'}" autocomplete="off"><button class="btn pri" data-key="${s}">저장</button></div>`}</div>`).join('')}
     ${S.keymsg?`<div class="note">${esc(S.keymsg)}</div>`:''}</div>`;
 }
 // 완성본 받기 — 판단은 server/deliver.js. 봇 토큰은 여기에만 넣는다
@@ -672,6 +675,10 @@ $('board').addEventListener('click',async e=>{
   if(t.dataset.mode)return save({text:{caption:{mode:t.dataset.mode}}});
   if(t.dataset.tpl){const [m,id]=t.dataset.tpl.split(':');return save({template:t.dataset.tpl==='none'?'none':{mode:m,id}})}
   if(t.dataset.voice){const v=S.st.catalog.voices.find(x=>x.voice_id===t.dataset.voice);return save({tts:{voice_id:v.voice_id,name:v.name,preset_id:v.preset_id}})}
+  if(t.id==='importkeys'){t.disabled=true;t.textContent='가져오는 중…';const r=await pcPost('/bridge/import-keys','/api/none',{});
+    const NM={typecast:'타입캐스트',elevenlabs:'일레븐랩스',fish:'피쉬오디오',coupang_access:'쿠팡 Access',coupang_secret:'쿠팡 Secret',vmake:'VMake',vertex_sa:'버텍스'};
+    S.keymsg=!r.ok?(r.why||'가져오지 못했습니다'):(r.imported||[]).length?'가져왔습니다: '+r.imported.map(x=>NM[x]||x).join(' · ')+((r.failed||[]).length?' (모양이 달라 못 옮긴 것: '+r.failed.join(', ')+')':''):'숏템메이커에 등록된 키가 없습니다 — 아래 칸에 직접 넣어 주세요';
+    S.setup=null;render();return}
   if(t.dataset.key){const s=t.dataset.key,key=($('key_'+s)||{}).value||'';const r=await pcPost('/bridge/key/'+s,'/api/key/'+s,{key});S.keymsg=r.ok?'저장했습니다 — 다음 영상부터 이 키를 씁니다':(r.why||'저장하지 못했습니다');S.setup=null;await load(true);render();return}
   if(t.dataset.dl){const k=t.dataset.dl;let r;
     if(k==='link')r=await api('/api/deliver/link',{token:($('tgtoken')||{}).value||''});
@@ -703,6 +710,8 @@ $('board').addEventListener('change',e=>{
 $('board').addEventListener('input',e=>{if(e.target.id==='asktext')S.askDraft=e.target.value});
 $('board').addEventListener('keydown',e=>{if(e.key!=='Enter')return;if(e.target.id==='asktext'){e.preventDefault();$('asksend').click()}else if(e.target.id==='vq'){e.preventDefault();$('vsearch').click()}});
 $('board').addEventListener('change',e=>{if(e.target.id==='pcpick'){S.pcVideo=e.target.value;render()}});
+// 버텍스 서비스 계정 파일 고르기 — 이 화면에서 읽어 칸에 넣기만(저장은 '저장' 단추 = 이 PC 로)
+$('board').addEventListener('change',e=>{const s=e.target.dataset&&e.target.dataset.keyfile;const f=s&&e.target.files&&e.target.files[0];if(!f)return;f.text().then(x=>{const el=$('key_'+s);if(el)el.value=x})});
 $('board').addEventListener('input',e=>{const o=e.target.nextElementSibling;if(e.target.type==='range'&&o&&o.tagName==='OUTPUT'){const v=+e.target.value;o.textContent=e.target.id==='tempo'?v.toFixed(2)+'배':e.target.id==='gain'?Math.round(v*100)+'%':v+'px'}});
 
 // ── 미리보기: 엔진이 만든 입력 → 렌더러(sceneStyle.load) 그대로 ──
