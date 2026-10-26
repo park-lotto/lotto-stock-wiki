@@ -32,14 +32,16 @@ FORBIDDEN = (
     "tools/calcopy/hybrid/*", "tools/calcopy/yanshot/*", "tools/calcopy/oneshot/*", "tools/calcopy/community_*.py",
     "tools/calcopy/transcribe_free.py", "tools/calcopy/*/README.md", "tools/calcopy/*.md",
     "research/*", "docs/*", "handoff/*", "wiki/*", "관제/*", "raw/*", "out/*.md",
-    ".env*", "*.pem", "shopping_shorts/app.py", "shopping_shorts/claude_portal.py", "shopping_shorts/tests/*",
+    ".env*", "*/.env*", "*.pem", "*/*.pem",      # ★하위 폴더 .env 도(fnmatch 는 경로 전체를 맞춰 ".env*" 가 shopping_shorts/.env 를 못 거르던 구멍 — 10-26 기미크림)
+    "shopping_shorts/app.py", "shopping_shorts/claude_portal.py", "shopping_shorts/tests/*",
     # 서버 수집기(계정 돌리기·프록시 슬롯·유료 수집) — 회원 PC 받기는 회원 로그인 쿠키로 한다(media_download 는 이것들 없이 돈다, 10-19 실측)
     "shopping_shorts/channel_archive.py", "shopping_shorts/instagram_playwright.py", "shopping_shorts/apify_client.py", "shopping_shorts/store.py",
 )
 # 묶음 안 어디에도 있으면 안 되는 글자(서버 주소·접속 열쇠 꼴·키 이름)
 #   duckdns 는 숏템 공개 주소(고객 프로그램이 라이선스 확인에 접속)라 숨길 대상이 아니다.
 SECRETS = (r"3\.35\.251\.172", r"LightsailDefaultKey", r"ubuntu@", r"BEGIN (RSA |OPENSSH )?PRIVATE KEY",
-           r"AIza[0-9A-Za-z_-]{30,}", r"SHORTS_GEMINI_KEY_\d+\s*=")
+           r"AIza[0-9A-Za-z_-]{30,}", r"SHORTS_GEMINI_KEY_\d+\s*=",
+           r"(?m)^\s*[A-Z][A-Z0-9_]*(?:API_KEY|_KEY|SECRET|TOKEN)\s*=\s*['\"]?[A-Za-z0-9_\-]{20,}['\"]?\s*$")   # .env 꼴 키 줄(일레븐랩스·타입캐스트·쿠팡 등) — 10-26
 # 노드 렌더러(render_scene_style.js)가 file:// 로 여는 것 — 파이썬 추적에 안 잡힌다. showcase html 의 src/href 에서 더 읽는다.
 RENDERER_EXTRA = ("tools/render_scene_style.js", "out/scene-style-ui-showcase.html")
 # 파이썬 추적에 안 잡히는 데이터(ffmpeg·node 가 여는 것, 설정 화면만 쓰는 것) — 10-19 설치본 실측: 목소리 목록·배경음악이 빠져
