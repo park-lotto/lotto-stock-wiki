@@ -1423,7 +1423,8 @@ def _of_sheets(W: Path, seeds: list[Path], cands: list[dict]) -> list[str]:
 
 def c_origin_foreign(W, d):
     """해외 원본 후보 + 판정 시트. mode lens = 소재(한국 재편집) 장면 4장 → 구글 렌즈 → 영상 링크 → 메타(origin_find 와 같은 함수) /
-    mode peers = 영어 검색어로 같은 제품 다른 해외 반응 쇼츠. 같은 영상·같은 제품 판정은 하지 않는다(서버 질문 — 회원 Claude 눈).
+    mode peers = 영어 검색어로 같은 제품 다른 해외 반응 쇼츠 / mode find = 회원 Claude 가 찾은 주소(urls)·검색어(queries, 쇼츠 필터) 후보.
+    같은 영상·같은 제품 판정은 하지 않는다(서버 질문 — 회원 Claude 눈).
     캐시 모드: lens = <캐시>/origin_foreign/<소재 id>.json {cands:[…]} · peers = 검색 캐시(search/<검색어>.json 또는 _default) — 유튜브·구글 0회."""
     from tools.calcopy import origin_find as OF
     mode = d.get("mode") or "lens"
@@ -1456,10 +1457,18 @@ def c_origin_foreign(W, d):
                 m = OF.meta(OF.url_of(pf, vid, x["href"]))
                 raw.append({"platform": pf, "id": vid, "url": OF.url_of(pf, vid, x["href"]), "lens_text": x["text"], "lens_hits": x["hits"], **m})
     else:
-        for e in _search(d.get("queries") or [], int(d.get("n") or 12)):
+        if mode == "find":          # 회원 Claude 가 직접 찾은 주소(flow f_of_find, 10-26) — 메타·썸네일만 받아 같은 영상 판정 시트에 싣는다(판정은 서버 질문)
+            for url in [str(x) for x in d.get("urls") or []][:8]:
+                k = OF.vkey(url)
+                if not k or k[1] == d.get("bench_id"):
+                    continue
+                raw.append({"platform": k[0], "id": k[1], "url": OF.url_of(k[0], k[1], url), "by": "member", **OF.meta(OF.url_of(k[0], k[1], url))})
+        for e in _search(d.get("queries") or [], int(d.get("n") or 12), shorts=(mode == "find")):
             raw.append({"platform": "yt", "id": e.get("id"), "url": f"https://www.youtube.com/shorts/{e.get('id')}", **{k: e.get(k) for k in ("title", "channel", "channel_id", "dur", "views", "date")}})
-    cands, seen = [], set()
+    cands, seen, bad = [], set(), []
     for c in raw:
+        if c.get("by") == "member" and c.get("why"):      # 회원 Claude 가 준 주소를 못 열었으면 이유를 돌려준다(조용히 버리지 않는다)
+            bad.append({"url": c.get("url"), "why": str(c.get("why"))[:160]})
         if not c.get("id") or c["id"] in skip or c["id"] in seen or c.get("why"):
             continue
         seen.add(c["id"])
@@ -1469,7 +1478,7 @@ def c_origin_foreign(W, d):
     sheets = _of_sheets(W, seeds, cands) if cands else []
     jsave(W / "origin_foreign" / f"cands_{mode}.json", cands)
     return {"mode": mode, "cands": [{k: c.get(k) for k in ("n", "platform", "id", "url", "title", "channel", "channel_id", "date", "dur", "views", "korean", "thumb_ok")} for c in cands],
-            "sheets": sheets, "seed": [rel(W, p) for p in seeds]}
+            "sheets": sheets, "seed": [rel(W, p) for p in seeds], **({"bad_urls": bad} if bad else {})}
 
 
 def c_clean_text(W, d):
@@ -1548,7 +1557,7 @@ BUDGET = {"bench": 900, "origin_get": 320, "origin_probe": 240, "channel_find": 
           "plan": 600, "origin_words": 180, "orig_heard": 120, "asr_spans": 120, "origin_foreign": 120, "clean_text": 900, "thumb_auto": 300}
 BUDGET_DEFAULT = 300
 BUDGET_FLOOR = 600   # 바닥(10-26 run4: 바닥 120초로 plan 120.2초·asr_spans 120.2초를 끊어 멀쩡한 편을 멈췄다 — 98 #124). 한없이 도는 일은 STALL_SEC 가 잡는다
-CMD_LABEL = {"env": "준비 확인", "bench": "영상 받기", "channel_find": "출처 채널 찾기", "origin_probe": "원본 후보 조사", "search": "원본 검색",
+CMD_LABEL = {"env": "준비 확인", "bench": "영상 받기", "channel_find": "출처 채널 찾기", "origin_probe": "원본 후보 조사", "origin_foreign": "해외 원본 후보 조사", "search": "원본 검색",
              "channel_list": "채널 영상 목록", "origin_subs": "원본 자막 대조", "origin_get": "원본 영상 받기", "coupang": "쿠팡 찾기", "coupang_reviews": "쿠팡 후기",
              "naver": "자료 찾기", "download": "영상 조각 받기", "screen": "장면 고르기", "shot_sheets": "장면 정리", "plan": "장면 맞추기",
              "render": "영상 만들기", "check": "완성본 확인", "clean_text": "자막 지우기", "thumb_auto": "썸네일 고르기", "finish": "마무리"}   # 회원 화면 진행 줄(내부 이름 금지)

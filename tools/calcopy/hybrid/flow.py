@@ -2231,12 +2231,14 @@ def f_of_got(st, m, rp, u):
     st["of_cands"], st["of_mode"] = cands, mode
     if o.get("error") or not cands or not o.get("sheets"):
         st["log"].append(f"원본 후보 없음({mode}): {str(o.get('error') or '')[:200]}")
-        if mode == "lens":
-            raise _Stop("해외 원본을 못 찾았어요", NO_ORIGIN[1])
+        if mode in ("lens", "find"):              # 자동(렌즈)·회원 Claude 찾기 후보가 없다 → 회원 Claude 가 직접 찾는 단계(f_of_find, 10-26)
+            st["of_find_why"] = ("자동 검색 후보 없음" if mode == "lens" else "그 주소·검색어로 후보를 하나도 못 열었음") + _bad_urls(o)
+            return {"goto": "of_find"}
         return {"goto": "of_fetch"}
     rows = "\n".join(f"{c['n']}. {c.get('platform')}:{c.get('id')} · {c.get('channel')} · '{str(c.get('title') or '')[:70]}' · {c.get('date')} · 한글 {bool(c.get('korean'))}"
                      for c in cands)
-    if mode == "lens":
+    if mode in ("lens", "find"):                 # 같은 영상 판정 = 렌즈 후보든 회원 Claude 가 찾은 후보든 같은 질문·같은 규칙(결과 검사)
+        st["of_bad"] = _bad_urls(o)
         from tools.calcopy import origin_find as OF
         ask = OF.JUDGE_PROMPT + "\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows
         return {"review": [_rv("of_judge", ask, [_img(x) for x in o["sheets"]][:4], model="sonnet", need=("same",))], "then": "of_pick"}
@@ -2249,7 +2251,7 @@ def f_of_pick(st, m, rp, u):
     from tools.calcopy import origin_find as OF
     cands = st.get("of_cands") or []
     by_n = {int(c["n"]): c for c in cands if str(c.get("n", "")).isdigit() or isinstance(c.get("n"), int)}
-    if st.get("of_mode") == "lens":
+    if st.get("of_mode") in ("lens", "find"):
         a = _reply(rp, "of_judge", ("same",))
         same = [by_n[int(n)] for n in a.get("same") or [] if str(n).isdigit() and int(n) in by_n]
         seed = {"key": f"yt:{st['bench'].get('id')}", "korean": True, "date": st["bench"].get("date")}
@@ -2260,9 +2262,15 @@ def f_of_pick(st, m, rp, u):
             st["log"].append(f"유튜브 밖 원본은 받기 길이 없어 뺌: {skipped}")
         for v in picked[:F_ORIGINS_MAX]:
             st["origins"].append({"id": v["id"], "info": {k: v.get(k) for k in ("id", "title", "channel", "date", "dur")}, "how": "렌즈 같은 촬영분"})
-        st["log"].append(f"렌즈 같은 영상 {len(same)}개 → 원본 {[o['id'] for o in st['origins']]}: {str(a.get('why'))[:120]}")
-        if not st["origins"]:
-            raise _Stop("해외 원본을 못 찾았어요", NO_ORIGIN[1])
+        st["log"].append(f"{'렌즈' if st.get('of_mode') == 'lens' else '회원 찾기'} 같은 영상 {len(same)}개 → 원본 {[o['id'] for o in st['origins']]}: {str(a.get('why'))[:120]}")
+        if not st["origins"]:                    # 결과 검사 불합격 → 이유를 들고 회원 Claude 가 다시 찾기(f_of_find 한도 안) — 회원에게 '다시 시도'를 묻지 않는다
+            why = str(a.get("why") or "")[:200]
+            if same and skipped:
+                why += " · 같은 영상이지만 유튜브 밖(받기 안 됨): " + ", ".join(skipped)[:160]
+            elif same:
+                why += " · 같은 영상이지만 한국 재편집이거나 소재보다 늦게 올린 것(퍼 간 쪽)"
+            st["of_find_why"] = why + st.get("of_bad", "")
+            return {"goto": "of_find"}
         if len(st["origins"]) < 2 and not st.get("_peers_done"):
             return {"goto": "of_peers"}
         return {"goto": "of_fetch"}
@@ -2278,6 +2286,61 @@ def f_of_pick(st, m, rp, u):
         have.add(c["id"])
     st["log"].append(f"같은 제품 다른 해외 반응 → 원본 {[o['id'] for o in st['origins']]}: {str(a.get('why'))[:120]}")
     return {"goto": "of_fetch"}
+
+
+F_FIND_MAX = 3         # 회원 Claude 직접 찾기 바퀴(한 바퀴 = 찾아 답 → 실행기 메타·썸네일 → 같은 영상 판정)
+
+OF_FIND_ASK = """너는 해외 원본 찾기 담당이다. 자동 검색(구글 렌즈)으로는 이 소재 쇼츠의 해외 원본을 못 찾았다 — 네가 직접 찾아라.
+목표: 이 소재(한국 재편집 쇼츠)가 가져다 쓴 **해외 원본 영상의 주소**. 짜깁기면 컷마다 원본이 다르다 — 찾은 것 전부(최대 8개).
+도구: ①네 웹 검색(WebSearch·WebFetch) ②queries 에 적은 검색어 = 숏템이 회원 PC 에서 유튜브 쇼츠 검색을 돌려 후보로 붙인다 ③urls 에 적은 주소 = 숏템이 그 영상 정보·썸네일을 받아 같은 영상인지 소재 장면과 나란히 판정한다(결과 검사 — 통과해야 다음 단계).
+★받기는 유튜브만 된다 — 틱톡·인스타에서 찾았으면 같은 사람(같은 아이디·이름)의 유튜브 쇼츠 업로드를 찾아 유튜브 주소로 준다.
+★같은 촬영분만 원본이다(같은 사람·같은 장소·같은 순간). 같은 제품을 다른 사람이 쓴 영상은 아니다. 한국 채널 재편집·소재보다 늦게 올린 계정은 원본이 아니다.
+JSON 하나: {"urls": ["https://www.youtube.com/shorts/…", …], "queries": ["영어 검색어 3~6단어", …], "why": "컷별로 무엇을 단서로 찾았는지 한 줄"}
+(urls·queries 둘 다 비우면 이번 바퀴는 못 찾은 것으로 친다)"""
+
+
+def _bad_urls(o: dict) -> str:
+    b = [x for x in o.get("bad_urls") or [] if isinstance(x, dict)]
+    return (" · 못 연 주소: " + "; ".join(f"{x.get('url')} ({x.get('why')})" for x in b[:4])) if b else ""
+
+
+def f_of_find(st, m, rp, u):
+    """해외 원본 — 자동(렌즈)이 못 찾으면 회원 Claude 가 목표+가이드+도구로 직접 찾는다(사장님 10-26 'Claude=두뇌, 우리=하네스·가이드·규칙').
+    판단 주인: 이 단계(질문·바퀴 한도) · 결과 검사 = 기존 같은 영상 판정(of_judge = origin_find.JUDGE_PROMPT)+origin_find.pick_origins 그대로.
+    한도(F_FIND_MAX)를 다 쓰면 그때만 회원에게 묻는다 — 다시 시도 = 회원 Claude 찾기 한 바퀴 더(회원이 준 주소를 실어)."""
+    n = int(st.get("of_find_n") or 0)
+    if n >= F_FIND_MAX:
+        st["of_find_n"] = 0
+        raise _Stop("해외 원본을 못 찾았어요", "원본 영상 주소를 알려 주시면 그 주소로 바로 이어 갈게요 · 아니면 다른 영상으로 시작해 주세요", retry="of_find")
+    st["of_find_n"] = n + 1
+    B, R0 = st.get("bench") or {}, st.get("read") or {}
+    tried = st.setdefault("of_find_tried", [])
+    lines = " / ".join(str(l.get("text")) for l in st.get("bench_lines") or [])[:2000]
+    ctx = "".join([
+        "\n\n## 소재\n제목: " + str(B.get("title")) + "\n채널: " + str(B.get("channel")) + " · 올린 날 " + str(B.get("date")),
+        "\n설명: " + str(B.get("desc") or "")[:1200] + "\n받아쓰기: " + lines,
+        "\n판독: 출연 " + str(R0.get("people")) + " · 제품 낱말 " + str(R0.get("product_words")) + " · 브랜드 단서 " + str(R0.get("brand_hint")),
+        " · 앞서 쓴 검색어 " + str(R0.get("queries_en")),
+        "\n\n## 지난 시도(" + str(n) + "/" + str(F_FIND_MAX) + " 바퀴)\n" + ("\n".join(tried[-6:]) or "없음"),
+        "\n바로 앞 결과: " + str(st.get("of_find_why") or "-")])
+    show = [_img(x) for x in (B.get("sheet"), B.get("big")) if x]
+    return {"review": [_rv("of_find", OF_FIND_ASK + "\n\n" + _brief("origin_foreign.md") + ctx, show, need=("urls", "queries"))], "then": "of_find_got"}
+
+
+
+def f_of_find_got(st, m, rp, u):
+    from tools.calcopy import origin_find as OF
+    a = _reply(rp, "of_find", ("urls", "queries"))
+    urls = [str(x).strip() for x in a.get("urls") or [] if isinstance(x, str) and OF.vkey(str(x))][:8]
+    qs = [str(x).strip()[:80] for x in a.get("queries") or [] if isinstance(x, str) and str(x).strip()][:4]
+    st.setdefault("of_find_tried", []).append(f"- {st.get('of_find_n')}바퀴: 주소 {urls or '없음'} · 검색어 {qs or '없음'} · {str(a.get('why') or '')[:160]}")
+    st["log"].append(f"회원 찾기 {st.get('of_find_n')}바퀴: 주소 {len(urls)} · 검색어 {len(qs)}")
+    if not urls and not qs:
+        st["of_find_why"] = "주소·검색어를 하나도 안 줬음"
+        return {"goto": "of_find"}
+    have = [o["id"] for o in st.get("origins") or []]
+    return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "find", "urls": urls, "queries": qs, "n": 10, "bench_id": (st.get("bench") or {}).get("id"),
+                    "skip": have + [(st.get("bench") or {}).get("id")]}], "then": "of_got"}
 
 
 def f_of_fetch(st, m, rp, u):
@@ -2607,7 +2670,7 @@ def s_material_dl(st, m, rp, u):
 
 
 FORMAT_PHASES = {   # 형식별 세부 단계 처리기 — 없는 세부 단계는 공용 PHASES
-    "해외원본형": {"bench_got": f_bench_got, "ref_read": f_ref_read, "of_peers": f_of_peers, "of_got": f_of_got, "of_pick": f_of_pick, "of_fetch": f_of_fetch,
+    "해외원본형": {"bench_got": f_bench_got, "ref_read": f_ref_read, "of_peers": f_of_peers, "of_got": f_of_got, "of_pick": f_of_pick, "of_find": f_of_find, "of_find_got": f_of_find_got, "of_fetch": f_of_fetch,
                 "of_fetched": f_of_fetched, "f_product_sheet": f_product_sheet, "f_product_pick": f_product_pick, "f_product_cands": f_product_cands,
                 "f_product_same": f_product_same, "research": f_research, "f_research_got": f_research_got, "f_research_check": f_research_check,
                 "f_material": f_material, "material": f_material, "f_material_got": f_material_got, "f_shots_got": f_shots_got, "f_clean": f_clean,
@@ -2618,7 +2681,7 @@ FORMAT_PHASES = {   # 형식별 세부 단계 처리기 — 없는 세부 단계
     "레시피형": {},      # 연예인형 처리기 그대로(재료 스티커 = 판)
 }
 PHASE_STAGE.update({
-    "ref_read": "bench", "topic_got": "bench", "of_peers": "origin", "of_got": "origin", "of_pick": "origin", "of_fetch": "origin", "of_fetched": "origin",
+    "ref_read": "bench", "topic_got": "bench", "of_peers": "origin", "of_got": "origin", "of_pick": "origin", "of_find": "origin", "of_find_got": "origin", "of_fetch": "origin", "of_fetched": "origin",
     "f_product_sheet": "product", "f_product_pick": "product", "f_product_cands": "product", "f_product_same": "product", "s_cands": "product", "s_cand_look": "product",
     "s_product_done": "product", "f_research_got": "research", "f_research_check": "research", "s_research_check": "research", "f_material": "material",
     "f_material_got": "material", "f_shots_got": "material", "f_clean": "material", "f_clean_got": "material", "f_draft": "material", "f_draft_got": "material",
