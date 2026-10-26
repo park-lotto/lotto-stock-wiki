@@ -1638,6 +1638,23 @@ def ph_script(st, m, rp, u):
     return {"do": [{"id": "msheets", "cmd": "mat_sheets", "files": files[:5]}], "then": "script_ask"}
 
 
+def _src_rule_ctx(st) -> str:
+    """컷 src 로 쓸 수 있는 파일 이름(실제로 받은 것만)과 판의 사진 컷 상한 — 대본 질문에 그대로 싣는다(10-27 썬크림 회원편: 질문이 'prod_*.jpg' 꼴만 알려
+    회원 Claude 가 없는 prod_1.jpg 를 지어 쓰고, 잇템로그판 photo_share_max 0 인데 사진 컷을 넣어 장면 맞추기에서 반려). 판정 주인은 그대로
+    (rules.material_problems '받은 파일이 아니다' · render_bench.photo_gate) — 여기는 걸릴 것을 처음부터 안 쓰게 알려 주기만."""
+    from tools.calcopy.hybrid import styles as STY
+    names = sorted(_all_dims(st))
+    R = (STY.rhythm(_style(st["version"])) or {}).get("photo_share_max") or {}
+    pics = [n for n in names if Path(n).suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")]
+    rule = ""
+    if R.get("v") is not None and float(R["v"]) <= 0.0:
+        rule = "\n★이 판은 사진(그림 파일) 컷을 쓰지 않는다(판 photo_share_max 0 — 벤치 6편 사진 컷 0). 컷 src 는 영상 파일만."
+    elif R.get("v") is not None:
+        rule = f"\n사진 컷은 전체 길이의 {float(R['v']):.0%} 까지(판 photo_share_max)."
+    return ("\n\n## 컷 src 로 쓸 수 있는 파일(이 이름 그대로 — 목록 밖 이름을 만들지 마라)\n" + ", ".join(names) +
+            (f"\n(사진 파일: {', '.join(pics)})" if pics else "") + rule) if names else ""
+
+
 def _script_ask(st, fail: str = "") -> dict:
     from tools.calcopy.hybrid import render_bench, styles as STY
     v = st["version"]
@@ -1654,7 +1671,7 @@ def _script_ask(st, fail: str = "") -> dict:
            "\n\n## 원음 받아쓰기(구간마다 — 모델 둘이면 둘 다)\n" + json.dumps(st.get("asr") or {}, ensure_ascii=False)[:6000] +
            "\n\n## 재료 파일(시트 순서 = 앞 5개)\n" + json.dumps(ms.get("list") or [], ensure_ascii=False) +
            "\n실제 크기(crop 은 이 픽셀로 — 시트는 줄인 미리보기다): " + json.dumps(_all_dims(st), ensure_ascii=False) + _shots_ctx(st) +
-           _foreign_script_ctx(st) + (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
+           _foreign_script_ctx(st) + _src_rule_ctx(st) + (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
     imgs = [_img(x) for x in ms.get("sheets") or []]
     if ms.get("bench_caps"):     # 소재 쇼츠 박힌 한국어 자막(1초 칸) — 잘된 편의 말맛 그대로(사장님 10-26)
         ctx += ("\n\n## 말맛 — 마지막 그림 = 소재 쇼츠 1초 자막 시트(한국 재편집이 잘된 말투)\n"

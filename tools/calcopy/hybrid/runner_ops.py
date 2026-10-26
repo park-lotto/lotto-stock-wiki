@@ -1610,18 +1610,39 @@ def c_of_settle(W, d):
     return {"ok": True, "noted": noted}
 
 
+META_PAR = {"yt": 2, "other": 8}     # 후보 정보(yt-dlp 메타) 동시 받기 — 유튜브는 막힘 방지 천천히 받기(YT_SLOW)라 2개만, 틱톡·인스타는 8개
+
+
+def _metas(urls: list[str]) -> dict:
+    """(판단 주인 — 후보 정보 받기 속도) 주소 → origin_find.meta. 10-27 실측: 후보 하나 7~18초를 100개쯤 한 줄로 받아 원본 찾기 한 바퀴 849~1047초
+    (예산 넘겨 시간 초과 2/3편). 유튜브 2개·나머지 8개씩 동시에. 받는 정보·판정은 그대로."""
+    from concurrent.futures import ThreadPoolExecutor
+    from tools.calcopy import origin_find as OF
+    out: dict = {}
+    yt = [u for u in dict.fromkeys(urls) if "youtube.com" in u or "youtu.be" in u]
+    other = [u for u in dict.fromkeys(urls) if u not in yt]
+    for group, n in ((yt, META_PAR["yt"]), (other, META_PAR["other"])):
+        if group:
+            with ThreadPoolExecutor(n) as ex:
+                for u, m in zip(group, ex.map(OF.meta, group)):
+                    out[u] = m
+    return out
+
+
 def _peer_raw(qs: list, n: int, skip: set) -> list[dict]:
     """영어 검색어 → 유튜브(_search) + 틱톡·인스타(_web_links — 검색 주인 한 곳) 후보 — 렌즈와 같은 꼴(platform·id·url·메타)."""
     from tools.calcopy import origin_find as OF
     raw = [{"platform": "yt", "id": e.get("id"), "url": f"https://www.youtube.com/shorts/{e.get('id')}", **{k: e.get(k) for k in ("title", "channel", "channel_id", "dur", "views", "date")}}
            for e in _search(qs, n) if e.get("id") and e.get("id") not in skip]
     have = {("yt", c["id"]) for c in raw}
+    web = []
     for x in _web_links(qs):
         k = OF.vkey(x["url"])
         if k and k not in have and k[1] not in skip:
             have.add(k)
-            raw.append({"platform": k[0], "id": k[1], "url": OF.url_of(k[0], k[1], x["url"]), "by": "web:" + x["how"], **OF.meta(OF.url_of(k[0], k[1], x["url"]))})
-    return raw
+            web.append({"platform": k[0], "id": k[1], "url": OF.url_of(k[0], k[1], x["url"]), "by": "web:" + x["how"]})
+    ms = _metas([c["url"] for c in web])
+    return raw + [{**c, **ms.get(c["url"], {})} for c in web]
 
 
 def c_origin_foreign(W, d):
@@ -1656,9 +1677,11 @@ def c_origin_foreign(W, d):
                         k = OF.vkey(r["href"])
                         if k and k[1] != d.get("bench_id"):
                             found.setdefault(k, {"href": r["href"], "text": r["text"], "hits": 0})["hits"] += 1
-            for (pf, vid), x in sorted(found.items(), key=lambda kv: -kv[1]["hits"])[:60]:     # 여러 장에 뜬 것 먼저(잘라 올리기로 후보가 13 → 58, 10-26)
-                m = OF.meta(OF.url_of(pf, vid, x["href"]))
-                raw.append({"platform": pf, "id": vid, "url": OF.url_of(pf, vid, x["href"]), "lens_text": x["text"], "lens_hits": x["hits"], **m})
+            top = sorted(found.items(), key=lambda kv: -kv[1]["hits"])[:60]     # 여러 장에 뜬 것 먼저(잘라 올리기로 후보가 13 → 58, 10-26)
+            ms = _metas([OF.url_of(pf, vid, x["href"]) for (pf, vid), x in top])
+            for (pf, vid), x in top:
+                u = OF.url_of(pf, vid, x["href"])
+                raw.append({"platform": pf, "id": vid, "url": u, "lens_text": x["text"], "lens_hits": x["hits"], **ms.get(u, {})})
             if d.get("queries"):        # 키워드 검색도 처음부터(사장님 10-26) — 원본 그대로인 영상이 검색으로 잡혀도 같은 촬영분 판정에 같이 든다
                 have = {(c["platform"], c["id"]) for c in raw}
                 for c in _peer_raw(d["queries"], int(d.get("n") or 8), skip | {d.get("bench_id")}):
@@ -1666,23 +1689,25 @@ def c_origin_foreign(W, d):
                         raw.append({**c, "found_by": "keyword"})
     else:
         if mode == "find":          # 회원 Claude 가 직접 찾은 주소(flow f_of_find, 10-26) — 메타·썸네일만 받아 같은 영상 판정 시트에 싣는다(판정은 서버 질문)
-            for url in [str(x) for x in d.get("urls") or []][:8]:
-                k = OF.vkey(url)
-                if not k or k[1] == d.get("bench_id"):
-                    continue
-                raw.append({"platform": k[0], "id": k[1], "url": OF.url_of(k[0], k[1], url), "by": "member", **OF.meta(OF.url_of(k[0], k[1], url))})
+            given = [(k, OF.url_of(k[0], k[1], url)) for url in [str(x) for x in d.get("urls") or []][:8] for k in [OF.vkey(url)] if k and k[1] != d.get("bench_id")]
+            ms = _metas([u for _, u in given])
+            for k, u in given:
+                raw.append({"platform": k[0], "id": k[1], "url": u, "by": "member", **ms.get(u, {})})
         for e in _search(d.get("queries") or [], int(d.get("n") or 12), shorts=(mode == "find")):
             raw.append({"platform": "yt", "id": e.get("id"), "url": f"https://www.youtube.com/shorts/{e.get('id')}", **{k: e.get(k) for k in ("title", "channel", "channel_id", "dur", "views", "date")}})
         if mode in ("find", "peers") and d.get("queries"):     # 틱톡·인스타도 같은 검색어로(같은 종류 해외 반응 peers 도 — 사장님 10-26 "유튜브 인스타 틱톡 모두 외국어로")(관제263 10-26 — 원본이 틱톡에만 있던 잇템로그 편)
             have = {(c.get("platform"), c.get("id")) for c in raw}
+            web = []
             for x in _web_links(d.get("queries") or [], int(d.get("web_n") or WEB_PER_Q)):
                 k = OF.vkey(x["url"])
                 if not k or k in have or k[1] == d.get("bench_id") or k[1] in skip:
                     continue
                 have.add(k)
-                raw.append({"platform": k[0], "id": k[1], "url": OF.url_of(k[0], k[1], x["url"]), "by": "web:" + x["how"], **OF.meta(OF.url_of(k[0], k[1], x["url"]))})
-                if sum(1 for c in raw if str(c.get("by") or "").startswith("web:")) >= WEB_MAX:
+                web.append({"platform": k[0], "id": k[1], "url": OF.url_of(k[0], k[1], x["url"]), "by": "web:" + x["how"]})
+                if len(web) >= WEB_MAX:
                     break
+            ms = _metas([c["url"] for c in web])
+            raw += [{**c, **ms.get(c["url"], {})} for c in web]
     cands, seen, bad = [], set(), []
     for c in raw:
         if c.get("by") == "member" and c.get("why"):      # 회원 Claude 가 준 주소를 못 열었으면 이유를 돌려준다(조용히 버리지 않는다)
@@ -1716,7 +1741,17 @@ def c_clean_text(W, d):
             pass                            # 관문 멈춤이어도 시간표는 관문 앞에서 저장된다
     t0 = time.strftime("%Y-%m-%d %H:%M:%S")
     src, send, used = VC.plan_spans(W / "doc" / v, d.get("shots") or {}, d.get("done") or {})
-    r = VC.clean_used(src, send, mode, log=lambda s: print(s, file=sys.stderr))
+    import threading
+    alive = threading.Event()
+
+    def _beat():            # VMake 조각 하나가 85~125초(10-26 실측) — 그동안 무음이라 감시가 '진행 신호 180초 없음'으로 끊었다(10-26 회원 여드름편 clean_text 183초 끔)
+        while not alive.wait(30):
+            progress(W, "자막 지우기")
+    threading.Thread(target=_beat, daemon=True).start()
+    try:
+        r = VC.clean_used(src, send, mode, log=lambda s: print(s, file=sys.stderr))
+    finally:
+        alive.set()
     sent = VC.sent_from_ledger(src, t0)
     r.update({"send": send, "used_sec": VC.span_sec(used), "send_sec": VC.span_sec(send), "sent": sent, "sent_bad": VC.sent_check(sent, used)})
     sys.stderr.write(f"[clean_text] 쓰는 구간 {r['used_sec']}초 중 자막 컷 {r['send_sec']}초 → VMake {r['calls']}회 · 보낸 초 {sent} · {r['mode']}: {r.get('why')}\n")

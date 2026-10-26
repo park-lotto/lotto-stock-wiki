@@ -145,7 +145,11 @@ def make_handler(W: Path):
         def do_POST(self):
             u = urlparse(self.path)
             n = int(self.headers.get("Content-Length") or 0)
-            body = json.loads(self.rfile.read(n) or b"{}")
+            raw = self.rfile.read(n) or b"{}"
+            try:
+                body = json.loads(raw.decode("utf-8"))
+            except UnicodeDecodeError:                 # 한국어 윈도 명령창(curl)이 보내는 cp949 — 브라우저는 늘 UTF-8
+                body = json.loads(raw.decode("cp949"))
             if u.path == "/api/approve":
                 msg = launch(W, ["--resume", "--approve"])
             elif u.path == "/api/retry":
