@@ -439,6 +439,10 @@ def _out(st: dict, status: str, phase: str, **kw) -> dict:
         lst = _stage_list(st)
         stage = {**stage, "no": [x for x, _ in lst].index(back) + 1, "text": dict(lst)[back], "key": back}
     res = {"status": status, "stage": stage, "message": msg, "traps": traps, "state": st}
+    fs = finding_say(st) if stage["key"] == "origin" and status != "stop" else None
+    if fs:                         # 원본 찾기가 길어지는 동안 진행 줄(주인 finding_say) — 회원 PC 가 5분마다 'N분째'를 새로 채운다
+        res["message"] = f"{msg} · {finding_line(fs)}"
+        res["finding"] = {**fs, "base": msg}
     for k, v in kw.items():
         if v is not None and k != "detail":
             res[k] = v
@@ -634,7 +638,7 @@ def ph_setup_check(st, m, rp, u):
     if miss:
         st["log"].append("준비 확인: 빠진 것 " + ", ".join(str(x.get("id")) for x in miss))
         raise _Stop(SETUP_WHY, setup_fix(miss), retry="setup", ask_member=True)       # 다시 시도 = 준비를 다시 잰다
-    st["env"] = {k: env.get(k) for k in ("keys", "dev", "cache", "asr")}
+    st["env"] = {k: env.get(k) for k in ("keys", "dev", "cache", "asr", "done_refs")}     # done_refs = 이 PC 작업 기록의 만든 편(둘째 소재 고르기가 뺀다)
     return {"goto": "bench"}
 
 
@@ -1106,7 +1110,10 @@ def ph_task_got(st, m, rp, u):
     url, prod = str(a.get("origin_url") or "").strip(), str(a.get("product") or "").strip()
     if act == "give" and url and t.get("stage") == "origin":
         if _fmt(st) == "해외원본형":
-            return {"goto": "of_find_got", "feed": {"rp": {"of_find": {"urls": [url], "queries": [], "why": str(a.get("note") or "")}}}}
+            give = {"urls": [url], "queries": [], "why": str(a.get("note") or "")}
+            if st.get("slots"):          # 소재 2편 함께 찾기 — 1편(회원이 준 소재) 칸에 그 주소로(f_of_dual_retry)
+                return {"goto": "of_dual_retry", "feed": {"rp": {"s1:of_find": give}}}
+            return {"goto": "of_find_got", "feed": {"rp": {"of_find": give}}}
         st["stopped"] = {**stopped, "origin_missing": True}
         return ph_stopped(st, {}, {}, {"origin_url": url})
     if act == "give" and prod and t.get("stage") == "product":
@@ -2305,6 +2312,10 @@ def f_of_got(st, m, rp, u):
     mode = o.get("mode") or ("peers" if st.get("_peers_done") else "lens")
     cands = [c for c in o.get("cands") or [] if isinstance(c, dict)]
     st["of_cands"], st["of_mode"] = cands, mode
+    seen = st.setdefault("of_seen", [])           # 지금까지 본 후보(플랫폼:id) — 진행 신호(이번 바퀴 새 후보 수)·회원 진행 줄 '후보 N개'
+    new = list(dict.fromkeys(f"{c.get('platform')}:{c.get('id')}" for c in cands if f"{c.get('platform')}:{c.get('id')}" not in seen))
+    seen += new
+    st["of_find_new"] = len(new)
     if o.get("error") or not cands or not o.get("sheets"):
         st["log"].append(f"원본 후보 없음({mode}): {str(o.get('error') or '')[:200]}")
         if mode in ("lens", "find"):              # 자동(렌즈)·회원 Claude 찾기 후보가 없다 → 회원 Claude 가 직접 찾는 단계(f_of_find, 10-26)
@@ -2332,18 +2343,14 @@ def f_of_pick(st, m, rp, u):
         same = [by_n[int(n)] for n in a.get("same") or [] if str(n).isdigit() and int(n) in by_n]
         seed = {"key": f"yt:{st['bench'].get('id')}", "korean": True, "date": st["bench"].get("date")}
         vs = [seed] + [{**c, "key": f"{c.get('platform')}:{c.get('id')}"} for c in same]
-        picked = [v for v in OF.pick_origins(vs) if v.get("platform") == "yt"]       # 주인 = origin_find.pick_origins(해외 채널마다 가장 먼저·한국 재편집보다 늦은 것 제외)
-        skipped = [v["key"] for v in OF.pick_origins(vs) if v.get("platform") != "yt"]
-        if skipped:
-            st["log"].append(f"유튜브 밖 원본은 받기 길이 없어 뺌: {skipped}")
+        picked = OF.pick_origins(vs)       # 주인 = origin_find.pick_origins(해외 채널마다 가장 먼저·한국 재편집보다 늦은 것 제외) — 유튜브·틱톡·인스타 모두(10-26 '유튜브만' 버림 제거, 받기 = runner c_origin_get)
         for v in picked[:F_ORIGINS_MAX]:
-            st["origins"].append({"id": v["id"], "info": {k: v.get(k) for k in ("id", "title", "channel", "date", "dur")}, "how": "렌즈 같은 촬영분"})
+            st["origins"].append({"id": v["id"], "platform": v.get("platform") or "yt", "url": v.get("url") or OF.url_of(v.get("platform") or "yt", v["id"]),
+                                  "info": {k: v.get(k) for k in ("id", "title", "channel", "date", "dur")}, "how": "렌즈 같은 촬영분"})
         st["log"].append(f"{'렌즈' if st.get('of_mode') == 'lens' else '회원 찾기'} 같은 영상 {len(same)}개 → 원본 {[o['id'] for o in st['origins']]}: {str(a.get('why'))[:120]}")
-        if not st["origins"]:                    # 결과 검사 불합격 → 이유를 들고 회원 Claude 가 다시 찾기(f_of_find 한도 안) — 회원에게 '다시 시도'를 묻지 않는다
+        if not st["origins"]:                    # 결과 검사 불합격 → 이유를 들고 회원 Claude 가 다시 찾기(f_of_find 시간 예산 안) — 회원에게 '다시 시도'를 묻지 않는다
             why = str(a.get("why") or "")[:200]
-            if same and skipped:
-                why += " · 같은 영상이지만 유튜브 밖(받기 안 됨): " + ", ".join(skipped)[:160]
-            elif same:
+            if same:
                 why += " · 같은 영상이지만 한국 재편집이거나 소재보다 늦게 올린 것(퍼 간 쪽)"
             st["of_find_why"] = why + st.get("of_bad", "")
             return {"goto": "of_find"}
@@ -2354,25 +2361,35 @@ def f_of_pick(st, m, rp, u):
     have = {o["id"] for o in st["origins"]}
     for n in a.get("picks") or []:
         c = by_n.get(int(n)) if str(n).isdigit() else None
-        if not c or c.get("id") in have or c.get("korean") or c.get("platform") != "yt":
+        if not c or c.get("id") in have or c.get("korean"):
             continue
         if len(st["origins"]) >= F_ORIGINS_MAX:
             break
-        st["origins"].append({"id": c["id"], "info": {k: c.get(k) for k in ("id", "title", "channel", "date", "dur")}, "how": "같은 제품 다른 해외 반응"})
+        st["origins"].append({"id": c["id"], "platform": c.get("platform") or "yt", "url": c.get("url") or OF.url_of(c.get("platform") or "yt", c["id"]), "info": {k: c.get(k) for k in ("id", "title", "channel", "date", "dur")}, "how": "같은 제품 다른 해외 반응"})
         have.add(c["id"])
     st["log"].append(f"같은 제품 다른 해외 반응 → 원본 {[o['id'] for o in st['origins']]}: {str(a.get('why'))[:120]}")
     return {"goto": "of_fetch"}
 
 
-F_FIND_MAX = 3         # 회원 Claude 직접 찾기 바퀴(한 바퀴 = 찾아 답 → 실행기 메타·썸네일 → 같은 영상 판정)
+# 회원 Claude 직접 찾기 시간 예산(관제263 10-26 사장님 "계속 찾을 수 있게" — 바퀴 수 한도 F_FIND_MAX 3 을 시간으로).
+#   근거: run3(10-26 17:27~17:40) 회원 찾기 3바퀴 = 렌즈 280초 뒤 약 8분(바퀴당 2~3분) · 사장님이 틱톡 원본을 손으로 찾은 시간 6분.
+#   예산 20분 = 바퀴 7~10개. 넘어도 바로 앞 바퀴에 새 후보가 있으면 계속(진행 신호 — runner 감시 장치와 같은 꼴), 60분이면 무조건 마침.
+F_FIND_SEC = 20 * 60
+F_FIND_HARD = 60 * 60
+F_SAY_STEP = 5 * 60    # 회원 진행 줄 'N분째' 를 5분마다(사장님 10-26 "5분에 한 번씩 계속 안내")
 
 OF_FIND_ASK = """너는 해외 원본 찾기 담당이다. 자동 검색(구글 렌즈)으로는 이 소재 쇼츠의 해외 원본을 못 찾았다 — 네가 직접 찾아라.
-목표: 이 소재(한국 재편집 쇼츠)가 가져다 쓴 **해외 원본 영상의 주소**. 짜깁기면 컷마다 원본이 다르다 — 찾은 것 전부(최대 8개).
-도구: ①네 웹 검색(WebSearch·WebFetch) ②queries 에 적은 검색어 = 숏템이 회원 PC 에서 유튜브 쇼츠 검색을 돌려 후보로 붙인다 ③urls 에 적은 주소 = 숏템이 그 영상 정보·썸네일을 받아 같은 영상인지 소재 장면과 나란히 판정한다(결과 검사 — 통과해야 다음 단계).
-★받기는 유튜브만 된다 — 틱톡·인스타에서 찾았으면 같은 사람(같은 아이디·이름)의 유튜브 쇼츠 업로드를 찾아 유튜브 주소로 준다.
+목표: 이 소재(한국 재편집 쇼츠)가 가져다 쓴 **해외 원본 영상의 주소**. 원본은 유튜브·틱톡·인스타그램 어디에 있어도 된다(셋 다 받을 수 있다).
+짜깁기면 컷마다 원본이 다르다 — **컷마다 따로** 찾는다(답 = 컷별 표, 최대 8컷).
+도구: ①네 웹 검색(WebSearch·WebFetch) — 틱톡·인스타는 계정 아이디·해시태그·브랜드·제품 이름으로 찾기 쉽다(브랜드 공식 계정·광고 크리에이터 영상이 원본인 경우가 많다)
+②queries 에 적은 검색어 = 숏템이 회원 PC 에서 유튜브 쇼츠 검색·틱톡 검색·인스타 릴스(구글) 검색을 돌려 후보로 붙인다
+③urls 에 적은 주소(유튜브 쇼츠·틱톡 영상·인스타 릴스 한 편 주소) = 숏템이 그 영상 정보·썸네일을 받아 같은 영상인지 소재 장면과 나란히 판정한다(결과 검사 — 통과해야 다음 단계).
+★틱톡·인스타 주소는 영상 한 편 주소 그대로(…tiktok.com/@아이디/video/숫자 · …instagram.com/reel/코드). 프로필·해시태그·검색 페이지 주소는 판정할 수 없다.
 ★같은 촬영분만 원본이다(같은 사람·같은 장소·같은 순간). 같은 제품을 다른 사람이 쓴 영상은 아니다. 한국 채널 재편집·소재보다 늦게 올린 계정은 원본이 아니다.
-JSON 하나: {"urls": ["https://www.youtube.com/shorts/…", …], "queries": ["영어 검색어 3~6단어", …], "why": "컷별로 무엇을 단서로 찾았는지 한 줄"}
-(urls·queries 둘 다 비우면 이번 바퀴는 못 찾은 것으로 친다)"""
+★지난 시도에서 판정에 떨어진 주소·같은 검색어는 다시 주지 마라 — 컷마다 다른 단서(사람 생김새·장소·글자·소리)를 써라.
+JSON 하나: {"cuts": [{"cut": "S1 또는 컷 설명", "seen": "그 컷에 보이는 것 한 줄", "urls": ["https://…"], "queries": ["영어 검색어 3~6단어", …]}, …],
+ "why": "컷별로 무엇을 단서로 찾았는지 한 줄"}
+(모든 컷의 urls·queries 가 비면 이번 바퀴는 못 찾은 것으로 친다)"""
 
 
 def _bad_urls(o: dict) -> str:
@@ -2380,13 +2397,22 @@ def _bad_urls(o: dict) -> str:
     return (" · 못 연 주소: " + "; ".join(f"{x.get('url')} ({x.get('why')})" for x in b[:4])) if b else ""
 
 
+def _now() -> float:
+    import time
+    return time.time()
+
+
 def f_of_find(st, m, rp, u):
     """해외 원본 — 자동(렌즈)이 못 찾으면 회원 Claude 가 목표+가이드+도구로 직접 찾는다(사장님 10-26 'Claude=두뇌, 우리=하네스·가이드·규칙').
-    판단 주인: 이 단계(질문·바퀴 한도) · 결과 검사 = 기존 같은 영상 판정(of_judge = origin_find.JUDGE_PROMPT)+origin_find.pick_origins 그대로.
-    한도(F_FIND_MAX)를 다 쓰면 그때만 회원에게 묻는다 — 다시 시도 = 회원 Claude 찾기 한 바퀴 더(회원이 준 주소를 실어)."""
+    판단 주인: 이 단계(질문·시간 예산) · 결과 검사 = 기존 같은 영상 판정(of_judge = origin_find.JUDGE_PROMPT)+origin_find.pick_origins 그대로.
+    예산(F_FIND_SEC, 새 후보가 계속 나오면 F_FIND_HARD 까지)을 다 쓰면 그때만 회원에게 묻는다 — 다시 시도 = 예산을 새로 받아 찾기."""
     n = int(st.get("of_find_n") or 0)
-    if n >= F_FIND_MAX:
+    t0 = st.setdefault("of_find_t0", _now())
+    used = _now() - t0
+    if n and (used >= F_FIND_HARD or (used >= F_FIND_SEC and not st.get("of_find_new"))):
+        st["log"].append(f"회원 찾기 마침: {n}바퀴 · {used / 60:.1f}분 · 본 후보 {len(st.get('of_seen') or [])}개")
         st["of_find_n"] = 0
+        st.pop("of_find_t0", None)
         raise _Stop("해외 원본을 못 찾았어요", "다시 시도해 주시면 숏템이 한 번 더 찾아볼게요", retry="of_find", ask_member=True)   # 회원에게 주소·다른 영상을 요구하지 않는다(test_redo_words, 10-26)
     st["of_find_n"] = n + 1
     B, R0 = st.get("bench") or {}, st.get("read") or {}
@@ -2397,22 +2423,24 @@ def f_of_find(st, m, rp, u):
         "\n설명: " + str(B.get("desc") or "")[:1200] + "\n받아쓰기: " + lines,
         "\n판독: 출연 " + str(R0.get("people")) + " · 제품 낱말 " + str(R0.get("product_words")) + " · 브랜드 단서 " + str(R0.get("brand_hint")),
         " · 앞서 쓴 검색어 " + str(R0.get("queries_en")),
-        "\n\n## 지난 시도(" + str(n) + "/" + str(F_FIND_MAX) + " 바퀴)\n" + ("\n".join(tried[-6:]) or "없음"),
+        f"\n\n## 지난 시도({n}바퀴 · {used / 60:.0f}분 지남 · 본 후보 {len(st.get('of_seen') or [])}개 — 시간이 남아 있으니 계속 찾는다)\n" + ("\n".join(tried[-8:]) or "없음"),
         "\n바로 앞 결과: " + str(st.get("of_find_why") or "-")])
     show = [_img(x) for x in (B.get("sheet"), B.get("big")) if x]
-    return {"review": [_rv("of_find", OF_FIND_ASK + "\n\n" + _brief("origin_foreign.md") + ctx, show, need=("urls", "queries"))], "then": "of_find_got"}
-
+    return {"review": [_rv("of_find", OF_FIND_ASK + "\n\n" + _brief("origin_foreign.md") + ctx, show, need=("cuts",))], "then": "of_find_got"}
 
 
 def f_of_find_got(st, m, rp, u):
+    """회원 Claude 컷별 표 → 주소·검색어(합쳐서) → 실행기(메타·썸네일·유튜브 쇼츠·틱톡·인스타 검색). 옛 꼴(urls·queries)도 받는다(제작자 과제 'give' 길)."""
     from tools.calcopy import origin_find as OF
-    a = _reply(rp, "of_find", ("urls", "queries"))
-    urls = [str(x).strip() for x in a.get("urls") or [] if isinstance(x, str) and OF.vkey(str(x))][:8]
-    qs = [str(x).strip()[:80] for x in a.get("queries") or [] if isinstance(x, str) and str(x).strip()][:4]
-    st.setdefault("of_find_tried", []).append(f"- {st.get('of_find_n')}바퀴: 주소 {urls or '없음'} · 검색어 {qs or '없음'} · {str(a.get('why') or '')[:160]}")
-    st["log"].append(f"회원 찾기 {st.get('of_find_n')}바퀴: 주소 {len(urls)} · 검색어 {len(qs)}")
+    a = _reply(rp, "of_find", ())
+    cuts = [c for c in (a.get("cuts") or []) if isinstance(c, dict)] or [{"urls": a.get("urls"), "queries": a.get("queries")}]
+    urls = list(dict.fromkeys(str(x).strip() for c in cuts for x in c.get("urls") or [] if isinstance(x, str) and OF.vkey(str(x))))[:8]
+    qs = list(dict.fromkeys(str(x).strip()[:80] for c in cuts for x in c.get("queries") or [] if isinstance(x, str) and str(x).strip()))[:6]
+    st.setdefault("of_find_tried", []).append(f"- {st.get('of_find_n')}바퀴(컷 {len(cuts)}): 주소 {urls or '없음'} · 검색어 {qs or '없음'} · {str(a.get('why') or '')[:160]}")
+    st["log"].append(f"회원 찾기 {st.get('of_find_n')}바퀴: 컷 {len(cuts)} · 주소 {len(urls)} · 검색어 {len(qs)}")
     if not urls and not qs:
         st["of_find_why"] = "주소·검색어를 하나도 안 줬음"
+        st["of_find_new"] = 0
         return {"goto": "of_find"}
     have = [o["id"] for o in st.get("origins") or []]
     return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "find", "urls": urls, "queries": qs, "n": 10, "bench_id": (st.get("bench") or {}).get("id"),
@@ -2421,8 +2449,10 @@ def f_of_find_got(st, m, rp, u):
 
 def f_of_fetch(st, m, rp, u):
     """원본 받기(해외 쇼츠는 짧다 — 통째로). 순서 = 고른 순서(소재의 원본 → 렌즈 원본(올린 날짜 순, pick_origins) → 같은 제품 다른 반응) —
-    판 v2 '원본 2~3개 시간순'은 원본마다 그 안에서 시간순이고, 이어 붙이는 순서는 주 원본이 먼저(10-24 ep13: MissDarcei → milky)."""
-    return {"do": [{"id": f"og_{k}", "cmd": "origin_get", "vid": o["id"], "a": 0.0, "b": float((o.get("info") or {}).get("dur") or 600), "ts": [], "full": True}
+    판 v2 '원본 2~3개 시간순'은 원본마다 그 안에서 시간순이고, 이어 붙이는 순서는 주 원본이 먼저(10-24 ep13: MissDarcei → milky).
+    틱톡·인스타 원본은 url 을 같이 준다(받기 = runner c_origin_get → media_download)."""
+    return {"do": [{"id": f"og_{k}", "cmd": "origin_get", "vid": o["id"], "a": 0.0, "b": float((o.get("info") or {}).get("dur") or 600), "ts": [], "full": True,
+                    **({"url": o["url"], "platform": o.get("platform")} if (o.get("platform") or "yt") != "yt" and o.get("url") else {})}
                    for k, o in enumerate(st["origins"])], "then": "of_fetched"}
 
 
@@ -2440,9 +2470,234 @@ def f_of_fetched(st, m, rp, u):
         raise _Stop("해외 원본 영상을 받지 못했어요", "잠시 뒤 다시 시도해 주시면 받기부터 이어 갈게요", retry="of_fetch", auto=True)
     st["origins"] = keep
     o0 = keep[0]
-    st["origin"] = {"id": o0["id"], "url": f"https://www.youtube.com/watch?v={o0['id']}", "files": files, "offset": 0.0, "offset_measured": True,
+    pf = o0.get("platform") or "yt"
+    st["origin"] = {"id": o0["id"], "url": o0.get("url") if pf != "yt" and o0.get("url") else f"https://www.youtube.com/watch?v={o0['id']}", "platform": pf,
+                    "files": files, "offset": 0.0, "offset_measured": True,
                     "matched": [], "window": [0.0, max(float(f.get("dur") or 0) for f in files)], "info": o0.get("info") or {}}
     return {"goto": "f_product_sheet"}
+
+
+# ── 해외원본형 소재 2편 함께 찾기(사장님 10-26 "소재를 두 개 골라서 각각 원본을 찾는다 → 먼저 원본이 확보된 소재로 제작") ─────────
+# 판단 주인 두 곳: ① 둘째 소재 고르기 = pick_alt_source  ② 두 소재를 함께 굴리고 먼저 원본을 확보한 쪽으로 넘어가기 = f_of_dual(소재 칸 스케줄러).
+# 칸마다 단계 처리기는 위의 해외원본형 처리기 그대로(ph_bench → f_bench_got → f_ref_read → 렌즈 → f_of_got/f_of_pick → f_of_find …) — 판단을 두 벌로 적지 않는다.
+# 칸 2 의 실행기 일은 작업 폴더 alt1/ 에서(do 의 sub), 이긴 칸이 alt1 이면 of_settle 이 파일을 맨 위로 옮긴다. 진 소재 = 회원 작업 기록 '멈춘 편'(다시 씀).
+ALT_LIST = "벤치상위.json"     # channel/<slug>/_kal/벤치상위.json — 그 판 벤치 채널 쇼츠(조회순 원천: 칼카피 select 단계 top.json)
+SLOT_SHARED = ("sid", "version", "fmt", "slug", "env", "given")
+SLOT_BENCH = ("bench", "bench_got", "ref_read")
+ALT_NOTICE_WON = "주신 영상은 원본을 아직 찾는 중이라, 함께 찾던 같은 채널 영상으로 먼저 만들게요"
+
+
+def pick_alt_source(st: dict) -> dict | None:
+    """(판단 주인 — 둘째 소재 고르기) 그 판 벤치 상위(조회순) 중 회원이 준 소재·이 PC 작업 기록의 만든 편(멈춘 편은 다시 씀 — runner done_refs) 아닌 첫 편."""
+    from tools.calcopy import origin_find as OF
+    f = PRESETS_FILE.parent / str(st.get("slug") or "-") / "_kal" / ALT_LIST
+    if not f.is_file():
+        st["log"].append(f"둘째 소재 없음: {f.name} 없음({st.get('slug')})")
+        return None
+    rows = [r for r in json.loads(f.read_text(encoding="utf-8")).get("rows") or [] if isinstance(r, dict) and r.get("id")]
+    k = OF.vkey(str(st.get("ref") or ""))
+    own = k[1] if k else ""
+    done = set((st.get("env") or {}).get("done_refs") or [])
+    for r in sorted(rows, key=lambda r: -(r.get("views") or 0)):
+        if r["id"] == own or r["id"] in done:
+            continue
+        return {"url": f"https://www.youtube.com/shorts/{r['id']}", "id": r["id"], "views": r.get("views"), "title": r.get("title")}
+    st["log"].append("둘째 소재 없음: 벤치 상위가 전부 만든 편")
+    return None
+
+
+def f_of_dual_start(st, m, rp, u):
+    alt = pick_alt_source(st)
+    st["slots"] = [{"ref": st["ref"], "sub": "", "phase": "bench", "st": {}}] + ([{"ref": alt["url"], "sub": "alt1", "phase": "bench", "st": {}, "pick": alt}] if alt else [])
+    st["finding"] = {"t0": _now()}
+    st["log"].append("소재 함께 찾기: " + " · ".join(s["ref"] for s in st["slots"]) + (f" (둘째 = 벤치 조회 {alt.get('views')})" if alt else ""))
+    return {"goto": "of_dual_b"}
+
+
+def _slot_view(st: dict, sl: dict) -> dict:
+    return {**{k: st[k] for k in SLOT_SHARED if k in st}, **sl["st"], "ref": sl["ref"], "log": []}
+
+
+def _slot_keep(st: dict, i: int, sl: dict, view: dict) -> None:
+    st["log"] += [f"[소재{i + 1}] {x}" for x in view.get("log") or []]
+    sl["st"] = {k: v for k, v in view.items() if k not in SLOT_SHARED and k not in ("log", "ref")}
+
+
+def _slot_run(st: dict, i: int, mi: dict, ri: dict) -> None:
+    """소재 칸 하나를 굴린다 — 처리기가 일(do·review)을 낼 때까지 · 원본 확보(goto of_fetch)면 won · 멈춤은 그 칸만(잠깐의 문제는 스스로 한 번 다시)."""
+    sl = st["slots"][i]
+    sl.pop("pend", None)
+    ph, m_, rp_ = sl["phase"], mi, ri
+    for attempt in range(2):
+        view = _slot_view(st, sl)
+        try:
+            for _ in range(20):
+                h = FORMAT_PHASES["해외원본형"].get(ph) if ph != "bench" else ph_bench
+                h = h or PHASES.get(ph)
+                if h is None:
+                    raise _Stop("만드는 중에 문제가 생겼어요", AGAIN, detail="소재 칸 모르는 단계 " + str(ph))
+                r = h(view, m_, rp_, {})
+                m_, rp_ = {}, {}
+                if "goto" in r:
+                    if r["goto"] == "of_fetch":
+                        sl["won"] = round(_now() - float((st.get("finding") or {}).get("t0") or _now()), 1)
+                        break
+                    ph = r["goto"]
+                    if r.get("feed"):
+                        m_, rp_ = r["feed"].get("m") or {}, r["feed"].get("rp") or {}
+                    continue
+                if "do" in r or "review" in r:
+                    kind = "do" if "do" in r else "review"
+                    sl["asker"] = ph
+                    sl["pend"] = {"kind": kind, "items": r[kind], "sent": False}
+                    ph = r["then"]
+                    break
+                raise _Stop("만드는 중에 문제가 생겼어요", AGAIN, detail="소재 칸에서 처리 못 하는 답 " + str(list(r)))
+            sl["phase"] = ph
+            _slot_keep(st, i, sl, view)
+            return
+        except _Stop as e:
+            _slot_keep(st, i, sl, view)
+            back = e.retry or sl.get("asker")
+            key = f"{back}:{e.why}"
+            if e.auto and back and attempt == 0 and not (sl.get("auto") or {}).get(key):
+                sl.setdefault("auto", {})[key] = 1
+                st["log"].append(f"[소재{i + 1}] 스스로 다시 시도: {e.why} → {back}")
+                ph, m_, rp_ = back, {}, {}
+                continue
+            sl["phase"] = ph
+            sl["dead"] = {"why": e.why, "fix": e.fix, "retry": None if e.final else back, "final": bool(e.final), "ask_member": bool(e.ask_member),
+                          "detail": str(e.detail or "")[:300]}
+            st["log"].append(f"[소재{i + 1}] 찾기 마침: {e.why}" + (f" · {str(e.detail)[:200]}" if e.detail else ""))
+            return
+
+
+def _slot_items(i: int, sl: dict) -> list:
+    tag, sub = f"s{i + 1}:", sl.get("sub") or ""
+    out = []
+    for x in sl["pend"]["items"]:
+        x = {**x, "id": tag + str(x.get("id"))}
+        if sl["pend"]["kind"] == "do" and sub:
+            x["sub"] = sub
+        if sl["pend"]["kind"] == "review" and sub:
+            x["show"] = [({"file": sub + "/" + s["file"]} if isinstance(s, dict) and s.get("file") else s) for s in x.get("show") or []]
+        out.append(x)
+    return out
+
+
+def f_of_dual(st, m, rp, u):
+    """소재 칸들을 함께 굴린다 — 실행기 일이 있는 칸 먼저 한꺼번에, 없으면 판정·찾기 질문을 한꺼번에(회원 Claude 가 한 번에 답한다).
+    먼저 원본을 확보한 칸으로 넘어간다(같은 호출에서 둘이면 앞 칸 = 회원이 준 소재). 모든 칸이 멈추면 그때만 회원에게."""
+    slots = st["slots"]
+    ins = [({}, {}) for _ in slots]
+    for src, j in ((m, 0), (rp, 1)):
+        for k, v in (src or {}).items():
+            tag, _, rid = str(k).partition(":")
+            if tag[:1] == "s" and tag[1:].isdigit() and 1 <= int(tag[1:]) <= len(slots) and rid:
+                ins[int(tag[1:]) - 1][j][rid] = v
+    for i, sl in enumerate(slots):
+        if sl.get("dead") or sl.get("won") is not None:
+            continue
+        pend = sl.get("pend")
+        if pend and not pend.get("sent"):
+            continue                                   # 아직 안 낸 일 — 다른 칸 차례를 기다린다
+        if pend and pend.get("sent") and not (ins[i][0] or ins[i][1]):
+            pend["sent"] = False                       # 낸 일인데 답이 안 왔다(다시 시도 등) — 다시 낸다
+            continue
+        _slot_run(st, i, *ins[i])
+    won = [i for i, sl in enumerate(slots) if sl.get("won") is not None]
+    if won:
+        return _slot_adopt(st, won[0])
+    for sl in slots:                                   # 일도 결과도 없는 칸(있으면 안 된다) = 멈춘 칸으로 — 조용히 영원히 기다리지 않게
+        if not sl.get("dead") and sl.get("won") is None and not sl.get("pend"):
+            sl["dead"] = {"why": "만드는 중에 문제가 생겼어요", "fix": AGAIN, "retry": sl.get("asker") or "bench", "final": False, "detail": "소재 칸 할 일 없음 " + str(sl.get("phase"))}
+    live = [i for i, sl in enumerate(slots) if not sl.get("dead")]
+    fd = st.setdefault("finding", {"t0": _now()})
+    fd["n"] = [len((sl.get("st") or {}).get("of_seen") or []) for sl in slots]
+    fd["done"] = [bool(sl.get("dead")) for sl in slots]
+    if not live:
+        d = next((sl["dead"] for sl in slots if not sl["dead"].get("final")), slots[0]["dead"])
+        final = all(sl["dead"].get("final") for sl in slots)
+        raise _Stop(d["why"], d["fix"], retry=None if final else "of_dual_retry", final=final,
+                    ask_member=all(sl["dead"].get("ask_member") for sl in slots),   # 받기 실패처럼 회원 Claude(제작자 과제)가 풀 수 있는 것은 과제로 · 찾기 예산 끝은 회원에게
+                    detail=" / ".join(f"소재{k + 1} {sl['dead'].get('why')} {sl['dead'].get('detail') or ''}".strip() for k, sl in enumerate(slots)))
+    pick = [i for i in live if slots[i]["pend"]["kind"] == "do"] or live
+    items = []
+    for i in pick:
+        items += _slot_items(i, slots[i])
+        slots[i]["pend"]["sent"] = True
+    kind = slots[pick[0]]["pend"]["kind"]
+    then = "of_dual_b" if all(slots[i]["phase"] in SLOT_BENCH for i in live) else "of_dual"
+    return {kind: items, "then": then}
+
+
+def f_of_dual_retry(st, m, rp, u):
+    """다시 시도 — 멈춘 소재 칸을 그 칸이 멈춘 단계부터 다시(찾기 예산은 새로).
+    제작자 과제가 원본 주소를 줬으면(ph_task_got give → rp 's1:of_find') 1편 칸이 그 주소로 바로 판정(of_find_got)부터."""
+    for k, sl in enumerate(st.get("slots") or []):
+        d = sl.get("dead")
+        if d and not d.get("final"):
+            sl.pop("dead", None)
+            sl.pop("pend", None)
+            sl["phase"] = d.get("retry") or "bench"
+            sl["st"].pop("of_find_t0", None)
+            sl["st"]["of_find_n"] = 0
+        if f"s{k + 1}:of_find" in (rp or {}) and not sl.get("dead"):
+            sl["phase"] = "of_find_got"
+            sl["pend"] = {"kind": "review", "items": [], "sent": True}
+    st["finding"] = {"t0": _now()}
+    return f_of_dual(st, m, rp, u)
+
+
+def _slot_adopt(st: dict, i: int) -> dict:
+    """먼저 원본을 확보한 소재로 넘어간다 — 그 칸 상태를 편 상태로, 다른 칸은 기록만(회원 작업 기록 '멈춘 편' — 다음 제작 때 다시 씀)."""
+    slots = st["slots"]
+    sl = slots[i]
+    for k, v in (sl.get("st") or {}).items():
+        st[k] = v
+    t0 = float((st.get("finding") or {}).get("t0") or _now())
+    st["of_times"] = {"won_slot": i + 1, "ref": sl["ref"], "sec": sl.get("won"), "slots": len(slots)}
+    st["log"].append(f"원본 확보: 소재{i + 1} {sl['ref']} · {sl.get('won')}초 · 원본 {[o.get('id') for o in st.get('origins') or []]}")
+    left = [{"url": o["ref"], "sub": o.get("sub") or "", "cands": len((o.get("st") or {}).get("of_seen") or []),
+             "why": (o.get("dead") or {}).get("why") or f"소재{i + 1} 이 먼저 원본 확보({round(_now() - t0)}초)"} for o in slots if o is not sl]
+    st["alt_left"] = left
+    if sl.get("sub"):
+        st["ref_asked"] = st["ref"]
+        st["ref"] = sl["ref"]
+        st["notice"] = ALT_NOTICE_WON
+    st.pop("finding", None)
+    if not left and not sl.get("sub"):
+        return {"goto": "of_fetch"}
+    return {"do": [{"id": "settle", "cmd": "of_settle", "win_sub": sl.get("sub") or "", "left": left, "style": st.get("version")}], "then": "of_settled"}
+
+
+def f_of_settled(st, m, rp, u):
+    s = m.get("settle") or {}
+    if s.get("error"):
+        raise _Stop("원본 영상을 정리하지 못했어요", AGAIN, retry="of_fetch", auto=True, detail=str(s.get("error"))[:300])
+    st["log"].append(f"소재 정리: 진 소재 기록 {s.get('noted')}")
+    return {"goto": "of_fetch"}
+
+
+def finding_say(st: dict, sec: float | None = None) -> dict | None:
+    """(판단 주인 — 원본 찾기 진행 줄 문구) 회원 화면 '원본을 계속 찾고 있어요 · N분째 · 후보 …' (사장님 10-26 '5분에 한 번씩 계속 안내').
+    say 의 {m} = 5분 단위 분(회원 PC 가 기다리는 동안 시계로 채운다 — shortem_client flow_driver.shapeFlow), say0 = 첫 5분."""
+    fd = st.get("finding")
+    if not fd or not fd.get("t0"):
+        return None
+    n, done = list(fd.get("n") or [0]), list(fd.get("done") or [])
+    if len(n) >= 2:
+        head = f"소재 {len(n)}편의 원본을 함께 찾고 있어요"
+        tail = " / ".join(f"{k + 1}편 후보 {x}개" + (" 확인 마침" if k < len(done) and done[k] else "") for k, x in enumerate(n))
+    else:
+        head, tail = "원본 영상을 계속 찾고 있어요", f"후보 {n[0]}개 확인"
+    sec = float(sec if sec is not None else _now() - float(fd["t0"]))
+    return {"sec": round(sec, 1), "step": F_SAY_STEP, "say": f"{head} · {{m}}분째 · {tail}", "say0": f"{head} · {tail}"}
+
+
+def finding_line(fs: dict) -> str:
+    m = int(float(fs["sec"]) // fs["step"]) * fs["step"] // 60
+    return fs["say0"] if m <= 0 else fs["say"].replace("{m}", str(m))
 
 
 def f_product_sheet(st, m, rp, u):
@@ -2491,7 +2746,9 @@ def f_product_same(st, m, rp, u):
 
 
 def f_research(st, m, rp, u):
-    return {"do": [{"id": f"words_{k}", "cmd": "origin_words", "vid": f["name"].rsplit(".", 1)[0], "src": "src/" + f["name"], "t0": 0.0}
+    pf = {str(o.get("id")): o.get("platform") or "yt" for o in st.get("origins") or []}     # 틱톡·인스타 원본은 유튜브 자막을 부르지 않는다(받아쓰기)
+    return {"do": [{"id": f"words_{k}", "cmd": "origin_words", "vid": f["name"].rsplit(".", 1)[0], "src": "src/" + f["name"], "t0": 0.0,
+                    "platform": pf.get(f["name"].rsplit(".", 1)[0], "yt")}
                    for k, f in enumerate(st["origin"]["files"])], "then": "f_research_got"}
 
 
@@ -2746,7 +3003,8 @@ def s_material_dl(st, m, rp, u):
 
 
 FORMAT_PHASES = {   # 형식별 세부 단계 처리기 — 없는 세부 단계는 공용 PHASES
-    "해외원본형": {"bench_got": f_bench_got, "ref_read": f_ref_read, "of_peers": f_of_peers, "of_got": f_of_got, "of_pick": f_of_pick, "of_find": f_of_find, "of_find_got": f_of_find_got, "of_fetch": f_of_fetch,
+    "해외원본형": {"bench": f_of_dual_start, "of_dual": f_of_dual, "of_dual_b": f_of_dual, "of_dual_retry": f_of_dual_retry, "of_settled": f_of_settled,
+                "bench_got": f_bench_got, "ref_read": f_ref_read, "of_peers": f_of_peers, "of_got": f_of_got, "of_pick": f_of_pick, "of_find": f_of_find, "of_find_got": f_of_find_got, "of_fetch": f_of_fetch,
                 "of_fetched": f_of_fetched, "f_product_sheet": f_product_sheet, "f_product_pick": f_product_pick, "f_product_cands": f_product_cands,
                 "f_product_same": f_product_same, "research": f_research, "f_research_got": f_research_got, "f_research_check": f_research_check,
                 "f_material": f_material, "material": f_material, "f_material_got": f_material_got, "f_shots_got": f_shots_got, "f_clean": f_clean,
@@ -2757,7 +3015,7 @@ FORMAT_PHASES = {   # 형식별 세부 단계 처리기 — 없는 세부 단계
     "레시피형": {},      # 연예인형 처리기 그대로(재료 스티커 = 판)
 }
 PHASE_STAGE.update({
-    "ref_read": "bench", "topic_got": "bench", "of_peers": "origin", "of_got": "origin", "of_pick": "origin", "of_find": "origin", "of_find_got": "origin", "of_fetch": "origin", "of_fetched": "origin",
+    "ref_read": "bench", "topic_got": "bench", "of_dual_b": "bench", "of_dual": "origin", "of_dual_retry": "origin", "of_settled": "origin", "of_peers": "origin", "of_got": "origin", "of_pick": "origin", "of_find": "origin", "of_find_got": "origin", "of_fetch": "origin", "of_fetched": "origin",
     "f_product_sheet": "product", "f_product_pick": "product", "f_product_cands": "product", "f_product_same": "product", "s_cands": "product", "s_cand_look": "product",
     "s_product_done": "product", "f_research_got": "research", "f_research_check": "research", "s_research_check": "research", "f_material": "material",
     "f_material_got": "material", "f_shots_got": "material", "f_clean": "material", "f_clean_got": "material", "f_draft": "material", "f_draft_got": "material",

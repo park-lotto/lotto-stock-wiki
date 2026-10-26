@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import subprocess
 import sys
 import types
@@ -93,11 +94,14 @@ def _measure(d: dict, ctx: dict) -> dict:
     if c == "thumb_auto":            # 썸네일 3안이 반려·없음이면 코드 자동 고르기(관제263 10-26)
         ctx["thumb_auto"] = ctx.get("thumb_auto", 0) + 1
         return {"ok": True, "pick": {"part": 0, "t": 0.5}, "cuts": 5}
+    if c == "of_settle":             # 소재 2편 함께 찾기 정리(flow._slot_adopt)
+        ctx.setdefault("settle", []).append(d)
+        return {"ok": True, "noted": [x.get("url") for x in d.get("left") or []]}
     raise AssertionError(f"가짜 실행기에 없는 명령: {c}")
 
 
 def _reply(rv: dict, ctx: dict) -> dict:
-    i = rv["id"]
+    i = re.sub(r"^s[0-9]+:", "", rv["id"])      # 해외원본형 소재 칸 질문(s1:·s2:, flow.f_of_dual) = 같은 질문
     if i == "origin_read":
         return {"celeb": "홍길동", "source_label": "출처: 홍길동TV", "source_kind": "channel", "product_words": ["크림"], "queries": ["홍길동 크림"], "is_shopping": True}
     if i == "origin_pick":
@@ -271,13 +275,15 @@ def test_foreign_overseas_ref_walk_to_done():
         assert c in cmds, c
     assert "channel_find" not in cmds and "origin_probe" not in cmds          # 연예인형 원본 찾기 길을 타지 않는다
     assert [o["id"] for o in st2["origins"]] == ["BENCH1", "PEER1"]          # 한국 제목 후보(KO1)는 원본 아님
-    assert ctx["of_calls"] == ["peers"]
+    assert ctx["of_calls"] == ["peers", "peers"]                              # 소재 2편 함께(가짜 실행기는 둘 다 같은 벤치) — 같은 호출에서 둘 다 원본 확보면 회원이 준 소재
+    assert st2["ref"] == "https://youtu.be/BENCH1" and st2["of_times"]["won_slot"] == 1
+    assert [x["url"] for x in ctx["settle"][0]["left"]] == ["https://www.youtube.com/shorts/ro1l3u734v4"]   # 진 소재 = 벤치 상위 조회 1위(기록만)
     assert st2["text_fix"]["calls"] == 0
     saved = [f for fs in ctx["docs"] for k, f in (fs or {}).items() if k.endswith("재료.json")]
     assert saved and saved[0].get("blur", {}).get("BENCH1.mp4"), "박힌 글자 샷이 재료.blur 로 흐려져야 한다"
     stages = [s for s, _ in F.FORMAT_STAGES["해외원본형"]]
     assert stages[2] == "origin" and F._stage("f_clean", st2)["text"].startswith("원본 정리")
-    rv_ids = [r for t in tr for r in t[3]]
+    rv_ids = [re.sub(r"^s[0-9]+:", "", r) for t in tr for r in t[3]]
     assert "ref_read" in rv_ids and "origin_read" not in rv_ids                # 연예인형 질문(연예인 본인 원본)을 쓰지 않는다
 
 

@@ -262,7 +262,28 @@ def c_env(W, d):
     except Exception:  # noqa: BLE001 — 도구 없음은 missing 이 이미 알린다
         enc = "cpu"
     return {"keys": keys, "dev": dev, "cache": bool(CACHE), "disk_gb": round(du.free / 1e9, 1), "voice": voice, "missing": missing,
-            "encoder": enc}       # 'gpu'(NVENC) | 'cpu' — 그래픽카드 있으면 렌더가 GPU 우선(98 #79)
+            "encoder": enc, "done_refs": done_refs()}
+
+
+def done_refs() -> list[str]:
+    """이 PC 작업 기록(엔진·회원 기록지 — 주인 work_log.list_)에서 이미 만든 편의 소재·원본 영상 id. 멈춘 편(stopped)은 다시 쓸 수 있어 뺀다.
+    서버 소재 고르기(flow.pick_alt_source)가 이 목록 밖에서 둘째 소재를 고른다 — 기록지는 회원 PC 에만 있다."""
+    from tools.calcopy import work_log as WL
+    from tools.calcopy.origin_find import vkey
+    out = set()
+    try:
+        rows = WL.list_(member=True)
+    except Exception as e:  # noqa: BLE001 — 기록지를 못 읽으면 빈 목록(이유는 로그에)
+        print(f"[env] 작업 기록 못 읽음: {type(e).__name__} {str(e)[:120]}", file=sys.stderr)
+        return []
+    for r in rows:
+        if r.get("status") == "stopped":
+            continue
+        for k in ("bench_url", "origin_url"):
+            v = vkey(str(r.get(k) or ""))
+            if v:
+                out.add(v[1])
+    return sorted(out)       # 'gpu'(NVENC) | 'cpu' — 그래픽카드 있으면 렌더가 GPU 우선(98 #79)
 
 
 def c_bench(W, d):
@@ -656,6 +677,28 @@ def c_origin_get(W, d):
     vid, a, b = d["vid"], float(d["a"]), float(d["b"])
     src = W / "src"; src.mkdir(exist_ok=True)
     dst = src / f"{vid}.mp4"
+    url = str(d.get("url") or "")
+    if url and "youtu" not in url and not CACHE:
+        # 틱톡·인스타 원본(관제263 10-26 '유튜브만'이 원본을 막았다). 쇼츠라 짧다 → 통째(0초 = 원본 0초).
+        # 받기 = yt-dlp 실행파일(메타 OF.meta 와 같은 도구 · 회원 PC 는 숏템 설정 파일의 로그인 쿠키를 그대로 읽는다).
+        #   media_download.download_any 는 `python -m yt_dlp` 라 틱톡 흉내(impersonate, curl_cffi)가 없으면 'Unexpected response' —
+        #   10-26 실측: 같은 @hismile 영상이 python 모듈 3회 실패 · yt-dlp.exe 1회 성공(13.8MB 1080p). 화질 상한은 media_download 와 같은 _Q_CAP.
+        if not dst.exists():
+            from shopping_shorts.media_download import _Q_CAP
+            why = ""
+            for n in range(2):
+                r = subprocess.run(["yt-dlp", "--no-warnings", "--no-playlist", "-f", f"bv*{_Q_CAP}+ba/b{_Q_CAP}/b", "-S", "res,ext:mp4:m4a",
+                                    "--merge-output-format", "mp4", "-o", str(src / f"{vid}.%(ext)s"), url],
+                                   capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
+                if dst.exists():
+                    break
+                from tools.calcopy.origin_find import yt_error
+                why = yt_error(r.stderr)
+                print(f"[origin_get] 받기 실패({n + 1}/2) {url}: {why}", file=sys.stderr, flush=True)
+                time.sleep(3)
+            if not dst.exists():
+                return {"error": f"원본 받기 실패({url[:80]}) — {why}"}
+        return {"files": [dims(dst)], "offset": 0.0, "measured": True, "note": "유튜브 밖 원본 = 통째"}
     if CACHE:
         s = cache_path("yt", vid + ".mp4")
         if not s.exists():
@@ -906,7 +949,7 @@ def c_naver(W, d):
 
 
 def c_origin_words(W, d):
-    words, how = _origin_words(W, d["vid"])
+    words, how = _origin_words(W, d["vid"]) if (d.get("platform") or "yt") == "yt" else ([], "")
     if not words:                       # 자막이 아예 없다 → 받은 파일을 받아써 원본 초로(t0 더함)
         t0 = float(d.get("t0") or 0)
         for s in asr(W / d["src"]):
@@ -1421,6 +1464,89 @@ def _of_sheets(W: Path, seeds: list[Path], cands: list[dict]) -> list[str]:
     return out
 
 
+WEB_PER_Q = 6       # 검색어 하나·사이트 하나에서 가져올 영상 주소 수
+WEB_MAX = 12        # 한 바퀴 틱톡·인스타 후보 상한(후보마다 메타 한 번 — 천천히 받기 YT_SLOW 라 하나 5~15초)
+WEB_LINK = re.compile(r"https?://(?:www\.)?tiktok\.com/@[\w.\-]+/video/\d+|/@[\w.\-]+/video/\d+|https?://(?:www\.)?instagram\.com/(?:[\w.]+/)?(?:reel|reels|p)/[\w-]+")
+
+
+def _web_links(qs: list[str], per: int = WEB_PER_Q) -> list[dict]:
+    """틱톡 검색 페이지·구글(인스타 릴스) 검색에서 영상 주소만 — 회원 PC 의 렌즈 창(lens.lens_page, 로그인 없음 · 창 띄움 = 틱톡이 헤드리스를 막는다, kw_backends 09-08 실측).
+    캐시 모드 = <캐시>/web/<검색어>.json([{url, how}]) 만. 판정은 하지 않는다(같은 영상 판정 = 서버 질문)."""
+    if CACHE:
+        out = []
+        for q in qs[:4]:
+            f = cache_path("web", _safe(q) + ".json")
+            if f.exists():
+                out += jload(f)
+            else:
+                _need("web", [q])
+        return out
+    from urllib.parse import quote
+    from tools.calcopy import lens as LN
+    out, seen = [], set()
+    try:
+        with LN.lens_page() as pg:
+            for q in qs[:4]:
+                for how, url in (("tiktok", f"https://www.tiktok.com/search/video?q={quote(q)}"),
+                                 ("instagram", f"https://www.google.com/search?q={quote(q + ' site:instagram.com/reel')}&hl=en")):
+                    try:
+                        pg.goto(url, wait_until="domcontentloaded", timeout=60000)
+                        pg.wait_for_timeout(6000)
+                        for _ in range(3):
+                            pg.mouse.wheel(0, 2000)
+                            pg.wait_for_timeout(1000)
+                        raw = pg.content()
+                    except Exception as e:  # noqa: BLE001 — 한 사이트 실패는 남기고 다음
+                        sys.stderr.write(f"[web] {how} 검색 실패 '{q}': {type(e).__name__} {str(e)[:80]}\n")
+                        continue
+                    k = 0
+                    for l in WEB_LINK.findall(raw):
+                        l = ("https://www.tiktok.com" + l) if l.startswith("/@") else l
+                        if l in seen:
+                            continue
+                        seen.add(l)
+                        out.append({"url": l, "how": how, "q": q})
+                        k += 1
+                        if k >= per:
+                            break
+                    sys.stderr.write(f"[web] {how} '{q}' 영상 주소 {k}개\n")
+    except Exception as e:  # noqa: BLE001 — 창을 못 띄우면 유튜브 검색 결과만으로(이유는 로그)
+        sys.stderr.write(f"[web] 검색 창 실패: {type(e).__name__} {str(e)[:120]}\n")
+    return out
+
+
+def c_of_settle(W, d):
+    """소재 2편 함께 찾기 정리(flow f_of_dual) — 이긴 소재가 둘째 칸(sub)이면 그 소재 파일(bench·origin_foreign)을 작업 폴더 맨 위로 옮기고,
+    진 소재는 회원 작업 기록에 '멈춘 편'(다음 제작 때 다시 쓸 수 있음)으로 한 줄, 둘째 칸 폴더는 지운다(공간)."""
+    from tools.calcopy import work_log as WL
+    win = str(d.get("win_sub") or "")
+    if win and not re.fullmatch(r"alt\d", win):
+        return {"error": f"허용되지 않은 작업 폴더: {win}"}
+    if win:
+        for name in ("bench", "origin_foreign"):
+            a, b = W / win / name, W / name
+            if b.exists():
+                shutil.rmtree(b, ignore_errors=True)
+            if a.exists():
+                shutil.move(str(a), str(b))
+    noted = []
+    for x in d.get("left") or []:
+        try:
+            WL.append({"status": "stopped", "bench_url": str(x.get("url") or "")[:300], "style": d.get("style"),
+                       "made_by": "member:" + (os.environ.get("SHORTEM_MEMBER_ID") or "pc"),
+                       "note": ("소재 2편 함께 찾기 — 다른 소재가 먼저 원본 확보, 이 소재는 다음 제작 때 다시 써도 됨 · 원본 후보 "
+                                + str(x.get("cands") or 0) + "개 확인 · " + str(x.get("why") or "")[:160])}, path=WL.member_log())
+            noted.append(x.get("url"))
+        except Exception as e:  # noqa: BLE001 — 기록 실패가 제작을 막지 않는다(이유는 결과에)
+            noted.append(f"기록 실패 {type(e).__name__}: {str(e)[:120]}")
+    for sub in {str(x.get("sub") or "") for x in d.get("left") or []} - {"", win}:
+        if re.fullmatch(r"alt\d", sub):
+            shutil.rmtree(W / sub, ignore_errors=True)
+    if win:
+        shutil.rmtree(W / win, ignore_errors=True)
+    return {"ok": True, "noted": noted}
+
+
 def c_origin_foreign(W, d):
     """해외 원본 후보 + 판정 시트. mode lens = 소재(한국 재편집) 장면 4장 → 구글 렌즈 → 영상 링크 → 메타(origin_find 와 같은 함수) /
     mode peers = 영어 검색어로 같은 제품 다른 해외 반응 쇼츠 / mode find = 회원 Claude 가 찾은 주소(urls)·검색어(queries, 쇼츠 필터) 후보.
@@ -1465,6 +1591,16 @@ def c_origin_foreign(W, d):
                 raw.append({"platform": k[0], "id": k[1], "url": OF.url_of(k[0], k[1], url), "by": "member", **OF.meta(OF.url_of(k[0], k[1], url))})
         for e in _search(d.get("queries") or [], int(d.get("n") or 12), shorts=(mode == "find")):
             raw.append({"platform": "yt", "id": e.get("id"), "url": f"https://www.youtube.com/shorts/{e.get('id')}", **{k: e.get(k) for k in ("title", "channel", "channel_id", "dur", "views", "date")}})
+        if mode == "find" and d.get("queries"):     # 틱톡·인스타도 같은 검색어로(관제263 10-26 — 원본이 틱톡에만 있던 잇템로그 편)
+            have = {(c.get("platform"), c.get("id")) for c in raw}
+            for x in _web_links(d.get("queries") or [], int(d.get("web_n") or WEB_PER_Q)):
+                k = OF.vkey(x["url"])
+                if not k or k in have or k[1] == d.get("bench_id") or k[1] in skip:
+                    continue
+                have.add(k)
+                raw.append({"platform": k[0], "id": k[1], "url": OF.url_of(k[0], k[1], x["url"]), "by": "web:" + x["how"], **OF.meta(OF.url_of(k[0], k[1], x["url"]))})
+                if sum(1 for c in raw if str(c.get("by") or "").startswith("web:")) >= WEB_MAX:
+                    break
     cands, seen, bad = [], set(), []
     for c in raw:
         if c.get("by") == "member" and c.get("why"):      # 회원 Claude 가 준 주소를 못 열었으면 이유를 돌려준다(조용히 버리지 않는다)
@@ -1544,7 +1680,7 @@ CMDS = {"env": c_env, "bench": c_bench, "search": c_search, "peer_sheet": c_peer
         "origin_get": c_origin_get, "channel_find": c_channel_find, "origin_probe": c_origin_probe, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "coupang_reviews": c_coupang_reviews, "cand_sheet": c_cand_sheet, "naver": c_naver, "origin_words": c_origin_words,
         "screen": c_screen, "download": c_download, "product_stills": c_product_stills, "orig_heard": c_orig_heard, "asr_spans": c_asr_spans, "shot_sheets": c_shot_sheets, "mat_sheets": c_mat_sheets,
         "write_doc": c_write_doc, "plan": c_plan, "render": c_render, "check": c_check, "finish": c_finish,
-        "origin_foreign": c_origin_foreign, "clean_text": c_clean_text, "materials_draft": c_materials_draft, "thumb_auto": c_thumb_auto}
+        "origin_foreign": c_origin_foreign, "of_settle": c_of_settle, "clean_text": c_clean_text, "materials_draft": c_materials_draft, "thumb_auto": c_thumb_auto}
 
 
 # ── 시간 예산·진행 신호·감시(사장님 10-26 "가만히 있으면 한없이 진행되는 게 제일 문제") ─────────────────────────
@@ -1560,7 +1696,7 @@ BUDGET_FLOOR = 600   # 바닥(10-26 run4: 바닥 120초로 plan 120.2초·asr_sp
 CMD_LABEL = {"env": "준비 확인", "bench": "영상 받기", "channel_find": "출처 채널 찾기", "origin_probe": "원본 후보 조사", "origin_foreign": "해외 원본 후보 조사", "search": "원본 검색",
              "channel_list": "채널 영상 목록", "origin_subs": "원본 자막 대조", "origin_get": "원본 영상 받기", "coupang": "쿠팡 찾기", "coupang_reviews": "쿠팡 후기",
              "naver": "자료 찾기", "download": "영상 조각 받기", "screen": "장면 고르기", "shot_sheets": "장면 정리", "plan": "장면 맞추기",
-             "render": "영상 만들기", "check": "완성본 확인", "clean_text": "자막 지우기", "thumb_auto": "썸네일 고르기", "finish": "마무리"}   # 회원 화면 진행 줄(내부 이름 금지)
+             "render": "영상 만들기", "check": "완성본 확인", "clean_text": "자막 지우기", "thumb_auto": "썸네일 고르기", "finish": "마무리", "of_settle": "원본 정리"}   # 회원 화면 진행 줄(내부 이름 금지)
 STALL_SEC = float(os.environ.get("SHORTEM_STALL_SEC") or 180)    # 진행 신호(명시 progress 또는 작업 폴더 파일 변화)가 이만큼 없으면 멈춘 것
 _PROG: dict = {"t": 0.0}
 _CHILDREN: set = set()
@@ -1698,8 +1834,12 @@ def run_do(W: Path, do: list[dict], log=print, stall: float | None = None) -> di
             return
         t0 = time.time()
         progress(W, CMD_LABEL.get(str(d.get("cmd")), "만드는 중"))
+        sub = str(d.get("sub") or "")
+        if sub and not re.fullmatch(r"alt\d", sub):
+            out[rid] = {"error": f"허용되지 않은 작업 폴더: {sub}"}
+            return
         try:
-            res = fn(W, d)
+            res = fn(W / sub if sub else W, d)      # sub = 함께 찾는 둘째 소재의 작업 폴더(flow 해외원본형 소재 2편, 10-26) — 진행 신호는 그대로 W
             if rid not in out:                     # 감시가 이미 '시간 초과'로 끝낸 일은 늦게 온 결과로 덮지 않는다
                 out[rid] = res
             return
