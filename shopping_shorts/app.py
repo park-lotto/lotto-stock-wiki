@@ -10174,7 +10174,12 @@ def _video_gone_reason(job):
         return "작업을 찾을 수 없어요."
     # 최종 렌더 뒤 입력을 고치면 status가 ready_for_review로 돌아간다. 혹시 옛 경로가
     # 남은 작업이어도 그 파일을 최신 완성본으로 주지 않는다(재생·공유·예약 공통 방어).
+    # ★한 번도 렌더하지 않은 작업에 "다시"라고 하면 고객이 뭘 해야 할지 모른다
+    #   (2026-10-26 관제 274, 임동일: 렌더 전에 예약을 눌러 "다시 렌더"만 보고 버퍼 고장으로 앎).
+    #   ⚠️렌더 뒤 고쳐서 무효화된 작업도 video_path가 비므로(_save_render_inputs) 두 경우 다 맞는 말로 쓴다.
     if job.get("status") != "done":
+        if not job.get("video_path"):
+            return "최신 완성 영상이 없어요 — '최종 렌더'를 눌러 완성본을 만들어 주세요."
         return "수정한 내용으로 최종 렌더를 다시 해주세요."
     if not job.get("video_path"):
         return "아직 완성된 영상이 없어요."
@@ -10707,13 +10712,25 @@ _BUFFER_DEMO_CHANNELS = [
 
 
 @app.get("/api/buffer/channels")
-def api_buffer_channels(request: Request):
-    """이 고객의 Buffer에 연결된 채널 목록(어디에 올릴지 고르게 한다)."""
+def api_buffer_channels(request: Request, job_id: str = ""):
+    """이 고객의 Buffer에 연결된 채널 목록(어디에 올릴지 고르게 한다).
+
+    job_id를 주면 그 작업에 올릴 완성 영상이 있는지 먼저 본다 — 없으면 예약 창을 열지 않고
+    이유를 돌려준다(2026-10-26 관제 274: 렌더 전에 예약 창이 열려 고객이 버퍼 고장으로 앎).
+    판정은 예약(api_buffer_schedule)과 같은 _video_gone_reason 하나다."""
     key = _buffer_key(request)
     if not key:
         if _BUFFER_DEMO:
             return {"ok": True, "channels": _BUFFER_DEMO_CHANNELS, "demo": True}
         return JSONResponse(status_code=200, content=_BUFFER_NO_KEY)
+    job_id = os.path.basename(job_id or "")
+    if job_id:
+        job = Store(DB_PATH).get_mix_job(job_id)
+        if job and int(job.get("customer_id") or 0) == _cid(request):
+            _gone = _video_gone_reason(job)
+            if _gone:
+                return JSONResponse(status_code=200,
+                                    content={"ok": False, "no_video": True, "error": _gone})
     try:
         return {"ok": True, "channels": buffer_api.channels(key)}
     except buffer_api.BufferError as e:
