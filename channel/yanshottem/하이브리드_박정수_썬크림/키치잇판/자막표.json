@@ -1,6 +1,6 @@
 {
  "_note": "배치 결과 — placement.place(판 설정 키치잇판) · 시각은 final.mp4 기준 초",
- "pack": "kitchit",
+ "pack": "kitchit_v2",
  "rows": [
   {
    "line": "N1",
@@ -11,7 +11,8 @@
    "variant": "",
    "emph": [
     {
-     "word": "박정수가"
+     "word": "배우 박정수가",
+     "color": "#65FEFB"
     }
    ],
    "sticker": "",
@@ -53,8 +54,8 @@
   {
    "line": "O1",
    "t0": 3.336,
-   "t1": 4.343,
-   "text": "나는 여기 거",
+   "t1": 4.823,
+   "text": "나는 여기 거 선크림",
    "speaker": "orig",
    "variant": "",
    "emph": [
@@ -68,16 +69,12 @@
   },
   {
    "line": "O1",
-   "t0": 4.343,
+   "t0": 4.823,
    "t1": 5.475,
-   "text": "선크림 안 씁니다",
+   "text": "안 씁니다",
    "speaker": "orig",
-   "variant": "",
-   "emph": [
-    {
-     "word": "안 씁니다"
-    }
-   ],
+   "variant": "hand",
+   "emph": [],
    "sticker": "",
    "stickers": [],
    "enter": "cut"
@@ -175,7 +172,12 @@
    "variant": "",
    "emph": [
     {
-     "word": "로션처럼"
+     "word": "로션처럼",
+     "color": "#65FEFB"
+    },
+    {
+     "word": "얇게",
+     "color": "#FD6B7B"
     }
    ],
    "sticker": "",
@@ -227,7 +229,18 @@
     }
    ],
    "sticker": "",
-   "stickers": [],
+   "stickers": [
+    {
+     "kind": "sound_word",
+     "text": "두둥",
+     "x": 22.0,
+     "y": 31.0,
+     "size": 170,
+     "r": -8.0,
+     "site": "answered",
+     "deco": true
+    }
+   ],
    "enter": "pop"
   },
   {
@@ -259,7 +272,39 @@
     }
    ],
    "sticker": "",
-   "stickers": [],
+   "stickers": [
+    {
+     "kind": "circle_arrow",
+     "x": 74.07,
+     "y": 36.46,
+     "r": 15.56,
+     "site": "answered",
+     "how": "deco_answer",
+     "deco": true,
+     "aim": {
+      "what": "튜브의 Tear-Free 글자",
+      "why": "deco_answers.json(정해진 질문 circle_arrow)",
+      "box": [
+       680,
+       650,
+       920,
+       750
+      ],
+      "frac": 0.0116,
+      "frames": [
+       {
+        "t": 19.649,
+        "box": [
+         680,
+         650,
+         920,
+         750
+        ]
+       }
+      ]
+     }
+    }
+   ],
    "enter": "pop"
   },
   {
@@ -347,7 +392,8 @@
    "variant": "pop",
    "emph": [
     {
-     "word": "인기래요"
+     "word": "넘을 만큼 인기래요",
+     "color": "#FD6B7B"
     }
    ],
    "sticker": "",
@@ -373,7 +419,7 @@
    "why": "컷 경계"
   },
   {
-   "t": 21.787,
+   "t": 23.174,
    "kind": "zoomblur",
    "ms": 167.0,
    "zoom": 0.12,
@@ -386,10 +432,11 @@
  "log": [
   "본보기 벤치 편 = Cs-Ka_S8nDM",
   "스티커 spark_lines 본보기 1개 중 0개만(조건 맞는 덩어리 모자람)",
-  "전환 [(7.0, 'zoomblur'), (13.502, 'black'), (21.787, 'zoomblur')] (판 cuts.transition.kinds 비율 {'zoomblur': 0.1, 'black': 0.07, 'flash': 0.01}, 컷 경계 16·붙일 수 있는 7(≥1.2초))",
+  "전환 [(7.0, 'zoomblur'), (13.502, 'black'), (23.174, 'zoomblur')] (판 cuts.transition.kinds 비율 {'zoomblur': 0.1, 'black': 0.07, 'flash': 0.01}, 컷 경계 18·붙일 수 있는 8(≥1.2초))",
   "효과음 0발(본보기 0) []",
   "꾸밈 없음 0→3/23(판 plain_share 0.163 → 4) 강조 뺌 ['N2「도대체 뭐가 그렇게 좋길래?」', 'O2「이건 안 시려워요」', 'N6「민감한 피부용」'] — 뺄 수 있는 강조만 덩어리 모자람(5)",
-  "등장 {'pop': 18, 'cut': 5} · 강조 19/23"
+  "등장 {'pop': 18, 'cut': 5} · 강조 19/23",
+  "꾸밈 답 8개"
  ],
  "check": {
   "ok": true,
@@ -444,7 +491,7 @@
      "pop": 0.33
     },
     "bench_emph": 0.73,
-    "ours_emph": 0.33,
+    "ours_emph": 0.0,
     "n": 3
    },
    "stickers": {
@@ -452,9 +499,12 @@
      "circle_arrow": 1,
      "spark_lines": 1
     },
-    "ours": {},
+    "ours": {
+     "sound_word": 1,
+     "circle_arrow": 1
+    },
     "vs": {
-     "circle_arrow": "0/1(판 규칙 없음 — 안 그림)",
+     "circle_arrow": "1/1(판 규칙 없음 — 안 그림)",
      "spark_lines": "0/1(벤치 38% 편만 씀 — 모자라도 벤치 범위)"
     }
    },
@@ -475,14 +525,14 @@
       "black": 0.071,
       "flash": 0.014
      },
-     "cut_bounds": 16,
+     "cut_bounds": 18,
      "want_raw": {
-      "zoomblur": 1.6,
-      "black": 1.136,
-      "flash": 0.224
+      "zoomblur": 1.8,
+      "black": 1.278,
+      "flash": 0.252
      },
      "want": 3,
-     "eligible": 7,
+     "eligible": 8,
      "picked": {
       "zoomblur": 2,
       "black": 1
@@ -490,7 +540,9 @@
      "min_cut": 1.2
     }
    },
-   "sites": {},
+   "sites": {
+    "answered": 2
+   },
    "meme": {
     "ours": 0
    }
