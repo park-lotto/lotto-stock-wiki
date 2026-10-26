@@ -2971,6 +2971,21 @@ def over_text(over: list[dict], plan: bool, measured: bool = True) -> list[str]:
     return [("계획에서 컷이 원본 샷보다 길다" + ("" if measured else "(어림)") + ": " if plan else "컷이 원본 샷보다 길다: ") + rows]
 
 
+GATE_STAMP = "plan_gates_ok.json"      # 계획 관문이 전부 통과한 입력 지문 — 렌더가 같은 지문이면 시간표 관문을 다시 안 잰다(검수단축 ⑤, 10-26)
+
+
+def gate_stamp(T: dict, M: dict, st: dict, doc: Path) -> str:
+    """(판단 주인 — 시간표 관문 입력 지문) 관문이 읽는 것 전부: 컷(시각·원본·ss·crop·속도…)·길이·흐림·원본 파일 정체(크기·mtime — VMake 로 지우면 바뀐다)·
+    판 설정·썸네일.json(카드 관문)·이 파일(관문 코드). 하나라도 다르면 다른 지문 = 다시 잰다."""
+    import hashlib
+    src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
+    srcs = sorted({str(c.get("src")) for c in T["cuts"]})
+    tp = Path(doc) / "썸네일.json"
+    body = [T["cuts"], T.get("end"), M.get("blur"), str(src_dir), st, [src_ident(src_dir / s)[1:] if src_dir else None for s in srcs],
+            tp.read_text(encoding="utf-8") if tp.exists() else None, hashlib.sha256(Path(__file__).read_bytes()).hexdigest()]
+    return hashlib.sha256(json.dumps(body, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8")).hexdigest()
+
+
 def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *, plan: bool, measured: bool = True,
                    erase: list | None = None, placed: dict | None = None) -> list[tuple[str, list[str]]]:
     """(판단 주인 — 렌더 전 시간표 관문 목록·순서) 같은 시간표 T 를 읽는 관문을 전부 돌려 [(관문 이름, 문제 글 목록)…] 로(빈 목록 = 통과).
@@ -3069,6 +3084,9 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         from tools.calcopy import vmake_clean as VC
         erase = [] if VC.will_erase(style_name) else None        # 박힌 글자를 지우는 판(orig_text.mode=vmake·돈 막힘 아님) — 글자 컷은 멈추지 않고 '지울 컷'(사장님 10-26)
         gates = timeline_gates(T, M, st, doc, R, log, plan=True, measured=bool(tts), erase=erase, placed=placed)      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬·꾸밈 전부(첫 실패에서 안 멈춘다)
+        (R / GATE_STAMP).unlink(missing_ok=True)
+        if tts and not erase and not any(b for _, b in gates):      # 진짜 목소리·지울 컷 없음·전부 통과일 때만 지문(지울 컷이 있으면 렌더가 지운 뒤 다시 잰다)
+            jsave(R / GATE_STAMP, {"stamp": gate_stamp(T, M, st, doc), "at": __import__("time").strftime("%Y-%m-%d %H:%M:%S")})
         if erase is not None:      # 지울 컷 = 계획 시간표 칸 하나(vmake_clean.used_spans 가 읽는다) — 관문 뒤에 다시 저장
             T["vmake_cuts"] = sorted(set(erase))
             jsave(doc / "plan/계획_시간표.json", {"timeline": T, "placement": placed})
@@ -3084,7 +3102,11 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         log("[나레 없음] tts 줄 0 — TTS 건너뜀, 자막 시간표(sub)·원음·배경음·효과음만")
     sm = {s["id"]: s for s in sent}
     T = timeline(S, M, st, sm, align)
-    gate_stop(timeline_gates(T, M, st, doc, R, log, plan=False))      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬 — 영상 굽기 전에 전부 모아 멈춘다(꾸밈은 창 자리 뒤 — GATE_DEPENDS)
+    sp = R / GATE_STAMP
+    if sp.exists() and jload(sp).get("stamp") == gate_stamp(T, M, st, doc):      # 계획이 같은 입력으로 전부 통과 — 다시 안 잰다(검수단축 ⑤)
+        log(f"[렌더 전 관문] 계획({jload(sp).get('at')})과 입력이 같다(컷·원본·판·썸네일·관문 코드 지문) — 다시 안 잰다")
+    else:
+        gate_stop(timeline_gates(T, M, st, doc, R, log, plan=False))      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬 — 영상 굽기 전에 전부 모아 멈춘다(꾸밈은 창 자리 뒤 — GATE_DEPENDS)
     win0 = render_window(T, M, st, R)                          # 창(전환 없이) — 자리 검출 화면의 재료
     placed = plan_rows(S, T, st, make_locate(S, T, st, R, win0, log))
     deco_apply(placed, doc, st, log)
