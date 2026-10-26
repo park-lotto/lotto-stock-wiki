@@ -643,6 +643,14 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             cache["I"] = lufs(final)
         return cache["I"]
 
+    def media_meas():
+        # 완성본 media_of(컷·LUFS) 한 번 — 판 리듬 칸과 재현일치도(match_from_render)가 같은 결과를 나눠 쓴다(10-26 검수 단축 ①:
+        # 옛 코드는 판 리듬 안 def media() 가 인자 media(bool)를 가려 재현일치도에 함수가 넘어가 media_of 를 다시 돌고,
+        # 캐시 열쇠에 함수 주소(str(media))가 들어가 열쇠가 매번 바뀌어 full 마다 재현일치도를 처음부터 다시 쟀다)
+        m = _cached(store, f"media|{fmd5}|{list(win)}", lambda: __import__("tools.calcopy.engine.kal_analyze", fromlist=["x"]).media_of(str(final), win))
+        save_store()
+        return m
+
     # ── 규격
     if want("규격"):
         row("규격", "길이", lambda: (LD["min"] - 0.5 <= dur() <= LD["max"] + 0.5, f"{dur():.2f}초 (판 {LD['min']}~{LD['max']})"), "판 length · ffprobe")
@@ -729,18 +737,13 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
     if want("판 리듬") and not legacy:
         RH = ST.rhythm(st)
 
-        def media():
-            m = _cached(store, f"media|{fmd5}|{list(win)}", lambda: __import__("tools.calcopy.engine.kal_analyze", fromlist=["x"]).media_of(str(final), win))
-            save_store()
-            return m
-
         def need(k):
             if k not in RH:
                 raise LookupError(f"판 rhythm.{k} 없음(그 채널 벤치 실측 + why 로 채울 것 — 표준 §4-1)")
             return RH[k]
 
         def cut_med():
-            v, m = float(need("cut_median")["v"]), media()
+            v, m = float(need("cut_median")["v"]), media_meas()
             lo, hi = ST.rhythm_bounds(st)["cut_median"]       # 합격 범위 주인 styles.rhythm_bounds(빠른 쪽 −30% · 느린 쪽 +30% 또는 벤치 가장 느린 편)
             o = m.get("cut_median")
             if o is None:
@@ -750,7 +753,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
         def hook():
             need("hook_cuts_3s")
             h = ST.rhythm_bounds(st)["hook_min"]
-            at = media().get("cut_at")
+            at = media_meas().get("cut_at")
             if at is None:
                 return None, "완성본 컷 시각 없음(옛 캐시)"
             b = [t for t in at if 0.1 < t <= 3.0]
@@ -890,10 +893,11 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             nonlocal match
             from tools.calcopy.engine import kal_analyze as K
             lr = sorted((st.get("bench") or {}).get("line_reads") and (ROOT / st["bench"]["line_reads"]).glob("*.json") or [])
-            key = "match|" + hashlib.sha256("|".join([fmd5, md5(R / "자막표.json"), md5(R / "timeline.json"), str(media), str(cache.get("frame0")), md5(Path(K.__file__)),
+            key = "match|" + hashlib.sha256("|".join([fmd5, md5(R / "자막표.json"), md5(R / "timeline.json"), "media" if media else "no-media", str(cache.get("frame0")), md5(Path(K.__file__)),
                                                        hashlib.sha256(ST.path_of(style_name).read_bytes()).hexdigest()]
                                                       + [f"{p.name}:{p.stat().st_size}:{int(p.stat().st_mtime)}" for p in lr]).encode()).hexdigest()[:24]
-            match = _cached(store, key, lambda: K.match_from_render(st, doc, work, media=media, frame0_kind_measured=cache.get("frame0")))
+            match = _cached(store, key, lambda: K.match_from_render(st, doc, work, media=media_meas() if media else False,      # 잰 dict 를 넘긴다(다시 안 잰다)
+                                                                    frame0_kind_measured=cache.get("frame0")))
             save_store()
             match["ok"] = match.get("verdict") == "통과"       # 카드(preset_card match_ok)가 읽는 칸
             jsave(doc / "재현일치도.json", match)

@@ -797,7 +797,7 @@ def bench_media_cached(src_dir: str, ids: list[str], win: tuple | None) -> dict:
     return out
 
 
-def match_from_render(style, doc, work, media: bool = True, frame0_kind_measured: str | None = None) -> dict:
+def match_from_render(style, doc, work, media: bool | dict = True, frame0_kind_measured: str | None = None) -> dict:
     """(어댑터 — 관제 263 지시서 04) 공용 렌더러(render_bench) 산출 → match_table. 판단은 match_table 한 곳(여기서 새로 판정하지 않는다).
     style = 판 이름 또는 판 dict · 벤치 = 판 bench.line_reads(줄판독) + bench.src_dir(같은 자로 컷·LUFS) ·
     우리 = work/render/자막표.json(rows·sfx·transitions·flashes) + timeline.json(cuts·end) + final.mp4 + doc/썸네일.json.
@@ -833,7 +833,7 @@ def match_from_render(style, doc, work, media: bool = True, frame0_kind_measured
     om = bm = None
     if media:
         x, y, w, h = (st.get("frame") or {}).get("window") or (0, 0, 1080, 1920)
-        om = media_of(str(R / "final.mp4"), (x, y, w, h))
+        om = media if isinstance(media, dict) else media_of(str(R / "final.mp4"), (x, y, w, h))     # 품질 관문이 이미 잰 완성본 media_of 결과(dict)면 그대로(10-26 검수 단축 ①)
         if B.get("src_dir"):
             bm = bench_media_cached(B["src_dir"], [d.get("id") for d in bench], _win_arg(None, bench))
     LD = st.get("length") or {}
