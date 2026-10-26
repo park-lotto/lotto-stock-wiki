@@ -1128,11 +1128,12 @@
  "rhythm": {
   "cut_median": {
    "v": 1.08,
-   "why": "벤치 6편 원본 컷 길이 중앙(kal_analyze.media_of = 관문·재현과 같은 자, C:/숏템_칼카피/ititemlog/src, 10-25 재측정) 편별 AZ2q 1.0·J7Gx 1.03·SbWT 1.37·aUic 1.13·ro1l 1.27·zOSp 0.98 → 중앙 1.08(범위 0.98~1.37). 키치잇판 rhythm.cut_median 과 같은 자·같은 방법"
+   "why": "벤치 6편 원본 컷 길이 중앙(kal_analyze.media_of = 관문·재현과 같은 자, C:/숏템_칼카피/ititemlog/src, 10-25 재측정) 편별 AZ2q 1.0·J7Gx 1.03·SbWT 1.37·aUic 1.13·ro1l 1.27·zOSp 0.98 → 중앙 1.08(범위 0.98~1.37). 키치잇판 rhythm.cut_median 과 같은 자·같은 방법 · E(10-26 사장님 '벤치가 못 넘는 문턱은 너무 빡빡 → 벤치 실측 범위'): max 1.37 = 벤치 가장 느린 편 SbWT(v×1.3=1.404 보다 작아 상한 그대로)",
+   "max": 1.37
   },
   "hook_cuts_3s": {
-   "min": 2,
-   "why": "벤치 6편 원본 0.1~3.0초 안 컷 경계 수(media_of cut_at = bench_one.measure 컷): AZ2q 2·J7Gx 1·SbWT 2·aUic 3·ro1l 0·zOSp 2 → 중앙 2 · p25 1.25. 키치잇판처럼 min = 중앙(ro1l·J7Gx 2편은 이 문턱 아래)"
+   "min": 0,
+   "why": "벤치 6편 원본 0.1~3.0초 안 컷 경계 수(media_of cut_at = bench_one.measure 컷): AZ2q 2·J7Gx 1·SbWT 2·aUic 3·ro1l 0·zOSp 2 → 중앙 2 · p25 1.25. 키치잇판처럼 min = 중앙(ro1l·J7Gx 2편은 이 문턱 아래) · E(10-26 사장님 '벤치가 못 넘는 문턱은 너무 빡빡 → 벤치 실측 범위'): min 2→0 = 벤치 가장 적은 편 ro1l 0(2면 벤치 2편이 못 넘음 — 훅 경계 칸은 이 판에서 판정 안 함)"
   },
   "plain_share": {
    "v": 0.854,

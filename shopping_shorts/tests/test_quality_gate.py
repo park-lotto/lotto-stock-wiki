@@ -136,7 +136,10 @@ def test_match_new_cells_measured_from_line_reads():
     for k in ("transition.rate", "sfx.rate", "sticker.rate", "meme.rate", "thumb.frame0"):
         assert k in keys and keys[k]["bench"] is not None, keys.get(k)
     assert keys["thumb.frame0"]["judge"] == "in"
-    assert keys["sfx.rate"]["judge"] == "out"          # 벤치 2편 효과음 0.034~0.067/초 vs 우리 0
+    # E(10-26 사장님 '벤치가 못 넘는 문턱은 너무 빡빡'): 벤치 6편 효과음 0~0.308/초 — 0발 편이 있어 우리 0 은 벤치 범위 안(같음).
+    assert keys["sfx.rate"]["judge"] == "in" and keys["sfx.rate"]["bench_span"] == (0.0, 0.308)
+    T2 = match_table(_bench_docs(), {**ours, "sfx_rate": 0.5}, None, None)          # 벤치 가장 많은 편보다 많으면 그대로 미달
+    assert next(r for r in T2["rows"] if r["key"] == "sfx.rate")["judge"] == "out"
 
 
 # ---------------------------------------------------------------- 장면↔대사 어댑터: 컷 10개(맞음 7·틀림 3) → 손 정답 ±1칸

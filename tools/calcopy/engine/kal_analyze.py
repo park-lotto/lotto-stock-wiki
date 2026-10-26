@@ -503,6 +503,29 @@ def style_targets(st: dict) -> dict:
     return out
 
 
+SPAN_MIN = 3     # 벤치 편별 범위로 넓히려면 벤치 편이 이만큼은 있어야 한다
+
+
+def _bench_span(key: str, B: list[dict], bm: dict):
+    """(E 넓히기, 사장님 10-26 '너무 빡빡한 건 줄여라 — 벤치가 못 넘는 문턱은 너무 빡빡') 벤치 편별 값의 범위 — 스칼라 칸 (lo, hi) · 분포 칸 {칸: (lo, hi)}.
+    벤치 편이 SPAN_MIN 편 미만이면 None(넓히지 않음). 근거: 벤치 한 편을 우리로 놓고 나머지와 같은 자로 잰 자기 통과율(loo2 — chunk.sec 50%·sfx.rate 51%·chunk.chars 62%·fx.pos 62%)."""
+    if key == "cut.median":
+        vals = [float(x) for x in bm.get("cut_median") or [] if isinstance(x, (int, float))]
+    elif key in ("fx.pos", "transition.rate"):
+        bs = [s[key] for s in B if s.get(key)]
+        if len(bs) < SPAN_MIN:
+            return None
+        ks = sorted({k for x in bs for k in x})
+        return {k: (min(x.get(k, 0.0) for x in bs), max(x.get(k, 0.0) for x in bs)) for k in ks}
+    else:
+        vals = [float(s[key]) for s in B if isinstance(s.get(key), (int, float))]
+    return (min(vals), max(vals)) if len(vals) >= SPAN_MIN else None
+
+
+def _in_span(o, span) -> bool:
+    return bool(span) and isinstance(o, (int, float)) and span[0] - 1e-9 <= o <= span[1] + 1e-9
+
+
 def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, bench_media: dict | None, own_len: tuple | None = None,
                 own_targets: dict | None = None) -> dict:
     """(판단 주인) 벤치 줄판독 모음 ↔ 우리 한 편을 MATCH_RULES 자로. 못 잰 항목은 failed(통과로 치지 않는다).
@@ -562,8 +585,9 @@ def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, ben
             b, o, brange = (c.most_common(1)[0][0] if c else None), O[key], None
         else:
             b, o, brange = _med([s[key] for s in B]), O[key], None
+        span = _bench_span(key, B, bm)            # 벤치 편별 범위 — 허용 폭 밖이어도 벤치 편 범위 안이면 같다(E, 10-26)
         if hybrid and key in HYBRID_OWN_KEYS:          # 판 목표값으로 비교(같은 kind·tol)
-            b, brange = own_targets[key][0], None
+            b, brange, span = own_targets[key][0], None, None
             why = why + f" — 하이브리드 판: 판 목표 {b}(판 why: {str(own_targets[key][1])[:80]}…)와 비교"
         if b is None and o is None and key.endswith((".원음", ".나레")) and B and all(s.get("n") for s in B):
             judge, diff = "in", "둘 다 그 화자 줄 0(해당 없음)"      # 벤치 전 편에 그 화자 줄이 없고 우리도 없다 = 같다(10-26 두유노: 원음 0/119 — 옛 판정은 '미측정'으로 미달)
@@ -573,32 +597,34 @@ def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, ben
             judge, diff = "failed", "미측정"
         elif kind == "rel":
             diff = round((o - b) / b * 100, 1) if b else None
-            judge = "in" if (brange and brange[0] <= o <= brange[1]) or (diff is not None and abs(diff) <= tol) else "out"
+            judge = "in" if (brange and brange[0] <= o <= brange[1]) or (diff is not None and abs(diff) <= tol) or _in_span(o, span) else "out"
         elif kind == "rel0":                    # 벤치 0 이면 우리도 0 이어야 같다(0 나누기 대신)
             diff = round((o - b) / b * 100, 1) if b else (0.0 if not o else "벤치 0")
             # 편 하나의 발 수는 정수 — 벤치 비율×길이에 가장 가까운 정수(차 ≤ 0.5발)면 같다(placement 가 개수를 round(비율×길이)로 정하는 것과 같은 자, 10-25 ep12 sfx 0.051×28.5=1.45 → 1발이 ±30% 로는 1·2발 둘 다 미달)
             n_ok = bool(b and odur and key.endswith(".rate") and abs((o - b) * odur) <= 0.5)
-            judge = "in" if (b and abs(diff) <= tol) or (not b and not o) or n_ok else "out"
+            judge = "in" if (b and abs(diff) <= tol) or (not b and not o) or n_ok or _in_span(o, span) else "out"
         elif kind == "rel_slow":
             diff = round((o - b) / b * 100, 1)
-            judge = "in" if -tol * 0.5 <= diff <= tol else "out"   # 빠른 쪽(음수)은 절반만 허용 — B4 '원본보다 빠르면 반려 쪽'
+            judge = "in" if -tol * 0.5 <= diff <= tol or (span and b <= o <= span[1] + 1e-9) else "out"   # 빠른 쪽(음수)은 절반만 허용 — B4 '원본보다 빠르면 반려 쪽' · 느린 쪽만 벤치 가장 느린 편까지(사장님 10-26 '휙휙 지나가 집중 안 됨' — 빠른 쪽은 안 넓힌다)
         elif kind == "db":
             diff = round(o - b, 2)
             judge = "in" if abs(diff) <= tol else "out"
         elif kind == "pctp":
             if isinstance(b, dict):
                 diff = {k: round((o.get(k, 0.0) - b.get(k, 0.0)) * 100, 1) for k in sorted(set(b) | set(o))}   # 한쪽에만 있는 칸은 0으로(분포 비교)
-                judge = "in" if all(abs(v) <= tol for v in diff.values()) else "out"
+                judge = "in" if all(abs(v) <= tol or (isinstance(span, dict) and span.get(k, (0.0, 0.0))[0] - 1e-9 <= o.get(k, 0.0) <= span.get(k, (0.0, 0.0))[1] + 1e-9)
+                                    for k, v in diff.items()) else "out"
             else:
                 diff = round((o - b) * 100, 1)
-                judge = "in" if abs(diff) <= tol else "out"
+                judge = "in" if abs(diff) <= tol or _in_span(o, span) else "out"
         elif kind == "range":
             diff = f"벤치 {brange[0]}~{brange[1]}" if brange else ""
             judge = "in" if brange and brange[0] <= o <= brange[1] else "out"
         else:  # eq
             diff = "" if o == b else "다름"
             judge = "in" if o == b else "out"
-        rows.append({"key": key, "bench": b, "ours": o, "diff": diff, "judge": judge, "core": core, "why": why})
+        rows.append({"key": key, "bench": b, "ours": o, "diff": diff, "judge": judge, "core": core, "why": why,
+                     **({"bench_span": span} if span and kind in ("rel", "rel0", "rel_slow", "pctp") else {})})
     core = [r for r in rows if r["core"]]
     verdict = "통과" if core and all(r["judge"] == "in" for r in core) else "미달"
     return {"verdict": verdict, "rows": rows, "n_bench": len(B), "ours_n_lines": O["n"]}

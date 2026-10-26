@@ -41,6 +41,28 @@ def rhythm(st: dict) -> dict:
     return {k: R[k] for k, f in RHYTHM_KEYS.items() if isinstance(R.get(k), dict) and isinstance(R[k].get(f), (int, float)) and R[k].get("why")}
 
 
+CUT_MEDIAN_TOL = 0.3     # 판 컷 길이 중앙 허용 ±30%(재현 cut.median 과 같은 폭)
+
+
+def rhythm_bounds(st: dict) -> dict:
+    """(판단 주인 — 판 리듬 합격 범위, E 10-26 사장님 '벤치가 못 넘는 문턱은 너무 빡빡 → 벤치 실측 범위로') 렌더 전 rhythm_gate·품질 관문 판 리듬 행이 같이 읽는다.
+    cut_median = (v×0.7, max(v×1.3, 칸 max)) — max = 벤치 가장 느린 편(why 의 편별 값). 빠른 쪽은 넓히지 않는다(사장님 10-26 '휙휙 지나가 집중 안 됨').
+    hook_min = hook_cuts_3s.min(벤치 가장 적은 편 이하로 적는다) · plain = (min(v−tol, range[0]), max(v+tol, range[1])) — range = 벤치 편별 최소~최대.
+    칸이 없으면 그 키는 빠진다(rhythm_missing 이 말한다)."""
+    R = rhythm(st)
+    out = {}
+    if "cut_median" in R:
+        v = float(R["cut_median"]["v"])
+        out["cut_median"] = (round(v * (1 - CUT_MEDIAN_TOL), 3), round(max(v * (1 + CUT_MEDIAN_TOL), float(R["cut_median"].get("max") or 0)), 3))
+    if "hook_cuts_3s" in R:
+        out["hook_min"] = int(R["hook_cuts_3s"]["min"])
+    if "plain_share" in R:
+        v, tol = float(R["plain_share"]["v"]), float(R["plain_share"].get("tol", 0.1))
+        rg = R["plain_share"].get("range") or [v - tol, v + tol]
+        out["plain"] = (round(min(v - tol, float(rg[0])), 3), round(max(v + tol, float(rg[1])), 3))
+    return out
+
+
 def rhythm_missing(st: dict) -> list[str]:
     have = rhythm(st)
     return [k for k in RHYTHM_KEYS if k not in have]

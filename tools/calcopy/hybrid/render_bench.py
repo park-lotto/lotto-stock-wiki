@@ -172,15 +172,17 @@ def rhythm_gate(T: dict, st: dict, src_dir: Path | None) -> list[str]:
     bad = []
     if R.get("cut_median"):
         v, med = float(R["cut_median"]["v"]), statistics.median([y - x for x, y in spans])
-        if med > v * 1.3 + 1e-6:
+        hi = _STY.rhythm_bounds(st)["cut_median"][1]          # 합격 범위 주인 styles.rhythm_bounds(×1.3 또는 벤치 가장 느린 편)
+        if med > hi + 1e-6:
             line_at = lambda x: next((c["line"] for c in T["cuts"] if abs(float(c["t0"]) - x) < 1e-3), "?")  # noqa: E731
             long = sorted(spans, key=lambda s: s[0] - s[1])[:5]
-            bad.append(f"진짜 컷 중앙 {med:.2f}초 > 판 cut_median {v}×1.3 — 긴 화면 {[(line_at(x), round(x, 2), round(y - x, 2)) for x, y in long]} "
+            bad.append(f"진짜 컷 중앙 {med:.2f}초 > 판 cut_median {v} 상한 {hi} — 긴 화면 {[(line_at(x), round(x, 2), round(y - x, 2)) for x, y in long]} "
                        f"에 다른 장면 컷을 더할 것(재료.json — 같은 샷 이어 붙이기는 컷이 아니다)")
     if R.get("hook_cuts_3s"):
         h = [t for t in b if 0.1 < t <= 3.0]
-        if len(h) < int(R["hook_cuts_3s"]["min"]):
-            bad.append(f"훅 0.1~3초 진짜 컷 경계 {len(h)} < 판 {R['hook_cuts_3s']['min']} — 첫 줄 재료에 다른 장면 컷을 더할 것")
+        hm = _STY.rhythm_bounds(st)["hook_min"]
+        if len(h) < hm:
+            bad.append(f"훅 0.1~3초 진짜 컷 경계 {len(h)} < 판 {hm} — 첫 줄 재료에 다른 장면 컷을 더할 것")
     return bad
 
 

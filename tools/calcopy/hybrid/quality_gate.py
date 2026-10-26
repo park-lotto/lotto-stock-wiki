@@ -688,7 +688,9 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
                     r = render_transition_drop(R, style_name, kinds=TD_KINDS)
                     td["ours"] = r.get("boundaries") or []
                     return drop_verdict([b.get("drop") for b in td["ours"]], bd["drops"], trans_plan_of(tab))      # 개수 기록 = 배치 주인이 자막표에 남긴 것
-                row("화면", "전환 세기(zoomblur drop 중앙 ±30%)", drop_row, "render_bench.render_transition_drop ↔ bench_transition_drop(채널 _kal 캐시)")
+                # 참고 행(판정 밖, E 10-26): 벤치 자기 경계 5개 [-0.192,0.175,0.136,0.337,0.24] 중 중앙 ±30% 안 2개뿐 · 맨 컷도 0.255(11_검사) — 벤치가 못 넘는 자.
+                #   전환 종류 비율은 재현일치도 transition.rate 가 잰다. 값은 그대로 기록한다.
+                row("화면", "전환 세기(zoomblur drop 중앙 ±30%, 참고)", drop_row, "render_bench.render_transition_drop ↔ bench_transition_drop(채널 _kal 캐시)", ref=True)
                 row("화면", "전환 길이 ms(참고)", lambda: (True, f"우리 {[b.get('ms') for b in td.get('ours') or []]} · 벤치 {bd['ms']}"),
                     "transition_drop.ms", ref=True)
     # ── 재료
@@ -739,13 +741,15 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
 
         def cut_med():
             v, m = float(need("cut_median")["v"]), media()
+            lo, hi = ST.rhythm_bounds(st)["cut_median"]       # 합격 범위 주인 styles.rhythm_bounds(빠른 쪽 −30% · 느린 쪽 +30% 또는 벤치 가장 느린 편)
             o = m.get("cut_median")
             if o is None:
                 return None, "완성본 컷 못 잼"
-            return (v * 0.7 <= o <= v * 1.3), f"완성본 컷 중앙 {o}초 vs 판 {v}(±30%, kal_analyze.media_of 같은 자) · 컷 {m.get('n_cuts')}"
+            return (lo <= o <= hi), f"완성본 컷 중앙 {o}초 vs 판 {v}(범위 {lo}~{hi}, kal_analyze.media_of 같은 자) · 컷 {m.get('n_cuts')}"
 
         def hook():
-            h = int(need("hook_cuts_3s")["min"])
+            need("hook_cuts_3s")
+            h = ST.rhythm_bounds(st)["hook_min"]
             at = media().get("cut_at")
             if at is None:
                 return None, "완성본 컷 시각 없음(옛 캐시)"
@@ -755,8 +759,9 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
         def plain():
             from tools.calcopy.hybrid import placement as PL
             R0 = need("plain_share")
+            lo, hi = ST.rhythm_bounds(st)["plain"]            # 판 v±tol 또는 벤치 편별 범위(range) — 주인 styles.rhythm_bounds
             o = PL.plain_share(tab.get("rows") or [])
-            return (o is not None and abs(o - float(R0["v"])) <= float(R0.get("tol", 0.1)) + 1e-9), f"꾸밈 없는 덩어리 {o} vs 판 {R0['v']}±{R0.get('tol', 0.1)}(자막표 rows · placement.plain_share)"
+            return (o is not None and lo - 1e-9 <= o <= hi + 1e-9), f"꾸밈 없는 덩어리 {o} vs 판 {R0['v']}(범위 {lo}~{hi})(자막표 rows · placement.plain_share)"
 
         def photo():
             from tools.calcopy.hybrid.render_bench import photo_share
