@@ -424,6 +424,8 @@ def reuse_violations_bench(cuts: list[dict], src_len: dict, adjacent_run: bool =
             s2, a2, b2, c2 = rows[j]
             if s1 != s2 or chain[i] == chain[j]:
                 continue
+            if c1.get("kind") == "orig" and c2.get("kind") == "orig" and c1.get("line") == c2.get("line") and a2 >= b1 - eps:
+                continue        # 같은 원음 줄 안 컷어웨이(말하는 사람 → 끼운 장면 → 다시 말하는 사람, 원본 시간은 앞으로) = 원음이 흐르는 것, 재사용 아님(10-27 썬크림 회원편 O2 50~51 ↔ 52~53 오판)
             tag = f"{Path(s1).stem} {a1:.2f}~{b1:.2f}({c1.get('line')}) ↔ {a2:.2f}~{b2:.2f}({c2.get('line')})"
             if a1 < b2 - eps and a2 < b1 - eps:
                 bad.append(f"겹침 {min(b1, b2) - max(a1, a2):.2f}초: {tag}")
