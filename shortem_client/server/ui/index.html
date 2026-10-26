@@ -678,7 +678,7 @@ $('board').addEventListener('click',async e=>{
   if(t.dataset.tpl){const [m,id]=t.dataset.tpl.split(':');return save({template:t.dataset.tpl==='none'?'none':{mode:m,id}})}
   if(t.dataset.voice){const v=S.st.catalog.voices.find(x=>x.voice_id===t.dataset.voice);return save({tts:{voice_id:v.voice_id,name:v.name,preset_id:v.preset_id}})}
   if(t.id==='importkeys'){t.disabled=true;t.textContent='가져오는 중…';const r=await pcPost('/bridge/import-keys','/api/none',{});
-    const NM={typecast:'타입캐스트',elevenlabs:'일레븐랩스',fish:'피쉬오디오',coupang_access:'쿠팡 Access',coupang_secret:'쿠팡 Secret',vmake:'VMake',vertex_sa:'버텍스'};
+    const NM={typecast:'타입캐스트',elevenlabs:'일레븐랩스',fish:'피쉬오디오',coupang_access:'쿠팡 Access',coupang_secret:'쿠팡 Secret',vmake:'VMake',vertex_sa:'버텍스',buffer:'Buffer'};
     S.keymsg=!r.ok?(r.why||'가져오지 못했습니다'):(r.imported||[]).length?'가져왔습니다: '+r.imported.map(x=>NM[x]||x).join(' · ')+((r.failed||[]).length?' (모양이 달라 못 옮긴 것: '+r.failed.join(', ')+')':''):'숏템메이커에 등록된 키가 없습니다 — 아래 칸에 직접 넣어 주세요';
     S.setup=null;render();return}
   if(t.dataset.key){const s=t.dataset.key,key=($('key_'+s)||{}).value||'';const r=await pcPost('/bridge/key/'+s,'/api/key/'+s,{key});S.keymsg=r.ok?'저장했습니다 — 다음 영상부터 이 키를 씁니다':(r.why||'저장하지 못했습니다');S.setup=null;await load(true);render();return}
