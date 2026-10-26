@@ -875,6 +875,12 @@ def c_coupang_reviews(W, d):
     return {"reviews": out}
 
 
+def img_url(u) -> str:
+    """쿠팡 사진 주소 한 곳 — 크롬 검색 카드는 '//thumbnail.coupangcdn.com/…'(스킴 없음)을 준다(10-27 실측). 받는 쪽은 전부 이 함수를 거친다."""
+    u = str(u or "").strip()
+    return "https:" + u if u.startswith("//") else u
+
+
 def c_cand_sheet(W, d):
     """쿠팡 후보 사진 시트 — 파트너스 API 가 준 대표 이미지 주소(ads-partners)만 받는다(상품 페이지는 열지 않는다).
     같은 제품 판정이 이름만 보고 고르던 것(10-22 강주은: 둥근 실버 잠금 가방을 '그린 버클 소가죽' 이름만으로 같은 제품)을 막는다."""
@@ -883,8 +889,9 @@ def c_cand_sheet(W, d):
     from PIL import Image, ImageDraw
     tiles = []
     for i, it in enumerate((d.get("items") or [])[:12]):
-        u = str(it.get("image") or "")
+        u = img_url(it.get("image"))
         if not u.startswith("http"):
+            sys.stderr.write(f"[cand_sheet] #{i + 1} 사진 주소 없음/형식 다름: {u[:60]!r}\n")
             continue
         try:
             b = urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0"}), timeout=15).read()
@@ -1074,8 +1081,8 @@ def c_product_stills(W, d):
     for f in sorted((W / "look").glob("coupang*.json")):
         for v in jload(f).values():
             for it in (v or {}).get("items") or []:
-                if str(it.get("product_id") or it.get("productId") or "") == pid and it.get("image") and it["image"] not in urls:
-                    urls.append(it["image"])
+                if str(it.get("product_id") or it.get("productId") or "") == pid and it.get("image") and img_url(it["image"]) not in urls:
+                    urls.append(img_url(it["image"]))
     (W / "src").mkdir(exist_ok=True)
     out, seen, fail = [], set(), []
     for k, u in enumerate(urls[:int(d.get("n") or 4)]):

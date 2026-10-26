@@ -1103,9 +1103,30 @@ def _task(st: dict, e: "_Stop", ph: str, retry: str | None) -> dict | None:
     st["log"].append(f"제작자 과제 {rid}({stg['text']}): {e.why}")
     ask = (TASK_ASK + f"{NL}{NL}## 막힌 곳{NL}단계: {stg['no']}/{stg.get('total')} {stg['text']}{NL}이유: {e.why}{NL}속사정: {str(e.detail or '-')[:600]}"
            + f"{NL}이 막힘 과제 {n[key]}/{TASK_PER_KEY}번째 · 최근 기록:{NL}" + f"{NL}".join(str(x)[:200] for x in (st.get('log') or [])[-6:])
+           + f"{NL}{NL}" + _task_state(st)
            + (f"{NL}{NL}## 이 단계 함정·금지선{NL}" + f"{NL}".join("- " + x for x in traps) if traps else "")
            + f"{NL}{NL}" + _guide(stg["key"]))
     return _rv(rid, ask, need=("action",))
+
+
+def _task_state(st: dict) -> str:
+    """제작자 과제에 싣는 지금 상태(10-27 사장님 '두뇌가 멈춘 자리에서 개입해 매듭을 풀어야') — 질문지에 재료가 없어 '다시'만 하던 것.
+    이 편이 지금까지 정한 것만 그대로 옮긴다(새 판단 없음)."""
+    p, r, pick = st.get("product") or {}, st.get("read") or {}, st.get("screen_pick") or {}
+    rows = [f"## 지금까지 정한 것(이 편 상태)",
+            f"- 소재: {(st.get('bench') or {}).get('id', '')} {str((st.get('bench') or {}).get('title') or '')[:80]}",
+            f"- 제품어: {', '.join(r.get('product_words') or [])[:200]}"]
+    if p:
+        rows.append(f"- 고른 제품: 쿠팡 {p.get('product_id')} {str(p.get('name') or '')[:80]} — {str(p.get('why') or '')[:160]}")
+    if st.get("research_md"):
+        rows.append(f"- 조사 결론: {str(st['research_md'])[:400]}")
+    if pick:
+        rows.append(f"- 재료 영상 고르기: 고름 {len(pick.get('chosen') or [])}개 · 탈락 {len(pick.get('rejected') or [])}개")
+        rows += [f"  · 탈락 {x.get('id')}: {str(x.get('why') or '')[:120]}" for x in (pick.get("rejected") or [])[:8]]
+    if st.get("material") is not None:
+        rows.append(f"- 받은 재료 파일: {len((st.get('material') or {}).get('files') or [])}개")
+    rows.append("- 작업 폴더의 파일(look/·screen/·src/·bench/)은 Read 로 직접 열어 확인할 수 있으면 열어 본다.")
+    return NL.join(rows)
 
 
 def ph_task_got(st, m, rp, u):
@@ -3129,7 +3150,13 @@ def s_research_check(st, m, rp, u):
 def s_material_dl(st, m, rp, u):
     st["material"] = {"files": ((m.get("dl") or {}).get("files") or []) + ((m.get("stills") or {}).get("files") or [])}
     if not st["material"]["files"]:
-        raise _Stop("영상 조각과 제품 사진을 하나도 받지 못했어요", "다시 시도해 주시면 이어 갈게요", auto=True)
+        # 속사정 = 왜 0개인지 그대로(10-27: 사진 주소 '//' 형식 오류가 'ok' 뒤에 숨어 제작자 과제가 '다시'만 반복했다)
+        pick = st.get("screen_pick") or {}
+        why = [f"재료 영상 고름 {len(pick.get('chosen') or [])}개 · 탈락 {len(pick.get('rejected') or [])}개"
+               + "".join(f" / {r.get('id')}: {str(r.get('why') or '')[:80]}" for r in (pick.get("rejected") or [])[:4]),
+               f"제품 사진 실패: {((m.get('stills') or {}).get('fail') or ['없음'])[:3]}",
+               f"영상 받기: {(m.get('dl') or {}).get('error') or '안 받음(고른 영상 없음)'}"]
+        raise _Stop("영상 조각과 제품 사진을 하나도 받지 못했어요", "다시 시도해 주시면 이어 갈게요", auto=True, detail=" · ".join(why))
     return {"goto": "script"}
 
 
