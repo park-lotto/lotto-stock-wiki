@@ -362,7 +362,12 @@
   //   바로 복귀. 숫자 'N단계'는 7칸 미니 진행바로 바꿔 진척을 형태로 보인다.
   // NAV는 로드 시 동기로 그려지는 정적 배열이라 하위 항목 개념이 없다 → 마운트 뒤에 주입한다.
   // NAV 구조 자체는 안 건드린다 — 페이지 6개가 이 파일을 공유한다.
-  var WORK_STEPS = 7;   // produce 7단계 — 미니바 칸 수
+  // ★칸 수·순서는 제작소 단계 동그라미(produce.html ORB_TO_PANEL)와 같아야 한다(관제 272).
+  //   예전엔 7칸에 step(=패널 번호)+1을 그대로 채워, 대본(패널8) 단계 작업은 꽉 차고 완성한 작업은
+  //   1칸만 찼다(박선정님 "완성했는데 미완성으로 나온다"). 이 사본은 tests/test_sidebar_work_bar.py 가
+  //   produce.html 원본과 같은지 지킨다.
+  var ORB_TO_PANEL = [0, 8, 7, 2, 1, 3, 4, 5, 6, 9];
+  var WORK_STEPS = ORB_TO_PANEL.length - 1;   // SNS 예약(마지막)은 선택이라 완성본까지를 꽉 찬 바로 친다
   // curWid: '지금 작업'으로 표시할 work_id. 안 넘기면 URL(?work=)에서 뽑는다.
   // ★produce.html의 WORK_ID는 `let`이라 **window에 안 올라간다**(렉시컬 바인딩 — MIX_JOB에서
   //   이미 한 번 밟은 함정). 그래서 window를 훔쳐보지 않고 **인자로 받는다**.
@@ -377,7 +382,9 @@
       d.works.forEach(function (w) {
         var cur = open && w.work_id === open;
         var name = escHtml(w.title || "(제목 없음)");
-        var done = Math.max(0, Math.min(WORK_STEPS, (w.step || 0) + 1));
+        // 완성본을 만든 작업(서버 done)은 마지막으로 보던 화면과 상관없이 꽉 찬 바다.
+        var orb = ORB_TO_PANEL.indexOf(w.step || 0);
+        var done = w.done ? WORK_STEPS : Math.max(1, Math.min(WORK_STEPS, (orb < 0 ? 0 : orb) + 1));
         var bar = "";
         for (var i = 0; i < WORK_STEPS; i++) bar += '<span class="ss-work-seg' + (i < done ? " on" : "") + '"></span>';
         // 열기(제목+진행바)와 삭제(✕)를 각각 클릭 가능하게 분리한다. ✕는 행 onclick으로 전파되면
