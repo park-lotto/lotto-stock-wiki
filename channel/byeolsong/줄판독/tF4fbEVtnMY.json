@@ -6,65 +6,1230 @@
   1080,
   1920
  ],
- "title_lines": [],
- "source_label": null,
+ "title_lines": [
+  {
+   "text": "러시아의",
+   "colors": [
+    {
+     "word": "러시아의",
+     "hex": "#FDFDFE"
+    }
+   ],
+   "y": [
+    244,
+    341
+   ],
+   "x": [
+    349,
+    729
+   ]
+  },
+  {
+   "text": "1호선 ㅋㅋ",
+   "colors": [
+    {
+     "word": "1호선 ㅋㅋ",
+     "hex": "#FCB0D1"
+    }
+   ],
+   "y": [
+    353,
+    450
+   ],
+   "x": [
+    307,
+    771
+   ],
+   "note": "'ㅋㅋ' 작게"
+  }
+ ],
+ "source_label": "📍gulomov.9595",
  "layout": {
   "window": [
    0,
    476,
    1080,
-   1444
+   1920
   ],
+  "title_y": [
+   244,
+   453
+  ],
+  "source_y": [
+   497,
+   526
+  ],
+  "logo_y": [
+   0,
+   235
+  ],
+  "top_band": "0~235 판타지풍 높은음자리표·음표·별 그림 — Pz↔tF 평균 차 1.84, Pz↔1lMb 2.42(0~255) = 같은 그림",
+  "title_bg_hex": "#000002",
+  "source_hex": "#FFFFFF",
+  "source_pin_hex": "#E83C21",
+  "source_label_x": [
+   123,
+   387
+  ],
+  "source_note": "'📍gulomov.9595' 흰 글+얇은 검정 외곽, 글자 높이≈26px · 첫 0.27초는 없고 8프레임째부터 뜸",
+  "card_box": {
+   "hex": "#191A18",
+   "alpha": 0.91,
+   "pad": "본문 x195(상자 왼끝+111)",
+   "radius": 15,
+   "xy_1line": [
+    84,
+    1457,
+    993,
+    1632
+   ],
+   "xy_2line": [
+    84,
+    1417,
+    993,
+    1632
+   ],
+   "seen_hex": "#1D1D1D~#262621(뒤 화면에 따라)"
+  },
+  "lyric_band": [
+   1097,
+   1198
+  ],
+  "watermark": {
+   "seen": false,
+   "alpha": null
+  },
   "caption_band": [
-   1494,
-   1601
-  ],
-  "title_y": null,
-  "source_y": null,
-  "logo_y": null,
-  "watermark": null
+   1417,
+   1632
+  ]
  },
  "lines": [
   {
-   "t0": 14.1,
-   "t1": 16.8,
-   "speaker": null,
-   "text": "",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "t0": 0.3,
+   "t1": 4.067,
+   "speaker": "제3자",
+   "text": "지폐로 낚시하는 법 ㄷㄷ;;;",
+   "layer": "별헤는쏭",
+   "role": "훅",
+   "enter": "fade",
+   "enter_ms": 433,
+   "variant": "댓글카드",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     13,
+     60
+    ],
+    [
+     0.1,
+     100,
+     40,
+     46
+    ],
+    [
+     0.2,
+     100,
+     59,
+     32
+    ],
+    [
+     0.3,
+     100,
+     68,
+     18
+    ],
+    [
+     0.4,
+     100,
+     74,
+     4
+    ],
+    [
+     0.433,
+     100,
+     100,
+     0
+    ]
+   ],
+   "exit": "cut(1프레임에 사라짐) → 빈 화면 67ms 뒤 다음 카드",
+   "type_cps": null,
+   "cursor": false,
    "y": [
     1530,
-    null
+    1559
    ],
-   "fill_hex": null,
+   "x": 195,
+   "align": "left",
+   "max_w": 910,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "유튜브 앱 댓글 꼴 고딕(Roboto+본고딕 계열 추정)",
+    "basis": "눈"
+   },
+   "size_px": 26,
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#191A18",
+    "alpha": 0.91,
+    "pad": "본문 x195(상자 왼끝+111)",
+    "radius": 15,
+    "xy_1line": [
+     84,
+     1457,
+     993,
+     1632
+    ],
+    "xy_2line": [
+     84,
+     1417,
+     993,
+     1632
+    ],
+    "seen_hex": "#1D1D1D~#262621(뒤 화면에 따라)"
+   },
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "기타",
+   "scene_desc": "열린 지하철 스크린도어 앞 바닥에 지폐 한 장, 회색 티 남자가 걸어 들어옴",
+   "fit": 8,
    "cut_at": [],
-   "_asr": [],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "transition": "none",
+   "motion": "pan",
+   "confidence": "픽셀",
+   "notes": "댓글카드: 프로필 원 #6A35CB(보라)(흐린 원+흰 사람 모양, 중심 x146 y1512, 지름≈60) · 닉네임 흐림 · 시간 '3개월 전' 회색 #B0B0AD · 좋아요 '1만'(회색 #B5B5B3, 엄지·싫어요·'답글' 줄 y1575~1602) · 헤더 줄 y1492~1511"
+  },
+  {
+   "t0": 4.133,
+   "t1": 7.3,
+   "speaker": "제3자",
+   "text": "발로 스윽 가리는거 보소 ㅋㅋ",
+   "layer": "별헤는쏭",
+   "role": "본문",
+   "enter": "fade",
+   "enter_ms": 433,
+   "variant": "댓글카드",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     13,
+     60
+    ],
+    [
+     0.1,
+     100,
+     40,
+     46
+    ],
+    [
+     0.2,
+     100,
+     59,
+     32
+    ],
+    [
+     0.3,
+     100,
+     68,
+     18
+    ],
+    [
+     0.4,
+     100,
+     74,
+     4
+    ],
+    [
+     0.433,
+     100,
+     100,
+     0
+    ]
+   ],
+   "exit": "cut(1프레임에 사라짐) → 빈 화면 67ms 뒤 다음 카드",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1530,
+    1559
+   ],
+   "x": 195,
+   "align": "left",
+   "max_w": 910,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "유튜브 앱 댓글 꼴 고딕(Roboto+본고딕 계열 추정)",
+    "basis": "눈"
+   },
+   "size_px": 26,
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#191A18",
+    "alpha": 0.91,
+    "pad": "본문 x195(상자 왼끝+111)",
+    "radius": 15,
+    "xy_1line": [
+     84,
+     1457,
+     993,
+     1632
+    ],
+    "xy_2line": [
+     84,
+     1417,
+     993,
+     1632
+    ],
+    "seen_hex": "#1D1D1D~#262621(뒤 화면에 따라)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "회색 티 남자가 지폐를 발로 밟아 가림",
+   "fit": 9,
+   "cut_at": [
+    4.067
+   ],
+   "transition": "cut",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "댓글카드: 프로필 원 #4FCB34(초록)(흐린 원+흰 사람 모양, 중심 x146 y1512, 지름≈60) · 닉네임 흐림 · 시간 '2일 전' 회색 #B0B0AD · 좋아요 '4.7천'(회색 #B5B5B3, 엄지·싫어요·'답글' 줄 y1575~1602) · 헤더 줄 y1492~1511 · 바로 앞 4.067 에 같은 장면 점프 컷(cutdet 'cut', 카드 교체와 같은 프레임)"
+  },
+  {
+   "t0": 7.367,
+   "t1": 11.0,
+   "speaker": "제3자",
+   "text": "페트병 줍는 빌드업 ㅋㅋㅋㅋㅋ",
+   "layer": "별헤는쏭",
+   "role": "고조",
+   "enter": "fade",
+   "enter_ms": 433,
+   "variant": "댓글카드",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     13,
+     60
+    ],
+    [
+     0.1,
+     100,
+     40,
+     46
+    ],
+    [
+     0.2,
+     100,
+     59,
+     32
+    ],
+    [
+     0.3,
+     100,
+     68,
+     18
+    ],
+    [
+     0.4,
+     100,
+     74,
+     4
+    ],
+    [
+     0.433,
+     100,
+     100,
+     0
+    ]
+   ],
+   "exit": "cut(1프레임에 사라짐) → 빈 화면 67ms 뒤 다음 카드",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1530,
+    1559
+   ],
+   "x": 195,
+   "align": "left",
+   "max_w": 910,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "유튜브 앱 댓글 꼴 고딕(Roboto+본고딕 계열 추정)",
+    "basis": "눈"
+   },
+   "size_px": 26,
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#191A18",
+    "alpha": 0.91,
+    "pad": "본문 x195(상자 왼끝+111)",
+    "radius": 15,
+    "xy_1line": [
+     84,
+     1457,
+     993,
+     1632
+    ],
+    "xy_2line": [
+     84,
+     1417,
+     993,
+     1632
+    ],
+    "seen_hex": "#1D1D1D~#262621(뒤 화면에 따라)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "남자가 페트병 줍는 척 허리 숙여 지폐를 노림",
+   "fit": 9,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "댓글카드: 프로필 원 #38B1CB(하늘)(흐린 원+흰 사람 모양, 중심 x146 y1512, 지름≈60) · 닉네임 흐림 · 시간 '1일 전' 회색 #B0B0AD · 좋아요 '1.2천'(회색 #B5B5B3, 엄지·싫어요·'답글' 줄 y1575~1602) · 헤더 줄 y1492~1511"
+  },
+  {
+   "t0": 11.067,
+   "t1": 13.633,
+   "speaker": "제3자",
+   "text": "와 ㅋㅋ 도파민 십 ㅋㅋㅋㅋㅋ",
+   "layer": "별헤는쏭",
+   "role": "공개",
+   "enter": "fade",
+   "enter_ms": 433,
+   "variant": "댓글카드",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     13,
+     60
+    ],
+    [
+     0.1,
+     100,
+     40,
+     46
+    ],
+    [
+     0.2,
+     100,
+     59,
+     32
+    ],
+    [
+     0.3,
+     100,
+     68,
+     18
+    ],
+    [
+     0.4,
+     100,
+     74,
+     4
+    ],
+    [
+     0.433,
+     100,
+     100,
+     0
+    ]
+   ],
+   "exit": "cut(1프레임에 사라짐) → 빈 화면 133ms 뒤 다음 카드",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1530,
+    1559
+   ],
+   "x": 195,
+   "align": "left",
+   "max_w": 910,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "유튜브 앱 댓글 꼴 고딕(Roboto+본고딕 계열 추정)",
+    "basis": "눈"
+   },
+   "size_px": 26,
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#191A18",
+    "alpha": 0.91,
+    "pad": "본문 x195(상자 왼끝+111)",
+    "radius": 15,
+    "xy_1line": [
+     84,
+     1457,
+     993,
+     1632
+    ],
+    "xy_2line": [
+     84,
+     1417,
+     993,
+     1632
+    ],
+    "seen_hex": "#1D1D1D~#262621(뒤 화면에 따라)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "지폐가 끌려가고 남자가 따라가며 문 닫힘(빠른 움직임)",
+   "fit": 8,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "댓글카드: 프로필 원 #CE356D(분홍)(흐린 원+흰 사람 모양, 중심 x146 y1512, 지름≈60) · 닉네임 흐림 · 시간 '1주 전' 회색 #B0B0AD · 좋아요 '4.5천'(회색 #B5B5B3, 엄지·싫어요·'답글' 줄 y1575~1602) · 헤더 줄 y1492~1511"
+  },
+  {
+   "t0": 13.767,
+   "t1": 16.367,
+   "speaker": "제3자",
+   "text": "ㅈㄴ 열받겠다 ㄷㄷ;;",
+   "layer": "별헤는쏭",
+   "role": "본문",
+   "enter": "fade",
+   "enter_ms": 433,
+   "variant": "댓글카드",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     13,
+     60
+    ],
+    [
+     0.1,
+     100,
+     40,
+     46
+    ],
+    [
+     0.2,
+     100,
+     59,
+     32
+    ],
+    [
+     0.3,
+     100,
+     68,
+     18
+    ],
+    [
+     0.4,
+     100,
+     74,
+     4
+    ],
+    [
+     0.433,
+     100,
+     100,
+     0
+    ]
+   ],
+   "exit": "cut(1프레임에 사라짐) → 빈 화면 67ms 뒤 다음 카드",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1530,
+    1559
+   ],
+   "x": 195,
+   "align": "left",
+   "max_w": 910,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "유튜브 앱 댓글 꼴 고딕(Roboto+본고딕 계열 추정)",
+    "basis": "눈"
+   },
+   "size_px": 26,
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#191A18",
+    "alpha": 0.91,
+    "pad": "본문 x195(상자 왼끝+111)",
+    "radius": 15,
+    "xy_1line": [
+     84,
+     1457,
+     993,
+     1632
+    ],
+    "xy_2line": [
+     84,
+     1417,
+     993,
+     1632
+    ],
+    "seen_hex": "#1D1D1D~#262621(뒤 화면에 따라)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "닫힌 유리문 너머 승강장, 남자가 멀리서 다가옴",
+   "fit": 8,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "댓글카드: 프로필 원 #D04A32(주황빨강)(흐린 원+흰 사람 모양, 중심 x146 y1512, 지름≈60) · 닉네임 흐림 · 시간 '2개월 전' 회색 #B0B0AD · 좋아요 '5.1천'(회색 #B5B5B3, 엄지·싫어요·'답글' 줄 y1575~1602) · 헤더 줄 y1492~1511"
+  },
+  {
+   "t0": 16.433,
+   "t1": 19.167,
+   "speaker": "제3자",
+   "text": "1호선 빌런들은 짭이 안되네 ㅋㅋㅋ",
+   "layer": "별헤는쏭",
+   "role": "반전",
+   "enter": "fade",
+   "enter_ms": 400,
+   "variant": "댓글카드(2줄 높이)",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     24,
+     74
+    ],
+    [
+     0.1,
+     100,
+     35,
+     52
+    ],
+    [
+     0.2,
+     100,
+     73,
+     34
+    ],
+    [
+     0.3,
+     100,
+     60,
+     18
+    ],
+    [
+     0.4,
+     100,
+     100,
+     0
+    ]
+   ],
+   "exit": "cut(1프레임에 사라짐) → 빈 화면 67ms 뒤 다음 카드",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1490,
+    1555
+   ],
+   "x": 195,
+   "align": "left",
+   "max_w": 910,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "유튜브 앱 댓글 꼴 고딕(Roboto+본고딕 계열 추정)",
+    "basis": "눈"
+   },
+   "size_px": 26,
+   "letter_gap_px": null,
+   "line_gap_px": 14,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#191A18",
+    "alpha": 0.91,
+    "pad": "본문 x195(상자 왼끝+111)",
+    "radius": 15,
+    "xy_1line": [
+     84,
+     1457,
+     993,
+     1632
+    ],
+    "xy_2line": [
+     84,
+     1417,
+     993,
+     1632
+    ],
+    "seen_hex": "#1D1D1D~#262621(뒤 화면에 따라)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "남자가 지폐를 들고 유리문 쪽으로 걸어옴",
+   "fit": 7,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "댓글카드: 프로필 원 #8636C9(보라)(흐린 원+흰 사람 모양, 중심 x146 y1473, 지름≈60) · 닉네임 흐림 · 시간 '2개월 전' 회색 #B0B0AD · 좋아요 '1.3만'(회색 #B5B5B3, 엄지·싫어요·'답글' 줄 y1575~1602) · 헤더 줄 y1452~1471 · 상자는 2줄 높이(위 1417)인데 본문은 1줄(1490~1515), 그 아래 빈 줄 — 원 댓글 줄바꿈 꼴"
+  },
+  {
+   "t0": 19.233,
+   "t1": 21.933,
+   "speaker": "제3자",
+   "text": "너무 잔인하다;; 다시해조잉",
+   "layer": "별헤는쏭",
+   "role": "끝",
+   "enter": "fade",
+   "enter_ms": 433,
+   "variant": "댓글카드",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     13,
+     60
+    ],
+    [
+     0.1,
+     100,
+     40,
+     46
+    ],
+    [
+     0.2,
+     100,
+     59,
+     32
+    ],
+    [
+     0.3,
+     100,
+     68,
+     18
+    ],
+    [
+     0.4,
+     100,
+     74,
+     4
+    ],
+    [
+     0.433,
+     100,
+     100,
+     0
+    ]
+   ],
+   "exit": "끝까지 유지",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1530,
+    1559
+   ],
+   "x": 195,
+   "align": "left",
+   "max_w": 910,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "유튜브 앱 댓글 꼴 고딕(Roboto+본고딕 계열 추정)",
+    "basis": "눈"
+   },
+   "size_px": 26,
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#191A18",
+    "alpha": 0.91,
+    "pad": "본문 x195(상자 왼끝+111)",
+    "radius": 15,
+    "xy_1line": [
+     84,
+     1457,
+     993,
+     1632
+    ],
+    "xy_2line": [
+     84,
+     1417,
+     993,
+     1632
+    ],
+    "seen_hex": "#1D1D1D~#262621(뒤 화면에 따라)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "남자가 유리문에 얼굴을 바짝 대고 노려봄",
+   "fit": 8,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "댓글카드: 프로필 원 #CD3340(빨강)(흐린 원+흰 사람 모양, 중심 x146 y1512, 지름≈60) · 닉네임 흐림 · 시간 '3주 전' 회색 #B0B0AD · 좋아요 '1.4만'(회색 #B5B5B3, 엄지·싫어요·'답글' 줄 y1575~1602) · 헤더 줄 y1492~1511"
+  },
+  {
+   "t0": 11.0,
+   "t1": 12.367,
+   "speaker": "제3자",
+   "text": "あぁ このまま / 아아 이대로",
+   "layer": "별헤는쏭·가사",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "가사 2줄",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "exit": "cut(다음 소절로 1프레임 교체)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1097,
+    1198
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 262,
+   "fill_hex": "#FFFEFF",
+   "font": {
+    "name": "굵은 고딕(일본어 줄도 같은 굵기)",
+    "basis": "눈"
+   },
+   "size_px": 36,
+   "letter_gap_px": null,
+   "line_gap_px": 31,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [
+    {
+     "word": "あぁ このまま",
+     "hex": "#F1D4DD",
+     "outline": "#000000 6px",
+     "basis": "지휘자 확대 눈 확인 10-27(PzKl·tF) — 일본어 줄 연분홍 채움, 한국어 줄 흰"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "문 닫히는 빠른 움직임",
+   "fit": 5,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "가사 · 위 일본어(잉크 y1097~1131 ≈35px) / 아래 한국어(y1162~1198 ≈37px) · 줄 간격 65px · 가운데 x540 고정(물체 안 따라감, 두 편 같은 y) · 외곽선 검정 6~7px(행 스캔 중앙값) · 노래 소절과 맞춘 것으로 보임(소리는 못 들음)"
+  },
+  {
+   "t0": 12.367,
+   "t1": 13.467,
+   "speaker": "제3자",
+   "text": "僕たち / 우리들의",
+   "layer": "별헤는쏭·가사",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "가사 2줄",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "exit": "cut(다음 소절로 1프레임 교체)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1097,
+    1198
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 262,
+   "fill_hex": "#FFFEFF",
+   "font": {
+    "name": "굵은 고딕(일본어 줄도 같은 굵기)",
+    "basis": "눈"
+   },
+   "size_px": 36,
+   "letter_gap_px": null,
+   "line_gap_px": 31,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [
+    {
+     "word": "僕たち",
+     "hex": "#F1D4DD",
+     "outline": "#000000 6px",
+     "basis": "지휘자 확대 눈 확인 10-27(PzKl·tF) — 일본어 줄 연분홍 채움, 한국어 줄 흰"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "닫힌 문",
+   "fit": 5,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "가사 · 위 일본어(잉크 y1097~1131 ≈35px) / 아래 한국어(y1162~1198 ≈37px) · 줄 간격 65px · 가운데 x540 고정(물체 안 따라감, 두 편 같은 y) · 외곽선 검정 6~7px(행 스캔 중앙값) · 노래 소절과 맞춘 것으로 보임(소리는 못 들음)"
+  },
+  {
+   "t0": 13.467,
+   "t1": 16.167,
+   "speaker": "제3자",
+   "text": "の声が / 목소리가",
+   "layer": "별헤는쏭·가사",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "가사 2줄",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "exit": "cut(다음 소절로 1프레임 교체)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1097,
+    1198
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 262,
+   "fill_hex": "#FFFEFF",
+   "font": {
+    "name": "굵은 고딕(일본어 줄도 같은 굵기)",
+    "basis": "눈"
+   },
+   "size_px": 36,
+   "letter_gap_px": null,
+   "line_gap_px": 31,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [
+    {
+     "word": "の声が",
+     "hex": "#F1D4DD",
+     "outline": "#000000 6px",
+     "basis": "지휘자 확대 눈 확인 10-27(PzKl·tF) — 일본어 줄 연분홍 채움, 한국어 줄 흰"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "유리문 너머 승강장",
+   "fit": 5,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "가사 · 위 일본어(잉크 y1097~1131 ≈35px) / 아래 한국어(y1162~1198 ≈37px) · 줄 간격 65px · 가운데 x540 고정(물체 안 따라감, 두 편 같은 y) · 외곽선 검정 6~7px(행 스캔 중앙값) · 노래 소절과 맞춘 것으로 보임(소리는 못 들음)"
+  },
+  {
+   "t0": 16.167,
+   "t1": 18.3,
+   "speaker": "제3자",
+   "text": "世界の端 / 세상의",
+   "layer": "별헤는쏭·가사",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "가사 2줄",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "exit": "cut(다음 소절로 1프레임 교체)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1097,
+    1198
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 262,
+   "fill_hex": "#FFFEFF",
+   "font": {
+    "name": "굵은 고딕(일본어 줄도 같은 굵기)",
+    "basis": "눈"
+   },
+   "size_px": 36,
+   "letter_gap_px": null,
+   "line_gap_px": 31,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [
+    {
+     "word": "世界の端",
+     "hex": "#F1D4DD",
+     "outline": "#000000 6px",
+     "basis": "지휘자 확대 눈 확인 10-27(PzKl·tF) — 일본어 줄 연분홍 채움, 한국어 줄 흰"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "남자가 지폐 들고 다가옴",
+   "fit": 5,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "가사 · 위 일본어(잉크 y1097~1131 ≈35px) / 아래 한국어(y1162~1198 ≈37px) · 줄 간격 65px · 가운데 x540 고정(물체 안 따라감, 두 편 같은 y) · 외곽선 검정 6~7px(행 스캔 중앙값) · 노래 소절과 맞춘 것으로 보임(소리는 못 들음)"
+  },
+  {
+   "t0": 18.3,
+   "t1": 19.067,
+   "speaker": "제3자",
+   "text": "っこまで / 가장자리까지",
+   "layer": "별헤는쏭·가사",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "가사 2줄",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "exit": "cut(다음 소절로 1프레임 교체)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1097,
+    1198
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 262,
+   "fill_hex": "#FFFEFF",
+   "font": {
+    "name": "굵은 고딕(일본어 줄도 같은 굵기)",
+    "basis": "눈"
+   },
+   "size_px": 36,
+   "letter_gap_px": null,
+   "line_gap_px": 31,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [
+    {
+     "word": "っこまで",
+     "hex": "#F1D4DD",
+     "outline": "#000000 6px",
+     "basis": "지휘자 확대 눈 확인 10-27(PzKl·tF) — 일본어 줄 연분홍 채움, 한국어 줄 흰"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "남자가 문 앞에 옴",
+   "fit": 5,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "가사 · 위 일본어(잉크 y1097~1131 ≈35px) / 아래 한국어(y1162~1198 ≈37px) · 줄 간격 65px · 가운데 x540 고정(물체 안 따라감, 두 편 같은 y) · 외곽선 검정 6~7px(행 스캔 중앙값) · 노래 소절과 맞춘 것으로 보임(소리는 못 들음)"
+  },
+  {
+   "t0": 19.067,
+   "t1": 21.933,
+   "speaker": "제3자",
+   "text": "消えることなく / 사라지지 않고",
+   "layer": "별헤는쏭·가사",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "가사 2줄",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "exit": "cut(다음 소절로 1프레임 교체)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1097,
+    1198
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 262,
+   "fill_hex": "#FFFEFF",
+   "font": {
+    "name": "굵은 고딕(일본어 줄도 같은 굵기)",
+    "basis": "눈"
+   },
+   "size_px": 36,
+   "letter_gap_px": null,
+   "line_gap_px": 31,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [
+    {
+     "word": "消えることなく",
+     "hex": "#F1D4DD",
+     "outline": "#000000 6px",
+     "basis": "지휘자 확대 눈 확인 10-27(PzKl·tF) — 일본어 줄 연분홍 채움, 한국어 줄 흰"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "유리문에 얼굴 대고 노려봄",
+   "fit": 6,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "가사 · 위 일본어(잉크 y1097~1131 ≈35px) / 아래 한국어(y1162~1198 ≈37px) · 줄 간격 65px · 가운데 x540 고정(물체 안 따라감, 두 편 같은 y) · 외곽선 검정 6~7px(행 스캔 중앙값) · 노래 소절과 맞춘 것으로 보임(소리는 못 들음)"
   }
  ],
- "beats": null,
- "narr_share": null,
- "notes": [],
- "name_evidence": [],
- "_todo": [
-  "speaker",
-  "layer",
-  "role",
-  "enter",
-  "fill_hex",
-  "emph",
-  "sticker",
-  "sfx",
-  "scene",
-  "fit",
-  "beats",
-  "narr_share"
+ "no_caption": [
+  [
+   0.0,
+   0.3
+  ]
  ],
- "_made_by": "kal_analyze.skeleton(기계값 뼈대 — 판독 전)"
+ "frame0": {
+  "what": "열린 지하철 스크린도어 앞 승강장 바닥(사람 없음, 약간 흐림), 카드·출처 줄 없음",
+  "face_frac": 0.0,
+  "text": "",
+  "frame_text": "제목 2줄만",
+  "basis": "지휘자 10-27: text = 장면 위에 얹은 표지 카드 글(frame0_kind) — 틀의 고정 제목·출처 줄은 frame_text 로 옮김. 0초 = 그냥 장면(카드 없음, what 칸)"
+ },
+ "beats": "훅(0.3초 '지폐로 낚시하는 법 ㄷㄷ;;;') → 본문(4.13초 발로 가림, 4.067 점프 컷) → 고조(7.37초 페트병 빌드업) → 공개(11.07초 '도파민 십', 11.0초 가사 시작) → 반전(16.43초 '1호선 빌런…') → 끝(19.23초 '너무 잔인하다;; 다시해조잉' + 유리문에 얼굴)",
+ "narr_share": "나레 0/13줄, 0초/21.9초 — 나레 없음(댓글카드 7 + 가사 6)",
+ "notes": [
+  "댓글카드 7장이 첫 0.3~0.43초부터 끝까지 이어짐 — 바뀔 때 앞 카드 1프레임에 사라짐(cut) → 빈 2~4프레임(67~133ms) → 새 카드 433ms 동안 아래 60px(2줄 카드 74px)에서 올라오며 페이드인(30fps 본문 대비로 잰 알파·밀림)",
+  "가사: 11.0초부터 cut 교체(11.0/12.367/13.467/16.167/18.3/19.067)",
+  "원본 화면에 박힌 글 없음",
+  "컷: 4.067 점프 컷 1(cutdet v2) · 0.0 시작 흐림(zoomblur 신호) · 샷 motion pan→cam",
+  "효과음 미확인(소리 못 들음) → sfx null",
+  "글꼴 이름은 눈 추정"
+ ],
+ "name_evidence": []
 }

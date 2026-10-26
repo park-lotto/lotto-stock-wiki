@@ -1,0 +1,115 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 별헤는쏭판) · 시각은 final.mp4 기준 초",
+ "pack": "clean",
+ "rows": [],
+ "sfx": [],
+ "flashes": [],
+ "transitions": [],
+ "memes": [],
+ "comment": null,
+ "cards": [
+  {
+   "line": "C1",
+   "t0": 0.27,
+   "t1": 3.4,
+   "text": "코코넛 원래 이렇게 생긴 거였어?",
+   "likes": "9.8천",
+   "ago": "2주 전",
+   "color": "#6A35CB"
+  },
+  {
+   "line": "C2",
+   "t0": 3.4,
+   "t1": 6.8,
+   "text": "도끼 몇 번에 껍질이 통째로 벗겨지네 ㄷㄷ;;",
+   "likes": "4.1천",
+   "ago": "1주 전",
+   "color": "#4FCB34"
+  },
+  {
+   "line": "C3",
+   "t0": 6.8,
+   "t1": 10.2,
+   "text": "깎는 게 아니라 그냥 옷을 벗기는 중 ㅋㅋㅋㅋ",
+   "likes": "1.2만",
+   "ago": "3주 전",
+   "color": "#38B1CB"
+  },
+  {
+   "line": "C4",
+   "t0": 10.2,
+   "t1": 13.43,
+   "text": "난 왜 이걸 끝까지 보고 있지",
+   "likes": "6.3천",
+   "ago": "5일 전",
+   "color": "#CE356D"
+  }
+ ],
+ "lyrics": [
+  {
+   "t0": 6.8,
+   "t1": 8.2,
+   "jp": "あぁ このまま",
+   "ko": "아아 이대로"
+  },
+  {
+   "t0": 8.2,
+   "t1": 9.3,
+   "jp": "僕たち",
+   "ko": "우리들의"
+  },
+  {
+   "t0": 9.3,
+   "t1": 12.0,
+   "jp": "の声が",
+   "ko": "목소리가"
+  },
+  {
+   "t0": 12.0,
+   "t1": 13.433,
+   "jp": "世界の端",
+   "ko": "세상의"
+  }
+ ],
+ "log": [
+  "본보기 벤치 편 = 없음(합계 비율)",
+  "효과음 0발(본보기 0) []",
+  "짤 0개(rate 0.0 — 벤치에 짤 없음도 스타일)",
+  "등장 {'cut': 4} · 강조 0/4",
+  "댓글카드 4장",
+  "가사 4줄 6.80초부터",
+  "꾸밈 답 없음(deco_answers.json)"
+ ],
+ "check": {
+  "ok": true,
+  "reference": null,
+  "worst_slot_diff": 0.0,
+  "slots": {
+   "stickers": {
+    "bench": null,
+    "ours": {},
+    "vs": {}
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0,
+    "kinds": {}
+   },
+   "transitions": {
+    "ours": {},
+    "plan": {
+     "src": null,
+     "want_raw": {},
+     "want": null,
+     "picked": {},
+     "why": "비율 출처 없음(본보기 줄판독 transition·counted.transition·판 cuts.transition.kinds 모두 없음)"
+    }
+   },
+   "sites": {},
+   "meme": {
+    "ours": 0
+   }
+  },
+  "bad": []
+ }
+}
