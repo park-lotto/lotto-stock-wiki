@@ -1681,6 +1681,13 @@ def _src_rule_ctx(st) -> str:
             (f"\n(사진 파일: {', '.join(pics)})" if pics else "") + rule) if names else ""
 
 
+def _points_ctx(v: str) -> str:
+    """이 판 대본 검사가 요구하는 포인트·표시 칸(주인 = script_audit.points_rule_for — 검사기와 같은 기준, 10-27 7번 반려)."""
+    from tools.calcopy.hybrid import script_audit
+    r = script_audit.points_rule_for(v)
+    return f"\n\n## 대본 검사가 보는 포인트·표시 칸(반드시)\n{r}" if r else ""
+
+
 def _script_ask(st, fail: str = "") -> dict:
     from tools.calcopy.hybrid import render_bench, styles as STY
     v = st["version"]
@@ -1697,7 +1704,7 @@ def _script_ask(st, fail: str = "") -> dict:
            "\n\n## 원음 받아쓰기(구간마다 — 모델 둘이면 둘 다)\n" + json.dumps(st.get("asr") or {}, ensure_ascii=False)[:6000] +
            "\n\n## 재료 파일(시트 순서 = 앞 5개)\n" + json.dumps(ms.get("list") or [], ensure_ascii=False) +
            "\n실제 크기(crop 은 이 픽셀로 — 시트는 줄인 미리보기다): " + json.dumps(_all_dims(st), ensure_ascii=False) + _shots_ctx(st) +
-           _foreign_script_ctx(st) + _src_rule_ctx(st) + (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
+           _foreign_script_ctx(st) + _src_rule_ctx(st) + _points_ctx(v) + (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
     imgs = [_img(x) for x in ms.get("sheets") or []]
     if ms.get("bench_caps"):     # 소재 쇼츠 박힌 한국어 자막(1초 칸) — 잘된 편의 말맛 그대로(사장님 10-26)
         ctx += ("\n\n## 말맛 — 마지막 그림 = 소재 쇼츠 1초 자막 시트(한국 재편집이 잘된 말투)\n"

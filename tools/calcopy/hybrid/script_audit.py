@@ -136,6 +136,25 @@ def version_of(path: Path, given: str | None, doc: dict | None = None) -> str:
     return "재미썸홈판" if "재미썸홈" in str(path) else "잇썸홈판"
 
 
+def engine_pc(kind: str, off: tuple = ()) -> dict | None:
+    """engine 검사의 포인트 기준(pc) 주인 한 곳 — 검사(engine)와 대본 질문지(points_rule_for → flow._script_ask)가 같은 기준을 쓴다.
+    10-27 실사고: 검사는 줄의 point·answer_at·facts 를 보는데 질문지엔 그 칸이 없어 7번 반려(통과 불가능)."""
+    pc = SF.load_points(FRAME["itssum"]) if kind == "itssum" else json.loads(FRAME["jaemi"].read_text(encoding="utf-8"))
+    if pc and "wow" in off:
+        pc = {**pc, "wow": {**(pc.get("wow") or {}), "count": 0, "strong_min": 0}}
+    return pc
+
+
+def points_rule_for(version: str) -> str:
+    """이 판 대본 검사(engine)가 요구하는 표시 칸 지시문 — 없으면 ''. 지시 글 주인 = script_frame.points_rule."""
+    for r in (ST.load(version).get("script") or {}).get("audit") or []:
+        if r.get("kind") == "engine":
+            rule = SF.points_rule(engine_pc(r["name"], tuple(r.get("off") or ())))
+            return (rule + "\n[표시 칸 — 검사가 글이 아니라 이 칸을 본다] 대본 lines 각 줄에 point(\"잉\"·\"와우\"·\"권위\" 등)·answer_at(잉 줄의 답이 나오는 뒤 줄 번호, 0부터)·"
+                    "facts(그 줄 사실의 근거 = 조사.md 사실 번호 목록, 예 [\"f3\"]) 칸을 단다. 숫자·권위 줄과 와우 줄은 facts 가 비면 없는 것으로 친다.") if rule else ""
+    return ""
+
+
 def engine(kind: str, d: dict, lines: list[dict], off: tuple = ()) -> dict:
     """옛 잇썸·재미썸 검사(동작 그대로). off = 판 audit 칸 engine.off — 이 판에서 끄는 points 항목(지금은 'wow' 하나:
     와우 = 줄 머리 강한 연결어 3줄, 10-26 두유노판 — 벤치 상위 10편 연결어 줄 0%라 벤치를 따라 끔. 다른 판은 그대로)."""
@@ -149,12 +168,9 @@ def engine(kind: str, d: dict, lines: list[dict], off: tuple = ()) -> dict:
         f = SF.features(text)
         res["endings"] = [SF.ending_of(s) for s in SF.sentences(text)]
         res["features"] = {k: f[k] for k in ("sent_len_mean", "connect_per_sent", "person1_ratio", "polite_ratio")}
-        pc = SF.load_points(FRAME["itssum"])
     else:
-        pc = json.loads(FRAME["jaemi"].read_text(encoding="utf-8"))
         res["polite"] = sum(1 for l in lines if l["text"].rstrip(" .,").endswith(("요", "니다")))
-    if pc and "wow" in off:
-        pc = {**pc, "wow": {**(pc.get("wow") or {}), "count": 0, "strong_min": 0}}
+    pc = engine_pc(kind, off)
     pcr = SF.points_check(lines, pc)
     if pcr is not None:
         res["points"] = {"ok": pcr["ok"], "why": pcr["why"], "bad": pcr["bad"], "wow": [w for _, w in pcr["wow"]], "ing": pcr["ing"]}
