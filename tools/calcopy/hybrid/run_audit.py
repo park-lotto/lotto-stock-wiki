@@ -4,7 +4,7 @@
 쓰는 법:  py tools/calcopy/hybrid/run_audit.py <폴더> [<폴더> …]
     폴더 아래 runner.log(회원 시험: home/창고/flow/<sid>/runner.log)·flow_log.jsonl(관리자 flow_dev)을 모두 찾는다.
 읽는 것:
-    runner.log  '[runner] <cmd> <초>s ok|ERR …'      → 단계 시간·실패
+    runner.log  '[runner] <cmd> <초>s ok|ERR …'      → 단계 시간·실패 · 'ok HOLLOW …' = 결과가 비었거나 일부를 버린 조용한 실패(runner_ops.hollow)
     flow.json   message 의 '다시 …(n/m): <이유>'      → 되돌아감(반려) 이유
     flow_log.jsonl msg 줄                             → 같은 꼴(관리자)
 기준: SLOW = 한 번에 이 초 넘는 실행기 일(원본 찾기·렌더 같은 긴 일은 LONG_OK 안이면 느림 아님)."""
@@ -17,6 +17,7 @@ from pathlib import Path
 SLOW = 180          # 실행기 한 일이 이보다 오래 걸리면 '느림'
 LONG_OK = {"render": 900, "plan": 420, "clean_text": 600, "origin_foreign": 300, "bench": 120, "origin_get": 180, "check": 600}
 RUN = re.compile(r"\[runner\] (\S+) ([\d.]+)s (ok|ERR)(.*)")
+HOL = re.compile(r"HOLLOW (.+)$")
 REDO = re.compile(r"다시 [^(]*\((\d+)/(\d+)\): (.+)$")
 
 
@@ -31,7 +32,7 @@ def runs(roots: list[Path]) -> list[tuple[str, Path]]:
 
 
 def audit(name: str, d: Path) -> dict:
-    steps, errs, slow = [], [], []
+    steps, errs, slow, hollow = [], [], [], []
     rl = d / "runner.log"
     if rl.exists():
         for ln in rl.read_text(encoding="utf-8", errors="replace").splitlines():
@@ -42,6 +43,9 @@ def audit(name: str, d: Path) -> dict:
             steps.append((cmd, sec, ok))
             if ok == "ERR":
                 errs.append(f"{cmd} {sec:.0f}초 {rest[:120]}")
+            hm = HOL.search(rest)
+            if ok == "ok" and hm:
+                hollow.append(f"{cmd} {hm.group(1)[:140]}")
             if sec > max(SLOW, LONG_OK.get(cmd, 0)):
                 slow.append(f"{cmd} {sec:.0f}초")
     redo = Counter()
@@ -71,7 +75,7 @@ def audit(name: str, d: Path) -> dict:
     for c, s, _ in steps:
         by[c] += s
     return {"name": name, "stage": stage, "total_sec": round(tot), "top": sorted(by.items(), key=lambda kv: -kv[1])[:4],
-            "errs": errs, "slow": slow, "redo": redo}
+            "errs": errs, "slow": slow, "hollow": hollow, "redo": redo}
 
 
 def main(argv: list[str]) -> int:
@@ -83,6 +87,8 @@ def main(argv: list[str]) -> int:
         print(f"■ {r['name']}  [{r['stage']}]  실행기 합 {r['total_sec']}초 · 큰 몫 " + ", ".join(f"{c} {s:.0f}초" for c, s in r["top"]))
         for e in r["errs"]:
             print(f"   ✗ 실패  {e}")
+        for h in r["hollow"]:
+            print(f"   ⚠ ok인데 비어 있음  {h}")
         for s in r["slow"]:
             print(f"   ⏱ 느림  {s}")
         for k, n in r["redo"].most_common():

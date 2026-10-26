@@ -1281,7 +1281,7 @@ def plan_sheet(W: Path, version: str, T: dict) -> Path:
     from tools.calcopy.hybrid import render_bench, styles as STY
     M = jload(W / "doc" / version / "재료.json")
     cand = Path(M.get("cand_dir") or (W / "src"))
-    _, _, ww, wh = STY.load(version)["frame"]["window"]
+    _, _, ww, wh = STY.window_of(version)
     import threading
     face_lock = threading.Lock()      # face_crop 의 얼굴 검출기는 나눠 쓰면 안 된다 — 한 번에 하나
 
@@ -1770,7 +1770,7 @@ def c_materials_draft(W, d):
     from tools.calcopy import ititemlog_make as IM
     from tools.calcopy.hybrid import styles as STY
     v = d["version"]
-    _, _, ww, wh = STY.load(v)["frame"]["window"]
+    _, _, ww, wh = STY.window_of(v)
     files = [dims(W / "src" / n) for n in d.get("files") or [] if (W / "src" / n).exists()]
     res = IM.draft(files, d.get("shots") or {}, ww / wh, d.get("cleaned") or [])
     jsave(W / "doc" / v / "재료_초안.json", res)
@@ -1805,6 +1805,26 @@ CMDS = {"env": c_env, "bench": c_bench, "search": c_search, "peer_sheet": c_peer
         "screen": c_screen, "download": c_download, "product_stills": c_product_stills, "orig_heard": c_orig_heard, "asr_spans": c_asr_spans, "shot_sheets": c_shot_sheets, "mat_sheets": c_mat_sheets,
         "write_doc": c_write_doc, "plan": c_plan, "render": c_render, "check": c_check, "finish": c_finish,
         "origin_foreign": c_origin_foreign, "of_settle": c_of_settle, "clean_text": c_clean_text, "materials_draft": c_materials_draft, "thumb_auto": c_thumb_auto}
+
+
+HOLLOW_KEYS = ("fail", "failed", "bad", "bad_urls", "miss", "skipped")      # 결과에 이 칸이 비어 있지 않으면 일부를 조용히 버린 것
+
+
+def hollow(r: dict) -> str:
+    """(판단 주인 — 'ok 인데 결과 0' 조용한 실패 표시, 진행판 창 10-27 요청) 오류 없이 끝난 실행기 결과가 ① 목록·묶음 칸이 하나 이상 있는데 전부 비었거나
+    ② 실패·버림 칸(HOLLOW_KEYS)에 무언가 있으면 한 줄 설명. runner.log 에 'ok HOLLOW …' 로 남아 run_audit 이 잡는다(판정은 바꾸지 않는다 — 표시만).
+    실측 근거: c_cand_sheet(사진 주소 '//' 를 조용히 건너뜀 → 시트 0장)·c_product_stills(ValueError 를 fail 에 숨기고 ok)."""
+    if not isinstance(r, dict):
+        return ""
+    coll = {k: v for k, v in r.items() if isinstance(v, (list, dict)) and k not in HOLLOW_KEYS}
+    out = []
+    if coll and all(not v for v in coll.values()):
+        out.append("결과 칸 전부 비어 있음(" + ",".join(list(coll)[:5]) + ")")
+    for k in HOLLOW_KEYS:
+        v = r.get(k)
+        if v:
+            out.append(f"{k} {len(v) if isinstance(v, (list, dict)) else 1}개")
+    return " · ".join(out)
 
 
 # ── 시간 예산·진행 신호·감시(사장님 10-26 "가만히 있으면 한없이 진행되는 게 제일 문제") ─────────────────────────
@@ -1978,7 +1998,8 @@ def run_do(W: Path, do: list[dict], log=print, stall: float | None = None) -> di
         finally:
             r0 = out.get(rid)
             if isinstance(r0, dict) and not r0.get("timed_out"):
-                log(f"[runner] {d.get('cmd')} {time.time() - t0:.1f}s {'ERR ' + str(r0.get('error'))[:120] if r0.get('error') else 'ok'}")
+                h = "" if r0.get("error") else hollow(r0)
+                log(f"[runner] {d.get('cmd')} {time.time() - t0:.1f}s {'ERR ' + str(r0.get('error'))[:120] if r0.get('error') else 'ok'}" + (f" HOLLOW {h}" if h else ""))
 
     batch: list = []
 
