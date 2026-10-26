@@ -472,6 +472,44 @@ def card_faces(st: dict, doc: Path, T: dict, cand_dir: Path) -> list[dict]:
     return rows
 
 
+AUTO_AT = (0.25, 0.5, 0.75)   # 자동 고르기: 컷마다 볼 자리(컷 길이 비율)
+
+
+def auto_pick(st: dict, T: dict, cand_dir: Path, log=print) -> dict | None:
+    """(관제263 10-26 사장님 '썸네일 이렇게 까다로운 것도 문제') AI 3안이 없거나 반려일 때 — 계획 컷(T cuts)에서 얼굴이 가장 크고 선명한 프레임을 코드가 고른다.
+    판정은 기존 자만 부른다: 카드 관문과 같은 judge(FACE_MIN_FRAC) 통과를 먼저, 그 안에서 score(얼굴 크기·정면·선명·눈 뜸) 큰 것.
+    프레임 = card_scene_frame(카드 관문·렌더 카드와 같은 자리 풀이). 반환 = 카드 한 안({part, t, …}) 또는 None(얼굴 프레임 없음 → 카드 없이)."""
+    from concurrent.futures import ThreadPoolExecutor
+    from tools.calcopy.hybrid.render_bench import frame_window
+    _, _, ww, wh = frame_window(st["frame"])
+    det = _detector()
+    jobs = [(k, round(float(c.get("dur") or (float(c.get("t1", 0)) - float(c.get("t0", 0)))) * f, 3))
+            for k, c in enumerate(T.get("cuts") or []) for f in AUTO_AT]
+    jobs = [(k, t) for k, t in jobs if t > 0]
+
+    def grab(job):
+        k, t = job
+        im, where = card_scene_frame({"part": k, "t": t}, T, cand_dir, (ww, wh))
+        return k, t, im, where
+
+    rows = []
+    with ThreadPoolExecutor(max_workers=6) as ex:      # 프레임 뽑기(ffmpeg)만 동시 — 얼굴 검출은 한 줄로(검출기 하나)
+        for k, t, im, where in ex.map(grab, jobs):
+            if im is None:
+                continue
+            ok, why, info = judge(faces_of(det, im), ww, wh)
+            s, sinfo = score(det, im)
+            rows.append({"part": k, "t": t, "ok": ok, "score": s, "where": where, **info, **{x: sinfo.get(x) for x in ("frontal", "sharp", "eye")}})
+    good = [r for r in rows if r["score"] >= 0]
+    if not good:
+        log(f"[thumb] 자동 고르기: 프레임 {len(rows)}장에 얼굴 없음 → 카드 없이")
+        return None
+    best = max(good, key=lambda r: (r["ok"], r["score"]))
+    log(f"[thumb] 자동 고르기 {len(rows)}장 → 컷 {best['part']} @{best['t']}초 얼굴 {best.get('h_frac')} 점수 {best['score']} 관문자 {'○' if best['ok'] else '×'} ({best['where']})")
+    return {"id": "A", "axis": "인물순간", "mood": "wow", "auto": True, "part": best["part"], "t": best["t"],
+            "why": f"자동: 얼굴 가장 큰 프레임(높이 {best.get('h_frac')}·점수 {best['score']})", "measure": {k: best.get(k) for k in ("h_frac", "score", "ok", "sharp", "eye", "where")}}
+
+
 THUMB_FRAMES = 2      # 벤치 실측: 0초 첫 2프레임(약 0.07초)만 썸네일 그림
 
 

@@ -90,6 +90,9 @@ def _measure(d: dict, ctx: dict) -> dict:
         return {"mode": "blur", "cleaned": [], "calls": 0, "why": "회원 VMake 키 없음 — 흐림으로 대체"}
     if c == "materials_draft":
         return {"draft": {"order": d.get("files"), "segments": {}}}
+    if c == "thumb_auto":            # 썸네일 3안이 반려·없음이면 코드 자동 고르기(관제263 10-26)
+        ctx["thumb_auto"] = ctx.get("thumb_auto", 0) + 1
+        return {"ok": True, "pick": {"part": 0, "t": 0.5}, "cuts": 5}
     raise AssertionError(f"가짜 실행기에 없는 명령: {c}")
 
 

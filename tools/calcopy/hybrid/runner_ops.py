@@ -645,13 +645,18 @@ def c_origin_get(W, d):
         if not dst.exists():
             shutil.copyfile(s, dst)
         return {"files": [dims(dst)], "offset": 0.0, "measured": True, "note": "캐시 원본 = 전체 파일(0초 = 원본 0초)"}
+    from tools.calcopy.engine import yt_fetch as YF
     from tools.calcopy.hybrid import screen
-    files = screen.download(W, [vid], None if d.get("full") else [(a, b)], prefix="")   # full = 통째로 바로(구간 받기가 멈추는 회선에서 기다림 150초+를 버린다, 10-22 실측 통째 47~53초)
+    files = screen.download(W, [vid], None if d.get("full") else [(a, b)], prefix="", pad=SECTION_PAD)   # full = 통째로 바로(구간 받기가 멈추는 회선에서 기다림 150초+를 버린다, 10-22 실측 통째 47~53초)
     if not files:
         return {"error": "원본 받기 실패"}
+    meta = None if d.get("full") else YF.sections_meta(Path(files[-1]))
+    if meta and len(meta.get("map") or []) == 1:      # DASH 조각으로 쓸 구간만 받음 — 파일 0초 = 원본 t0(조각 목차 sidx 의 정확한 시각, 받아쓰기로 잴 것 없음)
+        return {"files": [dims(Path(f)) for f in files], "offset": float(meta["t0"]), "measured": True, "sections": meta}
     whole = d.get("full") or dims(Path(files[-1]))["dur"] > (b - a) + 120
     if whole:                                         # 통째로 받은 파일은 0초 = 원본 0초 — 잴 것이 없다(10-22: 90초 받아쓰기로 재느라 원본 받기 118초)
-        return {"files": [dims(Path(f)) for f in files], "offset": 0.0, "measured": True}
+        warn = [] if d.get("full") else [section_fallback_warn(vid, [(a, b)], Path(files[-1]))]
+        return {"files": [dims(Path(f)) for f in files], "offset": 0.0, "measured": True, **({"warn": warn} if warn else {})}
     off, ok = origin_offset(W, vid, Path(files[-1]), a, [float(x) for x in d.get("ts") or []])
     return {"files": [dims(Path(f)) for f in files], "offset": off, "measured": ok}
 
@@ -917,9 +922,23 @@ def c_screen(W, d):
     return {"rows": meta, "sheets": sheets}
 
 
+SECTION_PAD = 2.0     # 쓸 구간 앞뒤 여유(초) — 사장님 10-26 '쓸 구간만 받기(앞뒤 2초)'. 구간 받기 주인 = engine/yt_fetch.download_sections(DASH 조각 먼저)
+
+
+def section_fallback_warn(vid: str, spans: list, f: Path) -> str:
+    """구간 받기가 안 돼 통째로 받았다 — 경보 1줄(실행기 로그 + 결과 warn 칸). 조용히 통째로 넘어가지 않는다(0순위-C)."""
+    try:
+        mb = f.stat().st_size / 1e6
+    except OSError:
+        mb = 0.0
+    msg = f"[경보] 구간 받기 실패 → 통째로 받음: {vid} 구간 {[[round(a, 1), round(b, 1)] for a, b in spans]} · {mb:.0f}MB (로그의 [yt_fetch] 줄이 이유)"
+    sys.stderr.write(msg + "\n")
+    return msg
+
+
 def c_download(W, d):
     src = W / "src"; src.mkdir(exist_ok=True)
-    files = []
+    files, warns = [], []
     for it in d.get("items") or []:
         vid = it["id"]
         if CACHE:
@@ -928,11 +947,14 @@ def c_download(W, d):
                 shutil.copyfile(s, src / f"{vid}.mp4")
                 files.append(dims(src / f"{vid}.mp4"))
             continue
+        from tools.calcopy.engine import yt_fetch as YF
         from tools.calcopy.hybrid import screen
         secs = [tuple(x) for x in it.get("sections") or []] or None
-        for f in screen.download(W, [vid], secs, prefix=""):
+        for f in screen.download(W, [vid], secs, prefix="", pad=SECTION_PAD):
             files.append(dims(Path(f)))
-    return {"files": files}
+            if secs and not YF.sections_meta(Path(f)) and dims(Path(f))["dur"] > sum(b - a for a, b in secs) + 2 * SECTION_PAD * len(secs) + 120:
+                warns.append(section_fallback_warn(vid, secs, Path(f)))
+    return {"files": files, **({"warn": warns} if warns else {})}
 
 
 def c_product_stills(W, d):
@@ -1470,11 +1492,28 @@ def c_finish(W, d):
     return {"video": str(final)} if final.exists() else {"error": "완성본 없음"}
 
 
+def c_thumb_auto(W, d):
+    """썸네일 카드 자동 고르기(관제263 10-26) — AI 3안이 없거나 반려면 계획 컷 중 얼굴이 가장 크고 선명한 프레임 한 장(판정 = thumb.auto_pick, 기존 얼굴 자).
+    d.text = 회원 AI 안에서 쓸 수 있는 글(있으면 얹는다). 얼굴 프레임이 없으면 카드 없이(빈 options) — 멈추지 않는다."""
+    from tools.calcopy.hybrid import styles as STY
+    from tools.calcopy.hybrid import thumb as TH
+    v = d["version"]
+    doc = W / "doc" / v
+    tp = doc / "plan" / "계획_시간표.json"
+    T = (jload(tp).get("timeline") or {}) if tp.exists() else {}
+    M = jload(doc / "재료.json") if (doc / "재료.json").exists() else {}
+    opt = TH.auto_pick(STY.load(v), T, Path(M.get("cand_dir") or (W / "src")), log=lambda s: sys.stderr.write(s + "\n")) if T.get("cuts") else None
+    if opt and d.get("text"):
+        opt["text"] = d["text"]
+    jsave(doc / "썸네일.json", {"options": [opt] if opt else [], "auto": True})
+    return {"ok": True, "pick": {k: opt.get(k) for k in ("part", "t", "measure")} if opt else None, "cuts": len(T.get("cuts") or [])}
+
+
 CMDS = {"env": c_env, "bench": c_bench, "search": c_search, "peer_sheet": c_peer_sheet, "channel_list": c_channel_list, "origin_subs": c_origin_subs,
         "origin_get": c_origin_get, "channel_find": c_channel_find, "origin_probe": c_origin_probe, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "coupang_reviews": c_coupang_reviews, "cand_sheet": c_cand_sheet, "naver": c_naver, "origin_words": c_origin_words,
         "screen": c_screen, "download": c_download, "product_stills": c_product_stills, "orig_heard": c_orig_heard, "asr_spans": c_asr_spans, "shot_sheets": c_shot_sheets, "mat_sheets": c_mat_sheets,
         "write_doc": c_write_doc, "plan": c_plan, "render": c_render, "check": c_check, "finish": c_finish,
-        "origin_foreign": c_origin_foreign, "clean_text": c_clean_text, "materials_draft": c_materials_draft}
+        "origin_foreign": c_origin_foreign, "clean_text": c_clean_text, "materials_draft": c_materials_draft, "thumb_auto": c_thumb_auto}
 
 
 # ── 시간 예산·진행 신호·감시(사장님 10-26 "가만히 있으면 한없이 진행되는 게 제일 문제") ─────────────────────────
@@ -1484,13 +1523,13 @@ CMDS = {"env": c_env, "bench": c_bench, "search": c_search, "peer_sheet": c_peer
 #   ★plan 120→600(기미크림 10-26): 위 plan 실측 17개는 --plan 이 TTS·줄별 받아쓰기(관문 7a95600f8)를 하기 전 — 지금 계획은 바뀐 줄 합성+스피치매틱스+긴 원본 장면 경계(524초 원본)까지 해 120초에 두 번 잘렸다(회원 마스크편). 진짜 멈춤은 STALL_SEC 180초가 잡는다.
 BUDGET = {"bench": 900, "origin_get": 320, "origin_probe": 240, "channel_find": 180, "origin_subs": 180, "search": 180, "channel_list": 180,
           "render": 780, "download": 740, "screen": 420, "shot_sheets": 330, "check": 240, "coupang": 120, "coupang_reviews": 150,
-          "plan": 600, "origin_words": 180, "orig_heard": 120, "asr_spans": 120, "origin_foreign": 120, "clean_text": 900}
+          "plan": 600, "origin_words": 180, "orig_heard": 120, "asr_spans": 120, "origin_foreign": 120, "clean_text": 900, "thumb_auto": 300}
 BUDGET_DEFAULT = 300
 BUDGET_FLOOR = 600   # 바닥(10-26 run4: 바닥 120초로 plan 120.2초·asr_spans 120.2초를 끊어 멀쩡한 편을 멈췄다 — 98 #124). 한없이 도는 일은 STALL_SEC 가 잡는다
 CMD_LABEL = {"env": "준비 확인", "bench": "영상 받기", "channel_find": "출처 채널 찾기", "origin_probe": "원본 후보 조사", "search": "원본 검색",
              "channel_list": "채널 영상 목록", "origin_subs": "원본 자막 대조", "origin_get": "원본 영상 받기", "coupang": "쿠팡 찾기", "coupang_reviews": "쿠팡 후기",
              "naver": "자료 찾기", "download": "영상 조각 받기", "screen": "장면 고르기", "shot_sheets": "장면 정리", "plan": "장면 맞추기",
-             "render": "영상 만들기", "check": "완성본 확인", "clean_text": "자막 지우기", "finish": "마무리"}   # 회원 화면 진행 줄(내부 이름 금지)
+             "render": "영상 만들기", "check": "완성본 확인", "clean_text": "자막 지우기", "thumb_auto": "썸네일 고르기", "finish": "마무리"}   # 회원 화면 진행 줄(내부 이름 금지)
 STALL_SEC = float(os.environ.get("SHORTEM_STALL_SEC") or 180)    # 진행 신호(명시 progress 또는 작업 폴더 파일 변화)가 이만큼 없으면 멈춘 것
 _PROG: dict = {"t": 0.0}
 _CHILDREN: set = set()

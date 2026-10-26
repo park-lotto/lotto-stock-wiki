@@ -1804,20 +1804,36 @@ def ph_thumb_sheet(st, m, rp, u):
     return {"goto": "thumb"}
 
 
+def _thumb_text(spec) -> list | None:
+    """회원 AI 3안에서 자동 카드에 얹을 글 — 인물순간 안 먼저, 줄마다 TEXT_MAX 이하·꼬리표 없음(thumb_rule 의 같은 자). 없으면 None."""
+    from tools.calcopy.hybrid import thumb_rule as TR
+    ops = (spec or {}).get("options") or [] if isinstance(spec, dict) else []
+    for o in sorted([o for o in ops if isinstance(o, dict)], key=lambda o: o.get("axis") != "인물순간"):
+        tx = [t for t in o.get("text") or [] if isinstance(t, dict) and t.get("lines")]
+        if tx and all(TR._n(x) <= TR.TEXT_MAX and not TR.tag_in(x) for t in tx for x in t["lines"]):
+            return tx[:1]
+    return None
+
+
+def _thumb_auto(st, why: str, spec=None) -> dict:
+    """썸네일 = 코드 자동 고르기(계획 컷 중 얼굴이 가장 크고 선명한 프레임 — runner thumb_auto → thumb.auto_pick) 뒤 곧장 렌더.
+    AI 에게 되묻지 않고 앞 단계로도 안 돌아간다(관제263 10-26 사장님 '썸네일 이렇게 까다로운 것도 문제'). 얼굴이 없으면 카드 없이 렌더."""
+    st["_thumb_auto"] = True
+    st["log"].append(f"썸네일 자동 고르기: {why[:300]}")
+    tx = _thumb_text(spec)
+    return {"do": [{"id": "thumb_auto", "cmd": "thumb_auto", "version": st["version"], **({"text": tx} if tx else {})}], "then": "render"}
+
+
 def ph_thumb_got(st, m, rp, u):
+    # AI 답은 한 번만 쓴다 — 3안 검사(thumb_rule.check)를 통과하면 그대로, 없거나 반려면 코드가 고른다(되묻기 없음)
     from tools.calcopy.hybrid import thumb_rule as TR
     v = st["version"]
-    spec = _reply(rp, f"thumb_{v}", ("썸네일",)).get("썸네일")
-    bad = TR.check(spec, n_parts=st.get("_n_cuts")) if isinstance(spec, dict) else ["썸네일 답이 JSON 객체가 아니다"]
-    if bad:
-        n = st["tries"].get("thumb", 0) + 1
-        st["tries"]["thumb"] = n
-        if n <= 2:
-            st["_thumb_bad"] = bad
-            return {"goto": "thumb"}
-        st["log"].append("썸네일 3안이 두 번 반려돼 카드 없이 렌더: " + "; ".join(bad)[:300])   # 영상은 막지 않는다(카드 = 덤)
-        return {"goto": "render"}
+    a = rp.get(f"thumb_{v}")
+    spec = (a.get("썸네일") or a.get("썸네일.json")) if isinstance(a, dict) else None
+    bad = TR.check(spec, n_parts=st.get("_n_cuts")) if isinstance(spec, dict) else ["썸네일 답 없음"]
     st.pop("_thumb_bad", None)
+    if bad:
+        return _thumb_auto(st, "AI 3안 반려 — " + "; ".join(bad), spec)
     return {"do": [{"id": "save_thumb", "cmd": "write_doc", "files": {f"{v}/썸네일.json": spec}, "version": v}], "then": "render"}
 
 
@@ -1840,13 +1856,11 @@ def ph_render_got(st, m, rp, u):
         return {"goto": "check"}
     probs = [x.strip() for x in str(r.get("error") or "").split(" / ") if x.strip()]
     if probs and all(x.startswith("썸네일 카드") for x in probs):
-        # 렌더 전 관문 ⑥(카드 얼굴·글자) 반려는 재료가 아니라 썸네일 3안 몫 — 썸네일 단계로 되돌린다(10-26 이미숙 회원편: render_fix 는 재료만 받아
-        # 회원 AI 가 썸네일을 고쳐 보내도 버려지고 '영상을 다듬다 막혔어요'로 멈춤, 98 기록)
-        if st["tries"].get("thumb", 0) < 2:
-            st["tries"]["thumb"] = st["tries"].get("thumb", 0) + 1
-            st["_thumb_bad"] = probs
-            return {"goto": "thumb"}
-        # 기회를 다 쓰면 ph_thumb_got 과 같은 규칙 — 카드 없이 렌더(영상은 막지 않는다 · 카드 = 덤)
+        # 렌더 전 관문 ⑥(카드 얼굴·글자) 반려는 재료가 아니라 썸네일 몫(10-26 이미숙 회원편: render_fix 는 재료만 받아
+        # 회원 AI 가 썸네일을 고쳐 보내도 버려지고 '영상을 다듬다 막혔어요'로 멈춤, 98 #140)
+        if not st.get("_thumb_auto"):       # 썸네일 단계로 되돌리지 않는다(관제263 10-26) — 코드가 얼굴 큰 프레임을 골라 곧장 다시 렌더
+            return _thumb_auto(st, "렌더 전 카드 반려 — " + "; ".join(probs))
+        # 자동 카드도 반려면 카드 없이 렌더(영상은 막지 않는다 · 카드 = 덤)
         st["log"].append("썸네일 카드가 계속 반려돼 카드 없이 렌더: " + "; ".join(probs)[:300])
         return {"do": [{"id": "clear_thumb", "cmd": "write_doc", "files": {f"{st['version']}/썸네일.json": {"options": []}}, "version": st["version"]}],
                 "then": "render"}

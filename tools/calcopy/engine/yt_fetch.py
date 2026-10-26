@@ -123,6 +123,232 @@ def _cleanup(dst: Path):
                 pass
 
 
+# ── DASH 조각 바로 받기(관제263 10-26) ─────────────────────────────────────────────────────────────────
+# 왜: 10-26 이미숙 원본 uOj3ix7qCj8(2233초) = HLS 없음·DASH(mp4 299 avc1 / 399 av1, webm 303) 만. `--download-sections` 는 ffmpeg 가
+#   영상 주소를 직접 읽다가 세 형식 모두 0B 로 60초씩 멈췄다(같은 날 실측, 직접 ffmpeg -ss 도 100초+ 0B) → 통째 722MB.
+#   그런데 같은 주소에 '&range=a-b' 바이트 요청은 0.3초에 답한다 → DASH mp4 의 sidx(조각 목차)로 쓸 구간 조각의 바이트만 받는다.
+#   조각은 키프레임에서 시작하고 안에 원본 시각(tfdt)이 있어 재인코딩 없이 이어 붙는다(영상 copy · 소리만 aac 로 맞춤).
+DASH_CHUNK = 9_500_000        # 한 요청 바이트 상한(유튜브는 큰 range 를 느리게 준다 — yt-dlp http_chunk_size 10MB 와 같은 결)
+DASH_HEAD = 65_536            # 머리(ftyp·moov·sidx) 첫 요청 크기 — 모자라면 sidx 크기만큼 더 받는다
+DASH_MIN_LAND = 1080          # 가로 원본 최소 높이(사장님 10-26 '가로 원본 1080p 이상, 가능하면 최고')
+DASH_MIN_PORT = 720           # 세로 원본 최소 폭(세로 720p 허용)
+
+
+def _range_get(url: str, headers: dict, a: int, b: int, timeout: float = 60) -> bytes:
+    """바이트 a..b(포함) — DASH_CHUNK 씩 나눠 '&range=' 로(헤더 Range 와 같은 답, 유튜브가 큰 요청을 늦추는 것을 피한다)."""
+    import urllib.error
+    import urllib.request
+    out = bytearray()
+    s = a
+    while s <= b:
+        e = min(b, s + DASH_CHUNK - 1)
+        req = urllib.request.Request(f"{url}&range={s}-{e}", headers=headers)
+        for k in range(4):                         # 10-26 실측: 갓 받은 주소가 403 을 주다가 잠시 뒤 같은 주소가 된다 — 쉬었다 다시(3번)
+            try:
+                part = urllib.request.urlopen(req, timeout=timeout).read()
+                break
+            except urllib.error.HTTPError as ex:
+                if ex.code != 403 or k == 3:
+                    raise
+                time.sleep(4 * (k + 1))
+        if not part:
+            raise OSError(f"빈 응답 range={s}-{e}")
+        out += part
+        s += len(part)
+    return bytes(out)
+
+
+def _box_at(buf: bytes, off: int) -> tuple[str, int]:
+    import struct
+    size, typ = struct.unpack(">I4s", buf[off:off + 8])
+    if size == 1:
+        size = struct.unpack(">Q", buf[off + 8:off + 16])[0]
+    return typ.decode("latin-1"), size
+
+
+def dash_index(url: str, headers: dict) -> tuple[bytes, list[tuple[float, float, int, int]]]:
+    """DASH mp4 머리(init = ftyp+moov 바이트)와 조각 목차 [(시작 초, 끝 초, 바이트 시작, 바이트 끝)] — sidx 를 읽는다. sidx 가 없으면 ValueError."""
+    import struct
+    head = _range_get(url, headers, 0, DASH_HEAD - 1)
+    off, init_end = 0, None
+    while off + 8 <= len(head):
+        typ, size = _box_at(head, off)
+        if typ == "moov":
+            init_end = off + size
+        if typ == "sidx":
+            if off + size > len(head):
+                head += _range_get(url, headers, len(head), off + size - 1)
+            box = head[off:off + size]
+            ver = box[8]
+            p = 12 + 4                                   # 버전·플래그 + reference_ID
+            scale = struct.unpack(">I", box[p:p + 4])[0]; p += 4
+            if ver == 0:
+                t, first = struct.unpack(">II", box[p:p + 8]); p += 8
+            else:
+                t, first = struct.unpack(">QQ", box[p:p + 16]); p += 16
+            p += 2
+            n = struct.unpack(">H", box[p:p + 2])[0]; p += 2
+            byte = off + size + first
+            refs = []
+            for _ in range(n):
+                rs, dur = struct.unpack(">II", box[p:p + 8]); p += 12
+                rs &= 0x7FFFFFFF
+                refs.append((t / scale, (t + dur) / scale, byte, byte + rs - 1))
+                t += dur; byte += rs
+            if init_end is None:
+                raise ValueError("moov 없음")
+            return head[:init_end], refs
+        if size <= 0:
+            break
+        off += size
+    raise ValueError("sidx 없음(조각 목차를 못 찾음)")
+
+
+def dash_pick(info: dict) -> tuple[dict | None, dict | None, str]:
+    """받을 영상·소리 형식(mp4 DASH 만 — sidx 가 있다). 영상 = 가로면 높이≥DASH_MIN_LAND·세로면 폭≥DASH_MIN_PORT 중 해상도 가장 큰 것,
+    같은 해상도면 avc1(디코딩 가벼움 — av1 1080p60 은 프레임 뽑기가 느리다, 10-26 관문 115초) > 그 밖, 그다음 fps. 소리 = 140(m4a) 먼저."""
+    fm = [f for f in info.get("formats") or [] if f.get("protocol") == "https" and f.get("ext") in ("mp4", "m4a") and f.get("url")]
+    vids = [f for f in fm if (f.get("vcodec") or "none") != "none" and (f.get("acodec") or "none") == "none" and f.get("width") and f.get("height")]
+    ok = [f for f in vids if (f["height"] >= DASH_MIN_LAND if f["width"] >= f["height"] else f["width"] >= DASH_MIN_PORT)]
+    if not ok:
+        best = max(vids, key=lambda f: f["width"] * f["height"], default=None)
+        return None, None, f"화질 미달(가장 큰 mp4 = {best['width']}x{best['height']})" if best else "mp4 DASH 영상 형식 없음"
+    v = max(ok, key=lambda f: (f["width"] * f["height"], str(f.get("vcodec")).startswith("avc1"), f.get("fps") or 0))
+    auds = [f for f in fm if (f.get("vcodec") or "none") == "none" and (f.get("acodec") or "none") != "none"]
+    a = next((f for f in auds if str(f.get("format_id")) == "140"), None) or max(auds, key=lambda f: f.get("abr") or 0, default=None)
+    return v, a, ""
+
+
+def _merge_spans(spans: list[tuple[float, float]], pad: float) -> list[tuple[float, float]]:
+    out: list[list[float]] = []
+    for a, b in sorted((max(0.0, float(a) - pad), float(b) + pad) for a, b in spans):
+        if out and a <= out[-1][1]:
+            out[-1][1] = max(out[-1][1], b)
+        else:
+            out.append([a, b])
+    return [(a, b) for a, b in out]
+
+
+def _segs_for(refs: list, spans: list[tuple[float, float]]) -> list[int]:
+    return sorted({k for k, (t0, t1, _, _) in enumerate(refs) for a, b in spans if t1 > a and t0 < b})
+
+
+def _probe_dur(p: Path) -> float:
+    r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=duration", "-of", "csv=p=0", str(p)],
+                       capture_output=True, text=True, stdin=subprocess.DEVNULL)
+    try:
+        return float(r.stdout.strip().splitlines()[0])
+    except (ValueError, IndexError):
+        return 0.0
+
+
+def _frag_file(p: Path, f: dict, init: bytes, refs: list, ks: list[int]) -> int:
+    """init + 고른 조각(이웃 조각은 한 요청) → p. 받은 바이트 수."""
+    got = 0
+    with open(p, "wb") as fh:
+        fh.write(init)
+        k = 0
+        while k < len(ks):
+            j = k
+            while j + 1 < len(ks) and ks[j + 1] == ks[j] + 1:
+                j += 1
+            b = _range_get(f["url"], f.get("http_headers") or {}, refs[ks[k]][2], refs[ks[j]][3])
+            fh.write(b); got += len(b)
+            k = j + 1
+    return got
+
+
+def dash_sections(url: str, spans: list[tuple[float, float]], dst: Path, pad: float = 2.0, log=print, info: dict | None = None) -> dict | None:
+    """쓸 구간(±pad 초)만 DASH 조각 바이트로 받아 dst(.mp4). 구간이 여러 개면 빈틈 없이 이어 붙인다(멈춘 화면이 안 생기게).
+    옆에 <dst>.sections.json {t0(파일 0초의 원본 초), map:[[파일 초, 원본 시작, 원본 끝]], fmt, res, bytes, sec} · <dst>.info.json.
+    파일 초 → 원본 초 = map 의 그 칸(구간 하나면 파일 초 + t0). 조각은 키프레임에서 시작 — 영상 copy(화질 그대로), 소리만 aac 로 영상 첫 프레임에 맞춘다.
+    실패(형식·sidx 없음·화질 미달·네트워크)면 None — 부르는 쪽이 다음 길로. 예외를 올리지 않는다."""
+    import json
+    t_start = time.time()
+    dst = Path(dst); dst.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        if info is None:
+            r = ytdlp(["-J", url], timeout=180, log=log)
+            if r.returncode != 0 or not r.stdout.strip():
+                log(f"[yt_fetch] DASH 조각: 영상 정보 실패 rc={r.returncode} {r.stderr[-160:].strip()}")
+                return None
+            info = json.loads(r.stdout)
+        v, a, why = dash_pick(info)
+        if v is None:
+            log(f"[yt_fetch] DASH 조각 못 씀: {why}")
+            return None
+        vinit, vrefs = dash_index(v["url"], v.get("http_headers") or {})
+        ainit, arefs = dash_index(a["url"], a.get("http_headers") or {}) if a is not None else (b"", [])
+        wins = _merge_spans([(s, e) for s, e in ((vrefs[k][0], vrefs[k][1]) for k in _segs_for(vrefs, _merge_spans(spans, pad)))], 0.0)
+        if not wins:
+            log(f"[yt_fetch] DASH 조각: 구간 {spans} 이 영상 길이 밖")
+            return None
+        got, parts, mp, at = 0, [], [], 0.0
+        for i, (w0, w1) in enumerate(wins):
+            vk = _segs_for(vrefs, [(w0, w1)])
+            vp = dst.with_name(dst.stem + f".dash_v{i}.mp4")
+            got += _frag_file(vp, v, vinit, vrefs, vk)
+            cmd = ["ffmpeg", "-y", "-v", "error", "-i", str(vp)]
+            if a is not None:
+                ak = _segs_for(arefs, [(w0, w1)])
+                ap = dst.with_name(dst.stem + f".dash_a{i}.mp4")
+                got += _frag_file(ap, a, ainit, arefs, ak)
+                lead = max(0.0, w0 - arefs[ak[0]][0])     # 소리 첫 조각은 영상보다 앞에서 시작한다 — 영상 첫 프레임에 맞춰 자른다
+                cmd += ["-ss", f"{lead:.3f}", "-i", str(ap), "-map", "0:v:0", "-map", "1:a:0", "-c:a", "aac", "-b:a", "192k", "-shortest"]
+            pp = dst.with_name(dst.stem + f".dash_p{i}.mp4")
+            cmd += ["-c:v", "copy", str(pp)]
+            rr = subprocess.run(cmd, capture_output=True, text=True, errors="replace", stdin=subprocess.DEVNULL, timeout=600)
+            if rr.returncode != 0 or not _valid(pp):
+                log(f"[yt_fetch] DASH 조각 합치기 실패: {rr.stderr[-200:].strip()}")
+                return None
+            d = _probe_dur(pp)
+            mp.append([round(at, 3), round(w0, 3), round(w0 + d, 3)])
+            at += d
+            parts.append(pp)
+        tmp = dst.with_suffix(".dash.mp4")
+        if len(parts) == 1:
+            os.replace(parts[0], tmp)
+        else:                                             # 구간마다 파일 0초부터 — concat 이 시각을 이어 준다(빈틈 없음)
+            lst = dst.with_name(dst.stem + ".dash_list.txt")
+            lst.write_text("".join(f"file '{p.name}'\n" for p in parts), encoding="utf-8")
+            rr = subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", str(lst), "-c", "copy", str(tmp)],
+                                capture_output=True, text=True, errors="replace", stdin=subprocess.DEVNULL, timeout=600, cwd=str(dst.parent))
+            if rr.returncode != 0:
+                log(f"[yt_fetch] DASH 조각 잇기 실패: {rr.stderr[-200:].strip()}")
+                return None
+        need = max(0.3, min(b - a_ for a_, b in spans) * 0.5) if spans else None
+        if not _valid(tmp, need):
+            log("[yt_fetch] DASH 조각: 결과 파일이 비었거나 짧다")
+            return None
+        os.replace(tmp, dst)
+        meta = {"how": "dash_range", "t0": mp[0][1], "map": mp, "asked": [[float(s), float(e)] for s, e in spans], "pad": pad,
+                "fmt": f"{v.get('format_id')}+{a.get('format_id') if a else ''}", "res": f"{v['width']}x{v['height']}", "vcodec": v.get("vcodec"),
+                "bytes": got, "sec": round(time.time() - t_start, 1)}
+        dst.with_suffix(".sections.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+        dst.with_suffix(".info.json").write_text(json.dumps(info, ensure_ascii=False), encoding="utf-8")
+        log(f"[yt_fetch] DASH 조각 구간 {len(mp)}개 {meta['sec']}초 {meta['res']} {meta['fmt']} t0={meta['t0']} → {dst} {dst.stat().st_size / 1e6:.1f}MB")
+        return meta
+    except Exception as e:  # noqa: BLE001 — 이 길이 안 되면 다음 길(형식 사슬·통째)로. 이유는 남긴다
+        log(f"[yt_fetch] DASH 조각 실패 → 다음 길: {type(e).__name__}: {str(e)[:200]}")
+        return None
+    finally:
+        for q in dst.parent.glob(dst.stem + ".dash*"):
+            try:
+                q.unlink()
+            except OSError:
+                pass
+
+
+def sections_meta(dst: Path) -> dict | None:
+    """dash_sections 가 남긴 구간 표(파일 0초 = 원본 t0). 없으면 None(형식 사슬로 받은 파일 = 시작 시각을 따로 재야 한다)."""
+    import json
+    p = Path(dst).with_suffix(".sections.json")
+    try:
+        return json.loads(p.read_text(encoding="utf-8")) if p.exists() and Path(dst).exists() and p.stat().st_mtime >= Path(dst).stat().st_mtime - 5 else None
+    except (OSError, ValueError):
+        return None
+
+
 SECTIONS_BAD_SEC = 6 * 3600   # 구간 받기가 멈춘 PC 는 이 동안 구간 받기를 건너뛴다(통째로 바로)
 
 
@@ -149,7 +375,10 @@ def _mark_sections_bad(log=print):
 def download_sections(url: str, spans: list[tuple[float, float]], dst: Path, fmts=(FMT_SECTION_1080, "137+ba[ext=m4a]/bv*[height>=1080]+ba/b"),
                       pad: float = 0.0, timeout: float = 900, stall_sec: float = STALL_SEC, extra: list | None = None, log=print) -> Result | None:
     """구간들만 받아 dst(.mp4) 로. 형식 사슬을 차례로(HLS 먼저) — 멈추거나(stall) 시간초과·빈 파일이면 다음 형식. 성공하면 Result, 전부 실패면 None.
-    이 PC 에서 최근 구간 받기가 멈췄으면(sections_bad) 시도하지 않고 None — 부르는 쪽이 통째로 받는다."""
+    이 PC 에서 최근 구간 받기가 멈췄으면(sections_bad) 시도하지 않고 None — 부르는 쪽이 통째로 받는다.
+    ★먼저 DASH 조각 바로 받기(dash_sections — ffmpeg 가 주소를 읽지 않아 sections_bad 와 무관). 안 되면 아래 형식 사슬."""
+    if spans and dash_sections(url, spans, dst, pad=pad, log=log) is not None:
+        return Result(0, "", "", 0.0)
     if sections_bad():
         log("[yt_fetch] 구간 받기 건너뜀(이 PC 최근 멈춤) → 통째로")
         return None
