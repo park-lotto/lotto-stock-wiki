@@ -1,0 +1,13 @@
+{
+ "ok": false,
+ "at": "2026-10-26 16:41",
+ "how": "회원 설치 묶음(숏템MCP engine_bundle build, 엔진 815a2f8d1 · deco·material_fit 은 회원 PC 미전송 상태로) + 로컬 시험 서버(새 DB) + flow_episode.js 머리 없는 claude -p opus",
+ "say": "https://www.youtube.com/shorts/NHwcwJCsOps 이걸로 잇템로그 스타일로 만들어줘",
+ "preset_used": "외국인+한국제품반응",
+ "stopped_at": "2/13 영상 확인",
+ "member_message": "영상을 받지 못했어요 — 잠시 뒤 다시 시도해 주시면 받기부터 이어 갈게요",
+ "minutes": 0.8,
+ "video": null,
+ "defects": ["98 #158 한글 홈 경로 yt-dlp 설정 파싱 실패(+stderr 버림)", "98 #159 yt3 계정 'Video unavailable'(하네스 환경)", "98 #160 프리셋 이름 없는 목록·별칭 미설명으로 회원 되물음"],
+ "run_dir": "C:/숏템_칼카피/flowtest/itl_member_1026/run1"
+}
