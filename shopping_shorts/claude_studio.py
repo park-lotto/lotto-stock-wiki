@@ -348,8 +348,13 @@ def typecast_presets(store, cid) -> list:
     from shopping_shorts import voice_presets
     try:
         banned = set(WORKER_ONE.call({"op": "banned"}).get("banned") or [])
-    except Exception:  # noqa: BLE001 — 못 물으면 다 보여 주고 저장 때 엔진 검사가 거른다
+    except Exception:  # noqa: BLE001 — 못 물으면 아래 요약 파일 것
         banned = set()
+    if not banned and STYLES_FILE.is_file():   # 서버 묶음이 옛 판(엔진 voices.py 없음, 10-26 라이브 실측 필재가 보였다) → 엔진 커밋에서 뽑아 둔 목록(style_catalog)
+        try:
+            banned = set(json.loads(STYLES_FILE.read_text(encoding="utf-8")).get("banned_voices") or [])
+        except ValueError:
+            banned = set()
     rows = store.list_voice_presets(lang="KR", customer_id=cid)
     return [g for g in voice_presets.groups(rows, skip=lambda p: p.get("base_voice_id") in banned)
             if g["engine"] == "typecast"]
