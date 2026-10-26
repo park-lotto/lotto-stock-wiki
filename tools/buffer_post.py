@@ -208,6 +208,35 @@ def _to_done(r):
     print(f"   {r['folder']} {r['file']}: 게시됨 → '{DONE}'")
 
 
+def _fingerprint(path):
+    """영상 내용 지문(sha256). 이름을 바꿔도 같은 영상이면 같은 값이다."""
+    import hashlib
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for b in iter(lambda: f.read(1 << 20), b""):
+            h.update(b)
+    return h.hexdigest()
+
+
+def _already_posted(rows, folder, d, v, fp):
+    """한 번 올린 영상을 다시 올리지 않는 장치(2026-10-26 사장님 "실수로 다시 올리면 안 된다").
+    ① 같은 내용(지문)이 장부에 있으면 — 어느 계정이든 막는다(이름을 바꿔 다시 넣어도 걸린다)
+    ② 같은 폴더·같은 이름이 장부에 있거나 그 폴더 예약/완료 에 같은 이름이 있으면 — 배지를 다시 입혀 지문이 바뀐 경우
+    ③ cleanup 이 Buffer 상태 deleted 로 적은 행(final_status)은 '안 올린 것'으로 본다
+    걸리면 사유 문자열, 아니면 None."""
+    for r in rows:
+        if r.get("final_status") == "deleted":      # 사장님이 Buffer 에서 지운 예약 = 안 올린 것
+            continue
+        if fp and r.get("fp") == fp:
+            return f"이미 올린 영상(같은 내용) — {r.get('folder')}/{r.get('file')} {r.get('due')}"
+        if r.get("folder") == folder and r.get("file") == v:
+            return f"이미 올린 이름 — {r.get('due')} 예약"
+    for sub in (RESERVED, DONE):
+        if os.path.isfile(os.path.join(d, sub, v)):
+            return f"'{sub}' 폴더에 같은 이름이 있다"
+    return None
+
+
 def cmd_post(a):
     cmd_cleanup()
     rows = _load(LEDGER, [])
@@ -227,6 +256,11 @@ def cmd_post(a):
             if bad:
                 print(f"[{n}] {v}: {bad} — 건너뜀")
                 continue
+            fp = _fingerprint(os.path.join(d, v))
+            dup = _already_posted(rows, n, d, v, fp)
+            if dup:
+                print(f"[{n}] {v}: ⛔ 중복 — {dup} → 안 올리고 건너뜀(정말 다시 올릴 거면 장부에서 그 행을 지워라)")
+                continue
             remote = None
             try:
                 remote, url = _upload(os.path.join(d, v))
@@ -242,7 +276,7 @@ def cmd_post(a):
             shutil.move(os.path.join(d, v), os.path.join(rsv, v))
             shutil.move(cap_path, os.path.join(rsv, os.path.basename(cap_path)))
             rows.append({"folder": n, "channel": ch.get("name"), "file": v, "post_id": res["id"],
-                         "due": res.get("dueAt") or "큐", "remote": remote,
+                         "due": res.get("dueAt") or "큐", "remote": remote, "fp": fp,
                          "at": dt.datetime.now(KST).isoformat(timespec="seconds")})
             _save_ledger(rows)
             print(f"[{n}] {v} → {ch.get('name')} 예약 {res.get('dueAt') or '(Buffer 큐 시간표)'}  id={res['id']}")
