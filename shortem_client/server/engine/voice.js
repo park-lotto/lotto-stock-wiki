@@ -30,6 +30,7 @@ export const KEY_SERVICES = Object.freeze({
   fish: { label: '목소리 키(피쉬오디오)', where: 'fish.audio ▸ API ▸ API Keys', env: 'FISH_API_KEY', need: '피쉬오디오 목소리를 고르면 필요합니다' },
   coupang_access: { label: '쿠팡 파트너스 Access Key', where: '쿠팡 파트너스 ▸ 추가기능 ▸ 오픈API', env: 'COUPANG_ACCESS_KEY', need: '없으면 이 PC 크롬 창으로 쿠팡을 찾습니다' },
   coupang_secret: { label: '쿠팡 파트너스 Secret Key', where: '쿠팡 파트너스 ▸ 추가기능 ▸ 오픈API', env: 'COUPANG_SECRET_KEY', need: 'Access Key 와 짝으로 넣습니다' },
+  vmake: { label: '자막 지우기 키(VMake)', where: 'VMake 개발자 화면 ▸ App Key 와 Secret 을 app_key:secret 꼴로', env: 'VMAKE_API_KEY', need: '원본 영상에 박힌 자막을 지울 때 필요합니다(엔진 vmake_clean — 없으면 그 단계에서 멈춥니다)' },
   speechmatics: { label: '받아쓰기 키(스피치매틱스)', where: 'speechmatics.com ▸ Settings ▸ API Keys', env: 'SPEECHMATICS_API_KEY', need: '있으면 원음·완성본 받아쓰기를 두 모델로 대조합니다(없으면 위스퍼만)' },
 });
 
