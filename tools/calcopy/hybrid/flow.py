@@ -10,7 +10,7 @@
             "wait": {kind, script}, "video": "<PC 파일>", "state": {...}}
 
 판단 주인(새로 적지 않고 부른다): 판 = styles · 대본 검사 = script_audit · 출처 규칙·자막↔목소리·제목 색·샷 끝·흐림 = rules ·
-완성본 검사 = quality_gate.gate 1단(PC 가 재고) + 눈 2단 E1~E8(quality_gate.EYE_Q 질문 그대로, 회원 Claude) · 해외 원본 고르기 = origin_find.pick_origins ·
+완성본 검사 = quality_gate.gate 1단(PC 가 재고) + 눈 2단 E1·E4·E6(quality_gate.EYE_Q = EYE_HUMAN 질문 그대로, 회원 Claude · 사장님 10-26) · 해외 원본 고르기 = origin_find.pick_origins ·
 형식 = channel/프리셋.json presets[slug].member.flow_format(표준 §2-1 — flow_format_of 한 곳). 단계는 channel/칼카피_제작순서 00~13 과 같은 순서(바꾸면 문서와 같은 커밋).
 
 형식별 단계표 FORMAT_STAGES(관제 263 지시서 08 · 표준 §7): 연예인형(원래 13단계) · 해외원본형(한국 재편집 → 렌즈로 해외 원본 → 같은 제품 다른 해외 반응 →
@@ -1890,7 +1890,7 @@ def ph_render_fix(st, m, rp, u):
     return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "render"}
 
 
-# ── 11 검사 — 표준 §5: 1단 quality_gate.gate(전체, PC 가 잰다) → 2단 눈 E1~E8(회원 Claude) → 미통과면 고쳐 다시(2회) → 그래도면 멈춤 ──
+# ── 11 검사 — 표준 §5: 1단 quality_gate.gate(전체, PC 가 잰다) → 2단 눈 E1·E4·E6(quality_gate.EYE_HUMAN, 회원 Claude — 나머지는 기계 값·E3 는 계획 검수) → 미통과면 고쳐 다시(2회) → 그래도면 멈춤 ──
 EYE_ASK = """너는 완성본 눈 검수 담당이다(표준 §5-2 — 사장님 눈의 대리인). 1단 자동 관문은 통과했다. 기계가 못 재는 것만 아래 번호로 답한다.
 자료 = 그림(1초 시트 · 벤치 나란히 시트 · 벤치 등장 대조 · 훅 3초 0.1초 띠 · 끝 2초 0.1초 띠) + 받아쓰기 대조표 + 줄↔컷 대조표(아래 글).
 번호마다 v = "○"(기준 그대로) | "△"(애매 — 통과 아님) | "×"(어긋남), memo = 근거 한 줄(어느 초·어느 줄). ○ 전부여야 통과다 — 모르면 △.

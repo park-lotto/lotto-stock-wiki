@@ -231,10 +231,10 @@ def test_gate_fail_stops_after_two_fixes():
 
 
 def test_eye_triangle_is_not_pass():
-    eye = {**E_OK, "E3": {"v": "△", "memo": "애매"}}
+    eye = {**E_OK, "E4": {"v": "△", "memo": "애매"}}          # 렌더 뒤 사람 눈 = E1·E4·E6(사장님 10-26 — E3 은 계획 검수에서 한 번)
     st = F.start("https://youtu.be/BENCH1", "키치잇판", "sid")
     tr, res, st2 = walk(F, st, {"eye": eye})
-    assert res["status"] == "stop" and "E3" in st2["stopped"]["detail"] and "E3" not in res["why"]
+    assert res["status"] == "stop" and "E4" in st2["stopped"]["detail"] and "E4" not in res["why"]
 
 
 def test_runner_check_uses_quality_gate_and_force_fail(tmp_path, monkeypatch):
