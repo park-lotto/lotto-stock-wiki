@@ -2023,6 +2023,7 @@ def api_fav_channel_add(request: Request, body: dict):
     )
     if added is None:
         return {"ok": False, "error": f"나만의 채널은 최대 {_fav_channel_cap(cid)}개까지예요"}
+    _fav_channel_fill_soon(cid, plat, chid, body.get("channel_url") or url)
     n = len(store.fav_channel_list(customer_id=cid))
     return {"ok": True, "added": bool(added), "platform": plat, "channel_id": chid, "count": n}
 
@@ -2038,6 +2039,30 @@ def api_fav_channel_remove(request: Request, body: dict):
 
 # 갱신 캐시 — 사장님 확정(2026-09-02): "열 때 1회". 6시간 안에 이미 갱신했으면 건너뛴다.
 _FAV_CH_TTL_SEC = 6 * 3600
+# 담는 순간 그 채널 1개의 사진·이름을 뒤에서 받는다(관제 278, 2026-10-27 사장님 "앞으로 넣을 때도 다 들어가게").
+#   ★화면 열 때 갱신만 있으면 3개씩·오래된 순이라 새로 담은 채널이 맨 뒤에서 수십 번을 기다렸다.
+#   유튜브 조회(yt-dlp)는 수십 초라 담기 응답을 붙잡지 않게 작은 풀(2개)로 돌린다.
+from shopping_shorts import keyctx as _fav_keyctx
+_FAV_FILL_POOL = _fav_keyctx.pool(max_workers=2)
+
+
+def _fav_channel_fill_now(cid, platform, channel_id, url=""):
+    meta = _fav_channel_probe(platform, channel_id, url)
+    if meta:
+        Store(DB_PATH).fav_channel_set_meta(platform, channel_id, customer_id=cid, **meta)
+    else:
+        print(f"[볼채널] 담은 직후 채우기 빈 결과 {platform}/{channel_id}", file=sys.stderr)
+
+
+def _fav_channel_fill_soon(cid, platform, channel_id, url=""):
+    """담기 입구(_fav_channel_register · /api/fav_channel/add)가 부른다 — 사진이 빈 채널만."""
+    try:
+        if any(i["platform"] == (platform or "").lower() and i["channel_id"] == channel_id
+               and not (i.get("avatar") or "")
+               for i in Store(DB_PATH).fav_channel_list(customer_id=cid)):
+            _FAV_FILL_POOL.submit(_fav_channel_fill_now, cid, platform, channel_id, url)
+    except Exception as e:  # noqa: BLE001 — 사진 채우기가 담기를 막지 않는다
+        print(f"[볼채널] 담은 직후 채우기 실패 {platform}/{channel_id}: {e!r}", file=sys.stderr)
 
 
 @app.post("/api/fav_channel/refresh")
@@ -2053,7 +2078,8 @@ def api_fav_channel_refresh(request: Request):
     #   멈춘다 → 한 번에 이만큼만 갱신하고 나머지는 다음에 열 때 이어서 한다.
     #   6시간 캐시가 있어 몇 번 열면 전부 채워진다.
     slow_left = 3
-    for it in items:
+    # 사진이 빈 채널 먼저(관제 278) — 오래된 순이면 6시간마다 기존 채널이 3칸을 다 쓴다.
+    for it in sorted(items, key=lambda i: bool(i.get("avatar"))):
         ts = it.get("refreshed_at")
         if ts:
             try:
@@ -2525,6 +2551,8 @@ def _fav_channel_register(cid, url: str, username: str = "", thumb: str = "") ->
     added = store.fav_channel_add(plat, chid, name=(disp or chid), url=url,
                                   last_video_thumb=thumb, customer_id=cid, cap=cap)
     status = "full" if added is None else ("added" if added else "exists")
+    if added is not None:
+        _fav_channel_fill_soon(cid, plat, chid, url)
     return {"status": status, "platform": plat, "channel_id": chid, "name": disp,
             "cap": cap}
 
