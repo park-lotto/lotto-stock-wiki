@@ -1,0 +1,248 @@
+{
+ "name": "별헤는쏭판",
+ "renderer": "bench",
+ "thumb_card_face": false,
+ "_thumb_card_face": "연예인 채널 아님 — 카드 얼굴 관문 끔",
+ "_note": "별헤는쏭(@별헤는쏭) 칼카피 1차 판(2026-10-27) — 나레 없는 자막썰: 바이럴 한 샷 + 일본 노래 + 댓글카드 모양 자막 + 가사 2줄. 근거 channel/byeolsong/{스타일분석.md, 줄판독/ 상위 5편 49줄, _kal/규칙빈도.json}. 브랜드 '미정'(사장님 10-27) — 로고 자리 = 맨 위 그림 띠(우리 그림, 글자 없음).",
+ "bench": {
+  "ko": "별헤는쏭",
+  "channel": "https://www.youtube.com/@별헤는쏭",
+  "analysis": "channel/byeolsong/스타일분석.md",
+  "line_reads": "channel/byeolsong/줄판독",
+  "src_dir": "C:/숏템_칼카피/byeolsong/src",
+  "palette": "channel/byeolsong/팔레트.json",
+  "rules_counted": "channel/byeolsong/_kal/규칙빈도.json"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f",
+  "candidates": [],
+  "why": "벤치 나레 0/5편(스타일분석 §5) — 대본에 tts 줄을 쓰지 않으므로 합성 안 함. 칸은 REQUIRED 라 명단 기본(남) 박창수를 둔다"
+ },
+ "cps_target": 4.7,
+ "_why_cps_target": "나레 없음 — 카드 글 읽기 속도 4.69자/초(규칙빈도 화자 제3자 자/초 중앙)",
+ "bgm": {
+  "id": "byeolsong_ref",
+  "db_below_voice": 0.0,
+  "duck_orig_db": 0.0,
+  "fade_out": 0.3,
+  "candidates": [],
+  "why": "벤치 소리 = 일본 노래뿐(5/5편, 현장음 흔적 없음) · 곡 = 벤치 1lMb 소리에서 뽑은 1차 내부 시험용(곡 제목 미확인) — ★발행 전 쓸 수 있는 곡으로 교체 필요 · 편마다 대본 bgm.ss 로 보컬 드롭(가사 시작)을 영상 48~59% 자리에"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 통일(사장님 10-18)"
+ },
+ "length": {
+  "min": 8.1,
+  "max": 21.9,
+  "why": "벤치 상위 5편 8.1~21.9초"
+ },
+ "timing": {
+  "gap": 0.0,
+  "tail": 0.0,
+  "why": "나레 없음 — 카드가 줄이고 줄 사이 = 카드 교체(빈틈은 카드 등장 페이드가 만든다) · 마지막 카드가 영상 끝까지(5/5)"
+ },
+ "frame": {
+  "kind": "window",
+  "bg": [
+   0,
+   0,
+   2
+  ],
+  "window": [
+   0,
+   476,
+   1080,
+   1444
+  ],
+  "band": {
+   "src": "channel/byeolsong/preset/band.png",
+   "box": [
+    0,
+    0,
+    1080,
+    235
+   ],
+   "why": "벤치 맨 위 0~235 그림 띠(5/5편 같은 그림 — 로고 자리) → 우리 그림(브랜드 미정이라 글자 없음)"
+  },
+  "title": [
+   {
+    "font": "GothicA1-Black.ttf",
+    "px": 102,
+    "ink_top": 244,
+    "color": "#FFFEFF",
+    "max_w": 1000,
+    "why": "1줄 흰 #FFFEFF 잉크 y244~341(h97) · 글꼴 GothicA1-Black — 획 두께 13.2 ≈ 벤치 14.4(잉크 97px 환산)·폭/높이 4.40 ≈ 4.27(후보 12개 중 가장 가까움, 10-27 픽셀 자 획 두께 칸 미달로 NotoSansKR-Bold 11.5 에서 교체)"
+   },
+   {
+    "font": "GothicA1-Black.ttf",
+    "px": 102,
+    "ink_top": 354,
+    "color": "#FCAFD2",
+    "max_w": 1000,
+    "why": "2줄 분홍 #FCAFD2 잉크 y354~451 · 'ㅋㅋ' 작게는 미지원(제목 칸 글자 크기 1벌 — 남은 차이) · 글꼴 GothicA1-Black — 획 두께 13.2 ≈ 벤치 14.4(잉크 97px 환산)·폭/높이 4.40 ≈ 4.27(후보 12개 중 가장 가까움, 10-27 픽셀 자 획 두께 칸 미달로 NotoSansKR-Bold 11.5 에서 교체)"
+   }
+  ],
+  "logo": null,
+  "watermark": null,
+  "credit": {
+   "in_window": true,
+   "font": "Pretendard-Bold.otf",
+   "px": 34,
+   "x": 112,
+   "cy": 511,
+   "color": "#FFFFFF",
+   "stroke": 3,
+   "stroke_color": "#000000",
+   "on": 0.27,
+   "pin": {
+    "r": 9,
+    "color": "#E83C21"
+   },
+   "why": "창 왼쪽 위 '📍<원본 계정>' x≈110~390 y496~526 · 0.27초부터(2조·3조 실측)"
+  },
+  "comment": {
+   "track": "lines",
+   "box": {
+    "x0": 86,
+    "x1": 992,
+    "bottom": 1631,
+    "h1": 172,
+    "line_add": 40,
+    "radius": 15,
+    "rgb": "#1A181A",
+    "alpha": 0.9
+   },
+   "avatar": {
+    "d": 60,
+    "cx": 145,
+    "cy_rel": 53,
+    "colors": [
+     "#6A35CB",
+     "#4FCB34",
+     "#38B1CB",
+     "#CE356D",
+     "#D1A235",
+     "#362BC5",
+     "#D04A32",
+     "#39CDB7"
+    ]
+   },
+   "text": {
+    "font": "Pretendard-Regular.otf",
+    "px": 34,
+    "color": "#FFFFFF",
+    "x": 195,
+    "y_rel": 66
+   },
+   "meta": {
+    "font": "Pretendard-Regular.otf",
+    "px": 24,
+    "color": "#B5B5B3",
+    "y_rel": 31,
+    "nick_w": 150,
+    "foot_rel": 115
+   },
+   "enter": {
+    "ms": 500,
+    "dy": 62
+   },
+   "why": "스타일분석 §2 — 상자 x86~992·아래 1631 고정·1줄 h172·2줄 +40 · #1A181A α0.90 · 반경 15 · 프로필 지름 60 중심 x145 · 본문 흰 잉크 26~27px(글꼴≈34) x195 · 헤더 y1492~1511·아래 줄 y1575~1602 회색 · 등장 페이드+아래 60~65px 올라오기 500ms(1조·3조 500·2조 433 → 중앙 500), 퇴장 즉시"
+  },
+  "lyrics": {
+   "jp": {
+    "font": "NotoSansKR-Bold.otf",
+    "px": 46,
+    "cy": 1114,
+    "color": "#F1D4DD"
+   },
+   "ko": {
+    "font": "NotoSansKR-Bold.otf",
+    "px": 48,
+    "cy": 1180,
+    "color": "#FCFAFC"
+   },
+   "stroke": {
+    "px": 7,
+    "color": "#000000"
+   },
+   "why": "스타일분석 §3 — 가운데 x540 고정 · 일본어 잉크 y1097~1131 연분홍 #F1D4DD · 한국어 y1162~1198 흰 · 잉크 35~38px · 외곽선 6~7px · 즉시 등장·교체"
+  }
+ },
+ "caption": {
+  "pack": "clean",
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 10.0,
+  "chunk_max_chars": 26,
+  "why": "본문 자막 = 댓글카드(frame.comment.track lines)라 자막팩이 그릴 줄 없음 — 팩 칸은 렌더러 필수라 clean · 카드 자수 최대 26(스타일분석 §2)"
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "cut": 1.0
+   },
+   "ms": 0,
+   "why": "원본 한 샷 — 컷 0(4/5편)·편집 줌 0"
+  },
+  "why": "카메라 = 원본 그대로"
+ },
+ "sfx_files": {
+  "gain_db": -8,
+  "why": "효과음 0(카드 26장 전부 — 신호 추정)"
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "narr.first": "cut",
+    "narr.rest": "cut",
+    "orig.first": "cut",
+    "orig.rest": "cut",
+    "why": "자막팩 줄 없음(카드가 그림)"
+   },
+   "transition": {
+    "kinds": [],
+    "why": "전환 효과 0"
+   },
+   "meme": {
+    "rate": 0.0,
+    "why": "짤 0"
+   },
+   "sfx": {
+    "kinds": {},
+    "max": 0,
+    "why": "효과음 0"
+   }
+  },
+  "counted": {}
+ },
+ "title_form": "2줄 — 1줄 상황(흰) / 2줄 결론·반응 + ㅋㅋ(분홍) — '아 인스타 / 광고 보고 샀는데' · '러시아의 / 1호선 ㅋㅋ'",
+ "script": {
+  "brief": [
+   "나레 없음 — 모든 줄 kind:'sub'{id, dur, caps[{text, likes, ago}]} 한 줄 = 댓글카드 한 장(약 3.2초, 1.9~5.0).",
+   "카드 순서: 첫 카드 = 훅/예고(상황을 한 줄로 낚음) → 장면 받아치기(관찰·의심·반응) → 보컬 드롭 자리 = 반전/공개 → 끝 = 농담·자기 고백·교훈. CTA 0.",
+   "카드 말투 = 진짜 댓글 반말 · ㅋㅋㅋ·ㄷㄷ;;·^^ · 1줄 26자 이내(2줄은 '\\n') · likes '710'·'3.5천'·'1.1만' 꼴 · ago 'N일 전'·'N주 전'·'N개월 전'.",
+   "대본 bgm{id, ss}: 가사 시작(곡 12.4초)이 영상 48~59% 자리에 오게 ss 를 정한다.",
+   "source_label = 원본 계정(📍 뒤 글)."
+  ],
+  "example": [],
+  "audit": [
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 8.1,
+    "max": 21.9,
+    "why": "벤치 5편 길이"
+   }
+  ]
+ }
+}

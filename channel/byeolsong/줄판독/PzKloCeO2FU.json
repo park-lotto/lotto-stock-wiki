@@ -6,131 +6,895 @@
   1080,
   1920
  ],
- "title_lines": [],
- "source_label": null,
+ "title_lines": [
+  {
+   "text": "영상 녹화가",
+   "colors": [
+    {
+     "word": "영상 녹화가",
+     "hex": "#FCFBFC"
+    }
+   ],
+   "y": [
+    244,
+    342
+   ],
+   "x": [
+    284,
+    799
+   ]
+  },
+  {
+   "text": "ㄹㅇ 중요한 이유",
+   "colors": [
+    {
+     "word": "ㄹㅇ 중요한 이유",
+     "hex": "#FBAFD1"
+    }
+   ],
+   "y": [
+    353,
+    453
+   ],
+   "x": [
+    185,
+    906
+   ],
+   "note": "'ㄹㅇ' 작게"
+  }
+ ],
+ "source_label": "📍serious_tob",
  "layout": {
   "window": [
    0,
    476,
    1080,
-   1024
+   1920
   ],
+  "title_y": [
+   244,
+   453
+  ],
+  "source_y": [
+   497,
+   526
+  ],
+  "logo_y": [
+   0,
+   235
+  ],
+  "top_band": "0~235 판타지풍 높은음자리표·음표·별 그림 — Pz↔tF 평균 차 1.84, Pz↔1lMb 2.42(0~255) = 같은 그림",
+  "title_bg_hex": "#000002",
+  "source_hex": "#FFFFFF",
+  "source_pin_hex": "#E83C21",
+  "source_label_x": [
+   123,
+   387
+  ],
+  "source_note": "'📍serious_tob' 흰 글+얇은 검정 외곽, 글자 높이≈26px · 첫 0.27초는 없고 8프레임째부터 뜸",
+  "card_box": {
+   "hex": "#191A18",
+   "alpha": 0.91,
+   "pad": "본문 x195(상자 왼끝+111)",
+   "radius": 15,
+   "xy_1line": [
+    84,
+    1457,
+    993,
+    1632
+   ],
+   "xy_2line": [
+    84,
+    1417,
+    993,
+    1632
+   ],
+   "seen_hex": "#1D1D1D~#262621(뒤 화면에 따라)"
+  },
+  "lyric_band": [
+   1097,
+   1198
+  ],
+  "watermark": {
+   "seen": false,
+   "alpha": null
+  },
   "caption_band": [
-   997,
-   1208
-  ],
-  "title_y": null,
-  "source_y": null,
-  "logo_y": null,
-  "watermark": null
+   1417,
+   1632
+  ]
  },
  "lines": [
   {
+   "t0": 0.433,
+   "t1": 4.433,
+   "speaker": "제3자",
+   "text": "남자는 나이는 무용지물.",
+   "layer": "별헤는쏭",
+   "role": "훅",
+   "enter": "fade",
+   "enter_ms": 433,
+   "variant": "댓글카드",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     13,
+     60
+    ],
+    [
+     0.1,
+     100,
+     40,
+     46
+    ],
+    [
+     0.2,
+     100,
+     59,
+     32
+    ],
+    [
+     0.3,
+     100,
+     68,
+     18
+    ],
+    [
+     0.4,
+     100,
+     74,
+     4
+    ],
+    [
+     0.433,
+     100,
+     100,
+     0
+    ]
+   ],
+   "exit": "cut(1프레임에 사라짐) → 빈 화면 67ms 뒤 다음 카드",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1530,
+    1559
+   ],
+   "x": 195,
+   "align": "left",
+   "max_w": 910,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "유튜브 앱 댓글 꼴 고딕(Roboto+본고딕 계열 추정)",
+    "basis": "눈"
+   },
+   "size_px": 26,
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#191A18",
+    "alpha": 0.91,
+    "pad": "본문 x195(상자 왼끝+111)",
+    "radius": 15,
+    "xy_1line": [
+     84,
+     1457,
+     993,
+     1632
+    ],
+    "xy_2line": [
+     84,
+     1417,
+     993,
+     1632
+    ],
+    "seen_hex": "#1D1D1D~#262621(뒤 화면에 따라)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "흰 티 남자가 카메라 앞에서 몸 숙였다가 검은 옷 남자 쪽으로 감(실내, 폰 촬영)",
+   "fit": 8,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "댓글카드: 프로필 원 #D1A235(금색)(흐린 원+흰 사람 모양, 중심 x146 y1512, 지름≈60) · 닉네임 흐림 · 시간 '4일 전' 회색 #B0B0AD · 좋아요 '3.5천'(회색 #B5B5B3, 엄지·싫어요·'답글' 줄 y1575~1602) · 헤더 줄 y1492~1511"
+  },
+  {
+   "t0": 4.5,
+   "t1": 8.1,
+   "speaker": "제3자",
+   "text": "진짜 ㅈ댈번했네;",
+   "layer": "별헤는쏭",
+   "role": "고조",
+   "enter": "fade",
+   "enter_ms": 433,
+   "variant": "댓글카드",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     13,
+     60
+    ],
+    [
+     0.1,
+     100,
+     40,
+     46
+    ],
+    [
+     0.2,
+     100,
+     59,
+     32
+    ],
+    [
+     0.3,
+     100,
+     68,
+     18
+    ],
+    [
+     0.4,
+     100,
+     74,
+     4
+    ],
+    [
+     0.433,
+     100,
+     100,
+     0
+    ]
+   ],
+   "exit": "cut(1프레임에 사라짐) → 빈 화면 67ms 뒤 다음 카드",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1530,
+    1559
+   ],
+   "x": 195,
+   "align": "left",
+   "max_w": 910,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "유튜브 앱 댓글 꼴 고딕(Roboto+본고딕 계열 추정)",
+    "basis": "눈"
+   },
+   "size_px": 26,
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#191A18",
+    "alpha": 0.91,
+    "pad": "본문 x195(상자 왼끝+111)",
+    "radius": 15,
+    "xy_1line": [
+     84,
+     1457,
+     993,
+     1632
+    ],
+    "xy_2line": [
+     84,
+     1417,
+     993,
+     1632
+    ],
+    "seen_hex": "#1D1D1D~#262621(뒤 화면에 따라)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "흰 티 남자가 장난치다 바지가 벗겨지고 넘어짐",
+   "fit": 7,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "댓글카드: 프로필 원 #39B8CE(하늘)(흐린 원+흰 사람 모양, 중심 x146 y1512, 지름≈60) · 닉네임 흐림 · 시간 '3개월 전' 회색 #B0B0AD · 좋아요 '3천'(회색 #B5B5B3, 엄지·싫어요·'답글' 줄 y1575~1602) · 헤더 줄 y1492~1511"
+  },
+  {
+   "t0": 8.167,
+   "t1": 10.567,
+   "speaker": "제3자",
+   "text": "입가에 미소가 순식간에 사라짐",
+   "layer": "별헤는쏭",
+   "role": "반전",
+   "enter": "fade",
+   "enter_ms": 433,
+   "variant": "댓글카드",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     13,
+     60
+    ],
+    [
+     0.1,
+     100,
+     40,
+     46
+    ],
+    [
+     0.2,
+     100,
+     59,
+     32
+    ],
+    [
+     0.3,
+     100,
+     68,
+     18
+    ],
+    [
+     0.4,
+     100,
+     74,
+     4
+    ],
+    [
+     0.433,
+     100,
+     100,
+     0
+    ]
+   ],
+   "exit": "cut(1프레임에 사라짐) → 빈 화면 67ms 뒤 다음 카드",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1530,
+    1559
+   ],
+   "x": 195,
+   "align": "left",
+   "max_w": 910,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "유튜브 앱 댓글 꼴 고딕(Roboto+본고딕 계열 추정)",
+    "basis": "눈"
+   },
+   "size_px": 26,
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#191A18",
+    "alpha": 0.91,
+    "pad": "본문 x195(상자 왼끝+111)",
+    "radius": 15,
+    "xy_1line": [
+     84,
+     1457,
+     993,
+     1632
+    ],
+    "xy_2line": [
+     84,
+     1417,
+     993,
+     1632
+    ],
+    "seen_hex": "#1D1D1D~#262621(뒤 화면에 따라)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "넘어진 채 있는데 문으로 여자들(빨간 머리)이 들어옴",
+   "fit": 9,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "댓글카드: 프로필 원 #9C35CB(보라)(흐린 원+흰 사람 모양, 중심 x146 y1512, 지름≈60) · 닉네임 흐림 · 시간 '2주 전' 회색 #B0B0AD · 좋아요 '2만'(회색 #B5B5B3, 엄지·싫어요·'답글' 줄 y1575~1602) · 헤더 줄 y1492~1511"
+  },
+  {
+   "t0": 10.633,
+   "t1": 12.567,
+   "speaker": "제3자",
+   "text": "ㅈㄴ 아찔하다",
+   "layer": "별헤는쏭",
+   "role": "본문",
+   "enter": "fade",
+   "enter_ms": 433,
+   "variant": "댓글카드",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     13,
+     60
+    ],
+    [
+     0.1,
+     100,
+     40,
+     46
+    ],
+    [
+     0.2,
+     100,
+     59,
+     32
+    ],
+    [
+     0.3,
+     100,
+     68,
+     18
+    ],
+    [
+     0.4,
+     100,
+     74,
+     4
+    ],
+    [
+     0.433,
+     100,
+     100,
+     0
+    ]
+   ],
+   "exit": "cut(1프레임에 사라짐) → 빈 화면 67ms 뒤 다음 카드",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1530,
+    1559
+   ],
+   "x": 195,
+   "align": "left",
+   "max_w": 910,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "유튜브 앱 댓글 꼴 고딕(Roboto+본고딕 계열 추정)",
+    "basis": "눈"
+   },
+   "size_px": 26,
+   "letter_gap_px": null,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#191A18",
+    "alpha": 0.91,
+    "pad": "본문 x195(상자 왼끝+111)",
+    "radius": 15,
+    "xy_1line": [
+     84,
+     1457,
+     993,
+     1632
+    ],
+    "xy_2line": [
+     84,
+     1417,
+     993,
+     1632
+    ],
+    "seen_hex": "#1D1D1D~#262621(뒤 화면에 따라)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "여자들이 서서 지켜봄·흰 티 남자가 카메라 쪽으로 다가옴",
+   "fit": 8,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "댓글카드: 프로필 원 #39CDB7(민트)(흐린 원+흰 사람 모양, 중심 x146 y1512, 지름≈60) · 닉네임 흐림 · 시간 '1주 전' 회색 #B0B0AD · 좋아요 '5.2천'(회색 #B5B5B3, 엄지·싫어요·'답글' 줄 y1575~1602) · 헤더 줄 y1492~1511"
+  },
+  {
+   "t0": 12.633,
+   "t1": 15.067,
+   "speaker": "제3자",
+   "text": "영상이 없었으면\n아무도 그들을 믿지 않았을 것이다",
+   "layer": "별헤는쏭",
+   "role": "끝",
+   "enter": "fade",
+   "enter_ms": 400,
+   "variant": "댓글카드(2줄 높이)",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     24,
+     74
+    ],
+    [
+     0.1,
+     100,
+     35,
+     52
+    ],
+    [
+     0.2,
+     100,
+     73,
+     34
+    ],
+    [
+     0.3,
+     100,
+     60,
+     18
+    ],
+    [
+     0.4,
+     100,
+     100,
+     0
+    ]
+   ],
+   "exit": "끝까지 유지",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1490,
+    1555
+   ],
+   "x": 195,
+   "align": "left",
+   "max_w": 910,
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "유튜브 앱 댓글 꼴 고딕(Roboto+본고딕 계열 추정)",
+    "basis": "눈"
+   },
+   "size_px": 26,
+   "letter_gap_px": null,
+   "line_gap_px": 14,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#191A18",
+    "alpha": 0.91,
+    "pad": "본문 x195(상자 왼끝+111)",
+    "radius": 15,
+    "xy_1line": [
+     84,
+     1457,
+     993,
+     1632
+    ],
+    "xy_2line": [
+     84,
+     1417,
+     993,
+     1632
+    ],
+    "seen_hex": "#1D1D1D~#262621(뒤 화면에 따라)"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "흰 티 남자가 카메라에 얼굴 가까이 대고 웃음",
+   "fit": 9,
+   "cut_at": [],
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "댓글카드: 프로필 원 #3262CA(파랑)(흐린 원+흰 사람 모양, 중심 x146 y1473, 지름≈60) · 닉네임 흐림 · 시간 '1주 전' 회색 #B0B0AD · 좋아요 '9.4천'(회색 #B5B5B3, 엄지·싫어요·'답글' 줄 y1575~1602) · 헤더 줄 y1452~1471 · 본문 2줄(1490~1515/1530~1555, 줄 간격 40px) — 상자 아래 끝 1632 고정, 위로 40px 늘어남 · 제목 '영상 녹화가 ㄹㅇ중요한 이유'를 받아 마무리"
+  },
+  {
    "t0": 8.1,
-   "t1": 9.5,
-   "speaker": null,
-   "text": "あぁ このまま 아아 이대로",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "t1": 9.467,
+   "speaker": "제3자",
+   "text": "あぁ このまま / 아아 이대로",
+   "layer": "별헤는쏭·가사",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "가사 2줄",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "exit": "cut(다음 소절로 1프레임 교체)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
     1097,
-    null
+    1198
    ],
-   "fill_hex": null,
-   "emph": [],
+   "x": 540,
+   "align": "center",
+   "max_w": 262,
+   "fill_hex": "#FFFEFF",
+   "font": {
+    "name": "굵은 고딕(일본어 줄도 같은 굵기)",
+    "basis": "눈"
+   },
+   "size_px": 36,
+   "letter_gap_px": null,
+   "line_gap_px": 31,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [
+    {
+     "word": "あぁ このまま",
+     "hex": "#F1D4DD",
+     "outline": "#000000 6px",
+     "basis": "지휘자 확대 눈 확인 10-27(PzKl·tF) — 일본어 줄 연분홍 채움, 한국어 줄 흰"
+    }
+   ],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "기타",
+   "scene_desc": "여자들 등장 직후",
+   "fit": 5,
    "cut_at": [],
-   "_asr": [],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "가사 · 위 일본어(잉크 y1097~1131 ≈35px) / 아래 한국어(y1162~1198 ≈37px) · 줄 간격 65px · 가운데 x540 고정(물체 안 따라감, 두 편 같은 y) · 외곽선 검정 6~7px(행 스캔 중앙값) · 노래 소절과 맞춘 것으로 보임(소리는 못 들음)"
   },
   {
-   "t0": 9.5,
-   "t1": 10.6,
-   "speaker": null,
-   "text": "僕たち 우리들의",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1094,
-    null
+   "t0": 9.467,
+   "t1": 10.567,
+   "speaker": "제3자",
+   "text": "僕たち / 우리들의",
+   "layer": "별헤는쏭·가사",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "가사 2줄",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     100,
+     0
+    ]
    ],
-   "fill_hex": null,
-   "emph": [],
+   "exit": "cut(다음 소절로 1프레임 교체)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1097,
+    1198
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 262,
+   "fill_hex": "#FFFEFF",
+   "font": {
+    "name": "굵은 고딕(일본어 줄도 같은 굵기)",
+    "basis": "눈"
+   },
+   "size_px": 36,
+   "letter_gap_px": null,
+   "line_gap_px": 31,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [
+    {
+     "word": "僕たち",
+     "hex": "#F1D4DD",
+     "outline": "#000000 6px",
+     "basis": "지휘자 확대 눈 확인 10-27(PzKl·tF) — 일본어 줄 연분홍 채움, 한국어 줄 흰"
+    }
+   ],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "기타",
+   "scene_desc": "여자들 서 있음",
+   "fit": 5,
    "cut_at": [],
-   "_asr": [],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "가사 · 위 일본어(잉크 y1097~1131 ≈35px) / 아래 한국어(y1162~1198 ≈37px) · 줄 간격 65px · 가운데 x540 고정(물체 안 따라감, 두 편 같은 y) · 외곽선 검정 6~7px(행 스캔 중앙값) · 노래 소절과 맞춘 것으로 보임(소리는 못 들음)"
   },
   {
-   "t0": 10.6,
-   "t1": 13.3,
-   "speaker": null,
-   "text": "の声が 목소리가",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1092,
-    null
+   "t0": 10.567,
+   "t1": 13.267,
+   "speaker": "제3자",
+   "text": "の声が / 목소리가",
+   "layer": "별헤는쏭·가사",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "가사 2줄",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     100,
+     0
+    ]
    ],
-   "fill_hex": null,
-   "emph": [],
+   "exit": "cut(다음 소절로 1프레임 교체)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1097,
+    1198
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 262,
+   "fill_hex": "#FFFEFF",
+   "font": {
+    "name": "굵은 고딕(일본어 줄도 같은 굵기)",
+    "basis": "눈"
+   },
+   "size_px": 36,
+   "letter_gap_px": null,
+   "line_gap_px": 31,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [
+    {
+     "word": "の声が",
+     "hex": "#F1D4DD",
+     "outline": "#000000 6px",
+     "basis": "지휘자 확대 눈 확인 10-27(PzKl·tF) — 일본어 줄 연분홍 채움, 한국어 줄 흰"
+    }
+   ],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "기타",
+   "scene_desc": "흰 티 남자 카메라 쪽으로",
+   "fit": 5,
    "cut_at": [],
-   "_asr": [],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "가사 · 위 일본어(잉크 y1097~1131 ≈35px) / 아래 한국어(y1162~1198 ≈37px) · 줄 간격 65px · 가운데 x540 고정(물체 안 따라감, 두 편 같은 y) · 외곽선 검정 6~7px(행 스캔 중앙값) · 노래 소절과 맞춘 것으로 보임(소리는 못 들음)"
   },
   {
-   "t0": 13.3,
-   "t1": 15.07,
-   "speaker": null,
-   "text": "世界の端 세상의",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1093,
-    null
+   "t0": 13.267,
+   "t1": 15.067,
+   "speaker": "제3자",
+   "text": "世界の端 / 세상의",
+   "layer": "별헤는쏭·가사",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "가사 2줄",
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     100,
+     0
+    ]
    ],
-   "fill_hex": null,
-   "emph": [],
+   "exit": "cut(다음 소절로 1프레임 교체)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1097,
+    1198
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 262,
+   "fill_hex": "#FFFEFF",
+   "font": {
+    "name": "굵은 고딕(일본어 줄도 같은 굵기)",
+    "basis": "눈"
+   },
+   "size_px": 36,
+   "letter_gap_px": null,
+   "line_gap_px": 31,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [
+    {
+     "word": "世界の端",
+     "hex": "#F1D4DD",
+     "outline": "#000000 6px",
+     "basis": "지휘자 확대 눈 확인 10-27(PzKl·tF) — 일본어 줄 연분홍 채움, 한국어 줄 흰"
+    }
+   ],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "얼굴",
+   "scene_desc": "남자 얼굴 근접",
+   "fit": 5,
    "cut_at": [],
-   "_asr": [],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "transition": "none",
+   "motion": "cam",
+   "confidence": "픽셀",
+   "notes": "가사 · 위 일본어(잉크 y1097~1131 ≈35px) / 아래 한국어(y1162~1198 ≈37px) · 줄 간격 65px · 가운데 x540 고정(물체 안 따라감, 두 편 같은 y) · 외곽선 검정 6~7px(행 스캔 중앙값) · 노래 소절과 맞춘 것으로 보임(소리는 못 들음)"
   }
  ],
- "beats": null,
- "narr_share": null,
- "notes": [],
- "name_evidence": [],
- "_todo": [
-  "speaker",
-  "layer",
-  "role",
-  "enter",
-  "fill_hex",
-  "emph",
-  "sticker",
-  "sfx",
-  "scene",
-  "fit",
-  "beats",
-  "narr_share"
+ "no_caption": [
+  [
+   0.0,
+   0.433
+  ]
  ],
- "_made_by": "kal_analyze.skeleton(기계값 뼈대 — 판독 전)"
+ "frame0": {
+  "what": "흰 티 남자가 카메라 앞에 몸을 숙인 실내 장면(얼굴 위쪽 잘림), 카드·출처 줄 없음",
+  "face_frac": 0.04,
+  "text": "",
+  "frame_text": "제목 2줄만",
+  "basis": "지휘자 10-27: text = 장면 위에 얹은 표지 카드 글(frame0_kind) — 틀의 고정 제목·출처 줄은 frame_text 로 옮김. 0초 = 그냥 장면(카드 없음, what 칸)"
+ },
+ "beats": "훅(0.43초 '남자는 나이는 무용지물.') → 고조(4.5초 '진짜 ㅈ댈번했네;') → 반전(8.17초 여자들 등장+'입가에 미소가…', 8.1초 가사 시작) → 본문(10.63초 'ㅈㄴ 아찔하다') → 끝(12.63초 2줄 카드 '영상이 없었으면…' = 제목 받기)",
+ "narr_share": "나레 0/9줄, 0초/15.1초 — 나레 없음(댓글카드 5 + 가사 4)",
+ "notes": [
+  "댓글카드 5장이 첫 0.3~0.43초부터 끝까지 이어짐 — 바뀔 때 앞 카드 1프레임에 사라짐(cut) → 빈 2~4프레임(67~133ms) → 새 카드 433ms 동안 아래 60px(2줄 카드 74px)에서 올라오며 페이드인(30fps 본문 대비로 잰 알파·밀림)",
+  "가사: 8.1초부터 소절마다 cut 교체(8.1/9.467/10.567/13.267)",
+  "원본 화면에 박힌 글 없음(원본박힘 줄 0)",
+  "컷 0(cutdet v2, 샷 1개·motion cam) — 편집 줌 없음",
+  "효과음 미확인(소리 못 들음·뜯기 받아쓰기 실패) → sfx null",
+  "상자 알파·본색 = 퇴장 직전/직후 프레임 회귀(알파 0.89~0.92, 본색 #161815~#1A1A17)",
+  "글꼴 이름은 눈 추정"
+ ],
+ "name_evidence": []
 }

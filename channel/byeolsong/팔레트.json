@@ -1,0 +1,115 @@
+{
+ "n_docs": 5,
+ "roles": {
+  "본문": [
+   {
+    "hex": "#FFFFFF",
+    "n_lines": 49,
+    "n_docs": 5,
+    "docs": [
+     "1lMbJh0n_d4",
+     "PzKloCeO2FU",
+     "SR-2LhCXxwY",
+     "_WLN4wnVbF8",
+     "tF4fbEVtnMY"
+    ],
+    "members": [
+     "#FFFFFF",
+     "#FCFAFC",
+     "#FFFEFF"
+    ]
+   }
+  ],
+  "강조": [
+   {
+    "hex": "#EDCED7",
+    "n_lines": 13,
+    "n_docs": 3,
+    "docs": [
+     "1lMbJh0n_d4",
+     "SR-2LhCXxwY",
+     "_WLN4wnVbF8"
+    ],
+    "members": [
+     "#EDCED7",
+     "#F1D4DD"
+    ]
+   }
+  ],
+  "외곽선": [
+   {
+    "hex": "#000000",
+    "n_lines": 23,
+    "n_docs": 5,
+    "docs": [
+     "1lMbJh0n_d4",
+     "PzKloCeO2FU",
+     "SR-2LhCXxwY",
+     "_WLN4wnVbF8",
+     "tF4fbEVtnMY"
+    ],
+    "members": [
+     "#000000"
+    ]
+   }
+  ],
+  "글로우": [],
+  "제목": [
+   {
+    "hex": "#FCAFD1",
+    "n_lines": 6,
+    "n_docs": 5,
+    "docs": [
+     "1lMbJh0n_d4",
+     "PzKloCeO2FU",
+     "SR-2LhCXxwY",
+     "_WLN4wnVbF8",
+     "tF4fbEVtnMY"
+    ],
+    "members": [
+     "#FCAFD1",
+     "#FCB0D1",
+     "#FCAFD2",
+     "#FBAFD1"
+    ]
+   },
+   {
+    "hex": "#FFFEFF",
+    "n_lines": 5,
+    "n_docs": 5,
+    "docs": [
+     "1lMbJh0n_d4",
+     "PzKloCeO2FU",
+     "SR-2LhCXxwY",
+     "_WLN4wnVbF8",
+     "tF4fbEVtnMY"
+    ],
+    "members": [
+     "#FFFEFF",
+     "#FDFDFD",
+     "#FCFBFC",
+     "#FEFDFE",
+     "#FDFDFE"
+    ]
+   }
+  ],
+  "스티커": [],
+  "출처": [
+   {
+    "hex": "#FFFFFF",
+    "n_lines": 5,
+    "n_docs": 5,
+    "docs": [
+     "1lMbJh0n_d4",
+     "PzKloCeO2FU",
+     "SR-2LhCXxwY",
+     "_WLN4wnVbF8",
+     "tF4fbEVtnMY"
+    ],
+    "members": [
+     "#FFFFFF"
+    ]
+   }
+  ]
+ }
+}

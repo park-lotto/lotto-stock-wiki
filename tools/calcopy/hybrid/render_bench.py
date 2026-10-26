@@ -36,7 +36,7 @@ FONTS = ROOT / "shopping_shorts/static/fonts"
 SFX_DIR = ROOT / "shopping_shorts/assets/sfx_packs"
 BGM_DIR = ROOT / "shopping_shorts/assets/bgm_lib"
 IMG_EXT = (".jpg", ".jpeg", ".png", ".webp")
-CAP_EXTRA = ("key", "key_color", "object_src", "aside", "append", "sound", "small")   # 대본 caps 덩어리 칸 → 배치(placement)가 읽는다
+CAP_EXTRA = ("key", "key_color", "object_src", "aside", "append", "sound", "small", "likes", "ago")   # likes·ago = 댓글카드 글 칸(card_plan)   # 대본 caps 덩어리 칸 → 배치(placement)가 읽는다
 
 
 def _rgb(c):
@@ -871,8 +871,13 @@ def frame_png(S: dict, st: dict, out: Path) -> Path:
     d = ImageDraw.Draw(im)
     for spec, segs in zip(F.get("title") or [], title_segs(F, S)):
         _title_line(im, spec, segs)
+    BD = F.get("band")                 # 맨 위 그림 띠(별헤는쏭 0~235 그림 — 로고 자리) {src, box[x,y,w,h]}
+    if BD:
+        p = Path(BD["src"]) if Path(BD["src"]).is_absolute() else ROOT / BD["src"]
+        bx, by, bw, bh = BD["box"]
+        im.alpha_composite(Image.open(p).convert("RGBA").resize((bw, bh), Image.LANCZOS), (bx, by))
     C = F.get("credit")
-    if C and S.get("source_label"):
+    if C and S.get("source_label") and not C.get("in_window"):
         f = _font(C["font"], C["px"])
         bb = d.textbbox((0, 0), S["source_label"], font=f)
         top = C["ink_top"] - bb[1] if "ink_top" in C else C["center"] - (bb[1] + bb[3]) // 2
@@ -921,6 +926,102 @@ def comment_png(C: dict, px: int, out: Path) -> tuple[int, int]:
     d.text((210, 88), "답글", font=fs, fill=(30, 30, 30))
     im.save(out)
     return w, h
+
+
+def comment_track(F: dict) -> dict | None:
+    """frame.comment.track == 'lines' = 댓글카드가 본문 자막(별헤는쏭 벤치 5편 실측 10-27): 자막 줄(kind sub)마다 그 줄 시간 동안 카드 한 장.
+    없으면 None(옛 꿀템노트 꼴 — 한 구간 흰 카드 한 장, plan_rows 의 placed['comment'])."""
+    C = F.get("comment") or {}
+    return C if C.get("track") == "lines" else None
+
+
+def card_plan(S: dict, T: dict, st: dict) -> list[dict]:
+    """(판단 주인: 어느 줄이 댓글카드인가·카드 시각·프로필 색) — 대본 sub 줄의 덩어리마다 카드 한 장, 시각 = 시간표 덩어리 시각.
+    카드 글 칸(likes·ago)은 대본 caps 덩어리에 적는다. 색 = 판 avatar.colors 를 차례로(편 안에서 겹치지 않게)."""
+    CT = comment_track(st["frame"])
+    if not CT:
+        return []
+    sub = {L["id"] for L in S["lines"] if L["kind"] == "sub"}
+    cols = (CT.get("avatar") or {}).get("colors") or ["#6A35CB"]
+    k0 = sum(map(ord, S.get("slug") or "x")) % len(cols)
+    out = []
+    for i, r in enumerate(r for r in T["rows"] if r["line"] in sub):
+        out.append({"line": r["line"], "t0": r["t0"], "t1": r["t1"], "text": r["text"], "likes": r.get("likes", ""), "ago": r.get("ago", ""),
+                    "color": cols[(k0 + i) % len(cols)]})
+    return out
+
+
+def comment_card_png(c: dict, CT: dict, out: Path) -> tuple[int, int]:
+    """다크 댓글카드 한 장(유튜브 다크 모드 꼴, 별헤는쏭 실측 — 판 frame.comment 칸이 숫자 주인). 반환 (w, h) — 아래 끝 = CT.bottom."""
+    from PIL import Image, ImageDraw, ImageFilter
+    B, A, TX, MT = CT["box"], CT["avatar"], CT["text"], CT["meta"]
+    lines = str(c["text"]).split("\n")
+    w = B["x1"] - B["x0"]
+    h = B["h1"] + B["line_add"] * (len(lines) - 1)
+    im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle([0, 0, w - 1, h - 1], radius=B["radius"], fill=_rgb(B["rgb"]) + (int(round(255 * B["alpha"])),))
+    ax, ay, ad = A["cx"] - B["x0"], A["cy_rel"], A["d"]
+    d.ellipse([ax - ad // 2, ay - ad // 2, ax + ad // 2, ay + ad // 2], fill=_rgb(c["color"]) + (255,))
+    hr = ad * 0.16                                         # 흰 사람 모양(머리·어깨) — 벤치 프로필 원 안 꼴
+    d.ellipse([ax - hr, ay - ad * 0.28, ax + hr, ay - ad * 0.28 + 2 * hr], fill=(255, 255, 255, 235))
+    d.pieslice([ax - ad * 0.3, ay + ad * 0.02, ax + ad * 0.3, ay + ad * 0.62], 180, 360, fill=(255, 255, 255, 235))
+    fm = _font(MT["font"], MT["px"])
+    tx = TX["x"] - B["x0"]
+    nick = Image.new("RGBA", (int(MT["nick_w"]), MT["px"] + 8), (0, 0, 0, 0))   # 가린 닉네임 = 흐린 회색 글자 덩어리
+    ImageDraw.Draw(nick).text((0, 2), "●" * max(4, int(MT["nick_w"]) // MT["px"]), font=fm, fill=_rgb(MT["color"]) + (200,))
+    im.alpha_composite(nick.filter(ImageFilter.GaussianBlur(3)), (tx, MT["y_rel"]))
+    if c.get("ago"):
+        d.text((tx + int(MT["nick_w"]) + 14, MT["y_rel"]), c["ago"], font=fm, fill=_rgb(MT["color"]))
+    ft = _font(TX["font"], TX["px"])
+    for j, ln in enumerate(lines):
+        d.text((tx, TX["y_rel"] + j * B["line_add"]), ln, font=ft, fill=_rgb(TX["color"]))
+    fy = h - (B["h1"] - MT["foot_rel"])                    # 아래 줄 = 상자 아래 끝 기준(2줄이면 같이 내려간다)
+    try:
+        from PIL import ImageFont
+        sym = ImageFont.truetype("C:/Windows/Fonts/segmdl2.ttf", MT["px"] + 4)
+    except OSError:
+        sym = fm
+    d.text((tx, fy), "\ue8e1", font=sym, fill=_rgb(MT["color"]))
+    d.text((tx + 44, fy), str(c.get("likes", "")), font=fm, fill=_rgb(MT["color"]))
+    lw = int(fm.getlength(str(c.get("likes", ""))))
+    d.text((tx + 44 + lw + 30, fy), "\ue8e0", font=sym, fill=_rgb(MT["color"]))
+    d.text((tx + 44 + lw + 100, fy), "답글", font=fm, fill=_rgb(MT["color"]))
+    im.save(out)
+    return w, h
+
+
+def lyric_plan(S: dict, st: dict, end: float) -> list[dict]:
+    """(판단 주인: 가사 화면 시각) — 곡 옆 가사표 bgm_lib/<id>.lyrics.json [{t0,t1,jp,ko}](곡 기준 초) − 대본 bgm.ss(곡 몇 초부터 쓰나).
+    판 frame.lyrics 가 없거나 가사표가 없으면 []."""
+    if not st["frame"].get("lyrics"):
+        return []
+    bid = (S.get("bgm") or {}).get("id") or st["bgm"].get("id")
+    p = BGM_DIR / f"{bid}.lyrics.json"
+    if not bid or not p.exists():
+        raise StageError(f"판 frame.lyrics 가 켜졌는데 가사표 없음: {p}")
+    ss = float((S.get("bgm") or {}).get("ss", 0.0))
+    out = []
+    for x in jload(p)["lyrics"]:
+        a, b = x["t0"] - ss, x["t1"] - ss
+        if b <= 0 or a >= end:
+            continue
+        out.append({"t0": round(max(0.0, a), 3), "t1": round(min(end, b), 3), "jp": x["jp"], "ko": x["ko"]})
+    return out
+
+
+def lyric_png(x: dict, LY: dict, out: Path):
+    """가사 2줄(위 일본어·아래 한국어, 가운데 정렬, 고정 자리) 한 장 = 화면 전체 크기 투명 PNG."""
+    from PIL import Image, ImageDraw
+    im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    for k in ("jp", "ko"):
+        sp = LY[k]
+        f = _font(sp["font"], sp["px"])
+        bb = d.textbbox((0, 0), x[k], font=f, stroke_width=LY["stroke"]["px"])
+        d.text((W // 2 - (bb[2] - bb[0]) // 2 - bb[0], sp["cy"] - (bb[1] + bb[3]) // 2), x[k], font=f, fill=_rgb(sp["color"]),
+               stroke_width=LY["stroke"]["px"], stroke_fill=_rgb(LY["stroke"]["color"]))
+    im.save(out)
 
 
 # ── 화면 ────────────────────────────────────────────────────────────────
@@ -2447,6 +2548,41 @@ def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, tr
         ins += ["-loop", "1", "-t", f"{end:.3f}", "-i", R / "comment.png"]
         fc += f";[b][{k}:v]overlay={(W - cw) // 2}:{F['comment']['bottom'] - ch}:enable='between(t,{C['t0']:.3f},{C['t1']:.3f})'[c]"
         last = "c"
+    CT = comment_track(F)
+    for i, c in enumerate(placed.get("cards") or []):      # 댓글카드 자막(track lines) — 등장 = 페이드 + 아래에서 dy 위로(ms), 퇴장 = 그 프레임에 사라짐
+        cw, ch = comment_card_png(c, CT, R / f"card_{i}.png")
+        k = len([a for a in ins if a == "-i"])
+        ins += ["-loop", "1", "-framerate", str(FPS), "-t", f"{end:.3f}", "-i", R / f"card_{i}.png"]
+        ms, dy = CT["enter"]["ms"] / 1000, CT["enter"]["dy"]
+        y0 = CT["box"]["bottom"] - ch
+        fc += (f";[{k}:v]format=rgba,fade=t=in:st={c['t0']:.3f}:d={ms:.3f}:alpha=1[cd{i}];"
+               f"[{last}][cd{i}]overlay={CT['box']['x0']}:'{y0}+{dy}*max(0,1-(t-{c['t0']:.3f})/{ms:.3f})':enable='between(t,{c['t0']:.3f},{c['t1'] - 1 / FPS:.3f})'[cc{i}]")
+        last = f"cc{i}"
+    CR = F.get("credit") or {}
+    if CR.get("in_window") and S.get("source_label"):     # 창 위 출처 줄(📍핀 + 원본 계정, 왼쪽 정렬) — on 초부터
+        from PIL import Image, ImageDraw
+        cim = Image.new("RGBA", (W, H), (0, 0, 0, 0)); cd = ImageDraw.Draw(cim)
+        f = _font(CR["font"], CR["px"])
+        bb = cd.textbbox((0, 0), S["source_label"], font=f, stroke_width=CR.get("stroke", 0))
+        px_ = CR["x"]
+        if CR.get("pin"):
+            P = CR["pin"]
+            cd.ellipse([px_, CR["cy"] - P["r"] - 6, px_ + 2 * P["r"], CR["cy"] + P["r"] - 6], fill=_rgb(P["color"]), outline=(0, 0, 0), width=2)
+            cd.line([px_ + P["r"], CR["cy"] + P["r"] - 6, px_ + P["r"], CR["cy"] + P["r"] + 8], fill=_rgb(P["color"]), width=4)
+            px_ += 2 * P["r"] + 8
+        cd.text((px_ - bb[0], CR["cy"] - (bb[1] + bb[3]) // 2), S["source_label"], font=f, fill=_rgb(CR["color"]),
+                stroke_width=CR.get("stroke", 0), stroke_fill=_rgb(CR.get("stroke_color", "#000000")))
+        cim.save(R / "credit.png")
+        k = len([a for a in ins if a == "-i"])
+        ins += ["-loop", "1", "-framerate", str(FPS), "-t", f"{end:.3f}", "-i", R / "credit.png"]
+        fc += f";[{last}][{k}:v]overlay=0:0:enable='gte(t,{float(CR.get('on', 0.0)):.3f})'[cr]"
+        last = "cr"
+    for i, x in enumerate(placed.get("lyrics") or []):     # 가사 2줄(즉시 뜨고 즉시 바뀜, 고정 자리)
+        lyric_png(x, F["lyrics"], R / f"lyric_{i}.png")
+        k = len([a for a in ins if a == "-i"])
+        ins += ["-loop", "1", "-framerate", str(FPS), "-t", f"{end:.3f}", "-i", R / f"lyric_{i}.png"]
+        fc += f";[{last}][{k}:v]overlay=0:0:enable='between(t,{x['t0']:.3f},{x['t1'] - 1 / FPS:.3f})'[ly{i}]"
+        last = f"ly{i}"
     for j, m in enumerate(meme_overlays(placed)):
         k = len([a for a in ins if a == "-i"])
         mx, my, mw, mh = m["box"]
@@ -2568,7 +2704,10 @@ def caption_rows(placed: dict, st: dict, segs: list[dict] | None = None) -> list
     segs(frame_segments) 의 captions=hide 구간은 빼고, 판 caption.stack 이면 쌓는다."""
     cps = float(st["caption"].get("typing_cps", 10.0))
     out = []
+    carded = {c["line"] for c in placed.get("cards") or []}      # 댓글카드가 그 줄 자막(render_base) — 자막팩으로 두 번 그리지 않는다
     for r in placed["rows"]:
+        if r["line"] in carded:
+            continue
         a, b = r["show"]
         row = {"line": r["line"], "t0": a, "t1": b, "text": r["text"], "speaker": r["speaker"], "variant": r.get("variant") or "",
                "emph": r.get("emph") or [], "sticker": "", "stickers": [], "enter": r.get("enter") or "instant"}   # enter = 검증 자(kal_analyze)가 등장을 잰다
@@ -2677,6 +2816,8 @@ def draw_motion_layers(video: Path, MG: dict | None, R: Path) -> Path:
 def burn_captions(base: Path, rows: list[dict], st: dict, R: Path, end: float, snap: dict | None = None) -> Path:
     from shopping_shorts import scene_style
     from tools.caption_pack.check_bench_packs import rows_to_timeline
+    if not rows and not snap:      # 자막팩이 그릴 줄 0(댓글카드가 모든 줄 자막 — frame.comment.track lines) → 바탕 그대로(compose 는 빈 시간표를 거절한다)
+        return base
     tts = R / "silence.wav"
     if not tts.exists():
         run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"anullsrc=r={SR}:cl=mono", "-t", "1", tts])
@@ -2757,7 +2898,8 @@ def audio(S: dict, M: dict, st: dict, T: dict, sent: list[dict], placed: dict, R
     if dn:
         nduck = "+".join(f"between(t,{a:.3f},{b:.3f})" for a, b in narr_spans) or "0"
         vol = f"if({duck},{k:.4f},if({nduck},{10 ** (dn / 20):.4f},1))"
-    bed_chain = (f"aresample={SR},aformat=channel_layouts=mono,atrim=0:{end:.3f},asetpts=PTS-STARTPTS,volume={g}dB,"
+    ss = float((S.get("bgm") or {}).get("ss", 0.0))      # 곡 몇 초부터 쓰나(편마다 — 보컬 드롭 자리를 맞춘다, 가사 시각 lyric_plan 과 같은 값)
+    bed_chain = (f"aresample={SR},aformat=channel_layouts=mono,atrim={ss:.3f}:{ss + end:.3f},asetpts=PTS-STARTPTS,volume={g}dB,"
                  f"volume='{vol}':eval=frame,afade=t=out:st={end - B.get('fade_out', 0.4):.3f}:d={B.get('fade_out', 0.4)}")
     bed = R / "bgm_bed.wav"       # BGM 만(나레·원음·효과음 없이) — 덕킹 실측·품질 관문이 읽는다
     run(["ffmpeg", "-y", "-v", "error", "-stream_loop", "-1", "-i", bgm, "-filter_complex", f"[0:a]{bed_chain}[b]", "-map", "[b]", "-ar", SR, bed])
@@ -2937,6 +3079,12 @@ def plan_rows(S: dict, T: dict, st: dict, locate=None) -> dict:
         t1 = T["end"] if C.get("to", "end") == "end" else T["lines"][C["to"]][0]
         placed["comment"] = {**C, "t0": t0, "t1": t1}
         placed["log"].append(f"댓글 카드 {t0:.2f}~{t1:.2f}")
+    placed["cards"] = card_plan(S, T, st)               # 댓글카드 자막(판 frame.comment.track lines) — 그 줄은 자막팩이 안 그린다(caption_rows)
+    placed["lyrics"] = lyric_plan(S, st, T["end"])
+    if placed["cards"]:
+        placed["log"].append(f"댓글카드 {len(placed['cards'])}장")
+    if placed["lyrics"]:
+        placed["log"].append(f"가사 {len(placed['lyrics'])}줄 {placed['lyrics'][0]['t0']:.2f}초부터")
     return placed
 
 
@@ -3303,6 +3451,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     jsave(R / "timeline.json", T)
     tab = {"_note": f"배치 결과 — placement.place(판 설정 {style_name}) · 시각은 final.mp4 기준 초", "pack": st["caption"]["pack"], "rows": rows,
            "sfx": placed["sfx"], "flashes": placed["flashes"], "transitions": trans, "memes": meme_overlays(placed), "comment": placed.get("comment"),
+           **({"cards": placed["cards"]} if placed.get("cards") else {}), **({"lyrics": placed["lyrics"]} if placed.get("lyrics") else {}),
            **({"segments": [{k: g[k] for k in ("t0", "t1", "kind", "window", "captions", "body_text")} for g in segs]} if segs else {}),
            "log": placed["log"], "check": chk}
     jsave(R / "자막표.json", tab)

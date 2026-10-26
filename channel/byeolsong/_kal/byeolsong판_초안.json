@@ -1,0 +1,100 @@
+{
+ "name": "byeolsong판",
+ "renderer": "bench",
+ "_note": "kal.py rules 초안(2026-10-27) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
+ "bench": {
+  "ko": "별헤는쏭",
+  "channel": "https://www.youtube.com/@별헤는쏭",
+  "analysis": "channel/byeolsong/스타일분석.md",
+  "line_reads": "channel/byeolsong/줄판독/",
+  "src_dir": "C:\\숏템_칼카피\\byeolsong\\src",
+  "sfx_events": null,
+  "sfx_key": null,
+  "palette": "channel/byeolsong/팔레트.json",
+  "rules_counted": "channel/byeolsong/_kal/규칙빈도.json"
+ },
+ "voice": {
+  "name": null,
+  "voice_id": null,
+  "candidates": [],
+  "why": "미정 — 사장님께(kal.py 시작 질문, 추천: 미측정(뜯기에 화자 성별 없음 — 줄판독 뒤 engine/sound/narr_report.py 닮은 목소리 순위로))"
+ },
+ "cps_target": null,
+ "bgm": {
+  "id": null,
+  "db_below_voice": null,
+  "duck_orig_db": null,
+  "fade_out": null,
+  "why": "engine/sound/bgm_fp.py·뜯기 audio"
+ },
+ "loudness": {
+  "lufs": -14,
+  "tp": -1.5
+ },
+ "length": {
+  "min": 8.1,
+  "max": 21.9
+ },
+ "script": {
+  "brief": [],
+  "example": [],
+  "audit": []
+ },
+ "frame": {
+  "window": [
+   0,
+   476,
+   1080,
+   1444
+  ],
+  "title": [],
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "comment": null
+ },
+ "caption": {
+  "pack": null,
+  "pack_default": null,
+  "variant_for": {},
+  "typing_cps": null
+ },
+ "timing": null,
+ "cuts": null,
+ "sfx_files": null,
+ "placement": {
+  "rules": {
+   "narr_enter": null,
+   "orig_enter": null,
+   "fx_rate": {
+    "제3자": 0.8
+   },
+   "plain_rate": 0.2,
+   "by_pos": {
+    "훅": 1.0,
+    "본문": 0.78,
+    "끝": 0.75
+   },
+   "strong": [
+    "역할=이음 → enter=instant 22/22",
+    "자리=끝 → enter=instant 8/12",
+    "자리=훅 → enter=fade 5/5",
+    "자리=훅 → enter_fx 5/5",
+    "역할=훅 → enter=fade 5/5",
+    "역할=훅 → enter_fx 5/5",
+    "역할=끝 → enter=fade 5/5",
+    "역할=끝 → enter_fx 5/5",
+    "화자전환 첫 덩어리=제3자 → enter=fade 5/5",
+    "역할=고조 → enter=fade 4/5",
+    "역할=고조 → enter_fx 4/5"
+   ]
+  },
+  "counted": {}
+ },
+ "_todo": [
+  "voice·bgm·sfx = engine/sound 결과",
+  "frame.title/logo/credit = 스타일분석 §틀",
+  "caption.pack = caption-motions.js 팩 이름(없으면 요청서)",
+  "timing·cuts·sfx_files = 견본 styles/키치잇판.json 꼴"
+ ]
+}

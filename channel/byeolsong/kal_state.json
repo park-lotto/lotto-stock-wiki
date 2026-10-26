@@ -74,46 +74,29 @@
    "note": "뼈대 3편 새로, 묶음 5편"
   },
   "readlines": {
-   "state": "waiting_human",
+   "state": "done",
    "sec": 0.0,
-   "at": "2026-10-27 02:17",
+   "at": "2026-10-27 02:34",
    "outputs": {
-    "pending": {
-     "1lMbJh0n_d4": [
-      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
-      "lines 비어 있음"
-     ],
-     "_WLN4wnVbF8": [
-      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
-      "줄0(9.0~10.4) 칸 누락(strict): transition",
-      "줄0(9.0~10.4) 칸 누락(strict): motion",
-      "줄0(9.0~10.4) 칸 누락(strict): confidence",
-      "줄0(9.0~10.4) speaker 미기입"
-     ],
-     "PzKloCeO2FU": [
-      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
-      "줄0(8.1~9.5) 칸 누락(strict): transition",
-      "줄0(8.1~9.5) 칸 누락(strict): motion",
-      "줄0(8.1~9.5) 칸 누락(strict): confidence",
-      "줄0(8.1~9.5) speaker 미기입"
-     ],
-     "tF4fbEVtnMY": [
-      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
-      "줄0(14.1~16.8) 칸 누락(strict): transition",
-      "줄0(14.1~16.8) 칸 누락(strict): motion",
-      "줄0(14.1~16.8) 칸 누락(strict): confidence",
-      "줄0(14.1~16.8) speaker 미기입"
-     ],
-     "SR-2LhCXxwY": [
-      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
-      "줄0(0.6~3.1) 칸 누락(strict): transition",
-      "줄0(0.6~3.1) 칸 누락(strict): motion",
-      "줄0(0.6~3.1) 칸 누락(strict): confidence",
-      "줄0(0.6~3.1) speaker 미기입"
-     ]
-    }
+    "ids": [
+     "1lMbJh0n_d4",
+     "_WLN4wnVbF8",
+     "PzKloCeO2FU",
+     "tF4fbEVtnMY",
+     "SR-2LhCXxwY"
+    ]
    },
-   "note": "줄판독 미완 5/5편 — 줄판독(눈) — 묶음 _kal/워커묶음.json 을 워커에 나눠 주고 줄판독/<id>.json 을 채운다 → check 통과 뒤 다시 실행"
+   "note": "줄판독 5편 strict 통과"
+  },
+  "rules": {
+   "state": "waiting_human",
+   "sec": 0.3,
+   "at": "2026-10-27 02:34",
+   "outputs": {
+    "draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\byeolsong\\_kal\\스타일분석_초안.md",
+    "plan_draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\byeolsong\\_kal\\byeolsong판_초안.json"
+   },
+   "note": "규칙 판정 — _kal/스타일분석_초안.md 를 보고 channel/<slug>/스타일분석.md 를 쓴다(붙는 조건 규칙 채택은 사람) → 다시 실행"
   }
  },
  "asked": {},

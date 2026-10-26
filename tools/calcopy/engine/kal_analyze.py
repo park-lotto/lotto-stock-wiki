@@ -442,6 +442,13 @@ def _ours_lines(o: dict) -> tuple[list[dict], float]:
         rows.append({"t0": t0, "t1": t1, "speaker": r.get("speaker") or r.get("kind"), "text": r.get("text"),
                      "enter": r.get("enter") or "instant", "emph": emph, "sticker": st,
                      "sfx": next((f"{t}" for t in sfx_t if t0 <= t < t1), None), "role": r.get("role"), "layer": "채널", "variant": r.get("variant")})
+    for c in o.get("cards") or []:      # 댓글카드 자막(render_bench frame.comment.track lines) — 줄판독의 카드 줄과 같은 칸(제3자·fade·꾸밈 없음)
+        rows.append({"t0": float(c["t0"]), "t1": float(c["t1"]), "speaker": "제3자", "text": c["text"], "enter": "fade", "emph": [], "sticker": [],
+                     "sfx": None, "role": None, "layer": "채널", "variant": None})
+    for x in o.get("lyrics") or []:     # 가사 2줄(render_bench lyric_plan) — 줄판독 가사 줄과 같은 칸(즉시·일본어 줄 색 = 강조)
+        rows.append({"t0": float(x["t0"]), "t1": float(x["t1"]), "speaker": "제3자", "text": f"{x['jp']} / {x['ko']}", "enter": "instant",
+                     "emph": [{"word": x["jp"]}], "sticker": [], "sfx": None, "role": None, "layer": "채널·가사", "variant": None})
+    rows.sort(key=lambda r: r["t0"])
     return rows, float(o.get("dur") or (max((r["t1"] for r in rows), default=0)))
 
 
@@ -595,6 +602,10 @@ def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, ben
             judge, diff = "in", f"우리 꾸밈 0 · 벤치 꾸밈 없는 줄 중앙 ≥{FXPOS_NA_PLAIN} — 자리 분포 해당 없음(꾸밈 비율은 fx.rate·plain.rate 칸이 잰다)"
         elif b is None or o is None:
             judge, diff = "failed", "미측정"
+        elif key == "cut.median" and om.get("n_cuts") == 1 and \
+                sum(p.get("n_cuts") == 1 for p in (bm.get("per") or {}).values()) * 2 > len(bm.get("per") or {}):
+            # 한 샷 영상의 '컷 길이' = 영상 길이 — 길이 차를 컷 리듬 차로 읽던 결함(10-27 별헤는쏭: 벤치 4/5 한 샷 · 우리 한 샷 13.4초가 '빠름' 미달). 길이는 len.duration 칸이 잰다
+            judge, diff = "in", f"둘 다 한 샷(컷 없음) — 벤치 {sum(p.get('n_cuts') == 1 for p in bm['per'].values())}/{len(bm['per'])}편 한 샷"
         elif kind == "rel":
             diff = round((o - b) / b * 100, 1) if b else None
             judge = "in" if (brange and brange[0] <= o <= brange[1]) or (diff is not None and abs(diff) <= tol) or _in_span(o, span) else "out"
@@ -811,7 +822,8 @@ def match_from_render(style, doc, work, media: bool | dict = True, frame0_kind_m
     tab = json.loads((R / "자막표.json").read_text(encoding="utf-8"))
     T = json.loads((R / "timeline.json").read_text(encoding="utf-8"))
     dur = float(T.get("end") or 0)
-    lines, _ = _ours_lines({"rows": tab.get("rows") or [], "dur": dur, "sfx_in_video": tab.get("sfx") or []})   # 효과음 = 덩어리 꾸밈(벤치 _decorated 와 같은 자 — 10-26 전엔 안 넘겨 우리 fx.rate 가 늘 0 이었다)
+    lines, _ = _ours_lines({"rows": tab.get("rows") or [], "cards": tab.get("cards") or [], "lyrics": tab.get("lyrics") or [],
+                            "dur": dur, "sfx_in_video": tab.get("sfx") or []})   # 효과음 = 덩어리 꾸밈(벤치 _decorated 와 같은 자 — 10-26 전엔 안 넘겨 우리 fx.rate 가 늘 0 이었다)
     # 짤: 시간표 컷에 meme 표시가 있으면 그 컷과 겹치는 줄 = 짤 화면
     memes = [(float(c["t0"]), float(c["t1"])) for c in T.get("cuts") or [] if c.get("meme") or c.get("kind") == "meme"]
     for l in lines:

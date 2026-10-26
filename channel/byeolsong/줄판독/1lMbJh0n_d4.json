@@ -6,42 +6,984 @@
   1080,
   1920
  ],
- "title_lines": [],
- "source_label": null,
+ "title_lines": [
+  {
+   "text": "아 인스타",
+   "colors": [
+    {
+     "word": "아 인스타",
+     "hex": "#FFFEFF"
+    }
+   ]
+  },
+  {
+   "text": "광고 보고 샀는데",
+   "colors": [
+    {
+     "word": "광고 보고 샀는데",
+     "hex": "#FCAFD2"
+    }
+   ]
+  }
+ ],
+ "source_label": "📍snow93180",
  "layout": {
+  "title_y": [
+   244,
+   451
+  ],
+  "title_rows": {
+   "line1": [
+    244,
+    341
+   ],
+   "line2": [
+    353,
+    451
+   ]
+  },
   "window": [
    0,
    476,
    1080,
-   1444
-  ],
-  "caption_band": [
-   1548,
    1920
   ],
-  "title_y": null,
-  "source_y": null,
-  "logo_y": null,
-  "watermark": null
+  "source_y": [
+   496,
+   523
+  ],
+  "source_x": [
+   119,
+   335
+  ],
+  "source_hex": "#FFFFFF",
+  "source_outline": "검정 #000000 외곽(약 2~3px, 눈)",
+  "source_pin": {
+   "hex": "#EF390A",
+   "x": [
+    124,
+    145
+   ],
+   "y": [
+    496,
+    509
+   ]
+  },
+  "logo_y": [
+   0,
+   235
+  ],
+  "top_band": "0~235 판타지풍 높은음자리표·음표·별·토끼·하트 육각 칸 그림 — 5편 같은 그림(0~235 크롭 상관 0.997, 평균차 ≈2 = 같은 편 안 시각차와 같은 크기), 아래로 검정에 번져 이어짐",
+  "title_bg": "#000000(236~475)",
+  "card_box": [
+   86,
+   1459,
+   992,
+   1631
+  ],
+  "watermark": {
+   "what": null,
+   "alpha": 0
+  }
  },
- "lines": [],
- "beats": null,
- "narr_share": null,
- "notes": [],
- "name_evidence": [],
- "_todo": [
-  "speaker",
-  "layer",
-  "role",
-  "enter",
-  "fill_hex",
-  "emph",
-  "sticker",
-  "sfx",
-  "scene",
-  "fit",
-  "beats",
-  "narr_share"
+ "lines": [
+  {
+   "t0": 0.233,
+   "t1": 3.667,
+   "speaker": "제3자",
+   "text": "?",
+   "layer": "별헤는쏭",
+   "role": "훅",
+   "enter": "fade",
+   "enter_ms": 500,
+   "variant": "기본(댓글카드)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "분홍·보라 사과 깎이 기계에 사과 꽂힘, 두 손이 기계를 놓고 빠짐, 칼날 팔이 움직이기 시작",
+   "fit": 7,
+   "y": [
+    1459,
+    1631
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "유튜브 앱 UI 고딕(Roboto+Noto Sans KR 계열 추정)",
+    "basis": "눈 — 유튜브 다크 모드 댓글 꼴과 같은 글자 모양"
+   },
+   "size_px": 27,
+   "x": 195,
+   "align": "left",
+   "max_w": 797,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#1A181A",
+    "alpha": 0.9,
+    "pad": {
+     "l": 28,
+     "t": 33,
+     "b": 29
+    },
+    "radius": 15,
+    "x0": 86,
+    "y0": 1459,
+    "x1": 992,
+    "y1": 1631,
+    "composite_on_light_hex": "#2C2B2C"
+   },
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     0,
+     65
+    ],
+    [
+     0.25,
+     100,
+     50,
+     32
+    ],
+    [
+     0.5,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "instant — 1프레임에 통째로 사라지고 그 다음 프레임부터 새 카드 페이드(빈 화면 33ms)",
+   "motion": "still",
+   "transition": "none",
+   "confidence": "픽셀",
+   "notes": "프로필 원 보라 #5337CD · 좋아요 '5.2천' · '3개월 전' · 닉네임 흐림(#595959 번짐) · 등장 = 0.5초 동안 불투명 0→100% + 아래 65px(y1524→1459)에서 위로 미끄러짐, 둘 다 직선(30fps 1프레임 4.6px)"
+  },
+  {
+   "t0": 3.7,
+   "t1": 7.267,
+   "speaker": "제3자",
+   "text": "상대를 일단 파악하는게 중요하긴해",
+   "layer": "별헤는쏭",
+   "role": "다리",
+   "enter": "fade",
+   "enter_ms": 500,
+   "variant": "기본(댓글카드)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "칼날 팔이 사과 둘레를 천천히 맴돌기만 함(깎기 전)",
+   "fit": 8,
+   "y": [
+    1459,
+    1631
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "유튜브 앱 UI 고딕(Roboto+Noto Sans KR 계열 추정)",
+    "basis": "눈 — 유튜브 다크 모드 댓글 꼴과 같은 글자 모양"
+   },
+   "size_px": 27,
+   "x": 195,
+   "align": "left",
+   "max_w": 797,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#1A181A",
+    "alpha": 0.9,
+    "pad": {
+     "l": 28,
+     "t": 33,
+     "b": 29
+    },
+    "radius": 15,
+    "x0": 86,
+    "y0": 1459,
+    "x1": 992,
+    "y1": 1631,
+    "composite_on_light_hex": "#2C2B2C"
+   },
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     0,
+     65
+    ],
+    [
+     0.25,
+     100,
+     50,
+     32
+    ],
+    [
+     0.5,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "instant — 1프레임에 통째로 사라지고 그 다음 프레임부터 새 카드 페이드(빈 화면 33ms)",
+   "motion": "still",
+   "transition": "none",
+   "confidence": "픽셀",
+   "notes": "프로필 원 연두 #9AD036 · 좋아요 '1.1만' · '1주 전' · 닉네임 흐림(#595959 번짐) · 등장 = 0.5초 동안 불투명 0→100% + 아래 65px(y1524→1459)에서 위로 미끄러짐, 둘 다 직선(30fps 1프레임 4.6px)"
+  },
+  {
+   "t0": 7.3,
+   "t1": 12.333,
+   "speaker": "제3자",
+   "text": "사과를 관찰하는 기계인가요?",
+   "layer": "별헤는쏭",
+   "role": "질문",
+   "enter": "fade",
+   "enter_ms": 500,
+   "variant": "기본(댓글카드)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "팔이 계속 사과 둘레를 맴돎(깎기 전)",
+   "fit": 9,
+   "y": [
+    1459,
+    1631
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "유튜브 앱 UI 고딕(Roboto+Noto Sans KR 계열 추정)",
+    "basis": "눈 — 유튜브 다크 모드 댓글 꼴과 같은 글자 모양"
+   },
+   "size_px": 27,
+   "x": 195,
+   "align": "left",
+   "max_w": 797,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#1A181A",
+    "alpha": 0.9,
+    "pad": {
+     "l": 28,
+     "t": 33,
+     "b": 29
+    },
+    "radius": 15,
+    "x0": 86,
+    "y0": 1459,
+    "x1": 992,
+    "y1": 1631,
+    "composite_on_light_hex": "#2C2B2C"
+   },
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     0,
+     65
+    ],
+    [
+     0.25,
+     100,
+     50,
+     32
+    ],
+    [
+     0.5,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "instant — 1프레임에 통째로 사라지고 그 다음 프레임부터 새 카드 페이드(빈 화면 33ms)",
+   "motion": "still",
+   "transition": "none",
+   "confidence": "픽셀",
+   "notes": "프로필 원 빨강 #D2492F · 좋아요 '3.9천' · '2주 전' · 닉네임 흐림(#595959 번짐) · 등장 = 0.5초 동안 불투명 0→100% + 아래 65px(y1524→1459)에서 위로 미끄러짐, 둘 다 직선(30fps 1프레임 4.6px)"
+  },
+  {
+   "t0": 12.367,
+   "t1": 15.367,
+   "speaker": "제3자",
+   "text": "의심해서 미안하다..",
+   "layer": "별헤는쏭",
+   "role": "반전",
+   "enter": "fade",
+   "enter_ms": 500,
+   "variant": "기본(댓글카드)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "칼날이 사과에 닿아 깎기 시작 — 같은 때 가사 시작(12.4)",
+   "fit": 9,
+   "y": [
+    1459,
+    1631
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "유튜브 앱 UI 고딕(Roboto+Noto Sans KR 계열 추정)",
+    "basis": "눈 — 유튜브 다크 모드 댓글 꼴과 같은 글자 모양"
+   },
+   "size_px": 27,
+   "x": 195,
+   "align": "left",
+   "max_w": 797,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#1A181A",
+    "alpha": 0.9,
+    "pad": {
+     "l": 28,
+     "t": 33,
+     "b": 29
+    },
+    "radius": 15,
+    "x0": 86,
+    "y0": 1459,
+    "x1": 992,
+    "y1": 1631,
+    "composite_on_light_hex": "#2C2B2C"
+   },
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     0,
+     65
+    ],
+    [
+     0.25,
+     100,
+     50,
+     32
+    ],
+    [
+     0.5,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "instant — 1프레임에 통째로 사라지고 그 다음 프레임부터 새 카드 페이드(빈 화면 33ms)",
+   "motion": "still",
+   "transition": "none",
+   "confidence": "픽셀",
+   "notes": "프로필 원 하늘 #3699D1 · 좋아요 '2.3천' · '6일 전' · 닉네임 흐림(#595959 번짐) · 등장 = 0.5초 동안 불투명 0→100% + 아래 65px(y1524→1459)에서 위로 미끄러짐, 둘 다 직선(30fps 1프레임 4.6px)"
+  },
+  {
+   "t0": 15.4,
+   "t1": 18.7,
+   "speaker": "제3자",
+   "text": "울 엄마보다 잘 깎네",
+   "layer": "별헤는쏭",
+   "role": "고조",
+   "enter": "fade",
+   "enter_ms": 500,
+   "variant": "기본(댓글카드)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "껍질이 한 줄로 길게 깎여 늘어짐, 노란 속살",
+   "fit": 8,
+   "y": [
+    1459,
+    1631
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "유튜브 앱 UI 고딕(Roboto+Noto Sans KR 계열 추정)",
+    "basis": "눈 — 유튜브 다크 모드 댓글 꼴과 같은 글자 모양"
+   },
+   "size_px": 27,
+   "x": 195,
+   "align": "left",
+   "max_w": 797,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#1A181A",
+    "alpha": 0.9,
+    "pad": {
+     "l": 28,
+     "t": 33,
+     "b": 29
+    },
+    "radius": 15,
+    "x0": 86,
+    "y0": 1459,
+    "x1": 992,
+    "y1": 1631,
+    "composite_on_light_hex": "#2C2B2C"
+   },
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     0,
+     65
+    ],
+    [
+     0.25,
+     100,
+     50,
+     32
+    ],
+    [
+     0.5,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "instant — 1프레임에 통째로 사라지고 그 다음 프레임부터 새 카드 페이드(빈 화면 33ms)",
+   "motion": "still",
+   "transition": "none",
+   "confidence": "픽셀",
+   "notes": "프로필 원 초록 #38CD77 · 좋아요 '2.6천' · '5일 전' · 닉네임 흐림(#595959 번짐) · 등장 = 0.5초 동안 불투명 0→100% + 아래 65px(y1524→1459)에서 위로 미끄러짐, 둘 다 직선(30fps 1프레임 4.6px)"
+  },
+  {
+   "t0": 18.733,
+   "t1": 21.7,
+   "speaker": "제3자",
+   "text": "난 진짜 아무 영상이나 다 보네",
+   "layer": "별헤는쏭",
+   "role": "끝",
+   "enter": "fade",
+   "enter_ms": 500,
+   "variant": "기본(댓글카드)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "거의 다 깎인 사과 — 끝",
+   "fit": 6,
+   "y": [
+    1459,
+    1631
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "유튜브 앱 UI 고딕(Roboto+Noto Sans KR 계열 추정)",
+    "basis": "눈 — 유튜브 다크 모드 댓글 꼴과 같은 글자 모양"
+   },
+   "size_px": 27,
+   "x": 195,
+   "align": "left",
+   "max_w": 797,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 0,
+    "hex": null
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "hex": "#1A181A",
+    "alpha": 0.9,
+    "pad": {
+     "l": 28,
+     "t": 33,
+     "b": 29
+    },
+    "radius": 15,
+    "x0": 86,
+    "y0": 1459,
+    "x1": 992,
+    "y1": 1631,
+    "composite_on_light_hex": "#2C2B2C"
+   },
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     0,
+     65
+    ],
+    [
+     0.25,
+     100,
+     50,
+     32
+    ],
+    [
+     0.5,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "instant — 1프레임에 통째로 사라지고 그 다음 프레임부터 새 카드 페이드(빈 화면 33ms)",
+   "motion": "still",
+   "transition": "none",
+   "confidence": "픽셀",
+   "notes": "프로필 원 주황 #D38934 · 좋아요 '6.2천' · '1주 전' · 닉네임 흐림(#595959 번짐) · 등장 = 0.5초 동안 불투명 0→100% + 아래 65px(y1524→1459)에서 위로 미끄러짐, 둘 다 직선(30fps 1프레임 4.6px)"
+  },
+  {
+   "t0": 12.4,
+   "t1": 13.8,
+   "speaker": "제3자",
+   "text": "あぁ このまま / 아아 이대로",
+   "layer": "별헤는쏭·가사",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(가사 2줄 — 위 일본어 연분홍, 아래 한국어 흰)",
+   "emph": [
+    {
+     "word": "あぁ このまま",
+     "hex": "#F1D4DD",
+     "outline": "#000000 6px",
+     "basis": "지휘자 확대 눈 확인 10-27(PzKl·tF) — 일본어 줄 연분홍 채움, 한국어 줄 흰"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "칼날 팔이 사과에 닿아 깎기 시작",
+   "fit": 3,
+   "y": [
+    1088,
+    1205
+   ],
+   "fill_hex": "#FCFAFC",
+   "size_px": 38,
+   "font": {
+    "name": "둥근 굵은 고딕(일본어 둥근 고딕·한글 주아체 계열 추정)",
+    "basis": "눈 — 확대 크롭"
+   },
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": 19,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": "흰 얇은 테 약 2px(검정 바깥 2~3px 밝기 +20~30 — 신호)",
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "instant — 다음 가사로 그 프레임에 바뀜(마지막은 영상 끝까지)",
+   "transition": "none",
+   "confidence": "픽셀",
+   "motion": "still",
+   "notes": "가사(노래 보컬 소절) · 일본어 줄 y≈1088~1138 글자≈35px 채움 #EDCED7(연분홍) · 한국어 줄 y≈1156~1205 글자≈38px 채움 #FCFAFC · 두 줄 각각 x=540 가운데 정렬, 편 안·편끼리 자리 고정(물체 안 따라감)"
+  },
+  {
+   "t0": 13.8,
+   "t1": 14.9,
+   "speaker": "제3자",
+   "text": "僕たち / 우리들의",
+   "layer": "별헤는쏭·가사",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(가사 2줄 — 위 일본어 연분홍, 아래 한국어 흰)",
+   "emph": [
+    {
+     "word": "僕たち",
+     "hex": "#F1D4DD",
+     "outline": "#000000 6px",
+     "basis": "지휘자 확대 눈 확인 10-27(PzKl·tF) — 일본어 줄 연분홍 채움, 한국어 줄 흰"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "사과 윗부분 깎임, 껍질 띠",
+   "fit": 3,
+   "y": [
+    1088,
+    1205
+   ],
+   "fill_hex": "#FCFAFC",
+   "size_px": 38,
+   "font": {
+    "name": "둥근 굵은 고딕(일본어 둥근 고딕·한글 주아체 계열 추정)",
+    "basis": "눈 — 확대 크롭"
+   },
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": 19,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": "흰 얇은 테 약 2px(검정 바깥 2~3px 밝기 +20~30 — 신호)",
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "instant — 다음 가사로 그 프레임에 바뀜(마지막은 영상 끝까지)",
+   "transition": "none",
+   "confidence": "픽셀",
+   "motion": "still",
+   "notes": "가사(노래 보컬 소절) · 일본어 줄 y≈1088~1138 글자≈35px 채움 #EDCED7(연분홍) · 한국어 줄 y≈1156~1205 글자≈38px 채움 #FCFAFC · 두 줄 각각 x=540 가운데 정렬, 편 안·편끼리 자리 고정(물체 안 따라감)"
+  },
+  {
+   "t0": 14.9,
+   "t1": 17.6,
+   "speaker": "제3자",
+   "text": "の声が / 목소리가",
+   "layer": "별헤는쏭·가사",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(가사 2줄 — 위 일본어 연분홍, 아래 한국어 흰)",
+   "emph": [
+    {
+     "word": "の声が",
+     "hex": "#F1D4DD",
+     "outline": "#000000 6px",
+     "basis": "지휘자 확대 눈 확인 10-27(PzKl·tF) — 일본어 줄 연분홍 채움, 한국어 줄 흰"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "껍질 띠 길게 늘어짐",
+   "fit": 3,
+   "y": [
+    1088,
+    1205
+   ],
+   "fill_hex": "#FCFAFC",
+   "size_px": 38,
+   "font": {
+    "name": "둥근 굵은 고딕(일본어 둥근 고딕·한글 주아체 계열 추정)",
+    "basis": "눈 — 확대 크롭"
+   },
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": 19,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": "흰 얇은 테 약 2px(검정 바깥 2~3px 밝기 +20~30 — 신호)",
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "instant — 다음 가사로 그 프레임에 바뀜(마지막은 영상 끝까지)",
+   "transition": "none",
+   "confidence": "픽셀",
+   "motion": "still",
+   "notes": "가사(노래 보컬 소절) · 일본어 줄 y≈1088~1138 글자≈35px 채움 #EDCED7(연분홍) · 한국어 줄 y≈1156~1205 글자≈38px 채움 #FCFAFC · 두 줄 각각 x=540 가운데 정렬, 편 안·편끼리 자리 고정(물체 안 따라감)"
+  },
+  {
+   "t0": 17.6,
+   "t1": 19.733,
+   "speaker": "제3자",
+   "text": "世界の端 / 세상의",
+   "layer": "별헤는쏭·가사",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(가사 2줄 — 위 일본어 연분홍, 아래 한국어 흰)",
+   "emph": [
+    {
+     "word": "世界の端",
+     "hex": "#F1D4DD",
+     "outline": "#000000 6px",
+     "basis": "지휘자 확대 눈 확인 10-27(PzKl·tF) — 일본어 줄 연분홍 채움, 한국어 줄 흰"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "노란 속살 드러남",
+   "fit": 3,
+   "y": [
+    1088,
+    1205
+   ],
+   "fill_hex": "#FCFAFC",
+   "size_px": 38,
+   "font": {
+    "name": "둥근 굵은 고딕(일본어 둥근 고딕·한글 주아체 계열 추정)",
+    "basis": "눈 — 확대 크롭"
+   },
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": 19,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": "흰 얇은 테 약 2px(검정 바깥 2~3px 밝기 +20~30 — 신호)",
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "instant — 다음 가사로 그 프레임에 바뀜(마지막은 영상 끝까지)",
+   "transition": "none",
+   "confidence": "픽셀",
+   "motion": "still",
+   "notes": "가사(노래 보컬 소절) · 일본어 줄 y≈1088~1138 글자≈35px 채움 #EDCED7(연분홍) · 한국어 줄 y≈1156~1205 글자≈38px 채움 #FCFAFC · 두 줄 각각 x=540 가운데 정렬, 편 안·편끼리 자리 고정(물체 안 따라감)"
+  },
+  {
+   "t0": 19.733,
+   "t1": 20.5,
+   "speaker": "제3자",
+   "text": "っこまで / 가장자리까지",
+   "layer": "별헤는쏭·가사",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(가사 2줄 — 위 일본어 연분홍, 아래 한국어 흰)",
+   "emph": [
+    {
+     "word": "っこまで",
+     "hex": "#F1D4DD",
+     "outline": "#000000 6px",
+     "basis": "지휘자 확대 눈 확인 10-27(PzKl·tF) — 일본어 줄 연분홍 채움, 한국어 줄 흰"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "거의 다 깎임",
+   "fit": 3,
+   "y": [
+    1088,
+    1205
+   ],
+   "fill_hex": "#FCFAFC",
+   "size_px": 38,
+   "font": {
+    "name": "둥근 굵은 고딕(일본어 둥근 고딕·한글 주아체 계열 추정)",
+    "basis": "눈 — 확대 크롭"
+   },
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": 19,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": "흰 얇은 테 약 2px(검정 바깥 2~3px 밝기 +20~30 — 신호)",
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "instant — 다음 가사로 그 프레임에 바뀜(마지막은 영상 끝까지)",
+   "transition": "none",
+   "confidence": "픽셀",
+   "motion": "still",
+   "notes": "가사(노래 보컬 소절) · 일본어 줄 y≈1088~1138 글자≈35px 채움 #EDCED7(연분홍) · 한국어 줄 y≈1156~1205 글자≈38px 채움 #FCFAFC · 두 줄 각각 x=540 가운데 정렬, 편 안·편끼리 자리 고정(물체 안 따라감)"
+  },
+  {
+   "t0": 20.5,
+   "t1": 21.7,
+   "speaker": "제3자",
+   "text": "消えることなく / 사라지지 않고",
+   "layer": "별헤는쏭·가사",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본(가사 2줄 — 위 일본어 연분홍, 아래 한국어 흰)",
+   "emph": [
+    {
+     "word": "消えることなく",
+     "hex": "#F1D4DD",
+     "outline": "#000000 6px",
+     "basis": "지휘자 확대 눈 확인 10-27(PzKl·tF) — 일본어 줄 연분홍 채움, 한국어 줄 흰"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "scene_desc": "거의 다 깎임 — 끝",
+   "fit": 3,
+   "y": [
+    1088,
+    1205
+   ],
+   "fill_hex": "#FCFAFC",
+   "size_px": 38,
+   "font": {
+    "name": "둥근 굵은 고딕(일본어 둥근 고딕·한글 주아체 계열 추정)",
+    "basis": "눈 — 확대 크롭"
+   },
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": 19,
+   "outline": {
+    "px": 6,
+    "hex": "#000000"
+   },
+   "ring": "흰 얇은 테 약 2px(검정 바깥 2~3px 밝기 +20~30 — 신호)",
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0.0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "instant — 다음 가사로 그 프레임에 바뀜(마지막은 영상 끝까지)",
+   "transition": "none",
+   "confidence": "픽셀",
+   "motion": "still",
+   "notes": "가사(노래 보컬 소절) · 일본어 줄 y≈1088~1138 글자≈35px 채움 #EDCED7(연분홍) · 한국어 줄 y≈1156~1205 글자≈38px 채움 #FCFAFC · 두 줄 각각 x=540 가운데 정렬, 편 안·편끼리 자리 고정(물체 안 따라감)"
+  }
  ],
- "_made_by": "kal_analyze.skeleton(기계값 뼈대 — 판독 전)"
+ "no_caption": [],
+ "beats": "훅(0.23 '?' 카드 — 이상한 기계) → 다리(3.7 '상대를 일단 파악…' 맴도는 팔 농담) → 질문(7.3 '관찰하는 기계인가요?') → 반전(12.4 깎기 시작 + 가사 시작 + '의심해서 미안하다..') → 고조(15.4 '울 엄마보다 잘 깎네') → 끝(18.7 자조 '난 진짜 아무 영상이나 다 보네', 영상 끝까지)",
+ "narr_share": "0/12 줄, 0초/21.7초 — 나레 없음(댓글카드 6 · 가사 6, 소리는 일본 노래뿐)",
+ "name_evidence": [
+  "출처 줄 '📍snow93180'(원본 계정, 화면 글자)"
+ ],
+ "frame0": {
+  "what": "분홍·보라 사과 깎이 기계 + 사과, 두 손이 기계를 잡고 있음(카드 없음, 제목·출처 줄만)",
+  "face_frac": 0.0,
+  "text": "",
+  "frame_text": "아 인스타 / 광고 보고 샀는데 · 📍snow93180",
+  "basis": "지휘자 10-27: text = 장면 위에 얹은 표지 카드 글(frame0_kind) — 틀의 고정 제목·출처 줄은 frame_text 로 옮김. 0초 = 그냥 장면(카드 없음, what 칸)"
+ },
+ "cuts": {
+  "scene_gt_0.3": [],
+  "note": "창 안(y540~1040) scene>0.15 도 0건 — 한 샷, 고정 카메라. kal cutdet 의 5컷(3.667·7.267·12.333·15.367·18.7)은 카드 띠가 창에 들어가 생긴 오탐 = 카드 바뀜 시각",
+  "edit_zoom": "없음(시트 눈 판독, 뜯기 줌 p90 4.3%/s = 손떨림 수준)"
+ },
+ "notes": [
+  "카드 6장: 등장 0.5초 페이드+65px 위로 미끄러짐(직선), 퇴장 1프레임 즉시, 카드 사이 빈 화면 1프레임(33ms) — 카드 없는 0.3초+ 구간 없음",
+  "카드 바탕 = #1A181A 불투명도 0.90(사라지는 프레임 앞뒤 4쌍 회귀, 채널별 0.895~0.910) — 밝은 바탕 위 합성색이 #2C2B2C(브리프 값)",
+  "카드 안: 프로필 원 지름≈62px 중심(144,1512) 흰 사람 모양 · 흐린 닉네임 y1492~1511 · 'N개월/주/일 전' 회색 #BCBCBC 글자 높이 20 · 본문 흰 y1529~1555(글자 27px, 글꼴 크기≈34px 추정) · 엄지+좋아요 수·싫어요·'답글' y1575~1602 #BCBCBC, 좋아요 꼴 'N.N천'/'N.N만'",
+  "가사 6소절 시작 간격 1.4·1.1·2.7·2.133·0.767초 — _WLN4wnVbF8 과 같다(같은 곡 같은 구간, 시작 시각만 편마다 다름: 여기 12.4초 = 깎기 시작 장면)",
+  "가사 줄 layer 를 '별헤는쏭(가사)'로 갈랐다 — 카드와 동시에 떠서 같은 층이면 check 가 시간 겹침으로 거절",
+  "효과음 없음으로 적음(소리 = 일본 노래뿐, 지휘자 받아쓰기) — sfx 전부 null",
+  "확인 못 한 것: 글꼴 이름(눈 추정) · 노래 보컬 시작이 가사 12.4초와 같은지 소리 대조 안 함 · 출처 줄 외곽선 두께는 눈값"
+ ],
+ "_made_by": "줄판독 워커(10-27, 30fps 카드 띠·가사 마스크 픽셀 실측 + 눈 판독)"
 }
