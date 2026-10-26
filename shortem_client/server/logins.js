@@ -57,7 +57,9 @@ export function writeCookies(cookies) {
     .map(c => ({ name: c.name, value: c.value, domain: c.domain, path: c.path || '/', expires: c.expires > 0 ? c.expires : -1, httpOnly: !!c.httpOnly, secure: !!c.secure, sameSite: c.sameSite || 'Lax' }));
   if (ig.length) writeFileIn(sessDir(), 'instagram.json', JSON.stringify({ cookies: ig, origins: [] }), 0o600);
   // 엔진의 yt-dlp 호출이 전부 이 쿠키를 쓰게(XDG_CONFIG_HOME/yt-dlp/config — exe·파이썬 모듈 둘 다 읽는다, 10-19 실측)
-  writeFileIn(homeDir(), path.join('ytdlp', 'yt-dlp', 'config'), `--cookies "${cookiesFile().replace(/\\/g, '/')}"\n`);
+  //   ★첫 줄 '# coding: utf-8' — 없으면 한국어 윈도의 yt-dlp.exe 가 이 파일을 cp949 로 읽어, 홈 경로에 한글(사용자 이름)이 있으면
+  //   'Unable to parse … config' 로 모든 받기가 즉시 죽는다(98 #158, 10-26 잇템로그 회원 실측 2/13 멈춤)
+  writeFileIn(homeDir(), path.join('ytdlp', 'yt-dlp', 'config'), `# coding: utf-8\n--cookies "${cookiesFile().replace(/\\/g, '/')}"\n`);
   return Object.fromEntries(Object.entries(PLATFORMS).map(([k, pf]) => [k, loggedIn(keep, pf)]));
 }
 
