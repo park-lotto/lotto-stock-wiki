@@ -2688,7 +2688,12 @@ def finding_say(st: dict, sec: float | None = None) -> dict | None:
     n, done = list(fd.get("n") or [0]), list(fd.get("done") or [])
     if len(n) >= 2:
         head = f"소재 {len(n)}편의 원본을 함께 찾고 있어요"
-        tail = " / ".join(f"{k + 1}편 후보 {x}개" + (" 확인 마침" if k < len(done) and done[k] else "") for k, x in enumerate(n))
+        live = [k for k in range(len(n)) if not (k < len(done) and done[k])]
+        if 0 < len(live) < len(n):   # 한 편이 멈췄다 — '확인 마침'은 찾기가 끝난 걸로 읽혔다(10-26 run4) → 찾는 편만 앞에, 멈춘 편은 쉬는 중
+            head = f"{live[0] + 1}편 영상의 원본을 계속 찾고 있어요" if len(live) == 1 else head
+            tail = " / ".join(f"{k + 1}편 후보 {n[k]}개" for k in live) + " (" + ", ".join(f"{k + 1}편" for k in range(len(n)) if k not in live) + "은 잠시 쉬는 중)"
+        else:
+            tail = " / ".join(f"{k + 1}편 후보 {x}개" for k, x in enumerate(n))
     else:
         head, tail = "원본 영상을 계속 찾고 있어요", f"후보 {n[0]}개 확인"
     sec = float(sec if sec is not None else _now() - float(fd["t0"]))

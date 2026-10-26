@@ -1485,8 +1485,9 @@ def _web_links(qs: list[str], per: int = WEB_PER_Q) -> list[dict]:
     from tools.calcopy import lens as LN
     out, seen = [], set()
     try:
-        with LN.lens_page() as pg:
-            for q in qs[:4]:
+        for q in qs[:4]:
+          # 검색어마다 창을 새로(10-26 run4: 첫 틱톡 페이지에서 창이 닫혀(TargetClosedError) 그 바퀴 나머지 7번이 전부 실패)
+          with LN.lens_page() as pg:
                 for how, url in (("tiktok", f"https://www.tiktok.com/search/video?q={quote(q)}"),
                                  ("instagram", f"https://www.google.com/search?q={quote(q + ' site:instagram.com/reel')}&hl=en")):
                     try:

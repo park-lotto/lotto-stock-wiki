@@ -276,3 +276,11 @@ def test_runner_makes_alt_dir(tmp_path):
     finally:
         R.CMDS.pop("_t_probe", None)
     assert out["s2:p"] == {"ok": True} and seen["w"].endswith("alt1")
+
+
+def test_progress_line_when_one_source_stopped():
+    """한 편이 멈추면 '확인 마침'(찾기가 끝난 걸로 읽힘, 10-26 run4) 대신 찾는 편만 앞에 · 멈춘 편은 '잠시 쉬는 중'."""
+    fs = F.finding_say({"finding": {"t0": 1, "n": [49, 0], "done": [False, True]}}, sec=620)
+    line = F.finding_line(fs)
+    assert line == "1편 영상의 원본을 계속 찾고 있어요 · 10분째 · 1편 후보 49개 (2편은 잠시 쉬는 중)" and F.member_ok(line)
+    assert "마침" not in line
