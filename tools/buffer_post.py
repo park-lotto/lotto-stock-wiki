@@ -2,7 +2,7 @@
 """Claude로 만든 영상을 구글 드라이브 폴더에서 Buffer로 예약한다(관제 250, 2026-10-21 사장님).
 
     py tools/buffer_post.py scan                       # 폴더별 올릴 영상·짝 .txt 유무
-    py tools/buffer_post.py post                       # 전 폴더 영상을 Buffer 큐(그 계정 시간표)에 넣기
+    py tools/buffer_post.py post                       # 전 폴더 영상을 계정별 다음 빈 칸(매일 15:00·20:00 KST, 칸당 1개)에 유튜브+틱톡 예약
     py tools/buffer_post.py post --folder 995 --at "2026-10-22 19:00" [--gap 24]
                                                        # 시각 지정(한국시간). 영상 여러 개면 gap 시간 간격
     py tools/buffer_post.py test --folder 995          # 실제 시험: 올리기→공개주소 HEAD→30일 뒤 비공개 예약→즉시 삭제
@@ -128,6 +128,30 @@ def _remove_remote(name):
         _ssh(f"rm -f {REMOTE_DIR}/{name}")
 
 
+SLOTS = ((15, 0), (20, 0))     # 사장님(2026-10-26) "매일 3시 한 번, 8시 한 번 / 한 번에 두 개는 없다" — 계정당 칸 하나에 영상 하나
+SERVICES = ("youtube", "tiktok")   # 같은 영상을 같은 칸에 유튜브·틱톡 둘 다(10-26 실사용). 인스타는 950 계정이 잘못 붙어 있어 뺀다
+
+
+def _taken(rows, folder):
+    """그 계정이 이미 쓴 칸(UTC 'YYYY-MM-DDTHH:MM'). Buffer 에서 지운 것만 빈 칸으로 본다."""
+    return {(r.get("due") or "")[:16] for r in rows
+            if r.get("folder") == folder and r.get("final_status") != "deleted"}
+
+
+def _slot_dues(rows, folder, n, now=None):
+    """다음 빈 칸 n개(15:00·20:00 KST). 15시가 지났거나 차 있으면 건너뛰고 20시 — 영상이 하나면 그 날 20시로 간다."""
+    now = now or dt.datetime.now(KST)
+    taken, out, day = _taken(rows, folder), [], now.date()
+    while len(out) < n:
+        for h, m in SLOTS:
+            t = dt.datetime(day.year, day.month, day.day, h, m, tzinfo=KST)
+            u = t.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M")
+            if t > now + dt.timedelta(minutes=20) and u not in taken and len(out) < n:
+                out.append(u + ":00.000Z")
+        day += dt.timedelta(days=1)
+    return out
+
+
 def _due_list(at, gap, n):
     if not at:
         return [None] * n
@@ -218,7 +242,7 @@ def _fingerprint(path):
     return h.hexdigest()
 
 
-def _already_posted(rows, folder, d, v, fp):
+def _already_posted(rows, folder, d, v, fp, service="youtube"):
     """한 번 올린 영상을 다시 올리지 않는 장치(2026-10-26 사장님 "실수로 다시 올리면 안 된다").
     ① 같은 내용(지문)이 장부에 있으면 — 어느 계정이든 막는다(이름을 바꿔 다시 넣어도 걸린다)
     ② 같은 폴더·같은 이름이 장부에 있거나 그 폴더 예약/완료 에 같은 이름이 있으면 — 배지를 다시 입혀 지문이 바뀐 경우
@@ -227,12 +251,14 @@ def _already_posted(rows, folder, d, v, fp):
     for r in rows:
         if r.get("final_status") == "deleted":      # 사장님이 Buffer 에서 지운 예약 = 안 올린 것
             continue
+        if r.get("service", "youtube") != service:  # 같은 영상을 유튜브·틱톡에 한 번씩은 정상 — 서비스별로 따로 본다
+            continue
         if fp and r.get("fp") == fp:
             return f"이미 올린 영상(같은 내용) — {r.get('folder')}/{r.get('file')} {r.get('due')}"
         if r.get("folder") == folder and r.get("file") == v:
             return f"이미 올린 이름 — {r.get('due')} 예약"
     for sub in (RESERVED, DONE):
-        if os.path.isfile(os.path.join(d, sub, v)):
+        if service == "youtube" and os.path.isfile(os.path.join(d, sub, v)):
             return f"'{sub}' 폴더에 같은 이름이 있다"
     return None
 
@@ -245,8 +271,17 @@ def cmd_post(a):
         vs = _videos(d)
         if not vs:
             continue
-        ch = _channel(key, n)
-        dues = _due_list(a.at, a.gap, len(vs))
+        chs = buffer_api.channels(key)
+        targets = [next(c for c in chs if c.get("service") == s) for s in SERVICES
+                   if any(c.get("service") == s for c in chs)]
+        if not targets:
+            print(f"[{n}] Buffer에 유튜브·틱톡 채널이 없다 — 건너뜀")
+            continue
+        # 시각: --at 이면 그대로(칸이 차 있으면 거절), 없으면 그 계정의 다음 빈 15:00·20:00 칸
+        dues = _due_list(a.at, a.gap, len(vs)) if a.at else _slot_dues(rows, n, len(vs))
+        for due in dues:
+            if due and due[:16] in _taken(rows, n):
+                raise SystemExit(f"[{n}] {due} 칸에 이미 예약이 있다 — 한 칸에 두 개는 없다(사장님 10-26)")
         for v, due in zip(vs, dues):
             cap, cap_path = _caption(d, v)
             if not cap:
@@ -257,30 +292,39 @@ def cmd_post(a):
                 print(f"[{n}] {v}: {bad} — 건너뜀")
                 continue
             fp = _fingerprint(os.path.join(d, v))
-            dup = _already_posted(rows, n, d, v, fp)
-            if dup:
-                print(f"[{n}] {v}: ⛔ 중복 — {dup} → 안 올리고 건너뜀(정말 다시 올릴 거면 장부에서 그 행을 지워라)")
+            todo = []
+            for ch in targets:
+                dup = _already_posted(rows, n, d, v, fp, ch.get("service"))
+                if dup:
+                    print(f"[{n}] {v} {ch.get('service')}: ⛔ 중복 — {dup} → 안 올림(정말 다시 올릴 거면 장부에서 그 행을 지워라)")
+                else:
+                    todo.append(ch)
+            if not todo:
                 continue
-            remote = None
-            try:
-                remote, url = _upload(os.path.join(d, v))
-                res = buffer_api.schedule_video(key, ch["id"], cap, url, due_at=due, privacy=a.privacy)
-            except Exception as e:
-                if remote:
-                    _remove_remote(remote)
-                print(f"[{n}] {v}: 실패 — {e}")
-                fail += 1
-                continue
-            rsv = os.path.join(d, RESERVED)
-            os.makedirs(rsv, exist_ok=True)
-            shutil.move(os.path.join(d, v), os.path.join(rsv, v))
-            shutil.move(cap_path, os.path.join(rsv, os.path.basename(cap_path)))
-            rows.append({"folder": n, "channel": ch.get("name"), "file": v, "post_id": res["id"],
-                         "due": res.get("dueAt") or "큐", "remote": remote, "fp": fp,
-                         "at": dt.datetime.now(KST).isoformat(timespec="seconds")})
-            _save_ledger(rows)
-            print(f"[{n}] {v} → {ch.get('name')} 예약 {res.get('dueAt') or '(Buffer 큐 시간표)'}  id={res['id']}")
-            ok += 1
+            done_any = False
+            for ch in todo:
+                remote = None
+                try:
+                    remote, url = _upload(os.path.join(d, v))
+                    res = buffer_api.schedule_video(key, ch["id"], cap, url, due_at=due, privacy=a.privacy)
+                except Exception as e:
+                    if remote:
+                        _remove_remote(remote)
+                    print(f"[{n}] {v} {ch.get('service')}: 실패 — {e}")
+                    fail += 1
+                    continue
+                rows.append({"folder": n, "channel": ch.get("name"), "service": ch.get("service"), "file": v,
+                             "post_id": res["id"], "due": res.get("dueAt") or "큐", "remote": remote, "fp": fp,
+                             "at": dt.datetime.now(KST).isoformat(timespec="seconds")})
+                _save_ledger(rows)          # 한 건마다 바로 적는다 — 중간에 끊겨도 다시 돌리면 중복 장치가 막는다
+                print(f"[{n}] {v} → {ch.get('service')} {ch.get('name')} 예약 {res.get('dueAt')}  id={res['id']}")
+                ok += 1
+                done_any = True
+            if done_any:
+                rsv = os.path.join(d, RESERVED)
+                os.makedirs(rsv, exist_ok=True)
+                shutil.move(os.path.join(d, v), os.path.join(rsv, v))
+                shutil.move(cap_path, os.path.join(rsv, os.path.basename(cap_path)))
     print(f"끝: 예약 {ok} · 실패 {fail}")
 
 
@@ -325,7 +369,7 @@ def main(argv=None):
         s = sub.add_parser(name)
         s.add_argument("--folder")
         if name == "post":
-            s.add_argument("--at", help='한국시간 "YYYY-MM-DD HH:MM" (없으면 Buffer 큐 시간표)')
+            s.add_argument("--at", help='한국시간 "YYYY-MM-DD HH:MM" (없으면 계정별 다음 빈 15:00·20:00 칸)')
             s.add_argument("--gap", type=float, default=24, help="영상 여러 개일 때 간격(시간)")
             s.add_argument("--privacy", default="public", choices=["public", "unlisted", "private"])
         if name == "test":

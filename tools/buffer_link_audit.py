@@ -98,6 +98,21 @@ def main():
             "desc_inpock": "inpock" in text, "desc_coupang": "link.coupang" in text,
             "where": _where(folder, r["file"], web) if svc == "youtube" else "",
         })
+    # 중복·칸 겹침(사장님 10-26 "중복 업로드 절대 금지 / 한 번에 두 개는 없다") — 장부 전체에서
+    live = [r for r in rows if r.get("final_status") != "deleted"]
+    seen, problems = {}, []
+    for r in live:
+        k = (r["folder"], r.get("service", "youtube"), r.get("fp") or r["file"])
+        if k in seen:
+            problems.append(f"중복 업로드: {r['folder']} {k[1]} {r['file']} ({seen[k]} / {r.get('due')})")
+        seen[k] = r.get("due")
+    slot = {}
+    for r in live:
+        k = (r["folder"], r.get("service", "youtube"), (r.get("due") or "")[:16])
+        if k in slot and slot[k] != r["file"]:
+            problems.append(f"한 칸에 두 개: {r['folder']} {k[1]} {k[2]} {slot[k]} + {r['file']}")
+        slot[k] = r["file"]
+    print("중복·칸겹침:", problems or "없음", file=sys.stderr)
     if a.inpock:
         out = {"rows": out, "inpock": {acct: _inpock_titles(acct) for acct in sorted(set(INPOCK_BY_CHANNEL.values()))}}
     print(json.dumps(out, ensure_ascii=False, indent=1))
