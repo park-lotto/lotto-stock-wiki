@@ -79,6 +79,7 @@ def audit(name: str, d: Path) -> dict:
 
 
 def main(argv: list[str]) -> int:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     roots = [Path(a) for a in argv] or [Path("C:/숏템_칼카피")]
     rows = [audit(n, d) for n, d in runs(roots)]
     allredo = Counter()
