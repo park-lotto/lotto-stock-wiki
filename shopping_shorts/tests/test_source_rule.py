@@ -229,6 +229,8 @@ def test_any_stop_retries_from_last_asker_with_its_inputs(monkeypatch):
     st = {"phase": "c", "tries": {"plan": 3}, "log": []}
     assert flow.step(st, {}, {"q": {"v": 1}}, {})["status"] == "execute"
     r = flow.step(st, {"x": {}}, {}, {})
+    assert r["status"] == "review" and r["review"][0]["id"] == "task_1"            # 회원에게 가기 전에 제작자 과제(10-26 flow._task)
+    r = flow.step(st, {}, {"task_1": {"action": "end"}}, {})
     assert r["status"] == "stop" and r.get("retry_ok") and st["stopped"]["retry"] == "c"
     r = flow.step(st, {}, {}, {"retry": True})
     assert r["status"] == "execute" and seen == [{"v": 1}, {"v": 1}] and st["tries"] == {}

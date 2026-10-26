@@ -104,7 +104,7 @@ def test_limit_then_ask_member_and_retry_really_runs():
     tr, res, st = walk(F, F.start("https://youtu.be/BENCH1", "잇템로그판_v2", "sid"), ctx)
     assert res["status"] == "stop"
     assert ctx["find_round"] == F.F_FIND_MAX
-    assert "원본 영상 주소를 알려 주시면" in json.dumps(res, ensure_ascii=False)
+    assert "한 번 더 찾아볼게요" in json.dumps(res, ensure_ascii=False)
     n_calls = len(ctx["of_calls"])
     # 다시 시도 = 회원 Claude 찾기 한 바퀴 더 — 실제로 질문이 나가고 실행기가 돈다(옛 길: 같은 후보 재판정만, 실행기 0회)
     res2 = F.step(st, {}, {}, {"retry": True})

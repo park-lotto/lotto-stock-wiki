@@ -125,7 +125,9 @@ def test_transient_stop_retries_itself_once():
     res = F.step(st, {"origin": {"error": "끊김"}}, {}, {})
     assert res["status"] == "execute" and res["do"][0]["cmd"] == "origin_get"      # 스스로 한 번 다시 받기
     res2 = F.step(st, {"origin": {"error": "또 끊김"}}, {}, {})
-    assert res2["status"] == "stop" and F.member_ok(res2["fix"], need_next=True)
+    assert res2["status"] == "review" and res2["review"][0]["id"].startswith("task_")   # 회원에게 가기 전에 제작자 과제(10-26 flow._task)
+    res3 = F.step(st, {}, {res2["review"][0]["id"]: {"action": "end", "note": "받기 안 됨"}}, {})
+    assert res3["status"] == "stop" and F.member_ok(res3["fix"], need_next=True)
 
 
 def test_going_back_stage_words_and_number():

@@ -323,8 +323,9 @@ class _Stop(Exception):
     auto = 잠깐의 문제라 회원에게 알리기 전에 **스스로 한 번** 다시 해 본다(사장님 10-26 '회원을 당황하게 하지 마라').
     detail = 속사정(검사 항목·오류 글) — 기록(st.log·stopped.detail)에만, 회원 문구에는 안 싣는다."""
     def __init__(self, why: str, fix: str = "", retry: str | None = None, final: bool = False, auto: bool = False, detail: str = "",
-                 origin_missing: bool = False):
+                 origin_missing: bool = False, ask_member: bool = False):
         super().__init__(why)
+        self.ask_member = ask_member          # 회원만 풀 수 있는 것(키·준비·과제 한도를 다 쓴 뒤) — 제작자 과제(_task)로 돌리지 않는다
         self.why, self.fix, self.retry, self.final, self.auto, self.detail = why, fix, retry, final, auto, detail
         self.origin_missing = origin_missing
 
@@ -396,6 +397,10 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
                 if retry == st.get("_asker") and st.get("_asker_in"):
                     m, rp = st["_asker_in"].get("m") or {}, st["_asker_in"].get("rp") or {}
                 continue
+            task = _task(st, e, ph, retry)              # 회원에게 묻기 전에 — 회원 Claude(제작자)가 가이드·도구로 푸는 과제(사장님 10-26)
+            if task:
+                st["phase"] = "task_got"
+                return _out(st, "review", ph, review=[task])
             st["phase"] = "stopped"
             st["stopped"] = {"why": e.why, "fix": e.fix, **({"retry": retry} if retry else {}), **({"detail": str(e.detail)[:400]} if e.detail else {}),
                              **({"origin_missing": True} if e.origin_missing else {})}
@@ -624,11 +629,11 @@ def ph_setup_check(st, m, rp, u):
     env = m.get("env") or {}
     if env.get("error"):
         st["log"].append("준비 확인 실패: " + str(env["error"])[:300])
-        raise _Stop("이 PC 준비가 아직 덜 됐어요", "숏템 준비 점검을 한 번 한 뒤 다시 시도해 주세요")
+        raise _Stop("이 PC 준비가 아직 덜 됐어요", "숏템 준비 점검을 한 번 한 뒤 다시 시도해 주세요", ask_member=True)
     miss = env.get("missing") or []     # 판단 주인 = runner_ops.need_list(이 판·소재에 실제로 쓰는 도구·키·로그인만) — 여기는 멈춤/진행만
     if miss:
         st["log"].append("준비 확인: 빠진 것 " + ", ".join(str(x.get("id")) for x in miss))
-        raise _Stop(SETUP_WHY, setup_fix(miss), retry="setup")       # 다시 시도 = 준비를 다시 잰다
+        raise _Stop(SETUP_WHY, setup_fix(miss), retry="setup", ask_member=True)       # 다시 시도 = 준비를 다시 잰다
     st["env"] = {k: env.get(k) for k in ("keys", "dev", "cache", "asr")}
     return {"goto": "bench"}
 
@@ -1040,7 +1045,78 @@ def ph_stopped(st, m, rp, u):
         st["tries"] = {k: v for k, v in (st.get("tries") or {}).items() if k == "length"}   # 다시 시도 = 고치기 횟수 새로(길이 고치기만 남긴다 — 사인을 다시 받는다)
         st.pop("redo_hist", None)
         return {"goto": r}
-    raise _Stop((st.get("stopped") or {}).get("why") or "아직 마무리되지 않은 편이에요", (st.get("stopped") or {}).get("fix") or AGAIN, retry=r)
+    raise _Stop((st.get("stopped") or {}).get("why") or "아직 마무리되지 않은 편이에요", (st.get("stopped") or {}).get("fix") or AGAIN, retry=r,
+                ask_member=True, origin_missing=bool((st.get("stopped") or {}).get("origin_missing")))   # 이미 회원에게 간 멈춤을 다시 보여 줄 뿐(과제로 또 돌리지 않는다)
+
+
+NL = chr(10)
+TASK_PER_KEY = 2       # 같은 막힘(이어 갈 단계+이유)마다 제작자 과제 횟수
+TASK_TOTAL = 8         # 한 편 전체 과제 상한 — 넘으면 회원에게(무한 되풀이 금지)
+STAGE_GUIDE = {"setup": "00_공통.md", "bench": "01_소재.md", "origin": "02_원본찾기.md", "product": "03_제품_쿠팡.md", "research": "04_조사.md",
+               "material": "05_재료영상.md", "asr": "06_받아쓰기.md", "script": "07_대본.md", "sign": "07_대본.md", "plan": "08_계획.md",
+               "render": "10_렌더.md", "check": "11_검사.md", "done": "12_납품.md"}
+GUIDE_DIR = Path(__file__).resolve().parents[3] / "channel" / "칼카피_제작순서"
+TASK_ASK = """너는 이 편의 **제작자**다(사장님 PC 의 제작 세션과 같은 자리). 아래 단계에서 만들기가 막혔다 — 회원에게 묻기 전에 네가 푼다.
+지킬 것: 가이드(아래 발췌)를 지킨다 · 금지선·함정은 절대 · 지어내지 않는다(모르면 웹 검색으로 확인) · 회원에게는 꼭 필요한 결정만.
+쓸 수 있는 것: 네 웹 검색(WebSearch·WebFetch) · 이 답(JSON)으로 숏템에 다음 행동을 시킨다 — 숏템이 그 결과를 다시 검사한다(통과해야 다음 단계).
+답 JSON 하나:
+ {"action": "retry" | "give" | "end", "origin_url": "", "product": "", "note": "무엇을 확인했고 왜 이 행동인지 한 줄"}
+ · retry = 같은 단계를 다시(잠깐의 막힘·고치기 횟수 소진·받기 실패 등 — 다시 하면 풀릴 근거가 있을 때)
+ · give = 네가 찾은 것을 준다: origin_url(원본 영상 유튜브 주소 — 원본 찾기 단계) 또는 product(쿠팡 상품 주소나 정확한 제품명 — 제품 확인 단계)
+ · end = 가이드·금지선상 이 편을 만들 수 없다(그때만 회원에게 쉬운 선택지로 묻는다)"""
+
+
+def _guide(stage_key: str, limit: int = 2500) -> str:
+    f = GUIDE_DIR / STAGE_GUIDE.get(stage_key, "00_공통.md")
+    try:
+        return f"[가이드 {f.name} 발췌]{NL}" + f.read_text(encoding="utf-8")[:limit]
+    except OSError:
+        return ""
+
+
+def _task(st: dict, e: "_Stop", ph: str, retry: str | None) -> dict | None:
+    """멈춤 → 제작자 과제(판단 주인 한 곳, 사장님 10-26 'Claude=두뇌·우리=하네스·가이드·규칙'). None = 회원에게 그대로 멈춤.
+    회원에게 바로 가는 것: final(금지선·만들 수 없는 소재 — 결정) · ask_member(키·준비·과제 한도 뒤) · 이어 갈 단계가 없음 · 횟수 한도."""
+    if e.final or e.ask_member or not retry:
+        return None
+    key = f"{retry}:{e.why}"
+    n = st.setdefault("task_n", {})
+    if n.get(key, 0) >= TASK_PER_KEY or sum(n.values()) >= TASK_TOTAL:
+        return None
+    n[key] = n.get(key, 0) + 1
+    stg = _stage(ph, st)
+    traps = (TRAPS_FOREIGN if _fmt(st) == "해외원본형" else TRAPS).get(stg["key"], [])
+    rid = f"task_{sum(n.values())}"
+    st["_task"] = {"id": rid, "key": key, "why": e.why, "fix": e.fix, "retry": retry, "origin_missing": bool(e.origin_missing), "stage": stg["key"], "detail": str(e.detail or "")[:400]}
+    st["log"].append(f"제작자 과제 {rid}({stg['text']}): {e.why}")
+    ask = (TASK_ASK + f"{NL}{NL}## 막힌 곳{NL}단계: {stg['no']}/{stg.get('total')} {stg['text']}{NL}이유: {e.why}{NL}속사정: {str(e.detail or '-')[:600]}"
+           + f"{NL}이 막힘 과제 {n[key]}/{TASK_PER_KEY}번째 · 최근 기록:{NL}" + f"{NL}".join(str(x)[:200] for x in (st.get('log') or [])[-6:])
+           + (f"{NL}{NL}## 이 단계 함정·금지선{NL}" + f"{NL}".join("- " + x for x in traps) if traps else "")
+           + f"{NL}{NL}" + _guide(stg["key"]))
+    return _rv(rid, ask, need=("action",))
+
+
+def ph_task_got(st, m, rp, u):
+    """제작자 과제 답 → 기존 이어 가기 길(ph_stopped) 그대로 — 결과 검사는 각 단계의 원래 판정이 한다."""
+    t = st.get("_task") or {}
+    a = _reply(rp, t.get("id") or "task", ("action",))
+    act = str(a.get("action") or "").strip()
+    st["log"].append(f"제작자 과제 답 {t.get('id')}: {act} · {str(a.get('note') or '')[:200]}")
+    stopped = {"why": t.get("why"), "fix": t.get("fix"), "retry": t.get("retry"), **({"origin_missing": True} if t.get("origin_missing") else {})}
+    url, prod = str(a.get("origin_url") or "").strip(), str(a.get("product") or "").strip()
+    if act == "give" and url and t.get("stage") == "origin":
+        if _fmt(st) == "해외원본형":
+            return {"goto": "of_find_got", "feed": {"rp": {"of_find": {"urls": [url], "queries": [], "why": str(a.get("note") or "")}}}}
+        st["stopped"] = {**stopped, "origin_missing": True}
+        return ph_stopped(st, {}, {}, {"origin_url": url})
+    if act == "give" and prod and t.get("stage") == "product":
+        st["given"] = prod[:200]
+        return {"goto": "given"}
+    if act == "retry":
+        st["stopped"] = stopped
+        return ph_stopped(st, {}, {}, {"retry": True})
+    raise _Stop(t.get("why") or "만드는 중에 문제가 생겼어요", t.get("fix") or AGAIN, retry=t.get("retry"), ask_member=True,
+                origin_missing=bool(t.get("origin_missing")), detail=(str(t.get("detail") or "") + f" · 제작자 과제 답 {act}: {str(a.get('note') or '')[:200]}").strip(" ·"))
 
 
 def _yt_id(text: str) -> str:
@@ -2311,7 +2387,7 @@ def f_of_find(st, m, rp, u):
     n = int(st.get("of_find_n") or 0)
     if n >= F_FIND_MAX:
         st["of_find_n"] = 0
-        raise _Stop("해외 원본을 못 찾았어요", "원본 영상 주소를 알려 주시면 그 주소로 바로 이어 갈게요 · 아니면 다른 영상으로 시작해 주세요", retry="of_find")
+        raise _Stop("해외 원본을 못 찾았어요", "다시 시도해 주시면 숏템이 한 번 더 찾아볼게요", retry="of_find", ask_member=True)   # 회원에게 주소·다른 영상을 요구하지 않는다(test_redo_words, 10-26)
     st["of_find_n"] = n + 1
     B, R0 = st.get("bench") or {}, st.get("read") or {}
     tried = st.setdefault("of_find_tried", [])
@@ -2692,7 +2768,7 @@ PHASE_STAGE.update({
 PHASES = {
     "setup": ph_setup, "setup_check": ph_setup_check, "bench": ph_bench, "bench_got": ph_bench_got, "origin_read": ph_origin_read, "src_got": ph_src_got, "probe_got": ph_probe_got, "sb_pick": ph_sb_pick,
     "peer": ph_peer, "peer_read": ph_peer_read, "search": ph_search, "search_got": ph_search_got, "titles": ph_titles,
-    "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped, "given_origin_got": ph_given_origin_got,
+    "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped, "task_got": ph_task_got, "given_origin_got": ph_given_origin_got,
     "vis_get": ph_vis_get, "vis_got": ph_vis_got, "vis_look": ph_vis_look, "vis_pick": ph_vis_pick, "vis_next": ph_vis_next,
     "product_sheet": ph_product_sheet, "product_pick": ph_product_pick, "product_pick_wide": ph_product_pick_wide, "product_cands": ph_product_cands, "product_same": ph_product_same,
     "product_done": ph_product_done, "cand_look": ph_cand_look, "reviews": ph_reviews, "reviews_got": ph_reviews_got, "reviews_naver": ph_reviews_naver, "name_find": ph_name_find, "name_got": ph_name_got, "named_cands": ph_named_cands,
@@ -2703,5 +2779,5 @@ PHASES = {
     "plan_look": ph_plan_look, "thumb": ph_thumb, "thumb_sheet": ph_thumb_sheet, "thumb_got": ph_thumb_got, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
     "check_got": ph_check_got, "check_look": ph_check_look, "check_judge": ph_check_judge, "check_fix": ph_check_fix, "customize": ph_customize, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
-for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "given_origin_got": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "given": "product", "given_same": "product", "cand_look": "product", "reviews": "product", "reviews_got": "product", "reviews_naver": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():
+for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "given_origin_got": "origin", "stopped": "setup", "task_got": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "given": "product", "given_same": "product", "cand_look": "product", "reviews": "product", "reviews_got": "product", "reviews_naver": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():
     PHASE_STAGE.setdefault(_k, _v)

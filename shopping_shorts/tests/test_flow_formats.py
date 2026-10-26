@@ -135,6 +135,9 @@ def _reply(rv: dict, ctx: dict) -> dict:
         return {"ok": True, "problems": []}
     if i.startswith("eye_"):
         return dict(ctx.get("eye") or E_OK)
+    if i.startswith("task_"):        # 제작자 과제(10-26 flow._task) — 이 시험들은 회원에게 가는 멈춤을 보므로 '만들 수 없다(end)'로 답한다
+        ctx.setdefault("tasks", []).append(i)
+        return {"action": ctx.get("task_action", "end"), "note": "시험"}
     raise AssertionError(f"가짜 회원 Claude 에 없는 질문: {i}")
 
 
