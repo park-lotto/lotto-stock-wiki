@@ -225,10 +225,15 @@ function hostServer(){
 }
 // '완성본 고치기'는 완성본이 생긴 뒤에만 열린다(사장님 10-25 '완료로 완성본 고치기가 활성') — 완성본 = 회원 PC 다리가 알려 준 목록
 const made=()=>!!(S.pc&&S.pc.ok&&(S.pc.videos||[]).length);
+// 잠긴 이유 한 줄 — 크롬이 이 PC 연결을 막은 것과 완성본이 아직 없는 것을 가른다(10-26 라이브: 권한 없으면 영상이 있어도 잠긴다)
+function lockWhy(){const l=S.pc&&!S.pc.ok&&S.pc.lna;
+  if(l==='denied')return '크롬이 이 PC 숏템 연결을 막았습니다 — 주소창 왼쪽 사이트 정보 → 로컬 네트워크 → 허용 뒤 새로고침';
+  if(l==='prompt')return '크롬이 "로컬 네트워크 접근"을 물으면 허용을 눌러 주세요(안 뜨면 새로고침) — 이 PC 완성본을 여기서 재생하는 데만 씁니다';
+  return '아직 완성본이 없습니다 — 소리 단계 끝의 "설정 완료"를 누르면 제작이 시작됩니다'}
 function steps(){$('steps').innerHTML=STEPS.map(s=>{const lock=s.k==='edit'&&!made();
-  return `<button class="step${s.k===S.step?' on':''}${lock?' lock':''}" data-k="${s.k}" title="${lock?'소리까지 설정하고 완료를 누르면 Claude 가 만들고, 완성본이 생기면 열립니다':''}"><span class="ic">${lock?'🔒':s.ic}</span><span>${s.t}</span></button>`}).join('')}
+  return `<button class="step${s.k===S.step?' on':''}${lock?' lock':''}" data-k="${s.k}" title="${lock?esc(lockWhy()):''}"><span class="ic">${lock?'🔒':s.ic}</span><span>${s.t}</span></button>`}).join('')}
 $('steps').onclick=e=>{const b=e.target.closest('.step');if(!b)return;
-  if(b.dataset.k==='edit'&&!made()){state('아직 완성본이 없습니다 — 소리 단계 끝의 "설정 완료"를 누르면 제작이 시작됩니다',true);return}
+  if(b.dataset.k==='edit'&&!made()){state(lockWhy(),true);return}
   S.step=b.dataset.k;render()};
 
 function render(){
@@ -426,12 +431,18 @@ async function pcLoad(){
   if(S.pcTried)return;S.pcTried=true;
   if(S.st.host!=='server'){S.pc={ok:true,videos:(S.st.videos||[]).map(v=>({name:v.name,title:v.title,src:'v/'+encodeURIComponent(v.name)}))};render();return}
   try{const r=await fetch(BRIDGE+'/bridge/videos').then(x=>x.json());S.pc={ok:true,videos:(r.videos||[]).map(v=>({...v,src:BRIDGE+'/bridge/v/'+encodeURIComponent(v.name)}))}}
-  catch(e){S.pc={ok:false}}
+  catch(e){S.pc={ok:false,lna:await lnaState()}}
   render();
 }
+// 크롬 '로컬 네트워크 접근' 권한(크롬 142~) — 웹(stmaker.kr)이 이 PC 숏템(127.0.0.1)에 닿으려면 회원이 한 번 '허용'해야 한다.
+//   10-26 라이브 실측: 권한이 없으면 'Permission was denied … loopback address space' 로 막히는데 화면은 '숏템이 꺼져 있다'고 잘못 말했다
+async function lnaState(){try{const p=await navigator.permissions.query({name:'local-network-access'});return p.state}catch(e){return ''}}
 function pcBox(){
   if(!S.pc)return'<div class="note">회원 PC 숏템에 연결하는 중…</div>';
-  if(!S.pc.ok)return'<div class="note">회원 PC 숏템이 꺼져 있습니다 — Claude 를 켜고 숏템을 한 번 부르면 이 PC 의 완성본이 여기에 뜹니다(영상은 서버로 올라가지 않습니다).</div>';
+  if(!S.pc.ok){
+    if(S.pc.lna==='denied')return'<div class="note">크롬이 이 PC 숏템 연결을 막고 있습니다 — 주소창 왼쪽 <b>사이트 정보(자물쇠·설정 아이콘)</b> → <b>로컬 네트워크</b>를 <b>허용</b>으로 바꾼 뒤 새로고침하세요. 영상은 서버로 올라가지 않고 이 PC 에서만 재생됩니다.</div>';
+    if(S.pc.lna==='prompt')return'<div class="note">크롬이 <b>“로컬 네트워크의 기기에 접근”</b>을 물으면 <b>허용</b>을 눌러 주세요 — 이 PC 의 완성본을 이 화면에서 재생하는 데만 씁니다. 창이 안 떴다면 새로고침하세요.</div>';
+    return'<div class="note">회원 PC 숏템이 꺼져 있습니다 — Claude 를 켜고 숏템을 한 번 부르면 이 PC 의 완성본이 여기에 뜹니다(영상은 서버로 올라가지 않습니다).</div>';}
   const vs=S.pc.videos||[];if(!vs.length)return'<div class="note">아직 완성본이 없습니다 — 소리 단계 끝의 "설정 완료"를 누르세요.</div>';
   const cur=curVideo();
   return `<div class="sec-h"><b>고칠 완성본</b><select id="pcpick" style="max-width:420px">${vs.map(v=>`<option value="${esc(v.name)}"${v.name===cur.name?' selected':''}>${esc(v.title)}</option>`).join('')}</select></div>`;
