@@ -201,6 +201,35 @@ def heard_words(path, lang: str = "ko") -> list[dict]:
     return words
 
 
+ASR_PAR = 4      # 동시 받아쓰기 상한(스피치매틱스 작업 동시 수 — 10-26 검수 단축 ⑥: 렌더 전 ② 9작업이 순차로 56초)
+
+
+def prefetch(paths, lang: str = "ko", workers: int = ASR_PAR) -> dict:
+    """여러 소리를 동시에 받아쓰기해 캐시(CACHE)에 채운다 — 판정은 그대로(뒤 순차 heard_words 가 캐시를 읽는다).
+    실패한 것은 {경로: 오류 이름}으로 돌려주고, 같은 파일을 뒤 순차 호출이 다시 겪어 그 자리에서 멈춘다(조용히 넘기지 않음)."""
+    from concurrent.futures import ThreadPoolExecutor
+    todo, seen = [], set()
+    for p in paths:
+        if not p or not Path(p).exists():
+            continue
+        m = _md5(p)
+        if m in seen or (CACHE / f"{m}_{lang}.json").exists():
+            continue
+        seen.add(m)
+        todo.append(p)
+    if len(todo) < 2:
+        return {}
+    errs = {}
+    with ThreadPoolExecutor(max_workers=min(workers, len(todo))) as ex:
+        futs = [(p, ex.submit(heard_words, p, lang)) for p in todo]
+        for p, f in futs:
+            try:
+                f.result()
+            except Exception as e:  # noqa: BLE001 — 뒤 순차 호출이 같은 파일로 다시 겪는다(여기선 기록만)
+                errs[str(p)] = type(e).__name__
+    return errs
+
+
 def _dur(path) -> float | None:
     import subprocess
     out = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(path)],
@@ -336,6 +365,7 @@ def latin_lines(S: dict) -> list[tuple[str, list[str]]]:
 
 def verify(lines: list[dict], paths: dict, narr=None, out: Path | None = None) -> dict:
     """lines = [{id, text(보낸 tts 글)}] · paths = {id: 줄 조각 wav} · narr = 전체 소리(있으면). 반환 {ok, sure, maybe}. out 이 있으면 json 저장."""
+    prefetch(([narr] if narr else []) + [v for v in paths.values() if v])      # 9작업 동시(상한 ASR_PAR) — 뒤 순차 판정은 캐시를 읽는다
     full = full_check(lines, narr) if narr and Path(narr).exists() else None
     sl = slice_checks(lines, {k: v for k, v in paths.items() if v and Path(v).exists()})
     sure, maybe = classify(full, sl)
