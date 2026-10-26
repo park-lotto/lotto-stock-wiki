@@ -3,11 +3,12 @@
 가로 스크롤 띠(메뉴·탭) 안에서 화면 밖으로 나간 것은 손가락으로 밀면 보이므로 결함이 아니다.
 결함 = 화면 밖으로 나갔는데 조상 중에 가로로 밀 수 있는 상자가 하나도 없는 요소.
 
-    py tools/mobile_audit.py                 # 전 화면, 결과 표 + out/mobile_audit/*.png + 한 장 모음
+    py tools/mobile_audit.py                 # 전 화면, 결과 표 + %TEMP%/mobile_audit/*.png + sheet.png
     py tools/mobile_audit.py produce /       # 몇 화면만
     py tools/mobile_audit.py --width 360     # 더 좁은 폰
 """
 import json
+import tempfile
 import os
 import sys
 
@@ -69,7 +70,7 @@ JS = r"""() => {
 
 def audit(pages, width=390, height=844, out_dir=None):
     from tools.live_admin import admin_page
-    out_dir = out_dir or os.path.join(ROOT, "out", "mobile_audit")
+    out_dir = out_dir or os.path.join(tempfile.gettempdir(), "mobile_audit")   # 캡처는 저장소에 안 남긴다
     os.makedirs(out_dir, exist_ok=True)
     rows = []
     for p in pages:
