@@ -341,7 +341,9 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
     for i, c in enumerate(cuts):
         lip = c["kind"] == "orig" and c["src"] == Lm[c["line"]].get("src")
         sd = round(src_frames(c) / FPS, 3)                        # 원본에서 쓰는 초 = 뽑을 프레임 × 속도(늦춘 컷은 짧다) — fit_cut·관문 ③과 같은 프레임 셈
-        cap = None if c.get("max") is None else float(c["max"]) - (float(c["ss"]) - float(c.get("ss_planned", c["ss"])))   # max = 재료에 적힌 ss 기준 — 옮긴 만큼 뺀다
+        cap = None if (c.get("max") is None or lip) else float(c["max"]) - (float(c["ss"]) - float(c.get("ss_planned", c["ss"])))   # max = 재료에 적힌 ss 기준 — 옮긴 만큼 뺀다
+        # 원음(입 맞춤) 컷은 원본 사람이 말하는 구간 그대로 — 그 안에 원본 자체 카메라 전환이 드는 건 원본 편집이 흐르는 것(샷 한도 아님).
+        # 번쩍임(짧은 조각)은 관문 ③(edge_fault)·원본 끝은 src_left 가 따로 본다(10-27 립글로스 회원편 O1 2.76초 vs 샷 0.53초 반려 — 맞출 수 없는 반려)
         c["over"] = round(sd - cap, 3) if cap is not None and sd > cap + 1e-3 else 0.0
         if src_dir:
             left = src_left(src_dir / c["src"], float(c.get("ss") or 0.0))
