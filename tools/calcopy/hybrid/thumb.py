@@ -279,6 +279,10 @@ def _part_frame(work: Path, part: int, t: float, wh: tuple[int, int] = (1080, 14
     from PIL import Image
     p = Path(work) / "render/parts" / f"c{part:02d}.mp4"
     w, h = wh          # 창 크기(부른 쪽이 frame_window 로 — full 판은 1080×1920, 10-26 두유노판)
+    from tools.calcopy.hybrid.common import dur_of
+    d = dur_of(p) if p.exists() else 0.0
+    if d and t > d - 2 / 30:     # 썸네일 안을 정한 뒤 재료를 고쳐 그 컷이 짧아졌다(10-27 립글로스 회원편 c11 0.73초 @1.2 → 렌더 멈춤) — 컷 안 끝 쪽 프레임으로
+        t = max(0.0, d - 2 / 30)
     raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t:.3f}", "-i", str(p), "-frames:v", "1", "-vf", f"scale={w}:{h}:flags=lanczos",
                           "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
     if len(raw) != w * h * 3:
