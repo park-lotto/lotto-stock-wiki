@@ -209,10 +209,17 @@
       //   select 는 화면 폭에 묶고, 표는 표 자리에서만 옆으로 밀어 보게 한다(페이지는 안 밀린다).
       //   본문 상자(.wrap{max-width:…;margin:0 auto})는 margin:auto 라 폭이 화면이 아니라 내용에 맞춰
       //   늘어난다 → 화면 폭에 묶는다. 페이지 .wrap 규칙(클래스)이 이겨서 !important 가 필요하다.
-      "body>*{max-width:100% !important;box-sizing:border-box}" +
+      //   화면에 떠 있는 알림·창(인라인 position:fixed)은 빼야 자기 max-width(90vw 등)가 산다.
+      "body>*:not([style*='position:fixed']):not([style*='position: fixed']){max-width:100% !important;box-sizing:border-box}" +
       "select{max-width:100%}" +
       // th nowrap: 표를 화면 폭에 넣으면 칸이 짓눌려 머리글이 '구/독/자'로 세로 쪼개졌다 → 머리글은 한 줄, 넘치면 표만 옆으로
-      "table{display:block;max-width:100%;overflow-x:auto}th{white-space:nowrap}}";
+      "table{display:block;max-width:100%;overflow-x:auto}th{white-space:nowrap}" +
+      // 손가락 크기(관제 276): 폰에서 단추·칩·선택상자가 20~31px(실측 — 랭킹 카드 28·31, 효과견본 칩 21, 레퍼런스 select 24).
+      //   60대 기준 44px 가 이상이지만 촘촘한 목록이 두 배로 길어지지 않게 36px 하한. 줄글 속 링크(a)는 글 흐름이라 뺀다.
+      "button,.btn,[role=button],select{min-height:36px}" +
+      // 구역 이동 칩(숏템팩·숏템프리셋·효과견본·유튜브제작의 nav 안 #링크, 25~30px)도 같은 하한
+      "nav:not(.ss-nav) a[href^='#']{min-height:36px;display:flex;align-items:center}" +
+      "input[type=text],input[type=search],input[type=url],input[type=number],input:not([type]){min-height:40px}}";
   // 버튼 쿠션감(전역, 2026-07-24) — 누르면 쏙 눌렸다 통통 튀어나옴. 사장님 선택 '쿠션' 프리셋.
   // 자체 transition 없는 주버튼(.btn-next/.btn-prev/.tab/.cta-shine 등)엔 풀 적용. 자체
   // transition을 가진 버튼은 페이지 규칙(클래스>요소)이 우선이라 배경 트랜지션을 안 밟고
@@ -819,7 +826,8 @@
         el = document.createElement("div"); el.id = id;
         el.setAttribute("role", "status");
         el.style.cssText = "position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:2147483000;" +
-          "max-width:92vw;padding:10px 16px;border-radius:10px;font:600 14px/1.5 'Pretendard','Malgun Gothic',sans-serif;" +
+          // width:max-content(관제 276): left:50% 라 폭이 화면 절반(폰 195px)으로 줄어 글이 잘게 꺾였다
+          "width:max-content;max-width:92vw;box-sizing:border-box;padding:10px 16px;border-radius:10px;font:600 14px/1.5 'Pretendard','Malgun Gothic',sans-serif;" +
           "box-shadow:0 6px 24px rgba(0,0,0,.25);display:flex;gap:10px;align-items:center";
         (document.body || document.documentElement).appendChild(el);
       }
