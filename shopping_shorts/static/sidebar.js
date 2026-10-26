@@ -384,7 +384,8 @@
         var name = escHtml(w.title || "(제목 없음)");
         // 완성본을 만든 작업(서버 done)은 마지막으로 보던 화면과 상관없이 꽉 찬 바다.
         var orb = ORB_TO_PANEL.indexOf(w.step || 0);
-        var done = w.done ? WORK_STEPS : Math.max(1, Math.min(WORK_STEPS, (orb < 0 ? 0 : orb) + 1));
+        //   완성 전 작업은 완성 화면에 서 있어도 한 칸 비워 둔다(꽉 찬 바 = 완성본 있음, 그 하나만 뜻한다).
+        var done = w.done ? WORK_STEPS : Math.max(1, Math.min(WORK_STEPS - 1, (orb < 0 ? 0 : orb) + 1));
         var bar = "";
         for (var i = 0; i < WORK_STEPS; i++) bar += '<span class="ss-work-seg' + (i < done ? " on" : "") + '"></span>';
         // 열기(제목+진행바)와 삭제(✕)를 각각 클릭 가능하게 분리한다. ✕는 행 onclick으로 전파되면
