@@ -237,7 +237,8 @@ def test_gate_fail_stops_after_two_fixes():
     assert not any(t[0] == "done" for t in tr)
 
 
-def test_eye_triangle_is_not_pass():
+def test_eye_triangle_is_not_pass(monkeypatch):
+    monkeypatch.setattr(F, "EYE_REVIEW", True)               # 눈 2단은 기본 꺼짐(사장님 10-26) — 켜면 △ 는 통과 아님
     eye = {**E_OK, "E4": {"v": "△", "memo": "애매"}}          # 렌더 뒤 사람 눈 = E1·E4·E6(사장님 10-26 — E3 은 계획 검수에서 한 번)
     st = F.start("https://youtu.be/BENCH1", "키치잇판", "sid")
     tr, res, st2 = walk(F, st, {"eye": eye})

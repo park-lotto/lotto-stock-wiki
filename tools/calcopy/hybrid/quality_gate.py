@@ -916,7 +916,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
                 match["upgrade"] = cache["gates_upgrade"]
                 msg += f" · 업그레이드 나아짐 {up['gates']['upgrade']['better']}(사람 {up['human_n']}·미측정 {up['unmeasured_n']})"
             return ok, msg
-        row("1차 자", "재현일치도(match_table)", m, "kal_analyze.match_from_render → 재현일치도.json")
+        row("1차 자", "재현일치도(match_table, 참고)", m, "kal_analyze.match_from_render → 재현일치도.json", ref=True)   # 사장님 10-26 "재현일치도는 필요없다" — 값은 남기고 판정 밖
     # ── 장면↔대사(㉔ 프레임 동일성 + 계획 점수 보고)
     fit_res = None
     if want("장면↔대사") and not legacy:
@@ -965,10 +965,9 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
     if eye_pack and not legacy:
         try:
             rep["eye_pack_dir"] = str(make_eye_pack(style_name, doc, work, T, tab, S, cuts, cache.get("asr"), fit_res, bool(st.get("base"))))
-        except Exception as e:  # noqa: BLE001 — 눈 검수 묶음 실패는 관문 ×(묶음 없이 2단을 못 한다)
+        except Exception as e:  # noqa: BLE001 — 눈 검수 묶음 실패는 참고 행(사장님 10-26 "눈검수는 필요없다" — 판정 밖, 실패 글은 남긴다)
             rep["eye_pack_dir"] = None
-            rep["rows"].append({"group": "표식", "what": "눈 검수 묶음", "ok": False, "value": f"만들기 실패: {e}", "src": "make_eye_pack"})
-            rep["ok"] = False
+            rep["rows"].append({"group": "표식", "what": "눈 검수 묶음(참고)", "ok": False, "ref": True, "value": f"만들기 실패: {e}", "src": "make_eye_pack"})
     rep["final_md5"] = fmd5         # 이 결과가 어느 완성본 것인가 — 납품(engine/deliver)이 봉인 md5 와 대조한다(10-25 잇템로그 04: 결과 ×인데 다른 판이 나갔다)
     if not legacy:
         jsave(doc / "품질관문.json", rep)

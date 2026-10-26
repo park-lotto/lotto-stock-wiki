@@ -318,6 +318,8 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
                 acc += w
     cuts[0]["t0"] = 0.0
     src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
+    if src_dir:
+        fit_lip_edges(cuts, src_dir, end, {k: v.get("src") for k, v in Lm.items()})
     for i, c in enumerate(cuts):
         c["t1"] = cuts[i + 1]["t0"] if i + 1 < len(cuts) else end
         c["dur"] = round(c["t1"] - c["t0"], 3)
@@ -1024,8 +1026,9 @@ def short_pieces(starts: list[float], a: float, b: float) -> list[float]:
 
 
 def slivers(starts: list[float], a: float, b: float, edge: float = SLIVER_SEC) -> list[float]:
-    """구간 [a,b) 안 경계 중 처음·끝 edge 안에 있는 것."""
-    return [s for s in starts if a + 1e-3 < s < b - 1e-3 and (s - a < edge - 1e-3 or b - s < edge - 1e-3)]      # 딱 0.2초(6프레임)는 통과
+    """구간 [a,b) 안 경계 중 처음·끝 edge 안에 있는 것 — 경계 = inner_bounds(계획 snap_ss·fit_cut·fit_lip_edges 와 같은 자).
+    10-26: 여기만 a+1ms 부터 세어 첫 반 프레임 안(0.003초 — 첫 프레임부터 새 샷, 화면엔 안 보임)도 번쩍임으로 쳐서 계획이 통과시킨 컷을 완성본 검사가 잡았다(자 두 벌)."""
+    return [s for s in inner_bounds(starts, a, b) if s - a < edge - 1e-3 or b - s < edge - 1e-3]      # 딱 0.2초(6프레임)는 통과
 
 
 def snap_ss(src: Path, ss: float, dur: float, reach: float = 0.4) -> float:
@@ -1091,6 +1094,69 @@ def fit_cut(src: Path, ss: float, n: int, cap: float | None = None, reach: float
 def cut_speed(c: dict) -> float:
     """컷 속도(원본 초 ÷ 화면 초) — fit_cut 이 정한 c["speed"] 를 읽기만. 없으면 1."""
     return float(c.get("speed") or 1.0)
+
+
+def fit_lip_edges(cuts: list, src_dir: Path, end: float, line_src: dict) -> list:
+    """(판단 주인 — 원음(입 맞춤) 컷 가장자리 초 조절, 사장님 10-26 "0.13·0.001 때문에 늦어지는 건 말이 안 된다 — 숏템메이커처럼 초 조절")
+    원음 컷은 입 맞춤이라 늦추거나 옮길 수 없다 — 대신 **이웃 컷과의 경계 시각**을 옮긴다:
+      · 끝 조각(원본 장면 경계 뒤 MIN_PIECE_SEC 미만)·샷 max 를 조금 넘는 끝 → 이 컷을 그만큼 일찍 끝내고 다음 컷이 일찍 시작(다음이 나레 컷이면 fit_cut 이 늘려 채운다)
+      · 첫 조각(경계 앞 MIN_PIECE_SEC 미만) → 이 컷을 그만큼 늦게 시작(ss 도 같이 — 입 맞춤 유지)하고 앞 컷이 그만큼 길어진다
+    옮기는 양은 MIN_PIECE_SEC 미만만(그보다 크면 계획을 고쳐야 할 일 — 관문이 그대로 잡는다). 반환 = 옮긴 기록."""
+    moved = []
+    lip = lambda c: c.get("kind") == "orig" and c.get("src") == line_src.get(c.get("line")) and c.get("ss") is not None
+    k = 0
+    while k + 1 < len(cuts):          # ① 같은 원음 줄에서 원본을 이어 트는 컷은 한 컷으로 — 원본의 제 컷은 그대로 흐르고, 우리가 나눈 자리에서 생기던 1프레임 끼임이 없다(10-26 까르보 L2)
+        a, b = cuts[k], cuts[k + 1]
+        if lip(a) and lip(b) and a["line"] == b["line"] and a["src"] == b["src"] \
+                and abs(float(b["ss"]) - (float(a["ss"]) + float(b["t0"]) - float(a["t0"]))) < 0.15:
+            moved.append((a["line"], "합침", round(float(b["ss"]), 3)))
+            a["max"] = None              # 샷 끝 max 는 쪼갠 첫 컷 것 — 합친 컷은 원본 제 컷을 그대로 흘려 보내므로 샷 끝 한도 대신 원본 남은 길이(src_left)만 본다
+            a["lip_run"] = True
+            del cuts[k + 1]
+            continue
+        k += 1
+    for i, c in enumerate(cuts):
+        if not lip(c):
+            continue
+        src = src_dir / c["src"]
+        if not src.exists() or src.suffix.lower() in IMG_EXT:
+            continue
+        t1 = cuts[i + 1]["t0"] if i + 1 < len(cuts) else end
+        ss, dur = float(c["ss"]), float(t1) - float(c["t0"])
+        if dur <= MIN_PIECE_SEC:
+            continue
+        e0 = src_start(src, ss)
+        bs = inner_bounds(shot_starts(src), e0, e0 + dur)
+        head = (bs[0] - e0) if bs else None
+        if head is not None and head < MIN_PIECE_SEC - 1e-3 and i > 0 and dur - head > MIN_PIECE_SEC:
+            k = round(head, 3)
+            c["t0"], c["ss"] = round(float(c["t0"]) + k, 3), round(ss + k, 3)
+            ss, dur, e0 = ss + k, dur - k, e0 + k
+            moved.append((c.get("line"), "앞", k))
+            bs = inner_bounds(shot_starts(src), e0, e0 + dur)
+        if i + 1 >= len(cuts):
+            continue
+        cap = c.get("max")
+        k = 0.0
+        for _ in range(4):           # 당긴 끝 바로 앞에 또 원본 경계가 있으면(0.09초 조각, 10-26 까르보 L2) 조각이 없어질 때까지 다시 당긴다
+            d_now = dur - k
+            bs_k = inner_bounds(shot_starts(src), e0, e0 + d_now)
+            tail = (e0 + d_now - bs_k[-1]) if bs_k else 0.0
+            sd = (round((float(t1) - k) * FPS) - round(float(c["t0"]) * FPS)) / FPS      # 실제 뽑는 프레임 수로(관문과 같은 셈 — 화면 0.75초가 23프레임 0.767초가 돼 샷 0.751초를 넘었다)
+            over = (sd - float(cap)) if cap is not None and sd > float(cap) + 1e-3 else 0.0
+            cut_back = max(tail if 0 < tail < MIN_PIECE_SEC - 1e-3 else 0.0, over if over < MIN_PIECE_SEC else 0.0)
+            if cut_back <= 0 or d_now - cut_back <= MIN_PIECE_SEC:
+                break
+            k += math.ceil(cut_back * FPS - 1e-6) / FPS           # 프레임 격자로 올림(0.001 넘침도 한 프레임 당겨 끝낸다)
+        if k > 0:
+            nx = cuts[i + 1]
+            nx["t0"] = round(float(nx["t0"]) - k, 3)
+            if nx.get("kind") == "orig" and nx.get("ss") is not None and nx.get("src") == line_src.get(nx.get("line")) and nx.get("line") == c.get("line"):
+                nx["ss"] = round(float(nx["ss"]) - k, 3)             # 같은 원음 줄 다음 컷 — 입 맞춤 그대로(원본 초도 같이 당긴다)
+            moved.append((c.get("line"), "끝", round(k, 3)))
+    if moved:
+        sys.stderr.write(f"[fit_lip_edges] 원음 컷 가장자리 초 조절 {moved}\n")
+    return moved
 
 
 def src_frames(c: dict) -> int:

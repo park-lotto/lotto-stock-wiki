@@ -46,7 +46,7 @@ ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 POOL_JSON = ROOT / "channel" / "sseolpulda" / "동종채널_2026-10-17.json"
-SSH_KEY = "C:/Users/CH/crawling_bot_client/LightsailDefaultKey-ap-northeast-2.pem"
+SSH_KEY = str(Path.home() / "crawling_bot_client" / "LightsailDefaultKey-ap-northeast-2.pem").replace("\\", "/")   # PC 마다 홈이 다르다(CH·TheRose)
 SSH_HOST = "ubuntu@3.35.251.172"
 SERVER_REPO = "/home/ubuntu/lotto-stock-wiki"
 

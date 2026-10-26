@@ -147,7 +147,9 @@ def test_tiktok_origin_is_kept_and_fetched_by_url():
 def test_time_budget_keeps_searching_past_three_rounds_then_asks(monkeypatch):
     """옛 한도 = 3바퀴. 지금은 시간(20분, 새 후보가 계속 나오면 60분까지) — 같은 후보만 되풀이하면 20분에 마치고 그때만 회원에게."""
     ctx = _clocked(monkeypatch, _ctx(judge_ok_after=None))
-    tr, res, st = walk(F, F.start("https://youtu.be/BENCH1", "잇템로그판_v2", "sid"), ctx)
+    st0 = F.start("https://youtu.be/BENCH1", "잇템로그판_v2", "sid")
+    monkeypatch.setattr(F, "FILL_SAME_KIND", False)   # 같은 종류 해외 반응 채우기(사장님 10-26)를 끈 옛 멈춤을 본다 — 채우기는 아래 시험
+    tr, res, st = walk(F, st0, ctx)
     assert res["status"] == "stop"
     assert ctx["find_round"][1] > 3                                             # 3바퀴 넘어 계속
     assert ctx["clock"][0] - 1_000_000.0 >= F.F_FIND_SEC                        # 예산(20분)을 다 쓴 뒤에(두 칸이 한 시계)
@@ -171,7 +173,9 @@ def test_new_candidates_extend_past_soft_budget(monkeypatch):
             r["cands"] = [{**r["cands"][0], "id": f"NEW{next(seq):08d}"}]
         return r
     monkeypatch.setattr(sys.modules[__name__], "_measure", fresh)
-    tr, res, st = walk(F, F.start("https://youtu.be/BENCH1", "잇템로그판_v2", "sid"), ctx, limit=800)
+    st0 = F.start("https://youtu.be/BENCH1", "잇템로그판_v2", "sid")
+    monkeypatch.setattr(F, "FILL_SAME_KIND", False)
+    tr, res, st = walk(F, st0, ctx, limit=800)
     assert res["status"] == "stop"
     assert ctx["clock"][0] - 1_000_000.0 >= F.F_FIND_HARD                       # 새 후보가 계속 나와 60분까지
 
@@ -284,3 +288,11 @@ def test_progress_line_when_one_source_stopped():
     line = F.finding_line(fs)
     assert line == "1편 영상의 원본을 계속 찾고 있어요 · 10분째 · 1편 후보 49개 (2편은 잠시 쉬는 중)" and F.member_ok(line)
     assert "마침" not in line
+
+
+def test_budget_end_without_origin_fills_with_same_kind_reactions(monkeypatch):
+    """사장님 10-26: 같은 촬영분을 끝내 못 찾으면 멈추지 말고 같은 종류(색·브랜드 달라도) 조회수 높은 해외 영상으로 원본을 채운다 — 예산 끝 → peers 검색."""
+    ctx = _clocked(monkeypatch, _ctx(judge_ok_after=None))
+    tr, res, st = walk(F, F.start("https://youtu.be/BENCH1", "잇템로그판_v2", "sid"), ctx, limit=800)
+    assert any("같은 종류 해외 반응" in str(x) for x in st.get("log") or []), st.get("log", [])[-5:]
+    assert st.get("_peers_done") is True

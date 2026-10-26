@@ -77,6 +77,20 @@ def caps_vs_tts(S: dict) -> list[str]:
     return [f"{x['line']}: {x['why']}" for x in SA.text_defects(S, joined=False) if x["rule"] in ("caps_text", "caps_say")]
 
 
+def title_colors_fix(S: dict, st: dict) -> list[str]:
+    """(판단 주인 — title_colors_bad 와 같은 판 틀 읽기) 그 줄 틀에 없는 'hi' 를 null 로 바꾼다 — 형식 일이라 대본을 다시 쓰게 하지 않는다
+    (10-26 까르보: 'hi' 를 2줄→1줄로 옮겨 붙이며 같은 반려 3번에 멈춤). 반환 = 바꾼 칸 글."""
+    spec = (st.get("frame") or {}).get("title") or []
+    fixed = []
+    for i, line in enumerate(S.get("title_lines") or []):
+        sp = spec[i] if i < len(spec) else {}
+        for chunk in line if isinstance(line, list) else []:
+            if isinstance(chunk, list) and len(chunk) > 1 and chunk[1] == "hi" and "hi" not in sp:
+                chunk[1] = None
+                fixed.append(f"제목 {i + 1}줄 '{chunk[0]}' hi → null")
+    return fixed
+
+
 def title_colors_bad(S: dict, st: dict) -> list[str]:
     """제목 줄마다 판 틀(frame.title[줄])에 있는 색만 썼나 — 'hi' 는 그 줄 틀에 hi 가 있을 때만(10-21 실측: 키치잇판 둘째 줄 상자에 hi → 렌더 KeyError)."""
     spec = (st.get("frame") or {}).get("title") or []

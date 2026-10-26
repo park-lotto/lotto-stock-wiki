@@ -26,7 +26,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-KEY = "C:/Users/CH/crawling_bot_client/LightsailDefaultKey-ap-northeast-2.pem"
+KEY = str(Path.home() / "crawling_bot_client" / "LightsailDefaultKey-ap-northeast-2.pem").replace("\\", "/")   # PC 마다 홈이 다르다(CH·TheRose) — _server_access.REF_KEY 와 같은 꼴
 HOST = "ubuntu@3.35.251.172"
 REPO = "/home/ubuntu/lotto-stock-wiki"
 from tools.calcopy.engine.gemini_server import MODELS as ASR_MODELS, FALLBACK_MODELS as ASR_FALLBACK  # noqa: E402  — 모델 목록 주인은 엔진 한 곳(10-18 실측 표는 거기)

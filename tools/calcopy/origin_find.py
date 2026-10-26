@@ -291,7 +291,7 @@ def run_one(L: dict, pg, url: str, log=print) -> dict:
         return {"why": "씨앗 받기 실패"}
     seed["korean"] = is_korean(seed.get("title", ""), seed.get("channel", ""))
     found = {}
-    for im in imgs:
+    for im in [c for s in imgs for c in LN.video_crops(s)]:      # 한국 재편집 제목 띠·자막 빼고(주인 lens.video_crops, 10-26)
         try:
             rows = LN.lens_rows(pg, str(im), skip=LN.SKIP_VIDEO)
         except Exception as e:  # noqa: BLE001 — 한 장 실패가 나머지를 막지 않는다(실패는 로그에)

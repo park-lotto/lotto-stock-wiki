@@ -332,6 +332,26 @@ def c_bench(W, d):
     return out
 
 
+def _tiktok_cookies() -> list[dict]:
+    """틱톡 로그인 쿠키(Playwright 꼴) — 회원 PC = 숏템 MCP 가 만든 cookies.txt(YTDLP_COOKIES_YOUTUBE, 설정 화면 '영상 받기 계정') ·
+    우리 PC = TIKTOK_SESSION_PATH(storage_state json, tools/tiktok_session_from_firefox.py). 없으면 [](로그인 없이 — 결과가 적다)."""
+    sp = os.environ.get("TIKTOK_SESSION_PATH") or str(Path(__file__).resolve().parents[3] / "out" / "tiktok_session.json")
+    if os.path.isfile(sp):
+        try:
+            return [c for c in jload(Path(sp)).get("cookies") or [] if "tiktok.com" in str(c.get("domain"))]
+        except Exception as e:  # noqa: BLE001 — 깨진 세션 파일은 알리고 쿠키 파일로
+            sys.stderr.write(f"[tiktok] 세션 파일 못 읽음 {sp}: {e}\n")
+    f = os.environ.get("YTDLP_COOKIES_YOUTUBE") or ""
+    out = []
+    if f and os.path.isfile(f):
+        for ln in Path(f).read_text(encoding="utf-8", errors="replace").splitlines():
+            r = ln.replace("#HttpOnly_", "", 1).split("\t")
+            if len(r) >= 7 and r[0].lstrip(".").endswith("tiktok.com"):
+                out.append({"name": r[5], "value": r[6], "domain": r[0], "path": r[2] or "/", "secure": r[3] == "TRUE",
+                            "expires": float(r[4]) if r[4] not in ("", "0") else -1})
+    return out
+
+
 def _search(qs: list[str], n: int = 12, shorts: bool = False) -> list[dict]:
     """유튜브 검색(한국어 제목). shorts=True 면 '4분 이하' 필터 — 그냥 검색은 긴 영상만 줬다(10-21 선우용여)."""
     if CACHE:                       # 받아 둔 검색 결과 — 검색어별(search/<검색어>.json, 대신 받기) 있으면 그것, 없으면 _default(정답지 시험)
@@ -706,6 +726,11 @@ def c_origin_get(W, d):
         if not dst.exists():
             shutil.copyfile(s, dst)
         return {"files": [dims(dst)], "offset": 0.0, "measured": True, "note": "캐시 원본 = 전체 파일(0초 = 원본 0초)"}
+    if d.get("url") and "youtu" not in str(d["url"]):     # 틱톡·인스타 원본(해외원본형 렌즈) — 짧은 영상이라 통째로, 벤치 받기와 같은 yt-dlp 길(10-26 까르보불닭)
+        yt(["-f", "bv*[height>=720]+ba/bv*+ba/b", "--merge-output-format", "mp4", "-o", str(src / f"{vid}.%(ext)s"), str(d["url"])])
+        if not dst.exists():
+            return {"error": f"원본 받기 실패({d['url']})"}
+        return {"files": [dims(dst)], "offset": 0.0, "measured": True}
     from tools.calcopy.engine import yt_fetch as YF
     from tools.calcopy.hybrid import screen
     files = screen.download(W, [vid], None if d.get("full") else [(a, b)], prefix="", pad=SECTION_PAD)   # full = 통째로 바로(구간 받기가 멈추는 회선에서 기다림 150초+를 버린다, 10-22 실측 통째 47~53초)
@@ -1137,7 +1162,16 @@ def c_mat_sheets(W, d):
             continue
         lst.append({"file": p.name, "dur": dims(p)["dur"]})
         sheets.append(rel(W, sheet(p, W / f"_sheet_{p.stem[:40]}.jpg", fps=0.5, cols=6, rows=5, w=240)))
-    return {"sheets": sheets, "list": lst}
+    out = {"sheets": sheets, "list": lst}
+    bm = W / "bench" / "bench.mp4"                   # 소재 쇼츠 1초 자막 시트 — 박힌 한국어 자막의 말맛(대본 작가가 그대로 본다, 사장님 10-26 '말맛 나고 재밌자나')
+    if bm.exists():
+        cs = W / "look" / "bench_caps.jpg"
+        cs.parent.mkdir(exist_ok=True)
+        if not cs.exists():
+            run(["ffmpeg", "-v", "error", "-y", "-i", str(bm), "-vf", "fps=1,crop=iw:ih*0.62:0:ih*0.30,scale=200:-2,tile=8x8", "-frames:v", "1", str(cs)])
+        if cs.exists():
+            out["bench_caps"] = rel(W, cs)
+    return out
 
 
 def c_write_doc(W, d):
@@ -1488,6 +1522,12 @@ def _web_links(qs: list[str], per: int = WEB_PER_Q) -> list[dict]:
         for q in qs[:4]:
           # 검색어마다 창을 새로(10-26 run4: 첫 틱톡 페이지에서 창이 닫혀(TargetClosedError) 그 바퀴 나머지 7번이 전부 실패)
           with LN.lens_page() as pg:
+                ck = _tiktok_cookies()            # 틱톡 로그인(우리 PC 파이어폭스 세션·회원 PC 연결 계정) — 있으면 결과가 많다(10-26 이 PC 24건/검색어)
+                if ck:
+                    try:
+                        pg.context.add_cookies(ck)
+                    except Exception as e:  # noqa: BLE001
+                        sys.stderr.write(f"[web] 틱톡 쿠키 못 실음: {e}\n")
                 for how, url in (("tiktok", f"https://www.tiktok.com/search/video?q={quote(q)}"),
                                  ("instagram", f"https://www.google.com/search?q={quote(q + ' site:instagram.com/reel')}&hl=en")):
                     try:
@@ -1548,6 +1588,20 @@ def c_of_settle(W, d):
     return {"ok": True, "noted": noted}
 
 
+def _peer_raw(qs: list, n: int, skip: set) -> list[dict]:
+    """영어 검색어 → 유튜브(_search) + 틱톡·인스타(_web_links — 검색 주인 한 곳) 후보 — 렌즈와 같은 꼴(platform·id·url·메타)."""
+    from tools.calcopy import origin_find as OF
+    raw = [{"platform": "yt", "id": e.get("id"), "url": f"https://www.youtube.com/shorts/{e.get('id')}", **{k: e.get(k) for k in ("title", "channel", "channel_id", "dur", "views", "date")}}
+           for e in _search(qs, n) if e.get("id") and e.get("id") not in skip]
+    have = {("yt", c["id"]) for c in raw}
+    for x in _web_links(qs):
+        k = OF.vkey(x["url"])
+        if k and k not in have and k[1] not in skip:
+            have.add(k)
+            raw.append({"platform": k[0], "id": k[1], "url": OF.url_of(k[0], k[1], x["url"]), "by": "web:" + x["how"], **OF.meta(OF.url_of(k[0], k[1], x["url"]))})
+    return raw
+
+
 def c_origin_foreign(W, d):
     """해외 원본 후보 + 판정 시트. mode lens = 소재(한국 재편집) 장면 4장 → 구글 렌즈 → 영상 링크 → 메타(origin_find 와 같은 함수) /
     mode peers = 영어 검색어로 같은 제품 다른 해외 반응 쇼츠 / mode find = 회원 Claude 가 찾은 주소(urls)·검색어(queries, 쇼츠 필터) 후보.
@@ -1571,7 +1625,7 @@ def c_origin_foreign(W, d):
             from tools.calcopy import lens as LN
             found: dict = {}
             with LN.lens_page() as pg:
-                for im in seeds:
+                for im in [c for s in seeds for c in LN.video_crops(s)]:
                     try:
                         rows = LN.lens_rows(pg, str(im), skip=LN.SKIP_VIDEO)
                     except Exception as e:  # noqa: BLE001 — 한 장 실패는 남기고 나머지
@@ -1580,9 +1634,14 @@ def c_origin_foreign(W, d):
                         k = OF.vkey(r["href"])
                         if k and k[1] != d.get("bench_id"):
                             found.setdefault(k, {"href": r["href"], "text": r["text"], "hits": 0})["hits"] += 1
-            for (pf, vid), x in list(found.items())[:40]:
+            for (pf, vid), x in sorted(found.items(), key=lambda kv: -kv[1]["hits"])[:60]:     # 여러 장에 뜬 것 먼저(잘라 올리기로 후보가 13 → 58, 10-26)
                 m = OF.meta(OF.url_of(pf, vid, x["href"]))
                 raw.append({"platform": pf, "id": vid, "url": OF.url_of(pf, vid, x["href"]), "lens_text": x["text"], "lens_hits": x["hits"], **m})
+            if d.get("queries"):        # 키워드 검색도 처음부터(사장님 10-26) — 원본 그대로인 영상이 검색으로 잡혀도 같은 촬영분 판정에 같이 든다
+                have = {(c["platform"], c["id"]) for c in raw}
+                for c in _peer_raw(d["queries"], int(d.get("n") or 8), skip | {d.get("bench_id")}):
+                    if (c["platform"], c["id"]) not in have:
+                        raw.append({**c, "found_by": "keyword"})
     else:
         if mode == "find":          # 회원 Claude 가 직접 찾은 주소(flow f_of_find, 10-26) — 메타·썸네일만 받아 같은 영상 판정 시트에 싣는다(판정은 서버 질문)
             for url in [str(x) for x in d.get("urls") or []][:8]:
@@ -1592,7 +1651,7 @@ def c_origin_foreign(W, d):
                 raw.append({"platform": k[0], "id": k[1], "url": OF.url_of(k[0], k[1], url), "by": "member", **OF.meta(OF.url_of(k[0], k[1], url))})
         for e in _search(d.get("queries") or [], int(d.get("n") or 12), shorts=(mode == "find")):
             raw.append({"platform": "yt", "id": e.get("id"), "url": f"https://www.youtube.com/shorts/{e.get('id')}", **{k: e.get(k) for k in ("title", "channel", "channel_id", "dur", "views", "date")}})
-        if mode == "find" and d.get("queries"):     # 틱톡·인스타도 같은 검색어로(관제263 10-26 — 원본이 틱톡에만 있던 잇템로그 편)
+        if mode in ("find", "peers") and d.get("queries"):     # 틱톡·인스타도 같은 검색어로(같은 종류 해외 반응 peers 도 — 사장님 10-26 "유튜브 인스타 틱톡 모두 외국어로")(관제263 10-26 — 원본이 틱톡에만 있던 잇템로그 편)
             have = {(c.get("platform"), c.get("id")) for c in raw}
             for x in _web_links(d.get("queries") or [], int(d.get("web_n") or WEB_PER_Q)):
                 k = OF.vkey(x["url"])

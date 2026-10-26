@@ -49,6 +49,34 @@ def lens_rows(pg, img: str, skip: re.Pattern = SKIP_SHOP, hl: str = "ko") -> lis
     return rows
 
 
+def video_crops(p) -> list:
+    """(주인) 영상 찾기 렌즈에 올릴 그림 = 소재 장면에서 한국 재편집이 덧붙인 것을 뺀 영상 부분 — ① 영상 띠(위아래 검정 여백·제목 띠 잘라 냄) ② 그 위 62%(아래 자막 줄 빼기).
+    장면 통째로 올리면 구글이 핀셋·패치 같은 물건만 작게 골라 쇼핑 결과로 쏠린다(10-26 여드름 패치: 통째 후보 13·해외 원본 0 → 잘라 올리기 58·원본 Erin Noelle 틱톡).
+    띠를 못 찾으면 원본 그대로 한 장."""
+    import cv2
+    import numpy as np
+    img = cv2.imdecode(np.fromfile(str(p), np.uint8), cv2.IMREAD_COLOR)
+    if img is None:
+        return [p]
+    rows = np.where(img.mean(axis=(1, 2)) > 25)[0]
+    if not len(rows):
+        return [p]
+    runs, s = [], rows[0]
+    for a, b in zip(rows, rows[1:]):
+        if b - a > 6:
+            runs.append((s, a)); s = b
+    runs.append((s, rows[-1]))
+    y0, y1 = max(runs, key=lambda r: r[1] - r[0])
+    if y1 - y0 < img.shape[0] * 0.3:
+        return [p]
+    out = []
+    for tag, crop in (("band", img[y0:y1]), ("top", img[y0:y0 + int((y1 - y0) * 0.62)])):
+        q = p.with_name(f"{p.stem}_{tag}.jpg")
+        cv2.imencode(".jpg", crop)[1].tofile(str(q))
+        out.append(q)
+    return out
+
+
 @contextmanager
 def lens_page():
     """렌즈용 크롬 한 창(화면 뜸 — 헤드리스는 구글이 막는다)."""

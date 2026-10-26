@@ -21,6 +21,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -111,6 +112,7 @@ def read_names(S, log=print) -> list:
     for l in S.get("lines") or []:
         if l.get("kind") == "tts" and l.get("tts"):
             t = ND.apply_all(l["tts"], v, voice_only=True)
+            t = re.sub(r"^(\s*아)\s*,\s*", r"\1~ ", t)     # 줄 첫 감탄 '아,' → '아~'(10-25 사장님 시험 B: '아,' 는 Typecast 가 '아' 길이를 0으로 찍어 쉼 넣기가 소리를 잘랐다 — 10-26 대본이 다시 '아,' 로 써 두 편 다 끊김. 글 쓰는 쪽과 상관없이 읽는 글 한 곳에서)
             if t != l["tts"]:
                 got.append(l.get("id"))
                 log(f"[이름 사전] {l.get('id')}: '{l['tts']}' → '{t}'")
