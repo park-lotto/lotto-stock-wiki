@@ -8647,6 +8647,33 @@ class Store:
             c.execute("DELETE FROM customer_keys WHERE id=? AND customer_id=?",
                       (int(key_id), int(customer_id)))
 
+    # ── 빌려준 키 한도(2026-10-26 관제 277) — 회사 키를 회원 계정에 넣고 크레딧 한도까지만 쓰게 한다 ──
+    #   판단(언제 끄나)은 keyroute.lent_key_charge 한 곳. 여기는 저장만 한다.
+    def lent_key_bump(self, fp, credits):
+        """그 키(지문)의 한도가 걸려 있으면 사용량을 더하고 (used, cap), 한도 없으면 None.
+        ★UPDATE 한 줄로 더한다 — 워커 여럿이 동시에 지워도 사용량이 안 빠진다."""
+        with self._conn() as c:
+            row = c.execute("SELECT value FROM settings WHERE key=?", ("lent_cap::" + fp,)).fetchone()
+            if not row:
+                return None
+            c.execute("INSERT INTO settings(key, value) VALUES(?, '0') ON CONFLICT(key) DO NOTHING",
+                      ("lent_used::" + fp,))
+            c.execute("UPDATE settings SET value = CAST(value AS INTEGER) + ? WHERE key=?",
+                      (int(credits), "lent_used::" + fp))
+            used = c.execute("SELECT value FROM settings WHERE key=?", ("lent_used::" + fp,)).fetchone()
+        return int(used[0]), int(row[0])
+
+    def lent_key_label_off(self, fp, label, off):
+        """회원 계정에 넣은 그 키 행(사장님 cid 0 행은 건드리지 않는다)의 표시 문구를 바꾸고, off면 끈다."""
+        import time
+        with self._conn() as c:
+            if off:
+                c.execute("UPDATE customer_keys SET label=?, status='off', checked_at=? "
+                          "WHERE key_hash=? AND customer_id != 0", (label, int(time.time()), fp))
+            else:
+                c.execute("UPDATE customer_keys SET label=? WHERE key_hash=? AND customer_id != 0",
+                          (label, fp))
+
     def set_customer_key_status(self, key_id, status):
         import time
         with self._conn() as c:

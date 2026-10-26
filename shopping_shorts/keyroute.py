@@ -165,6 +165,36 @@ def is_block_exempt(customer_id):
     return (not cid) or (cid in BLOCK_EXEMPT_CIDS)
 
 
+# ★빌려준 키 한도(2026-10-26 사장님 "강태경님한테 우리 v메이크 200크레딧 / 매일 안 물어보게", 관제 277).
+#   회사 키를 회원 계정(customer_keys)에 넣어 주고, 설정 `lent_cap::<지문>`=한도를 걸면
+#   그 키로 VMake 과금이 날 때마다 크레딧이 쌓이고 한도에 닿으면 **회원 쪽 그 키만** 꺼진다
+#   (사장님 cid 0 행은 그대로). 꺼지면 keys_for 가 회원 본인 키로 돌아간다.
+#   ⚠️ 마지막 한 번은 한도를 넘을 수 있다 — 과금은 업체가 먼저 하고 우리는 뒤에 센다.
+def lent_key_charge(store, api_key, credits):
+    """VMake 과금 직후 부른다. 한도 걸린 키면 (used, cap), 아니면 None. 판단은 여기 한 곳(0순위-B)."""
+    if not api_key or not credits:
+        return None
+    from shopping_shorts import keycrypt
+    fp = keycrypt.fingerprint(api_key)
+    got = store.lent_key_bump(fp, credits)
+    if got is None:
+        return None
+    used, cap = got
+    off = used >= cap
+    store.lent_key_label_off(fp, "지원 %d크레딧 · 남은 %d" % (cap, max(0, cap - used)), off)
+    logging.warning("[lent_key] %s… +%d → %d/%d%s", fp[:6], credits, used, cap, " → 꺼짐" if off else "")
+    if off:
+        try:
+            from shopping_shorts import ops_alert
+            ops_alert.raise_alert(
+                "lent_key_cap", "빌려준 자막지우기 키 한도 소진 — 회원 쪽 키를 껐다",
+                "key=%s… used=%d cap=%d" % (fp[:6], used, cap),
+                grade=ops_alert.GRADE_OPS, signature="lent_cap::" + fp)
+        except Exception as e:                    # noqa: BLE001 — 경보 실패가 끄기를 되돌리면 안 된다
+            logging.warning("[lent_key] 경보 실패(키는 껐다): %r", e)
+    return used, cap
+
+
 def requires_own_key(service):
     """개인 키가 없으면 못 쓰는 서비스인가. 판단은 여기 한 곳(0순위-B)."""
     return service in REQUIRE_OWN_KEY
