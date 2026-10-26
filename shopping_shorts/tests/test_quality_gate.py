@@ -208,7 +208,7 @@ def test_b18_gap_follows_timing_and_b18a_inline():
     th = {"comma": 0.22, "period": 0.30}
     assert inline_pause_verdict([("N7", ["comma"], [0.23, 0.09])], th)[0] is True
     assert inline_pause_verdict([("N7", ["comma"], [0.10])], th)[0] is False
-    assert inline_pause_verdict([], th)[0] is None
+    assert inline_pause_verdict([], th)[0] == "해당 없음"          # 문장부호 없는 대본 = 원래 없는 칸(사장님 10-26 ⑧)
 
 
 def test_strict_catches_null_transition():

@@ -82,13 +82,16 @@ def part_slivers(R: Path, T: dict, src_dir: Path | None = None) -> list:
     return bad
 
 
-def thumb_stamped(video: Path, doc: Path) -> tuple[bool | None, str]:
+NA = "해당 없음"      # (사장님 10-26 결정 · 검수단축 ⑧) 그 편에 원래 없는 칸 = 해당 없음(통과로 셈, 행에 na 표시) · 잴 수 있는데 못 잰 칸 = None(불합격)
+
+
+def thumb_stamped(video: Path, doc: Path) -> tuple[bool | str | None, str]:
     """썸네일.json 이 있으면 완성본 0·1프레임 = 고른 카드 그림인가(회색 평균 차 < 12 — 광고 표시·압축 차 허용), 2프레임은 카드가 아닌가."""
     import numpy as np
     from PIL import Image
     sp = Path(doc) / "썸네일.json"
-    if not sp.exists():
-        return None, "썸네일.json 없음(검사 안 함)"
+    if not sp.exists() or not (jload(sp).get("options") or jload(sp).get("pick")):
+        return NA, "썸네일 카드 없는 편(썸네일.json 없음·빈 3안 — flow 가 카드 반려 끝에 카드 없이 렌더)"
     pk = jload(sp).get("pick")
     jpg = Path(doc) / "thumb" / f"{pk}.jpg"
     ref = np.asarray(Image.open(jpg).convert("L").resize((108, 192)), dtype=np.int16)
@@ -560,7 +563,7 @@ def inline_pause_verdict(items: list[tuple[str, list[str], list[float]]], th: di
     """B18a 한 줄 안 문장부호 쉼(표준 §11 ①ⓑ): [(줄, 부호 목록(쉼표·마침표), 그 줄 안 무음 길이 목록)] — 긴 무음부터 마침표·쉼표 순으로 짝지어
     문턱 th{comma, period} −0.02/+0.03 안(checks 의 허용 폭과 같다)."""
     if not items:
-        return None, "줄 안 문장부호 없음(해당 없음 — 미측정)"
+        return NA, "줄 안 문장부호 없음"
     out, bad = [], []
     for lid, marks, sil in items:
         ms = sorted(marks, key=lambda m: 0 if m == "period" else 1)
@@ -582,8 +585,11 @@ def _row(rows: list, group: str, what: str, fn, src: str, timer=None, ref: bool 
         ok, value = fn()
     except Exception as e:  # noqa: BLE001 — 못 잰 항목은 ×(미측정)로 남긴다. 조용히 넘기지 않는다
         ok, value = None, f"측정 실패: {type(e).__name__}: {str(e)[:200]}"
+    na = isinstance(ok, str) and ok == NA          # 그 편에 원래 없는 칸 — 통과로 세고 '해당 없음' 표시(못 잰 칸 None 은 그대로 ×)
+    if na:
+        ok, value = True, f"{NA} — {value}"
     sec = round(time.time() - t0, 1)
-    rows.append({"group": group, "what": what, "ok": ok, "value": value, "src": src, "sec": sec, **({"ref": True} if ref else {})})
+    rows.append({"group": group, "what": what, "ok": ok, "value": value, "src": src, "sec": sec, **({"ref": True} if ref else {}), **({"na": True} if na else {})})
     if timer is not None:
         timer.done(f"gate:{group}:{what}", sec)
     return ok
@@ -866,7 +872,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
     if want("썸네일"):
         def ts():
             ok, msg = thumb_stamped(final, doc)
-            cache["frame0"] = "card" if ok else ("scene" if ok is False else None)
+            cache["frame0"] = "scene" if ok == NA else "card" if ok else ("scene" if ok is False else None)     # 카드 없는 편 = 0초는 장면
             if legacy:              # 옛 bench_check 그대로: 썸네일.json 없으면 검사 안 함 = 통과
                 return ok is not False, msg
             return ok, msg
@@ -875,8 +881,8 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             def trule():
                 from tools.calcopy.hybrid import thumb_rule
                 sp = doc / "썸네일.json"
-                if not sp.exists():
-                    return None, "썸네일.json 없음(미측정)"
+                if not sp.exists() or not jload(sp).get("options"):
+                    return NA, "썸네일 카드 없는 편(썸네일.json 없음·빈 3안)"
                 bad = thumb_rule.check(jload(sp), n_parts=len(T.get("cuts") or []))
                 return not bad, bad or "통과"
             row("썸네일", "thumb_rule.check(3안 규칙)", trule, "hybrid/thumb_rule.check")
