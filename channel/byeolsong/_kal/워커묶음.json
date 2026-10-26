@@ -1,0 +1,44 @@
+{
+ "slug": "byeolsong",
+ "brief": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\byeolsong\\_kal\\줄판독_브리프.md",
+ "rule_doc": "tools/calcopy/칼카피_분석지침서.md §2단계 자막 축 A",
+ "jobs": [
+  {
+   "id": "1lMbJh0n_d4",
+   "mp4": "C:\\숏템_칼카피\\byeolsong\\src\\1lMbJh0n_d4.mp4",
+   "frames": "C:\\숏템_칼카피\\byeolsong\\kal\\frames_1lMbJh0n_d4",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\byeolsong\\뜯기\\1lMbJh0n_d4\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\byeolsong\\줄판독\\1lMbJh0n_d4.json"
+  },
+  {
+   "id": "_WLN4wnVbF8",
+   "mp4": "C:\\숏템_칼카피\\byeolsong\\src\\_WLN4wnVbF8.mp4",
+   "frames": "C:\\숏템_칼카피\\byeolsong\\kal\\frames__WLN4wnVbF8",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\byeolsong\\뜯기\\_WLN4wnVbF8\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\byeolsong\\줄판독\\_WLN4wnVbF8.json"
+  },
+  {
+   "id": "PzKloCeO2FU",
+   "mp4": "C:\\숏템_칼카피\\byeolsong\\src\\PzKloCeO2FU.mp4",
+   "frames": "C:\\숏템_칼카피\\byeolsong\\kal\\frames_PzKloCeO2FU",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\byeolsong\\뜯기\\PzKloCeO2FU\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\byeolsong\\줄판독\\PzKloCeO2FU.json"
+  },
+  {
+   "id": "tF4fbEVtnMY",
+   "mp4": "C:\\숏템_칼카피\\byeolsong\\src\\tF4fbEVtnMY.mp4",
+   "frames": "C:\\숏템_칼카피\\byeolsong\\kal\\frames_tF4fbEVtnMY",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\byeolsong\\뜯기\\tF4fbEVtnMY\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\byeolsong\\줄판독\\tF4fbEVtnMY.json"
+  },
+  {
+   "id": "SR-2LhCXxwY",
+   "mp4": "C:\\숏템_칼카피\\byeolsong\\src\\SR-2LhCXxwY.mp4",
+   "frames": "C:\\숏템_칼카피\\byeolsong\\kal\\frames_SR-2LhCXxwY",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\byeolsong\\뜯기\\SR-2LhCXxwY\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\byeolsong\\줄판독\\SR-2LhCXxwY.json"
+  }
+ ],
+ "workers": 3,
+ "per_worker": 2
+}

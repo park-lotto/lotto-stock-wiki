@@ -1,0 +1,136 @@
+{
+ "id": "PzKloCeO2FU",
+ "dur": 15.067,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   476,
+   1080,
+   1024
+  ],
+  "caption_band": [
+   997,
+   1208
+  ],
+  "title_y": null,
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null
+ },
+ "lines": [
+  {
+   "t0": 8.1,
+   "t1": 9.5,
+   "speaker": null,
+   "text": "あぁ このまま 아아 이대로",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1097,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 9.5,
+   "t1": 10.6,
+   "speaker": null,
+   "text": "僕たち 우리들의",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1094,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 10.6,
+   "t1": 13.3,
+   "speaker": null,
+   "text": "の声が 목소리가",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1092,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 13.3,
+   "t1": 15.07,
+   "speaker": null,
+   "text": "世界の端 세상의",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1093,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  }
+ ],
+ "beats": null,
+ "narr_share": null,
+ "notes": [],
+ "name_evidence": [],
+ "_todo": [
+  "speaker",
+  "layer",
+  "role",
+  "enter",
+  "fill_hex",
+  "emph",
+  "sticker",
+  "sfx",
+  "scene",
+  "fit",
+  "beats",
+  "narr_share"
+ ],
+ "_made_by": "kal_analyze.skeleton(기계값 뼈대 — 판독 전)"
+}

@@ -1,0 +1,139 @@
+{
+ "slug": "byeolsong",
+ "ref": "https://www.youtube.com/@별헤는쏭",
+ "steps": {
+  "tteutgi": {
+   "state": "done",
+   "sec": 196.2,
+   "at": "2026-10-27 02:15",
+   "outputs": {
+    "ids": [
+     "1lMbJh0n_d4",
+     "_WLN4wnVbF8",
+     "PzKloCeO2FU",
+     "tF4fbEVtnMY",
+     "SR-2LhCXxwY"
+    ],
+    "dir": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\byeolsong\\뜯기"
+   },
+   "note": "뜯기 5편 (LLM=claude_cli, 받아쓰기 칸은 vtt 로)"
+  },
+  "select": {
+   "state": "done",
+   "sec": 8.8,
+   "at": "2026-10-27 02:07",
+   "outputs": {
+    "top": "C:\\숏템_칼카피\\byeolsong\\top.json"
+   },
+   "note": "별헤는쏭 구독 27500 편 272 조회중앙 44,000 최대 17,000,000 (구독 대비 중앙 1.6)"
+  },
+  "collect": {
+   "state": "done",
+   "sec": 21.8,
+   "at": "2026-10-27 02:12",
+   "outputs": {
+    "src": "C:\\숏템_칼카피\\byeolsong\\src",
+    "ids": [
+     "1lMbJh0n_d4",
+     "_WLN4wnVbF8",
+     "PzKloCeO2FU",
+     "tF4fbEVtnMY",
+     "SR-2LhCXxwY"
+    ]
+   },
+   "note": "받음 5/5(1080p, C 여유 24.9GB)"
+  },
+  "frames": {
+   "state": "done",
+   "sec": 56.4,
+   "at": "2026-10-27 02:17",
+   "outputs": {
+    "dirs": {
+     "1lMbJh0n_d4": "C:\\숏템_칼카피\\byeolsong\\kal\\frames_1lMbJh0n_d4",
+     "_WLN4wnVbF8": "C:\\숏템_칼카피\\byeolsong\\kal\\frames__WLN4wnVbF8",
+     "PzKloCeO2FU": "C:\\숏템_칼카피\\byeolsong\\kal\\frames_PzKloCeO2FU",
+     "tF4fbEVtnMY": "C:\\숏템_칼카피\\byeolsong\\kal\\frames_tF4fbEVtnMY",
+     "SR-2LhCXxwY": "C:\\숏템_칼카피\\byeolsong\\kal\\frames_SR-2LhCXxwY"
+    }
+   },
+   "note": "시트·0.1초 띠 5편"
+  },
+  "skeleton": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-27 02:17",
+   "outputs": {
+    "skeletons": [
+     "1lMbJh0n_d4",
+     "tF4fbEVtnMY",
+     "SR-2LhCXxwY"
+    ],
+    "bundle": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\byeolsong\\_kal\\워커묶음.json",
+    "brief": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\byeolsong\\_kal\\줄판독_브리프.md"
+   },
+   "note": "뼈대 3편 새로, 묶음 5편"
+  },
+  "readlines": {
+   "state": "waiting_human",
+   "sec": 0.0,
+   "at": "2026-10-27 02:17",
+   "outputs": {
+    "pending": {
+     "1lMbJh0n_d4": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "lines 비어 있음"
+     ],
+     "_WLN4wnVbF8": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(9.0~10.4) 칸 누락(strict): transition",
+      "줄0(9.0~10.4) 칸 누락(strict): motion",
+      "줄0(9.0~10.4) 칸 누락(strict): confidence",
+      "줄0(9.0~10.4) speaker 미기입"
+     ],
+     "PzKloCeO2FU": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(8.1~9.5) 칸 누락(strict): transition",
+      "줄0(8.1~9.5) 칸 누락(strict): motion",
+      "줄0(8.1~9.5) 칸 누락(strict): confidence",
+      "줄0(8.1~9.5) speaker 미기입"
+     ],
+     "tF4fbEVtnMY": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(14.1~16.8) 칸 누락(strict): transition",
+      "줄0(14.1~16.8) 칸 누락(strict): motion",
+      "줄0(14.1~16.8) 칸 누락(strict): confidence",
+      "줄0(14.1~16.8) speaker 미기입"
+     ],
+     "SR-2LhCXxwY": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.6~3.1) 칸 누락(strict): transition",
+      "줄0(0.6~3.1) 칸 누락(strict): motion",
+      "줄0(0.6~3.1) 칸 누락(strict): confidence",
+      "줄0(0.6~3.1) speaker 미기입"
+     ]
+    }
+   },
+   "note": "줄판독 미완 5/5편 — 줄판독(눈) — 묶음 _kal/워커묶음.json 을 워커에 나눠 주고 줄판독/<id>.json 을 채운다 → check 통과 뒤 다시 실행"
+  }
+ },
+ "asked": {},
+ "brand": "미정",
+ "n": 5,
+ "hybrid": "예",
+ "channel": {
+  "name": "별헤는쏭",
+  "url": "https://www.youtube.com/@별헤는쏭/shorts",
+  "subs": 27500,
+  "total": 272,
+  "view_median": 44000,
+  "view_max": 17000000,
+  "top_ids": [
+   "1lMbJh0n_d4",
+   "_WLN4wnVbF8",
+   "PzKloCeO2FU",
+   "tF4fbEVtnMY",
+   "SR-2LhCXxwY"
+  ],
+  "views_per_sub": 1.6
+ }
+}

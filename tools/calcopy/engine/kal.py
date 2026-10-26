@@ -302,8 +302,15 @@ def step_collect(S: State):
     todo = [i for i in ids if not (base / f"{i}.mp4").exists()]
 
     def dl(vid):
-        r = _run(["yt-dlp", "--encoding", "utf-8", "-f", fmt, "--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko",
-                  "-o", str(base / "%(id)s.%(ext)s"), f"https://www.youtube.com/shorts/{vid}"], timeout=900)
+        # 영상·info 먼저, 자막은 따로 — 자막 429 하나로 영상까지 버리던 결함(10-27 별헤는쏭 3/5편 실패)
+        url = f"https://www.youtube.com/shorts/{vid}"
+        r = _run(["yt-dlp", "--encoding", "utf-8", "-f", fmt, "--merge-output-format", "mp4", "--write-info-json",
+                  "-o", str(base / "%(id)s.%(ext)s"), url], timeout=900)
+        if r.returncode == 0 and not list(base.glob(f"{vid}*.vtt")):
+            s = _run(["yt-dlp", "--encoding", "utf-8", "--skip-download", "--write-auto-subs", "--sub-langs", "ko",
+                      "-o", str(base / "%(id)s.%(ext)s"), url], timeout=300)
+            if s.returncode != 0:
+                print(f"[경보] {vid} 자막(ko.vtt) 못 받음 — 영상은 받음, 받아쓰기는 스피치매틱스로: {s.stderr[-120:]}")
         return vid, r.returncode, r.stderr[-200:]
     errs = []
     with ThreadPoolExecutor(2) as ex:        # 무거운 프로세스 동시 ≤4(공통규칙) — 받기는 2
@@ -387,7 +394,8 @@ def step_skeleton(S: State):
     brief = tmpl.replace("starpickroom", S.d["slug"]).replace("스타픽룸", S.d.get("channel", {}).get("name") or S.d["slug"])
     brief = ("# " + S.d["slug"] + " 줄판독 브리프 (kal.py 가 스타픽룸 견본에서 만든 초안 — 지휘자가 '지금까지 본 것' 절을 이 채널 것으로 고친 뒤 워커에 준다)\n"
              "★칸·어휘는 `tools/calcopy/칼카피_분석지침서.md` 2단계 자막 축 A 가 주인(role·fit·자간·행간 칸 포함). 뼈대 json 의 _todo 칸을 전부 채우고 `kal_analyze.py check --strict` 통과시킨다.\n\n" + brief)
-    (kd / "줄판독_브리프.md").write_text(brief, encoding="utf-8")
+    if not (kd / "줄판독_브리프.md").exists():      # 지휘자가 고친 '지금까지 본 것'을 다시 돌릴 때 견본으로 덮지 않는다(10-27)
+        (kd / "줄판독_브리프.md").write_text(brief, encoding="utf-8")
     return "done", {"skeletons": made, "bundle": str(kd / "워커묶음.json"), "brief": str(kd / "줄판독_브리프.md")}, f"뼈대 {len(made)}편 새로, 묶음 {len(ids)}편"
 
 
@@ -563,7 +571,7 @@ def run(S: State, start: str | None = None, log=print) -> dict:
     i0 = STEPS.index(start) if start else 0
     for name in STEPS[i0:]:
         st = S.step(name)
-        if st.get("state") == "done" and not (start and name == start):
+        if st.get("state") == "done" and not start:     # --from = 그 단계부터 **뒤 단계 전부** 다시(10-27: 받기 5편 늘었는데 frames·skeleton 이 옛 2편으로 건너뜀)
             log(f"[건너뜀] {name}: {st.get('note', '')}")
             continue
         t = time.time()
