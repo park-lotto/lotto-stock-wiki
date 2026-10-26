@@ -74,6 +74,21 @@ def yt_why() -> str:
     return _yt_why[0]
 
 
+def yt_probe(url: str) -> str:
+    """준비 확인용 실제 받기 시험 — 받기와 **같은 함수(yt)** 로 그 영상 정보만 한 번 읽는다(내려받지 않음). 성공 = "", 실패 = 이유 한 줄.
+    뿌리(98 #157·#158·#159·10-27): 파일·쿠키 이름 검사는 '있는데 못 쓰는' 경우(인코딩·계정 막힘·프로필 다름)를 매번 놓쳤다."""
+    try:
+        r = yt(["--simulate", "--skip-download", "--no-playlist", "--print", "id", url], timeout=90)
+    except CacheMiss as e:
+        return str(e)
+    except subprocess.TimeoutExpired:
+        return "응답 없음(90초)"
+    if r.returncode == 0:
+        return ""
+    err = (r.stderr or "").strip().splitlines()
+    return yt_why() or (err[-1][:160] if err else "이유 모름")
+
+
 def _guard_cache_mode():
     """캐시 모드에선 이 프로세스의 어떤 코드도 yt-dlp 를 못 띄운다(다른 모듈이 직접 부르는 길까지 막는 안전장치)."""
     if not CACHE:
@@ -230,15 +245,19 @@ def need_list(version: str, url: str = "", fmt: str = "") -> list[dict]:
         if VC.ready(VC.style_mode(version))["mode"] == "need_key":
             out.append({"id": "vmake", "label": "VMake 키(원본 자막 지우기)", "how": "setting"})
     if not CACHE:                       # 영상 받기·원본 찾기 = 유튜브(모든 형식) + 소재가 인스타·틱톡이면 그 계정
-        if customer:
-            if not _cookie_ok("youtube"):
-                out.append({"id": "login:youtube", "label": "유튜브 계정 연결", "how": "login"})
-        else:                            # 우리 PC = 파이어폭스 전용 프로필(주인 origin_find.yt_auth) — 묶음을 정했는데 로그인이 없으면 못 받는다
-            from tools.calcopy.origin_find import yt_auth
-            try:
-                yt_auth("https://www.youtube.com/")
-            except PermissionError:
-                out.append({"id": "login:youtube", "label": "유튜브 계정 연결", "how": "login"})
+        # 판정 = 받기(yt)가 실제로 부르는 origin_find.yt_auth 그대로(10-27 실사고: 회원 모드만 쿠키 파일을 보고 통과 → 받기는 mcp* 프로필 없음으로 멈춤).
+        # 브라우저 프로필로 받으면 그걸로 끝, 아니면 회원 PC 처럼 쿠키 파일(설정 파일·YTDLP_COOKIES_YOUTUBE)로 받으니 그 파일을 본다.
+        from tools.calcopy.origin_find import yt_auth
+        try:
+            auth = yt_auth("https://www.youtube.com/")
+        except PermissionError:
+            auth = None
+        if auth is None or (customer and "--cookies-from-browser" not in auth and not _cookie_ok("youtube")):
+            out.append({"id": "login:youtube", "label": "유튜브 계정 연결", "how": "login"})
+        elif "youtu" in str(url or "").lower():   # 로그인이 있어 보여도 그 소재 영상을 실제로 받아 본다(있는데 못 쓰는 경우를 여기서 잡는다)
+            why = yt_probe(str(url))
+            if why:
+                out.append({"id": "probe:youtube", "label": f"유튜브 받기 시험 실패 — {why}", "how": "login"})
         u = str(url or "").lower()
         for pf, name in (("instagram", "인스타그램"), ("tiktok", "틱톡")):
             if LOGIN_OK[pf][0] in u and customer and not _cookie_ok(pf):

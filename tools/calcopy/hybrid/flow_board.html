@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>숏템 제작 진행판</title>
+<!-- 디자인 기준: linear.app DESIGN.md(어두운 바탕·라벤더 강조 1색·얇은 테두리) + 상태색 4개. 데이터 = flow_board.py /api/state(엔진 기록 그대로) -->
+<style>
+:root{--canvas:#010102;--s1:#0f1011;--s2:#141516;--line:#23252a;--line2:#34343a;--ink:#f7f8f8;--muted:#d0d6e0;--subtle:#8a8f98;--ter:#62666d;--primary:#5e6ad2;--primary-h:#828fff;--ok:#27a644;--wait:#e8a23a;--bad:#e5484d;--rev:#b07cf0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--canvas);color:var(--ink);font-family:"Pretendard","Malgun Gothic",system-ui,sans-serif;font-size:14px;line-height:1.5}
+.app{display:grid;grid-template-rows:auto 1fr;height:100vh}
+.top{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--s1);flex-wrap:wrap}
+.top b{font-size:15px}
+.chip{border:1px solid var(--line2);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--muted)}
+.pill{border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600}
+.pill.run{background:rgba(94,106,210,.2);color:var(--primary-h)}.pill.wait{background:rgba(232,162,58,.18);color:var(--wait)}
+.pill.stop{background:rgba(229,72,77,.18);color:var(--bad)}.pill.done{background:rgba(39,166,68,.18);color:var(--ok)}.pill.idle{background:var(--s2);color:var(--subtle)}
+.sp{margin-left:auto}
+.btn{background:var(--primary);color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;transition:transform .15s ease-out,background .15s ease-out}
+.btn:hover{background:var(--primary-h)}.btn:active{transform:scale(.97)}.btn.ghost{background:transparent;border:1px solid var(--line2);color:var(--muted)}
+.btn[hidden]{display:none}
+label.auto{font-size:12px;color:var(--subtle);display:flex;gap:6px;align-items:center}
+.main{display:grid;grid-template-columns:230px 1fr 320px;min-height:0}
+@media(max-width:1100px){.main{grid-template-columns:1fr}.app{height:auto}}
+.col{border-right:1px solid var(--line);overflow:auto;padding:14px}.col:last-child{border-right:0}
+.h{font-size:11px;color:var(--ter);letter-spacing:.4px;margin-bottom:8px}
+.step{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;margin-bottom:4px;color:var(--ter);border:1px solid transparent;cursor:pointer}
+.step .d{width:10px;height:10px;border-radius:50%;background:var(--line2);flex:none}
+.step.done{color:var(--muted)}.step.done .d{background:var(--ok)}
+.step.cur{color:var(--ink);border-color:var(--primary)}.step.cur .d{background:var(--primary);animation:pulse 1.4s ease-out infinite}
+.step.cur.wait{border-color:var(--wait)}.step.cur.wait .d{background:var(--wait)}
+.step.cur.stop{border-color:var(--bad)}.step.cur.stop .d{background:var(--bad);animation:none}
+.step.sel{background:var(--s2)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(94,106,210,.55)}100%{box-shadow:0 0 0 8px rgba(94,106,210,0)}}
+.ws h2{font-size:17px;font-weight:600;margin-bottom:4px}.sub{color:var(--subtle);font-size:13px;margin-bottom:14px}
+.card{border:1px solid var(--line);border-radius:12px;background:var(--s1);padding:12px 14px;margin-bottom:10px}
+.card.stop{border-color:rgba(229,72,77,.6)}.card.wait{border-color:rgba(232,162,58,.6)}.card.rev{border-color:rgba(176,124,240,.45)}
+.card .t{font-size:11px;color:var(--ter);margin-bottom:4px}
+.card .msg{font-size:14px}
+.card pre{white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:12.5px;color:var(--muted);max-height:260px;overflow:auto;background:var(--s2);border-radius:8px;padding:8px;margin-top:6px}
+.tag{font-size:11px;border-radius:5px;padding:1px 6px;margin-right:6px;border:1px solid var(--line2);color:var(--subtle)}
+.tag.ok{color:var(--ok);border-color:rgba(39,166,68,.5)}.tag.bad{color:var(--bad);border-color:rgba(229,72,77,.5)}.tag.rev{color:var(--rev);border-color:rgba(176,124,240,.5)}
+.imgs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.imgs img{height:150px;border-radius:6px;border:1px solid var(--line2);cursor:zoom-in}
+.ev{font-size:12px;padding:6px 8px;border-radius:7px;background:var(--s1);border:1px solid var(--line);color:var(--muted);margin-bottom:5px;word-break:break-word}
+.ev time{color:var(--ter);margin-right:6px;font-variant-numeric:tabular-nums}.ev.bad{border-color:rgba(229,72,77,.45)}.ev.rev{border-color:rgba(176,124,240,.4)}.ev.ok{border-color:rgba(39,166,68,.4)}
+video{width:100%;max-width:360px;aspect-ratio:9/16;background:#000;border-radius:10px;border:1px solid var(--line2)}
+.zoom{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9}.zoom img{max-width:95vw;max-height:95vh}
+.empty{color:var(--ter);font-size:13px;padding:20px 0}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <b id="title">숏템 제작</b><span class="chip" id="ver"></span><span class="pill idle" id="pill">대기</span>
+    <span class="chip" id="el"></span>
+    <span class="sp"></span>
+    <label class="auto"><input type="checkbox" id="auto">대본 확인도 자동</label>
+    <button class="btn" id="approve" hidden>✓ 대본 승인하고 계속</button>
+    <button class="btn" id="retry" hidden>↻ 다시 시도</button>
+  </div>
+  <div class="main">
+    <aside class="col"><div class="h">단계 (엔진 단계표)</div><div id="steps"></div></aside>
+    <main class="col ws" id="ws"><div class="empty">기록을 읽는 중…</div></main>
+    <aside class="col"><div class="h">Claude · 엔진 작업 기록</div><div id="log"></div></aside>
+  </div>
+</div>
+<div class="zoom" id="zoom" onclick="this.style.display='none'"><img id="zimg"></div>
+<script>
+const $ = s => document.querySelector(s);
+let S = null, pick = null, lastSig = "";
+const esc = s => String(s ?? "").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const file = p => "/file?p=" + encodeURIComponent(p);
+async function post(u, b = {}) { const r = await fetch(u, {method: "POST", body: JSON.stringify(b)}); const j = await r.json(); tick(); return j; }
+$("#approve").onclick = () => post("/api/approve");
+$("#retry").onclick = () => post("/api/retry");
+$("#auto").onchange = e => { try { localStorage.setItem("auto", e.target.checked ? "1" : "") } catch {} };
+try { $("#auto").checked = !!localStorage.getItem("auto") } catch {}
+
+// 기록을 단계별로 묶는다 — 'call' 줄의 stage(엔진 _stage)가 기준, 뒤따르는 measure·review 는 그 단계에
+function group(st) {
+  const by = {}; let cur = 0;
+  for (const r of st.log) {
+    if (r.stage && r.stage.no) cur = r.stage.no;
+    if (r.end && r.end.stage) cur = r.end.stage.no || cur;
+    if (r.end && r.stage && r.stage.no) cur = r.stage.no;
+    (by[cur] = by[cur] || []).push(r);
+  }
+  return by;
+}
+function status(st) {
+  if (st.running) return st.waiting ? ["wait", "대본 확인 대기"] : ["run", "진행 중"];
+  if (st.end) return st.end.end === "done" ? ["done", "완성"] : st.end.end === "stop" ? ["stop", "멈춤"] : ["stop", st.end.end];
+  if (st.waiting) return ["wait", "대본 확인 대기"];
+  return ["idle", st.log.length ? "멈춰 있음" : "대기"];
+}
+function evLine(r) {
+  const t = `<time>${esc(r.t)}</time>`;
+  if (r.call) return `<div class="ev ${r.status === "stop" ? "bad" : r.status === "review" || r.status === "reject" ? "rev" : ""}">${t}${esc(r.msg || r.status)}${r.do && r.do.length ? ` · <span class="tag">${esc(r.do.join(", "))}</span>` : ""}</div>`;
+  if (r.measure) { const bad = Object.entries(r.measure).filter(([k, v]) => v !== "ok");
+    return `<div class="ev ${bad.length ? "bad" : "ok"}">${t}실행 결과 ${bad.length ? bad.map(([k, v]) => `<b>${esc(k)}</b>: ${esc(v)}`).join(" · ") : `${Object.keys(r.measure).length}개 ok`}</div>`; }
+  if (r.review) return `<div class="ev rev">${t}Claude 판정 <b>${esc(r.review)}</b> (${esc(r.model)}, ${r.sec}초)</div>`;
+  if (r.review_error) return `<div class="ev bad">${t}판정 오류 ${esc(r.why)}</div>`;
+  if (r.wait) return `<div class="ev">${t}${esc(r.wait)}</div>`;
+  if (r.end) return `<div class="ev ${r.end === "done" ? "ok" : "bad"}">${t}끝 — ${esc(r.end)} ${esc(r.why || "")} ${esc(r.fix || "")}</div>`;
+  if (r.start) return `<div class="ev">${t}시작 · ${esc(r.version)} (${esc(r.start)})</div>`;
+  return "";
+}
+function stagePanel(st, no) {
+  const name = st.stages[no - 1] || "";
+  const rows = (group(st)[no] || []);
+  const [cls] = status(st);
+  const isCur = st.cur && st.cur.no === no;
+  let h = `<h2>${no}. ${esc(name)}</h2><div class="sub">${isCur ? "지금 단계" : (st.cur && no < st.cur.no ? "끝난 단계" : "아직")} · 기록 ${rows.length}줄</div>`;
+  const end = st.end;
+  if (isCur && end && end.end !== "done") h += `<div class="card stop"><div class="t">막힘</div><div class="msg"><b>${esc(end.why || "")}</b></div><div class="msg" style="margin-top:4px">${esc(end.fix || "")}</div></div>`;
+  if (isCur && st.waiting) h += `<div class="card wait"><div class="t">대본 확인 — 승인하면 이어 갑니다</div><pre>${esc(JSON.stringify(st.sign, null, 1)).slice(0, 6000)}</pre></div>`;
+  for (const r of rows) {
+    if (r.call) h += `<div class="card"><div class="t">${esc(r.t)} · ${esc(r.phase)}</div><div class="msg">${esc(r.msg || "")}</div>${r.do && r.do.length ? `<div style="margin-top:6px">${r.do.map(d => `<span class="tag">${esc(d)}</span>`).join("")}</div>` : ""}${r.reject ? `<pre>반려: ${esc(JSON.stringify(r.reject))}</pre>` : ""}</div>`;
+    else if (r.measure) { const bad = Object.entries(r.measure).filter(([k, v]) => v !== "ok");
+      h += `<div class="card ${bad.length ? "stop" : ""}"><div class="t">${esc(r.t)} · 실행 결과</div>${Object.entries(r.measure).map(([k, v]) => `<span class="tag ${v === "ok" ? "ok" : "bad"}">${esc(k)} ${v === "ok" ? "✓" : ""}</span>${v === "ok" ? "" : `<pre>${esc(v)}</pre>`}`).join("")}</div>`; }
+    else if (r.review) { const rv = st.reviews.find(x => x.dir.slice(7).startsWith(r.review.slice(0, 40))) || st.reviews.find(x => x.dir.includes(r.review.slice(0, 30)));
+      h += `<div class="card rev"><div class="t">${esc(r.t)} · Claude 판정 <span class="tag rev">${esc(r.review)}</span> ${esc(r.model)} · ${r.sec}초</div>`;
+      if (rv) h += `<div class="t" style="margin-top:6px">질문</div><pre>${esc(rv.ask)}</pre>${rv.imgs.length ? `<div class="imgs">${rv.imgs.map(i => `<img src="${file(i)}" onclick="$('#zimg').src=this.src;$('#zoom').style.display='flex'">`).join("")}</div>` : ""}<div class="t" style="margin-top:6px">Claude 답</div><pre>${esc(rv.answer)}</pre>`;
+      else h += `<pre>${esc(r.head)}</pre>`;
+      h += `</div>`; }
+  }
+  if (end && end.end === "done" && no === st.stages.length) h += `<div class="card"><div class="t">완성본</div>${end.video ? `<video controls src="${file(end.video)}"></video><div class="sub" style="margin-top:6px">${esc(end.video)}</div>` : "영상 경로 없음"}</div>`;
+  if (!rows.length && !(isCur && (end || st.waiting))) h += `<div class="empty">이 단계 기록이 아직 없습니다.</div>`;
+  return h;
+}
+function render(st) {
+  S = st;
+  const [cls, txt] = status(st);
+  $("#title").textContent = st.ref ? "본보기 " + st.ref.replace(/.*\//, "") : "숏템 제작";
+  $("#ver").textContent = [st.version, st.fmt].filter(Boolean).join(" · ");
+  $("#pill").className = "pill " + cls; $("#pill").textContent = txt;
+  const first = st.log.find(r => r.t), last = [...st.log].reverse().find(r => r.t);
+  $("#el").textContent = first ? `${first.t} 시작 · 마지막 기록 ${last.t}` : "";
+  $("#approve").hidden = !(st.waiting && !st.running);
+  $("#retry").hidden = !(st.end && st.end.end !== "done" && !st.running);
+  if (st.waiting && !st.running && $("#auto").checked) post("/api/approve");
+  const curNo = st.end && st.end.end === "done" ? st.stages.length : (st.cur ? st.cur.no : 1);
+  $("#steps").innerHTML = st.stages.map((n, i) => { const no = i + 1;
+    const c = no < curNo || (st.end && st.end.end === "done") ? "done" : no === curNo ? "cur " + (cls === "stop" ? "stop" : cls === "wait" ? "wait" : "") : "";
+    return `<div class="step ${c} ${pick === no ? "sel" : ""}" data-no="${no}"><span class="d"></span>${no}. ${esc(n)}</div>`; }).join("");
+  document.querySelectorAll(".step").forEach(e => e.onclick = () => { pick = +e.dataset.no; lastSig = ""; render(S); });
+  $("#ws").innerHTML = stagePanel(st, pick || curNo);
+  $("#log").innerHTML = [...st.log].reverse().map(evLine).join("");
+}
+async function tick() {
+  try { const r = await fetch("/api/state"); const st = await r.json(); const sig = JSON.stringify([st.log.length, st.running, st.waiting, st.reviews.length, pick]);
+    if (sig !== lastSig) { lastSig = sig; render(st); } } catch (e) { $("#pill").className = "pill stop"; $("#pill").textContent = "진행판 연결 끊김"; }
+}
+tick(); setInterval(tick, 2000);
+</script>
+</body>
+</html>

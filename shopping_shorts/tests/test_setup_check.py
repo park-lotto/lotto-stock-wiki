@@ -55,6 +55,9 @@ def member_pc(monkeypatch, tmp_path):
     monkeypatch.setattr(VC, "key_source", lambda: "member")
     monkeypatch.setattr(VC, "member_key", lambda: "k" if have["vmake"] else "")
     monkeypatch.setattr(VC, "paid_off", lambda: False)
+    from tools.calcopy import origin_find as OF      # 받기(yt)가 쓰는 로그인 = 회원 PC 처럼 브라우저 프로필 없음(쿠키 파일만)
+    monkeypatch.setattr(OF, "yt_auth", lambda url: ["--js-runtimes", "node"])
+    monkeypatch.setattr(R, "yt_probe", lambda url: "")                  # 실제 받기 시험 = 성공(시험은 회선을 두드리지 않는다)
     return have, tmp_path, monkeypatch
 
 
@@ -137,3 +140,35 @@ def test_setup_fix_groups_disk_and_install():
     assert F.member_ok(fix, need_next=True), fix
     assert fix.count("다시 시도해 주시면") == 1 and "C 드라이브" in fix and "다시 설치" in fix, fix
     print(json.dumps(fix, ensure_ascii=False))
+
+
+def test_youtube_check_uses_same_auth_as_download(member_pc):
+    """10-27 실사고: 준비 확인은 쿠키 파일만 보고 통과, 실제 받기(runner_ops.yt → origin_find.yt_auth)는 전용 프로필(mcp*) 로그인 없음으로 멈춤.
+    준비 확인은 받기와 **같은 함수**로 판정해야 한다 — 받기가 PermissionError 면 쿠키 파일이 있어도 '유튜브 계정 연결'이 나와야 한다."""
+    have, tmp, mp = member_pc
+    have["typecast"] = True
+    mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, "youtube.com"))
+    from tools.calcopy import origin_find as OF
+
+    def no_login(url):
+        raise PermissionError("유튜브 전용 프로필(mcp*)에 로그인된 계정이 없다")
+    mp.setattr(OF, "yt_auth", no_login)
+    v = _version_of("연예인형")
+    assert "login:youtube" in _ids(R.need_list(v, "https://www.youtube.com/shorts/abcdefghijk", "연예인형"))
+    mp.setattr(OF, "yt_auth", lambda url: ["--cookies-from-browser", "firefox:x", "--js-runtimes", "node"])   # 프로필로 받는 PC = 쿠키 파일 없어도 받는다
+    mp.delenv("YTDLP_COOKIES_YOUTUBE")
+    assert "login:youtube" not in _ids(R.need_list(v, "https://www.youtube.com/shorts/abcdefghijk", "연예인형"))
+
+
+def test_probe_catches_download_failure_even_when_login_looks_fine(member_pc):
+    """뿌리(98 #157·#158·#159·10-27): 준비 확인이 파일·쿠키 이름만 보고 통과 → 실제 받기에서 멈춤이 꼴만 바꿔 4번.
+    준비 확인은 그 편 소재 영상을 **실제 받기 함수(yt)** 로 한 번 시험한다 — 실패하면 그 이유를 한 번에 보여 준다."""
+    have, tmp, mp = member_pc
+    have["typecast"] = True
+    mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, "youtube.com"))
+    mp.setattr(R, "yt_probe", lambda url: "Video unavailable")
+    v = _version_of("연예인형")
+    got = R.need_list(v, "https://www.youtube.com/shorts/abcdefghijk", "연예인형")
+    assert "probe:youtube" in _ids(got), got
+    assert "Video unavailable" in next(x["label"] for x in got if x["id"] == "probe:youtube")
+    assert "probe:youtube" not in _ids(R.need_list(v, "https://www.instagram.com/reel/xyz/", "연예인형"))   # 유튜브 소재만 시험
