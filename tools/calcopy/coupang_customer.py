@@ -13,7 +13,12 @@ def search(queries: list[str]) -> dict:
     if os.environ.get("CALCOPY_DEV_COUPANG_SERVER") == "1" and not (ak and sk):
         # 개발 PC 시험 전용 — 이 PC 회선은 쿠팡이 막는다(10-21 실측 '사용권한이 제한된 페이지') → '키 있는 회원' 길을 서버 관리자 키로 흉내.
         #   coupang_api_search(서버 SSH)는 설치본에 없다 — 회원 PC 에서는 ImportError 로 이 줄이 돌 수 없다
-        from tools.calcopy import coupang_api_search as srv
+        try:
+            from tools.calcopy import coupang_api_search as srv
+        except ImportError as e:   # 설치 묶음엔 없다(10-26 run4 — 시험 하네스가 이 스위치를 켠 채 묶음을 돌림) → 회원 길로(경보 한 줄)
+            print(f"[coupang] 개발 서버 검색 없음({e}) — 회원 키·크롬 길로", file=sys.stderr, flush=True)
+            srv = None
+    if os.environ.get("CALCOPY_DEV_COUPANG_SERVER") == "1" and not (ak and sk) and srv is not None:
         os.environ.pop("CALCOPY_CUSTOMER_MODE", None)
         try:
             return srv.search(queries)

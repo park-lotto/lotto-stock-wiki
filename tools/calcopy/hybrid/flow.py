@@ -314,8 +314,10 @@ def _txt(s: str) -> dict:
 def _coupang_down(m: dict, key: str = "coupang") -> None:
     """쿠팡 검색이 아예 안 됐으면(runner c_coupang search_failed — 회선 막힘 등) '제품 없음'으로 고객에게 다른 영상을 권하지 않는다(사장님 10-26).
     멈춤 → 다시 시도(retry)하면 검색한 단계(_asker)부터 이어 간다."""
-    if (m.get(key) or {}).get("search_failed"):
-        raise _Stop("쿠팡 검색이 잠시 막혀 있어요", "몇 분 뒤 다시 시도해 주시면 제품 확인부터 이어 갈게요", auto=True)
+    c = m.get(key) or {}
+    if c.get("search_failed") or c.get("error"):     # 실행기 오류(10-26 run4: ImportError)도 '검색 안 됨' — '제품 없음'·'제품 이름 모름'으로 오진하지 않는다
+        raise _Stop("쿠팡 검색이 잠시 막혀 있어요", "몇 분 뒤 다시 시도해 주시면 제품 확인부터 이어 갈게요", auto=True,
+                    detail=str(c.get("error") or "search_failed")[:300])
 
 
 class _Stop(Exception):
@@ -1251,7 +1253,9 @@ def _given_query(g: str) -> tuple[str, str]:
 
 
 def ph_given(st, m, rp, u):
-    q, _ = _given_query(st["given"])
+    q, pid = _given_query(st["given"])
+    if not q and pid:     # 상품 주소만 받았다(10-26 run4 제작자 과제가 쿠팡 주소를 줌) — 검색어는 원본 판독 검색어로, 고르는 건 그 상품번호(ph_cand_look)
+        q = next((x for x in (st.get("coupang_qs") or []) + [str(w) for w in (st.get("read") or {}).get("product_words") or []] if str(x).strip()), "")
     if not q:
         raise _Stop("정해 주신 제품 이름을 알 수 없어요", "이 영상은 여기서 마칠게요", final=True)
     st["log"].append("원본에 제품 장면 없음 → 고객이 정한 제품으로")
