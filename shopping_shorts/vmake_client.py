@@ -185,6 +185,22 @@ def _orphan_charge_alert(key, ent):
         print("[vmake] 번호 없는 과금 경보 실패(무해): %r" % (e,), flush=True)
 
 
+def _lent_charge(api_key, video_path, seconds, tier):
+    """과금 직후 — 빌려준 키면 크레딧을 센다(판단은 keyroute.lent_key_charge). 실패는 무해(자막제거를 막지 않는다)."""
+    try:
+        from shopping_shorts import config, keyroute
+        from shopping_shorts.mix_pipeline import clean_credit_estimate
+        from shopping_shorts.store import Store
+        sec = seconds if seconds is not None else _seconds(video_path)
+        credits = clean_credit_estimate(sec, tier)
+        if credits is None:
+            print("[vmake] 빌려준 키 한도: 영상 길이를 못 재 세지 못했다 path=%s" % (video_path,), flush=True)
+            return
+        keyroute.lent_key_charge(Store(config.DB_PATH), api_key, credits)
+    except Exception as e:                        # noqa: BLE001
+        print("[vmake] 빌려준 키 한도 세기 실패(무해): %r" % (e,), flush=True)
+
+
 def _pending_drop(out_path, key):
     if not key:
         return
@@ -325,15 +341,20 @@ def remove_subtitles(video_path, api_key, out_path, poll_timeout=1200, tier=TIER
         except Exception as e:                    # noqa: BLE001 — 못 이으면 종전처럼 새로 맡긴다
             print("[vmake] 이어받기 실패 → 새로 맡긴다: %r" % (e,), flush=True)
             _pending_drop(out_path, key)
-    if key:
-        # ★과금(consume) 직후·제출 전에 '돈 나감' 표식을 먼저 적는다 — 그 사이에 죽으면 다음 클릭이 안다
-        _orig_consume = client._consume_permission
-
+    _orig_consume = getattr(client, "_consume_permission", None)
+    if _orig_consume is not None:
+        # ★과금(consume) 직후·제출 전에 '돈 나감' 표식을 먼저 적는다 — 그 사이에 죽으면 다음 클릭이 안다.
+        #   빌려준 키 한도(관제 277)도 같은 자리에서 센다 — 돈이 나간 그 순간이 기준이다.
         def _consume_marked(url, task_name):
             r = _orig_consume(url, task_name)
-            _pending_put(out_path, key, None, want_sec, consumed=True)
+            if key:
+                _pending_put(out_path, key, None, want_sec, consumed=True)
+            _lent_charge(api_key, video_path, want_sec, tier)
             return r
         client._consume_permission = _consume_marked
+    else:
+        print("[vmake] 이 SDK엔 _consume_permission이 없다 — 빌려준 키 한도를 못 센다", flush=True)
+    if key:
         result = client.run_task(task_name=task, image_path=video_path, params=params,
                                  on_async_submitted=lambda tid: _pending_put(out_path, key, tid, want_sec))
     else:
