@@ -181,16 +181,43 @@ def draft_materials(skel: dict, defaults: dict, assets: dict, asset_file) -> dic
 
 
 # ── 4) 1초 시트 ────────────────────────────────────────────────────────────
+def grab_frames(video: Path, ts: list[float], size: tuple[int, int] | None = None, width: int | None = None, fps: float = 30.0) -> dict:
+    """여러 시각의 프레임을 **한 번 디코드**(ffmpeg select 1회)로 → {t: PIL RGB}. 시각마다 -ss 로 따로 띄우던 것(1초 시트·0.1초 띠 — 편당 30~90번)과 같은 프레임:
+    입력 -ss t(정확 탐색) = pts ≥ t 인 첫 프레임 = 번호 ceil(t·fps). size=(w,h) 또는 width(높이는 짝수 비율, scale=w:-2). 영상 끝 밖 시각은 빠진다(옛 grab 은 빈 결과)."""
+    import math
+    import numpy as np
+    from PIL import Image
+    if not ts:
+        return {}
+    num = {t: max(0, math.ceil(round(float(t) * fps, 6))) for t in ts}
+    fs = sorted(set(num.values()))
+    vw, vh, _ = _probe(video)
+    if size:
+        w, h = int(size[0]), int(size[1])
+        sc = f"scale={w}:{h}"
+    else:
+        w = int(width)
+        h = int(round(vh * w / vw / 2) * 2) if vw else w
+        sc = f"scale={w}:-2"
+    sel = "+".join(f"eq(n\\,{f})" for f in fs)
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vf", f"select={sel},{sc}", "-fps_mode", "passthrough", "-f", "rawvideo",
+                          "-pix_fmt", "rgb24", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
+    arr = np.frombuffer(raw, np.uint8)
+    n = len(arr) // (w * h * 3)
+    got = dict(zip(fs, arr[:n * w * h * 3].reshape(n, h, w, 3))) if n else {}
+    return {t: Image.fromarray(got[f].copy()) for t, f in num.items() if f in got}
+
+
 def sheet_1s(video: Path, dst: Path, cols: int = 8):
     from PIL import Image, ImageDraw
-    import io
     _, _, dur = _probe(video)
     tiles = []
-    for k in range(int(dur)):
-        b = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{k + 0.5:.1f}", "-i", str(video), "-frames:v", "1", "-vf", "scale=180:-2",
-                            "-f", "image2pipe", "-vcodec", "png", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
-        if b:
-            im = Image.open(io.BytesIO(b)).convert("RGB"); ImageDraw.Draw(im).text((3, 3), f"{k + 0.5:.1f}s", fill=(255, 0, 0)); tiles.append(im)
+    ts = [round(k + 0.5, 1) for k in range(int(dur))]
+    got = grab_frames(video, ts, width=180)          # 한 번 디코드(10-26 검수 단축 ② — 옛: 초마다 ffmpeg -ss 한 번씩, 편당 16~33초)
+    for t in ts:
+        im = got.get(t)
+        if im is not None:
+            ImageDraw.Draw(im).text((3, 3), f"{t:.1f}s", fill=(255, 0, 0)); tiles.append(im)
     w, h = tiles[0].size
     S = Image.new("RGB", (w * cols, h * ((len(tiles) + cols - 1) // cols)), "white")
     for i, im in enumerate(tiles):

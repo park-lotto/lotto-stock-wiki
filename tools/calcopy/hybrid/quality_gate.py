@@ -989,15 +989,16 @@ EYE_Q9 = ("E9", "업그레이드(해당 판만)", "바꾼 칸마다 §4-2 측정
 def _strip(final: Path, t0: float, t1: float, dst: Path, step: float = 0.1, cols: int = 10, w: int = 162):
     """t0~t1 을 step 초마다 한 칸(위에 시각) — 0.1초 띠."""
     from PIL import Image, ImageDraw
-    from tools.calcopy.hybrid.compare_sheet import grab
+    from tools.calcopy.engine.remake import grab_frames
     h = round(w * 1920 / 1080)
     ts = [round(t0 + k * step, 2) for k in range(int(round((t1 - t0) / step)))]
+    got = grab_frames(final, ts, size=(w, h))      # 한 번 디코드(10-26 검수 단축 ② — 옛: 칸마다 ffmpeg -ss 한 번씩 30~50번, 같은 프레임)
     rows_n = (len(ts) + cols - 1) // cols
     im = Image.new("RGB", (cols * w, rows_n * (h + 18)), (16, 16, 16))
     d = ImageDraw.Draw(im)
     for k, t in enumerate(ts):
         x, y = (k % cols) * w, (k // cols) * (h + 18)
-        im.paste(grab(final, t, (w, h)), (x, y + 18))
+        im.paste(got.get(t) or Image.new("RGB", (w, h), (60, 0, 0)), (x, y + 18))      # 못 뽑은 칸 = 옛 grab 과 같은 붉은 칸
         d.text((x + 4, y + 2), f"{t:.1f}s", fill=(255, 230, 0))
     im.save(dst, quality=85)
     return dst
