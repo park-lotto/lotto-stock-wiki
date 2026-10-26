@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 숏템메이커 — 구글 버텍스 API 자동 설정 (관제 096, 2026-10-03)
 # 구글 클라우드 셸에서 한 줄로 실행한다:
-#   curl -fsSL https://shoppingshorts.duckdns.org/landing/vertex_setup.sh | bash
+#   curl -fsSL https://stmaker.kr/landing/vertex_setup.sh | bash
 # 설명서 ⑧의 2~4단계(API 사용 · 서비스 계정 · 역할 · 키 생성 차단 풀기 · 키 만들기)를 대신 한다.
 # 1단계(무료 체험 가입 = 결제 계정)는 본인 확인이라 대신 못 한다 — 없으면 안내하고 멈춘다.
 # 만든 것은 전부 이 스크립트 전용 프로젝트(라벨 shortsmaker=1) 안에만 둔다. 다른 프로젝트는 건드리지 않는다.
