@@ -254,6 +254,8 @@ body.is-admin .catmove{display:flex}
 .catmove button{font-size:10px;padding:2px 5px;border-radius:6px;border:1px solid #2a3a36;background:transparent;color:#9ab;cursor:pointer}
 .catmove button.on{background:#1fd1a0;color:#062;border-color:#1fd1a0;font-weight:700}
 .catmove button:hover{border-color:#1fd1a0;color:#dff}
+/* 폰 전용(관제 279) — 폰 브라우저엔 담기 확장이 없어 링크 붙여넣기 담기를 보여 준다 */
+@media(min-width:761px){.mob-only{display:none!important}}
 </style>
 <style id="rankSkin">
 /* ── 레퍼런스 랭킹 상단 리디자인 (다크 시네마 + 민트 네온, 2026-07-23) ── */
@@ -4462,18 +4464,26 @@ function lensOpenAll(shortcode, idx){
   const L = st.lang || 'auto';
   const targets = lensOpenTargets(c, L);
   if(!targets.length) return;
-  let opened = 0;
-  targets.forEach(t => {
-    const u = t.url;
-    // ★window.open이 null이면 브라우저가 팝업을 막은 것이다. 조용히 넘기면
-    //   "눌렀는데 하나만 열린다"가 되고 원인을 알 수 없다 — 세어서 알린다.
-    // ★'noopener'를 주면 window.open은 **열려도 늘 null**을 돌려준다(명세). 그래서 5개가 다 열려도
-    //   "0/5개만 열렸다"고 떴다(2026-09-14 실클릭 실측). 창을 받아 opener만 끊는다.
-    try { const w=window.open(u, '_blank'); if(w){ try{ w.opener=null; }catch(_){} opened++; } } catch(e){}
-  });
+  // ★이어 열기(관제 279, 2026-10-27 사장님 "6개 한번에 열기 누르면 샤오홍슈만 앞에 뜨고 지우면 다 닫혀 있고"):
+  //   크롬은 팝업을 허용하기 전엔 한 클릭에 탭 **하나**만 연다. 막힌 곳은 줄(st.openQ)에 남겨 두고
+  //   버튼을 「다음: 도우인 열기 (2/6)」로 바꿔 누를 때마다 하나씩 이어서 연다(한 클릭 = 한 탭은 크롬이 허용).
+  const _open1 = u => { try { const w=window.open(u, '_blank'); if(w){ try{ w.opener=null; }catch(_){} return true; } } catch(e){} return false; };
+  const q = st.openQ;
+  if(q && q.idx===idx && q.rest.length){
+    if(_open1(q.rest[0].url)) q.rest.shift();
+    if(!q.rest.length) st.openQ = null;
+    st.openNote = st.openQ ? {opened: q.total - q.rest.length, total: q.total} : null;
+    renderLens(shortcode); return;
+  }
+  // ★window.open이 null이면 브라우저가 팝업을 막은 것이다. 조용히 넘기면
+  //   "눌렀는데 하나만 열린다"가 되고 원인을 알 수 없다 — 세어서 알린다.
+  // ★'noopener'를 주면 window.open은 **열려도 늘 null**을 돌려준다(명세). 그래서 5개가 다 열려도
+  //   "0/5개만 열렸다"고 떴다(2026-09-14 실클릭 실측). 창을 받아 opener만 끊는다.
+  const rest = targets.filter(t => !_open1(t.url));
   // ★크롬은 한 번 클릭에 새 탭을 **하나만** 허용한다(2026-09-22 실제 크롬 실측: 기본 설정 1/5, 허용 후 5/5).
   //   예전엔 11.5px 주황 글씨 한 줄이라 고객이 못 보고 "샤오홍슈만 열린다"고 문의했다(배승훈님 등).
-  st.openNote = (opened >= targets.length) ? null : {opened, total: targets.length};
+  st.openQ = rest.length ? {idx, rest, total: targets.length} : null;
+  st.openNote = rest.length ? {opened: targets.length - rest.length, total: targets.length} : null;
   renderLens(shortcode);
 }
 
@@ -4486,9 +4496,9 @@ function _lensPopupHelp(n){
     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:13px;line-height:2">
       <span>① 주소창 오른쪽 끝</span>${pill('🚫 팝업 차단됨','#3a3f4b','#fff')}<span>아이콘 누르기</span>${arrow}
       <span>②</span>${pill('◉ 항상 허용','#1a73e8','#fff')}<span>선택 →</span>${pill('완료','#e8eaed','#1f1f1f')}${arrow}
-      <span>③ <b>↗ 6곳 새 탭 열기</b>를 다시 누르기</span>
+      <span>③ 다음부터 여섯 곳이 한 번에 열립니다</span>
     </div>
-    <div style="font-size:12px;color:var(--sub);margin-top:6px">한 번만 허용해 두면 다음부터는 여섯 곳이 한 번에 열립니다.</div>
+    <div style="font-size:13px;margin-top:6px">지금은 주황 <b>↗ 다음: … 열기</b> 버튼을 누를 때마다 남은 사이트가 <b>하나씩</b> 이어서 열려요.</div>
   </div>`;
 }
 
@@ -4664,7 +4674,9 @@ function renderLens(shortcode, mountId){
         ${plats.map(p=>p.url
           ?`<a href="${p.k==='xiaohongshu'?_openUrl(p.url):p.url}" target="_blank" rel="noopener" title="${p.name}에서 '${esc(p.q)}' 검색 — 새 탭으로 엽니다" style="${_icoCss}">${p.ico}<small style="font-size:10.5px;color:var(--sub)">${p.s}</small></a>`
           :`<span title="${p.name}: 이 언어의 검색어가 없습니다" style="${_icoCss};opacity:.25;cursor:default">${p.ico}<small style="font-size:10.5px;color:var(--sub)">${p.s}</small></span>`).join('')}
-        ${plats.some(p=>p.url)?`<button onclick="lensOpenAll('${shortcode}',${idx})" title="샤오홍슈·도우인·틱톡·인스타·핀터레스트·유튜브를 '${esc(kw||'')}'로 한꺼번에 새 탭으로 엽니다. 처음엔 브라우저가 팝업을 막을 수 있어요 — 주소창 오른쪽 아이콘에서 «항상 허용»" style="${_b}">↗ ${plats.filter(p=>p.url).length}곳 새 탭 열기</button>`:''}
+        ${plats.some(p=>p.url)?(()=>{ const oq=(st.openQ&&st.openQ.idx===idx&&st.openQ.rest.length)?st.openQ:null;
+          if(oq){ const nx=_plats0.find(p=>p.k===oq.rest[0].k)||{}; return `<button onclick="lensOpenAll('${shortcode}',${idx})" title="크롬이 막은 사이트를 하나씩 이어서 엽니다" style="${_b};background:#f59e0b;border-color:#f59e0b;color:#1a1206;font-weight:800">↗ 다음: ${nx.name||''} 열기 (${oq.total-oq.rest.length+1}/${oq.total})</button>`; }
+          return `<button onclick="lensOpenAll('${shortcode}',${idx})" title="샤오홍슈·도우인·틱톡·인스타·핀터레스트·유튜브를 '${esc(kw||'')}'로 한꺼번에 새 탭으로 엽니다. 처음엔 브라우저가 팝업을 막을 수 있어요 — 주소창 오른쪽 아이콘에서 «항상 허용»" style="${_b}">↗ ${plats.filter(p=>p.url).length}곳 새 탭 열기</button>`; })():''}
       </div></div>`;
   }).join('');
   const findBox=`<div style="${_secCss}">
@@ -4678,6 +4690,7 @@ function renderLens(shortcode, mountId){
       ${(!st.kwSearching&&st.kwCost!=null)?`<div style="font-size:11px;color:var(--sub);margin:4px 0">${st.kwCost>0?('이번 검색 $'+st.kwCost.toFixed(3)):'무료 검색'}</div>`:''}
       ${(!st.cnSearching&&st.cnCost!=null)?`<div style="font-size:11px;color:var(--sub);margin:4px 0">${st.cnCost>0?('이번 검색 $'+st.cnCost.toFixed(3)):'무료 검색'}</div>`:''}
       ${rows||`<div style="font-size:12px;color:var(--sub);padding:6px 0">아직 검색어가 없습니다 — 위 ①에 제품을 넣고 <b>✨ 검색어 만들기</b>를 누르세요.</div>`}
+      ${rows?`<a class="mob-only" href="/share" style="display:block;margin-top:10px;padding:13px 12px;border-radius:12px;background:#1d4f3c;border:1px solid #34d399;color:#d1fae5;font-weight:800;font-size:15px;text-align:center;text-decoration:none">📥 링크로 담기<small style="display:block;font-weight:500;font-size:12px;opacity:.85;margin-top:3px">폰에선 담기 버튼이 안 떠요 — 앱에서 공유 → 링크 복사 후 여기에 붙여넣기</small></a>`:''}
       ${rows?`<div style="font-size:11.5px;color:var(--sub);margin-top:8px">🔎 아래로 모아서 보기 = 유튜브·핀터레스트·네이버클립에서 찾아 이 창 아래 ③에 쌓음(무료) · 샤/도/틱/인/핀/유 = 그 사이트를 새 탭으로 열기</div>`:''}
     </div>`;
   // ── ③ 모인 영상 — sticky(칩+필터줄만. 2026-08-02 모바일 사고 주석 참고: 검색칸까지 넣으면 카드가 눌린다) ──
