@@ -157,6 +157,77 @@ def rel(W: Path, p: Path) -> str:
 
 
 # ── cmd ───────────────────────────────────────────────────────────────────
+LOGIN_OK = {"youtube": ("youtube.com", ("__Secure-3PSID", "SAPISID")), "instagram": ("instagram.com", ("sessionid",)),
+            "tiktok": ("tiktok.com", ("sessionid", "sid_tt"))}     # 숏템 MCP logins.js PLATFORMS 와 같은 표(회원이 설정 화면 '영상 받기 계정'에서 연결)
+
+
+def _cookie_ok(platform: str) -> bool:
+    """회원 PC 로그인 연결 — 숏템 MCP 가 만든 cookies.txt(엔진 환경 YTDLP_COOKIES_YOUTUBE)에 그 사이트 로그인 쿠키가 살아 있나. 이름·만료만 보고 값은 읽지 않는다."""
+    f = os.environ.get("YTDLP_COOKIES_YOUTUBE") or ""
+    if platform == "instagram" and os.path.isfile(os.environ.get("INSTAGRAM_SESSION_PATH") or ""):
+        return True
+    if not f or not os.path.isfile(f):
+        return False
+    dom, names = LOGIN_OK[platform]
+    now = time.time()
+    for ln in Path(f).read_text(encoding="utf-8", errors="replace").splitlines():
+        if not ln or (ln.startswith("#") and not ln.startswith("#HttpOnly_")):
+            continue
+        r = ln.replace("#HttpOnly_", "", 1).split("\t")
+        if len(r) >= 7 and r[0].lstrip(".").endswith(dom) and r[5] in names and r[6] and (r[4] == "0" or float(r[4] or 0) > now):
+            return True
+    return False
+
+
+def need_list(version: str, url: str = "", fmt: str = "") -> list[dict]:
+    """첫 제작 요청 준비 점검 — 판단 주인 한 곳(사장님 10-26 "제작에 필요한 도구·API 키를 처음에 점검, 없으면 한 번에 요구 · 도중엔 요구 금지").
+    이 판(목소리 엔진·형식·박힌 글자 처리)과 소재 주소에 **실제로 쓰이는 것만** 잰다. 있음 판정은 실제로 부르는 쪽 함수를 그대로 부른다(두 벌 금지).
+    → [{id, label(회원 화면 이름), how(setting·login·disk·install)}] — 빈 목록 = 준비 끝. 키 값은 읽어 '있음/없음'만, 출력하지 않는다."""
+    from tools.calcopy.hybrid import styles as STY
+    from tools.calcopy.engine import voices as VO
+    out = []
+    tools = {t: bool(shutil.which(t)) for t in ("ffmpeg", "ffprobe")} | {"yt-dlp": bool(shutil.which("yt-dlp")) or bool(CACHE)}
+    if not all(tools.values()):
+        out.append({"id": "tools:" + ",".join(k for k, v in tools.items() if not v), "label": "숏템 영상 도구", "how": "install"})
+    customer = os.environ.get("CALCOPY_CUSTOMER_MODE") == "1"
+    st = STY.load(version)
+    voice = st.get("voice") or {}
+    prov = VO.provider_of(voice)
+    if not PAID_OFF:                    # 돈 0 스위치 = 합성은 캐시만(tts_cache_miss) — 목소리 키를 부르지 않는다
+        if prov in (None, "typecast"):  # 옛 꼴 모르는 id = 타입캐스트 길(narr_align.old_path)
+            from shopping_shorts.channelkit import providers
+            if not providers.typecast_key(None):          # narr_align 합성이 쓰는 그 함수(환경변수 → ~/.volcano/keys/typecast)
+                out.append({"id": "typecast", "label": "목소리 키(타입캐스트)", "how": "setting"})
+        elif prov == "elevenlabs":      # narr_align._synth_eleven 과 같은 조건 — 회원 PC 만 회원 키(우리 PC 는 서버 미나)
+            if customer and not os.environ.get("ELEVENLABS_API_KEY") and os.environ.get("CALCOPY_DEV_MINA_SERVER") != "1":
+                out.append({"id": "elevenlabs", "label": "목소리 키(일레븐랩스)", "how": "setting"})
+        elif prov == "fish":
+            from tools.calcopy.engine import preset_make as PM
+            if not PM._member_key("fish"):
+                out.append({"id": "fish", "label": "목소리 키(피쉬)", "how": "setting"})
+    if not PAID_OFF and not have_speechmatics():     # 받아쓰기(원음·완성본 줄별 대조 narr_verify·asr_cross) — 사장님 10-26 '스피치매틱스도 무료 API 필요'. 키 자리 = asr_local.speechmatics_key
+        out.append({"id": "speechmatics", "label": "스피치매틱스 키(무료)", "how": "setting"})
+    if fmt == "해외원본형":              # 박힌 자막 지우기(VMake)는 이 형식만 부른다(flow f_clean·f_render) — 판 orig_text.mode·키 자리 판단 = vmake_clean.ready
+        from tools.calcopy import vmake_clean as VC
+        if VC.ready(VC.style_mode(version))["mode"] == "need_key":
+            out.append({"id": "vmake", "label": "VMake 키(원본 자막 지우기)", "how": "setting"})
+    if not CACHE:                       # 영상 받기·원본 찾기 = 유튜브(모든 형식) + 소재가 인스타·틱톡이면 그 계정
+        if customer:
+            if not _cookie_ok("youtube"):
+                out.append({"id": "login:youtube", "label": "유튜브 계정 연결", "how": "login"})
+        else:                            # 우리 PC = 파이어폭스 전용 프로필(주인 origin_find.yt_auth) — 묶음을 정했는데 로그인이 없으면 못 받는다
+            from tools.calcopy.origin_find import yt_auth
+            try:
+                yt_auth("https://www.youtube.com/")
+            except PermissionError:
+                out.append({"id": "login:youtube", "label": "유튜브 계정 연결", "how": "login"})
+        u = str(url or "").lower()
+        for pf, name in (("instagram", "인스타그램"), ("tiktok", "틱톡")):
+            if LOGIN_OK[pf][0] in u and customer and not _cookie_ok(pf):
+                out.append({"id": "login:" + pf, "label": name + " 계정 연결", "how": "login"})
+    return out
+
+
 def c_env(W, d):
     from tools.calcopy.hybrid import styles as STY
     du = shutil.disk_usage(str(W))
@@ -164,12 +235,16 @@ def c_env(W, d):
     keys = {"elevenlabs": bool(os.environ.get("ELEVENLABS_API_KEY")), "typecast": bool(os.environ.get("TYPECAST_API_KEY")),
             "coupang": bool(os.environ.get("COUPANG_ACCESS_KEY") and os.environ.get("COUPANG_SECRET_KEY")), "speechmatics": have_speechmatics()}
     dev = os.environ.get("CALCOPY_DEV_MINA_SERVER") == "1" or os.environ.get("SHORTEM_DEV") == "1"
-    tools = {t: bool(shutil.which(t)) for t in ("ffmpeg", "ffprobe")} | {"yt-dlp": bool(shutil.which("yt-dlp")) or bool(CACHE)}
-    if not all(tools.values()):
-        return {"error": f"실행 도구 없음: {[k for k, v in tools.items() if not v]}"}
-    from tools.calcopy.engine import encoder
-    return {"keys": keys, "dev": dev, "cache": bool(CACHE), "disk_gb": round(du.free / 1e9, 1), "voice": voice,
-            "encoder": encoder.kind()}       # 'gpu'(NVENC) | 'cpu' — 그래픽카드 있으면 렌더가 GPU 우선(98 #79)
+    missing = need_list(d["version"], d.get("url") or "", d.get("fmt") or "")
+    if du.free / 1e9 < 1.5:
+        missing.append({"id": "disk", "label": "C 드라이브 빈 공간 1.5GB", "how": "disk"})
+    try:
+        from tools.calcopy.engine import encoder
+        enc = encoder.kind()
+    except Exception:  # noqa: BLE001 — 도구 없음은 missing 이 이미 알린다
+        enc = "cpu"
+    return {"keys": keys, "dev": dev, "cache": bool(CACHE), "disk_gb": round(du.free / 1e9, 1), "voice": voice, "missing": missing,
+            "encoder": enc}       # 'gpu'(NVENC) | 'cpu' — 그래픽카드 있으면 렌더가 GPU 우선(98 #79)
 
 
 def c_bench(W, d):

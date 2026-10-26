@@ -112,12 +112,17 @@ def _whisper(a) -> dict:
 
 def speechmatics_key() -> str:
     """키 자리 한 곳: 환경변수 SPEECHMATICS_API_KEY → SPEECHMATICS_KEY → ~/.volcano/keys/speechmatics(볼케이노 실행기와 같은 자리, 값 한 줄).
-    10-21 사장님 '스피치매틱스 승인' — 서버(/etc/shopping-shorts.env·DB)에는 키가 없고 이 PC 볼케이노 키 파일에 있다(실측)."""
+    10-21 사장님 '스피치매틱스 승인' — 서버(/etc/shopping-shorts.env·DB)에는 키가 없고 이 PC 볼케이노 키 파일에 있다(실측).
+    10-26 사장님 '스피치매틱스도 무료 API 필요' — 회원 PC 는 회원 본인 키(~/.shortem/keys/speechmatics, 숏템 설정 화면이 저장) = 첫 준비 점검 필수 항목(runner_ops.need_list)."""
     v = (os.environ.get("SPEECHMATICS_API_KEY") or os.environ.get("SPEECHMATICS_KEY") or "").strip()
     if v:
         return v
-    p = os.path.expanduser("~/.volcano/keys/speechmatics")
-    return open(p, encoding="utf-8").read().strip() if os.path.exists(p) else ""
+    for p in (os.path.expanduser("~/.shortem/keys/speechmatics"), os.path.expanduser("~/.volcano/keys/speechmatics")):   # 회원 키 자리(숏템 설정 화면 · 다른 회원 키와 같은 방식) → 볼케이노 자리
+        if os.path.exists(p):
+            v = open(p, encoding="utf-8").read().strip()
+            if v:
+                return v
+    return ""
 
 
 def _speechmatics(path: str) -> dict:

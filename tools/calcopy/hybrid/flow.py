@@ -597,7 +597,27 @@ def _ar(version: str) -> float:
 
 # ── 0 준비 ────────────────────────────────────────────────────────────────
 def ph_setup(st, m, rp, u):
-    return {"do": [{"id": "env", "cmd": "env", "version": st["version"]}], "then": "setup_check"}
+    return {"do": [{"id": "env", "cmd": "env", "version": st["version"], "url": st.get("ref") or "", "fmt": _fmt(st)}], "then": "setup_check"}
+
+
+SETUP_WHY = "만들기 전에 준비가 필요한 것이 있어요"
+
+
+def setup_fix(missing: list) -> str:
+    """준비 점검(runner_ops.need_list)에서 빠진 것 전부를 한 줄로 — 회원에게 요구해도 되는 유일한 문구(사장님 10-26). 설정 화면 것(키·계정 연결)은 묶어 한 번에."""
+    groups: dict = {}
+    for x in missing:
+        how = x.get("how") or "setting"
+        groups.setdefault("setting" if how in ("setting", "login") else how, []).append(x)
+    parts = []
+    for g, xs in groups.items():
+        if g == "setting":
+            hows = {x.get("how") or "setting" for x in xs}
+            lead = "설정 화면에서 " + ("넣고 연결하고" if hows == {"setting", "login"} else "연결하고" if hows == {"login"} else "넣고")
+        else:
+            lead = {"disk": "C 드라이브 공간을 비우고", "install": "숏템을 다시 설치하고"}.get(g, "설정 화면에서 넣고")
+        parts.append(" · ".join(str(x.get("label")) for x in xs) + " — " + lead)
+    return " / ".join(parts) + " 다시 시도해 주시면 바로 이어 갈게요"
 
 
 def ph_setup_check(st, m, rp, u):
@@ -605,12 +625,10 @@ def ph_setup_check(st, m, rp, u):
     if env.get("error"):
         st["log"].append("준비 확인 실패: " + str(env["error"])[:300])
         raise _Stop("이 PC 준비가 아직 덜 됐어요", "숏템 준비 점검을 한 번 한 뒤 다시 시도해 주세요")
-    voice = (_style(st["version"]).get("voice") or {}).get("voice_id", "")
-    need = "elevenlabs" if voice.startswith("kr-mina") else "typecast"
-    if not (env.get("keys") or {}).get(need) and not env.get("dev"):
-        raise _Stop("목소리 키가 없어요", f"설정 화면 '소리' 칸에 {'일레븐랩스' if need == 'elevenlabs' else '타입캐스트'} 키를 넣어 주세요")
-    if float(env.get("disk_gb") or 99) < 1.5:
-        raise _Stop("PC 저장 공간이 모자라요(1편에 1.5GB)", "C 드라이브 공간을 비운 뒤 다시 시도해 주세요")
+    miss = env.get("missing") or []     # 판단 주인 = runner_ops.need_list(이 판·소재에 실제로 쓰는 도구·키·로그인만) — 여기는 멈춤/진행만
+    if miss:
+        st["log"].append("준비 확인: 빠진 것 " + ", ".join(str(x.get("id")) for x in miss))
+        raise _Stop(SETUP_WHY, setup_fix(miss), retry="setup")       # 다시 시도 = 준비를 다시 잰다
     st["env"] = {k: env.get(k) for k in ("keys", "dev", "cache", "asr")}
     return {"goto": "bench"}
 
@@ -623,7 +641,7 @@ def ph_bench(st, m, rp, u):
 def ph_bench_got(st, m, rp, u):
     b = m.get("bench") or {}
     if b.get("error"):
-        raise _Stop("영상을 받지 못했어요", "영상 주소가 맞는지, 유튜브 로그인 연결이 되어 있는지 확인해 주세요", auto=True)
+        raise _Stop("영상을 받지 못했어요", "잠시 뒤 다시 시도해 주시면 받기부터 이어 갈게요", auto=True)
     st["bench"] = {k: b.get(k) for k in ("id", "title", "channel", "date", "dur", "desc", "sheet", "big")}
     st["bench_lines"] = b.get("lines") or []
     return {"review": [_rv("origin_read", ORIGIN_READ + "\n\n제목: " + str(b.get("title")) + "\n채널: " + str(b.get("channel")) +
@@ -668,7 +686,7 @@ def ph_src_got(st, m, rp, u):
     """출처 채널 영상 목록 → 후보 조사(origin_probe: 한 번 요청으로 날짜·자막·스토리보드). 채널을 못 찾으면 검색 길로."""
     f = m.get("src") or {}
     if f.get("blocked"):
-        raise _Stop("유튜브가 잠시 요청을 막았어요", "잠시 뒤 다시 시도해 주시면 이어서 찾을게요 · 유튜브 로그인 연결도 확인해 주세요", auto=True)
+        raise _Stop("유튜브가 잠시 요청을 막았어요", "잠시 뒤 다시 시도해 주시면 이어서 찾을게요", auto=True)
     B, r = st["bench"], st["read"]
     cands = [t for t in f.get("titles") or [] if t["id"] != B.get("id") and (t.get("dur") or 0) > (B.get("dur") or 0) + 20]
     # 제목에 연예인 이름·장면·제품 낱말이 든 영상 먼저, 그다음 최신순(98 #58: 선우용여 '여주 아울렛' 원본은 반년 전 영상이라 최신 10편에 없었다 ·
@@ -701,7 +719,7 @@ JSON 하나: {"origin_id": "유튜브 id 또는 ''", "origin_t": [초, …], "wh
 def ph_probe_got(st, m, rp, u):
     p = m.get("probe") or {}
     if p.get("blocked") and not (p.get("matched") or p.get("sheets")):
-        raise _Stop("유튜브가 잠시 요청을 막았어요", "잠시 뒤 다시 시도해 주시면 이어서 찾을게요 · 유튜브 로그인 연결도 확인해 주세요", auto=True)
+        raise _Stop("유튜브가 잠시 요청을 막았어요", "잠시 뒤 다시 시도해 주시면 이어서 찾을게요", auto=True)
     st["probe_sb"] = {"sheets": p.get("sheets") or {}, "hits": p.get("hits") or {}, "dates": p.get("dates") or {}}
     if p.get("matched"):                                     # 벤치 말 = 원본 말 → 지금까지의 판정 그대로
         return ph_subs_got(st, {"subs": {"matched": p["matched"], "hits": p.get("hits") or {}}}, rp, u)
@@ -882,7 +900,7 @@ def ph_subs_got(st, m, rp, u):
     sub = m.get("subs") or {}
     got = sub.get("matched") or {}        # 지문 대조 = PC 가 rules.fingerprint 로(자막 낱말은 PC 에 남긴다)
     if sub.get("blocked") and not got:
-        raise _Stop("유튜브가 잠시 요청을 막았어요", "잠시 뒤 다시 시도해 주시면 이어서 찾을게요 · 유튜브 로그인 연결도 확인해 주세요", auto=True)
+        raise _Stop("유튜브가 잠시 요청을 막았어요", "잠시 뒤 다시 시도해 주시면 이어서 찾을게요", auto=True)
     scored = []
     for c in st.get("mixed") or []:
         mt = got.get(c["id"])
@@ -2154,7 +2172,7 @@ F_PEER_N = 12          # 같은 제품 다른 해외 반응 검색 후보 수
 def f_bench_got(st, m, rp, u):
     b = m.get("bench") or {}
     if b.get("error"):
-        raise _Stop("영상을 받지 못했어요", "영상 주소가 맞는지, 유튜브 로그인 연결이 되어 있는지 확인해 주세요", auto=True)
+        raise _Stop("영상을 받지 못했어요", "잠시 뒤 다시 시도해 주시면 받기부터 이어 갈게요", auto=True)
     st["bench"] = {k: b.get(k) for k in ("id", "title", "channel", "date", "dur", "desc", "sheet", "big")}
     st["bench_lines"] = b.get("lines") or []
     return {"review": [_rv("ref_read", REF_READ_FOREIGN + "\n\n" + _brief("origin_foreign.md") + "\n\n제목: " + str(b.get("title")) + "\n채널: " + str(b.get("channel")) +
@@ -2489,7 +2507,7 @@ def f_asr_got(st, m, rp, u):
 def s_bench_got(st, m, rp, u):
     b = m.get("bench") or {}
     if b.get("error"):
-        raise _Stop("영상을 받지 못했어요", "영상 주소가 맞는지, 유튜브 로그인 연결이 되어 있는지 확인해 주세요", auto=True)
+        raise _Stop("영상을 받지 못했어요", "잠시 뒤 다시 시도해 주시면 받기부터 이어 갈게요", auto=True)
     st["bench"] = {k: b.get(k) for k in ("id", "title", "channel", "date", "dur", "desc", "sheet", "big")}
     st["bench_lines"] = b.get("lines") or []
     return {"review": [_rv("topic_read", TOPIC_READ_SHOP + "\n\n제목: " + str(b.get("title")) + "\n채널: " + str(b.get("channel")) + "\n설명: " + str(b.get("desc") or "")[:1500] +
