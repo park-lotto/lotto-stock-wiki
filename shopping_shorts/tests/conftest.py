@@ -71,3 +71,24 @@ def _vertex_cutoff_off(monkeypatch):
     except Exception:      # noqa: BLE001 — 이 모듈을 못 불러도 다른 테스트는 돌아야 한다
         return
     monkeypatch.setattr(vertex_route, "OWNER_CUTOFF_DEFAULT", "off")
+
+
+def pytest_collection_modifyitems(config, items):
+    """병합 관문(GATE_XDIST_N)에선 이 PC 실제 영상(C:/숏템_칼카피)을 통째로 읽는 시험을 뺀다(2026-10-26).
+
+    실측: 원본 크기 띠를 capture_output 으로 다 읽는 시험이 병렬 8개로 돌아 남은 메모리 19GB→1GB,
+    ffmpeg 가 멈춰 칼카피 병합 관문이 1시간 반 정지. 집 PC 전용 시험이라 서버·다른 PC 관문에선 원래 skip 이다.
+    직접 돌릴 땐(관문 밖) 그대로 돈다. 관문에서도 돌리려면 GATE_REAL_MEDIA=1."""
+    import inspect
+    import os
+    if not os.environ.get("GATE_XDIST_N") or os.environ.get("GATE_REAL_MEDIA") == "1":
+        return
+    skip = pytest.mark.skip(reason="병합 관문: 집 PC 실제 영상 시험 제외(GATE_REAL_MEDIA=1 이면 돈다)")
+    for it in items:
+        reasons = " ".join(str(m.kwargs.get("reason", "")) for m in it.iter_markers("skipif"))
+        try:
+            src = inspect.getsource(it.function)
+        except (OSError, TypeError, AttributeError):
+            src = ""
+        if "숏템_칼카피" in src or "집 PC" in reasons or "원본 없음" in reasons:
+            it.add_marker(skip)
