@@ -1,11 +1,11 @@
 {
- "verdict": "미달",
+ "verdict": "통과",
  "rows": [
   {
    "key": "len.duration",
    "bench": 20.6255,
-   "ours": 18.4,
-   "diff": -10.8,
+   "ours": 17.3667,
+   "diff": -15.8,
    "judge": "in",
    "core": true,
    "why": "길이 차 ≤15%(검수 B1·compare len.duration)"
@@ -13,8 +13,8 @@
   {
    "key": "cut.median",
    "bench": 1.0699999999999998,
-   "ours": 1.05,
-   "diff": -1.9,
+   "ours": 0.97,
+   "diff": -9.3,
    "judge": "in",
    "core": true,
    "why": "컷 길이 중앙 ±30%, 벤치보다 빠르면 미달 쪽(검수 B4)"
@@ -22,8 +22,8 @@
   {
    "key": "speech.cps.나레",
    "bench": 8.58,
-   "ours": 9.08,
-   "diff": 5.8,
+   "ours": 8.69,
+   "diff": 1.3,
    "judge": "in",
    "core": true,
    "why": "나레 말속도(자막 글자/표시 초) 차 ≤10%(compare speech.cps)"
@@ -31,8 +31,8 @@
   {
    "key": "chunk.chars",
    "bench": 8.0,
-   "ours": 7.0,
-   "diff": -12.5,
+   "ours": 8,
+   "diff": 0.0,
    "judge": "in",
    "core": true,
    "why": "자막 조각 자수 중앙 차 ≤15%(검수 A9 범위)"
@@ -40,8 +40,8 @@
   {
    "key": "chunk.sec",
    "bench": 0.935,
-   "ours": 0.82,
-   "diff": -12.3,
+   "ours": 0.9,
+   "diff": -3.7,
    "judge": "in",
    "core": true,
    "why": "자막당 표시 초 중앙 차 ≤15%(compare cap.sub_sec)"
@@ -66,9 +66,9 @@
   },
   {
    "key": "fx.rate.나레",
-   "bench": 0.189,
+   "bench": 0.0,
    "ours": 0.0,
-   "diff": -18.9,
+   "diff": 0.0,
    "judge": "in",
    "core": true,
    "why": "나레 줄 중 꾸밈 붙은 비율 차 ≤20%p(시작문서 §0-1 12-1 ④ '효과 붙은 줄 비율')"
@@ -85,22 +85,22 @@
   {
    "key": "fx.pos",
    "bench": {
-    "훅": 0.315,
-    "본문": 0.485,
-    "끝": 0.309
+    "훅": 1.0,
+    "본문": 0.0,
+    "끝": 0.0
    },
    "ours": null,
-   "diff": "미측정",
-   "judge": "failed",
+   "diff": "우리 꾸밈 0 · 벤치 꾸밈 없는 줄 중앙 ≥0.9 — 자리 분포 해당 없음(꾸밈 비율은 fx.rate·plain.rate 칸이 잰다)",
+   "judge": "in",
    "core": true,
    "why": "꾸밈 붙은 줄의 자리(훅/본문/끝) 분포 칸마다 차 ≤20%p(compare sfx.after_event 와 같은 폭)"
   },
   {
    "key": "plain.rate",
-   "bench": 0.7765,
+   "bench": 0.947,
    "ours": 1.0,
-   "diff": 22.4,
-   "judge": "out",
+   "diff": 5.3,
+   "judge": "in",
    "core": true,
    "why": "꾸밈 없는 줄 비율 차 ≤20%p('없는 것도 스타일')"
   },
@@ -139,10 +139,10 @@
   },
   {
    "key": "sfx.rate",
-   "bench": 0.1205,
+   "bench": 0.0,
    "ours": 0.0,
-   "diff": -100.0,
-   "judge": "out",
+   "diff": 0.0,
+   "judge": "in",
    "core": true,
    "why": "효과음 발/초 차 ≤30%, 벤치 0이면 우리도 0(표준 §4-1 A2)"
   },
@@ -175,25 +175,24 @@
   }
  ],
  "n_bench": 6,
- "ours_n_lines": 24,
+ "ours_n_lines": 19,
  "ours_media": {
-  "duration": 18.4,
-  "cut_median": 1.05,
-  "n_cuts": 14,
+  "duration": 17.37,
+  "cut_median": 0.97,
+  "n_cuts": 13,
   "cut_at": [
    0.8,
-   1.667,
-   2.533,
-   3.2,
-   4.133,
-   5.433,
-   6.967,
-   8.233,
-   10.933,
-   14.233,
-   15.5,
-   16.667,
-   17.567
+   2.467,
+   3.3,
+   4.533,
+   6.833,
+   7.733,
+   9.3,
+   10.2,
+   11.133,
+   12.1,
+   14.167,
+   16.467
   ],
   "lufs": -14.1,
   "tp": -1.4,
@@ -433,5 +432,5 @@
  "line_reads": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\homedesignnote\\줄판독",
  "frame0_from": "완성본 측정",
  "made_by": "kal_analyze.match_from_render",
- "ok": false
+ "ok": true
 }

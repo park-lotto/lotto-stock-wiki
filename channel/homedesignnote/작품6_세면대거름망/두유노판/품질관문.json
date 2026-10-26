@@ -3,21 +3,21 @@
  "ok": false,
  "gate": "quality_gate:v2(2026-10-25 표준 §11)",
  "mode": "full",
- "sec": 95.0,
+ "sec": 74.8,
  "rows": [
   {
    "group": "규격",
    "what": "길이",
    "ok": true,
-   "value": "18.40초 (판 15~23)",
+   "value": "17.37초 (판 15~23)",
    "src": "판 length · ffprobe",
-   "sec": 0.6
+   "sec": 0.0
   },
   {
    "group": "규격",
    "what": "화면=시간표",
    "ok": true,
-   "value": "18.400 vs 18.4",
+   "value": "17.367 vs 17.3667",
    "src": "timeline.end",
    "sec": 0.0
   },
@@ -27,7 +27,7 @@
    "ok": true,
    "value": "-14.1 LUFS (목표 -14.0)",
    "src": "ebur128",
-   "sec": 1.6
+   "sec": 0.5
   },
   {
    "group": "규격",
@@ -43,7 +43,7 @@
    "ok": true,
    "value": "1080×1920 · 30.0fps",
    "src": "ffprobe",
-   "sec": 0.4
+   "sec": 0.1
   },
   {
    "group": "화면",
@@ -59,7 +59,7 @@
    "ok": true,
    "value": "전부 같음",
    "src": "parts/c*.mp4",
-   "sec": 14.7
+   "sec": 3.6
   },
   {
    "group": "화면",
@@ -67,7 +67,7 @@
    "ok": true,
    "value": "0건",
    "src": "창 안 프레임 차",
-   "sec": 4.3
+   "sec": 0.7
   },
   {
    "group": "화면",
@@ -75,23 +75,23 @@
    "ok": true,
    "value": "0건",
    "src": "render_bench.shot_starts",
-   "sec": 4.9
+   "sec": 0.7
   },
   {
    "group": "화면",
    "what": "B9 첫·끝 컷 Y≥60",
    "ok": true,
-   "value": "120 · 127 (≥60)",
+   "value": "195 · 158 (≥60)",
    "src": "checks._ymean",
-   "sec": 1.3
+   "sec": 0.3
   },
   {
    "group": "재료",
    "what": "B13 같은 장면 재사용(겹침 ×·거리 min(3, 0.25×길이))",
    "ok": true,
-   "value": "0 (소스 길이 {e-LfRPbnImo:57.7, 1PMEBOTD_d0:24.7, UYj6q-XRSlE:64.1})",
+   "value": "0 (소스 길이 {LyIQvkQqpkI:482.0, UYj6q-XRSlE:64.1, 1PMEBOTD_d0:24.7, QSKesKRNuPM:340.5, e-LfRPbnImo:57.7})",
    "src": "quality_gate.reuse_violations_bench",
-   "sec": 3.1
+   "sec": 0.6
   },
   {
    "group": "재료",
@@ -105,31 +105,31 @@
    "group": "재료",
    "what": "B16' 되감김·점프줌",
    "ok": true,
-   "value": "컷 23 · 되감김 0 [] · 점프줌 1(드묾)",
+   "value": "컷 44 · 되감김 0 [] · 점프줌 0(드묾)",
    "src": "engine/check_seams.check",
-   "sec": 14.1
+   "sec": 11.8
   },
   {
    "group": "판 리듬",
    "what": "컷 길이 중앙(판 rhythm.cut_median ±30%)",
    "ok": true,
-   "value": "완성본 컷 중앙 1.05초 vs 판 1.07(±30%, kal_analyze.media_of 같은 자) · 컷 14",
+   "value": "완성본 컷 중앙 0.97초 vs 판 1.07(±30%, kal_analyze.media_of 같은 자) · 컷 13",
    "src": "kal_analyze.media_of",
-   "sec": 22.7
+   "sec": 20.8
   },
   {
    "group": "판 리듬",
    "what": "훅 0.1~3초 컷 경계(판 rhythm.hook_cuts_3s)",
    "ok": true,
-   "value": "0.1~3초 컷 경계 3 [0.8, 1.667, 2.533] (판 ≥2)",
+   "value": "0.1~3초 컷 경계 2 [0.8, 2.467] (판 ≥2)",
    "src": "kal_analyze.media_of cut_at",
    "sec": 0.0
   },
   {
    "group": "판 리듬",
    "what": "꾸밈 없는 덩어리 비율(판 rhythm.plain_share)",
-   "ok": false,
-   "value": "꾸밈 없는 덩어리 1.0 vs 판 0.79±0.12(자막표 rows · placement.plain_share)",
+   "ok": true,
+   "value": "꾸밈 없는 덩어리 1.0 vs 판 0.933±0.13(자막표 rows · placement.plain_share)",
    "src": "placement.plain_share",
    "sec": 0.0
   },
@@ -153,7 +153,7 @@
    "group": "자막·효과",
    "what": "B14 효과음 과다(≤ 벤치 p90)",
    "ok": true,
-   "value": "우리 0발/18.4초 = 0.000/초 · 벤치 p90 0.215/초(편별 [0.062, 0.093, 0.19, 0.0, 0.24, 0.148])",
+   "value": "우리 0발/17.4초 = 0.000/초 · 벤치 p90 0.000/초(편별 [0.0, 0.0, 0.0, 0.0, 0.0, 0.0])",
    "src": "자막표.sfx · 줄판독 sfx",
    "sec": 0.0
   },
@@ -161,7 +161,7 @@
    "group": "소리",
    "what": "줄별 말속도 ±35%(렌더 기록)",
    "ok": true,
-   "value": "렌더 기록 평균 9.16자/초 ±35% · L1:8.46 L2:10.42 L3:8.76 L4:8.27 L5:9.17 L6:9.87",
+   "value": "렌더 기록 평균 9.03자/초 ±35% · L1:8.9 L2:9.69 L3:9.9 L4:8.37 L5:8.28",
    "src": "render_info.line_cps · render_itssum.CPS_LINE_TOL",
    "sec": 0.0
   },
@@ -169,15 +169,15 @@
    "group": "소리",
    "what": "B18 줄 사이 간격 = 판 timing(±1프레임+0.02)",
    "ok": true,
-   "value": "경계 L1→L2:0.04→0.00 L2→L3:0.04→0.00 L3→L4:0.04→0.00 L4→L5:0.04→0.00 L5→L6:0.04→0.00 (허용 ±0.053)",
+   "value": "경계 L1→L2:0.04→0.00 L2→L3:0.04→0.00 L3→L4:0.04→0.00 L4→L5:0.04→0.00 (허용 ±0.053)",
    "src": "timeline.lines(판 timing) · checks.pauses_between(voice.wav)",
    "sec": 0.2
   },
   {
    "group": "소리",
    "what": "B18a 줄 안 문장부호 쉼",
-   "ok": true,
-   "value": "L1,0.23 L2,0.23 L3,0.23 L4,0.23 L5,0.23 L6,0.23 L6,0.23 (쉼표 0.22·마침표 0.3, −0.02/+0.03)",
+   "ok": false,
+   "value": "L1,0.30 L2,0.23 L4,0.23 L5,0.23 L5,0.23 (쉼표 0.22·마침표 0.3, −0.02/+0.03) · 밖 ['L1:comma 0.30(목표 0.22)']",
    "src": "판 speech.pause_comma/period(없으면 0.22/0.30) · voice.wav 무음",
    "sec": 0.2
   },
@@ -185,25 +185,25 @@
    "group": "소리",
    "what": "나레 받아쓰기 ↔ 대본",
    "ok": true,
-   "value": "나레 6줄 중 못 찾음·0.25초 넘게 어긋남 0 · 최대 차 0.064 (스피치매틱스 낱말 시각) · L1:0.0↔0.0 L2:2.522↔2.49 L3:5.442↔5.4 L4:8.223↔8.19 L5:10.924↔10.86 L6:14.237↔14.19",
+   "value": "나레 5줄 중 못 찾음·0.25초 넘게 어긋남 0 · 최대 차 0.07 (스피치매틱스 낱말 시각) · L1:0.0↔0.0 L2:3.297↔3.24 L3:6.845↔6.78 L4:9.31↔9.24 L5:12.097↔12.03",
    "src": "engine/narr_verify.heard_words(스피치매틱스) → check_line_sync.line_starts_from_asr · LIMIT_SM",
-   "sec": 0.0
+   "sec": 8.1
   },
   {
    "group": "대본",
    "what": "script_audit",
    "ok": true,
-   "value": "규칙 2개 · 미달 0",
+   "value": "규칙 4개 · 미달 0",
    "src": "hybrid/script_audit.audit",
-   "sec": 0.1
+   "sec": 0.0
   },
   {
    "group": "썸네일",
    "what": "썸네일 맨 앞 2프레임",
    "ok": true,
-   "value": "안 A · 프레임 0·1·2 차 [0.5, 0.5, 37.3]",
+   "value": "안 A · 프레임 0·1·2 차 [0.6, 0.6, 58.9]",
    "src": "썸네일.json · 완성본 0~2프레임",
-   "sec": 0.9
+   "sec": 0.7
   },
   {
    "group": "썸네일",
@@ -224,18 +224,18 @@
   {
    "group": "1차 자",
    "what": "재현일치도(match_table)",
-   "ok": false,
-   "value": "1차 판 — 기준 칸 전부 필수 · 전체 18칸 ✓13 ✗4 미측정1 · 필수 16칸 중 미달 ['fx.pos(미측정)', 'plain.rate', 'sfx.rate'] · 벤치 6편",
+   "ok": true,
+   "value": "1차 판 — 기준 칸 전부 필수 · 전체 18칸 ✓16 ✗2 미측정0 · 필수 16칸 중 미달 없음 · 벤치 6편",
    "src": "kal_analyze.match_from_render → 재현일치도.json",
-   "sec": 20.7
+   "sec": 20.5
   },
   {
    "group": "장면↔대사",
    "what": "완성본 컷 = 계획 프레임(창 대조 ≥0.97)",
    "ok": true,
-   "value": "17컷 중 같음 17 · 다름 0 (창 1−평균차 ≥ 0.97, 최저 0.9966)",
+   "value": "15컷 중 같음 15 · 다름 0 (창 1−평균차 ≥ 0.97, 최저 0.9966)",
    "src": "quality_gate.plan_frames_check(base.mp4 또는 final−자막 띠 ↔ render_bench.plan_frames_gray 계획 그림)",
-   "sec": 5.1
+   "sec": 5.9
   },
   {
    "group": "장면↔대사",
@@ -250,14 +250,14 @@
    "group": "표식",
    "what": "render_info 표식(판 sha·렌더러 sig·reference)",
    "ok": true,
-   "value": "style_sha f9a319d07824 · renderer_sig render_bench@40d8d9a3cdf8 · reference iiBUscncqIk",
+   "value": "style_sha 22d9c220c32d · renderer_sig render_bench@1c966a0e8311 · reference iiBUscncqIk",
    "src": "render_info.json",
    "sec": 0.0
   }
  ],
  "n": 31,
- "n_ok": 29,
- "n_bad": 2,
+ "n_ok": 30,
+ "n_bad": 1,
  "n_unmeasured": 0,
  "placement": {
   "ok": true,
@@ -281,7 +281,7 @@
    "transitions": {
     "bench_expect": {},
     "ours": {},
-    "cut_bounds": 16,
+    "cut_bounds": 14,
     "plan": {
      "src": null,
      "want_raw": {},
@@ -301,12 +301,12 @@
   "본보기 벤치 편 = iiBUscncqIk",
   "효과음 0발(본보기 20) []",
   "짤 0개(rate 0.0 — 벤치에 짤 없음도 스타일)",
-  "꾸밈 없음 24/24 ≥ 판 plain_share 0.79×24=19",
-  "등장 {'cut': 24} · 강조 0/24",
+  "꾸밈 없음 19/19 ≥ 판 plain_share 0.933×19=18",
+  "등장 {'cut': 19} · 강조 0/19",
   "꾸밈 답 없음(deco_answers.json)"
  ],
  "match": {
-  "verdict": "미달",
+  "verdict": "통과",
   "file": "channel\\homedesignnote\\작품6_세면대거름망\\두유노판\\재현일치도.json"
  },
  "gates": {
@@ -314,9 +314,9 @@
  },
  "fit": {
   "min_sim": 0.97,
-  "n": 17,
+  "n": 15,
   "file": "channel\\homedesignnote\\작품6_세면대거름망\\두유노판\\장면대사.json"
  },
  "eye_pack_dir": "C:\\숏템_칼카피\\homedesignnote\\ep6_drain\\eye",
- "final_md5": "cbc77fb469a70a4f1aabcb39527f13ff"
+ "final_md5": "a35332126066d47b4d02a07a68c1574b"
 }

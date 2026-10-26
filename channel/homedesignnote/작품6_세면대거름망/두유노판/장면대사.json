@@ -1,0 +1,247 @@
+{
+ "made_by": "quality_gate.plan_frames_check",
+ "min_sim": 0.97,
+ "rows": [
+  {
+   "k": 0,
+   "line": "L1",
+   "src": "LyIQvkQqpkI.mp4",
+   "ss": 6.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9972,
+   "sims": [
+    0.9972,
+    0.9973,
+    0.9972
+   ],
+   "why": null
+  },
+  {
+   "k": 1,
+   "line": "L1",
+   "src": "UYj6q-XRSlE.mp4",
+   "ss": 50.5,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9974,
+   "sims": [
+    0.9973,
+    0.9974,
+    0.9975
+   ],
+   "why": null
+  },
+  {
+   "k": 2,
+   "line": "L1",
+   "src": "1PMEBOTD_d0.mp4",
+   "ss": 6.9,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9969,
+   "sims": [
+    0.9969,
+    0.9969,
+    0.9969
+   ],
+   "why": null
+  },
+  {
+   "k": 3,
+   "line": "L2",
+   "src": "QSKesKRNuPM.mp4",
+   "ss": 27.6,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.997,
+   "sims": [
+    0.9969,
+    0.997,
+    0.9972
+   ],
+   "why": null
+  },
+  {
+   "k": 4,
+   "line": "L2",
+   "src": "UYj6q-XRSlE.mp4",
+   "ss": 43.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9974,
+   "sims": [
+    0.9974,
+    0.9975,
+    0.9974
+   ],
+   "why": null
+  },
+  {
+   "k": 5,
+   "line": "L2",
+   "src": "UYj6q-XRSlE.mp4",
+   "ss": 45.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9972,
+   "sims": [
+    0.9972,
+    0.9971,
+    0.9972
+   ],
+   "why": null
+  },
+  {
+   "k": 6,
+   "line": "L3",
+   "src": "UYj6q-XRSlE.mp4",
+   "ss": 9.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9969,
+   "sims": [
+    0.9969,
+    0.9969,
+    0.9968
+   ],
+   "why": null
+  },
+  {
+   "k": 7,
+   "line": "L3",
+   "src": "UYj6q-XRSlE.mp4",
+   "ss": 17.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.997,
+   "sims": [
+    0.9969,
+    0.997,
+    0.997
+   ],
+   "why": null
+  },
+  {
+   "k": 8,
+   "line": "L4",
+   "src": "e-LfRPbnImo.mp4",
+   "ss": 19.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9969,
+   "sims": [
+    0.9969,
+    0.9969,
+    0.9969
+   ],
+   "why": null
+  },
+  {
+   "k": 9,
+   "line": "L4",
+   "src": "1PMEBOTD_d0.mp4",
+   "ss": 12.667,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9969,
+   "sims": [
+    0.9968,
+    0.9969,
+    0.9971
+   ],
+   "why": null
+  },
+  {
+   "k": 10,
+   "line": "L4",
+   "src": "1PMEBOTD_d0.mp4",
+   "ss": 11.4,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9966,
+   "sims": [
+    0.9966,
+    0.9967,
+    0.9965
+   ],
+   "why": null
+  },
+  {
+   "k": 11,
+   "line": "L5",
+   "src": "1PMEBOTD_d0.mp4",
+   "ss": 15.7,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9967,
+   "sims": [
+    0.9966,
+    0.9967,
+    0.9968
+   ],
+   "why": null
+  },
+  {
+   "k": 12,
+   "line": "L5",
+   "src": "1PMEBOTD_d0.mp4",
+   "ss": 21.467,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9967,
+   "sims": [
+    0.9969,
+    0.9967,
+    0.9965
+   ],
+   "why": null
+  },
+  {
+   "k": 13,
+   "line": "L5",
+   "src": "1PMEBOTD_d0.mp4",
+   "ss": 22.9,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9967,
+   "sims": [
+    0.9966,
+    0.9968,
+    0.9967
+   ],
+   "why": null
+  },
+  {
+   "k": 14,
+   "line": "L5",
+   "src": "e-LfRPbnImo.mp4",
+   "ss": 0.0,
+   "fit": null,
+   "screen": "base.mp4",
+   "plan": "clip_cmd(판 밀기·움직임·흐림 포함)",
+   "sim": 0.9972,
+   "sims": [
+    0.997,
+    0.9972,
+    0.9974
+   ],
+   "why": null
+  }
+ ],
+ "screen": "base.mp4(자막 전 완성 화면)"
+}

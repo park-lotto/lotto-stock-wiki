@@ -474,6 +474,11 @@ def _med(xs):
     return statistics.median(xs) if xs else None
 
 
+# fx.pos '해당 없음' 문턱(10-26 잇썸홈 두유노판, 코디 승인): 우리 꾸밈 줄 0 → 자리 분포 정의 안 됨. 벤치 꾸밈 없는 줄 중앙이 이 값 이상인
+# 채널(두유노 실측 0.947 — 벤치 6편 꾸밈 줄 ~5%, 전부 훅)만 '해당 없음'. 0.9 = plain.rate 허용폭 20%p 안에서 꾸밈 0 편이 이미 같다고 보는 쪽의
+# 보수적 하한(벤치 꾸밈 10% 미만). 꾸밈 많은 벤치(<0.9)는 계속 미달. 검수단축_wip.patch ⑧(측정 못 함 = 해당 없음)과 같은 판단 — 그 패치를 붙일 때 이 줄과 합칠 것.
+FXPOS_NA_PLAIN = 0.9
+
 HYBRID_OWN_KEYS = ("cut.median", "speech.cps.나레", "chunk.sec", "enter.mode.원음")   # 하이브리드 판이 벤치와 일부러 다른 칸(앞 원음 + 뒤 판매 이야기 · 고정 배속 목소리)
 
 
@@ -562,6 +567,8 @@ def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, ben
             why = why + f" — 하이브리드 판: 판 목표 {b}(판 why: {str(own_targets[key][1])[:80]}…)와 비교"
         if b is None and o is None and key.endswith((".원음", ".나레")) and B and all(s.get("n") for s in B):
             judge, diff = "in", "둘 다 그 화자 줄 0(해당 없음)"      # 벤치 전 편에 그 화자 줄이 없고 우리도 없다 = 같다(10-26 두유노: 원음 0/119 — 옛 판정은 '미측정'으로 미달)
+        elif key == "fx.pos" and o is None and O.get("n") and (_med([s["plain.rate"] for s in B if s.get("plain.rate") is not None]) or 0) >= FXPOS_NA_PLAIN:
+            judge, diff = "in", f"우리 꾸밈 0 · 벤치 꾸밈 없는 줄 중앙 ≥{FXPOS_NA_PLAIN} — 자리 분포 해당 없음(꾸밈 비율은 fx.rate·plain.rate 칸이 잰다)"
         elif b is None or o is None:
             judge, diff = "failed", "미측정"
         elif kind == "rel":

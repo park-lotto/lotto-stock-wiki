@@ -136,8 +136,9 @@ def version_of(path: Path, given: str | None, doc: dict | None = None) -> str:
     return "재미썸홈판" if "재미썸홈" in str(path) else "잇썸홈판"
 
 
-def engine(kind: str, d: dict, lines: list[dict]) -> dict:
-    """옛 잇썸·재미썸 검사(동작 그대로)."""
+def engine(kind: str, d: dict, lines: list[dict], off: tuple = ()) -> dict:
+    """옛 잇썸·재미썸 검사(동작 그대로). off = 판 audit 칸 engine.off — 이 판에서 끄는 points 항목(지금은 'wow' 하나:
+    와우 = 줄 머리 강한 연결어 3줄, 10-26 두유노판 — 벤치 상위 10편 연결어 줄 0%라 벤치를 따라 끔. 다른 판은 그대로)."""
     text = " ".join(l["text"] for l in lines)
     res = {}
     if kind == "itssum":
@@ -152,6 +153,8 @@ def engine(kind: str, d: dict, lines: list[dict]) -> dict:
     else:
         pc = json.loads(FRAME["jaemi"].read_text(encoding="utf-8"))
         res["polite"] = sum(1 for l in lines if l["text"].rstrip(" .,").endswith(("요", "니다")))
+    if pc and "wow" in off:
+        pc = {**pc, "wow": {**(pc.get("wow") or {}), "count": 0, "strong_min": 0}}
     pcr = SF.points_check(lines, pc)
     if pcr is not None:
         res["points"] = {"ok": pcr["ok"], "why": pcr["why"], "bad": pcr["bad"], "wow": [w for _, w in pcr["wow"]], "ing": pcr["ing"]}
@@ -236,6 +239,15 @@ def rule_check(r: dict, d: dict, st: dict) -> tuple[bool, str]:
         R = sibling_repeat(Path(d.get("__path__") or ""), d, r, d.get("__version__"))
         ok = not R["bad"]
         return ok, (" / ".join(R["bad"]) if not ok else f"편끼리 첫마디 겹침 최대 {R['worst']}(≤{r['max_share']}) · 비교 {R['n']}편")
+    if k in ("head_connectors", "made_candidates"):    # 상위 10편 대조 기계 칸과 같은 자(주인 = bench_compare_script_scene.CONNECTORS·MADE_RE) — 렌더 전에 미리 잰다
+        from tools.calcopy import bench_compare_script_scene as BC
+        sents = [x.strip() for l in T for x in re.split(r"(?<=[.?!])\s+", txt(l)) if x.strip()]
+        if k == "head_connectors":
+            hit = [x[:14] for x in sents if any(x.startswith(c) for c in BC.CONNECTORS)]
+            sh = round(len(hit) / max(1, len(sents)), 3)
+            return sh <= r["max"], f"문장 머리 연결어 {len(hit)}/{len(sents)}={sh} (≤{r['max']}) {hit}"
+        hit = [m for x in sents for m in BC.MADE_RE.findall(x)]
+        return len(hit) <= r["max"], f"지어냄 후보(숫자·나라·권위 말) {len(hit)}개 (≤{r['max']}) {hit}"
     if k in ("narr_share", "est_length"):
         cps = st.get("cps_target", 7.0)
         tn = sum(nchar(txt(l)) for l in T) / cps
@@ -485,7 +497,7 @@ def audit(path: Path, version: str | None = None) -> dict:
         if r.get("scope") == "preset" and not raw.get("preset"):      # 'preset' = preset_make 작품 대본만(채널 폴더 작품N — 하이브리드 판 대본은 안 잰다)
             continue
         if r["kind"] == "engine":
-            e = engine(r["name"], d, lines)
+            e = engine(r["name"], d, lines, tuple(r.get("off") or ()))
             res["engine"] = e
             ok &= e["ok"]
             continue

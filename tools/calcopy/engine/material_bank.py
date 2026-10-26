@@ -93,9 +93,41 @@ def _tags(bank: Path) -> list[dict]:
     return T["segments"]
 
 
+PROBLEM = "문제:"     # 문제 상태 동작 이름 머리(예 '문제: 물 고임') — 태그 state 'problem' 구간
+
+
+def is_problem(seg: dict) -> bool:
+    """문제 상태 구간 — 제품이 나오기 전 '불편'(고인 물·머리카락 뭉치 등). 다른 제품이 보이면 안 된다(product none 만)."""
+    return seg.get("state") == "problem" and seg.get("product") == "none"
+
+
 def usable(seg: dict) -> bool:
-    """(판단 주인 — 창고 구간을 컷 재료로 쓸 수 있나) 같은 제품 · 남의 글자 없음 · 동작 이름 있음."""
-    return seg.get("product") == "same" and not seg.get("text") and bool(seg.get("act"))
+    """(판단 주인 — 창고 구간을 컷 재료로 쓸 수 있나) 남의 글자 없음 · 동작 이름 있음 · (같은 제품 | 문제 상태).
+    10-26 두유노판 상위 10편 대조: 사연 줄(막힘·혼남)이 말한 상태가 화면에 없어 장면 ○ 0.5 < 상위 중앙 0.75 →
+    제품 없는 '문제 상태' 구간(state problem · product none · 동작 이름 '문제: …')도 재료로 쓴다. 다른 제품(other)은 계속 안 쓴다."""
+    if seg.get("text") or not seg.get("act"):
+        return False
+    if is_problem(seg):
+        return str(seg["act"]).startswith(PROBLEM)
+    return seg.get("product") == "same"
+
+
+def story_visible(S: dict, segs: list[dict], rule: dict | None) -> list[str]:
+    """(판단 주인 — 사연 줄이 보이는 상태로 쓰였나, 렌더 전) 판 script.scene_rule {story_slots, min_problem_pieces}:
+    그 칸(slot) 줄마다 조각 동작 첫 자리가 '문제: …'(창고에 있는 동작)인 조각이 min 개 이상. 모자라면 사유 목록(place 가 멈춘다)."""
+    if not rule:
+        return []
+    have = {s["act"] for s in segs if is_problem(s)}
+    bad = []
+    for li, L in enumerate(S.get("lines") or []):
+        if L.get("slot") not in (rule.get("story_slots") or []):
+            continue
+        firsts = [(pc["act"] if isinstance(pc["act"], list) else [pc["act"]])[0] for pc in L.get("pieces") or []]
+        n = sum(1 for a in firsts if a in have)
+        if n < int(rule.get("min_problem_pieces", 1)):
+            bad.append(f"줄{li + 1}({L.get('slot')}) 문제 상태 조각 {n} < {rule.get('min_problem_pieces', 1)} — 사연을 화면에 보이는 상태로 쓰고 "
+                       f"그 조각 동작 첫 자리를 창고의 문제 상태({sorted(have) or '없음 — 창고에 문제 상태 영상 태그 필요'})로")
+    return bad
 
 
 def acts(bank: Path) -> dict:
@@ -104,7 +136,7 @@ def acts(bank: Path) -> dict:
     for s in _tags(bank):
         if usable(s):
             out.setdefault(s["act"], []).append(s)
-    lines = ["# 장면 창고 — 동작별 쓸 수 있는 구간(같은 제품·남의 글자 없음)", ""]
+    lines = ["# 장면 창고 — 동작별 쓸 수 있는 구간(같은 제품 또는 '문제:' 문제 상태(제품 없음) · 남의 글자 없음)", ""]
     for a, ss in sorted(out.items(), key=lambda kv: -sum(x["b"] - x["a"] for x in kv[1])):
         tot = sum(x["b"] - x["a"] for x in ss)
         lines.append(f"## {a} — {len(ss)}구간 · 합 {tot:.1f}초")
@@ -165,6 +197,11 @@ def place(bank: Path, work: Path, pdir: Path, log=print) -> dict:
         aba_of = lambda cs: aba_list(cs, near)  # noqa: E731
     S = json.loads((work / "대본.json").read_text(encoding="utf-8"))
     segs = [s for s in _tags(bank) if usable(s)]
+    sv = story_visible(S, segs, (st.get("script") or {}).get("scene_rule") if board else None)
+    if sv:
+        for m in sv:
+            log("⚠ [place] " + m)
+        return {"ok": False, "miss": sv, "shots": []}
     lens = {n: x["dur"] for n, x in B["videos"].items()}
     P, t = [], 0.0                      # 조각마다 화면 시각(글자÷cps 어림 × 여유) — 고르는 순서와 상관없이 먼저 정한다
     for li, L in enumerate(S["lines"]):
@@ -208,7 +245,11 @@ def place(bank: Path, work: Path, pdir: Path, log=print) -> dict:
                 if [x for x in aba_of(sorted(placed + [cut], key=lambda c: c["t0"])) if x not in aba0]:    # A-B-A 끼움 = 그 길의 관문 판정(판 = quality_gate B16 checks.aba_violations · 프리셋 = preset_make A12 aba_list)
                     continue
                 cont = (prev is not None and prev[0]["src"] == s["v"] and 0 <= ss - (prev[0]["ss"] + prev[0]["dur"]) <= 0.6) or                        (nxt is not None and nxt[0]["src"] == s["v"] and 0 <= nxt[0]["ss"] - (ss + d) <= 0.6)
-                score = (q["want"].index(s["act"]), 0 if cont else 1, used.get((s["act"], s["v"]), 0), ss - s["a"])   # 대본이 먼저 적은 동작 > 이어짐 > 덜 쓴 영상 > 앞쪽
+                if q["li"]:
+                    score = (q["want"].index(s["act"]), 0 if cont else 1, used.get((s["act"], s["v"]), 0), ss - s["a"])   # 대본이 먼저 적은 동작 > 이어짐 > 덜 쓴 영상 > 앞쪽
+                else:     # 훅 줄 = 옆 컷과 다른 영상이 먼저(판 rhythm.hook_cuts_3s) — 10-26 6판: 같은 영상 다른 샷(흰 세면대 근접↔멀리)은 완성본 컷 경계(kal_analyze.media_of)에 안 잡혀 훅 경계 1 < 2
+                    near_same = any(n is not None and n[0]["src"] == s["v"] for n in (prev, nxt))
+                    score = (1 if near_same else 0, q["want"].index(s["act"]), used.get((s["act"], s["v"]), 0), ss - s["a"])
                 if best is None or score < best[0]:
                     best = (score, cut, s)
         if best is not None:
@@ -222,7 +263,7 @@ def place(bank: Path, work: Path, pdir: Path, log=print) -> dict:
             continue
         cut, s = got[q["i"]]
         v = B["videos"][s["v"]]
-        row = {"caption": q["text"], "src": Path(v["path"]).name, "ss": round(cut["ss"], 3), "kind": "product", "seen": f"{s['act']} — {s.get('see', '')}",
+        row = {"caption": q["text"], "src": Path(v["path"]).name, "ss": round(cut["ss"], 3), "kind": "situation" if is_problem(s) else "product", "seen": f"{s['act']} — {s.get('see', '')}",
                "li": q["li"], "j": q["j"], "n": q["n"], "wh": [v["w"], v["h"]]}
         cx = _crop_x(v, s, W, H)
         if cx is not None:
