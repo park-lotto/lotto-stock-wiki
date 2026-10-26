@@ -74,8 +74,8 @@ def _video_lock_path():
 #   '코어 절반'을 깼다), 메모리도 한 판 4.0~4.5GB(실측)라 두 판이 8.5GB → 남은 메모리 2.7GB, Claude 가 작업을 강제 종료.
 #   이제 **시험 프로세스 표(GATE_WORKER_TOKENS)** 를 병합 전체가 나눠 쓴다: 합계 8개 이하(코어 절반) + 남은 메모리로 더 줄인다.
 #   몰리면 한 판씩 전속력(-n 8 376초)으로 — 둘이 반씩(-n 4 각 727초)보다 먼저 끝난다(카드 081 실측).
-GATE_WORKER_TOKENS = 8           # 동시에 도는 시험 프로세스 합계 상한(16코어의 절반)
-GATE_WORKER_MB = 550             # 시험 프로세스 1개 메모리(실측: -n 8 한 판 4,027~4,501MB / 13~14개)
+GATE_WORKER_TOKENS = 4           # 동시에 도는 시험 프로세스 합계 상한 — 8→4(관제 275, 사장님 10-26 "일꾼 4개로": 8개가 커밋 메모리를 다 써 다른 창 받아쓰기가 mkl_malloc 실패)
+GATE_WORKER_MB = 2400            # 시험 프로세스 1개 메모리 — 550→2400(관제 275, 10-26 실측: -n 8 일꾼 8개 개당 1.35~3.44GB, 합 약 18GB · 옛 550 은 10-03 실측)
 GATE_RESERVE_MB = 4500           # 다른 프로그램(크롬·Claude 세션)을 위해 남기는 메모리
 #   ★2500→4500(관제 212, 2026-10-15): 일꾼을 띄운 뒤 남는 양이 2.5GB 까지 떨어져 Claude Code 가 '메모리 위험'으로
 #   다른 세션의 백그라운드 작업(대기·로컬 서버)을 강제로 껐다(하루 6번 실측). 일꾼 8개는 남은 메모리 8.9GB 이상일 때만.
@@ -83,7 +83,7 @@ GATE_MIN_WORKERS = 2
 
 
 def _free_mb():
-    """지금 남은 물리 메모리(MB). 못 재면 큰 값(막지 않는다)."""
+    """지금 쓸 수 있는 메모리(MB) = min(남은 물리 메모리, 남은 커밋). 못 재면 큰 값(막지 않는다)."""
     try:
         import ctypes
 
@@ -96,7 +96,8 @@ def _free_mb():
         m = _MS()
         m.dwLength = ctypes.sizeof(_MS)
         ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m))
-        return int(m.ullAvailPhys / 2 ** 20)
+        # 물리 메모리와 커밋(가상 메모리 포함) 여유 중 작은 쪽 — 10-26 RAM 15GB 남았는데 커밋 38.7/39.9GB 로 새 할당이 실패했다(관제 275)
+        return int(min(m.ullAvailPhys, m.ullAvailPageFile) / 2 ** 20)
     except Exception:  # noqa: BLE001
         return 10 ** 6
 
