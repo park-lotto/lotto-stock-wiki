@@ -34,6 +34,12 @@ def main(engine: str) -> int:
                 out = {"errors": P.check(req.get("pack") or {}, cat)}
             elif op == "preview":
                 out = P.preview(req)
+            elif op == "banned":   # 회원 PC 에서 못 쓰는 목소리(엔진 voices.BANNED_VOICES 한 곳 — 필재 등). 옛 묶음엔 없을 수 있다
+                try:
+                    from tools.calcopy.engine.voices import BANNED_VOICES
+                except ImportError:
+                    BANNED_VOICES = {}
+                out = {"banned": sorted(BANNED_VOICES)}
             elif op == "look":   # 꾸민 모양 검사 = 엔진 판 scene_style(칼카피 틀 customFrame 을 설명서 규칙으로 따로 검사한다 — 렌더러와 같은 판)
                 from shopping_shorts import scene_style as SS
                 try:
