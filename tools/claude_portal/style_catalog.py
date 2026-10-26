@@ -44,9 +44,24 @@ def committed_styles(engine: Path, ref: str = "HEAD") -> dict:
     return {n[:-5]: json.loads(git("show", f"{ref}:{STYLES_REL}/{n}").decode("utf-8")) for n in sorted(names)}
 
 
+def committed_banned_voices(engine: Path, ref: str = "HEAD") -> list:
+    """엔진 ref 의 engine/voices.py BANNED_VOICES 키(못 쓰는 목소리 id — 필재 등). 주인 = 엔진. 서버 묶음이 옛 판(voices.py 없음)일 때 설정 화면이 이걸 본다."""
+    import ast
+    import subprocess
+    try:
+        src = subprocess.run(["git", "-C", str(engine), "show", f"{ref}:tools/calcopy/engine/voices.py"], capture_output=True, check=True).stdout.decode("utf-8")
+    except subprocess.CalledProcessError:
+        return []
+    for node in ast.parse(src).body:
+        if isinstance(node, ast.Assign) and any(getattr(t, "id", "") == "BANNED_VOICES" for t in node.targets):
+            return sorted(ast.literal_eval(node.value))
+    return []
+
+
 def build(engine: Path, ref: str = "HEAD") -> dict:
     out = {stem: slim(d) for stem, d in committed_styles(engine, ref).items()}
-    return {"_about": "판 요약 — tools/claude_portal/style_catalog.py 가 엔진 판에서 만든다. 손으로 고치지 마라(관제 266).", "styles": out}
+    return {"_about": "판 요약 — tools/claude_portal/style_catalog.py 가 엔진 판에서 만든다. 손으로 고치지 마라(관제 266).", "styles": out,
+            "banned_voices": committed_banned_voices(engine, ref)}
 
 
 def main() -> int:

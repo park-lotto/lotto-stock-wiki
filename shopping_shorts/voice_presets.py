@@ -71,3 +71,37 @@ def seed_presets(store):
     store.set_voice_default_speeds({p["preset_id"]: default_speed(p.get("base_voice_id"))
                                     for p in store.list_voice_presets()})
     return len(rows)
+
+
+def groups(rows, skip=None):
+    """성우 프리셋 행 → 성우(그룹) 카드 목록 — **묶기의 주인 한 곳**(관제 266, 10-26 app /api/voice-presets 에서 뽑음).
+    /api/voice-presets(숏템메이커)·설정 화면 타입캐스트 추천(claude_studio.typecast_presets)이 같이 부른다.
+
+    · 튜닝 작업대 임시 프리셋(origin="tuned")은 뺀다 — 빈 껍데기 카드가 뜬다(2026-07-17 라이브 kr-test·kr-snap).
+      origin 이 없는 옛 행은 보이는 쪽으로 둔다(성우가 통째로 사라지는 쪽이 더 나쁘다).
+    · skip(p) 가 참인 행은 뺀다 — 부르는 쪽이 정한다(숏템메이커 = 서버에서 꺼 둔 엔진, 설정 화면 = 회원 PC 엔진 금지 목록).
+    · 순서는 rows 순서를 보존만 한다(정본 = Store.list_voice_presets 의 ORDER BY best DESC, created_at).
+    · best 는 성우(그룹)의 성질이라 첫 행에서 한 번만 집는다. engine 은 engine_of 한 곳(프론트가 접두사로 추측하지 않는다)."""
+    out = {}
+    for p in rows:
+        if p.get("origin") == "tuned":
+            continue
+        if skip and skip(p):
+            continue
+        gid = p["group_id"]
+        g = out.setdefault(gid, {
+            "group_id": gid, "name": p["name"], "one_liner": p["one_liner"],
+            "lang": p["lang"], "archetype": p["archetype"],
+            "best": bool(p.get("best", False)),
+            "engine": engine_of(p.get("model_id")),
+            "default_variant": "stable", "variants": {}, "samples_pending": False,
+        })
+        g["variants"][p["variant"]] = {
+            "preset_id": p["preset_id"], "voice_id": p["base_voice_id"],
+            "voice_settings": p["voice_settings"], "default_speed": p["default_speed"],
+            "default_silence_trim": p["default_silence_trim"],
+            "sample_url": f"/api/voice-presets/{p['preset_id']}/sample" if p["sample_file"] else None,
+        }
+        if p.get("origin") == "library" and not p.get("sample_file"):
+            g["samples_pending"] = True
+    return list(out.values())

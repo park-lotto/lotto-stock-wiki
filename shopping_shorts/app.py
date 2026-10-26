@@ -9621,43 +9621,10 @@ def api_voice_presets(request: Request, lang: str = "KR"):
     #   남이 담은 성우는 **그 사람 일레븐랩스 계정에만** 있어서, 내 키로 고르면 합성이 실패한다.
     _cid = getattr(request.state, "customer_id", 0) or 0
     rows = Store(DB_PATH).list_voice_presets(lang=lang, customer_id=_cid)
-    groups = {}
-    for p in rows:
-        # 튜닝 작업대가 만든 임시 프리셋(origin="tuned", :1526)은 카드에서 뺀다.
-        # prune_voice_presets가 그 행을 **의도적으로** 안 지우므로(작업대엔 필요, 리뷰 S2)
-        # 거르지 않으면 이름·설명·샘플이 다 빈 껍데기가 성우 카드로 뜬다 — 2026-07-17
-        # 라이브 화면에서 kr-test·kr-snap이 실제로 그렇게 보였다(사장님이 화면을 보라고
-        # 해서 브라우저로 직접 열어보고 발견). DB에 남는 건 맞고 카드에 나오는 게 틀렸다.
-        # ⚠️ origin이 없는 옛 행은 **보이는 쪽으로** 실패시킨다 — 안 보이는 실패는
-        # 아무도 못 잡고, 성우가 통째로 사라지는 쪽이 훨씬 나쁘다.
-        if p.get("origin") == "tuned":
-            continue
-        # ★타입캐스트를 껐으면 그 성우 카드는 아예 안 보인다(2026-09-07 사장님 "일레븐만
-        #   쓴다"). 고를 수 없으면 3단계에서 타입캐스트 오류가 날 길이 없다. 판정은
-        #   typecast_tts 한 곳(0순위-B) — 프론트가 "tc-" 접두사로 추측하지 않는다.
-        if typecast_tts.use_fallback(p.get("model_id")) or fish_tts.use_fallback(p.get("model_id")):
-            continue
-        gid = p["group_id"]
-        g = groups.setdefault(gid, {
-            "group_id": gid, "name": p["name"], "one_liner": p["one_liner"],
-            "lang": p["lang"], "archetype": p["archetype"],
-            # best는 성우(그룹)의 성질이라 첫 행에서 한 번만 집는다 — 같은 성우의
-            # 3~4개 variant 행은 모두 같은 값이다. 순서는 Store가 이미 정해서
-            # 줬고(ORDER BY best DESC), dict가 삽입 순서를 보존하므로 여기선 보존만 한다.
-            "best": bool(p.get("best", False)),
-            # 어느 엔진 성우인지 카드에 배지로 띄운다(2026-08-19). 판정은 서버가 한다 —
-            # 프론트가 group_id 접두사("tc-") 따위로 추측하면 판단이 두 곳이 된다(0순위-B).
-            "engine": voice_presets.engine_of(p.get("model_id")),
-            "default_variant": "stable", "variants": {}, "samples_pending": False,
-        })
-        g["variants"][p["variant"]] = {
-            "preset_id": p["preset_id"], "voice_id": p["base_voice_id"],
-            "voice_settings": p["voice_settings"], "default_speed": p["default_speed"],
-            "default_silence_trim": p["default_silence_trim"],
-            "sample_url": f"/api/voice-presets/{p['preset_id']}/sample" if p["sample_file"] else None,
-        }
-        if p.get("origin") == "library" and not p.get("sample_file"):
-            g["samples_pending"] = True
+    # ★타입캐스트를 껐으면 그 성우 카드는 아예 안 보인다(2026-09-07 사장님 "일레븐만 쓴다") — 판정은 typecast_tts 한 곳(0순위-B).
+    #   그룹 묶기(톤 variants·best·engine 배지·임시 'tuned' 빼기)는 voice_presets.groups 한 곳 — 설정 화면(claude_studio)도 같은 함수(관제 266).
+    groups = {g["group_id"]: g for g in voice_presets.groups(
+        rows, skip=lambda p: typecast_tts.use_fallback(p.get("model_id")) or fish_tts.use_fallback(p.get("model_id")))}
     # 🎙 마지막으로 쓴 성우(2026-09-02) — 화면이 그 성우를 미리 골라둔 상태로 연다.
     #   ★왜 여기냐: 이 라우트는 이미 로그인 고객 기준(_cid)이고 4단계가 열릴 때 한 번 부른다.
     #     /api/mix/status는 **인증이 없어**(job_id만 알면 열림) 거기 실으면 남의 선택이 샌다.

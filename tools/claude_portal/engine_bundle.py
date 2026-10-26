@@ -139,6 +139,8 @@ HAND_SERVER_ONLY = {
     "tools/calcopy/hybrid/material_fit.py",
     # 10-26 엔진 render_bench 가 함수 안에서 deco(키치잇 꾸밈 재현, 3a388064c WIP·미검증)를 부른다 — 회원 PC 로 보낼지는 관제 265 발행 판단
     "tools/calcopy/hybrid/deco.py",
+    # 10-26 엔진 runner_ops 가 preset_make(make_synth — 회원 목소리 합성 한 곳)를 부른다 — preset_* 는 묶음 금지 꼴이라 발행 때 판단(관제 265): HAND 로 옮기거나 make_synth 를 금지 밖 파일로
+    "tools/calcopy/engine/preset_make.py",
     "tools/calcopy/hybrid/server_ai.py", "tools/calcopy/hybrid/gemini_server.py",   # 서버 키·주소 — 보내면 안 됨
     "tools/calcopy/engine/preset_save.py",   # 프리셋 만드는 기술(render_itssum 함수 안) — 회원 PC 엔 안 보낸다
 }
