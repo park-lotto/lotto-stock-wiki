@@ -2833,7 +2833,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     from tools.calcopy.engine import ad_mark
     ad_mark.apply_inplace(final, log=log)
     jsave(R / "timeline.json", T)      # 썸네일 카드가 이 시간표로 장면(줄·몇 번째 컷)을 찾는다 — 카드보다 먼저 저장(10-24 09: 옛 시간표로 찾아 실패)
-    if (doc / "썸네일.json").exists():      # 맨 앞 2프레임 = 썸네일 카드(주인 thumb.card · 10-23 사장님 "맨 앞에 썸네일 아주 잠깐") — 카드에 '광고' 같이 찍힘
+    if (doc / "썸네일.json").exists() and (jload(doc / "썸네일.json").get("options") or []):      # 빈 3안 = 카드 없이(flow 가 카드 반려 끝에 비운다, 10-26) · 맨 앞 2프레임 = 썸네일 카드(주인 thumb.card · 10-23 사장님 "맨 앞에 썸네일 아주 잠깐") — 카드에 '광고' 같이 찍힘
         from tools.calcopy.hybrid import thumb as TH
         tc = TH.cards(style_name, doc, work, log=log)
         TH.stamp_video(final, Path(tc["pick_jpg"]))

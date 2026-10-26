@@ -57,3 +57,24 @@ def test_render_fix_nothing_to_fix_renders_again(monkeypatch):
     except flow._Stop:
         stopped = True
     assert stopped
+
+
+def test_stale_sheet_replans_before_thumb():
+    """④ 재료가 계획 시트 뒤에 바뀌면(_sheet_stale) 옛 카드를 비우고 계획을 다시 돌려 새 시트로 썸네일을 묻는다
+    (10-26 이미숙: 옛 시트 part 8 = 얼굴 근접, 바뀐 재료에선 앰플 병 → 카드 얼굴 반려 되풀이)."""
+    st = {"version": "키치잇판", "tries": {}, "log": [], "_sheet_stale": True, "_plan_sheet": "old.jpg"}
+    out = flow.ph_thumb(st, {}, {}, None)
+    assert out["then"] == "thumb_sheet"
+    assert [d["cmd"] for d in out["do"]] == ["write_doc", "plan"]
+    assert out["do"][0]["files"] == {"키치잇판/썸네일.json": {"options": []}}
+    out2 = flow.ph_thumb_sheet(st, {"plan": {"sheet": "new.jpg", "cuts": 20}}, {}, None)
+    assert out2 == {"goto": "thumb"} and st["_plan_sheet"] == "new.jpg" and "_sheet_stale" not in st
+    assert flow.PHASE_STAGE["thumb_sheet"] == "plan"
+
+
+def test_card_rejects_after_thumb_tries_render_without_card():
+    """⑤ 썸네일 기회를 다 쓴 뒤 카드 반려 = ph_thumb_got 과 같은 규칙(카드 없이 렌더) — 멈추지 않는다."""
+    st = {"version": "키치잇판", "tries": {"thumb": 2}, "log": []}
+    m = {"render": {"error": "썸네일 카드 A: 연예인 얼굴 아님(얼굴 0개 · a.mp4@80.00) — 얼굴이 크게 나온 장면으로 바꾼다"}}
+    out = flow.ph_render_got(st, m, {}, None)
+    assert out["then"] == "render" and out["do"][0]["files"] == {"키치잇판/썸네일.json": {"options": []}}

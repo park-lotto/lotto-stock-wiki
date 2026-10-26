@@ -90,7 +90,7 @@ PHASE_STAGE = {   # 세부 단계 → 회원에게 보이는 단계
     "best_same": "product", "product_done": "product", "research": "research", "research_got": "research", "material": "material",
     "material_got": "material", "material_pick": "material", "material_dl": "material", "asr": "asr", "asr_got": "asr", "shots_got": "asr",
     "script": "script", "script_got": "script", "script_saved": "script", "sign": "sign", "plan": "plan", "plan_got": "plan",
-    "plan_look": "plan", "plan_saved": "plan", "thumb": "plan", "thumb_got": "plan", "render": "render", "render_got": "render", "render_fix": "render", "render_saved": "render",
+    "plan_look": "plan", "plan_saved": "plan", "thumb": "plan", "thumb_sheet": "plan", "thumb_got": "plan", "render": "render", "render_got": "render", "render_fix": "render", "render_saved": "render",
     "check": "check", "check_got": "check", "check_look": "check", "check_fix": "check", "check_saved": "check", "done": "done",
 }
 
@@ -1713,6 +1713,7 @@ def _take_fix(st, r: dict) -> dict | None:
     bad = RU.source_rule_static(M, _origin_names(st), _rule_bench_id(st), st.get("shots") or {})
     st["script"]["M"] = M
     st["_fix_bad"] = bad
+    st["_sheet_stale"] = True      # 재료가 바뀌면 컷 번호(part)가 바뀐다 — 썸네일은 새 계획 시트로 다시 고른다(ph_thumb)
     return M
 
 
@@ -1760,6 +1761,12 @@ JSON 하나: {{"썸네일": {{"options":[3안], "no_person_why": "인물순간 �
 def ph_thumb(st, m, rp, u):
     from tools.calcopy.hybrid import thumb_rule as TR
     v = st["version"]
+    if st.get("_sheet_stale"):
+        # 재료가 계획 시트 뒤에 바뀌었다(재료 고치기·검사 뒤 고치기) — 옛 시트의 컷 번호로 고르면 렌더에선 다른 컷을 가리킨다
+        # (10-26 이미숙 회원편: part 8 = 시트에선 얼굴 근접 O3@163, 바뀐 재료에선 앰플 병 N2@80 → 카드 얼굴 반려 되풀이·멈춤, 98 기록).
+        # 옛 카드는 비우고(옛 번호라 계획 관문 ⑥이 시트를 막는다) 계획을 다시 돌려 새 시트로 묻는다.
+        return {"do": [{"id": "clear_thumb", "cmd": "write_doc", "files": {f"{v}/썸네일.json": {"options": []}}, "version": v},
+                       {"id": "plan", "cmd": "plan", "version": v, "origin_names": sorted(_origin_names(st))}], "then": "thumb_sheet"}
     _, _, ww, wh = _style(v)["frame"]["window"]
     ask = THUMB_ASK.format(good=TR.GOOD, order=TR.find_order(st.get("slug")), ww=ww, wh=wh)    # 상위 편 훅 참고 한 줄(지시서 15 — slug 의 _kal/상위편_목표.json)
     if st.get("_thumb_bad"):
@@ -1767,6 +1774,16 @@ def ph_thumb(st, m, rp, u):
     sheet = st.get("_plan_sheet")
     return {"review": [_rv(f"thumb_{v}", ask + "\n\n대본:\n" + json.dumps((st.get("script") or {}).get("S") or {}, ensure_ascii=False)[:4000],
                            [_img(sheet)] if sheet else [], need=("썸네일",))], "then": "thumb_got"}
+
+
+def ph_thumb_sheet(st, m, rp, u):
+    p = m.get("plan") or {}
+    st.pop("_sheet_stale", None)
+    if p.get("sheet"):
+        st["_plan_sheet"], st["_n_cuts"] = p.get("sheet"), p.get("cuts")
+    else:                          # 시트를 못 뽑았다(계획 넘침 등) — 옛 시트로 묻되 기록에 남긴다(멈추지 않는다 — 카드 관문이 다시 잰다)
+        st["log"].append("썸네일용 새 계획 시트 없음: " + str(p.get("error") or p.get("over") or "")[:200])
+    return {"goto": "thumb"}
 
 
 def ph_thumb_got(st, m, rp, u):
@@ -1804,12 +1821,17 @@ def ph_render_got(st, m, rp, u):
         _redo_done(st)
         return {"goto": "check"}
     probs = [x.strip() for x in str(r.get("error") or "").split(" / ") if x.strip()]
-    if probs and all(x.startswith("썸네일 카드") for x in probs) and st["tries"].get("thumb", 0) < 2:
+    if probs and all(x.startswith("썸네일 카드") for x in probs):
         # 렌더 전 관문 ⑥(카드 얼굴·글자) 반려는 재료가 아니라 썸네일 3안 몫 — 썸네일 단계로 되돌린다(10-26 이미숙 회원편: render_fix 는 재료만 받아
         # 회원 AI 가 썸네일을 고쳐 보내도 버려지고 '영상을 다듬다 막혔어요'로 멈춤, 98 기록)
-        st["tries"]["thumb"] = st["tries"].get("thumb", 0) + 1
-        st["_thumb_bad"] = probs
-        return {"goto": "thumb"}
+        if st["tries"].get("thumb", 0) < 2:
+            st["tries"]["thumb"] = st["tries"].get("thumb", 0) + 1
+            st["_thumb_bad"] = probs
+            return {"goto": "thumb"}
+        # 기회를 다 쓰면 ph_thumb_got 과 같은 규칙 — 카드 없이 렌더(영상은 막지 않는다 · 카드 = 덤)
+        st["log"].append("썸네일 카드가 계속 반려돼 카드 없이 렌더: " + "; ".join(probs)[:300])
+        return {"do": [{"id": "clear_thumb", "cmd": "write_doc", "files": {f"{st['version']}/썸네일.json": {"options": []}}, "version": st["version"]}],
+                "then": "render"}
     if r.get("error") and "원본 샷보다 길다" not in str(r["error"]) and not r.get("jumps") and st["tries"].get("render_err", 0) >= 1:
         st["log"].append("렌더 오류: " + str(r["error"])[:300])
         raise _Stop("영상을 만들다 멈췄어요", "다시 시도해 주시면 멈춘 곳부터 이어 갈게요", retry="render", auto=True)
@@ -2580,7 +2602,7 @@ PHASES = {
     "research_check": ph_research_check, "material": ph_material, "material_got": ph_material_got, "material_pick": ph_material_pick,
     "material_dl": ph_material_dl, "asr": ph_asr, "asr_got": ph_asr_got, "shots_got": ph_shots_got, "script": ph_script,
     "script_ask": ph_script_ask, "script_got": ph_script_got, "script_heard": ph_script_heard, "sign": ph_sign, "plan": ph_plan, "plan_got": ph_plan_got,
-    "plan_look": ph_plan_look, "thumb": ph_thumb, "thumb_got": ph_thumb_got, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
+    "plan_look": ph_plan_look, "thumb": ph_thumb, "thumb_sheet": ph_thumb_sheet, "thumb_got": ph_thumb_got, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
     "check_got": ph_check_got, "check_look": ph_check_look, "check_judge": ph_check_judge, "check_fix": ph_check_fix, "customize": ph_customize, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
 for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "given_origin_got": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "given": "product", "given_same": "product", "cand_look": "product", "reviews": "product", "reviews_got": "product", "reviews_naver": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():
