@@ -3045,7 +3045,7 @@ def f_render_clean_got(st, m, rp, u):
             tf["cleaned"].append(n)
     tf["calls"] = int(tf.get("calls") or 0) + int(c.get("calls") or 0)
     tf["sec"] = round(float(tf.get("sec") or 0) + float(c.get("send_sec") or 0), 3)
-    tf["key"] = _cuts_key(st) if not c.get("why") else None     # 실패한 구간(크레딧·시간 초과)이 있으면 다음 렌더 때 다시 보낸다 — 컷이 같다고 건너뛰면 안 지운 채 렌더(10-26 까르보: 크레딧 부족 뒤 새 키에도 80초대 자막 남음)
+    tf["key"] = _cuts_key(st) if not (c.get("mode") == "vmake" and c.get("why")) else None     # 'why' 는 '지울 글자 없음'(mode none)에도 붙는다 — 그때 열쇠를 비우면 clean_text↔write_doc 끝없는 되풀이(10-27 립글로스 회원편 20바퀴) · 실패한 구간(크레딧·시간 초과)이 있으면 다음 렌더 때 다시 보낸다 — 컷이 같다고 건너뛰면 안 지운 채 렌더(10-26 까르보: 크레딧 부족 뒤 새 키에도 80초대 자막 남음)
     st["log"].append(f"박힌 글자 VMake: 쓰는 구간 {c.get('used_sec')}초 중 자막 컷 {c.get('send_sec')}초 · 호출 {c.get('calls')}회 · 보낸 초 {c.get('sent')}"
                      + (f" · ⚠ {c['sent_bad']}" if c.get("sent_bad") else "") + (f" · {c.get('why')}" if c.get("why") else ""))
     if c.get("sent_bad"):

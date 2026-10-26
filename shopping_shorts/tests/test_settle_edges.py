@@ -77,3 +77,11 @@ def test_narration_cut_refits_with_wider_reach(src):
     cuts = [_cut(0.0, 1.5, 3.3, line="L1", max=None)]
     RB.settle_edges(cuts, src.parent, 1.5, {}, _refit(cuts, src.parent))
     assert RB.edge_fault(cuts[0], src.parent) is None
+
+
+def test_no_text_to_clean_does_not_loop_clean_text():
+    """지울 글자가 없으면(mode none·why '박힌 글자 없음') 열쇠를 남겨 렌더로 간다 — 옛 코드는 why 만 보고 열쇠를 비워 clean_text↔write_doc 끝없이(10-27 립글로스 20바퀴)."""
+    from tools.calcopy.hybrid import flow as F
+    st = {"version": "잇템로그판_v2", "text_fix": {"mode": "vmake", "done": {}}, "tries": {}, "log": [], "script": {"M": {"cuts": {"L1": [{"src": "a.mp4"}]}}}}
+    F.f_render_clean_got(st, {"clean": {"mode": "none", "done": {}, "cleaned": [], "calls": 0, "why": "쓰는 구간에 박힌 글자 없음"}}, {}, {})
+    assert st["text_fix"]["key"] == F._cuts_key(st)
