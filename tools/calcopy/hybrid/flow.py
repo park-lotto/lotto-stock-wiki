@@ -1796,6 +1796,38 @@ def ph_plan(st, m, rp, u):
     return {"do": [{"id": "plan", "cmd": "plan", "version": st["version"], "origin_names": sorted(_origin_names(st))}], "then": "plan_got"}
 
 
+MECH_FIX_MAX = 2      # 같은 편에서 기계 자동 고침(흐림 칸 넣기)을 되풀이하는 한도 — 넘으면 Claude 고치기로(무한 반복 막기)
+
+
+def _auto_blur(st, text: str) -> int:
+    """(완주 — 기계 걸림은 기계가 바로 고친다, 사장님 10-27 '단계별로 매끄럽게 완주') 관문 ④ 반려 글의 '이 칸을 그대로 넣거나 …: [x,y,w,h,a,b]'
+    (render_bench.blur_entry 가 원본 픽셀·초로 바꿔 둔 값)를 재료.blur 에 바로 넣는다. 반환 = 넣은 칸 수. Claude 에게 좌표 바꾸기를 시키지 않는다
+    (10-26 까르보: 같은 'NOOO!' 자막을 Claude 가 창→원본 좌표로 바꾸다 3번 어긋나 멈춤)."""
+    import re as _re
+    n = st["tries"].get("auto_blur", 0)
+    if n >= MECH_FIX_MAX:
+        return 0
+    M = (st.get("script") or {}).get("M")
+    if not isinstance(M, dict):
+        return 0
+    add = 0
+    for src, nums in _re.findall(r"blur\[([^\]]+)\] 에 이 칸을 그대로 넣거나[^:]*: \[([-\d., ]+)\]", str(text or "")):
+        try:
+            e = [float(x) for x in nums.split(",")]
+        except ValueError:
+            continue
+        if len(e) != 6:
+            continue
+        e = [int(e[0]), int(e[1]), int(e[2]), int(e[3]), e[4], e[5]]
+        lst = M.setdefault("blur", {}).setdefault(src, [])
+        if e not in lst:
+            lst.append(e); add += 1
+    if add:
+        st["tries"]["auto_blur"] = n + 1
+        st["log"].append(f"화면에 남은 글자 흐림 칸 {add}개 자동으로 넣음({n + 1}번째)")
+    return add
+
+
 def ph_plan_got(st, m, rp, u):
     p = m.get("plan") or {}
     if p.get("error"):                            # 계획 자체가 못 돌았다(실행기 오류·돈 0 모드 TTS 캐시 없음) — 빈 시트로 검수를 묻지 않는다(조용한 통과 금지)
@@ -1812,6 +1844,9 @@ def ph_plan_got(st, m, rp, u):
     over += RU.material_problems(st["script"]["M"], known, orig_lines, _all_dims(st), _ar(st["version"]))        # 재료 답 꼴 — 렌더에서 터지기 전에(뿌리 10-22)
     over += RU.source_rule_static(st["script"]["M"], _origin_names(st), _rule_bench_id(st), st.get("shots") or {})
     over += p.get("jumps") or []
+    if over and _auto_blur(st, "; ".join(over)) and all("흐림 밖 남의 박힌 글자" in x for x in "; ".join(over).split(" / ") if x.strip()):
+        v = st["version"]           # 걸린 것이 남은 글자뿐이면 흐림 칸만 넣고 계획을 다시(Claude 고치기 없이)
+        return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": st["script"]["M"]}, "cand_dir": True, "version": v}], "then": "plan"}
     st["_plan_over"] = over
     st["_plan_sheet"], st["_n_cuts"] = p.get("sheet"), p.get("cuts")
     return {"review": [_fix_review(st, "; ".join(over), p.get("sheet"), f"plan_{st['version']}")], "then": "plan_look"}
@@ -1973,6 +2008,10 @@ def ph_render_got(st, m, rp, u):
         st["log"].append("썸네일 카드가 계속 반려돼 카드 없이 렌더: " + "; ".join(probs)[:300])
         return {"do": [{"id": "clear_thumb", "cmd": "write_doc", "files": {f"{st['version']}/썸네일.json": {"options": []}}, "version": st["version"]}],
                 "then": "render"}
+    probs_all = [x.strip() for x in str(r.get("error") or "").split(" / ") if x.strip()]
+    if probs_all and _auto_blur(st, r.get("error")) and all("흐림 밖 남의 박힌 글자" in x for x in probs_all):
+        v = st["version"]           # 렌더 전 관문이 남은 글자만 잡았으면 흐림 칸만 넣고 바로 다시 렌더(Claude 고치기 없이)
+        return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": st["script"]["M"]}, "cand_dir": True, "version": v}], "then": "render"}
     gate = r.get("gate") or []       # 렌더 전 관문 멈춤(render_bench.GateError) = 재료 문제 — '처음 보는 렌더 오류'(1번 뒤 멈춤) 길로 보내지 않는다(10-26)
     if gate:
         why = "렌더 전 관문에 걸린 것 전부(한 번에 고쳐라): " + str(r.get("error") or "")

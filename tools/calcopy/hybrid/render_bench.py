@@ -320,16 +320,26 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
     src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
     if src_dir:
         fit_lip_edges(cuts, src_dir, end, {k: v.get("src") for k, v in Lm.items()})
+    line_src = {k: v.get("src") for k, v in Lm.items()}
+
+    def fit_all(reach: float = 0.4):
+        for i, c in enumerate(cuts):
+            c["t1"] = cuts[i + 1]["t0"] if i + 1 < len(cuts) else end
+            c["dur"] = round(c["t1"] - c["t0"], 3)
+            lip = c["kind"] == "orig" and c["src"] == Lm[c["line"]].get("src")      # 입 맞춤 = 원음 줄의 그 원본 화면 — 원음 줄 안에 끼운 다른 원본 컷(소리와 무관)은 나레 컷처럼 맞춘다(10-26 회원 마스크편 L7)
+            if src_dir and not lip and c.get("ss") is not None and not c.get("no_snap"):
+                base = float(c.get("ss_planned", c["ss"]))                         # 다시 맞출 때도 재료에 적힌 ss·max 기준(옮긴 ss 에 max 를 다시 붙이면 샷 끝을 넘는다)
+                s2, k = fit_cut(src_dir / c["src"], base, round(c["t1"] * FPS) - round(c["t0"] * FPS), c.get("max"), reach)   # 실제 뽑을 프레임 수로 — 옮기기·샷 안 늦추기 주인      # 원음 컷은 입 맞춤이라 옮기지도 늦추지도 않는다(검사만)
+                c.pop("speed", None)
+                if s2 != base:
+                    c["ss_planned"], c["ss"] = base, s2
+                if k < 1.0:
+                    c["speed"] = k
+    fit_all()
+    if src_dir:              # 그래도 남은 짧은 조각 = 계획이 스스로 끝낸다(관문 ③에 보내 Claude 가 초를 고치게 하지 않는다 — 10-26 까르보 '경계 맞추는 중' 22번)
+        settle_edges(cuts, src_dir, end, line_src, fit_all)
     for i, c in enumerate(cuts):
-        c["t1"] = cuts[i + 1]["t0"] if i + 1 < len(cuts) else end
-        c["dur"] = round(c["t1"] - c["t0"], 3)
-        lip = c["kind"] == "orig" and c["src"] == Lm[c["line"]].get("src")      # 입 맞춤 = 원음 줄의 그 원본 화면 — 원음 줄 안에 끼운 다른 원본 컷(소리와 무관)은 나레 컷처럼 맞춘다(10-26 회원 마스크편 L7)
-        if src_dir and not lip and c.get("ss") is not None and not c.get("no_snap"):
-            s2, k = fit_cut(src_dir / c["src"], float(c["ss"]), round(c["t1"] * FPS) - round(c["t0"] * FPS), c.get("max"))   # 실제 뽑을 프레임 수로 — 옮기기·샷 안 늦추기 주인      # 원음 컷은 입 맞춤이라 옮기지도 늦추지도 않는다(검사만)
-            if s2 != float(c["ss"]):
-                c["ss_planned"], c["ss"] = c["ss"], s2
-            if k < 1.0:
-                c["speed"] = k
+        lip = c["kind"] == "orig" and c["src"] == Lm[c["line"]].get("src")
         sd = round(src_frames(c) / FPS, 3)                        # 원본에서 쓰는 초 = 뽑을 프레임 × 속도(늦춘 컷은 짧다) — fit_cut·관문 ③과 같은 프레임 셈
         cap = None if c.get("max") is None else float(c["max"]) - (float(c["ss"]) - float(c.get("ss_planned", c["ss"])))   # max = 재료에 적힌 ss 기준 — 옮긴 만큼 뺀다
         c["over"] = round(sd - cap, 3) if cap is not None and sd > cap + 1e-3 else 0.0
@@ -1159,6 +1169,77 @@ def fit_lip_edges(cuts: list, src_dir: Path, end: float, line_src: dict) -> list
     return moved
 
 
+def edge_fault(c: dict, src_dir: Path) -> dict | None:
+    """(판단 주인 — 컷 하나가 원본 장면 경계로 짧은 조각을 만드나) 원본에서 실제로 쓰는 [첫 화면, +src_frames] 안 경계(inner_bounds)로 나눈 조각 중
+    MIN_PIECE_SEC 미만이 있으면 {e, end, hit, pieces}. 계획(settle_edges)과 렌더 전 관문 ③(cut_boundary_gate)이 같이 부른다 — 자 하나."""
+    src = Path(src_dir) / c["src"]
+    if c.get("ss") is None or src.suffix.lower() in IMG_EXT or not src.exists():
+        return None
+    e = src_start(src, float(c["ss"]))
+    end = e + src_frames(c) / FPS
+    hit = inner_bounds(shot_starts(src), e, end)
+    if not hit or not short_pieces(hit, e, end):
+        return None
+    pts = [e] + hit + [end]
+    return {"e": e, "end": end, "hit": hit, "pieces": [y - x for x, y in zip(pts, pts[1:])]}
+
+
+def settle_edges(cuts: list, src_dir: Path, end: float, line_src: dict, refit, passes: int = 4) -> list:
+    """(판단 주인 — 계획이 짧은 조각을 스스로 없앤다, 사장님 10-27 '걸림이 생기는 걸 없애라') fit_lip_edges·fit_cut(±0.4초 옮기기·늘리기) 뒤에도
+    edge_fault 가 남은 컷을 이렇게 푼다 — 관문 ③에 넘겨 Claude 가 초를 손으로 고치게 하지 않는다:
+      ① 나레 컷: 옮기는 범위를 ±1.2초로 넓혀 다시 맞춘다(refit) — 샷 안에 들어가면 끝
+      ② 그래도 끝 조각이 짧으면 이 컷을 그 조각만큼 일찍 끝내고 다음 컷이 일찍 시작(다음이 나레 컷이면 refit 이 늘려 채운다)
+      ③ 첫 조각이 짧으면 이 컷을 그만큼 늦게 시작(원본 초도 같이 — 원음 컷 입 맞춤 유지)하고 앞 컷이 길어진다
+    옮기는 양은 MIN_PIECE_SEC 미만·옮긴 뒤 컷이 MIN_PIECE_SEC 넘게 남을 때만. 컷 0 의 시작(0초)은 안 옮긴다. 반환 = 옮긴 기록."""
+    moved = []
+    lip = lambda c: c.get("kind") == "orig" and c.get("src") == line_src.get(c.get("line")) and c.get("ss") is not None
+    for p in range(passes):
+        bad = [i for i, c in enumerate(cuts) if edge_fault(c, src_dir)]
+        if not bad:
+            break
+        if p == 0 and any(not lip(cuts[i]) for i in bad):
+            refit(1.2)
+            moved.append(("넓혀 다시 맞춤", len(bad)))
+            continue
+        changed = False
+        for i in bad:
+            f = edge_fault(cuts[i], src_dir)
+            if not f:
+                continue
+            c = cuts[i]
+            sp = float(c.get("speed") or 1.0)
+            dur = float(c["t1"]) - float(c["t0"])
+            head, tail = f["pieces"][0], f["pieces"][-1]
+            if tail < MIN_PIECE_SEC - 1e-3 and i + 1 < len(cuts):
+                k = math.ceil(tail / sp * FPS - 1e-6) / FPS         # 화면 초(늘린 컷은 원본 1초 = 화면 1/speed 초)
+                if dur - k > MIN_PIECE_SEC:
+                    nx = cuts[i + 1]
+                    nx["t0"] = round(float(nx["t0"]) - k, 3)
+                    if lip(nx) and nx.get("line") == c.get("line"):
+                        nx["ss"] = round(float(nx["ss"]) - k, 3)
+                    moved.append((c.get("line"), "끝", round(k, 3)))
+                    changed = True
+                    continue
+            if head < MIN_PIECE_SEC - 1e-3 and i > 0:
+                k = math.ceil(head / sp * FPS - 1e-6) / FPS
+                if dur - k > MIN_PIECE_SEC:
+                    c["t0"] = round(float(c["t0"]) + k, 3)
+                    c["ss"] = round(float(c["ss"]) + k * sp, 3)
+                    if "ss_planned" in c:
+                        c["ss_planned"] = round(float(c["ss_planned"]) + k * sp, 3)
+                    if c.get("max") is not None:
+                        c["max"] = round(float(c["max"]) - k * sp, 3)          # max = 재료 ss 에서 샷 끝까지 — 시작을 늦춘 만큼 준다
+                    moved.append((c.get("line"), "앞", round(k, 3)))
+                    changed = True
+        if not changed:
+            break
+        refit(1.2)
+    left = [cuts[i].get("line") for i, c in enumerate(cuts) if edge_fault(c, src_dir)]
+    if moved or left:
+        sys.stderr.write(f"[settle_edges] 짧은 조각 스스로 풀기 {moved} · 남음 {left}\n")
+    return moved
+
+
 def src_frames(c: dict) -> int:
     """컷이 원본에서 쓰는 프레임 수(30fps 격자) = 화면 프레임 × 속도 — 관문 ③·④·접촉 시트·VMake 구간이 같이 읽는다(늘린 컷이 다음 샷을 재지 않게)."""
     return max(1, round(cut_frames_n(c) * cut_speed(c)))
@@ -1314,17 +1395,10 @@ def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
         return []
     bad = []
     for c in T["cuts"]:
-        src = src_dir / c["src"]
-        if c.get("ss") is None or src.suffix.lower() in IMG_EXT or not src.exists():
-            continue
-        ss = float(c["ss"])
-        n = src_frames(c)                  # 원본에서 쓰는 프레임(fit_cut 이 늦춘 컷은 화면 프레임보다 적다)
-        e = src_start(src, ss)             # 실제 첫 화면 초(24fps 원본은 ss 보다 늦다 — 10-26 식기세척기 끝 1프레임 번쩍)
-        end = e + n / FPS
-        hit = inner_bounds(shot_starts(src), e, end)
-        short = short_pieces(hit, e, end)
-        if hit and short:      # 양쪽이 긴 조각이면 원본 자체의 이어진 편집이라 통과 — 짧은 조각(번쩍임)만 막는다(오류기록 55: 0.3초 꼬리도 결함)
-            bad.append(f"컷 경계 {c['line']} {c['src']} ss={ss:.2f}~{end:.2f} 안 원본 장면 경계 {[round(t, 2) for t in hit]}초 → 짧은 조각 {short}초(<{MIN_PIECE_SEC})")
+        f = edge_fault(c, src_dir)         # 계획 settle_edges 와 같은 자(원본에서 쓰는 프레임·실제 첫 화면 초·inner_bounds)
+        if f:                  # 양쪽이 긴 조각이면 원본 자체의 이어진 편집이라 통과 — 짧은 조각(번쩍임)만 막는다(오류기록 55: 0.3초 꼬리도 결함)
+            short = [round(x, 2) for x in f["pieces"] if x < MIN_PIECE_SEC - 1e-3]
+            bad.append(f"컷 경계 {c['line']} {c['src']} ss={float(c['ss']):.2f}~{f['end']:.2f} 안 원본 장면 경계 {[round(t, 2) for t in f['hit']]}초 → 짧은 조각 {short}초(<{MIN_PIECE_SEC})")
     return bad
 
 

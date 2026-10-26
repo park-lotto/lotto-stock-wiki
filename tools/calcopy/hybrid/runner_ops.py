@@ -1371,6 +1371,9 @@ def c_plan(W, d):
     if T.get("cuts"):
         out["sheet"] = rel(W, plan_sheet(W, v, T))
         out["jumps"] = source_rule_scan(W, T, _origin_names(W, v) | set(d.get("origin_names") or []))
+        reuse = [f"같은 장면 재사용 {c.get('line')} {Path(str(c['src'])).stem}@{float(c['ss']):.2f} — 그 샷 안에서는 못 피함, 이 줄 컷을 다른 장면으로 바꿔라: {c['reuse_unfixed'][0]}"
+                 for c in T["cuts"] if c.get("reuse_unfixed")]
+        out["jumps"] += reuse      # 계획(respace_reuse)이 못 피한 B13 — 렌더(수 분) 뒤 완성본 검사에서야 걸려 11단계로 되돌아갔다(10-26 까르보 B13). 계획 고치기에서 바로
     return out
 
 
