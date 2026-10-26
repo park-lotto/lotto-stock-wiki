@@ -14059,6 +14059,78 @@ def _set_session_cookie(response, customer_id: int):
                          max_age=_COOKIE_MAX_AGE, httponly=True, samesite="lax")
 
 
+# ── 옛 주소 로그인 이어주기(관제 272, 2026-10-26 사장님 "고객이 할거없게") ─────────────
+# 고객 PC에 깔린 담기 확장은 옛 주소(shoppingshorts.duckdns.org)가 박혀 있어 뒤에서 그 주소로 부른다.
+# 로그인은 새 주소(stmaker.kr)에서 하므로 옛 주소엔 쿠키가 없다 → 확장 기능이 '로그인 필요'로 막혔다.
+# 그래서 새 주소에서 화면을 열 때 하루 한 번 옛 주소를 한 번 들렀다 온다(주소창 이동 = 1st-party 쿠키라
+# 브라우저가 막지 않는다). 들르는 자리에서 같은 로그인·같은 기기 도장을 옛 주소에도 심는다.
+# ★판단은 여기 두 함수 + 엔드포인트(api_old_domain_sync) 한 벌뿐이다.
+_OLD_HOST = "shoppingshorts.duckdns.org"
+_NEW_HOST = "stmaker.kr"
+_OLD_SYNC_MARK = "ss_oldsync"                 # 새 주소에 남기는 '오늘 들렀다' 표시
+_OLD_SYNC_MARK_AGE = 60 * 60 * 24             # 하루 — 옛 주소 쿠키(30일)보다 짧게 잡아 늘 살아 있게
+# ★경로가 /grab 으로 시작해야 한다 — 옛 주소 아파치 규칙(!^/(api/|grab|…))이 /grab* 만 새 주소로 안 넘긴다.
+#   /api/ 아래로 두면 '창 여는 /api/ 는 새 주소로'(같은 날 추가) 규칙에 걸려 옛 주소에 쿠키를 못 심는다.
+_OLD_SYNC_PATH = "/grab_auth_sync"
+
+
+def _old_sync_token(customer_id, device_id, ttl=120):
+    """옛 주소에 넘길 1회용 표(2분). 세션 쿠키 모양(3칸)과 달라 표 자체로는 로그인이 안 된다."""
+    exp = int(datetime.now(timezone.utc).timestamp()) + ttl
+    payload = f"{int(customer_id)}:{exp}:{device_id or '-'}"
+    sig = hmac.new((DASH_SECRET + "|oldsync").encode(), payload.encode(), hashlib.sha256).hexdigest()
+    return f"{payload}:{sig}"
+
+
+def _old_sync_verify(token):
+    """표 → (customer_id, device_id|None) 또는 None(위조·만료)."""
+    try:
+        cid_s, exp_s, dev, sig = (token or "").split(":")
+        if datetime.now(timezone.utc).timestamp() > int(exp_s):
+            return None
+        want = hmac.new((DASH_SECRET + "|oldsync").encode(), f"{cid_s}:{exp_s}:{dev}".encode(),
+                        hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig, want):
+            return None
+        return int(cid_s), (None if dev == "-" else dev)
+    except (ValueError, TypeError):
+        return None
+
+
+def _old_domain_sync_redirect(request, path, customer_id):
+    """새 주소에서 사람이 화면을 열었는데 오늘 옛 주소를 안 들렀으면 → 들렀다 오는 302. 아니면 None."""
+    try:
+        host = (request.headers.get("host") or "").split(":")[0].lower()
+        if host != _NEW_HOST or not _is_page_nav(request, path) or request.cookies.get(_OLD_SYNC_MARK):
+            return None
+        back = f"https://{_NEW_HOST}{path}" + (f"?{request.url.query}" if request.url.query else "")
+        q = urllib.parse.urlencode({"t": _old_sync_token(customer_id, _device_id(request)), "next": back})
+        r = RedirectResponse(f"https://{_OLD_HOST}{_OLD_SYNC_PATH}?{q}", status_code=302)
+        r.set_cookie(_OLD_SYNC_MARK, "1", max_age=_OLD_SYNC_MARK_AGE, httponly=True, samesite="lax")
+        return r
+    except Exception as e:      # noqa: BLE001 — 이어주기 때문에 화면이 막히면 안 된다(경보만)
+        print(f"[old_sync] 이어주기 판정 실패(화면은 그대로): {e!r}", file=sys.stderr)
+        return None
+
+
+@app.get(_OLD_SYNC_PATH)
+def api_old_domain_sync(request: Request, t: str = "", next: str = ""):
+    """옛 주소에서 받는다: 표가 맞으면 같은 로그인·기기 도장을 옛 주소 쿠키로 심고 새 주소로 돌려보낸다.
+    ★돌아갈 곳은 새 주소만 — 아무 주소나 받으면 남의 사이트로 보내는 열린 리다이렉트가 된다.
+    ★표가 틀려도 고객을 세우지 않는다 — 쿠키만 안 심고 그대로 돌려보낸다(경보만)."""
+    back = next if isinstance(next, str) and next.startswith(f"https://{_NEW_HOST}/") else f"https://{_NEW_HOST}/"
+    r = RedirectResponse(back, status_code=302)
+    got = _old_sync_verify(t)
+    if got is None:
+        print(f"[old_sync] 표 검증 실패 — 쿠키 안 심고 돌려보냄", file=sys.stderr)
+        return r
+    cid, dev = got
+    _set_session_cookie(r, cid)
+    if dev and not request.cookies.get(_DEVICE_COOKIE):
+        _stamp_device(r, dev)          # 새 주소와 같은 도장 — 같은 PC가 두 대로 잡히지 않게
+    return r
+
+
 # ── 🖥 PC 등록(2026-08-31 사장님 "1번pc 2번pc 다른곳에선 안되게") ──────────────
 # ★IP로 막지 않는다: 가정용 인터넷은 대부분 유동 IP라 재접속마다 바뀐다 — 같은 PC인데
 #   잠긴다. 브라우저에 **랜덤 기기 도장**을 찍어 그걸로 본다.
@@ -14066,6 +14138,11 @@ def _set_session_cookie(response, customer_id: int):
 # ⚠️쿠키가 지워지면(청소·시크릿창·포맷) 같은 PC도 새 기기로 보인다 — 그래서 사장님이
 #   누르는 '기기 초기화'가 반드시 짝으로 있어야 한다(관리자 화면).
 _DEVICE_COOKIE = "ss_pc"
+
+
+def _stamp_device(resp, dev):
+    """기기 도장 쿠키를 찍는 곳은 여기 하나(미들웨어·옛 주소 이어주기가 부른다)."""
+    resp.set_cookie(_DEVICE_COOKIE, dev, max_age=_DEVICE_MAX_AGE, httponly=True, samesite="lax")
 _DEVICE_MAX_AGE = 60 * 60 * 24 * 730      # 2년 — 쿠키가 만료로 사라지면 곧 잠김이다
 
 
@@ -16438,6 +16515,7 @@ async def _auth_guard(request: Request, call_next):
     #   사장님 PC의 도우미가 로그인 쿠키 없이 폴링한다. 엔드포인트가 자체 토큰
     #   (COUPANG_RELAY_TOKEN)을 검사하고, 토큰이 비어 있으면 스스로 403으로 닫는다.
     if (path in _AUTH_ALLOW or path == "/api/pricing"   # 기수·가격 공개 조회(2026-10-01) — _AUTH_ALLOW 튜플을 안 건드린 건 모듈 수준 diff가 영상 관문을 깨우기 때문
+            or path == _OLD_SYNC_PATH   # 옛 주소 로그인 이어주기(관제 272) — 옛 주소엔 아직 쿠키가 없다. 서명된 2분 표로 직접 검사
             or path.startswith("/static") or path.startswith("/landing/")   # 랜딩 영상·포스터(비로그인 대문)
             or path.startswith("/api/find/frame/")
             or path.startswith("/api/help/media/")   # 도움말 이미지·영상(공개 읽기)
@@ -16513,13 +16591,16 @@ async def _auth_guard(request: Request, call_next):
                     return RedirectResponse("/setup?first=1", status_code=303)
             except Exception as e:  # noqa: BLE001 — 안내 때문에 서비스를 막지 않는다
                 print(f"[setup] 안내 판정 실패(무시): {e!r}", file=sys.stderr)
+        # 옛 주소 로그인 이어주기(관제 272) — 모든 게이트를 통과한 화면 이동만, 하루 한 번
+        _sync = _old_domain_sync_redirect(request, path, customer_id)
+        if _sync is not None:
+            return _sync
         resp = await call_next(request)
         # 🖥 기기 도장은 **여기서만** 찍는다 — 모든 게이트를 통과한 응답에 얹으므로
         #   화면 이동(303)을 가로채지 않는다(위 _check_pc_device 주석 참조).
         _newdev = getattr(request.state, "new_device_id", None)
         if _newdev:
-            resp.set_cookie(_DEVICE_COOKIE, _newdev, max_age=_DEVICE_MAX_AGE,
-                            httponly=True, samesite="lax")
+            _stamp_device(resp, _newdev)
         return resp
     if path.startswith("/api/"):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
