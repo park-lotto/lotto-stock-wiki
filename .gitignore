@@ -216,3 +216,7 @@ out/lang_mode_check_*.json
 
 # 구글 렌즈 크롬 프로필(tools/calcopy/lens.py, 잠기면 _<pid> 사본)
 /.lens_profile*/
+
+# 쿠팡 브라우저 프로필(로그인·쿠키) — 절대 추적 금지 (10-26, 63729e22d 에 딸려 들어감)
+.coupang_profile*/
+.coupang_w3/
