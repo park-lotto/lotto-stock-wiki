@@ -163,9 +163,8 @@ def cut_gates(G: dict, doc: Path | None, R: Path, log=print) -> list[str]:
     bad += [f"사진 {x}" for x in RB.photo_gate(T, st)]
     bad += [f"③ {x}" for x in RB.cut_boundary_gate(Ts, M, st)]
     plain = [c for c in Ts["cuts"] if c["speed"] == 1.0 and not c.get("move")]
-    for c in plain:          # 컷 하나씩 — 문구의 컷 번호가 preset_make 컷 번호(pm_k)·접촉 시트 번호와 같게(걸러낸 목록 번호 0 을 바꿔 적는다)
-        k = c["pm_k"]
-        bad += ["⑦ " + x.replace("컷 멈춤 0 ", f"컷 멈춤 {k} ", 1) for x in RB.cut_still_gate({"cuts": [c], "end": Ts["end"]}, M, st)]
+    # 한 번에(컷끼리 동시 읽기 — render_bench.cut_still_gate) · 문구의 컷 번호 = preset_make 컷 번호(pm_k)·접촉 시트 번호(ks)
+    bad += ["⑦ " + x for x in RB.cut_still_gate({"cuts": plain, "end": Ts["end"]}, M, st, ks=[c["pm_k"] for c in plain])]
     for c in Ts["cuts"]:
         if c in plain or not Path(c["src"]).exists():
             continue

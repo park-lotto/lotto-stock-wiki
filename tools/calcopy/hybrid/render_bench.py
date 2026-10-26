@@ -1154,21 +1154,28 @@ def cut_gray(c: dict, src: Path, st: dict, M: dict):
     return np.frombuffer(raw[:len(raw) - len(raw) % (108 * sh)], np.uint8).reshape(-1, sh, 108).astype(np.int16)
 
 
-def cut_still_gate(T: dict, M: dict, st: dict) -> list[str]:
+def cut_still_gate(T: dict, M: dict, st: dict, ks: list | None = None) -> list[str]:
     """렌더 전 관문 ⑦ 멈춤·거의 멈춤(10-25): 컷마다 조각이 될 그림(cut_gray)에서 정지 구간을 quality_gate.still_spans(완성본 '화면 멈춤 없음'과 같은 판정)로 잰다.
     감사 눈7 정지 47건(확정 18: 골든카레 흑백 트럭 2.2초·S&B 로고·카레 캔·거즈 잠옷 등)은 원본 자체가 멈춘 그림인 컷이었고 렌더 전에는 아무 관문도 안 봤다.
     원본 끝을 넘어 마지막 프레임이 굳는 멈춤은 계획의 src_left('컷이 원본 샷보다 길다')가 이미 멈춘다(98 #61) — 여기서 다시 적지 않는다.
-    사진 컷은 clip_cmd 가 still_move(확대·흐름)를 넣은 그대로 재므로 '움직임 없는 사진'만 걸린다(벤치 판에 의도된 정지 사진 칸 없음 — 사장님 10-18 '이미지를 쓰려면 계속 움직이게')."""
+    사진 컷은 clip_cmd 가 still_move(확대·흐름)를 넣은 그대로 재므로 '움직임 없는 사진'만 걸린다(벤치 판에 의도된 정지 사진 칸 없음 — 사장님 10-18 '이미지를 쓰려면 계속 움직이게').
+    ks = 문구에 적을 컷 번호(T 컷 순서와 같은 길이 — preset_gates 가 preset_make 컷 번호로). 없으면 T 안 순번."""
     from tools.calcopy.hybrid import quality_gate as QG
     src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
     if not src_dir:
         return []
+    items = [(k, c, src_dir / c["src"]) for k, c in enumerate(T["cuts"]) if (src_dir / c["src"]).exists()]
+    if len(items) > 1:      # 컷마다 ffmpeg 회색 읽기를 동시 FRAME_JOBS 개까지 — 판정(still_spans)·문구 순서는 컷 순서 그대로
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(min(FRAME_JOBS, len(items))) as ex:
+            grays = list(ex.map(lambda x: cut_gray(x[1], x[2], st, M), items))
+    else:
+        grays = [cut_gray(c, src, st, M) for _, c, src in items]
     bad = []
-    for k, c in enumerate(T["cuts"]):
-        src = src_dir / c["src"]
-        if not src.exists():
-            continue
-        sp = QG.still_spans(cut_gray(c, src, st, M))
+    for (k, c, src), g in zip(items, grays):
+        if ks is not None:
+            k = ks[k]
+        sp = QG.still_spans(g)
         if sp:
             bad.append(f"컷 멈춤 {k} {c['line']} {c['src']}@{c.get('ss')}: 컷 안 {[(round(a, 2), round(b, 2)) for a, b in sp]}초가 멈춘 그림 — 움직이는 장면으로 바꾸거나(ss·원본) 사진이면 move 를 준다")
     return bad
@@ -1238,10 +1245,95 @@ def look_times(n: int) -> list[float]:
     return [round(x, 3) for x in (min(0.2, d / 4), d / 2, max(d - 0.2, 3 * d / 4))]
 
 
-def cut_frame(src: Path, t: float, crop, win: tuple[int, int], blur=None):
-    """렌더 조각과 같은 그림(창 크기 BGR) — 주인 thumb.card_scene_frame(file 자리) + 같은 흐림."""
+# ── 컷 프레임 뽑기 주인(10-26 관문 속도, 98 #?) — 접촉 시트·관문 ④·plan_canvas 가 같은 함수로 같은 프레임을 한 번만 뽑는다 ──
+# 그림 주인은 그대로 thumb.card_scene_frame(file 자리 · -ss 를 -i 앞에 둔 빠른 찾기 + ffmpeg 정확 찾기 · 흐림 → crop → scale). 여기는 그 결과를
+#   ① 프로세스 안 기억(열쇠 = 원본 경로·크기·mtime · t · crop · 창 · 흐림 칸 — 같은 열쇠 = 같은 ffmpeg 명령 = 같은 픽셀)
+#   ② 서로 상관없는 프레임을 동시에 FRAME_JOBS 개까지(ffmpeg 프로세스 — 판정 계산은 그대로 한 줄로)
+# 로 나눠 쓸 뿐이다. 10-26 회원 마스크편 실측: 접촉 시트 57장 45초 + 관문 ④ 114장(시트와 같은 57장 다시) — 프레임 한 장 0.7초.
+FRAME_JOBS = 6                   # 동시 ffmpeg 상한(프레임 뽑기·⑦ 회색 읽기)
+FRAME_MEMO_MAX = 1_200_000_000   # 기억 상한(바이트) — 넘으면 오래된 것부터 버린다(다시 뽑으면 같은 그림)
+_FRAME_MEMO: dict = {}
+_FRAME_MEMO_N = [0]
+_FRAME_LOCK = None
+
+
+def src_ident(src: Path) -> list:
+    """원본 정체 = [경로, 크기, mtime_ns] — 같은 이름으로 다시 받은 원본을 옛 기억·캐시로 보지 않게."""
+    p = Path(src)
+    try:
+        s = p.stat()
+        return [str(p), int(s.st_size), int(s.st_mtime_ns)]
+    except OSError:
+        return [str(p), -1, -1]
+
+
+def _frame_key(src: Path, t: float, crop, win, blur) -> str:
+    return json.dumps([src_ident(src), repr(float(t)), list(crop) if crop else None, list(win), blur])
+
+
+def _lock():
+    global _FRAME_LOCK
+    if _FRAME_LOCK is None:
+        import threading
+        _FRAME_LOCK = threading.Lock()
+    return _FRAME_LOCK
+
+
+def _frame_get(k: str):
+    with _lock():
+        if k in _FRAME_MEMO:
+            v = _FRAME_MEMO.pop(k)
+            _FRAME_MEMO[k] = v          # 최근 쓴 것을 뒤로(오래된 것부터 버린다)
+            return True, v
+    return False, None
+
+
+def _frame_put(k: str, im):
+    with _lock():
+        if k in _FRAME_MEMO:
+            return
+        _FRAME_MEMO[k] = im
+        _FRAME_MEMO_N[0] += im.nbytes if im is not None else 0
+        while _FRAME_MEMO_N[0] > FRAME_MEMO_MAX and len(_FRAME_MEMO) > 1:
+            old = _FRAME_MEMO.pop(next(iter(_FRAME_MEMO)))
+            _FRAME_MEMO_N[0] -= old.nbytes if old is not None else 0
+
+
+def _frame_read(src: Path, t: float, crop, win, blur):
     from tools.calcopy.hybrid import thumb as TH
-    return TH.card_scene_frame({"file": str(src), "ss": t, "crop": crop}, {}, Path("."), win, blur=blur)[0]
+    im = TH.card_scene_frame({"file": str(src), "ss": t, "crop": crop}, {}, Path("."), win, blur=blur)[0]
+    return im                           # 나눠 쓰는 그림 — 고치려면 .copy()(지금 부르는 쪽은 읽기만: 접촉 시트·글자·얼굴 자·plan_canvas)
+
+
+def cut_frames(reqs: list, jobs: int | None = None) -> list:
+    """(판단 주인 — 컷 프레임 뽑기) reqs = [(src, t, crop, win, blur)…] → 같은 순서의 그림(창 크기 BGR, 나눠 쓰니 고치지 말 것) 또는 None.
+    기억에 없는 것만 ffmpeg 로 — 서로 다른 프레임은 동시에 jobs(기본 FRAME_JOBS)개까지."""
+    keys = [_frame_key(*r) for r in reqs]
+    out: dict = {}
+    todo = {}
+    for k, r in zip(keys, reqs):
+        hit, v = _frame_get(k)
+        if hit:
+            out[k] = v
+        elif k not in todo:
+            todo[k] = r
+    if todo:
+        n = max(1, min(jobs or FRAME_JOBS, len(todo)))
+        if n == 1:
+            got = [_frame_read(*r) for r in todo.values()]
+        else:
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(n) as ex:
+                got = list(ex.map(lambda r: _frame_read(*r), todo.values()))
+        for k, im in zip(todo, got):
+            _frame_put(k, im)
+            out[k] = im
+    return [out[k] for k in keys]
+
+
+def cut_frame(src: Path, t: float, crop, win: tuple[int, int], blur=None):
+    """렌더 조각과 같은 그림(창 크기 BGR, 나눠 쓰니 고치지 말 것) — 주인 thumb.card_scene_frame(file 자리) + 같은 흐림. 뽑기·기억 = cut_frames."""
+    return cut_frames([(src, t, crop, win, blur)], jobs=1)[0]
 
 
 def blur_cover(regs, crop, win: tuple[int, int], box, t: float) -> float:
@@ -1293,9 +1385,10 @@ def _glyph_diff(g, diffs, box) -> list[float]:
     return [round(float(d[y0:y1, x0:x1][m].mean()), 2) for d in diffs]
 
 
-def text_feats(a, b, regs=None, crop=None, win=None, t: float = 0.0, far=()) -> list[dict]:
+def text_feats(a, b, regs=None, crop=None, win=None, t: float = 0.0, far=(), boxes=None) -> list[dict]:
     """한 프레임(a)의 글자 상자마다 잰 값 — 판정은 foreign_text. b = CONTENT_PAIR 뒤(또는 앞) 프레임(붙박이 재기).
-    far = 같은 컷의 다른 잴 프레임들(긴 간격 0.4초+ — 천천히 훑는 화면·멈춘 듯한 화면에서도 글이 주변과 같이 변하는지 본다) → fi = [[안, 둘레]…]."""
+    far = 같은 컷의 다른 잴 프레임들(긴 간격 0.4초+ — 천천히 훑는 화면·멈춘 듯한 화면에서도 글이 주변과 같이 변하는지 본다) → fi = [[안, 둘레]…].
+    boxes = 이 프레임(a)의 vision.text_boxes_scored 결과(같은 프레임 열쇠로 캐시해 둔 것 — cut_content_feats). 없으면 여기서 잰다."""
     import cv2
     import numpy as np
     from shopping_shorts.channelkit import vision as V
@@ -1306,7 +1399,7 @@ def text_feats(a, b, regs=None, crop=None, win=None, t: float = 0.0, far=()) -> 
     dfar = [np.abs(ga - gray(x)) for x in far if x is not None and x.shape == a.shape]
     H, W = ga.shape
     out = []
-    for q in V.text_boxes_scored(a):
+    for q in (V.text_boxes_scored(a) if boxes is None else boxes):
         x0, y0, x1, y1 = q["box"]
         bw, bh = max(1, x1 - x0), max(1, y1 - y0)
         d_in, d_ring = _in_ring(diff, (x0, y0, x1, y1))
@@ -1319,24 +1412,63 @@ def text_feats(a, b, regs=None, crop=None, win=None, t: float = 0.0, far=()) -> 
     return out
 
 
-def cut_content_feats(src: Path, ss: float, n: int, crop, win: tuple[int, int], regs=None, anchors=()) -> dict:
-    """관문 ④가 재는 값(판정 전) — 컷 하나의 잴 프레임 3장(look_times)마다 글자 상자 값(text_feats)·얼굴 값(face_feats).
-    표본 수집(test_cut_content_labels 표본)도 이 함수를 그대로 부른다 — 관문과 표본이 같은 자."""
+def content_times(ss: float, n: int) -> tuple[list[float], list[float]]:
+    """관문 ④가 컷 하나에서 읽는 시각(원본 초) — 잴 프레임 3장(look_times)과 그 짝(CONTENT_PAIR 뒤, 컷 끝이면 앞)."""
     ss = float(ss)
     d = n / FPS
     ts = [ss + dt for dt in look_times(n)]
-    A = [cut_frame(src, t, crop, win, regs) for t in ts]
+    return ts, [t + CONTENT_PAIR if (t - ss) + CONTENT_PAIR < d else t - CONTENT_PAIR for t in ts]
+
+
+def cut_content_feats(src: Path, ss: float, n: int, crop, win: tuple[int, int], regs=None, anchors=(), ocr: dict | None = None) -> dict:
+    """관문 ④가 재는 값(판정 전) — 컷 하나의 잴 프레임 3장(look_times)마다 글자 상자 값(text_feats)·얼굴 값(face_feats).
+    표본 수집(test_cut_content_labels 표본)도 이 함수를 그대로 부른다 — 관문과 표본이 같은 자.
+    프레임 = cut_frames(접촉 시트와 같은 열쇠 — 이미 뽑은 그림은 다시 안 뽑는다). ocr = {프레임 열쇠: text_boxes_scored 결과} 캐시(주면 읽고 채운다)."""
+    ss = float(ss)
+    ts, t2s = content_times(ss, n)
+    fr = cut_frames([(src, t, crop, win, regs) for t in ts + t2s])
+    A, B = fr[:len(ts)], fr[len(ts):]
     r = {"text": [], "face": []}
     for i, (t, a) in enumerate(zip(ts, A)):
         if a is None:
             continue
-        dt = t - ss
-        t2 = t + CONTENT_PAIR if dt + CONTENT_PAIR < d else t - CONTENT_PAIR
-        b = cut_frame(src, t2, crop, win, regs)
-        r["text"].append(text_feats(a, b, regs, crop, win, t, far=[x for j, x in enumerate(A) if j != i]))
+        boxes = None
+        if ocr is not None:
+            ok = ocr_key(src, t, crop, win, regs)
+            boxes = ocr.get(ok)
+            if boxes is None:
+                from shopping_shorts.channelkit import vision as V
+                boxes = ocr[ok] = [{"box": list(q["box"]), "score": q["score"], "fill": q["fill"]} for q in V.text_boxes_scored(a)]
+        r["text"].append(text_feats(a, B[i], regs, crop, win, t, far=[x for j, x in enumerate(A) if j != i], boxes=boxes))
         if anchors:
             r["face"].append(face_feats(a, anchors))
     return r
+
+
+def ocr_key(src: Path, t: float, crop, win, regs) -> str:
+    """글자 상자 캐시 열쇠 = 프레임 열쇠(원본 정체·t·crop·창·흐림) + CONTENT_VER."""
+    import hashlib
+    return hashlib.md5((_frame_key(src, t, crop, win, regs) + f"|v{CONTENT_VER}").encode()).hexdigest()[:20]
+
+
+CACHE_KEEP = 3000          # cut_content.json·cut_ocr.json 에 남기는 항목 수(옛 계획 컷도 남긴다 — 대본↔장면을 오가면 같은 컷이 돌아온다)
+
+
+def _cache_load(p: Path | None) -> dict:
+    try:
+        return jload(p) if (p and p.exists()) else {}
+    except Exception:  # noqa: BLE001 — 깨진 캐시 = 빈 캐시(다시 잰다)
+        return {}
+
+
+def _cache_save(p: Path | None, old: dict, now: dict):
+    """옛 항목 뒤에 이번 항목(최근 것이 뒤) — CACHE_KEEP 넘으면 앞(오래된 것)부터 버린다."""
+    if not p:
+        return
+    allk = {k: v for k, v in old.items() if k not in now}
+    allk.update(now)
+    keep = dict(list(allk.items())[-CACHE_KEEP:])
+    jsave(p, keep)
 
 
 def foreign_text(f: dict) -> bool:
@@ -1420,7 +1552,9 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
     """렌더 전 관문 ④(10-25 감사 남의 글자 33·남 얼굴 15): 계획의 컷마다 렌더 조각과 같은 프레임 3장(cut_crop·blur)을 원본에서 뽑아
       ① 글자: 흐림 밖에 남의 박힌 글자(자막·워터마크·로고 글)가 TEXT_MIN_HITS 장 이상이면 멈춤(foreign_text)
       ② 얼굴(연예인 판 thumb_card_face=true): 기준 얼굴(카드 통과 얼굴)과 다른 사람의 큰 얼굴이 FACE_MIN_HITS 장 이상이면 멈춤(other_face)
-    문제 목록(빈 목록 = 통과). 잰 값은 R/cut_content.json 캐시(열쇠 = 원본·ss·프레임 수·crop·blur·기준 얼굴·CONTENT_VER).
+    문제 목록(빈 목록 = 통과). 잰 값은 R/cut_content.json 캐시(열쇠 = 원본 정체(경로·크기·mtime)·ss·프레임 수·crop·blur·기준 얼굴·CONTENT_VER),
+    프레임마다 글자 상자는 R/cut_ocr.json(ocr_key) — 둘 다 옛 계획 컷을 남긴다(대본↔장면을 오가도 같은 컷·같은 프레임은 다시 안 잰다).
+    캐시 없는 컷의 프레임은 FRAME_JOBS 개씩 미리 뽑아 두고(cut_frames) 판정 계산은 컷 순서대로 한 줄로(결과·문구 순서 그대로).
     다른 제품(감사 눈3 24건)은 기계로 잴 자가 없어 이 관문 밖 — 접촉 시트 눈 검사 몫."""
     import hashlib
     src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
@@ -1432,11 +1566,10 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
         log("[관문④] 연예인 판인데 기준 얼굴 없음(썸네일.json 없음 또는 카드 얼굴 통과 0) — 얼굴 판정 건너뜀, 글자만 잰다")
     ak = hashlib.md5(b"".join(a.tobytes() for a in anchors)).hexdigest()[:8] if anchors else "-"
     cp = (R / "cut_content.json") if R else None
-    try:
-        cache = jload(cp) if (cp and cp.exists()) else {}
-    except Exception:
-        cache = {}
-    bad, rows = [], {}
+    op = (R / "cut_ocr.json") if R else None
+    cache, ocr0 = _cache_load(cp), _cache_load(op)
+    ocr = dict(ocr0)
+    jobs = []
     for k, c in enumerate(T["cuts"]):
         src = src_dir / c["src"]
         if c.get("ss") is None or src.suffix.lower() in IMG_EXT or not src.exists():
@@ -1444,23 +1577,40 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
         n = c.get("frames") or (round(c["t1"] * FPS) - round(c["t0"] * FPS))
         crop = cut_crop(c, src, (ww, wh))
         regs = (M.get("blur") or {}).get(c["src"])
-        key = hashlib.md5(json.dumps([c["src"], round(float(c["ss"]), 3), n, crop, regs, ak, CONTENT_VER, ww, wh]).encode()).hexdigest()[:16]
-        r = cache.get(key)
-        if r is None:
-            m = cut_content_feats(src, c["ss"], n, crop, (ww, wh), regs, anchors)
-            r = {"text": [[f for f in fr if foreign_text(f)] for fr in m["text"]], "face": [[f for f in fr if other_face(f)] for fr in m["face"]]}
-        rows[key] = r
-        nt = sum(1 for x in r["text"] if x)
-        nf = sum(1 for x in r["face"] if x)
-        where = f"{c['line']} {c['src']}@{float(c['ss']):.2f}"
-        if nt >= TEXT_MIN_HITS:
-            boxes = [f["box"] for x in r["text"] for f in x][:3]
-            bad.append(f"컷 {k} {where}: 흐림 밖 남의 박힌 글자 {nt}/{len(r['text'])}장(창 좌표 {boxes}) — 재료.json blur[{c['src']}] 에 그 칸을 넣거나 crop·ss 를 옮긴다")
-        if nf >= FACE_MIN_HITS:
-            cs = [f["cos"] for x in r["face"] for f in x][:3]
-            bad.append(f"컷 {k} {where}: 연예인 아닌 얼굴 {nf}/{len(r['face'])}장(기준 얼굴 코사인 {cs} < {FACE_OTHER_COS}) — 연예인이 나오는 장면으로 바꾼다")
-    if cp:
-        jsave(cp, rows)
+        key = hashlib.md5(json.dumps([c["src"], src_ident(src)[1:], round(float(c["ss"]), 3), n, crop, regs, ak, CONTENT_VER, ww, wh]).encode()).hexdigest()[:16]
+        jobs.append((k, c, src, n, crop, regs, key))
+    todo = [j for j in jobs if j[6] not in cache]
+    pre = {}
+    if todo:
+        from concurrent.futures import ThreadPoolExecutor
+        ex = ThreadPoolExecutor(min(FRAME_JOBS, len(todo)))
+        for (k, c, src, n, crop, regs, key) in todo:      # 프레임만 미리(ffmpeg 동시) — 판정 계산은 아래 순서대로
+            ts, t2s = content_times(c["ss"], n)
+            pre[key] = ex.submit(cut_frames, [(src, t, crop, (ww, wh), regs) for t in ts + t2s], 1)
+    bad, rows = [], {}
+    try:
+        for (k, c, src, n, crop, regs, key) in jobs:
+            r = cache.get(key)
+            if r is None:
+                pre[key].result()
+                m = cut_content_feats(src, c["ss"], n, crop, (ww, wh), regs, anchors, ocr=ocr)
+                r = {"text": [[f for f in fr if foreign_text(f)] for fr in m["text"]], "face": [[f for f in fr if other_face(f)] for fr in m["face"]]}
+            rows[key] = r
+            nt = sum(1 for x in r["text"] if x)
+            nf = sum(1 for x in r["face"] if x)
+            where = f"{c['line']} {c['src']}@{float(c['ss']):.2f}"
+            if nt >= TEXT_MIN_HITS:
+                boxes = [f["box"] for x in r["text"] for f in x][:3]
+                bad.append(f"컷 {k} {where}: 흐림 밖 남의 박힌 글자 {nt}/{len(r['text'])}장(창 좌표 {boxes}) — 재료.json blur[{c['src']}] 에 그 칸을 넣거나 crop·ss 를 옮긴다")
+            if nf >= FACE_MIN_HITS:
+                cs = [f["cos"] for x in r["face"] for f in x][:3]
+                bad.append(f"컷 {k} {where}: 연예인 아닌 얼굴 {nf}/{len(r['face'])}장(기준 얼굴 코사인 {cs} < {FACE_OTHER_COS}) — 연예인이 나오는 장면으로 바꾼다")
+    finally:
+        if todo:
+            ex.shutdown(wait=True, cancel_futures=True)
+    _cache_save(cp, cache, rows)
+    if len(ocr) != len(ocr0):
+        _cache_save(op, ocr0, {k: v for k, v in ocr.items() if k not in ocr0})
     return bad
 
 
@@ -1481,6 +1631,16 @@ def contact_sheet(T: dict, M: dict, st: dict, out: Path, S: dict | None = None) 
     head = 44
     text = {L["id"]: L.get("tts") or " ".join(c["text"] for c in caps_of(L)) for L in (S or {}).get("lines", [])}
     f1, f2 = _font("Pretendard-Regular.otf", 20), _font("Pretendard-Regular.otf", 17)
+    reqs = []          # 칸 그림을 먼저 한꺼번에(cut_frames — 동시 FRAME_JOBS 개, 관문 ④가 같은 열쇠로 다시 쓴다)
+    for c in T["cuts"]:
+        src = src_dir / c["src"]
+        if src.exists():
+            img = src.suffix.lower() in IMG_EXT
+            n = c.get("frames") or (round(c["t1"] * FPS) - round(c["t0"] * FPS))
+            crop = cut_crop(c, src, (ww, wh))
+            regs = (M.get("blur") or {}).get(c["src"])
+            reqs += [(src, 0.0 if img else float(c.get("ss") or 0) + dt, crop, (ww, wh), regs) for dt in ([0.0] if img else look_times(n))]
+    cut_frames(reqs)
     rows = []
     for k, c in enumerate(T["cuts"]):
         src = src_dir / c["src"]

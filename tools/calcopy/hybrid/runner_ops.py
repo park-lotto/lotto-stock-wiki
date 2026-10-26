@@ -1139,26 +1139,33 @@ def plan_sheet(W: Path, version: str, T: dict) -> Path:
     M = jload(W / "doc" / version / "재료.json")
     cand = Path(M.get("cand_dir") or (W / "src"))
     _, _, ww, wh = STY.load(version)["frame"]["window"]
-    tiles = []
-    for i, c in enumerate(T.get("cuts") or []):
+    import threading
+    face_lock = threading.Lock()      # face_crop 의 얼굴 검출기는 나눠 쓰면 안 된다 — 한 번에 하나
+
+    def tile(ic):
+        i, c = ic
         src = cand / str(c.get("src") or "")
         if not src.exists():
-            continue
+            return None
         f = W / "_plan" / f"c{i:02d}.jpg"
         crop = c.get("crop", "face")
         t = float(c.get("ss") or 0) + min(0.5, float(c.get("dur") or 0) / 2)
         try:
             if crop == "face" and src.suffix.lower() not in render_bench.IMG_EXT:
-                crop = render_bench.face_crop(src, t, ww / wh)
+                with face_lock:
+                    crop = render_bench.face_crop(src, t, ww / wh)
             frame(src, t, f, crop if isinstance(crop, list) else None)
             im = Image.open(f).convert("RGB")
             im.thumbnail((220, 220))
             dr = ImageDraw.Draw(im)
             dr.rectangle((0, 0, im.width, 18), fill=(0, 0, 0))
             dr.text((3, 2), f"c{i} {c.get('line')} {c.get('t0')}~{c.get('t1')}", fill=(255, 255, 0))   # c{i} = 썸네일 안의 part 번호(flow THUMB_ASK)
-            tiles.append(im)
+            return im
         except Exception:  # noqa: BLE001 — 못 뜬 컷은 시트에서 빠진다(검수가 본다)
-            continue
+            return None
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(render_bench.FRAME_JOBS) as ex:      # 컷마다 ffmpeg 한 장 — 동시(순서는 컷 순서 그대로, 10-26 계획 속도)
+        tiles = [im for im in ex.map(tile, enumerate(T.get("cuts") or [])) if im is not None]
     out = W / version / "plan_sheet.jpg"
     out.parent.mkdir(parents=True, exist_ok=True)
     cols = 6
