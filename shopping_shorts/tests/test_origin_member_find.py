@@ -264,3 +264,15 @@ def test_task_give_url_goes_to_first_source_slot():
     res = F.step(st, {}, {"task_1": {"action": "give", "origin_url": TT_CAND["url"], "note": "틱톡"}}, {})
     do = res.get("do") or []
     assert [d["cmd"] for d in do] == ["origin_foreign"] and do[0]["id"] == "s1:of" and do[0]["urls"] == [TT_CAND["url"]], res.get("status")
+
+
+def test_runner_makes_alt_dir(tmp_path):
+    """실행기 — 둘째 소재 칸 일(sub=alt1)은 작업 폴더를 만들어 그 안에서 돈다(10-26 run4: 폴더가 없어 bench 가 즉시 FileNotFoundError)."""
+    from tools.calcopy.hybrid import runner_ops as R
+    seen = {}
+    R.CMDS["_t_probe"] = lambda W, d: seen.setdefault("w", str(W)) and {"ok": (W / "x").parent.is_dir()}
+    try:
+        out = R.run_do(tmp_path, [{"id": "s2:p", "cmd": "_t_probe", "sub": "alt1"}], log=lambda s: None)
+    finally:
+        R.CMDS.pop("_t_probe", None)
+    assert out["s2:p"] == {"ok": True} and seen["w"].endswith("alt1")

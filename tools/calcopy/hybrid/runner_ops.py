@@ -1838,6 +1838,8 @@ def run_do(W: Path, do: list[dict], log=print, stall: float | None = None) -> di
         if sub and not re.fullmatch(r"alt\d", sub):
             out[rid] = {"error": f"허용되지 않은 작업 폴더: {sub}"}
             return
+        if sub:
+            (W / sub).mkdir(parents=True, exist_ok=True)   # 10-26 run4: 없던 alt1 아래 bench mkdir 이 FileNotFoundError → 2편이 1분 만에 마침
         try:
             res = fn(W / sub if sub else W, d)      # sub = 함께 찾는 둘째 소재의 작업 폴더(flow 해외원본형 소재 2편, 10-26) — 진행 신호는 그대로 W
             if rid not in out:                     # 감시가 이미 '시간 초과'로 끝낸 일은 늦게 온 결과로 덮지 않는다
