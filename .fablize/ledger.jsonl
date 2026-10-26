@@ -51,3 +51,10 @@
 {"ts": "2026-10-01T15:33:35.052788+00:00", "event": "checkpoint", "id": "G002", "status": "complete", "evidence": "어제 실제 diff(5696da7a2→7c5fd9c18) app_touches_video → False '모듈 상수 _AUTH_ALLOW,_PRICING_TMPL,_REFUND_BODY'; 반대증거 RENDER_FPS_X 상수 → True", "verify_cmd": "", "verify_evidence": ""}
 {"ts": "2026-10-01T15:33:35.233353+00:00", "event": "story_started", "id": "G003", "title": "기존실패분류"}
 {"ts": "2026-10-01T15:33:56.005238+00:00", "event": "checkpoint", "id": "G003", "status": "complete", "evidence": "단위 2갈래 + 실제 재실행", "verify_cmd": "py -m pytest shopping_shorts/tests/test_control_repair.py -q", "verify_evidence": "9 passed, 1 warning in 1.70s; _rerun_on_main 실제 실행 104초로 test_auto_deploy_pending을 origin/main 기존 실패로 분류"}
+{"ts": "2026-10-19T06:12:43.772276+00:00", "event": "plan_created", "brief": "관제234 5판: 고객PC 칼카피 완본 그대로(설계 docs/superpowers/specs/2026-10-19-숏템MCP-완본엔진-design.md)", "count": 7}
+{"ts": "2026-10-20T16:39:25.478306+00:00", "event": "plan_created", "brief": "회원 PC 숏템 재정비 — 한마디면 집 PC 13단계와 같은 얜샷템 하이브리드. 진행은 단계만 짧게. 미나=회원 일레븐랩스 키, 받아쓰기=위스퍼, 쿠팡=회원 파트너스 키(없으면 회원 PC 크롬)", "count": 7}
+{"ts": "2026-10-20T16:41:53.435365+00:00", "event": "story_started", "id": "G001", "title": "S1"}
+{"ts": "2026-10-20T16:41:53.589831+00:00", "event": "checkpoint", "id": "G001", "status": "complete", "evidence": "99_회원PC_MCP.md eb807a10b", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-10-20T16:41:53.760383+00:00", "event": "story_started", "id": "G002", "title": "S2"}
+{"ts": "2026-10-20T16:58:28.362099+00:00", "event": "checkpoint", "id": "G002", "status": "complete", "evidence": "key_ui_check ok(4칸·지문·env 4개) · npm test · catalog 명단 5", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-10-20T16:58:28.512365+00:00", "event": "story_started", "id": "G003", "title": "S3"}

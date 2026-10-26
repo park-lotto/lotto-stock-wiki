@@ -220,3 +220,7 @@ out/lang_mode_check_*.json
 # 쿠팡 브라우저 프로필(로그인·쿠키) — 절대 추적 금지 (10-26, 63729e22d 에 딸려 들어감)
 .coupang_profile*/
 .coupang_w3/
+
+# 대본 칼카피 엔진 — 음성 원본은 커밋하지 않는다(받아쓰기·태그·카드만)
+out/script_calcopy/*/audio/
+out/script_calcopy/*/_pull_ids.txt

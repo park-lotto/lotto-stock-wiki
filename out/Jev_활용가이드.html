@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jev 활용 가이드</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--ink:#1d1d1f;--sub:#5f6368;--line:#e3e3e0;--acc:#2f5bea;--accbg:#eef2fe;--ok:#1a7f4b;--okbg:#e8f5ee;--warn:#b25b00;--warnbg:#fff4e5;--bad:#b3261e;--badbg:#fdecea;--code:#f1f1ef}
+@media (prefers-color-scheme:dark){:root{--bg:#141416;--card:#1d1d20;--ink:#ececee;--sub:#a0a0a8;--line:#2e2e33;--acc:#7c9bff;--accbg:#1f2640;--ok:#5fd394;--okbg:#14291e;--warn:#ffb35c;--warnbg:#2e2213;--bad:#ff8a80;--badbg:#331a18;--code:#26262b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 "Pretendard","Malgun Gothic","Apple SD Gothic Neo",sans-serif}
+.wrap{max-width:960px;margin:0 auto;padding:32px 16px 80px}
+header h1{font-size:28px;margin:0 0 6px}
+header p{color:var(--sub);margin:0}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin:20px 0 8px}
+nav a{font-size:13px;padding:4px 10px;border:1px solid var(--line);border-radius:99px;color:var(--sub);text-decoration:none;background:var(--card)}
+nav a:hover{color:var(--acc);border-color:var(--acc)}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:18px 0}
+h2{font-size:19px;margin:0 0 14px;display:flex;gap:8px;align-items:center}
+h2 .n{background:var(--accbg);color:var(--acc);border-radius:8px;padding:0 9px;font-size:14px}
+h3{font-size:16px;margin:20px 0 8px}
+table{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}
+th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{color:var(--sub);font-weight:600;background:var(--bg)}
+.tw{overflow-x:auto}
+code{background:var(--code);padding:1px 6px;border-radius:5px;font-size:13px;font-family:Consolas,"D2Coding",monospace}
+pre{background:var(--code);padding:14px 16px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.55}
+pre code{background:none;padding:0}
+.note{border-radius:10px;padding:12px 14px;margin:10px 0;font-size:14px}
+.note.ok{background:var(--okbg);color:var(--ok)}
+.note.warn{background:var(--warnbg);color:var(--warn)}
+.note.bad{background:var(--badbg);color:var(--bad)}
+.note.info{background:var(--accbg);color:var(--acc)}
+.note b{color:inherit}
+.big{font-size:17px;font-weight:600}
+.tag{display:inline-block;white-space:nowrap;font-size:12px;padding:1px 8px;border-radius:99px;font-weight:600}
+.tag.ok{background:var(--okbg);color:var(--ok)}.tag.bad{background:var(--badbg);color:var(--bad)}.tag.warn{background:var(--warnbg);color:var(--warn)}
+ol,ul{padding-left:22px;margin:6px 0}
+li{margin:4px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi .v{font-size:20px;font-weight:700}
+.kpi .l{font-size:13px;color:var(--sub)}
+a{color:var(--acc)}
+.sub{color:var(--sub);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Jev(TypeSafe AI) 설치·활용 가이드</h1>
+  <p>2026-10-21 조사 · 공식 문서 직접 확인 + 공식 깃허브 + 커뮤니티 저장소 목록 + 유튜브 7편 자막</p>
+</header>
+<nav>
+  <a href="#s1">무엇인가</a><a href="#s2">설치 상태</a><a href="#s3">키 받기</a><a href="#s4">기본 코드</a>
+  <a href="#s5">잘 쓰는 법</a><a href="#s6">우리 일에 붙이기</a><a href="#s7">비용</a><a href="#s8">쓰지 말 곳</a><a href="#s9">다음 할 일</a><a href="#s10">자료</a>
+</nav>
+
+<div class="note warn"><b>먼저 알아둘 것:</b> 영상·저장소에 나오는 숫자는 <b>그 작성자가 잰 값</b>이지 우리가 잰 값이 아닙니다. 우리 데이터로는 아직 한 번도 돌려보지 않았습니다(API 키 없음).</div>
+
+<section id="s1">
+<h2><span class="n">1</span>Jev가 뭔가</h2>
+<p class="big">글을 쓰지 않는 AI — "판단"만 확률로 돌려줍니다.</p>
+<p>상황(<code>state</code>)과 객관식 질문(<code>questions</code>)을 주면 답을 확률로 줍니다. "이 뉴스는 어느 섹터?", "이 첫 줄은 몇 점?", "이 댓글이 악플일 확률은?"처럼 <b>사람이 10초 안에 답할 수 있는 판단</b>을 0.2~0.5초에, 매우 싸게 처리합니다.</p>
+<div class="tw"><table>
+<tr><th>질문 종류</th><th>용도</th><th>돌려주는 것</th></tr>
+<tr><td><b>Choice</b> (고르기)</td><td>보기 중 하나 고르기 (최대 255개)</td><td>고른 답 · 보기별 확률 · 확신도</td></tr>
+<tr><td><b>Score</b> (점수)</td><td>직접 정한 단계 기준표(2~10단계)로 점수 매기기</td><td>점수(소수) · 단계별 확률 · 확신도</td></tr>
+<tr><td><b>Noul</b> (예/아니오)</td><td>어떤 조건이 맞는지</td><td>"예"일 확률 0~1</td></tr>
+<tr><td><b>Box</b> (위치 찾기)</td><td>이미지 속 위치 찾기 — 1.14 미리보기 기능</td><td>박스 좌표</td></tr>
+</table></div>
+<div class="grid">
+  <div class="kpi"><div class="v">$0.042</div><div class="l">입력 100만 토큰당 · 출력은 무료</div></div>
+  <div class="kpi"><div class="v">64k / 32k</div><div class="l">요청당 / 질문당 토큰 한도</div></div>
+  <div class="kpi"><div class="v">0.27~0.44초</div><div class="l">영상 실측 건당 응답</div></div>
+  <div class="kpi"><div class="v">jev-1.13 / 1.14</div><div class="l">안정판 / 미리보기판(10/14 출시)</div></div>
+</div>
+<p class="sub">긴 문서는 요청 헤더 <code>TypeSafe-Danger-Zone-Long-Context: true</code>를 넣으면 26만 토큰까지 되지만, 느리고 덜 정확합니다(공식 문서).</p>
+</section>
+
+<section id="s2">
+<h2><span class="n">2</span>이 PC 설치 상태 (직접 확인)</h2>
+<div class="tw"><table>
+<tr><th>항목</th><th>상태</th><th>내용</th></tr>
+<tr><td>Python SDK <code>typesafe-sdk</code> 0.7.5</td><td><span class="tag ok">완료</span></td><td><code>C:\Users\CH\jev-lab\.venv</code>에 설치, 불러오기 정상</td></tr>
+<tr><td>Claude Code 플러그인 <code>typesafe@typesafe-ai</code> 0.5.7</td><td><span class="tag ok">켜짐</span></td><td>모든 창에서 "Jev로 ○○ 만들어줘" 하면 올바른 방식으로 코드를 짭니다</td></tr>
+<tr><td>시험 스크립트 <code>jev_test.py</code></td><td><span class="tag ok">작성</span></td><td>주식 뉴스 1건 + 숏폼 첫 줄 1건을 판단. 키가 없어 "키 없음"으로 끝나는 것까지만 확인</td></tr>
+<tr><td><b>API 키</b></td><td><span class="tag bad">없음</span></td><td>사장님이 발급해야 합니다 → 3번</td></tr>
+</table></div>
+</section>
+
+<section id="s3">
+<h2><span class="n">3</span>키 받는 법 (셋 중 하나)</h2>
+<ol>
+<li><b>TypeSafe 콘솔</b> — <a href="https://console.typesafe.ai/keys">console.typesafe.ai/keys</a>, 구글 로그인. 영상마다 대기열/초대제/바로가입으로 달랐습니다(지금 상태는 확인 못 함). 5달러 무료 크레딧 언급 있음. <a href="https://console.typesafe.ai/playground">Playground</a>에서 코드 없이 시험해볼 수 있습니다.</li>
+<li><b>OpenRouter</b> — 대기 없음. 모델 이름 <code>typesafe/jev-1.13</code> 또는 <code>typesafe/jev-latest</code>. 단 한도가 3만2천 토큰.</li>
+<li><b>Vercel AI Gateway</b> — 대기 없음. 자바스크립트 <code>ai</code> 패키지 7버전의 <code>experimental_evaluate</code>, 모델 <code>typesafe-ai/jev</code>.</li>
+</ol>
+<div class="note info">키를 받으면 <code>C:\Users\CH\jev-lab\.env</code> 파일에 <code>TYPESAFE_API_KEY=발급받은키</code> 한 줄 → <code>.venv\Scripts\python jev_test.py</code></div>
+<div class="note warn">키는 채팅창이나 터미널에 붙여넣지 말고 <b>파일에 직접</b> 넣으세요 (영상 3편 공통 권고).</div>
+</section>
+
+<section id="s4">
+<h2><span class="n">4</span>기본 코드 (공식 예제)</h2>
+<pre><code>from typesafe_sdk import Choice, Noul, Score, TypeSafeClient
+
+with TypeSafeClient(model="jev-latest") as client:   # TYPESAFE_API_KEY 를 자동으로 읽음
+    r = client.system_one(
+        state={"ticket": "API가 20분째 500에러, 주문 처리가 안 됨"},
+        questions={
+            "team":   Choice(instructions="Which team should handle `ticket`",
+                             criteria={"billing": "결제", "technical": "버그·연동", "sales": "가격·계정"}),
+            "anger":  Score(instructions="How frustrated the customer appears",
+                            criteria=["Calm", "Frustrated but civil", "Very angry"]),
+            "urgent": Noul(instructions="The message conveys urgency"),
+        },
+    )
+print(r.choices["team"].choice, r.scores["anger"].score, r.nouls["urgent"].noul)</code></pre>
+<ul>
+<li><b>질문 여러 개를 한 번에</b> 묶어 보내세요 — 공식 예제: 13문항을 묶으면 따로 보낼 때보다 12.2배 싸고 10배 빠름.</li>
+<li>state 안의 항목은 지시문에서 <code>`ticket`</code>처럼 백틱으로 가리킵니다.</li>
+<li>공식 응답 예: 팀 = technical(확신 1.0), 화남 점수 0.67/2, 긴급 확률 0.99.</li>
+</ul>
+</section>
+
+<section id="s5">
+<h2><span class="n">5</span>잘 쓰는 법 — 공식 원칙 + 영상 공통 조언</h2>
+<ol>
+<li><b>코드가 주인, Jev는 판단 한 칸만.</b> 계산·개수 세기·날짜 비교·정확한 검색은 코드로 합니다 (공식 "약점 목록" 9가지).</li>
+<li><b>질문 하나 = 판단 하나.</b> 여러 판단을 한 질문에 숨기지 말고, 점수 단계는 구체적인 상황으로 적습니다.</li>
+<li><b>"해당 없음" 보기를 꼭 넣으세요.</b> 보기에 없는 답은 고를 수 없습니다.</li>
+<li><b>확신도로 갈라 쓰세요.</b> 높으면 자동 처리, 낮으면 사람이나 큰 모델로 넘깁니다.<br><span class="sub">Tech With Tim 실측(은행 문의 1,000건): 확신도 0.95 이상(약 60%)은 95.8% 정답.</span></li>
+<li><b>state에는 필요한 것만.</b> 관계없는 내용이 많을수록 정확도가 떨어집니다.</li>
+<li><b>Choice 보기 순서를 바꿔 다시 물어보세요.</b> 1.13은 첫 번째 보기 쪽으로 기우는 경향이 있습니다(공식).</li>
+<li><b>에이전트 대화 안에서 실시간으로 부르지 말고</b> 묶음 처리·예약 실행·전용 프로그램으로 — 메인 AI가 느려서 Jev의 속도 이점이 사라집니다(시민개발자 구씨).</li>
+</ol>
+<div class="note bad"><b>한국어가 약합니다.</b> 공식 문서: "영어가 주력, 한중일 언어는 직접 시험해보라". 영상: 한국어 반어("2주 만에 왔어요, 최고")를 '만족'으로 오판, 한국어 고유명사에 약함.<br>→ <b>지시문·기준표는 영어로, 내용(state)만 한국어로</b> 시작하고, 우리 데이터로 정답을 아는 묶음을 만들어 먼저 재보세요.</div>
+</section>
+
+<section id="s6">
+<h2><span class="n">6</span>우리 일에 붙일 곳 <span class="tag warn">제안 · 미검증</span></h2>
+<h3>📈 주식 (STOCK BRAIN)</h3>
+<div class="tw"><table>
+<tr><th>붙일 곳</th><th>질문 모양</th><th>참고 사례</th></tr>
+<tr><td>텔레그램·뉴스 크롤 1차 선별</td><td>고르기: 섹터(조선·반도체·방산…+기타) · 예/아니오: 호재 · 점수: 영향도</td><td>시민개발자 구씨: 뉴스 500→42건 / xscout-jev: 260→5건, 0.028달러</td></tr>
+<tr><td>인제스트 라우팅(섹터·종목 페이지)</td><td>코드가 종목 후보를 먼저 뽑고, Jev는 고르기만</td><td>공식 "값 고르기 추출" 예제</td></tr>
+<tr><td>리포트 요약 검증</td><td>예/아니오: "이 요약 문장이 원문에 근거가 있나"</td><td>공식 인용 검증 예제</td></tr>
+<tr><td><span class="tag bad">비추천</span> 매매 판단</td><td colspan="2">주식 저장소 작성자 본인도 "하락 0.68 ≠ 승률 68%, 한 번의 응답으로 매매하지 않는다". QuantDinger는 주문 직전 '관문'으로만 사용.</td></tr>
+</table></div>
+<h3>🎬 숏템·쇼핑 숏츠</h3>
+<div class="tw"><table>
+<tr><th>붙일 곳</th><th>질문 모양</th><th>참고 사례</th></tr>
+<tr><td>레퍼런스 영상 수집 선별</td><td>제목·캡션으로 "쇼핑 제품 영상인가" 판단 → 통과한 것만 비싼 분석</td><td>jev-account-filter: 도우인 2,140계정 0.565달러, 정확도 94.49%(작성자)</td></tr>
+<tr><td>첫 줄(훅) 평가</td><td>점수: 호기심 0~3 · 고르기: 훅 기법(숫자/대비/약속/호기심/시연/목록)</td><td>radar-de-hook</td></tr>
+<tr><td>대본 줄 ↔ 장면 매칭 보조</td><td>코드가 후보 장면을 뽑고 Jev가 장면 설명 중 고르기</td><td>공식 재정렬 예제</td></tr>
+<tr><td>하이라이트·잡담 컷 판단</td><td>자막 구간마다 "잡담인가" 예/아니오</td><td>jevclip</td></tr>
+<tr><td>댓글·리뷰 분류</td><td>고르기: 감정·요청유형 / 예/아니오: 악플·스팸</td><td>텔레그램 스팸봇: 22문항을 한 요청에, 0.81 이상만 삭제</td></tr>
+<tr><td>썸네일 속 위치 찾기(1.14)</td><td>Box: 제품·글자 위치</td><td>6번 중 6번 적중, 0.2~0.3초(잔재미코딩) · 이미지 1568px 제한</td></tr>
+</table></div>
+<h3>🛠 Claude Code 작업 환경</h3>
+<ul>
+<li>플러그인은 이미 설치돼 있습니다 → "Jev로 ○○ 만들어줘"라고 하면 됩니다.</li>
+<li>MCP 서버: <code>jkudish/jev-mcp</code>(별 542, 도구 12종) · <code>itsmostafa/system-one-connector</code>(별 354).</li>
+<li>모델 자동 선택기·대화 압축기의 "약 60% 절감"은 <b>작성자 시뮬레이션</b>이지 실측이 아닙니다.</li>
+</ul>
+<div class="note bad"><b>MCP 도구 주의:</b> 코드·화면 내용을 외부로 보냅니다. 커뮤니티 목록 실행 리뷰에 개인키(.pem) 파일을 통째로 보낸 도구 사례가 있습니다. 설치 전 코드를 반드시 읽어야 합니다.</div>
+</section>
+
+<section id="s7">
+<h2><span class="n">7</span>비용 감 잡기</h2>
+<div class="grid">
+  <div class="kpi"><div class="v">약 0.13~0.21달러</div><div class="l">뉴스 1만 건 × 질문 3개 (공식 단가로 계산, 건당 300~500토큰 가정)</div></div>
+  <div class="kpi"><div class="v">0.001달러</div><div class="l">이메일 25건 분류 (영상 실측)</div></div>
+  <div class="kpi"><div class="v">60원 미만</div><div class="l">사이트 점검 판단 1,507회 (영상 실측)</div></div>
+</div>
+<h3>다른 모델과 비교 (Tech With Tim, 은행 문의 1,000건·77분류)</h3>
+<div class="tw"><table>
+<tr><th></th><th>Jev</th><th>Gemini Flash Lite</th><th>GPT 5.5</th></tr>
+<tr><td>정확도</td><td>80%</td><td>78.5%</td><td>84.9%</td></tr>
+<tr><td>응답 시간(중앙값)</td><td>443ms</td><td>약 1초</td><td>2.8초</td></tr>
+<tr><td>100만 건당 비용</td><td>약 71달러</td><td>약 150달러</td><td>약 4,600달러</td></tr>
+<tr><td>다시 돌려도 같은 답</td><td>98.9%</td><td>96.3%</td><td>96.3%</td></tr>
+</table></div>
+<p class="sub">영어 데이터 기준입니다. 한국어는 다를 수 있습니다.</p>
+</section>
+
+<section id="s8">
+<h2><span class="n">8</span>쓰지 말 곳</h2>
+<ul>
+<li>글 생성 (대본 쓰기 등) — 다른 모델로</li>
+<li>계산 · 개수 세기 · 날짜 비교 · 여러 단계 추론</li>
+<li>이전 대화 기억이 필요한 일</li>
+<li>3만2천 토큰이 넘는 긴 문서 (기본 설정)</li>
+<li>base64 같은 인코딩된 입력 — 코드로 먼저 풀어서 넣기 (풀었더니 91% → 98.4%)</li>
+<li>정확도를 검증하지 않은 치명적인 결정</li>
+</ul>
+</section>
+
+<section id="s9">
+<h2><span class="n">9</span>다음 할 일</h2>
+<ol>
+<li><b>키 발급</b> (사장님) → <code>jev_test.py</code> 실행 — 뉴스 1건 + 첫 줄 1건</li>
+<li>정답을 아는 묶음 50건(예: 텔레그램 뉴스 섹터)으로 <b>한국어 정확도 측정</b> — 영어 지시문 vs 한국어 지시문 비교</li>
+<li>정확도·확신도 분포를 보고 <b>붙일 곳 1개만</b> 골라 시험</li>
+</ol>
+</section>
+
+<section id="s10">
+<h2><span class="n">10</span>자료</h2>
+<h3>공식</h3>
+<ul>
+<li>문서 목차 <a href="https://docs.typesafe.ai/llms.txt">docs.typesafe.ai/llms.txt</a> (페이지 주소 뒤에 <code>.md</code>를 붙이면 마크다운으로 받아집니다)</li>
+<li>콘솔 <a href="https://console.typesafe.ai">console.typesafe.ai</a></li>
+<li>파이썬 SDK <a href="https://github.com/typesafe-ai/typesafe-sdk-python">typesafe-sdk-python</a> · 에이전트 스킬 <a href="https://github.com/typesafe-ai/skills">typesafe-ai/skills</a></li>
+<li>커뮤니티 목록 <a href="https://github.com/MrJev/awesome-jev">MrJev/awesome-jev</a> (비공식, 581개 항목)</li>
+</ul>
+<h3>유튜브 (자막 확인한 7편)</h3>
+<div class="tw"><table>
+<tr><th>채널</th><th>핵심</th></tr>
+<tr><td><a href="https://youtu.be/-fotMlYGMOc">코딩애플</a></td><td>호출 구조, 배경지식 부족 → state에 지식을 넣어라, 한국어 고유명사 약함</td></tr>
+<tr><td><a href="https://youtu.be/nU0dsSJkPZw">잔재미코딩</a></td><td>활용 7선, 설치법, 사이트 점검 1,507회 60원 미만</td></tr>
+<tr><td><a href="https://youtu.be/RJJOVHZxyhc">잔재미코딩 (1.14)</a></td><td>이미지·Box, 50문제에서 Jev 48 vs GPT 49, 한국어 반어 오판</td></tr>
+<tr><td><a href="https://youtu.be/P8Ubmvw2lmQ">시민개발자 구씨</a></td><td>업무 자동화, 뉴스 500→42, 예약 실행 권장</td></tr>
+<tr><td><a href="https://youtu.be/EXVC5xiw0oU">Jay Choi</a></td><td>OpenRouter로 시작, 활용 3범주(전환·대량 점수·실시간)</td></tr>
+<tr><td><a href="https://youtu.be/vNnTeuNCPYY">Tech With Tim</a></td><td>벤치마크 · 확신도 기준 나누기 · 명령어 안전장치</td></tr>
+<tr><td><a href="https://youtu.be/bJayuzhoj2g">초보 단계별 튜토리얼</a></td><td>가입·Playground·5달러 크레딧, 이메일 25건 0.001달러</td></tr>
+</table></div>
+<p class="sub">Moritz, Sam Witteveen 영상 2편은 유튜브 접속 제한으로 자막을 못 받아 내용에 포함되지 않았습니다.</p>
+</section>
+</div>
+</body>
+</html>

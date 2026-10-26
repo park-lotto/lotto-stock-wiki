@@ -1,4 +1,4 @@
-// MCP 겉면 — stdio 로 띄워 도구 6개·설명·annotations·셸 도구 없음·키 값 비노출 확인
+// MCP 겉면 — stdio 로 띄워 도구 9개(5판: shortem_ai·shortem_settings·shortem_login 추가)·설명·annotations·셸 도구 없음·키 값 비노출 확인
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
@@ -14,14 +14,14 @@ const client = new Client({ name: 't', version: '1' });
 await client.connect(new StdioClientTransport({ command: process.execPath, args: [SERVER], env: { ...process.env }, stderr: 'ignore' }));
 test.after(async () => { await client.close(); await fake.close(); });
 
-test('도구 6개 · 고정 설명 · annotations · 셸 실행 도구 없음', async () => {
+test('도구 9개 · 고정 설명 · annotations · 셸 실행 도구 없음', async () => {
   const { tools } = await client.listTools();
-  assert.deepEqual(tools.map(t => t.name).sort(), ['shortem_feedback', 'shortem_job', 'shortem_make', 'shortem_presets', 'shortem_profile', 'shortem_setup']);
+  assert.deepEqual(tools.map(t => t.name).sort(), ['shortem_ai', 'shortem_feedback', 'shortem_inbox', 'shortem_job', 'shortem_login', 'shortem_make', 'shortem_presets', 'shortem_profile', 'shortem_settings', 'shortem_setup']);   // shortem_inbox = 웹 지시함(관제 266)
   const by = Object.fromEntries(tools.map(t => [t.name, t]));
   assert.equal(by.shortem_presets.annotations.readOnlyHint, true);
   assert.equal(by.shortem_profile.annotations.readOnlyHint, true);
   assert.equal(by.shortem_make.annotations.destructiveHint, false);
-  assert.equal(by.shortem_make.annotations.idempotentHint, true);
+  assert.equal(by.shortem_make.annotations.idempotentHint, false);   // start 는 매번 새 세션
   assert.equal(by.shortem_job.annotations.destructiveHint, true);
   assert.ok(!tools.some(t => /shell|exec|command|run_/i.test(t.name)));
   for (const t of tools) for (const n of ['1462', '1006', '93.2', '-7.4', '1080', '1920']) assert.ok(!t.description.includes(n), `${t.name} 설명에 규격 숫자 ${n}`);
@@ -37,6 +37,8 @@ test('setup: 라이선스 확인·기기 등록, 키 값은 응답에 없음', a
   assert.equal(p.structuredContent.info.profiles.length, 3);
   const bad = await client.callTool({ name: 'shortem_make', arguments: { step: 'rm -rf' } });
   assert.equal(bad.isError, true);
+  const nm = await client.callTool({ name: 'shortem_make', arguments: { step: 'start', preset_name: '없는프리셋형', video: 'https://youtu.be/x' } });
+  assert.ok(nm.structuredContent.hints.some(h => /찾지 못했습니다/.test(h)), JSON.stringify(nm.structuredContent));
   const fb = await client.callTool({ name: 'shortem_feedback', arguments: { kind: 'bug', text: '시험' } });
   assert.equal(fb.structuredContent.info.sent, true);
 });

@@ -1,27 +1,55 @@
 {
- "brief": "관제수리(카드069)",
- "created": "2026-10-01T15:18:46.760153+00:00",
+ "brief": "회원 PC 숏템 재정비 — 한마디면 집 PC 13단계와 같은 얜샷템 하이브리드. 진행은 단계만 짧게. 미나=회원 일레븐랩스 키, 받아쓰기=위스퍼, 쿠팡=회원 파트너스 키(없으면 회원 PC 크롬)",
+ "created": "2026-10-20T16:39:25.475199+00:00",
  "goals": [
   {
    "id": "G001",
-   "title": "검사종류",
-   "objective": "live_check에 카드 '검사' 칸(url/api/수동/영상). url·api는 서버 반영 확인 후 HTTP로 재서 완료/회귀, 수동은 목록만",
+   "title": "S1",
+   "objective": "13단계와 엔진 단계 대응표·AI 요청 자리·멈춤·진행 문구(설계 문서)",
    "status": "complete",
-   "evidence": "test_control_repair 9 passed; 실제 보드 --all --no-write: 수동 25장 목록·영상 4장 서버 비교 통과(2작업)·url/api 분기는 fake sh/fetch 테스트로 완료/회귀/서버미반영 3갈래 확인"
+   "evidence": "99_회원PC_MCP.md eb807a10b"
   },
   {
    "id": "G002",
-   "title": "관문심볼판정",
-   "objective": "video_gate.app_touches_video가 모듈 수준 변경을 심볼 이름으로 판정(상수·템플릿은 제작 라인 밖)",
+   "title": "S2",
+   "objective": "회원 키 칸 일레븐랩스·쿠팡 파트너스",
    "status": "complete",
-   "evidence": "어제 실제 diff(5696da7a2→7c5fd9c18) app_touches_video → False '모듈 상수 _AUTH_ALLOW,_PRICING_TMPL,_REFUND_BODY'; 반대증거 RENDER_FPS_X 상수 → True"
+   "evidence": "key_ui_check ok(4칸·지문·env 4개) · npm test · catalog 명단 5"
   },
   {
    "id": "G003",
-   "title": "기존실패분류",
-   "objective": "track 게이트가 새로 깨진 테스트를 origin/main 코드로 재실행해 거기서도 깨지면 기존 실패로 분류",
-   "status": "complete",
-   "evidence": "단위 2갈래 + 실제 재실행"
+   "title": "S3",
+   "objective": "hybrid/run.py 단계가 회원 PC에서 돈다",
+   "status": "in_progress",
+   "evidence": null
+  },
+  {
+   "id": "G004",
+   "title": "S4",
+   "objective": "2~4단계 원본찾기·쿠팡·조사 자동+AI 눈",
+   "status": "pending",
+   "evidence": null
+  },
+  {
+   "id": "G005",
+   "title": "S5",
+   "objective": "5~12단계 재료~납품",
+   "status": "pending",
+   "evidence": null
+  },
+  {
+   "id": "G006",
+   "title": "S6",
+   "objective": "MCP 진행 안내·한 줄 요청",
+   "status": "pending",
+   "evidence": null
+  },
+  {
+   "id": "G007",
+   "title": "S7",
+   "objective": "설치본·회원처럼 이미도 한 편·집 PC 결과와 대조",
+   "status": "pending",
+   "evidence": null
   }
  ]
 }

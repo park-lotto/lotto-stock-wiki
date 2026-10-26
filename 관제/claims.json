@@ -1,4 +1,9 @@
 {
+  "deploy/apache-stmaker.conf": {
+    "at": "2026-10-23 16:45",
+    "card": 258,
+    "track": "도메인전환"
+  },
   "handoff/장면폰트.md": {
     "at": "2026-09-29 23:55",
     "card": 40,
@@ -58,6 +63,11 @@
     "at": "2026-10-06 20:52",
     "card": 147,
     "track": "씨앗1단계"
+  },
+  "shopping_shorts/app.py:_google_redirect_uri": {
+    "at": "2026-10-23 16:45",
+    "card": 258,
+    "track": "도메인전환"
   },
   "shopping_shorts/app.py:api_buffer_schedule": {
     "at": "2026-10-04 11:13",
@@ -258,6 +268,11 @@
     "at": "2026-10-06 20:47",
     "card": 147,
     "track": "씨앗1단계"
+  },
+  "shopping_shorts/storyboard.py:scene_review": {
+    "at": "2026-10-23 14:02",
+    "card": 257,
+    "track": "대본붙여넣기AI"
   },
   "shopping_shorts/tests": {
     "at": "2026-09-29 22:57",

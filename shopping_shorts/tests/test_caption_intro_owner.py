@@ -6,7 +6,7 @@
    B 렌더 drawtext(장면꾸미기 없는 job) · C 캡컷 caption_schedule 호출 · D 4단계 음성 미리보기(produce.html JS 를 node 로)
    E 장면꾸미기 렌더·6단계 편집기 scene_style.context_for
 ② 칸 앞 틈: 장면꾸미기 job 은 < 0.35초면 첫 자막이 칸 시작(전 통로), drawtext job 은 cap_lead. 0.35초 이상은 안 붙음.
-③ 인트로 판단 = mix_pipeline._intro_choice — (켜짐, 실제 파일|None, 길이 기본 1.2) · 도장은 파일 크기·시각까지 ·
+③ 인트로 판단 = mix_pipeline._intro_choice — (켜짐, 실제 파일|None, 길이 기본 0.1) · 도장은 파일 크기·시각까지 ·
    CTA 폴백은 붙었을 때만 민다 · run_render 는 켰는데 그림 없으면 렌더 전에 경보(intro_missing:<job>)하고 계속한다.
 통로별 사보타주: CAP_OWNER_PATCH=<폴더> 의 변형 video_assemble.py·scene_style.py·mix_pipeline.py·app.py(_lab_captions)·
 produce.html·capcut_draft.py 를 쓴다.
@@ -251,7 +251,7 @@ def thumbs(tmp_path, monkeypatch):
 def test_intro_choice_resolves_file_and_default_len(thumbs):
     (thumbs / "thumb_2.png").write_bytes(b"x" * 10)
     on, png, sec = mp._intro_choice({"intro": True, "selected": "thumb_2.png", "results": ["thumb_2.png"]}, "J1")
-    assert on and png and png.name == "thumb_2.png" and sec == pytest.approx(1.2)
+    assert on and png and png.name == "thumb_2.png" and sec == pytest.approx(0.1)
     on, png, sec = mp._intro_choice({"intro": True, "selected": "없음.png", "results": ["thumb_2.png"],
                                      "intro_sec": 2.0}, "J1")
     assert png.name == "thumb_2.png" and sec == 2.0, "고른 파일이 없으면 마지막 결과"
@@ -284,7 +284,7 @@ def test_cta_fallback_shifts_only_when_intro_attaches(thumbs, tmp_path, monkeypa
     (thumbs / "t.png").write_bytes(b"x")
     cut_on, _ = app._cta_cut_for_job(dict(job, thumbnail={"intro": True, "selected": "t.png"}))
     assert cut_none == pytest.approx(2.0), "켰어도 그림이 없으면 렌더가 안 붙였다 — 밀면 안 된다"
-    assert cut_on == pytest.approx(3.2)
+    assert cut_on == pytest.approx(2.1)
 
 
 @pytest.fixture
@@ -328,5 +328,5 @@ def test_run_render_intro_attaches_chosen_file(rjob, monkeypatch, thumbs):
     monkeypatch.setattr(mp, "prepend_still", lambda v, img, seconds=None, audio_wav=None: pre.append((Path(img).name, seconds)) or True)
     mp.run_render("J1", db, work)
     assert store.get_mix_job("J1")["status"] == "done"
-    assert pre == [("thumb_1.png", 1.2)] and not calls
+    assert pre == [("thumb_1.png", 0.1)] and not calls
 

@@ -31,7 +31,14 @@ def _files() -> list[str]:
     from shopping_shorts.calcopy_board import PRESET_LEDGERS, PRESET_DOCS, referenced_docs
     st = _blob(SRC_BRANCH, "channel/스타일.json")
     refs = sorted(referenced_docs(json.loads(st.decode("utf-8")))) if st else []
-    return list(dict.fromkeys(list(PRESET_LEDGERS) + [p for p, _ in PRESET_DOCS] + refs))
+    return list(dict.fromkeys(list(PRESET_LEDGERS) + [p for p, _ in PRESET_DOCS] + refs + _preset_frames()))
+
+
+def _preset_frames() -> list[str]:
+    """엔진의 프리셋 틀 폴더 channel/<slug>/preset/** — 클로드형 /claude 가 main 에서 읽는다(관제 234, claude_portal.presets).
+    엔진에서 지운 틀은 옮기지 않는다(지우기는 사람이 판단)."""
+    r = _git("-c", "core.quotepath=off", "ls-tree", "-r", "-z", "--name-only", SRC_BRANCH, "--", "channel", check=False)
+    return [p.decode("utf-8") for p in r.stdout.split(b"\0") if b"/preset/" in p] if r.returncode == 0 else []
 
 
 def _blob(ref: str, path: str) -> bytes | None:

@@ -60,7 +60,7 @@ MOTION_ASSETS_DIR = DEFAULT_ASSETS_DIR
 _PINNED_TTS_SEED = 7
 
 
-def _beat_words(mp3_path, dur=None, removed=None):
+def _beat_words(mp3_path, dur=None, removed=None, text=None):
     """자막 싱크용 단어 타임스탬프. TTS가 준 것을 먼저 쓰고, 없으면 ASR로 폴백한다(2026-07-31).
 
     ①TTS 타임스탬프 — 우리가 보낸 원문 그대로의 시각이라 맞출 대상이 없다(정렬 실패 없음).
@@ -71,11 +71,12 @@ def _beat_words(mp3_path, dur=None, removed=None):
 
     removed: 후처리가 잘라낸 무음 구간(원본 타임라인). 주면 rescale이 조각별로 갚는다
     — 속도감 모드 내부 무음 제거는 선형사상으로 못 맞춘다(2026-08-06).
+    text: 그 칸 나레이션 — ASR 폴백의 언어 힌트(일본어·영어, 2026-10-21 관제 248). 없으면 종전(ko).
     """
-    return _beat_words_src(mp3_path, dur, removed)[0]
+    return _beat_words_src(mp3_path, dur, removed, text=text)[0]
 
 
-def _beat_words_src(mp3_path, dur=None, removed=None):
+def _beat_words_src(mp3_path, dur=None, removed=None, text=None):
     """_beat_words + **어느 단에서 나온 시각인지**(2026-08-29 설계 ⑦a).
 
     "precise"  TTS가 준 정밀 타임스탬프(사이드카) — 정렬 실패 없음
@@ -88,7 +89,15 @@ def _beat_words_src(mp3_path, dur=None, removed=None):
     if words:
         # 합성 뒤 audio_post가 배속·무음트림으로 파일을 고쳤을 수 있다 → 최종 길이로 되맞춤.
         return tts_timestamps.rescale(words, dur, removed=removed), "precise"
-    w = asr_check.transcribe_words(mp3_path)
+    # ASR 폴백 언어 = 나레이션 언어(일본어를 language="ko"로 받아쓰면 엉터리가 된다 — 관제 248).
+    #   판정은 script_translate.asr_language 한 곳. 한국어(또는 text 없음)는 종전 호출 모양 그대로 둔다
+    #   (language 기본값 "ko"와 같다 — 테스트 스텁 `lambda p:` 들도 그대로 돈다).
+    from shopping_shorts.script_translate import asr_language
+    _lang = asr_language(text) if text else "ko"
+    if _lang == "ko":
+        w = asr_check.transcribe_words(mp3_path)
+    else:
+        w = asr_check.transcribe_words(mp3_path, language=_lang)
     return w, ("asr" if w else "estimate")
 
 
@@ -397,7 +406,8 @@ def finalize_beat_audio(beat, out, *, trim_tail=True):
     beat["cap_durs"] = None
     beat["cap_lead"] = 0.0
     _ensure_breath_lines(beat)   # 폴백 칸이면 Gemini 호흡 끊기(실패=규칙 폴백)
-    words, _wsrc = _beat_words_src(str(out), _ad, removed=tts_timestamps.load_removed(str(out)))
+    words, _wsrc = _beat_words_src(str(out), _ad, removed=tts_timestamps.load_removed(str(out)),
+                                   text=beat.get("narration"))
     _timing = None
     if words:
         _timing = _apply_cap_timing(beat, beat["narration"], words, _ad)
@@ -711,10 +721,15 @@ def _ensure_breath_lines(beat):
     except (TypeError, ValueError):
         mx = 0
     lines = None
+    # ★일본어 칸은 AI 호흡 끊기를 부르지 않는다(관제 248) — 그 프롬프트는 "한국어 쇼츠 내레이션·조사 앞" 규칙이라
+    #   일본어엔 맞지 않는다. None = 규칙 폴백(_caption_segments → _caption_segments_ja), 상한 칸은 아래 simple_caption_split.
+    from shopping_shorts.script_translate import lang_of as _lang_of
+    _skip_ai = _lang_of(beat.get("narration")) in ("ja", "zh")   # 중국어도 한국어 호흡 규칙을 안 탄다(관제 254)
     try:
         from shopping_shorts import script_generate
-        lines = (script_generate.ai_breath_lines(beat.get("narration"), max_chars=mx) if mx
-                 else script_generate.ai_breath_lines(beat.get("narration")))   # 표식 없으면 종전 호출 그대로
+        if not _skip_ai:
+            lines = (script_generate.ai_breath_lines(beat.get("narration"), max_chars=mx) if mx
+                     else script_generate.ai_breath_lines(beat.get("narration")))   # 표식 없으면 종전 호출 그대로
     except Exception:      # noqa: BLE001 — 호흡 끊기 실패로 합성을 죽이지 않는다
         traceback.print_exc(file=sys.stderr)
     # ★글자 상한 칸(2026-09-26): AI가 넘긴 줄은 단순 규칙으로 다시 나누고, AI가 못 하면 원문을 단순 규칙으로.
@@ -888,7 +903,8 @@ def _conform_beats(beats, tts_dir, *, voice, global_pron=None, customer_id=0):
         # 못 봐 오차가 커서 실측으로 둔다(2026-07-21). 실측 실패 시에만 추정 폴백.
         beat["target_seconds"] = round(new_dur, 1) if new_dur and new_dur > 0 \
             else round(max(1.5, len(new_n.strip()) / _SYLLABLES_PER_SEC), 1)
-        words, _wsrc = _beat_words_src(str(out), new_dur, removed=tts_timestamps.load_removed(str(out)))
+        words, _wsrc = _beat_words_src(str(out), new_dur, removed=tts_timestamps.load_removed(str(out)),
+                                       text=new_n)
         _t = None
         if words:
             _t = _apply_cap_timing(beat, new_n, words, new_dur)
@@ -2529,7 +2545,8 @@ def _meme_words_of(b):
     if not mp3 or not Path(mp3).exists():
         return None, None
     d = _probe_duration(str(mp3))
-    words, _src = _beat_words_src(str(mp3), d, removed=tts_timestamps.load_removed(str(mp3)))
+    words, _src = _beat_words_src(str(mp3), d, removed=tts_timestamps.load_removed(str(mp3)),
+                                  text=b.get("narration"))
     return words, _va._beat_effective_dur(b, mp3)
 
 
@@ -6300,7 +6317,7 @@ def _render_inputs_core(store, job, job_id, work, keys, customer_id=0, *, allow_
     return plan2, _cpaths, base
 
 
-INTRO_SEC_DEFAULT = 1.2      # 썸네일 인트로 기본 길이(초) — 이 값을 아는 곳은 여기 한 곳
+INTRO_SEC_DEFAULT = 0.1      # 썸네일 인트로 기본 길이(초) — 이 값을 아는 곳은 여기 한 곳
 
 
 def _intro_thumb(thumb):
@@ -6682,7 +6699,7 @@ def run_render(job_id, db_path, work_root, skip_clean=False, confirm_clean=None,
                             _vwav.unlink(missing_ok=True)
                     ensure_faststart(vout)
 
-                _cv.render_variants(cfg=_cvcfg, plan=plan_used, work=work,
+                _cv.render_variants(cfg=_cvcfg, plan=_cv.marked_plan(plan_used, job), work=work,
                                     render_one=_cv_render, synth=_cv_synth)
         except Exception:      # noqa: BLE001 — 판 때문에 본편을 잃지 않는다
             traceback.print_exc(file=sys.stderr)
@@ -6789,7 +6806,8 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root, *, sp
         except Exception:      # noqa: BLE001 — 길이 측정 실패로 재합성을 죽이지 않는다
             _rdur = None
         _ensure_breath_lines(beat)   # 폴백 칸이면 Gemini 호흡 끊기(실패=규칙 폴백)
-        words, _wsrc = _beat_words_src(str(out), _rdur, removed=tts_timestamps.load_removed(str(out)))
+        words, _wsrc = _beat_words_src(str(out), _rdur, removed=tts_timestamps.load_removed(str(out)),
+                                       text=beat.get("narration"))
         _t = None
         if words:
             _t = _apply_cap_timing(beat, beat["narration"], words, _rdur)

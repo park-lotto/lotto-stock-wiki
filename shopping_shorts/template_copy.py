@@ -90,6 +90,66 @@ def _cut_is_clean(before: list[str], after: list[str]) -> bool:
     return True
 
 
+# ── 일본어 훅 제목(관제 254, 2026-10-22 사장님 "일본어 장면꾸미기 훅에 자막이 없다") ──
+#   일본어는 띄어쓰기가 없어 낱말 규칙이 문장 통째를 hook1 한 줄에 넣고 hook2(강조색 둘째 줄)를 비웠다
+#   → 한 줄이 15px까지 눌려 훅이 빈 것처럼 보였다(실측 job 1e2c12ade064). 문장부호·조사 뒤에서 두 줄로 고르게 나눈다.
+_JA_TITLE_PARTICLES = ("から", "まで", "より", "は", "が", "を", "に", "で", "と", "も", "へ", "て")   # の 는 뒤 낱말을 꾸며 끊지 않는다
+
+
+def _is_ja(text: str) -> bool:
+    """글자 단위 언어(일본어·중국어) 제목인가 — 띄어쓰기로 못 나누는 제목(관제 254: 중국어 추가)."""
+    from .script_translate import lang_of, is_char_lang
+    return is_char_lang(lang_of(text))
+
+
+def _split_hook_zh(text: str) -> tuple[str, str]:
+    """중국어 제목 → 두 줄. 경계 순위: 문장부호 > 的了吧… 뒤·就都也… 앞(video_assemble 자막 나누기와 같은 목록) > 가운데."""
+    from .video_assemble import _ZH_AFTER, _ZH_BEFORE
+    t = text.strip().rstrip("。．.，,")
+    n = len(t)
+    if n < 8:
+        return t, ""
+    cands = []
+    for i in range(3, n - 2):
+        if t[i - 1] in "，、！？!?；":
+            rank = 0
+        elif t[i - 1] in _ZH_AFTER or any(t.startswith(w, i) for w in _ZH_BEFORE):
+            rank = 1
+        else:
+            continue
+        cands.append((max(i, n - i) + rank, i))
+    cut = min(cands)[1] if cands else (n + 1) // 2
+    return t[:cut].rstrip("，、"), t[cut:]
+
+
+def _split_hook_ja(text: str) -> tuple[str, str]:
+    """일본어 제목 → 두 줄. **긴 줄이 가장 짧아지는 자연 경계**에서 나눈다(긴 쪽 글자가 작아지므로).
+    경계 순위: 문장부호 > 조사 뒤 > 히라가나→한자·가타카나 > 긴 가타카나 속 ン·ング 뒤. の 뒤는 쓰지 않는다.
+    (관제 254 로컬 렌더 실측: 'も' 뒤 13|22자로 둘째 줄이 절반 크기로 줄었다)"""
+    t = text.strip().rstrip("。．.、,")
+    n = len(t)
+    if n < 8:
+        return t, ""
+    hira = lambda c: "぀" <= c <= "ゟ"          # noqa: E731
+    kata = lambda c: "゠" <= c <= "ヿ" and c not in "ァィゥェォッャュョヮー"   # noqa: E731
+    cands = []
+    for i in range(3, n - 2):
+        head, nxt = t[:i], t[i]
+        if head.endswith(("、", "。", "！", "？", "!", "?")):
+            rank = 0
+        elif any(head.endswith(pt) for pt in _JA_TITLE_PARTICLES) and not hira(nxt):
+            rank = 1
+        elif hira(t[i - 1]) and not hira(nxt) and nxt != "ー" and t[i - 1] != "の":
+            rank = 2
+        elif head.endswith("ング") and kata(nxt):
+            rank = 3
+        else:
+            continue
+        cands.append((max(i, n - i) + rank, i))   # 순위 한 칸 = 한 글자 손해로 친다
+    cut = min(cands)[1] if cands else n // 2
+    return t[:cut].rstrip("、"), t[cut:]
+
+
 def split_hook(value: object, contract: "TemplateCopyContract | None" = None) -> tuple[str, str]:
     """저장된 제목의 명시적 두 줄을 보존하고, 한 줄 데이터를 **두 줄 제목**으로 나눈다.
 
@@ -108,6 +168,9 @@ def split_hook(value: object, contract: "TemplateCopyContract | None" = None) ->
     if len(explicit) >= 2:
         return explicit[0], " ".join(explicit[1:])
     text = _one_line(raw)
+    if _is_ja(text):
+        from .script_translate import lang_of
+        return _split_hook_zh(text) if lang_of(text) == "zh" else _split_hook_ja(text)
     words = text.split()
     if len(words) < 2:
         return text, ""
@@ -197,6 +260,20 @@ def support_from_hook(hook1: object, hook2: object,
                       contract: "TemplateCopyContract | None" = None) -> str:
     """큰제목에서 흰 띠 문구를 만든다 — 줄여서 물음표로. 큰제목과 **같은 글이 되지 않게** 한다."""
     contract = contract or EVEN_SHOPPING
+    if _is_ja(f"{hook1}{hook2}"):
+        # 일본어: 붙여 쓰고 끝 마침표를 뗀 뒤 물음표(전각). 길면 뒷줄만 — 한국어와 같은 규칙(관제 254)
+        line = f"{hook1}{hook2}".strip().rstrip("。．.、,")
+        if len(line) > 13:
+            # 일본어는 전각이라 흰 띠 한 줄에 13자 안팎 — 제목 끝 자연 조각(정체를 밝히는 자리)만 쓴다
+            #   "クリーニング屋の…凄すぎる発明品" → "凄すぎる発明品？"(관제 254 로컬 렌더 실측: 23자가 두 줄로 작아졌다)
+            from .video_assemble import _caption_segments
+            segs = _caption_segments(line) or [line]
+            line = segs[-1]
+            for seg in reversed(segs[:-1]):
+                if len(seg) + len(line) > 13:
+                    break
+                line = seg + line
+        return line if line.endswith(("？", "！", "?", "!")) else line + "？"
     words = _one_line(f"{hook1} {hook2}").split()
     if not words:
         return ""

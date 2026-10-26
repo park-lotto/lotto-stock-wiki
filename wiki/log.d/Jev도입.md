@@ -1,0 +1,1 @@
+- 2026-10-21 Jev(TypeSafe 판단전용 모델) 조사·설치: SDK·플러그인·Vercel 경로는 jev-lab에 준비, 실호출은 결제수단 등록 대기. 가이드 out/Jev_활용가이드.html, 핸드오프 handoff/Jev도입.md

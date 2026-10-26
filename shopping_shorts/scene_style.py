@@ -441,9 +441,12 @@ def account_channel(job_id):
         from .store import Store
         from .config import DB_PATH
         st = Store(DB_PATH)
-        job = st.get_mix_job(job_id) or {}
+        job = st.get_mix_job(job_id)
+        if not job:
+            return ""
+        # ★cid 0 = 관리자(사장님) 계정이다 — 예전엔 0을 '없음'으로 보고 건너뛰어 사장님 작업만 늘 '숏템메이커'였다(관제 252)
         cid = int(job.get("customer_id") or 0)
-        return (st.get_pref(MY_CHANNEL_KEY, customer_id=cid) or "").strip() if cid else ""
+        return (st.get_pref(MY_CHANNEL_KEY, customer_id=cid) or "").strip()
     except Exception as exc:          # 못 읽어도 꾸미기는 떠야 한다 — 단 조용히 넘기지 않는다
         print(f"[scene_style] 내 채널명 읽기 실패 job={job_id}: {exc}", file=sys.stderr)
         return ""
@@ -463,7 +466,8 @@ def frame_kind(index, rule):
 
 
 def _word_key(text):
-    return re.sub(r"[^0-9A-Za-z가-힣]", "", text or "")
+    from .script_translate import letters_only      # 글자의 정의는 한 곳(가나·한자 포함, 관제 248)
+    return letters_only(text)
 
 
 def attach_scene_words(scenes, timeline):

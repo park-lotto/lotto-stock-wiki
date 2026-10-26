@@ -10,6 +10,8 @@ comment_gen 전용키가 아니라 key_vault 공유풀(general→…)을 캐스�
 import hashlib
 import json
 import re
+import sys
+import time
 
 from google.genai import types
 
@@ -163,6 +165,7 @@ def generate(job, seed=0):
     #   연타해 키를 순식간에 다 태웠다. 사유·실측은 key_vault.pick_paced_key 참조.
     #   시도 횟수·실패 처리는 종전과 같다.
     pool = list(keys)
+    transient = 0     # 일시 과부하 재시도 횟수(아래 except)
     while pool:
         key = key_vault.pick_paced_key(pool)
         if not key:
@@ -188,5 +191,13 @@ def generate(job, seed=0):
                 continue
             if key_vault.is_quota_error(e):
                 continue  # 순간 rate limit — 다음 키로
+            # ★구글 일시 과부하(503 high demand 등)도 다음 키로 — 종전엔 여기서 바로 포기해
+            #   과부하 시간대(10-19 23시~10-20 01시) 생성이 66번 실패했다(관제 247). 판정은 주인 함수 하나.
+            from shopping_shorts.script_extract import is_transient_api_error
+            if is_transient_api_error(e) and transient < 3:
+                transient += 1
+                time.sleep(1.5 * transient)
+                continue
+            print(f"[thumb_title] 생성 실패: {e!r}"[:300], file=sys.stderr)
             return None
     return None

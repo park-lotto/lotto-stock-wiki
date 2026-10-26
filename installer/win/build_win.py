@@ -39,6 +39,9 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent  # installer/
 LOCK = json.loads((ROOT / "common" / "tools.lock.json").read_text(encoding="utf-8"))
 PLAT = "win-x64"
+# 설치 폴더 맨 위에 둘 이름(이것만 exe 에 들어간다 — 시험이 남긴 _engine_test 같은 것이 섞인 사고, 10-19)
+STAGE_TOP = {"app_version.json", "claude-plugin", "engine", "models", "packs", "postinstall.js", "server",
+             "shortem.mcpb", "tools", "설치안내.html", "시작.template.md"}
 
 
 def log(msg: str) -> None:
@@ -210,8 +213,11 @@ def build_tools(out: Path, stage: Path, report: dict) -> dict:
     safe_extract_tar(t, e)
     shutil.copytree(e / "python", tools / "python")
     py = tools / "python" / "python.exe"
-    req = ROOT / "common" / "requirements-py312.txt"
-    log("python: Pillow·numpy 설치(해시 고정)")
+    # 엔진 패키지 목록(Pillow·numpy 포함 상위 집합 — 관제 234 5판). 없으면 예전처럼 Pillow·numpy 만.
+    req = ROOT / "common" / "requirements-engine-py312-win.txt"
+    if not req.exists():
+        req = ROOT / "common" / "requirements-py312.txt"
+    log(f"python: {req.name} 설치(해시 고정)")
     r = run([py, "-I", "-m", "pip", "install", "--no-cache-dir", "--disable-pip-version-check",
              "--no-warn-script-location", "--no-compile", "--only-binary=:all:", "--require-hashes", "-r", req], cwd=out)
     if r.returncode != 0:
@@ -243,7 +249,8 @@ def probe_versions(stage: Path, info: dict) -> dict:
     filters = run([t / info["ffmpeg"]["exe"], "-hide_banner", "-filters"]).stdout
     got["ffmpeg_ass_filter"] = " ass " in filters
     r = run([t / info["python"]["exe"], "-I", "-c",
-             "import sys,PIL,numpy;print(sys.version.split()[0],PIL.__version__,numpy.__version__)"], cwd=t)
+             "import sys,PIL,numpy,cv2,faster_whisper,yt_dlp,requests,dotenv,playwright.sync_api;from google import genai;"
+             "print(sys.version.split()[0],PIL.__version__,numpy.__version__,cv2.__version__,faster_whisper.__version__)"], cwd=t)
     got["python"] = r.stdout.strip() or r.stderr.strip()
     got["yt-dlp"] = run([t / info["yt-dlp"]["exe"], "--version"]).stdout.strip()
     if not got["ffmpeg_ass_filter"]:
@@ -304,6 +311,85 @@ def build_server(stage: Path, client: Path, report: dict) -> None:
                         "package_dir": str(pkg_dir) if pkg_dir else None}
 
 
+PUPPETEER_SHIM = """// 엔진 렌더러(tools/render_scene_style.js)의 require('puppeteer') → 설치본 크롬(chrome-headless-shell)으로 띄우는 얇은 연결(관제 234).
+//   puppeteer 본체(크롬 내려받기 포함)를 싣지 않고 서버의 puppeteer-core 를 쓴다(NODE_PATH = 설치/server/node_modules).
+const core = require('puppeteer-core');
+const shim = Object.create(core);
+shim.launch = (o = {}) => core.launch({ executablePath: process.env.PUPPETEER_EXECUTABLE_PATH, ...o });
+module.exports = shim;
+module.exports.default = shim;
+"""
+
+
+def build_engine(stage: Path, engine: Path, report: dict) -> None:
+    """엔진 묶음(만들기 전용 — engine_bundle 검사 통과분) + 받아쓰기 모델 + 렌더러 연결. 프리셋(channel/)은 넣지 않는다(편마다 빌린다)."""
+    sys.path.insert(0, str(ROOT.parent / "tools" / "claude_portal"))
+    import engine_bundle as EB
+    if not (engine / "tools" / "calcopy" / "make.py").exists():
+        raise SystemExit(f"[build_win] 엔진 폴더가 아닙니다: {engine}")
+    dst = stage / "engine"
+    man = EB.build(engine, ROOT / "common" / "engine_traces", dst)
+    bad = EB.check(dst)
+    if bad:
+        raise SystemExit("[build_win] 엔진 묶음 검사 빨강 — " + " / ".join(bad[:5]))
+    # 프리셋마다 기본값 표(사장님 10-20 "기본값은 모든 프리셋 원본 영상에 맞춘다") — 값을 정하는 것은 엔진 preview_request.preset_defaults 한 곳,
+    #   여기는 고객 프리셋 목록(claude_preset_names.json)마다 불러 표로 묶기만. 설정 화면·만들기가 이 표를 엔진 기본 팩 위에 얹는다(local_settings.packFor)
+    sys.path.insert(0, str(ROOT.parent / "tools" / "claude_portal"))
+    from preset_pack import pack_name
+    #   모든 프리셋(이름 붙은 5개만이 아니다 — 10-20 실측 회원 목록 18개): 엔진 channel/*/preset/* 중 틀이 있는 것 전부
+    presets = sorted(p.parent.relative_to(engine).as_posix() for p in engine.glob("channel/*/preset/**/frame.json")
+                     if (p.parent / "manifest.json").is_file())
+    code = ("import json,sys;sys.path.insert(0,'.');from tools.calcopy.preview_request import preset_defaults as D;"
+            "print(json.dumps({p: D(p) for p in json.loads(sys.argv[1])}, ensure_ascii=False))")
+    got = json.loads(subprocess.run([sys.executable, "-c", code, json.dumps(presets)], cwd=engine, capture_output=True, check=True,
+                                    env={**os.environ, "PYTHONIOENCODING": "utf-8"}).stdout.decode("utf-8"))
+    table = {pack_name(p).removesuffix(".zip"): got[p] for p in presets}
+    (dst / "tools" / "calcopy" / "preset_defaults.json").write_text(json.dumps(table, ensure_ascii=False, indent=1), encoding="utf-8")
+    report["preset_defaults"] = {pid: sorted(v) for pid, v in table.items()}
+    log("프리셋 기본값 " + " · ".join(f"{pid}:{'+'.join(sorted(v))}" for pid, v in table.items()))
+    shim = dst / "node_modules" / "puppeteer"
+    shim.mkdir(parents=True, exist_ok=True)
+    (shim / "index.js").write_text(PUPPETEER_SHIM, encoding="utf-8")
+    (shim / "package.json").write_text('{"name":"puppeteer","version":"0.0.0-shortem","main":"index.js"}' + chr(10), encoding="utf-8")
+    # 받아쓰기 모델(faster-whisper small, CT2) — 첫 설치에 다 깔려 있어야 한다(사장님 10-19). 엔진은 SHORTEM_WHISPER_DIR/<이름>
+    src = os.environ.get("SHORTEM_WHISPER_SRC") or next(iter(sorted((Path.home() / ".cache" / "huggingface" / "hub" /
+                                                                       "models--Systran--faster-whisper-small" / "snapshots").glob("*"))), None)
+    if not src or not (Path(src) / "model.bin").exists():
+        raise SystemExit("[build_win] 받아쓰기 모델(faster-whisper-small)이 없습니다 — SHORTEM_WHISPER_SRC 로 폴더를 주세요")
+    wd = stage / "models" / "whisper" / "small"
+    if wd.exists():
+        shutil.rmtree(wd)
+    wd.mkdir(parents=True)
+    for name in ("config.json", "model.bin", "tokenizer.json", "vocabulary.txt"):
+        shutil.copy2(Path(src) / name, wd / name)          # 캐시는 링크일 수 있다 — copy2 가 실제 파일로 복사
+    report["engine"] = {"files": len(man["files"]), "dropped": len(man["dropped"]), "missing": man["missing"],
+                        "whisper_mb": round(sum(p.stat().st_size for p in wd.iterdir()) / 1e6, 1), "check": "통과"}
+    log(f"엔진 묶음 {len(man['files'])}파일(뺀 것 {len(man['dropped'])}) · 받아쓰기 모델 {report['engine']['whisper_mb']}MB")
+
+
+def build_packs(stage: Path, engine: Path, report: dict) -> None:
+    """효과음 팩(숏템메이커 팩01~09) → <설치>/packs/sfx/팩NN/ + packs_manifest.json(엔진 calcopy_make._pack_assets 가 읽는 꼴).
+    10-19 실측: 우리 PC 의 팩 장부가 없어 완성본 효과음이 file=None 으로 빠졌다 — 설치본은 동봉 팩을 가리키는 장부를 직접 갖는다.
+    어느 칸을 시작·강조·끝에 쓰나는 엔진 preview_request.default_pack 한 곳이 정한다(여기는 파일·번호만)."""
+    src = engine / "shopping_shorts" / "assets" / "sfx_packs"
+    dst = stage / "packs"
+    if dst.exists():
+        shutil.rmtree(dst)
+    man, n = [], 0
+    for pk in sorted(p for p in src.iterdir() if p.is_dir()):
+        for f in sorted(pk.iterdir()):
+            if f.suffix.lower() not in (".wav", ".mp3"):
+                continue
+            n += 1
+            (dst / "sfx" / pk.name).mkdir(parents=True, exist_ok=True)
+            shutil.copy2(f, dst / "sfx" / pk.name / f.name)
+            man.append({"id": 10000 + n, "kind": "sfx", "pack": pk.name, "slot": f.stem, "file": f.name,
+                        "media_path": f"scene_assets/{pk.name}/{f.name}", "title": f"{pk.name} {f.stem}"})
+    (dst / "packs_manifest.json").write_text(json.dumps(man, ensure_ascii=False, indent=0), encoding="utf-8")
+    report["packs"] = {"sfx": len(man)}
+    log(f"효과음 팩 {len(man)}개 → packs/")
+
+
 def build_mcpb(out: Path, dist: Path, stage: Path, report: dict) -> Path:
     ms = fresh(out / "mcpb_stage")
     for f in ("manifest.json", "launcher.js", "icon.png"):
@@ -342,6 +428,48 @@ def build_plugin(stage: Path, report: dict) -> None:
             r = run([claude, "plugin", "validate", p])
             res[name] = (r.returncode, (r.stdout + r.stderr).strip().splitlines()[-1:])
     report["plugin"] = {"validate": res or "claude 없음 — 검사 생략"}
+
+
+def build_code_kit(dist: Path, stage: Path, version: str, report: dict) -> Path:
+    """Claude Code 용 시작 꾸러미(exe 없이, 스타터킷처럼 md 한 장 끌어다 놓기) — 플러그인 + 시작_코드.md + node.
+    ★설치 전 PC 엔 node 가 없을 수 있다 → 꾸러미 플러그인은 함께 든 node 로 연결 파일을 띄운다(설치 폴더 안 플러그인은 그대로 SHORTEM_NODE)."""
+    import zipfile
+    kit = dist / f"shortem-claude-code-{PLAT}-{version}.zip"
+    plug = stage / "claude-plugin"
+    pj_rel = Path("shortem") / ".claude-plugin" / "plugin.json"
+    pj = json.loads((plug / pj_rel).read_text(encoding="utf-8"))
+    pj["mcpServers"]["shortem"]["command"] = "${CLAUDE_PLUGIN_ROOT}/node/node.exe"
+    tmp = kit.with_suffix(".part")
+    with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
+        for p in sorted(plug.rglob("*")):
+            rel = p.relative_to(plug)
+            if p.is_file() and rel != pj_rel:
+                z.write(p, ("숏템시작/claude-plugin" / rel).as_posix())
+        z.writestr(("숏템시작/claude-plugin" / pj_rel).as_posix(), json.dumps(pj, ensure_ascii=False, indent=2) + "\n")
+        z.write(stage / "tools" / "node" / "node.exe", "숏템시작/claude-plugin/shortem/node/node.exe")
+        z.write(ROOT / "시작_코드.md", "숏템시작/시작.md")
+    os.replace(tmp, kit)
+    report["code_kit"] = {"file": str(kit), "mb": round(kit.stat().st_size / 1e6, 1), "sha256": sha256_file(kit)}
+    log(f"Claude Code 시작 꾸러미 {report['code_kit']['mb']}MB → {kit}")
+    return kit
+
+
+def make_pack_zip(stage: Path, zp: Path) -> dict:
+    """설치 폴더 → zip(윈도 내장 tar 가 푼다 — 한글 이름은 UTF-8 표시로). 내용은 STAGE_TOP 안의 것만."""
+    import hashlib
+    import zipfile
+    tmp = zp.with_suffix(".part")
+    with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED, compresslevel=6, allowZip64=True) as z:
+        for p in sorted(stage.rglob("*")):
+            rel = p.relative_to(stage)
+            if p.is_file() and rel.parts[0] in STAGE_TOP:
+                z.write(p, rel.as_posix())
+    os.replace(tmp, zp)
+    h = hashlib.sha256()
+    with open(zp, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return {"path": str(zp), "sha256": h.hexdigest(), "mb": round(zp.stat().st_size / 1e6, 1)}
 
 
 def write_manifest(stage: Path, version: str) -> dict:
@@ -396,8 +524,10 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(ROOT / "build"))
     ap.add_argument("--client", default=str(ROOT.parent / "shortem_client"))
+    ap.add_argument("--engine", default=str(ROOT.parent.parent / "칼카피숏템엔진"), help="엔진 트랙 폴더(엔진 묶음 원본)")
     ap.add_argument("--version", default=LOCK["installer_version"])
     ap.add_argument("--skip-exe", action="store_true")
+    ap.add_argument("--skip-zip", action="store_true")
     a = ap.parse_args()
 
     out = Path(a.out).resolve()
@@ -413,11 +543,23 @@ def main() -> None:
     report["probe"] = probe_versions(stage, info)
     log(f"버전 실측: {json.dumps(report['probe'], ensure_ascii=False)}")
     build_server(stage, Path(a.client).resolve(), report)
+    build_engine(stage, Path(a.engine).resolve(), report)
+    build_packs(stage, Path(a.engine).resolve(), report)
     shutil.copy2(ROOT / "common" / "postinstall.js", stage / "postinstall.js")
     shutil.copy2(ROOT / "시작.md", stage / "시작.template.md")
     shutil.copy2(ROOT / "guide" / "설치안내.html", stage / "설치안내.html")
     build_plugin(stage, report)
     build_mcpb(out, dist, stage, report)
+    build_code_kit(dist, stage, a.version, report)
+    (stage / "app_version.json").write_text(json.dumps({"version": a.version}), encoding="utf-8")   # 켤 때 자동 업데이트가 비교하는 판(관제 234)
+    # 설치 폴더는 다시 빌드할 때 통째로 비우지 않는다 → 정한 이름 밖(시험 파일 등)은 exe 에 넣기 전에 걷어낸다
+    extra = sorted(p.name for p in stage.iterdir() if p.name not in STAGE_TOP)
+    for name in extra:
+        p = stage / name
+        shutil.rmtree(p) if p.is_dir() else p.unlink()
+    report["stage_removed"] = extra
+    if extra:
+        log(f"설치 폴더에서 걷어낸 것(정한 이름 밖): {extra}")
     man = write_manifest(stage, a.version)
     report["manifest_files"] = len(man["files"])
     stage_bytes = sum(p.stat().st_size for p in stage.rglob("*") if p.is_file())
@@ -429,6 +571,14 @@ def main() -> None:
     if ln > 160:
         raise SystemExit("[build_win] 설치 폴더 안 경로가 160자를 넘습니다 — 고객 PC(MAX_PATH 260)에서 깨질 수 있어 중단합니다.")
     report["stage_path_chars"] = len(str(stage))
+
+    # exe 없이 까는 묶음(사장님 10-20 "인증서 없이 스타터킷처럼") — 연결 파일(launcher.js installPack)이 받아 푼다.
+    #   설치 폴더 통째 = exe 와 같은 내용. 서버에 올리기: tools/claude_portal/publish_update.py --install
+    if not a.skip_zip:
+        zp = dist / f"shortem-{PLAT}-{a.version}.zip"
+        log("설치 묶음 zip 만드는 중(exe 없이 까는 길)")
+        report["zip"] = make_pack_zip(stage, zp)
+        log(f"설치 묶음 {report['zip']['mb']}MB → {zp}")
 
     if not a.skip_exe:
         mk = nsis(out)

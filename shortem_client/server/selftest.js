@@ -22,6 +22,15 @@ export async function ffmpegCheck() {
   return { version: first.slice(0, 120), ass };
 }
 
+// 영상 인코딩 방식 — 그래픽카드(NVENC)가 실제로 돌면 'gpu', 아니면 'cpu'. 렌더 엔진 encoder.kind() 와 같은 시험(98 #79).
+//   어느 쪽이든 통과다(CPU 도 화질 같음, 느릴 뿐). 회원에게 알려 주는 정보.
+export async function encoderCheck() {
+  try {
+    const r = await run('ffmpeg', ['-v', 'error', '-f', 'lavfi', '-i', 'color=c=black:s=256x256:d=0.2', '-c:v', 'h264_nvenc', '-f', 'null', '-'], { timeoutMs: 30000 });
+    return r.code === 0 ? 'gpu' : 'cpu';
+  } catch { return 'cpu'; }
+}
+
 async function testRender(dir) {
   const spec = normalizeFrame(BASIC_FRAME, { title: '숏템\n자가점검', fonts: new Set() });
   const script = { title: '숏템\n자가점검', lines: ['숏템 자가점검 시험 렌더입니다'] };
@@ -72,6 +81,8 @@ export async function selftest() {
     items.push({ name: 'ffmpeg', ok: ff.ass, version: ff.version, ass_filter: ff.ass });
     if (!ff.ass) fails.push({ where: 'ffmpeg', why: '자막 굽기 필터(libass)가 없는 ffmpeg 입니다', fix: '설치팩 다시', retry_ok: false });
   } catch { fails.push({ where: 'ffmpeg', why: 'ffmpeg 를 실행하지 못했습니다', fix: '설치팩 다시', retry_ok: false }); }
+  const enc = await encoderCheck();
+  items.push({ name: '영상 인코딩', ok: true, encoder: enc, how: enc === 'gpu' ? '그래픽카드(NVENC) 우선' : 'CPU(그래픽카드 인코딩 없음 — 화질 같음, 렌더가 더 걸림)' });
   for (const [name, fn, where] of [['시험 렌더', testRender, '렌더'], ['시험 목소리', testVoice, '음성'], ['시험 다운로드', testDownload, '다운로드']]) {
     try {
       const r = await fn(dir);
@@ -82,7 +93,8 @@ export async function selftest() {
       if (process.env.SHORTEM_DEBUG) process.stderr.write(`[selftest] ${name}: ${e.stack || e}\n${e.detail || ''}\n`);
     }
   }
-  const md = ['# 숏템 자가점검 결과', '', `- 시각: ${new Date().toLocaleString('ko-KR')}`, `- 실행 도구: ${tools.mode === 'dev' ? '개발 모드' : '설치본'} · 문제 ${tools.problems.length}건`, ff ? `- ffmpeg: ${ff.version} · ass 필터 ${ff.ass ? '있음' : '없음'}` : '- ffmpeg: 실행 실패', '',
+  const md = ['# 숏템 자가점검 결과', '', `- 시각: ${new Date().toLocaleString('ko-KR')}`, `- 실행 도구: ${tools.mode === 'dev' ? '개발 모드' : '설치본'} · 문제 ${tools.problems.length}건`, ff ? `- ffmpeg: ${ff.version} · ass 필터 ${ff.ass ? '있음' : '없음'}` : '- ffmpeg: 실행 실패',
+    `- 영상 인코딩: ${enc === 'gpu' ? '그래픽카드(NVENC) 우선 — 실패하면 CPU 로 다시' : 'CPU(그래픽카드 인코딩 없음)'}`, '',
     '| 점검 | 결과 | 파일 |', '|---|---|---|',
     ...items.filter(i => i.name !== 'ffmpeg').map(i => `| ${i.name} | ${i.ok ? '통과' : i.skipped ? '건너뜀 — ' + i.why : '실패'} | ${i.file ? path.basename(i.file) : '-'} |`), '',
     ...(fails.length ? ['## 고칠 것', ...fails.map(f => `- [${f.where}] ${f.why} → ${f.fix}`)] : ['모든 점검을 통과했습니다.'])].join('\n');

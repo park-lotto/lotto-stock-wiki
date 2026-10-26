@@ -4,7 +4,7 @@ from shopping_shorts import voice_presets
 
 def test_fish_speed_owner_matches_presets_file():
     fish = [p for p in voice_presets.load_presets_file() if p["preset_id"].startswith("fs-")]
-    assert len(fish) == 8
+    assert len(fish) == 9   # 8명 + 일반여성2(관제 247)
     for p in fish:
         assert voice_presets.default_speed(p["base_voice_id"]) == p["default_speed"], p["preset_id"]
         assert 0.8 <= p["default_speed"] <= 1.6
