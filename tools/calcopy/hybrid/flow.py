@@ -94,7 +94,16 @@ PHASE_STAGE = {   # 세부 단계 → 회원에게 보이는 단계
     "check": "check", "check_got": "check", "check_look": "check", "check_fix": "check", "check_saved": "check", "done": "done",
 }
 
-LIMITS = {"script": 5, "plan": 8, "render": 3, "look": 2, "pick": 2, "review_bad": 2}
+# 고치기 한도(사장님 10-26 "고치기 한도는 계속 다듬어야 된다") — 근거 = 회원 마스크편(C:/숏템_칼카피/flowtest/ititemlog12_member, 11회 실행 · 대본 15·장면 17 판정)
+#   script 5→6: 첫 바퀴 대본이 6번 반려된 뒤 7번째에 통과했다(5에서 멈춰 '다시 시도'를 한 번 더 눌러야 했다) — 원인 묶음 {문장 수·말 빠르기·제목 색}→{제목 색}→{말 빠르기}→{제목 색}→{말끝·제목 색}×2 → 통과.
+#     하나씩 풀어 가는 중이었다. 6번을 넘는 바퀴는 이 로그에 없다(근거 없는 증액은 안 한다).
+#   plan 8 그대로: 장면 맞추기는 9번 반려가 한 번도 통과하지 못했다(마지막 9번 = 장면 경계·컷 길이·남은 글자를 손으로 옮기며 맴돎) — 늘려도 풀린다는 근거 없음.
+#   같은 원인 묶음이 STUCK 번 연속이면 한도 전이라도 멈춘다(REDO_STUCK 아래).
+LIMITS = {"script": 6, "plan": 8, "render": 3, "look": 2, "pick": 2, "review_bad": 2}
+# 같은 원인 묶음 연속 몇 번이면 '더 고쳐도 안 풀린다'로 보나 = 3. 근거(같은 로그): 똑같은 묶음 2번 연속은 두 번 다 다음 바퀴에 풀렸다
+#   (대본 {말끝·제목 색} 2연속 → 통과 · 장면 {장면 경계} 2연속 → 다른 원인으로 넘어감). 3번 이상 똑같았던 것은 재료로는 못 고치는 원인뿐이었다
+#   (장면 맞추기에서 '한 줄 말 빠르기 이상' 4연속 — 문장을 바꿔야 풀리는 것 · 배치 충돌 '꾸밈 자리' 3연속). 2로 하면 풀릴 바퀴를 두 번 끊는다.
+REDO_STUCK = 3
 TITLE_CHUNK = 120     # 원본 후보 제목 한 묶음(질문 하나 약 6천 자 — 10-21 300편 통째 4.2만 자로 40분 멈춤)
 ORIGIN_TRY = 16       # 자막 대조할 후보 수
 
@@ -274,14 +283,20 @@ def _went_back(st: dict, k: str) -> str | None:
 def _msg(st: dict, phase: str) -> str:
     sg = _stage(phase, st)
     k, text = sg["key"], dict(_stage_list(st))
+    rd = st.get("_redo") or {}
+    if rd and rd.get("stage") != k:        # 다른 단계로 넘어갔다 = 그 고치기는 끝(되돌아간 단계도 아니다)
+        st.pop("_redo", None)
+        rd = {}
+    # 고치는 중이면 몇 번째·왜(쉬운 말 한 줄) — 사장님 10-26 "고객도 반려가 이해될 수 있게" (회원 마스크편: 대본 반려 15번·장면 8번이 '대본 쓰기 중'만 떠 이유를 몰랐다)
+    tail = f" — {REDO_VERB.get(k, '다시 고치는 중')}({rd['n']}/{rd['limit']}): {rd['say']}" if rd else ""
     if _went_back(st, k):          # 되돌아감(10-26 이미숙 회원편 '목소리·영상 만들기 완료 → 장면 맞추기 중' — 회원이 당황) = 무엇을 다시 하는지 쉬운 말, 보인 단계는 그대로
-        return REDO_WORDS.get(phase) or f"더 잘 나오게 {text[k]}부터 다시 하는 중이에요"
+        return (REDO_WORDS.get(phase) or f"더 잘 나오게 {text[k]}부터 다시 하는 중이에요") + tail
     prev = st.get("_shown_stage")
     st["_shown_stage"] = k
     now = text[k] + (" 중" if k not in ("done", "sign") else "")
     if prev and prev != k and prev in text:
-        return f"{text[prev]} 완료 → {now}"
-    return now
+        return f"{text[prev]} 완료 → {now}" + tail
+    return now + tail
 
 
 def _rv(rid: str, ask: str, show: list | None = None, model: str = "opus", need: tuple = ()) -> dict:
@@ -320,8 +335,8 @@ AGAIN = "다시 시도해 주시면 이어 갈게요"
 MEMBER_BAD = ("멈춤", "검사", "retry", "shortem_", "렌더", "재료", "검수", "봇 확인", "지문", "개발팀", "부르세요", "확인 답", "판정", "세부 단계",
               "단계를", "phase", "look", "관문", "runner", "실행기", "Traceback", "error", "Error", "None", "{", "}")
 MEMBER_NEXT = re.compile(r"(주세요|까요|게요|있어요|드릴게요|갑니다)")
-NO_SIMILAR = ("쿠팡에서 비슷한 제품도 찾지 못했어요", "제품 이름을 알려 주시면 그 이름으로 찾아 이어 갈게요 · 다른 소재로 갈까요?")
-NO_ORIGIN = ("원본을 못 찾았어요", "원본 영상 주소를 주시면 바로 만들 수 있어요 · 다른 소재로 갈까요?")
+NO_SIMILAR = ("쿠팡에서 비슷한 제품도 찾지 못했어요", "다시 시도를 누르시면 숏템이 다른 검색어로 다시 찾아볼게요")
+NO_ORIGIN = ("원본을 못 찾았어요", "다시 시도를 누르시면 숏템이 다른 방법으로 다시 찾아볼게요")
 ALT_NOTICE = "같은 물건을 찾지 못해서 가장 비슷한 제품으로 골랐어요"
 
 
@@ -336,7 +351,7 @@ def member_ok(text: str, need_next: bool = False) -> bool:
 def member_stop(why: str, fix: str) -> tuple[str, str]:
     """멈춤 문구를 회원용으로 — 둘 다 괜찮으면 그대로, 아니면 쉬운 일반 문구(원문은 호출한 쪽이 기록에 남긴다)."""
     w = why if member_ok(why) else "만드는 중에 문제가 생겼어요"
-    f = fix if member_ok(fix, need_next=True) else AGAIN + " · 계속 안 되면 숏템 피드백으로 알려 주세요"
+    f = fix if member_ok(fix, need_next=True) else AGAIN
     return w, f
 
 
@@ -364,7 +379,7 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
         h = FORMAT_PHASES.get(_fmt(st), {}).get(ph) or PHASES.get(ph)
         m_in, rp_in = m, rp
         if h is None:
-            return _out(st, "stop", ph, why="만드는 중에 문제가 생겼어요", fix="숏템 피드백으로 알려 주시면 확인해 드릴게요", detail="알 수 없는 세부 단계 " + str(ph))
+            return _out(st, "stop", ph, why="만드는 중에 문제가 생겼어요", fix="다시 시도해 주시면 이어 갈게요", detail="알 수 없는 세부 단계 " + str(ph))
         try:
             r = h(st, m, rp, user)
         except _Stop as e:
@@ -407,7 +422,7 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
         if "done" in r:
             st["phase"] = "done"
             return _out(st, "done", "done", **r["done"])
-    return _out(st, "stop", st.get("phase"), why="만드는 중에 문제가 생겼어요", fix="숏템 피드백으로 알려 주시면 확인해 드릴게요", detail="세부 단계가 40번 돌기만 함")
+    return _out(st, "stop", st.get("phase"), why="만드는 중에 문제가 생겼어요", fix="다시 시도해 주시면 이어 갈게요", detail="세부 단계가 40번 돌기만 함")
 
 
 def _out(st: dict, status: str, phase: str, **kw) -> dict:
@@ -437,13 +452,123 @@ def _out(st: dict, status: str, phase: str, **kw) -> dict:
     return res
 
 
-def _tries(st: dict, key: str, limit: int) -> int:
+# ── 반려 원인 → 회원 쉬운 말(사장님 10-26 "고객도 반려가 이해될 수 있게") — 판단 주인 = 이 사전 한 곳 ──────────────
+# 키 = script_audit 규칙 kind(text:*·product:* 는 앞머리) · flow 대본 검사 칸(title·claims…) · 장면·렌더·완성본 원인(_plan_causes 가 붙인다).
+# 값 = (진행 줄에 붙는 한 줄, 끝내 멈출 때 쓰는 이름). 규칙 이름·수치·파일·내부 용어 금지 — 시험이 member_ok 로 전부 잰다.
+REDO_WHY = {
+    "first_line": ("첫 문장 순서를 맞추는 중이에요", "첫 문장"), "last_line": ("끝 문장을 맞추는 중이에요", "끝 문장"),
+    "count": ("문장 수를 맞추는 중이에요", "문장 수"), "tts_chars": ("문장이 길어서 줄이는 중이에요", "문장 길이"),
+    "tts_total_chars": ("전체 글 양을 맞추는 중이에요", "글 양"), "ending": ("문장 말끝을 맞추는 중이에요", "문장 말끝"),
+    "cap_chars": ("자막이 길어서 나누는 중이에요", "자막 길이"), "tts_cps_spread": ("말 빠르기를 고르게 맞추는 중이에요", "말 빠르기"),
+    "est_length_short": ("영상이 기준보다 짧아요", "영상 길이"), "est_length_long": ("영상이 기준보다 길어요", "영상 길이"),
+    "narr_share": ("목소리와 원래 소리 비율을 맞추는 중이에요", "목소리 비율"), "orig_span": ("원래 목소리 구간을 맞추는 중이에요", "원래 목소리 구간"),
+    "no_adjacent": ("이야기 흐름을 다듬는 중이에요", "이야기 흐름"), "beats": ("이야기 흐름을 다듬는 중이에요", "이야기 흐름"),
+    "has_line": ("꼭 들어갈 문장을 넣는 중이에요", "꼭 들어갈 문장"), "sibling_repeat": ("다른 편과 겹치는 말을 바꾸는 중이에요", "겹치는 말"),
+    "head_connectors": ("문장 잇는 말을 다듬는 중이에요", "문장 잇는 말"), "made_candidates": ("문장을 더 자연스럽게 다듬는 중이에요", "문장 다듬기"),
+    "forbid": ("쓰면 안 되는 표현을 바꾸는 중이에요", "쓰면 안 되는 표현"), "forbid_in": ("쓰면 안 되는 표현을 바꾸는 중이에요", "쓰면 안 되는 표현"),
+    "engine": ("문장을 더 자연스럽게 다듬는 중이에요", "문장 다듬기"), "text": ("자막 글자를 다듬는 중이에요", "자막 글자"),
+    "product": ("비슷한 제품이라는 걸 밝히는 문장을 넣는 중이에요", "제품 안내 문장"), "title": ("제목 색을 맞추는 중이에요", "제목 색"),
+    "claims": ("효과처럼 들리는 말을 바꾸는 중이에요", "효과처럼 들리는 말"), "alt_scene": ("비슷한 제품 장면을 맞추는 중이에요", "제품 장면"),
+    "source_rule": ("원본 장면 쓰는 방법을 맞추는 중이에요", "원본 장면 쓰기"), "product_cut": ("제품 장면을 넣는 중이에요", "제품 장면"),
+    "form": ("대본 모양을 바로잡는 중이에요", "대본 모양"), "orig_heard": ("원래 목소리가 들리는 자리를 맞추는 중이에요", "원래 목소리 자리"),
+    "conflict": ("화면 꾸밈이 들어갈 자리에 맞게 문장을 다듬는 중이에요", "꾸밈 자리"),
+    "voice_speed": ("한 줄만 말이 너무 느리거나 빨라서 문장을 바꾸는 중이에요", "한 줄 말 빠르기"),
+    "length_short": ("영상이 기준보다 짧아요", "영상 길이"), "length_long": ("영상이 기준보다 길어요", "영상 길이"),
+    "boundary": ("장면이 바뀌는 곳에 컷 경계를 맞추는 중이에요", "장면 경계"), "text_left": ("화면에 남은 글자를 가리는 중이에요", "남은 글자"),
+    "cut_len": ("컷 길이를 장면에 맞추는 중이에요", "컷 길이"), "rhythm": ("컷 박자를 맞추는 중이에요", "컷 박자"),
+    "reuse": ("같은 장면이 겹치지 않게 고르는 중이에요", "겹치는 장면"), "render": ("영상을 다시 맞추는 중이에요", "영상 맞추기"),
+    "final_check": ("완성본에서 걸린 곳을 고치는 중이에요", "완성본 마무리"),
+}
+REDO_GENERIC = ("더 잘 나오게 다듬는 중이에요", "마무리")
+REDO_VERB = {"script": "다시 쓰는 중", "plan": "장면 다시 맞추는 중", "render": "다시 만드는 중", "check": "다시 고치는 중"}
+
+
+def _redo_word(cause: str) -> tuple[str, str] | None:
+    return REDO_WHY.get(cause) or REDO_WHY.get(str(cause).split(":")[0])
+
+
+def _script_causes(a: dict) -> list:
+    """대본 검사 답(audit_script) → 원인 키(REDO_WHY) 목록 — 걸린 규칙 kind + flow 칸. 순서 = 검사 순서."""
+    out = []
+    for r in a.get("rules") or []:
+        if isinstance(r, dict) and r.get("ok") is False:
+            k = str(r.get("kind") or "")
+            if k == "est_length":           # 어림 길이 23.4초 (26~31, …) — 짧은지 긴지
+                mm = re.search(r"([\d.]+)초\s*\(([\d.]+)~([\d.]+)", str(r.get("why") or ""))
+                k = "est_length_long" if mm and float(mm.group(1)) > float(mm.group(3)) else "est_length_short"
+            out.append(k)
+    if (a.get("engine") or {}).get("ok") is False:
+        out.append("engine")
+    out += [k for k in ("title", "claims", "alt_scene", "source_rule", "product_cut") if a.get(k)]
+    if a.get("error"):
+        out.append("form")
+    return list(dict.fromkeys(out))
+
+
+_PLAN_PAT = [("voice_speed", r"말속도|TTS"), ("boundary", r"장면 경계|짧은 조각"), ("cut_len", r"샷보다 길|샷 잔여|샷 끝|컷 길이|번쩍"),
+             ("text_left", r"박힌 글자|흐림|자막"), ("rhythm", r"컷 중앙|컷 경계가|리듬|박자"), ("reuse", r"같은 장면|재사용|두 번 나")]
+
+
+def _plan_causes(texts) -> list:
+    """장면 맞추기 걸린 글(엔진 over·검수 problems) → 원인 키. 못 알아보는 글은 plan_other(경보 대상)."""
+    out = []
+    for t in texts or []:
+        hit = [k for k, p in _PLAN_PAT if re.search(p, str(t))]
+        out += hit or ["plan_other"]
+    return list(dict.fromkeys(out))
+
+
+def _len_cause(value) -> str:
+    """길이 다시 쓰기 값('23초 (판 26~31)' 등) → length_short|length_long."""
+    mm = re.search(r"([\d.]+)\s*초?\s*\(\D*([\d.]+)\s*~\s*([\d.]+)", str(value or ""))
+    return "length_long" if mm and float(mm.group(1)) > float(mm.group(3)) else "length_short"
+
+
+def _josa(word: str) -> str:
+    c = (word or " ")[-1]
+    return "이" if "가" <= c <= "힣" and (ord(c) - 0xAC00) % 28 else "가"
+
+
+def redo_stop_words(causes: list, stuck: bool = False) -> tuple[str, str]:
+    """끝내 멈출 때 회원 문구 — 무엇이 안 맞았는지 쉬운 이름 1~2개 + 할 수 있는 것(why·fix 두 줄)."""
+    names = list(dict.fromkeys((_redo_word(c) or REDO_GENERIC)[1] for c in causes or []))[:2]
+    if not names:
+        return "여러 번 고쳐 봤지만 아직 마무리가 안 됐어요", "다시 시도를 누르시면 숏템이 멈춘 곳부터 다시 맞춰 볼게요"
+    nm = "·".join(names)
+    why = f"{nm}{_josa(nm)} 몇 번을 고쳐도 같은 곳에서 안 맞았어요" if stuck else f"여러 번 고쳐 봤지만 {nm}{_josa(nm)} 끝내 안 맞았어요"
+    return why, "다시 시도를 누르시면 숏템이 멈춘 곳부터 다시 맞춰 볼게요"
+
+
+def _tries(st: dict, key: str, limit: int, causes: list | None = None, at: str | None = None) -> int:
+    """고치기 한 번 — 수를 세고, 왜 고치는지(원인 키) 기억해 회원 진행 줄에 쉬운 말로(_msg), 한도·같은 원인 되풀이면 멈춘다.
+    at = 고치기가 일어나는 단계 키(배치 충돌·길이처럼 대본으로 되돌아가 고칠 때 'script'). 없으면 지금 단계."""
     n = st["tries"].get(key, 0) + 1
     st["tries"][key] = n
+    cs = [str(c) for c in causes or [] if c]
+    unknown = [c for c in cs if not _redo_word(c)]
+    if unknown:
+        st["log"].append(f"경보: 회원 문구 없는 반려 원인 {unknown} — REDO_WHY 에 넣어라")
+    if cs:
+        hist = st.setdefault("redo_hist", {}).setdefault(key, [])
+        hist.append(sorted(cs))
+        del hist[:-REDO_STUCK]
+    say = (_redo_word(cs[0]) if cs and _redo_word(cs[0]) else REDO_GENERIC)[0] if cs else REDO_GENERIC[0]
+    st["_redo"] = {"stage": at or _stage(st.get("phase") or "setup", st)["key"], "key": key, "n": n, "limit": limit, "say": say}
     if n > limit:
-        st["log"].append(f"고치기 한도: {key} {limit}번")
-        raise _Stop("여러 번 고쳐 봤지만 아직 마무리가 안 됐어요", "다시 시도해 주시면 멈춘 곳부터 이어 갈게요")
+        st["log"].append(f"고치기 한도: {key} {limit}번 · 원인 {cs}")
+        w, f = redo_stop_words(cs)
+        raise _Stop(w, f, detail=f"고치기 한도 {key} {limit}번 · 원인 {cs}")
+    hist = (st.get("redo_hist") or {}).get(key) or []
+    if cs and len(hist) >= REDO_STUCK and all(h == hist[-1] for h in hist[-REDO_STUCK:]):
+        st["log"].append(f"같은 원인 {REDO_STUCK}번 연속: {key} {cs} — 한도 전 멈춤")
+        w, f = redo_stop_words(cs, stuck=True)
+        raise _Stop(w, f, detail=f"같은 원인 {REDO_STUCK}번 연속 {key} · {cs}")
     return n
+
+
+def _redo_done(st: dict) -> None:
+    """고치기가 통과로 끝났다 — 진행 줄의 '다시 …(n/m)' 를 내린다."""
+    st.pop("_redo", None)
 
 
 def _reply(rp: dict, rid: str, need: tuple = ()) -> dict:
@@ -511,11 +636,11 @@ def ph_bench_got(st, m, rp, u):
 def ph_origin_read(st, m, rp, u):
     r = _reply(rp, "origin_read", ("celeb", "queries", "is_shopping"))
     if not r.get("is_shopping"):
-        raise _Stop("연예인이 쓰는 물건이 나오는 영상이 아니에요", "연예인 쇼핑 쇼츠 주소를 주세요", final=True)
+        raise _Stop("연예인이 쓰는 물건이 나오는 영상이 아니에요", "이 영상은 여기서 마칠게요", final=True)
     st["read"] = r
     label = re.sub(r"^\s*출처\s*[:：]?\s*", "", r.get("source_label") or "").strip()
     if not label:      # 출처 표기 = 원본으로 가는 길(사장님 10-22 "무조건 표기해야 문제가 안 생긴다 · 없으면 패스")
-        raise _Stop("화면과 설명란 어디에도 출처가 없는 쇼츠라 원본을 찾을 수 없어요", "출처가 적힌 다른 쇼츠 주소를 주세요 · 다른 소재로 갈까요?")
+        raise _Stop("화면과 설명란 어디에도 출처가 없는 쇼츠라 원본을 찾을 수 없어요", "이 영상은 여기서 마칠게요")
     celeb = str(r.get("celeb") or "")
     sk = str(r.get("source_kind") or "")
     if sk.startswith("sns") or re.search(r"인스타|instagram|틱톡|tiktok|블로그|blog", label, re.I):
@@ -890,10 +1015,12 @@ def ph_stopped(st, m, rp, u):
         return _given_origin(st, vid)
     if u.get("retry") and r:
         st.pop("stopped", None)
+        st.pop("redo_hist", None)                 # 다시 시도 = 같은 원인 되풀이 셈도 새로
         if r == st.get("_asker") and st.get("_asker_in"):
             st["tries"] = {k: v for k, v in (st.get("tries") or {}).items() if k == "length"}
             return {"goto": r, "feed": st["_asker_in"]}
         st["tries"] = {k: v for k, v in (st.get("tries") or {}).items() if k == "length"}   # 다시 시도 = 고치기 횟수 새로(길이 고치기만 남긴다 — 사인을 다시 받는다)
+        st.pop("redo_hist", None)
         return {"goto": r}
     raise _Stop((st.get("stopped") or {}).get("why") or "아직 마무리되지 않은 편이에요", (st.get("stopped") or {}).get("fix") or AGAIN, retry=r)
 
@@ -972,7 +1099,7 @@ def ph_product_pick_wide(st, m, rp, u):
     if not sh:
         if st.get("given"):
             return {"goto": "given"}
-        raise _Stop("원본 영상에 제품이 화면으로 나오지 않아요(말로만 소개)", "제품이 화면에 나오는 다른 영상 주소를 주세요", final=True)
+        raise _Stop("원본 영상에 제품이 화면으로 나오지 않아요(말로만 소개)", "이 영상은 여기서 마칠게요", final=True)
     step, R0 = st["look_step"], st["read"]
     return {"review": [_rv("product_pick", PRODUCT_PICK + f"\n\n첫 그림 = 받은 원본 파일 **전체**를 {step}초 간격으로(왼쪽 위 첫 칸 = 0초, n번째 칸 = (n-1)×{step}초) — 답의 t 는 **파일 초**.\n"
                            f"둘째 그림 = 벤치 쇼츠 1초 시트(그 제품이 무엇인지 보여 준다). 벤치·원본 대사의 제품 낱말: {R0.get('product_words')}",
@@ -993,7 +1120,7 @@ def ph_product_cands(st, m, rp, u):
                             "fps": round(1 / step, 4), "cols": 8, "rows": VIS_TILES // 8, "w": 200, "ss": 0, "t": dur}], "then": "product_pick_wide"}
         if st.get("given"):
             return {"goto": "given"}
-        raise _Stop("원본 영상에 제품이 화면으로 나오지 않아요(말로만 소개)", "제품이 화면에 나오는 다른 영상 주소를 주세요", final=True)
+        raise _Stop("원본 영상에 제품이 화면으로 나오지 않아요(말로만 소개)", "이 영상은 여기서 마칠게요", final=True)
     st["product_pick"] = r
     qs = [q for q in r.get("coupang_queries") or [] if q][:4] + [w for w in r.get("brand_words") or [] if w][:2]
     st["coupang_qs"] = qs
@@ -1025,7 +1152,7 @@ def _given_query(g: str) -> tuple[str, str]:
 def ph_given(st, m, rp, u):
     q, _ = _given_query(st["given"])
     if not q:
-        raise _Stop("정해 주신 제품 이름을 알 수 없어요", "쿠팡 상품 이름을 함께 적어 다시 만들어 주세요", final=True)
+        raise _Stop("정해 주신 제품 이름을 알 수 없어요", "이 영상은 여기서 마칠게요", final=True)
     st["log"].append("원본에 제품 장면 없음 → 고객이 정한 제품으로")
     return {"do": [{"id": "coupang", "cmd": "coupang", "queries": [q]}], "then": "given_same"}
 
@@ -1034,7 +1161,7 @@ def ph_given_same(st, m, rp, u):
     _coupang_down(m)
     cands = (m.get("coupang") or {}).get("items") or []
     if not cands:
-        raise _Stop("정해 주신 제품을 쿠팡에서 찾지 못했어요", "쿠팡 상품 이름을 정확히 적어 다시 만들어 주세요", final=True)
+        raise _Stop("정해 주신 제품을 쿠팡에서 찾지 못했어요", "이 영상은 여기서 마칠게요", final=True)
     st["given_cands"] = cands[:16]
     return _cand_sheet_do(st, st["given_cands"], "given")
 
@@ -1080,7 +1207,7 @@ def ph_product_done(st, m, rp, u):
     mode = "exact" if "product_same" in rp else ("named" if "named_same" in rp else "alt")
     given = "given_same" in rp
     if given and not same.get("product_id"):
-        raise _Stop("정해 주신 제품을 쿠팡에서 찾지 못했어요", "쿠팡 상품 이름을 정확히 적어 다시 만들어 주세요", final=True)
+        raise _Stop("정해 주신 제품을 쿠팡에서 찾지 못했어요", "이 영상은 여기서 마칠게요", final=True)
     if not same.get("product_id"):
         if mode == "exact":
             return {"goto": "name_find"}
@@ -1092,7 +1219,7 @@ def ph_product_done(st, m, rp, u):
             return w
         raise _Stop(*NO_SIMILAR)
     if same.get("category") in ("의약품", "의료기기"):
-        raise _Stop("의약품·의료기기는 만들 수 없는 소재예요", "다른 소재 영상을 주세요", final=True)
+        raise _Stop("의약품·의료기기는 만들 수 없는 소재예요", "이 소재는 여기서 마칠게요", final=True)
     pool = st.get("given_cands") if given else (st.get("named_cands") if mode == "named" else st.get("coupang_cands"))
     if pool and str(same["product_id"]) not in {str(c.get("product_id") or c.get("productId") or c.get("id") or "") for c in pool}:
         st["log"].append(f"제품 번호 {same['product_id']} 가 후보 표에 없음 — 답 그대로 씀")
@@ -1239,7 +1366,7 @@ def ph_research_check(st, m, rp, u):
     r = _reply(rp, "research", ("조사_md", "keywords", "queries", "spans"))
     if r.get("stop"):
         st["log"].append("조사 멈춤: " + str(r["stop"])[:400])     # 판정 글은 기록에만 — 고객에겐 이유·해결 두 줄(사장님 10-22)
-        raise _Stop("조사해 보니 이 제품은 만들 수 없는 소재예요(의약품·금지 품목 등)", "다른 소재 영상을 주세요", final=True)
+        raise _Stop("조사해 보니 이 제품은 만들 수 없는 소재예요(의약품·금지 품목 등)", "이 소재는 여기서 마칠게요", final=True)
     md, bad = str(r.get("조사_md") or ""), []
     for h in ("결론", "출처", "원음", "사실", "금지", "확인 못"):
         if h not in md:
@@ -1489,9 +1616,12 @@ def ph_script_got(st, m, rp, u):
         M = _prep_material(st, S, M)
         a = audit_script(st, S, M)
     if not a.get("ok"):
-        _tries(st, "script", LIMITS["script"])
+        cs = _script_causes(a)
+        _tries(st, "script", LIMITS["script"], cs or ["form"])
         why = json.dumps({k: x for k, x in a.items() if k != "ok"}, ensure_ascii=False)[:4000]
-        return {"review": [_script_ask(st, why)], "then": "script_got", "reject": {"why": why[:400], "fix": "대본을 고쳐 다시"}}
+        st["log"].append("대본 반려: " + why[:400])          # 속사정은 기록에만 — reject 칸은 회원에게도 보일 수 있어 쉬운 말로
+        return {"review": [_script_ask(st, why)], "then": "script_got", "reject": {"why": st["_redo"]["say"], "fix": "대본을 고쳐 다시 확인받습니다"}}
+    _redo_done(st)
     st["script"] = {"S": S, "M": M, "G": r.get("근거_md") or ""}
     return {"do": [{"id": "save_script", "cmd": "write_doc", "files": {f"{v}/대본.json": S, f"{v}/재료.json": M, f"{v}/근거.md": st["script"]["G"]},
                     "cand_dir": True, "version": v},
@@ -1503,9 +1633,10 @@ def ph_script_heard(st, m, rp, u):
     bad = (m.get("heard") or {}).get("bad") or []
     if not bad:
         return {"goto": "customize"}
-    _tries(st, "script", LIMITS["script"])
+    _tries(st, "script", LIMITS["script"], ["orig_heard"])
     why = json.dumps({"orig_heard": bad}, ensure_ascii=False)[:4000]
-    return {"review": [_script_ask(st, why)], "then": "script_got", "reject": {"why": why[:400], "fix": "원음 구간을 그 말이 들리는 자리로"}}
+    st["log"].append("원음 대조 반려: " + why[:400])
+    return {"review": [_script_ask(st, why)], "then": "script_got", "reject": {"why": st["_redo"]["say"], "fix": "대본을 고쳐 다시 확인받습니다"}}
 
 
 def script_view(st) -> dict:
@@ -1528,6 +1659,7 @@ def ph_sign(st, m, rp, u):
         return {"goto": "plan"}
     if u.get("revise"):
         st["tries"]["script"] = 0
+        st.pop("redo_hist", None)
         return {"review": [_script_ask(st, "고객 요청: " + str(u["revise"])[:500])], "then": "script_got"}
     return {"wait": {"kind": "approve", "script": script_view(st)}, "then": "sign"}
 
@@ -1562,7 +1694,10 @@ def _fix_review(st, why: str, sheet: str | None, rid: str) -> dict:
     v = st["version"]
     _, _, ww, wh = _style(v)["frame"]["window"]
     sc = st["script"]
-    return _rv(rid, _q(st, "PLAN_LOOK").replace("{ar}", f"{ww}:{wh}") + (f"\n\n멈춘 이유(재료를 고쳐라): {why}" if why else "") + "\n\n대본:\n" +
+    from tools.calcopy import vmake_clean as VC
+    erase = ("\n\n★이 판은 원본에 박힌 글자(자막·워터마크)를 렌더 전에 VMake 로 지운다(사장님 10-26 — 엔진이 글자 컷을 '지울 컷'으로 이미 올렸다). "
+             "남의 박힌 글자는 problems 에 넣지 말고 blur 도 새로 넣지 마라 — 장면·제품·얼굴·순서만 본다.") if VC.will_erase(v) else ""
+    return _rv(rid, _q(st, "PLAN_LOOK").replace("{ar}", f"{ww}:{wh}") + erase + (f"\n\n멈춘 이유(재료를 고쳐라): {why}" if why else "") + "\n\n대본:\n" +
                json.dumps(sc["S"], ensure_ascii=False)[:6000] + "\n\n재료:\n" + json.dumps(sc["M"], ensure_ascii=False)[:8000] + _shots_ctx(st),
                [_img(sheet)] if sheet else [], need=("ok",))
 
@@ -1586,8 +1721,9 @@ def ph_plan_look(st, m, rp, u):
     r = _reply(rp, f"plan_{v}", ("ok",))
     over = st.get("_plan_over") or []
     if r.get("ok") and not over and not r.get("재료"):
+        _redo_done(st)
         return {"goto": "thumb"}
-    _tries(st, "plan", LIMITS["plan"])
+    _tries(st, "plan", LIMITS["plan"], _plan_causes(over or [p for p in r.get("problems") or [] if str(p).strip()]))
     M = _take_fix(st, r)
     if M is None:
         probs = [str(p) for p in (r.get("problems") or []) if str(p).strip()]
@@ -1598,7 +1734,7 @@ def ph_plan_look(st, m, rp, u):
             # 장면은 맞는데 대본·목소리 쪽 문제(예: 한 줄 말속도 이상 → 문장 고치기)를 짚었다 — 재료 답 칸이 없어 멈추던 것(10-26 회원 마스크편)
             #   → 대본 단계로 되돌린다(배치 충돌과 같은 길, 시도 수는 conflict 한도가 지킨다)
             st["log"].append("계획 검수 → 대본 다시: " + " / ".join(probs)[:300])
-            _tries(st, "conflict", 2)
+            _tries(st, "conflict", 2, ["voice_speed"], at="script")
             st["tries"]["script"] = 0
             st["approved"] = False
             why = "장면 확인에서 대본·목소리 쪽 문제가 나왔습니다 — 아래만 고치고 내용·결은 그대로: " + " / ".join(probs)[:1200]
@@ -1665,6 +1801,7 @@ def ph_render_got(st, m, rp, u):
         cap = 1.36 if str((_style(st["version"]).get("voice") or {}).get("voice_id", "")).startswith("kr-mina") else 1.26
         if tl.get("max") and float(tl["max"]) > cap:
             st["log"].append(f"배속 {tl['max']} > {cap - 0.01}")
+        _redo_done(st)
         return {"goto": "check"}
     probs = [x.strip() for x in str(r.get("error") or "").split(" / ") if x.strip()]
     if probs and all(x.startswith("썸네일 카드") for x in probs) and st["tries"].get("thumb", 0) < 2:
@@ -1679,7 +1816,7 @@ def ph_render_got(st, m, rp, u):
     if r.get("error") and "원본 샷보다 길다" not in str(r["error"]) and not r.get("jumps"):
         st["tries"]["render_err"] = st["tries"].get("render_err", 0) + 1   # 처음 보는 렌더 오류도 재료로 한 번 고쳐 본다(10-22 강주은: 사진 컷 ss 없음 KeyError 로 곧장 멈춤)
         why = f"렌더 오류: {str(r['error'])[:300]} — 재료.json 컷의 빠진 칸(src·ss·crop)·형식을 바로잡아라"
-    _tries(st, "render", LIMITS["render"])
+    _tries(st, "render", LIMITS["render"], ["render"])
     return {"review": [_fix_review(st, why, None, f"render_fix_{st['version']}")], "then": "render_fix"}
 
 
@@ -1778,7 +1915,7 @@ def ph_check_judge(st, m, rp, u):
         why = _check_fails(st)
         st["log"].append("완성본 검사 멈춤: " + why)
         raise _Stop("완성본 마무리 확인에서 걸린 곳이 있어요", "다시 시도해 주시면 걸린 곳부터 고쳐서 이어 갈게요", retry="check_retry", detail=why)
-    _tries(st, "look", LIMITS["look"])
+    _tries(st, "look", LIMITS["look"], ["final_check"])
     probs = json.dumps({"자동 관문 ×": [{k: r.get(k) for k in ("group", "what", "value")} for r in (st.get("auto") or {}).get("rows") or []
                                     if r.get("ok") is not True and not r.get("ref")] if not auto_ok else None,
                         "눈 검수 ×": look.get("problems")}, ensure_ascii=False)[:3000]
@@ -1787,7 +1924,7 @@ def ph_check_judge(st, m, rp, u):
 
 def _length_rewrite(st, value) -> dict:
     """길이 넘침·모자람은 재료가 아니라 글로 고친다(배속 아님, 07 §4) → 대본 다시 + 회원 사인 다시. 계획(목소리 실측)·완성본 검사 두 곳이 부른다."""
-    _tries(st, "length", 2)
+    _tries(st, "length", 2, [_len_cause(value)], at="script")
     st["tries"]["script"] = 0
     st["approved"] = False
     return {"review": [_script_ask(st, f"완성본 길이가 판 범위를 벗어났다: {value} — 나레 글을 줄이거나(넘침) 늘려서(모자람) 범위 안으로. 내용·결은 그대로")],
@@ -1800,12 +1937,12 @@ def _conflict_rewrite(st, c) -> dict:
     c = c if isinstance(c, dict) else {"cause": str(c)}
     cause = str(c.get("cause") or c.get("axis") or "배치 충돌")[:120]
     st["log"].append(f"배치 충돌 → 대본 다시: {json.dumps(c, ensure_ascii=False)[:300]}")
-    _tries(st, "conflict", 2)
+    _tries(st, "conflict", 2, ["conflict"], at="script")
     st["tries"]["script"] = 0
     st["approved"] = False
     why = (f"배치 충돌({c.get('axis')}: 필요 {c.get('need')} > 상한 {c.get('cap')}) — 뿌리 = 대본 규칙 위반 '{cause}'. 고치는 순서: ① 부사·군더더기·중복 조사 빼기 "
            f"② 그래도 넘치면 낱말 그대로 두 TTS 줄로 나누기(훅 어미는 첫 줄에) ③ 그래도면 정보 낱말을 지키며 다시 쓰기. 내용·결은 그대로")
-    return {"review": [_script_ask(st, why)], "then": "script_got", "reject": {"why": f"대본 규칙 '{cause}' 때문에 장면 배치가 맞지 않아 대본을 고칩니다", "fix": "대본을 고쳐 다시 확인받습니다"}}
+    return {"review": [_script_ask(st, why)], "then": "script_got", "reject": {"why": st["_redo"]["say"], "fix": "대본을 고쳐 다시 확인받습니다"}}
 
 
 def _face_hint(st) -> str:
@@ -1835,7 +1972,7 @@ def ph_check_fix(st, m, rp, u):
     r = _reply(rp, f"final_fix_{v}", ("ok",))
     M = _take_fix(st, r)
     if M is None:
-        raise _Stop("완성본 마무리 확인을 통과하지 못했어요", "숏템 피드백으로 알려 주시면 확인해 드릴게요 · 다른 소재로 갈까요?")
+        raise _Stop("완성본 마무리 확인을 통과하지 못했어요", AGAIN)
     return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "render"}
 
 
@@ -2008,7 +2145,7 @@ def f_ref_read(st, m, rp, u):
     from tools.calcopy import origin_find as OF
     r = _reply(rp, "ref_read", ("ref_kind", "is_shopping", "product_words", "queries_en"))
     if not r.get("is_shopping"):
-        raise _Stop("제품이 화면에 나오는 영상이 아니에요", "외국인이 제품을 써 보는 쇼츠 주소를 주세요", final=True)
+        raise _Stop("제품이 화면에 나오는 영상이 아니에요", "이 영상은 여기서 마칠게요", final=True)
     B = st["bench"]
     korean = OF.is_korean(str(B.get("title") or ""), str(B.get("channel") or "")) or r.get("ref_kind") == "korean_reedit"   # 한글 = 규칙(주인 is_korean), 판독은 보탬
     st["read"] = {**r, "celeb": "", "korean": korean}
@@ -2038,7 +2175,7 @@ def f_of_got(st, m, rp, u):
     if o.get("error") or not cands or not o.get("sheets"):
         st["log"].append(f"원본 후보 없음({mode}): {str(o.get('error') or '')[:200]}")
         if mode == "lens":
-            raise _Stop("해외 원본을 못 찾았어요", "원본 영상 주소를 주시면 바로 만들 수 있어요 · 다른 소재로 갈까요?")
+            raise _Stop("해외 원본을 못 찾았어요", NO_ORIGIN[1])
         return {"goto": "of_fetch"}
     rows = "\n".join(f"{c['n']}. {c.get('platform')}:{c.get('id')} · {c.get('channel')} · '{str(c.get('title') or '')[:70]}' · {c.get('date')} · 한글 {bool(c.get('korean'))}"
                      for c in cands)
@@ -2068,7 +2205,7 @@ def f_of_pick(st, m, rp, u):
             st["origins"].append({"id": v["id"], "info": {k: v.get(k) for k in ("id", "title", "channel", "date", "dur")}, "how": "렌즈 같은 촬영분"})
         st["log"].append(f"렌즈 같은 영상 {len(same)}개 → 원본 {[o['id'] for o in st['origins']]}: {str(a.get('why'))[:120]}")
         if not st["origins"]:
-            raise _Stop("해외 원본을 못 찾았어요", "원본 영상 주소를 주시면 바로 만들 수 있어요 · 다른 소재로 갈까요?")
+            raise _Stop("해외 원본을 못 찾았어요", NO_ORIGIN[1])
         if len(st["origins"]) < 2 and not st.get("_peers_done"):
             return {"goto": "of_peers"}
         return {"goto": "of_fetch"}
@@ -2139,7 +2276,7 @@ def f_product_cands(st, m, rp, u):
     names = {f["name"] for f in st["origin"]["files"]}
     scenes = [s for s in r.get("scenes") or [] if isinstance(s, dict) and isinstance(s.get("t"), (int, float))][:4]
     if not scenes:
-        raise _Stop("원본 영상에 제품이 화면으로 나오지 않아요", "제품이 화면에 나오는 다른 영상 주소를 주세요", final=True)
+        raise _Stop("원본 영상에 제품이 화면으로 나오지 않아요", "이 영상은 여기서 마칠게요", final=True)
     st["product_pick"] = r
     qs = [q for q in r.get("coupang_queries") or [] if q][:4] + [w for w in r.get("brand_words") or [] if w][:2]
     st["coupang_qs"] = qs
@@ -2183,7 +2320,7 @@ def f_research_check(st, m, rp, u):
     r = _reply(rp, "research", ("조사_md", "keywords", "queries", "spans"))
     if r.get("stop"):
         st["log"].append("조사 멈춤: " + str(r["stop"])[:400])
-        raise _Stop("조사해 보니 이 제품은 만들 수 없는 소재예요(의약품·금지 품목 등)", "다른 소재 영상을 주세요", final=True)
+        raise _Stop("조사해 보니 이 제품은 만들 수 없는 소재예요(의약품·금지 품목 등)", "이 소재는 여기서 마칠게요", final=True)
     md, bad = str(r.get("조사_md") or ""), []
     for h in ("결론", "출처", "원음", "사실", "금지", "확인 못"):
         if h not in md:
@@ -2295,7 +2432,7 @@ def f_render_clean_got(st, m, rp, u):
     st["log"].append(f"박힌 글자 VMake: 쓰는 구간 {c.get('used_sec')}초 중 자막 컷 {c.get('send_sec')}초 · 호출 {c.get('calls')}회 · 보낸 초 {c.get('sent')}"
                      + (f" · ⚠ {c['sent_bad']}" if c.get("sent_bad") else "") + (f" · {c.get('why')}" if c.get("why") else ""))
     if c.get("sent_bad"):
-        raise _Stop("자막 지우기에 쓰지 않는 구간까지 보낸 게 보여 멈췄어요", "숏템 피드백으로 알려 주시면 확인해 드릴게요", final=True)
+        raise _Stop("자막 지우기에 쓰지 않는 구간까지 보낸 게 보여 멈췄어요", "이 편은 여기서 마칠게요", final=True)
     M = st["script"]["M"]
     nb = RU.blur_minus_spans(M, tf.get("done") or {})
     if nb:
@@ -2341,7 +2478,7 @@ def s_bench_got(st, m, rp, u):
 def s_topic_got(st, m, rp, u):
     r = _reply(rp, "topic_read", ("is_shopping", "product_words", "coupang_queries"))
     if not r.get("is_shopping"):
-        raise _Stop("쿠팡 제품 이야기가 아닌 영상이에요", "제품 썰 영상 주소를 주세요", final=True)
+        raise _Stop("쿠팡 제품 이야기가 아닌 영상이에요", "이 영상은 여기서 마칠게요", final=True)
     st["read"] = {**r, "celeb": ""}
     st["coupang_qs"] = [q for q in r.get("coupang_queries") or [] if q][:4]
     if st.get("given"):
@@ -2374,7 +2511,7 @@ def s_product_done(st, m, rp, u):
     if not a.get("product_id"):
         raise _Stop(*NO_SIMILAR)
     if a.get("category") in ("의약품", "의료기기"):
-        raise _Stop("의약품·의료기기는 만들 수 없는 소재예요", "다른 소재 영상을 주세요", final=True)
+        raise _Stop("의약품·의료기기는 만들 수 없는 소재예요", "이 소재는 여기서 마칠게요", final=True)
     st["product"] = {**{k: a.get(k) for k in ("product_id", "name", "why", "category")}, "mode": "exact" if a.get("mode") != "alt" else "alt"}
     return {"goto": "reviews"}
 
@@ -2392,7 +2529,7 @@ def s_research_check(st, m, rp, u):
     r = _reply(rp, "research", ("조사_md", "keywords", "queries"))
     if r.get("stop"):
         st["log"].append("조사 멈춤: " + str(r["stop"])[:400])
-        raise _Stop("조사해 보니 이 제품은 만들 수 없는 소재예요(의약품·금지 품목 등)", "다른 소재 영상을 주세요", final=True)
+        raise _Stop("조사해 보니 이 제품은 만들 수 없는 소재예요(의약품·금지 품목 등)", "이 소재는 여기서 마칠게요", final=True)
     md = str(r.get("조사_md") or "")
     bad = [f"조사.md 에 '{h}' 절이 없다" for h in ("결론", "출처", "사실", "금지", "확인 못") if h not in md]
     bad += [f"사실 {f.get('id')} 에 출처가 없다" for f in r.get("facts") or [] if isinstance(f, dict) and not str(f.get("src") or "").strip()]

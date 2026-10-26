@@ -450,7 +450,9 @@ def test_placement_conflict_goes_back_to_script():
     conflict = {"axis": "fx.narr", "need": 5, "cap": 4, "cause": "tts_chars"}
     r = F.step(st, {"plan": {"conflict": conflict}}, {}, {})
     assert r["status"] == "reject" and r["review"][0]["id"].startswith("script_")
-    assert "tts_chars" in r["reject"]["why"] and r["state"]["approved"] is False
+    # 규칙 이름은 회원 Claude 질문에만 — 회원에게 보일 수 있는 reject 칸은 쉬운 말(10-26 사장님 "고객도 반려가 이해될 수 있게")
+    assert "tts_chars" in r["review"][0]["ask"] and "tts_chars" not in r["reject"]["why"] and F.member_ok(r["reject"]["why"])
+    assert r["state"]["approved"] is False
     assert "두 TTS 줄로 나누기" in r["review"][0]["ask"]
 
 
