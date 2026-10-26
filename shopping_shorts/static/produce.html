@@ -8914,12 +8914,15 @@ async function openWorksModal(){
   list.innerHTML = works.map(w => {
     const cur = (typeof WORK_ID !== 'undefined' && w.work_id === WORK_ID);
     const title = (w.title && w.title.trim()) ? esc(w.title.trim()) : '제목 없음 (대본 미작성)';
-    const step = (typeof w.step === 'number') ? (w.step+1) : 1;
+    // ★step 은 패널 번호다 — 동그라미 순서(PANEL_TO_ORB)로 바꿔 센다. 완성본을 만든 작업은 '완성'(관제 272)
+    const _n = ORB_TO_PANEL.length;
+    const _o = (typeof w.step === 'number' && PANEL_TO_ORB[w.step] != null) ? PANEL_TO_ORB[w.step] : 0;
+    const step = w.done ? '완성' : ((_o+1)+'/'+_n);
     const when = _wsWhen(w.updated_at);
     return '<div class="wsRow'+(cur?' cur':'')+'" onclick="openWork(\''+esc(w.work_id)+'\')">'
       + '<div class="wsMain"><div class="wsTitle">'+title+(cur?' · <span style="color:var(--accent)">지금 작업</span>':'')+'</div>'
-      + '<div class="wsMeta">'+when+(when?' · ':'')+'단계 '+step+'/8</div></div>'
-      + '<span class="wsBadge">'+step+'/8</span>'
+      + '<div class="wsMeta">'+when+(when?' · ':'')+(w.done?'완성':'단계 '+step)+'</div></div>'
+      + '<span class="wsBadge">'+step+'</span>'
       + ((window.DIALOGUE_ON && w.job_id) ? '<button class="wsDlg" onclick="event.stopPropagation();dlgOpen(\''+esc(w.work_id)+'\',\''+esc((w.title||'').trim().slice(0,30)).replace(/'/g,'')+'\')">🎭 대화형</button>' : '')
       + '<button class="wsDel" onclick="event.stopPropagation();deleteWork(\''+esc(w.work_id)+'\',this)">삭제</button>'
       + '</div>';
@@ -9130,9 +9133,11 @@ async function _restoreWork(workId){
   // 이 트랙은 같은 종류의 구멍에 이미 두 번 데었다(C-1: go만 막고 jump 놓침 / C-3: 재매칭의
   // 끝만 봉인하고 시작 놓침). 세 번째는 없다.
   PREVIEW_STATUS = null; WATCHED_ALL = false; PREVIEW_GATE_PASSED = false;
+  let _jobDone = false;   // 완성본까지 만든 job인가(관제 272) — 아래 단계 복원이 본다
   if(MIX_JOB){
     try{
       const s = await (await fetch('/api/mix/status/'+encodeURIComponent(MIX_JOB))).json();
+      if(s && s.ok) _jobDone = (s.status === 'done');
       if(s && s.ok) PREVIEW_STATUS = s.preview_status || null;
       if(s && s.ok) PREVIEW_GATE_PASSED = !!s.preview_gate_passed;   // 관제 186 — 판단은 서버 _preview_gate_passed
       try{ MIX_FAIL_MSG = (s && s.ok && s.status==='failed') ? (s.error||'원인 미상') : null; }catch(_){}   // 앞 절단 하네스엔 선언부가 없다
@@ -9149,6 +9154,15 @@ async function _restoreWork(workId){
   }
   const st = d.step;
   cur = (typeof st === 'number' && st >= 0 && st < PANEL_COUNT) ? st : 0;
+  // ★완성본까지 만든 작업은 **완성 단계에서** 연다(관제 272, 박선정님 "완성했는데 다시 들어가면 그 단계부터
+  //   다시 시작하래요"). 저장된 step 은 '마지막으로 보던 화면'일 뿐이라, 완성 뒤 1단계를 한 번 들여다보면
+  //   그 뒤로 열 때마다 1단계로 떨어졌다(핫팩 job ce5fb2b89db3: 완성 23:02 → 23:18 step 0 저장).
+  //   완성보다 뒤(SNS 예약)에 있던 사람은 그대로 둔다. 순서는 동그라미 순서(PANEL_TO_ORB)로 본다.
+  //   ★typeof 가드 — 이 함수를 앵커로 잘라 도는 하네스엔 PANEL_BY_KEY·PANEL_TO_ORB 가 없을 수 있다.
+  try{
+    if(_jobDone && typeof PANEL_BY_KEY !== 'undefined' && typeof PANEL_TO_ORB !== 'undefined'
+       && (PANEL_TO_ORB[cur] ?? 0) < PANEL_TO_ORB[PANEL_BY_KEY.final]) cur = PANEL_BY_KEY.final;
+  }catch(e){}
   // ★서버가 기억하는 단계를 따로 붙든다(2026-08-07). 바로 아래 stepLocked 강등이 cur를 0으로
   //   깎는데, 그 0이 다음 saveWork로 서버에 되쓰이면 진행단계가 **영구히 파괴**된다
   //   (사장님 제보 "작업을 옮겨 다니면 계속 1단계로 돌아온다"). _pushWork가 이 값을 보고

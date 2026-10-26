@@ -6053,15 +6053,19 @@ class Store:
                 "job_id": row[3], "step": row[4], "created_at": row[5], "updated_at": row[6]}
 
     def list_produce_works(self, customer_id=LEGACY_CUSTOMER_ID, limit=20):
-        """최근 작업 목록(updated_at DESC). state_json은 싣지 않는다 — 목록은 가벼워야 한다."""
+        """최근 작업 목록(updated_at DESC). state_json은 싣지 않는다 — 목록은 가벼워야 한다.
+
+        done = 붙은 job이 완성본까지 만들었나(mix_jobs.status='done', 관제 272). step은 '마지막으로
+        보던 화면'일 뿐이라 완성 여부를 모른다 — 박선정님 핫팩·세탁볼이 완성됐는데 목록엔 미완성으로 떴다."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT work_id, title, step, job_id, updated_at FROM produce_works "
-                "WHERE customer_id=? ORDER BY updated_at DESC, rowid DESC LIMIT ?",
+                "SELECT w.work_id, w.title, w.step, w.job_id, w.updated_at, j.status FROM produce_works w "
+                "LEFT JOIN mix_jobs j ON j.job_id = w.job_id "
+                "WHERE w.customer_id=? ORDER BY w.updated_at DESC, w.rowid DESC LIMIT ?",
                 (customer_id, limit),
             ).fetchall()
         return [{"work_id": r[0], "title": r[1], "step": r[2], "job_id": r[3],
-                 "updated_at": r[4]} for r in rows]
+                 "updated_at": r[4], "done": r[5] == "done"} for r in rows]
 
     def rename_produce_work(self, work_id, name, customer_id=LEGACY_CUSTOMER_ID):
         """작업 이름 바꾸기(2026-08-17). 성공하면 확정된 제목 문자열, 남의 것/없으면 None.
