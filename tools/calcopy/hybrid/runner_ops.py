@@ -140,10 +140,24 @@ def sheet(video: Path, dst: Path, fps: float = 1.0, cols: int = 6, rows: int = 5
     return dst
 
 
+FRAME_TAIL = 0.15     # 끝 여유(초) — 영상 길이 바로 앞 시각은 디코더가 그림을 못 내 ffmpeg 가 실패한다(10-27 41.93초 영상 41.92초 → 계획 실패)
+
+
+def frame_t(video: Path, t: float) -> float:
+    """한 장 뽑을 시각 주인 — [0, 길이−FRAME_TAIL] 안으로. 길이를 못 재면 그대로."""
+    from tools.calcopy.hybrid.common import dur_of
+    try:
+        d = dur_of(video)
+    except Exception:  # noqa: BLE001 — 길이 못 잼(손상) = 원래 시각으로 해 보고 실패는 ffmpeg 가 알린다
+        return max(0.0, t)
+    return min(max(0.0, t), max(0.0, d - FRAME_TAIL))
+
+
 def frame(video: Path, t: float, dst: Path, crop: list | None = None) -> Path:
+    """영상 한 장 — 실행기의 한 장 뽑기는 전부 이 함수(시각은 frame_t 로 끝 안쪽)."""
     vf = ["-vf", f"crop={crop[2]}:{crop[3]}:{crop[0]}:{crop[1]}"] if crop else []
     dst.parent.mkdir(parents=True, exist_ok=True)
-    run(["ffmpeg", "-y", "-v", "error", "-ss", f"{t:.2f}", "-i", str(video), "-frames:v", "1", *vf, str(dst)])
+    run(["ffmpeg", "-y", "-v", "error", "-ss", f"{frame_t(video, t):.2f}", "-i", str(video), "-frames:v", "1", *vf, str(dst)])
     return dst
 
 
@@ -1263,7 +1277,7 @@ def _cut_faces(W: Path, src: Path, ss: float, dur: float, crop) -> int:
     for k, t in enumerate([0.0] if still else [ss + dur * f for f in (0.15, 0.5, 0.85)]):
         f = src if still else tmp / f"{src.stem}_{k}.jpg"
         if not still:
-            run(["ffmpeg", "-y", "-v", "error", "-ss", f"{t:.2f}", "-i", str(src), "-frames:v", "1", str(f)])
+            frame(src, t, f)                    # 끝 넘는 시각은 frame_t 가 안쪽으로(10-27)
         im = cv2.imdecode(np.fromfile(str(f), np.uint8), cv2.IMREAD_COLOR) if f.exists() else None   # cv2.imread 는 한글 경로를 못 연다
         if im is None:
             continue
