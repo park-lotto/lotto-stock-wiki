@@ -120,7 +120,8 @@
     "shopping_shorts/clean_base.py": "_OLD_SLOWMO 옛 조립 역산용 의도적 고정 — 함수전수표 #4-②",
     "shopping_shorts/mix_pipeline.py": "합본 배속 판단은 screen_clips.plays_at_speed 한 곳으로 옮김(09-27 88b24b88e); 남은 setpts 는 청소 비교 클립용. 재확인 카드 예정",
     "shopping_shorts/tts_joined.py": "TTS 이어붙이기의 setpts — 영상 컷 배속과 다른 판단(음성)",
-    "shopping_shorts/static/scene_lab.html": "실험실 화면(고객 비노출) 상수 표시"
+    "shopping_shorts/static/scene_lab.html": "실험실 화면(고객 비노출) 상수 표시",
+    "shopping_shorts/channel_presets/hotpeople/render.py": "setpts=PTS-STARTPTS 는 -ss 뒤 첫 pts 를 0으로 맞추는 것뿐 — 배속·정지 판단 아님(뜨거운사람들 채널 프리셋 독립 렌더, 카드 097·273, 2026-10-26)"
    },
    "메모": "상한 숫자의 정본은 config.MAX_SLOWMO 한 곳(2026-10-01 관제 020, 1.15→1.2). video_assemble 은 import, app 이 scene_lab 데이터로 주입, scene_play 는 읽기만."
   },
@@ -240,7 +241,8 @@
    "검사도구": "tools/final_audio_audit.py",
    "과금": false,
    "예외": {
-    "shopping_shorts/capcut_draft.py": "볼륨 리터럴 15/60 네 곳 — 함수전수표 #12, 상수 하나로 뽑을 카드"
+    "shopping_shorts/capcut_draft.py": "볼륨 리터럴 15/60 네 곳 — 함수전수표 #12, 상수 하나로 뽑을 카드",
+    "shopping_shorts/channelkit/render.py": "채널킷(칼카피 채널 프리셋) 독립 렌더 — 고객 숏템메이커 완성본·캡컷 경로 밖, 효과음 베드 볼륨은 채널킷 spec.SFX_BED_DB(역분석 실측). 카드 097·273, 2026-10-26"
    }
   },
   {
