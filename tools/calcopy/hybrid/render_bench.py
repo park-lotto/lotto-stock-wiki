@@ -2857,12 +2857,76 @@ def _voice_gate_text(S: dict) -> None:
         raise StageError(f"tts 글에 영문 {bad} — 타입캐스트가 건너뛴다(감사 'AI'·'LED' 7곳). 한글 읽기로 바꿔 보낸다(AI → 에이아이)")
 
 
-def _voice_gate_audio(S: dict, sent: list, R: Path, log=print) -> None:
-    """렌더 전 관문 ② — 합성 직후 줄별 받아쓰기 ↔ 그 줄 글(주인 engine/narr_verify.gate_sent). 확정 결함이면 영상 굽기 전에 멈춘다."""
+def _voice_bad_audio(S: dict, sent: list, R: Path, log=print) -> list[str]:
+    """렌더 전 관문 ② — 합성 직후 줄별 받아쓰기 ↔ 그 줄 글(주인 engine/narr_verify.gate_sent). 확정 결함 글 목록(빈 목록 = 통과, 멈춤은 voice_plan 이 모아서)."""
     from tools.calcopy.engine import narr_verify as NV
     bad = NV.gate_sent(S, sent, R, log)
-    if bad:
-        raise StageError("나레 줄별 받아쓰기 확정 결함: " + " / ".join(bad) + " — 그 줄 문장을 바꿔 다시 합성(줄 캐시라 바뀐 줄만). 상세 render/narr_verify.json")
+    return ["나레 줄별 받아쓰기 확정 결함: " + " / ".join(bad) + " — 그 줄 문장을 바꿔 다시 합성(줄 캐시라 바뀐 줄만). 상세 render/narr_verify.json"] if bad else []
+
+
+def _voice_gate_audio(S: dict, sent: list, R: Path, log=print) -> None:
+    """(옛 이름 — 바로 멈추는 꼴) _voice_bad_audio 를 부르고 걸리면 GateError."""
+    gate_stop([("② 받아쓰기", _voice_bad_audio(S, sent, R, log))])
+
+
+# ── 렌더 전 관문 순서·모으기(10-26 사장님 '품질관문이나 고칠 것부터' — 회원 마스크편 장면 맞추기 8바퀴 = 바퀴마다 첫 실패 하나만 알려 줌) ──
+# 판정 함수·문턱은 그대로. 여기는 부르는 순서와 모으기만 정한다. 계획(--plan·회원 c_plan)과 렌더가 같은 timeline_gates 를 부른다(두 벌 금지).
+GATE_DEPENDS = {
+    # 관문(또는 묶음) : 기대는 것 — 앞이 걸리면 뒤는 그 결과가 바뀐 뒤 다시 재야 하니 이번엔 돌리지 않는다
+    "G-1 대본 글(영문)": "없음 — TTS(돈) 전에 멈춘다",
+    "이름 끊김 · ② 받아쓰기": "합성한 소리(같은 소리를 재는 두 관문이라 모아 한 번)",
+    "시간표 관문(넘침·⑧ 길이·⑥ 카드·③ 경계·④ 글자·얼굴·⑤ 컷 길이·⑦ 멈춤·사진·리듬)":
+        "소리 → 시간표(timeline). 전부 같은 시간표 T 를 읽기만 하고 서로의 결과를 안 읽는다 → 모두 돌려 모은다"
+        "(하나를 고치면 ss·컷이 바뀌어 다른 칸 값도 바뀔 수 있다 — 다음 계획이 전부 다시 잰다)",
+    "꾸밈(deco)": "계획 = 배치(plan_rows) 뒤 · 렌더 = 굽은 창의 자리 검출(make_locate) 뒤 — 렌더에서는 시간표 관문 통과 뒤에 돈다",
+}
+
+
+class GateError(StageError):
+    """렌더 전 관문 멈춤 — problems = [(관문 이름, 문제 글)…] 전부(한 번에 고치게). str = 문제 글을 ' / ' 로 이은 것(옛 StageError 글 꼴 그대로)."""
+
+    def __init__(self, problems: list[tuple[str, str]]):
+        self.problems = list(problems)
+        super().__init__(" / ".join(m for _, m in self.problems))
+
+
+def gate_stop(groups: list[tuple[str, list[str]]]) -> None:
+    """[(관문 이름, 문제 글 목록)…] — 하나라도 있으면 전부 실은 GateError."""
+    probs = [(g, m) for g, ms in groups for m in ms]
+    if probs:
+        raise GateError(probs)
+
+
+def over_text(over: list[dict], plan: bool, measured: bool = True) -> list[str]:
+    """'컷이 원본 샷보다 길다' 글(옛 글 그대로 — flow _plan_causes·ph_render_got 가 이 글로 찾는다)."""
+    if not over:
+        return []
+    rows = str([(c["line"], c["src"], c.get("ss"), c["dur"], c.get("max"), {"원본 남음": c["src_left"]} if "src_left" in c else None) for c in over])
+    return [("계획에서 컷이 원본 샷보다 길다" + ("" if measured else "(어림)") + ": " if plan else "컷이 원본 샷보다 길다: ") + rows]
+
+
+def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *, plan: bool, measured: bool = True,
+                   placed: dict | None = None) -> list[tuple[str, list[str]]]:
+    """(판단 주인 — 렌더 전 시간표 관문 목록·순서) 같은 시간표 T 를 읽는 관문을 전부 돌려 [(관문 이름, 문제 글 목록)…] 로(빈 목록 = 통과).
+    계획과 렌더가 이 함수 하나를 부른다. placed 를 주면(계획) 꾸밈 관문도. 기대는 관계 = GATE_DEPENDS."""
+    from tools.calcopy.hybrid import thumb_rule as TR
+    src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
+    out = [("넘침", over_text([c for c in T["cuts"] if c["over"] > 0], plan, measured)),
+           ("⑧ 길이", plan_length_gate(T, st, measured)),
+           ("⑥ 카드 글", TR.card_text_gate(doc)),
+           ("⑥ 카드 얼굴", TR.card_face_gate(st, doc, T, M["cand_dir"])),
+           ("③ 경계", cut_boundary_gate(T, M, st)),
+           ("④ 글자·얼굴", cut_content_gate(T, M, st, doc, R, log)),
+           ("⑤ 컷 길이", cut_length_gate(T, st)),
+           ("⑦ 멈춤", cut_still_gate(T, M, st)),
+           ("사진", photo_gate(T, st)),
+           ("리듬", rhythm_gate(T, st, src_dir))]
+    if placed is not None:
+        out.append(("꾸밈", deco_gate(placed, doc, st, log)))
+    n = sum(len(b) for _, b in out)
+    if n:
+        log(f"[렌더 전 관문] 걸린 것 {n}개 — " + " · ".join(f"{g} {len(b)}" for g, b in out if b) + " (한 번에 모아 알린다)")
+    return out
 
 
 def voice_plan(S: dict, st: dict, R: Path, log=print) -> tuple[list, dict | None, dict | None]:
@@ -2877,12 +2941,11 @@ def voice_plan(S: dict, st: dict, R: Path, log=print) -> tuple[list, dict | None
     full, align = tts_by_line(tts_S, R, log)
     from tools.calcopy.engine import narr_verify as NV
     nb = NV.name_breaks(S, align)      # 관문(이름 끊김, 관제 266) — 합성 글자 시각으로 인물 이름 안 쉼 > 0.15초면 영상 굽기 전에 멈춘다
-    if nb:
-        raise StageError(" / ".join(nb))
     if not align:
         log("[이름 끊김] 글자 시각 없음 — 판정 못 함(받아쓰기 관문 ②만)")
     sent, tempo, _ = RI.make_sentences(tts_S, full, R, log, align=align, spread=RI.spread_of(st))
-    _voice_gate_audio(S, sent, R, log)   # 판 targets.speech 목표가 있으면 타입캐스트 줄별 ±8% 미세(미나 그대로, 지시서 15)
+    asr = _voice_bad_audio(S, sent, R, log)   # 판 targets.speech 목표가 있으면 타입캐스트 줄별 ±8% 미세(미나 그대로, 지시서 15)
+    gate_stop([("이름 끊김", nb), ("② 받아쓰기", asr)])      # 같은 소리를 재는 두 관문 — 모아 한 번(GATE_DEPENDS: 시간표 관문은 이 소리에 기댄다)
     sent = fit_voice(S, st, sent, align, log)   # 줄 사이·문장부호 쉼 = 판(B18 timing.gap · B18a speech) — 관제263
     return sent, tempo, align
 
@@ -2931,44 +2994,28 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         sheet = contact_sheet(T, M, st, doc / "plan/계획_접촉시트.jpg", S)      # G-10 렌더 없는 눈 검사(관문이 멈춰도 볼 수 있게 관문 앞에서)
         if sheet:
             log(f"접촉 시트(컷마다 처음·가운데·끝, 렌더 칸 그대로) → {sheet}")
-        over = [c for c in T["cuts"] if c["over"] > 0]
         for c in T["cuts"]:
             log(f"  {c['line']:4s} {c['t0']:6.2f}~{c['t1']:6.2f} {c['dur']:.2f}s max {c.get('max')} {c['src']}@{c.get('ss')}")
         LD = st["length"]
-        len_bad = plan_length_gate(T, st, tts)
         length = {"sec": round(T["end"], 2), "min": LD["min"], "max": LD["max"], "measured": bool(tts),
                   "ok": LD["min"] - LENGTH_TOL <= T["end"] <= LD["max"] + LENGTH_TOL}      # 판정 = bench_check '길이'와 같은 범위(±0.5)
         log(f"{'목소리 실측' if tts else '어림'} 길이 {T['end']}초 · 배치 {placed['log']}")
-        msg = ("계획에서 컷이 원본 샷보다 길다" + ("" if tts else "(어림)") + ": " + str([(c["line"], c["src"], c.get("ss"), c["dur"], c.get("max"), {"원본 남음": c["src_left"]} if "src_left" in c else None) for c in over])) if over else ""
-        if (over or len_bad) and not report:
-            raise StageError(" / ".join(([msg] if over else []) + len_bad))
-        from tools.calcopy.hybrid import thumb_rule as TR
-        card_bad = (TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"]) + cut_boundary_gate(T, M, st)      # 렌더 전 관문 ⑥ — 계획 때 걸러 렌더를 안 돌린다
-                    + cut_content_gate(T, M, st, doc, R, log) + cut_length_gate(T, st) + cut_still_gate(T, M, st) + photo_gate(T, st)
-                    + rhythm_gate(T, st, Path(M["cand_dir"]) if M.get("cand_dir") else None) + deco_gate(placed, doc, st, log))                       # 관문 ④ 컷 안 남의 글자·남의 얼굴 · 꾸밈(deco)
-        if card_bad:
-            raise StageError(" / ".join(card_bad))
-        return {"timeline": T, "placement": placed, "length": length, "over": msg, "sheet": str(sheet) if sheet else None}
+        gates = timeline_gates(T, M, st, doc, R, log, plan=True, measured=bool(tts), placed=placed)      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬·꾸밈 전부(첫 실패에서 안 멈춘다)
+        if not report:
+            gate_stop(gates)
+        # report(회원 c_plan) = 멈추지 않고 전부 돌려준다 — over = 길이(⑧, length 칸이 따로 알린다) 밖 문제 글 전부 · gates = 관문별
+        over_all = " / ".join(m for g, ms in gates if g != "⑧ 길이" for m in ms)
+        return {"timeline": T, "placement": placed, "length": length, "over": over_all, "gates": gates, "sheet": str(sheet) if sheet else None}
     sent, tempo, align = voice_plan(S, st, R, log)      # 관문 ⑧ 주인 — 계획과 같은 함수(같은 소리·같은 길이)
     if not sent:    # 나레 없는 편(관제 263 02 2차 ②) — TTS 안 부른다(돈 0). 자막 줄(kind sub) 시간표 + 원음 + 배경음·효과음
         log("[나레 없음] tts 줄 0 — TTS 건너뜀, 자막 시간표(sub)·원음·배경음·효과음만")
     sm = {s["id"]: s for s in sent}
     T = timeline(S, M, st, sm, align)
-    over = [c for c in T["cuts"] if c["over"] > 0]
-    if over:
-        raise StageError("컷이 원본 샷보다 길다: " + str([(c["line"], c["src"], c.get("ss"), c["dur"], c.get("max"), {"원본 남음": c["src_left"]} if "src_left" in c else None) for c in over]))
-    from tools.calcopy.hybrid import thumb_rule as TR
-    card_bad = (plan_length_gate(T, st, True) + TR.card_text_gate(doc) + TR.card_face_gate(st, doc, T, M["cand_dir"]) + cut_boundary_gate(T, M, st)          # 렌더 전 관문 ⑧ 길이 · ⑥(10-25): 연예인 판 카드 3안 얼굴 — 영상 굽기 전에 멈춘다
-                + cut_content_gate(T, M, st, doc, R, log) + cut_length_gate(T, st) + cut_still_gate(T, M, st) + photo_gate(T, st)
-                    + rhythm_gate(T, st, Path(M["cand_dir"]) if M.get("cand_dir") else None))                                                             # 관문 ④ 컷 안 남의 글자·남의 얼굴(조각 뽑기 전)
-    if card_bad:
-        raise StageError(" / ".join(card_bad))
+    gate_stop(timeline_gates(T, M, st, doc, R, log, plan=False))      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬 — 영상 굽기 전에 전부 모아 멈춘다(꾸밈은 창 자리 뒤 — GATE_DEPENDS)
     win0 = render_window(T, M, st, R)                          # 창(전환 없이) — 자리 검출 화면의 재료
     placed = plan_rows(S, T, st, make_locate(S, T, st, R, win0, log))
     deco_apply(placed, doc, st, log)
-    bad = deco_gate(placed, doc, st, log)
-    if bad:
-        raise StageError(" / ".join(bad))
+    gate_stop([("꾸밈", deco_gate(placed, doc, st, log))])
     from tools.calcopy.hybrid import placement as PL
     chk = PL.check_place(placed, st)
     check_sfx(st, placed)

@@ -1268,6 +1268,8 @@ def c_plan(W, d):
         res, over = {"timeline": {"cuts": []}}, str(e)
     T = res.get("timeline") or {}
     out = {"over": over, "cuts": len(T.get("cuts") or []), "length": res.get("length")}
+    if res.get("gates"):           # 관문별 걸린 수(기록용 — 질문 글은 over 하나에 전부, render_bench.timeline_gates)
+        out["gates"] = {g: len(b) for g, b in res["gates"] if b}
     cf = _conflict_of(res)
     if cf:
         out["conflict"] = cf
@@ -1286,6 +1288,8 @@ def c_render(W, d):
     try:
         info = render_bench.render(v, W / "doc" / v, W / v)
     except StageError as e:
+        if getattr(e, "problems", None):      # 렌더 전 관문 멈춤(render_bench.GateError) — 걸린 것 전부를 자르지 않고(한 번에 고치게, 10-26)
+            return {"ok": False, "error": str(e), "gate": [[g, m] for g, m in e.problems]}
         return {"ok": False, "error": str(e)[:600]}
     cf = _conflict_of(info)
     if cf:

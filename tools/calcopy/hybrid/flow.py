@@ -1864,10 +1864,13 @@ def ph_render_got(st, m, rp, u):
         st["log"].append("썸네일 카드가 계속 반려돼 카드 없이 렌더: " + "; ".join(probs)[:300])
         return {"do": [{"id": "clear_thumb", "cmd": "write_doc", "files": {f"{st['version']}/썸네일.json": {"options": []}}, "version": st["version"]}],
                 "then": "render"}
-    if r.get("error") and "원본 샷보다 길다" not in str(r["error"]) and not r.get("jumps") and st["tries"].get("render_err", 0) >= 1:
+    gate = r.get("gate") or []       # 렌더 전 관문 멈춤(render_bench.GateError) = 재료 문제 — '처음 보는 렌더 오류'(1번 뒤 멈춤) 길로 보내지 않는다(10-26)
+    if gate:
+        why = "렌더 전 관문에 걸린 것 전부(한 번에 고쳐라): " + str(r.get("error") or "")
+    if r.get("error") and not gate and "원본 샷보다 길다" not in str(r["error"]) and not r.get("jumps") and st["tries"].get("render_err", 0) >= 1:
         st["log"].append("렌더 오류: " + str(r["error"])[:300])
         raise _Stop("영상을 만들다 멈췄어요", "다시 시도해 주시면 멈춘 곳부터 이어 갈게요", retry="render", auto=True)
-    if r.get("error") and "원본 샷보다 길다" not in str(r["error"]) and not r.get("jumps"):
+    if r.get("error") and not gate and "원본 샷보다 길다" not in str(r["error"]) and not r.get("jumps"):
         st["tries"]["render_err"] = st["tries"].get("render_err", 0) + 1   # 처음 보는 렌더 오류도 재료로 한 번 고쳐 본다(10-22 강주은: 사진 컷 ss 없음 KeyError 로 곧장 멈춤)
         why = f"렌더 오류: {str(r['error'])[:300]} — 재료.json 컷의 빠진 칸(src·ss·crop)·형식을 바로잡아라"
     _tries(st, "render", LIMITS["render"], ["render"])
