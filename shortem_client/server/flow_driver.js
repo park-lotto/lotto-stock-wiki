@@ -93,6 +93,7 @@ async function absorb(f, res) {
   f.status = res.status;
   f.message = res.message || f.message;
   f.stage = res.stage || f.stage;
+  f.finding = res.finding ? { ...res.finding, at: Date.now() } : null;   // 원본 찾기 진행 줄(서버 flow.finding_say) — 기다리는 동안 'N분째'를 시계로 채운다
   f.asks = null;
   f.wait = null;
   if (res.status === 'execute') { f.do = res.do || []; save(f); return 'run'; }
@@ -172,10 +173,19 @@ function progressLine(f) {
   } catch { return ''; }
 }
 
+// 원본 찾기가 길어질 때 진행 줄(사장님 10-26 "5분에 한 번씩 계속 안내") — 문구는 서버(flow.finding_say)가 준 그대로, 여기는 {m} 에 5분 단위 분만 채운다(flow.finding_line 과 같은 셈)
+export function findingLine(fd, now = Date.now()) {
+  const sec = Number(fd.sec || 0) + Math.max(0, (now - Number(fd.at || now)) / 1000);
+  const step = Number(fd.step || 300);
+  const m = Math.floor(sec / step) * step / 60;
+  return m <= 0 ? String(fd.say0 || '') : String(fd.say || '').replace('{m}', String(m));
+}
+
 // MCP 응답 꼴 — 회원에게는 message 한 줄만(세부 금지). need 로 다음 할 일.
 export function shapeFlow(f) {
   const doing = f.status === 'execute' ? progressLine(f) : '';   // 실행기 진행 신호('원본 후보 조사 3/8') — 회원이 멈춘 줄 모르게(10-26)
-  const base = { sid: f.sid, message: doing ? `${f.message} · ${doing}` : f.message, ...(doing ? { doing } : {}), ...(f.stage ? { stage: f.stage.text, step: f.stage.no, step_total: f.stage.total } : {}) };
+  const head = f.finding && !f.fail ? `${f.finding.base} · ${findingLine(f.finding)}` : f.message;
+  const base = { sid: f.sid, message: doing ? `${head} · ${doing}` : head, ...(doing ? { doing } : {}), ...(f.stage ? { stage: f.stage.text, step: f.stage.no, step_total: f.stage.total } : {}) };
   if (f.fail) return { ...base, need: 'fail', fail: { why: f.fail.why, fix: f.fail.fix || '', retry_ok: !!f.fail.retry_ok }, ...(f.fail.retry_ok ? { next: `shortem_make(step="retry", sid="${f.sid}")` } : {}) };
   if (f.status === 'done') return { ...base, need: 'done', video: f.video, title: f.title, note: f.note || undefined };
   if (f.status === 'wait_user' && f.wait && f.wait.kind === 'approve' && f.approved !== 'sent' && f.approved !== true) {
