@@ -605,8 +605,13 @@ def _style(version: str) -> dict:
     return STY.load(version)
 
 
+def STY_window(version: str) -> list:
+    from tools.calcopy.hybrid import styles as STY
+    return STY.window_of(version)                   # 창 주인 = styles.frame_window(전체화면 판 포함)
+
+
 def _ar(version: str) -> float:
-    _, _, ww, wh = _style(version)["frame"]["window"]
+    _, _, ww, wh = STY_window(version)
     return ww / wh
 
 
@@ -1895,7 +1900,7 @@ def ph_plan_got(st, m, rp, u):
 
 def _fix_review(st, why: str, sheet: str | None, rid: str) -> dict:
     v = st["version"]
-    _, _, ww, wh = _style(v)["frame"]["window"]
+    _, _, ww, wh = STY_window(v)
     sc = st["script"]
     from tools.calcopy import vmake_clean as VC
     erase = ("\n\n★이 판은 원본에 박힌 글자(자막·워터마크)를 렌더 전에 VMake 로 지운다(사장님 10-26 — 엔진이 글자 컷을 '지울 컷'으로 이미 올렸다). "
@@ -1970,7 +1975,7 @@ def ph_thumb(st, m, rp, u):
         # 옛 카드는 비우고(옛 번호라 계획 관문 ⑥이 시트를 막는다) 계획을 다시 돌려 새 시트로 묻는다.
         return {"do": [{"id": "clear_thumb", "cmd": "write_doc", "files": {f"{v}/썸네일.json": {"options": []}}, "version": v},
                        {"id": "plan", "cmd": "plan", "version": v, "origin_names": sorted(_origin_names(st))}], "then": "thumb_sheet"}
-    _, _, ww, wh = _style(v)["frame"]["window"]
+    _, _, ww, wh = STY_window(v)
     ask = THUMB_ASK.format(good=TR.GOOD, order=TR.find_order(st.get("slug")), ww=ww, wh=wh)    # 상위 편 훅 참고 한 줄(지시서 15 — slug 의 _kal/상위편_목표.json)
     if st.get("_thumb_bad"):
         ask += "\n\n지난 답 반려 이유(고쳐서 다시):\n- " + "\n- ".join(st["_thumb_bad"])

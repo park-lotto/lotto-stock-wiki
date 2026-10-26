@@ -67,7 +67,7 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
     from tools.calcopy.hybrid import styles as STY
     from tools.calcopy.hybrid.common import probe
-    _, _, ww, wh = STY.load(a.version)["frame"]["window"]
+    _, _, ww, wh = STY.window_of(a.version)
     files = []
     for n in [x for x in a.files.split(",") if x]:
         w, h, du = probe(Path(a.src) / n)

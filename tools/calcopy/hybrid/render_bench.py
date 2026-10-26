@@ -530,7 +530,9 @@ def frame_kind(F: dict) -> str:
 
 def frame_window(F: dict) -> list[int]:
     """영상 창 [x,y,w,h] 한 곳 — full = 화면 전체(창 칸을 안 적어도 된다), 그 밖 = frame.window."""
-    return [0, 0, W, H] if frame_kind(F) == "full" else list(F["window"])
+    from tools.calcopy.hybrid import styles as _STY
+    frame_kind(F)                                   # 모르는 kind 는 여기서 멈춘다
+    return _STY.frame_window(F)
 
 
 def _glow(lay, G: dict):

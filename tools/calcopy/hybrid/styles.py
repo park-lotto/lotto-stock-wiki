@@ -35,6 +35,20 @@ REQUIRED = ("name", "renderer", "voice", "bgm", "loudness", "length", "script", 
 RHYTHM_KEYS = {"cut_median": "v", "hook_cuts_3s": "min", "plain_share": "v", "photo_share_max": "v"}
 
 
+SCREEN = (1080, 1920)
+
+
+def frame_window(F: dict) -> list[int]:
+    """영상 창 [x,y,w,h] 주인 한 곳 — kind 'full'(전체화면 판, 두유노판 등) = 화면 전체(창 칸이 없다), 그 밖 = frame.window.
+    10-27 실사고: flow·runner_ops 다섯 곳이 frame['window'] 를 직접 읽어 전체화면 판에서 KeyError(대본 받은 직후 흐름이 죽음).
+    렌더러(render_bench.frame_window)·흐름·실행기 모두 이 함수를 부른다."""
+    return [0, 0, *SCREEN] if (F.get("kind") or "window") == "full" else list(F["window"])
+
+
+def window_of(version: str) -> list[int]:
+    return frame_window(load(version)["frame"])
+
+
 def rhythm(st: dict) -> dict:
     """(판단 주인 — 판 리듬 칸 읽기) {키: 칸 dict} — 값 칸·why 가 다 있는 것만. 빠진 키는 rhythm_missing 이 말한다(조용한 기본값 없음)."""
     R = st.get("rhythm") or {}
