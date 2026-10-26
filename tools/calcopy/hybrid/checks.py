@@ -89,9 +89,10 @@ def aba_violations(cuts_b: list[dict]) -> list[str]:
     return [f"{seq[i]}→{seq[i + 1]}→{seq[i + 2]} ({i})" for i in range(len(seq) - 2) if seq[i] == seq[i + 2] != seq[i + 1]]
 
 
-def pauses_between(voice_wav: Path, bounds: list[tuple[float, float]], noise="-35dB") -> list[dict]:
-    """B18: 줄 경계(앞 줄 끝~다음 줄 시작) 안의 무음 길이."""
-    sil = silences(voice_wav, noise, 0.08)
+def pauses_between(voice_wav: Path, bounds: list[tuple[float, float]], noise="-35dB", min_sil: float = 0.08) -> list[dict]:
+    """B18: 줄 경계(앞 줄 끝~다음 줄 시작) 안의 무음 길이. min_sil = 무음으로 셀 최소 길이 — 목표 간격보다 작아야 잰다
+    (10-27: 공용 렌더러 판 목표 0.08초를 무음 최소 0.08초로 재 L3→L4 0.080 이 0.025·E2→E3 0.079 가 0.000 으로 나왔다 — 자 결함)."""
+    sil = silences(voice_wav, noise, min_sil)
     out = []
     for a, b in bounds:
         inside = [(max(s, a - 0.15), min(e, b + 0.15)) for s, e in sil if e > a - 0.15 and s < b + 0.15]

@@ -553,11 +553,13 @@ def trans_plan_of(tab: dict) -> dict | None:
     return None
 
 
-def gap_verdict(pairs: list[tuple[str, float, float]]) -> tuple[bool | None, str]:
-    """B18 줄 사이 간격(표준 §11 ①ⓐ): [(경계, 계획 간격=시간표, 실측 무음)] — |실측−계획| ≤ 1프레임+0.02."""
+def gap_verdict(pairs: list[tuple[str, float, float]], longer_ok: set | None = None) -> tuple[bool | None, str]:
+    """B18 줄 사이 간격(표준 §11 ①ⓐ): [(경계, 계획 간격=시간표, 실측 무음)] — |실측−계획| ≤ 1프레임+0.02.
+    longer_ok = 원음 줄이 낀 경계 — 원본 말 끝에 원래 있던 쉼이 더해져 길어지는 건 원본 소리(우리 쉼 아님)라 짧아질 때(겹침·잘림)만 ×(10-27 썬크림 O1→L7 0.16)."""
     if not pairs:
         return None, "줄 경계 없음(미측정)"
-    bad = [(k, p, m) for k, p, m in pairs if abs(m - p) > GAP_TOL]
+    lo = longer_ok or set()
+    bad = [(k, p, m) for k, p, m in pairs if (p - m > GAP_TOL) if k in lo] + [(k, p, m) for k, p, m in pairs if k not in lo and abs(m - p) > GAP_TOL]
     return (not bad), "경계 " + " ".join(f"{k}:{p:.2f}→{m:.2f}" for k, p, m in pairs) + f" (허용 ±{GAP_TOL:.3f})" + (f" · 밖 {[k for k, _, _ in bad]}" if bad else "")
 
 
@@ -825,8 +827,10 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
                 pv = [p["pause"] for p in pauses_between(R / "voice.wav", bounds)]
                 return (all(PAUSE_LO - 0.02 <= p <= PAUSE_HI + 0.03 for p in pv) if pv else None), f"옛 길 쉼 {pv} ({PAUSE_LO}~{PAUSE_HI})"
             bounds = [(f"{a}→{b}", T["lines"][a][1], T["lines"][b][0]) for a, b in zip(ids[:-1], ids[1:])]
-            meas = pauses_between(R / "voice.wav", [(x, y) for _, x, y in bounds])
-            return gap_verdict([(k, round(y - x, 3), m["pause"]) for (k, x, y), m in zip(bounds, meas)])
+            meas = pauses_between(R / "voice.wav", [(x, y) for _, x, y in bounds], min_sil=0.02)     # 목표(0.08)보다 작은 무음부터(0.08 로 재면 0.08 간격이 0 으로 나옴)
+            kinds = {l.get("id"): l.get("kind") for l in S.get("lines") or []}
+            orig_edge = {k for k, _, _ in bounds if any(kinds.get(x) == "orig" for x in k.split("→"))}
+            return gap_verdict([(k, round(y - x, 3), m["pause"]) for (k, x, y), m in zip(bounds, meas)], longer_ok=orig_edge)
         row("소리", "B18 줄 사이 간격 = 판 timing(±1프레임+0.02)", gaps, "timeline.lines(판 timing) · checks.pauses_between(voice.wav)")
 
         def inline():
