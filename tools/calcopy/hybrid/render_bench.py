@@ -135,7 +135,7 @@ def real_cut_bounds(cuts: list[dict], src_dir: Path | None) -> list[float]:
         st = shot_starts(Path(src_dir) / a["src"])
         sa = max([t for t in st if t <= float(a["ss"]) + 1e-3] or [0.0])
         sb = max([t for t in st if t <= float(b["ss"]) + 1e-3] or [0.0])
-        if sa != sb or _jump_cut(Path(src_dir) / a["src"], float(a["ss"]) + float(a.get("dur") or (float(b["t0"]) - float(a["t0"]))), float(b["ss"])):
+        if sa != sb or _jump_cut(Path(src_dir) / a["src"], float(a["ss"]) + cut_speed(a) * float(a.get("dur") or (float(b["t0"]) - float(a["t0"]))), float(b["ss"])):
             out.append(float(b["t0"]))
     return out
 
@@ -319,16 +319,21 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
     for i, c in enumerate(cuts):
         c["t1"] = cuts[i + 1]["t0"] if i + 1 < len(cuts) else end
         c["dur"] = round(c["t1"] - c["t0"], 3)
-        c["over"] = round(c["dur"] - c["max"], 3) if c.get("max") is not None and c["dur"] > c["max"] else 0.0
-        if src_dir and c["kind"] == "tts" and c.get("ss") is not None and not c.get("no_snap"):
-            s2 = snap_ss(src_dir / c["src"], float(c["ss"]), (round(c["t1"] * FPS) - round(c["t0"] * FPS)) / FPS)   # 실제 뽑을 프레임 길이로      # 원음 컷은 입 맞춤이라 옮기지 않는다(검사만)
+        lip = c["kind"] == "orig" and c["src"] == Lm[c["line"]].get("src")      # 입 맞춤 = 원음 줄의 그 원본 화면 — 원음 줄 안에 끼운 다른 원본 컷(소리와 무관)은 나레 컷처럼 맞춘다(10-26 회원 마스크편 L7)
+        if src_dir and not lip and c.get("ss") is not None and not c.get("no_snap"):
+            s2, k = fit_cut(src_dir / c["src"], float(c["ss"]), round(c["t1"] * FPS) - round(c["t0"] * FPS), c.get("max"))   # 실제 뽑을 프레임 수로 — 옮기기·샷 안 늦추기 주인      # 원음 컷은 입 맞춤이라 옮기지도 늦추지도 않는다(검사만)
             if s2 != float(c["ss"]):
                 c["ss_planned"], c["ss"] = c["ss"], s2
+            if k < 1.0:
+                c["speed"] = k
+        sd = round(src_frames(c) / FPS, 3)                        # 원본에서 쓰는 초 = 뽑을 프레임 × 속도(늦춘 컷은 짧다) — fit_cut·관문 ③과 같은 프레임 셈
+        cap = None if c.get("max") is None else float(c["max"]) - (float(c["ss"]) - float(c.get("ss_planned", c["ss"])))   # max = 재료에 적힌 ss 기준 — 옮긴 만큼 뺀다
+        c["over"] = round(sd - cap, 3) if cap is not None and sd > cap + 1e-3 else 0.0
         if src_dir:
             left = src_left(src_dir / c["src"], float(c.get("ss") or 0.0))
-            if left is not None and c["dur"] > left:
+            if left is not None and sd > left + 1e-3:
                 c["src_left"] = left
-                c["over"] = max(c["over"], round(c["dur"] - left, 3))
+                c["over"] = max(c["over"], round(sd - left, 3))
     if src_dir:              # B13(같은 원본 가까운 구간) — 계획이 처음부터 피한다(주인 material_fit.respace_reuse, 판정 = quality_gate.reuse_violations_bench)
         from tools.calcopy.hybrid.material_fit import respace_reuse
         respace_reuse(cuts, src_dir, log=lambda m: sys.stderr.write(m + "\n"), adjacent_run=bool((st.get("reuse") or {}).get("adjacent_run")))   # 판 칸 reuse.adjacent_run(두유노판 — 사장님 10-26 '가')
@@ -1040,6 +1045,57 @@ def snap_ss(src: Path, ss: float, dur: float, reach: float = 0.4) -> float:
     return ss
 
 
+def _max_slowmo() -> float:
+    """늦춤 상한(배) — 정본은 shopping_shorts.config.MAX_SLOWMO 한 곳(숏템메이커 video_assemble._speed_and_freeze 와 같은 값, 관제 020 ·
+    10-01 사장님 '제일 심플하게': 경쟁사 완성본 실측 약 0.84배 감속 = 1.19배 늦춤). 여기서 숫자를 적지 않는다."""
+    from shopping_shorts.config import MAX_SLOWMO
+    return float(MAX_SLOWMO)
+
+
+def fit_cut(src: Path, ss: float, n: int, cap: float | None = None, reach: float = 0.4) -> tuple[float, float]:
+    """(판단 주인 — 나레 컷을 원본 샷 안에 맞추는 시작 초·속도, 사장님 10-26 "조각이 짧거나 길면 숏템메이커처럼 늘리기")
+    n = 컷 프레임 수 · cap = 재료 max(ss 에서 그 샷 끝까지 초 — rules.fill_shot_max) · 반환 (ss, speed) — speed = 원본 초 ÷ 화면 초(≤1, 1 = 제 속도).
+    ① snap_ss 그대로(±reach 안 옮기기, 옛 동작) → 제 속도로 샷 안·원본 끝 안·짧은 조각 없음이면 끝
+    ② 아니면 같은 자리부터 ±reach 안 가까운 순으로, 원본 프레임 수를 n → n÷MAX_SLOWMO 까지 줄여(= 늦춰) 처음 맞는 자리
+       (덜 늦추는 쪽 먼저 — 숏템메이커처럼 컷 안에서 고르게 늦춰 채움, 멈춤 프레임 없음) ③ 그래도 안 되면 그대로(관문이 잡는다).
+    cap 은 ss 를 옮긴 만큼 줄어든다(뒤로 δ 옮기면 샷 끝까지 cap−δ). 경계·조각 판정 = shot_starts·short_pieces·src_start(관문 ③과 같은 자)."""
+    src = Path(src)
+    if src.suffix.lower() in IMG_EXT or not src.exists() or n <= 0:
+        return ss, 1.0
+    starts = shot_starts(src)
+
+    def ok(s: float, m: int) -> bool:
+        sec = m / FPS
+        if s < 0 or (cap is not None and sec > float(cap) - (s - ss) + 1e-3):
+            return False
+        left = src_left(src, s)
+        if left is not None and sec > left + 1e-3:
+            return False
+        e = src_start(src, s)
+        return not short_pieces(starts, e, e + sec)
+    s1 = snap_ss(src, ss, n / FPS, reach)
+    if ok(s1, n):
+        return s1, 1.0
+    lo = math.ceil(n / _max_slowmo() - 1e-6)
+    shifts = [0] + [d for k in range(1, int(reach * FPS) + 1) for d in (k, -k)]
+    for d in shifts:
+        s = round(ss + d / FPS, 3)
+        for m in range(n - 1, lo - 1, -1):
+            if ok(s, m):
+                return s, round(m / n, 4)
+    return s1, 1.0
+
+
+def cut_speed(c: dict) -> float:
+    """컷 속도(원본 초 ÷ 화면 초) — fit_cut 이 정한 c["speed"] 를 읽기만. 없으면 1."""
+    return float(c.get("speed") or 1.0)
+
+
+def src_frames(c: dict) -> int:
+    """컷이 원본에서 쓰는 프레임 수(30fps 격자) = 화면 프레임 × 속도 — 관문 ③·④·접촉 시트·VMake 구간이 같이 읽는다(늘린 컷이 다음 샷을 재지 않게)."""
+    return max(1, round(cut_frames_n(c) * cut_speed(c)))
+
+
 CUT_CORR_MAX = 0.86   # 경계 앞뒤 프레임 회색 상관이 이보다 낮으면 진짜 편집점(오류기록 85: 146개 오푸스 눈 판정 P 0.94·R 0.97, 0.6 이면 R 0.43)
 CUTBOUNDS_VER = 2     # 경계 판정(문턱·읽는 법)이 바뀌면 올린다 — 파일 옆 캐시 이름에 들어가 옛 판정 캐시를 안 쓴다
 
@@ -1121,7 +1177,7 @@ def clip_args(c: dict, src: Path, st: dict, M: dict) -> dict:
     push = (st.get("cuts") or {}).get("push_orig" if c["kind"] == "orig" else "push_tts", 0.0)
     return {"ss": float(c.get("ss") or 0.0), "n": cut_frames_n(c), "crop": cut_crop(c, src, (ww, wh)), "win": (ww, wh),
             "push": float(c.get("push", push)), "move": c.get("move"), "blur": (M.get("blur") or {}).get(c["src"]),
-            "pic": pic_box(c, (ww, wh)), "pic_bg": c.get("pic_bg") or st["frame"].get("bg")}
+            "pic": pic_box(c, (ww, wh)), "pic_bg": c.get("pic_bg") or st["frame"].get("bg"), "speed": cut_speed(c)}
 
 
 def plan_frames_gray(c: dict, src: Path, st: dict, M: dict, idx: list[int]) -> dict:
@@ -1130,7 +1186,7 @@ def plan_frames_gray(c: dict, src: Path, st: dict, M: dict, idx: list[int]) -> d
     import subprocess
     a = clip_args(c, src, st, M)
     ww, wh = a["win"]
-    inp, vf, extra = clip_cmd(src, a["ss"], a["n"], a["crop"], a["win"], a["push"], a["move"], a["blur"], a["pic"], a["pic_bg"])
+    inp, vf, extra = clip_cmd(src, a["ss"], a["n"], a["crop"], a["win"], a["push"], a["move"], a["blur"], a["pic"], a["pic_bg"], speed=a["speed"])
     fs = sorted({int(i) for i in idx if 0 <= int(i) < a["n"]})
     if not fs:
         return {}
@@ -1147,7 +1203,7 @@ def cut_gray(c: dict, src: Path, st: dict, M: dict):
     import subprocess
     a = clip_args(c, src, st, M)
     (ww, wh), n = a["win"], a["n"]
-    inp, vf, extra = clip_cmd(src, a["ss"], n, a["crop"], a["win"], a["push"], a["move"], a["blur"], a["pic"], a["pic_bg"])
+    inp, vf, extra = clip_cmd(src, a["ss"], n, a["crop"], a["win"], a["push"], a["move"], a["blur"], a["pic"], a["pic_bg"], speed=a["speed"])
     sh = max(8, round(108 * wh / ww / 2) * 2)
     raw = subprocess.run(["ffmpeg", "-v", "error", *map(str, inp), "-vf", f"{vf},scale=108:{sh},format=gray", "-frames:v", str(n), *map(str, extra),
                           "-f", "rawvideo", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
@@ -1194,7 +1250,7 @@ def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
         if c.get("ss") is None or src.suffix.lower() in IMG_EXT or not src.exists():
             continue
         ss = float(c["ss"])
-        n = c.get("frames") or (round(c["t1"] * FPS) - round(c["t0"] * FPS))
+        n = src_frames(c)                  # 원본에서 쓰는 프레임(fit_cut 이 늦춘 컷은 화면 프레임보다 적다)
         e = src_start(src, ss)             # 실제 첫 화면 초(24fps 원본은 ss 보다 늦다 — 10-26 식기세척기 끝 1프레임 번쩍)
         end = e + n / FPS
         hit = inner_bounds(shot_starts(src), e, end)
@@ -1548,14 +1604,16 @@ def face_anchors(st: dict, doc: Path, T: dict, cand_dir: Path) -> list:
     return out
 
 
-def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Path | None = None, log=print) -> list[str]:
+def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Path | None = None, log=print, erase: list | None = None) -> list[str]:
     """렌더 전 관문 ④(10-25 감사 남의 글자 33·남 얼굴 15): 계획의 컷마다 렌더 조각과 같은 프레임 3장(cut_crop·blur)을 원본에서 뽑아
       ① 글자: 흐림 밖에 남의 박힌 글자(자막·워터마크·로고 글)가 TEXT_MIN_HITS 장 이상이면 멈춤(foreign_text)
       ② 얼굴(연예인 판 thumb_card_face=true): 기준 얼굴(카드 통과 얼굴)과 다른 사람의 큰 얼굴이 FACE_MIN_HITS 장 이상이면 멈춤(other_face)
     문제 목록(빈 목록 = 통과). 잰 값은 R/cut_content.json 캐시(열쇠 = 원본 정체(경로·크기·mtime)·ss·프레임 수·crop·blur·기준 얼굴·CONTENT_VER),
     프레임마다 글자 상자는 R/cut_ocr.json(ocr_key) — 둘 다 옛 계획 컷을 남긴다(대본↔장면을 오가도 같은 컷·같은 프레임은 다시 안 잰다).
     캐시 없는 컷의 프레임은 FRAME_JOBS 개씩 미리 뽑아 두고(cut_frames) 판정 계산은 컷 순서대로 한 줄로(결과·문구 순서 그대로).
-    다른 제품(감사 눈3 24건)은 기계로 잴 자가 없어 이 관문 밖 — 접촉 시트 눈 검사 몫."""
+    다른 제품(감사 눈3 24건)은 기계로 잴 자가 없어 이 관문 밖 — 접촉 시트 눈 검사 몫.
+    erase = 목록을 주면(박힌 글자를 VMake 로 지우는 판의 계획 — render 가 vmake_clean.will_erase 로 정한다) 글자 컷은 멈추지 않고 그 컷 번호를 erase 에 담는다(사장님 10-26).
+    얼굴은 지울 수 없으니 그대로 멈춘다."""
     import hashlib
     src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
     if not src_dir:
@@ -1574,7 +1632,7 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
         src = src_dir / c["src"]
         if c.get("ss") is None or src.suffix.lower() in IMG_EXT or not src.exists():
             continue
-        n = c.get("frames") or (round(c["t1"] * FPS) - round(c["t0"] * FPS))
+        n = src_frames(c)                  # 원본에서 쓰는 프레임 — 재는 시각 = 렌더 조각이 실제로 보여 주는 원본 초(늦춘 컷이 다음 샷을 재지 않게)
         crop = cut_crop(c, src, (ww, wh))
         regs = (M.get("blur") or {}).get(c["src"])
         key = hashlib.md5(json.dumps([c["src"], src_ident(src)[1:], round(float(c["ss"]), 3), n, crop, regs, ak, CONTENT_VER, ww, wh]).encode()).hexdigest()[:16]
@@ -1599,7 +1657,9 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
             nt = sum(1 for x in r["text"] if x)
             nf = sum(1 for x in r["face"] if x)
             where = f"{c['line']} {c['src']}@{float(c['ss']):.2f}"
-            if nt >= TEXT_MIN_HITS:
+            if nt >= TEXT_MIN_HITS and erase is not None:
+                erase.append(k)
+            elif nt >= TEXT_MIN_HITS:
                 boxes = [f["box"] for x in r["text"] for f in x][:3]
                 bad.append(f"컷 {k} {where}: 흐림 밖 남의 박힌 글자 {nt}/{len(r['text'])}장(창 좌표 {boxes}) — 재료.json blur[{c['src']}] 에 그 칸을 넣거나 crop·ss 를 옮긴다")
             if nf >= FACE_MIN_HITS:
@@ -1636,7 +1696,7 @@ def contact_sheet(T: dict, M: dict, st: dict, out: Path, S: dict | None = None) 
         src = src_dir / c["src"]
         if src.exists():
             img = src.suffix.lower() in IMG_EXT
-            n = c.get("frames") or (round(c["t1"] * FPS) - round(c["t0"] * FPS))
+            n = src_frames(c)              # 관문 ④·아래 칸과 같은 원본 프레임(늦춘 컷)
             crop = cut_crop(c, src, (ww, wh))
             regs = (M.get("blur") or {}).get(c["src"])
             reqs += [(src, 0.0 if img else float(c.get("ss") or 0) + dt, crop, (ww, wh), regs) for dt in ([0.0] if img else look_times(n))]
@@ -1650,7 +1710,7 @@ def contact_sheet(T: dict, M: dict, st: dict, out: Path, S: dict | None = None) 
         dr.text((6, 24), str(text.get(c["line"], ""))[:60], font=f2, fill=(230, 230, 230))
         if src.exists():
             img = src.suffix.lower() in IMG_EXT
-            n = c.get("frames") or (round(c["t1"] * FPS) - round(c["t0"] * FPS))
+            n = src_frames(c)              # 관문 ④와 같은 원본 프레임(늦춘 컷)
             crop = cut_crop(c, src, (ww, wh))
             regs = (M.get("blur") or {}).get(c["src"])
             for j, dt in enumerate([0.0] if img else look_times(n)):
@@ -1684,14 +1744,16 @@ def pic_box(c: dict, win: tuple[int, int]) -> list[int] | None:
     return [x, y, w - (w & 1), h - (h & 1)]          # yuv420 = 짝수 크기
 
 
-def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, push: float = 0.0, move=None, blur=None, pic=None, pic_bg=None):
+def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, push: float = 0.0, move=None, blur=None, pic=None, pic_bg=None, speed: float = 1.0):
     """컷 조각 하나 — 창 크기(win) 영상. pic[x,y,w,h] 를 주면 그 칸 크기로 그리고 창 나머지는 pic_bg 색(틀 바탕)으로 채운다(컷마다 그림 칸 크기)."""
-    inp, vf, extra = clip_cmd(src, ss, n, crop, win, push, move, blur, pic, pic_bg)
+    inp, vf, extra = clip_cmd(src, ss, n, crop, win, push, move, blur, pic, pic_bg, speed)
     run(["ffmpeg", "-y", "-v", "error", *inp, "-vf", vf, "-frames:v", n, *extra, *venc(16), "-pix_fmt", "yuv420p", *(["-color_range", "tv", "-colorspace", "bt709"] if src.suffix.lower() in IMG_EXT else []), out])
 
 
-def clip_cmd(src: Path, ss: float, n: int, crop, win: tuple[int, int], push: float = 0.0, move=None, blur=None, pic=None, pic_bg=None) -> tuple[list, str, list]:
-    """(판단 주인) 컷 조각이 어떤 그림이 되나 — (입력 인자, 필터, 출력 인자). clip(조각 굽기)·cut_still_gate(관문 ⑦ 멈춤 재기)가 같이 부른다."""
+def clip_cmd(src: Path, ss: float, n: int, crop, win: tuple[int, int], push: float = 0.0, move=None, blur=None, pic=None, pic_bg=None,
+             speed: float = 1.0) -> tuple[list, str, list]:
+    """(판단 주인) 컷 조각이 어떤 그림이 되나 — (입력 인자, 필터, 출력 인자). clip(조각 굽기)·cut_still_gate(관문 ⑦ 멈춤 재기)가 같이 부른다.
+    speed<1 = fit_cut 이 정한 샷 안 늦춤 — 원본 n×speed 프레임을 n 프레임으로 고르게 늘린다(setpts, 숏템메이커 video_assemble.cut_setpts 와 같은 꼴, 멈춤 프레임 없음)."""
     ww, wh = win
     tw, th = (pic[2], pic[3]) if pic else (ww, wh)
     pad = f",pad={ww}:{wh}:{pic[0]}:{pic[1]}:color=0x{''.join(f'{v:02X}' for v in _rgb(pic_bg or [0, 0, 0]))}" if pic else ""
@@ -1706,11 +1768,13 @@ def clip_cmd(src: Path, ss: float, n: int, crop, win: tuple[int, int], push: flo
               f"format=yuv420p,setsar=1")
         return ["-loop", "1", "-i", src], vf, ["-r", FPS]
     x, y, cw, ch = crop
-    bl = blur_vf(blur, ss, n / FPS)
+    sp = float(speed or 1.0)
+    bl = blur_vf(blur, ss, n * sp / FPS)                     # 흐림 시각 = 원본 초(늦추기 전 — setpts 는 흐림 뒤)
     pre = bl + "," if bl else ""
-    vf = f"{pre}crop={cw}:{ch}:{x}:{y},scale={tw}:{th}:flags=lanczos,setsar=1{pad},fps={FPS}"
+    slow = f"setpts=(PTS-STARTPTS)/{sp:.6f}," if sp < 1.0 - 1e-6 else ""
+    vf = f"{pre}crop={cw}:{ch}:{x}:{y},scale={tw}:{th}:flags=lanczos,setsar=1{pad},{slow}fps={FPS}"
     if push:
-        vf = (f"{pre}crop={cw}:{ch}:{x}:{y},scale={tw * 2}:{th * 2}:flags=lanczos,fps={FPS},"
+        vf = (f"{pre}crop={cw}:{ch}:{x}:{y},scale={tw * 2}:{th * 2}:flags=lanczos,{slow}fps={FPS},"
               f"zoompan=z='1+{push}*on/{max(1, n)}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={tw}x{th}:fps={FPS},setsar=1{pad}")
     return ["-ss", f"{ss:.3f}", "-i", src, "-an"], vf, []
 
@@ -2068,7 +2132,7 @@ def render_window(T: dict, M: dict, st: dict, R: Path, trans: list[dict] | None 
         src = src_dir / c["src"]
         a = clip_args(c, src, st, M)       # 칸·밀기·그림 칸·흐림 = 주인 한 곳(계획 프레임 대조·관문 ⑦과 같은 인자)
         p = parts / f"c{k:02d}.mp4"
-        clip(src, a["ss"], n, a["crop"], a["win"], p, push=a["push"], move=a["move"], blur=a["blur"], pic=a["pic"], pic_bg=a["pic_bg"])
+        clip(src, a["ss"], n, a["crop"], a["win"], p, push=a["push"], move=a["move"], blur=a["blur"], pic=a["pic"], pic_bg=a["pic_bg"], speed=a["speed"])
         got = count_frames(p)
         if got != n:      # 모자라면 뒤 컷이 전부 앞당겨지고 끝이 멈춘다 — 조용히 넘기지 않는다
             raise StageError(f"컷 조각 프레임 모자람: {c['line']} {c['src']}@{c.get('ss')} 계획 {n} · 실제 {got}")
@@ -2906,7 +2970,7 @@ def over_text(over: list[dict], plan: bool, measured: bool = True) -> list[str]:
 
 
 def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *, plan: bool, measured: bool = True,
-                   placed: dict | None = None) -> list[tuple[str, list[str]]]:
+                   erase: list | None = None, placed: dict | None = None) -> list[tuple[str, list[str]]]:
     """(판단 주인 — 렌더 전 시간표 관문 목록·순서) 같은 시간표 T 를 읽는 관문을 전부 돌려 [(관문 이름, 문제 글 목록)…] 로(빈 목록 = 통과).
     계획과 렌더가 이 함수 하나를 부른다. placed 를 주면(계획) 꾸밈 관문도. 기대는 관계 = GATE_DEPENDS."""
     from tools.calcopy.hybrid import thumb_rule as TR
@@ -2916,7 +2980,7 @@ def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *,
            ("⑥ 카드 글", TR.card_text_gate(doc)),
            ("⑥ 카드 얼굴", TR.card_face_gate(st, doc, T, M["cand_dir"])),
            ("③ 경계", cut_boundary_gate(T, M, st)),
-           ("④ 글자·얼굴", cut_content_gate(T, M, st, doc, R, log)),
+           ("④ 글자·얼굴", cut_content_gate(T, M, st, doc, R, log, erase=erase)),
            ("⑤ 컷 길이", cut_length_gate(T, st)),
            ("⑦ 멈춤", cut_still_gate(T, M, st)),
            ("사진", photo_gate(T, st)),
@@ -3000,7 +3064,14 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         length = {"sec": round(T["end"], 2), "min": LD["min"], "max": LD["max"], "measured": bool(tts),
                   "ok": LD["min"] - LENGTH_TOL <= T["end"] <= LD["max"] + LENGTH_TOL}      # 판정 = bench_check '길이'와 같은 범위(±0.5)
         log(f"{'목소리 실측' if tts else '어림'} 길이 {T['end']}초 · 배치 {placed['log']}")
-        gates = timeline_gates(T, M, st, doc, R, log, plan=True, measured=bool(tts), placed=placed)      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬·꾸밈 전부(첫 실패에서 안 멈춘다)
+        from tools.calcopy import vmake_clean as VC
+        erase = [] if VC.will_erase(style_name) else None        # 박힌 글자를 지우는 판(orig_text.mode=vmake·돈 막힘 아님) — 글자 컷은 멈추지 않고 '지울 컷'(사장님 10-26)
+        gates = timeline_gates(T, M, st, doc, R, log, plan=True, measured=bool(tts), erase=erase, placed=placed)      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬·꾸밈 전부(첫 실패에서 안 멈춘다)
+        if erase is not None:      # 지울 컷 = 계획 시간표 칸 하나(vmake_clean.used_spans 가 읽는다) — 관문 뒤에 다시 저장
+            T["vmake_cuts"] = sorted(set(erase))
+            jsave(doc / "plan/계획_시간표.json", {"timeline": T, "placement": placed})
+            if erase:
+                log(f"[관문④ → VMake] 박힌 글자 컷 {T['vmake_cuts']} — 멈추지 않고 렌더 전 VMake 로 지운다(vmake_clean.used_spans)")
         if not report:
             gate_stop(gates)
         # report(회원 c_plan) = 멈추지 않고 전부 돌려준다 — over = 길이(⑧, length 칸이 따로 알린다) 밖 문제 글 전부 · gates = 관문별

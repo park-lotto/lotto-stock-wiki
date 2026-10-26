@@ -77,6 +77,13 @@ def style_mode(version: str | None) -> str:
     return str(((styles.load(version).get("orig_text") or {}).get("mode")) or "vmake")
 
 
+def will_erase(version: str | None) -> bool:
+    """이 판의 박힌 글자를 렌더 전에 지우나(판단 주인) — 판 orig_text.mode 가 vmake 이고 돈 막힘(SHORTEM_NO_PAID)이 아니면 True.
+    render_bench --plan 관문 ④ 가 True 일 때 글자 컷을 멈추지 않고 '지울 컷'(timeline.vmake_cuts)에 올린다(사장님 10-26 "글자가 많으면 자막을 지우면 되는 거고").
+    키 없음(need_key)도 True — 지울 판이고, 키는 flow f_clean 이 렌더 전에 따로 멈춰 받는다."""
+    return ready(style_mode(version))["mode"] != "blur"
+
+
 def ready(mode: str = "vmake") -> dict:
     """돈 없이 '지울 수 있나'만 — {mode: vmake|blur|need_key, why, (fix), (via)}. flow 가 재료 단계에서 먼저 물어 키 없으면 일찍 멈춘다."""
     if mode == "blur" or paid_off():
@@ -156,19 +163,27 @@ def used_spans(T: dict, durs: dict, text: dict | None = None, done: dict | None 
     """★VMake 규칙 하나(사장님 10-26 "어떤 영상이든 동일 — 장면 편집 후 자막 있는 컷만"): 확정 계획 T(계획_시간표.json timeline)의 컷 중
     **박힌 글자가 있는 컷**이 쓰는 원본 구간만 → VMake 로 보낼 구간 {파일 이름: [[a,b]…]}(원본 초). 글자 없는 컷 = 호출 0.
     컷별 글자 판정은 이미 있는 것만: text = 샷 표 글자 샷 구간(회원 flow, text_spans — 컷과 겹치는 곳만) · text_cuts = 관문 ④ 판정 컷 번호(gate_text_cuts).
-    둘 다 None = 검사 기준(쓰는 구간 전체). durs = {이름: 원본 길이}(없는 src = 사진·재료 → 안 보냄) · done = 이미 지운 구간(빼고 보냄)."""
+    둘 다 None = 검사 기준(쓰는 구간 전체). durs = {이름: 원본 길이}(없는 src = 사진·재료 → 안 보냄) · done = 이미 지운 구간(빼고 보냄).
+    T["vmake_cuts"] = 렌더 전 관문 ④ 가 '글자 있음'으로 잰 컷(render_bench --plan, 지우는 판) — 샷 표·text_cuts 와 상관없이 늘 보낸다(관문이 멈추지 않은 대신).
+    컷 길이 = 원본에서 쓰는 초(render_bench.src_frames — fit_cut 이 늦춘 컷은 화면보다 짧다)."""
+    from tools.calcopy.hybrid.render_bench import src_frames
+    force = {int(k) for k in T.get("vmake_cuts") or [] if text is not None or text_cuts is not None}
     raw: dict = {}
+    must: dict = {}
     for k, c in enumerate(T.get("cuts") or []):
         n, ss = c.get("src"), c.get("ss")
-        if n not in durs or ss is None or (text_cuts is not None and k not in text_cuts):
+        if n not in durs or ss is None or (text_cuts is not None and k not in text_cuts and k not in force):
             continue
-        sec = int(c.get("frames") or (round(float(c["t1"]) * FPS) - round(float(c["t0"]) * FPS))) / FPS
-        raw.setdefault(n, []).append([max(0.0, float(ss) - pad), min(float(durs[n]), float(ss) + sec + pad)])
+        sec = src_frames(c) / FPS
+        span = [max(0.0, float(ss) - pad), min(float(durs[n]), float(ss) + sec + pad)]
+        raw.setdefault(n, []).append(span)
+        if k in force:
+            must.setdefault(n, []).append(span)
     out = {}
     for n, iv in raw.items():
         iv = _merge(iv, gap)
         if text is not None:
-            iv = _intersect(iv, [[a - pad, b + pad] for a, b in text.get(n) or []])
+            iv = _merge(_intersect(iv, [[a - pad, b + pad] for a, b in text.get(n) or []]) + must.get(n, []), gap)
         iv = _subtract(iv, (done or {}).get(n) or [])
         fixed = []
         for a, b in iv:

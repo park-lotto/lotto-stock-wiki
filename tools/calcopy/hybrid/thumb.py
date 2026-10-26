@@ -427,7 +427,7 @@ def card_scene_frame(opt: dict, T: dict, cand_dir: Path, win_wh: tuple[int, int]
                 return None, f"줄 {opt['line']} 에 {opt.get('nth', 0)}번째 컷이 없다"
             k = ks[int(opt.get("nth", 0))]
         c = cuts[int(k)]
-        src, t, crop = Path(cand_dir) / c["src"], float(c.get("ss") or 0) + float(opt.get("t", 0.0)), c.get("crop")
+        src, t, crop = Path(cand_dir) / c["src"], float(c.get("ss") or 0) + float(opt.get("t", 0.0)) * float(c.get("speed") or 1.0), c.get("crop")      # 컷 안 초 → 원본 초(늦춘 컷 = × speed, render_bench.fit_cut)
         if not (isinstance(crop, list) and len(crop) == 4):
             # 'face'·없음·사진 = 렌더 조각과 같은 칸 주인 render_bench.cut_crop(10-26 이미숙 회원편: 렌더 길은 관문 ⑥이 cut_crop 보다 먼저 돌아
             # crop 'face' 글자가 ffmpeg crop 에 그대로 들어가 '프레임 못 뽑음' → 썸네일 카드 3안 반려로 11/13 멈춤, 98 기록)

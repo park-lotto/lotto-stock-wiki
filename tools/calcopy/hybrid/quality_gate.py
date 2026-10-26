@@ -69,14 +69,14 @@ def part_frames(R: Path, T: dict) -> list:
 def part_slivers(R: Path, T: dict, src_dir: Path | None = None) -> list:
     """컷 처음·끝 0.2초 안에 원본 장면 경계가 있는 것(이웃 샷이 몇 프레임 끼어 번쩍임) — (번호, 줄, 원본@초, 경계 초(컷 기준)).
     경계 판정 = render_bench.shot_starts(원본) 한 곳(나레 컷 snap_ss 와 같은 판정 — 조각을 따로 재면 문턱이 달라 어긋났다, 10-24)."""
-    from tools.calcopy.hybrid.render_bench import IMG_EXT, SLIVER_SEC, shot_starts, slivers
+    from tools.calcopy.hybrid.render_bench import IMG_EXT, SLIVER_SEC, shot_starts, slivers, src_frames
     bad = []
     for k, c in enumerate(T["cuts"]):
         src = Path(src_dir) / c["src"] if src_dir else None
         if not src or not src.exists() or src.suffix.lower() in IMG_EXT:
             continue
         a = float(c.get("ss") or 0.0)
-        sv = slivers(shot_starts(src), a, a + (c.get("frames") or 0) / FPS, SLIVER_SEC)
+        sv = slivers(shot_starts(src), a, a + (src_frames(c) if c.get("frames") else 0) / FPS, SLIVER_SEC)      # 원본에서 쓰는 프레임(fit_cut 이 늦춘 컷)
         if sv:
             bad.append((k, c["line"], f"{c['src']}@{a}", [round(x - a, 3) for x in sv]))
     return bad
@@ -292,7 +292,7 @@ def plan_frames_check(R: Path, T: dict, cand_dir: Path, win: list, mask_of=None,
                 g = pg.get(f - f0)
                 g = g[:win[3], :win[2]] if g is not None else None
             else:
-                g = _src_gray(src, float(c.get("ss") or 0) + (f - f0) / FPS, crop, (win[2], win[3]))
+                g = _src_gray(src, float(c.get("ss") or 0) + (f - f0) / FPS * float(c.get("speed") or 1.0), crop, (win[2], win[3]))      # 늦춘 컷 = 원본 초 × speed(render_bench.fit_cut)
             sg = seg_of(f)
             if sg is not None and g is not None:
                 g = fill_crop(g, sg["window"][2:])
@@ -398,7 +398,7 @@ def reuse_violations_bench(cuts: list[dict], src_len: dict, adjacent_run: bool =
     (옛 길 itssum·jaemi 는 checks.reuse_violations 그대로 — 그쪽 ±3초는 긴 원본 전제)"""
     from tools.calcopy.hybrid.render_bench import IMG_EXT
     eps = 1 / 30
-    rows = sorted([(c["src"], float(c["ss"]), float(c["ss"]) + float(c["dur"]), c) for c in cuts
+    rows = sorted([(c["src"], float(c["ss"]), float(c["ss"]) + float(c["dur"]) * float(c.get("speed") or 1.0), c) for c in cuts      # 원본에서 쓰는 구간(늦춘 컷은 짧다)
                    if Path(str(c["src"])).suffix.lower() not in IMG_EXT], key=lambda r: r[3]["t0"])
     bad = []
     chain = [0] * len(rows)        # 같은 원본을 '이어 붙인 앞으로 가기'로 잇는 컷 사슬(N4 ayA 0.2→1.6 → O3 3.0) — 사슬 안은 재사용이 아니다(이웃 짝만 보면 첫↔끝이 거리 오탐, 10-25 ep12)

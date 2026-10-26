@@ -483,7 +483,7 @@ def respace_reuse(cuts: list[dict], src_dir: Path | None, log=print, adjacent_ru
     반환 = 로그 글 목록."""
     if not src_dir:
         return []
-    from tools.calcopy.hybrid.render_bench import FPS, IMG_EXT, shot_starts, short_pieces, src_left
+    from tools.calcopy.hybrid.render_bench import FPS, IMG_EXT, shot_starts, short_pieces, src_frames, src_left
     from tools.calcopy.hybrid.common import dur_of
     vid = [c for c in cuts if c.get("ss") is not None and Path(str(c["src"])).suffix.lower() not in IMG_EXT and (Path(src_dir) / c["src"]).exists()]
     lens = {s: dur_of(Path(src_dir) / s) for s in {c["src"] for c in vid}}
@@ -495,7 +495,7 @@ def respace_reuse(cuts: list[dict], src_dir: Path | None, log=print, adjacent_ru
         if not _new_viol(others, c, lens, adjacent_run):
             continue
         src = Path(src_dir) / c["src"]
-        ss0, d = float(c["ss"]), (round(float(c["t1"]) * FPS) - round(float(c["t0"]) * FPS)) / FPS
+        ss0, d = float(c["ss"]), src_frames(c) / FPS          # 원본에서 쓰는 초(fit_cut 이 늦춘 컷은 화면 길이보다 짧다)
         st = shot_starts(src)
         mid = ss0 + d / 2
         a = max([t for t in st if t <= mid] or [0.0])
