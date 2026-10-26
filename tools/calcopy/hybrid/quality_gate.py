@@ -789,11 +789,13 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             mx = float(need("photo_share_max")["v"])
             o = photo_share(T.get("cuts") or [], float(T["end"]))
             return o <= mx + 1e-9, f"쿠팡·상품 그림 컷 비중 {o} (판 ≤{mx}, 본인 사진 own_ 은 뺌 — timeline · render_bench.photo_share)"
-        for what, fn, src in (("컷 길이 중앙(판 rhythm.cut_median ±30%)", cut_med, "kal_analyze.media_of"),
-                              ("훅 0.1~3초 컷 경계(판 rhythm.hook_cuts_3s)", hook, "kal_analyze.media_of cut_at"),
-                              ("꾸밈 없는 덩어리 비율(판 rhythm.plain_share)", plain, "placement.plain_share"),
-                              ("쿠팡·상품 그림 컷 비중(판 rhythm.photo_share_max)", photo, "render_bench.photo_share")):
-            row("판 리듬", what, fn, src)
+        # 컷 길이 중앙·훅 컷은 판정 주인 = 계획 rhythm_gate(렌더 전 — 재료에 다른 장면 컷을 더하게 한다). 여기 완성본 자(장면 감지)는 같은 사람·같은 배경
+        # 점프컷을 컷으로 못 세 계획 통과 편을 렌더 뒤에 막고 렌더만 되풀이했다(10-27 립글로스 회원편 2.4초·썬크림 1.75초 — 계획 경계 17 중 10 못 봄, 프레임 눈 확인) → 참고 칸
+        for what, fn, src, ref in (("컷 길이 중앙(판 rhythm.cut_median ±30%, 참고 — 판정은 계획 rhythm_gate)", cut_med, "kal_analyze.media_of", True),
+                                   ("훅 0.1~3초 컷 경계(판 rhythm.hook_cuts_3s, 참고 — 판정은 계획 rhythm_gate)", hook, "kal_analyze.media_of cut_at", True),
+                                   ("꾸밈 없는 덩어리 비율(판 rhythm.plain_share)", plain, "placement.plain_share", False),
+                                   ("쿠팡·상품 그림 컷 비중(판 rhythm.photo_share_max)", photo, "render_bench.photo_share", False)):
+            row("판 리듬", what, fn, src, ref=ref)
     # ── 자막·효과
     lrp = (st.get("bench") or {}).get("line_reads")
     lrp = (ROOT / lrp) if lrp and not Path(lrp).is_absolute() else (Path(lrp) if lrp else None)
