@@ -151,6 +151,7 @@ details.sec summary small{color:var(--mute);font-size:12px}
 .btn{font:inherit;font-weight:700;border-radius:12px;padding:10px 18px;border:1px solid var(--line2);background:var(--panel2);color:var(--fg);cursor:pointer}
 .btn.pri{background:linear-gradient(145deg,#7d5cff,#5b3fd8);border-color:#a48bff}
 .side{position:sticky;top:14px;display:grid;gap:10px}
+.main.nophone{grid-template-columns:minmax(0,1fr)}.main.nophone .side{display:none}   /* 설정 단계 = 미리보기 없음(그려지지 않은 편집기가 작게 비쳤다 10-26) */
 .phone{position:relative;width:100%;aspect-ratio:9/16;border-radius:22px;overflow:hidden;background:#000;border:1px solid var(--line2);box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .phone iframe{position:absolute;left:0;top:0;width:1920px;height:2200px;border:0;transform-origin:0 0;pointer-events:none;background:transparent}
 .phone video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -190,8 +191,8 @@ details.sec summary small{color:var(--mute);font-size:12px}
 'use strict';
 // 단계(사장님 10-25): 프리셋(칼카피 영상 스타일) → 템플릿(겉모양) → 꾸미기 → 소리 → 완성본 고치기(캡컷 쉬운 판, 회원 Claude 에게 지시)
 // 템플릿 단계는 뺐다 — 꾸미기(장면꾸미기)에 템플릿 고르기가 이미 있다(사장님 10-25)
-const STEPS=[{k:'preset',ic:'◆',t:'프리셋'},{k:'look',ic:'✎',t:'꾸미기'},{k:'sound',ic:'♪',t:'소리'},{k:'edit',ic:'▶',t:'완성본 고치기'}];
-const S={step:'preset',st:null,scene:0,preview:null,video:null,stamp:-1,saving:0};
+const STEPS=[{k:'setup',ic:'⚙',t:'설정'},{k:'preset',ic:'◆',t:'프리셋'},{k:'look',ic:'✎',t:'꾸미기'},{k:'sound',ic:'♪',t:'소리'},{k:'edit',ic:'▶',t:'완성본 고치기'}];
+const S={step:'setup',st:null,scene:0,preview:null,video:null,stamp:-1,saving:0};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // 주소는 상대로 — 같은 화면이 회원 PC(127.0.0.1/)와 서버(/claude/studio/) 두 곳에서 뜬다(관제 266)
@@ -241,7 +242,16 @@ function render(){
   const st=S.st,p=pk(),cat=st.catalog||{fonts:[],caption_enter:[],emphasis:[],voices:[],bgm:[]};
   const tx=p.text||{},cap=tx.caption||{},tts=p.tts||{},bgm=p.bgm||{};
   let h='';
-  if(S.step==='preset'){
+  if(S.step==='setup'){
+    // 설정 = 이 PC 연결 · 내 키 · 영상 받기 계정(사장님 10-26 '제일 첫 단계 = API 넣는 곳'). 값은 회원 PC 에만 — 서버 화면이면 PC 다리(/bridge/setup·key·login)로
+    setupLoad();
+    const su=S.setup||{};
+    h=`<h2>설정 <small>처음 한 번 — 이 PC 연결 → 내 키 → 영상 받기 계정</small></h2>
+      <div class="sec"><div class="sec-h"><b>이 PC 숏템</b>${su.ok?'<span class="chg">✓ 연결됨</span>':''}</div>
+        ${su.ok?'<small style="color:var(--mute)">키와 계정은 이 PC 에만 저장되고, 우리 서버로는 가지 않습니다.</small>':`<div class="note">${esc(su.why||'이 PC 숏템에 연결하는 중…')}</div>`}</div>
+      ${su.ok?keyBox(su.keys):''}
+      ${su.ok?loginsBox(su.logins):''}`;
+  }else if(S.step==='preset'){
     h=`<h2>프리셋 고르기 <small>영상 스타일(말투·편집 리듬·효과음·모션·목소리)을 고릅니다 — 고른 뒤 '다음'</small></h2>
       ${loginsBox(st.logins)}
       ${(st.styles&&st.styles.length)?styleCards(st):presetCards(st)}`;
@@ -284,7 +294,7 @@ function render(){
     const pickV=(S.vres||[]).find(v=>v.voice_id===tts.voice_id);
     const emos=(pickV&&pickV.emotions&&pickV.emotions.length)?EMO.filter(([k])=>pickV.emotions.includes(k)):EMO;
     h=`<h2>소리 <small>목소리 엔진 → 목소리 → 빠르기 → 배경음악</small></h2>
-      ${keyBox(st.keys)}
+      <div class="note">목소리 키는 <b>설정</b> 단계에서 넣습니다(이 PC 에만 저장).</div>
       <div class="sec"><div class="sec-h"><b>목소리 엔진</b><small>고객님 키로 만듭니다</small></div>
         <div class="chips">${ENG.map(([k,t])=>`<button class="chip${k===curEng?' on':''}" data-eng="${k}">${t}</button>`).join('')}</div></div>
       ${st.host==='server'?voicePresetBox(curEng,tts,cat):''}
@@ -319,7 +329,7 @@ function render(){
   // 꾸미기 단계 = 오른쪽이 장면꾸미기 화면(큰 칸). 다른 단계 = 9:16 그림만
   $('phone').classList.toggle('drag',S.step==='edit');
   // 완성본 고치기: 오른쪽 = 완성본 재생(+표시), 그 아래 캡컷 내보내기(사장님 10-25 '오른쪽 썸네일 아래')
-  const vid=S.step==='edit'&&made();document.querySelector('.main').classList.toggle('vidmode',vid);videoStage();
+  const vid=S.step==='edit'&&made();document.querySelector('.main').classList.toggle('vidmode',vid);document.querySelector('.main').classList.toggle('nophone',S.step==='setup');videoStage();
   let C=$('capbar');if(!C){C=document.createElement('div');C.id='capbar';C.className='capbar';$('phone').after(C);C.addEventListener('click',e=>{const b=e.target.closest('#capcut');if(b&&!b.disabled)doCapcut(b)})}
   C.hidden=!vid;C.innerHTML=vid?`<button class="btn" id="capcut">캡컷으로 내보내기</button>${S.capmsg?`<small class="${S.capok?'ok':'err'}">${esc(S.capmsg)}</small>`:''}<small style="color:var(--mute)">이 완성본을 캡컷에서 직접 다듬을 수 있는 파일로 내보냅니다</small>`:'';
   // 프리셋 단계 견본: 실제 완성본 장면 3장(있으면) / 틀도 없으면 '견본 준비 중' — 남의 틀로 대신 그리지 않는다
@@ -427,6 +437,22 @@ function styleCards(st){
 //   지시는 회원 PC 의 Claude 가 받아 고친다(서버는 보관만 — claude_studio.ask). 지금은 미리보기 장면(견본 대본)으로 그린다
 // 회원 PC 다리(web_bridge.js, 127.0.0.1:17842) — 완성본 재생·시간 줄은 이 PC 에서 바로(서버를 안 거친다)
 const BRIDGE='http://127.0.0.1:17842';
+// 설정 단계 자료 — 서버 화면이면 이 PC 다리, 회원 PC 화면이면 그 화면 자료(state.keys·logins). 값은 안 오고 지문·연결 여부만
+async function setupLoad(){
+  if(S.setup||S.setupLoading)return;
+  if(S.st.host!=='server'){S.setup={ok:true,keys:S.st.keys,logins:S.st.logins};return}
+  S.setupLoading=true;
+  try{const r=await fetch(BRIDGE+'/bridge/setup').then(x=>x.json());S.setup=r&&r.ok?r:{ok:false,why:'이 PC 숏템이 답하지 않았습니다'}}
+  catch(e){const l=await lnaState();S.setup={ok:false,why:l==='denied'?'크롬이 이 PC 숏템 연결을 막았습니다 — 주소창 왼쪽 사이트 정보 → 로컬 네트워크 → 허용 뒤 새로고침':
+    l==='prompt'?'크롬이 "로컬 네트워크의 기기에 접근"을 물으면 허용을 눌러 주세요(안 뜨면 새로고침)':'이 PC 숏템이 꺼져 있습니다 — Claude 를 켜고 숏템을 한 번 부른 뒤 새로고침하세요'}}
+  S.setupLoading=false;render();
+}
+// 회원 PC 로 보내기 — 서버 화면이면 PC 다리(값이 서버를 안 거친다), 회원 PC 화면이면 그 화면 주소
+async function pcPost(bridgePath,localPath,body){
+  if(S.st.host!=='server')return api(localPath,body);
+  try{return await fetch(BRIDGE+bridgePath,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(x=>x.json())}
+  catch(e){return{ok:false,why:'이 PC 숏템에 연결하지 못했습니다'}}
+}
 async function pcLoad(){
   if(S.pcTried)return;S.pcTried=true;
   if(S.st.host!=='server'){S.pc={ok:true,videos:(S.st.videos||[]).map(v=>({name:v.name,title:v.title,src:'v/'+encodeURIComponent(v.name)}))};render();return}
@@ -595,7 +621,7 @@ async function doCapcut(t){t.disabled=true;t.textContent='만드는 중…';let 
 $('board').addEventListener('click',async e=>{
   const t=e.target.closest('button');if(!t)return;
   if(t.dataset.go!==undefined){S.step=STEPS[+t.dataset.go].k;render();return}
-  if(t.dataset.login){const r=await api('/api/login',{platform:t.dataset.login});await load(true);if(!r.ok)state(r.why,true);return}   // 다시 읽은 뒤에 오류를 띄운다(load 가 '저장됨'으로 덮는다)
+  if(t.dataset.login){const r=await pcPost('/bridge/login/'+t.dataset.login,'/api/login',{platform:t.dataset.login});S.setup=null;await load(true);render();if(!r.ok)state(r.why||'열지 못했습니다',true);return}   // 다시 읽은 뒤에 오류를 띄운다(load 가 '저장됨'으로 덮는다)
   // 고르기만 하고 다음 단계로 안 넘어간다(사장님 10-25 '내가 누르면 넘어가게')
   if(t.dataset.preset){const id=t.dataset.preset;S.video=null;preview(null,id);await api('/api/select',{preset:id});await load(true,true);return}
   if(t.dataset.style){const r=await api('/api/style',{style:t.dataset.style});if(r.current)preview(null,r.current);await load(true,true);return}
@@ -646,7 +672,7 @@ $('board').addEventListener('click',async e=>{
   if(t.dataset.mode)return save({text:{caption:{mode:t.dataset.mode}}});
   if(t.dataset.tpl){const [m,id]=t.dataset.tpl.split(':');return save({template:t.dataset.tpl==='none'?'none':{mode:m,id}})}
   if(t.dataset.voice){const v=S.st.catalog.voices.find(x=>x.voice_id===t.dataset.voice);return save({tts:{voice_id:v.voice_id,name:v.name,preset_id:v.preset_id}})}
-  if(t.dataset.key){const s=t.dataset.key;const r=await api('/api/key/'+s,{key:($('key_'+s)||{}).value||''});S.keymsg=r.ok?'저장했습니다 — 다음 영상부터 이 키를 씁니다':r.why;await load(true);return}
+  if(t.dataset.key){const s=t.dataset.key,key=($('key_'+s)||{}).value||'';const r=await pcPost('/bridge/key/'+s,'/api/key/'+s,{key});S.keymsg=r.ok?'저장했습니다 — 다음 영상부터 이 키를 씁니다':(r.why||'저장하지 못했습니다');S.setup=null;await load(true);render();return}
   if(t.dataset.dl){const k=t.dataset.dl;let r;
     if(k==='link')r=await api('/api/deliver/link',{token:($('tgtoken')||{}).value||''});
     else if(k==='confirm')r=await api('/api/deliver/confirm',{});
