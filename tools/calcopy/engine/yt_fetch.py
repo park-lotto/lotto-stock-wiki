@@ -61,7 +61,21 @@ def ytdlp(args: list, timeout: float = 600, stall_sec: float | None = None, watc
         except Exception as e:  # noqa: BLE001 — 로그인 길을 못 쓰면 그대로 받되 이유를 남긴다
             if log:
                 log(f"[yt_fetch] 로그인 쿠키 못 씀: {type(e).__name__}")
-    cmd = ["yt-dlp", "--no-warnings", "--no-playlist", *auth, *[str(a) for a in args]]
+    for n in range(3):                            # 쿠키·설정 탓 실패면 다시(판단 주인 = origin_find.yt_retry_args, 98 #158·#159)
+        r = _ytdlp_once(["yt-dlp", "--no-warnings", "--no-playlist", *auth, *[str(a) for a in args]], timeout, stall_sec, watch, log)
+        if r.returncode == 0 or r.stalled or r.timed_out or n == 2:
+            break
+        from tools.calcopy.origin_find import yt_error, yt_retry_args
+        nxt = yt_retry_args(r.stderr, auth)
+        if log:
+            log(f"[yt_fetch] 실패: {yt_error(r.stderr)}" + (" → 쿠키·설정 바꿔 한 번 더" if nxt else ""))
+        if not nxt:
+            break
+        auth = nxt
+    return r
+
+
+def _ytdlp_once(cmd: list, timeout: float, stall_sec: float | None, watch: Path | None, log) -> Result:
     out_f = tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace")
     err_f = tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace")
     t0 = time.time()

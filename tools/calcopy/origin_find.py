@@ -88,6 +88,52 @@ def _yt_logged_in(prof: str) -> bool:
         return False
     finally:
         shutil.rmtree(t.parent, ignore_errors=True)
+
+
+# 로그인 쿠키 때문에 막힌 받기 — 쿠키 없이 한 번 더(판단 주인 한 곳: yt_retry_args · 98 #158·#159, 10-26 잇템로그 회원 실측).
+#   실측: 공개 쇼츠(NHwcwJCsOps·ro1l3u734v4)가 yt3 계정 쿠키로는 'Video unavailable', 쿠키 없이는 정상(public·age 0) — 계정·영상별 막힘.
+#   회원 PC 는 자기 계정 쿠키(logins.writeCookies → <홈>/ytdlp/yt-dlp/config)로 받으니 같은 일을 겪는다.
+COOKIE_BLOCK = re.compile(r"Video unavailable|This video is unavailable|동영상을 재생할 수 없음|Private video|비공개 동영상|"
+                          r"page needs to be reloaded|confirm your age|age[- ]restricted|연령", re.I)
+# 회원 홈 경로에 한글이 있으면 yt-dlp.exe 가 UTF-8 설정 파일을 시스템 코드(cp949)로 읽다 즉시 죽는다(설정 파일이 '# coding' 없이 쓰인 옛 설치)
+CONFIG_BAD = re.compile(r"Unable to parse .*config", re.I | re.S)
+
+
+def _strip_cookies(auth: list) -> list:
+    out, skip = [], False
+    for a in auth:
+        if skip:
+            skip = False
+            continue
+        if str(a) in ("--cookies-from-browser", "--cookies"):
+            skip = True
+            continue
+        out.append(a)
+    return out
+
+
+def yt_error(stderr: str) -> str:
+    """yt-dlp 실패 이유 한 줄(마지막 ERROR/error 줄) — 로그·결과에 그대로 남긴다(원인 뭉개기 금지, 98 #156·#158)."""
+    lines = [s.strip() for s in str(stderr or "").splitlines() if s.strip()]
+    hit = [s for s in lines if s.startswith(("ERROR", "yt-dlp: error")) or "Error" in s.split(":")[0]]
+    return ((hit or lines or [""])[-1])[:300]
+
+
+def yt_retry_args(stderr: str, auth: list) -> list | None:
+    """막 실패한 yt-dlp 의 stderr·그때 쓴 auth → 한 번 더 받을 auth(앞에 붙일 인자) 또는 None(다시 해도 소용없음).
+    · 설정 파일을 못 읽음 → 설정 없이(--ignore-config) 회원 쿠키 파일(YTDLP_COOKIES_YOUTUBE)을 직접
+    · 쿠키를 쓴 받기가 계정 탓으로 막힘(COOKIE_BLOCK) → 쿠키 없이(--ignore-config, 브라우저 쿠키 뺌)
+    쿠키 없이 막힌 경우의 '쿠키로 다시'는 없다 — 쿠키가 있으면 첫 받기가 이미 쿠키로 간다(설정 파일·yt* 프로필)."""
+    se = str(stderr or "")
+    if "--ignore-config" not in auth and CONFIG_BAD.search(se):
+        ck = os.environ.get("YTDLP_COOKIES_YOUTUBE") or ""
+        return ["--ignore-config", *(["--cookies", ck] if ck and Path(ck).is_file() else []), *_strip_cookies(auth)]
+    used = "--cookies-from-browser" in auth or "--cookies" in auth or ("--ignore-config" not in auth and bool(os.environ.get("YTDLP_COOKIES_YOUTUBE")))
+    if used and COOKIE_BLOCK.search(se):
+        return ["--ignore-config", *_strip_cookies([a for a in auth if a != "--ignore-config"])]
+    return None
+
+
 META_WORKERS = 1
 VERIFY = False          # 후보를 받아 ORB 대조 — 10-21 실측 같은/다른 영상 점수가 겹쳐(다른 영상 60·같은 영상 9) 끔. 같은 영상 판정 = 장면 모음 눈 판정(sheet)
 

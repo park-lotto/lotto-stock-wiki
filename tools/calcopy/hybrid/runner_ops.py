@@ -43,17 +43,35 @@ def yt(args: list, timeout: int = 300) -> subprocess.CompletedProcess:
     wait = YT_GAP - (time.time() - _last_yt[0])
     if wait > 0:
         time.sleep(wait)
-    from tools.calcopy.origin_find import yt_auth          # 로그인 쿠키(파이어폭스 프로필)·JS 런타임 = 원본찾기와 같은 주인(10-21 회선 'not a bot' 우회)
+    from tools.calcopy.origin_find import yt_auth, yt_error, yt_retry_args   # 로그인 쿠키·JS 런타임 = 원본찾기와 같은 주인(10-21 'not a bot' 우회)
     url = next((str(a) for a in reversed(args) if "youtu" in str(a) or str(a).startswith("ytsearch")), "https://www.youtube.com/")
     try:
         auth = yt_auth(url if "youtu" in url else "https://www.youtube.com/")
     except PermissionError as e:                 # 전용 프로필에 로그인이 없으면 받지 않는다(주인 = origin_find.yt_auth)
         raise CacheMiss(str(e))
+    _yt_why[0] = ""
     try:
-        return subprocess.run(["yt-dlp", "--encoding", "utf-8", "--no-warnings", "--sleep-requests", "2", "--extractor-args", "youtube:lang=ko", *auth, *args],
-                              capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
+        for n in range(3):                      # 쿠키·설정 탓 실패면 다시(판단 주인 = origin_find.yt_retry_args, 98 #158·#159)
+            r = subprocess.run(["yt-dlp", "--encoding", "utf-8", "--no-warnings", "--sleep-requests", "2", "--extractor-args", "youtube:lang=ko", *auth, *args],
+                               capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
+            if r.returncode == 0:
+                return r
+            nxt = yt_retry_args(r.stderr, auth) if n < 2 else None
+            _yt_why[0] = yt_error(r.stderr)
+            print(f"[yt] 실패: {_yt_why[0]}" + (" → 쿠키·설정 바꿔 한 번 더" if nxt else ""), file=sys.stderr, flush=True)
+            if not nxt:
+                return r
+            auth = nxt
+        return r
     finally:
         _last_yt[0] = time.time()
+
+
+_yt_why = [""]     # 마지막 yt-dlp 실패 이유 한 줄(결과 error 에 그대로 — 원인 뭉개기 금지, 98 #156·#158)
+
+
+def yt_why() -> str:
+    return _yt_why[0]
 
 
 def _guard_cache_mode():
@@ -262,7 +280,7 @@ def c_bench(W, d):
         yt(["-f", "bv*[height>=720]+ba/b", "--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko",
             "-o", str(bd / "bench.%(ext)s"), url])
         if not mp4.exists():
-            return {"error": "벤치 영상을 받지 못했다"}
+            return {"error": "벤치 영상을 받지 못했다" + (f" — {yt_why()}" if yt_why() else "")}
     if (bd / "bench.info.json").exists():
         info = jload(bd / "bench.info.json")
     vtt = bd / "bench.ko.vtt" if (bd / "bench.ko.vtt").exists() else None
