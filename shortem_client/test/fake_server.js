@@ -117,8 +117,8 @@ export async function startFakeServer({ port = 0, ttl = 180, heartbeatEvery = 60
           dev = { fp: a.fp, name: name.slice(0, 40) || 'PC', slot: a.c.devices.length + 1 }; a.c.devices.push(dev); now = true;
         }
         return send(res, 200, { ok: true, cid: a.cid, plan: 'claude', expires: a.exp, device: { id: a.fp.slice(0, 12), name: dev.name, slot: dev.slot, registered_now: now },
-          devices_used: a.c.devices.length, devices_max: devicesMax, entitled_presets: PROFILES.map(p => p.preset_id),
-          presets: rent && rent.pid ? [{ id: rent.pid, name: rent.name || '제품비하인드썰형', desc: '' }] : [],
+          devices_used: a.c.devices.length, devices_max: devicesMax, entitled_presets: [...PROFILES.map(p => p.preset_id), ...(rent && rent.entitle ? [rent.pid] : [])],
+          presets: rent && rent.pid ? [{ id: rent.pid, name: rent.name || '제품비하인드썰형', desc: '', ...(rent.aliases ? { aliases: rent.aliases } : {}) }] : [],
           profiles: PROFILES.map(({ frame, ...p }) => p), min_engine: '1.0.0', min_installer: '1.0.0', server_time: Math.floor(Date.now() / 1000) });
       }
       if (u.pathname === '/api/claude/lease' && req.method === 'POST') {

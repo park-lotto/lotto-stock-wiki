@@ -168,7 +168,7 @@ function progressLine(f) {
     const p = JSON.parse(fs.readFileSync(path.join(flowRoot(), f.sid, 'job', 'progress.json'), 'utf8'));
     const what = String(p.what || '').slice(0, 40);
     if (!what) return '';
-    return p.n && p.m ? `${what} ${p.n}/${p.m}` : `${what} 중`;
+    return p.n && p.m ? `${what} ${p.n}/${p.m}` : (/중$/.test(what) ? what : `${what} 중`);   // '만드는 중 중' 겹침(10-26 잇템로그 회원 실측)
   } catch { return ''; }
 }
 

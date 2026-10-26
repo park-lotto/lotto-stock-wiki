@@ -35,3 +35,12 @@ test('멈춤 전달 안내는 한국어 칸 이름으로 — why·fix 영어 칸
   assert.match(FAIL_SAY, /이유: …/);
   assert.match(FAIL_SAY, /할 일: …/);
 });
+
+test('회원 Claude 역할(제작자) 한 곳 — 서버 안내 첫 줄 · make 스킬이 가리킨다(사장님 10-26)', async () => {
+  const { MAKER_ROLE } = await import('../server/index.js');
+  assert.ok(SERVER_INSTRUCTIONS.startsWith(MAKER_ROLE), '안내 첫 줄이 제작자 역할이 아님');
+  for (const w of ['제작자', '가이드를 지킨다', '금지선', '스스로 헤쳐 나간다', '꼭 필요한 결정']) assert.ok(MAKER_ROLE.includes(w), w);
+  const fs = await import('node:fs');
+  const skill = fs.readFileSync(new URL('../../installer/plugin/shortem/skills/make/SKILL.md', import.meta.url), 'utf8');
+  assert.match(skill, /역할: 너는 이 편의 제작자다/);
+});

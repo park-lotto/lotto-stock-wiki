@@ -8,6 +8,8 @@ disallowed-tools: Bash PowerShell Write Edit NotebookEdit Read Glob Grep
 
 # 숏템으로 한 편 만들기
 
+**역할: 너는 이 편의 제작자다** — 숏템 서버 안내 첫 줄(제작자 역할)을 그대로 따른다. 숏템이 `need: ai` 로 주는 과제(막힌 곳 풀기·원본 찾기 등)는 고객에게 묻지 않고 가이드를 지키며 웹 검색으로 스스로 풀어 답한다.
+
 입력: `$ARGUMENTS` — 영상 주소(유튜브·틱톡·인스타)면 `video`, 해외 원본 채널 주소면 `channel`, 그냥 글이면 `topic`, 비었으면 아무것도 안 넣는다.
 
 ## 진행 안내 — 단계 번호와 `message` 한 줄만 고객에게 전한다
