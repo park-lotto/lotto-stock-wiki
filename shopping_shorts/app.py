@@ -18897,6 +18897,14 @@ async def api_claude_studio_sync(request: Request):
     return _claude_json(await run_in_threadpool(_cs.CP.call, _cs.pc_sync, ctx, body, Store(DB_PATH)))
 
 
+@app.post("/api/claude/studio/keys")
+async def api_claude_studio_keys(request: Request):
+    """회원 PC(라이선스) → 숏템메이커에 등록한 본인 키 — 판단은 claude_studio.pc_keys. 웹 화면에선 못 부른다(라이선스 필요)."""
+    from shopping_shorts import claude_studio as _cs
+    ctx = _cs.CP.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cs.CP.call, _cs.pc_keys, ctx, Store(DB_PATH)))
+
+
 @app.post("/api/claude/studio/request")
 async def api_claude_studio_request(request: Request):
     """회원 PC Claude → 웹 지시 상태(처리 중·완료·못 함) — 판단은 claude_studio.pc_request."""

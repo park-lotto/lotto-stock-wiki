@@ -9,6 +9,10 @@ import { workDir } from './paths.js';
 import { baseUrl } from './api.js';
 import { videos, send, serveFile, readBody } from './local_ui.js';
 import { capcutExport } from './engine_bridge.js';
+import { keyStatuses, saveKey, KEY_SERVICES } from './engine/voice.js';
+import { api } from './api.js';
+const KEY_NAMES = new Set(Object.keys(KEY_SERVICES));
+import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
 
 export const BRIDGE_PORT = Number(process.env.SHORTEM_BRIDGE_PORT || 17842);
 const VERSION = 1;
@@ -67,6 +71,24 @@ async function route(req, res) {
     if (!videos().some(v => v.name === name)) return send(res, 404, { error: '없음' });
     return serveFile(req, res, path.join(workDir(), '완성본', name), 'video/mp4');
   }
+  // 설정 단계(관제 266, 사장님 10-26 '제일 첫 단계 = API 넣는 곳') — 키·영상 받기 계정은 이 PC 에만. 서버는 안 거친다(값은 응답에 없고 지문만)
+  if (u.pathname === '/bridge/setup' && req.method === 'GET') return send(res, 200, { ok: true, keys: keyStatuses(), logins: loginStatus() }, undefined, h);
+  const km = u.pathname.match(/^\/bridge\/key\/([a-z_]{2,30})$/);
+  if (km && req.method === 'POST') { const b = (await readBody(req)) || {}; return send(res, 200, saveKey(km[1], b.key), undefined, h); }
+  // 숏템메이커에 등록한 키 가져오기 — 이 PC 가 라이선스로 서버에서 받아 바로 파일에(값은 웹 화면으로 안 돌려준다, 지문만)
+  if (u.pathname === '/bridge/import-keys' && req.method === 'POST') {
+    let r;
+    try { r = await api.studioKeys(); } catch (e) { return send(res, 200, { ok: false, why: (e && e.msg) || '숏템메이커 서버에 연결하지 못했습니다' }, undefined, h); }
+    const got = (r && r.keys) || {}, done = [], bad = [];
+    const put = (svc, v) => { const x = saveKey(svc, v); (x.ok ? done : bad).push(svc); };
+    for (const [svc, v] of Object.entries(got)) {
+      if (svc === 'coupang') { const [a, b] = String(v).split(':'); if (a && b) { put('coupang_access', a); put('coupang_secret', b); } else bad.push(svc); }
+      else if (KEY_NAMES.has(svc)) put(svc, v);
+    }
+    return send(res, 200, { ok: true, imported: done, failed: bad, keys: keyStatuses() }, undefined, h);
+  }
+  const lm = u.pathname.match(/^\/bridge\/login\/([a-z]{2,20})$/);
+  if (lm && req.method === 'POST') return send(res, 200, PLATFORMS[lm[1]] ? await openLogin(lm[1]) : { ok: false, why: '모르는 곳입니다' }, undefined, h);
   if (u.pathname === '/bridge/capcut' && req.method === 'POST') {
     // 캡컷 내보내기 — 그 완성본을 만든 렌더 폴더(표식 topic_dir)를 엔진 capcut_export 에 넘긴다(engine_bridge.capcutExport)
     const body = (await readBody(req)) || {};

@@ -477,6 +477,26 @@ def sync_merge(mine: dict, theirs: dict) -> tuple:
     return out, n
 
 
+# 숏템메이커에 등록한 회원 키 → 회원 PC(관제 266, 사장님 10-26 '숏템에 있는 거면 그대로 가져올 수 있게').
+#   회원 PC 가 라이선스로 부른다 — 값은 브라우저(웹 화면)를 거치지 않고 PC 로 곧장 간다. 본인이 등록한 키만(사장님 공용 키 없음).
+#   이름 = 숏템메이커 customer_keys service → 회원 PC 키 이름(voice.js KEY_SERVICES). 쿠팡은 'Access:Secret' 한 줄을 PC 가 둘로 나눈다.
+PC_KEY_SERVICES = ("typecast", "elevenlabs", "fish", "coupang", "vmake", "vertex_sa")
+
+
+def pc_keys(ctx: dict, store=None) -> dict:
+    """POST /api/claude/studio/keys — {service: 평문 키}(등록한 것만). 키 내용은 로그에 안 남긴다(회원 번호·이름만)."""
+    store = CP._store(store)
+    CP.ensure_schema(store)
+    cid, _, _ = CP._front(store, ctx, "studio")
+    out = {}
+    for svc in PC_KEY_SERVICES:
+        keys = store.get_customer_keys_plain(cid, svc) or []
+        if keys:
+            out[svc] = keys[-1] if svc == "vertex_sa" else keys[0]   # 버텍스는 회원당 1개(새 것이 옛 것을 갈아끼움) — 마지막 행
+    log.info("claude_studio: cid %s 회원 PC 로 키 가져가기 %s", cid, sorted(out))
+    return {"ok": True, "keys": out}
+
+
 REQ_STATES = ("처리 중", "완료", "못 함")
 
 

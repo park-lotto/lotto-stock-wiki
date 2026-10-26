@@ -30,6 +30,8 @@ export const KEY_SERVICES = Object.freeze({
   fish: { label: '목소리 키(피쉬오디오)', where: 'fish.audio ▸ API ▸ API Keys', env: 'FISH_API_KEY', need: '피쉬오디오 목소리를 고르면 필요합니다' },
   coupang_access: { label: '쿠팡 파트너스 Access Key', where: '쿠팡 파트너스 ▸ 추가기능 ▸ 오픈API', env: 'COUPANG_ACCESS_KEY', need: '없으면 이 PC 크롬 창으로 쿠팡을 찾습니다' },
   coupang_secret: { label: '쿠팡 파트너스 Secret Key', where: '쿠팡 파트너스 ▸ 추가기능 ▸ 오픈API', env: 'COUPANG_SECRET_KEY', need: 'Access Key 와 짝으로 넣습니다' },
+  vmake: { label: '자막 지우기 키(VMake)', where: 'VMake 개발자 화면 ▸ App Key 와 Secret 을 app_key:secret 꼴로', env: 'VMAKE_API_KEY', need: '원본 영상에 박힌 자막을 지울 때 필요합니다(엔진 vmake_clean — 없으면 그 단계에서 멈춥니다)' },
+  vertex_sa: { label: '버텍스 AI 서비스 계정(JSON)', where: '구글 클라우드 ▸ IAM ▸ 서비스 계정 ▸ 키 ▸ JSON 내려받기(역할 Vertex AI User)', env: 'GOOGLE_APPLICATION_CREDENTIALS', file: true, json: true, need: 'AI 영상(Veo)·사진(Imagen)을 만들 때 씁니다 — 숏템메이커에 등록한 것을 그대로 가져올 수 있습니다' },
   speechmatics: { label: '받아쓰기 키(스피치매틱스)', where: 'speechmatics.com ▸ Settings ▸ API Keys', env: 'SPEECHMATICS_API_KEY', need: '있으면 원음·완성본 받아쓰기를 두 모델로 대조합니다(없으면 위스퍼만)' },
 });
 
@@ -38,6 +40,15 @@ export function saveKey(service, value) {
   const svc = KEY_SERVICES[service];
   if (!svc) return { ok: false, why: '모르는 키입니다' };
   const k = String(value || '').trim();
+  if (svc.json) {                                         // 버텍스 서비스 계정 = JSON 파일 통째(숏템메이커 vertex_route.validate_sa 와 같은 검사)
+    let j = null;
+    try { j = JSON.parse(k); } catch { return { ok: false, why: 'JSON 형식이 아닙니다 — 내려받은 키 파일(.json) 내용을 통째로 붙여 넣으세요' }; }
+    if (k.length > 20000 || !j || j.type !== 'service_account') return { ok: false, why: '서비스 계정 키가 아닙니다(type 이 service_account 여야 합니다)' };
+    for (const f of ['project_id', 'client_email', 'private_key']) if (!String(j[f] || '').trim()) return { ok: false, why: `키 파일에 ${f} 가 없습니다 — 다시 내려받아 주세요` };
+    if (!j.private_key.includes('BEGIN PRIVATE KEY')) return { ok: false, why: 'private_key 모양이 이상합니다 — 파일 전체를 그대로 붙여 넣으세요' };
+    writeFileIn(homeDir(), 'keys/' + service, k, 0o600);
+    return { ok: true, ...keyStatus(service) };
+  }
   if (k.length < 16 || k.length > 300 || /\s/.test(k)) return { ok: false, why: `키 모양이 아닙니다 — ${svc.where} 의 키 전체를 붙여 넣으세요` };
   writeFileIn(homeDir(), 'keys/' + service, k, 0o600);
   return { ok: true, ...keyStatus(service) };
@@ -45,13 +56,16 @@ export function saveKey(service, value) {
 
 export function keyStatus(service = 'typecast') {
   const k = readKey(service);
-  return k ? { present: true, fp: keyPrint(k) } : { present: false };
+  if (!k) return { present: false };
+  if ((KEY_SERVICES[service] || {}).json) { try { const j = JSON.parse(k); return { present: true, fp: `${j.project_id} · ${String(j.client_email || '').split('@')[0].slice(0, 4)}…` }; } catch { /* 아래 */ } }
+  return { present: true, fp: keyPrint(k) };
 }
 
 // 화면용 — 키마다 이름·어디서 받나·지문(값은 없다)
-export const keyStatuses = () => Object.fromEntries(Object.entries(KEY_SERVICES).map(([s, v]) => [s, { label: v.label, where: v.where, need: v.need, ...keyStatus(s) }]));
+export const keyStatuses = () => Object.fromEntries(Object.entries(KEY_SERVICES).map(([s, v]) => [s, { label: v.label, where: v.where, need: v.need, json: !!v.json, ...keyStatus(s) }]));
 // 엔진 환경변수 — 넣은 키만(값은 출력하지 않는다)
-export const keyEnv = () => Object.fromEntries(Object.entries(KEY_SERVICES).map(([s, v]) => [v.env, readKey(s)]).filter(([, k]) => k));
+// 파일로 쓰는 키(버텍스 서비스 계정)는 값 대신 파일 경로를 넘긴다(구글 라이브러리 GOOGLE_APPLICATION_CREDENTIALS 꼴)
+export const keyEnv = () => Object.fromEntries(Object.entries(KEY_SERVICES).map(([s, v]) => [v.env, readKey(s) ? (v.file ? keyFile(s) : readKey(s)) : '']).filter(([, k]) => k));
 
 function usage() {
   try { return JSON.parse(fs.readFileSync(jail(homeDir(), 'usage.json'), 'utf8')); } catch { return {}; }

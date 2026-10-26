@@ -10,6 +10,7 @@
   ③ 꾸미기 = 장면꾸미기 화면이 뜨고 '이 영상에 적용' → 서버 저장 200 · 버튼 '적용됨'
   ④ 소리 = 목소리 단추 → 팩 tts 저장(엔진이 모르는 목소리·칸이면 '저장됨'이 아니라 거절 이유가 화면에 남는다)
   ⑤ 완성본 고치기 = 완성본이 없으면 잠김(🔒)
+  ⓪ 첫 단계 = 설정(키·영상 받기 계정 — 값은 회원 PC 에만)
   화면 오류(pageerror) 0
 """
 from __future__ import annotations
@@ -54,6 +55,14 @@ def main() -> int:
 
         state = lambda: pg.evaluate("fetch('api/state').then(r=>r.json())")   # noqa: E731
         step = lambda name: pg.locator("[data-step],.steps button,.steps a").filter(has_text=name).first.click()   # noqa: E731
+        # ⓪ 설정 단계(10-26 첫 단계 — 키·영상 받기 계정, 값은 회원 PC 에만): 단추가 맨 앞에 있고, 프리셋으로 넘어간다
+        first = pg.locator(".step").first.inner_text().replace("
+", " ")
+        print(f"⓪ 첫 단계 '{first}'")
+        if "설정" not in first:
+            bad.append(f"첫 단계가 설정이 아님: {first}")
+        step("프리셋")
+        pg.wait_for_timeout(2500)
         # ① 프리셋(판) 카드
         cards = pg.locator(".scard")
         n_cards = cards.count()
