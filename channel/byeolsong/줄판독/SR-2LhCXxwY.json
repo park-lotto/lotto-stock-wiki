@@ -1,0 +1,117 @@
+{
+ "id": "SR-2LhCXxwY",
+ "dur": 8.1,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   476,
+   1080,
+   1444
+  ],
+  "caption_band": [
+   1530,
+   1601
+  ],
+  "title_y": null,
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null
+ },
+ "lines": [
+  {
+   "t0": 0.6,
+   "t1": 3.1,
+   "speaker": null,
+   "text": "함부로 비웃으면 안되는 이유.",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1530,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 3.1,
+   "t1": 5.8,
+   "speaker": null,
+   "text": "상상도 못했네 ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1530,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    3.43,
+    4.8
+   ],
+   "_asr": [],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 5.8,
+   "t1": 8.1,
+   "speaker": null,
+   "text": "순발력 ㅅ1ㅂㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1531,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  }
+ ],
+ "beats": null,
+ "narr_share": null,
+ "notes": [],
+ "name_evidence": [],
+ "_todo": [
+  "speaker",
+  "layer",
+  "role",
+  "enter",
+  "fill_hex",
+  "emph",
+  "sticker",
+  "sfx",
+  "scene",
+  "fit",
+  "beats",
+  "narr_share"
+ ],
+ "_made_by": "kal_analyze.skeleton(기계값 뼈대 — 판독 전)"
+}
