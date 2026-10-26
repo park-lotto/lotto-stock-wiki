@@ -1,0 +1,281 @@
+[
+ {
+  "path": "/",
+  "vw": 390,
+  "page_scroll": 0,
+  "cut": 36,
+  "cut_list": [
+   {
+    "sel": "button#save_w_9Oc7tcBDw.save",
+    "left": 308,
+    "right": 463,
+    "w": 155,
+    "text": "📥 즐겨찾기"
+   },
+   {
+    "sel": "button.cp-btn",
+    "left": 308,
+    "right": 463,
+    "w": 155,
+    "text": "🛒 슬라이더 지우개 쿠팡검색"
+   },
+   {
+    "sel": "button.inner-btn",
+    "left": 208,
+    "right": 463,
+    "w": 255,
+    "text": "🏠 숏템내부검색"
+   },
+   {
+    "sel": "button#save_t8ZTZwZiPPc.save",
+    "left": 308,
+    "right": 467,
+    "w": 158,
+    "text": "📥 즐겨찾기"
+   },
+   {
+    "sel": "button.cp-btn",
+    "left": 308,
+    "right": 467,
+    "w": 158,
+    "text": "🛒 휴대용 열선 의자 쿠팡검색"
+   },
+   {
+    "sel": "button.inner-btn",
+    "left": 208,
+    "right": 467,
+    "w": 259,
+    "text": "🏠 숏템내부검색"
+   },
+   {
+    "sel": "button#save_k7r2lVz_wLg.save",
+    "left": 308,
+    "right": 463,
+    "w": 155,
+    "text": "📥 즐겨찾기"
+   },
+   {
+    "sel": "button.cp-btn",
+    "left": 308,
+    "right": 463,
+    "w": 155,
+    "text": "🛒 비비고 사골곰탕 쿠팡검색"
+   },
+   {
+    "sel": "button.inner-btn",
+    "left": 208,
+    "right": 463,
+    "w": 255,
+    "text": "🏠 숏템내부검색"
+   },
+   {
+    "sel": "button#save_5KlA_EpC224.save",
+    "left": 308,
+    "right": 478,
+    "w": 169,
+    "text": "📥 즐겨찾기"
+   },
+   {
+    "sel": "button.cp-btn",
+    "left": 308,
+    "right": 478,
+    "w": 169,
+    "text": "🛒 적재형 수납 바구니 쿠팡검색"
+   },
+   {
+    "sel": "button.inner-btn",
+    "left": 208,
+    "right": 478,
+    "w": 270,
+    "text": "🏠 숏템내부검색"
+   }
+  ],
+  "small_taps": 752,
+  "shot": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\모바일버전\\out\\mobile_audit\\home.png"
+ },
+ {
+  "path": "/produce",
+  "vw": 390,
+  "page_scroll": 0,
+  "cut": 1,
+  "cut_list": [
+   {
+    "sel": "span.sb-note",
+    "left": 114,
+    "right": 414,
+    "w": 300,
+    "text": "대본 스타일로 줄마다 문장·장면을 짝지어 만듭니다"
+   }
+  ],
+  "small_taps": 134,
+  "shot": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\모바일버전\\out\\mobile_audit\\produce.png"
+ },
+ {
+  "path": "/refs",
+  "vw": 390,
+  "page_scroll": 0,
+  "cut": 0,
+  "cut_list": [],
+  "small_taps": 714,
+  "shot": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\모바일버전\\out\\mobile_audit\\refs.png"
+ },
+ {
+  "path": "/discover",
+  "vw": 390,
+  "page_scroll": 0,
+  "cut": 0,
+  "cut_list": [],
+  "small_taps": 569,
+  "shot": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\모바일버전\\out\\mobile_audit\\discover.png"
+ },
+ {
+  "path": "/overseas_ref",
+  "vw": 390,
+  "page_scroll": 286,
+  "cut": 1,
+  "cut_list": [
+   {
+    "sel": "div.wrap",
+    "left": 0,
+    "right": 676,
+    "w": 676,
+    "text": "🌐 해외 레퍼런스 수집\n\n해외에서 터진 영상을 만드는"
+   }
+  ],
+  "small_taps": 990,
+  "shot": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\모바일버전\\out\\mobile_audit\\overseas_ref.png"
+ },
+ {
+  "path": "/fav_channels",
+  "vw": 390,
+  "page_scroll": 0,
+  "cut": 0,
+  "cut_list": [],
+  "small_taps": 202,
+  "shot": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\모바일버전\\out\\mobile_audit\\fav_channels.png"
+ },
+ {
+  "path": "/collection",
+  "vw": 390,
+  "page_scroll": 0,
+  "cut": 0,
+  "cut_list": [],
+  "small_taps": 3210,
+  "shot": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\모바일버전\\out\\mobile_audit\\collection.png"
+ },
+ {
+  "path": "/archive",
+  "vw": 390,
+  "page_scroll": 193,
+  "cut": 1,
+  "cut_list": [
+   {
+    "sel": "div.wrap",
+    "left": 0,
+    "right": 583,
+    "w": 583,
+    "text": "🏆 역대 히트작 — 수집된 채널 699개\n전체\n홈템\n"
+   }
+  ],
+  "small_taps": 276,
+  "shot": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\모바일버전\\out\\mobile_audit\\archive.png"
+ },
+ {
+  "path": "/scene_library",
+  "vw": 390,
+  "page_scroll": 0,
+  "cut": 0,
+  "cut_list": [],
+  "small_taps": 2940,
+  "shot": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\모바일버전\\out\\mobile_audit\\scene_library.png"
+ },
+ {
+  "path": "/shortem_packs",
+  "vw": 390,
+  "page_scroll": 0,
+  "cut": 0,
+  "cut_list": [],
+  "small_taps": 265,
+  "shot": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\모바일버전\\out\\mobile_audit\\shortem_packs.png"
+ },
+ {
+  "path": "/shortem_preset",
+  "vw": 390,
+  "page_scroll": 0,
+  "cut": 0,
+  "cut_list": [],
+  "small_taps": 137,
+  "shot": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\모바일버전\\out\\mobile_audit\\shortem_preset.png"
+ },
+ {
+  "path": "/meme_pack",
+  "vw": 390,
+  "page_scroll": 0,
+  "cut": 0,
+  "cut_list": [],
+  "small_taps": 0,
+  "shot": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\모바일버전\\out\\mobile_audit\\meme_pack.png"
+ },
+ {
+  "path": "/cardnews",
+  "vw": 390,
+  "page_scroll": 0,
+  "cut": 0,
+  "cut_list": [],
+  "small_taps": 24,
+  "shot": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\모바일버전\\out\\mobile_audit\\cardnews.png"
+ },
+ {
+  "path": "/yt_studio",
+  "vw": 390,
+  "page_scroll": 54,
+  "cut": 1,
+  "cut_list": [
+   {
+    "sel": "div.wrap",
+    "left": 0,
+    "right": 444,
+    "w": 444,
+    "text": "유튜브제작\n\n씬마다 대사 · 준비 체크 · 자료/음성 "
+   }
+  ],
+  "small_taps": 30,
+  "shot": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\모바일버전\\out\\mobile_audit\\yt_studio.png"
+ },
+ {
+  "path": "/challenge",
+  "vw": 390,
+  "page_scroll": 0,
+  "cut": 0,
+  "cut_list": [],
+  "small_taps": 0,
+  "shot": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\모바일버전\\out\\mobile_audit\\challenge.png"
+ },
+ {
+  "path": "/help",
+  "vw": 390,
+  "page_scroll": 0,
+  "cut": 0,
+  "cut_list": [],
+  "small_taps": 0,
+  "shot": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\모바일버전\\out\\mobile_audit\\help.png"
+ },
+ {
+  "path": "/fx_samples",
+  "vw": 390,
+  "page_scroll": 0,
+  "cut": 0,
+  "cut_list": [],
+  "small_taps": 3337,
+  "shot": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\모바일버전\\out\\mobile_audit\\fx_samples.png"
+ },
+ {
+  "path": "/outreach",
+  "vw": 390,
+  "page_scroll": 0,
+  "cut": 0,
+  "cut_list": [],
+  "small_taps": 1,
+  "shot": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\모바일버전\\out\\mobile_audit\\outreach.png"
+ }
+]

@@ -203,7 +203,16 @@
       // 44px 터치타깃(2026-08-15) — 실측 28px이라 가로띠에서 손가락으로 누르기 작았다.
       // 가로띠는 어차피 가로 스크롤(scrollWidth 1477 > 390)이라 높이를 키워도 안 잘린다.
       ".ss-item{margin:0;padding:0 13px;min-height:44px;display:flex;align-items:center;" +
-        "flex-shrink:0;font-size:13px}}";
+        "flex-shrink:0;font-size:13px}" +
+      // 폰 화면 넘침 공용 규칙(관제 276) — 실측(390px): select 는 가장 긴 보기 글자만큼 넓어져
+      //   역대히트작 551px·유튜브제작 404px로 페이지 전체를 옆으로 밀었고, 해외레퍼런스는 7칸 표가 636px.
+      //   select 는 화면 폭에 묶고, 표는 표 자리에서만 옆으로 밀어 보게 한다(페이지는 안 밀린다).
+      //   본문 상자(.wrap{max-width:…;margin:0 auto})는 margin:auto 라 폭이 화면이 아니라 내용에 맞춰
+      //   늘어난다 → 화면 폭에 묶는다. 페이지 .wrap 규칙(클래스)이 이겨서 !important 가 필요하다.
+      "body>*{max-width:100% !important;box-sizing:border-box}" +
+      "select{max-width:100%}" +
+      // th nowrap: 표를 화면 폭에 넣으면 칸이 짓눌려 머리글이 '구/독/자'로 세로 쪼개졌다 → 머리글은 한 줄, 넘치면 표만 옆으로
+      "table{display:block;max-width:100%;overflow-x:auto}th{white-space:nowrap}}";
   // 버튼 쿠션감(전역, 2026-07-24) — 누르면 쏙 눌렸다 통통 튀어나옴. 사장님 선택 '쿠션' 프리셋.
   // 자체 transition 없는 주버튼(.btn-next/.btn-prev/.tab/.cta-shine 등)엔 풀 적용. 자체
   // transition을 가진 버튼은 페이지 규칙(클래스>요소)이 우선이라 배경 트랜지션을 안 밟고

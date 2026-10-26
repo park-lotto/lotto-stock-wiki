@@ -139,8 +139,10 @@
   /* 2026-07-30: 영상보기·댓글소통·즐겨찾기·숏템파워검색 4개를 2×2 격자로(사장님 지시).
      보기/댓글/담기 → 영상보기/댓글소통/즐겨찾기로 글자수 늘어(2자→4자) 한 줄 3칸이 좁아
      grid 2열로 전환, script-btn(숏템파워검색)도 이 grid의 4번째 칸으로 편입. */
-  .btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding-top:10px}
-  .btns button{font-size:11px;padding:7px 4px;border-radius:7px;border:1px solid var(--line);background:var(--inset);color:var(--txt);cursor:pointer;white-space:nowrap}
+  /* minmax(0,1fr)+ellipsis(관제 276): 쿠팡 버튼에 상품명이 붙으면 nowrap 글자가 칸을 밀어
+     폰(390px)에서 카드 밖으로 155px 나갔다. 칸은 카드 폭에 고정, 넘친 글자는 … 으로. */
+  .btns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;padding-top:10px}
+  .btns button{font-size:11px;padding:7px 4px;border-radius:7px;border:1px solid var(--line);background:var(--inset);color:var(--txt);cursor:pointer;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
   .btns button.view{border-color:var(--accent);color:var(--sel-fg)}
   .btns button.comment{background:linear-gradient(90deg,#7b2ff7,#c22ed0);border:none;color:#fff}
   .btns button.save.saved{background:#2ea043;border-color:#2ea043;color:#fff}
@@ -217,7 +219,7 @@
     .sidebar .menu-group .label{display:none}
     .menu-item{margin:0;padding:6px 10px;flex-shrink:0;font-size:12px}
     .main{padding:16px 14px}
-    .cards{grid-template-columns:repeat(2,1fr);gap:10px}
+    .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
     .head h2{font-size:20px}
     .toolbar{gap:8px}
     .tabs{overflow-x:auto}
@@ -225,7 +227,7 @@
     .progress-wrap{max-width:100%}
   }
   @media (max-width: 420px){
-    .cards{grid-template-columns:repeat(2,1fr);gap:8px}
+    .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
     .card .body{padding:8px}
     .stat{font-size:11px}
     .btns button{font-size:10px;padding:6px 2px}

@@ -1959,6 +1959,12 @@
       .steps-mini .smk.cur{background:var(--c);color:#fff;padding:0 10px}
       .steps-mini .smk:hover{filter:brightness(1.25)}
       .steps-mini .smt{color:#9aa3b8;font-size:11px;margin-right:2px}
+      /* 폰(관제 276): 단추 10여 개 ≈454px 가 390px 화면 가운데에 고정돼 양끝이 잘려 못 눌렀다 → 화면 폭에 묶고 옆으로 밀게 */
+      @media (max-width:760px){
+        .steps-mini{max-width:calc(100vw - 16px);overflow-x:auto;scrollbar-width:none}
+        .steps-mini::-webkit-scrollbar{display:none}
+        .steps-mini .smk,.steps-mini .smt{flex-shrink:0}
+      }
     </style>
 
     <!-- 1) 제작소: 좌(재료 그리드 ✓토글) · 우(AI PICK/빈 상태) — Task 4 재구성(2026-07-23).
@@ -3819,8 +3825,15 @@ function renderStepsMini(oi){
   }).join('');
   if(!m._io && typeof IntersectionObserver === 'function'){
     const top = document.getElementById('steps');
-    if(top){ m._io = new IntersectionObserver(es=>{ m.hidden = es[0].isIntersecting; }); m._io.observe(top); }
+    if(top){ m._io = new IntersectionObserver(es=>{ m.hidden = es[0].isIntersecting; centerStepsMini(m); }); m._io.observe(top); }
   }
+  centerStepsMini(m);
+}
+// 폰에서 이동줄이 옆으로 밀릴 때(관제 276) 지금 단계를 가운데로 — 안 그러면 7단계가 화면 밖에 있다
+function centerStepsMini(m){
+  if(m.hidden || m.scrollWidth <= m.clientWidth) return;
+  const c = m.querySelector('.smk.cur');
+  if(c) m.scrollLeft = c.offsetLeft - (m.clientWidth - c.offsetWidth) / 2;
 }
 // ── 도크 단계바 끝 ──
 // ★단계가 확정되기 전에는 패널을 그리지 않는다(2026-09-07 사장님 "3단계 새로고침하면
