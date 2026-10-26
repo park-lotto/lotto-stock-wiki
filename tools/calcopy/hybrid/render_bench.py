@@ -1672,6 +1672,19 @@ def face_anchors(st: dict, doc: Path, T: dict, cand_dir: Path) -> list:
     return out
 
 
+def blur_entry(boxes: list, crop: list, win: tuple, ss: float, sec: float, pad: int = 8) -> list:
+    """(판단 주인 — 창 좌표 글자 상자 → 재료.blur 한 칸) 창 [x0,y0,x1,y1] 들을 합친 칸을 원본 픽셀 [x, y, w, h, 시작초, 끝초]로.
+    10-26 까르보: 반려 문구가 창 좌표만 줘서 고치는 쪽이 원본 좌표로 바꾸다 세 번 다 어긋났다(같은 'NOOO!' 자막 3번 반려)."""
+    ww, wh = win
+    x0 = min(b[0] for b in boxes); y0 = min(b[1] for b in boxes); x1 = max(b[2] for b in boxes); y1 = max(b[3] for b in boxes)
+    sx, sy = crop[2] / ww, crop[3] / wh
+    ax, ay = crop[0] + x0 * sx - pad, crop[1] + y0 * sy - pad
+    bx, by = crop[0] + x1 * sx + pad, crop[1] + y1 * sy + pad
+    ax, ay = max(crop[0], int(ax)), max(crop[1], int(ay))
+    bx, by = min(crop[0] + crop[2], int(bx + 0.5)), min(crop[1] + crop[3], int(by + 0.5))
+    return [ax, ay, bx - ax, by - ay, round(ss, 3), round(ss + sec, 3)]
+
+
 def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Path | None = None, log=print, erase: list | None = None) -> list[str]:
     """렌더 전 관문 ④(10-25 감사 남의 글자 33·남 얼굴 15): 계획의 컷마다 렌더 조각과 같은 프레임 3장(cut_crop·blur)을 원본에서 뽑아
       ① 글자: 흐림 밖에 남의 박힌 글자(자막·워터마크·로고 글)가 TEXT_MIN_HITS 장 이상이면 멈춤(foreign_text)
@@ -1729,7 +1742,8 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
                 erase.append(k)
             elif nt >= TEXT_MIN_HITS:
                 boxes = [f["box"] for x in r["text"] for f in x][:3]
-                bad.append(f"컷 {k} {where}: 흐림 밖 남의 박힌 글자 {nt}/{len(r['text'])}장(창 좌표 {boxes}) — 재료.json blur[{c['src']}] 에 그 칸을 넣거나 crop·ss 를 옮긴다")
+                bad.append(f"컷 {k} {where}: 흐림 밖 남의 박힌 글자 {nt}/{len(r['text'])}장(창 좌표 {boxes}) — 재료.json blur[{c['src']}] 에 "
+                           f"이 칸을 그대로 넣거나(원본 픽셀·원본 초로 바꿔 둠) crop·ss 를 옮긴다: {blur_entry(boxes, crop, (ww, wh), float(c['ss']), n / FPS)}")
             if nf >= FACE_MIN_HITS:
                 cs = [f["cos"] for x in r["face"] for f in x][:3]
                 bad.append(f"컷 {k} {where}: 연예인 아닌 얼굴 {nf}/{len(r['face'])}장(기준 얼굴 코사인 {cs} < {FACE_OTHER_COS}) — 연예인이 나오는 장면으로 바꾼다")

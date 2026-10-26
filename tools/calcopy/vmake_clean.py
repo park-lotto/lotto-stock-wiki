@@ -381,22 +381,35 @@ def member_clean(files: list, api_key: str, log=print, tier: str = "pro") -> dic
     if paid_off():
         raise PermissionError("SHORTEM_NO_PAID=1 — VMake 호출 막음")
     from shopping_shorts import vmake_client as VC
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
     out = {"cleaned": [], "calls": 0, "fail": {}}
-    for f in files:
+    lock = threading.Lock()
+
+    def one(f):
         f = Path(f)
         t0 = time.time()
         tmp = f.with_name(f.stem + "_vclean" + f.suffix)
-        out["calls"] += 1
+        with lock:
+            out["calls"] += 1
         try:
             VC.remove_subtitles(str(f), api_key, str(tmp), tier=tier, resume_key=f"calcopy:{f.name}:{f.stat().st_size}")
             swap_in(f, tmp)
-            out["cleaned"].append(f.name)
-            log_entry(f.parent, {"file": f.name, "mode": "member", "ok": True, "sec": round(time.time() - t0, 1), "calls": 1, **_sent(f)})
+            with lock:
+                out["cleaned"].append(f.name)
+                log_entry(f.parent, {"file": f.name, "mode": "member", "ok": True, "sec": round(time.time() - t0, 1), "calls": 1, **_sent(f)})
         except Exception as e:  # noqa: BLE001 — 실패는 이유를 남기고 다음 파일(그 파일은 흐림으로)
-            out["fail"][f.name] = f"{type(e).__name__}: {str(e)[:200]}"
-            log_entry(f.parent, {"file": f.name, "mode": "member", "ok": False, "sec": round(time.time() - t0, 1), "calls": 1, **_sent(f), "why": out["fail"][f.name]})
+            with lock:
+                out["fail"][f.name] = f"{type(e).__name__}: {str(e)[:200]}"
+                log_entry(f.parent, {"file": f.name, "mode": "member", "ok": False, "sec": round(time.time() - t0, 1), "calls": 1, **_sent(f), "why": out["fail"][f.name]})
             log(f"[vmake] {f.name} 실패: {out['fail'][f.name]}")
+
+    with ThreadPoolExecutor(SERVER_PAR) as ex:      # 조각마다 7분 안팎 — 서버 길과 같게 동시에(10-26)
+        list(ex.map(one, files))
     return out
+
+
+SERVER_PAR = 4      # 서버 VMake 동시 조각 수(조각마다 다른 ssh·다른 파일)
 
 
 def server_clean(files: list, log=print, timeout: int = SERVER_TIMEOUT) -> dict:
@@ -418,24 +431,34 @@ print('@@JSON@@'+json.dumps(out))
 '''
     out = {"cleaned": [], "calls": 0, "fail": {}}
     subprocess.run(["ssh", "-i", server_ai.KEY, server_ai.HOST, f"mkdir -p {REMOTE_DIR}"], check=True, stdin=subprocess.DEVNULL)
-    for f in files:
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+    lock = threading.Lock()
+
+    def one(f):
         f = Path(f)
         n = f.stem
         t0 = time.time()
         subprocess.run(["scp", "-q", "-i", server_ai.KEY, str(f), f"{server_ai.HOST}:{REMOTE_DIR}/{n}.mp4"], check=True, stdin=subprocess.DEVNULL)
-        out["calls"] += 1
+        with lock:
+            out["calls"] += 1
         try:
             res = server_ai._ssh_py(code, {"names": [n]}, timeout=timeout)
         except Exception as e:  # noqa: BLE001 — 시간 초과면 서버에서는 끝났을 수 있다 → fetch 로 받는다
             res = {n: f"{type(e).__name__}: {str(e)[:200]}"}
         if res.get(n) == "ok":
             fetch(f.parent, [n], log)
-            out["cleaned"].append(f.name)
-            log_entry(f.parent, {"file": f.name, "mode": "server", "ok": True, "sec": round(time.time() - t0, 1), "calls": 1, **_sent(f)})
+            with lock:
+                out["cleaned"].append(f.name)
+                log_entry(f.parent, {"file": f.name, "mode": "server", "ok": True, "sec": round(time.time() - t0, 1), "calls": 1, **_sent(f)})
         else:
-            out["fail"][f.name] = str(res.get(n))[:300]
-            log_entry(f.parent, {"file": f.name, "mode": "server", "ok": False, "sec": round(time.time() - t0, 1), "calls": 1, **_sent(f), "why": out["fail"][f.name]})
+            with lock:
+                out["fail"][f.name] = str(res.get(n))[:300]
+                log_entry(f.parent, {"file": f.name, "mode": "server", "ok": False, "sec": round(time.time() - t0, 1), "calls": 1, **_sent(f), "why": out["fail"][f.name]})
             log(f"[vmake] {f.name} 실패: {out['fail'][f.name]} — 서버에서 끝났으면 `vmake_clean.py fetch {f.parent} {n}`")
+
+    with ThreadPoolExecutor(SERVER_PAR) as ex:      # 조각마다 7분 안팎(10-26 1초 조각 422초) — 차례로 보내면 실행기 예산(15분)을 넘겨 흐림으로 렌더됐다 → 동시에
+        list(ex.map(one, files))
     return out
 
 

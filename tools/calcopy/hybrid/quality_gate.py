@@ -69,13 +69,13 @@ def part_frames(R: Path, T: dict) -> list:
 def part_slivers(R: Path, T: dict, src_dir: Path | None = None) -> list:
     """컷 처음·끝 0.2초 안에 원본 장면 경계가 있는 것(이웃 샷이 몇 프레임 끼어 번쩍임) — (번호, 줄, 원본@초, 경계 초(컷 기준)).
     경계 판정 = render_bench.shot_starts(원본) 한 곳(나레 컷 snap_ss 와 같은 판정 — 조각을 따로 재면 문턱이 달라 어긋났다, 10-24)."""
-    from tools.calcopy.hybrid.render_bench import IMG_EXT, SLIVER_SEC, shot_starts, slivers, src_frames
+    from tools.calcopy.hybrid.render_bench import IMG_EXT, SLIVER_SEC, shot_starts, slivers, src_frames, src_start
     bad = []
     for k, c in enumerate(T["cuts"]):
         src = Path(src_dir) / c["src"] if src_dir else None
         if not src or not src.exists() or src.suffix.lower() in IMG_EXT:
             continue
-        a = float(c.get("ss") or 0.0)
+        a = src_start(src, float(c.get("ss") or 0.0))      # 컷 첫 화면 = 원본 프레임 격자(계획 snap_ss·fit_cut·fit_lip_edges 와 같은 자 — 10-26 ss 로 재 0.038초 번쩍임 오판)
         sv = slivers(shot_starts(src), a, a + (src_frames(c) if c.get("frames") else 0) / FPS, SLIVER_SEC)      # 원본에서 쓰는 프레임(fit_cut 이 늦춘 컷)
         if sv:
             bad.append((k, c["line"], f"{c['src']}@{a}", [round(x - a, 3) for x in sv]))
@@ -683,6 +683,14 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
         row("화면", "화면 멈춤 없음", lambda: (lambda z: (not z, "0건" if not z else " ".join(f"{a}~{b}s" for a, b in z)))(freezes(final, win)), "창 안 프레임 차")
         row("화면", "컷 끝 번쩍임 없음(0.2초 안 장면 경계)",
              lambda: (lambda s: (not s, "0건" if not s else str(s)))(part_slivers(R, T, Path(jload(doc / "재료.json")["cand_dir"]))), "render_bench.shot_starts")
+
+        def foreign_left():
+            """완성본 컷에 남의 박힌 글자가 남았나 — 렌더 전 관문 ④ 와 같은 함수(cut_content_gate)를 **지운 뒤 원본·지금 재료.blur** 로 다시(erase 없이).
+            10-26 까르보 3판: VMake 시간 초과로 못 지운 컷을 ④ 가 '지울 예정'으로 넘겨, 'there is no guanciale' 영어 자막이 남은 완성본이 33/33 통과."""
+            from tools.calcopy.hybrid.render_bench import cut_content_gate
+            probs = [p for p in cut_content_gate(T, jload(doc / "재료.json"), st, doc, R, log=lambda *_: None) if "글자" in p]
+            return (not probs, "0건" if not probs else " / ".join(probs)[:600])
+        row("화면", "남의 박힌 자막 없음(관문 ④ 자 · 지운 뒤)", foreign_left, "render_bench.cut_content_gate")
         if not legacy:
             def y_ok():
                 from tools.calcopy.hybrid.checks import Y_MIN, _ymean

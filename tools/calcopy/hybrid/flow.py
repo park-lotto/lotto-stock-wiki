@@ -2936,13 +2936,24 @@ def f_render_clean_got(st, m, rp, u):
         raise _Stop(str(c.get("why")), str(c.get("fix") or ""), retry="render")
     if c.get("error"):
         st["log"].append("박힌 글자 지우기 실패(흐림 그대로 렌더): " + str(c["error"])[:200])
+    if (c.get("mode") == "vmake" and c.get("why")) or c.get("error"):        # 못 지운 구간(시간 초과·크레딧) — 흐림으로 덮고 렌더하지 않는다(10-26 까르보 3판: 흐림이 어긋나 영어 자막이 그대로 남았다). 다시 보내고, 두 번째도 실패면 멈춘다
+        for n, iv in (c.get("done") or {}).items():
+            tf.setdefault("done", {}).setdefault(n, []).extend(iv)
+        tf["key"] = None
+        k = st["tries"].get("vmake_fail", 0) + 1
+        st["tries"]["vmake_fail"] = k
+        st["log"].append(f"자막 지우기 덜 됨({k}번째): {str(c.get('why') or c.get('error'))[:200]}")
+        if k <= 2:
+            return {"goto": "render"}
+        raise _Stop("원본 자막 지우기가 끝나지 않았어요", "다시 시도해 주시면 못 지운 구간부터 이어서 지울게요", retry="render",
+                    detail=str(c.get("why") or c.get("error"))[:300])
     for n, iv in (c.get("done") or {}).items():
         tf.setdefault("done", {}).setdefault(n, []).extend(iv)
         if n not in tf.setdefault("cleaned", []):
             tf["cleaned"].append(n)
     tf["calls"] = int(tf.get("calls") or 0) + int(c.get("calls") or 0)
     tf["sec"] = round(float(tf.get("sec") or 0) + float(c.get("send_sec") or 0), 3)
-    tf["key"] = _cuts_key(st)
+    tf["key"] = _cuts_key(st) if not c.get("why") else None     # 실패한 구간(크레딧·시간 초과)이 있으면 다음 렌더 때 다시 보낸다 — 컷이 같다고 건너뛰면 안 지운 채 렌더(10-26 까르보: 크레딧 부족 뒤 새 키에도 80초대 자막 남음)
     st["log"].append(f"박힌 글자 VMake: 쓰는 구간 {c.get('used_sec')}초 중 자막 컷 {c.get('send_sec')}초 · 호출 {c.get('calls')}회 · 보낸 초 {c.get('sent')}"
                      + (f" · ⚠ {c['sent_bad']}" if c.get("sent_bad") else "") + (f" · {c.get('why')}" if c.get("why") else ""))
     if c.get("sent_bad"):
