@@ -1470,6 +1470,40 @@
    "seconds": 37.29,
    "judge": "[확인대기] 잉 = 새우깡의 '깡'은 사장의 어린 딸이 아리랑을 '아리깡'으로 부른 데서(뉴시스 2020·2026) · 훅 = 농심 공식 새우깡 광고 봉지 · 뒤 쿠팡 같은 제품 94817 · −14.5 LUFS · TP −1.8 · make.py checks 14/14 · bench_distance 통과 · 멈춤/검정 0 · 봉인 ok · 줄별 대조 ○13 △2 · 사장님 판정·귀 확인 전",
    "doc": "channel/banggu/썰템홈샷_하이브리드/07_새우깡/"
+  },
+  {
+   "channel": "hottemreport",
+   "channel_name": "숏템리폿",
+   "brand": "숏템리폿",
+   "style": "현장썰 4차 하이브리드(앞 원음형 + 잇썸홈판)",
+   "date": "2026-10-27",
+   "from": "channel/hottemreport/현장썰_run.py(앞) → 현장썰하이브리드/render_front.py(뒤, 광고 표시 뒤 구간 수리) → tools/calcopy/hybrid/post_meme_thumb.py(짤·썸네일) → final_tp(alimiter 0.76) → engine/finalize.seal",
+   "n": 94,
+   "title": "4차 17 번머신(스피닝 번 로테이터, 쿠팡 7778988058 카토 번머신 — 비슷한 제품·같은 꼴)",
+   "path": "C:/숏템_칼카피/hottemreport/현장썰4차/17_BurnMachine/final.mp4",
+   "desktop": "숏템리폿_17_burn_machine_검수대기.mp4",
+   "md5": "3ab82afe578d005d2af56b765eb9cefc",
+   "seconds": 34.11,
+   "doc": "channel/hottemreport/현장썰4차/17_BurnMachine/",
+   "judge": "[확인대기] −14.3 LUFS · TP −2.0 · check_seams 되감김 0(점프줌 1 = 17.9초 짤 등장) · freeze/black 0 · script_audit ok 143자 · 받아쓰기 스피치매틱스+위스퍼 대조 일치(1차 '머리 위로'·'돌리듯' 뭉개짐 → 고쳐 다시 합성) · 끝 여운 0.90초 · 봉인 ok",
+   "note": "벤치 KFheIZe0DGQ(79.4만) · 앞 Garage Gym Reviews r9DDu3PEUo4(17.5만) 원음 2구간 · 맷 프레이저 본인 영상은 HWPO 로고로 화면 안 씀 · 짤 tomjaw 17.75초 · 썸네일 C"
+  },
+  {
+   "channel": "hottemreport",
+   "channel_name": "숏템리폿",
+   "brand": "숏템리폿",
+   "style": "현장썰 4차 하이브리드(앞 원음형 + 잇썸홈판)",
+   "date": "2026-10-27",
+   "from": "channel/hottemreport/현장썰_run.py(앞) → 현장썰하이브리드/render_front.py(뒤, 광고 표시 뒤 구간 수리) → tools/calcopy/hybrid/post_meme_thumb.py(짤·썸네일) → final_tp(alimiter 0.76) → engine/finalize.seal",
+   "n": 95,
+   "title": "4차 18 의자바퀴(The Office Oasis 롤러블레이드, 쿠팡 9779599540 같은 제품)",
+   "path": "C:/숏템_칼카피/hottemreport/현장썰4차/18_ChairWheels/final.mp4",
+   "desktop": "숏템리폿_18_office_chair_wheels_검수대기.mp4",
+   "md5": "ed6a2026d25bef022638e73465906155",
+   "seconds": 36.25,
+   "doc": "channel/hottemreport/현장썰4차/18_ChairWheels/",
+   "judge": "[확인대기] −14.4 LUFS · TP −2.0 · check_seams 되감김 0 · freeze/black 0 · script_audit ok 145자 · 받아쓰기 스피치매틱스+위스퍼 대조 일치(1차 '새 바퀴' 뭉개짐 → '이 바퀴'로 다시 합성) · 끝 여운 0.97초 · 봉인 ok",
+   "note": "벤치 gBalgjWMRfQ(33.0만) · 앞 Peter von Panda T8_Hc8E28-4(9,690회) 원음 2구간 · 사실 근거 창업자 틱톡 · 짤 owenwow 19.5초 · 썸네일 C"
   }
  ]
 }

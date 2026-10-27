@@ -1,0 +1,161 @@
+{
+ "_note": "숏템리폿 4차 17 번머신 하이브리드 — 앞 = 숏템리폿 현장썰 Garage Gym Reviews 원음형 박창수판(17_BurnMachine/front), 뒤 = 쿠팡 7778988058 '카토 번머신 권투 트레이닝 완력 헬스기구'(비슷한 제품 — 같은 꼴: 은색 고리 두 개·볼트·가운데 손잡이, 브랜드는 다름. 번머신은 상표 없는 범용 꼴이 여럿). 뒤 화면 = GGR 영상의 다른 장면(같은 꼴 번머신) + 쿠팡 대표 사진(move). 효능(심박·근육 효과·재활)·금액은 말하지 않는다.",
+ "brand": "잇썸홈",
+ "product": "카토 번머신 권투 트레이닝 완력 헬스기구(쿠팡 7778988058) — 은색 고리 두 개 안 손잡이를 돌리는 상체 운동기구",
+ "product_mode": "similar",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰4차/17_BurnMachine/front/render/final.mp4",
+  "cut": 14.8,
+  "why": "원음 O2 'only people in the world' 끝(앞 14.40) 뒤 0.4초 — 같은 한 샷(gg 291.11~294.25) 안",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API '번머신'(10-27 15:5x, 1회 3검색어 ok): 7778988058 '카토 번머신 권투 트레이닝 완력 헬스기구 승모근강화 손목강화 훈련기 팔 헬스기구' — 17_BurnMachine/coupang.json",
+  "c_img": "쿠팡 대표 이미지(look/cp_7778988058.jpg): 은색 고리 두 개·테두리 볼트·고리 안 가로 손잡이·가운데 이음쇠 — GGR 영상 기구와 같은 꼴(손잡이 색만 다름)",
+  "g_boxer": "벤치 설명란 '복서들이 상체 지구력 훈련에 쓰는 운동기구' · GGR 원본 259.9~262.0 'MMA athletes, boxers, those types could really benefit from this'",
+  "g_cycle": "GGR 원본 121.1~125.5 'They do make ergs or bikes that are handles. This kind of simulates that' · 161.1 'you literally just cycle it'",
+  "g_quiet": "GGR 원본 381.7~390.6 'a tool that's one quiet. A lot of conditioning tools make noise … you're training at home, you want something that's quiet'"
+ },
+ "흥미이음": {
+  "원본흥미": "크로스핏 세계 1위가 숨겨 둔 '비밀 무기' — 고리 두 개를 돌리기만 하는 기구가 1분도 못 버틸 만큼 힘들다",
+  "뒤흥미": "쿠팡의 같은 꼴 번머신(카토) — 같은 은색 고리·손잡이를 머리 위·앞·아래로 돌리는 모습",
+  "판정": "같음",
+  "근거": "같은 꼴: 쿠팡 대표 사진(은색 고리 두 개·볼트·가운데 손잡이) = GGR 기구 모양. 번머신은 상표 없는 범용 꼴(GGR '…there isn't like a known company… There are many'). 브랜드는 달라 대본에 '똑같이 생긴'으로 말함"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.3,
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 14.4
+ },
+ "front_style": {
+  "frame": "channel/hottemreport/현장썰4차/17_BurnMachine/front/frame_render.json",
+  "title": "1분도 못 버티는\n괴물 운동기구"
+ },
+ "transition": {
+  "kind": "slideleft",
+  "dur": 0.25
+ },
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "back_caption_lines": {
+  "B1": {
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   }
+  }
+ },
+ "sfx": {
+  "pack_customer": 0
+ },
+ "lines": [
+  {
+   "id": "B1",
+   "role": "공개",
+   "point": "잉",
+   "answer_at": 3,
+   "kind": "tts",
+   "seg": "B",
+   "tts": "근데 저 영상 보고 쿠팡에 쳐 봤더니, 똑같이 생긴 번머신이 있더라고요.",
+   "caps": [
+    "근데 저 영상 보고",
+    "쿠팡에 쳐 봤더니",
+    "똑같이 생긴 번머신이",
+    "있더라고요"
+   ],
+   "emph": [
+    "번머신"
+   ],
+   "facts": [
+    "c0",
+    "c_img"
+   ]
+  },
+  {
+   "id": "B2",
+   "role": "고조",
+   "point": "권위",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "이게 말도 안 되는 게, 원래 복서들이 상체 버티기 훈련할 때 쓰던 거래요.",
+   "caps": [
+    "이게 말도 안 되는 게",
+    "원래 복서들이",
+    "상체 버티기 훈련할 때",
+    "쓰던 거래요"
+   ],
+   "emph": [
+    "복서들이"
+   ],
+   "facts": [
+    "g_boxer"
+   ]
+  },
+  {
+   "id": "B3",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "진짜 핵심은 이건데, 자전거 페달처럼 손잡이만 빙글빙글 돌리면 끝이에요.",
+   "caps": [
+    "진짜 핵심은 이건데",
+    "자전거 페달처럼",
+    "손잡이만 빙글빙글",
+    "돌리면 끝이에요"
+   ],
+   "emph": [
+    "빙글빙글"
+   ],
+   "facts": [
+    "g_cycle"
+   ],
+   "_tts_fix": "1차 '돌리듯'을 '돌리던/돌리도'로 받아씀 → '페달처럼'으로 뒤 TTS 1회 다시"
+  },
+  {
+   "id": "B4",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "심지어 소리도 거의 안 나서, 밤에 집에서 돌려도 아무도 몰라요.",
+   "caps": [
+    "심지어 소리도",
+    "거의 안 나서",
+    "밤에 집에서 돌려도",
+    "아무도 몰라요"
+   ],
+   "emph": [
+    "아무도"
+   ],
+   "facts": [
+    "g_quiet"
+   ]
+  },
+  {
+   "id": "B5",
+   "role": "cta",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "헬스장 친구들한테 시켜 봤더니, 다들 1분도 못 버티고 이게 뭐냐고 난리예요.",
+   "caps": [
+    "헬스장 친구들한테",
+    "시켜 봤더니",
+    "다들 1분도 못 버티고",
+    "이게 뭐냐고 난리예요"
+   ],
+   "emph": [
+    "1분도"
+   ],
+   "facts": []
+  }
+ ]
+}

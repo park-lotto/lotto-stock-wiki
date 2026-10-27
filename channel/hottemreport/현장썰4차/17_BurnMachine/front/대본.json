@@ -1,0 +1,122 @@
+{
+ "topic": "번머신(스피닝 번 로테이터) — 크로스핏 세계 1위 맷 프레이저가 '비밀 무기'로 숨겨 두고 쓰던 상체 운동기구, Garage Gym Reviews 쿱이 처음 받아 써 봄",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "KFheIZe0DGQ",
+ "bench_note": "벤치 '1분도 못 버티는 괴물 운동의 정체'(79.4만, 핫템리포트 17위, 2026-08-03) — 번머신 몽타주(틱톡·인스타 클립 30개 안팎). 벤치 사람 원음은 렌즈 6장(이번)+9장(2차)·유튜브 검색 8개로 못 찾음(벤치 6.5초 검은 민소매 = 복서 Taras Shelestyuk 계정 후보, 유튜브 설명 영상뿐·감탄 없음) → 같은 꼴 번머신을 처음 받아 써 보는 Garage Gym Reviews(유튜브 17.5만) r9DDu3PEUo4 원음형. 맷 프레이저 본인 영상(5RQj-rTl-Tk)은 가슴 'HWPO' 로고가 크게 보여 화면으로 안 쓰고 사실 근거로만",
+ "sources": {
+  "gg": {
+   "file": "gg.mp4",
+   "who": "유튜브 Garage Gym Reviews \"Mat Fraser's 'SECRET Hand-Spinny' Conditioning Tool!\" r9DDu3PEUo4(2022-09-02) 150~450초 구간 사본(1080p → 30fps)",
+   "views": 175143,
+   "dur": 300.0,
+   "res": "1920x1080"
+  }
+ },
+ "titles": {
+  "hook": "1분도 못 버티는\n괴물 운동기구"
+ },
+ "facts": {
+  "f1": {
+   "text": "Mat Fraser 본인 유튜브 5RQj-rTl-Tk 'Mat Fraser's Home Gym Tour' 원본 490.8~495.9(스피치매틱스): 'never allowed it to go on camera because I thought it was a super valuable tool that I wanted to keep a secret'",
+   "kind": "본인 말"
+  },
+  "f2": {
+   "text": "GGR r9DDu3PEUo4 3.4~8.5 'World's Fittest Man Matt Frazier … brought out his secret weapon' · 376.5~379.4 'the fittest man on earth five times in a row'",
+   "kind": "리뷰어 말"
+  },
+  "f3": {
+   "text": "Mat Fraser 5RQj-rTl-Tk 원본 517.8~524.2: '30 seconds on 30 seconds off for ten rounds, and by round three I'm having to like take breaks'",
+   "kind": "본인 말"
+  },
+  "f4": {
+   "text": "GGR 원본 375.34~380.50 'as a secret tool that he used to be the fittest man on earth five times in a row, I'm gonna listen'",
+   "kind": "본인 말"
+  },
+  "f5": {
+   "text": "GGR 원본 441.23~443.63 'me and Matt Frazier are literally the only people in the world'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "id": "N1",
+    "fn": "훅(권위+~있는데요)",
+    "text": "크로스핏 세계 1위가 몰래 숨겨 두고 쓰던 운동기구가 있는데요.",
+    "caps": [
+     "크로스핏 세계 1위가",
+     "몰래 숨겨 두고 쓰던",
+     "운동기구가 있는데요"
+    ],
+    "facts": [
+     "f1",
+     "f2"
+    ]
+   },
+   {
+    "id": "N2",
+    "fn": "불러냄 → 원음 증거",
+    "text": "가볍게 돌리기만 하는데, 세 판만 해도 쉬어야 한대요.",
+    "caps": [
+     "가볍게 돌리기만 하는데",
+     "세 판만 해도 쉬어야 한대요"
+    ],
+    "facts": [
+     "f3"
+    ],
+    "_tts_fix": "1차 '머리 위로'를 스피치매틱스·위스퍼 둘 다 '머리로'로 받아씀(위 뭉개짐) → 앞 TTS 1회 다시"
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "gg",
+    "span": [
+     225.3,
+     230.48
+    ],
+    "en": "as a secret tool that he used to be the fittest man on earth five times in a row, I'm gonna listen",
+    "caps": [
+     "지구 최강 체력왕을",
+     "다섯 번이나 만든 비밀 무기라는데",
+     "당연히 써 봐야지!"
+    ],
+    "check": "원본 as 375.34 · listen 380.50 · 다음 So 380.50(말 끝 바로) · 화면 한 샷 원본 364.90~409.71"
+   },
+   {
+    "id": "O2",
+    "src": "gg",
+    "span": [
+     291.21,
+     293.65
+    ],
+    "en": "me and Matt Frazier are literally the only people in the world",
+    "caps": [
+     "이제 이거 쓰는 사람은",
+     "세상에 나랑 프레이저뿐이야!"
+    ],
+    "check": "원본 me 441.23 · world 443.63 · 다음 And 443.67 · 화면 원본 433.03~"
+   }
+  ],
+  "dropped": {
+   "벤치 '심박수'·'코어·하체'": "효능 — 안 씀",
+   "GGR '115 bucks'": "금액 금지",
+   "GGR 'adaptive athlete·injury rehab'": "효능·의학 — 안 씀",
+   "프레이저 본인 화면": "가슴 HWPO 로고 크게 — 사실 근거로만"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ }
+}

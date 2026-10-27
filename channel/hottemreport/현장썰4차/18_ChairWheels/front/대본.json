@@ -1,0 +1,41 @@
+{
+ "topic": "The Office Oasis 롤러블레이드 의자 바퀴 — 엔지니어 일을 그만두고 만든 의자 바퀴(공식 틱톡 본인 말 '백만 세트 넘게') + 같은 꼴 롤러블레이드 바퀴를 처음 단 유튜버 Peter von Panda '와, 완전 다르다'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "gBalgjWMRfQ",
+ "bench_note": "벤치 '의자 바퀴에 빡쳐 500억 번 직장인'(33.0만, 핫템리포트 21위, 2026-07-10) — 오피스 오아시스 롤러블레이드 의자 바퀴 몽타주. 벤치 컷 사람 원음은 렌즈 5장으로 못 찾음(3차 때 공식 틱톡 100편·유튜브 쇼츠 128편도 대조) → 창업자 본인 틱톡은 화면 한가운데 박힌 영어 자막이 얼굴을 덮어 원음 화면으로 못 씀 → 같은 꼴 롤러블레이드 바퀴를 처음 달아 보는 유튜버 Peter von Panda T8_Hc8E28-4 원음형. 벤치 '500억'·'아마존 1위'는 금액·근거 없어 안 씀",
+ "sources": {
+  "pp": {"file": "pp.mp4", "who": "유튜브 Peter von Panda 'Roller Blade Wheels For Office Chairs' T8_Hc8E28-4 150~215초 구간 사본(1080p30)", "views": 9690, "dur": 65.0, "res": "1920x1080"},
+  "mu": {"file": "mu.mp4", "who": "유튜브 The Office Oasis 공식 'How To Protect Your Wood Floors From Office Chairs' mUu4IsvvpFs 전체 사본(1080p30)", "views": 20008, "dur": 208.0, "res": "1920x1080"}
+ },
+ "titles": {"hook": "의자 바퀴 하나로\n대박 난 엔지니어"},
+ "facts": {
+  "f1": {"text": "The Office Oasis 공식 틱톡 @theofficeoasis 7678437086562766093 본인 말(스피치매틱스): 'I quit my engineering job to sell office chair wheels' · 'Today we've sold over a million sets'", "kind": "본인 말(회사 공식)"},
+  "f2": {"text": "같은 틱톡 'built these rollerblade style chair wheels that roll smoother, stay quieter and don't tear up your floors'", "kind": "본인 말(회사 공식)"},
+  "f3": {"text": "Peter von Panda 원본 167.96~174.12 'man, what a difference. First of all, this thing moves around and glides around like it never has.'", "kind": "본인 말"},
+  "f4": {"text": "Peter von Panda 원본 195.04~196.72 'man, what an improvement'", "kind": "본인 말"}
+ },
+ "final": {
+  "order": ["N1", "O1", "N2", "O2"],
+  "lines": [
+   {"id": "N1", "fn": "훅(인물+~있는데요)", "text": "의자 바퀴 하나 바꾸겠다고, 엔지니어 일까지 그만둔 사람이 있는데요.",
+    "caps": ["의자 바퀴 하나 바꾸겠다고", "엔지니어 일까지", "그만둔 사람이 있는데요"], "facts": ["f1"]},
+   {"id": "N2", "fn": "불러냄 → 원음 증거", "text": "인라인 스케이트 바퀴를 달았을 뿐인데, 벌써 백만 세트 넘게 팔렸대요.",
+    "caps": ["인라인 스케이트 바퀴를", "달았을 뿐인데", "벌써 백만 세트 넘게 팔렸대요"], "facts": ["f1", "f2"]}
+  ],
+  "orig_audio": [
+   {"id": "O1", "src": "pp", "span": [17.90, 24.22], "en": "man, what a difference. First of all, this thing moves around and glides around like it never has.",
+    "caps": ["와, 완전 다른데?", "이거 미끄러지듯 굴러가!", "이런 적이 한 번도 없었어!"],
+    "check": "원본 man 167.96 · has 174.12 · 다음 And 174.32 · 화면 한 샷 원본 166.03~183.63(=16.03~33.63)"},
+   {"id": "O2", "src": "pp", "span": [44.98, 46.80], "en": "man, what an improvement",
+    "caps": ["와, 이건 완전 업그레이드야!"],
+    "check": "원본 man 195.04 · improvement 196.72 · 다음 I'm 196.88 · 화면 한 샷 원본 193.90~(=43.90~)"}
+  ],
+  "dropped": {
+   "벤치 '500억'·'아마존 1위'": "금액·근거 없음 — 안 씀",
+   "Peter '15 or 16 bucks'": "금액 금지",
+   "공식 틱톡 원음 화면": "가운데 박힌 영어 자막이 얼굴을 덮음 — 말만 사실 근거로"
+  }
+ },
+ "voice": {"tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회", "speed": 1.24, "target_cps": 8.0, "id": "tc_6059dad0b83880769a50502f", "name": "박창수"}
+}

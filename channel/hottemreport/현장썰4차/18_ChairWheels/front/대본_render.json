@@ -1,0 +1,423 @@
+{
+ "topic": "The Office Oasis 롤러블레이드 의자 바퀴 — 엔지니어 일을 그만두고 만든 의자 바퀴(공식 틱톡 본인 말 '백만 세트 넘게') + 같은 꼴 롤러블레이드 바퀴를 처음 단 유튜버 Peter von Panda '와, 완전 다르다'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "gBalgjWMRfQ",
+ "bench_note": "벤치 '의자 바퀴에 빡쳐 500억 번 직장인'(33.0만, 핫템리포트 21위, 2026-07-10) — 오피스 오아시스 롤러블레이드 의자 바퀴 몽타주. 벤치 컷 사람 원음은 렌즈 5장으로 못 찾음(3차 때 공식 틱톡 100편·유튜브 쇼츠 128편도 대조) → 창업자 본인 틱톡은 화면 한가운데 박힌 영어 자막이 얼굴을 덮어 원음 화면으로 못 씀 → 같은 꼴 롤러블레이드 바퀴를 처음 달아 보는 유튜버 Peter von Panda T8_Hc8E28-4 원음형. 벤치 '500억'·'아마존 1위'는 금액·근거 없어 안 씀",
+ "sources": {
+  "pp": {
+   "file": "pp.mp4",
+   "who": "유튜브 Peter von Panda 'Roller Blade Wheels For Office Chairs' T8_Hc8E28-4 150~215초 구간 사본(1080p30)",
+   "views": 9690,
+   "dur": 65.0,
+   "res": "1920x1080"
+  },
+  "mu": {
+   "file": "mu.mp4",
+   "who": "유튜브 The Office Oasis 공식 'How To Protect Your Wood Floors From Office Chairs' mUu4IsvvpFs 전체 사본(1080p30)",
+   "views": 20008,
+   "dur": 208.0,
+   "res": "1920x1080"
+  }
+ },
+ "titles": {
+  "hook": "의자 바퀴 하나로\n대박 난 엔지니어"
+ },
+ "facts": {
+  "f1": {
+   "text": "The Office Oasis 공식 틱톡 @theofficeoasis 7678437086562766093 본인 말(스피치매틱스): 'I quit my engineering job to sell office chair wheels' · 'Today we've sold over a million sets'",
+   "kind": "본인 말(회사 공식)"
+  },
+  "f2": {
+   "text": "같은 틱톡 'built these rollerblade style chair wheels that roll smoother, stay quieter and don't tear up your floors'",
+   "kind": "본인 말(회사 공식)"
+  },
+  "f3": {
+   "text": "Peter von Panda 원본 167.96~174.12 'man, what a difference. First of all, this thing moves around and glides around like it never has.'",
+   "kind": "본인 말"
+  },
+  "f4": {
+   "text": "Peter von Panda 원본 195.04~196.72 'man, what an improvement'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "text": "의자 바퀴 하나 바꾸겠다고 엔지니어 일까지 그만둔 사람이 있는데요 인라인 스케이트 바퀴를 달았을 뿐인데 벌써 백만 세트 넘게 팔렸대요.",
+    "note": "렌더용 한 문장 — 원문 줄은 대본.json"
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "pp",
+    "span": [
+     17.9,
+     24.22
+    ],
+    "en": "man, what a difference. First of all, this thing moves around and glides around like it never has.",
+    "caps": [
+     "와, 완전 다른데?",
+     "이거 미끄러지듯 굴러가!",
+     "이런 적이 한 번도 없었어!"
+    ],
+    "check": "원본 man 167.96 · has 174.12 · 다음 And 174.32 · 화면 한 샷 원본 166.03~183.63(=16.03~33.63)"
+   },
+   {
+    "id": "O2",
+    "src": "pp",
+    "span": [
+     44.98,
+     46.8
+    ],
+    "en": "man, what an improvement",
+    "caps": [
+     "와, 이건 완전 업그레이드야!"
+    ],
+    "check": "원본 man 195.04 · improvement 196.72 · 다음 I'm 196.88 · 화면 한 샷 원본 193.90~(=43.90~)"
+   }
+  ],
+  "dropped": {
+   "벤치 '500억'·'아마존 1위'": "금액·근거 없음 — 안 씀",
+   "Peter '15 or 16 bucks'": "금액 금지",
+   "공식 틱톡 원음 화면": "가운데 박힌 영어 자막이 얼굴을 덮음 — 말만 사실 근거로"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ },
+ "captions_plan": [
+  {
+   "t0": 0.0,
+   "text": "의자 바퀴 하나 바꾸겠다고",
+   "kind": "나레"
+  },
+  {
+   "t0": 1.403,
+   "text": "엔지니어 일까지",
+   "kind": "나레"
+  },
+  {
+   "t0": 2.296,
+   "text": "그만둔 사람이 있는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 3.822,
+   "text": "와, 완전 다른데?",
+   "kind": "원음"
+  },
+  {
+   "t0": 5.547,
+   "text": "이거 미끄러지듯 굴러가!",
+   "kind": "원음"
+  },
+  {
+   "t0": 7.845,
+   "text": "이런 적이 한 번도 없었어!",
+   "kind": "원음"
+  },
+  {
+   "t0": 10.392,
+   "text": "인라인 스케이트 바퀴를",
+   "kind": "나레"
+  },
+  {
+   "t0": 11.686,
+   "text": "달았을 뿐인데",
+   "kind": "나레"
+  },
+  {
+   "t0": 12.462,
+   "text": "벌써 백만 세트 넘게 팔렸대요",
+   "kind": "나레"
+  },
+  {
+   "t0": 14.264,
+   "text": "와, 이건 완전 업그레이드야!",
+   "kind": "원음"
+  }
+ ],
+ "caption_events": [
+  {
+   "kind": "emph",
+   "text": "의자 바퀴 하나 바꾸겠다고",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.0,
+   "dur": 1.403,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "엔지니어 일까지",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 1.403,
+   "dur": 0.893,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "그만둔 사람이 있는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 2.296,
+   "dur": 1.526,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "와, 완전 다른데?",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 3.822,
+   "dur": 1.725,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "이거 미끄러지듯 굴러가!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 5.547,
+   "dur": 2.298,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "이런 적이 한 번도 없었어!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 7.845,
+   "dur": 2.547,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "인라인 스케이트 바퀴를",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 10.392,
+   "dur": 1.294,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "달았을 뿐인데",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 11.686,
+   "dur": 0.776,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "벌써 백만 세트 넘게 팔렸대요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 12.462,
+   "dur": 1.802,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "와, 이건 완전 업그레이드야!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 14.264,
+   "dur": 2.42,
+   "who": "원음"
+  }
+ ],
+ "render": {
+  "windows": [
+   [
+    3.822,
+    10.142
+   ],
+   [
+    14.264,
+    16.084
+   ]
+  ],
+  "blocks": [
+   {
+    "id": "N1",
+    "kind": "나레",
+    "n0": 0.0,
+    "n1": 3.572
+   },
+   {
+    "id": "O1",
+    "kind": "원음",
+    "a0": 3.822,
+    "a1": 10.142,
+    "audio_ss": 17.9,
+    "src": "pp"
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "n0": 10.392,
+    "n1": 14.014
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "a0": 14.264,
+    "a1": 16.084,
+    "audio_ss": 44.98,
+    "src": "pp"
+   }
+  ],
+  "pieces": [
+   {
+    "block": "N1",
+    "covers": [
+     "N1"
+    ],
+    "src": "mu",
+    "ss": 28.0,
+    "vs": 0.0,
+    "src_crop": [
+     420,
+     0,
+     857,
+     1080
+    ],
+    "why": "흔한 검은 플라스틱 의자 바퀴를 손에 듦(27.2~40.8 한 샷)",
+    "ve": 3.722,
+    "src_end": 31.722
+   },
+   {
+    "block": "O1",
+    "covers": [
+     "O1"
+    ],
+    "src": "pp",
+    "ss": 17.8,
+    "vs": 3.722,
+    "src_crop": [
+     700,
+     0,
+     857,
+     1080
+    ],
+    "why": "바꿔 단 바퀴로 의자가 카펫 위를 굴러감 + 'man, what a difference…glides around'(16.03~33.63 한 샷)",
+    "ve": 10.392,
+    "src_end": 24.47
+   },
+   {
+    "block": "N2",
+    "covers": [
+     "N2"
+    ],
+    "src": "mu",
+    "ss": 147.0,
+    "vs": 10.392,
+    "src_crop": [
+     780,
+     0,
+     857,
+     1080
+    ],
+    "why": "롤러블레이드 바퀴 단 의자가 나무 바닥을 굴러감(146.2~156.5)",
+    "ve": 14.164,
+    "src_end": 150.772
+   },
+   {
+    "block": "O2",
+    "covers": [
+     "O2"
+    ],
+    "src": "pp",
+    "ss": 44.88,
+    "vs": 14.164,
+    "src_crop": [
+     600,
+     0,
+     857,
+     1080
+    ],
+    "why": "'man, what an improvement'(43.90~ 한 샷)",
+    "ve": 16.684,
+    "src_end": 47.4
+   }
+  ],
+  "dur": 16.684,
+  "narr": [
+   {
+    "id": "N1",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\18_ChairWheels\\front\\render\\narr_N1.wav",
+    "dur": 3.572,
+    "tempo": 0.729,
+    "chars": 28,
+    "speech": 3.572,
+    "cps": 7.84,
+    "segs": [
+     [
+      0.0,
+      3.572
+     ]
+    ]
+   },
+   {
+    "id": "N2",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\18_ChairWheels\\front\\render\\narr_N2.wav",
+    "dur": 3.622,
+    "tempo": 0.807,
+    "chars": 28,
+    "speech": 3.622,
+    "cps": 7.73,
+    "segs": [
+     [
+      0.0,
+      3.622
+     ]
+    ]
+   }
+  ]
+ }
+}

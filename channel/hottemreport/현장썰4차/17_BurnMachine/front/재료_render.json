@@ -1,0 +1,137 @@
+{
+ "_note": "make_render.py 가 만든 렌더용 — 페이지 1개 × cuts(원음 입 맞춤 시각)",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰4차/17_BurnMachine/front/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "gg.mp4",
+   "ss": 19.05,
+   "cuts": [
+    {
+     "src": "gg.mp4",
+     "ss": 19.05,
+     "dur": 3.47,
+     "block": "N1",
+     "src_crop": [
+      560,
+      0,
+      857,
+      1080
+     ]
+    },
+    {
+     "src": "gg.mp4",
+     "ss": 225.2,
+     "dur": 5.53,
+     "block": "O1",
+     "src_crop": [
+      530,
+      0,
+      857,
+      1080
+     ]
+    },
+    {
+     "src": "gg.mp4",
+     "ss": 27.35,
+     "dur": 2.867,
+     "block": "N2",
+     "src_crop": [
+      760,
+      0,
+      857,
+      1080
+     ]
+    },
+    {
+     "src": "gg.mp4",
+     "ss": 291.11,
+     "dur": 3.14,
+     "block": "O2",
+     "src_crop": [
+      560,
+      0,
+      857,
+      1080
+     ]
+    }
+   ]
+  }
+ ],
+ "pieces": [
+  {
+   "block": "N1",
+   "covers": [
+    "N1"
+   ],
+   "src": "gg",
+   "ss": 19.05,
+   "vs": 0.0,
+   "src_crop": [
+    560,
+    0,
+    857,
+    1080
+   ],
+   "why": "번머신을 머리 위·앞으로 빠르게 돌림(18.97~27.28 한 샷)",
+   "ve": 3.47,
+   "src_end": 22.52
+  },
+  {
+   "block": "O1",
+   "covers": [
+    "O1"
+   ],
+   "src": "gg",
+   "ss": 225.2,
+   "vs": 3.47,
+   "src_crop": [
+    530,
+    0,
+    857,
+    1080
+   ],
+   "why": "번머신을 들고 'secret tool…fittest man on earth five times in a row, I'm gonna listen'(214.9~259.71 한 샷)",
+   "ve": 9.0,
+   "src_end": 230.73
+  },
+  {
+   "block": "N2",
+   "covers": [
+    "N2"
+   ],
+   "src": "gg",
+   "ss": 27.35,
+   "vs": 9.0,
+   "src_crop": [
+    760,
+    0,
+    857,
+    1080
+   ],
+   "why": "번머신을 머리 위로 들고 돌림(27.28~30.75 한 샷, 왼쪽 MADE 표지판은 crop 밖)",
+   "ve": 11.867,
+   "src_end": 30.217
+  },
+  {
+   "block": "O2",
+   "covers": [
+    "O2"
+   ],
+   "src": "gg",
+   "ss": 291.11,
+   "vs": 11.867,
+   "src_crop": [
+    560,
+    0,
+    857,
+    1080
+   ],
+   "why": "'me and Matt Frazier are literally the only people in the world'(283.03~)",
+   "ve": 15.007,
+   "src_end": 294.25
+  }
+ ]
+}
