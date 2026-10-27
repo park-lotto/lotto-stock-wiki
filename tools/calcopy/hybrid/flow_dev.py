@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import os
 import shutil
 import subprocess
@@ -34,7 +35,7 @@ CLAUDE = os.environ.get("CLAUDE_BIN") or shutil.which("claude") or str(Path.home
 def answer(W: Path, rv: dict, log, replay: Path | None = None) -> dict:
     """review 하나 → Claude CLI(회원 Claude 대신). 그림은 파일로 두고 Read 로 보게 한다(회원 PC 는 MCP 이미지로 싣는다).
     replay 폴더에 이 review id 앞부분 이름의 JSON 이 있으면 Claude 답은 answer_live.json 으로 남기고 그 JSON 을 답으로 쓴다."""
-    d = W / "reviews" / f"{time.strftime('%H%M%S')}_{rv['id'][:40]}"
+    d = W / "reviews" / f"{time.strftime('%H%M%S')}_{re.sub(r'[^0-9A-Za-z가-힣._-]', '_', rv['id'])[:40]}"   # 소재 2편 칸 id 's1:ref_read' — ':' 는 윈도우 폴더 이름에 못 쓴다(10-27)
     d.mkdir(parents=True, exist_ok=True)
     texts, imgs = [], []
     for s in rv.get("show") or []:
