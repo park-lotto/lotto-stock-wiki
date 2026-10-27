@@ -1,0 +1,51 @@
+{
+ "_note": "숏템리폿 4차 16 하이퍼쉘 하이브리드 — 앞 = 숏템리폿 현장썰 GCN 원음형 박창수판(16_Hypershell/front), 뒤 = 쿠팡 9452505213 '[한국공식스토어] 하이퍼쉘 X Ultra 웨어러블 보행보조 로봇'(같은 제품 — GCN 설명란 'Hypershell X Ultra'). 뒤 화면 = 같은 GCN 영상의 다른 장면(차기·자전거·친구들) + 쿠팡 대표 사진(move, '한국 공식' 표 crop 밖). 효능(통증·재활·힘 %)·금액은 말하지 않는다.",
+ "brand": "잇썸홈",
+ "product": "[한국공식스토어] 하이퍼쉘 X Ultra 웨어러블 보행보조 로봇(쿠팡 9452505213) — 허리 벨트+다리 막대에 모터가 달린 외골격",
+ "product_mode": "exact",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰4차/16_Hypershell/front/render/final.mp4",
+  "cut": 14.85,
+  "why": "원음 O2 'I feel alive' 끝(앞 14.867) 직전 — 원본 다음 장면(거리, 원본 219.04 = 앞 15.01) 전",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API '하이퍼쉘'(10-27 12:3x, 1회 2검색어 ok): 9452505213 '[한국공식스토어] 하이퍼쉘 X Ultra 웨어러블 보행보조 로봇' — 4차/coupang_2.json",
+  "c_img": "쿠팡 대표 이미지(look/cp_9452505213.jpg): 검정 허리 벨트·둥근 모터(주황 테)·검정 다리 막대·허벅지 띠 — GCN 영상 속 장치와 같은 모양",
+  "g_desc": "GCN 2ZAnvcEPhqM 설명란 'This is the exoskeleton we used! Hypershell X Ultra' · 'a robotic exoskeleton that claims to provide 1,000 watts of power' · 'pit him against … four-time British hill climb champion, Andrew Feather'",
+  "g_wear": "GCN 166~184초 화면: 의자에 앉아 혼자 허리 벨트·다리 띠를 채움 · 108~120초 길가에서 혼자 참",
+  "g_bike": "GCN 505~521초 화면: 장치를 찬 채 자전거로 오르막을 오름(다리 막대 보임)"
+ },
+ "흥미이음": {
+  "원본흥미": "다리에 차고 켜자마자 다리가 저절로 움직이는 느낌에 '이게 뭐야?'·'살아 있는 느낌'",
+  "뒤흥미": "쿠팡의 바로 그 제품(하이퍼쉘 X Ultra) — 같은 허리 벨트·모터·다리 막대, 차고 걷고 자전거까지",
+  "판정": "같음",
+  "근거": "같은 제품: GCN 설명란 'Hypershell X Ultra' = 쿠팡 상품명 '하이퍼쉘 X Ultra' + 대표 이미지 모양 대조(허리 벨트·주황 테 모터·다리 막대). 렌즈 3장 쿠팡 9452505213"
+ },
+ "voice": {"name": "박창수", "voice_id": "tc_6059dad0b83880769a50502f"},
+ "cps_target": 8.3,
+ "bgm": {"id": "honwaka_puppu", "db_below_voice": 14.4},
+ "front_style": {"frame": "channel/hottemreport/현장썰4차/16_Hypershell/front/frame_render.json", "title": "다리에 차는\n로봇 외골격"},
+ "transition": {"kind": "slideleft", "dur": 0.25},
+ "back_style": "shortem",
+ "line_role": {"B1": "공개", "B2": "고조", "B3": "고조", "B4": "고조", "B5": "cta"},
+ "back_caption_lines": {"B1": {"enter": {"kind": "pop", "ms": 300}}},
+ "sfx": {"pack_customer": 0},
+ "lines": [
+  {"id": "B1", "role": "공개", "point": "잉", "answer_at": 3, "kind": "tts", "seg": "B",
+   "tts": "근데 저 영상 보고 쿠팡에 쳐 봤더니, 똑같은 로봇이 진짜 있더라고요.",
+   "caps": ["근데 저 영상 보고", "쿠팡에 쳐 봤더니", "똑같은 로봇이", "진짜 있더라고요"], "emph": ["똑같은"], "facts": ["c0", "c_img"]},
+  {"id": "B2", "role": "고조", "point": "권위", "kind": "tts", "seg": "B",
+   "tts": "이게 말도 안 되는 게, 아이언맨처럼 허리랑 다리에 차는 건데, 최대 1,000와트 모터가 다리를 같이 밀어 준대요.",
+   "caps": ["이게 말도 안 되는 게", "아이언맨처럼", "허리랑 다리에 차는 건데", "최대 1,000와트 모터가", "다리를 같이 밀어 준대요"], "emph": ["1,000와트"], "facts": ["g_desc"]},
+  {"id": "B3", "role": "고조", "kind": "tts", "seg": "B",
+   "tts": "진짜 핵심은 이건데, 허리 벨트에 다리 띠만 채우면 끝이라 혼자서도 금방 차요.",
+   "caps": ["진짜 핵심은 이건데", "허리 벨트에", "다리 띠만 채우면 끝이라", "혼자서도 금방 차요"], "emph": ["혼자서도"], "facts": ["g_wear"]},
+  {"id": "B4", "role": "고조", "kind": "tts", "seg": "B",
+   "tts": "심지어 이걸 차고 자전거까지 타고, 오르막에서 영국 챔피언이랑 붙어 봤대요.",
+   "caps": ["심지어", "이걸 차고 자전거까지 타고", "오르막에서", "영국 챔피언이랑 붙어 봤대요"], "emph": ["챔피언"], "facts": ["g_bike", "g_desc"]},
+  {"id": "B5", "role": "cta", "kind": "tts", "seg": "B",
+   "tts": "자전거 친구들 앞에서 차 봤더니, 다들 한 번만 빌려 달라고 난리예요.",
+   "caps": ["자전거 친구들 앞에서", "차 봤더니", "다들 한 번만 빌려 달라고", "난리예요"], "emph": ["난리예요"], "facts": []}
+ ]
+}

@@ -874,10 +874,14 @@ def frame_png(S: dict, st: dict, out: Path) -> Path:
     elif kind == "full":
         _draw_full(im, F.get("full"))
     d = ImageDraw.Draw(im)
+    BD = F.get("band")                 # 맨 위 그림 띠(별헤는쏭 0~235 그림 — 로고 자리) {src, box[x,y,w,h], under(제목 아래에 깔기 — 제목 자리까지 덮는 머리판)}
+    if BD and BD.get("under"):
+        p = Path(BD["src"]) if Path(BD["src"]).is_absolute() else ROOT / BD["src"]
+        bx, by, bw, bh = BD["box"]
+        im.alpha_composite(Image.open(p).convert("RGBA").resize((bw, bh), Image.LANCZOS), (bx, by))
     for spec, segs in zip(F.get("title") or [], title_segs(F, S)):
         _title_line(im, spec, segs)
-    BD = F.get("band")                 # 맨 위 그림 띠(별헤는쏭 0~235 그림 — 로고 자리) {src, box[x,y,w,h]}
-    if BD:
+    if BD and not BD.get("under"):
         p = Path(BD["src"]) if Path(BD["src"]).is_absolute() else ROOT / BD["src"]
         bx, by, bw, bh = BD["box"]
         im.alpha_composite(Image.open(p).convert("RGBA").resize((bw, bh), Image.LANCZOS), (bx, by))

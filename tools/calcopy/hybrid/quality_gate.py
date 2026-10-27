@@ -234,6 +234,27 @@ def face_needed(st: dict) -> bool:
     return bool(st.get("thumb_card_face"))
 
 
+def overlay_mask_boxes(st: dict, win: list) -> list[tuple[int, int, int, int]]:
+    """(판단 주인 — 계획 대조에서 뺄 판 고정 덧그림 자리) 창 좌표 [y0,y1,x0,x1] 목록. base.mp4(render_base)가 그리는 것 중 원본에 없는 것:
+    댓글카드 줄(frame.comment.track='lines' — 상자 x0~x1 · 아래 bottom, 3줄 높이 + 올라오기 dy) · 가사 2줄(frame.lyrics cy ±1줄 높이)."""
+    from tools.calcopy.hybrid.render_bench import comment_track
+    F = st.get("frame") or {}
+    wx, wy = int(win[0]), int(win[1])
+    out = []
+    CT = comment_track(F)
+    if CT:
+        B = CT["box"]
+        top = int(B["bottom"]) - int(B["h1"]) - 2 * int(B.get("line_add", 0)) - 10
+        out.append((top - wy, int(B["bottom"]) + int((CT.get("enter") or {}).get("dy", 0)) + 10 - wy, int(B["x0"]) - 10 - wx, int(B["x1"]) + 10 - wx))
+    LY = F.get("lyrics")
+    if LY:
+        for k in ("jp", "ko"):
+            sp = LY[k]
+            hh = int(sp["px"]) + int(LY["stroke"]["px"]) * 2
+            out.append((int(sp["cy"]) - hh - wy, int(sp["cy"]) + hh - wy, 0, int(win[2])))
+    return out
+
+
 def plan_frames_check(R: Path, T: dict, cand_dir: Path, win: list, mask_of=None, st: dict | None = None, M: dict | None = None) -> list[dict]:
     """(판단 주인 — 완성본 컷 = 계획 프레임, ㉔) 컷마다 처음·가운데·끝 3시각에서 화면 창 ↔ 계획 프레임을 대조.
     계획 프레임 = render_bench.plan_frames_gray — 조각 굽기(clip_cmd)와 같은 인자(clip_args: 칸·판 밀기 cuts.push_tts/push_orig·사진 움직임·흐림·그림 칸)로
@@ -244,6 +265,16 @@ def plan_frames_check(R: Path, T: dict, cand_dir: Path, win: list, mask_of=None,
     video = R / "base.mp4" if (R / "base.mp4").exists() else R / "final.mp4"
     if video.name == "base.mp4":
         mask_of = None
+    fixed = overlay_mask_boxes(st, win) if st else []
+    if fixed:                      # base.mp4 에도 그려지는 판 고정 덧그림(댓글카드 줄·가사 줄)은 뺀다 — 10-27 릴리릴리 현관 캠: 밝은 바탕 위 카드가 전 컷을 0.95 로 끌어내림
+        prev = mask_of
+
+        def mask_of(t, shape, prev=prev):
+            import numpy as np
+            m = prev(t, shape) if prev else np.zeros(shape, bool)
+            for y0, y1, x0, x1 in fixed:
+                m[max(0, y0):max(0, y1), max(0, x0):max(0, x1)] = True
+            return m
     drawn = st is not None and M is not None
     plan = []
     out = []
