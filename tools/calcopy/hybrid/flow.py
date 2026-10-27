@@ -101,6 +101,9 @@ PHASE_STAGE = {   # 세부 단계 → 회원에게 보이는 단계
 #   plan 8 그대로: 장면 맞추기는 9번 반려가 한 번도 통과하지 못했다(마지막 9번 = 장면 경계·컷 길이·남은 글자를 손으로 옮기며 맴돎) — 늘려도 풀린다는 근거 없음.
 #   같은 원인 묶음이 STUCK 번 연속이면 한도 전이라도 멈춘다(REDO_STUCK 아래).
 LIMITS = {"script": 6, "plan": 8, "render": 3, "look": 2, "pick": 2, "review_bad": 2}
+# 대본: 내용 기준은 한 번 고쳐 받으면 통과(사장님 10-27). 꼭 지킬 것만 계속 반려 — 꼴이 틀림·지어낸 사실·출처 규칙·제품 컷·비슷한 제품 밝히기(10-25 규칙)
+SCRIPT_FIX_ONCE = 1
+SCRIPT_MUST = {"form", "claims", "source_rule", "product_cut", "alt_scene", "product:alt_say"}
 # 같은 원인 묶음 연속 몇 번이면 '더 고쳐도 안 풀린다'로 보나 = 3. 근거(같은 로그): 똑같은 묶음 2번 연속은 두 번 다 다음 바퀴에 풀렸다
 #   (대본 {말끝·제목 색} 2연속 → 통과 · 장면 {장면 경계} 2연속 → 다른 원인으로 넘어감). 3번 이상 똑같았던 것은 재료로는 못 고치는 원인뿐이었다
 #   (장면 맞추기에서 '한 줄 말 빠르기 이상' 4연속 — 문장을 바꿔야 풀리는 것 · 배치 충돌 '꾸밈 자리' 3연속). 2로 하면 풀릴 바퀴를 두 번 끊는다.
@@ -378,6 +381,8 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
     """한 번 호출 = 지난 do·review 결과를 먹고 다음 할 일을 낸다. 같은 호출 안에서 바로 이어 갈 수 있는 단계(goto)는 계속 넘어간다."""
     st = state
     m, rp, user = dict(measure or {}), dict(replies or {}), dict(user or {})
+    if m and st.get("watch_last") and any(isinstance(v, dict) and v.get("error") for v in m.values()):
+        (st.get("watch_keys") or {}).pop(st["watch_last"], None)     # 실패한 일을 같은 입력으로 다시 = 다시 시도(반복 감시 대상 아님)
     for _ in range(40):
         ph = st.get("phase") or "setup"
         h = FORMAT_PHASES.get(_fmt(st), {}).get(ph) or PHASES.get(ph)
@@ -387,6 +392,7 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
         try:
             r = h(st, m, rp, user)
         except _Stop as e:
+            st.pop("watch_keys", None)          # 멈춤 뒤 다시 시도 = 같은 일을 일부러 다시 낸다(반복 감시 대상 아님)
             # 뿌리(10-22): 멈춤 34곳 중 5곳만 이어 가기 → 고칠 때마다 원본 찾기부터 20~50분 다시. 이제 정한 retry 가 없으면 **마지막으로 일을 시킨 단계**부터(같은 do·질문을 다시)
             retry = None if e.final else (e.retry or st.get("_asker"))
             if e.detail:
@@ -428,6 +434,7 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
             st["phase"] = r["then"]
             st.pop("watch_cnt", None)          # 회원 Claude 가 한 번 봤다 — 감시는 '질문 없이 연달아 돈 실행기 일'만 센다(10-27 립글로스 03:12~03:54 질문 0개)
             st.pop("watch_lim", None)
+            st.pop("watch_keys", None)
             return _out(st, "reject" if r.get("reject") else "review", r["then"], review=r["review"], reject=r.get("reject"))
         if "wait" in r:
             st["phase"] = r["then"]
@@ -463,8 +470,15 @@ def _watch(st: dict, ph: str, r: dict) -> dict | None:
     cnt = st.setdefault("watch_cnt", {})
     cnt[cmd] = cnt.get(cmd, 0) + 1
     lim = (st.get("watch_lim") or {}).get(cmd, WATCH_N)
-    if cnt[cmd] <= lim:
+    # 같은 입력 두 번째 = 바로(10-27 재생 비교: 횟수 기준·오푸스 3분 읽기보다 빠름 — 립글로스 글자 지우기는 같은 do 를 그대로 다시 냈다)
+    key = hashlib.md5(json.dumps([{k: v for k, v in d.items() if k != "id"} for d in r.get("do") or []], ensure_ascii=False, sort_keys=True, default=str).encode()).hexdigest()
+    keys = st.setdefault("watch_keys", {})
+    again = keys.get(key, 0) >= 1 and key not in (st.get("watch_ok") or [])
+    keys[key] = keys.get(key, 0) + 1
+    st["watch_last"] = key
+    if cnt[cmd] <= lim and not again:
         return None
+    st["watch_key"] = key
     st["watch_do"] = {"do": r["do"], "then": r["then"], "cmd": cmd}
     st["phase"] = "watch_got"
     log = "\n".join(str(x)[:300] for x in (st.get("log") or [])[-25:])
@@ -479,6 +493,8 @@ def f_watch_got(st, m, rp, u):
     if not a.get("go") or not w.get("do"):
         raise _Stop("만드는 중에 같은 작업이 계속 반복됐어요", AGAIN, detail=f"감독 멈춤 {cmd}: {str(a.get('why') or '')[:300]}", ask_member=True)
     st.setdefault("watch_lim", {})[cmd] = st["watch_cnt"][cmd] + WATCH_N      # 다음 물음은 WATCH_N 번 더 돈 뒤
+    if st.get("watch_key"):
+        st.setdefault("watch_ok", []).append(st.pop("watch_key"))               # 감독이 '정상'이라 한 같은 입력은 다시 묻지 않는다
     return {"do": w["do"], "then": w["then"]}
 
 
@@ -1842,6 +1858,12 @@ def ph_script_got(st, m, rp, u):
             S["source_label"] = f"출처: {ch}"
         M = _prep_material(st, S, M)
         a = audit_script(st, S, M)
+    if not a.get("ok") and st["tries"].get("script", 0) >= SCRIPT_FIX_ONCE and not (set(_script_causes(a)) & SCRIPT_MUST):
+        # 사장님 10-27 "나머지 반려는 하지 말고 오푸스가 한 번에 수정을 끝내고 통과" — 형식은 코드가 이미 고쳤고(text_fix·title·caps),
+        #   남은 내용 기준(포인트·문장 결·줄 수·어림 길이)은 한 번 고쳐 받은 뒤엔 기록만 하고 넘어간다(길이는 장면 맞추기가 진짜 목소리로 다시 잰다)
+        st["log"].append("대본 내용 기준 미달 — 한 번 고친 뒤라 통과(기록): " + ", ".join(_script_causes(a)))
+        st.setdefault("warn", []).append({"stage": "script", "causes": _script_causes(a)})
+        a = {**a, "ok": True}
     if not a.get("ok"):
         cs = _script_causes(a)
         _tries(st, "script", LIMITS["script"], cs or ["form"])
@@ -1940,6 +1962,9 @@ def ph_plan_got(st, m, rp, u):
     if p.get("error"):                            # 계획 자체가 못 돌았다(실행기 오류·돈 0 모드 TTS 캐시 없음) — 빈 시트로 검수를 묻지 않는다(조용한 통과 금지)
         st["log"].append("계획 실패: " + str(p["error"])[:300])
         raise _Stop("장면 계획을 만들지 못했어요", "다시 시도해 주시면 계획부터 이어 갈게요", retry="plan", auto=True, detail=str(p["error"])[:300])
+    if str(p.get("over") or "").startswith("명령 실패"):   # 엔진 명령(ffprobe 등)이 죽은 것 = 재료 문제가 아니다 — Claude 에게 고치라고 넘기지 않는다(10-27 TV 편 2번)
+        st["log"].append("계획 명령 실패: " + str(p["over"])[:300])
+        raise _Stop("장면 계획 중 프로그램 명령이 실패했어요", "다시 시도해 주시면 계획부터 이어 갈게요", retry="plan", auto=True, detail=str(p["over"])[:300])
     if p.get("conflict"):                         # 배치 충돌 = 대본이 1차 audit 밖이라 생긴 증상(표준 §11-5 ㉛) → 대본 단계로
         return _conflict_rewrite(st, p["conflict"])
     ln = p.get("length") or {}
@@ -1954,9 +1979,35 @@ def ph_plan_got(st, m, rp, u):
     if over and _auto_blur(st, "; ".join(over)) and all("흐림 밖 남의 박힌 글자" in x for x in "; ".join(over).split(" / ") if x.strip()):
         v = st["version"]           # 걸린 것이 남은 글자뿐이면 흐림 칸만 넣고 계획을 다시(Claude 고치기 없이)
         return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": st["script"]["M"]}, "cand_dir": True, "version": v}], "then": "plan"}
+    if over and p.get("sig") and p["sig"] == st.get("_plan_sig"):     # 고친 답 뒤 계획이 컷 하나도 안 바뀌었다 — 같은 반려를 또 받는다(10-27 재생: b·c 계획 같은 판 4~5번)
+        over.insert(0, PLAN_SAME)
+    st["_plan_sig"] = p.get("sig")
+    over = _mark_new(st, over)
     st["_plan_over"] = over
     st["_plan_sheet"], st["_n_cuts"] = p.get("sheet"), p.get("cuts")
+    if not over and st.get("_plan_fixed"):
+        # 사장님 10-27 "오푸스가 한 번에 수정을 끝내고 통과" — 장면을 본 Claude 가 이미 한 번 고쳐 냈고 엔진 검사도 깨끗하면 다시 묻지 않는다
+        st["log"].append("장면 맞추기: Claude 가 고친 재료가 엔진 검사를 통과 — 다시 검수하지 않고 넘어감")
+        st.pop("_plan_fixed", None)
+        _redo_done(st)
+        return {"goto": "thumb"}
     return {"review": [_fix_review(st, "; ".join(over), p.get("sheet"), f"plan_{st['version']}")], "then": "plan_look"}
+
+
+FIX_NEW = "★지난 고치기에서 새로 생김: "
+PLAN_SAME = "★지난 고치기 뒤 계획이 컷 하나도 바뀌지 않았다 — 같은 재료 답을 다시 주지 말고, 걸린 줄의 컷(src·ss·순서)을 실제로 바꿔라"
+FIX_ALL = ("\n\n★한 번에 다 고쳐라 — 위 문제를 전부 고치되, 고친 컷이 새 문제를 만들지 않게 아래를 모두 지켜라"
+           "(10-27 완주시험: 같은 장면 재사용을 고치다 A-B-A 끼움을 새로 만들어 렌더를 다시 했다): "
+           "같은 원본 컷 사이 거리 3초 이상 · 원본 순서 X→Y→X 금지 · 컷 길이가 그 샷 끝을 넘지 않게 · 대사와 장면이 맞게.")
+
+
+def _mark_new(st: dict, over: list) -> list:
+    """(판단 주인 — 고치기가 새로 만든 문제 표시) 바로 앞 계획 문제 목록에 없던 꼴(숫자 초 빼고)에 FIX_NEW 를 붙인다. 문제가 있으면 FIX_ALL(지켜야 할 것 전부)을 끝에."""
+    norm = lambda x: re.sub(r"\d+(\.\d+)?", "#", str(x))    # noqa: E731
+    prev = {norm(x) for x in st.get("_plan_over_prev") or []}
+    out = [(FIX_NEW + x) if prev and norm(x) not in prev and x != PLAN_SAME else x for x in over]
+    st["_plan_over_prev"] = list(over)
+    return out + ([FIX_ALL] if out else [])
 
 
 def _fix_review(st, why: str, sheet: str | None, rid: str) -> dict:
@@ -1995,6 +2046,8 @@ def ph_plan_look(st, m, rp, u):
         return {"goto": "thumb"}
     _tries(st, "plan", LIMITS["plan"], _plan_causes(over or [p for p in r.get("problems") or [] if str(p).strip()]))
     M = _take_fix(st, r)
+    if M is not None:
+        st["_plan_fixed"] = True      # 다음 계획이 엔진 검사를 통과하면 다시 묻지 않는다(ph_plan_got)
     if M is None:
         probs = [str(p) for p in (r.get("problems") or []) if str(p).strip()]
         voice = [str(o) for o in over if "말속도" in str(o) or "목소리" in str(o) or "TTS" in str(o)]

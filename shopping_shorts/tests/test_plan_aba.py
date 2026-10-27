@@ -20,3 +20,30 @@ def test_plan_returns_aba_as_jump(tmp_path, monkeypatch):
     monkeypatch.setattr(R, "_origin_names", lambda W, v: set())
     out = R.c_plan(tmp_path, {"version": "v"})
     assert any("A-B-A" in j and "A→B→A" in j for j in out["jumps"]), out
+
+
+def test_plan_marks_problem_made_by_last_fix():
+    """고치기가 새로 만든 문제는 표시하고, 지켜야 할 것 전부를 같이 준다(사장님 10-27 '고쳤는데 또 반려할 걸 만든다')."""
+    from tools.calcopy.hybrid import flow as F
+    st = {}
+    a = F._mark_new(st, ["같은 장면 재사용 L9 X@87.60"])
+    assert a[0] == "같은 장면 재사용 L9 X@87.60" and a[-1] == F.FIX_ALL
+    b = F._mark_new(st, ["A-B-A 끼움 X→Y→X (3)"])
+    assert b[0].startswith(F.FIX_NEW)
+    assert F._mark_new(st, []) == []
+
+
+def test_plan_same_after_fix_is_flagged(monkeypatch):
+    """고친 답 뒤 계획 지문이 그대로면 맨 앞에 '안 바뀌었다'(10-27 재생: b·c 같은 계획 4~5번)."""
+    from tools.calcopy.hybrid import flow as F
+    st = {"version": "잇템로그판_v2", "script": {"M": {}, "S": {"lines": []}}, "tries": {}, "log": []}
+    monkeypatch.setattr(F.RU, "material_problems", lambda *a, **k: [])
+    monkeypatch.setattr(F.RU, "source_rule_static", lambda *a, **k: [])
+    monkeypatch.setattr(F, "_origin_names", lambda st: set())
+    monkeypatch.setattr(F, "_all_dims", lambda st: {})
+    monkeypatch.setattr(F, "_ar", lambda v: (9, 16))
+    monkeypatch.setattr(F, "_fix_review", lambda st, why, sheet, rid: {"id": rid, "why": why})
+    p = {"plan": {"over": "컷 넘침", "sig": "S1", "sheet": None}}
+    r1 = F.ph_plan_got(st, p, {}, {})
+    r2 = F.ph_plan_got(st, p, {}, {})
+    assert F.PLAN_SAME not in r1["review"][0]["why"] and r2["review"][0]["why"].startswith(F.PLAN_SAME)

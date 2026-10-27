@@ -130,8 +130,9 @@ def _ask(prompt: str, tries: int = 2) -> dict:
 
 
 def _ask1(prompt: str) -> dict:
-    r = subprocess.run([CLAUDE, "-p", "--model", "opus", "--output-format", "json"], input=prompt, capture_output=True,
-                       text=True, encoding="utf-8", timeout=300)
+    import tempfile        # 프로젝트 폴더에서 부르면 프로젝트 규칙·종료 훅이 실려 판정 대신 '대시보드 기록'을 한다(10-27 실측 57/92) — 빈 폴더·훅 끔
+    r = subprocess.run([CLAUDE, "-p", "--model", "opus", "--output-format", "json", "--settings", '{"disableAllHooks": true}'], input=prompt,
+                       capture_output=True, text=True, encoding="utf-8", timeout=300, cwd=tempfile.gettempdir())
     try:
         txt = json.loads(r.stdout).get("result") or ""
         return json.loads(re.search(r"\{.*\}", txt, re.S).group(0))

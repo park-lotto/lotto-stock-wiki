@@ -10,6 +10,7 @@
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -1402,7 +1403,8 @@ def c_plan(W, d):
     except StageError as e:          # 컷이 원본 샷보다 길다 → 재료를 고치게 한다
         res, over = {"timeline": {"cuts": []}}, str(e)
     T = res.get("timeline") or {}
-    out = {"over": over, "cuts": len(T.get("cuts") or []), "length": res.get("length")}
+    out = {"over": over, "cuts": len(T.get("cuts") or []), "length": res.get("length"),
+           "sig": hashlib.md5(json.dumps([[c.get("src"), round(float(c.get("ss") or 0), 2), round(float(c.get("t0") or 0), 2)] for c in T.get("cuts") or []]).encode()).hexdigest()}   # 계획 지문 — 고친 뒤 그대로인지(flow ph_plan_got)
     if res.get("gates"):           # 관문별 걸린 수(기록용 — 질문 글은 over 하나에 전부, render_bench.timeline_gates)
         out["gates"] = {g: len(b) for g, b in res["gates"] if b}
     cf = _conflict_of(res)

@@ -23,7 +23,7 @@ def _run(monkeypatch, go):
         outs.append(r)
         if r["status"] == "review":
             break
-    assert [o["status"] for o in outs] == ["execute"] * F.WATCH_N + ["review"]
+    assert [o["status"] for o in outs] == ["execute", "review"]                 # 같은 입력 두 번째에 바로
     assert outs[-1]["review"][0]["id"] == "watch" and "박힌 글자 없음" in outs[-1]["review"][0]["ask"]
     return st, F.step(st, replies={"watch": {"go": go, "why": "같은 결과 반복"}})
 
@@ -37,8 +37,8 @@ def test_watch_continue_then_asks_again_later(monkeypatch):
     st, r = _run(monkeypatch, True)
     assert r["status"] == "execute" and r["do"][0]["cmd"] == "clean_text"
     for _ in range(F.WATCH_N - 1):
-        assert F.step(st, measure={"c": {}})["status"] == "execute"
-    assert F.step(st, measure={"c": {}})["status"] == "review"           # WATCH_N 번 더 돈 뒤 다시 묻는다
+        assert F.step(st, measure={"c": {}})["status"] == "execute"         # 감독이 정상이라 한 같은 입력은 다시 안 묻는다
+    assert F.step(st, measure={"c": {}})["status"] == "review"           # 그래도 WATCH_N 번 더 돌면 다시 묻는다
 
 
 def test_review_between_resets_count(monkeypatch):
@@ -55,3 +55,15 @@ def test_review_between_resets_count(monkeypatch):
     seen = [F.step(st, measure={"c": {}}, replies={"x": {}})["status"] for _ in range(F.WATCH_N * 4)]
     assert "review" in seen and all(x in ("review", "execute") for x in seen)
     assert not any(r for r in [st.get("watch_do")])
+
+
+def test_same_input_second_time_asks_at_once(monkeypatch):
+    """같은 do(입력)를 질문 없이 두 번째 내려 하면 바로 감독에게 묻는다(횟수 6번을 기다리지 않는다 — 10-27 재생 비교)."""
+    monkeypatch.setitem(F.PHASES, "loopx", _loop_phase)
+    st = {"sid": "s", "phase": "loopx", "fmt": "해외원본형", "tries": {}, "log": [], "version": "잇템로그판_v2"}
+    assert F.step(st, measure={"c": {}})["status"] == "execute"
+    r = F.step(st, measure={"c": {}})
+    assert r["status"] == "review" and r["review"][0]["id"] == "watch"
+    r = F.step(st, replies={"watch": {"go": True, "why": "정상"}})
+    assert r["status"] == "execute"
+    assert F.step(st, measure={"c": {}})["status"] == "execute"            # 감독이 정상이라 한 같은 입력은 다시 안 묻는다
