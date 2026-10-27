@@ -3001,24 +3001,26 @@ def audio(S: dict, M: dict, st: dict, T: dict, sent: list[dict], placed: dict, R
         nduck = "+".join(f"between(t,{a:.3f},{b:.3f})" for a, b in narr_spans) or "0"
         vol = f"if({duck},{k:.4f},if({nduck},{10 ** (dn / 20):.4f},1))"
     ss = float((S.get("bgm") or {}).get("ss", 0.0))      # 곡 몇 초부터 쓰나(편마다 — 보컬 드롭 자리를 맞춘다, 가사 시각 lyric_plan 과 같은 값)
-    bed_chain = (f"aresample={SR},aformat=channel_layouts=mono,atrim={ss:.3f}:{ss + end:.3f},asetpts=PTS-STARTPTS,volume={g}dB,"
+    lay = "stereo" if B.get("stereo") else "mono"     # 판 bgm.stereo — 노래가 주인공인 판(자막노래형)은 곡을 스테레오 그대로(10-27 사장님 '노래 음질 깨짐': 모노로 합쳐 뭉개졌다)
+    bed_chain = (f"aresample={SR},aformat=channel_layouts={lay},atrim={ss:.3f}:{ss + end:.3f},asetpts=PTS-STARTPTS,volume={g}dB,"
                  f"volume='{vol}':eval=frame,afade=t=out:st={end - B.get('fade_out', 0.4):.3f}:d={B.get('fade_out', 0.4)}")
     bed = R / "bgm_bed.wav"       # BGM 만(나레·원음·효과음 없이) — 덕킹 실측·품질 관문이 읽는다
-    run(["ffmpeg", "-y", "-v", "error", "-stream_loop", "-1", "-i", bgm, "-filter_complex", f"[0:a]{bed_chain}[b]", "-map", "[b]", "-ar", SR, bed])
+    F32 = ["-c:a", "pcm_f32le"]      # 소수 wav — 곡을 올릴 때 16비트에서 0dB 넘는 곳이 잘리지 않게(10-27 bgm_bed 잘림 45곳). 최고점은 loud() 가 리미터로 누른다
+    run(["ffmpeg", "-y", "-v", "error", "-stream_loop", "-1", "-i", bgm, "-filter_complex", f"[0:a]{bed_chain}[b]", "-map", "[b]", "-ar", SR, *F32, bed])
     ins2 = ["-i", voice, "-stream_loop", "-1", "-i", bgm]
-    fc2 = [f"[1:a]{bed_chain}[b]"]
-    mix_in = "[0:a][b]"
+    fc2 = [f"[1:a]{bed_chain}[b]", f"[0:a]aformat=channel_layouts={lay}[v0]"]
+    mix_in = "[v0][b]"
     SF = st.get("sfx_files") or {}
     check_sfx(st, placed)
     for j, e in enumerate(placed.get("sfx") or []):
         f = SFX_DIR / SF[e["kind"]]
         ins2 += ["-i", f]
-        fc2.append(f"[{j + 2}:a]aresample={SR},aformat=channel_layouts=mono,volume={SF.get('gain_db', -8)}dB,adelay={int(round(e['t'] * 1000))}[s{j}]")
+        fc2.append(f"[{j + 2}:a]aresample={SR},aformat=channel_layouts={lay},volume={SF.get('gain_db', -8)}dB,adelay={int(round(e['t'] * 1000))}[s{j}]")
         mix_in += f"[s{j}]"
     n_in = 2 + len(placed.get("sfx") or [])
     fc2.append(f"{mix_in}amix=inputs={n_in}:normalize=0:duration=first[o]")
     raw = R / "mix_raw.wav"
-    run(["ffmpeg", "-y", "-v", "error", *ins2, "-filter_complex", ";".join(fc2), "-map", "[o]", "-ar", SR, raw])
+    run(["ffmpeg", "-y", "-v", "error", *ins2, "-filter_complex", ";".join(fc2), "-map", "[o]", "-ar", SR, *F32, raw])
     mix = R / "mix.wav"
     loud(raw, mix, st["loudness"])
     return mix, {"narr_lufs": nI, "orig_lufs": oI, "orig_gain": og, "bgm_gain": g, "bgm_ref": "narr" if not math.isnan(nI) else ("orig" if not math.isnan(oI) else "target"), "mix": lufs(mix),
