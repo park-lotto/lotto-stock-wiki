@@ -51,7 +51,7 @@ def dur_of(p) -> float:
 
 def probe(p) -> tuple[int, int, float]:
     j = json.loads(run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height:format=duration", "-of", "json", p]).stdout)
-    return j["streams"][0]["width"], j["streams"][0]["height"], float(j["format"]["duration"])
+    return j["streams"][0]["width"], j["streams"][0]["height"], float((j.get("format") or {}).get("duration") or 0)   # 사진(jpg)은 길이 칸이 없을 수 있다(10-27 run4 a편 쿠팡 사진 2장 KeyError → 제품 사진 0장)
 
 
 def lufs(p, extra=None) -> tuple[float, float]:
