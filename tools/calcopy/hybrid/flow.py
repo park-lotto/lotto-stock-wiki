@@ -1744,7 +1744,9 @@ def _src_rule_ctx(st) -> str:
     pics = [n for n in names if Path(n).suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")]
     rule = ""
     if R.get("v") is not None and float(R["v"]) <= 0.0:
-        rule = "\n★이 판은 사진(그림 파일) 컷을 쓰지 않는다(판 photo_share_max 0 — 벤치 6편 사진 컷 0). 컷 src 는 영상 파일만."
+        # 사진을 못 쓰는 판이면 '쓸 수 있는 파일' 목록에서도 뺀다(10-27 메이블린·쉐딩: 목록에 prod_*.jpg 를 주고 '쓰지 마라'를 같이 줘 사진 컷·A-B-A 반려)
+        names, pics = [n for n in names if n not in pics], []
+        rule = "\n★이 판은 사진(그림 파일) 컷을 쓰지 않는다(판 photo_share_max 0 — 벤치 6편 사진 컷 0). 컷 src 는 위 영상 파일만."
     elif R.get("v") is not None:
         rule = f"\n사진 컷은 전체 길이의 {float(R['v']):.0%} 까지(판 photo_share_max)."
     return ("\n\n## 컷 src 로 쓸 수 있는 파일(이 이름 그대로 — 목록 밖 이름을 만들지 마라)\n" + ", ".join(names) +
@@ -1831,6 +1833,9 @@ def _script_ask(st, fail: str = "") -> dict:
                 "원음 번역 자막은 사전식 직역 말고 이 시트처럼 찰지게(반말·인터넷체 '~함·~임·~셈·어디 감?', 'ㅋㅋ', '!!' — 비속어 자리는 '새@꺄'처럼 가림), "
                 "감탄 소리 자막('오우 노!!!·호우~!!·하이야~·으으음~~')도 원본 소리 자리에 넣고, 나레는 짧은 구어('일단 조리에 들어가는데'·'광클하는데'). 뜻·사실은 바꾸지 않는다.")
         imgs.append(_img(ms["bench_caps"]))
+    if PR.get("mode") == "alt" and not PR.get("given"):      # 비슷한 제품 밝히기 = 대본 검사(script_audit.alt_disclosed)가 거는 것 — 처음부터(10-27 메이블린·TV 반려)
+        from tools.calcopy.hybrid import script_audit
+        ctx += "\n\n## 비슷한 제품(반드시)\n" + script_audit.ALT_SAY_RULE
     return _rv(f"script_{v}", _q(st, "SCRIPT") + "\n\n" + ctx, imgs, need=("대본", "재료"))
 
 

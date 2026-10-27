@@ -67,3 +67,20 @@ def test_runner_skips_face_scan_when_told(monkeypatch, tmp_path):
     T = {"cuts": [{"src": "m.jpg", "ss": 0, "dur": 1.0, "line": "L0"}]}
     assert R.source_rule_scan(tmp_path, T, set(), faces=True)
     assert R.source_rule_scan(tmp_path, T, set(), faces=False) == []
+
+
+def test_photo_files_hidden_when_version_bans_photos(monkeypatch):
+    """10-27 메이블린·쉐딩: 사진 0% 판인데 '쓸 수 있는 파일'에 prod_*.jpg 를 줘 사진 컷·A-B-A 반려."""
+    monkeypatch.setattr(F, "_all_dims", lambda st: {"a.mp4": [1080, 1920], "prod_1_0.jpg": [600, 600]})
+    ctx = F._src_rule_ctx({"version": "잇템로그판_v2"})
+    assert "a.mp4" in ctx and "prod_1_0.jpg" not in ctx
+
+
+def test_alt_product_rule_in_first_ask():
+    """10-27 메이블린·TV: 비슷한 제품이면 밝히는 줄(script_audit.alt_disclosed)이 처음 질문에 없어 대본 반려."""
+    from tools.calcopy.hybrid import script_audit as SA
+    st = {"version": "두유노판", "fmt": "쇼핑형", "research_md": "", "log": [], "_msheets": {"list": [], "sheets": [], "shots": {}},
+          "product": {"mode": "alt", "name": "x"}}
+    assert SA.ALT_SAY_RULE in F._script_ask(st)["ask"]
+    st["product"] = {"mode": "exact", "name": "x"}
+    assert SA.ALT_SAY_RULE not in F._script_ask(st)["ask"]
