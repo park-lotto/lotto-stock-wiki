@@ -1722,6 +1722,23 @@ def _all_dims(st) -> dict:
     return {**{x["name"]: [int(x.get("w") or 0), int(x.get("h") or 0)] for x in (st.get("material") or {}).get("files") or [] if x.get("w")}, **_origin_dims(st)}
 
 
+PHOTO_EXT = (".jpg", ".jpeg", ".png", ".webp")
+
+
+def _photo_ok(st) -> bool:
+    """(판단 주인 — 이 판에서 상품 사진 컷을 쓰나) 판 rhythm.photo_share_max 가 0 이면 아니오. 아니오면 질문지 어디에도 사진을 내놓지 않는다
+    (10-27 2회차: '쓸 수 있는 파일'에서만 빼고 재료 목록·크기 표·시트 그림·기본 글 'prod_*.jpg' 에 남아 해외원본형 5편 중 4편 사진 컷 반려)."""
+    from tools.calcopy.hybrid import styles as STY
+    R = (STY.rhythm(_style(st["version"])) or {}).get("photo_share_max") or {}
+    return not (R.get("v") is not None and float(R["v"]) <= 0.0)
+
+
+def _offer_dims(st) -> dict:
+    """질문지에 싣는 파일·크기 — 사진을 못 쓰는 판이면 사진을 뺀다(_all_dims 는 검사용 그대로)."""
+    d = _all_dims(st)
+    return d if _photo_ok(st) else {k: v for k, v in d.items() if not k.lower().endswith(PHOTO_EXT)}
+
+
 def _shots_ctx(st) -> str:
     out = [f"### {stem} (파일 {stem}.mp4)\n" + RU.shot_text(shots) for stem, shots in (st.get("shots") or {}).items()]
     return ("\n\n## 원본 샷 표(카메라가 바뀌는 곳마다 — 주인공 컷은 who main·both 샷 안에서 ss 를 고르고, 컷 길이가 그 샷 끝을 넘지 않게)\n" + "\n".join(out)) if out else ""
@@ -1731,6 +1748,8 @@ def ph_script(st, m, rp, u):
     mats = ["src/" + x["name"] for x in (st.get("material") or {}).get("files") or []]
     origs = ["src/" + x["name"] for x in (st.get("origin") or {}).get("files") or []]
     files = (origs + mats) if _fmt(st) in FOREIGN_FMTS else (mats + origs)     # 해외원본형은 원본이 주재료 — 원본 시트가 앞
+    if not _photo_ok(st):                     # 사진 못 쓰는 판 — 시트 그림·재료 목록에도 사진을 내놓지 않는다
+        files = [f for f in files if not f.lower().endswith(PHOTO_EXT)]
     return {"do": [{"id": "msheets", "cmd": "mat_sheets", "files": files[:5]}], "then": "script_ask"}
 
 
@@ -1739,13 +1758,11 @@ def _src_rule_ctx(st) -> str:
     회원 Claude 가 없는 prod_1.jpg 를 지어 쓰고, 잇템로그판 photo_share_max 0 인데 사진 컷을 넣어 장면 맞추기에서 반려). 판정 주인은 그대로
     (rules.material_problems '받은 파일이 아니다' · render_bench.photo_gate) — 여기는 걸릴 것을 처음부터 안 쓰게 알려 주기만."""
     from tools.calcopy.hybrid import styles as STY
-    names = sorted(_all_dims(st))
+    names = sorted(_offer_dims(st))            # 사진 못 쓰는 판이면 사진이 빠진 목록(_photo_ok 한 곳)
     R = (STY.rhythm(_style(st["version"])) or {}).get("photo_share_max") or {}
-    pics = [n for n in names if Path(n).suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")]
+    pics = [n for n in names if n.lower().endswith(PHOTO_EXT)]
     rule = ""
-    if R.get("v") is not None and float(R["v"]) <= 0.0:
-        # 사진을 못 쓰는 판이면 '쓸 수 있는 파일' 목록에서도 뺀다(10-27 메이블린·쉐딩: 목록에 prod_*.jpg 를 주고 '쓰지 마라'를 같이 줘 사진 컷·A-B-A 반려)
-        names, pics = [n for n in names if n not in pics], []
+    if not _photo_ok(st):
         rule = "\n★이 판은 사진(그림 파일) 컷을 쓰지 않는다(판 photo_share_max 0 — 벤치 6편 사진 컷 0). 컷 src 는 위 영상 파일만."
     elif R.get("v") is not None:
         rule = f"\n사진 컷은 전체 길이의 {float(R['v']):.0%} 까지(판 photo_share_max)."
@@ -1824,7 +1841,7 @@ def _script_ask(st, fail: str = "") -> dict:
            (json.dumps(st.get("reviews") or [], ensure_ascii=False)[:4000] if st.get("reviews") else "(못 받음 — 후기 전언 줄을 쓰지 않는다)") +
            "\n\n## 원음 받아쓰기(구간마다 — 모델 둘이면 둘 다)\n" + json.dumps(st.get("asr") or {}, ensure_ascii=False)[:6000] +
            "\n\n## 재료 파일(시트 순서 = 앞 5개)\n" + json.dumps(ms.get("list") or [], ensure_ascii=False) +
-           "\n실제 크기(crop 은 이 픽셀로 — 시트는 줄인 미리보기다): " + json.dumps(_all_dims(st), ensure_ascii=False) + _shots_ctx(st) +
+           "\n실제 크기(crop 은 이 픽셀로 — 시트는 줄인 미리보기다): " + json.dumps(_offer_dims(st), ensure_ascii=False) + _shots_ctx(st) +
            _foreign_script_ctx(st) + _src_rule_ctx(st) + _cut_rules_ctx(st, ms.get("shots")) + _points_ctx(v) +
            (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
     imgs = [_img(x) for x in ms.get("sheets") or []]
@@ -1873,7 +1890,8 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
              "source_rule": RU.source_rule_static(M, _origin_names(st), _rule_bench_id(st), st.get("shots") or {})}
     on = _origin_names(st)
     if _fmt(st) not in FOREIGN_FMTS and not any(str(c.get("src") or "") not in on for cs in (M.get("cuts") or {}).values() for c in (cs if isinstance(cs, list) else [cs])):
-        extra["product_cut"] = ["제품 컷이 하나도 없다 — '써 봤다'·제품 설명 줄은 재료 파일(제품 영상 또는 prod_*.jpg 사진, 사진은 move: in·out·left·right)로. "
+        extra["product_cut"] = ["제품 컷이 하나도 없다 — '써 봤다'·제품 설명 줄은 재료 파일(" +
+                                ("제품 영상 또는 prod_*.jpg 사진, 사진은 move: in·out·left·right" if _photo_ok(st) else "제품 영상 — 이 판은 사진 컷 금지") + ")로. "
                                 "원본 방송 화면만으로 우리 제품 이야기를 하지 않는다(98 #22)"]
     bad = {k: x for k, x in extra.items() if x}
     return {**a, **bad, "ok": bool(a.get("ok")) and not bad}
@@ -1917,10 +1935,11 @@ def ph_script_got(st, m, rp, u):
             S["source_label"] = ch if _fmt(st) == "자막노래형" else f"출처: {ch}"      # 자막노래형 = 창 안 '📍<계정>'(판 credit.in_window)
         if _fmt(st) == "자막노래형":
             _subsong_bgm(st, S)
-        if (st.get("product") or {}).get("mode") == "alt" and _prod_files(st):
-            afix = RU.alt_scene_fix(S, M, _origin_names(st), [f["name"] for f in _prod_files(st)])
+        pool = _alt_fill_pool(st) if (st.get("product") or {}).get("mode") == "alt" else []
+        if pool:
+            afix = RU.alt_scene_fix(S, M, _origin_names(st), pool)
             if afix:
-                st["log"].append("비슷한 제품 줄 장면을 제품 사진으로 바로 바꿈: " + "; ".join(afix)[:300])
+                st["log"].append("비슷한 제품 줄 장면을 제품 화면으로 바로 바꿈: " + "; ".join(afix)[:300])
         M = _prep_material(st, S, M)
         a = audit_script(st, S, M)
     if not a.get("ok") and st["tries"].get("script", 0) >= SCRIPT_FIX_ONCE and not (set(_script_causes(a)) & SCRIPT_MUST):
@@ -2538,7 +2557,7 @@ other_product = 그 제품이 아닌 다른 제품이 주로 보이면 true, cx 
 JSON 하나: {{"shots": [{{"i": 번호, "who": "main", "product": false, "other_product": false, "text": [[0.1, 0.85, 0.9, 0.95]], "cx": 0.5, "desc": "…"}}]}}"""
 
 SCRIPT_FOREIGN = """너는 대본 작가다(오푸스). 해외원본형 — 해외 원본 영상(2~3개)을 재료로 판 규칙·결 기준 그대로 이 편의 대본·재료·근거를 써라. 대본 검사를 통과해야 한다 — 걸린 이유가 아래에 있으면 고쳐서 다시.
-재료의 cand_dir 는 비워 둔다(PC 가 채운다), 컷 src 는 받은 파일 이름(원본 = '<영상 id>.mp4', 상품 사진 = prod_*.jpg).
+재료의 cand_dir 는 비워 둔다(PC 가 채운다), 컷 src 는 아래 '컷 src 로 쓸 수 있는 파일'의 이름만(원본 = '<영상 id>.mp4' · 상품 사진 prod_*.jpg 는 그 목록에 있을 때만).
 ★확대는 1.0 — 세로 원본은 폭 전체(crop [0, y, 원본 폭, 원본 폭 ÷ 창 비율]), 박힌 글자는 엔진이 지우거나 흐린다(crop 으로 피하지 않는다).
 ★CTA·금액·질병·효능 단정 없음. 창작 허용 = 나레의 계기·감상·전언 말투 / 근거 필수 = 제품 속성·원리·반응 내용(줄마다 근거).
 
@@ -2571,7 +2590,7 @@ JSON 하나: {"stop": "", "조사_md": "마크다운 전문", "keywords": ["제�
 
 SCRIPT_SHOP = """너는 대본 작가다(오푸스). 쇼핑형 — 판 규칙·결 기준 그대로 이 편의 대본·재료·근거를 써라(원음 줄 없음 — kind tts, 판이 자막 줄(sub)을 쓰면 그대로). 대본 검사를 통과해야 한다.
 근거 = 쿠팡 베스트 후기(r번호 — 셀링포인트·소구점 전언)·네이버 글(n번호)·조사 사실(f번호). 후기 개수·별점 숫자는 쓰지 않는다. CTA·금액·질병·효능 단정 없음.
-재료의 cand_dir 는 비워 둔다, 컷 src 는 받은 재료 파일 이름(제품 영상·prod_*.jpg 사진 — 사진은 move: in·out·left·right). 컷마다 see — 그 줄 대사의 동작·상태가 그 컷에 보여야 한다."""
+재료의 cand_dir 는 비워 둔다, 컷 src 는 아래 '컷 src 로 쓸 수 있는 파일'의 이름만(제품 영상 · prod_*.jpg 사진은 그 목록에 있을 때만 — 사진은 move: in·out·left·right). 컷마다 see — 그 줄 대사의 동작·상태가 그 컷에 보여야 한다."""
 
 PLAN_LOOK_SHOP = """너는 장면 검수 담당이다(쇼핑형). 계획 시트를 보고 컷마다: 대사와 화면이 맞나 · 남의 글자·워터마크 · 사람만 나오고 제품·대사 동작이 안 보이는 컷(사람이 제품을 쓰는 장면은 괜찮다 — 10-27 사장님) · A-B-A 끼움.
 crop 은 원본 픽셀 정수[x, y, w, h] — 숫자 crop 은 엔진이 바꾸지 않는다. 박힌 글자는 재료.blur {파일: [[x, y, w, h, 시작초, 끝초]]}로 흐린다. 고칠 것이 있으면 재료 전체를 고쳐서 돌려준다(없으면 null).
@@ -3216,26 +3235,105 @@ def f_research_check(st, m, rp, u):
     return {"do": [{"id": "save_research", "cmd": "write_doc", "files": {"조사/조사.md": md}}], "then": "f_material"}
 
 
+def _alt_material_needed(st) -> bool:
+    """(판단 주인 — 해외원본형에 제품 영상을 받아 오나) 비슷한 제품(mode alt)이면 예. 원본 말 뒤 제품 줄은 원본 장면 금지(rules.alt_scene_problems)·
+    사진 금지(판 photo_share_max 0)라 쓸 화면이 없었다(10-27 3회차: 비슷한 제품 편 3편 사진 컷 반려) — 사장님 10-27 '제품 영상 받아 오기'."""
+    return _fmt(st) == "해외원본형" and (st.get("product") or {}).get("mode") == "alt"
+
+
+def _alt_fill_pool(st) -> list:
+    """비슷한 제품 줄의 원본 장면을 바꿀 화면 — 사진을 쓰는 판이면 상품 사진, 못 쓰는 판(_photo_ok)이면 받아 온 제품 영상의 긴 샷 구간 시작
+    (10-27 4회차 아크네스: alt_scene_fix 가 사진 0% 판에서 원본 장면을 상품 사진으로 바꿔 사진 컷 반려 — 두 규칙이 다른 답)."""
+    if _photo_ok(st):
+        return [f["name"] for f in _prod_files(st)]
+    on = _origin_names(st)
+    shots = (st.get("_msheets") or {}).get("shots") or {}
+    out = []
+    for f in (st.get("material") or {}).get("files") or []:
+        n = str(f.get("name") or "")
+        if not n or n in on or n.lower().endswith(PHOTO_EXT):
+            continue
+        sp = sorted((s for s in shots.get(n) or [] if s[1] - s[0] >= 1.0), key=lambda s: s[0] - s[1])[:4]   # 긴 구간 먼저(샷 경계·디졸브 뺀 표)
+        out += [{"src": n, "ss": round(float(a) + 0.2, 2)} for a, b in sp] or [{"src": n}]
+    return out
+
+
+def _alt_queries(st) -> list:
+    """비슷한 제품 영상 검색어 — 쿠팡 제품 이름(앞 낱말)·조사 키워드 + 리뷰/사용."""
+    P = st.get("product") or {}
+    name = " ".join(str(P.get("name") or "").split()[:3])
+    kws = [k for k in (st.get("research") or {}).get("keywords") or [] if k][:2]
+    qs = [f"{name} 리뷰", f"{name} 사용"] + [f"{k} review" for k in kws]
+    return [q for q in dict.fromkeys(q.strip() for q in qs) if q and q not in ("리뷰", "사용")][:5]
+
+
 def f_material(st, m, rp, u):
-    """원본 샷 표(카메라 바뀌는 곳·박힌 글자 상자) + 쿠팡 상품 사진 — 해외원본형 재료는 원본이 주재료(남의 리뷰 영상 검색은 안 한다)."""
-    return {"do": [{"id": "shots", "cmd": "shot_sheets", "files": ["src/" + f["name"] for f in st["origin"]["files"]], "window": None},
-                   {"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "n": 3}], "then": "f_material_got"}
+    """원본 샷 표(카메라 바뀌는 곳·박힌 글자 상자) + 쿠팡 상품 사진 — 해외원본형 재료는 원본이 주재료.
+    비슷한 제품이면 그 제품 영상 검색도 같이(_alt_material_needed — 쇼핑형 재료 단계와 같은 screen·SCREEN_PICK·download)."""
+    do = [{"id": "shots", "cmd": "shot_sheets", "files": ["src/" + f["name"] for f in st["origin"]["files"]], "window": None},
+          {"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "n": 3}]
+    if _alt_material_needed(st):
+        R = st.get("research") or {}
+        do.append({"id": "screen", "cmd": "screen", "queries": _alt_queries(st), "exclude": R.get("exclude") or [],
+                   "keywords": [k for k in R.get("keywords") or [] if k][:3] or [str((st.get("product") or {}).get("name") or "")[:20]], "top": 8,
+                   "bench_id": (st.get("bench") or {}).get("id"), "origin_id": (st.get("origin") or {}).get("id")})
+    return {"do": do, "then": "f_material_got"}
 
 
 def f_material_got(st, m, rp, u):
     st["material"] = {"files": (m.get("stills") or {}).get("files") or []}
+    if "screen" in m:
+        st["_alt_screen"] = m.get("screen") or {}
     sh = m.get("shots") or {}
     st["shots"] = sh.get("shots") or {}
     kind = (st.get("product") or {}).get("name") or st["read"].get("product_words")
     revs = [_rv(f"shot_{stem}_{k}", SHOT_READ_FOREIGN.format(kind=kind), [_img(rel)], need=("shots",))
             for stem, sheets in (sh.get("sheets") or {}).items() for k, rel in enumerate(sheets)]
     if not revs:
-        return {"goto": "f_clean"}
+        return {"goto": "f_alt_ask"}
     return {"review": revs, "then": "f_shots_got"}
 
 
 def f_shots_got(st, m, rp, u):
     _apply_shot_reads(st, rp)
+    return {"goto": "f_alt_ask"}
+
+
+ALT_PICK_NOTE = ("\n★이 편은 비슷한 제품이다 — 원본 말이 끝난 뒤 제품 이야기 줄에 쓸 **이 쿠팡 제품** 영상을 고른다(원본 출연자 장면은 그 줄에 못 쓴다). "
+                 "사람 얼굴이 크게 계속 나오는 영상은 뒤로 — 제품·손·사용 장면이 많은 영상이 앞(해외원본형은 원본 밖 영상의 사람 얼굴 컷을 반려한다).")
+
+
+def f_alt_ask(st, m, rp, u):
+    """비슷한 제품 영상 고르기(Claude) — 후보가 없으면 그대로 다음(사진도 못 쓰는 판이면 대본 단계 검사가 알려 준다)."""
+    s = st.pop("_alt_screen", None) or {}
+    rows = s.get("rows") or []
+    if not _alt_material_needed(st) or not rows:
+        if _alt_material_needed(st):
+            st["log"].append("비슷한 제품 영상 후보 0개 — " + str(s.get("error") or s.get("note") or "검색 결과 없음")[:200])
+        return {"goto": "f_clean"}
+    st["screen_rows"] = rows
+    return {"review": [_rv("screen_pick", SCREEN_PICK + ALT_PICK_NOTE + "\n\n후보(시트 순서와 같다):\n" + json.dumps(rows, ensure_ascii=False, indent=1) +
+                           f"\n\n제품: {(st.get('product') or {}).get('name')}", [_img(x) for x in s.get("sheets") or []][:8], need=("chosen",))],
+            "then": "f_alt_pick"}
+
+
+def f_alt_pick(st, m, rp, u):
+    r = _reply(rp, "screen_pick", ("chosen",))
+    known = {x.get("id") for x in st.get("screen_rows") or []}
+    skip = {(st.get("bench") or {}).get("id")} | {o.get("id") for o in st.get("origins") or []} | {(st.get("origin") or {}).get("id")}
+    chosen = [c for c in r.get("chosen") or [] if isinstance(c, dict) and c.get("id") in known and c["id"] not in skip]
+    st["screen_pick"] = {"chosen": chosen, "rejected": r.get("rejected") or []}
+    if not chosen:
+        st["log"].append("비슷한 제품 영상 — 고른 것 없음")
+        return {"goto": "f_clean"}
+    return {"do": [{"id": "dl", "cmd": "download", "items": [{"id": c["id"], "sections": c.get("sections") or []} for c in chosen]}], "then": "f_alt_dl"}
+
+
+def f_alt_dl(st, m, rp, u):
+    got = (m.get("dl") or {}).get("files") or []
+    have = {f.get("name") for f in (st.get("material") or {}).get("files") or []}
+    st.setdefault("material", {}).setdefault("files", []).extend(f for f in got if f.get("name") not in have)
+    st["log"].append(f"비슷한 제품 영상 {len(got)}개 받음" + ("" if got else " — " + str((m.get("dl") or {}).get("error") or "")[:200]))
     return {"goto": "f_clean"}
 
 
@@ -3465,7 +3563,7 @@ def _subsong_script_ask(st, fail: str = "") -> dict:
     ctx = (STY.brief(v) + "\n\n## 소재 판독\n" + str((st.get("read") or {}).get("what") or "") +
            "\n\n## 원본(한 샷 — 이 클립 하나로 만든다)\n" + "\n".join(O) +
            f"\n창(영상이 들어가는 자리) = {win[2]}x{win[3]} — crop 은 이 비율" +
-           "\n실제 크기(crop 은 이 픽셀로 — 시트는 줄인 미리보기다): " + json.dumps(_all_dims(st), ensure_ascii=False) + _shots_ctx(st) +
+           "\n실제 크기(crop 은 이 픽셀로 — 시트는 줄인 미리보기다): " + json.dumps(_offer_dims(st), ensure_ascii=False) + _shots_ctx(st) +
            _src_rule_ctx(st) + _points_ctx(v) + (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))   # 판 audit 숫자(est_length 등)도 처음부터(10-27 감사)
     return _rv(f"script_{v}", SCRIPT_SUBSONG + "\n\n" + ctx, [_img(x) for x in ms.get("sheets") or []], need=("대본", "재료"))
 
@@ -3558,7 +3656,7 @@ FORMAT_PHASES = {   # 형식별 세부 단계 처리기 — 없는 세부 단계
                 "bench_got": f_bench_got, "ref_read": f_ref_read, "of_lens": f_of_lens, "of_peers": f_of_peers, "of_got": f_of_got, "of_pick": f_of_pick, "of_find": f_of_find, "of_find_got": f_of_find_got, "of_fetch": f_of_fetch,
                 "of_fetched": f_of_fetched, "f_product_sheet": f_product_sheet, "f_product_pick": f_product_pick, "f_product_cands": f_product_cands,
                 "f_product_same": f_product_same, "research": f_research, "f_research_got": f_research_got, "f_research_check": f_research_check,
-                "f_material": f_material, "material": f_material, "f_material_got": f_material_got, "f_shots_got": f_shots_got, "f_clean": f_clean,
+                "f_material": f_material, "material": f_material, "f_material_got": f_material_got, "f_shots_got": f_shots_got, "f_alt_ask": f_alt_ask, "f_alt_pick": f_alt_pick, "f_alt_dl": f_alt_dl, "f_clean": f_clean,
                 "f_clean_got": f_clean_got, "f_draft": f_draft, "f_draft_got": f_draft_got, "f_asr": f_asr, "f_asr_got": f_asr_got,
                 "plan": f_plan, "render": f_render, "f_render_clean_got": f_render_clean_got},
     "쇼핑형": {"bench_got": s_bench_got, "topic_got": s_topic_got, "s_cands": s_cands, "s_cand_look": s_cand_look, "s_product_done": s_product_done,
@@ -3574,7 +3672,7 @@ PHASE_STAGE.update({
     "ref_read": "bench", "topic_got": "bench", "of_dual_b": "bench", "of_dual": "origin", "of_dual_retry": "origin", "of_settled": "origin", "of_lens": "origin", "of_peers": "origin", "of_got": "origin", "of_pick": "origin", "of_find": "origin", "of_find_got": "origin", "of_fetch": "origin", "of_fetched": "origin", "of_dedup": "origin",
     "f_product_sheet": "product", "f_product_pick": "product", "f_product_cands": "product", "f_product_same": "product", "s_cands": "product", "s_cand_look": "product",
     "s_product_done": "product", "f_research_got": "research", "f_research_check": "research", "s_research_check": "research", "f_material": "material",
-    "f_material_got": "material", "f_shots_got": "material", "f_clean": "material", "f_clean_got": "material", "f_draft": "material", "f_draft_got": "material",
+    "f_material_got": "material", "f_shots_got": "material", "f_alt_ask": "material", "f_alt_pick": "material", "f_alt_dl": "material", "f_clean": "material", "f_clean_got": "material", "f_draft": "material", "f_draft_got": "material",
     "f_asr": "asr", "f_asr_got": "asr", "customize": "sign", "j_material": "material", "check_judge": "check", "f_render_clean_got": "render",
 })
 

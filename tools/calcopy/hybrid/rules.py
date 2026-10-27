@@ -319,7 +319,8 @@ def alt_scene_fix(S: dict, M: dict, origin_names: set, photos: list) -> list[str
                 old = c.get("src")
                 for x in ("ss", "crop", "at", "max", "move"):
                     c.pop(x, None)
-                c["src"] = photos[k % len(photos)]
+                pick = photos[k % len(photos)]          # 사진 이름 또는 {src, ss}(사진 0% 판 = 받아 온 제품 영상 — flow._alt_fill_pool)
+                c.update(pick if isinstance(pick, dict) else {"src": pick})
                 k += 1
                 out.append(f"{lid}: {old} → {c['src']}")
     return out
