@@ -186,13 +186,20 @@ def one(r: dict, a, pool: Path) -> dict:
     status = "found" if end.get("end") == "stop_at" and org else ("not_found" if end else "error")
     if status == "found":
         status, how = how_found(W)
+        try:
+            st0 = json.loads((W / "flow_state.json").read_text(encoding="utf-8"))
+            org = [str(o["id"]) for o in st0.get("origins") or [] if "같은" in str(o.get("how")) and "다른" not in str(o.get("how"))] or org
+        except (OSError, ValueError):
+            pass
     else:
         how = ""
     why = next(iter(s.get("judge", {}).values()), {}).get("why", "") if s.get("judge") else ""
     if end.get("end") == "stop":
         why = f"{end.get('why') or ''} · {why}"
     same = judged_origins(W)
-    chans = [x for x in same if not x.get("korean")]
+    # 원본 채널 장부 = 실제 장면 확인(flow.f_of_verify)을 통과해 남은 '같은 촬영분' 원본의 채널만(10-27: 썸네일 판정만으로 다른 사람 채널이 섞였다)
+    good = set(org) if status == "found" else set()
+    chans = [x for x in same if not x.get("korean") and x.get("id") in good]
     # 같은 촬영분으로 판정된 한국 재편집(우리 소재 말고) = '한국에서도 했나·얼마나 터졌나' — 거꾸로 렌즈는 실측 실패(알려진 쌍 0/1)라 이쪽으로 센다
     kr = sorted([{"url": x.get("url"), "channel": x.get("channel"), "views": int(x.get("views") or 0)} for x in same if x.get("korean") and x.get("id") != r["id"]],
                 key=lambda x: -x["views"])
