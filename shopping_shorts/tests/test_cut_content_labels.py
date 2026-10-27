@@ -157,3 +157,12 @@ def test_face_gate_window_cuts():
     assert now["psr_c11"] == (True, True)
     tp = sum(1 for t, h in now.values() if t and h); fp = sum(1 for t, h in now.values() if h and not t); fn = sum(1 for t, h in now.values() if t and not h)
     assert fn == 0 and fp <= 1, (tp, fp, fn)
+
+
+def test_edge_clipped_caption_is_foreign_text():
+    """10-27 싱크대 L2: crop 왼쪽 끝에 잘린 원본 자막 '…건조'(가로/세로 1.21) — 글줄 모양 문턱 1.6 에 걸려 놓쳐 완성본에 남았다."""
+    from tools.calcopy.hybrid.render_bench import foreign_text
+    b = {"box": [0, 1377, 201, 1543], "score": 0.97, "fill": 0.9, "aspect": 1.21, "h": 0.09, "d_in": 0.2, "d_ring": 0.45, "d_gl": 0.33,
+         "fi": [[21.85, 2.59], [1.53, 2.19]], "blur": 0.09}
+    assert not foreign_text(b)                      # 창 끝 표식 없는 옛 값 = 옛 판정
+    assert foreign_text({**b, "edge": True})

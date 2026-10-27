@@ -1121,6 +1121,7 @@ def face_crop(src: Path, t: float, ar: float) -> list[int]:
 
 
 BLUR_SIGMA = 25.0     # 가림 흐림 세기 = 제품 가림막 흐림의 최저값(deco_frame.blur_sigma 25~80)과 같은 gblur
+BLUR_H_RATIO = 0.4    # 칸이 크면(큰 자막 띠) 세기 = 칸 높이 × 이 값 이상 — 10-27 싱크대 J6 띠 140px: 25 = '이 작업은 썬팅 시공과…' 읽힘 · 50+ 안 읽힘(눈 대조)
 
 
 def blur_vf(regs, ss: float, dur: float, sigma: float = BLUR_SIGMA) -> str:
@@ -1134,7 +1135,8 @@ def blur_vf(regs, ss: float, dur: float, sigma: float = BLUR_SIGMA) -> str:
         if a is not None and (b <= ss or a >= ss + dur):
             continue                                           # 이 컷 구간과 안 겹침
         en = f":enable='between(t,{max(0.0, a - ss):.3f},{b - ss:.3f})'" if a is not None else ""
-        out.append(f"split[bo][bi];[bi]crop={w}:{h}:{x}:{y},gblur=sigma={sigma}[bb];[bo][bb]overlay={x}:{y}{en}")
+        sg = max(float(sigma), round(BLUR_H_RATIO * h, 1))        # 글자 크기만큼 세게 — 고정 25 는 큰 자막이 흐린 채 읽혔다
+        out.append(f"split[bo][bi];[bi]crop={w}:{h}:{x}:{y},gblur=sigma={sg}[bb];[bo][bb]overlay={x}:{y}{en}")
     return ",".join(out)
 
 
@@ -1613,7 +1615,7 @@ def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
 # 판정 주인 = cut_content_gate 한 곳. 프레임은 렌더 조각과 같은 자리(cut_crop)·같은 흐림(blur_vf)으로 thumb.card_scene_frame 이 원본에서 뽑는다.
 # 자 = channelkit.vision(PP-OCRv5 det 글자 상자 · YuNet 얼굴 · SFace 동일성). 문턱 표본 = shopping_shorts/tests/fixtures/cut_content_labels.json.
 CONTENT_PAIR = 2 / FPS            # 글자 '붙박이' 재기 짝 프레임 간격 — 박힌 글은 2프레임 동안 그대로, 장면 속 글(포장·간판)은 화면과 같이 움직인다
-CONTENT_VER = 4                   # 판정(자·문턱)이 바뀌면 올린다 — 캐시 열쇠
+CONTENT_VER = 5                   # 판정(자·문턱)이 바뀌면 올린다 — 캐시 열쇠
 # 글자 문턱 — 표본 762컷(10-25 494컷 + 10-25 오검출 수리 268컷: 원본 무작위 구간·잇템로그 ep12·박정수·샤크탱크 원편) 오푸스 눈 라벨.
 #   pos 132(원본 쇼츠 가격·자막·제목 띠·방송사 자막·로고·광고 글) / neg 630(제품 포장·상자·라벨·간판·화면 속 글).
 #   id crc32 짝수로 정하고 홀수로 잰 값(정직한 값): 옛 판정 P 0.857·R 0.677 → 지금 P 0.900·R 0.726. 옛 494컷만: P 0.808→0.863 · R 0.94 그대로.
@@ -1623,6 +1625,7 @@ CONTENT_VER = 4                   # 판정(자·문턱)이 바뀌면 올린다 �
 TEXT_SCORE_MIN = 0.9              # 상자 점수(윤곽 안 확률 평균)
 TEXT_FILL_MIN = 0.8               # 윤곽 넓이/사각형 넓이(얼굴·유리 질감을 따라 번진 가짜 윤곽 거르기 — 박힌 글은 0.85~0.95)
 TEXT_ASPECT_MIN = 1.6             # 가로/세로 — 글줄 모양
+TEXT_EDGE_ASPECT = 1.0            # 창 왼·오른 끝에 닿은 상자(crop 에 잘린 글줄) — 표본 1.0~1.2 오검출 +0(0.8 이면 +2), 10-27 싱크대 L2 원본 '…건조' 1.21·1.55 놓침
 TEXT_H_RANGE = (0.035, 0.25)      # 상자 높이 / 창 높이 — 진열대 가격표(0.01~0.03)는 밖
 TEXT_BLUR_MAX = 0.3               # 흐림 칸이 이만큼 넘게 덮으면 이미 가린 글
 TEXT_STILL_RATIO = 0.5            # 상자 안 변화 / 둘레 변화 < 이 값이면 붙박이(박힌 글) — 움직이는 화면 위 자막
@@ -1810,7 +1813,7 @@ def text_feats(a, b, regs=None, crop=None, win=None, t: float = 0.0, far=(), box
         d_in, d_ring = _in_ring(diff, (x0, y0, x1, y1))
         gl = _glyph_diff(ga, [diff] + dfar, (x0, y0, x1, y1))
         out.append({"box": [x0, y0, x1, y1], "score": q["score"], "fill": q["fill"], "aspect": round(bw / bh, 2), "h": round(bh / H, 4),
-                    "cx": round((x0 + x1) / 2 / W, 3), "cy": round((y0 + y1) / 2 / H, 3),
+                    "cx": round((x0 + x1) / 2 / W, 3), "cy": round((y0 + y1) / 2 / H, 3), "edge": x0 <= 2 or x1 >= W - 2,
                     "d_in": d_in, "d_ring": d_ring, "d_gl": gl[0], "fg": gl[1:],
                     "fi": [_in_ring(d, (x0, y0, x1, y1)) for d in dfar],
                     "blur": blur_cover(regs, crop, win, (x0, y0, x1, y1), t) if regs else 0.0})
@@ -1884,7 +1887,8 @@ def foreign_text(f: dict) -> bool:
     if (f.get("d_gl") is not None and f["score"] >= TEXT_SCORE_MIN and f["fill"] >= TEXT_GLYPH_FILL and f["aspect"] >= TEXT_GLYPH_ASPECT
             and TEXT_SMALL_H <= f["h"] <= TEXT_H_RANGE[1] and f["d_ring"] >= TEXT_GLYPH_RING and f["d_gl"] < TEXT_GLYPH_STILL * f["d_ring"]):
         return True               # 획 붙박이 — 움직이는 배경 위 획이 그대로인 글줄(틱톡형 작은 자막 포함). d_gl 없는 옛 값은 건너뜀
-    if f["score"] < TEXT_SCORE_MIN or f["fill"] < TEXT_FILL_MIN or f["aspect"] < TEXT_ASPECT_MIN:
+    asp_min = TEXT_EDGE_ASPECT if f.get("edge") else TEXT_ASPECT_MIN     # 창 끝에 잘린 글줄은 짧아 네모에 가깝다(10-27 싱크대 L2 '…건조' 1.2)
+    if f["score"] < TEXT_SCORE_MIN or f["fill"] < TEXT_FILL_MIN or f["aspect"] < asp_min:
         return False
     if not (TEXT_SMALL_H <= f["h"] <= TEXT_H_RANGE[1]):
         return False
