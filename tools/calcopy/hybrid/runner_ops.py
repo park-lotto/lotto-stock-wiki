@@ -241,7 +241,7 @@ def need_list(version: str, url: str = "", fmt: str = "") -> list[dict]:
     st = STY.load(version)
     voice = st.get("voice") or {}
     prov = VO.provider_of(voice)
-    if not PAID_OFF:                    # 돈 0 스위치 = 합성은 캐시만(tts_cache_miss) — 목소리 키를 부르지 않는다
+    if not PAID_OFF and not voice.get("none"):     # 돈 0 스위치 = 합성은 캐시만(tts_cache_miss) — 목소리 키를 부르지 않는다 · 판 voice.none = 나레 없는 판(자막노래형 — 합성 0, 키 요구 금지)
         if prov in (None, "typecast"):  # 옛 꼴 모르는 id = 타입캐스트 길(narr_align.old_path)
             from shopping_shorts.channelkit import providers
             if not providers.typecast_key(None):          # narr_align 합성이 쓰는 그 함수(환경변수 → ~/.volcano/keys/typecast)
@@ -253,9 +253,9 @@ def need_list(version: str, url: str = "", fmt: str = "") -> list[dict]:
             from tools.calcopy.engine import voice_synth as PM
             if not PM._member_key("fish"):
                 out.append({"id": "fish", "label": "목소리 키(피쉬)", "how": "setting"})
-    if not PAID_OFF and not have_speechmatics():     # 받아쓰기(원음·완성본 줄별 대조 narr_verify·asr_cross) — 사장님 10-26 '스피치매틱스도 무료 API 필요'. 키 자리 = asr_local.speechmatics_key
+    if not PAID_OFF and not voice.get("none") and not have_speechmatics():   # 나레 없는 판(voice.none)은 받아쓸 소리가 없다     # 받아쓰기(원음·완성본 줄별 대조 narr_verify·asr_cross) — 사장님 10-26 '스피치매틱스도 무료 API 필요'. 키 자리 = asr_local.speechmatics_key
         out.append({"id": "speechmatics", "label": "스피치매틱스 키(무료)", "how": "setting"})
-    if fmt == "해외원본형":              # 박힌 자막 지우기(VMake)는 이 형식만 부른다(flow f_clean·f_render) — 판 orig_text.mode·키 자리 판단 = vmake_clean.ready
+    if fmt in ("해외원본형", "자막노래형"):   # 박힌 자막 지우기(VMake)는 이 두 형식만 부른다(flow f_clean·f_render) — 판 orig_text.mode·키 자리 판단 = vmake_clean.ready
         from tools.calcopy import vmake_clean as VC
         if VC.ready(VC.style_mode(version))["mode"] == "need_key":
             out.append({"id": "vmake", "label": "VMake 키(원본 자막 지우기)", "how": "setting"})

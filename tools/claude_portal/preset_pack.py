@@ -55,8 +55,18 @@ def tech_files(engine: Path, preset: str) -> list[str]:
         return []
     v = line["version"]
     h = "tools/calcopy/hybrid"
-    out = [f"{preset}/line.json", f"{h}/styles/_common.json", f"{h}/styles/{v}.json"]
-    st = json.loads((engine / h / "styles" / f"{v}.json").read_text(encoding="utf-8"))
+    out = [f"{preset}/line.json", f"{h}/styles/_common.json"]
+    st, name, seen = {}, v, []
+    while name and name not in seen:           # 변형판(base) 사슬 전부 — styles.load 가 바탕 판부터 깐다(10-27 릴리릴리판 → 별헤는쏭판 빠짐)
+        seen.append(name)
+        out.append(f"{h}/styles/{name}.json")
+        raw = json.loads((engine / h / "styles" / f"{name}.json").read_text(encoding="utf-8"))
+        st = {**raw, **st}                     # 위 판 칸이 이긴다(bench·frame 그림 칸 찾기용 — 깊은 합치기는 styles.load 몫)
+        for k in ("band", "logo", "watermark"):      # 판이 그리는 그림 파일(channel/… 상대 경로) — 렌더러가 연다
+            src = ((raw.get("frame") or {}).get(k) or {}).get("src") if isinstance((raw.get("frame") or {}).get(k), dict) else None
+            if src and (engine / src).is_file():
+                out.append(Path(src).as_posix())
+        name = raw.get("base")
     b = st.get("bench") or {}
     if b.get("line_reads"):
         out += [p.relative_to(engine).as_posix() for p in sorted((engine / b["line_reads"]).glob("*.json"))]

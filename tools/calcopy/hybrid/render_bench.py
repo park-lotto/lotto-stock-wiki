@@ -1010,6 +1010,18 @@ def lyric_plan(S: dict, st: dict, end: float) -> list[dict]:
     return out
 
 
+def bgm_ss_for(st: dict, length: float, bgm_id: str | None = None) -> float | None:
+    """(판단 주인: 노래 시작 지점 bgm.ss) 가사가 영상 길이의 판 bgm.vocal_at 비율 자리에서 처음 뜨게 — 곡 첫 가사 t0 − 비율×길이(0 아래면 0).
+    판 bgm.vocal_at 이나 가사표가 없으면 None(대본 bgm.ss 를 그대로 쓴다). 흐름(flow 자막노래형)·손 대본이 같이 부른다."""
+    va = (st.get("bgm") or {}).get("vocal_at")
+    bid = bgm_id or (st.get("bgm") or {}).get("id")
+    p = BGM_DIR / f"{bid}.lyrics.json" if bid else None
+    if not isinstance(va, dict) or not isinstance(va.get("v"), (int, float)) or not p or not p.exists():
+        return None
+    t0 = min(float(x["t0"]) for x in jload(p)["lyrics"])
+    return round(max(0.0, t0 - float(va["v"]) * float(length)), 2)
+
+
 def lyric_png(x: dict, LY: dict, out: Path):
     """가사 2줄(위 일본어·아래 한국어, 가운데 정렬, 고정 자리) 한 장 = 화면 전체 크기 투명 PNG."""
     from PIL import Image, ImageDraw

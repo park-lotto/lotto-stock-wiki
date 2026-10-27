@@ -1,0 +1,16 @@
+{
+ "_rule": "기본값 = 이 프리셋 원본 영상(사장님 10-20). 회원이 바꾼 칸만 회원 값. 읽는 곳 = tools/calcopy/preview_request.preset_defaults",
+ "_from": "판 별헤는쏭판.json·릴리릴리판.json — 나레 없음(voice.none, 벤치 6/6 나레 0) · 배경음 = 판 bgm.id(벤치 노래, 사장님 10-27 '음악은 저 음악원본으로') · 자막 = 댓글카드(frame.comment)",
+ "tts": {
+  "provider": null,
+  "none": true
+ },
+ "bgm": {
+  "candidates": [
+   "byeolsong_ref"
+  ]
+ },
+ "caption": {
+  "mode": "replace"
+ }
+}
