@@ -73,3 +73,18 @@ def test_source_rule_scan_reads_source_seconds_of_slowed_cut(monkeypatch, tmp_pa
     T = {"cuts": [{"line": "L0", "src": "v.mp4", "ss": 4.367, "t0": 1.767, "t1": 3.239, "dur": 1.472, "speed": 0.8409, "kind": "tts"}]}
     R.source_rule_scan(tmp_path, T, set())
     assert seen and abs(seen[0] - 1.237) < 0.05
+
+
+def test_relocate_drops_cut_when_no_room_and_line_has_mate(monkeypatch, tmp_path):
+    """10-27 펜티 E2 80초: 원음 줄이 원본을 거의 다 써 빈자리가 없는 재사용 컷 → 빼고 같은 줄 다른 컷이 이어받음(다른 영상으로 안 바꾼다)."""
+    from tools.calcopy.hybrid import render_bench as RB, runner_ops as R
+    import subprocess
+    subprocess.run(["ffmpeg", "-v", "error", "-f", "lavfi", "-i", "color=c=gray:s=64x64:d=10:r=30", "-c:v", "libx264", "-preset", "ultrafast",
+                    str(tmp_path / "v.mp4")], check=True)
+    monkeypatch.setattr(R, "jump_free_spans", lambda src, spans, **k: [])      # 빈자리 0
+    monkeypatch.setattr(R, "_cut_jumps", lambda *a, **k: [])
+    a = {**_c("E2", 0.0, "v.mp4", 1.0), "t1": 1.0, "dur": 1.0}
+    b = {**_c("E2", 1.0, "v.mp4", 5.0), "t1": 2.0, "dur": 1.0, "reuse_unfixed": ["거리"]}
+    cuts = [a, b]
+    MF.relocate_cuts(cuts, tmp_path, set(), log=lambda m: None, end=2.0)
+    assert cuts == [a]
