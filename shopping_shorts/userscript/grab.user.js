@@ -15,10 +15,13 @@
 // @match        https://*.pinterest.com/*
 // @match        https://shoppingshorts.duckdns.org/grab*
 // @match        https://app.stmaker.kr/grab*
+// @match        https://stmaker.kr/grab*
+// @match        https://www.stmaker.kr/grab*
 // @run-at       document-idle
 // @grant        GM_xmlhttpRequest
 // @connect      shoppingshorts.duckdns.org
 // @connect      app.stmaker.kr
+// @connect      stmaker.kr
 // @downloadURL  https://shoppingshorts.duckdns.org/grab.user.js
 // @updateURL    https://shoppingshorts.duckdns.org/grab.user.js
 // ==/UserScript==
