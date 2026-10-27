@@ -1788,6 +1788,10 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
     cfix = RU.caps_split_fix(S, _style(v))        # 자막 덩어리 자수도 형식 — 반려 말고 바로 나눈다(10-27 립글로스 회원편)
     if cfix:
         st["log"].append("자막 덩어리 자동 나눔: " + "; ".join(cfix)[:400])
+    xfix = script_audit.text_fix(S)               # 줄 끝 부호·영문 읽기·자막↔목소리도 형식 — 반려 말고 바로 고친다(10-27 TV 스탠드 대본 판정 34번)
+    if xfix:
+        st["log"].append("대본 글 자동 정리: " + "; ".join(xfix)[:400])
+        cfix = RU.caps_split_fix(S, _style(v))    # 다시 나눈 자막 조각도 덩어리 자수를 지키게
     with tempfile.TemporaryDirectory() as td:
         p = Path(td) / "대본.json"
         p.write_text(json.dumps(S, ensure_ascii=False), encoding="utf-8")

@@ -72,10 +72,9 @@
   }
  ],
  "log": [
-  "본보기 벤치 편 = 1lMbJh0n_d4",
+  "본보기 벤치 편 = 없음(합계 비율)",
   "효과음 0발(본보기 0) []",
   "짤 0개(rate 0.0 — 벤치에 짤 없음도 스타일)",
-  "꾸밈 없음 4/4 ≥ 판 plain_share 0.017×4=0",
   "등장 {'cut': 4} · 강조 0/4",
   "댓글카드 4장",
   "가사 4줄 6.80초부터",
@@ -83,11 +82,11 @@
  ],
  "check": {
   "ok": true,
-  "reference": "1lMbJh0n_d4",
+  "reference": null,
   "worst_slot_diff": 0.0,
   "slots": {
    "stickers": {
-    "bench": {},
+    "bench": null,
     "ours": {},
     "vs": {}
    },
@@ -97,9 +96,7 @@
     "kinds": {}
    },
    "transitions": {
-    "bench_expect": {},
     "ours": {},
-    "cut_bounds": 3,
     "plan": {
      "src": null,
      "want_raw": {},

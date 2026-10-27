@@ -156,6 +156,9 @@ def title_colors_fix(S: dict, st: dict) -> list[str]:
             if isinstance(chunk, list) and len(chunk) > 1 and chunk[1] == "hi" and "hi" not in sp:
                 chunk[1] = None
                 fixed.append(f"제목 {i + 1}줄 '{chunk[0]}' hi → null")
+    if isinstance(S.get("title_lines"), list) and len(S["title_lines"]) > len(spec):     # 판 틀보다 많은 줄은 그려지지도 않는다 — 잘라 낸다(10-27 TV 스탠드 편 '제목 줄 수 2 > 판 틀 0줄' 반려 6번)
+        fixed.append(f"제목 줄 {len(S['title_lines'])} → 판 틀 {len(spec)}줄")
+        S["title_lines"] = S["title_lines"][:len(spec)]
     return fixed
 
 
