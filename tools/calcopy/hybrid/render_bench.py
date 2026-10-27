@@ -1618,7 +1618,7 @@ def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
 # 판정 주인 = cut_content_gate 한 곳. 프레임은 렌더 조각과 같은 자리(cut_crop)·같은 흐림(blur_vf)으로 thumb.card_scene_frame 이 원본에서 뽑는다.
 # 자 = channelkit.vision(PP-OCRv5 det 글자 상자 · YuNet 얼굴 · SFace 동일성). 문턱 표본 = shopping_shorts/tests/fixtures/cut_content_labels.json.
 CONTENT_PAIR = 2 / FPS            # 글자 '붙박이' 재기 짝 프레임 간격 — 박힌 글은 2프레임 동안 그대로, 장면 속 글(포장·간판)은 화면과 같이 움직인다
-CONTENT_VER = 6                   # 판정(자·문턱)이 바뀌면 올린다 — 캐시 열쇠
+CONTENT_VER = 7                   # 판정(자·문턱)이 바뀌면 올린다 — 캐시 열쇠
 # 글자 문턱 — 표본 762컷(10-25 494컷 + 10-25 오검출 수리 268컷: 원본 무작위 구간·잇템로그 ep12·박정수·샤크탱크 원편) 오푸스 눈 라벨.
 #   pos 132(원본 쇼츠 가격·자막·제목 띠·방송사 자막·로고·광고 글) / neg 630(제품 포장·상자·라벨·간판·화면 속 글).
 #   id crc32 짝수로 정하고 홀수로 잰 값(정직한 값): 옛 판정 P 0.857·R 0.677 → 지금 P 0.900·R 0.726. 옛 494컷만: P 0.808→0.863 · R 0.94 그대로.
@@ -1638,6 +1638,7 @@ TEXT_FAR_RING = 5.0               # 긴 간격(같은 컷 다른 잴 프레임) 
 TEXT_SCENE_RATIO = (0.6, 1.3)     # 멈춘 화면 글: 긴 간격 짝에서 안/둘레 가 이 범위 = 글이 주변과 같이 변함 = 장면 속 글(카레 상자 팬·전구 무늬·성시경 간판). 표본 0.5~0.7 / 1.2~1.5 어디서나 같은 결과
 TEXT_SMALL_H = 0.03               # 창 3~3.5% 작은 글줄은 긴 간격 짝 전부에서 안/둘레 < TEXT_SMALL_STILL 일 때만(배경이 바뀌는 동안 그대로 = 박힌 자막 — 진열대 가격표는 같이 움직인다)
 TEXT_SMALL_STILL = 0.6
+TEXT_SLOW_RING, TEXT_SLOW_STILL = 1.0, 0.1   # 멈춘 듯한 화면의 긴 자막줄: 긴 간격 짝 둘레 변화 ≥ 1 인데 안/둘레 < 0.1. 표본 오검출 +0(완전히 멈춘 쪽지 글은 둘레도 0)
 TEXT_THIN_H, TEXT_THIN_ASPECT = 0.02, 5.0   # 획 붙박이 판정의 가는 글줄(창 2~3%) — 가로/세로 ≥ 5 일 때만. 표본 오검출 +0(4.0 이면 +1, 3.0 이면 +5), 10-27 TV 원본 박힌 제목 6.4~6.9
 TEXT_GLYPH_STILL = 0.3            # 획 픽셀 변화(d_gl) / 둘레 변화 < 이 값 = 획이 그대로인 박힌 글(자막 줄). 짝수 반 0.3~0.5 같은 결과(0.2 는 R 0.91), 홀수 반 오검출 +0
 TEXT_GLYPH_FILL = 0.65            # 획 판정 상자 채움 하한 — 작은 자막 줄은 낱말 사이 틈 때문에 0.70~0.79(TEXT_FILL_MIN 0.8 밖). 0.6~0.7 같은 결과
@@ -1906,6 +1907,8 @@ def foreign_text(f: dict) -> bool:
     if f["d_ring"] < TEXT_RING_MIN:
         if any(TEXT_SCENE_RATIO[0] <= q <= TEXT_SCENE_RATIO[1] for q in far):
             return False          # 2프레임 사이엔 멈췄지만 같은 컷 안 긴 간격에서 주변과 같이 변한 글 = 장면 속 글
+        if f["aspect"] >= TEXT_THIN_ASPECT and any(r >= TEXT_SLOW_RING and i / r < TEXT_SLOW_STILL for i, r in (f.get("fi") or [])):
+            return True           # 천천히 움직이는 화면 위 긴 자막줄(긴 간격 짝에서 주변은 변하고 글 칸만 그대로 — 10-27 oInEkACMS5s '이걸로 살짝 피부를…' 창 3.75%)
         return f["h"] >= TEXT_STATIC_H or small
     return f["d_in"] < TEXT_STILL_RATIO * f["d_ring"]
 
@@ -1964,6 +1967,7 @@ def face_anchors(st: dict, doc: Path, T: dict, cand_dir: Path) -> list:
     return out
 
 
+AUTOBLUR_MORE = 2            # 흐림 넣은 뒤 남은 글 상자로 칸을 더 넣는 횟수(10-27 oInEkACMS5s l10: 한 번 넣고 끝나 '흐림을 넣어도 2장' → Claude 장면 교체·재렌더 16분)
 SAME_TEXT_IOU = 0.5          # 같은 원본 두 컷의 글자 상자(원본 픽셀)가 이만큼 겹치면 같은 박힌 글
 
 
@@ -2053,9 +2057,15 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
                 M["_blur_added"] = M.get("_blur_added", 0) + 1
                 found.setdefault(c["src"], []).append(ent[:4])
                 fixed_k.add(k)
-                regs2 = M["blur"][c["src"]]
-                m2 = cut_content_feats(src, c["ss"], n, crop, (ww, wh), regs2, anchors, ocr=ocr)
-                left = sum(1 for fr in m2["text"] if any(foreign_text(f) for f in fr))
+                for _ in range(1 + AUTOBLUR_MORE):          # 넣고 다시 잰다 — 칸 밖으로 남은 글 상자(글줄이 길어지거나 다른 자리 자막)는 그 상자로 한 칸 더
+                    m2 = cut_content_feats(src, c["ss"], n, crop, (ww, wh), M["blur"][c["src"]], anchors, ocr=ocr)
+                    rest = [f["box"] for fr in m2["text"] for f in fr if foreign_text(f)]
+                    left = sum(1 for fr in m2["text"] if any(foreign_text(f) for f in fr))
+                    if not rest or _ == AUTOBLUR_MORE:
+                        break
+                    e2 = blur_entry(rest, crop, (ww, wh), float(c["ss"]), n / FPS)
+                    M["blur"][c["src"]].append(e2)
+                    log(f"[흐림 넣기] 컷 {k} {where} 아직 {left}장 → 한 칸 더 {e2}")
                 log(f"[흐림 넣기] 컷 {k} {where} 남의 글자 {nt}/{len(r['text'])}장 → 재료.blur[{c['src']}] += {ent} · 다시 잼 {left}장")
                 if left >= TEXT_MIN_HITS:
                     bad.append(f"컷 {k} {where}: 흐림을 넣어도 남의 박힌 글자 {left}장 — 다른 장면으로 바꾼다")
