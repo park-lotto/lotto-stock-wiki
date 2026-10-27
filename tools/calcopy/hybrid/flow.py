@@ -2386,8 +2386,8 @@ def ph_check_fix(st, m, rp, u):
         st["tries"]["render_same"] = 1
         st["log"].append("완성본 고치기: 재료로 고칠 것 없음 → 재료 그대로 한 번 다시 만들기")
         return {"goto": "render"}
-    if M is None:
-        raise _Stop("완성본 마무리 확인을 통과하지 못했어요", AGAIN)
+    if M is None:      # 다시 시도 = 검사부터(옛 검사 결과를 다시 먹이는 _asker 경로 금지 — 10-27 run4 a·c)
+        raise _Stop("완성본 마무리 확인을 통과하지 못했어요", AGAIN, retry="check")
     return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "render"}
 
 
