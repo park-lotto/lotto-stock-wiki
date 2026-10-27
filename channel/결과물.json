@@ -1436,6 +1436,40 @@
    "seconds": 36.37,
    "judge": "[확인대기] 앞 13.67초(벤치 D6H6sj3pap4 줄 칼카피 · Shark Tank Global IK_JDKOLP8g, 0초 원 = 창업자 티셔츠 Comfy 로고) + 뒤 22.69초(지훈 1인칭 · 쿠팡 같은 제품 더 컴피 오리지널 9774389207) · −14.1 LUFS · TP −2.3 · check render 전 칸 ○ · freeze/black 0 · 되감김 0 · 봉인 ok · 받아쓰기 2모델 대조",
    "doc": "channel/foreignshowshow/14편_TheComfy_하이브리드/"
+  },
+  {
+   "channel": "banggu",
+   "channel_name": "썰템홈샷",
+   "brand": "썰템홈샷",
+   "style": "나레썰/커뮤니티썰 하이브리드(이야기형 b)",
+   "preset": "channel/banggu/썰템홈샷_하이브리드/make.py",
+   "date": "2026-10-27",
+   "from": "channel/banggu/썰템홈샷_하이브리드/make.py → narr_video → thumb → 소리 리미터 → engine/finalize.seal",
+   "n": 92,
+   "title": "하이브리드 06 빼빼로(빼빼로데이 시작은 부산 여학생)",
+   "path": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/06_빼빼로/render/final.mp4",
+   "desktop": "썰템홈샷_06_pepero_검수대기.mp4",
+   "md5": "43d4eb4b6945c7b30fb0cd7ffc50d7e7",
+   "seconds": 39.98,
+   "judge": "[확인대기] 잉 = 빼빼로데이는 롯데가 아니라 90년대 초 부산 여학생 놀이(롯데 공식 유래 영상 El8pNi8e-p4·YTN·아이뉴스24) · 훅 = 롯데 공식 스트레이 키즈 빼빼로데이 광고 · 뒤 쿠팡 같은 제품 7138286338 · −14.4 LUFS · TP −1.7 · make.py checks 14/14 · bench_distance 통과 · 멈춤/검정 0 · 봉인 ok · 줄별 대조 ○16 · 사장님 판정·귀 확인 전",
+   "doc": "channel/banggu/썰템홈샷_하이브리드/06_빼빼로/"
+  },
+  {
+   "channel": "banggu",
+   "channel_name": "썰템홈샷",
+   "brand": "썰템홈샷",
+   "style": "나레썰/커뮤니티썰 하이브리드(이야기형 b)",
+   "preset": "channel/banggu/썰템홈샷_하이브리드/make.py",
+   "date": "2026-10-27",
+   "from": "channel/banggu/썰템홈샷_하이브리드/make.py → narr_video → thumb → 소리 리미터 → engine/finalize.seal",
+   "n": 93,
+   "title": "하이브리드 07 새우깡(깡 = 꼬마 딸의 아리깡)",
+   "path": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/07_새우깡/render/final.mp4",
+   "desktop": "썰템홈샷_07_saewookkang_검수대기.mp4",
+   "md5": "d38d9d720674c5c40ab935276f724c72",
+   "seconds": 37.29,
+   "judge": "[확인대기] 잉 = 새우깡의 '깡'은 사장의 어린 딸이 아리랑을 '아리깡'으로 부른 데서(뉴시스 2020·2026) · 훅 = 농심 공식 새우깡 광고 봉지 · 뒤 쿠팡 같은 제품 94817 · −14.5 LUFS · TP −1.8 · make.py checks 14/14 · bench_distance 통과 · 멈춤/검정 0 · 봉인 ok · 줄별 대조 ○13 △2 · 사장님 판정·귀 확인 전",
+   "doc": "channel/banggu/썰템홈샷_하이브리드/07_새우깡/"
   }
  ]
 }
