@@ -1,0 +1,554 @@
+{
+ "runs": [
+  {
+   "started": "2026-10-17 12:49:50",
+   "stages": {
+    "bench": {
+     "sec": 214.6,
+     "note": "",
+     "gemini": [
+      {
+       "tag": "yanshot_bench_read",
+       "model": "gemini-3-flash-preview",
+       "sec": 169.3,
+       "ok": true,
+       "failed": null
+      }
+     ]
+    },
+    "trace": {
+     "sec": 572.1,
+     "note": "",
+     "gemini": [
+      {
+       "tag": "yanshot_trace_confirm",
+       "model": "gemini-3-flash-preview",
+       "sec": 181.8,
+       "ok": null,
+       "failed": "504 DEADLINE_EXCEEDED. {'error': {'code': 504, 'message': 'Stream cancelled; RPC from prefill servable to decode servabl"
+      },
+      {
+       "tag": "yanshot_trace_confirm",
+       "model": "gemini-3-flash-preview",
+       "sec": 180.8,
+       "ok": null,
+       "failed": "504 DEADLINE_EXCEEDED. {'error': {'code': 504, 'message': 'Stream cancelled; RPC from prefill servable to decode servabl"
+      },
+      {
+       "tag": "yanshot_trace_confirm",
+       "model": "gemini-3-flash-preview",
+       "sec": 14.2,
+       "ok": true,
+       "failed": null
+      }
+     ]
+    },
+    "script": {
+     "sec": 18.5,
+     "note": "",
+     "gemini": [
+      {
+       "tag": "yanshot_script_0",
+       "model": "gemini-3-flash-preview",
+       "sec": 1.3,
+       "ok": null,
+       "failed": "429"
+      },
+      {
+       "tag": "yanshot_script_0",
+       "model": "gemini-3-flash-preview",
+       "sec": 17.1,
+       "ok": true,
+       "failed": null
+      }
+     ]
+    },
+    "plan": {
+     "sec": 133.6,
+     "note": "",
+     "gemini": [
+      {
+       "tag": "yanshot_plan_look",
+       "model": "gemini-3-flash-preview",
+       "sec": 47.7,
+       "ok": true,
+       "failed": null
+      },
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 24.6,
+       "ok": true,
+       "failed": null
+      },
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 20.1,
+       "ok": true,
+       "failed": null
+      }
+     ]
+    },
+    "make": {
+     "sec": 134.4,
+     "note": "",
+     "gemini": []
+    },
+    "check": {
+     "sec": 47.5,
+     "note": "실패: B표 걸림 — B4 1.43 (계획 보이는 컷 0.997) 1.54배 (B표 C:\\숏템_칼카피\\yanshottem\\정재형_후라이팬\\doc\\B표.md)"
+    }
+   },
+   "url": "https://www.youtube.com/shorts/5apue0D4ALc",
+   "slug": "정재형_후라이팬",
+   "until": "check",
+   "redo": null,
+   "total_sec": 1120.7
+  },
+  {
+   "started": "2026-10-17 13:09:57",
+   "stages": {
+    "bench": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "trace": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "script": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "plan": {
+     "sec": 317.7,
+     "note": "",
+     "gemini": [
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 110.8,
+       "ok": null,
+       "failed": "[WinError 10054] 현재 연결은 원격 호스트에 의해 강제로 끊겼습니다"
+      },
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 165.6,
+       "ok": true,
+       "failed": null
+      },
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 10.2,
+       "ok": true,
+       "failed": null
+      }
+     ]
+    },
+    "make": {
+     "sec": 151.1,
+     "note": "",
+     "gemini": []
+    },
+    "check": {
+     "sec": 229.5,
+     "note": "",
+     "gemini": [
+      {
+       "tag": "yanshot_check_asr",
+       "model": "gemini-3-flash-preview",
+       "sec": 181.0,
+       "ok": null,
+       "failed": "504 DEADLINE_EXCEEDED. {'error': {'code': 504, 'message': 'Stream cancelled; RPC from prefill servable to decode servabl"
+      },
+      {
+       "tag": "yanshot_check_asr",
+       "model": "gemini-3-flash-preview",
+       "sec": 13.6,
+       "ok": true,
+       "failed": null
+      }
+     ]
+    }
+   },
+   "url": "https://www.youtube.com/shorts/5apue0D4ALc",
+   "slug": "정재형_후라이팬",
+   "until": "check",
+   "redo": null,
+   "total_sec": 698.3
+  },
+  {
+   "started": "2026-10-17 13:24:00",
+   "stages": {
+    "bench": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "trace": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "script": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "plan": {
+     "sec": 616.8,
+     "note": "",
+     "gemini": [
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 37.5,
+       "ok": true,
+       "failed": null
+      },
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 182.3,
+       "ok": null,
+       "failed": "The read operation timed out"
+      },
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 179.7,
+       "ok": null,
+       "failed": "504 DEADLINE_EXCEEDED. {'error': {'code': 504, 'message': 'Deadline expired before operation could complete.', 'status':"
+      },
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 171.4,
+       "ok": true,
+       "failed": null
+      },
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 7.7,
+       "ok": true,
+       "failed": null
+      }
+     ]
+    },
+    "make": {
+     "sec": 72.4,
+     "note": "",
+     "gemini": []
+    },
+    "check": {
+     "sec": 33.6,
+     "note": "실패: B표 걸림 — B4 1.63 (계획 보이는 컷 0.997) 1.75배; B13 ['B13 컷8·컷10 원본 446.1/440.4 ±3초', 'B13 컷8·컷11 원본 446.1/443.9 ±3초']  (B표 C:\\숏템_칼카피\\yanshottem\\정재형_후라이팬\\doc\\B표.md)"
+    }
+   },
+   "url": "https://www.youtube.com/shorts/5apue0D4ALc",
+   "slug": "정재형_후라이팬",
+   "until": "check",
+   "redo": null,
+   "total_sec": 722.8
+  },
+  {
+   "started": "2026-10-17 13:41:39",
+   "stages": {
+    "bench": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "trace": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "script": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "plan": {
+     "sec": 65.4,
+     "note": "",
+     "gemini": [
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 19.0,
+       "ok": true,
+       "failed": null
+      },
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 23.4,
+       "ok": true,
+       "failed": null
+      },
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 8.1,
+       "ok": true,
+       "failed": null
+      }
+     ]
+    },
+    "make": {
+     "sec": 62.1,
+     "note": "",
+     "gemini": []
+    },
+    "check": {
+     "sec": 30.3,
+     "note": "실패: B표 걸림 — B4 1.8 (계획 보이는 컷 0.997) 1.94배 (B표 C:\\숏템_칼카피\\yanshottem\\정재형_후라이팬\\doc\\B표.md)"
+    }
+   },
+   "url": "https://www.youtube.com/shorts/5apue0D4ALc",
+   "slug": "정재형_후라이팬",
+   "until": "check",
+   "redo": null,
+   "total_sec": 157.8
+  },
+  {
+   "started": "2026-10-17 13:45:05",
+   "stages": {
+    "bench": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "trace": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "script": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "plan": {
+     "sec": 42.4,
+     "note": "실패: O3 원음 443.877~444.81 화면을 못 씀(다른 원음 블록 화면(원본 453.4)과 같은 자리(B13)) + 대신할 B롤 없음"
+    }
+   },
+   "url": "https://www.youtube.com/shorts/5apue0D4ALc",
+   "slug": "정재형_후라이팬",
+   "until": "check",
+   "redo": null,
+   "total_sec": 42.4
+  },
+  {
+   "started": "2026-10-17 13:46:04",
+   "stages": {
+    "bench": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "trace": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "script": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "plan": {
+     "sec": 1.0,
+     "note": "실패: O3 원음 443.877~444.81 화면을 못 씀(다른 원음 블록 화면(원본 453.4)과 같은 자리(B13)) + 대신할 B롤 없음"
+    }
+   },
+   "url": "https://www.youtube.com/shorts/5apue0D4ALc",
+   "slug": "정재형_후라이팬",
+   "until": "check",
+   "redo": null,
+   "total_sec": 1.0
+  },
+  {
+   "started": "2026-10-17 13:46:37",
+   "stages": {
+    "bench": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "trace": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "script": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "plan": {
+     "sec": 813.8,
+     "note": "실패: 크롭 검사 4회 모두 걸림: {'10': '덧씌운 글자 후라이팬 상태 확인 중', '18': '덧씌운 글자 요리에 집중하는 뒷모습'}"
+    }
+   },
+   "url": "https://www.youtube.com/shorts/5apue0D4ALc",
+   "slug": "정재형_후라이팬",
+   "until": "check",
+   "redo": null,
+   "total_sec": 813.8
+  },
+  {
+   "started": "2026-10-17 14:00:29",
+   "stages": {
+    "bench": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "trace": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "script": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "plan": {
+     "sec": 230.7,
+     "note": "",
+     "gemini": [
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 187.1,
+       "ok": null,
+       "failed": "The read operation timed out"
+      },
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 14.3,
+       "ok": true,
+       "failed": null
+      },
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 11.2,
+       "ok": true,
+       "failed": null
+      }
+     ]
+    },
+    "make": {
+     "sec": 72.8,
+     "note": "",
+     "gemini": []
+    },
+    "check": {
+     "sec": 33.7,
+     "note": "",
+     "gemini": [
+      {
+       "tag": "yanshot_check_asr",
+       "model": "gemini-3-flash-preview",
+       "sec": 8.4,
+       "ok": true,
+       "failed": null
+      }
+     ]
+    }
+   },
+   "url": "https://www.youtube.com/shorts/5apue0D4ALc",
+   "slug": "정재형_후라이팬",
+   "until": "check",
+   "redo": null,
+   "total_sec": 337.2
+  },
+  {
+   "started": "2026-10-17 14:06:27",
+   "stages": {
+    "bench": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "trace": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "script": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "plan": {
+     "sec": 541.5,
+     "note": "",
+     "gemini": [
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 52.3,
+       "ok": true,
+       "failed": null
+      },
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 38.9,
+       "ok": true,
+       "failed": null
+      },
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 181.2,
+       "ok": null,
+       "failed": "The read operation timed out"
+      },
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 178.5,
+       "ok": null,
+       "failed": "504 DEADLINE_EXCEEDED. {'error': {'code': 504, 'message': 'Deadline expired before operation could complete.', 'status':"
+      },
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 18.7,
+       "ok": true,
+       "failed": null
+      },
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 15.3,
+       "ok": true,
+       "failed": null
+      },
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 13.1,
+       "ok": true,
+       "failed": null
+      }
+     ]
+    },
+    "make": {
+     "sec": 64.9,
+     "note": "",
+     "gemini": []
+    },
+    "check": {
+     "sec": 31.0,
+     "note": "",
+     "gemini": [
+      {
+       "tag": "yanshot_check_asr",
+       "model": "gemini-3-flash-preview",
+       "sec": 9.0,
+       "ok": true,
+       "failed": null
+      }
+     ]
+    }
+   },
+   "url": "https://www.youtube.com/shorts/5apue0D4ALc",
+   "slug": "정재형_후라이팬",
+   "until": "check",
+   "redo": null,
+   "total_sec": 637.4
+  }
+ ]
+}

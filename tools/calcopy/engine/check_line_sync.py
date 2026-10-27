@@ -1,0 +1,183 @@
+# -*- coding: utf-8 -*-
+"""완성본 자막 줄 시각 ↔ 실제 나레 소리 대조 (관제 097, 2026-10-18).
+
+    PYTHONUTF8=1 py tools/calcopy/engine/check_line_sync.py <make 폴더(final.mp4·sfx_events.json)> [...]
+
+왜: 썰템쇼 작품3 에서 B 표가 통과(B15 만 미달)했는데 실제로는 가운데 줄 자막이 소리보다 1~2초 늦게 떴다(줄 시각 = sfx_events.timeline,
+소리 = 받아쓰기). 자막 시각은 렌더 쪽 계산이라 렌더 결과물(소리)로 대조해야 잡힌다.
+재는 법: final.mp4 소리를 받아쓰기(asr_segments — whisper 낱말 단위) → 줄마다 '그 줄 첫 낱말이 처음 들리는 구절 시작'과
+자막 줄 시작의 차. 구절이 여러 줄을 묶으면 그 구절 안 글자 비율로 줄 시작을 나눠 추정한다.
+판정: |차| > 0.6초 줄 또는 받아쓰기에서 못 찾은 줄이 하나라도 있으면 미달(못 잰 걸 통과로 치지 않는다 — 10-18 첫 판이 전부 '?'로 ○를 냈다). 결과 = <make>/line_sync.json + 표 출력.
+"""
+import json
+import re
+
+
+import sys
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[3]
+LIMIT = 0.6
+LIMIT_SM = 0.25      # 스피치매틱스 낱말 시각으로 잴 때(관문 quality_gate 나레 행, 10-25 관문 검토 ④) — 실측 |계획−SM| 최대: render_bench 판 ep12_rule 0.061(N4)·박정수 키치잇 0.047 · 기미 flowtest 키치잇판 0.145(한국어 원음 사이),
+                     # 옛 v3 판(ep08~ep13) 0.194(줄 앞 무음으로 목소리가 0.1~0.19초 늦음) · 합성 결함 N3 0.4초 앞당김 = 0.399 · 0.8초 = 0.789 → 둘 다 걸린다.
+                     # whisper small 은 같은 ep12 N3 를 12.12(계획 12.579, 0.46 차)로 들어 0.6 이 필요했다(위스퍼 단독 판정 금지 — 칼카피_시작 12번)
+
+
+def _norm(s: str) -> str:
+    return re.sub(r"[^0-9A-Za-z가-힣]", "", s or "")
+
+
+def _sec(v) -> float:
+    v = str(v)
+    if ":" in v:                    # 'MM:SS(.s)' 로 오는 답도 있다
+        m, x = v.rsplit(":", 1)
+        return int(m) * 60 + float(x)
+    return float(v)
+
+
+def asr_segments(final: Path) -> list[tuple[float, float, str]]:
+    """받아쓰기 = 이 PC 의 faster-whisper(small·낱말 시각) — 무료·한도 없음·같은 소리면 같은 답.
+    10-18 실측: 제미나이 2.5-flash 는 로컬 161키 한도 끝·서버 풀 404(신규 사용자 중단), 3-flash 는 시각이 늘어지고 flash-lite 는 빈 답 →
+    B17 이 4편을 '못 잼'으로 남겼다. whisper 가 없으면 예전 제미나이 창구(_asr_gemini)."""
+    try:
+        from faster_whisper import WhisperModel
+    except ImportError:
+        return _asr_gemini(final)
+    import subprocess
+    import numpy as np
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(final), "-vn", "-ac", "1", "-ar", "16000", "-f", "s16le", "-"],
+                         capture_output=True).stdout     # 소리는 ffmpeg 로 풀어 넘긴다(faster_whisper 의 av 해독은 설치된 av 판과 안 맞음)
+    audio = np.frombuffer(raw, np.int16).astype(np.float32) / 32768
+    if _WHISPER.get("m") is None:
+        # 받아 둔 폴더가 있으면 그 경로로 — 허깅페이스 내려받기 길은 engine/filelock.py 가 같은 이름 라이브러리를 가려 깨진다(10-18)
+        snap = sorted((Path.home() / ".cache/huggingface/hub/models--Systran--faster-whisper-small/snapshots").glob("*/model.bin"))
+        _WHISPER["m"] = WhisperModel(str(snap[-1].parent) if snap else "small", device="cpu", compute_type="int8")
+    segs, _ = _WHISPER["m"].transcribe(audio, language="ko", word_timestamps=True)
+    # 구절 시작은 앞 구절 끝에 붙어 0.2~0.4초 이르다(작품1 실측) — 낱말 단위로 쓴다
+    out = [(float(w.start), float(w.end), w.word) for s in segs for w in (s.words or []) if w.word.strip()]
+    if not out:
+        raise RuntimeError("받아쓰기 빈 답(whisper)")
+    # whisper 는 파일 끝 구절을 통째로 빠뜨릴 때가 있다(10-18 작품1: 끝줄 24.56~26.2초 소리 있음, 전체 받아쓰기엔 없음 → 끝만 다시 하면 나옴)
+    last, total = out[-1][1], len(audio) / 16000
+    if total - last > 1.0:
+        t0 = max(0.0, last - 1.0)
+        tail, _ = _WHISPER["m"].transcribe(audio[int(t0 * 16000):], language="ko", word_timestamps=True)
+        out += [(t0 + float(w.start), t0 + float(w.end), w.word) for s in tail for w in (s.words or [])
+                if w.word.strip() and t0 + float(w.start) > last - 0.05]
+    return out
+
+
+_WHISPER: dict = {}
+
+
+def _asr_gemini(final: Path) -> list[tuple[float, float, str]]:
+    """제미나이 창구(gemini_free.ask) + transcribe_free.P, 소리만(mp3)·gemini-2.5-flash — 기본 모델은 2초 단위 시각뿐(10-18)."""
+    import subprocess
+    sys.path.insert(0, str(ROOT))
+    from tools.calcopy.engine import gemini_free as G
+    from tools.calcopy.transcribe_free import P
+    mp3 = subprocess.run(["ffmpeg", "-v", "error", "-i", str(final), "-vn", "-ac", "1", "-ar", "16000", "-b:a", "48k", "-f", "mp3", "-"],
+                         capture_output=True).stdout
+    import time
+    for k in range(4):              # 503(모델 바쁨)은 잠깐 쉬고 다시
+        d, err = G.ask([(mp3, "audio/mp3")], P, tag="line_sync", models=("gemini-2.5-flash",))
+        if d is not None or "503" not in str(err):
+            break
+        time.sleep(20 * (k + 1))
+    if d is None:
+        raise RuntimeError(f"받아쓰기 실패: {err}")
+    seg = (d.get("segments") or d.get("items") or [])
+    out = [(_sec(x["start"]), _sec(x["end"]), x["text"]) for x in seg if str(x.get("text", "")).strip()]
+    if not out:
+        raise RuntimeError("받아쓰기 빈 답")
+    if all(float(a).is_integer() and float(b).is_integer() for a, b, _ in out):
+        raise RuntimeError("받아쓰기 시각이 1초 단위뿐 — 0.6초 판정에 못 쓴다")
+    return out
+
+
+PLACE_CORR_MIN = 0.6     # 줄 목소리 파일 ↔ 완성 목소리 상호상관 — 이 위면 '그 자리에 그 소리가 있다'
+
+
+def placed_at(line_wav: Path, voice_wav: Path, t0: float, win: float = 1.0, sr: int = 8000) -> tuple[float | None, float]:
+    """(판단 주인 — 나레 줄이 실제로 놓인 시각) 줄 목소리 파일 앞 1초를 완성 목소리(voice.wav)의 계획 시작 ±win 안에서 상호상관으로 찾는다.
+    받아쓰기 낱말 시각은 앞 줄이 원음일 때 경계에서 밀린다(10-27 run4 a편 L9: SM 20.79 vs 실제 20.322·상관 0.94) — 시각은 이것으로 잰다.
+    반환 (놓인 시각 또는 None, 상관)."""
+    import subprocess
+    import numpy as np
+
+    def rd(p, ss=None, t=None):
+        cmd = ["ffmpeg", "-v", "error"] + (["-ss", f"{ss:.3f}"] if ss is not None else []) + ["-i", str(p)] + (["-t", f"{t:.3f}"] if t else []) + ["-ac", "1", "-ar", str(sr), "-f", "s16le", "-"]
+        return np.frombuffer(subprocess.run(cmd, capture_output=True).stdout, np.int16).astype(float)
+    v = rd(line_wav, t=1.0)
+    lo = max(0.0, t0 - win)
+    m = rd(voice_wav, lo, 2 * win + 1.0)
+    if len(v) < sr // 10 or len(m) <= len(v):
+        return None, 0.0
+    v = v - v.mean()
+    c = np.correlate(m - m.mean(), v, "valid")
+    k = int(np.argmax(c))
+    seg = m[k:k + len(v)]
+    corr = float(c[k] / (np.linalg.norm(v) * np.linalg.norm(seg - seg.mean()) + 1e-9))
+    return (round(lo + k / sr, 3) if corr >= PLACE_CORR_MIN else None), round(corr, 3)
+
+
+def line_starts_from_asr(lines: list[str], segs) -> list[float | None]:
+    """줄 글(정규화)을 받아쓰기 구절 글 이어붙인 것에 차례로 맞춰, 줄 첫 글자가 놓인 구절 안 위치를 시각으로 옮긴다.
+    lines = 줄마다 실제로 말하는 전문. 찾은 뒤(또는 못 찾아도) 그 줄 몫만큼 앞으로 넘긴다 — 10-18 작품1: 「성분표」를 「공분표」로
+    들어 5줄을 놓치자 6줄 「다크 초콜릿」이 5줄 안의 같은 낱말에 붙어 1.29초 어긋남으로 거짓 미달이 났다.
+    오탈자는 창(남은 줄 몫 안) 안에서 첫 6글자 비슷함(≥ 0.6)으로 찾는다 — 숫자 표기(1만 2천 ↔ 12,000) 차이 때문에 몫은 절반만 넘긴다."""
+    from difflib import SequenceMatcher
+    chars = []                      # (글자, 시각)
+    for a, b, t in segs:
+        n = _norm(t)
+        for k, ch in enumerate(n):
+            chars.append((ch, a + (b - a) * k / max(1, len(n))))
+    stream = "".join(c for c, _ in chars)
+    out, pos = [], 0
+    for ln in lines:
+        n = _norm(ln)
+        if not n:
+            out.append(None); continue
+        key = n[:6]
+        hi = min(len(stream), pos + len(n) + 12)
+        j = stream.find(key[:4], pos, hi + 4)
+        if j < 0:                   # 받아쓰기 오탈자 — 창 안에서 가장 비슷한 자리
+            # 같은 점수면 앞자리(-i) — 10-18 작품6: 「달항아리」를 「다랑알이」로 들어 동점 뒷자리를 골라 1.01초 거짓 미달
+            best = max(((SequenceMatcher(None, key, stream[i:i + len(key)]).ratio(), -i) for i in range(pos, max(pos + 1, hi))),
+                       default=(0, 1))
+            j = -best[1] if best[0] >= 0.6 else -1
+        if j < 0:                   # 첫머리가 통째로 틀리게 들린 줄(작품5 「국물 튈까 봐」→「공을 칠까 봐」) — 줄 전문 비슷함
+            # 맞은 글자 / 줄 글자 — ratio() 는 받아쓰기 끝에서 잘린 짧은 창을 더 쳐줘서 줄 가운데에 붙었다(10-18 작품6 끝줄)
+            best = max(((sum(m.size for m in SequenceMatcher(None, n, stream[i:i + len(n)]).get_matching_blocks()) / len(n), -i)
+                        for i in range(pos, max(pos + 1, hi))),
+                       default=(0, 1))
+            j = -best[1] if best[0] >= 0.6 else -1
+        if j < 0:
+            out.append(None); pos = min(len(stream), pos + len(n) // 2); continue
+        out.append(round(chars[j][1], 2)); pos = j + max(1, len(n) // 2)
+    return out
+
+
+def check(make: Path) -> dict:
+    tl = json.loads((make / "sfx_events.json").read_text(encoding="utf-8"))["timeline"]
+    # 말하는 전문 = caption_lines 마지막(쌓이는 자막이면 앞은 그 일부) — 화자 표시('제조사 : ')는 소리에 없으니 뗀다
+    lines = [re.sub(r"^[^:]{1,12}\s:\s", "", (b.get("caption_lines") or [b["narration"]])[-1].replace("\n", " ")) for b in tl]
+    segs = asr_segments(make / "final.mp4")
+    heard = line_starts_from_asr(lines, segs)
+    rows = []
+    for b, ln, h in zip(tl, lines, heard):
+        d = None if h is None else round(float(b["t0"]) - h, 2)
+        rows.append({"line": ln[:24], "caption_t0": b["t0"], "heard_t0": h, "diff": d, "ok": d is not None and abs(d) <= LIMIT})
+    bad = [r for r in rows if not r["ok"]]
+    res = {"make": str(make), "limit_sec": LIMIT, "ok": not bad, "bad": len(bad), "rows": rows, "asr": segs}
+    (make / "line_sync.json").write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
+    return res
+
+
+if __name__ == "__main__":
+    for m in sys.argv[1:]:
+        r = check(Path(m))
+        print(f"== {m} → {'○' if r['ok'] else '× 미달'} (어긋난 줄 {r['bad']})")
+        for x in r["rows"]:
+            print(f"  자막 {x['caption_t0']:6.2f}  소리 {x['heard_t0'] if x['heard_t0'] is not None else '  ?  ':>6}  차 {x['diff'] if x['diff'] is not None else '-':>6} {'' if x['ok'] else '×'} {x['line']}")

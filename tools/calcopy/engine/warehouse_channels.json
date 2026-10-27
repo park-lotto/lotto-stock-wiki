@@ -1,0 +1,51 @@
+{
+ "sseolpulda": {
+  "category": "해외썰",
+  "preset": "channel/sseolpulda/preset/A_흰바탕창/창아래_검정",
+  "steps": "bench,score,assign,script,source",
+  "channels_file": "channel/스타일분석/현장썰/채널수집/같은결_채널.json"
+ },
+ "yummyknow": {
+  "category": "식품",
+  "preset": "channel/yummyknow/preset/게시글형",
+  "steps": "bench,score,assign,script,source",
+  "keywords": [
+   "신라면",
+   "코스트코",
+   "맥도날드",
+   "CU 편의점",
+   "배스킨라빈스",
+   "농심"
+  ]
+ },
+ "banggu": {
+  "category": "숨은이유",
+  "preset": "channel/banggu/preset/게시글형",
+  "steps": "bench,score,assign,script,source",
+  "keywords": [
+   "아웃백",
+   "다이소",
+   "이케아",
+   "스타벅스",
+   "올리브영",
+   "바나나맛우유"
+  ]
+ },
+ "hottemreport": {
+  "category": "신기한제품",
+  "preset": "hottemreport",
+  "steps": "bench,score,assign,script",
+  "_note": "프리셋(뜯기·틀)이 아직 없어 재료 후보(source)는 못 받는다 — 소재·벤치·점수·대본까지",
+  "source_kind": "해외영상",
+  "keywords": [
+   "신기한 제품",
+   "신박한 아이템",
+   "생활 발명품",
+   "amazing gadget",
+   "cool gadgets",
+   "kitchen gadget"
+  ],
+  "channels_file": "channel/스타일분석/현장썰/채널수집/같은결_채널.json"
+ },
+ "_note": "keywords = 제품비하인드 검색 명사 초기값(엔진: 우리 과거 제목에서 뽑지 않는다 — 사장님/조율자가 고친다). 해외영상은 비우면 reference.db 대표 영상(db_candidates) / channels_file = 같은 결 채널 목록(channel_find 판정 '확정') — 있으면 찾기는 채널 기준(topic_find.channel_candidates, 관제 234)"
+}
