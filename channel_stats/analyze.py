@@ -86,6 +86,8 @@ def build(db=DB):
     for r in _q(con, "SELECT post_id, metrics_at, views FROM snaps ORDER BY metrics_at"):
         tseries.setdefault(r["post_id"], []).append((r["metrics_at"], r["views"]))
 
+    ya = _ya(con)
+
     out_v = []
     for v in vids:
         pub = dt.datetime.fromisoformat(v["published"].replace("Z", "+00:00")).astimezone(KST)
@@ -105,6 +107,8 @@ def build(db=DB):
             "views_per_day": round(v["views"] / max(age_h / 24, 1), 1),
             "gain": (v["views"] - (v["first_views"] or v["views"])), "gain_since": v["first_at"],
             "pts": pts, "vph": _vph(pts),
+            "ya": ya["video"].get(v["video_id"]), "retention": ya["retention"].get(v["video_id"]),
+            "daily": _daily_pts(ya["video_daily"].get(v["video_id"], []), pub),
             "product": next((n for n, rx in PRODUCT if re.search(rx, title)), "기타"),
             "forms": [n for n, rx in FORMS if re.search(rx, title) or (n == "인물 언급" and key in PERSON_CH)],
             "tiktok": ({"pts": _pts(tseries.get(t["post_id"], []), pub), "views": int(t["views"] or 0), "avg_watch": t["averageTimeWatched"], "watch_min": t["totalTimeWatched"],
@@ -163,6 +167,7 @@ def build(db=DB):
             "like_rate": round(_med([v["like_rate"] for v in vs]), 2),
             "last7": sum(v["views"] for v in vs if v["age_h"] <= 24 * 7),
             "best": {"title": best["title"], "views": best["views"], "id": best["id"]} if best else None,
+            "ya": ya["channel"].get(c["channel_id"]), "traffic": ya["traffic"].get(c["channel_id"], []),
             "tiktok": {"posts": len(tk), "views": int(sum(t["views"] or 0 for t in tk)),
                        "avg_watch": round(_med([t["averageTimeWatched"] or 0 for t in tk if t["views"]]), 1)} if tk else None})
     channels.sort(key=lambda c: -c["views"])
@@ -175,6 +180,10 @@ def build(db=DB):
             "rules": {"hit": "채널 중앙값의 2배 이상", "mature_h": MATURE_H, "min_n": MIN_N},
             "coverage": {"youtube_videos": len(out_v), "tiktok_posts": len(tik), "channels": len(channels),
                          "pending": "유튜브 시청시간·유지율·유입경로는 채널 허용(유튜브 애널리틱스) 뒤에 붙는다"},
+            "analytics": {"channels": len(ya["channel"]), "last_run": ya["last_run"],
+                          "watch_min_28": round(sum(c["watch_min_28"] for c in ya["channel"].values())),
+                          "views_28": sum(c["views_28"] for c in ya["channel"].values()),
+                          "subs_net_28": sum(c["subs_net_28"] for c in ya["channel"].values())} if ya["channel"] else None,
             "totals": {"views": sum(v["views"] for v in out_v), "videos": len(out_v), "subs": sum(c["subs"] for c in channels),
                        "hits": sum(v["hit"] for v in out_v), "last7": sum(v["views"] for v in out_v if v["age_h"] <= 168),
                        "tiktok_views": int(sum(t["views"] or 0 for t in tik)), "likes": sum(v["likes"] for v in out_v)},
@@ -182,6 +191,48 @@ def build(db=DB):
             "breakdowns": breakdowns, "pairs": pairs, "insights": insights}
     con.close()
     return data
+
+
+def _ya(con):
+    """유튜브 애널리틱스 표(허용된 채널만 있다). 표가 없으면 빈 묶음."""
+    out = {"video": {}, "retention": {}, "video_daily": {}, "channel": {}, "traffic": {}, "last_run": None}
+    have = {r[0] for r in con.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    if "ya_video" not in have:
+        return out
+    for r in _q(con, "SELECT * FROM ya_video"):
+        out["video"][r["video_id"]] = {"watch_min": round(r["watch_min"] or 0, 1), "avg_dur": round(r["avg_dur"] or 0, 1),
+                                       "avg_pct": round(r["avg_pct"] or 0, 1), "subs": r["subs_gained"], "shares": r["shares"]}
+    for r in _q(con, "SELECT * FROM ya_retention"):
+        out["retention"][r["video_id"]] = json.loads(r["curve"])
+    for r in _q(con, "SELECT * FROM ya_video_daily ORDER BY day"):
+        out["video_daily"].setdefault(r["video_id"], []).append([r["day"], r["views"], round(r["watch_min"] or 0, 1)])
+    since = (dt.date.today() - dt.timedelta(days=28)).isoformat()
+    for cid in {r["channel_id"] for r in _q(con, "SELECT DISTINCT channel_id FROM ya_ch_daily")}:
+        rows = _q(con, "SELECT * FROM ya_ch_daily WHERE channel_id=? ORDER BY day", cid)
+        last = [r for r in rows if r["day"] >= since]
+        v28 = sum(r["views"] for r in last)
+        out["channel"][cid] = {
+            "daily": [[r["day"], r["views"], round(r["watch_min"] or 0, 1), round(r["avg_pct"] or 0, 1),
+                       r["subs_gained"] - r["subs_lost"], r["likes"], r["shares"]] for r in rows],
+            "views_28": v28, "watch_min_28": round(sum(r["watch_min"] or 0 for r in last), 1),
+            "avg_pct_28": round(sum((r["avg_pct"] or 0) * r["views"] for r in last) / v28, 1) if v28 else 0,
+            "avg_dur_28": round(sum((r["avg_dur"] or 0) * r["views"] for r in last) / v28, 1) if v28 else 0,
+            "subs_net_28": sum(r["subs_gained"] - r["subs_lost"] for r in last)}
+    for r in _q(con, "SELECT * FROM ya_traffic ORDER BY views DESC"):
+        out["traffic"].setdefault(r["channel_id"], []).append([r["source"], r["views"], round(r["watch_min"] or 0, 1)])
+    lr = _q(con, "SELECT max(at) at FROM ya_runs")
+    out["last_run"] = lr[0]["at"] if lr else None
+    return out
+
+
+def _daily_pts(rows, pub):
+    """애널리틱스 일별 조회 → 누적 [[게시 후 시간(그날 끝), 누적 조회]] — 수집 전 구간(게시 첫날부터)을 채운다."""
+    out, tot = [], 0
+    for day, views, _wm in rows:
+        tot += views
+        end = dt.datetime.fromisoformat(day).replace(tzinfo=KST) + dt.timedelta(days=1)
+        out.append([round(max((end - pub).total_seconds() / 3600, 0.5), 1), tot])
+    return out
 
 
 AGE_MARKS = [1, 2, 3, 6, 12, 24, 48, 72, 120, 168, 336, 720]   # 게시 후 시간(평소 곡선의 눈금)

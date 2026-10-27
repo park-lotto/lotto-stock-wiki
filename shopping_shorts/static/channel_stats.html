@@ -213,6 +213,8 @@ tr.click{cursor:pointer}
     <div class="scroll"><table class="tbl" id="chTbl"></table></div>
   </section>
 
+  <section class="card enter" id="daily" style="display:none;animation-delay:100ms"></section>
+
   <div class="two">
     <section class="card enter" style="animation-delay:120ms">
       <div class="head">
@@ -250,10 +252,7 @@ tr.click{cursor:pointer}
     <div id="pairs"></div>
   </section>
 
-  <section class="card pending enter" style="animation-delay:280ms">
-    <span class="live">연결 대기</span>
-    <div><b>유튜브 시청시간 · 평균 시청 비율 · 이탈 구간 · 유입 경로 · 구독 전환</b><br>채널마다 유튜브 애널리틱스 허용(1회) 뒤 이 자리에 붙습니다.</div>
-  </section>
+  <section class="card enter" id="conn" style="animation-delay:280ms"></section>
 
   <div class="foot" id="foot"></div>
 </div>
@@ -301,13 +300,14 @@ function boot() {
   $("#q").oninput = e => { state.q = e.target.value.trim(); renderVids(); };
   $("#foot").innerHTML = `기준 — 히트: ${esc(D.rules.hit)} · 비교에서 게시 ${D.rules.mature_h}시간 안 된 영상은 뺍니다(조회가 아직 차는 중) · 묶음 ${D.rules.min_n}편 미만은 흐리게 표시<br>
     출처 — 유튜브 공개 데이터(YouTube Data API: 제목·길이·게시일·조회·좋아요·댓글·구독자), Buffer(틱톡 조회·시청시간·공유), 버퍼 예약 장부(파일·게시 칸) · 매시간 갱신`;
+  renderMsg();
   render();
 }
 
 const vids = () => D.videos.filter(v => state.ch === "all" || v.ch === state.ch);
 const chans = () => D.channels.filter(c => state.ch === "all" || c.key === state.ch);
 
-function render() { renderKpis(); renderIns(); renderCh(); renderCmp(); renderStrip(); renderVids(); renderPairs(); }
+function render() { renderKpis(); renderIns(); renderCh(); renderDaily(); renderCmp(); renderStrip(); renderVids(); renderPairs(); renderConn(); }
 
 function renderKpis() {
   const vs = vids(), cs = chans(), mature = vs.filter(v => v.mature);
@@ -487,7 +487,9 @@ function lineChart(series, curve) {
 function openVideo(id) {
   const v = D.videos.find(x => x.id === id); if (!v) return;
   const ch = D.channels.find(c => c.key === v.ch) || {}, curve = (D.curves || {})[v.ch] || [];
-  const series = [{name: "유튜브", color: "var(--yt)", pts: v.pts || []}]
+  const first = (v.pts && v.pts.length) ? v.pts[0][0] : Infinity;
+  const ytPts = (v.daily || []).filter(p => p[0] < first).concat(v.pts || []);   // 애널리틱스 일별 누적(수집 전 구간) + 매시간 스냅샷
+  const series = [{name: "유튜브", color: "var(--yt)", pts: ytPts}]
     .concat(v.tiktok && v.tiktok.pts && v.tiktok.pts.length ? [{name: "틱톡", color: "var(--tt)", pts: v.tiktok.pts}] : []);
   $("#drawer").innerHTML = `<button class="x" id="dx" aria-label="닫기">×</button>
     <div class="dv-top"><img src="${esc(v.thumb)}" alt=""><div><h3>${esc(v.title)}${v.hit ? `<span class="hitb">히트</span>` : ""}</h3>
@@ -496,10 +498,11 @@ function openVideo(id) {
       <div style="margin-top:10px"><a class="btn" href="${v.url}" target="_blank" rel="noopener">유튜브에서 보기</a></div></div></div>
     <div class="stats4"><div><span>조회</span><b>${fmt(v.views)}</b></div><div><span>평소 대비</span><b>${v.vs_median ?? "–"}배</b></div>
       <div><span>시간당</span><b>${v.vph == null ? "–" : "+" + fmt(v.vph)}</b></div><div><span>좋아요율</span><b>${v.like_rate}%</b></div></div>
+    ${videoYaHtml(v)}
     <div class="chart"><div class="legend" style="margin-bottom:8px">${series.map(s => `<span class="plat"><i style="background:${s.color}"></i>${s.name}</span>`).join("")}
       <span class="plat"><i style="background:var(--ink4)"></i>채널 평소(같은 시간대 중앙값)</span></div>${lineChart(series, curve)}</div>
     <div class="note">점 = 매시간 수집한 누적 조회 · 가로축은 게시 후 시간(앞부분을 넓게 보는 로그 눈금)<br>
-      수집은 10-27부터 쌓입니다. 그 전 구간(게시 첫날부터)은 유튜브 애널리틱스 연결 뒤 일별 기록으로 채웁니다.</div>
+      ${v.daily && v.daily.length ? "게시 첫날부터 10-27 전까지는 유튜브 애널리틱스 일별 누적, 그 뒤는 매시간 수집입니다." : "수집은 10-27부터 쌓입니다. 그 전 구간(게시 첫날부터)은 이 채널을 애널리틱스에 연결하면 일별 기록으로 채워집니다."}</div>
     ${v.tiktok ? `<div class="stats4" style="margin-top:14px"><div><span>틱톡 조회</span><b>${fmt(v.tiktok.views)}</b></div><div><span>틱톡 평균 시청</span><b>${v.tiktok.avg_watch ?? "–"}초</b></div>
       <div><span>틱톡 총 시청</span><b>${fmt(v.tiktok.watch_min)}분</b></div><div><span>틱톡 공유</span><b>${fmt(v.tiktok.shares)}</b></div></div>` : ""}`;
   $("#drawer").classList.add("on"); $("#dbg").classList.add("on"); $("#dx").focus();
@@ -508,6 +511,105 @@ function openVideo(id) {
 function closeVideo() { $("#drawer").classList.remove("on"); $("#dbg").classList.remove("on"); }
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeVideo(); });
 document.addEventListener("click", e => { if (e.target.id === "dbg") closeVideo(); });
+
+// ── 유튜브 애널리틱스(관제 281 2단계) — 연결 상태·일별 기록·유입 경로·이탈 곡선 ──
+const TRAFFIC_KO = {SHORTS: "쇼츠 피드", YT_SEARCH: "유튜브 검색", SUBSCRIBER: "구독자", EXT_URL: "외부 링크", YT_CHANNEL: "채널 페이지",
+  RELATED_VIDEO: "추천 동영상", NO_LINK_OTHER: "직접·기타", PLAYLIST: "재생목록", NOTIFICATION: "알림", YT_OTHER_PAGE: "유튜브 기타",
+  BROWSE: "탐색(홈)", HASHTAGS: "해시태그", SOUND_PAGE: "사운드 페이지", END_SCREEN: "최종 화면", ADVERTISING: "광고", CAMPAIGN_CARD: "캠페인", ANNOTATION: "주석"};
+const hm = m => m >= 60 ? (m / 60).toFixed(m >= 600 ? 0 : 1) + "시간" : Math.round(m) + "분";
+
+function renderMsg() {
+  const m = new URLSearchParams(location.search).get("msg"); if (!m) return;
+  const el = document.createElement("div"); el.className = "card enter"; el.style.cssText = "margin-bottom:12px;border-color:var(--accent);color:var(--ink)";
+  el.textContent = m; $("#kpis").before(el); history.replaceState(null, "", location.pathname);
+}
+
+function renderConn() {
+  const box = $("#conn"); if (!box || !D.connections) return;
+  const n = D.connections.filter(c => c.connected).length;
+  box.innerHTML = `<div class="head"><div><h2>유튜브 애널리틱스 연결 <span class="mut" style="font-weight:500;font-size:13px">${n}/${D.connections.length}</span></h2>
+      <div class="sub">채널마다 한 번 — 그 채널의 구글 계정으로 로그인해 '허용'을 누르면 시청시간·평균 시청 비율·구독 증감·유입 경로·이탈 곡선·게시 첫날부터의 일별 조회가 붙습니다</div></div></div>
+    <div class="scroll"><table class="tbl"><thead><tr><th>채널</th><th>구글 계정</th><th>상태</th><th></th></tr></thead><tbody>${
+    D.connections.map(c => `<tr><td class="strong">${esc(c.name)} <span class="mut">${esc(c.key)}</span></td><td class="mut">${esc(c.email)}</td>
+      <td>${c.error ? `<span class="live">다시 연결 필요 · ${esc(c.error)}</span>` : c.connected ? `<span style="color:var(--good)">● 연결됨</span> <span class="mut" style="font-size:12px">${esc((c.connected_at || "").slice(0, 10))}</span>` : `<span class="mut">연결 전</span>`}</td>
+      <td style="text-align:right">${D.state && D.state.oauth_ready ? `<a class="btn" href="/api/admin/channel_stats/oauth/start?ch=${encodeURIComponent(c.key)}">${c.connected && !c.error ? "다시 연결" : "연결하기"}</a>` : ""}</td></tr>`).join("")}</tbody></table></div>`;
+}
+
+function chYa() {
+  // 고른 채널(전체면 연결된 채널 합) — 일별 [day, views, watch_min, avg_pct, subs_net, likes, shares]
+  const cs = chans().filter(c => c.ya);
+  if (!cs.length) return null;
+  if (cs.length === 1) return {daily: cs[0].ya.daily, traffic: cs[0].traffic, ya: cs[0].ya, names: cs[0].name};
+  const by = {};
+  cs.forEach(c => c.ya.daily.forEach(r => { const b = by[r[0]] = by[r[0]] || [r[0], 0, 0, 0, 0, 0, 0, 0];
+    b[1] += r[1]; b[2] += r[2]; b[7] += r[3] * r[1]; b[4] += r[4]; b[5] += r[5]; b[6] += r[6]; }));
+  const daily = Object.values(by).sort((a, b) => a[0] < b[0] ? -1 : 1).map(b => [b[0], b[1], +b[2].toFixed(1), b[1] ? +(b[7] / b[1]).toFixed(1) : 0, b[4], b[5], b[6]]);
+  const tr = {}; cs.forEach(c => (c.traffic || []).forEach(t => { tr[t[0]] = tr[t[0]] || [t[0], 0, 0]; tr[t[0]][1] += t[1]; tr[t[0]][2] += t[2]; }));
+  return {daily, traffic: Object.values(tr).sort((a, b) => b[1] - a[1]), names: `연결된 ${cs.length}개 채널 합`};
+}
+
+function bars(daily, idx, color, label, fmtv) {
+  // 일별 막대 하나(값 하나 = 축 하나 — 두 값을 한 축에 겹치지 않는다)
+  const W = 620, H = 150, L = 44, R = 6, T = 8, B = 22, n = daily.length;
+  const max = Math.max(1, ...daily.map(r => r[idx])), step = niceStep(max), ymax = Math.ceil(max / step) * step;
+  const bw = (W - L - R) / n, Y = v => T + (1 - v / ymax) * (H - T - B);
+  let g = "";
+  for (let v = 0; v <= ymax; v += step) g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${L - 6}" y="${Y(v) + 3}" text-anchor="end">${fmtv(v)}</text>`;
+  daily.forEach((r, i) => {
+    const x = L + i * bw, h = Math.max(Y(0) - Y(r[idx]), r[idx] ? 1 : 0);
+    g += `<rect x="${x + 1}" y="${Y(0) - h}" width="${Math.max(bw - 2, 1)}" height="${h}" rx="2" fill="${color}"><title>${r[0]} · ${label} ${fmtv(r[idx])}</title></rect>`;
+    if (i % Math.ceil(n / 8) === 0) g += `<text class="ax" x="${x + bw / 2}" y="${H - 6}" text-anchor="middle">${r[0].slice(5).replace("-", "/")}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="일별 ${label}">${g}</svg>`;
+}
+
+function renderDaily() {
+  const box = $("#daily"); if (!box) return;
+  const y = chYa();
+  if (!y) { box.style.display = "none"; return; }
+  box.style.display = "";
+  const d = y.daily.slice(-90), last28 = y.daily.slice(-28);
+  const v28 = last28.reduce((a, r) => a + r[1], 0), w28 = last28.reduce((a, r) => a + r[2], 0);
+  const pct = v28 ? (last28.reduce((a, r) => a + r[3] * r[1], 0) / v28).toFixed(1) : 0, sn = last28.reduce((a, r) => a + r[4], 0);
+  const tmax = Math.max(1, ...(y.traffic || []).map(t => t[1])), ttot = (y.traffic || []).reduce((a, t) => a + t[1], 0);
+  box.innerHTML = `<div class="head"><div><h2>일별 기록</h2><div class="sub">${esc(y.names)} · 유튜브 애널리틱스(하루 단위, 최근 90일) · 소셜블레이드처럼 날마다 몇이 늘었나</div></div></div>
+    <div class="grid kpis" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px">
+      <div class="card kpi"><div class="l">시청시간 (28일)</div><div class="v">${hm(w28)}</div><div class="n">${fmt(w28)}분</div></div>
+      <div class="card kpi"><div class="l">조회 (28일)</div><div class="v">${short(v28)}</div><div class="n">애널리틱스 기준</div></div>
+      <div class="card kpi"><div class="l">평균 시청 비율</div><div class="v">${pct}<small>%</small></div><div class="n">영상 길이 중 본 비율 (28일)</div></div>
+      <div class="card kpi"><div class="l">구독 순증 (28일)</div><div class="v">${sn >= 0 ? "+" : ""}${fmt(sn)}</div><div class="n">늘어난 수 − 줄어든 수</div></div></div>
+    <div class="two" style="margin-top:0">
+      <div><div class="chart" style="margin-bottom:10px"><div class="legend" style="margin-bottom:6px"><span class="plat"><i style="background:var(--yt)"></i>일별 조회</span></div>${bars(d, 1, "var(--yt)", "조회", short)}</div>
+        <div class="chart"><div class="legend" style="margin-bottom:6px"><span class="plat"><i style="background:var(--accent)"></i>일별 시청시간</span></div>${bars(d, 2, "var(--accent)", "시청시간", hm)}</div></div>
+      <div><div class="sub" style="margin-bottom:8px">어디서 보러 왔나 (최근 28일 조회)</div><div class="cmp">${(y.traffic || []).slice(0, 8).map(t => `<div class="cr" style="grid-template-columns:110px 1fr 90px">
+          <div class="k">${esc(TRAFFIC_KO[t[0]] || t[0])}</div><div class="track"><div class="fill" style="left:0;width:${t[1] / tmax * 100}%"></div></div>
+          <div class="v">${short(t[1])}<small>${ttot ? Math.round(t[1] / ttot * 100) : 0}%</small></div></div>`).join("") || `<div class="empty">아직 없음</div>`}</div>
+        <div class="scroll" style="margin-top:14px"><table class="tbl"><thead><tr><th>날짜</th><th class="num">조회</th><th class="num">시청시간</th><th class="num">평균 시청</th><th class="num">구독±</th></tr></thead><tbody>${
+          y.daily.slice(-14).reverse().map(r => `<tr><td class="mut">${r[0].slice(5).replace("-", "/")}</td><td class="num strong">${fmt(r[1])}</td><td class="num">${hm(r[2])}</td><td class="num">${r[3]}%</td>
+            <td class="num" style="color:${r[4] > 0 ? "var(--good)" : r[4] < 0 ? "var(--ink3)" : "var(--ink4)"}">${r[4] > 0 ? "+" : ""}${r[4]}</td></tr>`).join("")}</tbody></table></div></div></div>`;
+}
+
+function retentionChart(curve, dur) {
+  // 가로 = 영상 진행(0~100%), 세로 = 그 지점을 보고 있는 비율(조회 대비). 100% 넘으면 다시 본 사람이 있다는 뜻
+  const W = 580, H = 200, L = 40, R = 10, T = 10, B = 24;
+  const ymax = Math.max(1, ...curve.map(c => c[1])) * 1.05, X = r => L + r * (W - L - R), Y = v => T + (1 - v / ymax) * (H - T - B);
+  let g = "";
+  [0, .25, .5, .75, 1, 1.25, 1.5, 1.75, 2].filter(v => v <= ymax).forEach(v => g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${L - 6}" y="${Y(v) + 3}" text-anchor="end">${Math.round(v * 100)}%</text>`);
+  [0, .25, .5, .75, 1].forEach(r => g += `<text class="ax" x="${X(r)}" y="${H - 6}" text-anchor="middle">${dur ? Math.round(r * dur) + "초" : Math.round(r * 100) + "%"}</text>`);
+  g += `<polyline fill="none" stroke="var(--yt)" stroke-width="2" stroke-linejoin="round" points="${curve.map(c => X(c[0]) + "," + Y(c[1])).join(" ")}"/>`;
+  const drop = curve.find(c => c[1] < .5);
+  if (drop) g += `<circle cx="${X(drop[0])}" cy="${Y(drop[1])}" r="4.5" fill="var(--warn)" stroke="var(--s2)" stroke-width="2"><title>여기서 절반 아래로 (${dur ? Math.round(drop[0] * dur) + "초" : Math.round(drop[0] * 100) + "%"})</title></circle>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="시청 지속(이탈) 곡선">${g}</svg>`;
+}
+
+function videoYaHtml(v) {
+  if (!v.ya && !v.retention) return "";
+  const r = v.retention, rel = r ? (r.reduce((a, c) => a + c[2], 0) / r.length) : null;
+  return `${v.ya ? `<div class="stats4"><div><span>시청시간</span><b>${hm(v.ya.watch_min)}</b></div><div><span>평균 시청 비율</span><b>${v.ya.avg_pct}%</b></div>
+      <div><span>평균 시청</span><b>${v.ya.avg_dur}초</b></div><div><span>구독 전환</span><b>${v.ya.subs >= 0 ? "+" : ""}${v.ya.subs}</b></div></div>` : ""}
+    ${r ? `<div class="chart" style="margin-top:4px"><div class="legend" style="margin-bottom:8px"><span class="plat"><i style="background:var(--yt)"></i>몇 초에서 빠져나가나(시청 지속)</span>
+      <span class="plat"><i style="background:var(--warn)"></i>절반 아래로 떨어지는 지점</span>${rel != null ? `<span>비슷한 길이 영상 대비 ${rel >= .5 ? "좋음" : "약함"} (${rel.toFixed(2)})</span>` : ""}</div>${retentionChart(r, v.dur)}</div>` : ""}`;
+}
 
 const tip = $("#tip");
 function bindTips(sel, html) {

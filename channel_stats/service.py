@@ -40,8 +40,8 @@ def _last_run():
         con.close()
 
 
-def refresh(log=print):
-    """한 번 모은다. 이미 돌고 있으면 건너뛴다."""
+def refresh(log=print, force_analytics=False):
+    """한 번 모은다(Buffer·유튜브 공개 데이터 → 허용된 채널은 애널리틱스까지). 이미 돌고 있으면 건너뛴다."""
     if not _lock.acquire(blocking=False):
         return False
     _state.update(running=True, started=time.time())
@@ -51,7 +51,18 @@ def refresh(log=print):
         if not keys:
             raise RuntimeError(f"Buffer 키 파일이 없다: {DIR / 'buffer_keys.json'}")
         r = collect.collect(str(DIR / "stats.db"), keys=keys, ledger=_load("ledger.json", []), log=log)
-        _state["last_error"] = "; ".join(r["errors"]) or None
+        errs = list(r["errors"])
+        if (DIR / "yt_tokens.json").exists():
+            from channel_stats import yt_analytics
+            con = sqlite3.connect(DIR / "stats.db")
+            try:
+                recent = {}
+                for vid, cid, pub in con.execute("SELECT video_id, channel_id, substr(published,1,10) FROM yt_videos"):
+                    recent.setdefault(cid, []).append((vid, pub))
+                errs += yt_analytics.collect(str(DIR), con, recent, log=log, force=force_analytics).get("errors", [])
+            finally:
+                con.close()
+        _state["last_error"] = "; ".join(errs) or None
         return True
     except Exception as e:  # noqa: BLE001 — 실패 사유는 화면 머리(state.error)에 그대로 뜬다
         _state["last_error"] = str(e)
@@ -62,10 +73,10 @@ def refresh(log=print):
         _lock.release()
 
 
-def refresh_async():
+def refresh_async(force_analytics=False):
     if _state["running"]:
         return False
-    threading.Thread(target=refresh, daemon=True, name="channel_stats_refresh").start()
+    threading.Thread(target=refresh, kwargs={"force_analytics": force_analytics}, daemon=True, name="channel_stats_refresh").start()
     return True
 
 
@@ -77,6 +88,29 @@ def data(kick=True):
     if kick and stale:
         refresh_async()
     out = analyze.build(str(DIR / "stats.db")) if last else {"empty": True}
+    from channel_stats import yt_analytics
+    conn = yt_analytics.connected(str(DIR))
     out["state"] = {"refreshing": _state["running"], "error": _state["last_error"], "stale": stale,
-                    "keys": (DIR / "buffer_keys.json").exists()}
+                    "keys": (DIR / "buffer_keys.json").exists(), "oauth_ready": (DIR / "oauth_client.json").exists()}
+    out["connections"] = [{"key": c["key"], "name": c["name"], "id": c["id"], "email": ACCOUNT_EMAIL.get(c["key"], ""),
+                           "connected": c["id"] in conn, **conn.get(c["id"], {})} for c in out.get("channels", [])]
     return out
+
+
+# ── 유튜브 애널리틱스 연결(관제 281 2단계) ─────────────────────
+# Buffer 폴더 번호 → 그 유튜브 채널을 가진 구글 계정(사장님 10-27). 허용 화면을 그 계정으로 띄우는 힌트일 뿐 — 실제 채널은 콜백이 mine=true 로 확인한다
+ACCOUNT_EMAIL = {"950": "parklotto950@gmail.com", "987": "parklotto987@gmail.com", "994": "parklotto994@gmail.com",
+                 "995": "parklotto995@gmail.com", "998": "parklotto998@gmail.com", "999": "parklotto999@gmail.com",
+                 "숏템07": "shortem07@gmail.com", "21": "parklotto21@gmail.com"}
+
+
+def oauth_start(key=""):
+    from channel_stats import yt_analytics
+    return yt_analytics.start_url(str(DIR), ACCOUNT_EMAIL.get(key, ""))
+
+
+def oauth_finish(code, state):
+    from channel_stats import yt_analytics
+    title = yt_analytics.finish(str(DIR), code, state)
+    refresh_async(force_analytics=True)      # 연결하자마자 시청시간·일별 기록을 채운다
+    return title

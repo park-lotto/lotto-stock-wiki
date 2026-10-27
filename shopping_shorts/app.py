@@ -18823,6 +18823,30 @@ def api_admin_channel_stats(request: Request):
     return _cs.data()
 
 
+@app.get("/api/admin/channel_stats/oauth/start")
+def api_admin_channel_stats_oauth_start(request: Request, ch: str = ""):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from channel_stats import service as _cs
+    return RedirectResponse(_cs.oauth_start(ch), status_code=302)
+
+
+@app.get("/api/admin/channel_stats/oauth/callback")
+def api_admin_channel_stats_oauth_callback(request: Request, code: str = "", state: str = "", error: str = ""):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from channel_stats import service as _cs
+    try:
+        if error:
+            raise RuntimeError(f"구글이 거절했습니다: {error}")
+        msg = f"'{_cs.oauth_finish(code, state)}' 채널을 연결했습니다"
+    except Exception as e:  # noqa: BLE001 — 실패 사유를 화면 위 알림으로 그대로 보여준다
+        msg = f"연결 실패: {e}"
+    return RedirectResponse("/channel_stats?msg=" + urllib.parse.quote(msg), status_code=302)
+
+
 @app.post("/api/admin/channel_stats/refresh")
 def api_admin_channel_stats_refresh(request: Request):
     denied = _require_admin(request)
