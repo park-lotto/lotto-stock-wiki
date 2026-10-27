@@ -23,7 +23,7 @@ sys.path.insert(0, str(ROOT))
 from tools.calcopy.hybrid import render_itssum as RI  # noqa: E402
 from tools.calcopy.hybrid.common import FPS, SR, StageError, dur_of, jload, jsave, lufs, nchar, run  # noqa: E402
 
-GAP, TAIL = 0.20, 0.50
+GAP, TAIL = 0.20, 0.70   # 끝 말 뒤 여운 ≥0.6초(10-27 검수 END_TAIL) — 문장 wav 끝 무음 포함 실측 0.6 이상이 되게
 
 
 def b_timeline(S, M, sent: dict) -> dict:
@@ -390,6 +390,9 @@ def render(doc: Path, work: Path, plan_only=False, desktop: Path | None = None, 
     back_cfr = R / "back_cfr.mp4"
     run(["ffmpeg", "-y", "-i", back, "-vf", f"fps={FPS}", "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p",
          "-c:a", "aac", "-b:a", "192k", "-ar", SR, "-ac", "1", back_cfr])
+    # 뒤에도 '광고' 표시(주인 ad_mark — 앞 완성본은 narr_video 가 이미 붙임). 10-27 18편 실측: 뒤 구간에 표시 없음(15·16 납품본도 같음)
+    from tools.calcopy.engine import ad_mark
+    ad_mark.apply_inplace(back_cfr, log=log)
     final = R / "final.mp4"
     tr = S.get("transition")
     if tr:

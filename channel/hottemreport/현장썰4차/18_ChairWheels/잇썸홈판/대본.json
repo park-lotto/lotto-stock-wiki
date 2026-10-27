@@ -1,0 +1,180 @@
+{
+ "_note": "숏템리폿 4차 18 의자바퀴 하이브리드 — 앞 = 숏템리폿 현장썰 Peter von Panda 원음형 박창수판(18_ChairWheels/front), 뒤 = 쿠팡 9779599540 '오피스 오아시스 오리지널 사무용 의자 바퀴'(같은 제품 — 벤치 15~19초 'The office oasis' 로고·벤치 설명란 '오피스 오아시스 롤러블레이드 의자 휠'). 뒤 화면 = The Office Oasis 공식 유튜브·틱톡 영상(박힌 자막 띠는 crop 밖) + 쿠팡 대표 사진(move). 금액·효능은 말하지 않는다.",
+ "brand": "잇썸홈",
+ "product": "오피스 오아시스 오리지널 사무용 의자 바퀴(쿠팡 9779599540) — 인라인 스케이트형(롤러블레이드) 의자 바퀴 5개",
+ "product_mode": "exact",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰4차/18_ChairWheels/front/render/final.mp4",
+  "cut": 16.35,
+  "why": "원음 O2 'man, what an improvement' 끝(앞 16.084) 뒤 0.27초 — 같은 한 샷(pp 44.88~47.40) 안",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API '오피스 오아시스 의자 바퀴'(10-27 16:1x, 1회 2검색어 ok): 9779599540 '오피스 오아시스 오리지널 사무용 의자 바퀴 PBS 방영 검정색 …' — 18_ChairWheels/coupang.json",
+  "c_img": "쿠팡 대표 이미지(look/cp_9779599540.jpg): 검정 포크에 'oasis' 글자·투명 테 검은 인라인 스케이트형 바퀴 — 공식 영상 바퀴와 같은 모양",
+  "o_founder": "The Office Oasis 공식 틱톡 7678437086562766093 본인 말: 'rollerblade style chair wheels that roll smoother, stay quieter and don't tear up your floors'",
+  "o_carpet": "The Office Oasis 공식 틱톡 7688464043492920607: 'Office Oasis wheels are bigger, smoother and quieter so you can actually roll without doing a leg workout'(카펫 위)",
+  "o_install": "공식 유튜브 Ln9mq2k6CCk 244~252초 화면: 의자를 뒤집어 새 바퀴를 손으로 꽂음"
+ },
+ "흥미이음": {
+  "원본흥미": "의자 바퀴만 인라인 스케이트 바퀴로 바꿨더니 '와, 완전 다르다, 미끄러지듯 굴러간다'",
+  "뒤흥미": "쿠팡의 바로 그 오피스 오아시스 롤러블레이드 바퀴 — 같은 투명 테 바퀴가 바닥·카펫 위를 굴러감",
+  "판정": "같음",
+  "근거": "같은 제품: 벤치 로고 'The office oasis' = 쿠팡 상품명 '오피스 오아시스' + 대표 사진 'oasis' 포크 글자·바퀴 모양 대조. 앞 원음 사람(Peter von Panda)의 바퀴는 같은 꼴 롤러블레이드형(상표 확인 못 함)"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.3,
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 14.4
+ },
+ "front_style": {
+  "frame": "channel/hottemreport/현장썰4차/18_ChairWheels/front/frame_render.json",
+  "title": "의자 바퀴 하나로\n대박 난 엔지니어"
+ },
+ "transition": {
+  "kind": "slideleft",
+  "dur": 0.25
+ },
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "back_caption_lines": {
+  "B1": {
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   }
+  },
+  "B5": {
+   "enter": {
+    "kind": "fade",
+    "ms": 300
+   },
+   "emphasis": {
+    "words": [
+     "난리예요"
+    ],
+    "rgb": [
+     255,
+     230,
+     0
+    ],
+    "style": "grow"
+   },
+   "_why": "끝 화면 분홍 의자 위 — 분홍 강조 글 대신 노랑(10-27 검수: 빨강·분홍 위 빨간 글 금지)"
+  }
+ },
+ "sfx": {
+  "pack_customer": 0
+ },
+ "lines": [
+  {
+   "id": "B1",
+   "role": "공개",
+   "point": "잉",
+   "answer_at": 3,
+   "kind": "tts",
+   "seg": "B",
+   "tts": "근데 저 영상 보고 쿠팡에 쳐 봤더니, 그 엔지니어가 만든 바퀴가 진짜 있더라고요.",
+   "caps": [
+    "근데 저 영상 보고",
+    "쿠팡에 쳐 봤더니",
+    "그 엔지니어가 만든 바퀴가",
+    "진짜 있더라고요"
+   ],
+   "emph": [
+    "진짜"
+   ],
+   "facts": [
+    "c0",
+    "c_img"
+   ]
+  },
+  {
+   "id": "B2",
+   "role": "고조",
+   "point": "권위",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "이게 말도 안 되는 게, 인라인 스케이트처럼 크고 말랑한 바퀴라, 소리가 훨씬 조용하대요.",
+   "caps": [
+    "이게 말도 안 되는 게",
+    "인라인 스케이트처럼",
+    "크고 말랑한 바퀴라",
+    "소리가 훨씬 조용하대요"
+   ],
+   "emph": [
+    "인라인"
+   ],
+   "facts": [
+    "o_founder",
+    "o_carpet"
+   ]
+  },
+  {
+   "id": "B3",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "진짜 핵심은 이건데, 원래 바퀴 쑥 뽑고 이 바퀴 꾹 꽂으면 끝이에요.",
+   "caps": [
+    "진짜 핵심은 이건데",
+    "원래 바퀴 쑥 뽑고",
+    "이 바퀴 꾹 꽂으면",
+    "끝이에요"
+   ],
+   "emph": [
+    "꾹"
+   ],
+   "facts": [
+    "o_install"
+   ],
+   "_tts_fix": "1차 '새 바퀴'를 스피치매틱스 '쳇바퀴'·위스퍼 '체바퀴'로 받아씀(발음 뭉개짐) → '이 바퀴'로 뒤 TTS 1회 다시"
+  },
+  {
+   "id": "B4",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "심지어 카펫 위에서도 다리에 힘 하나 안 주고 쭉쭉 굴러간대요.",
+   "caps": [
+    "심지어 카펫 위에서도",
+    "다리에 힘 하나 안 주고",
+    "쭉쭉",
+    "굴러간대요"
+   ],
+   "emph": [
+    "쭉쭉"
+   ],
+   "facts": [
+    "o_carpet"
+   ]
+  },
+  {
+   "id": "B5",
+   "role": "cta",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "사무실 의자에 바꿔 끼웠더니, 다들 의자 소리 어디 갔냐고 난리예요.",
+   "caps": [
+    "사무실 의자에",
+    "바꿔 끼웠더니",
+    "다들 의자 소리 어디 갔냐고",
+    "난리예요"
+   ],
+   "emph": [
+    "난리예요"
+   ],
+   "facts": []
+  }
+ ]
+}
