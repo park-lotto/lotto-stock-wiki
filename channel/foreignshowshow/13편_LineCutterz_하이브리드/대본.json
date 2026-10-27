@@ -1,0 +1,358 @@
+{
+ "_note": "샥탬스토리 하이브리드 13편 Line Cutterz — 앞 0~O3 끝(15.29초) = 칼카피 그대로(끝 원음 '손가락에 커터를 끼우면?'), 뒤 = 지훈·같은 제목·BGM 이어서 1인칭 체험 나레(존댓말). CTA 없음·금액 없음. 쿠팡엔 반지형이 없어 같은 회사 지퍼형(비슷한 제품)을 숨기지 않고 말함(사장님 10-27 '비슷한 제품으로 해도 된다, 숨기지 않는다'). 렌더 tools/calcopy/shark/hybrid.py.",
+ "product": "LINE CUTTERZ 세라믹 블레이드 낚싯줄 커터 지퍼형(쿠팡 9694028180, 53,400원 — 같은 회사 Line Cutterz 제품, 방송 제품은 반지형이라 '비슷한 제품') · 같은 상품 9791490101 · 반지형은 쿠팡 검색 '라인커터즈 링'·'Line Cutterz Ring'·'라인커터즈 반지형' 0건(관련 없는 상품만)",
+ "same_product": false,
+ "similar_why": "방송 = Line Cutterz 반지형(Ring) / 쿠팡 = 같은 회사의 지퍼형(Zipper Pull) — 같은 브랜드·같은 '홈에 줄을 걸어 끊는' 방식, 모양이 다름",
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "흥미이음": {
+  "원본흥미": "칼을 안 꺼내고 손에 단 작은 커터 홈에 줄을 걸기만 하면 굵은 줄도 끊긴다(앞 O3 '손가락에 커터를 끼우면?'으로 끝남)",
+  "뒤흥미": "같은 회사 지퍼형 영상에서 가방·목걸이 줄에 단 커터 홈에 줄을 걸어 당기자 바로 끊김(os4Rtrpd0Ok 8~16·36~40초, wvu00XGhfJ4 29~31·42~44초)",
+  "판정": "같음",
+  "근거": "같은 브랜드 같은 원리 — 쿠팡 9694028180 상품명 'LINE CUTTERZ 세라믹 블레이드 낚싯줄 커터 지퍼형'(파트너스 API 2026-10-27, C:/숏템_칼카피/foreignshowshow/13편_소재/쿠팡API_13-14.json) · 상품 사진 img/9694028180.jpg(주황 지퍼형) · 공식 영상 시트 C:/숏템_칼카피/foreignshowshow/하이브리드/13편_LineCutterz/sheet/{os4,os4_8_44,wvu}.jpg"
+ },
+ "hybrid": {
+  "front_doc": "../13편_LineCutterz",
+  "front_src": "C:/숏템_칼카피/foreignshowshow/13편_LineCutterz/work/render/final.mp4",
+  "front_render_info": "C:/숏템_칼카피/foreignshowshow/13편_LineCutterz/work/render/render_info.json",
+  "front_work": "C:/숏템_칼카피/foreignshowshow/13편_LineCutterz/work",
+  "cut_after": "O3",
+  "cut_why": "O3 원음 '그래서 생각했죠 / 손가락에 커터를 끼우면?' 끝 — 발상 질문으로 끝나 '근데 저 반지가 궁금해서'로 잇는다. 시제품·시연은 뒤 체험이 받는다",
+  "transition": {
+   "kind": "slideleft",
+   "dur": 0.25,
+   "keep_top": 434,
+   "why": "샥탬 하이브리드 3~12편과 같은 이음(제목 띠 고정)"
+  }
+ },
+ "titles": {
+  "line1": "손가락에 끼우는",
+  "line2": "낚싯줄 커터?!",
+  "rule": "앞과 같은 제목(띠 고정)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.25,
+  "why": "앞 편과 같은 목소리·같은 speed(R2)"
+ },
+ "bench": {},
+ "final": {
+  "cps_target": 8.14,
+  "cps_note": "앞 13편 완성본 나레 실측 cps_out 8.14(render_info narr)",
+  "lines": [
+   {
+    "id": "B1",
+    "kind": "나레",
+    "fn": "이음(연결어)+잉?",
+    "text": "근데 저 반지가 궁금해서 쿠팡에 쳐 봤더니, 반지는 없고 같은 회사 지퍼형이 있더라고요.",
+    "tts": "근데 저 반지가 궁금해서 쿠팡에 쳐 봤더니, 반지는 없고 같은 회사 지퍼형이 있더라고요.",
+    "caps": [
+     "근데 저 반지가",
+     "궁금해서 쿠팡에 쳐 봤더니",
+     "반지는 없고",
+     "같은 회사 지퍼형이",
+     "있더라고요"
+    ],
+    "facts": [
+     "c1"
+    ],
+    "emph": [
+     {
+      "cap": "근데 저 반지가",
+      "span": "반지가",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "궁금해서 쿠팡에 쳐 봤더니",
+      "span": "쿠팡에 쳐 봤더니",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "반지는 없고",
+      "span": "반지는 없고",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "같은 회사 지퍼형이",
+      "span": "지퍼형이",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "있더라고요",
+      "span": "있더라고요",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ],
+    "point": "잉",
+    "answer_at": 2,
+    "emph_words": [
+     "같은 회사 지퍼형"
+    ]
+   },
+   {
+    "id": "B2",
+    "kind": "나레",
+    "fn": "②권위(와우1)",
+    "text": "이게 말도 안 되는 게, 샤크탱크에서 천재적이라는 말 듣고 투자까지 받은 회사거든요.",
+    "tts": "이게 말도 안 되는 게, 샤크탱크에서 천재적이라는 말 듣고 투자까지 받은 회사거든요.",
+    "caps": [
+     "이게 말도 안 되는 게",
+     "샤크탱크에서",
+     "천재적이라는 말 듣고",
+     "투자까지 받은",
+     "회사거든요"
+    ],
+    "facts": [
+     "f9",
+     "f10"
+    ],
+    "emph": [
+     {
+      "cap": "이게 말도 안 되는 게",
+      "span": "이게 말도",
+      "color": "분홍",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "샤크탱크에서",
+      "span": "샤크탱크에서",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "천재적이라는 말 듣고",
+      "span": "말 듣고",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "투자까지 받은",
+      "span": "투자까지 받은",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "회사거든요",
+      "span": "회사거든요",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B3",
+    "kind": "나레",
+    "fn": "③핵심(와우2, 잉 답)",
+    "text": "진짜 핵심은 이건데, 가방 지퍼에 달아 두고 줄을 홈에 걸어 당기면 바로 끊겨요.",
+    "tts": "진짜 핵심은 이건데, 가방 지퍼에 달아 두고 줄을 홈에 걸어 당기면 바로 끊겨요.",
+    "caps": [
+     "진짜 핵심은 이건데",
+     "가방 지퍼에 달아 두고",
+     "줄을 홈에 걸어 당기면",
+     "바로 끊겨요"
+    ],
+    "facts": [
+     "c2"
+    ],
+    "emph": [
+     {
+      "cap": "진짜 핵심은 이건데",
+      "span": "핵심은 이건데",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "가방 지퍼에 달아 두고",
+      "span": "지퍼에 달아 두고",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "줄을 홈에 걸어 당기면",
+      "span": "걸어 당기면",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "바로 끊겨요",
+      "span": "바로 끊겨요",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B4",
+    "kind": "나레",
+    "fn": "④심지어(와우3)",
+    "text": "심지어 이게 대박인 게, 이로 끊기 힘든 합사 줄도 한 번에 툭 잘리더라고요.",
+    "tts": "심지어 이게 대박인 게, 이로 끊기 힘든 합사 줄도 한 번에 툭 잘리더라고요.",
+    "caps": [
+     "심지어 이게 대박인 게",
+     "이로 끊기 힘든",
+     "합사 줄도",
+     "한 번에 툭 잘리더라고요"
+    ],
+    "facts": [
+     "c2",
+     "f6"
+    ],
+    "emph": [
+     {
+      "cap": "심지어 이게 대박인 게",
+      "span": "심지어 이게",
+      "color": "빨강",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "이로 끊기 힘든",
+      "span": "끊기 힘든",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "합사 줄도",
+      "span": "합사 줄도",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "한 번에 툭 잘리더라고요",
+      "span": "한 번에",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B5",
+    "kind": "나레",
+    "fn": "끝=사회 반응",
+    "text": "같이 낚시 다니는 형들이 보더니, 다들 어디서 샀냐고 난리예요.",
+    "tts": "같이 낚시 다니는 형들이 보더니, 다들 어디서 샀냐고 난리예요.",
+    "caps": [
+     "같이 낚시 다니는 형들이",
+     "보더니",
+     "다들 어디서 샀냐고",
+     "난리예요"
+    ],
+    "facts": [
+     "창작"
+    ],
+    "emph": [
+     {
+      "cap": "같이 낚시 다니는 형들이",
+      "span": "다니는 형들이",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "보더니",
+      "span": "보더니",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "다들 어디서 샀냐고",
+      "span": "어디서 샀냐고",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "난리예요",
+      "span": "난리예요",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ]
+ },
+ "facts": {
+  "c1": "쿠팡 파트너스 API 검색(2026-10-27, tools/calcopy/coupang_api_search.py) '라인커터즈'·'Line Cutterz' → 9792788750·9751263294 장착형, 9694028180·9791490101 지퍼형, 7598905619·9537758129·9696550151 퀵 커터 / '라인커터즈 링'·'Line Cutterz Ring'·'라인커터즈 반지형' → 관련 없는 상품만(반지형 없음). 결과 C:/숏템_칼카피/foreignshowshow/13편_소재/쿠팡API_13-14.json·쿠팡API_13b.json",
+  "c2": "공식 영상 'Line Cutterz Patented Zipper Pull Fishing Line Cutter'(os4Rtrpd0Ok) 8~16·36~40초 가방 지퍼에 단 커터 홈에 줄을 걸어 당겨 끊음 · 'Line Cutterz NEW ceramic blade … zipper pull'(wvu00XGhfJ4) 29~31·42~44초 · 쿠팡 상품명 '세라믹 블레이드 … 땋은(합사) 낚싯줄 커터'(7598905619)",
+  "f6": "앞 근거 f6 계열: 원본 103.45~105.21 창업자 'You can't bite this with your teeth.'(50파운드 합사 나일론)",
+  "f9": "앞 근거 f9: 원본 204.16~205.56 분홍 옷 투자자 'I think it's genius.'",
+  "f10": "원본 336.18~353.22 창업자 'Would you do 28%? … 30% … I can't … 33%' → 투자자 'Okay.' · 'Yes.' → 352.5 창업자가 투자자석으로 걸어가 악수(투자 성사) — 금액은 대본에 안 씀",
+  "창작": "B5 '같이 낚시 다니는 형들이 어디서 샀냐고 난리' = 화자 감상·사회 반응(지침서 §0-1 14 과장·창작 허용선 — 성분·효능·안전·금액 아님)"
+ }
+}
