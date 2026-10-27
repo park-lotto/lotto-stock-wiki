@@ -302,6 +302,29 @@ def alt_scene_problems(S: dict, M: dict, origin_names: set) -> list[str]:
     return out
 
 
+def alt_scene_fix(S: dict, M: dict, origin_names: set, photos: list) -> list[str]:
+    """alt_scene_problems 가 잡는 컷을 제품 사진으로 바로 바꾼다(판정과 같은 줄 범위) — 답이 하나뿐인 규칙은 반려 말고 고친다
+    (10-27 run4 a편: 사진을 받은 뒤에도 L9·L10 원본 장면으로 같은 반려). 사진은 번갈아, 움직임은 fill_shot_max 가 채운다."""
+    if not photos:
+        return []
+    lines = S.get("lines") or []
+    last_orig = max((i for i, l in enumerate(lines) if l.get("kind") == "orig"), default=-1)
+    after = {l.get("id") for l in lines[last_orig + 1:] if l.get("kind") == "tts"}
+    out, k = [], 0
+    for lid, cuts in (M.get("cuts") or {}).items():
+        if lid not in after:
+            continue
+        for c in cuts if isinstance(cuts, list) else [cuts]:
+            if isinstance(c, dict) and str(c.get("src") or "") in origin_names:
+                old = c.get("src")
+                for x in ("ss", "crop", "at", "max", "move"):
+                    c.pop(x, None)
+                c["src"] = photos[k % len(photos)]
+                k += 1
+                out.append(f"{lid}: {old} → {c['src']}")
+    return out
+
+
 STILL_EXT = (".jpg", ".jpeg", ".png", ".webp")
 ZOOM_MIN_H = 0.95     # 영상 컷 crop 높이 하한(원본 높이 비율) = 확대 1.0(사장님 10-22 "확대 과다 → 확대 1.0 + 원본 글 흐림") — 여유 5%
 

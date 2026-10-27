@@ -1864,6 +1864,10 @@ def ph_script_got(st, m, rp, u):
             S["source_label"] = ch if _fmt(st) == "자막노래형" else f"출처: {ch}"      # 자막노래형 = 창 안 '📍<계정>'(판 credit.in_window)
         if _fmt(st) == "자막노래형":
             _subsong_bgm(st, S)
+        if (st.get("product") or {}).get("mode") == "alt" and _prod_files(st):
+            afix = RU.alt_scene_fix(S, M, _origin_names(st), [f["name"] for f in _prod_files(st)])
+            if afix:
+                st["log"].append("비슷한 제품 줄 장면을 제품 사진으로 바로 바꿈: " + "; ".join(afix)[:300])
         M = _prep_material(st, S, M)
         a = audit_script(st, S, M)
     if not a.get("ok") and st["tries"].get("script", 0) >= SCRIPT_FIX_ONCE and not (set(_script_causes(a)) & SCRIPT_MUST):

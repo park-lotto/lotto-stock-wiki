@@ -63,3 +63,14 @@ def test_alt_scene_without_photos_fetches_photos_before_asking(monkeypatch):
     assert "prod_1_0.jpg" in r2["review"][0]["why"] and F._prod_files(st)
     r3 = F.ph_script_got(st, {}, {}, {})                       # 두 번째부터는 사진이 있어도 없어도 다시 받지 않는다(한 번)
     assert "review" in r3
+
+
+def test_alt_scene_fix_swaps_origin_cuts_to_photos():
+    """답이 하나뿐인 규칙(비슷한 제품 줄 = 제품 사진)은 반려 말고 바로 고친다(10-27 run4 a편 L9·L10 같은 반려)."""
+    from tools.calcopy.hybrid import rules as RU
+    S = {"lines": [{"id": "O1", "kind": "orig"}, {"id": "L9", "kind": "tts"}, {"id": "L10", "kind": "tts"}]}
+    M = {"cuts": {"O1": [{"src": "A.mp4", "ss": 1}], "L9": [{"src": "A.mp4", "ss": 5, "crop": [0, 0, 1, 1]}], "L10": [{"src": "A.mp4", "ss": 9}]}}
+    fx = RU.alt_scene_fix(S, M, {"A.mp4"}, ["prod_0.jpg", "prod_1.jpg"])
+    assert len(fx) == 2 and RU.alt_scene_problems(S, M, {"A.mp4"}) == []
+    assert M["cuts"]["O1"][0]["src"] == "A.mp4" and M["cuts"]["L9"][0] == {"src": "prod_0.jpg"}
+    assert RU.alt_scene_fix(S, M, {"A.mp4"}, []) == []
