@@ -719,7 +719,7 @@ def ph_setup_check(st, m, rp, u):
     if miss:
         st["log"].append("준비 확인: 빠진 것 " + ", ".join(str(x.get("id")) for x in miss))
         raise _Stop(SETUP_WHY, setup_fix(miss), retry="setup", ask_member=True)       # 다시 시도 = 준비를 다시 잰다
-    st["env"] = {k: env.get(k) for k in ("keys", "dev", "cache", "asr", "done_refs")}     # done_refs = 이 PC 작업 기록의 만든 편(둘째 소재 고르기가 뺀다)
+    st["env"] = {k: env.get(k) for k in ("keys", "dev", "cache", "asr", "done_refs", "single_source")}     # done_refs = 이 PC 작업 기록의 만든 편(둘째 소재 고르기가 뺀다)
     return {"goto": "bench"}
 
 
