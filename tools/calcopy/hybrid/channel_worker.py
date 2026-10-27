@@ -111,8 +111,8 @@ def yt_top(cid: str, n: int = 30) -> list[dict]:
     r = subprocess.run(["yt-dlp", "--flat-playlist", "-J", "--playlist-end", str(n), f"https://www.youtube.com/channel/{cid}/shorts"],
                        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
     try:
-        es = json.loads(r.stdout).get("entries") or []
-    except ValueError:
+        es = (json.loads(r.stdout or "null") or {}).get("entries") or []      # 없는 채널·막힘이면 yt-dlp 가 'null'(10-27 엔진 전체가 멈췄다)
+    except (ValueError, AttributeError):
         return []
     return [{"url": f"https://www.youtube.com/shorts/{x.get('id')}", "views": int(x.get("view_count") or 0), "title": x.get("title")} for x in es if x.get("id")]
 
@@ -209,9 +209,22 @@ def main(argv: list[str]) -> int:
         print(f"[ch] 후보 채널 {len(g)}개 · 거른 뒤 {sum(1 for e in g.values() if strong(e))}개 · 이번에 볼 것 {len(todo)}개", flush=True)
         if todo:
             t0 = time.time()
-            tts = tt_tops([e["handle"] for k, e in todo if e["platform"] == "tt"])
+            cache = pool / "_channel_tops.json"          # 받은 목록은 바로 남긴다(10-27: 유튜브 한 채널 오류로 틱톡 100여 채널 목록을 다 잃었다)
+            got = json.loads(cache.read_text(encoding="utf-8")) if cache.exists() else {}
+            need_tt = [e["handle"] for k, e in todo if e["platform"] == "tt" and k not in got]
+            if need_tt:
+                for h, v in tt_tops(need_tt).items():
+                    got[f"tt:{h}"] = v
+                cache.write_text(json.dumps(got, ensure_ascii=False), encoding="utf-8")
             for k, e in todo:
-                e["top"] = tts.get(e["handle"], []) if e["platform"] == "tt" else yt_top(e["handle"])
+                if k not in got and e["platform"] == "yt":
+                    try:
+                        got[k] = yt_top(e["handle"])
+                    except Exception as ex:  # noqa: BLE001 — 한 채널 실패는 남기고 다음
+                        sys.stderr.write(f"[ch] 유튜브 {k} 목록 실패: {type(ex).__name__}\n")
+                        got[k] = []
+                    cache.write_text(json.dumps(got, ensure_ascii=False), encoding="utf-8")
+                e["top"] = got.get(k) or []
             print(f"[ch] 채널 화면 {time.time() - t0:.0f}초", flush=True)
             for i in range(0, len(todo), BATCH):
                 bt = [(k, e) for k, e in todo[i:i + BATCH] if e["top"]]
@@ -226,6 +239,7 @@ def main(argv: list[str]) -> int:
                     print(f"[ch] {k} · 100만+ {book[k]['n_1m']}편 · 중앙 {book[k]['median']:,} · {jj.get('kind')} 쓸만 {jj.get('usable')} 점수 {jj.get('score')} · {str(jj.get('why') or '')[:60]}", flush=True)
                 ap_.write_text(json.dumps(dict(sorted(book.items(), key=lambda kv: -float(((kv[1].get("judge") or {}).get("score")) or 0))),
                                           ensure_ascii=False, indent=1), encoding="utf-8")
+            cache.unlink(missing_ok=True)          # 판정까지 끝난 회차 — 다음 회차(14일 뒤 재확인)는 목록을 새로 받는다
         if not a.loop:
             break
         time.sleep(3600)
