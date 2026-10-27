@@ -1615,7 +1615,7 @@ def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
 # 판정 주인 = cut_content_gate 한 곳. 프레임은 렌더 조각과 같은 자리(cut_crop)·같은 흐림(blur_vf)으로 thumb.card_scene_frame 이 원본에서 뽑는다.
 # 자 = channelkit.vision(PP-OCRv5 det 글자 상자 · YuNet 얼굴 · SFace 동일성). 문턱 표본 = shopping_shorts/tests/fixtures/cut_content_labels.json.
 CONTENT_PAIR = 2 / FPS            # 글자 '붙박이' 재기 짝 프레임 간격 — 박힌 글은 2프레임 동안 그대로, 장면 속 글(포장·간판)은 화면과 같이 움직인다
-CONTENT_VER = 5                   # 판정(자·문턱)이 바뀌면 올린다 — 캐시 열쇠
+CONTENT_VER = 6                   # 판정(자·문턱)이 바뀌면 올린다 — 캐시 열쇠
 # 글자 문턱 — 표본 762컷(10-25 494컷 + 10-25 오검출 수리 268컷: 원본 무작위 구간·잇템로그 ep12·박정수·샤크탱크 원편) 오푸스 눈 라벨.
 #   pos 132(원본 쇼츠 가격·자막·제목 띠·방송사 자막·로고·광고 글) / neg 630(제품 포장·상자·라벨·간판·화면 속 글).
 #   id crc32 짝수로 정하고 홀수로 잰 값(정직한 값): 옛 판정 P 0.857·R 0.677 → 지금 P 0.900·R 0.726. 옛 494컷만: P 0.808→0.863 · R 0.94 그대로.
@@ -1635,6 +1635,7 @@ TEXT_FAR_RING = 5.0               # 긴 간격(같은 컷 다른 잴 프레임) 
 TEXT_SCENE_RATIO = (0.6, 1.3)     # 멈춘 화면 글: 긴 간격 짝에서 안/둘레 가 이 범위 = 글이 주변과 같이 변함 = 장면 속 글(카레 상자 팬·전구 무늬·성시경 간판). 표본 0.5~0.7 / 1.2~1.5 어디서나 같은 결과
 TEXT_SMALL_H = 0.03               # 창 3~3.5% 작은 글줄은 긴 간격 짝 전부에서 안/둘레 < TEXT_SMALL_STILL 일 때만(배경이 바뀌는 동안 그대로 = 박힌 자막 — 진열대 가격표는 같이 움직인다)
 TEXT_SMALL_STILL = 0.6
+TEXT_THIN_H, TEXT_THIN_ASPECT = 0.02, 5.0   # 획 붙박이 판정의 가는 글줄(창 2~3%) — 가로/세로 ≥ 5 일 때만. 표본 오검출 +0(4.0 이면 +1, 3.0 이면 +5), 10-27 TV 원본 박힌 제목 6.4~6.9
 TEXT_GLYPH_STILL = 0.3            # 획 픽셀 변화(d_gl) / 둘레 변화 < 이 값 = 획이 그대로인 박힌 글(자막 줄). 짝수 반 0.3~0.5 같은 결과(0.2 는 R 0.91), 홀수 반 오검출 +0
 TEXT_GLYPH_FILL = 0.65            # 획 판정 상자 채움 하한 — 작은 자막 줄은 낱말 사이 틈 때문에 0.70~0.79(TEXT_FILL_MIN 0.8 밖). 0.6~0.7 같은 결과
 TEXT_GLYPH_ASPECT = 3.0           # 획 판정은 글줄(가로/세로 ≥ 3)만 — 1.6 이면 짝수 반 오검출 +4
@@ -1887,6 +1888,9 @@ def foreign_text(f: dict) -> bool:
     if (f.get("d_gl") is not None and f["score"] >= TEXT_SCORE_MIN and f["fill"] >= TEXT_GLYPH_FILL and f["aspect"] >= TEXT_GLYPH_ASPECT
             and TEXT_SMALL_H <= f["h"] <= TEXT_H_RANGE[1] and f["d_ring"] >= TEXT_GLYPH_RING and f["d_gl"] < TEXT_GLYPH_STILL * f["d_ring"]):
         return True               # 획 붙박이 — 움직이는 배경 위 획이 그대로인 글줄(틱톡형 작은 자막 포함). d_gl 없는 옛 값은 건너뜀
+    if (f.get("d_gl") is not None and TEXT_THIN_H <= f["h"] < TEXT_SMALL_H and f["aspect"] >= TEXT_THIN_ASPECT and f["score"] >= TEXT_SCORE_MIN
+            and f["fill"] >= TEXT_GLYPH_FILL and f["d_ring"] >= TEXT_GLYPH_RING and f["d_gl"] < TEXT_GLYPH_STILL * f["d_ring"]):
+        return True               # 가늘고 아주 긴 글줄(영상 내내 박힌 영문 제목 — 10-27 TV 'Ultimate TV Mobility' 창 2.7%) — 가격표(짧다)는 가로/세로에서 걸러진다
     asp_min = TEXT_EDGE_ASPECT if f.get("edge") else TEXT_ASPECT_MIN     # 창 끝에 잘린 글줄은 짧아 네모에 가깝다(10-27 싱크대 L2 '…건조' 1.2)
     if f["score"] < TEXT_SCORE_MIN or f["fill"] < TEXT_FILL_MIN or f["aspect"] < asp_min:
         return False
@@ -1957,6 +1961,16 @@ def face_anchors(st: dict, doc: Path, T: dict, cand_dir: Path) -> list:
     return out
 
 
+SAME_TEXT_IOU = 0.5          # 같은 원본 두 컷의 글자 상자(원본 픽셀)가 이만큼 겹치면 같은 박힌 글
+
+
+def _rect_iou(a, b) -> float:
+    ax1, ay1, bx1, by1 = a[0] + a[2], a[1] + a[3], b[0] + b[2], b[1] + b[3]
+    iw, ih = max(0, min(ax1, bx1) - max(a[0], b[0])), max(0, min(ay1, by1) - max(a[1], b[1]))
+    inter = iw * ih
+    return inter / max(1, a[2] * a[3] + b[2] * b[3] - inter)
+
+
 def blur_entry(boxes: list, crop: list, win: tuple, ss: float, sec: float, pad: int = 8) -> list:
     """(판단 주인 — 창 좌표 글자 상자 → 재료.blur 한 칸) 창 [x0,y0,x1,y1] 들을 합친 칸을 원본 픽셀 [x, y, w, h, 시작초, 끝초]로.
     10-26 까르보: 반려 문구가 창 좌표만 줘서 고치는 쪽이 원본 좌표로 바꾸다 세 번 다 어긋났다(같은 'NOOO!' 자막 3번 반려)."""
@@ -2013,6 +2027,7 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
             ts, t2s = content_times(c["ss"], n)
             pre[key] = ex.submit(cut_frames, [(src, t, crop, (ww, wh), regs) for t in ts + t2s], 1)
     bad, rows = [], {}
+    found, fixed_k = {}, set()          # autoblur: 원본마다 확인된 남의 글자 자리(원본 픽셀) · 흐림 넣은 컷
     try:
         for (k, c, src, n, crop, regs, key) in jobs:
             r = cache.get(key)
@@ -2033,6 +2048,8 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
                 ent = blur_entry(boxes, crop, (ww, wh), float(c["ss"]), n / FPS)
                 M.setdefault("blur", {}).setdefault(c["src"], []).append(ent)
                 M["_blur_added"] = M.get("_blur_added", 0) + 1
+                found.setdefault(c["src"], []).append(ent[:4])
+                fixed_k.add(k)
                 regs2 = M["blur"][c["src"]]
                 m2 = cut_content_feats(src, c["ss"], n, crop, (ww, wh), regs2, anchors, ocr=ocr)
                 left = sum(1 for fr in m2["text"] if any(foreign_text(f) for f in fr))
@@ -2046,6 +2063,26 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
             if nf >= FACE_MIN_HITS:
                 cs = [f["cos"] for x in r["face"] for f in x][:3]
                 bad.append(f"컷 {k} {where}: 연예인 아닌 얼굴 {nf}/{len(r['face'])}장(기준 얼굴 코사인 {cs} < {FACE_OTHER_COS}) — 연예인이 나오는 장면으로 바꾼다")
+        # 같은 원본 같은 자리 = 같은 박힌 글자(영상 내내 박힌 제목·워터마크). 배경까지 멈춘 컷은 '획 붙박이' 판정이 안 서서 놓친다(10-27 TV 12컷 중 5컷만)
+        #   → 확인된 자리와 겹치는 글자 상자(점수 ≥ TEXT_SCORE_MIN)가 같은 원본 다른 컷에 있으면 그 컷도 같은 글로 보고 흐린다
+        for (k, c, src, n, crop, regs, key) in jobs if autoblur and found else ():
+            if k in fixed_k or c["src"] not in found:
+                continue
+            regs_now = (M.get("blur") or {}).get(c["src"])
+            m = cut_content_feats(src, c["ss"], n, crop, (ww, wh), regs_now, anchors, ocr=ocr)
+            hit = []
+            for fr in m["text"]:
+                for f in fr:
+                    if f["score"] < TEXT_SCORE_MIN or f["blur"] > TEXT_BLUR_MAX:
+                        continue
+                    e = blur_entry([f["box"]], crop, (ww, wh), 0.0, 0.0)
+                    if any(_rect_iou(e[:4], g) >= SAME_TEXT_IOU for g in found[c["src"]]):
+                        hit.append(f["box"])
+            if hit:
+                ent = blur_entry(hit, crop, (ww, wh), float(c["ss"]), n / FPS)
+                M["blur"][c["src"]].append(ent)
+                M["_blur_added"] = M.get("_blur_added", 0) + 1
+                log(f"[흐림 넣기] 컷 {k} {c['line']} {c['src']}@{float(c['ss']):.2f} 같은 자리 박힌 글자(다른 컷에서 확인) → += {ent}")
     finally:
         if todo:
             ex.shutdown(wait=True, cancel_futures=True)

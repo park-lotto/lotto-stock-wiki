@@ -166,3 +166,18 @@ def test_edge_clipped_caption_is_foreign_text():
          "fi": [[21.85, 2.59], [1.53, 2.19]], "blur": 0.09}
     assert not foreign_text(b)                      # 창 끝 표식 없는 옛 값 = 옛 판정
     assert foreign_text({**b, "edge": True})
+
+
+def test_thin_long_burned_title_is_foreign_text():
+    """10-27 TV: 원본에 영상 내내 박힌 'Ultimate TV Mobility'(창 높이 2.7%·가로/세로 6.6) — 작은 글 문턱 3% 밑이라 놓쳐 완성본 전 컷에 남았다."""
+    from tools.calcopy.hybrid.render_bench import foreign_text
+    b = {"box": [390, 300, 736, 352], "score": 0.988, "fill": 0.791, "aspect": 6.65, "h": 0.0271, "d_in": 0.42, "d_ring": 3.8, "d_gl": 0.12,
+         "fi": [[3.87, 10.24], [2.55, 8.4]], "blur": 0.0}
+    assert foreign_text(b)
+    assert not foreign_text({**b, "aspect": 3.5})        # 짧은 작은 글(가격표 꼴)은 그대로 밖
+
+
+def test_same_source_same_place_rect_iou():
+    from tools.calcopy.hybrid.render_bench import SAME_TEXT_IOU, _rect_iou
+    assert _rect_iou([252, 191, 247, 52], [251, 190, 248, 54]) >= SAME_TEXT_IOU      # 10-27 TV 같은 제목 두 컷
+    assert _rect_iou([252, 191, 247, 52], [252, 600, 247, 52]) == 0                   # 다른 자리
