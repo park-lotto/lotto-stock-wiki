@@ -96,6 +96,32 @@ def _asr_gemini(final: Path) -> list[tuple[float, float, str]]:
     return out
 
 
+PLACE_CORR_MIN = 0.6     # 줄 목소리 파일 ↔ 완성 목소리 상호상관 — 이 위면 '그 자리에 그 소리가 있다'
+
+
+def placed_at(line_wav: Path, voice_wav: Path, t0: float, win: float = 1.0, sr: int = 8000) -> tuple[float | None, float]:
+    """(판단 주인 — 나레 줄이 실제로 놓인 시각) 줄 목소리 파일 앞 1초를 완성 목소리(voice.wav)의 계획 시작 ±win 안에서 상호상관으로 찾는다.
+    받아쓰기 낱말 시각은 앞 줄이 원음일 때 경계에서 밀린다(10-27 run4 a편 L9: SM 20.79 vs 실제 20.322·상관 0.94) — 시각은 이것으로 잰다.
+    반환 (놓인 시각 또는 None, 상관)."""
+    import subprocess
+    import numpy as np
+
+    def rd(p, ss=None, t=None):
+        cmd = ["ffmpeg", "-v", "error"] + (["-ss", f"{ss:.3f}"] if ss is not None else []) + ["-i", str(p)] + (["-t", f"{t:.3f}"] if t else []) + ["-ac", "1", "-ar", str(sr), "-f", "s16le", "-"]
+        return np.frombuffer(subprocess.run(cmd, capture_output=True).stdout, np.int16).astype(float)
+    v = rd(line_wav, t=1.0)
+    lo = max(0.0, t0 - win)
+    m = rd(voice_wav, lo, 2 * win + 1.0)
+    if len(v) < sr // 10 or len(m) <= len(v):
+        return None, 0.0
+    v = v - v.mean()
+    c = np.correlate(m - m.mean(), v, "valid")
+    k = int(np.argmax(c))
+    seg = m[k:k + len(v)]
+    corr = float(c[k] / (np.linalg.norm(v) * np.linalg.norm(seg - seg.mean()) + 1e-9))
+    return (round(lo + k / sr, 3) if corr >= PLACE_CORR_MIN else None), round(corr, 3)
+
+
 def line_starts_from_asr(lines: list[str], segs) -> list[float | None]:
     """줄 글(정규화)을 받아쓰기 구절 글 이어붙인 것에 차례로 맞춰, 줄 첫 글자가 놓인 구절 안 위치를 시각으로 옮긴다.
     lines = 줄마다 실제로 말하는 전문. 찾은 뒤(또는 못 찾아도) 그 줄 몫만큼 앞으로 넘긴다 — 10-18 작품1: 「성분표」를 「공분표」로

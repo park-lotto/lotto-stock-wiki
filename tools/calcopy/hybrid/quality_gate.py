@@ -886,10 +886,19 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
                 return None, f"스피치매틱스 못 씀({type(e).__name__}: {str(e)[:120]}) — 미측정 · 참고(판정 안 함) whisper 차 {ref_txt}"
             out = narr_sync_rows(narr, T["lines"], words)
             cache["asr"] = {"rows": out, "segs": [(w["s"], w["e"], w["w"]) for w in words]}
+            fixed = []
+            for r in out:                       # 낱말은 들렸는데 시각만 어긋남 → 줄 목소리 파일을 완성 목소리에 맞대 실제 놓인 시각으로(주인 check_line_sync.placed_at)
+                lw = R / f"s_{r['line']}.wav"
+                if not r["ok"] and r.get("heard_t0") is not None and lw.exists():
+                    at, cr = LS.placed_at(lw, voice, float(r["t0"]))
+                    if at is not None and abs(at - float(r["t0"])) <= LS.LIMIT_SM:
+                        r["ok"], r["placed_at"] = True, at
+                        fixed.append(f"{r['line']} 받아쓰기 {r['heard_t0']} → 실제 {at}(상관 {cr})")
             bad = [r["line"] for r in out if not r["ok"]]
-            worst = max((abs(r["diff"]) for r in out if r["diff"] is not None), default=None)
+            worst = max((abs(r["diff"]) for r in out if r["diff"] is not None and not r.get("placed_at")), default=None)
             return (not bad if out else None), (f"나레 {len(out)}줄 중 못 찾음·{LS.LIMIT_SM}초 넘게 어긋남 {bad or '0'} · 최대 차 {worst} "
-                                                f"(스피치매틱스 낱말 시각) · " + " ".join(f"{r['line']}:{r['t0']}↔{r['heard_t0']}" for r in out))
+                                                f"(스피치매틱스 낱말 시각) · " + " ".join(f"{r['line']}:{r['t0']}↔{r['heard_t0']}" for r in out)
+                                                + (f" · 받아쓰기 시각 오독을 실제 자리로 바로잡음 {fixed}" if fixed else ""))
         row("소리", "나레 받아쓰기 ↔ 대본", asr_rows, "engine/narr_verify.heard_words(스피치매틱스) → check_line_sync.line_starts_from_asr · LIMIT_SM")
     # ── 대본
     if want("대본") and not legacy:
