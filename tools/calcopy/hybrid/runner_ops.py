@@ -1735,6 +1735,7 @@ def c_origin_foreign(W, d):
                 return {"mode": mode, "error": "소재 장면을 못 뽑았다", "cands": [], "sheets": []}
             from tools.calcopy import lens as LN
             found: dict = {}
+            _t = time.time()
             with LN.lens_page() as pg:
                 for im in [c for s in seeds for c in LN.video_crops(s)]:
                     try:
@@ -1746,7 +1747,11 @@ def c_origin_foreign(W, d):
                         if k and k[1] != d.get("bench_id"):
                             found.setdefault(k, {"href": r["href"], "text": r["text"], "hits": 0})["hits"] += 1
             top = sorted(found.items(), key=lambda kv: -kv[1]["hits"])[:60]     # 여러 장에 뜬 것 먼저(잘라 올리기로 후보가 13 → 58, 10-26)
+            sys.stderr.write(f"[구간] 렌즈 {time.time() - _t:.0f}초 · 후보 {len(top)}\n")   # 원본 찾기 어디서 시간이 나나(10-27 run4: 한 번 510~537초, 구간 기록 없음)
+            _t = time.time()
             ms = _metas([OF.url_of(pf, vid, x["href"]) for (pf, vid), x in top])
+            sys.stderr.write(f"[구간] 렌즈 후보 정보 {time.time() - _t:.0f}초\n")
+            _t = time.time()
             for (pf, vid), x in top:
                 u = OF.url_of(pf, vid, x["href"])
                 raw.append({"platform": pf, "id": vid, "url": u, "lens_text": x["text"], "lens_hits": x["hits"], **ms.get(u, {})})
@@ -1755,6 +1760,7 @@ def c_origin_foreign(W, d):
                 for c in _peer_raw(d["queries"], int(d.get("n") or 8), skip | {d.get("bench_id")}):
                     if (c["platform"], c["id"]) not in have:
                         raw.append({**c, "found_by": "keyword"})
+                sys.stderr.write(f"[구간] 키워드 검색·정보 {time.time() - _t:.0f}초\n")
     else:
         if mode == "find":          # 회원 Claude 가 직접 찾은 주소(flow f_of_find, 10-26) — 메타·썸네일만 받아 같은 영상 판정 시트에 싣는다(판정은 서버 질문)
             given = [(k, OF.url_of(k[0], k[1], url)) for url in [str(x) for x in d.get("urls") or []][:8] for k in [OF.vkey(url)] if k and k[1] != d.get("bench_id")]
