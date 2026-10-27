@@ -264,9 +264,13 @@ def rules_of(slug: str, O: dict | None = None) -> list[dict]:
         if pl.get("denom"):
             out.append(_rec("cap_enter", "없음", "꾸밈 없는 줄(plain)", pl.get("n"), pl.get("denom"), round(pl["n"] / pl["denom"], 2),
                             None, _grade(pl["n"], pl["denom"]), [src], "눈"))
-        nar = (R.get("by_speaker") or {}).get("나레") or {}
+        bys = R.get("by_speaker") or {}
+        # 말속도 = 나레 · 나레 없는 판(자막썰 댓글카드 등)은 줄이 가장 많은 화자의 읽기 속도(별헤는쏭 10-27)
+        sp_name = "나레" if (bys.get("나레") or {}).get("cps") else max((k for k, v in bys.items() if (v or {}).get("cps")),
+                                                                     key=lambda k: bys[k].get("n") or 0, default=None)
+        nar = bys.get(sp_name) or {}
         if nar.get("cps"):
-            out.append(_rec("speech", "화자=나레", f"말속도 {nar['cps']} 자/초 · 덩어리 {nar.get('sec_med')}초", None, nar.get("n"), None,
+            out.append(_rec("speech", f"화자={sp_name}", f"말속도 {nar['cps']} 자/초 · 덩어리 {nar.get('sec_med')}초", None, nar.get("n"), None,
                             None, _grade(nar.get("n") or 0, nar.get("n") or 0), [src], "눈"))
     docs = [d for d in O["line_reads"] if isinstance(d, dict)]
     lines = [l for d in docs for l in d.get("lines") or [] if isinstance(l, dict)]
@@ -316,17 +320,25 @@ def rules_of(slug: str, O: dict | None = None) -> list[dict]:
     if bg:
         k = sum(1 for b in bg if b.get("present"))
         out.append(_rec("bgm", "편 단위", "배경음 있음", k, len(bg), round(k / len(bg), 2), None, _grade(k, len(bg)), tsrc, "신호"))
+    else:   # 뜯기 배경음 판독이 없으면 줄판독 sound.bgm(원본 신호 실측) — 별헤는쏭 10-27
+        lb = [((d.get("sound") or {}).get("bgm")) for d in docs]
+        lb = [b for b in lb if isinstance(b, dict) and "present" in b]
+        if lb:
+            k = sum(1 for b in lb if b.get("present"))
+            out.append(_rec("bgm", "편 단위", "배경음 있음", k, len(lb), round(k / len(lb), 2), None, _grade(k, len(lb)), lsrc,
+                            lb[0].get("confidence") or "신호"))
     sx = [t.get("sfx_rules") for t in TT if isinstance(t.get("sfx_rules"), dict) and t["sfx_rules"].get("ok")]
     if sx:
         ps = [s.get("per_sec") for s in sx if isinstance(s.get("per_sec"), (int, float))]
         out.append(_rec("sfx", "편 단위", f"효과음 후보 중앙 {round(statistics.median(ps), 3) if ps else '-'} 발/초", len(sx), len(TT), None, None,
                         _grade(len(sx), len(TT)), tsrc, "신호"))
     S = O["script_lang"]
-    if S and isinstance(S.get("나레"), dict):
-        nar = S["나레"]
+    sk = next((k for k in ("나레", "제3자", "원음") if isinstance((S or {}).get(k), dict)), None)   # 대본 = 나레 · 없으면 댓글카드(제3자) 글
+    if sk:
+        nar = S[sk]
         n = nar.get("n_sentence_end") or 0
         for e in nar.get("endings") or []:
-            out.append(_rec("script", "나레 문장 끝", f"어미 ~{e.get('ending')}", e.get("k"), n, e.get("rate"), None, _grade(e.get("k") or 0, n),
+            out.append(_rec("script", f"{sk} 문장 끝", f"어미 ~{e.get('ending')}", e.get("k"), n, e.get("rate"), None, _grade(e.get("k") or 0, n),
                             [f"channel/{slug}/_kal/대본언어.json"], "눈"))
     have = {r["element"] for r in out}
     for el in ELEMENTS:
