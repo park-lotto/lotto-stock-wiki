@@ -112,6 +112,8 @@ def _reply(rv: dict, ctx: dict) -> dict:
         return {"ref_kind": ctx.get("ref_kind", "overseas_origin"), "is_shopping": True, "product_words": ["cream", "크림"], "brand_hint": "Medicube", "queries_en": ["medicube cream reaction"]}
     if i == "of_judge":
         return {"same": [1], "why": "같은 촬영분"}
+    if i == "of_verify":                         # 받은 원본 실제 장면 확인(flow.f_of_verify) — 시험 원본은 모두 같은 촬영분
+        return {"same": ctx.get("verify_same", [1, 2, 3, 4]), "why": "같은 사람·같은 장소"}
     if i == "of_peer":
         return {"picks": [1, 2], "why": "같은 제품"}
     if i == "product_pick":

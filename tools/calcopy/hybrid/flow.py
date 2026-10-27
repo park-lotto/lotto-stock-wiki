@@ -2900,7 +2900,7 @@ def f_of_fetched(st, m, rp, u):
     st["origins"] = keep
     if len(files) > 1:                  # 재업로드(같은 영상 두 파일)는 빼고 간다 — 다음 장면 재사용을 B13 이 못 잡는다(10-27 run4 a·b편)
         return {"do": [{"id": "dups", "cmd": "origin_dups", "files": [f["name"] for f in files]}], "then": "of_dedup"}
-    return _set_origin(st, keep, files)
+    return _of_verify_ask(st, keep, files)
 
 
 def f_of_dedup(st, m, rp, u):
@@ -2918,7 +2918,69 @@ def f_of_dedup(st, m, rp, u):
             files += fs
     if drop:
         st["log"].append(f"재업로드 원본 뺌: {sorted(drop)} ({r.get('dups')})")
-    return _set_origin(st, keep or st["origins"], files or [f for o in st["origins"] for f in o.get("files") or []])
+    return _of_verify_ask(st, keep or st["origins"], files or [f for o in st["origins"] for f in o.get("files") or []])
+
+
+OF_VERIFY_FRAMES = (4, 2)      # 원본 하나 = 장면 8장(4×2)
+OF_VERIFY_ASK = """너는 원본 확인 담당이다. 첫 그림 = 소재(한국 재편집 쇼츠) 1초 장면 시트, 둘째 = 소재 큰 장면. 그 뒤 그림마다 = 받아 온 원본 후보 하나의 장면 8장(번호 = 아래 목록).
+후보마다 소재와 **같은 촬영분**인지 실제 장면으로 다시 판정해라 — 같은 사람(얼굴·머리색·옷)·같은 장소·같은 제품을 쓰는 같은 순간이어야 같다.
+비슷한 제품을 쓰는 다른 사람·다른 장소는 같지 않다(썸네일만 보고 고른 앞 판정이 틀렸을 수 있다 — 10-27 실측 3편 중 2편이 다른 사람). 확신이 없으면 같지 않다로.
+JSON 하나: {"same": [번호, …], "why": "한 줄"}"""
+
+
+def _of_verify_ask(st, keep: list, files: list) -> dict:
+    """(판단 주인 — 받은 원본이 정말 소재의 같은 촬영분인가) 앞 판정(of_judge·of_find)은 후보 **썸네일**로 골랐다 — 받은 영상의 실제 장면으로 한 번 더.
+    10-27 사장님 '잘못된 거면 수정해야' — of_worker 3편 대조: '같은 촬영분' 원본 중 다른 사람이 섞임(분필 파운데이션 2/2·오열 편).
+    확인 대상 = how 에 '같은 촬영분'·'같은 영상'(렌즈·찾기). '같은 제품 다른 해외 반응'(peer)은 일부러 다른 영상이라 확인하지 않는다."""
+    chk = [o for o in keep if "같은" in str(o.get("how") or "") and "다른" not in str(o.get("how") or "")]
+    if not chk or st.get("tries", {}).get("of_verify"):
+        return _set_origin(st, keep, files)
+    st.setdefault("tries", {})["of_verify"] = 1
+    st["_verify"] = {"keep": [o["id"] for o in keep], "chk": [o["id"] for o in chk]}
+    do = []
+    for k, o in enumerate(chk):
+        f = (o.get("files") or [{}])[0]
+        dur = float(f.get("dur") or 30) or 30
+        c, r = OF_VERIFY_FRAMES
+        do.append({"id": f"vs_{k}", "cmd": "sheet", "src": f"src/{f.get('name')}", "dst": f"look/verify_{o['id']}.jpg",
+                   "fps": round((c * r) / max(dur, 1.0), 4), "cols": c, "rows": r, "w": 240})
+    return {"do": do, "then": "of_verify"}
+
+
+def f_of_verify(st, m, rp, u):
+    v = st.get("_verify") or {}
+    shows, rows = [], []
+    b = st.get("bench") or {}
+    shows += ([_img(b["sheet"])] if b.get("sheet") else []) + ([_img(b["big"])] if b.get("big") else [])
+    for k, vid in enumerate(v.get("chk") or []):
+        g = m.get(f"vs_{k}") or {}
+        if g.get("file"):
+            shows.append(_img(g["file"]))
+            rows.append(f"{len(rows) + 1}. {vid}")
+    if not rows:                     # 시트를 못 만들면 앞 판정 그대로(기록)
+        st["log"].append("원본 확인 시트 못 만듦 — 앞 판정 그대로")
+        keep = [o for o in st["origins"] if o["id"] in set(v.get("keep") or [])]
+        return _set_origin(st, keep, [f for o in keep for f in o.get("files") or []])
+    st["_verify"]["rows"] = [r.split(". ", 1)[1] for r in rows]
+    return {"review": [_rv("of_verify", OF_VERIFY_ASK + NL + NL + "후보:" + NL + NL.join(rows), shows, need=("same",))], "then": "of_verify_got"}
+
+
+def f_of_verify_got(st, m, rp, u):
+    v = st.get("_verify") or {}
+    a = _reply(rp, "of_verify", ("same",))
+    ids = v.get("rows") or []
+    ok = {ids[n - 1] for n in a.get("same") or [] if isinstance(n, int) and 0 < n <= len(ids)}
+    bad = [x for x in v.get("chk") or [] if x not in ok]
+    keep = [o for o in st["origins"] if o["id"] in set(v.get("keep") or []) and o["id"] not in bad]
+    st["log"].append(f"원본 확인(실제 장면): 같음 {sorted(ok)} · 다름 {bad} — {str(a.get('why') or '')[:200]}")
+    if bad:
+        st.setdefault("of_verify_drop", []).extend(bad)
+    if not keep:
+        raise _Stop("받은 원본이 소재와 같은 영상이 아니었어요", "다시 시도해 주시면 원본을 한 번 더 찾아볼게요", retry="of_find", ask_member=True,
+                    origin_missing=True, detail=f"원본 확인 다름: {bad}")
+    if not any("같은" in str(o.get("how") or "") and "다른" not in str(o.get("how") or "") for o in keep):
+        st["log"].append("원본 확인: 같은 촬영분은 모두 빠짐 — 같은 제품 다른 해외 반응만 남음")
+    return _set_origin(st, keep, [f for o in keep for f in o.get("files") or []])
 
 
 def _set_origin(st, keep: list, files: list) -> dict:
@@ -3719,7 +3781,7 @@ def j_draft_got(st, m, rp, u):
 FORMAT_PHASES = {   # 형식별 세부 단계 처리기 — 없는 세부 단계는 공용 PHASES
     "해외원본형": {"bench": f_of_dual_start, "of_dual": f_of_dual, "of_dual_b": f_of_dual, "of_dual_retry": f_of_dual_retry, "of_settled": f_of_settled,
                 "bench_got": f_bench_got, "ref_read": f_ref_read, "of_lens": f_of_lens, "of_peers": f_of_peers, "of_got": f_of_got, "of_pick": f_of_pick, "of_find": f_of_find, "of_find_got": f_of_find_got, "of_fetch": f_of_fetch,
-                "of_fetched": f_of_fetched, "f_product_sheet": f_product_sheet, "f_product_pick": f_product_pick, "f_product_cands": f_product_cands,
+                "of_fetched": f_of_fetched, "of_verify": f_of_verify, "of_verify_got": f_of_verify_got, "f_product_sheet": f_product_sheet, "f_product_pick": f_product_pick, "f_product_cands": f_product_cands,
                 "f_product_same": f_product_same, "research": f_research, "f_research_got": f_research_got, "f_research_check": f_research_check,
                 "f_material": f_material, "material": f_material, "f_material_got": f_material_got, "f_shots_got": f_shots_got, "f_alt_ask": f_alt_ask, "f_alt_pick": f_alt_pick, "f_alt_dl": f_alt_dl, "f_clean": f_clean,
                 "f_clean_got": f_clean_got, "f_draft": f_draft, "f_draft_got": f_draft_got, "f_asr": f_asr, "f_asr_got": f_asr_got,
@@ -3734,7 +3796,7 @@ FORMAT_PHASES["자막노래형"] = {**{k: v for k, v in FORMAT_PHASES["해외원
                             "bench_got": j_bench_got, "ref_read": j_ref_read, "of_peers": j_of_peers, "of_fetched": j_of_fetched,
                             "j_material": j_material, "material": j_material, "f_draft_got": j_draft_got}
 PHASE_STAGE.update({
-    "ref_read": "bench", "topic_got": "bench", "of_dual_b": "bench", "of_dual": "origin", "of_dual_retry": "origin", "of_settled": "origin", "of_lens": "origin", "of_peers": "origin", "of_got": "origin", "of_pick": "origin", "of_find": "origin", "of_find_got": "origin", "of_fetch": "origin", "of_fetched": "origin", "of_dedup": "origin",
+    "ref_read": "bench", "topic_got": "bench", "of_dual_b": "bench", "of_dual": "origin", "of_dual_retry": "origin", "of_settled": "origin", "of_verify": "origin", "of_verify_got": "origin", "of_lens": "origin", "of_peers": "origin", "of_got": "origin", "of_pick": "origin", "of_find": "origin", "of_find_got": "origin", "of_fetch": "origin", "of_fetched": "origin", "of_dedup": "origin",
     "f_product_sheet": "product", "f_product_pick": "product", "f_product_cands": "product", "f_product_same": "product", "s_cands": "product", "s_cand_look": "product",
     "s_product_done": "product", "f_research_got": "research", "f_research_check": "research", "s_research_check": "research", "f_material": "material",
     "f_material_got": "material", "f_shots_got": "material", "f_alt_ask": "material", "f_alt_pick": "material", "f_alt_dl": "material", "f_clean": "material", "f_clean_got": "material", "f_draft": "material", "f_draft_got": "material",

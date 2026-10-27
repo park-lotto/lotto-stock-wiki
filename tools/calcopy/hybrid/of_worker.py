@@ -156,12 +156,18 @@ def add_channels(pool: Path, src_id: str, xs: list[dict]) -> int:
 
 
 def how_found(W: Path) -> tuple[str, str]:
-    """(판단 주인 — 원본 확보 vs 대체) 마지막으로 같은 영상이라 판정된 질문이 무엇이었나. 지시서는 원본을 못 찾으면 같은 제품 다른 해외 반응
-    (of_peer)으로 넘어간다 — 10-27 치아 테이프 편: 판정 3번 모두 '같은 촬영분 없음'인데 of_peer 로 3편을 받아 장부에 'found' 로 적혔다."""
-    rv = sorted((W / "job" / "reviews").glob("*_of_*"))
-    if any("of_peer" in d.name for d in rv):
+    """(판단 주인 — 원본 확보 vs 대체) 확보한 원본마다 지시서가 적은 how 그대로 — 실제 장면 확인(flow.f_of_verify_got)을 통과한
+    '같은 촬영분'이 하나라도 있으면 found, 같은 제품 다른 해외 반응뿐이면 peer. 10-27 사장님 '잘못된 거면 수정' — 썸네일 판정만 믿고 found 로 적던 것."""
+    try:
+        st = json.loads((W / "flow_state.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return "error", ""
+    hows = [str(o.get("how") or "") for o in st.get("origins") or []]
+    if any("같은" in h and "다른" not in h for h in hows):
+        return "found", "원본(실제 장면 확인)" if any("원본 확인(실제 장면)" in str(x) for x in st.get("log") or []) else "원본(썸네일 판정만)"
+    if hows:
         return "peer", "같은 제품 다른 해외 반응(원본 못 찾음)"
-    return "found", "원본"
+    return "not_found", ""
 
 
 def one(r: dict, a, pool: Path) -> dict:
