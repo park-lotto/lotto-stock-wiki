@@ -25,7 +25,7 @@ from tools.calcopy.hybrid import flow as F  # noqa: E402
 import test_flow_formats as TF  # noqa: E402
 
 BENCH = {"id": "BENCH1", "title": "치아 미백 테이프 이거 맞아??!", "channel": "잇템로그", "date": "20250801", "dur": 28, "sheet": "bench/sheet.jpg", "lines": []}
-ALT = "ro1l3u734v4"            # 벤치상위.json 조회 1위(둘째 소재)
+ALT = F.pick_alt_source({"slug": "ititemlog", "ref": "https://youtu.be/BENCH1", "sid": "sid", "log": [], "env": {}})["id"]   # 둘째 소재(판 본보기 뺀 상위 중 sid 로)
 YT_CAND = {"n": 1, "platform": "yt", "id": "ORIGX123456", "url": "https://www.youtube.com/shorts/ORIGX123456", "title": "Purple whitening strips?!",
            "channel": "Joe", "channel_id": "UCJOE", "date": "20250301", "dur": 20, "korean": False}
 TT_CAND = {"n": 1, "platform": "tt", "id": "7540826607364197640", "url": "https://www.tiktok.com/@hismile/video/7540826607364197640",
@@ -202,10 +202,21 @@ def test_first_found_source_wins_other_recorded():
 
 
 def test_pick_alt_source_skips_own_and_made():
-    st = F.start("https://www.youtube.com/shorts/ro1l3u734v4", "잇템로그판_v2", "sid")
-    st["env"] = {"done_refs": ["aUicTeDoW04"]}
+    """판 본보기(상위편_목표 ids)·회원이 준 것·이미 만든 편은 빼고, 남은 상위 ALT_SPREAD 편 안에서 sid 로 나눠 고른다
+    (10-27 완주시험: 3편 모두 둘째 소재가 판 본보기 콜라겐 마스크 ro1l3u734v4 — 같은 원본을 세 번 찾았다)."""
+    import json as _j
+    kal = F.PRESETS_FILE.parent / "ititemlog" / "_kal"
+    bench = set(_j.loads((kal / F.ALT_BENCH_IDS).read_text(encoding="utf-8"))["ids"])
+    rows = sorted(_j.loads((kal / F.ALT_LIST).read_text(encoding="utf-8"))["rows"], key=lambda r: -(r.get("views") or 0))
+    left = [r["id"] for r in rows if r["id"] not in bench]
+    st = F.start(f"https://www.youtube.com/shorts/{left[0]}", "잇템로그판_v2", "sid")
+    st["env"] = {"done_refs": [left[1]]}
     a = F.pick_alt_source(st)
-    assert a["id"] == "J7GxfaVdwSU"                                              # 1위 = 회원이 준 것 · 2위 = 이미 만든 편 → 3위
+    assert a["id"] not in bench and a["id"] not in (left[0], left[1]) and a["id"] in left[2:2 + F.ALT_SPREAD]
+    picks = set()
+    for k in range(20):
+        picks.add(F.pick_alt_source(F.start("https://youtu.be/X", "잇템로그판_v2", f"sid{k}"))["id"])
+    assert len(picks) >= 3 and not (picks & bench)                               # 동시에 도는 회원끼리 흩어진다
     st["slug"] = "없는판"
     assert F.pick_alt_source(st) is None
 

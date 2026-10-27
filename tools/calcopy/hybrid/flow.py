@@ -20,6 +20,7 @@
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import re
@@ -2630,6 +2631,8 @@ def f_of_fetched(st, m, rp, u):
 # 칸마다 단계 처리기는 위의 해외원본형 처리기 그대로(ph_bench → f_bench_got → f_ref_read → 렌즈 → f_of_got/f_of_pick → f_of_find …) — 판단을 두 벌로 적지 않는다.
 # 칸 2 의 실행기 일은 작업 폴더 alt1/ 에서(do 의 sub), 이긴 칸이 alt1 이면 of_settle 이 파일을 맨 위로 옮긴다. 진 소재 = 회원 작업 기록 '멈춘 편'(다시 씀).
 ALT_LIST = "벤치상위.json"     # channel/<slug>/_kal/벤치상위.json — 그 판 벤치 채널 쇼츠(조회순 원천: 칼카피 select 단계 top.json)
+ALT_BENCH_IDS = "상위편_목표.json"   # 그 판 본보기 편(ids) — 둘째 소재에서 뺀다(이미 만든 편·말맛 본보기)
+ALT_SPREAD = 5                      # 남은 상위 몇 편 안에서 sid 로 나눠 고르나
 SLOT_SHARED = ("sid", "version", "fmt", "slug", "env", "given")
 SLOT_BENCH = ("bench", "bench_got", "ref_read")
 ALT_NOTICE_WON = "주신 영상은 원본을 아직 찾는 중이라, 함께 찾던 같은 채널 영상으로 먼저 만들게요"
@@ -2646,11 +2649,14 @@ def pick_alt_source(st: dict) -> dict | None:
     k = OF.vkey(str(st.get("ref") or ""))
     own = k[1] if k else ""
     done = set((st.get("env") or {}).get("done_refs") or [])
-    for r in sorted(rows, key=lambda r: -(r.get("views") or 0)):
-        if r["id"] == own or r["id"] in done:
-            continue
+    # 판 본보기(상위편_목표 ids)는 빼고, 남은 상위 ALT_SPREAD 편 중 sid 로 골라 동시에 도는 회원끼리 같은 소재를 안 찾게(10-27 완주시험 3편 모두 콜라겐 마스크 — 원본찾기 시간 절반)
+    gf = f.parent / ALT_BENCH_IDS
+    bench = set(json.loads(gf.read_text(encoding="utf-8")).get("ids") or []) if gf.is_file() else set()
+    left = [r for r in sorted(rows, key=lambda r: -(r.get("views") or 0)) if r["id"] != own and r["id"] not in done and r["id"] not in bench]
+    if left:
+        r = left[int(hashlib.md5(str(st.get("sid") or "").encode()).hexdigest(), 16) % min(ALT_SPREAD, len(left))]
         return {"url": f"https://www.youtube.com/shorts/{r['id']}", "id": r["id"], "views": r.get("views"), "title": r.get("title")}
-    st["log"].append("둘째 소재 없음: 벤치 상위가 전부 만든 편")
+    st["log"].append("둘째 소재 없음: 벤치 상위가 전부 만든 편·판 본보기")
     return None
 
 
