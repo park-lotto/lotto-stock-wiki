@@ -1402,6 +1402,40 @@
    "doc": "channel/hottemreport/현장썰4차/16_Hypershell/",
    "judge": "[확인대기] −14.3 LUFS · TP −1.6 · check_seams 되감김 0 · freeze/black 0 · script_audit ok 161자 judge 0.772 · 받아쓰기 스피치매틱스+위스퍼 대조 일치 · 봉인 ok",
    "note": "벤치 R2C5yUZ3nKY(21만) · 앞 GCN 2ZAnvcEPhqM(80.9만) 원음 2구간 · 화면 속 GCN 옷 로고 있음 · 짤 mindblown 17.42초 · 썸네일 A"
+  },
+  {
+   "n": 90,
+   "channel": "foreignshowshow",
+   "channel_name": "샥탬스토리",
+   "brand": "샥탬스토리",
+   "style": "현장썰 하이브리드",
+   "preset": "channel/foreignshowshow/preset/샤크탱크_검정띠2줄 + tools/calcopy/shark/rules.json",
+   "date": "2026-10-27",
+   "from": "tools/calcopy/shark/hybrid.py → engine/finalize.seal",
+   "title": "샥탬_하이브리드_13편_LineCutterz",
+   "path": "C:/숏템_칼카피/foreignshowshow/하이브리드/13편_LineCutterz/work/hybrid/final.mp4",
+   "desktop": "샥탬스토리_13_line_cutterz.mp4",
+   "md5": "60b1ba1be690fb85432f52749562c4d7",
+   "seconds": 36.8,
+   "judge": "[확인대기] 앞 15.29초(벤치 hZgCO9PEnO8 줄 칼카피 · CNBC Qy7wUkIrrQ4, 0초 원 = 손가락 반지) + 뒤 21.52초(지훈 1인칭 · 쿠팡 반지형 없음 → 같은 회사 지퍼형 9694028180, 비슷한 제품 숨기지 않음) · −13.9 LUFS · TP −2.4 · check render 전 칸 ○ · freeze/black 0 · 되감김 0 · 봉인 ok · 받아쓰기 2모델 대조 · 지휘 검수 뒤 드라이브 13_line_cutterz_1027_1313.mp4",
+   "doc": "channel/foreignshowshow/13편_LineCutterz_하이브리드/"
+  },
+  {
+   "n": 91,
+   "channel": "foreignshowshow",
+   "channel_name": "샥탬스토리",
+   "brand": "샥탬스토리",
+   "style": "현장썰 하이브리드",
+   "preset": "channel/foreignshowshow/preset/샤크탱크_검정띠2줄 + tools/calcopy/shark/rules.json",
+   "date": "2026-10-27",
+   "from": "tools/calcopy/shark/hybrid.py → engine/finalize.seal",
+   "title": "샥탬_하이브리드_14편_TheComfy",
+   "path": "C:/숏템_칼카피/foreignshowshow/하이브리드/14편_TheComfy/work/hybrid/final.mp4",
+   "desktop": "샥탬스토리_14_TheComfy_검수대기.mp4",
+   "md5": "d6ee6b7c2b0464f678ac105a2b987b07",
+   "seconds": 36.37,
+   "judge": "[확인대기] 앞 13.67초(벤치 D6H6sj3pap4 줄 칼카피 · Shark Tank Global IK_JDKOLP8g, 0초 원 = 창업자 티셔츠 Comfy 로고) + 뒤 22.69초(지훈 1인칭 · 쿠팡 같은 제품 더 컴피 오리지널 9774389207) · −14.1 LUFS · TP −2.3 · check render 전 칸 ○ · freeze/black 0 · 되감김 0 · 봉인 ok · 받아쓰기 2모델 대조",
+   "doc": "channel/foreignshowshow/14편_TheComfy_하이브리드/"
   }
  ]
 }
