@@ -1,0 +1,269 @@
+{
+ "_note": "샥탬스토리 하이브리드 21편 Snactiv 뒤 재료 — 같은 제품 광고 영상 3편(Inoobi 채널 SNACTIV) + 리뷰 1편(LH2) + B2 방송 투자자석. 창 1080x1052.",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/21편_Snactiv/src",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "sources": {
+  "WsNBsO9l1kg": {
+   "채널": "Inoobi(SNACTIV 광고)",
+   "제목": "SNACTIV - DON'T PRESS PAUSE, DON'T TAKE 5, UPGRADE NOW!!",
+   "해상도": "1920x1080 23.98fps",
+   "남의 글자": "1~5초 로고 카드·50초 뒤 끝 화면 안 씀 · 손만"
+  },
+  "uMTtIGP_atk": {
+   "채널": "Inoobi(SNACTIV 광고)",
+   "제목": "SNACTIV - WFH just got Tasty!",
+   "해상도": "1920x1080 23.98fps",
+   "남의 글자": "없음 · 손만"
+  },
+  "KeoBjwLtOS8": {
+   "채널": "Inoobi(SNACTIV 광고)",
+   "제목": "SNACTIV! SNACTIV! SNACTIV!",
+   "해상도": "1920x1080 23.98fps",
+   "남의 글자": "12.9초 뒤 사람 얼굴 안 씀 · 손만"
+  },
+  "bH6wcn9fSEI": {
+   "채널": "LH2(리뷰)",
+   "제목": "SNACTIV - Snacking Tool of the Future - Finger Chopsticks",
+   "해상도": "1920x1080 30fps",
+   "남의 글자": "36~38초 'BPA Free·Dishwasher Safe' 글·44초 뒤 리뷰어 얼굴 안 씀 · 상자 'SNACTIV' = 제품 브랜드"
+  },
+  "nlVhx46TQFg": {
+   "채널": "Shark Tank Global(공식)",
+   "해상도": "1920x1080",
+   "남의 글자": "339~342·367~369초 띠 없음(402~407초는 제안 금액 띠 — 안 씀)"
+  }
+ },
+ "shots": [
+  {
+   "line": "B1",
+   "src": "bH6wcn9fSEI.mp4",
+   "ss": 14.1,
+   "dur": 3.5,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰(LH2 bH6wcn9fSEI, 1080p): 상자를 열어 스낵티브를 꺼내는 손(샷 14.03~18.67, 손만 · 12초 상자 앞면 컷은 'SNACTIV' 글자가 자막 자리에 겹쳐 뺌)",
+   "i": 0
+  },
+  {
+   "line": "B1",
+   "src": "bH6wcn9fSEI.mp4",
+   "ss": 18.75,
+   "dur": 2.5,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 꺼낸 스낵티브를 손에 들어 봄(샷 18.67~29.50, 손만)",
+   "i": 1
+  },
+  {
+   "line": "B2",
+   "src": "nlVhx46TQFg.mp4",
+   "ss": 339.4,
+   "dur": 2.5,
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "방송(nlVhx46TQFg): 게스트 샤크가 제안을 말함(원본 샷 339.31~342.94, 띠 없음 · 404초 컷은 아래에 제안 금액 띠가 있어 뺌, 소리 끔)",
+   "i": 2
+  },
+  {
+   "line": "B2",
+   "src": "nlVhx46TQFg.mp4",
+   "ss": 367.15,
+   "dur": 1.8,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "방송: 로리(샷 367.10~369.00, 띠 없음, 소리 끔)",
+   "i": 3
+  },
+  {
+   "line": "B2",
+   "src": "WsNBsO9l1kg.mp4",
+   "ss": 19.2,
+   "dur": 1.9,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "광고(Inoobi WsNBsO9l1kg, 1080p): 보드게임 판 위에서 스낵티브로 과자를 집는 손(샷 18.77~21.15, 위에서 찍음 · 손만)",
+   "i": 4
+  },
+  {
+   "line": "B3",
+   "src": "KeoBjwLtOS8.mp4",
+   "ss": 8.5,
+   "dur": 1.35,
+   "src_crop": [
+    545,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "광고(Inoobi KeoBjwLtOS8): 키보드 옆 손가락에 낀 흰 스낵티브(샷 8.47~9.88, 손만)",
+   "i": 5
+  },
+  {
+   "line": "B3",
+   "src": "KeoBjwLtOS8.mp4",
+   "ss": 9.92,
+   "dur": 2.95,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "광고: 스낵티브로 치즈 과자를 집어 올림(샷 9.88~12.93, 손만)",
+   "i": 6
+  },
+  {
+   "line": "B3",
+   "src": "uMTtIGP_atk.mp4",
+   "ss": 3.4,
+   "dur": 2.55,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "광고(Inoobi uMTtIGP_atk): 노트북 치다가 스낵티브로 매운 과자를 집음(샷 3.34~6.01, 손만)",
+   "i": 7
+  },
+  {
+   "line": "B4",
+   "src": "WsNBsO9l1kg.mp4",
+   "ss": 13.42,
+   "dur": 2.18,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "광고: 낀 채로 키보드를 치는 손(샷 13.39~15.64, 손만)",
+   "i": 8
+  },
+  {
+   "line": "B4",
+   "src": "WsNBsO9l1kg.mp4",
+   "ss": 33.22,
+   "dur": 1.28,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "광고: 낀 채로 폰 화면을 누르는 손 근접(샷 33.20~34.53, 손만 — uMTtIGP 7초 컷은 B3 3.4초 컷과 B13 ±3초라 뺌)",
+   "i": 9
+  },
+  {
+   "line": "B4",
+   "src": "WsNBsO9l1kg.mp4",
+   "ss": 37.8,
+   "dur": 2.1,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "광고: 낀 채로 폰 화면을 넘기는 손(샷 37.75~39.96, 손만)",
+   "i": 10
+  },
+  {
+   "line": "B4",
+   "src": "WsNBsO9l1kg.mp4",
+   "ss": 42.08,
+   "dur": 1.4,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "광고: 낀 채로 리모컨을 누르는 손(샷 42.04~43.50, 손만)",
+   "i": 11
+  },
+  {
+   "line": "B5",
+   "src": "WsNBsO9l1kg.mp4",
+   "ss": 47.3,
+   "dur": 1.72,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "광고: 스낵티브로 팝콘을 집는 손(샷 47.26~49.05, 손만)",
+   "i": 12
+  },
+  {
+   "line": "B5",
+   "src": "bH6wcn9fSEI.mp4",
+   "ss": 29.6,
+   "dur": 2.0,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 손가락에 낀 스낵티브를 들어 보임(샷 29.50~44.23 중 36초 글 전, 손만)",
+   "i": 13
+  },
+  {
+   "line": "B5",
+   "src": "uMTtIGP_atk.mp4",
+   "ss": 12.6,
+   "dur": 2.75,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "광고: 노트북 앞에서 그릇의 과자를 집는 손(샷 12.55~15.39, 손만 · 끝 컷 ≥1.5초)",
+   "i": 14
+  }
+ ],
+ "effects": []
+}
