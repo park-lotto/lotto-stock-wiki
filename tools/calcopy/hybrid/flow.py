@@ -1889,6 +1889,9 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
     PR = st.get("product") or {}
     if PR:     # 제품 판정을 대본에 싣는다 — script_audit.alt_disclosed 가 alt 면 '비슷한 제품' 밝히는 줄을 요구(03 · 사장님 10-25)
         S["product_mode"] = "given" if PR.get("given") else (PR.get("mode") or "exact")
+    if "voice" in S and not isinstance(S.get("voice"), dict):     # 목소리는 판이 정한다(계획 render 가 판 voice 로 채움) — 글자로 적으면 계획이
+        st["log"].append(f"대본 voice 칸 꼴 틀림({str(S['voice'])[:40]}) — 지우고 판 목소리로")   # 'str'.get 으로 죽었다(10-27 5회차 TV 편)
+        S.pop("voice")
     tfix = RU.title_colors_fix(S, _style(v))      # 판 틀에 없는 제목 강조색은 형식 — 반려 말고 바로 고친다(10-26 같은 반려 3번 멈춤)
     if tfix:
         st["log"].append("제목 색 자동 정리: " + "; ".join(tfix))
