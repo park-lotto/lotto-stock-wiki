@@ -1,0 +1,251 @@
+{
+ "_note": "샥탬스토리 하이브리드 22편 Plufl 뒤 재료 — 쿠팡의 비슷한 제품(LOVEPals 휴먼 도그베드)과 같은 꼴 사람용 개 침대 영상 3편 + B2 방송 투자자. 창 1080x1052. 사람 얼굴 없는 손·침대·개 컷만.",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/22편_Plufl/src",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "sources": {
+  "l0iT0Sq1Q": {
+   "채널": "Everything is easier with Tewgy",
+   "url": "https://www.youtube.com/watch?v=--l0iT0Sq1Q",
+   "제목": "Tewgy.com Human Dog Bed for Adult, 71\"x45\"x12\" Giant Calming Nest Bed",
+   "해상도": "1920x1080",
+   "남의 글자": "아래 박힌 안내 글(Unpack & Unfold 등) — 자르기 h 880 으로 밖 · 1초 'Quick Setup'·15~16초 'Folds From Compression'·33~36초 'BLACK NON-SLIP SIDE' 구간 안 씀 · 2~7초 상자 글 안 씀"
+  },
+  "hCep8H67OMI": {
+   "채널": "Kimberly Rosales",
+   "url": "https://www.youtube.com/watch?v=hCep8H67OMI",
+   "제목": "Human Dog Bed Review: Is This Giant Lounger Worth It?",
+   "해상도": "1920x1080",
+   "남의 글자": "없음 · 0~58·99초 뒤 리뷰어 얼굴·89~91초 아이 안 씀"
+  },
+  "1JmJuhF-GMw": {
+   "채널": "Brooke Rush Reviews",
+   "url": "https://www.youtube.com/watch?v=1JmJuhF-GMw",
+   "제목": "LOVEPALS Human Dog Bed Review | Is This Giant Bed Actually Worth It?",
+   "해상도": "1920x1080",
+   "남의 글자": "없음 · 리뷰어 얼굴 나오는 구간 안 씀(개만 있는 82~85·88.5~90.5)"
+  },
+  "TQw9ISabbhU": {
+   "채널": "Shark Tank Global(공식)",
+   "해상도": "1920x1080",
+   "남의 글자": "127~129·404.8~406초 띠 없음"
+  }
+ },
+ "shots": [
+  {
+   "line": "B1",
+   "src": "hCep8H67OMI.mp4",
+   "ss": 59.95,
+   "dur": 3.95,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰(Kimberly Rosales hCep8H67OMI, 1080p): 바닥에 펼친 회색 긴 털 사람용 개 침대(샷 59.85~64.06, 사람 없음)",
+   "i": 0
+  },
+  {
+   "line": "B1",
+   "src": "l0iT0Sq1Q.mp4",
+   "ss": 41.35,
+   "dur": 3.6,
+   "src_crop": [
+    508,
+    0,
+    903,
+    880
+   ],
+   "mute": true,
+   "ours": "설치 영상(Tewgy --l0iT0Sq1Q): 다 부푼 침대와 쿠션(샷 41.31~45.16 · 아래 박힌 안내 글은 자르기 밖, h 880)",
+   "i": 1
+  },
+  {
+   "line": "B2",
+   "src": "TQw9ISabbhU.mp4",
+   "ss": 127.0,
+   "dur": 2.3,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "방송(TQw9ISabbhU): 다른 투자자가 침대에 드러누움(원본 샷 126.96~129.40, 소리 끔)",
+   "i": 2
+  },
+  {
+   "line": "B2",
+   "src": "TQw9ISabbhU.mp4",
+   "ss": 404.8,
+   "dur": 1.25,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "방송: 함께 제안하는 로리(샷 404.77~406.11, 띠 없음, 소리 끔)",
+   "i": 3
+  },
+  {
+   "line": "B2",
+   "src": "l0iT0Sq1Q.mp4",
+   "ss": 9.78,
+   "dur": 2.5,
+   "src_crop": [
+    508,
+    0,
+    903,
+    880
+   ],
+   "mute": true,
+   "ours": "설치 영상: 압축 포장을 뜯어 꺼내는 손(샷 9.74~12.35 · 아래 안내 글은 자르기 밖)",
+   "i": 4
+  },
+  {
+   "line": "B3",
+   "src": "l0iT0Sq1Q.mp4",
+   "ss": 26.5,
+   "dur": 3.6,
+   "src_crop": [
+    508,
+    0,
+    903,
+    880
+   ],
+   "mute": true,
+   "ours": "설치 영상: 두툼한 테두리를 부풀리는 손(샷 26.46~30.16 · 아래 안내 글은 자르기 밖)",
+   "i": 5
+  },
+  {
+   "line": "B3",
+   "src": "l0iT0Sq1Q.mp4",
+   "ss": 36.95,
+   "dur": 2.0,
+   "src_crop": [
+    648,
+    0,
+    903,
+    880
+   ],
+   "mute": true,
+   "ours": "설치 영상: 긴 털 테두리를 쓸어내리는 손(샷 36.94~40.07 · 39초부터 아래 글 — 자르기 밖)",
+   "i": 6
+  },
+  {
+   "line": "B3",
+   "src": "hCep8H67OMI.mp4",
+   "ss": 67.6,
+   "dur": 2.6,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 테두리 털을 손으로 눌러 봄(샷 65.69~70.28, 손만 — B1 60초 컷과 B13 ±3초 피해 67.6초부터)",
+   "i": 7
+  },
+  {
+   "line": "B4",
+   "src": "hCep8H67OMI.mp4",
+   "ss": 74.7,
+   "dur": 4.2,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 커버 지퍼를 열어 보이는 손(샷 74.66~79.00, 손만)",
+   "i": 8
+  },
+  {
+   "line": "B4",
+   "src": "hCep8H67OMI.mp4",
+   "ss": 80.15,
+   "dur": 2.25,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 침대에 올라간 불도그(샷 80.12~82.46)",
+   "i": 9
+  },
+  {
+   "line": "B4",
+   "src": "1JmJuhF-GMw.mp4",
+   "ss": 82.0,
+   "dur": 3.0,
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰(Brooke Rush 'LOVEPALS Human Dog Bed Review' 1JmJuhF-GMw): 같은 상표 LOVEPals 침대에 누워 자는 셰퍼드(한 샷, 얼굴 없음)",
+   "i": 10
+  },
+  {
+   "line": "B5",
+   "src": "hCep8H67OMI.mp4",
+   "ss": 91.8,
+   "dur": 1.6,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 침대 위 불도그(샷 91.76~93.47)",
+   "i": 11
+  },
+  {
+   "line": "B5",
+   "src": "hCep8H67OMI.mp4",
+   "ss": 94.85,
+   "dur": 2.2,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 불도그에게 담요를 덮어 주는 손(샷 94.80~97.10)",
+   "i": 12
+  },
+  {
+   "line": "B5",
+   "src": "1JmJuhF-GMw.mp4",
+   "ss": 88.5,
+   "dur": 2.0,
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: LOVEPals 침대에서 자는 셰퍼드(한 샷, 얼굴 없음)",
+   "i": 13
+  }
+ ],
+ "effects": []
+}

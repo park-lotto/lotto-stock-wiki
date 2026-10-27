@@ -1,0 +1,342 @@
+{
+ "_note": "샥탬스토리 하이브리드 22편 Plufl — 앞 0~O3 끝 = 칼카피 그대로(끝 원음 창업자 '편해 보이지 않아요? 깨우기 미안할 정도예요'), 뒤 = 지훈·같은 제목·BGM 이어서 1인칭 체험 나레(존댓말). CTA 없음·금액 없음. 쿠팡에 방송 제품(Plufl 사람용 개 침대)이 없어 비슷한 제품 LOVEPals 휴먼 도그베드 — 대본 B1 에서 '똑같은 건 없고 비슷한' 이라고 밝힌다(칼카피_시작 §0 10). 렌더 tools/calcopy/shark/hybrid.py.",
+ "product": "LOVEPals 그레이 휴먼 도그베드(쿠팡 9774982758 — 방송 제품 Plufl 과 다른 상표의 비슷한 제품: 사람이 들어가 눕는 대형 개 침대 꼴·회색 긴 털·메모리폼·세탁 가능·담요 포함. 쿠팡의 Plufl 상표는 허글 바디 베개(9180478898 등)뿐 — 개 침대는 없음)",
+ "same_product": false,
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "흥미이음": {
+  "원본흥미": "사람이 개처럼 들어가 웅크려 자는 대형 개 침대 — 앞 O3 창업자 '편해 보이지 않아요? 깨우기 미안할 정도예요'로 끝남",
+  "뒤흥미": "비슷한 사람용 개 침대를 펼치고(l0iT0Sq1Q 9~45) 폭신한 테두리를 만지고(hCep8H67OMI 59~70) 커버 지퍼를 열어 보고(74~79) 개가 올라가 자는 장면(1JmJuhF-GMw 82~90)",
+  "판정": "같음",
+  "근거": "쿠팡 파트너스 API 2026-10-28 'Plufl'·'플러플 사람 강아지 침대' → Plufl 상표는 허글 바디 베개뿐 · '휴먼 독베드' → 9774982758 'LOVEPals 그레이 휴먼 도그베드 - 71x45x12 크기 성인 및 반려동물용 세탁 가능 두께 3.93 메모리폼 풍성한 베개 담요 스트랩 포함 대형 오버사이즈 강아지 침대' — C:/숏템_칼카피/foreignshowshow/21편_소재/쿠팡API_21a.json·쿠팡API_21b.json · 사진 C:/숏템_칼카피/foreignshowshow/21편_소재/img/cp_9774982758.jpg"
+ },
+ "hybrid": {
+  "front_doc": "../22편_Plufl",
+  "front_src": "C:/숏템_칼카피/foreignshowshow/22편_Plufl/work/render/final.mp4",
+  "front_render_info": "C:/숏템_칼카피/foreignshowshow/22편_Plufl/work/render/render_info.json",
+  "front_work": "C:/숏템_칼카피/foreignshowshow/22편_Plufl/work",
+  "cut_after": "O3",
+  "cut_why": "O3 창업자 원음 '편해 보이지 않아요? / 깨우기 미안할 정도예요' 끝 — 그 '얼마나 편하길래'를 뒤 체험(쿠팡에서 비슷한 사람용 개 침대를 사서 누워 봄)이 받는다",
+  "transition": {
+   "kind": "slideleft",
+   "dur": 0.25,
+   "keep_top": 434,
+   "why": "샥탬 하이브리드 3~21편과 같은 이음(제목 띠 고정)"
+  }
+ },
+ "titles": {
+  "line1": "사람이 들어가 자는",
+  "line2": "개 침대가 있다고?!",
+  "rule": "앞과 같은 제목(띠 고정)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.25,
+  "why": "앞 편과 같은 목소리·같은 speed(R2)"
+ },
+ "bench": {},
+ "render": {
+  "end_pad": 1.1,
+  "_why": "끝 말 뒤 여운 0.6초 이상(10-27 검수 ③, 98 #174)"
+ },
+ "final": {
+  "cps_target": 7.84,
+  "cps_note": "14~21편 하이브리드와 같은 목표(지훈 speed 1.25)",
+  "lines": [
+   {
+    "id": "B1",
+    "kind": "나레",
+    "fn": "이음(연결어)+잉?",
+    "text": "근데 저 개 침대가 궁금해서 쿠팡에 쳐 봤더니, 똑같은 건 없고 비슷한 사람용 개 침대가 있더라고요.",
+    "tts": "근데 저 개 침대가 궁금해서 쿠팡에 쳐 봤더니, 똑같은 건 없고, 비슷한 사람용 개 침대가 있더라고요.",
+    "caps": [
+     "근데 저 개 침대가",
+     "궁금해서 쿠팡에 쳐 봤더니",
+     "똑같은 건 없고",
+     "비슷한 사람용 개 침대가",
+     "있더라고요"
+    ],
+    "facts": [
+     "c1"
+    ],
+    "point": "잉",
+    "answer_at": 3,
+    "emph_words": [
+     "비슷한 사람용 개 침대가"
+    ],
+    "emph": [
+     {
+      "cap": "근데 저 개 침대가",
+      "span": "개 침대가",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "궁금해서 쿠팡에 쳐 봤더니",
+      "span": "쿠팡에 쳐 봤더니",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 자막 띠 확대 시트(배경 밝음·노랑 흰 바탕)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "똑같은 건 없고",
+      "span": "건 없고",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 빨강→파랑(배경 대비, 98 #180 ⑨) → 손: 자막 띠 확대 시트(배경 밝음·노랑 흰 바탕)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "비슷한 사람용 개 침대가",
+      "span": "사람용 개 침대가",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 자막 띠 확대 시트(배경 밝음·노랑 흰 바탕)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "있더라고요",
+      "span": "있더라고요",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 주황→초록(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B2",
+    "kind": "나레",
+    "fn": "②권위(와우1)",
+    "text": "이게 말도 안 되는 게, 샤크들이 줄줄이 누워 보고 둘이나 같이 데려간 그 침대랑 똑같은 컨셉이거든요.",
+    "tts": "이게 말도 안 되는 게, 샤크들이 줄줄이 누워 보고, 둘이나 같이 데려간 그 침대랑 똑같은 컨셉이거든요.",
+    "caps": [
+     "이게 말도 안 되는 게",
+     "샤크들이 줄줄이 누워 보고",
+     "둘이나 같이 데려간",
+     "그 침대랑 똑같은 컨셉이거든요"
+    ],
+    "facts": [
+     "f5",
+     "f6"
+    ],
+    "emph": [
+     {
+      "cap": "이게 말도 안 되는 게",
+      "span": "이게 말도",
+      "color": "민트",
+      "whole": false,
+      "why": "머리(꼬리 약함) → 손: 분홍→민트(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "샤크들이 줄줄이 누워 보고",
+      "span": "줄줄이 누워 보고",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "둘이나 같이 데려간",
+      "span": "같이 데려간",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "그 침대랑 똑같은 컨셉이거든요",
+      "span": "똑같은 컨셉이거든요",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 자막 띠 확대 시트(배경 밝음·노랑 흰 바탕)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B3",
+    "kind": "나레",
+    "fn": "③핵심(와우2, 잉 답)",
+    "text": "진짜 핵심은 이건데, 폭신한 테두리에 팔다리를 쏙 걸치고 누우면 온몸이 푹 감싸져요.",
+    "tts": "진짜 핵심은 이건데, 폭신한 테두리에 팔다리를 쏙 걸치고 누우면, 온몸이 푹 감싸져요.",
+    "caps": [
+     "진짜 핵심은 이건데",
+     "폭신한 테두리에",
+     "팔다리를 쏙 걸치고 누우면",
+     "온몸이 푹 감싸져요"
+    ],
+    "facts": [
+     "f4",
+     "c1"
+    ],
+    "emph": [
+     {
+      "cap": "진짜 핵심은 이건데",
+      "span": "핵심은 이건데",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 빨강→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "폭신한 테두리에",
+      "span": "폭신한 테두리에",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 자막 띠 확대 시트(배경 밝음·노랑 흰 바탕)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "팔다리를 쏙 걸치고 누우면",
+      "span": "걸치고 누우면",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 주황→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "온몸이 푹 감싸져요",
+      "span": "감싸져요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B4",
+    "kind": "나레",
+    "fn": "④심지어(와우3)",
+    "text": "심지어 이게 대박인 게, 세탁도 되고 강아지랑 같이 누워도 넉넉해요.",
+    "tts": "심지어 이게 대박인 게, 세탁도 되고, 강아지랑 같이 누워도 넉넉해요.",
+    "caps": [
+     "심지어 이게 대박인 게",
+     "세탁도 되고",
+     "강아지랑 같이 누워도",
+     "넉넉해요"
+    ],
+    "facts": [
+     "c1",
+     "c2"
+    ],
+    "emph": [
+     {
+      "cap": "심지어 이게 대박인 게",
+      "span": "심지어 이게",
+      "color": "초록",
+      "whole": false,
+      "why": "머리(꼬리 약함) → 손: 자막 띠 확대 시트(배경 밝음·노랑 흰 바탕)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "세탁도 되고",
+      "span": "세탁도 되고",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 빨강→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "강아지랑 같이 누워도",
+      "span": "같이 누워도",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 자막 띠 확대 시트(배경 밝음·노랑 흰 바탕)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "넉넉해요",
+      "span": "넉넉해요",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 분홍→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B5",
+    "kind": "나레",
+    "fn": "끝=사회 반응",
+    "text": "요즘은 우리 집에서 강아지랑 서로 먼저 누우려고 자리 싸움이 난리래요.",
+    "tts": "요즘은 우리 집에서, 강아지랑 서로 먼저 누우려고 자리 싸움이 난리래요.",
+    "caps": [
+     "요즘은 우리 집에서",
+     "강아지랑 서로 먼저 누우려고",
+     "자리 싸움이 난리래요"
+    ],
+    "facts": [
+     "창작"
+    ],
+    "emph": [
+     {
+      "cap": "요즘은 우리 집에서",
+      "span": "우리 집에서",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 자막 띠 확대 시트(배경 밝음·노랑 흰 바탕)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "강아지랑 서로 먼저 누우려고",
+      "span": "먼저 누우려고",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 주황→민트(배경 대비, 98 #180 ⑨) → 손: 자막 띠 확대 시트(배경 밝음·노랑 흰 바탕)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "자리 싸움이 난리래요",
+      "span": "싸움이 난리래요",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 자막 띠 확대 시트(배경 밝음·노랑 흰 바탕)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ]
+ },
+ "facts": {
+  "c1": "쿠팡 파트너스 API 검색(2026-10-28) 'Plufl' → Plufl 상표는 허글 바디 베개(9180478898·9593543629 등)뿐, 개 침대 없음 · '휴먼 독베드' → 9774982758 'LOVEPals 그레이 휴먼 도그베드 - 71x45x12 크기 성인 및 반려동물용 세탁 가능 두께 3.93 메모리폼 풍성한 베개 담요 스트랩 포함 대형 오버사이즈 강아지 침대'(→ B4 '세탁도 되고'·'강아지랑 같이') · 결과 C:/숏템_칼카피/foreignshowshow/21편_소재/쿠팡API_21a.json·21b.json · 상품 사진 = 회색 긴 털 대형 침대에 사람과 개",
+  "c2": "같은 꼴 사람용 개 침대 영상: Tewgy 설치 영상 https://www.youtube.com/watch?v=--l0iT0Sq1Q (펼치기·테두리 만지기) · Kimberly Rosales 리뷰 https://www.youtube.com/watch?v=hCep8H67OMI (테두리·커버 지퍼·개) · Brooke Rush 'LOVEPALS Human Dog Bed Review' https://www.youtube.com/watch?v=1JmJuhF-GMw (같은 상표 LOVEPals 침대에 개가 올라가 잠)",
+  "f4": "원본 TQw9ISabbhU 73.25~86.29 'The soft pillow border allows you to tuck your hands and feet inside and maximize… the snuggle factor. The plush faux fur and high grade orthopedic memory foam…'",
+  "f5": "원본 TQw9ISabbhU 100.97~136.36 샤크들이 차례로 누워 봄 'Shockingly, it's really comfortable.'·'It's actually not bad.'",
+  "f6": "원본 TQw9ISabbhU 403.86~415.74 '200,000… for 20%… The two of us together.'(화면 띠 'Mark & Lori's offer' 410~414초) · 436.10~446.75 성사 — 금액·지분 숫자는 대본에 안 씀('둘이나 같이 데려간'만)",
+  "창작": "B5 '우리 집에서 강아지랑 서로 먼저 누우려고 자리 싸움이 난리래요' = 화자 사회 반응(§0-1 14 허용선 — 성분·효능·안전·금액 아님)"
+ }
+}

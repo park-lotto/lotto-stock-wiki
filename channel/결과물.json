@@ -1708,6 +1708,38 @@
    "seconds": 40.6,
    "judge": "[확인대기] 잉 = 1957 필딩·샤반이 무늬 벽지를 만들려다 샤워 커튼 두 장을 열로 붙여 탄생(스미스소니언 2019·멘탈플로스 2012) · 벽지·온실 단열 실패 → IBM 1401 포장재 · 한국 겨울 창문 단열 뽁뽁이(삼성반도체 뉴스룸) · 훅 = NJ.com 공식 뽁뽁이 터뜨리기 · 뒤 쿠팡 비슷한 제품 34357682(원조 Sealed Air 같은 제품 9777408114는 업소용 디스펜서 상자 — 대본에 '원조 브랜드는 아니지만') · −14.4 LUFS · TP −1.6(완성본 직접) · make.py checks 14/14 · bench_distance 통과 · 멈춤/검정 0 · 광고 표시 0~40초 2초 간격+마지막 프레임 · 끝 여운 0.87초(말 끝 39.70) + 배경음악 0.50초 페이드 · 끝 0.1초 RMS −inf · 받아쓰기 스피치매틱스 0.957+위스퍼 줄 대조 · 봉인 ok · deliver --check ○ · 줄별 대조 ○15 △1 · 사장님 판정·귀 확인 전",
    "doc": "channel/banggu/썰템홈샷_하이브리드/13_뽁뽁이/"
+  },
+  {
+   "channel": "foreignshowshow",
+   "channel_name": "샥탬스토리",
+   "brand": "샥탬스토리",
+   "style": "현장썰 하이브리드(샤크탱크 칼카피 앞 + 쿠팡 1인칭 체험 뒤)",
+   "date": "2026-10-28",
+   "n": 108,
+   "from": "channel/foreignshowshow/21편_Snactiv/make_plan.py → tools/calcopy/shark/render.py(앞) → tools/calcopy/shark/hybrid.py(뒤·이음) → channel/foreignshowshow/하이브리드/final_tail.py(소리=영상 길이·끝 페이드·TP) → engine/finalize.seal",
+   "title": "하이브리드 21 Snactiv(스낵티브 손가락 젓가락 — 쿠팡 8945733467 같은 제품)",
+   "path": "C:/숏템_칼카피/foreignshowshow/하이브리드/21편_Snactiv/work/hybrid/final.mp4",
+   "desktop": "샥탬스토리_21_Snactiv_검수대기.mp4",
+   "md5": "b18d19f2da0dcceca0badae6b27b454c",
+   "seconds": 42.07,
+   "doc": "channel/foreignshowshow/21편_Snactiv_하이브리드/",
+   "judge": "[확인대기] 벤치 jo1QTw7GCWs ↔ Shark Tank Global nlVhx46TQFg · 앞 O3 끝 15.8초 + 뒤 지훈 1인칭 · −14.0 LUFS/TP −2.4 · 끝 여운 1.15초 · 끝 0.1초 −94.2dB · freeze/black 0 · 광고 2초 간격+마지막 프레임 · check 앞뒤 B13·B4 ○ · deliver --check ○ · 사람 귀 확인 전"
+  },
+  {
+   "channel": "foreignshowshow",
+   "channel_name": "샥탬스토리",
+   "brand": "샥탬스토리",
+   "style": "현장썰 하이브리드(샤크탱크 칼카피 앞 + 쿠팡 1인칭 체험 뒤)",
+   "date": "2026-10-28",
+   "n": 109,
+   "from": "channel/foreignshowshow/22편_Plufl/make_plan.py → tools/calcopy/shark/render.py(앞) → tools/calcopy/shark/hybrid.py(뒤·이음) → channel/foreignshowshow/하이브리드/final_tail.py(소리=영상 길이·끝 페이드·TP) → engine/finalize.seal",
+   "title": "하이브리드 22 Plufl(사람용 개 침대 — 쿠팡에 같은 제품 없어 비슷한 LOVEPals 9774982758, 대본에 밝힘)",
+   "path": "C:/숏템_칼카피/foreignshowshow/하이브리드/22편_Plufl/work/hybrid/final.mp4",
+   "desktop": "샥탬스토리_22_Plufl_검수대기.mp4",
+   "md5": "5c7f7039ad6458528888e65c97a25dc8",
+   "seconds": 37.7,
+   "doc": "channel/foreignshowshow/22편_Plufl_하이브리드/",
+   "judge": "[확인대기] 벤치 rlYYyUPjrug ↔ Shark Tank Global TQw9ISabbhU · 앞 O3 끝 13.2초 + 뒤 지훈 1인칭(B1 '똑같은 건 없고 비슷한') · −14.0 LUFS/TP −2.4 · 끝 여운 1.23초 · 끝 0.1초 −89.3dB · freeze/black 0 · 광고 2초 간격+마지막 프레임 · check B13·B4 ○ · deliver --check ○ · 사람 귀 확인 전"
   }
  ]
 }
