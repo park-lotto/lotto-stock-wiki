@@ -824,7 +824,8 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
         def photo():
             from tools.calcopy.hybrid.render_bench import photo_share
             mx = float(need("photo_share_max")["v"])
-            o = photo_share(T.get("cuts") or [], float(T["end"]))
+            ex = (jload(doc / "재료.json") if (doc / "재료.json").exists() else {}).get("photo_lines") or ()   # 계획 photo_gate 와 같은 예외 줄
+            o = photo_share(T.get("cuts") or [], float(T["end"]), ex)
             return o <= mx + 1e-9, f"쿠팡·상품 그림 컷 비중 {o} (판 ≤{mx}, 본인 사진 own_ 은 뺌 — timeline · render_bench.photo_share)"
         # 컷 길이 중앙·훅 컷은 판정 주인 = 계획 rhythm_gate(렌더 전 — 재료에 다른 장면 컷을 더하게 한다). 여기 완성본 자(장면 감지)는 같은 사람·같은 배경
         # 점프컷을 컷으로 못 세 계획 통과 편을 렌더 뒤에 막고 렌더만 되풀이했다(10-27 립글로스 회원편 2.4초·썬크림 1.75초 — 계획 경계 17 중 10 못 봄, 프레임 눈 확인) → 참고 칸

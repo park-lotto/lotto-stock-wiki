@@ -186,23 +186,25 @@ def rhythm_gate(T: dict, st: dict, src_dir: Path | None) -> list[str]:
     return bad
 
 
-def photo_share(cuts: list[dict], end: float) -> float:
+def photo_share(cuts: list[dict], end: float, exempt_lines=()) -> float:
     """(판단 주인 — 쿠팡·상품 그림 컷 비중) 그림(jpg·png·webp) 컷 초 합 ÷ 길이 — 연예인 본인 사진(파일 앞머리 own_, deco.is_own_photo)은 뺀다
     (사장님 10-25 "사진 비중 상한은 쿠팡 사진에만" — 본인 사진은 판 deco.photo 가 따로 센다). 렌더 전 관문(photo_gate)·품질 관문 rhythm 행이 같이 부른다."""
     from tools.calcopy.hybrid.deco import is_own_photo
     if not end:
         return 0.0
-    s = sum((c.get("t1", end) - c["t0"]) for c in cuts if Path(str(c.get("src") or "")).suffix.lower() in IMG_EXT and not is_own_photo(c.get("src")))
+    ex = set(exempt_lines or ())      # 재료.json photo_lines — 비슷한 제품 영상을 못 찾은 해외원본형의 제품 줄(사장님 10-27, 주인 flow._alt_photo_fallback)
+    s = sum((c.get("t1", end) - c["t0"]) for c in cuts if Path(str(c.get("src") or "")).suffix.lower() in IMG_EXT and not is_own_photo(c.get("src"))
+            and c.get("line") not in ex)
     return round(s / end, 3)
 
 
-def photo_gate(T: dict, st: dict) -> list[str]:
+def photo_gate(T: dict, st: dict, M: dict | None = None) -> list[str]:
     """렌더 전 관문: 그림 컷 비중이 판 rhythm.photo_share_max 를 넘으면 멈춘다(벤치 정지 화면 = 연예인 화보, 쇼핑몰 사진 0/8)."""
     from tools.calcopy.hybrid import styles as _STY
     R = _STY.rhythm(st).get("photo_share_max")
     if not R:
         return []
-    sh = photo_share(T["cuts"], T["end"])
+    sh = photo_share(T["cuts"], T["end"], (M or {}).get("photo_lines") or ())
     return [f"그림 컷 비중 {sh} > 판 photo_share_max {R['v']} — 쿠팡·상품 사진을 줄이고 원본·재료 영상으로(재료.json)"] if sh > float(R["v"]) + 1e-9 else []
 
 
@@ -3366,7 +3368,7 @@ def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *,
            ("④ 글자·얼굴", cut_content_gate(T, M, st, doc, R, log, erase=erase)),
            ("⑤ 컷 길이", cut_length_gate(T, st)),
            ("⑦ 멈춤", cut_still_gate(T, M, st)),
-           ("사진", photo_gate(T, st)),
+           ("사진", photo_gate(T, st, M)),
            ("리듬", rhythm_gate(T, st, src_dir))]
     if placed is not None:
         out.append(("꾸밈", deco_gate(placed, doc, st, log)))
