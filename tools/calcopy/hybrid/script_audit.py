@@ -380,6 +380,75 @@ def text_defects(d: dict, joined: bool = True) -> list[dict]:
     return out
 
 
+LATIN_READ = {"TV": "티비", "AI": "에이아이", "LED": "엘이디", "USB": "유에스비", "PC": "피씨", "OK": "오케이"}
+_LETTER = dict(zip("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "에이 비 씨 디 이 에프 지 에이치 아이 제이 케이 엘 엠 엔 오 피 큐 알 에스 티 유 브이 더블유 엑스 와이 지".split()))
+
+
+def _read_latin(tok: str) -> str | None:
+    """영문 토막의 한글 읽기 — 사전, 없으면 대문자 약어(5자 이하)는 글자 이름. 낱말(Apple 등)은 None(읽기를 코드가 정할 수 없다)."""
+    if tok.upper() in LATIN_READ:
+        return LATIN_READ[tok.upper()]
+    if tok.isupper() and tok.isalpha() and len(tok) <= 5:
+        return "".join(_LETTER[c] for c in tok)
+    return None
+
+
+def _split_like(say: str, parts: list[str]) -> list[str]:
+    """읽는 글을 옛 자막 조각 수·길이 비율대로 나눈다 — 자르는 곳은 비율 자리에서 가장 가까운 띄어쓰기."""
+    n = len(parts)
+    if n <= 1:
+        return [say]
+    tot = sum(len(p) for p in parts) or 1
+    gaps = [i for i, ch in enumerate(say) if ch == " "]
+    cuts, acc = [], 0
+    for p in parts[:-1]:
+        acc += len(p)
+        want = len(say) * acc / tot
+        free = [g for g in gaps if not cuts or g > cuts[-1]]
+        if not free:
+            break
+        cuts.append(min(free, key=lambda g: abs(g - want)))
+    pts = [0] + [c + 1 for c in cuts] + [len(say)]
+    return [say[a:b].strip() for a, b in zip(pts, pts[1:]) if say[a:b].strip()]
+
+
+def text_fix(d: dict, joined: bool = True) -> list[str]:
+    """(판단 주인 = text_defects 와 같은 자) 정답이 하나인 글 결함은 반려하지 않고 여기서 고친다 — 고친 것 글 목록(빈 목록 = 고칠 것 없음).
+    ① 자막이 목소리에 없는 낱말을 보이면(caps_say) 자막 조각을 읽는 글로 다시 나눈다(조각 수·key 유지) ② 줄 끝 부호(end_mark) 마침표
+    ③ 읽는 글 영문(latin) → 한글 읽기(자막은 원문). 읽기를 정할 수 없는 낱말·제품 밝히기(alt_say)는 그대로 둔다(내용 판단 = Claude).
+    10-27 TV 스탠드 편: opus 가 대본을 통째로 다시 쓰며 부호↔영문을 번갈아 깨뜨려 대본 판정 34번(46분)."""
+    from tools.calcopy.engine import narr_align as NA
+    out = []
+    N = narr_lines(d)
+    for l in N:
+        shown, parts = _shown(l)
+        caps = l.get("caps")
+        if shown is None or not parts or not isinstance(caps, list) or not shown_not_said(shown, _say(l)):
+            continue
+        new = _split_like(_say(l), parts)
+        if len(new) != len(caps):
+            continue
+        l["caps"] = [{**c, "text": t} if isinstance(c, dict) else t for c, t in zip(caps, new)]
+        for c in l["caps"]:
+            if isinstance(c, dict) and c.get("key") and c["key"] not in c["text"]:
+                c.pop("key")
+        out.append(f"{l.get('id')} 자막 = 읽는 글로 다시 나눔")
+    if joined:
+        T = [l for l in N if l.get("kind") == "tts"]
+        for l in T[:-1]:
+            if not NA.ends_with_mark(_say(l)):
+                k = "tts" if l.get("tts") else "text"
+                l[k] = str(l[k]).rstrip() + "."
+                out.append(f"{l.get('id')} 줄 끝 마침표")
+    for l in N:
+        say = _say(l)
+        new = LATIN.sub(lambda m: _read_latin(m.group(0)) or m.group(0), say)
+        if new != say:
+            l["tts"] = new
+            out.append(f"{l.get('id')} 영문 읽기 {LATIN.findall(say)}")
+    return out
+
+
 # ── 대체(비슷한) 제품 밝히기 — 판 설정 밖 **모든 판 공통**. 판단 주인 = alt_disclosed 한 곳 ──────────────────────
 #   사장님 10-25 "쿠팡에 같은 제품이 없으면 비슷한 제품으로 가되, 영상에서 분명히 말해야 한다"(제작순서 03 · rules.PRODUCT_TALK alt).
 #   대본.json 의 product_mode(exact·named·alt·given — 03 제품 판정, 회원 flow 는 st.product.mode 를 넣는다)가 'alt' 일 때만 잰다.
