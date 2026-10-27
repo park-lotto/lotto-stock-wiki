@@ -1572,6 +1572,40 @@
    "seconds": 38.77,
    "judge": "[확인대기] 잉 = SPAM 이름의 진짜 뜻은 호멜 옛 임원 몇 명만 안다(SPAM 공식 FAQ spam.com/faq) · 덤 = 1937 공모에서 뽑힌 사람이 부사장의 동생(호멜 공식 뉴스룸 2018) · 훅 = SPAM 공식 광고 캔 로고 · 뒤 쿠팡 같은 제품 8244032757 · −14.5 LUFS · TP −1.6(완성본 직접) · make.py checks 14/14 · bench_distance 통과 · 멈춤/검정 0 · 광고 표시 0~38.67초 2초 간격 전부 · 끝 여운 0.93초(나레 −45dB) · 받아쓰기 스피치매틱스 0.996+위스퍼 medium 대조 · 봉인 ok · 줄별 대조 ○11 △1 · 사장님 판정·귀 확인 전",
    "doc": "channel/banggu/썰템홈샷_하이브리드/09_스팸/"
+  },
+  {
+   "channel": "foreignshowshow",
+   "channel_name": "샥탬스토리",
+   "brand": "샥탬스토리",
+   "style": "현장썰 하이브리드(샤크탱크 칼카피 앞 + 쿠팡 1인칭 체험 뒤)",
+   "date": "2026-10-27",
+   "from": "channel/foreignshowshow/17편_SquidSocks/make_plan.py → tools/calcopy/shark/render.py(앞) → tools/calcopy/shark/hybrid.py(뒤·이음) → 소리 끝 무음 덧댐 → engine/finalize.seal",
+   "n": 100,
+   "title": "하이브리드 17 Squid Socks(스퀴드 삭스 — 쿠팡 9736659657 같은 제품)",
+   "path": "C:/숏템_칼카피/foreignshowshow/하이브리드/17편_SquidSocks/work/hybrid/final.mp4",
+   "desktop": "샥탬스토리_17_SquidSocks_검수대기.mp4",
+   "md5": "42b207b6dc72cb17b8222e1948cea03e",
+   "seconds": 36.87,
+   "doc": "channel/foreignshowshow/17편_SquidSocks_하이브리드/",
+   "judge": "[확인대기] −13.9 LUFS · TP −2.4(완성본 ebur128) · check render 뒤 전 칸 ○(앞 B4·B13 × = 자른 뒤 구간) · check_seams 되감김 0·점프줌 0 · freeze/black 0 · 광고 표시 0~36.8초 2초 간격+마지막 프레임 · 끝 여운 0.87초(받아쓰기 끝 36.00 → 36.87) · 받아쓰기 스피치매틱스 ko+위스퍼 small 대조('한 짝씩'을 둘 다 '한 장씩' → '한쪽씩'으로 고쳐 앞 TTS 재합성) · 자막 색 손질 12칸(④) · 봉인 ok · deliver --check ○",
+   "note": "벤치 pyV4RwGO2nM(310만) · 원본 CNBC Ambition lrfOlA0NjaA(CNBC 로고·띠 = 크롭 높이 900 밖) · 뒤 재료 Squid Socks 공식 zKYD9yCFjIA·창업자 채널 4Cl5YmCY8mQ·사용자 ymk8QmC4a68·방송 · 0초 원 = 아기 발에 남은 스퀴드 삭스"
+  },
+  {
+   "channel": "foreignshowshow",
+   "channel_name": "샥탬스토리",
+   "brand": "샥탬스토리",
+   "style": "현장썰 하이브리드(샤크탱크 칼카피 앞 + 쿠팡 1인칭 체험 뒤)",
+   "date": "2026-10-27",
+   "from": "channel/foreignshowshow/18편_LUCY/make_plan.py → tools/calcopy/shark/render.py(앞) → tools/calcopy/shark/hybrid.py(뒤·이음) → 소리 끝 무음 덧댐 → engine/finalize.seal",
+   "n": 101,
+   "title": "하이브리드 18 LUCY 드로잉 도구(쿠팡 9759217102 같은 상표 루시 플렉스)",
+   "path": "C:/숏템_칼카피/foreignshowshow/하이브리드/18편_LUCY/work/hybrid/final.mp4",
+   "desktop": "샥탬스토리_18_LUCY_검수대기.mp4",
+   "md5": "cbc8ef56186ffac91e780d67f8708f6b",
+   "seconds": 38.7,
+   "doc": "channel/foreignshowshow/18편_LUCY_하이브리드/",
+   "judge": "[확인대기] −13.9 LUFS · TP −2.3(완성본 ebur128) · check render 뒤 전 칸 ○(앞 B1·B4 × = 앞 전체 기준, 하이브리드는 16.0초만 씀) · check_seams 되감김 0·점프줌 0 · freeze/black 0 · 광고 표시 0~38.6초 2초 간격+마지막 프레임 · 끝 여운 0.73초(받아쓰기 끝 37.97 → 38.70) · 받아쓰기 스피치매틱스 ko(△ '케빈'→'캐빈' 같은 소리) · 자막 색 손질 22칸(④) · 봉인 ok · deliver --check ○",
+   "note": "벤치 0HbV-PW3ivw(410만) · 원본 Sony 49r_YvwH6lw · 뒤 재료 DrawLUCY 공식 Gq_t8OV_T7s·NJPklYRULSI·방송 케빈 시연 · 0초 원 = 무대 TV 홍보 영상 속 루시 본체"
   }
  ]
 }
