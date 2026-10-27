@@ -1970,7 +1970,8 @@ def blur_entry(boxes: list, crop: list, win: tuple, ss: float, sec: float, pad: 
     return [ax, ay, bx - ax, by - ay, round(ss, 3), round(ss + sec, 3)]
 
 
-def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Path | None = None, log=print, erase: list | None = None) -> list[str]:
+def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Path | None = None, log=print, erase: list | None = None,
+                     autoblur: bool = False) -> list[str]:
     """렌더 전 관문 ④(10-25 감사 남의 글자 33·남 얼굴 15): 계획의 컷마다 렌더 조각과 같은 프레임 3장(cut_crop·blur)을 원본에서 뽑아
       ① 글자: 흐림 밖에 남의 박힌 글자(자막·워터마크·로고 글)가 TEXT_MIN_HITS 장 이상이면 멈춤(foreign_text)
       ② 얼굴(연예인 판 thumb_card_face=true): 기준 얼굴(카드 통과 얼굴)과 다른 사람의 큰 얼굴이 FACE_MIN_HITS 장 이상이면 멈춤(other_face)
@@ -2025,6 +2026,19 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
             where = f"{c['line']} {c['src']}@{float(c['ss']):.2f}"
             if nt >= TEXT_MIN_HITS and erase is not None:
                 erase.append(k)
+            elif nt >= TEXT_MIN_HITS and autoblur:
+                # (사장님 10-27 뿌리 수정 — Claude 는 장면을 고르고 숫자는 코드가) 흐림 칸 = blur_entry 그대로 재료.blur 에 넣고 다시 잰다.
+                #   예전엔 이 숫자를 반려 글로 Claude 에게 넘겨 재료를 고치게 했다(같은 칸을 손으로 옮겨 적는 왕복). 넣은 뒤에도 글자가 남으면 그때 반려.
+                boxes = [f["box"] for x in r["text"] for f in x]
+                ent = blur_entry(boxes, crop, (ww, wh), float(c["ss"]), n / FPS)
+                M.setdefault("blur", {}).setdefault(c["src"], []).append(ent)
+                M["_blur_added"] = M.get("_blur_added", 0) + 1
+                regs2 = M["blur"][c["src"]]
+                m2 = cut_content_feats(src, c["ss"], n, crop, (ww, wh), regs2, anchors, ocr=ocr)
+                left = sum(1 for fr in m2["text"] if any(foreign_text(f) for f in fr))
+                log(f"[흐림 넣기] 컷 {k} {where} 남의 글자 {nt}/{len(r['text'])}장 → 재료.blur[{c['src']}] += {ent} · 다시 잼 {left}장")
+                if left >= TEXT_MIN_HITS:
+                    bad.append(f"컷 {k} {where}: 흐림을 넣어도 남의 박힌 글자 {left}장 — 다른 장면으로 바꾼다")
             elif nt >= TEXT_MIN_HITS:
                 boxes = [f["box"] for x in r["text"] for f in x][:3]
                 bad.append(f"컷 {k} {where}: 흐림 밖 남의 박힌 글자 {nt}/{len(r['text'])}장(창 좌표 {boxes}) — 재료.json blur[{c['src']}] 에 "
@@ -3412,7 +3426,7 @@ def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *,
            ("⑥ 카드 글", TR.card_text_gate(doc)),
            ("⑥ 카드 얼굴", TR.card_face_gate(st, doc, T, M["cand_dir"])),
            ("③ 경계", cut_boundary_gate(T, M, st)),
-           ("④ 글자·얼굴", cut_content_gate(T, M, st, doc, R, log, erase=erase)),
+           ("④ 글자·얼굴", cut_content_gate(T, M, st, doc, R, log, erase=erase, autoblur=True)),
            ("⑤ 컷 길이", cut_length_gate(T, st)),
            ("⑦ 멈춤", cut_still_gate(T, M, st)),
            ("사진", photo_gate(T, st, M)),
@@ -3499,6 +3513,8 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         from tools.calcopy import vmake_clean as VC
         erase = [] if VC.will_erase(style_name) else None        # 박힌 글자를 지우는 판(orig_text.mode=vmake·돈 막힘 아님) — 글자 컷은 멈추지 않고 '지울 컷'(사장님 10-26)
         gates = timeline_gates(T, M, st, doc, R, log, plan=True, measured=bool(tts), erase=erase, placed=placed)      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬·꾸밈 전부(첫 실패에서 안 멈춘다)
+        if M.pop("_blur_added", 0):      # 관문 ④가 넣은 흐림 칸 = 재료.json 에 — 렌더(같은 파일을 읽는다)·지문(gate_stamp)이 같은 흐림을 본다
+            jsave(doc / "재료.json", M)
         (R / GATE_STAMP).unlink(missing_ok=True)
         if tts and not erase and not any(b for _, b in gates):      # 진짜 목소리·지울 컷 없음·전부 통과일 때만 지문(지울 컷이 있으면 렌더가 지운 뒤 다시 잰다)
             jsave(R / GATE_STAMP, {"stamp": gate_stamp(T, M, st, doc), "at": __import__("time").strftime("%Y-%m-%d %H:%M:%S")})
@@ -3521,7 +3537,10 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     if sp.exists() and jload(sp).get("stamp") == gate_stamp(T, M, st, doc):      # 계획이 같은 입력으로 전부 통과 — 다시 안 잰다(검수단축 ⑤)
         log(f"[렌더 전 관문] 계획({jload(sp).get('at')})과 입력이 같다(컷·원본·판·썸네일·관문 코드 지문) — 다시 안 잰다")
     else:
-        gate_stop(timeline_gates(T, M, st, doc, R, log, plan=False))      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬 — 영상 굽기 전에 전부 모아 멈춘다(꾸밈은 창 자리 뒤 — GATE_DEPENDS)
+        _g = timeline_gates(T, M, st, doc, R, log, plan=False)
+        if M.pop("_blur_added", 0):      # 지시서가 계획 없이 재료를 다시 써 렌더로 온 길(flow save_m → render) — 흐림 칸을 여기서 넣고 같은 파일에
+            jsave(doc / "재료.json", M)
+        gate_stop(_g)      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬 — 영상 굽기 전에 전부 모아 멈춘다(꾸밈은 창 자리 뒤 — GATE_DEPENDS)
     win0 = render_window(T, M, st, R)                          # 창(전환 없이) — 자리 검출 화면의 재료
     placed = plan_rows(S, T, st, make_locate(S, T, st, R, win0, log))
     deco_apply(placed, doc, st, log)
