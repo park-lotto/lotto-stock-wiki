@@ -719,7 +719,7 @@ def ph_setup_check(st, m, rp, u):
     if miss:
         st["log"].append("준비 확인: 빠진 것 " + ", ".join(str(x.get("id")) for x in miss))
         raise _Stop(SETUP_WHY, setup_fix(miss), retry="setup", ask_member=True)       # 다시 시도 = 준비를 다시 잰다
-    st["env"] = {k: env.get(k) for k in ("keys", "dev", "cache", "asr", "done_refs")}     # done_refs = 이 PC 작업 기록의 만든 편(둘째 소재 고르기가 뺀다)
+    st["env"] = {k: env.get(k) for k in ("keys", "dev", "cache", "asr", "done_refs", "single_source")}     # done_refs = 이 PC 작업 기록의 만든 편(둘째 소재 고르기가 뺀다)
     return {"goto": "bench"}
 
 
@@ -1889,6 +1889,9 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
     PR = st.get("product") or {}
     if PR:     # 제품 판정을 대본에 싣는다 — script_audit.alt_disclosed 가 alt 면 '비슷한 제품' 밝히는 줄을 요구(03 · 사장님 10-25)
         S["product_mode"] = "given" if PR.get("given") else (PR.get("mode") or "exact")
+    if "voice" in S and not isinstance(S.get("voice"), dict):     # 목소리는 판이 정한다(계획 render 가 판 voice 로 채움) — 글자로 적으면 계획이
+        st["log"].append(f"대본 voice 칸 꼴 틀림({str(S['voice'])[:40]}) — 지우고 판 목소리로")   # 'str'.get 으로 죽었다(10-27 5회차 TV 편)
+        S.pop("voice")
     tfix = RU.title_colors_fix(S, _style(v))      # 판 틀에 없는 제목 강조색은 형식 — 반려 말고 바로 고친다(10-26 같은 반려 3번 멈춤)
     if tfix:
         st["log"].append("제목 색 자동 정리: " + "; ".join(tfix))
@@ -2943,6 +2946,8 @@ ALT_NOTICE_WON = "주신 영상은 원본을 아직 찾는 중이라, 함께 찾
 def pick_alt_source(st: dict) -> dict | None:
     """(판단 주인 — 둘째 소재 고르기) 그 판 벤치 상위(조회순) 중 회원이 준 소재·이 PC 작업 기록의 만든 편(멈춘 편은 다시 씀 — runner done_refs) 아닌 첫 편."""
     from tools.calcopy import origin_find as OF
+    if (st.get("env") or {}).get("single_source"):      # 원본 찾기 워커(of_worker, 사장님 10-27 '24시간 미리 찾아 둔다') — 그 소재 하나만
+        return None
     f = PRESETS_FILE.parent / str(st.get("slug") or "-") / "_kal" / ALT_LIST
     if not f.is_file():
         st["log"].append(f"둘째 소재 없음: {f.name} 없음({st.get('slug')})")
