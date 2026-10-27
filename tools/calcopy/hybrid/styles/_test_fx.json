@@ -1,0 +1,11 @@
+{
+ "name": "_test_fx",
+ "base": "키치잇판",
+ "_note": "시험 판(지시서 02·03 연결) — 키치잇판 그대로 + 검출 자리 스티커(circle_arrow → 얼굴, YuNet) + 짤(meme, 자막 띠 옆 caption_side) + 모든 경계 검은 1프레임. 자리 검출 = fx_target.locator(돈 안 드는 얼굴·자막옆만).",
+ "caption": {"band": [1290, 1390]},
+ "cuts": {"transition": {"kinds": {"black": 1.0}, "ms": 33}},
+ "placement": {"rules": {
+  "stickers": {"circle_arrow": {"target": "face", "avoid": [], "why": "시험: 얼굴 검출 자리"}},
+  "meme": {"rate": 0.3, "target": "caption_side", "len_s": 1.2, "size": [300, 300], "why": "시험: 자막 띠 옆 짤"}
+ }}
+}

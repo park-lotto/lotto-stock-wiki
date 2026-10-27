@@ -1,0 +1,20 @@
+{
+ "name": "_test_sinbak",
+ "base": "신박판",
+ "_note": "시험 판(지시서 02 2차 ④⑤) — 신박판 그대로 + 제목 왼쪽 정렬(벤치 rAt 3초 잉크 왼쪽 x97 실측)·자간 −2.1(frame.json props title.letter_spacing) + 둥근 창 87(frame.json video.radius, 벤치 모서리 곡선 실측과 맞음). 판 파일 값은 07 주인 — 넣을지는 07.",
+ "frame": {
+  "title": [
+   {
+    "font": "SUIT-Bold.otf",
+    "px": 73.05,
+    "center": 487,
+    "color": "#0D0D0D",
+    "max_w": 1000,
+    "align": "left",
+    "x": 97,
+    "letter_spacing": -2.1
+   }
+  ],
+  "window_radius": 87
+ }
+}

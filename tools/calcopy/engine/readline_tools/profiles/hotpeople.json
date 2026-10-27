@@ -1,0 +1,30 @@
+{
+ "_what": "hotpeople 판독 도구 채널 값 — 06 워커 10-25 channel/hotpeople/_kal/readline_profile.json 을 옮김(지시서 13). 원래 파일은 06 주인이라 그대로 둔다. (원래 설명: 뜨거운사람들(hotpeople) 줄판독 build_lr 채널 값 — 06 워커 10-25. readline_tools/profiles 는 tools/ 라 손대지 않고(지시서 06 '만질 파일') 이 파일을 --profile 로 넘긴다. 07/13 이 profiles/hotpeople.j)",
+ "_bands": "capseg 띠 1278~1478 --mode dark(흰 바탕 검정 글, 외곽 없음 — color/bright 모드는 글을 못 잡는다) · cutdet 창 484~1272 --v2(영상 창 0,484,1080×788)",
+ "_capseg_mode": "dark",
+ "layer": "채널자막",
+ "measure_band": [
+  1278,
+  1478
+ ],
+ "font": {
+  "name": "배민 주아체(BMJUA) 계열 굵게 — 잠정",
+  "basis": "1판 렌더 대조(09-25)"
+ },
+ "hand_font": {
+  "name": "해당 없음",
+  "basis": "손글씨 줄 없음"
+ },
+ "outline": "없음(검정 글 #000000, 외곽선·그림자 없음 — px box ring3-7px #000000 = 글 자체)",
+ "hand_outline": null,
+ "letter_gap_px": "좁음(눈 — 획끼리 거의 붙음, 열 빈칸 px 미측정)",
+ "made_by": "오푸스 실행자 줄판독 2026-10-25 (관제 263 지시서 06 · hotpeople)",
+ "capseg_band": [
+  1278,
+  1478
+ ],
+ "cutdet_window": [
+  484,
+  1272
+ ]
+}
