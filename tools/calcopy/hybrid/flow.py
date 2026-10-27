@@ -420,9 +420,14 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
             st["_asker_in"] = feed if len(json.dumps(feed, ensure_ascii=False)) <= ASKER_IN_MAX else None
         if "do" in r:
             st["phase"] = r["then"]
+            w = _watch(st, ph, r)
+            if w:
+                return _out(st, "review", r["then"], review=[w])     # 단계 표시·회원 문구는 하려던 일 그대로(st.phase 만 watch_got)
             return _out(st, "execute", r["then"], do=r["do"])
         if "review" in r:
             st["phase"] = r["then"]
+            st.pop("watch_cnt", None)          # 회원 Claude 가 한 번 봤다 — 감시는 '질문 없이 연달아 돈 실행기 일'만 센다(10-27 립글로스 03:12~03:54 질문 0개)
+            st.pop("watch_lim", None)
             return _out(st, "reject" if r.get("reject") else "review", r["then"], review=r["review"], reject=r.get("reject"))
         if "wait" in r:
             st["phase"] = r["then"]
@@ -431,6 +436,50 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
             st["phase"] = "done"
             return _out(st, "done", "done", **r["done"])
     return _out(st, "stop", st.get("phase"), why="만드는 중에 문제가 생겼어요", fix="다시 시도해 주시면 이어 갈게요", detail="세부 단계가 40번 돌기만 함")
+
+
+# ── 반복 감시(사장님 10-27 "오푸스가 계속 깨어 있어야 하는데 그게 안 되고 있다") ──────────────────────────
+# 서버↔실행기 고리는 회원 Claude 없이 돈다(flow_driver.pump) — 판단을 묻는 칸이 없으면 같은 일을 몇십 번 돌아도 아무도 모른다
+# (10-27 립글로스: clean_text↔write_doc 67번·37분, 그 42분 동안 회원 Claude 질문 0개). 질문 없이 같은 실행기 일이 WATCH_N 번을 넘으면 실행 대신 회원 Claude 에게 기록을 보여 주고
+# '이어 갈까·멈출까'를 묻는다. 판단 주인 = _watch(세기)·f_watch_got(답 처리) 한 곳.
+WATCH_N = 6
+
+WATCH_ASK = """너는 이 영상 제작의 감독이다. 아래 실행기 일이 같은 편 안에서 {n}번째 다시 돌려 한다 — 헛바퀴(같은 결과를 계속 다시 만듦)인지 정상 반복(반려를 받아 고치는 중)인지 기록을 보고 판단해라.
+헛바퀴면 멈추고(go=false) 무엇이 반복되는지·어디를 고쳐야 하는지 why 에 적는다. 정상 반복이면 go=true.
+JSON 하나: {{"go": true|false, "why": "한두 줄"}}
+
+## 다시 돌리려는 일
+{cmd} (지금 단계 {ph})
+
+## 최근 기록(오래된 → 최신)
+{log}"""
+
+
+def _watch(st: dict, ph: str, r: dict) -> dict | None:
+    """실행기 일 횟수를 세고, 넘으면 감독 질문(review)을 돌려준다. 내려던 do 는 st['watch_do'] 에 두었다가 '이어 감'이면 그대로 낸다."""
+    cmd = "+".join(sorted({str(d.get("cmd")) for d in r.get("do") or [] if isinstance(d, dict)}))
+    if not cmd:
+        return None
+    cnt = st.setdefault("watch_cnt", {})
+    cnt[cmd] = cnt.get(cmd, 0) + 1
+    lim = (st.get("watch_lim") or {}).get(cmd, WATCH_N)
+    if cnt[cmd] <= lim:
+        return None
+    st["watch_do"] = {"do": r["do"], "then": r["then"], "cmd": cmd}
+    st["phase"] = "watch_got"
+    log = "\n".join(str(x)[:300] for x in (st.get("log") or [])[-25:])
+    return _rv("watch", WATCH_ASK.format(n=cnt[cmd], cmd=cmd, ph=ph, log=log or "없음"), need=("go",))
+
+
+def f_watch_got(st, m, rp, u):
+    w = st.pop("watch_do", None) or {}
+    a = _reply(rp, "watch", ("go",))
+    cmd = w.get("cmd") or ""
+    st["log"].append(f"감독({cmd} {st.get('watch_cnt', {}).get(cmd)}번째): {'이어 감' if a.get('go') else '멈춤'} — {str(a.get('why') or '')[:200]}")
+    if not a.get("go") or not w.get("do"):
+        raise _Stop("만드는 중에 같은 작업이 계속 반복됐어요", AGAIN, detail=f"감독 멈춤 {cmd}: {str(a.get('why') or '')[:300]}", ask_member=True)
+    st.setdefault("watch_lim", {})[cmd] = st["watch_cnt"][cmd] + WATCH_N      # 다음 물음은 WATCH_N 번 더 돈 뒤
+    return {"do": w["do"], "then": w["then"]}
 
 
 def _out(st: dict, status: str, phase: str, **kw) -> dict:
@@ -3202,7 +3251,7 @@ PHASE_STAGE.update({
 PHASES = {
     "setup": ph_setup, "setup_check": ph_setup_check, "bench": ph_bench, "bench_got": ph_bench_got, "origin_read": ph_origin_read, "src_got": ph_src_got, "probe_got": ph_probe_got, "sb_pick": ph_sb_pick,
     "peer": ph_peer, "peer_read": ph_peer_read, "search": ph_search, "search_got": ph_search_got, "titles": ph_titles,
-    "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped, "task_got": ph_task_got, "given_origin_got": ph_given_origin_got,
+    "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped, "task_got": ph_task_got, "watch_got": f_watch_got, "given_origin_got": ph_given_origin_got,
     "vis_get": ph_vis_get, "vis_got": ph_vis_got, "vis_look": ph_vis_look, "vis_pick": ph_vis_pick, "vis_next": ph_vis_next,
     "product_sheet": ph_product_sheet, "product_pick": ph_product_pick, "product_pick_wide": ph_product_pick_wide, "product_cands": ph_product_cands, "product_same": ph_product_same,
     "product_done": ph_product_done, "cand_look": ph_cand_look, "reviews": ph_reviews, "reviews_got": ph_reviews_got, "reviews_naver": ph_reviews_naver, "name_find": ph_name_find, "name_got": ph_name_got, "named_cands": ph_named_cands,
