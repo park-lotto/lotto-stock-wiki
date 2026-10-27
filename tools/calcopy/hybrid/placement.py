@@ -562,6 +562,15 @@ def deco_cause(out: list[dict], style: dict) -> str:
     return "deco_pos×targets"
 
 
+def caption_units(tab: dict) -> list[dict]:
+    """(판단 주인 — 꾸밈 셈의 덩어리 목록) 자막표 rows + 댓글카드(cards, 등장 페이드 = 꾸밈) + 가사(lyrics, 색 강조 = 꾸밈).
+    나레 없는 판(별헤는쏭 10-27)은 rows 가 비고 카드·가사가 자막이다 — 벤치 줄판독도 카드(fade)·가사(emph)를 줄로 센다(kal_analyze._decorated)."""
+    out = list(tab.get("rows") or [])
+    out += [{"enter": "fade" if c.get("enter_ms", 1) else "cut"} for c in tab.get("cards") or []]
+    out += [{"enter": "instant", "emph": ["jp"]} for _ in tab.get("lyrics") or []]
+    return out
+
+
 def plain_share(out: list[dict]) -> float | None:
     """(판단 주인 — 꾸밈 없는 덩어리 비율) _is_deco 아닌 덩어리 ÷ 전체. 배치(plain_step)·품질 관문 rhythm 행이 같이 부른다."""
     return round(sum(1 for r in out if not _is_deco(r)) / len(out), 3) if out else None

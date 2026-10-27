@@ -1,7 +1,7 @@
 {
  "slug": "byeolsong",
  "made_by": "tools/calcopy/preset_card.py build",
- "built_at": "2026-10-27T09:24:02",
+ "built_at": "2026-10-27T09:27:30",
  "bench": "별헤는쏭(@별헤는쏭) — 바이럴 한 샷 + 일본 노래 + 댓글카드 자막 + 가사 2줄 → 우리 릴리릴리",
  "brand": null,
  "brand_note": null,
@@ -1782,7 +1782,7 @@
  "gates": {
   "match_first_copy": {
    "path": "channel/byeolsong/시험편01_코코넛/재현일치도.json",
-   "ok": null,
+   "ok": true,
    "pass": null,
    "fail": null
   },
@@ -1792,8 +1792,8 @@
    "better": null
   },
   "quality_gate": {
-   "path": null,
-   "ok": null
+   "path": "channel/byeolsong/시험편01_코코넛/품질관문.json",
+   "ok": true
   }
  },
  "member": {
@@ -1825,8 +1825,8 @@
   "hand_scripts": [],
   "hand_scripts_reference": [],
   "unmeasured": 0,
-  "quality_gate_ok": false,
-  "match_ok": false,
+  "quality_gate_ok": true,
+  "match_ok": true,
   "eye": null,
   "upgrade": {
    "better": 0,
@@ -1855,7 +1855,8 @@
   "channel/byeolsong/뜯기/SR-2LhCXxwY/뜯기.json": "ce14d43c95d5",
   "channel/byeolsong/뜯기/_WLN4wnVbF8/뜯기.json": "f45c162b7c89",
   "channel/byeolsong/뜯기/tF4fbEVtnMY/뜯기.json": "8284f9dce960",
-  "channel/byeolsong/시험편01_코코넛/재현일치도.json": "ec321629a951",
+  "channel/byeolsong/시험편01_코코넛/재현일치도.json": "5304e56ff8e9",
+  "channel/byeolsong/시험편01_코코넛/품질관문.json": "9db85d4ada6c",
   "channel/byeolsong/줄판독/1lMbJh0n_d4.json": "4995523ab7ad",
   "channel/byeolsong/줄판독/Fwk50_y9t9Q.json": "547b626aac4f",
   "channel/byeolsong/줄판독/PzKloCeO2FU.json": "309d6093d329",
@@ -1869,13 +1870,11 @@
   "channel/프리셋.json": "8bf58f4b1a73",
   "shopping_shorts/static/caption-motions.js": "f77b884bdc60",
   "tools/calcopy/hybrid/styles/_common.json": "5452d68fa811",
-  "tools/calcopy/hybrid/styles/별헤는쏭판.json": "0e9f1cb6b9c8"
+  "tools/calcopy/hybrid/styles/별헤는쏭판.json": "94e1700b7d76"
  },
  "done": {
   "level": "L1",
   "missing": [
-   "품질관문 ○",
-   "재현일치도 ○",
    "눈검수 E1·E4·E6",
    "업그레이드 나아짐≥과반∧나빠짐0",
    "눈검수 E9",
