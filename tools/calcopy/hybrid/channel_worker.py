@@ -117,7 +117,7 @@ def yt_top(cid: str, n: int = 30) -> list[dict]:
     return [{"url": f"https://www.youtube.com/shorts/{x.get('id')}", "views": int(x.get("view_count") or 0), "title": x.get("title")} for x in es if x.get("id")]
 
 
-def tt_tops(handles: list[str]) -> dict[str, list[dict]]:
+def tt_tops(handles: list[str], on_one=None) -> dict[str, list[dict]]:
     """틱톡 채널 화면 — 화면 뜬 창 + 틱톡 로그인 쿠키(원본 찾기의 틱톡 검색과 같은 길). 10-27 실측: 헤드리스는 몇 채널 뒤
     'Something went wrong'(목록 막힘)으로 7채널 0편 → 화면 뜬 창·쿠키로 32·32·19편. 막히면 5초 뒤 Refresh 한 번, 채널 사이 TT_GAP 초."""
     from tools.calcopy import lens as LN
@@ -131,13 +131,15 @@ def tt_tops(handles: list[str]) -> dict[str, list[dict]]:
         except ValueError:
             return 0
     out = {}
-    with R._plat_lock("web"), LN.lens_page("ttch") as pg:      # 원본 찾기 워커의 틱톡 검색과 엇갈리게(같은 잠금)
+    with LN.lens_page("ttch") as pg:
         ck = R._tiktok_cookies()
         if ck:
             pg.context.add_cookies(ck)
         for h in handles:
             items = []
             try:
+              # 잠금은 채널 하나 열 때만(10-27: 목록 전체 25분 내내 쥐어 원본 찾기 워커의 틱톡 검색이 136초+ 줄 섰다)
+              with R._plat_lock("web"):
                 pg.goto(f"https://www.tiktok.com/@{h}", wait_until="domcontentloaded", timeout=40000)
                 pg.wait_for_timeout(5000)
                 if not pg.locator('[data-e2e="user-post-item"]').count() and pg.get_by_text("Something went wrong").count():
@@ -152,6 +154,8 @@ def tt_tops(handles: list[str]) -> dict[str, list[dict]]:
             except Exception as e:  # noqa: BLE001 — 한 채널 실패는 남기고 다음
                 sys.stderr.write(f"[ch] 틱톡 @{h} 화면 실패: {type(e).__name__}\n")
             out[h] = [{"url": i["href"], "views": num(i.get("v")), "title": (i.get("t") or "")[:120]} for i in items if i.get("href")]
+            if on_one:
+                on_one(h, out[h])               # 채널마다 바로 저장(중간에 죽어도 받은 건 남는다)
             if not out[h]:
                 sys.stderr.write(f"[ch] 틱톡 @{h} 목록 0편(막힘?)\n")
             time.sleep(TT_GAP)
@@ -213,9 +217,10 @@ def main(argv: list[str]) -> int:
             got = json.loads(cache.read_text(encoding="utf-8")) if cache.exists() else {}
             need_tt = [e["handle"] for k, e in todo if e["platform"] == "tt" and k not in got]
             if need_tt:
-                for h, v in tt_tops(need_tt).items():
+                def keep(h, v):
                     got[f"tt:{h}"] = v
-                cache.write_text(json.dumps(got, ensure_ascii=False), encoding="utf-8")
+                    cache.write_text(json.dumps(got, ensure_ascii=False), encoding="utf-8")
+                tt_tops(need_tt, keep)
             for k, e in todo:
                 if k not in got and e["platform"] == "yt":
                     try:
