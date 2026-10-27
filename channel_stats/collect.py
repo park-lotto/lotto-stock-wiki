@@ -65,7 +65,7 @@ def _sent_posts(key, org, cid):
         cur = r["pageInfo"]["endCursor"]
 
 
-def collect(db_path=DB, keys=None, ledger=None, log=print):
+def collect(db_path=DB, keys=None, ledger=None, yt_keys=None, log=print):
     keys = keys if keys is not None else _load(KEYS, {})
     led = {r["post_id"]: r for r in (ledger if ledger is not None else _load(LEDGER, [])) if r.get("post_id")}
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
@@ -106,7 +106,7 @@ def collect(db_path=DB, keys=None, ledger=None, log=print):
                 n_new += cur.rowcount
     yt_ids = {cid: acc for cid, acc in con.execute(
         "SELECT link, account FROM channels WHERE service='youtube'")}   # link 칸 = 서비스 채널 id(UC…)
-    n_yt = _collect_youtube(con, now, yt_ids, errors)
+    n_yt = _collect_youtube(con, now, yt_ids, errors, yt_keys)
     con.execute("INSERT INTO runs VALUES(?,?,?,?)", (now, n_posts, n_new, json.dumps(errors, ensure_ascii=False)))
     con.commit()
     con.close()
@@ -116,9 +116,16 @@ def collect(db_path=DB, keys=None, ledger=None, log=print):
     return {"posts": n_posts, "snaps_new": n_new, "errors": errors}
 
 
-def _collect_youtube(con, now, yt_ids, errors):
-    """유튜브 공개 데이터 — 채널 구독자·업로드 전부·영상별 조회/좋아요/댓글 스냅샷(매 실행 1행)."""
-    keys = youtube_public.api_keys(ENV)
+def _collect_youtube(con, now, yt_ids, errors, keys=None):
+    """유튜브 공개 데이터 — 채널 구독자·업로드 전부·영상별 조회/좋아요/댓글 스냅샷(매 실행 1행).
+    키: 넘겨받은 것 → .env(PC) → shopping_shorts.config.YOUTUBE_API_KEYS(서버 환경) 순."""
+    keys = keys or youtube_public.api_keys(ENV)
+    if not keys:
+        try:
+            from shopping_shorts import config as _cfg
+            keys = list(getattr(_cfg, "YOUTUBE_API_KEYS", []) or [])
+        except Exception as e:  # noqa: BLE001 — 키를 못 찾은 사실은 아래 errors 로 화면까지 간다
+            errors.append(f"유튜브 키 풀 읽기 실패: {e}")
     if not keys:
         errors.append("유튜브 API 키 없음(.env YOUTUBE_API_KEY*)")
         return 0

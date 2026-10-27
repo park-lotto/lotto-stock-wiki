@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>채널 리포트</title>
+<title>채널 리포트 · 숏템메이커</title>
 <!-- 디자인 기준: awesome-design-md / linear.app — 숫자가 빽빽한 제품 화면에 맞는 짙은 바탕·강조색 하나·얇은 테두리.
      차트 색: dataviz 검증 통과(유튜브 #3987e5 · 틱톡 #199e70, 다크 표면 #0f1011, CVD ΔE 19.6).
      움직임: emil — 들어올 때 ease-out 200ms·누를 때 0.97, 자주 쓰는 정렬·필터는 움직이지 않는다. -->
@@ -24,7 +24,7 @@ html,body{margin:0;background:var(--canvas);color:var(--ink);
   font-family:"Pretendard Variable",Pretendard,-apple-system,"SF Pro Display","Segoe UI",sans-serif;
   font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1}
 a{color:inherit;text-decoration:none}
-.wrap{max-width:1360px;margin:0 auto;padding:28px 32px 80px}
+.wrap{max-width:1360px;margin:0 auto;padding:28px 32px 80px;min-width:0;width:100%}  /* body 가 flex(sidebar.js) — 폭을 화면에 묶는다 */
 @media (max-width:720px){.wrap{padding:20px 16px 60px}}
 
 /* 머리 */
@@ -244,7 +244,16 @@ const AXES = ["채널 콘셉트","상품 분류","제목 형태","게시 시각"
 const state = { ch: "all", axis: "채널 콘셉트", age: "all", sort: "views", dir: -1, q: "", more: false };
 let D;
 
-fetch("data.json", {cache: "no-store"}).then(r => r.json()).then(d => { D = d; boot(); })
+// 숏템메이커 관리자 API(/api/admin/channel_stats) — 로컬 미리보기(http.server)에선 옆의 data.json
+async function load() {
+  for (const u of ["/api/admin/channel_stats", "data.json"]) {
+    try { const r = await fetch(u, {cache: "no-store", credentials: "same-origin"}); if (r.ok) return r.json(); } catch (e) {}
+  }
+  throw new Error("데이터 주소가 열리지 않습니다");
+}
+load().then(d => {
+  if (d.empty) { $("#app").innerHTML = `<div class="card">${d.state && !d.state.keys ? "서버에 Buffer 키 파일이 아직 없습니다" : "첫 수집 중입니다 — 1~2분 뒤 새로고침하세요"}${d.state && d.state.error ? `<div class="sub">${esc(d.state.error)}</div>` : ""}</div>`; return; }
+  D = d; boot(); })
   .catch(e => { $("#app").innerHTML = `<div class="card">데이터를 못 읽었습니다: ${esc(e.message)}</div>`; });
 
 function seg(el, items, key, cb) {
@@ -256,7 +265,10 @@ function seg(el, items, key, cb) {
 function boot() {
   const t = new Date(D.collected_at);
   $("#meta").innerHTML = `<span><span class="dot"></span>수집 ${t.toLocaleString("ko-KR",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})}</span>
-    <span>유튜브 ${D.coverage.youtube_videos}편 · 틱톡 ${D.coverage.tiktok_posts}편 · 채널 ${D.coverage.channels}개</span>`;
+    <span>유튜브 ${D.coverage.youtube_videos}편 · 틱톡 ${D.coverage.tiktok_posts}편 · 채널 ${D.coverage.channels}개</span>
+    ${D.state ? (D.state.refreshing ? `<span class="live">새로 모으는 중</span>` : D.state.error ? `<span class="live" title="${esc(D.state.error)}">일부 수집 실패</span>` : "") : ""}
+    ${D.state ? `<button type="button" class="btn" id="refresh">지금 새로 모으기</button>` : ""}`;
+  const rb = $("#refresh"); if (rb) rb.onclick = async () => { rb.textContent = "모으는 중…"; await fetch("/api/admin/channel_stats/refresh", {method: "POST", credentials: "same-origin"}); setTimeout(() => location.reload(), 60000); };
   seg($("#fCh"), [["all","전체"], ...D.channels.map(c => [c.key, c.name])], "ch", render);
   seg($("#fAxis"), AXES.map(a => [a, a.replace("게시 ","")]), "axis", renderCmp);
   seg($("#fAge"), [["all","전체"],["7","최근 7일"],["mature","24시간 지난 것"]], "age", renderVids);
@@ -415,5 +427,6 @@ function bindTips(sel, html) {
   });
 }
 </script>
+<script src="/sidebar.js"></script>
 </body>
 </html>
