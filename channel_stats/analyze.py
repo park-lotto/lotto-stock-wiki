@@ -79,6 +79,13 @@ def build(db=DB):
     subs_first = {r["channel_id"]: r["subs"] for r in _q(con, """SELECT channel_id, subs FROM yt_channel_snaps a
                    WHERE at=(SELECT min(at) FROM yt_channel_snaps b WHERE b.channel_id=a.channel_id)""")}
 
+    series = {}
+    for r in _q(con, "SELECT video_id, at, views FROM yt_snaps ORDER BY at"):
+        series.setdefault(r["video_id"], []).append((r["at"], r["views"]))
+    tseries = {}
+    for r in _q(con, "SELECT post_id, metrics_at, views FROM snaps ORDER BY metrics_at"):
+        tseries.setdefault(r["post_id"], []).append((r["metrics_at"], r["views"]))
+
     out_v = []
     for v in vids:
         pub = dt.datetime.fromisoformat(v["published"].replace("Z", "+00:00")).astimezone(KST)
@@ -87,6 +94,7 @@ def build(db=DB):
         file = next((p["file"] for l, p in yt_post.items() if l and v["video_id"] in l), None)
         t = tik_by.get((key, v["title"].strip()))
         title = v["title"]
+        pts = _pts(series.get(v["video_id"], []), pub)
         out_v.append({
             "id": v["video_id"], "ch": key, "title": title, "thumb": v["thumb"], "file": file,
             "url": f"https://www.youtube.com/shorts/{v['video_id']}",
@@ -96,9 +104,10 @@ def build(db=DB):
             "like_rate": round(v["likes"] / v["views"] * 100, 2) if v["views"] else 0,
             "views_per_day": round(v["views"] / max(age_h / 24, 1), 1),
             "gain": (v["views"] - (v["first_views"] or v["views"])), "gain_since": v["first_at"],
+            "pts": pts, "vph": _vph(pts),
             "product": next((n for n, rx in PRODUCT if re.search(rx, title)), "기타"),
             "forms": [n for n, rx in FORMS if re.search(rx, title) or (n == "인물 언급" and key in PERSON_CH)],
-            "tiktok": ({"views": int(t["views"] or 0), "avg_watch": t["averageTimeWatched"], "watch_min": t["totalTimeWatched"],
+            "tiktok": ({"pts": _pts(tseries.get(t["post_id"], []), pub), "views": int(t["views"] or 0), "avg_watch": t["averageTimeWatched"], "watch_min": t["totalTimeWatched"],
                         "likes": t["reactions"], "shares": t["shares"], "url": t["link"]} if t else None)})
 
     # 채널별 히트 기준(성숙 영상 중앙값 ×2)
@@ -109,6 +118,10 @@ def build(db=DB):
         m = ch_med.get(v["ch"]) or 0
         v["hit"] = bool(v["mature"] and m and v["views"] >= 2 * m)
         v["vs_median"] = round(v["views"] / m, 2) if m else None
+
+    curves = {}
+    for c in {v["ch"] for v in out_v}:
+        curves[c] = _typical_curve([v["pts"] for v in out_v if v["ch"] == c])
 
     mature = [v for v in out_v if v["mature"]]
 
@@ -165,10 +178,51 @@ def build(db=DB):
             "totals": {"views": sum(v["views"] for v in out_v), "videos": len(out_v), "subs": sum(c["subs"] for c in channels),
                        "hits": sum(v["hit"] for v in out_v), "last7": sum(v["views"] for v in out_v if v["age_h"] <= 168),
                        "tiktok_views": int(sum(t["views"] or 0 for t in tik)), "likes": sum(v["likes"] for v in out_v)},
-            "channels": channels, "videos": sorted(out_v, key=lambda v: -v["views"]),
+            "channels": channels, "videos": sorted(out_v, key=lambda v: -v["views"]), "curves": curves,
             "breakdowns": breakdowns, "pairs": pairs, "insights": insights}
     con.close()
     return data
+
+
+AGE_MARKS = [1, 2, 3, 6, 12, 24, 48, 72, 120, 168, 336, 720]   # 게시 후 시간(평소 곡선의 눈금)
+
+
+def _pts(rows, pub):
+    """스냅샷 → [[게시 후 시간, 조회]] (같은 조회 반복은 첫 점만 — 그래프가 평평한 구간을 늘어뜨리지 않게, 마지막 점은 남긴다)."""
+    out = []
+    for i, (at, views) in enumerate(rows):
+        t = dt.datetime.fromisoformat(at.replace("Z", "+00:00"))
+        if t.tzinfo is None:
+            t = t.replace(tzinfo=KST)
+        h = round((t - pub).total_seconds() / 3600, 2)
+        if h < 0 or views is None:
+            continue
+        if out and out[-1][1] == views and i != len(rows) - 1:
+            continue
+        out.append([h, int(views)])
+    return out
+
+
+def _vph(pts):
+    """지금 시간당 몇 회씩 느나 — 마지막 두 스냅샷이 1시간 이상 떨어져 있을 때만(짧으면 흔들린다)."""
+    if len(pts) < 2:
+        return None
+    (h0, v0), (h1, v1) = pts[-2], pts[-1]
+    return round((v1 - v0) / (h1 - h0), 1) if h1 - h0 >= 1 else None
+
+
+def _typical_curve(all_pts):
+    """채널 평소 곡선: 눈금 시간마다, 그 시간 ±25% 안에 찍힌 스냅샷이 있는 영상들의 조회 중앙값(3편 이상일 때만)."""
+    out = []
+    for m in AGE_MARKS:
+        vals = []
+        for pts in all_pts:
+            near = [v for h, v in pts if m * .75 <= h <= m * 1.25]
+            if near:
+                vals.append(near[len(near) // 2])
+        if len(vals) >= 3:
+            out.append([m, _med(vals), len(vals)])
+    return out
 
 
 def _insights(breakdowns, channels, vids):

@@ -82,7 +82,7 @@ h1{font-size:28px;font-weight:600;letter-spacing:-.6px;margin:6px 0 0}
 .tbl th[data-k]{cursor:pointer;user-select:none}
 .tbl th[data-k]:hover{color:var(--ink2)}
 .tbl th.on{color:var(--ink)}
-.tbl th.num,.tbl td.num{text-align:right}
+.tbl th.num,.tbl td.num{text-align:right;white-space:nowrap}
 .tbl td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle;color:var(--ink2)}
 .tbl tr:last-child td{border-bottom:none}
 @media (hover:hover){.tbl tbody tr:hover td{background:var(--s2)}}
@@ -156,6 +156,30 @@ section{margin-top:12px}
 .tip.on{opacity:1;transform:none}
 .tip b{color:var(--ink);display:block;margin-bottom:4px;font-weight:600}
 .tip .row{display:flex;justify-content:space-between;gap:16px}
+
+/* 영상 상세(오른쪽 서랍) */
+.drawer-bg{position:fixed;inset:0;background:#0009;opacity:0;pointer-events:none;transition:opacity 200ms ease;z-index:40}
+.drawer-bg.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(640px,100vw);background:var(--s1);border-left:1px solid var(--line2);z-index:41;
+  transform:translateX(100%);transition:transform 240ms var(--ease);overflow-y:auto;padding:24px}
+.drawer.on{transform:none}
+@media (prefers-reduced-motion:reduce){.drawer{transition:none}}
+.drawer .x{all:unset;cursor:pointer;float:right;color:var(--ink3);font-size:20px;line-height:1;padding:4px 8px;border-radius:6px}
+.drawer .x:hover{background:var(--s3);color:var(--ink)}
+.dv-top{display:flex;gap:14px;margin-bottom:16px}
+.dv-top img{width:72px;height:128px;object-fit:cover;border-radius:6px;background:var(--s3);flex:none}
+.dv-top h3{margin:0 0 6px;font-size:17px;font-weight:600;letter-spacing:-.2px;line-height:1.35}
+.stats4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
+@media (max-width:480px){.stats4{grid-template-columns:repeat(2,1fr)}}
+.stats4 div{background:var(--s2);border:1px solid var(--line);border-radius:8px;padding:10px}
+.stats4 span{display:block;color:var(--ink3);font-size:11.5px}.stats4 b{font-size:17px;font-weight:600}
+.chart{background:var(--s2);border:1px solid var(--line);border-radius:10px;padding:14px 14px 8px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart .ax{fill:var(--ink4);font-size:10.5px}
+.chart .gl{stroke:var(--line);stroke-width:1}
+.note{color:var(--ink4);font-size:12px;margin-top:8px;line-height:1.6}
+.spark{display:block}
+tr.click{cursor:pointer}
 
 .pending{border-style:dashed;color:var(--ink3);font-size:13px;display:flex;gap:12px;align-items:center}
 .pending b{color:var(--ink2)}
@@ -234,6 +258,8 @@ section{margin-top:12px}
   <div class="foot" id="foot"></div>
 </div>
 <div class="tip" id="tip" role="tooltip"></div>
+<div class="drawer-bg" id="dbg"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="영상 상세"></aside>
 
 <script>
 const $ = s => document.querySelector(s);
@@ -386,22 +412,24 @@ function renderVids() {
   const total = vs.length; if (!state.more) vs = vs.slice(0, 20);
   const chName = Object.fromEntries(D.channels.map(c => [c.key, c.name]));
   const th = (key, label, num) => `<th ${key ? `data-k="${key}"` : ""} class="${num ? "num" : ""} ${state.sort === key ? "on" : ""}">${label}${state.sort === key ? (state.dir < 0 ? " ↓" : " ↑") : ""}</th>`;
-  $("#vTbl").innerHTML = `<thead><tr>${th("", "#")}${th("title", "영상")}${th("published", "게시")}${th("dur", "길이", 1)}${th("views", "조회", 1)}${th("vs_median", "평소 대비", 1)}
+  $("#vTbl").innerHTML = `<thead><tr>${th("", "#")}${th("title", "영상")}${th("published", "게시")}${th("dur", "길이", 1)}${th("views", "조회", 1)}${th("vph", "시간당", 1)}${th("", "추이")}${th("vs_median", "평소 대비", 1)}
     ${th("like_rate", "좋아요율", 1)}${th("comments", "댓글", 1)}${th("tt", "틱톡 조회", 1)}${th("", "분류")}</tr></thead><tbody>` +
     (vs.length ? vs.map((v, i) => { const p = new Date(v.published);
-      return `<tr><td class="mut">${i + 1}</td>
+      return `<tr class="click" data-id="${v.id}"><td class="mut">${i + 1}</td>
       <td><a class="vid" href="${v.url}" target="_blank" rel="noopener"><img src="${esc(v.thumb)}" alt="" loading="lazy"><div><div class="t">${esc(v.title)}${v.hit ? `<span class="hitb">히트</span>` : ""}</div>
         <div class="s">${esc(chName[v.ch] || v.ch)}${v.file ? " · " + esc(v.file) : ""}</div></div></a></td>
       <td class="mut" style="white-space:nowrap">${p.getMonth() + 1}/${p.getDate()} ${String(p.getHours()).padStart(2, "0")}:${String(p.getMinutes()).padStart(2, "0")}
         <div style="font-size:12px">${v.mature ? (v.age_h < 48 ? Math.round(v.age_h) + "시간 전" : Math.round(v.age_h / 24) + "일 전") : `<span class="live">${Math.round(v.age_h)}시간 · 차는 중</span>`}</div></td>
       <td class="num">${v.dur}초</td><td class="num strong">${fmt(v.views)}</td>
+      <td class="num">${v.vph == null ? `<span class="mut">–</span>` : `+${fmt(v.vph)}`}</td><td>${spark(v.pts)}</td>
       <td class="num">${v.vs_median == null ? "–" : `<span title="${v.mature ? "" : "24시간 전이라 아직 차는 중"}" style="opacity:${v.mature ? 1 : .55};color:${v.vs_median >= 2 ? "var(--accent2)" : v.vs_median < 1 ? "var(--ink3)" : "var(--ink2)"}">${v.vs_median}배</span>`}</td>
       <td class="num">${v.like_rate}%</td><td class="num">${v.comments}</td>
       <td class="num">${v.tiktok && v.tiktok.views ? `${fmt(v.tiktok.views)}<div class="mut" style="font-size:12px">${v.tiktok.avg_watch}초 시청</div>` : `<span class="mut">–</span>`}</td>
       <td><div class="chips"><span class="chip">${esc(v.product)}</span>${v.forms.map(f => `<span class="chip">${esc(f)}</span>`).join("")}</div></td></tr>`; }).join("")
-    : `<tr><td colspan="10" class="empty">맞는 영상이 없습니다</td></tr>`) + "</tbody>" +
-    (total > 20 ? `<tfoot><tr><td colspan="10" style="text-align:center;border:none;padding-top:14px"><button type="button" class="btn" id="more">${state.more ? "접기" : `나머지 ${total - 20}편 더 보기`}</button></td></tr></tfoot>` : "");
+    : `<tr><td colspan="12" class="empty">맞는 영상이 없습니다</td></tr>`) + "</tbody>" +
+    (total > 20 ? `<tfoot><tr><td colspan="12" style="text-align:center;border:none;padding-top:14px"><button type="button" class="btn" id="more">${state.more ? "접기" : `나머지 ${total - 20}편 더 보기`}</button></td></tr></tfoot>` : "");
   const mb = $("#more"); if (mb) mb.onclick = () => { state.more = !state.more; renderVids(); };
+  $("#vTbl").querySelectorAll("tr.click").forEach(tr => tr.onclick = e => { if (e.target.closest("a")) return; openVideo(tr.dataset.id); });
   $("#vTbl").querySelectorAll("th[data-k]").forEach(h => h.onclick = () => {
     const nk = h.dataset.k; state.dir = state.sort === nk ? -state.dir : -1; state.sort = nk; renderVids(); });
 }
@@ -416,6 +444,70 @@ function renderPairs() {
       <div class="r"><div class="b" style="width:${Math.max(p.tt / max * 100, .6)}%;background:var(--tt)"></div><span>${short(p.tt)}</span></div></div>
     <div style="font-size:12.5px;color:var(--ink3);text-align:right">틱톡 평균 <b style="color:var(--ink2)">${p.tt_avg_watch}초</b> 시청<br>영상 ${p.dur}초 중 ${p.dur ? Math.round(p.tt_avg_watch / p.dur * 100) : 0}%</div></div>`).join("");
 }
+
+// ── 영상별 추이(관제 281, 사장님 "영상 하나하나마다 조회수가 올라가는 그래프") ──
+function spark(pts) {
+  if (!pts || pts.length < 2) return `<span class="mut" style="font-size:12px">${pts && pts.length ? "쌓는 중" : "–"}</span>`;
+  const w = 72, h = 22, xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const X = x => (x - x0) / ((x1 - x0) || 1) * (w - 4) + 2, Y = y => h - 2 - (y - y0) / ((y1 - y0) || 1) * (h - 4);
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline fill="none" stroke="var(--yt)" stroke-width="1.5" stroke-linejoin="round" points="${pts.map(p => X(p[0]) + "," + Y(p[1])).join(" ")}"/></svg>`;
+}
+
+function ageLabel(h) { return h < 24 ? Math.round(h) + "시간" : Math.round(h / 24) + "일"; }
+
+function niceStep(max) {
+  const raw = max / 4, p = Math.pow(10, Math.floor(Math.log10(raw))), n = raw / p;
+  return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p;
+}
+
+function lineChart(series, curve) {
+  // 가로 = 게시 후 시간(로그 눈금: 첫 몇 시간을 넓게), 세로 = 누적 조회
+  const W = 580, H = 260, L = 48, R = 12, T = 12, B = 28;
+  const all = series.flatMap(s => s.pts).concat(curve.map(c => [c[0], c[1]]));
+  if (!all.length) return `<div class="empty">아직 찍힌 점이 없습니다</div>`;
+  const hx = Math.max(24, ...all.map(p => p[0])) * 1.15, step = niceStep(Math.max(10, ...all.map(p => p[1])));
+  const ymax = Math.ceil(Math.max(10, ...all.map(p => p[1])) * 1.05 / step) * step;
+  const lx = h => Math.log10(Math.max(h, 0) + 1);
+  const X = h => L + lx(h) / lx(hx) * (W - L - R), Y = v => T + (1 - v / ymax) * (H - T - B);
+  let g = "";
+  for (let v = 0; v <= ymax; v += step) g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${L - 6}" y="${Y(v) + 3}" text-anchor="end">${short(v)}</text>`;
+  [1, 3, 6, 12, 24, 72, 168, 336, 720].filter(t => t <= hx).forEach(t => { g += `<text class="ax" x="${X(t)}" y="${H - 8}" text-anchor="middle">${ageLabel(t)}</text>`; });
+  if (curve.length) {
+    if (curve.length > 1) g += `<polyline fill="none" stroke="var(--ink4)" stroke-width="2" stroke-dasharray="4 4" points="${curve.map(c => X(c[0]) + "," + Y(c[1])).join(" ")}"/>`;
+    g += curve.map(c => `<circle cx="${X(c[0])}" cy="${Y(c[1])}" r="3.5" fill="var(--ink4)"><title>채널 평소: 게시 ${ageLabel(c[0])} 무렵 ${fmt(c[1])}회 (${c[2]}편 중앙값)</title></circle>`).join("");
+  }
+  series.forEach(s => {
+    if (s.pts.length > 1) g += `<polyline fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" points="${s.pts.map(p => X(p[0]) + "," + Y(p[1])).join(" ")}"/>`;
+    g += s.pts.map(p => `<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="4.5" fill="${s.color}" stroke="var(--s2)" stroke-width="2"><title>${s.name} · 게시 ${ageLabel(p[0])} 뒤 ${fmt(p[1])}회</title></circle>`).join("");
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="게시 후 시간별 누적 조회">${g}</svg>`;
+}
+
+function openVideo(id) {
+  const v = D.videos.find(x => x.id === id); if (!v) return;
+  const ch = D.channels.find(c => c.key === v.ch) || {}, curve = (D.curves || {})[v.ch] || [];
+  const series = [{name: "유튜브", color: "var(--yt)", pts: v.pts || []}]
+    .concat(v.tiktok && v.tiktok.pts && v.tiktok.pts.length ? [{name: "틱톡", color: "var(--tt)", pts: v.tiktok.pts}] : []);
+  $("#drawer").innerHTML = `<button class="x" id="dx" aria-label="닫기">×</button>
+    <div class="dv-top"><img src="${esc(v.thumb)}" alt=""><div><h3>${esc(v.title)}${v.hit ? `<span class="hitb">히트</span>` : ""}</h3>
+      <div class="mut">${esc(ch.name || v.ch)} · ${new Date(v.published).toLocaleString("ko-KR", {month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit"})} 게시 · ${v.dur}초</div>
+      <div class="chips" style="margin-top:8px"><span class="chip">${esc(v.product)}</span>${v.forms.map(f => `<span class="chip">${esc(f)}</span>`).join("")}</div>
+      <div style="margin-top:10px"><a class="btn" href="${v.url}" target="_blank" rel="noopener">유튜브에서 보기</a></div></div></div>
+    <div class="stats4"><div><span>조회</span><b>${fmt(v.views)}</b></div><div><span>평소 대비</span><b>${v.vs_median ?? "–"}배</b></div>
+      <div><span>시간당</span><b>${v.vph == null ? "–" : "+" + fmt(v.vph)}</b></div><div><span>좋아요율</span><b>${v.like_rate}%</b></div></div>
+    <div class="chart"><div class="legend" style="margin-bottom:8px">${series.map(s => `<span class="plat"><i style="background:${s.color}"></i>${s.name}</span>`).join("")}
+      <span class="plat"><i style="background:var(--ink4)"></i>채널 평소(같은 시간대 중앙값)</span></div>${lineChart(series, curve)}</div>
+    <div class="note">점 = 매시간 수집한 누적 조회 · 가로축은 게시 후 시간(앞부분을 넓게 보는 로그 눈금)<br>
+      수집은 10-27부터 쌓입니다. 그 전 구간(게시 첫날부터)은 유튜브 애널리틱스 연결 뒤 일별 기록으로 채웁니다.</div>
+    ${v.tiktok ? `<div class="stats4" style="margin-top:14px"><div><span>틱톡 조회</span><b>${fmt(v.tiktok.views)}</b></div><div><span>틱톡 평균 시청</span><b>${v.tiktok.avg_watch ?? "–"}초</b></div>
+      <div><span>틱톡 총 시청</span><b>${fmt(v.tiktok.watch_min)}분</b></div><div><span>틱톡 공유</span><b>${fmt(v.tiktok.shares)}</b></div></div>` : ""}`;
+  $("#drawer").classList.add("on"); $("#dbg").classList.add("on"); $("#dx").focus();
+  $("#dx").onclick = closeVideo;
+}
+function closeVideo() { $("#drawer").classList.remove("on"); $("#dbg").classList.remove("on"); }
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeVideo(); });
+document.addEventListener("click", e => { if (e.target.id === "dbg") closeVideo(); });
 
 const tip = $("#tip");
 function bindTips(sel, html) {
