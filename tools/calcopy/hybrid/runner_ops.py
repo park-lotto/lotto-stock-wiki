@@ -1546,6 +1546,28 @@ WEB_MAX = 12        # 한 바퀴 틱톡·인스타 후보 상한(후보마다 �
 WEB_LINK = re.compile(r"https?://(?:www\.)?tiktok\.com/@[\w.\-]+/video/\d+|/@[\w.\-]+/video/\d+|https?://(?:www\.)?instagram\.com/(?:[\w.]+/)?(?:reel|reels|p)/[\w-]+")
 
 
+OF_MEMO: Path | None = None   # 원본 찾기 한 편 안 기억(작업 폴더/_of_memo) — c_origin_foreign 이 정한다. 렌즈·같은 종류(peers)·다시 찾기가
+                              # 같은 검색어·같은 후보를 또 받지 않게(10-27 완주시험: 콜라겐 검색어 4개×2사이트를 두 번, 한 바퀴 228~924초)
+
+
+def _memo(kind: str, key: str, make):
+    """(판단 주인 — 원본 찾기 한 편 안 재사용) 있으면 저장본, 없으면 make() 결과를 저장. 빈 결과·오류(why)는 저장하지 않는다(다음에 다시 시도)."""
+    import hashlib
+    if OF_MEMO is None:
+        return make()
+    f = OF_MEMO / kind / (hashlib.md5(key.encode("utf-8")).hexdigest() + ".json")
+    if f.is_file():
+        try:
+            return jload(f)
+        except ValueError:
+            pass
+    v = make()
+    if v and not (isinstance(v, dict) and v.get("why")):
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text(json.dumps(v, ensure_ascii=False), encoding="utf-8")
+    return v
+
+
 def _web_links(qs: list[str], per: int = WEB_PER_Q) -> list[dict]:
     """틱톡 검색 페이지·구글(인스타 릴스) 검색에서 영상 주소만 — 회원 PC 의 렌즈 창(lens.lens_page, 로그인 없음 · 창 띄움 = 틱톡이 헤드리스를 막는다, kw_backends 09-08 실측).
     캐시 모드 = <캐시>/web/<검색어>.json([{url, how}]) 만. 판정은 하지 않는다(같은 영상 판정 = 서버 질문)."""
@@ -1561,8 +1583,23 @@ def _web_links(qs: list[str], per: int = WEB_PER_Q) -> list[dict]:
     from urllib.parse import quote
     from tools.calcopy import lens as LN
     out, seen = [], set()
+
+    def add(rows: list[dict]) -> None:
+        for x in rows:
+            if x["url"] not in seen:
+                seen.add(x["url"])
+                out.append(x)
+    todo = []
+    for q in qs[:4]:
+        hit = _memo("web", q, lambda: None)
+        if hit:
+            sys.stderr.write(f"[web] '{q}' 저장된 검색 결과 {len(hit)}개 재사용\n")
+            add(hit)
+        else:
+            todo.append(q)
     try:
-        for q in qs[:4]:
+        for q in todo:
+          got: list[dict] = []
           # 검색어마다 창을 새로(10-26 run4: 첫 틱톡 페이지에서 창이 닫혀(TargetClosedError) 그 바퀴 나머지 7번이 전부 실패)
           with LN.lens_page() as pg:
                 ck = _tiktok_cookies()            # 틱톡 로그인(우리 PC 파이어폭스 세션·회원 PC 연결 계정) — 있으면 결과가 많다(10-26 이 PC 24건/검색어)
@@ -1583,17 +1620,20 @@ def _web_links(qs: list[str], per: int = WEB_PER_Q) -> list[dict]:
                     except Exception as e:  # noqa: BLE001 — 한 사이트 실패는 남기고 다음
                         sys.stderr.write(f"[web] {how} 검색 실패 '{q}': {type(e).__name__} {str(e)[:80]}\n")
                         continue
-                    k = 0
+                    k, mine = 0, set()
                     for l in WEB_LINK.findall(raw):
                         l = ("https://www.tiktok.com" + l) if l.startswith("/@") else l
-                        if l in seen:
+                        if l in mine:
                             continue
-                        seen.add(l)
-                        out.append({"url": l, "how": how, "q": q})
+                        mine.add(l)
+                        got.append({"url": l, "how": how, "q": q})
                         k += 1
                         if k >= per:
                             break
                     sys.stderr.write(f"[web] {how} '{q}' 영상 주소 {k}개\n")
+          add(got)
+          if got:
+              _memo("web", q, lambda: got)
     except Exception as e:  # noqa: BLE001 — 창을 못 띄우면 유튜브 검색 결과만으로(이유는 로그)
         sys.stderr.write(f"[web] 검색 창 실패: {type(e).__name__} {str(e)[:120]}\n")
     return out
@@ -1645,7 +1685,7 @@ def _metas(urls: list[str]) -> dict:
     for group, n in ((yt, META_PAR["yt"]), (other, META_PAR["other"])):
         if group:
             with ThreadPoolExecutor(n) as ex:
-                for u, m in zip(group, ex.map(OF.meta, group)):
+                for u, m in zip(group, ex.map(lambda u: _memo("meta", u, lambda: OF.meta(u)), group)):
                     out[u] = m
     return out
 
@@ -1672,6 +1712,8 @@ def c_origin_foreign(W, d):
     같은 영상·같은 제품 판정은 하지 않는다(서버 질문 — 회원 Claude 눈).
     캐시 모드: lens = <캐시>/origin_foreign/<소재 id>.json {cands:[…]} · peers = 검색 캐시(search/<검색어>.json 또는 _default) — 유튜브·구글 0회."""
     from tools.calcopy import origin_find as OF
+    global OF_MEMO
+    OF_MEMO = None if CACHE else W / "_of_memo"
     mode = d.get("mode") or "lens"
     seeds = _of_seed_frames(W)
     skip = set(d.get("skip") or [])

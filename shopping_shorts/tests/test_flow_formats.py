@@ -278,7 +278,7 @@ def test_foreign_overseas_ref_walk_to_done():
     assert [o["id"] for o in st2["origins"]] == ["BENCH1", "PEER1"]          # 한국 제목 후보(KO1)는 원본 아님
     assert ctx["of_calls"] == ["peers", "peers"]                              # 소재 2편 함께(가짜 실행기는 둘 다 같은 벤치) — 같은 호출에서 둘 다 원본 확보면 회원이 준 소재
     assert st2["ref"] == "https://youtu.be/BENCH1" and st2["of_times"]["won_slot"] == 1
-    assert [x["url"] for x in ctx["settle"][0]["left"]] == ["https://www.youtube.com/shorts/ro1l3u734v4"]   # 진 소재 = 벤치 상위 조회 1위(기록만)
+    assert [x["url"] for x in ctx["settle"][0]["left"]] == [st2["slots"][1]["ref"]] and "ro1l3u734v4" not in st2["slots"][1]["ref"]   # 진 소재 = 둘째 소재(판 본보기 아님, 기록만)
     assert st2["text_fix"]["calls"] == 0
     saved = [f for fs in ctx["docs"] for k, f in (fs or {}).items() if k.endswith("재료.json")]
     assert saved and saved[0].get("blur", {}).get("BENCH1.mp4"), "박힌 글자 샷이 재료.blur 로 흐려져야 한다"

@@ -7,7 +7,9 @@
     runner.log  '[runner] <cmd> <초>s ok|ERR …'      → 단계 시간·실패 · 'ok HOLLOW …' = 결과가 비었거나 일부를 버린 조용한 실패(runner_ops.hollow)
     flow.json   message 의 '다시 …(n/m): <이유>'      → 되돌아감(반려) 이유
     flow_log.jsonl msg 줄                             → 같은 꼴(관리자)
-기준: SLOW = 한 번에 이 초 넘는 실행기 일(원본 찾기·렌더 같은 긴 일은 LONG_OK 안이면 느림 아님)."""
+기준: SLOW = 한 번에 이 초 넘는 실행기 일(원본 찾기·렌더 같은 긴 일은 LONG_OK 안이면 느림 아님).
+    헛바퀴 = 같은 일이 LOOP_N 번 넘게 돈 것(10-27 립글로스 글자 지우기 67번·37분 — 총 시간만 보고 못 봤다)
+    같은 검색 = '[web] <사이트> '<검색어>'' 가 한 편 안에서 두 번 넘게(다시 찾기가 같은 검색어를 그대로 다시 씀)"""
 import json
 import re
 import sys
@@ -16,6 +18,8 @@ from pathlib import Path
 
 SLOW = 180          # 실행기 한 일이 이보다 오래 걸리면 '느림'
 LONG_OK = {"render": 900, "plan": 420, "clean_text": 600, "origin_foreign": 300, "bench": 120, "origin_get": 180, "check": 600}
+LOOP_N = 4          # 한 편에서 같은 실행기 일이 이보다 많이 돌면 헛바퀴 의심
+WEB = re.compile(r"\[web\] (\S+) '(.+)' 영상 주소")
 RUN = re.compile(r"\[runner\] (\S+) ([\d.]+)s (ok|ERR)(.*)")
 HOL = re.compile(r"HOLLOW (.+)$")
 REDO = re.compile(r"다시 [^(]*\((\d+)/(\d+)\): (.+)$")
@@ -32,10 +36,13 @@ def runs(roots: list[Path]) -> list[tuple[str, Path]]:
 
 
 def audit(name: str, d: Path) -> dict:
-    steps, errs, slow, hollow = [], [], [], []
+    steps, errs, slow, hollow, webq = [], [], [], [], Counter()
     rl = d / "runner.log"
     if rl.exists():
         for ln in rl.read_text(encoding="utf-8", errors="replace").splitlines():
+            w = WEB.search(ln)
+            if w:
+                webq[(w.group(1), w.group(2))] += 1
             m = RUN.search(ln)
             if not m:
                 continue
@@ -74,8 +81,11 @@ def audit(name: str, d: Path) -> dict:
     by = defaultdict(float)
     for c, s, _ in steps:
         by[c] += s
+    cnt = Counter(c for c, _, _ in steps)
+    loops = [(c, n, by[c]) for c, n in cnt.most_common() if n > LOOP_N]
+    dupq = [(q, n) for q, n in webq.items() if n > 1]
     return {"name": name, "stage": stage, "total_sec": round(tot), "top": sorted(by.items(), key=lambda kv: -kv[1])[:4],
-            "errs": errs, "slow": slow, "hollow": hollow, "redo": redo}
+            "errs": errs, "slow": slow, "hollow": Counter(hollow), "redo": redo, "loops": loops, "dupq": dupq}
 
 
 def main(argv: list[str]) -> int:
@@ -88,8 +98,12 @@ def main(argv: list[str]) -> int:
         print(f"■ {r['name']}  [{r['stage']}]  실행기 합 {r['total_sec']}초 · 큰 몫 " + ", ".join(f"{c} {s:.0f}초" for c, s in r["top"]))
         for e in r["errs"]:
             print(f"   ✗ 실패  {e}")
-        for h in r["hollow"]:
-            print(f"   ⚠ ok인데 비어 있음  {h}")
+        for c, n, sec in r["loops"]:
+            print(f"   🔁 헛바퀴 의심  {c} {n}번 · 합 {sec:.0f}초")
+        if r["dupq"]:
+            print(f"   🔁 같은 검색 다시  {len(r['dupq'])}개 검색어 · 예) " + " / ".join(f"{s} '{q}' {n}번" for (s, q), n in r["dupq"][:3]))
+        for h, n in r["hollow"].most_common():
+            print(f"   ⚠ ok인데 비어 있음 {n}번  {h}")
         for s in r["slow"]:
             print(f"   ⏱ 느림  {s}")
         for k, n in r["redo"].most_common():
