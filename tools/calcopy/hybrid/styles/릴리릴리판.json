@@ -42,6 +42,14 @@
    "source": "별헤는쏭판 length·script.audit est_length",
    "expect": "벤치 중앙 이상 길이",
    "verify": "완성본 길이"
+  },
+  {
+   "axis": "sound",
+   "what": "노래 = 벤치 쇼츠에서 뽑은 byeolsong_ref(21초·128k 재압축) → 夢灯籠 공식 오디오 yumetourou(2분 12초) · 렌더 스테레오·소수 wav(잘림 0)",
+   "why": "사장님 10-27 '노래 음질이 너무 깨짐'",
+   "source": "render_bench mix(bgm.stereo) · bgm_lib/yumetourou",
+   "expect": "깨짐 없음",
+   "verify": "bgm_bed 잘림 수·귀"
   }
  ],
  "frame": {
@@ -123,5 +131,9 @@
     }
    }
   }
+ },
+ "bgm": {
+  "id": "yumetourou",
+  "why": "夢灯籠(RADWIMPS) 공식 오디오 — 벤치가 쓴 곡과 같은 곡(상호상관 0.855, 원곡 12.05초 지점). 10-27 사장님 '유메토로 · 쇼츠 사용 괜찮' · 음질: 남의 쇼츠에서 뽑은 128k 재압축 → 공식 opus 132k → mp3 320k"
  }
 }
