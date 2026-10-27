@@ -22,12 +22,16 @@ def test_all_dropped_peer_remains():
     assert [o["id"] for o in st["origins"]] == ["P"]
 
 
-def test_nothing_left_stops():
+def test_nothing_left_refinds_once_then_stops():
     st = _st()
     st["origins"] = st["origins"][:2]
     st["_verify"]["keep"] = ["A", "B"]
+    r = F.f_of_verify_got(st, {}, {"of_verify": {"same": [], "why": "다름"}}, {})
+    assert r == {"goto": "of_find"} and st["skip_ids"] == ["A", "B"] and "실제 장면" in st["of_find_why"]
+    st["origins"] = [{"id": "C", "how": "렌즈 같은 촬영분", "files": []}]
+    st["_verify"] = {"keep": ["C"], "chk": ["C"], "rows": ["C"]}
     with pytest.raises(F._Stop):
-        F.f_of_verify_got(st, {}, {"of_verify": {"same": [], "why": "다름"}}, {})
+        F.f_of_verify_got(st, {}, {"of_verify": {"same": [], "why": "또 다름"}}, {})
 
 
 def test_peer_only_skips_verify():

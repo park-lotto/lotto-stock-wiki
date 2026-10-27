@@ -2879,7 +2879,7 @@ def f_of_find_got(st, m, rp, u):
         return {"goto": "of_find"}
     have = [o["id"] for o in st.get("origins") or []]
     return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "find", "urls": urls, "queries": qs, "n": 10, "bench_id": (st.get("bench") or {}).get("id"),
-                    "skip": have + [(st.get("bench") or {}).get("id")]}], "then": "of_got"}
+                    "skip": have + [(st.get("bench") or {}).get("id")] + list(st.get("skip_ids") or [])}], "then": "of_got"}
 
 
 def f_of_fetch(st, m, rp, u):
@@ -2984,6 +2984,14 @@ def f_of_verify_got(st, m, rp, u):
     if bad:
         st.setdefault("of_verify_drop", []).extend(bad)
     if not keep:
+        if not st["tries"].get("of_verify_refind"):     # 앞 판정이 틀렸다는 걸 알았으니 그 이유를 들고 직접 찾기 한 바퀴 더(10-27 gialHTQxXE0: 바로 멈췄다)
+            st["tries"]["of_verify_refind"] = 1
+            st["tries"].pop("of_verify", None)          # 다시 받은 원본도 실제 장면으로 확인
+            st["origins"] = []
+            st.setdefault("skip_ids", []).extend(bad)
+            st["of_find_why"] = "앞에서 고른 원본이 실제 장면 확인에서 다른 사람이었다: " + str(a.get("why") or "")[:300]
+            st["log"].append("원본 확인 탈락 → 직접 찾기 한 바퀴 더")
+            return {"goto": "of_find"}
         raise _Stop("받은 원본이 소재와 같은 영상이 아니었어요", "다시 시도해 주시면 원본을 한 번 더 찾아볼게요", retry="of_find", ask_member=True,
                     origin_missing=True, detail=f"원본 확인 다름: {bad}")
     if not any("같은" in str(o.get("how") or "") and "다른" not in str(o.get("how") or "") for o in keep):
