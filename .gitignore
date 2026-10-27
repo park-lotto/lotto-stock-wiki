@@ -218,3 +218,4 @@ out/lang_mode_check_*.json
 out/script_calcopy/*/audio/
 out/script_calcopy/*/_pull_ids.txt
 /channel_stats/data/
+/channel_stats/web/data.json

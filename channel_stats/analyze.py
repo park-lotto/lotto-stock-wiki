@@ -180,12 +180,12 @@ def _insights(breakdowns, channels, vids):
             top, low = rows[0], rows[-1]
             if b.get("measure") == "median":
                 out.append({"kind": "compare", "axis": b["label"],
-                            "text": f"{b['label']}: '{top['key']}' 중앙값 {top['median']:,.0f}회로 가장 높고 "
-                                    f"'{low['key']}' {low['median']:,.0f}회로 가장 낮다 (각 {top['n']}편·{low['n']}편)"})
+                            "text": f"{b['label']} — 한 편 보통 조회 '{top['key']}' {top['median']:,.0f}회({top['n']}편)가 가장 높고 "
+                                    f"'{low['key']}' {low['median']:,.0f}회({low['n']}편)가 가장 낮다"})
             elif top["vs_median"] > low["vs_median"]:
                 out.append({"kind": "compare", "axis": b["label"],
-                            "text": f"{b['label']}: '{top['key']}'가 채널 평소 대비 {top['vs_median']}배로 가장 잘 나왔고, "
-                                    f"'{low['key']}'는 {low['vs_median']}배로 가장 약했다 (각 {top['n']}편·{low['n']}편)"})
+                            "text": f"{b['label']} — 가장 잘됨 '{top['key']}' 평소의 {top['vs_median']}배({top['n']}편) · "
+                                    f"가장 약함 '{low['key']}' {low['vs_median']}배({low['n']}편)"})
     mv = [v for v in vids if v["mature"]]
     if mv:
         floor = sum(1 for v in mv if v["views"] < 2000)
@@ -197,7 +197,7 @@ def _insights(breakdowns, channels, vids):
     tk = [c for c in channels if c["tiktok"] and c["tiktok"]["views"]]
     if tk:
         b = max(tk, key=lambda c: c["tiktok"]["views"])
-        out.append({"kind": "tiktok", "text": f"틱톡은 {b['name']}이 {b['tiktok']['views']:,}회로 가장 많이 봤다 (평균 시청 {b['tiktok']['avg_watch']}초)"})
+        out.append({"kind": "tiktok", "text": f"틱톡 — '{b['name']}' {b['tiktok']['views']:,}회로 가장 많이 봤다 (평균 시청 {b['tiktok']['avg_watch']}초)"})
     return out
 
 
