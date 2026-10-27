@@ -30,6 +30,7 @@ WORK_ROOT = Path("C:/숏템_칼카피")
 MIN_VIEWS = 300_000         # 후보 영상 최고 조회 — 이보다 낮고 한 소재에만 나왔으면 약한 채널(코드로 거름)
 BATCH = 20                  # 소넷 한 번에 채널 몇 개(글만 — 채널당 상위 15편 제목·조회). 호출마다 고정 글 약 2만 토큰이라 크게 묶는다(10-27 실측)
 RECHECK_DAYS = 14
+IG_GAP = 8                  # 인스타 채널 사이 쉼(초) — 계정 막힘 사고가 있던 곳이라 천천히
 TT_GAP = 6                  # 틱톡 채널 화면 사이 쉼(초) — 몰아 열면 목록이 막힌다
 CLAUDE = shutil.which("claude") or "claude"
 
@@ -162,6 +163,56 @@ def tt_tops(handles: list[str], on_one=None) -> dict[str, list[dict]]:
     return out
 
 
+def _num_any(s: str) -> int:
+    """'59.4만'·'1.2억'·'3,456'·'1.2M' → 정수."""
+    s = (s or "").strip().replace(",", "").upper()
+    m = re.match(r"([0-9.]+)\s*(만|억|천|K|M|B)?", s)
+    if not m:
+        return 0
+    mul = {"만": 1e4, "억": 1e8, "천": 1e3, "K": 1e3, "M": 1e6, "B": 1e9}.get(m.group(2) or "", 1)
+    try:
+        return int(float(m.group(1)) * mul)
+    except ValueError:
+        return 0
+
+
+def ig_tops(handles: list[str], on_one=None) -> dict[str, list[dict]]:
+    """인스타 채널 릴스 화면 — 화면 뜬 창 + 이 PC 파이어폭스 인스타 쿠키(out/instagram_session.json, 사장님 10-27 '파이어폭스 계정으로 열어').
+    10-27 실측: 쿠키만으로 공개 채널 최근 릴스 12편·조회('59.4만')가 보인다. '계속'을 누르면 비밀번호 칸이 떠서 누르지 않는다(비밀번호는 안 친다)."""
+    from tools.calcopy import lens as LN
+    sp = ROOT / "out" / "instagram_session.json"
+    ck = json.loads(sp.read_text(encoding="utf-8")).get("cookies") or [] if sp.exists() else []
+    out = {}
+    with LN.lens_page("igch") as pg:
+        if ck:
+            pg.context.add_cookies([{k: c[k] for k in ("name", "value", "domain", "path", "secure")} for c in ck])
+        for h in handles:
+            rows = []
+            try:
+                pg.goto(f"https://www.instagram.com/{h}/reels/", wait_until="domcontentloaded", timeout=40000)
+                pg.wait_for_timeout(6000)
+                for _ in range(2):
+                    pg.mouse.wheel(0, 2500)
+                    pg.wait_for_timeout(1500)
+                rows = pg.eval_on_selector_all('a[href*="/reel/"]', "els=>els.map(e=>({href:e.href,t:e.innerText}))")
+            except Exception as e:  # noqa: BLE001
+                sys.stderr.write(f"[ch] 인스타 {h} 화면 실패: {type(e).__name__}" + chr(10))
+            seen, items = set(), []
+            for r in rows:
+                u = r["href"].split("?")[0]
+                if u in seen:
+                    continue
+                seen.add(u)
+                items.append({"url": u, "views": _num_any((r.get("t") or "").split(chr(10))[0]), "title": ""})
+            out[h] = items
+            if on_one:
+                on_one(h, items)
+            if not items:
+                sys.stderr.write(f"[ch] 인스타 {h} 릴스 0편" + chr(10))
+            time.sleep(IG_GAP)
+    return out
+
+
 def judge(batch: list[tuple[str, dict]], pool: Path) -> dict[str, dict]:
     """④ 소넷 판정 — 채널 BATCH 개를 글로만 한 번에."""
     rows = []
@@ -205,7 +256,7 @@ def main(argv: list[str]) -> int:
         book = json.loads(ap_.read_text(encoding="utf-8")) if ap_.exists() else {}
         g = gather()
         now = time.time()
-        todo = [(k, e) for k, e in g.items() if strong(e) and e["platform"] in ("tt", "yt")
+        todo = [(k, e) for k, e in g.items() if strong(e) and e["platform"] in ("tt", "yt", "ig")
                 and now - float((book.get(k) or {}).get("ts") or 0) > RECHECK_DAYS * 86400]
         todo.sort(key=lambda kv: (-len(kv[1]["seen_in"]), -kv[1]["cand_max_views"]))
         if a.max:
@@ -221,6 +272,12 @@ def main(argv: list[str]) -> int:
                     got[f"tt:{h}"] = v
                     cache.write_text(json.dumps(got, ensure_ascii=False), encoding="utf-8")
                 tt_tops(need_tt, keep)
+            need_ig = [e["handle"] for k, e in todo if e["platform"] == "ig" and k not in got]
+            if need_ig:
+                def keep_ig(h, v):
+                    got[f"ig:{h}"] = v
+                    cache.write_text(json.dumps(got, ensure_ascii=False), encoding="utf-8")
+                ig_tops(need_ig, keep_ig)
             for k, e in todo:
                 if k not in got and e["platform"] == "yt":
                     try:
@@ -237,7 +294,8 @@ def main(argv: list[str]) -> int:
                 for k, e in todo[i:i + BATCH]:
                     v = [x["views"] for x in e["top"]]
                     book[k] = {**{x: e.get(x) for x in ("platform", "handle", "name", "korean", "seen_in", "cand_max_views")},
-                               "url": {"tt": f"https://www.tiktok.com/@{e['handle']}", "yt": f"https://www.youtube.com/channel/{e['handle']}"}[e["platform"]],
+                               "url": {"tt": f"https://www.tiktok.com/@{e['handle']}", "yt": f"https://www.youtube.com/channel/{e['handle']}",
+                                       "ig": f"https://www.instagram.com/{e['handle']}/"}[e["platform"]],
                                "top": sorted(e["top"], key=lambda x: -x["views"])[:20], "n_1m": sum(1 for x in v if x >= 1_000_000),
                                "median": int(statistics.median(v)) if v else 0, "judge": js.get(k), "t": time.strftime("%Y-%m-%d %H:%M"), "ts": time.time()}
                     jj = js.get(k) or {}
