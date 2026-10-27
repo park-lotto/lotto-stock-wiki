@@ -852,6 +852,7 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
             out[idx[-1]]["variant_force"] = HK["pop_variant"]
         log.append(f"훅 {first} 덩어리 {len(idx)}개 → {HK['variant']}" + (f" (끝 {HK['pop_variant']})" if HK.get("pop_variant") else ""))
     # ④ 스티커: 본보기 편의 종류·개수(규칙에 있는 종류만 — 그릴 수 있는 것), 조건 맞는 덩어리
+    short_why: dict = {}
     for kind, rule in (R.get("stickers") or {}).items():
         if kind == "comment_card":
             continue        # 댓글 카드는 렌더러 틀 층(대본 comment 가 있을 때) — plan_rows 가 본보기 편 수로 정한다
@@ -880,6 +881,8 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
             log.append(f"스티커 {kind} → {out[i]['line']}「{out[i]['text']}」")
         if len(cand) < need:
             log.append(f"스티커 {kind} 본보기 {need}개 중 {len(cand)}개만(조건 맞는 덩어리 모자람)")
+        if got_n < need:        # 못 붙인 까닭을 남긴다 — 검사(check_place)가 '안 붙임'과 '붙일 자리 없음'을 가른다(10-27 run4 c편: 원·화살표 0/1 로 완성본 2번 반려·멈춤)
+            short_why[kind] = (f"조건 맞는 덩어리 {len(cand)}개" if len(cand) < need else f"후보 {len(cand)}개 중 대상이 덩어리 내내 화면에 있는 곳 {got_n}개")
     # 타이핑 덩어리에 따라붙는 스티커(키치잇 원음 타이핑 + ♥): 본보기 편에 그 스티커가 있을 때만
     ty = R.get("typing_sticker")
     if ty and ((ref or {}).get("stickers") or {}).get(ty["kind"]):
@@ -945,6 +948,8 @@ def place(rows: list[dict], style: dict, seed: str, cuts: list[dict] | None = No
         res["targets"] = tg_rep
     if dp_rep:
         res["deco_pos"] = dp_rep
+    if short_why:
+        res["sticker_short_why"] = short_why
     if conflict:
         res["conflict"] = conflict          # flow 가 보고 대본 단계로 되돌린다(08) — 조용히 한쪽을 이기게 두지 않는다(㉛)
     return res
@@ -1554,6 +1559,10 @@ def check_place(placed: dict, style: dict) -> dict:
     stk_bad, rep["stickers"]["vs"] = sticker_short(rep["stickers"]["bench"], rep["stickers"]["ours"],
                                                     list(((style["placement"].get("rules") or {}).get("stickers") or {}).keys()),
                                                     (style["placement"].get("counted") or {}).get("stickers"))
+    why = placed.get("sticker_short_why") or {}         # 배치가 '붙일 자리 없음'으로 남긴 종류는 참고(눈 대상 없는 곳에 억지로 붙이지 않는다)
+    if why:
+        rep["stickers"]["no_site"] = why
+        stk_bad = [b for b in stk_bad if not any(b.startswith(f"스티커 {k} ") for k in why)]
     rep["sfx"] = {"bench": len((ref or {}).get("sfx") or []), "ours": len(placed["sfx"])}
     sc, sfx_bad = (ref or {}).get("sfx_count"), []
     if sc and not (ref or {}).get("sfx_lines") and (style["placement"].get("rules") or {}).get("sfx") and not placed.get("targets"):
