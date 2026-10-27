@@ -67,3 +67,10 @@ def test_same_input_second_time_asks_at_once(monkeypatch):
     r = F.step(st, replies={"watch": {"go": True, "why": "정상"}})
     assert r["status"] == "execute"
     assert F.step(st, measure={"c": {}})["status"] == "execute"            # 감독이 정상이라 한 같은 입력은 다시 안 묻는다
+
+
+def test_check_retry_measures_again_first():
+    """완성본 검사에서 멈춘 편을 다시 시도하면 옛 결과로 고치기를 묻지 않고 검사부터 다시(10-27 run4 a·c편)."""
+    st = {"version": "잇템로그판_v2", "tries": {"look": 2}, "log": [], "auto": {"ok": False, "rows": [{"what": "x", "ok": False}]}}
+    r = F.ph_check_retry(st, {}, {}, {})
+    assert r == {"goto": "check"} and st["tries"]["look"] == 0

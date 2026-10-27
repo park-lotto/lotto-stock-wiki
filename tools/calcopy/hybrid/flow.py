@@ -2363,8 +2363,12 @@ def _face_hint(st) -> str:
 
 
 def ph_check_retry(st, m, rp, u):
-    """완성본 검사에서 멈춘 편을 다시 시도 — 걸린 곳부터 다시 고친다(받기·대본은 그대로)."""
+    """완성본 검사에서 멈춘 편을 다시 시도 — 검사부터 새로 재고(아래), 걸린 곳부터 다시 고친다(받기·대본은 그대로).
+    10-27 run4 a·c편: 다시 시도가 옛 검사 결과(st.auto)로 고치기만 물어 — 검사기 오판(받아쓰기 시각·스티커 자리)을 고친 뒤에도
+    오푸스 '재료로 고칠 것 없음' → 바로 멈춤을 되풀이했다. 다시 시도의 첫 일은 다시 재기."""
     st["tries"]["look"] = 0
+    if not st.pop("_check_stale_ok", False):      # 검사 다시 → check_judge 가 통과면 마무리, 아니면 그 새 결과로 고치기를 묻는다
+        return {"goto": "check"}
     v = st["version"]
     look = st.get("look") or {}
     probs = json.dumps({"자동 관문 ×": [r for r in (st.get("auto") or {}).get("rows") or [] if r.get("ok") is not True and not r.get("ref")],
@@ -2376,6 +2380,12 @@ def ph_check_fix(st, m, rp, u):
     v = st["version"]
     r = _reply(rp, f"final_fix_{v}", ("ok",))
     M = _take_fix(st, r)
+    if M is None and not st["tries"].get("render_same"):
+        # 오푸스 '재료로 고칠 것 없음' = 걸린 칸이 렌더·검사 쪽(자막 배치·소리 시각)이다 — 멈추기 전에 재료 그대로 한 번 다시 만든다
+        #   (10-27 run4 c편: 스티커 자리 판정이 렌더 때 정해져 다시 만들어야 새 규칙이 반영된다)
+        st["tries"]["render_same"] = 1
+        st["log"].append("완성본 고치기: 재료로 고칠 것 없음 → 재료 그대로 한 번 다시 만들기")
+        return {"goto": "render"}
     if M is None:
         raise _Stop("완성본 마무리 확인을 통과하지 못했어요", AGAIN)
     return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "render"}
