@@ -1516,11 +1516,28 @@
    "title": "하이브리드 15 Pick Up Bricks(픽업브릭스, 쿠팡 8728076376 같은 제품)",
    "path": "C:/숏템_칼카피/foreignshowshow/하이브리드/15편_PickUpBricks/work/hybrid/final.mp4",
    "desktop": "샥탬스토리_15_PickUpBricks_검수대기.mp4",
-   "md5": "a4f3542ced302d0a49259e8adf634c08",
+   "md5": "a30e04d741bbf4987b373a5f37f63e82",
    "seconds": 37.8,
    "doc": "channel/foreignshowshow/15편_PickUpBricks_하이브리드/",
-   "judge": "[확인대기] −14.1 LUFS · TP −2.4 · check render 뒤 전 칸 ○ · check_seams 되감김 0·점프줌 0 · freeze/black 0 · script_audit ok · 받아쓰기 스피치매틱스 ko+위스퍼 medium 대조(△ '체처럼'→책/채처럼, '픽업브릭스'→픽업 블릭스/픽어프릭스) · 광고 표시 0~37.75초 2초 간격 전부 · 끝 여운 1.17초(나레 트랙 −45dB) · 봉인 ok",
-   "note": "벤치 aKaBZjYmbRk(250만) · 원본 Sony Pictures Television X25MIpQqLIU · 뒤 재료 12 News Lq-jl9Da7sE·Ryes Pops Ra1opTaFBt4·방송 · 0초 원 = 무대 배너의 제품 그림"
+   "judge": "[확인대기] −14.1 LUFS · TP −2.4 · check render 뒤 전 칸 ○ · check_seams 되감김 0·점프줌 0 · freeze/black 0 · script_audit ok · 받아쓰기 스피치매틱스 ko+위스퍼 medium 대조(△ '체처럼'→책/채처럼, '픽업브릭스'→픽업 블릭스/픽어프릭스) · 광고 표시 0~37.75초 2초 간격 전부 · 끝 여운: 받아쓰기 마지막 낱말 끝 37.25→끝 37.80(0.55) · 나레 트랙 −45dB 무음 1.17초 · 자막 강조색 대비 손질 7칸 · 봉인 ok",
+   "note": "벤치 aKaBZjYmbRk(250만) · 원본 Sony Pictures Television X25MIpQqLIU · 뒤 재료 12 News Lq-jl9Da7sE·Ryes Pops Ra1opTaFBt4(통 근접만)·방송 · 0초 원 = 무대 배너의 제품 그림"
+  },
+  {
+   "channel": "foreignshowshow",
+   "channel_name": "샥탬스토리",
+   "brand": "샥탬스토리",
+   "style": "현장썰 하이브리드(샤크탱크 칼카피 앞 + 쿠팡 1인칭 체험 뒤)",
+   "date": "2026-10-27",
+   "from": "channel/foreignshowshow/16편_Rocketbook/make_plan.py → tools/calcopy/shark/render.py(앞) → tools/calcopy/shark/hybrid.py(뒤·이음) → 소리 끝 무음 덧댐·광고 표식 → engine/finalize.seal",
+   "n": 97,
+   "title": "하이브리드 16 Rocketbook(로켓북 — 쿠팡 249240837 에버레스트, 같은 회사 후속 노트 = 비슷한 제품·대본에서 밝힘)",
+   "path": "C:/숏템_칼카피/foreignshowshow/하이브리드/16편_Rocketbook/work/hybrid/final.mp4",
+   "desktop": "샥탬스토리_16_Rocketbook_검수대기.mp4",
+   "md5": "399726e26e261969b0a8fa62635f3b3a",
+   "seconds": 37.2,
+   "doc": "channel/foreignshowshow/16편_Rocketbook_하이브리드/",
+   "judge": "[확인대기] −14.0 LUFS · TP −2.4 · check render 뒤 전 칸 ○(앞 B4 ×: 앞 전체 장면 검출 중앙 2.93 — 하이브리드는 앞 13.17초만 씀) · check_seams 되감김 0·점프줌 0 · freeze/black 0 · script_audit ok · 받아쓰기 스피치매틱스 ko+위스퍼 medium 대조(△ '샤크'→'차크' 둘 다, '로켓북'→위스퍼 '로켓복') · TTS 3회(1차 '빅에'·2차 '다 쓴'을 두 모델 다 못 들어 표기 고쳐 재합성) · 광고 표시 0~37.15초 2초 간격 전부 · 끝 여운: 나레 트랙 −45dB 무음 1.30초(받아쓰기 끝 36.11→37.20 = 1.09) · 봉인 ok",
+   "note": "벤치 pc1_ezP__eY(180만) · 원본 CNBC Ambition bjW4T3xp8vc(CNBC 로고 = 크롭 높이 900 밖) · 뒤 재료 Smart Home Solver U9Kas8l38Kc·Jake Reeves HuwZ15jbJJo·방송 · 0초 원 = 투자자가 든 로켓북 노트"
   }
  ]
 }
