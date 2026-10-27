@@ -1640,6 +1640,40 @@
    "seconds": 36.1,
    "judge": "[확인대기] 잉 = 출시 이듬해 1972-01-01부터 삼립이 판매처에 진열대·알루미늄 찜통 배포(문화일보 2020 · 뉴시스 2023) · 이름 = 호호 불어 먹는 빵 · 첫해 12-31 하루 100만 개(SPC 관계자) · 훅 = KBS 공식 김 나는 찜통 · 뒤 쿠팡 같은 제품 7623478303 · −14.6 LUFS · TP −1.6(완성본 직접) · make.py checks 14/14 · bench_distance 통과 · 멈춤/검정 0 · 광고 표시 0~34초 2초 간격 전부 · 끝 여운 0.79초(나레 디지털 무음 시작 35.32) + 배경음악 0.53초 페이드 · 받아쓰기 스피치매틱스 0.978+위스퍼 줄별 대조 · 봉인 ok · deliver --check ○ · 줄별 대조 ○11 △1 · 사장님 판정·귀 확인 전",
    "doc": "channel/banggu/썰템홈샷_하이브리드/11_호빵/"
+  },
+  {
+   "channel": "foreignshowshow",
+   "channel_name": "샥탬스토리",
+   "brand": "샥탬스토리",
+   "style": "현장썰 하이브리드(샤크탱크 칼카피 앞 + 쿠팡 1인칭 체험 뒤)",
+   "date": "2026-10-28",
+   "from": "channel/foreignshowshow/19편_WadFree/make_plan.py → tools/calcopy/shark/render.py(앞) → tools/calcopy/shark/hybrid.py(뒤·이음) → channel/foreignshowshow/하이브리드/final_tail.py(소리=영상 길이·끝 페이드·TP) → engine/finalize.seal",
+   "n": 104,
+   "title": "하이브리드 19 Wad-Free(와드프리 — 쿠팡 9785431498 같은 제품)",
+   "path": "C:/숏템_칼카피/foreignshowshow/하이브리드/19편_WadFree/work/hybrid/final.mp4",
+   "desktop": "샥탬스토리_19_WadFree_검수대기.mp4",
+   "md5": "af4a2f02a56bcd111393cd067f581d30",
+   "seconds": 39.53,
+   "doc": "channel/foreignshowshow/19편_WadFree_하이브리드/",
+   "judge": "[확인대기] −14.1 LUFS · TP −2.3(완성본 ebur128) · 끝 여운 1.21초(나레 −45dB 마지막 칸 38.32 → 39.53) · 끝 0.1초 RMS −107.8dB(말 끝 뒤 페이드) · check render 뒤 전 칸 ○ · check_seams 되감김 0 · freeze/black 0 · 광고 표시 0~38초 2초 간격+마지막 프레임 · 받아쓰기 스피치매틱스 ko+위스퍼 small 대조(두 엔진 같은 자리 오류 3곳 → 문장 바꿔 뒤 TTS 재합성) · 자막 색 손질(④) · 봉인 ok · deliver --check ○",
+   "note": "벤치 eQ8jfp6lU7M(46만) · 원본 Sony pYFznP9V0SU(140-6 원어) · 뒤 재료 Wad-Free 공식 2gPKhWLbit8·사용자 QWNOYSy0Zos·리뷰 N1ldP5zlKw4(손·제품 컷만)·방송 케빈 · 0초 원 = 케빈 손의 와드프리 클립"
+  },
+  {
+   "channel": "foreignshowshow",
+   "channel_name": "샥탬스토리",
+   "brand": "샥탬스토리",
+   "style": "현장썰 하이브리드(샤크탱크 칼카피 앞 + 쿠팡 1인칭 체험 뒤)",
+   "date": "2026-10-28",
+   "from": "channel/foreignshowshow/20편_LittleElf/make_plan.py → tools/calcopy/shark/render.py(앞) → tools/calcopy/shark/hybrid.py(뒤·이음) → channel/foreignshowshow/하이브리드/final_tail.py(소리=영상 길이·끝 페이드·TP) → engine/finalize.seal",
+   "n": 105,
+   "title": "하이브리드 20 Little ELF(리틀 엘프 포장지 커터 — 쿠팡 9787516288 같은 제품)",
+   "path": "C:/숏템_칼카피/foreignshowshow/하이브리드/20편_LittleElf/work/hybrid/final.mp4",
+   "desktop": "샥탬스토리_20_LittleElf_검수대기.mp4",
+   "md5": "f8748adf934ece1356548483d958b1ea",
+   "seconds": 42.33,
+   "doc": "channel/foreignshowshow/20편_LittleElf_하이브리드/",
+   "judge": "[확인대기] −13.9 LUFS · TP −2.4(완성본 ebur128) · 끝 여운 1.17초(41.16 → 42.33) · 끝 0.1초 RMS −90.7dB · check render 뒤 전 칸 ○ · check_seams 되감김 0 · freeze/black 0 · 광고 표시 0~42초 2초 간격+마지막 프레임 · 받아쓰기 두 엔진 대조('롤에' 둘 다 오류 → '포장지 끝에'로 재합성) · 자막 색 손질(④) · 봉인 ok · deliver --check ○",
+   "note": "벤치 a8GJnj4-oko(6.4만) · 원본 Shark Tank Global vhgDo-stGq8(140 단일 트랙) · 뒤 재료 Little ELF 공식 VgQr3uYzEMg·Y8qUdzwLJ64·d7fBvClyGwk(손·제품 컷만)·방송 투자자석 · 0초 원 = 손에 든 빨간 리틀 엘프 · 공식 영상 본체는 초록, 쿠팡 상품은 빨강 2개(같은 제품 색 다름 — 대본에 색 말 없음)"
   }
  ]
 }

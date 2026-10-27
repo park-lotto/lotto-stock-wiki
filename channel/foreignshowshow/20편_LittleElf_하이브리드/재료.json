@@ -1,0 +1,188 @@
+{
+ "_note": "샥탬스토리 하이브리드 20편 Little ELF 뒤 재료 — 같은 제품 공식 영상 3편(Little ELF Products, Inc.) + B2 방송 투자자석. 창 1080x1052.",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/20편_LittleElf/src",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "sources": {
+  "VgQr3uYzEMg": {
+   "채널": "Little ELF Products, Inc.(공식)",
+   "제목": "Little ELF Gift Wrap Cutter Demonstration Video",
+   "해상도": "1920x1080 23.98fps",
+   "남의 글자": "없음 · 손만"
+  },
+  "Y8qUdzwLJ64": {
+   "채널": "Little ELF Products, Inc.(공식)",
+   "제목": "Little ELF Gift Wrap Cutter | As seen on Shark Tank",
+   "해상도": "1920x1080 29.97fps",
+   "남의 글자": "2~3초 로고·17~27초 글자 카드 안 씀"
+  },
+  "d7fBvClyGwk": {
+   "채널": "Little ELF Products, Inc.(공식)",
+   "제목": "How to use Little ELF Gift Wrap Cutter?",
+   "해상도": "1920x1080 29.97fps",
+   "남의 글자": "1~3초 로고·6~7초 안내 글·18~20초 글·27~31초 'CLEAN CUT EVERY TIME!'·'How to Trim'·45초 뒤 로고 카드 안 씀"
+  },
+  "vhgDo-stGq8": {
+   "채널": "Shark Tank Global(공식)",
+   "해상도": "1920x1080",
+   "남의 글자": "412~415초 띠 없음"
+  }
+ },
+ "shots": [
+  {
+   "line": "B1",
+   "src": "Y8qUdzwLJ64.mp4",
+   "ss": 7.2,
+   "dur": 2.4,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식(Little ELF Y8qUdzwLJ64, 1080p): 노란 탁자 위 포장지 롤에 리틀 엘프를 끼워 미는 손(샷 6.54~20.62, 손만 — 4~6초 본체 정지 컷은 멈춤 0.7초라 뺌)",
+   "i": 0
+  },
+  {
+   "line": "B1",
+   "src": "VgQr3uYzEMg.mp4",
+   "ss": 1.85,
+   "dur": 3.0,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식(VgQr3uYzEMg, 1080p): 무늬 포장지 롤 끝에 리틀 엘프를 끼우는 손(샷 1.79~6.01, 손만)",
+   "i": 1
+  },
+  {
+   "line": "B2",
+   "src": "vhgDo-stGq8.mp4",
+   "ss": 412.4,
+   "dur": 1.9,
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "방송(vhgDo-stGq8): 투자자석 케빈·로리·로버트 — 로리와 케빈 말다툼 직후(원본 샷 412.35~414.95, 소리 끔) · 1.9초(늘어나도 414.95 샷 끝 안 넘게, 98 #177 ④)",
+   "i": 2
+  },
+  {
+   "line": "B2",
+   "src": "d7fBvClyGwk.mp4",
+   "ss": 21.0,
+   "dur": 2.6,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식(d7fBvClyGwk, 1080p): 삼각 무늬 포장지를 리틀 엘프로 자르는 손(샷 20.69~29.20 중 26.5초 전까지 — 27초부터 박힌 글)",
+   "i": 3
+  },
+  {
+   "line": "B3",
+   "src": "VgQr3uYzEMg.mp4",
+   "ss": 8.1,
+   "dur": 3.0,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식: 롤 위로 리틀 엘프를 쭉 밀어 자름(샷 8.01~12.26, 손만)",
+   "i": 4
+  },
+  {
+   "line": "B3",
+   "src": "VgQr3uYzEMg.mp4",
+   "ss": 21.0,
+   "dur": 3.0,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식: 흰 포장지를 리틀 엘프로 밀어 자름(샷 20.60~31.49, 손만)",
+   "i": 5
+  },
+  {
+   "line": "B4",
+   "src": "d7fBvClyGwk.mp4",
+   "ss": 31.85,
+   "dur": 3.0,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식: 리틀 엘프를 거꾸로 끼워 종이 끝을 다듬음(샷 31.73~39.54, 손만)",
+   "i": 6
+  },
+  {
+   "line": "B4",
+   "src": "d7fBvClyGwk.mp4",
+   "ss": 39.65,
+   "dur": 3.0,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식: 롤 끝을 다듬어 자른 종이(샷 39.54~44.71, 손만)",
+   "i": 7
+  },
+  {
+   "line": "B5",
+   "src": "Y8qUdzwLJ64.mp4",
+   "ss": 14.5,
+   "dur": 1.8,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식(Y8qUdzwLJ64): 자른 포장지를 펴는 손(샷 6.54~20.62 중 14.5초부터 — B1 7.2초 컷과 3초 넘게(B13), 17초부터 박힌 글 'Clean Cuts' 전에 끝)",
+   "i": 8
+  },
+  {
+   "line": "B5",
+   "src": "d7fBvClyGwk.mp4",
+   "ss": 11.0,
+   "dur": 2.8,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식: 삼각 무늬 포장지를 펼치는 손(샷 10.71~15.18, 손만)",
+   "i": 9
+  }
+ ],
+ "effects": []
+}

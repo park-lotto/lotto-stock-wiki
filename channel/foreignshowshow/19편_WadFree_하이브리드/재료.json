@@ -1,0 +1,188 @@
+{
+ "_note": "샥탬스토리 하이브리드 19편 Wad-Free 뒤 재료 — 같은 제품 공식 영상 1편(Wad-Free) + 사용자·리뷰 영상 2편(손·제품 컷만) + B2 방송 케빈. 창 1080x1052.",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/19편_WadFree/src",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "sources": {
+  "2gPKhWLbit8": {
+   "채널": "Wad-Free for Bed Sheets(공식)",
+   "제목": "Troubleshooting Both Wad Free for Bed Sheets and for Blankets & Duvet Covers - April 2023",
+   "해상도": "1920x1080 29.97fps",
+   "남의 글자": "설명 자막이 박힌 구간(9~60·84~180초) 안 씀 · 쓰는 65~68초는 글자 없음"
+  },
+  "QWNOYSy0Zos": {
+   "채널": "Jody Right Now(사용자)",
+   "제목": "First Time Experience Using Wad-Free For Bed Sheets Laundry Gadget",
+   "해상도": "1920x1080 29.97fps",
+   "남의 글자": "얼굴 컷(0~65·84~90·144~179초)·채널 카드·107~111초 박힌 설명 글 안 씀 · 쓰는 컷은 손·제품만"
+  },
+  "N1ldP5zlKw4": {
+   "채널": "Golden Daisy 28(리뷰)",
+   "제목": "Laundry Sheet Detangler Review | Wad-Free Bed Sheet Detangler",
+   "해상도": "1920x1080 23.98fps",
+   "남의 글자": "12초 포장 사진 덧붙임 안 씀 · 쓰는 컷은 손·제품만, 얼굴 없음"
+  },
+  "pYFznP9V0SU": {
+   "채널": "Sony Pictures Television(공식)",
+   "해상도": "1920x1080",
+   "남의 글자": "475~477초 띠 없음"
+  }
+ },
+ "shots": [
+  {
+   "line": "B1",
+   "src": "2gPKhWLbit8.mp4",
+   "ss": 65.2,
+   "dur": 2.6,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "공식(Wad-Free 2gPKhWLbit8, 1080p): 파란 시트 위 Wad-Free 포장 2종과 클립(한 샷 64.33~76.94, 사람 없음)",
+   "i": 0
+  },
+  {
+   "line": "B1",
+   "src": "N1ldP5zlKw4.mp4",
+   "ss": 54.0,
+   "dur": 2.6,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰(N1ldP5zlKw4, 1080p): 손에 든 흰 사각 클립(손만)",
+   "i": 1
+  },
+  {
+   "line": "B2",
+   "src": "pYFznP9V0SU.mp4",
+   "ss": 475.25,
+   "dur": 1.25,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "방송(pYFznP9V0SU): 케빈이 말함 — 대사 '깐깐한 케빈'과 같은 사람(원본 샷 475.17~476.84, 소리 끔)",
+   "i": 2
+  },
+  {
+   "line": "B2",
+   "src": "N1ldP5zlKw4.mp4",
+   "ss": 16.6,
+   "dur": 2.6,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰: 베이지 시트 위에서 클립을 집어 드는 손(손만)",
+   "i": 3
+  },
+  {
+   "line": "B3",
+   "src": "QWNOYSy0Zos.mp4",
+   "ss": 80.0,
+   "dur": 2.0,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "사용자(QWNOYSy0Zos, 1080p): 초록 시트 귀퉁이를 끼운 클립 근접(샷 78.45~83.18 중 80초부터 — 79초·82.2초 뒤 손떨림 확대는 점프줌으로 잡혀 뺌, 손만)",
+   "i": 4
+  },
+  {
+   "line": "B3",
+   "src": "QWNOYSy0Zos.mp4",
+   "ss": 134.2,
+   "dur": 2.9,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "사용자: 세탁기에서 클립 붙은 초록 시트를 꺼냄 — 그대로 나옴(샷 134.13~137.94, 손만)",
+   "i": 5
+  },
+  {
+   "line": "B4",
+   "src": "QWNOYSy0Zos.mp4",
+   "ss": 140.8,
+   "dur": 2.6,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "사용자: 세탁기 문 앞 시트에 붙은 클립(샷 137.94~143.91, 손·옷만 · 134.2 컷과 3초 넘게 떨어짐 B13)",
+   "i": 6
+  },
+  {
+   "line": "B4",
+   "src": "QWNOYSy0Zos.mp4",
+   "ss": 101.5,
+   "dur": 1.6,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "사용자: 세탁기 안 클립 붙은 시트(샷 101.40~103.60)",
+   "i": 7
+  },
+  {
+   "line": "B5",
+   "src": "QWNOYSy0Zos.mp4",
+   "ss": 118.4,
+   "dur": 1.6,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "사용자: 세탁기 드럼 안을 들여다봄(샷 118.22~120.32, 손만)",
+   "i": 8
+  },
+  {
+   "line": "B5",
+   "src": "QWNOYSy0Zos.mp4",
+   "ss": 66.0,
+   "dur": 2.4,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "사용자: 초록 시트 귀퉁이를 잡은 손(샷 65.33~69.20, 손·옷만)",
+   "i": 9
+  }
+ ],
+ "effects": []
+}

@@ -1,0 +1,771 @@
+{
+ "_note": "샥탬스토리 19편 Wad-Free 재료 계획. 창 1080x1052(벤치 eQ8jfp6lU7M, 채널 고정 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물, effects 의 fx_place 계산값은 유지). 원음 컷은 원본 소리(pYFznP9V0SU_audio.m4a).",
+ "sources": {
+  "pYFznP9V0SU": {
+   "채널": "Sony Pictures Television(공식)",
+   "제목": "Shark Tank US | Can Wad-Free Persuade The Sharks To Make An Offer?",
+   "해상도": "1920x1080 29.97fps (137) + 140-6 영어 원어(자동 더빙 6개는 안 씀)",
+   "길이": 616.0,
+   "받은 구간": "전체",
+   "남의 글자": "이름/요청 띠(110~113·115~117초) 안 씀 · 590초 뒤 끝 화면 안 씀 · 무대 'Wad-Free' 간판·포장 = 제품 브랜드"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "이불 돌돌 말림",
+  "line2": "클립 하나로 끝?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "pYFznP9V0SU.mp4",
+   "mute": false,
+   "audio_src": "pYFznP9V0SU_audio.m4a",
+   "audio_ss": 126.45,
+   "audio_dur": 1.52,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "src_orig_span": [
+    125.7,
+    127.22
+   ],
+   "ss": 125.7,
+   "dur": 1.52,
+   "t_final_est": [
+    0.0,
+    1.52
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "케빈이 흰 시트에 끼운 와드프리 클립을 만지작거리며 말함(원본 샷 124.62~127.86 — 소리 = 이 줄 원음 cover, 같은 샷 0.75초 앞)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "N1",
+   "kind": "나레",
+   "src": "pYFznP9V0SU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "src_orig_span": [
+    129.85,
+    130.664
+   ],
+   "ss": 129.85,
+   "dur": 0.814,
+   "t_final_est": [
+    1.52,
+    2.33
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "데이먼드가 손으로 얼굴을 가리고 웃음(원본 샷 129.80~131.43, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 2,
+   "line": "N1",
+   "kind": "나레",
+   "src": "pYFznP9V0SU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "src_orig_span": [
+    131.47,
+    132.641
+   ],
+   "ss": 131.47,
+   "dur": 1.171,
+   "t_final_est": [
+    2.33,
+    3.5
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    390,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "로버트가 흰 시트를 들고 머리를 감싸며 웃음(샷 131.43~133.73, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 3,
+   "line": "O2",
+   "kind": "원음",
+   "src": "pYFznP9V0SU.mp4",
+   "mute": false,
+   "audio_src": "pYFznP9V0SU_audio.m4a",
+   "audio_ss": 140.73,
+   "audio_dur": 2.79,
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "src_orig_span": [
+    140.73,
+    143.52
+   ],
+   "ss": 140.73,
+   "dur": 2.79,
+   "t_final_est": [
+    3.5,
+    6.29
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    427,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "케빈이 시트를 쥐고 묻는 얼굴(원본 샷 140.67~143.54, 말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 4,
+   "line": "O2",
+   "kind": "원음",
+   "src": "pYFznP9V0SU.mp4",
+   "mute": false,
+   "audio_src": "pYFznP9V0SU_audio.m4a",
+   "audio_ss": 143.52,
+   "audio_dur": 2.29,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "src_orig_span": [
+    143.6,
+    145.89
+   ],
+   "ss": 143.6,
+   "dur": 2.29,
+   "t_final_est": [
+    6.29,
+    8.59
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "반지 낀 손이 클립을 시트에 끼우는 근접(샷 143.54~145.95 — 소리 = 이 줄 원음 이어서)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 5,
+   "line": "N2",
+   "kind": "나레",
+   "src": "pYFznP9V0SU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "src_orig_span": [
+    151.3,
+    152.509
+   ],
+   "ss": 151.3,
+   "dur": 1.209,
+   "t_final_est": [
+    8.59,
+    9.79
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    446,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "케빈이 클립을 손에 들고 살펴봄(원본 샷 151.22~153.32, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 6,
+   "line": "N2",
+   "kind": "나레",
+   "src": "pYFznP9V0SU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "src_orig_span": [
+    155.55,
+    157.077
+   ],
+   "ss": 155.55,
+   "dur": 1.527,
+   "t_final_est": [
+    9.79,
+    11.32
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    457,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "케빈이 클립을 들어 올려 봄(샷 155.46~158.09, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 7,
+   "line": "O3",
+   "kind": "원음",
+   "src": "pYFznP9V0SU.mp4",
+   "mute": false,
+   "audio_src": "pYFznP9V0SU_audio.m4a",
+   "audio_ss": 146.01,
+   "audio_dur": 2.94,
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "src_orig_span": [
+    146.01,
+    148.95
+   ],
+   "ss": 146.01,
+   "dur": 2.94,
+   "t_final_est": [
+    11.32,
+    14.26
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    230,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 파란 시트에 끼운 클립을 들고 답함(원본 샷 145.95~148.98, 말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 8,
+   "line": "O3",
+   "kind": "원음",
+   "src": "pYFznP9V0SU.mp4",
+   "mute": false,
+   "audio_src": "pYFznP9V0SU_audio.m4a",
+   "audio_ss": 148.95,
+   "audio_dur": 1.38,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "src_orig_span": [
+    149.02,
+    150.4
+   ],
+   "ss": 149.02,
+   "dur": 1.38,
+   "t_final_est": [
+    14.26,
+    15.64
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "파란 시트에 끼운 흰 클립 근접(샷 148.98~151.22 — 소리 = 이 줄 원음 이어서)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 9,
+   "line": "N3",
+   "kind": "나레",
+   "src": "pYFznP9V0SU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "src_orig_span": [
+    98.65,
+    100.4
+   ],
+   "ss": 98.65,
+   "dur": 1.75,
+   "t_final_est": [
+    15.64,
+    17.39
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "와드프리 포장과 흰 클립(원본 샷 98.60~101.00, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 10,
+   "line": "N3",
+   "kind": "나레",
+   "src": "pYFznP9V0SU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "src_orig_span": [
+    101.05,
+    102.953
+   ],
+   "ss": 101.05,
+   "dur": 1.903,
+   "t_final_est": [
+    17.39,
+    19.29
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "와드프리 포장 근접(샷 101.00~103.60, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 11,
+   "line": "O4",
+   "kind": "원음",
+   "src": "pYFznP9V0SU.mp4",
+   "mute": false,
+   "audio_src": "pYFznP9V0SU_audio.m4a",
+   "audio_ss": 88.71,
+   "audio_dur": 2.71,
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "src_orig_span": [
+    88.71,
+    91.42
+   ],
+   "ss": 88.71,
+   "dur": 2.71,
+   "t_final_est": [
+    19.29,
+    22.0
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 세탁기 앞에서 시트를 꺼냄(원본 샷 88.02~91.46, 말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 12,
+   "line": "O4",
+   "kind": "원음",
+   "src": "pYFznP9V0SU.mp4",
+   "mute": false,
+   "audio_src": "pYFznP9V0SU_audio.m4a",
+   "audio_ss": 91.42,
+   "audio_dur": 1.77,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "src_orig_span": [
+    91.5,
+    93.27
+   ],
+   "ss": 91.5,
+   "dur": 1.77,
+   "t_final_est": [
+    22.0,
+    23.77
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    419,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 펼쳐진 시트를 들어 보임(샷 91.46~93.36 — 소리 = 이 줄 원음 이어서)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 13,
+   "line": "N4",
+   "kind": "나레",
+   "src": "pYFznP9V0SU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "src_orig_span": [
+    399.92,
+    401.178
+   ],
+   "ss": 399.92,
+   "dur": 1.258,
+   "t_final_est": [
+    23.77,
+    25.03
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "케빈이 말함(원본 샷 399.87~402.47, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 14,
+   "line": "N4",
+   "kind": "나레",
+   "src": "pYFznP9V0SU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "src_orig_span": [
+    404.72,
+    405.993
+   ],
+   "ss": 404.72,
+   "dur": 1.273,
+   "t_final_est": [
+    25.03,
+    26.3
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    386,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "로리가 웃으며 말함(샷 404.67~407.31, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 15,
+   "line": "O5",
+   "kind": "원음",
+   "src": "pYFznP9V0SU.mp4",
+   "mute": false,
+   "audio_src": "pYFznP9V0SU_audio.m4a",
+   "audio_ss": 547.62,
+   "audio_dur": 5.18,
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "src_orig_span": [
+    547.62,
+    552.8
+   ],
+   "ss": 547.62,
+   "dur": 5.18,
+   "t_final_est": [
+    26.3,
+    31.48
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    413,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 두 손을 모으고 케빈을 고름(원본 샷 545.34~552.82, 말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 16,
+   "line": "N5",
+   "kind": "나레",
+   "src": "pYFznP9V0SU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "src_orig_span": [
+    560.58,
+    562.052
+   ],
+   "ss": 560.58,
+   "dur": 1.472,
+   "t_final_est": [
+    31.48,
+    32.96
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    393,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "데이먼드가 손뼉 치며 웃음(원본 샷 560.53~561.93, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 17,
+   "line": "N5",
+   "kind": "나레",
+   "src": "pYFznP9V0SU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=pYFznP9V0SU",
+   "src_orig_span": [
+    561.98,
+    563.809
+   ],
+   "ss": 561.98,
+   "dur": 1.829,
+   "t_final_est": [
+    32.96,
+    34.79
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    355,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "케빈과 창업자가 포옹(샷 561.93~563.66, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/19편_WadFree/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "how": "object",
+   "t": [
+    0.0,
+    0.45
+   ],
+   "target": [
+    482,
+    1116,
+    638,
+    1291
+   ],
+   "target_what": "케빈 손에 든 와드프리 클립(흰 플라스틱) — 125.9초 원본 프레임 눈 측정(원본 x 900~1060·y 700~880, 크롭 [405,0,1109,1080] ×0.974 → 완성본 좌표 · 시트 전체로 잡으면 원 525px 창 밖이라 클립만)",
+   "why": "R3 0초 원 = 물건(제품) — 사장님 10-19 '처음에 빨간원 얼굴에 하지말고'",
+   "at": [
+    560,
+    1204
+   ],
+   "size": 266,
+   "face_clear": true,
+   "target_box": [
+    482,
+    1116,
+    638,
+    1291
+   ],
+   "target_path": [
+    [
+     0.0,
+     482.0,
+     1116.0,
+     638.0,
+     1291.0
+    ],
+    [
+     0.067,
+     483.0,
+     1121.0,
+     633.0,
+     1289.0
+    ],
+    [
+     0.133,
+     483.3,
+     1125.3,
+     627.3,
+     1286.7
+    ],
+    [
+     0.2,
+     484.3,
+     1130.3,
+     622.3,
+     1285.3
+    ],
+    [
+     0.267,
+     490.0,
+     1136.3,
+     622.3,
+     1285.3
+    ],
+    [
+     0.333,
+     498.7,
+     1142.0,
+     625.7,
+     1285.0
+    ],
+    [
+     0.4,
+     509.0,
+     1146.0,
+     631.0,
+     1283.0
+    ]
+   ],
+   "track": [
+    [
+     0.0,
+     560,
+     1204
+    ],
+    [
+     0.067,
+     558,
+     1205
+    ],
+    [
+     0.133,
+     555,
+     1206
+    ],
+    [
+     0.2,
+     553,
+     1208
+    ],
+    [
+     0.267,
+     556,
+     1211
+    ],
+    [
+     0.333,
+     562,
+     1214
+    ],
+    [
+     0.4,
+     570,
+     1214
+    ]
+   ],
+   "track_conf": 0.608,
+   "track_how": "template",
+   "why_target": "손 상자(재료 target) · 추적 template 신뢰 0.608 · 원 266px = 물건 반대각선 117×1.04+선 · 얼굴 3프레임 겹침 0"
+  },
+  {
+   "line": "N1",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 1.6 '아무도 안 물어본 습관'"
+  },
+  {
+   "line": "O2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 6.0 '이게 나의 비싼 이불을'"
+  },
+  {
+   "line": "O3",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 18.0 '제대로만 끼우면'"
+  },
+  {
+   "line": "N3",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 20.0 제품 소개"
+  },
+  {
+   "line": "N4",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 39.0 지분 경쟁"
+  },
+  {
+   "line": "O5",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 49.0 '거래할게요'"
+  }
+ ]
+}

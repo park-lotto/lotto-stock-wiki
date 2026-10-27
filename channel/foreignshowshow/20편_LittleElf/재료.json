@@ -1,0 +1,798 @@
+{
+ "_note": "샥탬스토리 20편 Little ELF 재료 계획. 창 1080x1052(벤치 a8GJnj4-oko, 채널 고정 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물, effects 의 fx_place 계산값은 유지). 원음 컷은 원본 소리(vhgDo-stGq8_audio.m4a).",
+ "sources": {
+  "vhgDo-stGq8": {
+   "채널": "Shark Tank Global(공식)",
+   "제목": "The Sharks Fight For A Deal With Little Elf | Shark Tank US | Shark Tank Global",
+   "해상도": "1920x1080 29.97fps (137) + 140 영어 원음(더빙 트랙 없음)",
+   "길이": 632.0,
+   "받은 구간": "전체",
+   "남의 글자": "이름/요청/제안 띠(45~51·404~410·424초) 안 씀 · 601초 뒤 끝 화면 안 씀 · 제품·티셔츠 'ELF' = 제품 브랜드"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "포장지 가위질",
+  "line2": "안 해도 된다고?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "vhgDo-stGq8.mp4",
+   "mute": false,
+   "audio_src": "vhgDo-stGq8_audio.m4a",
+   "audio_ss": 96.99,
+   "audio_dur": 1.08,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=vhgDo-stGq8",
+   "src_orig_span": [
+    64.75,
+    65.83
+   ],
+   "ss": 64.75,
+   "dur": 1.08,
+   "t_final_est": [
+    0.0,
+    1.08
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    428,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 손에 든 빨간 리틀 엘프 근접(원본 샷 64.66~66.47 — 소리 = 투자자 원음 'I hate cutting paper.' cover, 말한 사람은 화면 밖)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "N1",
+   "kind": "나레",
+   "src": "vhgDo-stGq8.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=vhgDo-stGq8",
+   "src_orig_span": [
+    52.78,
+    54.492
+   ],
+   "ss": 52.78,
+   "dur": 1.712,
+   "t_final_est": [
+    1.08,
+    2.79
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "찢어지고 삐뚤게 잘린 포장지 더미(원본 샷 52.72~54.75, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 2,
+   "line": "N1",
+   "kind": "나레",
+   "src": "vhgDo-stGq8.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=vhgDo-stGq8",
+   "src_orig_span": [
+    54.82,
+    57.521
+   ],
+   "ss": 54.82,
+   "dur": 2.701,
+   "t_final_est": [
+    2.79,
+    5.49
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    429,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 손짓하며 설명(샷 54.75~57.92, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 3,
+   "line": "N2",
+   "kind": "나레",
+   "src": "vhgDo-stGq8.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=vhgDo-stGq8",
+   "src_orig_span": [
+    68.6,
+    70.422
+   ],
+   "ss": 68.6,
+   "dur": 1.822,
+   "t_final_est": [
+    5.49,
+    7.32
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "초록 포장지 롤 끝에 빨간 리틀 엘프를 끼움(원본 샷 68.54~73.67, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 4,
+   "line": "N2",
+   "kind": "나레",
+   "src": "vhgDo-stGq8.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=vhgDo-stGq8",
+   "src_orig_span": [
+    70.95,
+    73.05
+   ],
+   "ss": 70.95,
+   "dur": 2.1,
+   "t_final_est": [
+    7.32,
+    9.42
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "같은 샷 이어서 — 리틀 엘프를 롤에 끼운 손",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 5,
+   "line": "O2",
+   "kind": "원음",
+   "src": "vhgDo-stGq8.mp4",
+   "mute": false,
+   "audio_src": "vhgDo-stGq8_audio.m4a",
+   "audio_ss": 80.59,
+   "audio_dur": 2.24,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=vhgDo-stGq8",
+   "src_orig_span": [
+    81.45,
+    83.69
+   ],
+   "ss": 81.45,
+   "dur": 2.24,
+   "t_final_est": [
+    9.42,
+    11.66
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "펼친 포장지 위로 리틀 엘프를 앞으로 미는 손(원본 샷 81.38~85.42 — 소리 = 창업자 원음 0.86초 앞부터, 말하는 본인 손)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 6,
+   "line": "O3",
+   "kind": "원음",
+   "src": "vhgDo-stGq8.mp4",
+   "mute": false,
+   "audio_src": "vhgDo-stGq8_audio.m4a",
+   "audio_ss": 85.75,
+   "audio_dur": 1.35,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=vhgDo-stGq8",
+   "src_orig_span": [
+    83.75,
+    85.1
+   ],
+   "ss": 83.75,
+   "dur": 1.35,
+   "t_final_est": [
+    11.66,
+    13.01
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "리틀 엘프를 끝까지 밀어 자르는 손(원본 샷 81.38~85.42 이어서 — 투자자석 와이드 85.4~86.8 은 멈춘 화면 0.9초(freezedetect)라 뺌, 소리 = 창업자 원음 cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 7,
+   "line": "O3",
+   "kind": "원음",
+   "src": "vhgDo-stGq8.mp4",
+   "mute": false,
+   "audio_src": "vhgDo-stGq8_audio.m4a",
+   "audio_ss": 87.1,
+   "audio_dur": 2.25,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=vhgDo-stGq8",
+   "src_orig_span": [
+    86.85,
+    89.1
+   ],
+   "ss": 86.85,
+   "dur": 2.25,
+   "t_final_est": [
+    13.01,
+    15.26
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "반듯하게 잘린 포장지를 들어 보임(샷 86.82~89.16, 소리 = 이 줄 원음 이어서)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 8,
+   "line": "N3",
+   "kind": "나레",
+   "src": "vhgDo-stGq8.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=vhgDo-stGq8",
+   "src_orig_span": [
+    107.28,
+    108.503
+   ],
+   "ss": 107.28,
+   "dur": 1.223,
+   "t_final_est": [
+    15.26,
+    16.48
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "로리·창업자·바바라가 탁자에서 같이 잘라 봄(원본 샷 107.24~108.48, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 9,
+   "line": "N3",
+   "kind": "나레",
+   "src": "vhgDo-stGq8.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=vhgDo-stGq8",
+   "src_orig_span": [
+    111.75,
+    113.996
+   ],
+   "ss": 111.75,
+   "dur": 2.246,
+   "t_final_est": [
+    16.48,
+    18.72
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "바바라가 초록 포장지를 잘라 봄 — 손(샷 111.71~113.95, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 10,
+   "line": "O4",
+   "kind": "원음",
+   "src": "vhgDo-stGq8.mp4",
+   "mute": false,
+   "audio_src": "vhgDo-stGq8_audio.m4a",
+   "audio_ss": 120.19,
+   "audio_dur": 1.52,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=vhgDo-stGq8",
+   "src_orig_span": [
+    119.4,
+    120.92
+   ],
+   "ss": 119.4,
+   "dur": 1.52,
+   "t_final_est": [
+    18.72,
+    20.24
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "포장지 위를 미는 손 근접(원본 샷 119.32~121.59 — 소리 = 로리 원음 cover, 같은 샷)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 11,
+   "line": "N4",
+   "kind": "나레",
+   "src": "vhgDo-stGq8.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=vhgDo-stGq8",
+   "src_orig_span": [
+    133.1,
+    134.686
+   ],
+   "ss": 133.1,
+   "dur": 1.586,
+   "t_final_est": [
+    20.24,
+    21.83
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "뒤집은 리틀 엘프를 롤 끝에 끼움(원본 샷 133.03~136.70, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 12,
+   "line": "N4",
+   "kind": "나레",
+   "src": "vhgDo-stGq8.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=vhgDo-stGq8",
+   "src_orig_span": [
+    136.75,
+    138.685
+   ],
+   "ss": 136.75,
+   "dur": 1.935,
+   "t_final_est": [
+    21.83,
+    23.76
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "롤 끝을 다듬어 자름(샷 136.70~139.84, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 13,
+   "line": "N5",
+   "kind": "나레",
+   "src": "vhgDo-stGq8.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=vhgDo-stGq8",
+   "src_orig_span": [
+    414.98,
+    416.133
+   ],
+   "ss": 414.98,
+   "dur": 1.153,
+   "t_final_est": [
+    23.76,
+    24.92
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    473,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "로리가 손짓하며 말함(원본 샷 414.95~416.02, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 14,
+   "line": "N5",
+   "kind": "나레",
+   "src": "vhgDo-stGq8.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=vhgDo-stGq8",
+   "src_orig_span": [
+    416.06,
+    417.535
+   ],
+   "ss": 416.06,
+   "dur": 1.475,
+   "t_final_est": [
+    24.92,
+    26.39
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "케빈이 말함(샷 416.02~417.38, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 15,
+   "line": "O5",
+   "kind": "원음",
+   "src": "vhgDo-stGq8.mp4",
+   "mute": false,
+   "audio_src": "vhgDo-stGq8_audio.m4a",
+   "audio_ss": 588.62,
+   "audio_dur": 1.4,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=vhgDo-stGq8",
+   "src_orig_span": [
+    588.8,
+    590.2
+   ],
+   "ss": 588.8,
+   "dur": 1.4,
+   "t_final_est": [
+    26.39,
+    27.79
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    0,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자석 케빈·로리 — 창업자 말에 로리가 두 팔을 듦(원본 샷 588.72~590.49, 말한 창업자는 화면 밖 · 소리 = 이 줄 원음, 같은 샷 0.18초 뒤)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 16,
+   "line": "O6",
+   "kind": "원음",
+   "src": "vhgDo-stGq8.mp4",
+   "mute": false,
+   "audio_src": "vhgDo-stGq8_audio.m4a",
+   "audio_ss": 594.38,
+   "audio_dur": 1.2,
+   "url": "https://www.youtube.com/watch?v=vhgDo-stGq8",
+   "src_orig_span": [
+    594.38,
+    595.58
+   ],
+   "ss": 594.38,
+   "dur": 1.2,
+   "t_final_est": [
+    27.79,
+    28.99
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    346,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "로리가 창업자를 안아 줌(원본 샷 591.82~595.63, 말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 17,
+   "line": "N6",
+   "kind": "나레",
+   "src": "vhgDo-stGq8.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=vhgDo-stGq8",
+   "src_orig_span": [
+    597.35,
+    599.302
+   ],
+   "ss": 597.35,
+   "dur": 1.952,
+   "t_final_est": [
+    28.99,
+    30.94
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    306,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "로버트가 웃음(원본 샷 597.30~599.37, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 18,
+   "line": "N6",
+   "kind": "나레",
+   "src": "vhgDo-stGq8.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=vhgDo-stGq8",
+   "src_orig_span": [
+    581.45,
+    583.402
+   ],
+   "ss": 581.45,
+   "dur": 1.952,
+   "t_final_est": [
+    30.94,
+    32.9
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    377,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 웃음(샷 581.38~583.45, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/20편_LittleElf/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "how": "object",
+   "t": [
+    0.0,
+    0.45
+   ],
+   "target": [
+    430,
+    668,
+    651,
+    1126
+   ],
+   "target_what": "창업자 손에 든 빨간 리틀 엘프 — 65.0초 원본 프레임 눈 측정(원본 x 870~1096·y 240~710, 크롭 [428,0,1109,1080] ×0.974 → 완성본 좌표)",
+   "why": "R3 0초 원 = 물건(제품) — 사장님 10-19 '처음에 빨간원 얼굴에 하지말고'",
+   "at": [
+    540,
+    897
+   ],
+   "size": 551,
+   "face_clear": true,
+   "target_box": [
+    430,
+    668,
+    651,
+    1126
+   ],
+   "target_path": [
+    [
+     0.0,
+     430.0,
+     668.0,
+     651.0,
+     1126.0
+    ],
+    [
+     0.067,
+     425.0,
+     675.3,
+     646.0,
+     1133.3
+    ],
+    [
+     0.133,
+     424.7,
+     680.0,
+     645.7,
+     1138.0
+    ],
+    [
+     0.2,
+     427.0,
+     683.7,
+     648.0,
+     1141.7
+    ],
+    [
+     0.267,
+     428.7,
+     685.7,
+     649.7,
+     1143.7
+    ],
+    [
+     0.333,
+     431.7,
+     687.7,
+     652.7,
+     1145.7
+    ],
+    [
+     0.4,
+     438.0,
+     688.0,
+     659.0,
+     1146.0
+    ]
+   ],
+   "track": [
+    [
+     0.0,
+     540,
+     897
+    ],
+    [
+     0.067,
+     536,
+     904
+    ],
+    [
+     0.133,
+     535,
+     909
+    ],
+    [
+     0.2,
+     538,
+     913
+    ],
+    [
+     0.267,
+     539,
+     915
+    ],
+    [
+     0.333,
+     542,
+     917
+    ],
+    [
+     0.4,
+     548,
+     917
+    ]
+   ],
+   "track_conf": 0.946,
+   "track_how": "template",
+   "why_target": "손 상자(재료 target) · 추적 template 신뢰 0.946 · 원 551px = 물건 반대각선 254×1.04+선 · 얼굴 3프레임 겹침 0"
+  },
+  {
+   "line": "N1",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 5.0 '포장지를 가위로 자르면'"
+  },
+  {
+   "line": "N2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 8.0 '완벽하게 재단할 수 있는 제품'"
+  },
+  {
+   "line": "O2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 12.5 '아주 쉽게 앞으로 밀어주세요'"
+  },
+  {
+   "line": "N3",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 22.3 '자를 대거나'"
+  },
+  {
+   "line": "N5",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 지분 경쟁"
+  },
+  {
+   "line": "O5",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 41.0 '제안 수락할게요'"
+  }
+ ]
+}
