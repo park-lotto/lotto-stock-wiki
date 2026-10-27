@@ -1914,6 +1914,7 @@ CMDS = {"env": c_env, "bench": c_bench, "search": c_search, "peer_sheet": c_peer
 
 
 HOLLOW_KEYS = ("fail", "failed", "bad", "bad_urls", "miss", "skipped")      # 결과에 이 칸이 비어 있지 않으면 일부를 조용히 버린 것
+EMPTY_OK = ("jumps",)     # 비어 있어야 좋은 칸(원본 규칙 위반 목록) — '결과 0'으로 세지 않는다(10-27 run4 렌더마다 HOLLOW(jumps) 오경보)
 
 
 def hollow(r: dict) -> str:
@@ -1922,7 +1923,7 @@ def hollow(r: dict) -> str:
     실측 근거: c_cand_sheet(사진 주소 '//' 를 조용히 건너뜀 → 시트 0장)·c_product_stills(ValueError 를 fail 에 숨기고 ok)."""
     if not isinstance(r, dict):
         return ""
-    coll = {k: v for k, v in r.items() if isinstance(v, (list, dict)) and k not in HOLLOW_KEYS}
+    coll = {k: v for k, v in r.items() if isinstance(v, (list, dict)) and k not in HOLLOW_KEYS and k not in EMPTY_OK}
     out = []
     if coll and all(not v for v in coll.values()):
         out.append("결과 칸 전부 비어 있음(" + ",".join(list(coll)[:5]) + ")")
