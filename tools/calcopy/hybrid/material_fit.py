@@ -637,6 +637,15 @@ def merge_short(cuts: list[dict], end: float, log=print) -> list[str]:
         c, p = cuts[i], cuts[i - 1]
         t1 = cuts[i + 1]["t0"] if i + 1 < len(cuts) else end
         short = c.get("kind") in ("tts", "orig") and float(t1) - float(c["t0"]) < MIN_PIECE_SEC - 1e-3
+        need = round(MIN_PIECE_SEC + 0.02 - (float(t1) - float(c["t0"])), 3)
+        if short and p.get("line") == c.get("line") and float(c["t0"]) - float(p["t0"]) - need >= MIN_PIECE_SEC:
+            # 먼저 앞 컷에서 빌린다 — 두 장면을 다 두고 앞 컷만 조금 짧아진다(합치면 앞 컷이 늘어 원본 경계를 넘을 수 있다 — 10-27 썬크림 L7 0.13초 조각)
+            c["t0"] = round(float(c["t0"]) - need, 3)
+            if c.get("kind") == "orig" and c.get("ss") is not None:
+                c["ss"] = round(float(c["ss"]) - need, 3)            # 원음 줄 = 원본 초도 같이(입 맞춤)
+            out.append(f"[늘리기] {c.get('line')} {c.get('src')} 앞 컷에서 {need:.2f}초 빌림")
+            i += 1
+            continue
         if short and p.get("line") == c.get("line"):       # 원음 줄도 앞 컷에 — 앞 컷(입 맞춘 원본)이 같은 소리를 따라 이어질 뿐(10-27 썬크림 L7 0.33초)
             out.append(f"[합치기] {c.get('line')} {c.get('src')} {float(t1) - float(c['t0']):.2f}초 → 앞 컷에")
             cuts.pop(i)

@@ -29,10 +29,24 @@ def test_aba_across_lines_is_left_for_gate():
     assert aba_violations(cuts) and "줄을 넘어" in out[-1]
 
 
-def test_short_cut_merges_into_previous_same_line():
+def test_short_cut_borrows_from_previous_same_line():
+    """10-27 썬크림 L7: 합치면 앞 컷이 늘어 원본 경계를 넘었다 → 앞 컷에서 빌려 짧은 컷을 늘린다(두 장면 다 남김)."""
     cuts = [_c("L7", 0.0, "A.mp4", 1), _c("L7", 1.0, "B.mp4", 3), _c("L8", 1.33, "C.mp4", 5)]
     MF.merge_short(cuts, end=3.0, log=lambda m: None)
+    assert [c["src"] for c in cuts] == ["A.mp4", "B.mp4", "C.mp4"] and 1.33 - cuts[1]["t0"] >= 0.4
+
+
+def test_short_cut_merges_when_previous_cannot_lend():
+    cuts = [_c("L7", 0.0, "A.mp4", 1), _c("L7", 0.5, "B.mp4", 3), _c("L8", 0.8, "C.mp4", 5)]
+    MF.merge_short(cuts, end=3.0, log=lambda m: None)
     assert [c["src"] for c in cuts] == ["A.mp4", "C.mp4"]
+
+
+def test_orig_short_cut_borrow_keeps_lip_sync():
+    cuts = [_c("O1", 0.0, "O.mp4", 10.0, "orig"), _c("O1", 2.0, "O.mp4", 12.0, "orig"), _c("L2", 2.3, "C.mp4", 5)]
+    MF.merge_short(cuts, end=4.0, log=lambda m: None)
+    c = cuts[1]
+    assert round(c["ss"] - c["t0"], 3) == 10.0                     # 원본 초 − 줄 시각 = 그대로(입 맞춤)
 
 
 def test_short_first_cut_of_line_merges_into_next():
