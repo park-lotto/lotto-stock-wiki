@@ -278,6 +278,55 @@ def rule_check(r: dict, d: dict, st: dict) -> tuple[bool, str]:
     return False, f"모르는 규칙 {k}"
 
 
+def rule_text(r: dict, st: dict) -> str:
+    """rule_check 와 같은 판 칸을 처음 대본 질문에 실을 글로(10-27 사장님 "시험 범위를 모르고 시험 본다" — 줄 수·길이·글자 수가 판마다 질문에 빠져
+    반려로만 알려졌다). 판정은 rule_check, 이 글은 같은 숫자를 읽기만 한다. 글로 못 옮기는 칸(engine = points_rule_for, sibling_repeat)은 ''."""
+    k, rng = r["kind"], lambda: f"{r.get('min')}~{r.get('max')}"
+    if k == "first_line":
+        return f"첫 줄은 {r['is']} 줄"
+    if k == "last_line":
+        return f"끝 줄은 {r['is']} 줄" + (f"(또는 '{r['or_tts_pattern']}' 꼴 나레)" if r.get("or_tts_pattern") else "")
+    if k == "count":
+        return f"{'나레(tts)' if r['of'] == 'tts' else '원음'} 줄 수 {rng()}"
+    if k == "tts_chars":
+        return f"나레 한 줄 글자 수 {rng()}자"
+    if k == "tts_total_chars":
+        return f"나레 전체 글자 수 {rng()}자"
+    if k == "no_adjacent":
+        return f"{r['of']} 줄을 연달아 두지 않는다"
+    if k == "ending":
+        return f"어미({r['which']}) '{r['pattern']}' — {int(r.get('min_share', 1.0) * 100)}% 이상"
+    if k == "has_line":
+        return f"'{r.get('why', r['pattern'])}' 줄 {r.get('min', 1)}개 이상"
+    if k == "forbid_in":
+        return f"금지: {r.get('why', r['pattern'])}"
+    if k == "cap_chars":
+        mx = (st.get("caption") or {}).get("chunk_max_chars") if r["max"] == "chunk_max_chars" else r["max"]
+        return f"자막 덩어리(caps 한 칸) {mx}자 이하" + (f"({'원음 번역' if r['of'] == 'orig' else '나레'} 자막)" if r.get("of") in ("tts", "orig") else "")
+    if k == "orig_span":
+        return f"{'첫' if r['which'] == 'first' else '끝'} 원음 줄 {r['max']}초 이하"
+    if k == "tts_cps_spread":
+        return f"줄마다 말 빠르기 고르게(변동계수 ≤{r['max']})"
+    if k == "beats":
+        return "줄 머리 박자 " + " · ".join(f"{b['name']} {b['min']}~{b['max']}줄" for b in r["beats"])
+    if k == "head_connectors":
+        return f"문장 머리 연결어(그래서·근데 등) 비율 ≤{r['max']}"
+    if k == "made_candidates":
+        return f"지어낸 것처럼 보이는 숫자·나라·권위 말 {r['max']}개 이하(근거 있는 것만)"
+    if k == "narr_share":
+        return f"나레 비중 {rng()}"
+    if k == "est_length":
+        return f"완성 길이 {rng()}초(나레 글자 ÷ 말속도 {st.get('cps_target', 7.0)}자/초 + 원음 초로 어림)"
+    return ""
+
+
+def rules_text(version: str) -> str:
+    """판 script.audit 전부를 처음 질문 글로 — 주인 = 판 칸(rule_check 와 같은 칸)."""
+    st = ST.load(version)
+    rows = [rule_text(r, st) for r in (st.get("script") or {}).get("audit") or []]
+    return "\n".join("- " + x for x in rows if x)
+
+
 # ── 관문 G-1 대본 글 소리 위험(TTS 돈 쓰기 전) — 판 설정 밖 **모든 판 공통** 규칙. 판단 주인 = text_defects 한 곳 ──────────
 #   근거 = 10-25 전 편 음성 감사(소리 결함을 낸 대본 줄 ↔ 정상 줄, gate_fixtures/g1_script.json):
 #   ① 줄 끝 부호 없음 → 이어 합성한 소리를 줄마다 자를 때 다음 줄로 밀림(98 #75 잇템로그 02 N4·09 N3·11 N3 납품)

@@ -157,6 +157,28 @@ def from_frame(frame_json: str) -> tuple[tuple | None, tuple | None]:
     return win, mask
 
 
+def plan_forward(t: float, cuts: list[dict] | None, tol: float = BOUND_TOL) -> str:
+    """(판단 주인: 계획이 '앞으로'라 한 경계) 완성본 t 의 경계에서 계획 컷이 다른 원본으로 넘어가거나 같은 원본을 앞으로 건너뛰면 그 이유, 아니면 ''.
+    그림 대조는 같은 사람·같은 배경이면 다른 순간도 '되감김·점프줌'으로 읽는다(10-27 run4 a편: 계획 47.1→52.6초 앞으로인데 되감김 0.57초,
+    78→3.4초 다른 순간인데 점프줌 1.10 — 화면 확인 = 자연스러운 다음 순간). 계획이 순서의 주인이다."""
+    for i in range(1, len(cuts or [])):
+        a, b = cuts[i - 1], cuts[i]
+        if abs(float(b.get("t0") or 0) - t) > tol:
+            continue
+        if str(a.get("src")) != str(b.get("src")):
+            return "다른 원본으로 넘어감"
+        a_end = float(a.get("ss") or 0) + float(a.get("t1") or 0) - float(a.get("t0") or 0)
+        b0 = float(b.get("ss") or 0)
+        if b0 >= a_end - 1 / 30:
+            return f"같은 원본 앞으로 {b0 - a_end:+.2f}초"
+        b1 = b0 + float(b.get("t1") or 0) - float(b.get("t0") or 0)
+        shown = [(float(c.get("ss") or 0), float(c.get("ss") or 0) + float(c.get("t1") or 0) - float(c.get("t0") or 0))
+                 for c in cuts[:i] if str(c.get("src")) == str(b.get("src"))]
+        if a_end - b0 > 1.0 and not any(s0 - 0.5 < b1 and b0 < s1 + 0.5 for s0, s1 in shown):   # 뒤로 갔지만 앞에서 안 보인 구간(훅 = 결과 먼저 뒤 처음부터)
+            return f"같은 원본 안 보인 구간 {b0:.1f}초(앞 컷 끝 {a_end:.1f}초)"
+    return ""
+
+
 def split_by_bounds(rw: list[dict], bounds: list[float] | None, tol: float = BOUND_TOL) -> tuple[list[dict], list[dict]]:
     """(판단 주인: 어느 되감김을 세나) bounds = 계획 컷 경계 시각(완성본 초). None·빈 목록 = 경계를 모름 → 전부 센다(옛 판정 그대로 —
     10-25 관문이 timeline 에 cuts 가 없을 때 빈 경계로 걸러 되감김을 통째로 뺐다). 경계를 알면 ±tol 안 것만 센다. 반환 (센 것, 한 조각 안이라 뺀 것)."""

@@ -37,6 +37,8 @@ def _measure(d: dict, ctx: dict) -> dict:
         return {"titles": [{"id": "ORIG1", "title": "홍길동 크림 루틴", "dur": 600}], "picked": [{"name": "홍길동TV"}], "searched": ["ORIG1"], "how": "label"}
     if c == "origin_probe":
         return {"matched": {"ORIG1": [{"bench": "크림", "origin_t": 100.0 + k} for k in range(3)]}, "hits": {}}
+    if c == "origin_dups":          # 재업로드 확인(10-27) — 가짜 원본들은 서로 다른 영상
+        return {"dups": [], "checked": len(d.get("files") or [])}
     if c == "origin_get":
         vid = d["vid"]
         w, h = ctx.get("dims", {}).get(vid, (1920, 1080))

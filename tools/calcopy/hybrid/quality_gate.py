@@ -748,8 +748,14 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             save_store()
             jsave(R / "seams.json", s)
             inside = [r.get("t") for r in s.get("되감김_조각안") or []]
-            return s["ok"], (f"컷 {len(s['컷'])} · 되감김 {len(s['되감김'])} {[r.get('t') for r in s['되감김']]} · 점프줌 {len(s['점프줌'])}({s['점프줌_판정'] or '드묾'})"
-                             + (f" · 한 조각 안이라 뺌 {inside}" if inside else "") + ("" if bset else " · 시간표 컷 없음 → 경계 모름(전부 셈)"))
+            pc = T.get("cuts") or []                 # 계획이 '앞으로'라 한 경계의 그림 오독은 참고로(주인 check_seams.plan_forward)
+            rw = [r for r in s["되감김"] if not check_seams.plan_forward(float(r["t"]), pc)]
+            jz = [r for r in s["점프줌"] if not check_seams.plan_forward(float(r["t"]), pc)]
+            veto = [f"{r['t']}초 {check_seams.plan_forward(float(r['t']), pc)}" for r in s["되감김"] + s["점프줌"] if r not in rw and r not in jz]
+            jz_bad = check_seams.jz_verdict(jz, float(T.get("end") or 0) or 1.0) if jz else ""
+            return (not rw and not jz_bad), (f"컷 {len(s['컷'])} · 되감김 {len(rw)} {[r.get('t') for r in rw]} · 점프줌 {len(jz)}({jz_bad or '드묾'})"
+                             + (f" · 한 조각 안이라 뺌 {inside}" if inside else "") + (f" · 계획상 앞으로라 뺌(참고) {veto}" if veto else "")
+                             + ("" if bset else " · 시간표 컷 없음 → 경계 모름(전부 셈)"))
         row("재료", "B16' 되감김·점프줌", seams, "engine/check_seams.check")
     # ── 판 리듬(관제263 10-25 페이블 E1·E2·E4 — 모든 판 필수 4칸, 읽기 주인 styles.rhythm · 칸 없으면 ×)
     if want("판 리듬") and not legacy:
@@ -880,10 +886,19 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
                 return None, f"스피치매틱스 못 씀({type(e).__name__}: {str(e)[:120]}) — 미측정 · 참고(판정 안 함) whisper 차 {ref_txt}"
             out = narr_sync_rows(narr, T["lines"], words)
             cache["asr"] = {"rows": out, "segs": [(w["s"], w["e"], w["w"]) for w in words]}
+            fixed = []
+            for r in out:                       # 낱말은 들렸는데 시각만 어긋남 → 줄 목소리 파일을 완성 목소리에 맞대 실제 놓인 시각으로(주인 check_line_sync.placed_at)
+                lw = R / f"s_{r['line']}.wav"
+                if not r["ok"] and r.get("heard_t0") is not None and lw.exists():
+                    at, cr = LS.placed_at(lw, voice, float(r["t0"]))
+                    if at is not None and abs(at - float(r["t0"])) <= LS.LIMIT_SM:
+                        r["ok"], r["placed_at"] = True, at
+                        fixed.append(f"{r['line']} 받아쓰기 {r['heard_t0']} → 실제 {at}(상관 {cr})")
             bad = [r["line"] for r in out if not r["ok"]]
-            worst = max((abs(r["diff"]) for r in out if r["diff"] is not None), default=None)
+            worst = max((abs(r["diff"]) for r in out if r["diff"] is not None and not r.get("placed_at")), default=None)
             return (not bad if out else None), (f"나레 {len(out)}줄 중 못 찾음·{LS.LIMIT_SM}초 넘게 어긋남 {bad or '0'} · 최대 차 {worst} "
-                                                f"(스피치매틱스 낱말 시각) · " + " ".join(f"{r['line']}:{r['t0']}↔{r['heard_t0']}" for r in out))
+                                                f"(스피치매틱스 낱말 시각) · " + " ".join(f"{r['line']}:{r['t0']}↔{r['heard_t0']}" for r in out)
+                                                + (f" · 받아쓰기 시각 오독을 실제 자리로 바로잡음 {fixed}" if fixed else ""))
         row("소리", "나레 받아쓰기 ↔ 대본", asr_rows, "engine/narr_verify.heard_words(스피치매틱스) → check_line_sync.line_starts_from_asr · LIMIT_SM")
     # ── 대본
     if want("대본") and not legacy:

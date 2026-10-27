@@ -236,7 +236,7 @@ SCRIPT = """너는 대본 작가다(오푸스). 아래 판 규칙·결 기준 �
   '울퉁불퉁'→'제각각이라' · 이름 뒤 '이'(김영옥이)→'선생님이/씨가' · 첫 낱말이 브랜드면 앞에 한 낱말('요즘 설화수…').
 - 조사·어미를 빼지 않는다(명사 3개 이상 조사 없이 연속 금지). 판 길이를 넘치면 글을 줄인다(배속 아님).
 ## 재료(컷)
-- 컷마다 see(무엇이 보이나) — 그 줄 대사의 동작·상태가 그 컷에 보여야 한다. 같은 소스 ±3초 재사용 금지 · A-B-A 끼움 금지 · 컷 ≥1.2초 · 끝 컷 ≥1.5초.
+- 컷마다 see(무엇이 보이나) — 그 줄 대사의 동작·상태가 그 컷에 보여야 한다. 컷 ≥1.2초 · 끝 컷 ≥1.5초(재사용·A-B-A·샷 구간은 아래 '장면 규칙').
 - ★연예인 장면(face 가 사람)은 원본 파일에서만. 제품 컷도 원본 안 제품 장면이 먼저.
 - ★대체 제품(제품 판정 mode alt — 연예인 것과 다른 제품)이면 원음이 끝난 뒤 제품 이야기 줄에는 연예인 장면을 쓰지 않는다(연예인이 대체품을 말하는 것처럼 보인다) — 제품 사진·재료 영상만.
   같은 제품(exact·named)이면 연예인이 그 제품을 쓰는 장면을 함께 써도 된다(사장님 10-22). ★확대는 1.0(crop 높이 = 원본 높이, 'face' 가 기본) — 원본에 박힌 자막·워터마크·다른 브랜드 글자는 재료.blur {원본 파일: [[x, y, w, h, 시작초, 끝초]]} 로 흐린다(잘라서 피하지 않는다 — 사장님 10-22). 얼굴을 크게 보이려면 확대 말고 얼굴이 큰 샷을 고른다.
@@ -1751,11 +1751,49 @@ def _src_rule_ctx(st) -> str:
             (f"\n(사진 파일: {', '.join(pics)})" if pics else "") + rule) if names else ""
 
 
+# 장면 맞추기 관문이 거는 컷 규칙(판단은 각 관문 그대로 — 여기는 '처음부터 알려 주기' 글의 주인 한 곳). 처음 대본·재료 질문(_cut_rules_ctx)과
+# 고치기 질문(FIX_ALL)이 같이 쓴다 — 10-27 사장님 "시험 범위를 모르고 시험 본다": 반려 사유 전수(reject_catalog) 중 재사용 39·남의 쇼츠 34·
+# 컷 중앙 17·A-B-A 6·훅 3 의 규칙이 처음 질문 11편 모두에 없었다(고치기 질문에만).
+CUT_RULES = [
+    "컷 길이가 그 샷 끝을 넘지 않게(아래 샷 구간 안에서 ss 를 고른다 — 샷 경계를 넘으면 남의 장면 전환이 들어간다)",
+    "같은 장면 재사용 금지 — 같은 원본에서 컷끼리 겹치지 않고 거리 3초 이상(quality_gate B13)",
+    "원본 순서 X→Y→X 금지(A-B-A 끼움 — 같은 원본 사이에 다른 컷 하나만 끼우지 않는다, B16)",
+    "대사와 장면이 맞게(컷 see = 그 줄 대사의 동작·상태)",
+    "벤치(소재 쇼츠 bench.mp4)는 재료가 아니다 — 원본·제품 영상·사진만",
+    "원본 밖 재료 영상은 사람 얼굴이 안 나오는 제품 장면만(리뷰어·광고 모델 금지)",
+    "멈춘 그림 금지 — 원본이 멈춘 구간은 피하고, 사진 컷은 move(in·out·left·right)",
+]
+
+
+def _cut_rules_ctx(st, shots: dict | None = None) -> str:
+    """처음 대본·재료 질문에 싣는 컷 규칙 + 판 숫자(검사기와 같은 값) + 재료 영상 샷 구간(실행기 mat_sheets 가 shot_starts 로 잰 값)."""
+    from tools.calcopy.hybrid import styles as STY
+    b = STY.rhythm_bounds(_style(st["version"]))
+    nums = []
+    if b.get("cut_median"):
+        lo, hi = b["cut_median"]
+        nums.append(f"컷 길이(서로 다른 샷 경계 사이) 중앙값 {lo}~{hi}초 — 한 컷이 길면 그 줄에 다른 장면 컷을 더 넣는다(같은 샷 이어 붙이기는 컷으로 안 센다)")
+    if b.get("hook_min"):
+        nums.append(f"첫 0.1~3초 안에 진짜 장면 전환 {b['hook_min']}번 이상 — 첫 줄 재료를 서로 다른 샷 컷 {b['hook_min'] + 1}개 이상으로")
+    from tools.calcopy.hybrid.render_bench import MIN_PIECE_SEC
+    nums.append(f"한 컷은 {MIN_PIECE_SEC}초 이상(줄 하나를 너무 잘게 나누지 않는다)")
+    nums.append(f"사진 crop 너비는 사진 너비의 {RU.STILL_MIN_W:.0%} 이상(또는 crop 을 빼면 가운데 자동)")
+    rows = []
+    for name, sp in (shots or {}).items():
+        keep = [f"{a}~{c}" for a, c in sp if c - a >= 0.8][:60]
+        if keep:
+            rows.append(f"- {name}: " + ", ".join(keep))
+    return ("\n\n## 장면 규칙(장면 맞추기 검사가 거는 것 — 처음부터 지켜라)\n" + "\n".join("- " + x for x in CUT_RULES + nums) +
+            ("\n\n## 재료 영상 샷 구간(초, 0.8초 이상만 — 컷은 한 구간 안에서만)\n" + "\n".join(rows) if rows else ""))
+
+
 def _points_ctx(v: str) -> str:
     """이 판 대본 검사가 요구하는 포인트·표시 칸(주인 = script_audit.points_rule_for — 검사기와 같은 기준, 10-27 7번 반려)."""
     from tools.calcopy.hybrid import script_audit
     r = script_audit.points_rule_for(v)
-    return f"\n\n## 대본 검사가 보는 포인트·표시 칸(반드시)\n{r}" if r else ""
+    rows = script_audit.rules_text(v)      # 판 script.audit 숫자 전부(줄 수·글자·길이·어미 — 10-27 반려 전수: 판마다 질문에 빠진 칸이 반려로만 알려졌다)
+    return ((f"\n\n## 대본 검사 규칙(이 판 숫자 그대로 — 처음부터 지켜라)\n{rows}" if rows else "") +
+            (f"\n\n## 대본 검사가 보는 포인트·표시 칸(반드시)\n{r}" if r else ""))
 
 
 def _script_ask(st, fail: str = "") -> dict:
@@ -1776,7 +1814,8 @@ def _script_ask(st, fail: str = "") -> dict:
            "\n\n## 원음 받아쓰기(구간마다 — 모델 둘이면 둘 다)\n" + json.dumps(st.get("asr") or {}, ensure_ascii=False)[:6000] +
            "\n\n## 재료 파일(시트 순서 = 앞 5개)\n" + json.dumps(ms.get("list") or [], ensure_ascii=False) +
            "\n실제 크기(crop 은 이 픽셀로 — 시트는 줄인 미리보기다): " + json.dumps(_all_dims(st), ensure_ascii=False) + _shots_ctx(st) +
-           _foreign_script_ctx(st) + _src_rule_ctx(st) + _points_ctx(v) + (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
+           _foreign_script_ctx(st) + _src_rule_ctx(st) + _cut_rules_ctx(st, ms.get("shots")) + _points_ctx(v) +
+           (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
     imgs = [_img(x) for x in ms.get("sheets") or []]
     if ms.get("bench_caps"):     # 소재 쇼츠 박힌 한국어 자막(1초 칸) — 잘된 편의 말맛 그대로(사장님 10-26)
         ctx += ("\n\n## 말맛 — 마지막 그림 = 소재 쇼츠 1초 자막 시트(한국 재편집이 잘된 말투)\n"
@@ -2031,8 +2070,7 @@ def ph_plan_got(st, m, rp, u):
 FIX_NEW = "★지난 고치기에서 새로 생김: "
 PLAN_SAME = "★지난 고치기 뒤 계획이 컷 하나도 바뀌지 않았다 — 같은 재료 답을 다시 주지 말고, 걸린 줄의 컷(src·ss·순서)을 실제로 바꿔라"
 FIX_ALL = ("\n\n★한 번에 다 고쳐라 — 위 문제를 전부 고치되, 고친 컷이 새 문제를 만들지 않게 아래를 모두 지켜라"
-           "(10-27 완주시험: 같은 장면 재사용을 고치다 A-B-A 끼움을 새로 만들어 렌더를 다시 했다): "
-           "같은 원본 컷 사이 거리 3초 이상 · 원본 순서 X→Y→X 금지 · 컷 길이가 그 샷 끝을 넘지 않게 · 대사와 장면이 맞게.")
+           "(10-27 완주시험: 같은 장면 재사용을 고치다 A-B-A 끼움을 새로 만들어 렌더를 다시 했다): " + " · ".join(CUT_RULES) + ".")
 
 
 def _mark_new(st: dict, over: list) -> list:
@@ -2363,8 +2401,12 @@ def _face_hint(st) -> str:
 
 
 def ph_check_retry(st, m, rp, u):
-    """완성본 검사에서 멈춘 편을 다시 시도 — 걸린 곳부터 다시 고친다(받기·대본은 그대로)."""
+    """완성본 검사에서 멈춘 편을 다시 시도 — 검사부터 새로 재고(아래), 걸린 곳부터 다시 고친다(받기·대본은 그대로).
+    10-27 run4 a·c편: 다시 시도가 옛 검사 결과(st.auto)로 고치기만 물어 — 검사기 오판(받아쓰기 시각·스티커 자리)을 고친 뒤에도
+    오푸스 '재료로 고칠 것 없음' → 바로 멈춤을 되풀이했다. 다시 시도의 첫 일은 다시 재기."""
     st["tries"]["look"] = 0
+    if not st.pop("_check_stale_ok", False):      # 검사 다시 → check_judge 가 통과면 마무리, 아니면 그 새 결과로 고치기를 묻는다
+        return {"goto": "check"}
     v = st["version"]
     look = st.get("look") or {}
     probs = json.dumps({"자동 관문 ×": [r for r in (st.get("auto") or {}).get("rows") or [] if r.get("ok") is not True and not r.get("ref")],
@@ -2376,8 +2418,14 @@ def ph_check_fix(st, m, rp, u):
     v = st["version"]
     r = _reply(rp, f"final_fix_{v}", ("ok",))
     M = _take_fix(st, r)
-    if M is None:
-        raise _Stop("완성본 마무리 확인을 통과하지 못했어요", AGAIN)
+    if M is None and not st["tries"].get("render_same"):
+        # 오푸스 '재료로 고칠 것 없음' = 걸린 칸이 렌더·검사 쪽(자막 배치·소리 시각)이다 — 멈추기 전에 재료 그대로 한 번 다시 만든다
+        #   (10-27 run4 c편: 스티커 자리 판정이 렌더 때 정해져 다시 만들어야 새 규칙이 반영된다)
+        st["tries"]["render_same"] = 1
+        st["log"].append("완성본 고치기: 재료로 고칠 것 없음 → 재료 그대로 한 번 다시 만들기")
+        return {"goto": "render"}
+    if M is None:      # 다시 시도 = 검사부터(옛 검사 결과를 다시 먹이는 _asker 경로 금지 — 10-27 run4 a·c)
+        raise _Stop("완성본 마무리 확인을 통과하지 못했어요", AGAIN, retry="check")
     return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "render"}
 
 
@@ -2758,6 +2806,31 @@ def f_of_fetched(st, m, rp, u):
         files += g["files"]
     if not keep:
         raise _Stop("해외 원본 영상을 받지 못했어요", "잠시 뒤 다시 시도해 주시면 받기부터 이어 갈게요", retry="of_fetch", auto=True)
+    st["origins"] = keep
+    if len(files) > 1:                  # 재업로드(같은 영상 두 파일)는 빼고 간다 — 다음 장면 재사용을 B13 이 못 잡는다(10-27 run4 a·b편)
+        return {"do": [{"id": "dups", "cmd": "origin_dups", "files": [f["name"] for f in files]}], "then": "of_dedup"}
+    return _set_origin(st, keep, files)
+
+
+def f_of_dedup(st, m, rp, u):
+    """(판단 = runner_ops.same_video·same_frames) 재업로드 파일을 원본 목록에서 뺀다. 판정 실패면 그대로 간다(기록)."""
+    r = m.get("dups") or {}
+    drop = {d["dup"] for d in r.get("dups") or [] if isinstance(d, dict)}
+    if r.get("error"):
+        st["log"].append(f"원본 겹침 확인 실패(그대로 감): {str(r['error'])[:160]}")
+    keep, files = [], []
+    for o in st["origins"]:
+        fs = [f for f in o.get("files") or [] if f.get("name") not in drop]
+        if fs:
+            o["files"] = fs
+            keep.append(o)
+            files += fs
+    if drop:
+        st["log"].append(f"재업로드 원본 뺌: {sorted(drop)} ({r.get('dups')})")
+    return _set_origin(st, keep or st["origins"], files or [f for o in st["origins"] for f in o.get("files") or []])
+
+
+def _set_origin(st, keep: list, files: list) -> dict:
     st["origins"] = keep
     o0 = keep[0]
     pf = o0.get("platform") or "yt"
@@ -3456,7 +3529,7 @@ FORMAT_PHASES["자막노래형"] = {**{k: v for k, v in FORMAT_PHASES["해외원
                             "bench_got": j_bench_got, "ref_read": j_ref_read, "of_peers": j_of_peers, "of_fetched": j_of_fetched,
                             "j_material": j_material, "material": j_material, "f_draft_got": j_draft_got}
 PHASE_STAGE.update({
-    "ref_read": "bench", "topic_got": "bench", "of_dual_b": "bench", "of_dual": "origin", "of_dual_retry": "origin", "of_settled": "origin", "of_lens": "origin", "of_peers": "origin", "of_got": "origin", "of_pick": "origin", "of_find": "origin", "of_find_got": "origin", "of_fetch": "origin", "of_fetched": "origin",
+    "ref_read": "bench", "topic_got": "bench", "of_dual_b": "bench", "of_dual": "origin", "of_dual_retry": "origin", "of_settled": "origin", "of_lens": "origin", "of_peers": "origin", "of_got": "origin", "of_pick": "origin", "of_find": "origin", "of_find_got": "origin", "of_fetch": "origin", "of_fetched": "origin", "of_dedup": "origin",
     "f_product_sheet": "product", "f_product_pick": "product", "f_product_cands": "product", "f_product_same": "product", "s_cands": "product", "s_cand_look": "product",
     "s_product_done": "product", "f_research_got": "research", "f_research_check": "research", "s_research_check": "research", "f_material": "material",
     "f_material_got": "material", "f_shots_got": "material", "f_clean": "material", "f_clean_got": "material", "f_draft": "material", "f_draft_got": "material",
@@ -3467,7 +3540,7 @@ PHASE_STAGE.update({
 PHASES = {
     "setup": ph_setup, "setup_check": ph_setup_check, "bench": ph_bench, "bench_got": ph_bench_got, "origin_read": ph_origin_read, "src_got": ph_src_got, "probe_got": ph_probe_got, "sb_pick": ph_sb_pick,
     "peer": ph_peer, "peer_read": ph_peer_read, "search": ph_search, "search_got": ph_search_got, "titles": ph_titles,
-    "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped, "task_got": ph_task_got, "watch_got": f_watch_got, "stills_again": ph_stills_again, "given_origin_got": ph_given_origin_got,
+    "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped, "task_got": ph_task_got, "watch_got": f_watch_got, "of_dedup": f_of_dedup, "stills_again": ph_stills_again, "given_origin_got": ph_given_origin_got,
     "vis_get": ph_vis_get, "vis_got": ph_vis_got, "vis_look": ph_vis_look, "vis_pick": ph_vis_pick, "vis_next": ph_vis_next,
     "product_sheet": ph_product_sheet, "product_pick": ph_product_pick, "product_pick_wide": ph_product_pick_wide, "product_cands": ph_product_cands, "product_same": ph_product_same,
     "product_done": ph_product_done, "cand_look": ph_cand_look, "reviews": ph_reviews, "reviews_got": ph_reviews_got, "reviews_naver": ph_reviews_naver, "name_find": ph_name_find, "name_got": ph_name_got, "named_cands": ph_named_cands,
