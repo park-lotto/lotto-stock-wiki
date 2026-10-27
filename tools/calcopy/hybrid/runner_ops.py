@@ -1584,12 +1584,22 @@ OF_MEMO: Path | None = None   # 원본 찾기 한 편 안 기억(작업 폴더/_
                               # 같은 검색어·같은 후보를 또 받지 않게(10-27 완주시험: 콜라겐 검색어 4개×2사이트를 두 번, 한 바퀴 228~924초)
 
 
-def _memo(kind: str, key: str, make):
-    """(판단 주인 — 원본 찾기 한 편 안 재사용) 있으면 저장본, 없으면 make() 결과를 저장. 빈 결과·오류(why)는 저장하지 않는다(다음에 다시 시도)."""
+import threading as _threading
+_OF_TL = _threading.local()    # 소재 2편 원본 찾기를 동시에 돌리면(run_do PARALLEL) 칸마다 기억 폴더가 다르다 — 전역 하나로 두면 서로 덮는다
+
+
+def _memo_base() -> Path | None:
+    return getattr(_OF_TL, "dir", None) or OF_MEMO
+
+
+def _memo(kind: str, key: str, make, base: Path | None = None):
+    """(판단 주인 — 원본 찾기 한 편 안 재사용) 있으면 저장본, 없으면 make() 결과를 저장. 빈 결과·오류(why)는 저장하지 않는다(다음에 다시 시도).
+    base = 기억 폴더(없으면 이 스레드의 c_origin_foreign 이 정한 것) — 다른 스레드로 넘길 때는 꼭 넘긴다(_metas)."""
     import hashlib
-    if OF_MEMO is None:
+    base = base or _memo_base()
+    if base is None:
         return make()
-    f = OF_MEMO / kind / (hashlib.md5(key.encode("utf-8")).hexdigest() + ".json")
+    f = base / kind / (hashlib.md5(key.encode("utf-8")).hexdigest() + ".json")
     if f.is_file():
         try:
             return jload(f)
@@ -1714,12 +1724,13 @@ def _metas(urls: list[str]) -> dict:
     from concurrent.futures import ThreadPoolExecutor
     from tools.calcopy import origin_find as OF
     out: dict = {}
+    base = _memo_base()          # 일꾼 스레드에는 이 스레드의 기억 폴더가 없다 — 넘겨 준다
     yt = [u for u in dict.fromkeys(urls) if "youtube.com" in u or "youtu.be" in u]
     other = [u for u in dict.fromkeys(urls) if u not in yt]
     for group, n in ((yt, META_PAR["yt"]), (other, META_PAR["other"])):
         if group:
             with ThreadPoolExecutor(n) as ex:
-                for u, m in zip(group, ex.map(lambda u: _memo("meta", u, lambda: OF.meta(u)), group)):
+                for u, m in zip(group, ex.map(lambda u: _memo("meta", u, lambda: OF.meta(u), base), group)):
                     out[u] = m
     return out
 
@@ -1746,8 +1757,7 @@ def c_origin_foreign(W, d):
     같은 영상·같은 제품 판정은 하지 않는다(서버 질문 — 회원 Claude 눈).
     캐시 모드: lens = <캐시>/origin_foreign/<소재 id>.json {cands:[…]} · peers = 검색 캐시(search/<검색어>.json 또는 _default) — 유튜브·구글 0회."""
     from tools.calcopy import origin_find as OF
-    global OF_MEMO
-    OF_MEMO = None if CACHE else W / "_of_memo"
+    _OF_TL.dir = None if CACHE else W / "_of_memo"     # 이 스레드(소재 칸)의 기억 폴더
     mode = d.get("mode") or "lens"
     seeds = _of_seed_frames(W)
     skip = set(d.get("skip") or [])
@@ -2116,7 +2126,7 @@ def run_do(W: Path, do: list[dict], log=print, stall: float | None = None) -> di
     return out
 
 
-PARALLEL_OK = {"asr_spans", "shot_sheets", "frames", "coupang", "naver", "product_stills", "mat_sheets", "sheet"}   # 유튜브를 부르지 않고 서로의 결과를 읽지 않는 일
+PARALLEL_OK = {"asr_spans", "shot_sheets", "frames", "coupang", "naver", "product_stills", "mat_sheets", "sheet", "origin_foreign"}   # origin_foreign = 소재 2편 칸(sub 다름)을 동시에(10-27 run4: 차례로 510+537초·810+560초)   # 유튜브를 부르지 않고 서로의 결과를 읽지 않는 일
 
 
 def main():

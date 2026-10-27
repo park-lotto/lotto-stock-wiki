@@ -64,3 +64,20 @@ def test_web_links_reuses_query(tmp_path, monkeypatch):
     b = R._web_links(["korean collagen mask reaction", "new words"])
     assert a and {x["url"] for x in a} <= {x["url"] for x in b}
     assert len(opened) == n + 2                              # 새 검색어만 열었다(틱톡·구글 2번)
+
+
+def test_two_slots_run_together_with_own_memo(tmp_path, monkeypatch):
+    """소재 2편 원본 찾기(sub 다름)는 동시에 — 칸마다 기억 폴더가 따로(10-27 run4: 차례로 510+537초)."""
+    import time as _t
+
+    def fake(W, d):
+        R._OF_TL.dir = W / "_of_memo"
+        R._memo("web", "q", lambda: [{"url": str(W)}])
+        _t.sleep(1.0)
+        return {"cands": [1], "sheets": ["s"]}
+    monkeypatch.setitem(R.CMDS, "origin_foreign", fake)
+    t0 = _t.time()
+    out = R.run_do(tmp_path, [{"id": "s1:of", "cmd": "origin_foreign"}, {"id": "s2:of", "cmd": "origin_foreign", "sub": "alt1"}], log=lambda s: None)
+    assert _t.time() - t0 < 1.8 and set(out) == {"s1:of", "s2:of"}
+    assert len(list((tmp_path / "_of_memo" / "web").glob("*.json"))) == 1
+    assert len(list((tmp_path / "alt1" / "_of_memo" / "web").glob("*.json"))) == 1
