@@ -2104,7 +2104,10 @@ def _fix_review(st, why: str, sheet: str | None, rid: str) -> dict:
     erase = ("\n\n★이 판은 원본에 박힌 글자(자막·워터마크)를 렌더 전에 VMake 로 지운다(사장님 10-26 — 엔진이 글자 컷을 '지울 컷'으로 이미 올렸다). "
              "남의 박힌 글자는 problems 에 넣지 말고 blur 도 새로 넣지 마라 — 장면·제품·얼굴·순서만 본다.") if VC.will_erase(v) else ""
     return _rv(rid, _q(st, "PLAN_LOOK").replace("{ar}", f"{ww}:{wh}") + erase + (f"\n\n멈춘 이유(재료를 고쳐라): {why}" if why else "") + "\n\n대본:\n" +
-               json.dumps(sc["S"], ensure_ascii=False)[:6000] + "\n\n재료:\n" + json.dumps(sc["M"], ensure_ascii=False)[:8000] + _shots_ctx(st),
+               json.dumps(sc["S"], ensure_ascii=False)[:6000] + "\n\n재료:\n" + json.dumps(sc["M"], ensure_ascii=False)[:8000] + _shots_ctx(st) +
+               # 처음 질문과 같은 장면 규칙·판 숫자·재료 샷 구간·쓸 수 있는 파일(10-27: 고치기 질문엔 이게 없어 고친 컷이 샷 경계·컷 중앙을 새로 넘겼다 —
+               # 6편 두 번째 반려 전부 '지난 고치기에서 새로 생김')
+               _src_rule_ctx(st) + _cut_rules_ctx(st, (st.get("_msheets") or {}).get("shots")),
                [_img(sheet)] if sheet else [], need=("ok",))
 
 

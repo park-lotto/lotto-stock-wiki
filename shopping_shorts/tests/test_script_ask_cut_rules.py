@@ -84,3 +84,12 @@ def test_alt_product_rule_in_first_ask():
     assert SA.ALT_SAY_RULE in F._script_ask(st)["ask"]
     st["product"] = {"mode": "exact", "name": "x"}
     assert SA.ALT_SAY_RULE not in F._script_ask(st)["ask"]
+
+
+def test_fix_question_carries_same_scene_data(monkeypatch):
+    """10-27: 고치기 질문(_fix_review)에 샷 구간·판 숫자가 없어 6편 두 번째 반려가 전부 '지난 고치기에서 새로 생김'."""
+    monkeypatch.setattr(F, "_all_dims", lambda st: {"a.mp4": [1080, 1920]})
+    st = {"version": "두유노판", "fmt": "쇼핑형", "log": [], "_msheets": {"shots": SHOTS},
+          "script": {"S": {"lines": []}, "M": {"cuts": {}}}}
+    ask = F._fix_review(st, "x", None, "plan_두유노판")["ask"]
+    assert "a.mp4: 0.0~1.33, 1.33~3.23, 3.5~9.17" in ask and "중앙값" in ask and "쓸 수 있는 파일" in ask
