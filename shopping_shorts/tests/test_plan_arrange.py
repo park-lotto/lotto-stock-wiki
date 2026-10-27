@@ -88,3 +88,22 @@ def test_relocate_drops_cut_when_no_room_and_line_has_mate(monkeypatch, tmp_path
     cuts = [a, b]
     MF.relocate_cuts(cuts, tmp_path, set(), log=lambda m: None, end=2.0)
     assert cuts == [a]
+
+
+def test_check_place_uses_board_fixed_enter_not_reference():
+    """10-27 싱크대: 판 rules.enter narr.first=cut 으로 배치했는데 검사는 본보기 편(pop)과 대조해 '칸 최대 차 1.0' 으로 완성본 3번 반려."""
+    from tools.calcopy.hybrid import placement as PL
+    style = {"placement": {"rules": {"enter": {"narr.first": "cut"}},
+                           "counted": {"videos": [{"id": "R", "slots": {"narr.first": {"n": 4, "enter": {"pop": 4}, "emph": 0}}}]}}}
+    placed = {"reference": "R", "rows": [{"slot": "narr.first", "enter": "cut", "stickers": []} for _ in range(3)], "sfx": []}
+    chk = PL.check_place(placed, style)
+    assert chk["worst_slot_diff"] == 0.0
+
+
+def test_code_only_check_row_stops_without_material_loop():
+    from tools.calcopy.hybrid import flow as F
+    import pytest
+    st = {"version": "v", "tries": {}, "log": [], "auto": {"ok": False, "rows": [{"group": "자막·효과", "what": "배치(본보기 벤치 편 대조)", "ok": False, "value": "x"}]},
+          "look": {"ok": False, "problems": []}}
+    with pytest.raises(F._Stop):
+        F.ph_check_judge(st, {}, {}, None)

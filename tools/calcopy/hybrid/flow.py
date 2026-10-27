@@ -2414,6 +2414,13 @@ def ph_check_judge(st, m, rp, u):
     long = [r for r in (st.get("auto") or {}).get("rows") or [] if r.get("what") == "길이" and r.get("ok") is False]
     if long:
         return _length_rewrite(st, long[0].get("value"))
+    bad_rows = [r for r in (st.get("auto") or {}).get("rows") or [] if r.get("ok") is not True and not r.get("ref")]
+    if not auto_ok and bad_rows and all(str(r.get("what") or "").startswith(CODE_ONLY_ROWS) for r in bad_rows):
+        # 재료·대본으로 못 고치는 칸(배치 = 코드가 판 규칙으로 정한다)만 걸렸다 — Claude 에게 재료 고치기를 묻고 다시 렌더하는 헛바퀴 대신 바로 멈춘다
+        # (10-27 싱크대: 자막 배치 대조 1건으로 재료 고치기 3번·렌더 3번 → 같은 반려. 뿌리 수리 = placement.check_place)
+        why = _check_fails(st)
+        st["log"].append("완성본 검사 멈춤(코드 몫 — 재료로 못 고침): " + why)
+        raise _Stop("완성본 마무리 확인에서 걸린 곳이 있어요", "다시 시도해 주시면 걸린 곳부터 고쳐서 이어 갈게요", retry="check_retry", detail=why)
     if st["tries"].get("look", 0) >= LIMITS["look"]:
         why = _check_fails(st)
         st["log"].append("완성본 검사 멈춤: " + why)
@@ -2425,6 +2432,7 @@ def ph_check_judge(st, m, rp, u):
     return {"review": [_fix_review(st, "완성본 검사에서 걸린 것(화면·크롭·남의 글자는 재료로 고친다): " + probs + _face_hint(st), None, f"final_fix_{v}")], "then": "check_fix"}
 
 
+CODE_ONLY_ROWS = ("배치(본보기 벤치 편 대조)",)     # 완성본 1단 칸 중 재료·대본이 아니라 코드가 정하는 것 — 걸리면 헛바퀴 없이 멈춘다(ph_check_judge)
 VOICE_RX = re.compile(r"받아쓰기 확정 결함|말속도|이름 끊김|목소리|TTS")   # 재료(컷)로 못 고치는 목소리 결함 — 대본 문장을 바꿔 다시 합성
 
 

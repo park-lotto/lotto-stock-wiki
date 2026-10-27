@@ -1541,10 +1541,14 @@ def check_place(placed: dict, style: dict) -> dict:
     """배치 결과 ↔ 본보기 벤치 편 대조(검사): 칸마다 등장 비율 차이(최대 절댓값)·강조 비율·스티커·효과음 수."""
     ref = next((v for v in (style["placement"].get("counted") or {}).get("videos") or [] if v["id"] == placed.get("reference")), None)
     rows = placed["rows"]
+    fixed = (style["placement"].get("rules") or {}).get("enter") or {}
     rep, worst = {}, 0.0
     for key in SLOTS:
         mine = [r for r in rows if r["slot"] == key]
         rs = (ref or {}).get("slots", {}).get(key)
+        if key in fixed and mine:
+            # 판 rules.enter 로 정한 칸 = 배치(place ①)가 본보기를 안 보고 그 값을 쓴다 → 검사도 같은 자(10-27 두유노 싱크대: 판 cut ↔ 본보기 편 pop 이라 '칸 최대 차 1.0' 으로 완성본 3번 반려)
+            rs = {"n": 1, "enter": {fixed[key]: 1}, "emph": (rs or {}).get("emph", 0) / max(1, (rs or {}).get("n", 1))}
         if not mine or not rs:
             continue
         ours = Counter(r["enter"] for r in mine)
