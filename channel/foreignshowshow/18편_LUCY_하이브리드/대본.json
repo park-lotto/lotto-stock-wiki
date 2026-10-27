@@ -1,0 +1,350 @@
+{
+ "_note": "샥탬스토리 하이브리드 18편 LUCY — 앞 0~O3 끝 = 칼카피 그대로(끝 원음 케빈 '봐요 로리, 이렇게 쉬워요'), 뒤 = 지훈·같은 제목·BGM 이어서 1인칭 체험 나레(존댓말). CTA 없음·금액 없음. 쿠팡 = 방송과 같은 상표 LUCY(루시 플렉스 — 방송에서 창업자가 말한 'Lucy flex'). 렌더 tools/calcopy/shark/hybrid.py.",
+ "product": "LUCY 루시 드로잉 도구 플렉스(쿠팡 9759217102 — '루시 … 플렉스 … 카메라 루시다', 상품 사진 = 루시 플렉스 본체·집게·거위목 — 방송 제품과 같은 상표, 방송에서 창업자가 'the Lucy flex'로 말한 판)",
+ "same_product": true,
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "흥미이음": {
+  "원본흥미": "창을 들여다보면 그릴 대상이 종이 위에 겹쳐 보여 누구나 따라 그릴 수 있는 그림 도구 — 앞 O3 케빈 '그냥 상어를 따라 그리는 거예요, 봐요 로리, 이렇게 쉬워요'로 끝남",
+  "뒤흥미": "같은 상표 공식 영상에서 루시 본체를 손에 들고(Gq_t8OV_T7s), 창 너머 비친 과일 위로 따라 그리고(NJPklYRULSI 60~63), 연필 스케치가 완성되는 장면(72~78)",
+  "판정": "같음",
+  "근거": "쿠팡 파트너스 API 2026-10-27 '카메라 루시다'·'Lucy Draw' → 9759217102('루시 예술가용 … 플렉스 … 카메라 루시다') · 9341531167/9350262399('드로 루시의 루시 미니') — C:/숏템_칼카피/foreignshowshow/17편_소재/쿠팡API_17b.json · 사진 C:/숏템_칼카피/foreignshowshow/17편_소재/img/cp_9759217102.jpg(루시 플렉스 본체·거위목·집게, 방송 원본 309~314초 창업자 'the Lucy flex')"
+ },
+ "hybrid": {
+  "front_doc": "../18편_LUCY",
+  "front_src": "C:/숏템_칼카피/foreignshowshow/18편_LUCY/work/render/final.mp4",
+  "front_render_info": "C:/숏템_칼카피/foreignshowshow/18편_LUCY/work/render/render_info.json",
+  "front_work": "C:/숏템_칼카피/foreignshowshow/18편_LUCY/work",
+  "cut_after": "O3",
+  "cut_why": "O3 케빈 원음 '그냥 상어를 따라 그리는 거예요 / 봐요 로리, 이렇게 쉬워요' 끝 — 그 '이렇게 쉽다'를 뒤 체험(쿠팡에서 같은 루시를 사서 그려 봄)이 받는다",
+  "transition": {
+   "kind": "slideleft",
+   "dur": 0.25,
+   "keep_top": 434,
+   "why": "샥탬 하이브리드 3~17편과 같은 이음(제목 띠 고정)"
+  }
+ },
+ "titles": {
+  "line1": "그림 못 그려도",
+  "line2": "화가가 된다고?!",
+  "rule": "앞과 같은 제목(띠 고정)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.25,
+  "why": "앞 편과 같은 목소리·같은 speed(R2)"
+ },
+ "bench": {},
+ "render": {
+  "end_pad": 1.1,
+  "_why": "끝 말 뒤 여운 0.6초 이상(10-27 검수 ③, 98 #174)"
+ },
+ "final": {
+  "cps_target": 7.84,
+  "cps_note": "14~17편 하이브리드와 같은 목표(지훈 speed 1.25)",
+  "lines": [
+   {
+    "id": "B1",
+    "kind": "나레",
+    "fn": "이음(연결어)+잉?",
+    "text": "근데 저 그림 도구가 궁금해서 쿠팡에 쳐 봤더니, 방송에 나온 그 루시가 진짜 있더라고요.",
+    "tts": "근데 저 그림 도구가 궁금해서 쿠팡에 쳐 봤더니, 방송에 나온 그 루시가 진짜 있더라고요.",
+    "caps": [
+     "근데 저 그림 도구가",
+     "궁금해서 쿠팡에 쳐 봤더니",
+     "방송에 나온 그",
+     "루시가",
+     "진짜 있더라고요"
+    ],
+    "facts": [
+     "c1"
+    ],
+    "point": "잉",
+    "answer_at": 3,
+    "emph_words": [
+     "루시가"
+    ],
+    "emph": [
+     {
+      "cap": "근데 저 그림 도구가",
+      "span": "그림 도구가",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "궁금해서 쿠팡에 쳐 봤더니",
+      "span": "쿠팡에 쳐 봤더니",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 노랑이 흰 손·밝은 탁자 위(④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "방송에 나온 그",
+      "span": "방송에",
+      "color": "파랑",
+      "whole": false,
+      "why": "머리(꼬리 약함) → 손: 빨강이 살색 손 위(④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "루시가",
+      "span": "루시가",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 민트가 밝은 탁자 위(대비 낮음)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "진짜 있더라고요",
+      "span": "진짜 있더라고요",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 주황이 살색 손 위",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B2",
+    "kind": "나레",
+    "fn": "②권위(와우1)",
+    "text": "이게 말도 안 되는 게, 그 깐깐한 케빈이 직접 그려 보고 감탄했던 바로 그 도구거든요.",
+    "tts": "이게 말도 안 되는 게, 그 깐깐한 케빈이 직접 그려 보고 감탄했던 바로 그 도구거든요.",
+    "caps": [
+     "이게 말도 안 되는 게",
+     "그 깐깐한 케빈이",
+     "직접 그려 보고 감탄했던",
+     "바로 그 도구거든요"
+    ],
+    "facts": [
+     "f1"
+    ],
+    "emph": [
+     {
+      "cap": "이게 말도 안 되는 게",
+      "span": "이게 말도",
+      "color": "분홍",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "그 깐깐한 케빈이",
+      "span": "깐깐한 케빈이",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "직접 그려 보고 감탄했던",
+      "span": "보고 감탄했던",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "바로 그 도구거든요",
+      "span": "도구거든요",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 노랑이 흰 종이 위(④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B3",
+    "kind": "나레",
+    "fn": "③핵심(와우2, 잉 답)",
+    "text": "진짜 핵심은 이건데, 창을 들여다보면 그릴 게 종이 위에 겹쳐 보여서 그대로 따라 그리면 돼요.",
+    "tts": "진짜 핵심은 이건데, 창을 들여다보면 그릴 게 종이 위에 겹쳐 보여서 그대로 따라 그리면 돼요.",
+    "caps": [
+     "진짜 핵심은 이건데",
+     "창을 들여다보면",
+     "그릴 게 종이 위에",
+     "겹쳐 보여서",
+     "그대로 따라 그리면 돼요"
+    ],
+    "facts": [
+     "f3",
+     "c2"
+    ],
+    "emph": [
+     {
+      "cap": "진짜 핵심은 이건데",
+      "span": "핵심은 이건데",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 빨강이 주황·분홍 과일 그림 위(④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "창을 들여다보면",
+      "span": "창을 들여다보면",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 민트가 옅은 그림 위(대비 낮음)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "그릴 게 종이 위에",
+      "span": "종이 위에",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 주황이 주황 과일 그림 위(④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "겹쳐 보여서",
+      "span": "겹쳐 보여서",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "그대로 따라 그리면 돼요",
+      "span": "그리면 돼요",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 노랑이 흰 종이 위(④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B4",
+    "kind": "나레",
+    "fn": "④심지어(와우3)",
+    "text": "심지어 이게 대박인 게, 처음 그려 본 과일 그림을 다들 제가 그린 거라고 안 믿더라고요.",
+    "tts": "심지어 이게 대박인 게, 처음 그려 본 과일 그림을 다들 제가 그린 거라고 안 믿더라고요.",
+    "caps": [
+     "심지어 이게 대박인 게",
+     "처음 그려 본 과일 그림을",
+     "다들 제가 그린 거라고",
+     "안 믿더라고요"
+    ],
+    "facts": [
+     "c2",
+     "창작"
+    ],
+    "emph": [
+     {
+      "cap": "심지어 이게 대박인 게",
+      "span": "심지어 이게",
+      "color": "빨강",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "처음 그려 본 과일 그림을",
+      "span": "과일 그림을",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 민트가 흰 종이 위(대비 낮음)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "다들 제가 그린 거라고",
+      "span": "그린 거라고",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 분홍이 빨강·분홍 과일 그림 위(④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "안 믿더라고요",
+      "span": "안 믿더라고요",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 초록이 초록 잎 그림 위",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B5",
+    "kind": "나레",
+    "fn": "끝=사회 반응",
+    "text": "요즘은 조카들이 그림 그려 달라고 줄을 서요.",
+    "tts": "요즘은 조카들이 그림 그려 달라고 줄을 서요.",
+    "caps": [
+     "요즘은 조카들이",
+     "그림 그려 달라고",
+     "줄을 서요"
+    ],
+    "facts": [
+     "창작"
+    ],
+    "emph": [
+     {
+      "cap": "요즘은 조카들이",
+      "span": "요즘은 조카들이",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 주황이 분홍 작약 위(④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "그림 그려 달라고",
+      "span": "그려 달라고",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 노랑이 주황 호랑이 위(대비 낮음)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "줄을 서요",
+      "span": "줄을 서요",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 빨강이 주황 호랑이 위(④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ]
+ },
+ "facts": {
+  "c1": "쿠팡 파트너스 API 검색(2026-10-27) '카메라 루시다'·'Lucy Draw' → 9759217102 '루시 예술가용 위한 플렉스 액세서리 도구 그리기 그림을 카메라 루시다' · 9341531167·9350262399 '드로 루시의 루시 미니'(같은 상표). 결과 C:/숏템_칼카피/foreignshowshow/17편_소재/쿠팡API_17b.json · 상품 사진 루시 플렉스 본체",
+  "c2": "같은 상표 공식 영상: DrawLUCY 'The LUCY Drawing Tool'(NJPklYRULSI) 60~63초 창 너머 비친 과일 위로 따라 그림·72~78초 연필 스케치·79~81초 완성 그림·130~137초 그림들 · DrawLUCY 'LUCY flex Instructional Video 1'(Gq_t8OV_T7s) 186~189·232~235초 손에 든 루시 본체",
+  "f1": "원본 49r_YvwH6lw 133.48~139.68 'I would love to invite Kevin to come up and try it out.' · 184.04~190.68 케빈 'I'm just tracing around the shark… How easy that was. Isn't that amazing?' · 193.32~195.04 'That is absolutely spectacular.' — 화면 150~195 케빈이 직접 그림",
+  "f3": "원본 49r_YvwH6lw 101.56~107.48 'Whatever you want to draw in front of the Lucy, look down to the viewing window and draw over the reflected image'",
+  "창작": "B4 '다들 제가 그린 거라고 안 믿더라고요'·B5 '조카들이 그림 그려 달라고 줄을 서요' = 화자 체험·사회 반응(§0-1 14 허용선 — 성분·효능·안전·금액 아님)"
+ }
+}

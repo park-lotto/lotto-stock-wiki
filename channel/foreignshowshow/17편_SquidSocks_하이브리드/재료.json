@@ -1,0 +1,188 @@
+{
+ "_note": "샥탬스토리 하이브리드 17편 Squid Socks 뒤 재료 — 같은 제품 영상 3편(공식·창업자 채널·사용자) + B2 방송 투자자 와이드. 창 1080x1052.",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/17편_SquidSocks/src",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "sources": {
+  "zKYD9yCFjIA": {
+   "채널": "SQUID SOCKS(공식)",
+   "제목": "Squid Socks Stay-On Socks",
+   "해상도": "1920x1080 23.98fps",
+   "남의 글자": "아래 초록 박힌 자막(y≈955~1045) = 크롭 높이 900 밖 · 4초 'Evil Baby'·58초 'Sorcerous Wench'·98~101 로고+경쟁 양말·137~142 그림·176~180 '0-6 months'·179~181 'feet of all ages'·208~245 남의 영상 모음 = 안 씀 · 창업자 얼굴 컷 안 씀"
+  },
+  "4Cl5YmCY8mQ": {
+   "채널": "Jessica Miller(창업자 채널)",
+   "제목": "Squid Socks Battle | Toddlers Try to Pull Socks Off",
+   "해상도": "1920x1080 30fps",
+   "남의 글자": "없음"
+  },
+  "ymk8QmC4a68": {
+   "채널": "Katie(사용자)",
+   "제목": "Squid socks are a game changer for babies!",
+   "해상도": "1920x1080 30fps",
+   "남의 글자": "64.4초 뒤 끝 카드 안 씀"
+  },
+  "lrfOlA0NjaA": {
+   "채널": "CNBC Ambition(공식)",
+   "해상도": "1920x1080",
+   "남의 글자": "왼쪽 아래 CNBC 로고 = 크롭 높이 900 밖"
+  }
+ },
+ "shots": [
+  {
+   "line": "B1",
+   "src": "zKYD9yCFjIA.mp4",
+   "ss": 161.3,
+   "dur": 2.6,
+   "src_crop": [
+    178,
+    0,
+    924,
+    900
+   ],
+   "mute": true,
+   "ours": "공식(Squid Socks zKYD9yCFjIA, 1080p): 'squid socks' 글자가 찍힌 밑창 근접(샷 161.24~165.12 · 아래 박힌 자막 y≥955 는 크롭 높이 900 밖)",
+   "i": 0
+  },
+  {
+   "line": "B1",
+   "src": "ymk8QmC4a68.mp4",
+   "ss": 58.1,
+   "dur": 2.4,
+   "src_crop": [
+    838,
+    0,
+    924,
+    900
+   ],
+   "mute": true,
+   "ours": "사용자(Katie ymk8QmC4a68): 손에 든 양말 밑창의 'squid socks' 글자(한 샷, 손만)",
+   "i": 1
+  },
+  {
+   "line": "B2",
+   "src": "lrfOlA0NjaA.mp4",
+   "ss": 229.6,
+   "dur": 2.5,
+   "src_crop": [
+    498,
+    0,
+    924,
+    900
+   ],
+   "mute": true,
+   "ours": "방송(lrfOlA0NjaA): 투자자석 와이드(원본 샷 228.06~232.33, 소리 끔 — 아래 CNBC 로고·띠는 크롭 높이 900 밖)",
+   "i": 2
+  },
+  {
+   "line": "B2",
+   "src": "zKYD9yCFjIA.mp4",
+   "ss": 54.15,
+   "dur": 1.7,
+   "src_crop": [
+    338,
+    0,
+    924,
+    900
+   ],
+   "mute": true,
+   "ours": "공식: 아기 발에 신긴 분홍 'squid socks' 밑창(샷 54.05~56.01 · 36초 컷은 원본 안 확대로 점프줌이라 뺌)",
+   "i": 3
+  },
+  {
+   "line": "B3",
+   "src": "ymk8QmC4a68.mp4",
+   "ss": 12.5,
+   "dur": 2.3,
+   "src_crop": [
+    938,
+    0,
+    924,
+    900
+   ],
+   "mute": true,
+   "ours": "사용자(Katie ymk8QmC4a68, 1080p): 손으로 양말 발목을 벌려 안쪽 점들을 보여 줌(한 샷 0~64.4, 손만)",
+   "i": 4
+  },
+  {
+   "line": "B3",
+   "src": "4Cl5YmCY8mQ.mp4",
+   "ss": 2.0,
+   "dur": 2.9,
+   "src_crop": [
+    358,
+    0,
+    924,
+    900
+   ],
+   "mute": true,
+   "ours": "창업자 채널(Jessica Miller 4Cl5YmCY8mQ, 1080p): 소파에서 큰 아이가 아기 양말을 계속 당기는데 안 벗겨짐(한 샷, 얼굴 작게)",
+   "i": 5
+  },
+  {
+   "line": "B4",
+   "src": "zKYD9yCFjIA.mp4",
+   "ss": 181.5,
+   "dur": 1.6,
+   "src_crop": [
+    338,
+    0,
+    924,
+    900
+   ],
+   "mute": true,
+   "ours": "공식: 분홍 밑창 양말 신은 발로 마룻바닥을 걸음(샷 181.35~183.14, 발만)",
+   "i": 6
+  },
+  {
+   "line": "B4",
+   "src": "zKYD9yCFjIA.mp4",
+   "ss": 201.9,
+   "dur": 2.3,
+   "src_crop": [
+    838,
+    0,
+    924,
+    900
+   ],
+   "mute": true,
+   "ours": "공식: 공룡 무늬 양말 신은 아기 발(샷 201.79~204.25, 손·발만)",
+   "i": 7
+  },
+  {
+   "line": "B5",
+   "src": "zKYD9yCFjIA.mp4",
+   "ss": 187.6,
+   "dur": 1.5,
+   "src_crop": [
+    418,
+    0,
+    924,
+    900
+   ],
+   "mute": true,
+   "ours": "공식: 마룻바닥에 둥글게 놓인 색색 양말(샷 187.44~192.11)",
+   "i": 8
+  },
+  {
+   "line": "B5",
+   "src": "4Cl5YmCY8mQ.mp4",
+   "ss": 19.0,
+   "dur": 2.4,
+   "src_crop": [
+    358,
+    0,
+    924,
+    900
+   ],
+   "mute": true,
+   "ours": "창업자 채널(4Cl5YmCY8mQ): 소파에서 아이들이 양말을 신은 채 노는 모습(한 샷, 얼굴 작게 · 189초 바닥 양말 컷은 1.3초 멈춤으로 뺌)",
+   "i": 9
+  }
+ ],
+ "effects": []
+}

@@ -1,0 +1,772 @@
+{
+ "_note": "샥탬스토리 18편 LUCY 재료 계획. 창 1080x1052(벤치 0HbV-PW3ivw, 채널 고정 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물, effects 의 fx_place 계산값은 유지). 원음 컷은 원본 소리(49r_YvwH6lw_audio.m4a).",
+ "sources": {
+  "49r_YvwH6lw": {
+   "채널": "Sony Pictures Television(공식)",
+   "제목": "Shark Tank US | Entrepreneur From Season 2 Is Back With LUCIDArt Product",
+   "해상도": "1920x1080 29.97fps (137) + 140-6 영어 원어(자동 더빙 6개는 안 씀)",
+   "길이": 692.3,
+   "받은 구간": "전체",
+   "남의 글자": "이름/제안 띠(139~147·600~641초) 시각 컷은 크롭 높이 900 · 673초 뒤 끝 화면 안 씀 · 무대 'LUCY' 화면·홍보 영상 = 제품 브랜드"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "그림 못 그려도",
+  "line2": "화가가 된다고?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "49r_YvwH6lw.mp4",
+   "mute": false,
+   "audio_src": "49r_YvwH6lw_audio.m4a",
+   "audio_ss": 189.52,
+   "audio_dur": 1.16,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "src_orig_span": [
+    99.9,
+    101.06
+   ],
+   "ss": 99.9,
+   "dur": 1.16,
+   "t_final_est": [
+    0.0,
+    1.16
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    205,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 TV 홍보 영상: 과일 그릇 앞 루시 본체(검은 거울·렌즈 머리)(원본 샷 98.40~112.55 · 101.7초는 본체가 너무 커서 원이 창에 안 들어감 — 소리 = 케빈 원음 'Isn't that amazing?' cover, 말한 사람은 화면 밖)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "N1",
+   "kind": "나레",
+   "src": "49r_YvwH6lw.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "src_orig_span": [
+    120.1,
+    121.608
+   ],
+   "ss": 120.1,
+   "dur": 1.508,
+   "t_final_est": [
+    1.16,
+    2.67
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "홍보 영상: 연필로 과일 스케치를 그려 나가는 손(원본 샷 118.32~126.83)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 2,
+   "line": "N1",
+   "kind": "나레",
+   "src": "49r_YvwH6lw.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "src_orig_span": [
+    122.35,
+    123.893
+   ],
+   "ss": 122.35,
+   "dur": 1.543,
+   "t_final_est": [
+    2.67,
+    4.21
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "같은 샷 이어서 — 스케치가 채워짐",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 3,
+   "line": "O2",
+   "kind": "원음",
+   "src": "49r_YvwH6lw.mp4",
+   "mute": false,
+   "audio_src": "49r_YvwH6lw_audio.m4a",
+   "audio_ss": 103.48,
+   "audio_dur": 2.25,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "src_orig_span": [
+    107.55,
+    109.8
+   ],
+   "ss": 107.55,
+   "dur": 2.25,
+   "t_final_est": [
+    4.21,
+    6.46
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    498,
+    30,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "무대 TV 홍보 영상: 비친 과일 그림 위로 펜을 따라 그림(샷 98.40~112.55 — 소리 = 창업자 원음 cover, 화면 밖)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 4,
+   "line": "O2",
+   "kind": "원음",
+   "src": "49r_YvwH6lw.mp4",
+   "mute": false,
+   "audio_src": "49r_YvwH6lw_audio.m4a",
+   "audio_ss": 105.73,
+   "audio_dur": 1.75,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "src_orig_span": [
+    109.85,
+    111.6
+   ],
+   "ss": 109.85,
+   "dur": 1.75,
+   "t_final_est": [
+    6.46,
+    8.21
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    498,
+    30,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "같은 홍보 영상 이어서 — 비친 그림과 손 그림이 겹쳐 보임(cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 5,
+   "line": "N2",
+   "kind": "나레",
+   "src": "49r_YvwH6lw.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "src_orig_span": [
+    166.2,
+    167.751
+   ],
+   "ss": 166.2,
+   "dur": 1.551,
+   "t_final_est": [
+    8.21,
+    9.76
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자 케빈이 루시로 종이에 그려 봄 — 위에서 본 손(원본 샷 166.10~170.17, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 6,
+   "line": "N2",
+   "kind": "나레",
+   "src": "49r_YvwH6lw.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "src_orig_span": [
+    170.5,
+    171.769
+   ],
+   "ss": 170.5,
+   "dur": 1.269,
+   "t_final_est": [
+    9.76,
+    11.03
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    353,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "케빈이 루시 눈대 창을 들여다봄(샷 170.17~172.41, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 7,
+   "line": "O3",
+   "kind": "원음",
+   "src": "49r_YvwH6lw.mp4",
+   "mute": false,
+   "audio_src": "49r_YvwH6lw_audio.m4a",
+   "audio_ss": 184.04,
+   "audio_dur": 1.66,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "src_orig_span": [
+    184.2,
+    185.86
+   ],
+   "ss": 184.2,
+   "dur": 1.66,
+   "t_final_est": [
+    11.03,
+    12.69
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "케빈이 루시로 상어를 따라 그림 — 위에서 본 손(샷 184.18~185.89, 말하는 본인 케빈 · 앞 0.16초는 다른 샷이라 화면만 0.16초 뒤에서, 소리 = 이 줄 원음 cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 8,
+   "line": "O3",
+   "kind": "원음",
+   "src": "49r_YvwH6lw.mp4",
+   "mute": false,
+   "audio_src": "49r_YvwH6lw_audio.m4a",
+   "audio_ss": 185.7,
+   "audio_dur": 3.0,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "src_orig_span": [
+    185.92,
+    188.92
+   ],
+   "ss": 185.92,
+   "dur": 3.0,
+   "t_final_est": [
+    12.69,
+    15.69
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 와이드: 케빈과 창업자, 뒤 'LUCY' 화면(샷 185.89~189.19)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 9,
+   "line": "N3",
+   "kind": "나레",
+   "src": "49r_YvwH6lw.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "src_orig_span": [
+    45.0,
+    46.921
+   ],
+   "ss": 45.0,
+   "dur": 1.921,
+   "t_final_est": [
+    15.69,
+    17.61
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 턱받이를 목에 걸고 웃음(원본 샷 43.18~47.41, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 10,
+   "line": "N3",
+   "kind": "나레",
+   "src": "49r_YvwH6lw.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "src_orig_span": [
+    67.2,
+    68.787
+   ],
+   "ss": 67.2,
+   "dur": 1.587,
+   "t_final_est": [
+    17.61,
+    19.2
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "옛 제품 '멀미 턱받이'를 건 마네킹(샷 67.10~69.24, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 11,
+   "line": "N4",
+   "kind": "나레",
+   "src": "49r_YvwH6lw.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "src_orig_span": [
+    606.0,
+    607.317
+   ],
+   "ss": 606.0,
+   "dur": 1.317,
+   "t_final_est": [
+    19.2,
+    20.52
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    591,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "데이먼드가 손짓하며 말함(원본 샷 605.91~608.47, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 12,
+   "line": "N4",
+   "kind": "나레",
+   "src": "49r_YvwH6lw.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "src_orig_span": [
+    612.0,
+    613.701
+   ],
+   "ss": 612.0,
+   "dur": 1.701,
+   "t_final_est": [
+    20.52,
+    22.22
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    738,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "창업자가 설명함(샷 611.54~615.21, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 13,
+   "line": "O4",
+   "kind": "원음",
+   "src": "49r_YvwH6lw.mp4",
+   "mute": false,
+   "audio_src": "49r_YvwH6lw_audio.m4a",
+   "audio_ss": 627.67,
+   "audio_dur": 1.2,
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "src_orig_span": [
+    627.67,
+    628.87
+   ],
+   "ss": 627.67,
+   "dur": 1.2,
+   "t_final_est": [
+    22.22,
+    23.42
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    534,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "데이먼드가 17.5% 역제안(말하는 본인, 샷 627.26~629.33)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 14,
+   "line": "O5",
+   "kind": "원음",
+   "src": "49r_YvwH6lw.mp4",
+   "mute": false,
+   "audio_src": "49r_YvwH6lw_audio.m4a",
+   "audio_ss": 632.91,
+   "audio_dur": 3.2,
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "src_orig_span": [
+    632.91,
+    636.11
+   ],
+   "ss": 632.91,
+   "dur": 3.2,
+   "t_final_est": [
+    23.42,
+    26.62
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    479,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "창업자가 15% 제시(말하는 본인, 샷 629.33~636.17)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 15,
+   "line": "O6",
+   "kind": "원음",
+   "src": "49r_YvwH6lw.mp4",
+   "mute": false,
+   "audio_src": "49r_YvwH6lw_audio.m4a",
+   "audio_ss": 638.87,
+   "audio_dur": 1.6,
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "src_orig_span": [
+    638.87,
+    640.47
+   ],
+   "ss": 638.87,
+   "dur": 1.6,
+   "t_final_est": [
+    26.62,
+    28.22
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    671,
+    0,
+    924,
+    900
+   ],
+   "scale": 1.169,
+   "ours": "데이먼드가 웃으며 받아들임(말하는 본인, 샷 636.17~641.17)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 16,
+   "line": "N5",
+   "kind": "나레",
+   "src": "49r_YvwH6lw.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "src_orig_span": [
+    646.1,
+    648.505
+   ],
+   "ss": 646.1,
+   "dur": 2.405,
+   "t_final_est": [
+    28.22,
+    30.62
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자와 데이먼드 포옹(원본 샷 645.98~648.35, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 17,
+   "line": "N5",
+   "kind": "나레",
+   "src": "49r_YvwH6lw.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=49r_YvwH6lw",
+   "src_orig_span": [
+    648.4,
+    649.766
+   ],
+   "ss": 648.4,
+   "dur": 1.366,
+   "t_final_est": [
+    30.62,
+    31.99
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    570,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 웃음(샷 648.35~649.68, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/18편_LUCY/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "how": "object",
+   "t": [
+    0.0,
+    0.45
+   ],
+   "target": [
+    297,
+    565,
+    648,
+    931
+   ],
+   "target_what": "무대 TV 홍보 영상 속 루시 본체(검은 거울·렌즈 머리) — 99.95초 원본 프레임 눈 측정(원본 x 510~870·y 135~510, 크롭 [205,0,1109,1080] ×0.974 → 완성본 좌표)",
+   "why": "R3 0초 원 = 물건(제품) — 사장님 10-19 '처음에 빨간원 얼굴에 하지말고'",
+   "at": [
+    472,
+    748
+   ],
+   "size": 549,
+   "face_clear": true,
+   "target_box": [
+    297,
+    565,
+    648,
+    931
+   ],
+   "target_path": [
+    [
+     0.0,
+     297.0,
+     565.0,
+     648.0,
+     931.0
+    ],
+    [
+     0.067,
+     297.0,
+     584.3,
+     648.0,
+     950.3
+    ],
+    [
+     0.133,
+     297.0,
+     603.7,
+     648.0,
+     969.7
+    ],
+    [
+     0.2,
+     297.0,
+     621.3,
+     648.0,
+     987.3
+    ],
+    [
+     0.267,
+     297.0,
+     639.0,
+     648.0,
+     1005.0
+    ],
+    [
+     0.333,
+     297.0,
+     656.7,
+     648.0,
+     1022.7
+    ],
+    [
+     0.4,
+     297.0,
+     676.0,
+     648.0,
+     1042.0
+    ]
+   ],
+   "track": [
+    [
+     0.0,
+     472,
+     748
+    ],
+    [
+     0.067,
+     472,
+     767
+    ],
+    [
+     0.133,
+     472,
+     787
+    ],
+    [
+     0.2,
+     472,
+     804
+    ],
+    [
+     0.267,
+     472,
+     822
+    ],
+    [
+     0.333,
+     472,
+     840
+    ],
+    [
+     0.4,
+     472,
+     859
+    ]
+   ],
+   "track_conf": 0.983,
+   "track_how": "template",
+   "why_target": "손 상자(재료 target) · 추적 template 신뢰 0.983 · 원 549px = 물건 반대각선 254×1.04+선 · 얼굴 3프레임 겹침 0"
+  },
+  {
+   "line": "N1",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 1.5 '140억 벌었다는 이 제품'"
+  },
+  {
+   "line": "O2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 7.0 '이 거울과 렌즈로'"
+  },
+  {
+   "line": "N2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 16.0 '수세기 전부터 거장들이'"
+  },
+  {
+   "line": "N3",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "반전 자리"
+  },
+  {
+   "line": "N4",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 41.5 지분 컷"
+  },
+  {
+   "line": "O6",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 50.5 '그게 내가 원하던 거였어'"
+  }
+ ]
+}
