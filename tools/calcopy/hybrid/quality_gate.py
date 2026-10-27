@@ -890,8 +890,11 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
         def aud():
             from tools.calcopy.hybrid import script_audit
             r = script_audit.audit(doc / "대본.json", style_name)
-            bad = [f"{x['kind']}: {x['why']}" for x in r["rules"] if not x["ok"]] + ([f"engine {r['engine']}"] if r.get("engine") and not r["engine"].get("ok") else [])
-            return r["ok"], f"규칙 {len(r['rules'])}개 · 미달 {bad or '0'}"
+            bad = [f"{x['kind']}: {x['why']}" for x in r["rules"] if not x["ok"]]
+            # 문장 결·포인트(engine)는 대본 단계가 판정한다(flow.ph_script_got — 한 번 고친 뒤 통과, 사장님 10-27). 완성본에서 다시 걸면 판단이 두 벌이라
+            #   대본 단계가 넘긴 것을 렌더 뒤에 막는다(10-27 TV 스탠드 편 — 완성본 검사 '②숫자·권위 줄 없음'). 여기는 기록만
+            eng = f" · 참고 engine {r['engine'].get('points', {}).get('why') or 'ok 아님'}" if r.get("engine") and not r["engine"].get("ok") else ""
+            return not bad, f"규칙 {len(r['rules'])}개 · 미달 {bad or '0'}{eng}"
         row("대본", "script_audit", aud, "hybrid/script_audit.audit")
     # ── 썸네일(0초 측정이 1차 자 thumb.frame0 에 들어가므로 1차 자보다 먼저)
     if want("썸네일"):

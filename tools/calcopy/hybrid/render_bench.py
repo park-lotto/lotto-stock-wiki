@@ -328,6 +328,8 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
             c["dur"] = round(c["t1"] - c["t0"], 3)
             lip = c["kind"] == "orig" and c["src"] == Lm[c["line"]].get("src")      # 입 맞춤 = 원음 줄의 그 원본 화면 — 원음 줄 안에 끼운 다른 원본 컷(소리와 무관)은 나레 컷처럼 맞춘다(10-26 회원 마스크편 L7)
             if src_dir and not lip and c.get("ss") is not None and not c.get("no_snap"):
+                if c.get("max") is None and "ss_planned" not in c:
+                    shot_cap(c, src_dir / c["src"])
                 base = float(c.get("ss_planned", c["ss"]))                         # 다시 맞출 때도 재료에 적힌 ss·max 기준(옮긴 ss 에 max 를 다시 붙이면 샷 끝을 넘는다)
                 s2, k = fit_cut(src_dir / c["src"], base, round(c["t1"] * FPS) - round(c["t0"] * FPS), c.get("max"), reach)   # 실제 뽑을 프레임 수로 — 옮기기·샷 안 늦추기 주인      # 원음 컷은 입 맞춤이라 옮기지도 늦추지도 않는다(검사만)
                 c.pop("speed", None)
@@ -345,6 +347,8 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
         # 원음(입 맞춤) 컷은 원본 사람이 말하는 구간 그대로 — 그 안에 원본 자체 카메라 전환이 드는 건 원본 편집이 흐르는 것(샷 한도 아님).
         # 번쩍임(짧은 조각)은 관문 ③(edge_fault)·원본 끝은 src_left 가 따로 본다(10-27 립글로스 회원편 O1 2.76초 vs 샷 0.53초 반려 — 맞출 수 없는 반려)
         c["over"] = round(sd - cap, 3) if cap is not None and sd > cap + 1e-3 else 0.0
+        if c["over"] and c.get("max_auto") and src_dir:      # 샷이 모자란 재료 컷 — 고칠 자리(이 길이가 들어가는 샷)를 같이 싣는다
+            c["room"] = shot_room(src_dir / c["src"], round(sd / _max_slowmo(), 2))
         if src_dir:
             left = src_left(src_dir / c["src"], float(c.get("ss") or 0.0))
             if left is not None and sd > left + 1e-3:
@@ -373,7 +377,8 @@ def pause_targets(st: dict) -> dict:
     return {"comma": float(sp.get("pause_comma", 0.22)), "period": float(sp.get("pause_period", 0.30))}
 
 
-EDGE_BLIP = 0.03      # 줄 조각 맨 앞·뒤 이 안의 짧은 소리(앞 줄 꼬리·자르기 딸깍)는 무음 판정에서 무음으로 친다(10-25 박정수 N7: 0.02초 소리 뒤 무음 0.18초)
+EDGE_BLIP = 0.05      # 줄 조각 맨 앞·뒤 이 안의 짧은 소리(앞 줄 꼬리·자르기 딸깍)는 무음 판정에서 무음으로 친다(10-25 박정수 N7: 0.02초 소리 뒤 무음 0.18초 ·
+                      # 10-27 TV 스탠드 L2: 앞 줄 꼬리 0.044초 뒤 무음 0.18초가 안 깎여 B18 L1→L2 0.11초(계획 0.04) — 0.03 → 0.05. 다른 줄 첫 무음은 0.08초 뒤라 영향 없음)
 
 
 def _edge_sil(sil: list, total: float) -> tuple[float, float]:
@@ -1142,6 +1147,34 @@ def inner_bounds(starts: list[float], a: float, b: float) -> list[float]:
     """구간 [a,b) 화면 안에 보이는 장면 경계 — 첫 프레임부터 새 샷이면(t ≤ a+반 프레임) 경계 아님, 마지막 프레임까지 옛 샷이면(t > b−1프레임) 경계 아님.
     10-25 ep12 N7 ayB: 옛 판은 첫 1.5프레임 안을 빼서 ss 8.367·경계 8.4(= 둘째 프레임부터 새 샷)를 못 봐, snap_ss 가 앞 샷 1프레임 번쩍임 자리로 옮겼다(눈 확인)."""
     return [t for t in starts if a + 0.5 / FPS < t <= b - 1 / FPS + 1e-3]
+
+
+def shot_cap(c: dict, src: Path) -> None:
+    """(판단 주인 — 나레 컷의 샷 한도) 재료에 max 가 없는 영상 컷(쇼핑형 재료 영상처럼 서버 샷 표가 없는 파일)에 '그 샷 끝까지' 한도를 붙인다.
+    경계 = shot_starts(관문·완성본 검사·source_rule_scan 이 잡는 전환과 같은 자리 — 10-27 TV 편 재료 실측: 반려 컷 10/10 이 이 경계를 넘었고, 샷 23개 안쪽만 쓰면 0개).
+    ss 가 샷 끝 MIN_PIECE_SEC 안이면(다음 샷이 바로 이어지는 자리) 다음 샷 처음으로 옮긴다. 이 한도로 fit_cut 이 샷 안에서 옮기고 늦춘다.
+    10-27 TV 스탠드 편: 한도가 없어 재료 컷이 장면 전환을 넘었고, 계획 반려 → Claude 가 초를 눈대중으로 고치기를 17번."""
+    if src.suffix.lower() in IMG_EXT or not src.exists():
+        return
+    starts = shot_starts(src)
+    ss = float(c["ss"])
+    nxt = [t for t in starts if t > ss + 0.5 / FPS]
+    if nxt and nxt[0] - ss < MIN_PIECE_SEC:
+        ss = round(nxt[0], 3)
+        c["ss"] = c["ss_planned"] = ss
+        nxt = nxt[1:]
+    c["max"] = round(nxt[0] - ss, 3) if nxt else None
+    c["max_auto"] = True
+
+
+def shot_room(src: Path, need: float, k: int = 6) -> list[tuple[float, float]]:
+    """그 파일에서 need 초 이상 이어지는 샷 [(시작, 끝)] 긴 순 k 개 — 재료 고치기 질문에 싣는다(눈대중 대신 고를 자리)."""
+    if src.suffix.lower() in IMG_EXT or not src.exists():
+        return []
+    st = [0.0] + shot_starts(src)
+    end = src_left(src, 0.0)
+    pts = st + ([end] if end else [])
+    return sorted([(round(a, 2), round(b, 2)) for a, b in zip(pts, pts[1:]) if b - a >= need], key=lambda x: x[0] - x[1])[:k]
 
 
 def short_pieces(starts: list[float], a: float, b: float) -> list[float]:
@@ -3286,6 +3319,9 @@ def over_text(over: list[dict], plan: bool, measured: bool = True) -> list[str]:
     if not over:
         return []
     rows = str([(c["line"], c["src"], c.get("ss"), c["dur"], c.get("max"), {"원본 남음": c["src_left"]} if "src_left" in c else None) for c in over])
+    room = [f"{c['line']} {c['src']} 에서 {c['dur']}초가 들어가는 샷(시작~끝): {c['room'] or '없음 — 이 줄 컷을 둘로 나눠라'}" for c in over if "room" in c]
+    if room:
+        rows += " — 고칠 자리: " + " / ".join(room)
     return [("계획에서 컷이 원본 샷보다 길다" + ("" if measured else "(어림)") + ": " if plan else "컷이 원본 샷보다 길다: ") + rows]
 
 

@@ -586,14 +586,14 @@ def _script_causes(a: dict) -> list:
     return list(dict.fromkeys(out))
 
 
-_PLAN_PAT = [("voice_speed", r"말속도|TTS"), ("boundary", r"장면 경계|짧은 조각"), ("cut_len", r"샷보다 길|샷 잔여|샷 끝|컷 길이|번쩍"),
+_PLAN_PAT = [("voice_speed", r"말속도|TTS"), ("boundary", r"장면 경계|짧은 조각|장면 전환"), ("cut_len", r"샷보다 길|샷 잔여|샷 끝|컷 길이|번쩍"),
              ("text_left", r"박힌 글자|흐림|자막"), ("rhythm", r"컷 중앙|컷 경계가|리듬|박자"), ("reuse", r"같은 장면|재사용|두 번 나")]
 
 
 def _plan_causes(texts) -> list:
     """장면 맞추기 걸린 글(엔진 over·검수 problems) → 원인 키. 못 알아보는 글은 plan_other(경보 대상)."""
     out = []
-    for t in texts or []:
+    for t in [x for x in texts or [] if str(x).strip()]:     # 빈 조각('; ' 끝)은 원인 아님
         hit = [k for k, p in _PLAN_PAT if re.search(p, str(t))]
         out += hit or ["plan_other"]
     return list(dict.fromkeys(out))
