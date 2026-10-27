@@ -42,6 +42,21 @@ def prep(src: Path) -> Path:
     return dst
 
 
+def import_member(flow_dir: Path, dst: Path) -> Path:
+    """회원 PC 편(…/home/창고/flow/<sid>: flow.json 의 서명 payload = 지시서 상태 · job = 실행기 폴더) → flow_dev 작업 폴더(flow_state.json + job).
+    서로 다른 소재로 시험 세트를 넓힌다(10-27 사장님 '같은 주제 영상으로만 하면 의미 있어?')."""
+    import base64
+    import zlib
+    raw = json.loads((flow_dir / "flow.json").read_text(encoding="utf-8"))["payload"].split(".", 3)[2]
+    st = json.loads(zlib.decompress(base64.urlsafe_b64decode(raw.encode())).decode("utf-8"))
+    dst.mkdir(parents=True, exist_ok=True)
+    if not (dst / "job").exists():
+        shutil.copytree(flow_dir / "job", dst / "job", ignore=shutil.ignore_patterns("reviews"))
+    (dst / "flow_state.json").write_text(json.dumps(st, ensure_ascii=False), encoding="utf-8")
+    (dst / "flow_log.jsonl").write_text("", encoding="utf-8")
+    return dst
+
+
 def score(W: Path) -> dict:
     rows = [json.loads(l) for l in (W / "flow_log.jsonl").read_text(encoding="utf-8").splitlines() if l.strip()]
     rv = [r for r in rows if "review" in r and isinstance(r.get("review"), str)]
@@ -79,7 +94,13 @@ def main(argv=None):
     r.add_argument("--label", default="")
     t = sub.add_parser("table")
     t.add_argument("--name")
+    im = sub.add_parser("import")
+    im.add_argument("flow_dir")
+    im.add_argument("dst")
     a = ap.parse_args(argv)
+    if a.cmd == "import":
+        print(import_member(Path(a.flow_dir), Path(a.dst)))
+        return 0
     if a.cmd == "table":
         for l in LEDGER.read_text(encoding="utf-8").splitlines() if LEDGER.exists() else []:
             o = json.loads(l)
