@@ -1225,14 +1225,19 @@ def c_shot_sheets(W, d):
 
 
 def c_mat_sheets(W, d):
-    sheets, lst = [], []
+    from tools.calcopy.hybrid import render_bench
+    sheets, lst, shots = [], [], {}
     for f in d.get("files") or []:
         p = W / f
         if not p.exists():
             continue
-        lst.append({"file": p.name, "dur": dims(p)["dur"]})
+        dur = dims(p)["dur"]
+        lst.append({"file": p.name, "dur": dur})
         sheets.append(rel(W, sheet(p, W / f"_sheet_{p.stem[:40]}.jpg", fps=0.5, cols=6, rows=5, w=240)))
-    out = {"sheets": sheets, "list": lst}
+        if p.suffix.lower() not in render_bench.IMG_EXT and dur:   # 샷 구간 = 계획 관문이 재는 경계 그대로(shot_starts) — 처음 컷을 고를 때 넘지 않게(10-27 반려 71건)
+            b = [0.0] + [x for x in render_bench.shot_starts(p) if 0 < x < dur] + [round(float(dur), 2)]
+            shots[p.name] = [[round(a, 2), round(c, 2)] for a, c in zip(b, b[1:])]
+    out = {"sheets": sheets, "list": lst, "shots": shots}
     bm = W / "bench" / "bench.mp4"                   # 소재 쇼츠 1초 자막 시트 — 박힌 한국어 자막의 말맛(대본 작가가 그대로 본다, 사장님 10-26 '말맛 나고 재밌자나')
     if bm.exists():
         cs = W / "look" / "bench_caps.jpg"
@@ -1575,6 +1580,7 @@ def _of_sheets(W: Path, seeds: list[Path], cands: list[dict]) -> list[str]:
     return out
 
 
+WEB_WAIT = 6.0     # 틱톡·인스타 검색 페이지에서 영상 주소가 뜨길 기다리는 최대 초(실측 2초)
 WEB_PER_Q = 6       # 검색어 하나·사이트 하나에서 가져올 영상 주소 수
 WEB_MAX = 12        # 한 바퀴 틱톡·인스타 후보 상한(후보마다 메타 한 번 — 천천히 받기 YT_SLOW 라 하나 5~15초)
 WEB_LINK = re.compile(r"https?://(?:www\.)?tiktok\.com/@[\w.\-]+/video/\d+|/@[\w.\-]+/video/\d+|https?://(?:www\.)?instagram\.com/(?:[\w.]+/)?(?:reel|reels|p)/[\w-]+")
@@ -1641,45 +1647,60 @@ def _web_links(qs: list[str], per: int = WEB_PER_Q) -> list[dict]:
             add(hit)
         else:
             todo.append(q)
-    try:
-        for q in todo:
-          got: list[dict] = []
-          # 검색어마다 창을 새로(10-26 run4: 첫 틱톡 페이지에서 창이 닫혀(TargetClosedError) 그 바퀴 나머지 7번이 전부 실패)
-          with LN.lens_page() as pg:
+    def one(pg, q: str) -> list[dict]:
+        got: list[dict] = []
+        for how, url in (("tiktok", f"https://www.tiktok.com/search/video?q={quote(q)}"),
+                         ("instagram", f"https://www.google.com/search?q={quote(q + ' site:instagram.com/reel')}&hl=en")):
+            try:
+                pg.goto(url, wait_until="domcontentloaded", timeout=60000)
+                # 10-27 실측: 틱톡 영상 주소는 열고 2초에 다 뜬다(0,0,0,0,12…) · 구글(인스타)은 여는 순간 · 스크롤해도 0개 늘어남.
+                #   예전 무조건 6초 + 스크롤 3초 = 페이지마다 9초 → 주소가 뜨면 0.5초 뒤 읽기(최대 WEB_WAIT 초)
+                t0 = time.time()
+                while not WEB_LINK.search(pg.content()) and time.time() - t0 < WEB_WAIT:
+                    pg.wait_for_timeout(400)
+                pg.wait_for_timeout(500)
+                raw = pg.content()
+            except Exception as e:  # noqa: BLE001 — 한 사이트 실패는 남기고 다음(창이 닫혔으면 부르는 쪽이 새 창으로 다시)
+                sys.stderr.write(f"[web] {how} 검색 실패 '{q}': {type(e).__name__} {str(e)[:80]}\n")
+                if "Target" in type(e).__name__ or "closed" in str(e):
+                    raise
+                continue
+            k, mine = 0, set()
+            for l in WEB_LINK.findall(raw):
+                l = ("https://www.tiktok.com" + l) if l.startswith("/@") else l
+                if l in mine:
+                    continue
+                mine.add(l)
+                got.append({"url": l, "how": how, "q": q})
+                k += 1
+                if k >= per:
+                    break
+            sys.stderr.write(f"[web] {how} '{q}' 영상 주소 {k}개\n")
+        return got
+
+    # 창 하나로 검색어 전부(예전: 검색어마다 크롬을 새로 켬 — 앞 창이 다 꺼지기 전이라 '프로필 잠김' → 빈 프로필 사본으로 다시 켬, 10-27 5번).
+    #   창이 닫히면(10-26 TargetClosedError) 그 검색어부터 새 창으로 한 번 더
+    left = list(todo)
+    for _attempt in range(2):
+        if not left:
+            break
+        try:
+            with LN.lens_page("web") as pg:      # 렌즈 창과 동시에 열린다(c_origin_foreign) — 프로필을 따로
                 ck = _tiktok_cookies()            # 틱톡 로그인(우리 PC 파이어폭스 세션·회원 PC 연결 계정) — 있으면 결과가 많다(10-26 이 PC 24건/검색어)
                 if ck:
                     try:
                         pg.context.add_cookies(ck)
                     except Exception as e:  # noqa: BLE001
                         sys.stderr.write(f"[web] 틱톡 쿠키 못 실음: {e}\n")
-                for how, url in (("tiktok", f"https://www.tiktok.com/search/video?q={quote(q)}"),
-                                 ("instagram", f"https://www.google.com/search?q={quote(q + ' site:instagram.com/reel')}&hl=en")):
-                    try:
-                        pg.goto(url, wait_until="domcontentloaded", timeout=60000)
-                        pg.wait_for_timeout(6000)
-                        for _ in range(3):
-                            pg.mouse.wheel(0, 2000)
-                            pg.wait_for_timeout(1000)
-                        raw = pg.content()
-                    except Exception as e:  # noqa: BLE001 — 한 사이트 실패는 남기고 다음
-                        sys.stderr.write(f"[web] {how} 검색 실패 '{q}': {type(e).__name__} {str(e)[:80]}\n")
-                        continue
-                    k, mine = 0, set()
-                    for l in WEB_LINK.findall(raw):
-                        l = ("https://www.tiktok.com" + l) if l.startswith("/@") else l
-                        if l in mine:
-                            continue
-                        mine.add(l)
-                        got.append({"url": l, "how": how, "q": q})
-                        k += 1
-                        if k >= per:
-                            break
-                    sys.stderr.write(f"[web] {how} '{q}' 영상 주소 {k}개\n")
-          add(got)
-          if got:
-              _memo("web", q, lambda: got)
-    except Exception as e:  # noqa: BLE001 — 창을 못 띄우면 유튜브 검색 결과만으로(이유는 로그)
-        sys.stderr.write(f"[web] 검색 창 실패: {type(e).__name__} {str(e)[:120]}\n")
+                while left:
+                    q = left[0]
+                    got = one(pg, q)
+                    left.pop(0)
+                    add(got)
+                    if got:
+                        _memo("web", q, lambda: got)
+        except Exception as e:  # noqa: BLE001 — 창을 못 띄우거나 닫힘 → 남은 검색어는 새 창으로 한 번 더, 그래도 안 되면 유튜브 결과만으로(이유는 로그)
+            sys.stderr.write(f"[web] 검색 창 실패: {type(e).__name__} {str(e)[:120]}\n")
     return out
 
 
@@ -1715,7 +1736,16 @@ def c_of_settle(W, d):
     return {"ok": True, "noted": noted}
 
 
-META_PAR = {"yt": 2, "other": 8}     # 후보 정보(yt-dlp 메타) 동시 받기 — 유튜브는 막힘 방지 천천히 받기(YT_SLOW)라 2개만, 틱톡·인스타는 8개
+META_PAR = {"yt": 4, "other": 8}     # 후보 정보 동시 받기 — 유튜브 = 페이지 한 번(origin_find.meta_fast, 요청 1번)이라 4개, 실패한 것만 yt-dlp(천천히) · 틱톡·인스타는 8개
+
+
+def _meta_one(OF, u: str) -> dict:
+    """유튜브 = 페이지 한 번(meta_fast, 10-27 후보 하나 15~19초 → 1초) · 실패하면 yt-dlp(meta) · 나머지 = yt-dlp."""
+    if "youtube.com" in u or "youtu.be" in u:
+        m = OF.meta_fast(u)
+        if not m.get("why"):
+            return m
+    return OF.meta(u)
 
 
 def _metas(urls: list[str]) -> dict:
@@ -1730,7 +1760,7 @@ def _metas(urls: list[str]) -> dict:
     for group, n in ((yt, META_PAR["yt"]), (other, META_PAR["other"])):
         if group:
             with ThreadPoolExecutor(n) as ex:
-                for u, m in zip(group, ex.map(lambda u: _memo("meta", u, lambda: OF.meta(u), base), group)):
+                for u, m in zip(group, ex.map(lambda u: _memo("meta", u, lambda: _meta_one(OF, u), base), group)):
                     out[u] = m
     return out
 
@@ -1738,8 +1768,10 @@ def _metas(urls: list[str]) -> dict:
 def _peer_raw(qs: list, n: int, skip: set) -> list[dict]:
     """영어 검색어 → 유튜브(_search) + 틱톡·인스타(_web_links — 검색 주인 한 곳) 후보 — 렌즈와 같은 꼴(platform·id·url·메타)."""
     from tools.calcopy import origin_find as OF
+    t = time.time()
     raw = [{"platform": "yt", "id": e.get("id"), "url": f"https://www.youtube.com/shorts/{e.get('id')}", **{k: e.get(k) for k in ("title", "channel", "channel_id", "dur", "views", "date")}}
            for e in _search(qs, n) if e.get("id") and e.get("id") not in skip]
+    sys.stderr.write(f"[구간] 유튜브 검색 {time.time() - t:.0f}초 · {len(raw)}개\n"); t = time.time()
     have = {("yt", c["id"]) for c in raw}
     web = []
     for x in _web_links(qs):
@@ -1747,7 +1779,9 @@ def _peer_raw(qs: list, n: int, skip: set) -> list[dict]:
         if k and k not in have and k[1] not in skip:
             have.add(k)
             web.append({"platform": k[0], "id": k[1], "url": OF.url_of(k[0], k[1], x["url"]), "by": "web:" + x["how"]})
+    sys.stderr.write(f"[구간] 틱톡·인스타 검색 {time.time() - t:.0f}초 · {len(web)}개\n"); t = time.time()
     ms = _metas([c["url"] for c in web])
+    sys.stderr.write(f"[구간] 틱톡·인스타 후보 정보 {time.time() - t:.0f}초\n")
     return raw + [{**c, **ms.get(c["url"], {})} for c in web]
 
 
@@ -1773,6 +1807,26 @@ def c_origin_foreign(W, d):
             if not seeds:
                 return {"mode": mode, "error": "소재 장면을 못 뽑았다", "cands": [], "sheets": []}
             from tools.calcopy import lens as LN
+            import threading
+            kw: dict = {}
+            if d.get("queries"):        # 키워드 검색(유튜브 yt-dlp·틱톡/인스타 창)은 렌즈 창과 서로 기다릴 일이 없다 — 동시에(10-27 렌즈 34초 + 키워드 76초를 차례로 하던 것)
+                base = _memo_base()
+
+                def _kw():
+                    _OF_TL.dir = base
+                    t1 = time.time()
+                    try:
+                        kw["rows"] = _peer_raw(d["queries"], int(d.get("n") or 8), skip | {d.get("bench_id")})
+                    except Exception as e:  # noqa: BLE001 — 키워드가 죽어도 렌즈 결과로 간다(이유는 로그)
+                        kw["rows"] = []
+                        sys.stderr.write(f"[origin_foreign] 키워드 검색 실패: {type(e).__name__} {str(e)[:120]}
+")
+                    sys.stderr.write(f"[구간] 키워드 검색·정보(렌즈와 동시) {time.time() - t1:.0f}초
+")
+                kth = threading.Thread(target=_kw, daemon=True)
+                kth.start()
+            else:
+                kth = None
             found: dict = {}
             _t = time.time()
             with LN.lens_page() as pg:
@@ -1794,12 +1848,14 @@ def c_origin_foreign(W, d):
             for (pf, vid), x in top:
                 u = OF.url_of(pf, vid, x["href"])
                 raw.append({"platform": pf, "id": vid, "url": u, "lens_text": x["text"], "lens_hits": x["hits"], **ms.get(u, {})})
-            if d.get("queries"):        # 키워드 검색도 처음부터(사장님 10-26) — 원본 그대로인 영상이 검색으로 잡혀도 같은 촬영분 판정에 같이 든다
+            if kth is not None:         # 키워드 검색도 처음부터(사장님 10-26) — 원본 그대로인 영상이 검색으로 잡혀도 같은 촬영분 판정에 같이 든다
+                kth.join()
                 have = {(c["platform"], c["id"]) for c in raw}
-                for c in _peer_raw(d["queries"], int(d.get("n") or 8), skip | {d.get("bench_id")}):
+                for c in kw.get("rows") or []:
                     if (c["platform"], c["id"]) not in have:
                         raw.append({**c, "found_by": "keyword"})
-                sys.stderr.write(f"[구간] 키워드 검색·정보 {time.time() - _t:.0f}초\n")
+                sys.stderr.write(f"[구간] 키워드 기다림(렌즈 뒤) {time.time() - _t:.0f}초
+")
     else:
         if mode == "find":          # 회원 Claude 가 직접 찾은 주소(flow f_of_find, 10-26) — 메타·썸네일만 받아 같은 영상 판정 시트에 싣는다(판정은 서버 질문)
             given = [(k, OF.url_of(k[0], k[1], url)) for url in [str(x) for x in d.get("urls") or []][:8] for k in [OF.vkey(url)] if k and k[1] != d.get("bench_id")]
