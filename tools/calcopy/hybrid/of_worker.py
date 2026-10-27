@@ -29,6 +29,25 @@ MAX_CALLS = 40          # 원본 확보까지 실측 9번 — 못 찾을 때 직
 LOCK = "worker.lock"
 
 
+WORK_ROOT = Path(os.environ.get("SHORTEM_WORK_ROOT") or "C:/숏템_칼카피")
+
+
+def known_found(root: Path = WORK_ROOT) -> dict[str, dict]:
+    """다른 작업(시험·제작 편 폴더)에서 이미 원본을 확보한 소재 {소재 id: {origins, dir}} — 워커가 같은 원본을 또 찾지 않게
+    (10-27 사장님 '찾은 걸 왜 또 찾냐' — 워커가 자기 장부만 봐서 오늘 시험에서 찾은 홍현희 편을 다시 찾았다). 판정은 그 편 지시서 상태 그대로."""
+    out: dict[str, dict] = {}
+    for f in root.glob("**/flow_state.json"):
+        try:
+            st = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        b = (st.get("bench") or {}).get("id")
+        org = [str(o.get("id")) for o in st.get("origins") or [] if o.get("id")]
+        if b and org and b not in out:
+            out[b] = {"origins": org, "dir": str(f.parent)}
+    return out
+
+
 def queue(slug: str, book: dict) -> list[dict]:
     kal = ROOT / "channel" / slug / "_kal"
     rows = [r for r in json.loads((kal / "벤치상위.json").read_text(encoding="utf-8")).get("rows") or [] if isinstance(r, dict) and r.get("id")]
@@ -149,6 +168,14 @@ def main(argv: list[str]) -> int:
     try:
         while True:
             book = json.loads(bp.read_text(encoding="utf-8")) if bp.exists() else {}
+            for k, v in known_found().items():          # 다른 작업에서 이미 찾은 소재는 장부에 옮겨 적고 건너뛴다
+                if (book.get(k) or {}).get("status") != "found":
+                    book[k] = {"status": "found", "origins": v["origins"], "dir": v["dir"], "by": "기존 작업", "t": time.strftime("%Y-%m-%d %H:%M"), "ts": time.time()}
+                    if not (pool / k).exists():
+                        same = judged_origins(Path(v["dir"]))
+                        if same:
+                            add_channels(pool, k, [x for x in same if not x.get("korean")])
+            bp.write_text(json.dumps(book, ensure_ascii=False, indent=1), encoding="utf-8")
             q = queue(a.slug, book)
             if not q:
                 if not a.loop:
