@@ -1819,10 +1819,8 @@ def c_origin_foreign(W, d):
                         kw["rows"] = _peer_raw(d["queries"], int(d.get("n") or 8), skip | {d.get("bench_id")})
                     except Exception as e:  # noqa: BLE001 — 키워드가 죽어도 렌즈 결과로 간다(이유는 로그)
                         kw["rows"] = []
-                        sys.stderr.write(f"[origin_foreign] 키워드 검색 실패: {type(e).__name__} {str(e)[:120]}
-")
-                    sys.stderr.write(f"[구간] 키워드 검색·정보(렌즈와 동시) {time.time() - t1:.0f}초
-")
+                        sys.stderr.write(f"[origin_foreign] 키워드 검색 실패: {type(e).__name__} {str(e)[:120]}\n")
+                    sys.stderr.write(f"[구간] 키워드 검색·정보(렌즈와 동시) {time.time() - t1:.0f}초\n")
                 kth = threading.Thread(target=_kw, daemon=True)
                 kth.start()
             else:
@@ -1854,8 +1852,7 @@ def c_origin_foreign(W, d):
                 for c in kw.get("rows") or []:
                     if (c["platform"], c["id"]) not in have:
                         raw.append({**c, "found_by": "keyword"})
-                sys.stderr.write(f"[구간] 키워드 기다림(렌즈 뒤) {time.time() - _t:.0f}초
-")
+                sys.stderr.write(f"[구간] 키워드 기다림(렌즈 뒤) {time.time() - _t:.0f}초\n")
     else:
         if mode == "find":          # 회원 Claude 가 직접 찾은 주소(flow f_of_find, 10-26) — 메타·썸네일만 받아 같은 영상 판정 시트에 싣는다(판정은 서버 질문)
             given = [(k, OF.url_of(k[0], k[1], url)) for url in [str(x) for x in d.get("urls") or []][:8] for k in [OF.vkey(url)] if k and k[1] != d.get("bench_id")]
