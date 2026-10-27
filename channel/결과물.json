@@ -1674,6 +1674,40 @@
    "doc": "channel/foreignshowshow/20편_LittleElf_하이브리드/",
    "judge": "[확인대기] −13.9 LUFS · TP −2.4(완성본 ebur128) · 끝 여운 1.17초(41.16 → 42.33) · 끝 0.1초 RMS −90.7dB · check render 뒤 전 칸 ○ · check_seams 되감김 0 · freeze/black 0 · 광고 표시 0~42초 2초 간격+마지막 프레임 · 받아쓰기 두 엔진 대조('롤에' 둘 다 오류 → '포장지 끝에'로 재합성) · 자막 색 손질(④) — 지휘 재검수 ④ 보류 뒤 분홍·주황 9칸 다시 교체(98 #180 ⑨) · 봉인 ok · deliver --check ○",
    "note": "벤치 a8GJnj4-oko(6.4만) · 원본 Shark Tank Global vhgDo-stGq8(140 단일 트랙) · 뒤 재료 Little ELF 공식 VgQr3uYzEMg·Y8qUdzwLJ64·d7fBvClyGwk(손·제품 컷만)·방송 투자자석 · 0초 원 = 손에 든 빨간 리틀 엘프 · 공식 영상 본체는 초록, 쿠팡 상품은 빨강 2개(같은 제품 색 다름 — 대본에 색 말 없음)"
+  },
+  {
+   "channel": "banggu",
+   "channel_name": "썰템홈샷",
+   "brand": "썰템홈샷",
+   "style": "나레썰/커뮤니티썰 하이브리드(이야기형 b)",
+   "preset": "channel/banggu/썰템홈샷_하이브리드/make.py",
+   "date": "2026-10-28",
+   "from": "channel/banggu/썰템홈샷_하이브리드/make.py → narr_video → thumb → tail_pad(끝 프레임·여운) → fade_tail(배경음악 끝 페이드) → 소리 리미터(tp_limit, +0.5dB) → engine/finalize.seal",
+   "n": 106,
+   "title": "하이브리드 12 커피믹스(커피믹스는 한국 회사가 세계에서 처음 만든 것)",
+   "path": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/12_커피믹스/render/final.mp4",
+   "desktop": "썰템홈샷_12_coffee_mix_검수대기.mp4",
+   "md5": "6028288f8b50b114075723fbd61b3ea1",
+   "seconds": 38.5,
+   "judge": "[확인대기] 잉 = 커피믹스 세계 최초는 동서식품 1976년 12월(한국경제·주간경향·아이뉴스24·SBS Biz·노컷뉴스) · 품질관리 사원 착상·'커피믹스' 상표 등록 못 한 아쉬움(개발 책임자 회고록, 두 매체 인용) · 모카골드 1초 170개(SBS Biz·노컷) · 훅 = SBS 공식 탕비실 커피믹스 · 뒤 쿠팡 같은 제품 9777086822 · −14.4 LUFS · TP −1.7(완성본 직접) · make.py checks 14/14 · bench_distance 통과 · 멈춤/검정 0 · 광고 표시 0~38초 2초 간격+마지막 프레임 · 끝 여운 0.90초(나레 −45dB 말 끝 37.64) + 배경음악 0.54초 페이드 · 끝 0.1초 RMS −inf · 받아쓰기 스피치매틱스 0.977+위스퍼 줄 대조 · 봉인 ok · deliver --check ○ · 줄별 대조 ○11 △2 · 사장님 판정·귀 확인 전",
+   "doc": "channel/banggu/썰템홈샷_하이브리드/12_커피믹스/"
+  },
+  {
+   "channel": "banggu",
+   "channel_name": "썰템홈샷",
+   "brand": "썰템홈샷",
+   "style": "나레썰/커뮤니티썰 하이브리드(이야기형 b)",
+   "preset": "channel/banggu/썰템홈샷_하이브리드/make.py",
+   "date": "2026-10-28",
+   "from": "channel/banggu/썰템홈샷_하이브리드/make.py → narr_video → thumb → tail_pad(끝 프레임·여운) → fade_tail(배경음악 끝 페이드) → 소리 리미터(tp_limit, +0.5dB) → engine/finalize.seal",
+   "n": 107,
+   "title": "하이브리드 13 뽁뽁이(뽁뽁이는 원래 벽에 바르는 벽지로 만든 것)",
+   "path": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/13_뽁뽁이/render/final.mp4",
+   "desktop": "썰템홈샷_13_bubble_wrap_검수대기.mp4",
+   "md5": "ca9bcbd6ce433e16c61c6e7f83c766e3",
+   "seconds": 40.6,
+   "judge": "[확인대기] 잉 = 1957 필딩·샤반이 무늬 벽지를 만들려다 샤워 커튼 두 장을 열로 붙여 탄생(스미스소니언 2019·멘탈플로스 2012) · 벽지·온실 단열 실패 → IBM 1401 포장재 · 한국 겨울 창문 단열 뽁뽁이(삼성반도체 뉴스룸) · 훅 = NJ.com 공식 뽁뽁이 터뜨리기 · 뒤 쿠팡 비슷한 제품 34357682(원조 Sealed Air 같은 제품 9777408114는 업소용 디스펜서 상자 — 대본에 '원조 브랜드는 아니지만') · −14.4 LUFS · TP −1.6(완성본 직접) · make.py checks 14/14 · bench_distance 통과 · 멈춤/검정 0 · 광고 표시 0~40초 2초 간격+마지막 프레임 · 끝 여운 0.87초(말 끝 39.70) + 배경음악 0.50초 페이드 · 끝 0.1초 RMS −inf · 받아쓰기 스피치매틱스 0.957+위스퍼 줄 대조 · 봉인 ok · deliver --check ○ · 줄별 대조 ○15 △1 · 사장님 판정·귀 확인 전",
+   "doc": "channel/banggu/썰템홈샷_하이브리드/13_뽁뽁이/"
   }
  ]
 }
