@@ -1236,7 +1236,7 @@ def c_mat_sheets(W, d):
         sheets.append(rel(W, sheet(p, W / f"_sheet_{p.stem[:40]}.jpg", fps=0.5, cols=6, rows=5, w=240)))
         if p.suffix.lower() not in render_bench.IMG_EXT and dur:   # 샷 구간 = 계획 관문이 재는 경계 그대로(shot_starts) — 처음 컷을 고를 때 넘지 않게(10-27 반려 71건)
             b = [0.0] + [x for x in render_bench.shot_starts(p) if 0 < x < dur] + [round(float(dur), 2)]
-            shots[p.name] = [[round(a, 2), round(c, 2)] for a, c in zip(b, b[1:])]
+            shots[p.name] = jump_free_spans(p, [[round(a, 2), round(c, 2)] for a, c in zip(b, b[1:])])   # 디졸브·끊김 자리는 검사와 같은 자로 미리 뺌
     out = {"sheets": sheets, "list": lst, "shots": shots}
     bm = W / "bench" / "bench.mp4"                   # 소재 쇼츠 1초 자막 시트 — 박힌 한국어 자막의 말맛(대본 작가가 그대로 본다, 사장님 10-26 '말맛 나고 재밌자나')
     if bm.exists():
@@ -1275,6 +1275,32 @@ def _cut_jumps(src: Path, ss: float, dur: float, fps: int = 10, n: int = 64) -> 
     return [float(x) for x in np.abs(np.diff(a, axis=0)).mean((1, 2))]
 
 
+JUMP_MAX, JUMP_MANY, JUMP_MANY_N = 40, 25, 3     # 장면 전환·끊김 문턱(10-21 이미도 실측) — 검사(source_rule_scan)와 샷 구간 표(jump_free_spans)가 같이 쓴다
+
+
+def _jumpy(dd: list[float]) -> bool:
+    return bool(dd) and (max(dd) > JUMP_MAX or sum(x > JUMP_MANY for x in dd) >= JUMP_MANY_N)
+
+
+def jump_free_spans(src: Path, spans: list[list[float]], fps: int = 10, pad: float = 0.2) -> list[list[float]]:
+    """샷 구간에서 프레임 차가 JUMP_MANY 를 넘는 자리(±pad)를 뺀 구간 — 처음 컷 고르기에 주는 표(10-27 hdn3: shot_starts 는 딱 끊는 전환만 잡아
+    lBleNklHu2A 36.2~41.37 을 한 샷으로 줬는데, 그 안 40.2~41.0 디졸브를 source_rule_scan 이 '장면 전환'으로 반려 — 같은 자로 미리 뺀다)."""
+    if src.suffix.lower() in RU.STILL_EXT or not spans:
+        return spans
+    dd = _cut_jumps(src, 0.0, float(spans[-1][1]), fps=fps)
+    marks = [(i + 1) / fps for i, x in enumerate(dd) if x > JUMP_MANY]
+    out = []
+    for a, b in spans:
+        cur = a
+        for t in sorted(m for m in marks if a - pad < m < b + pad):
+            if t - pad > cur:
+                out.append([round(cur, 2), round(t - pad, 2)])
+            cur = max(cur, t + pad)
+        if b > cur:
+            out.append([round(cur, 2), round(b, 2)])
+    return out
+
+
 def source_rule_scan(W: Path, T: dict, origin_names: set) -> list[str]:
     """출처 규칙 ③ — 원본 밖 재료 컷에 장면 전환이 섞였나(10-21 이미도: 리뷰여왕 별 전환 최고 73·상위10% 53 / 다른 재료 컷 최고 28 이하)."""
     out = []
@@ -1284,7 +1310,7 @@ def source_rule_scan(W: Path, T: dict, origin_names: set) -> list[str]:
         if not src or src in origin_names or not p.exists() or not c.get("dur"):
             continue
         dd = [] if p.suffix.lower() in RU.STILL_EXT else _cut_jumps(p, float(c.get("ss") or 0), float(c["dur"]))
-        if dd and (max(dd) > 40 or sum(x > 25 for x in dd) >= 3):
+        if _jumpy(dd):
             out.append(f"{c.get('line')}: {src} {float(c.get('ss') or 0):.1f}초부터 {float(c['dur']):.1f}초 안에 장면 전환·끊김이 있다(남의 영상 편집 효과) — 시작점을 옮기거나 다른 장면으로")
         n = _cut_faces(W, p, float(c.get("ss") or 0), float(c["dur"]), c.get("crop"))
         if n:

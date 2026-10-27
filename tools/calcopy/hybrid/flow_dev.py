@@ -94,6 +94,7 @@ def main():
     ap.add_argument("--tts-seed", help="narr_full.mp3(+.tts.json) 가 있는 렌더 폴더 — 작업 폴더 <판>/render/ 로 복사")
     ap.add_argument("--replay", help="review 답 고정 폴더(<review id 앞부분>.json)")
     ap.add_argument("--max-calls", type=int, default=400)
+    ap.add_argument("--stop-at", default="", help="이 세부 단계(쉼표 목록)에 닿으면 멈춤 — 예 thumb = 장면 맞추기 통과 직후(10-27 사장님 '원본·대본·장면 구간만 계속')")
     ap.add_argument("--from-plan", help="(시험) 대본 답 JSON {대본, 재료, 근거_md} — --resume 상태에 대본 검사 없이 넣고 계획부터(TTS 캐시가 있는 승인본으로 렌더·검사)")
     a = ap.parse_args()
     W = Path(a.work); W.mkdir(parents=True, exist_ok=True)
@@ -147,6 +148,10 @@ def main():
         log({"call": calls, "status": res["status"], "msg": res.get("message"), "phase": st.get("phase"),
              "do": [d["cmd"] for d in res.get("do") or []], "review": [r["id"] for r in res.get("review") or []], "reject": res.get("reject")})
         measure, replies, user = {}, {}, {}
+        if st.get("phase") in {x for x in a.stop_at.split(",") if x}:
+            log({"end": "stop_at", "phase": st.get("phase"), "calls": calls, "min": round((time.time() - t_all) / 60, 1),
+                 "do_n": counts["do"], "review_n": counts["review"]})
+            break
         if res["status"] in ("done", "stop"):
             log({"end": res["status"], "why": res.get("why"), "fix": res.get("fix"), "video": res.get("video"), "calls": calls,
                  "min": round((time.time() - t_all) / 60, 1), "do_n": counts["do"], "review_n": counts["review"], "stage": res.get("stage")})
