@@ -84,7 +84,7 @@ def test_relocate_drops_cut_when_no_room_and_line_has_mate(monkeypatch, tmp_path
     monkeypatch.setattr(R, "jump_free_spans", lambda src, spans, **k: [])      # 빈자리 0
     monkeypatch.setattr(R, "_cut_jumps", lambda *a, **k: [])
     a = {**_c("E2", 0.0, "v.mp4", 1.0), "t1": 1.0, "dur": 1.0}
-    b = {**_c("E2", 1.0, "v.mp4", 5.0), "t1": 2.0, "dur": 1.0, "reuse_unfixed": ["거리"]}
+    b = {**_c("E2", 1.0, "v.mp4", 1.5), "t1": 2.0, "dur": 1.0, "reuse_unfixed": ["겹침"]}     # a(1.0~2.0)와 실제로 겹친다
     cuts = [a, b]
     MF.relocate_cuts(cuts, tmp_path, set(), log=lambda m: None, end=2.0)
     assert cuts == [a]

@@ -586,31 +586,40 @@ def relocate_cuts(cuts: list[dict], src_dir: Path | None, origins: set, log=prin
             c["jumpy"] = _jumpy(_cut_jumps(Path(src_dir) / c["src"], float(c["ss"]), src_frames(c) / FPS))
     spans_of: dict = {}
     out = []
-    for c in vid:
+    first_line = cuts[0].get("line") if cuts else None
+
+    def attempt(c, final: bool) -> str:
+        if c not in cuts:
+            return "gone"
+        if c.get("reuse_unfixed") and not c.get("over") and not c.get("jumpy") and not _new_viol([x for x in vid if x is not c and x in cuts], c, lens, adjacent_run):
+            c.pop("reuse_unfixed", None)            # 다른 컷을 옮기며 이미 풀렸다
+            return "ok"
         if c.get("kind") != "tts" or c.get("no_snap") or not (c.get("over") or c.get("reuse_unfixed") or c.get("jumpy")):
-            continue
+            return "ok"
         src = Path(src_dir) / c["src"]
         if c["src"] not in spans_of:
-            st = shot_starts(src)
-            pts = [0.0] + [t for t in st if 0 < t < lens[c["src"]]] + [lens[c["src"]]]
-            spans_of[c["src"]] = (st, jump_free_spans(src, [[a, b] for a, b in zip(pts, pts[1:])]))
+            st0 = shot_starts(src)
+            pts = [0.0] + [t for t in st0 if 0 < t < lens[c["src"]]] + [lens[c["src"]]]
+            spans_of[c["src"]] = (st0, jump_free_spans(src, [[a_, b_] for a_, b_ in zip(pts, pts[1:])]))
         st, spans = spans_of[c["src"]]
         d = round((float(c["t1"]) - float(c["t0"])) / _max_slowmo(), 3)    # 화면 초 ÷ 늦춤 상한 — 옮긴 뒤 fit_cut 이 샷 안에서 늦춰 채운다(같은 상한)
         ss0 = float(c.get("ss_planned", c["ss"]))
-        others = [x for x in vid if x is not c]
+        others = [x for x in vid if x is not c and x in cuts]
         got = None
-        for a, b in sorted(spans, key=lambda s: min(abs(s[0] - ss0), abs(s[1] - ss0))):
-            if b - a < d + 2 * EDGE:
+        for a_, b_ in sorted(spans, key=lambda sp_: min(abs(sp_[0] - ss0), abs(sp_[1] - ss0))):
+            if b_ - a_ < d + 2 * EDGE:
                 continue
-            m = REACH if b - a >= d + 2 * REACH else EDGE              # 뒤 fit_cut 이 ±REACH 옮겨도 구간 안(디졸브는 fit 이 모른다 — 10-27 TV L0)
-            s = round(min(max(ss0, a + m), b - d - m), 3)              # 그 구간 안에서 원래 초에 가장 가까운 자리
-            left = src_left(src, s)
-            if (left is not None and d > left) or short_pieces(st, s, s + d) or _new_viol(others, {**c, "ss": s}, lens, adjacent_run):
+            m = REACH if b_ - a_ >= d + 2 * REACH else EDGE           # 뒤 fit_cut 이 ±REACH 옮겨도 구간 안(디졸브는 fit 이 모른다 — 10-27 TV L0)
+            s_ = round(min(max(ss0, a_ + m), b_ - d - m), 3)           # 그 구간 안에서 원래 초에 가장 가까운 자리
+            left = src_left(src, s_)
+            if (left is not None and d > left) or short_pieces(st, s_, s_ + d) or _new_viol(others, {**c, "ss": s_}, lens, adjacent_run):
                 continue
-            got = (s, b)
+            got = (s_, b_)
             break
         why = "샷 넘침" if c.get("over") else ("재사용" if c.get("reuse_unfixed") else "장면 전환")
         if got is None:
+            if not final and not c.get("over"):
+                return "defer"                       # 훅 컷을 먼저 옮겨 보고 다시(풀리면 그대로 둔다)
             sp = split_cut(c, cuts, src_dir, end, {}, adjacent_run) if (c.get("over") and end is not None) else None   # 들어갈 샷이 없으면 두 샷에 나눠 담기
             mates = [x for x in cuts if x is not c and x.get("line") == c.get("line") and x.get("kind") == "tts"]
             if sp:
@@ -622,12 +631,23 @@ def relocate_cuts(cuts: list[dict], src_dir: Path | None, origins: set, log=prin
                 out.append(f"[빼기] {c.get('line')} {c['src']}@{ss0:.2f} {why} — 빈자리 없음, 같은 줄 다른 컷이 이어받음")
             else:
                 log(f"[옮기기] {c.get('line')} {c['src']}@{ss0:.2f} {why} — 같은 원본에 {d:.2f}초 들어갈 빈 구간 없음(관문 몫)")
-            continue
-        s, b = got
+            return "fail"
+        s_, b_ = got
         for k in ("over", "room", "reuse_unfixed", "src_left", "speed", "jumpy"):
             c.pop(k, None)
-        c["ss_moved"], c["ss"], c["ss_planned"], c["max"] = ss0, s, s, round(b - s, 3)
-        out.append(f"[옮기기] {c.get('line')} {c['src']} {why} ss {ss0:.2f} → {s:.2f}(구간 {s:.2f}~{b:.2f})")
+        c["ss_moved"], c["ss"], c["ss_planned"], c["max"] = ss0, s_, s_, round(b_ - s_, 3)
+        out.append(f"[옮기기] {c.get('line')} {c['src']} {why} ss {ss0:.2f} → {s_:.2f}(구간 {s_:.2f}~{b_:.2f})")
+        return "moved"
+
+    # 순서(10-27 메이블린): ①훅 아닌 컷을 옮겨 본다(자리 없으면 미룸) ②그래도 남은 훅(첫 줄 — 판 '0초 = 결과') 컷 ③미룬 컷 다시(풀렸으면 그대로).
+    #   훅 결과 컷을 먼저 옮기면 훅이 약해지고, 훅을 무조건 지키면 뒤 줄 컷이 빠져 남은 컷이 샷을 넘친다 — 자리가 있으면 훅을 지키고 없을 때만 옮긴다.
+    order = sorted(vid, key=lambda x: float(x.get("t0") or 0))
+    deferred = [c for c in order if c.get("line") != first_line and attempt(c, final=False) == "defer"]
+    for c in order:
+        if c.get("line") == first_line:
+            attempt(c, final=True)
+    for c in deferred:
+        attempt(c, final=True)
     for m in out:
         log(m)
     return out
