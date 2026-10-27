@@ -1,0 +1,42 @@
+{
+ "topic": "Shark StainForce(샤크 스테인포스) 무선 얼룩 제거 청소기 — 뿌리고·문지르고·빨아들이는 손 청소기(샤크 공식 사용법 영상) + 미국 리뷰어 Alder & Jade 가 카펫 얼룩에 처음 써 보고 'wow, it's almost already gone'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "YuYNhbtw7zM",
+ "bench_note": "벤치 '남자들이 두 번 보는 청소 영상'(24.9만, 핫템리포트 24위, 2026-09-23) — 강아지 오줌 얼룩을 Shark StainForce 로 지우는 여성 한 사람 영상(14초 'Shark STAINFORCE' 세제 통). 벤치 그 여성 원본은 찾지 않음(복장·구도상 쓰기 어려움 — 가슴 노출 큰 옷) → 같은 제품을 처음 써 보는 유튜브 Alder & Jade Reviews JwV3RthAwuQ(1.2만, 2025-10-26) 원음형. 벤치 '미국 1위 청소기 브랜드'는 근거 없어 안 씀",
+ "sources": {
+  "aj": {"file": "aj.mp4", "who": "유튜브 Alder & Jade Reviews 'What REALLY Happens When You Use the Shark StainForce on TOUGH Carpet Stains?' JwV3RthAwuQ 270~540초 구간 사본(1080p30, 영어 원음 트랙 140-19)", "views": 11845, "dur": 270.0, "res": "1920x1080"},
+  "sh": {"file": "sh.mp4", "who": "유튜브 Shark Home 공식 'How to use your Shark® StainForce™' uecQ3ylcVos 전체(1080p24)", "views": 131178, "dur": 144.94, "res": "1920x1080"}
+ },
+ "titles": {"hook": "강아지 실수 얼룩\n쓱 빨아먹는 청소기"},
+ "facts": {
+  "f1": {"text": "샤크 공식 uecQ3ylcVos(스피치매틱스) 53.68~58.72 'for a fresh wet stain Power on the unit and start by extracting up the liquid to prevent spreading' · 화면 56.35~60.77 젖은 얼룩을 빨아들여 없어짐 · 설명란 제품 주소 'shark-stainforce-cordless-spot-stain-cleaner-with-storage-caddy'(무선)", "kind": "공식"},
+  "f2": {"text": "같은 영상 27.36~52.04 'Spray the stain with Shark cleaning solution … Scrub again to activate the solution … Power on … Tilt the unit upwards and pull back slowly to extract'", "kind": "공식"},
+  "f3": {"text": "Alder & Jade 원본 385.92~388.12(사본 115.92~118.12) 'And then wow, it's almost already gone'", "kind": "본인 말"},
+  "f4": {"text": "같은 원본 395.68~397.92(사본 125.68~127.92) 'It fully removed that stain. No problem.'", "kind": "본인 말"}
+ },
+ "final": {
+  "order": ["N1", "O1", "N2", "O2"],
+  "lines": [
+   {"id": "N1", "fn": "훅(물건+~있는데요)", "text": "러그에 강아지가 실수해도, 걸레질 없이 쓱 빨아들이는 청소기가 있는데요.",
+    "caps": ["러그에 강아지가 실수해도", "걸레질 없이", "쓱 빨아들이는 청소기가 있는데요"], "facts": ["f1"]},
+   {"id": "N2", "fn": "불러냄 → 원음 증거", "text": "뿌리고, 문지르고, 빨아들이는 걸, 선 없이 이거 하나로 끝낸대요.",
+    "caps": ["뿌리고 문지르고 빨아들이는 걸", "선 없이 이거 하나로 끝낸대요"], "facts": ["f1", "f2"]}
+  ],
+  "orig_audio": [
+   {"id": "O1", "src": "aj", "span": [115.87, 118.25], "en": "And then, wow, it's almost already gone.",
+    "caps": ["그리고… 와!", "벌써 거의 다 지워졌어요!"],
+    "check": "And 115.92 · gone 118.12 · 다음 I 118.44 · 화면 한 샷 60.73~188.3"},
+   {"id": "O2", "src": "aj", "span": [125.62, 127.95], "en": "It fully removed that stain. No problem.",
+    "caps": ["얼룩이 싹 빠졌어요", "아무 문제 없네요!"],
+    "check": "It 125.68 · problem 127.92 · 다음 Let's 127.92(이어 말함 — 끝을 127.95 로, Let's 첫소리 0.03초) · 화면 한 샷 60.73~188.3"}
+  ],
+  "dropped": {
+   "벤치 '미국 1위 청소기 브랜드'": "근거 없음 — 안 씀",
+   "벤치 여성 원본": "가슴 노출 큰 옷·찾지 않음 — 같은 제품 리뷰어 원음형",
+   "리뷰어 'neutralized pet odors'(설명란)": "효능 — 안 씀",
+   "가격": "금액 금지"
+  }
+ },
+ "voice": {"tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회", "speed": 1.24, "target_cps": 8.0, "id": "tc_6059dad0b83880769a50502f", "name": "박창수"}
+}

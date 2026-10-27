@@ -1,0 +1,407 @@
+{
+ "topic": "Shark StainForce(샤크 스테인포스) 무선 얼룩 제거 청소기 — 뿌리고·문지르고·빨아들이는 손 청소기(샤크 공식 사용법 영상) + 미국 리뷰어 Alder & Jade 가 카펫 얼룩에 처음 써 보고 'wow, it's almost already gone'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "YuYNhbtw7zM",
+ "bench_note": "벤치 '남자들이 두 번 보는 청소 영상'(24.9만, 핫템리포트 24위, 2026-09-23) — 강아지 오줌 얼룩을 Shark StainForce 로 지우는 여성 한 사람 영상(14초 'Shark STAINFORCE' 세제 통). 벤치 그 여성 원본은 찾지 않음(복장·구도상 쓰기 어려움 — 가슴 노출 큰 옷) → 같은 제품을 처음 써 보는 유튜브 Alder & Jade Reviews JwV3RthAwuQ(1.2만, 2025-10-26) 원음형. 벤치 '미국 1위 청소기 브랜드'는 근거 없어 안 씀",
+ "sources": {
+  "aj": {
+   "file": "aj.mp4",
+   "who": "유튜브 Alder & Jade Reviews 'What REALLY Happens When You Use the Shark StainForce on TOUGH Carpet Stains?' JwV3RthAwuQ 270~540초 구간 사본(1080p30, 영어 원음 트랙 140-19)",
+   "views": 11845,
+   "dur": 270.0,
+   "res": "1920x1080"
+  },
+  "sh": {
+   "file": "sh.mp4",
+   "who": "유튜브 Shark Home 공식 'How to use your Shark® StainForce™' uecQ3ylcVos 전체(1080p24)",
+   "views": 131178,
+   "dur": 144.94,
+   "res": "1920x1080"
+  }
+ },
+ "titles": {
+  "hook": "강아지 실수 얼룩\n쓱 빨아먹는 청소기"
+ },
+ "facts": {
+  "f1": {
+   "text": "샤크 공식 uecQ3ylcVos(스피치매틱스) 53.68~58.72 'for a fresh wet stain Power on the unit and start by extracting up the liquid to prevent spreading' · 화면 56.35~60.77 젖은 얼룩을 빨아들여 없어짐 · 설명란 제품 주소 'shark-stainforce-cordless-spot-stain-cleaner-with-storage-caddy'(무선)",
+   "kind": "공식"
+  },
+  "f2": {
+   "text": "같은 영상 27.36~52.04 'Spray the stain with Shark cleaning solution … Scrub again to activate the solution … Power on … Tilt the unit upwards and pull back slowly to extract'",
+   "kind": "공식"
+  },
+  "f3": {
+   "text": "Alder & Jade 원본 385.92~388.12(사본 115.92~118.12) 'And then wow, it's almost already gone'",
+   "kind": "본인 말"
+  },
+  "f4": {
+   "text": "같은 원본 395.68~397.92(사본 125.68~127.92) 'It fully removed that stain. No problem.'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "text": "러그에 강아지가 실수해도 걸레질 없이 쓱 빨아들이는 청소기가 있는데요 뿌리고 문지르고 빨아들이는 걸 선 없이 이거 하나로 끝낸대요.",
+    "note": "렌더용 한 문장 — 원문 줄은 대본.json"
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "aj",
+    "span": [
+     115.87,
+     118.25
+    ],
+    "en": "And then, wow, it's almost already gone.",
+    "caps": [
+     "그리고… 와!",
+     "벌써 거의 다 지워졌어요!"
+    ],
+    "check": "And 115.92 · gone 118.12 · 다음 I 118.44 · 화면 한 샷 60.73~188.3"
+   },
+   {
+    "id": "O2",
+    "src": "aj",
+    "span": [
+     125.62,
+     127.95
+    ],
+    "en": "It fully removed that stain. No problem.",
+    "caps": [
+     "얼룩이 싹 빠졌어요",
+     "아무 문제 없네요!"
+    ],
+    "check": "It 125.68 · problem 127.92 · 다음 Let's 127.92(이어 말함 — 끝을 127.95 로, Let's 첫소리 0.03초) · 화면 한 샷 60.73~188.3"
+   }
+  ],
+  "dropped": {
+   "벤치 '미국 1위 청소기 브랜드'": "근거 없음 — 안 씀",
+   "벤치 여성 원본": "가슴 노출 큰 옷·찾지 않음 — 같은 제품 리뷰어 원음형",
+   "리뷰어 'neutralized pet odors'(설명란)": "효능 — 안 씀",
+   "가격": "금액 금지"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ },
+ "captions_plan": [
+  {
+   "t0": 0.0,
+   "text": "러그에 강아지가 실수해도",
+   "kind": "나레"
+  },
+  {
+   "t0": 1.407,
+   "text": "걸레질 없이",
+   "kind": "나레"
+  },
+  {
+   "t0": 2.046,
+   "text": "쓱 빨아들이는 청소기가 있는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 4.086,
+   "text": "그리고… 와!",
+   "kind": "원음"
+  },
+  {
+   "t0": 4.776,
+   "text": "벌써 거의 다 지워졌어요!",
+   "kind": "원음"
+  },
+  {
+   "t0": 6.716,
+   "text": "뿌리고 문지르고 빨아들이는 걸",
+   "kind": "나레"
+  },
+  {
+   "t0": 8.394,
+   "text": "선 없이 이거 하나로 끝낸대요",
+   "kind": "나레"
+  },
+  {
+   "t0": 10.193,
+   "text": "얼룩이 싹 빠졌어요",
+   "kind": "원음"
+  },
+  {
+   "t0": 11.436,
+   "text": "아무 문제 없네요!",
+   "kind": "원음"
+  }
+ ],
+ "caption_events": [
+  {
+   "kind": "emph",
+   "text": "러그에 강아지가 실수해도",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.0,
+   "dur": 1.407,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "걸레질 없이",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 1.407,
+   "dur": 0.639,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "쓱 빨아들이는 청소기가 있는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 2.046,
+   "dur": 2.04,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "그리고… 와!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 4.086,
+   "dur": 0.69,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "벌써 거의 다 지워졌어요!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 4.776,
+   "dur": 1.94,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "뿌리고 문지르고 빨아들이는 걸",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 6.716,
+   "dur": 1.678,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "선 없이 이거 하나로 끝낸대요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 8.394,
+   "dur": 1.799,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "얼룩이 싹 빠졌어요",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 10.193,
+   "dur": 1.243,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "아무 문제 없네요!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 11.436,
+   "dur": 1.687,
+   "who": "원음"
+  }
+ ],
+ "render": {
+  "windows": [
+   [
+    4.086,
+    6.466
+   ],
+   [
+    10.193,
+    12.523
+   ]
+  ],
+  "blocks": [
+   {
+    "id": "N1",
+    "kind": "나레",
+    "n0": 0.0,
+    "n1": 3.836
+   },
+   {
+    "id": "O1",
+    "kind": "원음",
+    "a0": 4.086,
+    "a1": 6.466,
+    "audio_ss": 115.87,
+    "src": "aj"
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "n0": 6.716,
+    "n1": 9.943
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "a0": 10.193,
+    "a1": 12.523,
+    "audio_ss": 125.62,
+    "src": "aj"
+   }
+  ],
+  "pieces": [
+   {
+    "block": "N1",
+    "covers": [
+     "N1"
+    ],
+    "src": "sh",
+    "ss": 56.45,
+    "vs": 0.0,
+    "src_crop": [
+     450,
+     0,
+     762,
+     960
+    ],
+    "why": "공식: 카펫 위 젖은 얼룩을 빨아들여 없어짐(56.35~60.77 한 샷)",
+    "ve": 3.986,
+    "src_end": 60.436
+   },
+   {
+    "block": "O1",
+    "covers": [
+     "O1"
+    ],
+    "src": "aj",
+    "ss": 115.77,
+    "vs": 3.986,
+    "src_crop": [
+     350,
+     0,
+     857,
+     1080
+    ],
+    "why": "리뷰어가 솔로 문지른 고양이 사료 얼룩이 거의 사라짐 + 'wow, it's almost already gone'(60.73~188.3 한 샷)",
+    "ve": 6.716,
+    "src_end": 118.5
+   },
+   {
+    "block": "N2",
+    "covers": [
+     "N2"
+    ],
+    "src": "sh",
+    "ss": 18.45,
+    "vs": 6.716,
+    "src_crop": [
+     520,
+     0,
+     762,
+     960
+    ],
+    "why": "공식: 붉은 얼룩 위로 기계를 당겨 빨아들임(18.35~22.94)",
+    "ve": 10.093,
+    "src_end": 21.827
+   },
+   {
+    "block": "O2",
+    "covers": [
+     "O2"
+    ],
+    "src": "aj",
+    "ss": 125.52,
+    "vs": 10.093,
+    "src_crop": [
+     350,
+     0,
+     857,
+     1080
+    ],
+    "why": "얼룩 자리를 손가락으로 가리키며 'It fully removed that stain'(같은 한 샷)",
+    "ve": 13.123,
+    "src_end": 128.55
+   }
+  ],
+  "dur": 13.123,
+  "narr": [
+   {
+    "id": "N1",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\20_StainForce\\front\\render\\narr_N1.wav",
+    "dur": 3.836,
+    "tempo": 0.863,
+    "chars": 30,
+    "speech": 3.836,
+    "cps": 7.82,
+    "segs": [
+     [
+      0.0,
+      3.836
+     ]
+    ]
+   },
+   {
+    "id": "N2",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\20_StainForce\\front\\render\\narr_N2.wav",
+    "dur": 3.227,
+    "tempo": 0.875,
+    "chars": 25,
+    "speech": 3.227,
+    "cps": 7.75,
+    "segs": [
+     [
+      0.0,
+      3.227
+     ]
+    ]
+   }
+  ]
+ }
+}
