@@ -58,7 +58,7 @@
   // JS 스코프만 격리하고 DOM은 페이지와 공유하므로 이 attribute를 페이지 스크립트가 읽는다.
   // 우리 도메인에선 담기 버튼을 붙이지 않고 여기서 끝낸다(자기 페이지에 엉뚱한 📥 방지).
   try {
-    if (["shoppingshorts.duckdns.org", "app.stmaker.kr"]
+    if (["shoppingshorts.duckdns.org", "stmaker.kr"]   // stmaker.kr = 루트·www·app 전부
         .some(function (h) { return location.hostname.indexOf(h) >= 0; })) {
       document.documentElement.setAttribute("data-ss-grab-installed", "1");
       // localStorage는 JS월드가 아니라 '출처(origin)'로 공유돼 샌드박스 경계에 가장 강하다.
