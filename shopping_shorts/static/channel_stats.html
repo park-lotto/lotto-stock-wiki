@@ -339,7 +339,7 @@ function renderCh() {
   $("#chTbl").innerHTML = `<thead><tr><th>채널</th><th>콘셉트</th><th class="num">구독자</th><th class="num">영상</th><th>누적 조회</th>
     <th class="num">한 편 보통</th><th class="num">히트</th><th class="num">좋아요율</th><th>가장 잘된 영상</th><th class="num">틱톡</th></tr></thead><tbody>` +
     cs.map(c => `<tr>
-      <td><a class="ch" href="https://www.youtube.com/channel/${c.id}" target="_blank" rel="noopener"><img src="${esc(c.thumb)}" alt="" loading="lazy"><div><div class="nm">${esc(c.name)}</div><div class="fd">${esc(c.folder)}</div></div></a></td>
+      <td><a class="ch" href="https://www.youtube.com/channel/${c.id}" target="_blank" rel="noopener"><img src="${esc(c.thumb)}" alt=""><div><div class="nm">${esc(c.name)}</div><div class="fd">${esc(c.folder)}</div></div></a></td>
       <td class="mut" style="white-space:nowrap">${esc(c.concept)}</td>
       <td class="num strong">${fmt(c.subs)}</td><td class="num">${c.videos}</td>
       <td><div style="display:flex;align-items:center;gap:10px"><span class="strong" style="min-width:52px">${short(c.views)}</span><div class="bar" style="flex:1"><span style="width:${c.views / max * 100}%"></span></div></div></td>
@@ -416,7 +416,7 @@ function renderVids() {
     ${th("like_rate", "좋아요율", 1)}${th("comments", "댓글", 1)}${th("tt", "틱톡 조회", 1)}${th("", "분류")}</tr></thead><tbody>` +
     (vs.length ? vs.map((v, i) => { const p = new Date(v.published);
       return `<tr class="click" data-id="${v.id}"><td class="mut">${i + 1}</td>
-      <td><a class="vid" href="${v.url}" target="_blank" rel="noopener"><img src="${esc(v.thumb)}" alt="" loading="lazy"><div><div class="t">${esc(v.title)}${v.hit ? `<span class="hitb">히트</span>` : ""}</div>
+      <td><a class="vid" href="${v.url}" target="_blank" rel="noopener"><img src="${esc(v.thumb)}" alt=""><div><div class="t">${esc(v.title)}${v.hit ? `<span class="hitb">히트</span>` : ""}</div>
         <div class="s">${esc(chName[v.ch] || v.ch)}${v.file ? " · " + esc(v.file) : ""}</div></div></a></td>
       <td class="mut" style="white-space:nowrap">${p.getMonth() + 1}/${p.getDate()} ${String(p.getHours()).padStart(2, "0")}:${String(p.getMinutes()).padStart(2, "0")}
         <div style="font-size:12px">${v.mature ? (v.age_h < 48 ? Math.round(v.age_h) + "시간 전" : Math.round(v.age_h / 24) + "일 전") : `<span class="live">${Math.round(v.age_h)}시간 · 차는 중</span>`}</div></td>
