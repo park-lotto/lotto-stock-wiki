@@ -45,7 +45,11 @@ FORMAT_STAGES = {
     "쇼핑형": [("setup", "준비 확인"), ("bench", "소재 확인"), ("product", "제품 확인"), ("research", "자료 조사"), ("material", "재료 영상 모으기"),
              ("script", "대본 쓰기"), ("sign", "대본 확인"), ("plan", "장면 맞추기"), ("render", "목소리·영상 만들기"), ("check", "완성본 검사"), ("done", "완성")],
     "레시피형": STAGES,          # 연예인형 단계 + 재료 스티커(판 placement·brief 가 정한다 — flow 는 판을 읽을 뿐)
+    "자막노래형": [("setup", "준비 확인"), ("bench", "영상 확인"), ("origin", "원본 영상 찾기"), ("material", "원본 정리"), ("script", "댓글 자막 쓰기"),
+               ("sign", "대본 확인"), ("plan", "장면 맞추기"), ("render", "글자 지우기·영상 만들기"), ("check", "완성본 검사"), ("done", "완성")],
+    # 자막노래형(릴리릴리·별헤는쏭 10-27) = 해외 바이럴 한 샷 + 노래 + 댓글 모양 자막 — 나레·제품·조사·원음 없음. 처리기는 해외원본형 것을 그대로 쓰고 j_* 만 다르다
 }
+FOREIGN_FMTS = ("해외원본형", "자막노래형")     # 원본(해외 클립)이 주재료인 형식 — 재료 순서·박힌 글자 흐림이 같다
 PRESETS_FILE = Path(__file__).resolve().parents[3] / "channel" / "프리셋.json"
 
 
@@ -1710,7 +1714,7 @@ def _shots_ctx(st) -> str:
 def ph_script(st, m, rp, u):
     mats = ["src/" + x["name"] for x in (st.get("material") or {}).get("files") or []]
     origs = ["src/" + x["name"] for x in (st.get("origin") or {}).get("files") or []]
-    files = (origs + mats) if _fmt(st) == "해외원본형" else (mats + origs)     # 해외원본형은 원본이 주재료 — 원본 시트가 앞
+    files = (origs + mats) if _fmt(st) in FOREIGN_FMTS else (mats + origs)     # 해외원본형은 원본이 주재료 — 원본 시트가 앞
     return {"do": [{"id": "msheets", "cmd": "mat_sheets", "files": files[:5]}], "then": "script_ask"}
 
 
@@ -1741,6 +1745,8 @@ def _points_ctx(v: str) -> str:
 def _script_ask(st, fail: str = "") -> dict:
     from tools.calcopy.hybrid import render_bench, styles as STY
     v = st["version"]
+    if _fmt(st) == "자막노래형":
+        return _subsong_script_ask(st, fail)
     fmt = (render_bench.__doc__ or "")
     fmt = fmt[fmt.find("대본.json:"):] if "대본.json:" in fmt else fmt
     PR = st.get("product") or {}
@@ -1793,7 +1799,7 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
              "alt_scene": RU.alt_scene_problems(S, M, _origin_names(st)) if (st.get("product") or {}).get("mode") == "alt" else [],
              "source_rule": RU.source_rule_static(M, _origin_names(st), _rule_bench_id(st), st.get("shots") or {})}
     on = _origin_names(st)
-    if _fmt(st) != "해외원본형" and not any(str(c.get("src") or "") not in on for cs in (M.get("cuts") or {}).values() for c in (cs if isinstance(cs, list) else [cs])):
+    if _fmt(st) not in FOREIGN_FMTS and not any(str(c.get("src") or "") not in on for cs in (M.get("cuts") or {}).values() for c in (cs if isinstance(cs, list) else [cs])):
         extra["product_cut"] = ["제품 컷이 하나도 없다 — '써 봤다'·제품 설명 줄은 재료 파일(제품 영상 또는 prod_*.jpg 사진, 사진은 move: in·out·left·right)로. "
                                 "원본 방송 화면만으로 우리 제품 이야기를 하지 않는다(98 #22)"]
     bad = {k: x for k, x in extra.items() if x}
@@ -1803,7 +1809,7 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
 def _prep_material(st, S: dict, M: dict) -> dict:
     """대본 답의 재료에 서버가 채우는 칸(한 곳) — 샷 끝·주인공 칸(fill_shot_max) · 해외원본형 박힌 글자 흐림(text_blur_all) · crop 단위."""
     M = RU.fill_shot_max(M, S, _origin_dims(st), st.get("shots") or {}, _ar(st["version"]))
-    if _fmt(st) == "해외원본형":              # 박힌 글자 = 지운 파일(clean)은 그대로, 나머지는 흐림 — 판단 주인 rules.text_blur_all(관제 263 08)
+    if _fmt(st) in FOREIGN_FMTS:              # 박힌 글자 = 지운 파일(clean)은 그대로, 나머지는 흐림 — 판단 주인 rules.text_blur_all(관제 263 08)
         nb = RU.merge_blur(M, RU.text_blur_all(st.get("shots") or {}, _origin_dims(st), set((st.get("text_fix") or {}).get("cleaned") or [])))
         if nb:
             st["log"].append(f"박힌 글자 흐림 {nb}칸(재료.blur)")
@@ -1835,7 +1841,9 @@ def ph_script_got(st, m, rp, u):
         if _fmt(st) == "해외원본형":              # 원본 여럿 — 원본 채널 이름을 다 적는다
             ch = ", ".join(dict.fromkeys(str((o.get("info") or {}).get("channel")) for o in st.get("origins") or [] if (o.get("info") or {}).get("channel"))) or ch
         if ch:                                   # 출처 줄 = 원본 채널 이름 그대로(사장님 '원본을 출처로') — 판정 답이 아니라 서버가 정한다
-            S["source_label"] = f"출처: {ch}"
+            S["source_label"] = ch if _fmt(st) == "자막노래형" else f"출처: {ch}"      # 자막노래형 = 창 안 '📍<계정>'(판 credit.in_window)
+        if _fmt(st) == "자막노래형":
+            _subsong_bgm(st, S)
         M = _prep_material(st, S, M)
         a = audit_script(st, S, M)
     if not a.get("ok"):
@@ -2415,6 +2423,7 @@ JSON 하나: {"ok": true, "problems": ["…"], "재료": null}"""
 _Q = {   # 형식별 질문 — 없으면 공용(연예인형) 상수
     "해외원본형": {"PLAN_LOOK": PLAN_LOOK_FOREIGN, "PRODUCT_BEST": PRODUCT_BEST_FOREIGN, "SCRIPT": None},
     "쇼핑형": {"PLAN_LOOK": PLAN_LOOK_SHOP, "SCRIPT": SCRIPT_SHOP},
+    "자막노래형": {"PLAN_LOOK": PLAN_LOOK_FOREIGN},
 }
 
 
@@ -3227,6 +3236,125 @@ def s_material_dl(st, m, rp, u):
     return {"goto": "script"}
 
 
+# ── 자막노래형 처리기(릴리릴리·별헤는쏭 10-27 — 해외 바이럴 한 샷 + 노래 + 댓글카드 자막, 나레·제품 없음) ─────────────────
+# 원본 찾기·받기·샷 표·박힌 글자·계획·렌더는 해외원본형 처리기 그대로. 다른 것: 소재 판독(제품 대신 '한 장면 클립인가') · 같은 제품 다른 반응 안 찾음(한 샷) ·
+# 제품·조사·원음 단계 없음 · 대본 = 댓글카드 sub 줄(질문 SCRIPT_SUBSONG) · 노래 시작점·출처 = 서버(render_bench.bgm_ss_for).
+REF_READ_SUBSONG = """너는 자막노래형 소재 판독 담당이다. 아래는 회원이 준 쇼츠(소재)의 1초 장면 시트·큰 장면 한 장·제목·설명·받아쓰기다.
+이 판 = '해외 바이럴 클립 한 샷 + 노래 + 댓글 모양 자막'. 소재가 한 장면으로 이어지는 바이럴 클립(사건·묘기·동물·사람 반응·신기한 기계 등)인지 본다.
+- ref_kind: korean_reedit = 한국 채널이 남의 클립에 한글 자막·제목·틀을 얹은 것(→ 원본을 찾는다) / foreign_original = 원본 그대로
+- is_clip: false = 제품 광고·말하는 사람 위주(강의·브이로그 말)·여러 영상 모음(장면 5개 넘게 바뀜)·게임 화면 — 댓글 자막이 받아칠 '한 장면'이 없는 영상
+- what: 무슨 장면인지 한 줄 · queries_en: 원본 찾기 영어 검색어 2~4개(장면 낱말)
+JSON만: {"ref_kind":"korean_reedit|foreign_original","is_clip":true,"what":"…","queries_en":["…"],"why":"…"}"""
+
+SCRIPT_SUBSONG = """너는 댓글 자막 작가다(오푸스). 자막노래형 — 나레(TTS) 없음. 원본 바이럴 클립 한 샷 위에 '댓글 모양 자막' 카드를 박자마다 한 장씩 얹는다.
+아래 판 규칙(대본 쓰는 법)·본보기 꼴 그대로 이 편의 대본·재료·근거를 써라. 대본 검사를 통과해야 한다 — 걸린 이유가 아래에 있으면 고쳐서 다시.
+- 대본 = {"slug": 영문 소문자_밑줄, "title_lines": [[["1줄", null]], [["2줄", null]]], "lines": [{"id":"C1","kind":"sub","dur":초,"caps":[{"text":…,"likes":…,"ago":…,"s0":0.27}]}, …], "facts": ["원본 근거 한 줄"]}
+  source_label·bgm 은 서버가 채운다(적지 마라). 줄 id = C1, C2 … · dur 합 = 쓰는 클립 길이(판 길이 안).
+- 재료 = {"cuts": {"C1": [{"src": "<원본 파일 이름 그대로>", "ss": 초, "crop": [x, y, w, h]}], …}} — 한 샷을 이어서(Cn ss = 앞 줄 ss + 앞 줄 dur), 되감기·건너뛰기 없음.
+  crop 은 창 비율(아래 '창')에 맞추고 원본 높이를 넘지 않게(확대 없음). 박힌 글자 흐림은 서버가 넣는다.
+- 장면에 실제로 보이는 것만 말한다 — 지어낸 사실·숫자·나라·사람 이름 금지. 욕설·혐오·CTA 금지.
+JSON만: {"대본": {…}, "재료": {…}, "근거_md": "원본 주소·장면 근거"}"""
+
+
+def _subsong_script_ask(st, fail: str = "") -> dict:
+    """자막노래형 대본 질문 — 판 brief(본보기 포함) + 원본 목록·크기·샷 표·창 비율. 제품·조사·원음 칸 없음."""
+    from tools.calcopy.hybrid import styles as STY
+    v = st["version"]
+    ms = st.get("_msheets") or {}
+    win = STY_window(v)
+    O = [f"- {o.get('id')} · {(o.get('info') or {}).get('channel')} · '{(o.get('info') or {}).get('title')}' · 파일 "
+         + ", ".join(f"{x['name']}({x.get('w')}x{x.get('h')}, {x.get('dur')}초)" for x in o.get("files") or []) for o in st.get("origins") or []]
+    ctx = (STY.brief(v) + "\n\n## 소재 판독\n" + str((st.get("read") or {}).get("what") or "") +
+           "\n\n## 원본(한 샷 — 이 클립 하나로 만든다)\n" + "\n".join(O) +
+           f"\n창(영상이 들어가는 자리) = {win[2]}x{win[3]} — crop 은 이 비율" +
+           "\n실제 크기(crop 은 이 픽셀로 — 시트는 줄인 미리보기다): " + json.dumps(_all_dims(st), ensure_ascii=False) + _shots_ctx(st) +
+           _src_rule_ctx(st) + (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
+    return _rv(f"script_{v}", SCRIPT_SUBSONG + "\n\n" + ctx, [_img(x) for x in ms.get("sheets") or []], need=("대본", "재료"))
+
+
+def _subsong_bgm(st, S: dict) -> None:
+    """노래 시작점(bgm.ss) = render_bench.bgm_ss_for(판 bgm.vocal_at — 가사가 영상 길이 그 비율 자리에서 시작). 판에 칸이 없으면 대본 그대로."""
+    from tools.calcopy.hybrid import render_bench
+    st_ = _style(st["version"])
+    L = sum(float(l.get("dur") or 0) for l in S.get("lines") or [] if l.get("kind") == "sub")
+    bid = (st_.get("bgm") or {}).get("id")
+    ss = render_bench.bgm_ss_for(st_, L, bid)
+    if ss is not None:
+        S["bgm"] = {"id": bid, "ss": ss}
+        st["log"].append(f"노래 시작점 bgm.ss {ss}초(길이 {round(L, 2)}초 · 판 vocal_at)")
+
+
+def j_bench_got(st, m, rp, u):
+    b = m.get("bench") or {}
+    if b.get("error"):
+        raise _Stop("영상을 받지 못했어요", "잠시 뒤 다시 시도해 주시면 받기부터 이어 갈게요", auto=True)
+    st["bench"] = {k: b.get(k) for k in ("id", "title", "channel", "date", "dur", "desc", "sheet", "big")}
+    st["bench_lines"] = b.get("lines") or []
+    return {"review": [_rv("ref_read", REF_READ_SUBSONG + "\n\n제목: " + str(b.get("title")) + "\n채널: " + str(b.get("channel")) +
+                           "\n설명: " + str(b.get("desc") or "")[:1500] + "\n받아쓰기: " + " / ".join(str(l.get("text")) for l in st["bench_lines"])[:3000],
+                           ([_img(b["sheet"])] if b.get("sheet") else []) + ([_img(b["big"])] if b.get("big") else []),
+                           need=("ref_kind", "is_clip", "queries_en"))], "then": "ref_read"}
+
+
+SHORT_SRC = ("영상이 짧아서 이 스타일로 만들 수 없어요", "이 영상은 여기서 마칠게요")
+
+
+def _subsong_too_short(st, dur) -> bool:
+    """(판단 주인 — 자막노래형 소재 길이) 한 샷을 이어서 쓰는 형식이라 원본이 판 length.min 보다 짧으면 만들 수 없다(되감기·느리게 = 벤치에 없음).
+    10-27 개발 완주: 6초 소재(lerlGHkuf5E)로 대본 3번·장면 맞추기 2번 헛돌고 장면 단계에서 멈춤 → 받자마자 길이로 마친다."""
+    lo = float((_style(st["version"]).get("length") or {}).get("min") or 0)
+    return isinstance(dur, (int, float)) and float(dur) < lo
+
+
+def j_ref_read(st, m, rp, u):
+    from tools.calcopy import origin_find as OF
+    r = _reply(rp, "ref_read", ("ref_kind", "is_clip", "queries_en"))
+    if not r.get("is_clip"):
+        raise _Stop("한 장면으로 이어지는 바이럴 영상이 아니에요", "이 영상은 여기서 마칠게요", final=True)
+    B = st["bench"]
+    if r.get("ref_kind") != "korean_reedit" and _subsong_too_short(st, B.get("dur")):     # 원본 그대로인 소재 — 그 길이가 곧 쓸 길이
+        st["log"].append(f"소재 길이 {B.get('dur')}초 < 판 최소 — 마침")
+        raise _Stop(*SHORT_SRC, final=True)
+    korean = OF.is_korean(str(B.get("title") or ""), str(B.get("channel") or "")) or r.get("ref_kind") == "korean_reedit"
+    st["read"] = {**r, "celeb": "", "korean": korean, "product_words": [str(r.get("what") or "장면")]}
+    st["origins"], st["research"] = [], {"spans": []}
+    if korean:
+        st["log"].append("소재 = 한국 재편집 → 렌즈로 해외 원본")
+        return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "lens", "bench_id": B.get("id"), "queries": [q for q in r.get("queries_en") or [] if q][:4]}], "then": "of_got"}
+    st["origins"] = [{"id": B.get("id"), "info": {k: B.get(k) for k in ("id", "title", "channel", "date", "dur")}, "how": "소재 = 해외 원본"}]
+    st["log"].append("소재 = 해외 원본 그대로(한 샷)")
+    return {"goto": "of_fetch"}
+
+
+def j_of_peers(st, m, rp, u):
+    """한 샷 형식 — 같은 제품 다른 반응을 찾지 않는다(원본 하나로 만든다)."""
+    st["_peers_done"] = True
+    return {"goto": "of_fetch"}
+
+
+def j_of_fetched(st, m, rp, u):
+    r = f_of_fetched(st, m, rp, u)
+    if r.get("goto") == "f_product_sheet":        # 제품 단계 없음 — 첫 원본(한 샷)만 남기고 원본 정리로
+        st["origins"] = st["origins"][:1]
+        st["origin"]["files"] = list(st["origins"][0].get("files") or [])
+        dur = max((float(x.get("dur") or 0) for x in st["origin"]["files"]), default=0)
+        if _subsong_too_short(st, dur):
+            st["log"].append(f"원본 길이 {dur}초 < 판 최소 — 마침")
+            raise _Stop(*SHORT_SRC, final=True)
+        return {"goto": "j_material"}
+    return r
+
+
+def j_material(st, m, rp, u):
+    """원본 샷 표(카메라 바뀌는 곳·박힌 글자 상자)만 — 쿠팡 사진 없음."""
+    return {"do": [{"id": "shots", "cmd": "shot_sheets", "files": ["src/" + f["name"] for f in st["origin"]["files"]], "window": None}], "then": "f_material_got"}
+
+
+def j_draft_got(st, m, rp, u):
+    f_draft_got(st, m, rp, u)
+    return {"goto": "script"}        # 원음 받아쓰기 없음(나레·원음 줄 없는 형식)
+
+
 FORMAT_PHASES = {   # 형식별 세부 단계 처리기 — 없는 세부 단계는 공용 PHASES
     "해외원본형": {"bench": f_of_dual_start, "of_dual": f_of_dual, "of_dual_b": f_of_dual, "of_dual_retry": f_of_dual_retry, "of_settled": f_of_settled,
                 "bench_got": f_bench_got, "ref_read": f_ref_read, "of_lens": f_of_lens, "of_peers": f_of_peers, "of_got": f_of_got, "of_pick": f_of_pick, "of_find": f_of_find, "of_find_got": f_of_find_got, "of_fetch": f_of_fetch,
@@ -3239,12 +3367,17 @@ FORMAT_PHASES = {   # 형식별 세부 단계 처리기 — 없는 세부 단계
              "research": s_research, "s_research_check": s_research_check, "material_dl": s_material_dl},
     "레시피형": {},      # 연예인형 처리기 그대로(재료 스티커 = 판)
 }
+FORMAT_PHASES["자막노래형"] = {**{k: v for k, v in FORMAT_PHASES["해외원본형"].items()
+                               if k not in ("bench", "of_dual", "of_dual_b", "of_dual_retry", "of_settled", "f_product_sheet", "f_product_pick",
+                                            "f_product_cands", "f_product_same", "research", "f_research_got", "f_research_check", "f_asr", "f_asr_got")},
+                            "bench_got": j_bench_got, "ref_read": j_ref_read, "of_peers": j_of_peers, "of_fetched": j_of_fetched,
+                            "j_material": j_material, "material": j_material, "f_draft_got": j_draft_got}
 PHASE_STAGE.update({
     "ref_read": "bench", "topic_got": "bench", "of_dual_b": "bench", "of_dual": "origin", "of_dual_retry": "origin", "of_settled": "origin", "of_lens": "origin", "of_peers": "origin", "of_got": "origin", "of_pick": "origin", "of_find": "origin", "of_find_got": "origin", "of_fetch": "origin", "of_fetched": "origin",
     "f_product_sheet": "product", "f_product_pick": "product", "f_product_cands": "product", "f_product_same": "product", "s_cands": "product", "s_cand_look": "product",
     "s_product_done": "product", "f_research_got": "research", "f_research_check": "research", "s_research_check": "research", "f_material": "material",
     "f_material_got": "material", "f_shots_got": "material", "f_clean": "material", "f_clean_got": "material", "f_draft": "material", "f_draft_got": "material",
-    "f_asr": "asr", "f_asr_got": "asr", "customize": "sign", "check_judge": "check", "f_render_clean_got": "render",
+    "f_asr": "asr", "f_asr_got": "asr", "customize": "sign", "j_material": "material", "check_judge": "check", "f_render_clean_got": "render",
 })
 
 
