@@ -2759,6 +2759,31 @@ def f_of_fetched(st, m, rp, u):
     if not keep:
         raise _Stop("해외 원본 영상을 받지 못했어요", "잠시 뒤 다시 시도해 주시면 받기부터 이어 갈게요", retry="of_fetch", auto=True)
     st["origins"] = keep
+    if len(files) > 1:                  # 재업로드(같은 영상 두 파일)는 빼고 간다 — 다음 장면 재사용을 B13 이 못 잡는다(10-27 run4 a·b편)
+        return {"do": [{"id": "dups", "cmd": "origin_dups", "files": [f["name"] for f in files]}], "then": "of_dedup"}
+    return _set_origin(st, keep, files)
+
+
+def f_of_dedup(st, m, rp, u):
+    """(판단 = runner_ops.same_video·same_frames) 재업로드 파일을 원본 목록에서 뺀다. 판정 실패면 그대로 간다(기록)."""
+    r = m.get("dups") or {}
+    drop = {d["dup"] for d in r.get("dups") or [] if isinstance(d, dict)}
+    if r.get("error"):
+        st["log"].append(f"원본 겹침 확인 실패(그대로 감): {str(r['error'])[:160]}")
+    keep, files = [], []
+    for o in st["origins"]:
+        fs = [f for f in o.get("files") or [] if f.get("name") not in drop]
+        if fs:
+            o["files"] = fs
+            keep.append(o)
+            files += fs
+    if drop:
+        st["log"].append(f"재업로드 원본 뺌: {sorted(drop)} ({r.get('dups')})")
+    return _set_origin(st, keep or st["origins"], files or [f for o in st["origins"] for f in o.get("files") or []])
+
+
+def _set_origin(st, keep: list, files: list) -> dict:
+    st["origins"] = keep
     o0 = keep[0]
     pf = o0.get("platform") or "yt"
     st["origin"] = {"id": o0["id"], "url": o0.get("url") if pf != "yt" and o0.get("url") else f"https://www.youtube.com/watch?v={o0['id']}", "platform": pf,
@@ -3456,7 +3481,7 @@ FORMAT_PHASES["자막노래형"] = {**{k: v for k, v in FORMAT_PHASES["해외원
                             "bench_got": j_bench_got, "ref_read": j_ref_read, "of_peers": j_of_peers, "of_fetched": j_of_fetched,
                             "j_material": j_material, "material": j_material, "f_draft_got": j_draft_got}
 PHASE_STAGE.update({
-    "ref_read": "bench", "topic_got": "bench", "of_dual_b": "bench", "of_dual": "origin", "of_dual_retry": "origin", "of_settled": "origin", "of_lens": "origin", "of_peers": "origin", "of_got": "origin", "of_pick": "origin", "of_find": "origin", "of_find_got": "origin", "of_fetch": "origin", "of_fetched": "origin",
+    "ref_read": "bench", "topic_got": "bench", "of_dual_b": "bench", "of_dual": "origin", "of_dual_retry": "origin", "of_settled": "origin", "of_lens": "origin", "of_peers": "origin", "of_got": "origin", "of_pick": "origin", "of_find": "origin", "of_find_got": "origin", "of_fetch": "origin", "of_fetched": "origin", "of_dedup": "origin",
     "f_product_sheet": "product", "f_product_pick": "product", "f_product_cands": "product", "f_product_same": "product", "s_cands": "product", "s_cand_look": "product",
     "s_product_done": "product", "f_research_got": "research", "f_research_check": "research", "s_research_check": "research", "f_material": "material",
     "f_material_got": "material", "f_shots_got": "material", "f_clean": "material", "f_clean_got": "material", "f_draft": "material", "f_draft_got": "material",
@@ -3467,7 +3492,7 @@ PHASE_STAGE.update({
 PHASES = {
     "setup": ph_setup, "setup_check": ph_setup_check, "bench": ph_bench, "bench_got": ph_bench_got, "origin_read": ph_origin_read, "src_got": ph_src_got, "probe_got": ph_probe_got, "sb_pick": ph_sb_pick,
     "peer": ph_peer, "peer_read": ph_peer_read, "search": ph_search, "search_got": ph_search_got, "titles": ph_titles,
-    "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped, "task_got": ph_task_got, "watch_got": f_watch_got, "stills_again": ph_stills_again, "given_origin_got": ph_given_origin_got,
+    "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped, "task_got": ph_task_got, "watch_got": f_watch_got, "of_dedup": f_of_dedup, "stills_again": ph_stills_again, "given_origin_got": ph_given_origin_got,
     "vis_get": ph_vis_get, "vis_got": ph_vis_got, "vis_look": ph_vis_look, "vis_pick": ph_vis_pick, "vis_next": ph_vis_next,
     "product_sheet": ph_product_sheet, "product_pick": ph_product_pick, "product_pick_wide": ph_product_pick_wide, "product_cands": ph_product_cands, "product_same": ph_product_same,
     "product_done": ph_product_done, "cand_look": ph_cand_look, "reviews": ph_reviews, "reviews_got": ph_reviews_got, "reviews_naver": ph_reviews_naver, "name_find": ph_name_find, "name_got": ph_name_got, "named_cands": ph_named_cands,

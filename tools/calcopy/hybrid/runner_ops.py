@@ -1913,8 +1913,71 @@ CMDS = {"env": c_env, "bench": c_bench, "search": c_search, "peer_sheet": c_peer
         "origin_foreign": c_origin_foreign, "of_settle": c_of_settle, "clean_text": c_clean_text, "materials_draft": c_materials_draft, "thumb_auto": c_thumb_auto}
 
 
+DUP_TOL, DUP_SHARE, DUP_DUR = 0.15, 0.8, 2.0   # 재업로드 판정: 길이 차 ≤2초 · 짧은 쪽 장면 경계의 80% 이상이 ±0.15초로 겹침(한 번 맞춘 어긋남 안에서)
+
+
+def same_video(a: list[float], da: float, b: list[float], db: float) -> float:
+    """(판단 주인 — 두 원본이 같은 영상(재업로드)인가) 장면 경계 시각표를 한 번 어긋남(offset)을 맞춰 대 본 겹침 비율(0~1).
+    10-27 run4 a편: DHtcXkaOnjr ↔ 7486512519620709687 경계가 약 0.1초 차로 똑같았다 → 비슷한 제품 구간이 앞 장면을 다시 씀(파일 이름이 달라 B13 못 잡음)."""
+    if abs(da - db) > DUP_DUR or len(a) < 3 or len(b) < 3:
+        return 0.0
+    short, long_ = (a, b) if len(a) <= len(b) else (b, a)
+    best = 0.0
+    for off in {round(y - x, 2) for x in short[:6] for y in long_[:6]} | {0.0}:
+        hit = sum(1 for x in short if any(abs(x + off - y) <= DUP_TOL for y in long_))
+        best = max(best, hit / len(short))
+    return round(best, 3)
+
+
+DUP_FRAME_DUR, DUP_FRAME_CORR = 1.0, 0.85   # 길이 차 ≤1초면 같은 시각 화면 5장을 작게 대 본다 — 중앙값 상관 ≥0.85 = 같은 영상(a편 실측 1.0·0.88·0.846·0.383(빠른 움직임)·0.94)
+
+
+def same_frames(pa: Path, pb: Path, da: float, db: float) -> float:
+    """해상도가 달라 장면 경계를 다르게 잡는 재업로드(10-27 run4 a편: 720p 경계 3개 vs 1080p 9개, 길이 105.53 vs 105.46) — 화면을 직접 대 본다."""
+    import numpy as np
+    if abs(da - db) > DUP_FRAME_DUR:
+        return 0.0
+    def grab(p, t):
+        b = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{max(0.0, t):.2f}", "-i", str(p), "-frames:v", "1", "-vf", "scale=36:64,format=gray", "-f", "rawvideo", "-"],
+                           capture_output=True).stdout
+        x = np.frombuffer(b, np.uint8).astype(float)
+        return x - x.mean() if len(x) == 36 * 64 else None
+    cs = []
+    for frac in (0.1, 0.3, 0.5, 0.7, 0.9):
+        t = min(da, db) * frac
+        a = grab(pa, t)
+        best = None
+        for dt in (-0.1, 0.0, 0.1):          # 재업로드는 시작이 몇 프레임 어긋나기도 한다(a편 길이 차 0.07초)
+            b2 = grab(pb, t + dt)
+            if a is not None and b2 is not None:
+                c = float((a * b2).sum() / (np.linalg.norm(a) * np.linalg.norm(b2) + 1e-9))
+                best = c if best is None else max(best, c)
+        if best is not None:
+            cs.append(best)
+    return round(sorted(cs)[len(cs) // 2], 3) if len(cs) >= 3 else 0.0      # 중앙값 — 빠른 움직임 한 장이 평균을 끌어내리지 않게
+
+
+def c_origin_dups(W, d):
+    """받은 원본들 중 재업로드(같은 영상)를 찾는다 — 판정은 same_video, 빼는 것은 flow(f_of_dedup)."""
+    from tools.calcopy.hybrid import render_bench
+    fs = [str(x) for x in d.get("files") or []]
+    meta = {f: (render_bench.shot_starts(W / "src" / f), float(dims(W / "src" / f)["dur"])) for f in fs if (W / "src" / f).exists()}
+    dups = []
+    for i, f in enumerate(fs):
+        for g in fs[:i]:
+            if f in meta and g in meta and g not in [x["dup"] for x in dups]:
+                s = same_video(meta[g][0], meta[g][1], meta[f][0], meta[f][1])
+                fr = same_frames(W / "src" / g, W / "src" / f, meta[g][1], meta[f][1]) if s < DUP_SHARE else 0.0
+                if s >= DUP_SHARE or fr >= DUP_FRAME_CORR:
+                    dups.append({"dup": f, "of": g, "share": s, **({"frames": fr} if fr else {})})
+    return {"dups": dups, "checked": len(meta)}
+
+
+CMDS["origin_dups"] = c_origin_dups      # 표(CMDS) 정의 뒤라 여기서 등록(진행 이름표는 없으면 '만드는 중')
+
+
 HOLLOW_KEYS = ("fail", "failed", "bad", "bad_urls", "miss", "skipped")      # 결과에 이 칸이 비어 있지 않으면 일부를 조용히 버린 것
-EMPTY_OK = ("jumps",)     # 비어 있어야 좋은 칸(원본 규칙 위반 목록) — '결과 0'으로 세지 않는다(10-27 run4 렌더마다 HOLLOW(jumps) 오경보)
+EMPTY_OK = ("jumps", "dups")     # 비어 있어야 좋은 칸(원본 규칙 위반 목록) — '결과 0'으로 세지 않는다(10-27 run4 렌더마다 HOLLOW(jumps) 오경보)
 
 
 def hollow(r: dict) -> str:
