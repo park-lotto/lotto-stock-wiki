@@ -401,8 +401,11 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
         if changed:
             fit_all()
             measure_over()
+        from tools.calcopy.hybrid import quality_gate as _QG
+        _still = lambda c: bool(_QG.still_spans(cut_gray({**c, "t1": c.get("t1", end), "dur": c.get("dur") or (float(c.get("t1", end)) - float(c["t0"]))},
+                                                          src_dir / c["src"], st, M)))      # 관문 ⑦ 과 같은 자(cut_still_gate)
         for _ in range(2):            # 옮기기 ↔ 맞추기(fit 이 ±0.4 옮겨 디졸브에 닿으면 다음 바퀴가 다시 옮긴다)
-            if not relocate_cuts(cuts, src_dir, origins, log=_lg, adjacent_run=adj, end=end):
+            if not relocate_cuts(cuts, src_dir, origins, log=_lg, adjacent_run=adj, end=end, still=_still):
                 break
             fit_all()                 # 옮긴 자리(ss_planned·max)에서 다시 맞추기·늦추기
             measure_over()
