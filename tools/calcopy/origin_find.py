@@ -187,6 +187,39 @@ def url_of(p: str, i: str, hint: str = "") -> str:
     return {"yt": f"https://www.youtube.com/shorts/{i}", "ig": f"https://www.instagram.com/reel/{i}/"}.get(p, hint)
 
 
+def meta_fast(url: str) -> dict:
+    """유튜브 후보 정보 — 영상 페이지 한 번(ytInitialPlayerResponse)에서 제목·채널·조회·길이·올린 날(UTC). 실패하면 {'why'}.
+    10-27 실측: yt-dlp meta 는 요청 6~8번 × 쉼 2초(+받기 전 4~10초)라 후보 하나 15~19초 — 렌즈 후보 60개에 162초.
+    이 방식은 요청 1번·0.8~1.0초, 값은 yt-dlp 와 같다(날짜는 업로더 시각 → UTC 로 맞춤). 구독자 수(subs)는 없다(해외원본형 판정에 안 씀)."""
+    import json as _j
+    import urllib.request
+    from datetime import datetime, timezone
+    m = re.search(r"(?:shorts/|v=|youtu\.be/)([\w-]{11})", url)
+    if not m:
+        return {"why": "유튜브 영상 주소 아님"}
+    vid = m.group(1)
+    try:
+        req = urllib.request.Request(f"https://www.youtube.com/watch?v={vid}&hl=en", headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36", "Accept-Language": "en"})
+        h = urllib.request.urlopen(req, timeout=20).read().decode("utf-8", "replace")
+        j = _j.loads(re.search(r"ytInitialPlayerResponse\s*=\s*(\{.+?\})\s*;\s*(?:var|</script>)", h, re.S).group(1))
+    except Exception as e:  # noqa: BLE001 — 부르는 쪽이 yt-dlp 로 다시 받는다
+        return {"why": f"페이지 읽기 실패 {type(e).__name__}"}
+    vd = j.get("videoDetails") or {}
+    if not vd.get("title"):
+        return {"why": "페이지에 영상 정보 없음(" + str((j.get("playabilityStatus") or {}).get("status")) + ")"}
+    mf = (j.get("microformat") or {}).get("playerMicroformatRenderer") or {}
+    raw = mf.get("uploadDate") or mf.get("publishDate") or ""
+    try:
+        date = datetime.fromisoformat(raw).astimezone(timezone.utc).strftime("%Y%m%d") if "T" in raw else raw[:10].replace("-", "")
+    except ValueError:
+        date = raw[:10].replace("-", "")
+    num = lambda x: int(x) if str(x or "").isdigit() else None  # noqa: E731
+    return {"title": vd.get("title"), "channel": vd.get("author"), "channel_id": vd.get("channelId"), "subs": None, "views": num(vd.get("viewCount")),
+            "date": date or None, "dur": num(vd.get("lengthSeconds")), "channel_url": f"https://www.youtube.com/channel/{vd['channelId']}" if vd.get("channelId") else None,
+            "thumb": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"}
+
+
 def meta(url: str) -> dict:
     """yt-dlp 메타(받지 않음). 실패하면 {'why'}."""
     fmt = "%(id)s\t%(title)s\t%(channel,uploader)s\t%(channel_id,uploader_id)s\t%(channel_follower_count)s\t%(view_count)s\t%(upload_date)s\t%(duration)s\t%(uploader_url,channel_url)s\t%(thumbnail)s"
