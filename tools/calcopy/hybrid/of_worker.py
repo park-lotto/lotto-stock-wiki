@@ -64,7 +64,10 @@ def kr_sources(pool: Path) -> list[dict]:
         return []
     out = []
     for k, c in json.loads(f.read_text(encoding="utf-8")).items():
-        if not c.get("korean"):
+        j = c.get("judge") or {}
+        # 한국 '재편집' 채널만(남의 해외 영상을 한국어로 다시 올리는 곳 = 원본이 해외에 있다). 10-27: 한국 채널 전부를 넣었더니
+        #   먹방(써니 Sunny EATING) 300편이 들어와 소재가 아닌 걸 찾았다 — 판정 kind 가 reuploader·compilation 이고 쓸 만함인 채널만
+        if not c.get("korean") or j.get("kind") not in ("reuploader", "compilation") or j.get("usable") is False:
             continue
         for v in c.get("top") or []:
             if int(v.get("views") or 0) < KR_SRC_MIN or not v.get("url"):
@@ -209,6 +212,25 @@ def one(r: dict, a, pool: Path) -> dict:
             "views": r.get("views"), "steps": s.get("steps"), "t": time.strftime("%Y-%m-%d %H:%M"), "ts": time.time(), "dir": str(W)}
 
 
+def merged_cookies(pool: Path) -> str:
+    """유튜브 cookies.txt + 틱톡(out/tiktok_session.json)·인스타(out/instagram_session.json) 쿠키를 한 파일로(넷스케이프 꼴) —
+    지시서 준비 점검(runner_ops._cookie_ok)과 소재 받기(yt-dlp)가 같은 파일을 본다. 10-27: 유튜브 것만 줘서 틱톡 주소 소재가 0.0분에 '틱톡 계정 연결' 멈춤."""
+    src = os.environ.get("YTDLP_COOKIES_YOUTUBE") or ""
+    lines = Path(src).read_text(encoding="utf-8", errors="replace").splitlines() if src and Path(src).exists() else ["# Netscape HTTP Cookie File"]
+    for sp in (ROOT / "out" / "tiktok_session.json", ROOT / "out" / "instagram_session.json"):
+        if not sp.exists():
+            continue
+        for c in json.loads(sp.read_text(encoding="utf-8")).get("cookies") or []:
+            d = str(c.get("domain") or "")
+            exp = int(c.get("expires") or 0)
+            exp = exp if exp > 0 else int(time.time()) + 30 * 86400
+            lines.append(chr(9).join([d, "TRUE" if d.startswith(".") else "FALSE", c.get("path") or "/", "TRUE" if c.get("secure") else "FALSE",
+                                    str(exp), str(c.get("name")), str(c.get("value"))]))
+    out = pool / "_cookies.txt"
+    out.write_text(chr(10).join(lines) + chr(10), encoding="utf-8")
+    return str(out)
+
+
 def main(argv: list[str]) -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser()
@@ -221,6 +243,7 @@ def main(argv: list[str]) -> int:
     a = ap.parse_args(argv)
     pool = Path(a.pool)
     pool.mkdir(parents=True, exist_ok=True)
+    os.environ["YTDLP_COOKIES_YOUTUBE"] = merged_cookies(pool)
     lk = pool / LOCK
     if lk.exists() and time.time() - lk.stat().st_mtime < 2 * 3600:
         print("다른 워커가 돌고 있다:", lk)
