@@ -1722,6 +1722,23 @@ def _all_dims(st) -> dict:
     return {**{x["name"]: [int(x.get("w") or 0), int(x.get("h") or 0)] for x in (st.get("material") or {}).get("files") or [] if x.get("w")}, **_origin_dims(st)}
 
 
+PHOTO_EXT = (".jpg", ".jpeg", ".png", ".webp")
+
+
+def _photo_ok(st) -> bool:
+    """(판단 주인 — 이 판에서 상품 사진 컷을 쓰나) 판 rhythm.photo_share_max 가 0 이면 아니오. 아니오면 질문지 어디에도 사진을 내놓지 않는다
+    (10-27 2회차: '쓸 수 있는 파일'에서만 빼고 재료 목록·크기 표·시트 그림·기본 글 'prod_*.jpg' 에 남아 해외원본형 5편 중 4편 사진 컷 반려)."""
+    from tools.calcopy.hybrid import styles as STY
+    R = (STY.rhythm(_style(st["version"])) or {}).get("photo_share_max") or {}
+    return not (R.get("v") is not None and float(R["v"]) <= 0.0)
+
+
+def _offer_dims(st) -> dict:
+    """질문지에 싣는 파일·크기 — 사진을 못 쓰는 판이면 사진을 뺀다(_all_dims 는 검사용 그대로)."""
+    d = _all_dims(st)
+    return d if _photo_ok(st) else {k: v for k, v in d.items() if not k.lower().endswith(PHOTO_EXT)}
+
+
 def _shots_ctx(st) -> str:
     out = [f"### {stem} (파일 {stem}.mp4)\n" + RU.shot_text(shots) for stem, shots in (st.get("shots") or {}).items()]
     return ("\n\n## 원본 샷 표(카메라가 바뀌는 곳마다 — 주인공 컷은 who main·both 샷 안에서 ss 를 고르고, 컷 길이가 그 샷 끝을 넘지 않게)\n" + "\n".join(out)) if out else ""
@@ -1731,6 +1748,8 @@ def ph_script(st, m, rp, u):
     mats = ["src/" + x["name"] for x in (st.get("material") or {}).get("files") or []]
     origs = ["src/" + x["name"] for x in (st.get("origin") or {}).get("files") or []]
     files = (origs + mats) if _fmt(st) in FOREIGN_FMTS else (mats + origs)     # 해외원본형은 원본이 주재료 — 원본 시트가 앞
+    if not _photo_ok(st):                     # 사진 못 쓰는 판 — 시트 그림·재료 목록에도 사진을 내놓지 않는다
+        files = [f for f in files if not f.lower().endswith(PHOTO_EXT)]
     return {"do": [{"id": "msheets", "cmd": "mat_sheets", "files": files[:5]}], "then": "script_ask"}
 
 
@@ -1739,13 +1758,11 @@ def _src_rule_ctx(st) -> str:
     회원 Claude 가 없는 prod_1.jpg 를 지어 쓰고, 잇템로그판 photo_share_max 0 인데 사진 컷을 넣어 장면 맞추기에서 반려). 판정 주인은 그대로
     (rules.material_problems '받은 파일이 아니다' · render_bench.photo_gate) — 여기는 걸릴 것을 처음부터 안 쓰게 알려 주기만."""
     from tools.calcopy.hybrid import styles as STY
-    names = sorted(_all_dims(st))
+    names = sorted(_offer_dims(st))            # 사진 못 쓰는 판이면 사진이 빠진 목록(_photo_ok 한 곳)
     R = (STY.rhythm(_style(st["version"])) or {}).get("photo_share_max") or {}
-    pics = [n for n in names if Path(n).suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")]
+    pics = [n for n in names if n.lower().endswith(PHOTO_EXT)]
     rule = ""
-    if R.get("v") is not None and float(R["v"]) <= 0.0:
-        # 사진을 못 쓰는 판이면 '쓸 수 있는 파일' 목록에서도 뺀다(10-27 메이블린·쉐딩: 목록에 prod_*.jpg 를 주고 '쓰지 마라'를 같이 줘 사진 컷·A-B-A 반려)
-        names, pics = [n for n in names if n not in pics], []
+    if not _photo_ok(st):
         rule = "\n★이 판은 사진(그림 파일) 컷을 쓰지 않는다(판 photo_share_max 0 — 벤치 6편 사진 컷 0). 컷 src 는 위 영상 파일만."
     elif R.get("v") is not None:
         rule = f"\n사진 컷은 전체 길이의 {float(R['v']):.0%} 까지(판 photo_share_max)."
@@ -1824,7 +1841,7 @@ def _script_ask(st, fail: str = "") -> dict:
            (json.dumps(st.get("reviews") or [], ensure_ascii=False)[:4000] if st.get("reviews") else "(못 받음 — 후기 전언 줄을 쓰지 않는다)") +
            "\n\n## 원음 받아쓰기(구간마다 — 모델 둘이면 둘 다)\n" + json.dumps(st.get("asr") or {}, ensure_ascii=False)[:6000] +
            "\n\n## 재료 파일(시트 순서 = 앞 5개)\n" + json.dumps(ms.get("list") or [], ensure_ascii=False) +
-           "\n실제 크기(crop 은 이 픽셀로 — 시트는 줄인 미리보기다): " + json.dumps(_all_dims(st), ensure_ascii=False) + _shots_ctx(st) +
+           "\n실제 크기(crop 은 이 픽셀로 — 시트는 줄인 미리보기다): " + json.dumps(_offer_dims(st), ensure_ascii=False) + _shots_ctx(st) +
            _foreign_script_ctx(st) + _src_rule_ctx(st) + _cut_rules_ctx(st, ms.get("shots")) + _points_ctx(v) +
            (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
     imgs = [_img(x) for x in ms.get("sheets") or []]
@@ -1873,7 +1890,8 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
              "source_rule": RU.source_rule_static(M, _origin_names(st), _rule_bench_id(st), st.get("shots") or {})}
     on = _origin_names(st)
     if _fmt(st) not in FOREIGN_FMTS and not any(str(c.get("src") or "") not in on for cs in (M.get("cuts") or {}).values() for c in (cs if isinstance(cs, list) else [cs])):
-        extra["product_cut"] = ["제품 컷이 하나도 없다 — '써 봤다'·제품 설명 줄은 재료 파일(제품 영상 또는 prod_*.jpg 사진, 사진은 move: in·out·left·right)로. "
+        extra["product_cut"] = ["제품 컷이 하나도 없다 — '써 봤다'·제품 설명 줄은 재료 파일(" +
+                                ("제품 영상 또는 prod_*.jpg 사진, 사진은 move: in·out·left·right" if _photo_ok(st) else "제품 영상 — 이 판은 사진 컷 금지") + ")로. "
                                 "원본 방송 화면만으로 우리 제품 이야기를 하지 않는다(98 #22)"]
     bad = {k: x for k, x in extra.items() if x}
     return {**a, **bad, "ok": bool(a.get("ok")) and not bad}
@@ -2538,7 +2556,7 @@ other_product = 그 제품이 아닌 다른 제품이 주로 보이면 true, cx 
 JSON 하나: {{"shots": [{{"i": 번호, "who": "main", "product": false, "other_product": false, "text": [[0.1, 0.85, 0.9, 0.95]], "cx": 0.5, "desc": "…"}}]}}"""
 
 SCRIPT_FOREIGN = """너는 대본 작가다(오푸스). 해외원본형 — 해외 원본 영상(2~3개)을 재료로 판 규칙·결 기준 그대로 이 편의 대본·재료·근거를 써라. 대본 검사를 통과해야 한다 — 걸린 이유가 아래에 있으면 고쳐서 다시.
-재료의 cand_dir 는 비워 둔다(PC 가 채운다), 컷 src 는 받은 파일 이름(원본 = '<영상 id>.mp4', 상품 사진 = prod_*.jpg).
+재료의 cand_dir 는 비워 둔다(PC 가 채운다), 컷 src 는 아래 '컷 src 로 쓸 수 있는 파일'의 이름만(원본 = '<영상 id>.mp4' · 상품 사진 prod_*.jpg 는 그 목록에 있을 때만).
 ★확대는 1.0 — 세로 원본은 폭 전체(crop [0, y, 원본 폭, 원본 폭 ÷ 창 비율]), 박힌 글자는 엔진이 지우거나 흐린다(crop 으로 피하지 않는다).
 ★CTA·금액·질병·효능 단정 없음. 창작 허용 = 나레의 계기·감상·전언 말투 / 근거 필수 = 제품 속성·원리·반응 내용(줄마다 근거).
 
@@ -2571,7 +2589,7 @@ JSON 하나: {"stop": "", "조사_md": "마크다운 전문", "keywords": ["제�
 
 SCRIPT_SHOP = """너는 대본 작가다(오푸스). 쇼핑형 — 판 규칙·결 기준 그대로 이 편의 대본·재료·근거를 써라(원음 줄 없음 — kind tts, 판이 자막 줄(sub)을 쓰면 그대로). 대본 검사를 통과해야 한다.
 근거 = 쿠팡 베스트 후기(r번호 — 셀링포인트·소구점 전언)·네이버 글(n번호)·조사 사실(f번호). 후기 개수·별점 숫자는 쓰지 않는다. CTA·금액·질병·효능 단정 없음.
-재료의 cand_dir 는 비워 둔다, 컷 src 는 받은 재료 파일 이름(제품 영상·prod_*.jpg 사진 — 사진은 move: in·out·left·right). 컷마다 see — 그 줄 대사의 동작·상태가 그 컷에 보여야 한다."""
+재료의 cand_dir 는 비워 둔다, 컷 src 는 아래 '컷 src 로 쓸 수 있는 파일'의 이름만(제품 영상 · prod_*.jpg 사진은 그 목록에 있을 때만 — 사진은 move: in·out·left·right). 컷마다 see — 그 줄 대사의 동작·상태가 그 컷에 보여야 한다."""
 
 PLAN_LOOK_SHOP = """너는 장면 검수 담당이다(쇼핑형). 계획 시트를 보고 컷마다: 대사와 화면이 맞나 · 남의 글자·워터마크 · 사람만 나오고 제품·대사 동작이 안 보이는 컷(사람이 제품을 쓰는 장면은 괜찮다 — 10-27 사장님) · A-B-A 끼움.
 crop 은 원본 픽셀 정수[x, y, w, h] — 숫자 crop 은 엔진이 바꾸지 않는다. 박힌 글자는 재료.blur {파일: [[x, y, w, h, 시작초, 끝초]]}로 흐린다. 고칠 것이 있으면 재료 전체를 고쳐서 돌려준다(없으면 null).
@@ -3465,7 +3483,7 @@ def _subsong_script_ask(st, fail: str = "") -> dict:
     ctx = (STY.brief(v) + "\n\n## 소재 판독\n" + str((st.get("read") or {}).get("what") or "") +
            "\n\n## 원본(한 샷 — 이 클립 하나로 만든다)\n" + "\n".join(O) +
            f"\n창(영상이 들어가는 자리) = {win[2]}x{win[3]} — crop 은 이 비율" +
-           "\n실제 크기(crop 은 이 픽셀로 — 시트는 줄인 미리보기다): " + json.dumps(_all_dims(st), ensure_ascii=False) + _shots_ctx(st) +
+           "\n실제 크기(crop 은 이 픽셀로 — 시트는 줄인 미리보기다): " + json.dumps(_offer_dims(st), ensure_ascii=False) + _shots_ctx(st) +
            _src_rule_ctx(st) + _points_ctx(v) + (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))   # 판 audit 숫자(est_length 등)도 처음부터(10-27 감사)
     return _rv(f"script_{v}", SCRIPT_SUBSONG + "\n\n" + ctx, [_img(x) for x in ms.get("sheets") or []], need=("대본", "재료"))
 

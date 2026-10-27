@@ -93,3 +93,15 @@ def test_fix_question_carries_same_scene_data(monkeypatch):
           "script": {"S": {"lines": []}, "M": {"cuts": {}}}}
     ask = F._fix_review(st, "x", None, "plan_두유노판")["ask"]
     assert "a.mp4: 0.0~1.33, 1.33~3.23, 3.5~9.17" in ask and "중앙값" in ask and "쓸 수 있는 파일" in ask
+
+
+def test_no_photo_anywhere_when_version_bans_photos(monkeypatch):
+    """10-27 2회차: 사진 0% 판인데 재료 목록·크기 표·시트·기본 글에 사진이 남아 해외원본형 5편 중 4편 사진 컷 반려 — 질문지 어디에도 사진이 없어야."""
+    monkeypatch.setattr(F, "_all_dims", lambda st: {"a.mp4": [1080, 1920], "prod_1_0.jpg": [600, 600]})
+    for v, fmt in (("잇템로그판_v2", "해외원본형"), ("두유노판", "쇼핑형")):
+        st = {"version": v, "fmt": fmt, "research_md": "", "log": [], "_msheets": {"list": [], "sheets": [], "shots": {}},
+              "material": {"files": [{"name": "prod_1_0.jpg"}, {"name": "a.mp4"}]}}
+        assert "prod_1_0.jpg" not in F._script_ask(st)["ask"], v
+        do = F.ph_script(st, {}, {}, {})["do"][0]
+        assert not any(f.endswith(".jpg") for f in do["files"]), v
+    assert F._photo_ok({"version": "키치잇판"}) is True
