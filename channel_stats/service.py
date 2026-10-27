@@ -114,3 +114,47 @@ def oauth_finish(code, state):
     title = yt_analytics.finish(str(DIR), code, state)
     refresh_async(force_analytics=True)      # 연결하자마자 시청시간·일별 기록을 채운다
     return title
+
+
+# ── 매시간 자동 수집(관제 281, 사장님 "한 시간 자동수집으로") ─────────────
+# 페이지를 아무도 안 열어도 조회수 점이 매시간 쌓여야 영상별 증가 그래프가 끊기지 않는다.
+# 숏템 웹 프로그램이 켜질 때 한 번 부른다(app startup). 서버 웹은 프로세스 1개지만, 혹시 둘이 떠도
+# 파일 잠금(flock)으로 한 곳만 모은다. 시험(pytest)·키 파일 없는 곳(트랙·병합 폴더)에선 띄우지 않는다.
+CHECK_SEC = 300
+START_DELAY = 90               # 기동 직후 몰리는 일(시드·키 합류)과 겹치지 않게
+_sched = {"started": False}
+
+
+def start_scheduler(log=print):
+    import sys
+    if _sched["started"] or "pytest" in sys.modules or os.environ.get("PYTEST_CURRENT_TEST"):
+        return False
+    if not (DIR / "buffer_keys.json").exists() or os.environ.get("CHSTATS_SCHEDULER", "on") == "off":
+        return False
+    _sched["started"] = True
+
+    def loop():
+        lock = None
+        try:
+            import fcntl
+            lock = open(DIR / ".scheduler.lock", "w")
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except ImportError:
+            pass                      # 윈도우(로컬 확인) — 잠금 없이 돈다
+        except OSError:
+            log("[channel_stats] 다른 프로세스가 이미 매시간 수집 중 — 이 프로세스는 쉰다")
+            return
+        time.sleep(START_DELAY)
+        while True:
+            try:
+                last = _last_run()
+                now = dt.datetime.now(dt.timezone(dt.timedelta(hours=9)))
+                if last is None or (now - last).total_seconds() > STALE_MIN * 60:
+                    refresh(log=log)
+            except Exception as e:  # noqa: BLE001 — 한 번 실패해도 다음 회차는 돈다. 사유는 화면 머리(state.error)에도 남는다
+                log(f"[channel_stats] 자동 수집 회차 실패: {e}")
+            time.sleep(CHECK_SEC)
+
+    threading.Thread(target=loop, daemon=True, name="channel_stats_hourly").start()
+    log("[channel_stats] 매시간 자동 수집 시작")
+    return True

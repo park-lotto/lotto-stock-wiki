@@ -190,6 +190,16 @@ app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 
 @app.on_event("startup")
+def _channel_stats_hourly():
+    """채널 리포트(관제 281) 매시간 자동 수집 — 언제·어디서 도나는 channel_stats.service.start_scheduler 한 곳."""
+    try:
+        from channel_stats import service as _cs
+        _cs.start_scheduler(log=lambda m: logging.warning(m))
+    except Exception as e:      # noqa: BLE001 — 기동은 막지 않되 사실은 남긴다
+        logging.warning("[channel_stats] 자동 수집 시작 실패: %r", e)
+
+
+@app.on_event("startup")
 def _seed_voice_presets():
     """기동 시 큐레이션 프리셋을 DB로 upsert(idempotent)."""
     try:
