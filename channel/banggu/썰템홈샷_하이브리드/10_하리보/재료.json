@@ -1,0 +1,437 @@
+{
+ "_note": "10 하리보 — 앞 = SWR(독일 공영방송) 공식 채널 「Wo die Gummibärchen zu Hause sind - Haribo feiert 100. Geburtstag」 NdBwNstYVTw(하리보 로비 글자·옛 광고·Archiv Haribo 옛 필름·Tanzbären 상자·공장) + HARIBO Deutschland 공식 광고 Pb_3wfw_xLo · 뒤 = 쿠팡 9219172184 사진 + 골드베렌 봉지·손 위 골드베렌(26_t0BBL2tk, 손만)",
+ "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/10_하리보/src",
+ "shots": [
+  {
+   "src": "NdBwNstYVTw.mp4",
+   "ss": 3.4,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "NdBwNstYVTw.mp4",
+     "ss": 2.5,
+     "dur": 2.1,
+     "fit": "cover",
+     "src_crop": [
+      860,
+      0,
+      1023,
+      1080
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_miniongasp.mp4",
+     "ss": 0.05,
+     "dur": 0.9,
+     "fit": "cover",
+     "src_crop": [
+      0,
+      0,
+      606,
+      640
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "SWR(독일 공영방송) 하리보 100주년 보도: 하리보 본사 로비의 커다란 HARIBO 글자 → 입 벌린 미니언 짤",
+   "why": "훅 = HARIBO 글자 = '하리보가 무슨 뜻?' 질문 + 짤",
+   "full": true
+  },
+  {
+   "src": "NdBwNstYVTw.mp4",
+   "ss": 331.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "NdBwNstYVTw.mp4",
+     "ss": 331.0,
+     "dur": 2.68,
+     "fit": "cover",
+     "src_crop": [
+      480,
+      0,
+      681,
+      900
+     ]
+    }
+   ],
+   "ours": "같은 보도 속 하리보 옛 광고(Archiv Haribo): HA → HARI 글자가 하나씩 생김",
+   "why": "'한스 리겔이라는 이름에, 살던 도시 이름까지' — 앞 글자 이어 붙이기"
+  },
+  {
+   "src": "NdBwNstYVTw.mp4",
+   "ss": 333.68,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "NdBwNstYVTw.mp4",
+     "ss": 333.68,
+     "dur": 1.38,
+     "fit": "cover",
+     "src_crop": [
+      560,
+      0,
+      681,
+      900
+     ]
+    }
+   ],
+   "ours": "같은 옛 광고: HARIBO 완성",
+   "why": "'앞 글자만 따서 하리보'"
+  },
+  {
+   "src": "NdBwNstYVTw.mp4",
+   "ss": 75.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "NdBwNstYVTw.mp4",
+     "ss": 75.05,
+     "dur": 2.0,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "NdBwNstYVTw.mp4",
+     "ss": 78.2,
+     "dur": 1.1,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "같은 보도: 하리보 공장 큰 솥에서 젤리가 쏟아짐 → 쏟아지는 젤리 근접",
+   "why": "'시작은 작은 부엌, 설탕 한 포대랑 구리 냄비' — 냄비·솥(지금 공장 화면)"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_miniongasp.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_mindblown.mp4",
+     "ss": 0.3,
+     "dur": 1.17,
+     "fit": "cover",
+     "src_crop": [
+      363,
+      0,
+      545,
+      720
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "머리가 펑 터지는 짤",
+   "why": "'거의 전부였다고' — 놀람"
+  },
+  {
+   "src": "NdBwNstYVTw.mp4",
+   "ss": 272.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "NdBwNstYVTw.mp4",
+     "ss": 272.0,
+     "dur": 2.51,
+     "fit": "cover",
+     "src_crop": [
+      400,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "같은 보도 속 옛 하리보 마당(Archiv Haribo, 흑백) — 멀리 사람·수레",
+   "why": "'첫 직원은 아내였고, 그날 만든 사탕을 자전거로' — 그 시절 하리보(인물 지목 없음)"
+  },
+  {
+   "src": "NdBwNstYVTw.mp4",
+   "ss": 275.2,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "NdBwNstYVTw.mp4",
+     "ss": 275.2,
+     "dur": 1.0,
+     "fit": "cover",
+     "src_crop": [
+      300,
+      150,
+      560,
+      740
+     ]
+    }
+   ],
+   "ours": "같은 옛 필름: 마당에 세워 둔 자전거들",
+   "why": "'직접 배달했고' — 자전거"
+  },
+  {
+   "src": "NdBwNstYVTw.mp4",
+   "ss": 172.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "NdBwNstYVTw.mp4",
+     "ss": 192.5,
+     "dur": 2.61,
+     "fit": "cover",
+     "src_crop": [
+      100,
+      300,
+      590,
+      780
+     ]
+    }
+   ],
+   "ours": "같은 보도: 커다란 노랑·초록 곰 모양 젤리 모형",
+   "why": "'곰 모양 젤리를 만들었는데'"
+  },
+  {
+   "src": "tanz_zoom.mp4",
+   "ss": 0.03,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "tanz_zoom.mp4",
+     "ss": 0.03,
+     "dur": 1.25,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "같은 보도 속 옛 'Haribo Tanzbären' 상자 그림(다가감)",
+   "why": "'이름이 무려 춤추는 곰'"
+  },
+  {
+   "src": "Pb_3wfw_xLo.mp4",
+   "ss": 1.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "Pb_3wfw_xLo.mp4",
+     "ss": 0.75,
+     "dur": 1.2,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "NdBwNstYVTw.mp4",
+     "ss": 117.0,
+     "dur": 2.27,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "HARIBO 독일 공식 광고: 무대 위 골드베렌 봉지 → 같은 보도: 공장에서 쏟아지는 골드베렌",
+   "why": "'그 곰이 바로 우리가 아는, 하리보 골드베렌'"
+  },
+  {
+   "src": "still_coupang.jpg",
+   "ss": 0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "still_coupang.jpg",
+     "ss": 0,
+     "dur": 2.0,
+     "fit": "cover",
+     "src_crop": [
+      150,
+      40,
+      757,
+      1000
+     ],
+     "move": "in"
+    },
+    {
+     "src": "26_t0BBL2tk.mp4",
+     "ss": 60.0,
+     "dur": 1.65,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "쿠팡 9219172184 상품 사진(다가감) → 골드베렌 봉지를 손으로 뜯음",
+   "why": "B 첫 줄 '쿠팡에서 골드베렌을 한 통' — 같은 제품"
+  },
+  {
+   "src": "26_t0BBL2tk.mp4",
+   "ss": 99.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "26_t0BBL2tk.mp4",
+     "ss": 99.0,
+     "dur": 2.84,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "골드베렌 하나를 손가락으로 눌러 봄",
+   "why": "'말랑하면서도 탄력이 있어서, 씹을수록 쫀득'"
+  },
+  {
+   "src": "26_t0BBL2tk.mp4",
+   "ss": 123.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "26_t0BBL2tk.mp4",
+     "ss": 123.0,
+     "dur": 2.41,
+     "fit": "cover",
+     "src_crop": [
+      600,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "손바닥 위 여러 색 골드베렌",
+   "why": "'색깔마다 맛이 달라서, 골라 먹다 보면'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_shaqshimmy.mp4",
+   "ss": 0.3,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_shaqshimmy.mp4",
+     "ss": 0.3,
+     "dur": 1.12,
+     "fit": "cover",
+     "src_crop": [
+      367,
+      0,
+      545,
+      720
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "신나서 어깨 들썩이는 샤킬 오닐 짤",
+   "why": "'손이 안 멈추더라고요'"
+  },
+  {
+   "src": "NdBwNstYVTw.mp4",
+   "ss": 117.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "NdBwNstYVTw.mp4",
+     "ss": 121.5,
+     "dur": 1.0,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "Pb_3wfw_xLo.mp4",
+     "ss": 22.1,
+     "dur": 2.43,
+     "fit": "cover",
+     "src_crop": [
+      990,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "같은 보도: 쏟아지는 골드베렌 → HARIBO 독일 공식 광고 끝 화면 'Die Goldbären werden 100'(골드베렌 100살)",
+   "why": "'백 년 넘게 춤을 추고 있네요' — 훅(HARIBO) 되받기"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 0,
+   "dt": 0.0,
+   "db": -2,
+   "why": "훅 시작 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_35.mp3",
+   "line": 0,
+   "dt": 1.98,
+   "db": -3,
+   "why": "피카츄 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_19.mp3",
+   "line": 2,
+   "dt": 3.1,
+   "db": -3,
+   "why": "미니언 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_06.mp3",
+   "line": 4,
+   "dt": 2.6,
+   "db": -4,
+   "why": "춤추는 곰 상자 두둥"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_26.mp3",
+   "line": 6,
+   "dt": 0.0,
+   "db": -2,
+   "why": "뒤 체험 첫 줄 뽀옹"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_24.mp3",
+   "line": 8,
+   "dt": 2.4,
+   "db": -3,
+   "why": "샤크 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_28.mp3",
+   "line": 9,
+   "dt": 1.0,
+   "db": -3,
+   "why": "골드베렌 100 끝 화면 띵"
+  }
+ ]
+}

@@ -1,0 +1,399 @@
+{
+ "_note": "11 호빵 — 훅·앞 = KBS News 공식 「국민 간식 호빵, 글로벌 간식도 노린다」 G9fAO10Kl4w(김 나는 찜통·1970년대 흑백 광고·옛 포스터·옛 찜통 사진) + MBC 미래뉴스 공식 엠팩토리 Inj7KU7Yyy4(공장)·스낵인포 h3pXnBiBFDg(호빵 가르기) · 끝 = 삼립 공식 대형 호빵 찜기 xUVXaeean28 · 뒤 = 쿠팡 7623478303 사진 + 삼립호빵 전자레인지 영상 wIw8PcBkH6I(지피스, 손만·아래 자막 밖)",
+ "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/11_호빵/src",
+ "shots": [
+  {
+   "src": "G9fAO10Kl4w.mp4",
+   "ss": 23.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "G9fAO10Kl4w.mp4",
+     "ss": 23.0,
+     "dur": 3.0,
+     "fit": "cover",
+     "src_crop": [
+      600,
+      0,
+      739,
+      780
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_pikachu.mp4",
+     "ss": 0.0,
+     "dur": 0.8,
+     "fit": "cover",
+     "src_crop": [
+      139,
+      0,
+      682,
+      720
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "KBS 뉴스(2024-11-26 경제콘서트): 가게 앞 큰 찜통에서 김이 펄펄 나는 찐빵 → 놀란 피카츄 짤",
+   "why": "훅 = 김 나는 찜통 = '저 찜통 어디서 왔지?' + 짤",
+   "full": true
+  },
+  {
+   "src": "xUVXaeean28.mp4",
+   "ss": 0.5,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "xUVXaeean28.mp4",
+     "ss": 0.5,
+     "dur": 1.44,
+     "fit": "cover",
+     "src_crop": [
+      100,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_tobeycry.mp4",
+     "ss": 0.1,
+     "dur": 1.8,
+     "fit": "cover",
+     "src_crop": [
+      368,
+      0,
+      543,
+      718
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "삼립 공식 영상 첫 장면: 회색빛 추운 겨울 서울 시내 → 울먹이는 토비 맥과이어 짤",
+   "why": "'옛날엔 겨울만 되면, 빵이 잘 안 팔리는 비수기'"
+  },
+  {
+   "src": "poster_zoom.mp4",
+   "ss": 0.03,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "poster_zoom.mp4",
+     "ss": 0.03,
+     "dur": 3.6,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "같은 보도 속 옛 삼립 '호빵' 광고 포스터(다가감)",
+   "why": "'그래서 삼립이 겨울에 팔 빵을 만든 게, 바로 호빵'"
+  },
+  {
+   "src": "h3pXnBiBFDg.mp4",
+   "ss": 25.5,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "h3pXnBiBFDg.mp4",
+     "ss": 25.4,
+     "dur": 1.87,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      0,
+      651,
+      860
+     ]
+    },
+    {
+     "src": "G9fAO10Kl4w.mp4",
+     "ss": 40.5,
+     "dur": 1.45,
+     "fit": "cover",
+     "src_crop": [
+      560,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "MBC 스낵인포: 김 나는 단팥 호빵을 두 손으로 가름 → 1970년대 흑백 광고: 눈보라 속에서 볼을 부풀려 호 부는 모델",
+   "why": "'이름도 뜨거워서, 호호 불어 먹는 빵'"
+  },
+  {
+   "src": "wIw8PcBkH6I.mp4",
+   "ss": 9.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "wIw8PcBkH6I.mp4",
+     "ss": 9.0,
+     "dur": 2.66,
+     "fit": "cover",
+     "src_crop": [
+      600,
+      0,
+      590,
+      780
+     ]
+    }
+   ],
+   "ours": "집 식탁에 삼립호빵 봉지와 호빵(손)",
+   "why": "'처음엔 집에서 쪄 먹는 빵이었는데'"
+  },
+  {
+   "src": "photo_zoom.mp4",
+   "ss": 0.03,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "photo_zoom.mp4",
+     "ss": 0.03,
+     "dur": 1.98,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      200,
+      665,
+      880
+     ]
+    }
+   ],
+   "ours": "같은 보도 속 옛 흑백 사진: '호빵' 글자 찜통 진열대(다가감)",
+   "why": "'첫날부터 가게에 찜통을 돌린 거죠'"
+  },
+  {
+   "src": "Inj7KU7Yyy4.mp4",
+   "ss": 37.1,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "Inj7KU7Yyy4.mp4",
+     "ss": 37.1,
+     "dur": 2.6,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      0,
+      575,
+      760
+     ]
+    }
+   ],
+   "ours": "MBC 엠팩토리: 호빵 공장 줄줄이 지나가는 반죽",
+   "why": "'출시 첫해 마지막 날엔, 하루에만 백만 개가 넘게'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_tomjaw.mp4",
+   "ss": 0.2,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_tomjaw.mp4",
+     "ss": 0.2,
+     "dur": 0.98,
+     "fit": "cover",
+     "src_crop": [
+      78,
+      0,
+      484,
+      640
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "턱 빠진 톰 짤",
+   "why": "'나갔다는 얘기' — 놀람"
+  },
+  {
+   "src": "still_coupang2.jpg",
+   "ss": 0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "still_coupang2.jpg",
+     "ss": 0,
+     "dur": 2.0,
+     "fit": "cover",
+     "src_crop": [
+      290,
+      20,
+      440,
+      581
+     ],
+     "move": "in"
+    },
+    {
+     "src": "wIw8PcBkH6I.mp4",
+     "ss": 6.0,
+     "dur": 1.4,
+     "fit": "cover",
+     "src_crop": [
+      650,
+      0,
+      560,
+      740
+     ]
+    }
+   ],
+   "ours": "쿠팡 7623478303 삼립호빵 정통 단팥 사진(다가감) → 삼립호빵 봉지 근접",
+   "why": "B 첫 줄 '쿠팡에서 삼립 호빵을 한 봉지' — 같은 제품"
+  },
+  {
+   "src": "wIw8PcBkH6I.mp4",
+   "ss": 46.2,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "wIw8PcBkH6I.mp4",
+     "ss": 46.0,
+     "dur": 1.3,
+     "fit": "cover",
+     "src_crop": [
+      600,
+      0,
+      606,
+      800
+     ]
+    },
+    {
+     "src": "wIw8PcBkH6I.mp4",
+     "ss": 52.1,
+     "dur": 2.29,
+     "fit": "cover",
+     "src_crop": [
+      950,
+      0,
+      606,
+      800
+     ]
+    }
+   ],
+   "ours": "호빵을 전자레인지에 넣음 → 다이얼을 돌림",
+   "why": "'전자레인지에 잠깐 돌리니까'"
+  },
+  {
+   "src": "wIw8PcBkH6I.mp4",
+   "ss": 89.5,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "wIw8PcBkH6I.mp4",
+     "ss": 89.5,
+     "dur": 2.42,
+     "fit": "cover",
+     "src_crop": [
+      600,
+      0,
+      590,
+      780
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_kidmanclap.mp4",
+     "ss": 0.2,
+     "dur": 1.0,
+     "fit": "cover",
+     "src_crop": [
+      146,
+      0,
+      363,
+      480
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "손으로 가른 단팥 호빵 → 박수 치는 니콜 키드먼 짤",
+   "why": "'호호 불면서, 앉은 자리에서 두 개'"
+  },
+  {
+   "src": "xUVXaeean28.mp4",
+   "ss": 14.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "xUVXaeean28.mp4",
+     "ss": 13.9,
+     "dur": 2.3,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "xUVXaeean28.mp4",
+     "ss": 47.05,
+     "dur": 1.03,
+     "fit": "cover",
+     "src_crop": [
+      1000,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "삼립 공식: 서울 시내 대형 호빵 찜기(김 속 호빵) → '삼립호빵' 글자",
+   "why": "'빵 이름 하나가 이제는, 찐빵을 부르는 말이' — 훅(찜통) 되받기"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 0,
+   "dt": 0.0,
+   "db": -2,
+   "why": "훅 시작 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_35.mp3",
+   "line": 0,
+   "dt": 3.0,
+   "db": -3,
+   "why": "피카츄 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_19.mp3",
+   "line": 1,
+   "dt": 1.44,
+   "db": -3,
+   "why": "징징이 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_06.mp3",
+   "line": 2,
+   "dt": 0.0,
+   "db": -4,
+   "why": "호빵 포스터 두둥"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_24.mp3",
+   "line": 5,
+   "dt": 2.6,
+   "db": -3,
+   "why": "톰 턱 빠짐 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_26.mp3",
+   "line": 6,
+   "dt": 0.0,
+   "db": -2,
+   "why": "뒤 체험 첫 줄 뽀옹"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_28.mp3",
+   "line": 9,
+   "dt": 1.9,
+   "db": -3,
+   "why": "삼립호빵 글자 되받기 띵"
+  }
+ ]
+}
