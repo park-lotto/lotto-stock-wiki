@@ -47,3 +47,49 @@ def test_first_ask_carries_script_audit_numbers():
             if r["kind"] not in ("engine", "sibling_repeat"):
                 assert t, f"{v}: 규칙 {r['kind']} 를 글로 못 옮긴다"
                 assert t in ask, f"{v}: 처음 질문에 '{t[:30]}' 가 없다"
+
+
+def test_people_ok_only_for_shopping_format():
+    """10-27 사장님 '영상 안에 사람 등장 괜찮은데 왜 반려 · 제품 관련 있는 건 괜찮지': 쇼핑형은 남의 얼굴 반려 안 함(대사·제품 대조는 그대로),
+    연예인형·해외원본형은 그대로 반려(98 #38 광고 모델이 연예인으로 보임)."""
+    assert F._other_faces({"fmt": "쇼핑형"}) is False
+    assert F._other_faces({"fmt": "해외원본형"}) is True and F._other_faces({"fmt": "연예인형"}) is True
+    shop, foreign = _ask("두유노판", "쇼핑형"), _ask("잇템로그판_v2", "해외원본형")
+    assert F.PEOPLE_OK in shop and F.FACE_RULE not in shop
+    assert F.FACE_RULE in foreign and F.PEOPLE_OK not in foreign
+
+
+def test_runner_skips_face_scan_when_told(monkeypatch, tmp_path):
+    from tools.calcopy.hybrid import runner_ops as R
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "m.jpg").write_bytes(b"x")
+    monkeypatch.setattr(R, "_cut_faces", lambda *a, **k: 2)
+    T = {"cuts": [{"src": "m.jpg", "ss": 0, "dur": 1.0, "line": "L0"}]}
+    assert R.source_rule_scan(tmp_path, T, set(), faces=True)
+    assert R.source_rule_scan(tmp_path, T, set(), faces=False) == []
+
+
+def test_photo_files_hidden_when_version_bans_photos(monkeypatch):
+    """10-27 메이블린·쉐딩: 사진 0% 판인데 '쓸 수 있는 파일'에 prod_*.jpg 를 줘 사진 컷·A-B-A 반려."""
+    monkeypatch.setattr(F, "_all_dims", lambda st: {"a.mp4": [1080, 1920], "prod_1_0.jpg": [600, 600]})
+    ctx = F._src_rule_ctx({"version": "잇템로그판_v2"})
+    assert "a.mp4" in ctx and "prod_1_0.jpg" not in ctx
+
+
+def test_alt_product_rule_in_first_ask():
+    """10-27 메이블린·TV: 비슷한 제품이면 밝히는 줄(script_audit.alt_disclosed)이 처음 질문에 없어 대본 반려."""
+    from tools.calcopy.hybrid import script_audit as SA
+    st = {"version": "두유노판", "fmt": "쇼핑형", "research_md": "", "log": [], "_msheets": {"list": [], "sheets": [], "shots": {}},
+          "product": {"mode": "alt", "name": "x"}}
+    assert SA.ALT_SAY_RULE in F._script_ask(st)["ask"]
+    st["product"] = {"mode": "exact", "name": "x"}
+    assert SA.ALT_SAY_RULE not in F._script_ask(st)["ask"]
+
+
+def test_fix_question_carries_same_scene_data(monkeypatch):
+    """10-27: 고치기 질문(_fix_review)에 샷 구간·판 숫자가 없어 6편 두 번째 반려가 전부 '지난 고치기에서 새로 생김'."""
+    monkeypatch.setattr(F, "_all_dims", lambda st: {"a.mp4": [1080, 1920]})
+    st = {"version": "두유노판", "fmt": "쇼핑형", "log": [], "_msheets": {"shots": SHOTS},
+          "script": {"S": {"lines": []}, "M": {"cuts": {}}}}
+    ask = F._fix_review(st, "x", None, "plan_두유노판")["ask"]
+    assert "a.mp4: 0.0~1.33, 1.33~3.23, 3.5~9.17" in ask and "중앙값" in ask and "쓸 수 있는 파일" in ask

@@ -55,7 +55,7 @@ def test_web_links_reuses_query(tmp_path, monkeypatch):
         def __exit__(self, *a):
             return False
     from tools.calcopy import lens as LN
-    monkeypatch.setattr(LN, "lens_page", lambda: Ctx())
+    monkeypatch.setattr(LN, "lens_page", lambda *a, **k: Ctx())
     monkeypatch.setattr(R, "_tiktok_cookies", lambda: None)
     monkeypatch.setattr(R, "CACHE", None)
     monkeypatch.setattr(R, "OF_MEMO", tmp_path / "_of_memo")

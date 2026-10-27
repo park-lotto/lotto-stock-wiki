@@ -1236,7 +1236,7 @@ def c_mat_sheets(W, d):
         sheets.append(rel(W, sheet(p, W / f"_sheet_{p.stem[:40]}.jpg", fps=0.5, cols=6, rows=5, w=240)))
         if p.suffix.lower() not in render_bench.IMG_EXT and dur:   # 샷 구간 = 계획 관문이 재는 경계 그대로(shot_starts) — 처음 컷을 고를 때 넘지 않게(10-27 반려 71건)
             b = [0.0] + [x for x in render_bench.shot_starts(p) if 0 < x < dur] + [round(float(dur), 2)]
-            shots[p.name] = [[round(a, 2), round(c, 2)] for a, c in zip(b, b[1:])]
+            shots[p.name] = jump_free_spans(p, [[round(a, 2), round(c, 2)] for a, c in zip(b, b[1:])])   # 디졸브·끊김 자리는 검사와 같은 자로 미리 뺌
     out = {"sheets": sheets, "list": lst, "shots": shots}
     bm = W / "bench" / "bench.mp4"                   # 소재 쇼츠 1초 자막 시트 — 박힌 한국어 자막의 말맛(대본 작가가 그대로 본다, 사장님 10-26 '말맛 나고 재밌자나')
     if bm.exists():
@@ -1275,7 +1275,33 @@ def _cut_jumps(src: Path, ss: float, dur: float, fps: int = 10, n: int = 64) -> 
     return [float(x) for x in np.abs(np.diff(a, axis=0)).mean((1, 2))]
 
 
-def source_rule_scan(W: Path, T: dict, origin_names: set) -> list[str]:
+JUMP_MAX, JUMP_MANY, JUMP_MANY_N = 40, 25, 3     # 장면 전환·끊김 문턱(10-21 이미도 실측) — 검사(source_rule_scan)와 샷 구간 표(jump_free_spans)가 같이 쓴다
+
+
+def _jumpy(dd: list[float]) -> bool:
+    return bool(dd) and (max(dd) > JUMP_MAX or sum(x > JUMP_MANY for x in dd) >= JUMP_MANY_N)
+
+
+def jump_free_spans(src: Path, spans: list[list[float]], fps: int = 10, pad: float = 0.2) -> list[list[float]]:
+    """샷 구간에서 프레임 차가 JUMP_MANY 를 넘는 자리(±pad)를 뺀 구간 — 처음 컷 고르기에 주는 표(10-27 hdn3: shot_starts 는 딱 끊는 전환만 잡아
+    lBleNklHu2A 36.2~41.37 을 한 샷으로 줬는데, 그 안 40.2~41.0 디졸브를 source_rule_scan 이 '장면 전환'으로 반려 — 같은 자로 미리 뺀다)."""
+    if src.suffix.lower() in RU.STILL_EXT or not spans:
+        return spans
+    dd = _cut_jumps(src, 0.0, float(spans[-1][1]), fps=fps)
+    marks = [(i + 1) / fps for i, x in enumerate(dd) if x > JUMP_MANY]
+    out = []
+    for a, b in spans:
+        cur = a
+        for t in sorted(m for m in marks if a - pad < m < b + pad):
+            if t - pad > cur:
+                out.append([round(cur, 2), round(t - pad, 2)])
+            cur = max(cur, t + pad)
+        if b > cur:
+            out.append([round(cur, 2), round(b, 2)])
+    return out
+
+
+def source_rule_scan(W: Path, T: dict, origin_names: set, faces: bool = True) -> list[str]:
     """출처 규칙 ③ — 원본 밖 재료 컷에 장면 전환이 섞였나(10-21 이미도: 리뷰여왕 별 전환 최고 73·상위10% 53 / 다른 재료 컷 최고 28 이하)."""
     out = []
     for c in (T or {}).get("cuts") or []:
@@ -1284,9 +1310,9 @@ def source_rule_scan(W: Path, T: dict, origin_names: set) -> list[str]:
         if not src or src in origin_names or not p.exists() or not c.get("dur"):
             continue
         dd = [] if p.suffix.lower() in RU.STILL_EXT else _cut_jumps(p, float(c.get("ss") or 0), float(c["dur"]))
-        if dd and (max(dd) > 40 or sum(x > 25 for x in dd) >= 3):
+        if _jumpy(dd):
             out.append(f"{c.get('line')}: {src} {float(c.get('ss') or 0):.1f}초부터 {float(c['dur']):.1f}초 안에 장면 전환·끊김이 있다(남의 영상 편집 효과) — 시작점을 옮기거나 다른 장면으로")
-        n = _cut_faces(W, p, float(c.get("ss") or 0), float(c["dur"]), c.get("crop"))
+        n = _cut_faces(W, p, float(c.get("ss") or 0), float(c["dur"]), c.get("crop")) if faces else 0   # faces = 지시서 flow._other_faces(쇼핑형은 사람 등장 허용, 10-27)
         if n:
             out.append(f"{c.get('line')}: {src} {float(c.get('ss') or 0):.1f}초부터 화면에 사람 얼굴이 보인다(원본 밖 영상의 다른 사람 — 광고 모델·리뷰어) — 원본 밖 재료는 사람 없는 제품 장면만")
     return out
@@ -1446,7 +1472,7 @@ def c_plan(W, d):
         out["conflict"] = cf
     if T.get("cuts"):
         out["sheet"] = rel(W, plan_sheet(W, v, T))
-        out["jumps"] = source_rule_scan(W, T, _origin_names(W, v) | set(d.get("origin_names") or []))
+        out["jumps"] = source_rule_scan(W, T, _origin_names(W, v) | set(d.get("origin_names") or []), d.get("other_faces", True))
         reuse = [f"같은 장면 재사용 {c.get('line')} {Path(str(c['src'])).stem}@{float(c['ss']):.2f} — 그 샷 안에서는 못 피함, 이 줄 컷을 다른 장면으로 바꿔라: {c['reuse_unfixed'][0]}"
                  for c in T["cuts"] if c.get("reuse_unfixed")]
         out["jumps"] += reuse      # 계획(respace_reuse)이 못 피한 B13 — 렌더(수 분) 뒤 완성본 검사에서야 걸려 11단계로 되돌아갔다(10-26 까르보 B13). 계획 고치기에서 바로
@@ -1472,7 +1498,7 @@ def c_render(W, d):
     if cf:
         return {"ok": False, "conflict": cf}
     T = jload(W / v / "render" / "timeline.json") if (W / v / "render" / "timeline.json").exists() else {}
-    jumps = source_rule_scan(W, T, _origin_names(W, v) | set(d.get("origin_names") or []))
+    jumps = source_rule_scan(W, T, _origin_names(W, v) | set(d.get("origin_names") or []), d.get("other_faces", True))
     return {"ok": (W / v / "render" / "final.mp4").exists() and not jumps, "jumps": jumps}
 
 
@@ -1796,6 +1822,7 @@ def c_origin_foreign(W, d):
     seeds = _of_seed_frames(W)
     skip = set(d.get("skip") or [])
     raw: list[dict] = []
+    lens_ai: dict = {}
     if mode == "lens":
         if CACHE:
             f = cache_path("origin_foreign", f"{d.get('bench_id')}.json")
@@ -1826,11 +1853,15 @@ def c_origin_foreign(W, d):
             else:
                 kth = None
             found: dict = {}
+            ai_txt: list[str] = []      # 렌즈 'AI 개요' 글(장면 전체 기준 — 출연자·브랜드 이름, 10-27)
             _t = time.time()
             with LN.lens_page() as pg:
                 for im in [c for s in seeds for c in LN.video_crops(s)]:
                     try:
-                        rows = LN.lens_rows(pg, str(im), skip=LN.SKIP_VIDEO)
+                        li: dict = {}
+                        rows = LN.lens_rows(pg, str(im), skip=LN.SKIP_VIDEO, info=li)
+                        if li.get("overview"):
+                            ai_txt.append(li["overview"])
                     except Exception as e:  # noqa: BLE001 — 한 장 실패는 남기고 나머지
                         sys.stderr.write(f"[origin_foreign] 렌즈 실패 {im.name}: {type(e).__name__} {str(e)[:80]}\n"); rows = []
                     for r in rows:
@@ -1853,6 +1884,12 @@ def c_origin_foreign(W, d):
                     if (c["platform"], c["id"]) not in have:
                         raw.append({**c, "found_by": "keyword"})
                 sys.stderr.write(f"[구간] 키워드 기다림(렌즈 뒤) {time.time() - _t:.0f}초\n")
+            names = []
+            for t in ai_txt:
+                for n in LN.overview_names(t):
+                    if n.lower() not in {x.lower() for x in names}:
+                        names.append(n)
+            lens_ai = {"names": names[:4], "overviews": list(dict.fromkeys(t[:400] for t in ai_txt))[:6]}   # 해석·검색어는 오푸스가(flow of_judge·of_find) — 코드는 모으기만(10-27 사장님 '코드 규칙만이면 이상한 방향을 못 잡는다')
     else:
         if mode == "find":          # 회원 Claude 가 직접 찾은 주소(flow f_of_find, 10-26) — 메타·썸네일만 받아 같은 영상 판정 시트에 싣는다(판정은 서버 질문)
             given = [(k, OF.url_of(k[0], k[1], url)) for url in [str(x) for x in d.get("urls") or []][:8] for k in [OF.vkey(url)] if k and k[1] != d.get("bench_id")]
@@ -1887,7 +1924,8 @@ def c_origin_foreign(W, d):
     sheets = _of_sheets(W, seeds, cands) if cands else []
     jsave(W / "origin_foreign" / f"cands_{mode}.json", cands)
     return {"mode": mode, "cands": [{k: c.get(k) for k in ("n", "platform", "id", "url", "title", "channel", "channel_id", "date", "dur", "views", "korean", "thumb_ok")} for c in cands],
-            "sheets": sheets, "seed": [rel(W, p) for p in seeds], **({"bad_urls": bad} if bad else {})}
+            "sheets": sheets, "seed": [rel(W, p) for p in seeds], **({"bad_urls": bad} if bad else {}),
+            **({"lens_ai": lens_ai} if lens_ai.get("names") or lens_ai.get("overviews") else {})}
 
 
 def c_clean_text(W, d):

@@ -1744,7 +1744,9 @@ def _src_rule_ctx(st) -> str:
     pics = [n for n in names if Path(n).suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")]
     rule = ""
     if R.get("v") is not None and float(R["v"]) <= 0.0:
-        rule = "\n★이 판은 사진(그림 파일) 컷을 쓰지 않는다(판 photo_share_max 0 — 벤치 6편 사진 컷 0). 컷 src 는 영상 파일만."
+        # 사진을 못 쓰는 판이면 '쓸 수 있는 파일' 목록에서도 뺀다(10-27 메이블린·쉐딩: 목록에 prod_*.jpg 를 주고 '쓰지 마라'를 같이 줘 사진 컷·A-B-A 반려)
+        names, pics = [n for n in names if n not in pics], []
+        rule = "\n★이 판은 사진(그림 파일) 컷을 쓰지 않는다(판 photo_share_max 0 — 벤치 6편 사진 컷 0). 컷 src 는 위 영상 파일만."
     elif R.get("v") is not None:
         rule = f"\n사진 컷은 전체 길이의 {float(R['v']):.0%} 까지(판 photo_share_max)."
     return ("\n\n## 컷 src 로 쓸 수 있는 파일(이 이름 그대로 — 목록 밖 이름을 만들지 마라)\n" + ", ".join(names) +
@@ -1760,16 +1762,25 @@ CUT_RULES = [
     "원본 순서 X→Y→X 금지(A-B-A 끼움 — 같은 원본 사이에 다른 컷 하나만 끼우지 않는다, B16)",
     "대사와 장면이 맞게(컷 see = 그 줄 대사의 동작·상태)",
     "벤치(소재 쇼츠 bench.mp4)는 재료가 아니다 — 원본·제품 영상·사진만",
-    "원본 밖 재료 영상은 사람 얼굴이 안 나오는 제품 장면만(리뷰어·광고 모델 금지)",
     "멈춘 그림 금지 — 원본이 멈춘 구간은 피하고, 사진 컷은 move(in·out·left·right)",
 ]
+
+
+def _other_faces(st) -> bool:
+    """(판단 주인 — 원본 밖 재료의 사람 얼굴을 반려하나) 연예인형·해외원본형 = 예(98 #38 고현정 편: 광고 모델 얼굴이 '출처: 고현정' 아래 나가 연예인으로 보임).
+    쇼핑형 = 아니오(10-27 사장님 '영상 안에 사람이 등장하는 거 괜찮은데 왜 반려 · 제품·대본과 상관없는 건 당연히 안 되지만' — 그건 장면 검수가 대사 대조로 본다)."""
+    return _fmt(st) != "쇼핑형"
+
+
+FACE_RULE = "원본 밖 재료 영상은 사람 얼굴이 안 나오는 제품 장면만(리뷰어·광고 모델 금지 — 다른 사람이 주인공으로 보인다)"
+PEOPLE_OK = "사람이 나와도 된다 — 단 그 컷에 제품이나 그 줄 대사의 동작이 보여야 한다(사람만 나오고 제품·대사와 상관없는 컷 금지)"
 
 
 def _cut_rules_ctx(st, shots: dict | None = None) -> str:
     """처음 대본·재료 질문에 싣는 컷 규칙 + 판 숫자(검사기와 같은 값) + 재료 영상 샷 구간(실행기 mat_sheets 가 shot_starts 로 잰 값)."""
     from tools.calcopy.hybrid import styles as STY
     b = STY.rhythm_bounds(_style(st["version"]))
-    nums = []
+    nums = [FACE_RULE if _other_faces(st) else PEOPLE_OK]
     if b.get("cut_median"):
         lo, hi = b["cut_median"]
         nums.append(f"컷 길이(서로 다른 샷 경계 사이) 중앙값 {lo}~{hi}초 — 한 컷이 길면 그 줄에 다른 장면 컷을 더 넣는다(같은 샷 이어 붙이기는 컷으로 안 센다)")
@@ -1822,6 +1833,9 @@ def _script_ask(st, fail: str = "") -> dict:
                 "원음 번역 자막은 사전식 직역 말고 이 시트처럼 찰지게(반말·인터넷체 '~함·~임·~셈·어디 감?', 'ㅋㅋ', '!!' — 비속어 자리는 '새@꺄'처럼 가림), "
                 "감탄 소리 자막('오우 노!!!·호우~!!·하이야~·으으음~~')도 원본 소리 자리에 넣고, 나레는 짧은 구어('일단 조리에 들어가는데'·'광클하는데'). 뜻·사실은 바꾸지 않는다.")
         imgs.append(_img(ms["bench_caps"]))
+    if PR.get("mode") == "alt" and not PR.get("given"):      # 비슷한 제품 밝히기 = 대본 검사(script_audit.alt_disclosed)가 거는 것 — 처음부터(10-27 메이블린·TV 반려)
+        from tools.calcopy.hybrid import script_audit
+        ctx += "\n\n## 비슷한 제품(반드시)\n" + script_audit.ALT_SAY_RULE
     return _rv(f"script_{v}", _q(st, "SCRIPT") + "\n\n" + ctx, imgs, need=("대본", "재료"))
 
 
@@ -1995,7 +2009,7 @@ def ph_sign(st, m, rp, u):
 
 # ── 8 계획 ────────────────────────────────────────────────────────────────
 def ph_plan(st, m, rp, u):
-    return {"do": [{"id": "plan", "cmd": "plan", "version": st["version"], "origin_names": sorted(_origin_names(st))}], "then": "plan_got"}
+    return {"do": [{"id": "plan", "cmd": "plan", "version": st["version"], "origin_names": sorted(_origin_names(st)), "other_faces": _other_faces(st)}], "then": "plan_got"}
 
 
 MECH_FIX_MAX = 2      # 같은 편에서 기계 자동 고침(흐림 칸 넣기)을 되풀이하는 한도 — 넘으면 Claude 고치기로(무한 반복 막기)
@@ -2043,6 +2057,8 @@ def ph_plan_got(st, m, rp, u):
     ln = p.get("length") or {}
     if ln.get("measured") and not ln.get("ok"):   # 진짜 목소리 길이가 판 범위 밖 — 렌더(5분) 전에 글로 고친다(10-22 선우용여: 렌더 뒤에야 걸려 렌더 3번)
         return _length_rewrite(st, f"{ln.get('sec')}초 (판 {ln.get('min')}~{ln.get('max')})")
+    if p.get("over") and VOICE_RX.search(str(p["over"])):   # 목소리 결함(받아쓰기·말속도·이름 끊김)은 재료 질문으로 보내지 않는다
+        return _voice_rewrite(st, [str(p["over"])])
     over = [p["over"]] if p.get("over") else []
     known = _origin_names(st) | {x.get("name") for x in (st.get("material") or {}).get("files") or [] if x.get("name")}
     orig_lines = {l["id"] for l in (st["script"].get("S") or {}).get("lines") or [] if l.get("kind") == "orig"}
@@ -2090,7 +2106,10 @@ def _fix_review(st, why: str, sheet: str | None, rid: str) -> dict:
     erase = ("\n\n★이 판은 원본에 박힌 글자(자막·워터마크)를 렌더 전에 VMake 로 지운다(사장님 10-26 — 엔진이 글자 컷을 '지울 컷'으로 이미 올렸다). "
              "남의 박힌 글자는 problems 에 넣지 말고 blur 도 새로 넣지 마라 — 장면·제품·얼굴·순서만 본다.") if VC.will_erase(v) else ""
     return _rv(rid, _q(st, "PLAN_LOOK").replace("{ar}", f"{ww}:{wh}") + erase + (f"\n\n멈춘 이유(재료를 고쳐라): {why}" if why else "") + "\n\n대본:\n" +
-               json.dumps(sc["S"], ensure_ascii=False)[:6000] + "\n\n재료:\n" + json.dumps(sc["M"], ensure_ascii=False)[:8000] + _shots_ctx(st),
+               json.dumps(sc["S"], ensure_ascii=False)[:6000] + "\n\n재료:\n" + json.dumps(sc["M"], ensure_ascii=False)[:8000] + _shots_ctx(st) +
+               # 처음 질문과 같은 장면 규칙·판 숫자·재료 샷 구간·쓸 수 있는 파일(10-27: 고치기 질문엔 이게 없어 고친 컷이 샷 경계·컷 중앙을 새로 넘겼다 —
+               # 6편 두 번째 반려 전부 '지난 고치기에서 새로 생김')
+               _src_rule_ctx(st) + _cut_rules_ctx(st, (st.get("_msheets") or {}).get("shots")),
                [_img(sheet)] if sheet else [], need=("ok",))
 
 
@@ -2116,24 +2135,18 @@ def ph_plan_look(st, m, rp, u):
     if r.get("ok") and not over and not r.get("재료"):
         _redo_done(st)
         return {"goto": "thumb"}
+    voice = [str(o) for o in over if VOICE_RX.search(str(o))]
+    if voice:          # 재료 답이 같이 와도 목소리 결함은 대본으로(10-27 이브라인 10번 반복)
+        return _voice_rewrite(st, voice)
     _tries(st, "plan", LIMITS["plan"], _plan_causes(over or [p for p in r.get("problems") or [] if str(p).strip()]))
     M = _take_fix(st, r)
     if M is not None:
         st["_plan_fixed"] = True      # 다음 계획이 엔진 검사를 통과하면 다시 묻지 않는다(ph_plan_got)
     if M is None:
         probs = [str(p) for p in (r.get("problems") or []) if str(p).strip()]
-        voice = [str(o) for o in over if "말속도" in str(o) or "목소리" in str(o) or "TTS" in str(o)]
-        if voice:      # 엔진이 짚은 목소리 이상(줄 말속도 ±35% 밖 — 되풀이·빠뜨림)은 재료로 못 고친다 → 문장 고치기(10-26 회원 마스크편 L8)
-            probs = voice
-        if probs and (voice or not over):
-            # 장면은 맞는데 대본·목소리 쪽 문제(예: 한 줄 말속도 이상 → 문장 고치기)를 짚었다 — 재료 답 칸이 없어 멈추던 것(10-26 회원 마스크편)
-            #   → 대본 단계로 되돌린다(배치 충돌과 같은 길, 시도 수는 conflict 한도가 지킨다)
-            st["log"].append("계획 검수 → 대본 다시: " + " / ".join(probs)[:300])
-            _tries(st, "conflict", 2, ["voice_speed"], at="script")
-            st["tries"]["script"] = 0
-            st["approved"] = False
-            why = "장면 확인에서 대본·목소리 쪽 문제가 나왔습니다 — 아래만 고치고 내용·결은 그대로: " + " / ".join(probs)[:1200]
-            return {"review": [_script_ask(st, why)], "then": "script_got"}
+        if probs and not over:
+            # 장면은 맞는데 Claude 가 대본·목소리 쪽 문제를 짚었다 — 재료 답 칸이 없어 멈추던 것(10-26 회원 마스크편) → 대본으로
+            return _voice_rewrite(st, probs)
         raise _Stop("장면을 맞추다 막혔어요", "다시 시도해 주시면 이어 갈게요")
     return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "plan"}
 
@@ -2160,7 +2173,7 @@ def ph_thumb(st, m, rp, u):
         # (10-26 이미숙 회원편: part 8 = 시트에선 얼굴 근접 O3@163, 바뀐 재료에선 앰플 병 N2@80 → 카드 얼굴 반려 되풀이·멈춤, 98 기록).
         # 옛 카드는 비우고(옛 번호라 계획 관문 ⑥이 시트를 막는다) 계획을 다시 돌려 새 시트로 묻는다.
         return {"do": [{"id": "clear_thumb", "cmd": "write_doc", "files": {f"{v}/썸네일.json": {"options": []}}, "version": v},
-                       {"id": "plan", "cmd": "plan", "version": v, "origin_names": sorted(_origin_names(st))}], "then": "thumb_sheet"}
+                       {"id": "plan", "cmd": "plan", "version": v, "origin_names": sorted(_origin_names(st)), "other_faces": _other_faces(st)}], "then": "thumb_sheet"}
     _, _, ww, wh = STY_window(v)
     ask = THUMB_ASK.format(good=TR.GOOD, order=TR.find_order(st.get("slug")), ww=ww, wh=wh)    # 상위 편 훅 참고 한 줄(지시서 15 — slug 의 _kal/상위편_목표.json)
     if st.get("_thumb_bad"):
@@ -2215,7 +2228,7 @@ def ph_thumb_got(st, m, rp, u):
 
 # ── 10 렌더 ───────────────────────────────────────────────────────────────
 def ph_render(st, m, rp, u):
-    return {"do": [{"id": "render", "cmd": "render", "version": st["version"], "origin_names": sorted(_origin_names(st))}], "then": "render_got"}
+    return {"do": [{"id": "render", "cmd": "render", "version": st["version"], "origin_names": sorted(_origin_names(st)), "other_faces": _other_faces(st)}], "then": "render_got"}
 
 
 def ph_render_got(st, m, rp, u):
@@ -2363,6 +2376,20 @@ def ph_check_judge(st, m, rp, u):
                                     if r.get("ok") is not True and not r.get("ref")] if not auto_ok else None,
                         "눈 검수 ×": look.get("problems")}, ensure_ascii=False)[:3000]
     return {"review": [_fix_review(st, "완성본 검사에서 걸린 것(화면·크롭·남의 글자는 재료로 고친다): " + probs + _face_hint(st), None, f"final_fix_{v}")], "then": "check_fix"}
+
+
+VOICE_RX = re.compile(r"받아쓰기 확정 결함|말속도|이름 끊김|목소리|TTS")   # 재료(컷)로 못 고치는 목소리 결함 — 대본 문장을 바꿔 다시 합성
+
+
+def _voice_rewrite(st, probs: list) -> dict:
+    """(판단 주인 — 목소리 결함은 대본으로) 계획(ph_plan_got)·장면 검수(ph_plan_look) 두 곳이 부른다. 10-27 이브라인 편: L5 TTS 되풀이(받아쓰기 결함)를
+    '재료를 고쳐라' 질문으로 10번 물어 멈춤 — Claude 는 매번 '재료로는 못 고친다, 문장을 바꿔야' 라고 답했다."""
+    st["log"].append("목소리 결함 → 대본 다시: " + " / ".join(probs)[:300])
+    _tries(st, "conflict", 2, ["voice_speed"], at="script")
+    st["tries"]["script"] = 0
+    st["approved"] = False
+    why = "목소리(합성) 쪽 문제 — 재료가 아니라 그 줄 문장을 바꿔 다시 합성한다. 아래만 고치고 내용·결은 그대로: " + " / ".join(probs)[:1200]
+    return {"review": [_script_ask(st, why)], "then": "script_got"}
 
 
 def _length_rewrite(st, value) -> dict:
@@ -2546,7 +2573,7 @@ SCRIPT_SHOP = """너는 대본 작가다(오푸스). 쇼핑형 — 판 규칙·�
 근거 = 쿠팡 베스트 후기(r번호 — 셀링포인트·소구점 전언)·네이버 글(n번호)·조사 사실(f번호). 후기 개수·별점 숫자는 쓰지 않는다. CTA·금액·질병·효능 단정 없음.
 재료의 cand_dir 는 비워 둔다, 컷 src 는 받은 재료 파일 이름(제품 영상·prod_*.jpg 사진 — 사진은 move: in·out·left·right). 컷마다 see — 그 줄 대사의 동작·상태가 그 컷에 보여야 한다."""
 
-PLAN_LOOK_SHOP = """너는 장면 검수 담당이다(쇼핑형). 계획 시트를 보고 컷마다: 대사와 화면이 맞나 · 남의 글자·워터마크 · 남의 얼굴(재료 영상의 리뷰어·광고 모델) · A-B-A 끼움.
+PLAN_LOOK_SHOP = """너는 장면 검수 담당이다(쇼핑형). 계획 시트를 보고 컷마다: 대사와 화면이 맞나 · 남의 글자·워터마크 · 사람만 나오고 제품·대사 동작이 안 보이는 컷(사람이 제품을 쓰는 장면은 괜찮다 — 10-27 사장님) · A-B-A 끼움.
 crop 은 원본 픽셀 정수[x, y, w, h] — 숫자 crop 은 엔진이 바꾸지 않는다. 박힌 글자는 재료.blur {파일: [[x, y, w, h, 시작초, 끝초]]}로 흐린다. 고칠 것이 있으면 재료 전체를 고쳐서 돌려준다(없으면 null).
 ★우리 틀(결함 아님): 맨 위 제목 · 로고 · 우리 자막(색 강조).
 JSON 하나: {"ok": true, "problems": ["…"], "재료": null}"""
@@ -2641,6 +2668,8 @@ def f_of_got(st, m, rp, u):
     mode = o.get("mode") or ("peers" if st.get("_peers_done") else "lens")
     cands = [c for c in o.get("cands") or [] if isinstance(c, dict)]
     st["of_cands"], st["of_mode"] = cands, mode
+    if o.get("lens_ai"):                  # 렌즈 'AI 개요'(장면 전체를 본 구글 설명 — 출연자·브랜드 단서). 해석은 오푸스가(판정·찾기 질문에 그대로)
+        st["lens_ai"] = o["lens_ai"]
     seen = st.setdefault("of_seen", [])           # 지금까지 본 후보(플랫폼:id) — 진행 신호(이번 바퀴 새 후보 수)·회원 진행 줄 '후보 N개'
     new = list(dict.fromkeys(f"{c.get('platform')}:{c.get('id')}" for c in cands if f"{c.get('platform')}:{c.get('id')}" not in seen))
     seen += new
@@ -2656,7 +2685,7 @@ def f_of_got(st, m, rp, u):
     if mode in ("lens", "find"):                 # 같은 영상 판정 = 렌즈 후보든 회원 Claude 가 찾은 후보든 같은 질문·같은 규칙(결과 검사)
         st["of_bad"] = _bad_urls(o)
         from tools.calcopy import origin_find as OF
-        ask = OF.JUDGE_PROMPT + "\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows
+        ask = OF.JUDGE_PROMPT + "\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows + _lens_ai_ctx(st)
         return {"review": [_rv("of_judge", ask, [_img(x) for x in o["sheets"]][:6], model="sonnet", need=("same",))], "then": "of_pick"}
     prod = ", ".join([str(st["read"].get("brand_hint") or "")] + [str(w) for w in st["read"].get("product_words") or []][:3]).strip(", ")
     need = "최대 2개" if st.get("origins") else "같은 촬영분 원본을 못 찾아 이 후보가 원본이 된다 — 가장 좋은 것부터 최대 3개"   # 가장 좋은 건 원본 그대로(렌즈), 못 찾으면 같은 종류 해외 반응(사장님 10-26)
@@ -2722,6 +2751,16 @@ JSON 하나: {"cuts": [{"cut": "S1 또는 컷 설명", "seen": "그 컷에 보�
 (모든 컷의 urls·queries 가 비면 이번 바퀴는 못 찾은 것으로 친다)"""
 
 
+def _lens_ai_ctx(st) -> str:
+    """렌즈 'AI 개요' 글을 오푸스 질문에 단서로 — 코드가 이름을 뽑아 검색하지 않는다(10-27 사장님 '코드 규칙만이면 이상한 방향을 못 잡는다',
+    실측: 정규식 이름 뽑기에 'Vogue Korea'·'medicube' 잡음). 10-27 실측: c편 '니키튜토리얼(NikkieTutorials)'·a편 '미스 다시(Miss Darcei)' = 실제 원본 채널."""
+    ov = [str(x) for x in (st.get("lens_ai") or {}).get("overviews") or [] if x]
+    if not ov:
+        return ""
+    return ("\n\n## 구글 렌즈 'AI 개요'(장면 전체를 보고 쓴 설명 — 출연자·채널·브랜드 이름 단서, 틀릴 수 있음)\n" + "\n".join(f"- {x[:400]}" for x in ov[:6]) +
+            "\n→ 출연자·채널·브랜드 이름이 보이면 그 이름 + 제품으로 틱톡·유튜브·인스타를 찾는다(queries·urls). 이미지만 비슷한 쇼핑·스톡 결과는 버린다.")
+
+
 def _bad_urls(o: dict) -> str:
     b = [x for x in o.get("bad_urls") or [] if isinstance(x, dict)]
     return (" · 못 연 주소: " + "; ".join(f"{x.get('url')} ({x.get('why')})" for x in b[:4])) if b else ""
@@ -2760,7 +2799,7 @@ def f_of_find(st, m, rp, u):
         "\n판독: 출연 " + str(R0.get("people")) + " · 제품 낱말 " + str(R0.get("product_words")) + " · 브랜드 단서 " + str(R0.get("brand_hint")),
         " · 앞서 쓴 검색어 " + str(R0.get("queries_en")),
         f"\n\n## 지난 시도({n}바퀴 · {used / 60:.0f}분 지남 · 본 후보 {len(st.get('of_seen') or [])}개 — 시간이 남아 있으니 계속 찾는다)\n" + ("\n".join(tried[-8:]) or "없음"),
-        "\n바로 앞 결과: " + str(st.get("of_find_why") or "-")])
+        "\n바로 앞 결과: " + str(st.get("of_find_why") or "-"), _lens_ai_ctx(st)])
     show = [_img(x) for x in (B.get("sheet"), B.get("big")) if x]
     return {"review": [_rv("of_find", OF_FIND_ASK + "\n\n" + _brief("origin_foreign.md") + ctx, show, need=("cuts",))], "then": "of_find_got"}
 
@@ -3426,7 +3465,7 @@ def _subsong_script_ask(st, fail: str = "") -> dict:
            "\n\n## 원본(한 샷 — 이 클립 하나로 만든다)\n" + "\n".join(O) +
            f"\n창(영상이 들어가는 자리) = {win[2]}x{win[3]} — crop 은 이 비율" +
            "\n실제 크기(crop 은 이 픽셀로 — 시트는 줄인 미리보기다): " + json.dumps(_all_dims(st), ensure_ascii=False) + _shots_ctx(st) +
-           _src_rule_ctx(st) + (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
+           _src_rule_ctx(st) + _points_ctx(v) + (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))   # 판 audit 숫자(est_length 등)도 처음부터(10-27 감사)
     return _rv(f"script_{v}", SCRIPT_SUBSONG + "\n\n" + ctx, [_img(x) for x in ms.get("sheets") or []], need=("대본", "재료"))
 
 

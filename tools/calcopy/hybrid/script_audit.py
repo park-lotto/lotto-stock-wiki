@@ -506,6 +506,10 @@ def text_fix(d: dict, joined: bool = True) -> list[str]:
 ALT_SAY = re.compile(r"(똑\s*같은|같은)\s*(제품|건|게|거|걸|것)\s*[은는이가을]?\s*(없|아니|아닌|못\s*찾)|비슷한\s*(걸|거|것|제품|게|건|[^.,!?]{1,12}?(으로|로|을|를))")
 
 
+ALT_SAY_RULE = ("나레 한 줄로 '같은 건 없어서 비슷한 제품'이라고 밝힌다 — 예 '영상 보고 쿠팡에서 찾아봤는데 똑같은 건 없어서 비슷한 걸로 써 봤어요'"
+                "(제작순서 03 · 사장님 10-25) · 판정 = alt_disclosed, 처음 대본 질문(flow._script_ask)도 이 글을 그대로 싣는다")
+
+
 def alt_disclosed(d: dict) -> dict | None:
     """(판단 주인) product_mode 'alt' 대본에 '같은 제품이 아니라 비슷한 제품' 이라고 말하는 나레 줄이 있나 → 걸리면 {rule, line, why}, 아니면 None."""
     if str(d.get("product_mode") or "") != "alt":
@@ -513,9 +517,7 @@ def alt_disclosed(d: dict) -> dict | None:
     hit = [l.get("id") for l in narr_lines(d) if ALT_SAY.search(_say(l))]
     if hit:
         return None
-    return {"rule": "alt_say", "line": None,
-            "why": "product_mode alt(쿠팡에 같은 제품 없음 → 비슷한 제품)인데 목소리로 그걸 밝히는 줄이 없다 — "
-                   "예 '영상 보고 쿠팡에서 찾아봤는데 똑같은 건 없어서 비슷한 걸로 써 봤어요'(제작순서 03 · 사장님 10-25)"}
+    return {"rule": "alt_say", "line": None, "why": "product_mode alt(쿠팡에 같은 제품 없음 → 비슷한 제품)인데 목소리로 그걸 밝히는 줄이 없다 — " + ALT_SAY_RULE}
 
 
 # ── 박자(고조·반전) 세기 · 편끼리 첫마디 겹침 — 판 설정 script.audit 규칙 'beats'·'sibling_repeat' ─────────────────

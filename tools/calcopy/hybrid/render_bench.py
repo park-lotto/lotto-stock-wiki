@@ -289,6 +289,14 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
                     moved.append(c)
                 head = [c for c in moved if "at" in c and c["at"] <= 0.0]
                 cs = ([head[-1]] if head else []) + [c for c in moved if not ("at" in c and c["at"] <= 0.0)]
+                # 앞 무음을 뺀 만큼 첫 컷만 짧아진다 — MIN_PIECE_SEC 밑이면 그 조각을 빼고 다음 컷을 줄 처음부터(ss 도 같은 만큼 당겨 입 맞춤 그대로).
+                # 10-27 펜티 편: Claude 가 0.4·0.5초로 적은 첫 컷이 앞 무음 0.068·0.388초에 깎여 0.33·0.13초 → '번쩍' 반려(Claude 탓 아님)
+                if len(cs) > 1 and "at" in cs[0] and "at" in cs[1] and float(cs[1]["at"]) - float(cs[0]["at"]) < MIN_PIECE_SEC:
+                    gone, nx = cs[0], cs[1]
+                    sh = float(nx["at"])
+                    nx = {**nx, "at": 0.0, **({"ss": round(float(nx["ss"]) - sh, 3)} if nx.get("ss") is not None and float(nx["ss"]) - sh >= 0 else {})}
+                    log_drop.append((lid, gone.get("src"), gone.get("ss"), "앞 무음 뒤 짧은 첫 컷"))
+                    cs = [nx] + cs[2:]
             for c in cs:
                 if "at" not in c and c.get("ss") is not None:   # ss 만 적은 컷 = 원음 초 → 그 초가 들리는 줄 안 시각(입 맞춤 그대로, 10-23 꿀템노트 재료)
                     p = next((p for p in opos if p["line"] == lid and p["span"][0] - 1e-3 <= float(c["ss"]) < p["span"][1]), None)

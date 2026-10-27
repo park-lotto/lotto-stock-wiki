@@ -19,24 +19,38 @@ SKIP_SHOP = re.compile(r"google|gstatic|coupangcdn|youtube|googleusercontent|ins
 SKIP_VIDEO = re.compile(r"google\.|gstatic|googleusercontent|ytimg|ggpht|coupangcdn")   # 영상 찾기: 유튜브·틱톡·인스타는 남긴다
 
 
-def lens_rows(pg, img: str, skip: re.Pattern = SKIP_SHOP, hl: str = "ko") -> list[dict]:
+LENS_FEW = 20      # 결과 화면의 링크 쌍이 이보다 적으면 덜 뜬 것 — 기다려 내려 본다(실측: 다 뜨면 60)
+
+
+def lens_rows(pg, img: str, skip: re.Pattern = SKIP_SHOP, hl: str = "ko", info: dict | None = None) -> list[dict]:
     """사진 한 장 → [{href, text, shop}]. hl = 구글 화면 언어(en 이면 해외 결과가 위로 — snowball 10-21)."""
     pg.goto(f"https://www.google.com/?hl={hl}", wait_until="domcontentloaded", timeout=40000)
-    pg.wait_for_timeout(1500)
-    for sel in ['div[aria-label="이미지로 검색"]', 'div[aria-label="Search by image"]']:
-        if pg.locator(sel).count():
-            pg.locator(sel).first.click()
-            break
-    pg.wait_for_timeout(1500)
+    # 고정 1.5초 두 번 대신 버튼이 보이면 바로(10-27 — 장마다 3초)
+    btn = pg.locator('div[aria-label="이미지로 검색"], div[aria-label="Search by image"]').first
+    try:
+        btn.wait_for(state="visible", timeout=8000)
+        btn.click()
+    except Exception:  # noqa: BLE001 — 버튼이 늦으면 예전처럼 기다렸다 한 번 더
+        pg.wait_for_timeout(1500)
+        for sel in ['div[aria-label="이미지로 검색"]', 'div[aria-label="Search by image"]']:
+            if pg.locator(sel).count():
+                pg.locator(sel).first.click()
+                break
+    up = pg.get_by_text(re.compile("파일을 업로드|upload a file", re.I)).first
+    up.wait_for(state="visible", timeout=8000)
     # 페이지에 file 칸이 여럿이라 첫 칸에 넣으면 안 올라간다(10-18 실측) → '파일을 업로드'를 눌러 뜨는 선택 창으로
     with pg.expect_file_chooser(timeout=15000) as fc:
-        pg.get_by_text(re.compile("파일을 업로드|upload a file", re.I)).first.click()
+        up.click()
     fc.value.set_files(str(Path(img).resolve()))
     pg.wait_for_url(re.compile(r"(lens|search)"), timeout=40000)
-    pg.wait_for_timeout(7000)
-    for _ in range(6):
-        pg.mouse.wheel(0, 1500)
-        pg.wait_for_timeout(700)
+    # 10-27 실측(샤넬 립라이너 4장): 영상 후보는 결과 주소가 뜬 순간에 이미 다 있다(바로 4·4·7·9 = 7초+스크롤 뒤 4·4·7·9, 새 것 0).
+    #   예전엔 무조건 7초 + 스크롤 4.2초 = 장마다 11초(8장 ≈ 1.5분). 1.5초 뒤 읽고, 링크가 적을 때만 기다려 내려 본다
+    pg.wait_for_timeout(1500)
+    if len(re.findall(r'"(https?://[^"\s]+)","([^"]{4,200})"', pg.content())) < LENS_FEW:
+        pg.wait_for_timeout(5500)
+        for _ in range(6):
+            pg.mouse.wheel(0, 1500)
+            pg.wait_for_timeout(700)
     raw = H.unescape(pg.content())
     seen, rows = set(), []
     for m in re.finditer(r'"(https?://[^"\s]+)","([^"]{4,200})"', raw):
@@ -46,7 +60,40 @@ def lens_rows(pg, img: str, skip: re.Pattern = SKIP_SHOP, hl: str = "ko") -> lis
             continue
         seen.add(h)
         rows.append({"href": h, "text": t, "shop": shop})
+    if info is not None:
+        info["overview"] = overview(pg)
     return rows
+
+
+AI_OVERVIEW_JS = """()=>{const h=[...document.querySelectorAll('*')].find(e=>e.childElementCount===0&&/^(AI 개요|AI Overview)$/.test((e.textContent||'').trim()));
+if(!h)return '';let b=h;for(let i=0;i<6&&b.parentElement;i++){b=b.parentElement;if((b.innerText||'').length>200)break}return (b.innerText||'').slice(0,700)}"""
+
+
+def overview(pg, wait_ms: int = 3000) -> str:
+    """렌즈 결과 'AI 개요' 글(사진 전체를 보고 쓴다 — 출연자·브랜드 이름이 나온다). 10-27 실측: c편 '니키튜토리얼(NikkieTutorials)'·
+    a편 '미스 다시(Miss Darcei)'·'@tirtir_global' = 실제 원본 채널·브랜드. 렌즈 링크(물체 한 칸만 고른 결과)와 달리 장면 전체 기준이다."""
+    t = 0
+    while t < wait_ms:
+        txt = pg.evaluate(AI_OVERVIEW_JS) or ""
+        if len(txt) > 80:
+            return " ".join(txt.split())
+        pg.wait_for_timeout(300)
+        t += 300
+    return ""
+
+
+NAME_PAREN = re.compile(r"[가-힣][가-힣 ·]{0,15}\(\s*([A-Za-z][A-Za-z0-9 ._'-]{1,30}?)\s*[,)]")
+HANDLE = re.compile(r"@([A-Za-z0-9_.]{3,30})")
+
+
+def overview_names(text: str) -> list[str]:
+    """(판단 주인 — AI 개요에서 사람·계정 이름) '한글(영문)' 괄호 속 영문 + @계정만(사이트·상품 제목 잡음은 뺀다)."""
+    out = []
+    for n in NAME_PAREN.findall(text or "") + HANDLE.findall(text or ""):
+        n = n.strip(" .")
+        if len(n) >= 3 and n.lower() not in {x.lower() for x in out}:
+            out.append(n)
+    return out[:4]
 
 
 def video_crops(p) -> list:
@@ -78,9 +125,10 @@ def video_crops(p) -> list:
 
 
 @contextmanager
-def lens_page():
-    """렌즈용 크롬 한 창(화면 뜸 — 헤드리스는 구글이 막는다)."""
+def lens_page(name: str = ""):
+    """렌즈용 크롬 한 창(화면 뜸 — 헤드리스는 구글이 막는다). name = 프로필 꼬리(같은 프로세스에서 창 두 개를 동시에 — 렌즈 + 틱톡·인스타 검색, 10-27)."""
     import os
+    import threading
     from playwright.sync_api import sync_playwright
     with sync_playwright() as p:
         def launch(prof):
@@ -88,10 +136,10 @@ def lens_page():
                                                         viewport={"width": 1366, "height": 900},
                                                         args=["--disable-blink-features=AutomationControlled"])
         try:
-            ctx = launch(PROFILE)
+            ctx = launch(PROFILE + (f"_{name}" if name else ""))
         except Exception as e:  # noqa: BLE001 — 프로필이 다른 세션 크롬에 잠김('기존 브라우저 세션에서 여는 중', 10-21 워커 5명+원본찾기 충돌)
             # 렌즈는 로그인이 필요 없어 빈 프로필이면 된다 → 이 프로세스 전용 사본 이름으로 연다(경보 한 줄 남김)
-            alt = f"{PROFILE}_{os.getpid()}"
+            alt = f"{PROFILE}{'_' + name if name else ''}_{os.getpid()}_{threading.get_ident() % 100000}"
             print(f"[lens] 프로필 잠김 → {Path(alt).name} 로 연다 ({type(e).__name__})")
             ctx = launch(alt)
         else:
