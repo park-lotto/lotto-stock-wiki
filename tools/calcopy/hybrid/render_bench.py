@@ -208,6 +208,23 @@ def photo_gate(T: dict, st: dict, M: dict | None = None) -> list[str]:
     return [f"그림 컷 비중 {sh} > 판 photo_share_max {R['v']} — 쿠팡·상품 사진을 줄이고 원본·재료 영상으로(재료.json)"] if sh > float(R["v"]) + 1e-9 else []
 
 
+def one_shot_chain(cuts: list, st: dict) -> None:
+    """(판단 주인 — 한 샷 이어 쓰기) 판 one_shot.v 가 참이면 같은 원본이 이어지는 컷을 첫 컷 하나로 합친다(첫 ss 부터 끊김 없이 흐름 — 되감기·건너뛰기·겹침 0)·옮기지 않음(no_snap).
+    재료의 ss 는 첫 컷만 쓴다. 10-27 릴리릴리 flow04: 작가가 C4 ss 를 11.38(이어지면 11.58)로 적어 0.2초 겹침 → B13 반려로 완성본 검사에서 멈춤."""
+    if not (st.get("one_shot") or {}).get("v"):
+        return
+    keep = cuts[:1]
+    for c in cuts[1:]:
+        if c.get("src") == keep[-1].get("src") and keep[-1].get("ss") is not None:
+            continue                  # 앞 컷이 이어서 흐른다 — 컷 하나(벤치 cut_median ≈ 편 길이). 원본 안 편집점은 원본 그대로 흐름(10-27 flow06 원본 편집 11곳이 우리 컷 경계와 부딪혀 멈춤)
+        keep.append(c)
+    cuts[:] = keep
+    for c in cuts:
+        c["no_snap"] = c["one_shot"] = True
+        for k in ("max", "max_auto", "dur"):      # 조각마다 적힌 샷 한도는 합친 컷엔 맞지 않는다(원본 끝 넘김은 src_left 가 따로 본다)
+            c.pop(k, None)
+
+
 def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) -> dict:
     """sent = {줄 id: {dur, raw, tempo}} (None 이면 글자÷cps 어림). 반환 = lines(줄 시각)·rows(자막 덩어리)·cuts(화면)·opos(원음 조각)·end."""
     from tools.calcopy.hybrid.material_fit import action_order       # 대사 동작 ↔ 컷 동작(페이블 E3) — 동작 컷 우선 + 없으면 경고
@@ -327,6 +344,7 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
                 cuts.append({**c, "line": lid, "t0": round(c0, 3), "kind": "tts"})
                 acc += w
     cuts[0]["t0"] = 0.0
+    one_shot_chain(cuts, st)
     from tools.calcopy.hybrid.material_fit import fix_aba
     fix_aba(cuts, log=lambda m: sys.stderr.write(m + "\n"))      # A-B-A = 같은 줄 안 화면 맞바꾸기로 계획이 스스로(샷 맞추기 전 — 바뀐 화면을 아래 fit 이 맞춘다)
     src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
@@ -1366,6 +1384,10 @@ def edge_fault(c: dict, src_dir: Path) -> dict | None:
     if not hit or not short_pieces(hit, e, end):
         return None
     pts = [e] + hit + [end]
+    if c.get("one_shot"):            # 한 샷 이어 쓰기(one_shot_chain) — 안쪽 편집점은 원본이 흐르는 그대로, 우리 컷 앞뒤 끝 조각만 번쩍임으로 본다
+        pc = [y - x for x, y in zip(pts, pts[1:])]
+        if min(pc[0], pc[-1]) >= MIN_PIECE_SEC - 1e-3:
+            return None
     return {"e": e, "end": end, "hit": hit, "pieces": [y - x for x, y in zip(pts, pts[1:])]}
 
 
