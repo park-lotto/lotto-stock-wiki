@@ -1,0 +1,153 @@
+{
+ "_note": "샥탬스토리 하이브리드 15편 Pick Up Bricks — 앞 0~O3 끝 = 칼카피 그대로(끝 원음 '무선에 튼튼하고 쓰기도 쉬워요 / 아이들한테 딱이죠'), 뒤 = 지훈·같은 제목·BGM 이어서 1인칭 체험 나레(존댓말). CTA 없음·금액 없음. 쿠팡 같은 제품(픽업브릭스). 렌더 tools/calcopy/shark/hybrid.py.",
+ "product": "픽업브릭스 레고 블록 장난감 청소 진공 청소기(쿠팡 8728076376 '픽업브릭스 레고 블록 장난감 청소 진공 청소기 샤크탱크' — 상품 사진의 상자·본체 'Pick up BRICKS' = 방송 제품과 같은 것)",
+ "same_product": true,
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "흥미이음": {
+  "원본흥미": "아이들이 직접 장난감(레고)을 빨아들여 치우는 청소기 — 앞 O3 '무선에 튼튼하고 쓰기도 쉬워요 / 아이들한테 딱이죠'로 끝남",
+  "뒤흥미": "같은 제품 리뷰 영상에서 아이들이 직접 호스로 레고를 빨아들이고(12 News 69~89), 통 안에 레고가 모임(Ryes Pops 115~117)",
+  "판정": "같음",
+  "근거": "쿠팡 파트너스 API 2026-10-27 'Pick Up Bricks'·'레고 블록 청소기' → 8728076376 하나(C:/숏템_칼카피/foreignshowshow/15편_소재/쿠팡API_15a.json) · 상품 사진 C:/숏템_칼카피/foreignshowshow/하이브리드/15편_PickUpBricks/coupang_8728076376.jpg(상자·본체에 'Pick up BRICKS' 글자, 연두 손잡이 투명 돔 = 방송 제품) · 리뷰 시트 같은 폴더 sheet/{Lq,Ra}.jpg"
+ },
+ "hybrid": {
+  "front_doc": "../15편_PickUpBricks",
+  "front_src": "C:/숏템_칼카피/foreignshowshow/15편_PickUpBricks/work/render/final.mp4",
+  "front_render_info": "C:/숏템_칼카피/foreignshowshow/15편_PickUpBricks/work/render/render_info.json",
+  "front_work": "C:/숏템_칼카피/foreignshowshow/15편_PickUpBricks/work",
+  "cut_after": "O3",
+  "cut_why": "O3 창업자 원음 '무선에 튼튼하고 쓰기도 쉬워요 / 아이들한테 딱이죠' 끝 — 그 장점을 뒤 체험(우리 애들이 직접 치움)이 받는다",
+  "transition": {
+   "kind": "slideleft",
+   "dur": 0.25,
+   "keep_top": 434,
+   "why": "샥탬 하이브리드 3~14편과 같은 이음(제목 띠 고정)"
+  }
+ },
+ "titles": {
+  "line1": "애들이 알아서",
+  "line2": "치우는 청소기?!",
+  "rule": "앞과 같은 제목(띠 고정)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.25,
+  "why": "앞 편과 같은 목소리·같은 speed(R2)"
+ },
+ "bench": {},
+ "final": {
+  "cps_target": 7.84,
+  "cps_note": "14편 하이브리드와 같은 목표(지훈 speed 1.25 실측 7.84)",
+  "lines": [
+   {
+    "id": "B1",
+    "kind": "나레",
+    "fn": "이음(연결어)+잉?",
+    "text": "근데 저 청소기가 궁금해서 쿠팡에 쳐 봤더니, 방송에 나온 그 픽업브릭스가 그대로 있더라고요.",
+    "tts": "근데 저 청소기가 궁금해서 쿠팡에 쳐 봤더니, 방송에 나온 그 픽업브릭스가 그대로 있더라고요.",
+    "caps": [
+     "근데 저 청소기가",
+     "궁금해서 쿠팡에 쳐 봤더니",
+     "방송에 나온",
+     "그 픽업브릭스가",
+     "그대로 있더라고요"
+    ],
+    "facts": [
+     "c1"
+    ],
+    "point": "잉",
+    "answer_at": 2,
+    "emph_words": [
+     "그 픽업브릭스가"
+    ]
+   },
+   {
+    "id": "B2",
+    "kind": "나레",
+    "fn": "②권위(와우1)",
+    "text": "이게 말도 안 되는 게, 샤크탱크 투자자 4명이 서로 투자하겠다고 붙었던 그 청소기거든요.",
+    "tts": "이게 말도 안 되는 게, 샤크탱크 투자자 네 명이 서로 투자하겠다고 붙었던 그 청소기거든요.",
+    "caps": [
+     "이게 말도 안 되는 게",
+     "샤크탱크 투자자 4명이",
+     "서로 투자하겠다고",
+     "붙었던 그 청소기거든요"
+    ],
+    "facts": [
+     "f6"
+    ]
+   },
+   {
+    "id": "B3",
+    "kind": "나레",
+    "fn": "③핵심(와우2, 잉 답)",
+    "text": "진짜 핵심은 이건데, 호스로 쓱 빨아들이면 장난감은 통에 남고 먼지만 체처럼 아래로 걸러져요.",
+    "tts": "진짜 핵심은 이건데, 호스로 쓱 빨아들이면 장난감은 통에 남고 먼지만 체처럼 아래로 걸러져요.",
+    "caps": [
+     "진짜 핵심은 이건데",
+     "호스로 쓱 빨아들이면",
+     "장난감은 통에 남고",
+     "먼지만 체처럼",
+     "아래로 걸러져요"
+    ],
+    "facts": [
+     "f4",
+     "c2"
+    ]
+   },
+   {
+    "id": "B4",
+    "kind": "나레",
+    "fn": "④심지어(와우3)",
+    "text": "심지어 이게 대박인 게, 우리 애들이 장난감인 줄 알고 서로 먼저 치우겠다고 싸워요.",
+    "tts": "심지어 이게 대박인 게, 우리 애들이 장난감인 줄 알고 서로 먼저 치우겠다고 싸워요.",
+    "caps": [
+     "심지어 이게 대박인 게",
+     "우리 애들이",
+     "장난감인 줄 알고",
+     "서로 먼저 치우겠다고",
+     "싸워요"
+    ],
+    "facts": [
+     "f5",
+     "창작"
+    ]
+   },
+   {
+    "id": "B5",
+    "kind": "나레",
+    "fn": "끝=사회 반응",
+    "text": "놀러 온 조카들까지 자기 집에도 사 달라고 난리예요.",
+    "tts": "놀러 온 조카들까지 자기 집에도 사 달라고 난리예요.",
+    "caps": [
+     "놀러 온 조카들까지",
+     "자기 집에도",
+     "사 달라고 난리예요"
+    ],
+    "facts": [
+     "창작"
+    ]
+   }
+  ]
+ },
+ "facts": {
+  "c1": "쿠팡 파트너스 API 검색(2026-10-27) 'Pick Up Bricks' → 8728076376 '픽업브릭스 레고 블록 장난감 청소 진공 청소기 샤크탱크' · '레고 블록 청소기' → 같은 8728076376. 결과 C:/숏템_칼카피/foreignshowshow/15편_소재/쿠팡API_15a.json · 상품 사진 상자·본체 'Pick up BRICKS'",
+  "c2": "리뷰 12 News 'Does It Work? Pick Up Bricks Lego Vacuum'(Lq-jl9Da7sE) 69~92초 아이들이 호스로 레고를 빨아들이고 통을 비움 · 공식 Pickup Bricks(yt0iHRbThn0) 2~4초 화면 글 'Removable dust collector sits below toy basket'",
+  "f4": "원본 X25MIpQqLIU 79.52~87.00 'our patented design separates the dirt and dust from the toys, leaving you with cleaner toys and a cleaner floor'",
+  "f5": "원본 X25MIpQqLIU 96.36~100.64 'They don't even realize that that's what they're doing because to them, it's fun. It's their toy.' · 138.16 'Just picking up the bricks is fun.'",
+  "f6": "원본 X25MIpQqLIU 415.85~418.17 'Listen, you've got four offers.' — 제안 넷(지분 20%·20%·12%·신용 한도 20%), 금액은 대본에 안 씀",
+  "창작": "B4 '우리 애들이 서로 먼저 치우겠다고 싸워요'·B5 '조카들까지 사 달라고 난리' = 화자 체험·사회 반응(§0-1 14 허용선 — 성분·효능·안전·금액 아님). B4 의 '장난감처럼 논다'는 f5 창업자·투자자 말이 근거 · B3 '체처럼' = 체감 비유(근거 f4 특허 설계가 먼지와 장난감을 나눔)"
+ },
+ "render": {
+  "end_pad": 1.1,
+  "_why": "끝 말 뒤 여운 0.6초 이상(10-27 검수) — 기본 0.6 은 받아쓰기 실측 0.26초(마지막 낱말 꼬리가 정렬 끝보다 0.35초 김)"
+ }
+}

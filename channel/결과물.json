@@ -1504,6 +1504,23 @@
    "doc": "channel/hottemreport/현장썰4차/18_ChairWheels/",
    "judge": "[확인대기] −14.4 LUFS · TP −2.0 · check_seams 되감김 0 · freeze/black 0 · script_audit ok 145자 · 받아쓰기 스피치매틱스+위스퍼 대조 일치(1차 '새 바퀴' 뭉개짐 → '이 바퀴'로 다시 합성) · 끝 여운 0.97초 · 봉인 ok",
    "note": "벤치 gBalgjWMRfQ(33.0만) · 앞 Peter von Panda T8_Hc8E28-4(9,690회) 원음 2구간 · 사실 근거 창업자 틱톡 · 짤 owenwow 19.5초 · 썸네일 C"
+  },
+  {
+   "channel": "foreignshowshow",
+   "channel_name": "샥탬스토리",
+   "brand": "샥탬스토리",
+   "style": "현장썰 하이브리드(샤크탱크 칼카피 앞 + 쿠팡 1인칭 체험 뒤)",
+   "date": "2026-10-27",
+   "from": "channel/foreignshowshow/15편_PickUpBricks/make_plan.py → tools/calcopy/shark/render.py(앞) → tools/calcopy/shark/hybrid.py(뒤·이음) → 소리 끝 무음 덧댐·광고 표식 → engine/finalize.seal",
+   "n": 96,
+   "title": "하이브리드 15 Pick Up Bricks(픽업브릭스, 쿠팡 8728076376 같은 제품)",
+   "path": "C:/숏템_칼카피/foreignshowshow/하이브리드/15편_PickUpBricks/work/hybrid/final.mp4",
+   "desktop": "샥탬스토리_15_PickUpBricks_검수대기.mp4",
+   "md5": "a4f3542ced302d0a49259e8adf634c08",
+   "seconds": 37.8,
+   "doc": "channel/foreignshowshow/15편_PickUpBricks_하이브리드/",
+   "judge": "[확인대기] −14.1 LUFS · TP −2.4 · check render 뒤 전 칸 ○ · check_seams 되감김 0·점프줌 0 · freeze/black 0 · script_audit ok · 받아쓰기 스피치매틱스 ko+위스퍼 medium 대조(△ '체처럼'→책/채처럼, '픽업브릭스'→픽업 블릭스/픽어프릭스) · 광고 표시 0~37.75초 2초 간격 전부 · 끝 여운 1.17초(나레 트랙 −45dB) · 봉인 ok",
+   "note": "벤치 aKaBZjYmbRk(250만) · 원본 Sony Pictures Television X25MIpQqLIU · 뒤 재료 12 News Lq-jl9Da7sE·Ryes Pops Ra1opTaFBt4·방송 · 0초 원 = 무대 배너의 제품 그림"
   }
  ]
 }
