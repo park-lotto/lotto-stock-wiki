@@ -781,7 +781,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             from tools.calcopy.hybrid import placement as PL
             R0 = need("plain_share")
             lo, hi = ST.rhythm_bounds(st)["plain"]            # 판 v±tol 또는 벤치 편별 범위(range) — 주인 styles.rhythm_bounds
-            o = PL.plain_share(tab.get("rows") or [])
+            o = PL.plain_share(PL.caption_units(tab))
             return (o is not None and lo - 1e-9 <= o <= hi + 1e-9), f"꾸밈 없는 덩어리 {o} vs 판 {R0['v']}(범위 {lo}~{hi})(자막표 rows · placement.plain_share)"
 
         def photo():
@@ -816,7 +816,10 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
                 row("자막·효과", "꾸밈 종류·횟수(판 deco)", deco_row, "자막표 rows·timeline cuts · deco.check")
     # ── 소리
     if (want("소리") or mode == "fast") and not legacy:      # 줄별 cps = render_info 표 읽기라 빠르다 → --fast 에도
-        row("소리", "줄별 말속도 ±35%(렌더 기록)", lambda: line_cps_verdict(info.get("line_cps"), cps_tol()), "render_info.line_cps · render_itssum.CPS_LINE_TOL")
+        no_narr = not any(l.get("kind", "tts") == "tts" for l in S.get("lines") or [])     # 나레 없는 판(자막 줄 sub 만 — 별헤는쏭 10-27)
+        row("소리", "줄별 말속도 ±35%(렌더 기록)",
+            (lambda: (NA, "나레 줄 0 — 읽는 줄이 없는 판")) if no_narr else (lambda: line_cps_verdict(info.get("line_cps"), cps_tol())),
+            "render_info.line_cps · render_itssum.CPS_LINE_TOL")
     if want("소리") and not legacy:
         narr = [l for l in S.get("lines") or [] if l.get("kind") == "tts"]
 
@@ -828,7 +831,11 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
                 bounds = [(T["lines"][a][1], T["lines"][b][0]) for a, b in zip(ids[:-1], ids[1:]) if a.startswith("N") and b.startswith("N")]
                 pv = [p["pause"] for p in pauses_between(R / "voice.wav", bounds)]
                 return (all(PAUSE_LO - 0.02 <= p <= PAUSE_HI + 0.03 for p in pv) if pv else None), f"옛 길 쉼 {pv} ({PAUSE_LO}~{PAUSE_HI})"
-            bounds = [(f"{a}→{b}", T["lines"][a][1], T["lines"][b][0]) for a, b in zip(ids[:-1], ids[1:])]
+            kinds0 = {l.get("id"): l.get("kind") for l in S.get("lines") or []}
+            vids = [i for i in ids if kinds0.get(i) != "sub"]     # 자막 줄(sub)은 소리가 없다 — 쉼은 소리 나는 줄 사이만
+            if len(vids) < 2:
+                return NA, "소리 나는 줄(나레·원음) 2개 미만 — 줄 사이 쉼 칸 없음"
+            bounds = [(f"{a}→{b}", T["lines"][a][1], T["lines"][b][0]) for a, b in zip(vids[:-1], vids[1:])]
             meas = pauses_between(R / "voice.wav", [(x, y) for _, x, y in bounds], min_sil=0.02)     # 목표(0.08)보다 작은 무음부터(0.08 로 재면 0.08 간격이 0 으로 나옴)
             kinds = {l.get("id"): l.get("kind") for l in S.get("lines") or []}
             orig_edge = {k for k, _, _ in bounds if any(kinds.get(x) == "orig" for x in k.split("→"))}
@@ -853,6 +860,8 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
         row("소리", "B18a 줄 안 문장부호 쉼", inline, "판 speech.pause_comma/period(없으면 0.22/0.30) · voice.wav 무음")
 
         def asr_rows():
+            if not narr:
+                return NA, "나레 줄 0 — 받아쓸 나레가 없는 판"
             if not asr:
                 return None, "받아쓰기 안 함(--no-asr, 미측정)"
             from tools.calcopy.engine import check_line_sync as LS

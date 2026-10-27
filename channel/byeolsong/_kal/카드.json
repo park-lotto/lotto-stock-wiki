@@ -1,0 +1,1891 @@
+{
+ "slug": "byeolsong",
+ "made_by": "tools/calcopy/preset_card.py build",
+ "built_at": "2026-10-27T09:27:30",
+ "bench": "별헤는쏭(@별헤는쏭) — 바이럴 한 샷 + 일본 노래 + 댓글카드 자막 + 가사 2줄 → 우리 릴리릴리",
+ "brand": null,
+ "brand_note": null,
+ "format": "해외원본",
+ "subformat": "자막+배경음",
+ "format_options": [],
+ "sound_style": [],
+ "engine": {
+  "style_file": "tools/calcopy/hybrid/styles/별헤는쏭판.json",
+  "style_error": null,
+  "renderer": "bench",
+  "entry": "tools/calcopy/hybrid/run.py <키> render --version 별헤는쏭판",
+  "hand_scripts": [],
+  "hand_scripts_reference": [],
+  "caption_pack": "clean",
+  "voice": "박창수",
+  "bgm": "byeolsong_ref"
+ },
+ "sample": {
+  "line_reads": 6,
+  "line_reads_strict_errors": 0,
+  "rules_freq": true,
+  "palette": true,
+  "style_analysis": true,
+  "sfx_events": true,
+  "tteutgi": 5,
+  "min_required": 6
+ },
+ "axes": {
+  "1자막": {
+   "value": "cap_look○ cap_enter○ cap_emph○ cap_exit○",
+   "confidence": "측정"
+  },
+  "2제목틀": {
+   "value": "2줄 — 1줄 상황(흰) / 2줄 결론·반응 + ㅋㅋ(분홍) — '아 인스타 / 광고 보고 샀는데' · '러시아의 / 1호선 ㅋㅋ'",
+   "confidence": "판"
+  },
+  "3전환": {
+   "value": "transition○ cut_rhythm○",
+   "confidence": "측정"
+  },
+  "4장면대사": {
+   "value": "scene_fit○",
+   "confidence": "측정"
+  },
+  "5스토리": {
+   "value": [
+    "고조",
+    "공개",
+    "끝",
+    "다리",
+    "반전",
+    "본문",
+    "이음",
+    "질문",
+    "훅"
+   ],
+   "confidence": "눈"
+  },
+  "6대본언어": {
+   "value": "script○ speech○",
+   "confidence": "측정"
+  },
+  "7소리": {
+   "value": "bgm○ sfx○",
+   "confidence": "측정"
+  },
+  "8스티커짤": {
+   "value": "sticker○ meme○ pointer○",
+   "confidence": "측정"
+  },
+  "9썸네일": {
+   "value": "thumb○",
+   "confidence": "측정"
+  },
+  "10소재": {
+   "value": null,
+   "confidence": "미측정"
+  },
+  "11채널": {
+   "value": "별헤는쏭(@별헤는쏭) — 바이럴 한 샷 + 일본 노래 + 댓글카드 자막 + 가사 2줄 → 우리 릴리릴리",
+   "confidence": "장부"
+  }
+ },
+ "elements": {
+  "cap_look": "○",
+  "cap_enter": "○",
+  "cap_emph": "○",
+  "cap_exit": "○",
+  "transition": "○",
+  "cut_rhythm": "○",
+  "scene_fit": "○",
+  "bgm": "○",
+  "sfx": "○",
+  "meme": "○",
+  "sticker": "○",
+  "pointer": "○",
+  "thumb": "○",
+  "speech": "○",
+  "script": "○"
+ },
+ "rules": [
+  {
+   "element": "cap_look",
+   "cond": "역할별",
+   "action": "팔레트 역할 7종",
+   "k": null,
+   "n": null,
+   "rate": null,
+   "base": null,
+   "grade": null,
+   "evidence": [
+    "channel/byeolsong/팔레트.json"
+   ],
+   "confidence": "픽셀",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json caption.pack",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=제3자",
+   "action": "enter=fade",
+   "k": 31,
+   "n": 57,
+   "rate": 0.54,
+   "base": null,
+   "grade": "중",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=제3자",
+   "action": "효과 붙은 등장",
+   "k": 31,
+   "n": 57,
+   "rate": 0.54,
+   "base": 0.54,
+   "grade": "중",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자=제3자",
+   "action": "enter=instant",
+   "k": 26,
+   "n": 57,
+   "rate": 0.46,
+   "base": null,
+   "grade": "중",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=본문",
+   "action": "enter=fade",
+   "k": 20,
+   "n": 36,
+   "rate": 0.56,
+   "base": null,
+   "grade": "중",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=본문",
+   "action": "효과 붙은 등장",
+   "k": 20,
+   "n": 36,
+   "rate": 0.56,
+   "base": 0.54,
+   "grade": "중",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=본문",
+   "action": "enter=instant",
+   "k": 16,
+   "n": 36,
+   "rate": 0.44,
+   "base": null,
+   "grade": "중",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=이음",
+   "action": "enter=instant",
+   "k": 22,
+   "n": 23,
+   "rate": 0.96,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=이음",
+   "action": "enter=fade",
+   "k": 1,
+   "n": 23,
+   "rate": 0.04,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=이음",
+   "action": "효과 붙은 등장",
+   "k": 1,
+   "n": 23,
+   "rate": 0.04,
+   "base": 0.54,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=끝",
+   "action": "enter=instant",
+   "k": 10,
+   "n": 15,
+   "rate": 0.67,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=끝",
+   "action": "enter=fade",
+   "k": 5,
+   "n": 15,
+   "rate": 0.33,
+   "base": null,
+   "grade": "중",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=끝",
+   "action": "효과 붙은 등장",
+   "k": 5,
+   "n": 15,
+   "rate": 0.33,
+   "base": 0.54,
+   "grade": "중",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=끝",
+   "action": "enter=fade",
+   "k": 6,
+   "n": 7,
+   "rate": 0.86,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=끝",
+   "action": "효과 붙은 등장",
+   "k": 6,
+   "n": 7,
+   "rate": 0.86,
+   "base": 0.54,
+   "grade": "강",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=고조",
+   "action": "enter=fade",
+   "k": 4,
+   "n": 7,
+   "rate": 0.57,
+   "base": null,
+   "grade": "중",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=고조",
+   "action": "효과 붙은 등장",
+   "k": 4,
+   "n": 7,
+   "rate": 0.57,
+   "base": 0.54,
+   "grade": "중",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=고조",
+   "action": "enter=instant",
+   "k": 3,
+   "n": 7,
+   "rate": 0.43,
+   "base": null,
+   "grade": "중",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=끝",
+   "action": "enter=instant",
+   "k": 1,
+   "n": 7,
+   "rate": 0.14,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=훅",
+   "action": "enter=fade",
+   "k": 6,
+   "n": 6,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "자리=훅",
+   "action": "효과 붙은 등장",
+   "k": 6,
+   "n": 6,
+   "rate": 1.0,
+   "base": 0.54,
+   "grade": "강",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=훅",
+   "action": "enter=fade",
+   "k": 6,
+   "n": 6,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=훅",
+   "action": "효과 붙은 등장",
+   "k": 6,
+   "n": 6,
+   "rate": 1.0,
+   "base": 0.54,
+   "grade": "강",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "화자전환 첫 덩어리=제3자",
+   "action": "enter=fade",
+   "k": 6,
+   "n": 6,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=반전",
+   "action": "enter=fade",
+   "k": 4,
+   "n": 4,
+   "rate": 1.0,
+   "base": null,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=반전",
+   "action": "효과 붙은 등장",
+   "k": 4,
+   "n": 4,
+   "rate": 1.0,
+   "base": 0.54,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=본문",
+   "action": "enter=fade",
+   "k": 4,
+   "n": 4,
+   "rate": 1.0,
+   "base": null,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=본문",
+   "action": "효과 붙은 등장",
+   "k": 4,
+   "n": 4,
+   "rate": 1.0,
+   "base": 0.54,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=다리",
+   "action": "enter=fade",
+   "k": 3,
+   "n": 3,
+   "rate": 1.0,
+   "base": null,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=다리",
+   "action": "효과 붙은 등장",
+   "k": 3,
+   "n": 3,
+   "rate": 1.0,
+   "base": 0.54,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=공개",
+   "action": "enter=fade",
+   "k": 2,
+   "n": 2,
+   "rate": 1.0,
+   "base": null,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=공개",
+   "action": "효과 붙은 등장",
+   "k": 2,
+   "n": 2,
+   "rate": 1.0,
+   "base": 0.54,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=질문",
+   "action": "enter=fade",
+   "k": 1,
+   "n": 1,
+   "rate": 1.0,
+   "base": null,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "역할=질문",
+   "action": "효과 붙은 등장",
+   "k": 1,
+   "n": 1,
+   "rate": 1.0,
+   "base": 0.54,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_enter",
+   "cond": "없음",
+   "action": "꾸밈 없는 줄(plain)",
+   "k": 0,
+   "n": 57,
+   "rate": 0.0,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.enter",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cap_emph",
+   "cond": "화자=제3자",
+   "action": "emph",
+   "k": 26,
+   "n": 57,
+   "rate": 0.46,
+   "base": 0.46,
+   "grade": "중",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "자리=본문",
+   "action": "emph",
+   "k": 16,
+   "n": 36,
+   "rate": 0.44,
+   "base": 0.46,
+   "grade": "중",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=이음",
+   "action": "emph",
+   "k": 22,
+   "n": 23,
+   "rate": 0.96,
+   "base": 0.46,
+   "grade": "강",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "자리=끝",
+   "action": "emph",
+   "k": 10,
+   "n": 15,
+   "rate": 0.67,
+   "base": 0.46,
+   "grade": "강",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=고조",
+   "action": "emph",
+   "k": 3,
+   "n": 7,
+   "rate": 0.43,
+   "base": 0.46,
+   "grade": "중",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=끝",
+   "action": "emph",
+   "k": 1,
+   "n": 7,
+   "rate": 0.14,
+   "base": 0.46,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "자리=훅",
+   "action": "emph",
+   "k": 0,
+   "n": 6,
+   "rate": 0.0,
+   "base": 0.46,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=훅",
+   "action": "emph",
+   "k": 0,
+   "n": 6,
+   "rate": 0.0,
+   "base": 0.46,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=반전",
+   "action": "emph",
+   "k": 0,
+   "n": 4,
+   "rate": 0.0,
+   "base": 0.46,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=본문",
+   "action": "emph",
+   "k": 0,
+   "n": 4,
+   "rate": 0.0,
+   "base": 0.46,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=다리",
+   "action": "emph",
+   "k": 0,
+   "n": 3,
+   "rate": 0.0,
+   "base": 0.46,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=공개",
+   "action": "emph",
+   "k": 0,
+   "n": 2,
+   "rate": 0.0,
+   "base": 0.46,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_emph",
+   "cond": "역할=질문",
+   "action": "emph",
+   "k": 0,
+   "n": 1,
+   "rate": 0.0,
+   "base": 0.46,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_exit",
+   "cond": "전체 줄",
+   "action": "exit=cut",
+   "k": 32,
+   "n": 57,
+   "rate": 0.56,
+   "base": null,
+   "grade": "중",
+   "evidence": [
+    "channel/byeolsong/줄판독 6편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_exit",
+   "cond": "전체 줄",
+   "action": "exit=instant",
+   "k": 23,
+   "n": 57,
+   "rate": 0.4,
+   "base": null,
+   "grade": "중",
+   "evidence": [
+    "channel/byeolsong/줄판독 6편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "cap_exit",
+   "cond": "전체 줄",
+   "action": "exit=끝까지",
+   "k": 2,
+   "n": 57,
+   "rate": 0.04,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/줄판독 6편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "-"
+  },
+  {
+   "element": "transition",
+   "cond": "전체 줄",
+   "action": "transition=none",
+   "k": 56,
+   "n": 58,
+   "rate": 0.97,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/byeolsong/줄판독 6편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json cuts.transition",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "transition",
+   "cond": "전체 줄",
+   "action": "transition=cut",
+   "k": 2,
+   "n": 58,
+   "rate": 0.03,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/줄판독 6편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json cuts.transition",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "cut_rhythm",
+   "cond": "편 단위",
+   "action": "컷 중앙 18.7초 · p90 18.7초",
+   "k": 5,
+   "n": 5,
+   "rate": null,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/byeolsong/뜯기 5편"
+   ],
+   "confidence": "신호",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json cuts",
+   "engine_support": "△",
+   "engine_gap": "-"
+  },
+  {
+   "element": "scene_fit",
+   "cond": "전체 줄",
+   "action": "대사↔장면 평균 6.25 · 7 미만 0.44",
+   "k": 32,
+   "n": 57,
+   "rate": 0.56,
+   "base": null,
+   "grade": "중",
+   "evidence": [
+    "channel/byeolsong/줄판독 6편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A5"
+  },
+  {
+   "element": "bgm",
+   "cond": "편 단위",
+   "action": "배경음 있음",
+   "k": 6,
+   "n": 6,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/byeolsong/줄판독 6편"
+   ],
+   "confidence": "신호",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json bgm.duck_narr_db",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "화자=제3자",
+   "action": "sfx",
+   "k": 0,
+   "n": 57,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "자리=본문",
+   "action": "sfx",
+   "k": 0,
+   "n": 36,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=이음",
+   "action": "sfx",
+   "k": 0,
+   "n": 23,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "자리=끝",
+   "action": "sfx",
+   "k": 0,
+   "n": 15,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=고조",
+   "action": "sfx",
+   "k": 0,
+   "n": 7,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=끝",
+   "action": "sfx",
+   "k": 0,
+   "n": 7,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "자리=훅",
+   "action": "sfx",
+   "k": 0,
+   "n": 6,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=훅",
+   "action": "sfx",
+   "k": 0,
+   "n": 6,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=반전",
+   "action": "sfx",
+   "k": 0,
+   "n": 4,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=본문",
+   "action": "sfx",
+   "k": 0,
+   "n": 4,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=다리",
+   "action": "sfx",
+   "k": 0,
+   "n": 3,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=공개",
+   "action": "sfx",
+   "k": 0,
+   "n": 2,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sfx",
+   "cond": "역할=질문",
+   "action": "sfx",
+   "k": 0,
+   "n": 1,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.sfx",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "meme",
+   "cond": "전체 줄",
+   "action": "짤 스티커",
+   "k": 0,
+   "n": 58,
+   "rate": 0.0,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/줄판독 6편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json placement.rules.meme",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "sticker",
+   "cond": "화자=제3자",
+   "action": "sticker",
+   "k": 0,
+   "n": 57,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "자리=본문",
+   "action": "sticker",
+   "k": 0,
+   "n": 36,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=이음",
+   "action": "sticker",
+   "k": 0,
+   "n": 23,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "자리=끝",
+   "action": "sticker",
+   "k": 0,
+   "n": 15,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=고조",
+   "action": "sticker",
+   "k": 0,
+   "n": 7,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=끝",
+   "action": "sticker",
+   "k": 0,
+   "n": 7,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "자리=훅",
+   "action": "sticker",
+   "k": 0,
+   "n": 6,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=훅",
+   "action": "sticker",
+   "k": 0,
+   "n": 6,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=반전",
+   "action": "sticker",
+   "k": 0,
+   "n": 4,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=본문",
+   "action": "sticker",
+   "k": 0,
+   "n": 4,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=다리",
+   "action": "sticker",
+   "k": 0,
+   "n": 3,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=공개",
+   "action": "sticker",
+   "k": 0,
+   "n": 2,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "sticker",
+   "cond": "역할=질문",
+   "action": "sticker",
+   "k": 0,
+   "n": 1,
+   "rate": 0.0,
+   "base": 0.0,
+   "grade": "표본부족",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "pointer",
+   "cond": "전체 줄",
+   "action": "원·화살표 스티커 (없음)",
+   "k": 0,
+   "n": 58,
+   "rate": 0.0,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/줄판독 6편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": null,
+   "engine_support": "×",
+   "engine_gap": "A3"
+  },
+  {
+   "element": "thumb",
+   "cond": "0초 프레임",
+   "action": "frame0 기입",
+   "k": 6,
+   "n": 6,
+   "rate": 1.0,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/byeolsong/줄판독 6편"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "render_bench thumb.stamp_video(판 칸 없음)",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "speech",
+   "cond": "화자=제3자",
+   "action": "말속도 4.49 자/초 · 덩어리 2.67초",
+   "k": null,
+   "n": 57,
+   "rate": null,
+   "base": null,
+   "grade": "강",
+   "evidence": [
+    "channel/byeolsong/_kal/규칙빈도.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json cps_target",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "제3자 문장 끝",
+   "action": "어미 ~다",
+   "k": 3,
+   "n": 9,
+   "rate": 0.33,
+   "base": null,
+   "grade": "중",
+   "evidence": [
+    "channel/byeolsong/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "제3자 문장 끝",
+   "action": "어미 ~",
+   "k": 1,
+   "n": 9,
+   "rate": 0.11,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "제3자 문장 끝",
+   "action": "어미 ~가요",
+   "k": 1,
+   "n": 9,
+   "rate": 0.11,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "제3자 문장 끝",
+   "action": "어미 ~아빠",
+   "k": 1,
+   "n": 9,
+   "rate": 0.11,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "제3자 문장 끝",
+   "action": "어미 ~기적",
+   "k": 1,
+   "n": 9,
+   "rate": 0.11,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "제3자 문장 끝",
+   "action": "어미 ~지물",
+   "k": 1,
+   "n": 9,
+   "rate": 0.11,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  },
+  {
+   "element": "script",
+   "cond": "제3자 문장 끝",
+   "action": "어미 ~이유",
+   "k": 1,
+   "n": 9,
+   "rate": 0.11,
+   "base": null,
+   "grade": "약",
+   "evidence": [
+    "channel/byeolsong/_kal/대본언어.json"
+   ],
+   "confidence": "눈",
+   "measure_task": null,
+   "engine_cell": "별헤는쏭판.json script.audit",
+   "engine_support": "○",
+   "engine_gap": null
+  }
+ ],
+ "gates": {
+  "match_first_copy": {
+   "path": "channel/byeolsong/시험편01_코코넛/재현일치도.json",
+   "ok": true,
+   "pass": null,
+   "fail": null
+  },
+  "upgrade": {
+   "path": null,
+   "items": null,
+   "better": null
+  },
+  "quality_gate": {
+   "path": "channel/byeolsong/시험편01_코코넛/품질관문.json",
+   "ok": true
+  }
+ },
+ "member": {
+  "line_json": null,
+  "preset_name": null,
+  "flow_format": "해외원본형"
+ },
+ "results": {
+  "n": 0,
+  "judged_pass": 0,
+  "latest": null
+ },
+ "facts": {
+  "hand_const": [],
+  "line_reads": 6,
+  "line_reads_strict_errors": 0,
+  "rules_freq": true,
+  "style_analysis": true,
+  "palette": true,
+  "sfx_events": true,
+  "style_file": "tools/calcopy/hybrid/styles/별헤는쏭판.json",
+  "style_file_exists": true,
+  "renderer": "bench",
+  "caption_pack": "clean",
+  "caption_pack_ok": true,
+  "counted_n": 6,
+  "no_why": [],
+  "rhythm_missing": [],
+  "hand_scripts": [],
+  "hand_scripts_reference": [],
+  "unmeasured": 0,
+  "quality_gate_ok": true,
+  "match_ok": true,
+  "eye": null,
+  "upgrade": {
+   "better": 0,
+   "worse": null,
+   "l3_ok": false,
+   "need": null,
+   "pending_n": 0
+  },
+  "member": {
+   "line_json": null,
+   "preset_name": null,
+   "flow_format": "해외원본형"
+  },
+  "line_json_exists": false,
+  "member_live_ok": false,
+  "results_n": 0,
+  "results_pass_n": 0,
+  "owner_pass": false
+ },
+ "inputs": {
+  "channel/byeolsong/_kal/sfx_events.json": "3edeb83e64d9",
+  "channel/byeolsong/_kal/규칙빈도.json": "b57a0352e341",
+  "channel/byeolsong/_kal/대본언어.json": "b936e94115c2",
+  "channel/byeolsong/뜯기/1lMbJh0n_d4/뜯기.json": "f1b749f4b73d",
+  "channel/byeolsong/뜯기/PzKloCeO2FU/뜯기.json": "2ea97325077d",
+  "channel/byeolsong/뜯기/SR-2LhCXxwY/뜯기.json": "ce14d43c95d5",
+  "channel/byeolsong/뜯기/_WLN4wnVbF8/뜯기.json": "f45c162b7c89",
+  "channel/byeolsong/뜯기/tF4fbEVtnMY/뜯기.json": "8284f9dce960",
+  "channel/byeolsong/시험편01_코코넛/재현일치도.json": "5304e56ff8e9",
+  "channel/byeolsong/시험편01_코코넛/품질관문.json": "9db85d4ada6c",
+  "channel/byeolsong/줄판독/1lMbJh0n_d4.json": "4995523ab7ad",
+  "channel/byeolsong/줄판독/Fwk50_y9t9Q.json": "547b626aac4f",
+  "channel/byeolsong/줄판독/PzKloCeO2FU.json": "309d6093d329",
+  "channel/byeolsong/줄판독/SR-2LhCXxwY.json": "e50f633a3e22",
+  "channel/byeolsong/줄판독/_WLN4wnVbF8.json": "d827cc61347e",
+  "channel/byeolsong/줄판독/tF4fbEVtnMY.json": "a5e2c70c698c",
+  "channel/byeolsong/팔레트.json": "4f7e5503328d",
+  "channel/결과물.json": "d026be6442ff",
+  "channel/브랜드.json": "b97e90d124c8",
+  "channel/스타일.json": "c8a155f5ab8b",
+  "channel/프리셋.json": "8bf58f4b1a73",
+  "shopping_shorts/static/caption-motions.js": "f77b884bdc60",
+  "tools/calcopy/hybrid/styles/_common.json": "5452d68fa811",
+  "tools/calcopy/hybrid/styles/별헤는쏭판.json": "94e1700b7d76"
+ },
+ "done": {
+  "level": "L1",
+  "missing": [
+   "눈검수 E1·E4·E6",
+   "업그레이드 나아짐≥과반∧나빠짐0",
+   "눈검수 E9",
+   "사장님 판정",
+   "member line.json",
+   "member preset_name",
+   "회원실측"
+  ],
+  "rule_unmeasured": 0,
+  "measure_tasks": [],
+  "hand_const": [],
+  "complete": false
+ }
+}
