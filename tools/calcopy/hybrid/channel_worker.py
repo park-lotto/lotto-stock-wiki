@@ -178,7 +178,7 @@ def _num_any(s: str) -> int:
 
 def ig_tops(handles: list[str], on_one=None) -> dict[str, list[dict]]:
     """인스타 채널 릴스 화면 — 화면 뜬 창 + 이 PC 파이어폭스 인스타 쿠키(out/instagram_session.json, 사장님 10-27 '파이어폭스 계정으로 열어').
-    10-27 실측: 쿠키만으로 공개 채널 최근 릴스 12편·조회('59.4만')가 보인다. '계속'을 누르면 비밀번호 칸이 떠서 누르지 않는다(비밀번호는 안 친다)."""
+    10-27 실측: 쿠키만으로 공개 채널 최근 릴스 12편·조회('59.4만')가 보인다. 시작할 때 '계속'을 한 번 눌러야 목록이 보인다(비밀번호 칸이 떠도 비운 채 — 비밀번호는 안 친다)."""
     from tools.calcopy import lens as LN
     sp = ROOT / "out" / "instagram_session.json"
     ck = json.loads(sp.read_text(encoding="utf-8")).get("cookies") or [] if sp.exists() else []
@@ -186,6 +186,15 @@ def ig_tops(handles: list[str], on_one=None) -> dict[str, list[dict]]:
     with LN.lens_page("igch") as pg:
         if ck:
             pg.context.add_cookies([{k: c[k] for k in ("name", "value", "domain", "path", "secure")} for c in ck])
+            try:                # 10-27 실측: 쿠키만 실으면 'OO 계정으로 계속' 화면에 막혀 릴스 0편 — '계속' 한 번 누르면 공개 릴스가 보인다(비밀번호 칸은 비운 채)
+                pg.goto("https://www.instagram.com/", wait_until="domcontentloaded", timeout=40000)
+                pg.wait_for_timeout(5000)
+                b = pg.get_by_role("button", name=re.compile("^(계속|Continue)$"))
+                if b.count():
+                    b.first.click()
+                    pg.wait_for_timeout(6000)
+            except Exception as e:  # noqa: BLE001
+                sys.stderr.write(f"[ch] 인스타 '계속' 실패: {type(e).__name__}" + chr(10))
         for h in handles:
             rows = []
             try:
