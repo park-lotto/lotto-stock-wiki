@@ -1,7 +1,7 @@
 {
  "slug": "byeolsong",
  "made_by": "tools/calcopy/preset_card.py build",
- "built_at": "2026-10-27T09:27:30",
+ "built_at": "2026-10-27T09:52:41",
  "bench": "별헤는쏭(@별헤는쏭) — 바이럴 한 샷 + 일본 노래 + 댓글카드 자막 + 가사 2줄 → 우리 릴리릴리",
  "brand": null,
  "brand_note": null,
@@ -1797,9 +1797,9 @@
   }
  },
  "member": {
-  "line_json": null,
-  "preset_name": null,
-  "flow_format": "해외원본형"
+  "line_json": "channel/byeolsong/preset/릴리릴리/line.json",
+  "preset_name": "릴리릴리",
+  "flow_format": "자막노래형"
  },
  "results": {
   "n": 0,
@@ -1836,18 +1836,18 @@
    "pending_n": 0
   },
   "member": {
-   "line_json": null,
-   "preset_name": null,
-   "flow_format": "해외원본형"
+   "line_json": "channel/byeolsong/preset/릴리릴리/line.json",
+   "preset_name": "릴리릴리",
+   "flow_format": "자막노래형"
   },
-  "line_json_exists": false,
+  "line_json_exists": true,
   "member_live_ok": false,
   "results_n": 0,
   "results_pass_n": 0,
   "owner_pass": false
  },
  "inputs": {
-  "channel/byeolsong/_kal/sfx_events.json": "3edeb83e64d9",
+  "channel/byeolsong/_kal/sfx_events.json": "0deb76a8d2c6",
   "channel/byeolsong/_kal/규칙빈도.json": "b57a0352e341",
   "channel/byeolsong/_kal/대본언어.json": "b936e94115c2",
   "channel/byeolsong/뜯기/1lMbJh0n_d4/뜯기.json": "f1b749f4b73d",
@@ -1855,10 +1855,10 @@
   "channel/byeolsong/뜯기/SR-2LhCXxwY/뜯기.json": "ce14d43c95d5",
   "channel/byeolsong/뜯기/_WLN4wnVbF8/뜯기.json": "f45c162b7c89",
   "channel/byeolsong/뜯기/tF4fbEVtnMY/뜯기.json": "8284f9dce960",
-  "channel/byeolsong/시험편01_코코넛/재현일치도.json": "5304e56ff8e9",
+  "channel/byeolsong/시험편01_코코넛/재현일치도.json": "e92476aede89",
   "channel/byeolsong/시험편01_코코넛/품질관문.json": "9db85d4ada6c",
   "channel/byeolsong/줄판독/1lMbJh0n_d4.json": "4995523ab7ad",
-  "channel/byeolsong/줄판독/Fwk50_y9t9Q.json": "547b626aac4f",
+  "channel/byeolsong/줄판독/Fwk50_y9t9Q.json": "70a82af794b3",
   "channel/byeolsong/줄판독/PzKloCeO2FU.json": "309d6093d329",
   "channel/byeolsong/줄판독/SR-2LhCXxwY.json": "e50f633a3e22",
   "channel/byeolsong/줄판독/_WLN4wnVbF8.json": "d827cc61347e",
@@ -1867,10 +1867,10 @@
   "channel/결과물.json": "d026be6442ff",
   "channel/브랜드.json": "b97e90d124c8",
   "channel/스타일.json": "c8a155f5ab8b",
-  "channel/프리셋.json": "8bf58f4b1a73",
+  "channel/프리셋.json": "e187fbc19863",
   "shopping_shorts/static/caption-motions.js": "f77b884bdc60",
   "tools/calcopy/hybrid/styles/_common.json": "5452d68fa811",
-  "tools/calcopy/hybrid/styles/별헤는쏭판.json": "94e1700b7d76"
+  "tools/calcopy/hybrid/styles/별헤는쏭판.json": "489562cbba01"
  },
  "done": {
   "level": "L1",
@@ -1879,8 +1879,6 @@
    "업그레이드 나아짐≥과반∧나빠짐0",
    "눈검수 E9",
    "사장님 판정",
-   "member line.json",
-   "member preset_name",
    "회원실측"
   ],
   "rule_unmeasured": 0,
