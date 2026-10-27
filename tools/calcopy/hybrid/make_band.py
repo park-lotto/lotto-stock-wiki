@@ -70,7 +70,46 @@ def make(out: str, seed: int = 27, ref: str | None = None, look: str = "bench") 
     print(out, "평균", [round(v * g) for v, g in zip(m, gain)])
 
 
+def header(out: str, seed: int = 27, h: int = 476) -> None:
+    """릴리릴리 머리판(사장님 10-27 '템플릿 교체') — 창 위 0~h 전체를 덮는 밝은 그림(제목은 그 위에 렌더러가 쓴다 · 판 band.under).
+    라벤더→연분홍 세로 그러데이션 + 흐린 꽃잎 + 왼쪽 위 'lily lily' 둥근 이름표 + 아래 끝 얇은 보라 줄. 벤치(밤하늘 띠)와 다른 밝은 결."""
+    random.seed(seed)
+    top, bot = (214, 196, 255), (255, 214, 232)
+    im = Image.new("RGBA", (W, h))
+    d = ImageDraw.Draw(im)
+    for y in range(h):
+        k = y / (h - 1)
+        d.line([(0, y), (W, y)], fill=tuple(int(a + (b - a) * k) for a, b in zip(top, bot)) + (255,))
+    lay = Image.new("RGBA", (W, h), (0, 0, 0, 0))
+    dl = ImageDraw.Draw(lay)
+    for _ in range(14):                                   # 흐린 꽃잎(흰·보라 타원 다섯 장)
+        cx, cy, r = random.randint(0, W), random.randint(0, h), random.randint(26, 60)
+        col = random.choice([(255, 255, 255), (190, 160, 255), (255, 190, 220)])
+        for k in range(5):
+            a = math.radians(72 * k + random.randint(0, 72))
+            px, py = cx + r * 0.9 * math.cos(a), cy + r * 0.9 * math.sin(a)
+            dl.ellipse([px - r * 0.6, py - r * 0.6, px + r * 0.6, py + r * 0.6], fill=col + (36,))
+    im = Image.alpha_composite(im, lay.filter(ImageFilter.GaussianBlur(10)))
+    d = ImageDraw.Draw(im)
+    for _ in range(40):
+        x, y, s = random.randint(0, W), random.randint(0, h), random.choice([2, 2, 3, 4])
+        d.ellipse([x - s, y - s, x + s, y + s], fill=(255, 255, 255, random.randint(150, 240)))
+    f = ImageFont.truetype("C:/Windows/Fonts/seguisym.ttf", 40)          # 이름표(왼쪽 위 — '광고' 표시는 오른쪽 위라 겹치지 않는다)
+    fn = ImageFont.truetype(str(__import__("pathlib").Path(__file__).resolve().parents[3] / "shopping_shorts/static/fonts/Jalnan2.ttf"), 40)
+    tw = fn.getlength("lily lily") + 56
+    d.rounded_rectangle([36, 34, 36 + tw + 20, 98], radius=32, fill=(123, 75, 214, 255))
+    d.text((52, 40), "❀", font=f, fill=(255, 226, 240, 255))
+    d.text((100, 44), "lily lily", font=fn, fill=(255, 255, 255, 255))
+    d.rectangle([0, h - 8, W, h], fill=(123, 75, 214, 255))
+    im.convert("RGB").save(out)
+    print(out, f"{W}x{h}")
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("out"); ap.add_argument("--seed", type=int, default=27); ap.add_argument("--ref", help="벤치 한 프레임 png — 줄마다 밝기를 그 띠에 맞춘다"); ap.add_argument("--look", default="bench", choices=sorted(LOOKS))
+    ap.add_argument("--header", type=int, help="릴리릴리 머리판(창 위 전체) 높이 — 주면 띠 대신 머리판을 만든다")
     a = ap.parse_args()
-    make(a.out, a.seed, a.ref, a.look)
+    if a.header:
+        header(a.out, a.seed, a.header)
+    else:
+        make(a.out, a.seed, a.ref, a.look)

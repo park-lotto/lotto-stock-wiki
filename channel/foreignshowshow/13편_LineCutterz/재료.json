@@ -1,0 +1,1113 @@
+{
+ "_note": "샥탬스토리 13편 Line Cutterz 재료 계획. 창 1080x1052(벤치 hZgCO9PEnO8 창 [0,435,1080,1051] ≒ 채널 고정 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물, effects 의 fx_place 계산값은 유지). 원음 컷은 원본 소리(영어 원음 트랙 Qy7wUkIrrQ4_audio.m4a).",
+ "sources": {
+  "Qy7wUkIrrQ4": {
+   "채널": "CNBC Ambition(공식)",
+   "제목": "Lori Calls This Product Genius | Shark Tank In 5",
+   "해상도": "1920x1080 29.97fps (137) + 140-6 영어 원음",
+   "길이": 368.3,
+   "받은 구간": "전체",
+   "남의 글자": "왼쪽 아래 CNBC 공작 로고·'CNBC.COM/CHANNELFINDER' 띠(y≥1035) — 모든 컷 크롭 h≤990 으로 뺌. 이름·제안 띠(14~22·133~140·265~277초) 시각 안 씀. 창업자 셔츠 'LINE CUTTERZ' 로고 = 제품 브랜드"
+  },
+  "gnb_t06Z12o": {
+   "채널": "Line Cutterz(판매사 공식 UC… 'Line Cutterz Ring Video')",
+   "제목": "Line Cutterz Ring Video",
+   "해상도": "1280x720 (136, 최대 화질)",
+   "길이": 184.2,
+   "남의 글자": "쓴 구간(71.6~73, 75.6~78.1, 98~100.4, 107~108.7)엔 글자 없음 — 시트 눈 확인. 셔츠 로고 = 제품 브랜드"
+  },
+  "a09Bkw-ypnU": {
+   "채널": "Line Cutterz(판매사 공식)",
+   "제목": "The Patented Line Cutterz Ring - As Seen On Shark Tank",
+   "해상도": "1920x1080 59.94fps (영상만)",
+   "길이": 76.5,
+   "남의 글자": "21~23 'Adjustable Velcro…'·34~36 'Two-sided…'·51~52 'No Risk of injury'·64~66 'Mount Anywhere' 글자 — 안 씀. 쓴 56.2~58.3 은 글자 없음"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "손가락에 끼우는",
+  "line2": "낚싯줄 커터?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": false,
+   "audio_src": "Qy7wUkIrrQ4_audio.m4a",
+   "audio_ss": 116.32,
+   "audio_dur": 0.65,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    112.3,
+    112.95
+   ],
+   "ss": 112.3,
+   "dur": 0.65,
+   "t_final_est": [
+    0.0,
+    0.65
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    757,
+    0,
+    719,
+    700
+   ],
+   "scale": 1.503,
+   "ours": "창업자 손 근접(확대 크롭 h700 — 반지가 자막 띠 아래로 오게): 손가락에 낀 검은 Line Cutterz 반지로 굵은 줄을 끊는 순간(원본 샷 111.45~114.81, 소리 = 다음 컷 투자자 'That's crazy' cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "O1",
+   "kind": "원음",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": false,
+   "audio_src": "Qy7wUkIrrQ4_audio.m4a",
+   "audio_ss": 116.97,
+   "audio_dur": 0.64,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    116.97,
+    117.61
+   ],
+   "ss": 116.97,
+   "dur": 0.64,
+   "t_final_est": [
+    0.65,
+    1.29
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    422,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "파란 셔츠 투자자가 놀라 웃으며 'That's crazy'(말하는 본인, 샷 116.42~117.62)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 2,
+   "line": "O1",
+   "kind": "원음",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": false,
+   "audio_src": "Qy7wUkIrrQ4_audio.m4a",
+   "audio_ss": 117.62,
+   "audio_dur": 0.67,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    117.62,
+    118.29
+   ],
+   "ss": 117.62,
+   "dur": 0.67,
+   "t_final_est": [
+    1.29,
+    1.96
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    465,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "대머리 검은 정장 투자자 반응(원본 편집 그대로, 샷 117.62~118.39) — 벤치 32.0 같은 샷",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 3,
+   "line": "N1",
+   "kind": "나레",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    11.4,
+    12.436
+   ],
+   "ss": 11.4,
+   "dur": 1.036,
+   "t_final_est": [
+    1.96,
+    3.0
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    621,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "창업자가 무대 가운데 서서 인사(원본 샷 11.38~14.08, 이름 띠 전)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 4,
+   "line": "N1",
+   "kind": "나레",
+   "src": "gnb_t06Z12o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=gnb_t06Z12o",
+   "src_orig_span": [
+    71.6,
+    72.533
+   ],
+   "ss": 71.6,
+   "dur": 0.933,
+   "t_final_est": [
+    3.0,
+    3.93
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    270,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "공식 홍보 영상(720p): 칼 두 자루 근접 — '위험한 칼' 그림",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 5,
+   "line": "N1",
+   "kind": "나레",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    49.86,
+    51.2
+   ],
+   "ss": 49.86,
+   "dur": 1.34,
+   "t_final_est": [
+    3.93,
+    5.27
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    372,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "분홍 옷 투자자가 입을 벌리고 놀람(원본 샷 49.78~51.89 — '발가락 잘릴 뻔' 바로 뒤 반응)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 6,
+   "line": "N2",
+   "kind": "나레",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    52.0,
+    52.766
+   ],
+   "ss": 52.0,
+   "dur": 0.766,
+   "t_final_est": [
+    5.27,
+    6.04
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    487,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "창업자가 말함(원본 샷 51.89~53.3, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 7,
+   "line": "N2",
+   "kind": "나레",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    54.3,
+    55.704
+   ],
+   "ss": 54.3,
+   "dur": 1.404,
+   "t_final_est": [
+    6.04,
+    7.44
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    904,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "무대: 창업자가 빨간 낚시 도구함을 거꾸로 쏟음",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 8,
+   "line": "N2",
+   "kind": "나레",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    56.65,
+    57.608
+   ],
+   "ss": 56.65,
+   "dur": 0.958,
+   "t_final_est": [
+    7.44,
+    8.4
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    392,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "바닥에 쏟아진 도구함·낚시 도구(원본 샷 56.59~58.23)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 9,
+   "line": "O2",
+   "kind": "원음",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": false,
+   "audio_src": "Qy7wUkIrrQ4_audio.m4a",
+   "audio_ss": 62.97,
+   "audio_dur": 1.53,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    62.97,
+    64.5
+   ],
+   "ss": 62.97,
+   "dur": 1.53,
+   "t_final_est": [
+    8.4,
+    9.93
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    381,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "창업자가 이를 가리키며 말함(말하는 본인, 샷 61.50~64.53)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 10,
+   "line": "O2",
+   "kind": "원음",
+   "src": "gnb_t06Z12o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=gnb_t06Z12o",
+   "src_orig_span": [
+    75.6,
+    78.07
+   ],
+   "ss": 75.6,
+   "dur": 2.47,
+   "t_final_est": [
+    9.93,
+    12.4
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    270,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "공식 홍보 영상: 낚시꾼이 이로 낚싯줄을 물어 끊는 사진(그 '옛날 방식')",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 11,
+   "line": "O3",
+   "kind": "원음",
+   "src": "gnb_t06Z12o.mp4",
+   "mute": false,
+   "audio_src": "Qy7wUkIrrQ4_audio.m4a",
+   "audio_ss": 67.61,
+   "audio_dur": 2.8,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=gnb_t06Z12o",
+   "src_orig_span": [
+    87.95,
+    90.75
+   ],
+   "ss": 87.95,
+   "dur": 2.8,
+   "t_final_est": [
+    12.4,
+    15.2
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    270,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "공식 홍보 영상: 'LINE CUTTERZ' 셔츠 낚시꾼이 손가락 반지로 줄을 다룸(소리 = 창업자 원음 cover) — 원본 이 시각 화면은 투자자 반응(64.53~68.64)·거의 안 움직이는 무대 와이드(68.64~74.07, freezedetect 0.93초 멈춤처럼 보임)라 발상 질문 '손가락에 커터를'을 그림으로",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 12,
+   "line": "O4",
+   "kind": "원음",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": false,
+   "audio_src": "Qy7wUkIrrQ4_audio.m4a",
+   "audio_ss": 70.53,
+   "audio_dur": 3.53,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    70.53,
+    74.06
+   ],
+   "ss": 70.53,
+   "dur": 3.53,
+   "t_final_est": [
+    15.2,
+    18.73
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    904,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "무대 와이드: 창업자가 손짓하며 설명(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 13,
+   "line": "O4",
+   "kind": "원음",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": false,
+   "audio_src": "Qy7wUkIrrQ4_audio.m4a",
+   "audio_ss": 74.09,
+   "audio_dur": 2.88,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    74.09,
+    76.97
+   ],
+   "ss": 74.09,
+   "dur": 2.88,
+   "t_final_est": [
+    18.73,
+    21.61
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    360,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "창업자 중간 샷(말하는 본인, 샷 74.07~77.01)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 14,
+   "line": "N3",
+   "kind": "나레",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    83.4,
+    84.282
+   ],
+   "ss": 83.4,
+   "dur": 0.882,
+   "t_final_est": [
+    21.61,
+    22.49
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    452,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "무대 진열 'LINE CUTTERZ' 간판 근접(원본 샷 83.35~85.82, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 15,
+   "line": "N3",
+   "kind": "나레",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    85.85,
+    86.889
+   ],
+   "ss": 85.85,
+   "dur": 1.039,
+   "t_final_est": [
+    22.49,
+    23.53
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    512,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "분홍 옷 투자자가 종이를 들고 지켜봄(원본 샷 85.82~87.52, 소리 끔) — 벤치 16.5 같은 투자자",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 16,
+   "line": "O5",
+   "kind": "원음",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": false,
+   "audio_src": "Qy7wUkIrrQ4_audio.m4a",
+   "audio_ss": 87.65,
+   "audio_dur": 2.75,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    87.65,
+    90.4
+   ],
+   "ss": 87.65,
+   "dur": 2.75,
+   "t_final_est": [
+    23.53,
+    26.28
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    904,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "무대 와이드: 창업자가 낚싯줄을 들어 보임(샷 87.52~90.42)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 17,
+   "line": "O5",
+   "kind": "원음",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": false,
+   "audio_src": "Qy7wUkIrrQ4_audio.m4a",
+   "audio_ss": 90.45,
+   "audio_dur": 2.92,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    90.45,
+    93.37
+   ],
+   "ss": 90.45,
+   "dur": 2.92,
+   "t_final_est": [
+    26.28,
+    29.2
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    568,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "창업자 중간 샷 — 줄 설명(말하는 본인, 샷 90.42~93.39)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 18,
+   "line": "O5",
+   "kind": "원음",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": false,
+   "audio_src": "Qy7wUkIrrQ4_audio.m4a",
+   "audio_ss": 93.42,
+   "audio_dur": 1.08,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    93.42,
+    94.5
+   ],
+   "ss": 93.42,
+   "dur": 1.08,
+   "t_final_est": [
+    29.2,
+    30.28
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    904,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "무대 와이드: 반지로 줄을 끊자 양동이가 떨어짐(샷 93.39~94.53)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 19,
+   "line": "O5",
+   "kind": "원음",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": false,
+   "audio_src": "Qy7wUkIrrQ4_audio.m4a",
+   "audio_ss": 94.55,
+   "audio_dur": 0.63,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    94.55,
+    95.18
+   ],
+   "ss": 94.55,
+   "dur": 0.63,
+   "t_final_est": [
+    30.28,
+    30.91
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    502,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "분홍 옷 투자자가 놀라 봄(샷 94.53~95.73) — 벤치 21.5 '단번에 끊어지는 줄' 같은 샷",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 20,
+   "line": "N4",
+   "kind": "나레",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    98.3,
+    99.354
+   ],
+   "ss": 98.3,
+   "dur": 1.054,
+   "t_final_est": [
+    30.91,
+    31.96
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    559,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "창업자가 굵은 줄 이야기를 하며 손짓(원본 샷 97.80~100.20, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 21,
+   "line": "N4",
+   "kind": "나레",
+   "src": "gnb_t06Z12o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=gnb_t06Z12o",
+   "src_orig_span": [
+    107.0,
+    108.119
+   ],
+   "ss": 107.0,
+   "dur": 1.119,
+   "t_final_est": [
+    31.96,
+    33.08
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    190,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "공식 홍보 영상: 검은 반지 날에 줄을 걸어 끊는 근접",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 22,
+   "line": "N4",
+   "kind": "나레",
+   "src": "a09Bkw-ypnU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=a09Bkw-ypnU",
+   "src_orig_span": [
+    56.2,
+    57.583
+   ],
+   "ss": 56.2,
+   "dur": 1.383,
+   "t_final_est": [
+    33.08,
+    34.46
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "공식 광고(1080p): 보트 난간에서 손가락 반지로 낚싯줄을 끊음(글자 없는 구간)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 23,
+   "line": "N6",
+   "kind": "나레",
+   "src": "gnb_t06Z12o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=gnb_t06Z12o",
+   "src_orig_span": [
+    98.0,
+    100.052
+   ],
+   "ss": 98.0,
+   "dur": 2.052,
+   "t_final_est": [
+    34.46,
+    36.52
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    270,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "공식 홍보 영상: 반지를 손바닥에 대고 문지름(벤치 29.5~31 얼굴 문지르기 대신 — B13)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 24,
+   "line": "N6",
+   "kind": "나레",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    174.75,
+    175.921
+   ],
+   "ss": 174.75,
+   "dur": 1.171,
+   "t_final_est": [
+    36.52,
+    37.69
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    407,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "창업자 정면 근접(원본 샷 174.71~176.14, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 25,
+   "line": "O9",
+   "kind": "원음",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": false,
+   "audio_src": "Qy7wUkIrrQ4_audio.m4a",
+   "audio_ss": 204.16,
+   "audio_dur": 1.2,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    204.16,
+    205.36
+   ],
+   "ss": 204.16,
+   "dur": 1.2,
+   "t_final_est": [
+    37.69,
+    38.89
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    112,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "분홍 옷 투자자가 'I think it's genius'(말하는 본인, 투 숏 200.80~205.57 의 왼쪽)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 26,
+   "line": "O9",
+   "kind": "원음",
+   "src": "Qy7wUkIrrQ4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "src_orig_span": [
+    223.5,
+    225.0
+   ],
+   "ss": 223.5,
+   "dur": 1.5,
+   "t_final_est": [
+    38.89,
+    40.39
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    771,
+    0,
+    1016,
+    990
+   ],
+   "scale": 1.063,
+   "ours": "창업자 얼굴(원본 샷 221.02~227.56, 소리 끔 — 끝 컷 1.5초 이상을 위해 원음 뒤 화면만, 다음 말 'I really like it' 206.84 전에 소리 끊음)",
+   "audio": "원본 소리(원음)"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/13편_LineCutterz/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "how": "object",
+   "t": [
+    0.0,
+    0.65
+   ],
+   "target": [
+    525,
+    1200,
+    615,
+    1330
+   ],
+   "target_what": "손가락에 낀 검은 반지(Line Cutterz 반지 커터) — 손 상자 = 112.32초 완성본 격자 sheet/ring_zoom.jpg 눈 측정",
+   "why": "R3 0초 원 = 물건(제품 반지) — 벤치 0~0.83 원은 투자자 얼굴이지만 사장님 10-19 '처음에 빨간원 얼굴에 하지말고'",
+   "at": [
+    570,
+    1265
+   ],
+   "size": 186,
+   "face_clear": true,
+   "target_box": [
+    525,
+    1200,
+    615,
+    1330
+   ],
+   "target_path": [
+    [
+     0.0,
+     525.0,
+     1200.0,
+     615.0,
+     1330.0
+    ],
+    [
+     0.067,
+     515.0,
+     1204.3,
+     605.0,
+     1334.3
+    ],
+    [
+     0.133,
+     501.7,
+     1221.0,
+     591.7,
+     1351.0
+    ],
+    [
+     0.2,
+     487.0,
+     1250.0,
+     577.0,
+     1380.0
+    ],
+    [
+     0.267,
+     474.3,
+     1282.3,
+     563.0,
+     1410.7
+    ],
+    [
+     0.333,
+     463.7,
+     1308.0,
+     551.0,
+     1434.7
+    ],
+    [
+     0.4,
+     453.7,
+     1320.0,
+     539.7,
+     1445.0
+    ],
+    [
+     0.467,
+     444.0,
+     1315.3,
+     530.0,
+     1440.3
+    ],
+    [
+     0.533,
+     437.3,
+     1297.7,
+     523.3,
+     1422.7
+    ],
+    [
+     0.6,
+     433.0,
+     1274.0,
+     519.0,
+     1399.0
+    ]
+   ],
+   "track": [
+    [
+     0.0,
+     570,
+     1265
+    ],
+    [
+     0.067,
+     560,
+     1269
+    ],
+    [
+     0.133,
+     547,
+     1286
+    ],
+    [
+     0.2,
+     532,
+     1315
+    ],
+    [
+     0.267,
+     519,
+     1346
+    ],
+    [
+     0.333,
+     507,
+     1371
+    ],
+    [
+     0.4,
+     497,
+     1382
+    ],
+    [
+     0.467,
+     487,
+     1378
+    ],
+    [
+     0.533,
+     480,
+     1360
+    ],
+    [
+     0.6,
+     476,
+     1336
+    ]
+   ],
+   "track_conf": 0.995,
+   "track_how": "template",
+   "why_target": "손 상자(재료 target) · 추적 template 신뢰 0.995 · 원 186px = 물건 반대각선 79×1.04+선 · 얼굴 3프레임 겹침 0"
+  },
+  {
+   "line": "O1",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.65,
+    1.1
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 0.867 초록 번쩍(원 다음 얼굴 컷 첫 프레임)"
+  },
+  {
+   "line": "N1",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 3.03 빨강 번쩍(사연 컷)"
+  },
+  {
+   "line": "N2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 5.37 빨강 번쩍(불편 컷)"
+  },
+  {
+   "line": "O3",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 10.17 초록 번쩍(발명 컷)"
+  },
+  {
+   "line": "O4",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    3.56,
+    4.01
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 14.4 초록 번쩍(첫 모델 컷) — 원본 74.07 샷 경계 = 줄 안 3.56"
+  },
+  {
+   "line": "O5",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    5.77,
+    6.22
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 20.5 끊기는 순간 — 원본 93.42 = 줄 안 5.77"
+  },
+  {
+   "line": "N4",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 26.9 빨강 번쩍(굵은 줄)"
+  },
+  {
+   "line": "O9",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "끝 반응 컷"
+  }
+ ]
+}

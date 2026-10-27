@@ -1,0 +1,41 @@
+{
+ "topic": "Hypershell X Ultra(하이퍼쉘) 다리에 차는 외골격 로봇 — GCN 진행자 Conor 가 처음 켜 보고 '이거 느껴져? 이게 뭐야?'·'살아 있는 느낌이야'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "R2C5yUZ3nKY",
+ "bench_note": "벤치 '쿠팡에서 파는 AI 로봇의 정체'(21.0만, 핫템리포트 27위, 2026-07-24) — 하이퍼쉘 X 시리즈 몽타주(공식 홍보·리뷰어 클립). 벤치 컷의 원래 사람 원음은 렌즈 9장으로 못 찾음 → 같은 제품(설명란 'Hypershell X Ultra')을 처음 써 보며 감탄하는 GCN(유튜브 80.9만) 원음형. 벤치 설명란의 '무릎 통증·재활·60% 힘'은 효능이라 안 씀",
+ "sources": {
+  "gc": {"file": "gc.mp4", "who": "유튜브 Global Cycling Network 'I Cheated At Cycling By Using An Exoskeleton' 2ZAnvcEPhqM(2025-09-14) 140~250초 구간 사본(1080p25 → libx264)", "views": 809056, "dur": 110.0, "res": "1920x1080"}
+ },
+ "titles": {"hook": "다리에 차는\n로봇 외골격"},
+ "facts": {
+  "f1": {"text": "2ZAnvcEPhqM 설명란 'This is the exoskeleton we used! Hypershell X Ultra' · 'claims to provide 1,000 watts of power'", "kind": "설명란"},
+  "f2": {"text": "gc 46.12~51.80(원본 186.1~191.8) 화면: 허리 벨트·다리 막대를 차는 모습", "kind": "화면"},
+  "f3": {"text": "원본 198.88~203.08 'Oh yeah. Oh, you feel that? What on earth?' · 204.56~205.92 'Oh, I'm on max power now. Wow.' (스피치매틱스 낱말 시각)", "kind": "본인 말"},
+  "f4": {"text": "원본 216.84~218.6 'I feel alive. I feel alive.'", "kind": "본인 말"},
+  "f5": {"text": "Created by Ella sSlta5QscRA 4:45~4:56 'with each step, it feels like it's helping to pull my leg up and then push it back down'", "kind": "다른 리뷰어 말(같은 제품)"}
+ },
+ "final": {
+  "order": ["N1", "O1", "N2", "O2"],
+  "lines": [
+   {"id": "N1", "fn": "훅(제품+~있는데요)", "text": "다리에 차기만 하면, 걸을 때마다 다리를 들어 올려 주는 로봇이 있는데요.",
+    "caps": ["다리에 차기만 하면", "걸을 때마다 다리를", "들어 올려 주는 로봇이 있는데요"], "facts": ["f1", "f2", "f5"]},
+   {"id": "N2", "fn": "불러냄 → 원음 증거", "text": "최대 출력으로 올리자마자, 다리가 저절로 앞으로 나가는 느낌이래요.",
+    "caps": ["최대 출력으로 올리자마자", "다리가 저절로", "앞으로 나가는 느낌이래요"], "facts": ["f3", "f5"]}
+  ],
+  "orig_audio": [
+   {"id": "O1", "src": "gc", "span": [58.75, 63.45], "en": "Oh yeah. Oh, you feel that? What on earth?",
+    "caps": ["오, 좋은데?", "오, 이거 느껴져?", "이게 대체 뭐야?!"],
+    "check": "원본 198.88 Oh · earth 203.08 · 다음 Oh 204.56 · 화면 컷 원본 198.56(=58.56, 시작 앞)·201.88(같은 방 다른 각도)"},
+   {"id": "O2", "src": "gc", "span": [76.80, 78.90], "en": "I feel alive. I feel alive.",
+    "caps": ["살아 있는 느낌이야!"],
+    "check": "원본 I 216.84 · alive 218.12~ · 다음 It's 220.32 · 화면 한 샷 원본 214.96~219.04(=74.96~79.04)"}
+  ],
+  "dropped": {
+   "벤치 '내 힘의 60%로 100% 파워'·'무릎 통증'·'재활'": "효능·의학 — 안 씀",
+   "GCN 'reduce exertion by 39%'": "효능 수치 — 안 씀",
+   "가격": "금액 금지"
+  }
+ },
+ "voice": {"tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회", "speed": 1.24, "target_cps": 8.0, "id": "tc_6059dad0b83880769a50502f", "name": "박창수"}
+}

@@ -1,0 +1,75 @@
+{
+ "_note": "make_render.py 가 만든 렌더용 — 페이지 1개 × cuts(원음 입 맞춤 시각)",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰4차/15_WaterFilter/front/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "ca.mp4",
+   "ss": 5.4,
+   "cuts": [
+    {
+     "src": "ca.mp4",
+     "ss": 5.4,
+     "dur": 2.874,
+     "block": "N1"
+    },
+    {
+     "src": "sh.mp4",
+     "ss": 0.0,
+     "dur": 4.47,
+     "block": "O1"
+    },
+    {
+     "src": "sh.mp4",
+     "ss": 7.434,
+     "dur": 6.766,
+     "block": "O2"
+    }
+   ]
+  }
+ ],
+ "pieces": [
+  {
+   "block": "N1",
+   "covers": [
+    "N1"
+   ],
+   "src": "ca",
+   "ss": 5.4,
+   "vs": 0.0,
+   "src_crop": null,
+   "why": "첫 프레임 = 제품: 콜라 든 물통 옆 꼭지를 눌러 맑은 물이 컵에(ca 5.35~8.68 한 샷)",
+   "ve": 2.874,
+   "src_end": 8.274
+  },
+  {
+   "block": "O1",
+   "covers": [
+    "O1"
+   ],
+   "src": "sh",
+   "ss": 0.0,
+   "vs": 2.874,
+   "src_crop": null,
+   "why": "피클 병을 물통에 붓으며 'turn pickle juice clear'(0~3.93 한 샷 + 3.93~4.53 같은 사람 가까운 샷)",
+   "ve": 7.344,
+   "src_end": 4.47
+  },
+  {
+   "block": "O2",
+   "covers": [
+    "N2",
+    "O2"
+   ],
+   "src": "sh",
+   "ss": 7.434,
+   "vs": 7.344,
+   "src_crop": null,
+   "why": "'Oh. That's some high quality H2O.' 마신 뒤 감탄(10.63~13.60 한 샷)",
+   "ve": 14.11,
+   "src_end": 14.2
+  }
+ ]
+}

@@ -1,0 +1,601 @@
+{
+ "topic": "Line Cutterz(손가락에 끼우는 세라믹 날 반지형 낚싯줄 커터) — 낚시하다 칼을 밟아 발가락이 잘릴 뻔한 창업자가 치실 커터를 뜯어 만든 반지로 12·30·100파운드 줄을 무대에서 끊어 보임",
+ "product": "Line Cutterz Ring(라인커터즈)",
+ "bench": {
+  "id": "hZgCO9PEnO8",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "A Tool Designed Only to Cut Fishing Line (화면 제목: 오로지 낚시줄만 / 자른다는 제품?!)",
+  "dur": 36.534,
+  "views": 6700000,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "cut_median": 1.43,
+  "_cut_median_how": "check.scene_cuts 같은 자(창 scene>th) 22조각 중앙 — 10-27 실측"
+ },
+ "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」",
+ "dropped": [
+  "벤치 1.0~2.6 창업자 낚시 사진·3.5~4.5 손가락 피 흘리는 사진 — 출처 없는 사진·상처 사진 → 원본 무대·공식 홍보 영상 칼 근접으로",
+  "벤치 나레 '칼에 손을 크게 베었다' — 원본은 '모래 속 칼을 밟아 발가락이 잘릴 뻔'(f2) → 원본대로",
+  "벤치 '5~6kg·20kg·150kg' 환산 — 원본 단위(12·30·100파운드) 그대로",
+  "벤치 29.5~34.2 '얼굴에 문지름 / 미친 짓 그만해 / 피부 상처 안 입혀' 원본 순간(116~120초) — 0초 훅과 같은 원본 3초 안이라 B13 → '미친 짓 그만해'는 0초 줄로, 문지르기는 공식 영상 손바닥 장면 + 나레 전언으로",
+  "벤치 '이번엔 20kg 플루오카본'(원본 30파운드 95.21~97.79) — 길이(벤치 +15% 안)를 맞추려 뺌",
+  "벤치 끝 '오로지 줄만 끊을 수 있게 설계되었다고' → 투자자 평 'I think it's genius' 원음으로 닫음"
+ ],
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "kind": "원음",
+    "fn": "반응(결말 반응 0초)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "이거 완전 미쳤는데?!",
+     "미친 짓 그만해!"
+    ],
+    "cap_at": [
+     116.32,
+     117.17
+    ],
+    "span": [
+     116.32,
+     118.29
+    ],
+    "orig_en": "That's crazy. / Stop the madness.",
+    "text": "이거 완전 미쳤는데?! 미친 짓 그만해!",
+    "style": "원음반응_크게",
+    "fx": "0초 빨간 원(R3 물건 = 손가락에 낀 검은 반지 커터) — 벤치 0~0.83 빨간 실선 원(투자자 얼굴, 우리는 물건)",
+    "emph": [
+     {
+      "cap": "이거 완전 미쳤는데?!",
+      "span": "이거 완전 미쳤는데?!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "미친 짓 그만해!",
+      "span": "미친 짓 그만해!",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N1",
+    "kind": "나레",
+    "fn": "문제(사연)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "낚시하다 모래 속",
+     "칼을 밟아서",
+     "발가락이 잘릴 뻔했다는",
+     "이 남자"
+    ],
+    "text": "낚시하다 모래 속 칼을 밟아서 발가락이 잘릴 뻔했다는 이 남자",
+    "tts": "낚시하다 모래 속 칼을 밟아서 발가락이 잘릴 뻔했다는 이 남자",
+    "fx": "빨강 번쩍 — 벤치 3.03(사연 컷 넘김)",
+    "emph": [
+     {
+      "cap": "낚시하다 모래 속",
+      "span": "낚시하다",
+      "color": "빨강",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "칼을 밟아서",
+      "span": "칼을 밟아서",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "발가락이 잘릴 뻔했다는",
+      "span": "잘릴 뻔했다는",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "이 남자",
+      "span": "이 남자",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "fn": "문제(기존 불편)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "녹슨 손톱깎이랑",
+     "위험한 칼로 줄 끊는 게",
+     "지긋지긋했다는데"
+    ],
+    "text": "녹슨 손톱깎이랑 위험한 칼로 줄 끊는 게 지긋지긋했다는데",
+    "tts": "녹슨 손톱깎이랑 위험한 칼로 줄 끊는 게 지긋지긋했다는데",
+    "fx": "빨강 번쩍 — 벤치 5.37(불편 컷 넘김)",
+    "emph": [
+     {
+      "cap": "녹슨 손톱깎이랑",
+      "span": "녹슨 손톱깎이랑",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "위험한 칼로 줄 끊는 게",
+      "span": "위험한 칼로",
+      "color": "초록",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "지긋지긋했다는데",
+      "span": "지긋지긋했다는데",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "fn": "문제(원음)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "옛날 식으로 이로 끊다가",
+     "이가 두 번이나 깨졌어요"
+    ],
+    "cap_at": [
+     62.97,
+     64.81
+    ],
+    "span": [
+     62.97,
+     66.97
+    ],
+    "orig_en": "I've even chipped my teeth biting line the old school way twice.",
+    "text": "옛날 식으로 이로 끊다가 이가 두 번이나 깨졌어요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "옛날 식으로 이로 끊다가",
+      "span": "이로 끊다가",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "이가 두 번이나 깨졌어요",
+      "span": "두 번이나",
+      "color": "민트",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O3",
+    "kind": "원음",
+    "fn": "해답(발상)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "그래서 생각했죠",
+     "손가락에 커터를 끼우면?"
+    ],
+    "cap_at": [
+     67.61,
+     68.45
+    ],
+    "span": [
+     67.61,
+     70.4
+    ],
+    "orig_en": "I thought, why not just put a cutter on your finger?",
+    "text": "그래서 생각했죠 손가락에 커터를 끼우면?",
+    "style": "보통",
+    "fx": "초록 번쩍 — 벤치 10.17(발명 컷 넘김)",
+    "emph": [
+     {
+      "cap": "그래서 생각했죠",
+      "span": "그래서 생각했죠",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "손가락에 커터를 끼우면?",
+      "span": "손가락에 커터를 끼우면?",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O4",
+    "kind": "원음",
+    "fn": "해답(시제품)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "용접 퍼티를 꺼내고",
+     "치실 커터를 뜯어서",
+     "첫 시제품을 손으로 만들었죠"
+    ],
+    "cap_at": [
+     70.53,
+     72.41,
+     74.69
+    ],
+    "span": [
+     70.53,
+     76.97
+    ],
+    "orig_en": "So I busted out some welding putty, broke apart a dental floss cutter and hand made my first prototype.",
+    "text": "용접 퍼티를 꺼내고 치실 커터를 뜯어서 첫 시제품을 손으로 만들었죠",
+    "style": "보통",
+    "fx": "초록 번쩍 — 벤치 14.4(첫 모델 컷)",
+    "emph": [
+     {
+      "cap": "용접 퍼티를 꺼내고",
+      "span": "퍼티를 꺼내고",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "치실 커터를 뜯어서",
+      "span": "커터를 뜯어서",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "첫 시제품을 손으로 만들었죠",
+      "span": "손으로 만들었죠",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "fn": "시연(예고)",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "그러고는 무대에서",
+     "바로 시범을 보여 주는데"
+    ],
+    "text": "그러고는 무대에서 바로 시범을 보여 주는데",
+    "tts": "그러고는 무대에서 바로 시범을 보여 주는데",
+    "emph": [
+     {
+      "cap": "그러고는 무대에서",
+      "span": "무대에서",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "바로 시범을 보여 주는데",
+      "span": "보여 주는데",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O5",
+    "kind": "원음",
+    "fn": "시연",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "이건 12파운드짜리",
+     "모노필라멘트 줄이에요",
+     "배스 잡을 때 많이 쓰죠",
+     "* 툭! 한 번에 끊김 *"
+    ],
+    "cap_at": [
+     87.65,
+     89.29,
+     90.61,
+     93.7
+    ],
+    "span": [
+     87.65,
+     95.18
+    ],
+    "orig_en": "This is 12-pound test monofilament line. / Pretty popular for catching sunny and bass. / (snap)",
+    "text": "이건 12파운드짜리 모노필라멘트 줄이에요 배스 잡을 때 많이 쓰죠 * 툭! 한 번에 끊김 *",
+    "style": "보통",
+    "fx": "빨강 번쩍 — 벤치 20.5('*딱*' 끊기는 순간)",
+    "emph": [
+     {
+      "cap": "이건 12파운드짜리",
+      "span": "12파운드짜리",
+      "color": "주황",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "모노필라멘트 줄이에요",
+      "span": "줄이에요",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "배스 잡을 때 많이 쓰죠",
+      "span": "때 많이 쓰죠",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "* 툭! 한 번에 끊김 *",
+      "span": "* 툭! 한 번에 끊김 *",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(상황)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N4",
+    "kind": "나레",
+    "fn": "시연(고조)",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "상어도 잡는다는",
+     "100파운드 굵은 줄까지",
+     "한 번에 툭 끊어 버리는데"
+    ],
+    "text": "상어도 잡는다는 100파운드 굵은 줄까지 한 번에 툭 끊어 버리는데",
+    "tts": "상어도 잡는다는 백 파운드 굵은 줄까지 한 번에 툭 끊어 버리는데",
+    "fx": "빨강 번쩍 — 벤치 26.9(굵은 줄 컷)",
+    "emph": [
+     {
+      "cap": "상어도 잡는다는",
+      "span": "상어도 잡는다는",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "100파운드 굵은 줄까지",
+      "span": "100파운드",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "한 번에 툭 끊어 버리는데",
+      "span": "한 번에",
+      "color": "노랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N6",
+    "kind": "나레",
+    "fn": "고조(피부)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "날을 손바닥에 문질러도",
+     "자기 피부는 안 베인다고",
+     "자신하는데"
+    ],
+    "text": "날을 손바닥에 문질러도 자기 피부는 안 베인다고 자신하는데",
+    "tts": "날을 손바닥에 문질러도 자기 피부는 안 베인다고 자신하는데",
+    "emph": [
+     {
+      "cap": "날을 손바닥에 문질러도",
+      "span": "손바닥에 문질러도",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "자기 피부는 안 베인다고",
+      "span": "안 베인다고",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "자신하는데",
+      "span": "자신하는데",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O9",
+    "kind": "원음",
+    "fn": "끝(투자자 평)",
+    "facts": [
+     "f9"
+    ],
+    "caps": [
+     "이건 천재적이에요"
+    ],
+    "cap_at": [
+     204.16
+    ],
+    "span": [
+     204.16,
+     206.84
+    ],
+    "orig_en": "I think it's genius.",
+    "text": "이건 천재적이에요",
+    "style": "보통",
+    "fx": "초록 번쩍 — 벤치 끝 반응 컷",
+    "emph": [
+     {
+      "cap": "이건 천재적이에요",
+      "span": "천재적이에요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ],
+  "cps_target": 7.8
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "speed": 1.25
+ },
+ "titles": {
+  "line1": "손가락에 끼우는",
+  "line2": "낚싯줄 커터?!",
+  "rule": "1줄 노랑·2줄 흰, 끝 '?!' — 벤치 '오로지 낚시줄만 / 자른다는 제품?!'과 3어절 연속 겹침 0, 줄당 ≤12자"
+ },
+ "render": {
+  "gap": 0.03
+ },
+ "facts": {
+  "f1": {
+   "text": "원본 116.29~117.17 'That's crazy.' · 117.17~118.29 'Stop the madness.'(스피치매틱스 enhanced 영어, 같은 화자 S3) — 100파운드 줄 시연 직후 투자자석 반응. 화면 116.42~117.62 파란 셔츠 투자자 · 117.62~118.39 대머리 투자자",
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "kind": "방송 원음"
+  },
+  "f2": {
+   "text": "원본 35.76~50.12 창업자 'When I got it onto the beach, it thrashed around and got tangled up in my line… I ran up to my tackle box to grab my knife and it had fallen in the sand. I stepped on it and almost cut off my toe.' — 벤치 나레 '손을 크게 베었다'는 원본과 다름(발가락) → 원본대로 고침",
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "kind": "방송 원음(창업자 사연)"
+  },
+  "f3": {
+   "text": "원본 53.04~62.77 'I was absolutely sick and tired of dealing with the same old rusty fingernail clippers and dangerous knives just to cut line.'",
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "kind": "방송 원음"
+  },
+  "f4": {
+   "text": "원본 62.97~66.93 'I've even chipped my teeth biting line the old school way twice.'",
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "kind": "방송 원음"
+  },
+  "f5": {
+   "text": "원본 67.61~70.37 'I thought, why not just put a cutter on your finger?' · 70.53~77.01 'So I busted out some welding putty, broke apart a dental floss cutter and hand made my first prototype.'",
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "kind": "방송 원음"
+  },
+  "f6": {
+   "text": "원본 85.89~87.65 'I got to show you how this works.' · 87.65~93.69 'This is 12-pound test monofilament line. Pretty popular for catching sunny and bass.' · 95.21~97.81 'This is 30-pound test fluorocarbon' (스피치매틱스가 pound 를 £ 로 적음 — 'test line' 단위는 파운드) · 화면 93.39~94.53 줄 끊기고 양동이 떨어짐",
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "kind": "방송 원음+화면"
+  },
+  "f7": {
+   "text": "원본 108.65~115.13 'This is a 100-pound test braided nylon fishing line. You can catch a 200, 300-pound shark with this line.' · 화면 111.45~114.81 반지로 굵은 줄을 끊는 손 근접",
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "kind": "방송 원음+화면"
+  },
+  "f8": {
+   "text": "원본 118.29~120.01 창업자 'I can't cut my skin with it either.'(창업자 주장 — 전언 '자신하는데'로만) · 화면 118.39~120.02 반지를 얼굴에 문지름 · 공식 홍보 영상 gnb_t06Z12o 98~100초 손바닥에 문지르는 장면",
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "kind": "방송 원음(창업자 주장)"
+  },
+  "f9": {
+   "text": "원본 204.16~205.56 'I think it's genius.'(분홍 옷 투자자 — 클립 제목 'Lori Calls This Product Genius') · 화면 200.80~205.57 투 숏",
+   "url": "https://www.youtube.com/watch?v=Qy7wUkIrrQ4",
+   "kind": "방송 원음"
+  }
+ }
+}
