@@ -1733,10 +1733,28 @@ def _photo_ok(st) -> bool:
     return not (R.get("v") is not None and float(R["v"]) <= 0.0)
 
 
+def _alt_photo_fallback(st) -> bool:
+    """(판단 주인 — 사진 0% 판의 예외) 해외원본형 + 비슷한 제품 + 받아 온 제품 영상 0개면 예 → 원본 말 뒤 제품 줄에만 상품 사진 허용
+    (사장님 10-27 '그때만 상품 사진' — 이브라인 4회차: 영상 후보에 같은 제품이 없어 0개 → 원본 장면 금지·사진 금지로 대본 6번 반려 뒤 멈춤).
+    예외 줄 = _photo_lines(재료.json photo_lines) — 계획 photo_gate·완성본 photo 행이 같은 줄을 뺀다(render_bench.photo_share)."""
+    if not _alt_material_needed(st) or _photo_ok(st):
+        return False
+    on = _origin_names(st)
+    return not any(str(f.get("name") or "") not in on and not str(f.get("name") or "").lower().endswith(PHOTO_EXT)
+                   for f in (st.get("material") or {}).get("files") or [])
+
+
+def _photo_lines(S: dict) -> list:
+    """원본(orig) 마지막 줄 뒤 나레 줄 — rules.alt_scene_problems 와 같은 줄 범위."""
+    L = S.get("lines") or []
+    last = max((i for i, l in enumerate(L) if l.get("kind") == "orig"), default=-1)
+    return [l.get("id") for l in L[last + 1:] if l.get("kind") == "tts"]
+
+
 def _offer_dims(st) -> dict:
-    """질문지에 싣는 파일·크기 — 사진을 못 쓰는 판이면 사진을 뺀다(_all_dims 는 검사용 그대로)."""
+    """질문지에 싣는 파일·크기 — 사진을 못 쓰는 판이면 사진을 뺀다(_all_dims 는 검사용 그대로). 예외(_alt_photo_fallback)면 사진도 싣는다."""
     d = _all_dims(st)
-    return d if _photo_ok(st) else {k: v for k, v in d.items() if not k.lower().endswith(PHOTO_EXT)}
+    return d if (_photo_ok(st) or _alt_photo_fallback(st)) else {k: v for k, v in d.items() if not k.lower().endswith(PHOTO_EXT)}
 
 
 def _shots_ctx(st) -> str:
@@ -1748,7 +1766,7 @@ def ph_script(st, m, rp, u):
     mats = ["src/" + x["name"] for x in (st.get("material") or {}).get("files") or []]
     origs = ["src/" + x["name"] for x in (st.get("origin") or {}).get("files") or []]
     files = (origs + mats) if _fmt(st) in FOREIGN_FMTS else (mats + origs)     # 해외원본형은 원본이 주재료 — 원본 시트가 앞
-    if not _photo_ok(st):                     # 사진 못 쓰는 판 — 시트 그림·재료 목록에도 사진을 내놓지 않는다
+    if not (_photo_ok(st) or _alt_photo_fallback(st)):   # 사진 못 쓰는 판 — 시트 그림·재료 목록에도 사진을 내놓지 않는다(예외 편은 싣는다)
         files = [f for f in files if not f.lower().endswith(PHOTO_EXT)]
     return {"do": [{"id": "msheets", "cmd": "mat_sheets", "files": files[:5]}], "then": "script_ask"}
 
@@ -1762,7 +1780,10 @@ def _src_rule_ctx(st) -> str:
     R = (STY.rhythm(_style(st["version"])) or {}).get("photo_share_max") or {}
     pics = [n for n in names if n.lower().endswith(PHOTO_EXT)]
     rule = ""
-    if not _photo_ok(st):
+    if _alt_photo_fallback(st):
+        rule = ("\n★이 판은 사진 컷을 쓰지 않는다 — 단 이 편은 비슷한 제품 영상을 못 찾아, 원본 말(orig) 마지막 줄 뒤 제품 이야기 나레 줄에만 상품 사진"
+                "(move: in·out·left·right)을 쓴다. 다른 줄은 영상만.")
+    elif not _photo_ok(st):
         rule = "\n★이 판은 사진(그림 파일) 컷을 쓰지 않는다(판 photo_share_max 0 — 벤치 6편 사진 컷 0). 컷 src 는 위 영상 파일만."
     elif R.get("v") is not None:
         rule = f"\n사진 컷은 전체 길이의 {float(R['v']):.0%} 까지(판 photo_share_max)."
@@ -1900,6 +1921,10 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
 def _prep_material(st, S: dict, M: dict) -> dict:
     """대본 답의 재료에 서버가 채우는 칸(한 곳) — 샷 끝·주인공 칸(fill_shot_max) · 해외원본형 박힌 글자 흐림(text_blur_all) · crop 단위."""
     M = RU.fill_shot_max(M, S, _origin_dims(st), st.get("shots") or {}, _ar(st["version"]))
+    if _alt_photo_fallback(st):                # 예외 줄 — 계획·완성본 사진 비율이 이 줄을 뺀다(주인 _alt_photo_fallback)
+        M["photo_lines"] = _photo_lines(S)
+    else:
+        M.pop("photo_lines", None)
     if _fmt(st) in FOREIGN_FMTS:              # 박힌 글자 = 지운 파일(clean)은 그대로, 나머지는 흐림 — 판단 주인 rules.text_blur_all(관제 263 08)
         nb = RU.merge_blur(M, RU.text_blur_all(st.get("shots") or {}, _origin_dims(st), set((st.get("text_fix") or {}).get("cleaned") or [])))
         if nb:
@@ -3244,7 +3269,7 @@ def _alt_material_needed(st) -> bool:
 def _alt_fill_pool(st) -> list:
     """비슷한 제품 줄의 원본 장면을 바꿀 화면 — 사진을 쓰는 판이면 상품 사진, 못 쓰는 판(_photo_ok)이면 받아 온 제품 영상의 긴 샷 구간 시작
     (10-27 4회차 아크네스: alt_scene_fix 가 사진 0% 판에서 원본 장면을 상품 사진으로 바꿔 사진 컷 반려 — 두 규칙이 다른 답)."""
-    if _photo_ok(st):
+    if _photo_ok(st) or _alt_photo_fallback(st):
         return [f["name"] for f in _prod_files(st)]
     on = _origin_names(st)
     shots = (st.get("_msheets") or {}).get("shots") or {}

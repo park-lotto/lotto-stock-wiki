@@ -49,3 +49,21 @@ def test_alt_scene_fix_uses_product_video_when_photos_banned():
     M = {"cuts": {"L8": [{"src": "O1.mp4", "ss": 3.0}]}}
     assert RU.alt_scene_fix(S, M, {"O1.mp4"}, pool)
     assert M["cuts"]["L8"][0]["src"] == "V1.mp4" and not RU.alt_scene_problems(S, M, {"O1.mp4"})
+
+
+def test_photo_fallback_only_when_no_product_video():
+    """사장님 10-27 '그때만 상품 사진': 비슷한 제품 영상을 못 찾은 편만 원본 말 뒤 제품 줄에 사진 허용 — 계획 photo_gate 도 그 줄을 뺀다."""
+    from tools.calcopy.hybrid import render_bench as RB, styles as STY
+    st = _st("alt")
+    st["material"] = {"files": [{"name": "prod_1_0.jpg", "w": 600, "h": 600}]}
+    assert F._alt_photo_fallback(st) and "prod_1_0.jpg" in F._offer_dims(st)
+    S = {"lines": [{"id": "O1", "kind": "orig"}, {"id": "L8", "kind": "tts"}, {"id": "L9", "kind": "tts"}]}
+    assert F._photo_lines(S) == ["L8", "L9"]
+    M = F._prep_material(st, S, {"cuts": {}})
+    assert M.get("photo_lines") == ["L8", "L9"]
+    T = {"end": 10.0, "cuts": [{"line": "L8", "src": "prod_1_0.jpg", "t0": 6.0, "t1": 8.0}, {"line": "L2", "src": "prod_1_0.jpg", "t0": 1.0, "t1": 2.0}]}
+    style = STY.load("잇템로그판_v2")
+    assert RB.photo_share(T["cuts"], 10.0, M["photo_lines"]) == 0.1           # L8 은 빼고 L2 만 센다
+    assert RB.photo_gate(T, style, M)                                         # 예외 줄 밖 사진(L2)은 그대로 걸린다
+    st["material"]["files"].append({"name": "V1.mp4"})                        # 제품 영상을 찾았으면 예외 없음
+    assert not F._alt_photo_fallback(st) and "photo_lines" not in F._prep_material(st, S, {"cuts": {}})
