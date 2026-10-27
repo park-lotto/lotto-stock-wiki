@@ -2942,6 +2942,8 @@ ALT_NOTICE_WON = "주신 영상은 원본을 아직 찾는 중이라, 함께 찾
 def pick_alt_source(st: dict) -> dict | None:
     """(판단 주인 — 둘째 소재 고르기) 그 판 벤치 상위(조회순) 중 회원이 준 소재·이 PC 작업 기록의 만든 편(멈춘 편은 다시 씀 — runner done_refs) 아닌 첫 편."""
     from tools.calcopy import origin_find as OF
+    if (st.get("env") or {}).get("single_source"):      # 원본 찾기 워커(of_worker, 사장님 10-27 '24시간 미리 찾아 둔다') — 그 소재 하나만
+        return None
     f = PRESETS_FILE.parent / str(st.get("slug") or "-") / "_kal" / ALT_LIST
     if not f.is_file():
         st["log"].append(f"둘째 소재 없음: {f.name} 없음({st.get('slug')})")
