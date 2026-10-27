@@ -1301,7 +1301,7 @@ def jump_free_spans(src: Path, spans: list[list[float]], fps: int = 10, pad: flo
     return out
 
 
-def source_rule_scan(W: Path, T: dict, origin_names: set) -> list[str]:
+def source_rule_scan(W: Path, T: dict, origin_names: set, faces: bool = True) -> list[str]:
     """출처 규칙 ③ — 원본 밖 재료 컷에 장면 전환이 섞였나(10-21 이미도: 리뷰여왕 별 전환 최고 73·상위10% 53 / 다른 재료 컷 최고 28 이하)."""
     out = []
     for c in (T or {}).get("cuts") or []:
@@ -1312,7 +1312,7 @@ def source_rule_scan(W: Path, T: dict, origin_names: set) -> list[str]:
         dd = [] if p.suffix.lower() in RU.STILL_EXT else _cut_jumps(p, float(c.get("ss") or 0), float(c["dur"]))
         if _jumpy(dd):
             out.append(f"{c.get('line')}: {src} {float(c.get('ss') or 0):.1f}초부터 {float(c['dur']):.1f}초 안에 장면 전환·끊김이 있다(남의 영상 편집 효과) — 시작점을 옮기거나 다른 장면으로")
-        n = _cut_faces(W, p, float(c.get("ss") or 0), float(c["dur"]), c.get("crop"))
+        n = _cut_faces(W, p, float(c.get("ss") or 0), float(c["dur"]), c.get("crop")) if faces else 0   # faces = 지시서 flow._other_faces(쇼핑형은 사람 등장 허용, 10-27)
         if n:
             out.append(f"{c.get('line')}: {src} {float(c.get('ss') or 0):.1f}초부터 화면에 사람 얼굴이 보인다(원본 밖 영상의 다른 사람 — 광고 모델·리뷰어) — 원본 밖 재료는 사람 없는 제품 장면만")
     return out
@@ -1472,7 +1472,7 @@ def c_plan(W, d):
         out["conflict"] = cf
     if T.get("cuts"):
         out["sheet"] = rel(W, plan_sheet(W, v, T))
-        out["jumps"] = source_rule_scan(W, T, _origin_names(W, v) | set(d.get("origin_names") or []))
+        out["jumps"] = source_rule_scan(W, T, _origin_names(W, v) | set(d.get("origin_names") or []), d.get("other_faces", True))
         reuse = [f"같은 장면 재사용 {c.get('line')} {Path(str(c['src'])).stem}@{float(c['ss']):.2f} — 그 샷 안에서는 못 피함, 이 줄 컷을 다른 장면으로 바꿔라: {c['reuse_unfixed'][0]}"
                  for c in T["cuts"] if c.get("reuse_unfixed")]
         out["jumps"] += reuse      # 계획(respace_reuse)이 못 피한 B13 — 렌더(수 분) 뒤 완성본 검사에서야 걸려 11단계로 되돌아갔다(10-26 까르보 B13). 계획 고치기에서 바로
@@ -1498,7 +1498,7 @@ def c_render(W, d):
     if cf:
         return {"ok": False, "conflict": cf}
     T = jload(W / v / "render" / "timeline.json") if (W / v / "render" / "timeline.json").exists() else {}
-    jumps = source_rule_scan(W, T, _origin_names(W, v) | set(d.get("origin_names") or []))
+    jumps = source_rule_scan(W, T, _origin_names(W, v) | set(d.get("origin_names") or []), d.get("other_faces", True))
     return {"ok": (W / v / "render" / "final.mp4").exists() and not jumps, "jumps": jumps}
 
 

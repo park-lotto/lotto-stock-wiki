@@ -1760,16 +1760,25 @@ CUT_RULES = [
     "원본 순서 X→Y→X 금지(A-B-A 끼움 — 같은 원본 사이에 다른 컷 하나만 끼우지 않는다, B16)",
     "대사와 장면이 맞게(컷 see = 그 줄 대사의 동작·상태)",
     "벤치(소재 쇼츠 bench.mp4)는 재료가 아니다 — 원본·제품 영상·사진만",
-    "원본 밖 재료 영상은 사람 얼굴이 안 나오는 제품 장면만(리뷰어·광고 모델 금지)",
     "멈춘 그림 금지 — 원본이 멈춘 구간은 피하고, 사진 컷은 move(in·out·left·right)",
 ]
+
+
+def _other_faces(st) -> bool:
+    """(판단 주인 — 원본 밖 재료의 사람 얼굴을 반려하나) 연예인형·해외원본형 = 예(98 #38 고현정 편: 광고 모델 얼굴이 '출처: 고현정' 아래 나가 연예인으로 보임).
+    쇼핑형 = 아니오(10-27 사장님 '영상 안에 사람이 등장하는 거 괜찮은데 왜 반려 · 제품·대본과 상관없는 건 당연히 안 되지만' — 그건 장면 검수가 대사 대조로 본다)."""
+    return _fmt(st) != "쇼핑형"
+
+
+FACE_RULE = "원본 밖 재료 영상은 사람 얼굴이 안 나오는 제품 장면만(리뷰어·광고 모델 금지 — 다른 사람이 주인공으로 보인다)"
+PEOPLE_OK = "사람이 나와도 된다 — 단 그 컷에 제품이나 그 줄 대사의 동작이 보여야 한다(사람만 나오고 제품·대사와 상관없는 컷 금지)"
 
 
 def _cut_rules_ctx(st, shots: dict | None = None) -> str:
     """처음 대본·재료 질문에 싣는 컷 규칙 + 판 숫자(검사기와 같은 값) + 재료 영상 샷 구간(실행기 mat_sheets 가 shot_starts 로 잰 값)."""
     from tools.calcopy.hybrid import styles as STY
     b = STY.rhythm_bounds(_style(st["version"]))
-    nums = []
+    nums = [FACE_RULE if _other_faces(st) else PEOPLE_OK]
     if b.get("cut_median"):
         lo, hi = b["cut_median"]
         nums.append(f"컷 길이(서로 다른 샷 경계 사이) 중앙값 {lo}~{hi}초 — 한 컷이 길면 그 줄에 다른 장면 컷을 더 넣는다(같은 샷 이어 붙이기는 컷으로 안 센다)")
@@ -1995,7 +2004,7 @@ def ph_sign(st, m, rp, u):
 
 # ── 8 계획 ────────────────────────────────────────────────────────────────
 def ph_plan(st, m, rp, u):
-    return {"do": [{"id": "plan", "cmd": "plan", "version": st["version"], "origin_names": sorted(_origin_names(st))}], "then": "plan_got"}
+    return {"do": [{"id": "plan", "cmd": "plan", "version": st["version"], "origin_names": sorted(_origin_names(st)), "other_faces": _other_faces(st)}], "then": "plan_got"}
 
 
 MECH_FIX_MAX = 2      # 같은 편에서 기계 자동 고침(흐림 칸 넣기)을 되풀이하는 한도 — 넘으면 Claude 고치기로(무한 반복 막기)
@@ -2160,7 +2169,7 @@ def ph_thumb(st, m, rp, u):
         # (10-26 이미숙 회원편: part 8 = 시트에선 얼굴 근접 O3@163, 바뀐 재료에선 앰플 병 N2@80 → 카드 얼굴 반려 되풀이·멈춤, 98 기록).
         # 옛 카드는 비우고(옛 번호라 계획 관문 ⑥이 시트를 막는다) 계획을 다시 돌려 새 시트로 묻는다.
         return {"do": [{"id": "clear_thumb", "cmd": "write_doc", "files": {f"{v}/썸네일.json": {"options": []}}, "version": v},
-                       {"id": "plan", "cmd": "plan", "version": v, "origin_names": sorted(_origin_names(st))}], "then": "thumb_sheet"}
+                       {"id": "plan", "cmd": "plan", "version": v, "origin_names": sorted(_origin_names(st)), "other_faces": _other_faces(st)}], "then": "thumb_sheet"}
     _, _, ww, wh = STY_window(v)
     ask = THUMB_ASK.format(good=TR.GOOD, order=TR.find_order(st.get("slug")), ww=ww, wh=wh)    # 상위 편 훅 참고 한 줄(지시서 15 — slug 의 _kal/상위편_목표.json)
     if st.get("_thumb_bad"):
@@ -2215,7 +2224,7 @@ def ph_thumb_got(st, m, rp, u):
 
 # ── 10 렌더 ───────────────────────────────────────────────────────────────
 def ph_render(st, m, rp, u):
-    return {"do": [{"id": "render", "cmd": "render", "version": st["version"], "origin_names": sorted(_origin_names(st))}], "then": "render_got"}
+    return {"do": [{"id": "render", "cmd": "render", "version": st["version"], "origin_names": sorted(_origin_names(st)), "other_faces": _other_faces(st)}], "then": "render_got"}
 
 
 def ph_render_got(st, m, rp, u):
@@ -2546,7 +2555,7 @@ SCRIPT_SHOP = """너는 대본 작가다(오푸스). 쇼핑형 — 판 규칙·�
 근거 = 쿠팡 베스트 후기(r번호 — 셀링포인트·소구점 전언)·네이버 글(n번호)·조사 사실(f번호). 후기 개수·별점 숫자는 쓰지 않는다. CTA·금액·질병·효능 단정 없음.
 재료의 cand_dir 는 비워 둔다, 컷 src 는 받은 재료 파일 이름(제품 영상·prod_*.jpg 사진 — 사진은 move: in·out·left·right). 컷마다 see — 그 줄 대사의 동작·상태가 그 컷에 보여야 한다."""
 
-PLAN_LOOK_SHOP = """너는 장면 검수 담당이다(쇼핑형). 계획 시트를 보고 컷마다: 대사와 화면이 맞나 · 남의 글자·워터마크 · 남의 얼굴(재료 영상의 리뷰어·광고 모델) · A-B-A 끼움.
+PLAN_LOOK_SHOP = """너는 장면 검수 담당이다(쇼핑형). 계획 시트를 보고 컷마다: 대사와 화면이 맞나 · 남의 글자·워터마크 · 사람만 나오고 제품·대사 동작이 안 보이는 컷(사람이 제품을 쓰는 장면은 괜찮다 — 10-27 사장님) · A-B-A 끼움.
 crop 은 원본 픽셀 정수[x, y, w, h] — 숫자 crop 은 엔진이 바꾸지 않는다. 박힌 글자는 재료.blur {파일: [[x, y, w, h, 시작초, 끝초]]}로 흐린다. 고칠 것이 있으면 재료 전체를 고쳐서 돌려준다(없으면 null).
 ★우리 틀(결함 아님): 맨 위 제목 · 로고 · 우리 자막(색 강조).
 JSON 하나: {"ok": true, "problems": ["…"], "재료": null}"""

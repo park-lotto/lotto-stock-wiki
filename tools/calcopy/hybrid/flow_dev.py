@@ -148,7 +148,7 @@ def main():
         log({"call": calls, "status": res["status"], "msg": res.get("message"), "phase": st.get("phase"),
              "do": [d["cmd"] for d in res.get("do") or []], "review": [r["id"] for r in res.get("review") or []], "reject": res.get("reject")})
         measure, replies, user = {}, {}, {}
-        if st.get("phase") in {x for x in a.stop_at.split(",") if x}:
+        if any(str(st.get("phase") or "").startswith(x) for x in a.stop_at.split(",") if x):     # 앞부분 맞춤 — thumb = thumb_sheet·thumb_got(10-27 정확히 같은 이름만 봐서 렌더까지 감)
             log({"end": "stop_at", "phase": st.get("phase"), "calls": calls, "min": round((time.time() - t_all) / 60, 1),
                  "do_n": counts["do"], "review_n": counts["review"]})
             break

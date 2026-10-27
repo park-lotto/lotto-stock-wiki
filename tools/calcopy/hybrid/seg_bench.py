@@ -69,7 +69,9 @@ def score(W: Path) -> dict:
         t = rej[0].read_text(encoding="utf-8")
         body = t.split("멈춘 이유(재료를 고쳐라):", 1)[1].split("★한 번에 다 고쳐라")[0]
         first = len([x for x in body.split("; ") if x.strip()])
-    secs = [r["t"] for r in rows if "t" in r]
+    cut = next((i for i, r in enumerate(rows) if str(r.get("phase") or "").startswith("thumb")), len(rows) - 1)
+    rows_in = rows[:cut + 1]                     # 분 = 장면 맞추기 통과 시점까지(그 뒤 렌더는 세지 않는다)
+    secs = [r["t"] for r in rows_in if "t" in r]
     h = lambda t: int(t[:2]) * 3600 + int(t[3:5]) * 60 + int(t[6:8])    # noqa: E731
     passed = any(str(r.get("phase") or "").startswith("thumb") for r in rows)     # 장면 맞추기 통과 = 다음 단계(thumb) 에 닿음
     return {"script_n": sn, "plan_n": pn, "plan_rej": len(rej), "first_rej_items": first,

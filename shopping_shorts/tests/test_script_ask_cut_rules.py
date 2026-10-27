@@ -47,3 +47,23 @@ def test_first_ask_carries_script_audit_numbers():
             if r["kind"] not in ("engine", "sibling_repeat"):
                 assert t, f"{v}: 규칙 {r['kind']} 를 글로 못 옮긴다"
                 assert t in ask, f"{v}: 처음 질문에 '{t[:30]}' 가 없다"
+
+
+def test_people_ok_only_for_shopping_format():
+    """10-27 사장님 '영상 안에 사람 등장 괜찮은데 왜 반려 · 제품 관련 있는 건 괜찮지': 쇼핑형은 남의 얼굴 반려 안 함(대사·제품 대조는 그대로),
+    연예인형·해외원본형은 그대로 반려(98 #38 광고 모델이 연예인으로 보임)."""
+    assert F._other_faces({"fmt": "쇼핑형"}) is False
+    assert F._other_faces({"fmt": "해외원본형"}) is True and F._other_faces({"fmt": "연예인형"}) is True
+    shop, foreign = _ask("두유노판", "쇼핑형"), _ask("잇템로그판_v2", "해외원본형")
+    assert F.PEOPLE_OK in shop and F.FACE_RULE not in shop
+    assert F.FACE_RULE in foreign and F.PEOPLE_OK not in foreign
+
+
+def test_runner_skips_face_scan_when_told(monkeypatch, tmp_path):
+    from tools.calcopy.hybrid import runner_ops as R
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "m.jpg").write_bytes(b"x")
+    monkeypatch.setattr(R, "_cut_faces", lambda *a, **k: 2)
+    T = {"cuts": [{"src": "m.jpg", "ss": 0, "dur": 1.0, "line": "L0"}]}
+    assert R.source_rule_scan(tmp_path, T, set(), faces=True)
+    assert R.source_rule_scan(tmp_path, T, set(), faces=False) == []
