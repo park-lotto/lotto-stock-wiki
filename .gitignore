@@ -217,3 +217,4 @@ out/lang_mode_check_*.json
 # 대본 칼카피 엔진 — 음성 원본은 커밋하지 않는다(받아쓰기·태그·카드만)
 out/script_calcopy/*/audio/
 out/script_calcopy/*/_pull_ids.txt
+/channel_stats/data/
