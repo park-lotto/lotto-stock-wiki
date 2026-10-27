@@ -719,7 +719,7 @@ def ph_setup_check(st, m, rp, u):
     if miss:
         st["log"].append("준비 확인: 빠진 것 " + ", ".join(str(x.get("id")) for x in miss))
         raise _Stop(SETUP_WHY, setup_fix(miss), retry="setup", ask_member=True)       # 다시 시도 = 준비를 다시 잰다
-    st["env"] = {k: env.get(k) for k in ("keys", "dev", "cache", "asr", "done_refs")}     # done_refs = 이 PC 작업 기록의 만든 편(둘째 소재 고르기가 뺀다)
+    st["env"] = {k: env.get(k) for k in ("keys", "dev", "cache", "asr", "done_refs", "single_source")}     # done_refs = 이 PC 작업 기록의 만든 편(둘째 소재 고르기가 뺀다)
     return {"goto": "bench"}
 
 
@@ -1733,10 +1733,28 @@ def _photo_ok(st) -> bool:
     return not (R.get("v") is not None and float(R["v"]) <= 0.0)
 
 
+def _alt_photo_fallback(st) -> bool:
+    """(판단 주인 — 사진 0% 판의 예외) 해외원본형 + 비슷한 제품 + 받아 온 제품 영상 0개면 예 → 원본 말 뒤 제품 줄에만 상품 사진 허용
+    (사장님 10-27 '그때만 상품 사진' — 이브라인 4회차: 영상 후보에 같은 제품이 없어 0개 → 원본 장면 금지·사진 금지로 대본 6번 반려 뒤 멈춤).
+    예외 줄 = _photo_lines(재료.json photo_lines) — 계획 photo_gate·완성본 photo 행이 같은 줄을 뺀다(render_bench.photo_share)."""
+    if not _alt_material_needed(st) or _photo_ok(st):
+        return False
+    on = _origin_names(st)
+    return not any(str(f.get("name") or "") not in on and not str(f.get("name") or "").lower().endswith(PHOTO_EXT)
+                   for f in (st.get("material") or {}).get("files") or [])
+
+
+def _photo_lines(S: dict) -> list:
+    """원본(orig) 마지막 줄 뒤 나레 줄 — rules.alt_scene_problems 와 같은 줄 범위."""
+    L = S.get("lines") or []
+    last = max((i for i, l in enumerate(L) if l.get("kind") == "orig"), default=-1)
+    return [l.get("id") for l in L[last + 1:] if l.get("kind") == "tts"]
+
+
 def _offer_dims(st) -> dict:
-    """질문지에 싣는 파일·크기 — 사진을 못 쓰는 판이면 사진을 뺀다(_all_dims 는 검사용 그대로)."""
+    """질문지에 싣는 파일·크기 — 사진을 못 쓰는 판이면 사진을 뺀다(_all_dims 는 검사용 그대로). 예외(_alt_photo_fallback)면 사진도 싣는다."""
     d = _all_dims(st)
-    return d if _photo_ok(st) else {k: v for k, v in d.items() if not k.lower().endswith(PHOTO_EXT)}
+    return d if (_photo_ok(st) or _alt_photo_fallback(st)) else {k: v for k, v in d.items() if not k.lower().endswith(PHOTO_EXT)}
 
 
 def _shots_ctx(st) -> str:
@@ -1748,7 +1766,7 @@ def ph_script(st, m, rp, u):
     mats = ["src/" + x["name"] for x in (st.get("material") or {}).get("files") or []]
     origs = ["src/" + x["name"] for x in (st.get("origin") or {}).get("files") or []]
     files = (origs + mats) if _fmt(st) in FOREIGN_FMTS else (mats + origs)     # 해외원본형은 원본이 주재료 — 원본 시트가 앞
-    if not _photo_ok(st):                     # 사진 못 쓰는 판 — 시트 그림·재료 목록에도 사진을 내놓지 않는다
+    if not (_photo_ok(st) or _alt_photo_fallback(st)):   # 사진 못 쓰는 판 — 시트 그림·재료 목록에도 사진을 내놓지 않는다(예외 편은 싣는다)
         files = [f for f in files if not f.lower().endswith(PHOTO_EXT)]
     return {"do": [{"id": "msheets", "cmd": "mat_sheets", "files": files[:5]}], "then": "script_ask"}
 
@@ -1762,7 +1780,10 @@ def _src_rule_ctx(st) -> str:
     R = (STY.rhythm(_style(st["version"])) or {}).get("photo_share_max") or {}
     pics = [n for n in names if n.lower().endswith(PHOTO_EXT)]
     rule = ""
-    if not _photo_ok(st):
+    if _alt_photo_fallback(st):
+        rule = ("\n★이 판은 사진 컷을 쓰지 않는다 — 단 이 편은 비슷한 제품 영상을 못 찾아, 원본 말(orig) 마지막 줄 뒤 제품 이야기 나레 줄에만 상품 사진"
+                "(move: in·out·left·right)을 쓴다. 다른 줄은 영상만.")
+    elif not _photo_ok(st):
         rule = "\n★이 판은 사진(그림 파일) 컷을 쓰지 않는다(판 photo_share_max 0 — 벤치 6편 사진 컷 0). 컷 src 는 위 영상 파일만."
     elif R.get("v") is not None:
         rule = f"\n사진 컷은 전체 길이의 {float(R['v']):.0%} 까지(판 photo_share_max)."
@@ -1868,6 +1889,9 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
     PR = st.get("product") or {}
     if PR:     # 제품 판정을 대본에 싣는다 — script_audit.alt_disclosed 가 alt 면 '비슷한 제품' 밝히는 줄을 요구(03 · 사장님 10-25)
         S["product_mode"] = "given" if PR.get("given") else (PR.get("mode") or "exact")
+    if "voice" in S and not isinstance(S.get("voice"), dict):     # 목소리는 판이 정한다(계획 render 가 판 voice 로 채움) — 글자로 적으면 계획이
+        st["log"].append(f"대본 voice 칸 꼴 틀림({str(S['voice'])[:40]}) — 지우고 판 목소리로")   # 'str'.get 으로 죽었다(10-27 5회차 TV 편)
+        S.pop("voice")
     tfix = RU.title_colors_fix(S, _style(v))      # 판 틀에 없는 제목 강조색은 형식 — 반려 말고 바로 고친다(10-26 같은 반려 3번 멈춤)
     if tfix:
         st["log"].append("제목 색 자동 정리: " + "; ".join(tfix))
@@ -1900,6 +1924,10 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
 def _prep_material(st, S: dict, M: dict) -> dict:
     """대본 답의 재료에 서버가 채우는 칸(한 곳) — 샷 끝·주인공 칸(fill_shot_max) · 해외원본형 박힌 글자 흐림(text_blur_all) · crop 단위."""
     M = RU.fill_shot_max(M, S, _origin_dims(st), st.get("shots") or {}, _ar(st["version"]))
+    if _alt_photo_fallback(st):                # 예외 줄 — 계획·완성본 사진 비율이 이 줄을 뺀다(주인 _alt_photo_fallback)
+        M["photo_lines"] = _photo_lines(S)
+    else:
+        M.pop("photo_lines", None)
     if _fmt(st) in FOREIGN_FMTS:              # 박힌 글자 = 지운 파일(clean)은 그대로, 나머지는 흐림 — 판단 주인 rules.text_blur_all(관제 263 08)
         nb = RU.merge_blur(M, RU.text_blur_all(st.get("shots") or {}, _origin_dims(st), set((st.get("text_fix") or {}).get("cleaned") or [])))
         if nb:
@@ -2563,6 +2591,9 @@ SCRIPT_FOREIGN = """너는 대본 작가다(오푸스). 해외원본형 — 해�
 
 """ + "{brief}"
 
+PLAN_LOOK_SUBSONG_HEAD = """★자막노래형(한 샷 이어 쓰기) — 렌더러가 같은 원본 컷을 첫 ss 부터 끊김 없이 한 컷으로 합친다(render_bench.one_shot_chain, 판 one_shot).
+원본 안의 편집점(카메라 전환)은 원본이 흐르는 그대로라 문제가 아니다 — 컷을 샷마다 나누지 마라. 볼 것은 첫 ss(훅)·끝(원본 끝 넘김)·남의 글자·멈춘 그림뿐.
+"""
 PLAN_LOOK_FOREIGN = """너는 장면 검수 담당이다(해외원본형). 계획 시트를 보고 컷마다: 대사와 화면이 맞나 · 남의 글자(원본에 박힌 자막·워터마크 — 재료.blur 가 덮나) ·
 다른 제품(비슷한 다른 브랜드)이 나오나 · 원본별 시간순·같은 장면 재사용 0 · A-B-A 끼움 · 0초·훅 = 결과(놀람 반응 얼굴 또는 제품 크게).
 ★확대는 1.0 — 세로 원본은 폭 전체(높이 = 폭 ÷ 창 비율 {ar}), 가로 원본은 높이 전체. 숫자 crop 으로 좁혀 확대하지 않는다. crop 은 원본 픽셀 정수[x, y, w, h].
@@ -2570,6 +2601,7 @@ PLAN_LOOK_FOREIGN = """너는 장면 검수 담당이다(해외원본형). 계�
 고칠 것이 있으면 재료 전체를 고쳐서 돌려준다(없으면 null).
 ★우리 틀(결함 아님): 맨 위 제목 · 로고 · 출처 줄 · 우리 자막(색 강조) — 남의 글자·워터마크가 아니다.
 JSON 하나: {"ok": true, "problems": ["…"], "재료": null}"""
+PLAN_LOOK_SUBSONG = PLAN_LOOK_SUBSONG_HEAD + PLAN_LOOK_FOREIGN
 
 TOPIC_READ_SHOP = """너는 쇼핑형 소재 판독 담당이다. 아래는 회원이 준 소재 영상(제품 썰·게시글·리뷰)의 1초 장면 시트·제목·설명·받아쓰기다.
 - is_shopping: 쿠팡에서 살 수 있는 **제품** 이야기면 true(의약품·의료기기·서비스면 false).
@@ -2600,7 +2632,7 @@ JSON 하나: {"ok": true, "problems": ["…"], "재료": null}"""
 _Q = {   # 형식별 질문 — 없으면 공용(연예인형) 상수
     "해외원본형": {"PLAN_LOOK": PLAN_LOOK_FOREIGN, "PRODUCT_BEST": PRODUCT_BEST_FOREIGN, "SCRIPT": None},
     "쇼핑형": {"PLAN_LOOK": PLAN_LOOK_SHOP, "SCRIPT": SCRIPT_SHOP},
-    "자막노래형": {"PLAN_LOOK": PLAN_LOOK_FOREIGN},
+    "자막노래형": {"PLAN_LOOK": PLAN_LOOK_SUBSONG},
 }
 
 
@@ -2724,7 +2756,7 @@ def f_of_pick(st, m, rp, u):
         picked = OF.pick_origins(vs)       # 주인 = origin_find.pick_origins(해외 채널마다 가장 먼저·한국 재편집보다 늦은 것 제외) — 유튜브·틱톡·인스타 모두(10-26 '유튜브만' 버림 제거, 받기 = runner c_origin_get)
         for v in picked[:F_ORIGINS_MAX]:
             st["origins"].append({"id": v["id"], "platform": v.get("platform") or "yt", "url": v.get("url") or OF.url_of(v.get("platform") or "yt", v["id"]),
-                                  "info": {k: v.get(k) for k in ("id", "title", "channel", "date", "dur")}, "how": "렌즈 같은 촬영분"})
+                                  "info": {k: v.get(k) for k in ("id", "title", "channel", "date", "dur", "views", "subs")}, "how": "렌즈 같은 촬영분"})
         st["log"].append(f"{'렌즈' if st.get('of_mode') == 'lens' else '회원 찾기'} 같은 영상 {len(same)}개 → 원본 {[o['id'] for o in st['origins']]}: {str(a.get('why'))[:120]}")
         if not st["origins"]:                    # 결과 검사 불합격 → 이유를 들고 회원 Claude 가 다시 찾기(f_of_find 시간 예산 안) — 회원에게 '다시 시도'를 묻지 않는다
             why = str(a.get("why") or "")[:200]
@@ -2914,6 +2946,8 @@ ALT_NOTICE_WON = "주신 영상은 원본을 아직 찾는 중이라, 함께 찾
 def pick_alt_source(st: dict) -> dict | None:
     """(판단 주인 — 둘째 소재 고르기) 그 판 벤치 상위(조회순) 중 회원이 준 소재·이 PC 작업 기록의 만든 편(멈춘 편은 다시 씀 — runner done_refs) 아닌 첫 편."""
     from tools.calcopy import origin_find as OF
+    if (st.get("env") or {}).get("single_source"):      # 원본 찾기 워커(of_worker, 사장님 10-27 '24시간 미리 찾아 둔다') — 그 소재 하나만
+        return None
     f = PRESETS_FILE.parent / str(st.get("slug") or "-") / "_kal" / ALT_LIST
     if not f.is_file():
         st["log"].append(f"둘째 소재 없음: {f.name} 없음({st.get('slug')})")
@@ -3244,7 +3278,7 @@ def _alt_material_needed(st) -> bool:
 def _alt_fill_pool(st) -> list:
     """비슷한 제품 줄의 원본 장면을 바꿀 화면 — 사진을 쓰는 판이면 상품 사진, 못 쓰는 판(_photo_ok)이면 받아 온 제품 영상의 긴 샷 구간 시작
     (10-27 4회차 아크네스: alt_scene_fix 가 사진 0% 판에서 원본 장면을 상품 사진으로 바꿔 사진 컷 반려 — 두 규칙이 다른 답)."""
-    if _photo_ok(st):
+    if _photo_ok(st) or _alt_photo_fallback(st):
         return [f["name"] for f in _prod_files(st)]
     on = _origin_names(st)
     shots = (st.get("_msheets") or {}).get("shots") or {}
@@ -3562,10 +3596,19 @@ def _subsong_script_ask(st, fail: str = "") -> dict:
          + ", ".join(f"{x['name']}({x.get('w')}x{x.get('h')}, {x.get('dur')}초)" for x in o.get("files") or []) for o in st.get("origins") or []]
     ctx = (STY.brief(v) + "\n\n## 소재 판독\n" + str((st.get("read") or {}).get("what") or "") +
            "\n\n## 원본(한 샷 — 이 클립 하나로 만든다)\n" + "\n".join(O) +
-           f"\n창(영상이 들어가는 자리) = {win[2]}x{win[3]} — crop 은 이 비율" +
+           f"\n창(영상이 들어가는 자리) = {win[2]}x{win[3]} — crop 은 이 비율" + _subsong_len_ctx(v) +
            "\n실제 크기(crop 은 이 픽셀로 — 시트는 줄인 미리보기다): " + json.dumps(_offer_dims(st), ensure_ascii=False) + _shots_ctx(st) +
            _src_rule_ctx(st) + _points_ctx(v) + (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))   # 판 audit 숫자(est_length 등)도 처음부터(10-27 감사)
     return _rv(f"script_{v}", SCRIPT_SUBSONG + "\n\n" + ctx, [_img(x) for x in ms.get("sheets") or []], need=("대본", "재료"))
+
+
+def _subsong_len_ctx(v: str) -> str:
+    """대본 길이 목표 한 줄 — 판 length{target,min,max} 그대로(사장님 10-27 '기본 20초 정도 · ± 어느 정도 허용'). 대본 검사 est_length 와 같은 판 칸."""
+    L = _style(v).get("length") or {}
+    if not L.get("target"):
+        return ""
+    return (f"\n길이: dur 합 목표 {L['target']}초(허용 {L.get('min')}~{L.get('max')}초 — 대본 검사가 이 범위를 본다). "
+            f"원본 움직임 구간이 목표보다 짧으면 움직임 구간을 다 쓰되 {L.get('min')}초 아래로는 쓰지 마라.")
 
 
 def _subsong_bgm(st, S: dict) -> None:
@@ -3584,7 +3627,7 @@ def j_bench_got(st, m, rp, u):
     b = m.get("bench") or {}
     if b.get("error"):
         raise _Stop("영상을 받지 못했어요", "잠시 뒤 다시 시도해 주시면 받기부터 이어 갈게요", auto=True)
-    st["bench"] = {k: b.get(k) for k in ("id", "title", "channel", "date", "dur", "desc", "sheet", "big")}
+    st["bench"] = {k: b.get(k) for k in ("id", "title", "channel", "date", "dur", "desc", "sheet", "big", "views", "subs")}
     st["bench_lines"] = b.get("lines") or []
     return {"review": [_rv("ref_read", REF_READ_SUBSONG + "\n\n제목: " + str(b.get("title")) + "\n채널: " + str(b.get("channel")) +
                            "\n설명: " + str(b.get("desc") or "")[:1500] + "\n받아쓰기: " + " / ".join(str(l.get("text")) for l in st["bench_lines"])[:3000],
@@ -3602,6 +3645,16 @@ def _subsong_too_short(st, dur) -> bool:
     return isinstance(dur, (int, float)) and float(dur) < lo
 
 
+NOT_HIT = ("조회수가 터진 영상이 아니라 이 스타일로 만들지 않아요", "많이 본 해외 영상(조회수 10만 넘고 구독자 수보다 많이 본 것)으로 다시 시도해 주세요")
+
+
+def _subsong_not_hit(info: dict) -> bool:
+    """(판단 주인 — 자막노래형 소재 조건, 사장님 10-27 '조건은 무조건 터진 영상들로') 실제로 쓰는 원본이 터진 영상인가.
+    기준 = origin_find.hit(조회수 ≥ max(구독자, 10만)) 그대로 — 여기서 새 숫자를 정하지 않는다. 조회수·구독자 수를 못 읽으면 터진 영상으로 치지 않는다(구독자 빈칸 = 10만만 보고 통과하던 구멍, 10-27 ViralHog 3,010만 구독 16만 회)."""
+    from tools.calcopy import origin_find as OF
+    return not all(isinstance(info.get(k), (int, float)) for k in ("views", "subs")) or not OF.hit(info)
+
+
 def j_ref_read(st, m, rp, u):
     from tools.calcopy import origin_find as OF
     r = _reply(rp, "ref_read", ("ref_kind", "is_clip", "queries_en"))
@@ -3617,8 +3670,11 @@ def j_ref_read(st, m, rp, u):
     if korean:
         st["log"].append("소재 = 한국 재편집 → 렌즈로 해외 원본")
         return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "lens", "bench_id": B.get("id"), "queries": [q for q in r.get("queries_en") or [] if q][:4]}], "then": "of_got"}
-    st["origins"] = [{"id": B.get("id"), "info": {k: B.get(k) for k in ("id", "title", "channel", "date", "dur")}, "how": "소재 = 해외 원본"}]
+    st["origins"] = [{"id": B.get("id"), "info": {k: B.get(k) for k in ("id", "title", "channel", "date", "dur", "views", "subs")}, "how": "소재 = 해외 원본"}]
     st["log"].append("소재 = 해외 원본 그대로(한 샷)")
+    if _subsong_not_hit(st["origins"][0]["info"]):           # 받기 전에 — 원본 그대로인 소재는 그 조회수가 곧 원본 조회수
+        st["log"].append(f"소재 조회 {B.get('views')} · 구독 {B.get('subs')} — 터진 영상 아님, 마침")
+        raise _Stop(*NOT_HIT, final=True)
     return {"goto": "of_fetch"}
 
 
@@ -3637,6 +3693,15 @@ def j_of_fetched(st, m, rp, u):
         if _subsong_too_short(st, dur):
             st["log"].append(f"원본 길이 {dur}초 < 판 최소 — 마침")
             raise _Stop(*SHORT_SRC, final=True)
+        lo_h = int(((_style(st["version"]).get("source") or {}).get("min_h")) or 0)
+        hi = max((int(x.get("h") or 0) for x in st["origin"]["files"]), default=0)
+        if lo_h and hi < lo_h:                       # 판 source.min_h — 낮은 화질 원본은 창에 4배 늘려져 흐리다(10-27 flow04 360p)
+            st["log"].append(f"원본 높이 {hi}px < 판 최소 {lo_h}px — 마침")
+            raise _Stop("원본 화질이 낮아서 이 스타일로 만들 수 없어요", "더 선명한(720p 이상) 영상으로 다시 시도해 주세요", final=True)
+        inf = st["origins"][0].get("info") or {}
+        if _subsong_not_hit(inf):
+            st["log"].append(f"원본 조회 {inf.get('views')} · 구독 {inf.get('subs')} — 터진 영상 아님, 마침")
+            raise _Stop(*NOT_HIT, final=True)
         return {"goto": "j_material"}
     return r
 

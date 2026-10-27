@@ -21,6 +21,8 @@ sys.path.insert(0, str(ROOT))
 
 
 def state_of(flow_dir: Path) -> dict:
+    if not (flow_dir / "flow.json").exists() and (flow_dir / "flow_state.json").exists():     # flow_dev·of_worker 폴더
+        return json.loads((flow_dir / "flow_state.json").read_text(encoding="utf-8"))
     f = json.loads((flow_dir / "flow.json").read_text(encoding="utf-8"))
     return json.loads(zlib.decompress(base64.urlsafe_b64decode(f["payload"].split(".")[2].encode())).decode("utf-8"))
 
