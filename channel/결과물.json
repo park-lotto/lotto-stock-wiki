@@ -1538,6 +1538,40 @@
    "doc": "channel/foreignshowshow/16편_Rocketbook_하이브리드/",
    "judge": "[확인대기] −14.0 LUFS · TP −2.4 · check render 뒤 전 칸 ○(앞 B4 ×: 앞 전체 장면 검출 중앙 2.93 — 하이브리드는 앞 13.17초만 씀) · check_seams 되감김 0·점프줌 0 · freeze/black 0 · script_audit ok · 받아쓰기 스피치매틱스 ko+위스퍼 medium 대조(△ '샤크'→'차크' 둘 다, '로켓북'→위스퍼 '로켓복') · TTS 3회(1차 '빅에'·2차 '다 쓴'을 두 모델 다 못 들어 표기 고쳐 재합성) · 광고 표시 0~37.15초 2초 간격 전부 · 끝 여운: 나레 트랙 −45dB 무음 1.30초(받아쓰기 끝 36.11→37.20 = 1.09) · 봉인 ok",
    "note": "벤치 pc1_ezP__eY(180만) · 원본 CNBC Ambition bjW4T3xp8vc(CNBC 로고 = 크롭 높이 900 밖) · 뒤 재료 Smart Home Solver U9Kas8l38Kc·Jake Reeves HuwZ15jbJJo·방송 · 0초 원 = 투자자가 든 로켓북 노트"
+  },
+  {
+   "channel": "banggu",
+   "channel_name": "썰템홈샷",
+   "brand": "썰템홈샷",
+   "style": "나레썰/커뮤니티썰 하이브리드(이야기형 b)",
+   "preset": "channel/banggu/썰템홈샷_하이브리드/make.py",
+   "date": "2026-10-27",
+   "from": "channel/banggu/썰템홈샷_하이브리드/make.py → narr_video → thumb → tail_pad(끝 프레임·여운) → 소리 리미터(tp_limit) → engine/finalize.seal",
+   "n": 98,
+   "title": "하이브리드 08 칠성사이다(칠성 = 별이 아니라 일곱 성씨)",
+   "path": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/08_칠성사이다/render/final.mp4",
+   "desktop": "썰템홈샷_08_chilsung_cider_검수대기.mp4",
+   "md5": "6ad6f05d983ff304fb0d3bb1c2d35f58",
+   "seconds": 36.6,
+   "judge": "[확인대기] 잉 = 칠성은 원래 별(七星)이 아니라 창업자 일곱 명의 성씨(七姓)(데일리안 2017 '롯데칠성음료에 따르면' · 비즈워치 2023·2025 · 서울신문 2025) · 훅 = 롯데칠성 공식 광고 별 로고 · 뒤 쿠팡 같은 제품 8712796546 · −14.5 LUFS · TP −1.4(완성본 직접) · make.py checks 14/14 · bench_distance 통과 · 멈춤/검정 0 · 광고 표시 0~36.5초 2초 간격 전부 · 끝 여운 0.95초(나레 −45dB) · 받아쓰기 스피치매틱스 0.975+위스퍼 medium 대조 · 봉인 ok · 줄별 대조 ○10 △1 · 사장님 판정·귀 확인 전",
+   "doc": "channel/banggu/썰템홈샷_하이브리드/08_칠성사이다/"
+  },
+  {
+   "channel": "banggu",
+   "channel_name": "썰템홈샷",
+   "brand": "썰템홈샷",
+   "style": "나레썰/커뮤니티썰 하이브리드(이야기형 b)",
+   "preset": "channel/banggu/썰템홈샷_하이브리드/make.py",
+   "date": "2026-10-27",
+   "from": "channel/banggu/썰템홈샷_하이브리드/make.py → narr_video → thumb → tail_pad(끝 프레임·여운) → 소리 리미터(tp_limit) → engine/finalize.seal",
+   "n": 99,
+   "title": "하이브리드 09 스팸(진짜 뜻은 옛 임원 몇 명만 안다)",
+   "path": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/09_스팸/render/final.mp4",
+   "desktop": "썰템홈샷_09_spam_검수대기.mp4",
+   "md5": "3f268721f484274af309ee384803619e",
+   "seconds": 38.77,
+   "judge": "[확인대기] 잉 = SPAM 이름의 진짜 뜻은 호멜 옛 임원 몇 명만 안다(SPAM 공식 FAQ spam.com/faq) · 덤 = 1937 공모에서 뽑힌 사람이 부사장의 동생(호멜 공식 뉴스룸 2018) · 훅 = SPAM 공식 광고 캔 로고 · 뒤 쿠팡 같은 제품 8244032757 · −14.5 LUFS · TP −1.6(완성본 직접) · make.py checks 14/14 · bench_distance 통과 · 멈춤/검정 0 · 광고 표시 0~38.67초 2초 간격 전부 · 끝 여운 0.93초(나레 −45dB) · 받아쓰기 스피치매틱스 0.996+위스퍼 medium 대조 · 봉인 ok · 줄별 대조 ○11 △1 · 사장님 판정·귀 확인 전",
+   "doc": "channel/banggu/썰템홈샷_하이브리드/09_스팸/"
   }
  ]
 }
