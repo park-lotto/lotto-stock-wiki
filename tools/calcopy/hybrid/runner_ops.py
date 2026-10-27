@@ -356,7 +356,12 @@ def c_bench(W, d):
         info = jload(bd / "bench.info.json")
     vtt = bd / "bench.ko.vtt" if (bd / "bench.ko.vtt").exists() else None
     out = {"id": info.get("id") or vid, "title": info.get("title"), "channel": info.get("channel"), "date": info.get("upload_date"),
-           "dur": info.get("duration"), "desc": (info.get("description") or "")[:1500]}
+           "dur": info.get("duration"), "desc": (info.get("description") or "")[:1500],
+           "views": info.get("view_count"), "subs": info.get("channel_follower_count")}      # 터진 영상 판정(origin_find.hit — 자막노래형 소재 조건)
+    if out["subs"] is None and not CACHE:       # 받기 정보에 구독자 칸이 빠질 때가 있다(10-27 ViralHog 3,010만 → 비어 '10만 넘음'만 보고 통과) — 메타 한 번 더
+        from tools.calcopy.origin_find import meta
+        mm = meta(url)
+        out["subs"], out["views"] = mm.get("subs"), out["views"] if out["views"] is not None else mm.get("views")
     if mp4.exists():
         sheet(mp4, bd / "sheet.jpg")
         out["sheet"] = "bench/sheet.jpg"
@@ -1924,7 +1929,7 @@ def c_origin_foreign(W, d):
         cands.append(c)
     sheets = _of_sheets(W, seeds, cands) if cands else []
     jsave(W / "origin_foreign" / f"cands_{mode}.json", cands)
-    return {"mode": mode, "cands": [{k: c.get(k) for k in ("n", "platform", "id", "url", "title", "channel", "channel_id", "date", "dur", "views", "korean", "thumb_ok")} for c in cands],
+    return {"mode": mode, "cands": [{k: c.get(k) for k in ("n", "platform", "id", "url", "title", "channel", "channel_id", "date", "dur", "views", "subs", "korean", "thumb_ok")} for c in cands],
             "sheets": sheets, "seed": [rel(W, p) for p in seeds], **({"bad_urls": bad} if bad else {}),
             **({"lens_ai": lens_ai} if lens_ai.get("names") or lens_ai.get("overviews") else {})}
 
