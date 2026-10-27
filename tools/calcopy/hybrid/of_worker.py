@@ -26,6 +26,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
 RETRY_DAYS = 7
+SRC_BUDGET = 20 * 60     # 소재 하나 상한(초) — 넘으면 못 찾음(시간 초과), 7일 뒤 재시도
 MAX_CALLS = 40          # 원본 확보까지 실측 9번 — 못 찾을 때 직접 찾기·과제까지 넉넉히, 그 이상은 헛돎
 LOCK = "worker.lock"
 
@@ -178,12 +179,20 @@ def one(r: dict, a, pool: Path) -> dict:
     W = pool / r["id"]
     W.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
+    timed_out = False
     with (W / "run.log").open("w", encoding="utf-8") as f:
+      try:
         subprocess.run([sys.executable, str(ROOT / "tools/calcopy/hybrid/flow_dev.py"), "--ref", r.get("url") or f"https://www.youtube.com/shorts/{r['id']}",
                         "--version", a.version, "--fmt", "해외원본형", "--work", str(W), "--no-paid", "--single", "--stop-at", "f_product",
                         "--max-calls", str(MAX_CALLS)], cwd=str(ROOT), stdout=f, stderr=subprocess.STDOUT,
-                       env={**os.environ, "PYTHONUTF8": "1", "SHORTEM_BROWSER_LOCK": "1"}, timeout=3600)
+                       env={**os.environ, "PYTHONUTF8": "1", "SHORTEM_BROWSER_LOCK": "1"}, timeout=SRC_BUDGET)
+      except subprocess.TimeoutExpired:      # 원본 없는 소재(한국인 출연·짜깁기)에 40~50분 붙잡혔다(10-27 QXuSRX·yykd) — 찾은 편은 실측 6~14분
+        timed_out = True
     s = of_stats.one(W)
+    if timed_out:
+        return {"status": "not_found", "how": f"시간 초과({SRC_BUDGET // 60}분)", "origins": [], "min": round((time.time() - t0) / 60, 1),
+                "why": "원본을 못 찾고 직접 찾기를 되풀이", "title": r.get("title"), "views": r.get("views"), "t": time.strftime("%Y-%m-%d %H:%M"),
+                "ts": time.time(), "dir": str(W)}
     end = s.get("end") or {}
     org = origins_of(W)
     status = "found" if end.get("end") == "stop_at" and org else ("not_found" if end else "error")
