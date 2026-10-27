@@ -181,13 +181,16 @@ def one(r: dict, a, pool: Path) -> dict:
     t0 = time.time()
     timed_out = False
     with (W / "run.log").open("w", encoding="utf-8") as f:
-      try:
-        subprocess.run([sys.executable, str(ROOT / "tools/calcopy/hybrid/flow_dev.py"), "--ref", r.get("url") or f"https://www.youtube.com/shorts/{r['id']}",
-                        "--version", a.version, "--fmt", "해외원본형", "--work", str(W), "--no-paid", "--single", "--stop-at", "f_product",
-                        "--max-calls", str(MAX_CALLS)], cwd=str(ROOT), stdout=f, stderr=subprocess.STDOUT,
-                       env={**os.environ, "PYTHONUTF8": "1", "SHORTEM_BROWSER_LOCK": "1"}, timeout=SRC_BUDGET)
-      except subprocess.TimeoutExpired:      # 원본 없는 소재(한국인 출연·짜깁기)에 40~50분 붙잡혔다(10-27 QXuSRX·yykd) — 찾은 편은 실측 6~14분
-        timed_out = True
+        pr = subprocess.Popen([sys.executable, str(ROOT / "tools/calcopy/hybrid/flow_dev.py"), "--ref", r.get("url") or f"https://www.youtube.com/shorts/{r['id']}",
+                               "--version", a.version, "--fmt", "해외원본형", "--work", str(W), "--no-paid", "--single", "--stop-at", "f_product",
+                               "--max-calls", str(MAX_CALLS)], cwd=str(ROOT), stdout=f, stderr=subprocess.STDOUT,
+                              env={**os.environ, "PYTHONUTF8": "1", "SHORTEM_BROWSER_LOCK": "1"})
+        try:
+            pr.wait(timeout=SRC_BUDGET)
+        except subprocess.TimeoutExpired:      # 원본 없는 소재(한국인 출연·짜깁기)에 40~50분 붙잡혔다(10-27 QXuSRX·yykd) — 찾은 편은 실측 6~14분
+            timed_out = True
+            # 하위 실행기·브라우저까지 통째로(10-27: flow_dev 만 죽여 runner_ops 가 남아 렌즈 차례·자원을 쥐었다)
+            subprocess.run(["taskkill", "/PID", str(pr.pid), "/T", "/F"], capture_output=True)
     s = of_stats.one(W)
     if timed_out:
         return {"status": "not_found", "how": f"시간 초과({SRC_BUDGET // 60}분)", "origins": [], "min": round((time.time() - t0) / 60, 1),
