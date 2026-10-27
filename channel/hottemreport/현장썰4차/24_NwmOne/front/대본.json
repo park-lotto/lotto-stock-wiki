@@ -1,0 +1,124 @@
+{
+ "topic": "nwm ONE 오픈형 헤드폰(귀를 막지 않고 귀 옆에 스피커를 띄운 꼴, NTT 계열 nwm) — DankPods 가 처음 꺼내 보고 'What is going on? Taking open back to the extreme'·'I think they look awesome' + CNET 제품 근접 영상",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "FC6fms_7K5U",
+ "bench_note": "벤치 '귀 땀에 빡친 일본 대기업이 만든 헤드폰'(14.6만, 핫템리포트 33위, 2026-07-16, 설명란 'NTT가 만든 신개념 오픈형 헤드폰 nwm ONE') — 컷 모음. 같은 제품을 처음 꺼내 보는 유튜브 DankPods 'C'mon, there's no way these actually work.' 4OlwtZREvQU(46.6만, 2025-09-04, 원음 영어 한 트랙 140 — 더빙 없음 yt-dlp -F 확인) 원음형. 화면은 손·제품만(DankPods 는 얼굴이 안 나온다). 벤치 '귀 땀에 빡친'·'NTT 특허 기술로 소리 새는 현상을 크게 줄였다'·'185g'은 1차 출처를 못 찾아 안 씀",
+ "sources": {
+  "dp": {
+   "file": "dp.mp4",
+   "who": "유튜브 DankPods 4OlwtZREvQU 0~260초 사본(1920x1080 60fps, 소리 140 영어 원음 — 원본 560초 중 앞부분만 남김). 초록 판 가운데 애플 로고가 보이는 컷은 안 씀",
+   "views": 466019,
+   "dur": 260.0,
+   "res": "1920x1080"
+  },
+  "cn": {
+   "file": "cn.mp4",
+   "who": "유튜브 CNET 'Finally, Over-Ear Headphones I Can Wear on a Hot Day' ppBwNsn4kEE(6.8만, 1920x1080) — 제품 근접 b-roll 만, 왼아래 'CNET' 글자는 crop(y 0~940) 밖",
+   "views": 68240,
+   "dur": 310.0,
+   "res": "1920x1080"
+  }
+ },
+ "titles": {
+  "hook": "귀를 안 덮는\n뻥 뚫린 헤드폰"
+ },
+ "facts": {
+  "f1": {
+   "text": "DankPods 원본(스피치매틱스 en) 15.28~18.72 'there you go, on ear speakers, ear speakers' · 73.82~76.54 'Taking open back to the extreme' · MKBHD EFiHm6WjhNA(211만) 자막 512~522초 'the driver in the middle sits floating … obviously is not sealed at all with your ear … sounds like a speaker floating next to my head' · 쿠팡 상품명 '오픈 이어형 … 귀 스피커'",
+   "kind": "리뷰·판매처"
+  },
+  "f2": {
+   "text": "같은 원본 141.61~146.89 'A few things they brag about is like some … technology about how like there's no sound leakage or bleed' · 165.33~170.45 'I will say, I was surprised that less sound bleed was coming out than I was expecting'",
+   "kind": "리뷰"
+  },
+  "f3": {
+   "text": "같은 원본 70.82~76.54 'What is going on? Taking open back to the extreme.'",
+   "kind": "본인 말"
+  },
+  "f4": {
+   "text": "같은 원본 102.34~105.86 'Looks wise, I think they look sweet. I think they look awesome.'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "id": "N1",
+    "fn": "훅(물건+~있는데요)",
+    "text": "귀를 꽉 덮는 대신, 귀 옆에 스피커만 둥둥 띄운 헤드폰이 있는데요.",
+    "caps": [
+     "귀를 꽉 덮는 대신",
+     "귀 옆에 스피커만 둥둥 띄운",
+     "헤드폰이 있는데요"
+    ],
+    "facts": [
+     "f1"
+    ]
+   },
+   {
+    "id": "N2",
+    "fn": "불러냄 → 원음 증거",
+    "text": "근데 이렇게 다 뚫려 있는데도, 생각보다 소리가 밖으로 덜 샌다는데요.",
+    "caps": [
+     "근데 이렇게 다 뚫려 있는데도",
+     "생각보다 소리가",
+     "밖으로 덜 샌다는데요"
+    ],
+    "facts": [
+     "f2"
+    ]
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "dp",
+    "span": [
+     70.8,
+     76.6
+    ],
+    "en": "What is going on? Taking open back to the extreme.",
+    "caps": [
+     "이게 도대체 뭐야?",
+     "오픈형 끝까지 밀었네!"
+    ],
+    "check": "앞 this 70.78 · What 70.82 · extreme 76.54 · 다음 I 76.54(이어짐 — 끝 0.06초 겹침) · 원본 컷 70.717(상자→손) 뒤에서 화면 시작(LEAD 0.03 → 70.77) · 73.717 다른 각도 손·헤드폰"
+   },
+   {
+    "id": "O2",
+    "src": "dp",
+    "span": [
+     102.3,
+     105.95
+    ],
+    "en": "Looks wise, I think they look sweet. I think they look awesome.",
+    "caps": [
+     "생긴 게 진짜 멋지고",
+     "완전 끝내줘요"
+    ],
+    "check": "Looks 큰 소리 102.32 · awesome 105.86 · 다음 I 105.86 · 원본 컷 102.267(애플 로고 판 컷 → 손·헤드폰 컷) 뒤에서 화면 시작(LEAD 0.03 → 102.27)"
+   }
+  ],
+  "dropped": {
+   "벤치 '귀 땀에 빡친 일본 대기업'": "근거 없음 — 안 씀",
+   "벤치 'NTT 특허 기술로 소리 새는 현상을 크게 줄였다'": "1차 출처 못 찾음 — '생각보다 덜 샌다'(DankPods 본인 말)로만",
+   "벤치 '185g'·'아이 울음소리'": "1차 출처 못 찾음 — 안 씀",
+   "DankPods 'Gucci'·'K1000'": "남의 상표 — 안 씀",
+   "가격": "금액 금지"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ }
+}

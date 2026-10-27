@@ -1,0 +1,230 @@
+{
+ "_note": "숏템리폿 4차 24 nwm ONE 하이브리드 — 앞 = 숏템리폿 현장썰 DankPods 원음형 박창수판(24_NwmOne/front), 뒤 = 쿠팡 9200538556 'nwm ONE MBH001 Bluetooth5.3 Type-C nwm(누무) 무선 헤드폰 오픈 이어형'(같은 제품 — DankPods 상자 'nwm ONE'·CNET 'NWM ONE OPEN EAR HEADPHONES'·쿠팡 상품명 nwm ONE MBH001, 연회색 = DankPods 색). 같은 이름 다른 판매 8283256023·8291050615 외. 뒤 화면 = DankPods 다른 장면(손·제품만, 애플 로고 보이는 컷 안 씀) + CNET 제품 근접(얼굴 컷·CNET 글자 crop 밖) + 쿠팡 대표 사진(move). 금액·효능·남의 상표는 말하지 않는다.",
+ "brand": "잇썸홈",
+ "product": "nwm ONE 오픈형 무선 헤드폰 MBH001(쿠팡 9200538556, 같은 제품)",
+ "product_mode": "exact",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰4차/24_NwmOne/front/render/final.mp4",
+  "cut": 17.44,
+  "why": "원음 O2 'they look awesome' 끝(앞 17.138) 뒤 0.3초 — 같은 한 샷(dp 102.27~110.27 손·헤드폰) 안",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API(10-28 04:1x, 'nwm ONE 헤드폰'): 9200538556 'nwm ONE MBH001 Bluetooth5.3 Type-C nwm(누무) 무선 헤드폰 오픈 이어형 귀 스피' · 8283256023 'nwm nwm ONE Bluetooth 5.3 NTT sonority (누름) 오픈 이어 타입' 외 — 23_cand/coupang_b.json · 대표 사진(look/cp_9200538556.jpg) 연회색 고리형 귀받침 = DankPods 화면 제품",
+  "o_hear": "MKBHD EFiHm6WjhNA(211만) 자막 516~522초 'I can just hear everything else in the room like normal' · DankPods 원본(스피치매틱스) 185.77~187.61 'You can hear everything that's going on'",
+  "o_light": "MKBHD 같은 영상 539~550초 'it's super lightweight … this is the lightest pair of headphones I think I've ever worn and so because of that you can also kind of start to forget you're wearing them'",
+  "o_pivot": "MKBHD 같은 영상 556~573초 'they can pivot like that and that sort of tilts the driver backwards … it tilts them away from your ear and so it becomes really muffled' · DankPods 80.02~81.82 'They even swivel'"
+ },
+ "흥미이음": {
+  "원본흥미": "귀를 하나도 안 덮는 헤드폰을 꺼내자 'What is going on? Taking open back to the extreme' · 'I think they look awesome'",
+  "뒤흥미": "쿠팡의 바로 그 nwm ONE — 옆 소리가 다 들리고, 가볍고, 귀 쪽을 뒤로 젖히는 장면",
+  "판정": "같음",
+  "근거": "같은 제품: DankPods 상자 'nwm ONE'·CNET 화면 'NWM ONE' = 쿠팡 상품명 'nwm ONE MBH001' + 대표 사진(연회색 고리형 귀받침) 대조"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.3,
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 14.4
+ },
+ "front_style": {
+  "frame": "channel/hottemreport/현장썰4차/24_NwmOne/front/frame_render.json",
+  "title": "귀를 안 덮는\n뻥 뚫린 헤드폰"
+ },
+ "transition": {
+  "kind": "slideleft",
+  "dur": 0.25
+ },
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "back_caption_lines": {
+  "B1": {
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   },
+   "emphasis": {
+    "words": [
+     "진짜"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 쿠팡 사진·초록 판 위 — 노랑 대신 하늘"
+  },
+  "B2": {
+   "emphasis": {
+    "words": [
+     "다"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "어두운 보라·초록 판 위 — 하늘"
+  },
+  "B3": {
+   "emphasis": {
+    "words": [
+     "잊어버린대요"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "어두운 바탕·초록 판 위 — 하늘"
+  },
+  "B4": {
+   "emphasis": {
+    "words": [
+     "뒤로"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "회색 옷·초록 판 위 — 하늘"
+  },
+  "B5": {
+   "enter": {
+    "kind": "fade",
+    "ms": 300
+   },
+   "emphasis": {
+    "words": [
+     "난리예요"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 사진 위 — 분홍 기본 대신 하늘"
+  }
+ },
+ "sfx": {
+  "pack_customer": 0
+ },
+ "lines": [
+  {
+   "id": "B1",
+   "role": "공개",
+   "point": "잉",
+   "answer_at": 3,
+   "kind": "tts",
+   "seg": "B",
+   "tts": "근데 저 영상 보고 쿠팡에 쳐 봤더니, 그 뻥 뚫린 헤드폰이 진짜 있더라고요.",
+   "caps": [
+    "근데 저 영상 보고",
+    "쿠팡에 쳐 봤더니",
+    "그 뻥 뚫린 헤드폰이",
+    "진짜 있더라고요"
+   ],
+   "emph": [
+    "진짜"
+   ],
+   "facts": [
+    "c0"
+   ]
+  },
+  {
+   "id": "B2",
+   "role": "고조",
+   "point": "권위",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "이게 말도 안 되는 게, 귀를 하나도 안 막아서 옆 사람 말이 다 들린대요.",
+   "caps": [
+    "이게 말도 안 되는 게",
+    "귀를 하나도 안 막아서",
+    "옆 사람 말이",
+    "다 들린대요"
+   ],
+   "emph": [
+    "다"
+   ],
+   "facts": [
+    "o_hear"
+   ]
+  },
+  {
+   "id": "B3",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "진짜 핵심은 이건데, 너무 가벼워서 쓰고 있는 것도 잊어버린대요.",
+   "caps": [
+    "진짜 핵심은 이건데",
+    "너무 가벼워서",
+    "쓰고 있는 것도",
+    "잊어버린대요"
+   ],
+   "emph": [
+    "잊어버린대요"
+   ],
+   "facts": [
+    "o_light"
+   ]
+  },
+  {
+   "id": "B4",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "심지어 귀 쪽을 뒤로 젖히면, 소리가 귀에서 멀어진대요.",
+   "caps": [
+    "심지어 귀 쪽을",
+    "뒤로 젖히면",
+    "소리가 귀에서",
+    "멀어진대요"
+   ],
+   "emph": [
+    "뒤로"
+   ],
+   "facts": [
+    "o_pivot"
+   ]
+  },
+  {
+   "id": "B5",
+   "role": "cta",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "사무실에서 쓰고 있었더니, 다들 그거 스피커냐고 난리예요.",
+   "caps": [
+    "사무실에서",
+    "쓰고 있었더니",
+    "다들 그거 스피커냐고",
+    "난리예요"
+   ],
+   "emph": [
+    "난리예요"
+   ],
+   "facts": []
+  }
+ ]
+}
