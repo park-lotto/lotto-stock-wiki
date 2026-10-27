@@ -18,6 +18,7 @@ import json
 import os
 import re
 import subprocess
+import threading
 import sys
 import time
 from pathlib import Path
@@ -155,6 +156,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--version", default="잇템로그판_v2")
     ap.add_argument("--pool", default="C:/숏템_칼카피/of_pool")
     ap.add_argument("--max", type=int, default=0, help="이번에 돌릴 편 수(0 = 줄이 빌 때까지)")
+    ap.add_argument("--par", type=int, default=2, help="동시에 찾는 소재 수(10-27 실측: 2개 동시도 한 편 시간 같음 — 3개 이상은 미측정, 렌즈·유튜브 차단 위험)")
     ap.add_argument("--loop", action="store_true", help="줄이 비면 1시간 쉬고 다시(24시간)")
     a = ap.parse_args(argv)
     pool = Path(a.pool)
@@ -164,9 +166,14 @@ def main(argv: list[str]) -> int:
         print("다른 워커가 돌고 있다:", lk)
         return 1
     bp = pool / "장부.json"
-    done = 0
-    try:
-        while True:
+    lock = threading.Lock()                 # 장부·원본채널 쓰기와 다음 소재 고르기는 한 번에 하나
+    busy: set[str] = set()
+    state = {"done": 0, "stop": False}
+
+    def take() -> dict | None:
+        with lock:
+            if state["stop"]:
+                return None
             book = json.loads(bp.read_text(encoding="utf-8")) if bp.exists() else {}
             for k, v in known_found().items():          # 다른 작업에서 이미 찾은 소재는 장부에 옮겨 적고 건너뛴다
                 if (book.get(k) or {}).get("status") != "found":
@@ -176,26 +183,43 @@ def main(argv: list[str]) -> int:
                         if same:
                             add_channels(pool, k, [x for x in same if not x.get("korean")])
             bp.write_text(json.dumps(book, ensure_ascii=False, indent=1), encoding="utf-8")
-            q = queue(a.slug, book)
+            q = [r for r in queue(a.slug, book) if r["id"] not in busy]
             if not q:
-                if not a.loop:
-                    break
+                return None
+            busy.add(q[0]["id"])
+            lk.write_text(" ".join(sorted(busy)), encoding="utf-8")
+            print(f"[{time.strftime('%H:%M')}] 소재 {q[0]['id']} · 조회 {q[0].get('views')} · {str(q[0].get('title'))[:40]} (남은 줄 {len(q)})", flush=True)
+            return q[0]
+
+    def run() -> None:
+        while True:
+            r = take()
+            if r is None:
+                if not a.loop or state["stop"]:
+                    return
                 time.sleep(3600)
                 continue
-            r = q[0]
-            lk.write_text(r["id"], encoding="utf-8")
-            print(f"[{time.strftime('%H:%M')}] 소재 {r['id']} · 조회 {r.get('views')} · {str(r.get('title'))[:40]} (남은 줄 {len(q)})", flush=True)
             try:
                 e = one(r, a, pool)
             except Exception as ex:  # noqa: BLE001 — 한 편 실패는 장부에 남기고 다음 편
                 e = {"status": "error", "why": f"{type(ex).__name__}: {ex}"[:300], "t": time.strftime("%Y-%m-%d %H:%M"), "ts": time.time()}
-            book = json.loads(bp.read_text(encoding="utf-8")) if bp.exists() else {}
-            book[r["id"]] = e
-            bp.write_text(json.dumps(book, ensure_ascii=False, indent=1), encoding="utf-8")
-            print(f"   → {e['status']} {e.get('origins') or ''} {e.get('min', '')}분 · {str(e.get('why'))[:120]}", flush=True)
-            done += 1
-            if a.max and done >= a.max:
-                break
+            with lock:
+                book = json.loads(bp.read_text(encoding="utf-8")) if bp.exists() else {}
+                book[r["id"]] = e
+                bp.write_text(json.dumps(book, ensure_ascii=False, indent=1), encoding="utf-8")
+                busy.discard(r["id"])
+                state["done"] += 1
+                if a.max and state["done"] >= a.max:
+                    state["stop"] = True
+            print(f"   → {r['id']} {e['status']} {e.get('origins') or ''} {e.get('min', '')}분 · {str(e.get('why'))[:120]}", flush=True)
+
+    try:
+        ts = [threading.Thread(target=run, daemon=True) for _ in range(max(1, a.par))]
+        for i, t in enumerate(ts):
+            t.start()
+            time.sleep(20 * (i > -1))       # 렌즈·유튜브 요청이 같은 순간 몰리지 않게 시작을 벌린다
+        for t in ts:
+            t.join()
     finally:
         lk.unlink(missing_ok=True)
     book = json.loads(bp.read_text(encoding="utf-8")) if bp.exists() else {}
