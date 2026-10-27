@@ -1414,6 +1414,9 @@ def c_plan(W, d):
         reuse = [f"같은 장면 재사용 {c.get('line')} {Path(str(c['src'])).stem}@{float(c['ss']):.2f} — 그 샷 안에서는 못 피함, 이 줄 컷을 다른 장면으로 바꿔라: {c['reuse_unfixed'][0]}"
                  for c in T["cuts"] if c.get("reuse_unfixed")]
         out["jumps"] += reuse      # 계획(respace_reuse)이 못 피한 B13 — 렌더(수 분) 뒤 완성본 검사에서야 걸려 11단계로 되돌아갔다(10-26 까르보 B13). 계획 고치기에서 바로
+        from tools.calcopy.hybrid import checks as CK      # B16 도 같은 꼴 — 판정 주인 checks.aba_violations(완성본 검사 quality_gate 와 같은 함수·같은 컷)
+        aba = CK.aba_violations([{"src": c["src"], "t0": float(c["t0"])} for c in T["cuts"] if c.get("kind") != "orig"])
+        out["jumps"] += [f"A-B-A 끼움 {x} — 사이에 낀 컷을 다른 원본으로 바꾸거나 앞뒤 원본을 이어 붙여라" for x in aba]   # 10-27 완주시험 b·c: 렌더+검사 7분 뒤에야 B16 반려
     return out
 
 
