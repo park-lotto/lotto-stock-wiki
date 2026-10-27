@@ -748,8 +748,14 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             save_store()
             jsave(R / "seams.json", s)
             inside = [r.get("t") for r in s.get("되감김_조각안") or []]
-            return s["ok"], (f"컷 {len(s['컷'])} · 되감김 {len(s['되감김'])} {[r.get('t') for r in s['되감김']]} · 점프줌 {len(s['점프줌'])}({s['점프줌_판정'] or '드묾'})"
-                             + (f" · 한 조각 안이라 뺌 {inside}" if inside else "") + ("" if bset else " · 시간표 컷 없음 → 경계 모름(전부 셈)"))
+            pc = T.get("cuts") or []                 # 계획이 '앞으로'라 한 경계의 그림 오독은 참고로(주인 check_seams.plan_forward)
+            rw = [r for r in s["되감김"] if not check_seams.plan_forward(float(r["t"]), pc)]
+            jz = [r for r in s["점프줌"] if not check_seams.plan_forward(float(r["t"]), pc)]
+            veto = [f"{r['t']}초 {check_seams.plan_forward(float(r['t']), pc)}" for r in s["되감김"] + s["점프줌"] if r not in rw and r not in jz]
+            jz_bad = check_seams.jz_verdict(jz, float(T.get("end") or 0) or 1.0) if jz else ""
+            return (not rw and not jz_bad), (f"컷 {len(s['컷'])} · 되감김 {len(rw)} {[r.get('t') for r in rw]} · 점프줌 {len(jz)}({jz_bad or '드묾'})"
+                             + (f" · 한 조각 안이라 뺌 {inside}" if inside else "") + (f" · 계획상 앞으로라 뺌(참고) {veto}" if veto else "")
+                             + ("" if bset else " · 시간표 컷 없음 → 경계 모름(전부 셈)"))
         row("재료", "B16' 되감김·점프줌", seams, "engine/check_seams.check")
     # ── 판 리듬(관제263 10-25 페이블 E1·E2·E4 — 모든 판 필수 4칸, 읽기 주인 styles.rhythm · 칸 없으면 ×)
     if want("판 리듬") and not legacy:
