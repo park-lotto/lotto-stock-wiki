@@ -612,8 +612,14 @@ def relocate_cuts(cuts: list[dict], src_dir: Path | None, origins: set, log=prin
         why = "샷 넘침" if c.get("over") else ("재사용" if c.get("reuse_unfixed") else "장면 전환")
         if got is None:
             sp = split_cut(c, cuts, src_dir, end, {}, adjacent_run) if (c.get("over") and end is not None) else None   # 들어갈 샷이 없으면 두 샷에 나눠 담기
+            mates = [x for x in cuts if x is not c and x.get("line") == c.get("line") and x.get("kind") == "tts"]
             if sp:
                 out.append(sp + " ← 샷 넘침")
+            elif not c.get("over") and mates:
+                # 재사용·전환인데 같은 원본에 빈자리가 없다 — 같은 줄에 Claude 가 고른 다른 컷이 있으면 이 컷을 빼고 그 컷이 시간을 이어받는다
+                # (그 줄 장면만 남아 대사↔화면 그대로 · 다른 영상으로 바꾸지 않는다 — 10-27 펜티 E2 80초, 원음 줄이 원본을 거의 다 씀)
+                cuts.remove(c)
+                out.append(f"[빼기] {c.get('line')} {c['src']}@{ss0:.2f} {why} — 빈자리 없음, 같은 줄 다른 컷이 이어받음")
             else:
                 log(f"[옮기기] {c.get('line')} {c['src']}@{ss0:.2f} {why} — 같은 원본에 {d:.2f}초 들어갈 빈 구간 없음(관문 몫)")
             continue

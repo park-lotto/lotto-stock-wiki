@@ -30,6 +30,7 @@ WORK_ROOT = Path("C:/숏템_칼카피")
 MIN_VIEWS = 300_000         # 후보 영상 최고 조회 — 이보다 낮고 한 소재에만 나왔으면 약한 채널(코드로 거름)
 BATCH = 20                  # 소넷 한 번에 채널 몇 개(글만 — 채널당 상위 15편 제목·조회). 호출마다 고정 글 약 2만 토큰이라 크게 묶는다(10-27 실측)
 RECHECK_DAYS = 14
+IG_GAP = 8                  # 인스타 채널 사이 쉼(초) — 계정 막힘 사고가 있던 곳이라 천천히
 TT_GAP = 6                  # 틱톡 채널 화면 사이 쉼(초) — 몰아 열면 목록이 막힌다
 CLAUDE = shutil.which("claude") or "claude"
 
@@ -111,13 +112,13 @@ def yt_top(cid: str, n: int = 30) -> list[dict]:
     r = subprocess.run(["yt-dlp", "--flat-playlist", "-J", "--playlist-end", str(n), f"https://www.youtube.com/channel/{cid}/shorts"],
                        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
     try:
-        es = json.loads(r.stdout).get("entries") or []
-    except ValueError:
+        es = (json.loads(r.stdout or "null") or {}).get("entries") or []      # 없는 채널·막힘이면 yt-dlp 가 'null'(10-27 엔진 전체가 멈췄다)
+    except (ValueError, AttributeError):
         return []
     return [{"url": f"https://www.youtube.com/shorts/{x.get('id')}", "views": int(x.get("view_count") or 0), "title": x.get("title")} for x in es if x.get("id")]
 
 
-def tt_tops(handles: list[str]) -> dict[str, list[dict]]:
+def tt_tops(handles: list[str], on_one=None) -> dict[str, list[dict]]:
     """틱톡 채널 화면 — 화면 뜬 창 + 틱톡 로그인 쿠키(원본 찾기의 틱톡 검색과 같은 길). 10-27 실측: 헤드리스는 몇 채널 뒤
     'Something went wrong'(목록 막힘)으로 7채널 0편 → 화면 뜬 창·쿠키로 32·32·19편. 막히면 5초 뒤 Refresh 한 번, 채널 사이 TT_GAP 초."""
     from tools.calcopy import lens as LN
@@ -131,13 +132,15 @@ def tt_tops(handles: list[str]) -> dict[str, list[dict]]:
         except ValueError:
             return 0
     out = {}
-    with R._plat_lock("web"), LN.lens_page("ttch") as pg:      # 원본 찾기 워커의 틱톡 검색과 엇갈리게(같은 잠금)
+    with LN.lens_page("ttch") as pg:
         ck = R._tiktok_cookies()
         if ck:
             pg.context.add_cookies(ck)
         for h in handles:
             items = []
             try:
+              # 잠금은 채널 하나 열 때만(10-27: 목록 전체 25분 내내 쥐어 원본 찾기 워커의 틱톡 검색이 136초+ 줄 섰다)
+              with R._plat_lock("web"):
                 pg.goto(f"https://www.tiktok.com/@{h}", wait_until="domcontentloaded", timeout=40000)
                 pg.wait_for_timeout(5000)
                 if not pg.locator('[data-e2e="user-post-item"]').count() and pg.get_by_text("Something went wrong").count():
@@ -152,9 +155,61 @@ def tt_tops(handles: list[str]) -> dict[str, list[dict]]:
             except Exception as e:  # noqa: BLE001 — 한 채널 실패는 남기고 다음
                 sys.stderr.write(f"[ch] 틱톡 @{h} 화면 실패: {type(e).__name__}\n")
             out[h] = [{"url": i["href"], "views": num(i.get("v")), "title": (i.get("t") or "")[:120]} for i in items if i.get("href")]
+            if on_one:
+                on_one(h, out[h])               # 채널마다 바로 저장(중간에 죽어도 받은 건 남는다)
             if not out[h]:
                 sys.stderr.write(f"[ch] 틱톡 @{h} 목록 0편(막힘?)\n")
             time.sleep(TT_GAP)
+    return out
+
+
+def _num_any(s: str) -> int:
+    """'59.4만'·'1.2억'·'3,456'·'1.2M' → 정수."""
+    s = (s or "").strip().replace(",", "").upper()
+    m = re.match(r"([0-9.]+)\s*(만|억|천|K|M|B)?", s)
+    if not m:
+        return 0
+    mul = {"만": 1e4, "억": 1e8, "천": 1e3, "K": 1e3, "M": 1e6, "B": 1e9}.get(m.group(2) or "", 1)
+    try:
+        return int(float(m.group(1)) * mul)
+    except ValueError:
+        return 0
+
+
+def ig_tops(handles: list[str], on_one=None) -> dict[str, list[dict]]:
+    """인스타 채널 릴스 화면 — 화면 뜬 창 + 이 PC 파이어폭스 인스타 쿠키(out/instagram_session.json, 사장님 10-27 '파이어폭스 계정으로 열어').
+    10-27 실측: 쿠키만으로 공개 채널 최근 릴스 12편·조회('59.4만')가 보인다. '계속'을 누르면 비밀번호 칸이 떠서 누르지 않는다(비밀번호는 안 친다)."""
+    from tools.calcopy import lens as LN
+    sp = ROOT / "out" / "instagram_session.json"
+    ck = json.loads(sp.read_text(encoding="utf-8")).get("cookies") or [] if sp.exists() else []
+    out = {}
+    with LN.lens_page("igch") as pg:
+        if ck:
+            pg.context.add_cookies([{k: c[k] for k in ("name", "value", "domain", "path", "secure")} for c in ck])
+        for h in handles:
+            rows = []
+            try:
+                pg.goto(f"https://www.instagram.com/{h}/reels/", wait_until="domcontentloaded", timeout=40000)
+                pg.wait_for_timeout(6000)
+                for _ in range(2):
+                    pg.mouse.wheel(0, 2500)
+                    pg.wait_for_timeout(1500)
+                rows = pg.eval_on_selector_all('a[href*="/reel/"]', "els=>els.map(e=>({href:e.href,t:e.innerText}))")
+            except Exception as e:  # noqa: BLE001
+                sys.stderr.write(f"[ch] 인스타 {h} 화면 실패: {type(e).__name__}" + chr(10))
+            seen, items = set(), []
+            for r in rows:
+                u = r["href"].split("?")[0]
+                if u in seen:
+                    continue
+                seen.add(u)
+                items.append({"url": u, "views": _num_any((r.get("t") or "").split(chr(10))[0]), "title": ""})
+            out[h] = items
+            if on_one:
+                on_one(h, items)
+            if not items:
+                sys.stderr.write(f"[ch] 인스타 {h} 릴스 0편" + chr(10))
+            time.sleep(IG_GAP)
     return out
 
 
@@ -201,7 +256,7 @@ def main(argv: list[str]) -> int:
         book = json.loads(ap_.read_text(encoding="utf-8")) if ap_.exists() else {}
         g = gather()
         now = time.time()
-        todo = [(k, e) for k, e in g.items() if strong(e) and e["platform"] in ("tt", "yt")
+        todo = [(k, e) for k, e in g.items() if strong(e) and e["platform"] in ("tt", "yt", "ig")
                 and now - float((book.get(k) or {}).get("ts") or 0) > RECHECK_DAYS * 86400]
         todo.sort(key=lambda kv: (-len(kv[1]["seen_in"]), -kv[1]["cand_max_views"]))
         if a.max:
@@ -209,9 +264,29 @@ def main(argv: list[str]) -> int:
         print(f"[ch] 후보 채널 {len(g)}개 · 거른 뒤 {sum(1 for e in g.values() if strong(e))}개 · 이번에 볼 것 {len(todo)}개", flush=True)
         if todo:
             t0 = time.time()
-            tts = tt_tops([e["handle"] for k, e in todo if e["platform"] == "tt"])
+            cache = pool / "_channel_tops.json"          # 받은 목록은 바로 남긴다(10-27: 유튜브 한 채널 오류로 틱톡 100여 채널 목록을 다 잃었다)
+            got = json.loads(cache.read_text(encoding="utf-8")) if cache.exists() else {}
+            need_tt = [e["handle"] for k, e in todo if e["platform"] == "tt" and k not in got]
+            if need_tt:
+                def keep(h, v):
+                    got[f"tt:{h}"] = v
+                    cache.write_text(json.dumps(got, ensure_ascii=False), encoding="utf-8")
+                tt_tops(need_tt, keep)
+            need_ig = [e["handle"] for k, e in todo if e["platform"] == "ig" and k not in got]
+            if need_ig:
+                def keep_ig(h, v):
+                    got[f"ig:{h}"] = v
+                    cache.write_text(json.dumps(got, ensure_ascii=False), encoding="utf-8")
+                ig_tops(need_ig, keep_ig)
             for k, e in todo:
-                e["top"] = tts.get(e["handle"], []) if e["platform"] == "tt" else yt_top(e["handle"])
+                if k not in got and e["platform"] == "yt":
+                    try:
+                        got[k] = yt_top(e["handle"])
+                    except Exception as ex:  # noqa: BLE001 — 한 채널 실패는 남기고 다음
+                        sys.stderr.write(f"[ch] 유튜브 {k} 목록 실패: {type(ex).__name__}\n")
+                        got[k] = []
+                    cache.write_text(json.dumps(got, ensure_ascii=False), encoding="utf-8")
+                e["top"] = got.get(k) or []
             print(f"[ch] 채널 화면 {time.time() - t0:.0f}초", flush=True)
             for i in range(0, len(todo), BATCH):
                 bt = [(k, e) for k, e in todo[i:i + BATCH] if e["top"]]
@@ -219,13 +294,15 @@ def main(argv: list[str]) -> int:
                 for k, e in todo[i:i + BATCH]:
                     v = [x["views"] for x in e["top"]]
                     book[k] = {**{x: e.get(x) for x in ("platform", "handle", "name", "korean", "seen_in", "cand_max_views")},
-                               "url": {"tt": f"https://www.tiktok.com/@{e['handle']}", "yt": f"https://www.youtube.com/channel/{e['handle']}"}[e["platform"]],
+                               "url": {"tt": f"https://www.tiktok.com/@{e['handle']}", "yt": f"https://www.youtube.com/channel/{e['handle']}",
+                                       "ig": f"https://www.instagram.com/{e['handle']}/"}[e["platform"]],
                                "top": sorted(e["top"], key=lambda x: -x["views"])[:20], "n_1m": sum(1 for x in v if x >= 1_000_000),
                                "median": int(statistics.median(v)) if v else 0, "judge": js.get(k), "t": time.strftime("%Y-%m-%d %H:%M"), "ts": time.time()}
                     jj = js.get(k) or {}
                     print(f"[ch] {k} · 100만+ {book[k]['n_1m']}편 · 중앙 {book[k]['median']:,} · {jj.get('kind')} 쓸만 {jj.get('usable')} 점수 {jj.get('score')} · {str(jj.get('why') or '')[:60]}", flush=True)
                 ap_.write_text(json.dumps(dict(sorted(book.items(), key=lambda kv: -float(((kv[1].get("judge") or {}).get("score")) or 0))),
                                           ensure_ascii=False, indent=1), encoding="utf-8")
+            cache.unlink(missing_ok=True)          # 판정까지 끝난 회차 — 다음 회차(14일 뒤 재확인)는 목록을 새로 받는다
         if not a.loop:
             break
         time.sleep(3600)

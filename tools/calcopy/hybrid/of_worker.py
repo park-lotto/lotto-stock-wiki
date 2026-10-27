@@ -49,19 +49,53 @@ def known_found(root: Path = WORK_ROOT) -> dict[str, dict]:
     return out
 
 
-def queue(slug: str, book: dict) -> list[dict]:
+KR_SRC_MIN = 300_000        # 한국 재편집 채널 영상을 소재로 넣는 조회 하한
+
+
+def _norm_title(t: str) -> str:
+    return re.sub(r"[^0-9a-z가-힣]", "", str(t or "").lower())
+
+
+def kr_sources(pool: Path) -> list[dict]:
+    """채널 엔진(채널자산.json)이 찾은 한국 재편집 채널의 조회 상위 영상 = 다음 소재(사장님 10-27 '이런 채널은 틱톡에도 원본이 많을 것' —
+    @user5140610948474 처럼 잇템로그류를 돌려 올리는 한국 채널). 판단 주인 = 채널자산 판정(korean)·조회 하한 KR_SRC_MIN."""
+    f = pool / "채널자산.json"
+    if not f.exists():
+        return []
+    out = []
+    for k, c in json.loads(f.read_text(encoding="utf-8")).items():
+        if not c.get("korean"):
+            continue
+        for v in c.get("top") or []:
+            if int(v.get("views") or 0) < KR_SRC_MIN or not v.get("url"):
+                continue
+            from tools.calcopy import origin_find as OF
+            vk = OF.vkey(v["url"])
+            if vk:
+                out.append({"id": vk[1], "url": v["url"], "views": v.get("views"), "title": v.get("title") or "", "from": k})
+    return out
+
+
+def queue(slug: str, book: dict, pool: Path | None = None) -> list[dict]:
+    """소재 줄 = 판 벤치 상위(조회순) + 한국 재편집 채널의 터진 영상(채널 엔진). 끝난 소재·같은 제목은 뺀다."""
     kal = ROOT / "channel" / slug / "_kal"
     rows = [r for r in json.loads((kal / "벤치상위.json").read_text(encoding="utf-8")).get("rows") or [] if isinstance(r, dict) and r.get("id")]
+    rows += kr_sources(pool) if pool else []
     gf = kal / "상위편_목표.json"
     skip = set(json.loads(gf.read_text(encoding="utf-8")).get("ids") or []) if gf.is_file() else set()
+    done_titles = {_norm_title(b.get("title")) for b in book.values() if b.get("title")} - {""}
     now = time.time()
-    out = []
+    out, seen = [], set()
     for r in sorted(rows, key=lambda r: -(r.get("views") or 0)):
         b = book.get(r["id"]) or {}
-        if r["id"] in skip or b.get("status") == "found":
+        nt = _norm_title(r.get("title"))
+        if r["id"] in skip or r["id"] in seen or b.get("status") == "found":
             continue
+        if not b and nt and (nt in done_titles or nt in {_norm_title(x.get("title")) for x in out}):
+            continue                       # 같은 영상을 여러 한국 채널이 돌려 올린 것(제목 같음)
         if b and now - float(b.get("ts") or 0) < RETRY_DAYS * 86400:
             continue
+        seen.add(r["id"])
         out.append(r)
     return out
 
@@ -136,7 +170,7 @@ def one(r: dict, a, pool: Path) -> dict:
     W.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
     with (W / "run.log").open("w", encoding="utf-8") as f:
-        subprocess.run([sys.executable, str(ROOT / "tools/calcopy/hybrid/flow_dev.py"), "--ref", f"https://www.youtube.com/shorts/{r['id']}",
+        subprocess.run([sys.executable, str(ROOT / "tools/calcopy/hybrid/flow_dev.py"), "--ref", r.get("url") or f"https://www.youtube.com/shorts/{r['id']}",
                         "--version", a.version, "--fmt", "해외원본형", "--work", str(W), "--no-paid", "--single", "--stop-at", "f_product",
                         "--max-calls", str(MAX_CALLS)], cwd=str(ROOT), stdout=f, stderr=subprocess.STDOUT,
                        env={**os.environ, "PYTHONUTF8": "1", "SHORTEM_BROWSER_LOCK": "1"}, timeout=3600)
@@ -196,7 +230,7 @@ def main(argv: list[str]) -> int:
                         if same:
                             add_channels(pool, k, [x for x in same if not x.get("korean")])
             bp.write_text(json.dumps(book, ensure_ascii=False, indent=1), encoding="utf-8")
-            q = [r for r in queue(a.slug, book) if r["id"] not in busy]
+            q = [r for r in queue(a.slug, book, pool) if r["id"] not in busy]
             if not q:
                 return None
             busy.add(q[0]["id"])
