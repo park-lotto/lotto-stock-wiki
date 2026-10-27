@@ -43,5 +43,31 @@
     "around_var": 70.4
    }
   ]
+ },
+ "aUicTeDoW04|zoomblur|41599:1792455244|6438068": {
+  "id": "aUicTeDoW04",
+  "kind": "zoomblur",
+  "window": [
+   0,
+   486,
+   1080,
+   1434
+  ],
+  "boundaries": [
+   {
+    "t": 7.53,
+    "drop": 0.915,
+    "ms": 467,
+    "band_var": 18.9,
+    "around_var": 221.1
+   },
+   {
+    "t": 19.833,
+    "drop": 0.616,
+    "ms": 167,
+    "band_var": 19.5,
+    "around_var": 50.8
+   }
+  ]
  }
 }
