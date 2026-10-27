@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import tempfile
+import contextlib
 import os
 import re
 import shutil
@@ -36,6 +38,32 @@ class CacheMiss(Exception):
 _last_yt = [0.0]
 YT_GAP = float(os.environ.get("SHORTEM_YT_GAP") or 4.0)   # 요청 사이 최소 쉼(초)
 
+
+
+@contextlib.contextmanager
+def _plat_lock(name: str):
+    """(시험 중 · SHORTEM_BROWSER_LOCK=1 일 때만) 렌즈·틱톡인스타 브라우저를 PC 전체에서 한 번에 하나만 — 원본 찾기 워커가 소재 여럿을 함께 돌 때
+    한 편이 렌즈를 쓰는 동안 다른 편은 틱톡을 쓰게 엇갈린다. 10-27 실측: 둘 다 동시면 렌즈 36~41초 → 68~89초, 틱톡·인스타 22~41초 → 64~112초(유튜브는 그대로)."""
+    if os.environ.get("SHORTEM_BROWSER_LOCK") != "1":
+        yield
+        return
+    import msvcrt
+    f = open(Path(tempfile.gettempdir()) / f"shortem_{name}.lock", "a+")
+    t0 = time.time()
+    while True:
+        try:
+            msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+            break
+        except OSError:
+            time.sleep(0.5)
+    if time.time() - t0 > 1:
+        sys.stderr.write(f"[구간] {name} 차례 기다림 {time.time() - t0:.0f}초\n")
+    try:
+        yield
+    finally:
+        f.seek(0)
+        msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+        f.close()
 
 def yt(args: list, timeout: int = 300) -> subprocess.CompletedProcess:
     """yt-dlp 한 번 — 한국어 제목(lang=ko, 10-21 영어 번역 제목 #6) · 요청 사이 쉼(not a bot 차단) · 캐시 모드면 부르지 않는다."""
@@ -1712,7 +1740,7 @@ def _web_links(qs: list[str], per: int = WEB_PER_Q) -> list[dict]:
         if not left:
             break
         try:
-            with LN.lens_page("web") as pg:      # 렌즈 창과 동시에 열린다(c_origin_foreign) — 프로필을 따로
+            with _plat_lock("web"), LN.lens_page("web") as pg:      # 렌즈 창과 동시에 열린다(c_origin_foreign) — 프로필을 따로
                 ck = _tiktok_cookies()            # 틱톡 로그인(우리 PC 파이어폭스 세션·회원 PC 연결 계정) — 있으면 결과가 많다(10-26 이 PC 24건/검색어)
                 if ck:
                     try:
@@ -1856,7 +1884,7 @@ def c_origin_foreign(W, d):
             found: dict = {}
             ai_txt: list[str] = []      # 렌즈 'AI 개요' 글(장면 전체 기준 — 출연자·브랜드 이름, 10-27)
             _t = time.time()
-            with LN.lens_page() as pg:
+            with _plat_lock("lens"), LN.lens_page() as pg:
                 for im in [c for s in seeds for c in LN.video_crops(s)]:
                     try:
                         li: dict = {}

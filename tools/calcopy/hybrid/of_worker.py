@@ -130,7 +130,7 @@ def one(r: dict, a, pool: Path) -> dict:
         subprocess.run([sys.executable, str(ROOT / "tools/calcopy/hybrid/flow_dev.py"), "--ref", f"https://www.youtube.com/shorts/{r['id']}",
                         "--version", a.version, "--fmt", "해외원본형", "--work", str(W), "--no-paid", "--single", "--stop-at", "f_product",
                         "--max-calls", str(MAX_CALLS)], cwd=str(ROOT), stdout=f, stderr=subprocess.STDOUT,
-                       env={**os.environ, "PYTHONUTF8": "1"}, timeout=3600)
+                       env={**os.environ, "PYTHONUTF8": "1", "SHORTEM_BROWSER_LOCK": "1"}, timeout=3600)
     s = of_stats.one(W)
     end = s.get("end") or {}
     org = origins_of(W)
