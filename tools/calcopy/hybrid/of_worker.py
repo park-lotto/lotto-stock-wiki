@@ -69,7 +69,7 @@ def judged_origins(W: Path) -> list[dict]:
         for cf in sorted((W / "job").glob("**/origin_foreign/cands_*.json")):
             c = json.loads(cf.read_text(encoding="utf-8"))
             for x in (c.get("cands") if isinstance(c, dict) else c) or []:
-                if x.get("n") in same and not x.get("korean") and x.get("channel"):
+                if x.get("n") in same and x.get("channel"):
                     out.append(x)
             break
     return out
@@ -118,10 +118,14 @@ def one(r: dict, a, pool: Path) -> dict:
     why = next(iter(s.get("judge", {}).values()), {}).get("why", "") if s.get("judge") else ""
     if end.get("end") == "stop":
         why = f"{end.get('why') or ''} · {why}"
-    chans = judged_origins(W)
+    same = judged_origins(W)
+    chans = [x for x in same if not x.get("korean")]
+    # 같은 촬영분으로 판정된 한국 재편집(우리 소재 말고) = '한국에서도 했나·얼마나 터졌나' — 거꾸로 렌즈는 실측 실패(알려진 쌍 0/1)라 이쪽으로 센다
+    kr = sorted([{"url": x.get("url"), "channel": x.get("channel"), "views": int(x.get("views") or 0)} for x in same if x.get("korean") and x.get("id") != r["id"]],
+                key=lambda x: -x["views"])
     if chans:
         add_channels(pool, r["id"], chans)
-    return {"status": status, "origins": org, "channels": sorted({f"{x.get('platform')}:{x.get('channel')}" for x in chans}), "min": round((time.time() - t0) / 60, 1), "why": why[:300], "title": r.get("title"),
+    return {"status": status, "origins": org, "channels": sorted({f"{x.get('platform')}:{x.get('channel')}" for x in chans}), "korean_same": kr[:12], "min": round((time.time() - t0) / 60, 1), "why": why[:300], "title": r.get("title"),
             "views": r.get("views"), "steps": s.get("steps"), "t": time.strftime("%Y-%m-%d %H:%M"), "ts": time.time(), "dir": str(W)}
 
 
