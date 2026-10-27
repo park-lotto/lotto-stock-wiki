@@ -35,3 +35,17 @@ def test_exact_product_does_not_search():
     assert not any(d["cmd"] == "screen" for d in F.f_material(st, {}, {}, {})["do"])
     F.f_material_got(st, {"stills": {"files": []}, "shots": {}}, {}, {})
     assert F.f_alt_ask(st, {}, {}, {}) == {"goto": "f_clean"}
+
+
+def test_alt_scene_fix_uses_product_video_when_photos_banned():
+    """10-27 4회차 아크네스: 사진 0% 판에서 alt_scene_fix 가 원본 장면을 상품 사진으로 바꿔 사진 컷 반려 → 받아 온 제품 영상으로."""
+    from tools.calcopy.hybrid import rules as RU
+    st = _st("alt")
+    st["material"] = {"files": [{"name": "prod_1_0.jpg"}, {"name": "V1.mp4"}]}
+    st["_msheets"] = {"shots": {"V1.mp4": [[0.0, 0.5], [2.0, 6.0], [6.0, 9.5]]}}
+    pool = F._alt_fill_pool(st)
+    assert pool and all(isinstance(p, dict) and p["src"] == "V1.mp4" for p in pool) and pool[0]["ss"] == 2.2
+    S = {"lines": [{"id": "O1", "kind": "orig"}, {"id": "L8", "kind": "tts"}]}
+    M = {"cuts": {"L8": [{"src": "O1.mp4", "ss": 3.0}]}}
+    assert RU.alt_scene_fix(S, M, {"O1.mp4"}, pool)
+    assert M["cuts"]["L8"][0]["src"] == "V1.mp4" and not RU.alt_scene_problems(S, M, {"O1.mp4"})

@@ -1935,10 +1935,11 @@ def ph_script_got(st, m, rp, u):
             S["source_label"] = ch if _fmt(st) == "자막노래형" else f"출처: {ch}"      # 자막노래형 = 창 안 '📍<계정>'(판 credit.in_window)
         if _fmt(st) == "자막노래형":
             _subsong_bgm(st, S)
-        if (st.get("product") or {}).get("mode") == "alt" and _prod_files(st):
-            afix = RU.alt_scene_fix(S, M, _origin_names(st), [f["name"] for f in _prod_files(st)])
+        pool = _alt_fill_pool(st) if (st.get("product") or {}).get("mode") == "alt" else []
+        if pool:
+            afix = RU.alt_scene_fix(S, M, _origin_names(st), pool)
             if afix:
-                st["log"].append("비슷한 제품 줄 장면을 제품 사진으로 바로 바꿈: " + "; ".join(afix)[:300])
+                st["log"].append("비슷한 제품 줄 장면을 제품 화면으로 바로 바꿈: " + "; ".join(afix)[:300])
         M = _prep_material(st, S, M)
         a = audit_script(st, S, M)
     if not a.get("ok") and st["tries"].get("script", 0) >= SCRIPT_FIX_ONCE and not (set(_script_causes(a)) & SCRIPT_MUST):
@@ -3238,6 +3239,23 @@ def _alt_material_needed(st) -> bool:
     """(판단 주인 — 해외원본형에 제품 영상을 받아 오나) 비슷한 제품(mode alt)이면 예. 원본 말 뒤 제품 줄은 원본 장면 금지(rules.alt_scene_problems)·
     사진 금지(판 photo_share_max 0)라 쓸 화면이 없었다(10-27 3회차: 비슷한 제품 편 3편 사진 컷 반려) — 사장님 10-27 '제품 영상 받아 오기'."""
     return _fmt(st) == "해외원본형" and (st.get("product") or {}).get("mode") == "alt"
+
+
+def _alt_fill_pool(st) -> list:
+    """비슷한 제품 줄의 원본 장면을 바꿀 화면 — 사진을 쓰는 판이면 상품 사진, 못 쓰는 판(_photo_ok)이면 받아 온 제품 영상의 긴 샷 구간 시작
+    (10-27 4회차 아크네스: alt_scene_fix 가 사진 0% 판에서 원본 장면을 상품 사진으로 바꿔 사진 컷 반려 — 두 규칙이 다른 답)."""
+    if _photo_ok(st):
+        return [f["name"] for f in _prod_files(st)]
+    on = _origin_names(st)
+    shots = (st.get("_msheets") or {}).get("shots") or {}
+    out = []
+    for f in (st.get("material") or {}).get("files") or []:
+        n = str(f.get("name") or "")
+        if not n or n in on or n.lower().endswith(PHOTO_EXT):
+            continue
+        sp = sorted((s for s in shots.get(n) or [] if s[1] - s[0] >= 1.0), key=lambda s: s[0] - s[1])[:4]   # 긴 구간 먼저(샷 경계·디졸브 뺀 표)
+        out += [{"src": n, "ss": round(float(a) + 0.2, 2)} for a, b in sp] or [{"src": n}]
+    return out
 
 
 def _alt_queries(st) -> list:
