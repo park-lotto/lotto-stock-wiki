@@ -3234,26 +3234,88 @@ def f_research_check(st, m, rp, u):
     return {"do": [{"id": "save_research", "cmd": "write_doc", "files": {"조사/조사.md": md}}], "then": "f_material"}
 
 
+def _alt_material_needed(st) -> bool:
+    """(판단 주인 — 해외원본형에 제품 영상을 받아 오나) 비슷한 제품(mode alt)이면 예. 원본 말 뒤 제품 줄은 원본 장면 금지(rules.alt_scene_problems)·
+    사진 금지(판 photo_share_max 0)라 쓸 화면이 없었다(10-27 3회차: 비슷한 제품 편 3편 사진 컷 반려) — 사장님 10-27 '제품 영상 받아 오기'."""
+    return _fmt(st) == "해외원본형" and (st.get("product") or {}).get("mode") == "alt"
+
+
+def _alt_queries(st) -> list:
+    """비슷한 제품 영상 검색어 — 쿠팡 제품 이름(앞 낱말)·조사 키워드 + 리뷰/사용."""
+    P = st.get("product") or {}
+    name = " ".join(str(P.get("name") or "").split()[:3])
+    kws = [k for k in (st.get("research") or {}).get("keywords") or [] if k][:2]
+    qs = [f"{name} 리뷰", f"{name} 사용"] + [f"{k} review" for k in kws]
+    return [q for q in dict.fromkeys(q.strip() for q in qs) if q and q not in ("리뷰", "사용")][:5]
+
+
 def f_material(st, m, rp, u):
-    """원본 샷 표(카메라 바뀌는 곳·박힌 글자 상자) + 쿠팡 상품 사진 — 해외원본형 재료는 원본이 주재료(남의 리뷰 영상 검색은 안 한다)."""
-    return {"do": [{"id": "shots", "cmd": "shot_sheets", "files": ["src/" + f["name"] for f in st["origin"]["files"]], "window": None},
-                   {"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "n": 3}], "then": "f_material_got"}
+    """원본 샷 표(카메라 바뀌는 곳·박힌 글자 상자) + 쿠팡 상품 사진 — 해외원본형 재료는 원본이 주재료.
+    비슷한 제품이면 그 제품 영상 검색도 같이(_alt_material_needed — 쇼핑형 재료 단계와 같은 screen·SCREEN_PICK·download)."""
+    do = [{"id": "shots", "cmd": "shot_sheets", "files": ["src/" + f["name"] for f in st["origin"]["files"]], "window": None},
+          {"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "n": 3}]
+    if _alt_material_needed(st):
+        R = st.get("research") or {}
+        do.append({"id": "screen", "cmd": "screen", "queries": _alt_queries(st), "exclude": R.get("exclude") or [],
+                   "keywords": [k for k in R.get("keywords") or [] if k][:3] or [str((st.get("product") or {}).get("name") or "")[:20]], "top": 8,
+                   "bench_id": (st.get("bench") or {}).get("id"), "origin_id": (st.get("origin") or {}).get("id")})
+    return {"do": do, "then": "f_material_got"}
 
 
 def f_material_got(st, m, rp, u):
     st["material"] = {"files": (m.get("stills") or {}).get("files") or []}
+    if "screen" in m:
+        st["_alt_screen"] = m.get("screen") or {}
     sh = m.get("shots") or {}
     st["shots"] = sh.get("shots") or {}
     kind = (st.get("product") or {}).get("name") or st["read"].get("product_words")
     revs = [_rv(f"shot_{stem}_{k}", SHOT_READ_FOREIGN.format(kind=kind), [_img(rel)], need=("shots",))
             for stem, sheets in (sh.get("sheets") or {}).items() for k, rel in enumerate(sheets)]
     if not revs:
-        return {"goto": "f_clean"}
+        return {"goto": "f_alt_ask"}
     return {"review": revs, "then": "f_shots_got"}
 
 
 def f_shots_got(st, m, rp, u):
     _apply_shot_reads(st, rp)
+    return {"goto": "f_alt_ask"}
+
+
+ALT_PICK_NOTE = ("\n★이 편은 비슷한 제품이다 — 원본 말이 끝난 뒤 제품 이야기 줄에 쓸 **이 쿠팡 제품** 영상을 고른다(원본 출연자 장면은 그 줄에 못 쓴다). "
+                 "사람 얼굴이 크게 계속 나오는 영상은 뒤로 — 제품·손·사용 장면이 많은 영상이 앞(해외원본형은 원본 밖 영상의 사람 얼굴 컷을 반려한다).")
+
+
+def f_alt_ask(st, m, rp, u):
+    """비슷한 제품 영상 고르기(Claude) — 후보가 없으면 그대로 다음(사진도 못 쓰는 판이면 대본 단계 검사가 알려 준다)."""
+    s = st.pop("_alt_screen", None) or {}
+    rows = s.get("rows") or []
+    if not _alt_material_needed(st) or not rows:
+        if _alt_material_needed(st):
+            st["log"].append("비슷한 제품 영상 후보 0개 — " + str(s.get("error") or s.get("note") or "검색 결과 없음")[:200])
+        return {"goto": "f_clean"}
+    st["screen_rows"] = rows
+    return {"review": [_rv("screen_pick", SCREEN_PICK + ALT_PICK_NOTE + "\n\n후보(시트 순서와 같다):\n" + json.dumps(rows, ensure_ascii=False, indent=1) +
+                           f"\n\n제품: {(st.get('product') or {}).get('name')}", [_img(x) for x in s.get("sheets") or []][:8], need=("chosen",))],
+            "then": "f_alt_pick"}
+
+
+def f_alt_pick(st, m, rp, u):
+    r = _reply(rp, "screen_pick", ("chosen",))
+    known = {x.get("id") for x in st.get("screen_rows") or []}
+    skip = {(st.get("bench") or {}).get("id")} | {o.get("id") for o in st.get("origins") or []} | {(st.get("origin") or {}).get("id")}
+    chosen = [c for c in r.get("chosen") or [] if isinstance(c, dict) and c.get("id") in known and c["id"] not in skip]
+    st["screen_pick"] = {"chosen": chosen, "rejected": r.get("rejected") or []}
+    if not chosen:
+        st["log"].append("비슷한 제품 영상 — 고른 것 없음")
+        return {"goto": "f_clean"}
+    return {"do": [{"id": "dl", "cmd": "download", "items": [{"id": c["id"], "sections": c.get("sections") or []} for c in chosen]}], "then": "f_alt_dl"}
+
+
+def f_alt_dl(st, m, rp, u):
+    got = (m.get("dl") or {}).get("files") or []
+    have = {f.get("name") for f in (st.get("material") or {}).get("files") or []}
+    st.setdefault("material", {}).setdefault("files", []).extend(f for f in got if f.get("name") not in have)
+    st["log"].append(f"비슷한 제품 영상 {len(got)}개 받음" + ("" if got else " — " + str((m.get("dl") or {}).get("error") or "")[:200]))
     return {"goto": "f_clean"}
 
 
@@ -3576,7 +3638,7 @@ FORMAT_PHASES = {   # 형식별 세부 단계 처리기 — 없는 세부 단계
                 "bench_got": f_bench_got, "ref_read": f_ref_read, "of_lens": f_of_lens, "of_peers": f_of_peers, "of_got": f_of_got, "of_pick": f_of_pick, "of_find": f_of_find, "of_find_got": f_of_find_got, "of_fetch": f_of_fetch,
                 "of_fetched": f_of_fetched, "f_product_sheet": f_product_sheet, "f_product_pick": f_product_pick, "f_product_cands": f_product_cands,
                 "f_product_same": f_product_same, "research": f_research, "f_research_got": f_research_got, "f_research_check": f_research_check,
-                "f_material": f_material, "material": f_material, "f_material_got": f_material_got, "f_shots_got": f_shots_got, "f_clean": f_clean,
+                "f_material": f_material, "material": f_material, "f_material_got": f_material_got, "f_shots_got": f_shots_got, "f_alt_ask": f_alt_ask, "f_alt_pick": f_alt_pick, "f_alt_dl": f_alt_dl, "f_clean": f_clean,
                 "f_clean_got": f_clean_got, "f_draft": f_draft, "f_draft_got": f_draft_got, "f_asr": f_asr, "f_asr_got": f_asr_got,
                 "plan": f_plan, "render": f_render, "f_render_clean_got": f_render_clean_got},
     "쇼핑형": {"bench_got": s_bench_got, "topic_got": s_topic_got, "s_cands": s_cands, "s_cand_look": s_cand_look, "s_product_done": s_product_done,
@@ -3592,7 +3654,7 @@ PHASE_STAGE.update({
     "ref_read": "bench", "topic_got": "bench", "of_dual_b": "bench", "of_dual": "origin", "of_dual_retry": "origin", "of_settled": "origin", "of_lens": "origin", "of_peers": "origin", "of_got": "origin", "of_pick": "origin", "of_find": "origin", "of_find_got": "origin", "of_fetch": "origin", "of_fetched": "origin", "of_dedup": "origin",
     "f_product_sheet": "product", "f_product_pick": "product", "f_product_cands": "product", "f_product_same": "product", "s_cands": "product", "s_cand_look": "product",
     "s_product_done": "product", "f_research_got": "research", "f_research_check": "research", "s_research_check": "research", "f_material": "material",
-    "f_material_got": "material", "f_shots_got": "material", "f_clean": "material", "f_clean_got": "material", "f_draft": "material", "f_draft_got": "material",
+    "f_material_got": "material", "f_shots_got": "material", "f_alt_ask": "material", "f_alt_pick": "material", "f_alt_dl": "material", "f_clean": "material", "f_clean_got": "material", "f_draft": "material", "f_draft_got": "material",
     "f_asr": "asr", "f_asr_got": "asr", "customize": "sign", "j_material": "material", "check_judge": "check", "f_render_clean_got": "render",
 })
 

@@ -26,7 +26,7 @@ RESET = ("script", "approved", "_redo", "stopped", "_asker", "watch_keys", "_msh
 WORSE = ("script_n", "plan_n", "plan_rej", "first_rej_items", "min")     # 클수록 나쁜 칸
 
 
-def prep(src: Path) -> Path:
+def prep(src: Path, phase: str = "script") -> Path:
     n = 1
     while (dst := src.parent / f"{src.name}_seg{n}").exists():
         n += 1
@@ -35,8 +35,8 @@ def prep(src: Path) -> Path:
     s = sp.read_text(encoding="utf-8").replace(src.name.join(("/", "/")), dst.name.join(("/", "/"))).replace(src.name.join(("\\\\", "\\\\")), dst.name.join(("\\\\", "\\\\")))
     d = json.loads(s)
     st = d.get("state", d)
-    st["phase"], st["tries"] = "script", {}
-    for k in [k for k in st if k.startswith("_plan") or k in RESET]:
+    st["phase"], st["tries"] = phase, {}
+    for k in [k for k in st if k.startswith("_plan") or k in RESET + (("material", "shots", "text_fix", "mat_draft", "screen_pick", "screen_rows") if phase != "script" else ())]:
         st.pop(k, None)
     sp.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
     return dst
@@ -94,6 +94,7 @@ def main(argv=None):
     r.add_argument("work")
     r.add_argument("--name", required=True)
     r.add_argument("--label", default="")
+    r.add_argument("--from", dest="from_phase", default="script", help="시작 세부 단계(기본 script = 대본 쓰기부터 · 해외원본형 재료부터 = f_material)")
     t = sub.add_parser("table")
     t.add_argument("--name")
     im = sub.add_parser("import")
@@ -112,7 +113,7 @@ def main(argv=None):
     src = Path(a.work)
     st0 = json.loads((src / "flow_state.json").read_text(encoding="utf-8"))
     st0 = st0.get("state", st0)
-    W = prep(src)
+    W = prep(src, a.from_phase)
     env = {**os.environ, "PYTHONUTF8": "1"}
     cmd = [sys.executable, str(ROOT / "tools/calcopy/hybrid/flow_dev.py"), "--work", str(W), "--ref", st0["ref"], "--version", st0["version"],
            "--resume", "--approve", "--stop-at", "thumb"]
