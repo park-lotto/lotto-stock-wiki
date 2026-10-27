@@ -47,3 +47,19 @@ def test_plan_same_after_fix_is_flagged(monkeypatch):
     r1 = F.ph_plan_got(st, p, {}, {})
     r2 = F.ph_plan_got(st, p, {}, {})
     assert F.PLAN_SAME not in r1["review"][0]["why"] and r2["review"][0]["why"].startswith(F.PLAN_SAME)
+
+
+def test_alt_scene_without_photos_fetches_photos_before_asking(monkeypatch):
+    """비슷한 제품 장면 반려인데 제품 사진 0장 → 오푸스에게 다시 묻기 전에 사진부터 다시 받는다(10-27 run4 a편 같은 사유 5번)."""
+    from tools.calcopy.hybrid import flow as F
+    st = {"version": "잇템로그판_v2", "fmt": "해외원본형", "tries": {}, "log": [], "product": {"mode": "alt", "product_id": "1"}, "material": {"files": []}}
+    monkeypatch.setattr(F, "_reply", lambda rp, k, need: {"대본": {}, "재료": {}})
+    monkeypatch.setattr(F, "_prep_material", lambda st, S, M: M)
+    monkeypatch.setattr(F, "audit_script", lambda st, S, M: {"ok": False, "alt_scene": ["L8: 원본 장면"]})
+    monkeypatch.setattr(F, "_script_ask", lambda st, why: {"id": "script", "why": why})
+    r = F.ph_script_got(st, {}, {}, {})
+    assert r["do"][0]["cmd"] == "product_stills" and r["then"] == "stills_again"
+    r2 = F.ph_stills_again(st, {"stills": {"files": [{"name": "prod_1_0.jpg", "w": 1000, "h": 1000}]}}, {}, {})
+    assert "prod_1_0.jpg" in r2["review"][0]["why"] and F._prod_files(st)
+    r3 = F.ph_script_got(st, {}, {}, {})                       # 두 번째부터는 사진이 있어도 없어도 다시 받지 않는다(한 번)
+    assert "review" in r3

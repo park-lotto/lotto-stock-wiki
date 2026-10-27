@@ -94,7 +94,7 @@ PHASE_STAGE = {   # 세부 단계 → 회원에게 보이는 단계
     "product_same": "product", "name_find": "product", "name_got": "product", "named_cands": "product", "named_same": "product",
     "best_same": "product", "product_done": "product", "research": "research", "research_got": "research", "material": "material",
     "material_got": "material", "material_pick": "material", "material_dl": "material", "asr": "asr", "asr_got": "asr", "shots_got": "asr",
-    "script": "script", "script_got": "script", "script_saved": "script", "sign": "sign", "plan": "plan", "plan_got": "plan",
+    "script": "script", "script_got": "script", "stills_again": "script", "script_saved": "script", "sign": "sign", "plan": "plan", "plan_got": "plan",
     "plan_look": "plan", "plan_saved": "plan", "thumb": "plan", "thumb_sheet": "plan", "thumb_got": "plan", "render": "render", "render_got": "render", "render_fix": "render", "render_saved": "render",
     "check": "check", "check_got": "check", "check_look": "check", "check_fix": "check", "check_saved": "check", "done": "done",
 }
@@ -1872,6 +1872,13 @@ def ph_script_got(st, m, rp, u):
         st["log"].append("대본 내용 기준 미달 — 한 번 고친 뒤라 통과(기록): " + ", ".join(_script_causes(a)))
         st.setdefault("warn", []).append({"stage": "script", "causes": _script_causes(a)})
         a = {**a, "ok": True}
+    if not a.get("ok") and a.get("alt_scene") and not _prod_files(st) and not st["tries"].get("stills_again"):
+        # 비슷한 제품 줄 = 제품 사진·재료 영상(alt_scene) — 그런데 사진이 0장이면 오푸스는 고칠 재료가 없다(10-27 run4 a편: 같은 사유 5번 반려).
+        #   묻기 전에 사진부터 다시 받는다(한 번). 받은 사진 이름은 대본 질문(_src_rule_ctx)에 실린다
+        st["tries"]["stills_again"] = 1
+        st["_stills_why"] = json.dumps({k: x for k, x in a.items() if k != "ok"}, ensure_ascii=False)[:4000]
+        st["log"].append("비슷한 제품 장면 반려인데 제품 사진 0장 → 사진 다시 받기")
+        return {"do": [{"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "n": 4}], "then": "stills_again"}
     if not a.get("ok"):
         cs = _script_causes(a)
         _tries(st, "script", LIMITS["script"], cs or ["form"])
@@ -1883,6 +1890,21 @@ def ph_script_got(st, m, rp, u):
     return {"do": [{"id": "save_script", "cmd": "write_doc", "files": {f"{v}/대본.json": S, f"{v}/재료.json": M, f"{v}/근거.md": st["script"]["G"]},
                     "cand_dir": True, "version": v},
                    {"id": "heard", "cmd": "orig_heard", "version": v}], "then": "script_heard"}
+
+
+def _prod_files(st) -> list:
+    return [f for f in (st.get("material") or {}).get("files") or [] if str(f.get("name") or "").startswith("prod_")]
+
+
+def ph_stills_again(st, m, rp, u):
+    got = [f for f in ((m.get("stills") or {}).get("files") or []) if isinstance(f, dict)]
+    have = {f.get("name") for f in (st.get("material") or {}).get("files") or []}
+    st.setdefault("material", {}).setdefault("files", []).extend(f for f in got if f.get("name") not in have)
+    st["log"].append(f"제품 사진 다시 받기: {len(got)}장" + (f" · 실패 {(m.get('stills') or {}).get('fail')}" if (m.get("stills") or {}).get("fail") else ""))
+    why = st.pop("_stills_why", "")
+    if got:
+        why += " / 제품 사진을 새로 받았다: " + ", ".join(f["name"] for f in got) + " — 비슷한 제품 줄은 이 사진으로(move: in·out·left·right)"
+    return {"review": [_script_ask(st, why)], "then": "script_got"}
 
 
 def ph_script_heard(st, m, rp, u):
@@ -3441,7 +3463,7 @@ PHASE_STAGE.update({
 PHASES = {
     "setup": ph_setup, "setup_check": ph_setup_check, "bench": ph_bench, "bench_got": ph_bench_got, "origin_read": ph_origin_read, "src_got": ph_src_got, "probe_got": ph_probe_got, "sb_pick": ph_sb_pick,
     "peer": ph_peer, "peer_read": ph_peer_read, "search": ph_search, "search_got": ph_search_got, "titles": ph_titles,
-    "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped, "task_got": ph_task_got, "watch_got": f_watch_got, "given_origin_got": ph_given_origin_got,
+    "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped, "task_got": ph_task_got, "watch_got": f_watch_got, "stills_again": ph_stills_again, "given_origin_got": ph_given_origin_got,
     "vis_get": ph_vis_get, "vis_got": ph_vis_got, "vis_look": ph_vis_look, "vis_pick": ph_vis_pick, "vis_next": ph_vis_next,
     "product_sheet": ph_product_sheet, "product_pick": ph_product_pick, "product_pick_wide": ph_product_pick_wide, "product_cands": ph_product_cands, "product_same": ph_product_same,
     "product_done": ph_product_done, "cand_look": ph_cand_look, "reviews": ph_reviews, "reviews_got": ph_reviews_got, "reviews_naver": ph_reviews_naver, "name_find": ph_name_find, "name_got": ph_name_got, "named_cands": ph_named_cands,
