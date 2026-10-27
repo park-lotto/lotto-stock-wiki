@@ -18804,6 +18804,58 @@ def api_admin_calcopy(request: Request):
     return _cb.board()
 
 
+# ── 채널 리포트(관제 281, 2026-10-27 사장님 "숏템메이커에 페이지 하나 붙이고 관리자만") — 우리 유튜브·틱톡 채널 성적 ──
+#    수집·분석 판단은 channel_stats(collect/analyze), 언제 다시 모으나는 channel_stats.service. 여기는 관리자 확인만.
+@app.get("/channel_stats", response_class=HTMLResponse)
+def _channel_stats_page(request: Request):
+    if not _is_admin(getattr(request.state, "customer_id", None)):
+        return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
+    return FileResponse(Path(__file__).parent / "static" / "channel_stats.html",
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
+@app.get("/api/admin/channel_stats")
+def api_admin_channel_stats(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from channel_stats import service as _cs
+    return _cs.data()
+
+
+@app.get("/api/admin/channel_stats/oauth/start")
+def api_admin_channel_stats_oauth_start(request: Request, ch: str = ""):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from channel_stats import service as _cs
+    return RedirectResponse(_cs.oauth_start(ch), status_code=302)
+
+
+@app.get("/api/admin/channel_stats/oauth/callback")
+def api_admin_channel_stats_oauth_callback(request: Request, code: str = "", state: str = "", error: str = ""):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from channel_stats import service as _cs
+    try:
+        if error:
+            raise RuntimeError(f"구글이 거절했습니다: {error}")
+        msg = f"'{_cs.oauth_finish(code, state)}' 채널을 연결했습니다"
+    except Exception as e:  # noqa: BLE001 — 실패 사유를 화면 위 알림으로 그대로 보여준다
+        msg = f"연결 실패: {e}"
+    return RedirectResponse("/channel_stats?msg=" + urllib.parse.quote(msg), status_code=302)
+
+
+@app.post("/api/admin/channel_stats/refresh")
+def api_admin_channel_stats_refresh(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from channel_stats import service as _cs
+    return {"started": _cs.refresh_async()}
+
+
 # ── 숏템프리셋(관제 224, 2026-10-17 사장님 "칼카피라고 하지 말고 숏템프리셋") — 관리자 전용 ──
 #    브랜드·스타일·결과물 장부를 한 화면에서. 판단은 calcopy_board.preset_home 하나, 여기는 관리자 확인만.
 @app.get("/shortem_preset", response_class=HTMLResponse)
