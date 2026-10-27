@@ -522,6 +522,234 @@ def respace_reuse(cuts: list[dict], src_dir: Path | None, log=print, adjacent_ru
     return out
 
 
+SLOT_KEYS = ("line", "t0", "kind", "at", "cap", "w")
+REACH = 0.4                # fit_cut 이 시작을 옮기는 폭(render_bench.fit_all reach) — 옮긴 자리가 그 폭만큼 흔들려도 전환 없는 구간 안      # 컷 자리(시간표 칸) — 순서 바꾸기는 이 칸은 두고 화면(src·ss·crop·see…)만 맞바꾼다
+
+
+def fix_aba(cuts: list[dict], log=print) -> list[str]:
+    """(판단 주인 — A-B-A 끼움을 계획이 스스로 푼다, 10-27 뿌리 수정) 나레 컷 원본 순서 X→Y→X 를 **같은 줄 안 두 컷의 화면 맞바꾸기**로 없앤다
+    (화면은 그대로·같은 대사 안 순서만 바뀜 — 대사↔장면 어긋남 없음). 판정 = checks.aba_violations(완성본 B16·계획 c_plan 과 같은 자).
+    바꾼 뒤 위반 수가 줄 때만 받는다. 줄을 넘는 A-B-A 는 손대지 않는다(관문·Claude 몫). 반환 = 로그 글."""
+    from tools.calcopy.hybrid.checks import aba_violations
+    narr = lambda: [c for c in cuts if c.get("kind") != "orig"]          # noqa: E731
+    count = lambda: len(aba_violations([{"src": c["src"], "t0": float(c["t0"])} for c in narr()]))   # noqa: E731
+
+    def swap(a, b):
+        ka = {k: v for k, v in a.items() if k not in SLOT_KEYS}
+        kb = {k: v for k, v in b.items() if k not in SLOT_KEYS}
+        for k in ka:
+            a.pop(k)
+        for k in kb:
+            b.pop(k)
+        a.update(kb)
+        b.update(ka)
+    out = []
+    for _ in range(12):
+        n0 = count()
+        if not n0:
+            break
+        seq = narr()
+        i = next(i for i in range(len(seq) - 2) if Path(seq[i]["src"]).stem == Path(seq[i + 2]["src"]).stem != Path(seq[i + 1]["src"]).stem)
+        done = False
+        for a, b in ((seq[i + 1], seq[i + 2]), (seq[i], seq[i + 1])):
+            if a.get("line") != b.get("line"):
+                continue
+            swap(a, b)
+            if count() < n0:
+                out.append(f"[A-B-A] {a.get('line')} 컷 순서 맞바꿈 {Path(b['src']).stem}↔{Path(a['src']).stem}")
+                done = True
+                break
+            swap(a, b)
+        if not done:
+            out.append(f"[A-B-A] {seq[i].get('line')}~{seq[i + 2].get('line')} {Path(seq[i]['src']).stem}→{Path(seq[i + 1]['src']).stem}→… 줄을 넘어 못 바꿈(관문 몫)")
+            break
+    for m in out:
+        log(m)
+    return out
+
+
+def relocate_cuts(cuts: list[dict], src_dir: Path | None, origins: set, log=print, adjacent_run: bool = False, end: float | None = None) -> list[str]:
+    """(판단 주인 — 계획이 숫자 반려를 스스로 푼다, 사장님 10-27 '뿌리 수정': Claude 는 장면을 고르고 정확한 초는 코드가 맞춘다)
+    respace_reuse(같은 샷 안 옮기기) 뒤에도 남은 나레 영상 컷 — ①샷보다 길다(c.over) ②같은 장면 재사용(c.reuse_unfixed) — 을
+    **같은 원본 안** 그 길이가 들어가고 장면 전환·디졸브가 없는 가장 가까운 구간(shot_starts 샷 − runner_ops.jump_free_spans)으로 옮긴다.
+    판정은 다시 적지 않는다: 재사용 = _new_viol(quality_gate.reuse_violations_bench) · 조각 = short_pieces · 원본 끝 = src_left.
+    10-27 재현(첫 재료 답 16편): 재사용 6·샷 넘침/전환 5 가 전부 '같은 원본 다른 자리'로 풀리는 꼴. 못 찾으면 그대로(관문이 알린다). 반환 = 옮긴 컷 글(못 옮긴 것은 log 로만)."""
+    if not src_dir:
+        return []
+    from tools.calcopy.hybrid.render_bench import FPS, IMG_EXT, _max_slowmo, shot_starts, short_pieces, src_frames, src_left
+    from tools.calcopy.hybrid.runner_ops import _cut_jumps, _jumpy, jump_free_spans
+    from tools.calcopy.hybrid.common import dur_of
+    vid = [c for c in cuts if c.get("ss") is not None and Path(str(c["src"])).suffix.lower() not in IMG_EXT and (Path(src_dir) / c["src"]).exists()]
+    lens = {s: dur_of(Path(src_dir) / s) for s in {c["src"] for c in vid}}
+    for c in vid:     # ③ 원본 밖 재료 컷 안 장면 전환·디졸브 — 판정 = runner_ops.source_rule_scan 과 같은 자(_cut_jumps·_jumpy)
+        if c.get("kind") == "tts" and c["src"] not in origins and not c.get("no_snap"):
+            c["jumpy"] = _jumpy(_cut_jumps(Path(src_dir) / c["src"], float(c["ss"]), src_frames(c) / FPS))
+    spans_of: dict = {}
+    out = []
+    for c in vid:
+        if c.get("kind") != "tts" or c.get("no_snap") or not (c.get("over") or c.get("reuse_unfixed") or c.get("jumpy")):
+            continue
+        src = Path(src_dir) / c["src"]
+        if c["src"] not in spans_of:
+            st = shot_starts(src)
+            pts = [0.0] + [t for t in st if 0 < t < lens[c["src"]]] + [lens[c["src"]]]
+            spans_of[c["src"]] = (st, jump_free_spans(src, [[a, b] for a, b in zip(pts, pts[1:])]))
+        st, spans = spans_of[c["src"]]
+        d = round((float(c["t1"]) - float(c["t0"])) / _max_slowmo(), 3)    # 화면 초 ÷ 늦춤 상한 — 옮긴 뒤 fit_cut 이 샷 안에서 늦춰 채운다(같은 상한)
+        ss0 = float(c.get("ss_planned", c["ss"]))
+        others = [x for x in vid if x is not c]
+        got = None
+        for a, b in sorted(spans, key=lambda s: min(abs(s[0] - ss0), abs(s[1] - ss0))):
+            if b - a < d + 2 * EDGE:
+                continue
+            m = REACH if b - a >= d + 2 * REACH else EDGE              # 뒤 fit_cut 이 ±REACH 옮겨도 구간 안(디졸브는 fit 이 모른다 — 10-27 TV L0)
+            s = round(min(max(ss0, a + m), b - d - m), 3)              # 그 구간 안에서 원래 초에 가장 가까운 자리
+            left = src_left(src, s)
+            if (left is not None and d > left) or short_pieces(st, s, s + d) or _new_viol(others, {**c, "ss": s}, lens, adjacent_run):
+                continue
+            got = (s, b)
+            break
+        why = "샷 넘침" if c.get("over") else ("재사용" if c.get("reuse_unfixed") else "장면 전환")
+        if got is None:
+            sp = split_cut(c, cuts, src_dir, end, {}, adjacent_run) if (c.get("over") and end is not None) else None   # 들어갈 샷이 없으면 두 샷에 나눠 담기
+            if sp:
+                out.append(sp + " ← 샷 넘침")
+            else:
+                log(f"[옮기기] {c.get('line')} {c['src']}@{ss0:.2f} {why} — 같은 원본에 {d:.2f}초 들어갈 빈 구간 없음(관문 몫)")
+            continue
+        s, b = got
+        for k in ("over", "room", "reuse_unfixed", "src_left", "speed", "jumpy"):
+            c.pop(k, None)
+        c["ss_moved"], c["ss"], c["ss_planned"], c["max"] = ss0, s, s, round(b - s, 3)
+        out.append(f"[옮기기] {c.get('line')} {c['src']} {why} ss {ss0:.2f} → {s:.2f}(구간 {s:.2f}~{b:.2f})")
+    for m in out:
+        log(m)
+    return out
+
+
+def merge_short(cuts: list[dict], end: float, log=print) -> list[str]:
+    """(판단 주인 — 번쩍 컷을 계획이 스스로) 나레 컷 화면 길이가 MIN_PIECE_SEC(관문 ⑤ cut_length_gate 와 같은 상수) 밑이면 같은 줄 앞 컷에 합친다
+    (앞 컷이 그만큼 길어진다 — 맞추기는 다음 fit). 10-27 재현 썬크림 L7 0.33초(w 로 나눈 조각)."""
+    from tools.calcopy.hybrid.render_bench import MIN_PIECE_SEC
+    out = []
+    i = 1
+    while i < len(cuts):
+        c, p = cuts[i], cuts[i - 1]
+        t1 = cuts[i + 1]["t0"] if i + 1 < len(cuts) else end
+        short = c.get("kind") in ("tts", "orig") and float(t1) - float(c["t0"]) < MIN_PIECE_SEC - 1e-3
+        need = round(MIN_PIECE_SEC + 0.02 - (float(t1) - float(c["t0"])), 3)
+        if short and p.get("line") == c.get("line") and float(c["t0"]) - float(p["t0"]) - need >= MIN_PIECE_SEC:
+            # 먼저 앞 컷에서 빌린다 — 두 장면을 다 두고 앞 컷만 조금 짧아진다(합치면 앞 컷이 늘어 원본 경계를 넘을 수 있다 — 10-27 썬크림 L7 0.13초 조각)
+            c["t0"] = round(float(c["t0"]) - need, 3)
+            if c.get("kind") == "orig" and c.get("ss") is not None:
+                c["ss"] = round(float(c["ss"]) - need, 3)            # 원음 줄 = 원본 초도 같이(입 맞춤)
+            out.append(f"[늘리기] {c.get('line')} {c.get('src')} 앞 컷에서 {need:.2f}초 빌림")
+            i += 1
+            continue
+        if short and p.get("line") == c.get("line"):       # 원음 줄도 앞 컷에 — 앞 컷(입 맞춘 원본)이 같은 소리를 따라 이어질 뿐(10-27 썬크림 L7 0.33초)
+            out.append(f"[합치기] {c.get('line')} {c.get('src')} {float(t1) - float(c['t0']):.2f}초 → 앞 컷에")
+            cuts.pop(i)
+            continue
+        nx = cuts[i + 1] if i + 1 < len(cuts) else None
+        if short and c.get("kind") == "tts" and nx is not None and nx.get("line") == c.get("line") and nx.get("kind") == "tts":    # 줄 첫 컷 — 같은 줄 다음 컷이 일찍 시작
+            out.append(f"[합치기] {c.get('line')} {c.get('src')} {float(t1) - float(c['t0']):.2f}초 → 다음 컷에")
+            nx["t0"] = c["t0"]
+            cuts.pop(i)
+            continue
+        i += 1
+    for m in out:
+        log(m)
+    return out
+
+
+MOVES = ("in", "out", "left", "right")
+
+
+def _spans(ctx: dict, src_dir: Path, name: str):
+    """(샷 시작 목록, 전환·디졸브 뺀 구간) — 한 계획 안에서 파일마다 한 번(ctx 캐시)."""
+    from tools.calcopy.hybrid.render_bench import shot_starts
+    from tools.calcopy.hybrid.runner_ops import jump_free_spans
+    from tools.calcopy.hybrid.common import dur_of
+    if name not in ctx:
+        src = Path(src_dir) / name
+        ln = dur_of(src)
+        st = shot_starts(src)
+        pts = [0.0] + [t for t in st if 0 < t < ln] + [ln]
+        ctx[name] = (ln, st, jump_free_spans(src, [[a, b] for a, b in zip(pts, pts[1:])]))
+    return ctx[name]
+
+
+def split_cut(c: dict, cuts: list[dict], src_dir: Path, end: float, ctx: dict, adjacent_run: bool = False) -> str | None:
+    """(판단 주인 — 컷 하나를 진짜 컷 경계가 생기게 둘로) 영상 = 뒤 절반을 같은 원본의 **다른 샷**(전환 없는 구간·재사용 거리 지킴)에서 ·
+    그림(상품 사진) = 같은 사진을 반대 움직임으로(그림 이웃은 real_cut_bounds 가 늘 진짜 경계로 센다). 못 나누면 None. 성공하면 cuts 에 끼우고 글을 돌려준다."""
+    from tools.calcopy.hybrid.render_bench import IMG_EXT, short_pieces, src_left
+    i = cuts.index(c)
+    t1 = float(cuts[i + 1]["t0"]) if i + 1 < len(cuts) else end
+    half = round((t1 - float(c["t0"])) / 2, 3)
+    keep = {k: v for k, v in c.items() if k not in ("at", "cap", "ss_planned", "ss_moved", "speed", "over", "room", "t1", "dur", "max_auto")}
+    if Path(str(c["src"])).suffix.lower() in IMG_EXT:
+        mv = str(c.get("move") or "in")
+        two = {**keep, "t0": round(float(c["t0"]) + half, 3), "t1": round(t1, 3), "move": MOVES[(MOVES.index(mv) + 1) % len(MOVES)] if mv in MOVES else "out",
+               "split_of": c.get("line"), "dur": half}
+        c["dur"], c["t1"] = half, round(float(c["t0"]) + half, 3)
+        cuts.insert(i + 1, two)
+        return f"[나누기] {c.get('line')} {c['src']}(사진) {2 * half:.2f}초 → {half:.2f}+{half:.2f}(움직임 {mv}→{two['move']})"
+    ln, st, spans = _spans(ctx, src_dir, c["src"])
+    src = Path(src_dir) / c["src"]
+    ss0 = float(c["ss"])
+    shot0 = max([t for t in st if t <= ss0 + 1e-3] or [0.0])
+    lens = {x["src"]: _spans(ctx, src_dir, x["src"])[0] for x in cuts if x.get("ss") is not None
+            and Path(str(x["src"])).suffix.lower() not in IMG_EXT and (Path(src_dir) / x["src"]).exists()}
+    base = [x for x in cuts if x is not c and x["src"] in lens]
+    first = {**c, "t1": round(float(c["t0"]) + half, 3), "dur": half}
+    for a, b in sorted(spans, key=lambda s_: abs(s_[0] - (ss0 + half))):
+        if b - a < half + 2 * EDGE:
+            continue
+        s_ = round(a + (REACH if b - a >= half + 2 * REACH else EDGE), 3)
+        if max([t for t in st if t <= s_ + 1e-3] or [0.0]) == shot0 and abs(s_ - ss0) < 3.0:
+            continue                                            # 같은 샷 이어 붙이기는 컷으로 안 센다(real_cut_bounds)
+        left = src_left(src, s_)
+        two = {**keep, "ss": s_, "t0": round(float(c["t0"]) + half, 3), "t1": round(t1, 3), "dur": half}
+        if (left is not None and half > left) or short_pieces(st, s_, s_ + half) or _new_viol(base + [first], two, lens, adjacent_run):
+            continue
+        two.update({"ss_planned": s_, "max": round(b - s_, 3), "split_of": c.get("line")})
+        c["dur"], c["t1"] = half, round(float(c["t0"]) + half, 3)
+        cuts.insert(i + 1, two)
+        return f"[나누기] {c.get('line')} {c['src']} {2 * half:.2f}초 → {half:.2f}+{half:.2f}(뒤 = {s_:.2f}초 다른 샷)"
+    return None
+
+
+def split_long(cuts: list[dict], src_dir: Path | None, end: float, hi: float, log=print, adjacent_run: bool = False, tries: int = 8) -> list[str]:
+    """(판단 주인 — 컷 길이 중앙(판 rhythm.cut_median 상한)을 계획이 스스로 맞춘다, 10-27 뿌리 수정) 진짜 컷 중앙(render_bench.real_cut_bounds —
+    rhythm_gate 와 같은 자)이 hi 를 넘으면 가장 긴 나레 컷을 split_cut 으로 나눈다(영상 = 같은 원본 다른 샷 · 사진 = 반대 움직임).
+    10-27 재현: 컷 중앙 3건 = 한 줄 컷 하나 6초(메이블린 L6 = 상품 사진 6.2초). 못 나누면 그대로(관문 몫)."""
+    import statistics
+    if not src_dir or not cuts:
+        return []
+    from tools.calcopy.hybrid.render_bench import IMG_EXT, MIN_PIECE_SEC, real_cut_bounds
+
+    def median():
+        b = real_cut_bounds(cuts, src_dir)
+        return statistics.median([y - x for x, y in zip([0.0] + b, b + [end])])
+    ctx, out, skip = {}, [], set()
+    for _ in range(tries):
+        for i, c in enumerate(cuts):
+            c["t1"] = cuts[i + 1]["t0"] if i + 1 < len(cuts) else end
+        if median() <= hi + 1e-6:
+            break
+        cand = [c for c in cuts if c.get("kind") == "tts" and not c.get("no_snap") and id(c) not in skip
+                and (c.get("ss") is not None or Path(str(c["src"])).suffix.lower() in IMG_EXT) and (Path(src_dir) / c["src"]).exists() and float(c["t1"]) - float(c["t0"]) >= 2 * max(MIN_PIECE_SEC, 0.6)]
+        if not cand:
+            break
+        c = max(cand, key=lambda x: float(x["t1"]) - float(x["t0"]))
+        skip.add(id(c))
+        m = split_cut(c, cuts, src_dir, end, ctx, adjacent_run)
+        out.append(m or f"[나누기] {c.get('line')} {c['src']}@{float(c['ss']):.2f} — 같은 원본에 다른 샷 없음(관문 몫)")
+    for m in out:
+        log(m)
+    return [m for m in out if "관문 몫" not in m]
+
+
 def constraint_flags(cand: dict, table: dict, fixed: list[dict], src_len: dict, outside: set, work: Path | None, texts: dict | None = None,
                      prod: dict | None = None, exclude: list | None = None, ident: dict | None = None, ref_person: str | None = None) -> dict:
     """채점 전 제약(표준 §12-3 ②) — 위반이면 그 이유(reject)를 적고 채점하지 않는다.

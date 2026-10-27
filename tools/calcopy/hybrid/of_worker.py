@@ -121,6 +121,15 @@ def add_channels(pool: Path, src_id: str, xs: list[dict]) -> int:
     return n
 
 
+def how_found(W: Path) -> tuple[str, str]:
+    """(판단 주인 — 원본 확보 vs 대체) 마지막으로 같은 영상이라 판정된 질문이 무엇이었나. 지시서는 원본을 못 찾으면 같은 제품 다른 해외 반응
+    (of_peer)으로 넘어간다 — 10-27 치아 테이프 편: 판정 3번 모두 '같은 촬영분 없음'인데 of_peer 로 3편을 받아 장부에 'found' 로 적혔다."""
+    rv = sorted((W / "job" / "reviews").glob("*_of_*"))
+    if any("of_peer" in d.name for d in rv):
+        return "peer", "같은 제품 다른 해외 반응(원본 못 찾음)"
+    return "found", "원본"
+
+
 def one(r: dict, a, pool: Path) -> dict:
     from tools.calcopy.hybrid import of_stats
     W = pool / r["id"]
@@ -135,6 +144,10 @@ def one(r: dict, a, pool: Path) -> dict:
     end = s.get("end") or {}
     org = origins_of(W)
     status = "found" if end.get("end") == "stop_at" and org else ("not_found" if end else "error")
+    if status == "found":
+        status, how = how_found(W)
+    else:
+        how = ""
     why = next(iter(s.get("judge", {}).values()), {}).get("why", "") if s.get("judge") else ""
     if end.get("end") == "stop":
         why = f"{end.get('why') or ''} · {why}"
@@ -145,7 +158,7 @@ def one(r: dict, a, pool: Path) -> dict:
                 key=lambda x: -x["views"])
     if chans:
         add_channels(pool, r["id"], chans)
-    return {"status": status, "origins": org, "channels": sorted({f"{x.get('platform')}:{x.get('channel')}" for x in chans}), "korean_same": kr[:12], "min": round((time.time() - t0) / 60, 1), "why": why[:300], "title": r.get("title"),
+    return {"status": status, "how": how, "origins": org, "channels": sorted({f"{x.get('platform')}:{x.get('channel')}" for x in chans}), "korean_same": kr[:12], "min": round((time.time() - t0) / 60, 1), "why": why[:300], "title": r.get("title"),
             "views": r.get("views"), "steps": s.get("steps"), "t": time.strftime("%Y-%m-%d %H:%M"), "ts": time.time(), "dir": str(W)}
 
 

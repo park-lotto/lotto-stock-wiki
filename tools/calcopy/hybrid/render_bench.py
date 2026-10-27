@@ -345,6 +345,8 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
                 acc += w
     cuts[0]["t0"] = 0.0
     one_shot_chain(cuts, st)
+    from tools.calcopy.hybrid.material_fit import fix_aba
+    fix_aba(cuts, log=lambda m: sys.stderr.write(m + "\n"))      # A-B-A = 같은 줄 안 화면 맞바꾸기로 계획이 스스로(샷 맞추기 전 — 바뀐 화면을 아래 fit 이 맞춘다)
     src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
     if src_dir:
         fit_lip_edges(cuts, src_dir, end, {k: v.get("src") for k, v in Lm.items()})
@@ -368,23 +370,42 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
     fit_all()
     if src_dir:              # 그래도 남은 짧은 조각 = 계획이 스스로 끝낸다(관문 ③에 보내 Claude 가 초를 고치게 하지 않는다 — 10-26 까르보 '경계 맞추는 중' 22번)
         settle_edges(cuts, src_dir, end, line_src, fit_all)
-    for i, c in enumerate(cuts):
-        lip = c["kind"] == "orig" and c["src"] == Lm[c["line"]].get("src")
-        sd = round(src_frames(c) / FPS, 3)                        # 원본에서 쓰는 초 = 뽑을 프레임 × 속도(늦춘 컷은 짧다) — fit_cut·관문 ③과 같은 프레임 셈
-        cap = None if (c.get("max") is None or lip) else float(c["max"]) - (float(c["ss"]) - float(c.get("ss_planned", c["ss"])))   # max = 재료에 적힌 ss 기준 — 옮긴 만큼 뺀다
-        # 원음(입 맞춤) 컷은 원본 사람이 말하는 구간 그대로 — 그 안에 원본 자체 카메라 전환이 드는 건 원본 편집이 흐르는 것(샷 한도 아님).
-        # 번쩍임(짧은 조각)은 관문 ③(edge_fault)·원본 끝은 src_left 가 따로 본다(10-27 립글로스 회원편 O1 2.76초 vs 샷 0.53초 반려 — 맞출 수 없는 반려)
-        c["over"] = round(sd - cap, 3) if cap is not None and sd > cap + 1e-3 else 0.0
-        if c["over"] and c.get("max_auto") and src_dir:      # 샷이 모자란 재료 컷 — 고칠 자리(이 길이가 들어가는 샷)를 같이 싣는다
-            c["room"] = shot_room(src_dir / c["src"], round(sd / _max_slowmo(), 2))
-        if src_dir:
-            left = src_left(src_dir / c["src"], float(c.get("ss") or 0.0))
-            if left is not None and sd > left + 1e-3:
-                c["src_left"] = left
-                c["over"] = max(c["over"], round(sd - left, 3))
+    def measure_over():
+        for i, c in enumerate(cuts):
+            lip = c["kind"] == "orig" and c["src"] == Lm[c["line"]].get("src")
+            sd = round(src_frames(c) / FPS, 3)                        # 원본에서 쓰는 초 = 뽑을 프레임 × 속도(늦춘 컷은 짧다) — fit_cut·관문 ③과 같은 프레임 셈
+            cap = None if (c.get("max") is None or lip) else float(c["max"]) - (float(c["ss"]) - float(c.get("ss_planned", c["ss"])))   # max = 재료에 적힌 ss 기준 — 옮긴 만큼 뺀다
+            # 원음(입 맞춤) 컷은 원본 사람이 말하는 구간 그대로 — 그 안에 원본 자체 카메라 전환이 드는 건 원본 편집이 흐르는 것(샷 한도 아님).
+            # 번쩍임(짧은 조각)은 관문 ③(edge_fault)·원본 끝은 src_left 가 따로 본다(10-27 립글로스 회원편 O1 2.76초 vs 샷 0.53초 반려 — 맞출 수 없는 반려)
+            c["over"] = round(sd - cap, 3) if cap is not None and sd > cap + 1e-3 else 0.0
+            if c["over"] and c.get("max_auto") and src_dir:      # 샷이 모자란 재료 컷 — 고칠 자리(이 길이가 들어가는 샷)를 같이 싣는다
+                c["room"] = shot_room(src_dir / c["src"], round(sd / _max_slowmo(), 2))
+            if src_dir:
+                left = src_left(src_dir / c["src"], float(c.get("ss") or 0.0))
+                if left is not None and sd > left + 1e-3:
+                    c["src_left"] = left
+                    c["over"] = max(c["over"], round(sd - left, 3))
+    measure_over()
     if src_dir:              # B13(같은 원본 가까운 구간) — 계획이 처음부터 피한다(주인 material_fit.respace_reuse, 판정 = quality_gate.reuse_violations_bench)
-        from tools.calcopy.hybrid.material_fit import respace_reuse
-        respace_reuse(cuts, src_dir, log=lambda m: sys.stderr.write(m + "\n"), adjacent_run=bool((st.get("reuse") or {}).get("adjacent_run")))   # 판 칸 reuse.adjacent_run(두유노판 — 사장님 10-26 '가')
+        from tools.calcopy.hybrid.material_fit import merge_short, relocate_cuts, respace_reuse, split_long
+        from tools.calcopy.hybrid.styles import rhythm_bounds as _STY_bounds
+        adj = bool((st.get("reuse") or {}).get("adjacent_run"))     # 판 칸 reuse.adjacent_run(두유노판 — 사장님 10-26 '가')
+        respace_reuse(cuts, src_dir, log=lambda m: sys.stderr.write(m + "\n"), adjacent_run=adj)
+        # 그래도 남은 샷 넘침·재사용 = 같은 원본 다른 자리로(주인 material_fit.relocate_cuts — Claude 에게 초를 고치라 하지 않는다, 10-27 뿌리 수정)
+        origins = {v.get("src") for v in Lm.values() if v.get("src")}
+        _lg = lambda m: sys.stderr.write(m + "\n")                 # noqa: E731
+        changed = bool(merge_short(cuts, end, log=_lg))             # 번쩍 컷 → 앞 컷에(주인 material_fit.merge_short)
+        hi = (_STY_bounds(st).get("cut_median") or (None, None))[1]
+        if hi and split_long(cuts, src_dir, end, hi, log=_lg, adjacent_run=adj):    # 컷 중앙 상한 → 긴 컷 나누기(주인 material_fit.split_long, 자 = rhythm_gate)
+            changed = True
+        if changed:
+            fit_all()
+            measure_over()
+        for _ in range(2):            # 옮기기 ↔ 맞추기(fit 이 ±0.4 옮겨 디졸브에 닿으면 다음 바퀴가 다시 옮긴다)
+            if not relocate_cuts(cuts, src_dir, origins, log=_lg, adjacent_run=adj, end=end):
+                break
+            fit_all()                 # 옮긴 자리(ss_planned·max)에서 다시 맞추기·늦추기
+            measure_over()
     for i, r in enumerate(rows):      # 자막은 다음 덩어리 시작까지(줄 사이 틈도 앞 자막이 덮는다 — 벤치: 자막 없는 틈 거의 없음)
         r["show"] = [r["t0"], round(rows[i + 1]["t0"] if i + 1 < len(rows) else end, 3)]
     out = {"lines": lines, "rows": rows, "cuts": cuts, "opos": opos, "end": end}
