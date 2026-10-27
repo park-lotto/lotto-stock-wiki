@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import os
 import shutil
 import subprocess
@@ -34,7 +35,7 @@ CLAUDE = os.environ.get("CLAUDE_BIN") or shutil.which("claude") or str(Path.home
 def answer(W: Path, rv: dict, log, replay: Path | None = None) -> dict:
     """review 하나 → Claude CLI(회원 Claude 대신). 그림은 파일로 두고 Read 로 보게 한다(회원 PC 는 MCP 이미지로 싣는다).
     replay 폴더에 이 review id 앞부분 이름의 JSON 이 있으면 Claude 답은 answer_live.json 으로 남기고 그 JSON 을 답으로 쓴다."""
-    d = W / "reviews" / f"{time.strftime('%H%M%S')}_{rv['id'][:40]}"
+    d = W / "reviews" / f"{time.strftime('%H%M%S')}_{re.sub(r'[^0-9A-Za-z가-힣._-]', '_', rv['id'])[:40]}"   # 소재 2편 칸 id 's1:ref_read' — ':' 는 윈도우 폴더 이름에 못 쓴다(10-27)
     d.mkdir(parents=True, exist_ok=True)
     texts, imgs = [], []
     for s in rv.get("show") or []:
@@ -90,6 +91,7 @@ def main():
     ap.add_argument("--resume", action="store_true")
     ap.add_argument("--retry", action="store_true", help="멈춘 편(stopped)을 다시 시도(서버 retry 와 같다 — 멈춘 단계부터)")
     ap.add_argument("--fmt", help="형식(연예인형·해외원본형·쇼핑형·레시피형) — 프리셋 장부와 다르면 거절")
+    ap.add_argument("--single", action="store_true", help="둘째 소재 없이 그 소재 하나만(원본 찾기 워커 of_worker)")
     ap.add_argument("--no-paid", action="store_true", help="돈 드는 호출 0(TTS 캐시만·스피치매틱스·VMake 안 부름)")
     ap.add_argument("--tts-seed", help="narr_full.mp3(+.tts.json) 가 있는 렌더 폴더 — 작업 폴더 <판>/render/ 로 복사")
     ap.add_argument("--replay", help="review 답 고정 폴더(<review id 앞부분>.json)")
@@ -113,6 +115,8 @@ def main():
         env["SHORTEM_SOURCE_CACHE"] = str(Path(a.cache).resolve())
     if a.no_paid:
         env["SHORTEM_NO_PAID"] = "1"
+    if a.single:
+        env["SHORTEM_SINGLE_SOURCE"] = "1"
     if a.tts_seed:
         rd = W / "job" / a.version / "render"
         rd.mkdir(parents=True, exist_ok=True)

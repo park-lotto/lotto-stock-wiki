@@ -312,7 +312,7 @@ def c_env(W, d):
     except Exception:  # noqa: BLE001 — 도구 없음은 missing 이 이미 알린다
         enc = "cpu"
     return {"keys": keys, "dev": dev, "cache": bool(CACHE), "disk_gb": round(du.free / 1e9, 1), "voice": voice, "missing": missing,
-            "encoder": enc, "done_refs": done_refs()}
+            "encoder": enc, "done_refs": done_refs(), **({"single_source": True} if os.environ.get("SHORTEM_SINGLE_SOURCE") == "1" else {})}   # 원본 찾기 워커(of_worker) — 둘째 소재 없이 소재 하나만
 
 
 def done_refs() -> list[str]:
