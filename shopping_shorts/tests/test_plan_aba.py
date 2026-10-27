@@ -16,7 +16,7 @@ def test_plan_returns_aba_as_jump(tmp_path, monkeypatch):
     monkeypatch.setattr(R, "tts_cache_miss", lambda W, v: None)
     monkeypatch.setattr(render_bench, "render", lambda *a, **k: {"timeline": {"cuts": cuts}, "length": 3.0})
     monkeypatch.setattr(R, "plan_sheet", lambda W, v, T: W / "s.jpg")
-    monkeypatch.setattr(R, "source_rule_scan", lambda W, T, names: [])
+    monkeypatch.setattr(R, "source_rule_scan", lambda *a, **k: [])
     monkeypatch.setattr(R, "_origin_names", lambda W, v: set())
     out = R.c_plan(tmp_path, {"version": "v"})
     assert any("A-B-A" in j and "A→B→A" in j for j in out["jumps"]), out

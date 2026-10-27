@@ -22,7 +22,7 @@ SKIP_VIDEO = re.compile(r"google\.|gstatic|googleusercontent|ytimg|ggpht|coupang
 LENS_FEW = 20      # 결과 화면의 링크 쌍이 이보다 적으면 덜 뜬 것 — 기다려 내려 본다(실측: 다 뜨면 60)
 
 
-def lens_rows(pg, img: str, skip: re.Pattern = SKIP_SHOP, hl: str = "ko") -> list[dict]:
+def lens_rows(pg, img: str, skip: re.Pattern = SKIP_SHOP, hl: str = "ko", info: dict | None = None) -> list[dict]:
     """사진 한 장 → [{href, text, shop}]. hl = 구글 화면 언어(en 이면 해외 결과가 위로 — snowball 10-21)."""
     pg.goto(f"https://www.google.com/?hl={hl}", wait_until="domcontentloaded", timeout=40000)
     # 고정 1.5초 두 번 대신 버튼이 보이면 바로(10-27 — 장마다 3초)
@@ -60,7 +60,40 @@ def lens_rows(pg, img: str, skip: re.Pattern = SKIP_SHOP, hl: str = "ko") -> lis
             continue
         seen.add(h)
         rows.append({"href": h, "text": t, "shop": shop})
+    if info is not None:
+        info["overview"] = overview(pg)
     return rows
+
+
+AI_OVERVIEW_JS = """()=>{const h=[...document.querySelectorAll('*')].find(e=>e.childElementCount===0&&/^(AI 개요|AI Overview)$/.test((e.textContent||'').trim()));
+if(!h)return '';let b=h;for(let i=0;i<6&&b.parentElement;i++){b=b.parentElement;if((b.innerText||'').length>200)break}return (b.innerText||'').slice(0,700)}"""
+
+
+def overview(pg, wait_ms: int = 3000) -> str:
+    """렌즈 결과 'AI 개요' 글(사진 전체를 보고 쓴다 — 출연자·브랜드 이름이 나온다). 10-27 실측: c편 '니키튜토리얼(NikkieTutorials)'·
+    a편 '미스 다시(Miss Darcei)'·'@tirtir_global' = 실제 원본 채널·브랜드. 렌즈 링크(물체 한 칸만 고른 결과)와 달리 장면 전체 기준이다."""
+    t = 0
+    while t < wait_ms:
+        txt = pg.evaluate(AI_OVERVIEW_JS) or ""
+        if len(txt) > 80:
+            return " ".join(txt.split())
+        pg.wait_for_timeout(300)
+        t += 300
+    return ""
+
+
+NAME_PAREN = re.compile(r"[가-힣][가-힣 ·]{0,15}\(\s*([A-Za-z][A-Za-z0-9 ._'-]{1,30}?)\s*[,)]")
+HANDLE = re.compile(r"@([A-Za-z0-9_.]{3,30})")
+
+
+def overview_names(text: str) -> list[str]:
+    """(판단 주인 — AI 개요에서 사람·계정 이름) '한글(영문)' 괄호 속 영문 + @계정만(사이트·상품 제목 잡음은 뺀다)."""
+    out = []
+    for n in NAME_PAREN.findall(text or "") + HANDLE.findall(text or ""):
+        n = n.strip(" .")
+        if len(n) >= 3 and n.lower() not in {x.lower() for x in out}:
+            out.append(n)
+    return out[:4]
 
 
 def video_crops(p) -> list:

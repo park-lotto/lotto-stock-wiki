@@ -2658,6 +2658,8 @@ def f_of_got(st, m, rp, u):
     mode = o.get("mode") or ("peers" if st.get("_peers_done") else "lens")
     cands = [c for c in o.get("cands") or [] if isinstance(c, dict)]
     st["of_cands"], st["of_mode"] = cands, mode
+    if o.get("lens_ai"):                  # 렌즈 'AI 개요'(장면 전체를 본 구글 설명 — 출연자·브랜드 단서). 해석은 오푸스가(판정·찾기 질문에 그대로)
+        st["lens_ai"] = o["lens_ai"]
     seen = st.setdefault("of_seen", [])           # 지금까지 본 후보(플랫폼:id) — 진행 신호(이번 바퀴 새 후보 수)·회원 진행 줄 '후보 N개'
     new = list(dict.fromkeys(f"{c.get('platform')}:{c.get('id')}" for c in cands if f"{c.get('platform')}:{c.get('id')}" not in seen))
     seen += new
@@ -2673,7 +2675,7 @@ def f_of_got(st, m, rp, u):
     if mode in ("lens", "find"):                 # 같은 영상 판정 = 렌즈 후보든 회원 Claude 가 찾은 후보든 같은 질문·같은 규칙(결과 검사)
         st["of_bad"] = _bad_urls(o)
         from tools.calcopy import origin_find as OF
-        ask = OF.JUDGE_PROMPT + "\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows
+        ask = OF.JUDGE_PROMPT + "\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows + _lens_ai_ctx(st)
         return {"review": [_rv("of_judge", ask, [_img(x) for x in o["sheets"]][:6], model="sonnet", need=("same",))], "then": "of_pick"}
     prod = ", ".join([str(st["read"].get("brand_hint") or "")] + [str(w) for w in st["read"].get("product_words") or []][:3]).strip(", ")
     need = "최대 2개" if st.get("origins") else "같은 촬영분 원본을 못 찾아 이 후보가 원본이 된다 — 가장 좋은 것부터 최대 3개"   # 가장 좋은 건 원본 그대로(렌즈), 못 찾으면 같은 종류 해외 반응(사장님 10-26)
@@ -2739,6 +2741,16 @@ JSON 하나: {"cuts": [{"cut": "S1 또는 컷 설명", "seen": "그 컷에 보�
 (모든 컷의 urls·queries 가 비면 이번 바퀴는 못 찾은 것으로 친다)"""
 
 
+def _lens_ai_ctx(st) -> str:
+    """렌즈 'AI 개요' 글을 오푸스 질문에 단서로 — 코드가 이름을 뽑아 검색하지 않는다(10-27 사장님 '코드 규칙만이면 이상한 방향을 못 잡는다',
+    실측: 정규식 이름 뽑기에 'Vogue Korea'·'medicube' 잡음). 10-27 실측: c편 '니키튜토리얼(NikkieTutorials)'·a편 '미스 다시(Miss Darcei)' = 실제 원본 채널."""
+    ov = [str(x) for x in (st.get("lens_ai") or {}).get("overviews") or [] if x]
+    if not ov:
+        return ""
+    return ("\n\n## 구글 렌즈 'AI 개요'(장면 전체를 보고 쓴 설명 — 출연자·채널·브랜드 이름 단서, 틀릴 수 있음)\n" + "\n".join(f"- {x[:400]}" for x in ov[:6]) +
+            "\n→ 출연자·채널·브랜드 이름이 보이면 그 이름 + 제품으로 틱톡·유튜브·인스타를 찾는다(queries·urls). 이미지만 비슷한 쇼핑·스톡 결과는 버린다.")
+
+
 def _bad_urls(o: dict) -> str:
     b = [x for x in o.get("bad_urls") or [] if isinstance(x, dict)]
     return (" · 못 연 주소: " + "; ".join(f"{x.get('url')} ({x.get('why')})" for x in b[:4])) if b else ""
@@ -2777,7 +2789,7 @@ def f_of_find(st, m, rp, u):
         "\n판독: 출연 " + str(R0.get("people")) + " · 제품 낱말 " + str(R0.get("product_words")) + " · 브랜드 단서 " + str(R0.get("brand_hint")),
         " · 앞서 쓴 검색어 " + str(R0.get("queries_en")),
         f"\n\n## 지난 시도({n}바퀴 · {used / 60:.0f}분 지남 · 본 후보 {len(st.get('of_seen') or [])}개 — 시간이 남아 있으니 계속 찾는다)\n" + ("\n".join(tried[-8:]) or "없음"),
-        "\n바로 앞 결과: " + str(st.get("of_find_why") or "-")])
+        "\n바로 앞 결과: " + str(st.get("of_find_why") or "-"), _lens_ai_ctx(st)])
     show = [_img(x) for x in (B.get("sheet"), B.get("big")) if x]
     return {"review": [_rv("of_find", OF_FIND_ASK + "\n\n" + _brief("origin_foreign.md") + ctx, show, need=("cuts",))], "then": "of_find_got"}
 
@@ -3441,7 +3453,7 @@ def _subsong_script_ask(st, fail: str = "") -> dict:
            "\n\n## 원본(한 샷 — 이 클립 하나로 만든다)\n" + "\n".join(O) +
            f"\n창(영상이 들어가는 자리) = {win[2]}x{win[3]} — crop 은 이 비율" +
            "\n실제 크기(crop 은 이 픽셀로 — 시트는 줄인 미리보기다): " + json.dumps(_all_dims(st), ensure_ascii=False) + _shots_ctx(st) +
-           _src_rule_ctx(st) + (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
+           _src_rule_ctx(st) + _points_ctx(v) + (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))   # 판 audit 숫자(est_length 등)도 처음부터(10-27 감사)
     return _rv(f"script_{v}", SCRIPT_SUBSONG + "\n\n" + ctx, [_img(x) for x in ms.get("sheets") or []], need=("대본", "재료"))
 
 

@@ -36,7 +36,10 @@ def main(argv: list[str]) -> int:
     fd = Path(a.flow)
     st = state_of(fd)
     slots = st.get("slots") or []
-    s = (slots[a.slot - 1].get("st") or {}) if slots and len(slots) >= a.slot else st
+    # 원본 찾기를 마친 편은 이긴 소재가 맨 위(st.read·job/bench)로 옮겨져 있다 — 그때는 맨 위 상태를 쓴다(10-27: 칸 1 검색어 + 이긴 소재 영상을 섞어 잼)
+    s = st if st.get("origins") and st.get("read") else ((slots[a.slot - 1].get("st") or {}) if slots and len(slots) >= a.slot else st)
+    if s is st:
+        a.slot = 1
     read = s.get("read") or st.get("read") or {}
     bench = s.get("bench") or st.get("bench") or {}
     qs = [q for q in read.get("queries_en") or [] if q][:4]

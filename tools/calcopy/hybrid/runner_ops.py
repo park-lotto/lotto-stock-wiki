@@ -1822,6 +1822,7 @@ def c_origin_foreign(W, d):
     seeds = _of_seed_frames(W)
     skip = set(d.get("skip") or [])
     raw: list[dict] = []
+    lens_ai: dict = {}
     if mode == "lens":
         if CACHE:
             f = cache_path("origin_foreign", f"{d.get('bench_id')}.json")
@@ -1852,11 +1853,15 @@ def c_origin_foreign(W, d):
             else:
                 kth = None
             found: dict = {}
+            ai_txt: list[str] = []      # 렌즈 'AI 개요' 글(장면 전체 기준 — 출연자·브랜드 이름, 10-27)
             _t = time.time()
             with LN.lens_page() as pg:
                 for im in [c for s in seeds for c in LN.video_crops(s)]:
                     try:
-                        rows = LN.lens_rows(pg, str(im), skip=LN.SKIP_VIDEO)
+                        li: dict = {}
+                        rows = LN.lens_rows(pg, str(im), skip=LN.SKIP_VIDEO, info=li)
+                        if li.get("overview"):
+                            ai_txt.append(li["overview"])
                     except Exception as e:  # noqa: BLE001 — 한 장 실패는 남기고 나머지
                         sys.stderr.write(f"[origin_foreign] 렌즈 실패 {im.name}: {type(e).__name__} {str(e)[:80]}\n"); rows = []
                     for r in rows:
@@ -1879,6 +1884,12 @@ def c_origin_foreign(W, d):
                     if (c["platform"], c["id"]) not in have:
                         raw.append({**c, "found_by": "keyword"})
                 sys.stderr.write(f"[구간] 키워드 기다림(렌즈 뒤) {time.time() - _t:.0f}초\n")
+            names = []
+            for t in ai_txt:
+                for n in LN.overview_names(t):
+                    if n.lower() not in {x.lower() for x in names}:
+                        names.append(n)
+            lens_ai = {"names": names[:4], "overviews": list(dict.fromkeys(t[:400] for t in ai_txt))[:6]}   # 해석·검색어는 오푸스가(flow of_judge·of_find) — 코드는 모으기만(10-27 사장님 '코드 규칙만이면 이상한 방향을 못 잡는다')
     else:
         if mode == "find":          # 회원 Claude 가 직접 찾은 주소(flow f_of_find, 10-26) — 메타·썸네일만 받아 같은 영상 판정 시트에 싣는다(판정은 서버 질문)
             given = [(k, OF.url_of(k[0], k[1], url)) for url in [str(x) for x in d.get("urls") or []][:8] for k in [OF.vkey(url)] if k and k[1] != d.get("bench_id")]
@@ -1913,7 +1924,8 @@ def c_origin_foreign(W, d):
     sheets = _of_sheets(W, seeds, cands) if cands else []
     jsave(W / "origin_foreign" / f"cands_{mode}.json", cands)
     return {"mode": mode, "cands": [{k: c.get(k) for k in ("n", "platform", "id", "url", "title", "channel", "channel_id", "date", "dur", "views", "korean", "thumb_ok")} for c in cands],
-            "sheets": sheets, "seed": [rel(W, p) for p in seeds], **({"bad_urls": bad} if bad else {})}
+            "sheets": sheets, "seed": [rel(W, p) for p in seeds], **({"bad_urls": bad} if bad else {}),
+            **({"lens_ai": lens_ai} if lens_ai.get("names") or lens_ai.get("overviews") else {})}
 
 
 def c_clean_text(W, d):
