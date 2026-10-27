@@ -1,0 +1,697 @@
+{
+ "topic": "The Comfy(입는 담요 — 겉 극세사·안 셰르파 후드 담요) — 판매 0 상태로 나온 스페셜 형제, 투자자 셋이 빠지고(스너기와 다를 게 없다) 바바라가 30%에 거래 → 바바라 본인이 꼽는 역대 최고 투자",
+ "product": "The Comfy Original(더 컴피 오리지널)",
+ "bench": {
+  "id": "D6H6sj3pap4",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "방송 나오고 대박난 담요?! (화면 제목: 방송 나오고 0원에서 / 7800억 팔린 담요?!)",
+  "dur": 61.161,
+  "views": 4200000,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "cut_median": 1.23,
+  "_cut_median_how": "check.scene_cuts 같은 자 46조각 중앙 — 10-27 실측"
+ },
+ "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」",
+ "dropped": [
+  "벤치 제목·나레 '7800억'·'200억 매출' — 출처를 못 찾은 금액(바바라 본인 발언은 '내 몫 4억 6,800만 달러', 회사 매출과 다름) → 금액 없이 '바바라의 역대 최고 투자'(본인 발언 전언)",
+  "벤치 7.5~8.5 QVC 홈쇼핑 화면·57.5~61 다른 채널 인터뷰 화면 — 방송 원본 밖 남의 영상 → 안 씀",
+  "벤치 46~57 역제안(25%)·거절 대목 — 길이·하이브리드 자르는 자리 때문에 바바라 30% 제안 → 성사로 줄임",
+  "벤치 끝 '방송 후 매출' 나레 — 하이브리드 뒤(쿠팡 체험)가 그 자리를 대신함"
+ ],
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "kind": "원음",
+    "fn": "반응(결말 반응 0초)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "어머 세상에!"
+    ],
+    "cap_at": [
+     93.27
+    ],
+    "span": [
+     93.27,
+     94.29
+    ],
+    "orig_en": "Oh my God.",
+    "text": "어머 세상에!",
+    "style": "원음반응_크게",
+    "fx": "0초 빨간 원(R3 물건 = 창업자 티셔츠의 the original Comfy 로고) — 벤치 0~1.4 빨간 실선 원(웃는 투자자 얼굴, 우리는 물건)",
+    "emph": [
+     {
+      "cap": "어머 세상에!",
+      "span": "어머 세상에!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N1",
+    "kind": "나레",
+    "fn": "문제(첫 반응)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "투자자 대부분이",
+     "시큰둥했던",
+     "이 입는 담요"
+    ],
+    "text": "투자자 대부분이 시큰둥했던 이 입는 담요",
+    "tts": "투자자 대부분이 시큰둥했던 이 입는 담요",
+    "fx": "빨강 번쩍 — 벤치 1.5(담요 컷)",
+    "emph": [
+     {
+      "cap": "투자자 대부분이",
+      "span": "투자자 대부분이",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "시큰둥했던",
+      "span": "시큰둥했던",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "이 입는 담요",
+      "span": "이 입는 담요",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "fn": "문제(혹평)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "이건 특별할 게 없어요",
+     "미안하지만 전 빠질게요"
+    ],
+    "cap_at": [
+     379.36,
+     380.81
+    ],
+    "span": [
+     379.36,
+     382.4
+    ],
+    "orig_en": "(This) is not unique enough. I'm sorry. I'm out.",
+    "text": "이건 특별할 게 없어요 미안하지만 전 빠질게요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "이건 특별할 게 없어요",
+      "span": "특별할 게 없어요",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "미안하지만 전 빠질게요",
+      "span": "전 빠질게요",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "fn": "반전 예고",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "근데 이게 몇 년 뒤",
+     "바바라의",
+     "역대 최고 투자가 됐다는데"
+    ],
+    "text": "근데 이게 몇 년 뒤 바바라의 역대 최고 투자가 됐다는데",
+    "tts": "근데 이게 몇 년 뒤 바바라의 역대 최고 투자가 됐다는데",
+    "fx": "초록 번쩍 — 벤치 6.0(반전 컷)",
+    "emph": [
+     {
+      "cap": "근데 이게 몇 년 뒤",
+      "span": "몇 년",
+      "color": "파랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "바바라의",
+      "span": "바바라의",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "역대 최고 투자가 됐다는데",
+      "span": "투자가 됐다는데",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O3",
+    "kind": "원음",
+    "fn": "문제(창업자)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "밖은 춥고",
+     "궂은 날씨잖아요",
+     "그저 따뜻하고 포근하고 싶죠"
+    ],
+    "cap_at": [
+     74.39,
+     75.27,
+     76.23
+    ],
+    "span": [
+     74.39,
+     78.99
+    ],
+    "orig_en": "It's cold outside. It's nasty. All you want is to be warm and cozy,",
+    "text": "밖은 춥고 궂은 날씨잖아요 그저 따뜻하고 포근하고 싶죠",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "밖은 춥고",
+      "span": "밖은 춥고",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "궂은 날씨잖아요",
+      "span": "궂은 날씨잖아요",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "그저 따뜻하고 포근하고 싶죠",
+      "span": "포근하고 싶죠",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "fn": "해답(소재)",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "겉은 극세사",
+     "안은 양털 같은 셰르파로",
+     "만든 입는 담요라"
+    ],
+    "text": "겉은 극세사, 안은 양털 같은 셰르파로 만든 입는 담요라",
+    "tts": "겉은 극세사, 안은 양털 같은 셰르파로 만든 입는 담요라",
+    "fx": "초록 번쩍 — 벤치 18.0(소재 컷)",
+    "emph": [
+     {
+      "cap": "겉은 극세사",
+      "span": "겉은 극세사",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "안은 양털 같은 셰르파로",
+      "span": "같은 셰르파로",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "만든 입는 담요라",
+      "span": "입는 담요라",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O4",
+    "kind": "원음",
+    "fn": "해답(반전 기능)",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "게다가 이 컴피는",
+     "자, 기다려 보세요",
+     "뒤집어 입을 수도 있어요"
+    ],
+    "cap_at": [
+     147.34,
+     149.5,
+     151.54
+    ],
+    "span": [
+     147.34,
+     153.22
+    ],
+    "orig_en": "But the comfy, sharks, is also, wait for it… reversible,",
+    "text": "게다가 이 컴피는 자, 기다려 보세요 뒤집어 입을 수도 있어요",
+    "style": "보통",
+    "fx": "빨강 번쩍 — 벤치 26.0('뒤집어 입을 수도')",
+    "emph": [
+     {
+      "cap": "게다가 이 컴피는",
+      "span": "이 컴피는",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "자, 기다려 보세요",
+      "span": "기다려 보세요",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "뒤집어 입을 수도 있어요",
+      "span": "수도 있어요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N4",
+    "kind": "나레",
+    "fn": "시연(투자자 체험)",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "샤크들도 직접 입고",
+     "소파에 눕더니",
+     "하나같이 포근하다며 웃었는데"
+    ],
+    "text": "샤크들도 직접 입고 소파에 눕더니 하나같이 포근하다며 웃었는데",
+    "tts": "샤크들도 직접 입고 소파에 눕더니 하나같이 포근하다며 웃었는데",
+    "emph": [
+     {
+      "cap": "샤크들도 직접 입고",
+      "span": "직접 입고",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "소파에 눕더니",
+      "span": "소파에 눕더니",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "하나같이 포근하다며 웃었는데",
+      "span": "포근하다며 웃었는데",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O5",
+    "kind": "원음",
+    "fn": "문제(판매 없음)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "팔아 본 적은 있어요?",
+     "완전 새 발명품이에요?",
+     "완전 새거예요"
+    ],
+    "cap_at": [
+     244.0,
+     245.56,
+     247.64
+    ],
+    "span": [
+     244.0,
+     248.32
+    ],
+    "orig_en": "So have you sold any, or is this a brand new invention? / Brand new.",
+    "text": "팔아 본 적은 있어요? 완전 새 발명품이에요? 완전 새거예요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "팔아 본 적은 있어요?",
+      "span": "팔아 본 적은 있어요?",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "완전 새 발명품이에요?",
+      "span": "완전 새 발명품이에요?",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "완전 새거예요",
+      "span": "완전 새거예요",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O6",
+    "kind": "원음",
+    "fn": "문제(판매 없음 반응)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "판매가 아예 없다고요?"
+    ],
+    "cap_at": [
+     252.48
+    ],
+    "span": [
+     252.48,
+     253.64
+    ],
+    "orig_en": "You have no sales, no sales yet.",
+    "text": "판매가 아예 없다고요?",
+    "style": "보통",
+    "fx": "빨강 번쩍 — 벤치 30.5('판매가 아예 없다고?')",
+    "emph": [
+     {
+      "cap": "판매가 아예 없다고요?",
+      "span": "판매가 아예 없다고요?",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N5",
+    "kind": "나레",
+    "fn": "지분 경쟁",
+    "facts": [
+     "f9"
+    ],
+    "caps": [
+     "결국 바바라가",
+     "지분 30%를 부르며",
+     "손을 내밀었는데"
+    ],
+    "text": "결국 바바라가 지분 30%를 부르며 손을 내밀었는데",
+    "tts": "결국 바바라가 지분 삼십 퍼센트를 부르며 손을 내밀었는데",
+    "fx": "초록 번쩍 — 벤치 45.0(지분 컷)",
+    "emph": [
+     {
+      "cap": "결국 바바라가",
+      "span": "결국 바바라가",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "지분 30%를 부르며",
+      "span": "30%를",
+      "color": "주황",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "손을 내밀었는데",
+      "span": "손을 내밀었는데",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O7",
+    "kind": "원음",
+    "fn": "결정(성사)",
+    "facts": [
+     "f9"
+    ],
+    "caps": [
+     "바바라,",
+     "거래하죠!",
+     "좋아요~",
+     "같이 따뜻하게 가 봐요"
+    ],
+    "cap_at": [
+     640.41,
+     641.97,
+     642.93,
+     644.33
+    ],
+    "span": [
+     640.41,
+     645.16
+    ],
+    "orig_en": "Barbara, you have a deal. / Okie dokie. / Let's get comfy together.",
+    "text": "바바라, 거래하죠! 좋아요~ 같이 따뜻하게 가 봐요",
+    "style": "보통",
+    "fx": "초록 번쩍 — 벤치 끝 거래 성사",
+    "emph": [
+     {
+      "cap": "바바라,",
+      "span": "바바라,",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "거래하죠!",
+      "span": "거래하죠!",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "좋아요~",
+      "span": "좋아요~",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "같이 따뜻하게 가 봐요",
+      "span": "따뜻하게 가 봐요",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N6",
+    "kind": "나레",
+    "fn": "끝(결과)",
+    "facts": [
+     "f9"
+    ],
+    "caps": [
+     "다들 혹평하던",
+     "그 담요가",
+     "그렇게 투자를 따냈다는데"
+    ],
+    "text": "다들 혹평하던 그 담요가 그렇게 투자를 따냈다는데",
+    "tts": "다들 혹평하던 그 담요가 그렇게 투자를 따냈다는데",
+    "emph": [
+     {
+      "cap": "다들 혹평하던",
+      "span": "다들 혹평하던",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "그 담요가",
+      "span": "그 담요가",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "그렇게 투자를 따냈다는데",
+      "span": "투자를 따냈다는데",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ],
+  "cps_target": 7.8
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "speed": 1.25
+ },
+ "titles": {
+  "line1": "샤크들이 비웃은",
+  "line2": "입는 담요의 반전?!",
+  "rule": "1줄 노랑·2줄 흰, 끝 '?!' — 벤치 '방송 나오고 0원에서 / 7800억 팔린 담요?!'과 3어절 연속 겹침 0, 줄당 ≤12자"
+ },
+ "render": {
+  "gap": 0.03
+ },
+ "facts": {
+  "f1": {
+   "text": "원본 93.27~94.27 'Oh my God.'(스피치매틱스 enhanced 영어) — 홍보 영상(바닷가·자동차·아이) 상영 중 투자자 반응. 화면 93.89~95.70 정장 투자자 웃음",
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "kind": "방송 원음"
+  },
+  "f2": {
+   "text": "원본 353~382 금발 투자자 '…the big elephant in the room… Snuggie… This is not unique enough. I'm out.' · 409~428 'I think you have a lot of work to do… I'm out' · 620 'I'm out' — 다섯 명 중 셋이 빠짐(시큰둥)",
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "kind": "방송 원음"
+  },
+  "f3": {
+   "text": "원본 379.17~382.21 'This is not unique enough. I'm sorry. I'm out.'",
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "kind": "방송 원음"
+  },
+  "f4": {
+   "text": "Yahoo Finance 'Barbara Corcoran Reveals Her Best Shark Tank Investment Has Made Her $468 Million So Far — And Nobody Wanted It'(2023 팟캐스트 본인 발언, https://finance.yahoo.com/news/barbara-corcoran-reveals-her-best-131202826.html) · CNBC 2020-03-16 'Barbara Corcoran invested in a company with no sales'(https://www.cnbc.com/2020/03/16/shark-tank-barbara-corcoran-invested-in-a-company-with-no-sales.html) — 대본엔 금액 안 씀('역대 최고 투자'만, 본인 발언 전언)",
+   "url": "https://finance.yahoo.com/news/barbara-corcoran-reveals-her-best-131202826.html",
+   "kind": "기사(본인 발언)"
+  },
+  "f5": {
+   "text": "원본 71.55~79.59 'Imagine sharks… It's cold outside. It's nasty. All you want is to be warm and cozy, you know?'",
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "kind": "방송 원음"
+  },
+  "f6": {
+   "text": "원본 109.83~115.83 'It's made of a soft microfiber on the outside and an even more luxurious Sherpa on the inside.' · 116.11~123.70 'The pocket is large enough…' · 147.34~153.22 '…the comfy sharks is also wait for it… reversible'",
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "kind": "방송 원음"
+  },
+  "f7": {
+   "text": "원본 199~243 창업자 'We'd love if you guys would come up and try it on the couch' → 투자자들이 입고 소파에 앉음 · 217.17 'It's pretty comfy.' · 화면 210~229",
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "kind": "방송 원음+화면"
+  },
+  "f8": {
+   "text": "원본 244.00~248.32 'So have you sold any, or is this a brand new invention? / Brand new.' · 252.48~253.88 'You have no sales, no sales yet.'",
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "kind": "방송 원음"
+  },
+  "f9": {
+   "text": "원본 584.22~585.82 바바라 'A 50 for 30%.' · 640.41~645.77 'Barbara, you have a deal. / Okie dokie. / Let's get comfy together.' · 화면 645~651 포옹 — '바바라' 이름은 원음 호명(575.46 'Barbara', 640.41)과 이름 띠",
+   "url": "https://www.youtube.com/watch?v=IK_JDKOLP8g",
+   "kind": "방송 원음"
+  }
+ }
+}
