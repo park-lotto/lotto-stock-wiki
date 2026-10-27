@@ -121,14 +121,26 @@ def code_alarms(blocks: list[dict], lines: list[dict]) -> list[dict]:
     return sorted(al, key=lambda a: a["t"])
 
 
-def _ask(prompt: str) -> dict:
+def _ask(prompt: str, tries: int = 2) -> dict:
+    for k in range(tries):
+        a = _ask1(prompt if k == 0 else prompt + " (설명 없이 JSON 한 줄만 답해라)")
+        if "답 못 읽음" not in str(a.get("what")):
+            return a
+    return a
+
+
+def _ask1(prompt: str) -> dict:
     r = subprocess.run([CLAUDE, "-p", "--model", "opus", "--output-format", "json"], input=prompt, capture_output=True,
                        text=True, encoding="utf-8", timeout=300)
     try:
         txt = json.loads(r.stdout).get("result") or ""
         return json.loads(re.search(r"\{.*\}", txt, re.S).group(0))
     except Exception as e:  # noqa: BLE001 — 못 읽은 답은 이유째 남긴다
-        return {"alarm": False, "what": f"답 못 읽음 {type(e).__name__}: {r.stdout[:120]} {r.stderr[:120]}"}
+        try:
+            txt = json.loads(r.stdout).get("result") or ""
+        except ValueError:
+            txt = r.stdout
+        return {"alarm": False, "what": f"답 못 읽음 {type(e).__name__}: {txt[:200]} {r.stderr[:120]}"}
 
 
 def opus_alarms(blocks: list[dict], lines: list[dict], win: float, par: int) -> list[dict]:
