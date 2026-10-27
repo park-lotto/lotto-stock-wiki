@@ -118,6 +118,30 @@ def yt_top(cid: str, n: int = 30) -> list[dict]:
     return [{"url": f"https://www.youtube.com/shorts/{x.get('id')}", "views": int(x.get("view_count") or 0), "title": x.get("title")} for x in es if x.get("id")]
 
 
+COVERS = Path("C:/숏템_칼카피/of_pool/_covers")
+
+
+def save_cover(url: str, src: str | None) -> str:
+    """영상 표지를 바로 받아 둔다(틱톡·인스타 표지 주소는 몇 시간 뒤 만료 — 10-27 oembed 는 표지 비어 옴·인스타 공개 표지 404).
+    → 저장한 파일 경로('' = 못 받음). 시선 끌기 판정(treasure_judge)이 이 그림을 본다."""
+    import requests
+    vid = url.rstrip("/").split("/")[-1].split("?")[0]
+    f = COVERS / f"{vid}.jpg"
+    if f.exists():
+        return str(f)
+    if not src or not src.startswith("http"):
+        return ""
+    try:
+        r = requests.get(src, timeout=15)
+        if r.ok and len(r.content) > 2000:
+            COVERS.mkdir(parents=True, exist_ok=True)
+            f.write_bytes(r.content)
+            return str(f)
+    except Exception:  # noqa: BLE001 — 표지 하나 실패는 판정에서 '그림 없음'
+        pass
+    return ""
+
+
 def tt_tops(handles: list[str], on_one=None) -> dict[str, list[dict]]:
     """틱톡 채널 화면 — 화면 뜬 창 + 틱톡 로그인 쿠키(원본 찾기의 틱톡 검색과 같은 길). 10-27 실측: 헤드리스는 몇 채널 뒤
     'Something went wrong'(목록 막힘)으로 7채널 0편 → 화면 뜬 창·쿠키로 32·32·19편. 막히면 5초 뒤 Refresh 한 번, 채널 사이 TT_GAP 초."""
@@ -151,10 +175,11 @@ def tt_tops(handles: list[str], on_one=None) -> dict[str, list[dict]]:
                     pg.mouse.wheel(0, 2500)
                     pg.wait_for_timeout(1000)
                 items = pg.eval_on_selector_all('[data-e2e="user-post-item"]', """els=>els.map(e=>({href:(e.querySelector('a')||{}).href,
-                    v:(e.querySelector('[data-e2e=video-views]')||{}).innerText, t:(e.querySelector('img')||{}).alt}))""")
+                    v:(e.querySelector('[data-e2e=video-views]')||{}).innerText, t:(e.querySelector('img')||{}).alt, src:(e.querySelector('img')||{}).src}))""")
             except Exception as e:  # noqa: BLE001 — 한 채널 실패는 남기고 다음
                 sys.stderr.write(f"[ch] 틱톡 @{h} 화면 실패: {type(e).__name__}\n")
-            out[h] = [{"url": i["href"], "views": num(i.get("v")), "title": (i.get("t") or "")[:120]} for i in items if i.get("href")]
+            out[h] = [{"url": i["href"], "views": num(i.get("v")), "title": (i.get("t") or "")[:120], "cover": save_cover(i["href"], i.get("src"))}
+                      for i in items if i.get("href")]
             if on_one:
                 on_one(h, out[h])               # 채널마다 바로 저장(중간에 죽어도 받은 건 남는다)
             if not out[h]:
@@ -203,7 +228,7 @@ def ig_tops(handles: list[str], on_one=None) -> dict[str, list[dict]]:
                 for _ in range(2):
                     pg.mouse.wheel(0, 2500)
                     pg.wait_for_timeout(1500)
-                rows = pg.eval_on_selector_all('a[href*="/reel/"]', "els=>els.map(e=>({href:e.href,t:e.innerText}))")
+                rows = pg.eval_on_selector_all('a[href*="/reel/"]', "els=>els.map(e=>({href:e.href,t:e.innerText,src:(e.querySelector('img')||{}).src}))")
             except Exception as e:  # noqa: BLE001
                 sys.stderr.write(f"[ch] 인스타 {h} 화면 실패: {type(e).__name__}" + chr(10))
             seen, items = set(), []
@@ -212,7 +237,7 @@ def ig_tops(handles: list[str], on_one=None) -> dict[str, list[dict]]:
                 if u in seen:
                     continue
                 seen.add(u)
-                items.append({"url": u, "views": _num_any((r.get("t") or "").split(chr(10))[0]), "title": ""})
+                items.append({"url": u, "views": _num_any((r.get("t") or "").split(chr(10))[0]), "title": "", "cover": save_cover(u, r.get("src"))})
             out[h] = items
             if on_one:
                 on_one(h, items)

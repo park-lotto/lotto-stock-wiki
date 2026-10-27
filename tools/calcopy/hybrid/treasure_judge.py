@@ -20,6 +20,7 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT))
 CLAUDE = shutil.which("claude") or "claude"
 BATCH = 25
 
@@ -73,12 +74,90 @@ def judge(batch: list[tuple[str, dict]]) -> dict[str, dict]:
     return out
 
 
+HOOK_ASK = """너는 쇼츠 시선 끌기 판정 담당이다. 그림 = 영상 표지 여러 장(칸마다 파란 번호). 스크롤하던 사람이 **멈춰서 보게 되는가**를 칸마다 0~10으로 매겨라.
+높게: 기괴하거나 충격적인 장면(눈·입에 뭔가·얼굴이 확 변함)·웃긴 표정·전후가 확 다른 비교·이상한 제품 모양·과장된 반응. 낮게: 평범한 셀카·제품만 덩그러니·글자뿐.
+JSON 하나: {"cells": [{"n": 번호, "hook": 0~10, "why": "한 줄(무엇이 눈을 끄나)"}]}"""
+NL2 = chr(10) * 2
+HOOK_GRID = (5, 4)          # 한 장에 20칸 — 그림 수를 줄여 토큰을 아낀다
+
+
+def _cover(v: dict) -> Path | None:
+    from tools.calcopy.hybrid import channel_worker as C
+    vid = v["url"].rstrip("/").split("/")[-1].split("?")[0]
+    f = C.COVERS / f"{vid}.jpg"
+    if f.exists():
+        return f
+    if v.get("platform") == "yt":                 # 유튜브 표지는 주소가 정해져 있다
+        import requests
+        try:
+            r = requests.get(f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg", timeout=15)
+            if r.ok and len(r.content) > 2000:
+                C.COVERS.mkdir(parents=True, exist_ok=True)
+                f.write_bytes(r.content)
+                return f
+        except Exception:  # noqa: BLE001
+            return None
+    return None
+
+
+def hook_judge(book: dict, outp: Path) -> int:
+    """(판단 = 소넷, 못 하면 오푸스) 표지 그림으로 '시선 끌기' 점수 — 사장님 10-27 '이런 시선 끌 만한 영상들이 조회수 잘 나온다'(눈 닦기 캡처).
+    제목만 보던 판정이 화면을 못 봤다. 표지 20장을 번호 붙인 한 장으로 묶어 한 번에 묻는다."""
+    import cv2
+    import numpy as np
+    todo = [(u, v) for u, v in book.items() if v.get("judge") and "hook" not in v["judge"]]
+    todo = [(u, v, c) for u, v in todo for c in [_cover(v)] if c]
+    print(f"[시선] 표지 있는 영상 {len(todo)}편", flush=True)
+    c, r = HOOK_GRID
+    sheet_dir = outp.parent / "_hook_sheets"
+    sheet_dir.mkdir(exist_ok=True)
+    done = 0
+    for i in range(0, len(todo), c * r):
+        part = todo[i:i + c * r]
+        tiles = []
+        for k, (u, v, f) in enumerate(part):
+            im = cv2.imdecode(np.fromfile(str(f), np.uint8), cv2.IMREAD_COLOR)
+            im = cv2.resize(im if im is not None else np.zeros((10, 10, 3), np.uint8), (216, 384))
+            cv2.rectangle(im, (0, 0), (52, 34), (200, 90, 20), -1)
+            cv2.putText(im, str(k + 1), (6, 26), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2)
+            tiles.append(im)
+        while len(tiles) % c:
+            tiles.append(np.zeros((384, 216, 3), np.uint8))
+        grid = np.vstack([np.hstack(tiles[j:j + c]) for j in range(0, len(tiles), c)])
+        sp = sheet_dir / f"hook_{i // (c * r) + 1}.jpg"
+        cv2.imencode(".jpg", grid, [cv2.IMWRITE_JPEG_QUALITY, 82])[1].tofile(str(sp))
+        got = {}
+        for model in ("sonnet", "opus"):
+            rr = subprocess.run([CLAUDE, "-p", "--model", model, "--output-format", "json", "--settings", '{"disableAllHooks": true}', "--max-turns", "4",
+                                 "--allowedTools", "Read", "--add-dir", str(sheet_dir), "--strict-mcp-config"],
+                                input=HOOK_ASK + NL2 + f"그림 파일(Read 로 열어 본다): {sp}" + chr(10) + f"칸 수 {len(part)}" + NL2 + "답은 JSON 하나만.",
+                                capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=tempfile.gettempdir(), timeout=900)
+            try:
+                txt = json.loads(rr.stdout).get("result") or ""
+                a = json.loads(txt[txt.find("{"):txt.rfind("}") + 1])
+                got = {int(x["n"]): x for x in a.get("cells") or [] if isinstance(x, dict) and str(x.get("n", "")).isdigit()}
+            except (ValueError, AttributeError, KeyError):
+                got = {}
+            if len(got) >= len(part) // 2:
+                break
+        for k, (u, v, f) in enumerate(part):
+            x = got.get(k + 1)
+            if x:
+                book[u]["judge"]["hook"] = x.get("hook")
+                book[u]["judge"]["hook_why"] = str(x.get("why") or "")[:120]
+                done += 1
+        outp.write_text(json.dumps(book, ensure_ascii=False, indent=1), encoding="utf-8")
+        print(f"[시선] {min(i + c * r, len(todo))}/{len(todo)} · 판정 {len(got)}", flush=True)
+    return done
+
+
 def main(argv: list[str]) -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser()
     ap.add_argument("--pool", default="C:/숏템_칼카피/of_pool")
     ap.add_argument("--min-score", type=float, default=8)
     ap.add_argument("--min-views", type=int, default=1_000_000)
+    ap.add_argument("--hook", action="store_true", help="표지 그림으로 시선 끌기 점수만(판정 끝난 영상)")
     a = ap.parse_args(argv)
     pool = Path(a.pool)
     chans = json.loads((pool / "채널자산.json").read_text(encoding="utf-8"))
@@ -87,6 +166,10 @@ def main(argv: list[str]) -> int:
     have_orig = {o for v in led.values() if v.get("status") == "found" for o in v.get("origins") or []}
     outp = pool / "보물후보.json"
     book = json.loads(outp.read_text(encoding="utf-8")) if outp.exists() else {}
+    if a.hook:
+        n = hook_judge(book, outp)
+        print(f"[시선] 점수 매긴 영상 {n}편")
+        return 0
     todo = []
     for ck, c in chans.items():
         j = c.get("judge") or {}
