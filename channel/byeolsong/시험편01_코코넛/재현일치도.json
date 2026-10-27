@@ -3,18 +3,18 @@
  "rows": [
   {
    "key": "len.duration",
-   "bench": 18.189999999999998,
+   "bench": 18.7,
    "ours": 13.4333,
-   "diff": -26.2,
+   "diff": -28.2,
    "judge": "in",
    "core": true,
    "why": "길이 차 ≤15%(검수 B1·compare len.duration)"
   },
   {
    "key": "cut.median",
-   "bench": 18.185000000000002,
+   "bench": 18.7,
    "ours": 13.43,
-   "diff": "둘 다 한 샷(컷 없음) — 벤치 5/6편 한 샷",
+   "diff": "둘 다 한 샷(컷 없음) — 벤치 4/5편 한 샷",
    "judge": "in",
    "core": true,
    "why": "컷 길이 중앙 ±30%, 벤치보다 빠르면 미달 쪽(검수 B4)",
@@ -34,9 +34,9 @@
   },
   {
    "key": "chunk.chars",
-   "bench": 11.25,
+   "bench": 12,
    "ours": 11.5,
-   "diff": 2.2,
+   "diff": -4.2,
    "judge": "in",
    "core": true,
    "why": "자막 조각 자수 중앙 차 ≤15%(검수 A9 범위)",
@@ -47,14 +47,14 @@
   },
   {
    "key": "chunk.sec",
-   "bench": 2.6900000000000004,
+   "bench": 2.7,
    "ours": 2.91,
-   "diff": 8.2,
+   "diff": 7.8,
    "judge": "in",
    "core": true,
    "why": "자막당 표시 초 중앙 차 ≤15%(compare cap.sub_sec)",
    "bench_span": [
-    2.25,
+    2.4,
     2.83
    ]
   },
@@ -97,9 +97,9 @@
   {
    "key": "fx.pos",
    "bench": {
-    "훅": 0.101,
-    "본문": 0.651,
-    "끝": 0.252
+    "훅": 0.091,
+    "본문": 0.667,
+    "끝": 0.231
    },
    "ours": {
     "훅": 0.125,
@@ -107,9 +107,9 @@
     "끝": 0.25
    },
    "diff": {
-    "끝": -0.2,
-    "본문": -2.6,
-    "훅": 2.4
+    "끝": 1.9,
+    "본문": -4.2,
+    "훅": 3.4
    },
    "judge": "in",
    "core": true,
@@ -117,10 +117,10 @@
    "bench_span": {
     "끝": [
      0.0,
-     0.375
+     0.333
     ],
     "본문": [
-     0.5,
+     0.583,
      0.75
     ],
     "훅": [
@@ -224,7 +224,7 @@
    "why": "0초 첫 화면 종류(card=글 얹은 표지 2프레임 / scene=그냥 장면) 벤치 최빈과 같음(표준 §4-1 A6)"
   }
  ],
- "n_bench": 6,
+ "n_bench": 5,
  "ours_n_lines": 8,
  "ours_media": {
   "duration": 13.43,
@@ -245,7 +245,6 @@
   "cut_median": [
    21.7,
    18.7,
-   17.67,
    15.07,
    3.3,
    21.93
@@ -253,7 +252,6 @@
   "lufs": [
    -14.4,
    -20.7,
-   -22.8,
    -18.5,
    -17.0,
    -18.5
@@ -261,7 +259,6 @@
   "ids": [
    "1lMbJh0n_d4",
    "_WLN4wnVbF8",
-   "Fwk50_y9t9Q",
    "PzKloCeO2FU",
    "SR-2LhCXxwY",
    "tF4fbEVtnMY"
@@ -289,21 +286,6 @@
     "cut_at": [],
     "lufs": -20.7,
     "tp": -4.2,
-    "win": [
-     0,
-     476,
-     1080,
-     1444
-    ],
-    "method": "probe.info + bench_one.measure 컷(compare 와 같은 자) + bench.audio.ebur128"
-   },
-   "Fwk50_y9t9Q": {
-    "duration": 17.67,
-    "cut_median": 17.67,
-    "n_cuts": 1,
-    "cut_at": [],
-    "lufs": -22.8,
-    "tp": -7.4,
     "win": [
      0,
      476,
@@ -366,13 +348,11 @@
  "bench_ids": [
   "1lMbJh0n_d4",
   "_WLN4wnVbF8",
-  "Fwk50_y9t9Q",
   "PzKloCeO2FU",
   "SR-2LhCXxwY",
   "tF4fbEVtnMY"
  ],
  "line_reads": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\byeolsong\\줄판독",
- "frame0_from": "완성본 측정",
- "made_by": "kal_analyze.match_from_render",
- "ok": true
+ "frame0_from": "썸네일.json pick(선언)",
+ "made_by": "kal_analyze.match_from_render"
 }

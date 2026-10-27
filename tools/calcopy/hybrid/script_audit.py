@@ -193,9 +193,8 @@ def _orig_sec(l: dict) -> float:
 
 def rule_check(r: dict, d: dict, st: dict) -> tuple[bool, str]:
     L = d.get("lines") or []
-    T = [l for l in L if l.get("kind") not in ("orig", "sub")]
+    T = [l for l in L if l.get("kind") != "orig"]
     O = [l for l in L if l.get("kind") == "orig"]
-    SUB = [l for l in L if l.get("kind") == "sub"]     # 나레 없는 자막 줄(댓글카드 등) — 길이는 줄 dur 그대로(별헤는쏭 10-27)
     txt = lambda l: (l.get("text") or l.get("tts") or "").strip()
     k = r["kind"]
     if k == "first_line":
@@ -273,7 +272,7 @@ def rule_check(r: dict, d: dict, st: dict) -> tuple[bool, str]:
         if k == "narr_share":
             sh = tn / max(0.01, tn + to)
             return r["min"] <= sh <= r["max"], f"나레 비중(어림) {sh:.2f} ({r['min']}~{r['max']})"
-        tot = tn + to + gaps + sum(float(l.get("dur") or 0) for l in SUB)
+        tot = tn + to + gaps
         return r["min"] - 1 <= tot <= r["max"] + 1, f"어림 길이 {tot:.1f}초 ({r['min']}~{r['max']}, 렌더 뒤 다시 잰다)"
     return False, f"모르는 규칙 {k}"
 

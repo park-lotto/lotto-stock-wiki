@@ -40,7 +40,6 @@
     "sinbak": {"format": "해외원본", "subformat": "자막+배경음", "bench_option": "신박발견(자막썰 1번) → 우리 신박리포트", "brand_ref": null,
       "engine": {"style_file": "tools/calcopy/hybrid/styles/신박판.json", "style_draft": "channel/sinbak/_kal/sinbak판_초안.json", "renderer": null, "preset_dir": "channel/sinbak/preset/연회색틀_둥근창_창아래자막", "hand_scripts": ["channel/sinbak/preset/sinbak_preset.py", "channel/sinbak/preset/sinbak_measure.py", "channel/sinbak/시험편1/make.py"]},
       "member": {"line_json": null, "preset_name": null, "flow_format": "해외원본형"}},
-    "byeolsong": {"format": "해외원본", "subformat": "자막+배경음", "bench_option": "별헤는쏭(@별헤는쏭) — 바이럴 한 샷 + 일본 노래 + 댓글카드 자막 + 가사 2줄 → 우리 릴리릴리", "brand_ref": "릴리릴리", "engine": {"style_file": "tools/calcopy/hybrid/styles/별헤는쏭판.json", "renderer": "bench", "preset_dir": "channel/byeolsong/preset/릴리릴리", "hand_scripts": []}, "member": {"line_json": null, "preset_name": null, "flow_format": "해외원본형"}},
     "shortvitc": {"format": "해외원본", "subformat": "자막+배경음", "bench_option": "숏비타민c(소리 미확인·09-16 이후 업로드 없음)", "brand_ref": null,
       "engine": {"style_file": "tools/calcopy/hybrid/styles/숏비타민c판.json", "renderer": null, "preset_dir": null, "hand_scripts": []},
       "member": {"line_json": null, "preset_name": null, "flow_format": "해외원본형"},
