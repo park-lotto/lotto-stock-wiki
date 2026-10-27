@@ -1606,6 +1606,40 @@
    "doc": "channel/foreignshowshow/18편_LUCY_하이브리드/",
    "judge": "[확인대기] −13.9 LUFS · TP −2.3(완성본 ebur128) · check render 뒤 전 칸 ○(앞 B1·B4 × = 앞 전체 기준, 하이브리드는 16.0초만 씀) · check_seams 되감김 0·점프줌 0 · freeze/black 0 · 광고 표시 0~38.6초 2초 간격+마지막 프레임 · 끝 여운 0.73초(받아쓰기 끝 37.97 → 38.70) · 받아쓰기 스피치매틱스 ko(△ '케빈'→'캐빈' 같은 소리) · 자막 색 손질 22칸(④) · 봉인 ok · deliver --check ○",
    "note": "벤치 0HbV-PW3ivw(410만) · 원본 Sony 49r_YvwH6lw · 뒤 재료 DrawLUCY 공식 Gq_t8OV_T7s·NJPklYRULSI·방송 케빈 시연 · 0초 원 = 무대 TV 홍보 영상 속 루시 본체"
+  },
+  {
+   "channel": "banggu",
+   "channel_name": "썰템홈샷",
+   "brand": "썰템홈샷",
+   "style": "나레썰/커뮤니티썰 하이브리드(이야기형 b)",
+   "preset": "channel/banggu/썰템홈샷_하이브리드/make.py",
+   "date": "2026-10-28",
+   "from": "channel/banggu/썰템홈샷_하이브리드/make.py → narr_video → thumb → tail_pad(끝 프레임·여운) → fade_tail(배경음악 끝 페이드) → 소리 리미터(tp_limit) → engine/finalize.seal",
+   "n": 102,
+   "title": "하이브리드 10 하리보(하리보 = 만든 사람 이름 + 도시 이름 HAns RIegel BOnn)",
+   "path": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/10_하리보/render/final.mp4",
+   "desktop": "썰템홈샷_10_haribo_검수대기.mp4",
+   "md5": "39e0cf5b2c1b3ab9b7d2458bfc55ffe8",
+   "seconds": 35.8,
+   "judge": "[확인대기] 잉 = 하리보는 창업자 이름+도시 이름 앞 글자(HARIBO 공식 역사 페이지) · 설탕 한 포대·구리 냄비 · 아내 자전거 배달 · 1922 춤추는 곰(같은 페이지) · 훅 = 하리보 로비 HARIBO 글자(SWR 공식) · 뒤 쿠팡 같은 제품 9219172184 · −14.6 LUFS · TP −1.7(완성본 직접) · make.py checks 14/14 · bench_distance 통과 · 멈춤/검정 0 · 광고 표시 0~34초 2초 간격 전부 · 끝 여운 0.78초(나레 디지털 무음 시작 35.02) + 배경음악 0.52초 페이드 · 받아쓰기 스피치매틱스 0.974+위스퍼 줄별 대조 · 봉인 ok · deliver --check ○ · 줄별 대조 ○13 △2 · 사장님 판정·귀 확인 전",
+   "doc": "channel/banggu/썰템홈샷_하이브리드/10_하리보/"
+  },
+  {
+   "channel": "banggu",
+   "channel_name": "썰템홈샷",
+   "brand": "썰템홈샷",
+   "style": "나레썰/커뮤니티썰 하이브리드(이야기형 b)",
+   "preset": "channel/banggu/썰템홈샷_하이브리드/make.py",
+   "date": "2026-10-28",
+   "from": "channel/banggu/썰템홈샷_하이브리드/make.py → narr_video → thumb → tail_pad(끝 프레임·여운) → fade_tail(배경음악 끝 페이드) → 소리 리미터(tp_limit) → engine/finalize.seal",
+   "n": 103,
+   "title": "하이브리드 11 호빵(가게 앞 호빵 찜통은 처음에 빵 회사가 돌린 것)",
+   "path": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/11_호빵/render/final.mp4",
+   "desktop": "썰템홈샷_11_hoppang_검수대기.mp4",
+   "md5": "03e05858774428804f4261ce1c57c5cf",
+   "seconds": 36.1,
+   "judge": "[확인대기] 잉 = 출시 이듬해 1972-01-01부터 삼립이 판매처에 진열대·알루미늄 찜통 배포(문화일보 2020 · 뉴시스 2023) · 이름 = 호호 불어 먹는 빵 · 첫해 12-31 하루 100만 개(SPC 관계자) · 훅 = KBS 공식 김 나는 찜통 · 뒤 쿠팡 같은 제품 7623478303 · −14.6 LUFS · TP −1.6(완성본 직접) · make.py checks 14/14 · bench_distance 통과 · 멈춤/검정 0 · 광고 표시 0~34초 2초 간격 전부 · 끝 여운 0.79초(나레 디지털 무음 시작 35.32) + 배경음악 0.53초 페이드 · 받아쓰기 스피치매틱스 0.978+위스퍼 줄별 대조 · 봉인 ok · deliver --check ○ · 줄별 대조 ○11 △1 · 사장님 판정·귀 확인 전",
+   "doc": "channel/banggu/썰템홈샷_하이브리드/11_호빵/"
   }
  ]
 }
