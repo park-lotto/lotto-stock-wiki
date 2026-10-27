@@ -1,0 +1,10 @@
+[
+ {
+  "at": "2026-10-28 06:00:19",
+  "dest": "G:\\내 드라이브\\칼카피영상\\2번 샥템스토리_987\\하이브리드\\21_snactiv_1028_0600.mp4",
+  "md5": "b18d19f2da0dcceca0badae6b27b454c",
+  "final": "C:\\숏템_칼카피\\foreignshowshow\\하이브리드\\21편_Snactiv\\work\\hybrid\\final.mp4",
+  "renderer": "tools/calcopy/shark/hybrid.py + channel/foreignshowshow/하이브리드/final_tail.py(소리=영상 길이·끝 페이드·TP)",
+  "gate": null
+ }
+]
