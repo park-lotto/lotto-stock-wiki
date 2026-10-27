@@ -1740,6 +1740,40 @@
    "seconds": 37.7,
    "doc": "channel/foreignshowshow/22편_Plufl_하이브리드/",
    "judge": "[확인대기] 벤치 rlYYyUPjrug ↔ Shark Tank Global TQw9ISabbhU · 앞 O3 끝 13.2초 + 뒤 지훈 1인칭(B1 '똑같은 건 없고 비슷한') · −14.0 LUFS/TP −2.4 · 끝 여운 1.23초 · 끝 0.1초 −89.3dB · freeze/black 0 · 광고 2초 간격+마지막 프레임 · check B13·B4 ○ · deliver --check ○ · 사람 귀 확인 전"
+  },
+  {
+   "channel": "banggu",
+   "channel_name": "썰템홈샷",
+   "brand": "썰템홈샷",
+   "style": "나레썰/커뮤니티썰 하이브리드(이야기형 b)",
+   "preset": "channel/banggu/썰템홈샷_하이브리드/make.py",
+   "date": "2026-10-28",
+   "from": "channel/banggu/썰템홈샷_하이브리드/make.py → narr_video → thumb → tail_pad(끝 프레임·여운 +0.35) → fade_tail(배경음악 끝 페이드) → 소리 리미터(tp_limit, +0.5dB) → engine/finalize.seal",
+   "n": 110,
+   "title": "하이브리드 14 포스트잇(포스트잇 풀은 원래 센 접착제를 만들다 실패한 것)",
+   "path": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/14_포스트잇/render/final.mp4",
+   "desktop": "썰템홈샷_14_post_it_notes_검수대기.mp4",
+   "md5": "f448ae67f1c4d4932a4995cedda17fb9",
+   "seconds": 38.1,
+   "doc": "channel/banggu/썰템홈샷_하이브리드/14_포스트잇/",
+   "judge": "[확인대기] 잉 = 1968 3M 연구원이 센 접착제를 만들려다 잘 떨어지는 풀(미네소타 역사학회 MNopedia·레멜슨-MIT) · 5년 쓸 데 없음 · 성가대 찬송가 책갈피 · 시험 판매 부진 → 보이시 무료 배포로 터짐(MNopedia·Twin Cities Business) · 훅 = NBC News Learn 공식 메모 벽 · 뒤 쿠팡 같은 제품 93449675(3M 포스트잇 큐브) · −14.5 LUFS/TP −1.4(완성본 직접) · 끝 여운 0.94초 · 끝 0.1초 무음 · make.py checks 14/14 · freeze/black 0 · 광고 2초 간격+마지막 프레임 · deliver --check ○ · 사람 귀 확인 전"
+  },
+  {
+   "channel": "banggu",
+   "channel_name": "썰템홈샷",
+   "brand": "썰템홈샷",
+   "style": "나레썰/커뮤니티썰 하이브리드(이야기형 b)",
+   "preset": "channel/banggu/썰템홈샷_하이브리드/make.py",
+   "date": "2026-10-28",
+   "from": "channel/banggu/썰템홈샷_하이브리드/make.py → narr_video → thumb → tail_pad(끝 프레임·여운 +0.35) → fade_tail(배경음악 끝 페이드) → 소리 리미터(tp_limit, +0.5dB) → engine/finalize.seal",
+   "n": 111,
+   "title": "하이브리드 15 츄파춥스(츄파춥스 로고는 화가 살바도르 달리가 그린 것)",
+   "path": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/15_츄파춥스/render/final.mp4",
+   "desktop": "썰템홈샷_15_chupa_chups_검수대기.mp4",
+   "md5": "a1c1f13e3e404fb9919bb179c9b00b0b",
+   "seconds": 35.77,
+   "doc": "channel/banggu/썰템홈샷_하이브리드/15_츄파춥스/",
+   "judge": "[확인대기] 잉 = 1969 달리가 신문지에 로고 바탕 스케치(Chupa Chups 영국 공식 연혁) · 포크로 먹듯 막대 · 이름 두 번 · 1995 미르 정거장 러시아 우주인(공식 연혁) · 훅 = 디스커버리 UK 공식 빨간 츄파춥스 → 달리 · 뒤 쿠팡 같은 제품 9774031587(파고다캡) · −14.5 LUFS/TP −1.6(완성본 직접) · 끝 여운 0.93초 · 끝 0.1초 무음 · make.py checks 14/14 · freeze/black 0 · 광고 2초 간격+마지막 프레임 · deliver --check ○ · 사람 귀 확인 전"
   }
  ]
 }

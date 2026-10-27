@@ -1,0 +1,159 @@
+{
+ "topic": "포스트잇 × 원래는 실패한 풀 — 3M 연구원 스펜서 실버(1968)가 센 접착제를 만들려다 붙였다 떼지는 약한 풀을 만듦 → 5년 동안 사내에 알려도 쓸 데 없음 → 성가대 동료 아트 프라이가 찬송가 책갈피에 발라 씀 → 첫 시험 판매 반응 시원찮아 접을 뻔 → 보이시 무료 배포(Boise Blitz) 성공 → 1980 전국 출시 · 뒤 체험: 쿠팡 3M 포스트잇 큐브 CT-654(93449675, 같은 제품)",
+ "brand": "3M Post-it",
+ "scene_query": "post-it notes office wall",
+ "product_mode": "exact",
+ "ing": {
+  "line": 0,
+  "fact": "mn",
+  "why": "책상·모니터마다 붙은 포스트잇 — 그 풀이 원래 '센 접착제를 만들다 실패한 약한 풀'(미네소타 역사학회 MNopedia 2016, 레멜슨-MIT 일치). 훅 장면 = NBC 공식: 포스트잇이 빽빽이 붙은 벽 — '이게 실패작?'"
+ },
+ "hook": [
+  "책상마다 붙은 포스트잇,",
+  "원래 실패작이었다?"
+ ],
+ "post": "포스트잇 풀은 원래 센 접착제를 만들다 실패한 것",
+ "tempo": null,
+ "points_from": "포인트.md",
+ "facts": {
+  "mn": {
+   "text": "MNopedia(Minnesota Historical Society, Julia Lavanger 2016-11-07) 'Post-it Notes': 1968 Spencer Silver was trying to make a strong glue but accidentally developed a material light enough to easily remove and peel apart · he spent five years meeting with others at 3M · Art Fry's scrap-paper bookmarks fell out of the hymnal he used while singing in his church choir · originally called Press n' Peel · After mixed success in market tests in several major cities, 3M almost decided to stop producing · free samples in Boise, Idaho (Boise Blitz) wildly successful · 1980 available in U.S. stores",
+   "url": "https://www.mnhs.org/mnopedia/search/index/thing/post-it-notes"
+  },
+  "lm": {
+   "text": "Lemelson-MIT 'Art Fry & Spencer Silver': In 1968, Silver developed a high-quality but 'low-tack' adhesive · Over the next five years, Silver shared his product with colleagues at 3M · Fry: the paper bookmarks that he used in his hymnal · in 1980, Post-it Notes were introduced nationwide",
+   "url": "https://lemelson.mit.edu/resources/art-fry-spencer-silver"
+  },
+  "tc": {
+   "text": "Twin Cities Business 2016-11-20 'How A Failed Glue Experiment And A Church Choir Singer's Frustration Led To The Invention Of Post-It': originally called Press n' Peel · After mixed success in market tests in several major cities, 3M almost decided to stop producing the Post-it Note · Boise Blitz wildly successful · 1980 U.S. stores",
+   "url": "https://tcbmag.com/?p=2630"
+  },
+  "p1": {
+   "text": "쿠팡 93449675 '3M 포스트잇 큐브 CT-654 (76x76mm), 3색 654 파스텔, 225매' — 파트너스 API 2026-10-28, 상품 사진 열어 Post-it 로고·3M 확인",
+   "url": "https://www.coupang.com/vp/products/93449675"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "잉 훅(포스트잇 벽 = 질문)",
+    "seg": "A",
+    "text": "책상마다 덕지덕지 붙어 있는 포스트잇, 그 풀이 원래는 실패작이었다는데",
+    "facts": [
+     "mn",
+     "lm"
+    ],
+    "sources": [
+     "https://www.mnhs.org/mnopedia/search/index/thing/post-it-notes",
+     "https://lemelson.mit.edu/resources/art-fry-spencer-silver"
+    ]
+   },
+   {
+    "fn": "몰랐던 배경",
+    "seg": "A",
+    "text": "알고 보니 쓰리엠 연구원 하나가, 아주 센 접착제를 만들려다가",
+    "facts": [
+     "mn",
+     "lm"
+    ],
+    "sources": [
+     "https://www.mnhs.org/mnopedia/search/index/thing/post-it-notes"
+    ]
+   },
+   {
+    "fn": "실패",
+    "seg": "A",
+    "text": "붙였다 떼면 그냥 떨어지는, 힘없는 풀을 만들어 버린 거죠",
+    "facts": [
+     "mn",
+     "lm"
+    ],
+    "sources": [
+     "https://www.mnhs.org/mnopedia/search/index/thing/post-it-notes",
+     "https://lemelson.mit.edu/resources/art-fry-spencer-silver"
+    ]
+   },
+   {
+    "fn": "쓸 데 없음",
+    "seg": "A",
+    "text": "그 뒤로 몇 년을 회사 안에 알리고 다녀도, 아무도 쓸 데를 못 찾았고",
+    "facts": [
+     "mn",
+     "lm"
+    ],
+    "sources": [
+     "https://www.mnhs.org/mnopedia/search/index/thing/post-it-notes",
+     "https://lemelson.mit.edu/resources/art-fry-spencer-silver"
+    ]
+   },
+   {
+    "fn": "계기",
+    "seg": "A",
+    "text": "그러다 교회 성가대에서 노래하던 동료가, 찬송가 책갈피가 자꾸 빠지니까",
+    "facts": [
+     "mn",
+     "lm"
+    ],
+    "sources": [
+     "https://www.mnhs.org/mnopedia/search/index/thing/post-it-notes",
+     "https://lemelson.mit.edu/resources/art-fry-spencer-silver"
+    ]
+   },
+   {
+    "fn": "공개",
+    "seg": "A",
+    "text": "그 풀을 종이에 발라서 끼워 본 게, 지금의 포스트잇이 됐다는 얘기",
+    "facts": [
+     "mn",
+     "lm"
+    ],
+    "sources": [
+     "https://www.mnhs.org/mnopedia/search/index/thing/post-it-notes",
+     "https://lemelson.mit.edu/resources/art-fry-spencer-silver"
+    ]
+   },
+   {
+    "fn": "덤(접을 뻔)",
+    "seg": "A",
+    "text": "근데 처음엔 반응이 시원찮아서 접을 뻔하다가, 공짜로 쫙 뿌리고 나서야 터졌다고",
+    "facts": [
+     "mn",
+     "tc"
+    ],
+    "sources": [
+     "https://www.mnhs.org/mnopedia/search/index/thing/post-it-notes",
+     "https://tcbmag.com/?p=2630"
+    ]
+   },
+   {
+    "fn": "B 연결",
+    "seg": "B",
+    "text": "이 얘기 듣고 저도, 쿠팡에서 쓰리엠 포스트잇 큐브를 샀는데",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/93449675"
+    ]
+   },
+   {
+    "fn": "B 좋은 점",
+    "seg": "B",
+    "text": "할 일을 적어서 노트북에 붙여 두니까, 깜빡하는 일이 확 줄었네요",
+    "facts": [],
+    "sources": []
+   },
+   {
+    "fn": "B 끝(되받기)",
+    "seg": "B",
+    "text": "실패한 접착제 하나가, 전 세계 책상을 점령해 버린 셈이죠",
+    "facts": [
+     "mn"
+    ],
+    "sources": [
+     "https://www.mnhs.org/mnopedia/search/index/thing/post-it-notes"
+    ]
+   }
+  ]
+ }
+}
