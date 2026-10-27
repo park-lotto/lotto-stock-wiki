@@ -45,7 +45,18 @@
     "orig_en": "Oh, no.",
     "text": "어머, 어떡해!",
     "style": "원음반응_크게",
-    "fx": "0초 빨간 원(R3 물건 = 무대 배너의 픽업브릭스 본체 그림) — 벤치 0~1.0 빨간 실선 원(놀란 투자자 얼굴, 우리는 물건)"
+    "fx": "0초 빨간 원(R3 물건 = 무대 배너의 픽업브릭스 본체 그림) — 벤치 0~1.0 빨간 실선 원(놀란 투자자 얼굴, 우리는 물건)",
+    "emph": [
+     {
+      "cap": "어머, 어떡해!",
+      "span": "어머, 어떡해!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
    },
    {
     "id": "N1",
@@ -61,7 +72,36 @@
     ],
     "text": "애 키우는 집이면 매일 밟는다는 이 고통",
     "tts": "애 키우는 집이면 매일 밟는다는 이 고통",
-    "fx": "빨강 번쩍 — 벤치 1.0(레고 바닥 컷)"
+    "fx": "빨강 번쩍 — 벤치 1.0(레고 바닥 컷)",
+    "emph": [
+     {
+      "cap": "애 키우는 집이면",
+      "span": "키우는 집이면",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "매일 밟는다는",
+      "span": "매일 밟는다는",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 배경(레고·분홍 옷·빨간 셔츠)과 대비 낮아 색 바꿈(10-27 ④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "이 고통",
+      "span": "이 고통",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
    },
    {
     "id": "O2",
@@ -84,7 +124,27 @@
     ],
     "orig_en": "The most painful experience a parent can face.",
     "text": "부모가 겪는 가장 끔찍한 고통이죠",
-    "style": "보통"
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "부모가 겪는",
+      "span": "부모가 겪는",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 배경(레고·분홍 옷·빨간 셔츠)과 대비 낮아 색 바꿈(10-27 ④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "가장 끔찍한 고통이죠",
+      "span": "끔찍한 고통이죠",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 배경(레고·분홍 옷·빨간 셔츠)과 대비 낮아 색 바꿈(10-27 ④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
    },
    {
     "id": "N2",
@@ -100,7 +160,36 @@
     ],
     "text": "그래서 애들이 알아서 치우라고 만든 장난감 전용 청소기",
     "tts": "그래서 애들이 알아서 치우라고 만든 장난감 전용 청소기",
-    "fx": "초록 번쩍 — 벤치 5.5(제품 공개 컷)"
+    "fx": "초록 번쩍 — 벤치 5.5(제품 공개 컷)",
+    "emph": [
+     {
+      "cap": "그래서 애들이",
+      "span": "그래서 애들이",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "알아서 치우라고 만든",
+      "span": "치우라고 만든",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "장난감 전용 청소기",
+      "span": "전용 청소기",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
    },
    {
     "id": "O3",
@@ -125,7 +214,36 @@
     ],
     "orig_en": "We made Pick Up Bricks cordless, durable, easy to use. It's perfect for kids.",
     "text": "픽업브릭스는 무선에 튼튼하고 쓰기도 쉬워요 아이들한테 딱이죠",
-    "style": "보통"
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "픽업브릭스는 무선에",
+      "span": "무선에",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "튼튼하고 쓰기도 쉬워요",
+      "span": "쓰기도 쉬워요",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "아이들한테 딱이죠",
+      "span": "딱이죠",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
    },
    {
     "id": "N3",
@@ -141,7 +259,36 @@
     ],
     "text": "심지어 먼지는 걸러 내고 장난감만 따로 모아 준다는데",
     "tts": "심지어 먼지는 걸러 내고 장난감만 따로 모아 준다는데",
-    "fx": "빨강 번쩍 — 벤치 15.5('일반 청소기와 다르게')"
+    "fx": "빨강 번쩍 — 벤치 15.5('일반 청소기와 다르게')",
+    "emph": [
+     {
+      "cap": "심지어 먼지는 걸러 내고",
+      "span": "먼지는 걸러 내고",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "장난감만",
+      "span": "장난감만",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "따로 모아 준다는데",
+      "span": "준다는데",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
    },
    {
     "id": "O4",
@@ -163,7 +310,18 @@
     "orig_en": "Wow, this thing is serious.",
     "text": "와, 이거 물건이네",
     "style": "보통",
-    "fx": "빨강 번쩍 — 벤치 20.0('와우 이거 물건이네')"
+    "fx": "빨강 번쩍 — 벤치 20.0('와우 이거 물건이네')",
+    "emph": [
+     {
+      "cap": "와, 이거 물건이네",
+      "span": "물건이네",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
    },
    {
     "id": "N4",
@@ -177,7 +335,27 @@
      "다들 손을 못 떼는데"
     ],
     "text": "샤크들도 직접 써 보더니 다들 손을 못 떼는데",
-    "tts": "샤크들도 직접 써 보더니 다들 손을 못 떼는데"
+    "tts": "샤크들도 직접 써 보더니 다들 손을 못 떼는데",
+    "emph": [
+     {
+      "cap": "샤크들도 직접 써 보더니",
+      "span": "직접 써 보더니",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "다들 손을 못 떼는데",
+      "span": "못 떼는데",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
    },
    {
     "id": "O5",
@@ -198,7 +376,18 @@
     ],
     "orig_en": "You don't have to clean them all up.",
     "text": "다 안 치우셔도 돼요~",
-    "style": "보통"
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "다 안 치우셔도 돼요~",
+      "span": "치우셔도 돼요~",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
    },
    {
     "id": "O6",
@@ -221,7 +410,27 @@
     ],
     "orig_en": "Just picking up the bricks is fun. / Yes, exactly.",
     "text": "그냥 줍는 것 자체가 재밌네 맞아, 바로 그거야",
-    "style": "보통"
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "그냥 줍는 것 자체가 재밌네",
+      "span": "자체가 재밌네",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "맞아, 바로 그거야",
+      "span": "바로 그거야",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
    },
    {
     "id": "N5",
@@ -237,7 +446,36 @@
     ],
     "text": "결국 샤크 넷이 줄줄이 지분을 부르며 붙었는데",
     "tts": "결국 샤크 넷이 줄줄이 지분을 부르며 붙었는데",
-    "fx": "초록 번쩍 — 벤치 38.5(지분 컷)"
+    "fx": "초록 번쩍 — 벤치 38.5(지분 컷)",
+    "emph": [
+     {
+      "cap": "결국 샤크 넷이",
+      "span": "샤크 넷이",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "줄줄이 지분을 부르며",
+      "span": "지분을 부르며",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "붙었는데",
+      "span": "붙었는데",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
    },
    {
     "id": "O7",
@@ -258,7 +496,18 @@
     ],
     "orig_en": "I am going to go to 15%.",
     "text": "난 15%까지 갈게요",
-    "style": "보통"
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "난 15%까지 갈게요",
+      "span": "15%까지",
+      "color": "노랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
    },
    {
     "id": "O8",
@@ -281,7 +530,27 @@
     ],
     "orig_en": "Is there any chance you guys would do it for 16 split?",
     "text": "두 분이 16%로 나눠 주실 순 없을까요?",
-    "style": "보통"
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "두 분이 16%로",
+      "span": "두 분이 16%로",
+      "color": "빨강",
+      "whole": true,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "나눠 주실 순 없을까요?",
+      "span": "나눠 주실 순 없을까요?",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
    },
    {
     "id": "O9",
@@ -303,7 +572,18 @@
     "orig_en": "We got a deal.",
     "text": "거래 성사예요!",
     "style": "보통",
-    "fx": "초록 번쩍 — 벤치 52.5 '협상 성공'"
+    "fx": "초록 번쩍 — 벤치 52.5 '협상 성공'",
+    "emph": [
+     {
+      "cap": "거래 성사예요!",
+      "span": "거래 성사예요!",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
    },
    {
     "id": "N6",
@@ -318,7 +598,36 @@
      "한 번에 잡았다는데"
     ],
     "text": "애들 장난감 청소기 하나로 샤크 둘을 한 번에 잡았다는데",
-    "tts": "애들 장난감 청소기 하나로 샤크 둘을 한 번에 잡았다는데"
+    "tts": "애들 장난감 청소기 하나로 샤크 둘을 한 번에 잡았다는데",
+    "emph": [
+     {
+      "cap": "애들 장난감 청소기 하나로",
+      "span": "청소기 하나로",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "샤크 둘을",
+      "span": "샤크 둘을",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "한 번에 잡았다는데",
+      "span": "한 번에",
+      "color": "노랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
    }
   ],
   "cps_target": 7.8

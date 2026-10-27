@@ -1,0 +1,571 @@
+{
+ "topic": "Rocketbook(로켓북 — 필기 뒤 앱으로 찍어 클라우드에 올리고, 전자레인지·물로 지워 다시 쓰는 노트) — 우주복 차림 창업자 둘, 투자자 다섯이 전부 거절 → CNBC 가 '샤크탱크 역사상 가장 큰 놓침 중 하나'로 꼽고 2020년 12월 BIC 이 인수",
+ "product": "Rocketbook(로켓북)",
+ "bench": {
+  "id": "pc1_ezP__eY",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "The product that the sharks missed the most was the most regrettable. (화면 제목: 샤크들이 놓쳐서 / 가장 후회한 제품?!)",
+  "dur": 32.534,
+  "views": 1800000,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "cut_median": 1.23,
+  "_cut_median_how": "check.scene_cuts 같은 자 23조각 중앙 — 10-27 실측"
+ },
+ "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」",
+ "dropped": [
+  "벤치 '매년 150억을 벌고 600억의 회사를 팔게 된' — 금액(대본 금액 금지) → '볼펜으로 유명한 빅에 팔렸다'(CNBC 화면 글, 금액 뺌)",
+  "벤치 0초 투자자 단체 화면·'가장 후회한' 투자자 인터뷰·아마존 순위 화면·바닷가 뒤 영상 — 이 원본 밖 → 원본 안 장면으로",
+  "벤치 '가장 후회한' — 투자자 본인 후회 발언 출처를 못 찾음 → CNBC 화면 글 'one of the biggest misses in Shark Tank history' 그대로 '손꼽히게 아깝게 놓친'",
+  "벤치 끝 '다들 우리가 돈을 못 벌 거라고 했지' 뒤 인터뷰 — 하이브리드 뒤(쿠팡 체험)가 그 자리를 대신함"
+ ],
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "kind": "원음",
+    "fn": "반응(결말 반응 0초)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "이렇게 웃기고 황당한 건",
+     "진짜 오랜만이네요"
+    ],
+    "cap_at": [
+     179.84,
+     181.12
+    ],
+    "span": [
+     179.84,
+     182.72
+    ],
+    "orig_en": "This is the funniest, wackiest, most ridiculous thing I've heard in a long time.",
+    "text": "이렇게 웃기고 황당한 건 진짜 오랜만이네요",
+    "style": "원음반응_크게",
+    "fx": "0초 빨간 원(R3 물건 = 투자자가 든 로켓북 노트) — 벤치 0~1.0 투자자석 와이드(우리는 물건 원)",
+    "emph": [
+     {
+      "cap": "이렇게 웃기고 황당한 건",
+      "span": "이렇게 웃기고",
+      "color": "초록",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "진짜 오랜만이네요",
+      "span": "오랜만이네요",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N1",
+    "kind": "나레",
+    "fn": "문제(훅)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "샤크탱크 역사상",
+     "손꼽히게 아깝게 놓친",
+     "제품이라는 이 노트"
+    ],
+    "text": "샤크탱크 역사상 손꼽히게 아깝게 놓친 제품이라는 이 노트",
+    "tts": "샤크탱크 역사상 손꼽히게 아깝게 놓친 제품이라는 이 노트",
+    "fx": "빨강 번쩍 — 벤치 1.5('가장 후회한 제품')",
+    "emph": [
+     {
+      "cap": "샤크탱크 역사상",
+      "span": "샤크탱크 역사상",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 배경(주황 우주복·흰 TV·산호색 옷)과 대비 낮아 미리 바꿈(10-27 ④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "손꼽히게 아깝게 놓친",
+      "span": "아깝게 놓친",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "제품이라는 이 노트",
+      "span": "이 노트",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 배경(주황 우주복·흰 TV·산호색 옷)과 대비 낮아 미리 바꿈(10-27 ④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "fn": "해답(소개)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "저희는 미래에서 온",
+     "노트를 만들어요"
+    ],
+    "cap_at": [
+     8.32,
+     9.4
+    ],
+    "span": [
+     8.32,
+     11.38
+    ],
+    "orig_en": "And we make notebooks from the future.",
+    "text": "저희는 미래에서 온 노트를 만들어요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "저희는 미래에서 온",
+      "span": "저희는 미래에서",
+      "color": "민트",
+      "whole": false,
+      "why": "머리(꼬리 약함) → 손: 배경(주황 우주복·흰 TV·산호색 옷)과 대비 낮아 미리 바꿈(10-27 ④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "노트를 만들어요",
+      "span": "노트를 만들어요",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "fn": "해답(기능)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "필기하고 앱으로 찍으면",
+     "클라우드에 바로 저장되고",
+     "지워서 다시 쓸 수도",
+     "있다는데"
+    ],
+    "text": "필기하고 앱으로 찍으면 클라우드에 바로 저장되고, 지워서 다시 쓸 수도 있다는데",
+    "tts": "필기하고 앱으로 찍으면 클라우드에 바로 저장되고, 지워서 다시 쓸 수도 있다는데",
+    "fx": "초록 번쩍 — 벤치 4.5('사진을 찍으면')",
+    "emph": [
+     {
+      "cap": "필기하고 앱으로 찍으면",
+      "span": "앱으로 찍으면",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "클라우드에 바로 저장되고",
+      "span": "바로 저장되고",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 배경(주황 우주복·흰 TV·산호색 옷)과 대비 낮아 미리 바꿈(10-27 ④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "지워서 다시 쓸 수도",
+      "span": "다시 쓸 수도",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "있다는데",
+      "span": "있다는데",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O3",
+    "kind": "원음",
+    "fn": "해답(지우기)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "노트에 쓴 내용을",
+     "통째로 사라지게 할 수 있어요"
+    ],
+    "cap_at": [
+     71.92,
+     73.36
+    ],
+    "span": [
+     71.92,
+     76.32
+    ],
+    "orig_en": "You can make your entire notebook contents disappear.",
+    "text": "노트에 쓴 내용을 통째로 사라지게 할 수 있어요",
+    "style": "보통",
+    "fx": "빨강 번쩍 — 벤치 9.0('모두 지워져')",
+    "emph": [
+     {
+      "cap": "노트에 쓴 내용을",
+      "span": "쓴 내용을",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 배경(주황 우주복·흰 TV·산호색 옷)과 대비 낮아 미리 바꿈(10-27 ④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "통째로 사라지게 할 수 있어요",
+      "span": "사라지게 할 수 있어요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "fn": "시연(전자레인지)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "방법은 노트에",
+     "물 한 컵 올려서",
+     "전자레인지에 돌리는 거라는데"
+    ],
+    "text": "방법은 노트에 물 한 컵 올려서 전자레인지에 돌리는 거라는데",
+    "tts": "방법은 노트에 물 한 컵 올려서 전자레인지에 돌리는 거라는데",
+    "emph": [
+     {
+      "cap": "방법은 노트에",
+      "span": "방법은 노트에",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "물 한 컵 올려서",
+      "span": "한 컵",
+      "color": "빨강",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "전자레인지에 돌리는 거라는데",
+      "span": "돌리는 거라는데",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O4",
+    "kind": "원음",
+    "fn": "문제(반대)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "대체 왜 지워요?",
+     "버리거나 태우고",
+     "새로 사게 해야죠"
+    ],
+    "cap_at": [
+     151.44,
+     153.04,
+     155.04
+    ],
+    "span": [
+     151.44,
+     156.56
+    ],
+    "orig_en": "Why would I want to erase it? Why wouldn't I want to make them throw it out or burn it and buy another one?",
+    "text": "대체 왜 지워요? 버리거나 태우고 새로 사게 해야죠",
+    "style": "보통",
+    "fx": "빨강 번쩍 — 벤치 16.5('두번째 책은 안 팔 생각인거야?')",
+    "emph": [
+     {
+      "cap": "대체 왜 지워요?",
+      "span": "대체 왜 지워요?",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "버리거나 태우고",
+      "span": "버리거나 태우고",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "새로 사게 해야죠",
+      "span": "사게 해야죠",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O5",
+    "kind": "원음",
+    "fn": "결정(거절)",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "2~3년 지나면",
+     "다들 질릴 거예요",
+     "그래서 전 빠질게요"
+    ],
+    "cap_at": [
+     186.8,
+     188.2,
+     189.76
+    ],
+    "span": [
+     186.8,
+     190.48
+    ],
+    "orig_en": "And 2 to 3 years from now, I think people will get tired of it. So I'm out.",
+    "text": "2~3년 지나면 다들 질릴 거예요 그래서 전 빠질게요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "2~3년 지나면",
+      "span": "2~3년 지나면",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "다들 질릴 거예요",
+      "span": "질릴 거예요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 배경(주황 우주복·흰 TV·산호색 옷)과 대비 낮아 미리 바꿈(10-27 ④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "그래서 전 빠질게요",
+      "span": "빠질게요",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N4",
+    "kind": "나레",
+    "fn": "결정(전원 거절)",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "결국 샤크 다섯 명이",
+     "줄줄이 빠졌는데"
+    ],
+    "text": "결국 샤크 다섯 명이 줄줄이 빠졌는데",
+    "tts": "결국 샤크 다섯 명이 줄줄이 빠졌는데",
+    "fx": "초록 번쩍 — 벤치 23.0('모든 투자자들의 거절')",
+    "emph": [
+     {
+      "cap": "결국 샤크 다섯 명이",
+      "span": "다섯 명이",
+      "color": "파랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "줄줄이 빠졌는데",
+      "span": "줄줄이 빠졌는데",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O6",
+    "kind": "원음",
+    "fn": "결정(마지막 거절)",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "전 빠질게요, 빠질게요"
+    ],
+    "cap_at": [
+     320.6
+    ],
+    "span": [
+     320.6,
+     322.36
+    ],
+    "orig_en": "I'm out, I'm out.",
+    "text": "전 빠질게요, 빠질게요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "전 빠질게요, 빠질게요",
+      "span": "빠질게요, 빠질게요",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N5",
+    "kind": "나레",
+    "fn": "끝(결과)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "근데 몇 년 뒤",
+     "이 회사가 볼펜으로 유명한",
+     "빅에 팔렸다는데"
+    ],
+    "text": "근데 몇 년 뒤 이 회사가 볼펜으로 유명한 빅에 팔렸다는데",
+    "tts": "근데 몇 년 뒤 이 회사가 볼펜으로 유명한 빅에 팔렸다는데",
+    "emph": [
+     {
+      "cap": "근데 몇 년 뒤",
+      "span": "근데 몇 년 뒤",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 배경(주황 우주복·흰 TV·산호색 옷)과 대비 낮아 미리 바꿈(10-27 ④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "이 회사가 볼펜으로 유명한",
+      "span": "볼펜으로 유명한",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 배경(주황 우주복·흰 TV·산호색 옷)과 대비 낮아 미리 바꿈(10-27 ④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "빅에 팔렸다는데",
+      "span": "빅에 팔렸다는데",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ],
+  "cps_target": 7.8
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "speed": 1.25
+ },
+ "titles": {
+  "line1": "샤크 5명이 거절한",
+  "line2": "미래에서 온 노트?!",
+  "rule": "1줄 노랑·2줄 흰, 끝 '?!' — 벤치 '샤크들이 놓쳐서 / 가장 후회한 제품?!'과 3어절 연속 겹침 0, 줄당 ≤12자"
+ },
+ "render": {
+  "gap": 0.03
+ },
+ "facts": {
+  "f1": {
+   "text": "원본 179.84~182.72 'This is the funniest, wackiest, most ridiculous thing I've heard in a long time.'(스피치매틱스 enhanced 영어) — 화면 179.61~182.28 검은 옷 투자자(말하는 본인)",
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "kind": "방송 원음"
+  },
+  "f2": {
+   "text": "원본 330~336초 CNBC 화면 글 'ROCKETBOOK WAS ONE OF THE BIGGEST MISSES IN SHARK TANK HISTORY. THE COMPANY WAS ACQUIRED IN DECEMBER 2020 BY PEN MAKER BIC FOR $40 MILLION.' — 대본엔 금액 안 씀",
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "kind": "방송사 화면 글(CNBC)"
+  },
+  "f3": {
+   "text": "원본 8.32~11.48 'And we make notebooks from the future.' · 30.12~41.16 'take notes in your Rocketbook and scan them with the Rocketbook app to instantly blast those notes to popular cloud services' · 66.56~70.80 '…the Rocketbook Wave, to be reusable.'",
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "kind": "방송 원음"
+  },
+  "f4": {
+   "text": "원본 71.92~76.32 'You can make your entire notebook contents disappear.' · 117.00~122.92 'you're gonna microwave your notebook here, and Commander Epstein is going to give you a little mug of water to place right on the circles on the cover.' · 175.36~179.80 'The water absorbs a lot of the microwave energy'",
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "kind": "방송 원음+화면"
+  },
+  "f5": {
+   "text": "원본 151.32~156.56 'Why would I want to erase it? Why wouldn't I want to make them throw it out or burn it and buy another one?'",
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "kind": "방송 원음"
+  },
+  "f6": {
+   "text": "원본 189.76 'So I'm out.' · 205.72 'I'm out.' · 230.96 'I'm out.' · 278.08~279.72 'So for that reason, I'm out.' · 320.60~322.36 'I'm out, I'm out.' — 투자자 다섯 모두 거절",
+   "url": "https://www.youtube.com/watch?v=bjW4T3xp8vc",
+   "kind": "방송 원음"
+  }
+ }
+}

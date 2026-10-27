@@ -67,6 +67,53 @@
     "answer_at": 2,
     "emph_words": [
      "그 픽업브릭스가"
+    ],
+    "emph": [
+     {
+      "cap": "근데 저 청소기가",
+      "span": "청소기가",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "궁금해서 쿠팡에 쳐 봤더니",
+      "span": "쿠팡에 쳐 봤더니",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "방송에 나온",
+      "span": "방송에 나온",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 배경(레고·분홍 옷·빨간 셔츠)과 대비 낮아 색 바꿈(10-27 ④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "그 픽업브릭스가",
+      "span": "그 픽업브릭스가",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 배경(레고·분홍 옷·빨간 셔츠)과 대비 낮아 색 바꿈(10-27 ④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "그대로 있더라고요",
+      "span": "있더라고요",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
     ]
    },
    {
@@ -83,6 +130,44 @@
     ],
     "facts": [
      "f6"
+    ],
+    "emph": [
+     {
+      "cap": "이게 말도 안 되는 게",
+      "span": "이게 말도",
+      "color": "노랑",
+      "whole": false,
+      "why": "머리(꼬리 약함) → 손: 배경(레고·분홍 옷·빨간 셔츠)과 대비 낮아 색 바꿈(10-27 ④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "샤크탱크 투자자 4명이",
+      "span": "4명이",
+      "color": "파랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "서로 투자하겠다고",
+      "span": "투자하겠다고",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "붙었던 그 청소기거든요",
+      "span": "청소기거든요",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
     ]
    },
    {
@@ -101,6 +186,53 @@
     "facts": [
      "f4",
      "c2"
+    ],
+    "emph": [
+     {
+      "cap": "진짜 핵심은 이건데",
+      "span": "핵심은 이건데",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "호스로 쓱 빨아들이면",
+      "span": "빨아들이면",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "장난감은 통에 남고",
+      "span": "통에 남고",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "먼지만 체처럼",
+      "span": "먼지만 체처럼",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "아래로 걸러져요",
+      "span": "아래로 걸러져요",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
     ]
    },
    {
@@ -119,6 +251,53 @@
     "facts": [
      "f5",
      "창작"
+    ],
+    "emph": [
+     {
+      "cap": "심지어 이게 대박인 게",
+      "span": "심지어 이게",
+      "color": "노랑",
+      "whole": false,
+      "why": "머리(꼬리 약함) → 손: 배경(레고·분홍 옷·빨간 셔츠)과 대비 낮아 색 바꿈(10-27 ④)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "우리 애들이",
+      "span": "우리 애들이",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "장난감인 줄 알고",
+      "span": "줄 알고",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "서로 먼저 치우겠다고",
+      "span": "치우겠다고",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "싸워요",
+      "span": "싸워요",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
     ]
    },
    {
@@ -134,6 +313,35 @@
     ],
     "facts": [
      "창작"
+    ],
+    "emph": [
+     {
+      "cap": "놀러 온 조카들까지",
+      "span": "조카들까지",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "자기 집에도",
+      "span": "자기 집에도",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "사 달라고 난리예요",
+      "span": "난리예요",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
     ]
    }
   ]
