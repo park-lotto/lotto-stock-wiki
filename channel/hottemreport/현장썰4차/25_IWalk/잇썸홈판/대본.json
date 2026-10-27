@@ -1,0 +1,56 @@
+{
+ "_note": "숏템리폿 4차 25 iWALK 하이브리드 — 앞 = 숏템리폿 현장썰 Kristi 원음형 박창수판(25_IWalk/front), 뒤 = 쿠팡 6926002708 'iWALK3.0 오리지널 핸즈 프리 무릎 목발'(같은 브랜드 iWALK 의 지금 모델 — 앞 원음 Kristi 는 iWALK2.0 이라 대본 B1 에서 '새 모델'로 밝힌다, Pat 화면 = 3.0 그대로). 뒤 화면 = 쿠팡 대표 사진(move) + Kristi 다른 장면(여자 — 농부·해리슨 포드 대사 때 남자 얼굴 안 나오게) + Pat 계단(다리만)·부엌. 금액·효능(통증·회복)·남의 상표는 말하지 않는다.",
+ "brand": "잇썸홈",
+ "product": "iWALK3.0 핸즈프리 무릎 목발(쿠팡 6926002708 — iWALK 같은 브랜드 지금 모델, 앞 원음은 2.0)",
+ "product_mode": "exact",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰4차/25_IWalk/front/render/final.mp4",
+  "cut": 18.16,
+  "why": "원음 O2 'cup of coffee' 끝(앞 17.864) 뒤 0.3초 — 같은 한 샷(kr 79.0~102.0) 안",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API(10-28 07:0x, 'iWALK 핸즈프리 목발' 1회, 25_cand/coupang_a.json): 6926002708 'iWALK3.0 u2013 오리지널 핸즈 프리 무릎 목발 - 목발과 무릎 스쿠터의 대안' · 대표 사진(cand/cp_6926002708.jpg) 검정·파랑 무릎 받침 = Pat 영상 iWALK3.0 · Kristi 영상 첫 화면 'iWALK2.0'(옛 모델)",
+  "o_farm": "FARM SHOW Magazine 2007 Vol.31 No.5 p.30 'Hands-Free Crutch'(연락처 iWALKFree, Mansfield, Ontario, www.iwalk-free.com): 발명가 Lance Matthews 가 헛간 지붕에서 떨어져 발을 다친 뒤 나무로 첫 판을 만들어 일과 휴가를 이어 갔다 · 2000년부터 판매",
+  "o_ford": "ABC Good Morning America 2014-07-02 'How Harrison Ford Is Coping with a Broken Leg'(Lesley Messer, People 인용): Ford 가 Star Wars: Episode VII 촬영장에서 다리가 부러진 뒤 iWalk Crutch 를 쓴다 · iWalk 사업개발 책임 Brad Hunter 'He gets it. He's mechanically inclined.'",
+  "o_do": "Pat 원본(MERqYnho898 자동 자막) 27.96~30.27 'within a day or two I could do stairs go outside' · Kristi 원본 145.74~146.54 'cook dinner' · Pat 화면 28.73~32.70 계단·38.27~40.57 가스레인지 앞 요리"
+ },
+ "흥미이음": {
+  "원본흥미": "처음 끼고 걷자마자 'this isn't so bad … pretty easy' · 두 팔을 벌리며 'No hands and my cup of coffee!'",
+  "뒤흥미": "쿠팡의 그 iWALK(지금 모델 3.0) — 농부가 나무로 만든 시작·해리슨 포드도 쓴 목발·계단과 부엌일을 서서",
+  "판정": "같음",
+  "근거": "같은 브랜드 같은 꼴: Kristi 화면 'iWALK2.0' · Pat 영상 iWALK3.0 = 쿠팡 상품명 'iWALK3.0' + 대표 사진(검정·파랑 무릎 받침) 대조"
+ },
+ "voice": {"name": "박창수", "voice_id": "tc_6059dad0b83880769a50502f"},
+ "cps_target": 8.3,
+ "bgm": {"id": "honwaka_puppu", "db_below_voice": 14.4},
+ "front_style": {"frame": "channel/hottemreport/현장썰4차/25_IWalk/front/frame_render.json", "title": "손이 필요 없는\n외다리 목발"},
+ "transition": {"kind": "slideleft", "dur": 0.25},
+ "back_style": "shortem",
+ "line_role": {"B1": "공개", "B2": "고조", "B3": "고조", "B4": "고조", "B5": "cta"},
+ "back_caption_lines": {
+  "B1": {"enter": {"kind": "pop", "ms": 300}, "emphasis": {"words": ["진짜"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "흰 쿠팡 사진·회색 길 위 — 노랑 대신 하늘"},
+  "B2": {"emphasis": {"words": ["나무로"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "흰 사진·살색 담 위 — 빨강·노랑 금지, 하늘"},
+  "B3": {"emphasis": {"words": ["해리슨 포드도"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "살색 담·흰 차 위 — 하늘"},
+  "B4": {"emphasis": {"words": ["서서"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "흰 계단·나무 부엌 위 — 하늘"},
+  "B5": {"enter": {"kind": "fade", "ms": 300}, "emphasis": {"words": ["바꾼대요"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "흰 사진 위 — 분홍 기본 대신 하늘"}
+ },
+ "sfx": {"pack_customer": 0},
+ "lines": [
+  {"id": "B1", "role": "공개", "point": "잉", "answer_at": 3, "kind": "tts", "seg": "B",
+   "tts": "근데 저 영상 보고 쿠팡에 쳐 봤더니, 그 목발 새 모델이 진짜 있더라고요.",
+   "caps": ["근데 저 영상 보고", "쿠팡에 쳐 봤더니", "그 목발 새 모델이", "진짜 있더라고요"], "emph": ["진짜"], "facts": ["c0"]},
+  {"id": "B2", "role": "고조", "point": "권위", "kind": "tts", "seg": "B",
+   "tts": "이게 원래 캐나다 농부가 지붕에서 떨어지고, 나무로 직접 만든 거래요.",
+   "caps": ["이게 원래 캐나다 농부가", "지붕에서 떨어지고", "나무로 직접", "만든 거래요"], "emph": ["나무로"], "facts": ["o_farm"]},
+  {"id": "B3", "role": "고조", "kind": "tts", "seg": "B",
+   "tts": "심지어 해리슨 포드도 스타워즈 찍다가 다리를 다쳤을 때, 이걸 썼대요.",
+   "caps": ["심지어 해리슨 포드도", "스타워즈 찍다가", "다리를 다쳤을 때", "이걸 썼대요"], "emph": ["해리슨 포드도"], "facts": ["o_ford"]},
+  {"id": "B4", "role": "고조", "kind": "tts", "seg": "B",
+   "tts": "무릎으로 딱 받치니까, 계단도 오르고 요리도 서서 한대요.",
+   "caps": ["무릎으로 딱 받치니까", "계단도 오르고", "요리도", "서서 한대요"], "emph": ["서서"], "facts": ["o_do"]},
+  {"id": "B5", "role": "cta", "kind": "tts", "seg": "B",
+   "tts": "발목 다친 친구한테 보여 줬더니, 목발 버리고 당장 이걸로 바꾼대요.",
+   "caps": ["발목 다친 친구한테", "보여 줬더니", "목발 버리고", "당장 이걸로 바꾼대요"], "emph": ["바꾼대요"], "facts": []}
+ ]
+}

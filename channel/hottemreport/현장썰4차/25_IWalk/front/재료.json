@@ -1,0 +1,19 @@
+{
+ "_note": "숏템리폿 4차 25 iWALK 앞 화면 소스 — kr = Kristi 5v_jGBMwXaI(그림 상자 1280x720 안만, 572x720 세로 crop) · pat = Pat MERqYnho898(1440x1080 → 794x1000, 오른아래 iWALK 표식 crop 밖). 창 1080x1360.",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰4차/25_IWalk/front/src",
+ "files": {"kr": "kr.mp4", "pat": "pat.mp4", "pp": "kr.mp4"},
+ "voice_src": {"kr": "kr_voice.wav"},
+ "scene_cuts": {
+  "kr": [8.275, 78.2, 78.95, 102.002, 108.775, 151.652],
+  "pat": [21.288, 24.958, 28.729, 32.699, 32.733, 36.77, 36.837, 38.272, 40.574, 40.607, 43.477, 43.51, 47.247, 47.281, 48.348, 48.382, 48.482, 50.984],
+  "how": "ffmpeg 320px select scene>0.1 + kr 디졸브 78.2~78.95 는 0.1초 시트로 눈 확인"
+ },
+ "blocks": {
+  "N1": {"src": "pat", "ss": 13.0, "src_crop": [253, 0, 794, 1000], "why": "Pat 이 iWALK3.0 을 끼고 카메라 쪽으로 걸어옴(12.0~21.29 한 샷) — 무릎 받침·외다리 전체가 보임, 오른아래 표식 crop 밖"},
+  "O1": {"src": "kr", "src_crop": [680, 180, 572, 720], "why": "Kristi 첫 걸음 + 'this isn't so bad … pretty easy'(8.27~78.2 한 샷, 그림 상자 안)"},
+  "N2": {"src": "pat", "ss": 43.55, "src_crop": [190, 0, 794, 1000], "why": "Pat 이 iWALK 끼고 서서 두 손으로 식기세척기 정리(43.51~47.25 한 샷, 얼굴 거의 안 보임)"},
+  "O2": {"src": "kr", "src_crop": [730, 180, 572, 720], "why": "Kristi 가 두 팔을 벌리고 걸으며 'No hands and my cup of coffee'(78.95 디졸브 끝~102.0 한 샷)"}
+ },
+ "consts": {"LUFS_FINAL": -14.0, "LUFS_NARR": -13.8, "LIMIT": 0.8, "GAINS": [13.2, 13.0], "GAP_NN": 0.25, "LEAD": 0.0,
+  "_why": "−14 LUFS · GAINS = −16 − 원음 창 LUFS(ebur128, VOICE_AF 뒤: O1 −29.2 · O2 −29.0) · LEAD 0 = O2 화면이 디졸브(78.2~78.95) 끝난 79.0 부터(O1 은 한 샷 안이라 무관)"}
+}

@@ -1,0 +1,428 @@
+{
+ "topic": "iWALK 핸즈프리 무릎 목발(무릎을 90도로 올려 받치고 다리 하나로 걷는 목발, 캐나다 iWALKFree) — 처음 걸어 보는 Kristi 가 'Okay, this isn't so bad … pretty easy'·'No hands and my cup of coffee!' + 3.0 사용자 Pat 영상",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "7IM2j2FwZng",
+ "bench_note": "벤치 '농부가 왜 천재인지 보여주는 발명품'(7.6만, 핫템리포트 37위, 설명란 '캐나다 농부의 발명품 … 해리슨 포드까지 #iWALK') — 컷 모음. 원음형 = iWALK 공식 채널 'First Time Using iWALK2.0 - Kristi takes her first steps' 5v_jGBMwXaI(7.6만, 1920x1080, 그림 1280x720 상자 x320~1600·y180~900, 원음 영어 한 트랙 140 — 더빙 없음 yt-dlp -F 확인, 설명 글은 그림 밖 아래에만). 화면 보조 = 공식 채널 'iWALK3.0 User Pat Gives Honest Review of First Time Using' MERqYnho898(116만, 1440x1080, 오른아래 iWALK 표식 crop 밖) — Pat 은 말 없는 화면만 쓴다(내레이션 후기라 원음 안 씀)",
+ "sources": {
+  "kr": {
+   "file": "kr.mp4",
+   "who": "유튜브 iWALKFree Official 5v_jGBMwXaI — Kristi 첫 걸음(iWALK2.0). 그림 상자 안만 crop(위 'iWALK2.0' 로고·아래 설명 글은 상자 밖)",
+   "views": 76319,
+   "dur": 164.0,
+   "res": "1920x1080(그림 1280x720)"
+  },
+  "pat": {
+   "file": "pat.mp4",
+   "who": "유튜브 iWALKFree Official MERqYnho898 — Pat iWALK3.0 첫 사용·집 안·계단·부엌. 오른아래 iWALK 표식(x>1300·y>1000) crop 밖",
+   "views": 1163104,
+   "dur": 56.3,
+   "res": "1440x1080"
+  }
+ },
+ "titles": {
+  "hook": "손이 필요 없는\n외다리 목발"
+ },
+ "facts": {
+  "f1": {
+   "text": "FARM SHOW Magazine 2007 Vol.31 No.5 p.30 'Hands-Free Crutch'(iWALKFree, Ontario) — 다리에 끈으로 묶는 브레이스 하나, 무릎을 90도로 굽혀 올리는 받침, 'basically serves as a prosthetic leg' · 쿠팡 6926002708 상품명 'iWALK3.0 오리지널 핸즈 프리 무릎 목발' · Pat 영상 13~16초 화면",
+   "kind": "기사·판매처"
+  },
+  "f2": {
+   "text": "FARM SHOW 2007 같은 기사 'The biggest advantage is that the injured person has full use of their arms and hands' · Kristi 원본(스피치매틱스) 79.00~84.18 'No hands and my cup of coffee, I could carry a cup of coffee now'",
+   "kind": "기사·본인 말"
+  },
+  "f3": {
+   "text": "Kristi 원본 46.08~51.92 'Okay, this isn't so bad. It's actually, it's actually pretty easy.'",
+   "kind": "본인 말"
+  },
+  "f4": {
+   "text": "Kristi 원본 79.00~84.18 'No hands and my cup of coffee, I could carry a cup of coffee now.'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "text": "무릎을 접어 올리고 걷는 다리 하나짜리 목발이 있는데요 근데 손을 하나도 안 쓰니까 두 손이 완전 자유롭다는데요.",
+    "note": "렌더용 한 문장 — 원문 줄은 대본.json"
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "kr",
+    "span": [
+     46.0,
+     52.0
+    ],
+    "en": "Okay, this isn't so bad. It's actually, it's actually pretty easy.",
+    "caps": [
+     "어, 이거 괜찮은데?",
+     "생각보다 진짜 쉬워요"
+    ],
+    "check": "앞 28.64 'go' 뒤 말 없음 · Okay 46.08 · easy 51.92 · 다음 All 56.60 · 원본 한 샷(8.27~78.9) 안"
+   },
+   {
+    "id": "O2",
+    "src": "kr",
+    "span": [
+     79.0,
+     84.2
+    ],
+    "en": "No hands and my cup of coffee, I could carry a cup of coffee now.",
+    "caps": [
+     "손이 다 비었어!",
+     "이제 커피도 들고 다닐 수 있어"
+    ],
+    "check": "앞 74.60 'think' · No 79.00 · coffee 84.18 · 다음 Now 84.22(끝 0.02초 앞에서 끊음) · 장면 겹침(디졸브) 78.2~78.9 끝난 뒤 79.0 부터 화면(LEAD 0 — 소리와 같이)"
+   }
+  ],
+  "dropped": {
+   "벤치 '해리슨 포드'": "앞에는 안 넣음 — 뒤 B3 에 출처(ABC 2014-07-02)와 같이, 화면은 남자 얼굴 없는 컷만",
+   "Kristi 'Doesn't hurt my sides'·'not feeling all the pain'": "통증·효능 말 — 안 씀",
+   "공식 광고 GB-AOgmM_mg 'pain free'·'fully functional recovery' 글": "효능 문구 박힘 — 화면·대사 안 씀",
+   "가격": "금액 금지"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ },
+ "captions_plan": [
+  {
+   "t0": 0.0,
+   "text": "무릎을 접어 올리고 걷는",
+   "kind": "나레"
+  },
+  {
+   "t0": 1.214,
+   "text": "다리 하나짜리",
+   "kind": "나레"
+  },
+  {
+   "t0": 2.088,
+   "text": "목발이 있는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 3.188,
+   "text": "어, 이거 괜찮은데?",
+   "kind": "원음"
+  },
+  {
+   "t0": 5.813,
+   "text": "생각보다 진짜 쉬워요",
+   "kind": "원음"
+  },
+  {
+   "t0": 9.438,
+   "text": "근데 손을 하나도 안 쓰니까",
+   "kind": "나레"
+  },
+  {
+   "t0": 10.861,
+   "text": "두 손이",
+   "kind": "나레"
+  },
+  {
+   "t0": 11.249,
+   "text": "완전 자유롭다는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 12.664,
+   "text": "손이 다 비었어!",
+   "kind": "원음"
+  },
+  {
+   "t0": 14.397,
+   "text": "이제 커피도 들고 다닐 수 있어",
+   "kind": "원음"
+  }
+ ],
+ "caption_events": [
+  {
+   "kind": "emph",
+   "text": "무릎을 접어 올리고 걷는",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.0,
+   "dur": 1.214,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "다리 하나짜리",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 1.214,
+   "dur": 0.874,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "목발이 있는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 2.088,
+   "dur": 1.1,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "어, 이거 괜찮은데?",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 3.188,
+   "dur": 2.625,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "생각보다 진짜 쉬워요",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 5.813,
+   "dur": 3.625,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "근데 손을 하나도 안 쓰니까",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 9.438,
+   "dur": 1.423,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "두 손이",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 10.861,
+   "dur": 0.388,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "완전 자유롭다는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 11.249,
+   "dur": 1.415,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "손이 다 비었어!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 12.664,
+   "dur": 1.733,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "이제 커피도 들고 다닐 수 있어",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 14.397,
+   "dur": 4.067,
+   "who": "원음"
+  }
+ ],
+ "render": {
+  "windows": [
+   [
+    3.188,
+    9.188
+   ],
+   [
+    12.664,
+    17.864
+   ]
+  ],
+  "blocks": [
+   {
+    "id": "N1",
+    "kind": "나레",
+    "n0": 0.0,
+    "n1": 2.938
+   },
+   {
+    "id": "O1",
+    "kind": "원음",
+    "a0": 3.188,
+    "a1": 9.188,
+    "audio_ss": 46.0,
+    "src": "kr"
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "n0": 9.438,
+    "n1": 12.414
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "a0": 12.664,
+    "a1": 17.864,
+    "audio_ss": 79.0,
+    "src": "kr"
+   }
+  ],
+  "pieces": [
+   {
+    "block": "N1",
+    "covers": [
+     "N1"
+    ],
+    "src": "pat",
+    "ss": 13.0,
+    "vs": 0.0,
+    "src_crop": [
+     253,
+     0,
+     794,
+     1000
+    ],
+    "why": "Pat 이 iWALK3.0 을 끼고 카메라 쪽으로 걸어옴(12.0~21.29 한 샷) — 무릎 받침·외다리 전체가 보임, 오른아래 표식 crop 밖",
+    "ve": 3.188,
+    "src_end": 16.188
+   },
+   {
+    "block": "O1",
+    "covers": [
+     "O1"
+    ],
+    "src": "kr",
+    "ss": 46.0,
+    "vs": 3.188,
+    "src_crop": [
+     680,
+     180,
+     572,
+     720
+    ],
+    "why": "Kristi 첫 걸음 + 'this isn't so bad … pretty easy'(8.27~78.2 한 샷, 그림 상자 안)",
+    "ve": 9.438,
+    "src_end": 52.25
+   },
+   {
+    "block": "N2",
+    "covers": [
+     "N2"
+    ],
+    "src": "pat",
+    "ss": 43.55,
+    "vs": 9.438,
+    "src_crop": [
+     190,
+     0,
+     794,
+     1000
+    ],
+    "why": "Pat 이 iWALK 끼고 서서 두 손으로 식기세척기 정리(43.51~47.25 한 샷, 얼굴 거의 안 보임)",
+    "ve": 12.664,
+    "src_end": 46.776
+   },
+   {
+    "block": "O2",
+    "covers": [
+     "O2"
+    ],
+    "src": "kr",
+    "ss": 79.0,
+    "vs": 12.664,
+    "src_crop": [
+     730,
+     180,
+     572,
+     720
+    ],
+    "why": "Kristi 가 두 팔을 벌리고 걸으며 'No hands and my cup of coffee'(78.95 디졸브 끝~102.0 한 샷)",
+    "ve": 18.464,
+    "src_end": 84.8
+   }
+  ],
+  "dur": 18.464,
+  "narr": [
+   {
+    "id": "N1",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\25_IWalk\\front\\render\\narr_N1.wav",
+    "dur": 2.938,
+    "tempo": 0.858,
+    "chars": 23,
+    "speech": 2.938,
+    "cps": 7.83,
+    "segs": [
+     [
+      0.0,
+      1.298
+     ],
+     [
+      1.443,
+      2.938
+     ]
+    ]
+   },
+   {
+    "id": "N2",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\25_IWalk\\front\\render\\narr_N2.wav",
+    "dur": 2.976,
+    "tempo": 0.804,
+    "chars": 23,
+    "speech": 2.976,
+    "cps": 7.73,
+    "segs": [
+     [
+      0.0,
+      2.976
+     ]
+    ]
+   }
+  ]
+ }
+}

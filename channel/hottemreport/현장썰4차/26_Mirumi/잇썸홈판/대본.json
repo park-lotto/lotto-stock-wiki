@@ -1,0 +1,230 @@
+{
+ "_note": "숏템리폿 4차 26 미루미 하이브리드 — 앞 = 숏템리폿 현장썰 grav3yardgirl 원음형 박창수판(26_Mirumi/front), 뒤 = 쿠팡 9626134724 '미루미 로봇 AI mirumi 반려동물 애완 가방 키링 참 … 유카이 yukai'(같은 제품 — 대표 사진 = Yukai 공식 3색 사진 'mirumi' 글자, grav3yardgirl 회색·공식 영상 분홍과 같은 꼴). 뒤 화면 = grav3yardgirl 다른 장면(손·미루미 근접, 덧그림·남의 상표 가방 구간 안 씀) + 공식 영상(글자 화면 안 씀) + 쿠팡 대표 사진(move). 금액·남의 상표는 말하지 않는다. '쿠팡 상품명의 AI'는 대사에 안 씀(미루미는 센서 반응).",
+ "brand": "잇썸홈",
+ "product": "미루미(Mirumi) 가방 참 로봇(쿠팡 9626134724, 같은 제품)",
+ "product_mode": "exact",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰4차/26_Mirumi/front/render/final.mp4",
+  "cut": 14.1,
+  "why": "원음 O2 'Oh my God' 끝(앞 13.795) 뒤 0.3초 — 같은 한 샷(gv 44.78~193.36) 안",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API(10-28 07:4x, '미루미 로봇 유카이' 1회, 26_cand/coupang_a.json): 9626134724 '미루미 로봇 AI mirumi 반려동물 애완 가방 키링 참 강아지 인형 유카이 yukai' — 대표 사진(front/src/cp_9626134724.jpg) = Yukai 공식 3색(분홍·아이보리·회색) 사진 · 같은 이름 다른 판매 9793715915",
+  "o_maker": "grav3yardgirl 원본(사본 스피치매틱스) 38.20~46.20 'a small, hyper realistic, fluffy charm designed by Tokyo based Yukai Engineering' · Yanko Design 2025-01-06 'Mirumi has been unveiled at CES 2025' · grav3yardgirl 원본(원래 시각) 33.88~42.16 'I started seeing it at … CES'",
+  "o_app": "같은 원본 189.48~193.52 'what I find great about this though, is it doesn't require any apps' · 219.12~225.64 'you just press the power button on … You just literally turn it on and off and that's it'",
+  "o_flash": "같은 원본 246.92~254.44 'it seemed like every time I turned the flash on to film him in the booth, he would turn his head away'"
+ },
+ "흥미이음": {
+  "원본흥미": "처음 꺼낸 털뭉치 얼굴을 보자마자 'Oh my God, it's so cute' · 'I love this little guy. Oh my God'",
+  "뒤흥미": "쿠팡의 바로 그 미루미 — 도쿄 회사가 CES 에서 공개·앱 없이 버튼 하나·플래시 켜면 고개를 돌리는 장면",
+  "판정": "같음",
+  "근거": "같은 제품: 쿠팡 상품명 'mirumi … 유카이 yukai' + 대표 사진(Yukai 공식 3색 'mirumi') = grav3yardgirl 회색 미루미·공식 영상"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.3,
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 14.4
+ },
+ "front_style": {
+  "frame": "channel/hottemreport/현장썰4차/26_Mirumi/front/frame_render.json",
+  "title": "가방에 사는\n털뭉치 로봇"
+ },
+ "transition": {
+  "kind": "slideleft",
+  "dur": 0.25
+ },
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "back_caption_lines": {
+  "B1": {
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   },
+   "emphasis": {
+    "words": [
+     "진짜"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 쿠팡 사진·회색 털 위 — 노랑 대신 하늘"
+  },
+  "B2": {
+   "emphasis": {
+    "words": [
+     "처음"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "분홍 털·회색 털 위 — 빨강·분홍 금지, 하늘"
+  },
+  "B3": {
+   "emphasis": {
+    "words": [
+     "버튼 하나로"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "회색 털·분홍 털 위 — 하늘"
+  },
+  "B4": {
+   "emphasis": {
+    "words": [
+     "돌려"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "회색·분홍 털 위 — 하늘"
+  },
+  "B5": {
+   "enter": {
+    "kind": "fade",
+    "ms": 300
+   },
+   "emphasis": {
+    "words": [
+     "난리"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 사진 위 — 분홍 기본 대신 하늘"
+  }
+ },
+ "sfx": {
+  "pack_customer": 0
+ },
+ "lines": [
+  {
+   "id": "B1",
+   "role": "공개",
+   "point": "잉",
+   "answer_at": 3,
+   "kind": "tts",
+   "seg": "B",
+   "tts": "근데 저 영상 보고 쿠팡에서 찾아봤더니, 그 털뭉치 로봇이 진짜 있더라고요.",
+   "caps": [
+    "근데 저 영상 보고",
+    "쿠팡에서 찾아봤더니",
+    "그 털뭉치 로봇이",
+    "진짜 있더라고요"
+   ],
+   "emph": [
+    "진짜"
+   ],
+   "facts": [
+    "c0"
+   ]
+  },
+  {
+   "id": "B2",
+   "role": "고조",
+   "point": "권위",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "이게 일본 도쿄 로봇 회사가 만든 건데, 세계 가전 박람회에서 처음 공개됐대요.",
+   "caps": [
+    "이게 일본 도쿄",
+    "로봇 회사가 만든 건데",
+    "세계 가전 박람회에서",
+    "처음 공개됐대요"
+   ],
+   "emph": [
+    "처음"
+   ],
+   "facts": [
+    "o_maker"
+   ]
+  },
+  {
+   "id": "B3",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "앱도 필요 없고, 버튼 하나로 켜고 끄면 끝이래요.",
+   "caps": [
+    "앱도 필요 없고",
+    "버튼 하나로",
+    "켜고 끄면",
+    "끝이래요"
+   ],
+   "emph": [
+    "버튼 하나로"
+   ],
+   "facts": [
+    "o_app"
+   ]
+  },
+  {
+   "id": "B4",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "심지어 플래시 켜고 찍으려니까, 부끄러운 듯 고개를 돌려 버렸대요.",
+   "caps": [
+    "심지어 플래시 켜고",
+    "찍으려니까",
+    "부끄러운 듯",
+    "고개를 돌려 버렸대요"
+   ],
+   "emph": [
+    "돌려"
+   ],
+   "facts": [
+    "o_flash"
+   ]
+  },
+  {
+   "id": "B5",
+   "role": "cta",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "가방에 달고 나갔더니, 다들 인형인 줄 알다가 고개 돌리니까 난리 났어요.",
+   "caps": [
+    "가방에 달고 나갔더니",
+    "다들 인형인 줄 알다가",
+    "고개 돌리니까",
+    "난리 났어요"
+   ],
+   "emph": [
+    "난리"
+   ],
+   "facts": []
+  }
+ ]
+}
