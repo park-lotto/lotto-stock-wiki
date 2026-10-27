@@ -1,0 +1,102 @@
+{
+ "name": "릴리릴리판",
+ "base": "별헤는쏭판",
+ "_note": "릴리릴리(우리 브랜드, 사장님 10-27) = 별헤는쏭판(1차) 위에 겉모양만 조금씩 바꾼 변형판. 뼈대(창·제목 자리·댓글카드·가사 자리·박자·노래)는 1차 그대로, 댓글카드는 손대지 않음(사장님 '댓글창 말고').",
+ "upgrades": [
+  {
+   "axis": "look",
+   "what": "맨 위 그림 띠 = 릴리릴리 그림(라벤더·민트 구름 + 꽃·반짝이, make_band --look lily)",
+   "why": "사장님 10-27 '템플릿 조금씩 변형' — 로고 자리 = 우리 브랜드",
+   "source": "tools/calcopy/hybrid/make_band.py LOOKS.lily",
+   "expect": "채널 구별",
+   "verify": "사람 판정"
+  },
+  {
+   "axis": "look",
+   "what": "제목 글꼴 GothicA1-Black → BlackHanSans · 2줄 색 분홍 → 라벤더 #C7B4FF · 바탕 검정 → 남색빛 검정 #07061A",
+   "why": "사장님 10-27 '템플릿 조금씩 변형'",
+   "source": "별헤는쏭판 frame.title",
+   "expect": "채널 구별",
+   "verify": "사람 판정"
+  },
+  {
+   "axis": "look",
+   "what": "출처 핀 빨강 → 라벤더 · 가사 일본어 줄 연분홍 → 연보라",
+   "why": "사장님 10-27 '다른것들 조금씩 변형' (댓글카드는 그대로)",
+   "source": "별헤는쏭판 frame.credit·lyrics",
+   "expect": "채널 구별",
+   "verify": "사람 판정"
+  }
+ ],
+ "frame": {
+  "bg": [
+   7,
+   6,
+   26
+  ],
+  "why": "바탕 #000002 → #07061A(남색빛 검정, 릴리릴리 변형) · 창 자리 1차 그대로",
+  "band": {
+   "src": "channel/byeolsong/preset/릴리릴리/band.png",
+   "box": [
+    0,
+    0,
+    1080,
+    235
+   ],
+   "why": "릴리릴리 그림 띠(make_band --look lily --ref 벤치 1lMb 프레임 — 줄 밝기 곡선은 벤치 그대로)"
+  },
+  "title": [
+   {
+    "font": "BlackHanSans.ttf",
+    "px": 102,
+    "ink_top": 244,
+    "color": "#FFFEFF",
+    "max_w": 1000,
+    "why": "릴리릴리 변형(사장님 10-27 \"템플릿 조금씩 변형\") — 자리·크기(잉크 top·102px)는 1차 그대로, 글꼴만 GothicA1-Black → BlackHanSans(같은 굵은 고딕 결, 다른 글꼴)"
+   },
+   {
+    "font": "BlackHanSans.ttf",
+    "px": 102,
+    "ink_top": 354,
+    "color": "#C7B4FF",
+    "max_w": 1000,
+    "why": "릴리릴리 변형(사장님 10-27 \"템플릿 조금씩 변형\") — 자리·크기(잉크 top·102px)는 1차 그대로, 글꼴만 GothicA1-Black → BlackHanSans(같은 굵은 고딕 결, 다른 글꼴) · 2줄 색 분홍 #FCAFD2 → 라벤더 #C7B4FF(브랜드 색)"
+   }
+  ],
+  "credit": {
+   "in_window": true,
+   "font": "Pretendard-Bold.otf",
+   "px": 34,
+   "x": 112,
+   "cy": 511,
+   "color": "#FFFFFF",
+   "stroke": 3,
+   "stroke_color": "#000000",
+   "on": 0.27,
+   "pin": {
+    "r": 9,
+    "color": "#9B7BFF"
+   },
+   "why": "1차 그대로 + 핀 색 빨강 #E83C21 → 라벤더 #9B7BFF(릴리릴리 변형)"
+  },
+  "lyrics": {
+   "jp": {
+    "font": "NotoSansKR-Bold.otf",
+    "px": 46,
+    "cy": 1114,
+    "color": "#D9CCFF"
+   },
+   "ko": {
+    "font": "NotoSansKR-Bold.otf",
+    "px": 48,
+    "cy": 1180,
+    "color": "#FCFAFC"
+   },
+   "stroke": {
+    "px": 7,
+    "color": "#000000"
+   },
+   "why": "1차 그대로 + 일본어 줄 연분홍 #F1D4DD → 연보라 #D9CCFF(릴리릴리 변형)"
+  }
+ }
+}

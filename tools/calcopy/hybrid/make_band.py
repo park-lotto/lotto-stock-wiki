@@ -11,16 +11,28 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 W, H = 1080, 235
 TARGET_MEAN = (70, 53, 64)
+# 결(look) 한 곳 — bench = 별헤는쏭 1차(벤치 결 그대로) · lily = 릴리릴리 변형판(사장님 10-27 '템플릿 조금씩 변형': 라벤더·민트 구름 + 꽃·반짝이, 평균 조금 더 푸르게)
+LOOKS = {
+    "bench": {"base": (22, 16, 34), "clouds": [(214, 120, 120), (230, 150, 110), (160, 90, 150), (70, 60, 140), (200, 110, 160)],
+              "hex": (255, 220, 200, 22), "dots": (255, 238, 200), "mean": TARGET_MEAN,
+              "glyphs": [("♫", 470, 30, (252, 214, 140, 255)), ("♪", 360, 80, (250, 190, 205, 235)), ("♩", 610, 85, (205, 220, 255, 230)),
+                         ("♬", 120, 50, (255, 225, 170, 190)), ("♪", 920, 60, (230, 200, 250, 190))]},
+    "lily": {"base": (16, 16, 36), "clouds": [(150, 120, 230), (120, 200, 200), (240, 170, 200), (80, 70, 170), (190, 150, 240)],
+             "hex": (220, 210, 255, 20), "dots": (235, 230, 255), "mean": (60, 56, 84),
+             "glyphs": [("❀", 470, 28, (236, 220, 255, 255)), ("✦", 350, 85, (190, 245, 235, 235)), ("❀", 630, 80, (255, 205, 225, 230)),
+                        ("✦", 130, 55, (220, 205, 255, 200)), ("✧", 910, 60, (200, 240, 255, 200))]},
+}
 
 
-def make(out: str, seed: int = 27, ref: str | None = None) -> None:
+def make(out: str, seed: int = 27, ref: str | None = None, look: str = "bench") -> None:
+    L = LOOKS[look]
     random.seed(seed)
-    im = Image.new("RGBA", (W, H), (22, 16, 34, 255))
+    im = Image.new("RGBA", (W, H), L["base"] + (255,))
     lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(lay)
     for _ in range(18):                                   # 분홍·주황·남색 구름(벤치 결 — 연기 띠)
         cx, cy, rr = random.randint(-80, W + 80), random.randint(-20, H), random.randint(90, 210)
-        col = random.choice([(214, 120, 120), (230, 150, 110), (160, 90, 150), (70, 60, 140), (200, 110, 160)])
+        col = random.choice(L["clouds"])
         d.ellipse([cx - rr, cy - rr // 2, cx + rr, cy + rr // 2], fill=col + (110,))
     im = Image.alpha_composite(im, lay.filter(ImageFilter.GaussianBlur(34)))
     hexl = Image.new("RGBA", (W, H), (0, 0, 0, 0))       # 흐린 육각형 무늬(벤치 그림 띠 결) — 모든 줄에 무늬가 있어야 픽셀 자가 띠를 한 덩어리로 읽는다(10-27 빈 줄에서 띠가 3개로 끊김)
@@ -31,15 +43,14 @@ def make(out: str, seed: int = 27, ref: str | None = None) -> None:
             cx = col * r * 1.732 + (r * 0.866 if row % 2 else 0)
             cy = row * r * 1.5
             pts = [(cx + r * math.cos(math.radians(60 * k + 30)), cy + r * math.sin(math.radians(60 * k + 30))) for k in range(6)]
-            dh.polygon(pts, outline=(255, 220, 200, 22), width=2)
+            dh.polygon(pts, outline=L["hex"], width=2)
     im = Image.alpha_composite(im, hexl)
     d = ImageDraw.Draw(im)
     for _ in range(60):
         x, y, s = random.randint(0, W), random.randint(0, H - 40), random.choice([1, 1, 2, 3])
-        d.ellipse([x - s, y - s, x + s, y + s], fill=(255, 238, 200, random.randint(120, 255)))
+        d.ellipse([x - s, y - s, x + s, y + s], fill=L["dots"] + (random.randint(120, 255),))
     f = ImageFont.truetype("C:/Windows/Fonts/seguisym.ttf", 110)
-    for ch, x, y, c in [("\u266B", 470, 30, (252, 214, 140, 255)), ("\u266A", 360, 80, (250, 190, 205, 235)), ("\u2669", 610, 85, (205, 220, 255, 230)),
-                        ("\u266C", 120, 50, (255, 225, 170, 190)), ("\u266A", 920, 60, (230, 200, 250, 190))]:
+    for ch, x, y, c in L["glyphs"]:
         gl = Image.new("RGBA", (W, H), (0, 0, 0, 0))
         ImageDraw.Draw(gl).text((x, y), ch, font=f, fill=c)
         im = Image.alpha_composite(im, gl.filter(ImageFilter.GaussianBlur(7)))
@@ -52,7 +63,7 @@ def make(out: str, seed: int = 27, ref: str | None = None) -> None:
         k = R.mean(axis=(1, 2)) / np.maximum(1e-6, A.mean(axis=(1, 2)))
         im = Image.fromarray(np.clip(A * k[:, None, None], 0, 255).astype(np.uint8))
     m = [sum(c) / (W * H) for c in zip(*im.get_flattened_data())] if hasattr(im, "get_flattened_data") else [sum(c) / (W * H) for c in zip(*im.getdata())]   # 평균 색을 벤치 평균에 맞춘다(채널별 배율)
-    gain = [t / max(1e-6, v) for t, v in zip(TARGET_MEAN, m)]
+    gain = [t / max(1e-6, v) for t, v in zip(L["mean"], m)]
     im = Image.eval(im, lambda v: v)
     im = Image.merge("RGB", [ch.point(lambda v, g=g: min(255, int(v * g))) for ch, g in zip(im.split(), gain)])
     im.save(out)
@@ -60,6 +71,6 @@ def make(out: str, seed: int = 27, ref: str | None = None) -> None:
 
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser(); ap.add_argument("out"); ap.add_argument("--seed", type=int, default=27); ap.add_argument("--ref", help="벤치 한 프레임 png — 줄마다 밝기를 그 띠에 맞춘다")
+    ap = argparse.ArgumentParser(); ap.add_argument("out"); ap.add_argument("--seed", type=int, default=27); ap.add_argument("--ref", help="벤치 한 프레임 png — 줄마다 밝기를 그 띠에 맞춘다"); ap.add_argument("--look", default="bench", choices=sorted(LOOKS))
     a = ap.parse_args()
-    make(a.out, a.seed, a.ref)
+    make(a.out, a.seed, a.ref, a.look)
