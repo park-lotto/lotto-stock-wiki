@@ -1,0 +1,1161 @@
+{
+ "_note": "샥탬스토리 15편 Pick Up Bricks 재료 계획. 창 1080x1052(벤치 aKaBZjYmbRk, 채널 고정 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물, effects 의 fx_place 계산값은 유지). 원음 컷은 원본 소리(X25MIpQqLIU_audio.m4a).",
+ "sources": {
+  "X25MIpQqLIU": {
+   "채널": "Sony Pictures Television(공식)",
+   "제목": "Shark Tank US | Pick Up Bricks' Entrepreneurs STEP ON LEGOS",
+   "해상도": "1920x1080 29.97fps (137) + 140-1 영어 원어(인도네시아어 더빙 트랙은 안 씀)",
+   "길이": 587.2,
+   "받은 구간": "전체",
+   "남의 글자": "아래 이름·제안 띠(102~111·334~336·405~406초) 시각 안 씀 · 무대 진열대의 'Pick up BRICKS'·'Making Cleanup Fun' 글자 = 제품 브랜드 · 무대 TV 홍보 영상 = 창업자 제품 영상"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "애들이 알아서",
+  "line2": "치우는 청소기?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": false,
+   "audio_src": "X25MIpQqLIU_audio.m4a",
+   "audio_ss": 11.56,
+   "audio_dur": 0.55,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    9.75,
+    10.3
+   ],
+   "ss": 9.75,
+   "dur": 0.55,
+   "t_final_est": [
+    0.0,
+    0.55
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    0,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 입장 와이드: 창업자 배너의 픽업브릭스 본체 그림·진열 카트(원본 샷 9.28~10.38, 사람 얼굴 없음 — 창업자는 크롭 밖, 소리 = 다음 컷 투자자 'Oh' cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "O1",
+   "kind": "원음",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": false,
+   "audio_src": "X25MIpQqLIU_audio.m4a",
+   "audio_ss": 12.11,
+   "audio_dur": 0.45,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    12.11,
+    12.56
+   ],
+   "ss": 12.11,
+   "dur": 0.45,
+   "t_final_est": [
+    0.55,
+    1.0
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    385,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "금발 투자자가 놀라며 'no'(말하는 본인, 샷 11.58~12.78 — 창업자들이 맨발로 레고 위를 걷는 걸 보고)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 2,
+   "line": "N1",
+   "kind": "나레",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    5.45,
+    6.21
+   ],
+   "ss": 5.45,
+   "dur": 0.76,
+   "t_final_est": [
+    1.0,
+    1.76
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 둘이 맨발로 무대 바닥을 걸어 들어옴(발 근접, 원본 샷 ~6.34)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 3,
+   "line": "N1",
+   "kind": "나레",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    37.35,
+    38.557
+   ],
+   "ss": 37.35,
+   "dur": 1.207,
+   "t_final_est": [
+    1.76,
+    2.97
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    505,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 바닥에 깔린 레고 카펫 — 맨발이 막 들어오는 순간(원본 샷 35.10~39.34, 다음 줄 O2 와 이어지는 같은 샷 — 미리보기 점프줌 3.03초 수리)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 4,
+   "line": "O2",
+   "kind": "원음",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": false,
+   "audio_src": "X25MIpQqLIU_audio.m4a",
+   "audio_ss": 38.76,
+   "audio_dur": 0.54,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    38.76,
+    39.3
+   ],
+   "ss": 38.76,
+   "dur": 0.54,
+   "t_final_est": [
+    2.97,
+    3.51
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    505,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "레고 카펫 위로 맨발이 들어옴(앞 컷과 같은 샷 이어서)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 5,
+   "line": "O2",
+   "kind": "원음",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": false,
+   "audio_src": "X25MIpQqLIU_audio.m4a",
+   "audio_ss": 39.36,
+   "audio_dur": 1.19,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    39.36,
+    40.55
+   ],
+   "ss": 39.36,
+   "dur": 1.19,
+   "t_final_est": [
+    3.51,
+    4.7
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    435,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 둘(말하는 본인 — 남자 창업자, 샷 39.34~40.57)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 6,
+   "line": "O2",
+   "kind": "원음",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": false,
+   "audio_src": "X25MIpQqLIU_audio.m4a",
+   "audio_ss": 40.6,
+   "audio_dur": 1.12,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    40.6,
+    41.72
+   ],
+   "ss": 40.6,
+   "dur": 1.12,
+   "t_final_est": [
+    4.7,
+    5.82
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "레고 더미 근접(샷 40.57~43.38)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 7,
+   "line": "N2",
+   "kind": "나레",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    97.0,
+    98.269
+   ],
+   "ss": 97.0,
+   "dur": 1.269,
+   "t_final_est": [
+    5.82,
+    7.09
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    245,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "홍보 영상: 아이가 픽업브릭스 청소기를 들고 바닥을 치움(원본 샷 96.83~100.90, 화면 꽉 찬 홍보 영상)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 8,
+   "line": "N2",
+   "kind": "나레",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    98.9,
+    100.355
+   ],
+   "ss": 98.9,
+   "dur": 1.455,
+   "t_final_est": [
+    7.09,
+    8.54
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    245,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "같은 샷 이어서: 노란 흡입구가 바닥의 레고를 빨아들임",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 9,
+   "line": "O3",
+   "kind": "원음",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": false,
+   "audio_src": "X25MIpQqLIU_audio.m4a",
+   "audio_ss": 73.72,
+   "audio_dur": 1.96,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    73.72,
+    75.68
+   ],
+   "ss": 73.72,
+   "dur": 1.96,
+   "t_final_est": [
+    8.54,
+    10.5
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    685,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 둘이 진열대 앞에서 설명(말하는 본인 — 여자 창업자, 샷 73.54~75.71)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 10,
+   "line": "O3",
+   "kind": "원음",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": false,
+   "audio_src": "X25MIpQqLIU_audio.m4a",
+   "audio_ss": 75.75,
+   "audio_dur": 1.65,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    75.75,
+    77.4
+   ],
+   "ss": 75.75,
+   "dur": 1.65,
+   "t_final_est": [
+    10.5,
+    12.15
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    570,
+    155,
+    719,
+    700
+   ],
+   "scale": 1.503,
+   "ours": "무대 TV 홍보 영상: 노란 흡입구로 레고를 빨아들임(TV 안쪽만 크롭, 샷 75.71~77.44)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 11,
+   "line": "O3",
+   "kind": "원음",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": false,
+   "audio_src": "X25MIpQqLIU_audio.m4a",
+   "audio_ss": 77.48,
+   "audio_dur": 1.1,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    77.48,
+    78.58
+   ],
+   "ss": 77.48,
+   "dur": 1.1,
+   "t_final_est": [
+    12.15,
+    13.25
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    570,
+    155,
+    719,
+    700
+   ],
+   "scale": 1.503,
+   "ours": "무대 TV 홍보 영상: 여자아이가 청소기 옆에 앉아 있음(샷 77.44~78.61)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 12,
+   "line": "O3",
+   "kind": "원음",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": false,
+   "audio_src": "X25MIpQqLIU_audio.m4a",
+   "audio_ss": 78.65,
+   "audio_dur": 0.75,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    78.65,
+    79.4
+   ],
+   "ss": 78.65,
+   "dur": 0.75,
+   "t_final_est": [
+    13.25,
+    14.0
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    570,
+    155,
+    719,
+    700
+   ],
+   "scale": 1.503,
+   "ours": "무대 TV 홍보 영상: 레고가 담긴 투명 통(샷 78.61~79.41)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 13,
+   "line": "N3",
+   "kind": "나레",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    83.1,
+    84.157
+   ],
+   "ss": 83.1,
+   "dur": 1.057,
+   "t_final_est": [
+    14.0,
+    15.06
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    569,
+    130,
+    821,
+    800
+   ],
+   "scale": 1.315,
+   "ours": "무대 TV 홍보 영상: 통 안에 모인 장난감(샷 83.05~84.38)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 14,
+   "line": "N3",
+   "kind": "나레",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    89.3,
+    91.288
+   ],
+   "ss": 89.3,
+   "dur": 1.988,
+   "t_final_est": [
+    15.06,
+    17.05
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    518,
+    100,
+    883,
+    860
+   ],
+   "scale": 1.223,
+   "ours": "무대 TV 홍보 영상: 걸러진 장난감 통과 노란 흡입 통(샷 89.22~91.69)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 15,
+   "line": "O4",
+   "kind": "원음",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": false,
+   "audio_src": "X25MIpQqLIU_audio.m4a",
+   "audio_ss": 120.36,
+   "audio_dur": 0.69,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    120.36,
+    121.05
+   ],
+   "ss": 120.36,
+   "dur": 0.69,
+   "t_final_est": [
+    17.05,
+    17.74
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자석: 노란 흡입구가 투명 상자 속 레고를 빨아들임(근접, 샷 119.55~121.09)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 16,
+   "line": "O4",
+   "kind": "원음",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": false,
+   "audio_src": "X25MIpQqLIU_audio.m4a",
+   "audio_ss": 121.12,
+   "audio_dur": 1.03,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    121.12,
+    122.15
+   ],
+   "ss": 121.12,
+   "dur": 1.03,
+   "t_final_est": [
+    17.74,
+    18.77
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    328,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "분홍 정장 투자자가 직접 청소기를 써 봄(샷 121.09~122.16)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 17,
+   "line": "O4",
+   "kind": "원음",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": false,
+   "audio_src": "X25MIpQqLIU_audio.m4a",
+   "audio_ss": 122.18,
+   "audio_dur": 0.26,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    122.18,
+    122.44
+   ],
+   "ss": 122.18,
+   "dur": 0.26,
+   "t_final_est": [
+    18.77,
+    19.03
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투명 통 근접(샷 122.16~124.06)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 18,
+   "line": "N4",
+   "kind": "나레",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    124.1,
+    125.204
+   ],
+   "ss": 124.1,
+   "dur": 1.104,
+   "t_final_est": [
+    19.03,
+    20.13
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    562,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "분홍 옷 투자자가 몸을 숙여 청소기로 레고를 빨아들임(샷 124.06~125.59)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 19,
+   "line": "N4",
+   "kind": "나레",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    125.62,
+    126.785
+   ],
+   "ss": 125.62,
+   "dur": 1.165,
+   "t_final_est": [
+    20.13,
+    21.3
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투명 상자 속 레고를 빨아들이는 흡입구 근접(샷 125.59~127.19)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 20,
+   "line": "O5",
+   "kind": "원음",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": false,
+   "audio_src": "X25MIpQqLIU_audio.m4a",
+   "audio_ss": 129.2,
+   "audio_dur": 1.32,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    129.2,
+    130.52
+   ],
+   "ss": 129.2,
+   "dur": 1.32,
+   "t_final_est": [
+    21.3,
+    22.62
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    545,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "정장 투자자가 끝까지 레고를 빨아들임(샷 128.60~130.70, 말은 화면 밖 창업자)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 21,
+   "line": "O6",
+   "kind": "원음",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": false,
+   "audio_src": "X25MIpQqLIU_audio.m4a",
+   "audio_ss": 138.16,
+   "audio_dur": 1.72,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    138.16,
+    139.88
+   ],
+   "ss": 138.16,
+   "dur": 1.72,
+   "t_final_est": [
+    22.62,
+    24.34
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    301,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "정장 투자자가 손짓하며 '줍는 것 자체가 재밌다'(말하는 본인, 샷 138.04~139.91)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 22,
+   "line": "O6",
+   "kind": "원음",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": false,
+   "audio_src": "X25MIpQqLIU_audio.m4a",
+   "audio_ss": 139.94,
+   "audio_dur": 1.14,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    139.94,
+    141.08
+   ],
+   "ss": 139.94,
+   "dur": 1.14,
+   "t_final_est": [
+    24.34,
+    25.48
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    355,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "분홍 정장 투자자가 맞장구(샷 139.91~142.24)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 23,
+   "line": "N5",
+   "kind": "나레",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    328.6,
+    329.721
+   ],
+   "ss": 328.6,
+   "dur": 1.121,
+   "t_final_est": [
+    25.48,
+    26.6
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    375,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "분홍 정장 투자자가 제안하는 중(원본 샷 328.56~331.93, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 24,
+   "line": "N5",
+   "kind": "나레",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    407.1,
+    408.238
+   ],
+   "ss": 407.1,
+   "dur": 1.138,
+   "t_final_est": [
+    26.6,
+    27.73
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    287,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "남색 셔츠 투자자가 제안하는 중(샷 407.07~410.48, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 25,
+   "line": "O7",
+   "kind": "원음",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": false,
+   "audio_src": "X25MIpQqLIU_audio.m4a",
+   "audio_ss": 440.33,
+   "audio_dur": 2.72,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    440.33,
+    443.05
+   ],
+   "ss": 440.33,
+   "dur": 2.72,
+   "t_final_est": [
+    27.73,
+    30.45
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    384,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "금발 투자자가 15% 제안(말하는 본인, 샷 440.31~443.14)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 26,
+   "line": "O8",
+   "kind": "원음",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": false,
+   "audio_src": "X25MIpQqLIU_audio.m4a",
+   "audio_ss": 518.81,
+   "audio_dur": 2.6,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    518.81,
+    521.41
+   ],
+   "ss": 518.81,
+   "dur": 2.6,
+   "t_final_est": [
+    30.45,
+    33.05
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 둘 — 여자 창업자가 묻는 중(말하는 본인, 샷 516.15~522.72, 522초 장식 공 전까지)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 27,
+   "line": "O9",
+   "kind": "원음",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": false,
+   "audio_src": "X25MIpQqLIU_audio.m4a",
+   "audio_ss": 533.81,
+   "audio_dur": 0.76,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    533.81,
+    534.57
+   ],
+   "ss": 533.81,
+   "dur": 0.76,
+   "t_final_est": [
+    33.05,
+    33.81
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 둘이 손뼉 치며 기뻐함(말하는 본인 — 남자 창업자, 샷 533.17~536.50)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 28,
+   "line": "N6",
+   "kind": "나레",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    537.7,
+    539.243
+   ],
+   "ss": 537.7,
+   "dur": 1.543,
+   "t_final_est": [
+    33.81,
+    35.36
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "남자 창업자가 투자자와 포옹(원본 샷 537.64~539.47, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 29,
+   "line": "N6",
+   "kind": "나레",
+   "src": "X25MIpQqLIU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "src_orig_span": [
+    539.52,
+    541.362
+   ],
+   "ss": 539.52,
+   "dur": 1.842,
+   "t_final_est": [
+    35.36,
+    37.2
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    559,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "금발 투자자가 창업자와 포옹(샷 539.47~541.61, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/15편_PickUpBricks/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "how": "object",
+   "t": [
+    0.0,
+    0.5
+   ],
+   "target": [
+    490,
+    935,
+    690,
+    1130
+   ],
+   "target_what": "무대 배너에 그려진 픽업브릭스 청소기 본체 그림(제품) — 손 상자 = 9.8초 원본 프레임 눈 측정(완성본 좌표). 65초 제품 근접은 원이 창에 안 들어가 거절(992px), 115초 투자자 앞 제품은 얼굴 겹침이라 안 씀",
+   "why": "R3 0초 원 = 물건(제품) — 벤치 0~1.0 원은 놀란 투자자 얼굴이지만 사장님 10-19 '처음에 빨간원 얼굴에 하지말고'",
+   "at": [
+    590,
+    1032
+   ],
+   "size": 313,
+   "face_clear": true,
+   "target_box": [
+    490,
+    935,
+    690,
+    1130
+   ],
+   "target_path": [
+    [
+     0.0,
+     490.0,
+     935.0,
+     690.0,
+     1130.0
+    ],
+    [
+     0.067,
+     520.7,
+     934.3,
+     720.7,
+     1129.3
+    ],
+    [
+     0.133,
+     552.3,
+     935.3,
+     749.7,
+     1127.7
+    ],
+    [
+     0.2,
+     583.3,
+     936.7,
+     778.0,
+     1126.3
+    ],
+    [
+     0.267,
+     613.7,
+     938.0,
+     805.7,
+     1125.0
+    ],
+    [
+     0.333,
+     641.3,
+     938.0,
+     833.3,
+     1125.0
+    ],
+    [
+     0.4,
+     668.3,
+     938.0,
+     860.3,
+     1125.0
+    ],
+    [
+     0.467,
+     695.0,
+     938.0,
+     887.0,
+     1125.0
+    ]
+   ],
+   "track": [
+    [
+     0.0,
+     590,
+     1032
+    ],
+    [
+     0.067,
+     621,
+     1032
+    ],
+    [
+     0.133,
+     651,
+     1032
+    ],
+    [
+     0.2,
+     681,
+     1032
+    ],
+    [
+     0.267,
+     710,
+     1032
+    ],
+    [
+     0.333,
+     737,
+     1032
+    ],
+    [
+     0.4,
+     764,
+     1032
+    ],
+    [
+     0.467,
+     791,
+     1032
+    ]
+   ],
+   "track_conf": 0.992,
+   "track_how": "template",
+   "why_target": "손 상자(재료 target) · 추적 template 신뢰 0.992 · 원 313px = 물건 반대각선 140×1.04+선 · 얼굴 3프레임 겹침 0"
+  },
+  {
+   "line": "O1",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.55,
+    0.93
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "원 다음 얼굴 컷 첫 프레임(14편과 같은 꼴)"
+  },
+  {
+   "line": "N1",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 1.0 레고 바닥 컷"
+  },
+  {
+   "line": "N2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 10.5 제품 공개 컷"
+  },
+  {
+   "line": "N3",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 15.5 '일반 청소기와 다르게'"
+  },
+  {
+   "line": "O4",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 20.0 '와우 이거 물건이네'"
+  },
+  {
+   "line": "N5",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 38.5 지분 컷"
+  },
+  {
+   "line": "O9",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 52.5 '협상 성공'"
+  }
+ ]
+}

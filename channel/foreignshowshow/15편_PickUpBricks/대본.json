@@ -1,0 +1,376 @@
+{
+ "topic": "Pick Up Bricks(픽업브릭스 — 레고·작은 장난감 전용 무선 흡입 청소기, 먼지와 장난감을 따로 거름) — 맨발로 레고 밟는 고통으로 시작한 창업자 둘(원음 'my brother in law'), 투자자 다섯이 직접 써 보고 넷이 제안 → 두 샤크가 16% 나눠 거래",
+ "product": "Pick Up Bricks(픽업브릭스)",
+ "bench": {
+  "id": "aKaBZjYmbRk",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "아이들이 직접 장난감 치운다고?! (화면 제목 같음)",
+  "dur": 55.174,
+  "views": 2500000,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "cut_median": 1.4,
+  "_cut_median_how": "check.scene_cuts 같은 자 39조각 중앙 — 10-27 실측"
+ },
+ "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」",
+ "dropped": [
+  "벤치 '소매가격은 14만원'·'3억 줄게요'·'전 3억에' — 금액(사장님 규칙: 대본에 금액 금지) → 지분 숫자만",
+  "벤치 끝 '거래 후 주문 20배 급증' — 출처를 못 찾음 → 안 씀",
+  "벤치 1.5~7 남의 육아 영상(소리 지르는 남자·부서진 레고)·홍보 영상 밖 화면 — 방송 원본 밖 → 원본 안 맨발·레고 카펫으로",
+  "벤치 끝 '협상 성공' 뒤 화면 — 하이브리드 뒤(쿠팡 체험)가 그 자리를 대신함"
+ ],
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "kind": "원음",
+    "fn": "반응(결말 반응 0초)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "어머, 어떡해!"
+    ],
+    "cap_at": [
+     11.56
+    ],
+    "span": [
+     11.56,
+     12.56
+    ],
+    "orig_en": "Oh, no.",
+    "text": "어머, 어떡해!",
+    "style": "원음반응_크게",
+    "fx": "0초 빨간 원(R3 물건 = 무대 배너의 픽업브릭스 본체 그림) — 벤치 0~1.0 빨간 실선 원(놀란 투자자 얼굴, 우리는 물건)"
+   },
+   {
+    "id": "N1",
+    "kind": "나레",
+    "fn": "문제(고통)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "애 키우는 집이면",
+     "매일 밟는다는",
+     "이 고통"
+    ],
+    "text": "애 키우는 집이면 매일 밟는다는 이 고통",
+    "tts": "애 키우는 집이면 매일 밟는다는 이 고통",
+    "fx": "빨강 번쩍 — 벤치 1.0(레고 바닥 컷)"
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "fn": "문제(창업자)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "부모가 겪는",
+     "가장 끔찍한 고통이죠"
+    ],
+    "cap_at": [
+     38.76,
+     39.88
+    ],
+    "span": [
+     38.76,
+     41.72
+    ],
+    "orig_en": "The most painful experience a parent can face.",
+    "text": "부모가 겪는 가장 끔찍한 고통이죠",
+    "style": "보통"
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "fn": "해답(제품 공개)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "그래서 애들이",
+     "알아서 치우라고 만든",
+     "장난감 전용 청소기"
+    ],
+    "text": "그래서 애들이 알아서 치우라고 만든 장난감 전용 청소기",
+    "tts": "그래서 애들이 알아서 치우라고 만든 장난감 전용 청소기",
+    "fx": "초록 번쩍 — 벤치 5.5(제품 공개 컷)"
+   },
+   {
+    "id": "O3",
+    "kind": "원음",
+    "fn": "해답(장점)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "픽업브릭스는 무선에",
+     "튼튼하고 쓰기도 쉬워요",
+     "아이들한테 딱이죠"
+    ],
+    "cap_at": [
+     73.72,
+     75.88,
+     77.64
+    ],
+    "span": [
+     73.72,
+     79.4
+    ],
+    "orig_en": "We made Pick Up Bricks cordless, durable, easy to use. It's perfect for kids.",
+    "text": "픽업브릭스는 무선에 튼튼하고 쓰기도 쉬워요 아이들한테 딱이죠",
+    "style": "보통"
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "fn": "해답(차별점)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "심지어 먼지는 걸러 내고",
+     "장난감만",
+     "따로 모아 준다는데"
+    ],
+    "text": "심지어 먼지는 걸러 내고 장난감만 따로 모아 준다는데",
+    "tts": "심지어 먼지는 걸러 내고 장난감만 따로 모아 준다는데",
+    "fx": "빨강 번쩍 — 벤치 15.5('일반 청소기와 다르게')"
+   },
+   {
+    "id": "O4",
+    "kind": "원음",
+    "fn": "시연(반응)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "와, 이거 물건이네"
+    ],
+    "cap_at": [
+     120.36
+    ],
+    "span": [
+     120.36,
+     122.44
+    ],
+    "orig_en": "Wow, this thing is serious.",
+    "text": "와, 이거 물건이네",
+    "style": "보통",
+    "fx": "빨강 번쩍 — 벤치 20.0('와우 이거 물건이네')"
+   },
+   {
+    "id": "N4",
+    "kind": "나레",
+    "fn": "시연(투자자 체험)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "샤크들도 직접 써 보더니",
+     "다들 손을 못 떼는데"
+    ],
+    "text": "샤크들도 직접 써 보더니 다들 손을 못 떼는데",
+    "tts": "샤크들도 직접 써 보더니 다들 손을 못 떼는데"
+   },
+   {
+    "id": "O5",
+    "kind": "원음",
+    "fn": "시연(창업자)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "다 안 치우셔도 돼요~"
+    ],
+    "cap_at": [
+     129.2
+    ],
+    "span": [
+     129.2,
+     130.52
+    ],
+    "orig_en": "You don't have to clean them all up.",
+    "text": "다 안 치우셔도 돼요~",
+    "style": "보통"
+   },
+   {
+    "id": "O6",
+    "kind": "원음",
+    "fn": "시연(투자자 평)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "그냥 줍는 것 자체가 재밌네",
+     "맞아, 바로 그거야"
+    ],
+    "cap_at": [
+     138.16,
+     140.12
+    ],
+    "span": [
+     138.16,
+     141.08
+    ],
+    "orig_en": "Just picking up the bricks is fun. / Yes, exactly.",
+    "text": "그냥 줍는 것 자체가 재밌네 맞아, 바로 그거야",
+    "style": "보통"
+   },
+   {
+    "id": "N5",
+    "kind": "나레",
+    "fn": "지분 경쟁",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "결국 샤크 넷이",
+     "줄줄이 지분을 부르며",
+     "붙었는데"
+    ],
+    "text": "결국 샤크 넷이 줄줄이 지분을 부르며 붙었는데",
+    "tts": "결국 샤크 넷이 줄줄이 지분을 부르며 붙었는데",
+    "fx": "초록 번쩍 — 벤치 38.5(지분 컷)"
+   },
+   {
+    "id": "O7",
+    "kind": "원음",
+    "fn": "지분 경쟁(원음)",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "난 15%까지 갈게요"
+    ],
+    "cap_at": [
+     440.33
+    ],
+    "span": [
+     440.33,
+     443.05
+    ],
+    "orig_en": "I am going to go to 15%.",
+    "text": "난 15%까지 갈게요",
+    "style": "보통"
+   },
+   {
+    "id": "O8",
+    "kind": "원음",
+    "fn": "결정(역제안)",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "두 분이 16%로",
+     "나눠 주실 순 없을까요?"
+    ],
+    "cap_at": [
+     518.81,
+     520.17
+    ],
+    "span": [
+     518.81,
+     521.41
+    ],
+    "orig_en": "Is there any chance you guys would do it for 16 split?",
+    "text": "두 분이 16%로 나눠 주실 순 없을까요?",
+    "style": "보통"
+   },
+   {
+    "id": "O9",
+    "kind": "원음",
+    "fn": "결정(성사)",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "거래 성사예요!"
+    ],
+    "cap_at": [
+     533.81
+    ],
+    "span": [
+     533.81,
+     534.57
+    ],
+    "orig_en": "We got a deal.",
+    "text": "거래 성사예요!",
+    "style": "보통",
+    "fx": "초록 번쩍 — 벤치 52.5 '협상 성공'"
+   },
+   {
+    "id": "N6",
+    "kind": "나레",
+    "fn": "끝(결과)",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "애들 장난감 청소기 하나로",
+     "샤크 둘을",
+     "한 번에 잡았다는데"
+    ],
+    "text": "애들 장난감 청소기 하나로 샤크 둘을 한 번에 잡았다는데",
+    "tts": "애들 장난감 청소기 하나로 샤크 둘을 한 번에 잡았다는데"
+   }
+  ],
+  "cps_target": 7.8
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "speed": 1.25
+ },
+ "titles": {
+  "line1": "애들이 알아서",
+  "line2": "치우는 청소기?!",
+  "rule": "1줄 노랑·2줄 흰, 끝 '?!' — 벤치 '아이들이 직접 / 장난감 치운다고?!'과 3어절 연속 겹침 0, 줄당 ≤12자"
+ },
+ "render": {
+  "gap": 0.03
+ },
+ "facts": {
+  "f1": {
+   "text": "원본 11.56~12.56 'Oh, no.'(스피치매틱스 enhanced 영어) — 창업자 둘이 맨발로 레고가 흩어진 바닥을 걸어 들어오자 금발 투자자 반응(화면 11.58~12.78)",
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "kind": "방송 원음"
+  },
+  "f2": {
+   "text": "원본 25.16~41.72 'Pick Up Bricks… We're here to talk about pain… The dreaded walk of pain. The most painful experience a parent can face.' · 화면 5~11·35~44 맨발·레고 카펫",
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "kind": "방송 원음+화면"
+  },
+  "f3": {
+   "text": "원본 54.60~66.60 'The pain of getting your kids to just pick up their stuff… that's why I created Pick Up Bricks, the kid's toy vacuum that picks up bricks and other little toys.' · 73.72~79.40 'We made Pick Up Bricks cordless, durable, easy to use. It's perfect for kids.'",
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "kind": "방송 원음"
+  },
+  "f4": {
+   "text": "원본 79.52~87.00 'But unlike a normal vacuum, our patented design separates the dirt and dust from the toys, leaving you with cleaner toys and a cleaner floor.'",
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "kind": "방송 원음"
+  },
+  "f5": {
+   "text": "원본 110.48~115.20 'You'll each find your very own Pick Up Bricks and a pile of toys to suck up.' · 120.36 'Wow, this thing is serious.' · 129.20 'You don't have to clean them all up.' · 138.16~141.08 'Just picking up the bricks is fun. / Yes, exactly.' · 화면 115~142 투자자 다섯이 직접 써 봄",
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "kind": "방송 원음+화면"
+  },
+  "f6": {
+   "text": "원본 415.85~418.17 'Listen, you've got four offers.' · 440.33~443.05 'I am going to go to 15%.' · 화면 328~332·407~410 제안하는 투자자",
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "kind": "방송 원음"
+  },
+  "f7": {
+   "text": "원본 502.81~504.41 'But you're getting two sharks.' · 518.81~521.41 'Is there any chance you guys would do it for 16 split?' · 529.25 'Sure.' · 532.25 'All right.' · 533.81~534.57 'We got a deal.' · 화면 537~541 포옹",
+   "url": "https://www.youtube.com/watch?v=X25MIpQqLIU",
+   "kind": "방송 원음"
+  }
+ }
+}
