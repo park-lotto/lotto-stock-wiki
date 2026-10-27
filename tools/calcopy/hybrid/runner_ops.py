@@ -154,8 +154,24 @@ def frame_t(video: Path, t: float) -> float:
     return min(max(0.0, t), max(0.0, d - FRAME_TAIL))
 
 
+def fit_crop(crop: list, w: int, h: int, ref=(1080, 1920)) -> list:
+    """(판단 주인 — 자를 칸을 원본 안으로) 칸이 원본 밖으로 나가면: 원본이 기준 크기(1080×1920)보다 작고 칸이 기준 안이면 기준 좌표로 보고 비율로 줄인다,
+    그 밖은 원본 안으로 잘라 맞춘다(10-27 run4 c편: 720×1280 원본에 1080 기준 칸 [200,900,760,1020] → ffmpeg 실패 → 결과 0개로 3번 반복)."""
+    x, y, cw, ch = [float(v) for v in crop[:4]]
+    if x + cw > w or y + ch > h:
+        if (w, h) != ref and x + cw <= ref[0] and y + ch <= ref[1]:
+            sx, sy = w / ref[0], h / ref[1]
+            x, y, cw, ch = x * sx, y * sy, cw * sx, ch * sy
+        x, y = max(0.0, min(x, w - 2)), max(0.0, min(y, h - 2))
+        cw, ch = max(2.0, min(cw, w - x)), max(2.0, min(ch, h - y))
+    return [int(x), int(y), int(cw) // 2 * 2, int(ch) // 2 * 2]
+
+
 def frame(video: Path, t: float, dst: Path, crop: list | None = None) -> Path:
     """영상 한 장 — 실행기의 한 장 뽑기는 전부 이 함수(시각은 frame_t 로 끝 안쪽)."""
+    if crop:
+        d = dims(video)
+        crop = fit_crop(crop, int(d["w"]), int(d["h"]))
     vf = ["-vf", f"crop={crop[2]}:{crop[3]}:{crop[0]}:{crop[1]}"] if crop else []
     dst.parent.mkdir(parents=True, exist_ok=True)
     run(["ffmpeg", "-y", "-v", "error", "-ss", f"{frame_t(video, t):.2f}", "-i", str(video), "-frames:v", "1", *vf, str(dst)])
@@ -788,13 +804,13 @@ def c_sheet(W, d):
 
 
 def c_frames(W, d):
-    out = []
+    out, bad = [], []
     for i, s in enumerate(d.get("items") or []):
         try:
             out.append(rel(W, frame(W / d["src"], float(s["t"]), W / f"{d['prefix']}{i + 1}.jpg", s.get("crop") if isinstance(s.get("crop"), list) else None)))
-        except Exception:  # noqa: BLE001 — 자르기 실패한 장면은 빼고 나머지로
-            continue
-    return {"files": out}
+        except Exception as e:  # noqa: BLE001 — 자르기 실패한 장면은 빼고 나머지로(이유는 결과에 — 조용히 0개로 돌려주지 않는다)
+            bad.append(f"{s.get('t')}초 {type(e).__name__}: {str(e)[:120]}")
+    return {"files": out, **({"bad": bad} if bad else {}), **({"error": "장면을 하나도 못 뽑음: " + "; ".join(bad[:3])} if bad and not out else {})}
 
 
 def coupang_chrome(queries: list[str], home: Path) -> dict:
