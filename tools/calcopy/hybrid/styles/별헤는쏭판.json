@@ -528,6 +528,14 @@
    }
   ]
  },
+ "source": {
+  "min_h": 720,
+  "why": "원본 높이 720px 아래면 창(1080x1444)에 2배 넘게 늘려져 흐리다 — 10-27 flow04 G7RgN9ijwE4 640x360 → 268x360 칸을 4배 확대. 벤치 6편 원본 = 1080p 받음(kal_state collect)"
+ },
+ "one_shot": {
+  "v": true,
+  "why": "벤치 6편 = 원본 한 샷을 되감기·건너뛰기 없이 이어 씀(rhythm.cut_median ≈ 편 길이) — render_bench.one_shot_chain 이 컷 ss 를 앞 컷에 이어 붙인다(10-27 flow04 C4 0.2초 겹침 B13 반려)"
+ },
  "rhythm": {
   "cut_median": {
    "v": 18.19,

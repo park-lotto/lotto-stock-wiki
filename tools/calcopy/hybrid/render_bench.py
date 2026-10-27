@@ -186,24 +186,43 @@ def rhythm_gate(T: dict, st: dict, src_dir: Path | None) -> list[str]:
     return bad
 
 
-def photo_share(cuts: list[dict], end: float) -> float:
+def photo_share(cuts: list[dict], end: float, exempt_lines=()) -> float:
     """(판단 주인 — 쿠팡·상품 그림 컷 비중) 그림(jpg·png·webp) 컷 초 합 ÷ 길이 — 연예인 본인 사진(파일 앞머리 own_, deco.is_own_photo)은 뺀다
     (사장님 10-25 "사진 비중 상한은 쿠팡 사진에만" — 본인 사진은 판 deco.photo 가 따로 센다). 렌더 전 관문(photo_gate)·품질 관문 rhythm 행이 같이 부른다."""
     from tools.calcopy.hybrid.deco import is_own_photo
     if not end:
         return 0.0
-    s = sum((c.get("t1", end) - c["t0"]) for c in cuts if Path(str(c.get("src") or "")).suffix.lower() in IMG_EXT and not is_own_photo(c.get("src")))
+    ex = set(exempt_lines or ())      # 재료.json photo_lines — 비슷한 제품 영상을 못 찾은 해외원본형의 제품 줄(사장님 10-27, 주인 flow._alt_photo_fallback)
+    s = sum((c.get("t1", end) - c["t0"]) for c in cuts if Path(str(c.get("src") or "")).suffix.lower() in IMG_EXT and not is_own_photo(c.get("src"))
+            and c.get("line") not in ex)
     return round(s / end, 3)
 
 
-def photo_gate(T: dict, st: dict) -> list[str]:
+def photo_gate(T: dict, st: dict, M: dict | None = None) -> list[str]:
     """렌더 전 관문: 그림 컷 비중이 판 rhythm.photo_share_max 를 넘으면 멈춘다(벤치 정지 화면 = 연예인 화보, 쇼핑몰 사진 0/8)."""
     from tools.calcopy.hybrid import styles as _STY
     R = _STY.rhythm(st).get("photo_share_max")
     if not R:
         return []
-    sh = photo_share(T["cuts"], T["end"])
+    sh = photo_share(T["cuts"], T["end"], (M or {}).get("photo_lines") or ())
     return [f"그림 컷 비중 {sh} > 판 photo_share_max {R['v']} — 쿠팡·상품 사진을 줄이고 원본·재료 영상으로(재료.json)"] if sh > float(R["v"]) + 1e-9 else []
+
+
+def one_shot_chain(cuts: list, st: dict) -> None:
+    """(판단 주인 — 한 샷 이어 쓰기) 판 one_shot.v 가 참이면 같은 원본이 이어지는 컷을 첫 컷 하나로 합친다(첫 ss 부터 끊김 없이 흐름 — 되감기·건너뛰기·겹침 0)·옮기지 않음(no_snap).
+    재료의 ss 는 첫 컷만 쓴다. 10-27 릴리릴리 flow04: 작가가 C4 ss 를 11.38(이어지면 11.58)로 적어 0.2초 겹침 → B13 반려로 완성본 검사에서 멈춤."""
+    if not (st.get("one_shot") or {}).get("v"):
+        return
+    keep = cuts[:1]
+    for c in cuts[1:]:
+        if c.get("src") == keep[-1].get("src") and keep[-1].get("ss") is not None:
+            continue                  # 앞 컷이 이어서 흐른다 — 컷 하나(벤치 cut_median ≈ 편 길이). 원본 안 편집점은 원본 그대로 흐름(10-27 flow06 원본 편집 11곳이 우리 컷 경계와 부딪혀 멈춤)
+        keep.append(c)
+    cuts[:] = keep
+    for c in cuts:
+        c["no_snap"] = c["one_shot"] = True
+        for k in ("max", "max_auto", "dur"):      # 조각마다 적힌 샷 한도는 합친 컷엔 맞지 않는다(원본 끝 넘김은 src_left 가 따로 본다)
+            c.pop(k, None)
 
 
 def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) -> dict:
@@ -325,6 +344,7 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
                 cuts.append({**c, "line": lid, "t0": round(c0, 3), "kind": "tts"})
                 acc += w
     cuts[0]["t0"] = 0.0
+    one_shot_chain(cuts, st)
     src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
     if src_dir:
         fit_lip_edges(cuts, src_dir, end, {k: v.get("src") for k, v in Lm.items()})
@@ -1343,6 +1363,10 @@ def edge_fault(c: dict, src_dir: Path) -> dict | None:
     if not hit or not short_pieces(hit, e, end):
         return None
     pts = [e] + hit + [end]
+    if c.get("one_shot"):            # 한 샷 이어 쓰기(one_shot_chain) — 안쪽 편집점은 원본이 흐르는 그대로, 우리 컷 앞뒤 끝 조각만 번쩍임으로 본다
+        pc = [y - x for x, y in zip(pts, pts[1:])]
+        if min(pc[0], pc[-1]) >= MIN_PIECE_SEC - 1e-3:
+            return None
     return {"e": e, "end": end, "hit": hit, "pieces": [y - x for x, y in zip(pts, pts[1:])]}
 
 
@@ -3366,7 +3390,7 @@ def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *,
            ("④ 글자·얼굴", cut_content_gate(T, M, st, doc, R, log, erase=erase)),
            ("⑤ 컷 길이", cut_length_gate(T, st)),
            ("⑦ 멈춤", cut_still_gate(T, M, st)),
-           ("사진", photo_gate(T, st)),
+           ("사진", photo_gate(T, st, M)),
            ("리듬", rhythm_gate(T, st, src_dir))]
     if placed is not None:
         out.append(("꾸밈", deco_gate(placed, doc, st, log)))
