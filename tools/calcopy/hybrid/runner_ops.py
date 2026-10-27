@@ -1606,6 +1606,7 @@ def _of_sheets(W: Path, seeds: list[Path], cands: list[dict]) -> list[str]:
     return out
 
 
+WEB_QN = 6         # 틱톡·인스타 검색어 수(10-27: 4개만 돌아 맨 뒤 이름 검색어가 빠졌다 — 앞 4 + 이름 2)
 WEB_WAIT = 6.0     # 틱톡·인스타 검색 페이지에서 영상 주소가 뜨길 기다리는 최대 초(실측 2초)
 WEB_PER_Q = 6       # 검색어 하나·사이트 하나에서 가져올 영상 주소 수
 WEB_MAX = 12        # 한 바퀴 틱톡·인스타 후보 상한(후보마다 메타 한 번 — 천천히 받기 YT_SLOW 라 하나 5~15초)
@@ -1666,7 +1667,7 @@ def _web_links(qs: list[str], per: int = WEB_PER_Q) -> list[dict]:
                 seen.add(x["url"])
                 out.append(x)
     todo = []
-    for q in qs[:4]:
+    for q in qs[:WEB_QN]:
         hit = _memo("web", q, lambda: None)
         if hit:
             sys.stderr.write(f"[web] '{q}' 저장된 검색 결과 {len(hit)}개 재사용\n")
