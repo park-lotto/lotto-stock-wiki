@@ -857,6 +857,9 @@ REVIEW_JS = r"""() => {
 }"""
 
 
+CP_REVIEW_TRIES = 2     # 쿠팡 후기 페이지 열기 횟수(한 번 더 = 10-27 run4 실패·0개)
+
+
 def c_coupang_reviews(W, d):
     """쿠팡 상품 페이지 베스트 후기(도움 순) — 대본 뒷부분 셀링포인트·소구점의 근거(사장님 10-22 "후기 베스트에 나오는 셀링포인트"). 회원 PC 크롬 창(쿠팡은 헤드리스를 막는다).
     실측 10-22 8003851952: 페이지 열고 후기 칸까지 약 5초 · 첫 후기 '18명에게 도움' — 수납·어울림·어깨끈 같은 소구점이 그대로 나온다."""
@@ -874,6 +877,7 @@ def c_coupang_reviews(W, d):
     with sync_playwright() as p:
         ctx = p.chromium.launch_persistent_context(str(prof), headless=False, channel="chrome", locale="ko-KR", viewport={"width": 1366, "height": 900},
                                                    args=["--disable-blink-features=AutomationControlled"])
+        why = ""
         try:
             pg = ctx.pages[0] if ctx.pages else ctx.new_page()
             try:
@@ -881,21 +885,30 @@ def c_coupang_reviews(W, d):
                 pg.wait_for_timeout(800)
             except Exception:  # noqa: BLE001 — 홈이 늦어도 상품 페이지는 열어 본다
                 pass
-            pg.goto(f"https://www.coupang.com/vp/products/{pid}", wait_until="domcontentloaded", timeout=30000)
-            pg.wait_for_timeout(1500)
-            if "사용권한이 제한된" in (pg.evaluate("()=>document.body.innerText.slice(0,400)") or ""):
-                return {"reviews": [], "blocked": True}      # 쿠팡이 이 PC 를 잠시 막았다(10-22 실측 — 짧은 시간에 여러 번 열면) — 더 두드리지 않는다
-            for _ in range(14):                        # 후기는 내려가야 불러온다(한 번에 건너뛰면 안 생긴다 — 10-22 실측 0개)
-                if pg.evaluate("()=>document.querySelectorAll('.sdp-review article').length") > 0:
-                    break
-                pg.mouse.wheel(0, 1400)
-                pg.wait_for_timeout(700)
-                pg.evaluate("()=>{const e=document.querySelector('.sdp-review'); if(e) e.scrollIntoView();}")
-            pg.wait_for_timeout(1200)
-            rows = pg.evaluate(REVIEW_JS) or []
-            if not rows:                               # 칸 이름이 바뀌었을 때 — 후기 칸 글 전체에서라도
-                txt = pg.evaluate("()=>{const e=document.querySelector('.sdp-review'); return e ? e.innerText : ''}") or ""
-                rows = [{"text": t.strip()[:600], "helpful": 0} for t in txt.split("신고하기") if len(t.strip()) > 30][:12]
+            rows = []
+            for k in range(CP_REVIEW_TRIES):            # 10-27 run4: 페이지가 넘어가며 'Execution context was destroyed'(c) · 후기 0개(b) — 한 번 더 열어 본다
+                try:
+                    pg.goto(f"https://www.coupang.com/vp/products/{pid}", wait_until="domcontentloaded", timeout=30000)
+                    pg.wait_for_timeout(1500 + 2500 * k)
+                    head = pg.evaluate("()=>document.body.innerText.slice(0,400)") or ""
+                    if "사용권한이 제한된" in head:
+                        return {"reviews": [], "blocked": True}      # 쿠팡이 이 PC 를 잠시 막았다(10-22 실측 — 짧은 시간에 여러 번 열면) — 더 두드리지 않는다
+                    for _ in range(14):                        # 후기는 내려가야 불러온다(한 번에 건너뛰면 안 생긴다 — 10-22 실측 0개)
+                        if pg.evaluate("()=>document.querySelectorAll('.sdp-review article').length") > 0:
+                            break
+                        pg.mouse.wheel(0, 1400)
+                        pg.wait_for_timeout(700)
+                        pg.evaluate("()=>{const e=document.querySelector('.sdp-review'); if(e) e.scrollIntoView();}")
+                    pg.wait_for_timeout(1200)
+                    rows = pg.evaluate(REVIEW_JS) or []
+                    if not rows:                               # 칸 이름이 바뀌었을 때 — 후기 칸 글 전체에서라도
+                        txt = pg.evaluate("()=>{const e=document.querySelector('.sdp-review'); return e ? e.innerText : ''}") or ""
+                        rows = [{"text": t.strip()[:600], "helpful": 0} for t in txt.split("신고하기") if len(t.strip()) > 30][:12]
+                    if rows:
+                        break
+                    why = "후기 0개 — 페이지 앞: " + " ".join(head.split())[:160]
+                except Exception as e:  # noqa: BLE001 — 한 번 실패는 다시 열어 본다(이유는 결과에)
+                    why = f"{type(e).__name__}: {str(e)[:160]}"
         finally:
             ctx.close()
     rows.sort(key=lambda r: -int(r.get("helpful") or 0))
@@ -903,7 +916,7 @@ def c_coupang_reviews(W, d):
     jsave(W / "look" / f"reviews_{pid}.json", out)
     if out:
         jsave(_cp_cache(home, "reviews", pid), out)
-    return {"reviews": out}
+    return {"reviews": out, **({"why": why} if not out and why else {})}
 
 
 def img_url(u) -> str:
