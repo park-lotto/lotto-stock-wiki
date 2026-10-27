@@ -1,0 +1,57 @@
+{
+ "_note": "숏템리폿 4차 21 워킹패드 하이브리드 — 앞 = 숏템리폿 현장썰 Inside Ilona's World 원음형 박창수판(21_WalkingPad/front), 뒤 = 쿠팡 7366337236 '킹스미스 워킹패드 C2 … 접이식 런닝머신'(같은 제품 — Ilona 설명란 'KingSmith WalkingPad C2', 흰색). 뒤 화면 = 킹스미스 공식 소개 영상(발·패드만) + Garage Gym Reviews Everything 접기 손 장면 + Ilona 다른 장면 + 쿠팡 대표 사진(move). 금액·효능은 말하지 않는다.",
+ "brand": "잇썸홈",
+ "product": "킹스미스 워킹패드 C2(쿠팡 7366337236) — 흰·빨강·파랑·노랑 같은 상품 옵션",
+ "product_mode": "exact",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰4차/21_WalkingPad/front/render/final.mp4",
+  "cut": 16.62,
+  "why": "원음 O2 'it just stops' 끝(앞 16.317) 뒤 0.3초 — 같은 한 샷(il 98.28~104.05) 안",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API(10-28 00:2x, '킹스미스 워킹패드'): 7366337236 '킹스미스 워킹패드 C2 홈트 실내 운동기구 가정용 워킹머신 저소음 접이식 런닝머신, 화이트, C2'(빨강·파랑 옵션 같은 번호) — 21_WalkingPad/coupang.json",
+  "c_img": "쿠팡 대표 이미지(look/cp_7366337236_0.jpg): 흰 몸통 + 검은 벨트 + 앞쪽 접힘 이음 = Ilona 영상 속 흰 C2 와 같은 모양",
+  "o_fold": "Garage Gym Reviews Everything NzZ_2qVYQlo(WalkingPad C2 리뷰) 99~110 'this does actually fold in half so if you want to save space … this can easily be stored like under a bed in a closet out of the way' · 공식 소개 12.6~14.0 화면 글 'Folding design 180°'",
+  "o_auto": "GGR 같은 영상 253~256 'manual mode automatic mode' · Ilona 81.16~84.08 'if I stop walking it starts slowing down' · 119.28~120.80 'Oh gosh it's going faster' · 공식 소개 27.1~29.6 화면 글 'Automatic Mode'",
+  "o_wheel": "GGR 같은 영상 132~139 'it does have these wheels on the front which you can see right here which do help' · 공식 소개 51.4~53.9 화면 글 'Scroll Wheel / Easy to Move'"
+ },
+ "흥미이음": {
+  "원본흥미": "처음 올라가 걸어 보고 'This is so nice' · 걸음을 멈추니 벨트가 알아서 'it just stops'",
+  "뒤흥미": "쿠팡의 바로 그 킹스미스 워킹패드 C2 — 반으로 접히고, 자동 모드로 걷는 대로 속도가 바뀌는 장면",
+  "판정": "같음",
+  "근거": "같은 제품: Ilona 설명란 'KingSmith WalkingPad C2' = 쿠팡 상품명 '킹스미스 워킹패드 C2' + 대표 사진(흰 몸통·검은 벨트) 대조"
+ },
+ "voice": {"name": "박창수", "voice_id": "tc_6059dad0b83880769a50502f"},
+ "cps_target": 8.3,
+ "bgm": {"id": "honwaka_puppu", "db_below_voice": 14.4},
+ "front_style": {"frame": "channel/hottemreport/현장썰4차/21_WalkingPad/front/frame_render.json", "title": "걷다 멈추면\n알아서 서는 러닝머신"},
+ "transition": {"kind": "slideleft", "dur": 0.25},
+ "back_style": "shortem",
+ "line_role": {"B1": "공개", "B2": "고조", "B3": "고조", "B4": "고조", "B5": "cta"},
+ "back_caption_lines": {
+  "B1": {"enter": {"kind": "pop", "ms": 300}, "emphasis": {"words": ["진짜"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "흰 쿠팡 사진·밝은 나무 바닥 위 — 노랑 대신 하늘"},
+  "B2": {"emphasis": {"words": ["반으로"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "흰 패드·검은 체육관 바닥 — 노랑 대신 하늘"},
+  "B3": {"emphasis": {"words": ["알아서"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "밝은 바닥·흰 패드 위 — 하늘"},
+  "B4": {"emphasis": {"words": ["굴려서"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "빨강 패드 위 — 빨강·노랑 금지, 하늘"},
+  "B5": {"enter": {"kind": "fade", "ms": 300}, "emphasis": {"words": ["난리예요"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "빨강·흰 패드 위 — 하늘"}
+ },
+ "sfx": {"pack_customer": 0},
+ "lines": [
+  {"id": "B1", "role": "공개", "point": "잉", "answer_at": 3, "kind": "tts", "seg": "B",
+   "tts": "근데 저 영상 보고 쿠팡에 쳐 봤더니, 그 킹스미스 워킹패드 씨투가 진짜 있더라고요.",
+   "caps": ["근데 저 영상 보고", "쿠팡에 쳐 봤더니", "그 킹스미스 워킹패드 C2가", "진짜 있더라고요"], "emph": ["진짜"], "facts": ["c0", "c_img"]},
+  {"id": "B2", "role": "고조", "point": "권위", "kind": "tts", "seg": "B",
+   "tts": "이게 말도 안 되는 게, 반으로 딱 접어서 침대 밑이나 옷장에 넣어 둔대요.",
+   "caps": ["이게 말도 안 되는 게", "반으로 딱 접어서", "침대 밑이나 옷장에", "넣어 둔대요"], "emph": ["반으로"], "facts": ["o_fold"]},
+  {"id": "B3", "role": "고조", "kind": "tts", "seg": "B",
+   "tts": "진짜 핵심은 이건데, 자동 모드로 두면 걷는 대로 속도가 알아서 바뀐대요.",
+   "caps": ["진짜 핵심은 이건데", "자동 모드로 두면", "걷는 대로 속도가", "알아서 바뀐대요"], "emph": ["알아서"], "facts": ["o_auto"]},
+  {"id": "B4", "role": "고조", "kind": "tts", "seg": "B",
+   "tts": "심지어 앞에 바퀴가 달려 있어서, 접은 채로 굴려서 옮긴대요.",
+   "caps": ["심지어 앞에 바퀴가", "달려 있어서", "접은 채로", "굴려서 옮긴대요"], "emph": ["굴려서"], "facts": ["o_wheel"]},
+  {"id": "B5", "role": "cta", "kind": "tts", "seg": "B",
+   "tts": "퇴근하고 드라마 틀어 놓고 걸었더니, 가족들이 서로 타겠다고 난리예요.",
+   "caps": ["퇴근하고 드라마", "틀어 놓고 걸었더니", "가족들이 서로 타겠다고", "난리예요"], "emph": ["난리예요"], "facts": []}
+ ]
+}
