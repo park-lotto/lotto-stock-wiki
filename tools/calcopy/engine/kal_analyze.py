@@ -1003,11 +1003,12 @@ def _ending(text: str) -> str:
 def script_of(docs: list[dict]) -> dict:
     """(판단 주인) 줄판독 → 화자별 어미 분포·말꼴(존댓말/반말/전언)·자수 분포·연결어·감탄어·역할별 어미. 줄 = 자막 조각이므로 '줄 끝 어미'는 조각 끝 기준(문장 끝은 ?·!·다/요 로 끝나는 조각만)."""
     out = {}
-    for sp in ("나레", "원음"):
+    for sp in ("나레", "원음", "제3자"):    # 제3자 = 나레 없는 자막썰의 댓글카드 글(별헤는쏭 10-27) — 노래 가사 층은 대본이 아니라 뺀다
         texts, roles = [], []
         for d in docs:
             for l in d.get("lines") or []:
-                if _sp(l.get("speaker")) == sp and "원본" not in str(l.get("layer") or ""):
+                lay = str(l.get("layer") or "")
+                if _sp(l.get("speaker")) == sp and "원본" not in lay and "가사" not in lay:
                     texts.append(str(l.get("text") or "")); roles.append(str(l.get("role") or "역할없음").split("·")[0])
         if not texts:
             continue
