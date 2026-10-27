@@ -1331,16 +1331,18 @@ def jump_free_spans(src: Path, spans: list[list[float]], fps: int = 10, pad: flo
 
 def source_rule_scan(W: Path, T: dict, origin_names: set, faces: bool = True) -> list[str]:
     """출처 규칙 ③ — 원본 밖 재료 컷에 장면 전환이 섞였나(10-21 이미도: 리뷰여왕 별 전환 최고 73·상위10% 53 / 다른 재료 컷 최고 28 이하)."""
+    from tools.calcopy.hybrid.render_bench import FPS, src_frames
     out = []
     for c in (T or {}).get("cuts") or []:
         src = str(c.get("src") or "")
         p = W / "src" / src
         if not src or src in origin_names or not p.exists() or not c.get("dur"):
             continue
-        dd = [] if p.suffix.lower() in RU.STILL_EXT else _cut_jumps(p, float(c.get("ss") or 0), float(c["dur"]))
+        sd = src_frames(c) / FPS if "t1" in c else float(c["dur"]) * float(c.get("speed") or 1.0)    # 원본에서 실제로 쓰는 초(늦춘 컷은 화면 dur 보다 짧다) — 화면 dur 로 읽으면 안 보이는 뒤 전환까지 잡는다(10-27 TV L0 0.84배 거짓 반려)
+        dd = [] if p.suffix.lower() in RU.STILL_EXT else _cut_jumps(p, float(c.get("ss") or 0), sd)
         if _jumpy(dd):
-            out.append(f"{c.get('line')}: {src} {float(c.get('ss') or 0):.1f}초부터 {float(c['dur']):.1f}초 안에 장면 전환·끊김이 있다(남의 영상 편집 효과) — 시작점을 옮기거나 다른 장면으로")
-        n = _cut_faces(W, p, float(c.get("ss") or 0), float(c["dur"]), c.get("crop")) if faces else 0   # faces = 지시서 flow._other_faces(쇼핑형은 사람 등장 허용, 10-27)
+            out.append(f"{c.get('line')}: {src} {float(c.get('ss') or 0):.1f}초부터 {sd:.1f}초 안에 장면 전환·끊김이 있다(남의 영상 편집 효과) — 시작점을 옮기거나 다른 장면으로")
+        n = _cut_faces(W, p, float(c.get("ss") or 0), sd, c.get("crop")) if faces else 0   # faces = 지시서 flow._other_faces(쇼핑형은 사람 등장 허용, 10-27)
         if n:
             out.append(f"{c.get('line')}: {src} {float(c.get('ss') or 0):.1f}초부터 화면에 사람 얼굴이 보인다(원본 밖 영상의 다른 사람 — 광고 모델·리뷰어) — 원본 밖 재료는 사람 없는 제품 장면만")
     return out
