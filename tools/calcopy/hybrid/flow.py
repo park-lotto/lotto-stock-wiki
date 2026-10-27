@@ -2057,6 +2057,8 @@ def ph_plan_got(st, m, rp, u):
     ln = p.get("length") or {}
     if ln.get("measured") and not ln.get("ok"):   # 진짜 목소리 길이가 판 범위 밖 — 렌더(5분) 전에 글로 고친다(10-22 선우용여: 렌더 뒤에야 걸려 렌더 3번)
         return _length_rewrite(st, f"{ln.get('sec')}초 (판 {ln.get('min')}~{ln.get('max')})")
+    if p.get("over") and VOICE_RX.search(str(p["over"])):   # 목소리 결함(받아쓰기·말속도·이름 끊김)은 재료 질문으로 보내지 않는다
+        return _voice_rewrite(st, [str(p["over"])])
     over = [p["over"]] if p.get("over") else []
     known = _origin_names(st) | {x.get("name") for x in (st.get("material") or {}).get("files") or [] if x.get("name")}
     orig_lines = {l["id"] for l in (st["script"].get("S") or {}).get("lines") or [] if l.get("kind") == "orig"}
@@ -2133,24 +2135,18 @@ def ph_plan_look(st, m, rp, u):
     if r.get("ok") and not over and not r.get("재료"):
         _redo_done(st)
         return {"goto": "thumb"}
+    voice = [str(o) for o in over if VOICE_RX.search(str(o))]
+    if voice:          # 재료 답이 같이 와도 목소리 결함은 대본으로(10-27 이브라인 10번 반복)
+        return _voice_rewrite(st, voice)
     _tries(st, "plan", LIMITS["plan"], _plan_causes(over or [p for p in r.get("problems") or [] if str(p).strip()]))
     M = _take_fix(st, r)
     if M is not None:
         st["_plan_fixed"] = True      # 다음 계획이 엔진 검사를 통과하면 다시 묻지 않는다(ph_plan_got)
     if M is None:
         probs = [str(p) for p in (r.get("problems") or []) if str(p).strip()]
-        voice = [str(o) for o in over if "말속도" in str(o) or "목소리" in str(o) or "TTS" in str(o)]
-        if voice:      # 엔진이 짚은 목소리 이상(줄 말속도 ±35% 밖 — 되풀이·빠뜨림)은 재료로 못 고친다 → 문장 고치기(10-26 회원 마스크편 L8)
-            probs = voice
-        if probs and (voice or not over):
-            # 장면은 맞는데 대본·목소리 쪽 문제(예: 한 줄 말속도 이상 → 문장 고치기)를 짚었다 — 재료 답 칸이 없어 멈추던 것(10-26 회원 마스크편)
-            #   → 대본 단계로 되돌린다(배치 충돌과 같은 길, 시도 수는 conflict 한도가 지킨다)
-            st["log"].append("계획 검수 → 대본 다시: " + " / ".join(probs)[:300])
-            _tries(st, "conflict", 2, ["voice_speed"], at="script")
-            st["tries"]["script"] = 0
-            st["approved"] = False
-            why = "장면 확인에서 대본·목소리 쪽 문제가 나왔습니다 — 아래만 고치고 내용·결은 그대로: " + " / ".join(probs)[:1200]
-            return {"review": [_script_ask(st, why)], "then": "script_got"}
+        if probs and not over:
+            # 장면은 맞는데 Claude 가 대본·목소리 쪽 문제를 짚었다 — 재료 답 칸이 없어 멈추던 것(10-26 회원 마스크편) → 대본으로
+            return _voice_rewrite(st, probs)
         raise _Stop("장면을 맞추다 막혔어요", "다시 시도해 주시면 이어 갈게요")
     return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "plan"}
 
@@ -2380,6 +2376,20 @@ def ph_check_judge(st, m, rp, u):
                                     if r.get("ok") is not True and not r.get("ref")] if not auto_ok else None,
                         "눈 검수 ×": look.get("problems")}, ensure_ascii=False)[:3000]
     return {"review": [_fix_review(st, "완성본 검사에서 걸린 것(화면·크롭·남의 글자는 재료로 고친다): " + probs + _face_hint(st), None, f"final_fix_{v}")], "then": "check_fix"}
+
+
+VOICE_RX = re.compile(r"받아쓰기 확정 결함|말속도|이름 끊김|목소리|TTS")   # 재료(컷)로 못 고치는 목소리 결함 — 대본 문장을 바꿔 다시 합성
+
+
+def _voice_rewrite(st, probs: list) -> dict:
+    """(판단 주인 — 목소리 결함은 대본으로) 계획(ph_plan_got)·장면 검수(ph_plan_look) 두 곳이 부른다. 10-27 이브라인 편: L5 TTS 되풀이(받아쓰기 결함)를
+    '재료를 고쳐라' 질문으로 10번 물어 멈춤 — Claude 는 매번 '재료로는 못 고친다, 문장을 바꿔야' 라고 답했다."""
+    st["log"].append("목소리 결함 → 대본 다시: " + " / ".join(probs)[:300])
+    _tries(st, "conflict", 2, ["voice_speed"], at="script")
+    st["tries"]["script"] = 0
+    st["approved"] = False
+    why = "목소리(합성) 쪽 문제 — 재료가 아니라 그 줄 문장을 바꿔 다시 합성한다. 아래만 고치고 내용·결은 그대로: " + " / ".join(probs)[:1200]
+    return {"review": [_script_ask(st, why)], "then": "script_got"}
 
 
 def _length_rewrite(st, value) -> dict:
