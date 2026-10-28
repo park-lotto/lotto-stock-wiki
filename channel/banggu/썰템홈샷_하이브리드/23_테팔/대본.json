@@ -1,0 +1,158 @@
+{
+ "topic": "테팔 × 시작은 낚시 도구 — 1954년 엔지니어 Marc Grégoire 가 낚시 도구에 입히던 테플론을 아내 권유로 아내의 팬에 입힘, 2년 뒤 테팔 창업·최초의 코팅 팬 회사(테팔 영국 공식 Our history) · 뒤 체험: 쿠팡 테팔 티타늄 1X 액티쿡 프라이팬(6976505075, 같은 브랜드 제품 — 열 표시 Thermo-Spot)",
+ "brand": "Tefal",
+ "scene_query": "Tefal commercial",
+ "product_mode": "exact",
+ "ing": {
+  "line": 0,
+  "fact": "fg",
+  "why": "누구나 아는 코팅 프라이팬 테팔 — 시작이 낚시 도구였고 아내 한마디로 팬이 됐다(회사 공식 연혁). 훅 = 공식 광고의 미끄러지는 계란 → 놀라는 짤"
+ },
+ "hook": [
+  "테팔 프라이팬,",
+  "원래는 어디에 쓰던 거게?"
+ ],
+ "post": "테팔 프라이팬은 낚시 도구에서 시작됐다",
+ "tempo": null,
+ "points_from": "포인트.md",
+ "facts": {
+  "fg": {
+   "text": "테팔 영국 공식 'Our history': 'In 1954, Marc Grégoire followed his wife's advice and as he had done for his fishing gear, used Teflon to coat her pans.'",
+   "url": "https://www.tefal.co.uk/about-tefal/our-history"
+  },
+  "wf": {
+   "text": "테팔 영국 공식 'Our history'(위 같은 문장) — 아내의 권유로 아내의 팬에 테플론을 입힘 · 'The results were astounding!'",
+   "url": "https://www.tefal.co.uk/about-tefal/our-history"
+  },
+  "co": {
+   "text": "테팔 영국 공식 'Our history': 'Two years later, Tefal was created to produce non-stick frying pans and became the first creator of non-stick cookware.'",
+   "url": "https://www.tefal.co.uk/about-tefal/our-history"
+  },
+  "rx": {
+   "text": "사회 반응(§0-1 14 — 반응은 출처 없이도 됨) · 같은 소재 영상 인기 댓글(포인트.md)",
+   "url": "포인트.md"
+  },
+  "ts": {
+   "text": "테팔 영국 공식 제품 페이지(Thermo-Spot): 'the pattern turns solid red' when the pan reaches cooking temperature · 테팔 호주 공식 'What is Tefal Thermo-Signal?': 'once it turns solid red' = 알맞은 온도",
+   "url": "https://www.tefal.com.au/pages/thermo-signal"
+  },
+  "p1": {
+   "text": "쿠팡 6976505075 '테팔 티타늄 1X 액티쿡 프라이팬'(파트너스 API 2026-10-28 — 상품 사진을 열어 가운데 빨간 열 표시가 있는 테팔 팬 확인)",
+   "url": "https://www.coupang.com/vp/products/6976505075"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "잉 훅(낚시 도구)",
+    "seg": "A",
+    "text": "계란이 안 들러붙는 테팔 프라이팬, 시작은 낚시 도구였대요",
+    "facts": [
+     "fg"
+    ],
+    "sources": [
+     "https://www.tefal.co.uk/about-tefal/our-history"
+    ]
+   },
+   {
+    "fn": "몰랐던 배경",
+    "seg": "A",
+    "text": "프랑스의 한 엔지니어가, 자기 낚시 도구에 미끄러운 코팅을 입혀 썼는데",
+    "facts": [
+     "fg"
+    ],
+    "sources": [
+     "https://www.tefal.co.uk/about-tefal/our-history"
+    ]
+   },
+   {
+    "fn": "계기(아내)",
+    "seg": "A",
+    "text": "그걸 본 아내가, 내 프라이팬에도 한번 발라 보라고 했대요",
+    "facts": [
+     "wf"
+    ],
+    "sources": [
+     "https://www.tefal.co.uk/about-tefal/our-history"
+    ]
+   },
+   {
+    "fn": "공개",
+    "seg": "A",
+    "text": "남편이 진짜로 아내 팬에 입혀 봤더니, 음식이 들러붙지 않는 팬이 나온 거죠",
+    "facts": [
+     "wf"
+    ],
+    "sources": [
+     "https://www.tefal.co.uk/about-tefal/our-history"
+    ]
+   },
+   {
+    "fn": "반전(창업)",
+    "seg": "A",
+    "text": "그리고 이 년 뒤엔, 아예 이 팬을 만드는 회사를 차렸는데",
+    "facts": [
+     "co"
+    ],
+    "sources": [
+     "https://www.tefal.co.uk/about-tefal/our-history"
+    ]
+   },
+   {
+    "fn": "쐐기",
+    "seg": "A",
+    "text": "그게 바로 세계 최초로 코팅 팬을 만든 회사, 테팔이래요",
+    "facts": [
+     "co"
+    ],
+    "sources": [
+     "https://www.tefal.co.uk/about-tefal/our-history"
+    ]
+   },
+   {
+    "fn": "사회 반응",
+    "seg": "A",
+    "text": "아내 말 한마디가, 전 세계 부엌을 바꿔 버린 셈이죠",
+    "facts": [
+     "rx"
+    ],
+    "sources": [
+     "포인트.md"
+    ]
+   },
+   {
+    "fn": "B 연결",
+    "seg": "B",
+    "text": "이 얘기 듣고 저도 쿠팡에서, 테팔 프라이팬을 하나 장만했는데",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/6976505075"
+    ]
+   },
+   {
+    "fn": "B 좋은 점",
+    "seg": "B",
+    "text": "가운데 빨간 무늬가 꽉 차게 바뀌면, 그때 재료를 올리면 되고",
+    "facts": [
+     "ts"
+    ],
+    "sources": [
+     "https://www.tefal.com.au/pages/thermo-signal"
+    ]
+   },
+   {
+    "fn": "B 끝(되받기)",
+    "seg": "B",
+    "text": "계란이 스르륵 미끄러지는 걸 보니까, 낚시 도구 얘기가 괜히 생각나더라고요",
+    "facts": [
+     "fg"
+    ],
+    "sources": [
+     "https://www.tefal.co.uk/about-tefal/our-history"
+    ]
+   }
+  ]
+ }
+}
