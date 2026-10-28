@@ -1,0 +1,1938 @@
+{
+ "timeline": {
+  "lines": {
+   "N1": [
+    0.0,
+    1.794
+   ],
+   "N2": [
+    1.874,
+    3.242
+   ],
+   "O1": [
+    3.322,
+    6.795
+   ],
+   "O2": [
+    6.875,
+    9.535
+   ],
+   "N3": [
+    9.615,
+    11.916
+   ],
+   "O3": [
+    11.996,
+    14.656
+   ],
+   "N4": [
+    14.736,
+    17.695
+   ],
+   "N5": [
+    17.775,
+    19.613
+   ],
+   "N6": [
+    19.693,
+    21.123
+   ],
+   "O4": [
+    21.203,
+    22.143
+   ],
+   "N7": [
+    22.223,
+    23.951
+   ],
+   "N8": [
+    24.031,
+    26.084
+   ]
+  },
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "입술이 까매진",
+    "t0": 0.0,
+    "t1": 0.735,
+    "show": [
+     0.0,
+     0.735
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "외국인이",
+    "t0": 0.735,
+    "t1": 1.165,
+    "show": [
+     0.735,
+     1.165
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "있다는데요?",
+    "t0": 1.165,
+    "t1": 1.794,
+    "show": [
+     1.165,
+     1.874
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "비슷한 틴트를",
+    "t0": 1.874,
+    "t1": 2.48,
+    "show": [
+     1.874,
+     2.48
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "써 본 외국인은",
+    "t0": 2.48,
+    "t1": 3.242,
+    "show": [
+     2.48,
+     3.322
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "왜 이렇게 차가워?",
+    "t0": 3.322,
+    "t1": 4.672,
+    "show": [
+     3.322,
+     4.702
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "시원한 느낌인데",
+    "t0": 4.702,
+    "t1": 5.982,
+    "show": [
+     4.702,
+     5.982
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 2,
+    "speaker": "orig",
+    "text": "이거 정상이야?",
+    "t0": 5.982,
+    "t1": 6.795,
+    "show": [
+     5.982,
+     6.875
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "나 수염 난 것 같아",
+    "t0": 6.875,
+    "t1": 8.575,
+    "show": [
+     6.875,
+     8.635
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "세상에!",
+    "t0": 8.635,
+    "t1": 9.535,
+    "show": [
+     8.635,
+     9.615
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "이십 분은 둬야 하는데",
+    "t0": 9.615,
+    "t1": 10.781,
+    "show": [
+     9.615,
+     10.781
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "못 참고 벗겨 버렸대요",
+    "t0": 10.781,
+    "t1": 11.916,
+    "show": [
+     10.781,
+     11.996
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "오, 이번 건",
+    "t0": 11.996,
+    "t1": 12.796,
+    "show": [
+     11.996,
+     12.796
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "좀 낫네",
+    "t0": 12.796,
+    "t1": 13.656,
+    "show": [
+     12.796,
+     13.696
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 2,
+    "speaker": "orig",
+    "text": "이건 어떡하지?",
+    "t0": 13.696,
+    "t1": 14.656,
+    "show": [
+     13.696,
+     14.736
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한국 제품은 이렇게",
+    "t0": 14.736,
+    "t1": 16.0,
+    "show": [
+     14.736,
+     16.0
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "까만 막을 벗기면",
+    "t0": 16.0,
+    "t1": 16.819,
+    "show": [
+     16.0,
+     16.819
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "색만 남는 거라는데",
+    "t0": 16.819,
+    "t1": 17.695,
+    "show": [
+     16.819,
+     17.775
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "벗겨 내자",
+    "t0": 17.775,
+    "t1": 18.459,
+    "show": [
+     17.775,
+     18.459
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "새빨간 입술이",
+    "t0": 18.459,
+    "t1": 19.064,
+    "show": [
+     18.459,
+     19.064
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "나왔다던데",
+    "t0": 19.064,
+    "t1": 19.613,
+    "show": [
+     19.064,
+     19.693
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "수염 같다던",
+    "t0": 19.693,
+    "t1": 20.417,
+    "show": [
+     19.693,
+     20.417
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "그 외국인도",
+    "t0": 20.417,
+    "t1": 21.123,
+    "show": [
+     20.417,
+     21.203
+    ]
+   },
+   {
+    "line": "O4",
+    "j": 0,
+    "speaker": "orig",
+    "text": "왜 유행인지 좀 알겠네",
+    "t0": 21.203,
+    "t1": 22.143,
+    "show": [
+     21.203,
+     22.223
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "입술이 트면",
+    "t0": 22.223,
+    "t1": 22.804,
+    "show": [
+     22.223,
+     22.804
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "잔금이 생긴다고 하고",
+    "t0": 22.804,
+    "t1": 23.951,
+    "show": [
+     22.804,
+     24.031
+    ]
+   },
+   {
+    "line": "N8",
+    "j": 0,
+    "speaker": "narr",
+    "text": "아~ 나도",
+    "t0": 24.031,
+    "t1": 24.689,
+    "show": [
+     24.031,
+     24.689
+    ]
+   },
+   {
+    "line": "N8",
+    "j": 1,
+    "speaker": "narr",
+    "text": "입술 촉촉하게 하고",
+    "t0": 24.689,
+    "t1": 25.47,
+    "show": [
+     24.689,
+     25.47
+    ]
+   },
+   {
+    "line": "N8",
+    "j": 2,
+    "speaker": "narr",
+    "text": "발라 봐야겠다",
+    "t0": 25.47,
+    "t1": 26.084,
+    "show": [
+     25.47,
+     26.8
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "src": "cl.mp4",
+    "ss": 10.22,
+    "w": 0.5,
+    "crop": [
+     0,
+     324,
+     720,
+     956
+    ],
+    "see": "까맣게 바른 입술로 놀란 얼굴(한 사람) — 자막 띠 흰 스웨터 위",
+    "line": "N1",
+    "t0": 0.0,
+    "kind": "tts",
+    "t1": 0.937,
+    "dur": 0.937,
+    "max": 1.08,
+    "max_auto": true,
+    "over": 0.0,
+    "jumpy": false,
+    "frozen": false
+   },
+   {
+    "src": "cl.mp4",
+    "ss": 25.3,
+    "w": 0.5,
+    "crop": [
+     0,
+     324,
+     720,
+     956
+    ],
+    "see": "벗겨 낸 뒤 빨간 입술(결과 먼저) — 자막 띠 흰 스웨터 위",
+    "line": "N1",
+    "t0": 0.937,
+    "kind": "tts",
+    "t1": 1.874,
+    "dur": 0.937,
+    "max": 2.033,
+    "max_auto": true,
+    "over": 0.0,
+    "jumpy": false,
+    "frozen": false
+   },
+   {
+    "src": "aw.mp4",
+    "ss": 0.3,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "까만 틴트를 입술에 바르기 시작",
+    "line": "N2",
+    "t0": 1.874,
+    "kind": "tts",
+    "t1": 3.322,
+    "dur": 1.448,
+    "max": 1.733,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "차갑다며 놀람(입 맞춤)",
+    "line": "O1",
+    "ss": 2.1,
+    "src": "aw.mp4",
+    "t0": 3.322,
+    "kind": "orig",
+    "t1": 6.875,
+    "dur": 3.553,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "까만 입술 = 수염 같다며 기겁(입 맞춤)",
+    "line": "O2",
+    "ss": 8.32,
+    "src": "aw.mp4",
+    "t0": 6.875,
+    "kind": "orig",
+    "t1": 9.515,
+    "dur": 2.64,
+    "over": 0.0
+   },
+   {
+    "src": "aw.mp4",
+    "ss": 14.7,
+    "w": 0.55,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "까만 입술 벗기기 시작",
+    "line": "N3",
+    "t0": 9.515,
+    "kind": "tts",
+    "t1": 10.925,
+    "dur": 1.41,
+    "max": 2.4,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "aw.mp4",
+    "ss": 22.38,
+    "w": 0.45,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "까만 막 벗겨 내기(박힌 글 없는 샷)",
+    "line": "N3",
+    "t0": 10.925,
+    "kind": "tts",
+    "t1": 11.996,
+    "dur": 1.071,
+    "max": 1.687,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "벗긴 뒤 빨간 입술(입 맞춤)",
+    "line": "O3",
+    "ss": 26.58,
+    "src": "aw.mp4",
+    "t0": 11.996,
+    "kind": "orig",
+    "t1": 14.736,
+    "dur": 2.74,
+    "over": 0.0
+   },
+   {
+    "src": "mt.mp4",
+    "ss": 2.7,
+    "w": 0.5,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "공식 영상 — 까만 틴트 바르기",
+    "line": "N4",
+    "t0": 14.736,
+    "kind": "tts",
+    "t1": 16.255,
+    "dur": 1.519,
+    "max": 1.2,
+    "max_auto": true,
+    "ss_planned": 2.8,
+    "over": 0.0,
+    "speed": 0.8478,
+    "jumpy": false,
+    "frozen": false
+   },
+   {
+    "src": "mt.mp4",
+    "ss": 6.767,
+    "w": 0.5,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "까만 입술 누르기",
+    "line": "N4",
+    "t0": 16.255,
+    "kind": "tts",
+    "t1": 17.015,
+    "dur": 0.76,
+    "max": 1.467,
+    "max_auto": true,
+    "ss_planned": 6.8,
+    "over": 0.0,
+    "jumpy": false,
+    "frozen": false
+   },
+   {
+    "src": "mt.mp4",
+    "ss": 8.55,
+    "w": 0.5,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "까만 입술 누르기",
+    "line": "N4",
+    "t0": 17.015,
+    "kind": "tts",
+    "max": 0.85,
+    "t1": 17.775,
+    "dur": 0.76,
+    "ss_planned": 8.55,
+    "split_of": "N4",
+    "over": 0.0,
+    "jumpy": false,
+    "frozen": false
+   },
+   {
+    "src": "cl.mp4",
+    "ss": 19.9,
+    "w": 1,
+    "crop": [
+     0,
+     324,
+     720,
+     956
+    ],
+    "see": "까만 막 벗겨 내자 빨간 입술",
+    "line": "N5",
+    "t0": 17.775,
+    "kind": "tts",
+    "t1": 19.693,
+    "dur": 1.918,
+    "max": 4.933,
+    "max_auto": true,
+    "over": 0.0,
+    "jumpy": false,
+    "frozen": false
+   },
+   {
+    "src": "aw.mp4",
+    "ss": 32.4,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "빨간 입술로 말하는 그 외국인",
+    "line": "N6",
+    "t0": 19.693,
+    "kind": "tts",
+    "t1": 21.203,
+    "dur": 1.51,
+    "max": 3.667,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "빨간 입술로 인정(입 맞춤)",
+    "line": "O4",
+    "ss": 36.1,
+    "src": "aw.mp4",
+    "t0": 21.203,
+    "kind": "orig",
+    "t1": 22.223,
+    "dur": 1.02,
+    "over": 0.0
+   },
+   {
+    "src": "aw.mp4",
+    "ss": 41.0,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "입술 가까이 — 잔금",
+    "line": "N7",
+    "t0": 22.223,
+    "kind": "tts",
+    "t1": 24.031,
+    "dur": 1.808,
+    "max": null,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "mt.mp4",
+    "ss": 23.05,
+    "w": 0.4,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "빨간 입술 + 제품",
+    "line": "N8",
+    "t0": 24.031,
+    "kind": "tts",
+    "t1": 25.139,
+    "dur": 1.108,
+    "max": null,
+    "max_auto": true,
+    "over": 0.0,
+    "speed": 0.9394,
+    "jumpy": false,
+    "frozen": false
+   },
+   {
+    "src": "cl.mp4",
+    "ss": 3.0,
+    "w": 0.6,
+    "crop": [
+     0,
+     324,
+     720,
+     956
+    ],
+    "see": "제품 열어 들기",
+    "line": "N8",
+    "t0": 25.139,
+    "kind": "tts",
+    "t1": 25.97,
+    "dur": 0.831,
+    "max": 1.867,
+    "max_auto": true,
+    "over": 0.0,
+    "jumpy": false,
+    "frozen": false
+   },
+   {
+    "src": "cl.mp4",
+    "ss": 5.5,
+    "w": 0.6,
+    "crop": [
+     0,
+     324,
+     720,
+     956
+    ],
+    "see": "제품 열어 들기",
+    "line": "N8",
+    "t0": 25.97,
+    "kind": "tts",
+    "max": 1.5,
+    "t1": 26.8,
+    "dur": 0.83,
+    "ss_planned": 5.5,
+    "split_of": "N8",
+    "over": 0.0,
+    "jumpy": false,
+    "frozen": false
+   }
+  ],
+  "opos": [
+   {
+    "line": "O1",
+    "k": 0,
+    "src": "aw.mp4",
+    "span": [
+     2.1,
+     5.573
+    ],
+    "t0": 3.322,
+    "t1": 6.795
+   },
+   {
+    "line": "O2",
+    "k": 0,
+    "src": "aw.mp4",
+    "span": [
+     8.32,
+     10.98
+    ],
+    "t0": 6.875,
+    "t1": 9.535
+   },
+   {
+    "line": "O3",
+    "k": 0,
+    "src": "aw.mp4",
+    "span": [
+     26.58,
+     29.24
+    ],
+    "t0": 11.996,
+    "t1": 14.656
+   },
+   {
+    "line": "O4",
+    "k": 0,
+    "src": "aw.mp4",
+    "span": [
+     36.1,
+     37.04
+    ],
+    "t0": 21.203,
+    "t1": 22.143
+   }
+  ],
+  "end": 26.8,
+  "orig_trim": {
+   "head": {
+    "O1": 0.0
+   },
+   "dropped_cuts": []
+  },
+  "vmake_cuts": []
+ },
+ "placement": {
+  "reference": "aUicTeDoW04",
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "입술이 까매진",
+    "t0": 0.0,
+    "t1": 0.735,
+    "show": [
+     0.0,
+     0.735
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": "hook"
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "외국인이",
+    "t0": 0.735,
+    "t1": 1.165,
+    "show": [
+     0.735,
+     1.165
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": "hook"
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "있다는데요?",
+    "t0": 1.165,
+    "t1": 1.794,
+    "show": [
+     1.165,
+     1.874
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [
+     {
+      "kind": "circle_arrow",
+      "word": "",
+      "target": {
+       "kind": "face",
+       "avoid": [],
+       "anchor": "mouth"
+      },
+      "site": "pending"
+     }
+    ],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": "hook_pop"
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "비슷한 틴트를",
+    "t0": 1.874,
+    "t1": 2.48,
+    "show": [
+     1.874,
+     2.48
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "써 본 외국인은",
+    "t0": 2.48,
+    "t1": 3.242,
+    "show": [
+     2.48,
+     3.322
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "왜 이렇게 차가워?",
+    "t0": 3.322,
+    "t1": 4.672,
+    "show": [
+     3.322,
+     4.702
+    ],
+    "first": true,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "시원한 느낌인데",
+    "t0": 4.702,
+    "t1": 5.982,
+    "show": [
+     4.702,
+     5.982
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 2,
+    "speaker": "orig",
+    "text": "이거 정상이야?",
+    "t0": 5.982,
+    "t1": 6.795,
+    "show": [
+     5.982,
+     6.875
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "나 수염 난 것 같아",
+    "t0": 6.875,
+    "t1": 8.575,
+    "show": [
+     6.875,
+     8.635
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "세상에!",
+    "t0": 8.635,
+    "t1": 9.535,
+    "show": [
+     8.635,
+     9.615
+    ],
+    "first": false,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "이십 분은 둬야 하는데",
+    "t0": 9.615,
+    "t1": 10.781,
+    "show": [
+     9.615,
+     10.781
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "못 참고 벗겨 버렸대요",
+    "t0": 10.781,
+    "t1": 11.916,
+    "show": [
+     10.781,
+     11.996
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "오, 이번 건",
+    "t0": 11.996,
+    "t1": 12.796,
+    "show": [
+     11.996,
+     12.796
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "좀 낫네",
+    "t0": 12.796,
+    "t1": 13.656,
+    "show": [
+     12.796,
+     13.696
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 2,
+    "speaker": "orig",
+    "text": "이건 어떡하지?",
+    "t0": 13.696,
+    "t1": 14.656,
+    "show": [
+     13.696,
+     14.736
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한국 제품은 이렇게",
+    "t0": 14.736,
+    "t1": 16.0,
+    "show": [
+     14.736,
+     16.0
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "까만 막을 벗기면",
+    "t0": 16.0,
+    "t1": 16.819,
+    "show": [
+     16.0,
+     16.819
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "색만 남는 거라는데",
+    "t0": 16.819,
+    "t1": 17.695,
+    "show": [
+     16.819,
+     17.775
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "벗겨 내자",
+    "t0": 17.775,
+    "t1": 18.459,
+    "show": [
+     17.775,
+     18.459
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "새빨간 입술이",
+    "t0": 18.459,
+    "t1": 19.064,
+    "show": [
+     18.459,
+     19.064
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "나왔다던데",
+    "t0": 19.064,
+    "t1": 19.613,
+    "show": [
+     19.064,
+     19.693
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "수염 같다던",
+    "t0": 19.693,
+    "t1": 20.417,
+    "show": [
+     19.693,
+     20.417
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "그 외국인도",
+    "t0": 20.417,
+    "t1": 21.123,
+    "show": [
+     20.417,
+     21.203
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O4",
+    "j": 0,
+    "speaker": "orig",
+    "text": "왜 유행인지 좀 알겠네",
+    "t0": 21.203,
+    "t1": 22.143,
+    "show": [
+     21.203,
+     22.223
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "입술이 트면",
+    "t0": 22.223,
+    "t1": 22.804,
+    "show": [
+     22.223,
+     22.804
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "잔금이 생긴다고 하고",
+    "t0": 22.804,
+    "t1": 23.951,
+    "show": [
+     22.804,
+     24.031
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N8",
+    "j": 0,
+    "speaker": "narr",
+    "text": "아~ 나도",
+    "t0": 24.031,
+    "t1": 24.689,
+    "show": [
+     24.031,
+     24.689
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N8",
+    "j": 1,
+    "speaker": "narr",
+    "text": "입술 촉촉하게 하고",
+    "t0": 24.689,
+    "t1": 25.47,
+    "show": [
+     24.689,
+     25.47
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N8",
+    "j": 2,
+    "speaker": "narr",
+    "text": "발라 봐야겠다",
+    "t0": 25.47,
+    "t1": 26.084,
+    "show": [
+     25.47,
+     26.8
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   }
+  ],
+  "sfx": [
+   {
+    "t": 2.064,
+    "role": "body",
+    "why": "body",
+    "kind": "pop"
+   }
+  ],
+  "transitions": [
+   {
+    "t": 3.322,
+    "kind": "zoomblur",
+    "ms": 467,
+    "why": "화자 바뀜"
+   }
+  ],
+  "flashes": [],
+  "cut_bounds": 17,
+  "trans_plan": {
+   "src": "본보기 aUicTeDoW04 줄판독 30줄",
+   "share": {
+    "zoomblur": 0.0667
+   },
+   "cut_bounds": 17,
+   "want_raw": {
+    "zoomblur": 1.133
+   },
+   "want": 1,
+   "eligible": 5,
+   "picked": {
+    "zoomblur": 1
+   },
+   "min_cut": 1.2
+  },
+  "log": [
+   "본보기 벤치 편 = aUicTeDoW04",
+   "목표 밀도 모드(업그레이드 판 targets): fx_rate_narr 0.18(상한 0.231), fx_rate_orig 0.056(상한 0.111), sfx_rate 0.051(상한 0.067), sticker_rate 0.061(상한 0.065) · 출처 channel/ititemlog/_kal/상위편_목표.json density",
+   "훅 N1 덩어리 3개 → hook (끝 hook_pop)",
+   "스티커 circle_arrow → N1「있다는데요?」",
+   "꾸밈 자리 본문 목표 3 중 0개 — key 덩어리·화자 상한 {'narr': 6, 'orig': 2} 모자람",
+   "꾸밈 자리(rules.deco_pos): 벤치 {'훅': 0.354, '본문': 0.508, '끝': 0.038} · 정해진 {'훅': 3} → 목표 {'훅': 2, '본문': 3, '끝': 0} · 우리 {'훅': 3} (+강조 [])",
+   "꾸밈(narr) 목표 4 중 3개만 — 대본 key 있는 덩어리 모자람",
+   "꾸밈(narr) targets: 목표 0.18×20=4 · 상한 5 · 1차 3 → 3",
+   "꾸밈(orig) 목표 1 중 0개만 — 대본 key 있는 덩어리 모자람",
+   "꾸밈(orig) targets: 목표 0.056×9=1 · 상한 1 · 1차 0 → 0",
+   "전환 [(3.322, 'zoomblur')] (본보기 aUicTeDoW04 줄판독 30줄 비율 {'zoomblur': 0.07}, 컷 경계 17·붙일 수 있는 5(≥1.2초))",
+   "효과음 targets: 목표 0.051발/초 × 26.08초 = 1발 · 상한 2(상위 편 최대 0.067)",
+   "효과음 1발(본보기 줄판독 1발 · 역할 {'body': 1} · 편차 +0.19초) [(2.064, 'pop', 'body')]",
+   "짤 0개(rate 0.0 — 벤치에 짤 없음도 스타일)",
+   "꾸밈(narr) 목표 4 중 3개만 — 대본 key 있는 덩어리 모자람",
+   "꾸밈(narr) targets: 목표 0.18×20=4 · 상한 5 · 1차 3 → 3",
+   "꾸밈(orig) 목표 1 중 0개만 — 대본 key 있는 덩어리 모자람",
+   "꾸밈(orig) targets: 목표 0.056×9=1 · 상한 1 · 1차 0 → 0",
+   "꾸밈 없음 26/29 ≥ 판 plain_share 0.854×29=25",
+   "등장 {'cut': 29} · 강조 0/29",
+   "꾸밈 답 없음(deco_answers.json)"
+  ],
+  "targets": {
+   "fx_rate_narr": {
+    "goal": 0.18,
+    "cap": 0.231,
+    "n_goal": 4,
+    "lo": 2,
+    "hi": 5,
+    "n_first": 2,
+    "dur": 20,
+    "n": 3,
+    "ours": 0.15,
+    "src": "channel/ititemlog/_kal/상위편_목표.json density"
+   },
+   "fx_rate_orig": {
+    "goal": 0.056,
+    "cap": 0.111,
+    "n_goal": 1,
+    "lo": 0,
+    "hi": 1,
+    "n_first": 1,
+    "dur": 9,
+    "n": 0,
+    "ours": 0.0,
+    "src": "channel/ititemlog/_kal/상위편_목표.json density"
+   },
+   "sfx_rate": {
+    "goal": 0.051,
+    "cap": 0.067,
+    "src": "channel/ititemlog/_kal/상위편_목표.json density",
+    "n_goal": 1,
+    "lo": 1,
+    "hi": 2,
+    "n_first": 1,
+    "dur": 26.084,
+    "n": 1,
+    "ours": 0.038
+   }
+  },
+  "deco_pos": {
+   "bench_pos": {
+    "훅": 0.354,
+    "본문": 0.508,
+    "끝": 0.038
+   },
+   "want": {
+    "훅": 2,
+    "본문": 3,
+    "끝": 0
+   },
+   "have_before": {
+    "훅": 3
+   },
+   "ours": {
+    "훅": 3
+   },
+   "ours_share": {
+    "훅": 1.0,
+    "본문": 0.0,
+    "끝": 0.0
+   },
+   "speaker_cap": {
+    "narr": 6,
+    "orig": 2
+   }
+  },
+  "_timeline": {
+   "cuts": [
+    {
+     "src": "cl.mp4",
+     "ss": 10.22,
+     "w": 0.5,
+     "crop": [
+      0,
+      324,
+      720,
+      956
+     ],
+     "see": "까맣게 바른 입술로 놀란 얼굴(한 사람) — 자막 띠 흰 스웨터 위",
+     "line": "N1",
+     "t0": 0.0,
+     "kind": "tts",
+     "t1": 0.937,
+     "dur": 0.937,
+     "max": 1.08,
+     "max_auto": true,
+     "over": 0.0,
+     "jumpy": false,
+     "frozen": false
+    },
+    {
+     "src": "cl.mp4",
+     "ss": 25.3,
+     "w": 0.5,
+     "crop": [
+      0,
+      324,
+      720,
+      956
+     ],
+     "see": "벗겨 낸 뒤 빨간 입술(결과 먼저) — 자막 띠 흰 스웨터 위",
+     "line": "N1",
+     "t0": 0.937,
+     "kind": "tts",
+     "t1": 1.874,
+     "dur": 0.937,
+     "max": 2.033,
+     "max_auto": true,
+     "over": 0.0,
+     "jumpy": false,
+     "frozen": false
+    },
+    {
+     "src": "aw.mp4",
+     "ss": 0.3,
+     "w": 1,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "까만 틴트를 입술에 바르기 시작",
+     "line": "N2",
+     "t0": 1.874,
+     "kind": "tts",
+     "t1": 3.322,
+     "dur": 1.448,
+     "max": 1.733,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "at": 0.0,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "차갑다며 놀람(입 맞춤)",
+     "line": "O1",
+     "ss": 2.1,
+     "src": "aw.mp4",
+     "t0": 3.322,
+     "kind": "orig",
+     "t1": 6.875,
+     "dur": 3.553,
+     "over": 0.0
+    },
+    {
+     "at": 0.0,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "까만 입술 = 수염 같다며 기겁(입 맞춤)",
+     "line": "O2",
+     "ss": 8.32,
+     "src": "aw.mp4",
+     "t0": 6.875,
+     "kind": "orig",
+     "t1": 9.515,
+     "dur": 2.64,
+     "over": 0.0
+    },
+    {
+     "src": "aw.mp4",
+     "ss": 14.7,
+     "w": 0.55,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "까만 입술 벗기기 시작",
+     "line": "N3",
+     "t0": 9.515,
+     "kind": "tts",
+     "t1": 10.925,
+     "dur": 1.41,
+     "max": 2.4,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "aw.mp4",
+     "ss": 22.38,
+     "w": 0.45,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "까만 막 벗겨 내기(박힌 글 없는 샷)",
+     "line": "N3",
+     "t0": 10.925,
+     "kind": "tts",
+     "t1": 11.996,
+     "dur": 1.071,
+     "max": 1.687,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "at": 0.0,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "벗긴 뒤 빨간 입술(입 맞춤)",
+     "line": "O3",
+     "ss": 26.58,
+     "src": "aw.mp4",
+     "t0": 11.996,
+     "kind": "orig",
+     "t1": 14.736,
+     "dur": 2.74,
+     "over": 0.0
+    },
+    {
+     "src": "mt.mp4",
+     "ss": 2.7,
+     "w": 0.5,
+     "crop": [
+      0,
+      200,
+      1080,
+      1434
+     ],
+     "see": "공식 영상 — 까만 틴트 바르기",
+     "line": "N4",
+     "t0": 14.736,
+     "kind": "tts",
+     "t1": 16.255,
+     "dur": 1.519,
+     "max": 1.2,
+     "max_auto": true,
+     "ss_planned": 2.8,
+     "over": 0.0,
+     "speed": 0.8478,
+     "jumpy": false,
+     "frozen": false
+    },
+    {
+     "src": "mt.mp4",
+     "ss": 6.767,
+     "w": 0.5,
+     "crop": [
+      0,
+      200,
+      1080,
+      1434
+     ],
+     "see": "까만 입술 누르기",
+     "line": "N4",
+     "t0": 16.255,
+     "kind": "tts",
+     "t1": 17.015,
+     "dur": 0.76,
+     "max": 1.467,
+     "max_auto": true,
+     "ss_planned": 6.8,
+     "over": 0.0,
+     "jumpy": false,
+     "frozen": false
+    },
+    {
+     "src": "mt.mp4",
+     "ss": 8.55,
+     "w": 0.5,
+     "crop": [
+      0,
+      200,
+      1080,
+      1434
+     ],
+     "see": "까만 입술 누르기",
+     "line": "N4",
+     "t0": 17.015,
+     "kind": "tts",
+     "max": 0.85,
+     "t1": 17.775,
+     "dur": 0.76,
+     "ss_planned": 8.55,
+     "split_of": "N4",
+     "over": 0.0,
+     "jumpy": false,
+     "frozen": false
+    },
+    {
+     "src": "cl.mp4",
+     "ss": 19.9,
+     "w": 1,
+     "crop": [
+      0,
+      324,
+      720,
+      956
+     ],
+     "see": "까만 막 벗겨 내자 빨간 입술",
+     "line": "N5",
+     "t0": 17.775,
+     "kind": "tts",
+     "t1": 19.693,
+     "dur": 1.918,
+     "max": 4.933,
+     "max_auto": true,
+     "over": 0.0,
+     "jumpy": false,
+     "frozen": false
+    },
+    {
+     "src": "aw.mp4",
+     "ss": 32.4,
+     "w": 1,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "빨간 입술로 말하는 그 외국인",
+     "line": "N6",
+     "t0": 19.693,
+     "kind": "tts",
+     "t1": 21.203,
+     "dur": 1.51,
+     "max": 3.667,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "at": 0.0,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "빨간 입술로 인정(입 맞춤)",
+     "line": "O4",
+     "ss": 36.1,
+     "src": "aw.mp4",
+     "t0": 21.203,
+     "kind": "orig",
+     "t1": 22.223,
+     "dur": 1.02,
+     "over": 0.0
+    },
+    {
+     "src": "aw.mp4",
+     "ss": 41.0,
+     "w": 1,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "입술 가까이 — 잔금",
+     "line": "N7",
+     "t0": 22.223,
+     "kind": "tts",
+     "t1": 24.031,
+     "dur": 1.808,
+     "max": null,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "mt.mp4",
+     "ss": 23.05,
+     "w": 0.4,
+     "crop": [
+      0,
+      200,
+      1080,
+      1434
+     ],
+     "see": "빨간 입술 + 제품",
+     "line": "N8",
+     "t0": 24.031,
+     "kind": "tts",
+     "t1": 25.139,
+     "dur": 1.108,
+     "max": null,
+     "max_auto": true,
+     "over": 0.0,
+     "speed": 0.9394,
+     "jumpy": false,
+     "frozen": false
+    },
+    {
+     "src": "cl.mp4",
+     "ss": 3.0,
+     "w": 0.6,
+     "crop": [
+      0,
+      324,
+      720,
+      956
+     ],
+     "see": "제품 열어 들기",
+     "line": "N8",
+     "t0": 25.139,
+     "kind": "tts",
+     "t1": 25.97,
+     "dur": 0.831,
+     "max": 1.867,
+     "max_auto": true,
+     "over": 0.0,
+     "jumpy": false,
+     "frozen": false
+    },
+    {
+     "src": "cl.mp4",
+     "ss": 5.5,
+     "w": 0.6,
+     "crop": [
+      0,
+      324,
+      720,
+      956
+     ],
+     "see": "제품 열어 들기",
+     "line": "N8",
+     "t0": 25.97,
+     "kind": "tts",
+     "max": 1.5,
+     "t1": 26.8,
+     "dur": 0.83,
+     "ss_planned": 5.5,
+     "split_of": "N8",
+     "over": 0.0,
+     "jumpy": false,
+     "frozen": false
+    }
+   ],
+   "end": 26.8
+  },
+  "cards": [],
+  "lyrics": [],
+  "transitions_drawn": [
+   {
+    "t": 3.322,
+    "kind": "zoomblur",
+    "ms": 467.0,
+    "zoom": 0.12,
+    "sigma": 14.0,
+    "why": "화자 바뀜"
+   }
+  ]
+ }
+}

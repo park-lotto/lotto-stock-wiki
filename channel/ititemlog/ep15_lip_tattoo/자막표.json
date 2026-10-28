@@ -1,0 +1,620 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 잇템로그판_v2) · 시각은 final.mp4 기준 초",
+ "pack": "ititemlog_v2",
+ "rows": [
+  {
+   "line": "N1",
+   "t0": 0.0,
+   "t1": 0.735,
+   "text": "입술이 까매진",
+   "speaker": "narr",
+   "variant": "hook",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N1",
+   "t0": 0.735,
+   "t1": 1.165,
+   "text": "외국인이",
+   "speaker": "narr",
+   "variant": "hook",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N1",
+   "t0": 1.165,
+   "t1": 1.874,
+   "text": "있다는데요?",
+   "speaker": "narr",
+   "variant": "hook_pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": [
+    {
+     "kind": "circle_arrow",
+     "word": "",
+     "target": {
+      "kind": "face",
+      "avoid": [],
+      "anchor": "mouth"
+     },
+     "x": 41.02,
+     "y": 49.64,
+     "w": 210,
+     "h": 90,
+     "conf": 0.85,
+     "how": "claude-opus",
+     "r": 13.61,
+     "aim": {
+      "what": "빨간 입술",
+      "why": "벗겨 낸 뒤 드러난 빨간 입술이 '입술이 까매진' 자막이 가리키는 결과 변화라서",
+      "asked": {
+       "key": null,
+       "line": "입술이 까매진 외국인이 있다는데요?",
+       "chunk": "있다는데요?",
+       "see": "벗겨 낸 뒤 빨간 입술(결과 먼저) — 자막 띠 흰 스웨터 위"
+      },
+      "box": [
+       338,
+       908,
+       548,
+       998
+      ],
+      "frac": 0.0091,
+      "frames": [
+       {
+        "t": 1.265,
+        "box": [
+         338,
+         908,
+         548,
+         998
+        ]
+       },
+       {
+        "t": 1.52,
+        "box": [
+         343,
+         919,
+         552,
+         1008
+        ]
+       },
+       {
+        "t": 1.774,
+        "box": [
+         346,
+         912,
+         560,
+         1002
+        ]
+       }
+      ],
+      "hold": {
+       "t0": 1.165,
+       "t1": 1.874,
+       "shot": [
+        0.937,
+        1.874
+       ],
+       "rule": "벤치 ititemlog 줄판독 3개"
+      }
+     },
+     "site": "detected"
+    }
+   ],
+   "enter": "cut"
+  },
+  {
+   "line": "N2",
+   "t0": 1.874,
+   "t1": 2.48,
+   "text": "비슷한 틴트를",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N2",
+   "t0": 2.48,
+   "t1": 3.322,
+   "text": "써 본 외국인은",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O1",
+   "t0": 3.322,
+   "t1": 4.702,
+   "text": "왜 이렇게 차가워?",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O1",
+   "t0": 4.702,
+   "t1": 5.982,
+   "text": "시원한 느낌인데",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O1",
+   "t0": 5.982,
+   "t1": 6.875,
+   "text": "이거 정상이야?",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O2",
+   "t0": 6.875,
+   "t1": 8.635,
+   "text": "나 수염 난 것 같아",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O2",
+   "t0": 8.635,
+   "t1": 9.615,
+   "text": "세상에!",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N3",
+   "t0": 9.615,
+   "t1": 10.781,
+   "text": "이십 분은 둬야 하는데",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N3",
+   "t0": 10.781,
+   "t1": 11.996,
+   "text": "못 참고 벗겨 버렸대요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O3",
+   "t0": 11.996,
+   "t1": 12.796,
+   "text": "오, 이번 건",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O3",
+   "t0": 12.796,
+   "t1": 13.696,
+   "text": "좀 낫네",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O3",
+   "t0": 13.696,
+   "t1": 14.736,
+   "text": "이건 어떡하지?",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N4",
+   "t0": 14.736,
+   "t1": 16.0,
+   "text": "한국 제품은 이렇게",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N4",
+   "t0": 16.0,
+   "t1": 16.819,
+   "text": "까만 막을 벗기면",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N4",
+   "t0": 16.819,
+   "t1": 17.775,
+   "text": "색만 남는 거라는데",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N5",
+   "t0": 17.775,
+   "t1": 18.459,
+   "text": "벗겨 내자",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N5",
+   "t0": 18.459,
+   "t1": 19.064,
+   "text": "새빨간 입술이",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N5",
+   "t0": 19.064,
+   "t1": 19.693,
+   "text": "나왔다던데",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N6",
+   "t0": 19.693,
+   "t1": 20.417,
+   "text": "수염 같다던",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N6",
+   "t0": 20.417,
+   "t1": 21.203,
+   "text": "그 외국인도",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "O4",
+   "t0": 21.203,
+   "t1": 22.223,
+   "text": "왜 유행인지 좀 알겠네",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N7",
+   "t0": 22.223,
+   "t1": 22.804,
+   "text": "입술이 트면",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N7",
+   "t0": 22.804,
+   "t1": 24.031,
+   "text": "잔금이 생긴다고 하고",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N8",
+   "t0": 24.031,
+   "t1": 24.689,
+   "text": "아~ 나도",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N8",
+   "t0": 24.689,
+   "t1": 25.47,
+   "text": "입술 촉촉하게 하고",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N8",
+   "t0": 25.47,
+   "t1": 26.8,
+   "text": "발라 봐야겠다",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  }
+ ],
+ "sfx": [
+  {
+   "t": 2.064,
+   "role": "body",
+   "why": "body",
+   "kind": "pop"
+  }
+ ],
+ "flashes": [],
+ "transitions": [
+  {
+   "t": 3.322,
+   "kind": "zoomblur",
+   "ms": 467.0,
+   "zoom": 0.12,
+   "sigma": 14.0,
+   "why": "화자 바뀜"
+  }
+ ],
+ "memes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = aUicTeDoW04",
+  "목표 밀도 모드(업그레이드 판 targets): fx_rate_narr 0.18(상한 0.231), fx_rate_orig 0.056(상한 0.111), sfx_rate 0.051(상한 0.067), sticker_rate 0.061(상한 0.065) · 출처 channel/ititemlog/_kal/상위편_목표.json density",
+  "훅 N1 덩어리 3개 → hook (끝 hook_pop)",
+  "스티커 circle_arrow → N1「있다는데요?」",
+  "꾸밈 자리 본문 목표 3 중 0개 — key 덩어리·화자 상한 {'narr': 6, 'orig': 2} 모자람",
+  "꾸밈 자리(rules.deco_pos): 벤치 {'훅': 0.354, '본문': 0.508, '끝': 0.038} · 정해진 {'훅': 3} → 목표 {'훅': 2, '본문': 3, '끝': 0} · 우리 {'훅': 3} (+강조 [])",
+  "꾸밈(narr) 목표 4 중 3개만 — 대본 key 있는 덩어리 모자람",
+  "꾸밈(narr) targets: 목표 0.18×20=4 · 상한 5 · 1차 3 → 3",
+  "꾸밈(orig) 목표 1 중 0개만 — 대본 key 있는 덩어리 모자람",
+  "꾸밈(orig) targets: 목표 0.056×9=1 · 상한 1 · 1차 0 → 0",
+  "전환 [(3.322, 'zoomblur')] (본보기 aUicTeDoW04 줄판독 30줄 비율 {'zoomblur': 0.07}, 컷 경계 17·붙일 수 있는 5(≥1.2초))",
+  "효과음 targets: 목표 0.051발/초 × 26.08초 = 1발 · 상한 2(상위 편 최대 0.067)",
+  "효과음 1발(본보기 줄판독 1발 · 역할 {'body': 1} · 편차 +0.19초) [(2.064, 'pop', 'body')]",
+  "짤 0개(rate 0.0 — 벤치에 짤 없음도 스타일)",
+  "꾸밈(narr) 목표 4 중 3개만 — 대본 key 있는 덩어리 모자람",
+  "꾸밈(narr) targets: 목표 0.18×20=4 · 상한 5 · 1차 3 → 3",
+  "꾸밈(orig) 목표 1 중 0개만 — 대본 key 있는 덩어리 모자람",
+  "꾸밈(orig) targets: 목표 0.056×9=1 · 상한 1 · 1차 0 → 0",
+  "꾸밈 없음 26/29 ≥ 판 plain_share 0.854×29=25",
+  "등장 {'cut': 29} · 강조 0/29",
+  "꾸밈 답 없음(deco_answers.json)"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "aUicTeDoW04",
+  "worst_slot_diff": 0.0,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 8
+   },
+   "narr.rest": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 12
+   },
+   "orig.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 4
+   },
+   "orig.rest": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 5
+   },
+   "stickers": {
+    "bench": {
+     "circle_arrow": 1,
+     "other": 9
+    },
+    "ours": {
+     "circle_arrow": 1
+    },
+    "vs": {
+     "circle_arrow": "1/1",
+     "other": "0/9(판 규칙 없음 — 안 그림)"
+    }
+   },
+   "sfx": {
+    "bench": 1,
+    "ours": 1,
+    "kinds": {
+     "pop": 1
+    },
+    "roles": {
+     "bench_expect": {
+      "body": 1.0
+     },
+     "ours": {
+      "body": 1
+     }
+    }
+   },
+   "transitions": {
+    "bench_expect": {
+     "zoomblur": 1.13
+    },
+    "ours": {
+     "zoomblur": 1
+    },
+    "cut_bounds": 17,
+    "plan": {
+     "src": "본보기 aUicTeDoW04 줄판독 30줄",
+     "share": {
+      "zoomblur": 0.0667
+     },
+     "cut_bounds": 17,
+     "want_raw": {
+      "zoomblur": 1.133
+     },
+     "want": 1,
+     "eligible": 5,
+     "picked": {
+      "zoomblur": 1
+     },
+     "min_cut": 1.2
+    }
+   },
+   "sites": {
+    "detected": 1
+   },
+   "meme": {
+    "ours": 0
+   },
+   "targets": {
+    "fx_rate_narr": {
+     "goal": 0.18,
+     "cap": 0.231,
+     "n_goal": 4,
+     "lo": 2,
+     "hi": 5,
+     "n_first": 2,
+     "dur": 20,
+     "n": 3,
+     "ours": 0.15,
+     "src": "channel/ititemlog/_kal/상위편_목표.json density"
+    },
+    "fx_rate_orig": {
+     "goal": 0.056,
+     "cap": 0.111,
+     "n_goal": 1,
+     "lo": 0,
+     "hi": 1,
+     "n_first": 1,
+     "dur": 9,
+     "n": 0,
+     "ours": 0.0,
+     "src": "channel/ititemlog/_kal/상위편_목표.json density"
+    },
+    "sfx_rate": {
+     "goal": 0.051,
+     "cap": 0.067,
+     "src": "channel/ititemlog/_kal/상위편_목표.json density",
+     "n_goal": 1,
+     "lo": 1,
+     "hi": 2,
+     "n_first": 1,
+     "dur": 26.084,
+     "n": 1,
+     "ours": 0.038
+    }
+   }
+  },
+  "bad": []
+ }
+}
