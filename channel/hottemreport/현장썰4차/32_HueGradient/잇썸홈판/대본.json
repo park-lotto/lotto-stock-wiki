@@ -1,0 +1,230 @@
+{
+ "_note": "숏템리폿 4차 32 필립스 휴 플레이 그라디언트 라이트스트립 하이브리드 — 앞 = 숏템리폿 현장썰 Justin_tech 원음형 박창수판(32_HueGradient/front), 뒤 = 쿠팡 8999566688 '필립스휴 플레이 그라디언트 라이트스트립 TV용'(같은 제품 — 대표 사진 = 필립스 휴 Play Gradient Lightstrip 상자, Justin 것과 같은 제품군). 뒤 화면 = 손·제품 컷만(빛나는 줄 근접·벽 조명·앱 화면·쿠팡 사진 — 얼굴 0, TV 안 남의 영상·게임 화면 0). 금액·남의 상표는 말하지 않는다.",
+ "brand": "잇썸홈",
+ "product": "필립스 휴 플레이 그라디언트 라이트스트립 TV용(쿠팡 8999566688, 같은 제품)",
+ "product_mode": "exact",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰4차/32_HueGradient/front/render/final.mp4",
+  "cut": 13.33,
+  "why": "N2 '된다네요' 끝(앞 13.027) 뒤 0.3초 — 같은 한 샷(jt 97.96~101.33) 안",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API(10-28 18:10, '필립스 휴 싱크 박스' 1회, 31_cand/coupang_a.json): 8999566688 '필립스휴 플레이 그라디언트 라이트스트립 TV용 1.6 x 1.7 x 304 cm'(로켓) — 같은 제품군 7712970302 'Philips Hue Play 그라디언트 라이트 스트립 … 싱크박스 브릿지 풀세트' · 대표 사진(front/src/cp_8999566688.jpg) = Philips hue Play Gradient Lightstrip 상자 · 끝 사진(cp_7712970302.jpg) = 흰 라이트스트립·브리지·싱크 박스",
+  "o_angle": "Justin_tech 원본(스피치매틱스) 80~86 'designed with a unique shape so light shines out at a 45 degree angle' · 128.47~136.03 'because of its 45 degree angle way more light was shining outward than my original lights which shine directly at the wall'",
+  "o_zone": "Justin_tech 원본 14.1~17.7 'it has seven zones of color'(숫자는 매체마다 달라 대사엔 안 씀) · 원본 82.78~86.05 화면(한 줄이 하늘·초록·주황·보라로 바뀜)",
+  "o_app": "필립스 휴 공식 유튜브 cB_Xm-LEUTg 25.5~27초 글 'Use the app to customize light intensity and brightness' · Justin_tech 원본 124.62~128.29·167.87~171.77 화면(폰 앱으로 색을 고르면 벽 색이 바뀜)"
+ },
+ "흥미이음": {
+  "원본흥미": "처음 켜자마자 'Three. Two. One. Wow. Wow. I love it.'(꺼진 TV 뒤 벽이 환해짐)",
+  "뒤흥미": "쿠팡의 바로 그 플레이 그라디언트 라이트스트립 — 비스듬한 빛·한 줄 여러 색·앱으로 색과 밝기",
+  "판정": "같음",
+  "근거": "같은 제품: 쿠팡 상품명 '필립스휴 플레이 그라디언트 라이트스트립 TV용' + 상자 사진(Play Gradient Lightstrip) = Justin 의 Hue Play gradient lightstrip"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.3,
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 14.4
+ },
+ "front_style": {
+  "frame": "channel/hottemreport/현장썰4차/32_HueGradient/front/frame_render.json",
+  "title": "화면 색 따라가는\n벽 조명"
+ },
+ "transition": {
+  "kind": "slideleft",
+  "dur": 0.25
+ },
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "back_caption_lines": {
+  "B1": {
+   "emphasis": {
+    "words": [
+     "진짜"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "분홍 상자 사진 위 칸은 흰 글씨만 · '진짜'는 흰 줄·나무 책상 위 — 빨강·분홍·주황 금지, 하늘",
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   }
+  },
+  "B2": {
+   "emphasis": {
+    "words": [
+     "비스듬히"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "회색·검정 줄 근접·보라 벽 위 — 하늘"
+  },
+  "B3": {
+   "emphasis": {
+    "words": [
+     "여러 가지 색이"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "검정 바탕·가는 색 줄·주황/분홍 벽 위 — 빨강·분홍·주황 금지, 하늘"
+  },
+  "B4": {
+   "emphasis": {
+    "words": [
+     "바로바로"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "검정 폰·보라/주황 벽 위 — 하늘"
+  },
+  "B5": {
+   "emphasis": {
+    "words": [
+     "친구들"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "어두운 방 줄 근접 위('친구들' 칸 = jt 87.6) — '영화'로 두면 '영화관'까지 칠해져 흰·분홍 쿠팡 사진 위에 뜸(1차 렌더 시트), 하늘",
+   "enter": {
+    "kind": "fade",
+    "ms": 300
+   }
+  }
+ },
+ "sfx": {
+  "pack_customer": 0
+ },
+ "lines": [
+  {
+   "id": "B1",
+   "role": "공개",
+   "point": "잉",
+   "answer_at": 3,
+   "kind": "tts",
+   "seg": "B",
+   "tts": "근데 저 영상 보고 쿠팡에서 찾아봤더니, 그 조명이 진짜 있더라고요.",
+   "caps": [
+    "근데 저 영상 보고",
+    "쿠팡에서 찾아봤더니",
+    "그 조명이",
+    "진짜 있더라고요"
+   ],
+   "emph": [
+    "진짜"
+   ],
+   "facts": [
+    "c0"
+   ]
+  },
+  {
+   "id": "B2",
+   "role": "고조",
+   "point": "권위",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "빛이 비스듬히 나오게 생겨서, 벽 쪽으로 더 넓게 퍼진다고 해요.",
+   "caps": [
+    "빛이 비스듬히",
+    "나오게 생겨서",
+    "벽 쪽으로",
+    "더 넓게 퍼진다고 해요"
+   ],
+   "emph": [
+    "비스듬히"
+   ],
+   "facts": [
+    "o_angle"
+   ]
+  },
+  {
+   "id": "B3",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "줄 하나에서, 여러 가지 색이 한꺼번에 나온다네요.",
+   "caps": [
+    "줄 하나에서",
+    "여러 가지 색이",
+    "한꺼번에",
+    "나온다네요"
+   ],
+   "emph": [
+    "여러 가지 색이"
+   ],
+   "facts": [
+    "o_zone"
+   ]
+  },
+  {
+   "id": "B4",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "폰 앱으로 색이랑 밝기도, 바로바로 바꿀 수 있고요.",
+   "caps": [
+    "폰 앱으로",
+    "색이랑 밝기도",
+    "바로바로",
+    "바꿀 수 있고요"
+   ],
+   "emph": [
+    "바로바로"
+   ],
+   "facts": [
+    "o_app"
+   ]
+  },
+  {
+   "id": "B5",
+   "role": "cta",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "영화 보는 날 친구들 불렀더니, 다들 영화관 온 것 같다고 난리였어요.",
+   "caps": [
+    "영화 보는 날",
+    "친구들 불렀더니",
+    "다들 영화관 온 것 같다고",
+    "난리였어요"
+   ],
+   "emph": [
+    "친구들"
+   ],
+   "facts": []
+  }
+ ]
+}
