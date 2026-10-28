@@ -1,0 +1,210 @@
+{
+ "_note": "샥탬스토리 하이브리드 29편 Pan's Mushroom Jerky 뒤 재료 — 쿠팡의 같은 제품 Pan's Mushroom Jerky 의 리뷰 영상(손 시점) + 공식 영상. 창 1080x1052. 사람 얼굴 없는 손·제품 컷만. 봉지 뒷면 영양표·공식 영상의 재료(파프리카·아보카도 기름) 컷은 안 씀.",
+ "_dur_note": "컷 길이 = 뒤 렌더 render_info 의 실제 줄 길이에 맞춤(인자 DUR)",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/29편_PansMushroomJerky/src",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "sources": {
+  "KEcwnSB1t8M": {
+   "채널": "The Junk Drawer",
+   "url": "https://www.youtube.com/watch?v=KEcwnSB1t8M",
+   "제목": "Pan's Mushroom Jerky Review: Is It Any Good?",
+   "해상도": "1920x1080 30fps",
+   "남의 글자": "없음(손 시점 한 샷) · 봉지 뒷면 영양표(30~32·88~93·123초) 안 씀"
+  },
+  "Q7lIPtBT2UU": {
+   "채널": "Hello Pan(공식)",
+   "url": "https://www.youtube.com/watch?v=Q7lIPtBT2UU",
+   "제목": "Pan's Mushroom Jerky",
+   "해상도": "1920x1080 23.98fps",
+   "남의 글자": "19~23초 봉지 그림·로고 끝 화면 안 씀 · 재료(소금·파프리카·아보카도) 컷 안 씀"
+  }
+ },
+ "shots": [
+  {
+   "line": "B1",
+   "src": "KEcwnSB1t8M.mp4",
+   "ss": 45.0,
+   "dur": 2.8,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "The Junk Drawer 리뷰(KEcwnSB1t8M, 1080p 손 시점): 'MUSHROOM JERKY ZESTY THAI' 봉지를 든 두 손(한 샷 27.6~100.97 안, 사람 얼굴 없음)",
+   "i": 0
+  },
+  {
+   "line": "B1",
+   "src": "KEcwnSB1t8M.mp4",
+   "ss": 52.0,
+   "dur": 2.8,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 리뷰: 오리지널 봉지를 든 손(사람 얼굴 없음)",
+   "i": 1
+  },
+  {
+   "line": "B2",
+   "src": "KEcwnSB1t8M.mp4",
+   "ss": 60.0,
+   "dur": 2.6,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 리뷰: 봉지를 뜯는 손(손만)",
+   "i": 2
+  },
+  {
+   "line": "B2",
+   "src": "KEcwnSB1t8M.mp4",
+   "ss": 72.0,
+   "dur": 3.0,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 리뷰: 손끝에 든 버섯 육포 조각(손만)",
+   "i": 3
+  },
+  {
+   "line": "B3",
+   "src": "Q7lIPtBT2UU.mp4",
+   "ss": 15.42,
+   "dur": 2.05,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "Hello Pan 공식(Q7lIPtBT2UU, 1080p 23.98fps): 버섯 육포 조각을 두 손으로 결대로 찢는 근접(샷 15.39~17.52, 손만)",
+   "i": 4
+  },
+  {
+   "line": "B3",
+   "src": "Q7lIPtBT2UU.mp4",
+   "ss": 17.55,
+   "dur": 1.55,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "Hello Pan 공식: 도마 위에서 조각을 찢는 손(샷 17.52~19.14, 손만)",
+   "i": 5
+  },
+  {
+   "line": "B3",
+   "src": "Q7lIPtBT2UU.mp4",
+   "ss": 2.82,
+   "dur": 1.25,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "Hello Pan 공식: 통 표고버섯을 집어 드는 손(샷 2.79~4.09, 손만)",
+   "i": 6
+  },
+  {
+   "line": "B4",
+   "src": "KEcwnSB1t8M.mp4",
+   "ss": 166.5,
+   "dur": 3.0,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 리뷰: 'ZESTY THAI' 봉지를 든 손(한 샷 100.97~174.93 안, 손만) — '매콤한 타이 맛부터'",
+   "i": 7
+  },
+  {
+   "line": "B4",
+   "src": "KEcwnSB1t8M.mp4",
+   "ss": 24.0,
+   "dur": 3.3,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "The Junk Drawer 리뷰: 'APPLEWOOD BBQ' 봉지를 든 손(한 샷 0~27.6 안, 손만) — '바비큐 맛까지'",
+   "i": 8
+  },
+  {
+   "line": "B5",
+   "src": "KEcwnSB1t8M.mp4",
+   "ss": 115.6,
+   "dur": 2.6,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 리뷰: 손에 든 버섯 육포 조각 근접(손만)",
+   "i": 9
+  },
+  {
+   "line": "B5",
+   "src": "KEcwnSB1t8M.mp4",
+   "ss": 192.0,
+   "dur": 2.6,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 리뷰: 조각을 두 손으로 찢어 보는 손(한 샷 174.93~ 안, 손만)",
+   "i": 10
+  },
+  {
+   "line": "B5",
+   "src": "KEcwnSB1t8M.mp4",
+   "ss": 205.5,
+   "dur": 2.6,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 리뷰: 여러 맛 봉지를 늘어놓는 손(손만)",
+   "i": 11
+  }
+ ],
+ "effects": []
+}

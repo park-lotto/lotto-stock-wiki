@@ -1,0 +1,555 @@
+{
+ "_note": "샥탬스토리 29편 Pan's Mushroom Jerky 재료 계획. 창 1080x1052(벤치 Qu3S7KKz4JM, 채널 고정 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물, effects 의 fx_place 계산값은 유지). 원음 컷은 원본 소리(Gsb98jeXm14_audio.m4a).",
+ "sources": {
+  "Gsb98jeXm14": {
+   "채널": "Sony Pictures Television(공식)",
+   "제목": "Shark Tank US | Sharks Fight To Get A Deal With Pan's Mushroom Jerky",
+   "해상도": "1920x1080 30fps (137) + 140-6 영어 원어(더빙 6개 중 original)",
+   "길이": 650.0,
+   "받은 구간": "전체",
+   "남의 글자": "116~126초 이름/요청 띠·제안 띠 안 씀 · 끝 화면 안 씀 · 무대·포장 'Pan's'·'MUSHROOM JERKY' 글 = 제품 브랜드"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "샤크들이 씹은 육포",
+  "line2": "정체가 버섯이라고?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "Gsb98jeXm14.mp4",
+   "mute": false,
+   "audio_src": "Gsb98jeXm14_audio.m4a",
+   "audio_ss": 89.38,
+   "audio_dur": 1.2,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=Gsb98jeXm14",
+   "src_orig_span": [
+    180.8,
+    182.0
+   ],
+   "ss": 180.8,
+   "dur": 1.2,
+   "t_final_est": [
+    0.0,
+    1.2
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    0,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "도마 위 버섯 육포 덩어리와 오리지널·제스티 타이 봉지(원본 샷 179.21~182.22, 사람 없음 — 소리 = 투자자 원음 'Really good.' cover, 말한 사람은 다음 컷)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "O1",
+   "kind": "원음",
+   "src": "Gsb98jeXm14.mp4",
+   "mute": false,
+   "audio_src": "Gsb98jeXm14_audio.m4a",
+   "audio_ss": 90.58,
+   "audio_dur": 1.12,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=Gsb98jeXm14",
+   "src_orig_span": [
+    90.58,
+    91.7
+   ],
+   "ss": 90.58,
+   "dur": 1.12,
+   "t_final_est": [
+    1.2,
+    2.32
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    420,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "육포를 먹으며 말하는 투자자 본인(원본 샷 88.56~91.79 — 소리 = 이 줄 원음 이어서, 화면초 = 소리초)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 2,
+   "line": "N1",
+   "kind": "나레",
+   "src": "Gsb98jeXm14.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Gsb98jeXm14",
+   "src_orig_span": [
+    78.46,
+    80.696
+   ],
+   "ss": 78.46,
+   "dur": 2.236,
+   "t_final_est": [
+    2.32,
+    4.56
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    312,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "육포를 씹는 투자자(원본 샷 78.45~80.71, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 3,
+   "line": "N1",
+   "kind": "나레",
+   "src": "Gsb98jeXm14.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Gsb98jeXm14",
+   "src_orig_span": [
+    82.79,
+    84.907
+   ],
+   "ss": 82.79,
+   "dur": 2.117,
+   "t_final_est": [
+    4.56,
+    6.67
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    410,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "육포를 먹는 투자자(샷 82.78~84.92, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 4,
+   "line": "N2",
+   "kind": "나레",
+   "src": "Gsb98jeXm14.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Gsb98jeXm14",
+   "src_orig_span": [
+    15.0,
+    16.779
+   ],
+   "ss": 15.0,
+   "dur": 1.779,
+   "t_final_est": [
+    6.67,
+    8.45
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    356,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대에서 말하는 창업자(원본 샷 12.41~21.29, 띠 없음, 소리 끔 — 84.9초 전신 컷은 거의 멈춰 freezedetect 0.53초라 바꿈)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 5,
+   "line": "N2",
+   "kind": "나레",
+   "src": "Gsb98jeXm14.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Gsb98jeXm14",
+   "src_orig_span": [
+    46.6,
+    48.124
+   ],
+   "ss": 46.6,
+   "dur": 1.524,
+   "t_final_est": [
+    8.45,
+    9.98
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "화면 속 육포를 손으로 찢는 근접(원본 샷 46.41~54.52, 손·제품만, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 6,
+   "line": "O2",
+   "kind": "원음",
+   "src": "Gsb98jeXm14.mp4",
+   "mute": false,
+   "audio_src": "Gsb98jeXm14_audio.m4a",
+   "audio_ss": 91.8,
+   "audio_dur": 1.67,
+   "url": "https://www.youtube.com/watch?v=Gsb98jeXm14",
+   "src_orig_span": [
+    91.8,
+    93.47
+   ],
+   "ss": 91.8,
+   "dur": 1.67,
+   "t_final_est": [
+    9.98,
+    11.65
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    409,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "말하는 창업자 본인(원본 샷 91.79~93.49)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 7,
+   "line": "O2",
+   "kind": "원음",
+   "src": "Gsb98jeXm14.mp4",
+   "mute": false,
+   "audio_src": "Gsb98jeXm14_audio.m4a",
+   "audio_ss": 93.47,
+   "audio_dur": 1.39,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=Gsb98jeXm14",
+   "src_orig_span": [
+    169.0,
+    170.39
+   ],
+   "ss": 169.0,
+   "dur": 1.39,
+   "t_final_est": [
+    11.65,
+    13.04
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "오리지널 봉지 앞 도마 위 버섯 육포 덩어리(원본 샷 168.87~171.07, 사람 없음 — 소리 = 창업자 원음 그 시각의 쉼)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 8,
+   "line": "O2",
+   "kind": "원음",
+   "src": "Gsb98jeXm14.mp4",
+   "mute": false,
+   "audio_src": "Gsb98jeXm14_audio.m4a",
+   "audio_ss": 94.86,
+   "audio_dur": 0.98,
+   "url": "https://www.youtube.com/watch?v=Gsb98jeXm14",
+   "src_orig_span": [
+    94.86,
+    95.84
+   ],
+   "ss": 94.86,
+   "dur": 0.98,
+   "t_final_est": [
+    13.04,
+    14.02
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    391,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "말하는 창업자 본인(샷 94.86~95.90 — 소리 = 원음 그 시각)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 9,
+   "line": "O3",
+   "kind": "원음",
+   "src": "Gsb98jeXm14.mp4",
+   "mute": false,
+   "audio_src": "Gsb98jeXm14_audio.m4a",
+   "audio_ss": 99.66,
+   "audio_dur": 1.57,
+   "cover": true,
+   "url": "https://www.youtube.com/watch?v=Gsb98jeXm14",
+   "src_orig_span": [
+    29.25,
+    30.82
+   ],
+   "ss": 29.25,
+   "dur": 1.57,
+   "t_final_est": [
+    14.02,
+    15.59
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 손끝에 든 육포 한 조각(원본 샷 28.76~31.43, 얼굴 없음 — 소리 = 투자자 원음 cover)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 10,
+   "line": "O3",
+   "kind": "원음",
+   "src": "Gsb98jeXm14.mp4",
+   "mute": false,
+   "audio_src": "Gsb98jeXm14_audio.m4a",
+   "audio_ss": 101.24,
+   "audio_dur": 0.91,
+   "url": "https://www.youtube.com/watch?v=Gsb98jeXm14",
+   "src_orig_span": [
+    101.24,
+    102.15
+   ],
+   "ss": 101.24,
+   "dur": 0.91,
+   "t_final_est": [
+    15.59,
+    16.5
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    398,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "말하는 투자자 본인(원본 샷 101.23~102.24 — 렌더가 원음 줄을 0.05초 늘려도 옆 샷이 안 섞이게 102.15 에서 끊음 — 화면초 = 소리초)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 11,
+   "line": "N3",
+   "kind": "나레",
+   "src": "Gsb98jeXm14.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Gsb98jeXm14",
+   "src_orig_span": [
+    145.6,
+    149.549
+   ],
+   "ss": 145.6,
+   "dur": 3.949,
+   "t_final_est": [
+    16.5,
+    20.45
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    341,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "말레이시아 이야기를 하는 창업자(원본 샷, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/29편_PansMushroomJerky/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "how": "object",
+   "t": [
+    0.0,
+    0.45
+   ],
+   "target": [
+    282,
+    1100,
+    672,
+    1245
+   ],
+   "target_what": "도마 위 버섯 육포 덩어리(오리지널 봉지 앞) — 181.0초 원본 프레임 눈 측정(창 크롭 [0,0,1109,1080] 안 x 290~690·y 690~830 → ×0.974 완성본 좌표)",
+   "why": "R3 0초 원 = 물건(제품) — 사장님 10-19 '처음에 빨간원 얼굴에 하지말고'",
+   "at": [
+    477,
+    1172
+   ],
+   "size": 455,
+   "face_clear": true,
+   "target_box": [
+    282,
+    1100,
+    672,
+    1245
+   ],
+   "target_path": [
+    [
+     0.0,
+     282.0,
+     1100.0,
+     672.0,
+     1245.0
+    ],
+    [
+     0.067,
+     281.0,
+     1101.0,
+     671.0,
+     1246.0
+    ],
+    [
+     0.133,
+     279.7,
+     1102.3,
+     669.7,
+     1247.3
+    ],
+    [
+     0.2,
+     278.3,
+     1103.7,
+     668.3,
+     1248.7
+    ],
+    [
+     0.267,
+     277.0,
+     1105.0,
+     667.0,
+     1250.0
+    ],
+    [
+     0.333,
+     276.0,
+     1106.3,
+     666.0,
+     1251.3
+    ],
+    [
+     0.4,
+     275.0,
+     1108.0,
+     665.0,
+     1253.0
+    ]
+   ],
+   "track": [
+    [
+     0.0,
+     477,
+     1172
+    ],
+    [
+     0.067,
+     476,
+     1174
+    ],
+    [
+     0.133,
+     475,
+     1175
+    ],
+    [
+     0.2,
+     473,
+     1176
+    ],
+    [
+     0.267,
+     472,
+     1178
+    ],
+    [
+     0.333,
+     471,
+     1179
+    ],
+    [
+     0.4,
+     470,
+     1180
+    ]
+   ],
+   "track_conf": 0.979,
+   "track_how": "template",
+   "why_target": "손 상자(재료 target) · 추적 template 신뢰 0.979 · 원 455px = 물건 반대각선 208×1.04+선 · 얼굴 3프레임 겹침 0"
+  },
+  {
+   "line": "N1",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 0.5"
+  },
+  {
+   "line": "N2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 6.4 반전 예고"
+  },
+  {
+   "line": "O2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    3.3,
+    3.75
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "정체 공개(버섯)"
+  }
+ ]
+}
