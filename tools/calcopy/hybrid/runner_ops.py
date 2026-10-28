@@ -1569,13 +1569,20 @@ OF_FRAMES = (0.15, 0.35, 0.55, 0.75)     # 렌즈 장면 = 원본찾기와 같�
 OF_SHEET_N = 24                         # 판정 시트 한 장 칸 수(8열 — origin_find.judge_same 과 같은 꼴)
 
 
-def _of_seed_frames(W: Path) -> list[Path]:
+def _of_seed_frames(W: Path, at: list | None = None) -> list[Path]:
+    """렌즈에 올릴 소재 장면. at = 판독(오푸스)이 고른 초(로고·영어 글자 없는 인물 장면, 10-27 사장님) — 그 장면 먼저, 고정 위치 FRAMES 는 뒤에(렌즈가 두 장면 일치로 멈추면 안 쓴다)."""
     from tools.calcopy.origin_find import FRAMES
     src = W / "bench" / "bench.mp4"
     out = []
     if not src.exists():
         return out
     du = dims(src)["dur"]
+    for t in at or []:
+        p = W / "origin_foreign" / f"seed_at{int(float(t) * 10)}.jpg"
+        if not p.exists():
+            frame(src, min(float(t), max(du - 0.1, 0)), p)
+        if p.exists():
+            out.append(p)
     for f in FRAMES:
         p = W / "origin_foreign" / f"seed_{int(f * 100)}.jpg"
         if not p.exists():
@@ -1847,6 +1854,11 @@ def _peer_raw(qs: list, n: int, skip: set) -> list[dict]:
     return raw + [{**c, **ms.get(c["url"], {})} for c in web]
 
 
+LENS_FIRST = True   # (10-27 사장님 '캡처 → 렌즈 → 결과에서 고르기, 1분도 안 걸린다') 렌즈를 먼저 · 두 장면에 같은 영상이 뜨면 멈춤 · 키워드는 렌즈가 빌 때만
+LENS_HL, LENS_GL = "en", "us"   # 해외 원본 찾기 렌즈 = 미국 결과(한국 회선 기본은 한국 판매 리그램이 위를 덮는다, 10-27 사장님 '구글 미국으로')
+LENS_TOP = 12       # 렌즈 상위만 정보 받기·판정(1lMbJh0n_d4: 60개 정보 83초 + 키워드 100초 동시 → 같은 영상 17개였다)
+
+
 def c_origin_foreign(W, d):
     """해외 원본 후보 + 판정 시트. mode lens = 소재(한국 재편집) 장면 4장 → 구글 렌즈 → 영상 링크 → 메타(origin_find 와 같은 함수) /
     mode peers = 영어 검색어로 같은 제품 다른 해외 반응 쇼츠 / mode find = 회원 Claude 가 찾은 주소(urls)·검색어(queries, 쇼츠 필터) 후보.
@@ -1855,7 +1867,7 @@ def c_origin_foreign(W, d):
     from tools.calcopy import origin_find as OF
     _OF_TL.dir = None if CACHE else W / "_of_memo"     # 이 스레드(소재 칸)의 기억 폴더
     mode = d.get("mode") or "lens"
-    seeds = _of_seed_frames(W)
+    seeds = _of_seed_frames(W, d.get("at"))
     skip = set(d.get("skip") or [])
     raw: list[dict] = []
     lens_ai: dict = {}
@@ -1872,7 +1884,7 @@ def c_origin_foreign(W, d):
             from tools.calcopy import lens as LN
             import threading
             kw: dict = {}
-            if d.get("queries"):        # 키워드 검색(유튜브 yt-dlp·틱톡/인스타 창)은 렌즈 창과 서로 기다릴 일이 없다 — 동시에(10-27 렌즈 34초 + 키워드 76초를 차례로 하던 것)
+            if d.get("queries") and not LENS_FIRST:        # 키워드 검색(유튜브 yt-dlp·틱톡/인스타 창)은 렌즈 창과 서로 기다릴 일이 없다 — 동시에(10-27 렌즈 34초 + 키워드 76초를 차례로 하던 것)
                 base = _memo_base()
 
                 def _kw():
@@ -1891,11 +1903,16 @@ def c_origin_foreign(W, d):
             found: dict = {}
             ai_txt: list[str] = []      # 렌즈 'AI 개요' 글(장면 전체 기준 — 출연자·브랜드 이름, 10-27)
             _t = time.time()
+            crops = [LN.video_crops(s) for s in seeds]
+            order = [(i, c[0]) for i, c in enumerate(crops) if c] + [(i, x) for i, c in enumerate(crops) for x in c[1:]]   # 장면마다 띠 먼저, 윗부분은 뒤에
+            seen_in: dict = {}
             with _plat_lock("lens"), LN.lens_page() as pg:
-                for im in [c for s in seeds for c in LN.video_crops(s)]:
+                for si, im in order:
+                    if LENS_FIRST and any(len(v) >= 2 for v in seen_in.values()):
+                        break       # 서로 다른 장면 두 장에 같은 영상이 떴다 = 사람이 렌즈 결과 맨 위를 누르는 것과 같은 확신 — 나머지 장은 안 올린다
                     try:
                         li: dict = {}
-                        rows = LN.lens_rows(pg, str(im), skip=LN.SKIP_VIDEO, info=li)
+                        rows = LN.lens_rows(pg, str(im), skip=LN.SKIP_VIDEO, info=li, hl=LENS_HL, gl=LENS_GL)
                         if li.get("overview"):
                             ai_txt.append(li["overview"])
                     except Exception as e:  # noqa: BLE001 — 한 장 실패는 남기고 나머지
@@ -1904,7 +1921,8 @@ def c_origin_foreign(W, d):
                         k = OF.vkey(r["href"])
                         if k and k[1] != d.get("bench_id"):
                             found.setdefault(k, {"href": r["href"], "text": r["text"], "hits": 0})["hits"] += 1
-            top = sorted(found.items(), key=lambda kv: -kv[1]["hits"])[:60]     # 여러 장에 뜬 것 먼저(잘라 올리기로 후보가 13 → 58, 10-26)
+                            seen_in.setdefault(k, set()).add(si)
+            top = sorted(found.items(), key=lambda kv: (-len(seen_in.get(kv[0], ())), -kv[1]["hits"]))[:LENS_TOP if LENS_FIRST else 60]     # 여러 장에 뜬 것 먼저(잘라 올리기로 후보가 13 → 58, 10-26)
             sys.stderr.write(f"[구간] 렌즈 {time.time() - _t:.0f}초 · 후보 {len(top)}\n")   # 원본 찾기 어디서 시간이 나나(10-27 run4: 한 번 510~537초, 구간 기록 없음)
             _t = time.time()
             ms = _metas([OF.url_of(pf, vid, x["href"]) for (pf, vid), x in top])
@@ -1913,6 +1931,8 @@ def c_origin_foreign(W, d):
             for (pf, vid), x in top:
                 u = OF.url_of(pf, vid, x["href"])
                 raw.append({"platform": pf, "id": vid, "url": u, "lens_text": x["text"], "lens_hits": x["hits"], **ms.get(u, {})})
+            if kth is None and LENS_FIRST and not raw and d.get("queries"):     # 렌즈가 영상을 하나도 못 줬을 때만 키워드
+                raw += [{**c, "found_by": "keyword"} for c in _peer_raw(d["queries"], int(d.get("n") or 8), skip | {d.get("bench_id")})]
             if kth is not None:         # 키워드 검색도 처음부터(사장님 10-26) — 원본 그대로인 영상이 검색으로 잡혀도 같은 촬영분 판정에 같이 든다
                 kth.join()
                 have = {(c["platform"], c["id"]) for c in raw}
