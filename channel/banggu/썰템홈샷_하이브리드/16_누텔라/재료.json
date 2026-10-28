@@ -1,0 +1,424 @@
+{
+ "_note": "16 누텔라 — 앞 = 누텔라 UK 공식 'Nutella Loves Bread' 9iAhJT0XRJ4 · 누텔라 공식 'Nutella Stories: Sara Rosso' qpwWWGOVsHw(_a 0~4초·_b 68~77초) · 펠슐린(스위스 초콜릿 회사) 공식 'Cut Pralines with Gianduja' sbX5pXz8aCo(_a 7~31초) · 잔두야 덩어리 써는 영상 t0PAcS4AyHw · 피에몬테 헤이즐넛 농장 Scoiattolo Rosso ThWiqmfS6bw(_a 1~9·_b 99~121초) · 코코아 콩 무료 소스 -rYcOFtojzA(파일명 rYcOFtojzA.mp4) · 뒤 = 쿠팡 9789228173 상품 사진 + India Food Network 'Nutella Toasties'(누텔라 협업) JHS9WqvvAH0(_a 12~28초, 손만) + Fitwaffle bdJnsvFsgPQ(_a 34~46초, 손만). 720 미만 원본(파테 1946 이탈리아 480·잔두야 칼질 360·50주년 360)은 받았다가 지움.",
+ "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/16_누텔라/src",
+ "shots": [
+  {
+   "src": "jar_zoom.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "full": true,
+   "cuts": [
+    {
+     "src": "jar_zoom.mp4",
+     "ss": 0.0,
+     "dur": 1.2,
+     "fit": "cover",
+     "src_crop": [
+      0,
+      0,
+      700,
+      1080
+     ]
+    },
+    {
+     "src": "t0PAcS4AyHw.mp4",
+     "ss": 4.5,
+     "dur": 1.5,
+     "fit": "cover",
+     "src_crop": [
+      560,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_chipmunk.mp4",
+     "ss": 0.3,
+     "dur": 0.9,
+     "fit": "cover",
+     "src_crop": [
+      70,
+      0,
+      180,
+      240
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "누텔라 UK 공식 「Nutella Loves Bread」: 누텔라 병+빵(천천히 다가가는 영상으로 구움 — zoomclip, 멈춤 방지) → 헤이즐넛 잔두야 덩어리를 큰 칼로 내리치는 장면 → 홱 돌아보는 다람쥐 짤",
+   "why": "훅 = 빵에 바르는 누텔라가 '썰어 먹는 덩어리'였다는 질문"
+  },
+  {
+   "src": "rYcOFtojzA.mp4",
+   "ss": 2.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "rYcOFtojzA.mp4",
+     "ss": 2.0,
+     "dur": 3.1,
+     "fit": "cover",
+     "src_crop": [
+      550,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "코코아 콩 근접(천천히 움직임)",
+   "why": "'코코아가 너무 귀했대요'"
+  },
+  {
+   "src": "ThWiqmfS6bw_a.mp4",
+   "ss": 1.2,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "ThWiqmfS6bw_a.mp4",
+     "ss": 1.2,
+     "dur": 2.5,
+     "fit": "cover",
+     "src_crop": [
+      560,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "피에몬테 헤이즐넛 농장(Scoiattolo Rosso, Piemonte IGP): 땅에 떨어진 헤이즐넛 두 알",
+   "why": "'피에몬테 지방의 페레로라는 사람이'"
+  },
+  {
+   "src": "ThWiqmfS6bw_b.mp4",
+   "ss": 15.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "ThWiqmfS6bw_b.mp4",
+     "ss": 15.0,
+     "dur": 2.15,
+     "fit": "cover",
+     "src_crop": [
+      550,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "피에몬테 헤이즐넛 농장: 쏟아지는 헤이즐넛 더미",
+   "why": "'동네에 흔한 헤이즐넛을 듬뿍 넣고'"
+  },
+  {
+   "src": "sbX5pXz8aCo_a.mp4",
+   "ss": 3.2,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "sbX5pXz8aCo_a.mp4",
+     "ss": 3.2,
+     "dur": 2.85,
+     "fit": "cover",
+     "src_crop": [
+      550,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "스위스 펠슐린 공식: 볼에서 갈색 잔두야 반죽을 젓는 손",
+   "why": "'코코아는 아주 조금만 넣은, 달콤한 반죽을'"
+  },
+  {
+   "src": "sbX5pXz8aCo_a.mp4",
+   "ss": 20.6,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "sbX5pXz8aCo_a.mp4",
+     "ss": 20.6,
+     "dur": 1.35,
+     "fit": "cover",
+     "src_crop": [
+      550,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "t0PAcS4AyHw.mp4",
+     "ss": 9.0,
+     "dur": 2.55,
+     "fit": "cover",
+     "src_crop": [
+      560,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "펠슐린: 판판하게 굳힌 잔두야 반죽 → 헤이즐넛 박힌 잔두야 덩어리를 칼로 써는 장면",
+   "why": "'빵처럼 덩어리로 빚어서, 칼로 썰어'"
+  },
+  {
+   "src": "9iAhJT0XRJ4.mp4",
+   "ss": 18.55,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "9iAhJT0XRJ4.mp4",
+     "ss": 18.55,
+     "dur": 1.1,
+     "fit": "cover",
+     "src_crop": [
+      500,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "sbX5pXz8aCo_a.mp4",
+     "ss": 15.0,
+     "dur": 1.65,
+     "fit": "cover",
+     "src_crop": [
+      550,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "누텔라 UK 공식: 빵에 누텔라를 펴 바르는 칼 → 펠슐린: 주걱으로 펴지는 크림",
+   "why": "'잘 발리는 크림으로 바뀌고'"
+  },
+  {
+   "src": "JHS9WqvvAH0_a.mp4",
+   "ss": 0.6,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "JHS9WqvvAH0_a.mp4",
+     "ss": 0.6,
+     "dur": 1.1,
+     "fit": "cover",
+     "src_crop": [
+      0,
+      150,
+      700,
+      930
+     ]
+    }
+   ],
+   "ours": "누텔라 인도 협업 영상: 식탁 위 누텔라 병(뚜껑 위 손)",
+   "why": "'지금 같은 누텔라 병은 그 뒤에'"
+  },
+  {
+   "src": "qpwWWGOVsHw_b.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "qpwWWGOVsHw_b.mp4",
+     "ss": 0.0,
+     "dur": 1.45,
+     "fit": "cover",
+     "src_crop": [
+      0,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "qpwWWGOVsHw_a.mp4",
+     "ss": 0.0,
+     "dur": 1.5,
+     "fit": "cover",
+     "src_crop": [
+      580,
+      400,
+      520,
+      680
+     ]
+    }
+   ],
+   "ours": "누텔라 공식 「Nutella Stories: Sara Rosso」: 'world nutella day' 블로그 화면 → 그 블로거 본인",
+   "why": "'세계 누텔라의 날은, 회사가 아니라 한 블로거가'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_homealone.mp4",
+   "ss": 0.3,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_homealone.mp4",
+     "ss": 0.3,
+     "dur": 1.0,
+     "fit": "cover",
+     "src_crop": [
+      184,
+      60,
+      272,
+      360
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "양손 볼에 대고 놀라는 「나 홀로 집에」 짤",
+   "why": "'만든 날이래요' 반응"
+  },
+  {
+   "src": "coupang.jpg",
+   "ss": 0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "coupang.jpg",
+     "ss": 0,
+     "dur": 3.75,
+     "fit": "cover",
+     "src_crop": [
+      130,
+      40,
+      530,
+      700
+     ],
+     "move": "in"
+    }
+   ],
+   "ours": "쿠팡 9789228173 페레로 누텔라 상품 사진(다가감)",
+   "why": "B 첫 줄 '쿠팡에서 누텔라를 하나' — 같은 제품"
+  },
+  {
+   "src": "JHS9WqvvAH0_a.mp4",
+   "ss": 4.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "JHS9WqvvAH0_a.mp4",
+     "ss": 4.0,
+     "dur": 1.25,
+     "fit": "cover",
+     "src_crop": [
+      0,
+      150,
+      700,
+      930
+     ]
+    },
+    {
+     "src": "JHS9WqvvAH0_a.mp4",
+     "ss": 5.6,
+     "dur": 1.1,
+     "fit": "cover",
+     "src_crop": [
+      550,
+      150,
+      700,
+      930
+     ]
+    },
+    {
+     "src": "JHS9WqvvAH0_a.mp4",
+     "ss": 9.2,
+     "dur": 1.3,
+     "fit": "cover",
+     "src_crop": [
+      360,
+      150,
+      700,
+      930
+     ]
+    }
+   ],
+   "ours": "누텔라 병 뚜껑 여는 손 → 칼로 크게 뜨는 손 → 식빵에 펴 바르는 손(손만, 오른쪽 위 글자는 자르기 밖)",
+   "why": "'뚜껑 열고 칼로 크게 떠서, 식빵에 쓱 펴 바르니까'"
+  },
+  {
+   "src": "bdJnsvFsgPQ_a.mp4",
+   "ss": 2.1,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "bdJnsvFsgPQ_a.mp4",
+     "ss": 2.1,
+     "dur": 3.1,
+     "fit": "cover",
+     "src_crop": [
+      620,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_chefskiss.mp4",
+     "ss": 0.0,
+     "dur": 0.85,
+     "fit": "cover",
+     "src_crop": [
+      190,
+      0,
+      353,
+      466
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "식빵에 누텔라를 펴 바르는 손(손만) → 셰프 키스 짤",
+   "why": "'썰어 먹던 시절이 있었다는 게, 도무지 상상이 안 가더라고요'"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 0,
+   "dt": 0.0,
+   "db": -2,
+   "why": "훅 시작 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_06.mp3",
+   "line": 0,
+   "dt": 2.7,
+   "db": -3,
+   "why": "다람쥐 짤 두둥"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_24.mp3",
+   "line": 4,
+   "dt": 1.35,
+   "db": -4,
+   "why": "칼로 써는 순간"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_35.mp3",
+   "line": 6,
+   "dt": 2.88,
+   "db": -3,
+   "why": "나 홀로 집에 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_26.mp3",
+   "line": 7,
+   "dt": 0.0,
+   "db": -2,
+   "why": "뒤 체험 첫 줄 뽀옹"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_28.mp3",
+   "line": 9,
+   "dt": 3.05,
+   "db": -3,
+   "why": "셰프 키스 짤 띵"
+  }
+ ]
+}
