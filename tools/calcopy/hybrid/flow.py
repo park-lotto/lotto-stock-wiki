@@ -3735,6 +3735,9 @@ def j_bench_got(st, m, rp, u):
 SHORT_SRC = ("영상이 짧아서 이 스타일로 만들 수 없어요", "이 영상은 여기서 마칠게요")
 
 
+REF_LEN_TOL = 1.0    # 레퍼런스 길이(정수 초로 기록)와 원본 길이 허용 차 — 10-29 실측 5편 차이 -0.4~+4초
+
+
 def _subsong_too_short(st, dur) -> bool:
     """(판단 주인 — 자막노래형 소재 길이) 한 샷을 이어서 쓰는 형식이라 원본이 판 length.min 보다 짧으면 만들 수 없다(되감기·느리게 = 벤치에 없음).
     10-27 개발 완주: 6초 소재(lerlGHkuf5E)로 대본 3번·장면 맞추기 2번 헛돌고 장면 단계에서 멈춤 → 받자마자 길이로 마친다."""
@@ -3826,9 +3829,20 @@ def j_origin_ready(st, m, rp, u):
     """(판단 주인 — 자막노래형 원본 관문) 원본이 정해진 뒤 한 곳: 받기 직후(of_fetched)든 실제 장면 대조 뒤(of_verify_got → _set_origin)든
     공용 길이 가는 f_product_sheet 자리에 이 처리기가 앉는다(10-27 렌즈 원본이 대조를 거쳐 제품 단계로 새어 '만드는 중 문제'로 멈춤 — 1lMbJh0n_d4).
     제품 단계 없음 — 첫 원본(한 샷)만 남기고 원본 정리로."""
-    st["origins"] = st["origins"][:1]
-    st["origin"]["files"] = list(st["origins"][0].get("files") or [])
-    dur = max((float(x.get("dur") or 0) for x in st["origin"]["files"]), default=0)
+    def _dur(o):
+        return max((float(x.get("dur") or 0) for x in o.get("files") or []), default=0)
+    need = float((st.get("bench") or {}).get("dur") or 0) - REF_LEN_TOL if (st.get("read") or {}).get("ref_kind") == "korean_reedit" else 0
+    ok = [o for o in st["origins"] if _dur(o) >= need]       # 레퍼런스보다 짧은 판 = 잘린 퍼 간 판(10-29 사장님 '레퍼런스가 긴데 원본이 짧은 건 안 된다') — 깨끗한 순서 그대로 다음 판
+    if not ok:
+        st["log"].append(f"원본 {[round(_dur(o), 1) for o in st['origins']]}초 모두 레퍼런스 {st['bench'].get('dur')}초보다 짧음 — 마침")
+        raise _Stop(*SHORT_SRC, final=True)
+    if ok[0] is not st["origins"][0]:
+        st["log"].append(f"원본 {st['origins'][0]['id']} {_dur(st['origins'][0]):.1f}초 < 레퍼런스 {st['bench'].get('dur')}초 → {ok[0]['id']} {_dur(ok[0]):.1f}초")
+    st["origins"] = ok[:1]
+    if ok[0]["id"] != st["origin"].get("id"):
+        _set_origin(st, ok[:1], list(ok[0].get("files") or []))       # 원본 칸(주소·플랫폼·창) 주인 한 곳
+    st["origin"]["files"] = list(ok[0].get("files") or [])
+    dur = _dur(ok[0])
     if _subsong_too_short(st, dur):
         st["log"].append(f"원본 길이 {dur}초 < 판 최소 — 마침")
         raise _Stop(*SHORT_SRC, final=True)
