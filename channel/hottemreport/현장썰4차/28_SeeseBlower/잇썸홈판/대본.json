@@ -1,0 +1,230 @@
+{
+ "_note": "숏템리폿 4차 28 SEESE 송풍기 하이브리드 — 앞 = 숏템리폿 현장썰 Dre 원음형 박창수판(28_SeeseBlower/front), 뒤 = 쿠팡 9778907774 'SEESE 터보 송풍기 600 CFM 무선 휴대용 낙엽 21V 4.0Ah 배터리 충전기 세트 세차 목공용'(같은 제품 — 대표 사진 = 초록 SEESE 터보 블로워·귀마개·상자, Dre·Diesel 것과 같은 꼴). 뒤 화면 = 손·제품 컷만(Dre 손·바퀴·보닛 오른쪽, Diesel 손 시점 톱밥·눈, 쿠팡 사진 — 원음 인물 얼굴 0, BMW 그릴·로고 crop 밖). 금액·남의 상표는 말하지 않는다.",
+ "brand": "잇썸홈",
+ "product": "SEESE 무선 터보 제트 송풍기 21V(쿠팡 9778907774, 같은 제품)",
+ "product_mode": "exact",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰4차/28_SeeseBlower/front/render/final.mp4",
+  "cut": 15.4,
+  "why": "원음 O2 'crazy' 끝(앞 15.115) 뒤 0.3초 — 같은 한 샷(dr 346.73~) 안",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API(10-28 10:5x, 'SEESE 송풍기' 1회, 27_cand/coupang_b.json): 9778907774 'SEESE 터보 송풍기 600 CFM 무선 휴대용 낙엽 21V 4.0Ah 배터리 충전기 세트 세차 목공용' — 같은 이름 다른 판매 9754782709·9436044228 · 대표 사진(front/src/cp_9778907774.jpg) = 초록 SEESE 'CORDLESS TURBO BLOWER' + 귀마개 상자",
+  "o_ear": "Dre 원본(사본 스피치매틱스) 22.36~25.72 'And what is this? Some earplugs.' · Diesel Legiance 원본 자동 자막 80.0~88.5 'It does come with some earplugs here because again, I heard this is a very loud jet blower' · 쿠팡 대표 사진 귀마개",
+  "o_rim": "Dre 원본(사본 스피치매틱스) 372.73~394.33 'may not be used to dry a whole car off, but to do rims, your headlights, grille, bumper, door jambs, your front windshield, your rear windshield, your side glasses, your actual external mirrors' · 화면 사본 313.6~316 옆 유리창·176 보닛 물기 밀어냄",
+  "o_dust": "Diesel Legiance 원본 자동 자막 125.5~141.0 'getting a lot of dirt and debris and leaves and dust … sawdust' · 화면 사본 dz 13~18 바닥 톱밥을 날림 · 44~48 트럭에 쌓인 눈을 날림"
+ },
+ "흥미이음": {
+  "원본흥미": "켜자마자 'You hear that? It's actually moving my hand' · 'This little thing is crazy'",
+  "뒤흥미": "쿠팡의 바로 그 SEESE 송풍기 — 귀마개가 든 상자·휠 물기·톱밥·눈까지 날리는 장면",
+  "판정": "같음",
+  "근거": "같은 제품: 쿠팡 상품명 'SEESE 터보 송풍기 … 21V 4.0Ah' + 대표 사진(초록 SEESE·21V 배터리) = Dre·Diesel 의 SEESE 21V 터보 블로워"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.3,
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 14.4
+ },
+ "front_style": {
+  "frame": "channel/hottemreport/현장썰4차/28_SeeseBlower/front/frame_render.json",
+  "title": "손이 밀려나는\n송풍기"
+ },
+ "transition": {
+  "kind": "slideleft",
+  "dur": 0.25
+ },
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "back_caption_lines": {
+  "B1": {
+   "emphasis": {
+    "words": [
+     "진짜"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 쿠팡 사진·초록 송풍기 위 — 노랑 금지(초록·흰), 하늘",
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   }
+  },
+  "B2": {
+   "emphasis": {
+    "words": [
+     "귀마개까지"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "초록 송풍기·나무 책상 위 — 하늘"
+  },
+  "B3": {
+   "emphasis": {
+    "words": [
+     "싹"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "빨간 차·파란 유리 위 — 빨강·분홍·주황 금지, 하늘"
+  },
+  "B4": {
+   "emphasis": {
+    "words": [
+     "눈까지"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 눈·회색 바닥 위 — 노랑 금지, 하늘"
+  },
+  "B5": {
+   "emphasis": {
+    "words": [
+     "난리"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 사진 위 — 분홍 기본 대신 하늘",
+   "enter": {
+    "kind": "fade",
+    "ms": 300
+   }
+  }
+ },
+ "sfx": {
+  "pack_customer": 0
+ },
+ "lines": [
+  {
+   "id": "B1",
+   "role": "공개",
+   "point": "잉",
+   "answer_at": 3,
+   "kind": "tts",
+   "seg": "B",
+   "tts": "근데 저 영상 보고 쿠팡에서 찾아봤더니, 그 송풍기가 진짜 있더라고요.",
+   "caps": [
+    "근데 저 영상 보고",
+    "쿠팡에서 찾아봤더니",
+    "그 송풍기가",
+    "진짜 있더라고요"
+   ],
+   "emph": [
+    "진짜"
+   ],
+   "facts": [
+    "c0"
+   ]
+  },
+  {
+   "id": "B2",
+   "role": "고조",
+   "point": "권위",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "얼마나 센지, 상자에 귀마개까지 같이 들어 있대요.",
+   "caps": [
+    "얼마나 센지",
+    "상자에 귀마개까지",
+    "같이",
+    "들어 있대요"
+   ],
+   "emph": [
+    "귀마개까지"
+   ],
+   "facts": [
+    "o_ear"
+   ]
+  },
+  {
+   "id": "B3",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "창문에 맺힌 물기도, 수건 없이 바람으로 싹 말린대요.",
+   "caps": [
+    "창문에 맺힌 물기도",
+    "수건 없이",
+    "바람으로",
+    "싹 말린대요"
+   ],
+   "emph": [
+    "싹"
+   ],
+   "facts": [
+    "o_rim"
+   ]
+  },
+  {
+   "id": "B4",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "차고 톱밥부터 차에 쌓인 눈까지, 이거 하나로 다 날린다고 해요.",
+   "caps": [
+    "차고 톱밥부터",
+    "차에 쌓인 눈까지",
+    "이거 하나로",
+    "다 날린다고 해요"
+   ],
+   "emph": [
+    "눈까지"
+   ],
+   "facts": [
+    "o_dust"
+   ]
+  },
+  {
+   "id": "B5",
+   "role": "cta",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "세차장에서 꺼냈더니, 옆 사람들이 그거 어디서 샀냐고 난리 났어요.",
+   "caps": [
+    "세차장에서 꺼냈더니",
+    "옆 사람들이",
+    "그거 어디서 샀냐고",
+    "난리 났어요"
+   ],
+   "emph": [
+    "난리"
+   ],
+   "facts": []
+  }
+ ]
+}

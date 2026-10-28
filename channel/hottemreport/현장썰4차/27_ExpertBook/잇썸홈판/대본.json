@@ -1,0 +1,230 @@
+{
+ "_note": "숏템리폿 4차 27 ExpertBook 하이브리드 — 앞 = 숏템리폿 현장썰 JulianTechTM 원음형 박창수판(27_ExpertBook/front), 뒤 = 쿠팡 9787251728 'ASUS ExpertBook B9 B9406CAA-TG1538X … 14인치 OLED 터치스크린 AI 노트북'(같은 제품 — ExpertBook Ultra = B9406, 대표 사진 검정). 뒤 화면 = 손·제품 컷만(Julian 손 시점·ShortCircuit 손·턴테이블 컷·쿠팡 사진, 원음 인물·진행자 얼굴 0). 금액·남의 상표는 말하지 않는다.",
+ "brand": "잇썸홈",
+ "product": "ASUS ExpertBook Ultra B9406(쿠팡 9787251728, 같은 제품)",
+ "product_mode": "exact",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰4차/27_ExpertBook/front/render/final.mp4",
+  "cut": 15.07,
+  "why": "원음 O2 'withstand the weight' 끝(앞 14.77) 뒤 0.3초 — 같은 한 샷(jt 96.43~115.22) 안",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API(10-28 10:5x, 'ASUS ExpertBook B9406' 1회, 27_cand/coupang_a.json): 9787251728 'ASUS ExpertBook B9 B9406CAA-TG1538X Ultra5 325 16GB 512GB Win 11P 14인치 OLED 터치스크린 AI 노트북' — 같은 B9406 다른 사양 9787173820·9787159050·9787169586 · 대표 사진(front/src/cp_9787251728.jpg) = 검정 ExpertBook",
+  "o_maker": "ASUS(대만 타이베이 본사) 공식 사양 asus.com/ch-de/laptops/for-work/expertbook/asus-expertbook-ultra/techspec/ 'Start from: 0.99 kg (2.18 lbs)'",
+  "o_pen": "JulianTechTM 원본(사본) 65.31~72.59 'They also told me I can put a pen in there and … Okay, I'm really gonna do it' · 화면 사본 66~70 자판 위 펜 → 덮개 닫음 → 74~76 화면 멀쩡",
+  "o_mil": "ASUS 공식 사양(같은 쪽) 'US MIL STD 810H military grade standard (24 procedures)'"
+ },
+ "흥미이음": {
+  "원본흥미": "리무버로 닦아도 'wow, it's really as good as new' · 위에 올라서도 버팀 'really impressed … withstand the weight'",
+  "뒤흥미": "쿠팡의 바로 그 ExpertBook Ultra(B9406) — 1kg 도 안 되는 무게·펜 끼우고 닫아도 멀쩡·미 군용 규격 24가지",
+  "판정": "같음",
+  "근거": "같은 제품: 쿠팡 상품명 'ASUS ExpertBook B9 B9406CAA' = Julian·ShortCircuit 의 ExpertBook Ultra B9406"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.3,
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 14.4
+ },
+ "front_style": {
+  "frame": "channel/hottemreport/현장썰4차/27_ExpertBook/front/frame_render.json",
+  "title": "밟아도 멀쩡한\n노트북"
+ },
+ "transition": {
+  "kind": "slideleft",
+  "dur": 0.25
+ },
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "back_caption_lines": {
+  "B1": {
+   "emphasis": {
+    "words": [
+     "진짜"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 쿠팡 사진·검정 노트북 위 — 노랑 대신 하늘",
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   }
+  },
+  "B2": {
+   "emphasis": {
+    "words": [
+     "일 킬로그램도"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "은색 노트북·보라 배경 위 — 하늘"
+  },
+  "B3": {
+   "emphasis": {
+    "words": [
+     "멀쩡하대요"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "검정 덮개·흰 책상 위 — 하늘"
+  },
+  "B4": {
+   "emphasis": {
+    "words": [
+     "스물네 가지"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 자판·은색 위 — 노랑 금지, 하늘"
+  },
+  "B5": {
+   "emphasis": {
+    "words": [
+     "난리"
+    ],
+    "rgb": [
+     90,
+     210,
+     255
+    ],
+    "style": "grow"
+   },
+   "_why": "흰 사진 위 — 분홍 기본 대신 하늘",
+   "enter": {
+    "kind": "fade",
+    "ms": 300
+   }
+  }
+ },
+ "sfx": {
+  "pack_customer": 0
+ },
+ "lines": [
+  {
+   "id": "B1",
+   "role": "공개",
+   "point": "잉",
+   "answer_at": 3,
+   "kind": "tts",
+   "seg": "B",
+   "tts": "근데 저 영상 보고 쿠팡에서 찾아봤더니, 그 노트북이 진짜 있더라고요.",
+   "caps": [
+    "근데 저 영상 보고",
+    "쿠팡에서 찾아봤더니",
+    "그 노트북이",
+    "진짜 있더라고요"
+   ],
+   "emph": [
+    "진짜"
+   ],
+   "facts": [
+    "c0"
+   ]
+  },
+  {
+   "id": "B2",
+   "role": "고조",
+   "point": "권위",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "대만 에이수스가 만든 건데, 무게가 일 킬로그램도 안 된대요.",
+   "caps": [
+    "대만 에이수스가",
+    "만든 건데",
+    "무게가 일 킬로그램도",
+    "안 된대요"
+   ],
+   "emph": [
+    "일 킬로그램도"
+   ],
+   "facts": [
+    "o_maker"
+   ]
+  },
+  {
+   "id": "B3",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "볼펜을 끼운 채로 덮개를 꾹 닫아도, 화면이 멀쩡하대요.",
+   "caps": [
+    "볼펜을 끼운 채로",
+    "덮개를 꾹 닫아도",
+    "화면이",
+    "멀쩡하대요"
+   ],
+   "emph": [
+    "멀쩡하대요"
+   ],
+   "facts": [
+    "o_pen"
+   ]
+  },
+  {
+   "id": "B4",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "심지어 미국 군용 내구성 기준으로, 스물네 가지 시험을 거쳤대요.",
+   "caps": [
+    "심지어 미국 군용",
+    "내구성 기준으로",
+    "스물네 가지 시험을",
+    "거쳤대요"
+   ],
+   "emph": [
+    "스물네 가지"
+   ],
+   "facts": [
+    "o_mil"
+   ]
+  },
+  {
+   "id": "B5",
+   "role": "cta",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "회사에서 보여 줬더니, 다들 한 번씩 밟아 보겠다고 난리 났어요.",
+   "caps": [
+    "회사에서 보여 줬더니",
+    "다들 한 번씩",
+    "밟아 보겠다고",
+    "난리 났어요"
+   ],
+   "emph": [
+    "난리"
+   ],
+   "facts": []
+  }
+ ]
+}
