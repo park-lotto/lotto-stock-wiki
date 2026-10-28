@@ -10,6 +10,7 @@
 
 흐름(한 영상):
   ① 짝 .txt(같은 이름) 읽기 — 첫 줄=유튜브 제목(buffer_api._yt_title), 전체=설명. ★없으면 건너뛴다
+     ★'인포크: [번호] 상품명' 줄이 있어야 하고 그 블록이 인포크 공개 페이지에 있어야 올린다(_inpock_check, 관제 282)
      (제목·설명은 Claude가 .txt로 먼저 써 둔다. 이 도구는 글을 지어내지 않는다)
   ② scp로 서버 data/buffer_drop/<무작위>.mp4 에 올림 → 공개 주소 /api/share/f/<이름> (app.api_share_f)
   ③ HEAD 200·video/mp4 확인 뒤 buffer_api.schedule_video  ④ 영상·.txt를 그 폴더 '예약\'으로 옮기고 장부에 적는다
@@ -22,6 +23,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import re
 import secrets
 import shutil
 import subprocess
@@ -54,6 +56,23 @@ def _load(path, default):
 def _save_ledger(rows):
     with open(LEDGER, "w", encoding="utf-8") as f:
         json.dump(rows, f, ensure_ascii=False, indent=1)
+
+
+def _acct_no(folder):
+    """폴더 이름의 계정 번호 — '995_2 얜샷템'·'995'·'숏템07(수창) 쓱싹템' → '995'·'995'·'07'."""
+    m = re.match(r"^(\d+)", folder.replace("숏템", ""))
+    return m.group(1) if m else ""
+
+
+def _key_for(keys, folder):
+    """장부 행의 Buffer 키(주인 한 곳 — cleanup·점검 도구가 같이 쓴다).
+    폴더 이름이 바뀌어도(10-28 '995' → '995_1 썰템쇼'·'995_2 얜샷템') 같은 번호의 키가 하나뿐이면 그 키.
+    번호가 같아도 키가 둘 이상이면 고르지 않는다(None) — 엉뚱한 계정 조회 금지."""
+    if folder in keys:
+        return keys[folder]
+    no = _acct_no(folder)
+    found = {v for k, v in keys.items() if no and _acct_no(k) == no}
+    return found.pop() if len(found) == 1 else None
 
 
 def _folders(only=None, need_dir=True):
@@ -99,9 +118,15 @@ def _probe(path):
         return None
 
 
-def _ssh(cmd):
-    r = subprocess.run(["ssh", "-o", "ConnectTimeout=15", "-i", KEY, HOST, cmd],
-                       capture_output=True, text=True, timeout=120)
+def _ssh(cmd, timeout=60):
+    # 매시간 작업(스케줄러)에서 ssh 가 가끔 120초 멈춰 cleanup 전체가 죽었다(10-27~29 로그 53회).
+    # stdin 을 닫고(BatchMode·DEVNULL) 응답 없는 연결은 ServerAlive 로 끊는다. 시간초과도 RuntimeError 로 — 부르는 쪽이 한 건만 건너뛴다.
+    try:
+        r = subprocess.run(["ssh", "-o", "ConnectTimeout=15", "-o", "BatchMode=yes",
+                            "-o", "ServerAliveInterval=10", "-o", "ServerAliveCountMax=3", "-i", KEY, HOST, cmd],
+                           stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"ssh 시간초과({timeout}초)")
     if r.returncode:
         raise RuntimeError(f"ssh 실패: {(r.stderr or r.stdout)[-300:]}")
     return r.stdout
@@ -123,9 +148,15 @@ def _upload(path):
     return name, url
 
 
-def _remove_remote(name):
-    if name and all(c.isalnum() or c in "-_." for c in name):
-        _ssh(f"rm -f {REMOTE_DIR}/{name}")
+def _safe_name(name):
+    return bool(name) and all(c.isalnum() or c in "-_." for c in name)
+
+
+def _remove_remote(*names):
+    """서버 사본 지우기 — 여러 개를 ssh 한 번으로. 실패하면 RuntimeError(부르는 쪽이 다음 시간에 다시)."""
+    names = [n for n in names if _safe_name(n)]
+    if names:
+        _ssh("rm -f " + " ".join(f"{REMOTE_DIR}/{n}" for n in names))
 
 
 SLOTS = ((15, 0), (20, 0))     # 사장님(2026-10-26) "매일 3시 한 번, 8시 한 번 / 한 번에 두 개는 없다" — 계정당 칸 하나에 영상 하나
@@ -187,6 +218,56 @@ def _channel(key, folder):
     return _targets(key, folder)[0]
 
 
+INPOCK = "https://link.inpock.co.kr"
+# 계정 번호 → 인포크 계정. 원본 = tools/shoplink/run.py INPOCK_BY_CHANNEL(쇼핑링크자동 트랙, 병합 전) — 이 트랙 안에선 여기 한 곳
+INPOCK_BY_CHANNEL = {"987": "shocktem", "950": "streport", "999": "yeshot", "21": "ssldezip",
+                     "998": "mtst", "995": "stems", "994": "ssult"}
+INPOCK_LINE = "인포크:"     # .txt 안의 한 줄 — "인포크: [10] 조선미녀 맑은쌀 선크림" (Buffer 글에는 안 들어간다)
+
+
+def _split_inpock(cap):
+    """.txt 글에서 '인포크:' 줄을 떼어 (Buffer 에 보낼 글, 인포크 블록 제목) 으로."""
+    keep, block = [], ""
+    for line in cap.splitlines():
+        if line.strip().startswith(INPOCK_LINE):
+            block = line.strip()[len(INPOCK_LINE):].strip()
+        else:
+            keep.append(line)
+    return "\n".join(keep).strip(), block
+
+
+def _inpock_blocks(acct, cache={}):
+    """인포크 공개 페이지의 링크 블록 [(제목, 주소, 공개여부)] — 공개 페이지에 박힌 "blocks":[…] 를 읽는다."""
+    if acct not in cache:
+        req = urllib.request.Request(f"{INPOCK}/{acct}", headers={"User-Agent": "Mozilla/5.0"})
+        html = urllib.request.urlopen(req, timeout=20).read().decode("utf-8", "replace")
+        i = html.find('"blocks":[')
+        arr = json.JSONDecoder().raw_decode(html[i + 9:])[0] if i >= 0 else []
+        cache[acct] = [(b.get("title") or "", b.get("url") or "", b.get("is_open", True))
+                       for b in arr if b.get("block_type") == "link"]
+    return cache[acct]
+
+
+def _inpock_check(folder, block):
+    """올리기 전 관문(사장님 10-26 "인포크 없으면 올리지 마라"): 그 계정 인포크 공개 페이지에 이 제목의 블록이
+    공개·쿠팡 링크로 있어야 한다. 문제가 있으면 이유 문자열, 괜찮으면 None."""
+    if not block:
+        return f".txt 에 '{INPOCK_LINE} [번호] 상품명' 줄이 없음(쇼핑링크를 먼저 만들고 그 제목을 적는다)"
+    acct = INPOCK_BY_CHANNEL.get(_acct_no(folder))
+    if not acct:
+        return f"이 계정({folder})의 인포크 계정이 정해지지 않음"
+    try:
+        blocks = _inpock_blocks(acct)
+    except Exception as e:
+        return f"인포크 {acct} 공개 페이지를 못 읽음 — {e}"
+    hit = next((b for b in blocks if b[0].strip() == block), None)
+    if not hit:
+        return f"인포크 {acct} 공개 페이지에 '{block}' 블록이 없음"
+    if not hit[2] or "link.coupang.com" not in hit[1]:
+        return f"인포크 {acct} '{block}' 블록이 비공개거나 쿠팡 링크가 아님({hit[1] or '링크없음'})"
+    return None
+
+
 def _check(d, mp4):
     """올리기 전 규격. 문제 문장을 돌려준다(없으면 "")."""
     pr = _probe(os.path.join(d, mp4))
@@ -210,43 +291,71 @@ def cmd_scan(a):
 
 
 def cmd_cleanup(a=None):
+    """① Buffer 상태를 장부에 적는다(sent/deleted = 끝, 행마다 바로 저장) ② 끝난 행의 서버 사본을 ssh 한 번으로 지운다.
+    error 는 끝이 아니다 — Buffer 에서 다시 시도하면 sent 가 되므로 서버 사본을 남겨 둔다(10-27 950 틱톡: 지워서 재시도 404).
+    ssh 가 실패해도 장부는 이미 적혀 있고, 못 지운 사본은 다음 시간에 다시 지운다."""
     rows = _load(LEDGER, [])
     keys = _load(KEYS, {})
-    changed = 0
+    done = 0
     for r in rows:
-        if r.get("cleaned") or r.get("folder") not in keys:
+        key = _key_for(keys, r.get("folder", ""))
+        if r.get("final_status") in ("sent", "deleted") or not key:
             continue
         try:
-            st = buffer_api.post_status(keys[r["folder"]], r["post_id"]).get("status")
+            st = buffer_api.post_status(key, r["post_id"]).get("status")
         except buffer_api.BufferNotFound:
             st = "deleted"
         except Exception as e:
-            print(f"   상태 조회 실패({r['file']}): {e}")
+            print(f"   상태 조회 실패({r['folder']} {r['file']}): {e}")
             continue
-        if st in ("sent", "deleted", "error"):
-            _remove_remote(r["remote"])
-            r["cleaned"], r["final_status"] = dt.datetime.now(KST).isoformat(timespec="seconds"), st
-            changed += 1
+        if st in ("sent", "deleted"):
+            r["final_status"] = st
             if st == "sent":
-                _to_done(r)
-            else:
-                print(f"   ⚠️ {r['folder']} {r['file']}: Buffer 상태 {st} — '{RESERVED}' 폴더에 그대로 둔다(확인 필요)")
-    if changed:
-        _save_ledger(rows)
-    print(f"서버 사본 정리 {changed}개")
+                r["done_where"] = _to_done(r)
+            _save_ledger(rows)          # 한 건마다 — 뒤에서 죽어도 여기까지는 남는다
+            done += 1
+        elif st == "error":
+            if r.get("last_status") != "error":
+                r["last_status"] = "error"
+                _save_ledger(rows)
+            print(f"   ⚠️ {r['folder']} {r['file']} {r.get('service')}: Buffer 상태 error — 서버 사본 남김(Buffer 에서 다시 시도 가능)")
+    left = [r for r in rows if r.get("final_status") in ("sent", "deleted") and not r.get("cleaned") and r.get("remote")]
+    removed = 0
+    if left:
+        try:
+            _remove_remote(*[r["remote"] for r in left])
+            now = dt.datetime.now(KST).isoformat(timespec="seconds")
+            for r in left:
+                r["cleaned"] = now
+            removed = len(left)
+            _save_ledger(rows)
+        except RuntimeError as e:
+            print(f"   ⚠️ 서버 사본 {len(left)}개 못 지움 — 다음 시간에 다시: {e}")
+    print(f"상태 확정 {done}개 · 서버 사본 정리 {removed}개")
+    return 0 if removed == len(left) else 1
 
 
 def _to_done(r):
-    """게시된 영상·.txt 를 '예약' → '완료' 로 옮긴다. 이미 완료에 있으면(옛 방식으로 옮긴 것) 그대로."""
+    """게시된 영상·.txt 를 '예약' → '완료' 로 옮긴다. 결과를 돌려준다(장부 done_where).
+    G: 동기화가 안 내려와 예약\\ 에 파일이 없으면 'G:에없음' — 웹 드라이브에서 옮겨야 한다(buffer_drive_web_move)."""
     d = os.path.join(DRIVE, r["folder"])
     if not os.path.isdir(d):
-        return
+        print(f"   ⚠️ {r['folder']} {r['file']}: 게시됨 — 드라이브 폴더가 안 보여 '{DONE}' 이동 못 함")
+        return "폴더없음"
+    moved = []
     for name in (r["file"], os.path.splitext(r["file"])[0] + ".txt"):
         src = os.path.join(d, RESERVED, name)
         if os.path.isfile(src):
             os.makedirs(os.path.join(d, DONE), exist_ok=True)
             shutil.move(src, os.path.join(d, DONE, name))
-    print(f"   {r['folder']} {r['file']}: 게시됨 → '{DONE}'")
+            moved.append(name)
+    if moved:
+        print(f"   {r['folder']} {r['file']}: 게시됨 → '{DONE}'")
+        return DONE
+    if os.path.isfile(os.path.join(d, DONE, r["file"])):
+        return DONE
+    print(f"   ⚠️ {r['folder']} {r['file']}: 게시됨 — G: '{RESERVED}' 에 파일이 없음(웹 드라이브에서 '{DONE}' 으로 옮겨야)")
+    return "G:에없음"
 
 
 def _fingerprint(path):
@@ -306,7 +415,8 @@ def cmd_post(a):
             if not cap:
                 print(f"[{n}] {v}: .txt 없음 — 건너뜀(첫 줄 제목, 나머지 설명으로 같은 이름 .txt 를 써 두라)")
                 continue
-            bad = _check(d, v)
+            cap, block = _split_inpock(cap)
+            bad = _check(d, v) or _inpock_check(n, block)
             if bad:
                 print(f"[{n}] {v}: {bad} — 건너뜀")
                 continue
@@ -328,13 +438,16 @@ def cmd_post(a):
                     res = buffer_api.schedule_video(key, ch["id"], cap, url, due_at=due, privacy=a.privacy)
                 except Exception as e:
                     if remote:
-                        _remove_remote(remote)
+                        try:
+                            _remove_remote(remote)
+                        except RuntimeError as e2:
+                            print(f"   ⚠️ 서버 사본 {remote} 못 지움: {e2}")
                     print(f"[{n}] {v} {ch.get('service')}: 실패 — {e}")
                     fail += 1
                     continue
                 rows.append({"folder": n, "channel": ch.get("name"), "service": ch.get("service"), "file": v,
                              "post_id": res["id"], "due": res.get("dueAt") or "큐", "remote": remote, "fp": fp,
-                             "at": dt.datetime.now(KST).isoformat(timespec="seconds")})
+                             "inpock": block, "at": dt.datetime.now(KST).isoformat(timespec="seconds")})
                 _save_ledger(rows)          # 한 건마다 바로 적는다 — 중간에 끊겨도 다시 돌리면 중복 장치가 막는다
                 print(f"[{n}] {v} → {ch.get('service')} {ch.get('name')} 예약 {res.get('dueAt')}  id={res['id']}")
                 ok += 1
@@ -378,7 +491,10 @@ def cmd_test(a):
             print(f"[{n}] 실패 — {e}")
         finally:
             if remote:
-                _remove_remote(remote)
+                try:
+                    _remove_remote(remote)
+                except RuntimeError as e2:
+                    print(f"   ⚠️ 서버 사본 {remote} 못 지움: {e2}")
 
 
 def main(argv=None):
@@ -394,8 +510,8 @@ def main(argv=None):
         if name == "test":
             s.add_argument("--file", help="시험용 mp4(없으면 폴더 첫 영상)")
     a = p.parse_args(argv)
-    {"scan": cmd_scan, "post": cmd_post, "test": cmd_test, "cleanup": cmd_cleanup}[a.cmd](a)
+    return {"scan": cmd_scan, "post": cmd_post, "test": cmd_test, "cleanup": cmd_cleanup}[a.cmd](a)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main() or 0)

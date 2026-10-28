@@ -11,42 +11,27 @@ import json
 import os
 import re
 import sys
-import urllib.request
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 from shopping_shorts import buffer_api  # noqa: E402
+from tools import buffer_post as bp  # noqa: E402 — 키 찾기 주인(_key_for)
 
 KEYS = os.path.expanduser("~/.claude/buffer_keys.json")
 LEDGER = os.path.expanduser("~/.claude/buffer_post_ledger.json")
 DRIVE = r"G:\내 드라이브\버퍼예약"
-INPOCK = "https://link.inpock.co.kr"
-# 주인 = tools/shoplink/run.py INPOCK_BY_CHANNEL(쇼핑링크자동 트랙). 병합 전이라 여기서 읽기만 한다.
-INPOCK_BY_CHANNEL = {"987": "shocktem", "950": "streport", "999": "yeshot", "21": "ssldezip",
-                     "998": "mtst", "995": "stems", "994": "ssult"}
+INPOCK_BY_CHANNEL = bp.INPOCK_BY_CHANNEL
 _Q = 'query($id: PostId!) { post(input: { id: $id }) { id status dueAt sentAt externalLink text } }'
 _NUM = re.compile(r"^\s*(\[\d+\]|\d+\.)\s")
 
 
-def _inpock_titles(acct, cache={}):
-    if acct not in cache:
-        try:
-            req = urllib.request.Request(f"{INPOCK}/{acct}", headers={"User-Agent": "Mozilla/5.0"})
-            html = urllib.request.urlopen(req, timeout=20).read().decode("utf-8", "replace")
-            cache[acct] = _blocks(html)   # 공개 페이지에 박힌 "blocks":[…] — 블록마다 쿠팡 링크·공개 여부
-        except Exception as e:  # noqa: BLE001 — 점검 도구: 못 받으면 표에 적는다
-            cache[acct] = [f"(받기 실패 {e})"]
-    return cache[acct]
-
-
-def _blocks(html):
-    i = html.find('"blocks":[')
-    if i < 0:
-        return []
-    arr, _ = json.JSONDecoder().raw_decode(html[i + 9:])
-    return [f'{b.get("title")} → {b.get("url") or "(링크없음)"}{"" if b.get("is_open", True) else " (비공개)"}'
-            for b in arr if b.get("block_type") == "link"]
+def _inpock_titles(acct):
+    """공개 페이지 블록을 '제목 → 주소' 줄로 — 읽기는 bp._inpock_blocks 한 곳."""
+    try:
+        return [f"{t} → {u or '(링크없음)'}{'' if o else ' (비공개)'}" for t, u, o in bp._inpock_blocks(acct)]
+    except Exception as e:  # noqa: BLE001 — 점검 도구: 못 받으면 표에 적는다
+        return [f"(받기 실패 {e})"]
 
 
 def _where(folder, name, web):
@@ -76,10 +61,8 @@ def main():
         if (r.get("at") or "") < a.since:
             continue
         folder, svc = r["folder"], r.get("service", "youtube")
-        ch = re.match(r"^(\d+)", folder.replace("숏템", "")).group(1)
-        key = keys.get(folder) or next((v for k, v in keys.items()
-                                        if re.match(r"^(\d+)", k.replace("숏템", "")) and
-                                        re.match(r"^(\d+)", k.replace("숏템", "")).group(1) == ch), None)
+        ch = bp._acct_no(folder)
+        key = bp._key_for(keys, folder)
         try:
             p = (buffer_api._call(key, _Q, {"id": r["post_id"]}).get("post") or {}) if key else {}
         except Exception as e:  # noqa: BLE001
@@ -88,9 +71,15 @@ def main():
         title = buffer_api._yt_title(text) if text else ""
         num = (_NUM.match(title) or [None, ""])[1] if title else ""
         acct = INPOCK_BY_CHANNEL.get(ch, "")
+        # 짝 = 올릴 때 장부에 남긴 인포크 제목(r["inpock"], 관제 282). 옛 행은 유튜브 제목 앞 번호로만 찾는다
         block = ""
-        if num and acct:
+        if acct and r.get("inpock"):
+            block = next((t for t in _inpock_titles(acct) if t.split(" → ")[0].strip() == r["inpock"]),
+                         f"★없음: '{r['inpock']}' 블록이 공개 페이지에 없다")
+        elif num and acct:
             block = next((t for t in _inpock_titles(acct) if t.startswith(num + " ") or t.startswith(num)), "")
+        if not block:
+            block = "(짝 기록 없음 — 옛 행)"
         out.append({
             "folder": folder, "svc": svc, "file": r["file"], "status": p.get("status") or "Buffer에없음",
             "due": (p.get("dueAt") or r.get("due") or "")[:16], "link": p.get("externalLink") or "",

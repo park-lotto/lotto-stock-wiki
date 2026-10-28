@@ -17,6 +17,7 @@ bp.buffer_api.schedule_video = lambda *a, **k: {"id": "fake", "dueAt": "fake"}
 bp.cmd_cleanup = lambda a=None: None
 bp.buffer_api.channels = lambda k: [{"id": s, "service": s, "name": s} for s in bp.SERVICES]
 bp._save_ledger = lambda rows: None
+bp._inpock_check = lambda folder, block: None   # 인포크 관문은 buffer_inpock_gate_check 가 따로 본다
 cases = {os.path.basename(posted): posted, "renamed_same.mp4": posted}
 if fresh:
     cases["fresh_" + os.path.basename(fresh)] = fresh

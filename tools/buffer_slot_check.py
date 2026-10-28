@@ -45,6 +45,7 @@ bp.DRIVE = tmp
 bp._load = lambda p, default: rows if p == bp.LEDGER else {F: "k"}
 bp._save_ledger = lambda r: None
 bp._probe = lambda p: (20.0, 1080, 1920)
+bp._inpock_check = lambda folder, block: None   # 인포크 관문은 buffer_inpock_gate_check 가 따로 본다
 bp._upload = lambda p: ("r", "http://x")
 bp._remove_remote = lambda r: None
 bp.cmd_cleanup = lambda a=None: None
