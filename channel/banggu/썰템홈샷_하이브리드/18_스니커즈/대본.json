@@ -1,0 +1,143 @@
+{
+ "topic": "스니커즈 × 이름이 마스(Mars) 집안이 아끼던 말 이름 — 1930 시카고에서 처음 만든 초코바에 '가족의 말' 이름을 붙임 → 영국에선 1968~1990 '마라톤'이라는 이름으로 팔리다 1990년에 스니커즈로(전부 Mars 공식 snickers.co.uk 'Our story') · 뒤 체험: 쿠팡 스니커즈 땅콩(9718147316, 같은 제품)",
+ "brand": "Snickers",
+ "scene_query": "Snickers named after horse Marathon",
+ "product_mode": "exact",
+ "ing": {
+  "line": 0,
+  "fact": "sn",
+  "why": "누구나 먹어 본 초코바 스니커즈 — 이름이 회사 집안이 아끼던 말 이름(Mars 공식 'named after the family horse'). 훅 = 스니커즈 묶음을 여는 손 → 놀라는 짤 '말 이름이라고?'"
+ },
+ "hook": [
+  "스니커즈가 원래,",
+  "말 이름이다?"
+ ],
+ "post": "스니커즈는 원래 회사 집안 말 이름이었다",
+ "tempo": null,
+ "points_from": "포인트.md",
+ "facts": {
+  "sn": {
+   "text": "Mars 공식 snickers.co.uk 'Our story'(2026-10-28 확인): 1930 'The very first SNICKERS Bar, named after the family horse, was manufactured in Chicago, US' · 1967-1990 'The satisfying product came to the UK in 1968 but was named the iconic MARATHON. This was then later changed to SNICKERS in 1990.'",
+   "url": "https://www.snickers.co.uk/our-story"
+  },
+  "hp": {
+   "text": "HuffPost UK(Yahoo News 재게재, 2024-05-07) — Mars 공식 문장 'named after the family horse' 인용",
+   "url": "https://au.news.yahoo.com/just-learned-snickers-stands-not-102712647.html"
+  },
+  "mt": {
+   "text": "Mars 1990 영국 TV 광고 'Marathon has changed its name to Snickers'(J57XRwZv2Pk) — 마라톤 포장 → 스니커즈 포장 화면",
+   "url": "https://www.youtube.com/watch?v=J57XRwZv2Pk"
+  },
+  "p1": {
+   "text": "쿠팡 9718147316 '스니커즈 땅콩' — 파트너스 API 2026-10-28, 상품 사진을 열어 스니커즈(SNICKERS) 포장 확인",
+   "url": "https://www.coupang.com/vp/products/9718147316"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "잉 훅(이름이 말 이름 = 질문)",
+    "seg": "A",
+    "text": "배고플 때 찾는 스니커즈, 근데 이 이름이 원래 말 이름이라는데",
+    "facts": [
+     "sn"
+    ],
+    "sources": [
+     "https://www.snickers.co.uk/our-story"
+    ]
+   },
+   {
+    "fn": "몰랐던 배경",
+    "seg": "A",
+    "text": "초콜릿 회사 마스 집안이, 그렇게 아끼던 말 이름이 스니커즈였대요",
+    "facts": [
+     "sn",
+     "hp"
+    ],
+    "sources": [
+     "https://www.snickers.co.uk/our-story",
+     "https://au.news.yahoo.com/just-learned-snickers-stands-not-102712647.html"
+    ]
+   },
+   {
+    "fn": "해결",
+    "seg": "A",
+    "text": "그래서 시카고에서 처음 만든 새 초코바에, 그 말 이름을 그대로 붙인 거죠",
+    "facts": [
+     "sn"
+    ],
+    "sources": [
+     "https://www.snickers.co.uk/our-story"
+    ]
+   },
+   {
+    "fn": "반전",
+    "seg": "A",
+    "text": "근데 영국에선, 이 초코바가 이십 년 넘게 마라톤이란 이름이었는데",
+    "facts": [
+     "sn",
+     "mt"
+    ],
+    "sources": [
+     "https://www.snickers.co.uk/our-story"
+    ]
+   },
+   {
+    "fn": "덤",
+    "seg": "A",
+    "text": "영국에서 스니커즈란 이름을 쓰게 된 건, 한참 나중 일이래요",
+    "facts": [
+     "sn",
+     "mt"
+    ],
+    "sources": [
+     "https://www.snickers.co.uk/our-story"
+    ]
+   },
+   {
+    "fn": "쐐기",
+    "seg": "A",
+    "text": "그러니까 지금 다들 먹는 이 이름이, 말 이름 그대로인 거죠",
+    "facts": [
+     "sn"
+    ],
+    "sources": [
+     "https://www.snickers.co.uk/our-story"
+    ]
+   },
+   {
+    "fn": "B 연결",
+    "seg": "B",
+    "text": "이 얘기 듣고 저도, 쿠팡에서 스니커즈를 한 묶음 샀는데",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/9718147316"
+    ]
+   },
+   {
+    "fn": "B 좋은 점",
+    "seg": "B",
+    "text": "반으로 쪼개 보니, 캐러멜이 쭉 늘어나면서 땅콩이 씹히고",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/9718147316"
+    ]
+   },
+   {
+    "fn": "B 끝(되받기)",
+    "seg": "B",
+    "text": "한 입 먹을 때마다, 이게 말 이름이라는 게 자꾸 생각나더라고요",
+    "facts": [
+     "sn"
+    ],
+    "sources": [
+     "https://www.snickers.co.uk/our-story"
+    ]
+   }
+  ]
+ }
+}

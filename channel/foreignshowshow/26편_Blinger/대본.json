@@ -1,0 +1,710 @@
+{
+ "topic": "Blinger(블링거) — 머리에 대고 누르면 보석이 박히는 도구. 꿈에서 떠올린 엄마가 집을 팔아 만듦, 시연·가발 쓴 샤크 → 장난감 회사 대박·짝퉁 → 엉망인 회사에 줄줄이 빠짐 → 바바라와 성사",
+ "product": "Blinger hair gem styling tool(머리에 보석을 박는 도구)",
+ "bench": {
+  "id": "opK6XXBLrks",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "딸깍 한번에 머리카락에 보석이?! (화면 제목: 딸깍 한번에 / 머리카락에 보석이?!)",
+  "dur": 49.9,
+  "views": 203000,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "cut_median": 1.8,
+  "_cut_median_how": "2초 시트 눈 측정 — 10-28"
+ },
+ "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」",
+ "dropped": [
+  "벤치 '2억 7천에 지분 25%'·'매출'(금액·지분) → 금액 없이 거절·성사만",
+  "벤치 '의료용 등급 접착제'·'어린아이도 안심하고'(성분·안전성) — 쓰지 않음",
+  "벤치 남의 광고 모델 얼굴 컷 — 이 원본 무대 시연으로"
+ ],
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "kind": "원음",
+    "fn": "반응(결말 반응 0초)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "와 진짜 쉽네!"
+    ],
+    "cap_at": [
+     83.94
+    ],
+    "span": [
+     83.94,
+     84.96
+    ],
+    "orig_en": "Wow, that was so easy.",
+    "text": "와 진짜 쉽네!",
+    "style": "원음반응_크게",
+    "fx": "0초 빨간 원(R3 물건 = 투자자 손에 든 분홍 블링거) — 벤치 0~1.0 투자자 얼굴 원(우리는 물건 원)",
+    "emph": [
+     {
+      "cap": "와 진짜 쉽네!",
+      "span": "와 진짜 쉽네!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N1",
+    "kind": "나레",
+    "fn": "문제(훅)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "머리에 대고 딸깍",
+     "누르기만 하면",
+     "보석이 박히는 도구가 있는데"
+    ],
+    "text": "머리에 대고 딸깍 누르기만 하면 보석이 박히는 도구가 있는데",
+    "tts": "머리에 대고 딸깍 누르기만 하면, 보석이 박히는 도구가 있는데",
+    "fx": "빨강 번쩍 — 벤치 0.5('딸깍 한 번에 머리에 보석이 박히는')",
+    "emph": [
+     {
+      "cap": "머리에 대고 딸깍",
+      "span": "대고 딸깍",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 분홍 상자 위 노랑 — 지휘 재검수 10-28 ④ — 분홍·빨강 바탕 영상, 빨강·분홍·주황·노랑 대신 파랑·초록·민트",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "누르기만 하면",
+      "span": "누르기만 하면",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 빨강→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "보석이 박히는 도구가 있는데",
+      "span": "보석이 박히는",
+      "color": "민트",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "fn": "해답(한 마디)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "딸깍 누르면 반짝!"
+    ],
+    "cap_at": [
+     63.74
+    ],
+    "span": [
+     63.74,
+     65.3
+    ],
+    "orig_en": "Click and bling.",
+    "text": "딸깍 누르면 반짝!",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "딸깍 누르면 반짝!",
+      "span": "딸깍 누르면 반짝!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응) → 손: 주황→초록(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "fn": "해답(빼기)",
+    "facts": [
+     "f2",
+     "f3"
+    ],
+    "caps": [
+     "열도 안 쓰고",
+     "뺄 때는 빗질",
+     "한 번이면 끝이라는데"
+    ],
+    "text": "열도 안 쓰고 뺄 때는 빗질 한 번이면 끝이라는데",
+    "tts": "열도 안 쓰고, 뺄 때는 빗질 한 번이면 끝이라는데",
+    "fx": "초록 번쩍 — 벤치 8.7('열도 전혀 사용하지 않아')",
+    "emph": [
+     {
+      "cap": "열도 안 쓰고",
+      "span": "열도 안 쓰고",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 분홍→초록(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "뺄 때는 빗질",
+      "span": "뺄 때는 빗질",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "한 번이면 끝이라는데",
+      "span": "한 번이면",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O3",
+    "kind": "원음",
+    "fn": "해답(구호)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "딸깍 넣고",
+     "쓱 빼기!"
+    ],
+    "cap_at": [
+     107.7,
+     108.55
+    ],
+    "span": [
+     107.7,
+     109.25
+    ],
+    "orig_en": "Bling in, brush out.",
+    "text": "딸깍 넣고 쓱 빼기!",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "딸깍 넣고",
+      "span": "딸깍 넣고",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 분홍 원피스 위 노랑 — 지휘 재검수 10-28 ④",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "쓱 빼기!",
+      "span": "쓱 빼기!",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(반응) → 손: 빨강→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "fn": "체험(가발)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "까다로운 샤크도",
+     "가발까지 쓰고",
+     "직접 해 봤다는데"
+    ],
+    "text": "까다로운 샤크도 가발까지 쓰고 직접 해 봤다는데",
+    "tts": "까다로운 샤크도, 가발까지 쓰고 직접 해 봤다는데",
+    "fx": "초록 번쩍 — 벤치 시연",
+    "emph": [
+     {
+      "cap": "까다로운 샤크도",
+      "span": "까다로운 샤크도",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "가발까지 쓰고",
+      "span": "가발까지 쓰고",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 주황→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "직접 해 봤다는데",
+      "span": "봤다는데",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O4",
+    "kind": "원음",
+    "fn": "반응(해냈다)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "대박!",
+     "해냈네!"
+    ],
+    "cap_at": [
+     163.32,
+     164.28
+    ],
+    "span": [
+     163.32,
+     164.92
+    ],
+    "orig_en": "Amazing. You did it!",
+    "text": "대박! 해냈네!",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "대박!",
+      "span": "대박!",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "해냈네!",
+      "span": "해냈네!",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응) → 손: 빨강→민트(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N4",
+    "kind": "나레",
+    "fn": "숫자(사연)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "꿈에서 떠오른",
+     "아이디어 하나로",
+     "집까지 팔아 가며",
+     "만들었다는데"
+    ],
+    "text": "꿈에서 떠오른 아이디어 하나로 집까지 팔아 가며 만들었다는데",
+    "tts": "꿈에서 떠오른 아이디어 하나로, 집까지 팔아 가며 만들었다는데",
+    "emph": [
+     {
+      "cap": "꿈에서 떠오른",
+      "span": "꿈에서 떠오른",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "아이디어 하나로",
+      "span": "아이디어 하나로",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 분홍→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "집까지 팔아 가며",
+      "span": "팔아 가며",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "만들었다는데",
+      "span": "만들었다는데",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 주황→민트(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O5",
+    "kind": "원음",
+    "fn": "숫자(집)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "집을 팔았어요"
+    ],
+    "cap_at": [
+     242.15
+    ],
+    "span": [
+     242.15,
+     243.14
+    ],
+    "orig_en": "I sold the house.",
+    "text": "집을 팔았어요",
+    "style": "보통",
+    "fx": "빨강 번쩍 — 벤치 사연",
+    "emph": [
+     {
+      "cap": "집을 팔았어요",
+      "span": "집을 팔았어요",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N5",
+    "kind": "나레",
+    "fn": "숫자(대박·짝퉁)",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "장난감 회사와 손잡고",
+     "대박이 났지만",
+     "짝퉁이 쏟아졌다는데"
+    ],
+    "text": "장난감 회사와 손잡고 대박이 났지만 짝퉁이 쏟아졌다는데",
+    "tts": "장난감 회사와 손잡고 대박이 났지만, 짝퉁이 쏟아졌다는데",
+    "emph": [
+     {
+      "cap": "장난감 회사와 손잡고",
+      "span": "회사와 손잡고",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 빨강→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "대박이 났지만",
+      "span": "대박이 났지만",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "짝퉁이 쏟아졌다는데",
+      "span": "쏟아졌다는데",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N6",
+    "kind": "나레",
+    "fn": "지분 경쟁(거절)",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "회사가 엉망이라며",
+     "샤크들이",
+     "줄줄이 빠지는데"
+    ],
+    "text": "회사가 엉망이라며 샤크들이 줄줄이 빠지는데",
+    "tts": "회사가 엉망이라며, 샤크들이 줄줄이 빠지는데",
+    "emph": [
+     {
+      "cap": "회사가 엉망이라며",
+      "span": "엉망이라며",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "샤크들이",
+      "span": "샤크들이",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "줄줄이 빠지는데",
+      "span": "줄줄이 빠지는데",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 빨강→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O6",
+    "kind": "원음",
+    "fn": "결정(제안)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "잠깐만요",
+     "지금 바로 제안할게요!"
+    ],
+    "cap_at": [
+     531.2,
+     531.68
+    ],
+    "span": [
+     531.2,
+     533.56
+    ],
+    "orig_en": "Wait a minute. I'm going to give you an offer right now.",
+    "text": "잠깐만요 지금 바로 제안할게요!",
+    "style": "보통",
+    "fx": "초록 번쩍 — 제안",
+    "emph": [
+     {
+      "cap": "잠깐만요",
+      "span": "잠깐만요",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 주황→초록(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "지금 바로 제안할게요!",
+      "span": "지금 바로 제안할게요!",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O7",
+    "kind": "원음",
+    "fn": "결정(성사)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "좋아요",
+     "거래할게요!"
+    ],
+    "cap_at": [
+     684.1,
+     684.62
+    ],
+    "span": [
+     684.1,
+     685.4
+    ],
+    "orig_en": "All right, let's do a deal, then.",
+    "text": "좋아요 거래할게요!",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "좋아요",
+      "span": "좋아요",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "거래할게요!",
+      "span": "거래할게요!",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응) → 손: 분홍→민트(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O8",
+    "kind": "원음",
+    "fn": "결정(포옹)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "너무 자랑스러워!"
+    ],
+    "cap_at": [
+     689.62
+    ],
+    "span": [
+     689.62,
+     690.58
+    ],
+    "orig_en": "I'm so proud of you.",
+    "text": "너무 자랑스러워!",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "너무 자랑스러워!",
+      "span": "너무 자랑스러워!",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N7",
+    "kind": "나레",
+    "fn": "끝(결과)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "꿈 하나로 시작한 엄마가",
+     "결국 샤크까지",
+     "잡았다는데"
+    ],
+    "text": "꿈 하나로 시작한 엄마가 결국 샤크까지 잡았다는데",
+    "tts": "꿈 하나로 시작한 엄마가, 결국 샤크까지 잡았다는데",
+    "emph": [
+     {
+      "cap": "꿈 하나로 시작한 엄마가",
+      "span": "시작한 엄마가",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 빨강→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "결국 샤크까지",
+      "span": "결국 샤크까지",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "잡았다는데",
+      "span": "잡았다는데",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ],
+  "cps_target": 7.8
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "speed": 1.25
+ },
+ "titles": {
+  "line1": "머리에 딸깍 하면",
+  "line2": "보석이 박힌다고?!",
+  "rule": "1줄 노랑·2줄 흰, 끝 '?!' — 벤치 '딸깍 한번에 / 머리카락에 보석이?!'과 3어절 연속 겹침 0, 줄당 ≤12자"
+ },
+ "render": {
+  "gap": 0.03
+ },
+ "facts": {
+  "f1": {
+   "text": "원본 83.94~84.98 'Wow, that was so easy.'(스피치매틱스 enhanced 영어 — 투자자 원음, 이름은 자막에 안 씀) · 화면은 같은 원본 154.9초 블링거를 든 같은 투자자(cover — 83.2~84.5초 이 말 화면도 이 투자자)",
+   "url": "https://www.youtube.com/watch?v=xZZ-uy34x1I&t=83s",
+   "kind": "방송 원음+화면"
+  },
+  "f2": {
+   "text": "원본 43.00~54.32 'Blinger is the styling tool that allows fashionistas of all ages to effortlessly add crystals, pearls, and other gems to their hair without heat…' · 58.60~65.30 'You simply load. Click and bling.' · 화면 65~71 시연",
+   "url": "https://www.youtube.com/watch?v=xZZ-uy34x1I&t=43s",
+   "kind": "방송 원음+화면"
+  },
+  "f3": {
+   "text": "원본 103.70~109.42 'And when you are ready to remove them, you simply brush them out. Bling in, brush out.'",
+   "url": "https://www.youtube.com/watch?v=xZZ-uy34x1I&t=103s",
+   "kind": "방송 원음+화면"
+  },
+  "f4": {
+   "text": "원본 119.06~124.92 'for you gentlemen, you'll notice that there's wigs…' · 152.44~170.36 투자자가 가발에 직접 해 봄 'Amazing.' 'You did it!' · 화면 156~170",
+   "url": "https://www.youtube.com/watch?v=xZZ-uy34x1I&t=152s",
+   "kind": "방송 원음+화면"
+  },
+  "f5": {
+   "text": "원본 31.44~34.60 'The idea for my invention came to me one night in a dream.' · 220.14~243.14 'what if we sell the house…' 'I sold the house.'",
+   "url": "https://www.youtube.com/watch?v=xZZ-uy34x1I&t=220s",
+   "kind": "방송 원음+화면"
+  },
+  "f6": {
+   "text": "원본 260.64~285.40 'I scheduled two pitches with two toy companies… licensing deal… royalty… In 2019, they did over $20 million wholesale' · 332.34~340.02 'we had illegal infringers all over the internet… totally knocked off' — 금액은 대본에 안 씀",
+   "url": "https://www.youtube.com/watch?v=xZZ-uy34x1I&t=260s",
+   "kind": "방송 원음"
+  },
+  "f7": {
+   "text": "원본 463.10~478.26 'We don't have a CFO… I really need a bookkeeper' · 502.72~510.16 'what a mess you've got on your hands… I'm out.' · 528.80~531.00 'everything's a mess. And so for those reasons, I'm out.'",
+   "url": "https://www.youtube.com/watch?v=xZZ-uy34x1I&t=463s",
+   "kind": "방송 원음+화면"
+  },
+  "f8": {
+   "text": "원본 531.20~533.56 'Wait a minute. I'm going to give you an offer right now.' · 596~598 띠 'Barbara's offer' · 684.10~685.54 'All right, let's do a deal, then.' · 689.62~690.58 'I'm so proud of you.' — 금액·지분은 대본에 안 씀",
+   "url": "https://www.youtube.com/watch?v=xZZ-uy34x1I&t=531s",
+   "kind": "방송 원음+화면"
+  }
+ }
+}
