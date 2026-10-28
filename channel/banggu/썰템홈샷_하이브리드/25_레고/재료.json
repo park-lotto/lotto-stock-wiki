@@ -1,0 +1,427 @@
+{
+ "_note": "25 레고 — 훅·앞 = 레고 공식 「The LEGO Story」 qr_dTySMl7s(애니메이션, qr_a = 0~36초 사본·qr_dTySMl7s = 71.75초부터 사본) · 레고 아이디어 하우스 전시(Zusammengebaut 9aSeWc6YXJ0, 워터마크 자르기 밖) · 뒤 = 쿠팡 7708749458 사진 + 같은 10698 언박싱·조립(BrickHow iP4QoGUxeqU 손만, ip_a = 0~87초 사본·iP4QoGUxeqU = 87.04초부터 사본, 제목 글자 구간 안 씀)",
+ "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/25_레고/src",
+ "shots": [
+  {
+   "src": "qr_a.mp4",
+   "ss": 4.5,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "qr_a.mp4",
+     "ss": 4.5,
+     "dur": 1.9,
+     "fit": "cover",
+     "src_crop": [
+      900,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "qr_a.mp4",
+     "ss": 11.9,
+     "dur": 1.19,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_speedmouth.mp4",
+     "ss": 0.1,
+     "dur": 1.2,
+     "fit": "cover",
+     "src_crop": [
+      285,
+      0,
+      545,
+      720
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "레고 공식 「The LEGO Story」: 빨간 브릭을 집는 손 → 브릭으로 지은 빨간 집 → 입 막고 놀라는 짤",
+   "why": "훅 '블록 장난감 레고, 그 이름이 덴마크 말 잘 놀아라의 줄임말이래요'",
+   "full": true
+  },
+  {
+   "src": "qr_dTySMl7s.mp4",
+   "ss": 21.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "qr_dTySMl7s.mp4",
+     "ss": 21.0,
+     "dur": 2.1,
+     "fit": "cover",
+     "src_crop": [
+      740,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "qr_dTySMl7s.mp4",
+     "ss": 23.25,
+     "dur": 1.02,
+     "fit": "cover",
+     "src_crop": [
+      400,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "레고 공식 애니메이션: 작업장 목수(창업자 올레 키르크) → 대패질하는 손",
+   "why": "'원래는 덴마크의 한 목수가, 불황에 일감이 끊기면서'"
+  },
+  {
+   "src": "qr_dTySMl7s.mp4",
+   "ss": 27.6,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "qr_dTySMl7s.mp4",
+     "ss": 27.6,
+     "dur": 2.2,
+     "fit": "cover",
+     "src_crop": [
+      450,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "9aSeWc6YXJ0.mp4",
+     "ss": 8.5,
+     "dur": 1.43,
+     "fit": "cover",
+     "src_crop": [
+      250,
+      110,
+      560,
+      740
+     ]
+    }
+   ],
+   "ours": "레고 공식 애니메이션: 작업대에서 깎는 나무 장난감 → 레고 아이디어 하우스 전시 나무 끌개 장난감(워터마크 자르기 밖)",
+   "why": "'사다리랑 다리미판에, 나무 장난감까지 만들어 팔았는데'"
+  },
+  {
+   "src": "9aSeWc6YXJ0.mp4",
+   "ss": 1.2,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "9aSeWc6YXJ0.mp4",
+     "ss": 1.2,
+     "dur": 3.53,
+     "fit": "cover",
+     "src_crop": [
+      330,
+      120,
+      727,
+      960
+     ]
+    }
+   ],
+   "ours": "레고 아이디어 하우스 전시 벽 \"Leg godt\" \"Play well\" 글",
+   "why": "'가게 이름을 지을 때, 그 두 낱말 앞 글자를 따서 붙인 거죠'"
+  },
+  {
+   "src": "ip_a.mp4",
+   "ss": 38.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "ip_a.mp4",
+     "ss": 38.0,
+     "dur": 2.2,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "ip_a.mp4",
+     "ss": 46.3,
+     "dur": 1.13,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "10698 상자에서 꺼낸 색색 브릭 봉지 → 분홍 브릭 더미(손만)",
+   "why": "'근데 나중에 알고 보니, 라틴어로는 모은다라는 뜻도 있었대요'"
+  },
+  {
+   "src": "busz.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "busz.mp4",
+     "ss": 0.0,
+     "dur": 1.6,
+     "fit": "cover",
+     "src_crop": [
+      200,
+      120,
+      727,
+      960
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_cruiselaugh.mp4",
+     "ss": 0.1,
+     "dur": 1.56,
+     "fit": "cover",
+     "src_crop": [
+      138,
+      0,
+      363,
+      480
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "전시된 레고 옛 나무 버스(다가감 사본 busz = 9aSeWc6YXJ0 23.6초~) → 웃는 톰 크루즈 짤",
+   "why": "'그땐 블록도 아니었는데, 우연히 딱 맞는 이름이 된 셈이죠'"
+  },
+  {
+   "src": "ip_a.mp4",
+   "ss": 64.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "ip_a.mp4",
+     "ss": 64.0,
+     "dur": 2.0,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_tomscream.mp4",
+     "ss": 0.1,
+     "dur": 1.76,
+     "fit": "cover",
+     "src_crop": [
+      80,
+      0,
+      194,
+      256
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "쏟아 놓은 파란 브릭 더미 → 발을 잡고 비명 지르는 톰 짤(워터마크 자르기 밖)",
+   "why": "'덕분에 지금은 전 세계 거실 바닥에서, 발바닥을 노리고 있죠'"
+  },
+  {
+   "src": "cp_7708749458.jpg",
+   "ss": 0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "cp_7708749458.jpg",
+     "ss": 0,
+     "dur": 1.4,
+     "fit": "cover",
+     "src_crop": [
+      232,
+      100,
+      1136,
+      1500
+     ],
+     "move": "in"
+    },
+    {
+     "src": "ip_a.mp4",
+     "ss": 4.2,
+     "dur": 1.47,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "쿠팡 7708749458 상품 사진(다가감) → 같은 레고 클래식 10698 상자",
+   "why": "B 첫 줄 '쿠팡에서, 레고 클래식 큰'"
+  },
+  {
+   "src": "ip_a.mp4",
+   "ss": 9.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "ip_a.mp4",
+     "ss": 9.0,
+     "dur": 1.24,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "10698 상자를 여는 손",
+   "why": "'상자를 하나 샀는데'"
+  },
+  {
+   "src": "ip_a.mp4",
+   "ss": 42.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "ip_a.mp4",
+     "ss": 42.0,
+     "dur": 1.9,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "ip_a.mp4",
+     "ss": 58.6,
+     "dur": 1.66,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "봉지에서 쏟은 빨간 브릭 → 노랑·주황 브릭",
+   "why": "'색색깔 블록이 가득 들어 있어서, 아무거나 막 만들어 보면 되고'"
+  },
+  {
+   "src": "iP4QoGUxeqU.mp4",
+   "ss": 26.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "iP4QoGUxeqU.mp4",
+     "ss": 26.0,
+     "dur": 1.5,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "iP4QoGUxeqU.mp4",
+     "ss": 95.0,
+     "dur": 1.4,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "10698 브릭으로 성을 끼우는 손 → 분홍 집을 끼우는 손",
+   "why": "'아이랑 바닥에 앉아 같이 조립하다 보니, 이름처럼 진짜'"
+  },
+  {
+   "src": "iP4QoGUxeqU.mp4",
+   "ss": 109.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "iP4QoGUxeqU.mp4",
+     "ss": 109.0,
+     "dur": 1.51,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "다 지은 분홍 집을 돌려 보는 손",
+   "why": "'잘 놀게 되더라고요'"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 0,
+   "dt": 0.0,
+   "db": -2,
+   "why": "훅 시작 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_06.mp3",
+   "line": 0,
+   "dt": 3.09,
+   "db": -3,
+   "why": "입 막는 짤 두둥"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_24.mp3",
+   "line": 5,
+   "dt": 1.6,
+   "db": -3,
+   "why": "톰 크루즈 웃음 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_35.mp3",
+   "line": 6,
+   "dt": 2.0,
+   "db": -4,
+   "why": "톰 비명 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_26.mp3",
+   "line": 7,
+   "dt": 0.0,
+   "db": -2,
+   "why": "뒤 체험 첫 줄 뽀옹"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_28.mp3",
+   "line": 9,
+   "dt": 0.0,
+   "db": -3,
+   "why": "끝 줄 띵"
+  }
+ ]
+}
