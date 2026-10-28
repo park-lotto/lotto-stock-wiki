@@ -1,0 +1,252 @@
+{
+ "_note": "샥탬스토리 하이브리드 24편 Create A Castle 뒤 재료 — 쿠팡의 비슷한 제품(성 모양 모래놀이 몰드)과 같은 꼴 모래성 틀 영상 3편 + B2 방송 투자자. 창 1080x1052. 리뷰어·광고 모델 얼굴 없는 손·틀·모래성 컷만.",
+ "_dur_note": "컷 길이 = 1차 렌더 render_info 의 실제 줄 길이(B1 6.39·B2 6.17·B3 5.05·B4 4.44·B5 4.06)에 맞춰 늘림·줄임 없이(샷 경계 넘음 방지, 98 #177 ④)",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/24편_CreateACastle/src",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "sources": {
+  "Y5OnK-oCjQ0": {
+   "채널": "Healthy Dad Hacks",
+   "url": "https://www.youtube.com/watch?v=Y5OnK-oCjQ0",
+   "제목": "Sand Castle Molds by Back Bay Play review (durable plastic!)",
+   "해상도": "1920x1080",
+   "남의 글자": "0~9초 리뷰어 얼굴·화살표 안 씀 · 쓰는 컷(13~17·31~34)은 손과 틀만"
+  },
+  "ud_SHwbehSc": {
+   "채널": "Kinetic Sand(공식)",
+   "url": "https://www.youtube.com/watch?v=ud_SHwbehSc",
+   "제목": "NEW Deluxe Beach Castle Playset How To | Kinetic Sand",
+   "해상도": "1920x1080",
+   "남의 글자": "12~32·128초 뒤 상자·'Kinetic Sand' 로고·글 구간 안 씀 · 48.5~50·55.5~56.5·97~98·104.5~105 그림 전환 안 씀 · 64.5~65.7 화면 나눔 안 씀"
+  },
+  "pOkjt3cpRtI": {
+   "채널": "Little Day Out",
+   "url": "https://www.youtube.com/watch?v=pOkjt3cpRtI",
+   "제목": "Sandcastle Building Time-lapse Video",
+   "해상도": "1920x1080",
+   "남의 글자": "없음 · 0~19초 사람 전신(멀리) 구간 안 씀"
+  },
+  "WIcEFgXDVsY": {
+   "채널": "Shark Tank Global(공식)",
+   "해상도": "1920x1080",
+   "남의 글자": "434~436·454~456·574~576초 띠 없음"
+  }
+ },
+ "shots": [
+  {
+   "line": "B1",
+   "src": "Y5OnK-oCjQ0.mp4",
+   "ss": 13.2,
+   "dur": 3.6,
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "Healthy Dad Hacks 'Sand Castle Molds by Back Bay Play'(Y5OnK-oCjQ0, 1080p): 분홍 탑 틀을 손에 들어 보임(샷 13.12~16.88, 손만 · 리뷰어 얼굴 나오는 0~9초 안 씀)",
+   "i": 0
+  },
+  {
+   "line": "B1",
+   "src": "Y5OnK-oCjQ0.mp4",
+   "ss": 31.0,
+   "dur": 2.79,
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 영상: 파란 성벽 틀을 손에 들어 보임(샷 30.92~35.24, 손만)",
+   "i": 1
+  },
+  {
+   "line": "B2",
+   "src": "WIcEFgXDVsY.mp4",
+   "ss": 436.05,
+   "dur": 1.75,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "방송(WIcEFgXDVsY): 제안하는 투자자(샷 436.00~438.04 — 434.13~436.00 은 창업자 컷이라 피함, 소리 끔)",
+   "i": 2
+  },
+  {
+   "line": "B2",
+   "src": "WIcEFgXDVsY.mp4",
+   "ss": 454.1,
+   "dur": 2.3,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "방송: 다른 제안을 내미는 투자자(샷 453.79~, 소리 끔)",
+   "i": 3
+  },
+  {
+   "line": "B2",
+   "src": "WIcEFgXDVsY.mp4",
+   "ss": 573.9,
+   "dur": 2.12,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "방송: 성사 뒤 끌어안는 창업자와 투자자(샷 572.14~576.18, 소리 끔)",
+   "i": 4
+  },
+  {
+   "line": "B3",
+   "src": "ud_SHwbehSc.mp4",
+   "ss": 42.5,
+   "dur": 1.6,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "Kinetic Sand 'Deluxe Beach Castle Playset How To'(ud_SHwbehSc, 1080p): 파란 틀에 모래를 꾹꾹 눌러 담는 손(샷 42.46~44.17, 손만)",
+   "i": 5
+  },
+  {
+   "line": "B3",
+   "src": "ud_SHwbehSc.mp4",
+   "ss": 44.2,
+   "dur": 1.55,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 영상: 틀에 모래를 다지는 손(샷 44.17~45.80)",
+   "i": 6
+  },
+  {
+   "line": "B3",
+   "src": "ud_SHwbehSc.mp4",
+   "ss": 50.66,
+   "dur": 1.0,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 영상: 틀을 들어 올리자 선 모래 탑(샷 50.63~51.72)",
+   "i": 7
+  },
+  {
+   "line": "B3",
+   "src": "ud_SHwbehSc.mp4",
+   "ss": 58.25,
+   "dur": 0.9,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 영상: 작은 틀에 모래를 채워 다지는 손(샷 58.22~60.06)",
+   "i": 8
+  },
+  {
+   "line": "B4",
+   "src": "ud_SHwbehSc.mp4",
+   "ss": 65.76,
+   "dur": 1.94,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 영상: 성벽을 이어 다듬는 손(샷 65.73~67.73)",
+   "i": 9
+  },
+  {
+   "line": "B4",
+   "src": "ud_SHwbehSc.mp4",
+   "ss": 67.76,
+   "dur": 1.8,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 영상: 긴 탑 틀을 쏙 들어 올리는 손(샷 67.73~69.61, 바로 앞 컷에서 원본 앞으로 이어짐)",
+   "i": 10
+  },
+  {
+   "line": "B4",
+   "src": "ud_SHwbehSc.mp4",
+   "ss": 103.5,
+   "dur": 0.7,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 영상: 성문이 찍힌 모래성(샷 103.48~104.30 — 104.3 부터 그림 전환이라 그 앞까지)",
+   "i": 11
+  },
+  {
+   "line": "B5",
+   "src": "ud_SHwbehSc.mp4",
+   "ss": 119.4,
+   "dur": 2.2,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 영상: 도구로 모래 탑에 무늬를 새기는 손(샷 118.91~122.62 · 87.5초 탑 컷은 손이 들어오기 전 1.1초 멈춤이라 뺌)",
+   "i": 12
+  },
+  {
+   "line": "B5",
+   "src": "pOkjt3cpRtI.mp4",
+   "ss": 20.0,
+   "dur": 1.86,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "Little Day Out 'Sandcastle Building Time-lapse'(pOkjt3cpRtI, 1080p): 완성된 모래성 근접(샷 19.29~23.02, 사람 없음)",
+   "i": 13
+  }
+ ],
+ "effects": []
+}
