@@ -1248,6 +1248,23 @@
       .worksBox{padding:14px}
       textarea{font-size:16px}   /* iOS는 16px 미만이면 포커스 시 화면을 확대한다 */
       input[type=text]{font-size:16px}
+      /* 관제 276 짓눌림(390px 실측) — tools/mobile_audit.py 가 센다
+         5단계: 제목줄 옆 [크레딧·토글]이 자리를 먹어 '숏템/고품/질 자/막제/거기'로 82px에 갇혔다 → 제목 한 줄, 스위치는 아래 줄
+         8단계: 버튼 4개가 한 줄에 눌려 'AI로/전체/생성' 69px → 두 줄로 나눠 칸마다 140px 이상 */
+      .hbar-row{flex-wrap:wrap}
+      .hbar{flex:1 1 100%}
+      .hright{margin-left:auto}
+      .seoBar{flex-wrap:wrap}
+      .seoBar .btn{flex:1 1 140px;min-height:44px}
+      /* 7단계 등: 위 .tab{flex:1 1 100%} 가 줄 안의 작은 탭(↺ 등, 인라인 min-width:auto — 28곳)까지 줄 폭으로 늘려
+         옆 글자 '🔍 사진 확대'를 16px로 눌렀다 → 작게 쓰라고 적은 탭은 내용 폭(인라인 flex:1 이 있으면 그게 이긴다) */
+      .tab[style*="min-width:auto"]{flex:0 0 auto}
+      /* 1단계 '담은 영상' 머리줄: 오른쪽 안내문이 자리를 먹어 '10개'가 두 줄로 쪼개졌다 → 안내문은 다음 줄로 */
+      .srcStageHead{flex-wrap:wrap}
+      #poolCount{white-space:nowrap}
+      /* 2단계 효과음 단추(▶·바꾸기·✕ 등 106개)는 PC에서 촘촘하게 인라인 min-height:0 — 폰에선 21px라 손가락으로 못 누른다 */
+      .mp-btn[style*="min-height:0"]{min-height:36px!important}
+      .btn-prev,.btn-next{white-space:nowrap}   /* 360px 폰: '← 이전'이 80px에서 두 줄로 꺾였다 */
     }
 
   /* ══════════════════════════════════════════════════════════════
@@ -1761,7 +1778,8 @@
 .sbwrap .sb-th .sb-sec{position:absolute;right:3px;bottom:3px;background:#000a;color:#fff;font-size:10.5px;border-radius:5px;padding:0 4px}
 .sbwrap .sb-th .sb-tg{position:absolute;left:3px;top:3px;display:flex;flex-direction:column;gap:2px}
 .sbwrap .sb-th .sb-tg span{background:#000b;color:#fff;font-size:10px;border-radius:5px;padding:0 4px}
-.sbwrap .sb-grps{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:8px}
+/* min(340px,100%)(관제 276): 360px 폰에서 칸 최소 340px가 묶음을 화면 밖으로 18px 밀었다. PC는 그대로 340px */
+.sbwrap .sb-grps{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(340px,100%),1fr));gap:8px}
 .sbwrap .sb-grp{background:#121a2b;border-radius:11px;padding:8px;border:2px solid transparent}
 .sbwrap .sb-grp.star{border-color:var(--sb-star)}
 .sbwrap .sb-gh b{font-size:14px}.sbwrap .sb-gh span{color:var(--sb-dim);font-size:12px}
@@ -1959,6 +1977,12 @@
       .steps-mini .smk.cur{background:var(--c);color:#fff;padding:0 10px}
       .steps-mini .smk:hover{filter:brightness(1.25)}
       .steps-mini .smt{color:#9aa3b8;font-size:11px;margin-right:2px}
+      /* 폰(관제 276): 단추 10여 개 ≈454px 가 390px 화면 가운데에 고정돼 양끝이 잘려 못 눌렀다 → 화면 폭에 묶고 옆으로 밀게 */
+      @media (max-width:760px){
+        .steps-mini{max-width:calc(100vw - 16px);overflow-x:auto;scrollbar-width:none}
+        .steps-mini::-webkit-scrollbar{display:none}
+        .steps-mini .smk,.steps-mini .smt{flex-shrink:0}
+      }
     </style>
 
     <!-- 1) 제작소: 좌(재료 그리드 ✓토글) · 우(AI PICK/빈 상태) — Task 4 재구성(2026-07-23).
@@ -2678,7 +2702,7 @@
           <label id="thumbIntroWrap" style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;min-height:44px">
             <input type="checkbox" id="thumbIntro" onchange="rememberThumbIntro(this.checked)">
             <span style="font-size:13px">🖼 <b>썸네일을 영상 맨 앞에</b> 넣기
-              <span class="hint" style="margin-left:4px">약 1.2초 표지처럼 보여줍니다</span></span>
+              <span class="hint" style="margin-left:4px">맨 앞에 찰나로 표지를 보여줍니다</span></span>
           </label>
           <div id="finalStatus" class="hint" style="margin-top:10px"></div>
           <!-- 📺 구매링크용 롱폼(2026-10-05 사장님 "완성본 최종 렌더하고 오른쪽에 롱폼으로 렌더를 활성화", 관제 132).
@@ -3317,7 +3341,8 @@ async function loadBuffer(){
   /* ★채널을 **먼저** 물어본다. 화면 확인용 응답(로컬 BUFFER_DEMO=1)인지는 답을 받아야
      알 수 있어서, 작업 유무를 그 전에 따지면 영영 못 온다(실측으로 밟았다). */
   var d = null;
-  try { d = await (await fetch('/api/buffer/channels')).json(); } catch(e){ d = null; }
+  /* job_id를 같이 보내 완성 영상이 없으면 서버가 이유를 돌려준다 — 렌더 전엔 예약 창 대신 안내(관제 274). */
+  try { d = await (await fetch('/api/buffer/channels' + (MIX_JOB ? '?job_id=' + encodeURIComponent(MIX_JOB) : ''))).json(); } catch(e){ d = null; }
   /* 기다리는 사이 복원이 끝나 job이 바뀌었으면, 지금 그린 화면은 옛 job 것이다 → 다시 그린다. */
   if (MIX_JOB && MIX_JOB !== _jobAtCall){ BUF.loadedFor = null; return loadBuffer(); }
   var demo = !!(d && d.demo);
@@ -3818,8 +3843,15 @@ function renderStepsMini(oi){
   }).join('');
   if(!m._io && typeof IntersectionObserver === 'function'){
     const top = document.getElementById('steps');
-    if(top){ m._io = new IntersectionObserver(es=>{ m.hidden = es[0].isIntersecting; }); m._io.observe(top); }
+    if(top){ m._io = new IntersectionObserver(es=>{ m.hidden = es[0].isIntersecting; centerStepsMini(m); }); m._io.observe(top); }
   }
+  centerStepsMini(m);
+}
+// 폰에서 이동줄이 옆으로 밀릴 때(관제 276) 지금 단계를 가운데로 — 안 그러면 7단계가 화면 밖에 있다
+function centerStepsMini(m){
+  if(m.hidden || m.scrollWidth <= m.clientWidth) return;
+  const c = m.querySelector('.smk.cur');
+  if(c) m.scrollLeft = c.offsetLeft - (m.clientWidth - c.offsetWidth) / 2;
 }
 // ── 도크 단계바 끝 ──
 // ★단계가 확정되기 전에는 패널을 그리지 않는다(2026-09-07 사장님 "3단계 새로고침하면
@@ -8229,10 +8261,29 @@ const SYLLABLES_PER_SEC = 5.7;
 const EN_CHARS_PER_SEC = 14.9;
 // 일본어 대본(일본어모드, 관제 248)은 일본어 계수 — 서버 edit_plan._JA_CHARS_PER_SEC(6.8, 2026-10-21 실측)와 짝.
 const JA_CHARS_PER_SEC = 6.8;
+// 중국어(관제 254) — 서버 edit_plan._ZH_CHARS_PER_SEC(4.4, 2026-10-23 중국어 성우 4명 실측)와 짝.
+const ZH_CHARS_PER_SEC = 4.4;
 function isEnglishText(t){ t=String(t||''); return !/[가-힣]/.test(t) && (t.match(/[A-Za-z]{2,}/g)||[]).length>=3; }
 // 서버 script_translate.lang_of 와 같은 규칙: 한글→ko · 가나/한자→ja · 영어 단어 3개+→en · 그 외 ko.
-function langOfText(t){ t=String(t||''); if(/[가-힣]/.test(t)) return 'ko'; if(/[\u3040-\u30ff\u4e00-\u9fff]/.test(t)) return 'ja'; return isEnglishText(t)?'en':'ko'; }
-function lenText(t){ t=t||''; const c=t.replace(/\s/g,'').length; const lg=langOfText(t); const sps=lg==='en'?EN_CHARS_PER_SEC:(lg==='ja'?JA_CHARS_PER_SEC:SYLLABLES_PER_SEC); return `${t.length}자 · 약 ${Math.round(c/sps)}초`; }
+function langOfText(t){ t=String(t||''); if(/[가-힣]/.test(t)) return 'ko'; if(/[\u3040-\u30ff]/.test(t)) return 'ja'; if(/[\u4e00-\u9fff]/.test(t)) return ZH_MARK_RE.test(t)?'zh':'ja'; return isEnglishText(t)?'en':'ko'; }
+// 일본어에선 안 쓰는 간체자·중국어 허사 — 서버 script_translate._ZH_MARK 와 짝(관제 254)
+const ZH_MARK_RE=/[别很把跟你她它这们个吗呢吧么还没给让说过对时为样东车门见长发问题实现买卖单冲热线经级运动开关风饭质钱铁锅绝净脏试谁啥咋哪您俩呀啦嘛哦刷扫挂叠带边头儿该无处变软轻贵听觉认识办场]/;
+// 네 언어 바로 옮기기(관제 254) — 2단계 안 카드·스토리보드가 같은 표를 쓴다. 판단(옮기기·검사)은 서버 /api/script/translate 하나.
+const LANG4=[['ko','🇰🇷','한국어'],['ja','🇯🇵','일본어'],['zh','🇨🇳','중국어'],['en','🌐','영어']];
+const LANG4_NAME={ko:'한국어',ja:'일본어',zh:'중국어',en:'영어'};
+const LANG4_FLAG={ko:'🇰🇷',ja:'🇯🇵',zh:'🇨🇳',en:'🌐'};
+// 지금 언어(cur)를 뺀 나머지 언어 버튼. orig = 원문 언어(그 버튼은 '원문으로 되돌리기'). mk(code,label,title) = 버튼 html.
+// 카드·보드의 지금 언어 — 표시(lang)가 없으면 글자로 판정(중국 쇼츠 원문을 그대로 넣은 대본 = 중국어). 원문 언어 = orig_lang, 없으면 지금 언어.
+function lang4Cur(o, text){ return (o&&o.lang)||langOfText(text)||'ko'; }
+function lang4Orig(o, text){ return (o&&o.orig_lang)||lang4Cur(o, text); }
+function lang4Btns(cur, orig, mk){
+  return LANG4.filter(([c])=>c!==cur).map(([c,f,n])=>{
+    const back=(c===orig && cur!==orig);
+    return mk(c, back?`${f} ${n}로(원문)`:`${f} ${n}로`,
+      back?`${n} 원문으로 되돌립니다`:`모든 줄을 ${n}로 바로 옮깁니다 — 어색한 줄은 칸에서 고치고 확정하면 ${n} 음성·자막이 됩니다${c==='ko'?'':'(일레븐랩스 성우만)'}`);
+  }).join('');
+}
+function lenText(t){ t=t||''; const c=t.replace(/\s/g,'').length; const lg=langOfText(t); const sps=lg==='en'?EN_CHARS_PER_SEC:(lg==='ja'?JA_CHARS_PER_SEC:(lg==='zh'?ZH_CHARS_PER_SEC:SYLLABLES_PER_SEC)); return `${t.length}자 · 약 ${Math.round(c/sps)}초`; }
 // ★2026-07-17 병합 해결: 보이스 트랙의 SYLLABLES_PER_SEC(위)와 작업파일 T3의 가드 제거(아래)를
 // 둘 다 살린다. main 쪽은 saveWork() 앞에 HANDOFF 길이 가드가 붙어 있는데, 그걸 그대로 받으면
 // 영상 없이 대본만 확정한 작업이 다시 저장되지 않는다 — 그게 사장님이 잃어버린 구간이다.
@@ -8895,12 +8946,15 @@ async function openWorksModal(){
   list.innerHTML = works.map(w => {
     const cur = (typeof WORK_ID !== 'undefined' && w.work_id === WORK_ID);
     const title = (w.title && w.title.trim()) ? esc(w.title.trim()) : '제목 없음 (대본 미작성)';
-    const step = (typeof w.step === 'number') ? (w.step+1) : 1;
+    // ★step 은 패널 번호다 — 동그라미 순서(PANEL_TO_ORB)로 바꿔 센다. 완성본을 만든 작업은 '완성'(관제 272)
+    const _n = ORB_TO_PANEL.length;
+    const _o = (typeof w.step === 'number' && PANEL_TO_ORB[w.step] != null) ? PANEL_TO_ORB[w.step] : 0;
+    const step = w.done ? '완성' : ((_o+1)+'/'+_n);
     const when = _wsWhen(w.updated_at);
     return '<div class="wsRow'+(cur?' cur':'')+'" onclick="openWork(\''+esc(w.work_id)+'\')">'
       + '<div class="wsMain"><div class="wsTitle">'+title+(cur?' · <span style="color:var(--accent)">지금 작업</span>':'')+'</div>'
-      + '<div class="wsMeta">'+when+(when?' · ':'')+'단계 '+step+'/8</div></div>'
-      + '<span class="wsBadge">'+step+'/8</span>'
+      + '<div class="wsMeta">'+when+(when?' · ':'')+(w.done?'완성':'단계 '+step)+'</div></div>'
+      + '<span class="wsBadge">'+step+'</span>'
       + ((window.DIALOGUE_ON && w.job_id) ? '<button class="wsDlg" onclick="event.stopPropagation();dlgOpen(\''+esc(w.work_id)+'\',\''+esc((w.title||'').trim().slice(0,30)).replace(/'/g,'')+'\')">🎭 대화형</button>' : '')
       + '<button class="wsDel" onclick="event.stopPropagation();deleteWork(\''+esc(w.work_id)+'\',this)">삭제</button>'
       + '</div>';
@@ -9111,9 +9165,11 @@ async function _restoreWork(workId){
   // 이 트랙은 같은 종류의 구멍에 이미 두 번 데었다(C-1: go만 막고 jump 놓침 / C-3: 재매칭의
   // 끝만 봉인하고 시작 놓침). 세 번째는 없다.
   PREVIEW_STATUS = null; WATCHED_ALL = false; PREVIEW_GATE_PASSED = false;
+  let _jobDone = false;   // 완성본까지 만든 job인가(관제 272) — 아래 단계 복원이 본다
   if(MIX_JOB){
     try{
       const s = await (await fetch('/api/mix/status/'+encodeURIComponent(MIX_JOB))).json();
+      if(s && s.ok) _jobDone = (s.status === 'done');
       if(s && s.ok) PREVIEW_STATUS = s.preview_status || null;
       if(s && s.ok) PREVIEW_GATE_PASSED = !!s.preview_gate_passed;   // 관제 186 — 판단은 서버 _preview_gate_passed
       try{ MIX_FAIL_MSG = (s && s.ok && s.status==='failed') ? (s.error||'원인 미상') : null; }catch(_){}   // 앞 절단 하네스엔 선언부가 없다
@@ -9130,6 +9186,15 @@ async function _restoreWork(workId){
   }
   const st = d.step;
   cur = (typeof st === 'number' && st >= 0 && st < PANEL_COUNT) ? st : 0;
+  // ★완성본까지 만든 작업은 **완성 단계에서** 연다(관제 272, 박선정님 "완성했는데 다시 들어가면 그 단계부터
+  //   다시 시작하래요"). 저장된 step 은 '마지막으로 보던 화면'일 뿐이라, 완성 뒤 1단계를 한 번 들여다보면
+  //   그 뒤로 열 때마다 1단계로 떨어졌다(핫팩 job ce5fb2b89db3: 완성 23:02 → 23:18 step 0 저장).
+  //   완성보다 뒤(SNS 예약)에 있던 사람은 그대로 둔다. 순서는 동그라미 순서(PANEL_TO_ORB)로 본다.
+  //   ★typeof 가드 — 이 함수를 앵커로 잘라 도는 하네스엔 PANEL_BY_KEY·PANEL_TO_ORB 가 없을 수 있다.
+  try{
+    if(_jobDone && typeof PANEL_BY_KEY !== 'undefined' && typeof PANEL_TO_ORB !== 'undefined'
+       && (PANEL_TO_ORB[cur] ?? 0) < PANEL_TO_ORB[PANEL_BY_KEY.final]) cur = PANEL_BY_KEY.final;
+  }catch(e){}
   // ★서버가 기억하는 단계를 따로 붙든다(2026-08-07). 바로 아래 stepLocked 강등이 cur를 0으로
   //   깎는데, 그 0이 다음 saveWork로 서버에 되쓰이면 진행단계가 **영구히 파괴**된다
   //   (사장님 제보 "작업을 옮겨 다니면 계속 1단계로 돌아온다"). _pushWork가 이 값을 보고
@@ -12965,7 +13030,8 @@ function toast(msg){
     t = document.createElement('div'); t.id = 'ssToast';
     t.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:99999;'
       + 'background:var(--panel);color:var(--txt);border:1px solid var(--accent);border-radius:10px;'
-      + 'padding:11px 18px;font-size:14px;box-shadow:0 8px 30px rgba(0,0,0,.4);opacity:0;transition:opacity .2s';
+      + 'padding:11px 18px;font-size:14px;box-shadow:0 8px 30px rgba(0,0,0,.4);opacity:0;transition:opacity .2s;'
+      + 'width:max-content;max-width:90vw;box-sizing:border-box';   // left:50% 라 폰에서 폭이 화면 절반으로 줄었다(관제 276)
     document.body.appendChild(t);
   }
   t.textContent = msg; t.style.opacity = '1';
@@ -18897,7 +18963,8 @@ function s2Cps(){
 }
 // dr(카드)가 영어·일본어모드면 변환 API가 준 그 언어 계수(dr.cps_x, 옛 저장본은 cps_en)로, 아니면 한국어 계수로. 전부 서버 상수(edit_plan.speech_cps).
 function s2SecOf(text, dr){
-  const cps=(dr && (dr.lang==='en'||dr.lang==='ja')) ? (dr.cps_x||dr.cps_en||null) : s2Cps(); if(!cps) return null;
+  const lg=dr?lang4Cur(dr, dr.script||''):'ko';
+  const cps=(lg!=='ko') ? (dr.cps_x||dr.cps_en||({en:EN_CHARS_PER_SEC,ja:JA_CHARS_PER_SEC,zh:ZH_CHARS_PER_SEC})[lg]||null) : s2Cps(); if(!cps) return null;
   const n=String(text||'').replace(/[\s\.,!?~'"]+/g,'').length;   // script_gate.norm과 같은 규칙
   return n ? Math.round(n/cps*10)/10 : 0;
 }
@@ -19031,10 +19098,10 @@ function s2DraftHtml(dr,i){
         <div class="s2-sent-wrap">
           <div class="s2-sent" contenteditable="true" data-ph="${esc(b.role?s2RoleName(b.role).replace(/^\S+\s*/,''):"새 문장")} — 여기에 쓰세요"
                oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}</div>${chk}
-          ${((dr.lang==='en'||dr.lang==='ja')&&b.text_ko)?`<div class="hint" style="margin-top:4px;font-size:12px;opacity:.75">🇰🇷 ${esc(b.text_ko)}</div>`:''}
+          ${(lang4Cur(dr, dr.script||'')!==lang4Orig(dr, dr.script||'')&&b.text_ko)?`<div class="hint" style="margin-top:4px;font-size:12px;opacity:.75">${LANG4_FLAG[lang4Orig(dr, dr.script||'')]||''} ${esc(b.text_ko)}</div>`:''}
         </div>
         <div class="s2-acts">
-          ${(dr.mine||dr.lang==='en'||dr.lang==='ja'||!b.role)?'':`<button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>`}
+          ${(dr.mine||lang4Cur(dr, dr.script||'')!=='ko'||!b.role)?'':`<button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>`}
           <button class="s2-cta${b.cta_mark===true?' on':''}" title="이 줄이 CTA(댓글·링크로 부르는 말)입니다 — 유튜브용 'CTA 잘라낸 영상'이 이 줄 앞에서 끝납니다. 다시 누르면 해제"
             onclick="s2ToggleCta(${i},${j})">📢 CTA</button>
           <button class="s2-del" title="이 줄을 대본에서 아주 뺍니다 — 3단계에서 이 장면 칸도 안 생깁니다"
@@ -19060,12 +19127,7 @@ function s2DraftHtml(dr,i){
     <div class="s2-dhead"><span class="s2-dname">${dr.mine?'✍ 내 대본':(String.fromCharCode(65+i)+'안'+(dr.style_name?(`<span class="sty"> · ${esc(dr.style_name)}</span>`):''))}</span>
       <span id="s2tot-${i}" title="우리 보이스 실측 속도로 환산한 예상 길이 — 릴스 기본은 30초 이내">${s2SecTag(s2DraftSec(dr), 30)}</span>${gate}
       ${dr.dialogue?`<span class="s2-gate pass" title="대화형 — 줄마다 화자를 바꿀 수 있어요">🎭 ${esc(dr.dialogue.label||'대화형')}</span>`:''}${dr.dialogue_error?`<span class="s2-gate fail" title="${esc(dr.dialogue_error)}">🎭 대화형 변환 실패 — 썰 그대로</span>`:''}
-      ${(dr.lang==='en'||dr.lang==='ja')
-        ?`<button class="btn-ghost s2-lang" id="s2lang-${i}" style="min-width:auto;margin-left:auto;padding:4px 10px" onclick="s2ToggleLang(${i},'ko')"
-        title="${dr.lang==='ja'?'일본어':'영어'} 문장을 버리고 한국어 원문으로 되돌립니다">🇰🇷 한국어로</button>`
-        :`<button class="btn-ghost s2-lang" id="s2lang-${i}" style="min-width:auto;margin-left:auto;padding:4px 10px" onclick="s2ToggleLang(${i},'en')"
-        title="이 안의 모든 문장을 영어로 바꿉니다. 어색한 줄은 칸에서 바로 고치고 확정하면 영어 음성·자막이 됩니다">🌐 영어모드</button><button class="btn-ghost s2-lang" id="s2lang-${i}-ja" style="min-width:auto;margin-left:4px;padding:4px 10px" onclick="s2ToggleLang(${i},'ja')"
-        title="이 안의 모든 문장을 일본어로 바꿉니다. 어색한 줄은 칸에서 바로 고치고 확정하면 일본어 음성·자막이 됩니다(일레븐랩스 성우만)">🇯🇵 일본어모드</button>`}</div>
+      <span style="margin-left:auto"></span>${lang4Btns(lang4Cur(dr, dr.script||''), lang4Orig(dr, dr.script||''), (c,l,t)=>`<button class="btn-ghost s2-lang s2lang-${i}" id="s2lang-${i}-${c}" style="min-width:auto;margin-left:4px;padding:4px 10px" onclick="s2ToggleLang(${i},'${c}')" title="${t}">${l}</button>`)}</div>
     ${rows}${fix}
     <div class="s2-dfoot">
       <button class="btn-ghost" style="min-width:auto" title="맨 아래에 칸을 하나 더 만듭니다 — 칸마다 ▲▼로 옮길 수 있어요" onclick="s2AddBeat(${i},s2Beats(S2.drafts[${i}]).length-1)">＋ 칸 추가</button>
@@ -19291,37 +19353,38 @@ async function s2PickTmpl(i,j,k){
 // 이 안의 문장을 그 언어로 갈아끼운다(원문은 text_ko에 보관 → 되돌리기). 사람이 칸에서 고친 뒤 확정하면
 // given_script가 그 언어로 3단계에 간다. 서버 /api/script/translate 는 줄 수가 다르면 거부한다.
 // lang: 'en'|'ja' = 변환, 'ko'(또는 생략하고 이미 외국어 카드) = 한국어 원문으로 되돌리기.
-const S2_LANG_NAME={en:'영어', ja:'일본어'};
+// 원문(처음 언어)은 text_ko 에 보관한다(이름은 옛 저장본 호환 — 원문이 중국어여도 여기). orig_lang = 원문 언어.
+// 옮길 때는 늘 원문에서 옮긴다(일→중처럼 거듭 옮겨 뜻이 흐려지지 않게). 원문 언어 버튼 = 되돌리기.
 async function s2ToggleLang(i, lang){
   const dr=S2.drafts[i]; if(!dr) return;
   const beats=s2Beats(dr); if(!beats.length){ toast('문장이 없어요'); return; }
-  const foreign=(dr.lang==='en'||dr.lang==='ja');
-  if(lang==='ko' || (!lang && foreign)){
+  const _tx=beats.map(b=>b.text||'').join(' '); const orig=lang4Orig(dr,_tx), cur=lang4Cur(dr,_tx);
+  if(!LANG4_NAME[lang]||lang===cur) return;
+  if(lang===orig){
     beats.forEach(b=>{ if(b.text_ko){ b.text=b.text_ko; } delete b.text_ko; });
-    dr.lang='ko'; delete dr.cps_en; delete dr.cps_x; dr.beats=beats; dr.script=beats.map(b=>b.text).filter(Boolean).join(String.fromCharCode(10));
-    s2RenderDrafts(); saveWork(); toast('한국어 원문으로 되돌렸어요'); return;
+    dr.lang=orig; delete dr.cps_en; delete dr.cps_x; dr.beats=beats; dr.script=beats.map(b=>b.text).filter(Boolean).join(String.fromCharCode(10));
+    s2RenderDrafts(); saveWork(); toast(LANG4_NAME[orig]+' 원문으로 되돌렸어요'); return;
   }
-  lang = (lang==='ja') ? 'ja' : 'en';
-  const name=S2_LANG_NAME[lang];
+  const name=LANG4_NAME[lang];
   const src=beats.map(b=>(b.text_ko||b.text||'').trim());
   if(src.some(t=>!t)){ toast('빈 칸이 있어요 — 채우거나 빼고 다시 눌러 주세요'); return; }
-  const btns=[document.getElementById('s2lang-'+i), document.getElementById('s2lang-'+i+'-ja')].filter(Boolean);
-  const btn=document.getElementById(lang==='ja'?('s2lang-'+i+'-ja'):('s2lang-'+i));
+  const btns=[...document.querySelectorAll('.s2lang-'+i)];
+  const btn=document.getElementById('s2lang-'+i+'-'+lang);
   btns.forEach(x=>{ x.disabled=true; });
-  if(btn){ btn.textContent='⏳ '+name+'로 바꾸는 중…'; }
+  if(btn){ btn.textContent='⏳ '+name+'로 옮기는 중…'; }
   try{
     const r=await fetch('/api/script/translate',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({lines:src, lang:lang, product:(S2.materials&&S2.materials.topic_product)||''})});
+      body:JSON.stringify({lines:src, lang:lang, src:orig, product:(S2.materials&&S2.materials.topic_product)||''})});
     const d=await r.json().catch(()=>null);
     if(!r.ok||!d||d.ok===false){ toast('❌ '+((d&&d.error)||'변환 실패')); return; }
     if(!Array.isArray(d.lines)||d.lines.length!==beats.length){ toast('❌ 줄 수가 맞지 않아 적용하지 않았어요'); return; }
     beats.forEach((b,k)=>{ if(!b.text_ko) b.text_ko=src[k]; b.text=d.lines[k]; });
-    dr.lang=lang; dr.cps_x=d.cps||d.cps_en||null; if(lang==='en') dr.cps_en=d.cps_en||d.cps||null; else delete dr.cps_en;
+    dr.orig_lang=orig; dr.lang=lang; dr.cps_x=d.cps||d.cps_en||null; if(lang==='en') dr.cps_en=d.cps_en||d.cps||null; else delete dr.cps_en;
     dr.beats=beats; dr.script=beats.map(b=>b.text).filter(Boolean).join(String.fromCharCode(10));
     s2RenderDrafts(); saveWork();
-    toast((lang==='ja'?'🇯🇵 ':'🌐 ')+name+'로 바꿨어요 — 어색한 줄은 칸에서 고치고 확정하세요(일레븐랩스 성우만 됩니다)');
+    toast(LANG4_FLAG[lang]+' '+name+'로 옮겼어요 — 어색한 줄은 칸에서 고치고 확정하세요'+(lang==='ko'?'':'(일레븐랩스 성우만 됩니다)'));
   }catch(e){ toast('❌ 서버에 연결하지 못했어요'); }
-  finally{ [document.getElementById('s2lang-'+i), document.getElementById('s2lang-'+i+'-ja')].forEach(b2=>{ if(b2){ b2.disabled=false; } }); }
+  finally{ s2RenderDrafts(); }
 }
 // [이대로 쓰기] — 재생성 없이 틀 원문을 그대로 넣는다(옛 동작). 빈칸은 사장님이 손으로 채운다.
 function s2UseTmplRaw(i,j,k){
@@ -19772,28 +19835,28 @@ function sbRowGenAbsorb(name, t){ const G=SB.rowGen||{}; const g=G[name]; if(!g)
 // 🌐 영어모드(관제 029를 스토리보드로, 관제 200) — 줄 문장을 영어로 갈아끼우고 원문은 line_ko 에 둔다(되돌리기).
 //   변환 판단은 서버 /api/script/translate 하나(줄 수 다르면 거부) — 2단계 옛 안 카드 s2ToggleLang 과 같은 길.
 function sbLangBtn(bd){
-  if(bd.lang==='en'||bd.lang==='ja'){
-    return `<button class="sb-btn" id="sbLangBtn" title="${bd.lang==='ja'?'일본어':'영어'} 문장을 버리고 한국어 원문으로 되돌립니다" onclick="sbToggleLang('ko')">🇰🇷 한국어로</button>`; }
-  return `<button class="sb-btn" id="sbLangBtn" title="모든 줄을 영어로 바꿉니다 — 어색한 줄은 칸에서 고치고 확정하세요(일레븐랩스 성우만)" onclick="sbToggleLang('en')">🌐 영어모드</button>`
-    +` <button class="sb-btn" id="sbLangBtnJa" title="모든 줄을 일본어로 바꿉니다 — 어색한 줄은 칸에서 고치고 확정하세요(일레븐랩스 성우만)" onclick="sbToggleLang('ja')">🇯🇵 일본어모드</button>`; }
+  const _tx=(bd.slots||[]).map(sl=>sl.line||'').join(' ');
+  return lang4Btns(lang4Cur(bd,_tx), lang4Orig(bd,_tx), (c,l,t)=>` <button class="sb-btn sbLangBtn" id="sbLangBtn-${c}" title="${t}" onclick="sbToggleLang('${c}')">${l}</button>`); }
+// 원문은 line_ko 에 보관(이름은 옛 저장본 호환), orig_lang = 원문 언어. 옮길 때는 늘 원문에서 — s2ToggleLang 과 같은 규칙.
 async function sbToggleLang(lang){
   const [ek,bd]=sbCur(); if(!bd) return; sbBake(ek,bd);
-  const foreign=(bd.lang==='en'||bd.lang==='ja');
-  if(lang==='ko' || (!lang && foreign)){ bd.slots.forEach(sl=>{ if(sl.line_ko!=null) sl.line=sl.line_ko; delete sl.line_ko; }); bd.lang='ko'; sbRender(); _sbSaveSoon(); toast('한국어 원문으로 되돌렸어요'); return; }
-  lang=(lang==='ja')?'ja':'en'; const name=(lang==='ja')?'일본어':'영어';
-  const rows=bd.slots.map((sl,k)=>[k,String(sl.line||'').trim()]).filter(x=>x[1]);
+  const _tx=bd.slots.map(sl=>sl.line||'').join(' '); const orig=lang4Orig(bd,_tx), cur=lang4Cur(bd,_tx);
+  if(!LANG4_NAME[lang]||lang===cur) return;
+  if(lang===orig){ bd.slots.forEach(sl=>{ if(sl.line_ko!=null) sl.line=sl.line_ko; delete sl.line_ko; }); bd.lang=orig; sbRender(); _sbSaveSoon(); toast(LANG4_NAME[orig]+' 원문으로 되돌렸어요'); return; }
+  const name=LANG4_NAME[lang];
+  const rows=bd.slots.map((sl,k)=>[k,String((sl.line_ko!=null?sl.line_ko:sl.line)||'').trim()]).filter(x=>x[1]);
   if(!rows.length){ toast('문장이 없어요'); return; }
-  ['sbLangBtn','sbLangBtnJa'].forEach(id=>{ const x=document.getElementById(id); if(x) x.disabled=true; });
-  const b=document.getElementById(lang==='ja'?'sbLangBtnJa':'sbLangBtn'); if(b){ b.textContent='⏳ '+name+'로 바꾸는 중…'; }
+  document.querySelectorAll('.sbLangBtn').forEach(x=>{ x.disabled=true; });
+  const b=document.getElementById('sbLangBtn-'+lang); if(b){ b.textContent='⏳ '+name+'로 옮기는 중…'; }
   try{
     const r=await fetch('/api/script/translate',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({lines:rows.map(x=>x[1]), lang:lang, product:(typeof S2!=='undefined'&&S2.materials&&S2.materials.topic_product)||''})});
+      body:JSON.stringify({lines:rows.map(x=>x[1]), lang:lang, src:orig, product:(typeof S2!=='undefined'&&S2.materials&&S2.materials.topic_product)||''})});
     const d=await r.json().catch(()=>null);
     if(!r.ok||!d||d.ok===false){ toast('❌ '+((d&&d.error)||'변환 실패')); return; }
     if(!Array.isArray(d.lines)||d.lines.length!==rows.length){ toast('❌ 줄 수가 맞지 않아 적용하지 않았어요'); return; }
-    rows.forEach(([k,t],m)=>{ bd.slots[k].line_ko=t; bd.slots[k].line=d.lines[m]; });
-    bd.lang=lang; _sbSaveSoon();
-    toast((lang==='ja'?'🇯🇵 ':'🌐 ')+name+'로 바꿨어요 — 어색한 줄은 칸에서 고치고 확정하세요(일레븐랩스 성우만 됩니다)');
+    rows.forEach(([k,t],m)=>{ if(bd.slots[k].line_ko==null) bd.slots[k].line_ko=t; bd.slots[k].line=d.lines[m]; });
+    bd.orig_lang=orig; bd.lang=lang; _sbSaveSoon();
+    toast(LANG4_FLAG[lang]+' '+name+'로 옮겼어요 — 어색한 줄은 칸에서 고치고 확정하세요'+(lang==='ko'?'':'(일레븐랩스 성우만 됩니다)'));
   }catch(e){ toast('❌ 서버에 연결하지 못했어요'); }
   finally{ sbRender(); }
 }

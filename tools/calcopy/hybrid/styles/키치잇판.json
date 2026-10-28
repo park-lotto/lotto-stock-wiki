@@ -1,0 +1,1175 @@
+{
+ "name": "키치잇판",
+ "renderer": "bench",
+ "thumb_card_face": true,
+ "_thumb_card_face": "썸네일 카드 3안 전부 연예인 얼굴(얜샷템 = 연예인 얼굴 규칙 · 렌더 전 관문 ⑥ thumb_rule.card_face_gate, 10-25 메디필 카드 = 제품)",
+ "_note": "얜샷템 하이브리드 — 키치잇(@키치잇) 칼카피 판. 근거 channel/kitchit/{스타일분석.md, 하이브리드_판설계.md, 줄판독/}. 렌더 = render_bench.py(이 파일만 보고 그린다).",
+ "bench": {
+  "ko": "키치잇",
+  "channel": "kitchit",
+  "analysis": "channel/kitchit/스타일분석.md",
+  "design": "channel/kitchit/하이브리드_판설계.md",
+  "line_reads": "channel/kitchit/줄판독",
+  "src_dir": "C:/숏템_칼카피/kitchit/src",
+  "sfx_events": "channel/kitchit/_kal/sfx_events.json",
+  "sfx_key": "kitchit",
+  "why_sfx_events": "채널 자기 신호표(표준 §3-3 A2) — placement.sfx_events_path 는 이미 이 파일을 먼저 읽는다(옛 칸 channel/starpickroom/_tools/결과/sfx_events_rules.json 은 표시만 낡아 있었음, 렌더 동작 같음)"
+ },
+ "voice": {
+  "name": "미나",
+  "voice_id": "kr-mina-expressive",
+  "candidates": [
+   "kr-keleek-stable"
+  ],
+  "why": "벤치 나레 여자 밝은 톤(F0 204~298Hz). 10-19 신호 재측정: 미나 닮음 74개 중 13~52위 — 후보 kr-keleek-stable(3/8편 1위)은 사장님 귀 확인 뒤에만 바꾼다(이 칸 한 곳)"
+ },
+ "cps_target": 6.83,
+ "bgm": {
+  "id": "qiuqiu",
+  "db_below_voice": 9.0,
+  "duck_orig_db": -6.0,
+  "fade_out": 0.4,
+  "why": "벤치 8편 BGM 0초~끝 경쾌·발랄(곡 식별 불가), 원음 줄 −6dB",
+  "candidates": [
+   "otsukare_summer",
+   "passo_bem_solto",
+   "sweets"
+  ],
+  "duck_narr_db": 0.0,
+  "why_02": "candidates = bgm_pick.py recommend 키치잇판(벤치 8편 템포 중앙 154.3 BPM·밝기 754Hz, 거리 0.824/0.838/0.904) — 곡은 사람이 고른다(id 그대로) · duck_narr_db 0 = 나레 덕킹 실측 없음"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 LUFS·TP −1.5 통일(사장님 10-18) · 벤치 −16.0(중앙) — 하이브리드_판설계.md §5"
+ },
+ "length": {
+  "min": 25,
+  "max": 30,
+  "why": "하이브리드 25~28초(앞 원음 12~14 + 뒤 12~14) — 하이브리드_판설계.md §1 · 벤치 단독 10~21초와 다른 점"
+ },
+ "timing": {
+  "gap": 0.06,
+  "tail": 0.15,
+  "why": "벤치 8편 원본 소리 실측(handconst.py kitchit → _kal/손상수_실측.json): gap 0.06 = 줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙 0.06초(n=47, p25 0·p75 0.08 — 경계 ±0.15초 창 안 가장 긴 쉼, 쉼 문턱 = 편별 (말 p50+p5)/2) · tail 0.15 = 마지막 말 소리 끝→영상 끝 편 중앙 0.152초(0.08~0.26, 로컬 위스퍼 마지막 낱말 끝)"
+ },
+ "frame": {
+  "bg": [
+   0,
+   0,
+   0
+  ],
+  "window": [
+   0,
+   420,
+   1080,
+   1080
+  ],
+  "title": [
+   {
+    "font": "Jalnan2.ttf",
+    "px": 79,
+    "ink_top": 164,
+    "shear": 0.2,
+    "color": "#FFFFFF",
+    "hi": "#FF2A2A",
+    "max_w": 1000,
+    "why": "제목 1줄 흰 기울임 Jalnan2 79(§2) · ink_top 164·shear 0.2·max_w = kitchit_frame.json"
+   },
+   {
+    "font": "Jalnan2.ttf",
+    "px": 77,
+    "box": [
+     42,
+     269,
+     1037,
+     399
+    ],
+    "box_color": "#FDE600",
+    "color": "#000000",
+    "max_w": 960,
+    "why": "2줄 노랑 박스 #FDE600 x42~1037 y269~399 + 검정 Jalnan2 77(§2) · max_w = kitchit_frame.json"
+   }
+  ],
+  "logo": {
+   "text": "얜샷템",
+   "font": "Jalnan2.ttf",
+   "px": 43,
+   "x": 75,
+   "y": 435,
+   "rgba": [
+    205,
+    205,
+    205,
+    215
+   ],
+   "stroke": 2,
+   "stroke_rgba": [
+    50,
+    50,
+    50,
+    200
+   ],
+   "why": "창 왼쪽 위 '얜샷템' — 벤치 '키치잇' 자리·크기, 회색+진회색 테두리(§2) · px·x·y·rgba = kitchit_frame.json"
+  },
+  "credit": {
+   "font": "Pretendard-Bold.otf",
+   "px": 46,
+   "color": "#B6B6B6",
+   "ink_top": 1535,
+   "why": "'출처: <원본 채널>' 회색 y1535(§2) · px 46 = kitchit_frame.json"
+  },
+  "flash_sec": 0.1,
+  "why": "하이브리드_판설계.md §2 + channel/kitchit/preset/kitchit_frame.json: 검정 바탕 · 창 1080×1080 y420 · 출처 회색 y1535 · 흰 번쩍 0.1초(나레↔원음, 벤치 BRa 19초·_Wa — §4)"
+ },
+ "caption": {
+  "pack": "kitchit",
+  "pack_default": {
+   "narr.first": "pop",
+   "orig.first": "pop",
+   "narr.rest": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {
+   "cut": "cut",
+   "pop": "pop",
+   "typing": "typing"
+  },
+  "typing_variant": "typing",
+  "typing_cps": 18.2,
+  "chunk_max_chars": 8,
+  "band": [
+   1311,
+   1391
+  ],
+  "why_band": "자막 잉크 가운데 y1351(caption-motions.js kitchit place — 스타일분석 §1 8편 같음) ±40(잉크 높이 미기입) — caption_side 짤·스티커 자리용(fx_target)",
+  "why": "자막팩 kitchit(§3) · band = 자막 잉크 가운데 y1351 ±40(why_band) · chunk_max_chars 8 = 벤치 나레 조각 자수(공백 뺀) p90 8(n=51, 중앙 6·최대 10) · typing_cps 18.2 = 벤치 타이핑 줄 13/135(3편, BRa5 10줄) 글자÷등장 ms 중앙 18.18자/초 — handconst.py kitchit caption.*"
+ },
+ "cuts": {
+  "push_tts": 0.06,
+  "push_orig": 0.03,
+  "transition": {
+   "kinds": {
+    "zoomblur": 0.1,
+    "black": 0.071,
+    "flash": 0.014
+   },
+   "ms": {
+    "zoomblur": 167,
+    "black": 33
+   },
+   "zoomblur": {
+    "zoom": 0.12,
+    "sigma": 0.5,
+    "why": "세기 = 벤치 줌블러 drop(라플라시안 하락) 5회 중앙 0.175(±30% 0.12~0.23, _kal/transition_drop.json)에 맞춤 — 10-25 관제263 박정수 편 같은 경계(6.98초) 실측: sigma 14(옛 상수) 0.701 · 1.0 0.360 · 0.6 0.233 · 0.5 0.223 → 0.5. 줌 0.12 는 옛 상수(창 크기 튐 = 스타일분석 §2, 배율 실측 없음). 주의: 같은 경계 맨 컷도 0.255 라 이 자로는 벤치 줌블러가 컷과 거의 안 갈린다(세기 자 한계)"
+   },
+   "why": "벤치 8편 줄판독 135줄 중 컷이 바뀌는 줄 시작 70곳(cut 57 + 특수 13) — zoomblur 7 · black 5 · flash 1 → 컷 경계당 0.1·0.071·0.014(스타일분석 §3, 5/8편, 13곳 전부 나레 줄 시작·9곳 훅). placement 는 이 비율 × 우리 컷 경계 수로 자리를 정한다(본보기 편에 특수 전환이 없을 때). ms: zoomblur = bench_transition_drop(channel/kitchit/_kal/transition_drop.json) 5회 ms 0·33·167·200·400 중앙 167 · black = '검은 1프레임'(스타일분석 §3) 33. 10-25 관제263: 이 칸이 없어 박정수 편 전환 0개(관문 ⑯ '우리 경계 0개')"
+  },
+  "why": "컷마다 천천히 밀기 줌 3~6%(하이브리드_판설계.md §4) → 나레 0.06·원음 0.03"
+ },
+ "sfx_files": {
+  "ding": "팩01/ding.wav",
+  "whoosh": "팩01/whoosh.wav",
+  "pop": "팩01/pop.wav",
+  "gain_db": -8
+ },
+ "placement": {
+  "rules": {
+   "typing_sticker": {
+    "kind": "heart",
+    "speaker": "orig",
+    "why": "벤치 BRa 원음 타이핑 덩어리 아래 ♥(본보기 편에 ♥ 가 있을 때만)"
+   },
+   "stickers": {
+    "gem": {
+     "lex": [
+      "lux",
+      "price"
+     ],
+     "needs_key": true,
+     "why": "BRa '부내나'·'부내까지 나면' 💎 — 고급·부·값 낱말"
+    },
+    "spark_lines": {
+     "lex": [
+      "excl"
+     ],
+     "needs_key": true
+    },
+    "kk_doodle": {
+     "lex": [
+      "excl"
+     ]
+    }
+   },
+   "sfx": {
+    "kind": "ding",
+    "max": 1,
+    "why": "10-19 신호 재측정: 편당 0~1발, 자막교체 또는 나레→원음 전환 직후(옛 '0초 띵+전환마다 휙' 폐기)"
+   },
+   "flash": {
+    "share": 0.25,
+    "where": "last_switch",
+    "why": "흰 번쩍임 0.1초 = BRa 19초·_Wa(8편 중 2편) 마무리 줄 시작"
+   }
+  },
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/kitchit/줄판독",
+   "n_videos": 8,
+   "slots": {
+    "narr.first": {
+     "n": 16,
+     "enter": {
+      "pop": 0.562,
+      "cut": 0.25,
+      "fade": 0.188
+     },
+     "emph": 0.625
+    },
+    "narr.rest": {
+     "n": 35,
+     "enter": {
+      "pop": 0.571,
+      "fade": 0.2,
+      "cut": 0.171,
+      "typing": 0.057
+     },
+     "emph": 0.657
+    },
+    "orig.first": {
+     "n": 15,
+     "enter": {
+      "pop": 0.4,
+      "cut": 0.4,
+      "fade": 0.2
+     },
+     "emph": 0.467
+    },
+    "orig.rest": {
+     "n": 69,
+     "enter": {
+      "cut": 0.406,
+      "pop": 0.348,
+      "typing": 0.159,
+      "fade": 0.087
+     },
+     "emph": 0.493
+    }
+   },
+   "share": {
+    "emph": 0.875,
+    "typing": 0.375,
+    "sfx": 0.375
+   },
+   "stickers": {
+    "circle_arrow": 0.25,
+    "gem": 0.125,
+    "heart": 0.125,
+    "kk_doodle": 0.125,
+    "other": 0.125,
+    "spark_lines": 0.375
+   },
+   "videos": [
+    {
+     "id": "_Wa4IehA6yE",
+     "n": 17,
+     "slots": {
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "pop": 1,
+        "cut": 1
+       },
+       "emph": 2
+      },
+      "narr.rest": {
+       "n": 2,
+       "enter": {
+        "cut": 1,
+        "pop": 1
+       },
+       "emph": 2
+      },
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "pop": 1,
+        "cut": 1
+       },
+       "emph": 2
+      },
+      "orig.rest": {
+       "n": 11,
+       "enter": {
+        "pop": 6,
+        "cut": 5
+       },
+       "emph": 9
+      }
+     },
+     "stickers": {
+      "kk_doodle": 1
+     },
+     "sticker_lex": {
+      "kk_doodle": {
+       "excl": 1
+      }
+     },
+     "variants": {
+      "기울임": 2,
+      "기타(덩어리 전체 연하늘 #BEFFFC, 주황빛 테두리)": 1,
+      "기타(덩어리 전체 노랑, 주황 테두리·크게)": 1,
+      "기타(덩어리 전체 초록, 주황 테두리)": 1,
+      "기타(덩어리 전체 노랑, 크게)": 1,
+      "기타(덩어리 전체 연보라)": 1,
+      "기타(덩어리 전체 초록)": 1,
+      "기타(덩어리 전체 하늘, 주황 테두리)": 1
+     },
+     "sfx": [],
+     "no_caption": 15
+    },
+    {
+     "id": "BRa5Iv4A3Y8",
+     "n": 21,
+     "slots": {
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "pop": 1,
+        "cut": 1
+       },
+       "emph": 2
+      },
+      "narr.rest": {
+       "n": 5,
+       "enter": {
+        "pop": 2,
+        "cut": 2,
+        "typing": 1
+       },
+       "emph": 5
+      },
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 13,
+       "enter": {
+        "typing": 9,
+        "cut": 3,
+        "pop": 1
+       },
+       "emph": 10
+      }
+     },
+     "stickers": {
+      "spark_lines": 2,
+      "heart": 3,
+      "gem": 3
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "excl": 2
+      },
+      "heart": {
+       "none": 3
+      },
+      "gem": {
+       "lux": 2,
+       "none": 1
+      }
+     },
+     "variants": {
+      "기타(번진 초록 블록이 선명해지며 나옴)": 1,
+      "기타(글자마다 튀어 나옴)": 1,
+      "기울임+라일락 흰빛(색 강조 낱말 없음, 글씨 전체가 연함)": 1,
+      "기타(첫 글자 분홍 번쩍)": 1,
+      "기타(전체 하늘색, 글자마다 튀며 마지막에 하늘 터짐)": 1,
+      "전체 분홍보라": 2,
+      "기타(음절마다 튀어 나옴 '내음' 크게 출렁)": 1,
+      "전체 라일락": 1,
+      "기타(마지막 '나' 작게)": 1,
+      "기타('다 했죠' 반투명에서 선명해짐)": 1
+     },
+     "sfx": [
+      "cap"
+     ],
+     "no_caption": 1
+    },
+    {
+     "id": "cNo91ddBwB8",
+     "n": 16,
+     "slots": {
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "pop": 2
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 2,
+       "enter": {
+        "cut": 2
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "pop": 2
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 10,
+       "enter": {
+        "cut": 6,
+        "pop": 4
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "other": 1
+     },
+     "sticker_lex": {
+      "other": {
+       "ask": 1
+      }
+     },
+     "variants": {},
+     "sfx": [
+      "none"
+     ],
+     "no_caption": 2
+    },
+    {
+     "id": "Cs-Ka_S8nDM",
+     "n": 18,
+     "slots": {
+      "narr.first": {
+       "n": 3,
+       "enter": {
+        "pop": 2,
+        "cut": 1
+       },
+       "emph": 3
+      },
+      "narr.rest": {
+       "n": 1,
+       "enter": {
+        "pop": 1
+       },
+       "emph": 1
+      },
+      "orig.first": {
+       "n": 3,
+       "enter": {
+        "pop": 2,
+        "cut": 1
+       },
+       "emph": 3
+      },
+      "orig.rest": {
+       "n": 11,
+       "enter": {
+        "cut": 5,
+        "pop": 5,
+        "typing": 1
+       },
+       "emph": 8
+      }
+     },
+     "stickers": {
+      "circle_arrow": 1,
+      "spark_lines": 1
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "ask": 1
+      },
+      "spark_lines": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "기울임(약 11° 기울임)": 1,
+      "기울임+분홍 전체색": 1,
+      "기타(글자마다 위로 튀며 기울어 나타남)": 1
+     },
+     "sfx": [],
+     "no_caption": 1
+    },
+    {
+     "id": "Ks5kYYKAUlQ",
+     "n": 13,
+     "slots": {
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "pop": 1,
+        "fade": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 3,
+       "enter": {
+        "fade": 1,
+        "pop": 1,
+        "typing": 1
+       },
+       "emph": 2
+      },
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "fade": 1,
+        "cut": 1
+       },
+       "emph": 2
+      },
+      "orig.rest": {
+       "n": 6,
+       "enter": {
+        "cut": 2,
+        "pop": 2,
+        "fade": 1,
+        "typing": 1
+       },
+       "emph": 3
+      }
+     },
+     "stickers": {
+      "spark_lines": 2
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "ask": 1,
+       "excl": 1
+      }
+     },
+     "variants": {
+      "기타(낱말·글자 단위로 이어 붙음)": 1,
+      "기타(글자 단위로 튀며 이어 붙음, 전체 초록)": 1
+     },
+     "sfx": [],
+     "no_caption": 0
+    },
+    {
+     "id": "Nv99RyxmrfU",
+     "n": 16,
+     "slots": {
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "pop": 1,
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 2,
+       "enter": {
+        "cut": 1,
+        "pop": 1
+       },
+       "emph": 1
+      },
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "pop": 1,
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 10,
+       "enter": {
+        "cut": 5,
+        "pop": 5
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "크게 튀어나옴(만원만 다른 줄보다 1.3배쯤 크고 노랑)": 1
+     },
+     "sfx": [
+      "cap"
+     ],
+     "no_caption": 0
+    },
+    {
+     "id": "oTi41R74WIY",
+     "n": 15,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "pop": 1
+       },
+       "emph": 1
+      },
+      "narr.rest": {
+       "n": 14,
+       "enter": {
+        "pop": 14
+       },
+       "emph": 9
+      }
+     },
+     "stickers": {
+      "circle_arrow": 1
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "기타(덩어리 전체가 분홍 채움)": 1,
+      "기타(덩어리 전체가 연보라 채움)": 1
+     },
+     "sfx": [],
+     "no_caption": 4
+    },
+    {
+     "id": "vSEaZ-BCELY",
+     "n": 19,
+     "slots": {
+      "orig.first": {
+       "n": 3,
+       "enter": {
+        "fade": 2,
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 8,
+       "enter": {
+        "fade": 5,
+        "cut": 2,
+        "pop": 1
+       },
+       "emph": 4
+      },
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "fade": 2
+       },
+       "emph": 2
+      },
+      "narr.rest": {
+       "n": 6,
+       "enter": {
+        "fade": 6
+       },
+       "emph": 3
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "기타(덩어리 전체 분홍)": 4,
+      "기타(덩어리 전체 연보라)": 2
+     },
+     "sfx": [],
+     "no_caption": 2
+    }
+   ]
+  }
+ },
+ "title_form": "1줄 = 인물+대상 느낌표('성시경 신라면 1등 레시피!') / 2줄(노랑 박스) = 반전 질문('면을 따로 비빈다고?') · 2줄 13자 안",
+ "script": {
+  "brief": [
+   "박자(키치잇 8편 + 하이브리드 뒤): N 훅(전언 의문 1줄 '~다네요?/~다고?') → O 원음 증언 → N 질문 1줄('대체 어떻게/어떤 ~길래?') → O 원음 답 → (O 원음 한마디) → 이음 N '저도 보자마자 따라 ~ 봤는데요,' → N 와우·비유 → N 권위 전언('~대요') → N 사회 반응 끝('~난리래요'·'~말 다 했죠').",
+   "나레 줄 5~7줄, 줄당 1.2~4초(6~28자). 앞 12~14초 · 뒤 12~14초 → 전체 25~28초.",
+   "어미: 앞 = 전언 의문('~다네요?'·'~다고?'·'~길래?'), 뒤 = 해요체 전언('~더라고요'·'~대요'·'~래요').",
+   "자막 덩어리(caps) = 2~5어절·12자 안, 덩어리마다 핵심 낱말 하나를 key 로(색칠 여부는 배치 규칙이 정한다). 고급·가격 낱말이 있으면 key 로 — 💎 후보.",
+   "1인칭 체험은 '따라 사 봤는데/따라 해 봤는데' 꼴, 효능·질병 말 금지, 권위자 말은 전언으로만, 연예인이 인정 안 한 것은 인정했다고 안 쓴다, CTA 없음."
+  ],
+  "example": "channel/kitchit/하이브리드_성시경/대본.json",
+  "audit": [
+   {
+    "kind": "first_line",
+    "is": "tts"
+   },
+   {
+    "kind": "count",
+    "of": "tts",
+    "min": 5,
+    "max": 7
+   },
+   {
+    "kind": "count",
+    "of": "orig",
+    "min": 2,
+    "max": 4
+   },
+   {
+    "kind": "tts_chars",
+    "min": 6,
+    "max": 30
+   },
+   {
+    "kind": "ending",
+    "which": "first_tts",
+    "pattern": "(다네요|다고|길래|래요|라는데|다는데)\\s*[?？.]*$",
+    "why": "훅 = 전언 의문"
+   },
+   {
+    "kind": "has_line",
+    "of": "tts",
+    "pattern": "(대체|어떻게|뭐길래|어떤|왜).*\\?",
+    "min": 1,
+    "why": "나레 질문 줄"
+   },
+   {
+    "kind": "has_line",
+    "of": "tts",
+    "pattern": "따라 (사|해|끓여|발라|입어|써) 봤",
+    "min": 1,
+    "why": "이음 '따라 ~ 봤는데'"
+   },
+   {
+    "kind": "ending",
+    "which": "last_tts",
+    "pattern": "(난리|필수템|말 다 했죠|사이에서|품절|대세|인기).*$",
+    "why": "끝 = 사회 반응"
+   },
+   {
+    "kind": "cap_chars",
+    "max": 12
+   },
+   {
+    "kind": "est_length",
+    "min": 25,
+    "max": 30
+   }
+  ]
+ },
+ "_pending": {
+  "transition_counted": "반영됨 10-25 관제263 → cuts.transition(분모 = 컷 경계 70곳 — 줄 135 분모 0.039 는 '같은 컷 안 자막 교체' 줄까지 세어 우리 컷 경계에 곱하면 반으로 줄었다)"
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "kitchit",
+   "gap": [
+    "벤치 등장 ['fade'](줄 5% 이상) 팩 'kitchit' 에 없음 → 팩요청.md 키치잇판#1"
+   ],
+   "rank": [
+    {
+     "pack": "kitchit",
+     "d": 0.212,
+     "terms": {
+      "px": 0.68,
+      "fill": 0.08,
+      "stroke": 0.27,
+      "y": 0.03,
+      "font": 0.0
+     }
+    },
+    {
+     "pack": "goodletter",
+     "d": 0.526,
+     "terms": {
+      "px": 0.13,
+      "fill": 0.15,
+      "stroke": 0.17,
+      "y": 0.68,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "recipe",
+     "d": 0.806,
+     "terms": {
+      "px": 0.1,
+      "fill": 0.08,
+      "stroke": 0.53,
+      "y": 1.82,
+      "font": 1.5
+     }
+    }
+   ],
+   "from": "벤치 8편 135줄 실측 [글꼴 Jalnan2(스타일분석 §1) · 나레 51줄[잉크 높이 78px(51줄 y칸) · 자리 y1352 · 채움 #FFFFFF(43줄) · 테 7px] · 원음 83줄[잉크 높이 78px(83줄 y칸) · 자리 y1352 · 채움 #FFFEFF(72줄) · 테 7px]] → 1위 kitchit(거리 0.212) · 지금 kitchit(거리 0.212, 순위 1)",
+   "enter_cover": {
+    "pop": {
+     "share": 0.43,
+     "n": 58,
+     "item": "overPop"
+    },
+    "cut": {
+     "share": 0.326,
+     "n": 44,
+     "item": "정지(팩 불필요)"
+    },
+    "fade": {
+     "share": 0.141,
+     "n": 19,
+     "item": null
+    },
+    "typing": {
+     "share": 0.096,
+     "n": 13,
+     "item": "typeFlash"
+    },
+    "기타": {
+     "share": 0.007,
+     "n": 1,
+     "item": null
+    }
+   }
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — 판 자막팩이 등장까지 정한다(caption-motions.js motionPlan: 팩 motion 이 효과팩 번호보다 이긴다) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": "팩01",
+   "map": {
+    "ding": "띠링",
+    "whoosh": "휙",
+    "pop": "뽁"
+   },
+   "gain_db": -8,
+   "ncc": {
+    "measured": true,
+    "hits": 35,
+    "pack_hits": 23,
+    "ge06": 0,
+    "max": 0.525,
+    "max_file": "팩02/tick.wav",
+    "mine_max": 0.496
+   },
+   "from": "NCC 벤치↔팩 파일 23발 중 ≥0.6 0개(최대 0.525 팩02/tick.wav) → 지문으로 고를 수 없어 종류 이름표로 slot: ding→띠링 · 팩 팩01",
+   "gap": []
+  },
+  "bgm": {
+   "id": "qiuqiu",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)",
+   "candidates": [
+    "otsukare_summer",
+    "passo_bem_solto",
+    "sweets"
+   ]
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
+  }
+ },
+ "_why_cps_target": "미나(일레븐랩스) 서비스 배속 고정 1.35(narr_align.fixed_tempo) — 이 칸은 배속을 못 바꾸고 대본 길이 어림(script_audit)·B3 목표로만 쓰이므로 값 = 이 판으로 낸 미나 실측: 6.83자/초(flowtest real20_gimi 9a584318 키치잇판 렌더 timeline 나레 7줄 133자/19.47초, 줄별 6.55~7.25) · 참고 벤치 나레 자/초 중앙 9.2(8편 7.9~10.2, handconst.py kitchit cps_target) — 미나 고정 배속으로는 벤치 말속도에 못 닿음(목소리 칸 몫)",
+ "rhythm": {
+  "cut_median": {
+   "v": 1.15,
+   "why": "벤치 8편 원본 컷 길이 중앙(kal_analyze.media_of = 관문·재현과 같은 자, C:/숏템_칼카피/kitchit/src/_bench_media_cache.json) 편별 1.37·1.0·0.98·1.0·0.83·1.7·1.3·1.97 → 중앙 1.15(범위 0.83~1.97). 10-25 페이블 눈검수 E1: 박정수 편 3.33초. 렌더 전 관문 render_bench.rhythm_gate 가 진짜 컷(다른 장면) 중앙이 ×1.3 을 넘으면 멈춘다 — 재료.json 에 다른 장면 컷을 더해 맞춘다 · E(10-26 사장님 '벤치가 못 넘는 문턱은 너무 빡빡 → 벤치 실측 범위'): max 1.97 = 벤치 가장 느린 편(편별 값 위) — 상한 = max(v×1.3, max)(styles.rhythm_bounds), 빠른 쪽은 그대로",
+   "max": 1.97
+  },
+  "hook_cuts_3s": {
+   "min": 1,
+   "why": "벤치 8편 원본 0.1~3.0초 안 컷 경계 수(bench_one.measure 컷 = media_of 와 같은 자): _Wa 2·BRa 4·cNo 2·Cs-Ka 3·Ks5k 3·Nv99 2·oTi 2·vSEa 1 → 중앙 2 · p25 2. 10-25 페이블 E2: 박정수 편 0(0~3.34초 한 컷). 1.5초 안은 중앙 2(0~3) · 렌더 전 관문 render_bench.rhythm_gate · E(10-26 사장님 '벤치가 못 넘는 문턱은 너무 빡빡 → 벤치 실측 범위'): min 2→1 = 벤치 가장 적은 편 vSEa 1(2면 벤치 1편이 못 넘음) · 박정수 0 은 그대로 걸림"
+  },
+  "plain_share": {
+   "v": 0.163,
+   "tol": 0.1,
+   "why": "벤치 8편 줄판독 덩어리 135개 중 꾸밈 없는 것(kal_analyze._decorated 의 등장 효과·강조·스티커·변형 모두 없음 = placement._is_deco 와 같은 칸) 22개 = 0.163(편별 0~0.5, 중앙 0.108). 허용 ±0.1 = 편별 중앙과 모은 값 차(0.055)의 두 배 남짓. 10-25 페이블 E4: 박정수 편 0/25 · E(10-26 사장님 '벤치가 못 넘는 문턱은 너무 빡빡 → 벤치 실측 범위'): range 0~0.5 = 벤치 편별 최소~최대(위) — 합격 = v±tol 또는 range 안",
+   "range": [
+    0.0,
+    0.5
+   ]
+  },
+  "photo_share_max": {
+   "v": 0.16,
+   "why": "벤치 8편 줄판독 scene/scene_desc '사진·화보' 줄 초 ÷ 길이 = BRa 0.222·Cs-Ka 0·Ks5k 0.279·Nv99 0.14·_Wa 0.027·cNo 0.046·oTi 0·vSEa 0.041 → p75 0.16(중앙 0.044). 벤치 정지 화면은 전부 연예인 화보 — 쇼핑몰 상품 사진 0/8(페이블 눈검수 E1). 우리 그림 파일(jpg·png) 컷 초 ÷ 길이가 이걸 넘으면 계획에서 멈춘다(render_bench.photo_gate). 박정수 편 0.27"
+  }
+ },
+ "deco": {
+  "_why": "벤치 10편 실측(tools/calcopy/hybrid/deco.py measure → _kal/꾸밈실측.json — 줄판독 8편 + 꾸밈_추가판독 2편). core = 벤치 편 50% 넘게 쓰는 종류(매 편 횟수 범위 안), accent = 나머지(편마다 accent_min 가지 이상, 최근 편과 같은 소리 글자·문구·조합 금지). core 횟수 = 벤치 10초당 중앙 × 우리 길이 27.5초 / 10 의 ×0.5~×1.5",
+  "made_by": "tools/calcopy/hybrid/deco.py board <판> (measure → board_deco — 기계 산출, 숫자 근거 = _kal/꾸밈실측.json)",
+  "length_s": 27.5,
+  "kinds": {
+   "word_color": {
+    "need": "core",
+    "min": 8,
+    "max": 24,
+    "drawn": true,
+    "bench_videos": "9/10",
+    "per_10s": 5.721,
+    "roles": [
+     "증거",
+     "끝",
+     "훅",
+     "공개"
+    ],
+    "shape": [
+     "기본",
+     "#00FD0B",
+     "#17FFF1",
+     "#15FF17"
+    ],
+    "how": "emph(낱말 1개, 팩 5색 돌림)"
+   },
+   "multi_color": {
+    "need": "accent",
+    "min": 0,
+    "max": 1,
+    "drawn": true,
+    "bench_videos": "3/10",
+    "per_10s": 0.0,
+    "roles": [
+     "훅",
+     "공개"
+    ],
+    "shape": [
+     "기울임",
+     "연분홍(측정 안 됨)",
+     "#17FFF1",
+     "기본"
+    ],
+    "how": "emph(낱말 2개+ 각자 색 — 어절 단위)"
+   },
+   "chunk_color": {
+    "need": "core",
+    "min": 3,
+    "max": 8,
+    "drawn": true,
+    "bench_videos": "8/10",
+    "per_10s": 1.935,
+    "roles": [
+     "증거",
+     "본문",
+     "훅",
+     "답"
+    ],
+    "shape": [
+     "기타(덩어리 전체 초록)",
+     "기타(덩어리 전체 분홍)",
+     "#00FD0B",
+     "#F7D3EF"
+    ],
+    "how": "emph(덩어리 전체 낱말, 색 하나)"
+   },
+   "big": {
+    "need": "accent",
+    "min": 0,
+    "max": 2,
+    "drawn": false,
+    "bench_videos": "5/10",
+    "per_10s": 0.238,
+    "roles": [
+     "증거",
+     "본문",
+     "공개",
+     "가격"
+    ],
+    "shape": [
+     "#F2FF0E",
+     "기타(덩어리 전체 노랑, 주황 테두리·크게)",
+     "기타(덩어리 전체 노랑, 크게)",
+     "기타(음절마다 튀어 나옴 '내음' 크게 출렁)"
+    ],
+    "how": null
+   },
+   "hand_big": {
+    "need": "accent",
+    "min": 0,
+    "max": 1,
+    "drawn": false,
+    "bench_videos": "1/10",
+    "per_10s": 0.0,
+    "roles": [
+     "가격"
+    ],
+    "shape": [
+     "손글씨 크게(얇은 붓 손글씨 검정 + 흰 테, 창 폭 거의 전체 ~100"
+    ],
+    "how": null
+   },
+   "tilt": {
+    "need": "accent",
+    "min": 0,
+    "max": 3,
+    "drawn": false,
+    "bench_videos": "3/10",
+    "per_10s": 0.0,
+    "roles": [
+     "증거",
+     "훅",
+     "답"
+    ],
+    "shape": [
+     "#17FFF1",
+     "기울임",
+     "연분홍(측정 안 됨)",
+     "#15FF12"
+    ],
+    "how": null
+   },
+   "letter_pop": {
+    "need": "accent",
+    "min": 0,
+    "max": 3,
+    "drawn": false,
+    "bench_videos": "3/10",
+    "per_10s": 0.0,
+    "roles": [
+     "증거",
+     "본문",
+     "질문",
+     "답"
+    ],
+    "shape": [
+     "#15FF17",
+     "기타(글자마다 튀어 나옴)",
+     "#ED3259",
+     "기타(전체 하늘색, 글자마다 튀며 마지막에 하늘 터짐)"
+    ],
+    "how": null
+   },
+   "sound_word": {
+    "need": "accent",
+    "min": 0,
+    "max": 1,
+    "drawn": true,
+    "bench_videos": "1/10",
+    "per_10s": 0.0,
+    "roles": [
+     "증거"
+    ],
+    "shape": [
+     "작게 튀어나와 약 0.13초(4프레임)에 큰 크기, 흰 손글씨 'ㅋㅋㅋ' 자막 왼쪽 위, "
+    ],
+    "how": "스티커 sound_word(편집기 renderStickers — 빨강 BMJUA 고정)"
+   },
+   "circle_arrow": {
+    "need": "accent",
+    "min": 0,
+    "max": 1,
+    "drawn": true,
+    "bench_videos": "2/10",
+    "per_10s": 0.0,
+    "roles": [
+     "훅"
+    ],
+    "shape": [
+     "뜯기 box 기준(원 x382~654 y1027~1330, 화살표 x242~370 y893",
+     "첫 프레임부터 있음(등장 곡선 못 봄) — 가방 둘레 빨간 원 + 흰 화살표"
+    ],
+    "how": "스티커 circle_arrow(fx_target.aim 좌표 — 빨강 고정)"
+   },
+   "spark_lines": {
+    "need": "accent",
+    "min": 0,
+    "max": 2,
+    "drawn": true,
+    "bench_videos": "3/10",
+    "per_10s": 0.0,
+    "roles": [
+     "증거",
+     "질문",
+     "답"
+    ],
+    "shape": [
+     "흰 짧은 선 2~3개 + 흰 점이 '찐' 오른쪽 위에서 번쩍(격자 4.2 눈대중)",
+     "흰 짧은 선 3개 '\\ | /' 이(10.1)·오른쪽 아래 2~3개(10.2~10.3)+흰",
+     "흰 짧은 선 3개 + 점, 글 오른쪽 위에서 번쩍(격자 5.2 눈대중)",
+     "흰 짧은 선 3개 + 흰 점, 글 오른쪽에서 번쩍(격자 9.8 눈대중)"
+    ],
+    "how": "스티커 spark_lines"
+   },
+   "gem": {
+    "need": "accent",
+    "min": 0,
+    "max": 3,
+    "drawn": true,
+    "bench_videos": "1/10",
+    "per_10s": 0.0,
+    "roles": [
+     "끝",
+     "본문"
+    ],
+    "shape": [
+     "튀어나온 뒤 흰 반짝임 쓸고 감, 글 오른쪽 위",
+     "글 왼쪽 앞, 튀어나옴+흰 반짝임",
+     "왼쪽 아래로 미끄러지며 사라짐"
+    ],
+    "how": "스티커 gem"
+   },
+   "heart": {
+    "need": "accent",
+    "min": 0,
+    "max": 3,
+    "drawn": true,
+    "bench_videos": "1/10",
+    "per_10s": 0.0,
+    "roles": [
+     "고조",
+     "본문"
+    ],
+    "shape": [
+     "첫 글자 아래 분홍 하트",
+     "흰 테두리 빈 하트, 글 끝 오른쪽 아래",
+     "마지막 친 글자 아래에서 따라 움직이다 다 치면 사라짐(스타일분석과 같음)"
+    ],
+    "how": "스티커 heart(타이핑 덩어리)"
+   },
+   "comment_card": {
+    "need": "accent",
+    "min": 0,
+    "max": 1,
+    "drawn": true,
+    "bench_videos": "1/10",
+    "per_10s": 0.0,
+    "roles": [
+     "반전"
+    ],
+    "shape": [
+     "유튜브 댓글 카드 흰 상자(창 왼쪽 위) — 컷인"
+    ],
+    "how": "스티커 comment_card"
+   },
+   "photo": {
+    "need": "core",
+    "min": 2,
+    "max": 5,
+    "drawn": true,
+    "bench_videos": "7/10",
+    "per_10s": 1.29,
+    "roles": [
+     "훅",
+     "질문",
+     "끝",
+     "공개"
+    ],
+    "shape": [],
+    "how": "재료.json 그림 컷(본인 출처 — 02 원본찾기)"
+   }
+  },
+  "accent_min": 2,
+  "accent_max": 6,
+  "_why_accent": "편마다 포인트 종류 수(벤치 편별 [4, 6, 0, 4, 2, 1, 2, 0, 1, 4]) 중앙 2 · 최대 6 — 그리지 못하는 ['big', 'hand_big', 'tilt', 'letter_pop'] 는 벤치에 있어도 고를 수 없다(편집기 주인 몫으로 보고)",
+  "photo": {
+   "own_share_max": 0.279,
+   "hook_share": 0.5,
+   "why": "벤치 본인 사진(화보·방송 사진) 줄 초 ÷ 길이 편별 최대 0.279 · 중앙 0.066 · 5/10편이 첫 1초 안에 사진(훅). 쿠팡·상품 사진 상한은 따로 rhythm.photo_share_max(본인 사진 own_ 은 그 셈에서 뺀다)"
+  },
+  "repeat_n": 5,
+  "_why_repeat": "작업기록(channel/작업기록.jsonl deco 칸) 최근 5편과 같은 소리 글자·손글씨 글·여러 색 덩어리 글·같은 포인트 조합을 다시 쓰지 않는다(사장님 10-25 '같은 걸 반복하지 말고 응용·발전')"
+ }
+}

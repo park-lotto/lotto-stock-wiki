@@ -133,7 +133,7 @@ def main():
         assert r.status_code == 422, "%s모드에서 타입캐스트가 막히지 않았다" % label
         assert ("%s모드" % label) in err, ("차단 문구에 언어 이름이 없다", err)
     pid = _pid(el)
-    r = S.post(BASE + "/api/mix/voice", json={"job_id": jid, "preset_id": pid, "speed": 1.0}, timeout=60)
+    r = S.post(BASE + "/api/mix/voice", json={"job_id": jid, "preset_id": pid}, timeout=60)
     d = r.json(); assert r.ok and d.get("ok"), ("voice", r.status_code, d)
     print("③-b 일레븐", el.get("name"), pid, "→ 음성 생성 중")
     _poll(S, jid, ("ready_for_review",))

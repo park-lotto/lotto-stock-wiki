@@ -176,21 +176,23 @@
   "voice_target": {
    "gender": "남",
    "f0_hz": 157,
-   "chars_per_s_total": 8.8
+   "chars_per_s_total": 8.8,
+   "_note": "10-26 판 목소리 = 진우(make.voice_id). f0 157Hz 는 벤치 남성 나레 실측"
   },
   "length_target_s": {
-   "median": 27.1,
+   "median": 26.3,
    "allow": [
-    23.0,
-    31.2
-   ]
+    25.0,
+    30.0
+   ],
+   "why": "벤치 6편 media_of 중앙 26.27 · 사장님 규칙서 25~30초"
   },
   "loudness": {
    "I": -13.4,
    "TP_max": -0.5
   },
   "bgm": "none",
-  "bgm_why": "사장님 10-17: 재미썸홈 배경음 금지(원본 이븐쇼핑은 BGM 있음 — 의도된 차이). 나레 + sfx_pack 효과음만",
+  "bgm_why": "벤치 6편 BGM 0/6(channel/evenshopping/스타일분석.md §7 — 쉼 구간 바닥이 말보다 30~39dB 낮고 조성 줄 없음, 10-25 실측). 사장님 10-17 '재미썸홈 배경음 금지'와 같은 방향 — 옛 문구 '원본은 BGM 있음'은 10-17 50편 제미니 판독이 틀린 것",
   "cut_rules": "사장님 10-17: 이야기 한 묶음 = 한 인물·한 영상 줄기(인물은 이야기가 바뀔 때만) · 같은 묶음 이웃 자막 조각은 한 컷으로 이음 · 컷 중앙 ≥0.93초·최소 0.6초 · 마지막 묶음 컷 ≥1.2초, 끝 컷(제품) ≥1.5초",
   "make": {
    "_why": "tools/calcopy/engine/preset_make.py(한 명령 제작기)가 읽는 값 — 작품1 render.py 두 벌에 흩어져 있던 값을 여기 한 곳으로(관제 097, 10-17). 코드에 채널 이름 분기 없음",
@@ -203,14 +205,14 @@
     "kind": "template"
    },
    "hook": "first_line",
-   "voice_id": "tc_68257f68bc6e3c161ab5078d",
-   "voice_name": "필재",
-   "tts_tempo": 1.6,
-   "tts_tempo_why": "페이블 10-17: 1.4 → 숫자 많은 대본 원속도 약 7자/초(atempo 1.24~1.26) — 1.6으로 atempo ≈1.1 목표(다음 작품부터, 작품2~5 는 1.4 캐시로 제작)",
+   "voice_id": "tc_632293f759d649937b97f323",
+   "voice_name": "진우",
+   "tts_tempo": 1.25,
+   "tts_tempo_why": "사장님 10-26: 진우 tempo 1.25(작품6 dbf7b241c·작품7 fa0f2cf05 '진우 tempo 1.25'). 옛 필재 1.6 값은 버림",
    "cps": 8.8,
    "atempo_range": [
     0.8,
-    1.27
+    1.25
    ],
    "line_rate": {
     "max_ratio": 1.05,
@@ -227,10 +229,27 @@
     "density": "low",
     "level": "normal",
     "role_of_slot": {
-     "solve": "limit",
-     "more2": "more"
+     "title": "more",
+     "bait": "more",
+     "reveal": "more",
+     "solve": "more",
+     "more": "more",
+     "more2": "more",
+     "twist": "more",
+     "land": "more",
+     "고조": "more",
+     "반전": "more",
+     "증거": "more",
+     "본문": "more",
+     "다리": "more",
+     "공개": "more",
+     "끝": "more"
     },
-    "why": "sfx_pack.events 호출만 · 칸 역할 = 스파인 칸('이게 말도 안 되는 게'=limit) · density low = 칸 첫 줄만(사장님 수정3)"
+    "why": "벤치 '띵만 1~4발': 모든 칸 역할 → more(결과 무리 = 칸 첫 자막 고정 소리 ding, sfx_pack.GROUP_SOUNDS) · density low(칸 첫 자막만) · ring_every 3(세 칸에 한 칸만 → 8줄이면 2~3발) · mute_first(첫 칸 오프너 끔) · pack_override 1(팩01 ding). sfx_pack.events 부르기만",
+    "_bench": "벤치 6편 효과음 = '띵'(4.3kHz+5.8kHz 순음, 0.28~1.08초) 편당 1~4발 17발, 13/17 자막 교체 직후 0.06초 안 · 휙·뽁·둥·오프너 0(스타일분석 §7, tools/calcopy/engine/readline_tools/tone.py). 지금 판(팩21 density low)은 칸 첫 줄마다 휙·둥·뽁 + 오프너 → 벤치와 다름. 맞추려면 preset_make 가 팩 고르기(pack_override, 팩01 ding = 4.6k·5.7k·4.3k 가장 가까움)·첫 칸 소리 끄기(mute_first)를 읽어야 한다 — 잇썸홈 담당(preset_make 주인)에게 요청(10-26)",
+    "pack_override": 1,
+    "mute_first": true,
+    "ring_every": 3
    },
    "meme_dir": "C:/숏템_칼카피/packs/meme/meme_pack",
    "master": {
@@ -244,10 +263,10 @@
    "checks": {
     "length_s": {
      "allow": [
-      23.02,
-      32.83
+      25.0,
+      30.0
      ],
-     "from": "bench_main/bench.json 채널 50편 길이 p10~p90(B1, 페이블 10-17: 중앙 ±15% 대신)"
+     "from": "사장님 10-25 규칙서 '영상 길이 목표 25~30초'(channel/evenshopping/preset/숏템템플릿/규칙서.md) · 벤치 조회 상위 6편 같은 자(kal_analyze.media_of) 25.9·26.05·26.22·26.32·36.33·36.72 → 중앙 26.27(옛 값 23.02~32.83 = bench_main 50편 p10~p90)"
     },
     "lufs": {
      "allow": [
@@ -288,28 +307,40 @@
     "at": ",",
     "why": "페이블 10-17 재발방지: 공백 뺀 35자 넘는 문장은 쉼표 자리에서 나눠 따로 넣는다(알람 끝 문장 53자를 4.2초에 몰아 읽음)"
    },
-   "atempo_range_why": "페이블 10-17: 필재 tempo 1.4 원속도 약 7자/초(숫자 많은 대본) → 상한 1.27"
+   "atempo_range_why": "사장님 10-26 '배속 상한 1.25'(handoff 10-26·작품6~8 대본 voice.why) — 넘으면 상한을 올리지 말고 대본을 줄인다(칼카피_시작 §12 빠른 배속 발음 확인)",
+   "voice_why": "사장님 10-26 결정(handoff 10-26 새벽 관문 창): 재미썸홈 목소리 = 타입캐스트 진우(Jinwoo, docs/typecast/voices_dump.json), 작품6~8 에서 쓰던 값. 필재 금지(칼카피_시작 §12 — 빠르면 발음이 뭉개짐)",
+   "rhythm": {
+    "_why": "판 리듬 4칸(관제263 10-25 페이블 E1·E2·E4, 읽기 주인 tools/calcopy/hybrid/styles.rhythm · 관문 render_bench.rhythm_gate·photo_gate — preset_gates.to_bench 가 이 칸을 st.rhythm 으로 넘긴다). 값 = 벤치 이븐쇼핑 조회 상위 6편을 관문·재현과 같은 자(kal_analyze.media_of = bench_one.measure 컷)로 잰 것(10-26, scratchpad bench_diff/media.json)",
+    "cut_median": {
+     "v": 1.12,
+     "why": "벤치 6편 원본 컷 길이 중앙(media_of): ABj 1.04·LHe 2.02·tca 1.2·kC8 0.62·1kf 1.99·Y2Y 0.8 → 중앙 1.12(범위 0.62~2.02). 우리 작품7~12 판(o7~o12) 0.93~1.6. rhythm_gate 는 진짜 컷 중앙이 ×1.3(1.46초)을 넘으면 멈춘다"
+    },
+    "hook_cuts_3s": {
+     "min": 1,
+     "why": "벤치 6편 0.1~3.0초 안 컷 경계 수(media_of cut_at): ABj 1·LHe 1·tca 1·kC8 3·1kf 1·Y2Y 1 → 중앙 1 · 첫 컷 1.48~2.02초(훅 제목 틀 → 본문 틀). 우리 작품7~9 판 0(첫 컷 3.37~3.83초)"
+    },
+    "plain_share": {
+     "v": 0.886,
+     "tol": 0.06,
+     "why": "벤치 6편 줄판독 185덩어리 중 꾸밈 없는 것 164 = 0.886(channel/evenshopping/스타일분석.md §1·규칙 채택 표 — 꾸밈 21줄 = 효과음 17 + 스티커 5, 겹침 1). 강조 낱말 색 0/185 · 등장 instant 185/185"
+    },
+    "photo_share_max": {
+     "v": 0.0,
+     "why": "벤치 6편 정지 사진 컷 0(스타일분석 §3 '정지 사진 컷 없음' — 증거 카드 4장은 손 영상 위에 0.8~2초 얹힘). 사장님 10-25 작품6 실사고('일시품절' 캡처·멈춤 8구간) — 쿠팡 사진 컷 금지"
+    }
+   }
   }
  },
  "voice_proposal": [
   {
    "rank": 1,
-   "preset_id": "tc-piljae-stable",
-   "name": "필재",
+   "preset_id": "tc-jinwoo",
+   "name": "진우",
    "engine": "typecast",
-   "voice_id": "tc_68257f68bc6e3c161ab5078d",
-   "f0_hz": 141.6,
-   "why": "타입캐스트(담당 규칙상 허용 엔진) 남성 중 f0 원본(157)과 가장 가까움, 내 팩 1번 기본 성우"
-  },
-  {
-   "rank": 2,
-   "preset_id": "fs-doyun-stable",
-   "name": "도윤",
-   "engine": "fish",
-   "voice_id": "f5ce3e1771d44d6eae3749a1be49117b",
-   "f0_hz": 150.2,
-   "why": "우리 성우 중 f0 최근접(Δ−7Hz), '또렷하고 설득력 있는 남성'. 피시 엔진 사용 여부는 페이블 판단"
+   "voice_id": "tc_632293f759d649937b97f323",
+   "why": "사장님 10-26 확정(재미썸홈 = 진우 tempo 1.25, 배속 ≤1.25)"
   }
  ],
- "voice_proposal_method": "shopping_shorts/assets/voice_samples/*-stable.mp3 f0 실측(같은 자기상관 방법, 호출 없음)"
+ "voice_proposal_method": "shopping_shorts/assets/voice_samples/*-stable.mp3 f0 실측(같은 자기상관 방법, 호출 없음)",
+ "voice_proposal_note": "옛 1순위 필재(tc_68257f68…)는 사장님 10-20 금지 — 판 어디에도 쓰지 않는다(칼카피_시작 §12)"
 }

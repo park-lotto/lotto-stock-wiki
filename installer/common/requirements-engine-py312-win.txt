@@ -100,3 +100,10 @@ websockets==16.1.1 \
     --hash=sha256:b436f6ec4fc3a6b4237c84d3f83170ed2b40bb584222f0ac47a0c8a5921980c7
 yt-dlp==2026.8.19 \
     --hash=sha256:1d57897e94c6665a0a6f9bc54b34e584284e32c034ffab3a7df25d8f7b24eedf
+# 렌즈·쿠팡 크롬 검색(회원 PC 에 깔린 크롬 — channel="chrome", 브라우저는 안 받는다) — 사장님 10-21 재정비
+greenlet==3.5.6 \
+    --hash=sha256:7ac4abb3877c43af320392c664774eef6fa2cc063c79a55fc02d844a3cbe7395
+playwright==1.58.0 \
+    --hash=sha256:a2bf639d0ce33b3ba38de777e08697b0d8f3dc07ab6802e4ac53fb65e3907af8
+pyee==13.0.1 \
+    --hash=sha256:af2f8fede4171ef667dfded53f96e2ed0d6e6bd7ee3bb46437f77e3b57689228

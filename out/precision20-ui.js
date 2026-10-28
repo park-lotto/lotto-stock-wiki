@@ -566,7 +566,7 @@
   if(colorRow)colorRow.innerHTML='<label class="swatch"> <input type="color" data-color-role="white" value="#ffffff"><span>흰색</span></label><label class="swatch"><input type="color" data-color-role="accent" value="#ffe600"><span>강조</span></label><label class="swatch"><input type="color" data-color-role="background" value="#211f19"><span>배경</span></label>';
   const motionPanel=document.createElement('section');
   motionPanel.className='hook-motion';
-  motionPanel.innerHTML='<div class="hook-motion-head"><b>훅 시선집중 모션</b><small>첫 장면에만 적용</small></div><div class="hook-motion-grid"><button type="button" class="active" data-hook-motion="zoom-punch">줌 펀치</button><button type="button" data-hook-motion="pop">팝업</button><button type="button" data-hook-motion="slide">슬라이드</button><button type="button" data-hook-motion="flash">플래시</button><button type="button" data-hook-motion="push-in">천천히 확대</button><button type="button" data-hook-motion="shake">떨림</button></div><div class="hook-speed hook-band-motion"><span>흰 띠</span><button type="button" data-hook-band-motion="">없음</button><button type="button" data-hook-band-motion="rise">스윽 올라오기</button><button type="button" data-hook-band-motion="grow">천천히 확대</button></div><div class="hook-speed"><span>속도</span><button type="button" data-hook-speed="1.35">느림</button><button type="button" data-hook-speed="1">보통</button><button type="button" class="active" data-hook-speed="0.72">빠름</button></div>';
+  motionPanel.innerHTML='<div class="hook-motion-head"><b>훅 시선집중 모션</b><small>첫 장면에만 적용</small></div><div class="hook-motion-grid"><button type="button" class="active" data-hook-motion="zoom-punch">줌 펀치</button><button type="button" data-hook-motion="pop">팝업</button><button type="button" data-hook-motion="slide">슬라이드</button><button type="button" data-hook-motion="flash">플래시</button><button type="button" data-hook-motion="push-in">천천히 확대</button><button type="button" data-hook-motion="shake">떨림</button><button type="button" data-hook-motion="none">없음</button></div><div class="hook-speed hook-band-motion"><span>흰 띠</span><button type="button" data-hook-band-motion="">없음</button><button type="button" data-hook-band-motion="rise">스윽 올라오기</button><button type="button" data-hook-band-motion="grow">천천히 확대</button></div><div class="hook-speed"><span>속도</span><button type="button" data-hook-speed="1.35">느림</button><button type="button" data-hook-speed="1">보통</button><button type="button" class="active" data-hook-speed="0.72">빠름</button></div>';
   const scopeBar=document.createElement('section');scopeBar.className='hook-motion edit-scope';
   scopeBar.innerHTML='<div class="hook-motion-head"><small>자막·제목·채널명의 글자 크기·위치·자막박스가 이 범위로 저장됩니다</small></div><div class="hook-motion-grid" style="grid-template-columns:1fr 1fr"><button type="button" data-edit-scope="all" class="active">모든 장면</button><button type="button" data-edit-scope="one">이 장면만</button></div>';
   scopeBar.addEventListener('click',event=>{const b=event.target.closest('[data-edit-scope]');if(!b)return;editScope=b.dataset.editScope;scopeBar.querySelectorAll('[data-edit-scope]').forEach(x=>x.classList.toggle('active',x===b));});
@@ -899,7 +899,7 @@
     if(hookMotion==='rise'){hookMotion='zoom-punch';hookBandMotion='rise';}   // 잠깐 있던 단독 'rise' 저장값은 조합형으로 옮긴다
     motionPanel.querySelectorAll('[data-hook-band-motion]').forEach(b=>b.classList.toggle('active',b.dataset.hookBandMotion===hookBandMotion));
     const bandLabel=motionPanel.querySelector('.hook-band-motion > span');if(bandLabel)bandLabel.textContent=mode==='continuous'?'자막 등장':'흰 띠';
-    motionPanel.querySelector('.hook-motion-head small').textContent=(hookMotion==='zoom-punch'?'화면 전체 확대 · 짧은 흔들림':hookMotion==='push-in'?'화면 전체가 천천히 확대':hookMotion==='shake'?'화면 전체가 훅 내내 잘게 떨림':'제목에만 적용')+(hookBandMotion==='rise'?' + 흰 띠 스윽':hookBandMotion==='grow'?' + 흰 띠 확대':'');
+    motionPanel.querySelector('.hook-motion-head small').textContent=(hookMotion==='none'?'첫 장면 모션 없음':hookMotion==='zoom-punch'?'화면 전체 확대 · 짧은 흔들림':hookMotion==='push-in'?'화면 전체가 천천히 확대':hookMotion==='shake'?'화면 전체가 훅 내내 잘게 떨림':'제목에만 적용')+(hookBandMotion==='rise'?' + 흰 띠 스윽':hookBandMotion==='grow'?' + 흰 띠 확대':'');
   }
   const minimumFixedTop=frame=>Math.min(46,Math.max(12,Math.ceil((Math.max(0,...(frame?.lines||[]).filter(line=>line.bind!=='caption').map(line=>line.y1))+2)/(frame?.height||1)*100)));
   // 썰쇼핑형은 글자를 안 줄이므로 원래 칸의 85%보다 좁히면 줄끼리 겹친다.
@@ -1053,6 +1053,8 @@
         if(seeking){animation.pause();animation.currentTime=options.time;}else animation.finished.then(()=>animation.cancel()).catch(()=>{});
       }
       return Math.max(total,duration);
+    }else if(hookMotion==='none'){
+      // 없음(관제 262, 강병주 회원 10-24 "훅모션에서 없음 옵션도") — 첫 장면 화면·제목 모션을 안 건다(흰 띠 효과는 따로 고른 대로)
     }else if(hookMotion==='pop'){
       texts.forEach((el,index)=>play(el,[{opacity:0,transform:'scale(.25)'},{opacity:1,transform:'scale(1.14)',offset:.68},{opacity:1,transform:'scale(1)'}],{...timing,duration:time(520),delay:time(index*90)}));
     }else if(hookMotion==='slide'){

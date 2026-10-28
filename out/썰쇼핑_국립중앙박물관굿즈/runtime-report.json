@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "scope": "work_directory",
+  "snapshot_validity": "requires_current_ledger_read",
+  "authoritative_reader": "runtime_metrics.report(workdir)",
+  "first_started_at": 1792827058.8028567,
+  "last_observed_at": 1792827125.4963613,
+  "elapsed_seconds": 66.693505,
+  "active_seconds": 66.693505,
+  "clock_discontinuity": false,
+  "unfinished_spans": 0,
+  "measurement_complete": true,
+  "spans": {
+    "drive": {
+      "completed": 0,
+      "failed": 1,
+      "waiting": 0,
+      "unfinished": 0,
+      "seconds": 66.693503
+    },
+    "mcp": {
+      "completed": 3,
+      "failed": 1,
+      "waiting": 0,
+      "unfinished": 0,
+      "seconds": 14.767237
+    },
+    "execute": {
+      "completed": 3,
+      "failed": 0,
+      "waiting": 0,
+      "unfinished": 0,
+      "seconds": 48.036766
+    }
+  },
+  "stages": {
+    "drive:env": {
+      "completed": 0,
+      "failed": 1,
+      "waiting": 0,
+      "unfinished": 0,
+      "seconds": 66.693503
+    },
+    "mcp:env": {
+      "completed": 2,
+      "failed": 0,
+      "waiting": 0,
+      "unfinished": 0,
+      "seconds": 8.500412
+    },
+    "execute:env": {
+      "completed": 2,
+      "failed": 0,
+      "waiting": 0,
+      "unfinished": 0,
+      "seconds": 1.961681
+    },
+    "mcp:sseol_seed": {
+      "completed": 1,
+      "failed": 0,
+      "waiting": 0,
+      "unfinished": 0,
+      "seconds": 3.681293
+    },
+    "execute:sseol_seed": {
+      "completed": 1,
+      "failed": 0,
+      "waiting": 0,
+      "unfinished": 0,
+      "seconds": 46.075085
+    },
+    "mcp:sseol_make": {
+      "completed": 0,
+      "failed": 1,
+      "waiting": 0,
+      "unfinished": 0,
+      "seconds": 2.585532
+    }
+  },
+  "operations": {},
+  "records": [
+    {
+      "id": 1,
+      "kind": "drive",
+      "stage": "env",
+      "started": 1792827058.8028567,
+      "ended": 1792827125.4963613,
+      "seconds": 66.6935028,
+      "outcome": "failed",
+      "unit": null
+    },
+    {
+      "id": 2,
+      "kind": "mcp",
+      "stage": "env",
+      "started": 1792827058.8326101,
+      "ended": 1792827064.6106954,
+      "seconds": 5.7780847,
+      "outcome": "completed",
+      "unit": null
+    },
+    {
+      "id": 3,
+      "kind": "execute",
+      "stage": "env",
+      "started": 1792827064.6262567,
+      "ended": 1792827066.5878077,
+      "seconds": 1.9615518,
+      "outcome": "completed",
+      "unit": null
+    },
+    {
+      "id": 4,
+      "kind": "mcp",
+      "stage": "env",
+      "started": 1792827066.6509557,
+      "ended": 1792827069.373284,
+      "seconds": 2.7223278,
+      "outcome": "completed",
+      "unit": null
+    },
+    {
+      "id": 5,
+      "kind": "execute",
+      "stage": "env",
+      "started": 1792827069.3891652,
+      "ended": 1792827069.3892946,
+      "seconds": 0.0001291,
+      "outcome": "completed",
+      "unit": null
+    },
+    {
+      "id": 6,
+      "kind": "mcp",
+      "stage": "sseol_seed",
+      "started": 1792827069.4374583,
+      "ended": 1792827073.1187513,
+      "seconds": 3.6812928,
+      "outcome": "completed",
+      "unit": null
+    },
+    {
+      "id": 7,
+      "kind": "execute",
+      "stage": "sseol_seed",
+      "started": 1792827073.1404204,
+      "ended": 1792827119.2155058,
+      "seconds": 46.0750852,
+      "outcome": "completed",
+      "unit": null
+    },
+    {
+      "id": 8,
+      "kind": "mcp",
+      "stage": "sseol_make",
+      "started": 1792827119.267593,
+      "ended": 1792827121.853125,
+      "seconds": 2.5855318,
+      "outcome": "failed",
+      "unit": null
+    }
+  ],
+  "provider_responses": [],
+  "billing": {
+    "status": "not_measured",
+    "actual_total": null,
+    "currency": null
+  },
+  "coverage": {
+    "timing": "explicit driver, execute and component spans since instrumentation; work directory cumulative; nested seconds overlap",
+    "operations": "explicitly instrumented operations only; submitted is not confirmed billed",
+    "provider_responses": "per HTTP attempt through response JSON parsing (or transport failure); excludes reservations, retry sleep and observation; concurrent durations overlap and are not added to wall time; returned IDs/codes/token counts are not confirmed billing",
+    "excluded": [
+      "host model usage and billing",
+      "provider invoices",
+      "work before instrumentation"
+    ],
+    "quality": "timing completion is not audiovisual quality approval"
+  }
+}

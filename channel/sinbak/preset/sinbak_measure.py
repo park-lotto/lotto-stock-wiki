@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# _deprecated_2026-10-25 → tools/calcopy/hybrid/styles/신박판.json (관제 263 지시서 07 · 표준 §3-1: 새 편은 공용 렌더러로. 읽기 전용 참고물 — 설명서 프리셋 생성기는 회원 옛 길이 결과를 읽으므로 지우지 않는다)
 """신박발견(sinbak) 프리셋 손질 근거 실측 — 원본 1080×1920 프레임 픽셀로 잰다(눈대중 금지). sinbak_preset.py 머리 주석의 출처.
     PYTHONUTF8=1 py channel/sinbak/preset/sinbak_measure.py      → C:/숏템_칼카피/sinbak/work/preset/{measure.json, font_*.png}
 

@@ -129,8 +129,8 @@ def words_from_alignment(alignment):
     # ★일본어는 띄어쓰기가 없다 — 공백으로 끊으면 문장 통째가 단어 1개가 되어 첫 자막 구절이 전체 시간을
     #   독식한다(2026-10-21 관제 248). 일본어면 **글자 하나 = 단어 하나**(공백·문장부호는 경계로만 쓰고 버린다).
     #   언어 판정·건너뛸 글자 집합은 script_translate 한 곳(lang_of·_TOKEN_SKIP — caption_tokens 와 같은 집합).
-    from shopping_shorts.script_translate import lang_of, _TOKEN_SKIP
-    if lang_of("".join(c for c in chars[:n] if isinstance(c, str))) == "ja":
+    from shopping_shorts.script_translate import lang_of, _TOKEN_SKIP, is_char_lang
+    if is_char_lang(lang_of("".join(c for c in chars[:n] if isinstance(c, str)))):   # 일본어·중국어
         out = []
         for i in range(n):
             ch = chars[i]

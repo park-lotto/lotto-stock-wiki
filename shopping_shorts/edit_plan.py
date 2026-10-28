@@ -1629,6 +1629,10 @@ _EN_RAW_CHARS_PER_SEC = 18.0    # 공백 **포함**(raw) — narr_secs(len(text)
 #   norm 97자 → 6.76, raw 106자 → 7.39 (페이블 실측, 음성 Rachel 21m00…). 영어와 같이 norm/raw 두 기준.
 _JA_CHARS_PER_SEC = 6.8         # 공백·문장부호 **제외**(norm) — 화면 s2SecOf 용(produce.html JA_CHARS_PER_SEC 와 짝)
 _JA_RAW_CHARS_PER_SEC = 7.4     # len(text)(raw) — narr_secs 용
+# 중국어(관제 254, 2026-10-23 실측): 라이브 중국어 성우 4명 × 12줄 TTS 중앙 norm 4.35 · raw 4.85자/초
+#   (원어민 쇼츠 내레이션 4편 4.2~6.5자/초와 같은 대) — produce.html ZH_CHARS_PER_SEC 와 짝
+_ZH_CHARS_PER_SEC = 4.4
+_ZH_RAW_CHARS_PER_SEC = 4.9
 
 
 def speech_cps(text=None, lang=None, norm=False):
@@ -1637,6 +1641,7 @@ def speech_cps(text=None, lang=None, norm=False):
     lang="ko" → _SYLLABLES_PER_SEC × _speech_speed() (종전 값 그대로, norm 무시)
     lang="en" → norm=True(공백·문장부호 제외 글자수로 나눌 때) _EN_CHARS_PER_SEC · norm=False(len(text)) _EN_RAW_CHARS_PER_SEC
     lang="ja" → norm=True _JA_CHARS_PER_SEC · norm=False _JA_RAW_CHARS_PER_SEC (2026-10-21 관제 248)
+    lang="zh" → norm=True _ZH_CHARS_PER_SEC · norm=False _ZH_RAW_CHARS_PER_SEC (2026-10-23 관제 254)
     lang이 없으면 text로 판정한다(script_translate.lang_of — 언어 판정의 유일한 주인)."""
     if lang is None and text:
         try:
@@ -1646,6 +1651,8 @@ def speech_cps(text=None, lang=None, norm=False):
             lang = "ko"
     if lang == "ja":
         return float(_JA_CHARS_PER_SEC if norm else _JA_RAW_CHARS_PER_SEC)
+    if lang == "zh":
+        return float(_ZH_CHARS_PER_SEC if norm else _ZH_RAW_CHARS_PER_SEC)
     if lang == "en":
         return float(_EN_CHARS_PER_SEC if norm else _EN_RAW_CHARS_PER_SEC)
     return _SYLLABLES_PER_SEC * _speech_speed()
