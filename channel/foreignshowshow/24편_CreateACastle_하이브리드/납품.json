@@ -1,0 +1,10 @@
+[
+ {
+  "at": "2026-10-28 09:38:23",
+  "dest": "G:\\내 드라이브\\칼카피영상\\2번 샥템스토리_987\\하이브리드\\24_create_a_castle_1028_0938.mp4",
+  "md5": "a7651b58848b09bd1821b530db261b67",
+  "final": "C:\\숏템_칼카피\\foreignshowshow\\하이브리드\\24편_CreateACastle\\work\\hybrid\\final.mp4",
+  "renderer": "tools/calcopy/shark/hybrid.py + channel/foreignshowshow/하이브리드/final_tail.py(소리=영상 길이·끝 페이드·TP)",
+  "gate": null
+ }
+]
