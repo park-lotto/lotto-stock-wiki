@@ -1806,8 +1806,9 @@ CUT_RULES = [
 
 def _other_faces(st) -> bool:
     """(판단 주인 — 원본 밖 재료의 사람 얼굴을 반려하나) 연예인형·해외원본형 = 예(98 #38 고현정 편: 광고 모델 얼굴이 '출처: 고현정' 아래 나가 연예인으로 보임).
-    쇼핑형 = 아니오(10-27 사장님 '영상 안에 사람이 등장하는 거 괜찮은데 왜 반려 · 제품·대본과 상관없는 건 당연히 안 되지만' — 그건 장면 검수가 대사 대조로 본다)."""
-    return _fmt(st) != "쇼핑형"
+    쇼핑형 = 아니오(10-27 사장님 '영상 안에 사람이 등장하는 거 괜찮은데 왜 반려 · 제품·대본과 상관없는 건 당연히 안 되지만' — 그건 장면 검수가 대사 대조로 본다).
+    해외원본형 = 아니오(10-27 사장님 '제품 쓰는 장면이면 허용' — 받아 온 제품 영상의 리뷰어 얼굴로 장면 반려 7번·멈춤, oInEkACMS5s). 연예인형만 반려."""
+    return _fmt(st) not in ("쇼핑형", "해외원본형")
 
 
 FACE_RULE = "원본 밖 재료 영상은 사람 얼굴이 안 나오는 제품 장면만(리뷰어·광고 모델 금지 — 다른 사람이 주인공으로 보인다)"
@@ -2881,7 +2882,7 @@ def f_of_find_got(st, m, rp, u):
         return {"goto": "of_find"}
     have = [o["id"] for o in st.get("origins") or []]
     return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "find", "urls": urls, "queries": qs, "n": 10, "bench_id": (st.get("bench") or {}).get("id"),
-                    "skip": have + [(st.get("bench") or {}).get("id")]}], "then": "of_got"}
+                    "skip": have + [(st.get("bench") or {}).get("id")] + list(st.get("skip_ids") or [])}], "then": "of_got"}
 
 
 def f_of_fetch(st, m, rp, u):
@@ -2987,6 +2988,14 @@ def f_of_verify_got(st, m, rp, u):
     if bad:
         st.setdefault("of_verify_drop", []).extend(bad)
     if not keep:
+        if not st["tries"].get("of_verify_refind"):     # 앞 판정이 틀렸다는 걸 알았으니 그 이유를 들고 직접 찾기 한 바퀴 더(10-27 gialHTQxXE0: 바로 멈췄다)
+            st["tries"]["of_verify_refind"] = 1
+            st["tries"].pop("of_verify", None)          # 다시 받은 원본도 실제 장면으로 확인
+            st["origins"] = []
+            st.setdefault("skip_ids", []).extend(bad)
+            st["of_find_why"] = "앞에서 고른 원본이 실제 장면 확인에서 다른 사람이었다: " + str(a.get("why") or "")[:300]
+            st["log"].append("원본 확인 탈락 → 직접 찾기 한 바퀴 더")
+            return {"goto": "of_find"}
         raise _Stop("받은 원본이 소재와 같은 영상이 아니었어요", "다시 시도해 주시면 원본을 한 번 더 찾아볼게요", retry="of_find", ask_member=True,
                     origin_missing=True, detail=f"원본 확인 다름: {bad}")
     if not any("같은" in str(o.get("how") or "") and "다른" not in str(o.get("how") or "") for o in keep):

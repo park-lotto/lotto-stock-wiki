@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+/* 숏클 엔진 실제 실행 기록(flow_log.jsonl, 2026-10-27 16:38:31~16:45:58) 재생 화면 — 1600x900 녹화용 */
+:root{--bg:#0B0C0E;--panel:#121316;--line:#26292d;--ink:#F4F4F6;--body:#C9CACD;--mute:#7d7f84;--red:#FF5757;--ok:#59D499;--gold:#FFC533;--blue:#57C1FF}
+*{box-sizing:border-box;margin:0}
+html{zoom:1.2}html,body{width:1600px;height:900px;overflow:hidden;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans KR',sans-serif}
+.top{height:74px;display:flex;align-items:center;gap:18px;padding:0 28px;border-bottom:1px solid var(--line)}
+.stripe{position:absolute;left:0;top:0;width:100%;height:6px;background:repeating-linear-gradient(-55deg,#FF5757 0 24px,#A1131A 24px 48px)}
+.brand{font-weight:700;font-size:28px}.brand span{color:var(--red)}
+.badge{font:700 17px 'JetBrains Mono',monospace;color:var(--gold);border:1px solid #4a3d12;background:#1d1708;padding:6px 10px;border-radius:6px}
+.clock{margin-left:auto;font:700 32px 'JetBrains Mono',monospace;color:var(--ink)}
+.clock small{font-size:17px;color:var(--mute);margin-right:10px}
+.wrap{display:grid;grid-template-columns:920px 1fr;gap:20px;padding:20px 28px;height:770px}
+.term{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.tbar{height:44px;display:flex;align-items:center;gap:8px;padding:0 16px;border-bottom:1px solid var(--line);font:17px 'JetBrains Mono',monospace;color:var(--mute)}
+.dot{width:11px;height:11px;border-radius:50%;background:#3a3d42}
+.log{flex:1;padding:22px 24px;font:21px/1.6 'JetBrains Mono','IBM Plex Sans KR',monospace;color:var(--body);overflow:hidden;display:flex;flex-direction:column;justify-content:flex-start;gap:6px}
+.l{display:flex;gap:12px;}
+.l.on{opacity:1;transform:none}
+.l .t{color:var(--mute);flex:none}
+.l .m{min-width:0}
+.ok{color:var(--ok)}.red{color:var(--red)}.gold{color:var(--gold)}.blue{color:var(--blue)}.w{color:var(--ink)}
+.quote{color:var(--ink);border-left:2px solid var(--ok);padding-left:10px;display:block;margin-top:2px;font-family:'IBM Plex Sans KR';font-size:20px}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--blue);border-right-color:transparent;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-1px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+.stages{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:grid;gap:9px}
+.st{display:flex;align-items:center;gap:14px;font-size:21px;color:var(--mute);transition:color .3s}
+.st i{width:26px;height:26px;border-radius:50%;border:2px solid #3a3d42;display:grid;place-items:center;font-style:normal;font-size:13px;flex:none}
+.st.run{color:var(--ink)}.st.run i{border-color:var(--blue);border-right-color:transparent;animation:sp .8s linear infinite}
+.st.done{color:var(--body)}.st.done i{border-color:var(--ok);background:var(--ok);color:#0B0C0E}
+.st b{margin-left:auto;font:500 17px 'JetBrains Mono',monospace;color:var(--mute)}
+.counts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cnt{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.cnt p{font-size:17px;color:var(--mute)}
+.cnt div{font:700 54px 'JetBrains Mono',monospace;color:var(--ink)}
+.shot{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:0;position:relative}
+.shot p{font-size:17px;color:var(--mute)}
+.shot img{position:absolute;left:12px;right:12px;top:44px;bottom:12px;width:calc(100% - 24px);height:calc(100% - 56px);object-fit:contain;border-radius:8px;opacity:0;transform:scale(.97);background:#1a1b1e}
+.shot img.on{opacity:1;transform:none}
+.prog{position:absolute;left:28px;right:28px;bottom:16px;height:44px;display:flex;align-items:center;gap:16px}
+.ptrack{position:relative;flex:1;height:10px;border-radius:5px;background:#26292d}
+.pfill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:5px;background:linear-gradient(90deg,#A1131A,#FF5757)}
+.pknob{position:absolute;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;background:#F4F4F6;box-shadow:0 0 12px rgba(255,87,87,.7);left:0}
+.ptick{position:absolute;top:-6px;width:2px;height:22px;background:#3a3d42}
+.ptime{font:700 20px 'JetBrains Mono',monospace;color:#F4F4F6;white-space:nowrap}
+.ptime small{color:#7d7f84;font-size:16px}
+</style></head><body>
+<div class="stripe"></div>
+<div class="top"><div class="brand">숏클 엔진 <span>원본찾기</span></div><div class="badge" id="badge">실제 실행 기록 재생</div><div class="clock"><small>실제 시각</small><span id="clk">16:38:31</span></div></div>
+<div class="wrap">
+ <div class="term"><div class="tbar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span style="margin-left:10px">원본찾기 시작 › 소재 2편</span></div><div class="log" id="log"></div></div>
+ <div class="side">
+  <div class="stages" id="stages"></div>
+  <div class="counts"><div class="cnt"><p>1편 후보 영상</p><div id="c1">0</div></div><div class="cnt"><p>2편 후보 영상</p><div id="c2">0</div></div></div>
+  <div class="shot"><p id="cap">AI가 보는 화면</p><img id="i1" src="sheet.jpg"><img id="i2" src="judge.jpg"><img id="i3" src="verify.jpg"></div>
+ </div>
+</div>
+<div class="prog"><div class="ptime" id="pel">0:00</div><div class="ptrack" id="ptr"><div class="pfill" id="pf"></div><div class="pknob" id="pk"></div></div><div class="ptime"><small>실제</small> 7:27</div></div>
+<script>
+const ST=["준비 확인","소재 받기","AI 장면 읽기","원본 찾기 · 4곳 동시","AI 같은 영상 판정","원본 받기","재업로드 확인"];
+const sg=document.getElementById('stages');
+ST.forEach((s,i)=>{sg.insertAdjacentHTML('beforeend',`<div class="st" id="s${i}"><i></i>${s}<b id="b${i}"></b></div>`)});
+const log=document.getElementById('log');
+const real0=16*3600+38*60+31, real1=16*3600+45*60+58;
+let SPEED=12;
+function sec(t){const [h,m,s]=t.split(':').map(Number);return h*3600+m*60+s}
+let cntOn=null;
+const ev=[
+ ["16:38:31",()=>{line('16:38:31','<span class="red">▶</span> <span class="w">원본찾기 시작</span> · 소재 2편 동시 (썬크림 · 치아 미백 테이프)');stage(0,'run')}],
+ ["16:38:47",()=>{line('16:38:47','<span class="ok">✓</span> 준비 확인 <span class="gold">16초</span>');stage(0,'done','16초');stage(1,'run')}],
+ ["16:40:14",()=>{line('16:40:14','<span class="ok">✓</span> 소재 2편 받기 <span class="gold">87초</span>');stage(1,'done','87초');stage(2,'run');img(1,'AI가 읽는 소재 장면 시트')}],
+ ["16:40:32",()=>{line('16:40:32','<span class="blue">◆</span> AI 장면 읽기 1편 → 한국 재편집본 · 제품 <span class="w">한국 썬크림</span> <span class="gold">18초</span>')}],
+ ["16:40:48",()=>{line('16:40:48','<span class="blue">◆</span> AI 장면 읽기 2편 → 제품 <span class="w">치아 미백 테이프</span> <span class="gold">17초</span>');stage(2,'done','35초');stage(3,'run');line('16:40:48','<span class="spin"></span> 유튜브 · 틱톡 · 인스타 · 구글 렌즈 동시 검색 중…');cntOn=sec('16:40:48')}],
+ ["16:44:05",()=>{cntOn=null;setCnt(1);line('16:44:05','<span class="ok">✓</span> 후보 모음 1편 <span class="w">117개</span> / 2편 <span class="w">115개</span> <span class="gold">197초</span>');stage(3,'done','197초');stage(4,'run');img(2,'소재(S1~S4)와 후보를 나란히 놓은 판정판')}],
+ ["16:44:25",()=>{line('16:44:25','<span class="blue">◆</span> AI 판정 1편 → <span class="ok">같은 촬영분 찾음</span> <span class="gold">20초</span><span class="quote">“초록 구름 헤어밴드에 갈색 상의를 입은 같은 여성이 같은 방에서 같은 선크림 장면을 찍은 촬영분이다”</span>')}],
+ ["16:44:47",()=>{line('16:44:47','<span class="blue">◆</span> AI 판정 2편 → <span class="red">같은 촬영분 없음</span> · 비슷한 얼굴도 걸러 냄 <span class="gold">22초</span>');stage(4,'done','42초');stage(5,'run')}],
+ ["16:45:08",()=>{line('16:45:08','<span class="ok">✓</span> 원본 받기 <span class="gold">21초</span>');stage(5,'done','21초');stage(6,'run');img(3,'받은 원본에서 다시 뽑은 장면')}],
+ ["16:45:58",()=>{line('16:45:58','<span class="ok">✓</span> 한국 재업로드 확인 → 같은 원본 <span class="w">12개</span> 발견 <span class="gold">50초</span>');stage(6,'done','50초');line('16:45:58','<span class="red">■</span> <span class="w">완료 7.5분</span> · 원본 확보 → 창고에 저장')}],
+];
+function line(t,h){const d=document.createElement('div');d.className='l on';d.innerHTML=`<span class="t">${t}</span><span class="m">${h}</span>`;log.appendChild(d)}
+function stage(i,c,b){const e=document.getElementById('s'+i);e.className='st '+c;if(c==='done')e.querySelector('i').textContent='✓';if(b)document.getElementById('b'+i).textContent=b}
+function setCnt(k){const e=1-Math.pow(1-k,2);document.getElementById('c1').textContent=Math.round(117*e);document.getElementById('c2').textContent=Math.round(115*e)}
+function img(n,cap){[1,2,3].forEach(k=>document.getElementById('i'+k).classList.toggle('on',k===n));document.getElementById('cap').textContent=cap}
+const clk=document.getElementById('clk');
+function fmt(s){s=Math.floor(s);return [Math.floor(s/3600),Math.floor(s%3600/60),s%60].map(x=>String(x).padStart(2,'0')).join(':')}
+let k=0;
+/* 가상 시계: 녹화 스크립트가 영상 시간(초)을 넘겨 한 장씩 그린다 — 실제 시각 = 시작 + (영상초-0.8)*배속 */
+window.RENDER=(vt,speed)=>{SPEED=speed;document.getElementById("badge").textContent="실제 실행 기록 재생 · "+speed+"배속";const now=Math.min(real1,real0+Math.max(0,(vt-0.8)*SPEED));clk.textContent=fmt(now);
+  while(k<ev.length&&sec(ev[k][0])<=now){ev[k][1]();k++}
+  if(cntOn!==null)setCnt(Math.min(1,(now-cntOn)/197));
+  const r=(now-real0)/(real1-real0);document.getElementById('pf').style.width=(r*100)+'%';document.getElementById('pk').style.left=(r*100)+'%';
+  const el=Math.floor(now-real0);document.getElementById('pel').textContent=Math.floor(el/60)+':'+String(el%60).padStart(2,'0');
+  return now>=real1};
+['16:38:47','16:40:14','16:40:48','16:44:05','16:44:47','16:45:08'].forEach(x=>{const d=document.createElement('div');d.className='ptick';d.style.left=((sec(x)-real0)/(real1-real0)*100)+'%';document.getElementById('ptr').appendChild(d)});
+</script></body></html>

@@ -568,7 +568,8 @@ def fix_aba(cuts: list[dict], log=print) -> list[str]:
     return out
 
 
-def relocate_cuts(cuts: list[dict], src_dir: Path | None, origins: set, log=print, adjacent_run: bool = False, end: float | None = None) -> list[str]:
+def relocate_cuts(cuts: list[dict], src_dir: Path | None, origins: set, log=print, adjacent_run: bool = False, end: float | None = None,
+                  still=None) -> list[str]:
     """(판단 주인 — 계획이 숫자 반려를 스스로 푼다, 사장님 10-27 '뿌리 수정': Claude 는 장면을 고르고 정확한 초는 코드가 맞춘다)
     respace_reuse(같은 샷 안 옮기기) 뒤에도 남은 나레 영상 컷 — ①샷보다 길다(c.over) ②같은 장면 재사용(c.reuse_unfixed) — 을
     **같은 원본 안** 그 길이가 들어가고 장면 전환·디졸브가 없는 가장 가까운 구간(shot_starts 샷 − runner_ops.jump_free_spans)으로 옮긴다.
@@ -584,6 +585,9 @@ def relocate_cuts(cuts: list[dict], src_dir: Path | None, origins: set, log=prin
     for c in vid:     # ③ 원본 밖 재료 컷 안 장면 전환·디졸브 — 판정 = runner_ops.source_rule_scan 과 같은 자(_cut_jumps·_jumpy)
         if c.get("kind") == "tts" and c["src"] not in origins and not c.get("no_snap"):
             c["jumpy"] = _jumpy(_cut_jumps(Path(src_dir) / c["src"], float(c["ss"]), src_frames(c) / FPS))
+    for c in vid:     # ⑦ 멈춘 그림 — 판정 = render_bench.cut_still_gate 와 같은 자(still = cut_gray + quality_gate.still_spans, render_bench 가 넘긴다)
+        if still and c.get("kind") == "tts" and not c.get("no_snap"):
+            c["frozen"] = bool(still(c))
     spans_of: dict = {}
     out = []
     first_line = cuts[0].get("line") if cuts else None
@@ -594,7 +598,7 @@ def relocate_cuts(cuts: list[dict], src_dir: Path | None, origins: set, log=prin
         if c.get("reuse_unfixed") and not c.get("over") and not c.get("jumpy") and not _new_viol([x for x in vid if x is not c and x in cuts], c, lens, adjacent_run):
             c.pop("reuse_unfixed", None)            # 다른 컷을 옮기며 이미 풀렸다
             return "ok"
-        if c.get("kind") != "tts" or c.get("no_snap") or not (c.get("over") or c.get("reuse_unfixed") or c.get("jumpy")):
+        if c.get("kind") != "tts" or c.get("no_snap") or not (c.get("over") or c.get("reuse_unfixed") or c.get("jumpy") or c.get("frozen")):
             return "ok"
         src = Path(src_dir) / c["src"]
         if c["src"] not in spans_of:
@@ -614,9 +618,11 @@ def relocate_cuts(cuts: list[dict], src_dir: Path | None, origins: set, log=prin
             left = src_left(src, s_)
             if (left is not None and d > left) or short_pieces(st, s_, s_ + d) or _new_viol(others, {**c, "ss": s_}, lens, adjacent_run):
                 continue
+            if c.get("frozen") and still and still({**c, "ss": s_, "ss_planned": s_}):
+                continue                                               # 옮긴 자리도 멈춘 그림
             got = (s_, b_)
             break
-        why = "샷 넘침" if c.get("over") else ("재사용" if c.get("reuse_unfixed") else "장면 전환")
+        why = "샷 넘침" if c.get("over") else ("재사용" if c.get("reuse_unfixed") else ("멈춘 그림" if c.get("frozen") and not c.get("jumpy") else "장면 전환"))
         if got is None:
             if not final and not c.get("over"):
                 return "defer"                       # 훅 컷을 먼저 옮겨 보고 다시(풀리면 그대로 둔다)
@@ -633,7 +639,7 @@ def relocate_cuts(cuts: list[dict], src_dir: Path | None, origins: set, log=prin
                 log(f"[옮기기] {c.get('line')} {c['src']}@{ss0:.2f} {why} — 같은 원본에 {d:.2f}초 들어갈 빈 구간 없음(관문 몫)")
             return "fail"
         s_, b_ = got
-        for k in ("over", "room", "reuse_unfixed", "src_left", "speed", "jumpy"):
+        for k in ("over", "room", "reuse_unfixed", "src_left", "speed", "jumpy", "frozen"):
             c.pop(k, None)
         c["ss_moved"], c["ss"], c["ss_planned"], c["max"] = ss0, s_, s_, round(b_ - s_, 3)
         out.append(f"[옮기기] {c.get('line')} {c['src']} {why} ss {ss0:.2f} → {s_:.2f}(구간 {s_:.2f}~{b_:.2f})")

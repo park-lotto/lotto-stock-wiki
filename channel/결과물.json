@@ -1870,6 +1870,38 @@
    "seconds": 38.17,
    "doc": "channel/foreignshowshow/28편_IncredibleEats_하이브리드/",
    "judge": "[확인대기] 벤치 Nc3em4FmEtM ↔ Sony EU96s14zgLk · 앞 O3 끝 15.87초 + 뒤 지훈 1인칭(B1 '똑같은 건 없고 비슷하게') · −13.9 LUFS/TP −2.4 · 끝 여운 1.250초 · 끝 0.1초 −98.4dB · freeze/black 0 · 광고 2초 간격 20칸 · 자막 띠 0.5초 시트(360px) 손질 8칸(앞 1·뒤 7) · emph_ban 0 · 받아쓰기 두 엔진 대조 · deliver --check ○ (사람 판정 전)"
+  },
+  {
+   "channel": "foreignshowshow",
+   "channel_name": "샥탬스토리",
+   "brand": "샥탬스토리",
+   "style": "현장썰 하이브리드(샤크탱크 칼카피 앞 + 쿠팡 1인칭 체험 뒤)",
+   "date": "2026-10-28",
+   "n": 118,
+   "from": "channel/foreignshowshow/29편_PansMushroomJerky/make_plan.py → tools/calcopy/shark/render.py(앞) → tools/calcopy/shark/hybrid.py(뒤·이음) → channel/foreignshowshow/하이브리드/final_tail.py(소리=영상 길이·끝 페이드·TP) → engine/finalize.seal",
+   "title": "하이브리드 29 Pan's Mushroom Jerky(버섯 육포 — 쿠팡 같은 제품 9694556217)",
+   "path": "C:/숏템_칼카피/foreignshowshow/하이브리드/29편_PansMushroomJerky/hybrid/final.mp4",
+   "desktop": "샥탬스토리_29_PansMushroomJerky_검수대기.mp4",
+   "md5": "9946ff3761d5697a8a503d3fe3e1e580",
+   "seconds": 39.83,
+   "doc": "channel/foreignshowshow/29편_PansMushroomJerky_하이브리드/",
+   "judge": "[확인대기] 벤치 Qu3S7KKz4JM ↔ Sony Gsb98jeXm14(원어 140-6) · 앞 O3 끝 16.57초 + 뒤 지훈 1인칭(B1 '똑같은 게 진짜 있더라고요') · −13.9 LUFS/TP −2.3 · 끝 여운 1.216초 · 끝 0.1초 −115.3dB · freeze/black 0 · 광고 2초 간격 20칸+마지막 프레임 · 자막 띠 0.5초 시트 손질 6칸 · emph_ban 0 · shot_overrun 재료·render_info 0 · 받아쓰기 두 엔진 대조 · deliver --check ○ (사람 판정 전)"
+  },
+  {
+   "channel": "foreignshowshow",
+   "channel_name": "샥탬스토리",
+   "brand": "샥탬스토리",
+   "style": "현장썰 하이브리드(샤크탱크 칼카피 앞 + 쿠팡 1인칭 체험 뒤)",
+   "date": "2026-10-28",
+   "n": 119,
+   "from": "channel/foreignshowshow/30편_PrankO/make_plan.py → tools/calcopy/shark/render.py(앞) → tools/calcopy/shark/hybrid.py(뒤·이음) → channel/foreignshowshow/하이브리드/final_tail.py(소리=영상 길이·끝 페이드·TP) → engine/finalize.seal",
+   "title": "하이브리드 30 Prank-O(장난 선물 상자 — 쿠팡에 같은 제품 없어 비슷한 중첩 나사 선물 상자 9563896304, 대본에 밝힘)",
+   "path": "C:/숏템_칼카피/foreignshowshow/하이브리드/30편_PrankO/hybrid/final.mp4",
+   "desktop": "샥탬스토리_30_PrankO_검수대기.mp4",
+   "md5": "4e0f08da80f5bcd6fd0eede0275c35ff",
+   "seconds": 40.1,
+   "doc": "channel/foreignshowshow/30편_PrankO_하이브리드/",
+   "judge": "[확인대기] 벤치 Jlo0i1kEtkQ ↔ Sony -hrbP_slqRI(원어 140-4) · 앞 O2 끝 14.83초 + 뒤 지훈 1인칭(B1 '똑같은 건 없고 비슷하게') · −14.1 LUFS/TP −2.3 · 끝 여운 1.277초 · 끝 0.1초 −117.5dB · freeze/black 0 · 광고 2초 간격 20칸+마지막 프레임 · 자막 띠 0.5초 시트 손질 6칸 · emph_ban 0 · shot_overrun 재료·render_info 0 · 받아쓰기 두 엔진 대조 · deliver --check ○ (사람 판정 전)"
   }
  ]
 }

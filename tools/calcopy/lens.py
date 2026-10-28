@@ -138,7 +138,8 @@ def lens_page(name: str = ""):
         def launch(prof):
             return p.chromium.launch_persistent_context(prof, headless=False, channel="chrome", locale="ko-KR",
                                                         viewport={"width": 1366, "height": 900},
-                                                        args=["--disable-blink-features=AutomationControlled"])
+                                                        args=["--disable-blink-features=AutomationControlled"] +
+                                                             (["--window-position=-32000,-32000"] if os.environ.get("SHORTEM_BROWSER_OFFSCREEN") == "1" else []))   # 창은 뜨되 화면 밖(10-28 강의 시연 '창 띄우지 마라')
         try:
             ctx = launch(PROFILE + (f"_{name}" if name else ""))
         except Exception as e:  # noqa: BLE001 — 프로필이 다른 세션 크롬에 잠김('기존 브라우저 세션에서 여는 중', 10-21 워커 5명+원본찾기 충돌)

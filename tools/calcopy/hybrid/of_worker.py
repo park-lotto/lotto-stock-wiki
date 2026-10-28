@@ -26,6 +26,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
 RETRY_DAYS = 7
+MONTAGE_BUDGET = 10 * 60   # 3명 이상 짜깁기 소재 상한(초)
+SRC_BUDGET = 20 * 60     # 소재 하나 상한(초) — 넘으면 못 찾음(시간 초과), 7일 뒤 재시도
 MAX_CALLS = 40          # 원본 확보까지 실측 9번 — 못 찾을 때 직접 찾기·과제까지 넉넉히, 그 이상은 헛돎
 LOCK = "worker.lock"
 
@@ -158,6 +160,19 @@ def add_channels(pool: Path, src_id: str, xs: list[dict]) -> int:
     return n
 
 
+def montage_n(W: Path) -> int:
+    """소재 판독(오푸스 ref_read 답 people)이 말한 짜깁기 출연자 수 — '3명 짜깁기'·'4명(컷마다 다름)' 꼴. 모르면 0."""
+    for d in (W / "job" / "reviews").glob("*ref_read*"):
+        try:
+            ppl = str(json.loads((d / "answer.json").read_text(encoding="utf-8")).get("people") or "")
+        except (OSError, ValueError):
+            continue
+        m = re.search(r"([2-9])\s*명", ppl)
+        if m and ("짜깁기" in ppl or "다름" in ppl):
+            return int(m.group(1))
+    return 0
+
+
 def how_found(W: Path) -> tuple[str, str]:
     """(판단 주인 — 원본 확보 vs 대체) 확보한 원본마다 지시서가 적은 how 그대로 — 실제 장면 확인(flow.f_of_verify_got)을 통과한
     '같은 촬영분'이 하나라도 있으면 found, 같은 제품 다른 해외 반응뿐이면 peer. 10-27 사장님 '잘못된 거면 수정' — 썸네일 판정만 믿고 found 로 적던 것."""
@@ -178,12 +193,30 @@ def one(r: dict, a, pool: Path) -> dict:
     W = pool / r["id"]
     W.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
+    timed_out = False
     with (W / "run.log").open("w", encoding="utf-8") as f:
-        subprocess.run([sys.executable, str(ROOT / "tools/calcopy/hybrid/flow_dev.py"), "--ref", r.get("url") or f"https://www.youtube.com/shorts/{r['id']}",
-                        "--version", a.version, "--fmt", "해외원본형", "--work", str(W), "--no-paid", "--single", "--stop-at", "f_product",
-                        "--max-calls", str(MAX_CALLS)], cwd=str(ROOT), stdout=f, stderr=subprocess.STDOUT,
-                       env={**os.environ, "PYTHONUTF8": "1", "SHORTEM_BROWSER_LOCK": "1"}, timeout=3600)
+        pr = subprocess.Popen([sys.executable, str(ROOT / "tools/calcopy/hybrid/flow_dev.py"), "--ref", r.get("url") or f"https://www.youtube.com/shorts/{r['id']}",
+                               "--version", a.version, "--fmt", "해외원본형", "--work", str(W), "--no-paid", "--single", "--stop-at", "f_product",
+                               "--max-calls", str(MAX_CALLS)], cwd=str(ROOT), stdout=f, stderr=subprocess.STDOUT,
+                              env={**os.environ, "PYTHONUTF8": "1", "SHORTEM_BROWSER_LOCK": "1"})
+        try:
+            t_end = time.time() + SRC_BUDGET
+            while pr.poll() is None:
+                if time.time() > t_end:
+                    raise subprocess.TimeoutExpired(pr.args, SRC_BUDGET)
+                if t_end - time.time() > MONTAGE_BUDGET and montage_n(W) >= 3:      # 3명 이상 짜깁기 = 출연자마다 원본이 따로라 직접 찾기를 되풀이(10-27 시간 초과 4편 전부)
+                    t_end = min(t_end, (W / "run.log").stat().st_ctime + MONTAGE_BUDGET)
+                time.sleep(10)
+        except subprocess.TimeoutExpired:      # 원본 없는 소재(한국인 출연·짜깁기)에 40~50분 붙잡혔다(10-27 QXuSRX·yykd) — 찾은 편은 실측 6~14분
+            timed_out = True
+            # 하위 실행기·브라우저까지 통째로(10-27: flow_dev 만 죽여 runner_ops 가 남아 렌즈 차례·자원을 쥐었다)
+            subprocess.run(["taskkill", "/PID", str(pr.pid), "/T", "/F"], capture_output=True)
     s = of_stats.one(W)
+    if timed_out:
+        mn = montage_n(W)
+        return {"status": "not_found", "how": f"시간 초과({SRC_BUDGET // 60}분)" + (f" · {mn}명 짜깁기" if mn else ""), "montage": mn, "origins": [], "min": round((time.time() - t0) / 60, 1),
+                "why": "원본을 못 찾고 직접 찾기를 되풀이", "title": r.get("title"), "views": r.get("views"), "t": time.strftime("%Y-%m-%d %H:%M"),
+                "ts": time.time(), "dir": str(W)}
     end = s.get("end") or {}
     org = origins_of(W)
     status = "found" if end.get("end") == "stop_at" and org else ("not_found" if end else "error")

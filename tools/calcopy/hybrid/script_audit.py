@@ -265,6 +265,12 @@ def rule_check(r: dict, d: dict, st: dict) -> tuple[bool, str]:
             return sh <= r["max"], f"문장 머리 연결어 {len(hit)}/{len(sents)}={sh} (≤{r['max']}) {hit}"
         hit = [m for x in sents for m in BC.MADE_RE.findall(x)]
         return len(hit) <= r["max"], f"지어냄 후보(숫자·나라·권위 말) {len(hit)}개 (≤{r['max']}) {hit}"
+    if k == "hook_formula":    # 사장님 첫 문장 공식(10-16·17, 불편 → '~해버렸대요') — 판단 주인 script_frame.hook_formula_check, 데이터 hook_formula.json
+        hf = SF.load_hook_formula(FRAME["itssum"])
+        R = SF.hook_formula_check(txt(T[0]) if T else "", hf, " ".join(txt(l) for l in T))
+        if R is None:
+            return False, "첫 문장 공식 파일(hook_formula.json) 없음"
+        return R["ok"], ("첫 문장 공식 통과" if R["ok"] else "첫 문장 공식 어긋남: " + " · ".join(R["why"])) + f" — '{R['sentence'][:40]}'"
     if k in ("narr_share", "est_length"):
         cps = st.get("cps_target", 7.0)
         tn = sum(nchar(txt(l)) for l in T) / cps
@@ -313,6 +319,8 @@ def rule_text(r: dict, st: dict) -> str:
         return f"문장 머리 연결어(그래서·근데 등) 비율 ≤{r['max']}"
     if k == "made_candidates":
         return f"지어낸 것처럼 보이는 숫자·나라·권위 말 {r['max']}개 이하(근거 있는 것만)"
+    if k == "hook_formula":
+        return SF.hook_formula_rule(SF.load_hook_formula(FRAME["itssum"])).strip()
     if k == "narr_share":
         return f"나레 비중 {rng()}"
     if k == "est_length":

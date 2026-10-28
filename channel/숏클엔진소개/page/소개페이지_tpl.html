@@ -1,0 +1,360 @@
+<title>숏클 원본찾기 엔진</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* 기준: awesome-design-md / raycast — 검색 엔진 소개라 '명령 팔레트' 같은 어두운 화면 + 머리띠 하나만 강한 색.
+   레이아웃: 한 줄 세로 흐름, 단계는 실제 순서대로 번호, 걸린 시간은 같은 눈금 막대 */
+:root{
+  --bg:#07080a; --surface:#0f1012; --card:#131416; --line:#24272a;
+  --ink:#f4f4f6; --body:#cdcdcf; --mute:#8d8e92;
+  --accent:#ff5757; --accent-deep:#a1131a; --ok:#59d499; --gold:#ffc533; --blue:#57c1ff;
+  --display:"Black Han Sans","IBM Plex Sans KR",system-ui,sans-serif;
+  --text:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#f6f6f4; --surface:#ffffff; --card:#ffffff; --line:#e1e1de;
+  --ink:#111214; --body:#33353a; --mute:#6b6d72;
+  --accent:#e03a3a; --accent-deep:#8f0f16; --ok:#13865a; --gold:#a86f00; --blue:#1f7fbf; color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#f6f6f4; --surface:#ffffff; --card:#ffffff; --line:#e1e1de;
+  --ink:#111214; --body:#33353a; --mute:#6b6d72;
+  --accent:#e03a3a; --accent-deep:#8f0f16; --ok:#13865a; --gold:#a86f00; --blue:#1f7fbf; color-scheme:light}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--body);font:16px/1.7 var(--text);margin:0;word-break:keep-all}
+.wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 72px}
+h1,h2,h3{color:var(--ink);text-wrap:balance;margin:0}
+h2{font:400 clamp(26px,4vw,34px)/1.25 var(--display);letter-spacing:.2px}
+h3{font-size:17px;font-weight:700}
+p{margin:0;max-width:65ch}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eyebrow{font:700 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+section{display:grid;gap:22px;padding-block:56px;border-top:1px solid var(--line)}
+
+/* 머리띠 */
+.stripe{height:6px;background:repeating-linear-gradient(-55deg,var(--accent) 0 26px,var(--accent-deep) 26px 52px);margin-inline:calc(-1*max(16px,env(safe-area-inset-left,0px)))}
+.hero{display:grid;gap:22px;padding-block:56px 48px}
+.hero h1{font:400 clamp(36px,7vw,64px)/1.12 var(--display);letter-spacing:.5px}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.lead{font-size:clamp(17px,2.2vw,19px);color:var(--body)}
+.palette{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;font:500 15px/1.4 var(--mono);color:var(--ink);min-width:0;overflow:hidden}
+.palette .k{color:var(--mute);flex:none}
+.palette .q{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.caret{display:inline-block;width:8px;height:18px;background:var(--accent);vertical-align:-3px;margin-left:2px;animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stat{background:var(--surface);padding:18px 16px;display:grid;gap:4px;min-width:0}
+.stat b{font:700 clamp(26px,4vw,34px)/1.1 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+.stat span{font-size:13.5px;color:var(--mute);line-height:1.45}
+.asof{font-size:13px;color:var(--mute)}
+
+/* 단계 */
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.step{display:grid;grid-template-columns:44px minmax(0,1fr) minmax(0,240px);gap:16px;align-items:start;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+.step .n{font:700 15px/1 var(--mono);color:var(--accent);border:1px solid var(--line);border-radius:8px;height:36px;display:grid;place-items:center}
+.step p{font-size:15px;margin-top:4px}
+.bar{display:grid;gap:6px;align-self:center}
+.bar .track{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar .fill{height:100%;background:var(--blue);border-radius:4px;transform-origin:left;animation:grow .7s cubic-bezier(.23,1,.32,1) both}
+.bar.hot .fill{background:var(--accent)}
+.bar small{font:500 12.5px/1 var(--mono);color:var(--mute)}
+@keyframes grow{from{transform:scaleX(.15)}to{transform:scaleX(1)}}
+.total{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline;font-size:15px}
+.total b{font:700 22px/1 var(--mono);color:var(--ink)}
+
+/* 예시 */
+.case{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.15fr);gap:18px;align-items:start}
+figure{margin:0;display:grid;gap:10px;min-width:0}
+figure img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block}
+figcaption{font-size:13.5px;line-height:1.5;color:var(--mute)}
+figcaption strong{display:block;color:var(--ink);font-size:14.5px}
+.tag{display:inline-block;font:700 11.5px/1 var(--mono);letter-spacing:.06em;padding:5px 8px;border-radius:6px;margin-bottom:6px}
+.tag.red{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+.tag.green{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.verdict{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:14px;min-width:0}
+.verdict blockquote{margin:0;font-size:15px;line-height:1.65;color:var(--ink);border-left:2px solid var(--ok);padding-left:12px}
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:14px;margin:0}
+.kv dt{color:var(--mute)}
+.kv dd{margin:0;color:var(--ink);font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* 표 */
+.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:14.5px}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:700 12px/1.2 var(--mono);letter-spacing:.08em;color:var(--mute);background:var(--surface)}
+tr:last-child td{border-bottom:0}
+td.r{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
+.score{font:700 14px/1 var(--mono);display:inline-grid;place-items:center;width:30px;height:26px;border-radius:6px;background:color-mix(in srgb,var(--gold) 18%,transparent);color:var(--gold)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12.5px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--body);white-space:nowrap}
+
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:12px;align-content:start;min-width:0}
+.compare{display:grid;gap:10px}
+.cmp-row{display:grid;grid-template-columns:96px minmax(0,1fr) 44px;gap:10px;align-items:center;font-size:14px}
+.cmp-row .track{height:12px;border-radius:6px;background:var(--line);overflow:hidden}
+.cmp-row .fill{height:100%;border-radius:6px}
+.cmp-row b{font:700 15px/1 var(--mono);color:var(--ink);text-align:right}
+.q-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;font:500 13.5px/1.45 var(--mono);color:var(--ink)}
+.q-list li{display:flex;gap:10px;min-width:0}
+.q-list li span{color:var(--mute);flex:none}
+.q-list li em{font-style:normal;overflow-wrap:anywhere}
+
+.mix{display:grid;gap:10px}
+.mix-row{display:grid;grid-template-columns:90px minmax(0,1fr) 44px;gap:10px;align-items:center;font-size:14px}
+.seg{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--line)}
+
+.soon{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.soon .panel h3{display:flex;gap:10px;align-items:baseline}
+.soon .panel h3 span{font:700 12px/1 var(--mono);color:var(--gold);letter-spacing:.08em}
+.foot{font-size:13px;color:var(--mute);padding-top:28px;border-top:1px solid var(--line)}
+
+@media (max-width:760px){
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .step{grid-template-columns:40px minmax(0,1fr)}
+  .step .bar{grid-column:2}
+  .case{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .case .verdict{grid-column:1/-1}
+  .two,.soon{grid-template-columns:minmax(0,1fr)}
+}
+
+.punch{font:700 clamp(17px,2.4vw,21px)/1.5 var(--text);color:var(--ink);border-left:3px solid var(--accent);padding:4px 0 4px 14px}
+.punch b{color:var(--accent)}
+.why h3{margin-top:8px}
+.why strong{color:var(--ink)}
+.vs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.vs-card{border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;gap:14px;align-content:start;min-width:0;background:var(--card)}
+.vs-card.engine{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--card))}
+.vs-card ul{margin:0;padding-left:18px;display:grid;gap:6px;font-size:15px}
+.plain ul{color:var(--mute)}
+.bubble{justify-self:start;max-width:100%;background:var(--surface);border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:10px 14px;font-size:15px;color:var(--ink)}
+.bubble.run{border-radius:8px;font:500 14px/1.4 var(--mono);color:var(--ok)}
+.codecount{font-size:14px;color:var(--mute)}
+.codecount b{color:var(--ink);font-size:16px}
+.traps td b{color:var(--accent);font-weight:700}
+@media (max-width:760px){.vs{grid-template-columns:minmax(0,1fr)}}
+
+.player{display:grid;gap:12px}
+.player video{width:100%;aspect-ratio:16/9;border-radius:10px;border:1px solid var(--line);background:#0B0C0E;display:block}
+.speeds{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.speeds button{font:700 14px var(--mono);padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--body);cursor:pointer;transition:transform .15s ease-out,background .15s ease-out}
+.speeds button:active{transform:scale(.97)}
+.speeds button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.speeds button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.speeds span{font-size:13px;color:var(--mute)}
+@media (prefers-reduced-motion:reduce){.caret,.bar .fill{animation:none}}
+</style>
+
+<div class="wrap">
+  <div class="stripe" aria-hidden="true"></div>
+
+  <header class="hero">
+    <div class="eyebrow">숏클 엔진 · 원본찾기 · 회원 미리보기</div>
+    <h1>터진 쇼츠의 <em>진짜 원본</em>을 찾아<br>우리 프리셋에 맞는 영상만 골라 옵니다</h1>
+    <p class="lead">한국에서 수백만 번 본 쇼츠는 대부분 해외 영상을 다시 편집한 것입니다. 엔진은 그 영상의 처음 촬영본을 찾아 받아 두고, 같은 영상이 한국에 몇 번 올라왔는지 세고, 원본을 찍은 채널까지 모아 둡니다. 회원님은 소재를 고르는 대신 준비된 원본으로 바로 만들게 됩니다.</p>
+    <p class="punch">클로드에게 "찾아줘"라고 말만 해서는 이렇게 안 됩니다. 코드로 짜 둔 <b>숏클 엔진</b>이라서 한 번에 됩니다.</p>
+    <div class="palette" aria-label="검색 예시">
+      <span class="k">찾는 중 ›</span>
+      <span class="q">백탁 0% 한국 썬크림 발라본 외국인 반응 · 690만 회</span><span class="caret" aria-hidden="true"></span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b class="num">348</b><span>훑어본 원본 채널<br>틱톡 192 · 유튜브 124 · 인스타 32</span></div>
+      <div class="stat"><b class="num">208</b><span>프리셋에 맞는지 판정한<br>100만 회 넘는 영상</span></div>
+      <div class="stat"><b class="num">27</b><span>원본을 찾아 받아 둔 소재<br>(34편 시도)</span></div>
+      <div class="stat"><b class="num">7분</b><span>소재 하나당 원본 확보까지<br>걸린 시간(중앙값)</span></div>
+    </div>
+    <p class="asof">숫자는 10월 27일 밤 엔진 장부 기준입니다. 엔진은 계속 돌면서 쌓습니다.</p>
+  </header>
+
+  <section aria-labelledby="why" class="why">
+    <div class="eyebrow">가장 중요한 것</div>
+    <h2 id="why">클로드에게 "찾아줘"라고 말만 해서는 안 됩니다</h2>
+    <p>원본 찾기는 검색 한 번이 아니라 받기, 장면 읽기, 네 곳 검색, 대조, 다시 확인, 기록까지 이어지는 일입니다. 말로 부탁하면 매번 처음부터 묻고, 중간 확인은 사람 눈이 합니다. 숏클 엔진은 이 순서와 아래 함정 막는 법을 코드로 박아 두어서 <strong>한 번 돌리면 끝까지</strong> 갑니다.</p>
+    <div class="vs">
+      <div class="vs-card plain">
+        <div class="eyebrow">말로만 부탁하면</div>
+        <div class="bubble">이 쇼츠 원본 찾아줘</div>
+        <ul>
+          <li>단계마다 다시 묻고 기다림</li>
+          <li>같은 사람인지 확인은 내 눈으로</li>
+          <li>어제 찾은 것도 오늘 또 찾음</li>
+        </ul>
+      </div>
+      <div class="vs-card engine">
+        <div class="eyebrow">숏클 엔진으로 하면</div>
+        <div class="bubble run">원본찾기 시작 › 소재 주소</div>
+        <ul>
+          <li>6단계가 순서대로 한 번에, 약 7분</li>
+          <li>받은 원본 장면까지 AI가 다시 대조</li>
+          <li>장부에 남아 다음엔 바로 꺼내 씀</li>
+        </ul>
+        <p class="codecount"><b class="num">49</b>개 파일 · <b class="num">24,678</b>줄의 엔진 코드 위에서 돕니다</p>
+      </div>
+    </div>
+    <h3>직접 부딪힌 함정과 엔진에 박아 둔 해결</h3>
+    <div class="tablebox">
+      <table class="traps">
+        <thead><tr><th>말로만 했을 때 실제로 생긴 일</th><th>숏클 엔진에 넣은 코드</th><th style="text-align:right">결과</th></tr></thead>
+        <tbody>
+          <tr><td>표지 그림만 보고 고른 원본이 <b>다른 사람</b>이었음(3편 대조에서 3편 모두)</td><td>받은 원본에서 장면 8장을 뽑아 소재와 다시 대조, 다르면 빼고 다시 찾기</td><td class="r">눈 대조와 3/3 일치</td></tr>
+          <tr><td>흔한 검색어로는 <b>협찬 광고</b>만 나옴</td><td>터진 원본들의 공통점으로 만든 숏클 검색어</td><td class="r">쓸 만한 소재 3 → 10편</td></tr>
+          <tr><td>원본 찾기 한 번에 <b>8분</b> 넘게 걸림</td><td>유튜브 정보 빠르게 읽기 · 렌즈와 키워드 검색 동시 · 틱톡 창 하나로</td><td class="r">484초 → 약 200초</td></tr>
+          <tr><td>틱톡·인스타 검색이 검색어 <b>앞 6개만</b> 돌고 나머지는 버려짐</td><td>검색어를 6개씩 나눠 부르기</td><td class="r">전부 검색</td></tr>
+          <tr><td>틱톡·인스타·유튜브 로그인이 서로 달라 <b>준비 단계에서 멈춤</b></td><td>세 곳 로그인 정보를 한 파일로 합쳐 한 번에 넘기기</td><td class="r">멈춤 없음</td></tr>
+          <tr><td>여러 사람 짜깁기 소재에서 <b>끝없이 헤맴</b>(시간 초과 4편 모두 짜깁기)</td><td>소재당 20분, 짜깁기 10분 상한 · 넘으면 하위 작업까지 정리</td><td class="r">다음 소재로 넘어감</td></tr>
+          <tr><td>렌즈·틱톡 창 두 개가 <b>서로 막음</b></td><td>브라우저 차례 잠금</td><td class="r">216초 → 183초</td></tr>
+          <tr><td>어제 찾은 소재를 <b>오늘 또 찾음</b></td><td>장부: 찾은 건 건너뛰고, 못 찾은 건 7일 뒤 다시</td><td class="r">같은 일 반복 0</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="live">
+    <div class="eyebrow">실제로 돌아가는 화면</div>
+    <h2 id="live">소재 2편을 동시에, 7분 27초 만에 끝까지</h2>
+    <p>숏클 엔진이 실제로 돌았던 기록을 그대로 다시 재생한 화면입니다. 시각, 걸린 시간, 후보 수, AI 판정 문구가 모두 실제 기록입니다. 아래 재생바를 끌면 원하는 단계로 바로 갑니다.</p>
+    <div class="player">
+      <div class="speeds" role="group" aria-label="재생 속도">
+        <button type="button" id="sp2" data-src="run_x2.mp4" aria-pressed="false">2배속 · 3분 47초</button>
+        <button type="button" id="sp5" data-src="run_x5.mp4" aria-pressed="false">5배속 · 1분 33초</button>
+        <button type="button" id="sp12" data-src="run_x12.mp4" aria-pressed="true">12배속 · 41초</button>
+        <span>실제 7분 27초</span>
+      </div>
+      <video id="runvid" src="run_x12.mp4" controls playsinline preload="metadata" muted></video>
+    </div>
+  </section>
+
+  <section aria-labelledby="flow">
+    <div class="eyebrow">과정</div>
+    <h2 id="flow">소재 하나가 원본이 되기까지 6단계</h2>
+    <p>사람이 하던 일을 그대로 순서대로 합니다. 막대는 15편을 실제로 돌렸을 때 단계마다 걸린 시간의 중앙값이고, 모두 같은 눈금입니다.</p>
+    <ol class="steps">
+      <li class="step"><div class="n">1</div><div><h3>소재 받기</h3><p>한국에서 터진 재편집 쇼츠를 내려받습니다. 자막·제목 띠가 덮인 상태입니다.</p></div>
+        <div class="bar"><div class="track"><div class="fill" style="width:26.4%"></div></div><small>52초</small></div></li>
+      <li class="step"><div class="n">2</div><div><h3>장면 읽기</h3><p>AI가 장면을 보고 출연자 생김새, 옷, 방, 제품, 어떤 반응인지를 글로 적습니다. 이 글이 검색 단서가 됩니다.</p></div>
+        <div class="bar"><div class="track"><div class="fill" style="width:10.2%"></div></div><small>20초</small></div></li>
+      <li class="step"><div class="n">3</div><div><h3>원본 찾기</h3><p>유튜브, 틱톡, 인스타, 구글 렌즈(그림으로 찾기)를 동시에 돌립니다. 가장 오래 걸리는 단계라 한 번 484초에서 약 200초로 줄였습니다.</p></div>
+        <div class="bar hot"><div class="track"><div class="fill" style="width:100%"></div></div><small>197초</small></div></li>
+      <li class="step"><div class="n">4</div><div><h3>같은 영상인지 판정</h3><p>찾은 후보들을 소재 장면과 나란히 놓고 AI가 같은 촬영분인지 가립니다. 비슷한 다른 사람은 여기서 빠집니다.</p></div>
+        <div class="bar"><div class="track"><div class="fill" style="width:12.7%"></div></div><small>25초</small></div></li>
+      <li class="step"><div class="n">5</div><div><h3>원본 받고 실제 장면으로 다시 확인</h3><p>받은 원본에서 장면 8장을 뽑아 소재와 한 번 더 대조합니다. 표지 그림만 보고 고른 원본이 다른 사람이었던 경우를 여기서 걸러 냅니다.</p></div>
+        <div class="bar"><div class="track"><div class="fill" style="width:17.8%"></div></div><small>22초 + 확인 14초</small></div></li>
+      <li class="step"><div class="n">6</div><div><h3>한국 재업로드 세기</h3><p>같은 원본이 한국 채널에 이미 몇 번 올라왔는지 셉니다. 너무 많이 쓰인 소재인지 미리 압니다.</p></div>
+        <div class="bar"><div class="track"><div class="fill" style="width:16.8%"></div></div><small>33초</small></div></li>
+    </ol>
+    <div class="total"><span>준비 점검을 더한 전체</span><b class="num">431초</b><span>약 7분 · 15편 중앙값</span></div>
+  </section>
+
+  <section aria-labelledby="case">
+    <div class="eyebrow">결과물 예시</div>
+    <h2 id="case">690만 회 재편집본에서 찾아낸 원본</h2>
+    <div class="case">
+      <figure>
+        <img src="{{SEED}}" alt="한국 채널 재편집본 화면. 위에 '한국 썬크림 백탁 0%라며' 제목 띠와 빨간 자막이 덮여 있다" width="360" height="480">
+        <figcaption><span class="tag red">소재</span><strong>한국 채널 재편집본</strong>690만 회 · 제목 띠와 자막이 화면을 덮고 있음</figcaption>
+      </figure>
+      <figure>
+        <img src="{{ORIG}}" alt="원본 틱톡 화면. 같은 여성이 같은 방에서 선크림을 손에 짜는 장면" width="360" height="480">
+        <figcaption><span class="tag green">찾은 원본</span><strong>처음 올린 틱톡 영상</strong>남의 편집 전 처음 촬영본 · 같은 순간 (원본 글자는 가리기·자막제거로 처리)</figcaption>
+      </figure>
+      <div class="verdict">
+        <div class="eyebrow">AI 판정문 그대로</div>
+        <blockquote>초록 구름 헤어밴드에 갈색 상의를 입은 같은 여성이 같은 방에서 같은 선크림 장면을 찍은 촬영분이다. 한국 재편집 칸은 자막, 제목 띠, 블러 배경 삽입만 다르다.</blockquote>
+        <dl class="kv">
+          <dt>같은 영상 점수</dt><dd>7.5 / 10</dd>
+          <dt>원본 채널</dt><dd>틱톡 · 최고 380만 회</dd>
+          <dt>한국 재업로드</dt><dd>12개 발견</dd>
+          <dt>걸린 시간</dt><dd>447초</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="channels">
+    <div class="eyebrow">원본 채널 자산</div>
+    <h2 id="channels">원본을 찍는 채널을 따라가 터진 영상을 더 찾습니다</h2>
+    <p>원본을 하나 찾으면 그 채널의 다른 영상도 봅니다. 채널마다 AI가 '직접 찍는 원본인가, 제품을 써 보는 반응이 꾸준히 터지는가'를 10점 만점으로 매깁니다. 8점 이상은 계속 지켜보는 채널이 됩니다.</p>
+    <div class="two">
+      <div class="panel">
+        <h3>채널 344곳 판정 결과</h3>
+        <div class="mix">
+          <div class="mix-row"><span>직접 찍는 사람</span><div class="seg"><div style="width:78.8%;background:var(--ok)"></div></div><b class="num">271</b></div>
+          <div class="mix-row"><span>브랜드 공식</span><div class="seg"><div style="width:7%;background:var(--blue)"></div></div><b class="num">24</b></div>
+          <div class="mix-row"><span>재업로드</span><div class="seg"><div style="width:6.1%;background:var(--accent)"></div></div><b class="num">21</b></div>
+          <div class="mix-row"><span>모음집·기타</span><div class="seg"><div style="width:8.1%;background:var(--mute)"></div></div><b class="num">28</b></div>
+        </div>
+        <p style="font-size:14px">쓸 만한 채널 205곳 · 8점 이상 34곳</p>
+      </div>
+      <div class="panel">
+        <h3>예: 10점 받은 채널 하나</h3>
+        <dl class="kv">
+          <dt>채널</dt><dd>Emma Grace (유튜브)</dd>
+          <dt>100만 회 넘은 영상</dt><dd>22편</dd>
+          <dt>조회 중앙값</dt><dd>335만 회</dd>
+          <dt>최고 영상</dt><dd>4,400만 회</dd>
+        </dl>
+        <p style="font-size:14px;color:var(--mute)">판정 이유: 제품을 써 보는 반응 영상이 수천만 회로 꾸준히 터진다</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="search">
+    <div class="eyebrow">숏클 검색어</div>
+    <h2 id="search">검색어부터 숏클만의 방식으로 찾습니다</h2>
+    <p>흔한 검색어로 찾으면 협찬 광고만 잔뜩 나옵니다. 숏클 엔진은 터진 원본들의 공통점을 분석해 만든 검색어를 씁니다. 검색어는 엔진 안에 있어서 회원님은 프리셋만 고르면 됩니다.</p>
+    <div class="two">
+      <div class="panel">
+        <h3>한 번 돌렸을 때 쓸 만한 소재(7점 이상)</h3>
+        <div class="compare">
+          <div class="cmp-row"><span>흔한 검색어</span><div class="track"><div class="fill" style="width:30%;background:var(--mute)"></div></div><b>3</b></div>
+          <div class="cmp-row"><span>숏클 검색어</span><div class="track"><div class="fill" style="width:100%;background:var(--accent)"></div></div><b>10</b></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>검색어는 엔진 안에 있습니다</h3>
+        <p style="font-size:15px">터진 원본들의 공통점을 분석해 만든 검색어로 유튜브·틱톡·인스타를 찾습니다. 프리셋을 고르면 그 프리셋에 맞는 검색어가 알아서 쓰입니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="treasure">
+    <div class="eyebrow">보물 후보</div>
+    <h2 id="treasure">어느 프리셋으로 만들면 좋은지까지 골라 둡니다</h2>
+    <p>8점 이상 채널의 100만 회 넘는 영상 208편을 AI가 하나씩 보고, 우리 프리셋 중 어디에 맞는지와 점수를 붙였습니다. 7점 이상이 29편입니다. 한 영상이 여러 프리셋에 맞을 수 있습니다.</p>
+    <div class="chips"><span class="chip">외국인+한국제품 61편</span><span class="chip">해외+신기템 58편</span><span class="chip">자막+노래 39편</span></div>
+    <div class="tablebox">
+      <table>
+        <thead><tr><th>점수</th><th>제품</th><th>맞는 프리셋</th><th style="text-align:right">조회</th><th>왜 골랐나</th></tr></thead>
+        <tbody>
+          <tr><td><span class="score">9</span></td><td>센텔리안24 마데카 크림</td><td>외국인+한국제품</td><td class="r">1,150만</td><td>한국 제품, 쿠팡에서 바로 살 수 있음</td></tr>
+          <tr><td><span class="score">9</span></td><td>한국 브랜드 파운데이션 150호</td><td>외국인+한국제품 · 해외+신기템</td><td class="r">830만</td><td>한국 제품이 놀람의 중심</td></tr>
+          <tr><td><span class="score">8</span></td><td>K뷰티 수면·시트 마스크</td><td>세 프리셋 모두</td><td class="r">4,960만</td><td>마스크 하나로 이해되는 단순한 구조</td></tr>
+          <tr><td><span class="score">8</span></td><td>VERAFECT 아이패치</td><td>외국인+한국제품 · 해외+신기템</td><td class="r">160만</td><td>'색이 어디 갔지?' 전후 반전</td></tr>
+          <tr><td><span class="score">8</span></td><td>셀리맥스 발 각질 케어</td><td>외국인+한국제품 · 해외+신기템</td><td class="r">130만</td><td>전후 비교가 확실하고 쿠팡에 있음</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="next">
+    <div class="eyebrow">다음 단계 · 준비 중</div>
+    <h2 id="next">지금 다듬고 있는 것</h2>
+    <div class="soon">
+      <div class="panel"><h3><span>준비 중</span>장면으로 다시 채점</h3><p style="font-size:15px">지금 점수는 제목과 표지로 매긴 것입니다. 잘된 편과 안된 편을 비교해 찾은 '터지는 기준 7가지'로 원본 장면 12장을 보고 다시 매깁니다.</p></div>
+      <div class="panel"><h3><span>준비 중</span>모든 프리셋에 숏클 검색어</h3><p style="font-size:15px">외국인+한국제품에서 효과를 본 숏클 검색어를 모든 프리셋에도 만듭니다.</p></div>
+      <div class="panel"><h3><span>준비 중</span>여러 사람 짜깁기 소재</h3><p style="font-size:15px">여러 사람을 이어 붙인 소재는 출연자마다 원본을 따로 찾습니다.</p></div>
+      <div class="panel"><h3><span>준비 중</span>받아 둔 원본으로 바로 제작</h3><p style="font-size:15px">회원님이 소재를 고르면 엔진이 미리 받아 둔 원본을 바로 씁니다. 원본 찾는 7분을 기다리지 않게 됩니다.</p></div>
+    </div>
+  </section>
+
+  <p class="foot">원본 확보 27편 중 15편은 받은 원본의 실제 장면까지 다시 대조했고, 나머지 12편은 장면 대조 단계가 생기기 전에 찾은 것이라 다시 확인할 예정입니다.</p>
+</div>
+<script>
+(function(){var v=document.getElementById('runvid');var bs=document.querySelectorAll('.speeds button');
+bs.forEach(function(b){b.addEventListener('click',function(){var r=v.duration?v.currentTime/v.duration:0;var play=!v.paused;
+bs.forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});v.src=b.dataset.src;
+v.addEventListener('loadedmetadata',function f(){v.removeEventListener('loadedmetadata',f);v.currentTime=r*v.duration;if(play)v.play().catch(function(){})});});});})();
+</script>

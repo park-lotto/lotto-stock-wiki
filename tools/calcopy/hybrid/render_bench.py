@@ -401,8 +401,11 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
         if changed:
             fit_all()
             measure_over()
+        from tools.calcopy.hybrid import quality_gate as _QG
+        _still = lambda c: bool(_QG.still_spans(cut_gray({**c, "t1": c.get("t1", end), "dur": c.get("dur") or (float(c.get("t1", end)) - float(c["t0"]))},
+                                                          src_dir / c["src"], st, M)))      # 관문 ⑦ 과 같은 자(cut_still_gate)
         for _ in range(2):            # 옮기기 ↔ 맞추기(fit 이 ±0.4 옮겨 디졸브에 닿으면 다음 바퀴가 다시 옮긴다)
-            if not relocate_cuts(cuts, src_dir, origins, log=_lg, adjacent_run=adj, end=end):
+            if not relocate_cuts(cuts, src_dir, origins, log=_lg, adjacent_run=adj, end=end, still=_still):
                 break
             fit_all()                 # 옮긴 자리(ss_planned·max)에서 다시 맞추기·늦추기
             measure_over()
@@ -1615,7 +1618,7 @@ def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
 # 판정 주인 = cut_content_gate 한 곳. 프레임은 렌더 조각과 같은 자리(cut_crop)·같은 흐림(blur_vf)으로 thumb.card_scene_frame 이 원본에서 뽑는다.
 # 자 = channelkit.vision(PP-OCRv5 det 글자 상자 · YuNet 얼굴 · SFace 동일성). 문턱 표본 = shopping_shorts/tests/fixtures/cut_content_labels.json.
 CONTENT_PAIR = 2 / FPS            # 글자 '붙박이' 재기 짝 프레임 간격 — 박힌 글은 2프레임 동안 그대로, 장면 속 글(포장·간판)은 화면과 같이 움직인다
-CONTENT_VER = 6                   # 판정(자·문턱)이 바뀌면 올린다 — 캐시 열쇠
+CONTENT_VER = 8                   # 판정(자·문턱)이 바뀌면 올린다 — 캐시 열쇠  (10-29 합침: 이 PC 6 + 회사 PC 7 둘 다 반영)
 # 글자 문턱 — 표본 762컷(10-25 494컷 + 10-25 오검출 수리 268컷: 원본 무작위 구간·잇템로그 ep12·박정수·샤크탱크 원편) 오푸스 눈 라벨.
 #   pos 132(원본 쇼츠 가격·자막·제목 띠·방송사 자막·로고·광고 글) / neg 630(제품 포장·상자·라벨·간판·화면 속 글).
 #   id crc32 짝수로 정하고 홀수로 잰 값(정직한 값): 옛 판정 P 0.857·R 0.677 → 지금 P 0.900·R 0.726. 옛 494컷만: P 0.808→0.863 · R 0.94 그대로.
@@ -1635,6 +1638,8 @@ TEXT_FAR_RING = 5.0               # 긴 간격(같은 컷 다른 잴 프레임) 
 TEXT_SCENE_RATIO = (0.6, 1.3)     # 멈춘 화면 글: 긴 간격 짝에서 안/둘레 가 이 범위 = 글이 주변과 같이 변함 = 장면 속 글(카레 상자 팬·전구 무늬·성시경 간판). 표본 0.5~0.7 / 1.2~1.5 어디서나 같은 결과
 TEXT_SMALL_H = 0.03               # 창 3~3.5% 작은 글줄은 긴 간격 짝 전부에서 안/둘레 < TEXT_SMALL_STILL 일 때만(배경이 바뀌는 동안 그대로 = 박힌 자막 — 진열대 가격표는 같이 움직인다)
 TEXT_SMALL_STILL = 0.6
+TEXT_SLOW_RING, TEXT_SLOW_STILL = 1.0, 0.1   # 멈춘 듯한 화면의 긴 자막줄: 긴 간격 짝 둘레 변화 ≥ 1 인데 안/둘레 < 0.1. 표본 오검출 +0(완전히 멈춘 쪽지 글은 둘레도 0)
+TEXT_THIN_H, TEXT_THIN_ASPECT = 0.02, 5.0   # 획 붙박이 판정의 가는 글줄(창 2~3%) — 가로/세로 ≥ 5 일 때만. 표본 오검출 +0(4.0 이면 +1, 3.0 이면 +5), 10-27 TV 원본 박힌 제목 6.4~6.9
 TEXT_GLYPH_STILL = 0.3            # 획 픽셀 변화(d_gl) / 둘레 변화 < 이 값 = 획이 그대로인 박힌 글(자막 줄). 짝수 반 0.3~0.5 같은 결과(0.2 는 R 0.91), 홀수 반 오검출 +0
 TEXT_GLYPH_FILL = 0.65            # 획 판정 상자 채움 하한 — 작은 자막 줄은 낱말 사이 틈 때문에 0.70~0.79(TEXT_FILL_MIN 0.8 밖). 0.6~0.7 같은 결과
 TEXT_GLYPH_ASPECT = 3.0           # 획 판정은 글줄(가로/세로 ≥ 3)만 — 1.6 이면 짝수 반 오검출 +4
@@ -1887,6 +1892,9 @@ def foreign_text(f: dict) -> bool:
     if (f.get("d_gl") is not None and f["score"] >= TEXT_SCORE_MIN and f["fill"] >= TEXT_GLYPH_FILL and f["aspect"] >= TEXT_GLYPH_ASPECT
             and TEXT_SMALL_H <= f["h"] <= TEXT_H_RANGE[1] and f["d_ring"] >= TEXT_GLYPH_RING and f["d_gl"] < TEXT_GLYPH_STILL * f["d_ring"]):
         return True               # 획 붙박이 — 움직이는 배경 위 획이 그대로인 글줄(틱톡형 작은 자막 포함). d_gl 없는 옛 값은 건너뜀
+    if (f.get("d_gl") is not None and TEXT_THIN_H <= f["h"] < TEXT_SMALL_H and f["aspect"] >= TEXT_THIN_ASPECT and f["score"] >= TEXT_SCORE_MIN
+            and f["fill"] >= TEXT_GLYPH_FILL and f["d_ring"] >= TEXT_GLYPH_RING and f["d_gl"] < TEXT_GLYPH_STILL * f["d_ring"]):
+        return True               # 가늘고 아주 긴 글줄(영상 내내 박힌 영문 제목 — 10-27 TV 'Ultimate TV Mobility' 창 2.7%) — 가격표(짧다)는 가로/세로에서 걸러진다
     asp_min = TEXT_EDGE_ASPECT if f.get("edge") else TEXT_ASPECT_MIN     # 창 끝에 잘린 글줄은 짧아 네모에 가깝다(10-27 싱크대 L2 '…건조' 1.2)
     if f["score"] < TEXT_SCORE_MIN or f["fill"] < TEXT_FILL_MIN or f["aspect"] < asp_min:
         return False
@@ -1899,6 +1907,8 @@ def foreign_text(f: dict) -> bool:
     if f["d_ring"] < TEXT_RING_MIN:
         if any(TEXT_SCENE_RATIO[0] <= q <= TEXT_SCENE_RATIO[1] for q in far):
             return False          # 2프레임 사이엔 멈췄지만 같은 컷 안 긴 간격에서 주변과 같이 변한 글 = 장면 속 글
+        if f["aspect"] >= TEXT_THIN_ASPECT and any(r >= TEXT_SLOW_RING and i / r < TEXT_SLOW_STILL for i, r in (f.get("fi") or [])):
+            return True           # 천천히 움직이는 화면 위 긴 자막줄(긴 간격 짝에서 주변은 변하고 글 칸만 그대로 — 10-27 oInEkACMS5s '이걸로 살짝 피부를…' 창 3.75%)
         return f["h"] >= TEXT_STATIC_H or small
     return f["d_in"] < TEXT_STILL_RATIO * f["d_ring"]
 
@@ -1978,6 +1988,17 @@ def face_anchors(st: dict, doc: Path, T: dict, cand_dir: Path) -> list:
     return out
 
 
+AUTOBLUR_MORE = 2            # 흐림 넣은 뒤 남은 글 상자로 칸을 더 넣는 횟수(10-27 oInEkACMS5s l10: 한 번 넣고 끝나 '흐림을 넣어도 2장' → Claude 장면 교체·재렌더 16분)
+SAME_TEXT_IOU = 0.5          # 같은 원본 두 컷의 글자 상자(원본 픽셀)가 이만큼 겹치면 같은 박힌 글
+
+
+def _rect_iou(a, b) -> float:
+    ax1, ay1, bx1, by1 = a[0] + a[2], a[1] + a[3], b[0] + b[2], b[1] + b[3]
+    iw, ih = max(0, min(ax1, bx1) - max(a[0], b[0])), max(0, min(ay1, by1) - max(a[1], b[1]))
+    inter = iw * ih
+    return inter / max(1, a[2] * a[3] + b[2] * b[3] - inter)
+
+
 def blur_entry(boxes: list, crop: list, win: tuple, ss: float, sec: float, pad: int = 8) -> list:
     """(판단 주인 — 창 좌표 글자 상자 → 재료.blur 한 칸) 창 [x0,y0,x1,y1] 들을 합친 칸을 원본 픽셀 [x, y, w, h, 시작초, 끝초]로.
     10-26 까르보: 반려 문구가 창 좌표만 줘서 고치는 쪽이 원본 좌표로 바꾸다 세 번 다 어긋났다(같은 'NOOO!' 자막 3번 반려)."""
@@ -1991,7 +2012,8 @@ def blur_entry(boxes: list, crop: list, win: tuple, ss: float, sec: float, pad: 
     return [ax, ay, bx - ax, by - ay, round(ss, 3), round(ss + sec, 3)]
 
 
-def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Path | None = None, log=print, erase: list | None = None) -> list[str]:
+def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Path | None = None, log=print, erase: list | None = None,
+                     autoblur: bool = False) -> list[str]:
     """렌더 전 관문 ④(10-25 감사 남의 글자 33·남 얼굴 15): 계획의 컷마다 렌더 조각과 같은 프레임 3장(cut_crop·blur)을 원본에서 뽑아
       ① 글자: 흐림 밖에 남의 박힌 글자(자막·워터마크·로고 글)가 TEXT_MIN_HITS 장 이상이면 멈춤(foreign_text)
       ② 얼굴(연예인 판 thumb_card_face=true): 기준 얼굴(카드 통과 얼굴)과 다른 사람의 큰 얼굴이 FACE_MIN_HITS 장 이상이면 멈춤(other_face)
@@ -2033,6 +2055,7 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
             ts, t2s = content_times(c["ss"], n)
             pre[key] = ex.submit(cut_frames, [(src, t, crop, (ww, wh), regs) for t in ts + t2s], 1)
     bad, rows = [], {}
+    found, fixed_k = {}, set()          # autoblur: 원본마다 확인된 남의 글자 자리(원본 픽셀) · 흐림 넣은 컷
     try:
         for (k, c, src, n, crop, regs, key) in jobs:
             r = cache.get(key)
@@ -2046,6 +2069,27 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
             where = f"{c['line']} {c['src']}@{float(c['ss']):.2f}"
             if nt >= TEXT_MIN_HITS and erase is not None:
                 erase.append(k)
+            elif nt >= TEXT_MIN_HITS and autoblur:
+                # (사장님 10-27 뿌리 수정 — Claude 는 장면을 고르고 숫자는 코드가) 흐림 칸 = blur_entry 그대로 재료.blur 에 넣고 다시 잰다.
+                #   예전엔 이 숫자를 반려 글로 Claude 에게 넘겨 재료를 고치게 했다(같은 칸을 손으로 옮겨 적는 왕복). 넣은 뒤에도 글자가 남으면 그때 반려.
+                boxes = [f["box"] for x in r["text"] for f in x]
+                ent = blur_entry(boxes, crop, (ww, wh), float(c["ss"]), n / FPS)
+                M.setdefault("blur", {}).setdefault(c["src"], []).append(ent)
+                M["_blur_added"] = M.get("_blur_added", 0) + 1
+                found.setdefault(c["src"], []).append(ent[:4])
+                fixed_k.add(k)
+                for _ in range(1 + AUTOBLUR_MORE):          # 넣고 다시 잰다 — 칸 밖으로 남은 글 상자(글줄이 길어지거나 다른 자리 자막)는 그 상자로 한 칸 더
+                    m2 = cut_content_feats(src, c["ss"], n, crop, (ww, wh), M["blur"][c["src"]], anchors, ocr=ocr)
+                    rest = [f["box"] for fr in m2["text"] for f in fr if foreign_text(f)]
+                    left = sum(1 for fr in m2["text"] if any(foreign_text(f) for f in fr))
+                    if not rest or _ == AUTOBLUR_MORE:
+                        break
+                    e2 = blur_entry(rest, crop, (ww, wh), float(c["ss"]), n / FPS)
+                    M["blur"][c["src"]].append(e2)
+                    log(f"[흐림 넣기] 컷 {k} {where} 아직 {left}장 → 한 칸 더 {e2}")
+                log(f"[흐림 넣기] 컷 {k} {where} 남의 글자 {nt}/{len(r['text'])}장 → 재료.blur[{c['src']}] += {ent} · 다시 잼 {left}장")
+                if left >= TEXT_MIN_HITS:
+                    bad.append(f"컷 {k} {where}: 흐림을 넣어도 남의 박힌 글자 {left}장 — 다른 장면으로 바꾼다")
             elif nt >= TEXT_MIN_HITS:
                 boxes = [f["box"] for x in r["text"] for f in x]          # 모든 장·모든 글줄(예전 [:3] 은 두 줄 자막의 한 줄만 담았다)
                 bad.append(f"컷 {k} {where}: 흐림 밖 남의 박힌 글자 {nt}/{len(r['text'])}장(창 좌표 {boxes}) — 재료.json blur[{c['src']}] 에 "
@@ -2053,6 +2097,26 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
             if nf >= FACE_MIN_HITS:
                 cs = [f["cos"] for x in r["face"] for f in x][:3]
                 bad.append(f"컷 {k} {where}: 연예인 아닌 얼굴 {nf}/{len(r['face'])}장(기준 얼굴 코사인 {cs} < {FACE_OTHER_COS}) — 연예인이 나오는 장면으로 바꾼다")
+        # 같은 원본 같은 자리 = 같은 박힌 글자(영상 내내 박힌 제목·워터마크). 배경까지 멈춘 컷은 '획 붙박이' 판정이 안 서서 놓친다(10-27 TV 12컷 중 5컷만)
+        #   → 확인된 자리와 겹치는 글자 상자(점수 ≥ TEXT_SCORE_MIN)가 같은 원본 다른 컷에 있으면 그 컷도 같은 글로 보고 흐린다
+        for (k, c, src, n, crop, regs, key) in jobs if autoblur and found else ():
+            if k in fixed_k or c["src"] not in found:
+                continue
+            regs_now = (M.get("blur") or {}).get(c["src"])
+            m = cut_content_feats(src, c["ss"], n, crop, (ww, wh), regs_now, anchors, ocr=ocr)
+            hit = []
+            for fr in m["text"]:
+                for f in fr:
+                    if f["score"] < TEXT_SCORE_MIN or f["blur"] > TEXT_BLUR_MAX:
+                        continue
+                    e = blur_entry([f["box"]], crop, (ww, wh), 0.0, 0.0)
+                    if any(_rect_iou(e[:4], g) >= SAME_TEXT_IOU for g in found[c["src"]]):
+                        hit.append(f["box"])
+            if hit:
+                ent = blur_entry(hit, crop, (ww, wh), float(c["ss"]), n / FPS)
+                M["blur"][c["src"]].append(ent)
+                M["_blur_added"] = M.get("_blur_added", 0) + 1
+                log(f"[흐림 넣기] 컷 {k} {c['line']} {c['src']}@{float(c['ss']):.2f} 같은 자리 박힌 글자(다른 컷에서 확인) → += {ent}")
     finally:
         if todo:
             ex.shutdown(wait=True, cancel_futures=True)
@@ -3435,7 +3499,7 @@ def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *,
            ("⑥ 카드 글", TR.card_text_gate(doc)),
            ("⑥ 카드 얼굴", TR.card_face_gate(st, doc, T, M["cand_dir"])),
            ("③ 경계", cut_boundary_gate(T, M, st)),
-           ("④ 글자·얼굴", cut_content_gate(T, M, st, doc, R, log, erase=erase)),
+           ("④ 글자·얼굴", cut_content_gate(T, M, st, doc, R, log, erase=erase, autoblur=True)),
            ("⑤ 컷 길이", cut_length_gate(T, st)),
            ("⑦ 멈춤", cut_still_gate(T, M, st)),
            ("사진", photo_gate(T, st, M)),
@@ -3522,6 +3586,8 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         from tools.calcopy import vmake_clean as VC
         erase = [] if VC.will_erase(style_name) else None        # 박힌 글자를 지우는 판(orig_text.mode=vmake·돈 막힘 아님) — 글자 컷은 멈추지 않고 '지울 컷'(사장님 10-26)
         gates = timeline_gates(T, M, st, doc, R, log, plan=True, measured=bool(tts), erase=erase, placed=placed)      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬·꾸밈 전부(첫 실패에서 안 멈춘다)
+        if M.pop("_blur_added", 0):      # 관문 ④가 넣은 흐림 칸 = 재료.json 에 — 렌더(같은 파일을 읽는다)·지문(gate_stamp)이 같은 흐림을 본다
+            jsave(doc / "재료.json", M)
         (R / GATE_STAMP).unlink(missing_ok=True)
         if tts and not erase and not any(b for _, b in gates):      # 진짜 목소리·지울 컷 없음·전부 통과일 때만 지문(지울 컷이 있으면 렌더가 지운 뒤 다시 잰다)
             jsave(R / GATE_STAMP, {"stamp": gate_stamp(T, M, st, doc), "at": __import__("time").strftime("%Y-%m-%d %H:%M:%S")})
@@ -3544,7 +3610,10 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     if sp.exists() and jload(sp).get("stamp") == gate_stamp(T, M, st, doc):      # 계획이 같은 입력으로 전부 통과 — 다시 안 잰다(검수단축 ⑤)
         log(f"[렌더 전 관문] 계획({jload(sp).get('at')})과 입력이 같다(컷·원본·판·썸네일·관문 코드 지문) — 다시 안 잰다")
     else:
-        gate_stop(timeline_gates(T, M, st, doc, R, log, plan=False))      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬 — 영상 굽기 전에 전부 모아 멈춘다(꾸밈은 창 자리 뒤 — GATE_DEPENDS)
+        _g = timeline_gates(T, M, st, doc, R, log, plan=False)
+        if M.pop("_blur_added", 0):      # 지시서가 계획 없이 재료를 다시 써 렌더로 온 길(flow save_m → render) — 흐림 칸을 여기서 넣고 같은 파일에
+            jsave(doc / "재료.json", M)
+        gate_stop(_g)      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬 — 영상 굽기 전에 전부 모아 멈춘다(꾸밈은 창 자리 뒤 — GATE_DEPENDS)
     win0 = render_window(T, M, st, R)                          # 창(전환 없이) — 자리 검출 화면의 재료
     placed = plan_rows(S, T, st, make_locate(S, T, st, R, win0, log))
     deco_apply(placed, doc, st, log)
