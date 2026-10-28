@@ -1,0 +1,443 @@
+{
+ "_note": "21 하겐다즈 — 하겐다즈 공식(Global uwwQIvQpkVQ: 숟가락·파인트 근접·뚜껑·매장 건물·끝 로고, 모델 얼굴 구간 안 씀 / Australia O4jh0Ms8A1I: 바닐라 스쿱·Häagen 큰 글자·파인트) · 브롱크스 항공 영상 MTI Aerials BJupNc9BUpI(4K → 1080 사본 bx, 왼쪽 위 표식은 자르기 밖, 원본은 지움) · 1902 뉴욕 마차 기록 영상 The History Place 8OTLNs1-eBU · 코펜하겐 뉘하운 WalkIn TodDCaawnLo · 덴마크 지도 Free GeoLayer Maps 2GDVf3uHcaU · 뒤 = 쿠팡 116375921 상품 사진 + 마카다미아 넛 파인트 든 손(Haeeon Eats DTCZkanEC0I, 얼굴·왼아래 채널 표식 자르기 밖) + 마카다미아 넛 아이스크림 근접(d9Z8BHQDYos, 다가감 d9z) · 다가감 사본 uz2(로고).",
+ "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/21_하겐다즈/src",
+ "shots": [
+  {
+   "src": "uwwQIvQpkVQ.mp4",
+   "ss": 51.66,
+   "fit": "cover",
+   "full": true,
+   "cuts": [
+    {
+     "src": "uwwQIvQpkVQ.mp4",
+     "ss": 51.66,
+     "dur": 1.25,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "O4jh0Ms8A1I.mp4",
+     "ss": 10.82,
+     "dur": 1.08,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_mathlady.mp4",
+     "ss": 0.0,
+     "dur": 2.0,
+     "fit": "cover",
+     "src_crop": [
+      366,
+      0,
+      545,
+      720
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "하겐다즈 공식: 숟가락으로 파인트 뜨기 → Häagen-Dazs 파인트 → 계산 안 되는 매스 레이디 짤",
+   "why": "훅 = '유럽에서 온 것 같은 하겐다즈라는 이름, 사실 아무 의미도 없는 말'"
+  },
+  {
+   "src": "bx.mp4",
+   "ss": 2.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "bx.mp4",
+     "ss": 2.0,
+     "dur": 2.93,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "뉴욕 브롱크스 항공 영상(1080 사본)",
+   "why": "'시작은 유럽이 아니라, 미국 뉴욕의 브롱크스'"
+  },
+  {
+   "src": "8OTLNs1-eBU.mp4",
+   "ss": 0.6,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "8OTLNs1-eBU.mp4",
+     "ss": 0.6,
+     "dur": 2.97,
+     "fit": "cover",
+     "src_crop": [
+      250,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "1902 뉴욕 거리의 말이 끄는 수레들(기록 영상)",
+   "why": "'창업자는 원래 말이 끄는 수레로, 동네에서 얼음과자를'"
+  },
+  {
+   "src": "8OTLNs1-eBU.mp4",
+   "ss": 67.6,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "8OTLNs1-eBU.mp4",
+     "ss": 67.6,
+     "dur": 1.2,
+     "fit": "cover",
+     "src_crop": [
+      200,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "1902 뉴욕 거리를 지나가는 말(기록 영상)",
+   "why": "'팔던 사람이었대요'"
+  },
+  {
+   "src": "uwwQIvQpkVQ.mp4",
+   "ss": 44.26,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "uwwQIvQpkVQ.mp4",
+     "ss": 44.26,
+     "dur": 1.06,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "O4jh0Ms8A1I.mp4",
+     "ss": 3.15,
+     "dur": 2.68,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "하겐다즈 공식: 파인트 속 숟가락(손) → 바닐라 아이스크림 스쿱",
+   "why": "'비싼 아이스크림을 팔려면, 왠지 유럽 느낌이'"
+  },
+  {
+   "src": "TodDCaawnLo.mp4",
+   "ss": 26.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "TodDCaawnLo.mp4",
+     "ss": 26.0,
+     "dur": 3.33,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "덴마크 코펜하겐 뉘하운 운하와 알록달록한 집들",
+   "why": "'덴마크 말처럼 들리는 이름을, 아예 직접 만들어 냈다'"
+  },
+  {
+   "src": "O4jh0Ms8A1I.mp4",
+   "ss": 9.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "O4jh0Ms8A1I.mp4",
+     "ss": 9.0,
+     "dur": 1.78,
+     "fit": "cover",
+     "src_crop": [
+      250,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "uz2.mp4",
+     "ss": 0.0,
+     "dur": 1.98,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "하겐다즈 공식: Häagen 큰 글자(ä 위 점 두 개) → 로고에 다가감(uz2)",
+   "why": "'글자 위에 찍힌 점 두 개는, 정작 덴마크 말에는 없는'"
+  },
+  {
+   "src": "2GDVf3uHcaU.mp4",
+   "ss": 2.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "2GDVf3uHcaU.mp4",
+     "ss": 2.0,
+     "dur": 2.47,
+     "fit": "cover",
+     "src_crop": [
+      300,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "덴마크 지도(위성 지도 위 Denmark)",
+   "why": "'처음 아이스크림 통에는, 덴마크 지도까지'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_tomscream.mp4",
+   "ss": 0.3,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_tomscream.mp4",
+     "ss": 0.3,
+     "dur": 1.0,
+     "fit": "cover",
+     "src_crop": [
+      93,
+      0,
+      174,
+      230
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "비명 지르는 톰 짤",
+   "why": "'그려 넣었다는데'"
+  },
+  {
+   "src": "uwwQIvQpkVQ.mp4",
+   "ss": 40.55,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "uwwQIvQpkVQ.mp4",
+     "ss": 40.55,
+     "dur": 0.82,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "bldz.mp4",
+     "ss": 0.0,
+     "dur": 1.73,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "하겐다즈 공식: 파인트를 뜨는 숟가락 → 하겐다즈 매장 건물",
+   "why": "'그 덕에 다들 진짜, 유럽에서 건너온 아이스크림인'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_ralph.mp4",
+   "ss": 0.2,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_ralph.mp4",
+     "ss": 0.2,
+     "dur": 1.11,
+     "fit": "cover",
+     "src_crop": [
+      290,
+      0,
+      363,
+      480
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "버스에서 웃는 랄프 짤",
+   "why": "'줄 알았다는 거예요'"
+  },
+  {
+   "src": "cp_116375921.jpg",
+   "ss": 0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "cp_116375921.jpg",
+     "ss": 0,
+     "dur": 3.7,
+     "fit": "cover",
+     "src_crop": [
+      140,
+      40,
+      700,
+      925
+     ],
+     "move": "in"
+    }
+   ],
+   "ours": "쿠팡 116375921 하겐다즈 파인트 마카다미아 넛 상품 사진(다가감)",
+   "why": "B 첫 줄 '쿠팡에서 하겐다즈를 한 통' — 같은 제품"
+  },
+  {
+   "src": "d9z.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "d9z.mp4",
+     "ss": 0.0,
+     "dur": 2.52,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "마카다미아 넛 아이스크림 근접(견과 조각, 다가감 d9z)",
+   "why": "'마카다미아 맛인데, 고소한 견과류가 사이사이에'"
+  },
+  {
+   "src": "d9z.mp4",
+   "ss": 2.52,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "d9z.mp4",
+     "ss": 2.52,
+     "dur": 0.99,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "마카다미아 넛 아이스크림 근접(이어서)",
+   "why": "'콕콕 박혀 있고'"
+  },
+  {
+   "src": "DTCZkanEC0I.mp4",
+   "ss": 1.8,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "DTCZkanEC0I.mp4",
+     "ss": 1.8,
+     "dur": 1.6,
+     "fit": "cover",
+     "src_crop": [
+      520,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "cp_116375921.jpg",
+     "ss": 0,
+     "dur": 2.03,
+     "fit": "cover",
+     "src_crop": [
+      110,
+      250,
+      450,
+      595
+     ],
+     "move": "in"
+    }
+   ],
+   "ours": "마카다미아 넛 파인트를 들어 보이는 손 → 상품 사진의 Häagen-Dazs 글자(다가감)",
+   "why": "'뚜껑 열 때마다, 그 점 두 개가 자꾸 눈에'"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 0,
+   "dt": 0.0,
+   "db": -2,
+   "why": "훅 시작 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_06.mp3",
+   "line": 0,
+   "dt": 2.33,
+   "db": -3,
+   "why": "계산 안 되는 매스 레이디 짤 두둥"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_24.mp3",
+   "line": 6,
+   "dt": 2.47,
+   "db": -3,
+   "why": "톰 비명 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_35.mp3",
+   "line": 7,
+   "dt": 2.55,
+   "db": -3,
+   "why": "랄프 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_26.mp3",
+   "line": 8,
+   "dt": 0.0,
+   "db": -2,
+   "why": "뒤 체험 첫 줄 뽀옹"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_28.mp3",
+   "line": 10,
+   "dt": 0.0,
+   "db": -3,
+   "why": "끝 줄 띵"
+  }
+ ]
+}
