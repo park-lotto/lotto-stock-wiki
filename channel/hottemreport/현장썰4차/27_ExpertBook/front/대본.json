@@ -1,0 +1,133 @@
+{
+ "topic": "ASUS ExpertBook Ultra(B9406, 0.99kg 비즈니스 노트북) — 리무버로 닦고 위에 올라서 보는 JulianTechTM 'They said I could do it and wow, it's really as good as new'·'I'm really impressed by the design for it to withstand the weight'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "3aWB9obyTgU",
+ "bench_note": "벤치 '대만 천재들이 만든 안 부서지는 노트북'(4.2만, 핫템리포트 45위, 설명란 'ASUS ExpertBook Ultra B9406 … 약 990g … 낙하와 압력 테스트') — 컷 모음. 원음형 = 유튜브 JulianTechTM 'Built Tough, But Is It Good? ASUS ExperBook Ultra!' nlv7GqU6IR0(1.96만, 1920x1080, 자동 더빙 트랙 여럿 — 원어 140-20 en-US original 로 받음) 140~330초 사본(전체본 삭제, 사본 시각 = 원래 −140). 화면 보조 = ShortCircuit 'I expect perfection - ASUS ExpertBook Ultra' 7kqvE63fnE4(42만, 영어 한 트랙) 40~170초 사본(손·제품 컷만 — 진행자 얼굴 구간·글자 덧그림 구간 안 씀).",
+ "sources": {
+  "jt": {
+   "file": "jt.mp4",
+   "who": "유튜브 JulianTechTM nlv7GqU6IR0 140~330초 사본(원어 140-20). 사본 10~12초 'Ceramic Coating' 덧글 구간 안 씀",
+   "views": 19597,
+   "dur": 190.1,
+   "res": "1920x1080"
+  },
+  "sc": {
+   "file": "sc.mp4",
+   "who": "유튜브 ShortCircuit 7kqvE63fnE4 40~170초 사본 — 손·제품 컷만",
+   "views": 419904,
+   "dur": 130.0,
+   "res": "1920x1080"
+  },
+  "jtz1": {
+   "file": "jtz1.mp4",
+   "who": "jt 48.9~53.6 을 1.22배 천천히 다가가게 구운 사본(원음 그대로) — 멈춤 대응",
+   "dur": 4.7
+  },
+  "jtz2": {
+   "file": "jtz2.mp4",
+   "who": "jt 96.5~101.2 를 1.22배 천천히 다가가게 구운 사본(원음 그대로) — 멈춤 대응",
+   "dur": 4.7
+  }
+ },
+ "titles": {
+  "hook": "밟아도 멀쩡한\n노트북"
+ },
+ "facts": {
+  "f1": {
+   "text": "JulianTechTM 원본(사본 스피치매틱스) 27.52~33.96 'because it's a ceramic coating, I can use alcohol or nail polish remover' · 47.56~53.20 'Honestly, this is my first time doing it. They said I could do it and wow, it's really as good as new.' · 화면 사본 23~29 덮개에 낙서·42~46 리무버 붓고 닦기",
+   "kind": "리뷰"
+  },
+  "f2": {
+   "text": "같은 원본 78.87~91.11 'Apparently, the laptop can withstand … 100 or 120 … below my weight, and I can stand on it' · 화면 사본 91~95 바닥의 노트북 위에 올라섬",
+   "kind": "리뷰"
+  },
+  "f3": {
+   "text": "같은 원본 49.28~53.20 'They said I could do it and wow, it's really as good as new.'",
+   "kind": "본인 말"
+  },
+  "f4": {
+   "text": "같은 원본 96.91~100.31 'I mean, I'm really impressed by the design for it to withstand the weight.'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "id": "N1",
+    "fn": "훅(물건+~있는데요)",
+    "text": "매니큐어 리무버로 박박 닦아도, 새것처럼 멀쩡한 노트북이 있는데요.",
+    "caps": [
+     "매니큐어 리무버로",
+     "박박 닦아도",
+     "새것처럼 멀쩡한 노트북이 있는데요"
+    ],
+    "facts": [
+     "f1"
+    ]
+   },
+   {
+    "id": "N2",
+    "fn": "불러냄 → 원음 증거",
+    "text": "심지어 이걸 바닥에 놓고, 사람이 위에 올라서도 버틴다는데요.",
+    "caps": [
+     "심지어 이걸 바닥에 놓고",
+     "사람이 위에 올라서도",
+     "버틴다는데요"
+    ],
+    "facts": [
+     "f2"
+    ]
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "jtz1",
+    "span": [
+     0.36,
+     4.1
+    ],
+    "en": "They said I could do it and wow, it's really as good as new.",
+    "caps": [
+     "해도 된다길래 해 봤는데",
+     "와, 진짜 새것 같아요!"
+    ],
+    "check": "앞 it 49.12~49.24(끝) · They 49.28 · new 52.80~53.20 · 다음 Yeah 54.60 · 원본 샷 47.18~50.88·50.88~54.55(원본 편집 그대로) · 화면 멈춤 대응으로 jtz1 사본(jt 48.9~53.6) 시각 0.36~4.10"
+   },
+   {
+    "id": "O2",
+    "src": "jtz2",
+    "span": [
+     0.38,
+     3.85
+    ],
+    "en": "I mean, I'm really impressed by the design for it to withstand the weight.",
+    "caps": [
+     "진짜 감탄했어요",
+     "이 무게를 버티다니!"
+    ],
+    "check": "앞 'I have to.' 96.39~96.87(안 넣음) · I 96.91 · weight 100.07~100.31 · 다음 Other 100.35 · 원본 한 샷(96.43~115.22) 안 · jtz2 사본(jt 96.5~101.2) 시각 0.38~3.85"
+   }
+  ],
+  "dropped": {
+   "벤치 '대만 천재들'·'커피 두 잔보다 가벼운'": "출처 없는 꾸밈 — 무게는 뒤에서 ASUS 사양(0.99kg)으로만",
+   "100kg·120kg 숫자": "Julian 본인도 '100 or 120 잊었다' — 숫자 안 씀",
+   "가격": "금액 금지",
+   "ShortCircuit 'Sponsored by ASUS'·진행자 얼굴": "화면 안 씀(손·제품만)"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ }
+}

@@ -1,0 +1,77 @@
+{
+ "_note": "숏템리폿 4차 28 SEESE 송풍기 앞 화면 소스 — dr = Dre LF8YsFaoDYw 40~455초 사본(1920x1080 → 857x1080) · 창 1080x1360. 같은 원본이 앞뒤로 되감기지 않게 dr 14.0 → 42.1 → 163.4 → 405.7 차례.",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰4차/28_SeeseBlower/front/src",
+ "files": {
+  "dr": "dr.mp4",
+  "dz": "dz.mp4",
+  "pp": "dr.mp4"
+ },
+ "voice_src": {
+  "dr": "dr_voice.wav"
+ },
+ "scene_cuts": {
+  "dr": [
+   37.03,
+   119.73,
+   201.33,
+   346.73
+  ],
+  "how": "ffmpeg 320px select scene>0.06 (고정 카메라 — 0.12 에선 0개)"
+ },
+ "blocks": {
+  "N1": {
+   "src": "dr",
+   "ss": 14.0,
+   "src_crop": [
+    531,
+    0,
+    857,
+    1080
+   ],
+   "why": "dr 0~37.03 한 샷 — 상자에서 송풍기를 꺼내는 손(얼굴 없음)"
+  },
+  "O1": {
+   "src": "dr",
+   "src_crop": [
+    610,
+    0,
+    857,
+    1080
+   ],
+   "why": "송풍기를 켠 손 + 'You hear that? It's actually moving my hand'(37.03~119.73 한 샷) — 보닛 BMW 원형 로고(소스 x≈537)는 crop 왼쪽 밖, 그릴 작은 M 표식은 첫 1초만 손 옆에 작게"
+  },
+  "N2": {
+   "src": "dr",
+   "ss": 163.4,
+   "src_crop": [
+    1063,
+    0,
+    857,
+    1080
+   ],
+   "why": "dr 119.73~201.33 한 샷 — 보닛 물기를 송풍기로 밀어냄, 그릴·로고는 crop 왼쪽 밖"
+  },
+  "O2": {
+   "src": "dr",
+   "src_crop": [
+    180,
+    0,
+    857,
+    1080
+   ],
+   "why": "손에 든 송풍기 근접 + 'This little thing is crazy'(346.73~ 한 샷) — 바퀴 가운데 BMW 로고(소스 x≈1106)는 crop 오른쪽 밖"
+  }
+ },
+ "consts": {
+  "LUFS_FINAL": -14.0,
+  "LUFS_NARR": -13.8,
+  "LIMIT": 0.8,
+  "GAINS": [
+   3.8,
+   9.3
+  ],
+  "GAP_NN": 0.25,
+  "LEAD": 0.03,
+  "_why": "−14 LUFS · GAINS = −16 − 원음 창 LUFS(ebur128, VOICE_AF 뒤: O1 −19.8(송풍기 소리 포함) · O2 −25.3) · LEAD 0.03(두 원음 모두 한 샷 안)"
+ }
+}
