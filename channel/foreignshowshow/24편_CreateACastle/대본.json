@@ -1,0 +1,609 @@
+{
+ "topic": "Create A Castle(크리에이트 어 캐슬) — 반으로 쪼개지는 모래성 틀. 해변에서 몇 시간씩 모래성을 쌓던 남편과 아내가 만듦, 해변·눈 시연 → 샤크 세 명 빠짐 → 두 샤크 경쟁 → 켄드라와 성사",
+ "product": "Create A Castle split mold sandcastle kit(반으로 쪼개지는 모래성 틀)",
+ "bench": {
+  "id": "YCosCkpODLc",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "모래성을 쉽게 만든다고?! (화면 제목: 몇분만에 완벽한 / 모래성을 만든다고?!)",
+  "dur": 47.0,
+  "views": 1200000,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "cut_median": 1.5,
+  "_cut_median_how": "2초 시트 눈 측정 — 10-28"
+ },
+ "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」",
+ "dropped": [
+  "벤치 '41억원'·'약 4억 8천만원에'(금액) → 금액 없이 거절·경쟁·성사만",
+  "벤치 '12개의 특허'·'국제완구상 수상' — 대본 사실 줄로는 안 씀(수상은 원본에 없음)",
+  "벤치 2~22초 남의 해변 영상 — 이 원본 밖 → 원본 무대 화면 속 시연으로"
+ ],
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "kind": "원음",
+    "fn": "반응(결말 반응 0초)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "이 성을 통째로 만든다고?"
+    ],
+    "cap_at": [
+     117.98
+    ],
+    "span": [
+     117.98,
+     119.46
+    ],
+    "orig_en": "You can build that entire castle.",
+    "text": "이 성을 통째로 만든다고?",
+    "style": "원음반응_크게",
+    "fx": "0초 빨간 원(R3 물건 = 무대 위 모래성 탑) — 벤치 0~1.0 투자자 얼굴 원(우리는 물건 원)",
+    "emph": [
+     {
+      "cap": "이 성을 통째로 만든다고?",
+      "span": "이 성을 통째로 만든다고?",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N1",
+    "kind": "나레",
+    "fn": "문제(훅)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "해변에 가면 가족은 뒷전이고",
+     "몇 시간씩 모래성만 쌓던",
+     "남편이 있었는데"
+    ],
+    "text": "해변에 가면 가족은 뒷전이고 몇 시간씩 모래성만 쌓던 남편이 있었는데",
+    "tts": "해변에 가면 가족은 뒷전이고, 몇 시간씩 모래성만 쌓던 남편이 있었는데",
+    "fx": "빨강 번쩍 — 벤치 0.5('41억원?!' 자리 — 우리는 금액 없음)",
+    "emph": [
+     {
+      "cap": "해변에 가면 가족은 뒷전이고",
+      "span": "가족은 뒷전이고",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 자막 띠 확대 시트(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "몇 시간씩 모래성만 쌓던",
+      "span": "몇 시간씩",
+      "color": "노랑",
+      "whole": false,
+      "why": "숫자 덩어리 → 손: 빨강→파랑(배경 대비, 98 #180 ⑨) → 손: 자막 띠 확대 시트(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "남편이 있었는데",
+      "span": "남편이 있었는데",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 자막 띠 확대 시트(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "fn": "문제(한 마디)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "젖은 모래가 통에 달라붙어요"
+    ],
+    "cap_at": [
+     47.8
+    ],
+    "span": [
+     47.8,
+     49.56
+    ],
+    "orig_en": "The wet sand sticks in the bucket.",
+    "text": "젖은 모래가 통에 달라붙어요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "젖은 모래가 통에 달라붙어요",
+      "span": "통에 달라붙어요",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 주황→초록(배경 대비, 98 #180 ⑨) → 손: 자막 띠 확대 시트(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "fn": "해답(제품)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "그래서 반으로 쪼개지는",
+     "모래성 틀을 아예",
+     "만들어 버렸다는데"
+    ],
+    "text": "그래서 반으로 쪼개지는 모래성 틀을 아예 만들어 버렸다는데",
+    "tts": "그래서 반으로 쪼개지는, 모래성 틀을 아예 만들어 버렸다는데",
+    "fx": "초록 번쩍 — 벤치 8.0('모래성을 만들 수 없어요' → 해답)",
+    "emph": [
+     {
+      "cap": "그래서 반으로 쪼개지는",
+      "span": "반으로 쪼개지는",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 분홍→민트(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "모래성 틀을 아예",
+      "span": "틀을 아예",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 자막 띠 확대 시트(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "만들어 버렸다는데",
+      "span": "버렸다는데",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "fn": "시연(틀 열기)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "틀에 모래를 꾹꾹 담고",
+     "열기만 하면",
+     "모래 탑이 뚝딱 선다는데"
+    ],
+    "text": "틀에 모래를 꾹꾹 담고 열기만 하면 모래 탑이 뚝딱 선다는데",
+    "tts": "틀에 모래를 꾹꾹 담고, 열기만 하면 모래 탑이 뚝딱 선다는데",
+    "fx": "초록 번쩍 — 벤치 10.0('몇 시간 걸리던 작업을')",
+    "emph": [
+     {
+      "cap": "틀에 모래를 꾹꾹 담고",
+      "span": "모래를 꾹꾹 담고",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 자막 띠 확대 시트(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "열기만 하면",
+      "span": "열기만 하면",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 빨강→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "모래 탑이 뚝딱 선다는데",
+      "span": "뚝딱 선다는데",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 자막 띠 확대 시트(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O3",
+    "kind": "원음",
+    "fn": "반응(두 시간)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "두 시간도 안 걸렸어요"
+    ],
+    "cap_at": [
+     121.06
+    ],
+    "span": [
+     121.06,
+     122.54
+    ],
+    "orig_en": "That took me under two hours.",
+    "text": "두 시간도 안 걸렸어요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "두 시간도 안 걸렸어요",
+      "span": "두 시간도",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리 → 손: 주황→초록(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N4",
+    "kind": "나레",
+    "fn": "체험(겨울)",
+    "facts": [
+     "f5",
+     "f6"
+    ],
+    "caps": [
+     "샤크들도 깜짝 놀랐는데",
+     "겨울엔 눈으로도",
+     "똑같이 쌓는다는데"
+    ],
+    "text": "샤크들도 깜짝 놀랐는데 겨울엔 눈으로도 똑같이 쌓는다는데",
+    "tts": "샤크들도 깜짝 놀랐는데, 겨울엔 눈으로도 똑같이 쌓는다는데",
+    "fx": "초록 번쩍 — 벤치 38.0('겨울에 눈으로도')",
+    "emph": [
+     {
+      "cap": "샤크들도 깜짝 놀랐는데",
+      "span": "깜짝 놀랐는데",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "겨울엔 눈으로도",
+      "span": "겨울엔 눈으로도",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "똑같이 쌓는다는데",
+      "span": "쌓는다는데",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 빨강→민트(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O4",
+    "kind": "원음",
+    "fn": "반응(엘사)",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "엘사 성이네!"
+    ],
+    "cap_at": [
+     161.3
+    ],
+    "span": [
+     161.3,
+     162.34
+    ],
+    "orig_en": "Elsa's castle.",
+    "text": "엘사 성이네!",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "엘사 성이네!",
+      "span": "엘사 성이네!",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N5",
+    "kind": "나레",
+    "fn": "지분 경쟁(거절)",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "근데 수익 얘기가 나오자",
+     "샤크 세 명이",
+     "줄줄이 빠졌는데"
+    ],
+    "text": "근데 수익 얘기가 나오자 샤크 세 명이 줄줄이 빠졌는데",
+    "tts": "근데 수익 얘기가 나오자, 샤크 세 명이 줄줄이 빠졌는데",
+    "fx": "빨강 번쩍 — 벤치 지분 경쟁",
+    "emph": [
+     {
+      "cap": "근데 수익 얘기가 나오자",
+      "span": "얘기가 나오자",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 분홍→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "샤크 세 명이",
+      "span": "샤크 세 명이",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "줄줄이 빠졌는데",
+      "span": "줄줄이 빠졌는데",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 주황→민트(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N6",
+    "kind": "나레",
+    "fn": "지분 경쟁(두 제안)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "남은 샤크 두 명이",
+     "서로 데려가겠다고",
+     "붙었다는데"
+    ],
+    "text": "남은 샤크 두 명이 서로 데려가겠다고 붙었다는데",
+    "tts": "남은 샤크 두 명이, 서로 데려가겠다고 붙었다는데",
+    "emph": [
+     {
+      "cap": "남은 샤크 두 명이",
+      "span": "두 명이",
+      "color": "노랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "서로 데려가겠다고",
+      "span": "데려가겠다고",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 빨강→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "붙었다는데",
+      "span": "붙었다는데",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O5",
+    "kind": "원음",
+    "fn": "결정(가로채기)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "잠깐 잠깐",
+     "기다려 봐!"
+    ],
+    "cap_at": [
+     448.99,
+     450.55
+    ],
+    "span": [
+     448.99,
+     451.08
+    ],
+    "orig_en": "Wait wait wait wait, hold on.",
+    "text": "잠깐 잠깐 기다려 봐!",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "잠깐 잠깐",
+      "span": "잠깐 잠깐",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "기다려 봐!",
+      "span": "기다려 봐!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O6",
+    "kind": "원음",
+    "fn": "결정(성사)",
+    "facts": [
+     "f9"
+    ],
+    "caps": [
+     "야호! 세상에!"
+    ],
+    "cap_at": [
+     573.17
+    ],
+    "span": [
+     573.17,
+     574.45
+    ],
+    "orig_en": "Yay! Oh my God.",
+    "text": "야호! 세상에!",
+    "style": "보통",
+    "fx": "초록 번쩍 — 성사",
+    "emph": [
+     {
+      "cap": "야호! 세상에!",
+      "span": "야호! 세상에!",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N7",
+    "kind": "나레",
+    "fn": "끝(결과)",
+    "facts": [
+     "f9"
+    ],
+    "caps": [
+     "가족은 뒷전이던 모래성 아빠가",
+     "결국 샤크까지",
+     "잡았다는데"
+    ],
+    "text": "가족은 뒷전이던 모래성 아빠가 결국 샤크까지 잡았다는데",
+    "tts": "가족은 뒷전이던 모래성 아빠가, 결국 샤크까지 잡았다는데",
+    "emph": [
+     {
+      "cap": "가족은 뒷전이던 모래성 아빠가",
+      "span": "뒷전이던 모래성 아빠가",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리 → 손: 빨강→파랑(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "결국 샤크까지",
+      "span": "결국 샤크까지",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말) → 손: 주황→초록(배경 대비, 98 #180 ⑨)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "잡았다는데",
+      "span": "잡았다는데",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ],
+  "cps_target": 7.8
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "speed": 1.25
+ },
+ "titles": {
+  "line1": "틀 하나로 이런",
+  "line2": "모래성이 된다고?!",
+  "rule": "1줄 노랑·2줄 흰, 끝 '?!' — 벤치 '몇분만에 완벽한 / 모래성을 만든다고?!'과 3어절 연속 겹침 0, 줄당 ≤12자"
+ },
+ "render": {
+  "gap": 0.03
+ },
+ "facts": {
+  "f1": {
+   "text": "원본 117.98~119.46 'You can build that entire castle.'(스피치매틱스 enhanced 영어 — 투자자 원음, 이름은 자막에 안 씀) · 화면은 같은 원본 41.25초 무대 위 모래성(cover)",
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY&t=117s",
+   "kind": "방송 원음+화면"
+  },
+  "f2": {
+   "text": "원본 33.32~42.52 'if you're anything like my husband here, you like to spend hours and hours and hours ignoring his family building the most elaborate sand castles.'",
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY&t=33s",
+   "kind": "방송 원음"
+  },
+  "f3": {
+   "text": "원본 42.52~52.48 'it's impossible to build a real sandcastle using the traditional fill and flip buckets. The wet sand sticks in the bucket. Even at its best, it just looks boring.' · 화면 48~51 초록 양동이",
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY&t=42s",
+   "kind": "방송 원음+화면"
+  },
+  "f4": {
+   "text": "원본 53.04~69.33 'we invented Create a Castle revolutionary split mold sandcastle kits… Just buckle it, pack it, unbuckle it, and well, create a castle.' · 114.05 'the mold split in half' · 화면 63~67·77~86 시연",
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY&t=53s",
+   "kind": "방송 원음+화면"
+  },
+  "f5": {
+   "text": "원본 119.94~123.74 'How long does that take?' 'That took me under two hours.' 'Wow.'",
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY&t=119s",
+   "kind": "방송 원음+화면"
+  },
+  "f6": {
+   "text": "원본 147.86~162.34 'It works in the snow… it works year round… And you can stack like crazy.' 'Elsa's castle.' · 화면 155~162 눈 시연",
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY&t=147s",
+   "kind": "방송 원음+화면"
+  },
+  "f7": {
+   "text": "원본 328.65~330.73 'And so for those reasons, I'm out.' · 346.61~362.14 'it's not investable yet because the business model isn't nailed down… I'm out.' · 381.62~384.86 'You're doing everything right… but I'm out.' (세 명)",
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY&t=328s",
+   "kind": "방송 원음+화면"
+  },
+  "f8": {
+   "text": "원본 419.87~444.67 'I'm going to give you an offer…' · 448.99~451.11 'Wait wait wait wait, hold on.' · 478.84~484.64 'I will give you the $350,000 for 25%' (두 샤크 경쟁) — 금액·지분은 대본에 안 씀",
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY&t=419s",
+   "kind": "방송 원음+화면"
+  },
+  "f9": {
+   "text": "원본 561.21~563.81 'But I think we're going to go with Kendra at the 20.' · 573.17~574.45 'Yay! Oh my God.' · 581.49~593.58 인터뷰 — 금액·지분은 대본에 안 씀",
+   "url": "https://www.youtube.com/watch?v=WIcEFgXDVsY&t=561s",
+   "kind": "방송 원음+화면"
+  }
+ }
+}

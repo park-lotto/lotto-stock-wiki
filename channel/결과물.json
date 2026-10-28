@@ -1774,6 +1774,38 @@
    "seconds": 35.77,
    "doc": "channel/banggu/썰템홈샷_하이브리드/15_츄파춥스/",
    "judge": "[확인대기] 잉 = 1969 달리가 신문지에 로고 바탕 스케치(Chupa Chups 영국 공식 연혁) · 포크로 먹듯 막대 · 이름 두 번 · 1995 미르 정거장 러시아 우주인(공식 연혁) · 훅 = 디스커버리 UK 공식 빨간 츄파춥스 → 달리 · 뒤 쿠팡 같은 제품 9774031587(파고다캡) · −14.5 LUFS/TP −1.6(완성본 직접) · 끝 여운 0.93초 · 끝 0.1초 무음 · make.py checks 14/14 · freeze/black 0 · 광고 2초 간격+마지막 프레임 · deliver --check ○ · 사람 귀 확인 전"
+  },
+  {
+   "channel": "foreignshowshow",
+   "channel_name": "샥탬스토리",
+   "brand": "샥탬스토리",
+   "style": "현장썰 하이브리드(샤크탱크 칼카피 앞 + 쿠팡 1인칭 체험 뒤)",
+   "date": "2026-10-28",
+   "n": 112,
+   "from": "channel/foreignshowshow/23편_Stretchlace/make_plan.py → tools/calcopy/shark/render.py(앞) → tools/calcopy/shark/hybrid.py(뒤·이음) → channel/foreignshowshow/하이브리드/final_tail.py(소리=영상 길이·끝 페이드·TP) → engine/finalize.seal",
+   "title": "하이브리드 23 Stretchlace(늘어나는 신발끈 — 쿠팡에 같은 제품 없어 비슷한 플렉시레이스 스판덱스 평끈 7941709582, 대본에 밝힘)",
+   "path": "C:/숏템_칼카피/foreignshowshow/하이브리드/23편_Stretchlace/work/hybrid/final.mp4",
+   "desktop": "샥탬스토리_23_Stretchlace_검수대기.mp4",
+   "md5": "7c0c146f5ad86beaef8723b7c1648071",
+   "seconds": 41.67,
+   "doc": "channel/foreignshowshow/23편_Stretchlace_하이브리드/",
+   "judge": "[확인대기] 벤치 yeUP61IW6bM ↔ Sony FW4-8lfU-4o · 앞 O3 끝 15.63초 + 뒤 지훈 1인칭(B1 '똑같은 건 없고 비슷하게') · −13.9 LUFS/TP −2.4 · 끝 여운 1.27초 · 끝 0.1초 −141dB · freeze/black 0 · 광고 2초 간격+마지막 프레임 · check B표 전 칸 ○ · deliver --check ○ · 사람 귀 확인 전"
+  },
+  {
+   "channel": "foreignshowshow",
+   "channel_name": "샥탬스토리",
+   "brand": "샥탬스토리",
+   "style": "현장썰 하이브리드(샤크탱크 칼카피 앞 + 쿠팡 1인칭 체험 뒤)",
+   "date": "2026-10-28",
+   "n": 113,
+   "from": "channel/foreignshowshow/24편_CreateACastle/make_plan.py → tools/calcopy/shark/render.py(앞) → tools/calcopy/shark/hybrid.py(뒤·이음) → channel/foreignshowshow/하이브리드/final_tail.py(소리=영상 길이·끝 페이드·TP) → engine/finalize.seal",
+   "title": "하이브리드 24 Create A Castle(쪼개지는 모래성 틀 — 쿠팡에 같은 제품 없어 비슷한 성 모양 모래놀이 몰드 9793958027, 대본에 밝힘)",
+   "path": "C:/숏템_칼카피/foreignshowshow/하이브리드/24편_CreateACastle/work/hybrid/final.mp4",
+   "desktop": "샥탬스토리_24_CreateACastle_검수대기.mp4",
+   "md5": "a7651b58848b09bd1821b530db261b67",
+   "seconds": 41.6,
+   "doc": "channel/foreignshowshow/24편_CreateACastle_하이브리드/",
+   "judge": "[확인대기] 벤치 YCosCkpODLc ↔ Shark Tank Global WIcEFgXDVsY · 앞 O3 끝 15.47초 + 뒤 지훈 1인칭(B1 '똑같은 건 없고 비슷하게') · −14.0 LUFS/TP −2.4 · 끝 여운 1.17초 · 끝 0.1초 −108dB · freeze/black 0 · 광고 2초 간격+마지막 프레임 · check B표 전 칸 ○ · deliver --check ○ · 사람 귀 확인 전"
   }
  ]
 }

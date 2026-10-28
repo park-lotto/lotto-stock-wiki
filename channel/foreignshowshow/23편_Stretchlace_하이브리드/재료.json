@@ -1,0 +1,236 @@
+{
+ "_note": "샥탬스토리 하이브리드 23편 Stretchlace 뒤 재료 — 쿠팡의 비슷한 제품(플렉시레이스 늘어나는 평끈)과 같은 꼴 늘어나는 신발끈 영상 3편 + B2 방송 투자자·B3 방송 손 근접. 창 1080x1052. 리뷰어·광고 모델 얼굴 없는 손·발·신발 컷만.",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/23편_Stretchlace/src",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "sources": {
+  "WA5TwiuMxEM": {
+   "채널": "PulseTV Deal",
+   "url": "https://www.youtube.com/watch?v=WA5TwiuMxEM",
+   "제목": "Easy Stretch Shoe Laces - 3 Pairs",
+   "해상도": "1920x1080",
+   "남의 글자": "오른아래 'Pulsetv.com' 표식 — 자르기 h 900(y 0 또는 60)으로 밖 · 0~9·25.5~35·41~61·66초 뒤 진행자 얼굴 안 씀 · 15~21초 New Balance 'N' 신발 안 씀 · 72~78 상자 글 안 씀"
+  },
+  "LOeFm4geE54": {
+   "채널": "The Good Stuff Guide",
+   "url": "https://www.youtube.com/watch?v=LOeFm4geE54",
+   "제목": "The Original STRETCHLACE | Easy On Shoes for Kids—No More Tying!",
+   "해상도": "1920x1080",
+   "남의 글자": "없음 · 32~97초 흰/베이지 운동화 혀 안 상표 글(다른 회사) 크게 보여 안 씀 — 22~31초 끈 근접만"
+  },
+  "z6u0A2uqKo8": {
+   "채널": "The Original Stretchlace(방송 제품 공식)",
+   "url": "https://www.youtube.com/watch?v=z6u0A2uqKo8",
+   "제목": "Turn Any Sneaker into a Slip-On!",
+   "해상도": "1920x1080",
+   "남의 글자": "오른아래 'THE ORIGINAL STRETCHLACE' 로고 — 자르기 h 880 으로 밖 · 44초 뒤 다른 회사 상표 신발 안 씀"
+  },
+  "FW4-8lfU-4o": {
+   "채널": "Sony Pictures Television(공식)",
+   "해상도": "1920x1080",
+   "남의 글자": "90~92·107~119초 띠 없음"
+  }
+ },
+ "shots": [
+  {
+   "line": "B1",
+   "src": "WA5TwiuMxEM.mp4",
+   "ss": 10.05,
+   "dur": 2.9,
+   "src_crop": [
+    498,
+    0,
+    924,
+    900
+   ],
+   "mute": true,
+   "ours": "PulseTV 'Easy Stretch Shoe Laces'(WA5TwiuMxEM, 1080p): 검은 평끈을 두 손으로 쭉 늘임(샷 ~9.9~15.0 · 오른아래 'Pulse' 표식은 자르기 밖 h 900, 손만)",
+   "i": 0
+  },
+  {
+   "line": "B1",
+   "src": "LOeFm4geE54.mp4",
+   "ss": 22.2,
+   "dur": 3.4,
+   "src_crop": [
+    425,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "The Good Stuff Guide(LOeFm4geE54): 흰 평끈을 손으로 쭉 당겨 보임(샷 22.10~31.87, 손만)",
+   "i": 1
+  },
+  {
+   "line": "B2",
+   "src": "FW4-8lfU-4o.mp4",
+   "ss": 90.4,
+   "dur": 1.076,
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "방송(FW4-8lfU-4o): 노란 끈을 꿴 운동화와 제품 상자(원본 샷 90.29~92.73, 사람 없음, 소리 끔) — '이게 말도 안 되는 게' 자막 자리",
+   "i": 2
+  },
+  {
+   "line": "B2",
+   "src": "FW4-8lfU-4o.mp4",
+   "ss": 397.0,
+   "dur": 1.357,
+   "src_crop": [
+    439,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "방송: '빠지겠다'고 말하는 투자자('샤크들이 다 빠졌다가' 자막 자리 6.06~8.49 에 딱 맞춤, 샷 396.80~401.23, 소리 끔)",
+   "i": 3
+  },
+  {
+   "line": "B2",
+   "src": "FW4-8lfU-4o.mp4",
+   "ss": 123.55,
+   "dur": 1.496,
+   "src_crop": [
+    186,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "방송: 운동화를 신어 보는 로버트('로버트가 다시 돌아와서 잡은' 자막 자리 8.49~9.99 에 딱 맞춤 — 화면 속 사람 = 말하는 그 사람, 샷 123.49~125.09, 소리 끔)",
+   "i": 4
+  },
+  {
+   "line": "B2",
+   "src": "FW4-8lfU-4o.mp4",
+   "ss": 112.75,
+   "dur": 1.25,
+   "src_crop": [
+    331,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "방송: 신발에 끈을 끼워 보는 투자자(샷 112.65~114.38, 소리 끔) — '그 신발끈이랑'",
+   "i": 5
+  },
+  {
+   "line": "B2",
+   "src": "FW4-8lfU-4o.mp4",
+   "ss": 114.5,
+   "dur": 0.91,
+   "src_crop": [
+    262,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "방송: 신발을 신어 보는 다른 투자자(샷 114.38~116.78, 바로 앞 컷에서 원본 앞으로 이어짐, 소리 끔)",
+   "i": 6
+  },
+  {
+   "line": "B3",
+   "src": "FW4-8lfU-4o.mp4",
+   "ss": 108.0,
+   "dur": 1.25,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "방송: 운동화에 끈을 꿰어 묶는 손 근접(샷 107.04~109.31 중 줌이 멈춘 108.0~, 손만, 소리 끔)",
+   "i": 7
+  },
+  {
+   "line": "B3",
+   "src": "z6u0A2uqKo8.mp4",
+   "ss": 19.2,
+   "dur": 4.1,
+   "src_crop": [
+    508,
+    0,
+    903,
+    880
+   ],
+   "mute": true,
+   "ours": "Stretchlace 공식 'Turn Any Sneaker into a Slip-On!'(z6u0A2uqKo8, 1080p): 묶인 흰 운동화에 발을 쑥 넣음(발만 · 오른아래 로고 표식은 자르기 밖 h 880)",
+   "i": 8
+  },
+  {
+   "line": "B4",
+   "src": "LOeFm4geE54.mp4",
+   "ss": 28.75,
+   "dur": 1.85,
+   "src_crop": [
+    425,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "The Good Stuff Guide: 평끈을 손으로 쭉 늘임(샷 28.67~31.87 — B1 22.2~25.4 와 ±3초 밖)",
+   "i": 9
+  },
+  {
+   "line": "B4",
+   "src": "WA5TwiuMxEM.mp4",
+   "ss": 61.75,
+   "dur": 2.55,
+   "src_crop": [
+    498,
+    60,
+    924,
+    900
+   ],
+   "mute": true,
+   "ours": "PulseTV: 끈을 안 풀고 운동화에서 발을 쑥 빼는 발(샷 61.63~65.80, 표식 자르기 밖)",
+   "i": 10
+  },
+  {
+   "line": "B5",
+   "src": "z6u0A2uqKo8.mp4",
+   "ss": 1.3,
+   "dur": 2.2,
+   "src_crop": [
+    508,
+    0,
+    903,
+    880
+   ],
+   "mute": true,
+   "ours": "Stretchlace 공식: 묶인 흰 운동화 옆으로 발이 들어옴(발만 · 로고 표식 자르기 밖 — B3 19.2~23.3 과 ±3초 밖)",
+   "i": 11
+  },
+  {
+   "line": "B5",
+   "src": "z6u0A2uqKo8.mp4",
+   "ss": 28.0,
+   "dur": 2.0,
+   "src_crop": [
+    508,
+    0,
+    903,
+    880
+   ],
+   "mute": true,
+   "ours": "Stretchlace 공식: 흰 운동화를 신은 두 발(발만 · 로고 표식 자르기 밖 — B3 19.2~23.3 과 ±3초 밖)",
+   "i": 12
+  }
+ ],
+ "effects": []
+}
