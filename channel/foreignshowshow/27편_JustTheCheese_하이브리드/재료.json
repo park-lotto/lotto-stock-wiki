@@ -1,0 +1,244 @@
+{
+ "_note": "샥탬스토리 하이브리드 27편 Just the Cheese 뒤 재료 — 쿠팡의 비슷한 제품 Moon Cheese 의 공식 영상 2편 + 그 제품 제조 영상(EnWave). 창 1080x1052. 사람 얼굴 없는 제품·알갱이·손 컷만. 화면 글자 '100% REAL CHEESE·HIGH IN PROTEIN·LOW IN CARBS'(효능·영양 글)·봉지 영양 표시 칸은 안 씀.",
+ "_dur_note": "컷 길이 = 뒤 렌더 render_info 의 실제 줄 길이에 맞춤(인자 DUR)",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/27편_JustTheCheese/src",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "sources": {
+  "D9DosMImCg4": {
+   "채널": "Moon Cheese Snacks(공식)",
+   "url": "https://www.youtube.com/watch?v=D9DosMImCg4",
+   "제목": "Moon Cheese Crunchy Cheese Sticks",
+   "해상도": "1920x1080 23.98fps",
+   "남의 글자": "7.5초 앞 '100% REAL CHEESE' 글·12초 뒤 'CRANK UP THE CRUNCH' 안 씀 · 0.7~4.9초 사람 얼굴 안 씀"
+  },
+  "mZJ1JCUEg2k": {
+   "채널": "Moon Cheese Snacks(공식)",
+   "url": "https://www.youtube.com/watch?v=mZJ1JCUEg2k",
+   "제목": "Moon Cheese Bites Brand Video",
+   "해상도": "1920x1080 30fps",
+   "남의 글자": "1.9~9.3초 '100% CHEESE·HIGH IN PROTEIN·LOW IN CARBS' 글·9.3~11.2초 봉지 영양 표시 안 씀 · 11.7초 뒤 위 글은 크롭 밖"
+  },
+  "wz4": {
+   "채널": "EnWave 사본",
+   "url": "https://www.youtube.com/watch?v=wsI_1K_7_ME",
+   "제목": "wsI 4.30초 구간 다가가는 사본(zoomclip.py)",
+   "해상도": "1920x1080 30fps"
+  },
+  "wz137": {
+   "채널": "EnWave 사본",
+   "url": "https://www.youtube.com/watch?v=wsI_1K_7_ME",
+   "제목": "wsI 137.15초 구간 다가가는 사본(zoomclip.py)",
+   "해상도": "1920x1080 30fps"
+  },
+  "wsI_1K_7_ME": {
+   "채널": "EnWave Corporation(장비 회사)",
+   "url": "https://www.youtube.com/watch?v=wsI_1K_7_ME",
+   "제목": "Moon Cheese: How It's Made",
+   "해상도": "1920x1080 23.98fps",
+   "남의 글자": "142초 뒤 EnWave 로고 안 씀 · 공장 직원 얼굴 컷 안 씀"
+  }
+ },
+ "shots": [
+  {
+   "line": "B1",
+   "src": "D9DosMImCg4.mp4",
+   "ss": 8.32,
+   "dur": 3.3,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "Moon Cheese 공식 'Crunchy Cheese Sticks'(D9DosMImCg4, 1080p): 선반 위 여러 맛 Moon Cheese 봉지(샷 8.30~11.72, 부스러기가 날림, 사람 없음)",
+   "i": 0
+  },
+  {
+   "line": "B1",
+   "src": "wz4.mp4",
+   "ss": 0.0,
+   "dur": 3.22,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "EnWave 'Moon Cheese: How It's Made'(wsI_1K_7_ME 4.30~8.50 을 1.20배 천천히 다가가는 사본 wz4.mp4 — 정지 화면 대응): 빨강·파랑 Moon Cheese 봉지 둘(사람 없음)",
+   "i": 1
+  },
+  {
+   "line": "B2",
+   "src": "wsI_1K_7_ME.mp4",
+   "ss": 99.42,
+   "dur": 2.2,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "EnWave 영상: 동글동글한 치즈 알갱이가 와르르 쏟아짐(샷 99.39~101.81, 사람 없음)",
+   "i": 2
+  },
+  {
+   "line": "B2",
+   "src": "wsI_1K_7_ME.mp4",
+   "ss": 72.72,
+   "dur": 1.2,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "EnWave 영상: 기계 위로 굴러가는 노릇한 알갱이(샷 72.70~74.28, 사람 없음)",
+   "i": 3
+  },
+  {
+   "line": "B2",
+   "src": "wsI_1K_7_ME.mp4",
+   "ss": 74.3,
+   "dur": 1.33,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "EnWave 영상: 노릇한 치즈 알갱이가 담기는 장면(샷 74.28~75.66, 사람 없음)",
+   "i": 4
+  },
+  {
+   "line": "B3",
+   "src": "wsI_1K_7_ME.mp4",
+   "ss": 68.25,
+   "dur": 1.35,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "EnWave 영상: 동글동글한 치즈 알갱이 근접(샷 68.19~70.61, 사람 없음)",
+   "i": 5
+  },
+  {
+   "line": "B3",
+   "src": "wsI_1K_7_ME.mp4",
+   "ss": 89.68,
+   "dur": 1.25,
+   "src_crop": [
+    545,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "EnWave 영상: 장갑 낀 손이 알갱이를 헤집음(샷 89.63~90.97, 손만·얼굴 없음)",
+   "i": 6
+  },
+  {
+   "line": "B3",
+   "src": "wsI_1K_7_ME.mp4",
+   "ss": 91.0,
+   "dur": 1.25,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "EnWave 영상: 둥근 통 안으로 떨어지는 알갱이(샷 90.97~92.26, 사람 없음)",
+   "i": 7
+  },
+  {
+   "line": "B3",
+   "src": "wsI_1K_7_ME.mp4",
+   "ss": 92.3,
+   "dur": 1.2,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "EnWave 영상: 위에서 쏟아지는 노릇한 알갱이(샷 92.26~93.80, 사람 없음)",
+   "i": 8
+  },
+  {
+   "line": "B4",
+   "src": "mZJ1JCUEg2k.mp4",
+   "ss": 11.72,
+   "dur": 2.77,
+   "src_crop": [
+    590,
+    360,
+    739,
+    720
+   ],
+   "mute": true,
+   "ours": "Moon Cheese 공식 'Bites Brand Video': 여러 맛 봉지 줄(샷 11.67~15.16 — 위 'CRANK UP THE CRUNCH' 글은 크롭 y 360 아래로 밖(봉지 위 영양 표기 줄도 밖) — 10-28 1초 시트에서 y 190 일 때 글 아랫단이 보여 내림)",
+   "i": 9
+  },
+  {
+   "line": "B4",
+   "src": "wsI_1K_7_ME.mp4",
+   "ss": 27.58,
+   "dur": 1.5,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "EnWave 영상: 노릇한 알갱이 사이 하얀 치즈 조각(샷 27.53~30.91, 사람 없음)",
+   "i": 10
+  },
+  {
+   "line": "B5",
+   "src": "wsI_1K_7_ME.mp4",
+   "ss": 16.22,
+   "dur": 1.45,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "EnWave 영상: 길게 썬 치즈가 지나감(샷 16.18~17.81, 사람 없음)",
+   "i": 11
+  },
+  {
+   "line": "B5",
+   "src": "wz137.mp4",
+   "ss": 0.0,
+   "dur": 2.91,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "EnWave 영상 끝 Moon Cheese 봉지(wsI_1K_7_ME 137.15~141.25 를 1.25배 천천히 다가가는 사본 wz137.mp4 — 정지 화면 대응, 141.35 뒤 EnWave 로고 안 씀)",
+   "i": 12
+  }
+ ],
+ "effects": []
+}
