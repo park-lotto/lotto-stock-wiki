@@ -1,0 +1,180 @@
+{
+ "_note": "샥탬스토리 하이브리드 31편 Moki Doorstep 뒤 재료 — 쿠팡의 비슷한 제품(접이식 차 문 고리 걸이 발판)과 같은 꼴의 사용 영상 2편(손·발 시점). 창 1080x1052. 사람 얼굴 없는 손·발·발판 컷만. 글자 띠 있는 홍보 영상(IZSSRUIE8PA)·워터마크 영상(GIZMODERN)은 안 씀.",
+ "_dur_note": "컷 길이 = 뒤 렌더 render_info 의 실제 줄 길이에 맞춤(인자 DUR)",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/31편_MokiDoorstep/src",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "sources": {
+  "HGzfXsFkj50": {
+   "채널": "Deepak John",
+   "url": "https://www.youtube.com/watch?v=HGzfXsFkj50",
+   "제목": "Hyundai Venue Accessories- Car Door Latch Hook Step",
+   "해상도": "1920x1080 29.97fps",
+   "남의 글자": "없음(손 시점) · 19~20초 차 옆 'PETROL' 연료 표기 스티커(상표 아님)"
+  },
+  "YY_zIc6Wk2I": {
+   "채널": "ONE F",
+   "url": "https://www.youtube.com/watch?v=YY_zIc6Wk2I",
+   "제목": "멀티 루프 도어스텝",
+   "해상도": "1280x720 29.97fps",
+   "남의 글자": "없음(손·다리 시점)"
+  }
+ },
+ "shots": [
+  {
+   "line": "B1",
+   "src": "HGzfXsFkj50.mp4",
+   "ss": 0.1,
+   "dur": 2.4,
+   "src_crop": [
+    145,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "Deepak John(HGzfXsFkj50, 1080p 손 시점): 손에 든 검정 접이식 발판(한 샷 0~20.59 안, 사람 얼굴 없음)",
+   "i": 0
+  },
+  {
+   "line": "B1",
+   "src": "HGzfXsFkj50.mp4",
+   "ss": 4.0,
+   "dur": 2.4,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 영상: 발판 경첩을 손으로 보여 줌(손만)",
+   "i": 1
+  },
+  {
+   "line": "B2",
+   "src": "HGzfXsFkj50.mp4",
+   "ss": 8.0,
+   "dur": 2.6,
+   "src_crop": [
+    305,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 영상: 열린 차 문 고리에 발판을 거는 손(손만)",
+   "i": 2
+  },
+  {
+   "line": "B2",
+   "src": "YY_zIc6Wk2I.mp4",
+   "ss": 0.5,
+   "dur": 2.2,
+   "src_crop": [
+    330,
+    0,
+    739,
+    720
+   ],
+   "mute": true,
+   "ours": "ONE F(YY_zIc6Wk2I, 720p): 차 문 고리에 발판을 거는 손(샷 0~5.27, 손만)",
+   "i": 3
+  },
+  {
+   "line": "B3",
+   "src": "YY_zIc6Wk2I.mp4",
+   "ss": 5.4,
+   "dur": 4.4,
+   "src_crop": [
+    330,
+    0,
+    739,
+    720
+   ],
+   "mute": true,
+   "ours": "같은 영상: 발판을 밟고 차 옆으로 올라서는 다리(샷 5.27~10.11, 얼굴 없음)",
+   "i": 4
+  },
+  {
+   "line": "B4",
+   "src": "YY_zIc6Wk2I.mp4",
+   "ss": 16.2,
+   "dur": 3.0,
+   "src_crop": [
+    270,
+    0,
+    739,
+    720
+   ],
+   "mute": true,
+   "ours": "같은 영상: 발판을 반으로 접는 두 손(샷 15.42~22.82, 손만)",
+   "i": 5
+  },
+  {
+   "line": "B4",
+   "src": "YY_zIc6Wk2I.mp4",
+   "ss": 22.9,
+   "dur": 1.25,
+   "src_crop": [
+    270,
+    0,
+    739,
+    720
+   ],
+   "mute": true,
+   "ours": "같은 영상: 접은 발판을 차 안에서 드는 손(샷 22.82~24.22, 손만)",
+   "i": 6
+  },
+  {
+   "line": "B5",
+   "src": "HGzfXsFkj50.mp4",
+   "ss": 16.2,
+   "dur": 2.0,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "Deepak John: 차 지붕 위(사람 없음)",
+   "i": 7
+  },
+  {
+   "line": "B5",
+   "src": "HGzfXsFkj50.mp4",
+   "ss": 19.0,
+   "dur": 1.5,
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 영상: 문 고리 발판을 밟는 맨발(샷 끝 20.59 안, 얼굴 없음)",
+   "i": 8
+  },
+  {
+   "line": "B5",
+   "src": "HGzfXsFkj50.mp4",
+   "ss": 21.0,
+   "dur": 2.3,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 영상: 문 고리에 걸린 발판(샷 20.59~ 안, 사람 없음)",
+   "i": 9
+  }
+ ],
+ "effects": []
+}
