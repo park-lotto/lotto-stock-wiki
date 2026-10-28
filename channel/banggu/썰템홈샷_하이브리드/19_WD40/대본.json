@@ -1,0 +1,162 @@
+{
+ "topic": "WD-40 × 이름이 'Water Displacement, 40th formula' — 1953 샌디에이고 로켓 케미컬(직원 셋)이 항공우주용 녹 방지제를 만들다 40번째 시도에 성공 → 첫 사용처 Convair 아틀라스 미사일 겉면 → 직원들이 도시락 통에 몰래 집에 가져감 → 스프레이 통에 담아 1958 가게 판매(전부 WD-40 Company 공식 'Our History') · 뒤 체험: 쿠팡 WD-40 방청유 360ml 스마트 스트로(6368258399, 같은 제품)",
+ "brand": "WD-40",
+ "scene_query": "WD-40 history 40th formula Atlas missile",
+ "product_mode": "exact",
+ "ing": {
+  "line": 0,
+  "fact": "wd",
+  "why": "누구나 아는 파란 캔 WD-40 — '40'이 마흔 번째 공식이라는 뜻(공식 'Water Displacement, 40th formula'). 훅 = 경첩에 칙 뿌리는 손 → 의심하는 짤 '40이 무슨 뜻?'"
+ },
+ "hook": [
+  "WD-40의 40,",
+  "이게 무슨 뜻이게?"
+ ],
+ "post": "WD-40의 40은 마흔 번째 공식이라는 뜻",
+ "tempo": null,
+ "points_from": "포인트.md",
+ "facts": {
+  "wd": {
+   "text": "WD-40 Company 공식 'Our History'(2026-10-28 확인): 'In 1953, in a small lab in San Diego, California' · 'fledgling Rocket Chemical Company and its staff of three' set out to create rust-prevention products for the aerospace industry · 'It took them 40 attempts to get their water displacing formula to work' · name = 'Water Displacement, 40th formula' · first commercial user 'Convair, an aerospace contractor, to protect the outer skin of the Atlas Missile' · 'Several employees snuck cans of WD-40 out of the plant in their lunchboxes to use at home' · Norm Larsen 'experimented with putting WD-40 into aerosol cans' · 1958 'first appearance on store shelves in San Diego'",
+   "url": "https://wd40company.com/our-company/our-history/"
+  },
+  "at": {
+   "text": "Retro Space HD 'MERCURY-ATLAS 1 - Launch (1960/07/29)'(vMvO62MSVi8) — 출처 NASA·San Diego Air and Space Museum 공공 자료, 아틀라스 로켓 발사(그 시절 아틀라스 그림)",
+   "url": "https://www.youtube.com/watch?v=vMvO62MSVi8"
+  },
+  "lb": {
+   "text": "WD-40 캔 라벨 'Stops Squeaks 삐걱임을 없애는 데'(쿠팡 상품 사진)",
+   "url": "https://www.coupang.com/vp/products/6368258399"
+  },
+  "p1": {
+   "text": "쿠팡 6368258399 'WD-40 방청유 360ml(Straw)' — 파트너스 API 2026-10-28, 상품 사진을 열어 WD-40 스마트 스트로 캔 확인",
+   "url": "https://www.coupang.com/vp/products/6368258399"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "잉 훅(40이 무슨 뜻 = 질문)",
+    "seg": "A",
+    "text": "녹슨 곳에 뿌리는 파란 캔 더블유디 포티, 근데 이 이름에 숨은 뜻이 있다는데",
+    "facts": [
+     "wd"
+    ],
+    "sources": [
+     "https://wd40company.com/our-company/our-history/"
+    ]
+   },
+   {
+    "fn": "몰랐던 배경",
+    "seg": "A",
+    "text": "원래는 로켓 케미컬이라는 작은 회사가, 녹슬지 말라고 만든 거였는데",
+    "facts": [
+     "wd"
+    ],
+    "sources": [
+     "https://wd40company.com/our-company/our-history/"
+    ]
+   },
+   {
+    "fn": "덤(미사일)",
+    "seg": "A",
+    "text": "처음 쓰인 곳이 놀랍게도, 미사일 바깥쪽이었대요",
+    "facts": [
+     "wd",
+     "at"
+    ],
+    "sources": [
+     "https://wd40company.com/our-company/our-history/"
+    ]
+   },
+   {
+    "fn": "한계",
+    "seg": "A",
+    "text": "근데 물기를 밀어내는 공식이, 자꾸만 실패했다는 거죠",
+    "facts": [
+     "wd"
+    ],
+    "sources": [
+     "https://wd40company.com/our-company/our-history/"
+    ]
+   },
+   {
+    "fn": "해결",
+    "seg": "A",
+    "text": "그렇게 시도한 지 마흔 번 만에, 겨우 성공한 공식이 바로 이거",
+    "facts": [
+     "wd"
+    ],
+    "sources": [
+     "https://wd40company.com/our-company/our-history/"
+    ]
+   },
+   {
+    "fn": "공개",
+    "seg": "A",
+    "text": "그래서 이름도, 물 밀어내기 마흔 번째 공식의 줄임말이래요",
+    "facts": [
+     "wd"
+    ],
+    "sources": [
+     "https://wd40company.com/our-company/our-history/"
+    ]
+   },
+   {
+    "fn": "반전",
+    "seg": "A",
+    "text": "심지어 직원들이 이걸, 도시락 통에 몰래 넣어 집에 가져갔다는데",
+    "facts": [
+     "wd"
+    ],
+    "sources": [
+     "https://wd40company.com/our-company/our-history/"
+    ]
+   },
+   {
+    "fn": "쐐기",
+    "seg": "A",
+    "text": "그걸 보고, 아예 스프레이 통에 담아 가게에서 팔기 시작했대요",
+    "facts": [
+     "wd"
+    ],
+    "sources": [
+     "https://wd40company.com/our-company/our-history/"
+    ]
+   },
+   {
+    "fn": "B 연결",
+    "seg": "B",
+    "text": "이 이야기 듣고 저도, 쿠팡에서 더블유디 포티를 하나 샀는데",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/6368258399"
+    ]
+   },
+   {
+    "fn": "B 좋은 점",
+    "seg": "B",
+    "text": "삐걱거리던 문 경첩에 칙 뿌리니까, 소리가 금방 조용해지고",
+    "facts": [
+     "lb"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/6368258399"
+    ]
+   },
+   {
+    "fn": "B 끝(되받기)",
+    "seg": "B",
+    "text": "뿌릴 때마다, 마흔 번째 공식이라는 게 자꾸 생각나더라고요",
+    "facts": [
+     "wd"
+    ],
+    "sources": [
+     "https://wd40company.com/our-company/our-history/"
+    ]
+   }
+  ]
+ }
+}

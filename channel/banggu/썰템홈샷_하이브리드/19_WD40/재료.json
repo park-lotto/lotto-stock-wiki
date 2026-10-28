@@ -1,0 +1,425 @@
+{
+ "_note": "19 WD-40 — WD-40 영국 공식 MDnBZHAts4Y(손으로 경첩·문에 뿌리는 컷만, 진행자 얼굴·바퀴 로고 컷 안 씀) · WD-40 미국 공식 rTT9psGLlDQ(캔 근접·물방울·뿌리기, 화면 영어 광고 글은 자르기 밖) · Retro Space HD 'MERCURY-ATLAS 1 Launch'(NASA·San Diego Air and Space Museum 공공 자료) vMvO62MSVi8 · HowStuffWorks 'WD-40: Where did it come from?' 6A2cq1X2Iog 의 WD-01~WD-10 통이 하나씩 늘어나는 그림만(만화 인물 구간 안 씀) (haz = 32.6초부터 2.1초 다가가는 사본) · 손 영상 r2fL3HgZM1g(세로, 캔 들기·경첩 뿌리기) · 뒤 = 쿠팡 6368258399 상품 사진 + 같은 WD-40 스마트 스트로 캔 손 영상.",
+ "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/19_WD40/src",
+ "shots": [
+  {
+   "src": "MDnBZHAts4Y.mp4",
+   "ss": 24.46,
+   "fit": "cover",
+   "full": true,
+   "cuts": [
+    {
+     "src": "MDnBZHAts4Y.mp4",
+     "ss": 24.46,
+     "dur": 0.88,
+     "fit": "cover",
+     "src_crop": [
+      450,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "MDnBZHAts4Y.mp4",
+     "ss": 25.38,
+     "dur": 1.46,
+     "fit": "cover",
+     "src_crop": [
+      900,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_spongepanic.mp4",
+     "ss": 0.0,
+     "dur": 2.0,
+     "fit": "cover",
+     "src_crop": [
+      114,
+      0,
+      272,
+      360
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "WD-40 공식: 빨대로 경첩에 칙 뿌리는 손 → 소리 지르며 당황하는 스폰지밥 짤",
+   "why": "훅 = 늘 쓰던 WD-40 의 '40, 무슨 뜻?'"
+  },
+  {
+   "src": "rTT9psGLlDQ.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "rTT9psGLlDQ.mp4",
+     "ss": 0.0,
+     "dur": 2.45,
+     "fit": "cover",
+     "src_crop": [
+      360,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "rTT9psGLlDQ.mp4",
+     "ss": 2.52,
+     "dur": 0.68,
+     "fit": "cover",
+     "src_crop": [
+      500,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "rTT9psGLlDQ.mp4",
+     "ss": 3.22,
+     "dur": 0.75,
+     "fit": "cover",
+     "src_crop": [
+      600,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "WD-40 공식: 파란 캔 근접 → 멀리 선 캔 → 바닥 위 캔(광고 글 나오기 전 구간만)",
+   "why": "'로켓 케미컬이라는 작은 회사가, 녹슬지 말라고'"
+  },
+  {
+   "src": "vMvO62MSVi8.mp4",
+   "ss": 9.12,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "vMvO62MSVi8.mp4",
+     "ss": 9.12,
+     "dur": 1.38,
+     "fit": "cover",
+     "src_crop": [
+      243,
+      0,
+      545,
+      720
+     ]
+    },
+    {
+     "src": "vMvO62MSVi8.mp4",
+     "ss": 22.35,
+     "dur": 1.6,
+     "fit": "cover",
+     "src_crop": [
+      243,
+      0,
+      545,
+      720
+     ]
+    }
+   ],
+   "ours": "발사대 위 아틀라스 로켓 → 불을 뿜으며 발사(NASA 공공 자료)",
+   "why": "'처음 쓰인 곳이 놀랍게도, 미사일 바깥쪽'"
+  },
+  {
+   "src": "rTT9psGLlDQ.mp4",
+   "ss": 7.06,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "rTT9psGLlDQ.mp4",
+     "ss": 7.06,
+     "dur": 1.5,
+     "fit": "cover",
+     "src_crop": [
+      1100,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "haz.mp4",
+     "ss": 0.0,
+     "dur": 2.1,
+     "fit": "cover",
+     "src_crop": [
+      0,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "WD-40 공식: 물방울 맺힌 판(가운데 광고 글은 자르기 밖) → WD-01·WD-02… 통이 하나씩 늘어나는 그림(다가감, zoomclip haz)",
+   "why": "'물기를 밀어내는 공식이, 자꾸만 실패'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_jonahexcited.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_jonahexcited.mp4",
+     "ss": 0.0,
+     "dur": 1.07,
+     "fit": "cover",
+     "src_crop": [
+      83,
+      0,
+      194,
+      256
+     ],
+     "kind": "짤"
+    },
+    {
+     "src": "rTT9psGLlDQ.mp4",
+     "ss": 12.62,
+     "dur": 2.3,
+     "fit": "cover",
+     "src_crop": [
+      1000,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "신나서 손뼉 치는 조나 힐 짤 → WD-40 캔 머리 근접(왼아래 광고 글은 자르기 밖)",
+   "why": "'마흔 번 만에, 겨우 성공한 공식이 바로 이거'"
+  },
+  {
+   "src": "rTT9psGLlDQ.mp4",
+   "ss": 22.05,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "rTT9psGLlDQ.mp4",
+     "ss": 22.05,
+     "dur": 3.3,
+     "fit": "cover",
+     "src_crop": [
+      1000,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "WD-40 공식: 노란 WD-40 글자 캔 근접(왼쪽 광고 글은 자르기 밖)",
+   "why": "'이름도, 물 밀어내기 마흔 번째 공식의 줄임말'"
+  },
+  {
+   "src": "r2fL3HgZM1g.mp4",
+   "ss": 37.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "r2fL3HgZM1g.mp4",
+     "ss": 37.0,
+     "dur": 2.75,
+     "fit": "cover",
+     "src_crop": [
+      0,
+      300,
+      1080,
+      1427
+     ]
+    }
+   ],
+   "ours": "WD-40 캔을 손에 쥐는 사람(손만)",
+   "why": "'직원들이 이걸, 도시락 통에 몰래 넣어'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_homerhedge.mp4",
+   "ss": 0.8,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_homerhedge.mp4",
+     "ss": 0.8,
+     "dur": 1.15,
+     "fit": "cover",
+     "src_crop": [
+      207,
+      0,
+      545,
+      720
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "뒷걸음질로 덤불에 숨는 호머 짤",
+   "why": "'집에 가져갔다는데'"
+  },
+  {
+   "src": "rTT9psGLlDQ.mp4",
+   "ss": 15.62,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "rTT9psGLlDQ.mp4",
+     "ss": 15.62,
+     "dur": 3.5,
+     "fit": "cover",
+     "src_crop": [
+      1000,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "WD-40 공식: 캔을 눌러 칙 뿌리는 손(왼아래 광고 글은 자르기 밖)",
+   "why": "'아예 스프레이 통에 담아, 가게에서 팔기 시작'"
+  },
+  {
+   "src": "coupang.jpg",
+   "ss": 0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "coupang.jpg",
+     "ss": 0,
+     "dur": 3.3,
+     "fit": "cover",
+     "src_crop": [
+      200,
+      30,
+      700,
+      925
+     ],
+     "move": "in"
+    }
+   ],
+   "ours": "쿠팡 6368258399 WD-40 360ml 스마트 스트로 상품 사진(다가감)",
+   "why": "B 첫 줄 '쿠팡에서 더블유디 포티를 하나' — 같은 제품"
+  },
+  {
+   "src": "r2fL3HgZM1g.mp4",
+   "ss": 53.6,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "r2fL3HgZM1g.mp4",
+     "ss": 53.6,
+     "dur": 2.5,
+     "fit": "cover",
+     "src_crop": [
+      0,
+      250,
+      1080,
+      1427
+     ]
+    },
+    {
+     "src": "MDnBZHAts4Y.mp4",
+     "ss": 33.68,
+     "dur": 1.27,
+     "fit": "cover",
+     "src_crop": [
+      1000,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "빨대로 문 경첩에 뿌리는 손 → 흰 문 경첩에 뿌리는 손(WD-40 공식)",
+   "why": "'삐걱거리던 문 경첩에 칙 뿌리니까'"
+  },
+  {
+   "src": "r2fL3HgZM1g.mp4",
+   "ss": 58.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "r2fL3HgZM1g.mp4",
+     "ss": 58.0,
+     "dur": 2.25,
+     "fit": "cover",
+     "src_crop": [
+      0,
+      250,
+      1080,
+      1427
+     ]
+    }
+   ],
+   "ours": "경첩에 계속 뿌리는 빨대(손만)",
+   "why": "'뿌릴 때마다, 마흔 번째 공식이라는 게'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_risitas.mp4",
+   "ss": 0.1,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_risitas.mp4",
+     "ss": 0.1,
+     "dur": 1.5,
+     "fit": "cover",
+     "src_crop": [
+      368,
+      0,
+      545,
+      720
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "배꼽 잡고 웃는 리시타스 짤",
+   "why": "'생각나더라고요'"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 0,
+   "dt": 0.0,
+   "db": -2,
+   "why": "훅 시작 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_06.mp3",
+   "line": 0,
+   "dt": 2.3,
+   "db": -3,
+   "why": "원숭이 짤 두둥"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_24.mp3",
+   "line": 4,
+   "dt": 0.0,
+   "db": -3,
+   "why": "조나 힐 손뼉 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_35.mp3",
+   "line": 6,
+   "dt": 2.67,
+   "db": -3,
+   "why": "호머 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_26.mp3",
+   "line": 8,
+   "dt": 0.0,
+   "db": -2,
+   "why": "뒤 체험 첫 줄 뽀옹"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_28.mp3",
+   "line": 10,
+   "dt": 2.19,
+   "db": -3,
+   "why": "리시타스 짤 띵"
+  }
+ ]
+}
