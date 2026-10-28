@@ -162,12 +162,29 @@ def _due_list(at, gap, n):
             for i in range(n)]
 
 
-def _channel(key, folder):
+def _targets(key, folder):
+    """그 폴더 영상이 갈 Buffer 채널들 — 판단 주인은 여기 한 곳(post·test 둘 다 부른다).
+    2026-10-28 계정마다 유튜브가 둘이 됐다(폴더 '995_1 썰템쇼'·'995_2 얜샷템'). 전엔 첫 유튜브를 골라
+    새 채널(_2)이 앞에 오자 _1 영상이 _2 채널로 갈 뻔했다 → 유튜브는 폴더 이름의 채널명과 같은 것만.
+    틱톡은 계정당 하나라 원래 채널(_1 또는 번호만) 폴더에만 붙인다(_2 까지 붙이면 틱톡 한 칸에 두 개)."""
     chs = buffer_api.channels(key)
-    yt = [c for c in chs if c.get("service") == "youtube"] or chs
-    if not yt:
-        raise RuntimeError(f"{folder}: Buffer에 연결된 채널이 없다 — Buffer에서 유튜브를 먼저 연결")
-    return yt[0]
+    label = folder.split(" ", 1)[1] if " " in folder else folder
+    yt = [c for c in chs if c.get("service") == "youtube"]
+    hit = [c for c in yt if (c.get("name") or "") == label]
+    if not hit and len(yt) == 1:
+        hit = yt
+    if not hit:
+        raise RuntimeError(f"{folder}: 폴더 이름의 채널명 '{label}' 과 같은 유튜브 채널이 Buffer 에 없다 "
+                           f"(있는 것: {[c.get('name') for c in yt]}) — 폴더 이름이나 Buffer 연결을 맞춰라")
+    out = hit[:1]
+    acct = folder.split(" ", 1)[0]
+    if "_" not in acct or acct.endswith("_1"):
+        out += [c for c in chs if c.get("service") == "tiktok"][:1]
+    return out
+
+
+def _channel(key, folder):
+    return _targets(key, folder)[0]
 
 
 def _check(d, mp4):
@@ -271,9 +288,11 @@ def cmd_post(a):
         vs = _videos(d)
         if not vs:
             continue
-        chs = buffer_api.channels(key)
-        targets = [next(c for c in chs if c.get("service") == s) for s in SERVICES
-                   if any(c.get("service") == s for c in chs)]
+        try:
+            targets = [c for c in _targets(key, n) if c.get("service") in SERVICES]
+        except RuntimeError as e:
+            print(f"[{n}] {e} — 건너뜀")
+            continue
         if not targets:
             print(f"[{n}] Buffer에 유튜브·틱톡 채널이 없다 — 건너뜀")
             continue
