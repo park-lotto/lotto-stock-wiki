@@ -18,7 +18,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-KEY = str(Path.home() / "crawling_bot_client" / "LightsailDefaultKey-ap-northeast-2.pem")   # 집 PC(CH)·회사 PC 둘 다 — 사용자 폴더 기준
+# 집 PC(CH)·회사 PC = crawling_bot_client, 헬로2 PC = ~/.ssh/lightsail.pem — 있는 것을 쓴다
+_KEYS = [Path.home() / "crawling_bot_client" / "LightsailDefaultKey-ap-northeast-2.pem", Path.home() / ".ssh" / "lightsail.pem"]
+KEY = str(next((k for k in _KEYS if k.exists()), _KEYS[0]))
 HOST = "shoppingshorts.duckdns.org"     # 서버 IP 는 바뀐다 — 도메인으로
 _REMOTE = r'''
 import json, sys
@@ -30,6 +32,32 @@ for q in json.loads(sys.argv[1]):
     out[q] = cp.search_products(q, limit=10, access_key=ak, secret_key=sk) if ak else {"ok": False, "notice": "관리자 파트너스 키 없음", "items": []}
 print("@@JSON@@" + json.dumps(out, ensure_ascii=False))
 '''
+# 딥링크(우리 계정 단축 URL) — 2026-10-28 우리 파트너스 계정 API 승인 → shoplink 가 크롬 '링크 생성' 대신 이걸 쓴다
+_REMOTE_DEEPLINK = r'''
+import json, sys
+sys.path.insert(0, ".")
+from shopping_shorts import app, keyctx, coupang_partners as cp
+ak, sk = app._coupang_member_key(keyctx.owner_cid())
+urls = json.loads(sys.argv[1])
+out = cp.to_deeplink(urls, ak, sk) if ak else [{"original_url": u, "shorten_url": "", "error": "관리자 파트너스 키 없음"} for u in urls]
+print("@@JSON@@" + json.dumps(out, ensure_ascii=False))
+'''
+
+
+def _remote(script: str, arg) -> object:
+    cmd = ("cd /home/ubuntu/lotto-stock-wiki && set -a && . /etc/shopping-shorts.env 2>/dev/null; set +a; "
+           "timeout 120 /usr/bin/python3 -c " + _shq(script) + " " + _shq(json.dumps(arg, ensure_ascii=False)))
+    r = subprocess.run(["ssh", "-o", "ConnectTimeout=15", "-i", KEY, f"ubuntu@{HOST}", cmd],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
+    line = next((l for l in r.stdout.splitlines() if l.startswith("@@JSON@@")), None)
+    if line is None:
+        raise RuntimeError(f"서버 호출 실패 rc={r.returncode}: {(r.stderr or r.stdout)[-400:]}")
+    return json.loads(line[len("@@JSON@@"):])
+
+
+def deeplink(urls: list[str]) -> list[dict]:
+    """쿠팡 상품 주소 → [{original_url, shorten_url, landing_url}] (서버 관리자 키 = 우리 계정 AF9580829)."""
+    return _remote(_REMOTE_DEEPLINK, urls)
 
 
 def search(queries: list[str]) -> dict:
@@ -39,14 +67,7 @@ def search(queries: list[str]) -> dict:
     if os.environ.get("CALCOPY_CUSTOMER_MODE") == "1":
         from tools.calcopy import coupang_customer
         return coupang_customer.search(queries)
-    cmd = ("cd /home/ubuntu/lotto-stock-wiki && set -a && . /etc/shopping-shorts.env 2>/dev/null; set +a; "
-           "timeout 120 /usr/bin/python3 -c " + _shq(_REMOTE) + " " + _shq(json.dumps(queries, ensure_ascii=False)))
-    r = subprocess.run(["ssh", "-o", "ConnectTimeout=15", "-i", KEY, f"ubuntu@{HOST}", cmd],
-                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
-    line = next((l for l in r.stdout.splitlines() if l.startswith("@@JSON@@")), None)
-    if line is None:
-        raise RuntimeError(f"서버 검색 실패 rc={r.returncode}: {(r.stderr or r.stdout)[-400:]}")
-    return json.loads(line[len("@@JSON@@"):])
+    return _remote(_REMOTE, queries)
 
 
 def _shq(s: str) -> str:

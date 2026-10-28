@@ -1,7 +1,8 @@
 """영상 1편 → 쿠팡 파트너스 단축링크 + 인포크 링크 블록 + 버퍼 설명란 문구 (관제 259).
 
-사장님(2026-10-23): "인포크랑 쿠파스를 다 자동화" — 우리 파트너스 계정은 최종 승인 전이라 API 가 없고
-인포크는 원래 API 가 없다 → 둘 다 로그인된 전용 크롬(tools/google_browser.py 프로필)을 조작한다.
+사장님(2026-10-23): "인포크랑 쿠파스를 다 자동화". 2026-10-28 우리 파트너스 계정(AF9580829) API 승인 →
+쿠팡 검색·링크 = 오픈API(서버 관리자 키, tools/calcopy/coupang_api_search). 쿠팡 로그인·쿠키 불필요.
+인포크는 원래 API 가 없다 → 로그인된 전용 크롬(tools/google_browser.py 프로필)을 조작한다.
 ★유튜브에는 손대지 않는다(사장님 조건: 유튜브에 우리 IP 금지). 유튜브 게시는 버퍼가 한다.
 
   py tools/shoplink/run.py find  "스크럽대디"                 # 쿠팡 후보 5개만 본다(아무것도 안 만든다)
@@ -30,33 +31,26 @@ OUT_DIR = os.path.expanduser(r"~\.claude\shoplink")          # 장부·이미지
 LEDGER = os.path.join(OUT_DIR, "ledger.json")
 
 
-# ── 쿠팡 파트너스 ─────────────────────────────────────────────
-def coupang_candidates(pg, keyword, n=5):
-    """파트너스 상품검색 결과 앞에서 n개 → [{name, price, image}] (아무것도 만들지 않는다)."""
-    pg.goto(f"{PARTNERS}#affiliate/ws/link/0/{urllib.parse.quote(keyword)}", wait_until="domcontentloaded")
-    for _ in range(60):                          # 로그인이 풀리면 해시 주소가 로그인 화면으로 넘어간다
-        pg.wait_for_timeout(500)
-        if "login.coupang.com" in pg.url:
-            raise SystemExit("쿠팡 파트너스 로그인이 풀렸다 — 전용 창에서 사장님 로그인('로그인 상태 유지' 체크) 필요")
-        if pg.locator(".product-item").count():
-            break
-    pg.wait_for_selector(".product-item", timeout=15000)
-    pg.wait_for_timeout(1500)
-    items = pg.evaluate("""n=>[...document.querySelectorAll('.product-item')].slice(0,n).map(e=>({
-        name:(e.querySelector('.product-description')||{}).innerText||'',
-        price:((e.querySelector('.sale-price')||{}).innerText||'').replace(/\\s+/g,''),
-        image:(e.querySelector('.product-picture img')||{}).src||''}))""", n)
-    for it in items:
-        it["name"] = it["name"].strip()
-        it["image"] = it["image"].replace("/212x212ex/", "/492x492ex/")
-    return items
+# ── 쿠팡 파트너스 (오픈API · 2026-10-28 우리 계정 승인) ──────────────────
+# 키는 서버 DB 관리자 계정에만 있다 → 검색·딥링크 둘 다 tools/calcopy/coupang_api_search 가 서버에서 부른다(주인 한 곳).
+OUR_TAG = "AF9580829"                    # 우리 파트너스 계정 — 링크가 이 계정으로 나왔는지 매번 확인한다
 
 
-def coupang_link(pg, keyword, pick, match=""):
-    """후보의 '링크 생성' → 우리 계정 단축 URL.
+def coupang_candidates(keyword, n=5):
+    """파트너스 API 상품검색 앞에서 n개 → [{name, price, image, url, product_id}] (아무것도 만들지 않는다)."""
+    from tools.calcopy import coupang_api_search
+    r = coupang_api_search.search([keyword]).get(keyword) or {}
+    if not r.get("ok"):
+        raise SystemExit(f"쿠팡 API 검색 실패: {r.get('notice') or r.get('error') or r}")
+    return (r.get("items") or [])[:n]
+
+
+def coupang_link(keyword, pick, match=""):
+    """후보 → API 딥링크 → 우리 계정 단축 URL.
     ★순번(pick)만으로 고르지 마라 — 쿠팡 검색 순서는 실행마다 바뀐다(2026-10-23 실측: find 때 [3]=luna 에어백,
       make 때 [3]=5세컨즈 스트랩). match 를 주면 이름에 그 글자가 든 후보를 고르고, 없으면 멈춘다."""
-    items = coupang_candidates(pg, keyword, n=10 if match else 5)
+    from tools.calcopy import coupang_api_search
+    items = coupang_candidates(keyword, n=10 if match else 5)
     if match:
         hit = [i for i, it in enumerate(items) if match in it["name"]]
         if not hit:
@@ -64,14 +58,13 @@ def coupang_link(pg, keyword, pick, match=""):
         pick = hit[0]
     if pick >= len(items):
         raise SystemExit(f"후보가 {len(items)}개뿐이다")
-    pg.locator(".product-item").nth(pick).hover()
-    pg.locator(".product-item").nth(pick).locator("button.btn-generate-link").click(force=True)
-    for _ in range(40):
-        pg.wait_for_timeout(500)
-        m = re.search(r"https://link\.coupang\.com/a/[A-Za-z0-9]+", pg.inner_text("body"))
-        if m:
-            return {**items[pick], "link": m.group(0), "keyword": keyword}
-    raise SystemExit("단축 URL 이 화면에 안 나왔다")
+    d = (coupang_api_search.deeplink([items[pick]["url"]]) or [{}])[0]
+    link = d.get("shorten_url") or ""
+    if not re.match(r"https://link\.coupang\.com/a/[A-Za-z0-9]+$", link):
+        raise SystemExit(f"딥링크 발급 실패: {d}")
+    if OUR_TAG not in (d.get("landing_url") or ""):
+        raise SystemExit(f"우리 계정({OUR_TAG}) 링크가 아니다: {d.get('landing_url')}")
+    return {**items[pick], "link": link, "keyword": keyword}
 
 
 # ── 인포크 ─────────────────────────────────────────────────
@@ -232,22 +225,6 @@ def description(title, desc, number, account, link, tags):
     ])
 
 
-COOKIES = os.path.join(OUT_DIR, "coupang_cookies.json")   # ★로컬 전용(git·드라이브 금지) — 로그인 세션
-
-
-def restore_cookies(pg):
-    """쿠팡 파트너스 로그인은 세션 쿠키라 크롬을 닫으면 사라진다(2026-10-23 실측: 다음 실행에 로그인 화면).
-    그래서 실행 끝에 쿠팡 쿠키를 저장해 두고 다음 실행 처음에 되돌린다."""
-    if os.path.exists(COOKIES):
-        pg.context.add_cookies(json.load(open(COOKIES, encoding="utf-8")))
-
-
-def save_cookies(pg):
-    cs = [c for c in pg.context.cookies() if "coupang.com" in c.get("domain", "")]
-    if cs:
-        json.dump(cs, open(COOKIES, "w", encoding="utf-8"))
-
-
 def download(url, path):
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0", "Referer": PARTNERS})
     with urllib.request.urlopen(req, timeout=30) as r, open(path, "wb") as f:
@@ -257,7 +234,7 @@ def download(url, path):
 
 def main(argv=None):
     p = argparse.ArgumentParser()
-    p.add_argument("cmd", choices=["find", "make", "login"])
+    p.add_argument("cmd", choices=["find", "make"])
     p.add_argument("keyword", nargs="?", default="")
     p.add_argument("--pick", type=int, default=0)
     p.add_argument("--match", default="", help="이 글자가 이름에 든 후보를 고른다(순번보다 우선·안전)")
@@ -269,32 +246,19 @@ def main(argv=None):
     p.add_argument("--account", default="", help="인포크 계정을 직접 지정(--channel 이 우선)")
     p.add_argument("--dry", action="store_true", help="쿠팡 링크만 발급, 인포크는 저장 안 함")
     a = p.parse_args(argv)
-    from tools.google_browser import google_page
     os.makedirs(OUT_DIR, exist_ok=True)
+    if a.cmd == "find":                          # 쿠팡은 API — 브라우저를 안 띄운다
+        for i, it in enumerate(coupang_candidates(a.keyword)):
+            print(f"[{i}] {it['name']}  {it['price']}  ({it['product_id']})")
+        return
+    prod = coupang_link(a.keyword, a.pick, a.match)
+    print("쿠팡:", prod["name"], prod["link"])
+    from tools.google_browser import google_page   # 인포크만 전용 크롬(인포크는 API 가 없다)
     with google_page() as pg:
-        restore_cookies(pg)
-        try:
-            run(pg, a)
-        finally:
-            save_cookies(pg)
+        run(pg, a, prod)
 
 
-def run(pg, a):
-        if a.cmd == "login":
-            pg.goto(PARTNERS, wait_until="domcontentloaded")
-            print("창에서 쿠팡 파트너스 로그인(최대 10분)…", flush=True)
-            for _ in range(300):
-                time.sleep(2)
-                if pg.url.startswith(PARTNERS + "#") and pg.locator("text=로그아웃").count() + pg.locator("text=내 정보").count():
-                    break
-            print("로그인 확인:", pg.url)
-            return
-        if a.cmd == "find":
-            for i, it in enumerate(coupang_candidates(pg, a.keyword)):
-                print(f"[{i}] {it['name']}  {it['price']}")
-            return
-        prod = coupang_link(pg, a.keyword, a.pick, a.match)
-        print("쿠팡:", prod["name"], prod["link"])
+def run(pg, a, prod):
         want = INPOCK_BY_CHANNEL.get(a.channel) if a.channel else a.account
         if a.channel and not want:
             raise SystemExit(f"채널 {a.channel} 의 인포크 계정이 정해져 있지 않다(INPOCK_BY_CHANNEL)")
