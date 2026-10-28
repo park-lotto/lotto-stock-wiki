@@ -1,0 +1,178 @@
+{
+ "topic": "프링글스 × 통을 설계한 P&G 화학자 Fredric Baur 는 자기 부탁대로 유골 일부가 프링글스 통에 담겨 묻혔다(AP 2008 · TIME 2008 · Wikipedia) — 맛은 자녀들이 오리지널로 고름 · 뒤 체험: 쿠팡 프링글스 오리지날 110g(6810393879, 같은 제품)",
+ "brand": "Pringles",
+ "scene_query": "Pringles commercial",
+ "product_mode": "exact",
+ "ing": {
+  "line": 0,
+  "fact": "bu",
+  "why": "누구나 아는 프링글스 원통 — 그 통을 만든 사람이 진짜 그 통에 묻혔다. 훅 = 공식 광고의 프링글스 통 근접 → 놀라는 짤"
+ },
+ "hook": [
+  "프링글스 통 만든 사람,",
+  "어디에 묻혔게?"
+ ],
+ "post": "프링글스 통을 만든 사람은 그 통에 묻혔다",
+ "tempo": null,
+ "points_from": "포인트.md",
+ "facts": {
+  "bu": {
+   "text": "AP 2008-06-02(CBS News·HeraldNet·ABC7 게재) 'Ashes of Pringles can designer buried in his work': Fredric J. Baur 의 자녀들이 그의 부탁대로 유골 일부를 Pringles 통에 담아 무덤에 묻음 · TIME 2008-06-04 'The Man Buried in a Pringles Can'",
+   "url": "https://www.cbsnews.com/news/mans-final-resting-place-a-pringles-can"
+  },
+  "who": {
+   "text": "AP 2008: 'an organic chemist and food storage technician' at Procter & Gamble · TIME 2008: 'earned a Ph.D. in organic chemistry … a clever way for Procter & Gamble to stack chips uniformly'",
+   "url": "https://www.cbsnews.com/news/mans-final-resting-place-a-pringles-can"
+  },
+  "pt": {
+   "text": "AP 2008(P&G 기록 담당 Ed Rider): 'Baur filed for a patent for the tubular Pringles container and the method of packaging the curved, stacked chips in the container' — 1966 출원·1970 등록 · TIME 2008 'stack chips uniformly'",
+   "url": "https://www.cbsnews.com/news/mans-final-resting-place-a-pringles-can"
+  },
+  "pr": {
+   "text": "AP 2008 아들 Lawrence Baur: 'he was proud of his design of the Pringles container' · TIME 2008: 'He was so proud of the achievement, he wanted to go to his grave with it.'",
+   "url": "https://www.cbsnews.com/news/mans-final-resting-place-a-pringles-can"
+  },
+  "rq": {
+   "text": "AP 2008: 'Baur requested the burial arrangement' · TIME 2008: 'When my dad first raised the burial idea in the 1980s, I chuckled about it'(아들 Larry)",
+   "url": "https://time.com/archive/6904379/the-man-buried-in-a-pringles-can"
+  },
+  "fl": {
+   "text": "TIME 2008 아들 Larry: 'My siblings and I briefly debated what flavor to use, but I said, Look, we need to use the original.' · Wikipedia 'Fred Baur'(NY Daily News·Cincinnati Enquirer 2008 인용): 'an Original flavor Pringles container in his grave'",
+   "url": "https://time.com/archive/6904379/the-man-buried-in-a-pringles-can"
+  },
+  "rx": {
+   "text": "사회 반응(§0-1 14 — 반응은 출처 없이도 됨) · 같은 소재 영상 인기 댓글(포인트.md)",
+   "url": "포인트.md"
+  },
+  "p1": {
+   "text": "쿠팡 6810393879 '프링글스 오리지날 감자스낵, 110g'(파트너스 API 2026-10-28 — 상품 사진을 열어 PRINGLES ORIGINAL 통 확인)",
+   "url": "https://www.coupang.com/vp/products/6810393879"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "잉 훅(통에 묻힘)",
+    "seg": "A",
+    "text": "프링글스 통을 처음 만든 사람, 결국 그 통 안에 묻혔대요",
+    "facts": [
+     "bu"
+    ],
+    "sources": [
+     "https://www.cbsnews.com/news/mans-final-resting-place-a-pringles-can"
+    ]
+   },
+   {
+    "fn": "몰랐던 배경(누구)",
+    "seg": "A",
+    "text": "주인공은 피앤지에서 일하던, 한 화학자였는데",
+    "facts": [
+     "who"
+    ],
+    "sources": [
+     "https://www.cbsnews.com/news/mans-final-resting-place-a-pringles-can"
+    ]
+   },
+   {
+    "fn": "공개(쌓는 방법)",
+    "seg": "A",
+    "text": "감자칩을 원통 안에, 가지런히 쌓아 담는 방법을 생각해 냈고",
+    "facts": [
+     "pt"
+    ],
+    "sources": [
+     "https://www.cbsnews.com/news/mans-final-resting-place-a-pringles-can"
+    ]
+   },
+   {
+    "fn": "자부심",
+    "seg": "A",
+    "text": "그 통으로 특허까지 받을 만큼, 자기 작품을 정말 자랑스러워했대요",
+    "facts": [
+     "pt",
+     "pr"
+    ],
+    "sources": [
+     "https://www.cbsnews.com/news/mans-final-resting-place-a-pringles-can"
+    ]
+   },
+   {
+    "fn": "부탁",
+    "seg": "A",
+    "text": "그래서 가족들한테, 나 죽으면 이 통에 묻어 달라고 부탁했는데",
+    "facts": [
+     "rq"
+    ],
+    "sources": [
+     "https://time.com/archive/6904379/the-man-buried-in-a-pringles-can"
+    ]
+   },
+   {
+    "fn": "반전(실제로)",
+    "seg": "A",
+    "text": "실제로 자녀들이 그 부탁대로, 유골 일부를 프링글스 통에 담아 묻었대요",
+    "facts": [
+     "bu"
+    ],
+    "sources": [
+     "https://www.cbsnews.com/news/mans-final-resting-place-a-pringles-can"
+    ]
+   },
+   {
+    "fn": "쐐기(맛)",
+    "seg": "A",
+    "text": "맛은 잠깐 고민하다가, 오리지널로 골랐다는 거예요",
+    "facts": [
+     "fl"
+    ],
+    "sources": [
+     "https://time.com/archive/6904379/the-man-buried-in-a-pringles-can"
+    ]
+   },
+   {
+    "fn": "사회 반응",
+    "seg": "A",
+    "text": "그래서 다들, 자기 작품에 진짜 뼈를 묻은 사람이라고 하죠",
+    "facts": [
+     "rx"
+    ],
+    "sources": [
+     "포인트.md"
+    ]
+   },
+   {
+    "fn": "B 연결",
+    "seg": "B",
+    "text": "이 얘기 듣고 저도 쿠팡에서, 오리지널로 한 통 시켜 봤는데",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/6810393879"
+    ]
+   },
+   {
+    "fn": "B 좋은 점",
+    "seg": "B",
+    "text": "뚜껑 열자마자, 칩이 한 줄로 가지런히 쌓여 있고",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/6810393879"
+    ]
+   },
+   {
+    "fn": "B 끝(되받기)",
+    "seg": "B",
+    "text": "다 먹은 빈 통을 보니까, 괜히 한 번 더 쳐다보게 되더라고요",
+    "facts": [
+     "bu"
+    ],
+    "sources": [
+     "https://www.cbsnews.com/news/mans-final-resting-place-a-pringles-can"
+    ]
+   }
+  ]
+ }
+}
