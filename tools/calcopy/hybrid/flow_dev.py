@@ -53,7 +53,7 @@ def answer(W: Path, rv: dict, log, replay: Path | None = None) -> dict:
     txt = ""
     for _ in range(2):
         try:
-            r = subprocess.run([CLAUDE, "-p", "--model", model, "--allowedTools", "Read,Glob,Grep,WebSearch,WebFetch", "--add-dir", str(W),   # 작업 폴더 전체를 열어 볼 수 있게(10-27 '두뇌가 재료 없이 다시만')
+            r = subprocess.run([CLAUDE, "-p", "--model", model, "--strict-mcp-config", "--allowedTools",   # MCP 서버(cmd 창) 안 띄움 — 쓰는 도구는 내장뿐(10-28) "Read,Glob,Grep,WebSearch,WebFetch", "--add-dir", str(W),   # 작업 폴더 전체를 열어 볼 수 있게(10-27 '두뇌가 재료 없이 다시만')
                                 "--output-format", "json", "--max-turns", "30"],
                                input=prompt, capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=str(d), timeout=1800)
             try:
