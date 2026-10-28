@@ -1806,6 +1806,38 @@
    "seconds": 41.6,
    "doc": "channel/foreignshowshow/24편_CreateACastle_하이브리드/",
    "judge": "[확인대기] 벤치 YCosCkpODLc ↔ Shark Tank Global WIcEFgXDVsY · 앞 O3 끝 15.47초 + 뒤 지훈 1인칭(B1 '똑같은 건 없고 비슷하게') · −14.0 LUFS/TP −2.4 · 끝 여운 1.17초 · 끝 0.1초 −108dB · freeze/black 0 · 광고 2초 간격+마지막 프레임 · check B표 전 칸 ○ · deliver --check ○ · 사람 귀 확인 전"
+  },
+  {
+   "channel": "foreignshowshow",
+   "channel_name": "샥탬스토리",
+   "brand": "샥탬스토리",
+   "style": "현장썰 하이브리드(샤크탱크 칼카피 앞 + 쿠팡 1인칭 체험 뒤)",
+   "date": "2026-10-28",
+   "n": 114,
+   "from": "channel/foreignshowshow/25편_SnowInSeconds/make_plan.py → tools/calcopy/shark/render.py(앞) → tools/calcopy/shark/hybrid.py(뒤·이음) → channel/foreignshowshow/하이브리드/final_tail.py(소리=영상 길이·끝 페이드·TP) → engine/finalize.seal",
+   "title": "하이브리드 25 Snow in Seconds(물만 부으면 눈이 되는 가루 — 쿠팡에 같은 제품 없어 비슷한 디어플레이스 스노우파우더 8402810577, 대본에 밝힘)",
+   "path": "C:/숏템_칼카피/foreignshowshow/하이브리드/25편_SnowInSeconds/hybrid/final.mp4",
+   "desktop": "샥탬스토리_25_SnowInSeconds_검수대기.mp4",
+   "md5": "67f85c825c0dfb694959e0c5d689a2a5",
+   "seconds": 40.97,
+   "doc": "channel/foreignshowshow/25편_SnowInSeconds_하이브리드/",
+   "judge": "[확인대기] 벤치 N2SNg-9RDEc ↔ Sony 8X9tQmmGUJU · 앞 O3 끝 14.30초 + 뒤 지훈 1인칭(B1 '똑같은 건 없고 비슷하게') · −14.0 LUFS/TP −2.4 · 끝 여운 1.22초 · 끝 0.1초 −126.7dB · freeze/black 0 · 광고 2초 간격+처음·이음·마지막 프레임 · 자막 띠 0.5초 확대 시트 · check render 앞·뒤 전 칸 ○ · deliver --check ○ (사람 판정 전)"
+  },
+  {
+   "channel": "foreignshowshow",
+   "channel_name": "샥탬스토리",
+   "brand": "샥탬스토리",
+   "style": "현장썰 하이브리드(샤크탱크 칼카피 앞 + 쿠팡 1인칭 체험 뒤)",
+   "date": "2026-10-28",
+   "n": 115,
+   "from": "channel/foreignshowshow/26편_Blinger/make_plan.py → tools/calcopy/shark/render.py(앞) → tools/calcopy/shark/hybrid.py(뒤·이음) → channel/foreignshowshow/하이브리드/final_tail.py(소리=영상 길이·끝 페이드·TP) → engine/finalize.seal",
+   "title": "하이브리드 26 Blinger(머리에 보석 박는 도구 — 쿠팡 같은 상표 blinger On The Go 8472424634)",
+   "path": "C:/숏템_칼카피/foreignshowshow/하이브리드/26편_Blinger/hybrid/final.mp4",
+   "desktop": "샥탬스토리_26_Blinger_검수대기.mp4",
+   "md5": "ee3dc2811f38c9a1acb7185ba08c1c49",
+   "seconds": 33.2,
+   "doc": "channel/foreignshowshow/26편_Blinger_하이브리드/",
+   "judge": "[확인대기] 벤치 opK6XXBLrks ↔ Sony xZZ-uy34x1I · 앞 O3 끝 10.20초 + 뒤 지훈 1인칭(B1 '똑같은 게 진짜 있더라고요') · −13.9 LUFS/TP −2.3 · 끝 여운 1.23초 · 끝 0.1초 −119.3dB · freeze/black 0 · 광고 2초 간격+처음·이음·마지막 프레임 · 자막 띠 0.5초 확대 시트 · check render 뒤 전 칸 ○(앞 B1 길이만 × — 하이브리드에서 잘리는 앞 뒷부분) · deliver --check ○ (사람 판정 전)"
   }
  ]
 }

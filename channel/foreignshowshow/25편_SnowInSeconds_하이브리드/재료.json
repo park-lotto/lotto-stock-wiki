@@ -1,0 +1,201 @@
+{
+ "_note": "샥탬스토리 하이브리드 25편 Snow in Seconds 뒤 재료 — 쿠팡의 비슷한 제품(스노우파우더 인공눈)과 같은 성분 인공눈 가루 영상 2편. 창 1080x1052. 사람 얼굴 없는 손·컵·눈 컷만.",
+ "_dur_note": "컷 길이 = 1차 렌더 render_info 의 실제 줄 길이(B1 6.55·B2 6.33·B3 4.99·B4 4.41·B5 4.37)에 맞춤 — 늘림 없이 샷 경계 안(98 #177 ④·#186)",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/25편_SnowInSeconds/src",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "sources": {
+  "pDE86qWZvwo": {
+   "채널": "BeardedScienceGuy",
+   "url": "https://www.youtube.com/watch?v=pDE86qWZvwo",
+   "제목": "The Fake Snow Experiment (Sodium Polyacrylate) - (Chemistry)",
+   "해상도": "1920x1080",
+   "남의 글자": "저울 숫자 화면(6.3~8.1)·기저귀 구간(41초 뒤) 안 씀"
+  },
+  "pz15/pz24/pz36": {
+   "채널": "BeardedScienceGuy 사본",
+   "url": "https://www.youtube.com/watch?v=pDE86qWZvwo",
+   "제목": "pDE86qWZvwo 15.30·24.60·36.80초 구간을 천천히 다가가게 구운 사본(channel/banggu/썰템홈샷_하이브리드/zoomclip.py)",
+   "해상도": "1920x1080 30fps"
+  },
+  "_xrNjPEi2Uw": {
+   "채널": "NileRed",
+   "url": "https://www.youtube.com/watch?v=_xrNjPEi2Uw",
+   "제목": "Demonstration of Instant Snow (Sodium Polyacrylate)",
+   "해상도": "1920x1080",
+   "남의 글자": "32~48초 왼위 흰 상자 표시는 크롭 밖 · 74초 뒤 끝 화면 안 씀"
+  }
+ },
+ "shots": [
+  {
+   "line": "B1",
+   "src": "pDE86qWZvwo.mp4",
+   "ss": 4.4,
+   "dur": 1.84,
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "BeardedScienceGuy 'The Fake Snow Experiment'(pDE86qWZvwo, 1080p): 저울 위 접시에 가루를 덜어 놓음(샷 4.30~6.31, 장갑 손만)",
+   "i": 0
+  },
+  {
+   "line": "B1",
+   "src": "pDE86qWZvwo.mp4",
+   "ss": 8.8,
+   "dur": 3.27,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 영상: 비커에 가루를 붓는 손(샷 8.11~20.42, 손만)",
+   "i": 1
+  },
+  {
+   "line": "B1",
+   "src": "_xrNjPEi2Uw.mp4",
+   "ss": 1.0,
+   "dur": 1.43,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "NileRed 'Demonstration of Instant Snow'(_xrNjPEi2Uw, 1080p): 가루 담긴 컵에 물을 붓는 손(샷 0~31.77, 왼위 흰 상자 표시는 32초부터라 없음)",
+   "i": 2
+  },
+  {
+   "line": "B2",
+   "src": "pz15.mp4",
+   "ss": 0.0,
+   "dur": 2.35,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 꼴 비커 속에서 하얗게 부푸는 가루(pDE86 15.30~17.75 를 1.30배 천천히 다가가는 사본 pz15.mp4 — 원본이 거의 멈춰 freezedetect 1.2초, 98 #179 ② 방식 · B1 8.8 컷과 3초 넘게 떨어짐)",
+   "i": 3
+  },
+  {
+   "line": "B2",
+   "src": "pDE86qWZvwo.mp4",
+   "ss": 20.5,
+   "dur": 3.98,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "비커 위로 넘치게 부풀어 오르는 눈(샷 20.42~24.49)",
+   "i": 4
+  },
+  {
+   "line": "B3",
+   "src": "pz24.mp4",
+   "ss": 0.0,
+   "dur": 2.6,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "부푼 눈을 장갑 낀 손으로 쥐어 보는 손(pDE86 24.60~27.30 를 1.20배 다가가는 사본 pz24.mp4 — 손 들어오기 전 0.6초 멈춤 대응, 손만)",
+   "i": 5
+  },
+  {
+   "line": "B3",
+   "src": "_xrNjPEi2Uw.mp4",
+   "ss": 58.3,
+   "dur": 2.4,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "NileRed: 접시 위 눈을 손으로 쓸어 보는 손(샷 57.29~73.61, 손만)",
+   "i": 6
+  },
+  {
+   "line": "B4",
+   "src": "_xrNjPEi2Uw.mp4",
+   "ss": 37.2,
+   "dur": 2.75,
+   "src_crop": [
+    545,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "NileRed: 컵을 들어 올리자 접시에 수북하게 쏟아지는 눈(샷 31.77~48.45 — 왼위 흰 상자 표시는 크롭 밖)",
+   "i": 7
+  },
+  {
+   "line": "B4",
+   "src": "_xrNjPEi2Uw.mp4",
+   "ss": 41.2,
+   "dur": 1.65,
+   "src_crop": [
+    545,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "같은 영상: 접시 위에 쌓인 눈더미(같은 샷, 앞 컷에서 원본 앞으로 이어짐)",
+   "i": 8
+  },
+  {
+   "line": "B5",
+   "src": "_xrNjPEi2Uw.mp4",
+   "ss": 66.0,
+   "dur": 2.19,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "NileRed: 눈더미를 손가락으로 헤집어 보는 손(샷 57.29~73.61 — B3 58.3 컷과 3초 넘게 떨어짐)",
+   "i": 9
+  },
+  {
+   "line": "B5",
+   "src": "pz36.mp4",
+   "ss": 0.0,
+   "dur": 2.19,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "BeardedScienceGuy: 검은 판 위의 눈 무더기(pDE86 36.80~39.10 를 1.30배 다가가는 사본 pz36.mp4 — 정지 화면 대응)",
+   "i": 10
+  }
+ ],
+ "effects": []
+}
