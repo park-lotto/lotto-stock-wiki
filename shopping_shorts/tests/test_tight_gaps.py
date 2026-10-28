@@ -20,16 +20,17 @@
 from shopping_shorts import audio_post
 
 
+# ★2026-10-01 관제 049 — 0.05초·-30dB 는 문장별 합성의 길이를 줄이려던 값이었다. 통째 합성으로 바꾸고
+#   사장님이 고른 샘플은 **0.15초·-40dB**였다(-30dB·0.05는 받침 앞 멈춤까지 잘라 단어 안이 끊겼다 —
+#   황선희님 job 0875d89db254 문장당 최대 12곳). 위 08-22 실측은 옛 기록으로 남긴다.
 def test_gap_is_listened_value():
-    """문장 사이 공백 = 0.05초 (사장님 청취 확정)."""
-    assert audio_post._PACE_STOP_DURATION == 0.05, \
-        "공백 상한이 %.2f초 - 고른 값은 0.05다" % audio_post._PACE_STOP_DURATION
+    """문장 사이 공백 상한 = 0.15초 (2026-10-01 사장님 청취 확정)."""
+    assert audio_post._PACE_STOP_DURATION == 0.15,         "공백 상한이 %.2f초 - 고른 값은 0.15다" % audio_post._PACE_STOP_DURATION
 
 
-def test_threshold_catches_breath():
-    """임계 -30dB - -38dB는 숨을 '소리 있음'으로 봐 안 자른다(20구간 잔존)."""
-    assert audio_post._PACE_THRESHOLD == "-30dB", \
-        "임계가 %s - 숨이 안 잘린다" % audio_post._PACE_THRESHOLD
+def test_threshold_keeps_soft_consonants():
+    """임계 -40dB — -30dB는 ㅎ·ㅅ·받침 앞 멈춤을 무음으로 봐 단어 안을 잘랐다."""
+    assert audio_post._PACE_THRESHOLD == "-40dB",         "임계가 %s - 고른 값은 -40dB다" % audio_post._PACE_THRESHOLD
 
 
 def test_tail_pad_kept():

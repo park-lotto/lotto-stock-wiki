@@ -1,0 +1,150 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "w-Ygny1f8O8",
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    252,
+    249,
+    253
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 378,
+   "w": 1080,
+   "h": 1449,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 166,
+   "w": 1000,
+   "align": "center",
+   "lines": 2,
+   "font": "Cafe24Ohsquare",
+   "size": 103.4,
+   "line_h": 104,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     253,
+     1,
+     80
+    ]
+   ],
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -3.2,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "$per_video"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 482,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "GasoekOne",
+   "size": 36.4,
+   "line_h": 42,
+   "rgb": [
+    209,
+    222,
+    154
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 8,
+    "rgb": [
+     254,
+     245,
+     222
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   },
+   "emphasis": null,
+   "text": null
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 1052,
+   "y": 15,
+   "w": 180,
+   "align": "right",
+   "lines": 1,
+   "font": "TmonMonsori",
+   "size": 48.0,
+   "line_h": 55,
+   "rgb": [
+    189,
+    188,
+    191
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 3,
+    "rgb": [
+     96,
+     95,
+     98
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": true,
+   "letter_spacing": -2.3,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "[광고]"
+  }
+ ]
+}

@@ -1,0 +1,160 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
+<title>볼케이노·노바·숏템 비교</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=Do+Hyeon&display=swap">
+<style>
+/* 레이아웃: 위 결론 → 구조 3칸 → 항목별 표(가로 스크롤) → 제품별 장단점 → 우리가 가져올 것 → 근거 */
+:root{
+  --bg:#f5f6f4; --paper:#ffffff; --ink:#1d2421; --mute:#5e6964; --line:#dfe3e0;
+  --vol:#c4471d; --vol-s:#fbe9e1; --nova:#6b4bb3; --nova-s:#efe9fa; --ours:#0d7a63; --ours-s:#dff3ee;
+  --good:#1f7a3a; --bad:#b3261e; --plan:#8a6300; --plan-s:#fbf1d6;
+  --f-body:"IBM Plex Sans KR",system-ui,"Malgun Gothic",sans-serif; --f-head:"Do Hyeon","IBM Plex Sans KR","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#121615;--paper:#1a201e;--ink:#e6ebe8;--mute:#9aa5a0;--line:#2c3532;--vol:#ff8a5c;--vol-s:#3a2118;--nova:#b89cff;--nova-s:#2a2240;--ours:#4fd1b0;--ours-s:#163a32;--good:#6fd68a;--bad:#ff8a80;--plan:#f0c35a;--plan-s:#3a2f12;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121615;--paper:#1a201e;--ink:#e6ebe8;--mute:#9aa5a0;--line:#2c3532;--vol:#ff8a5c;--vol-s:#3a2118;--nova:#b89cff;--nova-s:#2a2240;--ours:#4fd1b0;--ours-s:#163a32;--good:#6fd68a;--bad:#ff8a80;--plan:#f0c35a;--plan-s:#3a2f12;color-scheme:dark}
+*{box-sizing:border-box}
+.wrap>*{min-width:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.65}
+.wrap{max-width:1120px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:26px}
+h1{font-family:var(--f-head);font-weight:400;font-size:34px;line-height:1.2;margin:0;text-wrap:balance}
+h2{font-family:var(--f-head);font-weight:400;font-size:24px;margin:0 0 10px;text-wrap:balance}
+p{margin:0}
+.lead{color:var(--mute);max-width:72ch}
+.verdict{background:var(--paper);border:1px solid var(--line);border-left:6px solid var(--ours);border-radius:10px;padding:18px 20px;display:grid;gap:8px}
+.verdict b{font-size:17px}
+.tag{display:inline-block;font-size:12px;border-radius:999px;padding:1px 9px;margin-left:4px;vertical-align:1px;font-weight:500}
+.t-ok{background:var(--ours-s);color:var(--ours)}
+.t-plan{background:var(--plan-s);color:var(--plan)}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media(max-width:820px){.three{grid-template-columns:minmax(0,1fr)}}
+.col{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:10px;align-content:start;min-width:0}
+.col h3{margin:0;font-family:var(--f-head);font-weight:400;font-size:21px}
+.col.vol h3{color:var(--vol)}.col.nova h3{color:var(--nova)}.col.ours h3{color:var(--ours)}
+.flow{display:grid;gap:6px;font-size:13.5px}
+.flow div{border-radius:7px;padding:7px 10px;border:1px solid var(--line)}
+.flow .srv{background:var(--vol-s);border-color:transparent}
+.col.nova .flow .loc,.col.vol .flow .loc,.col.ours .flow .loc{background:var(--bg)}
+.flow small{color:var(--mute)}
+.who{font-size:12.5px;color:var(--mute)}
+.tbl{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:860px;font-size:13.5px}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line)}
+thead th{font-size:13px;position:sticky;top:0;background:var(--paper)}
+thead th.v{color:var(--vol)}thead th.n{color:var(--nova)}thead th.o{color:var(--ours)}
+tbody th{font-weight:700;width:14%;color:var(--ink)}
+td{width:28.6%}
+.g{color:var(--good);font-weight:700}.b{color:var(--bad);font-weight:700}
+.pc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media(max-width:820px){.pc{grid-template-columns:minmax(0,1fr)}}
+.pc .col ul{margin:0;padding-left:18px;display:grid;gap:4px;font-size:14px}
+.pc h4{margin:4px 0 0;font-size:13px;color:var(--mute);font-weight:700;letter-spacing:.02em}
+.take{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px 20px}
+.take ol{margin:0;padding-left:20px;display:grid;gap:8px}
+.ev{font-size:13px;color:var(--mute)}
+.ev ul{margin:6px 0 0;padding-left:18px;display:grid;gap:3px}
+code{font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:0 4px;word-break:break-all}
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:10px">
+    <h1>볼케이노 · 노바작가 · 숏템 비교</h1>
+    <p class="lead">세 제품 모두 회원의 Claude가 회원 PC에서 영상을 만듭니다. 차이는 <b>판단(프리셋·규칙)이 어디 있나</b>, <b>무엇이 처음부터 깔려 있나</b>, <b>완성본을 어디서 보고 고치나</b>입니다. 볼케이노와 노바는 이 PC에 깔린 실물을 열어 확인했습니다(아래 근거). 숏템 칸의 <span class="tag t-ok">실측</span>은 오늘까지 실제로 돌려 본 것이고, <span class="tag t-plan">계획</span>은 만들 예정인 것입니다.</p>
+  </header>
+
+  <section class="verdict">
+    <b>한 줄 결론</b>
+    <p>볼케이노는 <b>서버가 단계마다 지시</b>하는 방식이라 로직은 숨겨지지만 서버가 늘 살아 있어야 합니다. 노바는 <b>파일 묶음(zip)을 Claude Code에 넘기는</b> 방식이라 서버가 없지만 소스가 다 보이고, 결과물은 보기만 하는 HTML입니다. 숏템은 <b>완본을 만든 엔진을 통째로 설치팩에 넣고, 보기·고치기도 회원 PC 화면에서</b> 하는 방향입니다. 서버는 라이선스·업데이트만 맡습니다.</p>
+  </section>
+
+  <section>
+    <h2>구조 — 무엇이 어디서 도나</h2>
+    <div class="three">
+      <div class="col vol"><h3>볼케이노</h3>
+        <div class="flow">
+          <div class="srv">원격 MCP 서버<br><small>Cloudflare Workers · 로그인 필요 · 단계마다 next_step 지시</small></div>
+          <div class="loc">회원 Claude가 지시대로 실행<br><small>~/.volcano/venv (PIL·cv2·onnxruntime·numpy) · whisper-venv</small></div>
+          <div class="loc">이미지: 크롬 확장(구글 플로우) 또는 evolink 본인 키</div>
+          <div class="loc">렌더·목소리·합성 = 회원 PC<br><small>~/.volcano/jobs/20260911_뇌전구 663MB: video_raw.mp4·out/*.mp4·cache/tts·audio_sfx.wav</small></div>
+          <div class="loc">자산은 묶음으로 받아 PC에<br><small>.volcano-asset-receipts(묶음 지문·파일 목록) — 출처 서버는 미확인</small></div>
+        </div>
+      </div>
+      <div class="col nova"><h3>노바작가</h3>
+        <div class="flow">
+          <div class="loc">zip 1.2GB → 바탕화면 '쇼츠AI_스타터킷'<br><small>.claude/CLAUDE.md 지시문 + 가이드 7종 + 파이썬 엔진 17파일</small></div>
+          <div class="loc">회원 Claude Code가 지시문대로 설치·제작<br><small>설치.bat · ffmpeg 시스템 설치 · faster-whisper</small></div>
+          <div class="loc">결과: 바탕화면 '쇼츠AI_작업/영상_N'<br><small>대본·분석·자료·완성본·정적 타임라인 HTML</small></div>
+        </div>
+      </div>
+      <div class="col ours"><h3>숏템 (5판)</h3>
+        <div class="flow">
+          <div class="srv" style="background:var(--ours-s)">우리 서버: 라이선스(PC 1대)·업데이트만</div>
+          <div class="loc">설치 exe: node·파이썬·ffmpeg·크롬·yt-dlp 동봉 <span class="tag t-ok">실측</span><br><small>+ 칼카피 엔진·자산·위스퍼 모델 <span class="tag t-plan">계획</span></small></div>
+          <div class="loc">AI 일 = 회원 Claude(하이쿠·소넷·오퍼스) <span class="tag t-ok">실측</span></div>
+          <div class="loc">설정·미리보기·편집 = PC 로컬 화면 <span class="tag t-plan">계획</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>항목별 비교</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>항목</th><th class="v">볼케이노</th><th class="n">노바작가</th><th class="o">숏템</th></tr></thead>
+      <tbody>
+        <tr><th>시작</th><td>Claude에 MCP 주소 연결 + 로그인</td><td>zip 풀고 md 파일 하나를 Claude Code에 끌어다 놓고 엔터</td><td>설치 exe 실행 → 라이선스 키 → 끝</td></tr>
+        <tr><th>처음부터 깔린 것</th><td>파이썬 환경·위스퍼는 설치 때 받음</td><td>효과음 번들만. <span class="b">BGM·글꼴·클립은 회원이 직접 준비</span></td><td>실행 도구 전부 <span class="tag t-ok">실측</span> · 글꼴 88·효과음·BGM·짤·템플릿 <span class="tag t-plan">계획</span></td></tr>
+        <tr><th>판단(로직) 위치</th><td class="g">서버 — 회원 PC에 안 보임</td><td class="b">PC — 파이썬 소스·지시문 그대로 공개</td><td>PC — 엔진을 컴파일(pyc)해 넣음. 뜯으면 볼 수는 있음 <span class="tag t-plan">계획</span></td></tr>
+        <tr><th>서버 의존</th><td class="b">단계마다 서버 호출 — 서버가 멈추면 제작도 멈춤</td><td class="g">없음(확인한 범위)</td><td class="g">켤 때 라이선스·업데이트 확인만</td></tr>
+        <tr><th>운영자 서버 부담</th><td>작음 — 렌더는 회원 PC(작업 폴더에 완성본·중간 영상·목소리 실측), 서버는 로그인·단계 지시·자산 묶음. 단 매 단계 호출</td><td>없음</td><td class="g">거의 없음(작은 JSON)</td></tr>
+        <tr><th>AI 판독·대본</th><td>회원 AI가 답(review_client)</td><td>회원 Claude Code가 직접</td><td>엔진이 요청을 쌓고 회원 Claude가 답 · 엔진 검사가 근거·폭을 다시 걸러 재작성 요청 <span class="tag t-ok">실측</span></td></tr>
+        <tr><th>받아쓰기</th><td>위스퍼(로컬 venv)</td><td>faster-whisper(로컬)</td><td>위스퍼 기본 · 스피치매틱스 선택 <span class="tag t-ok">실측</span></td></tr>
+        <tr><th>목소리</th><td>채널마다 다름</td><td>타입캐스트 회원 키 — <span class="b">채팅창에 키를 붙여 넣게 안내</span></td><td>타입캐스트 회원 키 — 설정 칸에만(채팅 금지)</td></tr>
+        <tr><th>이미지 생성</th><td>크롬 확장으로 구글 플로우, 또는 evolink 유료</td><td>— (확인 못 함)</td><td>회원 버텍스 키(필요한 프리셋만)</td></tr>
+        <tr><th>소재 찾기</th><td>유튜브 주소 + 채널명으로 시작</td><td>벤치마킹 영상 주소를 줌</td><td>원본 채널·영상 주소 또는 프리셋 채널에서 터진 편 자동 <span class="tag t-ok">실측</span></td></tr>
+        <tr><th>완성본 보기·고치기</th><td>customize 단계(지원 채널만)</td><td class="b">정적 타임라인 HTML — 보기만</td><td>PC 로컬 편집 화면에서 보고 고치고, Claude와 같은 작업 파일 공유 <span class="tag t-plan">계획</span></td></tr>
+        <tr><th>남는 파일</th><td>~/.volcano/jobs</td><td>영상마다 폴더(영상_5 = 227MB, 임시·자료·대본 전부)</td><td>완성본 + 필요한 것만(작업 자료는 숨은 폴더)</td></tr>
+        <tr><th>프리셋 수</th><td class="g">30여 채널 · 제작자 여러 명 · 등급별 공개</td><td>예시 스타일 3(썰·인스타·클립형)</td><td>완본 프리셋(드라이브 칼카피영상) + 숏템 템플릿 40</td></tr>
+        <tr><th>PC 대수·라이선스</th><td>계정 로그인(OAuth)</td><td>— (확인한 범위에 라이선스 확인 없음)</td><td>PC 1대 · 켤 때 확인 · 자동 업데이트</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>장단점</h2>
+    <div class="pc">
+      <div class="col vol"><h3>볼케이노</h3>
+        <h4>좋은 점</h4><ul><li>로직이 서버에 있어 베끼기 어렵고, 고치면 바로 모든 회원에게 반영</li><li>제작자 여러 명이 프리셋을 올리는 장터 구조(30여 채널)</li><li>단계 지시가 서버에서 오니 Claude 모델이 약해도 흐름을 잃지 않음</li></ul>
+        <h4>아쉬운 점</h4><ul><li>서버가 멈추거나 느리면 제작이 멈춤</li><li>단계마다 서버 왕복</li><li>수정은 지원 채널만</li></ul>
+      </div>
+      <div class="col nova"><h3>노바작가</h3>
+        <h4>좋은 점</h4><ul><li>서버가 필요 없음</li><li>시작이 쉬움(파일 하나 끌어다 놓기)</li><li>회원 PC에 모든 과정이 파일로 남아 투명함</li></ul>
+        <h4>아쉬운 점</h4><ul><li>파이썬 소스·지시문이 그대로 노출 — 복제·재배포에 무방비</li><li>BGM·글꼴·클립을 회원이 직접 준비</li><li>결과물 HTML은 보기만 하고 고칠 수 없음</li><li>키를 채팅창에 붙여 넣게 함(대화 기록에 남음)</li><li>작업 폴더가 영상마다 수백 MB씩 쌓임</li></ul>
+      </div>
+      <div class="col ours"><h3>숏템</h3>
+        <h4>좋은 점</h4><ul><li>드라이브 완본을 만든 그 엔진 그대로 — 품질 기준이 이미 있음</li><li>처음 설치에 전부(도구·자산·모델) — 회원이 준비할 것 없음</li><li>서버 부담 거의 0, 서버가 멈춰도 제작은 됨</li><li>미리보기 = 완성본(같은 렌더러), PC 화면에서 고치고 Claude와 이어짐</li><li>엔진 검사(근거·글자 폭)가 Claude 답도 걸러냄</li></ul>
+        <h4>아쉬운 점·숙제</h4><ul><li>설치 파일이 큼(약 1GB 예상, 실측 전)</li><li>엔진이 PC에 있어 완전한 보호는 안 됨(컴파일+라이선스로 문턱만)</li><li>새 프리셋은 업데이트로만 — 켤 때 자동으로 받게</li><li>배경음악 판별은 제미나이보다 약함(소리 분류 모델 필요)</li><li>틱톡·인스타 채널 목록은 아직 못 엶(영상 주소는 됨)</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="take">
+    <h2>숏템이 가져올 것 · 피할 것</h2>
+    <ol>
+      <li><b>가져올 것(노바)</b>: 시작을 '파일 하나 · 버튼 하나'로. 설치 exe가 끝나면 바로 로컬 설정 화면이 뜨게.</li>
+      <li><b>가져올 것(볼케이노)</b>: 단계마다 '다음 할 일 한 줄'을 Claude에게 주는 방식 — 숏템 MCP 응답에 이미 넣음(need·next). 하이쿠도 길을 잃지 않게.</li>
+      <li><b>피할 것(노바)</b>: 키를 채팅에 받지 않기 · 결과물을 보기만 하는 HTML로 끝내지 않기 · 작업 찌꺼기를 회원 폴더에 그대로 쌓지 않기.</li>
+      <li><b>피할 것(볼케이노)</b>: 제작 단계가 우리 서버에 매달리게 하지 않기 — 서버는 라이선스·업데이트만.</li>
+    </ol>
+  </section>
+
+  <section class="ev">
+    <h2 style="font-size:19px">근거 (2026-10-19, 이 PC에서 확인)</h2>
+    <ul>
+      <li>볼케이노: <code>~/.claude.json</code> MCP 설정 <code>volcano · http · volcano-mcp.groove1027.workers.dev</code> · <code>~/.volcano/mcp-list.log</code>('Needs authentication' 뒤 연결) · <code>~/.volcano/venv</code> 패키지 목록 · <code>~/.volcano/jobs/20260911_뇌전구</code> · 도구 설명(next_step·customize·볼케이노킷·evolink·프리셋 목록). 키 폴더는 열지 않음.</li>
+      <li>노바작가: <code>바탕화면/쇼츠AI_스타터킷</code>(1.2GB, <code>.claude/CLAUDE.md</code>·가이드·<code>엔진/</code> 파이썬 17파일 1,896줄) · <code>쇼츠AI_작업/영상_5_인스타쇼핑형</code>(227MB, 완성본·타임라인 HTML) · 자가점검_결과.md(ffmpeg WinGet·파이썬 3.12.10·faster-whisper·타입캐스트). CLAUDE.md 에서 서버·라이선스 확인 문구는 찾지 못함(검색 범위: 그 파일).</li>
+      <li>숏템: 설치 exe 203MB(10-18 실측) · 엔진 고객 모드 실측(오늘: 프리셋→후보→대본→재료→계획, 제미나이 0) · 나머지는 계획.</li>
+    </ul>
+  </section>
+</div>
+
+</body></html>

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>장면 길이 안내 정리</title>
+<style>
+:root{--bg:#14161b;--card:#1d2028;--line:#2c313c;--txt:#e8eaf0;--sub:#9aa3b2;--voice:#3d7bff;--c1:#2fbf71;--c2:#f2a33a;--cut:#ff5a5a;--gap:#555c6b}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:"Malgun Gothic",system-ui,sans-serif;line-height:1.6}
+main{max-width:920px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:26px;margin:0 0 6px}h2{font-size:21px;margin:38px 0 10px}
+.sub{color:var(--sub)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:12px 0}
+.row{display:flex;align-items:center;gap:10px;margin:8px 0}
+.lab{width:64px;flex:0 0 64px;color:var(--sub);font-size:14px;text-align:right}
+.track{position:relative;flex:1;height:44px;border-radius:8px;background:#0e1014;overflow:visible}
+.seg{position:absolute;top:0;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#0b0d10}
+.voice{background:var(--voice);color:#fff}
+.k1{background:var(--c1)}.k2{background:var(--c2)}
+.cut{background:repeating-linear-gradient(45deg,rgba(255,90,90,.35) 0 8px,transparent 8px 16px);border:2px dashed var(--cut);color:#ffb3b3}
+.gap{background:repeating-linear-gradient(45deg,#3a3f4b 0 8px,#2a2e37 8px 16px);border:2px dashed var(--gap);color:#cfd5e0}
+.note{margin-top:10px;font-size:15px}
+.tag{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:700}
+.bad{background:#4a1f24;color:#ffb3b3}.good{background:#173a2a;color:#9be7bf}
+.fix{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}
+.fix .box{margin:0}
+.fix b{font-size:16px}
+.mess{display:flex;flex-direction:column;gap:8px}
+.mess div{padding:9px 12px;border-radius:9px;background:#3a1d22;border:1px solid #7a3540;color:#ffc2c2;font-size:14px}
+.mess div.o{background:#3a2e14;border-color:#8a6a2a;color:#ffe0a8}
+.mess div.k{background:#22262f;border-color:#454c5a;color:#cfd5e0}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 14px;border-radius:10px;background:#3a2e14;border:1px solid #8a6a2a;color:#ffe0a8;font-size:15px}
+.bar button{font:inherit;font-size:14px;border:0;border-radius:8px;padding:6px 12px;background:#2a2f3a;color:#e8eaf0;cursor:pointer}
+.bar button.on{background:var(--c2);color:#2a1d05;font-weight:800}
+.arrow{font-size:28px;text-align:center;color:var(--sub);margin:4px 0}
+@media (max-width:560px){.lab{width:48px;flex-basis:48px;font-size:12px}h1{font-size:22px}}
+</style></head><body><main>
+
+<h1>장면 길이 안내, 한 장으로 정리</h1>
+<div class="sub">3단계 장면 편집에서 "길이가 안 맞아요" 안내가 왜 여러 개인지, 어떻게 하나로 합칠지</div>
+
+<h2>① 기본 — 한 줄 = 목소리 길이만큼의 칸</h2>
+<div class="box">
+  <div class="row"><div class="lab">목소리</div><div class="track"><div class="seg voice" style="left:0;width:100%">4초 (바뀌지 않음)</div></div></div>
+  <div class="row"><div class="lab">장면</div><div class="track"><div class="seg k1" style="left:0;width:49.5%">카드1</div><div class="seg k2" style="left:50.5%;width:49.5%">카드2</div></div></div>
+  <div class="note">카드들이 이 4초를 <b>나눠 씁니다</b>. 칸 길이는 그대로라서 생기는 문제는 딱 <b>두 가지</b>뿐입니다.</div>
+</div>
+
+<h2>② 문제는 두 가지뿐</h2>
+<div class="box">
+  <span class="tag bad">A. 넘침 — 뒤가 잘림</span>
+  <div class="row"><div class="lab">목소리</div><div class="track"><div class="seg voice" style="left:0;width:75%">4초</div></div></div>
+  <div class="row"><div class="lab">장면</div><div class="track"><div class="seg k1" style="left:0;width:37%">카드1</div><div class="seg k2" style="left:38%;width:37%">카드2</div><div class="seg cut" style="left:75.5%;width:24.5%">잘림 1.4초</div></div></div>
+  <div class="note">고른 장면이 칸보다 길어서 <b>뒷부분이 안 나옵니다</b>.</div>
+</div>
+<div class="box">
+  <span class="tag bad">B. 모자람 — 빈칸</span>
+  <div class="row"><div class="lab">목소리</div><div class="track"><div class="seg voice" style="left:0;width:100%">4초</div></div></div>
+  <div class="row"><div class="lab">장면</div><div class="track"><div class="seg k1" style="left:0;width:49%">카드1</div><div class="seg k2" style="left:50%;width:35%">카드2</div><div class="seg gap" style="left:86%;width:14%">빈칸</div></div></div>
+  <div class="note">장면이 짧아서 <b>끝이 멈춰 보입니다</b>.</div>
+</div>
+
+<h2>③ 해결 방법도 세 가지뿐</h2>
+<div class="fix">
+  <div class="box"><b>1. 그 카드만 속도 바꾸기</b><br><span class="sub">넘치면 빠르게, 모자라면 느리게. 다른 카드는 그대로.</span></div>
+  <div class="box"><b>2. 전부 같이 속도 바꾸기</b><br><span class="sub">줄 안 카드 전부 같은 속도로. 속도가 들쭉날쭉하지 않음.</span></div>
+  <div class="box"><b>3. 장면을 더/덜 보여주기</b><br><span class="sub">옆 카드 뒤를 더 보여주거나, 장면을 하나 더 붙임.</span></div>
+</div>
+
+<h2>④ 지금 문제 — 같은 일인데 안내가 7가지</h2>
+<div class="box">
+  <div class="sub" style="margin-bottom:10px">생긴 <b>이유마다</b> 안내를 따로 만들어서, 한 줄에 두세 개씩 겹쳐 뜹니다.</div>
+  <div class="mess">
+    <div>⏩ 카드: 고른 구간 뒤 1.4초가 잘려요 [빠르게 맞추기] <span class="sub">— 박스로 길게 골랐을 때 (A)</span></div>
+    <div>⏱ 카드: 0.1초가 비어요 [속도 맞추기] <span class="sub">— 장면이 원래 짧을 때 (B)</span></div>
+    <div>⏱ 카드가 짧아 1.4초가 비어요 [같은 의미 장면 붙이기] [원본 다음 장면 붙이기] <span class="sub">— 많이 짧을 때 (B)</span></div>
+    <div>⚠ 0.4초가 비었어요 → [전체를 살짝 느리게] <span class="sub">— 구절 맞춤 끈 줄 (B)</span></div>
+    <div class="k">☐ 전체 늘리기 <span class="sub">— 체크박스 (B)</span></div>
+    <div class="o">카드 위 「+1.4초 ▶」 <span class="sub">— 새로 만든 것, 미배포 (A)</span></div>
+    <div class="o">✂ 1번 카드를 줄여 0.2초가 비었어요 [...] <span class="sub">— 새로 만든 것, 미배포 (손으로 줄였을 때)</span></div>
+  </div>
+</div>
+
+<div class="arrow">⬇ 합치면</div>
+
+<h2>⑤ 바꿀 모습 — 이유가 뭐든 줄마다 한 줄만</h2>
+<div class="box">
+  <span class="tag bad">A. 넘칠 때</span>
+  <div class="bar" style="margin-top:8px">1.4초 넘쳐요
+    <button class="on">✓ 그냥 두기(뒤 안 나옴)</button><button>카드2 빠르게</button><button>전부 같이 빠르게</button><button>되돌리기</button></div>
+</div>
+<div class="box">
+  <span class="tag bad">B. 모자랄 때</span>
+  <div class="bar" style="margin-top:8px">0.4초 비었어요
+    <button class="on">✓ 옆 장면 더 보여줌</button><button>카드2 느리게</button><button>전부 같이 느리게</button><button>장면 붙이기</button><button>되돌리기</button></div>
+</div>
+<div class="box">
+  <span class="tag good">이렇게 됩니다</span>
+  <ul style="margin:8px 0 0;padding-left:20px">
+    <li>안내는 <b>줄마다 한 줄</b> — 빨간 줄 여러 개·체크박스가 사라짐</li>
+    <li>버튼을 누르면 <b>바로 재생</b>, 다른 버튼 누르면 그걸로 바뀜 (비교해 보기)</li>
+    <li>너무 느려지거나 빨라지는 버튼은 <b>자동으로 숨김</b></li>
+    <li>이미 만든 손님 영상은 <b>그대로</b> (새 작업부터 적용)</li>
+  </ul>
+</div>
+</main></body></html>

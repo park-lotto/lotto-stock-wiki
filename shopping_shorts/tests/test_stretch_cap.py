@@ -16,10 +16,11 @@ JS = Path(__file__).resolve().parents[1] / "static" / "scene_play.js"
 def test_미리보기_상한이_렌더와_같다():
     from shopping_shorts.video_assemble import _MAX_SLOWMO
     src = JS.read_text(encoding="utf-8")
-    m = re.search(r"const\s+MAX_SLOWMO\s*=\s*([\d.]+)", src)
-    assert m, "미리보기에 MAX_SLOWMO 상한이 없다 — 무제한으로 늘리고 있다"
-    assert float(m.group(1)) == _MAX_SLOWMO, \
-        f"미리보기 {m.group(1)} vs 렌더 {_MAX_SLOWMO} — 두 값이 어긋나면 결과물이 다르다"
+    # 2026-10-01 관제 020: 미리보기는 숫자를 안 들고 서버(config.MAX_SLOWMO → DATA.max_slowmo)에서 받는다.
+    from shopping_shorts import config
+    assert _MAX_SLOWMO == config.MAX_SLOWMO
+    assert "function maxSlowmo()" in src and "DATA.max_slowmo" in src, "미리보기가 서버 상한을 안 읽는다"
+    assert not re.search(r"const" + chr(92) + "s+MAX_SLOWMO" + chr(92) + "s*=", src), "미리보기가 자기 숫자를 들고 있다 — 두 곳이면 어긋난다"
 
 
 def test_늘리기_분기가_상한을_실제로_쓴다():
@@ -28,4 +29,4 @@ def test_늘리기_분기가_상한을_실제로_쓴다():
     i = src.index("if (spread && filled > EPS)")
     body = src[i:i + 700]
     code = "\n".join(re.sub(r"//.*$", "", ln) for ln in body.splitlines())
-    assert "MAX_SLOWMO" in code, "spread 분기가 상한을 안 쓴다"
+    assert "maxSlowmo()" in code, "spread 분기가 상한을 안 쓴다"

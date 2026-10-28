@@ -1,0 +1,112 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    9,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 480,
+   "w": 1080,
+   "h": 1440,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 210,
+   "w": 1000,
+   "align": "center",
+   "lines": 2,
+   "font": "Pretendard",
+   "size": 102.2,
+   "line_h": 114,
+   "rgb": [
+    251,
+    246,
+    245
+   ],
+   "line_rgb": [
+    [
+     251,
+     246,
+     245
+    ],
+    [
+     246,
+     233,
+     1
+    ]
+   ],
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 5,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "에이티즈 산 가방 속\n풀내음 나는 핸드크림"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1222,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "SBAggroB",
+   "size": 75,
+   "line_h": 86,
+   "rgb": [
+    252,
+    250,
+    250
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 4,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   },
+   "emphasis": null,
+   "text": null
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "dNthcAKrj5U"
+}

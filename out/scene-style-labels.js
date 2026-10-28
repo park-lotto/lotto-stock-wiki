@@ -33,13 +33,17 @@
    focusedLine.dispatchEvent(new KeyboardEvent('keydown',{key:split?'Enter':'Backspace',bubbles:true,cancelable:true}));
  });
  caption.after(lines);let lastKey='',pending=false;
+ // 10-03 사장님: 템플릿 훅 장면은 제목·보조제목만 나온다(대사 자막은 본문부터). 화면에 없는 자막을 편집 칸에 띄워 헷갈렸다 — 그 장면에선 안내만 보인다.
+ const hookNote=document.createElement('p');hookNote.className='hook-caption-note';hookNote.hidden=true;hookNote.textContent='훅 장면은 제목이 나옵니다. 대사 자막은 본문 장면부터 보입니다.';lines.after(hookNote);
  function fillLines(){const context=api.context(),scene=context?.scenes[api.geometry().sceneIndex],input=caption.querySelector('[data-bind="caption"]');const values=scene?context.scenes.filter(s=>s.beat_idx===scene.beat_idx&&s.caption).map(s=>s.caption):input.value.split('\n');const box=lines.querySelector('[data-line-inputs]');box.replaceChildren(...values.map((text,i)=>window.makeCaptionLineInput(text,i)));}
- function sync(){const context=api.context(),index=api.geometry().sceneIndex,key=context?`${context.jobId}:${context.scenes[index]?.beat_idx}`:`local:${api.snapshot().presetId}:${index}`;lines.hidden=!context&&caption.hidden;lines.querySelector('[data-lines-context]').textContent=context?'':'샘플 자막';if(key!==lastKey){lastKey=key;fillLines()}controls();draw()}
+ function sync(){const context=api.context(),index=api.geometry().sceneIndex,key=context?`${context.jobId}:${context.scenes[index]?.beat_idx}`:`local:${api.snapshot()?.presetId||"none"}:${index}`;{const hideLines=caption.hidden,showNote=caption.hidden&&!!context&&!document.body.classList.contains('no-template');if(lines.hidden!==hideLines)lines.hidden=hideLines;if(hookNote.hidden===showNote)hookNote.hidden=!showNote;}lines.querySelector('[data-lines-context]').textContent=context?'':'샘플 자막';if(key!==lastKey){lastKey=key;fillLines()}controls();draw()}
  const status=message=>lines.querySelector('[data-lines-status]').textContent=message;
  lines.addEventListener('toggle',()=>{if(lines.open&&!pending)fillLines()});
  lines.addEventListener('click',event=>{const reset=!!event.target.closest('[data-lines-reset]');if(!reset&&!event.target.closest('[data-lines-save]'))return;if(pending)return;const values=[...lines.querySelectorAll('[data-capline]')].map(e=>e.value.trim()).filter(Boolean);if(!reset&&!values.length){status('줄을 입력해 주세요.');return;}const context=api.context();
    if(window.parent!==window&&context){pending=true;status('줄을 저장하는 중…');window.parent.postMessage({type:'scene-style-lines',jobId:context.jobId,beatIdx:context.scenes[api.geometry().sceneIndex].beat_idx,lines:values,reset,snapshot:api.snapshot()},location.origin);}
-   else{if(reset)api.resetCaptionText();else{const input=caption.querySelector('[data-bind="caption"]');input.value=values.join('\n');input.dispatchEvent(new Event('input',{bubbles:true}))}document.querySelector('.layout-a .edit-pane > .primary').click();fillLines();status('적용했어요.');}
+   else{if(reset)api.resetCaptionText();else{   // 09-19: 샘플 화면도 제작소처럼 한 줄 = 한 장면. 지금 장면부터 차례로 채운다(전엔 한 장면에 여러 줄로 몰아넣었다)
+     const input=caption.querySelector('[data-bind="caption"]'),start=api.geometry().sceneIndex,total=Number(document.querySelector('.layout-a [data-scene-total]')?.textContent)||12;
+     values.forEach((text,k)=>{if(start+k>=total)return;api.show(start+k);input.value=text;input.dispatchEvent(new Event('input',{bubbles:true}))});api.show(start);}document.querySelector('.layout-a .edit-pane > .primary').click();fillLines();status('적용했어요.');}
  });
  addEventListener('message',event=>{if(event.source!==window.parent||event.origin!==location.origin||event.data?.type!=='scene-style-lines-result')return;pending=false;status(event.data.ok?'줄 저장 완료 · 영상에 반영됩니다.':event.data.error||'저장하지 못했습니다.');if(event.data.ok){lastKey='';sync()}});
  new MutationObserver(sync).observe(preview.querySelector('.precision-edit-layer'),{childList:true});addEventListener('resize',()=>{if(!window.sceneStyleExporting)draw()});sync();

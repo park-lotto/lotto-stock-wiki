@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>숏폼 수익 구조도</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#16181d;--sub:#5d6470;--line:#e3e6eb;--a:#2563eb;--b:#0a7d4f;--c:#b45309;--d:#7c3aed;--e:#be185d;--x:#9b1c1c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111317;--card:#1b1e24;--ink:#eef0f3;--sub:#9aa2ae;--line:#2c313a;--a:#60a5fa;--b:#34d399;--c:#fbbf24;--d:#a78bfa;--e:#f472b6;--x:#f87171}}
+:root[data-theme="dark"]{--bg:#111317;--card:#1b1e24;--ink:#eef0f3;--sub:#9aa2ae;--line:#2c313a;--a:#60a5fa;--b:#34d399;--c:#fbbf24;--d:#a78bfa;--e:#f472b6;--x:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Malgun Gothic",system-ui,sans-serif;line-height:1.55}
+main{max-width:1180px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:26px;margin:0 0 4px}h2{font-size:20px;margin:38px 0 6px}h3{font-size:16px;margin:0 0 6px}
+a{color:var(--a)}
+.lead{color:var(--sub);margin:0 0 14px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:12px}
+.flow{display:grid;grid-template-columns:120px 1fr;gap:12px}
+.src{background:var(--ink);color:var(--bg);border-radius:14px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;font-size:18px;padding:12px}
+.ways{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.way{border-radius:12px;padding:12px;border:2px solid currentColor;background:var(--card)}
+.way b{display:block;font-size:15px}
+.way .ex{color:var(--ink);font-size:13px;margin-top:6px}
+.way ul{color:var(--ink);font-size:13px;margin:8px 0 0;padding-left:16px}
+.way li{margin:3px 0}
+.wa{color:var(--a)}.wb{color:var(--b)}.wc{color:var(--c)}.wd{color:var(--d)}.we{color:var(--e)}
+.wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:820px}
+th,td{border-bottom:1px solid var(--line);padding:9px 8px;text-align:left;vertical-align:top}
+th{color:var(--sub);font-weight:600;font-size:12.5px}
+td:first-child{font-weight:700;white-space:nowrap}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:6px;margin:1px 2px 1px 0;border:1px solid currentColor}
+.hi{color:var(--b)}.mid{color:var(--c)}.lo{color:var(--x)}
+.src-l{font-size:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin-top:10px}
+summary{cursor:pointer;font-weight:700;font-size:15px}
+details ol{margin:10px 0 4px;padding-left:20px;font-size:14px}
+details li{margin:5px 0}
+.stuck{font-size:13px;color:var(--x);margin:6px 0 2px}
+.note{font-size:13px;color:var(--sub)}
+.warn{border-color:var(--c)}
+.me{border:2px solid var(--b)}
+ul.plain{margin:6px 0;padding-left:18px;font-size:14px}
+ul.plain li{margin:4px 0}
+@media (max-width:980px){.ways{grid-template-columns:1fr 1fr}.flow{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}}
+@media (max-width:520px){.ways{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<h1>숏폼 수익 구조도</h1>
+<p class="lead">한국 거주자 기준, 2026-10-19 조사. 공식 문서를 직접 열어 확인한 것은 <span class="tag hi">공식</span>, 언론은 <span class="tag mid">언론</span>, 블로그·유튜브 영상 주장은 <span class="tag lo">주장</span>으로 표시했습니다.</p>
+
+<h2>① 돈이 들어오는 5가지 길</h2>
+<div class="flow">
+ <div class="src">영상 1개</div>
+ <div class="ways">
+  <div class="way wa"><b>A. 조회수 광고 수익</b><div class="ex">플랫폼이 광고 수익을 나눠 줌</div>
+   <ul><li>유튜브 쇼츠 (45%)</li><li>틱톡 리워드 (1분 이상·개인 계정)</li><li>네이버 클립 광고 인센티브 (45%)</li><li>인스타 보너스 (초대제)</li><li>페이스북 콘텐츠 수익화 (초대제)</li></ul></div>
+  <div class="way wb"><b>B. 플랫폼 보상·후원</b><div class="ex">미션 활동비·업로드 보상·시청자 후원</div>
+   <ul><li>네이버 클립 크리에이터 (네이버페이)</li><li>당근 스토리 (건당 300~2,000원)</li><li>카카오 숏폼 스튜디오 (정책 미공개)</li><li>인스타 기프트·구독 / 페북 스타</li><li>유튜브 멤버십·Super</li></ul></div>
+  <div class="way wc"><b>C. 남의 상품 제휴 수수료</b><div class="ex"><b>링크 만드는 곳</b>에서 링크를 받아 <b>영상 플랫폼</b>에 붙임</div>
+   <ul><li>만드는 곳: 쿠팡파트너스 · 네이버 쇼핑커넥트 · 토스쇼핑 쉐어링크</li><li>영상에 바로 태그: 유튜브 쇼핑 제휴</li><li>붙이는 곳: 프로필 링크 · 스레드 댓글 · 핀터레스트 링크 칸 · 클립 정보 태그</li></ul></div>
+  <div class="way wd"><b>D. 내 상품 판매</b><div class="ex">내 스토어로 손님을 보냄 (사업자)</div>
+   <ul><li>네이버 숏클립 (판매자 누구나)</li><li>스마트스토어 마케팅 링크 (수수료 3%→1%)</li><li>쇼핑커넥트 판매자 (남이 팔아줌)</li><li>유튜브 쇼핑은 카페24 경유만</li></ul></div>
+  <div class="way we"><b>E. 협찬 (브랜드가 직접)</b><div class="ex">플랫폼이 연결만 해 주고 브랜드가 돈을 줌</div>
+   <ul><li>인스타 크리에이터 마켓플레이스 (팔로워 1천)</li><li>유튜브 크리에이터 파트너십</li><li>틱톡 One</li><li>네이버 브랜드커넥트 캠페인</li></ul></div>
+ </div>
+</div>
+
+<h2>② 플랫폼별 — 어떻게 버나</h2>
+<div class="box wrap">
+<table>
+<tr><th>플랫폼</th><th>돈 버는 방식</th><th>조건</th><th>단가·정산</th><th>근거</th></tr>
+<tr><td>유튜브 쇼츠</td>
+<td><b>A</b> 쇼츠 광고 수익<br><b>C</b> 쇼핑 제휴(쿠팡 등 상품 태그 — 쇼츠에서도 클릭됨)<br><b>B</b> 멤버십·Super<br><b>E</b> 크리에이터 파트너십</td>
+<td>광고: 구독자 1,000 + 90일 쇼츠 1,000만 회<br>⚠️ <b>2027-02-01부터</b> 신규 2,000만 회, 기존 가입자도 90일 1,000만 회 유지해야 그달 쇼츠 수익<br>쇼핑 제휴: 파트너 프로그램 가입 + 구독자 500명</td>
+<td>쇼츠 광고 풀의 <b>45%</b>, 애드센스로 매월 21~26일 지급<br>쿠팡 태그 6.7%, 구매 후 60~120일 뒤 지급<br>실측 주장: 1,000회당 약 170~200원</td>
+<td class="src-l"><span class="tag hi">공식</span><a href="https://support.google.com/youtube/answer/72851">YPP</a> · <a href="https://support.google.com/youtube/answer/12504220">쇼츠 수익</a> · <a href="https://blog.youtube/intl/ko-kr/news-and-events/youtube-shopping-expansion-500-subscribers/">쇼핑 500명</a><br><span class="tag mid">언론</span><a href="https://www.digitaltoday.co.kr/news/articleView.html?idxno=568658">디지털투데이(6.7%)</a></td></tr>
+<tr><td>틱톡</td>
+<td><b>A</b> 크리에이터 리워드(한국어 2배)<br><b>B</b> LIVE·동영상 선물<br><b>E</b> TikTok One</td>
+<td>한국은 <b>만 19세</b> · <b>개인 계정만</b>(비즈니스 불가) · 팔로워 1만 · 30일 조회 10만 · <b>1분 이상</b> 원본 영상</td>
+<td>한국 단가 공개 없음. 10달러 넘으면 매월 15일 <b>PayPal만</b><br>틱톡샵은 한국 미출시</td>
+<td class="src-l"><span class="tag hi">공식</span><a href="https://support.tiktok.com/ko/business-and-creator/creator-rewards-program/creator-rewards-program">리워드 도움말</a><br><span class="tag mid">언론</span><a href="https://m.ddaily.co.kr/page/view/2026040210364332591">디지털데일리(2배)</a></td></tr>
+<tr><td>인스타 릴스</td>
+<td><b>A</b> 보너스(사진·릴스)<br><b>B</b> 기프트·구독<br><b>E</b> 크리에이터 마켓플레이스<br><b>C</b> 프로필 링크로 외부 제휴</td>
+<td>보너스: 국가 목록에 <b>한국 명시</b>, 한국 월 100만 조회 3개월 연속(릴스 500만) — <b>초대제</b><br>기프트: 팔로워 500 / 협찬: 팔로워 1,000<br>메타 자체 제휴 상품 태그는 한국 불가</td>
+<td>보너스 단가 비공개, 매월 7·21일<br>기프트 별 1개 = $0.01</td>
+<td class="src-l"><span class="tag hi">공식</span><a href="https://help.instagram.com/1620031291794312">보너스</a> · <a href="https://help.instagram.com/738469380549477">기프트</a> · <a href="https://help.instagram.com/1389278101788752">마켓플레이스</a></td></tr>
+<tr><td>페이스북 릴스</td>
+<td><b>A</b> 콘텐츠 수익화<br><b>B</b> 스타</td>
+<td>국가 목록에 한국·한국어 있음 — <b>초대제</b><br>스타: 팔로워 500을 30일 유지</td>
+<td>단가 비공개, 매월 21일경(최소 $25)</td>
+<td class="src-l"><span class="tag hi">공식</span><a href="https://www.facebook.com/business/help/267128784014981">콘텐츠 수익화</a> · <a href="https://www.facebook.com/business/help/862669417580221">스타</a></td></tr>
+<tr><td>스레드</td>
+<td>플랫폼이 주는 돈 <b>없음</b> → <b>C</b> 댓글에 제휴 링크</td>
+<td>스레드 보너스(미국 전용) 종료</td><td>—</td>
+<td class="src-l"><span class="tag mid">언론</span>· <span class="tag lo">주장</span><a href="https://www.youtube.com/watch?v=zn2nB9jNmxU">스레드+쿠팡 영상</a></td></tr>
+<tr><td>핀터레스트</td>
+<td>플랫폼이 주는 돈 <b>없음</b> → <b>C</b> 핀의 Link 칸에 제휴 링크 · <b>E</b> 협찬 표시</td>
+<td>크리에이터 보상은 미국 전용이었고 2022년 종료<br>공식: "일부 단축 주소·리디렉트는 허용 안 함" → 쿠팡 링크는 <b>단축 말고 긴 원래 주소</b>로. 막혔다·통과했다는 한국어 실측 모두 0건</td><td>제휴처 수수료</td>
+<td class="src-l"><span class="tag hi">공식</span><a href="https://help.pinterest.com/en/business/article/video-pins">영상 핀</a> · <a href="https://policy.pinterest.com/en/community-guidelines">가이드라인</a><br><span class="tag mid">언론</span><a href="https://techcrunch.com/?p=2450077">TechCrunch</a> · <a href="https://www.socialmediatoday.com/news/Pinterest-Ends-Creator-Rewards-Program/637578/">Social Media Today</a></td></tr>
+<tr><td>네이버 클립</td>
+<td><b>A</b> 광고 인센티브<br><b>B</b> 클립 크리에이터 활동비<br><b>C</b> 쇼핑커넥트 정보 태그</td>
+<td>업로드 누구나<br>광고: 구독자 1,000 + 90일 300만 회<br>크리에이터: 만 14세 이상, 상시 모집·월 1회 심사</td>
+<td>광고 <b>45%</b>, 5만 원 넘으면 매월 지급(법인 계좌 가능)<br>활동비 9만+1만 원 + 어워즈, <b>네이버페이 포인트</b> — 실제 활동자는 대부분 <b>월 10만 원</b>(많으면 30만)</td>
+<td class="src-l"><span class="tag hi">공식</span><a href="https://help.naver.com/service/30048">클립 도움말</a> · <a href="https://mkt.naver.com/clip-creators">클립 크리에이터</a><br><span class="tag mid">언론</span><a href="https://www.newsis.com/view/NISX20260206_0003505593">뉴시스</a></td></tr>
+<tr><td>카카오톡 숏폼</td>
+<td><b>B</b> 숏폼 스튜디오 수익화 프로그램</td>
+<td>만 14세 이상 개인·사업자, 가입 신청 → 카카오 심사</td>
+<td>운영정책에 "오픈 시점에 공개"라고만 적힘(10/19 재확인). 1월 챌린지는 6/9 종료 — 그 뒤 리워드·2기 모집 소식은 영상·웹 0건</td>
+<td class="src-l"><span class="tag hi">공식</span><a href="https://shortform-studio.kakao.com/terms/shortform_policy">약관</a> · <a href="https://www.kakaocorp.com/page/detail/11876">보도자료</a></td></tr>
+<tr><td>당근 스토리</td>
+<td><b>B</b> 스토리 인플루언서 보상</td>
+<td>한 달 5개 + 유효 시청 2,000회면 자동 자격<br>⛔ 상품 판매·외부 링크 유도·AI 영상·업체 소스 <b>금지</b></td>
+<td>건당 당근머니 300~2,000원 랜덤 + 월간 성과 보상, 세금은 당근 부담</td>
+<td class="src-l"><span class="tag hi">공식</span><a href="https://www.daangn.com/wv/faqs">당근 FAQ</a></td></tr>
+<tr><td>토스</td>
+<td><b>C</b> 토스쇼핑 <b>쉐어링크</b>(링크 만드는 곳)</td>
+<td>만 19세 이상, 비사업자도 가능</td>
+<td>10/1부터 <b>8%</b>(기본 5% + 한시 3%), 구매확정 다음 달 25일</td>
+<td class="src-l"><span class="tag hi">공식</span><a href="https://sharelink-docs.toss.im/">쉐어링크 문서</a></td></tr>
+</table>
+</div>
+
+<h2>③ 링크 만드는 곳 3곳 비교 (C 경로)</h2>
+<p class="lead">셋 다 영상을 올리는 곳이 아닙니다. 여기서 링크를 받아 유튜브 프로필·인스타·스레드·핀터레스트 등에 붙입니다.</p>
+<div class="box wrap">
+<table>
+<tr><th>항목</th><th>쿠팡파트너스</th><th>네이버 쇼핑커넥트</th><th>토스쇼핑 쉐어링크</th></tr>
+<tr><td>수수료</td><td>카테고리별 <b>1.8~5.0%</b>(패션 5.0, 가전·생활 2.0, 식품 1.8), 상품당 최대 10만 원 — "3% 일괄" 아님</td><td>상품마다 다름(판매자가 7~50% 설정, 크리에이터 몫은 그보다 낮음)</td><td><b>8%</b>(10/1부터, 그전 10%)</td></tr>
+<tr><td>정산</td><td>익익월 15일, 최소 1만 원</td><td>수익 확정 다음 달 22일 → 그다음 달 15일</td><td>구매확정 다음 달 25일, 최소 10원</td></tr>
+<tr><td>법인</td><td>사업자등록증 제출, 쿠팡이 세금계산서 역발행 → 승인</td><td>단체 아이디 가입 가능(9/8~), 세금계산서 23~27일 역발행</td><td>부가세 포함 지급, 세금계산서 승인</td></tr>
+<tr><td>막히는 곳</td><td>등록 안 한 채널에 걸면 부정행위 · 카톡·문자로 보내기 금지 · 쇼츠 설명란 링크는 클릭 안 됨</td><td>일반 스토어 링크는 수익 안 잡힘 · 면세사업자 정산 불가</td><td>일반 '공유하기' 링크는 집계 안 됨 · 상품 이미지 편집·합성 금지</td></tr>
+<tr><td>근거</td><td class="src-l"><span class="tag hi">공식</span>약관·운영정책 2026.9.7판, 수익지급율표</td><td class="src-l"><span class="tag hi">공식</span><a href="https://blog.naver.com/brandconnect-creator/224330405607">브랜드커넥트 공식 블로그</a></td><td class="src-l"><span class="tag hi">공식</span><a href="https://sharelink-docs.toss.im/">쉐어링크 문서</a></td></tr>
+</table>
+<p class="note">대가성 문구(공정위 지침, 2026-06-01 시행): 영상은 <b>제목 또는 영상 안 시작·끝 + 반복</b>, 글은 첫 부분. "제공받을 수 있습니다" 말고 <b>"제공받습니다"</b>. AI 가상인물이 추천하면 가상인물임을 표시. — <a href="https://www.law.go.kr/LSW/admRulInfoR.do?admRulSeq=2100000280130">법제처 원문</a></p>
+</div>
+
+<h2>④ 사업자 유형별 — 신청할 수 있는 것</h2>
+<div class="box wrap">
+<table>
+<tr><th>항목</th><th>사업자 없음</th><th>개인사업자</th><th>법인</th><th>스마트스토어 판매자</th></tr>
+<tr><td>클립 크리에이터 활동비</td><td>✅</td><td>✅</td><td>⚠️ 대표자 <b>개인 아이디</b>로만(네이버페이 포인트)</td><td>—</td></tr>
+<tr><td>클립 광고 인센티브</td><td>✅ 3.3% 떼고</td><td>✅ 세금계산서·현금영수증</td><td>✅ 법인 계좌 + 세금계산서</td><td>—</td></tr>
+<tr><td>쇼핑커넥트 크리에이터</td><td>✅</td><td>✅</td><td>✅ 단체 아이디 가능</td><td>판매자 여부와 별개</td></tr>
+<tr><td>브랜드커넥트 캠페인(판매자 쪽)</td><td>❌</td><td>스토어 있으면 ✅</td><td>스토어 있으면 ✅ (<b>개인 아이디로만</b> 가입)</td><td>✅</td></tr>
+<tr><td>숏클립</td><td>❌</td><td>판매자면 ✅</td><td>판매자면 ✅</td><td>✅ 누구나(새싹 조건은 라이브만)</td></tr>
+<tr><td>쿠팡파트너스</td><td>✅</td><td>✅</td><td>✅ (면세·비영리는 거절될 수 있음)</td><td>—</td></tr>
+<tr><td>토스 쉐어링크</td><td>✅ 3.3% 원천징수</td><td>✅</td><td>✅ 세금계산서</td><td>—</td></tr>
+<tr><td>틱톡 리워드</td><td colspan="4">개인 계정만 받음 — 사업자·법인 명의 수령은 확인 못 함</td></tr>
+<tr><td>유튜브·메타</td><td colspan="4">개인(W-8BEN) / 법인(W-8BEN-E) 세금 양식으로 갈림. 미국 시청 수익에 원천징수</td></tr>
+</table>
+<p class="note">⚠️ 브랜드커넥트: 크리에이터로 가입한 아이디는 판매자(캠페인사)로 가입할 수 없습니다. 둘 다 하려면 아이디를 나눠야 합니다.</p>
+</div>
+
+<h2>⑤ 실제로 하는 방법</h2>
+
+<details open><summary>스마트스토어 내 상품을 숏폼으로 팔기 (사장님 1순위)</summary>
+<ol>
+<li>PC 판매자센터 → 상품관리 → 상품 조회/수정 → 일괄 변경 → <b>마케팅 링크 생성/복사</b> (이 링크로 들어온 주문은 판매수수료 3% → <b>1%</b>)</li>
+<li>그 링크를 인스타·스레드·틱톡 프로필, 스레드 댓글, 유튜브 채널 링크에 겁니다. 스토어 안(상세·톡톡·라이브 댓글)에 넣으면 어뷰징입니다.</li>
+<li>같은 영상(10~120초)을 스마트스토어센터 → 스토어관리 → 스토어 전시관리 → <b>라이브 숏클립 등록</b>으로 올려 상품 대표 영상에 붙입니다.</li>
+<li>남이 대신 팔게 하려면 커머스솔루션마켓 → 쇼핑커넥트 추가 → 상품별 사용료(7~50%) 설정.</li>
+</ol>
+<p class="stuck">막히는 곳: 브라우저 주소를 복사하면 마케팅 수수료가 적용되지 않음 · 유튜브 쇼핑에 스마트스토어 직접 연결은 공식 지원 없음(카페24·마플샵만)</p>
+<p class="note"><span class="tag hi">공식</span><a href="https://help.sell.smartstore.naver.com/faq/content.help?faqId=15927">마케팅 링크 FAQ</a> · <a href="https://help.sell.smartstore.naver.com/faq/content.help?faqId=15759">수수료 FAQ</a> · <a href="https://support.google.com/youtube/answer/12258186">유튜브 스토어 연결</a></p>
+</details>
+
+<details><summary>유튜브 — 광고 수익 + 쿠팡 상품 태그</summary>
+<ol>
+<li>스튜디오 → 수익 창출 → 지금 신청하기 → 약관 → 애드센스 연결 → 검토(공식 "한 달 내").</li>
+<li>애드센스 → 지급 → 은행 송금(SWIFT 코드) · 세금 정보(법인은 W-8BEN-E) · 우편 PIN 입력.</li>
+<li>승인 뒤 '쇼츠 피드 광고'의 <b>지금 시작하기를 직접 눌러야</b> 수익이 잡힙니다.</li>
+<li>쇼핑: 수익 창출 → Shopping → 제휴 프로그램 가입 → 영상 수정 → 제품 → 판매자 '쿠팡' → 상품 추가 → 저장.</li>
+</ol>
+<p class="stuck">막히는 곳: 재사용·비진정성 콘텐츠는 거절 · 쇼츠 설명란 링크는 클릭 안 됨(상품 태그는 됨)</p>
+<p class="note"><span class="tag lo">영상</span><a href="https://www.youtube.com/watch?v=o6YpxPyMcEg">신청·애드센스</a> · <a href="https://www.youtube.com/watch?v=e7bttfpuU1U">지금 시작하기</a> · <a href="https://www.youtube.com/watch?v=dYbMFxcSrnA">상품 태그</a></p>
+</details>
+
+<details><summary>틱톡 — 크리에이터 리워드</summary>
+<ol>
+<li>개인 계정 유지(비즈니스 계정은 대상 아님).</li>
+<li>프로필 → ☰ → TikTok Studio → Creator Rewards Program → 신청(약 3일 안에 결과).</li>
+<li>☰ → 잔액 → 월간 수입 → 지급 설정 → PayPal 연결 + 세금 정보.</li>
+<li>승인 <b>뒤에</b> 올린 1분 이상 원본 영상만 계산됩니다.</li>
+</ol>
+<p class="stuck">막히는 곳: 독창성 기준이 엄격(배속·필터만 바꾼 것, 사진·텍스트만, 듀엣·이어붙이기는 제외)</p>
+<p class="note"><span class="tag hi">공식</span><a href="https://support.tiktok.com/ko/business-and-creator/creator-rewards-program/creator-rewards-program">리워드 도움말</a> · <span class="tag lo">영상</span><a href="https://www.youtube.com/watch?v=Zt4LGwDKAgE">거절 4개월 기록</a></p>
+</details>
+
+<details><summary>인스타·페이스북 — 보너스·콘텐츠 수익화</summary>
+<ol>
+<li>프로필 편집 → 프로페셔널 계정으로 전환 → 크리에이터 → 대시보드 생성.</li>
+<li>대시보드 → 내 도구 → 보너스(처음엔 "이용할 수 없음") → 조건을 채우면 초대 알림 → 활성화 → 지급 계좌.</li>
+<li>페이스북: 프로페셔널 대시보드 → 수익화 → 콘텐츠 수익화(초대가 와야 시작).</li>
+</ol>
+<p class="stuck">막히는 곳: 조건을 채워도 초대가 안 올 수 있음(공식 "전원 선발 아님") · 6개월 안에 계좌를 안 넣으면 수익 소멸 · 은행 SWIFT 코드 누락으로 지급 실패 사례</p>
+<p class="note"><span class="tag lo">영상</span><a href="https://www.youtube.com/watch?v=O4ilsoGpO38">프로페셔널 전환</a> · <a href="https://www.youtube.com/watch?v=Q74ritxHICA">페이스북 지급 실패·재지급</a></p>
+</details>
+
+<details><summary>쿠팡파트너스 링크로 팔기</summary>
+<ol>
+<li>쿠팡 계정으로 파트너스 가입(법인은 사업자등록증).</li>
+<li>쓸 채널 주소를 <b>전부 등록</b>(유튜브·인스타·스레드·틱톡·핀터레스트).</li>
+<li>상품 → 링크 생성 → 복사.</li>
+<li>쇼츠·릴스·틱톡은 프로필 링크, 스레드는 댓글, 핀터레스트는 Link 칸에 넣습니다.</li>
+<li>대가성 문구를 영상 안 시작·끝과 캡션 맨 앞에 넣습니다.</li>
+<li>누적 <b>판매액 15만 원</b>을 넘기면 최종승인 심사(1~3일, 스크린샷 제출) → 승인 뒤에야 계좌 입력창이 열림 → 매월 세금계산서 승인 → 익익월 15일 지급. 승인 전 실적은 쌓이지만, 승인 전에 탈퇴하면 못 받음.</li>
+</ol>
+<p class="stuck">막히는 곳: 문구 위치 때문에 경고(1회 경고 → 2회 수익 몰수 → 3회 해지) · 카톡·문자로 링크 보내기 금지</p>
+<p class="note"><span class="tag lo">영상</span><a href="https://www.youtube.com/watch?v=T-7kudu7Z88">경고 받은 사례</a></p>
+</details>
+
+<details><summary>네이버 클립 + 쇼핑커넥트</summary>
+<ol>
+<li>네이버앱 → 클립 → 프로필 생성(블로그를 연결하면 해지 불가).</li>
+<li>brandconnect.naver.com → 크리에이터 → 스페이스 개설 → 클립 프로필 연동 → 정산 유형(개인/개인사업자/법인) → 쇼핑커넥트 약관 동의(승인 대기 없음).</li>
+<li>상품 찾기 → 링크 발급 → 클립 올릴 때 <b>정보 태그 → 쇼핑 커넥트</b>(1개만).</li>
+<li>대가성 문구는 댓글로 달고 고정(클립 크리에이터 앱에서만 가능).</li>
+<li>클립 크리에이터 활동비: mkt.naver.com/clip-creators → 지원 → 다음 달 15일 이후 결과 → 그다음 달부터 활동(약 1~2달).</li>
+</ol>
+<p class="stuck">막히는 곳: PC 웹 업로드는 편집·링크가 안 됨 · 세금계산서를 23~27일에 안 내면 지급이 한 달 밀림 · 남의 영상 편집본은 활동으로 인정 안 됨</p>
+<p class="note"><span class="tag lo">영상</span><a href="https://www.youtube.com/watch?v=Kxpqm2iWM2k">쇼핑커넥트 클립 넣는 법</a> · <a href="https://www.youtube.com/watch?v=Z3oPBl0ejO0">브랜드커넥트 가입</a></p>
+</details>
+
+<details><summary>토스 쉐어링크 · 당근 · 카카오 · 핀터레스트</summary>
+<ol>
+<li><b>토스</b>: 앱 내 쇼핑 → 쉐어링크(웹 sharelink.toss.im) → 유형 선택 → 계좌 → 심사(영상 기준 1~2일) → 활동 채널 URL을 넣고 <b>'추가'를 눌러야</b> 저장 → 상품 공유 → "팔릴 때마다 돈 버는 링크 공유하기".</li>
+<li><b>당근</b>: 스토리 업로드(10초 이상·설명 30자·소리 있음) → 한 달 5개 + 시청 2,000회 → 다음 날 11시 알림 → 3일 안에 프로필 제출.</li>
+<li><b>카카오</b>: shortform-studio.kakao.com → 카카오계정 로그인 → 가입 신청 → 심사(지금 신청 화면은 로그인해야 보여 확인 못 함).</li>
+<li><b>핀터레스트</b>: 설정 → 비즈니스 계정 전환 → Create → 영상 업로드 → <b>Link</b> 칸 → Publish.</li>
+</ol>
+</details>
+
+<h2>⑥ 사장님(법인 + 스마트스토어)께 맞는 조합</h2>
+<div class="box me">
+<ul class="plain">
+<li><b>내 상품 영상</b>: 숏클립 + 같은 영상을 유튜브·인스타·스레드·틱톡·핀터레스트에 올리고 <b>마케팅 링크</b>로 스토어에 보냄 → 수수료 1%로 판매 (D)</li>
+<li><b>조회수 수익</b>: 유튜브(법인 W-8BEN-E 가능)·네이버 클립 광고 인센티브(법인 계좌 가능)는 법인으로 받을 수 있음. 틱톡 리워드는 개인 계정 기준 (A)</li>
+<li><b>남의 상품 채널</b>: 쿠팡파트너스·쇼핑커넥트·토스 쉐어링크 모두 법인 정산 가능 (C)</li>
+<li><b>내 상품 퍼뜨리기</b>: 브랜드커넥트 캠페인(공동구매 2026년 이용료 무료)으로 다른 크리에이터에게 맡김 (E)</li>
+<li>당근은 온라인 판매·외부 링크 금지라 쇼핑 용도로 맞지 않음</li>
+</ul>
+</div>
+
+<h2>⑦ 출처끼리 다른 것 — 남에게 설명할 때 주의</h2>
+<div class="box warn">
+<ul class="plain">
+<li><b>쿠팡파트너스 수수료</b>: 블로그·영상 "3%" ↔ 공식 요율표 1.8~5.0% → <b>공식</b></li>
+<li><b>쿠팡 최종승인</b>: 공식 운영정책 2026.9.7판 "최소 지급금액(1만 원) 이상" ↔ 영상 10곳(쿠팡 공식 채널·승인 메일 포함) "누적 <b>판매액</b> 15만 원", 9월 이후 1만 원대 승인 사례 0건 → <b>실무는 15만 원 판매로 보는 게 맞음</b>(⑧ 참고)</li>
+<li><b>유튜브 쇼핑 구독자 기준</b>: 1만 → 1,000 → <b>500명</b>(공식 2026-03-30)</li>
+<li><b>숏클립 자격</b>: 블로그 "새싹 이상" ↔ 공식 "판매자 누구나" → <b>공식</b></li>
+<li><b>클립 크리에이터 보상</b>: 기사 "월 최대 90만 원" = 9만+1만+월간 어워즈 1등 20만×4칸(계산상 일치, 겹쳐 받을 수 있는지는 미확인) ↔ 실제 활동자 영상 5편 모두 <b>월 약 10만 원</b>, 많아야 30만 원(⑧ 참고)</li>
+<li><b>토스 수수료</b>: 8~9월 영상 "10%" ↔ 공식 10/1부터 8%</li>
+<li><b>인스타 보너스</b>: 영상 "조건만 채우면 누구나" ↔ 공식 "전원 선발 아님"</li>
+<li><b>틱톡 나이</b>: 일반 18세 ↔ 한국 19세</li>
+</ul>
+</div>
+
+<h2>⑧ 문서로 안 나와서 유튜브 영상으로 확인한 것</h2>
+<p class="lead">2차 조사: 검색어 45개, 영상 약 500개 훑음 → 자막 52편 받아 금액·화면 설명 부분을 대조. 숫자는 "몇 곳이 같은 말을 했나"로 셌습니다.</p>
+<div class="grid2">
+ <div class="box"><h3>쿠팡파트너스 최종승인 — 판매액 15만 원</h3>
+  <ul class="plain">
+   <li><b>15만 원 = 누적 판매(결제)액</b>, 수수료 아님 — 7곳 일치(쿠팡 공식 채널·승인 메일 원문 포함)</li>
+   <li>9.7 운영정책 이후 1만 원대 승인 사례 <b>0건</b>. 10월 영상 3편도 15만 원이라고 말함(화면 증거는 없음)</li>
+   <li>반려 1위 <b>대가성 문구</b>: "받을 수 있습니다"(X) → "받습니다"(O), 맨 위에 — 3곳 실제 경험 / 2위 미등록 채널 매출 — 4곳</li>
+   <li>결과는 다음 날~3일 — 5곳 일치. 승인 전 실적은 쌓임 — 3곳</li>
+   <li>정산일 지나서 승인되면 그달 정산을 못 받은 사례 1곳</li>
+  </ul>
+  <p class="note"><span class="tag hi">공식</span><a href="https://www.youtube.com/watch?v=VdsVdZ-cuH0">쿠팡 공식 가이드 #2</a> · <span class="tag lo">영상</span><a href="https://www.youtube.com/watch?v=_qf7m7rJ2QI">승인·반려 메일 원문</a> · <a href="https://www.youtube.com/watch?v=nHLpv9N_AOM">판매액 기준(10-04)</a> · <a href="https://www.youtube.com/watch?v=KzlkBhxR8PI">1~3일</a> · <a href="https://www.youtube.com/watch?v=LwbEk4424CM">반려 2번 후기</a> · <a href="https://www.youtube.com/watch?v=RkFabmkqa1Y">문구 하나로 반려</a></p></div>
+ <div class="box"><h3>핀터레스트 + 쿠팡 링크 — 직접 넣어 봐야 앎</h3>
+  <ul class="plain">
+   <li>막혔다는 한국어 사례 <b>0건</b>, 최근 통과 실측도 <b>0건</b>, 수익 금액 사례 <b>0건</b></li>
+   <li>공식 도움말: "certain redirects or URL shorteners" 허용 안 함 / 영어 영상: 단축 주소는 막히니 긴 주소를 쓰라</li>
+   <li>쿠팡 링크 핀이 실제로 올라간 화면은 2023년 자동화 코드 판매 영상 1편뿐</li>
+   <li>→ 쿠팡파트너스에서 <b>긴 원래 주소(풀 링크)</b>로 만들어 핀 1개에 먼저 시험</li>
+  </ul>
+  <p class="note"><span class="tag hi">공식</span><a href="https://help.pinterest.com/en/articles/blocked-links-and-websites">차단 링크 도움말</a> · <span class="tag mid">커뮤니티</span><a href="https://community.pinterest.biz/t/can-i-use-amazon-affiliate-links-directly-in-my-pins-without-a-landing-page/31372">제휴 링크 직접 사용 답변</a> · <span class="tag lo">영상</span><a href="https://www.youtube.com/watch?v=ud-4Q1Nri-g">Blocked link 해결(영어)</a> · <a href="https://www.youtube.com/watch?v=zR3q_cnpmnY">쿠팡 자동 핀(2023)</a></p></div>
+ <div class="box"><h3>네이버 클립 크리에이터 — 실제는 월 10만 원</h3>
+  <ul class="plain">
+   <li>기본 미션 9만 + 해시태그 1만 = <b>월 약 10만 원</b> — 활동자 영상 5편 중 5편 일치</li>
+   <li>어워즈 받은 달 15만~30만 원. 가장 높은 인증은 월 30만 원, 90만 원 인증은 <b>0건</b></li>
+   <li>"월 최대 90만 원" = 9만 + 1만 + 1등 20만 × 4칸(정보·해시태그 × 동영상·게시물) — 계산상 맞지만 겹쳐 받을 수 있는지는 미확인</li>
+   <li>지급은 <b>네이버페이 포인트</b> — 공식 + 영상 3편 일치. 오늘 클립 챌린지는 별도로 월 최대 1.6만 원</li>
+   <li>실사례: 2025-03~2026-01 누적 약 206만 원</li>
+  </ul>
+  <p class="note"><span class="tag hi">공식</span><a href="https://mkt.naver.com/clip-creators">클립 크리에이터</a> · <span class="tag lo">영상</span><a href="https://www.youtube.com/watch?v=6WMEq81suD0">월 10만 원 고정</a> · <a href="https://www.youtube.com/watch?v=BBGjz4kaAXA">9만+1만</a> · <a href="https://www.youtube.com/watch?v=8tIXVL_91yg">10~20만 원</a> · <a href="https://www.youtube.com/watch?v=BBK_6mzBKdQ">206만 원 공개</a></p></div>
+ <div class="box"><h3>카카오톡 숏폼 — 아직 정해진 게 없음</h3>
+  <ul class="plain">
+   <li>참가자 본인이 금액을 말한 영상 <b>1편</b>: "월 8개 올리면 활동비 10만 원"(입금 화면은 없음)</li>
+   <li>"월말 300만 원"은 그 1편에만 나오고 공고 금액(TOP5 최대 100만 원)과 맞지 않음</li>
+   <li>2천만 원 등 결산 상금이 실제로 지급됐다는 근거 <b>0건</b></li>
+   <li>6/9 챌린지 종료 뒤 리워드·2기 모집 소식 영상·웹 <b>0건</b>. 10/19 운영정책도 "오픈 시점에 공개" 그대로</li>
+   <li>→ 지금은 <b>돈 버는 곳으로 계산하지 말 것</b>. 열리면 그때 신청</li>
+  </ul>
+  <p class="note"><span class="tag hi">공식</span><a href="https://shortform-studio.kakao.com/terms/shortform_operation">운영정책</a> · <a href="https://www.youtube.com/watch?v=bDRt-t9xT-s">kakao tech 발표</a> · <span class="tag lo">영상</span><a href="https://www.youtube.com/watch?v=vJjqBM0r_Do">참가자 특강(10만 원)</a> · <a href="https://www.youtube.com/watch?v=rzPhA-6owio">모집 공고 소개</a></p></div>
+</div>
+
+<h2>⑨ 유튜브 영상 속 수익 인증 (본인 주장 — 검증 안 됨)</h2>
+<div class="box wrap">
+<table>
+<tr><th>영상</th><th>날짜</th><th>주장</th></tr>
+<tr><td><a href="https://www.youtube.com/watch?v=p4Cs4Cd6ZvI">100일 매일 쇼츠</a></td><td>2026-02-08</td><td>1,748만 뷰에 337만 원(1,000회당 약 190~200원)</td></tr>
+<tr><td><a href="https://www.youtube.com/watch?v=BbqLWjY7RF0">쇼핑쇼츠 1달 키워보기</a></td><td>2025-11-16</td><td>광고만 100만 뷰 17만 원 / 쇼핑 태그 영상 제휴 357만 원</td></tr>
+<tr><td><a href="https://www.youtube.com/watch?v=8jnuEYYnjD4">인스타 사진 보너스</a></td><td>2026-07-02</td><td>게시물 550만 조회에 $597</td></tr>
+<tr><td><a href="https://www.youtube.com/watch?v=Q74ritxHICA">페이스북 수익화 423달러</a></td><td>2025-09-03</td><td>3개월 $557 → 세금·수수료 뒤 $423 입금</td></tr>
+<tr><td><a href="https://www.youtube.com/watch?v=BBK_6mzBKdQ">네이버 클립 크리에이터</a></td><td>2026-02-09</td><td>10개월 약 206만 원(월 10~30만 원)</td></tr>
+<tr><td><a href="https://www.youtube.com/watch?v=Kxpqm2iWM2k">쇼핑커넥트 클립</a></td><td>2026-09-01</td><td>판매 2,467만 원에 수익 약 100만 원</td></tr>
+<tr><td><a href="https://www.youtube.com/watch?v=vY0SpotA_tc">쿠팡파트너스 6개월 후기</a></td><td>2026-01-07</td><td>3개월 차에도 하루 1만 원 안 되는 날이 많음</td></tr>
+<tr><td><a href="https://www.youtube.com/watch?v=6pLwsyQXw1o">AI 양산형 쇼츠</a></td><td>2026-09-06</td><td>8편 총 852원</td></tr>
+</table>
+<p class="note">큰 수익 인증 영상 상당수는 강의·도구 판매와 이어져 있습니다(KBS 추적60분 2026-01-16이 이 구조를 다룸). 남의 영상을 다시 올리는 방식은 유튜브·틱톡·메타·네이버·당근 규정 모두에서 수익 제외 대상입니다.</p>
+</div>
+</main>
+</body>
+</html>

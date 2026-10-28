@@ -37,7 +37,7 @@
   function renderChecks(row){
     if(!row){checks.innerHTML='';return}
     checks.innerHTML=`<div class="check"><b>음성</b>${row.tts_ready?'준비됨':'부족'}</div><div class="check"><b>청소본</b>${row.clean_ready?'현재 편성 일치':'없음/낡음'}</div><div class="check"><b>장면</b>${row.beat_count}개 비트</div><div class="check"><b>편성 서명</b>${esc(row.clean_signature||'-')}</div>`;
-    clone.disabled=!(row.tts_ready&&row.clean_ready);
+    clone.disabled=!(row.tts_ready&&(row.clean_ready||row.unclean_preview_ready));   // 청소본 없으면 미리보기 완성본으로(관리자 시험)
   }
   async function loadJobs(){
     const response=await fetch('/api/admin/scene-style-lab/jobs',{cache:'no-store'});
@@ -59,7 +59,7 @@
       if(!exact||String(exact.job_id)!==sourceJobId)throw Error('현재 작업 확인에 실패했습니다. 다른 작업으로 대신 열지 않습니다.');
       let labId=existingLab;
       if(!labId){
-        const response=await fetch('/api/admin/scene-style-lab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:sourceJobId})});
+        const response=await fetch('/api/admin/scene-style-lab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:sourceJobId,allow_unclean:true})});
         const created=await response.json();if(!response.ok)throw Error(created.error||'시험 복사본을 만들지 못했습니다');
         labId=created.manifest.lab_id;
       }
@@ -69,12 +69,14 @@
       if(embeddedTab)sessionStorage.setItem(rememberedLabKey(),packet.manifest.lab_id);
       editor.hidden=false;editor.src='/api/produce/scene-style/assets/out/scene-style-ui-showcase.html?embedded=1&lab=1';
       outputs.hidden=false;renderCompare();
-      status.textContent='LAB 복사본 · 훅 말자막 숨김';
+      status.textContent=packet.manifest?.clean?.unclean?'LAB 복사본 · 자막제거 안 함(원본 자막 남음) · 훅 말자막 숨김':'LAB 복사본 · 훅 말자막 숨김';
+      document.documentElement.classList.remove('lab-error');
       document.documentElement.classList.add('editor-ready');
     }catch(cause){
       if(existingLab&&embeddedTab){sessionStorage.removeItem(rememberedLabKey());return openLabCopy();}
       error.textContent=cause.message;status.textContent='시험 시작 실패';renderChecks(selected());
       document.documentElement.classList.remove('editor-ready');
+      document.documentElement.classList.add('lab-error');   // '여는 중…' 덮개를 걷어 오류를 보이게
     }
   }
   clone.addEventListener('click',()=>openLabCopy());
@@ -97,7 +99,8 @@
   render.addEventListener('click',async()=>{
     error.textContent='';render.disabled=true;status.textContent='시험 MP4 만드는 중…';
     try{const response=await fetch(labUrl('/render'),{method:'POST'}),data=await response.json();if(!response.ok)throw Error(data.error||'렌더 시작 실패');
-      for(let i=0;i<120;i++){await new Promise(resolve=>setTimeout(resolve,1000));await reloadPacket();const state=packet.manifest.render_state||{};if(state.status==='error')throw Error(state.error||'렌더 실패');if(state.status==='ready'&&packet.manifest.outputs?.mp4)break}
+      for(let i=0;i<600;i++){await new Promise(resolve=>setTimeout(resolve,1000));await reloadPacket();   // 관제 163: 실작업 렌더가 2분을 넘겨 화면만 실패로 끊었다(10-08 실측, 서버는 정상 완료) — 10분까지 기다린다
+      const state=packet.manifest.render_state||{};if(state.status==='error')throw Error(state.error||'렌더 실패');if(state.status==='ready'&&packet.manifest.outputs?.mp4)break}
       if(packet.manifest.render_state?.status!=='ready'||!packet.manifest.outputs?.mp4)throw Error('렌더가 제한 시간 안에 끝나지 않았습니다');status.textContent='시험 MP4 완료 · 실파일 검증됨';
     }catch(cause){error.textContent=cause.message;status.textContent='시험 MP4 실패'}finally{render.disabled=false}
   });

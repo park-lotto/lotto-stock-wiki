@@ -220,6 +220,37 @@ def test_work_id_is_reused_after_first_save(js):
     assert "w-server-1" in out, "두 번째 POST가 work_id를 안 실었다 — 작업이 중복 생성된다"
 
 
+def test_overlapping_first_saves_wait_for_server_work_id(js):
+    """첫 생성 응답 전에 저장이 겹쳐도 다음 저장은 발급된 작업 ID를 재사용한다."""
+    out = _run(js, """
+      STATE.script = '겹친 최초 저장';
+      let releaseFirst;
+      let fetchCount = 0;
+      fetch = async function(url, opt){
+        POSTS.push({url, body: JSON.parse((opt&&opt.body)||'{}')});
+        fetchCount += 1;
+        if(fetchCount === 1) await new Promise(resolve => { releaseFirst = resolve; });
+        return { json: async () => ({ ok:true, work_id:'w-server-1' }) };
+      };
+
+      const first = _pushWork();
+      await Promise.resolve();
+      const second = _pushWork();
+      await Promise.resolve();
+      releaseFirst();
+      await Promise.all([first, second]);
+
+      console.log(JSON.stringify({
+        posts: POSTS.length,
+        ids: POSTS.map(p => p.body.work_id),
+      }));
+    """)
+    d = eval(out.replace("null", "None").replace("true", "True").replace("false", "False"))
+    assert d["posts"] == 2
+    assert d["ids"] == [None, "w-server-1"], (
+        f"첫 생성 응답 전 저장이 겹쳐 별도 작업으로 생성될 수 있음: {d}")
+
+
 def test_step_and_job_ride_along(js):
     """복원이 '단계까지 그대로'가 되려면 step·job_id가 저장에 실려야 한다(스펙 §3)."""
     out = _run(js, """

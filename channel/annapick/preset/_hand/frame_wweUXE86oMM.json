@@ -1,0 +1,166 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 418,
+   "w": 1080,
+   "h": 1084,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 215,
+   "lines": 2,
+   "font": "Cafe24Ohsquare",
+   "size": 93.2,
+   "line_h": 96,
+   "rgb": [
+    253,
+    252,
+    253
+   ],
+   "line_rgb": [
+    [
+     253,
+     252,
+     253
+    ],
+    [
+     252,
+     226,
+     119
+    ]
+   ],
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -1.6,
+   "enter": null,
+   "text": "목주름 걱정끝!\n정유미x이서진도 10년째"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 1150,
+   "lines": 3,
+   "font": "Cafe24Danjunghae",
+   "size": 48.9,
+   "line_h": 56,
+   "rgb": [
+    254,
+    251,
+    250
+   ],
+   "line_rgb": null,
+   "outline": {
+    "px": 6,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": {
+    "kind": "none",
+    "ms": 300
+   },
+   "emphasis": null
+  },
+  {
+   "kind": "text",
+   "w": 960,
+   "align": "center",
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "role": "label",
+   "x": 540,
+   "y": 1515,
+   "lines": 1,
+   "font": "CcPretendard-Regular",
+   "size": 34.0,
+   "line_h": 40,
+   "rgb": [
+    125,
+    125,
+    125
+   ],
+   "text": "출처 : 채널십오야"
+  },
+  {
+   "kind": "text",
+   "w": 960,
+   "align": "center",
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "role": "brand",
+   "x": 540,
+   "y": 1745,
+   "lines": 2,
+   "font": "CcPretendard-Regular",
+   "size": 36.0,
+   "line_h": 44,
+   "rgb": [
+    140,
+    140,
+    140
+   ],
+   "text": "anna\npick"
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "wweUXE86oMM",
+ "made_from": {
+  "tool": "ap_preset.hand",
+  "from": "wweUXE86oMM_auto.json",
+  "notes": [
+   "출처 줄(label)·로고(brand) 층 손으로 추가 — 3초 프레임 실측 자리"
+  ]
+ }
+}

@@ -116,7 +116,7 @@ def test_signup_stores_name_phone(tmp_path, monkeypatch):
     s = _setup(tmp_path, monkeypatch)
     c = TestClient(appmod.app, follow_redirects=False)
     c.post("/api/signup", data={"user": "newby", "pass": "pw12345", "name": "이영희",
-                                "phone": "010-1111-2222", "gender": "여성", "age_band": "30대"})
+                                "phone": "010-1111-2222", "gender": "여성", "age_band": "30대", "content_agree": "1"})
     with s._conn() as conn:
         row = conn.execute("SELECT name, phone, gender, age_band FROM customers "
                            "WHERE username='newby'").fetchone()

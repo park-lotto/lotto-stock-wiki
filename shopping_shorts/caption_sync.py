@@ -31,10 +31,24 @@ def phrase_durs_from_words(narration, words, total_dur, preset=None):
     if not segs or not words or total_dur <= 0:
         return None
 
-    ref = narration.split()
+    # 토큰 = script_translate.caption_tokens(한국어·영어는 split() 그대로, 일본어는 글자 단위 — 관제 248).
+    from shopping_shorts.script_translate import caption_tokens, lang_of, is_char_lang
+    _lang = lang_of(narration)
+    ref = caption_tokens(narration, lang=_lang)
     hyp = [w["word"] for w in words]
     # 각 hyp 단어의 시작 시각(초). 자막은 '시작 시각'만 쓴다(구절 전환 시점).
     hyp_start = [float(w["start"]) for w in words]
+    if is_char_lang(_lang):
+        # 일본어 ASR 폴백 단어는 여러 글자일 수 있다 → 글자로 펴고 시각은 그 단어 안에서 선형으로 나눈다
+        # (TTS 타임스탬프는 이미 글자 단위라 그대로다).
+        _h, _s = [], []
+        for w in words:
+            toks = caption_tokens(str(w.get("word") or ""), lang=_lang) or []
+            st, en = float(w["start"]), float(w.get("end", w["start"]))
+            for k, t in enumerate(toks):
+                _h.append(t)
+                _s.append(st + (en - st) * k / len(toks))
+        hyp, hyp_start = _h, _s
 
     # 대본 단어 ↔ ASR 단어 정렬. 각 ref 인덱스에 대응 hyp 시작시각을 채운다.
     ref_time = [None] * len(ref)
@@ -56,7 +70,7 @@ def phrase_durs_from_words(narration, words, total_dur, preset=None):
     # 각 구절의 첫 ref 단어 시작 시각. 구절→ref 단어 범위는 순서대로 소비.
     seg_starts, w_at = [], 0
     for seg in segs:
-        n = len(seg.split())
+        n = len(caption_tokens(seg, lang=_lang))
         seg_starts.append(ref_time[w_at] if w_at < len(ref_time) else total_dur)
         w_at += n
 

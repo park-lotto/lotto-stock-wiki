@@ -21,16 +21,48 @@ def test_caption_mask_placement_survives_validation():
         validate_snapshot(saved)
 
 
+def test_text_weight_and_shadow_accept_numeric_controls_and_legacy_values():
+    base = {"mode": "story", "presetId": "t11"}
+    numeric = {**base, "textWeight": 90, "textShadow": 65}
+    assert validate_snapshot(numeric)["textWeight"] == 90
+    assert validate_snapshot(numeric)["textShadow"] == 65
+    assert validate_snapshot({**base, "textWeight": "heavy", "textShadow": "soft"})["textWeight"] == "heavy"
+    split = {"channel": 5, "titleLarge": 100, "titleSmall": 55, "caption": 35}
+    assert validate_snapshot({**base, "textWeight": split, "textShadow": split})["textShadow"] == split
+    for bad in (-5, 7, 105, True, "medium"):
+        with pytest.raises(ValueError):
+            validate_snapshot({**base, "textWeight": bad})
+    for bad in ({"wrong": 50}, {"channel": 7}, {"caption": True}):
+        with pytest.raises(ValueError):
+            validate_snapshot({**base, "textShadow": bad})
+
+
 def test_real_caption_gaps_and_hook_beat_are_preserved():
     timeline=[{"beat_idx":7,"t0":0,"dur":2,"narration":"첫 줄 다음 줄","caption_lines":["첫 줄","다음 줄"],"cap_durs":[.7,1.1],"cap_lead":.2},
               {"beat_idx":9,"t0":2,"dur":1,"narration":"본문","caption_lines":["본문"]}]
     context=context_for(timeline,{"text":"실제 제목\n둘째 제목"})
-    assert [s['caption'] for s in context['scenes']]==['','첫 줄','다음 줄','본문']
-    assert [s['kind'] for s in context['scenes']]==['hook','hook','hook','body']
-    assert context['scenes'][0]['end']==.2
+    # 2026-09-21 사장님 제보 "4번 장면 본문 첫인데 자막에 글자가 없고 5번부터 시작된다".
+    #   자막 리드(cap_lead)만큼의 자투리를 독립 장면으로 세우면 장면 번호가 밀려, 편집기에서
+    #   글자 없는 장면을 넘겨야 한다. 실측(최근 job 25개, 빈 자막 장면 70개): 최대 0.52초로
+    #   사실상 전부 자투리였다 → 이웃 구절이 삼킨다(scene_style._MIN_SILENT_SCENE).
+    #   ★이 테스트가 지키는 본질은 **시간축과 훅/본문 구분**이다 — 그건 그대로 검사한다.
+    assert [s['caption'] for s in context['scenes']]==['첫 줄','다음 줄','본문']
+    assert [s['kind'] for s in context['scenes']]==['hook','hook','body']
+    assert context['scenes'][0]['start']==0       # 리드가 앞 장면에 흡수돼 빈틈이 없다
     assert context['scenes'][-1]['end']==3
     assert context['text']['hook1']=='실제 제목'
     assert context['text']['hook2']=='둘째 제목'
+
+
+def test_scene_context_uses_paired_subline_for_even_body_structure():
+    timeline=[{"beat_idx":0,"t0":0,"dur":1,"narration":"훅"},
+              {"beat_idx":1,"t0":1,"dur":1,"narration":"본문"}]
+    context=context_for(timeline,{"text":"건망증 환자를 살려낸\n일본 천재의 발명품",
+                                  "subline":"건망증 환자를 살려낸 발명품?"})
+    assert context["text"]["hook1"] == "건망증 환자를 살려낸"
+    assert context["text"]["hook2"] == "일본 천재의 발명품"
+    assert context["text"]["bodyTitle"] == "건망증 환자를 살려낸 발명품?"
+    assert context["text"]["supportTitle"] == context["text"]["bodyTitle"]
 
 
 def test_linux_layer_render_enables_chrome_no_sandbox(monkeypatch, tmp_path):
@@ -80,3 +112,11 @@ def test_레이어_제한시간은_영상길이에_비례한다():
     assert t({"scenes": [{"end": 29.7}]}) > 245 + 60     # 실측 245초에 여유
     assert t({"scenes": [{"end": 600}]}) == 900          # 상한
     assert t({}) == 240
+
+
+def test_hook_motion_none_is_saved():
+    # 훅 시선집중 모션 '없음'(관제 262) — 저장이 422로 막히면 첫 장면 줌 펀치를 끌 수 없다
+    base = {"mode": "story", "presetId": "t11"}
+    assert validate_snapshot({**base, "hookMotion": "none"})["hookMotion"] == "none"
+    with pytest.raises(ValueError):
+        validate_snapshot({**base, "hookMotion": "nope"})

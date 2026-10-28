@@ -323,6 +323,21 @@ def test_capcut_recovers_clean_final_when_path_cleared(monkeypatch, tmp_path):
     _mk_video(work / f"final_clean_{sig}.mp4", 4)          # 서명 파일은 살아 있다
     r = client.get("/api/mix/capcut/j1", params={"base": "C:/capcutproject/CapCut Drafts"})
     assert r.status_code == 200, r.text
+    payload = r.json()
+    asset_names = {asset["name"] for asset in payload["assets"]}
+    assert "original_full_s0.mp4" in asset_names, \
+        "자막 제거 조각뿐 아니라 편집 가능한 긴 원본도 캡컷으로 보내야 한다"
+    meta = __import__("json").loads(payload["texts"]["draft_meta_info.json"])
+    library_names = {
+        item.get("extra_info")
+        for group in meta.get("draft_materials", []) if group.get("type") == 0
+        for item in group.get("value", [])
+    }
+    assert "original_full_s0.mp4" in library_names
+    draft = __import__("json").loads(payload["texts"]["draft_content.json"])
+    timeline_paths = {Path(item.get("path", "")).name for item in draft["materials"]["videos"]}
+    assert "original_full_s0.mp4" not in timeline_paths, \
+        "긴 원본은 보관함에만 두고 자막 없는 타임라인은 그대로 유지해야 한다"
     # 서명 파일마저 없으면 종전처럼 막는다(자막 남은 결과물을 조용히 내보내지 않는다)
     (work / f"final_clean_{sig}.mp4").unlink()
     r2 = client.get("/api/mix/capcut/j1", params={"base": "C:/capcutproject/CapCut Drafts"})

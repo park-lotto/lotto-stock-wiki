@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>고객 제보 정리</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2330;--mut:#6b7280;--line:#e5e7eb;--todo:#9ca3af;--wip:#f59e0b;--done:#10b981;--hold:#ef4444}
+@media (prefers-color-scheme:dark){:root{--bg:#12151b;--card:#1b2029;--ink:#e8ebf0;--mut:#9aa3b2;--line:#2b3240}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Malgun Gothic",system-ui,sans-serif}
+main{max-width:980px;margin:0 auto;padding:24px 16px}
+h1{font-size:22px;margin:0 0 4px}.sub{color:var(--mut);margin-bottom:20px}
+h2{font-size:17px;margin:28px 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.top{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.id{font-weight:700}.ttl{font-weight:600;flex:1;min-width:200px}
+.st{font-size:12px;padding:2px 10px;border-radius:99px;color:#fff}
+.todo{background:var(--todo)}.wip{background:var(--wip)}.done{background:var(--done)}.hold{background:var(--hold)}
+.row{margin-top:6px;font-size:14px}.k{color:var(--mut);display:inline-block;min-width:64px}
+</style></head><body><main>
+<h1>고객 제보 정리 · 2026-10-18</h1>
+<div class="sub">버그 6 · 기능요청 2 — 수정 7 + 폰 보내기 1 · 버그 아님 1 — <b>18:33 라이브 반영</b></div>
+
+<h2>버그</h2>
+<div class="card"><div class="top"><span class="id">B4</span><span class="ttl">타입캐스트 성우 검색 안 됨 ("이현" 결과 없음)</span><span class="st done">라이브 반영</span></div>
+<div class="row"><span class="k">원인</span>타입캐스트 API가 성우 이름을 영문으로만 줌(1143명 중 한글 0). 이현=Leehyun, 나은=Naeun → 한글 검색어가 영문과 글자 비교돼 0건</div><div class="row"><span class="k">조치</span>한글 검색어를 영문 표기 후보(Hyun/Hyeon, Lee/Yi …)로 펼쳐 맞춤. 앞글자 일치를 위로. 판단 주인 typecast_tts.name_matches</div><div class="row"><span class="k">검증</span>서버 실목록 대조: 이현→Leehyun·Jihyun / 나은→Naeun / 미소→Miso / 유리→Yuri / 상현→Sanghyun. 은결·수정은 API 목록에 아예 없음(앱 전용 성우) → 안내 문구 추가. 라이브 반영은 병합 뒤</div></div>
+
+<div class="card"><div class="top"><span class="id">B5</span><span class="ttl">썸네일 제목 없을 때 크기조절 → 극소화 후 조절 불가</span><span class="st done">라이브 반영</span></div>
+<div class="row"><span class="k">원인</span>글자 크기 슬라이더는 30~200(기본 90)인데 ⤢ 손잡이는 2~30으로 막혀 있었음. 잡는 순간 30 이하로 쪼그라들고 다시 못 키움</div><div class="row"><span class="k">조치</span>범위를 _thumbSizeRange 한 곳에서 정하고 슬라이더 4종·손잡이가 모두 그걸 쓰게 함(도형도 60/70 어긋남 함께 정리)</div><div class="row"><span class="k">검증</span>크롬 실드래그: 고치기 전 2→2→2→2(재현) / 고친 뒤 91→133→78→161 정상. 점검 도구 tools/thumb_handle_check.py</div></div>
+
+<div class="card"><div class="top"><span class="id">B2</span><span class="ttl">완성 영상 처음 1초 고정화면</span><span class="st done">버그 아님 · 안내</span></div>
+<div class="row"><span class="k">원인</span>해당 job 383ac5b29649 에 <b>‘썸네일을 영상 맨 앞에 넣기’(1.2초)</b>가 켜져 있음. 썸네일을 영상 첫 장면으로 만들어 멈춘 화면처럼 보임. 켜면 다음 작업에도 기본값으로 기억됨</div><div class="row"><span class="k">조치</span>고객 안내: 4단계 썸네일 칸 “썸네일을 영상 맨 앞에 넣기” 체크를 끄고 다시 렌더. 코드 변경 없음</div><div class="row"><span class="k">검증</span>서버 실측: final.mp4 앞 35프레임(1.17초) 정지 = 썸네일 PNG. 같은 작업의 청소본·미리보기는 정지 0. 최근 3일 완성본 중 정지 35프레임인 것 모두 같은 인트로로 보임(표본 fed0f78bb29b 확인)</div></div>
+
+<div class="card"><div class="top"><span class="id">B6</span><span class="ttl">캡컷 내보내면 전체재생과 다르게 튐 (이윤정 님)</span><span class="st done">라이브 반영</span></div>
+<div class="row"><span class="k">원인</span>고객 작업 becdf537ca2e 캡컷 초안 본 트랙에 <b>1프레임도 안 되는 조각 3개</b>(s2 0.012초·s0 0.016초·짤 0.003초). 장면꾸미기 확대가 바뀌는 시각에서 조각을 나누는데 그 시각이 프레임 칸과 몇 ms 어긋나 생김. 완성본은 프레임 단위라 안 보이고 캡컷에서만 한 장씩 튐</div><div class="row"><span class="k">조치</span>capcut_draft._zoom_pieces — 나누는 자리를 1/30초 칸에 맞추고, 조각 끝에서 반 프레임 안이면 안 나눔</div><div class="row"><span class="k">검증</span>서버에서 고친 코드로 같은 작업 초안 재생성: 1프레임 미만 조각 3→0, 캡컷 합성 그림 vs 완성본 23장면 FAIL 0</div></div>
+
+<div class="card"><div class="top"><span class="id">B1</span><span class="ttl">흑백+AI자동강조 장면에서 TTS 버퍼·떨림</span><span class="st done">라이브 반영</span></div>
+<div class="row"><span class="k">원인</span>소리 자체는 멀쩡함(오디오 패킷 빈틈 0·디코드 오류 0). 흑백 충격의 필름 잡티+흔들림 때문에 <b>그 장면만 영상 용량이 초당 70~100Mb</b>로 치솟음(평소 5~12Mb, 3개 작업 실측 383ac5b29649·fd561d143f44·8eb2c0982f5a). 재생기가 그 구간에서 버벅여 목소리가 끊기고 떨려 들림. 타입캐스트와는 무관</div><div class="row"><span class="k">조치</span>장면 조각 인코딩에 비트레이트 상한 20Mb(SCENE_PART_VBV) — 완성본 compose 와 캡컷 굽기(capcut_bake_spans) 두 길 모두</div><div class="row"><span class="k">검증</span>실제 문제 구간 재인코딩: 상한 없음 75.6·78.2·77.8Mb → 상한 20.1·22.7·25.0Mb, 평소 구간 거의 그대로. 실제 렌더 재생 확인은 병합 뒤 라이브 job 으로</div></div>
+
+<div class="card"><div class="top"><span class="id">B3</span><span class="ttl">쇼핑스티커 예전자리 → 롱폼 화살표와 스티커 화살표 동시 노출</span><span class="st done">라이브 반영</span></div>
+<div class="row"><span class="k">원인</span>서버가 꾸밈을 저장할 때 세트 표식(set)을 버려, 다시 열면 ‘세트 빼기·다시 넣기’가 옛 화살표를 못 찾고 새 것을 더 얹음. 고객 job 383ac5b29649 한 장면에 세트 4벌(8개)이 겹쳐 있었음</div><div class="row"><span class="k">조치</span>① 서버 deco_frame._norm_masks 가 set 표식을 남김 ② 편집기가 표식 없는 옛 세트도 모양(같은 자리 화살표·같은 문구)으로 알아봄 ③ 편집기 스크립트 v82</div><div class="row"><span class="k">검증</span>크롬에 고객 실제 꾸밈 넣고 ‘세트 빼기’: 고치기 전 8→8(못 뺌) / 고친 뒤 8→0. 저장 정규화 뒤 표식 유지 확인. 렌더·캡컷 대조는 병합 뒤 라이브. 고객 안내: 배포 뒤 ‘세트 빼기’ 한 번 → 원하는 자리로 다시 넣기</div></div>
+
+<h2>기능 요청</h2>
+<div class="card"><div class="top"><span class="id">F1</span><span class="ttl">마지막 CTA만 플랫폼별 3~4버전 한 번에 출력 (자막+TTS)</span><span class="st done">라이브 반영</span></div>
+<div class="row"><span class="k">조치</span>완성 단계 「📣 플랫폼별 CTA 판」: 4개 플랫폼 체크+문구, 목소리 방식(CTA 칸만/전체 다시). 본편 렌더가 끝난 뒤 같은 재료로 판마다 조립 → final_cta_&lt;플랫폼&gt;.mp4. 차감은 본편 1회뿐. 주인 cta_variants</div>
+<div class="row"><span class="k">검증</span>서버 사본(라이브 무변경)에서 실제 run_render: 판 2개 정상. 처음엔 통짜 합성이 판마다 전 칸을 다시 구워 본편 구간 자막·소리가 밀림 → ‘CTA 칸만’은 그 칸만 굽게 고침 → 본편 구간 13초까지 프레임 동일(PSNR inf)·소리 차이는 CTA 구간(14.8초~)만. 시간: 본편 약 37초 + 판 41~52초씩(판 2개 ≈ 3.5배). 전체 다시 굽기 방식도 정상. 화면은 크롬에서 체크·저장·받기 버튼 확인</div></div>
+<div class="card"><div class="top"><span class="id">F2</span><span class="ttl">인포크 대신 머닝(moneying.biz) 연동</span><span class="st done">라이브 반영</span></div>
+<div class="row"><span class="k">조사</span>인포크 연동도 공개 API가 없어 ‘링크 복사 + 관리 화면 열기’ 방식. 머닝도 같은 방식으로 붙일 수 있음(머닝 = 프로필 링크·자동 DM·틱톡 자동답글)</div><div class="row"><span class="k">조치</span>9단계 등록 상자에 <b>인포크/머닝 고르기</b>(회원마다 저장, 다음 영상에도 유지). 고르면 상자 이름·‘링크 복사 + 머닝 열기’·안내 문구·SEO 단계 ‘머닝에 넣을 문구’가 모두 바뀜. 주인 coupang_partners.link_hub</div><div class="row"><span class="k">검증</span>서버 API 저장·거절 확인 / 크롬: 머닝 선택 → 상자·버튼·문구 전부 머닝, 여는 창 moneying.biz, 인포크로 되돌리면 원래대로. 점검 도구 tools/link_hub_check.py</div></div>
+<h2>추가 요청</h2>
+<div class="card"><div class="top"><span class="id">F3</span><span class="ttl">제목·설명·태그를 폰으로(카톡) 보내기</span><span class="st done">라이브 반영</span></div>
+<div class="row"><span class="k">조치</span>8단계 「📱 폰으로 보내기(카톡)」 → QR. 폰에서 열면 제목·설명·태그·해시태그·인스타 본문·댓글 유도가 칸마다 복사 버튼, 카톡 공유 버튼</div>
+<div class="row"><span class="k">검증</span>라이브 관리자: 링크 발급 OK, /api/share/seo 로그인 없이 200. 폰 크기 크롬 실행 시 6칸·JS 오류 0(로컬)</div></div>
+<div class="card"><div class="top"><span class="id">조사</span><span class="ttl">머닝·인포크 API</span><span class="st done">공개 API 없음</span></div>
+<div class="row"><span class="k">결과</span>머닝: /api 막힘(robots), /developers·/docs·/openapi.json 404. 사이트의 ‘API’는 쿠팡파트너스·메타 DM 연동 뜻. 인포크도 공개 API 없음 → 상품마다 복사·붙여넣기. 머닝 PRO 크롬 확장이 쿠팡 상품 블록을 넣어 준다고 소개됨(미시험)</div></div>
+<div class="card"><div class="top"><span class="id">남음</span><span class="ttl">렌더·캡컷 길 라이브 실측</span><span class="st wip">새 렌더 대기</span></div>
+<div class="row">워커·웹 모두 새 코드(606f45335). 화면 함수·성우 검색(이현→Leehyun)·썸네일 범위 30~200 라이브 확인. B1 용량 상한·B6 캡컷 조각·F1 판 생성은 <b>다음 실제 렌더</b>에서 숫자 확인 예정(배포 전엔 서버 사본에서 확인됨)</div></div>
+</main></body></html>

@@ -61,20 +61,18 @@ def test_batch_no_product_is_empty_when_all_found(monkeypatch, tmp_path):
 
 # ── 화면: 회색 처리 배선 ───────────────────────────────────────────────────
 
-def test_빈제품명이면_회색으로_내린다():
-    """★`if (!name) return;`으로 조용히 건너뛰면 안 된다 — 그게 헛클릭의 원인이었다."""
+def test_빈제품명이면_회색으로_내리지_않는다():
+    """2026-09-26 사장님 "살 물건 없음은 없애고" — 썸네일·캡션만 본 배치 판정이 말로만 소개하는
+    제품(소스·재료)을 자주 놓쳐 멀쩡한 카드가 회색이 됐다. 버튼은 그대로 두고, 대본이 필요한
+    카드는 🎬 쿠팡 대본검색이 맡는다. (09-05의 회색 처리는 되돌림 — 이 테스트가 그 계약을 뒤집는다)"""
     sb = _sidebar()
-    # 라벨 갱신 블록을 잘라 그 안만 본다(파일 전체 검색은 빈 단언이 된다)
     i = sb.find("window.ssCoupangPrewarm = function")
     assert i > 0
     blk = sb[i:i + 2600]
-    assert "data-noproduct" in blk, "회색 표시를 다는 코드가 없다"
-    # ⚠️or로 묶으면 하나만 남아도 통과한다(사보타주로 확인) — 둘 다 요구한다.
-    assert "grayscale" in blk, "회색(grayscale)이 빠졌다"
-    assert "opacity" in blk, "흐리게(opacity)가 빠졌다"
-    # 옛 조기 return(제품명 없으면 아무것도 안 함)이 남아 있으면 안 된다
-    assert not re.search(r"var name = pm\[sc\];\s*if \(!name\) return;", blk), \
-        "빈 제품명을 여전히 조용히 건너뛴다"
+    assert 'btn.setAttribute("data-noproduct", "1")' not in blk, "회색 '살 물건 없음' 표시가 되살아났다"
+    assert '"🛒 살 물건 없음"' not in blk
+    # 자료 만료(근거 없음) 표시는 남긴다 — 판독이 틀린 게 아니라 못 본 것이라는 안내
+    assert "data-noevidence" in blk
 
 
 def test_회색버튼은_판독을_다시_안돈다():

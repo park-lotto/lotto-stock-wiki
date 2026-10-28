@@ -1,0 +1,142 @@
+<title>메트리쿨 사용법</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&family=Black+Han+Sans&display=swap">
+<style>
+/* 위에서 아래로 따라 하는 순서표. 단계마다 '어디를 누르나'를 굵게 */
+:root{
+  --bg:#f3f6f5; --card:#ffffff; --ink:#132a2a; --sub:#4f6463; --line:#d7e1df;
+  --accent:#0f6b63; --accent-ink:#ffffff; --mark:#ffd84d; --ok:#1d7a3e; --warn:#a14a06;
+  --f-display:"Black Han Sans","IBM Plex Sans KR","Malgun Gothic",sans-serif;
+  --f-body:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1716; --card:#172221; --ink:#e7f0ee; --sub:#9fb3b0; --line:#2a3a38;
+  --accent:#3fb8a9; --accent-ink:#06201d; --mark:#e9c23a; --ok:#5fd18a; --warn:#f0a35c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1716; --card:#172221; --ink:#e7f0ee; --sub:#9fb3b0; --line:#2a3a38;
+  --accent:#3fb8a9; --accent-ink:#06201d; --mark:#e9c23a; --ok:#5fd18a; --warn:#f0a35c; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.65;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+.wrap{max-width:860px;margin:0 auto}
+header{padding-block:28px 4px}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(30px,6vw,44px);line-height:1.15;margin:0;text-wrap:balance}
+h1 span{background:linear-gradient(transparent 62%,var(--mark) 62%)}
+.lead{color:var(--sub);margin:8px 0 0;max-width:62ch}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:20px}
+.facts div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.facts b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.facts small{color:var(--sub);font-size:15px}
+section{margin-top:34px}
+h2{font-size:22px;margin:0 0 4px;text-wrap:balance}
+.note{color:var(--sub);margin:0;max-width:66ch}
+ol.steps{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:12px;counter-reset:s}
+ol.steps>li{counter-increment:s;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 16px 16px 64px;position:relative;min-width:0}
+ol.steps>li::before{content:counter(s);position:absolute;left:16px;top:14px;width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-family:var(--f-display);font-size:18px;display:grid;place-items:center}
+.steps h3{margin:0;font-size:18px}
+.steps p{margin:4px 0 0}
+.steps ul{margin:6px 0 0;padding-left:20px}
+.btn{display:inline-block;font-weight:700;padding:1px 8px;border-radius:6px;border:1.5px solid var(--line);background:var(--bg);white-space:nowrap}
+.go{display:inline-block;margin-top:10px;text-decoration:none;font-weight:700;padding:11px 18px;border-radius:10px;background:var(--accent);color:var(--accent-ink)}
+a:focus-visible{outline:3px solid var(--mark);outline-offset:2px}
+.tbl{overflow-x:auto;margin-top:14px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.tbl table{border-collapse:collapse;width:100%;font-size:15px}
+.tbl th,.tbl td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line)}
+.tbl tr:last-child td{border-bottom:0}
+.tbl th{font-size:14px;color:var(--sub)}
+.tbl td:first-child{font-weight:700;white-space:nowrap}
+.warn{margin-top:34px;background:var(--card);border:1.5px solid var(--warn);border-radius:14px;padding:16px 18px}
+.warn h2{color:var(--warn);font-size:19px}
+.warn ul{margin:8px 0 0;padding-left:22px}
+.foot{color:var(--sub);font-size:14px;margin-top:20px}
+.foot a{color:var(--accent)}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>메트리쿨 <span>사용법</span></h1>
+  <p class="lead">영상 1개를 유튜브 쇼츠·틱톡·인스타 릴스·스레드·페이스북·핀터레스트에 한 번에 올리는 도구입니다. PC에서 쓰는 게 가장 편합니다. 아래 순서대로 한 번만 연결해 두면, 그다음부터는 영상 올리기 5단계만 반복하면 됩니다.</p>
+  <div class="facts">
+    <div><b>무료</b><small>브랜드 1개(계정 묶음 1세트)까지</small></div>
+    <div><b>월 20개</b><small>무료로 예약할 수 있는 게시물 수(2026년 기준)</small></div>
+    <div><b>6곳</b><small>쇼츠·틱톡·릴스·스레드·페북·핀터레스트</small></div>
+  </div>
+</header>
+
+<section>
+  <h2>처음 한 번만: 가입하고 계정 연결</h2>
+  <p class="note">연결 전에 휴대폰에서 각 앱 가입을 먼저 끝내 두세요. 인스타는 <b>프로페셔널 계정</b>(크리에이터)으로 바꿔 둬야 연결됩니다.</p>
+  <ol class="steps">
+    <li><h3>가입·로그인</h3>
+      <p>"How do you want to log in?" 화면에서 <span class="btn">Google</span>을 누르면 가장 빠릅니다. 유튜브에 쓰는 구글 계정으로 들어가면 됩니다.</p>
+      <a class="go" href="https://metricool.com/ko/" target="_blank" rel="noopener">메트리쿨 열기</a></li>
+    <li><h3>계정 연결</h3>
+      <p>브랜드 설정의 <b>연결(Connections)</b> 화면(처음 가입하면 바로 나옵니다)에서 플랫폼마다 <span class="btn">연결</span>을 누르고, 뜨는 창에서 로그인·허용합니다.</p>
+      <ul>
+        <li><b>유튜브</b>: 구글 계정 선택 → 채널 선택 → 허용</li>
+        <li><b>틱톡</b>: 틱톡 로그인 → 허용</li>
+        <li><b>인스타그램</b>: 인스타 아이디·비밀번호로 연결하면 <b>예약·게시만</b> 됩니다(페이스북 없이). 통계까지 다 보려면 인스타와 연결된 <b>페이스북 페이지</b>로 연결합니다</li>
+        <li><b>스레드·페이스북·핀터레스트</b>: 각각 로그인 → 허용</li>
+      </ul></li>
+  </ol>
+</section>
+
+<section>
+  <h2>매번: 영상 1개를 한 번에 올리기</h2>
+  <ol class="steps">
+    <li><h3>계획(Planning) 열기</h3><p>왼쪽 메뉴 <span class="btn">계획 Planning</span> → 오른쪽 위 <span class="btn">게시물 만들기 Create post</span>.</p></li>
+    <li><h3>올릴 곳 고르기</h3><p>위쪽 동그란 아이콘 중 올릴 플랫폼을 <b>모두</b> 켭니다(유튜브·틱톡·인스타·스레드·페북·핀터레스트).</p></li>
+    <li><h3>영상·글 넣기</h3><p>세로 영상 파일을 끌어다 놓고, 설명 글을 씁니다. 상품 링크·"수수료를 받습니다" 문구도 여기 넣습니다.</p></li>
+    <li><h3>플랫폼별로 다듬기</h3><p><span class="btn">네트워크별 편집 Edit by network</span>을 켜면 곳마다 글을 다르게 쓸 수 있습니다. 유튜브는 <b>제목</b>을 따로 넣고, 인스타는 <b>릴스</b>, 페이스북도 <b>릴스</b>로 고릅니다.</p></li>
+    <li><h3>예약 또는 바로 올리기</h3><p>날짜·시간을 정하고 <span class="btn">예약 Schedule</span>, 지금 올리려면 <span class="btn">지금 게시 Publish now</span>. 틱톡은 <b>자동 게시(Auto publish)</b>를 켜 두세요. 꺼져 있으면 휴대폰으로 알림이 오고, 틱톡 앱에서 마무리해야 합니다.</p></li>
+  </ol>
+</section>
+
+<section>
+  <h2>무료와 유료 차이</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>구분</th><th>무료</th><th>유료</th></tr></thead>
+    <tbody>
+      <tr><td>브랜드 수</td><td>1개</td><td>여러 개(요금제마다 다름)</td></tr>
+      <tr><td>예약 게시물</td><td>월 20개</td><td>요금제마다 더 많음</td></tr>
+      <tr><td>통계 기록</td><td>최근 30일</td><td>더 길게</td></tr>
+      <tr><td>안 되는 곳</td><td>링크드인·X(트위터)</td><td>링크드인 가능, X는 추가 결제</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note" style="margin-top:10px">브랜드 1개 = 계정 묶음 1세트입니다. <b>휴대폰마다 다른 계정을 쓰면</b>(예: 8대 = 8세트) 무료로는 1세트만 연결되니, 나머지는 유료 요금제나 각 앱에서 직접 올려야 합니다.</p>
+</section>
+
+<section>
+  <h2>가격: 메트리쿨 vs 버퍼(Buffer)</h2>
+  <p class="note">메트리쿨은 <b>계정 묶음(브랜드)</b> 단위로, 버퍼는 <b>계정(채널) 하나하나</b>마다 돈을 받습니다. 그래서 계정 세트가 많을수록 메트리쿨이 훨씬 쌉니다.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>구분</th><th>메트리쿨</th><th>버퍼</th></tr></thead>
+    <tbody>
+      <tr><td>무료</td><td>브랜드 1개(6곳 다 연결), 월 20개 예약</td><td>채널 3개까지, 채널마다 예약 10개</td></tr>
+      <tr><td>유료 기본</td><td>스타터: 브랜드 5개 $20/월(연간 결제) · $25(월 결제)</td><td>에센셜: 채널당 $5/월</td></tr>
+      <tr><td>그다음</td><td>브랜드 10개 $36(연간) · $45(월)</td><td>팀: 채널당 $10/월</td></tr>
+      <tr><td>틱톡 자동 게시</td><td>개인 계정도 됨</td><td>비즈니스 계정만</td></tr>
+      <tr><td>한국 플랫폼</td><td>안 됨</td><td>안 됨</td></tr>
+    </tbody>
+  </table></div>
+  <div class="tbl"><table>
+    <thead><tr><th>쓰는 규모(6곳 기준)</th><th>메트리쿨</th><th>버퍼</th></tr></thead>
+    <tbody>
+      <tr><td>폰 1대(6곳)</td><td><b>무료</b>(월 20개까지)</td><td>$30/월 ≈ 4.2만 원</td></tr>
+      <tr><td>폰 5대(30곳)</td><td><b>$20/월 ≈ 2.8만 원</b></td><td>$150/월 ≈ 21만 원</td></tr>
+      <tr><td>폰 8대(48곳)</td><td><b>$36/월 ≈ 5만 원</b></td><td>$240/월 ≈ 34만 원</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note" style="margin-top:10px">원화는 1달러 = 1,400원으로 가정한 값입니다. 실제 결제에는 부가세·해외결제 수수료가 붙을 수 있습니다. 버퍼의 $5가 연간 결제 기준인지는 공식 페이지 안내가 서로 달라 확실하지 않습니다(월 결제는 더 비쌀 수 있음). 2026년 10월 20일 공식 요금 페이지 기준.</p>
+</section>
+
+<div class="warn">
+  <h2>알아 둘 것</h2>
+  <ul>
+    <li>네이버 클립·카카오·당근 같은 <b>한국 플랫폼은 메트리쿨이 지원하지 않습니다.</b> 같은 영상 파일을 각 앱에서 직접 올리세요.</li>
+    <li>무료 한도 20개가 <b>플랫폼마다 1개씩 세는지, 한 번 올리기를 1개로 세는지</b>는 공식 안내로 확인하지 못했습니다. 처음 며칠은 남은 개수를 보면서 쓰세요.</li>
+    <li>같은 영상을 여러 계정에 똑같이 올리면 중복 콘텐츠로 노출이 줄 수 있습니다. 계정마다 글·영상을 조금씩 다르게 하세요.</li>
+  </ul>
+</div>
+<p class="foot">메뉴 이름과 위치는 메트리쿨 업데이트로 바뀔 수 있습니다. 근거: <a href="https://help.metricool.com/how-to-connect-instagram-to-metricool-sermi" target="_blank" rel="noopener">인스타 연결 도움말</a> · <a href="https://help.metricool.com/multiposting-edit-per-social-network-85out" target="_blank" rel="noopener">네트워크별 편집</a> · <a href="https://metricool.com/schedule-tiktok-videos/" target="_blank" rel="noopener">틱톡 예약</a> · <a href="https://socialk.it/en/pricing/metricool" target="_blank" rel="noopener">요금제 정리</a> · <a href="https://metricool.com/pricing/" target="_blank" rel="noopener">메트리쿨 요금</a> · <a href="https://buffer.com/pricing" target="_blank" rel="noopener">버퍼 요금</a> (2026년 10월 확인)</p>
+</div>

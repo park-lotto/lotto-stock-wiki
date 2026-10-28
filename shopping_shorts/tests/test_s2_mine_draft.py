@@ -22,7 +22,7 @@ def _src():
 
 def _run(setup, tail):
     return run_js(f"""
-var toast = function(){{}}, saveWork = function(){{}}, s2RenderDrafts = function(){{}};
+var toast = function(){{}}, saveWork = function(){{}}, s2RenderDrafts = function(){{}}, s2CloseBanks = function(){{}};
 var document = {{ getElementById: function(){{ return null; }},
                   querySelector: function(){{ return null; }},
                   querySelectorAll: function(){{ return []; }} }};
@@ -65,11 +65,14 @@ def test_칸_추가는_빈_칸을_하나_더_만든다():
     assert json.loads(out) == 6
 
 
-def test_남의_안에는_칸을_더하지_않는다():
-    """AI가 만든 안은 게이트·역할 계약이 있다 — 여기서 임의로 칸을 늘리지 않는다."""
-    out = _run("{drafts: [{beats:[{role:'hook',text:'가'}]}], curDraft: 0}",
-               "s2MineAddRow(0); console.log(JSON.stringify(S2.drafts[0].beats.length));")
-    assert json.loads(out) == 1
+def test_AI_안에도_칸을_더한다():
+    """2026-09-30 사장님 "대본에서 칸을 더 만들 수 있게"(관제 044) — 종전(AI 안엔 안 더함)을 바꿨다.
+    역할 계약은 [빼기]와 같은 방식으로 지킨다: 칸 구성이 바뀌면 옛 검사 표시를 지운다(s2CommitBeats)."""
+    out = _run("{drafts: [{beats:[{role:'hook',text:'가'}], checks:[{ok:true}], passed:true}], curDraft: 0}",
+               "s2MineAddRow(0); console.log(JSON.stringify(S2.drafts[0]));")
+    dr = json.loads(out)
+    assert len(dr["beats"]) == 2 and dr["beats"][1] == {"role": "", "text": ""}
+    assert dr["checks"] == [] and dr["passed"] is False
 
 
 def test_화면_계약_내_대본은_게이트도_다시만들기도_안_붙는다():

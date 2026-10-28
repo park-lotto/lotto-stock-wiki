@@ -1,0 +1,133 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 420,
+   "w": 1080,
+   "h": 1080,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "w": 1040,
+   "align": "center",
+   "y": 146,
+   "lines": 2,
+   "font": "Cafe24Ohsquare",
+   "size": 118.0,
+   "line_h": 127,
+   "rgb": [
+    253,
+    253,
+    253
+   ],
+   "line_rgb": [
+    [
+     253,
+     253,
+     253
+    ],
+    [
+     166,
+     254,
+     246
+    ]
+   ],
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": true,
+   "letter_spacing": -5.5,
+   "word_spacing": 14,
+   "enter": null,
+   "text": "장윤정이 가격\n안 보고 사는 물건"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 1206,
+   "lines": 1,
+   "font": "Cafe24Ohsquare",
+   "size": 64.0,
+   "line_h": 74,
+   "rgb": [
+    245,
+    255,
+    22
+   ],
+   "line_rgb": null,
+   "outline": {
+    "px": 5,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "shadow": null,
+   "box": null,
+   "italic": true,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": {
+    "kind": "none",
+    "ms": 300
+   },
+   "emphasis": null
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 540,
+   "w": 900,
+   "align": "center",
+   "y": 1524,
+   "lines": 1,
+   "font": "GmarketSansBold",
+   "size": 32.0,
+   "line_h": 40,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "text": "출처 : 장공장장윤정"
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "BDAjUIBTjfY",
+ "made_from": {
+  "tool": "mt_preset.hand",
+  "from": "BDAjUIBTjfY_auto.json",
+  "notes": [
+   "제목 글 = to_frame",
+   "제목·자막·출처 = 8편 실측 중앙값으로 고정(색톤_실측.md)"
+  ]
+ }
+}

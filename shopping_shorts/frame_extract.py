@@ -11,11 +11,33 @@ def download_video(video_url, dest_dir):
     dest_dir = Path(dest_dir)
     dest_dir.mkdir(parents=True, exist_ok=True)
     path = dest_dir / f"{uuid.uuid4().hex}.mp4"
+    # ★HLS 재생목록(.m3u8)은 글자 파일이다 — 그대로 저장하면 .mp4 이름의 깨진 재료가 된다
+    #   (관제 194: 핀터레스트 HLS만 있는 핀 → 1,124바이트 재생목록이 재료로 들어가 필름 먹통).
+    #   ffmpeg로 조각을 받아 진짜 mp4로 묶는다.
+    if ".m3u8" in str(video_url).split("?", 1)[0].lower():
+        return _download_hls(video_url, path)
     resp = requests.get(video_url, stream=True, timeout=_cfg.MEDIA_CLIP_TIMEOUT_SEC)
     resp.raise_for_status()
     with open(path, "wb") as f:
         for chunk in resp.iter_content(chunk_size=1 << 16):
             f.write(chunk)
+    with open(path, "rb") as f:
+        head = f.read(16)
+    if head.lstrip().startswith(b"#EXTM3U"):
+        # 주소엔 .m3u8이 없는데 내용이 재생목록인 경우
+        path.unlink(missing_ok=True)
+        return _download_hls(video_url, path)
+    return path
+
+
+def _download_hls(video_url, path):
+    cmd = ["ffmpeg", "-y", "-loglevel", "error", "-i", str(video_url),
+           "-c", "copy", "-bsf:a", "aac_adtstoasc", "-movflags", "+faststart", str(path)]
+    r = subprocess.run(cmd, capture_output=True, check=False, stdin=subprocess.DEVNULL,
+                       timeout=_cfg.MEDIA_CLIP_TIMEOUT_SEC)
+    if r.returncode != 0 or not path.exists() or path.stat().st_size < 10_000:
+        path.unlink(missing_ok=True)
+        raise RuntimeError(f"HLS 영상 받기 실패: {r.stderr.decode('utf-8', 'replace')[-300:]}")
     return path
 
 

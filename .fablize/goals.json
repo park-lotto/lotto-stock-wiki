@@ -1,34 +1,55 @@
 {
- "brief": "캔바 이미지를 틀로 그대로 얹고 글자만 위에 올린다(코드 재현 금지 - 질감이 죽는다)",
- "created": "2026-08-31T01:16:51.767403+00:00",
+ "brief": "회원 PC 숏템 재정비 — 한마디면 집 PC 13단계와 같은 얜샷템 하이브리드. 진행은 단계만 짧게. 미나=회원 일레븐랩스 키, 받아쓰기=위스퍼, 쿠팡=회원 파트너스 키(없으면 회원 PC 크롬)",
+ "created": "2026-10-20T16:39:25.475199+00:00",
  "goals": [
   {
    "id": "G001",
-   "title": "배경레이어",
-   "objective": "deco_frame에 bg_image 레이어 추가. 경로탈출 차단, 캐시키에 반영",
+   "title": "S1",
+   "objective": "13단계와 엔진 단계 대응표·AI 요청 자리·멈춤·진행 문구(설계 문서)",
    "status": "complete",
-   "evidence": "pytest test_deco_bg_image.py 5 passed - 경로탈출 6종 차단, 투명유지, 캐시키 갈림, 깨진파일 fail-open, cover채움"
+   "evidence": "99_회원PC_MCP.md eb807a10b"
   },
   {
    "id": "G002",
-   "title": "업로드API",
-   "objective": "이미지 업로드/목록/삭제 엔드포인트, 고객별 저장소",
+   "title": "S2",
+   "objective": "회원 키 칸 일레븐랩스·쿠팡 파트너스",
    "status": "complete",
-   "evidence": "pytest test_frame_image_api.py 5 passed - 투명유지·1080x1920 정규화·중복1건·삭제는 목록만·깨진파일 422·id위조 404"
+   "evidence": "key_ui_check ok(4칸·지문·env 4개) · npm test · catalog 명단 5"
   },
   {
    "id": "G003",
-   "title": "글자세로위치",
-   "objective": "ch_y·title_y 추가, 0=안 정했음 규약 유지",
-   "status": "complete",
-   "evidence": "pytest 9 passed - 기본값이면 옛 그림과 픽셀동일(tobytes 일치), title_y 이동, head_block 끄면 덮인폭 감소, 띠없이 채널명 그려짐"
+   "title": "S3",
+   "objective": "hybrid/run.py 단계가 회원 PC에서 돈다",
+   "status": "in_progress",
+   "evidence": null
   },
   {
    "id": "G004",
-   "title": "제작소UI",
-   "objective": "이미지 틀 업로드·선택 카드 + 글자 위치 조절",
-   "status": "complete",
-   "evidence": "실브라우저 검증: 업로드 200, 카드 33개(안씀/+내그림/내틀2/프리셋20), 미리보기에 캔바 그림 그대로, frameUrl이 bg_image 16자+head_block=0 전송. head_block 문자열 0 버그 발견·수정(DEFAULTS 타입에서 뽑도록)"
+   "title": "S4",
+   "objective": "2~4단계 원본찾기·쿠팡·조사 자동+AI 눈",
+   "status": "pending",
+   "evidence": null
+  },
+  {
+   "id": "G005",
+   "title": "S5",
+   "objective": "5~12단계 재료~납품",
+   "status": "pending",
+   "evidence": null
+  },
+  {
+   "id": "G006",
+   "title": "S6",
+   "objective": "MCP 진행 안내·한 줄 요청",
+   "status": "pending",
+   "evidence": null
+  },
+  {
+   "id": "G007",
+   "title": "S7",
+   "objective": "설치본·회원처럼 이미도 한 편·집 PC 결과와 대조",
+   "status": "pending",
+   "evidence": null
   }
  ]
 }

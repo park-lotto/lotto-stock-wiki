@@ -1,0 +1,17 @@
+[Unit]
+Description=매일 디스크 정리 타이머(04:00 KST — tools/disk_janitor.py, 여유 50GB 미만이면 관리자 쪽지)
+
+[Timer]
+# 04:00 KST: 고객 작업이 가장 적은 03~06시(video-audit 04:30·카테고리 백필 05:30과 겹치지 않게 앞에).
+# 2026-09-29 디스크 100% 웹 크래시(195회) 뒤 신설(관제 038).
+#
+# 설치(서버, 한 번):
+#   sudo cp deploy/shopping-shorts-disk-janitor.service deploy/shopping-shorts-disk-janitor.timer /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now shopping-shorts-disk-janitor.timer
+#   # 즉시 1회: sudo systemctl start shopping-shorts-disk-janitor.service
+#   # 보고서: /home/ubuntu/disk_janitor/<날짜>.txt · journalctl -u shopping-shorts-disk-janitor
+OnCalendar=*-*-* 04:00:00
+Persistent=false
+
+[Install]
+WantedBy=timers.target

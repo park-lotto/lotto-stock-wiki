@@ -1,0 +1,940 @@
+{
+ "slug": "homedesignnote",
+ "style": "전체화면_가운데자막",
+ "made_by": "preset_save v1",
+ "rule": "같은 자리 값이 편마다 기준(숫자 max(4, 3%) · 색 채널 12 · 글·참거짓 같음) 밖이면 $per_video, 제목 글자는 항상 $per_video, --exclude 로 뺀 층은 그 편에서 비교 안 함",
+ "created_at": "2026-10-17T01:03:52+09:00",
+ "sources": [
+  {
+   "id": "fQPX6XeXeN0",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/homedesignnote/뜯기/fQPX6XeXeN0/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-16 23:53",
+   "frame_tool": "tools/calcopy/engine/to_frame.py",
+   "font": {
+    "top1": "GamjaFlower.ttf",
+    "top1_score": 0.1708,
+    "picked_from": {
+     "file": "GamjaFlower.ttf",
+     "score": 0.1708
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "글꼴 1위 GamjaFlower.ttf(0.1708) < 0.5 — 확신 낮음. 쓴 글꼴 CcGamjaFlower({'file': 'GamjaFlower.ttf', 'score': 0.1708})",
+    "자막 잰 높이 58.5px 에서 외곽선 16px×2 를 빼고 크기 역산",
+    "자막 자간은 잰 폭 고른 20/32개(사분위 폭 0.05) 중 첫 자막으로 역산",
+    "자막 낱말 간격 -1.4px — 원본 낱말 틈 26.0px 에 맞춤(자간 8.7px 은 글자 사이만)",
+    "자막 외곽선 8px [1, 0, 0] — 프레임 자막 줄 열 (462, 609) 에서 직접 잼(분석기 요약 16px [62, 61, 62])",
+    "자막 등장 none — 뜯기 등장 표본 3개 중 '없음' 3개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "손질(오푸스 HDN 10-17): to_frame 자막 ('CcGamjaFlower', 29.1, {'px': 8, 'rgb': [1, 0, 0]}, 8.7) → 검정 번짐을 외곽선으로 읽어 크기를 절반으로 역산한 오판. 밝은 잉크 폭 맞춤 크기 61·잉크 위 585(y=579)·번짐=외곽선4+그림자 blur20+glow40(렌더 대조 check_overlay 로 고름, 번짐 세기는 원본보다 약함=렌더러 한계)·글꼴 PoorStory(fontmatch 상위권, 전부 low). 워터마크 자리 brand '잇썸홈'(사장님 10-17).",
+    "2판(10-17): LOO 렌더 대조에서 잉크 높이 원본의 0.89·폭 0.98 → 크기 61→64·줄 칸 74·y=잉크 위−9",
+    "3판(10-17 페이블 '번짐 보강'): 번짐 세기 원본 32~58 vs 우리 6 → 외곽선 16·그림자 blur 30·glow 60 으로 렌더 실측 32~35(fQPX). 자막 층 두 겹은 schema 가 caption 1장만 허용해 불가. 가장자리는 원본보다 딱딱함(렌더러에 부드러운 짙은 번짐 칸 없음)."
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 1개: [12]",
+    "제목 글꼴: 창 위 고정 글자 띠 없음(layout above_bands)",
+    "글꼴 1위 점수 0.1708 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기 실패: 503",
+    "소리 구성 실패: 받아쓰기 실패(503)",
+    "sfx_rules: 받아쓰기 실패(503)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(503)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "전체화면_가운데자막",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "e63acefffffa"
+  },
+  {
+   "id": "DCXQjaWcZ-g",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/homedesignnote/뜯기/DCXQjaWcZ-g/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-16 23:53",
+   "frame_tool": "tools/calcopy/engine/to_frame.py",
+   "font": {
+    "top1": "PoorStory.ttf",
+    "top1_score": 0.1343,
+    "picked_from": {
+     "file": "PoorStory.ttf",
+     "score": 0.1343
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "글꼴 1위 PoorStory.ttf(0.1343) < 0.5 — 확신 낮음. 쓴 글꼴 CcPoorStory({'file': 'PoorStory.ttf', 'score': 0.1343})",
+    "자막 잰 높이 59.5px 에서 외곽선 17px×2 를 빼고 크기 역산",
+    "자막 자간은 잰 폭 고른 16/20개(사분위 폭 0.13) 중 첫 자막으로 역산",
+    "자막 낱말 간격 -0.8px — 원본 낱말 틈 26.0px 에 맞춤(자간 8.4px 은 글자 사이만)",
+    "자막 외곽선 7px [7, 3, 3] — 프레임 자막 줄 열 (253, 319) 에서 직접 잼(분석기 요약 17px [35, 33, 32])",
+    "자막 등장 none — 뜯기 등장 표본 3개 중 '없음' 2개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "손질(오푸스 HDN 10-17): to_frame 자막 ('CcPoorStory', 28.0, {'px': 7, 'rgb': [7, 3, 3]}, 8.4) → 검정 번짐을 외곽선으로 읽어 크기를 절반으로 역산한 오판. 밝은 잉크 폭 맞춤 크기 61·잉크 위 584(y=578)·번짐=외곽선4+그림자 blur20+glow40(렌더 대조 check_overlay 로 고름, 번짐 세기는 원본보다 약함=렌더러 한계)·글꼴 PoorStory(fontmatch 상위권, 전부 low). 워터마크 자리 brand '잇썸홈'(사장님 10-17).",
+    "2판(10-17): LOO 렌더 대조에서 잉크 높이 원본의 0.89·폭 0.98 → 크기 61→64·줄 칸 74·y=잉크 위−9",
+    "3판(10-17 페이블 '번짐 보강'): 번짐 세기 원본 32~58 vs 우리 6 → 외곽선 16·그림자 blur 30·glow 60 으로 렌더 실측 32~35(fQPX). 자막 층 두 겹은 schema 가 caption 1장만 허용해 불가. 가장자리는 원본보다 딱딱함(렌더러에 부드러운 짙은 번짐 칸 없음)."
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 4개: [1, 10, 11, 15]",
+    "제목 글꼴: 창 위 고정 글자 띠 없음(layout above_bands)",
+    "글꼴 1위 점수 0.1343 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기: 길이 초과 20.1~22.0",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[bg].rgb",
+    "layers[text:caption].box"
+   ],
+   "caption_style": "전체화면_가운데자막",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "15c297eef1c7"
+  },
+  {
+   "id": "7Nj6b0mX4HM",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/homedesignnote/뜯기/7Nj6b0mX4HM/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-16 23:53",
+   "frame_tool": "tools/calcopy/engine/to_frame.py",
+   "font": {
+    "top1": "GamjaFlower.ttf",
+    "top1_score": 0.1566,
+    "picked_from": {
+     "file": "GamjaFlower.ttf",
+     "score": 0.1566
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "글꼴 1위 GamjaFlower.ttf(0.1566) < 0.5 — 확신 낮음. 쓴 글꼴 CcGamjaFlower({'file': 'GamjaFlower.ttf', 'score': 0.1566})",
+    "자막 잰 높이 58.0px 에서 외곽선 16px×2 를 빼고 크기 역산",
+    "자막 자간·낱말 간격 0 — 잰 폭이 글 길이를 안 따른다(잰 폭/그린 폭 사분위 폭 0.73 > 0.15, 16개) — 창 안 자막이 영상 내용까지 잡힌 것으로 본다",
+    "자막 줄 수 {1: 27, 2: 1} → 최빈 1줄 칸",
+    "자막 외곽선 5px [24, 25, 30] — 프레임 자막 줄 열 (572, 657) 에서 직접 잼(분석기 요약 16px [45, 45, 51])",
+    "자막 등장 none — 뜯기 등장 표본 3개 중 '없음' 2개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "손질(오푸스 HDN 10-17): to_frame 자막 ('CcGamjaFlower', 28.6, {'px': 5, 'rgb': [24, 25, 30]}, 0) → 검정 번짐을 외곽선으로 읽어 크기를 절반으로 역산한 오판. 밝은 잉크 폭 맞춤 크기 61·잉크 위 482(y=476)·번짐=외곽선4+그림자 blur20+glow40(렌더 대조 check_overlay 로 고름, 번짐 세기는 원본보다 약함=렌더러 한계)·글꼴 PoorStory(fontmatch 상위권, 전부 low). 워터마크 자리 brand '잇썸홈'(사장님 10-17).",
+    "2판(10-17): LOO 렌더 대조에서 잉크 높이 원본의 0.89·폭 0.98 → 크기 61→64·줄 칸 74·y=잉크 위−9",
+    "3판(10-17 페이블 '번짐 보강'): 번짐 세기 원본 32~58 vs 우리 6 → 외곽선 16·그림자 blur 30·glow 60 으로 렌더 실측 32~35(fQPX). 자막 층 두 겹은 schema 가 caption 1장만 허용해 불가. 가장자리는 원본보다 딱딱함(렌더러에 부드러운 짙은 번짐 칸 없음)."
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 5개: [0, 13, 21, 25, 26]",
+    "제목 글꼴: 창 위 고정 글자 띠 없음(layout above_bands)",
+    "글꼴 1위 점수 0.1566 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기: 구절 미분할 8.9~17.6(8.7초)",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:caption].y"
+   ],
+   "caption_style": "전체화면_가운데자막",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "bd724b17ca30"
+  },
+  {
+   "id": "e15KZ_nO1_Y",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/homedesignnote/뜯기/e15KZ_nO1_Y/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-17 00:00",
+   "frame_tool": "tools/calcopy/engine/to_frame.py",
+   "font": {
+    "top1": "PoorStory.ttf",
+    "top1_score": 0.1753,
+    "picked_from": {
+     "file": "PoorStory.ttf",
+     "score": 0.1753
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "글꼴 1위 PoorStory.ttf(0.1753) < 0.5 — 확신 낮음. 쓴 글꼴 CcPoorStory({'file': 'PoorStory.ttf', 'score': 0.1753})",
+    "자막 잰 높이 60.5px 에서 외곽선 16px×2 를 빼고 크기 역산",
+    "자막 자간은 잰 폭 고른 12/24개(사분위 폭 0.05) 중 첫 자막으로 역산",
+    "자막 외곽선 8px [14, 8, 10] — 프레임 자막 줄 열 (385, 492) 에서 직접 잼(분석기 요약 16px [74, 60, 59])",
+    "자막 등장 none — 뜯기 등장 표본 3개 중 '없음' 3개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "손질(오푸스 HDN 10-17): to_frame 자막 ('CcPoorStory', 33.9, {'px': 8, 'rgb': [14, 8, 10]}, 10.2) → 검정 번짐을 외곽선으로 읽어 크기를 절반으로 역산한 오판. 밝은 잉크 폭 맞춤 크기 61·잉크 위 485(y=479)·번짐=외곽선4+그림자 blur20+glow40(렌더 대조 check_overlay 로 고름, 번짐 세기는 원본보다 약함=렌더러 한계)·글꼴 PoorStory(fontmatch 상위권, 전부 low). 워터마크 자리 brand '잇썸홈'(사장님 10-17).",
+    "2판(10-17): LOO 렌더 대조에서 잉크 높이 원본의 0.89·폭 0.98 → 크기 61→64·줄 칸 74·y=잉크 위−9",
+    "3판(10-17 페이블 '번짐 보강'): 번짐 세기 원본 32~58 vs 우리 6 → 외곽선 16·그림자 blur 30·glow 60 으로 렌더 실측 32~35(fQPX). 자막 층 두 겹은 schema 가 caption 1장만 허용해 불가. 가장자리는 원본보다 딱딱함(렌더러에 부드러운 짙은 번짐 칸 없음)."
+   ],
+   "unknown": [
+    "제목 글꼴: 창 위 고정 글자 띠 없음(layout above_bands)",
+    "글꼴 1위 점수 0.1753 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기: 길이 초과 21.0~23.5",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "전체화면_가운데자막",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "1edca913f4a8"
+  },
+  {
+   "id": "R0-bfj7JarA",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/homedesignnote/뜯기/R0-bfj7JarA/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-17 00:00",
+   "frame_tool": "tools/calcopy/engine/to_frame.py",
+   "font": {
+    "top1": "GamjaFlower.ttf",
+    "top1_score": 0.1464,
+    "picked_from": {
+     "file": "GamjaFlower.ttf",
+     "score": 0.1464
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "글꼴 1위 GamjaFlower.ttf(0.1464) < 0.5 — 확신 낮음. 쓴 글꼴 CcGamjaFlower({'file': 'GamjaFlower.ttf', 'score': 0.1464})",
+    "자막 잰 높이 59.0px 에서 외곽선 17px×2 를 빼고 크기 역산",
+    "자막 자간은 잰 폭 고른 19/34개(사분위 폭 0.06) 중 첫 자막으로 역산",
+    "자막 낱말 간격 -1.4px — 원본 낱말 틈 26.0px 에 맞춤(자간 8.2px 은 글자 사이만)",
+    "자막 등장 pop — 뜯기 등장 표본 3개 중 '확대/축소' 2개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "손질(오푸스 HDN 10-17): to_frame 자막 ('CcGamjaFlower', 27.5, {'px': 17, 'rgb': [92, 90, 90]}, 8.2) → 검정 번짐을 외곽선으로 읽어 크기를 절반으로 역산한 오판. 밝은 잉크 폭 맞춤 크기 61·잉크 위 587(y=581)·번짐=외곽선4+그림자 blur20+glow40(렌더 대조 check_overlay 로 고름, 번짐 세기는 원본보다 약함=렌더러 한계)·글꼴 PoorStory(fontmatch 상위권, 전부 low). 워터마크 자리 brand '잇썸홈'(사장님 10-17).",
+    "2판(10-17): LOO 렌더 대조에서 잉크 높이 원본의 0.89·폭 0.98 → 크기 61→64·줄 칸 74·y=잉크 위−9",
+    "3판(10-17 페이블 '번짐 보강'): 번짐 세기 원본 32~58 vs 우리 6 → 외곽선 16·그림자 blur 30·glow 60 으로 렌더 실측 32~35(fQPX). 자막 층 두 겹은 schema 가 caption 1장만 허용해 불가. 가장자리는 원본보다 딱딱함(렌더러에 부드러운 짙은 번짐 칸 없음)."
+   ],
+   "unknown": [
+    "제목 글꼴: 창 위 고정 글자 띠 없음(layout above_bands)",
+    "글꼴 1위 점수 0.1464 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:caption].rgb",
+    "layers[text:caption].enter"
+   ],
+   "caption_style": "전체화면_가운데자막",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "0c4133bc1db3"
+  },
+  {
+   "id": "Ez7KsS2K_Pk",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/homedesignnote/뜯기/Ez7KsS2K_Pk/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-17 00:00",
+   "frame_tool": "tools/calcopy/engine/to_frame.py",
+   "font": {
+    "top1": "GamjaFlower.ttf",
+    "top1_score": 0.1206,
+    "picked_from": {
+     "file": "GamjaFlower.ttf",
+     "score": 0.1206
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "글꼴 1위 GamjaFlower.ttf(0.1206) < 0.5 — 확신 낮음. 쓴 글꼴 CcGamjaFlower({'file': 'GamjaFlower.ttf', 'score': 0.1206})",
+    "자막 잰 높이 60.0px 에서 외곽선 17px×2 를 빼고 크기 역산",
+    "자막 자간·낱말 간격 0 — 잰 폭이 글 길이를 안 따른다(잰 폭/그린 폭 사분위 폭 0.41 > 0.15, 16개) — 창 안 자막이 영상 내용까지 잡힌 것으로 본다",
+    "자막 줄 수 {1: 23, 2: 1} → 최빈 1줄 칸",
+    "자막 외곽선 5px [0, 0, 0] — 프레임 자막 줄 열 전폭 에서 직접 잼(분석기 요약 17px [99, 96, 97])",
+    "자막 등장 pop — 뜯기 등장 표본 3개 중 '확대/축소' 3개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "손질(오푸스 HDN 10-17): to_frame 자막 ('CcGamjaFlower', 26.5, {'px': 5, 'rgb': [0, 0, 0]}, 0) → 검정 번짐을 외곽선으로 읽어 크기를 절반으로 역산한 오판. 밝은 잉크 폭 맞춤 크기 61·잉크 위 485(y=479)·번짐=외곽선4+그림자 blur20+glow40(렌더 대조 check_overlay 로 고름, 번짐 세기는 원본보다 약함=렌더러 한계)·글꼴 PoorStory(fontmatch 상위권, 전부 low). 워터마크 자리 brand '잇썸홈'(사장님 10-17).",
+    "2판(10-17): LOO 렌더 대조에서 잉크 높이 원본의 0.89·폭 0.98 → 크기 61→64·줄 칸 74·y=잉크 위−9",
+    "3판(10-17 페이블 '번짐 보강'): 번짐 세기 원본 32~58 vs 우리 6 → 외곽선 16·그림자 blur 30·glow 60 으로 렌더 실측 32~35(fQPX). 자막 층 두 겹은 schema 가 caption 1장만 허용해 불가. 가장자리는 원본보다 딱딱함(렌더러에 부드러운 짙은 번짐 칸 없음)."
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 2개: [1, 21]",
+    "제목 글꼴: 창 위 고정 글자 띠 없음(layout above_bands)",
+    "글꼴 1위 점수 0.1206 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기: 길이 초과 22.4~24.9",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "전체화면_가운데자막",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "b8c191c440a8"
+  },
+  {
+   "id": "seFkrVR-nYs",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/homedesignnote/뜯기/seFkrVR-nYs/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-17 00:34",
+   "frame_tool": "tools/calcopy/engine/to_frame.py",
+   "font": {
+    "top1": "GamjaFlower.ttf",
+    "top1_score": 0.169,
+    "picked_from": {
+     "file": "GamjaFlower.ttf",
+     "score": 0.169
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "글꼴 1위 GamjaFlower.ttf(0.169) < 0.5 — 확신 낮음. 쓴 글꼴 CcGamjaFlower({'file': 'GamjaFlower.ttf', 'score': 0.169})",
+    "자막 잰 높이 60.0px 에서 외곽선 15px×2 를 빼고 크기 역산",
+    "자막 자간·낱말 간격 0 — 잰 폭이 글 길이를 안 따른다(잰 폭/그린 폭 사분위 폭 0.18 > 0.15, 11개) — 창 안 자막이 영상 내용까지 잡힌 것으로 본다",
+    "자막 외곽선 9px [0, 0, 0] — 프레임 자막 줄 열 (444, 523) 에서 직접 잼(분석기 요약 15px [39, 37, 37])",
+    "자막 등장 none — 뜯기 등장 표본 3개 중 '없음' 3개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "손질(오푸스 HDN 10-17): to_frame 자막 ('CcGamjaFlower', 33.7, {'px': 9, 'rgb': [0, 0, 0]}, 0) → 6편과 같은 손질(크기 61·번짐·PoorStory), 잉크 위 936(y=930). brand '잇썸홈'.",
+    "2판(10-17): LOO 렌더 대조에서 잉크 높이 원본의 0.89·폭 0.98 → 크기 61→64·줄 칸 74·y=잉크 위−9",
+    "3판(10-17 페이블 '번짐 보강'): 번짐 세기 원본 32~58 vs 우리 6 → 외곽선 16·그림자 blur 30·glow 60 으로 렌더 실측 32~35(fQPX). 자막 층 두 겹은 schema 가 caption 1장만 허용해 불가. 가장자리는 원본보다 딱딱함(렌더러에 부드러운 짙은 번짐 칸 없음)."
+   ],
+   "unknown": [
+    "제목 글꼴: 창 위 고정 글자 띠 없음(layout above_bands)",
+    "글꼴 1위 점수 0.169 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "전체화면_가운데자막",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "fd35c297a89e"
+  },
+  {
+   "id": "orBlWWhejtc",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/homedesignnote/뜯기/orBlWWhejtc/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-17 00:34",
+   "frame_tool": "tools/calcopy/engine/to_frame.py",
+   "font": {
+    "top1": "GamjaFlower.ttf",
+    "top1_score": 0.1365,
+    "picked_from": {
+     "file": "GamjaFlower.ttf",
+     "score": 0.1365
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "글꼴 1위 GamjaFlower.ttf(0.1365) < 0.5 — 확신 낮음. 쓴 글꼴 CcGamjaFlower({'file': 'GamjaFlower.ttf', 'score': 0.1365})",
+    "자막 잰 높이 56.5px 에서 외곽선 17px×2 를 빼고 크기 역산",
+    "자막 자간·낱말 간격 0 — 잰 폭이 글 길이를 안 따른다(잰 폭/그린 폭 사분위 폭 0.31 > 0.15, 14개) — 창 안 자막이 영상 내용까지 잡힌 것으로 본다",
+    "자막 줄 수 {1: 17, 2: 2} → 최빈 1줄 칸",
+    "자막 등장 none — 뜯기 등장 표본 3개 중 '없음' 3개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "손질(오푸스 HDN 10-17): to_frame 자막 ('CcGamjaFlower', 27.8, {'px': 17, 'rgb': [84, 80, 77]}, 0) → 6편과 같은 손질(크기 61·번짐·PoorStory), 잉크 위 898(y=892). brand '잇썸홈'. ※밝은 바탕 섞여 크롭 잉크 위(898) 오염 → bench 띠 [936,997] 로 y=930.",
+    "2판(10-17): LOO 렌더 대조에서 잉크 높이 원본의 0.89·폭 0.98 → 크기 61→64·줄 칸 74·y=잉크 위−9",
+    "3판(10-17 페이블 '번짐 보강'): 번짐 세기 원본 32~58 vs 우리 6 → 외곽선 16·그림자 blur 30·glow 60 으로 렌더 실측 32~35(fQPX). 자막 층 두 겹은 schema 가 caption 1장만 허용해 불가. 가장자리는 원본보다 딱딱함(렌더러에 부드러운 짙은 번짐 칸 없음)."
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 11개: [0, 2, 4, 7, 8, 10, 11, 12, 13, 14]",
+    "제목 글꼴: 창 위 고정 글자 띠 없음(layout above_bands)",
+    "글꼴 1위 점수 0.1365 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "전체화면_가운데자막",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "5772bbaf815a"
+  }
+ ],
+ "updated_at": "2026-10-17T01:03:52+09:00",
+ "variables": [
+  "layers[bg].rgb",
+  "layers[text:caption].y",
+  "layers[text:caption].rgb",
+  "layers[text:caption].box",
+  "layers[text:caption].enter",
+  "layers[text:brand].text"
+ ],
+ "caption_styles": [
+  {
+   "name": "전체화면_가운데자막",
+   "layer": {
+    "kind": "text",
+    "role": "caption",
+    "x": 540,
+    "y": 576,
+    "w": 1000,
+    "align": "center",
+    "lines": 1,
+    "font": "CcPoorStory",
+    "size": 64,
+    "line_h": 74,
+    "rgb": [
+     251,
+     251,
+     252
+    ],
+    "line_rgb": null,
+    "line_scale": null,
+    "outline": {
+     "px": 7,
+     "rgb": [
+      0,
+      0,
+      0
+     ]
+    },
+    "line_outline": null,
+    "shadow": {
+     "dx": 0,
+     "dy": 0,
+     "blur": 24,
+     "rgb": [
+      0,
+      0,
+      0
+     ]
+    },
+    "glow": null,
+    "box": null,
+    "italic": false,
+    "letter_spacing": 0,
+    "word_spacing": 0,
+    "valign": "center",
+    "enter": {
+     "kind": "none",
+     "ms": 300
+    },
+    "emphasis": null,
+    "text": null
+   },
+   "status": "잰 편 fQPX6XeXeN0",
+   "sources": [
+    "fQPX6XeXeN0",
+    "DCXQjaWcZ-g",
+    "7Nj6b0mX4HM",
+    "e15KZ_nO1_Y",
+    "R0-bfj7JarA",
+    "Ez7KsS2K_Pk",
+    "seFkrVR-nYs",
+    "orBlWWhejtc"
+   ],
+   "notes": [
+    "fQPX6XeXeN0: 오푸스 HDN 손질본(자막 크기·번짐·글꼴 렌더 대조로 고침, 10-17)",
+    "DCXQjaWcZ-g: 오푸스 HDN 손질본(자막 크기·번짐·글꼴 렌더 대조로 고침, 10-17)",
+    "7Nj6b0mX4HM: 오푸스 HDN 손질본(자막 크기·번짐·글꼴 렌더 대조로 고침, 10-17)",
+    "e15KZ_nO1_Y: 오푸스 HDN 손질본(자막 크기·번짐·글꼴 렌더 대조로 고침, 10-17)",
+    "R0-bfj7JarA: 오푸스 HDN 손질본(자막 크기·번짐·글꼴 렌더 대조로 고침, 10-17)",
+    "Ez7KsS2K_Pk: 오푸스 HDN 손질본(자막 크기·번짐·글꼴 렌더 대조로 고침, 10-17)",
+    "seFkrVR-nYs: 오푸스 HDN 손질본(자막 크기·번짐·글꼴 렌더 대조로 고침, 10-17)",
+    "orBlWWhejtc: 오푸스 HDN 손질본(자막 크기·번짐·글꼴 렌더 대조로 고침, 10-17)",
+    "10-26 벤치 픽셀 대조(사장님 '흰 손글씨 얇은 외곽'): 잉크 둘레 거리별 밝기÷바탕 — 벤치 4편 밝은 바탕 9장 중앙 1~3px .09·3~5 .145·5~7 .17·7~9 .225·9~12 .365·12~16 .495·16~22 .68·22~30 .84·30~40 .92(검정 외곽 6~8px + 부드러운 그림자 ~30px). 옛 판(외곽 16·그림자 30·glow 60) = 0~16px 전부 0(검은 상자처럼 뭉침) 평균 차 0.237 → 외곽 7·그림자 blur 24·glow 없음 0.101(격자 27칸 중 1위권, 렌더러 그림자가 0.46 언저리 평평해 더 못 줄임). 도구 scratchpad hdn/grid.py·prof.py(compose_still 로 그려 잼)"
+   ]
+  }
+ ],
+ "variable_stats": {
+  "layers[bg].rgb": {
+   "values": {
+    "fQPX6XeXeN0": [
+     141,
+     135,
+     132
+    ],
+    "DCXQjaWcZ-g": [
+     137,
+     121,
+     108
+    ],
+    "7Nj6b0mX4HM": [
+     158,
+     155,
+     156
+    ],
+    "e15KZ_nO1_Y": [
+     150,
+     110,
+     109
+    ],
+    "R0-bfj7JarA": [
+     135,
+     122,
+     111
+    ],
+    "Ez7KsS2K_Pk": [
+     185,
+     175,
+     170
+    ],
+    "seFkrVR-nYs": [
+     108,
+     105,
+     103
+    ],
+    "orBlWWhejtc": [
+     113,
+     80,
+     61
+    ]
+   },
+   "default": [
+    139,
+    122,
+    110
+   ],
+   "range": null,
+   "how": "자리별 중앙값(8/8편)"
+  },
+  "layers[text:caption].y": {
+   "values": {
+    "fQPX6XeXeN0": 576,
+    "DCXQjaWcZ-g": 575,
+    "7Nj6b0mX4HM": 473,
+    "e15KZ_nO1_Y": 476,
+    "R0-bfj7JarA": 578,
+    "Ez7KsS2K_Pk": 476,
+    "seFkrVR-nYs": 927,
+    "orBlWWhejtc": 927
+   },
+   "default": 661,
+   "range": [
+    473,
+    927
+   ],
+   "how": "10-26 기본 = 벤치 손글씨 자막 4편 잉크 위 y 중앙 − 10(DCXQ 587·_Qq 931·EINo 754·SU9Y 534 → 670.5, 렌더 실측 ink_top = y + 10 · 잉크 높이 56). 화면 위 1/3~가운데(사장님). 옛 기본 927(50편 bench 최빈 무리 936 − 9)은 상위 6편과 어긋났다"
+  },
+  "layers[text:caption].rgb": {
+   "values": {
+    "fQPX6XeXeN0": [
+     251,
+     251,
+     252
+    ],
+    "DCXQjaWcZ-g": [
+     250,
+     250,
+     249
+    ],
+    "7Nj6b0mX4HM": [
+     247,
+     247,
+     250
+    ],
+    "e15KZ_nO1_Y": [
+     253,
+     245,
+     246
+    ],
+    "R0-bfj7JarA": [
+     237,
+     237,
+     237
+    ],
+    "Ez7KsS2K_Pk": [
+     255,
+     255,
+     255
+    ],
+    "seFkrVR-nYs": [
+     252,
+     252,
+     251
+    ],
+    "orBlWWhejtc": [
+     245,
+     242,
+     241
+    ]
+   },
+   "default": [
+    250,
+    248,
+    250
+   ],
+   "range": null,
+   "how": "자리별 중앙값(8/8편)"
+  },
+  "layers[text:caption].box": {
+   "values": {
+    "fQPX6XeXeN0": null,
+    "DCXQjaWcZ-g": {
+     "rgb": [
+      7,
+      9,
+      9
+     ],
+     "pad": 0,
+     "radius": 0
+    },
+    "7Nj6b0mX4HM": null,
+    "e15KZ_nO1_Y": null,
+    "R0-bfj7JarA": null,
+    "Ez7KsS2K_Pk": null,
+    "seFkrVR-nYs": null,
+    "orBlWWhejtc": null
+   },
+   "default": null,
+   "range": null,
+   "how": "최빈(7/8편)"
+  },
+  "layers[text:caption].enter": {
+   "values": {
+    "fQPX6XeXeN0": {
+     "kind": "none",
+     "ms": 300
+    },
+    "DCXQjaWcZ-g": {
+     "kind": "none",
+     "ms": 300
+    },
+    "7Nj6b0mX4HM": {
+     "kind": "none",
+     "ms": 300
+    },
+    "e15KZ_nO1_Y": {
+     "kind": "none",
+     "ms": 300
+    },
+    "R0-bfj7JarA": {
+     "kind": "pop",
+     "ms": 300
+    },
+    "Ez7KsS2K_Pk": {
+     "kind": "pop",
+     "ms": 300
+    },
+    "seFkrVR-nYs": {
+     "kind": "none",
+     "ms": 300
+    },
+    "orBlWWhejtc": {
+     "kind": "none",
+     "ms": 300
+    }
+   },
+   "default": {
+    "kind": "none",
+    "ms": 300
+   },
+   "range": null,
+   "how": "자리별 중앙값(6/8편)"
+  },
+  "layers[text:brand].text": {
+   "values": {},
+   "default": "잇썸홈",
+   "range": null,
+   "how": "채널명 — 기본 잇썸홈(사장님 10-17), 다른 채널명은 overrides 로(원본 워터마크 자리·크기 그대로)"
+  }
+ },
+ "rules": {
+  "formula": "title.size = size_cap(잰 크기 중앙값) — 가장 긴 줄이 fill_w(잰 폭 최대·화면 폭−48 중 큰 값)를 넘으면 자간부터(−15%까지), 그래도 넘으면 크기 · title.line_h = size×lh_ratio · title.y = title_top · video.y = (video_anchor) 'gap_ink' 면 제목 잉크 아래 끝 + gap_ink(고정), 'constant' 면 video_top, 'gap' 이면 title.y + lines×line_h + gap — 편마다 덜 흔들리는 쪽(데이터가 고름) · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy",
+  "keys": {}
+ },
+ "roles": [
+  "훅",
+  "도입",
+  "설명",
+  "효과",
+  "행동유도"
+ ],
+ "source_kind": "제품비하인드",
+ "rules_removed": {
+  "cap_dy": {
+   "was": {
+    "values": {
+     "fQPX6XeXeN0": -1344,
+     "DCXQjaWcZ-g": -1345,
+     "7Nj6b0mX4HM": -1447,
+     "e15KZ_nO1_Y": -1444,
+     "R0-bfj7JarA": -1342,
+     "Ez7KsS2K_Pk": -1444,
+     "seFkrVR-nYs": -993,
+     "orBlWWhejtc": -993
+    },
+    "default": -1344,
+    "range": [
+     -1447,
+     -993
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "why": "전체 화면 틀 — 자막 y 를 창 아래 끝 관계로 묶으면 두 무리 중앙(528, 원본에 없는 자리)으로 고정된다"
+  }
+ },
+ "channel_rules": {
+  "_why": "사장님 10-16 밤·10-17 결정 + 50편 bench·asr·judge 실측(값마다 출처)",
+  "script_frame": "channel/homedesignnote/대본설명서/script_frame.json",
+  "formula": "F1 (훅>도입>설명>효과>행동유도, 49편 중 14편 0.286 — script_frame 1_skeleton)",
+  "allow_hype": true,
+  "source_credit": false,
+  "story_required": true,
+  "climax_min": 4,
+  "climax_required": [
+   "센 시작",
+   "진짜 핵심 반전",
+   "~까지 난리"
+  ],
+  "climax_one_of": [
+   "숫자·권위",
+   "심지어 두 번째 반전"
+  ],
+  "opening_formula": "[누가]+[무엇을 하다가](구체 행동)+[귀찮아서·현타와서·답답해서]+[만들어버렸대요] — 센 말(빡친·열받은·미친) 1편 1회 이하",
+  "meme": 0,
+  "sfx": 0,
+  "template": "none",
+  "captions_only": true,
+  "bgm": "calm",
+  "brand": "잇썸홈",
+  "check_flip": {
+   "B6": "짤 0 이어야 통과(검수 매뉴얼 B6 '짤 되풀이 없음'을 이 채널은 '짤 0'으로 뒤집는다)",
+   "sfx": "효과음 0 이어야 통과"
+  },
+  "shot_contract": {
+   "unit": "자막 토막(1줄) = 컷 1개 — 그 토막 말의 핵심 명사·동작이 화면에 그대로(설계서 '장면 계약은 핵심 명사·동작마다')",
+   "cut_sec_median": 1.15,
+   "cut_sec_range": [
+    0.72,
+    2.32
+   ],
+   "sub_sec_median": 0.9,
+   "cut_eq_sub_pct": 94.0,
+   "cut_per_min": 43.9,
+   "first_cut_sec": 1.03,
+   "from": "C:/숏템_칼카피/homedesignnote/bench_main/bench.json criteria T.cut_sec·T.sub_sec·T.cut_eq_sub (45편)",
+   "by_role": "script_frame 5_shot_contract.by_role (역할별 장면 종류 비율)"
+  },
+  "sound": {
+   "narration": "남성 나레 45/49(judge voice: TTS남 35·사람남 10·여 4)",
+   "speech_rate_cps": 8.32,
+   "speech_rate_range": [
+    8.06,
+    8.74
+   ],
+   "speech_rate_from": "asr 49편 공백·기호 뺀 글자 ÷ (첫 낱말 시작~끝 낱말 끝), p10~p90",
+   "bgm_present": "50/50(judge bgm.present) — 원본 분위기는 '경쾌' 다수(경쾌·밝음 27/50 내외), 사장님 결정으로 우리 판은 차분",
+   "bgm_level_db_below_voice": 14.4,
+   "bgm_level_from": "bench A.openvoice 중앙(말 p90 − 바닥) 14.39dB, 바닥 −21.0 dBFS(50편 중앙)",
+   "master_lufs": -7.5,
+   "master_lufs_range": [
+    -21.9,
+    -6.0
+   ],
+   "master_from": "bench A.lufs 50편 중앙",
+   "bgm_candidates": [
+    {
+     "id": "honwaka_puppu",
+     "file": "shopping_shorts/assets/bgm_lib/honwaka_puppu.mp3",
+     "lufs": -14.3,
+     "lra": 3.5,
+     "why": "제미나이 청취(gemini-3-flash-preview, 앞 30초 10-17): 보컬 없음·차분 7/10·나레 밑 적합 → 1순위"
+    },
+    {
+     "id": "before_spring_ends",
+     "file": "shopping_shorts/assets/bgm_lib/before_spring_ends.mp3",
+     "lufs": -14.2,
+     "lra": 3.3,
+     "why": "제미나이 청취: 보컬 있음(0~30초 내내)·차분 4/10·나레 밑 부적합 → 탈락(보조 후보 mori_no_restaurant 도 보컬 있음)"
+    }
+   ],
+   "sfx": 0,
+   "voice_candidates": [
+    {
+     "name": "박창수",
+     "voice_id": "tc_6059dad0b83880769a50502f",
+     "why": "남성·'친근하고 편안한'(add_typecast_presets) — 원본 '~더라고요' 체험 말투"
+    },
+    {
+     "name": "지훈",
+     "voice_id": "tc_61f0859907085fc68561c9a1",
+     "why": "남성 young_adult·Conversational — 대화체"
+    }
+   ]
+  },
+  "watermark": {
+   "orig": "@Maison_HomeDino / @Home_design_notes",
+   "found": "43/50편",
+   "box_px": "x 373~706·y 1423~1475(25편) / x 384~695·y 1431~1466(16편)",
+   "ink_lum": "평균 밝기 220~255(불투명에 가까운 흰 글자 + 옅은 검정 그림자)",
+   "ours": "brand 층 '잇썸홈' x540 가운데·y1422 줄 칸 54·CcHiMelody 46px(잉크 높이 43 vs 원본 35~52)"
+  },
+  "excluded": "[광고] 표기(오른쪽 위, 일부 편) — 우리 판에 안 넣음(광고 아님)",
+  "make": {
+   "_why": "tools/calcopy/engine/preset_make.py(한 명령 제작기)가 읽는 값 — 작품1 render.py 두 벌에 흩어져 있던 값을 여기 한 곳으로(관제 097, 10-17). 코드에 채널 이름 분기 없음",
+   "window": [
+    1080,
+    1920
+   ],
+   "frame": {
+    "kind": "preset_save"
+   },
+   "hook": "first_piece",
+   "voice_id": "tc_6059dad0b83880769a50502f",
+   "voice_name": "박창수",
+   "tts_tempo": 1.2,
+   "tts_tempo_why": "15호 실측: tempo 없이 받은 박창수 → atempo 1.185 필요 — 다음 호출부터 TTS 단계에서 1.2(atempo ≈1.0)",
+   "cps": 8.32,
+   "atempo_range": [
+    0.8,
+    1.25
+   ],
+   "line_rate": {
+    "max_ratio": 1.05,
+    "last_lines": 2,
+    "why": "검수 B15 — 끝 문장이 평균보다 5% 넘게 빠르면 그 줄 구간만 늘린다",
+    "max_change": 0.1,
+    "why_change": "페이블 10-17 재발방지: 줄별 늘리기·줄이기는 ±10% 이내(수정3 끝 줄 0.698배가 말투를 바꿨을 가능성) — 넘으면 10%까지만 하고 B15 미달"
+   },
+   "end_pad_s": 0.4,
+   "narr_voice_dbfs": null,
+   "bgm": {
+    "file": "shopping_shorts/assets/bgm_lib/honwaka_puppu.mp3",
+    "db_below_voice": 14.4
+   },
+   "sfx": null,
+   "master": {
+    "pre": "dynaudnorm=f=100:g=9:p=0.9:m=20,acompressor=threshold=0.125:ratio=8:attack=1:release=40",
+    "lufs": -9.0,
+    "tp_limit_db": -2.0,
+    "gain_start": 16.0,
+    "gain_max": 22.0,
+    "why": "15호 render.py 그대로 — 리미터 −2(aac 뒤 최고점 ≤−0.5), 이득 상한 22(페이블: LUFS 맞추려 클리핑 안 함)"
+   },
+   "checks": {
+    "length_s": {
+     "allow": [
+      14.75,
+      29.61
+     ],
+     "from": "bench_main/bench.json 채널 50편 길이 p10~p90(B1, 페이블 10-17: 중앙 ±15% 대신)"
+    },
+    "lufs": {
+     "allow": [
+      -9.0,
+      -6.0
+     ],
+     "from": "bench A.lufs 중앙 −7.5 ±1.5(B2)"
+    },
+    "peak_max_dbfs": -0.5,
+    "cps": {
+     "allow": [
+      7.9,
+      8.74
+     ],
+     "from": "8.32 ±5%(B3)"
+    },
+    "cut_median_s": {
+     "allow": [
+      0.805,
+      1.667
+     ],
+     "from": "bench T.cut_sec 1.15 ±30%(B4) · 느린 쪽 상한 원본 +45%(페이블 10-17, 사장님 지적은 '너무 빠름' — 빠른 쪽 그대로)"
+    },
+    "cut_min_s": null,
+    "last_cut_min_s": null,
+    "last_line_cut_min_s": null,
+    "meme_ratio_max": 0.0,
+    "same_meme_max": 0,
+    "sfx_max_extra": null,
+    "sfx_max": 0,
+    "caption_max_chars": 13,
+    "edge_y_min": 60,
+    "aba_same_scene_s": 10.0,
+    "aba_why": "페이블 10-17: A-B-A 는 같은 소스 ±10초 이내(같은 장면·인물) 사이에 컷 하나가 끼었다 돌아올 때만 미달 — 같은 제품 다른 장면끼리 번갈아는 허용"
+   },
+   "tts_split": {
+    "max_chars": 35,
+    "at": ",",
+    "why": "페이블 10-17 재발방지: 공백 뺀 35자 넘는 문장은 쉼표 자리에서 나눠 따로 넣는다(알람 끝 문장 53자를 4.2초에 몰아 읽음)"
+   },
+   "atempo_why": "10-26 상한 1.35 → 1.25(타입캐스트 ≤1.25 — 칼카피_시작 §12 '빠르게 돌리면 발음이 이상해진다'). 박창수 tts_tempo 1.2 로 받으면 atempo ≈1.0(15호 실측)",
+   "rhythm": {
+    "_why": "판 리듬 4칸(관제263 페이블 E1·E2·E4, 읽기 주인 hybrid/styles.rhythm · 관문 render_bench.rhythm_gate — preset_gates.to_bench 가 st.rhythm 으로 넘긴다). 벤치 두유노 조회 상위 6편(_QqLEH4qlFQ·DCXQjaWcZ-g·iiBUscncqIk·WTgQPFfdSOQ·EINoAh8C9rQ·SU9YofB1IoI) — kal_analyze.media_of 와 같은 자(scratchpad bench_diff/media.json, 10-26)",
+    "cut_median": {
+     "v": 1.07,
+     "why": "벤치 6편 원본 컷 길이 중앙: _Qq 0.97·DCXQ 1.15·iiBU 1.8·WTgQ 0.99·EINo 1.3·SU9Y 0.83 → 중앙 1.07(범위 0.83~1.8). 옛 잇썸홈 6편(o1~o6) 0.97~1.53(중앙 1.28). rhythm_gate 는 진짜 컷 중앙이 ×1.3(1.39초)을 넘으면 멈춘다"
+    },
+    "hook_cuts_3s": {
+     "min": 2,
+     "why": "벤치 6편 0.1~3.0초 안 컷 경계 수(media_of cut_at): _Qq 3·DCXQ 2·iiBU 1·WTgQ 3·EINo 1·SU9Y 4 → 중앙 2.5 · p25 1.25 → min 2(키치잇판·잇템로그판처럼 중앙 쪽, 내림)"
+    },
+    "plain_share": {
+     "v": 0.79,
+     "tol": 0.12,
+     "why": "벤치 6편 줄판독 119줄 중 꾸밈 없는 줄(kal_analyze._decorated 전부 거짓) 94 = 0.79(편별 DCXQ 0.85·EINo 0.737·SU9Y 0.816·WTgQ 0.667·_Qq 0.895·iiBU 0.5(2줄)). 허용 ±0.12 = 2줄 편 빼고 편별 최대 거리(WTgQ 0.123). preset_make 자막은 등장 효과 없음(instant 110/112) — 0초 표지 카드만 꾸밈"
+    },
+    "photo_share_max": {
+     "v": 0.0,
+     "why": "벤치 6/6편 화면 = 해외 원본 영상 클립(스타일분석 §3·§10 눈 — 사진·쇼핑몰 그림 컷 0). 정지 사진 컷 금지(사장님 '사진·멈춤 없이', 창고판 README)"
+    }
+   },
+   "reuse": {
+    "adjacent_run": true,
+    "why": "사장님 10-26 결정 '가': 한 동작을 이어서 반복하는 컷(같은 원본·화면에서 바로 이어 붙은 컷 줄기)은 B13 거리 검사에서 뺀다 — 겹침(같은 프레임 다시)·사이 컷 낀 재등장은 계속 ×. 벤치 실측(channel/homedesignnote/preset/repeat_measure.py, 6편 컷 짝 그림 상관): 이웃 컷이 같은 촬영 줄기인 짝 EINo 0.88·0.80·DCXQ 0.67 등 · 이웃 짝 중 같은 그림(≥0.95) 0 → 겹침은 계속 ×. 판정 주인 quality_gate.reuse_violations_bench(adjacent_run)"
+   },
+   "cover_card": {
+    "font": "BMDOHYEON.ttf",
+    "px": 112,
+    "stroke": 11,
+    "line_gap": 1.12,
+    "y": 0.42,
+    "main": [
+     255,
+     255,
+     255
+    ],
+    "accent": "#7FD5E2",
+    "why": "0초 표지 카드 — 벤치 6/6편 frame0 = 장면 위 굵은 큰 글 2~3줄(잉크 80~140px, 흰 + 강조 줄 하늘 #7FD5E2 2편·파랑·노랑 각 1, 검정 외곽·그림자), 1프레임(4편)·3프레임(WTgQ) (스타일분석 §2·§9, 줄판독 frame0, work/f0_all.jpg 눈). 칼카피 규칙 '맨 앞 2프레임 썸네일 카드·3안 중 무작위'(thumb.THUMB_FRAMES·pick_option)와 합침: 프레임 수·3안 무작위는 그 규칙, 그림은 벤치 꼴 — 빨간 원·화살표·ㅋㅋ/ㄷㄷ 꼬리표는 벤치 0/6이라 안 쓴다. 문구 꼴 = 벤치 경고('절대 사지 마세요!')·명령('무조건 이거사세요!')·놀람 질문('이것도 만든다고?')·사연('와이프의 취미')·단정('신혼가전 필수템'). y 0.42 = 벤치 카드 가운데 높이(DCXQ 575~795 · f0_all 4편 40~55%) · 글꼴 BMDOHYEON(굵은 둥근 고딕 — 벤치 글꼴 미확정, 눈 대조)"
+   }
+  }
+ },
+ "verification": {
+  "at": "2026-10-17T00:53:48",
+  "tool": "channel/homedesignnote/preset/hdn_preset.py loo",
+  "tol": {
+   "cap_y0_px": 4,
+   "cap_h_pct": 12,
+   "cap_w_pct": 10,
+   "brand_cx_px": 6,
+   "brand_cy_px": 8
+  },
+  "videos_all_pass": "2/8",
+  "items": {
+   "자막 잉크 위 y": "18/24",
+   "자막 높이": "19/24",
+   "자막 폭": "19/24",
+   "브랜드 중심": "19/24"
+  },
+  "halo_median": {
+   "orig": 32.15,
+   "ours": 33.9
+  },
+  "detail": "C:\\숏템_칼카피\\homedesignnote\\preset_work\\loo\\loo_hdn.json",
+  "note": "build 전 loo 결과 — 이 build 뒤 다시 안 돌렸으면 옛 값"
+ }
+}

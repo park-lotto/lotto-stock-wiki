@@ -1,0 +1,7 @@
+{
+ "slug": "byeolsong",
+ "style": "릴리릴리",
+ "made_by": "hand 10-27 (공용 렌더러 판 — 틀·자막은 판 파일 tools/calcopy/hybrid/styles/릴리릴리판.json 이 주인)",
+ "note": "하이브리드 라인 프리셋 — 화면 틀(frame.json)·자막 칸은 판 파일에서 렌더러(render_bench)가 그린다. 옛 preset_make 꼴 frame.json 은 없다.",
+ "sources": []
+}

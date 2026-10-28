@@ -1,0 +1,108 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    9,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 480,
+   "w": 1080,
+   "h": 1440,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 210,
+   "lines": 2,
+   "font": "Pretendard",
+   "size": 100.5,
+   "line_h": 115,
+   "rgb": [
+    251,
+    246,
+    245
+   ],
+   "line_rgb": [
+    [
+     251,
+     246,
+     245
+    ],
+    [
+     246,
+     233,
+     0
+    ]
+   ],
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 7.3,
+   "enter": null,
+   "text": "안유진이 중독된다는\n미국 마트 보라 로션"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 1222,
+   "lines": 1,
+   "font": "SBAggroB",
+   "size": 75.0,
+   "line_h": 86,
+   "rgb": [
+    252,
+    250,
+    250
+   ],
+   "line_rgb": null,
+   "outline": {
+    "px": 4,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": {
+    "kind": "none",
+    "ms": 300
+   },
+   "emphasis": null
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "MfptnwqlGKs",
+ "made_from": {
+  "tool": "ih_preset.hand",
+  "from": "MfptnwqlGKs_auto.json",
+  "notes": [
+   "자막 = 나레 굵은체로 통일(SBAggroB 75·검정 외곽 4)"
+  ]
+ }
+}

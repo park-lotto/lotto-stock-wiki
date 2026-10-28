@@ -1,0 +1,7 @@
+{
+ "_rule": "기본값 = 이 프리셋 원본 영상(사장님 10-20). 글꼴·자막 외곽선은 frame.json 그대로. 회원이 바꾼 칸만 회원 값. 읽는 곳 = tools/calcopy/preview_request.preset_defaults",
+ "_from": "원본 남 TTS·7.88자/초(1편_STORMBAG/plan/voice_measure.json) · 지훈 speed 1.25 사장님 10-19 확정(샥탬스토리_시작.md:16,28) · BGM sweets(tools/calcopy/shark/render.py:55, 비율 기록 없음 → 엔진 기본) · 자막 replace(shark/render.py:50)",
+ "tts": {"provider": "typecast", "voice_id": "tc_61f0859907085fc68561c9a1", "name": "지훈", "preset_id": "tc-jihoon-stable", "tempo": 1.25},
+ "bgm": {"candidates": ["sweets"]},
+ "caption": {"mode": "replace"}
+}

@@ -107,6 +107,10 @@ def analyze_structure(full_text, max_key_tries=3):
         return {}
     prompt = _PROMPT.format(full_text=full_text[:4000],
                             categories="|".join(_CATEGORIES))
+    from shopping_shorts import vertex_route      # Vertex 먼저(관제 159) — 실패·꺼짐이면 아래 키풀 그대로
+    _vok, _vd = vertex_route.try_json("structure", prompt, _SCHEMA, what="구조분석")
+    if _vok:
+        return _vd
     for _ in range(max_key_tries):
         key, ki = comment_gen._current_key_and_idx()
         if key is None:

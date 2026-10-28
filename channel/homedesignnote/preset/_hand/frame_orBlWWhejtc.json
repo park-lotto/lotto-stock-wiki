@@ -1,0 +1,145 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    113,
+    80,
+    61
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 0,
+   "w": 1080,
+   "h": 1920,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 927,
+   "lines": 1,
+   "font": "CcPoorStory",
+   "size": 64,
+   "line_h": 74,
+   "rgb": [
+    245,
+    242,
+    241
+   ],
+   "line_rgb": null,
+   "outline": {
+    "px": 16,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 30,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": {
+    "kind": "none",
+    "ms": 300
+   },
+   "emphasis": null,
+   "glow": {
+    "px": 60,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "text": "잇썸홈",
+   "x": 540,
+   "y": 1422,
+   "w": 400,
+   "align": "center",
+   "lines": 1,
+   "font": "CcHiMelody",
+   "size": 46,
+   "line_h": 54,
+   "rgb": [
+    240,
+    240,
+    240
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": {
+    "dx": 1,
+    "dy": 1,
+    "blur": 3,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "orBlWWhejtc",
+ "made_from": {
+  "tool": "tools/calcopy/engine/to_frame.py",
+  "engine": "뜯기 1판 2026-10-15",
+  "font": {
+   "top1": "GamjaFlower.ttf",
+   "top1_score": 0.1365,
+   "picked_from": {
+    "file": "GamjaFlower.ttf",
+    "score": 0.1365
+   },
+   "font_confidence": "low",
+   "skipped": []
+  },
+  "title_ink_w": null,
+  "font_confidence": "low",
+  "notes": [
+   "글꼴 1위 GamjaFlower.ttf(0.1365) < 0.5 — 확신 낮음. 쓴 글꼴 CcGamjaFlower({'file': 'GamjaFlower.ttf', 'score': 0.1365})",
+   "자막 잰 높이 56.5px 에서 외곽선 17px×2 를 빼고 크기 역산",
+   "자막 자간·낱말 간격 0 — 잰 폭이 글 길이를 안 따른다(잰 폭/그린 폭 사분위 폭 0.31 > 0.15, 14개) — 창 안 자막이 영상 내용까지 잡힌 것으로 본다",
+   "자막 줄 수 {1: 17, 2: 2} → 최빈 1줄 칸",
+   "자막 등장 none — 뜯기 등장 표본 3개 중 '없음' 3개",
+   "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+   "손질(오푸스 HDN 10-17): to_frame 자막 ('CcGamjaFlower', 27.8, {'px': 17, 'rgb': [84, 80, 77]}, 0) → 6편과 같은 손질(크기 61·번짐·PoorStory), 잉크 위 898(y=892). brand '잇썸홈'. ※밝은 바탕 섞여 크롭 잉크 위(898) 오염 → bench 띠 [936,997] 로 y=930.",
+   "2판(10-17): LOO 렌더 대조에서 잉크 높이 원본의 0.89·폭 0.98 → 크기 61→64·줄 칸 74·y=잉크 위−9",
+   "3판(10-17 페이블 '번짐 보강'): 번짐 세기 원본 32~58 vs 우리 6 → 외곽선 16·그림자 blur 30·glow 60 으로 렌더 실측 32~35(fQPX). 자막 층 두 겹은 schema 가 caption 1장만 허용해 불가. 가장자리는 원본보다 딱딱함(렌더러에 부드러운 짙은 번짐 칸 없음)."
+  ],
+  "ocr_model": "gemini-3.5-flash"
+ }
+}

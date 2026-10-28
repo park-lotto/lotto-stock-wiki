@@ -259,7 +259,7 @@ def test_resynth_tts_job_applies_voice(monkeypatch, tmp_path):
 
     assert captured["kw"]["voice_id"] == "vZ"
     assert captured["kw"]["voice_settings"]["style"] == 0.3
-    assert captured["kw"]["speed"] == 1.3
+    assert captured["kw"]["speed"] == 1.0      # API에는 1.0 — 1.3은 뒤에서 atempo(관제 049)
     assert s.get_mix_job("j1")["status"] == "ready_for_review"
 
 

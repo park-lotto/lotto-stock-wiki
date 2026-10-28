@@ -1,0 +1,1 @@
+[실패] kr_OSZbnL--M8Y_3139 외 11개: Gemini 실패 — gemini-3.1-flash-lite: ServerError("503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}")

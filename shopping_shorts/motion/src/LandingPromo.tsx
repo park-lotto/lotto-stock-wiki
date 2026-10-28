@@ -27,6 +27,10 @@ const Kinetic: React.FC<{text: string; from: number; to: number; size: number}> 
 };
 
 // ── 1) 가격 비교 (1280x640, 9s) ─────────────────────
+// ★영상에 구워지는 기수·가격은 여기 한 곳. 값의 주인은 app.py:_cohort_info — 기수가 바뀌면 이 상수를 맞추고 다시 구워
+//   static/landing/price_compare.mp4 를 갈아야 한다(화면 글자는 자동으로 바뀌지만 영상은 안 바뀐다. 2026-10-12 1기 770,000 잔존).
+const NOW = {cohort: '2기', price: 880000, off: '41%'};
+const NEXT = {cohort: '3기', price: '990,000'};
 export const PRICE = {width: 1280, height: 640, fps: 30, durationInFrames: 270};
 const Lock: React.FC<{size: number}> = ({size}) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#8a93a0" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
@@ -52,8 +56,8 @@ export const PriceCompare: React.FC = () => {
   const ringT = pLocal >= 0 ? interpolate(pLocal, [0, 30], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}) : 1;
   const l = Math.min(1, lIn);
   const r = cardIn(8);
-  // 770,000 카운트업(등장) + 펄스 때 살짝 흔들림
-  const priceN = Math.round(interpolate(frame, [8, 34], [0, 770000], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}));
+  // 가격 카운트업(등장) + 펄스 때 살짝 흔들림
+  const priceN = Math.round(interpolate(frame, [8, 34], [0, NOW.price], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}));
   const priceStr = priceN.toLocaleString('ko-KR');
   const shake = pLocal >= 0 && pLocal < 12 ? Math.sin((pLocal / 12) * Math.PI * 3) * 2.5 : 0;
   const stamp = spring({frame: frame - 34, fps, config: {damping: 9, stiffness: 220, mass: 0.8}});
@@ -81,7 +85,7 @@ export const PriceCompare: React.FC = () => {
   return (
     <AbsoluteFill style={{background: BG, overflow: 'hidden', opacity: fade}}>
       <div style={{position: 'absolute', inset: 0, background: 'radial-gradient(60% 80% at 25% 40%, rgba(111,240,214,.10), transparent 70%)'}} />
-      {/* 왼쪽: 1기 */}
+      {/* 왼쪽: 지금 기수 */}
       <div
         style={{
           ...card,
@@ -94,7 +98,7 @@ export const PriceCompare: React.FC = () => {
           opacity: l,
         }}
       >
-        <div style={{display: 'inline-block', padding: '8px 18px', borderRadius: 999, background: MINT, color: '#062018', fontWeight: 900, fontSize: 26, letterSpacing: -0.5}}>1기 · 9월 30일 마감</div>
+        <div style={{display: 'inline-block', padding: '8px 18px', borderRadius: 999, background: MINT, color: '#062018', fontWeight: 900, fontSize: 26, letterSpacing: -0.5}}>{NOW.cohort} · 지금 모집 중</div>
         <div style={{marginTop: 14, fontSize: 30, fontWeight: 700, color: 'rgba(255,255,255,.55)', position: 'relative', display: 'table'}}>
           정가 1,500,000원
           <div style={{position: 'absolute', left: -6, top: '46%', height: 9, width: `calc(${strike * 100}% + 12px)`, background: RED, borderRadius: 5, transform: 'rotate(-5deg)', boxShadow: '0 0 12px rgba(255,77,77,.7)'}} />
@@ -109,7 +113,7 @@ export const PriceCompare: React.FC = () => {
           })}
         </div>
         <div style={{marginTop: 4, fontSize: 26, fontWeight: 700, color: MINT}}>지금 신청하면 이 가격 그대로</div>
-        {/* 49% 할인 도장 */}
+        {/* 할인 도장 */}
         <div
           style={{
             position: 'absolute',
@@ -131,7 +135,7 @@ export const PriceCompare: React.FC = () => {
             background: 'rgba(255,77,77,.08)',
           }}
         >
-          <div style={{fontSize: 50, lineHeight: 1, letterSpacing: -2}}>49%</div>
+          <div style={{fontSize: 50, lineHeight: 1, letterSpacing: -2}}>{NOW.off}</div>
           <div style={{fontSize: 28, lineHeight: 1.1}}>할인</div>
         </div>
         {/* 🔥 지금이 기회 스탬프 */}
@@ -157,7 +161,7 @@ export const PriceCompare: React.FC = () => {
           🔥 지금이 기회
         </div>
       </div>
-      {/* 오른쪽: 2기 */}
+      {/* 오른쪽: 다음 기수 */}
       <div
         style={{
           ...card,
@@ -168,21 +172,21 @@ export const PriceCompare: React.FC = () => {
           opacity: r * 0.92,
         }}
       >
-        <div style={{display: 'inline-block', padding: '8px 18px', borderRadius: 999, background: '#2a3038', color: '#aab2bd', fontWeight: 900, fontSize: 26, letterSpacing: -0.5}}>2기 · 10월 1일부터</div>
-        <div style={{marginTop: 28, fontSize: 30, fontWeight: 700, color: 'rgba(255,255,255,.28)'}}>업데이트 반영 가격</div>
+        <div style={{display: 'inline-block', padding: '8px 18px', borderRadius: 999, background: '#2a3038', color: '#aab2bd', fontWeight: 900, fontSize: 26, letterSpacing: -0.5}}>{NEXT.cohort} · 다음 기수</div>
+        <div style={{marginTop: 28, fontSize: 30, fontWeight: 700, color: 'rgba(255,255,255,.28)'}}>다음 기수 가격</div>
         <div style={{marginTop: 6, fontSize: 92, fontWeight: 900, color: '#6f7884', letterSpacing: -3, lineHeight: 1.1}}>
-          880,000<span style={{fontSize: 44, marginLeft: 6}}>원</span>
+          {NEXT.price}<span style={{fontSize: 44, marginLeft: 6}}>원</span>
         </div>
         <div style={{marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, fontSize: 26, fontWeight: 700, color: '#8a93a0'}}>
-          <Lock size={30} /> 2기 오픈 전까지 잠김
+          <Lock size={30} /> {NEXT.cohort}부터 이 가격
         </div>
       </div>
       {/* 하단 자막 */}
       <div style={{position: 'absolute', left: 0, right: 0, bottom: 0, height: 210, background: 'linear-gradient(0deg, rgba(4,7,10,.92) 0%, rgba(4,7,10,.75) 60%, rgba(4,7,10,0) 100%)'}} />
       <div style={{position: 'absolute', left: 40, right: 40, bottom: 44, display: 'flex', justifyContent: 'center'}}>
-        <Kinetic text="1기 동안 프로그램 [대규모 업데이트] → 2기부터 {가격 인상}" from={56} to={168} size={46} />
+        <Kinetic text={`[${NOW.cohort} 모집 중] → ${NEXT.cohort}부터 {가격 인상}`} from={56} to={168} size={46} />
         <div style={{transform: `scale(${frame >= 172 ? pulse : 1})`}}>
-          <Kinetic text="<9월까지만> 이 가격" from={172} to={D - 2} size={64} />
+          <Kinetic text={`<${NOW.cohort}까지만> 이 가격`} from={172} to={D - 2} size={64} />
         </div>
       </div>
     </AbsoluteFill>

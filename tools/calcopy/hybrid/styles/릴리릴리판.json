@@ -1,0 +1,127 @@
+{
+ "name": "릴리릴리판",
+ "base": "별헤는쏭판",
+ "_note": "릴리릴리(우리 브랜드, 사장님 10-27) = 별헤는쏭판(1차) 뼈대(창 자리·댓글카드·가사 자리·박자·노래) 위에 템플릿을 교체한 판. 2차(10-27 사장님 '템플릿을 교체 / 좌측상단 영어 지워') — 밤하늘 띠+검정 제목 칸 → 밝은 라벤더 머리판 통째, 창 안 원본 계정 줄 없앰. 댓글카드는 손대지 않음.",
+ "upgrades": [
+  {
+   "axis": "look",
+   "what": "머리판 교체: 밤하늘 띠(0~235)+검정 제목 칸 → 창 위 전체(0~476) 라벤더→연분홍 그러데이션 + 꽃잎 + 왼쪽 위 'lily lily' 이름표 + 아래 보라 줄(make_band --header 476, band.under)",
+   "why": "사장님 10-27 2차 '템플릿을 교체하라는 거'",
+   "source": "tools/calcopy/hybrid/make_band.py header",
+   "expect": "채널 구별",
+   "verify": "사람 판정"
+  },
+  {
+   "axis": "look",
+   "what": "제목: 흰 글/분홍 → 1줄 짙은 자주 #2A1640 · 2줄 흰 글+보라 외곽선 #7B4BD6, 글꼴 Jalnan2",
+   "why": "밝은 머리판 위에서 읽히게 · 벤치 결과 다른 글꼴",
+   "source": "별헤는쏭판 frame.title",
+   "expect": "채널 구별",
+   "verify": "사람 판정"
+  },
+  {
+   "axis": "look",
+   "what": "창 안 원본 계정 줄(📍영문 계정 이름) 없앰 — frame.credit null",
+   "why": "사장님 10-27 '영상 좌측상단에 영어 나온 것 지워야'",
+   "source": "별헤는쏭판 frame.credit",
+   "expect": "화면에 영어 없음",
+   "verify": "프레임 눈"
+  },
+  {
+   "axis": "look",
+   "what": "가사 일본어 줄 연분홍 → 연보라 #D9CCFF",
+   "why": "브랜드 색",
+   "source": "별헤는쏭판 frame.lyrics",
+   "expect": "채널 구별",
+   "verify": "사람 판정"
+  },
+  {
+   "axis": "length",
+   "what": "길이 8.1~21.9초(벤치 범위) → 목표 20초·허용 16~24초(소재 길이 관문·대본 검사·대본 지시 같이)",
+   "why": "사장님 10-27 '기본적으로 20초 정도 / ±어느 정도 허용' — 벤치 6편 8.2·15.1·17.7·18.8·21.8·22.0초(중앙 약 18초) 위로 20초 목표, ±4초",
+   "source": "별헤는쏭판 length·script.audit est_length",
+   "expect": "벤치 중앙 이상 길이",
+   "verify": "완성본 길이"
+  }
+ ],
+ "frame": {
+  "bg": [
+   214,
+   196,
+   255
+  ],
+  "why": "바탕 = 머리판 윗색(창 아래로는 안 보임) · 창 자리 1차 그대로",
+  "band": {
+   "src": "channel/byeolsong/preset/릴리릴리/header.png",
+   "box": [
+    0,
+    0,
+    1080,
+    476
+   ],
+   "under": true,
+   "why": "릴리릴리 머리판(make_band --header 476) — 제목 아래에 깐다(band.under)"
+  },
+  "title": [
+   {
+    "font": "Jalnan2.ttf",
+    "px": 96,
+    "ink_top": 170,
+    "color": "#2A1640",
+    "max_w": 980,
+    "why": "릴리릴리 2차 — 밝은 머리판 위 짙은 자주, 이름표(34~98) 아래"
+   },
+   {
+    "font": "Jalnan2.ttf",
+    "px": 96,
+    "ink_top": 300,
+    "color": "#FFFFFF",
+    "max_w": 980,
+    "stroke": {
+     "px": 9,
+     "color": "#7B4BD6"
+    },
+    "why": "릴리릴리 2차 — 흰 글 + 보라 외곽선"
+   }
+  ],
+  "credit": null,
+  "lyrics": {
+   "jp": {
+    "font": "NotoSansKR-Bold.otf",
+    "px": 46,
+    "cy": 1114,
+    "color": "#D9CCFF"
+   },
+   "ko": {
+    "font": "NotoSansKR-Bold.otf",
+    "px": 48,
+    "cy": 1180,
+    "color": "#FCFAFC"
+   },
+   "stroke": {
+    "px": 7,
+    "color": "#000000"
+   },
+   "why": "1차 그대로 + 일본어 줄 연분홍 #F1D4DD → 연보라 #D9CCFF(릴리릴리 변형)"
+  }
+ },
+ "length": {
+  "min": 16,
+  "target": 20,
+  "max": 24,
+  "why": "사장님 10-27 '기본적으로 20초 정도 / ±어느 정도 허용' — 벤치 6편 8.2·15.1·17.7·18.8·21.8·22.0초(중앙 약 18초) 위로 20초 목표, ±4초"
+ },
+ "script": {
+  "audit_patch": {
+   "replace": {
+    "est_length": {
+     "id": "est_length",
+     "kind": "est_length",
+     "min": 16,
+     "max": 24,
+     "why": "사장님 10-27 '기본적으로 20초 정도 / ±어느 정도 허용' — 벤치 6편 8.2·15.1·17.7·18.8·21.8·22.0초(중앙 약 18초) 위로 20초 목표, ±4초"
+    }
+   }
+  }
+ }
+}

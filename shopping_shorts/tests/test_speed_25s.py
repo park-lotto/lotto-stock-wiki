@@ -43,15 +43,19 @@ def test_default_voice_speed_is_listened_value():
       우리는 2.54초/20구간. 무음컷을 -30dB/0.05로 세게 하니 배속 1.6 그대로
       34.8초 → 29.3초가 됐다. 길이는 배속이 아니라 무음으로 맞춘다.
     """
-    assert mix_pipeline._DEFAULT_VOICE["speed"] == 1.6, \
-        "기본 배속이 1.6이 아니다 (2026-08-22 사장님 청취 확정)"
+    # ★2026-10-01 관제 049: 기본 성우(미나)는 **1.35** — 통째 합성 + atempo, 사장님 청취 확정.
+    #   위 08-22 기록(1.6·무음컷 -30dB/0.05)은 문장별 합성 시절 값이다. 정본은 voice_presets.default_speed.
+    from shopping_shorts import voice_presets
+    assert mix_pipeline._DEFAULT_VOICE["speed"] == 1.35 == voice_presets.default_speed(
+        mix_pipeline._DEFAULT_VOICE["voice_id"]), \
+        "기본 배속이 1.35가 아니다 (2026-10-01 사장님 청취 확정)"
 
 
 def test_speech_speed_estimate_follows_voice():
     """길이 추정 배속이 실제 보이스를 따라간다(둘이 어긋나면 길이 계산이 틀린다)."""
     got = script_gate._speech_cps()
-    # speed 1.6 + 무음컷 조합 실측 7.41자/초 — 무음컷을 빼고 재면 6.3으로 낮게 잡힌다.
-    assert 7.0 <= got <= 7.9, "추정 말속도 %.2f자/초가 실측 7.41과 다르다" % got
+    # 2026-10-01 관제 049: 5.7 × 1.23 = 7.01자/초 (옛 7.41 × 같은 job 실측 비 0.946).
+    assert 6.8 <= got <= 7.2, "추정 말속도 %.2f자/초가 7.01과 다르다" % got
 
 
 def test_25s_target_holds_maison_density():

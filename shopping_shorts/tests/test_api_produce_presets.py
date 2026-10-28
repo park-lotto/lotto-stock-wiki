@@ -51,3 +51,15 @@ def test_presets_rejects_bad_kind_and_shape(tmp_path, monkeypatch):
     c = _client(appmod, s.create_customer("u", "pw12"))
     assert c.get("/api/produce/presets/whatever").status_code == 404
     assert c.post("/api/produce/presets/hc_my_presets", json={"items": "x"}).status_code == 422
+
+
+def test_scene_style_my_presets_survive_browser_wipe(tmp_path, monkeypatch):
+    # 관제 183(10-12 이성택님) — 장면꾸미기 '내 프리셋'이 localStorage에만 있어 크롬 데이터 삭제 때 사라졌다.
+    appmod, s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("u", "pw12")
+    item = {"id": "k1", "name": "픽집 기본", "at": 1, "snap": {"presetId": "t11", "fontSet": "jalnan"}}
+    assert _client(appmod, cid).post("/api/produce/presets/scene_style_my_presets",
+                                     json={"items": [item]}).status_code == 200
+    # 새 브라우저(=새 클라이언트, 저장소 비어 있음)에서도 그대로 온다
+    got = _client(appmod, cid).get("/api/produce/presets/scene_style_my_presets").json()["items"]
+    assert got == [item]

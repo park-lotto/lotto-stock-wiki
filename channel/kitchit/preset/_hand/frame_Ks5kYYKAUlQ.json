@@ -1,0 +1,204 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "x": 0,
+   "y": 420,
+   "w": 1080,
+   "h": 1080,
+   "kind": "video",
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 42,
+   "y": 269,
+   "w": 996,
+   "h": 131,
+   "rgb": [
+    253,
+    230,
+    0
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "align": "center",
+   "line_rgb": [
+    [
+     255,
+     255,
+     255
+    ],
+    [
+     0,
+     0,
+     0
+    ]
+   ],
+   "line_scale": [
+    1.013,
+    0.987
+   ],
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "role": "title",
+   "x": 540,
+   "y": 135,
+   "w": 1000,
+   "lines": 2,
+   "font": "Jalnan2",
+   "size": 78.0,
+   "line_h": 133,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "text": "가을 햇볕에 피부 찢어질 때?\n박세리가 '몇 통째' 쓴 선크림!"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "w": 900,
+   "align": "center",
+   "y": 1310,
+   "lines": 1,
+   "font": "Jalnan2",
+   "size": 73.0,
+   "line_h": 82,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": null,
+   "outline": {
+    "px": 7,
+    "rgb": [
+     21,
+     22,
+     24
+    ]
+   },
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": {
+    "kind": "pop",
+    "ms": 400
+   },
+   "emphasis": {
+    "words": "auto",
+    "rgb": [
+     254,
+     221,
+     0
+    ],
+    "style": "color"
+   }
+  },
+  {
+   "kind": "text",
+   "align": "left",
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 2,
+    "rgb": [
+     50,
+     50,
+     50
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "role": "brand",
+   "x": 75,
+   "y": 431,
+   "w": 300,
+   "lines": 1,
+   "font": "Jalnan2",
+   "size": 43.0,
+   "line_h": 52,
+   "rgb": [
+    205,
+    205,
+    205
+   ],
+   "text": "키치잇"
+  },
+  {
+   "kind": "text",
+   "align": "center",
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "role": "label",
+   "x": 540,
+   "y": 1527,
+   "w": 900,
+   "lines": 1,
+   "font": "CcPretendard-Bold",
+   "size": 46.0,
+   "line_h": 56,
+   "rgb": [
+    182,
+    182,
+    182
+   ],
+   "text": "출처: 박세리의 속사정"
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "Ks5kYYKAUlQ",
+ "made_from": {
+  "tool": "kitchit_preset.hand",
+  "from": "Ks5kYYKAUlQ_auto.json",
+  "notes": [
+   "창 y420 1080x1080(8편 밝기 행 실측)",
+   "제목 1줄 흰 기울임 Jalnan2 79 · 2줄 노랑 박스 #FDE600 x42~1037 y269~399 + 검정 Jalnan2 77(박스 없는 편은 노랑 글)",
+   "자막 Jalnan2 73·가운데 y1351·외곽선 7px #151618 + 흰 바깥 테두리 약 2px(층 하나로 표현 못 함 — 자막팩 보강안)",
+   "자막 등장 pop 400ms(0프레임 22% → 0.27초 109% → 0.40초 100%, Cs-Ka '1년 내내' 30fps 실측)",
+   "강조색 돌림(노랑·초록·하늘·분홍·연보라)은 설명서 한 색만 — 돌림은 자막팩 보강안",
+   "로고 '키치잇' x75 y435 회색 + 출처 줄 y1535 회색(자동이 못 잡아 손으로)"
+  ]
+ }
+}

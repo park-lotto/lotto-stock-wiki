@@ -86,6 +86,7 @@ def test_scene_lab_data_shape(monkeypatch, tmp_path):
     assert d["ok"]
     data = d["data"]
     assert data["job_id"] == "j1"
+    assert data["scene_lab_revision"] == app_module._scene_lab_revision(store.get_mix_job("j1")["edit_plan"])
     assert data["syll_per_sec"] > 0
     assert set(data["segments"]) == {"s0-0", "s0-1", "s0-2"}
     seg = data["segments"]["s0-1"]
@@ -138,7 +139,9 @@ def test_scene_lab_apply_and_revert(monkeypatch, tmp_path):
     assert b["stretch_fill"] is True
     assert b["primary"]["seg_id"] == "s0-1"
     # revert → 100% 원상
-    assert client.post("/api/mix/scene_lab/j1/apply", json={"revert": True}).json()["reverted"]
+    rev = r.json()["revision"]
+    assert client.post("/api/mix/scene_lab/j1/apply",
+                       json={"revert": True, "base_revision": rev}).json()["reverted"]
     plan = store.get_mix_job("j1")["edit_plan"]
     assert "scene_override" not in plan["beats"][0]
     assert "scene_lab" not in plan
@@ -153,6 +156,51 @@ def test_scene_lab_apply_guards(monkeypatch, tmp_path):
                        ).status_code == 409
     _seed(store, "je")                               # 빈 payload → 422
     assert client.post("/api/mix/scene_lab/je/apply", json={"payload": {}}).status_code == 422
+
+
+def test_stale_scene_lab_tab_cannot_overwrite_newer_layout(monkeypatch, tmp_path):
+    """박세현님 재현: 렌더 뒤 다시 연 옛 화면의 통짜 자동저장은 최신 편성을 못 덮는다."""
+    client, store = _client(monkeypatch, tmp_path)
+    _seed(store)
+    first_rev = client.get("/api/mix/scene_lab/j1").json()["data"]["scene_lab_revision"]
+    newer = {"beats": [{"beat_idx": 0, "list": ["s0-0"], "stretch": False}]}
+    saved = client.post("/api/mix/scene_lab/j1/apply",
+                        json={"payload": newer, "base_revision": first_rev})
+    assert saved.status_code == 200
+
+    # 같은 첫 판본을 들고 있던 다른 탭이 뒤늦게 옛 배치를 보내도 200으로 받으면 안 된다.
+    stale = {"beats": [{"beat_idx": 0, "list": ["s0-2"], "stretch": False}]}
+    rejected = client.post("/api/mix/scene_lab/j1/apply",
+                           json={"payload": stale, "base_revision": first_rev})
+    assert rejected.status_code == 409
+    assert rejected.json()["code"] == "scene_lab_revision_conflict"
+    plan = store.get_mix_job("j1")["edit_plan"]
+    assert [x["seg_id"] for x in plan["beats"][0]["scene_override"]] == ["s0-0"]
+
+
+def test_old_client_without_revision_is_blocked_once_server_layout_exists(monkeypatch, tmp_path):
+    client, store = _client(monkeypatch, tmp_path)
+    _seed(store)
+    payload = {"beats": [{"beat_idx": 0, "list": ["s0-0"], "stretch": False}]}
+    assert client.post("/api/mix/scene_lab/j1/apply", json={"payload": payload}).status_code == 200
+    payload["beats"][0]["list"] = ["s0-2"]
+    assert client.post("/api/mix/scene_lab/j1/apply", json={"payload": payload}).status_code == 409
+
+
+def test_stale_tab_cannot_resurrect_layout_after_server_revert(monkeypatch, tmp_path):
+    client, store = _client(monkeypatch, tmp_path)
+    _seed(store)
+    empty_rev = client.get("/api/mix/scene_lab/j1").json()["data"]["scene_lab_revision"]
+    payload = {"beats": [{"beat_idx": 0, "list": ["s0-0"], "stretch": False}]}
+    made = client.post("/api/mix/scene_lab/j1/apply",
+                       json={"payload": payload, "base_revision": empty_rev}).json()
+    old_tab_rev = made["revision"]
+    reverted = client.post("/api/mix/scene_lab/j1/apply",
+                           json={"revert": True, "base_revision": old_tab_rev}).json()
+    assert reverted["reverted"] is True
+    # 되돌리기 전 판본을 들고 있던 탭이 되살리려 해도 빈 최신 편성을 이길 수 없다.
+    assert client.post("/api/mix/scene_lab/j1/apply",
+                       json={"payload": payload, "base_revision": old_tab_rev}).status_code == 409
 
 
 # ── ④ phash 헬퍼(순수 부분) ──────────────────────────────────────────────────

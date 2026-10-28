@@ -33,8 +33,10 @@ def test_over_cap_splits_into_capped_play_plus_freeze():
     assert play + freeze == pytest.approx(3.0)
 
 
-def test_default_cap_is_1_15():
-    assert _MAX_SLOWMO == 1.15
+def test_default_cap_is_config():
+    # 2026-10-01 관제 020: 상한 숫자는 config.MAX_SLOWMO 한 곳(1.15 → 1.2). 여기서 숫자를 다시 적지 않는다.
+    from shopping_shorts import config
+    assert _MAX_SLOWMO == config.MAX_SLOWMO
 
 
 def test_playback_factor_never_exceeds_cap():

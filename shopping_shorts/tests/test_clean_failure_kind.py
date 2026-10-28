@@ -19,6 +19,8 @@ CASES = [
     ("[60002] You don't have enough credits for this API. Purchase a subscription", "no_credit"),
     ("서버 재시작으로 중단되었습니다", "interrupted"),
     ("vmake code 10101 right reduce error", "unsupported"),
+    # 관제 176: 조립본에 컷 지도가 없어 업체를 부르기 전에 멈춘 사유(mix_pipeline.CLEAN_NO_MAP_MSG 원문)
+    ("조립된 영상이 편집 화면 계획과 달라 자막 지우기를 시작하지 않았습니다 [assembly_mismatch]", "assembly_mismatch"),
     # ★2026-09-17 실측(job 1556910737b6, 고급/Smart Pro): 업체 게이트웨이가 죽은 것이지
     #   영상 탓이 아니다. 30029='前置开放平台事件处理失败'(앞단 개방플랫폼 이벤트 처리 실패).
     #   같은 응답의 data.src_media_list엔 영상이 1080x1920·683프레임으로 **정상 파싱**돼

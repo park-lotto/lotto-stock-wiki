@@ -1,0 +1,59 @@
+{
+  "manifest_version": "0.3",
+  "name": "shortem",
+  "display_name": "숏템",
+  "version": "1.0.0",
+  "description": "숏템 채널 프리셋으로 내 PC에서 숏폼을 만듭니다(설치팩 필요).",
+  "long_description": "숏템 연결 파일입니다. 실제 실행 도구(렌더러·ffmpeg·파이썬)와 숏템 로컬 서버는 **숏템 설치팩**이 이 컴퓨터에 깔아 둡니다. 이 연결 파일은 그 서버를 Claude Desktop 에 등록하고 라이선스 키·작업 폴더만 받습니다.\n\n설치팩이 없으면 '숏템 준비 점검' 도구 하나만 보이고 설치 안내를 돌려줍니다.",
+  "author": {
+    "name": "숏템메이커",
+    "url": "https://shoppingshorts.duckdns.org"
+  },
+  "homepage": "https://shoppingshorts.duckdns.org/claude",
+  "support": "https://shoppingshorts.duckdns.org/claude",
+  "icon": "icon.png",
+  "server": {
+    "type": "node",
+    "entry_point": "launcher.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/launcher.js"],
+      "env": {
+        "SHORTEM_LICENSE": "${user_config.license_key}",
+        "SHORTEM_WORK": "${user_config.work_dir}",
+        "SHORTEM_CLIENT": "claude-desktop"
+      }
+    }
+  },
+  "tools": [
+    { "name": "shortem_setup", "description": "숏템 준비 점검: 라이선스·기기 등록·실행 도구·키 파일 확인과 자가점검(시험 렌더·목소리·다운로드)" },
+    { "name": "shortem_presets", "description": "쓸 수 있는 숏템 프리셋과 내 채널 프로필 목록" },
+    { "name": "shortem_profile", "description": "내 채널 프로필 조회(저장·수정은 숏템메이커 페이지에서)" },
+    { "name": "shortem_make", "description": "내 채널 프로필로 숏폼 한 편 만들기 — 9단계 중 지금 몇 번째인지와 내가 고를 것만 알려 줍니다" },
+    { "name": "shortem_job", "description": "만든 작업의 진행 단계·완성본 위치·검사 통과 여부 확인, 작업 취소" },
+    { "name": "shortem_feedback", "description": "숏템에 요청·버그 보내기" }
+  ],
+  "keywords": ["숏폼", "shorts", "video", "숏템"],
+  "license": "Proprietary",
+  "privacy_policies": ["https://shoppingshorts.duckdns.org/privacy"],
+  "compatibility": {
+    "platforms": ["win32", "darwin"],
+    "runtimes": { "node": ">=20.0.0" }
+  },
+  "user_config": {
+    "license_key": {
+      "type": "string",
+      "title": "숏템 라이선스 키",
+      "description": "숏템메이커 '클로드형' 페이지에서 복사한 키(SHORTEM-L1. 로 시작)를 붙여 넣으세요.",
+      "sensitive": true,
+      "required": true
+    },
+    "work_dir": {
+      "type": "directory",
+      "title": "작업 폴더",
+      "description": "완성 영상과 작업 기록이 저장될 폴더입니다.",
+      "required": false,
+      "default": "${DESKTOP}/숏템작업"
+    }
+  }
+}

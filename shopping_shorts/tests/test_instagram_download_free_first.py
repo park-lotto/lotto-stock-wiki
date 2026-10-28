@@ -11,7 +11,24 @@ import pytest
 from shopping_shorts import media_download as md
 
 
+def _no_ytdlp(*a, **kw):
+    raise RuntimeError("yt-dlp 병합 경로 실패(테스트: 네트워크 금지)")
+
+
+def test_ytdlp_merge_path_tried_first(monkeypatch, tmp_path):
+    """⓪ 1080p 병합 경로(_download_ytdlp)를 가장 먼저 탄다(2026-09-18) — 단일 스트림은 720p 천장."""
+    calls = []
+    monkeypatch.setattr(md, "_download_ytdlp",
+                        lambda url, d, max_attempts=3: calls.append(("ytdlp", url)) or (str(Path(d) / "hd.mp4"), ""))
+    monkeypatch.setattr(md, "resolve_media_url",
+                        lambda p, c: (_ for _ in ()).throw(AssertionError("병합 경로가 됐는데 단일 스트림을 불렀다")))
+    path, cap = md._download_instagram("https://www.instagram.com/reel/ABC123/", str(tmp_path))
+    assert path.endswith("hd.mp4") and cap == ""
+    assert calls == [("ytdlp", "https://www.instagram.com/reel/ABC123/")]
+
+
 def test_free_path_used_first(monkeypatch, tmp_path):
+    monkeypatch.setattr(md, "_download_ytdlp", _no_ytdlp)
     calls = []
     monkeypatch.setattr(md, "resolve_media_url",
                         lambda p, c: calls.append(("resolve", p, c)) or "https://cdn/x.mp4")
@@ -28,6 +45,7 @@ def test_free_path_used_first(monkeypatch, tmp_path):
 
 
 def test_falls_back_to_apify_when_free_path_fails(monkeypatch, tmp_path):
+    monkeypatch.setattr(md, "_download_ytdlp", _no_ytdlp)
     monkeypatch.setattr(md, "resolve_media_url", lambda p, c: "")     # 무료 경로 실패
     monkeypatch.setattr("shopping_shorts.apify_client.fetch_single_reel",
                         lambda url: {"videoUrl": "https://cdn/y.mp4", "caption": "캡션"})

@@ -1,0 +1,205 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 420,
+   "w": 1080,
+   "h": 1080,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "band",
+   "x": 42,
+   "y": 269,
+   "w": 996,
+   "h": 131,
+   "rgb": [
+    253,
+    230,
+    0
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 135,
+   "w": 1000,
+   "align": "center",
+   "lines": 2,
+   "font": "Jalnan2",
+   "size": 78,
+   "line_h": 133,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": [
+    [
+     255,
+     255,
+     255
+    ],
+    [
+     0,
+     0,
+     0
+    ]
+   ],
+   "line_scale": [
+    1.013,
+    0.987
+   ],
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "실장님도 탐낸 베이스\n알고 보니 1만원대?"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1310,
+   "w": 900,
+   "align": "center",
+   "lines": 1,
+   "font": "Jalnan2",
+   "size": 73,
+   "line_h": 82,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 7,
+    "rgb": [
+     21,
+     22,
+     24
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": {
+    "kind": "pop",
+    "ms": 400
+   },
+   "emphasis": {
+    "words": "auto",
+    "rgb": [
+     254,
+     221,
+     0
+    ],
+    "style": "color"
+   },
+   "text": null
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 75,
+   "y": 431,
+   "w": 300,
+   "align": "left",
+   "lines": 1,
+   "font": "Jalnan2",
+   "size": 43,
+   "line_h": 52,
+   "rgb": [
+    205,
+    205,
+    205
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 2,
+    "rgb": [
+     50,
+     50,
+     50
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "키치잇"
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 540,
+   "y": 1527,
+   "w": 900,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-Bold",
+   "size": 46,
+   "line_h": 56,
+   "rgb": [
+    182,
+    182,
+    182
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "출처: 윤쥬르 YOONJOUR 장윤주"
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "Nv99RyxmrfU"
+}

@@ -10,6 +10,15 @@
 import json
 
 from shopping_shorts.script_generate import _call_json
+from shopping_shorts.template_copy import EVEN_SHOPPING
+
+def _support_max():
+    """보조제목 한도 = 장면꾸미기 슬롯 계약(22자) 한 곳에서만 정한다(2026-09-22 사장님 결정).
+
+    종전엔 카나리 밖 고객은 32자(_LEGACY_SUBLINE_LEN)였는데, 화면 계약은 22자라 같은 값이
+    두 군데서 달랐다(0순위-B). 실측: 대본 8편 중 2편이 소제목이 두 줄로 터지고 양끝이 잘렸다.
+    """
+    return EVEN_SHOPPING.support_max
 
 _MAX_LEN = 26          # ★썸네일 문구는 두 줄이 전부다(2026-08-18). 40자였을 땐 화면에서 4줄로
 _LINE_LEN = 13         #   무너져 문단처럼 보였다 — 두 줄 x 13자를 넘기지 않는다.
@@ -79,7 +88,7 @@ _YOUTUBE_REVEAL_PROMPT = """너는 이븐쇼핑류 유튜브 쇼츠의 **첫 후
 - 단, 제품의 정체·작동 방식·핵심 효능은 대본과 다른 물건으로 바꾸지 않는다.
 - 마지막 재후킹에서 공개할 최강 장점은 subline에 미리 쓰지 않는다.
 - text는 두 줄, 각 줄 {linelen}자 이내, 전체 {maxlen}자 이내다.
-- subline은 32자 이내, upload_title은 50자 이내다.
+- subline은 {supportlen}자 이내, upload_title은 50자 이내다.
 - 마침표·이모지·해시태그·따옴표를 쓰지 않는다.
 
 좋은 세트 예:
@@ -106,7 +115,7 @@ _INSTAGRAM_STORY_PROMPT = """너는 인스타 릴스의 **관계썰 제목 세�
 - 관계 갈등이나 반전은 흥미롭게 각색해도 되지만 제품 정체·작동 방식·핵심 효능은 바꾸지 않는다.
 - 마지막 재후킹에서 공개할 최강 장점은 subline에 미리 쓰지 않는다.
 - text는 두 줄, 각 줄 {linelen}자 이내, 전체 {maxlen}자 이내다.
-- subline은 32자 이내, upload_title은 50자 이내다.
+- subline은 {supportlen}자 이내, upload_title은 50자 이내다.
 - 이모지·해시태그·따옴표를 쓰지 않는다.
 
 [대본]
@@ -127,7 +136,7 @@ _DEMO_DIRECT_PROMPT = """너는 제품을 직접 보여주는 쇼츠의 **시연
 - 대본에 없는 가족 갈등·천재 개발자·해외 품절 같은 서사를 억지로 만들지 않는다.
 - 제품 정체·작동 방식·핵심 효능은 대본과 다르게 바꾸지 않는다.
 - text는 두 줄, 각 줄 {linelen}자 이내, 전체 {maxlen}자 이내다.
-- subline은 32자 이내, upload_title은 50자 이내다.
+- subline은 {supportlen}자 이내, upload_title은 50자 이내다.
 - 마침표·이모지·해시태그·따옴표를 쓰지 않는다.
 
 [대본]
@@ -177,8 +186,9 @@ def suggest(script, want=_WANT, family=_DEFAULT_FAMILY):
         return []                      # 재료가 없으면 부르지 않는다(빈 재료로 지어낸다)
     family = normalize_family(family)
     paired = family in _PAIRED_FAMILIES
-    maxlen = 23 if paired else _MAX_LEN
-    linelen = 11 if paired else _LINE_LEN
+    maxlen = EVEN_SHOPPING.hook_total_max if paired else _MAX_LEN
+    # 두 줄 모두 둘째 줄 한도(10자)로 받는다 — 모델이 어느 줄에 긴 말을 넣을지 몰라 좁은 쪽에 맞춘다.
+    linelen = EVEN_SHOPPING.hook2_line_max if paired else _LINE_LEN
     prompt = _FAMILY_PROMPTS.get(family, _PROMPT)
     def clean(data):
         copies = data.get("copies") if isinstance(data, dict) else None
@@ -208,7 +218,11 @@ def suggest(script, want=_WANT, family=_DEFAULT_FAMILY):
                 subline = c.get("subline")
                 upload_title = c.get("upload_title")
                 if isinstance(subline, str) and subline.strip():
-                    item["subline"] = subline.strip()[:32]
+                    clean_subline = " ".join(subline.split())
+                    if len(clean_subline) > _support_max():
+                        continue                                              # 22자 계약 초과 후보 제외
+                    else:
+                        item["subline"] = clean_subline
                 if isinstance(upload_title, str) and upload_title.strip():
                     item["upload_title"] = upload_title.strip()[:50]
             out.append(item)
@@ -217,7 +231,8 @@ def suggest(script, want=_WANT, family=_DEFAULT_FAMILY):
         return out
 
     data = _call_json(prompt.format(script=s[:4000], maxlen=maxlen,
-                                    linelen=linelen, whylen=_WHY_LEN), _SCHEMA) or {}
+                                    linelen=linelen, supportlen=_support_max(),
+                                    whylen=_WHY_LEN), _SCHEMA) or {}
     out = clean(data)
     # 실측: 모델이 "11자 이내"를 보고도 12~15자로 네 후보를 전부 써서 결과가 0개가 됐다.
     # 안전폭을 풀지 않고, 받은 세트의 뜻은 유지한 채 길이만 한 번 압축한다.
@@ -225,7 +240,8 @@ def suggest(script, want=_WANT, family=_DEFAULT_FAMILY):
     if paired and not out and isinstance(raw, list) and raw:
         retry_prompt = f"""다음 제목 세트는 화면 폭 규칙을 어겼다.
 각 후보의 text만 정확히 두 줄로 다시 압축하라. 각 줄은 공백 포함 {linelen}자 이내,
-전체는 줄바꿈 포함 {maxlen}자 이내다. subline·upload_title·why의 의미는 유지하라.
+전체는 줄바꿈 포함 {maxlen}자 이내다. subline은 {_support_max()}자 이내로 줄이고
+upload_title·why의 의미는 유지하라.
 JSON 스키마대로 copies를 반환하라.
 
 [원래 후보]

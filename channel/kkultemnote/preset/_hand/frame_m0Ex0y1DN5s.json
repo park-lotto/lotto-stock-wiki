@@ -1,0 +1,139 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 420,
+   "w": 1080,
+   "h": 1120,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 188,
+   "lines": 2,
+   "font": "SBAggroB",
+   "size": 104.5,
+   "line_h": 107,
+   "rgb": [
+    253,
+    185,
+    206
+   ],
+   "line_rgb": [
+    [
+     252,
+     185,
+     206
+    ],
+    [
+     0,
+     145,
+     253
+    ]
+   ],
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -1.8,
+   "enter": null,
+   "text": "가방 안사는 장윤정이\n지갑 열게 만든 이유"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 1242,
+   "lines": 1,
+   "font": "Kkubulim",
+   "size": 90.0,
+   "line_h": 87,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": null,
+   "outline": {
+    "px": 5,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": {
+    "kind": "none",
+    "ms": 0
+   },
+   "emphasis": null
+  },
+  {
+   "kind": "text",
+   "w": 960,
+   "align": "center",
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "role": "label",
+   "x": 540,
+   "y": 1612,
+   "lines": 1,
+   "font": "CcPretendard-Regular",
+   "size": 40.0,
+   "line_h": 46,
+   "rgb": [
+    250,
+    250,
+    250
+   ],
+   "text": "출처 : $per_video"
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "m0Ex0y1DN5s",
+ "made_from": {
+  "tool": "kkt_preset.hand",
+  "from": "m0Ex0y1DN5s_sbaggro.json",
+  "notes": [
+   "제목 line_rgb = 강조색 분홍·파랑 고정(어절마다 흰과 섞는 규칙은 편마다 다름 — 스타일분석 §2)",
+   "자막 = 원음 꾸불림 90px 흰·검정 5px·컷인(30fps 실측) — 나레 자막은 자막팩 보강안",
+   "출처 줄(label) 손으로 추가 — y1615~1650 실측"
+  ]
+ }
+}

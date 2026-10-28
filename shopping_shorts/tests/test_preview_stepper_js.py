@@ -3,15 +3,7 @@ from pathlib import Path
 HTML = (Path(__file__).resolve().parents[1] / "static" / "produce.html").read_text(encoding="utf-8")
 
 
-def test_stepper_markup_and_functions_exist():
-    # ◀▶ 스텝퍼 마크업
-    assert 'id="beatStepper"' in HTML
-    assert 'onclick="stepBeat(-1)"' in HTML and 'onclick="stepBeat(1)"' in HTML
-    assert 'id="beatCount"' in HTML
-    # 핵심 함수
-    for fn in ["function loadBeatsPreview", "function showBeat", "function stepBeat"]:
-        assert fn in HTML, fn
-
+# (옛 피팅룸 마크업 시험은 2026-10-01 삭제 — 관제 058 C1, 옛 6단계 HTML 제거)
 
 def test_caption_preview_uses_variable_not_hardcoded():
     # 자막 미리보기 텍스트가 전역 변수를 쓰고, 하드코딩 문자열 직접대입은 사라졌다

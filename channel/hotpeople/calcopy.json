@@ -1,0 +1,56 @@
+{
+ "name": "뜨거운사람들",
+ "url": "",
+ "concept": "인물 썰(BGM만·자막)",
+ "stats": {
+  "subs": 21000,
+  "median_views": 138658,
+  "per_day": 1.0
+ },
+ "steps": {
+  "1": {
+   "state": "done",
+   "date": "2026-09-24",
+   "note": "최근 50편 실측, 상위10/하위10 대조",
+   "files": []
+  },
+  "2": {
+   "state": "done",
+   "date": "2026-09-28",
+   "note": "10층 기준표 실측 + bench 1단계 기준선 11 passed",
+   "files": [
+    "channel/hotpeople/칼카피_기준표_1안_2026-09-27.md"
+   ]
+  },
+  "3": {
+   "state": "done",
+   "date": "2026-09-28",
+   "note": "56편 훅 전수: 사실 훅 중앙 565k vs 인용 훅 51k",
+   "files": []
+  },
+  "4": {
+   "state": "done",
+   "date": "2026-09-28",
+   "note": "인물명 → 방송 클립 검색·다운로드, 주인공 등장 비율 자",
+   "files": []
+  },
+  "5": {
+   "state": "doing",
+   "date": "2026-09-28",
+   "note": "channel_presets/hotpeople(spec) 있음. 컨셉 프리셋 형식은 컨셉스튜디오 문서 대기",
+   "files": [
+    "shopping_shorts/channel_presets/hotpeople"
+   ]
+  },
+  "6": {
+   "state": "blocked",
+   "date": "2026-09-28",
+   "note": "안세영 v3 범위 안 / 우상혁 v3 내용 관문 막음(자 결함 2건, 결정 대기)",
+   "files": []
+  },
+  "7": {
+   "state": "todo"
+  }
+ },
+ "next": "자 결함 2건 결정(가장자리 잘린 얼굴·장면 검사 모델) → 시험 3편 완주"
+}

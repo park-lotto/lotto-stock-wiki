@@ -1,0 +1,872 @@
+{
+ "job": "sf1627ea43ac",
+ "model": "gemini-3.6-flash",
+ "calls": 7,
+ "secs": 169.2,
+ "product": "핑거 젓가락",
+ "claims": [
+  {
+   "id": "C1",
+   "text": "손가락 사이에 끼워 쓰는 핑거 젓가락",
+   "kind": "특징"
+  },
+  {
+   "id": "C2",
+   "text": "손에 양념이나 가루가 묻지 않는 효과",
+   "kind": "효과"
+  },
+  {
+   "id": "C3",
+   "text": "두 손가락을 찝는 동작만으로 작동",
+   "kind": "기능"
+  },
+  {
+   "id": "C4",
+   "text": "게임 패드 조작하며 동시에 과자 먹기",
+   "kind": "활용"
+  },
+  {
+   "id": "C5",
+   "text": "키보드와 마우스 작업 중 간식 섭취",
+   "kind": "활용"
+  },
+  {
+   "id": "C6",
+   "text": "알록달록하고 깔끔한 플라스틱 디자인",
+   "kind": "외관"
+  },
+  {
+   "id": "C7",
+   "text": "과자부터 젤리, 팝콘까지 집어내는 용도",
+   "kind": "활용"
+  },
+  {
+   "id": "C8",
+   "text": "여러 색상 스틱이 포함된 멀티 구성",
+   "kind": "구성"
+  },
+  {
+   "id": "C9",
+   "text": "양념 묻은 더러운 손을 깨끗하게 유지",
+   "kind": "전후"
+  }
+ ],
+ "cuts": [
+  {
+   "no": 1,
+   "src": "s0",
+   "start": 0.0,
+   "end": 1.45,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_001.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c001_1.jpg",
+   "scene_desc": "3D 프린터 판 위에 놓인 연두색 핑거 젓가락을 집어 올린다.",
+   "label": "제품 공개",
+   "claims": [
+    "C1",
+    "C6"
+   ]
+  },
+  {
+   "no": 2,
+   "src": "s0",
+   "start": 1.45,
+   "end": 2.5,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_002.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c002_1.jpg",
+   "scene_desc": "손가락 사이에 핑거 젓가락을 끼우고 찝는 동작을 취해 본다.",
+   "label": "착용 및 동작",
+   "claims": [
+    "C1",
+    "C3"
+   ]
+  },
+  {
+   "no": 3,
+   "src": "s0",
+   "start": 2.5,
+   "end": 3.37,
+   "strip": "/tmp/claimv_sf1627ea43ac/c003_0.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c003_0.jpg",
+   "scene_desc": "키보드 앞에서 손가락 사이에 핑거 젓가락을 끼운 모습을 보여준다.",
+   "label": "키보드 작업 환경",
+   "claims": [
+    "C1",
+    "C5"
+   ]
+  },
+  {
+   "no": 4,
+   "src": "s0",
+   "start": 3.37,
+   "end": 4.08,
+   "strip": "/tmp/claimv_sf1627ea43ac/c004_0.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c004_0.jpg",
+   "scene_desc": "여성이 분홍색 핑거 젓가락을 끼운 손과 과자 그릇을 함께 들어 보인다.",
+   "label": "간식 용도",
+   "claims": [
+    "C1"
+   ]
+  },
+  {
+   "no": 5,
+   "src": "s0",
+   "start": 4.08,
+   "end": 4.88,
+   "strip": "/tmp/claimv_sf1627ea43ac/c005_0.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c005_0.jpg",
+   "scene_desc": "3D 프린터베드 위에 출력된 연두색 플라스틱 핑거 젓가락이 보인다.",
+   "label": "플라스틱 외관",
+   "claims": [
+    "C6"
+   ]
+  },
+  {
+   "no": 6,
+   "src": "s0",
+   "start": 4.88,
+   "end": 5.67,
+   "strip": "/tmp/claimv_sf1627ea43ac/c006_0.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c006_0.jpg",
+   "scene_desc": "하얀색 핑거 젓가락을 검지와 중지 사이에 끼우고 찝는 동작을 시연한다.",
+   "label": "찝기 기능 시연",
+   "claims": [
+    "C1",
+    "C3"
+   ]
+  },
+  {
+   "no": 7,
+   "src": "s0",
+   "start": 5.67,
+   "end": 6.8,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_007.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c007_1.jpg",
+   "scene_desc": "3D 프린터 판에서 새로 출력된 하얀색 젓가락 부품을 떼어낸다.",
+   "label": "제품 분리",
+   "claims": []
+  },
+  {
+   "no": 8,
+   "src": "s0",
+   "start": 6.8,
+   "end": 7.7,
+   "strip": "/tmp/claimv_sf1627ea43ac/c008_0.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c008_0.jpg",
+   "scene_desc": "손가락 사이에 검은색 핑거 젓가락을 끼워 착용한 모습을 보여준다.",
+   "label": "손가락 끼우기",
+   "claims": [
+    "C1"
+   ]
+  },
+  {
+   "no": 9,
+   "src": "s0",
+   "start": 7.7,
+   "end": 8.85,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_009.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c009_1.jpg",
+   "scene_desc": "개발자가 손가락에 핑거 젓가락을 끼운 채 제품에 대해 설명한다.",
+   "label": "개발자 인터뷰",
+   "claims": [
+    "C1"
+   ]
+  },
+  {
+   "no": 10,
+   "src": "s0",
+   "start": 8.85,
+   "end": 9.88,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_010.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c010_1.jpg",
+   "scene_desc": "손가락에 핑거 젓가락을 끼우고 두 손가락을 오므려 찝는 동작을 해본다.",
+   "label": "동작 시연",
+   "claims": [
+    "C1",
+    "C3"
+   ]
+  },
+  {
+   "no": 11,
+   "src": "s0",
+   "start": 9.88,
+   "end": 10.78,
+   "strip": "/tmp/claimv_sf1627ea43ac/c011_0.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c011_0.jpg",
+   "scene_desc": "여성이 손가락 사이에 하얀색 핑거 젓가락을 끼우고 손을 보여준다.",
+   "label": "착용 모습",
+   "claims": [
+    "C1"
+   ]
+  },
+  {
+   "no": 12,
+   "src": "s0",
+   "start": 10.78,
+   "end": 11.72,
+   "strip": "/tmp/claimv_sf1627ea43ac/c012_0.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c012_0.jpg",
+   "scene_desc": "핑거 젓가락을 사용해 그릇에 담긴 감자칩 과자를 집어 올린다.",
+   "label": "과자 집기",
+   "claims": [
+    "C1",
+    "C3",
+    "C7"
+   ]
+  },
+  {
+   "no": 13,
+   "src": "s0",
+   "start": 11.72,
+   "end": 12.67,
+   "strip": "/tmp/claimv_sf1627ea43ac/c013_0.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c013_0.jpg",
+   "scene_desc": "키보드 위에서 손가락 사이에 흰색 핑거 젓가락을 끼우고 있음.",
+   "label": "핑거 젓가락 착용",
+   "claims": [
+    "C1"
+   ]
+  },
+  {
+   "no": 14,
+   "src": "s0",
+   "start": 12.67,
+   "end": 14.03,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_014.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c014_1.jpg",
+   "scene_desc": "검은색 핑거 젓가락으로 접시 속 젤리를 찝어 들어 올림.",
+   "label": "젤리 집어 올리기",
+   "claims": [
+    "C3",
+    "C7"
+   ]
+  },
+  {
+   "no": 15,
+   "src": "s0",
+   "start": 14.03,
+   "end": 15.27,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_015.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c015_1.jpg",
+   "scene_desc": "안경 쓴 남성이 핑거 젓가락을 사용해 과자를 입에 넣음.",
+   "label": "과자 집어먹기",
+   "claims": [
+    "C1"
+   ]
+  },
+  {
+   "no": 16,
+   "src": "s0",
+   "start": 15.27,
+   "end": 16.0,
+   "strip": "/tmp/claimv_sf1627ea43ac/c016_0.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c016_0.jpg",
+   "scene_desc": "분홍색 핑거 젓가락을 쥔 여성이 과자 그릇을 들고 카메라를 봄.",
+   "label": "착용 모습 공개",
+   "claims": [
+    "C1"
+   ]
+  },
+  {
+   "no": 17,
+   "src": "s0",
+   "start": 16.0,
+   "end": 17.27,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_017.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c017_1.jpg",
+   "scene_desc": "손가락에 과자 가루가 묻은 채 게임 패드를 쥐는 장면.",
+   "label": "양념 묻은 손가락",
+   "claims": []
+  },
+  {
+   "no": 18,
+   "src": "s0",
+   "start": 17.27,
+   "end": 18.08,
+   "strip": "/tmp/claimv_sf1627ea43ac/c018_0.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c018_0.jpg",
+   "scene_desc": "핑거 젓가락으로 그릇 안의 과자를 깔끔하게 집어 올림.",
+   "label": "과자 집기",
+   "claims": [
+    "C1",
+    "C7"
+   ]
+  },
+  {
+   "no": 19,
+   "src": "s0",
+   "start": 18.08,
+   "end": 19.13,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_019.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c019_1.jpg",
+   "scene_desc": "남성이 핑거 젓가락으로 그릇의 과자를 집어 입에 넣음.",
+   "label": "과자 입에 넣기",
+   "claims": [
+    "C1",
+    "C7"
+   ]
+  },
+  {
+   "no": 20,
+   "src": "s0",
+   "start": 19.13,
+   "end": 20.07,
+   "strip": "/tmp/claimv_sf1627ea43ac/c020_0.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c020_0.jpg",
+   "scene_desc": "손가락을 찝어 그릇 안의 링 모양 과자를 집어 올림.",
+   "label": "링 과자 집기",
+   "claims": [
+    "C3",
+    "C7"
+   ]
+  },
+  {
+   "no": 21,
+   "src": "s0",
+   "start": 20.07,
+   "end": 21.65,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_021.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c021_1.jpg",
+   "scene_desc": "과자 봉지 속으로 핑거 젓가락을 넣어 과자 칩을 집어냄.",
+   "label": "봉지 과자 집기",
+   "claims": [
+    "C1",
+    "C7"
+   ]
+  },
+  {
+   "no": 22,
+   "src": "s0",
+   "start": 21.65,
+   "end": 22.33,
+   "strip": "/tmp/claimv_sf1627ea43ac/c022_0.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c022_0.jpg",
+   "scene_desc": "손가락에 핑거 젓가락을 낀 채 키보드 타자와 마우스를 조작함.",
+   "label": "PC 작업 중 사용",
+   "claims": [
+    "C5"
+   ]
+  },
+  {
+   "no": 23,
+   "src": "s0",
+   "start": 22.33,
+   "end": 22.97,
+   "strip": "/tmp/claimv_sf1627ea43ac/c023_0.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c023_0.jpg",
+   "scene_desc": "검은색 핑거 젓가락을 착용한 손으로 게임 패드를 잡고 조작함.",
+   "label": "게임 패드 조작",
+   "claims": [
+    "C4"
+   ]
+  },
+  {
+   "no": 24,
+   "src": "s0",
+   "start": 22.97,
+   "end": 26.97,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_024.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c024_1.jpg",
+   "scene_desc": "키보드 작업, 깨끗한 손가락, 초록색 스틱 쥔 손이 이어짐.",
+   "label": "깨끗한 손 유지",
+   "claims": [
+    "C2",
+    "C5"
+   ]
+  },
+  {
+   "no": 25,
+   "src": "s0",
+   "start": 26.97,
+   "end": 27.82,
+   "strip": "/tmp/claimv_sf1627ea43ac/c025_0.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c025_0.jpg",
+   "scene_desc": "검은색 핑거 젓가락을 손가락 사이에 끼운 남성이 화면을 보며 이야기함.",
+   "label": "제품 착용 및 소개",
+   "claims": [
+    "C1"
+   ]
+  },
+  {
+   "no": 26,
+   "src": "s0",
+   "start": 27.82,
+   "end": 28.4,
+   "strip": "/tmp/claimv_sf1627ea43ac/c026_0.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c026_0.jpg",
+   "scene_desc": "손가락에 핑거 젓가락을 끼운 채 게임 패드를 잡고 과자를 집어 들고 있음.",
+   "label": "게임 중 과자 집기",
+   "claims": [
+    "C1",
+    "C4"
+   ]
+  },
+  {
+   "no": 27,
+   "src": "s1",
+   "start": 0.0,
+   "end": 6.81,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_027.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c027_2.jpg",
+   "scene_desc": "흰색 핑거 젓가락을 손가락에 끼우고 컴퓨터 키보드로 타이핑 작업을 진행함.",
+   "label": "키보드 작업 중 착용",
+   "claims": [
+    "C1",
+    "C5"
+   ]
+  },
+  {
+   "no": 28,
+   "src": "s2",
+   "start": 0.0,
+   "end": 1.3,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_028.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c028_1.jpg",
+   "scene_desc": "과자 봉지를 뜯은 후 맨손으로 시즈닝이 묻은 치토스 과자를 집어 들어 올림.",
+   "label": "맨손 과자 섭취",
+   "claims": []
+  },
+  {
+   "no": 29,
+   "src": "s2",
+   "start": 1.3,
+   "end": 2.67,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_029.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c029_1.jpg",
+   "scene_desc": "맨손으로 과자를 집어 먹은 탓에 두 손가락 끝에 주황색 가루가 묻어있음.",
+   "label": "손가락 가루 오염",
+   "claims": []
+  },
+  {
+   "no": 30,
+   "src": "s2",
+   "start": 2.67,
+   "end": 4.27,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_030.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c030_1.jpg",
+   "scene_desc": "주황색 가루가 묻은 손가락으로 닌텐도 스위치 게임 콘트롤러를 잡고 있음.",
+   "label": "오염된 손으로 조작",
+   "claims": []
+  },
+  {
+   "no": 31,
+   "src": "s2",
+   "start": 4.27,
+   "end": 5.77,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_031.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c031_1.jpg",
+   "scene_desc": "3D 프린터 노즐이 움직이며 초록색 플라스틱 핑거 젓가락을 출력하고 있음.",
+   "label": "3D 프린터 제작",
+   "claims": []
+  },
+  {
+   "no": 32,
+   "src": "s2",
+   "start": 5.77,
+   "end": 7.0,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_032.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c032_1.jpg",
+   "scene_desc": "3D 프린터의 가열 베드 위에서 출력 완료된 초록색 핑거 젓가락을 보여줌.",
+   "label": "완성된 제품 확인",
+   "claims": []
+  },
+  {
+   "no": 33,
+   "src": "s2",
+   "start": 7.0,
+   "end": 10.73,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_033.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c033_1.jpg",
+   "scene_desc": "완성된 초록색 핑거 젓가락을 손가락 사이에 끼우고 찝는 동작을 시연함.",
+   "label": "착용 및 찝기 동작",
+   "claims": [
+    "C1",
+    "C3"
+   ]
+  },
+  {
+   "no": 34,
+   "src": "s2",
+   "start": 10.73,
+   "end": 11.5,
+   "strip": "/tmp/claimv_sf1627ea43ac/c034_0.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c034_0.jpg",
+   "scene_desc": "치토스 과자 봉지의 윗부분을 두 손으로 잡고 옆으로 당겨 개봉하는 모습.",
+   "label": "과자 봉지 개봉",
+   "claims": []
+  },
+  {
+   "no": 35,
+   "src": "s2",
+   "start": 11.5,
+   "end": 13.53,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_035.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c035_1.jpg",
+   "scene_desc": "손가락에 끼운 초록색 핑거 젓가락으로 과자 봉지 속 치토스를 집어 올림.",
+   "label": "핑거 젓가락 과자 집기",
+   "claims": [
+    "C1",
+    "C2",
+    "C3"
+   ]
+  },
+  {
+   "no": 36,
+   "src": "s2",
+   "start": 13.53,
+   "end": 14.93,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_036.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c036_1.jpg",
+   "scene_desc": "손가락에 핑거 젓가락을 끼운 채 닌텐도 스위치 게임을 하며 과자를 집어 먹음.",
+   "label": "게임 중 과자 섭취",
+   "claims": [
+    "C1",
+    "C2",
+    "C4"
+   ]
+  },
+  {
+   "no": 37,
+   "src": "s3",
+   "start": 0.0,
+   "end": 6.76,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_037.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c037_2.jpg",
+   "scene_desc": "책을 보며 손가락 젓가락을 끼고 감자칩을 집어 올린다.",
+   "label": "독서 중 과자 섭취",
+   "claims": [
+    "C1",
+    "C7"
+   ]
+  },
+  {
+   "no": 38,
+   "src": "s4",
+   "start": 0.0,
+   "end": 6.82,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_038.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c038_2.jpg",
+   "scene_desc": "핑크색 젓가락을 손가락에 끼운 채 키보드와 마우스를 조작한다.",
+   "label": "키보드·마우스 작업",
+   "claims": [
+    "C1",
+    "C5"
+   ]
+  },
+  {
+   "no": 39,
+   "src": "s4",
+   "start": 6.82,
+   "end": 13.63,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_039.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c039_2.jpg",
+   "scene_desc": "핑거 젓가락으로 가루 양념이 묻은 과일 조각을 집어 올린다.",
+   "label": "양념 과일 집기",
+   "claims": [
+    "C7"
+   ]
+  },
+  {
+   "no": 40,
+   "src": "s4",
+   "start": 13.63,
+   "end": 20.18,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_040.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c040_2.jpg",
+   "scene_desc": "여성이 핑거 젓가락으로 집은 과일을 맛있게 먹는 모습이다.",
+   "label": "간식 섭취",
+   "claims": [
+    "C7"
+   ]
+  },
+  {
+   "no": 41,
+   "src": "s5",
+   "start": 0.0,
+   "end": 5.07,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_041.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c041_1.jpg",
+   "scene_desc": "손가락 젓가락을 착용한 상태로 마우스와 견과류 그릇 옆으로 이동한다.",
+   "label": "간식 섭취 준비",
+   "claims": [
+    "C1",
+    "C5"
+   ]
+  },
+  {
+   "no": 42,
+   "src": "s5",
+   "start": 5.07,
+   "end": 10.14,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_042.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c042_1.jpg",
+   "scene_desc": "젓가락으로 견과류를 찝어 올려 먹고 마우스를 조작한다.",
+   "label": "견과류 집기 및 작업",
+   "claims": [
+    "C3",
+    "C5",
+    "C7"
+   ]
+  },
+  {
+   "no": 43,
+   "src": "s5",
+   "start": 10.14,
+   "end": 15.21,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_043.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c043_1.jpg",
+   "scene_desc": "손가락에 젓가락을 착용한 채 마우스를 자연스럽게 조작한다.",
+   "label": "마우스 조작",
+   "claims": [
+    "C5"
+   ]
+  },
+  {
+   "no": 44,
+   "src": "s6",
+   "start": 0.0,
+   "end": 3.9,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_044.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c044_1.jpg",
+   "scene_desc": "손가락 사이에 젓가락을 끼우고 키보드를 원활하게 입력한다.",
+   "label": "착용 후 타자",
+   "claims": [
+    "C1",
+    "C5"
+   ]
+  },
+  {
+   "no": 45,
+   "src": "s6",
+   "start": 3.9,
+   "end": 7.8,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_045.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c045_1.jpg",
+   "scene_desc": "키보드를 치다가 과자 봉지에서 나쵸를 집어 올린다.",
+   "label": "과자 집기",
+   "claims": [
+    "C5",
+    "C7"
+   ]
+  },
+  {
+   "no": 46,
+   "src": "s7",
+   "start": 0.0,
+   "end": 1.07,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_046.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c046_1.jpg",
+   "scene_desc": "두 손으로 연두색과 핑크색 젓가락을 찝는 동작을 시연한다.",
+   "label": "집는 동작 시연",
+   "claims": [
+    "C1",
+    "C3",
+    "C6"
+   ]
+  },
+  {
+   "no": 47,
+   "src": "s7",
+   "start": 1.07,
+   "end": 2.43,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_047.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c047_1.jpg",
+   "scene_desc": "연두, 핑크, 파랑, 주황 등 다양한 색상의 젓가락을 들어 보인다.",
+   "label": "여러 색상 구성",
+   "claims": [
+    "C6",
+    "C8"
+   ]
+  },
+  {
+   "no": 48,
+   "src": "s7",
+   "start": 2.43,
+   "end": 3.43,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_048.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c048_1.jpg",
+   "scene_desc": "봉지 과자에서 그릇으로 팝콘을 수북하게 쏟아 담는다.",
+   "label": "그릇에 팝콘 담기",
+   "claims": []
+  },
+  {
+   "no": 49,
+   "src": "s7",
+   "start": 3.43,
+   "end": 5.6,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_049.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c049_1.jpg",
+   "scene_desc": "노트북 키보드 작업을 하며 핑거 젓가락으로 팝콘을 집어 먹는다.",
+   "label": "작업 중 간식 섭취",
+   "claims": [
+    "C1",
+    "C5",
+    "C7"
+   ]
+  },
+  {
+   "no": 50,
+   "src": "s7",
+   "start": 5.6,
+   "end": 6.47,
+   "strip": "/tmp/claimv_sf1627ea43ac/c050_0.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c050_0.jpg",
+   "scene_desc": "손가락에 젓가락을 착용한 상태로 게임 패드를 잡아 조작한다.",
+   "label": "게임 패드 조작",
+   "claims": [
+    "C1",
+    "C4"
+   ]
+  },
+  {
+   "no": 51,
+   "src": "s7",
+   "start": 6.47,
+   "end": 8.5,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_051.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c051_1.jpg",
+   "scene_desc": "게임 패드를 잡고 게임을 하며 아래 놓인 과자를 집어 먹는다.",
+   "label": "게임하며 과자 먹기",
+   "claims": [
+    "C1",
+    "C4",
+    "C7"
+   ]
+  },
+  {
+   "no": 52,
+   "src": "s7",
+   "start": 8.5,
+   "end": 9.92,
+   "strip": "/tmp/claimv_sf1627ea43ac/strip_052.jpg",
+   "mid": "/tmp/claimv_sf1627ea43ac/c052_1.jpg",
+   "scene_desc": "분홍, 초록, 주황, 파랑 등 여러 색상의 핑거 젓가락을 모아 보여준다.",
+   "label": "다양한 색상 구성",
+   "claims": [
+    "C6",
+    "C8"
+   ]
+  }
+ ],
+ "beats": [
+  {
+   "text": "손 안 묻히는 천재의 발명품",
+   "role": "훅",
+   "need": 2.15,
+   "cur_seg": "grab_tiktok_8c98ba2b6a20-7",
+   "cur_src": "s2",
+   "cur_start": 11.5,
+   "cur_end": 13.533
+  },
+  {
+   "text": "최근 딱 봤을 때는 손에 가루 묻는 불편을 없애려 만들었다는데",
+   "role": "미끼",
+   "need": 4.31,
+   "cur_seg": "grab_tiktok_8c98ba2b6a20-1",
+   "cur_src": "s2",
+   "cur_start": 1.3,
+   "cur_end": 2.667
+  },
+  {
+   "text": "이건 바로 손가락 사이에 끼워 장착하는 도구",
+   "role": "공개",
+   "need": 3.12,
+   "cur_seg": "grab_instagram_83c51f4739a8-0",
+   "cur_src": "s4",
+   "cur_start": 0.0,
+   "cur_end": 6.816
+  },
+  {
+   "text": "이게 말도 안 되는게 끼운 채 과자 먹으며 가루 없이 키보드를 친다는 거",
+   "role": "고조1",
+   "need": 5.11,
+   "cur_seg": "grab_tiktok_a57ef299cb74-0",
+   "cur_src": "s1",
+   "cur_start": 0.0,
+   "cur_end": 6.805011
+  },
+  {
+   "text": "심지어 마우스 쓰며 손 안 더럽히고 간식 먹는다고",
+   "role": "고조2",
+   "need": 3.43,
+   "cur_seg": "grab_instagram_ed23cd5642b6-1",
+   "cur_src": "s5",
+   "cur_start": 5.07,
+   "cur_end": 10.14
+  },
+  {
+   "text": "근데 진짜 충격적인 포인트는 즙 묻는 귤도 집어 먹는다고",
+   "role": "충격",
+   "need": 4.56,
+   "cur_seg": "grab_instagram_83c51f4739a8-1",
+   "cur_src": "s4",
+   "cur_start": 6.816,
+   "cur_end": 13.633
+  },
+  {
+   "text": "다양한 색상으로 나온다는 거",
+   "role": "마무리",
+   "need": 1.53,
+   "cur_seg": "grab_instagram_963e405c091f-1",
+   "cur_src": "s7",
+   "cur_start": 1.067,
+   "cur_end": 2.433
+  }
+ ],
+ "lines": [
+  {
+   "i": 0,
+   "claims": [],
+   "needs_scene": false,
+   "unlisted": ""
+  },
+  {
+   "i": 1,
+   "claims": [
+    "C2"
+   ],
+   "needs_scene": true,
+   "unlisted": ""
+  },
+  {
+   "i": 2,
+   "claims": [
+    "C1"
+   ],
+   "needs_scene": true,
+   "unlisted": ""
+  },
+  {
+   "i": 3,
+   "claims": [
+    "C2",
+    "C5"
+   ],
+   "needs_scene": true,
+   "unlisted": ""
+  },
+  {
+   "i": 4,
+   "claims": [
+    "C2",
+    "C5",
+    "C9"
+   ],
+   "needs_scene": true,
+   "unlisted": ""
+  },
+  {
+   "i": 5,
+   "claims": [],
+   "needs_scene": true,
+   "unlisted": "즙 묻는 귤을 집어 먹는 용도"
+  },
+  {
+   "i": 6,
+   "claims": [
+    "C8"
+   ],
+   "needs_scene": true,
+   "unlisted": ""
+  }
+ ]
+}

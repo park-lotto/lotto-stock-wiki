@@ -38,6 +38,7 @@ def test_migration_moves_old_labels_to_hometem(tmp_path):
     s.save_script("B", {"full_text": "살림템", "segments": []}, category="생활용품")
     s.save_script("C", {"full_text": "감자요리", "segments": []}, category="레시피")
 
+    Store.reset_schema_cache(db)   # 같은 프로세스 안 '재기동' 흉내(2026-09-18 스키마 1회 가드)
     Store(db)  # 재기동 = 마이그레이션 재실행
 
     assert s.get_extract("A")["category"] == "홈템"
@@ -58,6 +59,7 @@ def test_migration_drops_stale_stat_buckets(tmp_path):
                       "VALUES (?,?,?,?,?,?,?)",
                       (cat, "hook", "라벨", "설명", "[]", 5, "2026-07-15"))
 
+    Store.reset_schema_cache(db)   # 같은 프로세스 안 '재기동' 흉내
     Store(db)  # 재기동
 
     with Store(db)._conn() as c:

@@ -55,12 +55,18 @@ def test_api_mix_tts_regen_merges_override_onto_job_voice_snapshot(monkeypatch):
         "voice_id": "JOB_V", "model_id": "eleven_multilingual_v2",
         "silence_trim": "strong", "settings": {"stability": 0.5},
     }
-    job = {"edit_plan": {"beats": []}, "status": "ready_for_review", "voice": job_voice}
+    # 실제 API 계약처럼 요청 대상 비트가 존재하는 잡을 쓴다. 통합 속도는 비트 단위라
+    # 없는 번호는 404가 정상이며, 빈 beats로는 설정 병합 경로까지 도달하지 않는다.
+    job = {"edit_plan": {"beats": [{"beat_idx": 0}]},
+           "status": "ready_for_review", "voice": job_voice}
 
     class FakeStore:
         def __init__(self, *a, **k): pass
         def get_mix_job(self, j): return job
     monkeypatch.setattr(appmod, "Store", FakeStore)
+    # 이 테스트는 음성 설정 병합만 검증한다. 실제 키 유무는 전용
+    # test_require_own_key.py에서 검증하므로 로컬 설정값에 따라 선행 402가 나지 않게 격리한다.
+    monkeypatch.setattr(appmod, "_need_own_key_or_402", lambda *a, **k: None)
 
     body = {"voice_id": "TONE_V", "settings": {"stability": 0.2}}  # speed 미포함
     bg = BackgroundTasks()
@@ -109,3 +115,44 @@ def test_resynth_updates_target_seconds_and_conforms(monkeypatch, tmp_path):
     b = plan["beats"][0]
     assert b["target_seconds"] == 16.8, "실측 길이로 갱신 안 됨 — 초가 두 벌로 남는다"
     assert b.get("sync_gap", 0) > 0.8, "화면 부족을 sync_gap으로 안 남기면 UI가 경고를 못 띄운다"
+
+
+def test_speed_only_reuses_one_base_voice_and_returns_to_original(monkeypatch, tmp_path):
+    """배속 왕복은 TTS를 새로 읽히지 않고 같은 기준 음성에서 파생해야 한다."""
+    synth_calls = []
+
+    def fake_synth(narr, out, **kw):
+        synth_calls.append(kw["voice"])
+        Path(out).write_bytes(b"ORIGINAL")
+
+    def fake_post(src, out, tempo=1.0, **kw):
+        Path(out).write_bytes(Path(src).read_bytes() + f"@{tempo}".encode())
+        return str(out)
+
+    monkeypatch.setattr(mp, "synthesize_line", fake_synth)
+    monkeypatch.setattr(mp.audio_post, "post_process", fake_post)
+    monkeypatch.setattr(mp, "_probe_duration", lambda p: 2.0)
+    monkeypatch.setattr(mp, "_beat_words", lambda *a, **k: [])
+    monkeypatch.setattr(mp, "_conform_beats", lambda *a, **k: None)
+
+    beat = {"beat_idx": 0, "narration": "같은 문장", "sync_speed": 1.4}
+    plan = {"beats": [beat]}
+
+    class FakeStore:
+        def __init__(self, *a, **k): pass
+        def get_mix_job(self, j): return {"edit_plan": plan, "status": "ready_for_review"}
+        def update_mix_job(self, j, **f): pass
+    monkeypatch.setattr(mp, "Store", FakeStore)
+
+    # API가 넘기는 speed는 기본 1.6 × 상대 1.4인 절대값. 기준 합성에는 1.6만 들어간다.
+    mp.resynth_one_beat("job1", 0, {"voice_id": "V", "speed": 2.24},
+                        "db", str(tmp_path), speed_only=True)
+    assert synth_calls == [{"voice_id": "V", "speed": 1.6}]
+    assert Path(beat["tts_path"]).read_bytes() == b"ORIGINAL@1.4"
+
+    # 1.0으로 복귀해도 재합성 0회, 기준 파일을 그대로 복사한다.
+    beat["sync_speed"] = 1.0
+    mp.resynth_one_beat("job1", 0, {"voice_id": "V", "speed": 1.6},
+                        "db", str(tmp_path), speed_only=True)
+    assert len(synth_calls) == 1
+    assert Path(beat["tts_path"]).read_bytes() == b"ORIGINAL"

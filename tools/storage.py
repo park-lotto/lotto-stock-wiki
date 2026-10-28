@@ -1,0 +1,762 @@
+# -*- coding: utf-8 -*-
+"""저장 층(C/D) 관제 v2 — SSD(C) 에는 코드가 도는 것만, 나머지는 외장 HDD(D:\\숏템) 로. 지도 관제/storage.json.
+
+실측(2026-09-29): C = SSD 232GB(여유 5~9GB) · D = USB HDD 3.7TB(여유 3,555GB).
+  D 큰 파일 쓰기 124MB/s — 영상·보관엔 충분. 4KB 파일 2000개 쓰기 C 0.9초 vs D 8.9초 — 코드·pytest 는 D 에서 못 돈다.
+그래서: 활성 트랙(7일 안에 손댄 것)·DB·병합 임시 = C. 식은 트랙은 **폴더를 D 로 옮기고 C 에 정션** → 경로가 그대로라
+세션이 열 수 있고(느릴 뿐), 다시 일할 땐 `warm` 으로 C 로 되돌린다. 정션 뒤 git worktree 동작은 실측으로 확인했다.
+
+★판단의 주인: 이 파일의 plan() 하나. "옮겨도 되나"를 다른 곳에서 계산하지 마라(0순위-C).
+★apply 는 D 가 꽂혀 있고 규칙 파일(D:/숏템/_저장규칙.txt)이 보일 때만. D 가 빠지면 정션이 죽는다 — status 가 빨강으로 알린다.
+
+사용:
+    py tools/storage.py status                 # C/D 여유 · 소비 상위 · 죽은 정션 · 경보선
+    py tools/storage.py plan                   # 지도 기준으로 지금 D 로 보낼 것 + GB (실행 없음)
+    py tools/storage.py apply --tracks         # 7일+ 무활동 트랙 폴더 → D:/숏템/00_트랙(정션)/<트랙>, C 에 정션
+    py tools/storage.py apply --stages         # 끊긴 _merge-* 잔해 삭제
+    py tools/storage.py apply --out            # out/ 30일+ 안 연 파일 → D 90_보관/out/<YYYY-MM>/
+    py tools/storage.py apply --research       # research/ → D + C 정션
+    py tools/storage.py apply --auto           # 위 넷(research 제외) — 작업 스케줄러가 매일 돈다
+    py tools/storage.py warm <트랙>            # D 에 있는 트랙 폴더를 C 로 되돌린다(다시 일할 때)
+    py tools/storage.py schedule               # Windows 작업 스케줄러에 매일 04:40 --auto 등록
+"""
+import argparse
+import json
+import os
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+MAP_REL = "관제/storage.json"
+_REPARSE = 0x400
+
+
+def _git(cwd, *args):
+    p = subprocess.run(["git", "-c", "core.quotepath=off", *args], cwd=str(cwd), capture_output=True,
+                       text=True, encoding="utf-8", errors="replace")
+    return p.returncode, (p.stdout or "") + (p.stderr or "")
+
+
+def main_worktree():
+    rc, out = _git(Path(__file__).resolve().parent, "rev-parse", "--path-format=absolute", "--git-common-dir")
+    if rc == 0 and out.strip():
+        return Path(out.strip()).resolve().parent
+    return Path(__file__).resolve().parent.parent
+
+
+def load_map(repo):
+    p = Path(repo) / MAP_REL
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
+
+
+def gb(n):
+    return n / 2 ** 30
+
+
+def dir_size(path):
+    t = 0
+    for r, _ds, fs in os.walk(path):
+        for f in fs:
+            try:
+                t += os.path.getsize(os.path.join(r, f))
+            except OSError:
+                pass
+    return t
+
+
+def free_gb(path):
+    try:
+        return gb(shutil.disk_usage(str(path)).free)
+    except OSError:
+        return None
+
+
+def is_junction(p):
+    try:
+        return bool(os.lstat(p).st_file_attributes & _REPARSE)
+    except (OSError, AttributeError):
+        return False
+
+
+def dead_junction(p):
+    """정션은 있는데 목적지가 없다(D 가 빠졌거나 옮겨짐)."""
+    return is_junction(p) and not os.path.exists(p)
+
+
+def make_junction(link, target):
+    r = subprocess.run(["cmd", "/c", "mklink", "/J", str(link), str(target)], capture_output=True, text=True)
+    return r.returncode == 0
+
+
+def remove_junction(link):
+    """정션만 지운다(목적지 내용은 그대로). rmdir 는 정션에 안전하다."""
+    os.rmdir(link)
+
+
+def external_ok(smap):
+    ext = smap.get("외장", {})
+    root = Path(ext.get("root", "D:/숏템"))
+    rule = Path(ext.get("규칙", str(root / "_저장규칙.txt")))
+    if not root.exists():
+        return False, "외장 %s 가 없다(안 꽂혔거나 드라이브 문자가 바뀜)" % root
+    if not rule.exists():
+        return False, "규칙 파일 %s 이 없다 — 다른 디스크가 D 에 물렸을 수 있다. 옮기지 않는다" % rule
+    return True, "외장 %s (여유 %.0fGB)" % (root, free_gb(root) or 0)
+
+
+def _dest(smap, key, default):
+    return Path(smap["외장"]["root"]) / smap["외장"].get(key, default)
+
+
+# ── 후보 (트랙 판단은 track.py 의 것을 부른다) ─────────────────────────────
+
+def idle_tracks(repo, days):
+    import track
+    out = []
+    for br in track.track_branches(repo):
+        name = br[len(track.BRANCH_PREFIX):]
+        wt = track.worktree_path(name, repo)
+        if not os.path.lexists(wt):
+            continue
+        if is_junction(wt):
+            continue                                   # 이미 D 에 있다
+        age = track._last_touch_days(repo, name)
+        if age is None or age < days:
+            continue
+        _, st = track.run(["git", "status", "--porcelain"], wt)
+        dirty = [p for p in track.parse_status(st) if not track.is_ignorable(p)]
+        out.append({"name": name, "age": age, "dirty": len(dirty), "size": dir_size(wt), "wt": wt})
+    return out
+
+
+def cold_tracks(repo):
+    """이미 D 에 있는(정션) 트랙 — status 가 보여준다."""
+    root = Path(repo) / ".tracks"
+    if not root.exists():
+        return []
+    return [d.name for d in root.iterdir() if is_junction(d) and not d.name.startswith("_")]
+
+
+def stale_stages(repo):
+    root = Path(repo) / ".tracks"
+    if not root.exists():
+        return []
+    return [{"name": d.name, "size": dir_size(d), "path": d} for d in root.iterdir()
+            if d.is_dir() and not is_junction(d) and d.name.startswith("_merge-")]
+
+
+def old_files(root, days):
+    """root 아래 days 일 넘게 안 연(atime·mtime 중 늦은 쪽) 파일."""
+    cut = time.time() - days * 86400
+    out = []
+    root = Path(root)
+    if not root.exists():
+        return out
+    for p in root.rglob("*"):
+        if p.is_file():
+            try:
+                st = p.stat()
+            except OSError:
+                continue
+            if max(st.st_mtime, st.st_atime) < cut:
+                out.append({"path": p, "size": st.st_size, "mtime": st.st_mtime})
+    return out
+
+
+def plan(repo, smap, idle_days=7):
+    """지도 기준 '지금 D 로 보낼 것' — 실행은 안 한다. 항목: what · size · how · block(막힘 이유) · ref."""
+    items = []
+    tiers = {t["경로"]: t for t in smap.get("층", [])}
+    for t in idle_tracks(repo, idle_days):
+        note = "미커밋 %d개(폴더 통째로 가므로 유실 없음)" % t["dirty"] if t["dirty"] else ""
+        items.append({"what": ".tracks/%s (%.0f일)" % (t["name"], t["age"]), "size": t["size"],
+                      "how": "move+junction", "block": "", "note": note, "ref": t})
+    for s in stale_stages(repo):
+        items.append({"what": ".tracks/%s (끊긴 병합 잔해)" % s["name"], "size": s["size"], "how": "delete", "block": "", "note": "", "ref": s})
+    rs = Path(repo) / "research"
+    if "research/" in tiers and rs.exists() and not is_junction(rs):
+        items.append({"what": "research/", "size": dir_size(rs), "how": "junction", "block": "", "note": "", "ref": None})
+    out_t = tiers.get("out/", {})
+    days = int(out_t.get("나이_일", 30))
+    olds = old_files(Path(repo) / "out", days)
+    if olds:
+        items.append({"what": "out/ %d일+ 안 연 파일 %d개" % (days, len(olds)), "size": sum(o["size"] for o in olds),
+                      "how": "move → 90_보관/out", "block": "", "note": "", "ref": olds})
+    tmp = temp_targets(smap)
+    if tmp:
+        items.append({"what": "Temp(pytest·claude) %d일+ 파일 %d개" % (int(smap.get("임시", {}).get("나이_일", 2)), len(tmp)),
+                      "size": sum(o["size"] for o in tmp), "how": "delete", "block": "", "note": "", "ref": tmp})
+    gg = git_garbage(repo)
+    if gg:
+        items.append({"what": ".git tmp_pack 잔해 %d개 (+gc)" % len(gg), "size": sum(g["size"] for g in gg),
+                      "how": "delete+gc", "block": "", "note": "느슨한 객체 팩으로 묶으면 더 준다", "ref": gg})
+    for t in desktop_targets(smap):
+        items.append({"what": "바탕화면/%s" % t["name"], "size": t["size"], "how": "move+junction → 90_보관/바탕화면",
+                      "block": "", "note": "사장님 확인 뒤(--desktop)", "ref": t})
+    return items
+
+
+# ── 실행 ────────────────────────────────────────────────────────────
+
+def _require_external(smap):
+    ok, why = external_ok(smap)
+    if not ok:
+        raise SystemExit("중단: " + why)
+
+
+def move_track_to_external(repo, smap, name, printer=print):
+    """트랙 폴더 → D:/숏템/00_트랙(정션)/<트랙>, C 에 정션. 실패하면 되돌린다."""
+    import track
+    wt = track.worktree_path(name, repo)
+    if is_junction(wt):
+        printer("   %s: 이미 D 에 있다" % name)
+        return False
+    dest_root = _dest(smap, "트랙", "00_트랙(정션)")
+    dest_root.mkdir(parents=True, exist_ok=True)
+    dest = dest_root / name
+    if dest.exists():
+        printer("   건너뜀 %s: %s 가 이미 있다 — 합치는 판단은 사람이" % (name, dest))
+        return False
+    if not move_dir_safe(wt, dest, printer):          # 복사→대조→삭제. 사용 중이면 C 원본 그대로, D 사본 지움
+        return False
+    if not make_junction(wt, dest):
+        shutil.move(str(dest), str(wt))
+        printer("   건너뜀 %s: 정션 생성 실패 — 되돌렸다" % name)
+        return False
+    _git_safe_directory(dest, add=True)
+    _git_safe_directory(wt, add=True)
+    rc, out = _git(wt, "status", "--porcelain")
+    if rc != 0:                                        # 정션 뒤에서 git 이 안 되면 되돌린다(조용히 넘기지 않는다)
+        remove_junction(wt)
+        shutil.move(str(dest), str(wt))
+        _git_safe_directory(dest, add=False)
+        _git_safe_directory(wt, add=False)
+        printer("   건너뜀 %s: 정션 뒤 git 실패 — 되돌렸다: %s" % (name, out.strip()[:100]))
+        return False
+    printer("   → D  %s (%.2fGB)" % (name, gb(dir_size(dest))))
+    return True
+
+
+def ensure_warm(repo, name, printer=print, smap=None):
+    """★트랙을 쓰기 직전에 부른다(관제 109 — 사장님 "쓸 때만 C 로"). D 에 있으면 C 로 되돌린다. 판단 주인은 여기 한 곳:
+    트랙.bat(track_open)·finish·`track.py use` 가 이걸 부른다. 반환 (C 에 있나, 이유).
+    못 되돌리면(D 빠짐·C 여유 모자람·사용 중) 정션은 그대로 둔다 — 느리지만 그 자리에서 동작한다. 조용히 넘기지 않고 이유를 말한다."""
+    import track
+    return warm_link(repo, track.worktree_path(name, repo), printer, smap)
+
+
+def warm_link(repo, wt, printer=print, smap=None):
+    """C 에 정션으로 남은 자리(트랙·바탕화면 폴더 등)를 실제 폴더로 되돌린다 — ensure_warm·`storage.py warm <경로>` 공용."""
+    wt = Path(wt)
+    name = wt.name
+    if not is_junction(wt):
+        return True, "C"
+    if dead_junction(wt):
+        return False, "D 에 있는데 D 가 안 보인다 — 외장하드가 꽂혀 있나?"
+    smap = smap or load_map(repo) or {}
+    real = Path(os.path.realpath(wt))
+    need = gb(dir_size(real))
+    have = free_gb(repo) or 0
+    if have - need < smap.get("경보", {}).get("refuse_gb", 3):
+        return False, "C 여유 %.1fGB 인데 %.1fGB 가 필요하다 — D 에서 그대로 연다(느림)" % (have, need)
+    printer("← D 에 있던 %s 를 C 로 되돌리는 중(%.2fGB, 외장 HDD 라 몇 분 걸릴 수 있다)…" % (name, need))
+    remove_junction(wt)
+    if not move_dir_safe(real, wt, printer):              # 복사→대조→D 삭제. 실패하면 D 정본 그대로
+        make_junction(wt, real)
+        return False, "C 로 복사가 안 됐다 — D 에서 그대로 연다(느림)"
+    if not (wt / ".git").exists():                        # 트랙이 아닌 폴더(바탕화면 등)
+        printer("← C  %s (%.2fGB)" % (name, need))
+        return True, "D→C"
+    _git_safe_directory(real, add=False)
+    _git_safe_directory(wt, add=False)
+    rc, out = _git(wt, "status", "--porcelain")
+    printer("← C  %s (%.2fGB)%s" % (name, need, "" if rc == 0 else "  ⚠️ git status 실패: " + out.strip()[:80]))
+    return True, "D→C"
+
+
+def warm_track(repo, smap, name, printer=print):
+    """D 에 있는 트랙 폴더(이름) 또는 정션 자리(경로·바탕화면 폴더 이름)를 C 로 되돌린다(손으로 부를 때)."""
+    import track
+    desk = Path(os.path.expandvars(smap.get("바탕화면", {}).get("root", "%USERPROFILE%/Desktop"))) / name
+    if os.path.lexists(track.worktree_path(name, repo)):
+        ok, why = ensure_warm(repo, name, printer, smap)
+    elif os.path.lexists(name) or os.path.lexists(desk):
+        ok, why = warm_link(repo, name if os.path.lexists(name) else desk, printer, smap)
+    else:
+        raise SystemExit("중단: %s — 트랙도 경로도 바탕화면 폴더도 아니다" % name)
+    if not ok:
+        raise SystemExit("중단: " + why)
+    if why == "C":
+        printer("%s 는 이미 C 에 있다" % name)
+    return why == "D→C"
+
+
+def apply_tracks(repo, smap, idle_days=7, printer=print):
+    _require_external(smap)
+    before = free_gb(repo)
+    moved = 0
+    for t in idle_tracks(repo, idle_days):
+        if move_track_to_external(repo, smap, t["name"], printer):
+            moved += 1
+    printer("트랙 %d개 → D · C 여유 %.1fGB → %.1fGB" % (moved, before or 0, free_gb(repo) or 0))
+    return moved
+
+
+def apply_stages(repo, printer=print):
+    import track
+    with track._finish_gate_lock():          # 살아 있는 finish 가 있으면 기다린다 — 그 stage 를 지우면 병합이 깨진다
+        removed = track._clean_dead_stages(repo)
+    printer("잔해 %d개 정리" % len(removed))
+    return len(removed)
+
+
+def apply_out(repo, smap, printer=print):
+    _require_external(smap)
+    tiers = {t["경로"]: t for t in smap.get("층", [])}
+    days = int(tiers.get("out/", {}).get("나이_일", 30))
+    dest_root = _dest(smap, "보관", "90_보관") / "out"
+    n = tot = 0
+    for o in old_files(Path(repo) / "out", days):
+        ym = time.strftime("%Y-%m", time.localtime(o["mtime"]))
+        rel = o["path"].relative_to(Path(repo) / "out")
+        dst = dest_root / ym / rel
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        if dst.exists():
+            dst = dst.with_name(dst.stem + "_" + str(int(o["mtime"])) + dst.suffix)
+        shutil.move(str(o["path"]), str(dst))
+        n += 1
+        tot += o["size"]
+    printer("out/ %d일+ 파일 %d개 %.2fGB → %s" % (days, n, gb(tot), dest_root))
+    return n
+
+
+def apply_research(repo, smap, printer=print):
+    _require_external(smap)
+    src = Path(repo) / "research"
+    if is_junction(src):
+        printer("research/ 는 이미 정션이다")
+        return False
+    dst = Path(smap["외장"]["root"]) / "80_강의·참고" / "research"
+    if dst.exists():
+        raise SystemExit("중단: %s 가 이미 있다 — 합치는 판단은 사람이" % dst)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(src), str(dst))
+    if not make_junction(src, dst):
+        shutil.move(str(dst), str(src))
+        raise SystemExit("중단: 정션 생성 실패 — 되돌렸다")
+    printer("research/ → %s (C 에는 정션)" % dst)
+    return True
+
+
+def idle_days_default(smap):
+    return float(smap.get("자동", {}).get("무활동_일", 7))
+
+
+# ── 더 많이 옮기기(2026-09-30 사장님 "기존에 있는 것 안 쓰는 것들 많이 옮기면 안 되나") ─────────
+
+def temp_targets(smap):
+    """Temp 아래 지워도 되는 폴더(pytest 임시·클로드 스크래치)의 N일+ 파일."""
+    t = smap.get("임시", {})
+    root = Path(os.path.expandvars(t.get("root", "%LOCALAPPDATA%/Temp")))
+    days = float(t.get("나이_일", 2))
+    out = []
+    for sub in t.get("폴더", ["pytest-of-CH", "claude"]):
+        out += old_files(root if sub == "*" else root / sub, days)   # "*" = Temp 전체(관제 109 — 윈도 저장소 센스와 같은 방식)
+    return out
+
+
+def apply_temp(smap, printer=print):
+    n = tot = 0
+    for o in temp_targets(smap):
+        try:
+            os.remove(o["path"])
+            n += 1
+            tot += o["size"]
+        except OSError:
+            pass                                       # 열려 있는 파일은 다음에
+    # 빈 폴더 정리
+    t = smap.get("임시", {})
+    root = Path(os.path.expandvars(t.get("root", "%LOCALAPPDATA%/Temp")))
+    for sub in t.get("폴더", ["pytest-of-CH", "claude"]):
+        base = root if sub == "*" else root / sub
+        for d in sorted((p for p in base.rglob("*") if p.is_dir()), key=lambda p: -len(str(p))):
+            try:
+                d.rmdir()
+            except OSError:
+                pass
+    printer("Temp 임시 파일 %d개 %.2fGB 삭제" % (n, gb(tot)))
+    return n
+
+
+def git_garbage(repo, days=1):
+    """끊긴 push·gc 가 남긴 .git/objects/pack/tmp_pack_* (09-30 실측 2.55GB) — days 일 넘은 것만."""
+    rc, out = _git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir")
+    gitdir = Path(out.strip()) if rc == 0 else Path(repo) / ".git"
+    cut = time.time() - days * 86400
+    res = []
+    for p in (gitdir / "objects" / "pack").glob("tmp_pack_*"):
+        try:
+            st = p.stat()
+        except OSError:
+            continue
+        if st.st_mtime < cut:
+            res.append({"path": p, "size": st.st_size})
+    return res
+
+
+def apply_gitgc(repo, printer=print):
+    """tmp_pack 잔해 삭제 + git gc(느슨한 객체 32,727개·2.7GB 를 팩으로). git 이 도는 중이면 gc 가 스스로 기다리거나 거절한다."""
+    n = tot = 0
+    for g in git_garbage(repo):
+        try:
+            os.remove(g["path"])
+            n += 1
+            tot += g["size"]
+        except OSError:
+            pass
+    before = free_gb(repo)
+    rc, out = _git(repo, "gc", "--prune=now", "--quiet")
+    printer("git 잔해 %d개 %.2fGB 삭제 · gc %s · C 여유 %.1f → %.1fGB" % (
+        n, gb(tot), "완료" if rc == 0 else "실패: " + out.strip()[:100], before or 0, free_gb(repo) or 0))
+    return rc == 0
+
+
+def desktop_targets(smap):
+    """바탕화면의 옛 폴더(지도 '바탕화면' 목록) — 코드가 참조하지 않는 것만 지도에 적는다."""
+    d = smap.get("바탕화면", {})
+    root = Path(os.path.expandvars(d.get("root", "%USERPROFILE%/Desktop")))
+    out = []
+    for name in d.get("폴더", []):
+        p = root / name
+        if p.exists() and not is_junction(p):
+            out.append({"name": name, "path": p, "size": dir_size(p)})
+    return out
+
+
+def _file_map(root):
+    out = {}
+    for r, _ds, fs in os.walk(root):
+        for f in fs:
+            p = os.path.join(r, f)
+            try:
+                out[os.path.relpath(p, root)] = os.path.getsize(p)
+            except OSError:
+                out[os.path.relpath(p, root)] = -1
+    return out
+
+
+def _git_safe_directory(path, add=True):
+    """exFAT(D) 에는 소유자가 없어 git 이 'detected dubious ownership' 으로 거부한다(09-30 실측: 트랙 0개 이동의 원인).
+    옮긴 폴더를 전역 safe.directory 에 등록/해제한다. pytest 안에서는 전역 설정을 건드리지 않는다."""
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        return
+    p = str(path).replace("\\", "/")
+    if add:
+        _git(Path.cwd(), "config", "--global", "--add", "safe.directory", p)
+    else:
+        _git(Path.cwd(), "config", "--global", "--unset-all", "safe.directory", p)
+
+
+def move_dir_safe(src, dst, printer=print):
+    """복사 → 개수·크기 대조 → 원본 삭제. 삭제가 중간에 막히면(사용 중 파일) **원본을 D 사본에서 되살리고 D 사본을 지운다** — C 가 정본으로 남는다.
+    (2026-09-30 실사고: shutil.move 가 실행 중인 ShoppingLens 를 옮기다 C 에서 51개를 지우고 멈췄다. 되돌렸지만 이 함수가 그걸 막는다)
+    깨진 심볼릭 링크는 건너뛴다(09-30 실측: 4개 트랙이 [WinError 2] 로 복사 실패)."""
+    src, dst = Path(src), Path(dst)
+    try:
+        shutil.copytree(str(src), str(dst), ignore_dangling_symlinks=True)
+    except (OSError, shutil.Error) as e:
+        shutil.rmtree(dst, ignore_errors=True)
+        printer("   건너뜀 %s: 복사 실패 — %s" % (src.name, str(e)[:160]))
+        return False
+    a, b = _file_map(src), _file_map(dst)
+    if a != b:
+        shutil.rmtree(dst, ignore_errors=True)
+        printer("   건너뜀 %s: 복사 대조 불일치(C %d / D %d) — D 사본 지움" % (src.name, len(a), len(b)))
+        return False
+    try:
+        shutil.rmtree(str(src))
+    except OSError as e:
+        left = _file_map(src)
+        for rel in b:
+            if rel not in left:
+                p = src / rel
+                p.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(dst / rel, p)
+        shutil.rmtree(dst, ignore_errors=True)
+        printer("   건너뜀 %s: 사용 중(%s) — C 원본 그대로, D 사본 지움" % (src.name, str(e)[:60]))
+        return False
+    return True
+
+
+def apply_desktop(smap, printer=print):
+    _require_external(smap)
+    dest_root = _dest(smap, "보관", "90_보관") / "바탕화면"
+    dest_root.mkdir(parents=True, exist_ok=True)
+    n = tot = 0
+    for t in desktop_targets(smap):
+        dst = dest_root / t["name"]
+        if dst.exists():
+            printer("   건너뜀 %s: D 에 이미 있다" % t["name"])
+            continue
+        if not move_dir_safe(t["path"], dst, printer):
+            continue
+        make_junction(t["path"], dst)                  # 바탕화면 자리는 정션으로 남겨 찾기 쉽게
+        n += 1
+        tot += t["size"]
+        printer("   → D  %s (%.2fGB)" % (t["name"], gb(t["size"])))
+    printer("바탕화면 %d개 %.2fGB → %s" % (n, gb(tot), dest_root))
+    return n
+
+
+# ── 트랙 접기(카드 005 대청소): bundle 을 D 에 → 문서만 남은 커밋은 main 에 → 폴더·브랜치 삭제 ───────────
+
+def archive_track(repo, smap, name, printer=print, allow_code=False):
+    """접는다. ① git bundle(브랜치 전체) → D:/숏템/90_보관/트랙/<이름>.bundle ② 미병합 커밋이 문서(handoff·wiki/log.d·관제)만이면
+    origin/main 위에 cherry-pick 해 push(기록 보존) ③ 코드 미병합이 있으면 allow_code 없이는 멈춘다(사장님 판단) ④ 폴더·브랜치(로컬·원격) 삭제."""
+    import track
+    _require_external(smap)
+    br = track.branch_name(name)
+    if not track.branch_exists(repo, br):
+        printer("   %s: 브랜치 없음" % name)
+        return False
+    _git(repo, "fetch", "origin")
+    dest = _dest(smap, "보관", "90_보관") / "트랙"
+    dest.mkdir(parents=True, exist_ok=True)
+    # ★전체 브랜치가 아니라 main 에 없는 커밋만 bundle — 전체(8GB 저장소)는 pack-objects 가 메모리 부족으로 죽는다(09-30 실측 10/10 실패).
+    #   main 에 다 들어간 트랙은 보존할 게 없다(빈 bundle 은 git 이 거절) → bundle 없이 접는다.
+    rc, n = _git(repo, "rev-list", "--count", "origin/main..%s" % br)
+    if int((n or "0").strip() or 0) > 0:
+        rc, out = _git(repo, "bundle", "create", str(dest / ("%s.bundle" % name)), "origin/main..%s" % br)
+        if rc != 0:
+            printer("   건너뜀 %s: bundle 실패 %s" % (name, out.strip()[:120]))
+            return False
+    rc, files = _git(repo, "diff", "--name-only", "origin/main...%s" % br)
+    unmerged = [f.strip() for f in files.splitlines() if f.strip()]
+    code = [f for f in unmerged if not track._is_non_code(f)]
+    if code and not allow_code:
+        printer("   보류 %s: 미병합 코드 %d파일(%s) — 사장님 판단. bundle 은 D 에 남겼다" % (name, len(code), ", ".join(code[:3])))
+        return False
+    if unmerged and not code:
+        # 내용이 main 과 같은 파일은 보존할 게 없다(09-30 실측: 짤쇼핑카테고리 — 같은 날 main 에도 같은 기록이 들어가 있었다)
+        differ = []
+        for f in unmerged:
+            rc, d = _git(repo, "diff", "origin/main", br, "--", f)
+            if any(ln[:1] in "+-" and not ln.startswith(("+++", "---")) for ln in d.splitlines()):
+                differ.append(f)
+        if differ:
+            # 문서만 남은 것을 main 에 살린다 — 커밋 재생(cherry-pick)이 아니라 **트랙 쪽 파일을 그대로 얹는다**(옛 트랙은
+            # 부모가 멀어 cherry-pick 이 자주 깨진다). 코드가 아니라 게이트 없이 push(관제 카드와 같은 길).
+            stage = Path(repo) / ".tracks" / ("_archive-%s" % name)
+            _git(repo, "worktree", "remove", "--force", str(stage))
+            rc, out = _git(repo, "worktree", "add", "--detach", "--no-checkout", str(stage), "origin/main")
+            ok = rc == 0
+            if ok:
+                _git(stage, "sparse-checkout", "set", "handoff", "wiki/log.d", "관제")
+                _git(stage, "reset", "--hard", "HEAD")
+                rc, out = _git(stage, "checkout", br, "--", *differ)
+                ok = rc == 0
+                if ok:
+                    rc, out = _git(stage, "commit", "-q", "-m", "접은 트랙 %s 의 문서 보존 (%s)" % (name, ", ".join(differ)))
+                    ok = rc == 0 or "nothing to commit" in out
+                if ok:
+                    rc, out = _git(stage, "push", "origin", "HEAD:main")
+                    ok = rc == 0
+                _git(repo, "worktree", "remove", "--force", str(stage))
+            if not ok:
+                printer("   보류 %s: 문서를 main 에 못 살렸다 — 손으로 보고 접어라: %s" % (name, out.strip()[:120]))
+                return False
+            printer("   %s: 문서 %d파일 main 에 살림" % (name, len(differ)))
+        else:
+            printer("   %s: 미병합 문서가 main 과 내용이 같다 — 보존할 것 없음" % name)
+    wt = track.worktree_path(name, repo)
+    if os.path.lexists(wt):
+        if is_junction(wt):
+            real = Path(os.path.realpath(wt))
+            remove_junction(wt)
+            shutil.rmtree(real, ignore_errors=True)
+            _git(repo, "worktree", "prune")
+        else:
+            rc, out = _git(repo, "worktree", "remove", "--force", str(wt))
+            if rc != 0:
+                printer("   보류 %s: 폴더를 못 지웠다(열린 창?) %s" % (name, out.strip()[:100]))
+                return False
+    _git(repo, "push", "origin", "--delete", br)
+    rc, out = _git(repo, "branch", "-D", br)
+    printer("   🧹 %s 접음%s" % (name, (" — bundle %s" % (dest / ("%s.bundle" % name))) if (dest / ("%s.bundle" % name)).exists() else " (main 에 전부 있어 bundle 없음)"))
+    return rc == 0
+
+
+def status(repo, smap, printer=print):
+    c = free_gb(repo)
+    ok, why = external_ok(smap)
+    warn, refuse = smap.get("경보", {}).get("warn_gb", 15), smap.get("경보", {}).get("refuse_gb", 3)
+    flag = "❌ finish 거절선 아래" if c is not None and c < refuse else ("⚠️ 경고선 아래" if c is not None and c < warn else "정상")
+    printer("C 여유 %.1fGB (%s: 경고 %dGB · 거절 %dGB) · %s" % (c or 0, flag, warn, refuse, why))
+    root = Path(repo)
+    dead = [d.name for d in (root / ".tracks").iterdir() if dead_junction(d)] if (root / ".tracks").exists() else []
+    if dead_junction(root / "research"):
+        dead.append("research")
+    if dead:
+        printer("❌ 죽은 정션 %d개(D 가 빠졌나?): %s" % (len(dead), ", ".join(dead)))
+    cold = cold_tracks(repo)
+    if cold:
+        printer("D 에 있는 트랙 %d개: %s   (되돌리기: py tools/storage.py warm <트랙>)" % (len(cold), ", ".join(cold)))
+    rows = []
+    for d in root.iterdir():
+        if d.is_dir() and d.name != ".tracks" and not is_junction(d):
+            rows.append((d.name, dir_size(d)))
+    tr = root / ".tracks"
+    if tr.exists():
+        hot = [x for x in tr.iterdir() if x.is_dir() and not is_junction(x)]
+        rows.append((".tracks C 에 %d개" % len(hot), sum(dir_size(x) for x in hot)))
+    for name, sz in sorted(rows, key=lambda x: -x[1])[:10]:
+        printer("  %-28s %6.2f GB" % (name, gb(sz)))
+
+
+def schedule(repo, smap, printer=print):
+    a = smap.get("자동", {})
+    name, at = a.get("작업이름", "숏템_저장층_정리"), a.get("시각", "04:40")
+    import win_schedule   # 예약 명령은 한 곳(관제 107 — 옛 \" 따옴표로 등록돼 한 번도 안 돌았다)
+    return win_schedule.register(name, ["/SC", "DAILY", "/ST", at], repo, ["tools\\storage.py", "apply", "--auto"],
+                                 Path(repo) / "관제" / "storage_auto.log", printer=printer)
+
+
+_APPLY_LOCK = Path(os.environ.get("TEMP") or os.environ.get("TMP") or ".") / "stockbrain_storage_apply.lock"
+
+
+class _ApplyLock:
+    """apply 는 한 번에 하나만. 09-30 실사고: 사장님이 apply 를 두 번 띄워 둘이 같은 트랙을 동시에 복사·삭제하다
+    '[WinError 2] 지정된 파일을 찾을 수 없습니다' 로 4개 트랙이 실패했다(C 는 되돌려져 무사). OS 파일락 — 프로세스가 죽으면 자동 해제."""
+
+    def __enter__(self):
+        self.fh = open(_APPLY_LOCK, "a+")
+        try:
+            import msvcrt
+            msvcrt.locking(self.fh.fileno(), msvcrt.LK_NBLCK, 1)
+        except OSError:
+            self.fh.close()
+            raise SystemExit("중단: 다른 storage apply 가 돌고 있다 — 끝난 뒤 다시(둘이 같은 폴더를 옮기면 파일이 사라진다)")
+        except ImportError:
+            pass
+        return self
+
+    def __exit__(self, *a):
+        try:
+            import msvcrt
+            self.fh.seek(0)
+            msvcrt.locking(self.fh.fileno(), msvcrt.LK_UNLCK, 1)
+        except (ImportError, OSError):
+            pass
+        self.fh.close()
+
+
+def main(argv=None):
+    try:
+        sys.stdout.reconfigure(errors="replace")
+    except (AttributeError, OSError, ValueError):
+        pass
+    ap = argparse.ArgumentParser(description="저장 층(C/D) 관제")
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("status")
+    p = sub.add_parser("plan")
+    p.add_argument("--days", type=float, default=None, help="무활동 일수(기본: 지도의 자동.무활동_일)")
+    p = sub.add_parser("apply")
+    for f in ("tracks", "stages", "out", "temp", "gitgc", "desktop", "research", "auto"):
+        p.add_argument("--" + f, action="store_true")
+    p.add_argument("--days", type=float, default=None)
+    p = sub.add_parser("warm")
+    p.add_argument("name")
+    sub.add_parser("schedule")
+    args = ap.parse_args(argv)
+    repo = main_worktree()
+    smap = load_map(repo)
+    if smap is None:
+        print("지도가 없다: %s" % MAP_REL, file=sys.stderr)
+        return 2
+    days = args.days if getattr(args, "days", None) is not None else idle_days_default(smap)
+    if args.cmd == "status":
+        status(repo, smap)
+    elif args.cmd == "plan":
+        items = plan(repo, smap, days)
+        total = 0
+        for it in items:
+            extra = ("  · " + it["note"]) if it.get("note") else ""
+            print("  %-46s %6.2f GB  %s%s" % (it["what"], gb(it["size"]), it["how"], extra))
+            total += it["size"]
+        print("\n비울 수 있는 것 %.1fGB (%d항목, 무활동 %g일 기준). 실행: py tools/storage.py apply --auto  (+ --desktop --research 는 확인 뒤)"
+              % (gb(total), len(items), days))
+    elif args.cmd == "warm":
+        warm_track(repo, smap, args.name)
+    elif args.cmd == "schedule":
+        schedule(repo, smap)
+    else:
+      with _ApplyLock():
+        print("[%s] 저장 층 정리 시작" % time.strftime("%Y-%m-%d %H:%M"))
+        try:
+            _apply_selected(args, repo, smap, days)
+        except BaseException as e:
+            if args.auto:
+                record_auto_run(repo, False, "%s: %s" % (type(e).__name__, e))
+            raise
+        if args.auto:
+            record_auto_run(repo, True, "")
+        status(repo, smap)
+    return 0
+
+
+def _apply_selected(args, repo, smap, days):
+        if args.tracks or args.auto:
+            apply_tracks(repo, smap, days)
+        if args.stages or args.auto:
+            apply_stages(repo)
+        if args.out or args.auto:
+            apply_out(repo, smap)
+        if args.temp or args.auto:
+            apply_temp(smap)
+        if args.gitgc or args.auto:
+            apply_gitgc(repo)
+        if args.desktop:
+            apply_desktop(smap)
+        if args.research:
+            apply_research(repo, smap)
+        if not (args.tracks or args.stages or args.out or args.temp or args.gitgc or args.desktop or args.research or args.auto):
+            print("무엇을 옮길지 골라라: --tracks / --stages / --out / --temp / --gitgc / --desktop / --research / --auto")
+
+
+# ── 자동 정리가 정말 도나(관제 109) ──────────────────────────────────────
+# 09-29 등록한 04:40 작업이 따옴표 오류로 한 달 내내 조용히 실패했다(로그 0개). 이제 --auto 는 끝날 때마다 기록을 남기고,
+# track.py start·finish 가 기록이 낡았거나 실패면 크게 알린다 — "안 돌고 있다"를 사람이 아니라 도구가 먼저 본다.
+LAST_RUN_REL = "관제/storage_last.json"
+LAST_RUN_STALE_H = 30
+
+
+def record_auto_run(repo, ok, error):
+    try:
+        (Path(repo) / LAST_RUN_REL).write_text(json.dumps(
+            {"at": time.strftime("%Y-%m-%d %H:%M:%S"), "epoch": time.time(), "ok": bool(ok), "error": error[:300],
+             "c_free_gb": round(free_gb(repo) or 0, 1)}, ensure_ascii=False), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def auto_run_warning(repo, now=None):
+    """자동 정리가 최근에 성공했으면 None, 아니면 사람이 읽을 경고 한 줄."""
+    p = Path(repo) / LAST_RUN_REL
+    try:
+        d = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return "자동 저장층 정리(04:40) 기록이 없다 — 한 번도 안 돌았을 수 있다. 확인: schtasks /query /tn 숏템_저장층_정리 /fo LIST /v"
+    age_h = ((now or time.time()) - float(d.get("epoch", 0))) / 3600
+    if not d.get("ok"):
+        return "자동 저장층 정리가 실패했다(%s): %s" % (d.get("at"), d.get("error") or "?")
+    if age_h > LAST_RUN_STALE_H:
+        return "자동 저장층 정리가 %.0f시간째 안 돌았다(마지막 %s). PC가 04:40에 꺼져 있었거나 작업이 죽었다" % (age_h, d.get("at"))
+    return None
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

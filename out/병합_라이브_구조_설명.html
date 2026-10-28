@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>병합·라이브 구조</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--ink:#1d2433;--sub:#5b6478;--line:#e2e6ef;--blue:#2f6fed;--green:#14a06b;--red:#e0464e;--amber:#e6a100}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11141b;--card:#1a1f2a;--ink:#e8ecf4;--sub:#9aa3b5;--line:#2a3140}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "Pretendard","Malgun Gothic",sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:28px 16px 60px}
+h1{font-size:26px;margin:0 0 6px}.lead{color:var(--sub);margin:0 0 26px}
+h2{font-size:20px;margin:34px 0 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:12px 0}
+.flow{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch}
+.step{flex:1 1 150px;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:12px}
+.step b{display:block;font-size:15px}.step small{color:var(--sub)}
+.out{border-color:var(--blue)}.in{border-color:var(--red)}.live{border-color:var(--green)}
+.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;color:#fff;margin-bottom:6px}
+.t-out{background:var(--blue)}.t-in{background:var(--red)}.t-live{background:var(--green)}
+.arrow{align-self:center;color:var(--sub);font-size:22px}
+table{width:100%;border-collapse:collapse;font-size:15px}td,th{border-bottom:1px solid var(--line);padding:9px 6px;text-align:left;vertical-align:top}
+th{color:var(--sub);font-weight:600}
+.bad{color:var(--red);font-weight:700}.good{color:var(--green);font-weight:700}
+.bar{height:22px;border-radius:6px;display:flex;overflow:hidden;margin:6px 0 2px}
+.bar span{display:block;height:100%}
+.legend{font-size:13px;color:var(--sub)}
+</style></head><body><div class="wrap">
+<h1>병합 → 라이브, 지금 어떻게 돌아가나</h1>
+<p class="lead">트랙(작업 폴더)에서 만든 코드가 고객 사이트에 올라가기까지의 길. 2026-10-15 기준 실측.</p>
+
+<h2>1. 큰 그림 — 4단계</h2>
+<div class="flow">
+ <div class="step out"><span class="tag t-out">각자 동시에</span><b>① 합쳐보기</b><small>임시 폴더에 내 코드 + 최신 main 을 합친다</small></div>
+ <div class="arrow">→</div>
+ <div class="step out"><span class="tag t-out">각자 동시에</span><b>② 관문 검사</b><small>시험(pytest) · 관제 검사 · 영상/캡컷/소리 대조</small></div>
+ <div class="arrow">→</div>
+ <div class="step in"><span class="tag t-in">한 줄로</span><b>③ main 에 올리기</b><small>커밋 + push, 몇 초. 한 번에 하나만</small></div>
+ <div class="arrow">→</div>
+ <div class="step live"><span class="tag t-live">서버</span><b>④ 라이브 반영</b><small>서버가 3분마다 받아감 → 웹 재시작</small></div>
+</div>
+<div class="card">핵심: <b>오래 걸리는 ①②는 트랙마다 동시에</b> 해두고, <b>③만 줄을 선다</b>.
+사장님이 말씀하신 "내 할 일까지 해두고 기다리기"가 원래 설계다.</div>
+
+<h2>2. 그런데 왜 오래 걸렸나</h2>
+<div class="card">
+<b>문제 A — 줄 섰더니 남이 먼저 들어가 있으면, 해둔 검사를 버리고 처음부터</b>
+<p style="margin:6px 0 0">②를 끝내고 ③에 섰는데 그사이 다른 트랙 코드가 main 에 들어갔다면, "그 코드와 같이 돌려도 괜찮나" 다시 재야 한다.
+그런데 <b>내 파일과 전혀 상관없어도</b> 시험 전체(약 20분)를 다시 돌았다.</p>
+<p class="legend">실측: finish 165건 중 재시험 83회 · 다시 돈 시험 약 700분</p>
+</div>
+<div class="card">
+<b>문제 B — 시험 자리가 모자라 멍하니 대기</b>
+<p style="margin:6px 0 0">PC 메모리 때문에 시험은 동시에 몇 개만 돌 수 있다. 재시험하는 트랙은 줄 <b>맨 뒤</b>로 다시 섰고,
+같은 트랙을 두 번 거는 일(오늘 2건)도 자리를 이중으로 차지했다.</p>
+<p class="legend">실측: 최근 3일 전체 시간의 33%(712분)가 이 대기</p>
+</div>
+<div class="card">
+<b>문제 C — 라이브 반영이 새벽으로 미뤄짐</b>
+<p style="margin:6px 0 0">서버는 낮에 받은 코드를 <b>새벽 2~6시</b>에 반영하도록 돼 있다. 낮에 바로 올리려면 즉시배포 표시(DEPLOY_NOW)가 필요하고,
+그래도 <b>고객이 접속·렌더 중이면 재시작을 최대 30~40분 미룬다</b>(고객 작업 보호).</p>
+</div>
+
+<h2>3. 시간이 어디로 갔나 (finish 165건, 총 5,033분)</h2>
+<div class="card">
+<div class="bar">
+ <span style="width:29%;background:#2f6fed" title="시험(첫 회)"></span>
+ <span style="width:14%;background:#e0464e" title="재시험"></span>
+ <span style="width:19%;background:#e6a100" title="자원 대기"></span>
+ <span style="width:17%;background:#8b6cf0" title="영상 관문"></span>
+ <span style="width:21%;background:#9aa3b5" title="기타"></span>
+</div>
+<div class="legend">■<span style="color:#2f6fed">시험 첫 회 29%</span> ■<span style="color:#e0464e">다시 돈 시험 14%</span> ■<span style="color:#e6a100">시험 자원 대기 19%</span> ■<span style="color:#8b6cf0">영상 관문 17%</span> ■기타(병합·관제·줄) 21%</div>
+</div>
+
+<h2>4. 오늘 고친 것 (관제 212 · 트랙 병합관문효율)</h2>
+<table>
+<tr><th>문제</th><th>전</th><th>후</th></tr>
+<tr><td>상관없는 끼어듦</td><td class="bad">무조건 전체 재시험</td><td class="good">파일이 안 겹치면 끼어든 코드 관련 시험만 · 화면 파일만이면 생략</td></tr>
+<tr><td>같은 트랙 두 번 걸기</td><td class="bad">둘 다 돌며 병합 폴더를 서로 지움</td><td class="good">두 번째는 즉시 거절</td></tr>
+<tr><td>재시험 줄 순서</td><td class="bad">맨 뒤로</td><td class="good">자기 순번(맨 앞) 유지</td></tr>
+<tr><td>잴 도구</td><td class="bad">없음</td><td class="good"><code>tools/finish_time_audit.py</code> — 언제든 다시 잼</td></tr>
+</table>
+<p class="legend">상태: 관련 시험 41개 통과 · 지금 finish 관문 진행 중(아직 main 미병합). 효과는 병합 뒤 같은 도구로 전후 비교 예정.</p>
+
+<h2>5. 그대로 둔 것 (일부러)</h2>
+<div class="card">
+• <b>같은 파일을 둘 다 고쳤을 때</b>는 지금처럼 넓게 다시 잰다 — 서로 부딪힐 수 있어서.<br>
+• <b>영상 관문</b>은 제작 라인 파일이 같으면 이미 결과를 재사용 중.<br>
+• <b>고객 접속 중 재시작 연기</b>는 고객 렌더가 끊기지 않게 하는 안전장치라 유지.
+</div>
+</div></body></html>

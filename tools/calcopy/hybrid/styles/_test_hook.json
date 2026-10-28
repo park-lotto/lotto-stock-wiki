@@ -1,0 +1,295 @@
+{
+ "name": "_test_hook",
+ "base": "잇템로그판",
+ "_note": "시험 판(지시서 02 2차 ①③⑥) — 잇템로그판(목소리·TTS 캐시 그대로) 위에 틀만 방구석 꼴: 본문 틀 = 썰템홈샷판 frame 값 복사, 시간 구간 훅 카드 = _test_post 틀, 자막 2줄 쌓기(clean 팩 줄 간격 110 실측 — 벤치 79 는 팩 몫). 판 파일 값은 07 주인이라 여기만. · 본문 제목 칸 join \" \"(대본 제목 2줄을 한 줄로 — 07 2차 요청)",
+ "frame": {
+  "kind": "post",
+  "bg": [
+   253,
+   253,
+   253
+  ],
+  "window": [
+   20,
+   672,
+   1036,
+   880
+  ],
+  "title": [
+   {
+    "font": "Pretendard-Bold.otf",
+    "px": 75.6,
+    "center": 308,
+    "color": "#000000",
+    "max_w": 960,
+    "join": " "
+   }
+  ],
+  "post": {
+   "head_bar": {
+    "box": [
+     0,
+     0,
+     1080,
+     234
+    ],
+    "color": "#39A0FA",
+    "icons": [
+     {
+      "kind": "bars",
+      "x": 79,
+      "ys": [
+       130,
+       160,
+       193
+      ],
+      "w": 88,
+      "h": 10,
+      "color": "#000000"
+     },
+     {
+      "kind": "search",
+      "x": 904,
+      "y": 128,
+      "size": 84,
+      "stroke": 7,
+      "color": "#000000"
+     },
+     {
+      "font": "Kkubulim.ttf",
+      "px": 109.9,
+      "color": "#000000",
+      "cx": 530,
+      "cy": 178.0,
+      "max_w": 400,
+      "text": "썰템홈샷",
+      "kind": "text",
+      "from": "brand"
+     }
+    ]
+   },
+   "author_line": {
+    "font": "Pretendard-SemiBold.otf",
+    "px": 36.3,
+    "color": "#555355",
+    "x": 125,
+    "cy": 390,
+    "word_spacing": 14,
+    "max_w": 600,
+    "text": "썰템홈샷"
+   },
+   "rules": [
+    {
+     "box": [
+      0,
+      236,
+      1080,
+      240
+     ],
+     "color": "#240400"
+    },
+    {
+     "box": [
+      60,
+      446,
+      1020,
+      451
+     ],
+     "color": "#221F23"
+    }
+   ]
+  },
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "segments": [
+   {
+    "t0": 0,
+    "t1": "#1.end",
+    "frame": {
+     "kind": "post",
+     "bg": [
+      95,
+      95,
+      95
+     ],
+     "window": [
+      0,
+      760,
+      1080,
+      1056
+     ],
+     "post": {
+      "head_bar": {
+       "box": [
+        0,
+        0,
+        1080,
+        234
+       ],
+       "color": "#0F3B5F",
+       "icons": [
+        {
+         "kind": "bars",
+         "x": 79,
+         "ys": [
+          130,
+          160,
+          193
+         ],
+         "w": 88,
+         "h": 10,
+         "color": "#000002"
+        },
+        {
+         "kind": "search",
+         "x": 904,
+         "y": 128,
+         "size": 84,
+         "stroke": 7,
+         "color": "#000000"
+        }
+       ]
+      },
+      "rules": [
+       {
+        "box": [
+         0,
+         236,
+         1080,
+         240
+        ],
+        "color": "#240400"
+       },
+       {
+        "box": [
+         60,
+         446,
+         1020,
+         451
+        ],
+        "color": "#111313"
+       },
+       {
+        "box": [
+         0,
+         1816,
+         1080,
+         1920
+        ],
+        "color": "#7D7D7D"
+       }
+      ],
+      "author_line": {
+       "text": "골방 | 14:25",
+       "font": "Pretendard-SemiBold.otf",
+       "px": 36.3,
+       "color": "#222121",
+       "x": 125,
+       "cy": 392,
+       "word_spacing": 14
+      },
+      "body_box": {
+       "box": [
+        0,
+        540,
+        1080,
+        802
+       ],
+       "color": "#FDFDFD",
+       "fade": [
+        56,
+        74
+       ],
+       "rules": [
+        {
+         "box": [
+          0,
+          583,
+          1080,
+          585
+         ],
+         "color": "#3C3C3C"
+        },
+        {
+         "box": [
+          0,
+          736,
+          1080,
+          737
+         ],
+         "color": "#3C3C3C"
+        }
+       ],
+       "text": {
+        "text": "",
+        "font": "Pretendard-Regular.otf",
+        "px": 53.4,
+        "color": "#000000",
+        "cx": 540,
+        "cy": 658,
+        "max_w": 960
+       }
+      }
+     },
+     "title": [
+      {
+       "font": "JalnanGothic.ttf",
+       "px": 103.2,
+       "center": 184,
+       "color": "#FFFFFF",
+       "hi": "#2BA2FC",
+       "max_w": 1000,
+       "stroke": {
+        "px": 6,
+        "color": "#000114"
+       },
+       "shadow": {
+        "dx": 3,
+        "dy": 4,
+        "color": "#000114"
+       }
+      },
+      {
+       "font": "JalnanGothic.ttf",
+       "px": 103.2,
+       "center": 307,
+       "color": "#2BA2FC",
+       "hi": "#2BA2FC",
+       "max_w": 1000,
+       "stroke": {
+        "px": 6,
+        "color": "#000114"
+       },
+       "shadow": {
+        "dx": 3,
+        "dy": 4,
+        "color": "#000114"
+       }
+      }
+     ],
+     "logo": null,
+     "credit": null
+    },
+    "captions": "hide",
+    "body_text": "lines",
+    "why": "시험: 훅 카드(방구석 게시글형 hook 틀 = _test_post 좌표) 0초~첫 줄 끝 → 본문 틀(썰템홈샷판 본문 좌표). 훅 동안 자막팩 자막 대신 흰 띠에 첫 줄 글"
+   }
+  ]
+ },
+ "caption": {
+  "pack": "clean",
+  "stack": {
+   "lines": 2,
+   "break": "full",
+   "y": 505,
+   "pitch": 110,
+   "why": "시험: 첫 줄 가운데 y505(제목 밑줄 y451 과 창 y672 사이 — clean 팩이 벤치 자막보다 커서 벤치 y527 이면 둘째 줄이 창에 닿는다)·clean 팩 줄 간격 110px(10-25 실측)"
+  }
+ },
+ "packs": {
+  "caption": {
+   "pack": "clean"
+  }
+ }
+}

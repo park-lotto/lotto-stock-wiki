@@ -20,6 +20,7 @@ from shopping_shorts import comment_gen
 from shopping_shorts import scene_cut
 from shopping_shorts import shot_roles as _shot_roles
 from shopping_shorts import tag_qa
+from shopping_shorts import vertex_route
 from shopping_shorts.config import SHORTS_GEMINI_KEYS
 from shopping_shorts.video_analysis import _MODEL, _wait_until_active
 
@@ -102,6 +103,15 @@ _RESPONSE_SCHEMA = {
                     #   돌아왔다 — 축 확장이 통째로 무력화된 상태였다.
                     "shot_role": {"type": "string", "enum": list(_shot_roles.SHOT_ROLES)},
                     "product_benefits": {"type": "array", "items": {"type": "string"}},
+                    # 2026-10-01 확장 칸(카드 051) — 전부 선택. 값 검증은 _assign_seg_ids/normalize_tags 가 한다.
+                    "appeal_kind": {"type": "string"},
+                    "hook_type": {"type": "string"},
+                    "hook_why": {"type": "string"},
+                    "is_outro": {"type": "boolean"},
+                    "outro_why": {"type": "string"},
+                    "moments": {"type": "string"},
+                    "tempo": {"type": "string"},
+                    "speed_hint": {"type": "number"},
                 },
                 "required": ["start", "end", "text", "scene_desc"],
             },
@@ -141,60 +151,81 @@ _BRIEF_GUIDE = """[source_brief — 이 영상이 무슨 영상인지 먼저 한
 - flow: 영상의 **시간 흐름**을 전환점 2~5개로(한국어 한 줄, 예: "0~4초 문제 상황 → 4~15초 제품 사용 → 15초~ 결과 확인"). 대사가 없어도 화면 순서로 잡아라.
 - confidence: 위 스토리를 얼마나 확신하나 — "높음"/"낮음"/"불명" 중 하나. 화면만으론 전개를 모르겠으면 "불명"."""
 
-_SEG_FIELD_GUIDE = """- scene_desc: 그 구간 화면에 무엇이 보이는지 짧게(제품/행동/구도). 화면 속 **주 대상을
-  정확히** 적어라 — 헷갈리는 물체를 다른 것으로 단정하지 마라(예: 양파를 참외로, 무를 감자로
-  오인 금지). 확실치 않으면 색·형태로만 묘사하고 엉뚱한 이름을 붙이지 마라.
-  ★주 제품 판별: 이 영상이 파는/보여주는 **주 제품**은 영상 전체에서 **반복적으로 클로즈업되거나
-  손에 들려 사용되는 물건**이다. 화면 한구석에 잠깐 보이는 **배경 소품(인형·장식품 등)이나
-  프레임 안의 진짜 동물·사람**은 맥락일 뿐 제품이 아니다 — 이런 것에 낚여 "강아지 선풍기"처럼
-  실제 제품과 무관한 이름을 지어내지 마라. 예: 손에 들고 사용 중인 선풍기 옆에 강아지 인형이나
-  진짜 강아지가 보여도, 주 제품은 여전히 "선풍기"다.
-- label: ★그 구간이 **이 영상에서 하는 일**을 짧은 이름으로 붙여라(**12자 이내**, 한국어).
-  scene_desc가 "무엇이 보이나"(묘사)라면 label은 **"왜 이 장면이 여기 있나"(역할)**다.
-  ★위에서 정한 source_brief(제품·역할·핵심)를 기준으로 삼아라 — 이 영상이 맡은 몫 안에서
-  이 장면이 어느 대목인지 적는 것이다. 같은 그림이라도 맨 앞이면 "도입", 맨 뒤면 "마무리".
-  brief의 role이 "크기 비교"인 영상이면 그 비교 흐름 속 위치로 이름을 지어라.
-  형식: `대상 + 무엇을 하는 대목` (…시연 / …강조 / …확인 / …설명 / …비교 / …소개 / …예고).
-  · 좋은 예: "제품 개봉·구성품 확인" "자석 부착 시연" "크기 비교 시연" "바텀업 추출 시연"
-             "기존 제품 작동 시연" "완성품 클로즈업" "고객 반응 강조" "마무리·CTA"
-  · 나쁜 예: "손이 컵을 든다"(그냥 묘사) / "커피"(무엇을 하는지 없음) /
-             "메탈 플레이트 중앙의 하트 문양에서 커피가 솟는 클로즈업"(너무 길다)
-  ★화면에 실제로 보이는 것만으로 지어라. 안 보이는 걸 추측해 이름 붙이지 마라.
-- use_point: ★이 장면을 **새 영상에서 어디에 어떻게 쓰면 좋은지** 한 문장(한국어, 40~70자).
-  label이 "무슨 장면인가"(정체)라면 use_point는 **"어떻게 써먹나"(쓸모)**다.
-  대본의 어느 대목(훅·문제 제기·기능 설명·결과 확인·마무리)에 어울리는지와, 그 이유를
-  화면에 보이는 근거로 함께 적어라.
-  · 좋은 예: "영상 도입부에서 제품 목적과 구성품을 빠르게 보여주어 시청자의 흥미를 끌기 좋습니다"
-             "기존 방식과 나란히 보여주므로 '뭐가 다른데?'라는 의문을 푸는 대목에 쓰기 좋습니다"
-             "크레마가 차오르는 변화가 또렷해 결과를 확인시키는 마무리 대목에 어울립니다"
-  · 나쁜 예: "좋은 장면입니다"(근거 없음) / "제품을 보여줍니다"(scene_desc 반복) /
-             "훅"(한 단어 — 왜 그런지가 없다)
-  ★화면에 실제로 보이는 것을 근거로만 판단해라. 안 보이는 효능을 지어내지 마라.
-- action: 그 구간의 주요 손동작을 하나 골라라(당기다·붓다·바르다·펴다·자르다·섞다·닦다·
-  누르다·끼우다·열다·담다·닫다). 해당 없으면 "없음".
-- change: ★이 구간에서 **화면 속 사물에 무슨 일이 일어났는지** 한국어 한 줄로 적어라.
-  손이 무엇을 했는지(action)가 아니라 **사물이 어떻게 됐는지**다 — 주어가 사물이어야 한다.
-  · 상태 변화: "프린팅이 쩍쩍 갈라져 있다" / "크랙이 사라지고 매끈해졌다" / "양념이 사방으로 튄다"
-  · 기능 확인: "가림막이 튀는 기름을 막아준다" / "물로 쓱 헹구니 바로 닦인다" / "흔들어도 고정돼 있다"
-  · 감각·재질: "손으로 늘리니 모찌처럼 쭉 늘어난다" / "표면이 보송보송해 보인다"
-  변화도 감각도 안 보이는 구간(인물 등장·인사·배경·CTA)이면 빈 문자열.
-  ★화면에 실제로 보이는 것만. 안 보이는 효능을 지어내지 마라.
-- has_effect: 그 구간에 **원본 제작자가 넣은 지울 수 없는 시각 효과**가 있으면 true. 즉
-  화면 전환효과·줌인아웃 연출·분할화면·강한 색보정/필터·스티커/이모지/그래픽 오버레이·
-  큰 텍스트 애니메이션이 박혀 있어 **깨끗한 요리/제품 원본이 아닌** 조각이면 true. 평범하게
-  촬영된 요리/손동작/완성샷이면 false. (우리가 B롤로 재사용할 때 이물감이 생기는 조각을
-  걸러내려는 것 — 확실할 때만 true, 애매하면 false.)
-- is_key: 이 구간이 **제품/도구의 기능·성능·장점·효과를 화면으로 실증**하거나(넓다·크다·쏙
-  들어간다·때가 빠진다를 실제 행동/결과로 보여줌), 요리·살림의 **핵심 방법을 손동작으로 보여주는**
-  구간이면 true. 단순 도입 상황·인물 등장·감상·완성 인사·CTA·링크유도면 false. (원본 제작자가
-  "이 대사에 이 장면"으로 맞춰둔 실증 페어를 골라내려는 것 — 대사가 기능을 설명하며 화면이 그걸
-  보여주면 true. 애매하면 false.)
+# ★2026-10-01 사장님(카드 051): 태그는 분류가 아니라 **대본 재료** — use_point 를 "장면 위에 읽힐 대본 한 줄(소구점)"로,
+#   훅은 점수 아닌 **유형**(클로즈업/반전/비포애프터/충격/문제), 뒷컷(is_outro)·긴 컷 구간(moments)·속도(tempo/speed_hint) 추가.
+#   실측(거치대 job 29109deff2a9, tools/claim_trial_results/tagtrial_*): 장면 맞음은 유지, 대본 문장이 장면과 더 붙음.
+#   ⚠️ 뒷컷은 태거가 영상 끝의 제품 컷까지 찍는다 — 읽는 쪽(backbone_assemble._seg_index)이 "제품 보이면 무시"로 가른다.
+HOOK_TYPES = ("클로즈업", "반전", "비포애프터", "충격", "문제")
+APPEAL_KINDS = ("문제", "기능", "특징", "장점", "효과", "외관", "활용", "구성", "반응")
+
+
+def _norm_hook_type(v):
+    v = str(v or "").strip()
+    return v if v in HOOK_TYPES else ""
+
+
+def _norm_speed_hint(v):
+    """권장 재생 배속 0.5~2.0 사이 숫자만. 아니면 None(=힌트 없음). 렌더 적용은 별도 결정(sync_speed 통합 설계)."""
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return None
+    return round(f, 2) if 0.5 <= f <= 2.0 else None
+
+
+def _norm_bool(v):
+    return v if isinstance(v, bool) else str(v).strip().lower() in ("true", "1", "yes")
+
+
+_SEG_FIELD_GUIDE = """★너는 쇼핑 쇼츠 영상을 수천 편 뜯어본 **영상 추출·분석 전문가**이자, 그걸 대본으로 옮기는 **이야기 작가**다. 이 태깅은 분류가 아니라 **최고의 대본을 쓰기 위한 밑작업**이다.
+★왜 이 작업이 꼭 필요한가: 뒤에 오는 두 단계가 **전부 여기 적은 문장에 기대어** 돈다.
+  ① 대본 작가는 네 문장을 재료로 대본을 쓴다 — 네가 밋밋하게 쓰면 대본도 밋밋해진다.
+  ② 장면 매칭은 "대본 줄 ↔ 네 문장"이 같은 말인지로 컷을 고른다 — 네 문장에 그 컷만의 디테일이 없으면 엉뚱한 컷이 붙거나
+     같은 컷이 여러 줄에 반복된다(실제로 그렇게 됐다). 네 문장이 곧 그 컷이 그 줄에 가야 할 **이유**다.
+그러니 컷마다 **정말 디테일하게, 말맛을 살려서** 써라. 대충 쓴 한 줄이 대본 한 줄과 장면 하나를 망친다.
+디테일이 말맛이다: 화면에 보이는 구체 동작·부위(어느 손가락으로 무엇을 어떻게, 무엇이 어디로 쏙)를 문장에 담아라.
+"튼튼해요·간편해요" 같은 추상 장점만 적은 문장은 어느 컷에나 붙는 죽은 문장이다. 화면에 안 보이는 효능은 쓰지 마라.
+
+- scene_desc: 그 구간 화면에 무엇이 보이는지 짧게(제품/행동/구도, 40자 안팎). 띠 안에서 무엇이 어떻게 바뀌나까지.
+  화면 속 **주 대상을 정확히** 적어라 — 헷갈리는 물체를 다른 것으로 단정하지 마라. 확실치 않으면 색·형태로만.
+  ★주 제품 = 영상 전체에서 반복적으로 클로즈업되거나 손에 들려 사용되는 물건. 배경 소품·진짜 동물·사람은 제품이 아니다.
+- label: 그 구간이 **이 영상에서 하는 일**(12자 이내). 형식 `대상 + 무엇을 하는 대목`(…시연/…강조/…확인/…비교/…소개).
+  · 좋은 예: "자석 부착 시연" "크기 비교 시연" "가방 수납 확인" "완성품 클로즈업" "기존 제품 작동 시연"
+- appeal_kind: 이 장면이 보여주는 소구점의 **종류 하나** — 문제(쓰기 전 불편·기존 제품 단점) / 기능 / 특징 / 장점 /
+  효과(전후 변화·결과) / 외관(색·재질·크기) / 활용(어디에 쓰나) / 구성 / 반응(사람 표정·댓글). 소구점이 없으면 "".
+  ★"문제"를 놓치지 마라 — 제품 없이 불편한 상황, 기존 둔탁한 물건, 지저분한 상태가 보이면 문제다. 대본의 문제 제기 줄이 쓴다.
+- use_point: ★**대본화 소구점** — 시청자가 "오 저거 괜찮다"고 느낄 어필 포인트를, 이 장면 위에서 그대로 읽힐 **대본 한 줄**로
+  (한국어 구어체, 18~40자. 위 '디테일이 말맛' 원칙대로).
+  · 좋은 예: "접으면 한 손에 쏙 들어가는 일자 막대가 돼요" / "손가락으로 하단 고리를 쓱 빼면 노트북까지 버텨요" /
+             "노트북 올리고 눌러도 꿈쩍을 안 해요" / "가방 옆주머니에 그냥 쓱 넣으면 끝" / "기존 거치대는 가방이 볼록 튀어나와 짐이었죠"(문제)
+  · 나쁜 예: "도입부에 쓰기 좋습니다"(어디 쓰나 ≠ 대본) / "제품을 보여줍니다"(묘사 반복) / "최고의 거치대"(근거 없음)
+- hook_type: 이 컷이 **훅(시선 잡기)으로 쓸 만한 유형**을 하나 고른다. 점수가 아니라 "무엇이 보이면 훅인가"다. 해당 없으면 "".
+  · "클로즈업" = 제품이 화면의 절반 이상을 차지하는 뚜렷한 근접·줌인(손이나 배경보다 제품이 큼)
+  · "반전" = 펼침·변신·크기가 바뀌는 순간이 띠 안에 보임(접힌 막대가 십자로, 작은 것이 커짐)
+  · "비포애프터" = 같은 구도에서 쓰기 전/후 차이가 한 띠 안에 보임
+  · "충격" = 의외의 결과·크기·양이 한눈에 보임(무거운 걸 받친다, 한 번에 쏟아진다)
+  · "문제" = 제품 없이 불편한 상황·기존 둔탁한 물건(미끼 자리용)
+  hook_why: **띠 안에서 무엇이 보여서** 그 유형인지 10자 안팎(예 "접힌 막대가 십자로 펴짐"). 느낌·추측 금지.
+- is_outro: **화면 내용**으로만 판정한다(영상 끝부분이라는 이유로 true 금지). 띠 안에 CTA·구독·구매 링크 **글자**가 크게 박혔거나,
+  남의 채널 UI(채널명·댓글창·썸네일 격자)거나, 사람이 카메라 보고 인사·말만 하거나, 검은 화면·로고만 있으면 true.
+  **제품이 보이면 영상 맨 끝 컷이라도 false**(수납·완성품·마지막 클로즈업은 전부 재료다).
+  outro_why: true일 때만 **띠 안에 무엇이 보여서**인지(예 "구독 버튼 글자", "댓글창 UI"). 제품 이름이 들어가면 그 컷은 뒷컷이 아니다.
+- moments: 컷이 3초보다 길면 "0~2초 뚜껑 염, 2~5초 내용물 부음, 5초~ 멈춤"처럼 **몇 초에 무엇이 보이는지**. 동작이 끝나고 멈춰 있는
+  구간이 있으면 그것도 적어라(편성이 그 구간을 자른다). 3초 이하면 "".
+- tempo: 띠 안 동작의 **속도** — "빠름"(1초 안에 동작이 끝남·휙 지나감) / "보통" / "느림"(천천히 보여주거나 정지에 가까움).
+  speed_hint: 이 컷을 대본 위에 깔 때 권장 재생 배속 — 빠른 동작을 잘 보이게 하려면 0.8, 보통 1.0, 지루하게 길면 1.2.
+- action: 주요 손동작 하나(당기다·붓다·바르다·펴다·자르다·섞다·닦다·누르다·끼우다·열다·담다·닫다). 없으면 "없음".
+- change: 화면 속 **사물이 어떻게 됐는지** 한국어 한 줄(주어 = 사물). 변화 없으면 빈 문자열.
+  · "거치대가 십자로 펼쳐졌다" / "스마트폰이 자석에 착 붙었다" / "접힌 막대가 가방 주머니에 들어갔다"
+- has_effect: 원본 제작자가 넣은 지울 수 없는 시각 효과(전환·분할·그래픽·큰 텍스트 애니메이션)가 있으면 true. 확실할 때만.
+- is_key: 제품의 기능·성능·장점·효과를 **화면으로 실증**하는 구간이면 true(넓다·쏙 들어간다·흔들리지 않는다를 실제 행동·결과로).
+  단순 도입·인물·감상·CTA는 false.
 {_SHOT_ROLE_GUIDE}
-- product_benefits: **자막도 나레이션도 없어도** 그 구간 화면만 보고 이 제품/도구의 **특장점을
-  한국어 문장 1~2개**로 뽑아라(예: "터치 한 번에 자동으로 열린다", "좁은 틈에 쏙 들어가 공간을
-  아낀다", "고급스러운 마감"). 요리·살림 소재면 방법 설명 대신 **결과의 매력**을 적어라(예:
-  "겉은 바삭 속은 촉촉하게 나온다"). 화면이 특장점을 안 보여주는 구간(인물 등장·인사·배경)이면
-  빈 배열. **추측으로 없는 기능을 만들지 마라** — 화면에 실제로 보이는 것만."""
+- product_benefits: 그 구간 화면만 보고 이 제품의 **특장점 문장 1~2개**(use_point와 같은 소구점을 사실 문장으로.
+  예: "접으면 일자 막대 크기가 된다", "노트북을 눌러도 흔들리지 않는다"). 화면이 특장점을 안 보여주면 빈 배열.
+  **추측으로 없는 기능을 만들지 마라** — 화면에 실제로 보이는 것만.
+
+★출력 JSON의 태그마다 위 칸을 **전부** 넣어라 — 특히 appeal_kind, hook_type, hook_why, is_outro, moments, tempo, speed_hint 는 아래 출력 예시에 안 보여도 반드시 키로 넣는다(없으면 "" 또는 0)."""
 
 _PROMPT = """이 영상을 보고 시간 순서대로 세그먼트로 나눠 대본을 추출해라.
 
@@ -467,6 +498,19 @@ def _merge_too_short(raw_segments, min_clip=None):
     return segs
 
 
+def _story_for(brief, segments, note=None):
+    """1단계 마무리에서 스토리 한 번(호출 1회). 실패·빈 응답은 [] 로 두고 stderr 에 남긴다(조용히 숨기지 않는다)."""
+    from shopping_shorts import story_tag
+    import sys as _sys
+    n = {}
+    lines = story_tag.make_story((brief or {}).get("product") if isinstance(brief, dict) else "", segments, note=n)
+    if not lines:
+        print("script_extract: 스토리 없음 — %s" % (n.get("story_reason") or "?"), file=_sys.stderr)
+    if note is not None:
+        note.update(n)
+    return lines
+
+
 def _assign_seg_ids(video_id, raw_segments, motion_map=None):
     """모델이 준 세그먼트 목록에 seg_id 부여 + 숫자 필드 float 캐스팅(순수함수).
     motion_map({seg_id: level|None})이 오면 그 값을 motion_level로 싣는다(P2, 2026-07-29)."""
@@ -502,6 +546,15 @@ def _assign_seg_ids(video_id, raw_segments, motion_map=None):
             # 무자막 소스용 화면→특장점 문장 (fail-open []) — text가 빈칸이어도 대본 재료가 된다.
             "product_benefits": _norm_benefits(seg.get("product_benefits")),
             "motion_level": motion_map.get(sid),  # scene_cut 매핑 결과 or None(정보없음, fail-open)
+            # 2026-10-01 확장 칸(카드 051) — 옛 추출본엔 없어 빈칸/False/None(fail-open)
+            "appeal_kind": (str(seg.get("appeal_kind") or "").strip() if str(seg.get("appeal_kind") or "").strip() in APPEAL_KINDS else ""),
+            "hook_type": _norm_hook_type(seg.get("hook_type")),
+            "hook_why": str(seg.get("hook_why") or "").strip()[:40],
+            "is_outro": _norm_bool(seg.get("is_outro")),
+            "outro_why": str(seg.get("outro_why") or "").strip()[:40],
+            "moments": str(seg.get("moments") or "").strip()[:120],
+            "tempo": (str(seg.get("tempo") or "").strip() if str(seg.get("tempo") or "").strip() in ("빠름", "보통", "느림") else ""),
+            "speed_hint": _norm_speed_hint(seg.get("speed_hint")),
         })
     return out
 
@@ -643,7 +696,10 @@ def storable(result):
             # 가로 영상을 세로 숏폼에 넣으면 좌우가 잘려 확대된 것처럼 나오고, 제작은
             # mix_pipeline._block_landscape가 막는다. 여기 없으면 담을 때 알릴 방법이 없다.
             "video_w": int(r.get("video_w") or 0) or None,
-            "video_h": int(r.get("video_h") or 0) or None}
+            "video_h": int(r.get("video_h") or 0) or None,
+            # 영상 스토리(2026-10-02, 관제 020) — 1단계가 만든 "대본 문장+컷". 2단계 백본·이야기작가가 특징 묶음 자리에 쓴다.
+            # ★10-02 실측: 여기 빠져 있어 배포 뒤 분석된 영상 전부 스토리가 저장 순간 버려졌다(만들고도 0건).
+            "story": r.get("story") or []}
 
 
 def _pick_better_extract(first, second, duration):
@@ -709,24 +765,42 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
     attempt = 0
     _walk_guard = 0
     _walk_cap = max_retries + len(SHORTS_GEMINI_KEYS) + 2
+    # ★Vertex 먼저(2026-09-25, 스위치 켠 계정만 — vertex_route.on). 딱 1회 시도하고 실패하면
+    #   아래 종전 키풀 경로로 **그대로** 이어간다(attempt·키 표시를 건드리지 않는다).
+    #   Vertex엔 Files API가 없어 영상을 인라인 바이트로 보낸다(실측 32MB·19초 OK).
+    _vx_pending = vertex_route.on("script_extract")
+    _vx_t0 = 0.0
     while attempt < max_retries and _walk_guard < _walk_cap:
         _walk_guard += 1
-        key, idx = comment_gen._current_key_and_idx()
-        if key is None:
-            # 조용한 빈 결과 금지(2026-08-07) — 호출부가 '음성 없는 영상'으로 오해했다.
-            print("script_extract: 키 풀 전체 소진 — 호출 못 함(영상 문제 아님)",
-                  file=sys.stderr)
-            raise KeyPoolExhausted(
-                "Gemini 키 풀이 전부 소진 표시 상태라 대본 추출을 시작하지 못했습니다")
-        client = comment_gen._client_for_key(key)
+        _use_vertex, _vpart = False, None
+        if _vx_pending:
+            _vx_pending = False
+            _vpart = vertex_route.video_part(video_path)
+            if _vpart is not None:
+                _use_vertex, key, idx = True, None, None
+                client, model = vertex_route.client(), vertex_route.model()
+                _vx_t0 = time.monotonic()
+        if not _use_vertex:
+            key, idx = comment_gen._current_key_and_idx()
+            if key is None:
+                # 조용한 빈 결과 금지(2026-08-07) — 호출부가 '음성 없는 영상'으로 오해했다.
+                print("script_extract: 키 풀 전체 소진 — 호출 못 함(영상 문제 아님)",
+                      file=sys.stderr)
+                raise KeyPoolExhausted(
+                    "Gemini 키 풀이 전부 소진 표시 상태라 대본 추출을 시작하지 못했습니다")
+            client = comment_gen._client_for_key(key)
         file_obj = None
         try:
-            with open(video_path, "rb") as fh:
-                file_obj = client.files.upload(file=fh, config=types.UploadFileConfig(mime_type="video/mp4"))
-            file_obj = _wait_until_active(client, file_obj)
+            if _use_vertex:
+                _contents = [_vpart, prompt]
+            else:
+                with open(video_path, "rb") as fh:
+                    file_obj = client.files.upload(file=fh, config=types.UploadFileConfig(mime_type="video/mp4"))
+                file_obj = _wait_until_active(client, file_obj)
+                _contents = [file_obj, prompt]
             resp = client.models.generate_content(
                 model=model,
-                contents=[file_obj, prompt],
+                contents=_contents,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
                     response_schema=_RESPONSE_SCHEMA,
@@ -746,12 +820,16 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
             # 소스 단위 특장점: 모델의 최상위 요약을 우선하고, 없으면 세그별 집계로 폴백.
             # 무자막 영상(full_text 0자)이 대본 생성에서 통째로 빠지던 것을 막는 재료다.
             benefits = _norm_benefits(data.get("product_benefits")) or _collect_benefits(segments)
+            _brief = _norm_brief(data.get("source_brief"))
             result = {
                 "segments": segments,
                 "full_text": data.get("full_text", ""),
                 "product_benefits": benefits,
                 # 영상 단위 요약(2026-08-16). 없으면 {} — 읽는 쪽이 빈 dict를 견딘다.
-                "source_brief": _norm_brief(data.get("source_brief")),
+                "source_brief": _brief,
+                # ★스토리(2026-10-01 사장님 "태깅부터 대본화"): 순서 있는 대본 문장 + 컷. 2단계가 특징 묶음 자리에 그대로 쓴다.
+                #   실패하면 [] — 2단계는 종전 경로(note 에 이유). 판단은 story_tag 한 곳.
+                "story": _story_for(_brief, segments),
             }
             # ★태깅 QA(2026-08-01). 지금까진 스키마만 통과하면 무조건 채택했다 — 프롬프트의
             #   지침(0초 훅·받아쓰기·shot_role·change)이 지켜졌는지 아무도 안 봤다. 슬롯 기반
@@ -765,9 +843,18 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 continue
             if qa_first is not None:             # 재시도분이 더 나쁘면 첫 결과로 되돌린다
                 result = _pick_better_extract(qa_first, result, duration)
+            if _use_vertex:
+                print("vertex_route.대본추출: %s OK(%.1fs, 구간 %d)" % (
+                    model, time.monotonic() - _vx_t0, len(segments)), file=sys.stderr)
             return _attach_qa(result, duration, qa_retried, video_path)
         except Exception as e:
             m = str(e)
+            if _use_vertex:
+                # ★Vertex 실패는 키풀과 무관 — 표시·대기·attempt 없이 종전 경로로 넘어간다.
+                print("vertex_route.대본추출: %s 실패(%.1fs) → 키풀 폴백 — %r" % (
+                    model, time.monotonic() - _vx_t0, e), file=sys.stderr)
+                model = _MODEL
+                continue
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e), exc=e)
                 continue  # ★죽은 키 우회는 attempt를 안 올린다 — 살아있는 키까지 걸어간다

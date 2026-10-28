@@ -6,6 +6,8 @@
 근본원인 ②: 프론트가 완료 신호 없이 고정 4초 뒤 한 번만 새로고침 → 실제 재합성(>4초)이
   끝나기 전에 옛 mp3를 캐시버스터 새 URL로 물어와 그대로 굳음.
 """
+from pathlib import Path
+
 from fastapi.testclient import TestClient
 from shopping_shorts import app as app_module
 from shopping_shorts.store import Store
@@ -62,7 +64,9 @@ def test_resynth_one_beat_bumps_tts_ver(monkeypatch, tmp_path):
     store.create_mix_job("jb", ["u"], 20, "free")
     store.update_mix_job("jb", edit_plan={
         "structure": "free", "beats": [_beat()], "plagiarism_flags": []})
-    monkeypatch.setattr(mix_pipeline, "synthesize_line", lambda *a, **k: "n")
+    monkeypatch.setattr(
+        mix_pipeline, "synthesize_line",
+        lambda _text, out, **_kw: Path(out).write_bytes(b"MP3"))
     monkeypatch.setattr(mix_pipeline.asr_check, "transcribe_words", lambda p: [])
     mix_pipeline.resynth_one_beat("jb", 0, {"voice_id": "v"}, db, str(tmp_path / "work"))
     beat = store.get_mix_job("jb")["edit_plan"]["beats"][0]

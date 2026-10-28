@@ -84,7 +84,8 @@ def test_manual_open_link_stays_as_fallback():
     """자동으로 열리지 않아도(팝업 차단 등) 손으로 열 링크가 박스에 남아 있어야 한다."""
     html = _html()
     box = html.split("async function refreshInpock(")[1].split("function inpockCopy(")[0]
-    assert "인포크만 열기" in box
+    # 2026-10-18: 링크 서비스(인포크/머닝)를 고르게 돼 이름이 들어간다 — "<서비스>만 열기"
+    assert "만 열기" in box and "H.page" in box
     assert 'target="_blank"' in box
 
 

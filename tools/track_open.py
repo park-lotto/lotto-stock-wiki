@@ -36,6 +36,7 @@ def open_track(name, repo=track.BASE, agent="claude", extra=()):
             f"없는 트랙: {name}\n"
             f"만들려면: py tools/track.py start {name}"
         )
+    track.warm(name, repo)                     # D 에 가 있던 트랙이면 C 로 먼저(관제 109 — "쓸 때만 C 로")
     print(f"\n▶ {name} 트랙에서 엽니다\n  {wt}\n")
     # cwd만 바꿔 claude를 띄운다. 출력을 캡처하지 않으므로 TUI가 콘솔을 그대로 쓴다.
     return subprocess.call(["claude", *sys.argv[2:]], cwd=str(wt))

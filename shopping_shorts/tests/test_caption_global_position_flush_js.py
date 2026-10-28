@@ -20,12 +20,7 @@ def _body(src: str, start: str, end: str) -> str:
     return src[i:src.index(end, i)]
 
 
-def test_vertical_slider_commits_global_position_and_clears_scene_overrides():
-    src = _src()
-    tag = re.search(r'<input id="capY"[^>]+>', src).group(0)
-    assert 'oninput="capPositionTouched()"' in tag
-    assert 'onchange="saveCapAllPosition()"' in tag
-
+# (세로 슬라이더 capY 마크업 시험은 옛 피팅룸 삭제(2026-10-01 관제 058 C1)로 뺐다 — 새 편집기는 자막 자리를 드래그·적용 범위로 정한다)
 
 def test_horizontal_alignment_uses_same_global_position_path():
     body = _body(_src(), "function alignCap(where){", "// ══")

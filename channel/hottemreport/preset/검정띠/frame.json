@@ -1,0 +1,153 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "OE-11wb7vdY",
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 559,
+   "w": 1080,
+   "h": 1361,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 298,
+   "w": 1000,
+   "align": "center",
+   "lines": 2,
+   "font": "CcIBMPlexSansKR-Bold",
+   "size": 127.4,
+   "line_h": 111,
+   "rgb": [
+    248,
+    233,
+    3
+   ],
+   "line_rgb": [
+    [
+     248,
+     233,
+     3
+    ],
+    [
+     253,
+     33,
+     31
+    ]
+   ],
+   "line_scale": [
+    0.835,
+    1.165
+   ],
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -1.2,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "$per_video"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1384,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "Pretendard",
+   "size": 80.2,
+   "line_h": 92,
+   "rgb": [
+    253,
+    253,
+    253
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 13,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": {
+    "kind": "none",
+    "ms": 300
+   },
+   "emphasis": null,
+   "text": null
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 539,
+   "y": 159,
+   "w": 320,
+   "align": "center",
+   "lines": 1,
+   "font": "GasoekOne",
+   "size": 62.5,
+   "line_h": 72,
+   "rgb": [
+    241,
+    255,
+    240
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": {
+    "px": 37,
+    "rgb": [
+     4,
+     113,
+     4
+    ]
+   },
+   "box": null,
+   "italic": false,
+   "letter_spacing": -3.8,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "핫템리포트"
+  }
+ ]
+}

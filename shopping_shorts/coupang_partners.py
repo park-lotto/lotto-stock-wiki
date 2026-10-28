@@ -52,10 +52,18 @@ def canonical_product_url(url):
     ★남의 추적링크를 그대로 쓰면 수수료가 그쪽으로 간다(2026-08-18 채이홈 사례).
       `link.coupang.com/re/AFFSDP?...&pageKey=123` / `coupang.com/vp/products/123?...` →
       `https://www.coupang.com/vp/products/123`. 단축링크(`link.coupang.com/a/xxx`)는
-      상품번호를 알 수 없어 그대로 둔다(그건 사람이 상품 URL로 바꿔 넣어야 한다)."""
+      상품번호를 알 수 없어 그대로 둔다(그건 사람이 상품 URL로 바꿔 넣어야 한다).
+    ★옵션(`itemId`·`vendorItemId`)은 남긴다(2026-10-14 회원 제보, 관제 207) — 추적값이 아니라
+      **어느 옵션 화면으로 여는지**다. 지우면 발급 링크가 기본 옵션으로 열려 회원이 고른 옵션과 달라진다.
+      수수료 주인은 `lptag`라 그건 계속 걷어낸다."""
     u = (url or "").strip()
     m = _PAGEKEY_RE.search(u) or _PRODUCT_RE.search(u)
-    return f"https://www.coupang.com/vp/products/{m.group(1)}" if m else u
+    if not m:
+        return u
+    q = urllib.parse.parse_qsl(urllib.parse.urlsplit(u).query)
+    kept = [(k, v) for k, v in q if k in _KEEP_PARAMS and v.isdigit()]
+    base = f"https://www.coupang.com/vp/products/{m.group(1)}"
+    return base + ("?" + urllib.parse.urlencode(kept) if kept else "")
 
 
 def _auth_header(method, path_with_query, ak, sk):
@@ -120,6 +128,18 @@ def probe_key(ak, sk):
 PARTNERS_LINK_PAGE = "https://partners.coupang.com/#affiliate/ws/link"
 # 인포크링크(링크인바이오) 관리 화면 — 최종 링크를 버튼으로 올리는 곳.
 INPOCK_PAGE = "https://link.inpock.co.kr"
+
+# 링크 서비스(링크인바이오) — 회원이 고른다(2026-10-18 고객 제보 "인포크 말고 머닝도 — 더 싸고 틱톡 자동답글").
+#   둘 다 공개 등록 API 가 없어 하는 일은 같다: 최종 링크를 복사하고 그 서비스 관리 화면을 연다.
+LINK_HUBS = {
+    "inpock":   {"key": "inpock",   "name": "인포크", "page": INPOCK_PAGE, "admin": "https://link.inpock.co.kr/admin"},
+    "moneying": {"key": "moneying", "name": "머닝",   "page": "https://moneying.biz", "admin": "https://moneying.biz/my/multilink"},
+}
+
+
+def link_hub(key):
+    """링크 서비스 정보 — 모르는 값이면 인포크(종전 그대로)."""
+    return dict(LINK_HUBS.get(str(key or ""), LINK_HUBS["inpock"]))
 
 # 공정거래위원회 추천·보증 심사지침상 대가성 고지 문구(설명란·고정댓글 필수).
 DISCLOSURE = "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다."
@@ -262,6 +282,37 @@ def build_product(keyword="", url="", name="", partner_url="", memo=""):
         # 인포크링크에 실제로 올렸는지 — 자동화 전까진 사람이 체크한다.
         "inpock_registered": False,
     }
+
+
+# 쿠팡 이미지 호스트 — 파트너스 검색 API는 ads-partners.coupang.com/image1/…을 준다(2026-09-27 서버 실측),
+# 상품 페이지 쪽은 *.coupangcdn.com. 서버가 대신 받는 대상은 이 둘뿐(SSRF 방지).
+_IMAGE_HOST_RE = re.compile(r"^https://(([a-z0-9-]+\.)*coupangcdn\.com|ads-partners\.coupang\.com)/", re.I)
+
+
+def is_product_image_url(u):
+    """쿠팡 이미지 서버(coupangcdn.com·ads-partners.coupang.com) https 주소인가 — 서버가 대신 받아 줄 수 있는 유일한 대상(SSRF 방지)."""
+    return bool(u) and bool(_IMAGE_HOST_RE.match(str(u).strip()))
+
+
+def product_image(product_id, name="", given="", access_key="", secret_key="", customer_id=None):
+    """상품 이미지 주소 — **판단은 여기 한 곳**(2026-09-27 김형관님 "인포크에 올릴 이미지를 못 받는다").
+
+    ① 화면이 검색 카드에서 고른 이미지(given)가 쿠팡 이미지 서버 주소면 그대로.
+    ② 없으면 상품명으로 파트너스 검색 1회 → **같은 상품번호** 카드의 이미지(다른 상품 그림을 붙이지 않는다).
+    ③ 못 찾으면 "" — 화면은 이미지 칸을 숨긴다. 쿠팡 상품 페이지는 봇 차단(Akamai)이라 긁지 않는다."""
+    if is_product_image_url(given):
+        return given.strip()
+    pid = str(product_id or "").strip()
+    if not (pid and (name or "").strip() and access_key and secret_key):
+        return ""
+    try:
+        res = search_products(name, 10, access_key, secret_key, customer_id=customer_id)
+    except Exception:                                    # noqa: BLE001 — 이미지는 부가물
+        return ""
+    for it in (res or {}).get("items") or []:
+        if str(it.get("product_id")) == pid and is_product_image_url(it.get("image")):
+            return it["image"].strip()
+    return ""
 
 
 def final_link(product):

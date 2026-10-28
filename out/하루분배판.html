@@ -1,0 +1,686 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<title>하루 분배판</title><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#0f1115;--fg:#e8ebf0;--mut:#98a2b3;--line:#232833;--card:#161a22;
+--hot:#3ddc84;--cold:#f5b942;--dead:#f2545b;--acc:#5b9dff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Malgun Gothic',system-ui,sans-serif;font-size:15px;line-height:1.6}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 80px}
+h1{font-size:26px;margin:0 0 4px}
+.sub{color:var(--mut);margin-bottom:26px}
+h2{font-size:19px;margin:34px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card .t{font-weight:700;margin-bottom:6px}
+.card .d{color:var(--mut);font-size:13.5px}
+.big{font-size:30px;font-weight:800}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--mut);font-weight:600;font-size:13px;position:sticky;top:0;background:var(--bg)}
+td.num{text-align:right;white-space:nowrap;color:var(--mut)}
+td.nm{font-weight:600;white-space:nowrap}
+td.nx{color:var(--mut);font-size:13px}
+tr.dead td.nm{color:var(--dead)} tr.cold td.nm{color:var(--cold)} tr.hot td.nm{color:var(--hot)}
+.b{cursor:pointer;border:1px solid var(--line);background:#1d2230;color:var(--mut);
+border-radius:7px;padding:4px 9px;font-size:12.5px;margin-right:4px}
+.b:hover{border-color:var(--acc)}
+.b.on[data-v=keep]{background:#12351f;color:var(--hot);border-color:var(--hot)}
+.b.on[data-v=drop]{background:#3a1416;color:var(--dead);border-color:var(--dead)}
+.b.on[data-v=hold]{background:#3a2d10;color:var(--cold);border-color:var(--cold)}
+td.pick{white-space:nowrap}
+.sched td.slot{white-space:nowrap;color:var(--acc);font-weight:700}
+.rule{background:#1a1410;border:1px solid #4a3418;border-radius:12px;padding:14px 18px;margin-top:14px}
+.rule b{color:var(--cold)}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#11151c;border-top:1px solid var(--line);
+padding:10px 16px;display:flex;gap:18px;justify-content:center;font-size:14px}
+.bar span b{font-size:17px}
+</style></head><body><div class="wrap">
+<h1>하루 분배판</h1>
+<div class="sub">2026-09-20 실측 · 열린 트랙 322개 · <b>미병합 65개</b> · 최근 3일 작업은 전부 제작소 한 축</div>
+
+<h2>1. 하루를 네 칸으로 자른다 — 개발은 그중 한 칸</h2>
+<div class="grid">
+<div class="card"><div class="t">칸 A · 개발 (하루 1칸)</div><div class="d">아래 판에서 <b>끝낸다</b>로 찍은 것만. 새 트랙 금지. 이 칸이 넘치면 그날은 거기서 끝.</div></div>
+<div class="card"><div class="t">칸 B · 유튜브 영상</div><div class="d">대본 1편 또는 편집 1편. 프로그램은 도구일 뿐, 이 칸이 자산을 만든다.</div></div>
+<div class="card"><div class="t">칸 C · 남의 채널 보기</div><div class="d">30~40분. 그냥 보기 말고 <b>메모 3줄</b>(훅/구성/왜 터졌나) 남겨야 끝난 것.</div></div>
+<div class="card"><div class="t">칸 D · 강의·공부</div><div class="d">한 강의만 고정. 여러 개 동시 수강 금지 — 그게 트랙 322개와 같은 병이다.</div></div>
+</div>
+
+<table class="sched">
+<tr><th>칸</th><th>표준 배치</th><th>끝났다는 기준(이게 없으면 안 끝난다)</th></tr>
+<tr><td class="slot">A 개발</td><td>가장 머리 맑은 시간 1블록 (90~120분)</td><td>브랜치 1개 <b>finish까지</b>. 커밋만 하고 끝내면 미병합 66개가 된다</td></tr>
+<tr><td class="slot">B 영상</td><td>A 다음 블록</td><td>대본 .md 1개 또는 영상 1편 업로드</td></tr>
+<tr><td class="slot">C 채널</td><td>이동·식후 자투리</td><td>메모 3줄 저장</td></tr>
+<tr><td class="slot">D 공부</td><td>하루 끝, 짧게</td><td>1강 + 적용할 것 1줄</td></tr>
+</table>
+
+<div class="rule">
+<b>분배를 지키게 만드는 규칙 3개</b><br>
+① <b>개발은 하루 한 칸.</b> 재밌어도 B·C·D 칸을 먹지 않는다. 개발이 무한한 이유는 재밌어서이지 급해서가 아니다.<br>
+② <b>끝낸다 = finish.</b> 커밋만 한 건 안 끝난 것. 그래서 65개가 쌓였다.<br>
+③ <b>신규 트랙은 "끝낸다"가 3개 이하일 때만.</b> 지금은 신규 금지 상태다.
+</div>
+
+<h2>2. 밀린 일 65개 — 버튼으로 찍으십시오 (선택은 자동 저장)</h2>
+<div class="grid" style="margin-bottom:10px">
+<div class="card"><div class="d">죽은 일 (30일+)</div><div class="big" style="color:var(--dead)">16</div><div class="d">대부분 버려야 할 것</div></div>
+<div class="card"><div class="d">식은 일 (14~29일)</div><div class="big" style="color:var(--cold)">18</div><div class="d">보류 또는 버리기</div></div>
+<div class="card"><div class="d">살아있는 일 (13일 이내)</div><div class="big" style="color:var(--hot)">31</div><div class="d">여기서만 "끝낸다"를 고르십시오</div></div>
+</div>
+<table>
+<tr><th>트랙</th><th>방치</th><th>커밋</th><th>핸드오프의 다음 할 일</th><th>판정</th></tr>
+<tr class="dead" data-name="대본믹스통합">
+<td class="nm">대본믹스통합</td>
+<td class="num">63일</td><td class="num">1</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="dead" data-name="샤오홍슈믹스">
+<td class="nm">샤오홍슈믹스</td>
+<td class="num">62일</td><td class="num">2</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="dead" data-name="동적로딩">
+<td class="nm">동적로딩</td>
+<td class="num">62일</td><td class="num">1</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="dead" data-name="제작소재료다운로드">
+<td class="nm">제작소재료다운로드</td>
+<td class="num">61일</td><td class="num">1</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="dead" data-name="채널히스토리">
+<td class="nm">채널히스토리</td>
+<td class="num">59일</td><td class="num">1</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="dead" data-name="부품은행-세션2길이">
+<td class="nm">부품은행-세션2길이</td>
+<td class="num">56일</td><td class="num">1</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="dead" data-name="제작소작업목록">
+<td class="nm">제작소작업목록</td>
+<td class="num">55일</td><td class="num">1</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="dead" data-name="샤홍도우인크롤">
+<td class="nm">샤홍도우인크롤</td>
+<td class="num">53일</td><td class="num">1</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="dead" data-name="영상길이표시">
+<td class="nm">영상길이표시</td>
+<td class="num">46일</td><td class="num">1</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="dead" data-name="숏템메이커">
+<td class="nm">숏템메이커</td>
+<td class="num">44일</td><td class="num">2</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="dead" data-name="VSL리모션">
+<td class="nm">VSL리모션</td>
+<td class="num">38일</td><td class="num">24</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="dead" data-name="롱폼쇼츠">
+<td class="nm">롱폼쇼츠</td>
+<td class="num">34일</td><td class="num">1</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="dead" data-name="랭킹렌더상한">
+<td class="nm">랭킹렌더상한</td>
+<td class="num">33일</td><td class="num">3</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="dead" data-name="짤쇼핑카테고리">
+<td class="nm">짤쇼핑카테고리</td>
+<td class="num">33일</td><td class="num">1</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="dead" data-name="씨앗오염">
+<td class="nm">씨앗오염</td>
+<td class="num">33일</td><td class="num">1</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="dead" data-name="대본수정미리보기">
+<td class="nm">대본수정미리보기</td>
+<td class="num">32일</td><td class="num">2</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="cold" data-name="바꾸기길이">
+<td class="nm">바꾸기길이</td>
+<td class="num">28일</td><td class="num">1</td>
+<td class="nx">⏭ 병합만 남음(`821a1bdf6`).</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="cold" data-name="효과음배치">
+<td class="nm">효과음배치</td>
+<td class="num">27일</td><td class="num">1</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="cold" data-name="자막컷정렬">
+<td class="nm">자막컷정렬</td>
+<td class="num">26일</td><td class="num">1</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="cold" data-name="대본스타일카드">
+<td class="nm">대본스타일카드</td>
+<td class="num">26일</td><td class="num">1</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="cold" data-name="고객상세시트">
+<td class="nm">고객상세시트</td>
+<td class="num">22일</td><td class="num">1</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="cold" data-name="필름롤러">
+<td class="nm">필름롤러</td>
+<td class="num">21일</td><td class="num">1</td>
+<td class="nx">⏭ 사장님 폰 확인(?pv=1): 세로 적층 순서·미리보기 높이(38vh)·필름 끌기 감도.</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="cold" data-name="칸타임라인">
+<td class="nm">칸타임라인</td>
+<td class="num">21일</td><td class="num">1</td>
+<td class="nx">- ⏭ 남은 것: T7 싱크감사 배치 / --pv-w·--shorts-pv-w 변수 통합 / 사장님 실사용 피드백</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="cold" data-name="장면강조썸네일">
+<td class="nm">장면강조썸네일</td>
+<td class="num">20일</td><td class="num">4</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="cold" data-name="글자별색">
+<td class="nm">글자별색</td>
+<td class="num">20일</td><td class="num">3</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="cold" data-name="필름자막구간">
+<td class="nm">필름자막구간</td>
+<td class="num">20일</td><td class="num">1</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="cold" data-name="마이페이지">
+<td class="nm">마이페이지</td>
+<td class="num">20일</td><td class="num">1</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="cold" data-name="가입자동승인">
+<td class="nm">가입자동승인</td>
+<td class="num">20일</td><td class="num">1</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="cold" data-name="출처장면배선">
+<td class="nm">출처장면배선</td>
+<td class="num">19일</td><td class="num">3</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="cold" data-name="여백안내">
+<td class="nm">여백안내</td>
+<td class="num">18일</td><td class="num">1</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="cold" data-name="매칭오푸스AB">
+<td class="nm">매칭오푸스AB</td>
+<td class="num">17일</td><td class="num">3</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="cold" data-name="썰채널전수조사">
+<td class="nm">썰채널전수조사</td>
+<td class="num">14일</td><td class="num">8</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="cold" data-name="띠손잡이드래그">
+<td class="nm">띠손잡이드래그</td>
+<td class="num">14일</td><td class="num">3</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="cold" data-name="유튜브대본추출">
+<td class="nm">유튜브대본추출</td>
+<td class="num">14일</td><td class="num">1</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="좋은장면우선">
+<td class="nm">좋은장면우선</td>
+<td class="num">13일</td><td class="num">1</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="원본자막안내">
+<td class="nm">원본자막안내</td>
+<td class="num">12일</td><td class="num">1</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="컷뱅크">
+<td class="nm">컷뱅크</td>
+<td class="num">10일</td><td class="num">1</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="noonnu-font-collect">
+<td class="nm">noonnu-font-collect</td>
+<td class="num">9일</td><td class="num">3</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="장면그림">
+<td class="nm">장면그림</td>
+<td class="num">9일</td><td class="num">10</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="신비한건축사전">
+<td class="nm">신비한건축사전</td>
+<td class="num">9일</td><td class="num">1</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="yt-meaningful-search">
+<td class="nm">yt-meaningful-search</td>
+<td class="num">9일</td><td class="num">1</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="result-window-stability">
+<td class="nm">result-window-stability</td>
+<td class="num">9일</td><td class="num">1</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="크리에이티브라이브러리설계">
+<td class="nm">크리에이티브라이브러리설계</td>
+<td class="num">8일</td><td class="num">2</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="볼케이노어댑터">
+<td class="nm">볼케이노어댑터</td>
+<td class="num">8일</td><td class="num">2</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="회사운영플랫폼">
+<td class="nm">회사운영플랫폼</td>
+<td class="num">6일</td><td class="num">22</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="효과팩라이브러리">
+<td class="nm">효과팩라이브러리</td>
+<td class="num">6일</td><td class="num">13</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="담은장면전부">
+<td class="nm">담은장면전부</td>
+<td class="num">5일</td><td class="num">3</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="릴리자막프리셋">
+<td class="nm">릴리자막프리셋</td>
+<td class="num">5일</td><td class="num">22</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="장면꾸미기배선검증">
+<td class="nm">장면꾸미기배선검증</td>
+<td class="num">5일</td><td class="num">1</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="product-consensus">
+<td class="nm">product-consensus</td>
+<td class="num">5일</td><td class="num">1</td>
+<td class="nx">- 다음:정규finish→서버갱신→QA용기전체생성 및변기부분regen/저장/새로고침. 임시�</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="Buffer연동">
+<td class="nm">Buffer연동</td>
+<td class="num">5일</td><td class="num">1</td>
+<td class="nx">⏭ 다음</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="오늘의핫영상">
+<td class="nm">오늘의핫영상</td>
+<td class="num">4일</td><td class="num">2</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="토스결제">
+<td class="nm">토스결제</td>
+<td class="num">4일</td><td class="num">1</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="유튜브제작">
+<td class="nm">유튜브제작</td>
+<td class="num">4일</td><td class="num">1</td>
+<td class="nx">  다음 녹화부터 창을 줄이거나 Ctrl+ 확대 상태로 찍으면 깔끔해진다</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="뇌전구벤치">
+<td class="nm">뇌전구벤치</td>
+<td class="num">3일</td><td class="num">61</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="대본게이트">
+<td class="nm">대본게이트</td>
+<td class="num">3일</td><td class="num">4</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="내대본직접쓰기">
+<td class="nm">내대본직접쓰기</td>
+<td class="num">3일</td><td class="num">1</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="장면꾸미기기존탭통합">
+<td class="nm">장면꾸미기기존탭통합</td>
+<td class="num">2일</td><td class="num">2</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="자막제거프로">
+<td class="nm">자막제거프로</td>
+<td class="num">2일</td><td class="num">1</td>
+<td class="nx">- ⏭ 제안(미착수): 30029에서 자동 2차 시도 중단(2중 차감), 업체 장애 중 같은 편성 �</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="구절컷반영">
+<td class="nm">구절컷반영</td>
+<td class="num">2일</td><td class="num">1</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="대본말속도">
+<td class="nm">대본말속도</td>
+<td class="num">1일</td><td class="num">10</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="landing-footer-registration">
+<td class="nm">landing-footer-registration</td>
+<td class="num">1일</td><td class="num">1</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="장면분량">
+<td class="nm">장면분량</td>
+<td class="num">0일</td><td class="num">68</td>
+<td class="nx">(핸드오프 있음, 다음할일 줄 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="장면꾸미기UI코덱스">
+<td class="nm">장면꾸미기UI코덱스</td>
+<td class="num">0일</td><td class="num">21</td>
+<td class="nx">- 다음: main 배포 후 서버 관리자 본인 청소 완료 작업 한 건으로 복사→MP4→CapCut→�</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+<tr class="hot" data-name="TTS속도UI">
+<td class="nm">TTS속도UI</td>
+<td class="num">0일</td><td class="num">2</td>
+<td class="nx">(핸드오프 없음)</td>
+<td class="pick">
+<button class="b keep" data-v="keep">끝낸다</button>
+<button class="b drop" data-v="drop">버린다</button>
+<button class="b hold" data-v="hold">보류</button>
+</td></tr>
+</table>
+</div>
+<div class="bar">
+<span>끝낸다 <b id="c1" style="color:var(--hot)">0</b></span>
+<span>버린다 <b id="c2" style="color:var(--dead)">0</b></span>
+<span>보류 <b id="c3" style="color:var(--cold)">0</b></span>
+<span style="color:var(--mut)">찍고 나서 "판정 끝났다"고 알려주시면 버릴 것들 닫고 목록 정리합니다</span>
+</div>
+<script>
+var KEY='worklist_pick_v1';
+var st={}; try{st=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){st={}}
+function paint(){
+  var c={keep:0,drop:0,hold:0};
+  document.querySelectorAll('tr[data-name]').forEach(function(tr){
+    var v=st[tr.dataset.name];
+    tr.querySelectorAll('.b').forEach(function(b){b.classList.toggle('on', b.dataset.v===v)});
+    if(v) c[v]++;
+  });
+  c1.textContent=c.keep; c2.textContent=c.drop; c3.textContent=c.hold;
+}
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.b'); if(!b) return;
+  var n=b.closest('tr').dataset.name;
+  st[n] = (st[n]===b.dataset.v) ? undefined : b.dataset.v;
+  if(!st[n]) delete st[n];
+  try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}
+  paint();
+});
+paint();
+</script></body></html>

@@ -49,6 +49,7 @@ global.cur = 0;
 global.PREVIEW_STATUS = null;
 // 전체재생 완주 플래그(2026-08-17) — _restoreWork가 PREVIEW_STATUS와 짝으로 되돌린다.
 global.WATCHED_ALL = false;
+global.PREVIEW_GATE_PASSED = false;   // 관제 186
 global.PANEL_COUNT = 8;
 global.STATE = { script:'', script_src_idx:null, script_from_wiki:null,
                  deco:{extra_texts:[],motion:null} };

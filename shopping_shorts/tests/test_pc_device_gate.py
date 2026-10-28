@@ -323,3 +323,186 @@ def test_admin_page_has_no_dead_refresh_call(_=None):
     # 갱신은 한 곳에서 정한다(0순위-B) — 실제 이름 둘을 그 안에서 부른다
     body = html.split("async function refreshCustomers()", 1)[1][:260]
     assert "load()" in body and "renderCustomers()" in body, body
+
+
+# ── 👻 유령 칸 자동 교체(관제 142, 2026-10-06 사장님 승인) ─────────────────────
+# 실측: 2칸 꽉 찬 회원 19명 중 7명은 한 칸이 1시간도 안 쓰이고 버려진 칸(시크릿 창·쿠키 삭제로 도장이 사라짐).
+def _age(st, cid, slot, first_ago, last_ago):
+    """칸의 첫 접속·마지막 접속을 '지금으로부터 몇 초 전'으로 돌려놓는다."""
+    import time
+    now = int(time.time())
+    with st._conn() as c:
+        c.execute("UPDATE customer_devices SET first_seen=?, last_seen=? WHERE customer_id=? AND slot=?",
+                  (now - first_ago, now - last_ago, cid, slot))
+
+
+def test_ghost_slot_is_replaced_by_new_pc(st):
+    st.device_register(9, "used", PC, "1.1.1.1")
+    st.device_register(9, "ghost", PC, "2.2.2.2")   # 다른 곳(같은 IP·브라우저면 같은 PC로 재인식 — 관제 238)
+    _age(st, 9, 1, 30 * 86400, 0)              # 1번: 한 달째 매일 쓰는 PC
+    _age(st, 9, 2, 3 * 86400, 3 * 86400 - 30)  # 2번: 30초 쓰고 3일째 안 보임 = 유령
+    ok, slot, why = st.device_register(9, "new", PC, "3.3.3.3")
+    assert (ok, slot) == (True, 2), why
+    ids = {d["slot"]: d["device_id"] for d in st.device_list(9)}
+    assert ids == {1: "used", 2: "new"}, "쓰던 PC는 남고 유령 칸만 새 PC로 바뀌어야 한다"
+    assert st.device_check(9, "ghost", PC, "2.2.2.2")[0] is False
+
+
+def test_two_real_pcs_are_never_replaced(st):
+    """두 장소에서 둘 다 7일 안에 쓰는 PC면 교체 안 된다 — 돌려쓰기 방지는 그대로(관제 184)."""
+    st.device_register(9, "a", PC, "1.1.1.1")
+    st.device_register(9, "b", PC, "2.2.2.2")
+    _age(st, 9, 1, 40 * 86400, 6 * 86400)      # 34일 쓰고 6일째 안 봄
+    _age(st, 9, 2, 5 * 86400, 0)
+    ok, slot, why = st.device_register(9, "c", PC, "3.3.3.3")
+    assert ok is False and "2대" in why
+
+
+# ── 🔁 같은 PC·오래 안 쓴 칸 교체(관제 184, 2026-10-12) ─────────────────────
+# 실측(라이브 꽉 찬 22명): 9명이 두 칸 다 같은 IP(쿠키 지워진 같은 PC), 다수가 한 칸 몇 주째 미사용.
+def test_same_pc_after_cookie_loss_is_replaced(st):
+    """오래 쓰던 PC의 쿠키가 지워져도(같은 IP·같은 브라우저) 다시 등록하면 그 칸을 이어받는다."""
+    st.device_register(9, "home", PC, "1.1.1.1")
+    st.device_register(9, "office", PC, "2.2.2.2")
+    _age(st, 9, 1, 30 * 86400, 3600)           # 30일 쓰다 1시간 전 쿠키 날아감
+    _age(st, 9, 2, 30 * 86400, 0)
+    ok, slot, why = st.device_register(9, "home2", PC, "1.1.1.1")
+    assert (ok, slot) == (True, 1), why
+    ids = {d["slot"]: d["device_id"] for d in st.device_list(9)}
+    assert ids == {1: "home2", 2: "office"}
+
+
+def test_same_ip_other_browser_is_not_same_pc(st):
+    """IP만 같고 브라우저가 다르면 같은 PC로 치지 않는다(둘 다 최근 사용이면 막힘)."""
+    st.device_register(9, "a", PC, "1.1.1.1")
+    st.device_register(9, "b", PC, "2.2.2.2")
+    _age(st, 9, 1, 30 * 86400, 3600)
+    _age(st, 9, 2, 30 * 86400, 0)
+    ok, _s, _w = st.device_register(9, "c", PC + " Edg/120.0", "1.1.1.1")   # 엣지(버전만 다른 건 같은 PC — 관제 238)
+    assert ok is False
+
+
+def test_stale_pc_over_7_days_is_replaced(st):
+    """7일 넘게 안 쓴 PC 칸은 새 PC에게 넘어간다(바꾼·버린 PC)."""
+    st.device_register(9, "old", PC, "1.1.1.1")
+    st.device_register(9, "now", PC, "2.2.2.2")
+    _age(st, 9, 1, 60 * 86400, 8 * 86400)
+    _age(st, 9, 2, 30 * 86400, 0)
+    ok, slot, why = st.device_register(9, "new", PC, "3.3.3.3")
+    assert (ok, slot) == (True, 1), why
+
+
+def test_short_but_recent_slot_is_not_a_ghost(st):
+    """방금 등록한(24시간 안) 칸은 짧게 썼어도 유령이 아니다 — 등록 직후 세 번째는 여전히 막힌다."""
+    st.device_register(9, "a", PC, "1.1.1.1")
+    st.device_register(9, "b", PC, "2.2.2.2")
+    _age(st, 9, 2, 3600, 3570)                 # 30초 쓰고 1시간 전
+    assert st.device_register(9, "c", PC, "3.3.3.3")[0] is False
+
+
+def test_oldest_ghost_goes_first(st):
+    st.device_register(9, "g1", PC, "1.1.1.1")
+    st.device_register(9, "g2", PC, "1.1.1.1")
+    _age(st, 9, 1, 2 * 86400, 2 * 86400)       # 둘 다 유령, 1번이 덜 오래됨
+    _age(st, 9, 2, 9 * 86400, 9 * 86400)
+    assert st.device_register(9, "new", PC, "1.1.1.1")[:2] == (True, 2)
+
+
+def test_ghost_rule_lives_in_one_place():
+    """유령 판정 숫자는 store 한 곳에만 — app.py·화면에 같은 숫자를 다시 적지 않는다."""
+    src = (pathlib.Path(__file__).resolve().parents[1] / "app.py").read_text(encoding="utf-8")
+    assert "GHOST_MAX_USE" not in src.replace("Store.GHOST_MAX_USE", "")
+    assert Store.GHOST_MAX_USE == 3600 and Store.GHOST_IDLE == 86400
+
+
+def test_register_api_replaces_ghost_end_to_end(client, monkeypatch):
+    """실제 HTTP 경로: 마이페이지 '이 PC 등록하기' → API → DB. 고객이 보는 문구까지 확인한다."""
+    c, app_mod = client
+    st = Store(app_mod.DB_PATH)
+    st.device_reset(4250)
+    st.device_register(4250, "a" * 32, PC, "1.1.1.1")
+    st.device_register(4250, "b" * 32, PC, "1.1.1.1")
+    _age(st, 4250, 1, 20 * 86400, 0)
+    _age(st, 4250, 2, 5 * 86400, 5 * 86400 - 10)        # 10초 쓰고 5일째 안 보임
+    monkeypatch.setattr(app_mod, "_AUTH_ON", True)     # 로컬은 기본 꺼짐 → 전원 관리자(핸드오프 함정)
+    monkeypatch.setattr(app_mod, "access_level", lambda cid, cust=None: "full")   # 유료 회원으로
+    _login(c, app_mod, 4250)
+    c.cookies.set(app_mod._DEVICE_COOKIE, "c" * 32)
+    r = c.post("/api/my/devices/register", headers={"user-agent": PC})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["ok"] and body["slot"] == 2 and "바꿨어요" in body["message"], body
+    assert {d["slot"]: d["device_id"] for d in st.device_list(4250)} == {1: "a" * 32, 2: "c" * 32}
+    st.device_reset(4250)
+
+
+def test_settings_page_stamps_new_browser(client, monkeypatch):
+    """관제 184 라이브 실측: 마이페이지로 바로 들어온 새 브라우저에 도장이 없어 등록이 실패했다."""
+    c, app_mod = client
+    monkeypatch.setattr(app_mod, "_AUTH_ON", True)
+    monkeypatch.setattr(app_mod, "access_level", lambda cid, cust=None: "full")
+    _login(c, app_mod, 4251)
+    r = c.get("/settings", headers={"user-agent": PC, "accept": "text/html", "sec-fetch-mode": "navigate",
+                                    "sec-fetch-dest": "document"}, follow_redirects=False)
+    assert app_mod._DEVICE_COOKIE in r.headers.get("set-cookie", ""), (r.status_code, r.headers)
+
+
+# ── 🔁 쿠키 잃은 같은 PC 자동 재인식(관제 238, 2026-10-19) ─────────────────────
+# 실사고 10-19: 윤주홍(PC① 쿠키 손실 + 크롬 154→155 자동업데이트 → 등록 409 두 번)·
+#   황선희(브라우저 쿠키 통째 삭제 → 재로그인하자 '이 PC를 등록해 주세요'). 둘 다 사장님이 손으로 풀었다.
+CHROME = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%d.0.0.0 Safari/537.36"
+
+
+def test_cookie_lost_same_pc_passes_without_button(st):
+    """황선희 재현: 같은 IP·같은 브라우저인데 쿠키만 새로 → 버튼 없이 통과, 칸 수 그대로."""
+    st.device_register(9, "old-stamp", CHROME % 155, "218.156.65.34")
+    ok, slot, n = st.device_check(9, "new-stamp", CHROME % 155, "218.156.65.34")
+    assert (ok, slot, n) == (True, 1, 1)
+    assert [d["device_id"] for d in st.device_list(9)] == ["new-stamp"]
+
+
+def test_chrome_update_is_still_same_pc(st):
+    """윤주홍 재현: 2대 다 쓰는 중, PC① 쿠키 손실 + 크롬 154→155 → 그 칸을 이어받고 PC②는 그대로."""
+    st.device_register(9, "pc1", CHROME % 154, "49.173.69.147")
+    st.device_register(9, "pc2", CHROME % 153, "49.175.5.178")
+    _age(st, 9, 1, 7 * 86400, 6 * 86400)
+    _age(st, 9, 2, 7 * 86400, 5 * 86400)
+    ok, slot, _n = st.device_check(9, "pc1-new", CHROME % 155, "49.173.69.147")
+    assert (ok, slot) == (True, 1)
+    assert {d["slot"]: d["device_id"] for d in st.device_list(9)} == {1: "pc1-new", 2: "pc2"}
+    assert st.device_check(9, "pc2", CHROME % 153, "49.175.5.178")[0] is True
+
+
+def test_other_place_new_pc_is_still_blocked(st):
+    """다른 IP의 새 PC는 여전히 막힌다 — 돌려쓰기 방지는 그대로."""
+    st.device_register(9, "pc1", CHROME % 154, "49.173.69.147")
+    st.device_register(9, "pc2", CHROME % 153, "49.175.5.178")
+    assert st.device_check(9, "pc3", CHROME % 155, "1.2.3.4")[0] is False
+    assert len(st.device_list(9)) == 2
+
+
+def test_other_browser_same_ip_is_not_auto_taken(st):
+    """같은 IP라도 브라우저 종류가 다르면(크롬↔엣지) 자동으로 칸을 가져가지 않는다."""
+    st.device_register(9, "chrome", CHROME % 155, "1.1.1.1")
+    edge = CHROME % 155 + " Edg/155.0.0.0"
+    assert st.device_check(9, "edge", edge, "1.1.1.1")[0] is False
+
+
+def test_cookie_lost_same_pc_end_to_end(client, monkeypatch):
+    """실제 HTTP 경로(미들웨어): 쿠키 잃은 같은 PC는 통과, 다른 곳 새 PC는 pc_unregistered 403."""
+    c, app_mod = client
+    st = Store(app_mod.DB_PATH)
+    st.device_reset(4251)
+    st.device_register(4251, "a" * 32, CHROME % 154, "49.173.69.147")
+    st.device_register(4251, "b" * 32, CHROME % 153, "49.175.5.178")
+    monkeypatch.setattr(app_mod, "_AUTH_ON", True)
+    monkeypatch.setattr(app_mod, "access_level", lambda cid, cust=None: "full")
+    monkeypatch.setattr(app_mod, "_pc_gate_applies", lambda cust: True)
+    _login(c, app_mod, 4251)
+    c.cookies.set(app_mod._DEVICE_COOKIE, "d" * 32)
+    other = c.get("/api/produce/works", headers={"user-agent": CHROME % 155, "x-forwarded-for": "1.2.3.4"})
+    assert other.status_code == 403 and other.json().get("reason") == "pc_unregistered", other.text
+    same = c.get("/api/produce/works", headers={"user-agent": CHROME % 155, "x-forwarded-for": "49.173.69.147"})
+    assert same.status_code != 403, same.text
+    assert {d["slot"]: d["device_id"] for d in st.device_list(4251)} == {1: "d" * 32, 2: "b" * 32}
+    st.device_reset(4251)

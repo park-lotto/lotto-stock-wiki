@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- ffmpeg·ffprobe·dylib 등 나머지: 추가 권한 없음(hardened runtime 기본) -->
+<plist version="1.0">
+<dict/>
+</plist>

@@ -1,0 +1,971 @@
+{
+ "slug": "starpickroom",
+ "style": "검정틀_금색로고_타이핑나레",
+ "made_by": "preset_save v1",
+ "rule": "같은 자리 값이 편마다 기준(숫자 max(4, 3%) · 색 채널 12 · 글·참거짓 같음) 밖이면 $per_video, 제목 글자는 항상 $per_video, --exclude 로 뺀 층은 그 편에서 비교 안 함",
+ "created_at": "2026-10-18T22:46:08+09:00",
+ "sources": [
+  {
+   "id": "ASqFulFvhgg",
+   "tteutgi": "channel/starpickroom/뜯기/ASqFulFvhgg/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 21:52",
+   "frame_tool": "spr_preset.hand",
+   "font": {
+    "top1": "Pretendard-Bold.otf",
+    "top1_score": 0.2835,
+    "picked_from": {
+     "file": "Pretendard-Bold.otf",
+     "score": 0.2835
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 1위 Pretendard-Bold.otf(0.2835) < 0.5 — 확신 낮음. 쓴 글꼴 CcPretendard-Bold({'file': 'Pretendard-Bold.otf', 'score': 0.2835})",
+    "제목 글꼴 GmarketSansBold — 분석기 fonts.title 1위 GmarketSansBold.otf(0.3696), 신뢰 low",
+    "제목 줄마다 크기 [111.4, 100.0] → size 105.7 × line_scale [1.054, 0.946]",
+    "제목 칸 폭 1041 — 원본 가장 긴 줄 잉크 1001px 가 기본 칸보다 넓다",
+    "제목 줄별 외곽선 [None, [2, 81, 77, 0]] (창 위로 걸친 고리만 잼)",
+    "제목 기울기 +10도(기둥 전단 투영) → 기울임",
+    "자막 잰 높이 57.5px 에서 외곽선 8px×2 를 빼고 크기 역산",
+    "자막 자간은 잰 폭 고른 8/15개(사분위 폭 0.01) 중 첫 자막으로 역산",
+    "자막 낱말 간격 -23.1px — 원본 낱말 틈 6.0px 에 맞춤(자간 13.8px 은 글자 사이만)",
+    "자막 등장 pop — 뜯기 등장 표본 3개 중 '확대/축소' 2개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "제목·자막 글꼴/크기 손질(실측 근거는 이 파일 머리) · 출처·워터마크(brand)·로고(image) 층 손으로 추가",
+    "제목 낱말별 색·워터마크 투명도·로고는 spr_overlay 로 덮는다(스키마 빈칸)",
+    "나레 줄 = 타이핑(10~15자/초), 원음 줄 = 즉시 — 층 하나라 enter none 으로 두고 자막팩 보강안에 갈라 적음"
+   ],
+   "unknown": [
+    "글꼴 1위 점수 0.2835 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:title].text"
+   ],
+   "caption_style": "원음즉시_나레타이핑",
+   "title_ink_w": 1001,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.3696
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.3576
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.3518
+     }
+    ],
+    "top5": [
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.3696
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.3576
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.3518
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.3478
+     },
+     {
+      "font": "TmonMonsori.ttf",
+      "score": 0.3461
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "5e596ce81b1d"
+  },
+  {
+   "id": "VbpdNba182M",
+   "tteutgi": "channel/starpickroom/뜯기/VbpdNba182M/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 21:52",
+   "frame_tool": "spr_preset.hand",
+   "font": {
+    "top1": "SpoqaHanSansNeo-Bold.otf",
+    "top1_score": 0.2912,
+    "picked_from": {
+     "file": "SpoqaHanSansNeo-Bold.otf",
+     "score": 0.2912
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 1위 SpoqaHanSansNeo-Bold.otf(0.2912) < 0.5 — 확신 낮음. 쓴 글꼴 CcSpoqaHanSansNeo-Bold({'file': 'SpoqaHanSansNeo-Bold.otf', 'score': 0.2912})",
+    "제목 글꼴 Cafe24Ohsquare — 분석기 fonts.title 1위 Cafe24Ohsquare.ttf(0.3815), 신뢰 low",
+    "제목 칸 폭 1015 — 원본 가장 긴 줄 잉크 975px 가 기본 칸보다 넓다",
+    "제목 기울기 +10도(기둥 전단 투영) → 기울임",
+    "자막 잰 높이 58.0px 에서 외곽선 8px×2 를 빼고 크기 역산",
+    "자막 자간은 잰 폭 고른 24/29개(사분위 폭 0.01) 중 첫 자막으로 역산",
+    "자막 낱말 간격 -22.4px — 원본 낱말 틈 9.0px 에 맞춤(자간 13.4px 은 글자 사이만)",
+    "자막 외곽선 8px [0, 0, 0] — 프레임 자막 줄 열 (495, 691) 에서 직접 잼(분석기 요약 8px [104, 103, 103])",
+    "자막 등장 pop — 뜯기 등장 표본 3개 중 '확대/축소' 2개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "제목·자막 글꼴/크기 손질(실측 근거는 이 파일 머리) · 출처·워터마크(brand)·로고(image) 층 손으로 추가",
+    "제목 낱말별 색·워터마크 투명도·로고는 spr_overlay 로 덮는다(스키마 빈칸)",
+    "나레 줄 = 타이핑(10~15자/초), 원음 줄 = 즉시 — 층 하나라 enter none 으로 두고 자막팩 보강안에 갈라 적음"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 2개: [14, 17]",
+    "글꼴 1위 점수 0.2912 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기: 구절 미분할 18.2~36.6(18.4초)",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:label].text"
+   ],
+   "caption_style": "원음즉시_나레타이핑",
+   "title_ink_w": 975,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.3815
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.3523
+     },
+     {
+      "font": "SBAggroB.ttf",
+      "score": 0.3512
+     }
+    ],
+    "top5": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.3815
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.3523
+     },
+     {
+      "font": "SBAggroB.ttf",
+      "score": 0.3512
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.3508
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.3497
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "5239eb5a26d2"
+  },
+  {
+   "id": "21VoGAEK_pU",
+   "tteutgi": "channel/starpickroom/뜯기/21VoGAEK_pU/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 21:52",
+   "frame_tool": "spr_preset.hand",
+   "font": {
+    "top1": "Pretendard-ExtraBold.otf",
+    "top1_score": 0.2621,
+    "picked_from": {
+     "file": "Pretendard-ExtraBold.otf",
+     "score": 0.2621
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 1위 Pretendard-ExtraBold.otf(0.2621) < 0.5 — 확신 낮음. 쓴 글꼴 Pretendard({'file': 'Pretendard-ExtraBold.otf', 'score': 0.2621})",
+    "제목 글꼴 Cafe24Ohsquare — 분석기 fonts.title 1위 Cafe24Ohsquare.ttf(0.4074), 신뢰 low",
+    "제목 기울기 +10도(기둥 전단 투영) → 기울임",
+    "자막 잰 높이 58.0px 에서 외곽선 7px×2 를 빼고 크기 역산",
+    "자막 자간·낱말 간격 0 — 잰 폭이 글 길이를 안 따른다(잰 폭/그린 폭 사분위 폭 0.20 > 0.15, 20개) — 창 안 자막이 영상 내용까지 잡힌 것으로 본다",
+    "자막 줄 수 {2: 1, 1: 22} → 최빈 1줄 칸",
+    "자막 외곽선 4px [190, 196, 210] — 프레임 자막 줄 열 전폭 에서 직접 잼(분석기 요약 7px [172, 154, 153])",
+    "자막 등장 pop — 뜯기 등장 표본 3개 중 '확대/축소' 1개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "자막 그림자 [[6, 6]] — 뜯기 값 모양을 설명서 그림자로 옮기는 규칙 없음(미반영)",
+    "제목·자막 글꼴/크기 손질(실측 근거는 이 파일 머리) · 출처·워터마크(brand)·로고(image) 층 손으로 추가",
+    "제목 낱말별 색·워터마크 투명도·로고는 spr_overlay 로 덮는다(스키마 빈칸)",
+    "나레 줄 = 타이핑(10~15자/초), 원음 줄 = 즉시 — 층 하나라 enter none 으로 두고 자막팩 보강안에 갈라 적음"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 10개: [0, 2, 8, 10, 12, 14, 16, 17, 20, 21]",
+    "글꼴 1위 점수 0.2621 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기: 길이 초과 37.1~38.6",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "원음즉시_나레타이핑",
+   "title_ink_w": 958,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.4074
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.3293
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.3124
+     }
+    ],
+    "top5": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.4074
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.3293
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.3124
+     },
+     {
+      "font": "TmonMonsori.ttf",
+      "score": 0.308
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.3067
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "8b05ef54c49f"
+  },
+  {
+   "id": "onmwSxfco-A",
+   "tteutgi": "channel/starpickroom/뜯기/onmwSxfco-A/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 21:52",
+   "frame_tool": "spr_preset.hand",
+   "font": {
+    "top1": "IBMPlexSansKR-Bold.otf",
+    "top1_score": 0.43,
+    "picked_from": {
+     "file": "IBMPlexSansKR-Bold.otf",
+     "score": 0.43
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 1위 IBMPlexSansKR-Bold.otf(0.43) < 0.5 — 확신 낮음. 쓴 글꼴 CcIBMPlexSansKR-Bold({'file': 'IBMPlexSansKR-Bold.otf', 'score': 0.43})",
+    "제목 글꼴 Cafe24Ohsquare — 분석기 fonts.title 1위 Cafe24Ohsquare.ttf(0.3332), 신뢰 low",
+    "제목 칸 폭 1012 — 원본 가장 긴 줄 잉크 972px 가 기본 칸보다 넓다",
+    "제목 기울기 +10도(기둥 전단 투영) → 기울임",
+    "자막 잰 높이 57.0px 에서 외곽선 8px×2 를 빼고 크기 역산",
+    "자막 자간은 잰 폭 고른 13/20개(사분위 폭 0.01) 중 첫 자막으로 역산",
+    "자막 낱말 간격 -21.6px — 원본 낱말 틈 9.0px 에 맞춤(자간 13.0px 은 글자 사이만)",
+    "자막 외곽선 7px [6, 3, 5] — 프레임 자막 줄 열 (200, 318) 에서 직접 잼(분석기 요약 8px [119, 117, 117])",
+    "자막 등장 none — 뜯기 등장 표본 3개 중 '없음' 2개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "제목·자막 글꼴/크기 손질(실측 근거는 이 파일 머리) · 출처·워터마크(brand)·로고(image) 층 손으로 추가",
+    "제목 낱말별 색·워터마크 투명도·로고는 spr_overlay 로 덮는다(스키마 빈칸)",
+    "나레 줄 = 타이핑(10~15자/초), 원음 줄 = 즉시 — 층 하나라 enter none 으로 두고 자막팩 보강안에 갈라 적음"
+   ],
+   "unknown": [
+    "글꼴 1위 점수 0.43 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기: 구절 미분할 11.5~26.5(15.0초)",
+    "받아쓰기: 구절 미분할 29.5~43.3(13.8초)",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "원음즉시_나레타이핑",
+   "title_ink_w": 972,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.3332
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.3025
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.2958
+     }
+    ],
+    "top5": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.3332
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.3025
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.2958
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.2951
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.2868
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "7232f62cfaa6"
+  },
+  {
+   "id": "r5XN6Eilfxs",
+   "tteutgi": "channel/starpickroom/뜯기/r5XN6Eilfxs/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 22:24",
+   "frame_tool": "spr_preset.hand",
+   "font": {
+    "top1": "Gugi-Regular.ttf",
+    "top1_score": 0.2998,
+    "picked_from": {
+     "file": "Gugi-Regular.ttf",
+     "score": 0.2998
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 1위 Gugi-Regular.ttf(0.2998) < 0.5 — 확신 낮음. 쓴 글꼴 CcGugi-Regular({'file': 'Gugi-Regular.ttf', 'score': 0.2998})",
+    "제목 글꼴 Cafe24Ohsquare — 분석기 fonts.title 1위 Cafe24Ohsquare.ttf(0.3192), 신뢰 low",
+    "제목 줄마다 크기 [89.9, 98.9] → size 94.4 × line_scale [0.952, 1.048]",
+    "제목 칸 폭 1035 — 원본 가장 긴 줄 잉크 995px 가 기본 칸보다 넓다",
+    "제목 기울기 +10도(기둥 전단 투영) → 기울임",
+    "자막 잰 높이 57.0px 에서 외곽선 8px×2 를 빼고 크기 역산",
+    "자막 자간은 잰 폭 고른 12/16개(사분위 폭 0.11) 중 첫 자막으로 역산",
+    "자막 낱말 간격 -22.1px — 원본 낱말 틈 19.0px 에 맞춤(자간 13.2px 은 글자 사이만)",
+    "자막 줄 수 {1: 15, 3: 1} → 최빈 1줄 칸",
+    "자막 등장 none — 뜯기 등장 표본 3개 중 '없음' 2개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "자막 그림자 [[6, 6]] — 뜯기 값 모양을 설명서 그림자로 옮기는 규칙 없음(미반영)",
+    "제목·자막 글꼴/크기 손질(실측 근거는 이 파일 머리) · 출처·워터마크(brand)·로고(image) 층 손으로 추가",
+    "제목 낱말별 색·워터마크 투명도·로고는 spr_overlay 로 덮는다(스키마 빈칸)",
+    "나레 줄 = 타이핑(10~15자/초), 원음 줄 = 즉시 — 층 하나라 enter none 으로 두고 자막팩 보강안에 갈라 적음"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 3개: [3, 6, 12]",
+    "글꼴 1위 점수 0.2998 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기: 길이 초과 22.5~24.5",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "원음즉시_나레타이핑",
+   "title_ink_w": 995,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.3192
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.297
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.2904
+     }
+    ],
+    "top5": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.3192
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.297
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.2904
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.2884
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.2879
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "bdfbc2d6cb1f"
+  },
+  {
+   "id": "EZQlWvvnKPI",
+   "tteutgi": "channel/starpickroom/뜯기/EZQlWvvnKPI/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 22:19",
+   "frame_tool": "spr_preset.hand",
+   "font": {
+    "top1": "Sunflower-Medium.ttf",
+    "top1_score": 0.2062,
+    "picked_from": {
+     "file": "Sunflower-Medium.ttf",
+     "score": 0.2062
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 1위 Sunflower-Medium.ttf(0.2062) < 0.5 — 확신 낮음. 쓴 글꼴 CcSunflower-Medium({'file': 'Sunflower-Medium.ttf', 'score': 0.2062})",
+    "제목 글꼴 Cafe24Ohsquare — 분석기 fonts.title 1위 Cafe24Ohsquare.ttf(0.4273), 신뢰 low",
+    "제목 줄마다 크기 [90.9, 81.0] → size 86.0 × line_scale [1.057, 0.942]",
+    "제목 칸 폭 1058 — 원본 가장 긴 줄 잉크 1018px 가 기본 칸보다 넓다",
+    "제목 줄별 외곽선 [[2, 246, 248, 0], None] (창 위로 걸친 고리만 잼)",
+    "제목 기울기 +10도(기둥 전단 투영) → 기울임",
+    "자막 잰 높이 57.0px 에서 외곽선 8px×2 를 빼고 크기 역산",
+    "자막 자간·낱말 간격 0 — 잰 폭이 글 길이를 안 따른다(잰 폭/그린 폭 사분위 폭 0.20 > 0.15, 19개) — 창 안 자막이 영상 내용까지 잡힌 것으로 본다",
+    "자막 등장 rise — 뜯기 등장 표본 3개 중 '이동' 2개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "제목·자막 글꼴/크기 손질(실측 근거는 이 파일 머리) · 출처·워터마크(brand)·로고(image) 층 손으로 추가",
+    "제목 낱말별 색·워터마크 투명도·로고는 spr_overlay 로 덮는다(스키마 빈칸)",
+    "나레 줄 = 타이핑(10~15자/초), 원음 줄 = 즉시 — 층 하나라 enter none 으로 두고 자막팩 보강안에 갈라 적음"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 3개: [21, 23, 24]",
+    "글꼴 1위 점수 0.2062 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기: 길이 초과 48.0~49.2",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "원음즉시_나레타이핑",
+   "title_ink_w": 1018,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.4273
+     },
+     {
+      "font": "TmonMonsori.ttf",
+      "score": 0.3812
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.347
+     }
+    ],
+    "top5": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.4273
+     },
+     {
+      "font": "TmonMonsori.ttf",
+      "score": 0.3812
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.347
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.3464
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.3426
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "d02d08221f69"
+  },
+  {
+   "id": "j5D30T2n0-w",
+   "tteutgi": "channel/starpickroom/뜯기/j5D30T2n0-w/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 22:25",
+   "frame_tool": "spr_preset.hand",
+   "font": {
+    "top1": "YeonSung-Regular.ttf",
+    "top1_score": 0.1017,
+    "picked_from": {
+     "file": "YeonSung-Regular.ttf",
+     "score": 0.1017
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 1위 YeonSung-Regular.ttf(0.1017) < 0.5 — 확신 낮음. 쓴 글꼴 CcYeonSung-Regular({'file': 'YeonSung-Regular.ttf', 'score': 0.1017})",
+    "제목 글꼴 Cafe24Ohsquare — 분석기 fonts.title 1위 Cafe24Ohsquare.ttf(0.3612), 신뢰 low",
+    "제목 줄별 외곽선 [None, [2, 73, 68, 0]] (창 위로 걸친 고리만 잼)",
+    "제목 기울기 +10도(기둥 전단 투영) → 기울임",
+    "자막 잰 높이 67px 에서 외곽선 6px×2 를 빼고 크기 역산",
+    "자막 자간·낱말 간격 0 — 잰 폭이 글 길이를 안 따른다(잰 폭/그린 폭 사분위 폭 0.70 > 0.15, 10개) — 창 안 자막이 영상 내용까지 잡힌 것으로 본다",
+    "자막 줄 수 {1: 13, 2: 1} → 최빈 1줄 칸",
+    "자막 외곽선 2px [4, 2, 4] — 프레임 자막 줄 열 (679, 745) 에서 직접 잼(분석기 요약 6px [170, 175, 167])",
+    "자막 등장 pop — 뜯기 등장 표본 3개 중 '확대/축소' 1개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "제목·자막 글꼴/크기 손질(실측 근거는 이 파일 머리) · 출처·워터마크(brand)·로고(image) 층 손으로 추가",
+    "제목 낱말별 색·워터마크 투명도·로고는 spr_overlay 로 덮는다(스키마 빈칸)",
+    "나레 줄 = 타이핑(10~15자/초), 원음 줄 = 즉시 — 층 하나라 enter none 으로 두고 자막팩 보강안에 갈라 적음"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 9개: [2, 3, 4, 5, 6, 9, 10, 12, 13]",
+    "글꼴 1위 점수 0.1017 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기: 길이 초과 28.9~30.3",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "원음즉시_나레타이핑",
+   "title_ink_w": 958,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.3612
+     },
+     {
+      "font": "S-CoreDream-7ExtraBold.ttf",
+      "score": 0.2892
+     },
+     {
+      "font": "BMDOHYEON.ttf",
+      "score": 0.2779
+     }
+    ],
+    "top5": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.3612
+     },
+     {
+      "font": "S-CoreDream-7ExtraBold.ttf",
+      "score": 0.2892
+     },
+     {
+      "font": "BMDOHYEON.ttf",
+      "score": 0.2779
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.2702
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.2656
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "c2548a4e242f"
+  },
+  {
+   "id": "dKczVzmdr00",
+   "tteutgi": "channel/starpickroom/뜯기/dKczVzmdr00/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 22:14",
+   "frame_tool": "spr_preset.hand",
+   "font": {
+    "top1": "Dongle-Bold.ttf",
+    "top1_score": 0.1339,
+    "picked_from": {
+     "file": "Dongle-Bold.ttf",
+     "score": 0.1339
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 1위 Dongle-Bold.ttf(0.1339) < 0.5 — 확신 낮음. 쓴 글꼴 DongleBold({'file': 'Dongle-Bold.ttf', 'score': 0.1339})",
+    "제목 글꼴 Cafe24Ohsquare — 분석기 fonts.title 1위 Cafe24Ohsquare.ttf(0.3406), 신뢰 low",
+    "제목 기울기 +10도(기둥 전단 투영) → 기울임",
+    "자막 잰 높이 71.5px 에서 외곽선 3px×2 를 빼고 크기 역산",
+    "자막 자간·낱말 간격 0 — 잰 폭이 글 길이를 안 따른다(잰 폭/그린 폭 사분위 폭 0.23 > 0.15, 19개) — 창 안 자막이 영상 내용까지 잡힌 것으로 본다",
+    "자막 외곽선 7px [0, 0, 0] — 프레임 자막 줄 열 (212, 871) 에서 직접 잼(분석기 요약 3px [21, 20, 20])",
+    "자막 등장 none — 뜯기 등장 표본 3개 중 '없음' 2개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "제목·자막 글꼴/크기 손질(실측 근거는 이 파일 머리) · 출처·워터마크(brand)·로고(image) 층 손으로 추가",
+    "제목 낱말별 색·워터마크 투명도·로고는 spr_overlay 로 덮는다(스키마 빈칸)",
+    "나레 줄 = 타이핑(10~15자/초), 원음 줄 = 즉시 — 층 하나라 enter none 으로 두고 자막팩 보강안에 갈라 적음"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 4개: [3, 4, 5, 7]",
+    "글꼴 1위 점수 0.1339 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "소리 구성 duck_db: 한국어 나레 구간 없음",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "원음즉시_나레타이핑",
+   "title_ink_w": 957,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.3406
+     },
+     {
+      "font": "BagelFatOne-Regular.ttf",
+      "score": 0.266
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.2597
+     }
+    ],
+    "top5": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.3406
+     },
+     {
+      "font": "BagelFatOne-Regular.ttf",
+      "score": 0.266
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.2597
+     },
+     {
+      "font": "TmonMonsori.ttf",
+      "score": 0.2557
+     },
+     {
+      "font": "SBAggroB.ttf",
+      "score": 0.2248
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "786a87cd8a96"
+  }
+ ],
+ "updated_at": "2026-10-18T22:46:09+09:00",
+ "variables": [
+  "layers[text:title].text",
+  "layers[text:label].text"
+ ],
+ "caption_styles": [
+  {
+   "name": "원음즉시_나레타이핑",
+   "layer": {
+    "kind": "text",
+    "role": "caption",
+    "x": 540,
+    "y": 1106,
+    "w": 1000,
+    "align": "center",
+    "lines": 1,
+    "font": "GmarketSansBold",
+    "size": 62,
+    "line_h": 70,
+    "rgb": [
+     255,
+     255,
+     255
+    ],
+    "line_rgb": null,
+    "line_scale": null,
+    "outline": {
+     "px": 7,
+     "rgb": [
+      0,
+      0,
+      0
+     ]
+    },
+    "line_outline": null,
+    "shadow": null,
+    "glow": null,
+    "box": null,
+    "italic": false,
+    "letter_spacing": 0,
+    "word_spacing": 0,
+    "valign": "center",
+    "enter": {
+     "kind": "none",
+     "ms": 300
+    },
+    "emphasis": null,
+    "text": null
+   },
+   "status": "잰 편 ASqFulFvhgg",
+   "sources": [
+    "ASqFulFvhgg",
+    "VbpdNba182M",
+    "21VoGAEK_pU",
+    "onmwSxfco-A",
+    "r5XN6Eilfxs",
+    "EZQlWvvnKPI",
+    "j5D30T2n0-w",
+    "dKczVzmdr00"
+   ],
+   "notes": [
+    "ASqFulFvhgg: 원음 줄 즉시 · 나레 줄 타이핑(자막팩 보강안 spr_typing)",
+    "VbpdNba182M: 원음 줄 즉시 · 나레 줄 타이핑(자막팩 보강안 spr_typing)",
+    "21VoGAEK_pU: 원음 줄 즉시 · 나레 줄 타이핑(자막팩 보강안 spr_typing)",
+    "onmwSxfco-A: 원음 줄 즉시 · 나레 줄 타이핑(자막팩 보강안 spr_typing)",
+    "r5XN6Eilfxs: 원음 줄 즉시 · 나레 줄 타이핑(자막팩 보강안 spr_typing)",
+    "EZQlWvvnKPI: 원음 줄 즉시 · 나레 줄 타이핑(자막팩 보강안 spr_typing)",
+    "j5D30T2n0-w: 원음 줄 즉시 · 나레 줄 타이핑(자막팩 보강안 spr_typing)",
+    "dKczVzmdr00: 원음 줄 즉시 · 나레 줄 타이핑(자막팩 보강안 spr_typing)"
+   ]
+  }
+ ],
+ "variable_stats": {
+  "layers[text:title].text": {
+   "values": {
+    "ASqFulFvhgg": "불 없이 5분 완성!\n주상욱도 극찬한 비빔국수",
+    "VbpdNba182M": "땅콩버터에 푹 빠진\n공효진이 찾아낸 최강 조합",
+    "21VoGAEK_pU": "아침마다 20개씩 먹는다는\n윤남노 셰프의 최애 간식",
+    "onmwSxfco-A": "잘 익은 바나나 하나로 만든\n오연수의 초간단 건강빵",
+    "r5XN6Eilfxs": "국밥 마니아 차예련이 찾은\n코스트코 최애 국밥 3가지",
+    "EZQlWvvnKPI": "된장도 커피도 필요 없다!\n백지영,이원일의 초간단 수육",
+    "j5D30T2n0-w": "\"이건 역대급이야!\"\n최화정도 반한 SNS 레시피",
+    "dKczVzmdr00": "공개하는 순간 품절각?!\n이민정 만원대 최애 향기템"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  },
+  "layers[text:label].text": {
+   "values": {
+    "ASqFulFvhgg": "출처: 차장금 차예련",
+    "VbpdNba182M": "출처: 당분간 공효진",
+    "21VoGAEK_pU": "출처: 냉부해, 스튜디오슬램",
+    "onmwSxfco-A": "출처: 오연수 Yun Soo Oh",
+    "r5XN6Eilfxs": "출처: 차장금 차예련",
+    "EZQlWvvnKPI": "출처: 백지영, 셰프이원일",
+    "j5D30T2n0-w": "출처: 안녕하세요 최화정이에요",
+    "dKczVzmdr00": "출처: 이민정 MJ"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  }
+ },
+ "rules": {
+  "formula": "title.size = size_cap(잰 크기 중앙값) — 가장 긴 줄이 fill_w(잰 폭 최대·화면 폭−48 중 큰 값)를 넘으면 자간부터(−15%까지), 그래도 넘으면 크기 · title.line_h = size×lh_ratio · title.y = title_top · video.y = (video_anchor) 'gap_ink' 면 제목 잉크 아래 끝 + gap_ink(고정), 'constant' 면 video_top, 'gap' 이면 title.y + lines×line_h + gap — 편마다 덜 흔들리는 쪽(데이터가 고름) · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy",
+  "keys": {
+   "title_top": {
+    "values": {
+     "ASqFulFvhgg": 236,
+     "VbpdNba182M": 236,
+     "21VoGAEK_pU": 236,
+     "onmwSxfco-A": 236,
+     "r5XN6Eilfxs": 236,
+     "EZQlWvvnKPI": 236,
+     "j5D30T2n0-w": 236,
+     "dKczVzmdr00": 236
+    },
+    "default": 236,
+    "range": [
+     236,
+     236
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "gap": {
+    "values": {
+     "ASqFulFvhgg": 39,
+     "VbpdNba182M": 39,
+     "21VoGAEK_pU": 39,
+     "onmwSxfco-A": 39,
+     "r5XN6Eilfxs": 39,
+     "EZQlWvvnKPI": 39,
+     "j5D30T2n0-w": 39,
+     "dKczVzmdr00": 39
+    },
+    "default": 39,
+    "range": [
+     39,
+     39
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "lh_ratio": {
+    "values": {
+     "ASqFulFvhgg": 1.13,
+     "VbpdNba182M": 1.13,
+     "21VoGAEK_pU": 1.13,
+     "onmwSxfco-A": 1.13,
+     "r5XN6Eilfxs": 1.13,
+     "EZQlWvvnKPI": 1.13,
+     "j5D30T2n0-w": 1.13,
+     "dKczVzmdr00": 1.13
+    },
+    "default": 1.13,
+    "range": [
+     1.13,
+     1.13
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "size_cap": {
+    "values": {
+     "ASqFulFvhgg": 92,
+     "VbpdNba182M": 92,
+     "21VoGAEK_pU": 92,
+     "onmwSxfco-A": 92,
+     "r5XN6Eilfxs": 92,
+     "EZQlWvvnKPI": 92,
+     "j5D30T2n0-w": 92,
+     "dKczVzmdr00": 92
+    },
+    "default": 92,
+    "range": [
+     92,
+     92
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "video_bottom": {
+    "values": {
+     "ASqFulFvhgg": 1541,
+     "VbpdNba182M": 1541,
+     "21VoGAEK_pU": 1541,
+     "onmwSxfco-A": 1541,
+     "r5XN6Eilfxs": 1541,
+     "EZQlWvvnKPI": 1541,
+     "j5D30T2n0-w": 1541,
+     "dKczVzmdr00": 1541
+    },
+    "default": 1541,
+    "range": [
+     1541,
+     1541
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "video_top": {
+    "values": {
+     "ASqFulFvhgg": 483,
+     "VbpdNba182M": 483,
+     "21VoGAEK_pU": 483,
+     "onmwSxfco-A": 483,
+     "r5XN6Eilfxs": 483,
+     "EZQlWvvnKPI": 483,
+     "j5D30T2n0-w": 483,
+     "dKczVzmdr00": 483
+    },
+    "default": 483,
+    "range": [
+     483,
+     483
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "gap_ink": {
+    "values": {
+     "ASqFulFvhgg": 50,
+     "VbpdNba182M": 50,
+     "21VoGAEK_pU": 51,
+     "onmwSxfco-A": 50,
+     "r5XN6Eilfxs": 51,
+     "EZQlWvvnKPI": 35,
+     "j5D30T2n0-w": 51,
+     "dKczVzmdr00": 51
+    },
+    "default": 50,
+    "range": [
+     35,
+     51
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "fill_w": {
+    "values": {
+     "ASqFulFvhgg": 1001,
+     "VbpdNba182M": 975,
+     "21VoGAEK_pU": 958,
+     "onmwSxfco-A": 972,
+     "r5XN6Eilfxs": 995,
+     "EZQlWvvnKPI": 1018,
+     "j5D30T2n0-w": 958,
+     "dKczVzmdr00": 957
+    },
+    "default": 1032,
+    "range": [
+     957,
+     1018
+    ],
+    "how": "잰 폭 최대와 화면 폭−48 중 큰 값"
+   },
+   "cap_dy": {
+    "values": {
+     "ASqFulFvhgg": -435,
+     "VbpdNba182M": -435,
+     "21VoGAEK_pU": -435,
+     "onmwSxfco-A": -435,
+     "r5XN6Eilfxs": -435,
+     "EZQlWvvnKPI": -435,
+     "j5D30T2n0-w": -435,
+     "dKczVzmdr00": -435
+    },
+    "default": -435,
+    "range": [
+     -435,
+     -435
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "video_anchor": {
+    "values": null,
+    "default": "gap_ink",
+    "range": null,
+    "how": "제목 끝–창 간격 고정(gap_ink)"
+   }
+  }
+ },
+ "roles": [
+  "원음 훅(연예인 본인 말·반응 3.5~8초, 자막 즉시)",
+  "나레 1~3조각(타이핑, '[수식어] [이름]이 ~한 [것]이 있다는데..?')",
+  "원음 본문(쓰는 법·만드는 법, 줄마다 즉시 자막 + 강조 낱말·스티커)",
+  "(선택) 나레 1줄 다리('그리고 ~ 팁이 있다는데..?')",
+  "원음 끝(먹는·쓰는 얼굴 반응, 맺음 나레·CTA 없음)"
+ ],
+ "source_kind": "해외영상",
+ "note": "기록용 + 얜샷템 스타픽룸판 틀 근거. 렌더 = 이 frame + spr_overlay(제목 낱말 색·워터마크·로고)"
+}

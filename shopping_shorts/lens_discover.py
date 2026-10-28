@@ -151,6 +151,15 @@ def upload_frame(image_bytes):
 
 def _platform_of(link):
     host = urlparse(link or "").netloc.lower()
+    # ★핀터레스트 나라별 주소(pinterest.co.kr·.jp …)는 담기 쪽 목록 한 곳(media_download._is_pinterest_host
+    #   → app._GRAB_DOMAINS)으로 판정한다(관제 151, 2026-10-07). 렌즈만 pinterest.com 하나를 따로 들고 있어
+    #   한국 렌즈가 주는 pinterest.co.kr 핀이 '모르는 사이트'로 통째로 버려졌다(09-24 담기 수리와 같은 뿌리).
+    try:
+        from shopping_shorts.media_download import _is_pinterest_host
+        if _is_pinterest_host(host.split(":")[0]):
+            return "pinterest"
+    except Exception:          # noqa: BLE001 — 목록을 못 읽으면 아래 기본 목록(pinterest.com)으로
+        pass
     for name, domains in _PLATFORM_DOMAINS:
         if any(host == d or host.endswith("." + d) for d in domains):
             return name

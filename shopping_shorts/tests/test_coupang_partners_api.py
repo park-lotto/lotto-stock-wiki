@@ -19,6 +19,8 @@ def test_split_key_and_format():
     ("https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9572701928&traceid=V0-1",
      "https://www.coupang.com/vp/products/9572701928"),
     ("https://www.coupang.com/vp/products/123?itemId=9&vendorItemId=8&lptag=AF1",
+     "https://www.coupang.com/vp/products/123?itemId=9&vendorItemId=8"),   # 옵션은 남기고 lptag만 뺀다(관제 207)
+    ("https://www.coupang.com/vp/products/123?lptag=AF1&searchId=x",
      "https://www.coupang.com/vp/products/123"),
     ("https://link.coupang.com/a/gLcKSPsbwO", "https://link.coupang.com/a/gLcKSPsbwO"),   # 단축은 상품번호를 모른다
 ])
@@ -381,7 +383,7 @@ def test_identify_prefers_script_evidence_over_thumbnail(monkeypatch, tmp_path):
     # 둘 다 없으면 대본 추출을 권한다
     monkeypatch.setattr(product_name, "identify_many", lambda items, db_path, **k: {})
     r = a.api_coupang_identify({"shortcode": "ABC", "thumbnail": "https://x/t.jpg"})
-    assert r["ok"] is False and "영상 보고 정확히" in r["error"]
+    assert r["ok"] is False and "대본으로 다시 찾기" in r["error"]
 
 
 def test_coupang_evidence_collects_script_analysis_caption(tmp_path):

@@ -1,0 +1,3 @@
+# 맥 설치팩 전용: yt-dlp 를 동봉 파이썬 패키지로(해시 출처 https://pypi.org/pypi/yt-dlp/2026.8.19/json, 2026-10-18)
+yt-dlp==2026.8.19 \
+    --hash=sha256:1d57897e94c6665a0a6f9bc54b34e584284e32c034ffab3a7df25d8f7b24eedf

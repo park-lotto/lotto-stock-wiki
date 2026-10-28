@@ -1,0 +1,353 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>쇼츠 속 도구 모음</title><style>:root{--bg:#0e0f13;--card:#171922;--line:#262a36;--tx:#e9ecf4;--mu:#9aa3b8}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.6 "Pretendard",system-ui,sans-serif}main{max-width:1100px;margin:auto;padding:28px 16px 80px}
+h1{font-size:27px;margin:0 0 6px}h2{font-size:20px;margin:40px 0 10px;padding-top:10px;border-top:1px solid var(--line)}a{color:#64d2ff}.mu{color:var(--mu);font-size:13px}
+.hero{background:linear-gradient(135deg,#14261a,#1b1f2c);border:1px solid #23402c;border-radius:16px;padding:16px 20px;margin:14px 0}
+.tool{background:var(--card);border:1px solid var(--line);border-left:4px solid #8e8e93;border-radius:12px;padding:12px 16px;margin:10px 0}
+.tool.p1{border-left-color:#30d158}.tool.p2{border-left-color:#ff9f0a}.tool.p3{opacity:.78}
+.th{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.nm{font-size:18px}.badge{color:#fff;border-radius:8px;padding:1px 10px;font-weight:800;font-size:13px}
+.vids{margin-left:auto}.vr{display:inline-block;background:#262a36;border-radius:10px;padding:0 8px;margin-left:4px;font-size:12px;text-decoration:none}
+.help{background:#12201a;border-radius:8px;padding:6px 12px;margin:6px 0}.help p{margin:2px 0}.al{color:#ffd27a;font-size:14px;margin:4px 0}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:14px;word-break:break-all}@media(max-width:760px){.row{grid-template-columns:1fr}}
+pre{white-space:pre-wrap;word-break:break-all;background:#0b0c10;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:13px/1.5 Consolas,monospace;margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:14px}td{border-bottom:1px solid var(--line);padding:5px 8px;vertical-align:top;word-break:break-all}
+ol li,ul li{margin:4px 0}</style></head><body><main>
+<h1>🧰 쇼츠 20편 속 도구 — 받을지 말지</h1>
+<p class=mu>2026-10-20 · 영상 20편에서 도구 추출 → <b>고정 댓글·설명란 가이드 페이지를 직접 열어</b> 깃허브 주소·설치 명령 확인 → 웹 검색으로 정체 확인(제미나이) → 링크 46개 실제 접속 확인.
+'이미 겹침'은 사장님 클로드 코드에 설치된 스킬·MCP와 비교한 것.</p>
+<div class=hero><b>먼저 받을 것</b><ol><li>ECC (Everything Claude Code) - 클로드 코드 하네스로 멀티 에이전트 개발 환경 및 세션 통합 구축</li><li>Headroom - 클로드 코드 프록시 단계에서 입력 토큰을 최적화해 토큰 소모량 50% 절감</li><li>Context7 - 최신 라이브러리 공식 문서를 클로드에 실시간 주입하여 파괴적 변경 및 구버전 API 환각 차단</li><li>Agent Reach - 유료 API 비용 없이 유튜브 자막, 깃허브, 레딧 실시간 데이터를 무료 자동 수집</li><li>Strix - 개발 중인 FastAPI SaaS 및 크롬 확장 프로그램의 보안 취약점을 자동 침투 테스트하여 사전 패치</li></ol>
+<p class=mu>바로 받기 10개 · 시험해 볼 만 24개 · 안 받아도 됨 12개</p></div>
+<h2>클로드 코드 한도·토큰 절약 / 기억·맥락 <span class=mu>6개</span></h2><div class="tool p1"><div class=th><span class=badge style="background:#30d158">바로 받기</span><b class=nm>Headroom</b>
+<span class=mu>오픈소스 무료 (앱 버전 7일 체험 후 유료)</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/l_RB6lTTrKE" target=_blank title="3달만에 9만 달성하게 해 준 클로드 스킬 8개 #claude #claudecode #ai">▶18</a> <a class=vr href="https://www.youtube.com/shorts/oDW7XUrzork" target=_blank title="클로드에 무조건 설치해야하는 5개">▶7</a></span></div>
+<p>Claude Code 입력에 들어가는 불필요한 로그, 도구 출력, 대화 기록을 중요 정보만 남기고 실시간 압축하는 토큰 최적화 도구입니다. 프롬프트 전달 전 로컬 프록시 단계에서 데이터 맥락을 보존하면서 토큰 소모를 최대 50% 이상 절감합니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 숏템메이커 SaaS 개발 시 FastAPI 백엔드 코드와 제미나이 연동 로직 입력 토큰 소모 절감. ② 하루 종일 멀티트랙 작업 시 대화 맥락 차감 속도를 줄여 제한 도달 연장. ③ 주식 위키 대량 문서 정리 시 API 토큰 소비 대폭 감소.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/headroomlabs-ai/headroom" target=_blank>github.com/headroomlabs-ai/headroom</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/claude-skills-top5-0815" target=_blank>lazyowen.com/guides/claude-skills-top5-0815</a></div></div>
+<pre>pip install &quot;headroom-ai[all]&quot;</pre>
+<p class=mu><b>판단</b> 클로드 코드로 하루 종일 멀티트랙 코딩을 진행하는 환경에서 한도 도달 시간을 즉각 늘려주는 최고의 토큰 절감 도구입니다. · 주의: 로컬 프록시 방식으로 동작하므로 개발 환경 세팅 시 프록시 연결 설정 확인 필요.</p></div><div class="tool p1"><div class=th><span class=badge style="background:#30d158">바로 받기</span><b class=nm>Claude-mem</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/oDW7XUrzork" target=_blank title="클로드에 무조건 설치해야하는 5개">▶7</a></span></div>
+<p>Claude Code 세션 간의 작업 내역과 프로젝트 지식을 자동 축적하고 다음 세션에 관찰 요약을 주입해 주는 기억 유지 플러그인입니다. 터미널을 다시 열 때마다 프로젝트 구조나 디버깅 내역을 재설명해야 하는 &#x27;백지 상태&#x27; 문제를 해결해 줍니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 숏템메이커 개발 시 이전 세션의 파일 수정 내역과 API 버그 수정 과정을 기억하여 신속하게 개발 재개. ② 클로드 코드로 멀티트랙 코딩 시 트랙별 맥락과 코딩 스타일 자동 유지. ③ 주식 위키 자동화 작업 시 기존 데이터 포맷 규칙 연속 유지.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/thedotmack/claude-mem" target=_blank>github.com/thedotmack/claude-mem</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/claude-skills-top5-0815" target=_blank>lazyowen.com/guides/claude-skills-top5-0815</a></div></div>
+<pre>npx --yes claude-mem@latest install</pre>
+<p class=mu><b>판단</b> 세션 종료 후 재시작 시 매번 프로젝트 맥락을 다시 설명할 필요가 없어 코딩 생산성이 극대화됩니다. · 주의: 지속적으로 오가는 관찰 요약 데이터로 인해 초기 컨텍스트 토큰 전송량이 약간 증가할 수 있음.</p></div><div class="tool p1"><div class=th><span class=badge style="background:#30d158">바로 받기</span><b class=nm>GSD (Get Shit Done)</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/9_eaZJ0N7Sw" target=_blank title="클로드 코드 최고의 스킬 5개 알려줌  #ai #claude">▶5</a></span></div>
+<p>대화가 길어짐에 따라 생기는 AI 맥락 유실(Context Rot)을 방지하도록 프로젝트를 계획·실행·검증 단계로 세분화해 주는 메타 프롬프팅 프레임워크입니다. 서브에이전트에 독립 컨텍스트를 할당하여 큰 규모의 코딩 과업을 끝까지 완수시킵니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 숏템메이커 FastAPI 백엔드 구축 시 API 구현 및 크롬 확장 연동 과업을 단계별로 분할 수행. ② 하루 종일 작업 시 클로드가 중간에 길을 잃거나 이전 지시를 잊는 현상 완전 방지. ④ 쇼핑 쇼츠 파이프라인 개발 시 빌드 및 테스트 자동 검증 수행.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/gsd-build/get-shit-done" target=_blank>github.com/gsd-build/get-shit-done</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/claude-code-skills-5-0813" target=_blank>lazyowen.com/guides/claude-code-skills-5-0813</a></div></div>
+<pre>npx --yes @opengsd/gsd-core@latest --claude --global</pre>
+<p class=mu><b>판단</b> 장시간 지속되는 대형 코딩 트랙에서 클로드 코딩의 원인을 알 수 없는 품질 저하와 맥락 유실을 방지합니다. · 주의: 서브에이전트 단계를 다수 생성하는 과정에서 단일 대화 대비 총 토큰 사용량이 증가할 수 있음.</p></div><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>OmniRoute</b>
+<span class=mu>무료 오픈소스</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/l_RB6lTTrKE" target=_blank title="3달만에 9만 달성하게 해 준 클로드 스킬 8개 #claude #claudecode #ai">▶18</a> <a class=vr href="https://www.youtube.com/shorts/oDW7XUrzork" target=_blank title="클로드에 무조건 설치해야하는 5개">▶7</a></span></div>
+<p>수백 개의 AI 모델 요청을 단일 엔드포인트로 통합하고 최적의 모델로 동적 라우팅해 주는 오픈소스 AI 게이트웨이입니다. Claude 사용 한도에 도달하더라도 준비된 대체 AI 모델로 연속 작업을 전환해 줍니다.</p>
+<div class=help><b>사장님께 도움</b><p>② 클로드 코드 작업 중 한도가 차더라도 멈추지 않고 Gemini/Qwen 등의 모델로 작업을 이어받아 코딩 지속. ① 숏템메이커 백엔드에서 서드파티 LLM 요청 시 장애 회피 처리.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/diegosouzapw/OmniRoute" target=_blank>github.com/diegosouzapw/OmniRoute</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/claude-skills-top5-0815" target=_blank>lazyowen.com/guides/claude-skills-top5-0815</a></div></div>
+<pre>npm install -g omniroute</pre>
+<p class=mu><b>판단</b> 클로드 코드 유료 한도 초과 시에도 개발 작업을 멈추지 않고 부드럽게 이어갈 수 있는 안전망 역할을 합니다. · 주의: 모델 전환 시 프롬프트 응답 스타일 차이가 발생할 수 있으며 엔드포인트 서버 구동 관리가 필요함.</p></div><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>Graphify</b>
+<span class=mu>무료 오픈소스</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/FGm0aTGA9SU" target=_blank title="남들보다 토큰 70% 더 쓰는 방법 #claude #chatgpt #codex #ai">▶2</a> <a class=vr href="https://www.youtube.com/shorts/l_RB6lTTrKE" target=_blank title="3달만에 9만 달성하게 해 준 클로드 스킬 8개 #claude #claudecode #ai">▶18</a></span></div>
+<p>AST 파싱을 통해 소스코드의 구조와 의존 관계를 지식 그래프로 변환해 주는 스킬 도구입니다. 클로드가 전체 프로젝트 코드 파일을 반복해서 읽는 대신 지식 그래프를 탐색하도록 유도하여 파일 탐색 토큰을 절약합니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 숏템메이커 FastAPI 및 크롬 확장 모듈 간 연관 관계를 그래프로 빠르게 조회. ② 소스코드 전체를 매번 읽는 습관을 막아 파일 탐색 토큰 소모 감축.</p></div>
+<p class=al>⚠️ 이미 가진 것과 겹침: context-engineering</p>
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/safishamsi/graphify" target=_blank>github.com/safishamsi/graphify</a></div><div><b>가이드</b> <span class=mu>확인 안 됨</span></div></div>
+<pre>uv tool install graphifyy</pre>
+<p class=mu><b>판단</b> 대형 소스코드 구조를 파악하고 토큰을 줄일 수 있으나 코드 변경 시마다 수동 갱신이 필요합니다. · 주의: 코드 수정 후 그래프를 재갱신하지 않으면 클로드가 이전 구조를 참조해 오답을 낼 수 있음.</p></div><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>FreeLLMAPI</b>
+<span class=mu>무료 오픈소스</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/Sf8Gu31kEfA" target=_blank title="클로드 코드, 이제 공짜로 거의 무제한">▶19</a></span></div>
+<p>여러 AI 제공사의 무료 티어 API 키를 하나로 모아 단일 OpenAI/Anthropic 호환 엔드포인트로 연결해 주는 프록시 라우터입니다. API 한도 도달 시 다른 무료 LLM으로 자동 회피하여 작업을 지속시킵니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 숏템메이커 스크립트 생성 중 제미나이 한도 초과 시 타 무료 모델로 전환하여 중단 방지. ② 클로드 코드 한도 초과 시 서브 개발 작업 전환.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/tashfeenahmed/freellmapi" target=_blank>github.com/tashfeenahmed/freellmapi</a></div><div><b>가이드</b> <span class=mu>확인 안 됨</span></div></div>
+<pre>curl -fsSL https://freellmapi.co/install.sh | bash</pre>
+<p class=mu><b>판단</b> 다양한 무료 LLM 자원을 보조 엔진으로 묶어 활용하기에 용이합니다. · 주의: 여러 외부 무료 키를 발급/관리해야 하며 타사 프록시 거침에 따라 개인코드 유출 위험이 있음.</p></div><h2>에이전트·개발 체계·보안 (개발 환경) <span class=mu>9개</span></h2><div class="tool p1"><div class=th><span class=badge style="background:#30d158">바로 받기</span><b class=nm>ECC (Everything Claude Code)</b>
+<span class=mu>무료 (GitHub App 일부 유료)</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/Ekf7hznOEg0" target=_blank title="클로드코드 바이브코딩 필수 3가지">▶9</a> <a class=vr href="https://www.youtube.com/shorts/l_RB6lTTrKE" target=_blank title="3달만에 9만 달성하게 해 준 클로드 스킬 8개 #claude #claudecode #ai">▶18</a> <a class=vr href="https://www.youtube.com/shorts/dVMKJtBjCQA" target=_blank title="최고의 클로드 사용하는 방법">▶15</a></span></div>
+<p>검증된 에이전트, 스킬, 지속성 메모리를 하나로 묶어 AI 코딩 생산성을 극대화하는 통합 에이전트 하네스 프레임워크입니다. 코딩, 리뷰, 보안 검사 등 전문 에이전트 역할을 분담시켜 고품질 개발 워크플로우를 구성합니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 숏템메이커 FastAPI, Gemini 연동, 크롬 확장 병열 개발 및 디버깅. ② 클로드 코드 및 코덱스 환경에서 전문 서브 에이전트 팀을 구성하여 멀티트랙 코딩 속도 극대화. ③ 주식 정보 수집 자동화 알고리즘 구축.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/affaan-m/ECC" target=_blank>github.com/affaan-m/ECC</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/vibecoding3" target=_blank>lazyowen.com/guides/vibecoding3</a></div></div>
+<pre>/plugin marketplace add https://github.com/affaan-m/ECC
+/plugin install ecc@ecc</pre>
+<p class=mu><b>판단</b> 클로드 코딩 개발 환경의 표준이자 최고의 에이전트 하네스로 멀티트랙 개발 생산성을 수배 높여줍니다. · 주의: 기능이 매우 다채롭고 방대하므로 초기 체계 파악 및 에이전트 관리 적응 필요.</p></div><div class="tool p1"><div class=th><span class=badge style="background:#30d158">바로 받기</span><b class=nm>Context7</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/Ekf7hznOEg0" target=_blank title="클로드코드 바이브코딩 필수 3가지">▶9</a></span></div>
+<p>최신 공식 라이브러리 문서와 코드 예시를 클로드 코드에 실시간 주입해 주는 맥락 주입 도구입니다. AI 모델의 구버전 학습 데이터로 인한 API 파괴적 변경(Breaking Changes) 오류나 코드 환각 현상을 사전에 예방합니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 숏템메이커 개발 시 최신 FastAPI 및 Gemini API, YouTube API 변경 스펙을 클로드가 즉시 반영. ② 최신 라이브러리 공식 문서를 찾으러 브라우저 검색을 오가는 시간을 완전 제거.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://context7.com" target=_blank>context7.com</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/vibecoding3" target=_blank>lazyowen.com/guides/vibecoding3</a></div></div>
+<pre>npx ctx7 setup --claude</pre>
+<p class=mu><b>판단</b> 최신 API 및 프레임워크 기반 개발 시 발생하는 구버전 코드 생성 오류를 완벽히 해결합니다. · 주의: 비공개 사내 라이브러리 검색 시 외부 Context7 서버로 문맥 요청이 전송되므로 주의.</p></div><div class="tool p1"><div class=th><span class=badge style="background:#30d158">바로 받기</span><b class=nm>Strix</b>
+<span class=mu>Strix 서비스 유료 스캔 플랜 (CLI 자체 무료 호스팅 지원)</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/Ekf7hznOEg0" target=_blank title="클로드코드 바이브코딩 필수 3가지">▶9</a></span></div>
+<p>애플리케이션 소스코드 및 API의 실시간 보안 취약점을 실제 해커처럼 공격 및 검증하는 자율 AI 침투 테스트 도구입니다. 개인정보 탈취, OWASP Top 10 웹 취약점을 사전에 발견하고 자동 수정 패치까지 제시합니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 숏템메이커 FastAPI 서버 및 크롬 확장 프로그램의 인증 우회, SQL 인젝션, API 키 노출 취약점 사전 차단. ② 배포 전 작성된 코드를 자동으로 진단해 프로덕션 서비스 안전성 확보.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/tghastings/strix-claude-code" target=_blank>github.com/tghastings/strix-claude-code</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/vibecoding3" target=_blank>lazyowen.com/guides/vibecoding3</a></div></div>
+<pre>curl -sSL https://strix.ai/install | bash</pre>
+<p class=mu><b>판단</b> 실제 배포 예정인 SaaS 서비스의 보안 구멍과 민감 정보 유출을 배포 전에 확실하게 차단합니다. · 주의: 공격적 침투 테스트를 수행하므로 프로덕션 운영 서버가 아닌 개발 스테이징 환경에서 실행 필수.</p></div><div class="tool p1"><div class=th><span class=badge style="background:#30d158">바로 받기</span><b class=nm>MCP Builder</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/9_eaZJ0N7Sw" target=_blank title="클로드 코드 최고의 스킬 5개 알려줌  #ai #claude">▶5</a></span></div>
+<p>외부 API 명세와 상세 조건만 알려주면 클로드와 연결할 수 있는 MCP(Model Context Protocol) 서버 코드를 자동 스캐폴딩해 주는 도구입니다. 필요한 도구를 직접 MCP 커스텀 규격으로 빠르게 제작할 수 있습니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 숏템메이커 전용 내장 연동 MCP 도구 자동 생성. ③ 주식 금융 API나 주식 DB 조회용 전용 MCP를 몇 분 만에 구축하여 클로드에 직결.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/anthropics/skills/tree/main/skills/mcp-builder" target=_blank>github.com/anthropics/skills/tree/main/skills/mcp-builder</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/claude-code-skills-5-0813" target=_blank>lazyowen.com/guides/claude-code-skills-5-0813</a></div></div>
+<pre>npx --yes skills@latest add anthropics/skills --skill mcp-builder --agent claude-code --yes --copy</pre>
+<p class=mu><b>판단</b> 사업 운영상 필요한 연동 도구를 Claude 전용 MCP 서버로 손쉽게 자작할 수 있어 확장성이 뛰어납니다. · 주의: 자동 생성된 코드의 API 키 노출 여부와 예외 처리를 사용자 측에서 한 번 검수해야 함.</p></div><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>RuFlo</b>
+<span class=mu>무료 오픈소스</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/D7S-Cl9oHz8" target=_blank title="지구에서 가장 좋은 클로드 사용법">▶12</a> <a class=vr href="https://www.youtube.com/shorts/nmYF0XOm20Q" target=_blank title="클로드로 무료로 100명 고용하는 법">▶3</a></span></div>
+<p>수십 개 특화 AI 에이전트 스웜이 공유 메모리를 바탕으로 복잡한 개발 작업을 병렬 처리하도록 돕는 멀티 에이전트 오케스트레이션 도구입니다. 난이도별 자동 모델 라우팅을 수행합니다.</p>
+<div class=help><b>사장님께 도움</b><p>①, ② 클로드 코드 세션에 에이전트 스웜을 붙여 기능 구현, 테스트, 검수를 병렬 처리.</p></div>
+<p class=al>⚠️ 이미 가진 것과 겹침: subagent</p>
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/ruvnet/ruflo" target=_blank>github.com/ruvnet/ruflo</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/ruflo" target=_blank>lazyowen.com/guides/ruflo</a></div></div>
+<pre>npx ruflo@latest init wizard</pre>
+<p class=mu><b>판단</b> 병렬 에이전트 오케스트레이션 기능이 강력하나 이미 사용자가 subagent 스킬을 보유 중이므로 선택적 적용. · 주의: 스웜 다중 실행 시 제어 루프를 제대로 안 걸면 API 토큰 비용이 급증할 위험 존재.</p></div><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>Ponytail</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/l_RB6lTTrKE" target=_blank title="3달만에 9만 달성하게 해 준 클로드 스킬 8개 #claude #claudecode #ai">▶18</a></span></div>
+<p>AI 에이전트가 불필요한 과잉 구현(오버엔지니어링)을 하지 않도록 제어하는 오픈소스 스킬입니다. 게으른 시니어 개발자 페르소나를 적용하여 최단·최소 코드로 문제를 해결하게 합니다.</p>
+<div class=help><b>사장님께 도움</b><p>①, ② FastAPI 개발 시 쓸데없는 외부 패키지 추가나 과도한 객체 추상화를 방지해 코드베이스 간결화.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/DietrichGebert/ponytail" target=_blank>github.com/DietrichGebert/ponytail</a></div><div><b>가이드</b> <span class=mu>확인 안 됨</span></div></div>
+<pre>npx skills add DietrichGebert/ponytail --skill ponytail --agent claude-code</pre>
+<p class=mu><b>판단</b> 클로드가 불필요하게 코드를 길게 뽑아 토큰을 낭비하는 현상을 억제해 줍니다. · 주의: 지나친 코드 압축 적용 시 프로젝트 기존 가독성이나 고유 컨벤션과 마찰될 수 있음.</p></div><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>Find-skills</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/9_eaZJ0N7Sw" target=_blank title="클로드 코드 최고의 스킬 5개 알려줌  #ai #claude">▶5</a></span></div>
+<p>만들고자 하는 것을 말하면 생태계 내 수백 개 커뮤니티 스킬을 탐색해서 적합한 스킬을 추천 및 단일 명령으로 설치해 주는 도구입니다.</p>
+<div class=help><b>사장님께 도움</b><p>필요한 작업에 대한 스킬을 매번 GitHub에서 검색할 필요 없이 클로드 내부에서 즉시 탐색 및 설치.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://skills.sh/" target=_blank>skills.sh/</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/claude-code-skills-5-0813" target=_blank>lazyowen.com/guides/claude-code-skills-5-0813</a></div></div>
+<pre>npx --yes skills@latest add vercel-labs/skills --skill find-skills --agent claude-code --yes --copy</pre>
+<p class=mu><b>판단</b> 새로운 스킬이 필요할 때 검색 시간을 줄여주는 편리한 탐색기 역할을 합니다. · 주의: 검증되지 않은 오픈소스 커뮤니티 스킬 설치 시 보안성 사전 확인 필요.</p></div><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>Claude Code Setup</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/oDW7XUrzork" target=_blank title="클로드에 무조건 설치해야하는 5개">▶7</a></span></div>
+<p>프로젝트 소스코드와 파일 구조를 읽어 최적의 스킬, 훅, MCP 구성을 진단 및 자동 추천해 주는 플러그인입니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 숏템메이커 프로젝트 구조를 스캔해 필요한 린터, 훅, MCP 자동 진단 및 구성.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/anthropics/claude-plugins-official/tree/main/plugins/claude-code-setup" target=_blank>github.com/anthropics/claude-plugins-official/tree/main/plugins/claude-code-setup</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/claude-skills-top5-0815" target=_blank>lazyowen.com/guides/claude-skills-top5-0815</a></div></div>
+<pre>/plugin install claude-code-setup@claude-plugins-official</pre>
+<p class=mu><b>판단</b> 프로젝트 초기 세팅이나 진단 시 과도한 도구 설치 없이 필요한 최소 도구만 맞춤 정리해 줍니다. · 주의: 코드베이스 탐색 과정에서 파일 스캔 토큰이 소비됨.</p></div><div class="tool p3"><div class=th><span class=badge style="background:#8e8e93">안 받아도 됨</span><b class=nm>Task Observer</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/oDW7XUrzork" target=_blank title="클로드에 무조건 설치해야하는 5개">▶7</a></span></div>
+<p>작업 도중 사용자의 교정 사항과 반복 피드백을 지켜보고 SKILL.md 규칙으로 자동 축적·개선하도록 돕는 메타 스킬입니다.</p>
+<div class=help><b>사장님께 도움</b><p>①, ④ 쇼츠 제작 피드백이나 코딩 지침을 스킬 문서로 축적.</p></div>
+<p class=al>⚠️ 이미 가진 것과 겹침: skill-creator</p>
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/rebelytics/one-skill-to-rule-them-all" target=_blank>github.com/rebelytics/one-skill-to-rule-them-all</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/claude-skills-top5-0815" target=_blank>lazyowen.com/guides/claude-skills-top5-0815</a></div></div>
+<pre>npx skills add rebelytics/one-skill-to-rule-them-all --skill task-observer</pre>
+<p class=mu><b>판단</b> 피드백 축적 기능은 좋으나 사용자가 이미 `skill-creator` 스킬을 활용 중이므로 중복에 가까움. · 주의: 상시 모니터링 프롬프트 추가로 컨텍스트 입력 토큰 사용량 증가.</p></div><h2>브라우저·수집 / 지식 정리 <span class=mu>5개</span></h2><div class="tool p1"><div class=th><span class=badge style="background:#30d158">바로 받기</span><b class=nm>Agent Reach</b>
+<span class=mu>무료 오픈소스</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/JTv1SiYmv0w" target=_blank title="클로드에게 자동화를 시킨다면 이거 봐야함">▶13</a></span></div>
+<p>유료 API 구독 없이 유튜브 자막, 트위터, 깃허브, 레딧 등 13개 이상 주요 플랫폼의 데이터를 클로드가 수집할 수 있도록 통로를 열어주는 오픈소스 CLI 도구입니다.</p>
+<div class=help><b>사장님께 도움</b><p>③ 주식 유튜브 및 위키용 최신 뉴스, 깃허브 트렌드, 커뮤니티 반응 실시간 수집. ①, ④ 쇼핑 쇼츠 제작 시 소셜 트렌드 키워드 무료 자동 탐색.</p></div>
+<p class=al>⚠️ 이미 가진 것과 겹침: firecrawl</p>
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/Panniantong/Agent-Reach" target=_blank>github.com/Panniantong/Agent-Reach</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/agent-reach" target=_blank>lazyowen.com/guides/agent-reach</a></div></div>
+<pre>pipx install https://github.com/Panniantong/agent-reach/archive/main.zip</pre>
+<p class=mu><b>판단</b> 유료 API 비용 지불 없이 유튜브 자막 및 SNS 데이터를 무료 수집하여 주식 리서치와 쇼츠 기획을 대폭 강화합니다. · 주의: 비공식 스크래핑 방식이 포함되어 있어 대상 플랫폼 정책 변경이나 IP 제한 위험이 존재함.</p></div><div class="tool p1"><div class=th><span class=badge style="background:#30d158">바로 받기</span><b class=nm>Claude-video (Watch Skill)</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/kYnNTl1BWOk" target=_blank title="클로드가 유튜브로 알아서 공부한다">▶14</a> <a class=vr href="https://www.youtube.com/shorts/l_RB6lTTrKE" target=_blank title="3달만에 9만 달성하게 해 준 클로드 스킬 8개 #claude #claudecode #ai">▶18</a></span></div>
+<p>유튜브 영상 URL에서 yt-dlp와 ffmpeg를 이용해 자막 텍스트와 정지 프레임 이미지를 추출하여 클로드에 전달해 주는 영상 분석 스킬입니다.</p>
+<div class=help><b>사장님께 도움</b><p>③ 주식 유튜브 채널 벤치마킹 시 경쟁 영상 자막과 화면 차트 프레임 자동 요약 분석. ① 숏템메이커 렌더링 영상 결과물의 화면 레이아웃 및 자막 오탈자 자동 검수.</p></div>
+<p class=al>⚠️ 이미 가진 것과 겹침: media-use</p>
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/bradautomates/claude-video" target=_blank>github.com/bradautomates/claude-video</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/claude-youtube-skill" target=_blank>lazyowen.com/guides/claude-youtube-skill</a></div></div>
+<pre>/plugin marketplace add bradautomates/claude-video
+/plugin install watch@claude-video</pre>
+<p class=mu><b>판단</b> 유튜브 튜토리얼이나 참고 숏폼 영상을 클로드가 시각·텍스트 단위로 정밀 분석하게 해 줍니다. · 주의: 영상 프레임 이미지를 대량 전달할 경우 클로드 토큰 소모량이 커질 수 있음.</p></div><div class="tool p1"><div class=th><span class=badge style="background:#30d158">바로 받기</span><b class=nm>NotebookLM</b>
+<span class=mu>기본 무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/G7o-IWd8LJc" target=_blank title="가장 똑똑한 클로드 만들기(토큰 0으로)">▶1</a></span></div>
+<p>업로드한 문서, 뉴스, 유튜브 트랜스크립트 자료를 바탕으로 환각 없이 요약 보고서와 오디오/비디오 브리핑을 생성해 주는 구글의 지식 분석 서비스입니다.</p>
+<div class=help><b>사장님께 도움</b><p>③ 주식 리포트 및 공시 자료 수십 개를 딥 리서치하여 주식 위키 문서 및 유튜브 대본 초안 생성. ② 긴 기술 명세서를 1차 요약하여 클로드 코드 토큰 절약.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://notebooklm.google.com/" target=_blank>notebooklm.google.com/</a></div><div><b>가이드</b> <a href="https://app.notion.com/p/39a28466a54e81b7ad39f5ea86662277" target=_blank>app.notion.com/p/39a28466a54e81b7ad39f5ea86662277</a></div></div>
+<p class=mu>설치 명령: 확인 안 됨 — 받는 곳 페이지 참고</p>
+<p class=mu><b>판단</b> 방대한 주식 자료 분석 및 클로드 코드 전 단계 토큰 절감 보조 엔진으로 매우 뛰어납니다. · 주의: 수동 웹 UI 중심 서비스이므로 백엔드 API 직접 자동화 파이프라인 연동은 어려움.</p></div><div class="tool p3"><div class=th><span class=badge style="background:#8e8e93">안 받아도 됨</span><b class=nm>agent-browser</b>
+<span class=mu>무료 (Claude 구독 필요)</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/49Yc4rS6sIU" target=_blank title="무조건 설치해야하는 클로드 디자인 스킬 #claude #claudecode">▶20</a> <a class=vr href="https://www.youtube.com/shorts/9_eaZJ0N7Sw" target=_blank title="클로드 코드 최고의 스킬 5개 알려줌  #ai #claude">▶5</a></span></div>
+<p>AI 에이전트가 브라우저를 직접 열어 클릭, 입력, 데이터 추출, 화면 캡처 및 자동 테스트를 수행할 수 있게 돕는 CLI 도구입니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 쇼핑몰 상품 데이터 자동 수집 및 웹 인터페이스 자동 검증.</p></div>
+<p class=al>⚠️ 이미 가진 것과 겹침: agent-browser</p>
+<div class=row><div><b>받는 곳</b> <a href="https://agent-browser.dev/" target=_blank>agent-browser.dev/</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/claude-code-skills-5-0813" target=_blank>lazyowen.com/guides/claude-code-skills-5-0813</a></div></div>
+<pre>npx --yes skills@latest add vercel-labs/agent-browser --agent claude-code --yes --copy</pre>
+<p class=mu><b>판단</b> 이미 사용자가 동일한 `agent-browser` 스킬을 설치해 사용 중이므로 추가 설치 불필요. · 주의: 기존 설치된 스킬과 충돌 유의.</p></div><div class="tool p3"><div class=th><span class=badge style="background:#8e8e93">안 받아도 됨</span><b class=nm>Playwright MCP</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/-9hkRtWMmrM" target=_blank title="클로드가 웹 디자이너들을 전부 끝장냈어요! #ai #claude #웹디자인">▶17</a></span></div>
+<p>Claude Code가 실제 브라우저를 구동하여 웹 페이지와 상호작용하고 UI 스크린샷을 찍어 테스트하도록 지원하는 MCP 서버입니다.</p>
+<div class=help><b>사장님께 도움</b><p>①, ② 개발한 웹 UI 화면을 직접 열어 잘림 여부를 스크린샷으로 진단.</p></div>
+<p class=al>⚠️ 이미 가진 것과 겹침: playwright</p>
+<div class=row><div><b>받는 곳</b> <a href="https://playwright.dev" target=_blank>playwright.dev</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/claude-designer-kill" target=_blank>lazyowen.com/guides/claude-designer-kill</a></div></div>
+<pre>claude mcp add playwright npx @playwright/mcp@latest</pre>
+<p class=mu><b>판단</b> 이미 사용자의 MCP 목록에 `playwright`가 포함되어 있어 설치 생략 가능. · 주의: 기존 MCP 중복 등록 주의.</p></div><h2>디자인·웹 프론트엔드 <span class=mu>9개</span></h2><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>Impeccable</b>
+<span class=mu>무료 오픈소스</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/-9hkRtWMmrM" target=_blank title="클로드가 웹 디자이너들을 전부 끝장냈어요! #ai #claude #웹디자인">▶17</a></span></div>
+<p>AI 특유의 조잡하고 흔한 웹 디자인(AI Slop)을 방지하도록 타이포그래피, 여백, 레이아웃, 애니메이션 안티패턴 규칙을 정밀 교정해 주는 디자인 스킬 패키지입니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 숏템메이커 대시보드 및 랜딩 페이지 UI 디테일 정밀 다듬기. ③ 주식 위키 웹 레이아웃 가독성 및 타이포그래피 향상.</p></div>
+<p class=al>⚠️ 이미 가진 것과 겹침: frontend-design</p>
+<div class=row><div><b>받는 곳</b> <a href="https://impeccable.style" target=_blank>impeccable.style</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/claude-designer-kill" target=_blank>lazyowen.com/guides/claude-designer-kill</a></div></div>
+<pre>npx impeccable@latest install --providers=claude --scope=project</pre>
+<p class=mu><b>판단</b> 흔한 AI 느낌의 프론트엔드 디자인을 프로덕션 수준으로 정밀하게 폴리싱할 수 있습니다. · 주의: 프론트엔드 전용 명령어로 백엔드 구현에는 영향 없음.</p></div><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>Emil Kowalski Design</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/-9hkRtWMmrM" target=_blank title="클로드가 웹 디자이너들을 전부 끝장냈어요! #ai #claude #웹디자인">▶17</a></span></div>
+<p>UI 폴리싱, 컴포넌트 디자인, 인터랙티브 애니메이션에 관한 디자인 철학과 미세 규칙을 클로드에 주입해 주는 디자인 스킬입니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 숏템메이커 웹 서비스의 매끄러운 트랜지션 및 컴포넌트 애니메이션 가이드 주입.</p></div>
+<p class=al>⚠️ 이미 가진 것과 겹침: frontend-design</p>
+<div class=row><div><b>받는 곳</b> <a href="https://emilkowalski.com" target=_blank>emilkowalski.com</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/claude-designer-kill" target=_blank>lazyowen.com/guides/claude-designer-kill</a></div></div>
+<pre>npx --yes skills@latest add emilkowalski/skills --skill &quot;emil-design-eng&quot; --agent claude-code --yes --copy</pre>
+<p class=mu><b>판단</b> 인터랙티브 웹 요소와 세련된 애니메이션 감각을 프론트엔드 코드 생성 시 즉시 반영합니다. · 주의: 유료 코스 가이드가 별도 존재함.</p></div><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>Image to Code</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/49Yc4rS6sIU" target=_blank title="무조건 설치해야하는 클로드 디자인 스킬 #claude #claudecode">▶20</a></span></div>
+<p>참고하고 싶은 웹사이트 스크린샷이나 목업 이미지를 클로드에 전달하면 레이아웃과 디자인을 정밀 분석해 반응형 프론트엔드 코드로 변환해 주는 스킬입니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 벤치마킹 쇼핑몰이나 크롬 확장 UI 캡처본을 입력해 &#x27;담기&#x27; 팝업 UI 코드로 즉시 변환.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/Leonxlnx/taste-skill" target=_blank>github.com/Leonxlnx/taste-skill</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/claude-design-top-5-skill" target=_blank>lazyowen.com/guides/claude-design-top-5-skill</a></div></div>
+<pre>npx --yes skills@latest add https://github.com/Leonxlnx/taste-skill --skill &quot;image-to-code&quot; --agent claude-code --yes --copy</pre>
+<p class=mu><b>판단</b> 디자인 캡처 이미지를 클로드 코드가 즉시 구현 가능한 실체 코드로 직결해 줍니다. · 주의: 고해상도 이미지 다량 분석 시 클로드 토큰 비용 소모 주의.</p></div><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>Awesome Design</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/49Yc4rS6sIU" target=_blank title="무조건 설치해야하는 클로드 디자인 스킬 #claude #claudecode">▶20</a></span></div>
+<p>실제 고품질 제품 사이트에서 추출한 컬러 파렛트, 타이포그래피, 스페이싱 토큰을 DESIGN.md 규격으로 클로드에 주입해 일관된 디자인 시스템을 구성하도록 돕는 가이드 모음입니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 숏템메이커 웹 UI 구축 시 브랜드 디자인 시스템 토큰 주입.</p></div>
+<p class=al>⚠️ 이미 가진 것과 겹침: web-design-guidelines</p>
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/VoltAgent/awesome-design-md" target=_blank>github.com/VoltAgent/awesome-design-md</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/claude-design-top-5-skill" target=_blank>lazyowen.com/guides/claude-design-top-5-skill</a></div></div>
+<p class=mu>설치 명령: 확인 안 됨 — 받는 곳 페이지 참고</p>
+<p class=mu><b>판단</b> 디자인 시스템 기준 파일을 프로젝트에 배치하여 AI 디자인 흔적을 차단합니다. · 주의: 가이드 원문에 별도 자동 npx 설치 명령이 기재되어 있지 않아 파일 직접 배치가 필요함.</p></div><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>Stitch</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/B4TdQobVEKI" target=_blank title="구글이 AI도구를 무료로 풀었다 #ai #antigravity #google">▶6</a></span></div>
+<p>자연어 프롬프트나 스케치 이미지를 입력하여 웹·앱 UI 시안과 프론트엔드 코드를 자동 생성하고 MCP/CLI 연동을 지원하는 구글 랩스의 디자인 도구입니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 숏템메이커 SaaS 랜딩 페이지 및 웹 관리자 UI 초안 시안을 구글 AI로 신속 설계.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://stitch.withgoogle.com" target=_blank>stitch.withgoogle.com</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/google-aitool-free-15" target=_blank>lazyowen.com/guides/google-aitool-free-15</a></div></div>
+<p class=mu>설치 명령: 확인 안 됨 — 받는 곳 페이지 참고</p>
+<p class=mu><b>판단</b> 백엔드 개발 전 UI 시안 구조를 빠르게 시각화하는 데 유용합니다. · 주의: 생성 결과물은 백엔드 로직이 없는 프론트엔드 초안임.</p></div><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>Figma MCP</b>
+<span class=mu>무료 베타</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/-9hkRtWMmrM" target=_blank title="클로드가 웹 디자이너들을 전부 끝장냈어요! #ai #claude #웹디자인">▶17</a></span></div>
+<p>Claude AI가 Figma 디자인 파일의 레이아웃과 컴포넌트 구조를 직접 읽어 프론트엔드 코드로 구현하도록 연결해 주는 표준 MCP 서버입니다.</p>
+<div class=help><b>사장님께 도움</b><p>① Figma에서 디자인된 숏템메이커 UI 요소를 클로드 코드가 직접 코드로 구현.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://mcp.figma.com/mcp" target=_blank>mcp.figma.com/mcp</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/claude-designer-kill" target=_blank>lazyowen.com/guides/claude-designer-kill</a></div></div>
+<pre>claude mcp add --transport http figma https://mcp.figma.com/mcp</pre>
+<p class=mu><b>판단</b> 피그마 디자인 자산을 클로드 코드와 직접 연결하여 변환 작업을 줄입니다. · 주의: Figma 로그인 승인 과정이 필요함.</p></div><div class="tool p3"><div class=th><span class=badge style="background:#8e8e93">안 받아도 됨</span><b class=nm>Taste (Taste Skill)</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/49Yc4rS6sIU" target=_blank title="무조건 설치해야하는 클로드 디자인 스킬 #claude #claudecode">▶20</a> <a class=vr href="https://www.youtube.com/shorts/9_eaZJ0N7Sw" target=_blank title="클로드 코드 최고의 스킬 5개 알려줌  #ai #claude">▶5</a> <a class=vr href="https://www.youtube.com/shorts/l_RB6lTTrKE" target=_blank title="3달만에 9만 달성하게 해 준 클로드 스킬 8개 #claude #claudecode #ai">▶18</a> <a class=vr href="https://www.youtube.com/shorts/eCCNwD69Htc" target=_blank title="클로드로 회사 통째로 운영하는 법">▶4</a> <a class=vr href="https://www.youtube.com/shorts/-9hkRtWMmrM" target=_blank title="클로드가 웹 디자이너들을 전부 끝장냈어요! #ai #claude #웹디자인">▶17</a></span></div>
+<p>AI 특유의 뻔하고 조잡한 웹 디자인 패턴을 지양하고 세련된 레이아웃과 모션을 적용하도록 안내하는 프론트엔드 디자인 스킬입니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 숏템메이커 웹 UI 디자인 개선.</p></div>
+<p class=al>⚠️ 이미 가진 것과 겹침: design-taste-frontend</p>
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/Leonxlnx/taste-skill" target=_blank>github.com/Leonxlnx/taste-skill</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/claude-designer-kill" target=_blank>lazyowen.com/guides/claude-designer-kill</a></div></div>
+<pre>npx --yes skills@latest add https://github.com/Leonxlnx/taste-skill --skill design-taste-frontend --agent claude-code --yes --copy</pre>
+<p class=mu><b>판단</b> 사용자가 이미 `design-taste-frontend` 스킬을 설치하여 보유하고 있으므로 중복 대상입니다. · 주의: 이미 보유 중.</p></div><div class="tool p3"><div class=th><span class=badge style="background:#8e8e93">안 받아도 됨</span><b class=nm>UI/UX Pro</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/eCCNwD69Htc" target=_blank title="클로드로 회사 통째로 운영하는 법">▶4</a></span></div>
+<p>UI 스타일, 색상 팔레트, UX 가이드라인 데이터베이스를 제공하여 전문적인 인터페이스 작성을 돕는 스킬입니다.</p>
+<div class=help><b>사장님께 도움</b><p>① SaaS 서비스 UI 가이드 구성 보조.</p></div>
+<p class=al>⚠️ 이미 가진 것과 겹침: frontend-design</p>
+<div class=row><div><b>받는 곳</b> <a href="https://mdskills.ai/" target=_blank>mdskills.ai/</a></div><div><b>가이드</b> <a href="https://app.notion.com/p/3b428466a54e81b7ad39f5ea86662277" target=_blank>app.notion.com/p/3b428466a54e81b7ad39f5ea86662277</a></div></div>
+<p class=mu>설치 명령: 확인 안 됨 — 받는 곳 페이지 참고</p>
+<p class=mu><b>판단</b> 이미 보유 중인 `frontend-design` 스킬과 기능이 대부분 중복됩니다. · 주의: 기능 중복.</p></div><div class="tool p3"><div class=th><span class=badge style="background:#8e8e93">안 받아도 됨</span><b class=nm>Web Design Guidelines Skill</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/49Yc4rS6sIU" target=_blank title="무조건 설치해야하는 클로드 디자인 스킬 #claude #claudecode">▶20</a></span></div>
+<p>Vercel의 최신 웹 인터페이스 가이드라인을 기반으로 UI 코드의 접근성 및 UX 문제를 검사해 주는 디자인 감사 스킬입니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 웹 UI 가이드라인 검사.</p></div>
+<p class=al>⚠️ 이미 가진 것과 겹침: web-design-guidelines</p>
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/vercel-labs/agent-skills" target=_blank>github.com/vercel-labs/agent-skills</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/claude-design-top-5-skill" target=_blank>lazyowen.com/guides/claude-design-top-5-skill</a></div></div>
+<pre>npx --yes skills@latest add vercel-labs/agent-skills --skill &quot;web-design-guidelines&quot; --agent claude-code --yes --copy</pre>
+<p class=mu><b>판단</b> 사용자가 이미 `web-design-guidelines` 스킬을 가지고 있어 추가 설치가 필요 없습니다. · 주의: 이미 보유 중.</p></div><h2>영상·이미지 AI &amp; 비주얼 렌더링 <span class=mu>6개</span></h2><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>MiniMax H3</b>
+<span class=mu>웹 체험판 무료 / 로컬 모델 무료 (API 이용 시 초당 과금)</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/4ozy-nFO1Ho" target=_blank title="세상에서 제일 좋은 영상 모델 사용법">▶8</a></span></div>
+<p>텍스트와 이미지, 비디오 입력을 바탕으로 최대 15초 길이의 2K 해상도 비디오와 효과음, 대화, 배경음을 한 번에 동기화해 생성하는 멀티모달 영상 AI 모델입니다.</p>
+<div class=help><b>사장님께 도움</b><p>①, ④ 쇼핑 쇼츠 제작 시 효과음 및 대사 음성이 내장된 숏폼 영상 소재 생성 파이프라인으로 연동. ③ 주식 설명 영상의 시각 자료 B-roll 자동 생성.</p></div>
+<p class=al>⚠️ 이미 가진 것과 겹침: volcano</p>
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/MiniMax-AI/MiniMax-H3" target=_blank>github.com/MiniMax-AI/MiniMax-H3</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/minimaxh3" target=_blank>lazyowen.com/guides/minimaxh3</a></div></div>
+<p class=mu>설치 명령: 확인 안 됨 — 받는 곳 페이지 참고</p>
+<p class=mu><b>판단</b> 영상과 오디오가 일체형으로 생성되므로 숏폼 제작 생산성이 높으나 로컬 구동 시 고성능 GPU가 필요합니다. · 주의: ComfyUI 로컬 실행 시 높은 GPU VRAM 요구, API 사용 시 비용 발생.</p></div><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>Higgsfield / Higgsfield MCP</b>
+<span class=mu>무료 연동 (생성 시 계정 크레딧 차감)</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/4ozy-nFO1Ho" target=_blank title="세상에서 제일 좋은 영상 모델 사용법">▶8</a> <a class=vr href="https://www.youtube.com/shorts/OiMKe3ruPcI" target=_blank title="클로드로 천만원 값 웹사이트 만드는 법">▶11</a></span></div>
+<p>Claude(웹/Desktop/Claude Code)와 연동되어 대화창이나 CLI 환경에서 영상 및 이미지 자산을 직접 생성하고 조작할 수 있는 원격 MCP 서비스 및 CLI 도구입니다.</p>
+<div class=help><b>사장님께 도움</b><p>②, ④ 쇼핑 쇼츠 기획 및 프론트엔드 제작 중 웹사이트에 삽입할 모션 영상 자산을 클로드 대화창에서 MCP로 생성 및 소스 반영.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/higgsfield-ai/cli" target=_blank>github.com/higgsfield-ai/cli</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/fable5-website" target=_blank>lazyowen.com/guides/fable5-website</a></div></div>
+<pre>npm install -g @higgsfield/cli
+npx skills add higgsfield-ai/skills</pre>
+<p class=mu><b>판단</b> 클로드 코딩 및 기획 맥락을 유지한 채 비주얼 영상 소재를 즉각 생성하는 연결성이 뛰어납니다. · 주의: 생성 시마다 Higgsfield 계정 크레딧이 차감되므로 비용 관리 필요.</p></div><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>Seedance 2.0</b>
+<span class=mu>무료 크레딧 제공 후 유료 구독</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/OiMKe3ruPcI" target=_blank title="클로드로 천만원 값 웹사이트 만드는 법">▶11</a></span></div>
+<p>텍스트, 이미지, 오디오를 조합해 시네마틱 영상과 오디오를 생성해 주는 바이트댄스의 멀티모달 AI 비디오 생성 모델입니다.</p>
+<div class=help><b>사장님께 도움</b><p>①, ④ 쇼핑 쇼츠에 필요한 입체적 제품 연출컷 및 고품질 AI 비디오 소재 생성.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://dreamina.capcut.com" target=_blank>dreamina.capcut.com</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/fable5-website" target=_blank>lazyowen.com/guides/fable5-website</a></div></div>
+<p class=mu>설치 명령: 확인 안 됨 — 받는 곳 페이지 참고</p>
+<p class=mu><b>판단</b> 쇼츠 영상 비주얼 완성도를 올릴 수 있으나 영상 제목의 &#x27;3D 웹사이트 통째 생성&#x27;은 과장된 소문입니다. · 주의: 웹사이트를 직접 만드는 도구가 아니며 단순 비디오 생성 모델임.</p></div><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>Google Omni Model</b>
+<span class=mu>Gemini 유료 구독 및 API 과금</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/4ozy-nFO1Ho" target=_blank title="세상에서 제일 좋은 영상 모델 사용법">▶8</a></span></div>
+<p>구글 DeepMind의 멀티모달 동영상 생성 모델로 음성과 동기화된 영상 생성 및 대화형 장면 연장/수정을 지원합니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 숏템메이커 파이썬 백엔드에서 Gemini Omni API 연동 후 상품 쇼츠 자동 생성.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://gemini.google.com" target=_blank>gemini.google.com</a></div><div><b>가이드</b> <span class=mu>확인 안 됨</span></div></div>
+<p class=mu>설치 명령: 확인 안 됨 — 받는 곳 페이지 참고</p>
+<p class=mu><b>판단</b> 사용자가 이미 제미나이 API 환경에 친숙하므로 백엔드 연동용으로 테스트 가치가 높습니다. · 주의: API 호출 시 100만 토큰당 비용 발생 및 입력 영상 길이 제한.</p></div><div class="tool p3"><div class=th><span class=badge style="background:#8e8e93">안 받아도 됨</span><b class=nm>Hyperframes</b>
+<span class=mu>기본 오픈소스 무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/l_RB6lTTrKE" target=_blank title="3달만에 9만 달성하게 해 준 클로드 스킬 8개 #claude #claudecode #ai">▶18</a></span></div>
+<p>AI 에이전트가 HTML, CSS, JS 코드를 작성하여 브라우저 화면 요소를 MP4 비디오 모션그래픽으로 변환해 주는 렌더링 도구입니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 쇼핑 쇼츠용 모션 그래픽, 자막, 로고 스팅 애니메이션 생성.</p></div>
+<p class=al>⚠️ 이미 가진 것과 겹침: hyperframes</p>
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/heygen-com/hyperframes" target=_blank>github.com/heygen-com/hyperframes</a></div><div><b>가이드</b> <span class=mu>확인 안 됨</span></div></div>
+<pre>npx skills add heygen-com/hyperframes</pre>
+<p class=mu><b>판단</b> 사용자가 이미 `hyperframes` 스킬을 설치해 사용 중이므로 중복됩니다. · 주의: 이미 보유 중.</p></div><div class="tool p3"><div class=th><span class=badge style="background:#8e8e93">안 받아도 됨</span><b class=nm>Mixboard</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/B4TdQobVEKI" target=_blank title="구글이 AI도구를 무료로 풀었다 #ai #antigravity #google">▶6</a></span></div>
+<p>구글 랩스에서 제공하는 AI 기반 무한 캔버스형 시각적 컨셉 보드 서비스로 여러 비주얼 아이디어를 생성하고 합성·조합할 수 있습니다.</p>
+<div class=help><b>사장님께 도움</b><p>④ 쇼핑 쇼츠 및 유튜브 썸네일 무드보드 사전 시각화 브레인스토밍.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://labs.google/mixboard" target=_blank>labs.google/mixboard</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/google-aitool-free-15" target=_blank>lazyowen.com/guides/google-aitool-free-15</a></div></div>
+<p class=mu>설치 명령: 확인 안 됨 — 받는 곳 페이지 참고</p>
+<p class=mu><b>판단</b> 자동화 API 파이프라인 연동이 불가능한 기획용 웹 UI 도구입니다. · 주의: 공식 API 부재로 FastAPI 백엔드 연동 불가.</p></div><h2>프롬프트 &amp; 기초 AI 서비스·키 <span class=mu>3개</span></h2><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>Prompt Master</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/TK6yy5cJtjI" target=_blank title="남들보다 프롬프트 잘 쓰는 법">▶10</a></span></div>
+<p>입력 지시문에서 작업 범위, 출력 형태, 제약, 멈출 시점 등 9가지 차원을 정밀 구성하여 재요청으로 인한 토큰 낭비를 차단해 주는 프롬프트 생성 스킬입니다.</p>
+<div class=help><b>사장님께 도움</b><p>② 클로드 코드 부여용 코딩 지시문 정밀화. ①, ④ 쇼츠 대본 및 TTS/이미지 생성 지시문 구조화. ③ 주식 리포트 요약 정밀 프롬프트 작성.</p></div>
+<p class=al>⚠️ 이미 가진 것과 겹침: prompt-architect</p>
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/nidhinjs/prompt-master" target=_blank>github.com/nidhinjs/prompt-master</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/prompt-master" target=_blank>lazyowen.com/guides/prompt-master</a></div></div>
+<pre>git clone https://github.com/nidhinjs/prompt-master.git ~/.claude/skills/prompt-master</pre>
+<p class=mu><b>판단</b> 재요청으로 낭비되는 토큰을 크게 줄여주지만 사용자가 이미 `prompt-architect` 스킬을 보유 중입니다. · 주의: 유사 스킬 중복 적용 가능성.</p></div><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>Fable 5</b>
+<span class=mu>API 토큰 종량제 과금</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/OiMKe3ruPcI" target=_blank title="클로드로 천만원 값 웹사이트 만드는 법">▶11</a></span></div>
+<p>100만 토큰 컨텍스트 창과 적응형 추론을 제공하는 Anthropic의 최상위 AI 모델로, Claude Code 터미널에서 고난도 코딩 작업을 주도합니다.</p>
+<div class=help><b>사장님께 도움</b><p>② 클로드 코드 멀티트랙 개발 중 해결하기 어려운 복잡한 시스템 버그 및 대규모 자율 리팩터링 처리.</p></div>
+<p class=al>⚠️ 이미 가진 것과 겹침: claude-api</p>
+<div class=row><div><b>받는 곳</b> <a href="https://platform.claude.com" target=_blank>platform.claude.com</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/fable5-website" target=_blank>lazyowen.com/guides/fable5-website</a></div></div>
+<p class=mu>설치 명령: 확인 안 됨 — 받는 곳 페이지 참고</p>
+<p class=mu><b>판단</b> 클로드 코드 개발 역량을 최고 수준으로 끌어올릴 수 있으나 API 비용 증가에 유의해야 합니다. · 주의: Sonnet 대비 높은 토큰 비용 소모.</p></div><div class="tool p3"><div class=th><span class=badge style="background:#8e8e93">안 받아도 됨</span><b class=nm>Google AI Studio / Gemini API Key</b>
+<span class=mu>무료 티어 제공</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/kYnNTl1BWOk" target=_blank title="클로드가 유튜브로 알아서 공부한다">▶14</a></span></div>
+<p>구글의 Gemini API 키를 무료로 발급받고 웹 UI에서 프롬프트 성능을 테스트할 수 있는 개발자용 포털입니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 숏템메이커 백엔드용 제미나이 API 키 공급.</p></div>
+<p class=al>⚠️ 이미 가진 것과 겹침: 제미나이 키 158개 풀</p>
+<div class=row><div><b>받는 곳</b> <a href="https://aistudio.google.com" target=_blank>aistudio.google.com</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/claude-youtube-skill" target=_blank>lazyowen.com/guides/claude-youtube-skill</a></div></div>
+<p class=mu>설치 명령: 확인 안 됨 — 받는 곳 페이지 참고</p>
+<p class=mu><b>판단</b> 사용자가 이미 제미나이 API 키 158개 풀을 보유하고 있으므로 신규 발급 불필요. · 주의: 이미 키 보유 중.</p></div><h2>워크플로우·노코드 &amp; 대안 IDE <span class=mu>5개</span></h2><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>Antigravity</b>
+<span class=mu>무료 한도 제공</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/B4TdQobVEKI" target=_blank title="구글이 AI도구를 무료로 풀었다 #ai #antigravity #google">▶6</a></span></div>
+<p>구글이 만든 AI 에이전트 중심의 개발 환경으로, AI가 코드 작성뿐 아니라 터미널 명령과 브라우저 제어 테스트까지 자율 처리해 줍니다.</p>
+<div class=help><b>사장님께 도움</b><p>① FastAPI 서버 및 크롬 확장 프로그램 E2E 테스트 자동화. ② 백그라운드 멀티 에이전트 개발 트랙 구성.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/google-antigravity/antigravity-cli" target=_blank>github.com/google-antigravity/antigravity-cli</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/google-aitool-free-15" target=_blank>lazyowen.com/guides/google-aitool-free-15</a></div></div>
+<p class=mu>설치 명령: 확인 안 됨 — 받는 곳 페이지 참고</p>
+<p class=mu><b>판단</b> 구글 생태계 기반 AI 코딩 도구로 클로드 코드의 대안으로 시험해 볼 만합니다. · 주의: 현재 사용 중인 Claude Code 개발 환경과 기능적 중복.</p></div><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>Google Opal</b>
+<span class=mu>무료 (미국 베타)</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/B4TdQobVEKI" target=_blank title="구글이 AI도구를 무료로 풀었다 #ai #antigravity #google">▶6</a></span></div>
+<p>자연어와 시각적 에디터를 사용해 프롬프트, Gemini 모델, 도구를 연결하는 구글 랩스의 노코드 AI 워크플로우 빌더입니다.</p>
+<div class=help><b>사장님께 도움</b><p>①, ④ 쇼핑 쇼츠 스크립트 생성 및 마케팅 문구 자동화 노코드 워크플로우 구축.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://developers.google.com/opal" target=_blank>developers.google.com/opal</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/google-aitool-free-15" target=_blank>lazyowen.com/guides/google-aitool-free-15</a></div></div>
+<p class=mu>설치 명령: 확인 안 됨 — 받는 곳 페이지 참고</p>
+<p class=mu><b>판단</b> Gemini 기반 미니 앱 및 반복 처리 워크플로우를 노코드로 빠르게 구성해 볼 수 있습니다. · 주의: 실험적 공개 베타 서비스로 제공 방식 변경 가능성.</p></div><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>n8n / Make</b>
+<span class=mu>Self-hosted 무료 / 클라우드 유료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/B4TdQobVEKI" target=_blank title="구글이 AI도구를 무료로 풀었다 #ai #antigravity #google">▶6</a></span></div>
+<p>시각적 노드를 연결하여 다양한 SaaS, API, AI 모델 간의 자동화 파이프라인을 시각적으로 구축하는 워크플로우 도구입니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 크롬 확장 웹훅 이벤트를 받아 제미나이 처리 및 비동기 작업 자동화. ③ 주식 지표 및 공시 데이터를 자동 수집해 위키 DB로 전송.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://n8n.io" target=_blank>n8n.io</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/google-aitool-free-15" target=_blank>lazyowen.com/guides/google-aitool-free-15</a></div></div>
+<pre>docker run -d --name n8n -p 5678:5678 n8nio/n8n</pre>
+<p class=mu><b>판단</b> FastAPI 백엔드 외적인 스케줄링 및 3사 API 연동 작업을 백엔드 코드 작성 없이 시각화하여 처리할 수 있습니다. · 주의: Self-hosted 구축 시 서버 유지보수 필요.</p></div><div class="tool p3"><div class=th><span class=badge style="background:#8e8e93">안 받아도 됨</span><b class=nm>Cursor / OpenAI Codex</b>
+<span class=mu>무료 / 유료 구독</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/B4TdQobVEKI" target=_blank title="구글이 AI도구를 무료로 풀었다 #ai #antigravity #google">▶6</a> <a class=vr href="https://www.youtube.com/shorts/dVMKJtBjCQA" target=_blank title="최고의 클로드 사용하는 방법">▶15</a></span></div>
+<p>VS Code 기반 AI 코딩 에디터 및 OpenAI의 자율형 CLI 에이전트로 AI 코드 자동 완성 및 자율 디버깅을 제공합니다.</p>
+<div class=help><b>사장님께 도움</b><p>② 클로드 코드 외 서브 GUI 개발 환경 활용.</p></div>
+<p class=al>⚠️ 이미 가진 것과 겹침: 코덱스 CLI</p>
+<div class=row><div><b>받는 곳</b> <a href="https://cursor.sh" target=_blank>cursor.sh</a></div><div><b>가이드</b> <a href="https://github.com/affaan-m/ecc" target=_blank>github.com/affaan-m/ecc</a></div></div>
+<p class=mu>설치 명령: 확인 안 됨 — 받는 곳 페이지 참고</p>
+<p class=mu><b>판단</b> 이미 사용자가 코덱스 CLI와 클로드 코드를 핵심 엔진으로 구동 중이므로 추가 도입 실익이 낮습니다. · 주의: 기존 AI 개발 도구와 완전 중복.</p></div><div class="tool p3"><div class=th><span class=badge style="background:#8e8e93">안 받아도 됨</span><b class=nm>Automaton</b>
+<span class=mu>무료 오픈소스</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/6oQM5Y8x7KA" target=_blank title="돈을 못 벌면 진짜 죽는 AI 에이전트가 나왔다 #ai #claude #claudecode #chatgpt #automaton">▶16</a></span></div>
+<p>에이전트가 이더리움 지갑을 직접 소유하고 API 비용을 자율 지불하며 잔고 고갈 시 정지되는 실험적 자율 생존 AI 에이전트입니다.</p>
+<div class=help><b>사장님께 도움</b><p>24시간 상시 자동 실행 웹 모니터링 에이전트 실험.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/Conway-Research/automaton" target=_blank>github.com/Conway-Research/automaton</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/automaton-self-funding-ai-agent" target=_blank>lazyowen.com/guides/automaton-self-funding-ai-agent</a></div></div>
+<pre>git clone https://github.com/Conway-Research/automaton.git
+cd automaton
+npx --yes pnpm@10.28.1 install
+npx --yes pnpm@10.28.1 build</pre>
+<p class=mu><b>판단</b> 개념 검증용 온체인 실험 프로젝트에 가까워 실제 안정적인 SaaS 개발 및 운영에 적용하기엔 위험 요소가 큽니다. · 주의: 셸 무제한 권한 부여에 따른 보안 위험 및 자금 고갈 리스크.</p></div><h2>마케팅 &amp; 업무 스킬 팩 <span class=mu>3개</span></h2><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>Claude Marketing / Social Media Skills</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/G7o-IWd8LJc" target=_blank title="가장 똑똑한 클로드 만들기(토큰 0으로)">▶1</a> <a class=vr href="https://www.youtube.com/shorts/eCCNwD69Htc" target=_blank title="클로드로 회사 통째로 운영하는 법">▶4</a></span></div>
+<p>Claude에 광고 제작, 소셜 미디어 카피라이팅, 릴스 대본 작성 지침을 주입해 주는 전용 업무 스킬 팩 모음입니다.</p>
+<div class=help><b>사장님께 도움</b><p>①, ④ 쇼핑 쇼츠 셀링포인트 도초 및 숏폼 특화 카피, 썸네일 기획 생성. ③ 주식 유튜브 제목 및 영상 소셜 홍보문 자동화.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/anthropics/skills" target=_blank>github.com/anthropics/skills</a></div><div><b>가이드</b> <a href="https://app.notion.com/p/3b428466a54e81b7ad39f5ea86662277" target=_blank>app.notion.com/p/3b428466a54e81b7ad39f5ea86662277</a></div></div>
+<p class=mu>설치 명령: 확인 안 됨 — 받는 곳 페이지 참고</p>
+<p class=mu><b>판단</b> 클로드에 마케터 페르소나를 주입해 쇼츠 멘트와 상품 홍보 카피의 질을 높여줍니다. · 주의: 출력물 검수 필요.</p></div><div class="tool p2"><div class=th><span class=badge style="background:#ff9f0a">시험해 볼 만</span><b class=nm>Pomelli</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/B4TdQobVEKI" target=_blank title="구글이 AI도구를 무료로 풀었다 #ai #antigravity #google">▶6</a></span></div>
+<p>웹사이트 URL을 입력하면 브랜드의 디자인 및 톤앤매너를 분석하여 이에 들어맞는 SNS 이미지와 마케팅 카피 에셋을 만드는 구글 랩스 도구입니다.</p>
+<div class=help><b>사장님께 도움</b><p>① 숏템메이커 서비스 홍보용 카드뉴스 및 소셜 배너 비주얼 자동 제작. ④ 쇼핑몰 URL을 분석해 상품 연출 포토샷 생성.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://labs.google.com/pomelli" target=_blank>labs.google.com/pomelli</a></div><div><b>가이드</b> <a href="https://lazyowen.com/guides/google-aitool-free-15" target=_blank>lazyowen.com/guides/google-aitool-free-15</a></div></div>
+<p class=mu>설치 명령: 확인 안 됨 — 받는 곳 페이지 참고</p>
+<p class=mu><b>판단</b> SaaS 서비스 마케팅 자산과 쇼핑 쇼츠용 연출 컷 이미지를 손쉽게 만들어 냅니다. · 주의: 영어 기반 베타 서비스 중심임.</p></div><div class="tool p3"><div class=th><span class=badge style="background:#8e8e93">안 받아도 됨</span><b class=nm>Finance / Legal Skills (Claude)</b>
+<span class=mu>무료</span><span class=vids><a class=vr href="https://www.youtube.com/shorts/eCCNwD69Htc" target=_blank title="클로드로 회사 통째로 운영하는 법">▶4</a></span></div>
+<p>재무제표 분석, DCF 가치평가 모델링, 계약서 및 법률 문서 위험 조항 검토 지침을 주입해 주는 클로드 전용 플러그인입니다.</p>
+<div class=help><b>사장님께 도움</b><p>③ 상장사 재무제표 분석 및 주식 위키 리포트 작성. ① SaaS 이용약관 및 서비스 계약서 위험 조항 검토.</p></div>
+
+<div class=row><div><b>받는 곳</b> <a href="https://github.com/anthropics/knowledge-work-plugins" target=_blank>github.com/anthropics/knowledge-work-plugins</a></div><div><b>가이드</b> <a href="https://app.notion.com/p/3b428466a54e81b7ad39f5ea86662277" target=_blank>app.notion.com/p/3b428466a54e81b7ad39f5ea86662277</a></div></div>
+<p class=mu>설치 명령: 확인 안 됨 — 받는 곳 페이지 참고</p>
+<p class=mu><b>판단</b> 주식 분석에는 유용하나 한국 국세청 세금계산서 발행 및 국내 실무 법률 검토에는 한계가 존재합니다. · 주의: 한국 세무/홈택스 실무 직접 연결 불가.</p></div>
+<h2>안 받아도 되는 것</h2><ul><li>Taste, UI/UX Pro, Web Design Guidelines (이미 design-taste-frontend, frontend-design, web-design-guidelines 보유)</li><li>agent-browser, Playwright (이미 agent-browser, playwright MCP 보유)</li><li>Hyperframes (이미 hyperframes 스킬 보유)</li><li>Google AI Studio (이미 제미나이 API 키 158개 풀 보유)</li><li>Automaton (온체인 지갑 자율 생존 실험 프로젝트로 실제 사업 적용 시 보안 및 자금 손실 위험)</li></ul>
+<h2>공개 자료 없이 'DM으로 준다'만 한 것</h2><ul><li>영상 &#x27;nmYF0XOm20Q&#x27; (클로드로 100명 무료로 고용하는 방법)에서 소개된 일부 비공개 마케팅 템플릿 및 DM 전달 자료</li></ul>
+<p class=mu>노션 링크 2곳(▶1 NotebookLM 두 번째 뇌, ▶4 무료 스킬 84개)은 로그인 벽이라 열지 못했다 — 그 영상 도구는 영상 내용과 웹 검색으로만 확인.</p>
+<h2>영상별 고정 댓글 가이드 링크</h2><table><tr><td>▶1</td><td><a href="https://www.youtube.com/shorts/G7o-IWd8LJc" target=_blank>가장 똑똑한 클로드 만들기(토큰 0으로)</a></td><td><a href="https://app.notion.com/p/39a28466a54e812a984bc91bbe8b9d21" target=_blank>app.notion.com/p/39a28466a54e812a984bc91bbe8b9d21</a></td></tr><tr><td>▶2</td><td><a href="https://www.youtube.com/shorts/FGm0aTGA9SU" target=_blank>남들보다 토큰 70% 더 쓰는 방법 #claude #chatgpt #codex #ai</a></td><td><span class=mu>확인 안 됨</span></td></tr><tr><td>▶3</td><td><a href="https://www.youtube.com/shorts/nmYF0XOm20Q" target=_blank>클로드로 무료로 100명 고용하는 법</a></td><td><span class=mu>확인 안 됨</span></td></tr><tr><td>▶4</td><td><a href="https://www.youtube.com/shorts/eCCNwD69Htc" target=_blank>클로드로 회사 통째로 운영하는 법</a></td><td><a href="https://app.notion.com/p/3b428466a54e81b7ad39f5ea86662277" target=_blank>app.notion.com/p/3b428466a54e81b7ad39f5ea86662277</a></td></tr><tr><td>▶5</td><td><a href="https://www.youtube.com/shorts/9_eaZJ0N7Sw" target=_blank>클로드 코드 최고의 스킬 5개 알려줌  #ai #claude</a></td><td><a href="https://lazyowen.com/go/claude-code-skills-5-0813" target=_blank>lazyowen.com/go/claude-code-skills-5-0813</a></td></tr><tr><td>▶6</td><td><a href="https://www.youtube.com/shorts/B4TdQobVEKI" target=_blank>구글이 AI도구를 무료로 풀었다 #ai #antigravity #google</a></td><td><a href="https://lazyowen.com/go/google-aitool-free-15" target=_blank>lazyowen.com/go/google-aitool-free-15</a></td></tr><tr><td>▶7</td><td><a href="https://www.youtube.com/shorts/oDW7XUrzork" target=_blank>클로드에 무조건 설치해야하는 5개</a></td><td><a href="https://lazyowen.com/go/claude-skills-top5-0815" target=_blank>lazyowen.com/go/claude-skills-top5-0815</a></td></tr><tr><td>▶8</td><td><a href="https://www.youtube.com/shorts/4ozy-nFO1Ho" target=_blank>세상에서 제일 좋은 영상 모델 사용법</a></td><td><a href="https://lazyowen.com/go/minimaxh3" target=_blank>lazyowen.com/go/minimaxh3</a></td></tr><tr><td>▶9</td><td><a href="https://www.youtube.com/shorts/Ekf7hznOEg0" target=_blank>클로드코드 바이브코딩 필수 3가지</a></td><td><a href="https://lazyowen.com/go/vibecoding3" target=_blank>lazyowen.com/go/vibecoding3</a></td></tr><tr><td>▶10</td><td><a href="https://www.youtube.com/shorts/TK6yy5cJtjI" target=_blank>남들보다 프롬프트 잘 쓰는 법</a></td><td><a href="https://lazyowen.com/guides/prompt-master" target=_blank>lazyowen.com/guides/prompt-master</a></td></tr><tr><td>▶11</td><td><a href="https://www.youtube.com/shorts/OiMKe3ruPcI" target=_blank>클로드로 천만원 값 웹사이트 만드는 법</a></td><td><a href="https://lazyowen.com/guides/fable5-website" target=_blank>lazyowen.com/guides/fable5-website</a></td></tr><tr><td>▶12</td><td><a href="https://www.youtube.com/shorts/D7S-Cl9oHz8" target=_blank>지구에서 가장 좋은 클로드 사용법</a></td><td><a href="https://lazyowen.com/guides/ruflo" target=_blank>lazyowen.com/guides/ruflo</a></td></tr><tr><td>▶13</td><td><a href="https://www.youtube.com/shorts/JTv1SiYmv0w" target=_blank>클로드에게 자동화를 시킨다면 이거 봐야함</a></td><td><a href="https://lazyowen.com/guides/agent-reach" target=_blank>lazyowen.com/guides/agent-reach</a></td></tr><tr><td>▶14</td><td><a href="https://www.youtube.com/shorts/kYnNTl1BWOk" target=_blank>클로드가 유튜브로 알아서 공부한다</a></td><td><a href="https://lazyowen.com/guides/claude-youtube-skill" target=_blank>lazyowen.com/guides/claude-youtube-skill</a></td></tr><tr><td>▶15</td><td><a href="https://www.youtube.com/shorts/dVMKJtBjCQA" target=_blank>최고의 클로드 사용하는 방법</a></td><td><a href="https://github.com/affaan-m/ecc" target=_blank>github.com/affaan-m/ecc</a></td></tr><tr><td>▶16</td><td><a href="https://www.youtube.com/shorts/6oQM5Y8x7KA" target=_blank>돈을 못 벌면 진짜 죽는 AI 에이전트가 나왔다 #ai #claude #claudecode #chatgpt #automaton</a></td><td><a href="https://lazyowen.com/guides/automaton-self-funding-ai-agent" target=_blank>lazyowen.com/guides/automaton-self-funding-ai-agent</a></td></tr><tr><td>▶17</td><td><a href="https://www.youtube.com/shorts/-9hkRtWMmrM" target=_blank>클로드가 웹 디자이너들을 전부 끝장냈어요! #ai #claude #웹디자인</a></td><td><a href="https://lazyowen.com/guides/claude-designer-kill" target=_blank>lazyowen.com/guides/claude-designer-kill</a></td></tr><tr><td>▶18</td><td><a href="https://www.youtube.com/shorts/l_RB6lTTrKE" target=_blank>3달만에 9만 달성하게 해 준 클로드 스킬 8개 #claude #claudecode #ai</a></td><td><a href="https://lazyowen.com/guides" target=_blank>lazyowen.com/guides</a></td></tr><tr><td>▶19</td><td><a href="https://www.youtube.com/shorts/Sf8Gu31kEfA" target=_blank>클로드 코드, 이제 공짜로 거의 무제한</a></td><td><span class=mu>확인 안 됨</span></td></tr><tr><td>▶20</td><td><a href="https://www.youtube.com/shorts/49Yc4rS6sIU" target=_blank>무조건 설치해야하는 클로드 디자인 스킬 #claude #claudecode</a></td><td><a href="https://lazyowen.com/go/claude-design-top-5-skill" target=_blank>lazyowen.com/go/claude-design-top-5-skill</a></td></tr></table>
+</main></body></html>

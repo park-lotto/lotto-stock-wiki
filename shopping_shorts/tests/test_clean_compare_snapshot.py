@@ -1,4 +1,26 @@
 # -*- coding: utf-8 -*-
+def test_compare_uses_calibrated_offset_from_base(tmp_path, monkeypatch):
+    """옛 청소본(밀림 보정 off)이면 전/후 비교 좌표도 그 보정을 쓴다 — 렌더와 같은 함수(cut_span_in_clean)."""
+    from pathlib import Path
+    from shopping_shorts import mix_pipeline as mp, clean_base as cb
+    plan = {"beats": [{"beat_idx": 0, "target_seconds": 1.0, "primary": {"video_id": "s0", "seg_id": "s0-0", "start": 7.7, "end": 8.75}, "alternates": []}]}
+    job = {"job_id": "j", "edit_plan": plan, "urls": ["u"], "subtitle_removal": 1, "customer_id": 0}
+    (tmp_path / "s0").mkdir(); (tmp_path / "s0" / "v.mp4").write_bytes(b"v" * 4096)
+    clean = tmp_path / "final_clean_abc.mp4"; clean.write_bytes(b"c" * 4096)
+    cuts = [{"video_id": "s0", "beat_idx": 0, "src": 7.7, "fin": 2.66, "dur": 1.05, "off": 0.133}]
+    cb.save_base(tmp_path, sig="abc", path=str(clean), plan=plan, cuts=cuts)
+    monkeypatch.setattr(mp, "clean_final_path_for_plan", lambda j, w: clean)
+    monkeypatch.setattr(mp, "clean_base_for", lambda j, w: cb.load_base(w))
+    monkeypatch.setattr(mp, "final_clip_pairs", lambda p, t, d: [dict(c) for c in cuts])
+    monkeypatch.setattr(mp, "_src_durs_for", lambda j, w: {"s0": 30.0})
+    r = mp.clean_compare_clips(job, tmp_path)
+    assert r["clips"] and abs(r["clips"][0]["fin"] - (2.66 + 0.133)) < 1e-6        # ★보정 적용
+    assert r["clips"][0]["src"] == 7.7
+    # 정본이 없는(옛 경로) 작업은 종전 그대로 fin
+    monkeypatch.setattr(mp, "clean_base_for", lambda j, w: None)
+    r2 = mp.clean_compare_clips(job, tmp_path)
+    assert abs(r2["clips"][0]["fin"] - 2.66) < 1e-6
+
 """자막제거 전/후 비교 — 편성이 바뀐 뒤에도 **같은 장면**이어야 한다 (2026-09-03).
 
 실측 job fb62adf0aad0: 10:23 청소 → 16:03~16:27 장면편집 30회 → 편성 서명이 달라졌다

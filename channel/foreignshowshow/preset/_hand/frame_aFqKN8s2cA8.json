@@ -1,0 +1,123 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 434,
+   "w": 1080,
+   "h": 1052,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "w": 1020,
+   "align": "center",
+   "y": 180,
+   "lines": 2,
+   "font": "GmarketSansBold",
+   "size": 118.8,
+   "line_h": 124,
+   "rgb": [
+    255,
+    253,
+    127
+   ],
+   "line_rgb": [
+    [
+     255,
+     253,
+     127
+    ],
+    [
+     255,
+     255,
+     255
+    ]
+   ],
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -1.4,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "케첩을 이제\n안 부어도 된다고?!"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 897,
+   "lines": 2,
+   "font": "GmarketSansBold",
+   "size": 68.0,
+   "line_h": 68,
+   "rgb": [
+    253,
+    250,
+    250
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": {
+    "dx": 3,
+    "dy": 3,
+    "blur": 6,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": {
+    "kind": "none",
+    "ms": 300
+   },
+   "emphasis": null
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "aFqKN8s2cA8",
+ "made_from": {
+  "tool": "fs_preset.hand",
+  "from": "aFqKN8s2cA8_auto.json(바탕·창) + fs_measure 실측(제목·자막)",
+  "notes": [
+   "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+   "글꼴 못 정함: OCR 글자가 없음 — 글자 층 생략",
+   "제목 = 실측 잉크 [([187, 291], 596), ([311, 416], 980)] → 줄 크기 [118.2, 119.3] (to_frame.size_and_top)",
+   "제목 글꼴 GmarketSansBold — fontmatch 묶음 {'font': 'GmarketSansBold.otf', 'score': 0.9997, 'wins': 1, 'raw': 0.7835}",
+   "제목 채움 [[255, 253, 127], [255, 255, 255]]",
+   "자막 = 8편 공통 실측(1줄 잉크 929~988·2줄 895~953/963~1022, GmarketSansBold·줄 칸 68·valign center)",
+   "자막 크기 68·y 897 = 렌더 대조로 맞춤(PIL 역산 65.6·y 894 로 그리니 1줄 잉크 927~983 폭 615 vs 원본 929~987 폭 645 — loo QMJ 10-18)",
+   "자막 그림자 = 흰 글자 아래오른쪽 고리가 위왼쪽보다 어두움(밝기 차 18/10/2, 3표본) + 뜯기 glyph 그림자 [2,2] → dx3 dy3 blur6 (근사)",
+   "낱말 형광색·같은 색 번짐 빛은 층 하나로 못 그림(emphasis 는 한 색) — manifest channel_rules.captions.highlight_palette"
+  ]
+ }
+}

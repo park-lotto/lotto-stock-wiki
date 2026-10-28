@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<title>영상제작소 · 숏템하우스 2편</title>
+<style>
+:root{--bg:#f4f2ee;--card:#fff;--ink:#1d1d1f;--mute:#8a8580;--line:#e4e0da;--ok:#1f9d55;--no:#c9c4bd;--acc:#e8590c}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Pretendard","Malgun Gothic",sans-serif}
+header{position:sticky;top:0;z-index:5;background:#1d1d1f;color:#fff;padding:14px 20px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+header h1{font-size:18px;margin:0}header .bar{flex:1;min-width:200px;height:10px;background:#444;border-radius:6px;overflow:hidden}
+header .bar i{display:block;height:100%;background:var(--acc)}header small{color:#bbb}
+main{max-width:1100px;margin:0 auto;padding:18px 16px 80px}
+.scene{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
+.head{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer}
+.no{font-weight:800;font-size:20px;width:34px;color:var(--mute)}.title{font-weight:700;flex:1}
+.chip{font-size:12px;padding:3px 9px;border-radius:20px;background:#eee;color:var(--mute)}
+.chip.on{background:#e3f5ea;color:var(--ok);font-weight:700}
+.body{display:none;padding:0 18px 18px;gap:16px;grid-template-columns:1fr 1fr}
+.scene.open .body{display:grid}
+@media(max-width:800px){.scene.open .body{grid-template-columns:1fr}}
+.text{white-space:pre-wrap;background:#faf9f7;border:1px solid var(--line);border-radius:10px;padding:12px;max-height:420px;overflow:auto;font-size:14px}
+.drop{border:2px dashed var(--no);border-radius:12px;padding:22px;text-align:center;color:var(--mute)}
+.drop.hover{border-color:var(--acc);background:#fff4ec;color:var(--acc)}
+.files h4{margin:14px 0 6px;font-size:13px}.file{display:flex;gap:8px;align-items:center;font-size:13px;padding:4px 0}
+.file span{flex:1;word-break:break-all}
+video,audio{width:100%;margin-top:6px;border-radius:8px}
+button{font:inherit;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 14px;cursor:pointer}
+button.main{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:700}
+button.x{padding:2px 8px;color:#b33}
+textarea{width:100%;min-height:70px;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+pre.log{background:#111;color:#ddd;font-size:12px;padding:10px;border-radius:8px;max-height:160px;overflow:auto;white-space:pre-wrap}
+</style></head><body>
+<header><h1>🎬 숏템하우스 2편</h1><div class="bar"><i id="prog"></i></div><small id="sum"></small></header>
+<main id="list"></main>
+<script>
+const open=new Set(JSON.parse(localStorage.getItem('open')||'[]'));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function load(){
+  const r=await (await fetch('/api/scenes')).json();
+  const S=r.scenes;let done=0;
+  document.getElementById('list').innerHTML=S.map(s=>{
+    const f=s.files,fin=f['완성'].length>0;if(fin)done++;
+    const chip=(on,t)=>`<span class="chip ${on?'on':''}">${on?'✓':'·'} ${t}</span>`;
+    const u=(k,n)=>`/file/${encodeURIComponent(s.key)}/${k}/${encodeURIComponent(n)}`;
+    const list=k=>f[k].map(n=>`<div class="file"><span>${esc(n)}</span><button class="x" onclick="del('${s.key}','${k}','${esc(n)}')">버리기</button></div>`+
+      (k==='음성'?`<audio controls src="${u(k,n)}"></audio>`:(k==='녹화'||k==='완성')?`<video controls preload="metadata" src="${u(k,n)}"></video>`:'')).join('')||'<div class="file" style="color:#aaa">없음</div>';
+    const j=s.job;
+    return `<section class="scene ${open.has(s.key)?'open':''}" data-key="${esc(s.key)}">
+      <div class="head" onclick="tog('${s.key}')"><div class="no">${s.no}</div><div class="title">${esc(s.title)}</div>
+        ${chip(f['음성'].length,'음성')}${chip(f['녹화'].length,'녹화')}${chip(fin,'완성')}</div>
+      <div class="body">
+        <div><div class="text">${esc(s.text)}</div>
+          <div class="row"><button onclick="copyText('${s.key}')">대사 복사 (일레븐랩스용)</button></div></div>
+        <div>
+          <div class="drop" ondragover="event.preventDefault();this.classList.add('hover')" ondragleave="this.classList.remove('hover')" ondrop="drop(event,'${s.key}')">
+            여기에 파일을 끌어다 놓으세요<br><small>음성(mp3) · 녹화(mp4) · 그림 — 알아서 나눠 담습니다</small><br>
+            <label><input type="file" multiple style="display:none" onchange="send('${s.key}',this.files)"><u style="cursor:pointer">또는 파일 고르기</u></label></div>
+          <div class="files"><h4>🎙 음성</h4>${list('음성')}<h4>🖥 녹화</h4>${list('녹화')}<h4>🖼 자료</h4>${list('자료')}<h4>✅ 완성본</h4>${list('완성')}</div>
+          <div class="row">
+            <button onclick="act('${s.key}','timing')" ${f['음성'].length?'':'disabled'}>타이밍 뽑기</button>
+            <button class="main" onclick="act('${s.key}','render')" ${s.comp?'':'disabled title="아직 리모션 씬이 없습니다"'}>영상 만들기</button>
+            ${s.timing?'<span class="chip on">✓ 타이밍</span>':''}</div>
+          ${j?`<pre class="log">${j.state==='running'?'⏳ 진행 중…':j.state==='done'?'✅ 끝':'❌ 실패'}\n${esc(j.log)}</pre>`:''}
+          <h4 style="margin:14px 0 6px;font-size:13px">📝 Claude에게 남길 말</h4>
+          <textarea onchange="memo('${s.key}',this.value)" placeholder="예) 3초쯤 버튼 누르는 부분 확대해줘">${esc(s.memo)}</textarea>
+        </div></div></section>`}).join('');
+  document.getElementById('prog').style.width=(done/S.length*100)+'%';
+  document.getElementById('sum').textContent=`완성 ${done} / ${S.length}씬`;
+  window._S=S;
+  if(S.some(s=>s.job&&s.job.state==='running'))setTimeout(load,3000);
+}
+function tog(k){open.has(k)?open.delete(k):open.add(k);localStorage.setItem('open',JSON.stringify([...open]));load()}
+function drop(e,k){e.preventDefault();send(k,e.dataTransfer.files)}
+async function send(k,files){const fd=new FormData();for(const f of files)fd.append('files',f);
+  await fetch(`/api/${encodeURIComponent(k)}/upload`,{method:'POST',body:fd});load()}
+async function del(k,kind,n){await fetch(`/api/${encodeURIComponent(k)}/${kind}/${encodeURIComponent(n)}`,{method:'DELETE'});load()}
+async function memo(k,v){await fetch(`/api/${encodeURIComponent(k)}/memo`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({memo:v})})}
+async function act(k,a){const r=await fetch(`/api/${encodeURIComponent(k)}/${a}`,{method:'POST'});
+  if(!r.ok)alert((await r.json()).error);setTimeout(load,300)}
+function copyText(k){navigator.clipboard.writeText(window._S.find(s=>s.key===k).text)}
+load();
+</script></body></html>

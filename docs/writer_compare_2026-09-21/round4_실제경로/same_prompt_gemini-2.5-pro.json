@@ -1,0 +1,48 @@
+[
+  {
+    "beats": [
+      {
+        "role": "title",
+        "text": "개발자도 예상 못한 미친 활용법임.",
+        "src_seg": "",
+        "needs_scene": false
+      },
+      {
+        "role": "bait",
+        "text": "최근 SNS에서 난리가 난 빗이 하나 있는데,",
+        "src_seg": "",
+        "needs_scene": false
+      },
+      {
+        "role": "origin",
+        "text": "원래는 두피에 토닉을 바르면서 빗질하라고 나온 평범한 제품이었음.",
+        "src_seg": "grab_instagram_93846c9ca07d-0",
+        "needs_scene": true
+      },
+      {
+        "role": "notice",
+        "text": "그런데 사람들이 이걸 쓰면 손에 한 방울 안 묻히고 두피 관리가 가능하다는 걸 알아채고 엉뚱하게 쓰기 시작하는데,",
+        "src_seg": "grab_instagram_93846c9ca07d-8",
+        "needs_scene": true
+      },
+      {
+        "role": "cases",
+        "text": "초보들은 기껏해야 토닉을 채워서 두피 전체에 슥슥 바르는 정도였음.",
+        "src_seg": "grab_instagram_7f80070dc52a-2",
+        "needs_scene": true
+      },
+      {
+        "role": "escalation",
+        "text": "근데 고수들은 이걸로 두피 혈점을 찾아서 시원하게 롤링 마사지를 해 버림.",
+        "src_seg": "grab_instagram_e7ba48e8f982-10",
+        "needs_scene": true
+      },
+      {
+        "role": "twist",
+        "text": "하지만 진짜 미친 포인트는 따로 있었는데, 출산 때문에 고생한 아내한테 이거 하나 쓱 주면 비싼 선물보다 더 사랑받는다는 거.",
+        "src_seg": "",
+        "needs_scene": false
+      }
+    ]
+  }
+]

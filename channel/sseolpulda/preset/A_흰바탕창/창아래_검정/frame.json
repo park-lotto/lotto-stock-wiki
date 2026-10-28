@@ -1,0 +1,135 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "template_off": {
+  "tail_sec": 2.18,
+  "scenes": null
+ },
+ "made_by": "calcopy_frame v1",
+ "source": "ZdeZRtCeAC4",
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    251,
+    248,
+    252
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 426,
+   "w": 1080,
+   "h": 1006,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 224,
+   "w": 1000,
+   "align": "center",
+   "lines": 2,
+   "font": "SBAggroB",
+   "size": 93.2,
+   "line_h": 96,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -2,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "$per_video"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1462,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "CcSpoqaHanSansNeo-Bold",
+   "size": 66,
+   "line_h": 76,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -7.4,
+   "word_spacing": 6.8,
+   "valign": "center",
+   "enter": {
+    "kind": "none",
+    "ms": 300
+   },
+   "emphasis": null,
+   "text": null
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 1052,
+   "y": 15,
+   "w": 181,
+   "align": "right",
+   "lines": 1,
+   "font": "TmonMonsori",
+   "size": 48.0,
+   "line_h": 55,
+   "rgb": [
+    185,
+    184,
+    188
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 3,
+    "rgb": [
+     96,
+     95,
+     98
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": true,
+   "letter_spacing": -2.3,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "[광고]"
+  }
+ ]
+}

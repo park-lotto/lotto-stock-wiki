@@ -193,7 +193,7 @@ SFX_POSITIONS = ("first", "last", "transition")
 
 # ★효과음 한 발의 길이 상한(초) — 이보다 길면 컷을 덮는다.
 #   이븐쇼핑류 실측: 중앙 80ms · 200ms 이하가 93%(channel/strategy/효과음_패턴분석.md, 441건).
-#   상한을 200ms에 맞추면 뇌전구 팩에서 pop4·click·x_click·r3_click 4계열 25개가 남는다.
+#   상한을 200ms에 맞추면 기본 제공 팩에서 pop4·click·x_click·r3_click 4계열 25개가 남는다.
 _SFX_MAX_SECS = 0.20
 
 # ★타점 기본값 = **칸이 넘어가는 순간**(transition), 역할 무관 (2026-08-29).
@@ -230,7 +230,7 @@ def _sfx_candidates(assets):
 
 
 # ★벤치마크 순환 공식 — 추측이 아니라 **실측된 것**을 그대로 옮긴다.
-#   (channel/volcano/뇌전구_역분석_8편_2026-09-12.md: "32컷 전 구간 5편 완전 동일(접미사까지,
+#   (벤치마크 역분석 8편, 2026-09-12: "32컷 전 구간 5편 완전 동일(접미사까지,
 #    전편 3편 포함 8/8). 4칸 틀 × 계열별 주기". ⚠"12주기 반복"이 아니다 — 13번째가 r3_click이다.)
 #     i%4==0 → pop4                                         ← ★첫 컷(훅)은 항상 이것
 #     i%4==1 → click, r3_click, x_click, r3_click, x_click  (주기 5)
@@ -248,7 +248,7 @@ _CYCLE_SLOTS = (
 
 def _has_pack(cands):
     """벤치마크 팩이 깔려 있나 — 그 경우에만 공식 순환을 쓴다(없으면 종전 역할 경로)."""
-    return any((a.get("source_ref") or "") == "volcano/sfx_norm" for a in cands)
+    return any(a.get("source_kind") == "pack" for a in cands)
 
 
 def _cycle_pool(cands):
@@ -259,9 +259,9 @@ def _cycle_pool(cands):
     ★팩에 든 것만 쓴다 — 08-21 검증용 톤("띠용(테스트)"·"뿅(테스트)")이 섞이면 결이 튄다.
     결정적(정렬 고정)이라 같은 대본이면 항상 같은 배열이 나온다.
     """
-    packed = [a for a in cands if (a.get("source_ref") or "") == "volcano/sfx_norm"] or cands
+    packed = [a for a in cands if a.get("source_kind") == "pack"] or cands
     # ★긴 소리는 뺀다(2026-09-17 사장님 "이븐쇼핑이랑 최대한 비슷하게 해").
-    #   실측 대조 — 뇌전구 팩 79개: 길이 중앙 421ms · 200ms 이하 29% · 반짝 25%/붐 53%
+    #   실측 대조 — 기본 제공 팩 79개: 길이 중앙 421ms · 200ms 이하 29% · 반짝 25%/붐 53%
     #             이븐쇼핑류 12편 441건: 길이 중앙 80ms · 200ms 이하 93% · 반짝 80%/붐 17%
     #   팩이 5배 길고 계열 비율이 거의 반대다. 컷이 1.7초인데 drum(1535ms)·ding(1060ms)을
     #   얹으면 컷 하나를 통째로 덮는다(실측 job sfxb04ef8057에 censor·drum·fail이 들어갔다).
@@ -306,7 +306,7 @@ def match_sfx(plan, assets):
         #   조용히 되돌아간다 — "바꿨는데 그대로"로 겪는다.
         if (beat.get("sfx") or {}).get("match_type") == "manual":
             continue
-        # ★팩(뇌전구)이 깔려 있으면 **역할을 보지 않고 공식 순환**을 쓴다(2026-09-17 사장님
+        # ★기본 제공 팩이 깔려 있으면 **역할을 보지 않고 공식 순환**을 쓴다(2026-09-17 사장님
         #   "이븐쇼핑이랑 최대한 비슷하게 해" · "후킹 처음에 들어가는 공통 효과음 있어").
         #   역할 경로로 가면 길이 상한을 안 타서 훅에 r3_pop(353ms)·CTA에 x_ding(859ms) 같은
         #   긴 소리가 붙었다(실측). 벤치마크는 훅이 **항상 pop4**(8편 전부 동일)이고 컷 번호로만
@@ -320,12 +320,12 @@ def match_sfx(plan, assets):
         compatible = _ROLE_FALLBACK.get(beat.get("role") or "")
         if not compatible:
             # ★역할표에 없는 역할도 **빈 채로 두지 않는다**(2026-09-17 사장님 "효과음이랑 짤을
-            #   뇌전구 껄로 쓰라는 거야"). 종전엔 표에 없으면 통째로 건너뛰어, 백본 대본처럼
+            #   벤치마크 껄로 쓰라는 거야"). 종전엔 표에 없으면 통째로 건너뛰어, 백본 대본처럼
             #   역할이 `feature`인 칸은 **전부 소리가 없었다**(실측 job cut1da908c80: 배치 0/7칸,
             #   자산은 81개인데 하나도 안 붙음). 표를 늘리는 건 두더지다 — 역할이 새로 생길
             #   때마다 또 빈다(조사 기록: `match_sfx` 배치 5/9칸도 같은 원인).
             #   실측이 가리키는 답: 벤치마크는 **역할을 안 보고 컷마다 순환**한다
-            #   (뇌전구 역분석 — 27컷 전부 1발씩, pop4→click→boing→ding… 컷 번호대로 고정 순환.
+            #   (벤치마크 역분석 — 27컷 전부 1발씩, pop4→click→boing→ding… 컷 번호대로 고정 순환.
             #    무작위 아님. 효과음 실측 12편에서도 "역할이 아니라 컷에 붙는다").
             #   그래서 표에 없으면 **전체 후보를 비트 순번으로 돌려쓴다**(결정적 = 재실행해도 같다).
             if not cands:

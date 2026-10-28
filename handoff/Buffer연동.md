@@ -108,3 +108,53 @@ shareNow는 쓰지 않았다(되돌릴 수 없다).
   유지되는 회귀검사와 실제 만료 링크 청소 검사를 추가했다. 관련 파일 17건 통과.
 - 배포 후 김형관 기존 3건의 글·채널을 Buffer에서 읽어 오늘 18:00 KST로 재예약하고, 새 3건이
   모두 확인된 뒤 기존 예약을 삭제한다. 새 공개주소 HEAD/Range GET과 후속 새 링크 생성 뒤 생존을 확인한다.
+
+## 2026-09-21 — 고인재(고객 536) "예약발행 후 업로드 안 됨" 조사 (코드 수정 없음)
+
+- 실측: 8일간 `POST /api/buffer/schedule` 22회 **전부 404, 200은 0건**(IP 121.142.162.228 = customer_access상 536 본인).
+  Buffer 연결(`GET /api/buffer/channels`)은 200. 즉 예약이 Buffer까지 간 적이 없다 — Buffer 쪽 문제 아님.
+- 404 자리: `app.py` `_video_gone_reason` → 작업 7건 전부 `status=ready_for_review`·`video_path` 없음.
+  작업 폴더엔 `final_clean_*.mp4`(자막제거본)·`preview.mp4`만 있고 최종 완성본 없음.
+  같은 IP의 `/api/mix/render` 호출 오늘 0건 → **[완성본 만들기]를 한 번도 안 누르고 SNS 예약 단계로 갔다.**
+- 화면은 404의 `error`("수정한 내용으로 최종 렌더를 다시 해주세요.")를 상태줄에 띄운다(`produce.html:4150`).
+  ⚠️고객 화면에서 이 문구가 실제로 눈에 띄는지는 **미확인**(그분 계정으로 로그인하지 않았다).
+- ⏭ 개선 후보(사장님 승인 필요, 라이브 변경): 완성본 없는 작업은 SNS 예약 단계에서 예약 버튼 대신
+  "먼저 완성본 만들기" 안내를 크게. 한 번도 렌더 안 한 작업엔 "다시 해주세요"가 아니라 "아직 완성본이 없어요" 문구.
+
+### 2026-09-21 (2) — 사장님이 보낸 고객 화면 사진으로 뿌리 추가 확인: **화면이 없는 완성본을 "완성본"이라고 말한다**
+- 고객 화면 10단계: 썸네일 + "작업 b76f26326b5e 의 완성본 · 이 작업에서 완성한 영상 그대로 올라갑니다".
+  그런데 서버엔 그 작업의 `final.mp4`가 없다(폴더 실측: `final_clean_*`·`clean_preview.mp4`·`preview.mp4`뿐.
+  최종 렌더 출력은 `mix_pipeline.py:3797`의 `work/final.mp4`). 그분 IP의 `POST /api/mix/render`는 10:00 이후 **0회**.
+- 왜 그렇게 보이나: `produce.html:3922~3943`이 완성본 유무를 **안 보고** 무조건 "…의 완성본"이라 쓰고,
+  poster는 `/api/produce/mix/poster`가 자막제거본에서 뽑아 200을 준다. 정작 영상 주소 `/api/mix/video`는 404
+  (로그 16:10:13·16:42:14). → 고객 눈엔 완성본이 있는 것처럼 보이고, 예약만 404로 22번 막혔다.
+- ⏭ 고칠 것(승인 대기): 10단계 진입 시 완성본 유무를 서버 판정(`_video_gone_reason` 한 곳)으로 받아,
+  없으면 "완성본" 문구·썸네일 대신 "아직 완성본이 없어요 → [완성본 만들기]로 가기"를 띄우고 예약 버튼을 잠근다.
+
+## 2026-10-04 — 같은 영상이 2개씩 올라감(고객 340 박세현) → 중복 방지·예약 취소·페이스북 (관제 114, 트랙 버퍼중복취소)
+
+**증상**: 유튜브·인스타에 같은 영상이 2개씩. **Buffer 실측**(고객 키로 posts 조회, 읽기만):
+- job `c2e762780e08`(바늘) — 10-04 00:18·00:23 KST 두 번 예약, 둘 다 유튜브+인스타·같은 시각(07:30) → 2개씩 게시
+- job `869943fae072`(지퍼백) — 인스타 예약 1건 + 즉시 게시 1건
+- 페이스북은 `Facebook posts require a type` 로 거절(10-03 2회) — metadata 누락
+
+**뿌리**: 예약 요청은 부를 때마다 createPost 했고 서버는 **무엇을 예약했는지 안 적었다**. 화면에도 흔적이 안 남아
+패널을 다시 열면 예약했는지 알 수 없었다. 취소할 게시물 id도 없었다.
+
+**주인 함수**: `shopping_shorts/buffer_posts.py` — `already_scheduled`(중복), `cancel`(취소 가능 여부). 장부 테이블 `buffer_posts`.
+판단 직전에 Buffer에 지금 상태를 물어 장부를 맞춘다(`sync`) — Buffer에서 직접 지운 예약은 더는 안 막는다.
+**결과물 검사**: `shopping_shorts/tests/test_buffer_posts.py`(끝단: 두 번 눌러도 createPost 횟수 불변) · `tools/buffer_dup_ui_check.py`(화면 실제 함수).
+
+**고친 것**
+- `app.py` `/api/buffer/schedule`: 중복 채널은 Buffer로 안 보내고 `dup`으로 돌려줌 → 화면이 묻고 `force`로만 다시. 작업 단위 락. 성공 시 장부 기록.
+- `app.py` 신규 `/api/buffer/posts`(목록) · `/api/buffer/cancel`(취소). 올라간 글(sent)·올리는 중은 취소 거절(SNS에서 지우라고 안내).
+- `buffer_api.py`: `post_status` · `delete_post` · `BufferNotFound`(extensions.code NOT_FOUND) · 페이스북 `{"type":"reel"}`.
+- `produce.html` 10단계: 📋 예약 목록 + [예약 취소] + 중복 확인창.
+
+**Buffer 규격 실측(2026-10-04)**: `post(input:{id})` 없는 id → errors code NOT_FOUND / `deletePost` 없는 id → `{message:"Document not found"}` /
+facebook reel metadata로 createPost → 스키마 통과("Channel not found"까지 도달).
+
+⏭ 남은 것
+- **라이브에서 실제 Buffer로 예약→중복 물음→취소** 한 바퀴는 미실측(사장님 계정에 Buffer 키가 없어 대신 돌릴 계정이 없다). 배포 뒤 Buffer 키 있는 계정으로 확인 필요.
+- 페이스북 실제 예약 성공 여부는 페이스북 채널이 있는 고객 실사용 로그로 확인(거절 로그 `Facebook posts require a type` 가 사라지는지).
+- 배포 전 예약분은 장부에 없다 — 목록·중복 판정은 배포 뒤 예약부터 적용.

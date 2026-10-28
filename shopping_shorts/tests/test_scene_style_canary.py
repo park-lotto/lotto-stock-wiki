@@ -30,7 +30,7 @@ def test_lab_job_query_locks_to_exact_job_without_first_job_fallback():
     assert ".find(row=>String(row.job_id)===requestedJob)" in script
     assert "jobs=[exact];job.disabled=true" in script
     assert "sourceJobId=requestedJob||job.value" in script
-    assert "JSON.stringify({job_id:sourceJobId})" in script
+    assert "JSON.stringify({job_id:sourceJobId,allow_unclean:true})" in script
     assert "jobs[0]" not in script
 
 

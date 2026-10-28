@@ -1,0 +1,10 @@
+{"style": "A_흰바탕창",
+ "made_by": "preset_save v1 (하위 스타일 = 프리셋 단위)",
+ "rule": "틀 A(흰 바탕 + 창 + 제목 2줄 + 오른쪽 위 [광고]) 안에서도 자막 갈래가 다르면 프리셋을 나눈다 — 평균 내지 않는다(사장님 2026-10-16). 갈래 분류는 워커 정답(뜯기/<id>/점검.md).",
+ "sub_styles": [
+  {"name": "창아래_검정", "dir": "창아래_검정", "sources": ["ZdeZRtCeAC4"], "caption": "창 아래 바탕 위 검정 자막(분석기 측정)"},
+  {"name": "창안_흰외곽선", "dir": "창안_흰외곽선", "sources": ["ho5GSd-4To0", "7DYbxVNz5q8", "1_VtwOkbbVE"], "caption": "창 안 흰/색 글씨+외곽선 — 자막 층은 bench 측정 임시(분석기 D9 수리 전)"},
+  {"name": "창안_상자", "dir": "창안_상자", "sources": ["w-Ygny1f8O8"], "caption": "창 안 반투명 검정 상자+흰 작은 글씨 — 자막 층은 bench 측정 임시(상자 없음)"}
+ ],
+ "not_included": [{"id": "oJZDImhYdXw", "why": "뜯기.json 없음(정답시트만)"}],
+ "history": "5편을 한 프리셋으로 합친 판(커밋 c7fc70a27)은 기본값이 아무 편도 아닌 틀을 냈다(ZdeZ 재현 26 중 5 안) — 지움"}

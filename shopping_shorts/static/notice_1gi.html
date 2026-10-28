@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>숏템메이커 1기 사전 신청 안내</title>
+<title>숏템메이커 __COHORT__ 사전 신청 안내</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@700;900&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
@@ -149,7 +149,7 @@
 </style>
 
 <div class="wrap">
-  <h1>숏템메이커<br>1기 사전 신청 안내</h1>
+  <h1>숏템메이커<br><span data-pr=cohort></span> 사전 신청 안내</h1>
   <p class="lede">신청 전에 <b>이 문서를 끝까지</b> 읽어 주세요.<br>읽으신 뒤 맨 아래에서 신청하실 수 있습니다.</p>
 
   <!-- 한 줄 정리 -->
@@ -217,19 +217,19 @@
 
   <div class="note"><span class="ic">📌</span><span>이 비용은 <b>숏템메이커를 써서 새로 생기는 제작비가 아닙니다.</b> 쇼핑쇼츠를 기존 방식으로 직접 만드셔도 AI 음성·AI 생성·자막 제거를 쓰신다면 발생하는 비용입니다. 숏템메이커는 이 서비스들을 <b>하나의 제작 흐름으로 묶어 자동화</b>하는 프로그램입니다.</span></div>
 
-  <h2>1기 이용조건</h2>
+  <h2><span data-pr=cohort></span> 이용조건</h2>
   <div class="card terms">
-    <div class="t"><span class="k">이용권</span><span class="v"><b>1년 770,000원</b></span></div>
+    <div class="t"><span class="k">이용권</span><span class="v"><b>1년 <span data-pr=amount></span></b></span></div>
     <div class="t"><span class="k">이용 시작</span><span class="v">8월 24일부터 프로그램 이용 가능</span></div>
     <div class="t"><span class="k">업데이트</span><span class="v">이용기간 내 프로그램 지속 업데이트</span></div>
     <div class="t"><span class="k">교육</span><span class="v">프로그램 교육 및 운영 노하우 영상 제공</span></div>
     <div class="t"><span class="k">시작 전</span><span class="v"><b style="color:var(--ok);font-size:inherit">자세한 프로그램 가이드 영상 제공</b></span></div>
-    <div class="t"><span class="k">커뮤니티</span><span class="v">1기 전용 단톡방</span></div>
+    <div class="t"><span class="k">커뮤니티</span><span class="v"><span data-pr=cohort></span> 전용 단톡방</span></div>
     <div class="t"><span class="k">우선권</span><span class="v">신규 기능 우선 사용</span></div>
     <div class="t"><span class="k">추가 혜택</span><span class="v">신규 프로그램 선공개 및 할인</span></div>
   </div>
 
-  <div class="note"><span class="ic">🔥</span><span><b>1기는 무제한으로 인원을 받지 않을 예정입니다.</b> 원활한 운영과 1기 멤버 관리를 위해, 사전 신청 인원이 예상보다 많을 경우 <b>모집 인원을 제한하여 조기 마감</b>할 수 있습니다.</span></div>
+  <div class="note"><span class="ic">🔥</span><span><b><span data-pr=cohort></span>는 무제한으로 인원을 받지 않을 예정입니다.</b> 원활한 운영과 멤버 관리를 위해, 사전 신청 인원이 예상보다 많을 경우 <b>모집 인원을 제한하여 조기 마감</b>할 수 있습니다.</span></div>
 
   <!-- 신청 -->
   <div class="apply">
@@ -246,8 +246,8 @@
         <option>아직 시작 전</option>
       </select>
       <label class="agree"><input id="f_ok" type="checkbox" required>
-        위 안내를 확인했으며, 1기 참여를 희망합니다</label>
-      <button class="btn" id="pf_go" type="submit">🚀 1기 사전 신청하기</button>
+        위 안내를 확인했으며, <span data-pr=cohort></span> 참여를 희망합니다</label>
+      <button class="btn" id="pf_go" type="submit">🚀 사전 신청하기</button>
       <p class="sub" id="pf_msg">1분이면 됩니다 · 신청하시면 <b style="color:var(--accent)">결제 안내</b>로 바로 이어집니다</p>
     </form>
   </div>
@@ -297,10 +297,20 @@
     }).catch(function (err) {
       busy = false;
       btn.disabled = false;
-      btn.textContent = "🚀 1기 사전 신청하기";
+      btn.textContent = "🚀 사전 신청하기";
       msg.textContent = (err && err.message) || "접수에 실패했어요. 잠시 후 다시 시도해 주세요.";
       msg.className = "sub err";
     });
   });
 })();
+</script>
+<script>
+/* 기수·가격은 서버 /api/pricing 한 곳에서(2026-10-01 2기 전환). 이 파일에 '2기'·금액을 적지 마라 — test_cohort_pricing이 막는다. */
+(function(){ fetch('/api/pricing').then(function(r){return r.json()}).then(function(p){
+  var v={cohort:p.cohort, next_cohort:p.next_cohort, name:p.name,
+         amount:(p.amount||0).toLocaleString('ko-KR')+'원', amount_man:Math.round((p.amount||0)/10000)+'만원',
+         next_price:(p.next_price||0).toLocaleString('ko-KR')+'원'};
+  document.querySelectorAll('[data-pr]').forEach(function(el){ var k=el.getAttribute('data-pr'); if(v[k]!=null) el.textContent=v[k]; });
+  if(p.cohort && /^\s*$/.test(document.title)===false) document.title=document.title.replace('__COHORT__', p.cohort);
+}).catch(function(){}); })();
 </script>

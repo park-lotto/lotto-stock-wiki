@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3단계 영상대본MIX — 전체 UI 유지, 효과음·도구줄만 정리</title>
+<style>
+:root{--bg:#0a0f14;--panel:#111820;--inset:#172029;--line:#263241;--txt:#e8eef2;--sub:#8fa1ad;--blue:#2f7cf6;--mint:#34e0b5;--org:#f0a040}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:"Pretendard","Malgun Gothic",sans-serif;font-size:13px}
+.wrap{padding:16px 18px 30px;max-width:1660px;margin:0 auto}
+h3{margin:0;font-size:18px}.sub{color:var(--sub);margin:4px 0 12px;font-size:13px}
+.sec{display:flex;align-items:center;gap:10px;margin:8px 0 10px}.sec b{font-size:13px;margin-right:auto}
+.btn{height:30px;padding:0 10px;border-radius:7px;border:1px solid var(--line);background:var(--inset);color:var(--txt);font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}.btn.ghost{background:transparent;color:var(--sub);font-weight:600}.btn.big{height:36px;font-size:13px;padding:0 14px}.btn.more{width:30px;padding:0;justify-content:center;font-size:16px}
+.cols{display:grid;grid-template-columns:350px 1fr;gap:10px}
+.tabs{display:flex;background:var(--inset);border-radius:8px;padding:3px}.tabs span{flex:1;text-align:center;padding:7px 0;border-radius:6px;font-weight:700;color:var(--sub)}.tabs span.on{background:var(--blue);color:#fff}
+.pvbox{margin-top:8px;border:1px solid var(--blue);border-radius:8px;padding:10px;background:#0d141c}
+.pvbox .t{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-bottom:6px}
+.pv{aspect-ratio:9/15;background:#1a2a1a;border-radius:6px;background:linear-gradient(160deg,#2e4a2a,#8a6a1a 60%,#1c6a9a);display:flex;align-items:flex-end;justify-content:center;color:#fff9;font-size:11px;padding:6px}
+.bar2{height:4px;background:#2a3a4a;border-radius:2px;margin:10px 0 4px;position:relative}.bar2::after{content:"";position:absolute;right:0;top:-4px;width:12px;height:12px;border-radius:50%;background:var(--blue)}
+.cut{margin-top:8px}.cut .btn{margin-bottom:6px}.cut p{margin:0;color:var(--sub);font-size:11px;line-height:1.5}
+.sound{margin-top:10px;background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px}
+.stabs{display:flex;gap:4px;margin-bottom:8px;background:var(--panel);border-radius:8px;padding:3px}.stabs span{flex:1;text-align:center;padding:6px 0;border-radius:6px;font-weight:700;color:var(--sub)}.stabs span.on{background:var(--blue);color:#fff}.stabs em{font-style:normal;font-size:10px;background:#3a2c14;color:#f0b35a;border-radius:6px;padding:1px 5px;margin-left:4px}
+.row{display:flex;align-items:center;gap:7px;margin-top:7px;font-size:12px}.row b{min-width:40px;color:var(--sub);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}.seg span{min-width:44px;text-align:center;padding:5px 0;background:var(--panel)}.seg span+span{border-left:1px solid var(--line)}.seg span.on{background:var(--blue);color:#fff;font-weight:700}
+.sw{width:34px;height:19px;border-radius:10px;background:var(--mint);position:relative;flex:none}.sw::after{content:"";position:absolute;right:2px;top:2px;width:15px;height:15px;border-radius:50%;background:#fff}
+select{height:28px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--txt);font-size:12px;padding:0 6px}
+.right{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;overflow:hidden}
+.top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.top .t{font-weight:800}.top .t small{color:var(--sub);font-weight:400;margin-left:8px}
+.dots{display:flex;gap:10px;font-size:11px;color:var(--sub);margin-left:auto}.dots i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--mint);margin-right:4px}
+.beats{display:flex;gap:14px;margin-top:12px;overflow:hidden}
+.beat{flex:0 0 660px;background:#0d141c;border:1px solid var(--line);border-radius:10px;padding:10px}
+.beat.dim{opacity:.55;flex-basis:560px}
+.bh{display:flex;align-items:center;gap:8px;font-weight:800}.bh small{color:var(--sub);font-weight:400}
+.bt{display:flex;align-items:center;gap:6px;margin:8px 0;font-size:11px;color:var(--sub);justify-content:flex-end;flex-wrap:wrap}.bt label{display:flex;align-items:center;gap:3px}.bt .btn{height:24px;font-size:11px;padding:0 7px}.bt select{height:24px;font-size:11px}
+.tr{display:grid;grid-template-columns:28px 1fr;gap:6px;align-items:center;margin-top:4px;font-size:11px;color:var(--sub)}
+.clips{display:flex;gap:4px}.clip{height:52px;border-radius:5px;border:1px solid var(--org);background:linear-gradient(135deg,#5a3a2a,#3a2a3a);position:relative;font-size:10px;padding:3px}.clip i{position:absolute;left:4px;top:3px;font-style:normal;background:#0009;padding:0 4px;border-radius:4px}.clip.n{background:linear-gradient(135deg,#7a6a30,#9a8a40)}
+.caps{display:flex;gap:4px}.cap{height:22px;background:#1b2a3a;border:1px solid #2f4a6a;border-radius:4px;padding:3px 8px;font-size:11px;display:flex;align-items:center;justify-content:space-between;color:#dfe}
+.aud{height:16px;border-radius:4px;background:repeating-linear-gradient(90deg,#1e4a3a 0 3px,#163a2e 3px 6px);display:flex;justify-content:flex-end;align-items:center;gap:4px;padding-right:4px;font-size:10px}
+.thumbs{display:flex;gap:6px;margin-top:10px}.th{width:92px;height:150px;border-radius:6px;border:2px solid var(--blue);background:linear-gradient(170deg,#4a3a3a,#2a2a4a);position:relative;font-size:10px;padding:4px}.th.n{background:linear-gradient(170deg,#8a7a30,#5a5a20)}.th i{position:absolute;left:4px;top:4px;font-style:normal;background:#000a;padding:0 4px;border-radius:4px}.th em{position:absolute;right:4px;top:4px;font-style:normal;background:#2f7cf6;padding:0 4px;border-radius:4px;font-size:9px}
+.th .box{position:absolute;left:4px;right:4px;bottom:4px;display:flex;gap:3px;align-items:center}.th .box span{flex:1;background:#5a3a2a;border-radius:3px;text-align:center;font-size:9px}
+.chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}.chips span{background:#1b2a3a;border:1px solid #2f4a6a;border-radius:4px;padding:3px 7px;font-size:11px}.chips span b{color:var(--blue)}
+.chips.g span{background:#1d242c;border-color:var(--line);color:var(--sub)}
+.scroll{height:10px;background:#141c24;border-radius:5px;margin-top:12px;position:relative}.scroll::after{content:"";position:absolute;left:1%;width:18%;top:2px;height:6px;border-radius:3px;background:#3a4a5a}
+.film{margin-top:10px;width:270px;height:120px;border:1px dashed var(--line);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:11px;text-align:center}
+.legend{margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.legend div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.5;color:var(--sub)}.legend b{display:block;color:#fff;font-size:13px;margin-bottom:3px}
+.mark{outline:2px dashed var(--mint);outline-offset:3px;border-radius:8px}
+@media(max-width:1100px){.cols{grid-template-columns:1fr}.legend{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h3>3 · 영상대본MIX</h3>
+<div class="sub">문장마다 어떤 화면이 붙는지 정하고 미리 봅니다 — 아래 타임프레임이 <b style="color:#fff">영상 전체의 흐름</b>입니다.</div>
+<!-- ★여기 있던 「썰 효과음 자동 넣기」 가로 바 → 왼쪽 미리보기 아래 소리 패널로(바뀐 것 ①) -->
+<div class="sec"><b>🎬 장면 편집 — 어떤 화면이 언제 나올지 여기서 정하고 미리 봅니다</b><span class="btn ghost">⛶ 넓게 보기</span></div>
+
+<div class="cols">
+  <div class="left">
+    <div class="tabs"><span class="on">미리보기</span><span>완성본 만들기</span></div>
+    <!-- 바뀐 것 ②: 여기 있던 두 번째 「전체 재생」 버튼은 지움(오른쪽 바와 중복) -->
+    <div class="pvbox"><div class="t"><span>미리보기</span><span>닫기 ✕</span></div>
+      <div class="pv">(장면 영상)</div>
+      <div class="bar2"></div><div style="text-align:right;font-size:11px;color:var(--sub)">0:00 / 0:00</div>
+      <div class="cut"><span class="btn">✂ 여기부터 자르기</span><p>뺄 구간의 시작에서 누르고, 끝에서 한 번 더 — 진행바를 끌어 지점을 찾으세요</p></div>
+    </div>
+    <div class="sound mark">
+      <div class="stabs"><span class="on">🔊 효과음</span><span>🎵 배경음 <em>준비중</em></span></div>
+      <div class="row"><span class="sw"></span><b style="min-width:0;color:#fff;font-weight:800">효과음 자동 넣기</b></div>
+      <div class="row"><b>횟수</b><span class="seg"><span>적게</span><span class="on">보통</span><span>많이</span></span></div>
+      <div class="row"><b>크기</b><span class="seg"><span>작게</span><span class="on">보통</span><span>크게</span></span></div>
+      <div class="row"><b>소리</b><select><option>기본</option><option>소리 묶음 3</option><option>내 소리 1</option></select><span class="btn ghost">▶ 들어보기</span></div>
+      <div class="row"><b></b><span class="btn">＋ 내 효과음 등록</span><span style="color:var(--sub);font-size:11px">칸별 끄기는 그 칸 머리의 🔇</span></div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="top mark">
+      <span class="t">내 영상 전체<small>총 34.7초 · 컷 27개</small></span>
+      <span class="btn pri big">▶ 전체 재생</span>
+      <span class="btn">🔊 음성 만들기</span>
+      <span class="btn">▤ 넓게</span>
+      <span class="btn more">⋯</span>
+      <span class="dots"><span><i></i>음성 27/27</span><span><i></i>저장됨 · F30</span></span>
+    </div>
+
+    <div class="beats">
+      <div class="beat">
+        <div class="bh">1. 훅 <small>6.0/2.4초 · 0.6초는 안 나와요</small><span class="btn ghost" style="margin-left:auto;height:22px;font-size:11px">🔇</span></div>
+        <div class="bt"><label><input type="checkbox">컷 리듬</label><label><input type="checkbox" checked>구절 맞춤</label><label><input type="checkbox">전체 늘리기</label><span class="btn">✏ 대본수정</span><select><option>없음</option></select><span class="btn">✨ AI 장면</span><span class="btn">⚡ 임팩트</span><span class="btn">비우기</span><span class="btn">✨ 채우기</span></div>
+        <div class="tr"><span>컷</span><div class="clips"><div class="clip" style="flex:1"><i>1.2s</i></div><div class="clip" style="flex:1.1"><i>1.3s</i></div></div></div>
+        <div class="tr"><span>자막</span><div class="caps"><div class="cap" style="flex:1">자취생을 구원한 <span>1.2s</span></div><div class="cap" style="flex:1.1">파스타 쿠커의 정체 <span>1.3s</span></div></div></div>
+        <div class="tr"><span>음성</span><div class="aud"><span class="btn" style="height:14px;font-size:9px;padding:0 4px">🎯 정밀싱크</span><span>beat_0</span><span class="btn" style="height:14px;font-size:9px;padding:0 4px">✂ 경계</span></div></div>
+        <div class="thumbs"><div class="th"><i>1.2</i><em>8-8</em><div class="box"><input type="checkbox"><span>🍱 박스</span>✕</div></div><div class="th"><i>1.8</i><em>8-8</em><div class="box"><input type="checkbox"><span>🍱 박스</span>✕</div></div></div>
+        <div class="chips g"><span>자취생을 구원한 파스타 쿠커의 정체</span></div>
+        <div class="chips g"><span>자취생을 구원한 <b>1.2초</b></span><span>파스타 쿠커의 정체 <b>1.3초</b></span></div>
+      </div>
+      <div class="beat dim">
+        <div class="bh">2. 미끼 <small>7.5/5.0초 · 2.5초는 안 나와요</small></div>
+        <div class="bt"><label><input type="checkbox">컷 리듬</label><label><input type="checkbox" checked>구절 맞춤</label><label><input type="checkbox">전체 늘리기</label></div>
+        <div class="tr"><span>컷</span><div class="clips"><div class="clip n" style="flex:1"><i>1.5s</i></div><div class="clip n" style="flex:1.1"><i>1.7s</i></div></div></div>
+        <div class="tr"><span>자막</span><div class="caps"><div class="cap" style="flex:1">불 앞에서 땀 뻘뻘 흘리며 <span>1.5s</span></div><div class="cap" style="flex:1.1">면 삶던 사람들 사이에서 <span>1.7s</span></div></div></div>
+        <div class="thumbs"><div class="th n"><i>1.5</i><em>8-4</em></div><div class="th n"><i>1.7</i><em>8-4</em></div><div class="th n"><i>1.8</i><em>8-6</em></div></div>
+        <div class="chips g"><span>불 앞에서 땀 뻘뻘 흘리며 면 삶던 사람들 사이에서 이게 입소문 난리가 났다는데</span></div>
+      </div>
+    </div>
+    <div class="scroll"></div>
+    <div class="film">조각의 [필름 펼치기]를 누르면<br>여기에 필름이 펼쳐집니다</div>
+  </div>
+</div>
+
+<div class="legend">
+  <div><b>① 효과음 가로 바 → 미리보기 아래 「효과음 | 배경음」 패널</b>본문 위 한 줄이 사라지고, 칸·타임라인은 그대로. 효과음 탭: 켜기·횟수·크기·소리·내 효과음 등록. 배경음 탭: 준비중. 칸별 끄기는 칸 머리의 🔇.</div>
+  <div><b>② 「내 영상 전체」 줄 9개 → 4개 + 점</b>▶ 전체 재생(파랑) · 음성 만들기 · 넓게 · ⋯(되돌리기·지금 저장·서버에서 불러오기·이전 편성). F30·「모든 칸에 음성이 이미 있음」은 녹색 점. 왼쪽 열의 중복 「전체 재생」은 지움.</div>
+  <div><b>③ 그대로 두는 것</b>칸마다 있는 컷 리듬·구절 맞춤·전체 늘리기·대본수정·AI 장면·임팩트·비우기·채우기, 컷/자막/음성 트랙, 후보 썸네일·박스, 필름, 넓게 보기. 손대지 않는다.</div>
+</div>
+</div></body></html>

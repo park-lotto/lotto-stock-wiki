@@ -1,0 +1,315 @@
+{
+ "job": "4a1d44721e8a",
+ "mode": "ai_mix_trial",
+ "model": "gemini-3.6-flash",
+ "calls": 1,
+ "secs": 28.5,
+ "given": "자취생들 구원한 파스타 쿠커의 정체\n불 앞에서 땀 뻘뻘 흘리며 면 삶던 사람들 사이에서 이게 입소문 난리가 났다는데\n이건 바로 파스타 쿠커.\n이게 말도 안 되는게 원래는 큰 냄비에 물 올리고 한참 기다려야 했던 데다\n뜨거운 물 버리다 손 데이고 싱크대에 면발을 쏟던 지옥을\n기울이기만 하면 물만 싹 배수되어 없애 버렸다는 거\n거기다 더운 날 불 앞에서 계속 저어주던 노이로제도\n전자레인지로 냄비 없이 알아서 삶아지니\n가스불 앞 스트레스를 완전히 날려 버렸다고\n진짜 미친 포인트는 계량 구멍과 물 눈금으로 1인분 딱 맞춰 한강물 될 일도 없다는 거\n진짜 물건이라고",
+ "beat_sources": [
+  {
+   "role": "훅",
+   "seg": "grab_tiktok_a11c2d3808e1-0",
+   "segs": [
+    "grab_tiktok_a11c2d3808e1-0",
+    "XLNjEUpLToA-0"
+   ]
+  },
+  {
+   "role": "미끼",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "공개",
+   "seg": "grab_instagram_4c7e6ef11137-0",
+   "segs": [
+    "grab_instagram_4c7e6ef11137-0"
+   ]
+  },
+  {
+   "role": "고조1",
+   "seg": "XLNjEUpLToA-5",
+   "segs": [
+    "XLNjEUpLToA-5"
+   ]
+  },
+  {
+   "role": "고조1",
+   "seg": "grab_tiktok_a11c2d3808e1-13",
+   "segs": [
+    "grab_tiktok_a11c2d3808e1-13",
+    "grab_tiktok_a11c2d3808e1-14",
+    "grab_instagram_68af678cbce6-10"
+   ]
+  },
+  {
+   "role": "고조1",
+   "seg": "XLNjEUpLToA-7",
+   "segs": [
+    "XLNjEUpLToA-7"
+   ]
+  },
+  {
+   "role": "고조2",
+   "seg": "grab_tiktok_b522b6236e14-2",
+   "segs": [
+    "grab_tiktok_b522b6236e14-2",
+    "XLNjEUpLToA-3"
+   ]
+  },
+  {
+   "role": "고조2",
+   "seg": "grab_instagram_cb03ab048fdf-3",
+   "segs": [
+    "grab_instagram_cb03ab048fdf-3"
+   ]
+  },
+  {
+   "role": "고조2",
+   "seg": "grab_tiktok_a11c2d3808e1-22",
+   "segs": [
+    "grab_tiktok_a11c2d3808e1-22",
+    "grab_tiktok_a11c2d3808e1-25"
+   ]
+  },
+  {
+   "role": "반전",
+   "seg": "grab_tiktok_a11c2d3808e1-2",
+   "segs": [
+    "grab_tiktok_a11c2d3808e1-2",
+    "grab_tiktok_a11c2d3808e1-19",
+    "grab_instagram_52601cb818f2-1"
+   ]
+  },
+  {
+   "role": "마무리",
+   "seg": "grab_instagram_cb03ab048fdf-11",
+   "segs": [
+    "grab_instagram_cb03ab048fdf-11"
+   ]
+  }
+ ],
+ "rows": [
+  {
+   "i": 0,
+   "text": "자취생들 구원한 파스타 쿠커의 정체",
+   "role": "훅",
+   "need": 2.4,
+   "segs": [
+    "grab_tiktok_a11c2d3808e1-0",
+    "XLNjEUpLToA-0"
+   ],
+   "why": "파스타 쿠커 제품 소개 및 외관 훅 → 파스타 용기를 밝게 보여주며 흥미 유발",
+   "problem": "",
+   "frames": [
+    "/tmp/mixtrial_4a1d44721e8a/line00_grab_tiktok_a11c2d3808e1-0_0.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line00_grab_tiktok_a11c2d3808e1-0_1.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line00_XLNjEUpLToA-0_0.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line00_XLNjEUpLToA-0_1.jpg"
+   ],
+   "descs": [
+    "grab_tiktok_a11c2d3808e1-0(1.0s) 남성이 전자레인지용 파스타 조리기 두 개를 양손에 들고 흔들며 웃고 있다 | 훅:- 종류:-",
+    "XLNjEUpLToA-0(2.0s) 손으로 파스타 쿠커에 스파게티 면을 담고 물을 붓는 모습 | 훅:- 종류:-"
+   ]
+  },
+  {
+   "i": 1,
+   "text": "불 앞에서 땀 뻘뻘 흘리며 면 삶던 사람들 사이에서 이게 입소문 난리가 났다는데",
+   "role": "미끼",
+   "need": 5.0,
+   "segs": [],
+   "why": "불 앞에서 고생하는 기존 냄비 조리 불편 모습 → 문제 장면 없음",
+   "problem": "",
+   "frames": [],
+   "descs": []
+  },
+  {
+   "i": 2,
+   "text": "이건 바로 파스타 쿠커.",
+   "role": "공개",
+   "need": 1.4,
+   "segs": [
+    "grab_instagram_4c7e6ef11137-0"
+   ],
+   "why": "파스타 쿠커 전용 용기 외관 공개 → 쿠커 제품 전체가 단독으로 또렷이 보임",
+   "problem": "",
+   "frames": [
+    "/tmp/mixtrial_4a1d44721e8a/line02_grab_instagram_4c7e6ef11137-0_0.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line02_grab_instagram_4c7e6ef11137-0_1.jpg"
+   ],
+   "descs": [
+    "grab_instagram_4c7e6ef11137-0(1.2s) 직사각형 조리 용기가 빈 상태로 놓여 있음. | 훅:클로즈업 종류:외관"
+   ]
+  },
+  {
+   "i": 3,
+   "text": "이게 말도 안 되는게 원래는 큰 냄비에 물 올리고 한참 기다려야 했던 데다",
+   "role": "고조1",
+   "need": 4.5,
+   "segs": [
+    "XLNjEUpLToA-5"
+   ],
+   "why": "일반 냄비와 비교 및 큰 용기 시연 → 일반 냄비와 쿠커의 면 담기 비교 장면",
+   "problem": "",
+   "frames": [
+    "/tmp/mixtrial_4a1d44721e8a/line03_XLNjEUpLToA-5_0.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line03_XLNjEUpLToA-5_1.jpg"
+   ],
+   "descs": [
+    "XLNjEUpLToA-5(5.4s) 일반 냄비와 쿠커를 비교하며 면을 넣는 모습 | 훅:- 종류:-"
+   ]
+  },
+  {
+   "i": 4,
+   "text": "뜨거운 물 버리다 손 데이고 싱크대에 면발을 쏟던 지옥을",
+   "role": "고조1",
+   "need": 3.1,
+   "segs": [
+    "grab_tiktok_a11c2d3808e1-13",
+    "grab_tiktok_a11c2d3808e1-14",
+    "grab_instagram_68af678cbce6-10"
+   ],
+   "why": "뜨거운 물 버리는 과정 및 싱크대 배수 시연 → 뚜껑을 활용해 싱크대에 물을 버리는 시연",
+   "problem": "",
+   "frames": [
+    "/tmp/mixtrial_4a1d44721e8a/line04_grab_tiktok_a11c2d3808e1-13_0.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line04_grab_tiktok_a11c2d3808e1-13_1.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line04_grab_tiktok_a11c2d3808e1-14_0.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line04_grab_tiktok_a11c2d3808e1-14_1.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line04_grab_instagram_68af678cbce6-10_0.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line04_grab_instagram_68af678cbce6-10_1.jpg"
+   ],
+   "descs": [
+    "grab_tiktok_a11c2d3808e1-13(0.8s) 사람 손이 투명한 플라스틱 뚜껑을 집어 들고 보여준다 | 훅:- 종류:-",
+    "grab_tiktok_a11c2d3808e1-14(1.0s) 용기에 담긴 파스타 물을 싱크대 배수구로 따라내는 모습 | 훅:- 종류:-",
+    "grab_instagram_68af678cbce6-10(1.4s) 용기 측면의 거름망을 활용해 싱크대에서 물을 따라낸다. | 훅:- 종류:-"
+   ]
+  },
+  {
+   "i": 5,
+   "text": "기울이기만 하면 물만 싹 배수되어 없애 버렸다는 거",
+   "role": "고조1",
+   "need": 2.9,
+   "segs": [
+    "XLNjEUpLToA-7"
+   ],
+   "why": "용기 슬릿으로 물만 싹 배수되는 클로즈업 → 기울이기만 해도 면은 남고 물만 빠짐",
+   "problem": "",
+   "frames": [
+    "/tmp/mixtrial_4a1d44721e8a/line05_XLNjEUpLToA-7_0.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line05_XLNjEUpLToA-7_1.jpg"
+   ],
+   "descs": [
+    "XLNjEUpLToA-7(5.4s) 제품 옆면 슬릿으로 면은 남고 물만 빠지는 클로즈업 화면 | 훅:- 종류:-"
+   ]
+  },
+  {
+   "i": 6,
+   "text": "거기다 더운 날 불 앞에서 계속 저어주던 노이로제도",
+   "role": "고조2",
+   "need": 3.0,
+   "segs": [
+    "grab_tiktok_b522b6236e14-2",
+    "XLNjEUpLToA-3"
+   ],
+   "why": "가스불 없이 준비하는 간편 조리 준비 과정 → 불 없이 물과 간을 맞추는 간편 준비",
+   "problem": "",
+   "frames": [
+    "/tmp/mixtrial_4a1d44721e8a/line06_grab_tiktok_b522b6236e14-2_0.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line06_grab_tiktok_b522b6236e14-2_1.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line06_XLNjEUpLToA-3_0.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line06_XLNjEUpLToA-3_1.jpg"
+   ],
+   "descs": [
+    "grab_tiktok_b522b6236e14-2(1.6s) 소금을 넣는 장면 | 훅:- 종류:기능",
+    "XLNjEUpLToA-3(2.0s) 주전자로 파스타 쿠커에 물을 붓는 모습 | 훅:- 종류:-"
+   ]
+  },
+  {
+   "i": 7,
+   "text": "전자레인지로 냄비 없이 알아서 삶아지니",
+   "role": "고조2",
+   "need": 2.3,
+   "segs": [
+    "grab_instagram_cb03ab048fdf-3"
+   ],
+   "why": "전자레인지에 용기를 넣고 조리하는 모습 → 전자레인지에 넣고 작동시키는 장면",
+   "problem": "",
+   "frames": [
+    "/tmp/mixtrial_4a1d44721e8a/line07_grab_instagram_cb03ab048fdf-3_0.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line07_grab_instagram_cb03ab048fdf-3_1.jpg"
+   ],
+   "descs": [
+    "grab_instagram_cb03ab048fdf-3(2.5s) 준비된 조리기를 전자레인지에 넣고 문을 닫는다. | 훅:- 종류:효과"
+   ]
+  },
+  {
+   "i": 8,
+   "text": "가스불 앞 스트레스를 완전히 날려 버렸다고",
+   "role": "고조2",
+   "need": 2.5,
+   "segs": [
+    "grab_tiktok_a11c2d3808e1-22",
+    "grab_tiktok_a11c2d3808e1-25"
+   ],
+   "why": "전자레인지 조리 완료 및 제품 꺼내기 → 전자레인지에서 완료된 완벽한 면 상태 확인",
+   "problem": "",
+   "frames": [
+    "/tmp/mixtrial_4a1d44721e8a/line08_grab_tiktok_a11c2d3808e1-22_0.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line08_grab_tiktok_a11c2d3808e1-22_1.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line08_grab_tiktok_a11c2d3808e1-25_0.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line08_grab_tiktok_a11c2d3808e1-25_1.jpg"
+   ],
+   "descs": [
+    "grab_tiktok_a11c2d3808e1-22(1.4s) 전자레인지 내부에서 용기를 꺼내 손으로 옮기는 모습 | 훅:- 종류:-",
+    "grab_tiktok_a11c2d3808e1-25(1.7s) 조리된 파스타를 파스타 포크로 들어 올려 용기 안 상태를 보여줌 | 훅:- 종류:-"
+   ]
+  },
+  {
+   "i": 9,
+   "text": "진짜 미친 포인트는 계량 구멍과 물 눈금으로 1인분 딱 맞춰 한강물 될 일도 없다는 거",
+   "role": "반전",
+   "need": 5.9,
+   "segs": [
+    "grab_tiktok_a11c2d3808e1-2",
+    "grab_tiktok_a11c2d3808e1-19",
+    "grab_instagram_52601cb818f2-1"
+   ],
+   "why": "계량 구멍으로 면 측정 및 물 눈금 확인 → 면 계량 구멍 사용 및 용기 내 물 눈금 가리킴",
+   "problem": "",
+   "frames": [
+    "/tmp/mixtrial_4a1d44721e8a/line09_grab_tiktok_a11c2d3808e1-2_0.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line09_grab_tiktok_a11c2d3808e1-2_1.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line09_grab_tiktok_a11c2d3808e1-19_0.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line09_grab_tiktok_a11c2d3808e1-19_1.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line09_grab_instagram_52601cb818f2-1_0.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line09_grab_instagram_52601cb818f2-1_1.jpg"
+   ],
+   "descs": [
+    "grab_tiktok_a11c2d3808e1-2(2.9s) 계량 도구의 구멍을 이용해 파스타 면의 양을 조절하여 용기에 넣는다. | 훅:- 종류:-",
+    "grab_tiktok_a11c2d3808e1-19(1.4s) 손가락으로 용기 안쪽의 물 수위 계량 눈금을 가리키는 모습 | 훅:- 종류:-",
+    "grab_instagram_52601cb818f2-1(1.2s) 측정 도구로 파스타 면의 양을 계량하여 용기에 담는다. | 훅:클로즈업 종류:기능"
+   ]
+  },
+  {
+   "i": 10,
+   "text": "진짜 물건이라고",
+   "role": "마무리",
+   "need": 1.3,
+   "segs": [
+    "grab_instagram_cb03ab048fdf-11"
+   ],
+   "why": "완성된 맛있는 파스타 모습 → 완성된 파스타 클로즈업으로 마무리",
+   "problem": "",
+   "frames": [
+    "/tmp/mixtrial_4a1d44721e8a/line10_grab_instagram_cb03ab048fdf-11_0.jpg",
+    "/tmp/mixtrial_4a1d44721e8a/line10_grab_instagram_cb03ab048fdf-11_1.jpg"
+   ],
+   "descs": [
+    "grab_instagram_cb03ab048fdf-11(1.3s) 면을 가까이서 비추며 마무리한다. | 훅:클로즈업 종류:효과"
+   ]
+  }
+ ],
+ "first_bad": {},
+ "left_bad": {}
+}

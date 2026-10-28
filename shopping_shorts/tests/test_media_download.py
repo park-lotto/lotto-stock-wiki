@@ -281,6 +281,35 @@ def test_route_pinterest_image_pin_raises_clear_error(monkeypatch, tmp_path):
         assert "이미지 핀" in str(e)
 
 
+def test_pinterest_server_block_falls_back_to_pc_relay(monkeypatch, tmp_path):
+    """데이터센터 IP에서 JSON-LD가 없으면 이미지 핀으로 오판하지 않고 PC에 맡긴다."""
+    import shopping_shorts.pinterest_crawl as pc
+    from shopping_shorts import config
+    monkeypatch.setattr(pc, "pin_video_info", lambda url, timeout=8: None)
+    monkeypatch.setattr(config, "YT_RELAY_ENABLED", True)
+    monkeypatch.setattr(config, "YTDLP_PROXY", "")
+    monkeypatch.setattr(md, "_download_via_relay",
+                        lambda url, dest: (str(tmp_path / "from-pc.mp4"), ""))
+
+    path, caption = md.download_any(
+        "https://kr.pinterest.com/pin/18295942229438860/", str(tmp_path))
+    assert path.endswith("from-pc.mp4")
+    assert caption == ""
+
+
+def test_pinterest_http_block_falls_back_to_pc_relay(monkeypatch, tmp_path):
+    import shopping_shorts.pinterest_crawl as pc
+    from shopping_shorts import config
+    monkeypatch.setattr(pc, "pin_video_info",
+                        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("HTTP 403")))
+    monkeypatch.setattr(config, "YT_RELAY_ENABLED", True)
+    monkeypatch.setattr(config, "YTDLP_PROXY", "")
+    monkeypatch.setattr(md, "_download_via_relay",
+                        lambda url, dest: (str(tmp_path / "from-pc.mp4"), ""))
+    path, _ = md.download_any("https://www.pinterest.com/pin/456/", str(tmp_path))
+    assert path.endswith("from-pc.mp4")
+
+
 def test_pinimg_direct_mp4_skips_page_fetch(monkeypatch, tmp_path):
     """핀터레스트 탭이 저장한 video_url(v1.pinimg …mp4)이 그대로 오면 페이지 재조회 없이
     직접 다운로드(.mp4 → _is_direct_video 경로)여야 한다."""

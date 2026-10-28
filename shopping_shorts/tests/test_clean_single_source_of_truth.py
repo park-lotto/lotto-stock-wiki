@@ -96,16 +96,41 @@ class Test완성본_경로에서_화면이_새지_않는다:
 
 
 class Test캡컷도_청소본을_쓴다:
-    def test_완성본_조각으로_갈아끼운다(self):
-        """소스별 청소본이 없으면 완성본을 컷별로 잘라 넘긴다 — 원본이 나가면 안 된다."""
-        body = _src(A.api_mix_capcut)
-        assert "split_final_into_beat_clips" in body, \
-            "캡컷이 완성본 조각을 안 쓴다 — 원본 자막이 살아난다"
-        assert "plan_using_beat_clips" in body
+    # ★2026-09-27: 캡컷·ZIP 의 재료 판단이 mix_pipeline.export_sources_for 한 곳으로 옮겨갔다(clean_route = 렌더와 같은 규칙).
+    #   종전 소스 글자 검사(라우트 본문에 split_final… 글자가 있나)는 호출이 옮겨가면 거짓으로 깨지고 글자만 남기면 통과한다
+    #   → **실제 job 으로 불러서** 확인한다.
+    def test_완성본_조각으로_갈아끼운다(self, monkeypatch, tmp_path):
+        """소스별 청소본이 없으면 청소 완성본을 컷별로 잘라 넘긴다 — 캡컷·ZIP 둘 다, 원본이 나가면 안 된다."""
+        import json
+        from pathlib import Path
+        from shopping_shorts.store import Store
+        from shopping_shorts.tests.test_app_export import _mk_video, _seed
+        client = _seed(monkeypatch, tmp_path)
+        store = Store(A.DB_PATH)
+        store.update_mix_job("j1", subtitle_removal=1, clean_status="ready", clean_video_path=None)
+        _mk_video(A._MIX_WORK_DIR / "j1" / f"final_clean_{mp._clean_sig(store.get_mix_job('j1'))}.mp4", 4)
+        r = client.get("/api/mix/capcut/j1", params={"base": "C:/capcutproject/CapCut Drafts"})
+        assert r.status_code == 200, r.text
+        vids = [m for m in json.loads(r.json()["texts"]["draft_content.json"])["materials"]["videos"]
+                if m["type"] == "video"]
+        assert vids and {m["material_name"] for m in vids} == {"s0"}, \
+            "캡컷 미디어가 소스 영상별(s0)이 아니다"
+        ex = mp.export_sources_for(store, store.get_mix_job("j1"), "j1", A._MIX_WORK_DIR / "j1", 0)
+        assert ex["route"] == "final" and all(Path(p).name.startswith("capcut_src_") for p in ex["source_video_paths"].values()), "청소 완성본 조각을 안 쓴다 — 원본 자막이 살아난다"
 
-    def test_자르기_실패는_원본으로_폴백하지_않는다(self):
-        """★조용한 폴백이 최악이다 — 자막 남은 결과물을 캡컷에서야 알게 된다."""
-        body = _src(A.api_mix_capcut)
-        i = body.find("split_final_into_beat_clips")
-        assert "500" in body[i:i + 900] or "status_code=500" in body[i:i + 900], \
-            "자르기 실패를 막지 않는다"
+    def test_자르기_실패는_원본으로_폴백하지_않는다(self, monkeypatch, tmp_path):
+        """★조용한 폴백이 최악이다 — 자막 남은 결과물을 캡컷에서야 알게 된다. 캡컷 500 · ZIP 조각 409."""
+        from shopping_shorts.store import Store
+        from shopping_shorts.tests.test_app_export import _mk_video, _seed
+        client = _seed(monkeypatch, tmp_path)
+        store = Store(A.DB_PATH)
+        store.update_mix_job("j1", subtitle_removal=1, clean_status="ready", clean_video_path=None)
+        _mk_video(A._MIX_WORK_DIR / "j1" / f"final_clean_{mp._clean_sig(store.get_mix_job('j1'))}.mp4", 4)
+
+        def boom(*a, **k):
+            raise RuntimeError("자르기 실패")
+        monkeypatch.setattr(mp, "_build_source_file", boom)
+        r = client.get("/api/mix/capcut/j1", params={"base": "C:/capcutproject/CapCut Drafts"})
+        assert r.status_code == 500, "자르기 실패를 막지 않는다"
+        r2 = client.get("/api/mix/export/j1", params={"part": "sources"})
+        assert r2.status_code == 409, "ZIP 이 자르기 실패 뒤 원본 조각으로 폴백했다"

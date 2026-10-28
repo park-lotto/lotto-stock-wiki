@@ -30,7 +30,10 @@ def test_best_flag_matches_best_five():
 def test_non_best_voices_keep_three_tones():
     """나머지 9명은 감추는 게 아니라 그대로 둔다 — 3톤이 살아있는가."""
     groups = {}
+    from shopping_shorts import fish_tts
     for p in load_presets_file():
+        if fish_tts.is_fish(p.get("model_id")):
+            continue                     # Fish는 감정축이 없어 기본 1톤(2026-10-05)
         groups.setdefault(p["group_id"], set()).add(p["variant"])
     for gid, variants in groups.items():
         assert {"stable", "natural", "expressive"} <= variants, gid
@@ -60,6 +63,11 @@ def test_whisper_samples_exist_and_are_real_audio():
     assert len(set(sizes)) > 1, "전부 같은 크기 = 무음 mock 의심"
 
 
+def voice_presets_engine(mid):
+    from shopping_shorts import voice_presets
+    return voice_presets.engine_of(mid)
+
+
 def test_eleven_preset_total_is_47():
     """일레븐랩스 큐레이션은 47건(42 + whisper 5)이다.
 
@@ -69,5 +77,5 @@ def test_eleven_preset_total_is_47():
     그대로 유효하고, 일레븐랩스 쪽이 실수로 늘거나 줄면 여전히 잡힌다."""
     from shopping_shorts import typecast_tts
     eleven = [p for p in load_presets_file()
-              if not typecast_tts.is_typecast(p.get("model_id"))]
+              if voice_presets_engine(p.get("model_id")) == "elevenlabs"]
     assert len(eleven) == 47      # 42 + 5
