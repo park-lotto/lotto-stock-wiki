@@ -1,0 +1,441 @@
+{
+ "topic": "후지필름 인스탁스 미니 에보 시네마(instax mini Evo Cinema) — 처음 꺼내 쥐어 보는 Henry's Camera 'wow, what a wild looking camera. I actually can't believe this exists'·'Wow. Yeah. Okay. So that feels really good in the hands'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "Ls7BKO0e3Us",
+ "bench_note": "벤치 '아이폰 유저들만 환장하는 카메라'(3.1만, 핫템리포트 10-27 목록 117편 조회수 55위, 설명란 '다이얼만 돌리면 과거의 감성으로 촬영하고, 사진 인화는 물론 영상까지 다시 재생 … #instaxminiEvoCinema') — 화면 속 제품 = 인스탁스 미니 에보 시네마. 원음형 = 유튜브 Henry's Camera 'Fujifilm's Instax Mini Evo CINEMA (Unboxing & Walkthrough)' wtxpqVtOymY(8.6천, 자동 더빙 12개 — 원어 140-12) 260~550초 사본 30fps(사본 시각 = 원래 −260, 위에서 찍은 손만, 오른쪽 위 채널 표식은 crop 밖) + SmartphoneFan 'Fujifilm Instax Mini Evo Cinema Unboxing' cNLHS5tsRc0(1.9천, 원어 140-17) 250~346초 사본(사본 시각 = 원래 −250, 손만). 벤치의 '아이폰 유저들만'은 근거 없는 표현이라 안 씀.",
+ "sources": {
+  "hc": {
+   "file": "hc.mp4",
+   "who": "유튜브 Henry's Camera wtxpqVtOymY 260~550초 사본(원어 140-12) — 노란 바탕 위에서 찍은 손만(얼굴 0), 오른쪽 위 채널 표식 x≥1840",
+   "views": 8607,
+   "dur": 290.0,
+   "res": "1920x1080"
+  },
+  "sf": {
+   "file": "sf.mp4",
+   "who": "유튜브 SmartphoneFan cNLHS5tsRc0 250~346초 사본(원어 140-17) — 나무 책상 위 손만(얼굴 0)",
+   "views": 1906,
+   "dur": 96.07,
+   "res": "1920x1080"
+  }
+ },
+ "titles": {
+  "hook": "사진 뽑는\n영화 카메라"
+ },
+ "facts": {
+  "f1": {
+   "text": "후지필름 공식 제품 페이지(fujifilm.com/us/en/consumer/instax/cameras/minievocinema) 'Easily print videos utilizing the print lever or print instax photos with QR code' · Henry's Camera 원본 383.42~403.50 'the photos that you're going to print right out of the top of the camera … twist this print lever' · 원본 110~ 'makes this camera feel like an old super eight camera' · 쿠팡 9360934130 '인스탁스 미니 에보 시네마 카메라'",
+   "kind": "공식·리뷰·판매처"
+  },
+  "f2": {
+   "text": "Henry's Camera 원본 246.46~269.38 'extension grip … once you slap that grip on there it actually is very surprising' · SmartphoneFan 원본 253.18~260.22 'unlike most cameras we can hold this vertically just like old eight millimetres movie camera'",
+   "kind": "리뷰"
+  },
+  "f3": {
+   "text": "Henry's Camera 원본 274.18~280.62 'And wow what a wild looking camera I actually can't believe this exists I think this is pretty cool'",
+   "kind": "본인 말"
+  },
+  "f4": {
+   "text": "Henry's Camera 원본 322.36~325.28 'Wow. Yeah. Okay. So that feels really good in the hands'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "text": "생긴 건 옛날 영화 카메라인데 찍은 걸 바로 사진으로 뽑아 준다는 카메라가 있는데요 근데 손잡이를 끼우면 옛날 8밀리 카메라처럼 세로로 쥐고 찍는다는데요.",
+    "note": "렌더용 한 문장 — 원문 줄은 대본.json"
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "hc",
+    "span": [
+     14.1,
+     20.75
+    ],
+    "en": "And wow, what a wild looking camera. I actually can't believe this exists. I think this is pretty cool.",
+    "caps": [
+     "와, 생긴 게 완전 특이한데요",
+     "이런 게 진짜 있다니",
+     "꽤 멋진데요!"
+    ],
+    "check": "사본 시각(원래 −260): 앞 camera 13.62~14.18 · And 14.18 · wow 14.66~15.06 · exists 18.66~19.26 · cool 20.18~20.62 · 다음 This 21.02 · 원본 한 샷(269.10~292.38 → 9.10~32.38) 안 — 주머니에서 꺼내 쥐는 손 · 자막 칸은 말 차례(wow…camera 2.4초 → can't believe … exists 2.2초 → pretty cool 1.4초)"
+   },
+   {
+    "id": "O2",
+    "src": "hc",
+    "span": [
+     62.25,
+     65.3
+    ],
+    "en": "Wow. Yeah. Okay. So that feels really good in the hands.",
+    "caps": [
+     "와…",
+     "오, 손에 착 감기는데요!"
+    ],
+    "check": "사본 시각: 앞 are 61.72~62.00 · Wow 62.36~62.72 · hands 64.80~65.28 · 다음 So 65.28 · 원본 한 샷(295.38~352.73 → 35.38~92.73) 안 — 손잡이 낀 카메라를 쥔 손 · 자막 칸: 와 0.6초 → 나머지 2.3초"
+   }
+  ],
+  "dropped": {
+   "벤치 '아이폰 유저들만 환장하는'": "근거 없는 표현 — 안 씀",
+   "해상도·필름 장수·배터리 숫자": "판·리뷰마다 달라 숫자 안 씀",
+   "가격": "금액 금지"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ },
+ "captions_plan": [
+  {
+   "t0": 0.0,
+   "text": "생긴 건 옛날 영화 카메라인데",
+   "kind": "나레"
+  },
+  {
+   "t0": 1.536,
+   "text": "찍은 걸 바로 사진으로",
+   "kind": "나레"
+  },
+  {
+   "t0": 2.687,
+   "text": "뽑아 준다는 카메라가 있는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 4.601,
+   "text": "와, 생긴 게 완전 특이한데요",
+   "kind": "원음"
+  },
+  {
+   "t0": 7.649,
+   "text": "이런 게 진짜 있다니",
+   "kind": "원음"
+  },
+  {
+   "t0": 9.866,
+   "text": "꽤 멋진데요!",
+   "kind": "원음"
+  },
+  {
+   "t0": 11.501,
+   "text": "근데 손잡이를 끼우면",
+   "kind": "나레"
+  },
+  {
+   "t0": 12.663,
+   "text": "옛날 8밀리 카메라처럼",
+   "kind": "나레"
+  },
+  {
+   "t0": 13.953,
+   "text": "세로로 쥐고 찍는다는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 15.623,
+   "text": "와…",
+   "kind": "원음"
+  },
+  {
+   "t0": 16.178,
+   "text": "오, 손에 착 감기는데요!",
+   "kind": "원음"
+  }
+ ],
+ "caption_events": [
+  {
+   "kind": "emph",
+   "text": "생긴 건 옛날 영화 카메라인데",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.0,
+   "dur": 1.536,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "찍은 걸 바로 사진으로",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 1.536,
+   "dur": 1.151,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "뽑아 준다는 카메라가 있는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 2.687,
+   "dur": 1.914,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "와, 생긴 게 완전 특이한데요",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 4.601,
+   "dur": 3.048,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "이런 게 진짜 있다니",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 7.649,
+   "dur": 2.217,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "꽤 멋진데요!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 9.866,
+   "dur": 1.635,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "근데 손잡이를 끼우면",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 11.501,
+   "dur": 1.162,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "옛날 8밀리 카메라처럼",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 12.663,
+   "dur": 1.29,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "세로로 쥐고 찍는다는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 13.953,
+   "dur": 1.67,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "와…",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 15.623,
+   "dur": 0.555,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "오, 손에 착 감기는데요!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 16.178,
+   "dur": 3.095,
+   "who": "원음"
+  }
+ ],
+ "render": {
+  "windows": [
+   [
+    4.601,
+    11.251
+   ],
+   [
+    15.623,
+    18.673
+   ]
+  ],
+  "blocks": [
+   {
+    "id": "N1",
+    "kind": "나레",
+    "n0": 0.0,
+    "n1": 4.351
+   },
+   {
+    "id": "O1",
+    "kind": "원음",
+    "a0": 4.601,
+    "a1": 11.251,
+    "audio_ss": 14.1,
+    "src": "hc"
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "n0": 11.501,
+    "n1": 15.373
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "a0": 15.623,
+    "a1": 18.673,
+    "audio_ss": 62.25,
+    "src": "hc"
+   }
+  ],
+  "pieces": [
+   {
+    "block": "N1",
+    "covers": [
+     "N1"
+    ],
+    "src": "hc",
+    "ss": 102.85,
+    "vs": 0.0,
+    "src_crop": [
+     520,
+     0,
+     857,
+     1080
+    ],
+    "why": "hc 102.78~111.29 한 샷 — 두 손으로 쥔 에보 시네마 앞면(다이얼·단추), 얼굴 없음",
+    "ve": 4.571,
+    "src_end": 107.421
+   },
+   {
+    "block": "O1",
+    "covers": [
+     "O1"
+    ],
+    "src": "hc",
+    "ss": 14.07,
+    "vs": 4.571,
+    "src_crop": [
+     560,
+     0,
+     857,
+     1080
+    ],
+    "why": "주머니에서 꺼내 쥐며 'wow, what a wild looking camera … can't believe this exists'(9.10~32.38 한 샷)",
+    "ve": 11.501,
+    "src_end": 21.0
+   },
+   {
+    "block": "N2",
+    "covers": [
+     "N2"
+    ],
+    "src": "sf",
+    "ss": 7.5,
+    "vs": 11.501,
+    "src_crop": [
+     530,
+     0,
+     857,
+     1080
+    ],
+    "why": "sf 카메라를 세로로 쥔 손(한 샷 안)",
+    "ve": 15.593,
+    "src_end": 11.592
+   },
+   {
+    "block": "O2",
+    "covers": [
+     "O2"
+    ],
+    "src": "hc",
+    "ss": 62.22,
+    "vs": 15.593,
+    "src_crop": [
+     480,
+     0,
+     857,
+     1080
+    ],
+    "why": "손잡이 낀 카메라를 쥐며 'Wow … feels really good in the hands'(35.38~92.73 한 샷)",
+    "ve": 19.273,
+    "src_end": 65.9
+   }
+  ],
+  "dur": 19.273,
+  "narr": [
+   {
+    "id": "N1",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\31_InstaxCinema\\front\\render\\narr_N1.wav",
+    "dur": 4.351,
+    "tempo": 0.847,
+    "chars": 34,
+    "speech": 4.351,
+    "cps": 7.81,
+    "segs": [
+     [
+      0.0,
+      4.351
+     ]
+    ]
+   },
+   {
+    "id": "N2",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\31_InstaxCinema\\front\\render\\narr_N2.wav",
+    "dur": 3.872,
+    "tempo": 0.934,
+    "chars": 30,
+    "speech": 3.872,
+    "cps": 7.75,
+    "segs": [
+     [
+      0.0,
+      3.872
+     ]
+    ]
+   }
+  ]
+ }
+}
