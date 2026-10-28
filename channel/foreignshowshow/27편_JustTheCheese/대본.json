@@ -1,0 +1,676 @@
+{
+ "topic": "Just the Cheese(저스트 더 치즈) — 치즈만 틀에 넣어 구운 바삭한 치즈 과자. 위스콘신 치즈 집안 아들, 팬에 눌어붙은 치즈가 제일 맛있다 → 치즈만 구움 → 샤크 시식 '나 이거 사 먹어 봤어' → 베끼기 쉽다며 줄줄이 빠짐 → 남은 제안도 거절, 빈손 → 몇 년 뒤 큰 식품 회사가 브랜드 인수",
+ "product": "Just the Cheese baked cheese snack bar(치즈만 구운 과자)",
+ "bench": {
+  "id": "s920FioMSvY",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "치즈 100% 과자?! (화면 제목: 치즈 100% 과자 / 산다 vs 안산다)",
+  "dur": 56.6,
+  "views": 2800000,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "cut_median": 1.5,
+  "_cut_median_how": "1초 시트 눈 측정 — 10-28"
+ },
+ "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」",
+ "dropped": [
+  "벤치 '50억 7천만원을 팔았어요'·'6억 8천만원에 지분 15%'·'마진 17~20%'(금액·지분) → 금액 없이 거절·빈손만",
+  "벤치 '한 개에 몇 칼로리야 / 75칼로리요'(영양 수치) — 쓰지 않음",
+  "벤치 '대형 제과회사가 50억에 회사를 사갔다고'(금액, 1차 출처는 '금액 비공개') → '견과류로 유명한 식품 회사가 브랜드를 통째로' 로(Business Wire 보도자료)",
+  "벤치 6~7초 남의 틱톡 화면(남의 얼굴·글자) — 이 원본 밖 → 원본 무대 시연으로"
+ ],
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "kind": "원음",
+    "fn": "반응(결말 반응 0초)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "진짜 맛있어!",
+     "나 이거 먹어 봤어"
+    ],
+    "cap_at": [
+     168.77,
+     169.85
+    ],
+    "span": [
+     168.77,
+     171.89
+    ],
+    "orig_en": "Really good. I have to admit, I've had this before.",
+    "text": "진짜 맛있어! 나 이거 먹어 봤어",
+    "style": "원음반응_크게",
+    "fx": "0초 빨간 원(R3 물건 = 투자자 손에 든 구운 치즈 바) — 벤치 0~1.0 투자자 원(우리는 물건 원)",
+    "emph": [
+     {
+      "cap": "진짜 맛있어!",
+      "span": "진짜 맛있어!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "나 이거 먹어 봤어",
+      "span": "먹어 봤어",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N1",
+    "kind": "나레",
+    "fn": "문제(훅)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "치즈 샌드위치를 구우면",
+     "팬에 눌어붙은 바삭한 치즈가",
+     "제일 맛있다는 남자가 있는데"
+    ],
+    "text": "치즈 샌드위치를 구우면 팬에 눌어붙은 바삭한 치즈가 제일 맛있다는 남자가 있는데",
+    "tts": "치즈 샌드위치를 구우면, 팬에 눌어붙은 바삭한 치즈가, 제일 맛있다는 남자가 있는데",
+    "fx": "빨강 번쩍 — 벤치 0.5('늘어붙은 치즈가 최고라는 이 남자')",
+    "emph": [
+     {
+      "cap": "치즈 샌드위치를 구우면",
+      "span": "샌드위치를 구우면",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "팬에 눌어붙은 바삭한 치즈가",
+      "span": "바삭한 치즈가",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "제일 맛있다는 남자가 있는데",
+      "span": "제일 맛있다는",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "fn": "해답(한 마디)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "다들 이거 보면",
+     "치즈만 먹고 싶다 하죠!"
+    ],
+    "cap_at": [
+     115.0,
+     116.88
+    ],
+    "span": [
+     114.63,
+     119.49
+    ],
+    "orig_en": "Well, most people look at that and think, man, I wish I could eat just the cheese.",
+    "text": "다들 이거 보면 치즈만 먹고 싶다 하죠!",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "다들 이거 보면",
+      "span": "이거 보면",
+      "color": "초록",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "치즈만 먹고 싶다 하죠!",
+      "span": "치즈만 먹고 싶다 하죠!",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "fn": "해답(시연)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "그래서 직접 만든 치즈를",
+     "틀에 살짝 넣고",
+     "오븐에 굽기만 했다는데"
+    ],
+    "text": "그래서 직접 만든 치즈를 틀에 살짝 넣고 오븐에 굽기만 했다는데",
+    "tts": "그래서 직접 만든 치즈를, 틀에 살짝 넣고, 오븐에 굽기만 했다는데",
+    "fx": "초록 번쩍 — 벤치 9.0('자체 생산한 치즈를 가지고')",
+    "emph": [
+     {
+      "cap": "그래서 직접 만든 치즈를",
+      "span": "만든 치즈를",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "틀에 살짝 넣고",
+      "span": "살짝 넣고",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "오븐에 굽기만 했다는데",
+      "span": "굽기만 했다는데",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O3",
+    "kind": "원음",
+    "fn": "해답(구호)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "그냥 치즈",
+     "그 자체예요!"
+    ],
+    "cap_at": [
+     143.49,
+     144.3
+    ],
+    "span": [
+     143.49,
+     145.33
+    ],
+    "orig_en": "It's just the cheese.",
+    "text": "그냥 치즈 그 자체예요!",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "그냥 치즈",
+      "span": "그냥 치즈",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "그 자체예요!",
+      "span": "그 자체예요!",
+      "color": "파랑",
+      "whole": true,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "fn": "체험(시식)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "샤크들도 한 입씩 먹어 보는데",
+     "아마존에서만 하루에",
+     "수백 박스씩 팔린다는데"
+    ],
+    "text": "샤크들도 한 입씩 먹어 보는데 아마존에서만 하루에 수백 박스씩 팔린다는데",
+    "tts": "샤크들도 한 입씩 먹어 보는데, 아마존에서만 하루에, 수백 박스씩 팔린다는데",
+    "fx": "초록 번쩍 — 벤치 21.4('투자자도 사 먹어 봤을 정도로')",
+    "emph": [
+     {
+      "cap": "샤크들도 한 입씩 먹어 보는데",
+      "span": "한 입씩",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "아마존에서만 하루에",
+      "span": "하루에",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "수백 박스씩 팔린다는데",
+      "span": "수백",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N4",
+    "kind": "나레",
+    "fn": "숫자(베끼기)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "근데 이렇게 간단한 걸",
+     "아무나 따라 만들면",
+     "어떡하냐는 말이 나오는데"
+    ],
+    "text": "근데 이렇게 간단한 걸 아무나 따라 만들면 어떡하냐는 말이 나오는데",
+    "tts": "근데 이렇게 간단한 걸, 아무나 따라 만들면, 어떡하냐는 말이 나오는데",
+    "emph": [
+     {
+      "cap": "근데 이렇게 간단한 걸",
+      "span": "근데 이렇게",
+      "color": "민트",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "아무나 따라 만들면",
+      "span": "따라 만들면",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "어떡하냐는 말이 나오는데",
+      "span": "말이 나오는데",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O4",
+    "kind": "원음",
+    "fn": "지분 경쟁(독설)",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "이미 앞선 브랜드가",
+     "널렸어요"
+    ],
+    "cap_at": [
+     203.32,
+     204.21
+    ],
+    "span": [
+     203.32,
+     205.29
+    ],
+    "orig_en": "There's a ton of brands out there ahead of you.",
+    "text": "이미 앞선 브랜드가 널렸어요",
+    "style": "보통",
+    "fx": "빨강 번쩍 — 벤치 지분 경쟁",
+    "emph": [
+     {
+      "cap": "이미 앞선 브랜드가",
+      "span": "브랜드가",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "널렸어요",
+      "span": "널렸어요",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N5",
+    "kind": "나레",
+    "fn": "지분 경쟁(거절)",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "결국 비슷한 게 너무 많다며",
+     "샤크들이",
+     "하나둘 빠지는데"
+    ],
+    "text": "결국 비슷한 게 너무 많다며 샤크들이 하나둘 빠지는데",
+    "tts": "결국 비슷한 게 너무 많다며, 샤크들이 하나둘 빠지는데",
+    "emph": [
+     {
+      "cap": "결국 비슷한 게 너무 많다며",
+      "span": "게 너무 많다며",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "샤크들이",
+      "span": "샤크들이",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "하나둘 빠지는데",
+      "span": "하나둘 빠지는데",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O5",
+    "kind": "원음",
+    "fn": "지분 경쟁(포기)",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "그런 이유로",
+     "난 빠질게요"
+    ],
+    "cap_at": [
+     482.86,
+     483.82
+    ],
+    "span": [
+     482.86,
+     484.42
+    ],
+    "orig_en": "So for those reasons, I'm out.",
+    "text": "그런 이유로 난 빠질게요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "그런 이유로",
+      "span": "그런 이유로",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "난 빠질게요",
+      "span": "난 빠질게요",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N6",
+    "kind": "나레",
+    "fn": "결정(거절)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "과자 하나마다 평생",
+     "돈을 떼 가겠다는 제안까지",
+     "거절하고 빈손으로 나갔다는데"
+    ],
+    "text": "과자 하나마다 평생 돈을 떼 가겠다는 제안까지 거절하고 빈손으로 나갔다는데",
+    "tts": "과자 하나마다 평생, 돈을 떼 가겠다는 제안까지, 거절하고 빈손으로 나갔다는데",
+    "fx": "빨강 번쩍 — 거절",
+    "emph": [
+     {
+      "cap": "과자 하나마다 평생",
+      "span": "하나마다 평생",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "돈을 떼 가겠다는 제안까지",
+      "span": "가겠다는 제안까지",
+      "color": "초록",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "거절하고 빈손으로 나갔다는데",
+      "span": "빈손으로 나갔다는데",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O6",
+    "kind": "원음",
+    "fn": "끝(되받기)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "투자는 못 받았지만",
+     "가족들이",
+     "자랑스러워했으면 해요"
+    ],
+    "cap_at": [
+     684.15,
+     685.91,
+     686.39
+    ],
+    "span": [
+     684.15,
+     687.35
+    ],
+    "orig_en": "that I couldn't bring home a deal, but I hope they're proud of me anyway.",
+    "text": "투자는 못 받았지만 가족들이 자랑스러워했으면 해요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "투자는 못 받았지만",
+      "span": "받았지만",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "가족들이",
+      "span": "가족들이",
+      "color": "파랑",
+      "whole": true,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "자랑스러워했으면 해요",
+      "span": "해요",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N7",
+    "kind": "나레",
+    "fn": "끝(결과)",
+    "facts": [
+     "f9"
+    ],
+    "caps": [
+     "근데 몇 년 뒤",
+     "견과류로 유명한 식품 회사가",
+     "이 브랜드를 통째로 사 갔다는데"
+    ],
+    "text": "근데 몇 년 뒤 견과류로 유명한 식품 회사가 이 브랜드를 통째로 사 갔다는데",
+    "tts": "근데 몇 년 뒤, 견과류로 유명한 식품 회사가, 이 브랜드를 통째로 사 갔다는데",
+    "fx": "초록 번쩍 — 후일담",
+    "emph": [
+     {
+      "cap": "근데 몇 년 뒤",
+      "span": "근데 몇 년 뒤",
+      "color": "파랑",
+      "whole": true,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "견과류로 유명한 식품 회사가",
+      "span": "유명한 식품 회사가",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "이 브랜드를 통째로 사 갔다는데",
+      "span": "통째로 사 갔다는데",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ],
+  "cps_target": 7.8
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "speed": 1.25
+ },
+ "titles": {
+  "line1": "치즈만 구워서",
+  "line2": "과자를 만든다고?!",
+  "rule": "1줄 노랑·2줄 흰, 끝 '?!' — 벤치 '치즈 100% 과자 / 산다 vs 안산다'과 3어절 연속 겹침 0, 줄당 ≤12자"
+ },
+ "render": {
+  "gap": 0.03
+ },
+ "facts": {
+  "f1": {
+   "text": "원본 168.77~172.01 'Really good. I have to admit, I've had this before.'(스피치매틱스 enhanced 영어 — 투자자 원음, 이름은 자막에 안 씀) · 화면은 같은 원본 162.56초 투자자 손에 든 치즈 바(cover) + 말한 투자자 본인",
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk&t=168s",
+   "kind": "방송 원음+화면"
+  },
+  "f2": {
+   "text": "원본 110.40~119.49 'when you make a grilled cheese sandwich, the best part is the cheese that melts off into the pan and gets crunchy. Well, most people look at that and think, man, I wish I could eat just the cheese.'",
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk&t=110s",
+   "kind": "방송 원음"
+  },
+  "f3": {
+   "text": "원본 127.29~145.33 'First, we start with Wisconsin milk. Make our own fresh cheese in-house. Shred just a little bit into a cookie cutter mold. Pop it in the oven and that is it. … It's just the cheese.' · 화면 134~145 시연",
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk&t=127s",
+   "kind": "방송 원음+화면"
+  },
+  "f4": {
+   "text": "원본 169.85~179.29 'I have to admit, I've had this before.' 'I bought it on Amazon.' 'We sell between 4 and 700 boxes a day on Amazon.' · 화면 160~183 샤크들 시식",
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk&t=169s",
+   "kind": "방송 원음+화면"
+  },
+  "f5": {
+   "text": "원본 191.77~196.73 'Why can't anybody knock you off? I mean, you're doing something so simple. Anybody can do this, right?'",
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk&t=191s",
+   "kind": "방송 원음"
+  },
+  "f6": {
+   "text": "원본 202.69~205.29 'There's a ton of brands out there ahead of you.'",
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk&t=202s",
+   "kind": "방송 원음+화면"
+  },
+  "f7": {
+   "text": "원본 409.93~412.25 'I don't like the taste of it.' · 438.38~441.10 'I just don't think there's space and I'm out.' · 462.30~463.02 'So I'm out.' · 482.86~484.42 'So for those reasons, I'm out.' · 498.30~499.78 'Four sharks are out.'",
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk&t=409s",
+   "kind": "방송 원음+화면"
+  },
+  "f8": {
+   "text": "원본 507.06~514.26 'I give you half $1 million. I ask for $0.20 a bar. As a royalty, I get no equity in perpetuity.' · 631.10~632.78 'Yes, but I'm going to have to decline.' · 661.07~666.19 'It's a reasonable offer, but I'm going to politely and respectfully say no.' · 681.87~687.35 '…that I couldn't bring home a deal, but I hope they're proud of me anyway.' — 금액은 대본에 안 씀",
+   "url": "https://www.youtube.com/watch?v=EI9C5IHWdYk&t=507s",
+   "kind": "방송 원음+화면"
+  },
+  "f9": {
+   "text": "John B. Sanfilippo & Son, Inc. 보도자료(2022-12-16, Business Wire) 'announces acquisition of Just the Cheese brand' — Specialty Cheese Company 로부터 브랜드 사업 자산 인수, 금액 비공개 · Sanfilippo = 견과류·말린 과일 회사(Fisher·Orchard Valley Harvest)",
+   "url": "https://www.foodprocessing.com/business-of-food-beverage/mergers-acquisitions/news/21441635/sanfilippo-expands-from-nuts-into-cheese-snacks",
+   "url2": "https://www.businesswire.com/news/home/20221216005470/en",
+   "kind": "업계지 기사(직접 확인)+회사 보도자료"
+  }
+ }
+}
