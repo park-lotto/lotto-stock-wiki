@@ -1,0 +1,2172 @@
+{
+ "timeline": {
+  "lines": {
+   "N1": [
+    0.0,
+    3.152
+   ],
+   "O1": [
+    3.232,
+    4.489
+   ],
+   "N2": [
+    4.569,
+    6.644
+   ],
+   "N3": [
+    6.724,
+    9.314
+   ],
+   "O2": [
+    9.394,
+    11.498
+   ],
+   "N4": [
+    11.578,
+    14.02
+   ],
+   "N5": [
+    14.1,
+    16.963
+   ],
+   "O3": [
+    17.043,
+    21.486
+   ],
+   "N6": [
+    21.566,
+    24.083
+   ],
+   "N7": [
+    24.163,
+    26.717
+   ],
+   "N8": [
+    26.797,
+    29.183
+   ]
+  },
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한국 주걱으로",
+    "t0": 0.0,
+    "t1": 0.763,
+    "show": [
+     0.0,
+     0.763
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "파데 바르다가",
+    "t0": 0.763,
+    "t1": 1.585,
+    "show": [
+     0.763,
+     1.585
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "멘붕 온 외국인들이",
+    "t0": 1.585,
+    "t1": 2.549,
+    "show": [
+     1.585,
+     2.549
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 3,
+    "speaker": "narr",
+    "text": "있다는데요?",
+    "t0": 2.549,
+    "t1": 3.152,
+    "show": [
+     2.549,
+     3.232
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "뭘 잘못하는 건지",
+    "t0": 3.232,
+    "t1": 3.939,
+    "show": [
+     3.232,
+     3.939
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "모르겠어",
+    "t0": 3.939,
+    "t1": 4.489,
+    "show": [
+     3.939,
+     4.569
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "얇은 주걱에",
+    "t0": 4.569,
+    "t1": 5.211,
+    "show": [
+     4.569,
+     5.211
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "파데를 묻혀",
+    "t0": 5.211,
+    "t1": 5.768,
+    "show": [
+     5.211,
+     5.768
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 2,
+    "speaker": "narr",
+    "text": "얼굴에 펴 바르는데",
+    "t0": 5.768,
+    "t1": 6.644,
+    "show": [
+     5.768,
+     6.724
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "주걱을 세워 잡았다고",
+    "t0": 6.724,
+    "t1": 7.848,
+    "show": [
+     6.724,
+     7.848
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "댓글에서 놀림까지",
+    "t0": 7.848,
+    "t1": 8.755,
+    "show": [
+     7.848,
+     8.755
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 2,
+    "speaker": "narr",
+    "text": "받았대요",
+    "t0": 8.755,
+    "t1": 9.314,
+    "show": [
+     8.755,
+     9.394
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "아직도",
+    "t0": 9.394,
+    "t1": 9.979,
+    "show": [
+     9.394,
+     9.979
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "이 방법 잘 모르겠어",
+    "t0": 9.979,
+    "t1": 11.498,
+    "show": [
+     9.979,
+     11.578
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "이 외국인은",
+    "t0": 11.578,
+    "t1": 12.218,
+    "show": [
+     11.578,
+     12.218
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "그동안 잘못 썼다며",
+    "t0": 12.218,
+    "t1": 13.137,
+    "show": [
+     12.218,
+     13.137
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "방법을 바꿨는데",
+    "t0": 13.137,
+    "t1": 14.02,
+    "show": [
+     13.137,
+     14.1
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "파데는 끝부분에",
+    "t0": 14.1,
+    "t1": 15.055,
+    "show": [
+     14.1,
+     15.055
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "살짝 묻혀서",
+    "t0": 15.055,
+    "t1": 15.811,
+    "show": [
+     15.055,
+     15.811
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "얇게 나눠 펴는 거래요",
+    "t0": 15.811,
+    "t1": 16.963,
+    "show": [
+     15.811,
+     17.043
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "전에도 피부 같았지?",
+    "t0": 17.043,
+    "t1": 19.243,
+    "show": [
+     17.043,
+     19.293
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "지금 봐 봐",
+    "t0": 19.293,
+    "t1": 20.293,
+    "show": [
+     19.293,
+     20.343
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 2,
+    "speaker": "orig",
+    "text": "미쳤어!",
+    "t0": 20.343,
+    "t1": 21.486,
+    "show": [
+     20.343,
+     21.566
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "이렇게 하면",
+    "t0": 21.566,
+    "t1": 22.38,
+    "show": [
+     21.566,
+     22.38
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "파데도 반 펌프면",
+    "t0": 22.38,
+    "t1": 23.249,
+    "show": [
+     22.38,
+     23.249
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "충분하다던데",
+    "t0": 23.249,
+    "t1": 24.083,
+    "show": [
+     23.249,
+     24.163
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그 놀림 받던 외국인도",
+    "t0": 24.163,
+    "t1": 25.525,
+    "show": [
+     24.163,
+     25.525
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "가까이선",
+    "t0": 25.525,
+    "t1": 25.943,
+    "show": [
+     25.525,
+     25.943
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 2,
+    "speaker": "narr",
+    "text": "티가 안 났다고 하고",
+    "t0": 25.943,
+    "t1": 26.717,
+    "show": [
+     25.943,
+     26.797
+    ]
+   },
+   {
+    "line": "N8",
+    "j": 0,
+    "speaker": "narr",
+    "text": "아~ 나도 내일은",
+    "t0": 26.797,
+    "t1": 27.981,
+    "show": [
+     26.797,
+     27.981
+    ]
+   },
+   {
+    "line": "N8",
+    "j": 1,
+    "speaker": "narr",
+    "text": "주걱 세워서",
+    "t0": 27.981,
+    "t1": 28.479,
+    "show": [
+     27.981,
+     28.479
+    ]
+   },
+   {
+    "line": "N8",
+    "j": 2,
+    "speaker": "narr",
+    "text": "발라 봐야겠다",
+    "t0": 28.479,
+    "t1": 29.183,
+    "show": [
+     28.479,
+     29.333
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "src": "et.mp4",
+    "ss": 7.167,
+    "w": 0.34,
+    "crop": [
+     0,
+     500,
+     1080,
+     1434
+    ],
+    "see": "주걱으로 손등 파데 바르기 — 자막 띠 흰 티 위(빨강 훅 ④)",
+    "line": "N1",
+    "t0": 0.0,
+    "kind": "tts",
+    "t1": 1.099,
+    "dur": 1.099,
+    "max": 10.57,
+    "max_auto": true,
+    "over": 0.0,
+    "ss_reuse": 7.13,
+    "frozen": false
+   },
+   {
+    "src": "et.mp4",
+    "ss": 15.2,
+    "w": 0.33,
+    "crop": [
+     0,
+     500,
+     1080,
+     1434
+    ],
+    "see": "주걱 들고 바르기 설명 — 자막 띠 흰 티 위",
+    "line": "N1",
+    "t0": 1.099,
+    "kind": "tts",
+    "t1": 2.165,
+    "dur": 1.066,
+    "max": 2.5,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "et.mp4",
+    "ss": 19.0,
+    "w": 0.33,
+    "crop": [
+     0,
+     500,
+     1080,
+     1434
+    ],
+    "see": "주걱 들고 바르기 시늉 — 자막 띠 흰 티 위",
+    "line": "N1",
+    "t0": 2.165,
+    "kind": "tts",
+    "t1": 3.232,
+    "dur": 1.067,
+    "max": 5.433,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "주걱 대고 당황(입 맞춤)",
+    "line": "O1",
+    "ss": 43.043,
+    "src": "cp.mp4",
+    "t0": 3.232,
+    "kind": "orig",
+    "t1": 4.469,
+    "dur": 1.237,
+    "over": 0.0
+   },
+   {
+    "src": "cp.mp4",
+    "ss": 25.25,
+    "w": 0.55,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "볼에 주걱으로 파데 바르기(가까이)",
+    "line": "N2",
+    "t0": 4.469,
+    "kind": "tts",
+    "t1": 5.754,
+    "dur": 1.285,
+    "max": 2.183,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "cp.mp4",
+    "ss": 28.833,
+    "w": 0.45,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "주걱으로 바르기 — 자국 난 볼",
+    "line": "N2",
+    "t0": 5.754,
+    "kind": "tts",
+    "t1": 6.724,
+    "dur": 0.97,
+    "ss_planned": 28.833,
+    "max": 3.7,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "cp.mp4",
+    "ss": 12.2,
+    "w": 0.34,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "주걱 세워 들고 말함",
+    "line": "N3",
+    "t0": 6.724,
+    "kind": "tts",
+    "t1": 7.632,
+    "dur": 0.908,
+    "max": 5.767,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "cp.mp4",
+    "ss": 47.3,
+    "w": 0.33,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "주걱 세워 볼에 댐",
+    "line": "N3",
+    "t0": 7.632,
+    "kind": "tts",
+    "t1": 8.513,
+    "dur": 0.881,
+    "max": 3.033,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "cp.mp4",
+    "ss": 53.0,
+    "w": 0.33,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "주걱 세워 바르기",
+    "line": "N3",
+    "t0": 8.513,
+    "kind": "tts",
+    "t1": 9.394,
+    "dur": 0.881,
+    "max": 3.0,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "퍼프로 이마 두드리며 갸웃(입 맞춤)",
+    "line": "O2",
+    "ss": 67.465,
+    "src": "cp.mp4",
+    "t0": 9.394,
+    "kind": "orig",
+    "max": null,
+    "lip_run": true,
+    "t1": 11.578,
+    "dur": 2.184,
+    "over": 0.0
+   },
+   {
+    "src": "et.mp4",
+    "ss": 1.6,
+    "w": 0.5,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "주걱 들고 말하는 둘째 외국인",
+    "line": "N4",
+    "t0": 11.578,
+    "kind": "tts",
+    "t1": 12.839,
+    "dur": 1.261,
+    "max": 3.867,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "et.mp4",
+    "ss": 2.88,
+    "w": 0.5,
+    "crop": [
+     140,
+     380,
+     800,
+     1062
+    ],
+    "see": "같은 장면 당겨 보기",
+    "line": "N4",
+    "t0": 12.839,
+    "kind": "tts",
+    "t1": 14.1,
+    "dur": 1.261,
+    "max": 2.587,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "et.mp4",
+    "ss": 24.6,
+    "w": 0.33,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "주걱 끝으로 얼굴에 얇게 바르기",
+    "line": "N5",
+    "t0": 14.1,
+    "kind": "tts",
+    "t1": 15.071,
+    "dur": 0.971,
+    "max": 6.733,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "et.mp4",
+    "ss": 28.6,
+    "w": 0.33,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "얼굴에 얇게 펴기",
+    "line": "N5",
+    "t0": 15.071,
+    "kind": "tts",
+    "t1": 16.042,
+    "dur": 0.971,
+    "max": 2.733,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "et.mp4",
+    "ss": 32.567,
+    "w": 0.34,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "나눠서 얇게 바르기",
+    "line": "N5",
+    "t0": 16.042,
+    "kind": "tts",
+    "t1": 17.043,
+    "dur": 1.001,
+    "max": 3.767,
+    "max_auto": true,
+    "over": 0.0,
+    "ss_reuse": 32.6,
+    "frozen": false
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "자연광 얼굴 보여 주며 감탄(입 맞춤)",
+    "line": "O3",
+    "ss": 55.33,
+    "src": "et.mp4",
+    "t0": 17.043,
+    "kind": "orig",
+    "max": null,
+    "lip_run": true,
+    "t1": 21.566,
+    "dur": 4.523,
+    "over": 0.0
+   },
+   {
+    "src": "et.mp4",
+    "ss": 36.6,
+    "w": 0.5,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "주걱으로 볼에 얇게 바르기",
+    "line": "N6",
+    "t0": 21.566,
+    "kind": "tts",
+    "t1": 22.864,
+    "dur": 1.298,
+    "max": 4.6,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "et.mp4",
+    "ss": 37.9,
+    "w": 0.5,
+    "crop": [
+     140,
+     380,
+     800,
+     1062
+    ],
+    "see": "당겨 보기 — 얇게 바르기",
+    "line": "N6",
+    "t0": 22.864,
+    "kind": "tts",
+    "t1": 24.163,
+    "dur": 1.299,
+    "max": 3.3,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "cp.mp4",
+    "ss": 72.667,
+    "w": 0.5,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "첫 외국인 두 번째 도전 결과 가까이",
+    "line": "N7",
+    "t0": 24.163,
+    "kind": "tts",
+    "t1": 25.48,
+    "dur": 1.317,
+    "max": 2.2,
+    "max_auto": true,
+    "over": 0.0,
+    "ss_reuse": 72.4,
+    "frozen": false
+   },
+   {
+    "src": "cp.mp4",
+    "ss": 59.5,
+    "w": 0.5,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "주걱으로 볼에 바르기(가까이)",
+    "line": "N7",
+    "t0": 25.48,
+    "kind": "tts",
+    "t1": 26.797,
+    "dur": 1.317,
+    "max": 2.5,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "et.mp4",
+    "ss": 44.0,
+    "w": 0.5,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "주걱 세워 볼에 바르기",
+    "line": "N8",
+    "t0": 26.797,
+    "kind": "tts",
+    "t1": 28.065,
+    "dur": 1.268,
+    "max": 7.867,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "et.mp4",
+    "ss": 48.2,
+    "w": 0.5,
+    "crop": [
+     0,
+     200,
+     1080,
+     1434
+    ],
+    "see": "주걱으로 얇게 바르기",
+    "line": "N8",
+    "t0": 28.065,
+    "kind": "tts",
+    "t1": 29.3333,
+    "dur": 1.268,
+    "max": 3.667,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   }
+  ],
+  "opos": [
+   {
+    "line": "O1",
+    "k": 0,
+    "src": "cp.mp4",
+    "span": [
+     43.043,
+     44.3
+    ],
+    "t0": 3.232,
+    "t1": 4.489
+   },
+   {
+    "line": "O2",
+    "k": 0,
+    "src": "cp.mp4",
+    "span": [
+     67.465,
+     69.569
+    ],
+    "t0": 9.394,
+    "t1": 11.498
+   },
+   {
+    "line": "O3",
+    "k": 0,
+    "src": "et.mp4",
+    "span": [
+     55.33,
+     59.773
+    ],
+    "t0": 17.043,
+    "t1": 21.486
+   }
+  ],
+  "end": 29.3333,
+  "orig_trim": {
+   "head": {
+    "O1": 0.093,
+    "O2": 0.015,
+    "O3": 0.0
+   },
+   "dropped_cuts": []
+  },
+  "vmake_cuts": []
+ },
+ "placement": {
+  "reference": "aUicTeDoW04",
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한국 주걱으로",
+    "t0": 0.0,
+    "t1": 0.763,
+    "show": [
+     0.0,
+     0.763
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": "hook"
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "파데 바르다가",
+    "t0": 0.763,
+    "t1": 1.585,
+    "show": [
+     0.763,
+     1.585
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": "hook"
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "멘붕 온 외국인들이",
+    "t0": 1.585,
+    "t1": 2.549,
+    "show": [
+     1.585,
+     2.549
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": "hook"
+   },
+   {
+    "line": "N1",
+    "j": 3,
+    "speaker": "narr",
+    "text": "있다는데요?",
+    "t0": 2.549,
+    "t1": 3.152,
+    "show": [
+     2.549,
+     3.232
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [
+     {
+      "kind": "circle_arrow",
+      "word": "",
+      "target": {
+       "kind": "face",
+       "avoid": [],
+       "anchor": "mouth"
+      },
+      "site": "pending"
+     }
+    ],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": "hook_pop"
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "뭘 잘못하는 건지",
+    "t0": 3.232,
+    "t1": 3.939,
+    "show": [
+     3.232,
+     3.939
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "모르겠어",
+    "t0": 3.939,
+    "t1": 4.489,
+    "show": [
+     3.939,
+     4.569
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "얇은 주걱에",
+    "t0": 4.569,
+    "t1": 5.211,
+    "show": [
+     4.569,
+     5.211
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "파데를 묻혀",
+    "t0": 5.211,
+    "t1": 5.768,
+    "show": [
+     5.211,
+     5.768
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 2,
+    "speaker": "narr",
+    "text": "얼굴에 펴 바르는데",
+    "t0": 5.768,
+    "t1": 6.644,
+    "show": [
+     5.768,
+     6.724
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "주걱을 세워 잡았다고",
+    "t0": 6.724,
+    "t1": 7.848,
+    "show": [
+     6.724,
+     7.848
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "댓글에서 놀림까지",
+    "t0": 7.848,
+    "t1": 8.755,
+    "show": [
+     7.848,
+     8.755
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 2,
+    "speaker": "narr",
+    "text": "받았대요",
+    "t0": 8.755,
+    "t1": 9.314,
+    "show": [
+     8.755,
+     9.394
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "아직도",
+    "t0": 9.394,
+    "t1": 9.979,
+    "show": [
+     9.394,
+     9.979
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "이 방법 잘 모르겠어",
+    "t0": 9.979,
+    "t1": 11.498,
+    "show": [
+     9.979,
+     11.578
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "이 외국인은",
+    "t0": 11.578,
+    "t1": 12.218,
+    "show": [
+     11.578,
+     12.218
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "그동안 잘못 썼다며",
+    "t0": 12.218,
+    "t1": 13.137,
+    "show": [
+     12.218,
+     13.137
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "방법을 바꿨는데",
+    "t0": 13.137,
+    "t1": 14.02,
+    "show": [
+     13.137,
+     14.1
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "파데는 끝부분에",
+    "t0": 14.1,
+    "t1": 15.055,
+    "show": [
+     14.1,
+     15.055
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "살짝 묻혀서",
+    "t0": 15.055,
+    "t1": 15.811,
+    "show": [
+     15.055,
+     15.811
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "얇게 나눠 펴는 거래요",
+    "t0": 15.811,
+    "t1": 16.963,
+    "show": [
+     15.811,
+     17.043
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "전에도 피부 같았지?",
+    "t0": 17.043,
+    "t1": 19.243,
+    "show": [
+     17.043,
+     19.293
+    ],
+    "first": true,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "지금 봐 봐",
+    "t0": 19.293,
+    "t1": 20.293,
+    "show": [
+     19.293,
+     20.343
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 2,
+    "speaker": "orig",
+    "text": "미쳤어!",
+    "t0": 20.343,
+    "t1": 21.486,
+    "show": [
+     20.343,
+     21.566
+    ],
+    "first": false,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "이렇게 하면",
+    "t0": 21.566,
+    "t1": 22.38,
+    "show": [
+     21.566,
+     22.38
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "파데도 반 펌프면",
+    "t0": 22.38,
+    "t1": 23.249,
+    "show": [
+     22.38,
+     23.249
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 2,
+    "speaker": "narr",
+    "text": "충분하다던데",
+    "t0": 23.249,
+    "t1": 24.083,
+    "show": [
+     23.249,
+     24.163
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그 놀림 받던 외국인도",
+    "t0": 24.163,
+    "t1": 25.525,
+    "show": [
+     24.163,
+     25.525
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "가까이선",
+    "t0": 25.525,
+    "t1": 25.943,
+    "show": [
+     25.525,
+     25.943
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 2,
+    "speaker": "narr",
+    "text": "티가 안 났다고 하고",
+    "t0": 25.943,
+    "t1": 26.717,
+    "show": [
+     25.943,
+     26.797
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N8",
+    "j": 0,
+    "speaker": "narr",
+    "text": "아~ 나도 내일은",
+    "t0": 26.797,
+    "t1": 27.981,
+    "show": [
+     26.797,
+     27.981
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N8",
+    "j": 1,
+    "speaker": "narr",
+    "text": "주걱 세워서",
+    "t0": 27.981,
+    "t1": 28.479,
+    "show": [
+     27.981,
+     28.479
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N8",
+    "j": 2,
+    "speaker": "narr",
+    "text": "발라 봐야겠다",
+    "t0": 28.479,
+    "t1": 29.183,
+    "show": [
+     28.479,
+     29.333
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   }
+  ],
+  "sfx": [
+   {
+    "t": 3.422,
+    "role": "body",
+    "why": "body",
+    "kind": "pop"
+   }
+  ],
+  "transitions": [
+   {
+    "t": 4.469,
+    "kind": "zoomblur",
+    "ms": 467,
+    "why": "화자 바뀜"
+   }
+  ],
+  "flashes": [],
+  "cut_bounds": 21,
+  "trans_plan": {
+   "src": "본보기 aUicTeDoW04 줄판독 30줄",
+   "share": {
+    "zoomblur": 0.0667
+   },
+   "cut_bounds": 21,
+   "want_raw": {
+    "zoomblur": 1.4
+   },
+   "want": 1,
+   "eligible": 9,
+   "picked": {
+    "zoomblur": 1
+   },
+   "min_cut": 1.2
+  },
+  "log": [
+   "본보기 벤치 편 = aUicTeDoW04",
+   "목표 밀도 모드(업그레이드 판 targets): fx_rate_narr 0.18(상한 0.231), fx_rate_orig 0.056(상한 0.111), sfx_rate 0.051(상한 0.067), sticker_rate 0.061(상한 0.065) · 출처 channel/ititemlog/_kal/상위편_목표.json density",
+   "훅 N1 덩어리 4개 → hook (끝 hook_pop)",
+   "스티커 circle_arrow → N1「있다는데요?」",
+   "꾸밈 자리 본문 목표 4 중 0개 — key 덩어리·화자 상한 {'narr': 8, 'orig': 1} 모자람",
+   "꾸밈 자리(rules.deco_pos): 벤치 {'훅': 0.354, '본문': 0.508, '끝': 0.038} · 정해진 {'훅': 4} → 목표 {'훅': 2, '본문': 4, '끝': 0} · 우리 {'훅': 4} (+강조 [])",
+   "꾸밈(narr) 목표 5 중 4개만 — 대본 key 있는 덩어리 모자람",
+   "꾸밈(narr) targets: 목표 0.18×25=5 · 상한 6 · 1차 4 → 4",
+   "꾸밈(orig) targets: 목표 0.056×7=0 · 상한 1 · 1차 0 → 0",
+   "전환 [(4.469, 'zoomblur')] (본보기 aUicTeDoW04 줄판독 30줄 비율 {'zoomblur': 0.07}, 컷 경계 21·붙일 수 있는 9(≥1.2초))",
+   "효과음 targets: 목표 0.051발/초 × 29.18초 = 1발 · 상한 2(상위 편 최대 0.067)",
+   "효과음 1발(본보기 줄판독 1발 · 역할 {'body': 1} · 편차 +0.19초) [(3.422, 'pop', 'body')]",
+   "짤 0개(rate 0.0 — 벤치에 짤 없음도 스타일)",
+   "꾸밈(narr) 목표 5 중 4개만 — 대본 key 있는 덩어리 모자람",
+   "꾸밈(narr) targets: 목표 0.18×25=5 · 상한 6 · 1차 4 → 4",
+   "꾸밈(orig) targets: 목표 0.056×7=0 · 상한 1 · 1차 0 → 0",
+   "꾸밈 없음 28/32 ≥ 판 plain_share 0.854×32=27",
+   "등장 {'cut': 32} · 강조 0/32",
+   "꾸밈 답 없음(deco_answers.json)"
+  ],
+  "targets": {
+   "fx_rate_narr": {
+    "goal": 0.18,
+    "cap": 0.231,
+    "n_goal": 5,
+    "lo": 3,
+    "hi": 6,
+    "n_first": 3,
+    "dur": 25,
+    "n": 4,
+    "ours": 0.16,
+    "src": "channel/ititemlog/_kal/상위편_목표.json density"
+   },
+   "fx_rate_orig": {
+    "goal": 0.056,
+    "cap": 0.111,
+    "n_goal": 0,
+    "lo": 0,
+    "hi": 1,
+    "n_first": 0,
+    "dur": 7,
+    "n": 0,
+    "ours": 0.0,
+    "src": "channel/ititemlog/_kal/상위편_목표.json density"
+   },
+   "sfx_rate": {
+    "goal": 0.051,
+    "cap": 0.067,
+    "src": "channel/ititemlog/_kal/상위편_목표.json density",
+    "n_goal": 1,
+    "lo": 1,
+    "hi": 2,
+    "n_first": 1,
+    "dur": 29.183,
+    "n": 1,
+    "ours": 0.034
+   }
+  },
+  "deco_pos": {
+   "bench_pos": {
+    "훅": 0.354,
+    "본문": 0.508,
+    "끝": 0.038
+   },
+   "want": {
+    "훅": 2,
+    "본문": 4,
+    "끝": 0
+   },
+   "have_before": {
+    "훅": 4
+   },
+   "ours": {
+    "훅": 4
+   },
+   "ours_share": {
+    "훅": 1.0,
+    "본문": 0.0,
+    "끝": 0.0
+   },
+   "speaker_cap": {
+    "narr": 8,
+    "orig": 1
+   }
+  },
+  "_timeline": {
+   "cuts": [
+    {
+     "src": "et.mp4",
+     "ss": 7.167,
+     "w": 0.34,
+     "crop": [
+      0,
+      500,
+      1080,
+      1434
+     ],
+     "see": "주걱으로 손등 파데 바르기 — 자막 띠 흰 티 위(빨강 훅 ④)",
+     "line": "N1",
+     "t0": 0.0,
+     "kind": "tts",
+     "t1": 1.099,
+     "dur": 1.099,
+     "max": 10.57,
+     "max_auto": true,
+     "over": 0.0,
+     "ss_reuse": 7.13,
+     "frozen": false
+    },
+    {
+     "src": "et.mp4",
+     "ss": 15.2,
+     "w": 0.33,
+     "crop": [
+      0,
+      500,
+      1080,
+      1434
+     ],
+     "see": "주걱 들고 바르기 설명 — 자막 띠 흰 티 위",
+     "line": "N1",
+     "t0": 1.099,
+     "kind": "tts",
+     "t1": 2.165,
+     "dur": 1.066,
+     "max": 2.5,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "et.mp4",
+     "ss": 19.0,
+     "w": 0.33,
+     "crop": [
+      0,
+      500,
+      1080,
+      1434
+     ],
+     "see": "주걱 들고 바르기 시늉 — 자막 띠 흰 티 위",
+     "line": "N1",
+     "t0": 2.165,
+     "kind": "tts",
+     "t1": 3.232,
+     "dur": 1.067,
+     "max": 5.433,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "at": 0.0,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "주걱 대고 당황(입 맞춤)",
+     "line": "O1",
+     "ss": 43.043,
+     "src": "cp.mp4",
+     "t0": 3.232,
+     "kind": "orig",
+     "t1": 4.469,
+     "dur": 1.237,
+     "over": 0.0
+    },
+    {
+     "src": "cp.mp4",
+     "ss": 25.25,
+     "w": 0.55,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "볼에 주걱으로 파데 바르기(가까이)",
+     "line": "N2",
+     "t0": 4.469,
+     "kind": "tts",
+     "t1": 5.754,
+     "dur": 1.285,
+     "max": 2.183,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "cp.mp4",
+     "ss": 28.833,
+     "w": 0.45,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "주걱으로 바르기 — 자국 난 볼",
+     "line": "N2",
+     "t0": 5.754,
+     "kind": "tts",
+     "t1": 6.724,
+     "dur": 0.97,
+     "ss_planned": 28.833,
+     "max": 3.7,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "cp.mp4",
+     "ss": 12.2,
+     "w": 0.34,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "주걱 세워 들고 말함",
+     "line": "N3",
+     "t0": 6.724,
+     "kind": "tts",
+     "t1": 7.632,
+     "dur": 0.908,
+     "max": 5.767,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "cp.mp4",
+     "ss": 47.3,
+     "w": 0.33,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "주걱 세워 볼에 댐",
+     "line": "N3",
+     "t0": 7.632,
+     "kind": "tts",
+     "t1": 8.513,
+     "dur": 0.881,
+     "max": 3.033,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "cp.mp4",
+     "ss": 53.0,
+     "w": 0.33,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "주걱 세워 바르기",
+     "line": "N3",
+     "t0": 8.513,
+     "kind": "tts",
+     "t1": 9.394,
+     "dur": 0.881,
+     "max": 3.0,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "at": 0.0,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "퍼프로 이마 두드리며 갸웃(입 맞춤)",
+     "line": "O2",
+     "ss": 67.465,
+     "src": "cp.mp4",
+     "t0": 9.394,
+     "kind": "orig",
+     "max": null,
+     "lip_run": true,
+     "t1": 11.578,
+     "dur": 2.184,
+     "over": 0.0
+    },
+    {
+     "src": "et.mp4",
+     "ss": 1.6,
+     "w": 0.5,
+     "crop": [
+      0,
+      200,
+      1080,
+      1434
+     ],
+     "see": "주걱 들고 말하는 둘째 외국인",
+     "line": "N4",
+     "t0": 11.578,
+     "kind": "tts",
+     "t1": 12.839,
+     "dur": 1.261,
+     "max": 3.867,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "et.mp4",
+     "ss": 2.88,
+     "w": 0.5,
+     "crop": [
+      140,
+      380,
+      800,
+      1062
+     ],
+     "see": "같은 장면 당겨 보기",
+     "line": "N4",
+     "t0": 12.839,
+     "kind": "tts",
+     "t1": 14.1,
+     "dur": 1.261,
+     "max": 2.587,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "et.mp4",
+     "ss": 24.6,
+     "w": 0.33,
+     "crop": [
+      0,
+      200,
+      1080,
+      1434
+     ],
+     "see": "주걱 끝으로 얼굴에 얇게 바르기",
+     "line": "N5",
+     "t0": 14.1,
+     "kind": "tts",
+     "t1": 15.071,
+     "dur": 0.971,
+     "max": 6.733,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "et.mp4",
+     "ss": 28.6,
+     "w": 0.33,
+     "crop": [
+      0,
+      200,
+      1080,
+      1434
+     ],
+     "see": "얼굴에 얇게 펴기",
+     "line": "N5",
+     "t0": 15.071,
+     "kind": "tts",
+     "t1": 16.042,
+     "dur": 0.971,
+     "max": 2.733,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "et.mp4",
+     "ss": 32.567,
+     "w": 0.34,
+     "crop": [
+      0,
+      200,
+      1080,
+      1434
+     ],
+     "see": "나눠서 얇게 바르기",
+     "line": "N5",
+     "t0": 16.042,
+     "kind": "tts",
+     "t1": 17.043,
+     "dur": 1.001,
+     "max": 3.767,
+     "max_auto": true,
+     "over": 0.0,
+     "ss_reuse": 32.6,
+     "frozen": false
+    },
+    {
+     "at": 0.0,
+     "crop": [
+      0,
+      200,
+      1080,
+      1434
+     ],
+     "see": "자연광 얼굴 보여 주며 감탄(입 맞춤)",
+     "line": "O3",
+     "ss": 55.33,
+     "src": "et.mp4",
+     "t0": 17.043,
+     "kind": "orig",
+     "max": null,
+     "lip_run": true,
+     "t1": 21.566,
+     "dur": 4.523,
+     "over": 0.0
+    },
+    {
+     "src": "et.mp4",
+     "ss": 36.6,
+     "w": 0.5,
+     "crop": [
+      0,
+      200,
+      1080,
+      1434
+     ],
+     "see": "주걱으로 볼에 얇게 바르기",
+     "line": "N6",
+     "t0": 21.566,
+     "kind": "tts",
+     "t1": 22.864,
+     "dur": 1.298,
+     "max": 4.6,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "et.mp4",
+     "ss": 37.9,
+     "w": 0.5,
+     "crop": [
+      140,
+      380,
+      800,
+      1062
+     ],
+     "see": "당겨 보기 — 얇게 바르기",
+     "line": "N6",
+     "t0": 22.864,
+     "kind": "tts",
+     "t1": 24.163,
+     "dur": 1.299,
+     "max": 3.3,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "cp.mp4",
+     "ss": 72.667,
+     "w": 0.5,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "첫 외국인 두 번째 도전 결과 가까이",
+     "line": "N7",
+     "t0": 24.163,
+     "kind": "tts",
+     "t1": 25.48,
+     "dur": 1.317,
+     "max": 2.2,
+     "max_auto": true,
+     "over": 0.0,
+     "ss_reuse": 72.4,
+     "frozen": false
+    },
+    {
+     "src": "cp.mp4",
+     "ss": 59.5,
+     "w": 0.5,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "주걱으로 볼에 바르기(가까이)",
+     "line": "N7",
+     "t0": 25.48,
+     "kind": "tts",
+     "t1": 26.797,
+     "dur": 1.317,
+     "max": 2.5,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "et.mp4",
+     "ss": 44.0,
+     "w": 0.5,
+     "crop": [
+      0,
+      200,
+      1080,
+      1434
+     ],
+     "see": "주걱 세워 볼에 바르기",
+     "line": "N8",
+     "t0": 26.797,
+     "kind": "tts",
+     "t1": 28.065,
+     "dur": 1.268,
+     "max": 7.867,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "et.mp4",
+     "ss": 48.2,
+     "w": 0.5,
+     "crop": [
+      0,
+      200,
+      1080,
+      1434
+     ],
+     "see": "주걱으로 얇게 바르기",
+     "line": "N8",
+     "t0": 28.065,
+     "kind": "tts",
+     "t1": 29.3333,
+     "dur": 1.268,
+     "max": 3.667,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    }
+   ],
+   "end": 29.3333
+  },
+  "cards": [],
+  "lyrics": [],
+  "transitions_drawn": [
+   {
+    "t": 4.469,
+    "kind": "zoomblur",
+    "ms": 467.0,
+    "zoom": 0.12,
+    "sigma": 14.0,
+    "why": "화자 바뀜"
+   }
+  ]
+ }
+}
