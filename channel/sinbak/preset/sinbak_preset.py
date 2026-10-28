@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# _deprecated_2026-10-25 → tools/calcopy/hybrid/styles/신박판.json (관제 263 지시서 07 · 표준 §3-1: 새 편은 공용 렌더러로. 읽기 전용 참고물 — 설명서 프리셋 생성기는 회원 옛 길이 결과를 읽으므로 지우지 않는다)
 """신박발견(@신박발견) 생활 꿀팁 자막썰 프리셋 「연회색틀_둥근창_창아래자막」 — 자동 설명서 → 손질 → preset_save (관제 097, 2026-10-20).
     PYTHONUTF8=1 py channel/sinbak/preset/sinbak_measure.py   (실측 → C:/숏템_칼카피/sinbak/work/preset/measure.json, 5분)
     PYTHONUTF8=1 py channel/sinbak/preset/sinbak_preset.py    (손질본 _hand/ → preset_save)

@@ -2,6 +2,7 @@
 (claude_store = shopping_shorts/data/claude_store, gitignore). 숏템MCP 병합(finish)이 라이브에 들어간 뒤에 돌린다(서버에 publish_update.py --install 필요).
 
   py tools/claude_portal/upload_release.py --dist <빌드>/dist --packs <프리셋 꾸러미 폴더> --version 1.0.0 [--dry]
+  py tools/claude_portal/upload_release.py … --version 1.0.1 --update-stage <빌드>/win-x64/Shortem   ← 이미 깐 PC 용 자동 업데이트도
 
 올리는 것: ①프리셋 꾸러미 p_*.zip → preset_packs/ ②연결 파일 shortem.mcpb·Claude Code 꾸러미 → installers/ + manifest.json(페이지 ④ 두 칸)
           ③설치 묶음 shortem-win-x64-<판>.zip → publish_update.py --install(내용주소 assets/ + install/latest-win-x64.json)
@@ -58,6 +59,8 @@ def main(argv=None) -> int:
     ap.add_argument("--packs", required=True)
     ap.add_argument("--version", required=True)
     ap.add_argument("--dry", action="store_true", help="파일·서버 상태만 보고 올리지 않는다")
+    ap.add_argument("--update-stage", help="설치 폴더(빌드 win-x64/Shortem) — 주면 server·engine 묶음을 켤 때 자동 업데이트로도 올린다(publish_update.make_zip)")
+    ap.add_argument("--notes", default="")
     a = ap.parse_args(argv)
     dist, packs = Path(a.dist), Path(a.packs)
     mcpb = dist / "shortem.mcpb"
@@ -95,6 +98,21 @@ def main(argv=None) -> int:
     pub = ssh(f"cd {REPO} && /usr/bin/python3 tools/claude_portal/publish_update.py --install {UPLOAD}/{pack.name} --plat win-x64 --version {a.version} && rm -f {UPLOAD}/{pack.name}")
     got = json.loads(pub.strip().splitlines()[-1])
     out["install_sha_match"] = got.get("sha256") == local_sha
+    if a.update_stage:     # 켤 때 자동 업데이트 — 묶는 것은 publish_update.make_zip 한 곳, 서버 등록은 서버에 이미 있는 claude_portal 함수로
+        sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+        from tools.claude_portal.publish_update import make_zip
+        with tempfile.TemporaryDirectory() as td:
+            uz = Path(td) / f"shortem-app-{a.version}.zip"
+            uz.write_bytes(make_zip(Path(a.update_stage), a.version))
+            u_sha = sha256(uz)
+            scp([uz], f"{UPLOAD}/")
+        reg = ("import json,os;from pathlib import Path;from shopping_shorts import claude_portal as cp;"
+               f"p=Path('{UPLOAD}/shortem-app-{a.version}.zip');sha,size=cp.put_blob(p);p.unlink();"
+               f"cp.update_path().parent.mkdir(parents=True,exist_ok=True);"
+               f"cp.update_path().write_text(json.dumps({{'version':'{a.version}','sha256':sha,'size':size,'notes':{json.dumps(a.notes)}}}),encoding='utf-8');print(sha)")
+        import base64      # 따옴표가 셸을 두 번 지나며 깨지지 않게 글을 통째로 넘긴다
+        got_u = ssh(f"cd {REPO} && echo {base64.b64encode(reg.encode()).decode()} | base64 -d | /usr/bin/python3 -").strip().splitlines()[-1]
+        out["update_sha_match"] = got_u == u_sha
     out["server_presets"] = int(ssh(f"ls {STORE}/preset_packs/p_*.zip | wc -l").strip())
     out["server_installers"] = ssh(f"ls {STORE}/installers").split()
     out["server_free_gb_after"] = round(int(ssh("df -k --output=avail / | tail -1").strip()) / 1e6, 1)
@@ -103,7 +121,7 @@ def main(argv=None) -> int:
             out["live_install_route"] = json.loads(r.read().decode())
     except urllib.error.HTTPError as e:
         out["live_install_route"] = {"status": e.code, "body": json.loads(e.read().decode() or "{}")}
-    out["ok"] = out["install_sha_match"] and out["server_presets"] >= len(presets) and {"shortem.mcpb", kit.name, "manifest.json"} <= set(out["server_installers"])
+    out["ok"] = out.get("update_sha_match", True) and out["install_sha_match"] and out["server_presets"] >= len(presets) and {"shortem.mcpb", kit.name, "manifest.json"} <= set(out["server_installers"])
     print(json.dumps(out, ensure_ascii=False))
     return 0 if out["ok"] else 1
 

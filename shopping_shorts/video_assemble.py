@@ -1807,12 +1807,14 @@ def simple_caption_split(text, max_chars):
     한 어절이 max_chars를 넘으면 그 어절은 혼자 한 줄(글자를 쪼개지 않는다).
     ★일본어는 띄어쓰기가 없어 이 규칙이 문장 통째를 한 어절로 본다 → _caption_segments_ja(폭=max_chars)로 보낸다(관제 248)."""
     from shopping_shorts.script_translate import lang_of
-    if lang_of(text) == "ja":
+    _lg = lang_of(text)
+    if _lg in ("ja", "zh"):
         try:
             _mx = int(max_chars or 0)
         except (TypeError, ValueError):
             _mx = 0
-        return _caption_segments_ja(text, width=_mx if _mx > 0 else None)
+        _fn = _caption_segments_zh if _lg == "zh" else _caption_segments_ja
+        return _fn(text, width=_mx if _mx > 0 else None)
     words = (text or "").split()
     try:
         mx = int(max_chars or 0)
@@ -1942,6 +1944,40 @@ def _caption_segments_ja(narr, width=None):
     return pieces
 
 
+_ZH_AFTER = "的了着过吧呢啊呀嘛哦"          # 이 글자 뒤에서 끊으면 자연스럽다(어기조사·구조조사)
+_ZH_BEFORE = ("就", "都", "也", "还", "但", "而", "所以", "因为", "然后", "可是", "而且", "直接", "只要", "连")   # 이 말 앞에서
+
+
+def _zh_split_long(seg, width=None):
+    """쉼표로도 못 줄인 긴 중국어 조각 → 자연 경계(的了吧… 뒤 / 就都也… 앞)에서 가장 균형 있게, 없으면 가운데."""
+    width = width or _CAP_WRAP
+    n = len(seg)
+    if n <= width:
+        return [seg]
+    lo, hi = 4, n - 3
+    cands = [i for i in range(lo, hi + 1) if seg[i - 1] in _ZH_AFTER or any(seg.startswith(w, i) for w in _ZH_BEFORE)]
+    cut = min(cands, key=lambda i: abs(i - (n - i))) if cands else min(width, max(1, n // 2 + (n % 2)))
+    return _zh_split_long(seg[:cut], width) + _zh_split_long(seg[cut:], width)
+
+
+def _caption_segments_zh(narr, width=None):
+    """중국어 나레이션 → 자막 줄 목록(관제 254). ①。！？，、； 뒤에서 끊는다 ②그래도 넘치면 _zh_split_long
+    ③끝 조각이 3자 미만이면 앞 조각에 붙인다. 일본어 규칙은 가나 조사 기준이라 중국어엔 맞지 않는다."""
+    t = (narr or "").strip()
+    if not t:
+        return []
+    pieces = []
+    for p in re.split(r"(?<=[。！？!?，,、；;])", t):
+        p = _strip_cap_tail(p.strip())
+        if p:
+            pieces.extend(_zh_split_long(p, width))
+    pieces = [p for p in pieces if p.strip()]
+    if len(pieces) >= 2 and len(pieces[-1]) < 3:
+        last = pieces.pop()
+        pieces[-1] = pieces[-1] + last
+    return pieces
+
+
 def _wrap_long(segs, manual=False):
     """구절 리스트에서 _CAP_WRAP를 크게 넘는 초장문만 줄바꿈으로 방어(대부분 그대로 1줄).
     각 줄은 표시용으로 끝 문장부호를 정리한다(2026-07-21 사장님 '봤잖아요.' 마침표 노출).
@@ -1968,9 +2004,9 @@ def _wrap_long(segs, manual=False):
             continue
         # ★일본어는 어절(띄어쓰기)이 없다 — textwrap 19자 기계 절단 대신 조사 뒤에서 나눈다(관제 248).
         #   manual 이어도 19자 넘는 덩어리는 나눈다("어절 둘 이상이면 존중" 규칙이 일본어엔 안 맞는다).
-        if lang_of(s) == "ja":
+        if lang_of(s) in ("ja", "zh"):
             if len(s.replace(" ", "")) > _CAP_WRAP:
-                out.extend(_caption_segments_ja(s) or [s])
+                out.extend((_caption_segments_zh if lang_of(s) == "zh" else _caption_segments_ja)(s) or [s])
             else:
                 out.append(s)
             continue
@@ -2016,6 +2052,8 @@ def _caption_segments(narration, preset=None):
     from shopping_shorts.script_translate import lang_of
     if lang_of(narr) == "ja":
         return _caption_segments_ja(narr) or [narr]
+    if lang_of(narr) == "zh":
+        return _caption_segments_zh(narr) or [narr]
     words = narr.split()
     out, cur = [], []
     for i, w in enumerate(words):
@@ -3243,10 +3281,11 @@ def _default_or_lang_font(work, text):
         base = _resolve_font()
         if not base or _fg.too_broken(base, text, label="기본폰트"):
             try:
-                shutil.copy(jp, Path(work) / "font_ja.ttf")
-                return "font_ja.ttf"
+                _name = "font_ja.ttf" if jp.endswith("JP-Bold.ttf") else "font_lang" + Path(jp).suffix   # 일본어는 종전 이름 그대로
+                shutil.copy(jp, Path(work) / _name)
+                return _name
             except Exception as e:      # noqa: BLE001 — 복사 실패는 종전(기본폰트)으로, 흔적은 남긴다
-                print(f"[폰트] 일본어 폴백 폰트 복사 실패 — 기본폰트로: {e!r}", file=sys.stderr)
+                print(f"[폰트] 언어 폴백 폰트 복사 실패 — 기본폰트로: {e!r}", file=sys.stderr)
     return "font.ttf"
 
 

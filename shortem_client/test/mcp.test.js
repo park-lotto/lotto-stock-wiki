@@ -16,7 +16,7 @@ test.after(async () => { await client.close(); await fake.close(); });
 
 test('도구 9개 · 고정 설명 · annotations · 셸 실행 도구 없음', async () => {
   const { tools } = await client.listTools();
-  assert.deepEqual(tools.map(t => t.name).sort(), ['shortem_ai', 'shortem_feedback', 'shortem_job', 'shortem_login', 'shortem_make', 'shortem_presets', 'shortem_profile', 'shortem_settings', 'shortem_setup']);
+  assert.deepEqual(tools.map(t => t.name).sort(), ['shortem_ai', 'shortem_feedback', 'shortem_inbox', 'shortem_job', 'shortem_login', 'shortem_make', 'shortem_presets', 'shortem_profile', 'shortem_settings', 'shortem_setup']);   // shortem_inbox = 웹 지시함(관제 266)
   const by = Object.fromEntries(tools.map(t => [t.name, t]));
   assert.equal(by.shortem_presets.annotations.readOnlyHint, true);
   assert.equal(by.shortem_profile.annotations.readOnlyHint, true);
@@ -37,6 +37,8 @@ test('setup: 라이선스 확인·기기 등록, 키 값은 응답에 없음', a
   assert.equal(p.structuredContent.info.profiles.length, 3);
   const bad = await client.callTool({ name: 'shortem_make', arguments: { step: 'rm -rf' } });
   assert.equal(bad.isError, true);
+  const nm = await client.callTool({ name: 'shortem_make', arguments: { step: 'start', preset_name: '없는프리셋형', video: 'https://youtu.be/x' } });
+  assert.ok(nm.structuredContent.hints.some(h => /찾지 못했습니다/.test(h)), JSON.stringify(nm.structuredContent));
   const fb = await client.callTool({ name: 'shortem_feedback', arguments: { kind: 'bug', text: '시험' } });
   assert.equal(fb.structuredContent.info.sent, true);
 });

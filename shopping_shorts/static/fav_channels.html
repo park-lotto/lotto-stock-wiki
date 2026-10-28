@@ -44,6 +44,19 @@
     font-family:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .btns a.view{border-color:var(--accent);color:var(--sel-fg)}
   .btns button.del:hover{border-color:var(--fire);color:var(--fire)}
+  /* 분류 탭(관제 261) — 서버가 cats 를 줄 때만(지금은 관리자만) 보인다 */
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px}
+  .tabs button{border:1px solid var(--line);background:var(--inset);color:var(--txt);border-radius:20px;
+    padding:8px 13px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap}
+  .tabs button b{font-weight:500;color:var(--sub);margin-left:3px}
+  .tabs button.on{background:var(--accent2);border-color:var(--accent2);color:#fff}
+  .tabs button.on b{color:#fff}
+  .tabs button.add{border-style:dashed;color:var(--sel-fg)}
+  .catsel{width:100%;margin-top:4px;background:var(--inset);color:var(--txt);border:1px solid var(--line);
+    border-radius:7px;padding:7px 6px;font-size:12.5px;font-family:inherit}
+  .catsel.etc{border-color:var(--gold);color:var(--gold)}
+  @media (max-width:600px){ .main{padding:16px} .cards{grid-template-columns:1fr 1fr;gap:10px}
+    .thumb{min-height:150px} .thumb img{height:150px} .addbar input{min-width:0} }
   .empty{color:var(--sub);text-align:center;padding:60px 20px;grid-column:1/-1;line-height:1.9}
 </style>
 </head>
@@ -63,12 +76,16 @@
     <button onclick="addChannel()">담기</button>
     <span id="addMsg"></span>
   </div>
+  <div class="tabs" id="tabs" style="display:none"></div>
   <div class="cards" id="cards"></div>
 </main>
 <script>
 function esc(s){ return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
 const PLAT_LABEL={instagram:"인스타",tiktok:"틱톡",youtube:"유튜브",threads:"쓰레드",xiaohongshu:"샤오홍슈",douyin:"도우인"};
-let ITEMS=[], CAP=50;
+let ITEMS=[], CAP=50;   // 0 = 한도 없음
+// 분류(관제 261): CATS 가 null 이면 분류를 안 쓰는 사람(회원) — 화면이 종전 그대로다.
+let CATS=null, ETC='기타', TAB='';
+try{ TAB=localStorage.getItem('favChTab')||''; }catch(e){}
 
 // ★열 때 1회만 갱신한다(사장님 확정 2026-09-02). 목록은 먼저 그리고, 갱신 결과가
 //   오면 다시 그린다 — 갱신을 기다리느라 빈 화면을 보여주지 않는다.
@@ -77,7 +94,8 @@ async function load(){
   try{
     const d=await (await fetch('/api/fav_channel/list')).json();
     ITEMS=(d.items||[]).slice().reverse();   // 최근에 담은 게 맨 위
-    if(d.cap) CAP=d.cap;
+    if(d.cap!=null) CAP=d.cap;
+    if(d.cats){ CATS=d.cats_fixed||d.cats; ETC=d.etc||'기타'; }
   }catch(e){ ITEMS=[]; }
   render();
   try{
@@ -92,13 +110,16 @@ function fmtFollowers(n){
 }
 function render(){
   const wrap=document.getElementById('cards');
-  document.getElementById('capMsg').textContent=ITEMS.length+' / '+CAP+'개';
+  document.getElementById('capMsg').textContent=CAP?(ITEMS.length+' / '+CAP+'개'):(ITEMS.length+'개');   // 0 = 한도 없음(관리자)
   if(!ITEMS.length){
     wrap.innerHTML='<div class="empty">아직 담은 채널이 없습니다.<br>'+
       '위에 채널 주소를 붙여넣거나, 인스타·틱톡·유튜브 화면의 <b>⭐ 나만의 채널등록</b> 버튼을 눌러보세요.</div>';
     return;
   }
-  wrap.innerHTML=ITEMS.map(card).join('');
+  drawTabs();
+  const shown=(CATS&&TAB)?ITEMS.filter(function(it){ return (it.category||ETC)===TAB; }):ITEMS;
+  if(!shown.length){ wrap.innerHTML='<div class="empty">'+esc(TAB)+' 분류에 담긴 채널이 없습니다.</div>'; return; }
+  wrap.innerHTML=shown.map(card).join('');
   // 만료된 썸네일(인스타 CDN은 며칠이면 403)을 검은 칸으로 두지 않는다 —
   // onerror 속성 대신 여기서 걸어 따옴표 중첩(HTML 문자열 안의 JS) 함정을 피한다.
   wrap.querySelectorAll('img[data-thumb]').forEach(function(img){
@@ -127,6 +148,7 @@ function card(it){
       '<div class="nm">'+esc(it.name||it.channel_id||'')+'</div>'+
       '<div class="id">@'+esc(it.channel_id||'')+'</div>'+
       (it.followers?'<div class="fol">'+esc(fmtFollowers(it.followers))+'</div>':'')+
+      catSel(it)+
       '<div class="btns">'+
         // [채널이동] = 그 채널 홈으로. 주소는 서버가 정해 내려준다(home_url) —
         // 저장된 url은 '담을 때 보던 화면'이라 영상 페이지일 수 있다.
@@ -136,6 +158,61 @@ function card(it){
           'onclick="removeChannel(this)">빼기</button>'+
       '</div>'+
     '</div></div>';
+}
+// ── 분류(관제 261) ───────────────────────────────────────────
+function drawTabs(){
+  const box=document.getElementById('tabs');
+  if(!CATS){ box.style.display='none'; return; }
+  const names=CATS.concat([ETC]);
+  if(TAB && names.indexOf(TAB)<0) TAB='';
+  const cnt={}; ITEMS.forEach(function(it){ const c=it.category||ETC; cnt[c]=(cnt[c]||0)+1; });
+  box.style.display='flex';
+  box.innerHTML=[['',`전체`,ITEMS.length]].concat(names.map(function(n){ return [n,n,cnt[n]||0]; }))
+    .map(function(t){ return '<button class="'+(t[0]===TAB?'on':'')+'" data-tab="'+esc(t[0])+'">'+esc(t[1])+'<b>'+t[2]+'</b></button>'; })
+    .join('')+'<button class="add" data-add="1">＋ 분류 추가</button>';
+  box.querySelectorAll('button[data-tab]').forEach(function(b){
+    b.onclick=function(){ TAB=b.getAttribute('data-tab'); try{localStorage.setItem('favChTab',TAB);}catch(e){} render(); };
+  });
+  box.querySelector('button[data-add]').onclick=addCat;
+}
+function catSel(it){
+  if(!CATS) return '';
+  const cur=it.category||ETC;
+  return '<select class="catsel'+(cur===ETC?' etc':'')+'" data-plat="'+esc(it.platform||'')+'" data-cid="'+esc(it.channel_id||'')+'" onchange="moveCat(this)">'+
+    CATS.concat([ETC]).map(function(n){ return '<option'+(n===cur?' selected':'')+' value="'+esc(n)+'">'+
+      (n===cur?(cur===ETC?'기타 — 분류로 옮기기':'분류: '+esc(n)):esc(n))+'</option>'; }).join('')+
+    '</select>';
+}
+async function moveCat(sel){
+  sel.disabled=true;
+  try{
+    const d=await (await fetch('/api/fav_channel/set_cat',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({platform:sel.getAttribute('data-plat'),channel_id:sel.getAttribute('data-cid'),category:sel.value})})).json();
+    if(d.ok){
+      CATS=d.cats_fixed||d.cats;
+      ITEMS.forEach(function(it){ if(it.platform===d.platform&&it.channel_id===d.channel_id) it.category=d.category; });
+    } else document.getElementById('addMsg').textContent='⚠ '+(d.error||'옮기지 못했어요');
+  }catch(e){}
+  render();
+}
+async function addCat(){
+  // 이름 칸을 탭 줄 끝에 붙여 받는다(브라우저 prompt 창을 쓰지 않는다)
+  const box=document.getElementById('tabs');
+  if(box.querySelector('input')) return box.querySelector('input').focus();
+  const inp=document.createElement('input');
+  inp.maxLength=20; inp.placeholder='새 분류 이름 → Enter';
+  inp.style.cssText='border:1px dashed var(--accent);background:var(--inset);color:var(--txt);border-radius:20px;padding:8px 13px;font-size:13px;font-family:inherit;width:170px';
+  inp.onkeydown=async function(e){
+    if(e.key!=='Enter') return;
+    const v=(inp.value||'').trim(); if(!v) return;
+    try{
+      const d=await (await fetch('/api/fav_channel/cats/add',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name:v})})).json();
+      if(d.ok){ CATS=d.cats_fixed||d.cats; TAB=d.name; try{localStorage.setItem('favChTab',TAB);}catch(e){} }
+    }catch(e){}
+    render();
+  };
+  box.appendChild(inp); inp.focus();
 }
 async function addChannel(){
   const box=document.getElementById('addUrl'), msg=document.getElementById('addMsg');

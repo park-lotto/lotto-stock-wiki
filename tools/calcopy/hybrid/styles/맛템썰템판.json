@@ -1,0 +1,732 @@
+{
+ "name": "맛템썰템판",
+ "renderer": "bench",
+ "thumb_card_face": false,
+ "_thumb_card_face": "연예인 채널 아님 — 카드 얼굴 관문 끔(판마다 명시 필수, styles.REQUIRED)",
+ "_note": "맛있는 친구들(@yummyknow-x1x) 칼카피 1차 판 — 쇼핑형>썰커뮤니티형(흰 게시글 틀, frame.kind post). 근거 channel/yummyknow/{스타일분석.md, 줄판독/ 6편 200줄, _kal/규칙빈도.json}. 손 스크립트 make_맛템썰템.py(10-17 외관 E 에스프레소·크림골드 — 사장님 고른 우리 겉모양)·rerender_*.py 는 업그레이드 재료(_pending.upgrade_from_hand_scripts) — 1차 = 벤치 100%",
+ "bench": {
+  "ko": "맛있는 친구들",
+  "channel": "yummyknow",
+  "analysis": "channel/yummyknow/스타일분석.md",
+  "line_reads": "channel/yummyknow/줄판독",
+  "src_dir": "C:/숏템_칼카피/yummyknow/mp4",
+  "sfx_events": "channel/yummyknow/_kal/sfx_events.json",
+  "palette": "channel/yummyknow/팔레트.json"
+ },
+ "voice": {
+  "name": "유라",
+  "voice_id": "tc_61130d6cf89dd58a4c13295d",
+  "candidates": [
+   "kr-mina-expressive"
+  ],
+  "why": "벤치 나레 여성(f0 중앙 178~185Hz, 스타일분석 §7) · 유라 = preset/게시글형/defaults.json(새소재 1·2호) · 배속은 cps_target 으로(상한 1.25 — defaults 의 1.36 은 상한 넘음)"
+ },
+ "cps_target": 8.5,
+ "_why_cps_target": "벤치 6편 나레 자/초 8.16~8.73(중앙 8.53, 규칙빈도.json episodes.narr_cps)",
+ "bgm": {
+  "id": "qiuqiu",
+  "db_below_voice": 16.0,
+  "duck_orig_db": 0.0,
+  "duck_narr_db": 0.0,
+  "fade_out": 0.0,
+  "candidates": [],
+  "why": "BGM 있음(신호): 말 쉼 바닥 −23~−34dB·p5 −34~−37dB → 목소리보다 15~17dB 낮음 → 16 · 시작 0.05초·끝 페이드 0/6 → fade_out 0 · 곡 미측정 → qiuqiu(defaults.json, audio.json 비율 0.12) · 원음 0 → duck_orig 0 · 나레 덕킹 근거 없음 0"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 통일(사장님 10-18) · 벤치 −16.1~−16.5(스타일분석 §7, 비교 안 함)"
+ },
+ "length": {
+  "min": 32.7,
+  "max": 42.3,
+  "why": "벤치 6편 32.67~42.27초(규칙빈도.json episodes.dur)"
+ },
+ "timing": {
+  "gap": 0.02,
+  "tail": 0.14,
+  "why": "벤치 6편 원본 소리 실측(handconst.py yummyknow → _kal/손상수_실측.json): gap 0.02 = 줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙(n=10, p25 0·p75 0.06 — 경계 ±0.15초 창 안 가장 긴 쉼, 쉼 문턱 = 편별 (말 p50+p5)/2 · 문장 경계 표본 10개라 약함) · tail 0.14 = 마지막 말 소리 끝→영상 끝 편 중앙 0.137초(0.107·0.113·0.16·0.307·0.107·0.373 — 로컬 위스퍼 마지막 낱말 끝 p≥0.4) · 끝 페이드 0(마지막 1초 ≈ 앞 2초)"
+ },
+ "frame": {
+  "kind": "post",
+  "_from": "frame_import.py ← calcopy_frame v1 source=rGFXQlS9Cp4 frame=body span=$per_video",
+  "bg": [
+   255,
+   255,
+   255
+  ],
+  "window": [
+   0,
+   745,
+   1080,
+   965
+  ],
+  "title": [
+   {
+    "font": "BMDOHYEON.ttf",
+    "px": 78.8,
+    "center": 450.5,
+    "color": "#000000",
+    "max_w": 960,
+    "align": "left",
+    "x": 89
+   }
+  ],
+  "post": {
+   "head_bar": {
+    "box": [
+     0,
+     0,
+     1080,
+     236
+    ],
+    "color": "#E3EFD3",
+    "icons": [
+     {
+      "font": "BMDOHYEON.ttf",
+      "px": 125,
+      "color": "#000000",
+      "x": 77,
+      "cy": 124.5,
+      "max_w": 960,
+      "text": "맛템썰템",
+      "kind": "text",
+      "from": "brand"
+     }
+    ]
+   },
+   "author_line": {
+    "font": "Pretendard-Regular.otf",
+    "px": 24.2,
+    "color": "#8C8C8C",
+    "x": 256,
+    "cy": 376,
+    "max_w": 400,
+    "text": "오늘 | 댓글"
+   },
+   "rules": [
+    {
+     "box": [
+      0,
+      515,
+      1080,
+      517
+     ],
+     "color": "#000000"
+    }
+   ],
+   "body_box": {
+    "box": [
+     85,
+     265,
+     225,
+     393
+    ],
+    "color": "#E3EFD5",
+    "text": {
+     "font": "NotoSansKR-Bold.otf",
+     "px": 76.2,
+     "color": "#000000",
+     "cx": 155,
+     "cy": 324,
+     "text": "味"
+    }
+   },
+   "views_line": {
+    "font": "BMDOHYEON.ttf",
+    "px": 66.2,
+    "color": "#000000",
+    "x": 254,
+    "cy": 316,
+    "text": "맛템썰템"
+   }
+  },
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "why": "frame_import.py ← channel/yummyknow/preset/게시글형/frame.json(body, rGFX 측정) + 벤치 6편 픽셀(스타일분석 §2 틀 B): 머리띠 y0~236 연두 #E3EFD3 5/6 · 머리 글 잉크 y75~174(가운데 124.5) — 우리 브랜드 '맛템썰템'(브랜드.json) · 게시자 줄 y≈286~360 연한 상자 '味'+'미식' 굵게+회색 작은 글('???? | 11:11 | 댓글 9999' — 가짜 시각·숫자는 뺌, 사장님 10-24) · 글 제목 잉크 y≈417~484(가운데 450.5) · 구분선 y515 1px 검정 · 흰 바탕 · 그림 칸 = 자막 바로 아래 y≈745~(아래 끝 1160~1710, 폭 컷마다 다름) → 창 [0,745,1080,965] 고정(컷마다 크기 = _pending) · 글 제목 왼쪽 정렬 x≈80(스타일분석 §2 틀 B) · 제목 왼쪽 x 80→89(g7cx 9초 잉크 왼쪽 89)",
+  "_pending": {
+   "post_slots": "게시자 줄 글 칸이 author_line 하나뿐 → '味' 상자는 body_box(상자+글)·'미식' 이름은 views_line 칸을 빌려 그림(뜻 이름과 다름 — 02 에 post.profile{box,glyph,name,meta} 칸 요청)",
+   "head_icons": "머리 '≫' 화살표·포크/접시 아이콘(그림) — BMDOHYEON 에 '»'·🍽 글리프 없음(두부 □ 로 그려짐, 실측) → 글만, 아이콘은 02 쪽지(head_bar icons image) — 02 2차 head_bar image 칸은 생겼으나 '≫'·포크/접시 그림 파일이 저장소에 없음(벤치 크롭 금지 — 새로 그려야 함)"
+  },
+  "segments": [
+   {
+    "t0": 0,
+    "t1": "#1.end",
+    "frame": {
+     "kind": "post",
+     "bg": [
+      56,
+      58,
+      51
+     ],
+     "window": [
+      0,
+      690,
+      1080,
+      1008
+     ],
+     "title": [
+      {
+       "font": "Pretendard-ExtraBold.otf",
+       "px": 153,
+       "center": 311.5,
+       "color": "#FFFFFF",
+       "max_w": 1000,
+       "shadow": {
+        "dx": 4,
+        "dy": 4,
+        "color": "#000000"
+       }
+      },
+      {
+       "font": "Pretendard-ExtraBold.otf",
+       "px": 153,
+       "center": 461,
+       "color": "#8EF885",
+       "max_w": 1000,
+       "shadow": {
+        "dx": 4,
+        "dy": 4,
+        "color": "#000000"
+       }
+      }
+     ],
+     "post": {
+      "rules": [],
+      "body_box": {
+       "box": [
+        0,
+        568,
+        1080,
+        684
+       ],
+       "color": "#EBEBEB",
+       "text": {
+        "font": "Pretendard-Bold.otf",
+        "px": 73.3,
+        "color": "#000000",
+        "cx": 540,
+        "cy": 623,
+        "max_w": 960,
+        "text": ""
+       }
+      },
+      "head_bar": {
+       "box": [
+        0,
+        0,
+        1080,
+        236
+       ],
+       "color": "#383A33",
+       "icons": []
+      }
+     },
+     "logo": null,
+     "credit": null,
+     "watermark": null
+    },
+    "captions": "hide",
+    "body_text": "lines",
+    "why": "표지 카드 6/6편 0~1.33~1.63초(중앙 1.52) = 첫 나레 문장(표지 제목 그대로 읽음) → 게시글 틀(스타일분석 §2 틀 A) · 바탕 #383A33 · 큰 제목 2줄 흰/초록 #8EF885 4/6(frame.json hook Pretendard-ExtraBold 145.1+그림자 4) · 회색 띠 y572~679(frame.json 568~684 #EBEBEB) 검은 글자 제목 반복 = body_text · 머리띠 = 바탕과 같은 #383A33(표지 카드는 머리띠 자리 같은 색, '≫'·포크 아이콘만 — 그림 파일 없음 _pending) · 제목 px 145.1→153·가운데 311.5/461(g7cx 0.5초 1줄 잉크 244~379 대조)"
+   }
+  ]
+ },
+ "caption": {
+  "pack": "yummyknow",
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 8.5,
+  "chunk_max_chars": 10,
+  "band": [
+   570,
+   813
+  ],
+  "why": "검정 #000000 195/195 · 외곽·그림자·강조 0 · BMDOHYEON 68px(PIL 대조 0.684) · 1줄 잉크 y570 고정·줄 피치 93(3줄 ≈762~813) · 조각 자수 중앙 9~10(6편) → chunk_max_chars 10 · 등장 instant 107·append 88(전부 1프레임) · typing 0(typing_cps 안 쓰임)",
+  "stack": {
+   "lines": 3,
+   "break": "line",
+   "y": 605,
+   "pitch": 89,
+   "why": "문장 누적 1~3줄: 문장 107개 중 1줄 27·2줄 72·3줄 8 → lines 3 · 다음 문장에서 통째 교체 → break line(스타일분석 §1) · 벤치 1줄째 잉크 y570~623·줄 피치 93 — 새 팩 yummyknow(1a6bb76d7) 렌더 피치 89·첫 줄 가운데 605(팩요청.md 해결)"
+  }
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "cut": 1.0
+   },
+   "ms": 0,
+   "why": "전환 cut 99·none 93·디졸브 1·흑백 2(부정 문맥)·흰 페이드 1 — 줌블러·흰 번쩍·검은 0(스타일분석 §3). 1차 = cut(디졸브·흑백은 표본 1~3, 렌더러 종류 없음 → _pending)"
+  },
+  "why": "push 0: motion still 139·cam 40·zoom_in 15(사진 서서히 확대 1.08~1.11/샷 — 세기는 있으나 '사진 컷만' 조건 칸 없음 → _pending)"
+ },
+ "sfx_files": {
+  "gain_db": -8,
+  "why": "효과음 0(sfx_events 강한 후보 33 중 규칙 근거 없음, 스타일분석 §7) — gain 은 꼴 유지용 손 상수"
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "narr.first": "cut",
+    "narr.rest": "cut",
+    "why": "등장·퇴장 전부 1프레임 195/195(instant 107·append 88 — 렌더에선 cut)"
+   },
+   "transition": {
+    "kinds": [],
+    "why": "그릴 전환 0(줌블러·흰·검정 0/195)"
+   },
+   "meme": {
+    "rate": 0.0,
+    "why": "얹는 짤 0 — 짤은 그림 칸 재료 자체(10줄)"
+   },
+   "sfx": {
+    "max": 0,
+    "why": "효과음 0 — sfx_events 강한 후보 33 중 자막·컷 규칙 근거 없음(적중 0.27 vs 우연 0.14~0.26)·줄판독 sfx 0/6편(스타일분석 §7)"
+   }
+  },
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/yummyknow/줄판독",
+   "n_videos": 6,
+   "slots": {
+    "narr.first": {
+     "n": 6,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.0
+    },
+    "narr.rest": {
+     "n": 189,
+     "enter": {
+      "cut": 0.534,
+      "append": 0.466
+     },
+     "emph": 0.0
+    }
+   },
+   "share": {
+    "emph": 0.0,
+    "typing": 0.0,
+    "sfx": 0.333
+   },
+   "stickers": {
+    "yellow_label": 0.667
+   },
+   "transition": {
+    "cut": 0.984,
+    "other": 0.016
+   },
+   "sfx_kinds": {},
+   "videos": [
+    {
+     "id": "76uZKOpnlqQ",
+     "n": 38,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 37,
+       "enter": {
+        "cut": 19,
+        "append": 18
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "yellow_label": 2
+     },
+     "sticker_lex": {
+      "yellow_label": {
+       "none": 2
+      }
+     },
+     "variants": {
+      "훅 표지 카드(틀 A: 회색 띠 검은 글자 — 제목 반복)": 1,
+      "인용(큰따옴표, 같은 검은 글자)": 2
+     },
+     "sfx": [
+      "none",
+      "none"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 37
+     },
+     "n_trans": 37,
+     "roles": {
+      "hook": 1,
+      "body": 21,
+      "twist": 8,
+      "reveal": 5,
+      "end": 3
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "8f9T8Jeo-gQ",
+     "n": 32,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 31,
+       "enter": {
+        "cut": 16,
+        "append": 15
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "yellow_label": 1
+     },
+     "sticker_lex": {
+      "yellow_label": {
+       "price": 1
+      }
+     },
+     "variants": {
+      "훅 표지 카드(틀 A: 회색 띠 검은 글자 — 제목 반복)": 1,
+      "인용(큰따옴표, 같은 검은 글자)": 2
+     },
+     "sfx": [],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 30,
+      "other": 1
+     },
+     "n_trans": 31,
+     "roles": {
+      "hook": 1,
+      "body": 21,
+      "twist": 4,
+      "reveal": 4,
+      "end": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "g7cxCPWMI5M",
+     "n": 31,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 30,
+       "enter": {
+        "cut": 16,
+        "append": 14
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "yellow_label": 1
+     },
+     "sticker_lex": {
+      "yellow_label": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "훅 표지 카드(틀 A: 회색 띠 검은 글자 — 제목 반복)": 1,
+      "인용(큰따옴표, 같은 검은 글자)": 2
+     },
+     "sfx": [
+      "none",
+      "none"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 30
+     },
+     "n_trans": 30,
+     "roles": {
+      "hook": 1,
+      "body": 19,
+      "twist": 3,
+      "reveal": 6,
+      "end": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "gBVXQdbzwJU",
+     "n": 33,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 32,
+       "enter": {
+        "cut": 17,
+        "append": 15
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "yellow_label": 2
+     },
+     "sticker_lex": {
+      "yellow_label": {
+       "none": 2
+      }
+     },
+     "variants": {
+      "훅 표지 카드(틀 A: 회색 띠 검은 글자 — 제목 반복)": 1,
+      "인용(큰따옴표, 같은 검은 글자)": 6
+     },
+     "sfx": [],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 32
+     },
+     "n_trans": 32,
+     "roles": {
+      "hook": 1,
+      "reveal": 2,
+      "body": 26,
+      "twist": 2,
+      "end": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "PFvCfu1ECK4",
+     "n": 30,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 29,
+       "enter": {
+        "cut": 16,
+        "append": 13
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "훅 표지 카드(틀 A: 회색 띠 검은 글자 — 제목 반복)": 1,
+      "인용(큰따옴표, 같은 검은 글자)": 3
+     },
+     "sfx": [],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 29
+     },
+     "n_trans": 29,
+     "roles": {
+      "hook": 1,
+      "body": 18,
+      "twist": 5,
+      "reveal": 4,
+      "end": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "rGFXQlS9Cp4",
+     "n": 31,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 30,
+       "enter": {
+        "cut": 17,
+        "append": 13
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "훅 표지 카드(틀 A: 회색 띠 검은 글자 — 제목 반복)": 1,
+      "인용(큰따옴표, 같은 검은 글자)": 2
+     },
+     "sfx": [],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 28,
+      "other": 2
+     },
+     "n_trans": 30,
+     "roles": {
+      "hook": 1,
+      "body": 18,
+      "twist": 5,
+      "reveal": 5,
+      "end": 2
+     },
+     "sfx_lines": []
+    }
+   ]
+  }
+ },
+ "title_form": "글 제목 1줄 = 표지 제목 문장 그대로('영업기밀 유출된 치즈스틱') · 표지 카드 2줄(흰/초록)은 _pending.hook_card",
+ "_pending": {
+  "blank_cells": "그림 없는 빈 칸 17/195줄(5/6편, 이음·질문 줄 0.5~1.5초) — 재료.json 에 빈 컷 꼴 없음 → 02·08",
+  "photo_zoom": "사진 컷만 서서히 확대(zoom_in 15/195, 아핀 1.08~1.11/샷) — push 는 화자 단위라 재료 종류 조건 없음 → 02",
+  "neg_fx": "부정 문맥 흑백 2·흰 페이드 1·디졸브 1 — 표본 1~3(약) · 렌더러 종류 없음",
+  "yellow_label": "노랑 글자 라벨(가격·출처·예시) 6/195·4/6편 — 스티커 kind 없음 → 03(placement)·02",
+  "upgrade_from_hand_scripts": "make_맛템썰템.py: 에스프레소 #2C1E18·페이지 #F7F3EE·크림 카드·크림골드 네온·둥근 R28·'맛템썰템 · N만 읽음' 조회수 줄 · rerender_맛템썰템.py: 자막 accumulate · defaults 유라 tempo 1.36(상한 초과) → 업그레이드 판 재료",
+  "pic_box_per_cut": "그림 칸 컷마다 크기 = 재료.json 컷 pic·pic_bg 칸(02 2차) — 판 칸 아님, 재료 만들기(08) 몫. 판 window 는 최대 칸",
+  "transition": "디졸브 1·흑백 2·흰 페이드 1(other 0.016) — 렌더러 종류 없음(cut·flash·zoomblur·black 만)"
+ },
+ "script": {
+  "brief": [
+   "박자(6/6): 첫 문장 = 표지 제목 그대로 → 배경('사실 ~는/최근 ~는') → 반전 '하지만 문제는'(길이 20~35%) → 공개 '알고 보니/사실 이는/그건 바로' → 증거(가격·리뷰·인용) → 2차 반전(72~83%) 4/6 → 끝 '~다고 함/~거ㅋㅋ'. CTA 0.",
+   "반말 썰체(음슴체), 존댓말 0. 문장 끝 '는데'13·'지만'7·'다고 함'7·'거/것'8·'음'3. 연결어 하지만 8·사실 3. 문장 = 1~3줄(2줄 72/107), 조각 9자 안팎(최대 16).",
+   "인용 줄은 큰따옴표 그대로 1~2줄, '라며/라는/라고'로 받는다. 금액은 우리 금지선(_common forbid)이 이긴다."
+  ],
+  "audit": [
+   {
+    "id": "first_line",
+    "kind": "first_line",
+    "is": "tts",
+    "why": "나레 100%(원음 0/195)"
+   },
+   {
+    "id": "count_orig",
+    "kind": "count",
+    "of": "orig",
+    "min": 0,
+    "max": 0,
+    "why": "원음 0/195"
+   },
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 32.7,
+    "max": 42.3,
+    "why": "벤치 6편 길이"
+   }
+  ]
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "yummyknow",
+   "gap": [
+    "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 clean same=False) → 팩요청.md 맛템썰템판#1(관제 235) · 그동안 'clean' 임시(stand_in)"
+   ],
+   "rank": [
+    {
+     "pack": "clean",
+     "d": 1.855,
+     "terms": {
+      "px": 3.91,
+      "fill": 1.01,
+      "y": 1.0,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "soft",
+     "d": 3.015,
+     "terms": {
+      "px": 4.9,
+      "fill": 4.66,
+      "y": 1.0,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "premium",
+     "d": 6.515,
+     "terms": {
+      "px": 4.54,
+      "fill": 19.02,
+      "y": 1.0,
+      "font": 1.5
+     }
+    }
+   ],
+   "from": "벤치 6편 200줄 실측 [글꼴 BMDOHYEON(스타일분석 §1) · 나레 195줄[잉크 높이 53px(195줄 y칸) · 자리 y606 · 채움 #000000(195줄)]] → 1위 clean(거리 1.855) · 지금 clean(거리 1.855, 순위 1)",
+   "stand_in": true,
+   "enter_cover": {
+    "cut": {
+     "share": 0.56,
+     "n": 112,
+     "item": "정지(팩 불필요)"
+    },
+    "append": {
+     "share": 0.44,
+     "n": 88,
+     "item": "정지(팩 불필요)"
+    }
+   }
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — render_bench 옛 고정값 그대로(벤치 등장 = 판 caption.pack_default·placement.rules.enter 가 정함) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": null,
+   "map": {},
+   "gain_db": -8,
+   "why": "효과음 0(sfx_events 강한 후보 33 중 규칙 근거 없음, 스타일분석 §7) — gain 은 꼴 유지용 손 상수",
+   "ncc": {
+    "measured": false
+   },
+   "from": "NCC 미측정(_kal/sfx_ncc.json 없음) → 지문으로 고를 수 없어 종류 이름표로 slot: 없음 · 팩 없음(종류 미측정)",
+   "gap": []
+  },
+  "bgm": {
+   "id": "qiuqiu",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)",
+   "candidates": []
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 칼카피 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
+  }
+ }
+}

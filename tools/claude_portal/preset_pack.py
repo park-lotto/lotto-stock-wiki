@@ -41,7 +41,28 @@ def files_for(engine: Path, preset: str) -> list[str]:
         t = s.get("tteutgi") if isinstance(s, dict) else None
         if t and (engine / t).is_file():
             out.append(Path(t).as_posix())
-    return [x for x in dict.fromkeys(out) if (engine / x).is_file()]
+    return [x for x in dict.fromkeys(out + tech_files(engine, preset)) if (engine / x).is_file()]
+
+
+def tech_files(engine: Path, preset: str) -> list[str]:
+    """하이브리드 프리셋(line.json hybrid)이 렌더 단계에 빌리는 것 — **판 설정과 벤치 자료만**(관제 234 10-21 볼케이노형).
+    코드(실행기·렌더러)는 설치본(engine_bundle.HAND), 노하우(지시서·브리프·제작순서 문서)는 서버 hybrid/flow.py 한 곳 — 꾸러미에 넣지 않는다."""
+    lp = engine / preset / "line.json"
+    if not lp.is_file():
+        return []
+    line = json.loads(lp.read_text(encoding="utf-8"))
+    if line.get("line") != "hybrid":
+        return []
+    v = line["version"]
+    h = "tools/calcopy/hybrid"
+    out = [f"{preset}/line.json", f"{h}/styles/_common.json", f"{h}/styles/{v}.json"]
+    st = json.loads((engine / h / "styles" / f"{v}.json").read_text(encoding="utf-8"))
+    b = st.get("bench") or {}
+    if b.get("line_reads"):
+        out += [p.relative_to(engine).as_posix() for p in sorted((engine / b["line_reads"]).glob("*.json"))]
+    if b.get("sfx_events"):
+        out.append(b["sfx_events"])
+    return out
 
 
 def pack_name(preset: str) -> str:

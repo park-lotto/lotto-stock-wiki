@@ -2,6 +2,7 @@
 //   빈 폴더 = 고객 PC(LOCALAPPDATA·USERPROFILE 을 그 안으로) → 연결 파일(installer/mcpb/launcher.js)만 띄워
 //   shortem_setup {install:true, license_key} → 진행률을 부르며 기다림 → 다시 띄웠을 때 진짜 숏템 서버 도구가 뜨는가.
 //   실행: node test/noexe_install_check.js --zip <dist>/shortem-win-x64-<판>.zip [--sha <sha256>] [--dir <없는 폴더>]
+//         node test/noexe_install_check.js --live --key-file <키 파일> [--dir <없는 폴더>]   ← 라이브 서버에서 진짜로 받기(키는 환경변수로만, 출력 안 함)
 //   출력: JSON 한 줄(ok·걸린 초·도구 이름·설치 폴더 크기). 하나라도 어긋나면 rc=1.
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -14,22 +15,26 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const LAUNCHER = path.resolve(HERE, '..', '..', 'installer', 'mcpb', 'launcher.js');
 const arg = (n, d) => { const i = process.argv.indexOf(n); return i >= 0 ? process.argv[i + 1] : d; };
 
+const LIVE = process.argv.includes('--live');
 const zip = arg('--zip');
-if (!zip || !fs.existsSync(zip)) { console.error('--zip <설치 묶음> 이 필요합니다'); process.exit(2); }
+if (!LIVE && (!zip || !fs.existsSync(zip))) { console.error('--zip <설치 묶음> 또는 --live --key-file 이 필요합니다'); process.exit(2); }
 const dir = path.resolve(arg('--dir', path.join(os.tmpdir(), 'shortem_noexe_' + Date.now())));
 if (fs.existsSync(dir)) { console.error('없는 폴더를 주세요: ' + dir); process.exit(2); }
 fs.mkdirSync(path.join(dir, 'Desktop'), { recursive: true });
 
 let sha = arg('--sha');
-if (!sha) {
+if (!sha && !LIVE) {
   const h = (await import('node:crypto')).createHash('sha256');
   for await (const c of fs.createReadStream(zip)) h.update(c);
   sha = h.digest('hex');
 }
-const srv = await startFakeServer({ install: { file: zip, size: fs.statSync(zip).size, sha256: sha, version: '1.0.0' } });
-const key = makeKey(12, Math.floor(Date.now() / 1000) + 86400, 1);
+const srv = LIVE ? null : await startFakeServer({ install: { file: zip, size: fs.statSync(zip).size, sha256: sha, version: '1.0.0' } });
+const key = LIVE ? fs.readFileSync(arg('--key-file'), 'utf8').trim() : makeKey(12, Math.floor(Date.now() / 1000) + 86400, 1);
 const env = { ...process.env, LOCALAPPDATA: path.join(dir, 'AppData', 'Local'), USERPROFILE: dir, HOME: dir,
-  SHORTEM_HOME: path.join(dir, '.shortem'), SHORTEM_BASE: srv.url, SHORTEM_INSTALL: '', SHORTEM_LICENSE: '' };
+  SHORTEM_HOME: path.join(dir, '.shortem'), SHORTEM_INSTALL: '',
+  // 라이브 = Claude 데스크탑처럼 키를 설정(환경변수)으로 / 시험 서버 = Claude Code 처럼 도구 인자로
+  ...(LIVE ? { SHORTEM_LICENSE: key } : { SHORTEM_BASE: srv.url, SHORTEM_LICENSE: '' }) };
+if (LIVE) delete env.SHORTEM_BASE;
 
 // 연결 파일 하나를 띄워 줄 단위 JSON-RPC 로 묻는다
 function mcp() {
@@ -59,14 +64,14 @@ await a.ask('initialize', { protocolVersion: '2025-06-18', capabilities: {}, cli
 const first = await a.ask('tools/list');
 out.before_tools = first.result.tools.map((t) => t.name);
 const call = (args) => a.ask('tools/call', { name: 'shortem_setup', arguments: args }).then((m) => m.result.structuredContent || {});
-let st = await call({ install: true, license_key: key });
+let st = await call(LIVE ? { install: true } : { install: true, license_key: key });
 out.start = st.text;
 const seen = new Set();
 while (!['done', 'failed'].includes(st.phase)) {
   await new Promise((r) => setTimeout(r, 3000));
   st = await call({});
   seen.add(st.phase);
-  if (Date.now() - t0 > 40 * 60 * 1000) { st = { phase: 'failed', text: '40분 넘음' }; break; }
+  if (Date.now() - t0 > 60 * 60 * 1000) { st = { phase: 'failed', text: '40분 넘음' }; break; }
 }
 out.phases = [...seen];
 out.end = st.text;
@@ -87,8 +92,8 @@ if (out.installed) {
   out.after_tools = (l.result.tools || []).map((t) => t.name);
   b.stop();
 }
-await srv.close();
-out.ok = st.phase === 'done' && out.installed && out.license_saved && out.leftover.length === 0
+if (srv) await srv.close();
+out.ok = st.phase === 'done' && out.installed && (LIVE || out.license_saved) && out.leftover.length === 0
   && (out.after_tools || []).includes('shortem_make') && (out.after_tools || []).length > 1;
 console.log(JSON.stringify(out));
 process.exit(out.ok ? 0 : 1);

@@ -64,6 +64,9 @@
     .card .body{padding:8px}
     .stat{font-size:11px}
     .btns button{font-size:10px;padding:6px 2px}
+    /* 관제 276: 2열 카드(칸 ≈170px)에 단추 2개가 나란히라 '🔗 열기+댓글채우기'가 76px에 4줄로 쪼개졌다 → 단추마다 한 줄 */
+    .card .row{flex-wrap:wrap}
+    .card .row button{flex:1 1 100%}
   }
 </style>
 </head>

@@ -249,7 +249,7 @@ def probe_versions(stage: Path, info: dict) -> dict:
     filters = run([t / info["ffmpeg"]["exe"], "-hide_banner", "-filters"]).stdout
     got["ffmpeg_ass_filter"] = " ass " in filters
     r = run([t / info["python"]["exe"], "-I", "-c",
-             "import sys,PIL,numpy,cv2,faster_whisper,yt_dlp,requests,dotenv;from google import genai;"
+             "import sys,PIL,numpy,cv2,faster_whisper,yt_dlp,requests,dotenv,playwright.sync_api;from google import genai;"
              "print(sys.version.split()[0],PIL.__version__,numpy.__version__,cv2.__version__,faster_whisper.__version__)"], cwd=t)
     got["python"] = r.stdout.strip() or r.stderr.strip()
     got["yt-dlp"] = run([t / info["yt-dlp"]["exe"], "--version"]).stdout.strip()
@@ -332,6 +332,21 @@ def build_engine(stage: Path, engine: Path, report: dict) -> None:
     bad = EB.check(dst)
     if bad:
         raise SystemExit("[build_win] 엔진 묶음 검사 빨강 — " + " / ".join(bad[:5]))
+    # 프리셋마다 기본값 표(사장님 10-20 "기본값은 모든 프리셋 원본 영상에 맞춘다") — 값을 정하는 것은 엔진 preview_request.preset_defaults 한 곳,
+    #   여기는 고객 프리셋 목록(claude_preset_names.json)마다 불러 표로 묶기만. 설정 화면·만들기가 이 표를 엔진 기본 팩 위에 얹는다(local_settings.packFor)
+    sys.path.insert(0, str(ROOT.parent / "tools" / "claude_portal"))
+    from preset_pack import pack_name
+    #   모든 프리셋(이름 붙은 5개만이 아니다 — 10-20 실측 회원 목록 18개): 엔진 channel/*/preset/* 중 틀이 있는 것 전부
+    presets = sorted(p.parent.relative_to(engine).as_posix() for p in engine.glob("channel/*/preset/**/frame.json")
+                     if (p.parent / "manifest.json").is_file())
+    code = ("import json,sys;sys.path.insert(0,'.');from tools.calcopy.preview_request import preset_defaults as D;"
+            "print(json.dumps({p: D(p) for p in json.loads(sys.argv[1])}, ensure_ascii=False))")
+    got = json.loads(subprocess.run([sys.executable, "-c", code, json.dumps(presets)], cwd=engine, capture_output=True, check=True,
+                                    env={**os.environ, "PYTHONIOENCODING": "utf-8"}).stdout.decode("utf-8"))
+    table = {pack_name(p).removesuffix(".zip"): got[p] for p in presets}
+    (dst / "tools" / "calcopy" / "preset_defaults.json").write_text(json.dumps(table, ensure_ascii=False, indent=1), encoding="utf-8")
+    report["preset_defaults"] = {pid: sorted(v) for pid, v in table.items()}
+    log("프리셋 기본값 " + " · ".join(f"{pid}:{'+'.join(sorted(v))}" for pid, v in table.items()))
     shim = dst / "node_modules" / "puppeteer"
     shim.mkdir(parents=True, exist_ok=True)
     (shim / "index.js").write_text(PUPPETEER_SHIM, encoding="utf-8")

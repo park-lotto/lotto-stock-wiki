@@ -1,0 +1,6 @@
+{
+ "_rule": "이 회원 프리셋이 쓰는 제작 라인 — 주인 한 곳(사장님 10-21 재정비: 집 PC 제작순서 그대로). 기술 꾸러미 = 숏템MCP tools/claude_portal/preset_pack.tech_files",
+ "line": "hybrid",
+ "version": "잇템로그판_v2",
+ "_from": "channel/프리셋.json ititemlog — 형식 해외원본(나레+원음), member.flow_format 해외원본형 = flow.FORMAT_STAGES['해외원본형'](flow_format_of('잇템로그판_v2') → base 잇템로그판 → 해외원본형) · 판 = 업그레이드 판 잇템로그판_v2(base 잇템로그판, 시험 편 ep12 렌더 판)"
+}

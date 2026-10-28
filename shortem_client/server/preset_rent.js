@@ -13,6 +13,16 @@ const MARK = '.rented';
 let current = null;                                       // 지금 빌린 것(PC 1대 · 작업 하나)
 
 export function channelDir(engineRoot) { return path.join(engineRoot, 'channel'); }
+// 기술 꾸러미(사장님 10-21 '프리셋처럼 편마다 빌려주기') — 집 PC 제작 라인 코드가 풀리는 자리. 설치본에는 없다(engine_bundle FORBIDDEN).
+//   풀 때 자리마다 표식(.rented) — 표식 없는 자리(개발 PC 의 진짜 코드)는 지우지 않는다
+export const TECH_DIRS = ['tools/calcopy/hybrid', 'tools/calcopy/yanshot'];
+const ALLOWED = ['channel/', ...TECH_DIRS.map(d => d + '/')];
+const techDir = (engineRoot, d) => path.join(engineRoot, ...d.split('/'));
+function wipe(engineRoot) {
+  for (const d of [channelDir(engineRoot), ...TECH_DIRS.map(x => techDir(engineRoot, x))]) {
+    if (fs.existsSync(path.join(d, MARK))) { try { fs.rmSync(d, { recursive: true, force: true }); } catch { /* 다음 sweep 이 지운다 */ } }
+  }
+}
 
 // 잠긴 꾸러미(b64: nonce 12 + 암호문 + 태그 16) → zip Buffer. 덧붙임 글(cid|job)이 다르면 풀리지 않는다.
 export function openPack(r) {
@@ -51,22 +61,29 @@ export function readZip(zip) {
 }
 
 function unpack(zip, root) {
-  const base = path.resolve(root);
+  const engine = path.dirname(path.resolve(root));
   for (const f of readZip(zip)) {
-    if (!f.name.startsWith('channel/') || f.name.includes('..') || f.name.includes('\\')) throw new Error('꾸러미에 바깥 경로가 있습니다');
-    const dst = path.resolve(path.dirname(base), f.name);
-    if (!dst.startsWith(base + path.sep)) throw new Error('꾸러미에 바깥 경로가 있습니다');
+    const top = ALLOWED.find(a => f.name.startsWith(a));
+    if (!top || f.name.includes('..') || f.name.includes('\\')) throw new Error('꾸러미에 바깥 경로가 있습니다');
+    const dir = path.resolve(engine, top);
+    const dst = path.resolve(engine, f.name);
+    if (!dst.startsWith(dir + path.sep)) throw new Error('꾸러미에 바깥 경로가 있습니다');
+    if (top !== 'channel/') {             // 기술 꾸러미 자리 — 표식 없는 진짜 코드(개발 PC)는 덮지 않는다
+      if (fs.existsSync(dir) && !fs.existsSync(path.join(dir, MARK))) throw new Error('이 PC 에 같은 자리의 진짜 코드가 있습니다');
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, MARK), '');
+    }
     fs.mkdirSync(path.dirname(dst), { recursive: true });
     fs.writeFileSync(dst, f.data);
   }
 }
 
-// 지난번에 못 지운 것(프로그램이 죽었을 때) — 표식이 있는 channel 만 지운다(개발 PC 의 진짜 channel 은 표식이 없다).
+// 지난번에 못 지운 것(프로그램이 죽었을 때) — 표식이 있는 자리(channel·기술 꾸러미)만 지운다(개발 PC 의 진짜 파일은 표식이 없다).
 export function sweep(engineRoot) {
-  const root = channelDir(engineRoot);
-  if (current || !fs.existsSync(path.join(root, MARK))) return false;
-  fs.rmSync(root, { recursive: true, force: true });
-  return true;
+  if (current) return false;
+  const had = [channelDir(engineRoot), ...TECH_DIRS.map(x => techDir(engineRoot, x))].some(d => fs.existsSync(path.join(d, MARK)));
+  wipe(engineRoot);
+  return had;
 }
 
 // 빌리기 → { presetPath, release() }. 개발 PC(표식 없는 진짜 channel 이 이미 있음)는 빌리지 않고 그 파일을 쓴다.
@@ -117,7 +134,7 @@ async function release(me, engineRoot) {
   if (current !== me) return;
   current = null;
   clearTimeout(me.idle);
-  try { fs.rmSync(channelDir(engineRoot), { recursive: true, force: true }); } catch { /* 다음 sweep 이 지운다 */ }
+  wipe(engineRoot);                                       // 프리셋(channel) + 기술 꾸러미(hybrid·yanshot) — 표식 있는 자리만
   await me.lease.release();
   audit('preset_return', { job: me.jobId, result: 'ok' });
 }

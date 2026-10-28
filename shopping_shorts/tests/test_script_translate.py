@@ -244,7 +244,7 @@ def test_foreign_helpers():
     assert script_translate.is_foreign_sentence(JA[0]) and script_translate.is_foreign_sentence(EN[0])
     assert not script_translate.is_foreign_sentence(KO[0])
     assert script_translate.foreign_ratio(JA + KO[:1], "ja") == 0.75
-    assert script_translate.LANG_LABEL == {"en": "영어", "ja": "일본어", "ko": "한국어"}
+    assert script_translate.LANG_LABEL == {"en": "영어", "ja": "일본어", "ko": "한국어", "zh": "중국어"}   # 관제 254 중국어 추가
 
 
 def test_api_script_translate_ja(client, monkeypatch):

@@ -1,0 +1,115 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 486,
+   "w": 1080,
+   "h": 1434,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 202.5,
+   "w": 1020,
+   "align": "center",
+   "lines": 2,
+   "font": "TmonMonsori",
+   "size": 132,
+   "line_h": 137,
+   "rgb": [
+    253,
+    253,
+    253
+   ],
+   "line_rgb": [
+    [
+     253,
+     253,
+     253
+    ],
+    [
+     253,
+     222,
+     1
+    ]
+   ],
+   "line_scale": [
+    1,
+    0.909
+   ],
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "한국 콜라겐 마스크\n쓰고 충격받은 외국인"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1245,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "CcSpoqaHanSansNeo-Bold",
+   "size": 66,
+   "line_h": 76,
+   "rgb": [
+    253,
+    225,
+    6
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 9,
+    "rgb": [
+     180,
+     163,
+     19
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 15.9,
+   "word_spacing": -33,
+   "valign": "center",
+   "enter": {
+    "kind": "none",
+    "ms": 300
+   },
+   "emphasis": null,
+   "text": null
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "ro1l3u734v4"
+}

@@ -97,8 +97,29 @@ _JA_TITLE_PARTICLES = ("から", "まで", "より", "は", "が", "を", "に",
 
 
 def _is_ja(text: str) -> bool:
-    from .script_translate import lang_of
-    return lang_of(text) == "ja"
+    """글자 단위 언어(일본어·중국어) 제목인가 — 띄어쓰기로 못 나누는 제목(관제 254: 중국어 추가)."""
+    from .script_translate import lang_of, is_char_lang
+    return is_char_lang(lang_of(text))
+
+
+def _split_hook_zh(text: str) -> tuple[str, str]:
+    """중국어 제목 → 두 줄. 경계 순위: 문장부호 > 的了吧… 뒤·就都也… 앞(video_assemble 자막 나누기와 같은 목록) > 가운데."""
+    from .video_assemble import _ZH_AFTER, _ZH_BEFORE
+    t = text.strip().rstrip("。．.，,")
+    n = len(t)
+    if n < 8:
+        return t, ""
+    cands = []
+    for i in range(3, n - 2):
+        if t[i - 1] in "，、！？!?；":
+            rank = 0
+        elif t[i - 1] in _ZH_AFTER or any(t.startswith(w, i) for w in _ZH_BEFORE):
+            rank = 1
+        else:
+            continue
+        cands.append((max(i, n - i) + rank, i))
+    cut = min(cands)[1] if cands else (n + 1) // 2
+    return t[:cut].rstrip("，、"), t[cut:]
 
 
 def _split_hook_ja(text: str) -> tuple[str, str]:
@@ -148,7 +169,8 @@ def split_hook(value: object, contract: "TemplateCopyContract | None" = None) ->
         return explicit[0], " ".join(explicit[1:])
     text = _one_line(raw)
     if _is_ja(text):
-        return _split_hook_ja(text)
+        from .script_translate import lang_of
+        return _split_hook_zh(text) if lang_of(text) == "zh" else _split_hook_ja(text)
     words = text.split()
     if len(words) < 2:
         return text, ""

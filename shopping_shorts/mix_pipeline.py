@@ -724,7 +724,7 @@ def _ensure_breath_lines(beat):
     # ★일본어 칸은 AI 호흡 끊기를 부르지 않는다(관제 248) — 그 프롬프트는 "한국어 쇼츠 내레이션·조사 앞" 규칙이라
     #   일본어엔 맞지 않는다. None = 규칙 폴백(_caption_segments → _caption_segments_ja), 상한 칸은 아래 simple_caption_split.
     from shopping_shorts.script_translate import lang_of as _lang_of
-    _skip_ai = _lang_of(beat.get("narration")) == "ja"
+    _skip_ai = _lang_of(beat.get("narration")) in ("ja", "zh")   # 중국어도 한국어 호흡 규칙을 안 탄다(관제 254)
     try:
         from shopping_shorts import script_generate
         if not _skip_ai:
@@ -6314,7 +6314,7 @@ def _render_inputs_core(store, job, job_id, work, keys, customer_id=0, *, allow_
     return plan2, _cpaths, base
 
 
-INTRO_SEC_DEFAULT = 1.2      # 썸네일 인트로 기본 길이(초) — 이 값을 아는 곳은 여기 한 곳
+INTRO_SEC_DEFAULT = 0.1      # 썸네일 인트로 기본 길이(초) — 이 값을 아는 곳은 여기 한 곳
 
 
 def _intro_thumb(thumb):
