@@ -1,0 +1,442 @@
+{
+ "topic": "다이슨 허쉬젯 미니 쿨(Dyson HushJet Mini Cool) 손풍기 — 처음 켜 보는 MrExitStrategy 'Very powerful. Like for a fan, that's impressive'·Phones And Drones 'but wow. That power is actually amazing on something this tiny'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "Fw8Zmas4uAA",
+ "bench_note": "벤치 '다이슨이 몰래 만든 손풍기 정체'(3.3만, 핫템리포트 10-27 목록 54위, 설명란 '다이슨 허쉬젯 미니 쿨 … 360도 회전 노즐에 목걸이 스트랩, 전용 스탠드') — 화면 속 제품 = 다이슨 허쉬젯 미니 쿨. 원음형 = 유튜브 MrExitStrategy 'Dyson HushJet Mini Cool Personal Fan - Unboxing + Review' VP94GltYb8U(633, 자동 더빙 20개 — 원어 140-20) 190~420초 사본(위에서 찍은 손만, 전체본 삭제, 사본 시각 = 원래 −190) + Phones And Drones 'Dyson HushJet Mini Cool Unboxed' hbgYfTVYU_U(412, 원어 140-20, 위에서 찍은 손만 — 얼굴 0). 벤치의 '6만 5천 RPM·초속 25m' 숫자·'몰래'는 1차 출처로 확정 못 해 안 씀.",
+ "sources": {
+  "me": {
+   "file": "me.mp4",
+   "who": "유튜브 MrExitStrategy VP94GltYb8U 190~420초 사본(원어 140-20) — 사본 0~211.27 위에서 찍은 손(남색 허쉬젯), 211.27~ 본인 얼굴(안 씀)",
+   "views": 633,
+   "dur": 230.0,
+   "res": "1920x1080"
+  },
+  "pd": {
+   "file": "pd.mp4",
+   "who": "유튜브 Phones And Drones hbgYfTVYU_U 전체(원어 140-20) — 처음부터 끝까지 위에서 찍은 손(스톤 색 허쉬젯), 얼굴 0",
+   "views": 412,
+   "dur": 308.4,
+   "res": "1920x1080"
+  }
+ },
+ "titles": {
+  "hook": "다이슨이 만든\n손풍기"
+ },
+ "facts": {
+  "f1": {
+   "text": "Phones And Drones 원본(스피치매틱스) 185.66~187.70 'Nice bladeless design' · 12.24~18.84 'the new Dyson Hush Jet Mini Cool … handheld portable fan' · 쿠팡 9732030704 '다이슨 허쉬젯 미니 쿨 선풍기'",
+   "kind": "리뷰·판매처"
+  },
+  "f2": {
+   "text": "Phones And Drones 원본 197.86~203.62 'it instantly starts blowing air. Five different settings as well for speed' · 232.78~235.02 'there's a boost mode you can actually go into' · MrExitStrategy 사본 165.97~177.65 'Number five … boost mode … hold the plus button'",
+   "kind": "리뷰"
+  },
+  "f3": {
+   "text": "MrExitStrategy 사본 179.81~184.73 'Very powerful. Like for a fan, that's that's impressive.'",
+   "kind": "본인 말"
+  },
+  "f4": {
+   "text": "Phones And Drones 원본 235.02~240.10 'but wow. That power is actually amazing on something this tiny'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "text": "손에 쏙 들어오는데 날개도 없이 바람이 나온다는 다이슨 선풍기가 있는데요 근데 이 조그만 게 단계를 끝까지 올리면 바람이 확 세진다는데요.",
+    "note": "렌더용 한 문장 — 원문 줄은 대본.json"
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "me",
+    "span": [
+     179.7,
+     184.8
+    ],
+    "en": "Very powerful. Like for a fan, that's that's impressive.",
+    "caps": [
+     "진짜 세요",
+     "선풍기치고 이건 대단한데요!"
+    ],
+    "check": "앞 button 177.65~178.05 · Very 179.81 · impressive 184.05~184.73 · 다음 Loud 185.81 · 원본 한 샷(0~211.27) 안 — 켠 허쉬젯 앞에 손을 대 봄"
+   },
+   {
+    "id": "O2",
+    "src": "pd",
+    "span": [
+     234.98,
+     240.1
+    ],
+    "en": "but wow. That power is actually amazing on something this tiny.",
+    "caps": [
+     "와…",
+     "바람 세기가 진짜 장난 아닌데요",
+     "이 조그만 게!"
+    ],
+    "check": "앞 also 234.66~235.02 · but 235.02 · tiny 239.82~240.10 · 다음 It's 240.10 · 원본 한 샷(142.18~끝) 안 — 손에 든 허쉬젯 · 자막 칸은 글자 수 비례라 말 차례(wow 0.4초 → power…amazing 2.4초 → tiny 1.1초)에 맞춰 글을 나눔(98 #182 ⑤)"
+   }
+  ],
+  "dropped": {
+   "벤치 '다이슨이 몰래 만든'": "근거 없는 표현 — 안 씀",
+   "6만 5천 RPM·초속 25m": "판·기사마다 표기가 달라 숫자는 안 씀",
+   "'다이슨 첫 손풍기'": "다이슨 1차 문서로 확인 못 함(기사·리뷰만) — 안 씀",
+   "가격": "금액 금지"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ },
+ "captions_plan": [
+  {
+   "t0": 0.0,
+   "text": "손에 쏙 들어오는데",
+   "kind": "나레"
+  },
+  {
+   "t0": 1.023,
+   "text": "날개도 없이 바람이 나온다는",
+   "kind": "나레"
+  },
+  {
+   "t0": 2.557,
+   "text": "다이슨 선풍기가 있는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 4.214,
+   "text": "진짜 세요",
+   "kind": "원음"
+  },
+  {
+   "t0": 5.489,
+   "text": "선풍기치고 이건 대단한데요!",
+   "kind": "원음"
+  },
+  {
+   "t0": 9.564,
+   "text": "근데 이 조그만 게",
+   "kind": "나레"
+  },
+  {
+   "t0": 10.469,
+   "text": "단계를 끝까지 올리면",
+   "kind": "나레"
+  },
+  {
+   "t0": 11.632,
+   "text": "바람이 확 세진다는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 13.174,
+   "text": "와…",
+   "kind": "원음"
+  },
+  {
+   "t0": 13.588,
+   "text": "바람 세기가 진짜 장난 아닌데요",
+   "kind": "원음"
+  },
+  {
+   "t0": 17.259,
+   "text": "이 조그만 게!",
+   "kind": "원음"
+  }
+ ],
+ "caption_events": [
+  {
+   "kind": "emph",
+   "text": "손에 쏙 들어오는데",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.0,
+   "dur": 1.023,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "날개도 없이 바람이 나온다는",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 1.023,
+   "dur": 1.534,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "다이슨 선풍기가 있는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 2.557,
+   "dur": 1.657,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "진짜 세요",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 4.214,
+   "dur": 1.275,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "선풍기치고 이건 대단한데요!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 5.489,
+   "dur": 4.075,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "근데 이 조그만 게",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 9.564,
+   "dur": 0.905,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "단계를 끝까지 올리면",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 10.469,
+   "dur": 1.163,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "바람이 확 세진다는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 11.632,
+   "dur": 1.542,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "와…",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 13.174,
+   "dur": 0.414,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "바람 세기가 진짜 장난 아닌데요",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 13.588,
+   "dur": 3.671,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "이 조그만 게!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 17.259,
+   "dur": 1.635,
+   "who": "원음"
+  }
+ ],
+ "render": {
+  "windows": [
+   [
+    4.214,
+    9.314
+   ],
+   [
+    13.174,
+    18.294
+   ]
+  ],
+  "blocks": [
+   {
+    "id": "N1",
+    "kind": "나레",
+    "n0": 0.0,
+    "n1": 3.964
+   },
+   {
+    "id": "O1",
+    "kind": "원음",
+    "a0": 4.214,
+    "a1": 9.314,
+    "audio_ss": 179.7,
+    "src": "me"
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "n0": 9.564,
+    "n1": 12.924
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "a0": 13.174,
+    "a1": 18.294,
+    "audio_ss": 234.98,
+    "src": "pd"
+   }
+  ],
+  "pieces": [
+   {
+    "block": "N1",
+    "covers": [
+     "N1"
+    ],
+    "src": "pd",
+    "ss": 186.0,
+    "vs": 0.0,
+    "src_crop": [
+     470,
+     0,
+     857,
+     1080
+    ],
+    "why": "pd 142.18~ 한 샷 — 손에 든 허쉬젯(스톤), 얼굴 없음",
+    "ve": 4.184,
+    "src_end": 190.184
+   },
+   {
+    "block": "O1",
+    "covers": [
+     "O1"
+    ],
+    "src": "me",
+    "ss": 179.67,
+    "vs": 4.184,
+    "src_crop": [
+     530,
+     0,
+     857,
+     1080
+    ],
+    "why": "켠 남색 허쉬젯 앞에 손을 대 보며 'Very powerful … that's impressive'(0~211.27 한 샷, 얼굴 없음)",
+    "ve": 9.564,
+    "src_end": 185.05
+   },
+   {
+    "block": "N2",
+    "covers": [
+     "N2"
+    ],
+    "src": "pd",
+    "ss": 200.5,
+    "vs": 9.564,
+    "src_crop": [
+     470,
+     0,
+     857,
+     1080
+    ],
+    "why": "pd 단추를 누르는 손(한 샷 안)",
+    "ve": 13.144,
+    "src_end": 204.08
+   },
+   {
+    "block": "O2",
+    "covers": [
+     "O2"
+    ],
+    "src": "pd",
+    "ss": 234.95,
+    "vs": 13.144,
+    "src_crop": [
+     470,
+     0,
+     857,
+     1080
+    ],
+    "why": "손에 든 허쉬젯 + 'but wow. That power is actually amazing on something this tiny'(한 샷 안)",
+    "ve": 18.894,
+    "src_end": 240.7
+   }
+  ],
+  "dur": 18.894,
+  "narr": [
+   {
+    "id": "N1",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\30_HushJet\\front\\render\\narr_N1.wav",
+    "dur": 3.964,
+    "tempo": 0.817,
+    "chars": 31,
+    "speech": 3.964,
+    "cps": 7.82,
+    "segs": [
+     [
+      0.0,
+      3.964
+     ]
+    ]
+   },
+   {
+    "id": "N2",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\30_HushJet\\front\\render\\narr_N2.wav",
+    "dur": 3.36,
+    "tempo": 0.882,
+    "chars": 26,
+    "speech": 3.36,
+    "cps": 7.74,
+    "segs": [
+     [
+      0.0,
+      3.36
+     ]
+    ]
+   }
+  ]
+ }
+}
