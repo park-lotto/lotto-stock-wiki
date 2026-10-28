@@ -31,8 +31,29 @@ LEDGER = os.path.join(OUT_DIR, "ledger.json")
 
 
 # ── 쿠팡 파트너스 ─────────────────────────────────────────────
+API_KEY_FILE = os.path.expanduser(r"~\.claude\coupang_partners_key.txt")   # 사장님 파트너스 API 키(2026-10-28 승인, AF9580829)
+
+
+def _api_key():
+    try:
+        from shopping_shorts import coupang_partners as cp
+        return cp.split_key(open(API_KEY_FILE, encoding="utf-8").read().strip())
+    except (OSError, ValueError):
+        return None
+
+
 def coupang_candidates(pg, keyword, n=5):
-    """파트너스 상품검색 결과 앞에서 n개 → [{name, price, image}] (아무것도 만들지 않는다)."""
+    """파트너스 상품검색 결과 앞에서 n개 → [{name, price, image, link?}] (아무것도 만들지 않는다).
+    ★2026-10-28 사장님 API 키가 있으면 API 로 찾는다 — 링크(productUrl)가 이미 우리 추적태그로 붙어 나와
+      화면 클릭이 필요 없다. 키가 없을 때만 예전처럼 파트너스 웹 화면."""
+    key = _api_key()
+    if key:
+        from shopping_shorts import coupang_partners as cp
+        r = cp.search_products(keyword, limit=max(n, 10), access_key=key[0], secret_key=key[1])
+        if not r.get("ok"):
+            raise SystemExit(f"쿠팡 API 검색 실패: {r.get('notice') or r.get('error')}")
+        return [{"name": it["name"], "price": it["price"], "image": it["image"].replace("/230x230ex/", "/492x492ex/"),
+                 "url": it["url"], "link": it["partner_url"]} for it in r["items"][:n]]
     pg.goto(f"{PARTNERS}#affiliate/ws/link/0/{urllib.parse.quote(keyword)}", wait_until="domcontentloaded")
     for _ in range(60):                          # 로그인이 풀리면 해시 주소가 로그인 화면으로 넘어간다
         pg.wait_for_timeout(500)
@@ -64,6 +85,14 @@ def coupang_link(pg, keyword, pick, match=""):
         pick = hit[0]
     if pick >= len(items):
         raise SystemExit(f"후보가 {len(items)}개뿐이다")
+    if items[pick].get("url"):                       # API 후보 — 딥링크로 짧은 링크(link.coupang.com/a/…)를 받는다
+        from shopping_shorts import coupang_partners as cp
+        key = _api_key()
+        dl = cp.to_deeplink([items[pick]["url"]], key[0], key[1])
+        short = (dl[0].get("shorten_url") if dl else "") or ""
+        if not short.startswith("https://link.coupang.com/a/"):
+            raise SystemExit(f"쿠팡 딥링크 실패: {dl[0].get('error') if dl else '응답 없음'}")
+        return {**items[pick], "link": short, "keyword": keyword}
     pg.locator(".product-item").nth(pick).hover()
     pg.locator(".product-item").nth(pick).locator("button.btn-generate-link").click(force=True)
     for _ in range(40):
