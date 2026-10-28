@@ -36274,3 +36274,4 @@
    280 릴리릴리 고객 흐름 라이브 — 엔진 폴더(tools/calcopy) 첫  · 주인 tools/calcopy/hybrid/flow.py
    281 우리 채널 통계 페이지(유튜브 애널리틱스+버퍼 틱톡) · 주인 channel_stats/collect.py:collect
 [2026-10-28 15:57:53] ■ 끝 rc=0
+[2026-10-28 16:57:02] ▶ tools\live_check.py --all
