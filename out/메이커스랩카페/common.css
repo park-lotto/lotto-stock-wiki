@@ -1,0 +1,5 @@
+@font-face { font-family: K; src: url("file:///C:/Windows/Fonts/NotoSansKR-VF.ttf"); font-weight: 100 900; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: K, sans-serif; color: #EEF1F8; background: #05070F; -webkit-font-smoothing: antialiased; }
+.gold { color: #F2C46D; } .vio { color: #B9A2FF; }
+.eyebrow { letter-spacing: .42em; font-weight: 600; font-size: 13px; color: #9AA4BD; }

@@ -1,0 +1,72 @@
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="common.css"><style>
+body { width:860px; background:#05070F; }
+.hero { height:430px; position:relative; overflow:hidden;
+  background: url(bg_title.png) right -60px center / auto 520px no-repeat; }
+.hero:before { content:""; position:absolute; inset:0; background:linear-gradient(90deg,#05070F 10%,#05070Fd0 45%,#05070F10 85%), linear-gradient(0deg,#05070F 0%,#05070F00 35%); }
+.hero .in { position:absolute; left:56px; top:96px; }
+.hero h1 { font-size:46px; font-weight:800; line-height:1.22; letter-spacing:-.025em; margin-top:18px; }
+.hero p { margin-top:20px; color:#A9B2C8; font-size:17px; line-height:1.6; }
+.sec { padding:0 56px; }
+.lab { font-size:13px; letter-spacing:.3em; color:#7F8AA6; font-weight:600; margin:54px 0 18px; }
+.cards { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.card { border-radius:22px; padding:30px 28px 28px; position:relative; overflow:hidden;
+  background: linear-gradient(160deg, rgba(255,255,255,.07), rgba(255,255,255,.015)); border:1px solid rgba(255,255,255,.09); }
+.card.g { box-shadow: inset 0 1px 0 rgba(242,196,109,.5), 0 0 60px -20px rgba(242,196,109,.45); }
+.card.v { box-shadow: inset 0 1px 0 rgba(185,162,255,.55), 0 0 60px -20px rgba(120,110,255,.5); }
+.card .glow { position:absolute; width:260px; height:260px; border-radius:50%; right:-90px; top:-110px; filter:blur(40px); opacity:.35; }
+.g .glow { background:#E9A93C; } .v .glow { background:#7B5CFF; }
+.card small { font-size:12px; letter-spacing:.22em; font-weight:700; }
+.card h2 { font-size:30px; font-weight:800; letter-spacing:-.02em; margin:10px 0 14px; }
+.card .d { font-size:15px; color:#B7BFD3; line-height:1.65; }
+.chips { margin-top:20px; display:flex; flex-wrap:wrap; gap:8px; }
+.chip { font-size:13px; padding:7px 13px; border-radius:99px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); color:#DDE2EE; }
+table { width:100%; border-collapse:separate; border-spacing:0; border-radius:18px; overflow:hidden; border:1px solid rgba(255,255,255,.08); }
+th, td { padding:17px 20px; font-size:15px; text-align:left; border-bottom:1px solid rgba(255,255,255,.06); }
+th { background:rgba(255,255,255,.05); color:#8E98B2; font-weight:600; font-size:13px; letter-spacing:.08em; }
+td { background:rgba(255,255,255,.02); color:#D5DAE6; }
+td b { color:#fff; font-weight:700; } tr:last-child td { border-bottom:0; }
+.o { color:#B9A2FF; font-weight:700; } .x { color:#4C5570; }
+.note { margin-top:16px; border-radius:16px; padding:20px 22px; background:rgba(242,196,109,.06); border:1px solid rgba(242,196,109,.18); font-size:15px; color:#D9D2C0; line-height:1.75; }
+.note b { color:#F2C46D; }
+.steps { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.step { border-radius:18px; padding:24px 22px; background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.08); }
+.step .n { font-size:13px; font-weight:800; letter-spacing:.2em; color:#7F8AA6; }
+.step h3 { font-size:19px; font-weight:700; margin:10px 0 8px; }
+.step p { font-size:14px; color:#A9B2C8; line-height:1.6; }
+.foot { margin-top:56px; padding:30px 56px 40px; border-top:1px solid rgba(255,255,255,.07); display:flex; justify-content:space-between; align-items:center; color:#6E7893; font-size:13px; }
+.foot img { width:44px; height:44px; border-radius:12px; vertical-align:middle; margin-right:12px; }
+.foot .brand { color:#C9CFDD; font-weight:700; letter-spacing:.2em; font-size:14px; }
+</style></head><body>
+<div class="hero"><div class="in">
+  <div class="eyebrow">MAKERS LAB</div>
+  <h1>메이커스랩의<br><span class="gold">숏템메이커</span> · <span class="vio">숏클메이커</span></h1>
+  <p>두 프로그램의 강의·업데이트·질문답변을<br>이 카페에서 반별로 이용하세요.</p>
+</div></div>
+<div class="sec">
+  <div class="lab">PROGRAMS</div>
+  <div class="cards">
+    <div class="card g"><div class="glow"></div><small class="gold">PROGRAM 01</small><h2>숏템메이커</h2>
+      <div class="d">1·2기 수강생이 쓰는 프로그램입니다.<br>공지·업데이트와 질문답변을 전용 게시판에서.</div>
+      <div class="chips"><span class="chip">숏템 공지·업데이트</span><span class="chip">숏템 질문·답변</span></div></div>
+    <div class="card v"><div class="glow"></div><small class="vio">PROGRAM 02</small><h2>숏클메이커</h2>
+      <div class="d">기본반 · 고급반 · 프리미엄반으로<br>나뉘어 반별 강의를 들을 수 있습니다.</div>
+      <div class="chips"><span class="chip">기본 강의</span><span class="chip">고급 강의</span><span class="chip">프리미엄 라운지</span></div></div>
+  </div>
+  <div class="lab">숏클메이커 반별 안내</div>
+  <table>
+    <tr><th>반</th><th>기본 강의</th><th>고급 강의</th><th>프리미엄 라운지 · 1:1 피드백</th></tr>
+    <tr><td><b>기본반</b></td><td class="o">●</td><td class="x">—</td><td class="x">—</td></tr>
+    <tr><td><b>고급반</b></td><td class="o">●</td><td class="o">●</td><td class="x">—</td></tr>
+    <tr><td><b>프리미엄반</b></td><td class="o">●</td><td class="o">●</td><td class="o">●</td></tr>
+  </table>
+  <div class="note"><b>숏템메이커 1·2기 수강생</b> — 숏템메이커를 계속 쓰거나, 숏클메이커 기본반으로 옮기거나 중 하나를 선택합니다.<br>
+  <b>1·2기 체험단</b> — 숏클메이커 고급반에 무료로 배정되며, 카페에서 조교로 활동합니다.</div>
+  <div class="lab">카페 이용 순서</div>
+  <div class="steps">
+    <div class="step"><div class="n">STEP 1</div><h3>카페 가입</h3><p>누구나 바로 가입하고<br>공지·후기를 볼 수 있어요.</p></div>
+    <div class="step"><div class="n">STEP 2</div><h3>등업 신청</h3><p>고객센터 › 등업 신청에<br>구매 인증을 남겨 주세요.</p></div>
+    <div class="step"><div class="n">STEP 3</div><h3>반별 강의 이용</h3><p>등업이 되면 내 반의<br>강의 게시판이 열립니다.</p></div>
+  </div>
+</div>
+<div class="foot"><div><img src="bg_icon.png"><span class="brand">MAKERS LAB</span></div><div>cafe.naver.com/makerslab7</div></div>
+</body></html>
