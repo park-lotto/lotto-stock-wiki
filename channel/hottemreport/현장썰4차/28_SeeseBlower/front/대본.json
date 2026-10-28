@@ -1,0 +1,123 @@
+{
+ "topic": "SEESE 무선 터보 제트 송풍기(21V) — 처음 켜 보는 JACK of all TRADES Dre 'Oh, yeah. You hear that? It's actually moving my hand'·'This little thing is crazy'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "WI84l4MVPYA",
+ "bench_note": "벤치 '미국에서 차 사면 받는 선물 1위 정체'(4.0만, 핫템리포트 48위, 설명란 '틱톡샵 … 그 송풍기 … 세차 후 물기 제거부터 낙엽 청소') — 화면 속 제품 = SEESE 초록 터보 송풍기. 원음형 = 유튜브 JACK of all TRADES Dre 'SEESE Cordless Turbo Blower Review (Tik-Tok) JOATD' LF8YsFaoDYw(3천, 1920x1080, 자동 더빙 여럿 — 원어 140-19 en-US original) 40~455초 사본(전체본 삭제, 사본 시각 = 원래 −40). 화면 보조 = Diesel Legiance 'SEESE 21V Turbo Jet Blower Review' jFkOt4RIt3s(2.5만, 원어 140-12) 195~257초 사본(손 시점 컷만 — 마지막 얼굴 구간 안 씀). 벤치의 '선물 1위'·'32만 개'는 출처가 없어 안 씀.",
+ "sources": {
+  "dr": {
+   "file": "dr.mp4",
+   "who": "유튜브 JACK of all TRADES Dre LF8YsFaoDYw 40~455초 사본(원어 140-19) — 고정 카메라 앞 손·차, 얼굴은 사본 296초 근처만(안 씀)",
+   "views": 3035,
+   "dur": 415.3,
+   "res": "1920x1080"
+  },
+  "dz": {
+   "file": "dz.mp4",
+   "who": "유튜브 Diesel Legiance jFkOt4RIt3s 195~257초 사본(원어 140-12) — 손 시점(톱밥·눈), 19~33초 세로 영상 검은 띠·58초 뒤 얼굴 구간 안 씀",
+   "views": 25444,
+   "dur": 62.0,
+   "res": "1920x1080"
+  }
+ },
+ "titles": {
+  "hook": "손이 밀려나는\n송풍기"
+ },
+ "facts": {
+  "f1": {
+   "text": "Dre 원본(사본 스피치매틱스) 19.08~21.60 'it's like very, very light. Very light.' · 26.32~29.08 'what is a tornado going to come out of this thing or something?' · 쿠팡 9778907774 'SEESE 터보 송풍기 600 CFM 무선 휴대용 … 21V'",
+   "kind": "리뷰·판매처"
+  },
+  "f2": {
+   "text": "Dre 원본 화면 사본 163~167 물 뿌린 보닛 물기를 송풍기로 밀어냄 · 369.41~371.09 'Check it out. Rims dry.' · 벤치 설명란 '세차 후 물기 제거'",
+   "kind": "리뷰"
+  },
+  "f3": {
+   "text": "Dre 원본 42.16~47.60 'Oh, yeah. You hear that? It's actually moving my hand.'",
+   "kind": "본인 말"
+  },
+  "f4": {
+   "text": "Dre 원본 405.77~406.65 'This little thing is crazy.'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "id": "N1",
+    "fn": "훅(물건+~있는데요)",
+    "text": "손에 쏙 들어오는데, 태풍 같은 바람을 쏜다는 송풍기가 있는데요.",
+    "caps": [
+     "손에 쏙 들어오는데",
+     "태풍 같은 바람을 쏜다는",
+     "송풍기가 있는데요"
+    ],
+    "facts": [
+     "f1"
+    ]
+   },
+   {
+    "id": "N2",
+    "fn": "불러냄 → 원음 증거",
+    "text": "근데 세차한 차에 대고 쏘면, 물기가 한 방에 싹 밀려난다는데요.",
+    "caps": [
+     "근데 세차한 차에 대고 쏘면",
+     "물기가 한 방에",
+     "싹 밀려난다는데요"
+    ],
+    "facts": [
+     "f2"
+    ]
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "dr",
+    "span": [
+     42.08,
+     48.05
+    ],
+    "en": "Oh, yeah. You hear that? It's actually moving my hand.",
+    "caps": [
+     "오, 그래! 이 소리 들려요?",
+     "손이 밀려요!"
+    ],
+    "check": "앞 sounds 39.48~40.04 · Oh 42.16 · hand 47.60~48.00 · 다음 That's 52.24 · 원본 한 샷(37.03~119.73) 안 — 송풍기 든 손 · 자막: 43.5~46.5 는 송풍기 소리뿐이라 앞 칸을 길게(98 #182 ⑤ 꼴)"
+   },
+   {
+    "id": "O2",
+    "src": "dr",
+    "span": [
+     405.7,
+     407.55
+    ],
+    "en": "This little thing is crazy.",
+    "caps": [
+     "이 쪼끄만 게",
+     "진짜 미쳤어요!"
+    ],
+    "check": "앞 crazy 401.41~401.93(4초 무음 뒤) · This 405.77 · crazy 406.65~407.41 · 다음 All 410.41 · 원본 한 샷(346.73~끝) 안 — 손에 든 송풍기 근접"
+   }
+  ],
+  "dropped": {
+   "벤치 '미국에서 차 사면 받는 선물 1위'·'틱톡샵 32만 개'": "1차 출처 못 찾음 — 안 씀",
+   "100만 rpm·풍속 숫자": "판매처 숫자가 판마다 다름 — 안 씀",
+   "가격": "금액 금지",
+   "BMW 차": "앞 그릴·로고가 보이는 화면 피함(보닛 오른쪽·손 근접만)"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ }
+}

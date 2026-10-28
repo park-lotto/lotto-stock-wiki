@@ -1,0 +1,434 @@
+{
+ "topic": "ASUS ExpertBook Ultra(B9406, 0.99kg 비즈니스 노트북) — 리무버로 닦고 위에 올라서 보는 JulianTechTM 'They said I could do it and wow, it's really as good as new'·'I'm really impressed by the design for it to withstand the weight'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "3aWB9obyTgU",
+ "bench_note": "벤치 '대만 천재들이 만든 안 부서지는 노트북'(4.2만, 핫템리포트 45위, 설명란 'ASUS ExpertBook Ultra B9406 … 약 990g … 낙하와 압력 테스트') — 컷 모음. 원음형 = 유튜브 JulianTechTM 'Built Tough, But Is It Good? ASUS ExperBook Ultra!' nlv7GqU6IR0(1.96만, 1920x1080, 자동 더빙 트랙 여럿 — 원어 140-20 en-US original 로 받음) 140~330초 사본(전체본 삭제, 사본 시각 = 원래 −140). 화면 보조 = ShortCircuit 'I expect perfection - ASUS ExpertBook Ultra' 7kqvE63fnE4(42만, 영어 한 트랙) 40~170초 사본(손·제품 컷만 — 진행자 얼굴 구간·글자 덧그림 구간 안 씀).",
+ "sources": {
+  "jt": {
+   "file": "jt.mp4",
+   "who": "유튜브 JulianTechTM nlv7GqU6IR0 140~330초 사본(원어 140-20). 사본 10~12초 'Ceramic Coating' 덧글 구간 안 씀",
+   "views": 19597,
+   "dur": 190.1,
+   "res": "1920x1080"
+  },
+  "sc": {
+   "file": "sc.mp4",
+   "who": "유튜브 ShortCircuit 7kqvE63fnE4 40~170초 사본 — 손·제품 컷만",
+   "views": 419904,
+   "dur": 130.0,
+   "res": "1920x1080"
+  },
+  "jtz1": {
+   "file": "jtz1.mp4",
+   "who": "jt 48.9~53.6 을 1.22배 천천히 다가가게 구운 사본(원음 그대로) — 멈춤 대응",
+   "dur": 4.7
+  },
+  "jtz2": {
+   "file": "jtz2.mp4",
+   "who": "jt 96.5~101.2 를 1.22배 천천히 다가가게 구운 사본(원음 그대로) — 멈춤 대응",
+   "dur": 4.7
+  }
+ },
+ "titles": {
+  "hook": "밟아도 멀쩡한\n노트북"
+ },
+ "facts": {
+  "f1": {
+   "text": "JulianTechTM 원본(사본 스피치매틱스) 27.52~33.96 'because it's a ceramic coating, I can use alcohol or nail polish remover' · 47.56~53.20 'Honestly, this is my first time doing it. They said I could do it and wow, it's really as good as new.' · 화면 사본 23~29 덮개에 낙서·42~46 리무버 붓고 닦기",
+   "kind": "리뷰"
+  },
+  "f2": {
+   "text": "같은 원본 78.87~91.11 'Apparently, the laptop can withstand … 100 or 120 … below my weight, and I can stand on it' · 화면 사본 91~95 바닥의 노트북 위에 올라섬",
+   "kind": "리뷰"
+  },
+  "f3": {
+   "text": "같은 원본 49.28~53.20 'They said I could do it and wow, it's really as good as new.'",
+   "kind": "본인 말"
+  },
+  "f4": {
+   "text": "같은 원본 96.91~100.31 'I mean, I'm really impressed by the design for it to withstand the weight.'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "text": "매니큐어 리무버로 박박 닦아도 새것처럼 멀쩡한 노트북이 있는데요 심지어 이걸 바닥에 놓고 사람이 위에 올라서도 버틴다는데요.",
+    "note": "렌더용 한 문장 — 원문 줄은 대본.json"
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "jtz1",
+    "span": [
+     0.36,
+     4.1
+    ],
+    "en": "They said I could do it and wow, it's really as good as new.",
+    "caps": [
+     "해도 된다길래 해 봤는데",
+     "와, 진짜 새것 같아요!"
+    ],
+    "check": "앞 it 49.12~49.24(끝) · They 49.28 · new 52.80~53.20 · 다음 Yeah 54.60 · 원본 샷 47.18~50.88·50.88~54.55(원본 편집 그대로) · 화면 멈춤 대응으로 jtz1 사본(jt 48.9~53.6) 시각 0.36~4.10"
+   },
+   {
+    "id": "O2",
+    "src": "jtz2",
+    "span": [
+     0.38,
+     3.85
+    ],
+    "en": "I mean, I'm really impressed by the design for it to withstand the weight.",
+    "caps": [
+     "진짜 감탄했어요",
+     "이 무게를 버티다니!"
+    ],
+    "check": "앞 'I have to.' 96.39~96.87(안 넣음) · I 96.91 · weight 100.07~100.31 · 다음 Other 100.35 · 원본 한 샷(96.43~115.22) 안 · jtz2 사본(jt 96.5~101.2) 시각 0.38~3.85"
+   }
+  ],
+  "dropped": {
+   "벤치 '대만 천재들'·'커피 두 잔보다 가벼운'": "출처 없는 꾸밈 — 무게는 뒤에서 ASUS 사양(0.99kg)으로만",
+   "100kg·120kg 숫자": "Julian 본인도 '100 or 120 잊었다' — 숫자 안 씀",
+   "가격": "금액 금지",
+   "ShortCircuit 'Sponsored by ASUS'·진행자 얼굴": "화면 안 씀(손·제품만)"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ },
+ "captions_plan": [
+  {
+   "t0": 0.0,
+   "text": "매니큐어 리무버로",
+   "kind": "나레"
+  },
+  {
+   "t0": 1.023,
+   "text": "박박 닦아도",
+   "kind": "나레"
+  },
+  {
+   "t0": 1.663,
+   "text": "새것처럼 멀쩡한 노트북이 있는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 3.831,
+   "text": "해도 된다길래 해 봤는데",
+   "kind": "원음"
+  },
+  {
+   "t0": 5.909,
+   "text": "와, 진짜 새것 같아요!",
+   "kind": "원음"
+  },
+  {
+   "t0": 7.821,
+   "text": "심지어 이걸 바닥에 놓고",
+   "kind": "나레"
+  },
+  {
+   "t0": 9.113,
+   "text": "사람이 위에 올라서도",
+   "kind": "나레"
+  },
+  {
+   "t0": 10.275,
+   "text": "버틴다는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 11.3,
+   "text": "진짜 감탄했어요",
+   "kind": "원음"
+  },
+  {
+   "t0": 12.919,
+   "text": "이 무게를 버티다니!",
+   "kind": "원음"
+  }
+ ],
+ "caption_events": [
+  {
+   "kind": "emph",
+   "text": "매니큐어 리무버로",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.0,
+   "dur": 1.023,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "박박 닦아도",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 1.023,
+   "dur": 0.64,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "새것처럼 멀쩡한 노트북이 있는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 1.663,
+   "dur": 2.168,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "해도 된다길래 해 봤는데",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 3.831,
+   "dur": 2.078,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "와, 진짜 새것 같아요!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 5.909,
+   "dur": 1.912,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "심지어 이걸 바닥에 놓고",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 7.821,
+   "dur": 1.292,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "사람이 위에 올라서도",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 9.113,
+   "dur": 1.162,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "버틴다는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 10.275,
+   "dur": 1.025,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "진짜 감탄했어요",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 11.3,
+   "dur": 1.619,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "이 무게를 버티다니!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 12.919,
+   "dur": 2.451,
+   "who": "원음"
+  }
+ ],
+ "render": {
+  "windows": [
+   [
+    3.831,
+    7.571
+   ],
+   [
+    11.3,
+    14.77
+   ]
+  ],
+  "blocks": [
+   {
+    "id": "N1",
+    "kind": "나레",
+    "n0": 0.0,
+    "n1": 3.581
+   },
+   {
+    "id": "O1",
+    "kind": "원음",
+    "a0": 3.831,
+    "a1": 7.571,
+    "audio_ss": 0.36,
+    "src": "jtz1"
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "n0": 7.821,
+    "n1": 11.05
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "a0": 11.3,
+    "a1": 14.77,
+    "audio_ss": 0.38,
+    "src": "jtz2"
+   }
+  ],
+  "pieces": [
+   {
+    "block": "N1",
+    "covers": [
+     "N1"
+    ],
+    "src": "jt",
+    "ss": 25.0,
+    "vs": 0.0,
+    "src_crop": [
+     531,
+     0,
+     857,
+     1080
+    ],
+    "why": "jt 23.26~29.33 한 샷 — 검정 덮개(제품) 위 낙서·마커 든 손(얼굴 없음), 첫 화면부터 노트북",
+    "ve": 3.801,
+    "src_end": 28.801
+   },
+   {
+    "block": "O1",
+    "covers": [
+     "O1"
+    ],
+    "src": "jtz1",
+    "ss": 0.33,
+    "vs": 3.801,
+    "src_crop": [
+     531,
+     0,
+     857,
+     1080
+    ],
+    "why": "Julian 이 리무버로 닦은 덮개를 보며 'wow … as good as new'(원본 편집 47.18~50.88·50.88~54.55) — 덮개만 보이는 정지 구간(완성본 freezedetect 4.57·5.47·5.97초)이라 jt 48.9~53.6 을 1.22배 천천히 다가가는 사본 jtz1(zoomclip_av.py, 원음 그대로)",
+    "ve": 7.821,
+    "src_end": 4.35
+   },
+   {
+    "block": "N2",
+    "covers": [
+     "N2"
+    ],
+    "src": "jt",
+    "ss": 91.2,
+    "vs": 7.821,
+    "src_crop": [
+     620,
+     80,
+     690,
+     869
+    ],
+    "why": "jt 78.75~96.43 한 샷 — 바닥에 놓은 노트북 위에 올라섬(사람 작아 확대, Cif 상자·주전자 상표는 crop 밖)",
+    "ve": 11.27,
+    "src_end": 94.649
+   },
+   {
+    "block": "O2",
+    "covers": [
+     "O2"
+    ],
+    "src": "jtz2",
+    "ss": 0.35,
+    "vs": 11.27,
+    "src_crop": [
+     531,
+     0,
+     857,
+     1080
+    ],
+    "why": "Julian 'really impressed … withstand the weight'(96.43~115.22 한 샷) — 정지에 가까운 서 있는 장면(freezedetect 13.2·14.13초)이라 jt 96.5~101.2 를 1.22배 다가가는 사본 jtz2",
+    "ve": 15.37,
+    "src_end": 4.45
+   }
+  ],
+  "dur": 15.37,
+  "narr": [
+   {
+    "id": "N1",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\27_ExpertBook\\front\\render\\narr_N1.wav",
+    "dur": 3.581,
+    "tempo": 0.872,
+    "chars": 28,
+    "speech": 3.581,
+    "cps": 7.82,
+    "segs": [
+     [
+      0.0,
+      3.581
+     ]
+    ]
+   },
+   {
+    "id": "N2",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\27_ExpertBook\\front\\render\\narr_N2.wav",
+    "dur": 3.229,
+    "tempo": 0.845,
+    "chars": 25,
+    "speech": 3.229,
+    "cps": 7.74,
+    "segs": [
+     [
+      0.0,
+      3.229
+     ]
+    ]
+   }
+  ]
+ }
+}
