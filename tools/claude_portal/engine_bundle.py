@@ -49,7 +49,8 @@ RENDERER_EXTRA = ("tools/render_scene_style.js", "out/scene-style-ui-showcase.ht
 DATA_EXTRA = ("shopping_shorts/assets/voice_presets.json", "shopping_shorts/assets/bgm_lib", "shopping_shorts/assets/sfx_packs",
               "shopping_shorts/calcopy_frame/my_packs.json", "shopping_shorts/static/caption-motions.js",
               "tools/calcopy/engine/warehouse_channels.json",
-              "shopping_shorts/static/fonts/Pretendard-Bold.otf")        # 완성본 오른쪽 위 '광고' 표시 글꼴(engine/ad_mark, 사장님 10-22)
+              "shopping_shorts/static/fonts")        # 글꼴 폴더 통째 — render_bench._font(FONTS/이름)·광고 표시(engine/ad_mark)가 연다.
+              # 10-29 실측: Pretendard 하나만 넣어 회원 묶음 렌더가 제목 글꼴에서 OSError 로 멈췄다(회원 PC 에 글꼴을 이 자리로 넣는 코드도 없다)
 
 
 def data_extra(engine: Path) -> list[str]:
@@ -127,20 +128,22 @@ def top_imports(engine: Path, entries=ENTRY) -> set[str]:
 #   노하우(지시서 hybrid/flow.py·브리프·문서)는 서버 한 곳 — 아래에 없으면 금지 목록 그대로 막힌다. 판 설정(styles/*.json)은 렌더 단계에만 빌린다.
 HAND = tuple(f"tools/calcopy/hybrid/{m}.py" for m in ("__init__", "runner_ops", "rules", "common", "render_bench", "render_itssum", "placement",
                                                        "bench_check", "thumb", "screen", "styles",
-                                                       "fx_target", "pack_map", "thumb_rule")) +     ("tools/calcopy/yanshot/__init__.py", "tools/calcopy/yanshot/common.py", "tools/calcopy/yanshot/plan.py")
+                                                       "fx_target", "pack_map", "thumb_rule",
+                                                       # 10-29 회원 묶음으로 렌더 실측(parity_render) — 렌더 경로가 함수 안에서 부른다. 빠지면 계획·렌더가 ImportError 로 멈춘다
+                                                       "material_fit", "quality_gate", "checks", "script_audit", "deco")) + (
+    "tools/calcopy/yanshot/__init__.py", "tools/calcopy/yanshot/common.py", "tools/calcopy/yanshot/plan.py",
+    "tools/calcopy/engine/tts_pause.py", "shopping_shorts/channelkit/vision/ocrdet.py",
+    "shopping_shorts/script_translate.py")       # 글자·언어 판정(scene_style·video_assemble) — script_generate 는 번역 때만 늦게 불러온다
 
 
 # HAND 가 부르는 hybrid 모듈 중 회원 PC 에 안 보내는 것(서버·개발 전용) — 여기도 HAND 에도 없으면 build 가 멈춘다(관제 265, 10-25:
 #   render_bench 가 fx_target·pack_map·thumb_rule 을 새로 부르는데 HAND 에 없어 회원 PC import 실패 구멍이 났다 — 손 목록은 썩는다).
 HAND_SERVER_ONLY = {
     # 판단 대기(관제 265): runner_ops·render_itssum·screen 이 함수 안에서 부른다 — 회원 PC 에서 그 갈래가 도는지 확인 뒤 HAND 로 옮기거나 여기 둔다
-    "tools/calcopy/hybrid/quality_gate.py", "tools/calcopy/hybrid/checks.py", "tools/calcopy/hybrid/script_audit.py",
     "tools/calcopy/hybrid/compare_sheet.py", "tools/calcopy/oneshot/scene_fit.py",
     # 10-25 엔진 render_bench 가 함수 안(src_dir 있을 때)에서 respace_reuse 를 부른다 — material_fit 이 부르는 quality_gate·checks·script_audit·scene_fit 이
     #   전부 위 '판단 대기'라 같이 둔다(회원 PC 로 보낼지는 관제 265 판단, 관제 266 병합 막힘 풀기)
-    "tools/calcopy/hybrid/material_fit.py",
     # 10-26 엔진 render_bench 가 함수 안에서 deco(키치잇 꾸밈 재현, 3a388064c WIP·미검증)를 부른다 — 회원 PC 로 보낼지는 관제 265 발행 판단
-    "tools/calcopy/hybrid/deco.py",
     # 10-26 엔진 runner_ops 가 preset_make(make_synth — 회원 목소리 합성 한 곳)를 부른다 — preset_* 는 묶음 금지 꼴이라 발행 때 판단(관제 265): HAND 로 옮기거나 make_synth 를 금지 밖 파일로
     "tools/calcopy/engine/preset_make.py",
     "tools/calcopy/hybrid/server_ai.py", "tools/calcopy/hybrid/gemini_server.py",   # 서버 키·주소 — 보내면 안 됨
@@ -243,7 +246,8 @@ def build(engine: Path, traces: Path, out: Path) -> dict:
     bad = hand_unresolved(engine)
     if bad:
         raise SystemExit("[engine_bundle] HAND 가 부르는데 묶음에서 빠지는 파일 — HAND 또는 HAND_SERVER_ONLY 에 정해라:\n  " + "\n  ".join(bad))
-    want = sorted(mods | data | top_imports(engine) | set(hand_deps(engine)) | set(RENDERER_EXTRA) | set(showcase_deps(engine)) | set(data_extra(engine)))
+    # HAND 자신도 넣는다(10-29: thumb_rule 이 HAND 에 있는데 추적·hand_deps 에 안 잡혀 빠졌다)
+    want = sorted(mods | data | top_imports(engine) | set(HAND) | set(hand_deps(engine)) | set(RENDERER_EXTRA) | set(showcase_deps(engine)) | set(data_extra(engine)))
     kept, dropped, missing = [], [], []
     if out.exists():
         shutil.rmtree(out)
