@@ -6603,21 +6603,46 @@ class Store:
 
     # ── 유튜브 로컬 릴레이 큐(2026-07-24) ──
     def enqueue_yt_relay(self, url):
-        """유튜브 다운로드 요청을 큐에 넣고 req_id 반환. PC 에이전트가 받아 처리한다."""
+        """유튜브 다운로드 요청을 큐에 넣고 req_id 반환. PC 에이전트가 받아 처리한다.
+        ★같은 URL 이 이미 대기·처리 중이거나 받아 둔 파일이 있으면 그 요청을 같이 쓴다(2026-10-29 관제 287).
+        종전엔 시간초과로 다시 부를 때마다 새 줄을 세워, 같은 영상이 6번 쌓이고 PC 가 17분 밀렸다.
+        updated_at = 마지막으로 누가 기다리기 시작한 시각 → 아무도 안 기다리는 요청은 next 가 버린다."""
         import secrets
-        req_id = secrets.token_hex(8)
         now = datetime.now(timezone.utc).isoformat()
         with self._conn() as c:
+            for rid, st, op in c.execute(
+                    "SELECT req_id, status, out_path FROM yt_relay WHERE url=? "
+                    "AND status IN ('pending','working','done') ORDER BY created_at DESC", (url,)).fetchall():
+                if st == "done" and not (op and Path(op).exists()):
+                    continue
+                c.execute("UPDATE yt_relay SET updated_at=? WHERE req_id=?", (now, rid))
+                return rid
+            req_id = secrets.token_hex(8)
             c.execute("INSERT INTO yt_relay(req_id, url, status, created_at, updated_at) "
                       "VALUES(?,?,'pending',?,?)", (req_id, url, now, now))
         return req_id
 
-    def next_pending_yt_relay(self):
-        """가장 오래된 pending 요청 1건 → {req_id, url}. 없으면 None. 에이전트가 폴링한다."""
+    def next_pending_yt_relay(self, stale_after=None):
+        """가장 오래된 pending 요청 1건을 맡겨(working) {req_id, url} 반환. 없으면 None.
+        ★아무도 안 기다리는 pending(서버가 이미 시간초과로 포기)은 먼저 failed 로 버린다 — PC 헛일 방지.
+        working 으로 바꿔 맡기므로 에이전트가 여러 줄로 동시에 받아도 같은 요청을 두 번 안 받는다."""
+        if stale_after is None:
+            from shopping_shorts import config
+            stale_after = config.YT_RELAY_POLL_TIMEOUT + 20
+        cut = (datetime.now(timezone.utc) - timedelta(seconds=stale_after)).isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         with self._conn() as c:
-            r = c.execute("SELECT req_id, url FROM yt_relay WHERE status='pending' "
-                          "ORDER BY created_at LIMIT 1").fetchone()
-        return {"req_id": r[0], "url": r[1]} if r else None
+            c.execute("UPDATE yt_relay SET status='failed', error='stale: 기다리는 쪽 없음(시간초과)', "
+                      "updated_at=? WHERE status='pending' AND updated_at<?", (now, cut))
+            while True:
+                r = c.execute("SELECT req_id, url FROM yt_relay WHERE status='pending' "
+                              "ORDER BY created_at LIMIT 1").fetchone()
+                if not r:
+                    return None
+                n = c.execute("UPDATE yt_relay SET status='working' WHERE req_id=? AND status='pending'",
+                              (r[0],)).rowcount
+                if n:
+                    return {"req_id": r[0], "url": r[1]}
 
     def finish_yt_relay(self, req_id, out_path=None, error=None):
         """에이전트가 완료(out_path) 또는 실패(error) 보고. status를 done|failed로."""
