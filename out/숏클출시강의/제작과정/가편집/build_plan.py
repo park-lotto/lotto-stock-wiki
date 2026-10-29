@@ -81,7 +81,8 @@ def captions(chars):
             t0 = s
         buf += c
         nxt = chars[k + 1][0] if k + 1 < len(chars) else "\n"
-        if (c in ".?!" and nxt in " \n") or (c == "\n" and buf.strip()) or k == len(chars) - 1:
+        # 문장 끝(.?! 뒤에 공백·줄바꿈, 또는 띄어쓰기 없이 바로 붙은 한글) / 줄바꿈 / 마지막 글자에서 끊는다
+        if (c in ".?!" and (nxt in " \n" or "가" <= nxt <= "힣")) or (c == "\n" and buf.strip()) or k == len(chars) - 1:
             t = " ".join(buf.split())
             if t and t0 is not None:
                 for a, b in SHOW:
