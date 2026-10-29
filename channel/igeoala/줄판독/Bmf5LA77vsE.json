@@ -1,0 +1,537 @@
+{
+ "id": "Bmf5LA77vsE",
+ "dur": 47.533,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   0,
+   1080,
+   1920
+  ],
+  "caption_band": [
+   212,
+   392
+  ],
+  "title_y": null,
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.4,
+   "speaker": null,
+   "text": "슬로우",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    225,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "걷는 속도로 뛰는게 운동이 되냐고?"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 4.6,
+   "t1": 8.7,
+   "speaker": null,
+   "text": "1주차",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    212,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "30일 동안. 1주차. 너무 느려서",
+    "민망해. 빠르게 걷는 사람한테 추월",
+    "당해. 그런데 발이 땅에 닿는 횟수는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 8.7,
+   "t1": 9.1,
+   "speaker": null,
+   "text": "1주차",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    217,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "당해. 그런데 발이 땅에 닿는 횟수는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 9.1,
+   "t1": 9.6,
+   "speaker": null,
+   "text": "1주차",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    232,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "당해. 그런데 발이 땅에 닿는 횟수는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 9.6,
+   "t1": 10.0,
+   "speaker": null,
+   "text": "1주차",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    219,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "당해. 그런데 발이 땅에 닿는 횟수는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 10.0,
+   "t1": 10.4,
+   "speaker": null,
+   "text": "1주차",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    232,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "당해. 그런데 발이 땅에 닿는 횟수는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 10.4,
+   "t1": 12.3,
+   "speaker": null,
+   "text": "1주차",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    212,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "당해. 그런데 발이 땅에 닿는 횟수는",
+    "빨리 뛸 때랑 비슷해. 몸이 세는 건"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 12.8,
+   "t1": 13.3,
+   "speaker": null,
+   "text": "",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": null,
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "빨리 뛸 때랑 비슷해. 몸이 세는 건",
+    "속도가 아니라 횟수야. 2주차."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 14.2,
+   "t1": 21.8,
+   "speaker": null,
+   "text": "1주차",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    217,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "속도가 아니라 횟수야. 2주차.",
+    "다리속에 피가 가는 길이 늘어나.이",
+    "길은 여러 번 오래 달려야 늘어나.",
+    "한 번 세 개로는 안 늘어나. 같은",
+    "속도가 눈에 띄게 편해져. 3주차."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 21.8,
+   "t1": 24.3,
+   "speaker": null,
+   "text": "2주차",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    212,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    24.3
+   ],
+   "_asr": [
+    "속도가 눈에 띄게 편해져. 3주차.",
+    "아무도 말 안 해 주는게 있어."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 24.3,
+   "t1": 26.7,
+   "speaker": null,
+   "text": "3주차",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    230,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    24.3
+   ],
+   "_asr": [
+    "아무도 말 안 해 주는게 있어.",
+    "느리게 뛰면 다음 날이 멀쩡해. 세계",
+    "30분은 이틀 쉬게 되고 느리게 한"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 26.7,
+   "t1": 28.2,
+   "speaker": null,
+   "text": "3주차",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    212,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    26.83,
+    28.2
+   ],
+   "_asr": [
+    "30분은 이틀 쉬게 되고 느리게 한"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 28.2,
+   "t1": 29.2,
+   "speaker": null,
+   "text": "3주차",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    247,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    28.2
+   ],
+   "_asr": [
+    "30분은 이틀 쉬게 되고 느리게 한",
+    "시간은 내일 또 나가. 한 달 뒤에"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 29.2,
+   "t1": 29.6,
+   "speaker": null,
+   "text": "3주차",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    250,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    29.57
+   ],
+   "_asr": [
+    "시간은 내일 또 나가. 한 달 뒤에"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 29.6,
+   "t1": 31.6,
+   "speaker": null,
+   "text": "3주차",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    212,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    29.57
+   ],
+   "_asr": [
+    "시간은 내일 또 나가. 한 달 뒤에",
+    "쌓인 양이 완전히 달라져. 사주차."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 31.6,
+   "t1": 34.0,
+   "speaker": null,
+   "text": "4주차",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    212,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    34.03
+   ],
+   "_asr": [
+    "쌓인 양이 완전히 달라져. 사주차.",
+    "오랜만에 속도를 올려봤어. 예전에"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 34.0,
+   "t1": 35.4,
+   "speaker": null,
+   "text": "",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": null,
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    34.03
+   ],
+   "_asr": [
+    "오랜만에 속도를 올려봤어. 예전에",
+    "숨차게 뛰던 속도가 지금은 그냥 편한"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 35.4,
+   "t1": 40.1,
+   "speaker": null,
+   "text": "4주차",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    212,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    35.67,
+    40.1
+   ],
+   "_asr": [
+    "숨차게 뛰던 속도가 지금은 그냥 편한",
+    "속도야. 느리게가 어느 정도냐고.",
+    "말이 되는 속도. 옆 사람이랑 대화가"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 40.7,
+   "t1": 43.9,
+   "speaker": null,
+   "text": "4주차",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    212,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "말이 되는 속도. 옆 사람이랑 대화가",
+    "되면 맞고 숨이 차서 말이 끊기면",
+    "빠른 거야. 오늘은 여기까지. 다음"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  }
+ ],
+ "beats": null,
+ "narr_share": null,
+ "notes": [],
+ "name_evidence": [],
+ "_todo": [
+  "speaker",
+  "layer",
+  "role",
+  "enter",
+  "fill_hex",
+  "emph",
+  "sticker",
+  "sfx",
+  "scene",
+  "fit",
+  "beats",
+  "narr_share"
+ ],
+ "_made_by": "kal_analyze.skeleton(기계값 뼈대 — 판독 전)"
+}

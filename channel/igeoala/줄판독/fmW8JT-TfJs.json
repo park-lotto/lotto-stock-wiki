@@ -1,0 +1,1294 @@
+{
+ "id": "fmW8JT-TfJs",
+ "dur": 41.767,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   1122,
+   1080,
+   798
+  ],
+  "caption_band": [
+   1379,
+   1511
+  ],
+  "title_y": null,
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null
+ },
+ "lines": [
+  {
+   "t0": 0.9,
+   "t1": 1.6,
+   "speaker": null,
+   "text": "처음 5분",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "달리기 시작하고 처음 5분. 제일"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 3.9,
+   "t1": 4.4,
+   "speaker": null,
+   "text": "다리는",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "힘들지? 숨은 턱까지 차고 다리는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 4.4,
+   "t1": 5.1,
+   "speaker": null,
+   "text": "무겁고",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "힘들지? 숨은 턱까지 차고 다리는",
+    "무겁고 이때 내 심장은 이러고 있어."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 5.1,
+   "t1": 5.9,
+   "speaker": null,
+   "text": "네 심장은",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "무겁고 이때 내 심장은 이러고 있어."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 5.9,
+   "t1": 6.4,
+   "speaker": null,
+   "text": "이러고 있어",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "무겁고 이때 내 심장은 이러고 있어."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 6.4,
+   "t1": 7.0,
+   "speaker": null,
+   "text": "많이들",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "무겁고 이때 내 심장은 이러고 있어.",
+    "많이들 여기서 멈춰. 그런데 체력이"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 7.0,
+   "t1": 7.7,
+   "speaker": null,
+   "text": "멈춰",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "많이들 여기서 멈춰. 그런데 체력이"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 7.7,
+   "t1": 8.4,
+   "speaker": null,
+   "text": "그런데",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "많이들 여기서 멈춰. 그런데 체력이"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 8.4,
+   "t1": 9.2,
+   "speaker": null,
+   "text": "체력이",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "많이들 여기서 멈춰. 그런데 체력이",
+    "없어서가 아니야. 몸이 아직 안 켜진"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 9.2,
+   "t1": 9.6,
+   "speaker": null,
+   "text": "없어서가",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "없어서가 아니야. 몸이 아직 안 켜진"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 9.6,
+   "t1": 10.4,
+   "speaker": null,
+   "text": "몸이",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1385,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "없어서가 아니야. 몸이 아직 안 켜진"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 10.4,
+   "t1": 11.2,
+   "speaker": null,
+   "text": "안 켜진 거야",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "없어서가 아니야. 몸이 아직 안 켜진",
+    "거야. 안을 보자. 출발할 때 근육은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 11.2,
+   "t1": 12.1,
+   "speaker": null,
+   "text": "안을 보자",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "거야. 안을 보자. 출발할 때 근육은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 12.1,
+   "t1": 12.9,
+   "speaker": null,
+   "text": "출발할 때",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "거야. 안을 보자. 출발할 때 근육은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 13.4,
+   "t1": 14.0,
+   "speaker": null,
+   "text": "차가워",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "아직 차가워. 차가운 근육은 뻑뻑해서"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 14.0,
+   "t1": 14.5,
+   "speaker": null,
+   "text": "차가운",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1384,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "아직 차가워. 차가운 근육은 뻑뻑해서"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 14.5,
+   "t1": 15.3,
+   "speaker": null,
+   "text": "뻑뻑해서",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "아직 차가워. 차가운 근육은 뻑뻑해서"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 15.3,
+   "t1": 16.1,
+   "speaker": null,
+   "text": "안 움직여",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "아직 차가워. 차가운 근육은 뻑뻑해서",
+    "잘 안 움직여. 심장도 아직 느리게"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 16.1,
+   "t1": 16.8,
+   "speaker": null,
+   "text": "심장도",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "잘 안 움직여. 심장도 아직 느리게"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 16.8,
+   "t1": 17.3,
+   "speaker": null,
+   "text": "느리게",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "잘 안 움직여. 심장도 아직 느리게",
+    "뛰고 있어. 근육은 벌써 산소를"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 17.3,
+   "t1": 18.4,
+   "speaker": null,
+   "text": "근육은",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1383,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "뛰고 있어. 근육은 벌써 산소를"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 18.4,
+   "t1": 19.1,
+   "speaker": null,
+   "text": "산소를",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1387,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "뛰고 있어. 근육은 벌써 산소를",
+    "달라는데 보내는 길은 아직 좁아.이"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 19.1,
+   "t1": 20.5,
+   "speaker": null,
+   "text": "보내는 길은",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "달라는데 보내는 길은 아직 좁아.이"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 20.5,
+   "t1": 21.2,
+   "speaker": null,
+   "text": "좁아",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "달라는데 보내는 길은 아직 좁아.이"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 21.2,
+   "t1": 21.7,
+   "speaker": null,
+   "text": "이 어긋난",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "달라는데 보내는 길은 아직 좁아.이",
+    "어긋남 몇 분이 제일 힘든 거야."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 21.7,
+   "t1": 22.1,
+   "speaker": null,
+   "text": "몇 분이",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "어긋남 몇 분이 제일 힘든 거야."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 22.1,
+   "t1": 22.8,
+   "speaker": null,
+   "text": "힘든 거야",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "어긋남 몇 분이 제일 힘든 거야."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 22.8,
+   "t1": 23.5,
+   "speaker": null,
+   "text": "5분쯤",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1385,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "어긋남 몇 분이 제일 힘든 거야.",
+    "5분쯤 지나면 근육이 더워지면서"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 23.5,
+   "t1": 24.0,
+   "speaker": null,
+   "text": "지나면",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "5분쯤 지나면 근육이 더워지면서"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 24.0,
+   "t1": 24.5,
+   "speaker": null,
+   "text": "근육이",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1383,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "5분쯤 지나면 근육이 더워지면서"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 24.5,
+   "t1": 25.1,
+   "speaker": null,
+   "text": "더워지면서",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "5분쯤 지나면 근육이 더워지면서",
+    "부드러워져. 좁던 길도 활짝 열려."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 25.1,
+   "t1": 25.6,
+   "speaker": null,
+   "text": "부드러워져",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    25.57
+   ],
+   "_asr": [
+    "부드러워져. 좁던 길도 활짝 열려."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 25.6,
+   "t1": 26.5,
+   "speaker": null,
+   "text": "좁던 길도",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1389,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    25.57
+   ],
+   "_asr": [
+    "부드러워져. 좁던 길도 활짝 열려."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 27.2,
+   "t1": 27.6,
+   "speaker": null,
+   "text": "그때부터",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1385,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "부드러워져. 좁던 길도 활짝 열려.",
+    "그때부터 같은 속도가 갑자기 편해져."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 27.6,
+   "t1": 28.1,
+   "speaker": null,
+   "text": "같은 속도가",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "그때부터 같은 속도가 갑자기 편해져."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 28.7,
+   "t1": 29.1,
+   "speaker": null,
+   "text": "편해져",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "그때부터 같은 속도가 갑자기 편해져."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 29.1,
+   "t1": 29.7,
+   "speaker": null,
+   "text": "그러니까",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "그때부터 같은 속도가 갑자기 편해져.",
+    "그러니까 처음 5분은 시험이 아니라"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 29.7,
+   "t1": 30.5,
+   "speaker": null,
+   "text": "처음 5분은",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "그러니까 처음 5분은 시험이 아니라"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 30.5,
+   "t1": 31.0,
+   "speaker": null,
+   "text": "시험이 아니라",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1379,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "그러니까 처음 5분은 시험이 아니라"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 31.0,
+   "t1": 32.0,
+   "speaker": null,
+   "text": "준비 구간이야",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "그러니까 처음 5분은 시험이 아니라",
+    "준비 구간이야. 빨리 나갈수록 그"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 32.0,
+   "t1": 32.5,
+   "speaker": null,
+   "text": "빨리",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "준비 구간이야. 빨리 나갈수록 그"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 32.5,
+   "t1": 33.1,
+   "speaker": null,
+   "text": "나갈수록",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "준비 구간이야. 빨리 나갈수록 그"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 33.1,
+   "t1": 33.6,
+   "speaker": null,
+   "text": "그 구간이",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "준비 구간이야. 빨리 나갈수록 그",
+    "구간이 더 길어져. 처음 5부는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 33.6,
+   "t1": 34.1,
+   "speaker": null,
+   "text": "더 길어져",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "구간이 더 길어져. 처음 5부는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 34.1,
+   "t1": 35.1,
+   "speaker": null,
+   "text": "처음 5분은",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "구간이 더 길어져. 처음 5부는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 35.1,
+   "t1": 35.8,
+   "speaker": null,
+   "text": "일부러",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "구간이 더 길어져. 처음 5부는",
+    "일부러 느리게 가. 힘든 건 내가"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 35.8,
+   "t1": 36.3,
+   "speaker": null,
+   "text": "느리게 가",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "일부러 느리게 가. 힘든 건 내가"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 36.3,
+   "t1": 36.8,
+   "speaker": null,
+   "text": "힘든 건",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "일부러 느리게 가. 힘든 건 내가"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 36.8,
+   "t1": 37.6,
+   "speaker": null,
+   "text": "약해서가",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "일부러 느리게 가. 힘든 건 내가",
+    "약해서가 아니라 몸이 켜지는"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 38.9,
+   "t1": 39.5,
+   "speaker": null,
+   "text": "중이라서야",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "약해서가 아니라 몸이 켜지는",
+    "중이라서야. 오늘은 여기까지. 다음"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 40.3,
+   "t1": 41.2,
+   "speaker": null,
+   "text": "다음 거",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1380,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "중이라서야. 오늘은 여기까지. 다음",
+    "거 기대해. Так."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  }
+ ],
+ "beats": null,
+ "narr_share": null,
+ "notes": [],
+ "name_evidence": [],
+ "_todo": [
+  "speaker",
+  "layer",
+  "role",
+  "enter",
+  "fill_hex",
+  "emph",
+  "sticker",
+  "sfx",
+  "scene",
+  "fit",
+  "beats",
+  "narr_share"
+ ],
+ "_made_by": "kal_analyze.skeleton(기계값 뼈대 — 판독 전)"
+}
