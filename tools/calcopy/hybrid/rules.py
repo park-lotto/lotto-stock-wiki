@@ -153,10 +153,21 @@ def caps_split_fix(S: dict, st: dict) -> list[str]:
     return out
 
 
+def title_spec(st: dict) -> tuple[list, float]:
+    """(판단 주인 — 대본 제목 줄을 받는 판 틀 칸) (줄마다 칸, 받을 수 있는 줄 수). 본문 틀(frame.title)과 구간 틀(frame.segments[].frame.title —
+    훅 카드 흰·연두 2줄 등) 중 칸이 가장 많은 것. 칸에 join 이 있으면 남은 줄을 이어 그리므로 줄 수 제한 없음(render_bench.title_segs 와 같은 뜻).
+    10-29 썰템쇼 회원 시험: 본문 틀 1칸만 보고 훅 카드용 2번째 줄(연두)을 잘라 '제목 1줄' 관문이 고치기 내내 반복됐다."""
+    F = st.get("frame") or {}
+    specs = [F.get("title") or []] + [((g.get("frame") or {}).get("title") or []) for g in F.get("segments") or [] if isinstance(g, dict)]
+    best = max(specs, key=len)
+    cap = float("inf") if any(isinstance(sp, dict) and sp.get("join") is not None for L in specs for sp in L) else len(best)
+    return best, cap
+
+
 def title_colors_fix(S: dict, st: dict) -> list[str]:
-    """(판단 주인 — title_colors_bad 와 같은 판 틀 읽기) 그 줄 틀에 없는 'hi' 를 null 로 바꾼다 — 형식 일이라 대본을 다시 쓰게 하지 않는다
+    """(판단 주인 — title_colors_bad 와 같은 판 틀 읽기 title_spec) 그 줄 틀에 없는 'hi' 를 null 로 바꾼다 — 형식 일이라 대본을 다시 쓰게 하지 않는다
     (10-26 까르보: 'hi' 를 2줄→1줄로 옮겨 붙이며 같은 반려 3번에 멈춤). 반환 = 바꾼 칸 글."""
-    spec = (st.get("frame") or {}).get("title") or []
+    spec, cap = title_spec(st)
     fixed = []
     for i, line in enumerate(S.get("title_lines") or []):
         sp = spec[i] if i < len(spec) else {}
@@ -164,15 +175,15 @@ def title_colors_fix(S: dict, st: dict) -> list[str]:
             if isinstance(chunk, list) and len(chunk) > 1 and chunk[1] == "hi" and "hi" not in sp:
                 chunk[1] = None
                 fixed.append(f"제목 {i + 1}줄 '{chunk[0]}' hi → null")
-    if isinstance(S.get("title_lines"), list) and len(S["title_lines"]) > len(spec):     # 판 틀보다 많은 줄은 그려지지도 않는다 — 잘라 낸다(10-27 TV 스탠드 편 '제목 줄 수 2 > 판 틀 0줄' 반려 6번)
+    if isinstance(S.get("title_lines"), list) and len(S["title_lines"]) > cap:     # 판 틀보다 많은 줄은 그려지지도 않는다 — 잘라 낸다(10-27 TV 스탠드 편 '제목 줄 수 2 > 판 틀 0줄' 반려 6번)
         fixed.append(f"제목 줄 {len(S['title_lines'])} → 판 틀 {len(spec)}줄")
-        S["title_lines"] = S["title_lines"][:len(spec)]
+        S["title_lines"] = S["title_lines"][:int(cap)]
     return fixed
 
 
 def title_colors_bad(S: dict, st: dict) -> list[str]:
-    """제목 줄마다 판 틀(frame.title[줄])에 있는 색만 썼나 — 'hi' 는 그 줄 틀에 hi 가 있을 때만(10-21 실측: 키치잇판 둘째 줄 상자에 hi → 렌더 KeyError)."""
-    spec = (st.get("frame") or {}).get("title") or []
+    """제목 줄마다 판 틀(title_spec)에 있는 색만 썼나 — 'hi' 는 그 줄 틀에 hi 가 있을 때만(10-21 실측: 키치잇판 둘째 줄 상자에 hi → 렌더 KeyError)."""
+    spec, cap = title_spec(st)
     out = []
     for i, line in enumerate(S.get("title_lines") or []):
         sp = spec[i] if i < len(spec) else {}
@@ -180,7 +191,7 @@ def title_colors_bad(S: dict, st: dict) -> list[str]:
             c = chunk[1] if isinstance(chunk, list) and len(chunk) > 1 else None
             if c == "hi" and "hi" not in sp:
                 out.append(f"제목 {i + 1}줄 '{chunk[0]}' 에 'hi' — 이 판 제목 {i + 1}줄은 강조색이 없다(null 또는 '#hex')")
-    if len(S.get("title_lines") or []) > len(spec):
+    if len(S.get("title_lines") or []) > cap:
         out.append(f"제목 줄 수 {len(S['title_lines'])} > 판 틀 {len(spec)}줄")
     return out
 

@@ -67,7 +67,9 @@
     "center": 316.0,
     "color": "#000000",
     "max_w": 980,
-    "x": 546
+    "x": 546,
+    "join": " ",
+    "_why_join": "본문 게시글 제목 = 훅 2줄을 이은 한 문장(벤치 본문 라벨 8/8편 한 줄 문장 — manifest variable_stats frames[body].layers[text:label]) · 10-29 회원 시험 3차: join 없어 1번째 줄('오뚜기가 일반인한테는')만 그려졌다(render_bench.title_segs 이븐쇼핑판과 같은 칸)"
    }
   ],
   "post": {
