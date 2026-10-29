@@ -2209,7 +2209,9 @@ def ph_plan_look(st, m, rp, u):
         if probs and not over:
             # 장면은 맞는데 Claude 가 대본·목소리 쪽 문제를 짚었다 — 재료 답 칸이 없어 멈추던 것(10-26 회원 마스크편) → 대본으로
             return _voice_rewrite(st, probs)
-        raise _Stop("장면을 맞추다 막혔어요", "다시 시도해 주시면 이어 갈게요")
+        # 속사정 = 엔진 관문에 걸린 것 + 재료 파일 수(10-29 썰템쇼: 재료 영상 0개·상품 사진만이라 '사진 비중' 관문이 고칠 길 없이 반복 — 기록이 빈칸이었다)
+        raise _Stop("장면을 맞추다 막혔어요", "다시 시도해 주시면 이어 갈게요",
+                    detail=f"엔진 관문 {over[:4]} · 재료 파일 {len((st.get('material') or {}).get('files') or [])}개 · 검수 문제 {probs[:3]}")
     return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "plan"}
 
 
