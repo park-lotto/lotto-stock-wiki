@@ -449,12 +449,9 @@ def cmd_post(a):
         if not targets:
             print(f"[{n}] Buffer에 유튜브·틱톡 채널이 없다 — 건너뜀")
             continue
-        # 시각: --at 이면 그대로(칸이 차 있으면 거절), 없으면 그 계정의 다음 빈 15:00·20:00 칸
-        dues = _due_list(a.at, a.gap, len(vs)) if a.at else _slot_dues(rows, n, len(vs))
-        for due in dues:
-            if due and due[:16] in _taken(rows, n):
-                raise SystemExit(f"[{n}] {due} 칸에 이미 예약이 있다 — 한 칸에 두 개는 없다(사장님 10-26)")
-        for v, due in zip(vs, dues):
+        # ① 올릴 수 있는 영상만 먼저 고른다 — 준비 안 된 영상이 칸을 차지하면 준비된 영상이 다음 날로 밀린다(10-29)
+        ready = []
+        for v in vs:
             cap, cap_path = _caption(d, v)
             if not cap:
                 print(f"[{n}] {v}: .txt 없음 — 건너뜀(첫 줄 제목, 나머지 설명으로 같은 이름 .txt 를 써 두라)")
@@ -469,6 +466,10 @@ def cmd_post(a):
                 continue
             cap = _with_link_line(n, cap, block)
             fp = _fingerprint(os.path.join(d, v))
+            same = next((r[0] for r in ready if r[4] == fp), None)
+            if same:     # 이번 묶음 안의 같은 영상(이름만 다름) — 장부엔 아직 없어 _already_posted 가 못 본다
+                print(f"[{n}] {v}: ⛔ 중복 — 이번에 올리는 {same} 와 같은 영상 → 안 올림")
+                continue
             todo = []
             for ch in targets:
                 dup = _already_posted(rows, n, d, v, fp, ch.get("service"))
@@ -476,8 +477,16 @@ def cmd_post(a):
                     print(f"[{n}] {v} {ch.get('service')}: ⛔ 중복 — {dup} → 안 올림(정말 다시 올릴 거면 장부에서 그 행을 지워라)")
                 else:
                     todo.append(ch)
-            if not todo:
-                continue
+            if todo:
+                ready.append((v, cap, cap_path, block, fp, todo))
+        if not ready:
+            continue
+        # ② 시각: --at 이면 그대로(칸이 차 있으면 거절), 없으면 그 계정의 다음 빈 칸(SLOTS) — 준비된 영상 수만큼만
+        dues = _due_list(a.at, a.gap, len(ready)) if a.at else _slot_dues(rows, n, len(ready))
+        for due in dues:
+            if due and due[:16] in _taken(rows, n):
+                raise SystemExit(f"[{n}] {due} 칸에 이미 예약이 있다 — 한 칸에 두 개는 없다(사장님 10-26)")
+        for (v, cap, cap_path, block, fp, todo), due in zip(ready, dues):
             done_any = False
             for ch in todo:
                 remote = None

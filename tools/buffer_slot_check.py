@@ -58,7 +58,9 @@ bp.main(["post", "--folder", F])
 by_file = {}
 for r in rows:
     by_file.setdefault(r["file"], set()).add((r["service"], r["due"]))
-check("올라간 영상 = a·b 2개(이름만 바꾼 같은 영상은 막힘)", sorted(by_file), ["a.mp4", "b.mp4"])
+posted = sorted(by_file)     # 순서가 무작위(10-29)라 같은 영상 a·a_renamed 중 먼저 온 쪽이 올라간다 — 둘 중 하나만
+check("올라간 영상 = b + (a 또는 a_renamed) 2개(이름만 바꾼 같은 영상은 막힘)",
+      len(posted) == 2 and "b.mp4" in posted and len({"a.mp4", "a_renamed.mp4"} & set(posted)) == 1, True)
 check("한 영상당 유튜브·틱톡 1번씩, 인스타 없음", sorted(len(v) for v in by_file.values()), [2, 2])
 check("한 영상의 두 서비스는 같은 칸", [len({due for _s, due in v}) for v in by_file.values()], [1, 1])
 dues = [next(iter(v))[1] for v in by_file.values()]
@@ -72,11 +74,26 @@ for i in range(30):
     _r.seed(i); seen.add(tuple(bp._order(["a.mp4", "b.mp4", "c.mp4"])))
 check("폴더에 여럿이면 무작위 순서(사장님 10-29)", len(seen) > 1, True)
 n1 = len(calls)
-for nm in ("a.mp4", "b.mp4"):                       # 예약 폴더로 간 것을 사장님이 실수로 다시 넣었다
+for nm in posted:                                   # 예약 폴더로 간 것을 사장님이 실수로 다시 넣었다
     shutil.copy2(os.path.join(d, bp.RESERVED, nm), os.path.join(d, nm))
     shutil.copy2(os.path.join(d, bp.RESERVED, nm[:-4] + ".txt"), os.path.join(d, nm[:-4] + ".txt"))
 bp.main(["post", "--folder", F])
 check("다시 돌리면 업로드 0(중복 절대 금지)", len(calls) - n1, 0)
+# 준비 안 된 영상(.txt 없음)이 칸을 차지해 준비된 영상이 다음 날로 밀리면 안 된다(10-29) — 무작위 순서 30번 다 첫 칸
+F2 = "950 숏템리폿"
+d2 = os.path.join(tmp, F2); os.makedirs(d2)
+firsts = set()
+for i in range(30):
+    for nm in os.listdir(d2):
+        os.remove(os.path.join(d2, nm)) if os.path.isfile(os.path.join(d2, nm)) else None
+    for nm, body in (("x1.mp4", b"X" * 999), ("x2.mp4", b"Y" * 999), ("ok.mp4", bytes([i]) * 1000)):
+        open(os.path.join(d2, nm), "wb").write(body)
+    open(os.path.join(d2, "ok.txt"), "w", encoding="utf-8").write("제목\n\n설명\n인포크: [1] 시험 상품")
+    rows.clear(); calls.clear(); _r.seed(i)
+    bp._load = lambda p, default: rows if p == bp.LEDGER else {F2: "k"}
+    bp.main(["post", "--folder", F2])
+    firsts.update(due for _cid, due in calls)
+check("준비 안 된 영상이 있어도 준비된 영상은 늘 다음 첫 칸", len(firsts), 1)
 shutil.rmtree(tmp)
 print("결과:", "통과" if not fails else f"실패 {len(fails)}건 {fails}")
 sys.exit(1 if fails else 0)
