@@ -1,0 +1,82 @@
+/* 메이커스랩 무료자료 공용 디자인 — A4 세로, 40·50·60대가 읽기 편한 큰 글자.
+   두 키트(숏템·숏클)가 이 파일 하나만 쓴다. 색은 카페(out/메이커스랩카페/common.css)와 같은 계열. */
+@font-face { font-family: K; src: url("file:///C:/Windows/Fonts/NotoSansKR-VF.ttf"); font-weight: 100 900; }
+@page { size: A4; margin: 0; }
+:root {
+  --navy: #0B1020; --ink: #1A1F2E; --sub: #5A6275; --line: #E3E6EE; --paper: #FFFFFF; --soft: #F5F6FA;
+  --gold: #E0A93B; --gold-soft: #FFF5DF; --vio: #6B4FE0; --vio-soft: #F0ECFF; --red: #D64545; --red-soft: #FDEDED;
+  --green: #1F9D6B; --green-soft: #E7F6EF;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { background: #888; }
+body { font-family: K, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+/* 한 쪽 = .page (A4 210x297mm). 넘치면 build_pdf.py 가 잡아낸다 */
+.page { width: 210mm; height: 297mm; background: var(--paper); position: relative; overflow: hidden;
+  padding: 22mm 20mm 24mm; margin: 0 auto 8mm; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+@media print { html, body { background: #fff; } .page { margin: 0; } }
+.page .foot { position: absolute; left: 20mm; right: 20mm; bottom: 10mm; display: flex; justify-content: space-between;
+  font-size: 9.5pt; color: #9AA0AE; border-top: 1px solid var(--line); padding-top: 3mm; }
+
+/* 표지 */
+.cover { background: var(--navy); color: #EEF1F8; padding: 30mm 22mm; display: flex; flex-direction: column; }
+.cover .brand { letter-spacing: .4em; font-size: 10.5pt; font-weight: 700; color: #9AA4BD; }
+.cover .kit { margin-top: 34mm; display: inline-block; align-self: flex-start; font-size: 12pt; font-weight: 700;
+  color: var(--navy); background: #F2C46D; padding: 2mm 5mm; border-radius: 2mm; }
+.cover h1 { margin-top: 8mm; font-size: 36pt; line-height: 1.25; font-weight: 900; letter-spacing: -.02em; }
+.cover h1 em { font-style: normal; color: #F2C46D; }
+.cover .lead { margin-top: 8mm; font-size: 14pt; line-height: 1.6; color: #C9CFDE; }
+.cover .inside { margin-top: auto; border-top: 1px solid #2A3250; padding-top: 7mm; font-size: 11.5pt; line-height: 1.9; color: #C9CFDE; }
+.cover .inside b { color: #fff; }
+.cover .who { margin-top: 6mm; font-size: 10pt; color: #7F89A3; }
+
+/* 본문 */
+.chap { font-size: 11pt; font-weight: 800; letter-spacing: .15em; color: var(--vio); }
+h2 { margin-top: 3mm; font-size: 22pt; line-height: 1.3; font-weight: 900; letter-spacing: -.02em; }
+h3 { margin-top: 8mm; font-size: 14.5pt; font-weight: 800; }
+p { margin-top: 3.5mm; font-size: 12pt; line-height: 1.75; }
+p.big { font-size: 13.5pt; }
+.sub { color: var(--sub); }
+ul, ol { margin-top: 3mm; padding-left: 6mm; font-size: 12pt; line-height: 1.75; }
+li { margin-top: 1.2mm; }
+b, strong { font-weight: 800; }
+mark { background: var(--gold-soft); color: inherit; padding: 0 1mm; }
+
+/* 상자들 */
+.box { margin-top: 5mm; border-radius: 3mm; padding: 5mm 6mm; background: var(--soft); font-size: 12pt; line-height: 1.7; }
+.box.gold { background: var(--gold-soft); border-left: 2mm solid var(--gold); }
+.box.vio { background: var(--vio-soft); border-left: 2mm solid var(--vio); }
+.box.red { background: var(--red-soft); border-left: 2mm solid var(--red); }
+.box.green { background: var(--green-soft); border-left: 2mm solid var(--green); }
+.box .t { font-weight: 800; font-size: 12.5pt; margin-bottom: 1.5mm; }
+
+/* 예시 대본: 칸 이름 + 줄 */
+.script { margin-top: 5mm; border: 1px solid var(--line); border-radius: 3mm; overflow: hidden; }
+.script .row { display: flex; border-top: 1px solid var(--line); }
+.script .row:first-child { border-top: 0; }
+.script .k { flex: 0 0 30mm; background: var(--soft); padding: 3mm 4mm; font-size: 10.5pt; font-weight: 800; color: var(--vio); }
+.script .v { flex: 1; padding: 3mm 4mm; font-size: 12pt; line-height: 1.6; }
+
+/* 표 */
+table { margin-top: 5mm; width: 100%; border-collapse: collapse; font-size: 11pt; line-height: 1.55; }
+th { background: var(--navy); color: #fff; text-align: left; padding: 2.5mm 3mm; font-weight: 700; }
+td { border-bottom: 1px solid var(--line); padding: 2.5mm 3mm; vertical-align: top; }
+
+/* 복사용 프롬프트 */
+.prompt { margin-top: 4mm; background: #0F1426; color: #E6E9F2; border-radius: 3mm; padding: 5mm 6mm;
+  font-size: 10.5pt; line-height: 1.7; white-space: pre-wrap; word-break: keep-all; }
+.prompt .fill { color: #F2C46D; font-weight: 700; }
+.ptag { margin-top: 7mm; display: inline-block; font-size: 10pt; font-weight: 800; color: #fff; background: var(--vio); padding: 1mm 3.5mm; border-radius: 1.5mm; }
+
+/* 점검표 */
+.check { margin-top: 4mm; list-style: none; padding-left: 0; }
+.check li { position: relative; padding: 2.2mm 0 2.2mm 10mm; border-bottom: 1px dashed var(--line); }
+.check li::before { content: ""; position: absolute; left: 0; top: 3.2mm; width: 5.5mm; height: 5.5mm; border: .5mm solid var(--ink); border-radius: 1mm; }
+
+/* 마지막 쪽 안내 */
+.next { background: var(--navy); color: #EEF1F8; }
+.next h2 { color: #fff; }
+.next p, .next li { color: #C9CFDE; }
+.next .box { background: #141B33; color: #DDE2EE; }
+.next .foot { border-color: #2A3250; color: #7F89A3; }

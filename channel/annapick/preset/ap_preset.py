@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# _deprecated_2026-10-25 → tools/calcopy/hybrid/styles/안나픽판.json (관제 263 지시서 07 · 표준 §3-1: 새 편은 공용 렌더러로. 읽기 전용 참고물 — 설명서 프리셋 생성기는 회원 옛 길이 결과를 읽으므로 지우지 않는다)
 """안나픽 연예인템 프리셋 「검정띠2줄_출처」 — 자동 설명서 6편 → 손질(창 아래 출처 줄·채널 로고 층 추가) → preset_save (관제 097).
     PYTHONUTF8=1 py channel/annapick/preset/ap_preset.py
 ★뜯기 기록용 — 렌더에 쓰지 않는다(사장님 10-17: 얜샷템 렌더 = 만템 색톤 프레임 channel/mantem/frame_얜샷템.json).

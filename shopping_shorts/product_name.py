@@ -28,6 +28,7 @@ vision_tags의 subject/keywords는 **분위기어가 지배**한다. 아카이�
 import concurrent.futures as _fut
 import json
 import sys
+import time
 
 from pipeline.atoms import key_vault
 from shopping_shorts import comment_gen
@@ -123,6 +124,12 @@ def _identify_one(image_bytes):
                 continue           # 다음 키로 (죽은 키 8·11번이 여기서 걸러진다)
             if key_vault.is_quota_error(e):
                 continue           # 429는 다음 키로 — 기다리지 않는다(검색은 대화형이다)
+            # ★구글 일시 과부하(503)도 잠깐 뒤 다음 키로(관제 247) — 판정은 주인 함수 하나
+            from shopping_shorts.script_extract import is_transient_api_error
+            if is_transient_api_error(e):
+                time.sleep(1.5)
+                continue
+            print(f"[product_name] 판독 실패: {e!r}"[:300], file=sys.stderr)
             return None, None, None, None
     return None, None, None, None
 

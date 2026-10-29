@@ -1,0 +1,129 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    242,
+    242,
+    242
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 19,
+   "y": 541,
+   "w": 1041,
+   "h": 746,
+   "radius": 87
+  },
+  {
+   "kind": "text",
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -2.1,
+   "word_spacing": 5.6,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "role": "title",
+   "x": 68,
+   "y": 446,
+   "w": 1000,
+   "align": "left",
+   "lines": 1,
+   "font": "SUITBold",
+   "size": 69.2,
+   "line_h": 80,
+   "rgb": [
+    13,
+    13,
+    13
+   ],
+   "text": "정성에 '아이디어'가 더해질 때"
+  },
+  {
+   "kind": "text",
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 2,
+    "rgb": [
+     255,
+     255,
+     255
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -3.3,
+   "word_spacing": 20.3,
+   "valign": "center",
+   "enter": {
+    "kind": "none",
+    "ms": 0
+   },
+   "emphasis": null,
+   "role": "caption",
+   "x": 548,
+   "y": 1291,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-SemiBold",
+   "size": 71.9,
+   "line_h": 83,
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "bpjoacs2S6Q",
+ "made_from": {
+  "tool": "sinbak_preset.hand",
+  "engine": "뜯기 1판 2026-10-15",
+  "font": {
+   "top1": "SUIT-Bold.otf",
+   "top1_score": 0.3886,
+   "picked_from": {
+    "file": "SUIT-Bold.otf",
+    "score": 0.3886
+   },
+   "font_confidence": "low",
+   "skipped": []
+  },
+  "title_ink_w": 257,
+  "font_confidence": "low",
+  "notes": [
+   "바탕색 = 프레임 실제 칠 [242, 242, 242] (뜯기 잰 값 [242, 242, 242])",
+   "글꼴 1위 SUIT-Bold.otf(0.3886) < 0.5 — 확신 낮음. 쓴 글꼴 SUITBold({'file': 'SUIT-Bold.otf', 'score': 0.3886})",
+   "제목 글꼴 = 자막 글꼴(SUITBold) — 분석기 fonts.title 없음 · 프레임/제목 OCR 없어 직접 판별 못 함",
+   "제목 줄마다 크기 [48.4, 24.2] → size 36.3 × line_scale [1.333, 0.667]",
+   "제목 기울기 +0도(기둥 전단 투영) → 바름",
+   "제목 글자 OCR 없음 → text null(크기는 표본 글자로 잼)",
+   "자막 자간·낱말 간격 0 — 폭 ≥400px 자막 0/10개(3개 미만)",
+   "자막 등장 none — 뜯기 등장 표본 3개 중 '없음' 3개",
+   "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+   "캔버스 1080 으로 · 창/제목/본문 손질(실측 근거 = 이 파일 머리, 값 = measure.json)",
+   "로고 줄 [94,280,773,406] = 우리 '신박리포트' 자리 — 그림 없음, 층 비움(스키마 빈칸 아님, 자산 빈칸)",
+   "창 안 글씨(BMDOHYEON·검정 9px 테·색=뜻·자유 자리)는 스키마 글자 층에 못 담음 → manifest.overlay_style"
+  ],
+  "from": "frame_bpjoacs2S6Q.json"
+ }
+}

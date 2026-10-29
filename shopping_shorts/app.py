@@ -190,6 +190,16 @@ app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 
 @app.on_event("startup")
+def _channel_stats_hourly():
+    """채널 리포트(관제 281) 매시간 자동 수집 — 언제·어디서 도나는 channel_stats.service.start_scheduler 한 곳."""
+    try:
+        from channel_stats import service as _cs
+        _cs.start_scheduler(log=lambda m: logging.warning(m))
+    except Exception as e:      # noqa: BLE001 — 기동은 막지 않되 사실은 남긴다
+        logging.warning("[channel_stats] 자동 수집 시작 실패: %r", e)
+
+
+@app.on_event("startup")
 def _seed_voice_presets():
     """기동 시 큐레이션 프리셋을 DB로 upsert(idempotent)."""
     try:
@@ -1906,16 +1916,37 @@ def _fav_channel_home_url(platform, channel_id, fallback=""):
     return tpl.format(id=cid) if tpl else fallback
 
 
-def _fav_channel_decorate(items):
-    """목록에 화면이 쓸 파생값을 붙인다(저장은 안 한다)."""
+def _fav_channel_decorate(items, cid=None):
+    """목록에 화면이 쓸 파생값을 붙인다(저장은 안 한다).
+    cid 가 분류를 쓰는 사람이면 채널마다 category(없으면 '기타')도 붙인다(관제 261)."""
+    cats = Store(DB_PATH).fav_cat_of(customer_id=cid) if cid is not None and _fav_cat_on(cid) else None
     for it in items:
         it["home_url"] = _fav_channel_home_url(
             it.get("platform"), it.get("channel_id"), it.get("url") or "")
+        if cats is not None:
+            it["category"] = cats.get((it.get("platform"), it.get("channel_id")), Store.FAV_CAT_ETC)
     return items
 
 
+def _fav_cat_on(cid) -> bool:
+    """나만의 채널 분류를 쓰는 사람 — ★판단의 주인은 여기 하나(관제 261).
+    지금은 관리자만(사장님 2026-10-24 "지금은 나만 보는거야"). 회원에게 열 땐 여기만 바꾼다."""
+    return _is_admin(cid)
+
+
+def _fav_cat_payload(cid, platform="", channel_id="") -> dict:
+    """분류 버튼을 그릴 재료 — 분류 이름(최근 쓴 순)·기타 이름·(채널을 주면) 그 채널의 지금 분류."""
+    store = Store(DB_PATH)
+    out = {"cats": store.fav_cat_names(customer_id=cid), "etc": Store.FAV_CAT_ETC,
+           "cats_fixed": store.fav_cat_names(customer_id=cid, recent=False)}   # 목록 탭은 순서 고정
+    if channel_id:
+        out["category"] = store.fav_cat_of(customer_id=cid).get(
+            ((platform or "").lower(), channel_id.lstrip("@")), Store.FAV_CAT_ETC)
+    return out
+
+
 def _fav_channel_cap(cid) -> int:
-    """나만의 채널 상한 — ★판단의 주인은 여기 하나다. 관리자 100 · 회원 50(사장님 2026-10-18)."""
+    """나만의 채널 상한 — ★판단의 주인은 여기 하나다. 관리자 0(=한도 없음, 사장님 2026-10-24) · 회원 50."""
     return Store.FAV_CHANNEL_CAP_ADMIN if _is_admin(cid) else Store.FAV_CHANNEL_CAP
 
 
@@ -1924,8 +1955,50 @@ def api_fav_channel_list(request: Request):
     """내 볼채널 목록. 지표 갱신은 여기서 하지 않는다 — 화면이 refresh를 따로 부른다
     (열 때 1회·6시간 캐시. 목록 조회마다 외부 API를 때리면 카드 수만큼 비용이 난다)."""
     store = Store(DB_PATH)
-    items = _fav_channel_decorate(store.fav_channel_list(customer_id=_cid(request)))
-    return {"ok": True, "items": items, "cap": _fav_channel_cap(_cid(request))}
+    cid = _cid(request)
+    items = _fav_channel_decorate(store.fav_channel_list(customer_id=cid), cid)
+    out = {"ok": True, "items": items, "cap": _fav_channel_cap(cid)}
+    if _fav_cat_on(cid):
+        out.update(_fav_cat_payload(cid))
+    return out
+
+
+def _fav_cat_cid(request: Request):
+    """분류 API 입구 검사 — 로그인(세션) + 분류 쓰는 사람인지. 통과면 (cid, None)."""
+    cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
+    if cid is None:
+        return None, {"ok": False, "error": "로그인이 필요합니다"}
+    if not _fav_cat_on(cid):
+        return None, {"ok": False, "error": "분류는 관리자만 쓸 수 있어요"}
+    return cid, None
+
+
+@app.post("/api/fav_channel/cats/add")
+def api_fav_channel_cat_add(request: Request, body: dict):
+    """새 분류 만들기(관제 261). body: {name}"""
+    cid, err = _fav_cat_cid(request)
+    if err:
+        return err
+    name = Store(DB_PATH).fav_cat_add(body.get("name") or "", customer_id=cid)
+    if not name:
+        return {"ok": False, "error": "분류 이름을 넣어주세요"}
+    return {"ok": True, "name": name, **_fav_cat_payload(cid)}
+
+
+@app.post("/api/fav_channel/set_cat")
+def api_fav_channel_set_cat(request: Request, body: dict):
+    """채널을 분류로 옮기기(관제 261). body: {platform, channel_id, category} — ''·'기타' = 기타."""
+    cid, err = _fav_cat_cid(request)
+    if err:
+        return err
+    plat = (body.get("platform") or "").strip().lower()
+    chid = (body.get("channel_id") or "").strip().lstrip("@")
+    store = Store(DB_PATH)
+    if not any(i["platform"] == plat and i["channel_id"] == chid
+               for i in store.fav_channel_list(customer_id=cid)):
+        return {"ok": False, "error": "나만의 채널에 없는 채널이에요"}
+    cat = store.fav_cat_set(plat, chid, body.get("category") or "", customer_id=cid)
+    return {"ok": True, "platform": plat, "channel_id": chid, **_fav_cat_payload(cid), "category": cat}
 
 
 @app.post("/api/fav_channel/add")
@@ -1960,6 +2033,7 @@ def api_fav_channel_add(request: Request, body: dict):
     )
     if added is None:
         return {"ok": False, "error": f"나만의 채널은 최대 {_fav_channel_cap(cid)}개까지예요"}
+    _fav_channel_fill_soon(cid, plat, chid, body.get("channel_url") or url)
     n = len(store.fav_channel_list(customer_id=cid))
     return {"ok": True, "added": bool(added), "platform": plat, "channel_id": chid, "count": n}
 
@@ -1975,6 +2049,30 @@ def api_fav_channel_remove(request: Request, body: dict):
 
 # 갱신 캐시 — 사장님 확정(2026-09-02): "열 때 1회". 6시간 안에 이미 갱신했으면 건너뛴다.
 _FAV_CH_TTL_SEC = 6 * 3600
+# 담는 순간 그 채널 1개의 사진·이름을 뒤에서 받는다(관제 278, 2026-10-27 사장님 "앞으로 넣을 때도 다 들어가게").
+#   ★화면 열 때 갱신만 있으면 3개씩·오래된 순이라 새로 담은 채널이 맨 뒤에서 수십 번을 기다렸다.
+#   유튜브 조회(yt-dlp)는 수십 초라 담기 응답을 붙잡지 않게 작은 풀(2개)로 돌린다.
+from shopping_shorts import keyctx as _fav_keyctx
+_FAV_FILL_POOL = _fav_keyctx.pool(max_workers=2)
+
+
+def _fav_channel_fill_now(cid, platform, channel_id, url=""):
+    meta = _fav_channel_probe(platform, channel_id, url)
+    if meta:
+        Store(DB_PATH).fav_channel_set_meta(platform, channel_id, customer_id=cid, **meta)
+    else:
+        print(f"[볼채널] 담은 직후 채우기 빈 결과 {platform}/{channel_id}", file=sys.stderr)
+
+
+def _fav_channel_fill_soon(cid, platform, channel_id, url=""):
+    """담기 입구(_fav_channel_register · /api/fav_channel/add)가 부른다 — 사진이 빈 채널만."""
+    try:
+        if any(i["platform"] == (platform or "").lower() and i["channel_id"] == channel_id
+               and not (i.get("avatar") or "")
+               for i in Store(DB_PATH).fav_channel_list(customer_id=cid)):
+            _FAV_FILL_POOL.submit(_fav_channel_fill_now, cid, platform, channel_id, url)
+    except Exception as e:  # noqa: BLE001 — 사진 채우기가 담기를 막지 않는다
+        print(f"[볼채널] 담은 직후 채우기 실패 {platform}/{channel_id}: {e!r}", file=sys.stderr)
 
 
 @app.post("/api/fav_channel/refresh")
@@ -1990,7 +2088,8 @@ def api_fav_channel_refresh(request: Request):
     #   멈춘다 → 한 번에 이만큼만 갱신하고 나머지는 다음에 열 때 이어서 한다.
     #   6시간 캐시가 있어 몇 번 열면 전부 채워진다.
     slow_left = 3
-    for it in items:
+    # 사진이 빈 채널 먼저(관제 278) — 오래된 순이면 6시간마다 기존 채널이 3칸을 다 쓴다.
+    for it in sorted(items, key=lambda i: bool(i.get("avatar"))):
         ts = it.get("refreshed_at")
         if ts:
             try:
@@ -2012,7 +2111,7 @@ def api_fav_channel_refresh(request: Request):
                                        customer_id=cid, **meta)
             done += 1
     return {"ok": True, "refreshed": done,
-            "items": _fav_channel_decorate(store.fav_channel_list(customer_id=cid))}
+            "items": _fav_channel_decorate(store.fav_channel_list(customer_id=cid), cid)}
 
 
 def _fav_channel_yt_probe(channel_id):
@@ -2462,6 +2561,8 @@ def _fav_channel_register(cid, url: str, username: str = "", thumb: str = "") ->
     added = store.fav_channel_add(plat, chid, name=(disp or chid), url=url,
                                   last_video_thumb=thumb, customer_id=cid, cap=cap)
     status = "full" if added is None else ("added" if added else "exists")
+    if added is not None:
+        _fav_channel_fill_soon(cid, plat, chid, url)
     return {"status": status, "platform": plat, "channel_id": chid, "name": disp,
             "cap": cap}
 
@@ -2517,6 +2618,8 @@ def api_share(request: Request, background_tasks: BackgroundTasks, body: dict):
                         background_tasks=background_tasks)
     elif dest == "channel":
         r = _fav_channel_register(cid, link)
+        if r["status"] in ("added", "exists") and _fav_cat_on(cid):
+            r.update(_fav_cat_payload(cid, r["platform"], r["channel_id"]))   # 분류 버튼 재료(관제 261)
     else:
         return {"ok": True, "status": "preview", "link": link,
                 "platform": _grab_platform(link) or _fav_channel_platform(link)}
@@ -9535,43 +9638,10 @@ def api_voice_presets(request: Request, lang: str = "KR"):
     #   남이 담은 성우는 **그 사람 일레븐랩스 계정에만** 있어서, 내 키로 고르면 합성이 실패한다.
     _cid = getattr(request.state, "customer_id", 0) or 0
     rows = Store(DB_PATH).list_voice_presets(lang=lang, customer_id=_cid)
-    groups = {}
-    for p in rows:
-        # 튜닝 작업대가 만든 임시 프리셋(origin="tuned", :1526)은 카드에서 뺀다.
-        # prune_voice_presets가 그 행을 **의도적으로** 안 지우므로(작업대엔 필요, 리뷰 S2)
-        # 거르지 않으면 이름·설명·샘플이 다 빈 껍데기가 성우 카드로 뜬다 — 2026-07-17
-        # 라이브 화면에서 kr-test·kr-snap이 실제로 그렇게 보였다(사장님이 화면을 보라고
-        # 해서 브라우저로 직접 열어보고 발견). DB에 남는 건 맞고 카드에 나오는 게 틀렸다.
-        # ⚠️ origin이 없는 옛 행은 **보이는 쪽으로** 실패시킨다 — 안 보이는 실패는
-        # 아무도 못 잡고, 성우가 통째로 사라지는 쪽이 훨씬 나쁘다.
-        if p.get("origin") == "tuned":
-            continue
-        # ★타입캐스트를 껐으면 그 성우 카드는 아예 안 보인다(2026-09-07 사장님 "일레븐만
-        #   쓴다"). 고를 수 없으면 3단계에서 타입캐스트 오류가 날 길이 없다. 판정은
-        #   typecast_tts 한 곳(0순위-B) — 프론트가 "tc-" 접두사로 추측하지 않는다.
-        if typecast_tts.use_fallback(p.get("model_id")) or fish_tts.use_fallback(p.get("model_id")):
-            continue
-        gid = p["group_id"]
-        g = groups.setdefault(gid, {
-            "group_id": gid, "name": p["name"], "one_liner": p["one_liner"],
-            "lang": p["lang"], "archetype": p["archetype"],
-            # best는 성우(그룹)의 성질이라 첫 행에서 한 번만 집는다 — 같은 성우의
-            # 3~4개 variant 행은 모두 같은 값이다. 순서는 Store가 이미 정해서
-            # 줬고(ORDER BY best DESC), dict가 삽입 순서를 보존하므로 여기선 보존만 한다.
-            "best": bool(p.get("best", False)),
-            # 어느 엔진 성우인지 카드에 배지로 띄운다(2026-08-19). 판정은 서버가 한다 —
-            # 프론트가 group_id 접두사("tc-") 따위로 추측하면 판단이 두 곳이 된다(0순위-B).
-            "engine": voice_presets.engine_of(p.get("model_id")),
-            "default_variant": "stable", "variants": {}, "samples_pending": False,
-        })
-        g["variants"][p["variant"]] = {
-            "preset_id": p["preset_id"], "voice_id": p["base_voice_id"],
-            "voice_settings": p["voice_settings"], "default_speed": p["default_speed"],
-            "default_silence_trim": p["default_silence_trim"],
-            "sample_url": f"/api/voice-presets/{p['preset_id']}/sample" if p["sample_file"] else None,
-        }
-        if p.get("origin") == "library" and not p.get("sample_file"):
-            g["samples_pending"] = True
+    # ★타입캐스트를 껐으면 그 성우 카드는 아예 안 보인다(2026-09-07 사장님 "일레븐만 쓴다") — 판정은 typecast_tts 한 곳(0순위-B).
+    #   그룹 묶기(톤 variants·best·engine 배지·임시 'tuned' 빼기)는 voice_presets.groups 한 곳 — 설정 화면(claude_studio)도 같은 함수(관제 266).
+    groups = {g["group_id"]: g for g in voice_presets.groups(
+        rows, skip=lambda p: typecast_tts.use_fallback(p.get("model_id")) or fish_tts.use_fallback(p.get("model_id")))}
     # 🎙 마지막으로 쓴 성우(2026-09-02) — 화면이 그 성우를 미리 골라둔 상태로 연다.
     #   ★왜 여기냐: 이 라우트는 이미 로그인 고객 기준(_cid)이고 4단계가 열릴 때 한 번 부른다.
     #     /api/mix/status는 **인증이 없어**(job_id만 알면 열림) 거기 실으면 남의 선택이 샌다.
@@ -9957,13 +10027,16 @@ def _voice_snapshot(store, body):
 
 @app.post("/api/script/translate")
 def api_script_translate(request: Request, body: dict):
-    """2단계 대본 영어모드 변환(2026-09-29 사장님 "대본생성에 두어야 맞는 거 아니야", 관제 029).
+    """2단계 대본 영어·일본어모드 변환(2026-09-29 관제 029 영어 · 2026-10-21 관제 248 일본어).
 
-    body: {lines: [...], product?: str} → {ok, lines: [...]} 같은 길이. 화면(2단계 카드)이 줄을 갈아끼우고
-    사람이 고친 뒤 확정하면 given_script가 영어로 3단계에 간다. 판단 주인은 script_translate.to_english
+    body: {lines: [...], product?: str, lang?: 'en'|'ja'(기본 en)} → {ok, lines: [...], lang, cps(+en이면 cps_en)} 같은 길이. 화면(2단계 카드)이 줄을 갈아끼우고
+    사람이 고친 뒤 확정하면 given_script가 그 언어로 3단계에 간다. 판단 주인은 script_translate.translate
     (줄 수 계약·한글 잔존 거부). 작업(job)을 건드리지 않는다 — 순수 문장 변환.
     """
     from shopping_shorts import script_translate
+    lang = body.get("lang") or "en"
+    if lang not in script_translate.LANG_LABEL:      # ko·ja·zh·en 어느 쪽으로든(관제 254 — 원문 언어는 엔진이 판정)
+        return JSONResponse(status_code=422, content={"ok": False, "error": "지원하지 않는 언어예요"})
     lines = [str(x or "") for x in (body.get("lines") or []) if isinstance(x, (str, int, float))]
     if not lines:
         return JSONResponse(status_code=422, content={"ok": False, "error": "번역할 문장이 없어요"})
@@ -9973,12 +10046,45 @@ def api_script_translate(request: Request, body: dict):
     if _blocked:
         return _blocked
     try:
-        out = script_translate.to_english(lines, str(body.get("product") or ""))
+        out = script_translate.translate(lines, lang, str(body.get("product") or ""),
+                                         source=(body.get("src") if body.get("src") in script_translate.LANG_LABEL else None))
     except ValueError as e:
         return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
-    # 화면이 "몇 초"를 영어 계수로 말하게 같이 준다(2026-09-29 사장님 "영어는 두 배가 되네" — 한국어 계수로 나눈 표시).
+    # 화면이 "몇 초"를 그 언어 계수로 말하게 같이 준다(2026-09-29 사장님 "영어는 두 배가 되네" — 한국어 계수로 나눈 표시).
     from shopping_shorts import edit_plan as _ep
-    return {"ok": True, "lines": out, "cps_en": _ep.speech_cps(lang="en", norm=True)}   # 화면 s2SecOf는 norm 글자를 센다
+    cps = _ep.speech_cps(lang=lang, norm=True)          # 화면 s2SecOf는 norm 글자를 센다
+    res = {"ok": True, "lines": out, "lang": lang, "cps": cps}
+    if lang == "en":
+        res["cps_en"] = cps                              # 옛 화면·저장본 호환(관제 029)
+    return res
+
+
+@app.get("/api/script/chat/models")
+def api_script_chat_models(request: Request):
+    """대화창 모델 선택 칸(관제 253) — 이 계정이 고를 수 있는 모델. 판단 주인 script_chat.models_for(vertex_route.plan)."""
+    from shopping_shorts import script_chat
+    if not _setting_gate(Store(DB_PATH), "script_chat_enabled", _cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "아직 열리지 않은 기능이에요"})
+    return {"ok": True, **script_chat.models_for(_cid(request))}
+
+
+@app.post("/api/script/chat")
+def api_script_chat(request: Request, body: dict):
+    """2단계 대본 AI 대화 고치기(관제 253). body: {lines, message, history?, product?, roles?, only?(한 줄 요구창 줄 번호)}
+    → {ok, reply, lines(같은 줄 수), changed}. 판단 주인 script_chat.revise — AI 길(자기 버텍스·관리자·무료 키)은
+    script_generate._call_json 이 vertex_route.plan 으로 가른다. 작업(job)을 건드리지 않는다 — 화면이 [적용]으로 칸에 넣는다."""
+    from shopping_shorts import script_chat
+    if not _setting_gate(Store(DB_PATH), "script_chat_enabled", _cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "아직 열리지 않은 기능이에요"})
+    try:
+        return {"ok": True, **script_chat.revise(body.get("lines") or [], body.get("message") or "",
+                                                 body.get("history") if isinstance(body.get("history"), list) else [],
+                                                 str(body.get("product") or ""),
+                                                 body.get("roles") if isinstance(body.get("roles"), list) else None,
+                                                 body.get("only") if isinstance(body.get("only"), int) else None,
+                                                 str(body.get("model") or "") or None)}
+    except ValueError as e:
+        return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
 
 
 @app.post("/api/script/cta_guess")
@@ -10000,17 +10106,19 @@ def api_script_cta_guess(body: dict):
 
 
 def _lang_voice_block(job, voice):
-    """영어모드 작업에 타입캐스트(한국 성우) 성우를 쓰려 하면 422 응답, 아니면 None.
-    언어 판정은 script_translate.job_lang 한 곳(2단계에서 영어로 확정한 작업 = given_script가 영어)."""
+    """영어·일본어·중국어모드 작업에 타입캐스트(한국 성우)·Fish 한국어 성우를 쓰려 하면 422 응답, 아니면 None.
+    언어 판정은 script_translate.job_lang 한 곳(2단계에서 외국어로 확정한 작업 = given_script가 그 언어)."""
     from shopping_shorts import script_translate
-    if script_translate.job_lang(job) != "en":
+    lang = script_translate.job_lang(job)
+    if lang not in ("en", "ja", "zh"):
         return None
+    label = script_translate.LANG_LABEL[lang]
     if fish_tts.is_fish((voice or {}).get("model_id")):
         return JSONResponse(status_code=422, content={
-            "ok": False, "error": "영어모드에서는 Fish 한국어 성우를 쓸 수 없어요 — 일레븐랩스 성우를 골라 주세요."})
+            "ok": False, "error": f"{label}모드에서는 Fish 한국어 성우를 쓸 수 없어요 — 일레븐랩스 성우를 골라 주세요."})
     if typecast_tts.is_typecast((voice or {}).get("model_id")):
         return JSONResponse(status_code=422, content={
-            "ok": False, "error": "영어모드에서는 타입캐스트(한국 성우)를 쓸 수 없어요 — 일레븐랩스 성우를 골라 주세요."})
+            "ok": False, "error": f"{label}모드에서는 타입캐스트(한국 성우)를 쓸 수 없어요 — 일레븐랩스 성우를 골라 주세요."})
     return None
 
 
@@ -10104,7 +10212,12 @@ def _video_gone_reason(job):
         return "작업을 찾을 수 없어요."
     # 최종 렌더 뒤 입력을 고치면 status가 ready_for_review로 돌아간다. 혹시 옛 경로가
     # 남은 작업이어도 그 파일을 최신 완성본으로 주지 않는다(재생·공유·예약 공통 방어).
+    # ★한 번도 렌더하지 않은 작업에 "다시"라고 하면 고객이 뭘 해야 할지 모른다
+    #   (2026-10-26 관제 274, 임동일: 렌더 전에 예약을 눌러 "다시 렌더"만 보고 버퍼 고장으로 앎).
+    #   ⚠️렌더 뒤 고쳐서 무효화된 작업도 video_path가 비므로(_save_render_inputs) 두 경우 다 맞는 말로 쓴다.
     if job.get("status") != "done":
+        if not job.get("video_path"):
+            return "최신 완성 영상이 없어요 — '최종 렌더'를 눌러 완성본을 만들어 주세요."
         return "수정한 내용으로 최종 렌더를 다시 해주세요."
     if not job.get("video_path"):
         return "아직 완성된 영상이 없어요."
@@ -10497,6 +10610,25 @@ def api_share_v(request: Request, sid: str, dl: int = 0):
     return _mp4_range_response(job["video_path"], request)
 
 
+# ── Claude로 만든 영상의 Buffer 공개 주소(관제 250, 2026-10-21) ──
+# 사장님 PC의 tools/buffer_post.py 가 SSH(scp)로 이 폴더에 올리고, Buffer가 이 주소로 가져간다.
+# ★업로드 창구는 일부러 안 만든다 — 올리는 길은 SSH 키가 있는 PC뿐이라 아무나 올릴 수 없다.
+#   이름은 도구가 짓는 긴 무작위 값(추측 불가)이고, 게시가 끝나면 도구가 지운다.
+_BUFFER_DROP_DIR = Path(__file__).parent / "data" / "buffer_drop"
+_BUFFER_DROP_NAME = re.compile(r"^[A-Za-z0-9_-]{24,64}\.mp4$")
+
+
+@app.api_route("/api/share/f/{name}", methods=["GET", "HEAD"])
+def api_share_f(request: Request, name: str):
+    """buffer_drop 폴더의 영상을 로그인 없이 내준다. ★HEAD 필수(Buffer가 먼저 HEAD로 확인 — api_share_v 머리말)."""
+    if not _BUFFER_DROP_NAME.match(name):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 영상이에요"})
+    p = _BUFFER_DROP_DIR / name
+    if not p.is_file():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 영상이에요"})
+    return _mp4_range_response(str(p), request)
+
+
 @app.api_route("/api/share/e/{sid}", methods=["GET", "HEAD"])
 def api_share_e(request: Request, sid: str):
     """Buffer가 가져가는 **캡컷 편집본** 공개 주소(/api/share/v와 같은 단축 id·만료).
@@ -10618,13 +10750,25 @@ _BUFFER_DEMO_CHANNELS = [
 
 
 @app.get("/api/buffer/channels")
-def api_buffer_channels(request: Request):
-    """이 고객의 Buffer에 연결된 채널 목록(어디에 올릴지 고르게 한다)."""
+def api_buffer_channels(request: Request, job_id: str = ""):
+    """이 고객의 Buffer에 연결된 채널 목록(어디에 올릴지 고르게 한다).
+
+    job_id를 주면 그 작업에 올릴 완성 영상이 있는지 먼저 본다 — 없으면 예약 창을 열지 않고
+    이유를 돌려준다(2026-10-26 관제 274: 렌더 전에 예약 창이 열려 고객이 버퍼 고장으로 앎).
+    판정은 예약(api_buffer_schedule)과 같은 _video_gone_reason 하나다."""
     key = _buffer_key(request)
     if not key:
         if _BUFFER_DEMO:
             return {"ok": True, "channels": _BUFFER_DEMO_CHANNELS, "demo": True}
         return JSONResponse(status_code=200, content=_BUFFER_NO_KEY)
+    job_id = os.path.basename(job_id or "")
+    if job_id:
+        job = Store(DB_PATH).get_mix_job(job_id)
+        if job and int(job.get("customer_id") or 0) == _cid(request):
+            _gone = _video_gone_reason(job)
+            if _gone:
+                return JSONResponse(status_code=200,
+                                    content={"ok": False, "no_video": True, "error": _gone})
     try:
         return {"ok": True, "channels": buffer_api.channels(key)}
     except buffer_api.BufferError as e:
@@ -13937,6 +14081,78 @@ def _set_session_cookie(response, customer_id: int):
                          max_age=_COOKIE_MAX_AGE, httponly=True, samesite="lax")
 
 
+# ── 옛 주소 로그인 이어주기(관제 272, 2026-10-26 사장님 "고객이 할거없게") ─────────────
+# 고객 PC에 깔린 담기 확장은 옛 주소(shoppingshorts.duckdns.org)가 박혀 있어 뒤에서 그 주소로 부른다.
+# 로그인은 새 주소(stmaker.kr)에서 하므로 옛 주소엔 쿠키가 없다 → 확장 기능이 '로그인 필요'로 막혔다.
+# 그래서 새 주소에서 화면을 열 때 하루 한 번 옛 주소를 한 번 들렀다 온다(주소창 이동 = 1st-party 쿠키라
+# 브라우저가 막지 않는다). 들르는 자리에서 같은 로그인·같은 기기 도장을 옛 주소에도 심는다.
+# ★판단은 여기 두 함수 + 엔드포인트(api_old_domain_sync) 한 벌뿐이다.
+_OLD_HOST = "shoppingshorts.duckdns.org"
+_NEW_HOST = "stmaker.kr"
+_OLD_SYNC_MARK = "ss_oldsync"                 # 새 주소에 남기는 '오늘 들렀다' 표시
+_OLD_SYNC_MARK_AGE = 60 * 60 * 24             # 하루 — 옛 주소 쿠키(30일)보다 짧게 잡아 늘 살아 있게
+# ★경로가 /grab 으로 시작해야 한다 — 옛 주소 아파치 규칙(!^/(api/|grab|…))이 /grab* 만 새 주소로 안 넘긴다.
+#   /api/ 아래로 두면 '창 여는 /api/ 는 새 주소로'(같은 날 추가) 규칙에 걸려 옛 주소에 쿠키를 못 심는다.
+_OLD_SYNC_PATH = "/grab_auth_sync"
+
+
+def _old_sync_token(customer_id, device_id, ttl=120):
+    """옛 주소에 넘길 1회용 표(2분). 세션 쿠키 모양(3칸)과 달라 표 자체로는 로그인이 안 된다."""
+    exp = int(datetime.now(timezone.utc).timestamp()) + ttl
+    payload = f"{int(customer_id)}:{exp}:{device_id or '-'}"
+    sig = hmac.new((DASH_SECRET + "|oldsync").encode(), payload.encode(), hashlib.sha256).hexdigest()
+    return f"{payload}:{sig}"
+
+
+def _old_sync_verify(token):
+    """표 → (customer_id, device_id|None) 또는 None(위조·만료)."""
+    try:
+        cid_s, exp_s, dev, sig = (token or "").split(":")
+        if datetime.now(timezone.utc).timestamp() > int(exp_s):
+            return None
+        want = hmac.new((DASH_SECRET + "|oldsync").encode(), f"{cid_s}:{exp_s}:{dev}".encode(),
+                        hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig, want):
+            return None
+        return int(cid_s), (None if dev == "-" else dev)
+    except (ValueError, TypeError):
+        return None
+
+
+def _old_domain_sync_redirect(request, path, customer_id):
+    """새 주소에서 사람이 화면을 열었는데 오늘 옛 주소를 안 들렀으면 → 들렀다 오는 302. 아니면 None."""
+    try:
+        host = (request.headers.get("host") or "").split(":")[0].lower()
+        if host != _NEW_HOST or not _is_page_nav(request, path) or request.cookies.get(_OLD_SYNC_MARK):
+            return None
+        back = f"https://{_NEW_HOST}{path}" + (f"?{request.url.query}" if request.url.query else "")
+        q = urllib.parse.urlencode({"t": _old_sync_token(customer_id, _device_id(request)), "next": back})
+        r = RedirectResponse(f"https://{_OLD_HOST}{_OLD_SYNC_PATH}?{q}", status_code=302)
+        r.set_cookie(_OLD_SYNC_MARK, "1", max_age=_OLD_SYNC_MARK_AGE, httponly=True, samesite="lax")
+        return r
+    except Exception as e:      # noqa: BLE001 — 이어주기 때문에 화면이 막히면 안 된다(경보만)
+        print(f"[old_sync] 이어주기 판정 실패(화면은 그대로): {e!r}", file=sys.stderr)
+        return None
+
+
+@app.get(_OLD_SYNC_PATH)
+def api_old_domain_sync(request: Request, t: str = "", next: str = ""):
+    """옛 주소에서 받는다: 표가 맞으면 같은 로그인·기기 도장을 옛 주소 쿠키로 심고 새 주소로 돌려보낸다.
+    ★돌아갈 곳은 새 주소만 — 아무 주소나 받으면 남의 사이트로 보내는 열린 리다이렉트가 된다.
+    ★표가 틀려도 고객을 세우지 않는다 — 쿠키만 안 심고 그대로 돌려보낸다(경보만)."""
+    back = next if isinstance(next, str) and next.startswith(f"https://{_NEW_HOST}/") else f"https://{_NEW_HOST}/"
+    r = RedirectResponse(back, status_code=302)
+    got = _old_sync_verify(t)
+    if got is None:
+        print(f"[old_sync] 표 검증 실패 — 쿠키 안 심고 돌려보냄", file=sys.stderr)
+        return r
+    cid, dev = got
+    _set_session_cookie(r, cid)
+    if dev and not request.cookies.get(_DEVICE_COOKIE):
+        _stamp_device(r, dev)          # 새 주소와 같은 도장 — 같은 PC가 두 대로 잡히지 않게
+    return r
+
+
 # ── 🖥 PC 등록(2026-08-31 사장님 "1번pc 2번pc 다른곳에선 안되게") ──────────────
 # ★IP로 막지 않는다: 가정용 인터넷은 대부분 유동 IP라 재접속마다 바뀐다 — 같은 PC인데
 #   잠긴다. 브라우저에 **랜덤 기기 도장**을 찍어 그걸로 본다.
@@ -13944,6 +14160,11 @@ def _set_session_cookie(response, customer_id: int):
 # ⚠️쿠키가 지워지면(청소·시크릿창·포맷) 같은 PC도 새 기기로 보인다 — 그래서 사장님이
 #   누르는 '기기 초기화'가 반드시 짝으로 있어야 한다(관리자 화면).
 _DEVICE_COOKIE = "ss_pc"
+
+
+def _stamp_device(resp, dev):
+    """기기 도장 쿠키를 찍는 곳은 여기 하나(미들웨어·옛 주소 이어주기가 부른다)."""
+    resp.set_cookie(_DEVICE_COOKIE, dev, max_age=_DEVICE_MAX_AGE, httponly=True, samesite="lax")
 _DEVICE_MAX_AGE = 60 * 60 * 24 * 730      # 2년 — 쿠키가 만료로 사라지면 곧 잠김이다
 
 
@@ -15970,20 +16191,34 @@ def _google_configured():
     return bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
 
 
-def _google_authorize_url(state):
+# 정식 도메인(2026-10-23 도메인전환). g_state 쿠키는 접속한 도메인에만 붙으므로 콜백도
+# **들어온 도메인으로** 돌아와야 한다 — 한 주소로 고정하면 다른 도메인 고객은 "보안 검증 실패".
+# 두 콜백 모두 구글 콘솔에 등록돼 있다(duckdns · stmaker.kr). www·app 은 아파치가 루트로 돌린다.
+_STMAKER_REDIRECT_URI = "https://stmaker.kr/auth/google/callback"
+
+
+def _google_redirect_uri(request=None):
+    """구글 콜백 주소의 주인 — 로그인 시작·토큰 교환이 둘 다 이 함수만 부른다(짝이 어긋나면 400)."""
+    host = ((request.headers.get("host") if request is not None else "") or "").split(":")[0].lower()
+    if host == "stmaker.kr":
+        return _STMAKER_REDIRECT_URI
+    return GOOGLE_REDIRECT_URI
+
+
+def _google_authorize_url(state, redirect_uri=None):
     q = urllib.parse.urlencode({
-        "client_id": GOOGLE_CLIENT_ID, "redirect_uri": GOOGLE_REDIRECT_URI,
+        "client_id": GOOGLE_CLIENT_ID, "redirect_uri": redirect_uri or GOOGLE_REDIRECT_URI,
         "response_type": "code", "scope": "openid email profile",
         "state": state, "access_type": "online", "prompt": "select_account"})
     return _GOOGLE_AUTH_URL + "?" + q
 
 
-def _google_fetch_identity(code, _requests=None):
+def _google_fetch_identity(code, _requests=None, redirect_uri=None):
     """code → {sub, email} 또는 None. 네트워크는 _requests 주입으로 테스트 가능."""
     rq = _requests or requests
     tok = rq.post(_GOOGLE_TOKEN_URL, data={
         "code": code, "client_id": GOOGLE_CLIENT_ID, "client_secret": GOOGLE_CLIENT_SECRET,
-        "redirect_uri": GOOGLE_REDIRECT_URI, "grant_type": "authorization_code"}, timeout=10)
+        "redirect_uri": redirect_uri or GOOGLE_REDIRECT_URI, "grant_type": "authorization_code"}, timeout=10)
     if tok.status_code != 200:
         return None
     access = tok.json().get("access_token")
@@ -16006,7 +16241,7 @@ def _google_login(request: Request):
         return HTMLResponse("<h3 style='font-family:sans-serif'>구글 로그인이 아직 설정되지 않았어요.</h3>",
                             status_code=503)
     state = secrets.token_urlsafe(24)
-    r = RedirectResponse(_google_authorize_url(state), status_code=303)
+    r = RedirectResponse(_google_authorize_url(state, _google_redirect_uri(request)), status_code=303)
     r.set_cookie("g_state", state, max_age=600, httponly=True, samesite="lax")
     return r
 
@@ -16022,7 +16257,7 @@ def _google_callback(request: Request, code: str = "", state: str = "", error: s
         state_ok = False       # 비-ASCII state 주입 등 → fail-closed
     if not state_ok:
         return RedirectResponse("/login?e=" + urllib.parse.quote("보안 검증 실패 — 다시 시도해주세요"), status_code=303)
-    ident = _google_fetch_identity(code)
+    ident = _google_fetch_identity(code, redirect_uri=_google_redirect_uri(request))
     if not ident:
         return RedirectResponse("/login?e=" + urllib.parse.quote("구글 인증에 실패했어요"), status_code=303)
     cid, created = Store(DB_PATH).get_or_create_by_google(
@@ -16302,11 +16537,13 @@ async def _auth_guard(request: Request, call_next):
     #   사장님 PC의 도우미가 로그인 쿠키 없이 폴링한다. 엔드포인트가 자체 토큰
     #   (COUPANG_RELAY_TOKEN)을 검사하고, 토큰이 비어 있으면 스스로 403으로 닫는다.
     if (path in _AUTH_ALLOW or path == "/api/pricing"   # 기수·가격 공개 조회(2026-10-01) — _AUTH_ALLOW 튜플을 안 건드린 건 모듈 수준 diff가 영상 관문을 깨우기 때문
+            or path == _OLD_SYNC_PATH   # 옛 주소 로그인 이어주기(관제 272) — 옛 주소엔 아직 쿠키가 없다. 서명된 2분 표로 직접 검사
             or path.startswith("/static") or path.startswith("/landing/")   # 랜딩 영상·포스터(비로그인 대문)
             or path.startswith("/api/find/frame/")
             or path.startswith("/api/help/media/")   # 도움말 이미지·영상(공개 읽기)
             or path.startswith("/s/") or path.startswith("/api/share/v/")
             or path.startswith("/api/share/e/")   # 캡컷 편집본(Buffer가 가져감, 2026-09-22)
+            or path.startswith("/api/share/f/")   # Claude 영상 Buffer 예약(관제 250, api_share_f)
             or path.startswith("/api/share/t/")
             or path.startswith("/api/share/seo/")   # 제목·설명·태그(폰에서 복사·카톡, 2026-10-18)
             or path.startswith("/api/yt_relay/") or path.startswith("/api/coupang/relay/")
@@ -16376,13 +16613,16 @@ async def _auth_guard(request: Request, call_next):
                     return RedirectResponse("/setup?first=1", status_code=303)
             except Exception as e:  # noqa: BLE001 — 안내 때문에 서비스를 막지 않는다
                 print(f"[setup] 안내 판정 실패(무시): {e!r}", file=sys.stderr)
+        # 옛 주소 로그인 이어주기(관제 272) — 모든 게이트를 통과한 화면 이동만, 하루 한 번
+        _sync = _old_domain_sync_redirect(request, path, customer_id)
+        if _sync is not None:
+            return _sync
         resp = await call_next(request)
         # 🖥 기기 도장은 **여기서만** 찍는다 — 모든 게이트를 통과한 응답에 얹으므로
         #   화면 이동(303)을 가로채지 않는다(위 _check_pc_device 주석 참조).
         _newdev = getattr(request.state, "new_device_id", None)
         if _newdev:
-            resp.set_cookie(_DEVICE_COOKIE, _newdev, max_age=_DEVICE_MAX_AGE,
-                            httponly=True, samesite="lax")
+            _stamp_device(resp, _newdev)
         return resp
     if path.startswith("/api/"):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
@@ -17016,6 +17256,8 @@ def _api_me(request: Request):
             "story_writer": _setting_gate(st, "story_writer_enabled", cid),
             # 2단계 스토리보드(관제 120) — 서버 입구(mix/start)와 같은 스위치 하나. 화면은 이 값으로만 보인다
             "storyboard": _setting_gate(st, "storyboard_enabled", cid),
+            # 대본 붙여넣기·AI 대화·한 줄 요구(관제 253) — 화면과 서버 입구(/api/script/chat*)가 같은 스위치 하나
+            "script_chat": _setting_gate(st, "script_chat_enabled", cid),
             # 카드뉴스 제작소(관제 223) — 사이드바 메뉴와 서버 입구(/cardnews·/api/cardnews/*)가 같은 스위치 하나
             "cardnews": _setting_gate(st, "cardnews_enabled", cid),
             # 감정짤(관제 139·143) — 좌측 '밈팩' 메뉴·2단계 짤 칸. 판정은 렌더 경로와 같은 mix_pipeline._meme_on 한 곳
@@ -17163,6 +17405,10 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "scene_style_inline_enabled",
                        # 2단계 스토리보드(관제 120, 2026-10-05) — 칸마다 고른 장면 그대로 3단계로. ""끔 · "admin" · "11,42" · "1" 전체
                        "storyboard_enabled",
+                       # 2단계 대본 붙여넣기·AI 대화·한 줄 요구(관제 253, 2026-10-22 사장님 "관리자 먼저 열어줘") — ""끔 · "admin" · "11,42" · "1" 전체
+                       "script_chat_enabled",
+                       # 지침서 작가(관제 249, 2026-10-20) — 2단계 스토리보드에 '체험형·정보형(지침서)' 스타일. 버텍스가 쓰고 코드가 검수·1회 재작성. ""끔 · "admin" · "11,42" · "1" 전체
+                       "guide_writer_enabled",
                        # 카드뉴스 제작소(관제 223, 2026-10-17) — 사이드바 메뉴·/cardnews·/api/cardnews/*. ""끔 · "admin" · "11,42" · "1" 전체
                        "cardnews_enabled",
                        # 신호어 새 풀(히트 자막 2,051편 빈도 가중, 2026-10-05) — ""끔(종전 8세트) · "admin" · "1" 전체
@@ -18568,6 +18814,58 @@ def api_admin_calcopy(request: Request):
     return _cb.board()
 
 
+# ── 채널 리포트(관제 281, 2026-10-27 사장님 "숏템메이커에 페이지 하나 붙이고 관리자만") — 우리 유튜브·틱톡 채널 성적 ──
+#    수집·분석 판단은 channel_stats(collect/analyze), 언제 다시 모으나는 channel_stats.service. 여기는 관리자 확인만.
+@app.get("/channel_stats", response_class=HTMLResponse)
+def _channel_stats_page(request: Request):
+    if not _is_admin(getattr(request.state, "customer_id", None)):
+        return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
+    return FileResponse(Path(__file__).parent / "static" / "channel_stats.html",
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
+@app.get("/api/admin/channel_stats")
+def api_admin_channel_stats(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from channel_stats import service as _cs
+    return _cs.data()
+
+
+@app.get("/api/admin/channel_stats/oauth/start")
+def api_admin_channel_stats_oauth_start(request: Request, ch: str = ""):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from channel_stats import service as _cs
+    return RedirectResponse(_cs.oauth_start(ch), status_code=302)
+
+
+@app.get("/api/admin/channel_stats/oauth/callback")
+def api_admin_channel_stats_oauth_callback(request: Request, code: str = "", state: str = "", error: str = ""):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from channel_stats import service as _cs
+    try:
+        if error:
+            raise RuntimeError(f"구글이 거절했습니다: {error}")
+        msg = f"'{_cs.oauth_finish(code, state)}' 채널을 연결했습니다"
+    except Exception as e:  # noqa: BLE001 — 실패 사유를 화면 위 알림으로 그대로 보여준다
+        msg = f"연결 실패: {e}"
+    return RedirectResponse("/channel_stats?msg=" + urllib.parse.quote(msg), status_code=302)
+
+
+@app.post("/api/admin/channel_stats/refresh")
+def api_admin_channel_stats_refresh(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from channel_stats import service as _cs
+    return {"started": _cs.refresh_async()}
+
+
 # ── 숏템프리셋(관제 224, 2026-10-17 사장님 "칼카피라고 하지 말고 숏템프리셋") — 관리자 전용 ──
 #    브랜드·스타일·결과물 장부를 한 화면에서. 판단은 calcopy_board.preset_home 하나, 여기는 관리자 확인만.
 @app.get("/shortem_preset", response_class=HTMLResponse)
@@ -18713,6 +19011,90 @@ def api_claude_blob(token: str):
 def _claude_page(request: Request):
     return FileResponse(Path(__file__).parent / "static" / "claude.html",
                         media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
+# ── 숏템 설정 화면 서버판(관제 266) — 판단은 claude_studio, 화면은 회원 PC 와 같은 파일 ──
+@app.get("/claude/studio")
+def _claude_studio_slash(request: Request):
+    return RedirectResponse("/claude/studio/", status_code=307)   # 화면이 상대 주소(api/·r/)를 쓴다
+
+
+@app.get("/claude/studio/", response_class=HTMLResponse)
+def _claude_studio_page(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_studio as _cs
+    return FileResponse(_cs.UI_FILE, media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
+@app.get("/claude/studio/r/{rel:path}")
+def _claude_studio_static(request: Request, rel: str):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_studio as _cs
+    try:
+        f = _cs.static_file(rel)
+    except _cs.StudioError as e:
+        return JSONResponse(e.body(), status_code=e.status)
+    if not f:
+        return JSONResponse({"error": "없음"}, status_code=404)
+    return FileResponse(str(f), headers={"Cache-Control": "private, max-age=3600"})
+
+
+@app.api_route("/api/claude/studio", methods=["GET", "POST"])
+async def api_claude_studio_sync(request: Request):
+    """회원 PC ↔ 서버 설정 맞추기(라이선스 키) — 합치기는 claude_studio.sync_merge 한 곳."""
+    from shopping_shorts import claude_studio as _cs
+    body = await _claude_body(request) if request.method == "POST" else None
+    ctx = _cs.CP.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cs.CP.call, _cs.pc_sync, ctx, body, Store(DB_PATH)))
+
+
+@app.post("/api/claude/studio/keys")
+async def api_claude_studio_keys(request: Request):
+    """회원 PC(라이선스) → 숏템메이커에 등록한 본인 키 — 판단은 claude_studio.pc_keys. 웹 화면에선 못 부른다(라이선스 필요)."""
+    from shopping_shorts import claude_studio as _cs
+    ctx = _cs.CP.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cs.CP.call, _cs.pc_keys, ctx, Store(DB_PATH)))
+
+
+@app.post("/api/claude/studio/request")
+async def api_claude_studio_request(request: Request):
+    """회원 PC Claude → 웹 지시 상태(처리 중·완료·못 함) — 판단은 claude_studio.pc_request."""
+    from shopping_shorts import claude_studio as _cs
+    body = await _claude_body(request)
+    ctx = _cs.CP.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cs.CP.call, _cs.pc_request, ctx, body, Store(DB_PATH)))
+
+
+@app.get("/claude/studio/api/state")
+def _claude_studio_state(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_studio as _cs
+    return _claude_json(_cs.CP.call(_cs.state, st, cid))
+
+
+@app.post("/claude/studio/api/{op}")
+async def _claude_studio_op(request: Request, op: str):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_studio as _cs
+    b = await _claude_body(request)
+    fn = {"select": lambda: _cs.select(st, cid, b.get("preset")),
+          "style": lambda: _cs.select_style(st, cid, b.get("style")),
+          "ask": lambda: _cs.ask(st, cid, b.get("target"), b.get("text")),
+          "look": lambda: _cs.save_look(st, cid, b.get("preset"), b.get("snapshot")),
+          "save": lambda: _cs.save(st, cid, b.get("preset"), b.get("patch")),
+          "reset": lambda: _cs.reset(st, cid, b.get("preset")),
+          "preview": lambda: _cs.preview(st, cid, b.get("preset"), b.get("patch"), flags=_scene_editor_flags(cid))}.get(op)
+    if not fn:
+        return JSONResponse({"error": "없음"}, status_code=404)
+    return _claude_json(await run_in_threadpool(_cs.CP.call, fn))
 
 
 @app.get("/api/claude/me/home")
@@ -22562,6 +22944,37 @@ def api_storyboard_picks(request: Request, job_id: str, body: dict):
     return {"ok": True, "slots": bd["slots"], "pack_sfx_on": bd.get("pack_sfx_on"), "check": _check}
 
 
+@app.post("/api/produce/storyboard/{job_id}/scene_review")
+def api_storyboard_scene_review(request: Request, job_id: str, body: dict):
+    """장면 점검(관제 257) — 줄마다 지금 장면이 최선인지 이유와 함께 유지·교체 제안·장면 없음.
+    body {slots:[{slot,line,ids}], rows?:[줄 번호], message?, model?, product?, use_seed?}. 판단 주인 storyboard.scene_review,
+    근거 조각은 보드를 만들 때와 같은 _materials. 작업을 건드리지 않는다 — 화면이 [이 장면으로 바꾸기]로 칸에 넣는다.
+    스위치: 스토리보드(_sb_gate) + 대본 AI(script_chat_enabled) 둘 다."""
+    g = _sb_gate(request)
+    if g:
+        return g
+    if not _setting_gate(Store(DB_PATH), "script_chat_enabled", _cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "아직 열리지 않은 기능이에요"})
+    key, _ex, _jid = _sb_job(request, job_id)
+    if not key:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    slots = (body or {}).get("slots")
+    if not isinstance(slots, list) or not slots or len(slots) > 60:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "slots 목록이 필요해요"})
+    slots = [dict(x) if isinstance(x, dict) else {} for x in slots]
+    rows = body.get("rows") if isinstance(body.get("rows"), list) else None
+    from shopping_shorts import storyboard as _sbm, script_chat
+    _keep = {c for x in slots for c in (x.get("ids") or []) if isinstance(c, str)}
+    mats = _sbm._materials(None, key, _ex or {}, keep=_keep, with_seed=body.get("use_seed") is True)
+    model = str(body.get("model") or "")
+    model = model if model in {m["id"] for m in script_chat.CHAT_MODELS} else script_chat.DEFAULT_CHAT_MODEL
+    try:
+        return {"ok": True, **_sbm.scene_review(slots, rows, mats, str(body.get("message") or ""),
+                                                str(body.get("product") or ""), model)}
+    except ValueError as e:
+        return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
+
+
 @app.get("/api/produce/storyboard/{job_id}")
 def api_storyboard_get(request: Request, job_id: str):
     """재료 장면 카드(썸네일·초·설명) + 장면 목록·스타일 추천(있으면) + 스타일 카드 + 진행 중인 일."""
@@ -22585,7 +22998,8 @@ def api_storyboard_get(request: Request, job_id: str):
                                "seed": _sb.is_seed_source(ex)}
     _sb_expire(job_id)
     tasks = {k[1]: {kk: vv for kk, vv in v.items() if kk not in ("t0", "gen", "timed_out")} for k, v in list(_SB_TASKS.items()) if k[0] == job_id}
-    return {"ok": True, "pieces": pieces, "state": _sb.load_state(job_id), "families": _sb.families(DB_PATH), "tasks": tasks,
+    _guide_on = _setting_gate(Store(DB_PATH), "guide_writer_enabled", getattr(request.state, "customer_id", 0))
+    return {"ok": True, "pieces": pieces, "state": _sb.load_state(job_id), "families": _sb.families(DB_PATH, guide=_guide_on), "tasks": tasks,
             "min_clip": _sb._min_clip(),
             "role_ko": _sb.ROLE_KO,   # 칸 이름 한국어 — 주인 storyboard.ROLE_KO(관제 215)
             # 지금 재료 지문 — 보드에 찍힌 mat_sig(만든 때의 재료)와 화면이 견줘 '예전 재료로 만든 보드'를 가른다(판정은 storyboard.mat_sig 한 곳)
@@ -22678,7 +23092,10 @@ def api_storyboard_boards(request: Request, job_id: str, body: dict):
     star, roles = str(body.get("star") or ""), str(body.get("roles") or "")
     _cid = getattr(request.state, "customer_id", 0)
     _use_seed = body.get("use_seed") is True               # 씨앗 영상도 2단계에 배치(관제 161)
+    _guide_on = _setting_gate(Store(DB_PATH), "guide_writer_enabled", _cid)    # 지침서 작가 스타일('g:…')은 스위치 켠 계정만 — 목록(families)과 같은 스위치
     for k in [str(x) for x in (body.get("keys") or [])][:6]:
+        if k.startswith("g:") and not _guide_on:
+            continue
         _sb_run(job_id, "board:" + k, lambda k=k: _sb_picks(_cid, job_id, _sb.make_boards(DB_PATH, job_id, [k], star, roles, ex=_ex,
                                                                                          use_seed=_use_seed).get(k)))
     return {"ok": True}
@@ -23050,8 +23467,9 @@ def api_produce_mix_settings(body: dict):
         # ★새 편집기에서 고친 채널명을 계정 채널명으로도 기억한다(2026-09-29) — 다음 작업의 기본값이 된다
         #   (scene_style.account_channel). 샘플값 그대로면 건드리지 않는다.
         _ch = str(((snapshot or {}).get("text") or {}).get("channel") or "").strip()
-        if _ch and _ch != "숏템메이커" and len(_ch) <= 40 and int(job.get("customer_id") or 0):
-            store.set_pref(_MY_CHANNEL_KEY, _ch, customer_id=int(job.get("customer_id")))
+        #   cid 0 = 관리자 계정도 기억한다(관제 252 — 0을 '없음'으로 보고 건너뛰어 사장님만 매번 숏템메이커였다)
+        if _ch and _ch != "숏템메이커" and len(_ch) <= 40:
+            store.set_pref(_MY_CHANNEL_KEY, _ch, customer_id=int(job.get("customer_id") or 0))
     if "seo" in body:
         fields["seo"] = body.get("seo")  # 6단계 SEO 일습 dict or None
     if fields:
@@ -23296,8 +23714,7 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     if copy_family:
         headcopy["copy_family"] = headcopy_gen.normalize_family(copy_family)
     context = context_for(timeline, headcopy, snapshot, job_id)
-    # 구매링크 안내(관제 133): 스위치가 열어 준 계정에만 편집기가 유튜브 화면 자리·새 세트 디자인을 보여 준다(out/scene-style-decorations.js guideOn).
-    context["linkGuide"] = bool(_setting_gate(Store(DB_PATH), "link_guide_enabled", _cid(request)))
+    context.update(_scene_editor_flags(_cid(request)))   # 편집기 스위치(관제 133·124·127·222) — 설정 화면(/claude/studio)과 같은 함수
     # ★페이지 그림 = **그 페이지 시간 한가운데**의 실제 화면(2026-10-03 관제 101, 황선희님 817308da1647).
     #   종전엔 모든 페이지에 칸 대표 그림 한 장(beatframe/<칸>)을 줘서, 장면 앞 1초에만 지나가는 원본 자막이
     #   편집기에 안 보였다 → 고객이 가림막을 못 넣고 완성본에서야 자막을 봤다. 시각 → 그림은 _beatframe_file(at=) 한 곳.
@@ -23319,12 +23736,6 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
         scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_at:.2f}{_fq}"
         # 페이지 안 앞·가운데·뒤(관제 104) — 창 안에서 잠깐만 지나가는 원본 자막도 볼 수 있게. 가운데는 위 media 와 같은 주소.
         scene["media_points"] = [f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_t:.2f}{_fq}" for _t in _scene_page_points(scene)]
-    # 장면 효과(관제 124) 스위치 — 꺼진 계정은 편집기가 '강조 효과' 상자·자동 배치를 안 띄운다(고객 화면 불변)
-    context["fxEnabled"] = bool(_setting_gate(Store(DB_PATH), "scene_fx_enabled", _cid(request)))
-    # 자막팩(관제 127) 스위치 — 꺼진 계정은 편집기가 팩 카드·새 등장 효과·새 강조 방식 버튼을 안 띄운다(고객 화면 불변)
-    context["captionPackEnabled"] = bool(_setting_gate(Store(DB_PATH), "caption_pack_enabled", _cid(request)))
-    # 모션그래픽팩(관제 222) 스위치 — 꺼진 계정은 효과 탭에 '🎞 모션그래픽' 칸이 안 뜬다(고객 화면 불변). 저장값·렌더는 스위치와 무관하게 받는다
-    context["mographEnabled"] = bool(_setting_gate(Store(DB_PATH), "mograph_enabled", _cid(request)))
     # 등장 효과팩 자동 번호(관제 144) — 그 작업 회원의 번호(관리자가 남의 작업을 열어도 그 회원 번호). 스위치가 꺼졌으면 안 준다(고객 화면 불변)
     # 자동 배치는 새 영상에만(2026-10-06 사장님 "기존영상은 하지말고") — 장면 효과 자동 배치·등장 효과팩 자동 번호가 같은 기준(scene_style.auto_new_job)
     from .scene_style import auto_new_job, caption_motion_pack_for
@@ -23332,6 +23743,17 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     if context["captionPackEnabled"] and context["autoNew"]:
         context["motionPackAuto"] = caption_motion_pack_for(job.get("customer_id"))
     return {"context": context, "snapshot": snapshot}
+
+
+def _scene_editor_flags(cid) -> dict:
+    """장면꾸미기 편집기 스위치 — 제작소(scene-style context)와 설정 화면(/claude/studio)이 같이 쓴다(판단 한 곳).
+      linkGuide(관제 133 구매링크 안내) · fxEnabled(관제 124 장면 효과) · captionPackEnabled(관제 127 자막팩) · mographEnabled(관제 222 모션그래픽).
+    꺼진 계정은 편집기가 그 칸을 안 띄운다(고객 화면 불변). 저장값·렌더는 스위치와 무관하게 받는다."""
+    st = Store(DB_PATH)
+    return {"linkGuide": bool(_setting_gate(st, "link_guide_enabled", cid)),
+            "fxEnabled": bool(_setting_gate(st, "scene_fx_enabled", cid)),
+            "captionPackEnabled": bool(_setting_gate(st, "caption_pack_enabled", cid)),
+            "mographEnabled": bool(_setting_gate(st, "mograph_enabled", cid))}
 
 
 def _scene_page_points(scene):

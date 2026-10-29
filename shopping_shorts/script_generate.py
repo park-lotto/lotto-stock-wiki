@@ -60,7 +60,7 @@ def _style_extra():
         return ""
 
 
-def _call_json(prompt, schema, note=None, model=None, vertex=True, vertex_op="script_generate"):
+def _call_json(prompt, schema, note=None, model=None, vertex=True, vertex_op="script_generate", vertex_model=None, temperature=None):
     """key_vault 캐스케이드 키풀로 JSON 1콜. 소진키는 마킹하고 다음 키로.
     무키·전부실패면 {} (호출부는 반드시 빈 dict 허용 — fail-open).
 
@@ -76,17 +76,21 @@ def _call_json(prompt, schema, note=None, model=None, vertex=True, vertex_op="sc
     if vertex:
         from shopping_shorts import vertex_route
 
+        # temperature: 같은 입력엔 같은 답이 나와야 하는 판정 호출부만 낮춘다(관제 257 장면 점검). None = 모델 기본(종전 그대로).
+        # vertex_model: 호출부가 고른 버텍스 모델(관제 253 대화창 모델 선택 — 허용 목록은 script_chat.CHAT_MODELS).
+        #   없으면 관리자 설정 vertex_model 그대로. 실패하면 아래 키풀로 넘어가고 note["auth"]가 비어 화면이 그 사실을 말한다.
         def _vx(cl, m):
             resp = cl.models.generate_content(
-                model=m, contents=prompt,
+                model=vertex_model or m, contents=prompt,
                 config=types.GenerateContentConfig(response_mime_type="application/json",
-                                                   response_schema=schema))
+                                                   response_schema=schema, temperature=temperature))
             return json.loads(resp.text)
         # vertex_op: 이 깔때기를 빌려 쓰는 다른 판단(예: 1단계 스토리="story")은 자기 op로 스위치를 본다(관제 159)
         _ok, _got = vertex_route.try_call(vertex_op, _vx, what="대본생성" if vertex_op == "script_generate" else vertex_op)
         if _ok:
             if note is not None:
                 note["auth"] = "vertex"
+                note["model"] = vertex_model or vertex_route.model()
             return _got
     keys = keyroute.gemini_keys(_GEN_GROUP)
     if note is not None:
@@ -109,7 +113,7 @@ def _call_json(prompt, schema, note=None, model=None, vertex=True, vertex_op="sc
             resp = key_vault.get_client_for_key(key).models.generate_content(
                 model=(model or _MODEL), contents=prompt,
                 config=types.GenerateContentConfig(
-                    response_mime_type="application/json", response_schema=schema),
+                    response_mime_type="application/json", response_schema=schema, temperature=temperature),
             )
             return json.loads(resp.text)
         except Exception as e:  # noqa: BLE001 — 생성 실패는 치명적 아님

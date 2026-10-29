@@ -278,5 +278,26 @@
   "css": "HCBunpil",
   "group": "hand",
   "star": false
+ },
+ {
+  "name": "온글잎 콘콘체",
+  "file": "OwnglyphKonkon.ttf",
+  "css": "HCKonkon",
+  "group": "hand",
+  "star": false
+ },
+ {
+  "name": "어른아이",
+  "file": "AdultKid.ttf",
+  "css": "HCAdultKid",
+  "group": "hand",
+  "star": false
+ },
+ {
+  "name": "안동엄마까투리",
+  "file": "Katuri.ttf",
+  "css": "HCKaturi",
+  "group": "cute",
+  "star": false
  }
 ]

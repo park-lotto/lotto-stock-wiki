@@ -194,3 +194,44 @@ def test_정상폰트는_그리는_방식이_바뀌지_않는다():
     one = render(lambda d: d.text((10, 10), "정말 맛있어요", font=font, fill=0))
     same = render(lambda d: fg.draw_text(d, (10, 10), "정말 맛있어요", font, 0, "la", 44))
     assert one == same, "정상 폰트인데 그림이 달라졌다(회귀)"
+
+
+# ── 일본어모드(2026-10-21 관제 248) — 기본폰트(NanumGothic)조차 일본어를 못 그린다 ──
+JA_SAMPLE = "この財布は本当にお得です"
+ASSETS = BASE / "shopping_shorts" / "assets"
+
+
+def test_기본폰트와_잘난2는_일본어를_대부분_못_그린다():
+    va = _va()
+    body = "".join(dict.fromkeys(JA_SAMPLE))
+    for p in (ASSETS / "NanumGothic.ttf", FONT_DIR / "Jalnan2.ttf"):
+        if not p.exists():
+            pytest.skip(f"{p.name} 없음")
+        miss = va._missing_glyphs(p, JA_SAMPLE)
+        assert len(miss) >= len(body) / 2, f"{p.name}: 일본어 누락을 못 잡았다({miss!r})"
+
+
+def test_일본어_폴백폰트는_다_그린다():
+    va = _va()
+    assert va._missing_glyphs(ASSETS / "NotoSansJP-Bold.ttf", JA_SAMPLE) == ""
+
+
+def test_일본어는_일본어_폴백폰트로(tmp_path, monkeypatch):
+    va = _va()
+    (tmp_path / "font.ttf").write_bytes((ASSETS / "NanumGothic.ttf").read_bytes())
+    monkeypatch.setattr(va, "_resolve_font", lambda: str(ASSETS / "NanumGothic.ttf"))
+    assert va._font_ref("BMJUA.ttf", tmp_path, "k", JA_SAMPLE) == "font_ja.ttf"
+    assert (tmp_path / "font_ja.ttf").exists()
+    assert va._font_ref(None, tmp_path, "k2", JA_SAMPLE) == "font_ja.ttf"
+    assert va._font_ref("없는파일.ttf", tmp_path, "k3", JA_SAMPLE) == "font_ja.ttf"
+    # 한국어는 종전 그대로
+    assert va._font_ref("BMJUA.ttf", tmp_path, "k4", "한글 자막") == "font_k4.ttf"
+    assert va._font_ref(None, tmp_path, "k5", "한글 자막") == "font.ttf"
+    assert va._font_ref("OkMallangW.ttf", tmp_path, "k6", "한글 자막") == "font.ttf"
+
+
+def test_fallback_font_for():
+    from shopping_shorts import font_glyphs as fg
+    assert fg.fallback_font_for(JA_SAMPLE) == str(fg.JA_FALLBACK_FONT)
+    assert fg.fallback_font_for("한글 자막") is None
+    assert fg.fallback_font_for("Hello there my friend") is None

@@ -546,6 +546,29 @@ class Store:
                     PRIMARY KEY (customer_id, platform, channel_id)
                 )
             """)
+            # 나만의 채널 분류(관제 261, 2026-10-24 사장님 "폰에서 담을 때 분류 버튼 한 번").
+            #   fav_channel(회원 표)은 건드리지 않고 옆 표 둘로 둔다 — 분류는 지금 관리자만 쓴다.
+            #   분류 이름 목록(_def)과 채널↔분류(_cat). 분류가 없는 채널 = '기타'(행 없음).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS fav_channel_cat_def (
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    name TEXT NOT NULL,
+                    sort INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT,
+                    last_used_at TEXT,
+                    PRIMARY KEY (customer_id, name)
+                )
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS fav_channel_cat (
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    platform TEXT NOT NULL,
+                    channel_id TEXT NOT NULL,
+                    category TEXT NOT NULL,
+                    set_at TEXT,
+                    PRIMARY KEY (customer_id, platform, channel_id)
+                )
+            """)
             # 부품은행 흡수 실패 재큐(2026-07-24). 503(모델 용량)으로 실패한 상위영상은 다음
             # 수집 때 상위권 밖으로 밀리면 영구 유실될 수 있다 → url당 1행으로 담아 지수 백오프로
             # 재시도한다. fail_count가 상한을 넘으면 흡수 루프가 스스로 폐기(영구불량 영상 방어).
@@ -3345,14 +3368,14 @@ class Store:
     # ── 볼채널등록(개인 채널 즐겨찾기) ─────────────────────────────────────
     #   ★수집 트리거가 아니다. 여기 담아도 크롤 대상은 늘지 않는다(설계 의도).
     FAV_CHANNEL_CAP = 50          # 인당 상한 — 없으면 한 명이 수천 건을 밀어넣는다
-    FAV_CHANNEL_CAP_ADMIN = 100   # 관리자 상한(사장님 2026-10-18) — 누가 관리자인지는 app._fav_channel_cap 이 정한다
+    FAV_CHANNEL_CAP_ADMIN = 0     # 관리자 = 한도 없음(0, 사장님 2026-10-24 "한도 없이", 10-18 의 100 을 대체) — 누가 관리자인지는 app._fav_channel_cap 이 정한다
 
     def fav_channel_add(self, platform, channel_id, name="", url="", avatar="",
                         followers=None, last_video_thumb="", last_video_url="",
                         customer_id=LEGACY_CUSTOMER_ID, cap=None):
         """있으면 메타만 갱신(멱등), 없으면 추가. 새로 담겼으면 True.
         상한을 넘으면 CapExceeded 대신 None을 돌려준다 — 호출부가 안내 문구를 고른다.
-        cap: 이 사람의 상한(app._fav_channel_cap). 안 주면 회원 상한."""
+        cap: 이 사람의 상한(app._fav_channel_cap). 안 주면 회원 상한. 0 = 한도 없음."""
         platform = (platform or "").strip().lower()
         channel_id = (channel_id or "").strip().lstrip("@")
         if not platform or not channel_id:
@@ -3376,7 +3399,8 @@ class Store:
                 return False
             n = c.execute("SELECT COUNT(*) FROM fav_channel WHERE customer_id=?",
                           (customer_id,)).fetchone()[0]
-            if n >= (cap or self.FAV_CHANNEL_CAP):
+            limit = self.FAV_CHANNEL_CAP if cap is None else cap
+            if limit and n >= limit:
                 return None
             c.execute(
                 "INSERT INTO fav_channel(customer_id, platform, channel_id, name, url, avatar,"
@@ -3389,10 +3413,82 @@ class Store:
 
     def fav_channel_remove(self, platform, channel_id, customer_id=LEGACY_CUSTOMER_ID):
         with self._conn() as c:
+            key = (customer_id, (platform or "").lower(), (channel_id or "").lstrip("@"))
             c.execute(
-                "DELETE FROM fav_channel WHERE customer_id=? AND platform=? AND channel_id=?",
-                (customer_id, (platform or "").lower(), (channel_id or "").lstrip("@")),
-            )
+                "DELETE FROM fav_channel WHERE customer_id=? AND platform=? AND channel_id=?", key)
+            c.execute(
+                "DELETE FROM fav_channel_cat WHERE customer_id=? AND platform=? AND channel_id=?", key)
+
+    # ── 나만의 채널 분류(관제 261) ─────────────────────────────────────────
+    #   ★분류 이름·기타 판단의 주인은 여기다. 화면·공유는 이 메서드만 부른다.
+    FAV_CAT_ETC = "기타"          # 분류 안 한 채널. 이름 목록엔 넣지 않는다(행 없음 = 기타)
+    FAV_CAT_DEFAULTS = ("연예인제품", "연예인레시피", "썰쇼핑", "썰비하인드", "해외+상품",
+                        "해외+조회수", "샤크탱크", "해외화장품", "인스타스타일")   # 사장님 2026-10-24
+    FAV_CAT_NAME_MAX = 20
+
+    def fav_cat_clean(self, name):
+        """분류 이름 다듬기. 못 쓰는 이름이면 ''. '기타'는 그대로 '기타'."""
+        n = " ".join((name or "").split())[: self.FAV_CAT_NAME_MAX]
+        return n
+
+    def fav_cat_names(self, customer_id=LEGACY_CUSTOMER_ID, recent=True):
+        """분류 이름 — recent=True 면 최근에 쓴 것 먼저(폰 버튼), False 면 만든 순서 고정(목록 탭).
+        처음 부르면 기본 분류를 깐다."""
+        with self._conn() as c:
+            n = c.execute("SELECT COUNT(*) FROM fav_channel_cat_def WHERE customer_id=?",
+                          (customer_id,)).fetchone()[0]
+            if not n:
+                c.executemany(
+                    "INSERT OR IGNORE INTO fav_channel_cat_def(customer_id, name, sort, created_at)"
+                    " VALUES(?,?,?, datetime('now'))",
+                    [(customer_id, nm, i) for i, nm in enumerate(self.FAV_CAT_DEFAULTS)])
+            rows = c.execute(
+                "SELECT name FROM fav_channel_cat_def WHERE customer_id=?"
+                + (" ORDER BY (last_used_at IS NULL), last_used_at DESC, sort ASC, rowid ASC" if recent
+                   else " ORDER BY sort ASC, rowid ASC"),
+                (customer_id,)).fetchall()
+        return [r[0] for r in rows]
+
+    def fav_cat_add(self, name, customer_id=LEGACY_CUSTOMER_ID):
+        """새 분류. 돌려주는 값 = 실제 저장된 이름('' = 못 씀, '기타'는 따로 안 만든다)."""
+        n = self.fav_cat_clean(name)
+        if not n or n == self.FAV_CAT_ETC:
+            return n
+        self.fav_cat_names(customer_id)          # 기본 분류가 먼저 깔려 있어야 순서가 맞다
+        with self._conn() as c:
+            mx = c.execute("SELECT COALESCE(MAX(sort),0) FROM fav_channel_cat_def WHERE customer_id=?",
+                           (customer_id,)).fetchone()[0]
+            c.execute("INSERT OR IGNORE INTO fav_channel_cat_def(customer_id, name, sort, created_at)"
+                      " VALUES(?,?,?, datetime('now'))", (customer_id, n, mx + 1))
+        return n
+
+    def fav_cat_set(self, platform, channel_id, category, customer_id=LEGACY_CUSTOMER_ID):
+        """채널을 분류로 옮긴다. ''·'기타' = 기타로(행 삭제). 없는 분류 이름이면 새로 만든다.
+        돌려주는 값 = 실제 들어간 분류 이름."""
+        plat = (platform or "").strip().lower()
+        chid = (channel_id or "").strip().lstrip("@")
+        cat = self.fav_cat_clean(category)
+        if not plat or not chid:
+            return ""
+        if not cat or cat == self.FAV_CAT_ETC:
+            with self._conn() as c:
+                c.execute("DELETE FROM fav_channel_cat WHERE customer_id=? AND platform=? AND channel_id=?",
+                          (customer_id, plat, chid))
+            return self.FAV_CAT_ETC
+        self.fav_cat_add(cat, customer_id)
+        with self._conn() as c:
+            c.execute("INSERT OR REPLACE INTO fav_channel_cat(customer_id, platform, channel_id, category, set_at)"
+                      " VALUES(?,?,?,?, datetime('now'))", (customer_id, plat, chid, cat))
+            c.execute("UPDATE fav_channel_cat_def SET last_used_at=strftime('%Y-%m-%d %H:%M:%f','now')"
+                      " WHERE customer_id=? AND name=?", (customer_id, cat))
+        return cat
+
+    def fav_cat_of(self, customer_id=LEGACY_CUSTOMER_ID):
+        """{(platform, channel_id): 분류} — 없는 채널은 기타."""
+        with self._conn() as c:
+            rows = c.execute("SELECT platform, channel_id, category FROM fav_channel_cat WHERE customer_id=?",
+                             (customer_id,)).fetchall()
+        return {(r[0], r[1]): r[2] for r in rows}
 
     def fav_channel_list(self, customer_id=LEGACY_CUSTOMER_ID):
         """담은 순서대로 dict 리스트."""
@@ -5957,15 +6053,19 @@ class Store:
                 "job_id": row[3], "step": row[4], "created_at": row[5], "updated_at": row[6]}
 
     def list_produce_works(self, customer_id=LEGACY_CUSTOMER_ID, limit=20):
-        """최근 작업 목록(updated_at DESC). state_json은 싣지 않는다 — 목록은 가벼워야 한다."""
+        """최근 작업 목록(updated_at DESC). state_json은 싣지 않는다 — 목록은 가벼워야 한다.
+
+        done = 붙은 job이 완성본까지 만들었나(mix_jobs.status='done', 관제 272). step은 '마지막으로
+        보던 화면'일 뿐이라 완성 여부를 모른다 — 박선정님 핫팩·세탁볼이 완성됐는데 목록엔 미완성으로 떴다."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT work_id, title, step, job_id, updated_at FROM produce_works "
-                "WHERE customer_id=? ORDER BY updated_at DESC, rowid DESC LIMIT ?",
+                "SELECT w.work_id, w.title, w.step, w.job_id, w.updated_at, j.status FROM produce_works w "
+                "LEFT JOIN mix_jobs j ON j.job_id = w.job_id "
+                "WHERE w.customer_id=? ORDER BY w.updated_at DESC, w.rowid DESC LIMIT ?",
                 (customer_id, limit),
             ).fetchall()
         return [{"work_id": r[0], "title": r[1], "step": r[2], "job_id": r[3],
-                 "updated_at": r[4]} for r in rows]
+                 "updated_at": r[4], "done": r[5] == "done"} for r in rows]
 
     def rename_produce_work(self, work_id, name, customer_id=LEGACY_CUSTOMER_ID):
         """작업 이름 바꾸기(2026-08-17). 성공하면 확정된 제목 문자열, 남의 것/없으면 None.
@@ -7986,14 +8086,25 @@ class Store:
                 "                      WHERE w.state='running' AND w.owner=q.owner "
                 f"                       AND (w.task IN (" + lph + ")) = (q.task IN (" + lph + "))) "
                 f"                    < CASE WHEN q.owner='0' THEN ? "
-                f"                           WHEN q.task IN (" + lph + ") THEN ? ELSE 1 END) "
+                f"                           WHEN q.task IN (" + lph + ") THEN ? "
+                # ★놀 때만 같은 고객의 '다른 영상' 동시 N개(2026-10-20 관제 246 사장님).
+                #   실측 7일: 워커 12개 중 평균 1.47개 가동인데 고객 제작작업 60초+ 대기 126건이
+                #   전부 이 고객당-1개 칸 때문이었고, 그중 119건은 같은 고객의 **다른 영상**을 기다렸다.
+                #   같은 영상(job_id)은 단계 순서가 있어 여전히 하나씩 — job_id 가 없는 작업이
+                #   하나라도 끼면(판별 불가) 종전대로 1개.
+                "                           WHEN json_extract(q.args_json,'$.job_id') IS NOT NULL "
+                "                            AND NOT EXISTS (SELECT 1 FROM job_queue s WHERE s.state='running' "
+                "                                 AND s.owner=q.owner AND (json_extract(s.args_json,'$.job_id') IS NULL "
+                "                                  OR json_extract(s.args_json,'$.job_id') = json_extract(q.args_json,'$.job_id'))) "
+                "                            AND (SELECT COUNT(*) FROM job_queue a WHERE a.state='running') < ? "
+                "                           THEN ? ELSE 1 END) "
                 f"               AND (q.task NOT IN ({ph}) OR {_safe} OR NOT EXISTS "
                 "                    (SELECT 1 FROM job_queue r "
                 f"                     WHERE r.state='running' AND r.task IN ({ph}) "
                 f"                       AND NOT ({_safe_r}))) "
                 "             ORDER BY COALESCE(q.prio, 5), q.id LIMIT 1) "
                 "RETURNING id, task, args_json",
-                # ★인자는 SQL에 물음표가 나오는 **순서 그대로**다:
+                # ★인자는 SQL에 물음표가 나오는 **순서 그대로**다(10-20: light 다음에 burst 2개 추가):
                 #   lph, lph (카운트 조건) → admin (CASE 첫 THEN) → lph → light → ph, ph
                 #   한 칸이라도 어긋나면 조건이 조용히 뒤집힌다(2026-09-02에 실제로 어긋나
                 #   관리자 동시 2개 제한이 풀렸고, 회귀 테스트가 그걸 잡았다).
@@ -8001,6 +8112,8 @@ class Store:
                  + (int(os.environ.get("ADMIN_CONCURRENT_JOBS", "2") or 2),)
                  + self._LIGHT_TASKS
                  + (int(os.environ.get("LIGHT_CONCURRENT_JOBS", "3") or 3),)
+                 + (int(os.environ.get("OWNER_BURST_IDLE_BELOW", "6") or 6),     # 전체 가동이 이 수 미만일 때만
+                    int(os.environ.get("OWNER_BURST_JOBS", "2") or 2))           # 같은 고객 다른 영상 동시 상한
                  + self._EXCLUSIVE_TASKS * 2)).fetchone()
             if not row:
                 return None
@@ -8533,6 +8646,33 @@ class Store:
         with self._conn() as c:
             c.execute("DELETE FROM customer_keys WHERE id=? AND customer_id=?",
                       (int(key_id), int(customer_id)))
+
+    # ── 빌려준 키 한도(2026-10-26 관제 277) — 회사 키를 회원 계정에 넣고 크레딧 한도까지만 쓰게 한다 ──
+    #   판단(언제 끄나)은 keyroute.lent_key_charge 한 곳. 여기는 저장만 한다.
+    def lent_key_bump(self, fp, credits):
+        """그 키(지문)의 한도가 걸려 있으면 사용량을 더하고 (used, cap), 한도 없으면 None.
+        ★UPDATE 한 줄로 더한다 — 워커 여럿이 동시에 지워도 사용량이 안 빠진다."""
+        with self._conn() as c:
+            row = c.execute("SELECT value FROM settings WHERE key=?", ("lent_cap::" + fp,)).fetchone()
+            if not row:
+                return None
+            c.execute("INSERT INTO settings(key, value) VALUES(?, '0') ON CONFLICT(key) DO NOTHING",
+                      ("lent_used::" + fp,))
+            c.execute("UPDATE settings SET value = CAST(value AS INTEGER) + ? WHERE key=?",
+                      (int(credits), "lent_used::" + fp))
+            used = c.execute("SELECT value FROM settings WHERE key=?", ("lent_used::" + fp,)).fetchone()
+        return int(used[0]), int(row[0])
+
+    def lent_key_label_off(self, fp, label, off):
+        """회원 계정에 넣은 그 키 행(사장님 cid 0 행은 건드리지 않는다)의 표시 문구를 바꾸고, off면 끈다."""
+        import time
+        with self._conn() as c:
+            if off:
+                c.execute("UPDATE customer_keys SET label=?, status='off', checked_at=? "
+                          "WHERE key_hash=? AND customer_id != 0", (label, int(time.time()), fp))
+            else:
+                c.execute("UPDATE customer_keys SET label=? WHERE key_hash=? AND customer_id != 0",
+                          (label, fp))
 
     def set_customer_key_status(self, key_id, status):
         import time

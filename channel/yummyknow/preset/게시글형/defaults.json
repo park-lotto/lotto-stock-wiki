@@ -1,0 +1,7 @@
+{
+ "_rule": "기본값 = 이 프리셋 원본 영상(사장님 10-20). 글꼴·자막 외곽선은 frame.json 그대로. 회원이 바꾼 칸만 회원 값. 읽는 곳 = tools/calcopy/preview_request.preset_defaults",
+ "_from": "원본 여 TTS 7/9·8.73자/초(yummyknow/뜯기/*/뜯기.md) · 새소재 1·2호 유라 tempo 1.5 + atempo 0.91 → 실효 1.36(새소재_shinramyun_gumi/계획.md:73,78) · BGM qiuqiu 0.12(audio.json) · 자막 accumulate(rerender_맛템썰템.py:21)",
+ "tts": {"provider": "typecast", "voice_id": "tc_61130d6cf89dd58a4c13295d", "name": "유라", "preset_id": "tc-yura-stable", "tempo": 1.36},
+ "bgm": {"candidates": ["qiuqiu"], "gain": 0.12},
+ "caption": {"mode": "accumulate"}
+}

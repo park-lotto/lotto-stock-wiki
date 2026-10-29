@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# _deprecated_2026-10-25 → tools/calcopy/hybrid/styles/아이템홈판.json (관제 263 지시서 07 · 표준 §3-1: 새 편은 공용 렌더러로. 읽기 전용 참고물 — 설명서 프리셋 생성기는 회원 옛 길이 결과를 읽으므로 지우지 않는다)
 """아이템홈 연예인템 프리셋 「검정띠2줄」 — 자동 설명서 8편 → 손질(자막 나레 굵은체 통일) → preset_save (관제 097).
     PYTHONUTF8=1 py channel/itemhome/preset/ih_preset.py
 손질 근거(눈으로 본 것, 프레임 7편 대조): 나레 자막 = 굵은 둥근 고딕(SBAggroB·잰 점수 0.93) + 검정 외곽선 + 강조어 노랑/분홍,

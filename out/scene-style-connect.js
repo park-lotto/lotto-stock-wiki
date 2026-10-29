@@ -278,6 +278,8 @@
       //   ★새 영상에만(서버 context.autoNew, 2026-10-06 사장님 '기존영상은 하지말고') — 기존 영상은 고객이 효과를 직접 누를 때만.
       if(context.fxEnabled!==false&&context.autoNew!==false&&!Object.values(saved.effects||{}).some(e=>api.hasSceneFx(e))&&api.autoPlace(true))aimEmphasis(api.moments().map((_,k)=>k));
       drawFxp();   // 그 영상에 저장된 강조효과 프리셋 표시(관제 158)
+      // 관제 252: 저장본 없는 새 영상을 처음 열 때만 '마지막에 적용한 내 프리셋'을 건다(적용 버튼과 같은 일). 자막 나누기 뒤 다시 받는 context(sceneIndex 있음)는 제외
+      if(!event.data.snapshot&&!Number.isInteger(event.data.sceneIndex))api.applyLastMine?.().then(name=>{if(name&&headerStatus)headerStatus.textContent=`실제 자막 ${context.scenes.length}개 연결 · 내 프리셋 '${name}'`;sync();}).catch(e=>console.warn('[내 프리셋] 마지막 프리셋 적용 실패',e));
       if(Number.isInteger(event.data.sceneIndex))api.show(event.data.sceneIndex);
       document.documentElement.classList.remove('scene-waiting');   // 실제 데이터가 그려졌다 — 본문을 보인다(머리띠 가림은 html 표식이 계속)
       const status=pane.querySelector('[data-connection-status]');if(status)status.textContent=`실제 자막 ${context.scenes.length}개를 연결했습니다.`;

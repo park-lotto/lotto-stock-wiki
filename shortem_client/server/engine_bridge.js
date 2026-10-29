@@ -139,7 +139,51 @@ export function answer(id, obj) {
 }
 
 // 엔진 미리보기 도구(tools/calcopy/preview_request.py) — 판단(합치기·스냅샷·검사)은 엔진, 여기는 부르기만. 결과는 JSON 한 줄.
-export function engineTool(cmd, input, { timeoutMs = 60000 } = {}) {
+//   ★상주 워커(관제 266): 클릭마다 엔진을 새로 띄우면 import 만 수 초(10-25 실측 클릭 1번 10.8초) — engine_worker.py 하나를
+//   띄워 두고 줄마다 부른다. 서버 설정 화면(claude_studio)도 같은 파일을 쓴다. 워커가 죽으면 다음 요청에 다시 띄운다(오류는 화면에 그대로).
+const WORKER_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), 'engine_worker.py');
+let W = null;
+function engineWorker() {
+  if (W && !W.dead) return W;
+  const root = engineRoot();
+  const proc = spawn(pythonExe(), ['-u', WORKER_FILE, root],
+    { cwd: root, env: engineEnv(ensureDir(aiRoot(), '_ui'), null, {}), shell: false, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
+  const w = { proc, buf: '', q: [], dead: false, err: '' };
+  w.ready = new Promise(res => { w.onReady = res; });
+  proc.stdout.setEncoding('utf8');
+  proc.stdout.on('data', d => {
+    w.buf += d;
+    let i;
+    while ((i = w.buf.indexOf('\n')) >= 0) {
+      const line = w.buf.slice(0, i).trim(); w.buf = w.buf.slice(i + 1);
+      if (!line) continue;
+      let j; try { j = JSON.parse(line); } catch { j = { error: '엔진 미리보기 응답 모양이 다릅니다' }; }
+      if (j.ready && w.onReady) { w.onReady(true); w.onReady = null; continue; }
+      const cb = w.q.shift(); if (cb) cb(j);
+    }
+  });
+  proc.stderr.on('data', d => { if (w.err.length < 20000) w.err += String(d); });
+  const die = why => { w.dead = true; if (w.onReady) { w.onReady(false); w.onReady = null; } for (const cb of w.q.splice(0)) cb({ error: why, tail: w.err.slice(-400) }); };
+  proc.on('error', e => die(String(e && e.message)));
+  proc.on('close', () => die('엔진 미리보기가 멈췄습니다'));
+  // 워커가 MCP·시험 프로세스를 붙잡아 두지 않게(기다리는 요청은 타이머가 붙잡는다), 끝날 때 같이 끈다
+  for (const s of [proc, proc.stdin, proc.stdout, proc.stderr]) { try { s.unref && s.unref(); } catch { /* 없음 */ } }
+  W = w;
+  return w;
+}
+
+export async function engineTool(cmd, input, { timeoutMs = 60000 } = {}) {
+  if (['catalog', 'check', 'preview'].includes(cmd) && !process.env.SHORTEM_NO_WORKER) {
+    const w = engineWorker();
+    if (await w.ready) {
+      return new Promise(resolve => {
+        const t = setTimeout(() => { try { w.proc.kill(); } catch { /* 이미 끝 */ } }, timeoutMs);
+        w.q.push(j => { clearTimeout(t); resolve(j); });
+        w.proc.stdin.write(JSON.stringify({ op: cmd, ...(input || {}) }) + '\n');
+      });
+    }
+    return { error: '엔진 미리보기를 띄우지 못했습니다', tail: w.err.slice(-400) };
+  }
   return new Promise(resolve => {
     const proc = spawn(pythonExe(), [path.join(engineRoot(), 'tools', 'calcopy', 'preview_request.py'), cmd],
       { cwd: engineRoot(), env: engineEnv(ensureDir(aiRoot(), '_ui'), null, {}), shell: false, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
@@ -180,6 +224,39 @@ export function runOps(jobDir, doList, { timeoutMs = 3 * 60 * 60 * 1000 } = {}) 
       try { fs.unlinkSync(doFile); } catch { /* 이미 */ }
       const s = Buffer.concat(out).toString('utf8').trim().split('\n').filter(Boolean).pop() || '';
       try { resolve(JSON.parse(s)); } catch { resolve(fail('실행기 결과를 읽지 못했다: ' + err.slice(-300))); }
+    });
+  });
+}
+
+// 완성본 → 캡컷 초안(관제 266) — 판단·꼴은 엔진 tools/calcopy/engine/capcut_export.export 한 곳. 여기는 띄우고 마지막 줄 JSON 을 읽기만 한다.
+//   이 PC 에 캡컷이 깔려 있으면 캡컷 초안 폴더에 바로(캡컷 목록에 뜬다), 없으면 그 편 작업 폴더/capcut 아래.
+const CAPCUT_PY = [
+  'import json, sys',
+  'from pathlib import Path',
+  'from tools.calcopy.engine import capcut_export as C',
+  'work, name = sys.argv[1], sys.argv[2]',
+  'root = C.capcut_drafts_root()',
+  'p = C.export(work, root or (Path(work) / "capcut"), None, name or None, log=lambda *a, **k: None)',
+  'r = C.check(p, work)',
+  'print(json.dumps({"ok": r["ok"], "bad": r["bad"], "draft": str(p), "in_capcut": bool(root)}, ensure_ascii=False))',
+].join('\n');
+export function capcutExport(workDir, name, { timeoutMs = 10 * 60 * 1000 } = {}) {
+  return new Promise(resolve => {
+    const proc = spawn(pythonExe(), ['-c', CAPCUT_PY, workDir, name || ''],
+      { cwd: engineRoot(), env: { ...engineEnv(ensureDir(aiRoot(), '_ui'), null, {}), PYTHONPATH: engineRoot() }, shell: false, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    const out = [];
+    let err = '';
+    const t = setTimeout(() => { try { proc.kill(); } catch { /* 이미 끝 */ } }, timeoutMs);
+    proc.stdout.on('data', d => out.push(d));
+    proc.stderr.on('data', d => { if (err.length < 20000) err += String(d); });
+    proc.on('error', e => { clearTimeout(t); resolve({ ok: false, why: String(e && e.message) }); });
+    proc.on('close', () => {
+      clearTimeout(t);
+      const s = Buffer.concat(out).toString('utf8').trim().split('\n').filter(Boolean).pop() || '';
+      try { resolve(JSON.parse(s)); } catch {
+        const last = err.trim().split('\n').filter(Boolean).pop() || '';   // 엔진이 거절한 이유(렌더 안 끝남 등) 한 줄
+        resolve({ ok: false, why: last.replace(/^\w+Error:\s*/, '') || '캡컷 초안을 만들지 못했습니다' });
+      }
     });
   });
 }

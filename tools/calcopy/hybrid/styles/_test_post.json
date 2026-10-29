@@ -1,0 +1,29 @@
+{
+ "name": "_test_post",
+ "base": "키치잇판",
+ "_note": "시험 판(지시서 02 합격 검사 3) — 게시글형 틀(frame.kind post)을 공용 렌더러가 그리나. 좌표·색 = channel/banggu/preset/게시글형/frame.json 훅 틀(= channel/banggu/칼카피_ILIi/frame_hook.json) 그대로 손으로 옮김. 판 이관 도구(frame_import.py)는 지시서 07.",
+ "frame": {
+  "kind": "post",
+  "bg": [95, 95, 95],
+  "window": [0, 760, 1080, 1056],
+  "post": {
+   "head_bar": {"box": [0, 0, 1080, 234], "color": "#0F3B5F",
+    "icons": [{"kind": "bars", "x": 79, "ys": [130, 160, 193], "w": 88, "h": 10, "color": "#000002"},
+              {"kind": "search", "x": 904, "y": 128, "size": 84, "stroke": 7, "color": "#000000"}]},
+   "rules": [{"box": [0, 236, 1080, 240], "color": "#240400"}, {"box": [60, 446, 1020, 451], "color": "#111313"},
+             {"box": [0, 1816, 1080, 1920], "color": "#7D7D7D"}],
+   "author_line": {"text": "골방 | 14:25", "font": "Pretendard-SemiBold.otf", "px": 36.3, "color": "#222121", "x": 125, "cy": 392, "word_spacing": 14},
+   "body_box": {"box": [0, 540, 1080, 802], "color": "#FDFDFD", "fade": [56, 74],
+    "rules": [{"box": [0, 583, 1080, 585], "color": "#3C3C3C"}, {"box": [0, 736, 1080, 737], "color": "#3C3C3C"}],
+    "text": {"text": "", "font": "Pretendard-Regular.otf", "px": 53.4, "color": "#000000", "cx": 540, "cy": 658, "max_w": 960}}
+  },
+  "title": [
+   {"font": "JalnanGothic.ttf", "px": 103.2, "center": 184, "color": "#FFFFFF", "hi": "#2BA2FC", "max_w": 1000,
+    "stroke": {"px": 6, "color": "#000114"}, "shadow": {"dx": 3, "dy": 4, "color": "#000114"}},
+   {"font": "JalnanGothic.ttf", "px": 103.2, "center": 307, "color": "#2BA2FC", "hi": "#2BA2FC", "max_w": 1000,
+    "stroke": {"px": 6, "color": "#000114"}, "shadow": {"dx": 3, "dy": 4, "color": "#000114"}}
+  ],
+  "logo": null,
+  "credit": null
+ }
+}

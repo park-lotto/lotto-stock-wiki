@@ -20,12 +20,13 @@ def main():
     ap.add_argument("--engine", required=True)
     ap.add_argument("--dir", required=True)
     ap.add_argument("--port", type=int, default=18849)
+    ap.add_argument("--channel-root", default="", help="프리셋 틀(channel/<slug>/preset) 뿌리 — 기본 = --engine. 라이브 서버 흉내(엔진 묶음엔 channel/ 이 없다)는 저장소 뿌리를 준다")
     a = ap.parse_args()
     d = Path(a.dir); d.mkdir(parents=True, exist_ok=True)
     sf = d / "secret.txt"                            # 서버를 다시 켜도 같은 비밀값 — 진행 중 편의 서명 payload 가 이어지게(이어 가기 시험)
     if not sf.exists():
         sf.write_text("local-test-" + os.urandom(8).hex(), encoding="utf-8")
-    os.environ.update(CLAUDE_CHANNEL_ROOT=str(Path(a.engine).resolve()), CLAUDE_FLOW_ENGINE=str(Path(a.engine).resolve()),
+    os.environ.update(CLAUDE_CHANNEL_ROOT=str(Path(a.channel_root or a.engine).resolve()), CLAUDE_FLOW_ENGINE=str(Path(a.engine).resolve()),
                       CLAUDE_STORE_DIR=str(d / "store"), CLAUDE_LICENSE_SECRET=sf.read_text(encoding="utf-8").strip())
     sys.path.insert(0, str(ROOT))
     from shopping_shorts import app as A, claude_portal as cp

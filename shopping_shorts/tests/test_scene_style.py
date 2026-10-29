@@ -112,3 +112,11 @@ def test_레이어_제한시간은_영상길이에_비례한다():
     assert t({"scenes": [{"end": 29.7}]}) > 245 + 60     # 실측 245초에 여유
     assert t({"scenes": [{"end": 600}]}) == 900          # 상한
     assert t({}) == 240
+
+
+def test_hook_motion_none_is_saved():
+    # 훅 시선집중 모션 '없음'(관제 262) — 저장이 422로 막히면 첫 장면 줌 펀치를 끌 수 없다
+    base = {"mode": "story", "presetId": "t11"}
+    assert validate_snapshot({**base, "hookMotion": "none"})["hookMotion"] == "none"
+    with pytest.raises(ValueError):
+        validate_snapshot({**base, "hookMotion": "nope"})

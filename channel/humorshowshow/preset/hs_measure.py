@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# _deprecated_2026-10-25 → tools/calcopy/hybrid/styles/썰템쇼판.json (관제 263 지시서 07 · 표준 §3-1: 새 편은 공용 렌더러로. 설명서 프리셋 썰템쇼_화자썰 생성기 — 회원 옛 길 preset_make 가 그 결과를 읽으므로 지우지 않는다)
 """썰템쇼(벤치 재밌쇼) 틀 픽셀 실측 — 편마다 본문·훅 프레임 한 장씩 떠서 층별 잉크 자리·색을 잰다 (관제 097, 2026-10-18).
 
     PYTHONUTF8=1 py channel/humorshowshow/preset/hs_measure.py [id ...]     → C:/숏템_칼카피/humorshowshow/preset_work/measure/<id>.json + all.json

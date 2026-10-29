@@ -25,8 +25,14 @@ from pathlib import Path
 #   부르는데 목록에 없어 서버 옛 sfx_pack 이 쓰였고, 소리 대조가 작업 6개 전부 TypeError 로 건너뛰어 관문이 실패했다(관제 102 와 같은 함정).
 # storyboard 는 video_assemble 앞(관제 120 장면배분, 2026-10-07): video_assemble.sfx_events_for 가 줄 효과음 볼륨 표
 #   storyboard.line_sfx_gain 을 부른다. storyboard 는 script_generate·edit_plan 만 모듈 머리에서 import 한다.
+# script_translate 는 edit_plan 앞(관제 248 일본어모드, 2026-10-21): 언어 판정 주인 lang_of 를 edit_plan.speech_cps·video_assemble
+#   _caption_segments·caption_sync·tts_timestamps·font_glyphs 가 부른다. 목록에 없어 서버 옛 파일이 쓰여 화면 계산(screen_clips.warm)이
+#   ImportError 로 6작업 전부 건너뛰었다(관제 102 와 같은 함정). 머리 import 는 script_generate 뿐(서버 것 사용).
+# font_glyphs 는 video_assemble 앞(`from . import font_glyphs` 가 머리에 있다) · caption_sync 는 video_assemble 뒤·mix_pipeline 앞
+#   (머리에서 .video_assemble 을, mix_pipeline 이 머리에서 caption_sync 를 import) · narration_naturalize 는 mix_pipeline 앞.
 PATCH_MODULES = ("config", "voice_presets", "typecast_tts", "fish_tts", "audio_post", "tts_timestamps", "tts", "tts_joined",
-                 "frame_match", "seg_snap", "edit_plan", "screen_clips", "sfx_pack", "storyboard", "video_assemble", "scene_style", "clean_base", "mix_pipeline",
+                 "frame_match", "seg_snap", "script_translate", "edit_plan", "screen_clips", "sfx_pack", "storyboard", "font_glyphs",
+                 "video_assemble", "caption_sync", "narration_naturalize", "scene_style", "clean_base", "mix_pipeline",
                  "export_bundle", "capcut_draft")
 
 # 모듈 말고 같이 올릴 것: screen_clips 가 자기 옆(_HERE)의 러너·화면 코드를 부른다 / app 은 굽기 함수만 바꿔 끼운다.

@@ -1,0 +1,20 @@
+{
+ "_rule": "기본값 = 이 프리셋 원본 영상(사장님 10-20). 글꼴·자막 외곽선은 frame.json 그대로(여기 적지 않는다). 회원이 바꾼 칸만 회원 값. 읽는 곳 = tools/calcopy/preview_request.preset_defaults",
+ "_from": "channel/itemhome/1편_안유진로션/근거.md:76(TTS 문정 tc_68f9c6a72f0f04a417bb136f · 템포 1.36 → 8.30자/초, 만템 8편 8.4자/초 calcopy.json rules.narration_cps) · :88(BGM sweets) · 만템 나레 여 7/8(비교_만템_아이템홈_얜샷템1편.md:46) · 문정 = 사장님 10-20 고름(10-17 미나는 일레븐랩스라 회원 PC 불가) · 자막 replace(itemhome/1편_안유진로션/make_render.py:144, 만템 1줄 116/121칸)",
+ "tts": {
+  "provider": "typecast",
+  "voice_id": "tc_68f9c6a72f0f04a417bb136f",
+  "name": "문정",
+  "preset_id": "tc-moonjung-stable",
+  "tempo": 1.36
+ },
+ "bgm": {
+  "candidates": [
+   "sweets"
+  ],
+  "_gain": "1편 기록은 LUFS(−24.5)만 있고 비율이 없어 엔진 기본(0.12)을 그대로 쓴다"
+ },
+ "caption": {
+  "mode": "replace"
+ }
+}
