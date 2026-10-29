@@ -14,6 +14,8 @@ const RESUME = arg('--resume');   // 이어 가기 시험: 같은 폴더(같은 
 if (fs.existsSync(dir) && !RESUME) { console.error('없는 폴더를 주세요: ' + dir); process.exit(2); }
 const HOME = path.join(dir, 'home'), WORK = path.join(dir, 'work'), CWD = path.join(dir, 'cwd');
 for (const d of [HOME, WORK, CWD]) fs.mkdirSync(d, { recursive: true });
+// 회원 지침(installer/common/CLAUDE_숏클.md) — 회원 PC 엔 설치팩이 넣어 둔다. 시험도 같은 지침을 읽게 작업 폴더 CLAUDE.md 로(관제 290: 지침 없이 돌린 시험은 회원과 다르다)
+fs.copyFileSync(path.join(HERE, '..', '..', 'installer', 'common', 'CLAUDE_숏클.md'), path.join(CWD, 'CLAUDE.md'));
 // --keys <폴더>: 회원이 설정 화면 '내 키'에 넣어 둔 것처럼 <HOME>/keys/ 에 복사(쿠팡 파트너스 등 — 값은 출력하지 않는다)
 if (arg('--keys')) fs.cpSync(path.resolve(arg('--keys')), path.join(HOME, 'keys'), { recursive: true });
 const env = { SHORTEM_HOME: HOME, SHORTEM_WORK: WORK, SHORTEM_CLIENT: 'claude-code', SHORTEM_NO_BROWSER: '1', SHORTEM_DEV_TOOLS: '1', SHORTEM_DEV: '1',
@@ -31,7 +33,7 @@ const t0 = Date.now();
 const log = path.join(dir, RESUME ? `claude_resume_${Date.now()}.jsonl` : 'claude.jsonl');
 const claude = process.env.CLAUDE_BIN || (process.platform === 'win32' ? path.join(process.env.USERPROFILE || '', '.local', 'bin', 'claude.exe') : 'claude');
 const p = spawn(claude, ['-p', prompt, '--mcp-config', cfg, '--strict-mcp-config', '--model', 'opus', '--output-format', 'stream-json', '--verbose',
-  '--allowedTools', 'mcp__shortem__shortem_setup,mcp__shortem__shortem_presets,mcp__shortem__shortem_make,mcp__shortem__shortem_ai,mcp__shortem__shortem_job,mcp__shortem__shortem_settings,WebSearch,WebFetch',
+  '--allowedTools', 'mcp__shortem__shortem_setup,mcp__shortem__shortem_presets,mcp__shortem__shortem_make,mcp__shortem__shortem_ai,mcp__shortem__shortem_job,mcp__shortem__shortem_settings,mcp__shortem__shortem_inbox,mcp__shortem__shortem_profile,mcp__shortem__shortem_feedback,Agent,WebSearch,WebFetch',
   '--max-turns', '600'], { cwd: CWD, stdio: ['ignore', fs.openSync(log, 'w'), 'pipe'], windowsHide: true });
 let err = ''; p.stderr.on('data', d => { err += d; });
 const code = await new Promise(r => p.on('close', r));
