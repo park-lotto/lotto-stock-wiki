@@ -772,8 +772,29 @@ def ph_origin_read(st, m, rp, u):
     kind = "program" if sk.startswith("program") else "channel"
     st["src"] = {"label": label, "kind": kind}         # 출처 = 채널 이름인가 프로그램 이름인가 — 편 상태·작업 기록에 남겨 다시 시도할 때도 같은 길(사장님 10-22). 고객 진행 줄에는 단계만(세부 금지)
     st["log"].append(f"출처 '{label}' = {'프로그램 이름' if kind == 'program' else '채널 이름'}")
-    return {"do": [{"id": "src", "cmd": "channel_find", "label": label, "kind": kind, "celeb": "" if celeb == "불명" else celeb, "n": 60,
+    return _src_find(st)
+
+
+def _src_find(st) -> dict:
+    r, src = st["read"], st["src"]
+    if src.get("kind") == "sns":
+        return {"goto": "search"}
+    celeb = str(r.get("celeb") or "")
+    return {"do": [{"id": "src", "cmd": "channel_find", "label": src["label"], "kind": src["kind"], "celeb": "" if celeb == "불명" else celeb, "n": 60,
                     "words": [w for w in r.get("product_words") or [] if w][:2], "queries": _src_queries(r)}], "then": "src_got"}
+
+
+ORIGIN_STATE = ("origin_tried", "mixed", "src_mixed", "scored", "vis", "probe_sb", "sb", "origin", "src_channel")
+
+
+def ph_origin_again(st, m, rp, u):
+    """'원본을 못 찾았어요' 뒤 다시 시도 = 원본 찾기를 **처음부터 다시 잰다**(10-29 얜샷템: 옛 다시 시도는 마지막 판정 단계(subs_got)에
+    옛 자막 대조 결과를 그대로 다시 넣어 — 대조를 고쳐도 같은 '못 찾음'. 회원 문구 '다른 방법으로 다시 찾아볼게요'와 실제가 달랐다).
+    소재 판독(read)·출처(src)는 그대로 두고 후보·대조·판정만 새로. 받은 자막 파일은 PC 에 남아 다시 받지 않는다."""
+    for k in ORIGIN_STATE:
+        st.pop(k, None)
+    st["log"].append("원본 찾기: 다시 시도 — 후보·대조를 처음부터 다시")
+    return _src_find(st)
 
 
 def _src_queries(r: dict) -> list[str]:
@@ -864,7 +885,7 @@ def _origin_next(st, why: str) -> dict:
         return {"goto": "search"}
     if "vis" not in tried and st.get("vis"):
         return {"goto": "vis_get"}
-    raise _Stop(*NO_ORIGIN, origin_missing=True, detail="시도한 길: " + ", ".join(tried))
+    raise _Stop(*NO_ORIGIN, retry="origin_again", origin_missing=True, detail="시도한 길: " + ", ".join(tried))
 
 
 def ph_sb_pick(st, m, rp, u):
@@ -1133,6 +1154,8 @@ def ph_stopped(st, m, rp, u):
         r = "of_lens"                            # 10-26 이전 판이 멈춘 해외원본형 편(retry 칸 없음)도 렌즈부터 새로
     if not r and why0.startswith("look 단계를"):
         r = "check_retry"
+    if why0 == NO_ORIGIN[0] and (st.get("stopped") or {}).get("origin_missing"):
+        r = "origin_again"                       # 10-29 전에 멈춘 편은 retry 가 판정 단계(subs_got)로 남아 옛 대조 결과만 되풀이했다
     vid = _yt_id(str(u.get("origin_url") or "") or str(u.get("revise") or ""))
     if vid and (st.get("stopped") or {}).get("origin_missing"):      # '원본 주소를 주시면 바로' — 그 주소로 원본 찾기를 끝낸다
         st.pop("stopped", None)
@@ -3957,7 +3980,7 @@ PHASE_STAGE.update({
 
 
 PHASES = {
-    "setup": ph_setup, "setup_check": ph_setup_check, "bench": ph_bench, "bench_got": ph_bench_got, "origin_read": ph_origin_read, "src_got": ph_src_got, "probe_got": ph_probe_got, "sb_pick": ph_sb_pick,
+    "setup": ph_setup, "setup_check": ph_setup_check, "bench": ph_bench, "bench_got": ph_bench_got, "origin_read": ph_origin_read, "origin_again": ph_origin_again, "src_got": ph_src_got, "probe_got": ph_probe_got, "sb_pick": ph_sb_pick,
     "peer": ph_peer, "peer_read": ph_peer_read, "search": ph_search, "search_got": ph_search_got, "titles": ph_titles,
     "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped, "task_got": ph_task_got, "watch_got": f_watch_got, "of_dedup": f_of_dedup, "stills_again": ph_stills_again, "given_origin_got": ph_given_origin_got,
     "vis_get": ph_vis_get, "vis_got": ph_vis_got, "vis_look": ph_vis_look, "vis_pick": ph_vis_pick, "vis_next": ph_vis_next,

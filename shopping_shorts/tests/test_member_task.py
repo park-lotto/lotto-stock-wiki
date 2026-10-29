@@ -129,3 +129,17 @@ def test_old_flow_asked_member_directly():
     ctx = {"bench_fail": 2, "task_answer": {"action": "retry"}}
     tr, res, st = walk(old, old.start("https://youtu.be/BENCH1", "잇템로그판_v2", "sid"), ctx)
     assert res["status"] == "stop" and "tasks" not in ctx
+
+
+def test_no_origin_retry_remeasures_from_scratch():
+    """10-29 얜샷템: '원본을 못 찾았어요' 뒤 다시 시도가 판정 단계(subs_got)에 옛 자막 대조 결과를 그대로 다시 넣어, 대조를 고쳐도 같은 '못 찾음'.
+    다시 시도 = 후보·대조를 처음부터(PC 에 channel_find 부터 다시 시킨다). 옛 판이 남긴 retry='subs_got' 멈춤도 같은 길."""
+    st = _start()
+    st.update({"phase": "stopped", "read": {"celeb": "최화정", "product_words": ["할아버지김"], "scene_words": []},
+               "src": {"label": "안녕하세요 최화정이에요", "kind": "channel"}, "origin_tried": ["src", "sb", "search"],
+               "scored": [{"id": "OLD"}], "mixed": [{"id": "OLD"}],
+               "stopped": {"why": "원본을 못 찾았어요", "fix": "", "retry": "subs_got", "origin_missing": True}})
+    res = F.step(st, {}, {}, {"retry": True})
+    assert [d["cmd"] for d in res.get("do") or []] == ["channel_find"], res
+    s2 = res["state"]
+    assert not s2.get("origin_tried") and not s2.get("scored") and not s2.get("mixed")

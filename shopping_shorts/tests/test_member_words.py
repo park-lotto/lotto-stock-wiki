@@ -98,6 +98,9 @@ def test_origin_pick_reject_goes_to_next_way_not_stop():
 def test_origin_all_ways_tried_then_friendly_and_url_continues():
     st = _st(scored=[{"id": "S1", "matched": []}], origin_tried=["src", "sb", "search"], phase="pick_got")
     res = F.step(st, {}, {"origin_pick": {"origin_id": "", "self_spoken": False}}, {})
+    if res["status"] == "review":                  # 다시 시도할 길(origin_again)이 있는 멈춤 = 회원에게 묻기 전에 제작자 과제 — 과제가 '못 만듦'이면 회원에게
+        tid = res["review"][0]["id"]
+        res = F.step(st, {}, {tid: {"action": "end", "note": "본인 채널 원본 확인 못 함"}}, {})
     assert res["status"] == "stop"
     assert res["why"] == F.NO_ORIGIN[0] and res["fix"] == F.NO_ORIGIN[1] and "멈춤" not in res["message"]
     assert st["stopped"].get("origin_missing")
