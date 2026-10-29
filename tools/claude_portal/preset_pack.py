@@ -70,8 +70,11 @@ def tech_files(engine: Path, preset: str) -> list[str]:
         if b and b not in seen:
             seen.add(b)
             todo.append(b)
-    st = json.loads((engine / h / "styles" / f"{v}.json").read_text(encoding="utf-8"))
-    b = st.get("bench") or {}
+    # bench(줄판독·효과음 실측 자리)는 상속 판에서 물려받을 수 있다 — 날것 v.json 만 보면 빠진다(10-29 회원 잇템로그판_v2: 완성본 검사 B14 '벤치 줄판독 없음')
+    b, name = {}, v
+    while name and not b:
+        raw = json.loads((engine / h / "styles" / f"{name}.json").read_text(encoding="utf-8"))
+        b, name = raw.get("bench") or {}, raw.get("base")
     if b.get("line_reads"):
         out += [p.relative_to(engine).as_posix() for p in sorted((engine / b["line_reads"]).glob("*.json"))]
     if b.get("sfx_events"):

@@ -130,7 +130,8 @@ HAND = tuple(f"tools/calcopy/hybrid/{m}.py" for m in ("__init__", "runner_ops", 
                                                        "bench_check", "thumb", "screen", "styles",
                                                        "fx_target", "pack_map", "thumb_rule",
                                                        # 10-29 회원 묶음으로 렌더 실측(parity_render) — 렌더 경로가 함수 안에서 부른다. 빠지면 계획·렌더가 ImportError 로 멈춘다
-                                                       "material_fit", "quality_gate", "checks", "script_audit", "deco")) + (
+                                                       "material_fit", "quality_gate", "checks", "script_audit", "deco", "compare_sheet")) + (
+    "tools/calcopy/oneshot/__init__.py", "tools/calcopy/oneshot/scene_fit.py",   # 완성본 검사(check)가 부른다 — 10-29 회원 12/13 ModuleNotFoundError
     "tools/calcopy/yanshot/__init__.py", "tools/calcopy/yanshot/common.py", "tools/calcopy/yanshot/plan.py",
     "tools/calcopy/engine/tts_pause.py", "shopping_shorts/channelkit/vision/ocrdet.py",
     "shopping_shorts/script_translate.py")       # 글자·언어 판정(scene_style·video_assemble) — script_generate 는 번역 때만 늦게 불러온다
@@ -140,7 +141,6 @@ HAND = tuple(f"tools/calcopy/hybrid/{m}.py" for m in ("__init__", "runner_ops", 
 #   render_bench 가 fx_target·pack_map·thumb_rule 을 새로 부르는데 HAND 에 없어 회원 PC import 실패 구멍이 났다 — 손 목록은 썩는다).
 HAND_SERVER_ONLY = {
     # 판단 대기(관제 265): runner_ops·render_itssum·screen 이 함수 안에서 부른다 — 회원 PC 에서 그 갈래가 도는지 확인 뒤 HAND 로 옮기거나 여기 둔다
-    "tools/calcopy/hybrid/compare_sheet.py", "tools/calcopy/oneshot/scene_fit.py",
     # 10-25 엔진 render_bench 가 함수 안(src_dir 있을 때)에서 respace_reuse 를 부른다 — material_fit 이 부르는 quality_gate·checks·script_audit·scene_fit 이
     #   전부 위 '판단 대기'라 같이 둔다(회원 PC 로 보낼지는 관제 265 판단, 관제 266 병합 막힘 풀기)
     # 10-26 엔진 render_bench 가 함수 안에서 deco(키치잇 꾸밈 재현, 3a388064c WIP·미검증)를 부른다 — 회원 PC 로 보낼지는 관제 265 발행 판단
