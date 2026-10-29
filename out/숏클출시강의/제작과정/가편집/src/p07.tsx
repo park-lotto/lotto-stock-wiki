@@ -9,7 +9,8 @@ import { Caption, Cap, Fonts, Hand, INK, Ink, OR, PAPER, S, Slam, ez } from "./k
 const SC = (PLAN as any)[17];
 const CAPS = SC.caps as Cap[];
 const END = SC.sec + 0.4;
-const sq = (a: number, b: number, el: React.ReactNode) => <Sequence from={S(a)} durationInFrames={Math.max(1, S(b) - S(a))}>{el}</Sequence>;
+const LF: React.FC<{ r: (f: number) => React.ReactNode }> = ({ r }) => <>{r(useCurrentFrame())}</>;
+const sq = (a: number, b: number, el: React.ReactNode | ((f: number) => React.ReactNode)) => <Sequence from={S(a)} durationInFrames={Math.max(1, S(b) - S(a))}>{typeof el === "function" ? <LF r={el} /> : el}</Sequence>;
 const pop = (f: number, at: number, k = 1.6) => interpolate(f, [at, at + 5, at + 10], [k, 0.95, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
 // 엔진 6단계 — [불 들어오는 초, 이름]
@@ -165,9 +166,9 @@ const Main: React.FC = () => (
     {sq(3.49, 6.54, <AbsoluteFill style={{ background: PAPER }}>
       <Slam text="운 좋으면 ✓" at={S(0.2)} x={200} y={250} size={130} color="#2F9E6E" center={false} />
       <Slam text="대부분 ✗ ✗ ✗" at={S(1.3)} x={200} y={460} size={150} color="#E5484D" center={false} /></AbsoluteFill>)}
-    {sq(6.54, 12.62, <Dark>
+    {sq(6.54, 12.62, (lf: number) => <Dark>
       <Slam text="원본 찾기 엔진" at={S(0.3)} y={220} size={170} color={OR} />
-      {useCurrentFrame() >= S(3.6) && <div style={{ position: "absolute", left: 380, top: 520, width: 1160, padding: "28px 36px", border: "4px solid #555", borderRadius: 18, background: "#1d1e23",
+      {lf >= S(3.6) && <div style={{ position: "absolute", left: 380, top: 520, width: 1160, padding: "28px 36px", border: "4px solid #555", borderRadius: 18, background: "#1d1e23",
         fontFamily: "Consolas, monospace", fontSize: 48, color: "#ddd" }}>🔗 소재 영상 주소 하나<span style={{ color: OR }}>▌</span></div>}</Dark>)}
     {sq(12.62, 14.51, <Dark><Slam text="쭉 흘러갑니다 →" at={S(0.2)} y={420} size={140} color="#fff" /></Dark>)}
     {sq(14.51, 19.4, <Read />)}
@@ -175,24 +176,24 @@ const Main: React.FC = () => (
     {sq(24.87, 32.36, <Judge tCover={28.61 - 24.87} tScene={31.45 - 24.87} />)}
     {sq(32.36, 38.08, <Recheck />)}
     {sq(38.08, 43.58, <Korea tSplit={40.97 - 38.08} />)}
-    {sq(43.58, 47.34, <AbsoluteFill style={{ background: PAPER }}>
+    {sq(43.58, 47.34, (lf: number) => <AbsoluteFill style={{ background: PAPER }}>
       <div style={{ position: "absolute", left: 0, right: 0, top: 230, textAlign: "center", fontFamily: "Pret", fontWeight: 800, fontSize: 110, color: "#b9b3a8" }}>
-        <span style={{ position: "relative" }}>"어, 똑같네"<div style={{ position: "absolute", left: -10, right: -10, top: "52%", height: 14, background: "#E5484D", transform: `scaleX(${ez(useCurrentFrame(), 14, 24)})`, transformOrigin: "left" }} /></span></div>
+        <span style={{ position: "relative" }}>"어, 똑같네"<div style={{ position: "absolute", left: -10, right: -10, top: "52%", height: 14, background: "#E5484D", transform: `scaleX(${ez(lf, 14, 24)})`, transformOrigin: "left" }} /></span></div>
       <Slam text="검증까지 쭉" at={S(1.6)} y={430} size={200} color={OR} /></AbsoluteFill>)}
     {sq(47.34, 48.21, <AbsoluteFill style={{ background: PAPER }}><Slam text="아시겠죠?" at={1} y={380} size={170} /></AbsoluteFill>)}
     {sq(48.21, 58.74, <Case base={48.21} />)}
-    {sq(58.74, 62.43, <AbsoluteFill style={{ background: PAPER }}>
+    {sq(58.74, 62.43, (lf: number) => <AbsoluteFill style={{ background: PAPER }}>
       <Slam text="클로드가 대단하죠" at={S(0.1)} y={240} size={140} color={OR} />
-      <div style={{ position: "absolute", left: 0, right: 0, top: 520, textAlign: "center", fontFamily: "Pen", fontSize: 100, color: "#7a756d", opacity: ez(useCurrentFrame(), S(1.3), S(1.3) + 10) }}>여기까지 만든 것도 대단하고요 😄</div></AbsoluteFill>)}
-    {sq(62.43, 67.32, <AbsoluteFill style={{ background: PAPER }}>
+      <div style={{ position: "absolute", left: 0, right: 0, top: 520, textAlign: "center", fontFamily: "Pen", fontSize: 100, color: "#7a756d", opacity: ez(lf, S(1.3), S(1.3) + 10) }}>여기까지 만든 것도 대단하고요 😄</div></AbsoluteFill>)}
+    {sq(62.43, 67.32, (lf: number) => <AbsoluteFill style={{ background: PAPER }}>
       <Slam text="물론, 안 되는 것도 있어요" at={S(0.1)} y={140} size={90} />
-      <div style={{ position: "absolute", left: 260, top: 360, padding: "36px 50px", borderRadius: 24, background: "#E8F7EF", border: "4px solid #2F9E6E", fontFamily: "Pret", fontWeight: 800, fontSize: 70, color: "#1F6B4A", opacity: ez(useCurrentFrame(), S(1.8), S(1.8) + 8) }}>⏱ 2~3분이면 찾는 것</div>
-      <div style={{ position: "absolute", left: 1000, top: 360, padding: "36px 50px", borderRadius: 24, background: "#FFF1E6", border: `4px solid ${OR}`, fontFamily: "Pret", fontWeight: 800, fontSize: 70, color: OR, opacity: ez(useCurrentFrame(), S(3.0), S(3.0) + 8) }}>🔄 계속 도는 것</div></AbsoluteFill>)}
-    {sq(67.32, 70.79, <Ink n="f_dream" side="right" draw={false}><Hand text={"사람은 개입 안 함\n가만히 냅두면 끝"} x={130} y={260} size={140} color={OR} /></Ink>)}
-    {sq(70.79, END, <AbsoluteFill style={{ background: PAPER }}>
+      <div style={{ position: "absolute", left: 260, top: 360, padding: "36px 50px", borderRadius: 24, background: "#E8F7EF", border: "4px solid #2F9E6E", fontFamily: "Pret", fontWeight: 800, fontSize: 70, color: "#1F6B4A", opacity: ez(lf, S(1.8), S(1.8) + 8) }}>⏱ 2~3분이면 찾는 것</div>
+      <div style={{ position: "absolute", left: 1000, top: 360, padding: "36px 50px", borderRadius: 24, background: "#FFF1E6", border: `4px solid ${OR}`, fontFamily: "Pret", fontWeight: 800, fontSize: 70, color: OR, opacity: ez(lf, S(3.0), S(3.0) + 8) }}>🔄 계속 도는 것</div></AbsoluteFill>)}
+    {sq(67.32, 70.79, <Ink n="f_coffee" side="right" draw={false}><Hand text={"사람은 개입 안 함\n가만히 냅두면 끝"} x={130} y={260} size={140} color={OR} /></Ink>)}
+    {sq(70.79, END, (lf: number) => <AbsoluteFill style={{ background: PAPER }}>
       <div style={{ position: "absolute", left: 200, top: 120, fontFamily: "Pret", fontWeight: 800, fontSize: 44, color: "#9a958d" }}>출시 라이브 · 이 장면에서 채팅이 제일 많았어요</div>
       {["원본 찾기 진짜 힘들었는데", "검증까지?"].map((t, k) => <div key={k} style={{ position: "absolute", left: 220 + k * 120, top: 230 + k * 170, padding: "24px 40px", background: "#fff", border: "4px solid #ddd", borderRadius: 30,
-        fontFamily: "Pret", fontWeight: 800, fontSize: 70, color: INK, opacity: ez(useCurrentFrame(), S(2.99) + k * 20, S(2.99) + k * 20 + 8) }}>"{t}"</div>)}
+        fontFamily: "Pret", fontWeight: 800, fontSize: 70, color: INK, opacity: ez(lf, S(2.99) + k * 20, S(2.99) + k * 20 + 8) }}>"{t}"</div>)}
       <Slam text="네, 검증까지입니다" at={S(75.0 - 70.79)} y={600} size={130} color={OR} /></AbsoluteFill>)}
     {/* 엔진 단계 줄 + 실제 진행판 — 엔진 설명 구간(12.62~47.34) */}
     {sq(12.62, 47.34, <><Pipe base={12.62} /><Board /></>)}

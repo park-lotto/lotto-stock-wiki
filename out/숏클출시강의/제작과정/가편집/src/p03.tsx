@@ -211,7 +211,7 @@ const Main: React.FC = () => {
       {sq(o[0] + 5.74, o[0] + 12.96, <Todo base={5.74} />)}
       {sq(o[0] + 12.96, o[0] + 15.27, <AbsoluteFill style={{ background: PAPER }}><Slam text="5~6시간" at={S(0.72)} y={260} size={300} color={OR} />
         <div style={{ position: "absolute", left: 0, right: 0, top: 640, textAlign: "center", fontFamily: "Pen", fontSize: 90, color: INK }}>쇼츠 한 편에</div></AbsoluteFill>)}
-      {sq(o[0] + 15.27, o[0] + 18.8, <Ink n="f_tired" side="right">
+      {sq(o[0] + 15.27, o[0] + 18.8, <Ink n="f_desk_slump" side="right">
         <Slam text="빠른 분 2~3시간" at={S(0.77)} x={130} y={240} size={110} center={false} />
         <Slam text="끝내 못 만드는 분도" at={S(2.67)} x={130} y={420} size={100} color={OR} center={false} /></Ink>)}
       {sq(o[0] + 18.8, o[0] + 21.98, <Ink n="f_laptop_hope" side="left"><Hand text={"손이 가면\n욕심이 생긴다"} x={1040} y={240} size={160} /></Ink>)}
@@ -226,8 +226,8 @@ const Main: React.FC = () => {
       {sq(o[1] + 11.25, o[2], <Ink n="m_frustr_head" side="center" draw={false}><Hand text={"길었던 밤\n그 절망"} x={1300} y={240} size={170} color={OR} /></Ink>)}
       {/* ─ s04 수익 없는 시간 */}
       {sq(o[2], o[2] + 3.42, <Months t2={1.85 - 0} t3={2.45} />)}
-      {sq(o[2] + 3.42, o[2] + 6.56, <Ink n="f_frustr_head" side="right"><Hand text={"언제까지\n수익 없이?"} x={150} y={230} size={170} /></Ink>)}
-      {sq(o[2] + 6.56, o[3], <Ink n="m_tired" side="left"><Hand text={"그만두지도\n못하는 시간"} x={1060} y={260} size={160} color={OR} /></Ink>)}
+      {sq(o[2] + 3.42, o[2] + 6.56, <Ink n="f_cover_face" side="right"><Hand text={"언제까지\n수익 없이?"} x={150} y={230} size={170} /></Ink>)}
+      {sq(o[2] + 6.56, o[3], <Ink n="m_rub_eyes" side="left"><Hand text={"그만두지도\n못하는 시간"} x={1060} y={260} size={160} color={OR} /></Ink>)}
       {/* ─ s05 강의 */}
       {sq(o[3], o[3] + 7.21, <Courses tLeft={4.21} />)}
       {sq(o[3] + 7.21, o[3] + 8.84, <AbsoluteFill style={{ background: PAPER }}><Slam text="강의 탓이 아니에요" at={S(0.19)} y={360} size={150} /></AbsoluteFill>)}

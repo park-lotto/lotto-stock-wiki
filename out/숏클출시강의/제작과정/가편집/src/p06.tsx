@@ -12,7 +12,8 @@ const OFF: number[] = []; let acc = 0;
 SC.forEach((s) => { OFF.push(acc); acc += s.sec + PAD; });
 const END = acc;
 const CAPS: Cap[] = SC.flatMap((s, k) => (s.caps as Cap[]).map((c) => [c[0] + OFF[k], c[1] + OFF[k], c[2]] as Cap));
-const sq = (a: number, b: number, el: React.ReactNode) => <Sequence from={S(a)} durationInFrames={Math.max(1, S(b) - S(a))}>{el}</Sequence>;
+const LF: React.FC<{ r: (f: number) => React.ReactNode }> = ({ r }) => <>{r(useCurrentFrame())}</>;
+const sq = (a: number, b: number, el: React.ReactNode | ((f: number) => React.ReactNode)) => <Sequence from={S(a)} durationInFrames={Math.max(1, S(b) - S(a))}>{typeof el === "function" ? <LF r={el} /> : el}</Sequence>;
 const pop = (f: number, at: number) => interpolate(f, [at, at + 5, at + 10], [1.6, 0.95, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
 const Pic: React.FC<{ src: string; x: number; y: number; w: number; at?: number }> = ({ src, x, y, w, at = 0 }) => {
@@ -127,10 +128,10 @@ const Main: React.FC = () => {
         <Label text="회원 요청" x={110} y={200} at={0} color="#fff" size={90} />
         {[0, 1, 2, 3].map((k) => <Label key={k} text="✓ 반영" x={130} y={340 + k * 110} at={S(1.2 + k * 0.5)} color="#6EE7B7" size={70} />)}
         <Label text="다 필요한 것들" x={110} y={800} at={S(4.98)} color={OR} size={60} /></AbsoluteFill>)}
-      {sq(o[0] + 7.97, o[0] + 10.23, <AbsoluteFill style={{ background: PAPER }}>
+      {sq(o[0] + 7.97, o[0] + 10.23, (lf: number) => <AbsoluteFill style={{ background: PAPER }}>
         {Array.from({ length: 6 }).map((_, r) => Array.from({ length: 9 }).map((_, c) => (
           <div key={`${r}-${c}`} style={{ position: "absolute", left: 220 + c * 170 + (r % 2) * 85, top: 120 + r * 110, width: 160, height: 100, background: "#E9B8A0", border: "4px solid #8a4b35",
-            opacity: ez(useCurrentFrame(), r * 3, r * 3 + 6) }} />)))}
+            opacity: ez(lf, r * 3, r * 3 + 6) }} />)))}
         <div style={{ position: "absolute", left: 0, right: 0, top: 300, height: 260, background: "rgba(28,27,25,.82)" }} /><Slam text="넘을 수 없는 벽" at={S(0.5)} y={330} size={150} color="#fff" /></AbsoluteFill>)}
       {sq(o[0] + 10.23, o[0] + 12.79, <AbsoluteFill style={{ background: PAPER }}>
         <Slam text="숏템 = 무료 AI" at={S(0.1)} y={300} size={160} />
@@ -143,41 +144,41 @@ const Main: React.FC = () => {
       {sq(o[0] + 26.72, o[0] + 29.06, <Vs tR={1.1}
         l={<div style={{ marginTop: 160, textAlign: "center", fontFamily: "Pret", fontWeight: 800, color: "#7a756d" }}><div style={{ fontSize: 70 }}>전교</div><div style={{ fontSize: 200 }}>30등</div></div>}
         r={<div style={{ marginTop: 160, textAlign: "center", fontFamily: "Pret", fontWeight: 800, color: OR }}><div style={{ fontSize: 70 }}>전교</div><div style={{ fontSize: 240 }}>1등</div></div>} />)}
-      {sq(o[0] + 29.06, o[0] + 31.89, <AbsoluteFill style={{ background: PAPER }}>
-        <div style={{ position: "absolute", left: 300, top: 470, width: 260, height: 180, border: `6px solid ${INK}`, borderRadius: 14, opacity: ez(useCurrentFrame(), 0, 8) }} />
+      {sq(o[0] + 29.06, o[0] + 31.89, (lf: number) => <AbsoluteFill style={{ background: PAPER }}>
+        <div style={{ position: "absolute", left: 300, top: 470, width: 260, height: 180, border: `6px solid ${INK}`, borderRadius: 14, opacity: ez(lf, 0, 8) }} />
         <div style={{ position: "absolute", left: 300, top: 670, fontFamily: "Pen", fontSize: 70, color: "#7a756d" }}>대리가 맡는 일</div>
-        <div style={{ position: "absolute", left: 900, top: 120, width: 700, height: 530, border: `8px solid ${OR}`, borderRadius: 24, opacity: ez(useCurrentFrame(), 20, 30), transform: `scale(${pop(useCurrentFrame(), 20)})` }} />
-        <div style={{ position: "absolute", left: 900, top: 670, fontFamily: "Pen", fontSize: 70, color: OR, opacity: ez(useCurrentFrame(), 26, 34) }}>부장이 맡는 일</div></AbsoluteFill>)}
+        <div style={{ position: "absolute", left: 900, top: 120, width: 700, height: 530, border: `8px solid ${OR}`, borderRadius: 24, opacity: ez(lf, 20, 30), transform: `scale(${pop(lf, 20)})` }} />
+        <div style={{ position: "absolute", left: 900, top: 670, fontFamily: "Pen", fontSize: 70, color: OR, opacity: ez(lf, 26, 34) }}>부장이 맡는 일</div></AbsoluteFill>)}
       {sq(o[0] + 31.89, o[0] + 32.53, <AbsoluteFill style={{ background: PAPER }}><Slam text="아시겠죠?" at={1} y={360} size={180} color={OR} /></AbsoluteFill>)}
-      {sq(o[0] + 32.53, o[0] + 34.72, <AbsoluteFill style={{ background: PAPER }}>
+      {sq(o[0] + 32.53, o[0] + 34.72, (lf: number) => <AbsoluteFill style={{ background: PAPER }}>
         <Label text="엔진" x={160} y={150} at={0} size={80} color="#9a958d" />
-        <div style={{ position: "absolute", left: 160, top: 300, fontFamily: "Pret", fontWeight: 800, fontSize: 150, color: "#b9b3a8", opacity: 1 - ez(useCurrentFrame(), 14, 24) }}>제미나이</div>
+        <div style={{ position: "absolute", left: 160, top: 300, fontFamily: "Pret", fontWeight: 800, fontSize: 150, color: "#b9b3a8", opacity: 1 - ez(lf, 14, 24) }}>제미나이</div>
         <Label text="→ 클로드" x={160} y={300} at={20} size={170} color={OR} /></AbsoluteFill>)}
       {sq(o[0] + 34.72, o[0] + 38.04, <AbsoluteFill style={{ background: PAPER }}>
         <Pic src="p6/p_pack.png" x={1000} y={40} w={780} />
         <Label text="제 클로드의 노하우" x={150} y={230} at={0} size={84} />
         <Label text="→ 설치팩 하나" x={150} y={380} at={S(36.4 - 34.72)} size={120} color={OR} /></AbsoluteFill>)}
-      {sq(o[0] + 38.04, o[0] + 44.96, <AbsoluteFill style={{ background: PAPER }}>
-        {[0, 1].map((k) => <div key={k} style={{ position: "absolute", left: 220 + k * 820, top: 140, width: 660, height: 420, border: `10px solid ${INK}`, borderRadius: 24, background: "#fff", opacity: ez(useCurrentFrame(), k * 10, k * 10 + 10) }}>
+      {sq(o[0] + 38.04, o[0] + 44.96, (lf: number) => <AbsoluteFill style={{ background: PAPER }}>
+        {[0, 1].map((k) => <div key={k} style={{ position: "absolute", left: 220 + k * 820, top: 140, width: 660, height: 420, border: `10px solid ${INK}`, borderRadius: 24, background: "#fff", opacity: ez(lf, k * 10, k * 10 + 10) }}>
           <div style={{ position: "absolute", left: 0, right: 0, top: 130, textAlign: "center", fontFamily: "Pret", fontWeight: 800, fontSize: 80, color: OR }}>설치팩 ✓</div></div>)}
         <Label text="제 PC" x={420} y={600} at={0} size={70} />
         <Label text="회원님 PC" x={1170} y={600} at={10} size={70} />
         <Label text="=" x={920} y={280} at={S(40.59 - 38.04)} size={150} color={OR} /></AbsoluteFill>)}
-      {sq(o[0] + 44.96, b, <Ink n="m_point_right_b" side="right"><Hand text={"그 전에\n먼저 보실 게 하나"} x={140} y={240} size={150} color={OR} /></Ink>)}
+      {sq(o[0] + 44.96, b, <Ink n="m_point_up" side="right"><Hand text={"그 전에\n먼저 보실 게 하나"} x={140} y={240} size={150} color={OR} /></Ink>)}
       {/* s16 왜 원본 */}
       {sq(b, b + 2.96, <AbsoluteFill style={{ background: PAPER }}><Slam text="터지는 쇼츠의 비밀" at={S(0.3)} y={360} size={150} /></AbsoluteFill>)}
       {sq(b + 2.96, b + 7.73, <Loop1y tYear={3.96 - 2.96} />)}
-      {sq(b + 7.73, b + 10.79, <AbsoluteFill style={{ background: PAPER }}>
+      {sq(b + 7.73, b + 10.79, (lf: number) => <AbsoluteFill style={{ background: PAPER }}>
         <Label text="우리 나름대로 각색" x={160} y={230} at={0} size={110} />
-        <svg width={420} height={420} viewBox="-60 -60 120 120" style={{ position: "absolute", left: 1300, top: 160, transform: `rotate(${useCurrentFrame() * 4}deg)` }}>
+        <svg width={420} height={420} viewBox="-60 -60 120 120" style={{ position: "absolute", left: 1300, top: 160, transform: `rotate(${lf * 4}deg)` }}>
           <path d="M 40 0 A 40 40 0 1 1 28 -28" fill="none" stroke={OR} strokeWidth={8} strokeLinecap="round" /><path d="M 18 -36 L 30 -28 L 22 -16" fill="none" stroke={OR} strokeWidth={8} strokeLinecap="round" /></svg>
         <Label text="돌고 도는 것" x={160} y={420} at={S(9.66 - 7.73)} size={140} color={OR} /></AbsoluteFill>)}
       {sq(b + 10.79, b + 13.87, <Ink n="m_phone_show_b" side="right"><Hand text={"잘하는 채널은\n이미 다 한다\n(수작업으로)"} x={140} y={200} size={130} /></Ink>)}
       {sq(b + 13.87, b + 19.37, <OriginalVsReup tFind={99} />)}
       {sq(b + 19.37, b + 24.55, <OriginalVsReup tFind={0} />)}
-      {sq(b + 24.55, END, <AbsoluteFill style={{ background: PAPER }}>
+      {sq(b + 24.55, END, (lf: number) => <AbsoluteFill style={{ background: PAPER }}>
         <div style={{ position: "absolute", left: 0, right: 0, top: 260, textAlign: "center", fontFamily: "Pret", fontWeight: 800, fontSize: 150, color: "#b9b3a8" }}>
-          <span style={{ position: "relative" }}>사람이<div style={{ position: "absolute", left: -10, right: -10, top: "52%", height: 16, background: "#E5484D", transform: `scaleX(${ez(useCurrentFrame(), 10, 20)})`, transformOrigin: "left" }} /></span></div>
+          <span style={{ position: "relative" }}>사람이<div style={{ position: "absolute", left: -10, right: -10, top: "52%", height: 16, background: "#E5484D", transform: `scaleX(${ez(lf, 10, 20)})`, transformOrigin: "left" }} /></span></div>
         <Slam text="엔진이 한다" at={S(27.37 - 24.55)} y={470} size={200} color={OR} /></AbsoluteFill>)}
       {IDX.map((i, k) => <Sequence key={i} from={S(o[k])}><Audio src={staticFile(`full/s${i}.mp3`)} /></Sequence>)}
       <Caption caps={CAPS} />

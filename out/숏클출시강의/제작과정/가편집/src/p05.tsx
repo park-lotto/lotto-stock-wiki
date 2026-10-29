@@ -13,7 +13,8 @@ const OFF: number[] = []; let acc = 0;
 SC.forEach((s) => { OFF.push(acc); acc += s.sec + PAD; });
 const END = acc;
 const CAPS: Cap[] = SC.flatMap((s, k) => (s.caps as Cap[]).map((c) => [c[0] + OFF[k], c[1] + OFF[k], c[2]] as Cap));
-const sq = (a: number, b: number, el: React.ReactNode) => <Sequence from={S(a)} durationInFrames={Math.max(1, S(b) - S(a))}>{el}</Sequence>;
+const LF: React.FC<{ r: (f: number) => React.ReactNode }> = ({ r }) => <>{r(useCurrentFrame())}</>;
+const sq = (a: number, b: number, el: React.ReactNode | ((f: number) => React.ReactNode)) => <Sequence from={S(a)} durationInFrames={Math.max(1, S(b) - S(a))}>{typeof el === "function" ? <LF r={el} /> : el}</Sequence>;
 
 // ── 채팅: [시각(s12 기준), 누가, 내용, 카드영상?]
 type Msg = [number, "me" | "ai", string, string?];
@@ -135,9 +136,9 @@ const Main: React.FC = () => {
       {sq(o[0] + 31.23, o[1], <Jabdori tFact={34.87 - 31.23} tLine={35.44 - 31.23} />)}
       {/* s13 진짜 바라는 것 */}
       {sq(o[1], o[1] + 3.58, <Ink n="m_subway_swipe_a" side="right"><Hand text={"우리가 원하는 건\n그게 아니잖아요"} x={130} y={230} size={140} /></Ink>)}
-      {sq(o[1] + 3.58, o[1] + 5.47, <AbsoluteFill style={{ background: PAPER }}>
+      {sq(o[1] + 3.58, o[1] + 5.47, (lf: number) => <AbsoluteFill style={{ background: PAPER }}>
         <div style={{ position: "absolute", left: 0, right: 0, top: 330, textAlign: "center", fontFamily: "Pret", fontWeight: 800, fontSize: 150, color: INK }}>
-          <span style={{ position: "relative" }}>AI랑 말씨름<div style={{ position: "absolute", left: -10, right: -10, top: "52%", height: 16, background: "#E5484D", transform: `scaleX(${ez(useCurrentFrame(), 10, 20)})`, transformOrigin: "left" }} /></span></div></AbsoluteFill>)}
+          <span style={{ position: "relative" }}>AI랑 말씨름<div style={{ position: "absolute", left: -10, right: -10, top: "52%", height: 16, background: "#E5484D", transform: `scaleX(${ez(lf, 10, 20)})`, transformOrigin: "left" }} /></span></div></AbsoluteFill>)}
       {sq(o[1] + 5.47, o[2], <Two mode="want" t1={0} t2={8.23 - 5.47} />)}
       {sq(o[2], o[2] + 6.34, <Two mode="need" t1={1.2} t2={3.54} />)}
       {sq(o[2] + 6.34, o[2] + 9.36, <Ink n="m_subway_swipe_b" side="left"><Hand text={"아이디어는 있는데\n찍어낼 도구가 없었다"} x={1000} y={250} size={120} /></Ink>)}

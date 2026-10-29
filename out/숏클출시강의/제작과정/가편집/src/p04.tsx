@@ -12,7 +12,8 @@ const OFF: number[] = []; let acc = 0;
 SC.forEach((s) => { OFF.push(acc); acc += s.sec + PAD; });
 const END = acc;
 const CAPS: Cap[] = SC.flatMap((s, k) => (s.caps as Cap[]).map((c) => [c[0] + OFF[k], c[1] + OFF[k], c[2]] as Cap));
-const sq = (a: number, b: number, el: React.ReactNode) => <Sequence from={S(a)} durationInFrames={Math.max(1, S(b) - S(a))}>{el}</Sequence>;
+const LF: React.FC<{ r: (f: number) => React.ReactNode }> = ({ r }) => <>{r(useCurrentFrame())}</>;
+const sq = (a: number, b: number, el: React.ReactNode | ((f: number) => React.ReactNode)) => <Sequence from={S(a)} durationInFrames={Math.max(1, S(b) - S(a))}>{typeof el === "function" ? <LF r={el} /> : el}</Sequence>;
 const ROADS = ["직접 만들기", "반자동", "자동화 프로그램", "클로드"];
 
 // 위쪽 '네 갈래 길' 띠 — 전체 조각 내내
@@ -174,7 +175,7 @@ const Main: React.FC = () => {
       {/* s07 네 갈래 */}
       {sq(o[0], o[1], <Sign />)}
       {/* s08 직접 만들기 */}
-      {sq(o[1], o[1] + 2.67, <Ink n="m_laptop_hope" side="right"><Hand text={"강의 듣고\n직접 만들기"} x={140} y={230} size={160} /></Ink>)}
+      {sq(o[1], o[1] + 2.67, <Ink n="m_notebook" side="right"><Hand text={"강의 듣고\n직접 만들기"} x={140} y={230} size={160} /></Ink>)}
       {sq(o[1] + 2.67, o[1] + 6.04, <Timeline />)}
       {sq(o[1] + 6.04, o[1] + 8.12, <Ink n="m_excited" side="left"><Hand text={"실력은 확실히 늘어요"} x={1030} y={300} size={130} color={OR} /></Ink>)}
       {sq(o[1] + 8.12, o[1] + 10.99, <AbsoluteFill style={{ background: PAPER }}>
@@ -193,17 +194,17 @@ const Main: React.FC = () => {
         <div style={{ position: "absolute", left: 0, right: 0, top: 520, textAlign: "center", fontFamily: "Pen", fontSize: 96, color: "#9a958d" }}>단계만 따라가면 버튼으로</div></AbsoluteFill>)}
       {sq(o[3] + 4.14, o[4], <OffthreadVideo src={staticFile("p4/b2.mp4")} startFrom={S(4.14)} muted style={{ width: 1920, height: 1080 }} />)}
       {/* s11 클로드 */}
-      {sq(o[4], o[4] + 2.88, <AbsoluteFill style={{ background: PAPER }}><Slam text="넷째, 클로드" at={S(2.33)} y={330} size={200} color={OR} />
-        <div style={{ position: "absolute", left: 0, right: 0, top: 230, textAlign: "center", fontFamily: "Pen", fontSize: 90, color: "#9a958d", opacity: ez(useCurrentFrame(), 0, 10) }}>요즘 제일 많이 보시는 거</div></AbsoluteFill>)}
+      {sq(o[4], o[4] + 2.88, (lf: number) => <AbsoluteFill style={{ background: PAPER }}><Slam text="넷째, 클로드" at={S(2.33)} y={330} size={200} color={OR} />
+        <div style={{ position: "absolute", left: 0, right: 0, top: 230, textAlign: "center", fontFamily: "Pen", fontSize: 90, color: "#9a958d", opacity: ez(lf, 0, 10) }}>요즘 제일 많이 보시는 거</div></AbsoluteFill>)}
       {sq(o[4] + 2.88, o[4] + 7.54, <AbsoluteFill style={{ background: PAPER }}>
         <Browser shot={{ page: 4, term: "클로드 쇼츠 자동화", from: [300, 900, 1500], to: [950, 1050, 720], hl: [971, 1252, 601, 26], lines: [] }} dur={S(4.66)} />
         <Slam text="힉스필드 + MCP" at={S(2.73)} x={1300} y={330} size={84} color={OR} center={false} /></AbsoluteFill>)}
       {sq(o[4] + 7.54, o[4] + 10.74, <AiArt />)}
       {sq(o[4] + 10.74, o[4] + 14.89, <Credits />)}
-      {sq(o[4] + 14.89, o[4] + 17.84, <AbsoluteFill style={{ background: PAPER }}>
+      {sq(o[4] + 14.89, o[4] + 17.84, (lf: number) => <AbsoluteFill style={{ background: PAPER }}>
         <div style={{ position: "absolute", left: 0, right: 0, top: 330, textAlign: "center", fontFamily: "Pret", fontWeight: 800, fontSize: 130, color: INK }}>
           <span style={{ position: "relative" }}>AI가 그린 쇼츠<div style={{ position: "absolute", left: -10, right: -10, top: "55%", height: 14, background: "#E5484D",
-            transform: `scaleX(${ez(useCurrentFrame(), 14, 26)})`, transformOrigin: "left" }} /></span></div>
+            transform: `scaleX(${ez(lf, 14, 26)})`, transformOrigin: "left" }} /></span></div>
         <div style={{ position: "absolute", left: 0, right: 0, top: 560, textAlign: "center", fontFamily: "Pen", fontSize: 100, color: OR }}>우리가 하려는 건 이게 아니잖아요</div></AbsoluteFill>)}
       {sq(o[4] + 17.84, END, <OurShorts />)}
       <Roads />
