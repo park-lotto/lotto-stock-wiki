@@ -1,0 +1,34 @@
+{
+  "version": "1.0",
+  "render_runtime": "remotion",
+  "composition_mode": "atelier",
+  "cuts": [
+    {
+      "id": "c1",
+      "source": "src",
+      "in_seconds": 0,
+      "out_seconds": 4
+    },
+    {
+      "id": "c2",
+      "source": "src",
+      "in_seconds": 0,
+      "out_seconds": 7
+    }
+  ],
+  "bespoke": {
+    "entry": "src/index.tsx",
+    "composition_id": "HybridKopack",
+    "public_dir": "assets",
+    "crf": 18,
+    "art_direction": "ink #0b0a11 / cream #f3ece0 / orange #f0902a / teal #2ee6c9; Pretendard; ease-out only; signature device = phone frame in bookend beats"
+  },
+  "metadata": {
+    "layer_order": [
+      "source phone",
+      "text",
+      "ui"
+    ],
+    "overlay_windows": {}
+  }
+}

@@ -1,0 +1,135 @@
+<!doctype html>
+<!-- 숏클 오프닝 15.5초 · 레퍼런스 = presets/terminal_galaxy_brand_reveal 의 해외 원작(jasonzhu 2105279421435572498 앞 30초) 구조를 그대로 따름
+     터미널 극접사 → 물러나며 작업 목록 → 소용돌이·빛 → 나선 은하 → 로고 → 문구
+     차분함 규칙(기획안 §9): 컷 5개 · 장면 2.5초+ · 팔레트 검정·크림·주황+청록 · 본문 70px+ · 움직임은 들어올 때만(ease-out) -->
+<html lang="ko"><head><meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+<script src="brand/gsap.min.js"></script>
+<style>
+@font-face{font-family:"PretX";src:url("brand/Pretendard-ExtraBold.otf")}
+@font-face{font-family:"PretS";src:url("brand/Pretendard-SemiBold.otf")}
+@font-face{font-family:"Code";src:url("brand/NanumGothicCoding-Bold.ttf")}
+html,body{margin:0;background:#07070b}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:#07070b}
+#cv{position:absolute;left:0;top:0}
+.pre{position:absolute;opacity:0;font-family:PretX}.pre2{position:absolute;opacity:0;font-family:PretS}.pre3{position:absolute;opacity:0;font-family:Code}
+</style></head><body>
+<div id="stage" data-composition-id="shortcl_open" data-start="0" data-duration="15.5" data-width="1920" data-height="1080">
+<canvas id="cv" width="1920" height="1080"></canvas>
+<span class="pre">숏클메이커 영상 제작, 이제 한 줄이면</span><span class="pre2">말 한 줄이면, 쇼츠 한 편</span><span class="pre3">$ ✓ 원본</span>
+</div>
+<script>
+(()=>{
+const D=15.5,WD=1920,HT=1080,CX=960,CY=540;
+const cv=document.getElementById('cv'),C=cv.getContext('2d');
+const cl=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)),E=p=>1-Math.pow(1-cl(p),3),EI=p=>{p=cl(p);return p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2},lerp=(a,b,p)=>a+(b-a)*p;
+const BG='#0b0a11',CREAM='#f3ece0',OR='#f0902a',OR2='#e8701a',TEAL='#2ee6c9';
+let s=7;const R=()=>(s=(s*16807)%2147483647)/2147483647;
+const STARS=[...Array(520)].map(()=>[R()*WD,R()*HT,R(),R()]);
+const GX=[...Array(52000)].map(()=>[R(),R(),R(),R()]);
+const DUST=[...Array(14)].map(()=>[R(),R(),R()]);
+
+// 필름 질감(원작의 거친 입자) — 노이즈 타일을 미리 만들어 프레임마다 위치만 바꾼다
+const NZ=document.createElement('canvas');NZ.width=NZ.height=256;{const n=NZ.getContext('2d'),d=n.createImageData(256,256);for(let i=0;i<d.data.length;i+=4){const v=R()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255}n.putImageData(d,0,0)}
+const grain=(t,a=.05)=>{C.save();C.globalAlpha=a;C.globalCompositeOperation='overlay';const ox=Math.floor(t*30*37)%256,oy=Math.floor(t*30*53)%256;for(let x=-ox;x<WD;x+=256)for(let y=-oy;y<HT;y+=256)C.drawImage(NZ,x,y);C.restore()};
+const stars=(t,a=1)=>{for(const [x,y,z,w] of STARS){C.fillStyle=`rgba(255,240,222,${a*(.15+.45*Math.abs(Math.sin(t*.8+z*9)))*(.4+w*.6)})`;const r=.8+w*1.4;C.fillRect(x+Math.sin(t*.1+z)*6,y,r,r)}};
+const T=(c,t,x,y,sz,col,font,al='left',bl='middle')=>{c.fillStyle=col;c.font=`${sz}px ${font}`;c.textAlign=al;c.textBaseline=bl;c.fillText(t,x,y)};
+
+// ── 터미널(원본 크기 1500×860 을 따로 그린 뒤 카메라로 옮긴다)
+const TW=1500,TH=860,TC=document.createElement('canvas');TC.width=TW;TC.height=TH;const tc=TC.getContext('2d');
+const CMD=[{s:'$ cd ~/숏클 && ./start',a:.25,b:1.15,c:CREAM},{s:'$ 만들어줘  해외 화장품 쇼츠 3편',a:1.45,b:2.75,c:OR}];
+const CHK=['원본 찾기 · 해외 4곳 동시 검색','같은 영상인지 AI 판정','대본 · 터진 채널의 틀 그대로','장면 맞추기 · 목소리 · 자막','검사 통과 · 완성 3편 전송'];
+function drawTerm(t){
+ tc.clearRect(0,0,TW,TH);
+ tc.fillStyle='#14151f';tc.beginPath();tc.roundRect(0,0,TW,TH,22);tc.fill();
+ tc.fillStyle='#1b1d2b';tc.beginPath();tc.roundRect(0,0,TW,64,[22,22,0,0]);tc.fill();
+ [['#e8584a',40],['#e0a83a',72],['#4f5266',104]].forEach(([c,x])=>{tc.fillStyle=c;tc.beginPath();tc.arc(x,32,9,0,7);tc.fill()});
+ T(tc,'~/숏클 · /만들어줘',140,33,24,'#6f7290','Code');
+ let cur=null;
+ CMD.forEach((l,i)=>{const p=cl((t-l.a)/(l.b-l.a));if(t<l.a)return;const n=Math.floor(p*l.s.length);const y=150+i*78;
+  tc.fillStyle=TEAL;tc.font='44px Code';tc.textAlign='left';tc.textBaseline='middle';tc.fillText('$',70,y);
+  const body=l.s.slice(2,Math.max(2,n));T(tc,body,120,y,44,l.c,'Code');if(p<1||(i===1&&t<3.3))cur=[120+tc.measureText(body).width+8,y]});
+ CHK.forEach((l,i)=>{const a=3.35+i*.5;if(t<a)return;const p=E((t-a)/.45);const y=330+i*82;tc.globalAlpha=p;
+  T(tc,'✓',70,y+(1-p)*14,40,TEAL,'Code');T(tc,l,120,y+(1-p)*14,40,'#d9d4c8','Code');tc.globalAlpha=1});
+ if(cur&&Math.floor(t*2.4)%2===0){tc.fillStyle=OR;tc.fillRect(cur[0],cur[1]-24,22,48)}
+}
+// 카메라: 극접사(첫 줄) → 천천히 물러나며 살짝 기울어짐(원작 0~11초 구조)
+function camTerm(t){
+ const p=EI((t-3.0)/3.0);
+ const sc=lerp(lerp(2.25,2.05,cl(t/3)),0.98,p);
+ const fx=lerp(360,TW/2,p),fy=lerp(150,TH/2,p);   // 화면 가운데에 둘 터미널 위의 점
+ const rot=lerp(0,-0.035,p),sk=lerp(0,0.05,p);
+ return {sc,fx,fy,rot,sk};
+}
+function putTerm(t,alpha=1,extraRot=0,extraSc=1){
+ const k=camTerm(t);C.save();C.globalAlpha=alpha;C.translate(CX,CY);C.rotate(k.rot+extraRot);C.transform(1,k.sk*.25,0,1,0,0);C.scale(k.sc*extraSc,k.sc*extraSc);
+ C.shadowColor='rgba(0,0,0,.6)';C.shadowBlur=60;C.drawImage(TC,-k.fx,-k.fy);C.restore();
+}
+// ── 나선 은하
+const GC=document.createElement('canvas');GC.width=WD;GC.height=HT;const gc=GC.getContext('2d');
+function galaxy(t,u,alpha){
+ const op=lerp(.35,1,E(u/1.0)),zoom=lerp(.95,1.18,EI(u/3.2));
+ C.save();C.globalAlpha=alpha;C.translate(CX,CY+30);C.scale(zoom,zoom*lerp(.44,.52,u/3.2));C.rotate(-.14);
+ for(const [r,a,z,w] of DUST){const g=C.createRadialGradient((r-.5)*1500,(a-.5)*900,0,(r-.5)*1500,(a-.5)*900,260+z*300);g.addColorStop(0,`rgba(130,30,26,${.26*op})`);g.addColorStop(1,'rgba(0,0,0,0)');C.fillStyle=g;C.fillRect(-1600,-1200,3200,2400)}
+ C.restore();
+ // 입자는 따로 그려 '번짐 한 겹 + 선명 한 겹'으로 겹친다(원작의 두꺼운 팔)
+ gc.setTransform(1,0,0,1,0,0);gc.clearRect(0,0,WD,HT);gc.translate(CX,CY+30);gc.scale(zoom,zoom*lerp(.44,.52,u/3.2));gc.rotate(-.14);
+ for(const [r,a,z,w] of GX){const rr=(26+Math.pow(r,.75)*800)*op;const arm=z>.5?Math.PI:0;const g1=((a-.5)+(w-.5)+(z%.5-.25))*.9;
+  const ang=Math.log(rr/26)*2.55+arm+g1*.55-u*.22;const x=Math.cos(ang)*rr,y=Math.sin(ang)*rr;const b=(1-r*.45)*(1-Math.abs(g1)*.55);
+  gc.fillStyle=`rgba(255,${Math.floor(236-r*70)},${Math.floor(214-r*95)},${(.5+.4*w)*b})`;gc.fillRect(x,y,2.4,2.4)}
+ C.save();C.globalAlpha=alpha*.85;C.globalCompositeOperation='lighter';C.filter='blur(7px)';C.drawImage(GC,0,0);C.filter='none';C.globalAlpha=alpha;C.drawImage(GC,0,0);C.restore();
+ const g=C.createRadialGradient(CX,CY+30,0,CX,CY+30,280);g.addColorStop(0,`rgba(255,246,225,${.95*alpha})`);g.addColorStop(.25,`rgba(255,205,140,${.5*alpha})`);g.addColorStop(1,'rgba(255,170,90,0)');C.fillStyle=g;C.fillRect(0,0,WD,HT);
+}
+// 빛 폭발(원작 12초: 십자 광선이 있는 별)
+function flare(cx,cy,k,a){
+ C.save();C.globalCompositeOperation='lighter';
+ const g=C.createRadialGradient(cx,cy,0,cx,cy,420*k);g.addColorStop(0,`rgba(255,255,255,${a})`);g.addColorStop(.15,`rgba(255,235,200,${.8*a})`);g.addColorStop(1,'rgba(255,190,120,0)');C.fillStyle=g;C.fillRect(0,0,WD,HT);
+ C.globalAlpha=a;[[1,0],[0,1]].forEach(([dx,dy])=>{const L=900*k;const lg=C.createLinearGradient(cx-dx*L,cy-dy*L,cx+dx*L,cy+dy*L);lg.addColorStop(0,'rgba(255,240,215,0)');lg.addColorStop(.5,'rgba(255,250,240,1)');lg.addColorStop(1,'rgba(255,240,215,0)');C.fillStyle=lg;if(dx)C.fillRect(cx-L,cy-2,2*L,4);else C.fillRect(cx-2,cy-L,4,2*L)});
+ C.restore();
+}
+// ── 로고
+function logo(cx,cy,sc,a,blur){
+ C.save();C.globalAlpha=a;if(blur>.2)C.filter=`blur(${blur}px)`;C.translate(cx,cy);C.scale(sc,sc);
+ const S=190,x0=-560,y0=-S/2;
+ const h=C.createRadialGradient(x0+S/2,0,20,x0+S/2,0,330);h.addColorStop(0,'rgba(255,170,70,.75)');h.addColorStop(.45,'rgba(240,130,40,.28)');h.addColorStop(1,'rgba(240,130,40,0)');C.fillStyle=h;C.fillRect(x0-400,-420,S+800,840);
+ C.shadowColor='rgba(255,160,60,.95)';C.shadowBlur=70;
+ const g=C.createLinearGradient(0,y0,0,y0+S);g.addColorStop(0,'#ffb04a');g.addColorStop(1,OR2);C.fillStyle=g;C.beginPath();C.roundRect(x0,y0,S,S,S*.24);C.fill();C.shadowBlur=0;
+ C.fillStyle='rgba(255,255,255,.18)';C.beginPath();C.roundRect(x0+8,y0+8,S-16,S*.42,[S*.2,S*.2,8,8]);C.fill();
+ T(C,'숏',x0+S/2,6,124,'#fff','PretX','center');
+ T(C,'숏클메이커',x0+S+48,-14,150,CREAM,'PretX','left');
+ C.fillStyle=OR;C.fillRect(x0+S+52,62,700,9);C.fillStyle=CREAM;C.fillRect(x0+S+52,73,700,5);C.fillStyle=TEAL;C.fillRect(x0+S+52,80,700,9);
+ C.restore();
+}
+function render(t){
+ C.filter='none';C.globalAlpha=1;C.globalCompositeOperation='source-over';
+ C.fillStyle=BG;C.fillRect(0,0,WD,HT);
+ if(t<6.0){ // ① 터미널
+  stars(t,.6);drawTerm(t);putTerm(t);
+ }else if(t<7.1){ // ② 소용돌이 → 빛
+  const u=t-6.0;stars(t,.6*(1-u));drawTerm(t);
+  for(let i=7;i>=0;i--){const q=E(u/.8);putTerm(6.0,(1-q)*(i===0?1:.13),q*(1.1+i*.09),1-q*.55-i*.015)}
+  flare(CX,CY,.25+E(u/1.1)*1.0,cl(u/.5)*(1-cl((u-.8)/.3)*.35));
+ }else if(t<9.9){ // ③ 은하
+  const u=t-7.1;stars(t,.8);galaxy(t,u,1);flare(CX,CY+20,lerp(1.25,.35,E(u/.8)),lerp(.65,.12,E(u/.8)));
+ }else if(t<12.9){ // ④ 로고 — 은하 중심이 접히며 그 빛에서 로고가 선다
+  const u=t-9.9;stars(t,.5);
+  if(u<.7){galaxy(t,2.8+u,1-E(u/.7));flare(CX,CY+20,.4+u*.6,.4*(1-u/.7))}
+  const w=C.createRadialGradient(CX-560*.9,CY,10,CX-300,CY,900);w.addColorStop(0,`rgba(240,144,42,${.42*E((u-.3)/1.2)})`);w.addColorStop(1,'rgba(0,0,0,0)');C.fillStyle=w;C.fillRect(0,0,WD,HT);
+  const out=E((u-2.55)/.45);
+  logo(CX+110-out*120,CY-40,lerp(.94,1,E((u-.2)/1.4)),E((u-.2)/.6)*(1-out),lerp(14,0,E((u-.2)/.7))+out*16);
+  const sp=E((u-1.1)/.6)*(1-out);if(sp>0){C.globalAlpha=sp;T(C,'말 한 줄이면, 쇼츠 한 편',CX+110-out*120+(1-sp)*0,CY+150+(1-sp)*16,52,'#cfc8ba','PretS','center');C.globalAlpha=1}
+ }else{ // ⑤ 문구
+  const u=t-12.9;stars(t,.45);
+  const w=C.createRadialGradient(CX,CY,10,CX,CY,1000);w.addColorStop(0,`rgba(240,144,42,${.26})`);w.addColorStop(1,'rgba(0,0,0,0)');C.fillStyle=w;C.fillRect(0,0,WD,HT);
+  const a=E(u/.5);C.globalAlpha=a;T(C,'영상 제작, 이제',CX-30,CY+(1-a)*20,104,CREAM,'PretX','right');C.globalAlpha=1;
+  C.font='104px PretX';const word='한 줄이면',bw=C.measureText(word).width+64,bx=CX+10,bh=150;
+  const bp=E((u-.55)/.5);if(bp>0){C.fillStyle=OR;C.beginPath();C.roundRect(bx,CY-bh/2,bw*bp,bh,14);C.fill();
+   C.save();C.beginPath();C.rect(bx,CY-bh/2,bw,bh);C.clip();const wp=E((u-.85)/.45);T(C,word,bx+32,CY+(1-wp)*120,104,'#fff','PretX');C.restore()}
+ }
+ grain(t,.055);
+ // 가장자리 비네트
+ const v=C.createRadialGradient(CX,CY,500,CX,CY,1250);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.55)');C.fillStyle=v;C.fillRect(0,0,WD,HT);
+}
+window.__timelines=window.__timelines||{};const tl=gsap.timeline({paused:true});const S={t:0};tl.to(S,{t:D,duration:D,ease:'none',onUpdate:()=>render(S.t)});window.__timelines['shortcl_open']=tl;
+document.fonts.ready.then(()=>render(0));render(0);
+})();
+</script></body></html>

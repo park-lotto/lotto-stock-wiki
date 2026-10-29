@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8"/>
+<script src="brand/gsap.min.js"></script>
+<style>
+@font-face{font-family:"NC";src:url("brand/NanumGothicCoding-Bold.ttf")}
+@font-face{font-family:"PD";src:url("brand/Pretendard-ExtraBold.otf");font-weight:800}
+html,body{margin:0;background:#000}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:#050505;color:#d8d8d8;font-family:"NC","Segoe UI Symbol","DejaVu Sans Mono",monospace}
+.l{position:absolute}
+.win{position:absolute;background:#0c0d0c;border:1.5px solid #262826;border-radius:12px;overflow:hidden}
+.bar{height:42px;font-size:19px;color:#6a6a6a;text-align:center;line-height:42px;border-bottom:1.5px solid #1c1e1c;position:relative}
+.dots{position:absolute;left:18px;top:0}.dots i{display:inline-block;width:14px;height:14px;border-radius:7px;margin-right:9px;vertical-align:-1px}
+.ln{font-size:29px;line-height:1.38;white-space:pre}
+.g{display:inline-block;width:1.2em;text-align:left}
+</style></head><body>
+<div id="stage" data-composition-id="shortcl" data-start="0" data-duration="15" data-width="1920" data-height="1080">
+ <div id="ui" class="l" style="inset:0"></div>
+</div>
+<script>
+(()=>{
+const D=15,$=id=>document.getElementById(id);
+const cl=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)),E=p=>1-Math.pow(1-cl(p),3);
+const typ=(s,p)=>[...s].slice(0,Math.round(cl(p)*[...s].length)).join('');
+const OR='#D97757',GR='#4fc86a',RED='#e8442a';
+const pad=n=>String(n).padStart(2,'0');
+const clock=s=>`${pad(Math.floor(s/3600))}:${pad(Math.floor(s/60)%60)}:${pad(Math.floor(s)%60)}`;
+const PROMPT='해외 화장품 쇼츠 3편 만들어줘';
+const T_TYPE=0.7,T_TYPE_END=2.5,T_SEND=2.9;
+// [시작, 제목줄, 결과줄, 결과시작, 완료시각]
+const STEPS=[
+ [3.4,'원본 찾기(틱톡 · 인스타 · 유튜브 · 샤오홍슈 동시 검색)','후보를 찾았습니다',4.3],
+ [5.0,'같은 영상인지 판정','원본 확인',5.9],
+ [6.6,'대본 쓰기(터진 채널의 틀 그대로)','3편',7.5],
+ [8.3,'장면 맞추기 · 목소리 · 자막','완료',9.5],
+ [10.2,'렌더 · 검사','✓ 통과',11.2]
+];
+const DONE_T=12.3;
+const SP=['✻','✢','✳','✶'];
+const WORDS=[[0,'Crunching…'],[5.0,'Crunching…']];
+function term(t){
+ let b='';
+ // 환영 박스
+ b+=`<div style="border:1.5px solid ${OR};border-radius:10px;padding:10px 22px 12px;width:640px;margin-bottom:14px"><div class="ln" style="font-size:30px"><span style="color:${OR}">✻</span> Welcome to <b style="color:#f0f0f0">Claude Code</b>!</div><div class="ln" style="color:#8a8a8a;font-size:25px;line-height:1.45">/help for help, /status for your current setup\n\ncwd: ~/shortcl</div></div>`;
+ if(t>=T_SEND){
+  b+=`<div class="ln" style="background:#2b2b2b;padding:2px 14px;margin-bottom:14px;color:#e8e8e8"><span style="color:#999">&gt;</span> ${PROMPT}</div>`;
+  STEPS.forEach(s=>{
+   if(t<s[0])return;
+   const dn=t>=s[3]; const typed=typ(s[1],(t-s[0])/0.55);
+   const blink=(!dn&&Math.floor(t*2)%2==0)?'<span style="color:#eee">●</span>':(!dn?'<span style="color:#444">●</span>':`<span style="color:${GR}">●</span>`);
+   const m=typed.match(/^([^(]*)(\(.*)?$/); 
+   b+=`<div class="ln"><span class="g">${blink}</span><b style="color:#f2f2f2">${m[1]}</b><span style="color:#cfcfcf">${m[2]||''}</span></div>`;
+   if(dn){const r=s[2],ck=r.startsWith('✓');b+=`<div class="ln" style="color:#9a9a9a"><span class="g" style="color:#777"><i style="display:inline-block;width:12px;height:14px;border-left:2px solid #777;border-bottom:2px solid #777;margin-left:12px;vertical-align:8px"></i></span> ${ck?`<span style="color:${GR}">${r}</span>`:r}</div>`}
+   b+='<div style="height:2px"></div>';
+  });
+  if(t>=DONE_T){const n=cl((t-DONE_T)/0.5);b+=`<div class="ln" style="margin-top:8px;color:${GR};opacity:${n}"><span class="g">✓</span><b>완성 3편 → 텔레그램으로 보냈습니다</b></div>`}
+  else{const el=Math.floor(t-T_SEND);b+=`<div class="ln" style="margin-top:8px;color:${OR}">${SP[Math.floor(t*6)%4]} Crunching… <span style="color:#7a7a7a">(${el}s · esc to interrupt)</span></div>`}
+ }
+ // 입력 박스
+ const typing=t<T_SEND; const txt=typing?typ(PROMPT,(t-T_TYPE)/(T_TYPE_END-T_TYPE)):'';
+ const cur=(t>=0.2&&(typing||true))?`<span style="background:#e6e6e6;color:#000">&nbsp;</span>`:'';
+ const curShow=(typing&&(Math.floor(t*2.2)%2==0||(t>T_TYPE&&t<T_TYPE_END)))||(!typing&&Math.floor(t*2)%2==0);
+ const inp=`<div class="l" style="left:30px;right:30px;bottom:74px;border:1.5px solid #555;border-radius:10px;height:60px;padding:0 18px;font-size:29px;line-height:57px;white-space:pre"><span style="color:#aaa">&gt;</span> ${t>=T_TYPE?txt:''}${curShow?cur:'<span>&nbsp;</span>'}</div>`;
+ const foot=`<div class="ln l" style="left:34px;right:34px;bottom:22px;font-size:23px;color:#8a8a8a;display:flex;justify-content:space-between"><span><span style="color:${OR}">⏵⏵ auto mode on</span> (shift+tab to cycle)</span><span>Opus 5.5</span></div>`;
+ return `<div class="win" style="left:40px;top:70px;width:1060px;height:960px"><div class="bar"><span class="dots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></span>✳ claude — shortcl — 96×34</div><div style="padding:22px 24px;height:760px;overflow:hidden">${b}</div>${inp}${foot}</div>`}
+function typo(t){
+ // 오른쪽 큰 타이포: 한 줄 → 원본 → 완성
+ const W=[[0,'한 줄','01'],[5.0,'원본','02'],[10.2,'완성','03']];
+ let k=0;W.forEach((w,i)=>{if(t>=w[0])k=i});
+ const w=W[k],p=cl((t-w[0])/0.45),e=E(p);
+ const bg=k==2?RED:'#0c0d0c';
+ const fg=k==2?'#111':'#f0f0f0';
+ const y=(1-e)*60, o=e;
+ const seg=W.map((s,i)=>`<div style="flex:1;height:6px;background:${i<=k?(k==2?'#111':OR):'#2a2a2a'}"></div>`).join('<div style="width:10px"></div>');
+ return `<div class="win" style="left:1140px;top:120px;width:740px;height:700px;background:${bg};border-color:${k==2?RED:'#262826'}">
+  <div class="l" style="left:40px;top:36px;font-size:26px;color:${k==2?'#111':'#777'}">${w[2]} / 03</div>
+  <div class="l" style="left:0;right:0;top:${190+y}px;text-align:center;font:800 ${w[1].length>2?250:300}px/1 PD,sans-serif;color:${fg};letter-spacing:-8px;opacity:${o}">${w[1]}</div>
+  <div class="l" style="left:40px;right:40px;bottom:44px;display:flex">${seg}</div></div>`}
+function render(t){
+ const bad=`<div class="l" style="right:40px;top:16px;font-size:36px;color:#ddd"><span style="background:${RED};color:#000;font-size:19px;padding:3px 10px;vertical-align:5px;margin-right:12px">▸▸ 빨리감기</span>${clock(t*14)}</div>`;
+ $('ui').innerHTML=bad+term(t)+typo(t);
+}
+window.__timelines=window.__timelines||{};
+Promise.all([document.fonts.load('29px NC'),document.fonts.load('800 200px PD')]).then(()=>document.fonts.ready).then(()=>{const tl=gsap.timeline({paused:true});const P={t:0};tl.to(P,{t:D,duration:D,ease:"none",onUpdate:()=>render(P.t)});render(0);window.__timelines["shortcl"]=tl;});
+render(0);
+})();
+</script></body></html>

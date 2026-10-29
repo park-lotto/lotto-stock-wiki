@@ -1,0 +1,119 @@
+{
+  "version": "1.0",
+  "concept_options": [
+    {
+      "id": "A",
+      "title": "질문-정의-체크리스트-로고",
+      "hook": "숏클메이커가 뭔가요?",
+      "narrative_structure": "tutorial",
+      "visual_approach": "타이포그래피 + 체크리스트 (HyperFrames/GSAP, 한글 커스텀 레이아웃)",
+      "suggested_playbook": "clean-professional",
+      "target_audience": "40-60대 한국 시청자",
+      "target_platform": "youtube",
+      "target_duration_seconds": 22,
+      "why_this_works": "차분한 타이포·체크리스트로 한 번에 이해"
+    },
+    {
+      "id": "B",
+      "title": "차트형 설명(Remotion stat_card)",
+      "hook": "쇼츠 한 편이 나오기까지",
+      "narrative_structure": "tutorial",
+      "visual_approach": "Remotion 스톡 장면 text_card/callout 조합",
+      "suggested_playbook": "clean-professional",
+      "target_audience": "40-60대 한국 시청자",
+      "target_platform": "youtube",
+      "target_duration_seconds": 22,
+      "why_this_works": "차분한 타이포·체크리스트로 한 번에 이해"
+    },
+    {
+      "id": "C",
+      "title": "Manim 도식",
+      "hook": "원본->대본->완성 도식",
+      "narrative_structure": "tutorial",
+      "visual_approach": "ManimCE 도식 (한글 글꼴 설정 부담 큼)",
+      "suggested_playbook": "clean-professional",
+      "target_audience": "40-60대 한국 시청자",
+      "target_platform": "youtube",
+      "target_duration_seconds": 22,
+      "why_this_works": "차분한 타이포·체크리스트로 한 번에 이해"
+    }
+  ],
+  "selected_concept": {
+    "concept_id": "A",
+    "rationale": "한글 커스텀 레이아웃과 체크 애니메이션은 HTML/GSAP가 가장 자연스럽다. 비용 0, 키 불필요."
+  },
+  "production_plan": {
+    "pipeline": "animation",
+    "playbook": "clean-professional",
+    "stages": [
+      {
+        "stage": "research",
+        "tools": [],
+        "approach": "생략: 사용자 브리프 제공"
+      },
+      {
+        "stage": "proposal",
+        "tools": [],
+        "approach": "사전 승인"
+      },
+      {
+        "stage": "script",
+        "tools": [],
+        "approach": "온스크린 텍스트만"
+      },
+      {
+        "stage": "scene_plan",
+        "tools": [],
+        "approach": "4장면"
+      },
+      {
+        "stage": "assets",
+        "tools": [],
+        "approach": "폰트 복사, 음악 시도(403)"
+      },
+      {
+        "stage": "edit",
+        "tools": [],
+        "approach": "타이밍 확정"
+      },
+      {
+        "stage": "compose",
+        "tools": [],
+        "approach": "hyperframes check->render"
+      }
+    ],
+    "render_runtime": "hyperframes",
+    "renderer_family": "animation-first",
+    "composition_mode": "atelier",
+    "art_direction": "검정 #0b0a11 / 크림 #f3ece0 / 주황 #f0902a + 청록 #2ee6c9, Pretendard, ease-out(power3.out), 장면 2.5초 이상, 동시 움직임 2개 이하, 글리치 금지",
+    "music_source": {
+      "mood_direction": "none - pixabay_music HTTP 403, no music",
+      "estimated_cost_usd": 0
+    },
+    "alternative_paths": [
+      {
+        "description": "Remotion 스톡 text_card 조합",
+        "total_cost_usd": 0,
+        "quality_level": "free",
+        "what_changes": "한글 커스텀 레이아웃 제약"
+      }
+    ]
+  },
+  "cost_estimate": {
+    "total_estimated_usd": 0,
+    "line_items": [
+      {
+        "tool": "hyperframes_compose",
+        "operation": "check+render",
+        "estimated_usd": 0
+      }
+    ],
+    "budget_cap_usd": 0,
+    "budget_verdict": "within_budget"
+  },
+  "approval": {
+    "status": "approved",
+    "user_notes": "사용자 지시문으로 사전 승인(렌더 런타임 hyperframes 포함)",
+    "approved_budget_usd": 0
+  }
+}

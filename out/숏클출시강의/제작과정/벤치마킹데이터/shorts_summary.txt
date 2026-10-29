@@ -1,0 +1,178 @@
+== Base44 {'short': 7, 'long': 45}
+   short dated 7
+     20260723 53 1300 Base44 Backend - How to build a Chrome extension | links: 
+     20260723 44 2400 Base44 Backend - How to build a desktop application | links: 
+     20260619 39 1300 Brik on Base44 Backend | links: 
+     20260618 32 2400 Brik: The Designer Tool Built on Base44 Backend | links: 
+     20260226 52 2600 What is Base44's Backend Platform | links: 
+     20260226 51 2400 AI + Base44 Build in 5 Minutes | links: 
+     20250523 28 73000 Come build with Base44 | links: 
+   long dated 15
+     20260730 58 25000000 Rewrite the agency playbook with Base44 | links: 
+     20260715 45 25000000 Can't is Dead. Base44 | links: 
+     20260603 68 17000000 The pro builder's secrets to Base44 | links: 
+     20260404 60 27000000 Base44 Superagents - Your Personal AI Agent | links: 
+     20260326 49 206000000 Build Your Website with One Sentence | Base44 | links: 
+     20260308 51 35000000 Build it your way with Base44. | links: 
+     20260308 46 140000000 Create a website with one sentence using Base44 | links: [kw:watch]
+     20260203 31 147000000 Introducing Base44’s Big Game Ad “It’s App to You” | links: 
+     20260129 56 999000000 Introducing Base44’s Big Game Full Ad “It’s App to You” | links: 
+     20260129 16 164000000 Introducing Base44’s Big Game Ad Teaser “It’s App to You” | links: 
+     20251231 57 702000000 Your ideas, your apps—Base44 | links: 
+     20251012 63 19000000 Build apps to run your business using Base44 | links: 
+     20250916 55 596000000 Turn any idea into an app with Base44 | links: [kw:watch]
+     20250820 60 22000000 Turn your business vision into an app with Base44 | links: [kw:watch]
+     20250810 58 49000000 Build your next big idea without writing a single line of co | links: [kw:watch]
+== ManusAI {'short': 1, 'long': 60}
+   short dated 1
+     20250509 63 4100 NYC Vibe Coding Event -- Powered by Manus | links: 
+   long dated 15
+     20261001 59 548000 Introducing Manus Game Developer: Build a Game, Then Play It | links: 
+     20261001 53 4200000 Introducing Manus Video Editor | links: 
+     20260928 167 13000000 Introducing Manus 2.0 | links: 
+     20260430 48 188000 Introducing Cloud Computer for Manus | Build Bots, Databases | links: 
+     20260316 57 46000 Introducing My Computer: When Manus Meets Your Desktop | links: 
+     20260113 1404 23000 Manus Demo Walkthrough 2026 | links: 
+     20251222 61 20000 Introducing Manus Design View | links: 
+     20251208 29 15000 AI Presentations Just Got Better: Nano Banana Pro in Manus S | links: [kw:watch]
+     20251118 60 78000 Introducing Manus Browser Operator : An AI Agent that Browse | links: 
+     20251016 25 40000 Introducing Manus 1.5 | links: 
+     20250731 159 51000 Introducing Wide Research | links: 
+     20250717 42 20000 Introducing Data Visualization for Manus | links: 
+     20250612 88 31000 Introducing Manus Playbook | links: 
+     20250609 84 18000 Manus Integrates Veo3 | links: 
+     20250603 77 28000 Introducing Manus video generation | links: [kw:watch]
+== LumaLabsAI {'short': 60, 'long': 60}
+   short dated 15
+     20260307 60 2500000 Travel between worlds made with Luma Agents | links: 
+     20260116 9 4500 BTS: Crab Walk - Reimagined with #Ray3 Modify Video in Dream | links: 
+     20260115 5 4900 BTS: Day to Night - Reimagined with #Ray3 Modify in Dream Ma | links: 
+     20260101 26 4400 BTS: Creatures of the Wild - Reimagined with Ray3 Modify in  | links: 
+     20250926 18 9300 This is instruction following with Ray3. Smart prompt unders | links: 
+     20250924 18 4800 This is high-octane motion with Ray3. Explosive cinematic ch | links: 
+     20250625 14 6700 BTS: Operation Zombie Reimagined with #Ray2 Modify Video #ai | links: 
+     20250407 22 20000 3D Chalk Art – Step into the illusion. #Ray2 Camera Motion C | links: 
+     20250403 17 6400 This is Bolt Cam in #DreamMachine with #Ray2 Camera Motion C | links: 
+     20250306 38 6700 #Ray2 Keyframes, Extend & Loop is now here. Create your visu | links: 
+     20241011 20 46000 How to Morph Food 🍊↔🍎, 🍔↔🍕? #tutorial #lumadreammachine | links: [kw:watch]
+     20240912 25 9100 Hugging with AI 🤗 Import photos, type ‘make them hug’ to cre | links: 
+     20240827 32 3600 How to AI Life Timelapse 🕰️Morph between any photos ✅Made wi | links: 
+     20240820 36 67000 “Lifetime” 🕰️  Aging Timelapse made with AI 🤯 | links: 
+     20240819 28 21000 Dream Machine 1.5 Announcement | Luma AI | links: 
+   long dated 15
+     20260409 51 64000 Luma Snacktime | links: 
+     20260409 67 78000 Traffic Stop | links: [kw:watch]
+     20260409 151 52000 Luma Energy Drink Ad About a Skateboarding Sumo Wrestler | links: 
+     20260409 50 65000 Luma Break | links: 
+     20260409 32 72000 Luma Insurance | links: 
+     20260409 62 88000 The Stain | links: 
+     20260409 95 101000 The Hug | links: 
+     20260409 170 77000 Luma Snacks Cupcakes | links: 
+     20260409 40 62000 For Everyone | links: 
+     20260409 34 72000 Theater Night | links: 
+     20260409 54 59000 Luma Matchmaking | links: 
+     20260409 51 75000 The Red Sock | links: 
+     20260305 69 55000000 Introducing Luma Agents | links: [kw:watch]
+     20260207 35 660000 “Pizza Baby!” - Luma Dream Brief | links: 
+     20250604 64 96000 Luma AI - Introducing Modify Video | links: 
+== googleworkspace {'short': 60, 'long': 60}
+   short dated 15
+     20261022 12 4600 When the Google Sheets canvas and the numbers look good 🧡 #S | links: 
+     20261022 10 4900 Real work with real ones 🧑‍💻📈❤️  #Shorts | links: 
+     20261012 9 4800 When the spinny chair has your coworkers full attention 😵‍💫  | links: 
+     20261012 30 4900000 How Small Teams Build Big Brands with Gemini in Workspace | links: 
+     20261007 11 8400 When it's crunchtime, stay on track with @timer 🕐✍️👨‍💻 #shor | links: 
+     20261002 90 4200 How to Be Your Own Brand Deal Manager with Sheets Canvas 👩‍💻 | links: 
+     20260923 67 4300 Create HD videos at no cost with Gemini in Google Vids | links: 
+     20260910 75 11000 Create interactive mini-apps with Sheets canvas | links: 
+     20260828 16 4000 How did you do? 🔮🗂️  #Shorts | links: 
+     20260827 6 7100 Somebody has to keep the cursor moving 🫡 #Shorts | links: 
+     20260826 26 5500 Transform training decks into polished videos with Google Vi | links: 
+     20260818 8 5100 Color penciling you in for tomorrow 💖 💙 💜 💚 💛 🧡 ❤️ #Shorts | links: 
+     20260818 6 12000 Both locked in 🔐🧑‍💻 #Shorts | links: 
+     20260810 11 8700 Normalize adding a 1-sentence description 😵‍💫 #Shorts | links: 
+     20260805 9 7000 Being friends with your coworkers 🤩 #Shorts | links: 
+   long dated 15
+     20261012 31 4800000 How Small Teams Build Big Brands with Gemini in Workspace | links: 
+     20261012 16 14000000 Scale your team with Gemini in Workspace | links: 
+     20261012 16 17000000 How an Event Business Founder Gets the Party Started with Ge | links: 
+     20261012 16 22000000 How an Iron Foundry Preserves Legacy Knowledge with Gemini N | links: 
+     20260923 35 23000 Sheets canvas: Turn project trackers into dynamic Kanban boa | links: 
+     20260923 67 119000 Create HD videos at no cost with Gemini in Google Vids | links: 
+     20260922 85 19000 Ask Gemini in Google Chat | links: 
+     20260903 75 65000 Create interactive mini-apps with Sheets canvas | links: 
+     20260903 61 14000 Need an interactive study planner? A drag-and-drop wedding s | links: 
+     20260903 94 25000 Use your voice to get more done in Gmail, Docs, and Keep | links: 
+     20260902 128 19000 Perfect lighting, zero-typing, instant recaps, and live tran | links: 
+     20260901 99 74000 Say hello to Google Pics from Google Workspace | links: 
+     20260813 104 28000 There are 5 types of Docs. Which are you? | links: 
+     20260813 155 48000 How to create interactive dashboards and apps in Google Shee | links: 
+     20260730 36 13000 Star in your videos with Personal Avatars in Google Vids | links: 
+== framer {'short': 42, 'long': 60}
+   short dated 15
+     20251023 19 10000 Framer is free full-featured design tool | links: 
+     20250903 40 13000 Build a portfolio website in seconds with wireframer #framer | links: [kw:watch]
+     20241029 36 184000 No Code Websites made in Framer Pt.2 #framer #nocode #websit | links: 
+     20241028 27 19000 How to add 3D animations to your website without code #frame | links: 
+     20241025 41 33000 No Code Parallax scroll in Framer #framer #nocode #websitede | links: 
+     20241024 44 30000 Let’s build Apple’s website without code #framer #apple #des | links: 
+     20240410 46 28000 3D Transforms in Framer are here! #shorts #nocode #webdesign | links: 
+     20240313 48 58000 Create a website in less than 60 seconds  #webdesign #tutori | links: 
+     20240125 25 14000 Build a Framer website with @Oliur / UltraLinx  #webdesign # | links: 
+     20231221 33 10000 Drag effects on your website in seconds! #Framer #tutorial | links: 
+     20231219 52 34000 Create engaging interactive scroll effects in less than a mi | links: 
+     20231213 33 102000 Learn how to move elements horizontally on the scroll in les | links: 
+     20230921 19 14000 Learn how to easily copy HTML from your website to Framer in | links: 
+     20230829 28 12000 Adding Code Blocks in the Framer CMS within seconds 😮 #tutor | links: 
+     20230206 59 11000 Create a rotating video grid in Framer without code #shorts  | links: youtu.be/Nud4JCiOXbg ; [kw:watch]
+   long dated 15
+     20260925 17 631000 Prompts aren't always enough - Framer Skills | links: 
+     20260922 30 720000 Introducing Skills: Teach the Framer Agent to design more li | links: 
+     20260921 24 463000 Framer is for Agencies | links: 
+     20260915 357 13000 Prompt, build and publish your first site with Framer | links: 
+     20260910 31 1700000 Framer is for Founders | links: 
+     20260909 27 476000 Framer is for Growth Teams | links: 
+     20260909 21 417000 Framer Design Agents — Cannonball | links: 
+     20260722 36 1900000 Framer Agents: Design with AI, Keep Control. | links: 
+     20260616 433 21000 Connect Framer to Claude Code, ChatGPT Codex, Cursor, and mo | links: youtu.be/ITFOYba8g0U
+     20260616 76 2100000 Framer 3.0 with Agents, Branching, and a new Community | links: youtu.be/j4WW4bwWhPk ; [kw:watch]
+     20260616 919 12000 Generate layouts and styles from a prompt in Framer | links: 
+     20260616 2401 34000 Framer Event — Introducing Agents, Branching, and a new Comm | links: youtu.be/j4WW4bwWhPk ; [kw:watch]
+     20260422 125 14000 Framer Update: Logo Shaders | links: 
+     20260421 253 16000 Framer Update: CMS 3.0 | links: 
+     20260324 148 24000 Framer Shaders | links: 
+claude shorts n 15 min 13 med 73 max 157 <=30: 3 31-60: 4 >60: 8
+anthropic-ai shorts n 15 min 27 med 46 max 85 <=30: 2 31-60: 12 >60: 1
+Base44 shorts n 7 min 28 med 44 max 53 <=30: 1 31-60: 6 >60: 0
+ManusAI shorts n 1 min 63 med 63 max 63 <=30: 0 31-60: 0 >60: 1
+LumaLabsAI shorts n 15 min 5 med 22 max 60 <=30: 11 31-60: 4 >60: 0
+googleworkspace shorts n 15 min 6 med 11 max 90 <=30: 12 31-60: 0 >60: 3
+framer shorts n 15 min 19 med 36 max 59 <=30: 5 31-60: 10 >60: 0
+DESC-HINT claude What happens when you talk to AI? | An AI model writes one word at a time, but it doesn't think one word at a time. Jane from Anthropic’s user experience team breaks down the prediction process behind every AI output, and how to better interpret the responses you get back.  Have a ques
+DESC-HINT anthropic-ai Claude on Mars | On December 8, the Perseverance rover safely trundled across the surface of Mars.  This was the first AI-planned drive on another planet. And it was planned by Claude.  Engineers at NASA Jet Propulsion Laboratory used Claude to plot out the route for
+DESC-HINT Base44 Base44 Backend - How to build a Chrome e | Devs, check out this Chrome extension AI assistant Dor Chaouat just built with the Base44 CLI - without touching a line of backend. Learn more about building on the BASE44 backend: https://base44.com/backend
+DESC-HINT Base44 Base44 Backend - How to build a desktop  | Look how Dor Chaouat used the Base44 CLI to build a whiteboard tool - AI chat, realtime collaboration, and image generation, all on a backend he didn't have to wire up. Learn more about what you can build with Base44's backend: https://base44.com/bac
+DESC-HINT Base44 Brik on Base44 Backend | Brik is built entirely on Base44 Backend — a full production backend, not a toy. Entities, edge functions, Stripe, auth. All deployed and hosted. Editable from the CLI and by AI agents. Check it out at brik.space
+DESC-HINT LumaLabsAI How to Morph Food 🍊↔🍎, 🍔↔🍕? #tutorial #l | Step 1: Use any 2 food photos in the same spot. 🍽️ Step 2: Import photos into First & Last Frame. 🎞️ Step 3: Type prompt “camera static, the (food 1) transforms into the (food 2)”. 🥕↔🥦 Step 4: Generate video and watch your transition!✨ Create your ow
+DESC-HINT googleworkspace When the Google Sheets canvas and the nu | What is Google Workspace → https://goo.gle/4xvUPL1  Set up Google Workspace → https://goo.gle/4yFEX9N Subscribe to Google Workspace → https://goo.gle/GoogleWorkspace  Try Google Workspace with Gemini → https://goo.gle/4yAlxD1 Follow Google Workspace 
+DESC-HINT googleworkspace Real work with real ones 🧑‍💻📈❤️  #Shorts | What is Google Workspace → https://goo.gle/4xvUPL1  Set up Google Workspace → https://goo.gle/4yFEX9N Subscribe to Google Workspace → https://goo.gle/GoogleWorkspace  Try Google Workspace with Gemini → https://goo.gle/4yAlxD1 Follow Google Workspace 
+DESC-HINT googleworkspace When the spinny chair has your coworkers | What is Google Workspace → https://goo.gle/4xvUPL1  Set up Google Workspace → https://goo.gle/4yFEX9N Subscribe to Google Workspace → https://goo.gle/GoogleWorkspace  Try Google Workspace with Gemini → https://goo.gle/4yAlxD1 Follow Google Workspace 
+DESC-HINT googleworkspace How Small Teams Build Big Brands with Ge | Big results don’t need big teams. Workspace helps turn complex info into clear next steps.  Learn more → https://goo.gle/4y8BP5p What is Google Workspace → https://goo.gle/4xvUPL1  Set up Google Workspace → https://goo.gle/4yFEX9N Subscribe to Google
+DESC-HINT googleworkspace When it's crunchtime, stay on track with | Did you know this was a thing?  👀  Who else uses @timer to help manage time? 🕐✍️👨‍💻  What is Google Workspace → https://goo.gle/4xvUPL1  Set up Google Workspace → https://goo.gle/4yFEX9N Subscribe to Google Workspace → https://goo.gle/GoogleWorkspace
+DESC-HINT googleworkspace How to Be Your Own Brand Deal Manager wi | See how Julia Broome uses Sheets canvas to build her brand partnership pipeline and stay organized like her own mini talent agency. 👩‍💻 From tracking opportunities to keeping everything in one place, Sheets canvas makes it easier to manage your workf
+DESC-HINT googleworkspace Create HD videos at no cost with Gemini  | Anyone with a Google or Google Workspace account can now generate 1080p HD videos right from their browser using Google Vids. Direct every scene by extending clips with consistent lighting and characters and setting precise clip durations without pro
+DESC-HINT googleworkspace Create interactive mini-apps with Sheets | Break out of the grid with Sheets canvas. Turn spreadsheet data into powerful, interactive mini-apps right inside Google Sheets, no coding or third-party required.  What is Google Workspace → https://goo.gle/44ft0dH  Set up Google Workspace → https:/
+DESC-HINT googleworkspace How did you do? 🔮🗂️  #Shorts | What is Google Workspace → https://goo.gle/44ft0dH  Set up Google Workspace → https://goo.gle/4vMR7MO  Subscribe to Google Workspace → https://goo.gle/GoogleWorkspace  Try Google Workspace with Gemini → https://goo.gle/4vNyZCB Follow Google Workspace
+DESC-HINT googleworkspace Somebody has to keep the cursor moving 🫡 | What is Google Workspace → https://goo.gle/44ft0dH  Set up Google Workspace → https://goo.gle/4vMR7MO  Subscribe to Google Workspace → https://goo.gle/GoogleWorkspace  Try Google Workspace with Gemini → https://goo.gle/4vNyZCB Follow Google Workspace
+DESC-HINT googleworkspace Transform training decks into polished v | Complete with AI avatars, voiceovers, music & animations! Update anytime without re-recording.✨ Try it on desktop at vids.new  Try Google Vids for yourself → https://goo.gle/44dH8nW What is Google Workspace → https://goo.gle/44ft0dH  Set up Google Wo
+DESC-HINT googleworkspace Color penciling you in for tomorrow 💖 💙  | What is Google Workspace → https://goo.gle/44ft0dH  Set up Google Workspace → https://goo.gle/4vMR7MO  Subscribe to Google Workspace → https://goo.gle/GoogleWorkspace  Try Google Workspace with Gemini → https://goo.gle/4vNyZCB Follow Google Workspace
+DESC-HINT googleworkspace Both locked in 🔐🧑‍💻 #Shorts | What is Google Workspace → https://goo.gle/44ft0dH  Set up Google Workspace → https://goo.gle/4vMR7MO  Subscribe to Google Workspace → https://goo.gle/GoogleWorkspace  Try Google Workspace with Gemini → https://goo.gle/4vNyZCB Follow Google Workspace
+DESC-HINT googleworkspace Normalize adding a 1-sentence descriptio | What is Google Workspace → https://goo.gle/44ft0dH  Set up Google Workspace → https://goo.gle/4vMR7MO  Subscribe to Google Workspace → https://goo.gle/GoogleWorkspace  Try Google Workspace with Gemini → https://goo.gle/4vNyZCB Follow Google Workspace
+DESC-HINT googleworkspace Being friends with your coworkers 🤩 #Sho | What is Google Workspace → https://goo.gle/44ft0dH  Set up Google Workspace → https://goo.gle/4vMR7MO  Subscribe to Google Workspace → https://goo.gle/GoogleWorkspace  Try Google Workspace with Gemini → https://goo.gle/4vNyZCB Follow Google Workspace
+DESC-HINT framer Framer is free full-featured design tool | Framer is completely free for all your design work. Create social posts, explore unlimited ideas, and access built-in resources without spending a cent. You only pay when you publish a site.  Topics covered: free website builder, graphic design tools
+DESC-HINT framer Build a portfolio website in seconds wit | Build a complete portfolio website structure in seconds with Wireframer. This quick demo shows how product designer Emily creates a fully responsive portfolio showcasing four projects, complete with layouts optimized for desktop, tablet, and mobile. 
+DESC-HINT framer 3D Transforms in Framer are here! #short | 3D Transforms bring a whole new dimension to web design in Framer. This quick demo shows how you can place any layer in 3D space, creating animations and interactions that feel incredibly polished. With over 10 new properties including Rotation, Skew
+DESC-HINT framer Create a website in less than 60 seconds | Build a professional website in less than 60 seconds? It's possible. This quick tutorial shows you exactly how to go from blank canvas to published site using Framer's visual design tools.  Get the kit for free: framer.link/saas-kit  Topics covered: 
+DESC-HINT framer Create a rotating video grid in Framer w | Create an eye-catching rotating video grid that responds to scroll in just 60 seconds. This quick tutorial shows you how to use Framer's scroll transform effects to make your videos rotate dynamically as visitors scroll through your site.  Watch the 
+shorts with desc 72 desc hints 26
+links nonempty shorts: 3

@@ -1,0 +1,57 @@
+{
+  "version": "1.0",
+  "output_path": "C:\\Users\\TheRose\\숏템자료\\모션그래픽엔진\\work\\2026-10-29_openmontage\\animation\\renders\\final.mp4",
+  "status": "pass",
+  "recommended_action": "present_to_user",
+  "checks": {
+    "technical_probe": {
+      "valid_container": true,
+      "duration_seconds": 22.0,
+      "resolution": "1920x1080",
+      "fps": 30,
+      "has_audio": false,
+      "codec": "h264",
+      "file_size_bytes": 905550,
+      "issues": []
+    },
+    "visual_spotcheck": {
+      "frames_sampled": 22,
+      "frame_paths": [
+        "C:\\Users\\TheRose\\숏템자료\\모션그래픽엔진\\work\\2026-10-29_openmontage\\animation\\frames\\sheet_1s.png",
+        "C:\\Users\\TheRose\\숏템자료\\모션그래픽엔진\\work\\2026-10-29_openmontage\\animation\\frames\\s3_end.png"
+      ],
+      "black_frames_detected": false,
+      "broken_overlays": false,
+      "missing_assets": false,
+      "unreadable_text": false,
+      "issues": [
+        "1초 샘플 시트에서 t=17s는 장면3->4 페이드 사이 검은 화면(약 0.8s 의도된 호흡)"
+      ]
+    },
+    "audio_spotcheck": {
+      "narration_present": false,
+      "music_present": false,
+      "unexpected_silence": false,
+      "clipping_detected": false,
+      "mix_intelligible": true,
+      "issues": [
+        "무음 영상: 나레이션 없음(지시), 배경음 pixabay 403으로 생략"
+      ]
+    },
+    "promise_preservation": {
+      "delivery_promise_honored": true,
+      "renderer_family_used": "animation-first",
+      "render_runtime_used": "hyperframes",
+      "runtime_swap_detected": false,
+      "runtime_swap_check": "manual: proposal=hyperframes, edit=hyperframes, used=hyperframes",
+      "silent_downgrade_detected": false,
+      "issues": []
+    },
+    "subtitle_check": {
+      "subtitles_expected": false,
+      "subtitles_present": false,
+      "issues": []
+    }
+  },
+  "issues_found": []
+}

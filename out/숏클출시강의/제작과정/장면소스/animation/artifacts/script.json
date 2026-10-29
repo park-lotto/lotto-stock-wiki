@@ -1,0 +1,38 @@
+{
+  "version": "1.0",
+  "title": "숏클메이커 소개",
+  "total_duration_seconds": 22,
+  "sections": [
+    {
+      "id": "s1",
+      "label": "질문",
+      "text": "숏클메이커가 뭔가요?",
+      "start_seconds": 0,
+      "end_seconds": 4
+    },
+    {
+      "id": "s2",
+      "label": "정의",
+      "text": "말 한 줄이면, 쇼츠 한 편이 나옵니다",
+      "start_seconds": 4,
+      "end_seconds": 8
+    },
+    {
+      "id": "s3",
+      "label": "체크리스트",
+      "text": "원본 찾기 · 해외 4곳 동시 검색 / 같은 영상인지 AI 판정 / 대본 · 터진 채널의 틀 그대로 / 장면 맞추기 · 목소리 · 자막 / 검사 통과 · 완성본 전송",
+      "start_seconds": 8,
+      "end_seconds": 17.5
+    },
+    {
+      "id": "s4",
+      "label": "로고",
+      "text": "숏클메이커 - 말 한 줄이면 됩니다",
+      "start_seconds": 17.5,
+      "end_seconds": 22
+    }
+  ],
+  "metadata": {
+    "narration": "none (on-screen text only)"
+  }
+}

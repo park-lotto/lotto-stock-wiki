@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<script src="brand/gsap.min.js"></script>
+<style>
+@font-face { font-family: "PB"; src: url("brand/Pretendard-ExtraBold.otf"); font-weight: 800; }
+@font-face { font-family: "PB"; src: url("brand/Pretendard-SemiBold.otf"); font-weight: 600; }
+html, body { margin: 0; background: #fff; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #fff; font-family: "PB", sans-serif; color: #111; }
+.tx { position: absolute; white-space: nowrap; letter-spacing: -0.03em; line-height: 1.15; color: #111; }
+#svg { position: absolute; left: 0; top: 0; }
+#pen { position: absolute; left: 0; top: 0; opacity: 0; overflow: visible; }
+</style></head><body>
+<div id="stage" data-composition-id="promo" data-start="0" data-duration="14" data-width="1920" data-height="1080">
+  <div class="tx" id="title" style="left:90px;top:40px;font-size:112px;font-weight:800">쉽다고 해서 시작했는데…</div>
+  <svg id="svg" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+  <div id="rows"></div>
+  <div class="tx" id="cnt" style="left:1090px;top:610px;font-size:190px;font-weight:800;z-index:2">5~6시간</div>
+  <div class="tx" id="bot" style="left:90px;top:905px;font-size:112px;font-weight:800">쇼츠 한 편에, 결국 몇 시간</div>
+  <svg id="pen" width="90" height="90" viewBox="0 0 90 90"><g transform="rotate(-38 0 0)"><path d="M0 0 L14 -9 L84 -9 L84 9 L14 9 Z" fill="#111"/><path d="M0 0 L14 -9 L14 9 Z" fill="#f2e6cf" stroke="#111" stroke-width="2"/><path d="M0 0 L5 -3 L5 3 Z" fill="#111"/><rect x="60" y="-9" width="6" height="18" fill="#c9a24a"/></g></svg>
+</div>
+<script>
+(() => {
+  const NS = "http://www.w3.org/2000/svg", $ = (id) => document.getElementById(id), SVG = $("svg");
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const seg = (t, a, b) => clamp((t - a) / (b - a));
+  const eo = (p) => 1 - Math.pow(1 - p, 3);
+  const SW = 5; // 펜 선 굵기 일정
+  const mk = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); (parent || SVG).appendChild(e); return e; };
+  const lineAttr = { fill: "none", stroke: "#141414", "stroke-width": SW, "stroke-linecap": "round", "stroke-linejoin": "round" };
+  // 손으로 그린 듯 살짝 일그러진 원 (정지 상태 고정 곡선)
+  const wob = (cx, cy, r, ph) => { let d = ""; const n = 48; for (let i = 0; i <= n; i++) { const a = -Math.PI / 2 + i / n * Math.PI * 2.04; const rr = r * (1 + 0.012 * Math.sin(3 * a + ph) + 0.008 * Math.sin(5 * a + ph * 2) + 0.006 * (i / n)); d += (i ? "L" : "M") + (cx + rr * Math.cos(a)).toFixed(1) + " " + (cy + rr * Math.sin(a)).toFixed(1); } return d; };
+
+  const ITEMS = []; // 펜 그리기 항목
+  const addPath = (d, s, dur, o = {}) => {
+    const el = mk("path", Object.assign({ d, pathLength: 1 }, lineAttr, o.attr || {}), o.parent);
+    el.setAttribute("stroke-dasharray", 1); el.setAttribute("stroke-dashoffset", 1);
+    const it = { el, s, dur, len: el.getTotalLength(), pen: o.pen !== false, ox: o.ox || 0, oy: o.oy || 0 }; ITEMS.push(it); return it;
+  };
+
+  // ---------- 시계 ----------
+  const CX = 1250, CY = 420, CR = 150;
+  addPath(wob(CX, CY, CR, 0.6), 0.9, 1.0);
+  for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6, r1 = CR - 26, r2 = CR - 8; addPath(`M${(CX + r1 * Math.sin(a)).toFixed(1)} ${(CY - r1 * Math.cos(a)).toFixed(1)} L${(CX + r2 * Math.sin(a)).toFixed(1)} ${(CY - r2 * Math.cos(a)).toFixed(1)}`, 1.7 + i * 0.015, 0.25, { pen: false }); }
+  const hMin = mk("line", Object.assign({ x1: CX, y1: CY, x2: CX, y2: CY - 112 }, lineAttr));
+  const hHour = mk("line", Object.assign({ x1: CX, y1: CY, x2: CX, y2: CY - 70 }, lineAttr));
+  const hDot = mk("circle", { cx: CX, cy: CY, r: 8, fill: "#141414" });
+
+  // ---------- 창밖 (해 지고 달 뜸) ----------
+  const WX = 1540, WY = 250, WW = 260, WH = 270, HOR = 450;
+  const cp = mk("clipPath", { id: "sky" }); mk("rect", { x: WX + 4, y: WY + 4, width: WW - 8, height: HOR - WY - 4 }, cp);
+  addPath(`M${WX} ${WY} L${WX + WW} ${WY} L${WX + WW} ${WY + WH} L${WX} ${WY + WH} Z`, 1.45, 0.7, { pen: false });
+  addPath(`M${WX} ${HOR} L${WX + WW} ${HOR}`, 1.9, 0.4, { pen: false });
+  addPath(`M${WX + WW / 2} ${WY} L${WX + WW / 2} ${HOR}`, 2.0, 0.4, { pen: false });
+  const sunG = mk("g", { "clip-path": "url(#sky)" }), sunIn = mk("g", {}, sunG), moonIn = mk("g", {}, sunG);
+  const SXc = WX + WW / 2, SUN0 = 340, SUN1 = HOR + 70;
+  const sunC = addPath(`M${SXc - 34} 0 A34 34 0 1 1 ${SXc + 34} 0 A34 34 0 1 1 ${SXc - 34} 0`, 2.2, 0.5, { parent: sunIn, pen: false });
+  const rays = []; for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; rays.push(addPath(`M${(SXc + 46 * Math.cos(a)).toFixed(1)} ${(46 * Math.sin(a)).toFixed(1)} L${(SXc + 62 * Math.cos(a)).toFixed(1)} ${(62 * Math.sin(a)).toFixed(1)}`, 2.5, 0.3, { parent: sunIn, pen: false })); }
+  const moon = addPath(`M${SXc} -34 A34 34 0 1 0 ${SXc} 34 A26 26 0 1 1 ${SXc} -34 Z`, 2.2, 0.6, { parent: moonIn, pen: false });
+  const stars = [[WX + 50, WY + 55], [WX + 215, WY + 90], [WX + 70, WY + 150]].map(([x, y]) => addPath(`M${x - 9} ${y} L${x + 9} ${y} M${x} ${y - 9} L${x} ${y + 9}`, 0, 0.01, { pen: false }));
+
+  // ---------- 할 일 목록 ----------
+  const LIST = ["소재 찾기", "원본 찾기", "자르기", "대본 쓰기", "목소리", "자막", "썸네일"];
+  const RY = 225, PITCH = 84, S0 = 2.1, STEP = 0.95, ROWS = [];
+  LIST.forEach((txt, i) => {
+    const y = RY + i * PITCH, s = S0 + i * STEP;
+    const div = document.createElement("div"); div.className = "tx"; div.textContent = txt;
+    div.style.cssText = `left:150px;top:${y}px;font-size:68px;font-weight:600`;
+    $("rows").appendChild(div);
+    const bx = 70, by = y + 6;
+    const box = addPath(`M${bx} ${by + 2} L${bx + 54} ${by} L${bx + 55} ${by + 54} L${bx + 1} ${by + 55} Z`, s + 0.62, 0.22, { pen: false });
+    const chk = addPath(`M${bx + 10} ${by + 30} L${bx + 24} ${by + 45} L${bx + 70} ${by - 10}`, s + 0.8, 0.22);
+    ROWS.push({ div, s, y, check: s + 0.8 });
+  });
+
+  // ---------- 얼굴 (지친 사람) ----------
+  const FX = 1730, FY = 982, FR = 82, F0 = 12.0;
+  const face = [];
+  face.push(addPath(wob(FX, FY, FR, 1.9), F0, 0.8));
+  // 반쯤 감긴 눈: 아래 반원 + 위 눈꺼풀 직선
+  [-32, 32].forEach((dx, k) => {
+    const ex = FX + dx, ey = FY - 8;
+    face.push(addPath(`M${ex - 15} ${ey} L${ex + 15} ${ey}`, F0 + 0.8 + k * 0.1, 0.18));
+    face.push(addPath(`M${ex - 14} ${ey + 1} Q${ex} ${ey + 14} ${ex + 14} ${ey + 1}`, F0 + 0.95 + k * 0.1, 0.18));
+    face.push(addPath(`M${ex - 16} ${ey + 20} L${ex + 10} ${ey + 22}`, F0 + 1.15 + k * 0.05, 0.15));
+  });
+  face.push(addPath(`M${FX - 52} ${FY - 28} L${FX - 18} ${FY - 38}`, F0 + 1.3, 0.15));
+  face.push(addPath(`M${FX + 52} ${FY - 28} L${FX + 18} ${FY - 38}`, F0 + 1.4, 0.15));
+  face.push(addPath(`M${FX - 22} ${FY + 38} Q${FX - 7} ${FY + 30} ${FX} ${FY + 38} Q${FX + 8} ${FY + 46} ${FX + 22} ${FY + 36}`, F0 + 1.5, 0.25));
+  face.push(addPath(`M${FX + 62} ${FY - 38} Q${FX + 70} ${FY - 22} ${FX + 62} ${FY - 12}`, F0 + 1.65, 0.2, { pen: false }));
+
+  // ---------- 숫자 형광 밑줄 (펜 선과 별도: 형광펜) ----------
+  const hl = mk("path", { d: "M1105 868 Q1400 852 1760 864", fill: "none", stroke: "#b8ff00", "stroke-width": 24, "stroke-linecap": "round", pathLength: 1 }); SVG.insertBefore(hl, SVG.firstChild);
+  hl.setAttribute("stroke-dasharray", 1); hl.setAttribute("stroke-dashoffset", 1);
+  const HL0 = 10.7, HLD = 0.6;
+
+  // ---------- 글자 쓰기 (왼→오 와이프 + 펜) ----------
+  const W = {}, TXT = [
+    { el: $("title"), s: 0.0, dur: 0.95, yc: 100 },
+    { el: $("cnt"), s: 9.0, dur: 1.5, yc: 725 },
+    { el: $("bot"), s: 12.0, dur: 1.5, yc: 965 },
+  ];
+  ROWS.forEach((r) => TXT.push({ el: r.div, s: r.s, dur: 0.55, yc: r.y + 40 }));
+
+  const PEN = $("pen");
+  function render(t) {
+    // 글자
+    let pen = null, penS = -1;
+    TXT.forEach((o) => {
+      const w = o.w || (o.w = o.el.offsetWidth), p = eo(seg(t, o.s, o.s + o.dur));
+      o.el.style.clipPath = `inset(-30px ${Math.max(0, w * (1 - p)).toFixed(1)}px -30px -30px)`;
+      o.el.style.opacity = t >= o.s ? 1 : 0;
+      if (p > 0 && p < 1 && o.s > penS) { penS = o.s; pen = [parseFloat(o.el.style.left) + w * p, o.yc]; }
+    });
+    // 선화
+    ITEMS.forEach((it) => {
+      const p = eo(seg(t, it.s, it.s + it.dur));
+      it.el.setAttribute("stroke-dashoffset", (1 - p).toFixed(4));
+      if (it.pen && p > 0 && p < 1 && it.s > penS) { penS = it.s; const q = it.el.getPointAtLength(p * it.len); pen = [q.x + it.ox, q.y + it.oy]; }
+    });
+    // 별: 해가 진 뒤 밤하늘에 나타남
+    stars.forEach((st, i) => { const p = eo(seg(t, 7.2 + i * 0.5, 7.7 + i * 0.5)); st.el.setAttribute("stroke-dashoffset", (1 - p).toFixed(4)); });
+    // 해/달 이동
+    const sp = eo(seg(t, 2.2, 9.0)); // 해: 내려감
+    sunIn.setAttribute("transform", `translate(0 ${(SUN0 + (SUN1 - SUN0) * sp).toFixed(1)})`);
+    const mp = eo(seg(t, 5.5, 9.0)); // 달: 올라옴
+    moonIn.setAttribute("transform", `translate(0 ${(HOR + 80 - (HOR + 80 - 345) * mp).toFixed(1)})`);
+    // 시계 바늘: 연속 회전 + 체크마다 한 바퀴
+    let ang = 70 * Math.max(0, t - 1.9);
+    ROWS.forEach((r) => { ang += 360 * eo(seg(t, r.check, r.check + 0.6)); });
+    const vis = t >= 1.9 ? 1 : 0;
+    hMin.setAttribute("transform", `rotate(${ang.toFixed(2)} ${CX} ${CY})`);
+    hHour.setAttribute("transform", `rotate(${(ang / 12 + 200).toFixed(2)} ${CX} ${CY})`);
+    hMin.style.opacity = vis; hHour.style.opacity = vis; hDot.style.opacity = vis;
+    // 형광 밑줄
+    hl.setAttribute("stroke-dashoffset", (1 - eo(seg(t, HL0, HL0 + HLD))).toFixed(4));
+    // 펜
+    if (pen) { PEN.style.opacity = 1; PEN.style.transform = `translate(${pen[0].toFixed(1)}px, ${pen[1].toFixed(1)}px)`; } else PEN.style.opacity = 0;
+  }
+  window.__timelines = window.__timelines || {};
+  document.fonts.load('800 46px "PB"').then(() => document.fonts.load('600 46px "PB"')).then(() => document.fonts.ready).then(() => {
+    const tl = gsap.timeline({ paused: true }), P = { t: 0 };
+    tl.to(P, { t: 14, duration: 14, ease: "none", onUpdate: () => render(P.t) });
+    render(0); window.__timelines["promo"] = tl;
+  });
+  render(0);
+})();
+</script></body></html>

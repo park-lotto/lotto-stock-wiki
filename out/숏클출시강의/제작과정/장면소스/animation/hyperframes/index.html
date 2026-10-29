@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<title>숏클메이커 소개</title>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+@font-face{font-family:"PretendardOM";src:url("fonts/Pretendard-ExtraBold.otf") format("opentype");font-weight:800;}
+@font-face{font-family:"PretendardOM";src:url("fonts/Pretendard-SemiBold.otf") format("opentype");font-weight:600;}
+html,body{margin:0;padding:0;background:#0b0a11;}
+body{font-family:"PretendardOM",sans-serif;}
+#root{position:relative;width:1920px;height:1080px;overflow:hidden;}
+.clip{position:absolute;left:0;top:0;width:1920px;height:1080px;}
+.bg{position:absolute;left:0;top:0;width:1920px;height:1080px;background:#0b0a11;}
+.abs{position:absolute;}
+#card{left:210px;top:290px;width:1500px;height:500px;background:#f3ece0;border-radius:44px;}
+#card-bar{left:290px;top:370px;width:14px;height:100px;background:#f0902a;border-radius:7px;}
+#q{left:0;top:290px;width:1920px;height:500px;display:flex;align-items:center;justify-content:center;gap:34px;color:#0b0a11;font-weight:800;font-size:128px;white-space:nowrap;}
+.w{display:inline-block;}
+#d1{left:0;top:330px;width:1920px;text-align:center;color:#f3ece0;font-weight:800;font-size:120px;white-space:nowrap;}
+#d2{left:0;top:530px;width:1920px;text-align:center;color:#f3ece0;font-weight:800;font-size:120px;white-space:nowrap;}
+#d2 b{color:#f0902a;font-weight:800;}
+.row{left:250px;width:1500px;height:120px;display:flex;align-items:center;gap:44px;white-space:nowrap;}
+.ck{position:relative;width:84px;height:84px;border-radius:42px;border:6px solid #f3ece0;box-sizing:border-box;flex:none;}
+.ckfill{position:absolute;left:-6px;top:-6px;width:84px;height:84px;border-radius:42px;background:#2ee6c9;opacity:0;}
+.ckmark{position:absolute;left:-6px;top:-6px;width:84px;height:84px;opacity:0;}
+.txt{color:#f3ece0;font-weight:800;font-size:76px;}
+.txt i{font-style:normal;font-weight:600;color:#f3ece0;}
+#logo{left:0;top:340px;width:1920px;text-align:center;color:#f3ece0;font-weight:800;font-size:220px;white-space:nowrap;}
+#bar{left:560px;top:600px;width:800px;height:12px;background:#f0902a;border-radius:6px;}
+#tag{left:0;top:660px;width:1920px;text-align:center;color:#2ee6c9;font-weight:800;font-size:90px;white-space:nowrap;}
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-width="1920" data-height="1080" data-duration="22">
+
+  <section id="s1" class="clip" data-start="0" data-duration="4" data-track-index="1">
+    <div class="bg"></div>
+    <div id="card" class="abs"></div>
+    <div id="card-bar" class="abs"></div>
+    <div id="q" class="abs"><span class="w">숏클메이커가</span><span class="w">뭔가요?</span></div>
+  </section>
+
+  <section id="s2" class="clip" data-start="4" data-duration="4" data-track-index="1">
+    <div class="bg"></div>
+    <div id="d1" class="abs">말 한 줄이면,</div>
+    <div id="d2" class="abs"><b>쇼츠 한 편</b>이 나옵니다</div>
+  </section>
+
+  <section id="s3" class="clip" data-start="8" data-duration="9.5" data-track-index="1">
+    <div class="bg"></div>
+    <div class="row abs" id="r1" style="top:140px"><div class="ck"><div class="ckfill"></div><svg class="ckmark" viewBox="0 0 84 84"><path d="M22 44 L37 58 L63 28" fill="none" stroke="#0b0a11" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1 1.2" stroke-dashoffset="1.1"/></svg></div><div class="txt">원본 찾기 · <i>해외 4곳 동시 검색</i></div></div>
+    <div class="row abs" id="r2" style="top:290px"><div class="ck"><div class="ckfill"></div><svg class="ckmark" viewBox="0 0 84 84"><path d="M22 44 L37 58 L63 28" fill="none" stroke="#0b0a11" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1 1.2" stroke-dashoffset="1.1"/></svg></div><div class="txt">같은 영상인지 <i>AI 판정</i></div></div>
+    <div class="row abs" id="r3" style="top:440px"><div class="ck"><div class="ckfill"></div><svg class="ckmark" viewBox="0 0 84 84"><path d="M22 44 L37 58 L63 28" fill="none" stroke="#0b0a11" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1 1.2" stroke-dashoffset="1.1"/></svg></div><div class="txt">대본 · <i>터진 채널의 틀 그대로</i></div></div>
+    <div class="row abs" id="r4" style="top:590px"><div class="ck"><div class="ckfill"></div><svg class="ckmark" viewBox="0 0 84 84"><path d="M22 44 L37 58 L63 28" fill="none" stroke="#0b0a11" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1 1.2" stroke-dashoffset="1.1"/></svg></div><div class="txt">장면 맞추기 · <i>목소리 · 자막</i></div></div>
+    <div class="row abs" id="r5" style="top:740px"><div class="ck"><div class="ckfill"></div><svg class="ckmark" viewBox="0 0 84 84"><path d="M22 44 L37 58 L63 28" fill="none" stroke="#0b0a11" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1 1.2" stroke-dashoffset="1.1"/></svg></div><div class="txt">검사 통과 · <i>완성본 전송</i></div></div>
+  </section>
+
+  <section id="s4" class="clip" data-start="17.5" data-duration="4.5" data-track-index="1">
+    <div class="bg"></div>
+    <div id="logo" class="abs">숏클메이커</div>
+    <div id="bar" class="abs"></div>
+    <div id="tag" class="abs">말 한 줄이면 됩니다</div>
+  </section>
+</div>
+
+<script>
+window.__timelines = window.__timelines || {};
+const tl = gsap.timeline({ paused: true });
+const EZ = "power3.out";
+tl.fromTo("#card", {opacity:0}, {opacity:1, duration:0.6, ease:EZ}, 0.1);
+tl.fromTo("#card-bar", {opacity:0}, {opacity:1, duration:0.6, ease:EZ}, 0.1);
+tl.fromTo("#q .w", {opacity:0}, {opacity:1, duration:0.7, ease:EZ, stagger:0.55}, 0.7);
+tl.to("#s1 > :not(.bg)", {opacity:0, duration:0.5, ease:"power2.out"}, 3.5);
+tl.fromTo("#d1", {opacity:0, y:24}, {opacity:1, y:0, duration:0.8, ease:EZ}, 4.3);
+tl.fromTo("#d2", {opacity:0, y:24}, {opacity:1, y:0, duration:0.8, ease:EZ}, 5.3);
+tl.to("#s2 > :not(.bg)", {opacity:0, duration:0.5, ease:"power2.out"}, 7.5);
+["r1","r2","r3","r4","r5"].forEach(function(id, i) {
+  var t = 8.4 + i * 1.6;
+  tl.fromTo("#"+id, {opacity:0, x:-30}, {opacity:1, x:0, duration:0.6, ease:EZ}, t);
+  tl.to("#"+id+" .ckfill", {opacity:1, duration:0.3, ease:EZ}, t+0.7);
+  tl.to("#"+id+" .ckmark", {opacity:1, duration:0.01}, t+0.7);
+  tl.to("#"+id+" .ckmark path", {strokeDashoffset:0, duration:0.4, ease:EZ}, t+0.7);
+});
+tl.to("#s3 > :not(.bg)", {opacity:0, duration:0.5, ease:"power2.out"}, 17.0);
+tl.fromTo("#logo", {opacity:0, y:24}, {opacity:1, y:0, duration:0.9, ease:EZ}, 17.8);
+tl.fromTo("#bar", {opacity:0, scaleX:0.2}, {opacity:1, scaleX:1, duration:0.8, ease:EZ}, 18.6);
+tl.fromTo("#tag", {opacity:0, y:20}, {opacity:1, y:0, duration:0.8, ease:EZ}, 19.4);
+window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

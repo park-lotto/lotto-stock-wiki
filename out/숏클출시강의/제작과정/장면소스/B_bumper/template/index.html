@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<script src="brand/gsap.min.js"></script>
+<style>
+@font-face{font-family:"AB";src:url("brand/GmarketSansBold.otf")}
+@font-face{font-family:"UB";src:url("brand/Unbounded.ttf")}
+@font-face{font-family:"JB";src:url("brand/JBMono.ttf")}
+html,body{margin:0;background:#0a0a0a}#stage{position:relative;width:1920px;height:1080px;overflow:hidden}canvas{position:absolute;left:0;top:0}
+</style></head><body>
+<div id="stage" data-composition-id="q2bump" data-start="0" data-duration="6" data-width="1920" data-height="1080"><canvas id="c" width="1920" height="1080"></canvas></div>
+<script>
+(()=>{
+const D=6,cv=document.getElementById('c'),x=cv.getContext('2d');
+const BG='#0a0a0a',MG='#ff2bd6',AG='#b8ff00',WH='#f5f5f5',BEAT=.5;
+const cl=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)),E=p=>1-Math.pow(1-cl(p),3);
+const spring=(u,f=2.4,z=.55)=>{if(u<=0)return 0;const w=2*Math.PI*f,wd=w*Math.sqrt(1-z*z);return 1-Math.exp(-z*w*u)*(Math.cos(wd*u)+(z*w/wd)*Math.sin(wd*u))};
+const rnd=i=>{const v=Math.sin(i*127.1+311.7)*43758.5;return v-Math.floor(v)};
+const SCR='ABCDEFGHJKMNOPRSTUVWXYZ47/';
+// 한 줄: 글자마다 스프링(아래→위, 흐림), 선택: 섞임(scramble)
+
+function line(t,txt,t0,X,Y,font,size,col,o={}){x.font=`${size}px ${font}`;x.letterSpacing=(o.ls||0)+'px';let tw=x.measureText(txt).width;let cx=o.center?X-tw/2:X;
+ for(let i=0;i<txt.length;i++){let ch=txt[i];const u=t-t0-i*(o.st??.06);const w=x.measureText(ch).width;if(u<0){cx+=w;continue}
+  const s=spring(u,2.2,.5);const dy=(1-s)*size*.9,bl=cl(1-u/.18)*10;
+  x.save();x.translate(cx,Y+dy);if(bl>0)x.filter=`blur(${bl}px)`;
+  if(o.mis&&u<.25){x.globalAlpha=.4;x.fillStyle=MG;x.fillText(ch,-5,0);x.fillStyle=AG;x.fillText(ch,5,0);x.globalAlpha=1}
+  if(u<.15&&o.smear){x.globalAlpha=.6;x.fillStyle=MG;x.fillText(ch,0,size*.12);x.globalAlpha=1}
+  x.fillStyle=col;x.fillText(ch,0,0);x.restore();cx+=w}
+ x.letterSpacing='0px'}
+function hud(t){x.font='16px JB';x.fillStyle='#5a5a5a';x.letterSpacing='2px';x.textAlign='left';x.fillText('SHORTCL   DAY 01   1920x1080   30 FPS',40,1042);x.textAlign='right';
+ x.fillText(`00:${String(Math.floor(t)).padStart(2,'0')}.${String(Math.floor(t*100)%100).padStart(2,'0')}   BEAT ${Math.floor(t/BEAT)%16+1}/16`,1880,1042);x.textAlign='left';
+ x.strokeStyle='#3a3a3a';x.lineWidth=2;[[24,24],[1896,24],[24,1056],[1896,1056]].forEach(([a,b])=>{const dx=a<100?28:-28,dy=b<100?28:-28;x.beginPath();x.moveTo(a,b+dy);x.lineTo(a,b);x.lineTo(a+dx,b);x.stroke()});
+ x.fillStyle=MG;x.fillRect(40,50,10,10);x.fillStyle='#888';x.fillText('NOGADA',60,60);x.letterSpacing='0px'}
+function bar(y,a,b,c,p){x.fillStyle=c;x.fillRect(a,y,(b-a)*E(p),8)}
+function render(t){x.fillStyle=BG;x.fillRect(0,0,1920,1080);const punch=1+(t%BEAT<.08?.015:0);x.save();x.translate(960,540);x.scale(punch,punch);x.translate(-960,-540);
+ if(t<2.0){line(t,'쇼츠 노가다',0.0,960,640,'AB',300,WH,{center:1,ls:-6,mis:1,smear:1,st:.09});bar(720,160,1760,AG,(t-.7)/.5)}
+ else if(t<3.7){line(t,'한 편에',2.0,960,640,'AB',330,WH,{center:1,ls:-6,mis:1,st:.1});bar(720,460,1460,MG,(t-2.6)/.4)}
+ else{line(t,'5~6시간',3.7,960,660,'AB',380,AG,{center:1,ls:-6,mis:1,smear:1,st:.09});if(t>4.6)bar(740,260,1660,WH,(t-4.6)/.35)}
+ x.restore();hud(t)}
+window.__timelines=window.__timelines||{};
+Promise.all([document.fonts.load('60px AB','쇼츠 노가다 한 편에 5~6시간'),document.fonts.load('40px UB'),document.fonts.load('10px JB')]).then(()=>document.fonts.ready).then(()=>{const tl=gsap.timeline({paused:true});const P={t:0};tl.to(P,{t:D,duration:D,ease:"none",onUpdate:()=>render(P.t)});render(0);window.__timelines["q2bump"]=tl;});
+render(0);
+})();
+</script></body></html>

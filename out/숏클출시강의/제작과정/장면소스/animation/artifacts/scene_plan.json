@@ -1,0 +1,54 @@
+{
+  "version": "1.0",
+  "style_playbook": "clean-professional",
+  "scenes": [
+    {
+      "id": "s1",
+      "type": "text_card",
+      "description": "크림 카드 위 질문, 단어별 페이드인",
+      "start_seconds": 0,
+      "end_seconds": 4,
+      "script_section_id": "s1",
+      "transition_in": "fade",
+      "transition_out": "fade",
+      "information_role": "hook"
+    },
+    {
+      "id": "s2",
+      "type": "text_card",
+      "description": "한 문장 정의, '쇼츠 한 편' 주황 강조",
+      "start_seconds": 4,
+      "end_seconds": 8,
+      "script_section_id": "s2",
+      "transition_in": "fade",
+      "transition_out": "fade",
+      "information_role": "definition"
+    },
+    {
+      "id": "s3",
+      "type": "animation",
+      "description": "체크리스트 5줄 순차 체크(청록)",
+      "start_seconds": 8,
+      "end_seconds": 17.5,
+      "script_section_id": "s3",
+      "transition_in": "fade",
+      "transition_out": "fade",
+      "information_role": "proof"
+    },
+    {
+      "id": "s4",
+      "type": "text_card",
+      "description": "로고 + 슬로건",
+      "start_seconds": 17.5,
+      "end_seconds": 22,
+      "script_section_id": "s4",
+      "transition_in": "fade",
+      "transition_out": "fade",
+      "information_role": "cta"
+    }
+  ],
+  "metadata": {
+    "reuse_strategy": "배경 1색 고정, 크림 텍스트, 주황=강조, 청록=완료",
+    "animation_mode": "typography/remotion-free"
+  }
+}

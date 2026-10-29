@@ -1,0 +1,93 @@
+// P7 대리에서 부장으로 (18초)
+const DESK = 770;
+function desk(L, x0, x1, s, plate) {
+  const top = rr(x0, DESK, x1 - x0, 38, 8), front = rr(x0 + 50, DESK + 38, x1 - x0 - 100, 300, 6);
+  L.shape(front, s + 0.5, 0.7, BEIGE, { op: 0.4 }); L.shape(top, s, 0.7, BEIGE, { op: 0.55 });
+  const cx = (x0 + x1) / 2;
+  const pl2 = poly([[cx - 150, DESK + 105], [cx + 150, DESK + 105], [cx + 172, DESK + 232], [cx - 172, DESK + 232]], 8, true, 0.8);
+  L.shape(pl2, s + 1.2, 0.6, "#F2D27A", { op: 0.55 });
+  L.text(plate, { x: cx, y: DESK + 172, size: 120, s: s + 1.9, anchor: "c", gap: 0.12 });
+}
+function paperDoc(L, w = 124, h = 86) { // 원점 기준 서류(이미 그려진 상태)
+  const d = rr(0, 0, w, h, 6); L.line(d, -99, 0.1, { pen: false }); L.fill(d, "#FFFFFF", -99, 0.95);
+  for (let i = 0; i < 3; i++) L.line(ln(14, 22 + i * 20, w - 16 - (i === 2 ? 30 : 0), 22 + i * 20), -99, 0.1, { w: 4, pen: false });
+}
+
+// ================= 컷1: 대리 (무료 AI) =================
+const c1 = S.layer().vis(-1, 6.6, "slide");
+desk(c1, 100, 1560, 0.2, "대리");
+robot(c1, { cx: 560, cy: 345, sc: 1.75, s: 0.9, kind: "dae", bodyH: 178,
+  exprs: [{ e: "ok", a: -1, b: 5.0 }, { e: "stuck", a: 5.0, b: 1e9 }],
+  arms: [{ pts: [[-86, 112], [-142, 150], [-152, 205]], hand: [-154, 210], s: 2.2 }, { pts: [[86, 112], [142, 150], [152, 205]], hand: [154, 210], s: 2.4 }] });
+c1.text("무료 AI", { x: 560, y: 345 + 122 * 1.75, size: 52, font: "gae", s: 3.2, anchor: "c" });
+// 왼쪽 쌓인 서류
+for (let i = 0; i < 4; i++) { const L = c1.sub(), d = rr(150, 690 - i * 14, 124, 86, 6); L.line(d, 1.6 + i * 0.15, 0.3, { pen: false }); L.fill(d, "#FFFFFF", 1.9 + i * 0.15, 0.95); }
+// 하나씩 처리: 왼 더미 → 로봇 손 → 오른쪽 더미
+for (let i = 0; i < 4; i++) {
+  const L = c1.sub(); paperDoc(L);
+  const t0 = 2.6 + i * 0.75, ex = 780 + (i % 2) * 10, ey = 690 - i * 12;
+  L.vis(t0 - 0.05, 1e9, "none");
+  L.xf((t) => {
+    const p1 = eo(seg(t, t0, t0 + 0.45)), p2 = eo(seg(t, t0 + 0.5, t0 + 0.95));
+    const x = p2 > 0 ? 150 + (ex - 150) * (0.5 + 0.5 * p2) : 150 + (ex - 150) * 0.5 * p1;
+    const y = 676 + (ey - 676) * p2 - 40 * Math.sin(Math.PI * p1 * (1 - p2));
+    return { x, y, ox: 0, oy: 0 };
+  });
+}
+// 이것도 만들어 줘 — 메모가 쌓임
+[[0, 0], [1, -4], [2, 3], [3, -2]].forEach(([i, rot]) => {
+  const L = c1.sub(), x = 1020 + (i % 2) * 22, y = 700 - i * 92, ts = 4.1 + i * 0.35;
+  L.vis(ts - 0.1, 1e9, "pop");
+  const d = rr(x, y, 440, 120, 8); L.line(d, ts, 0.35, { w: 5 }); L.fill(d, "#F4E28A", ts + 0.2, 0.55);
+  L.xf(() => ({ r: rot, ox: x + 220, oy: y + 60 }));
+  if (i === 3) L.text("이것도 만들어 줘", { x: x + 220, y: y + 66, size: 58, font: "gae", s: ts + 0.4, anchor: "c", gap: 0.05 });
+});
+c1.text("…", { x: 800, y: 235, size: 150, s: 5.3 });
+
+// ================= 컷2: 부장 (클로드) =================
+const c2 = S.layer().vis(6.2, 11.9, "slide");
+desk(c2, 100, 1560, 6.5, "부장");
+robot(c2, { cx: 1010, cy: 335, sc: 1.9, s: 7.2, kind: "boss", bodyH: 163,
+  exprs: [{ e: "ok", a: 6.2, b: 10.4 }, { e: "idea", a: 10.4, b: 1e9 }],
+  arms: [{ pts: [[-86, 110], [-170, 150], [-252, 118]], hand: [-262, 106], s: 9.0 }, { pts: [[86, 110], [170, 170], [238, 202]], hand: [248, 208], s: 9.3 }] });
+c2.text("클로드", { x: 1010, y: 335 + 122 * 1.9, size: 52, font: "gae", s: 9.6, anchor: "c" });
+const fr = rr(330, 575, 320, 190, 14); c2.shape(fr, 7.4, 0.55, BEIGE);
+c2.line(poly([[455, 635], [455, 705], [515, 670]], 5, true, 0.5), 8.0, 0.3, { w: 5 });
+const lens = ell(470, 505, 72, 72, { n: 22 }); c2.line(lens, 9.4, 0.55, { w: 7 }); c2.fill(lens, "#FFFFFF", 9.8, 0.55); c2.line(ln(515, 552, 520, 590), 9.8, 0.2, { w: 10, pen: false });
+const doc = rr(1330, 590, 250, 180, 8); c2.shape(doc, 8.6, 0.5, "#FFFFFF", { op: 0.9 });
+[0, 1, 2].forEach((i) => c2.line(ln(1352, 630 + i * 34, 1550 - i * 40, 630 + i * 34), 9.4 + i * 0.12, 0.2, { w: 4.5, pen: false }));
+c2.line(pl([[1500, 680], [1522, 706], [1566, 650]]), 10.0, 0.4, { w: 8 });
+const bulb = c2.sub(); bulb.vis(10.2, 1e9, "pop");
+bulb.line(ell(1300, 205, 46, 46, { n: 20 }), 10.4, 0.5, { w: 6 }); bulb.fill(ell(1300, 205, 46, 46, { n: 20 }), "#F2D27A", 10.9, 0.7);
+bulb.line(rr(1280, 250, 40, 30, 4), 10.8, 0.2, { w: 5, pen: false }); bulb.line(ln(1288, 292, 1312, 292), 10.9, 0.1, { pen: false });
+for (let i = 0; i < 7; i++) { const a = -Math.PI + i * Math.PI / 6; bulb.line(ln(1300 + 62 * Math.cos(a), 205 + 62 * Math.sin(a), 1300 + 86 * Math.cos(a), 205 + 86 * Math.sin(a)), 11.0 + i * 0.04, 0.12, { w: 5, pen: false }); }
+
+// ================= 컷3: 비유 두 컷 + 한 줄 =================
+const c3 = S.layer().vis(11.7, 1e9, "slide");
+function plateSmall(L, cx, y, txt, s) { L.shape(poly([[cx - 100, y - 36], [cx + 100, y - 36], [cx + 112, y + 36], [cx - 112, y + 36]], 8, true, 0.6), s, 0.4, "#F2D27A", { op: 0.55 }); L.text(txt, { x: cx, y: y + 2, size: 70, s: s + 0.3, anchor: "c" }); }
+plateSmall(c3, 520, 100, "대리", 12.3); plateSmall(c3, 1400, 100, "부장", 12.5);
+function arrow(L, x0, x1, y, s) { L.line(pl([[x0, y], [(x0 + x1) / 2, y - 6], [x1, y]]), s, 0.4, { w: 7 }); L.line(pl([[x1 - 30, y - 24], [x1, y], [x1 - 30, y + 24]]), s + 0.35, 0.2, { w: 7 }); }
+arrow(c3, 760, 1160, 100, 12.7);
+function car(L, cx, cy, kind, s) {
+  const T = (x, y) => [cx + x, cy + y];
+  const body = kind === "ave" ? [[-200, 40], [-204, -4], [-150, -22], [-95, -78], [45, -78], [110, -24], [200, -14], [206, 40]] : [[-236, 38], [-238, 0], [-205, -16], [-125, -62], [-30, -84], [55, -66], [115, -22], [232, -6], [238, 38]];
+  L.shape(poly(body.map((p) => T(p[0], p[1])), 18, true, 1.2), s, 0.8, kind === "ave" ? SKY : PINK, { op: 0.4 });
+  const win = kind === "ave" ? [[-85, -26], [-60, -66], [-5, -66], [-5, -26]] : [[-100, -26], [-45, -62], [20, -66], [60, -26]];
+  L.line(poly(win.map((p) => T(p[0], p[1])), 6, true, 0.6), s + 0.8, 0.3, { w: 5, pen: false });
+  if (kind === "ave") L.line(poly([[5, -26], [5, -66], [78, -66], [100, -26]].map((p) => T(p[0], p[1])), 6, true, 0.6), s + 0.9, 0.3, { w: 5, pen: false });
+  [-122, 128].forEach((wx, i) => { const w = ell(...T(wx, 44), 41, 41, { n: 16 }); L.line(w, s + 0.9 + i * 0.1, 0.35, { w: 6 }); L.fill(w, "#7E7B76", s + 1.3, 0.55); L.line(ell(...T(wx, 44), 15, 15, { n: 10 }), s + 1.2, 0.2, { w: 4.5, pen: false }); });
+}
+car(c3, 520, 330, "ave", 12.9); c3.text("아반떼", { x: 520, y: 438, size: 62, font: "gae", s: 13.9, anchor: "c" });
+arrow(c3, 760, 1160, 330, 14.0);
+car(c3, 1400, 332, "por", 14.2); c3.text("포르쉐", { x: 1400, y: 438, size: 62, font: "gae", s: 15.2, anchor: "c" });
+function card(L, cx, cy, txt, s, good) {
+  const d = rr(cx - 160, cy - 110, 320, 220, 10); L.shape(d, s, 0.6, good ? "#F4E28A" : "#FFFFFF", { op: good ? 0.5 : 0.9 });
+  L.line(ln(cx - 125, cy - 62, cx + 20, cy - 62), s + 0.6, 0.2, { w: 4.5, pen: false }); L.line(ln(cx - 125, cy - 30, cx - 20, cy - 30), s + 0.7, 0.2, { w: 4.5, pen: false });
+  L.text(txt, { x: cx, y: cy + 50, size: 84, font: "gae", s: s + 0.8, anchor: "c", gap: 0.07 });
+}
+card(c3, 520, 610, "전교 30등", 15.0, false);
+arrow(c3, 760, 1160, 610, 15.9);
+card(c3, 1400, 610, "전교 1등", 16.1, true);
+c3.line(pl([[1500, 520], [1522, 488], [1552, 520], [1584, 486], [1606, 520], [1490, 524]]), 16.8, 0.5, { w: 6 });
+const brain = c3.text("두뇌가 다릅니다", { x: 960, y: 905, size: 200, s: 16.7, anchor: "c", gap: 0.08 });
+c3.underline(brain.box(0, 1), 17.4, 0.3);

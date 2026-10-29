@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<script src="brand/gsap.min.js"></script>
+<style>
+@font-face { font-family: "PS"; src: url("brand/Pretendard-SemiBold.otf"); font-weight: 600; }
+@font-face { font-family: "PX"; src: url("brand/Pretendard-ExtraBold.otf"); font-weight: 800; }
+html, body { margin: 0; background: #0c0c0d; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: radial-gradient(ellipse at 50% 40%, #151617, #0a0a0b); color: #eef0ee; font-family: PS, sans-serif; font-weight: 600; }
+.a { position: absolute; white-space: nowrap; }
+.m { font-family: PS, sans-serif; letter-spacing: 3px; }
+.pn { position: absolute; background: #1a1c1d; border: 1.5px solid #2a2d2e; border-radius: 9px; }
+svg { position: absolute; left: 0; top: 0; }
+</style>
+</head>
+<body>
+<div id="stage" data-composition-id="shortcl" data-start="0" data-duration="14" data-width="1920" data-height="1080">
+  <svg id="sv" width="1920" height="1080"></svg><div id="L" style="position:absolute;inset:0"></div>
+  <div class="a m" id="hb" style="left:72px;bottom:36px;font-size:22px;color:#777"></div>
+</div>
+<script>
+(() => {
+  const D = 14, TE = "#5ee6cc";
+  const $ = (id) => document.getElementById(id);
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const lerp = (a, b, p) => a + (b - a) * p;
+  const eo = (p) => 1 - Math.pow(1 - clamp(p), 3), eio = (p) => { p = clamp(p); return p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2; };
+  const typed = (s, t, cps) => s.slice(0, Math.max(0, Math.floor(t * cps)));
+  const bin = (p) => `opacity:${clamp(p * 1.4)};filter:blur(${(1 - clamp(p)) * 12}px);transform:translateY(${(1 - eo(p)) * 21}px)`;
+  const PHR = [["채널마다 하나씩 들어가 봐야 한다", "유튜브 · 틱톡 · 인스타 · 따로따로", 230, 290, -3], ["다음 영상을 감으로 정한다", "무엇이 터질지 · 모른다", 560, 600, 2]];
+  const ROWS = [["해외 음식 반응", 19164], ["해외 핫템", 12345], ["유명 프로그램 후기", 10964], ["해외 화장품", 8573], ["쇼핑 썰", 4302]];
+  function render(t) {
+    let h = "", s = "", hb = "";
+    if (t < 3.4) {
+      hb = "숏클 채널 리포트 · 지금까지는";
+      const conv = eio((t - 2.4) / 0.5);
+      PHR.forEach(([w, sub, x, y, r], i) => { const p = (t - i * 0.9) / 0.4; if (p <= 0) return; const X = lerp(x, 960 - 330, conv), Y = lerp(y, 500, conv);
+        h += `<div class="a" style="left:${X}px;top:${Y}px;transform:rotate(${r * (1 - conv)}deg) scale(${1 - conv * 0.6});opacity:${1 - conv};${conv ? "" : bin(p)}"><div class="m" style="font-size:24px;color:#888;margin-left:66px">${sub}</div><div style="font-size:60px;letter-spacing:-1px;margin-top:6px"><span style="display:inline-block;width:30px;height:36px;border:3px solid #aaa;border-radius:5px;margin-right:30px;vertical-align:-3px"></span>${w}</div></div>`; });
+      const dt = t < 0.9 ? 0 : 1, dp = eio((t - 0.9) / 0.6), P = PHR.map(([, , x, y]) => [x + 30, y + 78]);
+      const dx = t < 2.4 ? lerp(P[0][0], P[1][0], t < 0.9 ? 0 : dp) : 960, dy = t < 2.4 ? lerp(P[0][1], P[1][1], t < 0.9 ? 0 : dp) : 540;
+      s += `<circle cx="${dx}" cy="${dy}" r="${t > 2.4 ? 13 + Math.sin(t * 8) * 1.5 : 10}" fill="${TE}"/><circle cx="${dx}" cy="${dy}" r="24" fill="${TE}" opacity=".15"/>`;
+      if (t > 2.6) h += `<div class="a" style="left:0;right:0;text-align:center;top:450px;font-size:44px;color:#ccc;${bin((t - 2.6) / .3)}">한곳에서 <span style="color:${TE}">볼 수 있다면?</span></div>`;
+      if (t > 3.0) { const p = eo((t - 3.0) / 0.4); s += `<circle cx="960" cy="540" r="${p * 450}" fill="none" stroke="${TE}" stroke-width="3" opacity="${1 - p}"/>`; for (let i = 0; i < 18; i++) { const a = i / 18 * 6.283; s += `<line x1="${960 + Math.cos(a) * 30 * p}" y1="${540 + Math.sin(a) * 30 * p}" x2="${960 + Math.cos(a) * 90 * p}" y2="${540 + Math.sin(a) * 90 * p}" stroke="#ddd" stroke-width="3" opacity="${1 - p}"/>`; } }
+    } else if (t < 6.2) {
+      hb = "02 —— 대시보드"; const u = t - 3.4, tilt = lerp(18, 8, eo(u / 2.6));
+      h += `<div class="a" style="left:0;right:0;text-align:center;top:40px;font-size:30px;letter-spacing:3px">숏클.</div><div class="a m" style="left:0;right:0;text-align:center;top:90px;font-size:22px;color:#ccc">▣ 채널 리포트</div>`;
+      h += `<div style="position:absolute;left:0;top:0;width:1920px;height:1080px;perspective:1650px"><div style="position:absolute;inset:0;transform:rotateX(${tilt}deg) rotateZ(-2deg);transform-origin:50% 30%">`;
+      h += `<div class="a" style="left:0;right:0;text-align:center;top:140px;font-size:84px;letter-spacing:-1.5px;${bin(u / .4)}">채널 리포트</div>`;
+      [["▣ 한눈에 보기", 1], ["영상별 조회수"], ["에이전트"]].forEach(([b, hi], i) => { h += `<div class="a m" style="left:${470 + i * 300}px;top:275px;font-size:24px;padding:12px 28px;border-radius:6px;${hi ? `background:${TE};color:#0c3a33` : "background:#1a1c1d;color:#ddd"};${bin((u - 0.3 - i * .08) / .3)}">${b}</div>`; });
+      const q = eo((u - .5) / 2.0);
+      h += `<div class="pn" style="left:285px;top:380px;width:660px;height:300px;border-left:5px solid ${TE};${bin((u - .5) / .3)}"><div class="m" style="position:absolute;left:34px;top:36px;font-size:30px;color:#aaa">유튜브 누적 조회수</div><div style="position:absolute;left:34px;top:100px;font:800 120px PX;letter-spacing:-2px">${Math.round(14 * q)}<span style="font-size:80px">만</span></div></div>`;
+      h += `<div class="pn" style="left:975px;top:380px;width:660px;height:300px;border-left:5px solid #e2b23d;${bin((u - .6) / .3)}"><div class="m" style="position:absolute;left:34px;top:36px;font-size:30px;color:#aaa">최근 7일 올린 영상</div><div style="position:absolute;left:34px;top:100px;font:800 120px PX;letter-spacing:-2px">${Math.round(11 * q)}<span style="font-size:80px">만</span></div></div>`;
+      // 장식 막대(숫자 없음)
+      let bars = ""; for (let i = 0; i < 24; i++) { const hh = (30 + ((i * 37) % 70)) * eo((u - 1.0 - i * 0.03) / .4); bars += `<div style="position:absolute;left:${60 + i * 52}px;bottom:0;width:30px;height:${hh}px;background:${i > 18 ? TE : "#2f3436"}"></div>`; }
+      h += `<div class="pn" style="left:285px;top:710px;width:1350px;height:150px;overflow:hidden;${bin((u - .9) / .3)}">${bars}</div>`;
+      h += `</div></div>`;
+    } else if (t < 9.8) {
+      hb = "03 —— 영상별 조회수"; const u = t - 6.2;
+      h += `<div class="a" style="left:0;right:0;text-align:center;top:70px;font-size:84px;letter-spacing:-1.5px;${bin(u / .4)}">영상별 조회수</div>`;
+      h += `<div class="pn" style="left:260px;top:210px;width:1400px;height:700px;border-left:5px solid ${TE};${bin((u - .2) / .3)}">`;
+      h += `<div class="m" style="position:absolute;left:44px;top:30px;font-size:34px;color:#888">영상 종류</div><div class="m" style="position:absolute;right:44px;top:30px;font-size:34px;color:${TE}">조회수</div>`;
+      ROWS.forEach(([n, v], i) => { const p = clamp((u - 0.6 - i * 0.5) / 0.3); if (p <= 0) return; const q = eo((u - 0.6 - i * 0.5) / 0.7);
+        const top = 100 + i * 118;
+        h += `<div style="position:absolute;left:44px;top:${top}px;width:1310px;height:100px;opacity:${p};transform:translateY(${(1 - p) * 14}px)"><div style="position:absolute;left:0;top:0;font-size:46px;line-height:56px">${n}</div><div style="position:absolute;right:0;top:0;font:800 50px PX;color:${i === 0 ? TE : "#eef0ee"}">${Math.round(v * q).toLocaleString("en-US")}</div><div style="position:absolute;left:0;top:70px;width:1310px;height:10px;background:#2a2d2e"><div style="width:${v / 19164 * 100 * q}%;height:100%;background:${i === 0 ? TE : "#5b6a68"}"></div></div></div>`; });
+      h += `</div>`;
+    } else if (t < 12.0) {
+      hb = "04 —— 에이전트"; const u = t - 9.8;
+      h += `<div class="a" style="left:0;right:0;text-align:center;top:120px;font-size:68px;letter-spacing:-1.2px;${bin(u / .4)}">에이전트가 <span style="color:${TE}">대신 봅니다.</span></div>`;
+      h += `<div class="pn" style="left:360px;top:300px;width:1200px;height:480px;${bin((u - .3) / .3)}"><div class="m" style="position:absolute;right:34px;top:24px;font-size:24px;color:#888">AI 에이전트</div>`;
+      h += `<div style="position:absolute;left:44px;top:110px;width:1000px;background:#121415;border:1.5px solid #2a2d2e;border-radius:16px;padding:26px 30px;font-size:46px;line-height:64px;color:#ddd;white-space:normal;min-height:140px">${typed("평소보다 7배 터진 영상을 찾았습니다", (u - 0.5), 18)}</div>`;
+      h += `<div style="position:absolute;left:28px;right:110px;bottom:28px;height:70px;border:2px solid ${TE};border-radius:10px;font-size:28px;line-height:70px;padding-left:22px;color:#777">에이전트에게 물어보세요...</div><div style="position:absolute;right:28px;bottom:28px;width:70px;height:70px;border-radius:10px;background:${TE};color:#0c3a33;text-align:center;line-height:70px;font-size:34px">↑</div></div>`;
+    } else {
+      hb = "05 —— 평소보다"; const u = t - 12.0;
+      if (u < 0.3) h += `<div class="a" style="left:945px;top:525px;width:30px;height:30px;border-radius:50%;background:${TE}"></div>`;
+      else { const p = eo((u - 0.3) / 1.0), n = Math.max(1, Math.round(7 * p));
+        s += `<circle cx="960" cy="540" r="${300 * eo((u - .3) / .4)}" fill="none" stroke="#333" stroke-width="2" opacity="${1 - clamp((u - .7) / .4)}"/>`;
+        h += `<div class="a m" style="left:0;right:0;text-align:center;top:290px;font-size:34px;color:#ccc">평소보다 터진 영상</div><div class="a" style="left:0;right:0;text-align:center;top:350px;font:800 300px PX;line-height:300px;color:${TE};text-shadow:0 0 45px rgba(94,230,204,.35);letter-spacing:-6px">${n}배</div><div class="a" style="left:0;right:0;text-align:center;top:700px;font-size:44px;font-weight:600;color:#ddd;${bin((u - 1.0) / .4)}">다음 영상, 이제 숫자로 정합니다.</div>`; }
+    }
+    $("sv").innerHTML = s; $("L").innerHTML = h; $("hb").textContent = hb;
+  }
+  window.__timelines = window.__timelines || {};
+  Promise.all(["600 40px PS", "800 40px PX"].map((f) => document.fonts.load(f, "가나다0123"))).then(() => {
+    const tl = gsap.timeline({ paused: true }); const P = { t: 0 };
+    tl.to(P, { t: D, duration: D, ease: "none", onUpdate: () => render(P.t) });
+    render(0); window.__timelines["shortcl"] = tl;
+  });
+  render(0);
+})();
+</script>
+</body>
+</html>

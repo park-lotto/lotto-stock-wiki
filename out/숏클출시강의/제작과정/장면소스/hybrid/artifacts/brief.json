@@ -1,0 +1,33 @@
+{
+  "version": "1.0",
+  "title": "이 쇼츠, 말 한 줄로 나왔습니다",
+  "hook": "결말(완성 쇼츠)을 먼저 보여주고 되감기",
+  "key_points": [
+    "완성 쇼츠 먼저",
+    "어떻게요?",
+    "말 한 줄 입력 -> 4단계 진행",
+    "말 한 줄이면 됩니다"
+  ],
+  "tone": "차분",
+  "style": "clean-professional(ink/cream/orange/teal custom)",
+  "target_platform": "generic",
+  "target_duration_seconds": 25,
+  "metadata": {
+    "anchor_medium": "screen_recording(source=finished vertical short)",
+    "source_inventory": [
+      "해외화장품_코팩_완성본.mp4 1080x1920 28s"
+    ],
+    "support_layers": [
+      "headline text",
+      "question card",
+      "typing prompt UI",
+      "progress chip",
+      "brand tag"
+    ],
+    "deliverable_mix": [
+      "16:9 hero 1920x1080"
+    ],
+    "missing_capabilities": [],
+    "fallback_policy": "no paid API; no narration"
+  }
+}

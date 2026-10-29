@@ -1,0 +1,61 @@
+{
+  "version": "1.0",
+  "project_id": "hybrid-kopack",
+  "decisions": [
+    {
+      "decision_id": "d1",
+      "stage": "idea",
+      "category": "render_runtime_selection",
+      "subject": "Composition runtime",
+      "options_considered": [
+        {
+          "option_id": "remotion",
+          "label": "remotion",
+          "score": 0.9,
+          "reason": "source video via OffthreadVideo + React typing UI in one pass"
+        },
+        {
+          "option_id": "hyperframes",
+          "label": "hyperframes",
+          "score": 0.4,
+          "reason": "no HTML/GSAP-native need here",
+          "rejected_because": "no HTML/GSAP-native need here"
+        },
+        {
+          "option_id": "ffmpeg",
+          "label": "ffmpeg",
+          "score": 0.4,
+          "reason": "cannot do typing UI",
+          "rejected_because": "cannot do typing UI"
+        }
+      ],
+      "selected": "remotion",
+      "reason": "brief pre-approved by user; both runtimes available",
+      "confidence": 0.8
+    },
+    {
+      "decision_id": "d2",
+      "stage": "idea",
+      "category": "composition_mode",
+      "subject": "Authoring mode",
+      "options_considered": [
+        {
+          "option_id": "atelier",
+          "label": "atelier",
+          "score": 0.9,
+          "reason": "typing UI + phone frame are not in stock cut.type catalog"
+        },
+        {
+          "option_id": "templated",
+          "label": "templated",
+          "score": 0.4,
+          "reason": "stock scene types do not cover it",
+          "rejected_because": "stock scene types do not cover it"
+        }
+      ],
+      "selected": "atelier",
+      "reason": "bespoke UI beats",
+      "confidence": 0.85
+    }
+  ]
+}

@@ -1,0 +1,464 @@
+{
+ "EAes9z_pGOA": {
+  "length_sec": 30,
+  "hook_first_1s": "한 여성이 문을 열고 밝은 빛이 드러나며 여성의 목소리가 '사람들은 충격을 받습니다...'라고 말하며 시작됩니다.",
+  "hook_first_3s_words": "People are shocked when they find out that it's just the two of us.",
+  "format": "원래 세로",
+  "voice": "사람 말(나레이션), 배경 음악. 자신감 있고 긍정적인 말투.",
+  "beats": [
+   {
+    "t": "0-3",
+    "what": "한 여성이 큰 문을 열고 밝은 공간으로 들어서는 장면, 다양한 사람들이 각자의 일을 하는 모습 (공장, 자전거 배달, 짐 운반 등). 화면 하단에 'Google Workspace with Gemini' 로고와 함께 'People are shocked when they find out that it's just the two of us.' 자막이 나옴.",
+    "said": "People are shocked when they find out that it's just the two of us.",
+    "role": "훅/문제 제기"
+   },
+   {
+    "t": "3-6",
+    "what": "남성이 손수레에 박스를 싣고 가는 모습, 여성이 큰 가방을 트럭에 싣는 모습, 여성이 쿨러 두 개를 운반하는 모습. 'We're a small scrappy business compared to the big guys.' 자막.",
+    "said": "We're a small scrappy business compared to the big guys.",
+    "role": "문제/상황 설명"
+   },
+   {
+    "t": "6-10",
+    "what": "남성의 얼굴 클로즈업, 두 여성이 공원에서 쿨러가 실린 카트를 미는 모습. 'In order to grow, we have to multiply our capability.' 자막.",
+    "said": "In order to grow, we have to multiply our capability.",
+    "role": "문제/목표 설정"
+   },
+   {
+    "t": "10-14",
+    "what": "여성이 노트북으로 작업하는 모습, 화면에는 Google Sheets 대시보드가 보이며 'Create a dashboard to project next month's order' 프롬프트와 'Order Recommendation' 차트가 나타남. 'Gemini and Google Workspace absolutely levels the playing field for small businesses like ours.' 자막.",
+    "said": "Gemini and Google Workspace absolutely levels the playing field for small businesses like ours.",
+    "role": "시연/증거"
+   },
+   {
+    "t": "14-16",
+    "what": "남성이 비커에 액체를 붓고 맛을 보는 모습. 'That's pretty good.' 자막.",
+    "said": "That's pretty good.",
+    "role": "전환/증거"
+   },
+   {
+    "t": "16-19",
+    "what": "남성이 와인을 따르는 모습, 여성이 아이들과 함께 천 위에서 뛰어노는 모습, 여성이 자전거를 타고 가면서 휴대폰을 확인하는 모습. 'We're able to act like we're much bigger. People think that we have a whole army of folks.' 자막.",
+    "said": "We're able to act like we're much bigger. People think that we have a whole army of folks.",
+    "role": "증거/혜택"
+   },
+   {
+    "t": "19-24",
+    "what": "여성이 휴대폰으로 'Daily Brief' 일정을 확인하는 모습, 남성이 휴대폰으로 'Gemini Notebook'에 안전 점검 질문을 하는 모습, 용광로에서 쇠를 붓는 장면. 'Payroll, visuals, marketing strategy, emails, playbooks.' 'With Gemini, it feels like we have a multi-million dollar team.' 자막.",
+    "said": "Payroll, visuals, marketing strategy, emails, playbooks. With Gemini, it feels like we have a multi-million dollar team.",
+    "role": "시연/증거"
+   },
+   {
+    "t": "24-27",
+    "what": "두 여성이 함께 웃는 모습, 여러 사람이 잔을 들고 건배하는 모습. 'With Gemini, it feels like we have a multi-million dollar team.' (대사 계속) 'We show up as a big brand.' 자막.",
+    "said": "With Gemini, it feels like we have a multi-million dollar team. We show up as a big brand.",
+    "role": "증거/혜택"
+   },
+   {
+    "t": "27-30",
+    "what": "화면에 'Google Workspace with Gemini' 로고와 'Get started' 버튼이 나타나고, 뒤로 흐릿하게 즐거워하는 사람들의 모습이 보임. 'We show up as a big brand, even though we're tiny.' 자막.",
+    "said": "We show up as a big brand, even though we're tiny.",
+    "role": "전환/CTA/요약"
+   }
+  ],
+  "is_cut_from_long": "아니요, 쇼츠 형식에 맞춰 제작된 것으로 보입니다. 빠른 전환과 핵심 메시지 전달이 숏폼에 적합합니다.",
+  "ending_last_3s": "Google Workspace with Gemini 로고와 'Get started' 버튼, 뒤로 흐릿하게 즐거워하는 사람들의 모습. 마지막 대사 'We show up as a big brand, even though we're tiny.'",
+  "long_form_pointer": "없음",
+  "captions_style": "크기: 중간에서 큰 편. 위치: 주로 하단 중앙. 색상: 흰색 텍스트에 얇은 검은색 테두리/그림자 처리로 가독성이 매우 좋음.",
+  "why_it_works": "이 쇼츠는 소규모 사업자들이 겪는 어려움에 공감하고, Gemini가 그들의 역량을 배가시켜 대기업처럼 보이게 한다는 명확한 가치 제안을 시각적으로 설득력 있게 전달합니다. 역동적인 장면 전환과 공감 가는 메시지가 시청자의 이목을 끕니다 (추정).",
+  "_meta": {
+   "ch": "googleworkspace",
+   "id": "EAes9z_pGOA",
+   "views": 4900000
+  }
+ },
+ "O0Bf2A4Z6O0": {
+  "length_sec": 50,
+  "hook_first_1s": "첫 1초에 밝게 웃는 여성이 카메라를 응시하며 활기찬 손짓을 하고, 질문을 던지는 명확한 목소리가 들립니다. 시각적, 청각적으로 즉각적인 주의를 끕니다.",
+  "hook_first_3s_words": "Can you trust what AI tells you? Let's say you ask an AI a question and the answer comes back confident, well-organized, and maybe even cites a source.",
+  "format": "원래 세로 영상으로 제작된 것으로 보이며, 인물을 클로즈업하여 시청자의 몰입을 유도합니다.",
+  "voice": "사람 말 (여성 나레이션). 설명조이지만 친근하고 자신감 있는 어조입니다.",
+  "beats": [
+   {
+    "t": "0-3",
+    "what": "여성이 직접 카메라를 보며 말하고, 상단에 질문 텍스트('Can you trust what AI tells you?')가 나타납니다.",
+    "said": "Let's say you ask an AI a question and the answer comes back confident, well-organized, and maybe even cites a source.",
+    "role": "훅/문제 제기"
+   },
+   {
+    "t": "3-6",
+    "what": "여성이 계속해서 말하며 손짓으로 설명을 이어갑니다.",
+    "said": "Can you trust it?",
+    "role": "문제 강조"
+   },
+   {
+    "t": "6-16",
+    "what": "화면이 텍스트 박스로 전환됩니다. AI의 답변처럼 보이는 텍스트가 나옵니다 ('Sydney is the capital of Australia. It's the country's largest and most well-known city, known for its iconic harbor and coastline.'). 이 정보는 틀립니다 (호주의 수도는 캔버라).",
+    "said": "There are two common ways it goes sideways, and have different causes. The first is that the model can generate something plausible that isn't true.",
+    "role": "문제 시연/증거 (AI 환각 현상 예시)"
+   },
+   {
+    "t": "16-19",
+    "what": "화면에 'Inconsistency 1 Hallucination' 텍스트가 나타납니다.",
+    "said": "This is what's called hallucination.",
+    "role": "개념 설명"
+   },
+   {
+    "t": "19-24",
+    "what": "화면이 텍스트 박스로 전환됩니다. 'That's such a special reason to want that as your first car. It's reliable, sentimental, and going to improve your day-to-day commute. And yes, the 2011 model does have bluetooth capabilities.' (2011년 모델에 블루투스 기능이 없음을 암시).",
+    "said": "Sometimes it's subtle, like a product description that lists a feature the product doesn't actually have.",
+    "role": "추가 예시/증거"
+   },
+   {
+    "t": "24-30",
+    "what": "화면에 'Inconsistency 2 Sycophancy' 텍스트가 나타납니다.",
+    "said": "The second is that the models can sometimes tell you what you seem to want to hear. This is called sycophancy.",
+    "role": "새로운 개념 설명"
+   },
+   {
+    "t": "30-38",
+    "what": "채팅 화면이 시뮬레이션됩니다. 사용자가 'I think this plan is solid, don't you?'라고 묻자 AI가 'You've shown a lot of thought about your options, it's for sure a great plan. Start with your prep work on Saturday morning, but make sure you give yourself plenty of time for each coat to dry Before starting the next one.'라고 동조하며 답변합니다.",
+    "said": "If your question signaled the answer you're hoping for, like 'I think this plan is solid, don't you?' the model might just agree.",
+    "role": "시연/증거 (AI 아첨 현상 예시)"
+   },
+   {
+    "t": "38-42",
+    "what": "AI의 답변 부분이 흐려지면서 문제점을 시각적으로 강조합니다.",
+    "said": "Hallucinations and sycophancy are both problems we work on directly at Anthropic.",
+    "role": "문제점 요약 및 회사 소개"
+   },
+   {
+    "t": "42-46",
+    "what": "여성이 다시 화면에 등장하여 설명합니다.",
+    "said": "No model is perfect, but we train each one to do better.",
+    "role": "해결책 제시/가치관 전달"
+   },
+   {
+    "t": "46-50",
+    "what": "여성이 사라지고, 'Claude' 로고와 함께 애니메이션이 나타납니다.",
+    "said": "",
+    "role": "브랜드/CTA"
+   }
+  ],
+  "is_cut_from_long": "아니오. 세로 화면 구성, 빠른 편집, 카메라를 직접 바라보는 방식 등이 숏폼 콘텐츠에 최적화되어 제작된 것으로 보입니다.",
+  "ending_last_3s": "여성이 말하는 것을 마치고 화면에서 사라진 후, 'Claude'라는 로고가 부드러운 애니메이션과 함께 나타나며 영상이 마무리됩니다.",
+  "long_form_pointer": "없음.",
+  "captions_style": "중간 크기의 흰색 글자가 화면 하단 중앙에 위치하며, 배경과 대비되어 잘 읽힙니다.",
+  "why_it_works": "AI의 신뢰성이라는 중요한 문제점을 시청자가 쉽게 이해할 수 있는 구체적인 예시와 명확한 용어(환각, 아첨)로 설명하여 몰입도를 높입니다. 정보 전달 방식이 간결하고 직접적이어서 짧은 시간 안에 핵심 메시지를 효과적으로 전달합니다. (추정)",
+  "_meta": {
+   "ch": "claude",
+   "id": "O0Bf2A4Z6O0",
+   "views": 2000000
+  }
+ },
+ "RyjROxHLi_g": {
+  "length_sec": 43,
+  "hook_first_1s": "화면: 미소 짓는 여성이 카메라를 응시하며 손짓함. 배경에 'What happens when you talk to AI?' 텍스트. 소리: 경쾌한 배경 음악과 여성의 설명하는 목소리 시작.",
+  "hook_first_3s_words": "대사: When you send a message to an AI, there's a moment where it appears to be thinking. 화면 글자: What happens when you talk to AI?",
+  "format": "원래 세로",
+  "voice": "사람 말 + 배경 음악. 부드럽고 친절하며 설명적인 여성의 목소리 톤.",
+  "beats": [
+   {
+    "t": "0-3",
+    "what": "여성이 카메라를 보며 질문을 던지고, 경쾌한 배경 음악이 흐름. 화면에 'What happens when you talk to AI?' 질문 텍스트가 떠오름.",
+    "said": "When you send a message to an AI, there's a moment where it appears to be thinking.",
+    "role": "훅/문제 제기"
+   },
+   {
+    "t": "3-5",
+    "what": "빨간색 배경에 전송 버튼 아이콘이 나타나며 전환.",
+    "said": "But what's actually happening?",
+    "role": "전환"
+   },
+   {
+    "t": "5-9",
+    "what": "사용자가 'My daughter asked me how electricity works. How do I explain it to a 5-year-old?'라고 메시지를 입력하는 시뮬레이션.",
+    "said": "AI models like Claude work by prediction. When you send a message,",
+    "role": "시연/문제 상황 제시"
+   },
+   {
+    "t": "9-15",
+    "what": "메시지 전송 후 'Responding' 문구가 나타나며 AI가 응답을 준비하는 모습.",
+    "said": "the model reads that message and draws on everything it learned during training, along with what you share in your message to write back a response a little bit at a time.",
+    "role": "설명/처리 과정"
+   },
+   {
+    "t": "15-22",
+    "what": "AI가 단어별로 'Electricity -> is -> the -> transfer -> of -> charged -> particles'를 생성하는 시각화. 최종 문장이 초록색으로 하이라이트됨.",
+    "said": "You'll see it appear word by word and each one is chosen based on everything that came before it.",
+    "role": "시연/증거"
+   },
+   {
+    "t": "22-34",
+    "what": "다시 여성이 등장하여 AI가 메시지 외 다른 컨텍스트(프롬프트, 문서, 대화 기록)도 고려한다고 설명. 관련 아이콘들이 옆에 나타남.",
+    "said": "Along with your message, the model sees other context, instructions from the app's developers, known as the system prompts, files you've uploaded, and depending on your settings, its memory of your past conversations and more.",
+    "role": "설명/추가 정보"
+   },
+   {
+    "t": "34-40",
+    "what": "여성이 카메라를 보며 AI 모델을 예측 시스템으로 이해하면 더 잘 활용할 수 있다고 결론.",
+    "said": "When you understand that an AI model is a prediction system, you're able to work with it and interpret its outputs much better.",
+    "role": "결론/가치 제안"
+   },
+   {
+    "t": "40-43",
+    "what": "하얀 배경에 Claude 로고가 나타남.",
+    "said": "",
+    "role": "CTA"
+   }
+  ],
+  "is_cut_from_long": "아님. 쇼츠에 최적화된 형식과 빠른 전환, 명확한 요약으로 보아 처음부터 쇼츠 형식으로 제작된 것으로 추정됨.",
+  "ending_last_3s": "화면: 하얀 배경에 Claude 로고(별 모양 아이콘과 'Claude' 텍스트)가 나타나며, 밝은 효과음과 함께 배경 음악이 서서히 사라짐. 말: 없음.",
+  "long_form_pointer": "없음",
+  "captions_style": "화면 중간 하단에 흰색 배경에 검은색 글자로 표시되며, 비교적 크고 읽기 쉬운 편.",
+  "why_it_works": "(추정) AI의 작동 방식을 시각적으로 쉽고 명확하게 설명하여, 복잡한 기술에 대한 대중의 궁금증을 해소하고 Claude의 이해도를 높이는 데 효과적입니다. 짧은 시간 안에 핵심 정보를 전달하여 시청자의 흥미를 유발합니다.",
+  "_meta": {
+   "ch": "claude",
+   "id": "RyjROxHLi_g",
+   "views": 2900000
+  }
+ },
+ "T_wTfrmsThg": {
+  "length_sec": 26,
+  "hook_first_1s": "첫 1초에는 나뭇가지에 앉아있는 새(실사)와 함께 부드러운 하늘 배경이 보이며, 평화로운 새 소리가 들려 시청자의 시선을 붙잡습니다.",
+  "hook_first_3s_words": "화면: (돋보기 확대 효과와 함께 새 그림, 또 다른 새 그림)\n소리: (새소리, 돋보기 확대 효과음)",
+  "format": "원래 세로 영상",
+  "voice": "음악만 (초반 새소리 포함)",
+  "beats": [
+   {
+    "t": "0-1",
+    "what": "나뭇가지에 앉은 새(실사)와 흐린 하늘",
+    "said": "",
+    "role": "훅"
+   },
+   {
+    "t": "1-3",
+    "what": "돋보기로 확대되는 효과음과 함께, 새 그림, 또 다른 새 그림이 연속해서 지나감",
+    "said": "",
+    "role": "전환"
+   },
+   {
+    "t": "3-7",
+    "what": "다양한 식물 및 새의 세밀화(Iris cuprea, Digitalis purpurea, Rosa damascena 등의 라틴어 학명 포함), 작은 나비가 날아다님",
+    "said": "Iris cuprea, Digitalis purpurea, Rosa damascena",
+    "role": "시연/확장"
+   },
+   {
+    "t": "7-9",
+    "what": "녹색 잎사귀 그림에서 지질학 지도(색상 구분 및 지명/약어 표기)로 전환됨",
+    "said": "",
+    "role": "전환"
+   },
+   {
+    "t": "9-10",
+    "what": "지질학 지도 위에 여러 개의 시추공 단면도(색상 구분된 지층)가 나타남",
+    "said": "",
+    "role": "시연/확장"
+   },
+   {
+    "t": "10-11",
+    "what": "물방울이 떠다니는 푸른 액체 화면으로 전환",
+    "said": "",
+    "role": "전환"
+   },
+   {
+    "t": "11-12",
+    "what": "검은 배경에 여러 개의 타원형 그래프(수학적 표기 포함)",
+    "said": "a_1 = 1, b_1 = 1, δ = 0\na_1 = 1, b_1 = 1, δ = π / 4\na_1 = 1, b_1 = 2, δ = π / 4",
+    "role": "시연/확장"
+   },
+   {
+    "t": "12-14",
+    "what": "설계도면 같은 이미지들, 이후 돋보기 안에서 달 표면(크레이터) 이미지로 전환",
+    "said": "",
+    "role": "전환"
+   },
+   {
+    "t": "14-17",
+    "what": "돋보기가 사라지면서 실제 낮 하늘의 달과 구름 풍경이 나타남",
+    "said": "",
+    "role": "전환"
+   },
+   {
+    "t": "17-21",
+    "what": "하늘과 구름 배경에 흰색 텍스트 'Fable 5.1'이 나타났다가, 아래에 '* Claude'와 별 모양 로고가 추가로 나타남",
+    "said": "Fable 5.1\n* Claude",
+    "role": "브랜드 소개"
+   },
+   {
+    "t": "21-26",
+    "what": "텍스트가 사라지고 다시 나뭇가지에 앉은 새(실사)가 보이며 평화로운 새소리가 들림",
+    "said": "",
+    "role": "마무리/여운"
+   }
+  ],
+  "is_cut_from_long": "아니요, 롱폼 영상에서 잘라낸 것으로 보이지 않습니다. 전체적인 구성과 템포가 쇼츠 형식에 맞춰져 있으며, 돋보기 효과를 통한 줌인/아웃과 다양한 분야의 시각 자료 전환이 하나의 완결된 메시지를 전달하려는 의도로 보입니다. 특히 마지막에 브랜드명이 등장하며 마무리되는 것이 독립적인 쇼츠의 특징입니다.",
+  "ending_last_3s": "마지막 3초 동안은 나뭇가지에 앉아있는 새의 실사 영상이 다시 등장하며, 잔잔한 새 소리가 들립니다. 그 전에 'Claude'라는 브랜드 이름과 별 모양 로고가 잠시 보였다가 사라집니다.",
+  "long_form_pointer": "없음",
+  "captions_style": "초반 식물 세밀화에 라틴어 학명은 흰색 혹은 검은색의 작은 글씨로 표시됩니다. 이후 그래프에는 검은 배경에 흰색으로 수식이 작게 표시됩니다. 마지막 'Fable 5.1'과 '* Claude'는 하늘색 배경에 흰색, 크고 중앙에 위치하며 가독성이 좋습니다.",
+  "why_it_works": "추정) 돋보기를 통해 마이크로한 세계부터 매크로한 세계까지 넘나드는 시각적 전환이 시청자의 호기심을 자극합니다. 다양한 분야(생물, 지리, 물리, 공학, 천문학)의 자료들을 연속적으로 보여주면서 'Claude'라는 AI가 이 모든 지식을 연결하고 탐구하는 능력을 가지고 있다는 인상을 은유적으로 전달하여 깊은 생각과 궁금증을 유발합니다.",
+  "_meta": {
+   "ch": "claude",
+   "id": "T_wTfrmsThg",
+   "views": 3400000
+  }
+ },
+ "V12aLcjX23Q": {
+  "length_sec": 54,
+  "hook_first_1s": "여성 출연자가 카메라를 응시하며 의아한 표정을 짓고, 'vv nat does'라는 글자가 빠르게 나타났다가 사라지며 질문의 일부를 보여준다.",
+  "hook_first_3s_words": "So, what does AI know about you? / What does AI know about me?",
+  "format": "원래 세로형 영상으로 제작되었으며, 화면 중앙에 인물과 설명이 나오고 자막이 아래에 위치한다. 중간중간 애니메이션 설명 화면이 삽입된다.",
+  "voice": "젊은 여성의 친절하고 차분한 설명조의 목소리(사람 말)가 주를 이룬다. 배경에 잔잔한 음악이 깔린다.",
+  "beats": [
+   {
+    "t": "0-3",
+    "what": "여성 출연자가 카메라를 보며 의아한 표정. 'What does AI know about me?'라는 질문 자막이 화면에 뜬다.",
+    "said": "So, what does AI know about you?",
+    "role": "훅/문제"
+   },
+   {
+    "t": "3-9",
+    "what": "여성 출연자가 손 제스처를 사용하며 설명. 배경은 실내 사무실 같은 공간.",
+    "said": "Every day, people type things into AI tools, they wouldn't broadcast publicly at work. Medical questions, money worries.",
+    "role": "문제/상황 설명"
+   },
+   {
+    "t": "9-15",
+    "what": "여성 출연자가 계속 설명. 화면이 클로즈업됨.",
+    "said": "You should be able to see and control why your AI provider retains about you. You can think of them as four different uses.",
+    "role": "해결책 제시/전환"
+   },
+   {
+    "t": "15-22",
+    "what": "애니메이션 화면으로 전환. 챗봇 대화창을 보여주며 'What shall we think through? How can I help you today?' 글자와 'The conversation' 자막이 뜬다.",
+    "said": "The first use is just for this conversation. It only knows what you choose to put in front of it.",
+    "role": "설명/개념"
+   },
+   {
+    "t": "22-29",
+    "what": "애니메이션 화면. 'your account'와 'product model'이 연결되는 그림. 'Product memory' 자막.",
+    "said": "The second use is product memory. Many AI tools can now save useful details from one chat to the next.",
+    "role": "설명/개념"
+   },
+   {
+    "t": "29-31",
+    "what": "애니메이션 화면. 'The provider' 자막.",
+    "said": "The third use is the provider's own systems.",
+    "role": "설명/개념"
+   },
+   {
+    "t": "31-36",
+    "what": "여성 출연자가 다시 화면에 나타나 설명. 클로즈업 상태.",
+    "said": "Close the chat and it's kept on the provider's timeline under the provider's policy.",
+    "role": "설명"
+   },
+   {
+    "t": "36-45",
+    "what": "애니메이션 화면. 'Training future models' 자막. 대화 내용이 물결 모양으로 표시되다가 일반화된 녹색 블록으로 변하는 모습.",
+    "said": "The fourth use is training future models. Your conversations aren't stored in the model to be read back to other users. Where providers train future models on conversations, many let you opt out.",
+    "role": "설명/개념"
+   },
+   {
+    "t": "45-50",
+    "what": "여성 출연자가 다시 화면에 나타나 결론을 말한다. 전체적인 실내 배경이 보인다.",
+    "said": "A few minutes, plus a little thought about what you share, gets you most of the way to using these tools comfortably.",
+    "role": "결론/CTA"
+   },
+   {
+    "t": "50-54",
+    "what": "클로드(Claude)의 빨간색 별 모양 로고와 'Claude'라는 브랜드 이름이 화면 중앙에 나타난다.",
+    "said": "",
+    "role": "CTA"
+   }
+  ],
+  "is_cut_from_long": "아니오. 짧은 설명과 빠른 화면 전환, 세로형 포맷 등이 쇼츠에 최적화된 형태로 제작된 것으로 보인다.",
+  "ending_last_3s": "클로드(Claude)의 빨간색 별 모양 로고와 'Claude'라는 브랜드 이름이 중앙에 나타난다.",
+  "long_form_pointer": "없음",
+  "captions_style": "흰색 배경에 검은색 텍스트 자막이 화면 하단 중앙에 위치하며, 글자 크기는 비교적 크고 가독성이 좋다.",
+  "why_it_works": "인공지능 사용 시 개인 정보 보호에 대한 시청자들의 보편적인 궁금증을 명확하고 간결하게 해소해 주며, 애니메이션과 사람의 설명이 조화롭게 구성되어 이해하기 쉽다. (추정)",
+  "_meta": {
+   "ch": "claude",
+   "id": "V12aLcjX23Q",
+   "views": 1900000
+  }
+ },
+ "xKYHvD7XKdU": {
+  "length_sec": 59,
+  "hook_first_1s": "웅장한 배경 음악과 함께 낡고 번잡한 산업 도시 전경(상단) 및 약간 개선된 버전(하단)이 동시에 나타나며 시선을 끈다.",
+  "hook_first_3s_words": "You worked too hard to settle for scraps.",
+  "format": "세로형 영상으로, 상단과 하단에 두 개의 다른 시퀀스를 나란히 비교하여 보여주는 분할 화면 방식이다.",
+  "voice": "남성 나레이션(차분하고 권위 있는 말투)과 시네마틱한 배경 음악이 사용되었다. 나레이션은 초반에는 비극적인 현실을 묘사하다가 후반으로 갈수록 희망적인 어조로 바뀐다.",
+  "beats": [
+   {
+    "t": "0-3",
+    "what": "상단은 낡고 복잡한 산업 도시의 전경과 이동하는 사람들. 하단은 유사하지만 더 선명하고 디테일이 살아있는 모습(AI 생성 영상).",
+    "said": "You worked too hard to settle for scraps.",
+    "role": "훅/문제"
+   },
+   {
+    "t": "3-8",
+    "what": "상단은 스파크가 튀는 고된 작업 현장과 낡은 운송 수단. 하단은 개선된 모습.",
+    "said": "You built a life. Earned your place.",
+    "role": "문제"
+   },
+   {
+    "t": "8-16",
+    "what": "상단은 좁은 공간에서 기계를 수리하는 근로자들과 복잡한 열차 내부. 하단은 개선된, 쾌적한 모습.",
+    "said": "Why should your journey be punishment? Why should you suffer in transit to your dreams?",
+    "role": "문제/질문"
+   },
+   {
+    "t": "16-21",
+    "what": "상단은 낡은 창문 너머로 우주선을 보는 사람들. 하단은 깨끗한 창문 밖으로 지구와 세련된 'LUMA' 우주선이 보이는 모습.",
+    "said": "(배경 음악 고조)",
+    "role": "전환/시연"
+   },
+   {
+    "t": "21-29",
+    "what": "상단은 낡은 방에서 쭈그려 앉거나 어색하게 인사하는 사람들. 하단은 현대적인 함교와 세련된 복도에서 환영받는 모습.",
+    "said": "(배경 음악)",
+    "role": "시연"
+   },
+   {
+    "t": "29-32",
+    "what": "상단은 낡은 방에서 멍하니 서 있는 여성. 하단은 미니 정원이 있는 쾌적한 공간에 서 있는 여성.",
+    "said": "You deserve a life...",
+    "role": "전환/시연"
+   },
+   {
+    "t": "32-43",
+    "what": "상단은 열악한 환경에서 휴식하거나 대화하는 모습. 하단은 우주선 안의 아늑한 공간, 고급스러운 음료를 즐기거나 즐겁게 교류하는 모습.",
+    "said": "(배경 음악)",
+    "role": "시연"
+   },
+   {
+    "t": "43-45",
+    "what": "상단은 낡은 회의실 테이블. 하단은 'LUMA' 로고가 있는 현대적인 공간에서 노트북으로 작업하는 남성.",
+    "said": "Luma.",
+    "role": "전환/제품명 공개"
+   },
+   {
+    "t": "45-52",
+    "what": "화면에 'LUMA. Travel between worlds in style.' 문구가 나타나고, 고급스러운 침실 창밖으로 별이 빛나는 우주가 보인다.",
+    "said": "Travel between worlds in style.",
+    "role": "CTA"
+   },
+   {
+    "t": "52-59",
+    "what": "침실 창밖 우주 풍경이 사라지고, 어두워지며 침대 위 창문이 닫히고, 최종적으로 검은 화면에 'MADE WITH Luma lumalabs.ai/app' 문구가 나타난다.",
+    "said": "(배경 음악 페이드 아웃)",
+    "role": "전환/마무리"
+   }
+  ],
+  "is_cut_from_long": "롱폼에서 잘라낸 것으로 보이지 않는다. 현실과 이상적인 미래를 대조하는 분할 화면 형식은 숏폼 콘텐츠에 최적화된 구성으로, AI 기술 시연 영상에서 흔히 사용되는 방식이다.",
+  "ending_last_3s": "검은 화면에 'MADE WITH Luma'와 'lumalabs.ai/app' 문구가 나타난다.",
+  "long_form_pointer": "lumalabs.ai/app",
+  "captions_style": "나레이션 자막은 하단에 검은색 바 위에 흰색 글씨로 비교적 작게 표시된다. 마지막 브랜드 슬로건('LUMA. Travel between worlds in style.')은 영상 중앙에 크게 흰색으로 나타난다.",
+  "why_it_works": "이 쇼츠는 AI 기술을 활용하여 '열악한 현실'과 '이상적인 미래'를 극명하게 시각적으로 대조함으로써 강력한 메시지를 전달한다. 짧은 시간 안에 드라마틱한 변화를 보여주고 시청자에게 '더 나은 삶을 누릴 자격이 있다'는 공감을 불러일으켜 몰입도를 높인다 (추정).",
+  "_meta": {
+   "ch": "LumaLabsAI",
+   "id": "xKYHvD7XKdU",
+   "views": 2500000
+  }
+ }
+}

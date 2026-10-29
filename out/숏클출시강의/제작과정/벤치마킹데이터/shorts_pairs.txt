@@ -1,0 +1,59 @@
+title/length pairs: 28
+  ('claude', 'How an Anthropic engineer uses Claude Docs', 'S', 'NA', '', 'L', '83', '')
+  ('claude', 'Meet Claude Duet', 'S', '75', '20261023', 'L', '99', '20261021')
+  ('claude', 'Introducing Claude Dashboards and Claude Motion', 'S', '82', '20261019', 'L', '82', '20261008')
+  ('claude', 'Coding on the go with Claude Code', 'S', '73', '20261014', 'L', '243', '')
+  ('claude', "What's new in Claude: September recap", 'S', '157', '20261008', 'L', '158', '')
+  ('claude', 'Build an App With Claude Design', 'S', '102', '20261002', 'L', '103', '')
+  ('claude', 'Introducing Claude Sonnet 5.5', 'S', '13', '20260928', 'L', '14', '20260928')
+  ('claude', 'Meet Claude Opus 5.5', 'S', '20', '20260922', 'L', '20', '')
+  ('claude', 'Claude Cowork and chat are now one Claude', 'S', 'NA', '', 'L', '72', '')
+  ('claude', 'What does AI actually know about you?', 'S', '55', '20260814', 'L', '291', '20260813')
+  ('claude', 'Can you trust what AI tells you?', 'S', '50', '20260811', 'L', '304', '20260811')
+  ('claude', 'What happens when you talk to AI?', 'S', '43', '20260808', 'L', '288', '20260805')
+  ('claude', 'Making New York City miniature with Claude', 'S', 'NA', '', 'L', '80', '20260708')
+  ('claude', 'Regenerative beekeeping with Claude', 'S', 'NA', '', 'L', '91', '20260707')
+  ('claude', 'There’s hope in hard questions', 'S', 'NA', '', 'L', '91', '')
+  ('claude', 'Photographing the stars with Claude', 'S', 'NA', '', 'L', '79', '20260706')
+  ('anthropic-ai', 'Meet Claude Fable 5.1', 'S', '85', '20260901', 'L', '86', '')
+  ('anthropic-ai', 'Claude streamlines task management across your fav', 'S', '48', '20250617', 'L', '48', '20251016')
+  ('Base44', 'AI + Base44 Build in 5 Minutes', 'S', '51', '20260226', 'L', '51', '20260308')
+  ('LumaLabsAI', 'How to AI Life Timelapse 🕰️Morph between any photo', 'S', '32', '20240827', 'L', '32', '20260409')
+  ('googleworkspace', 'How Small Teams Build Big Brands with Gemini in Wo', 'S', '30', '20261012', 'L', '31', '20261012')
+  ('googleworkspace', 'Create HD videos at no cost with Gemini in Google ', 'S', '67', '20260923', 'L', '67', '20260923')
+  ('googleworkspace', 'Create interactive mini-apps with Sheets canvas', 'S', '75', '20260910', 'L', '75', '20260903')
+  ('googleworkspace', 'How did you do? 🔮🗂️  #Shorts', 'S', '16', '20260828', 'L', '16', '20261012')
+  ('googleworkspace', 'How did you do? 🔮🗂️  #Shorts', 'S', '16', '20260828', 'L', '16', '20261012')
+  ('googleworkspace', 'How did you do? 🔮🗂️  #Shorts', 'S', '16', '20260828', 'L', '16', '20261012')
+  ('framer', 'No Code Websites made in Framer Pt.2 #framer #noco', 'S', '36', '20241029', 'L', '36', '20260722')
+  ('framer', 'How to add 3D animations to your website without c', 'S', '27', '20241028', 'L', '27', '20260909')
+shorts with desc: 72 with youtube pointer: 1
+   framer Create a rotating video grid in Framer without cod | youtu.be/Nud4JCiOXbg ; [kw:watch] | full 10 minute tutorial → https://youtu.be/Nud4JCiOXbg  Topics covered: scroll transform effects, rotating animations, responsive design  🌞 Start for 
+LAUNCH claude 20261021 99 Introducing Claude Duet -> shorts -3..+7d: 2 [('20261023', '75', 'Meet Claude Duet'), ('20261019', '82', 'Introducing Claude Dashboards and Claude')]
+LAUNCH claude 20261008 82 Introducing Claude Dashboards and Claude Motion -> shorts -3..+7d: 3 [('20261014', '73', 'Coding on the go with Claude Code'), ('20261008', '157', "What's new in Claude: September recap"), ('20261005', '86', 'How to use Opus 5.5 and Sonnet 5.5')]
+LAUNCH claude 20260928 14 Introducing Claude Sonnet 5.5 -> shorts -3..+7d: 4 [('20261005', '86', 'How to use Opus 5.5 and Sonnet 5.5'), ('20261002', '102', 'Build an App With Claude Design'), ('20261001', '105', 'Make presentations with Claude Slides'), ('20260928', '13', 'Introducing Claude Sonnet 5.5')]
+LAUNCH claude 20260916 95 Meet Claude Slides, Claude Design and Claude Docs -> shorts -3..+7d: 1 [('20260922', '20', 'Meet Claude Opus 5.5')]
+LAUNCH anthropic-ai 20260112 69 Introducing Cowork: Claude Code for the rest of yo -> shorts -3..+7d: 0 []
+LAUNCH Base44 20260404 60 Base44 Superagents - Your Personal AI Agent -> shorts -3..+7d: 0 []
+LAUNCH Base44 20260203 31 Introducing Base44’s Big Game Ad “It’s App to You” -> shorts -3..+7d: 0 []
+LAUNCH Base44 20260129 56 Introducing Base44’s Big Game Full Ad “It’s App to -> shorts -3..+7d: 0 []
+LAUNCH Base44 20260129 16 Introducing Base44’s Big Game Ad Teaser “It’s App  -> shorts -3..+7d: 0 []
+LAUNCH ManusAI 20261001 59 Introducing Manus Game Developer: Build a Game, Th -> shorts -3..+7d: 0 []
+LAUNCH ManusAI 20261001 53 Introducing Manus Video Editor -> shorts -3..+7d: 0 []
+LAUNCH ManusAI 20260928 167 Introducing Manus 2.0 -> shorts -3..+7d: 0 []
+LAUNCH ManusAI 20260430 48 Introducing Cloud Computer for Manus | Build Bots, -> shorts -3..+7d: 0 []
+LAUNCH ManusAI 20260316 57 Introducing My Computer: When Manus Meets Your Des -> shorts -3..+7d: 0 []
+LAUNCH ManusAI 20251222 61 Introducing Manus Design View -> shorts -3..+7d: 0 []
+LAUNCH ManusAI 20251118 60 Introducing Manus Browser Operator : An AI Agent t -> shorts -3..+7d: 0 []
+LAUNCH ManusAI 20251016 25 Introducing Manus 1.5 -> shorts -3..+7d: 0 []
+LAUNCH ManusAI 20250731 159 Introducing Wide Research -> shorts -3..+7d: 0 []
+LAUNCH ManusAI 20250717 42 Introducing Data Visualization for Manus -> shorts -3..+7d: 0 []
+LAUNCH ManusAI 20250612 88 Introducing Manus Playbook -> shorts -3..+7d: 0 []
+LAUNCH ManusAI 20250603 77 Introducing Manus video generation -> shorts -3..+7d: 0 []
+LAUNCH LumaLabsAI 20260305 69 Introducing Luma Agents -> shorts -3..+7d: 1 [('20260307', '60', 'Travel between worlds made with Luma Age')]
+LAUNCH LumaLabsAI 20250604 64 Luma AI - Introducing Modify Video -> shorts -3..+7d: 0 []
+LAUNCH framer 20260922 30 Introducing Skills: Teach the Framer Agent to desi -> shorts -3..+7d: 0 []
+LAUNCH framer 20260909 21 Framer Design Agents — Cannonball -> shorts -3..+7d: 0 []
+LAUNCH framer 20260722 36 Framer Agents: Design with AI, Keep Control. -> shorts -3..+7d: 0 []
+LAUNCH framer 20260616 76 Framer 3.0 with Agents, Branching, and a new Commu -> shorts -3..+7d: 0 []
+LAUNCH framer 20260616 2401 Framer Event — Introducing Agents, Branching, and  -> shorts -3..+7d: 0 []

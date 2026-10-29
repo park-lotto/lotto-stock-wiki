@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+<script src="brand/gsap.min.js"></script>
+<style>
+@font-face { font-family: "NP"; src: url("brand/NanumPenScript.ttf"); }
+@font-face { font-family: "GG"; src: url("brand/Gaegu-Bold.ttf"); }
+@font-face { font-family: "PB"; src: url("brand/Pretendard-ExtraBold.otf"); font-weight: 800; }
+html, body { margin: 0; background: #FBF8F1; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #FBF8F1; }
+#overlay { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; z-index: 900; pointer-events: none;
+  background: url("brand/paper.png"), radial-gradient(ellipse at center, rgba(0,0,0,0) 62%, rgba(60,45,20,0.09) 100%); background-size: 512px 512px, 100% 100%; opacity: 0.55; }
+#pen { position: absolute; left: 0; top: 0; z-index: 1000; opacity: 0; overflow: visible; }
+</style></head><body>
+<div id="stage" data-composition-id="P1" data-start="0" data-duration="12" data-width="1920" data-height="1080">
+  <div id="overlay"></div>
+  <svg id="pen" width="90" height="90" viewBox="0 0 90 90"><g transform="rotate(-38 0 0)"><path d="M0 0 L14 -9 L84 -9 L84 9 L14 9 Z" fill="#1F1D1A"/><path d="M0 0 L14 -9 L14 9 Z" fill="#f2e6cf" stroke="#1F1D1A" stroke-width="2"/><path d="M0 0 L5 -3 L5 3 Z" fill="#1F1D1A"/><rect x="60" y="-9" width="6" height="18" fill="#F6A93B"/></g></svg>
+</div>
+<script src="brand/ink.js"></script><script src="brand/hero.js"></script>
+<script>
+document.fonts.load('40px "NP"').then(()=>document.fonts.load('40px "GG"')).then(()=>document.fonts.load('800 40px "PB"')).then(()=>document.fonts.ready).then(()=>{
+  const ink = new INK.Ink(document.getElementById("stage"), 12);
+  window.__ink = ink;
+  const { Ink, ell, P, rect, line, ORANGE } = INK;
+const I = INK.ID, R = (x, y, w, h, r) => rect(I, x, y, w, h, r), Pp = (a) => P(I, a), E = (cx, cy, rx, ry, o) => ell(I, cx, cy, rx, ry, o);
+// ===== 컷 A: 밤, 침대에서 폰 보는 주인공 (0~3.8) =====
+const A = ink.cut(0, 3.8);
+A.path(R(120, 170, 310, 380, 14), { s: 0, dur: 0.6, tint: "night" });          // 창
+A.path(Pp([["M", 275, 170], ["L", 275, 550]]), { s: 0.5, dur: 0.3 }); A.path(Pp([["M", 120, 360], ["L", 430, 360]]), { s: 0.6, dur: 0.3 });
+A.path(Pp([["M", 330, 225], ["C", 270, 232, 245, 300, 300, 345], ["C", 235, 352, 205, 285, 235, 245], ["C", 255, 225, 300, 215, 330, 225], ["Z"]]), { s: 0.8, dur: 0.5, tint: "sun", tintOp: 0.6 }); // 달
+A.path(Pp([["M", 180, 230], ["L", 180, 256]]), { s: 1.2, dur: 0.15, w: 5 }); A.path(Pp([["M", 167, 243], ["L", 193, 243]]), { s: 1.25, dur: 0.15, w: 5 });
+A.path(R(1500, 640, 290, 370, 10), { s: 0.4, dur: 0.6, tint: "beige" }); A.path(Pp([["M", 1500, 800], ["L", 1790, 800]]), { s: 0.9, dur: 0.3 });  // 협탁
+A.path(Pp([["M", 1560, 440], ["L", 1730, 440], ["L", 1690, 560], ["L", 1600, 560], ["Z"]]), { s: 0.8, dur: 0.5, tint: "beige" }); // 스탠드
+A.path(Pp([["M", 1645, 560], ["L", 1645, 640]]), { s: 1.1, dur: 0.2 });
+A.path(R(470, 150, 980, 320, 40), { s: 0.2, dur: 0.8, tint: "beige" });          // 침대 머리판
+A.mask(R(690, 360, 540, 215, 70), 0.9); A.path(R(690, 360, 540, 215, 70), { s: 0.9, dur: 0.6, tint: "sky", tintOp: 0.25 }); // 베개
+A.path(Pp([["M", 926, 560], ["L", 926, 640], ["C", 800, 650, 720, 690, 690, 760]]), { s: 1.2, dur: 0.4, w: 5 });  // 어깨
+A.path(Pp([["M", 994, 560], ["L", 994, 640], ["C", 1120, 650, 1200, 690, 1230, 760]]), { s: 1.3, dur: 0.4, w: 5 });
+HERO.face(A, 960, 470, 100, { expr: "neutral", look: 0, s: 1.3, sp: 0.55 });
+const blk = Pp([["M", 340, 720], ["C", 340, 630, 600, 610, 800, 650], ["S", 1100, 615, 1300, 650], ["S", 1580, 650, 1580, 720], ["L", 1580, 1010], ["L", 340, 1010], ["Z"]]);
+A.mask(blk, 2.0); A.path(blk, { s: 2.0, dur: 0.8, tint: "sky" });                 // 이불
+A.path(Pp([["M", 520, 770], ["Q", 570, 880, 520, 980]]), { s: 2.6, dur: 0.3, w: 5 }); A.path(Pp([["M", 1380, 770], ["Q", 1330, 880, 1380, 980]]), { s: 2.7, dur: 0.3, w: 5 });
+A.mask(R(870, 610, 180, 270, 26), 2.5); A.path(R(870, 610, 180, 270, 26), { s: 2.5, dur: 0.5, tint: "grey", tintOp: 0.3 });  // 폰(뒷면)
+A.path(E(925, 660, 18, 18, { n: 24 }), { s: 2.9, dur: 0.2, w: 5 });
+A.path(E(855, 820, 52, 40, { ph: 1 }), { s: 3.0, dur: 0.3, tint: "skin" }); A.path(E(1065, 820, 52, 40, { ph: 2 }), { s: 3.1, dur: 0.3, tint: "skin" });
+A.path(Pp([["M", 820, 600], ["Q", 780, 560, 800, 520]]), { s: 3.2, dur: 0.3, w: 4 }); A.path(Pp([["M", 1100, 600], ["Q", 1140, 560, 1120, 520]]), { s: 3.25, dur: 0.3, w: 4 }); // 폰 빛
+
+// ===== 컷 B: 폰 화면 + 눈이 반짝 (3.8~7.0) =====
+const B = ink.cut(3.8, 7.0);
+B.path(R(300, 130, 480, 830, 56), { s: 0, dur: 0.8, tint: "grey", tintOp: 0.25 });
+B.path(R(328, 178, 424, 734, 34), { s: 0.5, dur: 0.7, fill: "none" });
+B.path(Pp([["M", 485, 152], ["L", 595, 152]]), { s: 0.9, dur: 0.15, w: 5 });
+B.text("쇼츠로\n돈 번다", { x: 372, y: 330, font: "PB", weight: 800, size: 86, s: 1.0, gap: 0.07 });
+B.path(Pp([["M", 640, 745], ["C", 600, 700, 560, 760, 640, 810], ["C", 720, 760, 680, 700, 640, 745], ["Z"]]), { s: 1.9, dur: 0.4, tint: "pink", tintOp: 0.5, w: 5 });
+B.path(E(390, 800, 28, 28, { n: 24 }), { s: 1.6, dur: 0.25, w: 5 }); B.path(Pp([["M", 440, 790], ["L", 560, 790]]), { s: 1.7, dur: 0.2, w: 5 }); B.path(Pp([["M", 440, 818], ["L", 520, 818]]), { s: 1.75, dur: 0.2, w: 5 });
+HERO.torso(B, 1250, 450, 170, { h: 4.2, s: 0.2, sp: 0.8 });
+HERO.face(B, 1250, 450, 170, { expr: "sparkle", look: -0.3, s: 0.3, sp: 0.75 });
+
+// ===== 컷 C: 책상, 노트북 강의 결제 + 손글씨 (7.0~12.0) =====
+const C = ink.cut(7.0, 12.0);
+C.path(R(130, 110, 880, 580, 26), { s: 0, dur: 0.7, tint: "grey", tintOp: 0.25 });
+C.path(R(160, 140, 820, 520, 8), { s: 0.4, dur: 0.6 });
+C.path(Pp([["M", 60, 700], ["L", 1080, 700], ["L", 1020, 760], ["L", 120, 760], ["Z"]]), { s: 0.6, dur: 0.6, tint: "beige" });
+C.path(Pp([["M", 0, 790], ["L", 1920, 790]]), { s: 0.8, dur: 0.7 });
+C.path(Pp([["M", 160, 210], ["L", 980, 210]]), { s: 1.0, dur: 0.3, w: 5 });
+[0, 1, 2].forEach((k) => C.path(E(195 + k * 36, 175, 9, 9, { n: 16 }), { s: 1.0 + k * 0.05, dur: 0.12, w: 4 }));
+C.text("강의 결제", { x: 200, y: 232, font: "GG", size: 66, s: 1.1, gap: 0.06 });
+C.path(R(200, 340, 300, 200, 12), { s: 1.3, dur: 0.4, tint: "sky" }); C.path(Pp([["M", 320, 400], ["L", 320, 480], ["L", 390, 440], ["Z"]]), { s: 1.6, dur: 0.3, w: 5 });
+[360, 420, 480].forEach((y, i) => C.path(Pp([["M", 560, y], ["L", 940 - i * 80, y]]), { s: 1.6 + i * 0.1, dur: 0.25, w: 5 }));
+C.path(R(580, 548, 340, 80, 40), { s: 2.0, dur: 0.45, tint: "pink", tintOp: 0.45 });
+C.text("결제하기", { x: 650, y: 553, font: "GG", size: 60, s: 2.3, gap: 0.06 });
+C.path(Pp([["M", 840, 590], ["L", 840, 676], ["L", 862, 654], ["L", 884, 696], ["L", 900, 688], ["L", 878, 648], ["L", 908, 646], ["Z"]]), { s: 2.8, dur: 0.4, w: 5, tint: "beige" }); // 클릭 커서
+HERO.torso(C, 1470, 410, 125, { h: 3.05, s: 0.2, sp: 0.8 });
+HERO.face(C, 1470, 410, 125, { expr: "neutral", look: -1, s: 0.3, sp: 0.8 });
+const T = C.text("다 해 보셨을 텐데, 결과는요?", { x: 190, y: 830, font: "NP", size: 140, s: 2.6, gap: 0.05, rot: -1.5 });
+C.circle(C.box(T, 12, 16), { s: 3.6, dur: 0.6, px: 30, py: 10 });
+
+  ink.start("P1");
+});
+</script></body></html>

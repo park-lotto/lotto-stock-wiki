@@ -1,0 +1,47 @@
+{
+  "version": "1.0",
+  "cuts": [
+    {
+      "id": "s1",
+      "source": "hyperframes/index.html#s1",
+      "in_seconds": 0,
+      "out_seconds": 4
+    },
+    {
+      "id": "s2",
+      "source": "hyperframes/index.html#s2",
+      "in_seconds": 4,
+      "out_seconds": 8
+    },
+    {
+      "id": "s3",
+      "source": "hyperframes/index.html#s3",
+      "in_seconds": 8,
+      "out_seconds": 17.5
+    },
+    {
+      "id": "s4",
+      "source": "hyperframes/index.html#s4",
+      "in_seconds": 17.5,
+      "out_seconds": 22
+    }
+  ],
+  "render_runtime": "hyperframes",
+  "renderer_family": "animation-first",
+  "composition_mode": "atelier",
+  "bespoke": {
+    "entry": "hyperframes/index.html",
+    "composition_id": "main",
+    "art_direction": "검정/크림/주황+청록, Pretendard, power3.out"
+  },
+  "metadata": {
+    "hold_windows": [
+      "s1 1.5s",
+      "s2 2.2s",
+      "s3 마지막 체크 후 1.3s",
+      "s4 마지막 1.9s"
+    ],
+    "transition_map": "opacity fade 0.5s",
+    "stagger_rules": "단어 0.55s, 체크 1.6s 간격"
+  }
+}

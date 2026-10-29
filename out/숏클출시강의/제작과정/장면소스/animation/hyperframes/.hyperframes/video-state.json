@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "historyId": "152e2e69-0c1a-4adf-93ce-fcba0a547c83",
+  "currentRevision": "34a2225d-2328-48fd-8ec2-3fcd312bc4af",
+  "pendingChanges": false,
+  "files": {
+    "hyperframes.json": {
+      "hash": "ea5e0c6bf5226706356144c30f8edcfceeddafa327894a1563fb2bdbf2202767",
+      "content": "C:\\Users\\TheRose\\.cache\\hyperframes\\history\\152e2e69-0c1a-4adf-93ce-fcba0a547c83\\blobs\\ea\\ea5e0c6bf5226706356144c30f8edcfceeddafa327894a1563fb2bdbf2202767"
+    },
+    "index.html": {
+      "hash": "f0e2972a3c4477377fe950d605e3c1b453ba9429e7ab9f726f2cabac44a73554",
+      "content": "C:\\Users\\TheRose\\.cache\\hyperframes\\history\\152e2e69-0c1a-4adf-93ce-fcba0a547c83\\blobs\\f0\\f0e2972a3c4477377fe950d605e3c1b453ba9429e7ab9f726f2cabac44a73554"
+    },
+    "fonts/Pretendard-ExtraBold.otf": {
+      "hash": "c35fe941b7568d52a96010561540e47f9d3948dfde66ba25bc1908233e0a40cd",
+      "content": "C:\\Users\\TheRose\\.cache\\hyperframes\\history\\152e2e69-0c1a-4adf-93ce-fcba0a547c83\\blobs\\c3\\c35fe941b7568d52a96010561540e47f9d3948dfde66ba25bc1908233e0a40cd"
+    },
+    "fonts/Pretendard-SemiBold.otf": {
+      "hash": "c89bc43027dc7cde5726e96223376f8eec09302b2fc1f8147fd5b57cfc376118",
+      "content": "C:\\Users\\TheRose\\.cache\\hyperframes\\history\\152e2e69-0c1a-4adf-93ce-fcba0a547c83\\blobs\\c8\\c89bc43027dc7cde5726e96223376f8eec09302b2fc1f8147fd5b57cfc376118"
+    }
+  },
+  "revisions": {
+    "34a2225d-2328-48fd-8ec2-3fcd312bc4af": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1793233666514,
+      "endedAt": 1793233666518,
+      "files": {
+        "index.html": {
+          "before": "C:\\Users\\TheRose\\.cache\\hyperframes\\history\\152e2e69-0c1a-4adf-93ce-fcba0a547c83\\blobs\\3f\\3f67628cbea3b5979f32ed4a6ff46826d09da3ba04cb9947698c794e7fbf5075",
+          "after": "C:\\Users\\TheRose\\.cache\\hyperframes\\history\\152e2e69-0c1a-4adf-93ce-fcba0a547c83\\blobs\\f0\\f0e2972a3c4477377fe950d605e3c1b453ba9429e7ab9f726f2cabac44a73554"
+        }
+      }
+    }
+  },
+  "checks": {
+    "latest": {
+      "revision": "34a2225d-2328-48fd-8ec2-3fcd312bc4af",
+      "id": "82186cba-71ab-48e2-a760-0e4bbf8d6430"
+    },
+    "revisions": {
+      "34a2225d-2328-48fd-8ec2-3fcd312bc4af": [
+        {
+          "id": "af4e0ecc-84c1-4159-85f2-0c3e0ef28210",
+          "scope": "project",
+          "report": "C:\\Users\\TheRose\\숏템자료\\모션그래픽엔진\\work\\2026-10-29_openmontage\\animation\\hyperframes\\.hyperframes\\artifacts\\checks\\af4e0ecc-84c1-4159-85f2-0c3e0ef28210.json",
+          "metadata": {
+            "ok": true,
+            "browserSkipped": false,
+            "options": {
+              "samples": 9,
+              "atTransitions": false,
+              "maxIssues": 80,
+              "collapseStatic": true,
+              "tolerance": 2,
+              "timeout": 10000,
+              "contrast": true,
+              "strict": false,
+              "snapshots": false,
+              "browserGpuMode": "auto"
+            }
+          },
+          "createdAt": 1793233672785,
+          "contentHash": "ee1746a7d63769e474e60b10967bbfda674be1cc3efcd0a700909c920464c5b5",
+          "revision": "34a2225d-2328-48fd-8ec2-3fcd312bc4af",
+          "inputFingerprint": "f200837cc54548057dd3633882b3179f71c88699fa0d4195f161614157ec852a",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        },
+        {
+          "id": "82186cba-71ab-48e2-a760-0e4bbf8d6430",
+          "scope": "project",
+          "report": "C:\\Users\\TheRose\\숏템자료\\모션그래픽엔진\\work\\2026-10-29_openmontage\\animation\\hyperframes\\.hyperframes\\artifacts\\checks\\82186cba-71ab-48e2-a760-0e4bbf8d6430.json",
+          "metadata": {
+            "ok": true,
+            "browserSkipped": false,
+            "options": {
+              "samples": 9,
+              "atTransitions": false,
+              "maxIssues": 80,
+              "collapseStatic": true,
+              "tolerance": 2,
+              "timeout": 10000,
+              "contrast": true,
+              "strict": false,
+              "snapshots": false,
+              "browserGpuMode": "auto"
+            }
+          },
+          "createdAt": 1793233774391,
+          "contentHash": "ee1746a7d63769e474e60b10967bbfda674be1cc3efcd0a700909c920464c5b5",
+          "revision": "34a2225d-2328-48fd-8ec2-3fcd312bc4af",
+          "inputFingerprint": "f200837cc54548057dd3633882b3179f71c88699fa0d4195f161614157ec852a",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        }
+      ]
+    },
+    "unversioned": [
+      {
+        "id": "84e51ed4-3713-45b2-ba8a-528f36587efd",
+        "scope": "project",
+        "report": "C:\\Users\\TheRose\\숏템자료\\모션그래픽엔진\\work\\2026-10-29_openmontage\\animation\\hyperframes\\.hyperframes\\artifacts\\checks\\84e51ed4-3713-45b2-ba8a-528f36587efd.json",
+        "metadata": {
+          "ok": false,
+          "browserSkipped": true,
+          "options": {
+            "samples": 9,
+            "atTransitions": false,
+            "maxIssues": 80,
+            "collapseStatic": true,
+            "tolerance": 2,
+            "timeout": 10000,
+            "contrast": true,
+            "strict": false,
+            "snapshots": false,
+            "browserGpuMode": "auto"
+          }
+        },
+        "createdAt": 1793233653513,
+        "contentHash": "a4768a9cb9982f0ee597c0a0ea723a4f31a3b5ecb2a20007fcf521e38a2a89e3",
+        "revision": null,
+        "inputFingerprint": "131090d780d743f8afd742b8b56d49cf9c1b3e7113a8224325b4cd3e1bf8d93e",
+        "inputScope": "local-project-files",
+        "attribution": "unversioned"
+      }
+    ]
+  },
+  "snapshots": {
+    "latest": null,
+    "revisions": {},
+    "unversioned": []
+  },
+  "renders": {
+    "latest": {
+      "id": "49b3c0c2-d6f0-4a09-b1f0-a68ee9d2b1e7",
+      "completedAt": 1793233844703,
+      "output": "C:\\Users\\TheRose\\숏템자료\\모션그래픽엔진\\work\\2026-10-29_openmontage\\animation\\renders\\final.mp4",
+      "status": "completed",
+      "revision": "34a2225d-2328-48fd-8ec2-3fcd312bc4af"
+    },
+    "retainedRevisions": [
+      "34a2225d-2328-48fd-8ec2-3fcd312bc4af"
+    ]
+  },
+  "pendingArtifactCleanup": []
+}

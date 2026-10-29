@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "assets": [
+    {
+      "id": "font-eb",
+      "type": "font",
+      "path": "hyperframes/fonts/Pretendard-ExtraBold.otf",
+      "source_tool": "local_copy",
+      "scene_id": "all",
+      "license": "OFL (Pretendard)"
+    },
+    {
+      "id": "font-sb",
+      "type": "font",
+      "path": "hyperframes/fonts/Pretendard-SemiBold.otf",
+      "source_tool": "local_copy",
+      "scene_id": "all",
+      "license": "OFL (Pretendard)"
+    },
+    {
+      "id": "composition",
+      "type": "animation",
+      "path": "hyperframes/index.html",
+      "source_tool": "hand-authored (atelier)",
+      "scene_id": "all",
+      "cost_usd": 0
+    }
+  ],
+  "total_cost_usd": 0,
+  "metadata": {
+    "music": "none - pixabay_music HTTP 403",
+    "layer3_skills_read": [
+      "hyperframes-core"
+    ]
+  }
+}

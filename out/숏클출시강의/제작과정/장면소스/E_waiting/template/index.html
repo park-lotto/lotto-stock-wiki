@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8"/>
+<script src="brand/gsap.min.js"></script>
+<style>
+@font-face{font-family:PS;src:url(brand/Pretendard-SemiBold.otf);font-weight:600}
+@font-face{font-family:PS;src:url(brand/Pretendard-ExtraBold.otf);font-weight:800}
+html,body{margin:0;background:#1f1f1e}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:#1f1f1e;font-family:PS,"Segoe UI Symbol",sans-serif;font-weight:600;color:#d9d6cf}
+.l{position:absolute}
+#cam{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+</style></head><body>
+<!-- saas_app_walkthrough variant (dark Claude-style chat): 1920 stage, chat -> status line close-up, final caption -->
+<div id="stage" data-composition-id="usage" data-start="0" data-duration="10" data-width="1920" data-height="1080"><div id="cam"><div id="L" class="l" style="inset:0"></div></div><div id="cap" class="l" style="left:0;right:0;top:120px;height:200px;background:rgba(0,0,0,.62);opacity:0;text-align:center;line-height:200px;font-weight:800;font-size:96px;color:#fff;white-space:nowrap">글자만 보며 기다려 보셨죠?</div></div>
+<script>
+(()=>{
+const D=10,$=id=>document.getElementById(id),cl=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)),E=p=>1-Math.pow(1-cl(p),3),EIO=p=>{p=cl(p);return p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2};
+const spin=t=>['✳','✶','✻','✽'][Math.floor(t*8)%4];
+const bub=(txt,ts,t)=>{const p=E((t-ts)/.35);return t<ts?'':`<div style="align-self:flex-end;background:#2d2c2a;border-radius:24px;padding:20px 36px;font-size:40px;opacity:${p};transform:translateY(${(1-p)*14}px)">${txt}</div>`};
+const bot=(txt,ts,t)=>{const p=E((t-ts)/.35);return t<ts?'':`<div style="font-size:40px;line-height:1.5;opacity:${p};transform:translateY(${(1-p)*14}px)">${txt}</div>`};
+function render(t){
+ let h=`<div class="l" style="left:0;right:0;top:0;height:90px;border-bottom:2px solid #3a3936;font-size:36px;line-height:90px;padding-left:60px;color:#a8a49c">새 대화</div>`;
+ h+=`<div class="l" style="left:60px;right:60px;top:110px;height:640px;display:flex;flex-direction:column;justify-content:flex-end;gap:28px">${bub('쇼츠 만들어줘',.5,t)}${bub('됐어?',3.6,t)}${bot('아직 진행 중입니다',4.4,t)}${bub('이거 된 거야?',5.6,t)}</div>`;
+ const sec=12+Math.floor(Math.max(0,t-.8));
+ if(t>=.8)h+=`<div class="l" style="left:60px;top:770px;font-size:42px;color:#a8a49c;opacity:${E((t-.8)/.3)}"><span style="color:#e2763f">${spin(t)}</span> 작업 중… ${sec}s <span style="color:#8a867e">›</span></div>`;
+ h+=`<div class="l" style="left:60px;right:60px;top:860px;height:110px;border:3px solid #4a4945;border-radius:22px;font-size:38px;line-height:110px;padding-left:36px;box-sizing:border-box;color:#8a867e">Claude에게 메시지 보내기<span class="l" style="right:36px;top:0">⏎</span></div>`;
+ $('L').innerHTML=h;
+ const p=EIO((t-6.9)/.9),z=1+p*1.5,fx=420,fy=790;
+ $('cam').style.transform=`translate(${p*(960-fx*z)}px,${p*(540-fy*z)}px) scale(${z})`;
+ $('cap').style.opacity=t>=8.5?E((t-8.5)/.2):0;
+}
+window.__timelines=window.__timelines||{};const tl=gsap.timeline({paused:true});const P={t:0};tl.to(P,{t:D,duration:D,ease:'none',onUpdate:()=>render(P.t)});render(0);window.__timelines['usage']=tl;
+})();
+</script></body></html>

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<script src="brand/gsap.min.js"></script>
+<script src="strokes.js"></script>
+<style>
+@font-face { font-family: "PB"; src: url("brand/Pretendard-ExtraBold.otf"); font-weight: 800; }
+@font-face { font-family: "PB"; src: url("brand/Pretendard-SemiBold.otf"); font-weight: 600; }
+html, body { margin: 0; background: #fff; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #fff; font-family: "PB", sans-serif; color: #111; }
+.sc { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; opacity: 0; }
+.cap { position: absolute; left: 0; width: 1920px; text-align: center; font-weight: 600; color: #8a8a8a; letter-spacing: -0.03em; white-space: nowrap; }
+.cap b { color: #111; font-weight: 800; }
+.img { position: absolute; }
+#rail { position: absolute; left: 64px; top: 330px; }
+#rail i { display: block; width: 22px; height: 22px; border-radius: 50%; border: 3px solid #111; margin-bottom: 24px; box-sizing: border-box; background: #fff; }
+#rail i.on { background: #111; }
+#q { position: absolute; left: 1120px; top: 400px; font-size: 420px; font-weight: 800; line-height: 1; }
+</style></head><body>
+<div id="stage" data-composition-id="promo" data-start="0" data-duration="10" data-width="1920" data-height="1080">
+  <div id="rail"></div>
+  <div class="sc" id="s0">
+    <div class="cap" style="top:110px;font-size:76px">휴대폰에 저장한 <b>쇼츠</b>, 몇 개나 되세요?</div>
+    <img class="img" src="i_folder.png" style="left:560px;top:290px;width:800px;height:800px">
+  </div>
+  <div class="sc" id="s1">
+    <div class="cap" style="top:100px;font-size:130px;color:#111;font-weight:800"><b>올린 건</b> 몇 개입니까?</div>
+    <img class="img" src="i_empty.png" style="left:300px;top:340px;width:700px;height:700px">
+    <div id="q">?</div>
+  </div>
+  <div class="sc" id="s2">
+    <div class="cap" style="top:330px;font-size:104px;font-weight:800;color:#111">의지가 아니라</div>
+    <div class="cap" style="top:500px;font-size:104px;font-weight:600;color:#111"><b>할 일이 너무 많아서</b>입니다</div>
+  </div>
+  <svg id="pen" width="90" height="90" viewBox="0 0 90 90" style="position:absolute;left:0;top:0;opacity:0;overflow:visible"><g transform="rotate(-38 0 0)"><path d="M0 0 L14 -9 L84 -9 L84 9 L14 9 Z" fill="#111"/><path d="M0 0 L14 -9 L14 9 Z" fill="#f2e6cf" stroke="#111" stroke-width="2"/><path d="M0 0 L5 -3 L5 3 Z" fill="#111"/><rect x="60" y="-9" width="6" height="18" fill="#c9a24a"/></g></svg>
+</div>
+<script>
+(() => {
+  const D = 10, $ = (id) => document.getElementById(id);
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const seg = (t, a, b) => clamp((t - a) / (b - a));
+  const eo = (p) => 1 - Math.pow(1 - p, 3);
+  const back = (p) => { const c = 1.7; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
+  const ST = [0.2, 3.7, 7.0], DUR = [3.5, 3.3, 3.0], DRAWD = [2.4, 2.2];
+  for (let i = 0; i < 12; i++) $("rail").insertAdjacentHTML("beforeend", "<i></i>");
+  const dots = [...document.querySelectorAll("#rail i")];
+  const NS = "http://www.w3.org/2000/svg", DRAW = [];
+  document.querySelectorAll("img.img").forEach((im) => {
+    const sc = +im.closest(".sc").id.slice(1);
+    const L = parseFloat(im.style.left), T = parseFloat(im.style.top), W = parseFloat(im.style.width), H = parseFloat(im.style.height);
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("width", W); svg.setAttribute("height", H);
+    svg.style.cssText = `position:absolute;left:${L}px;top:${T}px;overflow:visible`;
+    const name = im.getAttribute("src").replace(".png", ""), k = W / 700;
+    const paths = (window.STROKES[name] || []).map((d) => `<path d="${d}"/>`).join("");
+    svg.innerHTML = `<image href="${im.getAttribute("src")}" width="${W}" height="${H}" opacity="0" preserveAspectRatio="xMidYMid meet"/><g transform="scale(${k})" fill="none" stroke="#141414" stroke-width="${2.6 / Math.max(1, k * 0.9)}" stroke-linecap="round" stroke-linejoin="round">${paths}</g>`;
+    im.replaceWith(svg);
+    const ps = [...svg.querySelectorAll("g path")], lens = ps.map((q) => q.getTotalLength());
+    const cum = []; let tot = 0; lens.forEach((l) => { cum.push(tot); tot += l; });
+    ps.forEach((q, i) => { q.setAttribute("stroke-dasharray", lens[i] + 1); q.setAttribute("stroke-dashoffset", lens[i] + 1); });
+    svg.parentNode.id === "s" + sc;
+    DRAW.push({ sc, ps, lens, cum, tot, k, img: svg.querySelector("image"), L, T, done: -1, dur: DRAWD[sc] });
+  });
+  function drawImgs(t) {
+    let pen = null;
+    DRAW.forEach((o) => {
+      const a = ST[o.sc] - 0.05, p = seg(t, a, a + o.dur);
+      const Ld = o.tot * (1 - Math.pow(1 - p, 1.6));
+      let i = 0; while (i < o.ps.length - 1 && o.cum[i + 1] <= Ld) i++;
+      o.ps.forEach((q, j) => { if (j < i) q.setAttribute("stroke-dashoffset", 0); else if (j > i) q.setAttribute("stroke-dashoffset", o.lens[j] + 1); });
+      const into = clamp(Ld - o.cum[i], 0, o.lens[i]);
+      o.ps[i].setAttribute("stroke-dashoffset", o.lens[i] + 1 - into);
+      o.img.setAttribute("opacity", seg(p, 0.82, 1));
+      if (p > 0 && p < 1) { const q = o.ps[i].getPointAtLength(into); pen = [o.L + q.x * o.k, o.T + q.y * o.k]; }
+    });
+    const P = $("pen");
+    if (pen) { P.style.opacity = 1; P.style.transform = `translate(${pen[0]}px, ${pen[1]}px)`; } else P.style.opacity = 0;
+  }
+  function render(t) {
+    let k = 0; for (let i = 0; i < 3; i++) if (t >= ST[i] - 0.12) k = i;
+    for (let i = 0; i < 3; i++) {
+      const s = $("s" + i), a = ST[i] - 0.12, on = i === k ? 1 : 0;
+      const p = back(seg(t, a, a + 0.32));
+      s.style.opacity = on * clamp(seg(t, a, a + 0.12));
+      s.style.transform = `scale(${0.94 + 0.06 * p})`;
+    }
+    // dots: beat1 fill one by one (many), beat2 most go empty -> only 2 stay
+    dots.forEach((d, i) => {
+      let on;
+      if (t < ST[1]) on = t >= 0.5 + i * 0.22;
+      else on = i < 2 || t < ST[1] + 0.3 + (11 - i) * 0.12 ? (i < 2 ? true : t < ST[1] + 0.3 + (11 - i) * 0.12) : false;
+      d.classList.toggle("on", !!on);
+    });
+    $("rail").style.opacity = seg(t, 0.2, 0.5);
+    $("q").style.opacity = seg(t, ST[1] + 1.6, ST[1] + 1.8);
+    $("q").style.transform = `scale(${0.5 + 0.5 * back(seg(t, ST[1] + 1.6, ST[1] + 2.1))})`;
+    $("q").style.transformOrigin = "50% 60%";
+    drawImgs(t);
+  }
+  window.__timelines = window.__timelines || {};
+  document.fonts.load('800 46px "PB"').then(() => document.fonts.ready).then(() => {
+    const tl = gsap.timeline({ paused: true }), P = { t: 0 };
+    tl.to(P, { t: D, duration: D, ease: "none", onUpdate: () => render(P.t) });
+    render(0); window.__timelines["promo"] = tl;
+  });
+  render(0);
+})();
+</script></body></html>

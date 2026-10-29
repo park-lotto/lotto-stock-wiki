@@ -1,0 +1,25 @@
+{
+  "version": "1.0",
+  "outputs": [
+    {
+      "path": "C:\\Users\\TheRose\\숏템자료\\모션그래픽엔진\\work\\2026-10-29_openmontage\\animation\\renders\\final.mp4",
+      "format": "mp4",
+      "codec": "h264",
+      "resolution": "1920x1080",
+      "fps": 30,
+      "duration_seconds": 22.0,
+      "file_size_bytes": 905550,
+      "platform_target": "youtube"
+    }
+  ],
+  "render_time_seconds": 85.7,
+  "render_grammar": "animation-first",
+  "warnings": [
+    "hyperframes lint: 5 warnings (sections nested in root, track density) - 0 errors",
+    "music not included: pixabay_music HTTP 403"
+  ],
+  "verification_notes": [
+    "hyperframes check: lint 0 errors, runtime 0, layout 0, contrast on",
+    "ffprobe 22.000s 1920x1080 30fps 660 frames"
+  ]
+}

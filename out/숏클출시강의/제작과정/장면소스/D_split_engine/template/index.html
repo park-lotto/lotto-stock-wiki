@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<script src="brand/gsap.min.js"></script>
+<style>
+@font-face{font-family:"PS";src:url("brand/Pretendard-SemiBold.otf");font-weight:600}
+@font-face{font-family:"PS";src:url("brand/Pretendard-ExtraBold.otf");font-weight:800}
+@font-face{font-family:"NC";src:url("brand/NanumGothicCoding-Bold.ttf");font-weight:700}
+html,body{margin:0;background:#070a24}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden;font-family:"PS",sans-serif;font-weight:600;color:#fff;background:radial-gradient(ellipse at 50% 40%,#1a1f5a 0%,#080a26 70%)}
+#grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:48px 48px}
+.hd{position:absolute;top:34px;font-size:64px;font-weight:800;letter-spacing:-1px;display:flex;align-items:center;gap:22px}
+.hd i{display:inline-block;width:52px;height:52px;border-radius:50%}
+#L{position:absolute;left:45px;top:150px;width:900px;height:890px;background:#f6f5f2;border-radius:18px;overflow:hidden;color:#222}
+#R{position:absolute;left:975px;top:150px;width:900px;height:890px;background:#0d0d0f;border-radius:15px;overflow:hidden;color:#ccc}
+.bar{position:absolute;left:0;right:0;top:0;height:64px;box-sizing:border-box;padding:13px 28px;font-size:34px}
+#L .bar{border-bottom:2px solid #e3e3e0;color:#555}
+#R .bar{border-bottom:2px solid #222;color:#aaa;font-family:"NC";font-weight:700}
+.msg{position:absolute;border-radius:20px;padding:16px 24px;line-height:50px;box-sizing:border-box;font-size:36px;opacity:0}
+.me{background:#111;color:#fff;right:26px;max-width:640px}
+.bt{background:#e8e8e5;color:#222;left:26px;max-width:700px}
+#dots{position:absolute;left:26px;top:690px;opacity:0;background:#e8e8e5;border-radius:20px;padding:12px 28px;font-size:44px;color:#777;letter-spacing:6px}
+#lcap{position:absolute;left:0;right:0;bottom:104px;text-align:center;font-size:36px;color:#c0392b;font-weight:800;opacity:0}
+#inp{position:absolute;left:20px;right:20px;bottom:18px;height:70px;border-radius:35px;background:#fff;border:2px solid #e3e3e0;font-size:34px;color:#999;padding:14px 30px;box-sizing:border-box}
+.st{position:absolute;left:34px;right:34px;height:92px;display:flex;align-items:center;opacity:0}
+.st .ck{width:56px;height:56px;border-radius:50%;border:4px solid #3fc46a;box-sizing:border-box;margin-right:26px;display:flex;align-items:center;justify-content:center;font-size:36px;color:#0d0d0f;font-weight:800;flex:none}
+.st .lb{font-size:40px;color:#fff;flex:1}
+.st .sec{font-family:"NC";font-weight:700;font-size:44px;color:#3fc46a;min-width:130px;text-align:right}
+.st .rule{position:absolute;left:0;right:0;bottom:0;height:2px;background:#1e1e24}
+#tot{position:absolute;left:34px;right:34px;top:710px;height:130px;border-radius:16px;background:#12261a;border:3px solid #3fc46a;box-sizing:border-box;padding:12px 28px;opacity:0}
+#tot b{display:block;font-size:46px;font-weight:800;color:#fff;line-height:56px}
+#tot span{display:block;font-size:38px;color:#7ee6a0;line-height:50px}
+</style></head><body>
+<div id="stage" data-composition-id="shortclsplit" data-start="0" data-duration="14" data-width="1920" data-height="1080">
+<div id="grid"></div>
+<div class="hd" style="left:60px" id="h1"><i style="background:#fff"></i>말로 부탁하기</div>
+<div class="hd" style="left:990px" id="h2"><i style="background:#3fc46a"></i>숏클 엔진</div>
+<div id="L"><div class="bar">☻ 채팅</div><div id="lm"></div><div id="lcap">핑퐁만 길어집니다</div><div id="inp">메시지 보내기</div></div>
+<div id="R"><div class="bar">$ 원본 찾기 · 자동</div><div id="rs"></div><div id="tot"><b>합계 약 7분</b><span>사람 개입 없음</span></div></div>
+</div>
+<script>
+(()=>{
+const D=14,$=id=>document.getElementById(id),cl=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)),E=p=>1-Math.pow(1-cl(p),3);
+const back=p=>{p=cl(p);const c=1.6;return 1+(c+1)*Math.pow(p-1,3)+c*Math.pow(p-1,2)};
+// [시각, 쪽, top, 글]
+const LM=[[1.0,'me',90,'이 영상 원본 찾아줘'],
+[2.6,'bt',200,'어떤 영상인가요?'],
+[4.0,'me',310,'화장품 바르는 여자가 나오는 영상인데 틱톡에서 봤어'],
+[5.7,'bt',480,'비슷한 걸 찾았는데 같은 사람인지는 확인해 주세요'],
+[7.5,'me',650,'이거 아닌데…']];
+$('lm').innerHTML=LM.map((m,i)=>`<div class="msg ${m[1]}" id="lm${i}" style="top:${m[2]}px">${m[3]}</div>`).join('');
+
+const ST=[['소재 받기',52],['장면 읽기',20],['네 곳 동시 원본 찾기',197],['같은 영상인지 판정',25],['받은 원본 재확인',36],['한국 재업로드 세기',33]];
+const T0=[1.4,2.9,4.4,6.0,7.5,9.0];
+$('rs').innerHTML=ST.map((s,i)=>`<div class="st" id="st${i}" style="top:${84+i*94}px"><span class="ck" id="ck${i}"></span><span class="lb">${s[0]}</span><span class="sec" id="sc${i}"></span><span class="rule"></span></div>`).join('');
+function render(t){
+ const fi=E(t/.5);$('h1').style.opacity=fi;$('h2').style.opacity=fi;$('L').style.opacity=fi;$('R').style.opacity=fi;
+ LM.forEach((m,i)=>{const p=E((t-m[0])/.35);const e=$('lm'+i);e.style.opacity=p;e.style.transform=`translateY(${(1-p)*14}px)`});
+ 
+ $('lcap').style.opacity=E((t-10.5)/.5);
+ ST.forEach((s,i)=>{const u=t-T0[i];const p=E(u/.35);const e=$('st'+i);e.style.opacity=p;e.style.transform=`translateX(${(1-p)*30}px)`;
+  const done=u>0.7;const c=$('ck'+i);
+  if(!done){c.textContent='';c.style.background='transparent';c.style.borderColor='#556';c.style.borderTopColor='#3fc46a';c.style.transform=`rotate(${u*720}deg)`;$('sc'+i).textContent=''}
+  else{c.textContent='✓';c.style.background='#3fc46a';c.style.borderColor='#3fc46a';c.style.transform='rotate(0deg)';
+   const v=Math.round(s[1]*E((u-.7)/.5));$('sc'+i).textContent=v+'초'}});
+ const tp=back((t-10.6)/.5);$('tot').style.opacity=cl((t-10.6)/.2);$('tot').style.transform=`scale(${.9+.1*tp})`;
+ $('R').style.boxShadow=t>10.6?`0 0 ${50*E((t-10.6)/.6)}px rgba(63,196,106,.45)`:'none';
+}
+window.__timelines=window.__timelines||{};
+const tl=gsap.timeline({paused:true});const S={t:0};tl.to(S,{t:D,duration:D,ease:'none',onUpdate:()=>render(S.t)});window.__timelines['shortclsplit']=tl;render(0);
+})();
+</script></body></html>

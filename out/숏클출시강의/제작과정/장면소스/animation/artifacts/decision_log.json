@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "project_id": "shortclip-maker-intro",
+  "decisions": [
+    {
+      "decision_id": "d1",
+      "stage": "proposal",
+      "category": "render_runtime_selection",
+      "subject": "렌더 런타임",
+      "options_considered": [
+        "remotion",
+        "hyperframes",
+        "ffmpeg"
+      ],
+      "selected": "hyperframes",
+      "reason": "한글 커스텀 레이아웃 + 단어별 페이드/체크 그리기는 HTML/GSAP가 자연스러움. 사용자가 사전 승인한 흐름.",
+      "user_visible": true,
+      "user_approved": true
+    },
+    {
+      "decision_id": "d2",
+      "stage": "assets",
+      "category": "music_source",
+      "subject": "배경음",
+      "options_considered": [
+        "pixabay_music",
+        "music_library(비어있음)",
+        "없음"
+      ],
+      "selected": "없음",
+      "reason": "pixabay_music HTTP 403, music_library 없음, 유료 API 금지",
+      "user_visible": true,
+      "user_approved": true
+    }
+  ]
+}

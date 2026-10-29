@@ -1,0 +1,40 @@
+{
+  "version": "1.0",
+  "assets": [
+    {
+      "id": "src",
+      "type": "video",
+      "path": "assets/source_kopack.mp4",
+      "source_tool": "user_provided",
+      "scene_id": "s1"
+    },
+    {
+      "id": "font_bold",
+      "type": "font",
+      "path": "assets/fonts/Pretendard-Bold.otf",
+      "source_tool": "user_provided",
+      "scene_id": "s3"
+    },
+    {
+      "id": "font_xbold",
+      "type": "font",
+      "path": "assets/fonts/Pretendard-ExtraBold.otf",
+      "source_tool": "user_provided",
+      "scene_id": "s1"
+    },
+    {
+      "id": "font_semi",
+      "type": "font",
+      "path": "assets/fonts/Pretendard-SemiBold.otf",
+      "source_tool": "user_provided",
+      "scene_id": "s2"
+    },
+    {
+      "id": "font_reg",
+      "type": "font",
+      "path": "assets/fonts/Pretendard-Regular.otf",
+      "source_tool": "user_provided",
+      "scene_id": "s2"
+    }
+  ]
+}

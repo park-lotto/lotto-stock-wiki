@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "title": "hybrid sample",
+  "total_duration_seconds": 25,
+  "sections": [
+    {
+      "id": "s1",
+      "text": "이 쇼츠, 말 한 줄로 나왔습니다",
+      "start_seconds": 0,
+      "end_seconds": 4
+    },
+    {
+      "id": "s2",
+      "text": "어떻게요?",
+      "start_seconds": 4,
+      "end_seconds": 7
+    },
+    {
+      "id": "s3",
+      "text": "해외 화장품 쇼츠 만들어줘 / 원본 찾는 중… / 대본 쓰는 중… / 장면 맞추는 중… / 완성 ✓",
+      "start_seconds": 7,
+      "end_seconds": 18
+    },
+    {
+      "id": "s4",
+      "text": "말 한 줄이면 됩니다 / 숏클메이커",
+      "start_seconds": 18,
+      "end_seconds": 25
+    }
+  ],
+  "metadata": {
+    "anchor_sections": [
+      "s1",
+      "s4"
+    ],
+    "support_sections": [
+      "s2",
+      "s3"
+    ],
+    "narration_sections": [],
+    "required_support_assets": [
+      "Pretendard fonts"
+    ]
+  }
+}
