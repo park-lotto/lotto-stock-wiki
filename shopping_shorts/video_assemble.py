@@ -615,7 +615,12 @@ def _beat_effective_dur(beat, tts_path):
                           beat.get("head_trim", 0.0), beat.get("tail_trim", 0.0))
 
 
-def _run_ffmpeg(cmd, cwd=None, timeout=None):
+# ffmpeg 한 번의 상한(초) — 끝없는 입력이 비어 영원히 도는 명령도 이 시간이면 오류로 끝난다(관제 285: 4시간 멈춤).
+# 정상 명령은 쇼츠 기준 수십 초~수 분. 더 긴 일은 호출부가 timeout 을 따로 준다. 환경변수로 바꿀 수 있다.
+_FF_TIMEOUT = float(os.environ.get("SHORTEM_FFMPEG_TIMEOUT") or 3600)
+
+
+def _run_ffmpeg(cmd, cwd=None, timeout=_FF_TIMEOUT):
     """ffmpeg 실행. 실패 시 stderr를 예외에 담아 원인을 삼키지 않는다.
     stdin=DEVNULL 필수(Windows): pytest 캡처 중에는 부모 stdin 핸들이 유효하지
     않아, 명시 안 하면 subprocess가 그 핸들을 상속하려다 OSError([WinError 6]
