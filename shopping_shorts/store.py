@@ -8402,6 +8402,23 @@ class Store:
                 f"   AND ({col} IS NULL OR {col} NOT IN ({marks}))",
                 (self._DEAD_MSG, job_id, *done_values))
 
+    @staticmethod
+    def _queue_args_where(task, args_match):
+        """큐 행 찾기 조건 — args_match 의 **키만** 맞으면 같은 작업으로 본다(queue_status·task_is_alive 한 곳).
+
+        ★왜(2026-10-29 박진우님 "자막제거에서 멈추고 안 돌아간다", 관제 286): 09-27부터 자막제거는
+          동의 표식(confirm_clean·confirm_secs·pick)을 args 에 함께 싣는데, 화면 판정은 {"job_id"} 를
+          args_json **글자 그대로** 비교해 큐 행을 못 찾았다(10-27 이후 112건 중 109건). 그래서 하트비트를
+          못 보고 updated_at 10분 규칙으로 떨어져, 10분 넘는 정상 청소가 "서버가 재시작되어 중단됐어요"로 떴다.
+        """
+        if not args_match:
+            return "task=?", (task,)
+        conds, params = ["task=?"], [task]
+        for k, v in args_match.items():
+            conds.append("json_extract(args_json, ?) IS ?")
+            params += [f'$."{k}"', v]
+        return " AND ".join(conds), tuple(params)
+
     def queue_status(self, task, args_match=None):
         """이 작업의 큐 상태. position=내 앞에 있는 queued/running 개수(화면 대기순번).
 
@@ -8412,10 +8429,10 @@ class Store:
                     "SELECT id, state, error, progress, claimed_at FROM job_queue WHERE task=? "
                     "ORDER BY id DESC LIMIT 1", (task,)).fetchone()
             else:
+                where, params = self._queue_args_where(task, args_match)
                 row = c.execute(
                     "SELECT id, state, error, progress, claimed_at FROM job_queue "
-                    " WHERE task=? AND args_json=? ORDER BY id DESC LIMIT 1",
-                    (task, json.dumps(args_match, ensure_ascii=False))).fetchone()
+                    f" WHERE {where} ORDER BY id DESC LIMIT 1", params).fetchone()
             if not row:
                 return None
             qid, state, error, progress, claimed_at = row
@@ -8439,11 +8456,11 @@ class Store:
         그건 **진짜로 돌고 있는 것**이다. 여유를 둬 기본 3분으로 본다(reap 2분 > 폴링 지연).
         queued(아직 차례 대기)도 살아있는 것으로 친다 — 실패가 아니다.
         """
+        where, params = self._queue_args_where(task, args_match)
         with self._conn() as c:
             row = c.execute(
                 "SELECT state, heartbeat_at FROM job_queue "
-                " WHERE task=? AND args_json=? ORDER BY id DESC LIMIT 1",
-                (task, json.dumps(args_match, ensure_ascii=False))).fetchone()
+                f" WHERE {where} ORDER BY id DESC LIMIT 1", params).fetchone()
             if not row:
                 return False                      # 큐 기록이 없으면 판단 불가 → 기존 규칙에 맡긴다
             state, hb = row
