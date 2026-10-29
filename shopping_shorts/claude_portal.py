@@ -652,6 +652,16 @@ def _rules_of(pdir: Path, man: dict) -> dict:
 
 
 # ── license ─────────────────────────────────────────────────────────────
+def _member_name(store, cid) -> str:
+    """회원 Claude 첫 인사 "○○ 회원님"(숏클 지침 2장) — 가입 이름, 없으면 아이디. 못 찾으면 빈칸(PC 는 '회원님'만)."""
+    try:
+        cu = store.get_customer(cid) or {}
+    except Exception as e:                       # 회원 표가 없는 시험 저장소 등 — 인사만 빠진다
+        log.debug("member_name: %s", e)
+        return ""
+    return re.sub(r"[\s<>]+", " ", str(cu.get("name") or cu.get("username") or "")).strip()[:20]
+
+
 def license(ctx: dict, store=None) -> dict:
     """GET /api/claude/license — 확인 + 이 기기 등록(빈 칸이 있으면 자동, DEVICES_MAX 차면 거절·자동 교체 없음)."""
     store = _store(store)
@@ -680,7 +690,7 @@ def license(ctx: dict, store=None) -> dict:
         raise PortalError("device_limit", f"기기 {DEVICES_MAX}대가 이미 등록돼 있습니다 — 마이페이지에서 기기를 빼고 다시 시도하세요")
     _raise_on(anomaly_check(cid, {"type": "license", "route": "license", **_ev(ctx)}, store=store))
     row = info["row"]
-    return {"ok": True, "cid": cid, "plan": row.get("plan") or "claude", "expires": info["exp"],
+    return {"ok": True, "cid": cid, "member_name": _member_name(store, cid), "plan": row.get("plan") or "claude", "expires": info["exp"],
             "device": {"id": fp[:12], "name": name, "slot": dev["slot"], "registered_now": registered_now},
             "devices_used": len(live), "devices_max": DEVICES_MAX,
             "entitled_presets": _entitled(store, cid, row),

@@ -2,7 +2,7 @@
 name: setup
 description: 숏템 준비 점검 — 라이선스·기기 등록·실행 도구·API 키 파일을 확인하고 자가점검(시험 렌더·시험 목소리·시험 다운로드)을 돌린다. 사용자가 "숏템 준비", "숏템 설치 확인", "/shortem:setup" 이라고 할 때.
 argument-hint: "[자가점검 생략은 quick]"
-allowed-tools: mcp__plugin_shortem_shortem__shortem_setup mcp__plugin_shortem_shortem__shortem_settings mcp__plugin_shortem_shortem__shortem_login
+allowed-tools: mcp__plugin_shortem_shortem__shortem_setup mcp__plugin_shortem_shortem__shortem_settings mcp__plugin_shortem_shortem__shortem_login mcp__plugin_shortem_shortem__shortem_presets
 disallowed-tools: Bash PowerShell Write Edit NotebookEdit
 ---
 

@@ -8,9 +8,9 @@ import { rentPreset } from './preset_rent.js';
 import { refreshCookies } from './logins.js';
 import { packFile as localPackFile, PID_RE } from './local_settings.js';
 import { homeDir, writeFileIn, workDir, ensureDir } from './paths.js';
-import { deliverInBackground } from './deliver.js';
+import { deliverInBackground, deliverStatus } from './deliver.js';
 import { logFinal } from './work_log.js';
-import { startFlow, waitFlow, approveFlow, retryFlow, isFlowSid, loadFlow, shapeFlow } from './flow_driver.js';
+import { startFlow, waitFlow, approveFlow, retryFlow, reviseFlow, isFlowSid, loadFlow, shapeFlow } from './flow_driver.js';
 import { ApiError } from './api.js';
 
 export const waitMs = () => Number(process.env.SHORTEM_WAIT_SEC || 45) * 1000;
@@ -24,6 +24,17 @@ function aiNeed(runId) {
     next: `shortem_ai(action="list") 로 요청을 받아 하나씩 답한 뒤(answer), shortem_make(step="wait", run_id="${runId}") 를 부르세요`,
     hints: [`엔진이 AI 판독 ${n}건을 기다립니다 — 사람에게 묻지 말고 바로 답하세요`] };
 }
+
+// 완성본 받기 상태(숏클 지침 8장 '연결 안 됐으면 안내') — 보내기는 뒤에서 돌아 결과를 기다리지 않는다. 어디로 가는지만 알린다
+export function deliverSay() {
+  const d = deliverStatus();
+  const to = [d.telegram.linked && d.telegram.on ? '텔레그램' : '', d.drive.found && d.drive.on ? '구글 드라이브' : ''].filter(Boolean);
+  return to.length ? { deliver: { to }, hint: `완성본을 ${to.join('·')}(으)로도 보내는 중입니다` }
+    : { deliver: { to: [] }, hint: '완성본 받기(텔레그램·구글 드라이브)가 아직 연결되지 않았습니다 — 원하시면 shortem_settings(action="open") 화면의 완성본 받기에서 연결할 수 있다고 한 줄 안내하세요' };
+}
+
+// 회원에게 물은 뒤 기다리기(숏클 지침 5장 '1분씩 최대 10분') — 셸 없이 기다리는 유일한 길. 한 번에 60초까지
+export const pauseSec = s => Math.max(5, Math.min(60, Number(s) || 60));
 
 const cand = c => ({ n: c.n, title: c.title, total: c.total, line: c.line, scores: c.scores, made: c.made || 0 });
 
@@ -69,7 +80,8 @@ export function shapeSession(S) {
     const video = src && fs.existsSync(src)
       ? keepFinal(src, { sid: S.sid, title: String(t.name || ''), marker: { preset: S.preset_id || null, topic_dir: path.dirname(src) } }) : null;
     if (!video) return { ...base, fail: { why: '완성본 파일을 찾지 못했습니다', fix: 'shortem_make(step="status") 로 다시 보세요' } };
-    return { ...base, need: 'done', video, hints: ['완성본 경로를 고객에게 알려 주세요(파일을 열어 보라고 안내)', `겉모습을 바꾸고 싶다고 하면 shortem_settings 로 바꾼 뒤 shortem_make(step="restyle", sid="${S.sid}") — 대본·재료는 그대로, 렌더만 다시`] };
+    const dv = deliverSay();
+    return { ...base, need: 'done', video, deliver: dv.deliver, hints: ['완성본 경로를 고객에게 알려 주세요(파일을 열어 보라고 안내)', dv.hint, `겉모습을 바꾸고 싶다고 하면 shortem_settings 로 바꾼 뒤 shortem_make(step="restyle", sid="${S.sid}") — 대본·재료는 그대로, 렌더만 다시`] };
   }
   return { ...base, need: 'wait', topic_state: t.state, next: `shortem_make(step="status", sid="${S.sid}")` };
 }
@@ -130,11 +142,29 @@ function flowOut(s) {
   if (!s || s.need !== 'done' || !s.video || !fs.existsSync(s.video)) return s;
   const f = loadFlow(s.sid) || {};
   const video = keepFinal(s.video, { sid: s.sid, title: String(s.title || ''), marker: { line: 'flow' }, preset: f.preset || null });
-  return { ...s, video, hints: ['완성본 경로를 고객에게 알려 주세요', ...(s.note ? [s.note] : [])] };
+  const dv = deliverSay();
+  return { ...s, video, deliver: dv.deliver, hints: ['완성본 경로를 고객에게 알려 주세요', dv.hint, ...(s.note ? [s.note] : [])] };
 }
 
-export async function makeStep({ step, sid, n, run_id, preset, topic, channel, video, product }) {
+export async function makeStep({ step, sid, n, run_id, preset, topic, channel, video, product, revise, seconds }) {
+  if (step === 'pause') {
+    const sec = pauseSec(seconds);
+    await new Promise(r => setTimeout(r, sec * 1000));
+    return { paused: sec, hints: ['회원 답이 왔으면 그 답으로 이어 가고, 아직이면 같은 pause 를 다시(합쳐 10분까지). 10분이 지나면 네가 정해 완성본까지 간다'] };
+  }
   if (sid && isFlowSid(sid)) {     // 볼케이노형 편 — 서버 지시서를 따라 돈다(판단은 서버)
+    if (step === 'script') {
+      const f = loadFlow(sid);
+      return f && f.script ? { sid, script: f.script, hints: ['대본을 그대로 보여 주세요. 고칠 줄을 말하면 shortem_make(step="revise", sid, revise="<줄 id 와 바꿀 말>") — 그 줄만 고치고 장면은 그대로 둡니다'] }
+        : { sid, hints: ['대본이 아직 없습니다 — 대본 단계가 끝나면 다시 보세요'] };
+    }
+    if (step === 'revise') {
+      if (!String(revise || '').trim()) return { hints: ['revise 에 고칠 줄과 바꿀 말을 넣으세요(예: "L5 를 더 짧게")'] };
+      const r = await reviseFlow(sid, revise);
+      if (r && r.busy) return { sid, hints: ['지금 하던 일이 끝나는 대로 다시 보내 주세요 — shortem_make(step="wait") 뒤에 revise'] };
+      if (r && r.no_script) return { sid, hints: ['대본이 아직 없습니다 — 대본 단계가 끝난 뒤 고칠 수 있습니다'] };
+      return flowOut(await waitFlow(sid, waitMs()));
+    }
     if (step === 'approve') approveFlow(sid);
     else if (step === 'retry') retryFlow(sid);
     else if (step === 'restyle') return { hints: ['이 프리셋은 다시 만들기를 아직 못 합니다 — 같은 영상 주소로 새로 만들어 주세요'] };

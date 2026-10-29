@@ -2,7 +2,7 @@
 name: make
 description: 숏템 — 내 채널 프리셋으로 숏폼 한 편 만들기(소재 후보 → 고객이 고르기 → 대본·계획 → 고객 사인 → 완성본 · 완성본 다시 만들기). 사용자가 "/shortem:make", "숏템으로 만들어줘", "이 영상으로 만들어줘", "다시 만들어줘" 라고 할 때.
 argument-hint: "[영상 주소 · 해외 원본 채널 주소 · 소재 한 줄]"
-allowed-tools: mcp__plugin_shortem_shortem__shortem_make mcp__plugin_shortem_shortem__shortem_ai Agent WebSearch WebFetch mcp__plugin_shortem_shortem__shortem_settings mcp__plugin_shortem_shortem__shortem_login mcp__plugin_shortem_shortem__shortem_setup mcp__plugin_shortem_shortem__shortem_feedback
+allowed-tools: mcp__plugin_shortem_shortem__shortem_make mcp__plugin_shortem_shortem__shortem_ai Agent WebSearch WebFetch mcp__plugin_shortem_shortem__shortem_settings mcp__plugin_shortem_shortem__shortem_login mcp__plugin_shortem_shortem__shortem_setup mcp__plugin_shortem_shortem__shortem_feedback mcp__plugin_shortem_shortem__shortem_inbox mcp__plugin_shortem_shortem__shortem_job mcp__plugin_shortem_shortem__shortem_presets mcp__plugin_shortem_shortem__shortem_profile
 disallowed-tools: Bash PowerShell Write Edit NotebookEdit Read Glob Grep
 ---
 

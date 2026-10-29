@@ -603,3 +603,15 @@ def test_install_키만으로_묶음_주소_기기지문_없이(env, tmp_path):
     got = c.get(d["url"])
     assert got.status_code == 200 and got.content == z.read_bytes()
     assert c.get("/api/claude/license", headers=bare).json()["code"] == "bad_request", "다른 창구는 지문이 있어야 한다"
+
+
+def test_라이선스_회원이름_인사(env):
+    """숏클 지침 2장 '○○ 회원님' — 라이선스 응답에 가입 이름(없으면 아이디). 회원이 없으면 빈칸."""
+    c, st = env["client"], env["store"]
+    cid = st.create_customer("hong_gd", "pw-123456", name="홍길동")
+    r = c.get("/api/claude/license", headers=_h(_key(env, cid)))
+    assert r.status_code == 200, r.text
+    assert r.json()["member_name"] == "홍길동"
+    cid2 = st.create_customer("noname_id", "pw-123456")
+    assert c.get("/api/claude/license", headers=_h(_key(env, cid2), fp=FP1)).json()["member_name"] == "noname_id"
+    assert c.get("/api/claude/license", headers=_h(_key(env, 987654))).json().get("member_name", "") == ""

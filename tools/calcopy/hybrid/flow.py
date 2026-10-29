@@ -94,7 +94,7 @@ PHASE_STAGE = {   # 세부 단계 → 회원에게 보이는 단계
     "product_same": "product", "name_find": "product", "name_got": "product", "named_cands": "product", "named_same": "product",
     "best_same": "product", "product_done": "product", "research": "research", "research_got": "research", "material": "material",
     "material_got": "material", "material_pick": "material", "material_dl": "material", "asr": "asr", "asr_got": "asr", "shots_got": "asr",
-    "script": "script", "script_got": "script", "stills_again": "script", "script_saved": "script", "sign": "sign", "plan": "plan", "plan_got": "plan", "line_fix_got": "plan",
+    "script": "script", "script_got": "script", "stills_again": "script", "script_saved": "script", "sign": "sign", "plan": "plan", "plan_got": "plan", "line_fix_got": "plan", "member_revise": "plan",
     "plan_look": "plan", "plan_saved": "plan", "thumb": "plan", "thumb_sheet": "plan", "thumb_got": "plan", "render": "render", "render_got": "render", "render_fix": "render", "render_saved": "render",
     "check": "check", "check_got": "check", "check_look": "check", "check_fix": "check", "check_saved": "check", "done": "done",
 }
@@ -399,6 +399,8 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
     """한 번 호출 = 지난 do·review 결과를 먹고 다음 할 일을 낸다. 같은 호출 안에서 바로 이어 갈 수 있는 단계(goto)는 계속 넘어간다."""
     st = state
     m, rp, user = dict(measure or {}), dict(replies or {}), dict(user or {})
+    if user.get("revise") and (st.get("script") or {}).get("S") and st.get("phase") != "sign":
+        st["phase"] = "member_revise"      # 대본이 나온 뒤 회원이 고칠 줄을 말함 — 어느 단계든 그 줄만(재료 그대로, ph_member_revise)
     if m and st.get("watch_last") and any(isinstance(v, dict) and v.get("error") for v in m.values()):
         (st.get("watch_keys") or {}).pop(st["watch_last"], None)     # 실패한 일을 같은 입력으로 다시 = 다시 시도(반복 감시 대상 아님)
     for _ in range(40):
@@ -525,6 +527,8 @@ def _out(st: dict, status: str, phase: str, **kw) -> dict:
         lst = _stage_list(st)
         stage = {**stage, "no": [x for x, _ in lst].index(back) + 1, "text": dict(lst)[back], "key": back}
     res = {"status": status, "stage": stage, "message": msg, "traps": traps, "state": st}
+    if (st.get("script") or {}).get("S"):      # 대본은 늘 같이 — 회원이 언제든 보고 그 줄만 고치게(숏클 지침 3-1, 10-30)
+        res["script"] = script_view(st)
     fs = finding_say(st) if stage["key"] == "origin" and status != "stop" else None
     if fs:                         # 원본 찾기가 길어지는 동안 진행 줄(주인 finding_say) — 회원 PC 가 5분마다 'N분째'를 새로 채운다
         res["message"] = f"{msg} · {finding_line(fs)}"
@@ -2066,7 +2070,8 @@ def script_view(st) -> dict:
     S = (st.get("script") or {}).get("S") or {}
     title = " ".join("".join(c[0] for c in l) if isinstance(l, list) else str(l) for l in S.get("title_lines") or [])
     lines = [(l.get("tts") or l.get("text") or " ".join(c[0] for c in l.get("caps_rel") or []) or "").strip() for l in S.get("lines") or []]
-    return {"title": title, "lines": [x for x in lines if x][:30]}
+    rows = [{"id": l.get("id"), "text": x} for l, x in zip(S.get("lines") or [], lines) if x and l.get("kind") != "orig"]
+    return {"title": title, "lines": [x for x in lines if x][:30], "rows": rows[:30]}
 
 
 # ── 회원 맞춤 자리(표준 §10-3 — 지시서 12 가 채운다) ─────────────────────────────
@@ -2514,6 +2519,20 @@ def _line_fix(st, why: str, ids: list[str], pick: bool = False) -> dict | None:
     return {"review": [_rv(f"line_fix_{st['version']}", q, [], need=("lines",))], "then": "line_fix_got"}
 
 
+def ph_member_revise(st, m, rp, u):
+    """(판단 주인 — 회원이 대본을 보고 고칠 곳을 말함, 숏클 지침 3-1 '그 줄만 고친다') 말에 줄 id 가 있으면 그 줄만,
+    없으면 나레 줄 전부를 보여 주고 최소 줄만 고르게. 재료(컷)는 그대로 → 계획부터. 회원 요청은 줄 고치기 한도를 쓰지 않는다."""
+    text = str(u.get("revise") or "")[:500]
+    st["tries"]["line_fix"] = 0
+    st["_line_fix_why"] = "고객 요청: " + text
+    ids = _line_ids(st, [text])
+    lf = _line_fix(st, "고객 요청: " + text, ids, pick=not ids)
+    if lf:
+        return lf
+    st["tries"]["script"] = 0
+    return {"review": [_script_ask(st, "고객 요청: " + text)], "then": "script_got"}
+
+
 def ph_line_fix_got(st, m, rp, u):
     """줄 고치기 답 → 그 줄만 바꿔 대본 검사(재료 그대로) → 통과면 대본만 저장하고 계획부터. 안 되면 옛 길(대본 전체)."""
     v = st["version"]
@@ -2531,6 +2550,9 @@ def ph_line_fix_got(st, m, rp, u):
     if not a.get("ok"):
         st["log"].append("줄 고치기 대본 검사 미달 → 대본 전체 다시: " + json.dumps({k: x for k, x in a.items() if k != "ok"}, ensure_ascii=False)[:300])
         st["tries"]["line_fix"] = LINE_FIX_MAX
+        if str(st.get("_line_fix_why") or "").startswith("고객 요청"):     # 회원 요청 — 목소리 탓이 아니다, 그 요청 그대로 대본 다시
+            st["tries"]["script"] = 0
+            return {"review": [_script_ask(st, st["_line_fix_why"])], "then": "script_got"}
         return _voice_rewrite(st, [st.get("_line_fix_why") or "줄 고치기 실패"])
     st["script"]["S"] = S
     st["_plan_fixed"] = True          # 재료는 그대로 — 계획이 엔진 검사를 통과하면 장면 검수를 다시 묻지 않는다(ph_plan_got)
@@ -4060,7 +4082,7 @@ PHASES = {
     "named_same": ph_named_same, "best": ph_best, "best_rated": ph_best_rated, "given": ph_given, "given_same": ph_given_same, "research": ph_research, "research_got": ph_research_got,
     "research_check": ph_research_check, "material": ph_material, "material_got": ph_material_got, "material_pick": ph_material_pick,
     "material_dl": ph_material_dl, "asr": ph_asr, "asr_got": ph_asr_got, "shots_got": ph_shots_got, "script": ph_script,
-    "script_ask": ph_script_ask, "script_got": ph_script_got, "script_heard": ph_script_heard, "sign": ph_sign, "plan": ph_plan, "plan_got": ph_plan_got, "line_fix_got": ph_line_fix_got,
+    "script_ask": ph_script_ask, "script_got": ph_script_got, "script_heard": ph_script_heard, "sign": ph_sign, "plan": ph_plan, "plan_got": ph_plan_got, "line_fix_got": ph_line_fix_got, "member_revise": ph_member_revise,
     "plan_look": ph_plan_look, "thumb": ph_thumb, "thumb_sheet": ph_thumb_sheet, "thumb_got": ph_thumb_got, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
     "check_got": ph_check_got, "check_look": ph_check_look, "check_judge": ph_check_judge, "check_fix": ph_check_fix, "customize": ph_customize, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
