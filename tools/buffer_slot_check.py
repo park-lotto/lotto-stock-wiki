@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""buffer_post 시간 칸·중복 시험(2026-10-26 사장님 "매일 3시·8시 한 번씩, 한 번에 두 개는 없다 / 중복 업로드 절대 금지").
+"""buffer_post 시간 칸·중복 시험(2026-10-26 사장님 "매일 3시·8시 한 번씩(10-29: 3시반·7시반), 한 번에 두 개는 없다 / 중복 업로드 절대 금지").
 실제 업로드·예약은 전부 가짜 — 아무것도 안 올라간다. 영상 파일도 임시로 만든다.
     py tools/buffer_slot_check.py
-기대: ① 칸 계산이 15:00·20:00 만, 지난 칸·찬 칸은 건너뜀  ② 한 영상 = 유튜브·틱톡 같은 칸 1번씩
+기대: ① 칸 계산이 15:30·19:30 만, 지난 칸·찬 칸은 건너뜀  ② 한 영상 = 유튜브·틱톡 같은 칸 1번씩
      ③ 서로 다른 영상이 같은 칸에 안 들어감  ④ 다시 돌리면 업로드 0(중복 금지) ⑤ 이름 바꾼 같은 영상도 막음."""
 import os, sys, tempfile, shutil, datetime as dt, importlib.util
 here = os.path.dirname(os.path.abspath(__file__))
@@ -24,16 +24,16 @@ def z(y, mo, d, h, mi=0):
 
 F = "21(수창) 쓸데수집"
 now = dt.datetime(2026, 10, 27, 10, 0, tzinfo=KST)
-check("오전, 영상 2 → 그날 15·20시", bp._slot_dues([], F, 2, now), [z(2026, 10, 27, 15), z(2026, 10, 27, 20)])
-check("오후 4시, 영상 1 → 그날 20시(15시 건너뜀)", bp._slot_dues([], F, 1, now.replace(hour=16)), [z(2026, 10, 27, 20)])
-check("오후 4시, 영상 2 → 20시, 다음날 15시", bp._slot_dues([], F, 2, now.replace(hour=16)),
-      [z(2026, 10, 27, 20), z(2026, 10, 28, 15)])
-taken = [{"folder": F, "due": z(2026, 10, 27, 15)}]
-check("15시 이미 참 → 20시", bp._slot_dues(taken, F, 1, now), [z(2026, 10, 27, 20)])
-check("다른 계정 칸은 상관없음", bp._slot_dues([{"folder": "999 얜샷템", "due": z(2026, 10, 27, 15)}], F, 1, now),
-      [z(2026, 10, 27, 15)])
+check("오전, 영상 2 → 그날 15:30·19:30", bp._slot_dues([], F, 2, now), [z(2026, 10, 27, 15, 30), z(2026, 10, 27, 19, 30)])
+check("오후 4시, 영상 1 → 그날 19:30(15:30 건너뜀)", bp._slot_dues([], F, 1, now.replace(hour=16)), [z(2026, 10, 27, 19, 30)])
+check("오후 4시, 영상 2 → 19:30, 다음날 15:30", bp._slot_dues([], F, 2, now.replace(hour=16)),
+      [z(2026, 10, 27, 19, 30), z(2026, 10, 28, 15, 30)])
+taken = [{"folder": F, "due": z(2026, 10, 27, 15, 30)}]
+check("15:30 이미 참 → 19:30", bp._slot_dues(taken, F, 1, now), [z(2026, 10, 27, 19, 30)])
+check("다른 계정 칸은 상관없음", bp._slot_dues([{"folder": "999 얜샷템", "due": z(2026, 10, 27, 15, 30)}], F, 1, now),
+      [z(2026, 10, 27, 15, 30)])
 check("지운 예약(deleted) 칸은 빈 칸", bp._slot_dues([dict(taken[0], final_status="deleted")], F, 1, now),
-      [z(2026, 10, 27, 15)])
+      [z(2026, 10, 27, 15, 30)])
 
 # ── 끝까지: 가짜 Buffer 로 post 두 번 ──
 tmp = tempfile.mkdtemp(); d = os.path.join(tmp, F); os.makedirs(d)
@@ -63,9 +63,14 @@ check("한 영상당 유튜브·틱톡 1번씩, 인스타 없음", sorted(len(v)
 check("한 영상의 두 서비스는 같은 칸", [len({due for _s, due in v}) for v in by_file.values()], [1, 1])
 dues = [next(iter(v))[1] for v in by_file.values()]
 check("서로 다른 영상은 다른 칸", len(set(dues)), 2)
-check("칸은 15:00·20:00 KST 뿐",
+check("칸은 15:30·19:30 KST 뿐",
       all(dt.datetime.strptime(x[:16], "%Y-%m-%dT%H:%M").replace(tzinfo=dt.timezone.utc).astimezone(KST).strftime("%H:%M")
-          in ("15:00", "20:00") for x in dues), True)
+          in ("15:30", "19:30") for x in dues), True)
+import random as _r
+seen = set()
+for i in range(30):
+    _r.seed(i); seen.add(tuple(bp._order(["a.mp4", "b.mp4", "c.mp4"])))
+check("폴더에 여럿이면 무작위 순서(사장님 10-29)", len(seen) > 1, True)
 n1 = len(calls)
 for nm in ("a.mp4", "b.mp4"):                       # 예약 폴더로 간 것을 사장님이 실수로 다시 넣었다
     shutil.copy2(os.path.join(d, bp.RESERVED, nm), os.path.join(d, nm))

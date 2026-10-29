@@ -23,6 +23,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import random
 import re
 import secrets
 import shutil
@@ -159,7 +160,7 @@ def _remove_remote(*names):
         _ssh("rm -f " + " ".join(f"{REMOTE_DIR}/{n}" for n in names))
 
 
-SLOTS = ((15, 0), (20, 0))     # 사장님(2026-10-26) "매일 3시 한 번, 8시 한 번 / 한 번에 두 개는 없다" — 계정당 칸 하나에 영상 하나
+SLOTS = ((15, 30), (19, 30))   # 사장님(2026-10-29) "매일 3시반·7시반"(10-26 3시·8시에서 바뀜) / "한 번에 두 개는 없다" — 계정당 칸 하나에 영상 하나
 SERVICES = ("youtube", "tiktok")   # 같은 영상을 같은 칸에 유튜브·틱톡 둘 다(10-26 실사용). 인스타는 950 계정이 잘못 붙어 있어 뺀다
 
 
@@ -169,8 +170,15 @@ def _taken(rows, folder):
             if r.get("folder") == folder and r.get("final_status") != "deleted"}
 
 
+def _order(vs):
+    """칸에 넣는 순서 — 폴더에 둘 이상이면 무작위(사장님 10-29 "두 개 이상 있어도 랜덤으로 배정")."""
+    vs = list(vs)
+    random.shuffle(vs)
+    return vs
+
+
 def _slot_dues(rows, folder, n, now=None):
-    """다음 빈 칸 n개(15:00·20:00 KST). 15시가 지났거나 차 있으면 건너뛰고 20시 — 영상이 하나면 그 날 20시로 간다."""
+    """다음 빈 칸 n개(SLOTS, KST). 앞 칸이 지났거나 차 있으면 건너뛰고 다음 칸 — 영상이 하나면 그 날 남은 칸으로 간다."""
     now = now or dt.datetime.now(KST)
     taken, out, day = _taken(rows, folder), [], now.date()
     while len(out) < n:
@@ -430,7 +438,7 @@ def cmd_post(a):
     rows = _load(LEDGER, [])
     ok = fail = 0
     for n, d, key in _folders(a.folder):
-        vs = _videos(d)
+        vs = _order(_videos(d))
         if not vs:
             continue
         try:
