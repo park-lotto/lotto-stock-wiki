@@ -103,3 +103,12 @@ test('대본 보기·줄 고치기 — 서버 대본을 보관하고 revise 를 
   assert.equal(o.need, 'ai');
   s.close();
 });
+
+test('숏템메이커 키 가져오기 — 설정 화면과 회원 Claude 가 같은 한 곳(점검표 14)', async () => {
+  const src = fs.readFileSync(path.join(REPO, 'shortem_client', 'server', 'web_bridge.js'), 'utf8');
+  assert.match(src, /\/bridge\/import-keys[^\n]*importMakerKeys\(\)/, '설정 화면 버튼이 importMakerKeys 를 부른다');
+  assert.equal((src.match(/api\.studioKeys\(\)/g) || []).length, 1, '가져오기 판단은 한 벌');
+  const idx = fs.readFileSync(path.join(REPO, 'shortem_client', 'server', 'index.js'), 'utf8');
+  assert.match(idx, /action === 'import_keys'[\s\S]{0,400}importMakerKeys\(\)/);
+  assert.match(fs.readFileSync(GUIDE, 'utf8'), /action="import_keys"/);
+});

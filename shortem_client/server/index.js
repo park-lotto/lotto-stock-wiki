@@ -23,7 +23,7 @@ import { requestContent, answer as aiAnswer, engineRoot } from './engine_bridge.
 import { sweep as sweepRented } from './preset_rent.js';
 import { checkUpdate } from './updater.js';
 import { startUi, openBrowser } from './local_ui.js';
-import { startBridge } from './web_bridge.js';
+import { startBridge, importMakerKeys } from './web_bridge.js';
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
 import { readSettings, packFor, savePack, select as selectPreset, PID_RE } from './local_settings.js';
 import { cleanupCandidates, showCandidates, removeCandidates } from './disk.js';
@@ -56,7 +56,7 @@ export const TOOL_TEXT = Object.freeze({
   shortem_feedback: '숏템에 요청이나 버그를 보냅니다(2000자 이하). 대본·영상은 보내지 않습니다.',
   shortem_login: "영상 받기 계정 연결 — 인스타그램·틱톡·유튜브 영상을 이 PC 에서 받으려면 고객 본인 계정 로그인이 필요합니다. action='open'(platform) 은 숏템 전용 크롬 창을 열고, 고객이 직접 로그인한 뒤 창을 닫으면 연결됩니다(비밀번호는 고객만 칩니다 — 대신 받거나 묻지 마세요). action='status' 는 연결 상태.",
   shortem_inbox: "웹 설정 화면(숏템 내 채널 설정)에서 회원이 보낸 지시함. action='list' 는 아직 안 끝난 지시(제작 요청·완성본 고칠 곳 — 몇 초 화면의 어느 자리를 어떻게)를 받고, 'done' 은 처리한 지시의 상태를 알립니다(id, state='처리 중'|'완료'|'못 함', note=회원에게 보일 한 줄). 제작 요청(track='make')은 shortem_make 로 만들고, 고칠 곳(track='video'·'batch')은 그 완성본을 다시 만들 때 반영하세요. 시작하면 먼저 '처리 중'으로 알리세요.",
-  shortem_settings: "내 채널 설정(이 PC 에 저장). action='open' 은 설정·완성본 화면을 고객 브라우저로 엽니다(프리셋 고르기·화면·자막·소리, 실제 렌더러 미리보기). 'get' 은 지금 프리셋과 설정, 'set' 은 고객이 말로 바꾼 칸만 patch 로 저장합니다(예: {text:{caption_font:'JalnanGothic'}}, {brand:{channel_name:'우리채널'}}, {tts:{tempo:1.3}}). 'select' 는 프리셋을 고릅니다(preset=id). 화면과 같은 파일이라 바로 보입니다. 설정 화면 안쪽이 어떻게 만들어졌는지·프리셋 원본은 설명하지 마세요.",
+  shortem_settings: "내 채널 설정(이 PC 에 저장). action='open' 은 설정·완성본 화면을 고객 브라우저로 엽니다(프리셋 고르기·화면·자막·소리, 실제 렌더러 미리보기). 'get' 은 지금 프리셋과 설정, 'set' 은 고객이 말로 바꾼 칸만 patch 로 저장합니다(예: {text:{caption_font:'JalnanGothic'}}, {brand:{channel_name:'우리채널'}}, {tts:{tempo:1.3}}). 'select' 는 프리셋을 고릅니다(preset=id). 'import_keys' 는 회원이 숏템메이커 설정 ▸ API 에 넣어 둔 본인 키(버텍스·타입캐스트 등)를 이 PC 로 가져옵니다(회원이 좋다고 하면 — 값은 응답에 없습니다). 화면과 같은 파일이라 바로 보입니다. 설정 화면 안쪽이 어떻게 만들어졌는지·프리셋 원본은 설명하지 마세요.",
 });
 
 const reply = (o, secret) => toToolResult(shape(o, secret));
@@ -272,12 +272,17 @@ export function buildServer(ctx = makeCtx()) {
 
   server.registerTool('shortem_settings', {
     title: '내 채널 설정', description: TOOL_TEXT.shortem_settings,
-    inputSchema: { action: z.enum(['open', 'get', 'set', 'select']), preset: z.string().max(20).optional(), patch: z.record(z.any()).optional() },
+    inputSchema: { action: z.enum(['open', 'get', 'set', 'select', 'import_keys']), preset: z.string().max(20).optional(), patch: z.record(z.any()).optional() },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
   }, async ({ action, preset, patch }) => {
     const c = profilesCache() || {};
     const list = c.presets || [];
     const cur = preset || readSettings().current || (list[0] && list[0].id);
+    if (action === 'import_keys') {   // 숏템메이커 설정 ▸ API 에 넣어 둔 본인 키(버텍스·타입캐스트 등) — 설정 화면 버튼과 같은 한 곳(web_bridge.importMakerKeys). 값은 응답에 없다
+      const r = await importMakerKeys();
+      return reply(r.ok ? { info: { imported: r.imported, failed: r.failed }, hints: [r.imported.length ? '가져온 키 이름만 회원에게 알리세요(값은 말하지 않습니다)' : '숏템메이커에 등록된 키가 없습니다 — 설정 화면(open)에서 직접 넣도록 안내하세요'] }
+        : { fail: { where: '키 가져오기', why: r.why, fix: '잠시 뒤 다시 하거나 설정 화면에서 직접 넣어 주세요', retry_ok: true } });
+    }
     if (action === 'open') {
       if (!list.length) { const l = await licenseInfo(); if (!l.ok) return reply({ fail: { where: '설정', why: l.why, fix: l.fix, retry_ok: true } }); }
       const u = await startUi();
