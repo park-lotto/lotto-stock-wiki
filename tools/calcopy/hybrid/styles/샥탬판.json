@@ -206,7 +206,7 @@
    },
    "transition": {
     "cut": 0.817,
-    "flash": 0.178,
+    "colorflash": 0.178,
     "zoomblur": 0.005
    },
    "sfx_kinds": {
@@ -270,22 +270,16 @@
       "크게(약 ×1.25, 잉크 높이 73px)": 1
      },
      "sfx": [
-      "cap",
-      "cap",
-      "none",
-      "none",
-      "none",
-      "none",
-      "none",
-      "cut",
-      "cut",
-      "none",
       "none",
       "none"
      ],
+     "sfx_count": {
+      "sure": 0,
+      "pending": 2
+     },
      "no_caption": 0,
      "transitions": {
-      "flash": 10,
+      "colorflash": 10,
       "cut": 24
      },
      "n_trans": 34,
@@ -376,19 +370,18 @@
       "크게(약 ×1.25, 잉크 높이 74px)": 1
      },
      "sfx": [
-      "none",
-      "none",
-      "cap",
       "cut",
-      "switch",
-      "none",
+      "cut",
       "cap",
-      "none",
       "switch"
      ],
+     "sfx_count": {
+      "sure": 0,
+      "pending": 4
+     },
      "no_caption": 0,
      "transitions": {
-      "flash": 9,
+      "colorflash": 9,
       "cut": 16
      },
      "n_trans": 25,
@@ -482,19 +475,20 @@
      },
      "sfx": [
       "cap",
-      "cap",
-      "cut",
-      "cap",
       "none",
       "cap",
-      "none",
+      "cap",
       "cap",
       "switch"
      ],
+     "sfx_count": {
+      "sure": 2,
+      "pending": 4
+     },
      "no_caption": 0,
      "transitions": {
       "cut": 31,
-      "flash": 3
+      "colorflash": 3
      },
      "n_trans": 34,
      "roles": {
@@ -585,15 +579,18 @@
       "크게(약 ×1.25, 잉크 높이 71px)": 1
      },
      "sfx": [
-      "none",
-      "cap",
+      "cut",
       "cut",
       "cut"
      ],
+     "sfx_count": {
+      "sure": 0,
+      "pending": 3
+     },
      "no_caption": 0,
      "transitions": {
       "cut": 39,
-      "flash": 4
+      "colorflash": 4
      },
      "n_trans": 43,
      "roles": {
@@ -671,22 +668,19 @@
       "크게(약 ×1.25, 잉크 높이 76px)": 1
      },
      "sfx": [
-      "switch",
-      "none",
-      "cut",
-      "cut",
       "none",
       "none",
       "switch",
-      "none",
-      "cap",
-      "cut",
-      "none"
+      "cut"
      ],
+     "sfx_count": {
+      "sure": 3,
+      "pending": 1
+     },
      "no_caption": 0,
      "transitions": {
       "cut": 31,
-      "flash": 7,
+      "colorflash": 7,
       "zoomblur": 1
      },
      "n_trans": 39,
@@ -766,12 +760,6 @@
      },
      "sfx": [
       "cap",
-      "none",
-      "cap",
-      "cap",
-      "none",
-      "none",
-      "none",
       "cap",
       "cap",
       "cap",
@@ -780,10 +768,14 @@
       "cut",
       "none"
      ],
+     "sfx_count": {
+      "sure": 1,
+      "pending": 7
+     },
      "no_caption": 0,
      "transitions": {
       "cut": 24,
-      "flash": 3
+      "colorflash": 3
      },
      "n_trans": 27,
      "roles": {
