@@ -164,7 +164,7 @@ async function pump(f) {
 
 export async function startFlow({ preset, video, product }) {
   await refreshCookies();
-  const res = await api.step({ step: 'start', preset, source: { kind: 'youtube', url: video, ...(product ? { product: String(product).slice(0, 200) } : {}) } });
+  const res = await api.step({ step: 'start', preset, source: { kind: /tiktok.com/.test(video) ? 'tiktok' : (/instagram.com/.test(video) ? 'instagram' : 'youtube'), url: video, ...(product ? { product: String(product).slice(0, 200) } : {}) } });
   const f = { sid: res.sid, preset, video, created: Date.now() };
   flows.set(f.sid, f);
   await absorb(f, res);

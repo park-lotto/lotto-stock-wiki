@@ -369,6 +369,20 @@ def member_stop(why: str, fix: str) -> tuple[str, str]:
 ASKER_IN_MAX = 60_000   # 다시 시도용으로 기억할 입력 크기 상한(글자) — 넘으면 그 단계 입력 없이 다시(대개 do 를 다시 내는 단계라 입력이 필요 없다)
 
 
+SOURCE_URL_RX = re.compile(r"^https://(?:www\.|m\.)?(?:"
+                           r"youtube\.com/(?:shorts/|watch\?v=)[0-9A-Za-z_-]{11}|youtu\.be/[0-9A-Za-z_-]{11}"
+                           r"|tiktok\.com/@[^/?#]+/video/\d{8,}"
+                           r"|instagram\.com/(?:reel|reels|p)/[0-9A-Za-z_-]{5,})")
+
+
+def source_url_problem(url: str) -> str:
+    """(판단 주인 — 소재로 받는 영상 주소) 유튜브 쇼츠·영상 / 틱톡 영상 / 인스타 릴스 한 편 주소면 '' , 아니면 회원에게 보일 이유.
+    사장님 길(flow_dev)과 회원 창구(claude_flow.step start)가 같이 부른다 — 10-29 창구만 유튜브 정규식이라 틱톡 소재가 거절됐다(하나의 MCP)."""
+    if SOURCE_URL_RX.match(str(url or "").strip()):
+        return ""
+    return "영상 한 편 주소를 주세요 — 유튜브 쇼츠·틱톡 영상(…/@아이디/video/숫자)·인스타 릴스(…/reel/코드)"
+
+
 def start(ref: str, version: str, sid: str, product: str = "", fmt: str | None = None) -> dict:
     """product = 고객이 정한 쿠팡 제품(이름·상품 주소) — 원본에 제품이 화면으로 안 나올 때 쓴다(사장님 10-23 '실제 올린 채널의 상품을 참고').
     fmt = 형식(서버가 넘기면 그대로 — 단 프리셋 장부와 다르면 거절). 없으면 channel/프리셋.json 에서(flow_format_of). 못 정하면 FormatError."""

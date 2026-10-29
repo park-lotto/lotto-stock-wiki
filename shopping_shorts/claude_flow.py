@@ -100,8 +100,10 @@ def step(ctx: dict, body: dict, store=None) -> dict:
         if not line:
             raise CP.PortalError("bad_request", "이 프리셋은 단계 진행 방식이 아닙니다")
         url = str((body.get("source") or {}).get("url") or "")
-        if not re.match(r"^https://(www\.)?(youtube\.com/(shorts/|watch\?v=)|youtu\.be/)[0-9A-Za-z_-]{11}", url):
-            raise CP.PortalError("bad_request", "연예인 쇼핑 쇼츠(유튜브) 주소를 주세요")
+        why = flow.source_url_problem(url) if hasattr(flow, "source_url_problem") else (
+            "" if re.match(r"^https://(www\.)?(youtube\.com/(shorts/|watch\?v=)|youtu\.be/)[0-9A-Za-z_-]{11}", url) else "유튜브 쇼츠 주소를 주세요")   # 판단 주인 = 지시서 flow.source_url_problem(옛 지시서면 옛 유튜브 규칙)
+        if why:
+            raise CP.PortalError("bad_request", why)
         sid = uuid.uuid4().hex[:12]
         # 고객이 정한 쿠팡 제품(이름·주소) — 원본에 제품이 말로만 나올 때 쓴다(사장님 10-23)
         product = str((body.get("source") or {}).get("product") or "")[:200]
