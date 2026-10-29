@@ -16,7 +16,7 @@ table{border-collapse:collapse;width:100%;background:#F8F4ED}
 td,th{border:1px solid #DDD4C7;padding:8px;font-size:14px;text-align:left}
 p,li{font-size:15px;color:#3a3833}"""
 
-body = markdown.markdown(open(SRC, encoding="utf-8").read(), extensions=["tables"])
+body = markdown.markdown(open(SRC, encoding="utf-8").read(), extensions=["tables", "nl2br"])
 html = (f'<!doctype html><html lang="ko"><head><meta charset="utf-8">'
         f'<meta name="viewport" content="width=device-width,initial-scale=1"><title>숏클 1편 대본</title>'
         f'<style>{CSS}</style></head><body><div class="w">{body}</div></body></html>')
