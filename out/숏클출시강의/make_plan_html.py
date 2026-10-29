@@ -72,13 +72,13 @@ html = f"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name
 <title>숏클 데일리 1편 구성안</title><style>{CSS}</style></head><body><div class="wrap">
 <span class="pill">사장님 승인 대기</span>
 <h1>숏클 데일리 1편 구성안</h1>
-<div class="lead">롱폼 약 15분 30초 + 쇼츠 4편, 같은 날 함께 기획 · 2026-10-29 · 샘플 영상은 바탕화면 숏클_장면샘플 폴더(그 자리에서 재생)</div>
+<div class="lead">롱폼 약 17분 30초 + 쇼츠 4편, 같은 날 함께 기획 · 2026-10-29 · 샘플 영상은 바탕화면 숏클_장면샘플 폴더(그 자리에서 재생)</div>
 <div class="sum">
 <div class="box"><b>관통 키워드 = "진짜 딸깍"</b> (+ "한 줄")<br>오프닝 "진짜 클로드의 딸깍을 보여 드립니다" → 한계 "한 줄로 부탁하면 안 된다" → 본론 "프리셋+한 줄" ×8 → 끝 "오늘 한 줄 넣어 보세요"</div>
 <div class="box"><b>이야기 구조</b><br>주인공 = 시청자(40·50·60대) · 적 = 시간 · 실패한 시도 = AI에게 말로 부탁 · 조력자 = 숏클 엔진 · <b>시험 8번</b> = 프리셋 8개 · 결말 = 자는 동안 쌓인 결과물</div>
 <div class="box"><b>핵심(사장님)</b><br>라이브에서 사람들이 좋아한 것 = 진솔함 + 기존 클로드형이 못 하는 것들(근거: 라이브_반응분석.md — 채팅 157개 × 발언 대조). 진짜 Claude 가 만드는 과정 + 결과물 등장. 결과 등장 방식은 매번 다르게. 목소리 = 필재 1.25배속.</div>
 </div>
-<div class="bar"><div style="flex:30;background:#6B6660">오프닝</div><div style="flex:180;background:#9A8F80">1~5단계 3분</div><div style="flex:630;background:var(--or)">6 내 아이템 10분30초 (68%)</div><div style="flex:90;background:var(--teal)">질문·CTA</div></div>
+<div class="bar"><div style="flex:40;background:#6B6660">훅</div><div style="flex:325;background:#9A8F80">공감·문제·해결책·한계·바람·방향·배제 5분25초</div><div style="flex:585;background:var(--or)">6 내 아이템 9분45초 (56%)</div><div style="flex:100;background:var(--teal)">질문·CTA</div></div>
 <h2>롱폼 장면표 — 설득 7단계</h2>
 <table><tr><th>단계</th><th>장면(샘플)</th><th>필재 나레이션 요지</th><th class="dev">설득 장치</th></tr>{trs}</table>
 <h2>6단계 — 라이브에서 반응이 컸던 메리트 순서 + 프리셋 시험 8번(메리트마다 증거로 붙임)</h2>
@@ -90,7 +90,7 @@ html = f"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name
 <h2>쓸 수 있는 프리셋 (구글 드라이브 칼카피영상 실측)</h2>
 <table><tr><th>한 줄 명령</th><th>형식</th><th>완성본</th></tr>{pr}</table>
 <div class="lead" style="margin-top:8px">이번 편은 8개 전부 사용. 다음 편부터는 같은 8개를 다른 결과물·다른 등장 순서로 돌린다(매일 스타일 교체). 폴더↔프리셋 짝은 폴더 이름과 프리셋.json 형식으로 맞춘 것.</div>
-<h2>사장님 확인할 것</h2><ol><li>관통 키워드 "한 줄" · 이야기 구조(시험 8번) 이대로?</li><li>프리셋 8개와 순서(쉬운 → 어려운) 이대로?</li><li>터미널 = 진짜 Claude Code 화면 녹화로?</li><li>15분 30초판으로 바로 제작? (1~5단계 3분 · 6단계 10분 30초 · 질문·CTA 1분 30초 — 필재 실측 뒤 조정)</li></ol>
+<h2>사장님 확인할 것</h2><ol><li>관통 키워드 "한 줄" · 이야기 구조(시험 8번) 이대로?</li><li>프리셋 8개와 순서(쉬운 → 어려운) 이대로?</li><li>터미널 = 진짜 Claude Code 화면 녹화로?</li><li>17분 30초판으로? (앞 6분 · 6단계 9분 45초 · 질문·CTA 1분 40초 — 필재 실측 뒤 조정) / 힉스필드·구글 플로우 이름을 그대로 말할지</li></ol>
 </div></body></html>"""
 
 out = os.path.join(HERE, "데일리_1편_구성안.html")
