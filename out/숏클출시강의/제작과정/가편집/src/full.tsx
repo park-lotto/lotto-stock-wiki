@@ -12,8 +12,9 @@ const FPS = 30, S = (s: number) => Math.round(s * FPS);
 const BG = "#EFE9DF", INK = "#1C1B19", OR = "#E07A2B", SUB = "#6B6660";
 const ez = (f: number, a: number, b: number) =>
   interpolate(f, [a, b], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) });
-type V = { src: string; sec: number };
-type Sc = { i: number; name: string; style: string; sec: number; text: string; vids: V[] };
+type V = { src: string; sec: number; at: number };
+type Cap = [number, number, string];
+type Sc = { i: number; name: string; style: string; sec: number; caps: Cap[]; vids: V[] };
 const P = PLAN as Sc[];
 const PAD = 0.4;
 
@@ -25,12 +26,12 @@ const Fonts = () => (
   `}</style>
 );
 
-const Caption: React.FC<{ text: string; dur: number }> = ({ text, dur }) => {
-  const f = useCurrentFrame();
-  const parts = text.split(/(?<=[.?!])\s+/);
-  const total = parts.reduce((a, p) => a + p.length, 0);
-  let acc = 0, cur = parts[0];
-  for (const p of parts) { if (f >= (acc / total) * dur) cur = p; acc += p.length; }
+// 자막 = 필재 음성의 실제 발음 시각(build_plan.py 가 align.json 에서 뽑은 [시작, 끝, 글]).
+const Caption: React.FC<{ caps: Cap[] }> = ({ caps }) => {
+  const t = useCurrentFrame() / FPS;
+  const c = caps.find((x, k) => t >= x[0] && t < (caps[k + 1] ? caps[k + 1][0] : x[1] + 0.6));
+  if (!c) return null;
+  const cur = c[2];
   return (
     <div style={{ position: "absolute", left: 0, right: 0, bottom: 50, display: "flex", justifyContent: "center" }}>
       <div style={{ fontFamily: "Pret", fontWeight: 800, fontSize: 46, color: "#fff", background: "rgba(0,0,0,.72)", padding: "12px 30px", borderRadius: 14, maxWidth: 1640, textAlign: "center", wordBreak: "keep-all", lineHeight: 1.35 }}>{cur}</div>
@@ -57,11 +58,12 @@ const Placeholder: React.FC<{ s: Sc }> = ({ s }) => {
 
 const Visual: React.FC<{ s: Sc; dur: number }> = ({ s, dur }) => {
   if (!s.vids.length) return <Placeholder s={s} />;
-  const each = Math.floor(dur / s.vids.length);
+  // 영상 전환 = 나레이션 기준 구절이 들리는 시각(v.at, build_plan.py ANCHOR)
+  const st = s.vids.map((v) => S(v.at));
   return (
     <>
       {s.vids.map((v, k) => (
-        <Sequence key={k} from={k * each} durationInFrames={k === s.vids.length - 1 ? dur - k * each : each}>
+        <Sequence key={k} from={st[k]} durationInFrames={Math.max(1, (k === s.vids.length - 1 ? dur : st[k + 1]) - st[k])}>
           <AbsoluteFill style={{ background: "#000" }}>
             <Loop durationInFrames={Math.max(1, S(v.sec) - 1)}>
               <OffthreadVideo src={staticFile(v.src)} muted style={{ width: 1920, height: 1080, objectFit: "contain" }} />
@@ -84,7 +86,7 @@ const Main: React.FC = () => {
           <Sequence key={s.i} from={from} durationInFrames={dur}>
             <Visual s={s} dur={dur} />
             <Audio src={staticFile(`full/s${String(s.i).padStart(2, "0")}.mp3`)} />
-            <Caption text={s.text} dur={dur} />
+            <Caption caps={s.caps} />
             <Tag s={s} />
           </Sequence>
         );
