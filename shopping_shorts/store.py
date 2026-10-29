@@ -6610,11 +6610,20 @@ class Store:
         import secrets
         now = datetime.now(timezone.utc).isoformat()
         with self._conn() as c:
-            for rid, st, op in c.execute(
-                    "SELECT req_id, status, out_path FROM yt_relay WHERE url=? "
+            from shopping_shorts import config
+            work_cut = (datetime.now(timezone.utc)
+                        - timedelta(seconds=config.YT_RELAY_POLL_TIMEOUT)).isoformat()
+            for rid, st, op, upd in c.execute(
+                    "SELECT req_id, status, out_path, updated_at FROM yt_relay WHERE url=? "
                     "AND status IN ('pending','working','done') ORDER BY created_at DESC", (url,)).fetchall():
                 if st == "done" and not (op and Path(op).exists()):
                     continue
+                # ★working 의 updated_at = PC 가 맡은 시각. 오래된 working 은 PC 가 도중에 죽은 것 —
+                #   거기 붙으면 영원히 안 끝난다(10-29 실사고: 에이전트 재시작 뒤 NsSZAEmgJ88 20분 멈춤).
+                if st == "working":
+                    if upd < work_cut:
+                        continue
+                    return rid
                 c.execute("UPDATE yt_relay SET updated_at=? WHERE req_id=?", (now, rid))
                 return rid
             req_id = secrets.token_hex(8)
@@ -6639,8 +6648,8 @@ class Store:
                               "ORDER BY created_at LIMIT 1").fetchone()
                 if not r:
                     return None
-                n = c.execute("UPDATE yt_relay SET status='working' WHERE req_id=? AND status='pending'",
-                              (r[0],)).rowcount
+                n = c.execute("UPDATE yt_relay SET status='working', updated_at=? "
+                              "WHERE req_id=? AND status='pending'", (now, r[0])).rowcount
                 if n:
                     return {"req_id": r[0], "url": r[1]}
 
