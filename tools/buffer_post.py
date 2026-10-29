@@ -342,6 +342,13 @@ def cmd_cleanup(a=None):
     keys = _load(KEYS, {})
     done = 0
     for r in rows:
+        # 게시됐는데 그때 G: 에 파일이 없어 못 옮긴 것 — 매번 다시 옮겨 본다(10-29: G: 끊김 뒤 7편이 예약\ 에 남았다)
+        if r.get("final_status") == "sent" and r.get("done_where") == "G:에없음":
+            w = _to_done(r)
+            if w != r["done_where"]:
+                r["done_where"] = w
+                _save_ledger(rows)
+            continue
         key = _key_for(keys, r.get("folder", ""))
         if r.get("final_status") in ("sent", "deleted") or not key:
             continue
