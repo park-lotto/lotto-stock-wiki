@@ -35,7 +35,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20261023;
+  var LOGIC_VER = 20261027;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   // ★옛 '번호 있는' 로직을 이어받을 때도 그 버튼을 걷는다(관제 156): 버튼은 id 선점이라 옛 것이 남으면
   //   그 옛 클릭 처리(예: 30초에 끊는 렌즈)가 계속 돈다 — 새 로직이 떠도 '서버 연결 실패'가 났다.
@@ -58,7 +58,7 @@
   // JS 스코프만 격리하고 DOM은 페이지와 공유하므로 이 attribute를 페이지 스크립트가 읽는다.
   // 우리 도메인에선 담기 버튼을 붙이지 않고 여기서 끝낸다(자기 페이지에 엉뚱한 📥 방지).
   try {
-    if (["shoppingshorts.duckdns.org", "app.stmaker.kr"]
+    if (["shoppingshorts.duckdns.org", "stmaker.kr"]   // stmaker.kr = 루트·www·app 전부
         .some(function (h) { return location.hostname.indexOf(h) >= 0; })) {
       document.documentElement.setAttribute("data-ss-grab-installed", "1");
       // localStorage는 JS월드가 아니라 '출처(origin)'로 공유돼 샌드박스 경계에 가장 강하다.
@@ -144,6 +144,9 @@
     return "";
   }
   function openGrab(url, thumb, title, videoUrl) {
+    // ★썸네일은 짧은 웹 주소만 싣는다(관제 279, 2026-10-27 서버 실측: 인스타 5·틱톡 1건이 data: 그림을 통째로
+    //   주소에 실어 414(주소가 너무 김)로 서버 앞에서 거절 — 담기 자체가 안 됐다). 썸네일은 서버 _enrich_grab 이 다시 채운다.
+    if (!/^https?:\/\//.test(thumb || "") || String(thumb).length > 1500) thumb = "";
     window.open(
       BASE + "/api/grab?url=" + encodeURIComponent(url) +
         "&thumbnail=" + encodeURIComponent(thumb || "") +
@@ -1308,6 +1311,7 @@
       return "";
     }
     function openGrab(url, thumb, title, videoUrl) {
+      if (!/^https?:\/\//.test(thumb || "") || String(thumb).length > 1500) thumb = "";   // 414 막기(위 openGrab 과 같은 규칙, 관제 279)
       window.open(BASE + "/api/grab?url=" + encodeURIComponent(url) + "&thumbnail=" + encodeURIComponent(thumb || "") + "&title=" + encodeURIComponent((title || "").slice(0, 120)) + (videoUrl ? "&video_url=" + encodeURIComponent(videoUrl) : ""), "ss_grab", "width=380,height=220");
     }
     function deepFindId(o, d) {

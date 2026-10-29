@@ -43,6 +43,21 @@ test('만든 쿠키 파일·설정을 yt-dlp 가 그대로 읽는다(파일 꼴 
   assert.equal(r.status, 0, log.slice(-500));
 });
 
+test('홈 경로에 한글이 있어도 yt-dlp 가 설정 파일을 읽는다(98 #158 — 한국어 윈도 cp949)', () => {
+  L.writeCookies(ck);
+  const conf = fs.readFileSync(path.join(L.engineCookieEnv().XDG_CONFIG_HOME, 'yt-dlp', 'config'), 'utf8');
+  assert.match(conf, /^# coding: utf-8\n/, '첫 줄 인코딩 표기');
+  // 같은 설정 꼴을 한글 폴더에 두고(쿠키 경로도 한글) yt-dlp 를 진짜로 돌린다 — 파싱 실패면 'Unable to parse'
+  const dir = fs.mkdtempSync(path.join(path.dirname(L.cookiesFile()), '한글홈_'));
+  fs.mkdirSync(path.join(dir, 'yt-dlp'), { recursive: true });
+  fs.copyFileSync(L.cookiesFile(), path.join(dir, '쿠키.txt'));
+  fs.writeFileSync(path.join(dir, 'yt-dlp', 'config'), conf.replace(/--cookies "[^"]+"/, `--cookies "${path.join(dir, '쿠키.txt').replace(/\\/g, '/')}"`));
+  const r = spawnSync(process.platform === 'win32' ? 'yt-dlp' : 'yt-dlp', ['--simulate', 'notaurl'], { env: { ...process.env, XDG_CONFIG_HOME: dir }, encoding: 'utf8', timeout: 60000 });
+  const log = (r.stdout || '') + (r.stderr || '');
+  assert.doesNotMatch(log, /Unable to parse/, log.slice(-300));
+  assert.match(log, /not a valid URL/, log.slice(-300));
+});
+
 test('만료된 로그인 쿠키는 연결 안 됨으로 본다', () => {
   L.writeCookies([{ ...ck[0], expires: Date.now() / 1000 - 10 }]);
   assert.equal(L.status().connected.instagram, false);

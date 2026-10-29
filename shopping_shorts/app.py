@@ -190,6 +190,16 @@ app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 
 @app.on_event("startup")
+def _channel_stats_hourly():
+    """채널 리포트(관제 281) 매시간 자동 수집 — 언제·어디서 도나는 channel_stats.service.start_scheduler 한 곳."""
+    try:
+        from channel_stats import service as _cs
+        _cs.start_scheduler(log=lambda m: logging.warning(m))
+    except Exception as e:      # noqa: BLE001 — 기동은 막지 않되 사실은 남긴다
+        logging.warning("[channel_stats] 자동 수집 시작 실패: %r", e)
+
+
+@app.on_event("startup")
 def _seed_voice_presets():
     """기동 시 큐레이션 프리셋을 DB로 upsert(idempotent)."""
     try:
@@ -2023,6 +2033,7 @@ def api_fav_channel_add(request: Request, body: dict):
     )
     if added is None:
         return {"ok": False, "error": f"나만의 채널은 최대 {_fav_channel_cap(cid)}개까지예요"}
+    _fav_channel_fill_soon(cid, plat, chid, body.get("channel_url") or url)
     n = len(store.fav_channel_list(customer_id=cid))
     return {"ok": True, "added": bool(added), "platform": plat, "channel_id": chid, "count": n}
 
@@ -2038,6 +2049,30 @@ def api_fav_channel_remove(request: Request, body: dict):
 
 # 갱신 캐시 — 사장님 확정(2026-09-02): "열 때 1회". 6시간 안에 이미 갱신했으면 건너뛴다.
 _FAV_CH_TTL_SEC = 6 * 3600
+# 담는 순간 그 채널 1개의 사진·이름을 뒤에서 받는다(관제 278, 2026-10-27 사장님 "앞으로 넣을 때도 다 들어가게").
+#   ★화면 열 때 갱신만 있으면 3개씩·오래된 순이라 새로 담은 채널이 맨 뒤에서 수십 번을 기다렸다.
+#   유튜브 조회(yt-dlp)는 수십 초라 담기 응답을 붙잡지 않게 작은 풀(2개)로 돌린다.
+from shopping_shorts import keyctx as _fav_keyctx
+_FAV_FILL_POOL = _fav_keyctx.pool(max_workers=2)
+
+
+def _fav_channel_fill_now(cid, platform, channel_id, url=""):
+    meta = _fav_channel_probe(platform, channel_id, url)
+    if meta:
+        Store(DB_PATH).fav_channel_set_meta(platform, channel_id, customer_id=cid, **meta)
+    else:
+        print(f"[볼채널] 담은 직후 채우기 빈 결과 {platform}/{channel_id}", file=sys.stderr)
+
+
+def _fav_channel_fill_soon(cid, platform, channel_id, url=""):
+    """담기 입구(_fav_channel_register · /api/fav_channel/add)가 부른다 — 사진이 빈 채널만."""
+    try:
+        if any(i["platform"] == (platform or "").lower() and i["channel_id"] == channel_id
+               and not (i.get("avatar") or "")
+               for i in Store(DB_PATH).fav_channel_list(customer_id=cid)):
+            _FAV_FILL_POOL.submit(_fav_channel_fill_now, cid, platform, channel_id, url)
+    except Exception as e:  # noqa: BLE001 — 사진 채우기가 담기를 막지 않는다
+        print(f"[볼채널] 담은 직후 채우기 실패 {platform}/{channel_id}: {e!r}", file=sys.stderr)
 
 
 @app.post("/api/fav_channel/refresh")
@@ -2053,7 +2088,8 @@ def api_fav_channel_refresh(request: Request):
     #   멈춘다 → 한 번에 이만큼만 갱신하고 나머지는 다음에 열 때 이어서 한다.
     #   6시간 캐시가 있어 몇 번 열면 전부 채워진다.
     slow_left = 3
-    for it in items:
+    # 사진이 빈 채널 먼저(관제 278) — 오래된 순이면 6시간마다 기존 채널이 3칸을 다 쓴다.
+    for it in sorted(items, key=lambda i: bool(i.get("avatar"))):
         ts = it.get("refreshed_at")
         if ts:
             try:
@@ -2525,6 +2561,8 @@ def _fav_channel_register(cid, url: str, username: str = "", thumb: str = "") ->
     added = store.fav_channel_add(plat, chid, name=(disp or chid), url=url,
                                   last_video_thumb=thumb, customer_id=cid, cap=cap)
     status = "full" if added is None else ("added" if added else "exists")
+    if added is not None:
+        _fav_channel_fill_soon(cid, plat, chid, url)
     return {"status": status, "platform": plat, "channel_id": chid, "name": disp,
             "cap": cap}
 
@@ -10195,7 +10233,12 @@ def _video_gone_reason(job):
         return "작업을 찾을 수 없어요."
     # 최종 렌더 뒤 입력을 고치면 status가 ready_for_review로 돌아간다. 혹시 옛 경로가
     # 남은 작업이어도 그 파일을 최신 완성본으로 주지 않는다(재생·공유·예약 공통 방어).
+    # ★한 번도 렌더하지 않은 작업에 "다시"라고 하면 고객이 뭘 해야 할지 모른다
+    #   (2026-10-26 관제 274, 임동일: 렌더 전에 예약을 눌러 "다시 렌더"만 보고 버퍼 고장으로 앎).
+    #   ⚠️렌더 뒤 고쳐서 무효화된 작업도 video_path가 비므로(_save_render_inputs) 두 경우 다 맞는 말로 쓴다.
     if job.get("status") != "done":
+        if not job.get("video_path"):
+            return "최신 완성 영상이 없어요 — '최종 렌더'를 눌러 완성본을 만들어 주세요."
         return "수정한 내용으로 최종 렌더를 다시 해주세요."
     if not job.get("video_path"):
         return "아직 완성된 영상이 없어요."
@@ -10728,13 +10771,25 @@ _BUFFER_DEMO_CHANNELS = [
 
 
 @app.get("/api/buffer/channels")
-def api_buffer_channels(request: Request):
-    """이 고객의 Buffer에 연결된 채널 목록(어디에 올릴지 고르게 한다)."""
+def api_buffer_channels(request: Request, job_id: str = ""):
+    """이 고객의 Buffer에 연결된 채널 목록(어디에 올릴지 고르게 한다).
+
+    job_id를 주면 그 작업에 올릴 완성 영상이 있는지 먼저 본다 — 없으면 예약 창을 열지 않고
+    이유를 돌려준다(2026-10-26 관제 274: 렌더 전에 예약 창이 열려 고객이 버퍼 고장으로 앎).
+    판정은 예약(api_buffer_schedule)과 같은 _video_gone_reason 하나다."""
     key = _buffer_key(request)
     if not key:
         if _BUFFER_DEMO:
             return {"ok": True, "channels": _BUFFER_DEMO_CHANNELS, "demo": True}
         return JSONResponse(status_code=200, content=_BUFFER_NO_KEY)
+    job_id = os.path.basename(job_id or "")
+    if job_id:
+        job = Store(DB_PATH).get_mix_job(job_id)
+        if job and int(job.get("customer_id") or 0) == _cid(request):
+            _gone = _video_gone_reason(job)
+            if _gone:
+                return JSONResponse(status_code=200,
+                                    content={"ok": False, "no_video": True, "error": _gone})
     try:
         return {"ok": True, "channels": buffer_api.channels(key)}
     except buffer_api.BufferError as e:
@@ -18778,6 +18833,58 @@ def api_admin_calcopy(request: Request):
         return denied
     from shopping_shorts import calcopy_board as _cb
     return _cb.board()
+
+
+# ── 채널 리포트(관제 281, 2026-10-27 사장님 "숏템메이커에 페이지 하나 붙이고 관리자만") — 우리 유튜브·틱톡 채널 성적 ──
+#    수집·분석 판단은 channel_stats(collect/analyze), 언제 다시 모으나는 channel_stats.service. 여기는 관리자 확인만.
+@app.get("/channel_stats", response_class=HTMLResponse)
+def _channel_stats_page(request: Request):
+    if not _is_admin(getattr(request.state, "customer_id", None)):
+        return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
+    return FileResponse(Path(__file__).parent / "static" / "channel_stats.html",
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
+@app.get("/api/admin/channel_stats")
+def api_admin_channel_stats(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from channel_stats import service as _cs
+    return _cs.data()
+
+
+@app.get("/api/admin/channel_stats/oauth/start")
+def api_admin_channel_stats_oauth_start(request: Request, ch: str = ""):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from channel_stats import service as _cs
+    return RedirectResponse(_cs.oauth_start(ch), status_code=302)
+
+
+@app.get("/api/admin/channel_stats/oauth/callback")
+def api_admin_channel_stats_oauth_callback(request: Request, code: str = "", state: str = "", error: str = ""):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from channel_stats import service as _cs
+    try:
+        if error:
+            raise RuntimeError(f"구글이 거절했습니다: {error}")
+        msg = f"'{_cs.oauth_finish(code, state)}' 채널을 연결했습니다"
+    except Exception as e:  # noqa: BLE001 — 실패 사유를 화면 위 알림으로 그대로 보여준다
+        msg = f"연결 실패: {e}"
+    return RedirectResponse("/channel_stats?msg=" + urllib.parse.quote(msg), status_code=302)
+
+
+@app.post("/api/admin/channel_stats/refresh")
+def api_admin_channel_stats_refresh(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from channel_stats import service as _cs
+    return {"started": _cs.refresh_async()}
 
 
 # ── 숏템프리셋(관제 224, 2026-10-17 사장님 "칼카피라고 하지 말고 숏템프리셋") — 관리자 전용 ──

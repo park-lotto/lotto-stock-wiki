@@ -25,3 +25,22 @@ test('서버 안내에 내부 설명 금지가 들어 있다', () => {
   assert.match(SERVER_INSTRUCTIONS, /설명드릴 수 없어요/);
   assert.match(SERVER_INSTRUCTIONS, /열어 읽거나 보여 주지 않는다/);
 });
+
+test('멈춤 전달 안내는 한국어 칸 이름으로 — why·fix 영어 칸 이름을 고객에게 쓰지 말라고(98 #160)', async () => {
+  const { FAIL_SAY, TOOL_TEXT } = await import('../server/index.js');
+  for (const t of [SERVER_INSTRUCTIONS, TOOL_TEXT.shortem_make]) {
+    assert.ok(t.includes(FAIL_SAY), '멈춤 안내가 FAIL_SAY 한 곳을 안 씀');
+    assert.ok(!/why·fix 두 줄만/.test(t), '옛 안내(why·fix 두 줄만)가 남았다');
+  }
+  assert.match(FAIL_SAY, /이유: …/);
+  assert.match(FAIL_SAY, /할 일: …/);
+});
+
+test('회원 Claude 역할(제작자) 한 곳 — 서버 안내 첫 줄 · make 스킬이 가리킨다(사장님 10-26)', async () => {
+  const { MAKER_ROLE } = await import('../server/index.js');
+  assert.ok(SERVER_INSTRUCTIONS.startsWith(MAKER_ROLE), '안내 첫 줄이 제작자 역할이 아님');
+  for (const w of ['제작자', '가이드를 지킨다', '금지선', '스스로 헤쳐 나간다', '꼭 필요한 결정']) assert.ok(MAKER_ROLE.includes(w), w);
+  const fs = await import('node:fs');
+  const skill = fs.readFileSync(new URL('../../installer/plugin/shortem/skills/make/SKILL.md', import.meta.url), 'utf8');
+  assert.match(skill, /역할: 너는 이 편의 제작자다/);
+});

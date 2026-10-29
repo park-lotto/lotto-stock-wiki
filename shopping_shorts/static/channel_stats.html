@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>채널 리포트 · 숏템메이커</title>
+<!-- 디자인 기준: awesome-design-md / linear.app — 숫자가 빽빽한 제품 화면에 맞는 짙은 바탕·강조색 하나·얇은 테두리.
+     차트 색: dataviz 검증 통과(유튜브 #3987e5 · 틱톡 #199e70, 다크 표면 #0f1011, CVD ΔE 19.6).
+     움직임: emil — 들어올 때 ease-out 200ms·누를 때 0.97, 자주 쓰는 정렬·필터는 움직이지 않는다. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  color-scheme:dark;
+  --canvas:#010102; --s1:#0f1011; --s2:#141516; --s3:#18191a; --s4:#1e1f21;
+  --line:#23252a; --line2:#34343a;
+  --ink:#f7f8f8; --ink2:#d0d6e0; --ink3:#8a8f98; --ink4:#62666d;
+  --accent:#5e6ad2; --accent2:#828fff; --good:#27a644; --warn:#c98500;
+  --yt:#3987e5; --tt:#199e70;
+  --r-sm:6px; --r:8px; --r-lg:12px;
+  --ease:cubic-bezier(.23,1,.32,1);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--canvas);color:var(--ink);
+  font-family:"Pretendard Variable",Pretendard,-apple-system,"SF Pro Display","Segoe UI",sans-serif;
+  font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1360px;margin:0 auto;padding:28px 32px 80px;min-width:0;width:100%}  /* body 가 flex(sidebar.js) — 폭을 화면에 묶는다 */
+@media (max-width:720px){.wrap{padding:20px 16px 60px}}
+
+/* 머리 */
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.brand{display:flex;align-items:center;gap:10px;color:var(--ink3);font-size:13px;font-weight:500;letter-spacing:.2px}
+.brand i{width:8px;height:8px;border-radius:2px;background:var(--accent);display:inline-block}
+h1{font-size:28px;font-weight:600;letter-spacing:-.6px;margin:6px 0 0}
+.meta{color:var(--ink3);font-size:13px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--good);display:inline-block;margin-right:6px;box-shadow:0 0 0 3px #27a64422}
+
+/* 필터 한 줄 */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px;position:sticky;top:0;z-index:5;
+  padding:10px 0;background:linear-gradient(var(--canvas) 80%,transparent)}
+.seg{display:inline-flex;background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:2px;gap:2px;overflow-x:auto;max-width:100%}
+.seg button{all:unset;cursor:pointer;padding:6px 12px;border-radius:var(--r-sm);color:var(--ink3);font-size:13px;font-weight:500;white-space:nowrap;
+  transition:background-color 150ms ease,color 150ms ease}
+.seg button[aria-pressed=true]{background:var(--s4);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line2)}
+@media (hover:hover) and (pointer:fine){.seg button:hover{color:var(--ink2)}}
+.seg button:active,.btn:active{transform:scale(.97)}
+.btn{all:unset;cursor:pointer;background:var(--s2);border:1px solid var(--line2);border-radius:var(--r);padding:8px 16px;color:var(--ink2);font-size:13px;font-weight:500;transition:transform 160ms var(--ease),background-color 150ms ease}
+@media (hover:hover){.btn:hover{background:var(--s3)}}
+.search{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);color:var(--ink);padding:7px 12px;font:inherit;font-size:13px;min-width:200px}
+.search:focus{outline:none;border-color:var(--accent)}
+
+/* 카드 */
+.card{background:var(--s1);border:1px solid var(--line);border-radius:var(--r-lg);padding:20px}
+.card h2{font-size:16px;font-weight:600;letter-spacing:-.2px;margin:0}
+.card .sub{color:var(--ink3);font-size:12.5px;margin-top:2px}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.grid{display:grid;gap:12px}
+.enter{opacity:0;transform:translateY(6px);animation:in 260ms var(--ease) forwards}
+@keyframes in{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.enter{animation:none;opacity:1;transform:none}}
+
+/* 핵심 숫자 */
+.kpis{grid-template-columns:repeat(6,1fr);margin-bottom:12px}
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{padding:16px 18px}
+.kpi .l{color:var(--ink3);font-size:12.5px;font-weight:500}
+.kpi .v{font-size:26px;font-weight:600;letter-spacing:-.6px;margin-top:6px;line-height:1.15}
+.kpi .n{color:var(--ink4);font-size:12px;margin-top:4px}
+.kpi .v small{font-size:14px;color:var(--ink3);font-weight:500;margin-left:2px;letter-spacing:0}
+
+/* 인사이트 */
+.ins{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.in{background:var(--s2);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;font-size:13.5px;color:var(--ink2);display:flex;gap:10px}
+.in b{color:var(--ink);font-weight:600}
+.in .tag{flex:none;font-size:11px;font-weight:600;color:var(--ink3);border:1px solid var(--line2);border-radius:4px;padding:1px 6px;height:fit-content;margin-top:1px;white-space:nowrap}
+.in.hit .tag{color:var(--accent2);border-color:#5e6ad266}
+
+/* 표 */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;color:var(--ink3);font-weight:500;font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;background:var(--s1)}
+.tbl th[data-k]{cursor:pointer;user-select:none}
+.tbl th[data-k]:hover{color:var(--ink2)}
+.tbl th.on{color:var(--ink)}
+.tbl th.num,.tbl td.num{text-align:right;white-space:nowrap}
+.tbl td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle;color:var(--ink2)}
+.tbl tr:last-child td{border-bottom:none}
+@media (hover:hover){.tbl tbody tr:hover td{background:var(--s2)}}
+.tbl td.strong{color:var(--ink);font-weight:600}
+.scroll{overflow-x:auto;margin:0 -20px;padding:0 20px}
+.ch{display:flex;align-items:center;gap:10px;min-width:180px}
+.ch img{width:28px;height:28px;border-radius:50%;background:var(--s3);flex:none}
+.ch .nm{color:var(--ink);font-weight:600}
+.ch .fd{color:var(--ink4);font-size:12px}
+.vid{display:flex;gap:10px;align-items:center;min-width:300px;max-width:440px}
+.vid img{width:36px;height:64px;object-fit:cover;border-radius:4px;background:var(--s3);flex:none}
+.vid .t{color:var(--ink);font-weight:500;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vid .s{color:var(--ink4);font-size:12px;margin-top:2px}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chip{font-size:11px;color:var(--ink3);background:var(--s3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;white-space:nowrap}
+.hitb{font-size:11px;font-weight:600;color:#fff;background:var(--accent);border-radius:4px;padding:1px 6px;margin-left:6px;white-space:nowrap}
+.live{font-size:11px;color:var(--warn);border:1px solid #c9850055;border-radius:4px;padding:1px 6px;white-space:nowrap}
+.bar{height:6px;border-radius:3px;background:var(--s3);overflow:hidden;min-width:60px}
+.bar span{display:block;height:100%;background:var(--yt);border-radius:0 3px 3px 0}
+.mut{color:var(--ink4)}
+.plat{display:inline-flex;align-items:center;gap:6px}
+.plat i{width:8px;height:8px;border-radius:2px;display:inline-block}
+
+/* 2단 */
+.two{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:12px}
+.two>*{min-width:0}
+@media (max-width:1000px){.two{grid-template-columns:minmax(0,1fr)}}
+section{margin-top:12px}
+
+/* 비교 막대 */
+.cmp{display:flex;flex-direction:column;gap:8px}
+.cr{display:grid;grid-template-columns:150px 1fr 120px;gap:12px;align-items:center;font-size:13px}
+@media (max-width:560px){.cr{grid-template-columns:96px 1fr 76px}.cr .v small{display:block;margin:0}}
+.cr .k{color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cr .k.thin{color:var(--ink4)}
+.track{position:relative;height:22px;background:var(--s2);border-radius:4px}
+.track .base{position:absolute;top:-3px;bottom:-3px;width:1px;background:var(--ink4)}
+.track .fill{position:absolute;top:4px;bottom:4px;border-radius:4px;background:var(--yt)}
+.track .fill.neg{background:#5b6270}
+.cr .v{text-align:right;color:var(--ink2);white-space:nowrap}
+.cr .v small{color:var(--ink4);margin-left:4px}
+.legend{display:flex;gap:14px;color:var(--ink3);font-size:12px;flex-wrap:wrap}
+
+/* 점 분포 */
+.strip{position:relative}
+.srow{display:grid;grid-template-columns:110px 1fr;align-items:center;height:34px;border-bottom:1px solid var(--line)}
+.srow:last-child{border-bottom:none}
+.srow .k{color:var(--ink2);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slane{position:relative;height:100%}
+.pt{position:absolute;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:var(--yt);opacity:.75;
+  box-shadow:0 0 0 2px var(--s1);cursor:pointer;transition:transform 150ms var(--ease)}
+.pt.hit{background:var(--accent2);opacity:1;width:12px;height:12px;margin:-6px 0 0 -6px}
+.pt.young{background:transparent;box-shadow:0 0 0 2px var(--s1),inset 0 0 0 2px var(--yt)}
+@media (hover:hover){.pt:hover{transform:scale(1.4)}}
+.axis{display:grid;grid-template-columns:110px 1fr;color:var(--ink4);font-size:11px;margin-top:6px}
+.axis .ticks{position:relative;height:16px}
+.axis .ticks span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.gridl{position:absolute;top:0;bottom:0;width:1px;background:var(--line);pointer-events:none}
+
+/* 짝 비교 */
+.pair{display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.pair:last-child{border-bottom:none}
+.pb{display:flex;flex-direction:column;gap:3px}
+.pb .r{display:grid;grid-template-columns:1fr 54px;gap:6px;align-items:center;font-size:12px;color:var(--ink3)}
+.pb .r .b{height:8px;border-radius:0 4px 4px 0}
+
+/* 툴팁 */
+.tip{position:fixed;z-index:50;pointer-events:none;background:var(--s4);border:1px solid var(--line2);border-radius:var(--r);
+  padding:10px 12px;font-size:12.5px;color:var(--ink2);max-width:280px;box-shadow:0 8px 24px #0008;
+  opacity:0;transform:scale(.97);transform-origin:top left;transition:opacity 125ms ease-out,transform 125ms ease-out}
+.tip.on{opacity:1;transform:none}
+.tip b{color:var(--ink);display:block;margin-bottom:4px;font-weight:600}
+.tip .row{display:flex;justify-content:space-between;gap:16px}
+
+/* 영상 상세(오른쪽 서랍) */
+.drawer-bg{position:fixed;inset:0;background:#0009;opacity:0;pointer-events:none;transition:opacity 200ms ease;z-index:40}
+.drawer-bg.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(640px,100vw);background:var(--s1);border-left:1px solid var(--line2);z-index:41;
+  transform:translateX(100%);transition:transform 240ms var(--ease);overflow-y:auto;padding:24px}
+.drawer.on{transform:none}
+@media (prefers-reduced-motion:reduce){.drawer{transition:none}}
+.drawer .x{all:unset;cursor:pointer;float:right;color:var(--ink3);font-size:20px;line-height:1;padding:4px 8px;border-radius:6px}
+.drawer .x:hover{background:var(--s3);color:var(--ink)}
+.dv-top{display:flex;gap:14px;margin-bottom:16px}
+.dv-top img{width:72px;height:128px;object-fit:cover;border-radius:6px;background:var(--s3);flex:none}
+.dv-top h3{margin:0 0 6px;font-size:17px;font-weight:600;letter-spacing:-.2px;line-height:1.35}
+.stats4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
+@media (max-width:480px){.stats4{grid-template-columns:repeat(2,1fr)}}
+.stats4 div{background:var(--s2);border:1px solid var(--line);border-radius:8px;padding:10px}
+.stats4 span{display:block;color:var(--ink3);font-size:11.5px}.stats4 b{font-size:17px;font-weight:600}
+.chart{background:var(--s2);border:1px solid var(--line);border-radius:10px;padding:14px 14px 8px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart .ax{fill:var(--ink4);font-size:10.5px}
+.chart .gl{stroke:var(--line);stroke-width:1}
+.note{color:var(--ink4);font-size:12px;margin-top:8px;line-height:1.6}
+.spark{display:block}
+tr.click{cursor:pointer}
+
+.pending{border-style:dashed;color:var(--ink3);font-size:13px;display:flex;gap:12px;align-items:center}
+.pending b{color:var(--ink2)}
+.foot{color:var(--ink4);font-size:12px;margin-top:28px;line-height:1.7}
+.empty{color:var(--ink4);padding:20px 0;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="top">
+    <div>
+      <div class="brand"><i></i>우리 채널 성적표</div>
+      <h1>채널 리포트</h1>
+    </div>
+    <div class="meta" id="meta"></div>
+  </div>
+
+  <div class="filters">
+    <div class="seg" id="fCh" role="group" aria-label="채널"></div>
+  </div>
+
+  <div class="grid kpis" id="kpis"></div>
+
+  <section class="card enter" style="animation-delay:40ms">
+    <div class="head"><div><h2>지금 숫자가 말하는 것</h2><div class="sub">표본 5편 미만 묶음으로는 결론을 내지 않습니다</div></div></div>
+    <div class="ins" id="ins"></div>
+  </section>
+
+  <section class="card enter" style="animation-delay:80ms">
+    <div class="head"><div><h2>채널별 성적</h2><div class="sub">히트 = 그 채널 중앙값의 2배 이상 · 24시간 지난 영상 기준</div></div></div>
+    <div class="scroll"><table class="tbl" id="chTbl"></table></div>
+  </section>
+
+  <section class="card enter" id="daily" style="display:none;animation-delay:100ms"></section>
+
+  <div class="two">
+    <section class="card enter" style="animation-delay:120ms">
+      <div class="head">
+        <div><h2>무엇이 잘되나</h2><div class="sub" id="cmpSub"></div></div>
+        <div class="seg" id="fAxis" role="group" aria-label="비교 기준"></div>
+      </div>
+      <div class="cmp" id="cmp"></div>
+      <div class="legend" style="margin-top:14px" id="cmpLegend"></div>
+    </section>
+    <section class="card enter" style="animation-delay:160ms">
+      <div class="head"><div><h2>영상 한 편 한 편</h2><div class="sub">점 하나 = 영상 하나 · 조회수(로그 눈금)</div></div></div>
+      <div class="strip" id="strip"></div>
+      <div class="legend" style="margin-top:12px">
+        <span class="plat"><i style="background:var(--yt)"></i>24시간 지남</span>
+        <span class="plat"><i style="background:transparent;box-shadow:inset 0 0 0 2px var(--yt)"></i>24시간 안 됨(아직 차는 중)</span>
+        <span class="plat"><i style="background:var(--accent2)"></i>히트</span>
+      </div>
+    </section>
+  </div>
+
+  <section class="card enter" style="animation-delay:200ms">
+    <div class="head">
+      <div><h2>영상 순위</h2><div class="sub" id="vidSub"></div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div class="seg" id="fAge" role="group" aria-label="기간"></div>
+        <input class="search" id="q" placeholder="제목 검색" aria-label="제목 검색">
+      </div>
+    </div>
+    <div class="scroll"><table class="tbl" id="vTbl"></table></div>
+  </section>
+
+  <section class="card enter" style="animation-delay:240ms">
+    <div class="head"><div><h2>같은 영상, 유튜브 vs 틱톡</h2><div class="sub">같은 파일을 두 곳에 올린 것만 · 틱톡은 Buffer 연결(10-26) 뒤 게시분</div></div>
+      <div class="legend"><span class="plat"><i style="background:var(--yt)"></i>유튜브</span><span class="plat"><i style="background:var(--tt)"></i>틱톡</span></div></div>
+    <div id="pairs"></div>
+  </section>
+
+  <section class="card enter" id="conn" style="animation-delay:280ms"></section>
+
+  <div class="foot" id="foot"></div>
+</div>
+<div class="tip" id="tip" role="tooltip"></div>
+<div class="drawer-bg" id="dbg"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="영상 상세"></aside>
+
+<script>
+const $ = s => document.querySelector(s);
+const fmt = n => n == null ? "–" : Math.round(n).toLocaleString("ko-KR");
+const short = n => n >= 10000 ? (+(n / 10000).toFixed(n >= 100000 ? 0 : 1)) + "만" : fmt(n);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const AXES = ["채널 콘셉트","상품 분류","제목 형태","게시 시각","영상 길이","게시 요일"];
+const state = { ch: "all", axis: "채널 콘셉트", age: "all", sort: "views", dir: -1, q: "", more: false };
+let D;
+
+// 숏템메이커 관리자 API(/api/admin/channel_stats) — 로컬 미리보기(http.server)에선 옆의 data.json
+async function load() {
+  for (const u of ["/api/admin/channel_stats", "data.json"]) {
+    try { const r = await fetch(u, {cache: "no-store", credentials: "same-origin"}); if (r.ok) return r.json(); } catch (e) {}
+  }
+  throw new Error("데이터 주소가 열리지 않습니다");
+}
+load().then(d => {
+  if (d.empty) { $("#app").innerHTML = `<div class="card">${d.state && !d.state.keys ? "서버에 Buffer 키 파일이 아직 없습니다" : "첫 수집 중입니다 — 1~2분 뒤 새로고침하세요"}${d.state && d.state.error ? `<div class="sub">${esc(d.state.error)}</div>` : ""}</div>`; return; }
+  D = d; boot(); })
+  .catch(e => { $("#app").innerHTML = `<div class="card">데이터를 못 읽었습니다: ${esc(e.message)}</div>`; });
+
+function seg(el, items, key, cb) {
+  el.innerHTML = items.map(([v, l]) => `<button type="button" data-v="${esc(v)}" aria-pressed="${state[key] === v}">${esc(l)}</button>`).join("");
+  el.onclick = e => { const b = e.target.closest("button"); if (!b) return; state[key] = b.dataset.v;
+    el.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); cb(); };
+}
+
+function boot() {
+  const t = new Date(D.collected_at);
+  $("#meta").innerHTML = `<span><span class="dot"></span>수집 ${t.toLocaleString("ko-KR",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})}</span>
+    <span>유튜브 ${D.coverage.youtube_videos}편 · 틱톡 ${D.coverage.tiktok_posts}편 · 채널 ${D.coverage.channels}개</span>
+    ${D.state ? (D.state.refreshing ? `<span class="live">새로 모으는 중</span>` : D.state.error ? `<span class="live" title="${esc(D.state.error)}">일부 수집 실패</span>` : "") : ""}
+    ${D.state ? `<button type="button" class="btn" id="refresh">지금 새로 모으기</button>` : ""}`;
+  const rb = $("#refresh"); if (rb) rb.onclick = async () => { rb.textContent = "모으는 중…"; await fetch("/api/admin/channel_stats/refresh", {method: "POST", credentials: "same-origin"}); setTimeout(() => location.reload(), 60000); };
+  seg($("#fCh"), [["all","전체"], ...D.channels.map(c => [c.key, c.name])], "ch", render);
+  seg($("#fAxis"), AXES.map(a => [a, a.replace("게시 ","")]), "axis", renderCmp);
+  seg($("#fAge"), [["all","전체"],["7","최근 7일"],["mature","24시간 지난 것"]], "age", renderVids);
+  $("#q").oninput = e => { state.q = e.target.value.trim(); renderVids(); };
+  $("#foot").innerHTML = `기준 — 히트: ${esc(D.rules.hit)} · 비교에서 게시 ${D.rules.mature_h}시간 안 된 영상은 뺍니다(조회가 아직 차는 중) · 묶음 ${D.rules.min_n}편 미만은 흐리게 표시<br>
+    출처 — 유튜브 공개 데이터(YouTube Data API: 제목·길이·게시일·조회·좋아요·댓글·구독자), Buffer(틱톡 조회·시청시간·공유), 버퍼 예약 장부(파일·게시 칸) · 매시간 갱신`;
+  renderMsg();
+  render();
+}
+
+const vids = () => D.videos.filter(v => state.ch === "all" || v.ch === state.ch);
+const chans = () => D.channels.filter(c => state.ch === "all" || c.key === state.ch);
+
+function render() { renderKpis(); renderIns(); renderCh(); renderDaily(); renderCmp(); renderStrip(); renderVids(); renderPairs(); renderConn(); }
+
+function renderKpis() {
+  const vs = vids(), cs = chans(), mature = vs.filter(v => v.mature);
+  const tk = cs.reduce((a, c) => a + (c.tiktok ? c.tiktok.views : 0), 0);
+  const last7 = vs.filter(v => v.age_h <= 168).reduce((a, v) => a + v.views, 0);
+  const med = mature.length ? mature.map(v => v.views).sort((a, b) => a - b)[Math.floor(mature.length / 2)] : 0;
+  const k = [
+    ["유튜브 누적 조회", short(vs.reduce((a, v) => a + v.views, 0)), `${vs.length}편`],
+    ["최근 7일 올린 영상 조회", short(last7), `${vs.filter(v => v.age_h <= 168).length}편`],
+    ["한 편 보통 조회", fmt(med), "24시간 지난 영상 중앙값"],
+    ["히트", `${vs.filter(v => v.hit).length}<small>편</small>`, `${mature.length ? Math.round(vs.filter(v => v.hit).length / mature.length * 100) : 0}% · 평소 2배 이상`],
+    ["구독자", fmt(cs.reduce((a, c) => a + c.subs, 0)), cs.length > 1 ? `${cs.length}개 채널 합` : esc(cs[0]?.folder || "")],
+    ["틱톡 조회", short(tk), `${cs.reduce((a, c) => a + (c.tiktok ? c.tiktok.posts : 0), 0)}편 · 10-26부터`]];
+  $("#kpis").innerHTML = k.map(([l, v, n], i) => `<div class="card kpi enter" style="animation-delay:${i * 30}ms"><div class="l">${l}</div><div class="v">${v}</div><div class="n">${n}</div></div>`).join("");
+}
+
+function renderIns() {
+  const ins = state.ch === "all" ? D.insights : D.insights.filter(i => i.kind !== "compare");
+  const lab = {compare: "비교", hit: "히트", tiktok: "틱톡", dist: "분포"};
+  const list = state.ch === "all" ? ins : [
+    ...vids().filter(v => v.hit).map(v => ({kind: "hit", text: `'${v.title}' — 채널 평소의 ${v.vs_median}배 (${fmt(v.views)}회)`})),
+    ...(chans()[0] ? [{kind: "dist", text: `이 채널 한 편 보통 조회 ${fmt(chans()[0].median)}회 · 히트 ${chans()[0].hits}편(${chans()[0].hit_rate}%) · 좋아요율 ${chans()[0].like_rate}%`}] : [])];
+  $("#ins").innerHTML = list.length ? list.map(i => `<div class="in ${i.kind}"><span class="tag">${lab[i.kind] || ""}</span><span>${esc(i.text).replace(/'([^']+)'/g, "<b>$1</b>")}</span></div>`).join("")
+    : `<div class="empty">아직 말할 만한 차이가 없습니다</div>`;
+}
+
+function renderCh() {
+  const cs = chans(), max = Math.max(...D.channels.map(c => c.views));
+  $("#chTbl").innerHTML = `<thead><tr><th>채널</th><th>콘셉트</th><th class="num">구독자</th><th class="num">영상</th><th>누적 조회</th>
+    <th class="num">한 편 보통</th><th class="num">히트</th><th class="num">좋아요율</th><th>가장 잘된 영상</th><th class="num">틱톡</th></tr></thead><tbody>` +
+    cs.map(c => `<tr>
+      <td><a class="ch" href="https://www.youtube.com/channel/${c.id}" target="_blank" rel="noopener"><img src="${esc(c.thumb)}" alt=""><div><div class="nm">${esc(c.name)}</div><div class="fd">${esc(c.folder)}</div></div></a></td>
+      <td class="mut" style="white-space:nowrap">${esc(c.concept)}</td>
+      <td class="num strong">${fmt(c.subs)}</td><td class="num">${c.videos}</td>
+      <td><div style="display:flex;align-items:center;gap:10px"><span class="strong" style="min-width:52px">${short(c.views)}</span><div class="bar" style="flex:1"><span style="width:${c.views / max * 100}%"></span></div></div></td>
+      <td class="num">${fmt(c.median)}</td>
+      <td class="num">${c.hits}<span class="mut"> · ${c.hit_rate}%</span></td>
+      <td class="num">${c.like_rate}%</td>
+      <td><div style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.best ? `<a href="https://www.youtube.com/shorts/${c.best.id}" target="_blank" rel="noopener">${esc(c.best.title)}</a> <span class="mut">${short(c.best.views)}</span>` : "–"}</div></td>
+      <td class="num">${c.tiktok && c.tiktok.views ? `${short(c.tiktok.views)}<div class="mut" style="font-size:12px">평균 ${c.tiktok.avg_watch}초 시청</div>` : c.tiktok ? `<span class="mut">집계 전</span>` : `<span class="mut">–</span>`}</td></tr>`).join("") + "</tbody>";
+}
+
+function groupRows() {
+  // 채널을 고르면 그 채널 영상만으로 다시 묶는다(서버 묶음은 전체 기준)
+  const b = D.breakdowns.find(x => x.label === state.axis);
+  if (state.ch === "all") return b;
+  const keyf = {"채널 콘셉트": v => [b.rows.length ? v.ch : ""], "상품 분류": v => [v.product], "제목 형태": v => v.forms.length ? v.forms : ["형태 없음"],
+    "게시 시각": v => [String(new Date(v.published).getHours()).padStart(2, "0") + "시"], "영상 길이": v => [v.dur_bucket], "게시 요일": v => [v.weekday + "요일"]}[state.axis];
+  const g = {};
+  vids().filter(v => v.mature).forEach(v => keyf(v).forEach(k => (g[k] = g[k] || []).push(v)));
+  const med = a => { const s = a.slice().sort((x, y) => x - y); return s.length ? (s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2) : 0; };
+  const rows = Object.entries(g).map(([k, vs]) => ({key: k, n: vs.length, median: med(vs.map(v => v.views)), vs_median: +med(vs.map(v => v.vs_median || 0)).toFixed(2),
+    hits: vs.filter(v => v.hit).length, hit_rate: Math.round(vs.filter(v => v.hit).length / vs.length * 100), thin: vs.length < D.rules.min_n}));
+  const abs = b.measure === "median" || state.axis === "채널 콘셉트";
+  rows.sort((a, c) => abs ? c.median - a.median : c.vs_median - a.vs_median || c.median - a.median);
+  return {label: b.label, measure: abs ? "median" : "vs_median", rows};
+}
+
+function renderCmp() {
+  const b = groupRows(), abs = b.measure === "median";
+  $("#cmpSub").textContent = abs ? "한 편 보통 조회(중앙값) · 콘셉트는 채널마다 체급이 달라 실제 조회로 비교" : "채널 평소 대비 몇 배인지(1.0 = 평소) · 채널 체급 차이를 지운 비교";
+  if (!b.rows.length) { $("#cmp").innerHTML = `<div class="empty">24시간 지난 영상이 아직 없습니다</div>`; return; }
+  const vals = b.rows.map(r => abs ? r.median : r.vs_median);
+  const lo = abs ? 0 : Math.min(0.5, ...vals), hi = abs ? Math.max(...vals) * 1.05 : Math.max(1.5, ...vals) * 1.05;
+  const x = v => (v - lo) / (hi - lo) * 100, base = abs ? 0 : x(1);
+  $("#cmp").innerHTML = b.rows.map(r => {
+    const v = abs ? r.median : r.vs_median, left = Math.min(base, x(v)), w = Math.max(Math.abs(x(v) - base), .8);
+    return `<div class="cr" data-tip="${esc(JSON.stringify({t: r.key, n: r.n, m: r.median, vm: r.vs_median, h: r.hits, hr: r.hit_rate}))}">
+      <div class="k ${r.thin ? "thin" : ""}" title="${esc(r.key)}">${esc(r.key)}</div>
+      <div class="track">${abs ? "" : `<div class="base" style="left:${base}%"></div>`}<div class="fill ${!abs && v < 1 ? "neg" : ""}" style="left:${left}%;width:${w}%"></div></div>
+      <div class="v">${abs ? fmt(v) + "회" : v.toFixed(2) + "배"}<small>${r.n}편${r.thin ? " · 표본 적음" : ""}</small></div></div>`;
+  }).join("");
+  $("#cmpLegend").innerHTML = abs ? `<span>막대 = 중앙값 조회</span>` :
+    `<span class="plat"><i style="background:var(--yt)"></i>평소보다 잘됨</span><span class="plat"><i style="background:#5b6270"></i>평소보다 덜됨</span><span>세로선 = 평소(1.0배)</span>`;
+  bindTips("#cmp .cr", d => `<b>${esc(d.t)}</b><div class="row"><span>영상</span><span>${d.n}편</span></div><div class="row"><span>한 편 보통 조회</span><span>${fmt(d.m)}회</span></div>
+    <div class="row"><span>채널 평소 대비</span><span>${d.vm}배</span></div><div class="row"><span>히트</span><span>${d.h}편 (${d.hr}%)</span></div>`);
+}
+
+function renderStrip() {
+  const vs = vids(), cs = chans();
+  const lv = v => Math.log10(Math.max(v, 100)), lo = 2.7, hi = Math.max(4.3, ...vs.map(v => lv(v.views))) + .05;
+  const x = v => (lv(v) - lo) / (hi - lo) * 100;
+  const ticks = [500, 1000, 2000, 5000, 10000, 20000, 50000].filter(t => lv(t) >= lo && lv(t) <= hi);
+  const grid = ticks.map(t => `<div class="gridl" style="left:${x(t)}%"></div>`).join("");
+  $("#strip").innerHTML = cs.map(c => `<div class="srow"><div class="k">${esc(c.name)}</div><div class="slane">${grid}${
+    vs.filter(v => v.ch === c.key).map(v => `<a class="pt ${v.hit ? "hit" : ""} ${v.mature ? "" : "young"}" href="${v.url}" target="_blank" rel="noopener" style="left:${x(v.views)}%"
+      data-tip="${esc(JSON.stringify({t: v.title, v: v.views, a: v.age_h, vm: v.vs_median, l: v.like_rate, d: v.dur}))}" aria-label="${esc(v.title)} ${fmt(v.views)}회"></a>`).join("")}</div></div>`).join("") +
+    `<div class="axis"><div></div><div class="ticks">${ticks.map(t => `<span style="left:${x(t)}%">${short(t)}</span>`).join("")}</div></div>`;
+  bindTips("#strip .pt", d => `<b>${esc(d.t)}</b><div class="row"><span>조회</span><span>${fmt(d.v)}회</span></div><div class="row"><span>채널 평소 대비</span><span>${d.vm ?? "–"}배</span></div>
+    <div class="row"><span>좋아요율</span><span>${d.l}%</span></div><div class="row"><span>길이 · 게시 후</span><span>${d.d}초 · ${d.a < 48 ? Math.round(d.a) + "시간" : Math.round(d.a / 24) + "일"}</span></div>`);
+}
+
+function renderVids() {
+  let vs = vids();
+  if (state.age === "7") vs = vs.filter(v => v.age_h <= 168);
+  if (state.age === "mature") vs = vs.filter(v => v.mature);
+  if (state.q) vs = vs.filter(v => v.title.includes(state.q));
+  const k = state.sort;
+  vs = vs.slice().sort((a, b) => { const x = k === "tt" ? (a.tiktok?.views ?? -1) : a[k], y = k === "tt" ? (b.tiktok?.views ?? -1) : b[k];
+    return (typeof x === "string" ? x.localeCompare(y) : (x ?? -1) - (y ?? -1)) * state.dir; });
+  $("#vidSub").textContent = `${vs.length}편 · 머리글을 누르면 정렬`;
+  const total = vs.length; if (!state.more) vs = vs.slice(0, 20);
+  const chName = Object.fromEntries(D.channels.map(c => [c.key, c.name]));
+  const th = (key, label, num) => `<th ${key ? `data-k="${key}"` : ""} class="${num ? "num" : ""} ${state.sort === key ? "on" : ""}">${label}${state.sort === key ? (state.dir < 0 ? " ↓" : " ↑") : ""}</th>`;
+  $("#vTbl").innerHTML = `<thead><tr>${th("", "#")}${th("title", "영상")}${th("published", "게시")}${th("dur", "길이", 1)}${th("views", "조회", 1)}${th("vph", "시간당", 1)}${th("", "추이")}${th("vs_median", "평소 대비", 1)}
+    ${th("like_rate", "좋아요율", 1)}${th("comments", "댓글", 1)}${th("tt", "틱톡 조회", 1)}${th("", "분류")}</tr></thead><tbody>` +
+    (vs.length ? vs.map((v, i) => { const p = new Date(v.published);
+      return `<tr class="click" data-id="${v.id}"><td class="mut">${i + 1}</td>
+      <td><a class="vid" href="${v.url}" target="_blank" rel="noopener"><img src="${esc(v.thumb)}" alt=""><div><div class="t">${esc(v.title)}${v.hit ? `<span class="hitb">히트</span>` : ""}</div>
+        <div class="s">${esc(chName[v.ch] || v.ch)}${v.file ? " · " + esc(v.file) : ""}</div></div></a></td>
+      <td class="mut" style="white-space:nowrap">${p.getMonth() + 1}/${p.getDate()} ${String(p.getHours()).padStart(2, "0")}:${String(p.getMinutes()).padStart(2, "0")}
+        <div style="font-size:12px">${v.mature ? (v.age_h < 48 ? Math.round(v.age_h) + "시간 전" : Math.round(v.age_h / 24) + "일 전") : `<span class="live">${Math.round(v.age_h)}시간 · 차는 중</span>`}</div></td>
+      <td class="num">${v.dur}초</td><td class="num strong">${fmt(v.views)}</td>
+      <td class="num">${v.vph == null ? `<span class="mut">–</span>` : `+${fmt(v.vph)}`}</td><td>${spark(v.pts)}</td>
+      <td class="num">${v.vs_median == null ? "–" : `<span title="${v.mature ? "" : "24시간 전이라 아직 차는 중"}" style="opacity:${v.mature ? 1 : .55};color:${v.vs_median >= 2 ? "var(--accent2)" : v.vs_median < 1 ? "var(--ink3)" : "var(--ink2)"}">${v.vs_median}배</span>`}</td>
+      <td class="num">${v.like_rate}%</td><td class="num">${v.comments}</td>
+      <td class="num">${v.tiktok && v.tiktok.views ? `${fmt(v.tiktok.views)}<div class="mut" style="font-size:12px">${v.tiktok.avg_watch}초 시청</div>` : `<span class="mut">–</span>`}</td>
+      <td><div class="chips"><span class="chip">${esc(v.product)}</span>${v.forms.map(f => `<span class="chip">${esc(f)}</span>`).join("")}</div></td></tr>`; }).join("")
+    : `<tr><td colspan="12" class="empty">맞는 영상이 없습니다</td></tr>`) + "</tbody>" +
+    (total > 20 ? `<tfoot><tr><td colspan="12" style="text-align:center;border:none;padding-top:14px"><button type="button" class="btn" id="more">${state.more ? "접기" : `나머지 ${total - 20}편 더 보기`}</button></td></tr></tfoot>` : "");
+  const mb = $("#more"); if (mb) mb.onclick = () => { state.more = !state.more; renderVids(); };
+  $("#vTbl").querySelectorAll("tr.click").forEach(tr => tr.onclick = e => { if (e.target.closest("a")) return; openVideo(tr.dataset.id); });
+  $("#vTbl").querySelectorAll("th[data-k]").forEach(h => h.onclick = () => {
+    const nk = h.dataset.k; state.dir = state.sort === nk ? -state.dir : -1; state.sort = nk; renderVids(); });
+}
+
+function renderPairs() {
+  const ps = D.pairs.filter(p => state.ch === "all" || p.ch === state.ch).sort((a, b) => (b.yt + b.tt) - (a.yt + a.tt));
+  if (!ps.length) { $("#pairs").innerHTML = `<div class="empty">이 채널은 아직 틱톡에 같이 올린 영상이 없습니다</div>`; return; }
+  const max = Math.max(...ps.flatMap(p => [p.yt, p.tt]));
+  $("#pairs").innerHTML = ps.map(p => `<div class="pair">
+    <div class="pb"><div style="color:var(--ink);font-size:13px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.title)}</div>
+      <div class="r"><div class="b" style="width:${Math.max(p.yt / max * 100, .6)}%;background:var(--yt)"></div><span>${short(p.yt)}</span></div>
+      <div class="r"><div class="b" style="width:${Math.max(p.tt / max * 100, .6)}%;background:var(--tt)"></div><span>${short(p.tt)}</span></div></div>
+    <div style="font-size:12.5px;color:var(--ink3);text-align:right">틱톡 평균 <b style="color:var(--ink2)">${p.tt_avg_watch}초</b> 시청<br>영상 ${p.dur}초 중 ${p.dur ? Math.round(p.tt_avg_watch / p.dur * 100) : 0}%</div></div>`).join("");
+}
+
+// ── 영상별 추이(관제 281, 사장님 "영상 하나하나마다 조회수가 올라가는 그래프") ──
+function spark(pts) {
+  if (!pts || pts.length < 2) return `<span class="mut" style="font-size:12px">${pts && pts.length ? "쌓는 중" : "–"}</span>`;
+  const w = 72, h = 22, xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const X = x => (x - x0) / ((x1 - x0) || 1) * (w - 4) + 2, Y = y => h - 2 - (y - y0) / ((y1 - y0) || 1) * (h - 4);
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline fill="none" stroke="var(--yt)" stroke-width="1.5" stroke-linejoin="round" points="${pts.map(p => X(p[0]) + "," + Y(p[1])).join(" ")}"/></svg>`;
+}
+
+function ageLabel(h) { return h < 24 ? Math.round(h) + "시간" : Math.round(h / 24) + "일"; }
+
+function niceStep(max) {
+  const raw = max / 4, p = Math.pow(10, Math.floor(Math.log10(raw))), n = raw / p;
+  return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p;
+}
+
+function lineChart(series, curve) {
+  // 가로 = 게시 후 시간(로그 눈금: 첫 몇 시간을 넓게), 세로 = 누적 조회
+  const W = 580, H = 260, L = 48, R = 12, T = 12, B = 28;
+  const all = series.flatMap(s => s.pts).concat(curve.map(c => [c[0], c[1]]));
+  if (!all.length) return `<div class="empty">아직 찍힌 점이 없습니다</div>`;
+  const hx = Math.max(24, ...all.map(p => p[0])) * 1.15, step = niceStep(Math.max(10, ...all.map(p => p[1])));
+  const ymax = Math.ceil(Math.max(10, ...all.map(p => p[1])) * 1.05 / step) * step;
+  const lx = h => Math.log10(Math.max(h, 0) + 1);
+  const X = h => L + lx(h) / lx(hx) * (W - L - R), Y = v => T + (1 - v / ymax) * (H - T - B);
+  let g = "";
+  for (let v = 0; v <= ymax; v += step) g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${L - 6}" y="${Y(v) + 3}" text-anchor="end">${short(v)}</text>`;
+  [1, 3, 6, 12, 24, 72, 168, 336, 720].filter(t => t <= hx).forEach(t => { g += `<text class="ax" x="${X(t)}" y="${H - 8}" text-anchor="middle">${ageLabel(t)}</text>`; });
+  if (curve.length) {
+    if (curve.length > 1) g += `<polyline fill="none" stroke="var(--ink4)" stroke-width="2" stroke-dasharray="4 4" points="${curve.map(c => X(c[0]) + "," + Y(c[1])).join(" ")}"/>`;
+    g += curve.map(c => `<circle cx="${X(c[0])}" cy="${Y(c[1])}" r="3.5" fill="var(--ink4)"><title>채널 평소: 게시 ${ageLabel(c[0])} 무렵 ${fmt(c[1])}회 (${c[2]}편 중앙값)</title></circle>`).join("");
+  }
+  series.forEach(s => {
+    if (s.pts.length > 1) g += `<polyline fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" points="${s.pts.map(p => X(p[0]) + "," + Y(p[1])).join(" ")}"/>`;
+    g += s.pts.map(p => `<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="4.5" fill="${s.color}" stroke="var(--s2)" stroke-width="2"><title>${s.name} · 게시 ${ageLabel(p[0])} 뒤 ${fmt(p[1])}회</title></circle>`).join("");
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="게시 후 시간별 누적 조회">${g}</svg>`;
+}
+
+function openVideo(id) {
+  const v = D.videos.find(x => x.id === id); if (!v) return;
+  const ch = D.channels.find(c => c.key === v.ch) || {}, curve = (D.curves || {})[v.ch] || [];
+  const first = (v.pts && v.pts.length) ? v.pts[0][0] : Infinity;
+  const ytPts = (v.daily || []).filter(p => p[0] < first).concat(v.pts || []);   // 애널리틱스 일별 누적(수집 전 구간) + 매시간 스냅샷
+  const series = [{name: "유튜브", color: "var(--yt)", pts: ytPts}]
+    .concat(v.tiktok && v.tiktok.pts && v.tiktok.pts.length ? [{name: "틱톡", color: "var(--tt)", pts: v.tiktok.pts}] : []);
+  $("#drawer").innerHTML = `<button class="x" id="dx" aria-label="닫기">×</button>
+    <div class="dv-top"><img src="${esc(v.thumb)}" alt=""><div><h3>${esc(v.title)}${v.hit ? `<span class="hitb">히트</span>` : ""}</h3>
+      <div class="mut">${esc(ch.name || v.ch)} · ${new Date(v.published).toLocaleString("ko-KR", {month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit"})} 게시 · ${v.dur}초</div>
+      <div class="chips" style="margin-top:8px"><span class="chip">${esc(v.product)}</span>${v.forms.map(f => `<span class="chip">${esc(f)}</span>`).join("")}</div>
+      <div style="margin-top:10px"><a class="btn" href="${v.url}" target="_blank" rel="noopener">유튜브에서 보기</a></div></div></div>
+    <div class="stats4"><div><span>조회</span><b>${fmt(v.views)}</b></div><div><span>평소 대비</span><b>${v.vs_median ?? "–"}배</b></div>
+      <div><span>시간당</span><b>${v.vph == null ? "–" : "+" + fmt(v.vph)}</b></div><div><span>좋아요율</span><b>${v.like_rate}%</b></div></div>
+    ${videoYaHtml(v)}
+    <div class="chart"><div class="legend" style="margin-bottom:8px">${series.map(s => `<span class="plat"><i style="background:${s.color}"></i>${s.name}</span>`).join("")}
+      <span class="plat"><i style="background:var(--ink4)"></i>채널 평소(같은 시간대 중앙값)</span></div>${lineChart(series, curve)}</div>
+    <div class="note">점 = 매시간 수집한 누적 조회 · 가로축은 게시 후 시간(앞부분을 넓게 보는 로그 눈금)<br>
+      ${v.daily && v.daily.length ? "게시 첫날부터 10-27 전까지는 유튜브 애널리틱스 일별 누적, 그 뒤는 매시간 수집입니다." : "수집은 10-27부터 쌓입니다. 그 전 구간(게시 첫날부터)은 이 채널을 애널리틱스에 연결하면 일별 기록으로 채워집니다."}</div>
+    ${v.tiktok ? `<div class="stats4" style="margin-top:14px"><div><span>틱톡 조회</span><b>${fmt(v.tiktok.views)}</b></div><div><span>틱톡 평균 시청</span><b>${v.tiktok.avg_watch ?? "–"}초</b></div>
+      <div><span>틱톡 총 시청</span><b>${fmt(v.tiktok.watch_min)}분</b></div><div><span>틱톡 공유</span><b>${fmt(v.tiktok.shares)}</b></div></div>` : ""}`;
+  $("#drawer").classList.add("on"); $("#dbg").classList.add("on"); $("#dx").focus();
+  $("#dx").onclick = closeVideo;
+}
+function closeVideo() { $("#drawer").classList.remove("on"); $("#dbg").classList.remove("on"); }
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeVideo(); });
+document.addEventListener("click", e => { if (e.target.id === "dbg") closeVideo(); });
+
+// ── 유튜브 애널리틱스(관제 281 2단계) — 연결 상태·일별 기록·유입 경로·이탈 곡선 ──
+const TRAFFIC_KO = {SHORTS: "쇼츠 피드", YT_SEARCH: "유튜브 검색", SUBSCRIBER: "구독자", EXT_URL: "외부 링크", YT_CHANNEL: "채널 페이지",
+  RELATED_VIDEO: "추천 동영상", NO_LINK_OTHER: "직접·기타", PLAYLIST: "재생목록", NOTIFICATION: "알림", YT_OTHER_PAGE: "유튜브 기타",
+  BROWSE: "탐색(홈)", HASHTAGS: "해시태그", SOUND_PAGE: "사운드 페이지", END_SCREEN: "최종 화면", ADVERTISING: "광고", CAMPAIGN_CARD: "캠페인", ANNOTATION: "주석"};
+const hm = m => m >= 60 ? (m / 60).toFixed(m >= 600 ? 0 : 1) + "시간" : Math.round(m) + "분";
+
+function renderMsg() {
+  const m = new URLSearchParams(location.search).get("msg"); if (!m) return;
+  const el = document.createElement("div"); el.className = "card enter"; el.style.cssText = "margin-bottom:12px;border-color:var(--accent);color:var(--ink)";
+  el.textContent = m; $("#kpis").before(el); history.replaceState(null, "", location.pathname);
+}
+
+function renderConn() {
+  const box = $("#conn"); if (!box || !D.connections) return;
+  const n = D.connections.filter(c => c.connected).length;
+  box.innerHTML = `<div class="head"><div><h2>유튜브 애널리틱스 연결 <span class="mut" style="font-weight:500;font-size:13px">${n}/${D.connections.length}</span></h2>
+      <div class="sub">채널마다 한 번 — 그 채널의 구글 계정으로 로그인해 '허용'을 누르면 시청시간·평균 시청 비율·구독 증감·유입 경로·이탈 곡선·게시 첫날부터의 일별 조회가 붙습니다</div></div></div>
+    <div class="scroll"><table class="tbl"><thead><tr><th>채널</th><th>구글 계정</th><th>상태</th><th></th></tr></thead><tbody>${
+    D.connections.map(c => `<tr><td class="strong">${esc(c.name)} <span class="mut">${esc(c.key)}</span></td><td class="mut">${esc(c.email)}</td>
+      <td>${c.error ? `<span class="live">다시 연결 필요 · ${esc(c.error)}</span>` : c.connected ? `<span style="color:var(--good)">● 연결됨</span> <span class="mut" style="font-size:12px">${esc((c.connected_at || "").slice(0, 10))}</span>` : `<span class="mut">연결 전</span>`}</td>
+      <td style="text-align:right">${D.state && D.state.oauth_ready ? `<a class="btn" href="/api/admin/channel_stats/oauth/start?ch=${encodeURIComponent(c.key)}">${c.connected && !c.error ? "다시 연결" : "연결하기"}</a>` : ""}</td></tr>`).join("")}</tbody></table></div>`;
+}
+
+function chYa() {
+  // 고른 채널(전체면 연결된 채널 합) — 일별 [day, views, watch_min, avg_pct, subs_net, likes, shares]
+  const cs = chans().filter(c => c.ya);
+  if (!cs.length) return null;
+  if (cs.length === 1) return {daily: cs[0].ya.daily, traffic: cs[0].traffic, ya: cs[0].ya, names: cs[0].name};
+  const by = {};
+  cs.forEach(c => c.ya.daily.forEach(r => { const b = by[r[0]] = by[r[0]] || [r[0], 0, 0, 0, 0, 0, 0, 0];
+    b[1] += r[1]; b[2] += r[2]; b[7] += r[3] * r[1]; b[4] += r[4]; b[5] += r[5]; b[6] += r[6]; }));
+  const daily = Object.values(by).sort((a, b) => a[0] < b[0] ? -1 : 1).map(b => [b[0], b[1], +b[2].toFixed(1), b[1] ? +(b[7] / b[1]).toFixed(1) : 0, b[4], b[5], b[6]]);
+  const tr = {}; cs.forEach(c => (c.traffic || []).forEach(t => { tr[t[0]] = tr[t[0]] || [t[0], 0, 0]; tr[t[0]][1] += t[1]; tr[t[0]][2] += t[2]; }));
+  return {daily, traffic: Object.values(tr).sort((a, b) => b[1] - a[1]), names: `연결된 ${cs.length}개 채널 합`};
+}
+
+function bars(daily, idx, color, label, fmtv) {
+  // 일별 막대 하나(값 하나 = 축 하나 — 두 값을 한 축에 겹치지 않는다)
+  const W = 620, H = 150, L = 44, R = 6, T = 8, B = 22, n = daily.length;
+  const max = Math.max(1, ...daily.map(r => r[idx])), step = niceStep(max), ymax = Math.ceil(max / step) * step;
+  const bw = (W - L - R) / n, Y = v => T + (1 - v / ymax) * (H - T - B);
+  let g = "";
+  for (let v = 0; v <= ymax; v += step) g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${L - 6}" y="${Y(v) + 3}" text-anchor="end">${fmtv(v)}</text>`;
+  daily.forEach((r, i) => {
+    const x = L + i * bw, h = Math.max(Y(0) - Y(r[idx]), r[idx] ? 1 : 0);
+    g += `<rect x="${x + 1}" y="${Y(0) - h}" width="${Math.max(bw - 2, 1)}" height="${h}" rx="2" fill="${color}"><title>${r[0]} · ${label} ${fmtv(r[idx])}</title></rect>`;
+    if (i % Math.ceil(n / 8) === 0) g += `<text class="ax" x="${x + bw / 2}" y="${H - 6}" text-anchor="middle">${r[0].slice(5).replace("-", "/")}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="일별 ${label}">${g}</svg>`;
+}
+
+function renderDaily() {
+  const box = $("#daily"); if (!box) return;
+  const y = chYa();
+  if (!y) { box.style.display = "none"; return; }
+  box.style.display = "";
+  const d = y.daily.slice(-90), last28 = y.daily.slice(-28);
+  const v28 = last28.reduce((a, r) => a + r[1], 0), w28 = last28.reduce((a, r) => a + r[2], 0);
+  const pct = v28 ? (last28.reduce((a, r) => a + r[3] * r[1], 0) / v28).toFixed(1) : 0, sn = last28.reduce((a, r) => a + r[4], 0);
+  const tmax = Math.max(1, ...(y.traffic || []).map(t => t[1])), ttot = (y.traffic || []).reduce((a, t) => a + t[1], 0);
+  box.innerHTML = `<div class="head"><div><h2>일별 기록</h2><div class="sub">${esc(y.names)} · 유튜브 애널리틱스(하루 단위, 최근 90일) · 소셜블레이드처럼 날마다 몇이 늘었나</div></div></div>
+    <div class="grid kpis" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px">
+      <div class="card kpi"><div class="l">시청시간 (28일)</div><div class="v">${hm(w28)}</div><div class="n">${fmt(w28)}분</div></div>
+      <div class="card kpi"><div class="l">조회 (28일)</div><div class="v">${short(v28)}</div><div class="n">애널리틱스 기준</div></div>
+      <div class="card kpi"><div class="l">평균 시청 비율</div><div class="v">${pct}<small>%</small></div><div class="n">영상 길이 중 본 비율 (28일)</div></div>
+      <div class="card kpi"><div class="l">구독 순증 (28일)</div><div class="v">${sn >= 0 ? "+" : ""}${fmt(sn)}</div><div class="n">늘어난 수 − 줄어든 수</div></div></div>
+    <div class="two" style="margin-top:0">
+      <div><div class="chart" style="margin-bottom:10px"><div class="legend" style="margin-bottom:6px"><span class="plat"><i style="background:var(--yt)"></i>일별 조회</span></div>${bars(d, 1, "var(--yt)", "조회", short)}</div>
+        <div class="chart"><div class="legend" style="margin-bottom:6px"><span class="plat"><i style="background:var(--accent)"></i>일별 시청시간</span></div>${bars(d, 2, "var(--accent)", "시청시간", hm)}</div></div>
+      <div><div class="sub" style="margin-bottom:8px">어디서 보러 왔나 (최근 28일 조회)</div><div class="cmp">${(y.traffic || []).slice(0, 8).map(t => `<div class="cr" style="grid-template-columns:110px 1fr 90px">
+          <div class="k">${esc(TRAFFIC_KO[t[0]] || t[0])}</div><div class="track"><div class="fill" style="left:0;width:${t[1] / tmax * 100}%"></div></div>
+          <div class="v">${short(t[1])}<small>${ttot ? Math.round(t[1] / ttot * 100) : 0}%</small></div></div>`).join("") || `<div class="empty">아직 없음</div>`}</div>
+        <div class="scroll" style="margin-top:14px"><table class="tbl"><thead><tr><th>날짜</th><th class="num">조회</th><th class="num">시청시간</th><th class="num">평균 시청</th><th class="num">구독±</th></tr></thead><tbody>${
+          y.daily.slice(-14).reverse().map(r => `<tr><td class="mut">${r[0].slice(5).replace("-", "/")}</td><td class="num strong">${fmt(r[1])}</td><td class="num">${hm(r[2])}</td><td class="num">${r[3]}%</td>
+            <td class="num" style="color:${r[4] > 0 ? "var(--good)" : r[4] < 0 ? "var(--ink3)" : "var(--ink4)"}">${r[4] > 0 ? "+" : ""}${r[4]}</td></tr>`).join("")}</tbody></table></div></div></div>`;
+}
+
+function retentionChart(curve, dur) {
+  // 가로 = 영상 진행(0~100%), 세로 = 그 지점을 보고 있는 비율(조회 대비). 100% 넘으면 다시 본 사람이 있다는 뜻
+  const W = 580, H = 200, L = 40, R = 10, T = 10, B = 24;
+  const ymax = Math.max(1, ...curve.map(c => c[1])) * 1.05, X = r => L + r * (W - L - R), Y = v => T + (1 - v / ymax) * (H - T - B);
+  let g = "";
+  [0, .25, .5, .75, 1, 1.25, 1.5, 1.75, 2].filter(v => v <= ymax).forEach(v => g += `<line class="gl" x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${L - 6}" y="${Y(v) + 3}" text-anchor="end">${Math.round(v * 100)}%</text>`);
+  [0, .25, .5, .75, 1].forEach(r => g += `<text class="ax" x="${X(r)}" y="${H - 6}" text-anchor="middle">${dur ? Math.round(r * dur) + "초" : Math.round(r * 100) + "%"}</text>`);
+  g += `<polyline fill="none" stroke="var(--yt)" stroke-width="2" stroke-linejoin="round" points="${curve.map(c => X(c[0]) + "," + Y(c[1])).join(" ")}"/>`;
+  const drop = curve.find(c => c[1] < .5);
+  if (drop) g += `<circle cx="${X(drop[0])}" cy="${Y(drop[1])}" r="4.5" fill="var(--warn)" stroke="var(--s2)" stroke-width="2"><title>여기서 절반 아래로 (${dur ? Math.round(drop[0] * dur) + "초" : Math.round(drop[0] * 100) + "%"})</title></circle>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="시청 지속(이탈) 곡선">${g}</svg>`;
+}
+
+function videoYaHtml(v) {
+  if (!v.ya && !v.retention) return "";
+  const r = v.retention, rel = r ? (r.reduce((a, c) => a + c[2], 0) / r.length) : null;
+  return `${v.ya ? `<div class="stats4"><div><span>시청시간</span><b>${hm(v.ya.watch_min)}</b></div><div><span>평균 시청 비율</span><b>${v.ya.avg_pct}%</b></div>
+      <div><span>평균 시청</span><b>${v.ya.avg_dur}초</b></div><div><span>구독 전환</span><b>${v.ya.subs >= 0 ? "+" : ""}${v.ya.subs}</b></div></div>` : ""}
+    ${r ? `<div class="chart" style="margin-top:4px"><div class="legend" style="margin-bottom:8px"><span class="plat"><i style="background:var(--yt)"></i>몇 초에서 빠져나가나(시청 지속)</span>
+      <span class="plat"><i style="background:var(--warn)"></i>절반 아래로 떨어지는 지점</span>${rel != null ? `<span>비슷한 길이 영상 대비 ${rel >= .5 ? "좋음" : "약함"} (${rel.toFixed(2)})</span>` : ""}</div>${retentionChart(r, v.dur)}</div>` : ""}`;
+}
+
+const tip = $("#tip");
+function bindTips(sel, html) {
+  document.querySelectorAll(sel).forEach(el => {
+    el.onmouseenter = () => { tip.innerHTML = html(JSON.parse(el.dataset.tip)); tip.classList.add("on"); };
+    el.onmousemove = e => { const w = tip.offsetWidth, h = tip.offsetHeight;
+      tip.style.left = Math.min(e.clientX + 14, innerWidth - w - 8) + "px"; tip.style.top = Math.min(e.clientY + 14, innerHeight - h - 8) + "px"; };
+    el.onmouseleave = () => tip.classList.remove("on");
+  });
+}
+</script>
+<script src="/sidebar.js"></script>
+</body>
+</html>

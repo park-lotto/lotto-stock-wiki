@@ -6,7 +6,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { api, ApiError } from './api.js';
-import { runOps, aiRootDir, dataDir } from './engine_bridge.js';
+import { runOps, aiRootDir, dataDir, engineRoot } from './engine_bridge.js';
+import { rentPreset } from './preset_rent.js';
 import { refreshCookies } from './logins.js';
 import { ensureDir, jail } from './paths.js';
 
@@ -93,6 +94,7 @@ async function absorb(f, res) {
   f.status = res.status;
   f.message = res.message || f.message;
   f.stage = res.stage || f.stage;
+  f.finding = res.finding ? { ...res.finding, at: Date.now() } : null;   // 원본 찾기 진행 줄(서버 flow.finding_say) — 기다리는 동안 'N분째'를 시계로 채운다
   f.asks = null;
   f.wait = null;
   if (res.status === 'execute') { f.do = res.do || []; save(f); return 'run'; }
@@ -115,6 +117,22 @@ async function send(f, body) {
   }
 }
 
+// 실행기 일은 그 편 프리셋(판 설정·벤치 자료 꾸러미)을 빌린 채로 — 렌더·계획·준비 점검이 판 설정을 읽는다(10-29 회원 실측:
+//   빌리지 않아 렌더가 판 파일 없음 SystemExit 로 조용히 죽고 '같은 원인 3번'으로 멈췄다). 빌림 판단은 서버 claude_portal.preset_rent 한 곳.
+async function runWithPreset(f) {
+  const job = path.join(flowRoot(), f.sid, 'job');
+  let rental = null;
+  if (f.preset) {
+    try { rental = await rentPreset({ engineRoot: engineRoot(), presetId: f.preset }); }
+    catch (e) {
+      const why = '프리셋을 받지 못했다: ' + String((e && (e.code || e.message)) || e).slice(0, 120);
+      return Object.fromEntries((f.do || []).map(d => [String(d.id || d.cmd), { error: why }]));
+    }
+  }
+  try { return await runOps(job, f.do || []); }
+  finally { if (rental) await rental.release(); }
+}
+
 // 막힐 때(AI 답·회원 사인)까지 고리를 돈다 — 실행기 일은 기다려서 끝낸다
 async function pump(f) {
   if (f.busy) return;
@@ -123,7 +141,7 @@ async function pump(f) {
     for (let guard = 0; guard < 200; guard++) {
       let res;
       if (f.status === 'execute') {
-        const measure = await runOps(path.join(flowRoot(), f.sid, 'job'), f.do || []);
+        const measure = await runWithPreset(f);
         res = await send(f, { step: 'go', measure });
       } else if (f.status === 'review' || f.status === 'reject') {
         const replies = collect(f);
@@ -163,9 +181,28 @@ export function retryFlow(sid) {
   return f;
 }
 
+function progressLine(f) {
+  try {
+    const p = JSON.parse(fs.readFileSync(path.join(flowRoot(), f.sid, 'job', 'progress.json'), 'utf8'));
+    const what = String(p.what || '').slice(0, 40);
+    if (!what) return '';
+    return p.n && p.m ? `${what} ${p.n}/${p.m}` : (/중$/.test(what) ? what : `${what} 중`);   // '만드는 중 중' 겹침(10-26 잇템로그 회원 실측)
+  } catch { return ''; }
+}
+
+// 원본 찾기가 길어질 때 진행 줄(사장님 10-26 "5분에 한 번씩 계속 안내") — 문구는 서버(flow.finding_say)가 준 그대로, 여기는 {m} 에 5분 단위 분만 채운다(flow.finding_line 과 같은 셈)
+export function findingLine(fd, now = Date.now()) {
+  const sec = Number(fd.sec || 0) + Math.max(0, (now - Number(fd.at || now)) / 1000);
+  const step = Number(fd.step || 300);
+  const m = Math.floor(sec / step) * step / 60;
+  return m <= 0 ? String(fd.say0 || '') : String(fd.say || '').replace('{m}', String(m));
+}
+
 // MCP 응답 꼴 — 회원에게는 message 한 줄만(세부 금지). need 로 다음 할 일.
 export function shapeFlow(f) {
-  const base = { sid: f.sid, message: f.message, ...(f.stage ? { stage: f.stage.text, step: f.stage.no, step_total: f.stage.total } : {}) };
+  const doing = f.status === 'execute' ? progressLine(f) : '';   // 실행기 진행 신호('원본 후보 조사 3/8') — 회원이 멈춘 줄 모르게(10-26)
+  const head = f.finding && !f.fail ? `${f.finding.base} · ${findingLine(f.finding)}` : f.message;
+  const base = { sid: f.sid, message: doing ? `${head} · ${doing}` : head, ...(doing ? { doing } : {}), ...(f.stage ? { stage: f.stage.text, step: f.stage.no, step_total: f.stage.total } : {}) };
   if (f.fail) return { ...base, need: 'fail', fail: { why: f.fail.why, fix: f.fail.fix || '', retry_ok: !!f.fail.retry_ok }, ...(f.fail.retry_ok ? { next: `shortem_make(step="retry", sid="${f.sid}")` } : {}) };
   if (f.status === 'done') return { ...base, need: 'done', video: f.video, title: f.title, note: f.note || undefined };
   if (f.status === 'wait_user' && f.wait && f.wait.kind === 'approve' && f.approved !== 'sent' && f.approved !== true) {

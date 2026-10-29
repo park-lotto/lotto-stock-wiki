@@ -299,6 +299,16 @@
     "card": 158,
     "track": "자막팩"
   },
+  "tools/calcopy/hybrid/material_fit.py:relocate_cuts": {
+    "at": "2026-10-29 09:14",
+    "card": 285,
+    "track": "칼카피숏템엔진"
+  },
+  "tools/calcopy/hybrid/render_bench.py:render": {
+    "at": "2026-10-29 09:14",
+    "card": 285,
+    "track": "칼카피숏템엔진"
+  },
   "tools/render_scene_style.js": {
     "at": "2026-10-17 01:09",
     "card": 222,

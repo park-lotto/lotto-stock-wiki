@@ -1,0 +1,485 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>쇼핑쇼츠 대본 데이터북</title>
+<link rel="stylesheet" href="../_공용/book.css">
+<style>
+body { word-break: keep-all; overflow-wrap: break-word; }
+.page h2 { font-size: 21pt; }
+table td, table th { word-break: keep-all; }
+mark { background: #FFF5DF; color: #8A5A00; font-weight: 700; }
+.page td { padding: 1.7mm 2.5mm; } .page th { padding: 2mm 2.5mm; }
+.page table { margin-top: 3.5mm; }
+code { font-family: K, sans-serif; background: #F0ECFF; padding: 0 1.5mm; border-radius: 1mm; font-size: 10.5pt; }
+.next code { background: #141B33; }
+</style></head><body>
+<section class="page cover">
+<div class="brand">MAKERS LAB · 데이터북</div>
+<div class="kit">숏템메이커 무료 키트 · 2판</div>
+<h1>쇼핑쇼츠<br><em>대본 데이터북</em></h1>
+<p class="lead">터진 쇼핑쇼츠 2,051편을 한 줄씩 셌습니다.<br>감이 아니라 숫자로 고르는 유형 · 첫 줄 · 연결어 · 편집 수치.</p>
+<div class="inside">
+<b>안에 든 것</b><br>
+① 대본 유형 14종 — 유형마다 조회 중앙값 · 칸 순서 · 빈칸 틀 · 예시<br>
+② 실측 첫 줄 TOP 50 (조회수 붙음) · 첫 단어 랭킹<br>
+③ 연결어 자리표 · 스타일별 편집 수치 · 안 될 때 진단표<br>
+④ 클로드 스킬 파일 · 복사용 프롬프트 5종 · 올리기 전 점검표
+</div>
+<div class="who">메이커스랩 · cafe.naver.com/makerslab7 · 기준일 2026-09 / 정책 확인일 2026-10-29</div>
+</section><section class="page ">
+<div class="chap">시작하기 전에</div>
+<h2>이 책은 이렇게 쓰세요</h2>
+<p class="big">쇼핑쇼츠는 화면보다 <b>말</b>에서 갈립니다. 같은 제품, 같은 화면이어도 첫 줄과 칸 순서가 다르면 2초 만에 넘어갑니다. 이 책은 "무엇이 잘 됐나"를 숫자로 보여 주고, 바로 따라 쓸 틀로 바꿔 둔 것입니다.</p>
+<div class="box gold"><div class="t">처음이라면 이 순서로</div>
+<ol style="margin-top:1mm">
+<li><b>내 제품에 맞는 유형 고르기</b> — 5쪽 순위표 → 유형 쪽에서 빈칸 틀 확인</li>
+<li><b>첫 줄 정하기</b> — 첫 줄 TOP 50에서 꼴을 빌려 내 제품으로 바꾸기</li>
+<li><b>연결어 세 개 넣기</b> — 자리표 순서대로, 뒤에는 반드시 구체 내용</li>
+<li><b>AI에게 맡기기</b> — 클로드 스킬 또는 프롬프트에 제품 사실만 넣기</li>
+<li><b>올리기 전 점검표</b> → 올린 뒤 숫자가 안 나오면 <b>진단표</b></li>
+</ol></div>
+<div class="box"><div class="t">숫자를 읽을 때</div>
+조회수는 <b>원래 영상이 받은 조회</b>입니다. 같은 유형으로 써도 조회는 제품·화면·시기에 따라 크게 달라집니다. 이 책은 <b>더 자주 터진 꼴</b>을 알려 줄 뿐, 조회나 수익을 약속하지 않습니다.</div>
+<div class="box red"><div class="t">예시 대본에 대해</div>
+유형별 예시 대본은 이 책을 위해 새로 쓴 것이고, 예시 속 제품 사실은 설명을 위해 꾸민 것입니다. 실제로 쓸 때는 내 제품 상세페이지의 사실로 바꿔 쓰세요.</div>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>2 / 39</span></div></section><section class="page ">
+<div class="chap">데이터 출처</div>
+<h2>무엇을, 몇 편, 언제 셌나</h2>
+<table>
+<tr><th style="width:30%">자료</th><th>규모</th><th style="width:24%">기준일</th></tr>
+<tr><td><b>쇼핑·썰 쇼츠 자막</b></td><td>2,051편 · 채널 97곳 · 조회 합 429,146,000회 · 한 편 조회 중앙값 29,000회</td><td>2026-08-20~09-18 수집</td></tr>
+<tr><td><b>칸 단위로 쪼갠 대본</b></td><td>368편 · 14개 유형 · 원문 조회 합 172,807,983회 · 원문 조회 중앙값 201,498회 · 한 편 칸 수 중앙값 6.5칸</td><td>2026-09-20 정리</td></tr>
+<tr><td><b>연결어 빈도</b></td><td>자막 2,051편 중 연결어가 있는 1,242편에서 센 횟수 (인스타 641편 따로)</td><td>2026-09-22~10-05</td></tr>
+<tr><td><b>편집 수치</b></td><td>쇼츠 스타일 13갈래 · 채널 20곳 · 138편을 자막 한 덩이 단위로 잰 값</td><td>2026-10</td></tr>
+</table>
+<h3>이 데이터의 한계</h3>
+<ul>
+<li>유튜브에 공개된 <b>잘 된 쪽</b> 영상을 모았습니다. 같은 꼴로 써서 안 된 영상은 들어 있지 않습니다.</li>
+<li>자막은 자동 받아쓰기라 오타가 있습니다. 첫 줄 목록은 뜻이 바뀌지 않는 선에서 오타를 바로잡았습니다.</li>
+<li>조회수에는 광고·추천 운 같은 바깥 요인이 섞여 있습니다. 유형별 중앙값은 <b>경향</b>으로 읽으세요.</li>
+<li>채널 이름은 싣지 않았습니다. 첫 줄은 짧은 문구만 싣고 대본 전문은 싣지 않았습니다.</li>
+<li>건강·피부 효과나 수익을 주장하는 첫 줄은 목록에서 뺐습니다.</li>
+</ul>
+<h3>한 편 조회 구간 (2,051편)</h3>
+<table>
+<tr><th>1,000만 회 이상</th><th>100만 회 이상</th><th>10만 회 이상</th><th>10만 회 미만</th></tr>
+<tr><td>4편</td><td>85편</td><td>342편</td><td>1,620편 (79%)</td></tr>
+</table>
+<p class="sub">→ 잘 된다는 채널의 영상도 10편 중 8편은 10만 회를 못 넘었습니다. 한 편에 기대기보다 <b>같은 틀로 여러 편</b>을 올려야 하는 이유입니다.</p>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>3 / 39</span></div></section><section class="page ">
+<div class="chap">기본기</div>
+<h2>대본은 8가지 칸으로 움직입니다</h2>
+<p>368편을 칸 단위로 쪼개 보니, 유형은 달라도 쓰는 칸은 거의 같았습니다. 한 편은 보통 <b>6.5칸</b>입니다.</p>
+<table><tr><th style="width:22%">칸</th><th>하는 일</th></tr>
+<tr><td><b>훅</b></td><td>첫 줄. 제품 이름은 숨기고 '그게 뭔데?'를 만든다</td></tr><tr><td><b>계기</b></td><td>이야기가 시작된 상황(어디서, 왜)</td></tr><tr><td><b>불편</b></td><td>원래 무엇이 문제였나</td></tr><tr><td><b>전환</b></td><td>해결로 넘어가는 순간·제품 등장</td></tr><tr><td><b>작동</b></td><td>제품을 쓰는 장면을 눈에 보이게</td></tr><tr><td><b>심지어</b></td><td>두 번째 놀라움(숫자·다른 쓰임)</td></tr><tr><td><b>감정</b></td><td>반응·생활이 바뀐 모습</td></tr><tr><td><b>CTA</b></td><td>댓글 유도(받을 것을 말해 준다)</td></tr>
+</table>
+<h3>앞 3칸 순서 — 가장 많이 쓴 것</h3>
+<table><tr><th>앞 3칸</th><th>편수</th><th>비율</th></tr><tr><td>훅 → 계기 → 불편</td><td>214편</td><td>58%</td></tr><tr><td>훅 → 계기 → 작동</td><td>47편</td><td>13%</td></tr><tr><td>훅 → 계기 → 전환</td><td>36편</td><td>10%</td></tr><tr><td>훅 → 불편 → 전환</td><td>32편</td><td>9%</td></tr><tr><td>훅 → 불편 → 작동</td><td>19편</td><td>5%</td></tr></table>
+<div class="box gold"><div class="t">모르면 이 순서</div><b>훅 → 계기 → 불편</b>. 214편(58%)이 이렇게 시작했습니다. 첫 줄로 붙잡고, 무슨 일인지 말하고, 원래 불편을 보여 준 뒤에 제품이 나옵니다.</div>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>4 / 39</span></div></section><section class="page ">
+<div class="chap">대본 유형 14종</div>
+<h2>유형별 원문 조회 중앙값 순위</h2>
+<p>368편을 유형으로 나누고, 유형마다 원래 영상 조회수의 <b>가운데 값</b>(중앙값)을 냈습니다. 평균은 한두 편 대박에 끌려가서 중앙값을 썼습니다.</p>
+<table style="font-size:10.5pt"><tr><th>#</th><th>유형</th><th>편수</th><th>조회 중앙값</th><th>한 줄 정의</th></tr><tr><td>1</td><td><b>만능템형</b></td><td>11편</td><td>406,000회</td><td>물건 하나가 여러 불편을 한꺼번에 해결한다는 이야기</td></tr><tr><td>2</td><td><b>오용형</b></td><td>46편</td><td>405,500회</td><td>원래 용도와 다른 곳에 쓰는 '활용법'</td></tr><tr><td>3</td><td><b>목격담형</b></td><td>18편</td><td>344,404회</td><td>내가 어디 갔다가 본 장면으로 시작하는 이야기</td></tr><tr><td>4</td><td><b>정체의문형</b></td><td>6편</td><td>339,462회</td><td>생김새로는 정체를 모를 물건을 '이게 ○○라고?'로 던지고 작동 장면으로 답한다</td></tr><tr><td>5</td><td><b>지인증언형</b></td><td>48편</td><td>312,360회</td><td>가족·지인의 반응(혼날 뻔, 오해)이 이야기를 끈다</td></tr><tr><td>6</td><td><b>발명품형</b></td><td>22편</td><td>282,446회</td><td>누가, 왜, 어떻게 만들었는지가 재밌는 물건</td></tr><tr><td>7</td><td><b>다이소지목형</b></td><td>23편</td><td>269,219회</td><td>'어느 매장 가면 이거 보이면 담아라'</td></tr><tr><td>8</td><td><b>무지후회형</b></td><td>19편</td><td>142,207회</td><td>'이거 몰라서 손해 볼 뻔했다'</td></tr><tr><td>9</td><td><b>내자랑형</b></td><td>38편</td><td>122,230회</td><td>써 보고 바뀐 내 생활을 자랑한다</td></tr><tr><td>10</td><td><b>사회증거형</b></td><td>23편</td><td>117,436회</td><td>'다들 쓴다, 난리 났다'</td></tr><tr><td>11</td><td><b>권유지시형</b></td><td>24편</td><td>87,913회</td><td>'○○은 무조건 이걸로 하세요'</td></tr><tr><td>12</td><td><b>금지경고형</b></td><td>49편</td><td>77,387회</td><td>'절대 ○○하지 마세요'</td></tr><tr><td>13</td><td><b>제품정체형</b></td><td>22편</td><td>69,824회</td><td>놀란 반응을 먼저 던지고, 정체는 뒤에서 밝힌다</td></tr><tr><td>14</td><td><b>가성비형</b></td><td>19편</td><td>52,884회</td><td>'이걸로 얼마·얼마나 아꼈다'</td></tr></table>
+<div class="box"><div class="t">이렇게 고르세요</div>순위가 높다고 아무 제품에나 맞는 건 아닙니다. 다음 쪽부터 유형마다 <b>'언제 고르나'</b>를 보고 내 제품에 맞는 것 2~3개를 고른 뒤, 그중 순위가 높은 것부터 써 보세요. 편수가 적은 유형(정체의문형 6편, 만능템형 11편)은 숫자가 흔들릴 수 있습니다.</div>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>5 / 39</span></div></section><section class="page ">
+<div class="chap">유형 1 / 14</div>
+<h2>만능템형</h2>
+<p style="margin-top:2mm"><b>물건 하나가 여러 불편을 한꺼번에 해결한다는 이야기. '필수템 N가지' 묶음도 여기.</b></p>
+<table style="font-size:10.5pt;margin-top:3mm"><tr><th style="width:25%">편수</th><th style="width:25%">조회 중앙값</th><th>언제 고르나</th></tr>
+<tr><td>11편</td><td>406,000회</td><td>기능이 2~3개 겹치는 물건, 공간을 줄여 주는 물건</td></tr></table>
+<p class="sub" style="font-size:10.5pt">가장 많이 쓴 칸 순서(2편): 훅 → 불편 → 전환 → 작동 → 심지어 → 감정</p>
+<table style="font-size:10.5pt"><tr><th style="width:13%">칸</th><th style="width:40%">빈칸 틀</th><th>예시 (새로 쓴 것)</th></tr><tr><td><b>훅</b></td><td>이거 하나로 <mark>[바뀌는 것]</mark>이 다 된다고?</td><td>이거 하나로 주방 정리가 다 된다고?</td></tr><tr><td><b>불편</b></td><td><mark>[원래 따로 놀던 것들]</mark></td><td>냄비 받침, 집게, 장갑이 서랍마다 따로 굴러다녔거든요</td></tr><tr><td><b>전환</b></td><td>그러다 알게 된 게 이 <mark>[제품]</mark></td><td>그러다 알게 된 게 이 실리콘 3단 주방 패드예요</td></tr><tr><td><b>작동</b></td><td><mark>[쓰는 동작 하나]</mark></td><td>펼치면 냄비 받침, 반 접으면 손잡이 잡는 장갑이 되더라고요</td></tr><tr><td><b>심지어</b></td><td>심지어 <mark>[두 번째 쓰임]</mark></td><td>심지어 돌돌 말아서 병뚜껑 딸 때도 써요</td></tr><tr><td><b>감정</b></td><td><mark>[생활이 바뀐 모습]</mark></td><td>이제 서랍 세 칸이 한 칸으로 줄었어요</td></tr></table>
+<h3 style="margin-top:5mm">이 유형에서 조회가 높았던 첫 줄</h3>
+<ul style="font-size:11pt"><li>“다치기 전에 미리 사놓는 우리집 필수 구급템 5가지” <span class='sub'>— 2,283,180회</span></li><li>“이거 하나로 이렇게 깔끔해진다고?” <span class='sub'>— 1,081,852회</span></li><li>“주부들도 인정한 이케아 도마 활용법.” <span class='sub'>— 739,000회</span></li></ul>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>6 / 39</span></div></section><section class="page ">
+<div class="chap">유형 2 / 14</div>
+<h2>오용형</h2>
+<p style="margin-top:2mm"><b>원래 용도와 다른 곳에 쓰는 '활용법'. 만든 곳도 몰랐다는 권위 비틀기가 첫 줄.</b></p>
+<table style="font-size:10.5pt;margin-top:3mm"><tr><th style="width:25%">편수</th><th style="width:25%">조회 중앙값</th><th>언제 고르나</th></tr>
+<tr><td>46편</td><td>405,500회</td><td>흔한 물건인데 다른 데 쓰면 놀라운 것</td></tr></table>
+<p class="sub" style="font-size:10.5pt">가장 많이 쓴 칸 순서(12편): 훅 → 계기 → 불편 → 작동 → 심지어 → 감정</p>
+<table style="font-size:10.5pt"><tr><th style="width:13%">칸</th><th style="width:40%">빈칸 틀</th><th>예시 (새로 쓴 것)</th></tr><tr><td><b>훅</b></td><td><mark>[만든 곳]</mark>도 몰랐던 천재 아이디어</td><td>제조사도 몰랐던 압축봉 천재 아이디어</td></tr><tr><td><b>계기</b></td><td>원래는 <mark>[원래 용도]</mark>로 만든 <mark>[물건]</mark>인데</td><td>원래는 커튼 다는 용도로 만든 압축봉인데</td></tr><tr><td><b>불편</b></td><td><mark>[집단]</mark>이 <mark>[불편]</mark> 때문에 여기 주목했대요</td><td>수납공간 모자란 주부들이 여기에 주목했대요</td></tr><tr><td><b>작동</b></td><td><mark>[다른 용도로 쓰는 장면]</mark></td><td>싱크대 아래 두 개 걸치니까 세제 거는 선반이 되는 거예요</td></tr><tr><td><b>심지어</b></td><td>심지어 <mark>[또 다른 활용]</mark></td><td>심지어 옷장에 가로로 걸면 가방 거는 봉이 된대요</td></tr><tr><td><b>감정</b></td><td>그래서 요즘 <mark>[집단]</mark> 사이에서 <mark>[반응]</mark></td><td>그래서 요즘 살림 고수들 사이에서 집집마다 몇 개씩 산다고 난리래요</td></tr></table>
+<h3 style="margin-top:5mm">이 유형에서 조회가 높았던 첫 줄</h3>
+<ul style="font-size:11pt"><li>“코스트코 본사도 몰랐던 천재 아이디어” <span class='sub'>— 12,000,000회</span></li><li>“미국 제조사도 놀란 천재 아이디어” <span class='sub'>— 4,400,000회</span></li><li>“다이소 더쿠들의 천재적인 활용법.” <span class='sub'>— 2,600,000회</span></li></ul>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>7 / 39</span></div></section><section class="page ">
+<div class="chap">유형 3 / 14</div>
+<h2>목격담형</h2>
+<p style="margin-top:2mm"><b>내가 어디 갔다가 본 장면으로 시작하는 이야기. 장소가 곧 미끼.</b></p>
+<table style="font-size:10.5pt;margin-top:3mm"><tr><th style="width:25%">편수</th><th style="width:25%">조회 중앙값</th><th>언제 고르나</th></tr>
+<tr><td>18편</td><td>344,404회</td><td>남의 집·가게에서 '어? 저게 뭐지' 할 만한 물건</td></tr></table>
+<p class="sub" style="font-size:10.5pt">가장 많이 쓴 칸 순서(6편): 훅 → 계기 → 불편 → 전환 → 작동 → 심지어 → 감정 → CTA</p>
+<table style="font-size:10.5pt"><tr><th style="width:13%">칸</th><th style="width:40%">빈칸 틀</th><th>예시 (새로 쓴 것)</th></tr><tr><td><b>훅</b></td><td><mark>[장소]</mark> 갔다가 진짜 충격 받았어요</td><td>친정 갔다가 진짜 충격 받았어요</td></tr><tr><td><b>계기</b></td><td><mark>[무슨 일로 갔는데]</mark></td><td>엄마가 반찬 가지러 오라 하셔서 갔는데</td></tr><tr><td><b>불편</b></td><td><mark>[원래 그 집의 문제]</mark></td><td>원래 엄마 냉장고는 반찬통이 탑처럼 쌓여 있었거든요</td></tr><tr><td><b>전환</b></td><td>근데 <mark>[달라진 장면]</mark></td><td>근데 이번엔 칸칸이 서랍처럼 쏙쏙 빠지는 거예요</td></tr><tr><td><b>작동</b></td><td>알고 보니 <mark>[제품]</mark></td><td>알고 보니 냉장고 선반에 끼우는 슬라이드 정리함이더라고요</td></tr><tr><td><b>심지어</b></td><td>심지어 <mark>[두 번째]</mark></td><td>심지어 손잡이에 날짜 쓰는 칸까지 있고요</td></tr><tr><td><b>감정</b></td><td><mark>[내 반응]</mark></td><td>그날 바로 저희 집 것도 같이 주문했어요</td></tr><tr><td><b>CTA</b></td><td>궁금하시면 댓글에 &#x27;<mark>[단어]</mark>&#x27; 남겨주세요</td><td>궁금하시면 댓글에 &#x27;냉장고&#x27; 남겨주세요</td></tr></table>
+<h3 style="margin-top:5mm">이 유형에서 조회가 높았던 첫 줄</h3>
+<ul style="font-size:11pt"><li>“시댁갔다가 진짜 충격먹었어요” <span class='sub'>— 3,477,254회</span></li><li>“저 입주청소 알바 갔다가 기절할 뻔했어요” <span class='sub'>— 2,355,292회</span></li><li>“제 결혼식장에서 엄마가 펑펑 우셨어요.” <span class='sub'>— 2,104,609회</span></li></ul>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>8 / 39</span></div></section><section class="page ">
+<div class="chap">유형 4 / 14</div>
+<h2>정체의문형</h2>
+<p style="margin-top:2mm"><b>생김새로는 정체를 모를 물건을 '이게 ○○라고?'로 던지고 작동 장면으로 답한다.</b></p>
+<table style="font-size:10.5pt;margin-top:3mm"><tr><th style="width:25%">편수</th><th style="width:25%">조회 중앙값</th><th>언제 고르나</th></tr>
+<tr><td>6편</td><td>339,462회</td><td>겉모습과 쓰임이 딴판인 물건</td></tr></table>
+<p class="sub" style="font-size:10.5pt">가장 많이 쓴 칸 순서(1편): 훅 → 작동 → 작동 → 심지어 → 전환 → CTA</p>
+<table style="font-size:10.5pt"><tr><th style="width:13%">칸</th><th style="width:40%">빈칸 틀</th><th>예시 (새로 쓴 것)</th></tr><tr><td><b>훅</b></td><td>이게 <mark>[물건]</mark>이라고?</td><td>이게 빨래 건조대라고?</td></tr><tr><td><b>작동</b></td><td><mark>[생김새와 다른 첫 동작]</mark></td><td>벽에 붙은 얇은 액자인 줄 알았는데 아래로 당기니까</td></tr><tr><td><b>작동</b></td><td><mark>[이어지는 동작]</mark></td><td>봉 다섯 개가 착착 펼쳐지면서 수건 다섯 장이 걸려요</td></tr><tr><td><b>심지어</b></td><td>심지어 <mark>[두 번째]</mark></td><td>심지어 다 쓰면 다시 밀어 넣어서 얇게 돌아가고요</td></tr><tr><td><b>전환</b></td><td><mark>[왜 필요한지]</mark></td><td>베란다 없는 원룸에선 이게 거의 유일한 답이더라고요</td></tr><tr><td><b>CTA</b></td><td>댓글에 &#x27;<mark>[단어]</mark>&#x27; 남겨주세요</td><td>어디 건지 궁금하시면 댓글에 &#x27;건조대&#x27; 남겨주세요</td></tr></table>
+<h3 style="margin-top:5mm">이 유형에서 조회가 높았던 첫 줄</h3>
+<ul style="font-size:11pt"><li>“이게 요새 그렇게 유명한 파라솔이라면서요?” <span class='sub'>— 2,953,223회</span></li><li>“이게 스테이플러라고??” <span class='sub'>— 687,406회</span></li><li>“애들 침대를 한 번만 사도 된다고?” <span class='sub'>— 505,718회</span></li></ul>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>9 / 39</span></div></section><section class="page ">
+<div class="chap">유형 5 / 14</div>
+<h2>지인증언형</h2>
+<p style="margin-top:2mm"><b>가족·지인의 반응(혼날 뻔, 오해)이 이야기를 끈다. 368편 중 가장 많은 축.</b></p>
+<table style="font-size:10.5pt;margin-top:3mm"><tr><th style="width:25%">편수</th><th style="width:25%">조회 중앙값</th><th>언제 고르나</th></tr>
+<tr><td>48편</td><td>312,360회</td><td>가족이 처음엔 반대하다 결국 쓰는 물건</td></tr></table>
+<p class="sub" style="font-size:10.5pt">가장 많이 쓴 칸 순서(8편): 훅 → 계기 → 불편 → 작동 → 심지어 → 감정 → CTA</p>
+<table style="font-size:10.5pt"><tr><th style="width:13%">칸</th><th style="width:40%">빈칸 틀</th><th>예시 (새로 쓴 것)</th></tr><tr><td><b>훅</b></td><td>저 이거 때문에 <mark>[가족]</mark>한테 <mark>[혼날]</mark> 뻔했어요</td><td>저 이거 때문에 남편한테 등짝 맞을 뻔했어요</td></tr><tr><td><b>계기</b></td><td><mark>[무엇을 샀는데]</mark></td><td>주말마다 차 청소한다고 무선 청소기를 하나 샀는데</td></tr><tr><td><b>불편</b></td><td><mark>[가족이 오해한 이유]</mark></td><td>남편은 또 쓸데없는 거 샀다고 한숨부터 쉬더라고요</td></tr><tr><td><b>작동</b></td><td><mark>[써 보니]</mark></td><td>근데 시트 틈에 노즐을 끼우니까 과자 부스러기가 쭉 빨려 나와요</td></tr><tr><td><b>심지어</b></td><td>심지어 <mark>[두 번째]</mark></td><td>심지어 충전 거치대가 차 컵홀더에 쏙 들어가요</td></tr><tr><td><b>감정</b></td><td><mark>[가족 반응이 바뀜]</mark></td><td>이제는 남편이 먼저 꺼내서 쓰고 있어요</td></tr><tr><td><b>CTA</b></td><td><mark>[가족]</mark> 소환하실 분 댓글 남겨주세요</td><td>남편 소환하실 분 댓글 남겨주세요</td></tr></table>
+<h3 style="margin-top:5mm">이 유형에서 조회가 높았던 첫 줄</h3>
+<ul style="font-size:11pt"><li>“시댁 갔다가 진짜 충격 받았어요” <span class='sub'>— 3,449,962회</span></li><li>“저 이거 때문에 아빠한테 등짝 맞을 뻔 했어요.” <span class='sub'>— 2,346,171회</span></li><li>“저 이거 보고 진짜 충격받았어요” <span class='sub'>— 1,804,227회</span></li></ul>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>10 / 39</span></div></section><section class="page ">
+<div class="chap">유형 6 / 14</div>
+<h2>발명품형</h2>
+<p style="margin-top:2mm"><b>누가, 왜, 어떻게 만들었는지가 재밌는 물건. '천재가 만들어 난리 난' 꼴.</b></p>
+<table style="font-size:10.5pt;margin-top:3mm"><tr><th style="width:25%">편수</th><th style="width:25%">조회 중앙값</th><th>언제 고르나</th></tr>
+<tr><td>22편</td><td>282,446회</td><td>아이디어 하나로 기존 불편을 뒤집은 물건</td></tr></table>
+<p class="sub" style="font-size:10.5pt">가장 많이 쓴 칸 순서(4편): 훅 → 계기 → 불편 → 전환 → 작동 → 심지어 → 감정</p>
+<table style="font-size:10.5pt"><tr><th style="width:13%">칸</th><th style="width:40%">빈칸 틀</th><th>예시 (새로 쓴 것)</th></tr><tr><td><b>훅</b></td><td><mark>[누가]</mark> 하다 지친 <mark>[나라]</mark> 천재가 만들어 난리 난 <mark>[물건]</mark></td><td>매일 우산 말리다 지친 한국 천재가 만들어 난리 난 우산</td></tr><tr><td><b>계기</b></td><td><mark>[만든 사람이 겪은 일]</mark></td><td>비 오는 날마다 젖은 우산 때문에 현관이 물바다가 됐대요</td></tr><tr><td><b>불편</b></td><td><mark>[기존 물건의 문제]</mark></td><td>접으면 젖은 면이 바깥으로 나와서 옷까지 다 젖고요</td></tr><tr><td><b>전환</b></td><td>그래서 <mark>[뒤집은 생각]</mark></td><td>그래서 아예 거꾸로 접히는 우산을 만들어 버렸대요</td></tr><tr><td><b>작동</b></td><td><mark>[쓰는 동작]</mark></td><td>버튼을 누르면 젖은 면이 안쪽으로 말려 들어가요</td></tr><tr><td><b>심지어</b></td><td>심지어 <mark>[두 번째]</mark></td><td>심지어 손잡이가 C자라 팔에 걸고 휴대폰을 볼 수 있고요</td></tr><tr><td><b>감정</b></td><td>그래서 요즘 <mark>[집단]</mark> 사이에서 난리래요</td><td>그래서 요즘 출퇴근길 직장인들 사이에서 난리래요</td></tr></table>
+<h3 style="margin-top:5mm">이 유형에서 조회가 높았던 첫 줄</h3>
+<ul style="font-size:11pt"><li>“역발상으로 돈방석앉은 육아천재의 발명품” <span class='sub'>— 1,772,569회</span></li><li>“한국 천재가 특허내 돈방석 앉은 제품?” <span class='sub'>— 1,101,222회</span></li><li>“천재가 만들어서 요즘 캠핑족들 사이에서 난리 났다는 불멸의 얼음이 있어요” <span class='sub'>— 982,951회</span></li></ul>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>11 / 39</span></div></section><section class="page ">
+<div class="chap">유형 7 / 14</div>
+<h2>다이소지목형</h2>
+<p style="margin-top:2mm"><b>'어느 매장 가면 이거 보이면 담아라'. 쉽게 살 수 있다는 게 미끼.</b></p>
+<table style="font-size:10.5pt;margin-top:3mm"><tr><th style="width:25%">편수</th><th style="width:25%">조회 중앙값</th><th>언제 고르나</th></tr>
+<tr><td>23편</td><td>269,219회</td><td>생활용품점에서 흔히 파는 싼 물건</td></tr></table>
+<p class="sub" style="font-size:10.5pt">가장 많이 쓴 칸 순서(3편): 훅 → 계기 → 불편 → 전환 → 작동 → 심지어 → 감정 → CTA</p>
+<table style="font-size:10.5pt"><tr><th style="width:13%">칸</th><th style="width:40%">빈칸 틀</th><th>예시 (새로 쓴 것)</th></tr><tr><td><b>훅</b></td><td><mark>[매장]</mark> 가서 이거 보이면 무조건 담으세요</td><td>생활용품점 가서 이거 보이면 무조건 담으세요</td></tr><tr><td><b>계기</b></td><td><mark>[그 물건이 필요했던 순간]</mark></td><td>욕실 청소하다가 줄눈 사이 얼룩 때문에 한숨 쉬던 참이었는데</td></tr><tr><td><b>불편</b></td><td><mark>[원래 방법의 문제]</mark></td><td>칫솔로 문지르면 손목만 아프고 잘 안 닿잖아요</td></tr><tr><td><b>전환</b></td><td>그러다 발견한 게 이 <mark>[제품]</mark></td><td>그러다 발견한 게 이 ㄱ자 틈새 브러시예요</td></tr><tr><td><b>작동</b></td><td><mark>[쓰는 동작]</mark></td><td>꺾인 머리를 줄눈에 대고 쓱 밀면 모서리까지 닿더라고요</td></tr><tr><td><b>심지어</b></td><td>심지어 <mark>[두 번째]</mark></td><td>심지어 손잡이 끝에 고무 밀대가 달려서 물기까지 밀어요</td></tr><tr><td><b>감정</b></td><td><mark>[생활 변화]</mark></td><td>주말 욕실 청소가 금방 끝나요</td></tr><tr><td><b>CTA</b></td><td>댓글에 &#x27;<mark>[단어]</mark>&#x27; 남겨주시면 알려드릴게요</td><td>어느 코너에 있는지 댓글에 &#x27;브러시&#x27; 남겨주시면 알려드릴게요</td></tr></table>
+<h3 style="margin-top:5mm">이 유형에서 조회가 높았던 첫 줄</h3>
+<ul style="font-size:11pt"><li>“여러분! 다이소 가서 이거 보이면 무조건 쓸어 담으세요.” <span class='sub'>— 1,141,294회</span></li><li>“또 한번 사고 쳐버린 다이소” <span class='sub'>— 930,000회</span></li><li>“다이소에서 무조건 품절되는 필수템.” <span class='sub'>— 725,000회</span></li></ul>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>12 / 39</span></div></section><section class="page ">
+<div class="chap">유형 8 / 14</div>
+<h2>무지후회형</h2>
+<p style="margin-top:2mm"><b>'이거 몰라서 손해 볼 뻔했다'. 손실이 미끼라 끝까지 듣게 된다.</b></p>
+<table style="font-size:10.5pt;margin-top:3mm"><tr><th style="width:25%">편수</th><th style="width:25%">조회 중앙값</th><th>언제 고르나</th></tr>
+<tr><td>19편</td><td>142,207회</td><td>모르면 물건·시간을 버리게 되는 정리·보관용품</td></tr></table>
+<p class="sub" style="font-size:10.5pt">가장 많이 쓴 칸 순서(6편): 훅 → 계기 → 불편 → 전환 → 작동 → 심지어 → 감정 → CTA</p>
+<table style="font-size:10.5pt"><tr><th style="width:13%">칸</th><th style="width:40%">빈칸 틀</th><th>예시 (새로 쓴 것)</th></tr><tr><td><b>훅</b></td><td>이거 몰라서 <mark>[손해]</mark> 볼 뻔했어요</td><td>이거 몰라서 새 패딩 버릴 뻔했어요</td></tr><tr><td><b>계기</b></td><td><mark>[예전에 한 실수]</mark></td><td>작년 겨울에 패딩을 그냥 비닐에 넣어 옷장에 뒀거든요</td></tr><tr><td><b>불편</b></td><td><mark>[그 결과]</mark></td><td>올해 꺼내 보니 눌려서 납작해졌더라고요</td></tr><tr><td><b>전환</b></td><td><mark>[알게 된 계기]</mark></td><td>세탁소 사장님이 보시더니 이거 하나 쓰라고 하시는 거예요</td></tr><tr><td><b>작동</b></td><td><mark>[쓰는 동작]</mark></td><td>옷걸이째 넣고 지퍼만 닫으면 세워서 보관하는 가방이었어요</td></tr><tr><td><b>심지어</b></td><td>심지어 <mark>[두 번째]</mark></td><td>심지어 투명 창이 있어서 안 열어 봐도 어떤 옷인지 보여요</td></tr><tr><td><b>감정</b></td><td><mark>[바뀐 결과]</mark></td><td>올해는 꺼내자마자 바로 입었어요</td></tr><tr><td><b>CTA</b></td><td><mark>[고민]</mark>이시면 댓글에 &#x27;<mark>[단어]</mark>&#x27; 남겨주세요</td><td>패딩 보관 고민이시면 댓글에 &#x27;패딩&#x27; 남겨주세요</td></tr></table>
+<h3 style="margin-top:5mm">이 유형에서 조회가 높았던 첫 줄</h3>
+<ul style="font-size:11pt"><li>“이거 몰라서 500만 원 날릴 뻔했어요” <span class='sub'>— 5,361,981회</span></li><li>“이것 때문에 햇반이랑 완전히 손절했습니다.” <span class='sub'>— 1,174,149회</span></li><li>“여러분 저 이거 알고 바나나 절대 안 먹어요” <span class='sub'>— 608,427회</span></li></ul>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>13 / 39</span></div></section><section class="page ">
+<div class="chap">유형 9 / 14</div>
+<h2>내자랑형</h2>
+<p style="margin-top:2mm"><b>써 보고 바뀐 내 생활을 자랑한다. 화자의 기쁨이 곧 증거.</b></p>
+<table style="font-size:10.5pt;margin-top:3mm"><tr><th style="width:25%">편수</th><th style="width:25%">조회 중앙값</th><th>언제 고르나</th></tr>
+<tr><td>38편</td><td>122,230회</td><td>매일 하는 일을 짧게 줄여 주는 물건</td></tr></table>
+<p class="sub" style="font-size:10.5pt">가장 많이 쓴 칸 순서(5편): 훅 → 계기 → 작동 → 심지어 → 감정 → CTA</p>
+<table style="font-size:10.5pt"><tr><th style="width:13%">칸</th><th style="width:40%">빈칸 틀</th><th>예시 (새로 쓴 것)</th></tr><tr><td><b>훅</b></td><td>와 여러분 저 이거 <mark>[하고]</mark> <mark>[바뀐 것]</mark></td><td>와 여러분 저 이거 들이고 아침 도시락이 금방 끝나요</td></tr><tr><td><b>계기</b></td><td><mark>[예전 생활]</mark></td><td>아이 도시락 싸느라 매일 6시에 일어났거든요</td></tr><tr><td><b>작동</b></td><td><mark>[쓰는 동작]</mark></td><td>칸 나뉜 프라이팬에 계란, 소시지, 채소를 한 번에 올려 굽는 거예요</td></tr><tr><td><b>심지어</b></td><td>심지어 <mark>[두 번째]</mark></td><td>심지어 칸마다 따로 뒤집을 수 있어서 섞이지도 않아요</td></tr><tr><td><b>감정</b></td><td><mark>[바뀐 생활]</mark></td><td>이제 30분 더 자고 일어나요</td></tr><tr><td><b>CTA</b></td><td><mark>[대상]</mark>분들 댓글 남겨주시면 링크 드릴게요</td><td>도시락 싸시는 분들 댓글 남겨주시면 링크 드릴게요</td></tr></table>
+<h3 style="margin-top:5mm">이 유형에서 조회가 높았던 첫 줄</h3>
+<ul style="font-size:11pt"><li>“와 여러분 저 이거 먹고 빵집 끊었어요!” <span class='sub'>— 1,636,910회</span></li><li>“집에 놀러오는 손님들마다 이거 어디서 사냐고 물어봐요” <span class='sub'>— 950,277회</span></li><li>“제가 햄버거를 진짜 좋아했는데 이렇게 만들고 나서 안 사 먹어요.” <span class='sub'>— 871,154회</span></li></ul>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>14 / 39</span></div></section><section class="page ">
+<div class="chap">유형 10 / 14</div>
+<h2>사회증거형</h2>
+<p style="margin-top:2mm"><b>'다들 쓴다, 난리 났다'. 많은 사람이 이미 고른 물건이라는 게 증거.</b></p>
+<table style="font-size:10.5pt;margin-top:3mm"><tr><th style="width:25%">편수</th><th style="width:25%">조회 중앙값</th><th>언제 고르나</th></tr>
+<tr><td>23편</td><td>117,436회</td><td>어느 모임·취미에서 유행하는 물건</td></tr></table>
+<p class="sub" style="font-size:10.5pt">가장 많이 쓴 칸 순서(3편): 훅 → 계기 → 불편 → 작동 → 심지어 → 감정 → CTA</p>
+<table style="font-size:10.5pt"><tr><th style="width:13%">칸</th><th style="width:40%">빈칸 틀</th><th>예시 (새로 쓴 것)</th></tr><tr><td><b>훅</b></td><td>요즘 <mark>[집단]</mark> 사이에서 난리 난 <mark>[물건]</mark></td><td>요즘 캠핑족들 사이에서 난리 난 랜턴</td></tr><tr><td><b>계기</b></td><td><mark>[어디서 봤나]</mark></td><td>캠핑장 가 보면 텐트마다 이게 하나씩 걸려 있더라고요</td></tr><tr><td><b>불편</b></td><td><mark>[기존 물건의 아쉬움]</mark></td><td>원래 랜턴은 밝으면 무겁고 가벼우면 금방 꺼졌잖아요</td></tr><tr><td><b>작동</b></td><td><mark>[쓰는 동작]</mark></td><td>이건 손바닥만 한데 줄을 당기면 늘어나면서 텐트 전체를 비춰요</td></tr><tr><td><b>심지어</b></td><td>심지어 <mark>[두 번째]</mark></td><td>심지어 바닥이 자석이라 차 문에도 철썩 붙고요</td></tr><tr><td><b>감정</b></td><td><mark>[주변 반응]</mark></td><td>옆 텐트 분이 어디서 샀냐고 물어보셔서 알려드렸어요</td></tr><tr><td><b>CTA</b></td><td>궁금하시면 댓글에 &#x27;<mark>[단어]</mark>&#x27; 남겨주세요</td><td>궁금하시면 댓글에 &#x27;랜턴&#x27; 남겨주세요</td></tr></table>
+<h3 style="margin-top:5mm">이 유형에서 조회가 높았던 첫 줄</h3>
+<ul style="font-size:11pt"><li>“종이에 써있는대로 올리면 요리 완성?” <span class='sub'>— 2,261,819회</span></li><li>“SNS에서 만두 귀신들이 극찬하는 냉동만두 3대장 빠르게 알려드릴게요.” <span class='sub'>— 1,857,158회</span></li><li>“쿠팡 후기 1만개나 터진 딸기우유 네일 발라보니 이유가 있어요!” <span class='sub'>— 1,571,745회</span></li></ul>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>15 / 39</span></div></section><section class="page ">
+<div class="chap">유형 11 / 14</div>
+<h2>권유지시형</h2>
+<p style="margin-top:2mm"><b>'○○은 무조건 이걸로 하세요'. 정답을 먼저 주고 이유를 붙인다.</b></p>
+<table style="font-size:10.5pt;margin-top:3mm"><tr><th style="width:25%">편수</th><th style="width:25%">조회 중앙값</th><th>언제 고르나</th></tr>
+<tr><td>24편</td><td>87,913회</td><td>고르는 기준이 분명한 생활용품(아이·차·주방)</td></tr></table>
+<p class="sub" style="font-size:10.5pt">가장 많이 쓴 칸 순서(3편): 훅 → 계기 → 불편 → 전환 → 작동 → 심지어 → 감정 → CTA</p>
+<table style="font-size:10.5pt"><tr><th style="width:13%">칸</th><th style="width:40%">빈칸 틀</th><th>예시 (새로 쓴 것)</th></tr><tr><td><b>훅</b></td><td><mark>[대상]</mark>은 무조건 이걸로 하세요</td><td>아이 물병은 무조건 이걸로 하세요</td></tr><tr><td><b>계기</b></td><td><mark>[겪은 일]</mark></td><td>학교 다녀온 아이 가방이 매번 젖어 있었거든요</td></tr><tr><td><b>불편</b></td><td><mark>[기존 물건의 문제]</mark></td><td>뚜껑을 꽉 안 닫으면 새고, 꽉 닫으면 아이가 못 열고요</td></tr><tr><td><b>전환</b></td><td>그래서 바꾼 게 <mark>[제품]</mark></td><td>그래서 바꾼 게 버튼 하나로 열리는 물병이에요</td></tr><tr><td><b>작동</b></td><td><mark>[쓰는 동작]</mark></td><td>버튼을 누르면 빨대가 톡 올라오고, 닫으면 딸깍 잠겨요</td></tr><tr><td><b>심지어</b></td><td>심지어 <mark>[두 번째]</mark></td><td>심지어 이름표 꽂는 칸이 있어서 잃어버려도 돌아와요</td></tr><tr><td><b>감정</b></td><td><mark>[바뀐 결과]</mark></td><td>그 뒤로 가방 젖을 일이 없어졌어요</td></tr><tr><td><b>CTA</b></td><td><mark>[대상]</mark>분들 댓글에 &#x27;<mark>[단어]</mark>&#x27; 남겨주세요</td><td>학부모님들 댓글에 &#x27;물병&#x27; 남겨주세요</td></tr></table>
+<h3 style="margin-top:5mm">이 유형에서 조회가 높았던 첫 줄</h3>
+<ul style="font-size:11pt"><li>“센스있는 차쟁이들은 글로버 박스에 이거 설치해요” <span class='sub'>— 1,215,704회</span></li><li>“여러분 아이들 필통은 무조건 이걸로 하세요.” <span class='sub'>— 1,128,803회</span></li><li>“마늘을 대하는 자세 이정도 장비는 있어야죠” <span class='sub'>— 734,941회</span></li></ul>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>16 / 39</span></div></section><section class="page ">
+<div class="chap">유형 12 / 14</div>
+<h2>금지경고형</h2>
+<p style="margin-top:2mm"><b>'절대 ○○하지 마세요'. 흔한 습관을 막아서 듣게 만든다.</b></p>
+<table style="font-size:10.5pt;margin-top:3mm"><tr><th style="width:25%">편수</th><th style="width:25%">조회 중앙값</th><th>언제 고르나</th></tr>
+<tr><td>49편</td><td>77,387회</td><td>흔히 잘못하는 일을 바꿔 주는 도구</td></tr></table>
+<p class="sub" style="font-size:10.5pt">가장 많이 쓴 칸 순서(6편): 훅 → 계기 → 불편 → 전환 → 작동 → 감정 → CTA</p>
+<table style="font-size:10.5pt"><tr><th style="width:13%">칸</th><th style="width:40%">빈칸 틀</th><th>예시 (새로 쓴 것)</th></tr><tr><td><b>훅</b></td><td><mark>[하는 일]</mark> 할 때 절대 <mark>[이것]</mark> 하지 마세요</td><td>택배 상자 뜯을 때 절대 칼 쓰지 마세요</td></tr><tr><td><b>계기</b></td><td><mark>[다들 겪는 일]</mark></td><td>칼로 뜯다가 안에 든 물건까지 긁힌 적 있으시죠</td></tr><tr><td><b>불편</b></td><td><mark>[다른 방법의 문제]</mark></td><td>테이프가 두 겹이면 손으로는 잘 안 뜯기고요</td></tr><tr><td><b>전환</b></td><td>그래서 요즘은 이걸 써요</td><td>그래서 요즘은 이걸 써요</td></tr><tr><td><b>작동</b></td><td><mark>[쓰는 동작]</mark></td><td>날이 안쪽에 숨은 동그란 커터라서 테이프 위로 쓱 긋기만 해요</td></tr><tr><td><b>감정</b></td><td><mark>[바뀐 기분]</mark></td><td>이제 택배 뜯을 때 망설일 일이 없어요</td></tr><tr><td><b>CTA</b></td><td><mark>[대상]</mark>이시면 댓글에 &#x27;<mark>[단어]</mark>&#x27; 남겨주세요</td><td>택배 자주 받으시면 댓글에 &#x27;커터&#x27; 남겨주세요</td></tr></table>
+<h3 style="margin-top:5mm">이 유형에서 조회가 높았던 첫 줄</h3>
+<ul style="font-size:11pt"><li>“부침개 부칠 때 절대 물 넣지 마세요” <span class='sub'>— 1,263,368회</span></li><li>“딸기 수돗물에 씻으면 절대 안됩니다!!!!” <span class='sub'>— 1,204,824회</span></li><li>“집에서 김밥 쌀 때 밥에 절대 소금 참기름만 넣지 마세요.” <span class='sub'>— 1,161,673회</span></li></ul>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>17 / 39</span></div></section><section class="page ">
+<div class="chap">유형 13 / 14</div>
+<h2>제품정체형</h2>
+<p style="margin-top:2mm"><b>놀란 반응을 먼저 던지고, 정체는 뒤에서 밝힌다.</b></p>
+<table style="font-size:10.5pt;margin-top:3mm"><tr><th style="width:25%">편수</th><th style="width:25%">조회 중앙값</th><th>언제 고르나</th></tr>
+<tr><td>22편</td><td>69,824회</td><td>보자마자 '저게 뭐야' 할 겉모습의 물건</td></tr></table>
+<p class="sub" style="font-size:10.5pt">가장 많이 쓴 칸 순서(3편): 훅 → 계기 → 불편 → 작동 → 심지어 → 감정</p>
+<table style="font-size:10.5pt"><tr><th style="width:13%">칸</th><th style="width:40%">빈칸 틀</th><th>예시 (새로 쓴 것)</th></tr><tr><td><b>훅</b></td><td>저 이거 보고 진짜 놀랐어요</td><td>저 이거 보고 진짜 놀랐어요</td></tr><tr><td><b>계기</b></td><td><mark>[어디서 봤나]</mark></td><td>동생 집에 갔는데 거실 벽에 동그란 게 붙어 있더라고요</td></tr><tr><td><b>불편</b></td><td><mark>[원래 문제]</mark></td><td>멀티탭 줄이 바닥에 엉켜 있던 집이었거든요</td></tr><tr><td><b>작동</b></td><td>알고 보니 <mark>[제품]</mark> + <mark>[쓰는 모습]</mark></td><td>알고 보니 벽에 붙이는 원형 멀티탭이라 줄이 전부 벽으로 올라가 있었어요</td></tr><tr><td><b>심지어</b></td><td>심지어 <mark>[두 번째]</mark></td><td>심지어 돌리면 콘센트 방향이 바뀌어서 큰 충전기도 같이 꽂혀요</td></tr><tr><td><b>감정</b></td><td><mark>[바뀐 모습]</mark></td><td>바닥이 깨끗해지니까 집이 넓어 보이더라고요</td></tr></table>
+<h3 style="margin-top:5mm">이 유형에서 조회가 높았던 첫 줄</h3>
+<ul style="font-size:11pt"><li>“저 이거 보고 진짜 충격받았어요.” <span class='sub'>— 3,006,194회</span></li><li>“목수보다 음대생들이 더 많이 쓰는 연필의 정체.” <span class='sub'>— 2,400,000회</span></li><li>“와~ 레트로 감성 미쳤는데요!” <span class='sub'>— 465,780회</span></li></ul>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>18 / 39</span></div></section><section class="page ">
+<div class="chap">유형 14 / 14</div>
+<h2>가성비형</h2>
+<p style="margin-top:2mm"><b>'이걸로 얼마·얼마나 아꼈다'. 아낀 것이 첫 줄.</b></p>
+<table style="font-size:10.5pt;margin-top:3mm"><tr><th style="width:25%">편수</th><th style="width:25%">조회 중앙값</th><th>언제 고르나</th></tr>
+<tr><td>19편</td><td>52,884회</td><td>사 먹던 것·맡기던 일을 집에서 하게 해 주는 물건</td></tr></table>
+<p class="sub" style="font-size:10.5pt">가장 많이 쓴 칸 순서(2편): 훅 → 계기 → 불편 → 작동 → 감정 → CTA</p>
+<table style="font-size:10.5pt"><tr><th style="width:13%">칸</th><th style="width:40%">빈칸 틀</th><th>예시 (새로 쓴 것)</th></tr><tr><td><b>훅</b></td><td>이걸로 <mark>[아낀 것]</mark> 아꼈어요</td><td>저 이걸로 커피값 아꼈어요</td></tr><tr><td><b>계기</b></td><td><mark>[예전 습관]</mark></td><td>출근길마다 카페에 들렀거든요</td></tr><tr><td><b>불편</b></td><td><mark>[집에서 못 했던 이유]</mark></td><td>집에서 내리면 맛이 영 안 나서 포기했었고요</td></tr><tr><td><b>작동</b></td><td><mark>[쓰는 동작]</mark></td><td>이건 원두 넣고 버튼 한 번이면 갈고 내리는 것까지 해 줘요</td></tr><tr><td><b>감정</b></td><td><mark>[바뀐 생활]</mark></td><td>이제 텀블러에 담아서 바로 나가요</td></tr><tr><td><b>CTA</b></td><td><mark>[대상]</mark>이시면 댓글에 &#x27;<mark>[단어]</mark>&#x27; 남겨주세요</td><td>커피 좋아하시면 댓글에 &#x27;커피&#x27; 남겨주세요</td></tr></table>
+<h3 style="margin-top:5mm">이 유형에서 조회가 높았던 첫 줄</h3>
+<ul style="font-size:11pt"><li>“와~~여러분!!!! 저 이걸로 500만 원 아꼈어요” <span class='sub'>— 1,475,222회</span></li><li>“이거 얼마인지 아세요? 5만 원대예요. 대박이죠?” <span class='sub'>— 406,168회</span></li><li>“와, 이제 미용실 갈 필요 없겠는데요?” <span class='sub'>— 374,907회</span></li></ul>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>19 / 39</span></div></section><section class="page ">
+<div class="chap">첫 줄 스와이프 · 1 / 3</div>
+<h2>실측 첫 줄 TOP 50</h2>
+<p class="sub" style="margin-top:2mm;font-size:10.5pt">원래 영상 조회수 순. 비슷한 줄은 하나만 남겼고, 받아쓰기 오타는 바로잡았습니다. 그대로 베끼지 말고 <b>꼴</b>을 빌려 내 제품으로 바꾸세요.</p>
+<table style="font-size:10.5pt;margin-top:3mm"><tr><th style="width:7%">#</th><th>첫 줄</th><th style="width:16%">조회</th><th style="width:16%">유형</th></tr><tr><td>1</td><td>코스트코 본사도 몰랐던 천재 아이디어</td><td>12,000,000</td><td>오용형</td></tr><tr><td>2</td><td>이거 몰라서 500만 원 날릴 뻔했어요</td><td>5,361,981</td><td>무지후회형</td></tr><tr><td>3</td><td>미국 제조사도 놀란 천재 아이디어</td><td>4,400,000</td><td>오용형</td></tr><tr><td>4</td><td>시댁갔다가 진짜 충격먹었어요</td><td>3,477,254</td><td>목격담형</td></tr><tr><td>5</td><td>저 이거 보고 진짜 충격받았어요.</td><td>3,006,194</td><td>제품정체형</td></tr><tr><td>6</td><td>이게 요새 그렇게 유명한 파라솔이라면서요?</td><td>2,953,223</td><td>정체의문형</td></tr><tr><td>7</td><td>다이소 더쿠들의 천재적인 활용법.</td><td>2,600,000</td><td>오용형</td></tr><tr><td>8</td><td>다이소 개발진도 당황한 미친 활용법.</td><td>2,600,000</td><td>오용형</td></tr><tr><td>9</td><td>목수보다 음대생들이 더 많이 쓰는 연필의 정체.</td><td>2,400,000</td><td>제품정체형</td></tr><tr><td>10</td><td>저 입주청소 알바 갔다가 기절할 뻔했어요</td><td>2,355,292</td><td>목격담형</td></tr><tr><td>11</td><td>저 이거 때문에 아빠한테 등짝 맞을 뻔 했어요.</td><td>2,346,171</td><td>지인증언형</td></tr><tr><td>12</td><td>다치기 전에 미리 사놓는 우리집 필수 구급템 5가지</td><td>2,283,180</td><td>만능템형</td></tr><tr><td>13</td><td>종이에 써있는대로 올리면 요리 완성?</td><td>2,261,819</td><td>사회증거형</td></tr><tr><td>14</td><td>제 결혼식장에서 엄마가 펑펑 우셨어요.</td><td>2,104,609</td><td>목격담형</td></tr><tr><td>15</td><td>부모들을 오열하게 만든 다이소 제품.</td><td>2,100,000</td><td>오용형</td></tr><tr><td>16</td><td>SNS에서 만두 귀신들이 극찬하는 냉동만두 3대장 빠르게 알려드릴게요.</td><td>1,857,158</td><td>사회증거형</td></tr><tr><td>17</td><td>다이소 기획자도 감탄한 천재적 아이디어.</td><td>1,800,000</td><td>오용형</td></tr></table>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>20 / 39</span></div></section><section class="page ">
+<div class="chap">첫 줄 스와이프 · 2 / 3</div>
+<h2>실측 첫 줄 TOP 50 (이어서)</h2>
+<p class="sub" style="margin-top:2mm;font-size:10.5pt">원래 영상 조회수 순. 비슷한 줄은 하나만 남겼고, 받아쓰기 오타는 바로잡았습니다. 그대로 베끼지 말고 <b>꼴</b>을 빌려 내 제품으로 바꾸세요.</p>
+<table style="font-size:10.5pt;margin-top:3mm"><tr><th style="width:7%">#</th><th>첫 줄</th><th style="width:16%">조회</th><th style="width:16%">유형</th></tr><tr><td>18</td><td>역발상으로 돈방석앉은 육아천재의 발명품</td><td>1,772,569</td><td>발명품형</td></tr><tr><td>19</td><td>와 여러분 저 이거 먹고 빵집 끊었어요!</td><td>1,636,910</td><td>내자랑형</td></tr><tr><td>20</td><td>이케아 직원도 몰랐던 미친 활용법.</td><td>1,600,000</td><td>오용형</td></tr><tr><td>21</td><td>이거 개발자도 이렇게 쓰는 거 보고 깜짝 놀랐대요.</td><td>1,584,648</td><td>오용형</td></tr><tr><td>22</td><td>쿠팡 후기 1만개나 터진 딸기우유 네일 발라보니 이유가 있어요!</td><td>1,571,745</td><td>사회증거형</td></tr><tr><td>23</td><td>와~~여러분!!!! 저 이걸로 500만 원 아꼈어요</td><td>1,475,222</td><td>가성비형</td></tr><tr><td>24</td><td>다이소도 예상 못한 천재적 활용법.</td><td>1,300,000</td><td>오용형</td></tr><tr><td>25</td><td>부침개 부칠 때 절대 물 넣지 마세요</td><td>1,263,368</td><td>금지경고형</td></tr><tr><td>26</td><td>센스있는 차쟁이들은 글로버 박스에 이거 설치해요</td><td>1,215,704</td><td>권유지시형</td></tr><tr><td>27</td><td>딸기 수돗물에 씻으면 절대 안됩니다!!!!</td><td>1,204,824</td><td>금지경고형</td></tr><tr><td>28</td><td>저 이것 때문에 집주인한테 의심받을 뻔했어요</td><td>1,204,345</td><td>지인증언형</td></tr><tr><td>29</td><td>이것 때문에 햇반이랑 완전히 손절했습니다.</td><td>1,174,149</td><td>무지후회형</td></tr><tr><td>30</td><td>집에서 김밥 쌀 때 밥에 절대 소금 참기름만 넣지 마세요.</td><td>1,161,673</td><td>금지경고형</td></tr><tr><td>31</td><td>여러분! 다이소 가서 이거 보이면 무조건 쓸어 담으세요.</td><td>1,141,294</td><td>다이소지목형</td></tr><tr><td>32</td><td>여러분 아이들 필통은 무조건 이걸로 하세요.</td><td>1,128,803</td><td>권유지시형</td></tr><tr><td>33</td><td>한국 천재가 특허내 돈방석 앉은 제품?</td><td>1,101,222</td><td>발명품형</td></tr><tr><td>34</td><td>판매자도 당황한 설치 장소.</td><td>1,100,000</td><td>오용형</td></tr></table>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>21 / 39</span></div></section><section class="page ">
+<div class="chap">첫 줄 스와이프 · 3 / 3</div>
+<h2>실측 첫 줄 TOP 50 (이어서)</h2>
+<p class="sub" style="margin-top:2mm;font-size:10.5pt">원래 영상 조회수 순. 비슷한 줄은 하나만 남겼고, 받아쓰기 오타는 바로잡았습니다. 그대로 베끼지 말고 <b>꼴</b>을 빌려 내 제품으로 바꾸세요.</p>
+<table style="font-size:10.5pt;margin-top:3mm"><tr><th style="width:7%">#</th><th>첫 줄</th><th style="width:16%">조회</th><th style="width:16%">유형</th></tr><tr><td>35</td><td>이거 때문에 시어머니한테 욕 바가지로 먹을 뻔 했어요</td><td>1,082,093</td><td>지인증언형</td></tr><tr><td>36</td><td>이거 하나로 이렇게 깔끔해진다고?</td><td>1,081,852</td><td>만능템형</td></tr><tr><td>37</td><td>제조사도 당황한 의외의 사용자</td><td>1,040,429</td><td>오용형</td></tr><tr><td>38</td><td>천재가 만들어서 요즘 캠핑족들 사이에서 난리 났다는 불멸의 얼음이 있어요</td><td>982,951</td><td>발명품형</td></tr><tr><td>39</td><td>집에 놀러오는 손님들마다 이거 어디서 사냐고 물어봐요</td><td>950,277</td><td>내자랑형</td></tr><tr><td>40</td><td>또 한번 사고 쳐버린 다이소</td><td>930,000</td><td>다이소지목형</td></tr><tr><td>41</td><td>제가 이거 샀다가 와이프한테 쫓겨날 뻔했어요</td><td>929,855</td><td>지인증언형</td></tr><tr><td>42</td><td>나가실 때 원상 복구해주세요. 전세 살면 이 소리 제일 무섭잖아요.</td><td>910,055</td><td>목격담형</td></tr><tr><td>43</td><td>제가 햄버거를 진짜 좋아했는데 이렇게 만들고 나서 안 사 먹어요.</td><td>871,154</td><td>내자랑형</td></tr><tr><td>44</td><td>이거 해 드렸더니 시어머니가 엄청 좋아하시네요</td><td>866,127</td><td>내자랑형</td></tr><tr><td>45</td><td>이게 집에서 키울 수 있는 생물이라고?</td><td>864,200</td><td>지인증언형</td></tr><tr><td>46</td><td>저 이거 때문에 진짜 충격먹었어요.</td><td>852,251</td><td>목격담형</td></tr><tr><td>47</td><td>이케아도 예상 못한 미친 활용법.</td><td>852,000</td><td>오용형</td></tr><tr><td>48</td><td>변태적 설계로 주방 덕후들 사이에서 대박난 소름 돋는 제품</td><td>828,773</td><td>사회증거형</td></tr><tr><td>49</td><td>저 이거 때문에 엄마한테 욕 바가지 먹을 뻔했어요</td><td>823,405</td><td>지인증언형</td></tr><tr><td>50</td><td>집주인 몰래 설치했다가 들켰는데 그냥 두고 나가래요</td><td>816,726</td><td>지인증언형</td></tr></table>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>22 / 39</span></div></section><section class="page ">
+<div class="chap">첫 단어</div>
+<h2>첫 단어는 '어디'와 '누가도'</h2>
+<p>2,051편의 첫 자막 첫 단어를 셌습니다. 위쪽은 거의 <b>장소·나라</b>(매장 이름, 나라 이름)와 <b>'○○도'</b>(만든 쪽도 놀랐다)입니다.</p>
+<table style="font-size:11pt"><tr><th style="width:10%">#</th><th>첫 단어</th><th style="width:22%">편수</th></tr><tr><td>1</td><td>이케아</td><td>105편</td></tr><tr><td>2</td><td>다이소</td><td>98편</td></tr><tr><td>3</td><td>제조사도</td><td>93편</td></tr><tr><td>4</td><td>일본</td><td>80편</td></tr><tr><td>5</td><td>다이소도</td><td>69편</td></tr><tr><td>6</td><td>미국</td><td>62편</td></tr><tr><td>7</td><td>개발자도</td><td>44편</td></tr><tr><td>8</td><td>이케아도</td><td>35편</td></tr><tr><td>9</td><td>한국</td><td>35편</td></tr><tr><td>10</td><td>와</td><td>23편</td></tr><tr><td>11</td><td>요즘</td><td>19편</td></tr><tr><td>12</td><td>전</td><td>17편</td></tr></table>
+<div class="box vio"><div class="t">'○○도'로 시작한 첫 줄 — 360편</div>
+많이 쓴 말: 제조사도 93, 다이소도 69, 개발자도 44, 이케아도 35, 판매자도 17<br>
+조회 중앙값: '○○도'로 시작 <b>35,000회</b> · 나머지 28,000회</div>
+<p class="sub">→ "만든 쪽도 몰랐던 / 파는 사람도 당황한" 꼴은 권위를 한 번 비틀어 궁금하게 만듭니다. 단, 실제 회사가 그렇게 말했다고 지어내면 안 됩니다. "제조사도 몰랐을" 같은 <b>추측형</b>이나 일반 말(만든 사람도, 파는 사람도)로 쓰세요.</p>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>23 / 39</span></div></section><section class="page ">
+<div class="chap">연결어 자리표</div>
+<h2>세 자리, 점점 세게</h2>
+<p>놀라운 줄 앞에 붙는 말을 <b>연결어</b>라 부릅니다. 연결어가 든 1,242편에서 나온 횟수입니다. 자리는 거의 정해져 있습니다: <b>첫째(기존 것과 비교) → 둘째(덧붙이기) → 셋째(가장 센 사실)</b>.</p>
+<div style="display:flex;gap:5mm">
+<div style="flex:1"><h3>첫째 자리</h3><table style="font-size:10.5pt"><tr><th>말</th><th>횟수</th></tr><tr><td>이게 말도 안 되는 게</td><td>120회</td></tr><tr><td>이게 미친 포인트인 게</td><td>108회</td></tr><tr><td>이게 진짜 말도 안 되는 게</td><td>67회</td></tr><tr><td>이게 진짜 대박인 게</td><td>26회</td></tr><tr><td>이게 진짜 미친 포인트인 게</td><td>22회</td></tr><tr><td>진짜 미친 포인트인 게</td><td>16회</td></tr></table><div class="box vio" style="font-size:10.5pt"><div class="t">인스타 릴스는 다릅니다</div>641편 실측: 심지어 73 · 대박인 건 21 · 거기다 7 · 무엇보다 6. 썰쇼츠의 "이게 말도 안 되는 게"는 릴스에 거의 없습니다.</div></div>
+<div style="flex:1"><h3>둘째 자리</h3><table style="font-size:10.5pt"><tr><th>말</th><th>횟수</th></tr><tr><td>심지어</td><td>599회</td></tr><tr><td>무엇보다</td><td>35회</td></tr><tr><td>뿐만 아니라</td><td>28회</td></tr><tr><td>거기다</td><td>11회</td></tr></table>
+<h3>셋째 자리</h3><table style="font-size:10.5pt"><tr><th>말</th><th>횟수</th></tr><tr><td>근데 진짜 충격적인 포인트는</td><td>84회</td></tr><tr><td>더 충격적인 건</td><td>71회</td></tr><tr><td>근데 진짜는 여기서부터</td><td>64회</td></tr><tr><td>진짜 충격적인 포인트는</td><td>54회</td></tr><tr><td>근데 진짜 미친 포인트는</td><td>39회</td></tr><tr><td>더 대박인 건</td><td>31회</td></tr></table></div>
+</div>
+<div class="box gold"><div class="t">세 가지 규칙</div>
+① 연결어 바로 뒤에는 <b>숫자·동작·기존 것과 비교</b>가 와야 합니다. 센 말만 있고 내용이 없으면 오히려 거짓말처럼 들립니다.<br>
+② 같은 뿌리 말(미친·충격·대박)을 한 편에 두 번 쓰지 않습니다.<br>
+③ 첫째 자리 1위 "이게 말도 안 되는 게"는 50편 중 31편에서 첫째 자리에 왔습니다. "심지어"는 둘째 자리 말입니다.</div>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>24 / 39</span></div></section><section class="page ">
+<div class="chap">편집 수치</div>
+<h2>스타일별 편집 기준표</h2>
+<p>잘 된 쇼츠 138편(채널 20곳)을 자막 한 덩이씩 쟀습니다. 모두 <b>편마다 잰 값의 가운데 값</b>입니다.</p>
+<table style="font-size:9.4pt"><tr><th style="width:23%">스타일</th><th>표본</th><th>길이</th><th>나레 비율</th><th>자막 한 덩이</th><th>덩이 시간</th><th>1초에 읽는 글자</th><th>꾸밈 붙은 줄</th></tr><tr><td>쇼핑 · 썰 나레</td><td style='white-space:nowrap'>1곳 6편</td><td>26초</td><td>100%</td><td>8.5자</td><td>0.97초</td><td>8.7자</td><td>3줄</td></tr><tr><td>쇼핑 · 게시글 썰</td><td style='white-space:nowrap'>3곳 18편</td><td>28초</td><td>100%</td><td>10.5자</td><td>1.20초</td><td>8.5자</td><td>1줄</td></tr><tr><td>쇼핑 · 인스타 설명</td><td style='white-space:nowrap'>1곳 6편</td><td>21초</td><td>99%</td><td>8.0자</td><td>0.94초</td><td>8.6자</td><td>4줄</td></tr><tr><td>레시피 · 원음</td><td style='white-space:nowrap'>1곳 8편</td><td>26초</td><td>0%</td><td>6.8자</td><td>0.94초</td><td>6.0자</td><td>24줄</td></tr><tr><td>인물+제품 · 가격 공개</td><td style='white-space:nowrap'>1곳 10편</td><td>24초</td><td>80%</td><td>8.8자</td><td>1.29초</td><td>6.8자</td><td>0줄</td></tr><tr><td>인물+제품 · 나레+원음</td><td style='white-space:nowrap'>3곳 18편</td><td>20초</td><td>19%</td><td>7.2자</td><td>0.89초</td><td>8.6자</td><td>12줄</td></tr><tr><td>인물+제품 · 대화</td><td style='white-space:nowrap'>1곳 8편</td><td>17초</td><td>40%</td><td>8.2자</td><td>0.89초</td><td>9.9자</td><td>14줄</td></tr><tr><td>인물+제품 · 체험</td><td style='white-space:nowrap'>1곳 8편</td><td>37초</td><td>9%</td><td>9.0자</td><td>1.30초</td><td>9.3자</td><td>7줄</td></tr><tr><td>인물+제품 · 후기</td><td style='white-space:nowrap'>1곳 8편</td><td>14초</td><td>23%</td><td>6.5자</td><td>0.76초</td><td>9.2자</td><td>16줄</td></tr><tr><td>인물 썰 · 나레</td><td style='white-space:nowrap'>1곳 6편</td><td>58초</td><td>100%</td><td>16.5자</td><td>2.24초</td><td>7.4자</td><td>0줄</td></tr><tr><td>해외 영상 · 나레</td><td style='white-space:nowrap'>1곳 12편</td><td>17초</td><td>39%</td><td>7.2자</td><td>1.06초</td><td>7.4자</td><td>4줄</td></tr><tr><td>해외 영상 · 나레+원음</td><td style='white-space:nowrap'>3곳 18편</td><td>33초</td><td>55%</td><td>7.0자</td><td>0.99초</td><td>7.8자</td><td>6줄</td></tr><tr><td>해외 영상 · 자막+음악</td><td style='white-space:nowrap'>2곳 12편</td><td>18초</td><td>61%</td><td>9.4자</td><td>2.06초</td><td>5.4자</td><td>8줄</td></tr></table>
+<div class="box gold"><div class="t">전체 공통 — 이것만 기억하세요</div>
+자막 한 덩이 <b>약 8자</b>, 화면에 <b>약 1초</b>. 나레 속도는 <b>1초에 약 8.4자</b>(스타일에 따라 5.4~9.9자). 한 편 길이 가운데 값 <b>26초</b>.</div>
+<p class="sub" style="font-size:9.4pt;line-height:1.55">· 나레 비율 = 영상 길이 중 AI·사람 목소리가 나오는 비율. 쇼핑 썰은 거의 100%, 인물+제품은 원래 소리를 살려 낮습니다.<br>· 꾸밈 붙은 줄 = 효과음·스티커·강조가 붙은 자막 줄 수(한 편). · 표본 1곳인 줄은 그 채널 한 곳의 값이라 참고만 하세요.</p>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>25 / 39</span></div></section><section class="page ">
+<div class="chap">편집 수치</div>
+<h2>내 영상, 이렇게 재 보세요</h2>
+<p class="big">숫자가 안 나올 때 가장 먼저 볼 것은 <b>말 속도와 자막 덩이</b>입니다. 재는 데 5분이면 됩니다.</p>
+<h3>① 1초에 읽는 글자 수</h3>
+<p>대본 전체 글자 수(띄어쓰기 빼고) ÷ 목소리가 나오는 초. 예) 240자 ÷ 28초 = <b>8.6자</b>. 쇼핑 썰 기준표는 8.7자입니다.</p>
+<ul><li>6자보다 느리면 → 지루합니다. 문장을 줄이거나 TTS 속도를 올리세요.</li>
+<li>10자보다 빠르면 → 자막을 못 따라 읽습니다. 줄을 빼세요.</li></ul>
+<h3>② 자막 한 덩이 글자 수</h3>
+<p>캡컷·브루 같은 편집기의 자막 목록에서 덩이마다 글자 수를 세어 보세요. 6~10자가 대부분이면 정상입니다. 15자가 넘는 덩이가 여러 개면 둘로 쪼개세요.</p>
+<h3>③ 첫 덩이가 나오는 시점</h3>
+<p>첫 자막(첫 줄)이 <b>영상 시작과 동시에</b> 뜨는지 보세요. 0.5초라도 빈 화면이면 넘기는 사람이 늘어납니다.</p>
+<h3>④ 전체 길이</h3>
+<p>기준표의 길이 가운데 값은 26초입니다. 40초를 넘는다면 '심지어' 칸이나 '감정' 칸 하나를 빼 보세요.</p>
+<div class="box"><div class="t">기록해 두세요</div>올린 영상마다 ①~④와 3일 뒤 조회수를 한 줄로 적어 두면, 내 채널에 맞는 숫자가 2주 안에 보입니다.</div>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>26 / 39</span></div></section><section class="page ">
+<div class="chap">안 될 때 · 1 / 2</div>
+<h2>증상별 진단표 — 반응</h2>
+<p>숫자가 안 나오면 감으로 다 바꾸지 말고, <b>증상 하나 → 확인 하나 → 처방 하나</b>씩 고치세요. 한 번에 하나만 바꿔야 무엇이 효과였는지 압니다.</p>
+<table style="font-size:10.5pt"><tr><th style="width:24%">증상</th><th style="width:33%">먼저 확인</th><th>처방</th></tr><tr><td><b>조회가 300회 아래에서 멈춤</b></td><td>첫 줄이 제품 이름부터 말하나? / 첫 자막이 늦게 뜨나?</td><td>제품 이름을 2~3줄째로 미루고, 첫 줄을 TOP 50 꼴로 바꾸기. 첫 자막은 0초에.</td></tr><tr><td><b>조회는 나오는데 금방 넘김 (짧게 보고 나감)</b></td><td>앞 3칸에 '불편'이 있나? / 1초에 읽는 글자가 10자 넘나?</td><td>훅 → 계기 → 불편 순서로 고치기. 줄 하나를 빼서 말 속도 낮추기.</td></tr><tr><td><b>끝까지 보는데 댓글·반응이 없음</b></td><td>마지막에 받을 것을 말했나?</td><td>CTA에 '댓글에 ○○ 남기면 무엇을 드린다'처럼 받을 것을 말하기. 없는 할인·한정 수량은 지어내지 않기.</td></tr><tr><td><b>같은 유형만 계속 안 됨</b></td><td>한 유형만 10편 넘게 썼나?</td><td>언제 고르나가 맞는 다른 유형 2개로 3편씩 비교. 조회 중앙값 높은 유형부터.</td></tr></table>
+<div class="box"><div class="t">비교는 3편씩</div>한 편만 보고 판단하지 마세요. 자막 2,051편 중 79%가 10만 회 미만이었습니다. 같은 조건으로 3편을 올리고 가운데 값을 보세요.</div>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>27 / 39</span></div></section><section class="page ">
+<div class="chap">안 될 때 · 2 / 2</div>
+<h2>증상별 진단표 — 판매·정책</h2>
+<table style="font-size:10.2pt"><tr><th style="width:23%">증상</th><th style="width:30%">먼저 확인</th><th>처방 (근거)</th></tr><tr><td><b>구매 클릭이 0</b></td><td>설명란 첫 줄·고정 댓글에 링크가 있나? / 영상에서 제품을 보여 주는 칸(작동)이 있나?</td><td>작동 칸에서 제품을 손에 들고 쓰는 장면을 보이기. 링크는 설명란 위쪽과 고정 댓글 두 곳에.</td></tr><tr><td><b>유튜브 쇼핑 제품 연결(쇼핑 태그)이 안 열림</b></td><td>YouTube 파트너 프로그램(YPP) 가입했나? 구독자 500명 이상인가?</td><td>유튜브 공식 블로그(2026-03-30): YPP 가입자 중 구독자 500명 이상이면 쇼핑 제휴 프로그램 참여 가능. 그전엔 설명란·고정 댓글 링크로.</td></tr><tr><td><b>수익 창출 거절 · '재사용된 콘텐츠'</b></td><td>남의 영상을 거의 그대로 썼나? 내 설명·편집이 더해졌나?</td><td>유튜브 고객센터 '재사용된 콘텐츠' 정책: 실질적인 수정 없이 내려받거나 복사한 콘텐츠, 설명 없이 모은 클립은 수익 창출 불가. 내 대본·목소리·편집을 더하고, 직접 찍은 제품 장면을 섞기.</td></tr><tr><td><b>광고 표시 지적 · 신고</b></td><td>설명란 첫 줄에 대가성 문구가 있나? '받을 수 있음' 같은 흐린 말을 썼나?</td><td>다음 쪽 '대가성 표시' 그대로. 영상 첫 화면에도 '광고' 표시.</td></tr></table>
+<p class="sub" style="font-size:9.8pt;margin-top:5mm">출처(확인일 2026-10-29): 유튜브 공식 블로그 「수익 창출의 문턱이 낮아집니다: 이제 구독자 500명 이상부터 유튜브 쇼핑을 시작하세요」(2026-03-30, blog.youtube) ·
+유튜브 고객센터 「YouTube 채널 수익 창출 정책」 재사용된 콘텐츠 항목(support.google.com/youtube/answer/1311392). 정책은 바뀝니다. 신청 전 유튜브 스튜디오 '수익 창출' 메뉴에서 다시 확인하세요.</p>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>28 / 39</span></div></section><section class="page ">
+<div class="chap">지키는 선</div>
+<h2>쓰면 안 되는 말 · 대가성 표시</h2>
+<table style="font-size:10.5pt"><tr><th style="width:30%">쓰면 안 되는 것</th><th>예</th><th style="width:30%">대신</th></tr>
+<tr><td>성분·원료 효능</td><td>"○○ 성분이라 ~에 좋대요"</td><td>쓰는 장면·생김새</td></tr>
+<tr><td>건강·피부·의학 효과</td><td>"붓기가 빠져요", "피부가 좋아져요"</td><td>생활이 편해진 모습</td></tr>
+<tr><td>연구·인증·실험 결과</td><td>"실험해 보니 99%"</td><td>상세페이지 사실(크기·구성)</td></tr>
+<tr><td>"안전하다"</td><td>"아이가 써도 안전해요"</td><td>쓰는 방법 설명</td></tr>
+<tr><td>가격·할인율</td><td>"지금 70% 할인"</td><td>빼기(가격은 바뀐다)</td></tr>
+<tr><td>연예인이 썼다는 말</td><td>"○○이 쓰는 그 제품"</td><td>"요즘 ○○ 사이에서"</td></tr>
+</table>
+<p class="sub" style="font-size:10.5pt">'떼돈', '난리', '충격' 같은 반응 과장과 지어낸 생활 사연은 쇼츠의 말투로 쓰입니다. 선을 넘는 건 <b>제품이 몸에 무엇을 해 준다</b>는 주장과 <b>지어낸 숫자</b>입니다.</p>
+<h3>대가성 표시 — 설명란 첫 줄에 그대로</h3>
+<div class="box gold">쿠팡 파트너스: <b>이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</b><br>
+다른 제휴: <b>이 영상은 제휴 광고이며, 링크로 구매하시면 제가 수수료를 받습니다.</b><br>
+영상: 시작 화면 위쪽에 <b>'광고'</b> 표시</div>
+<ul style="font-size:11pt">
+<li>공정거래위원회 「추천·보증 등에 관한 표시·광고 심사지침」 개정(2024-12-01 시행): 블로그·카페 같은 글 매체는 대가성 문구를 <b>제목 또는 첫 부분</b>에, 본문보다 크거나 다른 색으로.</li>
+<li>같은 개정 내용 정리(법무법인 세종 뉴스레터): "소정의 수수료를 지급받을 수 있음"처럼 <b>받을 수도 있다는 흐린 말</b>은 명확한 표시로 보지 않는다는 예시가 추가됨.</li>
+<li>영상의 구체 표시 방식은 지침 원문·공정위 안내서로 다시 확인하세요. 위 '광고' 화면 표시는 저희가 권하는 방식입니다.</li>
+</ul>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>29 / 39</span></div></section><section class="page ">
+<div class="chap">클로드 스킬</div>
+<h2>제품 정보만 넣으면 유형을 골라 대본을 씁니다</h2>
+<p>이 키트에는 <b>클로드 스킬 파일</b>(<code>쇼핑쇼츠-대본/SKILL.md</code>)이 들어 있습니다. 이 책의 14유형 · 칸 순서 · 연결어 · 금지어 · 자체 검사를 클로드가 읽고 따라 하게 만든 설명서입니다.</p>
+<h3>설치 — 클로드 데스크톱 앱 / claude.ai</h3>
+<ol><li>설정 → <b>기능(Capabilities)</b> → <b>스킬</b>에서 스킬 추가</li>
+<li>받은 <code>쇼핑쇼츠-대본</code> 폴더를 압축(zip)해서 올리기</li>
+<li>새 대화에서 "쇼핑쇼츠 대본 써 줘"와 함께 제품 정보를 주면 스킬이 켜집니다</li></ol>
+<h3>설치 — 클로드 코드</h3>
+<p><code>쇼핑쇼츠-대본</code> 폴더를 내 PC의 <b>사용자 폴더 → .claude → skills</b> 폴더 아래에 그대로 복사하면 됩니다.</p>
+<h3>스킬이 없는 AI(챗GPT 등)라면</h3>
+<p>SKILL.md 파일 내용을 통째로 복사해 대화창 맨 앞에 붙여 넣고, 그 아래에 제품 정보를 적으세요. 다음 두 쪽의 결과가 바로 이 방법으로 돌린 것입니다.</p>
+<div class="box"><div class="t">넣어 줄 것 5가지</div>제품 이름 · 상세페이지 사실 3~5개 · 누가 쓰나 · 없을 때 불편한 순간 · (선택) 원하는 유형·말투<br>
+<span class="sub">메뉴 이름은 앱 업데이트에 따라 바뀔 수 있습니다(2026-10 기준).</span></div>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>30 / 39</span></div></section><section class="page ">
+<div class="chap">스킬 · 실제로 돌려본 결과 1</div>
+<h2>유형을 스스로 고른 경우</h2>
+<p class="sub">2026-10-29, 클로드(Sonnet)에 SKILL.md + 아래 정보만 넣고 한 번 돌린 결과를 고치지 않고 옮겼습니다(칸 이름은 이해를 돕게 붙임).</p>
+<div class="box" style="font-size:10.5pt"><b>넣은 정보</b> — 접이식 실리콘 설거지통 / 사실: 펼치면 9리터·접으면 높이 6cm, 바닥 물 빠지는 마개, 손잡이, 캠핑·싱크대 겸용 / 쓰는 사람: 캠핑 가족, 원룸 자취생</div>
+<p style="margin-top:3mm"><b>클로드가 고른 유형: 만능템형</b> — "캠핑장과 싱크대 두 곳의 불편을 하나로 해결하는 제품이라 골랐어요."</p>
+<div class="script"><div class="row"><div class="k">훅</div><div class="v">이거 하나로 캠핑장이랑 자취방 설거지가 다 된대요</div></div><div class="row"><div class="k">불편</div><div class="v">캠핑장에선 설거지거리 들고 개수대까지 왔다 갔다 하죠</div></div><div class="row"><div class="k">불편</div><div class="v">좁은 원룸 싱크대엔 큰 대야 둘 데도 없고요</div></div><div class="row"><div class="k">전환</div><div class="v">그래서 써본 게 접이식 실리콘 설거지통이에요</div></div><div class="row"><div class="k">작동</div><div class="v">이게 말도 안 되는 게, 펼치면 9리터인데 접으면 높이 6cm로 납작해져요</div></div><div class="row"><div class="k">심지어</div><div class="v">심지어 바닥에 물 빠지는 마개까지 있더라고요</div></div><div class="row"><div class="k">작동</div><div class="v">근데 진짜 충격적인 포인트는 손잡이로 들고 옮겨서 캠핑도 싱크대도 둘 다 쓴다는 거예요</div></div><div class="row"><div class="k">감정</div><div class="v">이제 설거지하러 왔다 갔다 안 해도 돼요</div></div></div>
+<p style="font-size:11pt;margin-top:3mm"><b>자체 검사</b> 7항목 모두 ○ — 숫자는 넣어 준 9리터·6cm만 썼고, 금지어 0개, 약 230자.</p>
+<p style="font-size:11pt"><b>제목 후보</b>: "접으면 6cm인데 펼치면 9리터? 자취방 싱크대 필수템" 외 2개 · <b>설명란 첫 줄</b>: 쿠팡 파트너스 대가성 문구 그대로</p>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>31 / 39</span></div></section><section class="page ">
+<div class="chap">스킬 · 실제로 돌려본 결과 2</div>
+<h2>유형을 정해 준 경우 (지인증언형)</h2>
+<p class="sub">같은 날, 같은 방법. 이번엔 "지인증언형, 존댓말"을 정해 줬습니다.</p>
+<div class="box" style="font-size:10.5pt"><b>넣은 정보</b> — 자석 냉장고 메모 보드 / 사실: 자석 부착, 마커로 쓰고 물티슈로 지움, 요일별 칸, 마커 꽂는 홈 / 쓰는 사람: 아이 키우는 집, 맞벌이 부부</div>
+<div class="script"><div class="row"><div class="k">훅</div><div class="v">저 이거 때문에 남편한테 혼날 뻔했어요</div></div><div class="row"><div class="k">계기</div><div class="v">장 보러 가서 뭘 사야 하는지 까먹고 빈손으로 왔거든요</div></div><div class="row"><div class="k">불편</div><div class="v">아이 학원 일정도 서로 몰라 겹쳤는데 자석 냉장고 메모 보드 붙였어요</div></div><div class="row"><div class="k">작동</div><div class="v">이게 말도 안 되는 게 냉장고 문에 자석으로 붙고 요일별 칸이 그려져 있더라고요</div></div><div class="row"><div class="k">심지어</div><div class="v">심지어 마커로 쓰고 물티슈로 쓱 지우면 끝이라 일정이 바뀌어도 금방 고쳐요</div></div><div class="row"><div class="k">작동</div><div class="v">근데 진짜 충격적인 포인트는 마커 꽂는 홈이 옆에 있어서 마커 찾을 일이 없어요</div></div><div class="row"><div class="k">감정</div><div class="v">이제 남편이랑 일정 안 겹치고 장 볼 때도 안 까먹어요</div></div><div class="row"><div class="k">CTA</div><div class="v">맞벌이 부부면 남편이나 아내 소환해서 댓글 남겨주세요</div></div></div>
+<p style="font-size:11pt;margin-top:3mm"><b>자체 검사</b> 7항목 모두 ○ — 8줄, 약 267자, 가장 긴 줄 43자.</p>
+<div class="box gold"><div class="t">보고 고칠 점도 있습니다</div>3줄째에 제품 이름과 해결이 한 줄에 몰렸습니다. '불편'과 '전환'을 두 줄로 나누면 더 자연스럽습니다. AI 결과는 <b>초안</b>입니다 — 소리 내 읽어 보고 걸리는 줄만 손보세요.</div>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>32 / 39</span></div></section><section class="page ">
+<div class="chap">프롬프트 1 / 4</div>
+<h2>복사해서 쓰는 프롬프트</h2>
+<p class="sub">챗GPT·클로드 등 대화창에 통째로 붙여 넣고 <span style="color:#B07A10;font-weight:800">[대괄호]</span> 칸만 바꾸세요. [제품 사실]에는 상세페이지에 적힌 사실만 넣으세요.</p>
+<span class="ptag">프롬프트 ① 썰형 대본 (8칸 · 반말 전언체 · 유튜브 쇼츠)</span>
+<div class="prompt">너는 쇼핑 쇼츠 대본 작가야. 아래 제품으로 &#x27;썰형&#x27; 쇼츠 대본을 써 줘.
+
+<span class="fill">[제품 이름]</span> :
+<span class="fill">[제품 사실]</span> : (상세페이지에 있는 사실 3~5개. 만든 나라·회사, 쓰는 방법, 크기·숫자 등)
+<span class="fill">[누가 쓰나]</span> : (예: 자취생, 아이 키우는 엄마, 캠핑 다니는 아빠)
+
+규칙
+1. 정확히 8줄, 아래 순서와 줄 머리를 지킨다.
+   1줄 제목: &quot;<span class="fill">[무엇을 하다가]</span> <span class="fill">[감정어 하나]</span> <span class="fill">[나라]</span> 천재가 만들어 떼돈 번 <span class="fill">[물건]</span>의 정체.&quot; — 제품 이름은 숨긴다.
+      (예: &quot;애들 깨우다 현타 온 일본 천재가 만들어 떼돈 번 알람의 정체.&quot;)
+   2줄 미끼: &quot;최근 <span class="fill">[집단]</span> 사이에서 난리 난 <span class="fill">[물건]</span>이 있는데,&quot; — 아직 이름을 말하지 않는다.
+   3줄 공개: &quot;이건 바로 <span class="fill">[쉬운 제품 이름]</span>.&quot; — 짧게.
+   4줄 와우1: &quot;이게 말도 안 되는 게&quot;로 시작 + 기존 것과 비교(&quot;기존엔 ~했지만 이건 ~다는 거.&quot;)
+   5줄 와우2: &quot;심지어&quot;로 시작 + 숫자·만든 회사·유래 중 하나(제품 사실에 있는 것만) + 말끝 &quot;~는데,&quot;
+   6줄 디테일: 기능 하나를 생활 장면으로 바꿔 말한다. 말끝 &quot;~다고.&quot;
+   7줄 와우3: &quot;근데 진짜 충격적인 포인트는&quot;으로 시작 + 가장 센 사실. 말끝 &quot;~다고.&quot;
+   8줄 마무리: &quot;그래서 요즘엔 <span class="fill">[집단]</span> 사이에서 <span class="fill">[생활 변화]</span> 난리라고.&quot;
+2. 말투는 반말 전언체(~다는 거, ~는데, ~다고, ~라고). &#x27;요&#x27;·&#x27;니다&#x27; 존댓말 금지.
+3. 한 줄은 50자 이내. 전체 200~290자.
+4. 금지: 성분·원료, 건강·피부·의학 효과, 연구·인증·실험 결과, 안전하다는 말, 가격·할인율, 연예인이 했다는 말.
+   <span class="fill">[제품 사실]</span>에 없는 숫자·회사 이름을 지어내지 않는다. &#x27;떼돈&#x27;·&#x27;난리&#x27; 같은 반응 과장은 괜찮다.
+5. 감정어(현타 온·답답했던·귀찮았던 등)는 제목에 하나만.
+6. 4·6·7줄은 서로 다른 사실을 말한다(같은 내용 반복 금지). 7줄에는 제품 사실 중 가장 놀라운 것을 아껴 둔다.
+대본 8줄만 출력해. 번호·설명은 붙이지 마.</div>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>33 / 39</span></div></section><section class="page "><div class='chap'>프롬프트 2 / 4</div><span class="ptag">프롬프트 ② 설명형 대본 (5~8줄 · 존댓말 전언 · 인스타·쇼츠 겸용)</span>
+<div class="prompt">너는 생활용품 쇼츠 대본 작가야. 아래 제품으로 &#x27;설명형&#x27; 쇼츠 대본을 써 줘.
+
+<span class="fill">[제품 이름]</span> :
+<span class="fill">[제품 사실]</span> : (상세페이지에 있는 사실 3~5개)
+<span class="fill">[끝에 댓글 유도 넣을까]</span> : (예 / 아니오)
+
+규칙
+1. 6~8줄. 순서:
+   첫 줄(궁금증): 누가 무엇에 지쳐서 이걸 만들었다는 이야기로 시작하되, 물건이 &#x27;어떻게&#x27; 해결하는지는 말하지 않는다.
+      예) &quot;~하다 지쳐버린 <span class="fill">[나라]</span> <span class="fill">[회사/주부]</span>가 아예 <span class="fill">[물건]</span>에 <span class="fill">[뜻밖의 것]</span>을 달아버렸대요.&quot;
+   둘째 줄: 제품 사실 중 숫자·만든 곳·유래 하나(&quot;~했다는데,&quot;)
+   셋째 줄: &quot;진짜 핵심은 이건데,&quot;로 시작 + 쓰는 동작을 눈에 보이게
+   넷째 줄: &quot;심지어&quot;로 시작 + 두 번째 놀라운 점(숫자가 있으면 숫자)
+   다섯째 줄: 익숙한 것에 빗댄 비교 한 줄(&quot;~처럼&quot;, &quot;~보다&quot;)
+   마지막 줄: &quot;요즘 <span class="fill">[집단]</span> 사이에서 ~한다고 난리래요.&quot;
+   <span class="fill">[끝에 댓글 유도]</span>가 &#x27;예&#x27;면 맨 끝에 한 줄 더: &quot;궁금하시면 댓글에 &#x27;<span class="fill">[제품 짧은 이름]</span>&#x27; 남겨주세요.&quot;
+2. 말투는 존댓말 전언체(~대요, ~더라고요, ~래요). 한 줄 58자 이내. 전체 150~250자.
+3. 금지: 성분·원료, 건강·피부·의학 효과, 연구·인증·실험 결과, 안전하다는 말, 가격·할인율, 연예인이 했다는 말.
+   <span class="fill">[제품 사실]</span>에 없는 숫자·회사 이름을 지어내지 않는다.
+대본만 출력해.</div><div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>34 / 39</span></div></section><section class="page "><div class='chap'>프롬프트 3 / 4</div><span class="ptag">프롬프트 ③ 첫 줄(제목 줄) 10개 뽑기</span>
+<div class="prompt">아래 제품으로 쇼핑 쇼츠의 &#x27;첫 줄&#x27; 10개를 만들어 줘. 첫 줄은 영상 시작 2초 안에 화면에 뜨는 글이야.
+
+<span class="fill">[제품 이름]</span> :
+<span class="fill">[누가 쓰나]</span> :
+<span class="fill">[이 제품이 없을 때 불편한 순간]</span> : (예: 아침마다 애들 깨울 때, 양념 찾다가 다 쏟을 때)
+
+규칙
+1. 10개 모두 제품 이름을 숨기고 &quot;그게 뭔데?&quot;가 나오게 한다.
+2. 아래 꼴을 골고루 섞는다(같은 꼴 3개 넘게 금지). 조회수가 붙은 쇼핑쇼츠 368편에서 자주 나온 꼴이다.
+   가) 오용형: <span class="fill">[만든 곳]</span>도 몰랐던 천재 아이디어 / <span class="fill">[만든 곳]</span>도 당황한 활용법
+   나) 목격담형: <span class="fill">[장소]</span> 갔다가 진짜 충격 받았어요
+   다) 지인증언형: 저 이거 때문에 <span class="fill">[가족]</span>한테 <span class="fill">[혼날]</span> 뻔했어요
+   라) 발명품형: <span class="fill">[나라]</span> 천재가 만들어 <span class="fill">[반응]</span> 난 <span class="fill">[물건]</span>
+   마) 정체의문형: 이게 <span class="fill">[물건]</span>이라고?
+   바) 무지후회형: 이거 몰라서 <span class="fill">[손해]</span> 볼 뻔했어요
+   사) 금지경고형: <span class="fill">[하는 일]</span> 할 때 절대 <span class="fill">[이것]</span> 하지 마세요
+   아) 만능템형: 이거 하나로 <span class="fill">[바뀌는 것]</span>이 된다고?
+   줄 끝에 (유형 이름)을 괄호로 붙인다.
+3. 감정어는 한 줄에 하나만, 센 말(빡친·열받은·짜증 난)은 쓰지 않는다. 첫 줄 본문은 25자 이내.
+4. 조사를 빼먹지 말고 소리 내 읽었을 때 자연스러운 한국어로 쓴다.
+5. 실제 가게·브랜드·회사 이름은 쓰지 않는다. 대신 &#x27;대형마트도&#x27;, &#x27;살림 고수도&#x27;처럼 일반 말로.
+6. 금지: 건강·피부·의학 효과, 가격, 연예인 이름.
+번호 없이 10줄만 출력해. 각 줄 = 첫 줄 + (유형 이름).</div>
+<div class="box" style="font-size:10.5pt;margin-top:4mm"><div class="t">③을 실제로 돌린 결과 (2026-10-29, 접이식 설거지통)</div>
+캠핑용품점도 몰랐던 천재 아이디어 (오용형) · 캠핑장 개수대 갔다가 진짜 충격 받았어요 (목격담형) · 이거 몰라서 캠핑 내내 왕복할 뻔했어요 (무지후회형) · 이거 하나로 캠핑장이 주방이 된다고? (만능템형) · 원룸 친구 집 갔다가 진짜 놀랐어요 (목격담형) 외 5줄</div><div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>35 / 39</span></div></section><section class="page "><div class='chap'>프롬프트 4 / 4</div><span class="ptag">프롬프트 ④ 제목·설명란·해시태그 (광고 표시 포함)</span>
+<div class="prompt">아래 쇼츠 대본으로 유튜브 쇼츠 올릴 때 쓸 글을 만들어 줘.
+
+<span class="fill">[대본]</span> : (완성 대본 붙여넣기)
+<span class="fill">[구매 링크 종류]</span> : (쿠팡 파트너스 / 다른 제휴 / 내 상품 / 없음)
+
+출력 형식
+제목: (40자 이내, 대본 첫 줄의 궁금증을 살리고 제품 이름은 숨긴다)
+설명란 첫 줄: (구매 링크 종류가 &#x27;쿠팡 파트너스&#x27;면 반드시 &quot;이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.&quot; 그대로. 다른 제휴면 &quot;이 영상은 제휴 광고이며, 링크로 구매하시면 제가 수수료를 받습니다.&quot; / 내 상품이면 &quot;제가 판매하는 상품입니다.&quot; / 없음이면 생략)
+설명란 둘째 줄: (대본을 한 문장으로 요약)
+영상 첫 화면 표시: 영상 시작 화면 위쪽에 &quot;광고&quot; 표시를 넣으라는 안내 한 줄
+해시태그: (#쇼츠 포함 5개, 제품 종류·쓰는 사람·쓰는 장소 위주. 브랜드·연예인 이름 금지)
+고정 댓글: (궁금증을 한 번 더 건드리는 한 줄)
+위 6칸만 출력해.</div><div class='box gold' style='font-size:10.5pt'><div class='t'>④를 실제로 돌린 결과 (2026-10-29)</div>설명란 첫 줄에 쿠팡 파트너스 문구를 그대로 넣고, "영상이 시작되는 첫 화면 위쪽에 광고 표시를 꼭 넣어 주세요" 안내까지 6칸을 모두 채웠습니다.</div><div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>36 / 39</span></div></section><section class="page "><div class='chap'>프롬프트 · 검사관</div><span class="ptag">프롬프트 ⑤ 대본 검사관 (올리기 전 마지막 점검)</span>
+<div class="prompt">너는 쇼핑 쇼츠 대본 검사관이야. 아래 대본을 검사하고 고쳐 줘.
+
+<span class="fill">[대본]</span> : (검사할 대본 붙여넣기)
+<span class="fill">[틀]</span> : (썰형 / 설명형)
+
+검사 항목 (항목마다 통과 ○ / 걸림 ✕ 와 이유 한 줄)
+1. 첫 줄이 제품 이름을 숨기고 궁금하게 만드나
+2. 와우 줄 3개가 있나(썰형: &quot;이게 말도 안 되는 게&quot; / &quot;심지어&quot; / &quot;근데 진짜 충격적인 포인트는&quot; 계열, 설명형: &quot;진짜 핵심은&quot; / &quot;심지어&quot; / 비교 줄)
+3. 와우 줄 바로 뒤에 구체 내용(숫자·동작·기존 것과 비교)이 있나 — 센 말만 있고 내용이 없으면 ✕
+4. 말투가 한 가지로 이어지나(썰형=반말 전언, 설명형=존댓말 전언)
+5. 금지어: 성분·원료, 건강·피부·의학 효과, 연구·인증·실험, &#x27;안전&#x27;, 가격·할인, 연예인이 했다는 말 — 하나라도 있으면 ✕ 하고 그 낱말을 적는다
+6. 센 감정어(빡친·열받은·짜증)가 2번 이상이면 ✕
+7. 한 줄이 너무 길어 한 호흡에 못 읽는 줄(썰형 50자, 설명형 58자 넘음)
+
+고칠 때 규칙
+- ✕ 항목을 하나도 남기지 말고 전부 고친다(금지어·센 감정어는 지우거나 다른 말로).
+- 대본에 없던 새 사실(숫자·기능·회사)을 지어내지 않는다. 내용이 모자란 줄은 &quot;<span class="fill">[제품 사실 필요: 무엇]</span>&quot;으로 비워 둔다.
+- 줄 머리 연결어와 말끝(썰형: ~다는 거 / ~는데, / ~다고. / ~라고.)을 틀대로 맞춘다.
+- 다 고친 뒤 1~7번을 고친 대본에 다시 검사하고, 모두 ○일 때만 출력한다.
+
+출력: 검사표 7줄 → 빈 줄 → &quot;고친 대본:&quot; 다음에 고친 대본 전체(걸린 게 없으면 &quot;고칠 것 없음&quot;).</div><div class='box' style='font-size:10.5pt'><div class='t'>왜 검사관이 따로 있나</div>AI는 쓰는 것보다 <b>고치는 것</b>을 더 잘합니다. 대본을 쓴 대화와 다른 새 대화창에서 검사관을 돌리면 놓친 금지어를 더 잘 잡습니다.</div><div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>37 / 39</span></div></section><section class="page ">
+<div class="chap">올리기 전에</div>
+<h2>업로드 전 점검표</h2>
+<ul class="check">
+<li>첫 줄에 제품 이름이 없다 — "그게 뭔데?"가 나온다</li>
+<li>첫 자막이 영상 시작(0초)과 함께 뜬다</li>
+<li>앞 3칸에 '불편'이 들어 있다</li>
+<li>연결어 세 개가 순서대로, 뒤에 숫자·동작·비교가 붙어 있다</li>
+<li>같은 뿌리 센 말(미친·충격·대박)이 두 번 나오지 않는다</li>
+<li>자막 한 덩이가 대부분 6~10자다</li>
+<li>1초에 읽는 글자가 6~10자 사이다</li>
+<li>성분·효능·건강·실험·안전·가격·연예인 말이 0개다</li>
+<li>상세페이지에 없는 숫자·회사 이름이 없다</li>
+<li>제품을 손에 들고 쓰는 장면(작동 칸)이 화면에 나온다</li>
+<li>설명란 첫 줄에 대가성 문구, 영상 시작 화면에 '광고' 표시</li>
+<li>고정 댓글에 링크 또는 댓글 유도 한 줄</li>
+<li>올린 날짜 · 유형 · 1초 글자 수를 기록장에 적었다</li>
+</ul>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>38 / 39</span></div></section><section class="page next">
+<div class="chap">마지막으로</div>
+<h2>이 책을 버튼으로 — 숏템메이커</h2>
+<p class="big">이 책대로 하면 대본은 빨라집니다. 그래도 자막 · 목소리 · 장면 붙이기 · 썸네일은 한 편마다 손으로 해야 하고, 같은 틀로 매일 여러 편을 올리려면 그 손일이 쌓입니다.</p>
+<div class="box"><b style="color:#F2C46D">숏템메이커</b>는 이 책의 연결어 조사(자막 2,051편)를 대본 쓰기에 쓰는 쇼핑쇼츠 제작 프로그램입니다. 참고할 영상 링크를 담으면 대본 · AI 목소리 · 원본 자막 지우기 · 장면 붙이기 · 꾸미기 · 썸네일 · 제목까지 단계별 버튼으로 완성 영상을 만들어 줍니다.</div>
+<h3>더 알고 싶다면</h3>
+<ul>
+<li>네이버 <b>메이커스랩 카페</b> — cafe.naver.com/makerslab7</li>
+<li>숏템메이커 소개·질문은 카페 '숏템 질문·답변' 게시판에</li>
+<li>이 책이 업데이트되면 카페 '무료 자료실'에 새 판을 올립니다</li>
+</ul>
+<p class="sub" style="margin-top:8mm">이 책의 숫자는 공개 영상에서 잰 값이며, 조회수나 수익을 보장하지 않습니다. 무단 복제·재판매를 금합니다. © 메이커스랩</p>
+<div class="foot"><span>메이커스랩 · 쇼핑쇼츠 대본 데이터북</span><span>39 / 39</span></div></section>
+</body></html>

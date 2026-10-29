@@ -15,7 +15,8 @@ let current = null;                                       // 지금 빌린 것(P
 export function channelDir(engineRoot) { return path.join(engineRoot, 'channel'); }
 // 기술 꾸러미(사장님 10-21 '프리셋처럼 편마다 빌려주기') — 집 PC 제작 라인 코드가 풀리는 자리. 설치본에는 없다(engine_bundle FORBIDDEN).
 //   풀 때 자리마다 표식(.rented) — 표식 없는 자리(개발 PC 의 진짜 코드)는 지우지 않는다
-export const TECH_DIRS = ['tools/calcopy/hybrid', 'tools/calcopy/yanshot'];
+// 빌리는 기술 자리 = 판 설정 폴더만 — 실행기·렌더 코드(hybrid/*.py·yanshot)는 설치본 엔진 묶음에 있어 같은 자리를 덮으면 '진짜 코드' 막음에 걸린다(10-29)
+export const TECH_DIRS = ['tools/calcopy/hybrid/styles'];
 const ALLOWED = ['channel/', ...TECH_DIRS.map(d => d + '/')];
 const techDir = (engineRoot, d) => path.join(engineRoot, ...d.split('/'));
 function wipe(engineRoot) {
