@@ -6,7 +6,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { api, ApiError } from './api.js';
-import { runOps, aiRootDir, dataDir } from './engine_bridge.js';
+import { runOps, aiRootDir, dataDir, engineRoot } from './engine_bridge.js';
+import { rentPreset } from './preset_rent.js';
 import { refreshCookies } from './logins.js';
 import { ensureDir, jail } from './paths.js';
 
@@ -116,6 +117,22 @@ async function send(f, body) {
   }
 }
 
+// 실행기 일은 그 편 프리셋(판 설정·벤치 자료 꾸러미)을 빌린 채로 — 렌더·계획·준비 점검이 판 설정을 읽는다(10-29 회원 실측:
+//   빌리지 않아 렌더가 판 파일 없음 SystemExit 로 조용히 죽고 '같은 원인 3번'으로 멈췄다). 빌림 판단은 서버 claude_portal.preset_rent 한 곳.
+async function runWithPreset(f) {
+  const job = path.join(flowRoot(), f.sid, 'job');
+  let rental = null;
+  if (f.preset) {
+    try { rental = await rentPreset({ engineRoot: engineRoot(), presetId: f.preset }); }
+    catch (e) {
+      const why = '프리셋을 받지 못했다: ' + String((e && (e.code || e.message)) || e).slice(0, 120);
+      return Object.fromEntries((f.do || []).map(d => [String(d.id || d.cmd), { error: why }]));
+    }
+  }
+  try { return await runOps(job, f.do || []); }
+  finally { if (rental) await rental.release(); }
+}
+
 // 막힐 때(AI 답·회원 사인)까지 고리를 돈다 — 실행기 일은 기다려서 끝낸다
 async function pump(f) {
   if (f.busy) return;
@@ -124,7 +141,7 @@ async function pump(f) {
     for (let guard = 0; guard < 200; guard++) {
       let res;
       if (f.status === 'execute') {
-        const measure = await runOps(path.join(flowRoot(), f.sid, 'job'), f.do || []);
+        const measure = await runWithPreset(f);
         res = await send(f, { step: 'go', measure });
       } else if (f.status === 'review' || f.status === 'reject') {
         const replies = collect(f);

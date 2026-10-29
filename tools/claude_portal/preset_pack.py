@@ -56,6 +56,20 @@ def tech_files(engine: Path, preset: str) -> list[str]:
     v = line["version"]
     h = "tools/calcopy/hybrid"
     out = [f"{preset}/line.json", f"{h}/styles/_common.json", f"{h}/styles/{v}.json"]
+    # 그 판이 상속하는 판(base 사슬) + 렌더 코드가 불러오는 순간 읽는 판(render_itssum DEF=잇썸홈판·render_jaemi DEF=재미썸홈판) —
+    #   빠지면 회원 PC 렌더가 '판이 없다' SystemExit 로 죽는다(10-29 회원 실측 잇템로그 11/13)
+    seen, todo = {v}, [v, "잇썸홈판", "재미썸홈판"]
+    while todo:
+        name = todo.pop()
+        f = engine / h / "styles" / f"{name}.json"
+        if not f.is_file():
+            continue
+        if f"{h}/styles/{name}.json" not in out:
+            out.append(f"{h}/styles/{name}.json")
+        b = json.loads(f.read_text(encoding="utf-8")).get("base")
+        if b and b not in seen:
+            seen.add(b)
+            todo.append(b)
     st = json.loads((engine / h / "styles" / f"{v}.json").read_text(encoding="utf-8"))
     b = st.get("bench") or {}
     if b.get("line_reads"):
