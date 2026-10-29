@@ -96,7 +96,7 @@ PHASE_STAGE = {   # 세부 단계 → 회원에게 보이는 단계
     "material_got": "material", "material_pick": "material", "material_dl": "material", "asr": "asr", "asr_got": "asr", "shots_got": "asr",
     "script": "script", "script_got": "script", "stills_again": "script", "script_saved": "script", "sign": "sign", "plan": "plan", "plan_got": "plan", "line_fix_got": "plan", "member_revise": "plan", "more_got": "plan", "more_pick": "plan", "more_dl": "plan", "more_sheets": "plan",
     "plan_look": "plan", "plan_saved": "plan", "thumb": "plan", "thumb_sheet": "plan", "thumb_got": "plan", "render": "render", "render_got": "render", "render_fix": "render", "render_saved": "render",
-    "check": "check", "check_got": "check", "check_look": "check", "check_fix": "check", "check_saved": "check", "done": "done",
+    "check": "check", "check_got": "check", "check_look": "check", "final_sheet": "check", "check_fix": "check", "check_saved": "check", "done": "done",
 }
 
 # 고치기 한도(사장님 10-26 "고치기 한도는 계속 다듬어야 된다") — 근거 = 회원 마스크편(C:/숏템_칼카피/flowtest/ititemlog12_member, 11회 실행 · 대본 15·장면 17 판정)
@@ -2190,9 +2190,11 @@ def _mark_new(st: dict, over: list) -> list:
     return out + ([FIX_ALL] if out else [])
 
 
-PLAN_LOOK_WAYS = ("\n\n★재료로 못 고치는 줄(맞는 장면이 재료에 없다)은 멈추지 말고 둘 중 하나로 답에 넣어라 — "
-                  "① 그 줄 문장을 장면에 맞게 바꾼다: \"대본줄\": {\"<줄 id>\": {\"tts\": \"…\", \"caps\": [\"…\"]}} (바꾼 줄만 · 뜻·사실·결 그대로 · caps 를 이으면 tts) "
-                  "② 재료를 더 찾는다: \"재료_더찾기\": [\"유튜브 검색어\", …] (최대 4개 — 그 장면이 나올 영상 검색어). 해당 없으면 넣지 않는다.")
+WAY_LINE = ("그 줄 문장을 장면에 맞게 바꾼다(자막 넘침·낱말 끊김도 이것으로): \"대본줄\": {\"<줄 id>\": {\"tts\": \"…\", \"caps\": [\"…\"]}} "
+            "(바꾼 줄만 · 뜻·사실·결 그대로 · caps 를 이으면 tts)")
+PLAN_LOOK_WAYS = ("\n\n★재료로 못 고치는 줄(맞는 장면이 재료에 없다)은 멈추지 말고 둘 중 하나로 답에 넣어라 — ① " + WAY_LINE +
+                  " ② 재료를 더 찾는다: \"재료_더찾기\": [\"유튜브 검색어\", …] (최대 4개 — 그 장면이 나올 영상 검색어). 해당 없으면 넣지 않는다.")
+FINAL_FIX_WAYS = "\n\n★재료(컷)로 못 고치는 것(자막 넘침·낱말 끊김·대사와 다른 말)은 " + WAY_LINE + " 로 답에 넣어라. 해당 없으면 넣지 않는다."
 
 
 def _fix_review(st, why: str, sheet: str | None, rid: str, more_imgs: list | None = None) -> dict:
@@ -2206,7 +2208,7 @@ def _fix_review(st, why: str, sheet: str | None, rid: str, more_imgs: list | Non
                json.dumps(sc["S"], ensure_ascii=False)[:6000] + "\n\n재료:\n" + json.dumps(sc["M"], ensure_ascii=False)[:8000] + _shots_ctx(st) +
                # 처음 질문과 같은 장면 규칙·판 숫자·재료 샷 구간·쓸 수 있는 파일(10-27: 고치기 질문엔 이게 없어 고친 컷이 샷 경계·컷 중앙을 새로 넘겼다 —
                # 6편 두 번째 반려 전부 '지난 고치기에서 새로 생김')
-               _src_rule_ctx(st) + _cut_rules_ctx(st, (st.get("_msheets") or {}).get("shots")) + _subject_ctx(st) + PLAN_LOOK_WAYS,
+               _src_rule_ctx(st) + _cut_rules_ctx(st, (st.get("_msheets") or {}).get("shots")) + _subject_ctx(st) + (PLAN_LOOK_WAYS if rid.startswith("plan_") else FINAL_FIX_WAYS if rid.startswith("final_fix_") else ""),
                ([_img(sheet)] if sheet else []) + [_img(x) for x in more_imgs or []], need=("ok",))
 
 
@@ -2414,6 +2416,13 @@ def ph_check(st, m, rp, u):
 
 
 EYE_REVIEW = False       # 완성본 눈 2단(E1~E9 질문) — 사장님 10-26 "재현일치도랑 눈검수는 필요없다". 되살리면 True
+FINAL_SHEET_LOOK = True  # 완성 전 1초 시트 한 번 — 사장님 PC 제작처럼(숏클 지침 15-0, 관제 290). E 번호 묻기가 아니라 시트를 보고 걸린 것만
+FINAL_SHEET_FILES = ("시트_1초.jpg", "훅3초_0.1초.jpg", "끝2초_0.1초.jpg")
+FINAL_SHEET_ASK = """너는 이 편을 채널에 올릴지 마지막으로 보는 사람이다. 자동 검사는 통과했다. 완성본 1초 시트(처음~끝)·훅 3초·끝 2초를 처음부터 끝까지 한 칸씩 본다.
+본다: 줄마다 화면이 대사와 맞나 · 자막이 넘치거나 낱말 중간에서 끊기나 · 제목 줄 수·잘림 · 남의 얼굴·손·글자(원본 편집 자막·워터마크) · 같은 장면 되풀이·멈춘 화면·검은 칸 · 이야기 대상과 다른 물건이 그 줄에 나오나.
+★우리 틀(결함 아님): 맨 위 제목 · 로고 · 우리 자막(색 강조) · 출처 줄.
+걸린 것은 몇 초·어느 줄인지 적는다(예: "7초 L4 자막 3줄 넘침"). 없으면 빈 목록.
+JSON 하나: {"ok": true, "problems": ["…"]}"""
 
 
 def ph_check_got(st, m, rp, u):
@@ -2426,7 +2435,13 @@ def ph_check_got(st, m, rp, u):
     if not st["auto"].get("ok"):          # 1단이 ×면 눈 검수는 하지 않는다(표준 §5-2 '1단 통과 뒤') — 바로 고치기 판정으로
         st["look"] = {"ok": False, "problems": ["1단 자동 관문 미통과 — 눈 검수 생략"], "skipped": True}
         return {"goto": "check_judge"}
-    if not EYE_REVIEW:                   # 사장님 10-26 "눈검수는 필요없다" — 1단 자동 관문 통과면 바로 완성(눈 묶음 질문 안 함)
+    if not EYE_REVIEW:                   # 사장님 10-26 "눈검수는 필요없다" — E 번호 묻기는 안 한다
+        sheets = [x for x in st["eye_pack"] if any(str(x).endswith(n) for n in FINAL_SHEET_FILES)]
+        if FINAL_SHEET_LOOK and sheets:     # 완성 전 1초 시트(숏클 지침 15-0) — 고쳐 다시 렌더하면 새 시트로 또 본다
+            texts = "".join(f"\n\n## {n}\n{str(t)[:4000]}" for n, t in (c.get("eye_texts") or {}).items())
+            sv = script_view(st)
+            return {"review": [_rv(f"sheet_{st['version']}", FINAL_SHEET_ASK + texts + "\n\n## 대본\n" + json.dumps(sv, ensure_ascii=False)[:4000],
+                                   [_img(x) for x in sheets][:3], need=("ok",))], "then": "final_sheet"}
         st["look"] = {"ok": True, "problems": [], "skipped": "눈 검수 뺌(사장님 10-26)"}
         return {"goto": "check_judge"}
     rows = _eye_rows(bool(c.get("upgrade")))
@@ -2448,6 +2463,16 @@ def _eye_verdict(a: dict, keys: list) -> tuple[bool, list]:
         if v != "○":
             bad.append(f"{k} {v or '답 없음'}: {str((x or {}).get('memo') if isinstance(x, dict) else '')[:160]}")
     return not bad, bad
+
+
+def ph_final_sheet(st, m, rp, u):
+    """완성 전 1초 시트 답(숏클 지침 15-0) → 걸린 것이 없으면 완성, 있으면 완성본 고치기(ph_check_judge 의 고치기 길 그대로 — 한도 LIMITS['look'])."""
+    a = _reply(rp, f"sheet_{st['version']}", ("ok",))
+    probs = [str(p)[:200] for p in a.get("problems") or [] if str(p).strip()]
+    ok = bool(a.get("ok")) and not probs
+    st["look"] = {"ok": ok, "problems": probs, "by": "완성 전 1초 시트"}
+    st["log"].append(f"완성 전 1초 시트: {'통과' if ok else '걸림 ' + ' / '.join(probs)[:300]}")
+    return {"goto": "check_judge"}
 
 
 def ph_check_look(st, m, rp, u):
@@ -2494,7 +2519,8 @@ def ph_check_judge(st, m, rp, u):
     probs = json.dumps({"자동 관문 ×": [{k: r.get(k) for k in ("group", "what", "value")} for r in (st.get("auto") or {}).get("rows") or []
                                     if r.get("ok") is not True and not r.get("ref")] if not auto_ok else None,
                         "눈 검수 ×": look.get("problems")}, ensure_ascii=False)[:3000]
-    return {"review": [_fix_review(st, "완성본 검사에서 걸린 것(화면·크롭·남의 글자는 재료로 고친다): " + probs + _face_hint(st), None, f"final_fix_{v}")], "then": "check_fix"}
+    sheet = next((x for x in st.get("eye_pack") or [] if str(x).endswith(FINAL_SHEET_FILES[0])), None) if look.get("by") else None
+    return {"review": [_fix_review(st, "완성본 검사에서 걸린 것(화면·크롭·남의 글자는 재료로 고친다): " + probs + _face_hint(st), sheet, f"final_fix_{v}")], "then": "check_fix"}
 
 
 CODE_ONLY_ROWS = ("배치(본보기 벤치 편 대조)",)     # 완성본 1단 칸 중 재료·대본이 아니라 코드가 정하는 것 — 걸리면 헛바퀴 없이 멈춘다(ph_check_judge)
@@ -2734,6 +2760,12 @@ def ph_check_retry(st, m, rp, u):
 def ph_check_fix(st, m, rp, u):
     v = st["version"]
     r = _reply(rp, f"final_fix_{v}", ("ok",))
+    if isinstance(r.get("대본줄"), dict) and r["대본줄"]:       # 자막 넘침 등 글 쪽 — 그 줄만 바꿔 계획부터(목소리 새로, 재료 답이 같이 오면 같이)
+        if isinstance(r.get("재료"), dict):
+            _take_fix(st, r)
+        got = _apply_lines(st, r["대본줄"], "완성본 고치기 — 줄 바꿈")
+        if got:
+            return got
     M = _take_fix(st, r)
     if M is None and not st["tries"].get("render_same"):
         # 오푸스 '재료로 고칠 것 없음' = 걸린 칸이 렌더·검사 쪽(자막 배치·소리 시각)이다 — 멈추기 전에 재료 그대로 한 번 다시 만든다
@@ -4184,7 +4216,7 @@ PHASES = {
     "material_dl": ph_material_dl, "asr": ph_asr, "asr_got": ph_asr_got, "shots_got": ph_shots_got, "script": ph_script,
     "script_ask": ph_script_ask, "script_got": ph_script_got, "script_heard": ph_script_heard, "sign": ph_sign, "plan": ph_plan, "plan_got": ph_plan_got, "line_fix_got": ph_line_fix_got, "member_revise": ph_member_revise, "more_got": ph_more_got, "more_pick": ph_more_pick, "more_dl": ph_more_dl, "more_sheets": ph_more_sheets,
     "plan_look": ph_plan_look, "thumb": ph_thumb, "thumb_sheet": ph_thumb_sheet, "thumb_got": ph_thumb_got, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
-    "check_got": ph_check_got, "check_look": ph_check_look, "check_judge": ph_check_judge, "check_fix": ph_check_fix, "customize": ph_customize, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
+    "check_got": ph_check_got, "check_look": ph_check_look, "final_sheet": ph_final_sheet, "check_judge": ph_check_judge, "check_fix": ph_check_fix, "customize": ph_customize, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
 for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "given_origin_got": "origin", "stopped": "setup", "task_got": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "given": "product", "given_same": "product", "cand_look": "product", "reviews": "product", "reviews_got": "product", "reviews_naver": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():
     PHASE_STAGE.setdefault(_k, _v)
