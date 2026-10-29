@@ -94,7 +94,7 @@ PHASE_STAGE = {   # 세부 단계 → 회원에게 보이는 단계
     "product_same": "product", "name_find": "product", "name_got": "product", "named_cands": "product", "named_same": "product",
     "best_same": "product", "product_done": "product", "research": "research", "research_got": "research", "material": "material",
     "material_got": "material", "material_pick": "material", "material_dl": "material", "asr": "asr", "asr_got": "asr", "shots_got": "asr",
-    "script": "script", "script_got": "script", "stills_again": "script", "script_saved": "script", "sign": "sign", "plan": "plan", "plan_got": "plan",
+    "script": "script", "script_got": "script", "stills_again": "script", "script_saved": "script", "sign": "sign", "plan": "plan", "plan_got": "plan", "line_fix_got": "plan",
     "plan_look": "plan", "plan_saved": "plan", "thumb": "plan", "thumb_sheet": "plan", "thumb_got": "plan", "render": "render", "render_got": "render", "render_fix": "render", "render_saved": "render",
     "check": "check", "check_got": "check", "check_look": "check", "check_fix": "check", "check_saved": "check", "done": "done",
 }
@@ -2478,9 +2478,74 @@ CODE_ONLY_ROWS = ("배치(본보기 벤치 편 대조)",)     # 완성본 1단 �
 VOICE_RX = re.compile(r"받아쓰기 확정 결함|말속도|이름 끊김|목소리|TTS")   # 재료(컷)로 못 고치는 목소리 결함 — 대본 문장을 바꿔 다시 합성
 
 
+LINE_FIX_MAX = 2      # 그 자리 줄 고치기 한도 — 넘으면 대본 전체 다시(옛 길)
+LINE_FIX_ASK = """너는 대본 작가다. 이미 통과한 대본에서 아래 줄만 고친다 — 다른 줄·재료(컷)는 그대로 둔다(장면 맞추기를 다시 하지 않게).
+고칠 이유: {why}
+규칙: 뜻·사실·결(반말 전언체 등)은 그대로, 줄의 tts(읽을 문장)와 caps(화면 자막 조각)를 함께 고친다. caps 를 이으면 tts 와 같은 말이어야 한다.
+판 규칙: {rules}
+지금 줄(id·tts·caps):
+{lines}
+{extra}JSON 하나: {{"lines": {{"<줄 id>": {{"tts": "…", "caps": ["…", "…"]}}}}}} — 바꾼 줄만 넣는다."""
+
+
+def _line_ids(st, probs) -> list[str]:
+    """걸림 글에서 대본 줄 id(L5·l3 …)만 뽑는다 — 대본에 있는 나레 줄만."""
+    ids = [l["id"] for l in (st["script"].get("S") or {}).get("lines") or [] if l.get("kind") != "orig"]
+    txt = " ".join(str(p) for p in probs)
+    return [i for i in ids if re.search(rf"(?<![A-Za-z0-9]){re.escape(i)}(?![0-9])", txt)]
+
+
+def _line_fix(st, why: str, ids: list[str], pick: bool = False) -> dict | None:
+    """(판단 주인 — 목소리·길이 걸림은 그 자리에서 줄만 고친다, 사장님 10-30 '왜 대본까지 거슬러 가서 장면을 처음부터 다시 맞추냐')
+    걸린 줄만 묻고 재료(컷)는 그대로 → 바뀐 줄만 다시 합성해 계획부터. pick=True(길이) = 나레 줄 전부를 보여 주고 최소 줄만 고르게.
+    한도(LINE_FIX_MAX)를 넘었거나 줄을 못 찾으면 None → 부른 쪽이 옛 길(대본 전체)로."""
+    from tools.calcopy.hybrid import script_audit
+    S = st["script"].get("S") or {}
+    if st["tries"].get("line_fix", 0) >= LINE_FIX_MAX:
+        return None
+    rows = [l for l in S.get("lines") or [] if l.get("kind") != "orig" and (pick or l["id"] in ids)]
+    if not rows:
+        return None
+    st["tries"]["line_fix"] = st["tries"].get("line_fix", 0) + 1
+    st["log"].append(f"줄 고치기({st['tries']['line_fix']}번째, 재료 그대로): {why[:200]}")
+    lines = "\n".join(json.dumps({k: l.get(k) for k in ("id", "tts", "caps")}, ensure_ascii=False) for l in rows)
+    extra = "고칠 줄은 위에서 가장 적게 골라라(전부 고치지 마라).\n" if pick else ""
+    q = LINE_FIX_ASK.format(why=why[:1200], rules=script_audit.rules_text(st["version"])[:1500], lines=lines, extra=extra)
+    return {"review": [_rv(f"line_fix_{st['version']}", q, [], need=("lines",))], "then": "line_fix_got"}
+
+
+def ph_line_fix_got(st, m, rp, u):
+    """줄 고치기 답 → 그 줄만 바꿔 대본 검사(재료 그대로) → 통과면 대본만 저장하고 계획부터. 안 되면 옛 길(대본 전체)."""
+    v = st["version"]
+    r = _reply(rp, f"line_fix_{v}", ("lines",))
+    S = json.loads(json.dumps(st["script"]["S"], ensure_ascii=False))
+    M = st["script"]["M"]
+    got = r.get("lines") if isinstance(r.get("lines"), dict) else {}
+    by = {l["id"]: l for l in S.get("lines") or []}
+    for lid, x in got.items():
+        if lid in by and isinstance(x, dict) and by[lid].get("kind") != "orig":
+            for k in ("tts", "caps"):
+                if x.get(k):
+                    by[lid][k] = x[k]
+    a = audit_script(st, S, M) if got else {"ok": False, "error": "바꾼 줄 없음"}
+    if not a.get("ok"):
+        st["log"].append("줄 고치기 대본 검사 미달 → 대본 전체 다시: " + json.dumps({k: x for k, x in a.items() if k != "ok"}, ensure_ascii=False)[:300])
+        st["tries"]["line_fix"] = LINE_FIX_MAX
+        return _voice_rewrite(st, [st.get("_line_fix_why") or "줄 고치기 실패"])
+    st["script"]["S"] = S
+    st["_plan_fixed"] = True          # 재료는 그대로 — 계획이 엔진 검사를 통과하면 장면 검수를 다시 묻지 않는다(ph_plan_got)
+    return {"do": [{"id": "save_script", "cmd": "write_doc", "files": {f"{v}/대본.json": S}, "cand_dir": True, "version": v}], "then": "plan"}
+
+
 def _voice_rewrite(st, probs: list) -> dict:
     """(판단 주인 — 목소리 결함은 대본으로) 계획(ph_plan_got)·장면 검수(ph_plan_look) 두 곳이 부른다. 10-27 이브라인 편: L5 TTS 되풀이(받아쓰기 결함)를
-    '재료를 고쳐라' 질문으로 10번 물어 멈춤 — Claude 는 매번 '재료로는 못 고친다, 문장을 바꿔야' 라고 답했다."""
+    '재료를 고쳐라' 질문으로 10번 물어 멈춤 — Claude 는 매번 '재료로는 못 고친다, 문장을 바꿔야' 라고 답했다.
+    10-30: 먼저 그 자리에서 걸린 줄만 고친다(_line_fix — 재료 그대로). 줄을 못 찾거나 한도를 넘으면 아래 옛 길(대본 전체)."""
+    why = "목소리(합성) 쪽 문제 — 그 줄 문장을 바꿔 다시 합성: " + " / ".join(str(p) for p in probs)[:1200]
+    st["_line_fix_why"] = why
+    lf = _line_fix(st, why, _line_ids(st, probs))
+    if lf:
+        return lf
     st["log"].append("목소리 결함 → 대본 다시: " + " / ".join(probs)[:300])
     _tries(st, "conflict", 2, ["voice_speed"], at="script")
     st["tries"]["script"] = 0
@@ -2490,7 +2555,13 @@ def _voice_rewrite(st, probs: list) -> dict:
 
 
 def _length_rewrite(st, value) -> dict:
-    """길이 넘침·모자람은 재료가 아니라 글로 고친다(배속 아님, 07 §4) → 대본 다시 + 회원 사인 다시. 계획(목소리 실측)·완성본 검사 두 곳이 부른다."""
+    """길이 넘침·모자람은 재료가 아니라 글로 고친다(배속 아님, 07 §4) → 대본 다시 + 회원 사인 다시. 계획(목소리 실측)·완성본 검사 두 곳이 부른다.
+    10-30: 먼저 그 자리에서 최소 줄만 고친다(_line_fix pick — 재료 그대로). 한도를 넘으면 아래 옛 길."""
+    why = f"완성본 길이가 판 범위를 벗어났다: {value} — 나레 글을 줄이거나(넘침) 늘려서(모자람) 범위 안으로. 내용·결은 그대로"
+    st["_line_fix_why"] = why
+    lf = _line_fix(st, why, [], pick=True)
+    if lf:
+        return lf
     _tries(st, "length", 2, [_len_cause(value)], at="script")
     st["tries"]["script"] = 0
     st["approved"] = False
@@ -3989,7 +4060,7 @@ PHASES = {
     "named_same": ph_named_same, "best": ph_best, "best_rated": ph_best_rated, "given": ph_given, "given_same": ph_given_same, "research": ph_research, "research_got": ph_research_got,
     "research_check": ph_research_check, "material": ph_material, "material_got": ph_material_got, "material_pick": ph_material_pick,
     "material_dl": ph_material_dl, "asr": ph_asr, "asr_got": ph_asr_got, "shots_got": ph_shots_got, "script": ph_script,
-    "script_ask": ph_script_ask, "script_got": ph_script_got, "script_heard": ph_script_heard, "sign": ph_sign, "plan": ph_plan, "plan_got": ph_plan_got,
+    "script_ask": ph_script_ask, "script_got": ph_script_got, "script_heard": ph_script_heard, "sign": ph_sign, "plan": ph_plan, "plan_got": ph_plan_got, "line_fix_got": ph_line_fix_got,
     "plan_look": ph_plan_look, "thumb": ph_thumb, "thumb_sheet": ph_thumb_sheet, "thumb_got": ph_thumb_got, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
     "check_got": ph_check_got, "check_look": ph_check_look, "check_judge": ph_check_judge, "check_fix": ph_check_fix, "customize": ph_customize, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
