@@ -21,8 +21,9 @@ sys.path.insert(0, ROOT)
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 from tools import buffer_post as bp  # noqa: E402
 
-# 매일 돌리는 계정 — 인포크 계정이 정해진 채널만. _2 채널(995_2 얜샷템 등)은 인포크가 정해지면 넣는다(사장님 결정 대기)
-ACCOUNTS = ["21(수창) 쓸데수집", "950 숏템리폿", "987_1 샥템스토리", "994_1 썰템홈샷", "995_1 썰템쇼", "998_1 꿀템샷", "999_1 잇썸홈"]
+# 매일 돌리는 계정 — 인포크 계정이 정해진 채널만(bp._inpock_acct). 나머지 _2 채널은 인포크가 정해지면 넣는다
+ACCOUNTS = ["21(수창) 쓸데수집", "950 숏템리폿", "987_1 샥템스토리", "994_1 썰템홈샷", "995_1 썰템쇼", "995_2 얜샷템",
+            "998_1 꿀템샷", "999_1 잇썸홈"]
 SHOPLINK_DIR = os.path.join(ROOT, ".tracks", "쇼핑링크자동") if os.path.isdir(os.path.join(ROOT, ".tracks", "쇼핑링크자동")) \
     else os.path.join(os.path.dirname(os.path.dirname(ROOT)), "쇼핑링크자동")   # 트랙 폴더에서 돌 때(.tracks/버퍼예약드라이브)
 LOG_DIR = os.path.expanduser(r"~\.claude\buffer_daily")
@@ -49,7 +50,7 @@ def plan(now=None):
         ready = [v for v in vs if bp._caption(d, v)[0]]
         raw = [v for v in vs if v not in ready]
         need = max(0, len(today) - len(ready))
-        out.append({"folder": f, "free_slots_today": [_kst(u) for u in today], "ready": ready,
+        out.append({"folder": f, "inpock": bp._inpock_acct(f), "free_slots_today": [_kst(u) for u in today], "ready": ready,
                     "prepare": random.sample(raw, min(need, len(raw))), "left_after": len(raw) - min(need, len(raw))})
     return out
 
