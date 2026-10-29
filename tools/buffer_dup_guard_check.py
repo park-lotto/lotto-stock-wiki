@@ -23,7 +23,7 @@ if fresh:
     cases["fresh_" + os.path.basename(fresh)] = fresh
 for n, s in cases.items():
     shutil.copy2(s, os.path.join(d, n))
-    open(os.path.join(d, os.path.splitext(n)[0] + ".txt"), "w", encoding="utf-8").write("제목\n\n설명")
+    open(os.path.join(d, os.path.splitext(n)[0] + ".txt"), "w", encoding="utf-8").write("제목\n\n설명\n인포크: [1] 시험 상품")
 bp.main(["post", "--folder", folder, "--at", "2099-01-01 10:00"])
 shutil.rmtree(tmp)
 want = ["fresh_" + os.path.basename(fresh)] * len(bp.SERVICES) if fresh else []   # 유튜브·틱톡 1번씩(10-26)

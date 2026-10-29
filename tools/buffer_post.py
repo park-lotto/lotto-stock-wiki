@@ -248,6 +248,42 @@ def _inpock_blocks(acct, cache={}):
     return cache[acct]
 
 
+# 설명란 안내 한 줄(사장님 10-29 "설명란에 영상 속 제품은 프로필 링크 몇 번에 있습니다 / 채널별로 말투 다르게").
+# 주인 = 여기 한 곳. 폴더 이름 → 말투. {n} = 인포크 블록 번호. 없는 폴더는 기본 문장.
+LINK_LINE = {
+    "950 숏템리폿": "📌 영상 속 제품은 프로필 링크 {n}번에 정리해 두었습니다.",
+    "987_1 샥템스토리": "영상 속 그 제품, 프로필 링크 {n}번에 있어요 👀",
+    "987_2 신박리포트": "🔎 영상 속 제품 정보는 프로필 링크 {n}번에서 확인하세요.",
+    "994_1 썰템홈샷": "썰 속 그 제품은 프로필 링크 {n}번에 있어요!",
+    "994_2 트롯파파": "영상에 나온 제품은 프로필 링크 {n}번에 있습니다~",
+    "995_1 썰템쇼": "🎬 오늘 나온 제품은 프로필 링크 {n}번에 있어요!",
+    "995_2 얜샷템": "이거 어디서 사냐고요? 프로필 링크 {n}번이에요 😎",
+    "998_1 꿀템샷": "🍯 영상 속 꿀템은 프로필 링크 {n}번에 담아 뒀어요.",
+    "998_2 별빛여행": "✨ 영상 속 아이템은 프로필 링크 {n}번에서 만나보세요.",
+    "999_1 잇썸홈": "🏠 영상 속 살림템은 프로필 링크 {n}번에 있어요.",
+    "999_2 재미썸홈": "궁금하셨죠? 영상 속 제품은 프로필 링크 {n}번이에요 😆",
+    "21(수창) 쓸데수집": "🛒 영상 속 그 물건은 프로필 링크 {n}번에 있어요.",
+    "숏템07(수창) 쓱싹템": "🧽 영상 속 제품은 프로필 링크 {n}번에 있어요.",
+}
+LINK_LINE_DEFAULT = "영상 속 제품은 프로필 링크 {n}번에 있습니다."
+
+
+def _block_no(block):
+    """'[10] 조선미녀…' · '13. 픽업브릭스…' → '10' · '13'."""
+    m = re.match(r"^\s*\[?\s*(\d+)\s*[\].]", block or "")
+    return m.group(1) if m else ""
+
+
+def _with_link_line(folder, cap, block):
+    """제목(첫 줄) 바로 아래에 채널 말투의 '프로필 링크 N번' 한 줄을 넣는다. 이미 '프로필 링크'가 있으면 그대로."""
+    n = _block_no(block)
+    if not n or "프로필 링크" in cap:
+        return cap
+    line = LINK_LINE.get(folder, LINK_LINE_DEFAULT).format(n=n)
+    title, _, rest = cap.partition("\n")
+    return f"{title}\n\n{line}\n\n{rest.strip()}".rstrip()
+
+
 def _inpock_check(folder, block):
     """올리기 전 관문(사장님 10-26 "인포크 없으면 올리지 마라"): 그 계정 인포크 공개 페이지에 이 제목의 블록이
     공개·쿠팡 링크로 있어야 한다. 문제가 있으면 이유 문자열, 괜찮으면 None."""
@@ -420,6 +456,10 @@ def cmd_post(a):
             if bad:
                 print(f"[{n}] {v}: {bad} — 건너뜀")
                 continue
+            if not _block_no(block):
+                print(f"[{n}] {v}: 인포크 제목 '{block}' 에서 번호를 못 읽음 — 건너뜀(설명란 '프로필 링크 N번'을 못 쓴다)")
+                continue
+            cap = _with_link_line(n, cap, block)
             fp = _fingerprint(os.path.join(d, v))
             todo = []
             for ch in targets:

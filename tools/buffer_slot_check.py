@@ -39,7 +39,7 @@ check("지운 예약(deleted) 칸은 빈 칸", bp._slot_dues([dict(taken[0], fin
 tmp = tempfile.mkdtemp(); d = os.path.join(tmp, F); os.makedirs(d)
 for nm, body in (("a.mp4", b"A" * 1000), ("b.mp4", b"B" * 1000), ("a_renamed.mp4", b"A" * 1000)):
     open(os.path.join(d, nm), "wb").write(body)
-    open(os.path.join(d, nm[:-4] + ".txt"), "w", encoding="utf-8").write("제목\n\n설명")
+    open(os.path.join(d, nm[:-4] + ".txt"), "w", encoding="utf-8").write("제목\n\n설명\n인포크: [1] 시험 상품")
 rows, calls = [], []
 bp.DRIVE = tmp
 bp._load = lambda p, default: rows if p == bp.LEDGER else {F: "k"}

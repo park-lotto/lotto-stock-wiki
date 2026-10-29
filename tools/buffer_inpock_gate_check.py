@@ -3,7 +3,8 @@
 업로드·예약·인포크 페이지는 전부 가짜 — 아무것도 안 올라간다.
     py tools/buffer_inpock_gate_check.py [buffer_post.py 경로]
 기대: ① '인포크:' 줄 없는 영상 = 안 올림  ② 공개 페이지에 없는 블록 = 안 올림  ③ 비공개·쿠팡 아닌 블록 = 안 올림
-     ④ 있는 블록 = 올림 · 장부에 inpock 제목 기록  ⑤ Buffer 글에는 '인포크:' 줄이 안 들어간다"""
+     ④ 있는 블록 = 올림 · 장부에 inpock 제목 기록  ⑤ Buffer 글에는 '인포크:' 줄이 안 들어간다
+     ⑥ 제목 바로 아래 채널 말투의 '프로필 링크 N번' 한 줄(사장님 10-29)  ⑦ 설명란에 쿠팡 링크 없음(쿠팡은 인포크에만)"""
 import importlib.util
 import os
 import sys
@@ -54,6 +55,8 @@ posted = sorted(r["file"] for r in rows)
 check("① 줄 없음 안 올림 / ② 없는 블록 안 올림 / ③ 비공개 안 올림 / ④ 있는 블록만 올림", posted, ["good.mp4"])
 check("④ 장부에 인포크 제목", [r.get("inpock") for r in rows], ["[10] 조선미녀 맑은쌀 선크림"])
 check("⑤ Buffer 글에 '인포크:' 줄 없음", any("인포크:" in c for c in sent), False)
-check("⑤ 제목·설명은 그대로", sent[0] if sent else None, "좋은 제목\n\n설명 #쇼츠")
+check("⑥ 제목 아래 채널 말투 '프로필 링크 10번' 한 줄(사장님 10-29)", sent[0] if sent else None,
+      "좋은 제목\n\n🍯 영상 속 꿀템은 프로필 링크 10번에 담아 뒀어요.\n\n설명 #쇼츠")
+check("⑦ 설명란에 쿠팡 링크 없음(쿠팡은 인포크에만)", any("coupang" in c for c in sent), False)
 print("\n결과:", "통과" if not fails else f"실패 {len(fails)}건 — {fails}")
 sys.exit(1 if fails else 0)
