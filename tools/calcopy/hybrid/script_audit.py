@@ -229,6 +229,9 @@ def rule_check(r: dict, d: dict, st: dict) -> tuple[bool, str]:
     if k == "forbid_in":
         bad = [l["id"] for l in (T if r["of"] == "tts" else L) if re.search(r["pattern"], txt(l))]
         return not bad, f"금지 '{r.get('why', r['pattern'])}' {bad}"
+    if k == "title_lines":   # 훅 카드 제목 줄 수(10-29 썰템쇼: 판 훅 틀은 흰·연두 2줄인데 대본이 1줄만 써서 연두 줄이 빈 채 렌더)
+        n = len(d.get("title_lines") or [])
+        return r["min"] <= n <= r["max"], f"제목 {n}줄 ({r['min']}~{r['max']})"
     if k == "cap_chars":     # max "chunk_max_chars" = 판 caption.chunk_max_chars 를 그대로(조각 자수 판단은 그 칸 하나)
         mx = (st.get("caption") or {}).get("chunk_max_chars") if r["max"] == "chunk_max_chars" else r["max"]
         sel = [l for l in L if (l.get("kind") == "orig") == (r.get("of") == "orig")] if r.get("of") in ("tts", "orig") else L   # of = 나레/원음 번역 자막 따로(자수 자가 다르다)
@@ -306,6 +309,8 @@ def rule_text(r: dict, st: dict) -> str:
         return f"'{r.get('why', r['pattern'])}' 줄 {r.get('min', 1)}개 이상"
     if k == "forbid_in":
         return f"금지: {r.get('why', r['pattern'])}"
+    if k == "title_lines":
+        return f"제목(title_lines) {rng()}줄" + (f" — {r['why']}" if r.get("why") else "")
     if k == "cap_chars":
         mx = (st.get("caption") or {}).get("chunk_max_chars") if r["max"] == "chunk_max_chars" else r["max"]
         return f"자막 덩어리(caps 한 칸) {mx}자 이하" + (f"({'원음 번역' if r['of'] == 'orig' else '나레'} 자막)" if r.get("of") in ("tts", "orig") else "")
