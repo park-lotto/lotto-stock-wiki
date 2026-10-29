@@ -116,9 +116,14 @@ def presets(engine: Path) -> list[str]:
 
 def check_preset(engine: Path, bundle: Path, preset: str) -> dict:
     v = json.loads((engine / preset / "line.json").read_text(encoding="utf-8"))["version"]
+    probs, fixed = [], []
+    # ⓪ 판 준비 — 빈칸은 벤치 실측으로 **채우고 다시 잰다**(주인 hybrid/pan_ready, 사장님 10-29 '멈추는 게 아니라 다시 되게'). 꾸러미는 고친 판으로 묶는다
+    if engine.resolve() == ROOT.resolve():
+        from tools.calcopy.hybrid import pan_ready as PR
+        left = PR.repair(v, log=fixed.append)
+        probs += [f"판 준비 못 함: {g['what']}" for g in left]
     data, meta = PP.build(engine, preset)
     names = zipfile.ZipFile(io.BytesIO(data)).namelist()
-    probs = []
     # ③ 자료 — 판 사슬(위 판이 이긴다)의 bench 자리가 꾸러미에 있나
     st, name, chain = {}, v, []
     while name and name not in chain:
@@ -172,7 +177,7 @@ def check_preset(engine: Path, bundle: Path, preset: str) -> dict:
         for d in ("channel", f"{H}/styles"):
             shutil.rmtree(bundle / d, ignore_errors=True)
         shutil.rmtree(tmp, ignore_errors=True)
-    return {"preset": preset, "version": v, "pack_files": len(names), "problems": probs}
+    return {"preset": preset, "version": v, "pack_files": len(names), "problems": probs, "fixed": fixed}
 
 
 def main(argv: list[str]) -> int:
@@ -193,6 +198,8 @@ def main(argv: list[str]) -> int:
         for r in rows:
             mark = "✓" if not r["problems"] else "✗"
             print(f"{mark} {r['preset']} (판 {r['version']} · 꾸러미 {r['pack_files']}개)")
+            for f in r.get("fixed") or []:
+                print("   ↻", f.strip(), "— 판 파일이 바뀌었다: 커밋할 것")
             for p in r["problems"]:
                 print("   -", p)
         bad = bool(missing) or any(r["problems"] for r in rows)

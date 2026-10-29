@@ -356,18 +356,22 @@ def test_sticker_role_condition_avoid_empty_and_fail_reason():
     assert FX.caption_side((160, 160), (1258, 1330), (0, 1250, 1080, 90), (), why=why) is None and len(why) == 6, why   # 가운데·좌·우 × 위·아래
 
 
-def test_colorflash_vocab_and_placement_for_shark():
-    """02 468380769 colorflash 장치 — 줄판독 'flash(빨강 덮기 …)' = colorflash(흰 번쩍 flash 와 다름), 샥탬판 전환 배치에 나온다."""
-    assert PL.trans_key("flash(빨강 덮기 → 0.45초 사라짐)") == "colorflash"
+def test_color_flash_is_flash_and_renderer_can_draw_it():
+    """색 덮기 번쩍 = kind flash(렌더러 정본 900c1027a ㉝ — 색은 판 cuts.transition.flash.colors). 10-29 사고: 배치만 colorflash 를 내어
+    회원 렌더가 '전환 종류 colorflash 모름'으로 멈췄다 → 배치가 내는 종류는 모두 렌더러 TRANSITION_KINDS 안에 있어야 한다."""
+    from tools.calcopy.hybrid import render_bench as RB
+    assert PL.trans_key("flash(빨강 덮기 → 0.45초 사라짐)") == "flash"
     assert PL.trans_key("flash(흰 번쩍)") == "flash" and PL.trans_key("flash") == "flash"
-    assert "colorflash" in PL.TRANS_DRAWABLE
+    assert set(PL.TRANS_DRAWABLE) <= set(RB.TRANSITION_KINDS)
     st = copy.deepcopy(ST.load("샥탬판"))
     st["placement"]["counted"] = PL.count(st)
-    assert st["placement"]["counted"]["transition"].get("colorflash", 0) > 0.1
-    st["placement"]["rules"]["transition"] = {"kinds": ["colorflash"], "cond": {"min_cut_s": 0.5}}
+    assert st["placement"]["counted"]["transition"].get("flash", 0) > 0.1
     rows = [{"line": f"L{i}", "j": 0, "speaker": "narr" if i % 2 else "orig", "text": "가나다", "t0": i * 1.5, "t1": i * 1.5 + 1.4} for i in range(14)]
     p = PL.place(rows, st, "seed", cuts=[{"t0": i * 1.5, "dur": 1.5} for i in range(14)])
-    assert p["transitions"] and all(e["kind"] == "colorflash" for e in p["transitions"]), p["transitions"]
+    assert p["transitions"] and all(e["kind"] in RB.TRANSITION_KINDS for e in p["transitions"]), p["transitions"]
+    assert any(e["kind"] == "flash" for e in p["transitions"])
+    got = RB.transitions_of({}, st, p)                                   # 렌더러가 실제로 읽어 색을 붙인다(막히지 않는다)
+    assert got and all(e.get("rgb") for e in got if e["kind"] == "flash"), got
 
 
 def test_fail_reason_reaches_log_through_wrapped_locate(monkeypatch):
