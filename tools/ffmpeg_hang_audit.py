@@ -135,7 +135,9 @@ def scan_file(p: Path) -> list[dict]:
                 ex.append(s)
         seq = ex
         level, why = classify(seq, text)
-        has_to = any(k.arg == "timeout" for k in node.keywords)
+        direct = isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name) and node.func.value.id == "subprocess"
+        # video_assemble._run_ffmpeg · hybrid.common.run 은 기본 상한(SHORTEM_FFMPEG_TIMEOUT, 관제 285)이 있다 — subprocess 직접 호출만 없다
+        has_to = any(k.arg == "timeout" for k in node.keywords) or (not direct and name in ("_run_ffmpeg", "run"))
         fsrc = ast.get_source_segment(p.read_text(encoding="utf-8"), fn) if fn else ""
         guard = bool(fsrc) and any(k in fsrc for k in ("_probe_duration", "probe(", "dur_of(", "count_frames(", "영상보다 길다"))
         rows.append({"file": str(p.relative_to(ROOT)).replace("\\", "/"), "line": node.lineno, "func": fn.name if fn else "-",
