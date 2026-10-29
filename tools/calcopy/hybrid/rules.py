@@ -19,14 +19,22 @@ def fingerprint(bench_lines: list[dict], words: list) -> list[dict]:
     words = [(float(t), norm(w)) for t, w in words if norm(w)]
     out = []
     # 위스퍼는 나레·원음을 한 덩어리로 묶는다(10-21 실측: 2줄, 둘째 줄 80자) → 문장·쉼표·10~16자 토막으로 갈라 토막마다 대조
+    # 토막은 **낱말 경계**에서 자른다(10~16자, 반씩 겹쳐 민다). 10-29 얜샷템 최화정 RPuDFaMmpJI: 글자 수로 14자씩 끊던 옛 판은
+    # '할아버지 김 너무나 힘들다는'이 '…할아버지김너'·'김너무나힘들다…'로 쪼개져 받아쓰기 오타 하나에 0.7 밑 → 4줄 맞는 원본이 1줄만 맞아 놓쳤다
     chunks = []
     for b in bench_lines:
         for s in re.split(r"[.?!,]\s*", str(b.get("text") or "")):
-            n = norm(s)
-            while len(n) > 16:
-                chunks.append(n[:14]); n = n[10:]
-            if len(n) >= 6:
-                chunks.append(n)
+            toks = [t for t in (norm(w) for w in s.split()) if t]
+            i = 0
+            while i < len(toks):
+                acc, j = "", i
+                while j < len(toks) and len(acc) < 10:
+                    acc += toks[j]; j += 1
+                if len(acc) >= 6:
+                    chunks.append(acc[:16])
+                if j >= len(toks):
+                    break
+                i += max(1, (j - i) // 2)
     # 비교 창 길이는 토막 길이 -2~+4 중 가장 맞는 것(98 #117 — 옛 판은 늘 +4 고정이라 11자 토막은 글자가 다 맞아도 0.85,
     # 받아쓰기 한 낱말만 달라도 0.69 로 떨어져 진짜 원본(이미숙 uOj3ix7qCj8)이 1줄만 맞았다)
     for q in dict.fromkeys(chunks):
