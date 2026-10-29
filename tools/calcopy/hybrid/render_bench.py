@@ -2216,6 +2216,12 @@ def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, pu
     run(["ffmpeg", "-y", "-v", "error", *inp, "-vf", vf, "-frames:v", n, *extra, *venc(16), "-pix_fmt", "yuv420p", *(["-color_range", "tv", "-colorspace", "bt709"] if src.suffix.lower() in IMG_EXT else []), out])
 
 
+# 컷 조각 색 표식 한 벌 — 조각마다 원본 표식(smpte170m·bt709·unknown)이 달라 이어 붙인 창 영상 중간에 색 정보가 바뀌면
+# ffmpeg 8 이 그 프레임에서 필터 식을 다시 세워 trim·overlay 상태가 초기화된다 → render_base 에서 화면이 몇 초 멈춤
+# (10-29 썰템쇼 회원 시험: smpte170m 원본 m48q 조각 3.07~5.5초 = base.mp4 정지 3.0~5.8초, '화면 멈춤'·'컷≠계획' 관문 반복). 변환은 scale out_color_matrix, 표식은 여기.
+COLOR_TAGS = "setparams=range=tv:color_primaries=bt709:color_trc=bt709:colorspace=bt709"
+
+
 def clip_cmd(src: Path, ss: float, n: int, crop, win: tuple[int, int], push: float = 0.0, move=None, blur=None, pic=None, pic_bg=None,
              speed: float = 1.0) -> tuple[list, str, list]:
     """(판단 주인) 컷 조각이 어떤 그림이 되나 — (입력 인자, 필터, 출력 인자). clip(조각 굽기)·cut_still_gate(관문 ⑦ 멈춤 재기)가 같이 부른다.
@@ -2231,17 +2237,17 @@ def clip_cmd(src: Path, ss: float, n: int, crop, win: tuple[int, int], push: flo
         # 필터를 다시 세우며 틀(제목·로고·출처 줄)을 2~4프레임 빠뜨린다(10-21 장윤주 실측: 쿠팡 사진 컷 앞뒤 2+4프레임 → 고친 뒤 0.
         # 최화정_피부 완성본에도 제목 빠짐 2+2프레임이 있었다 — 원인 대조는 안 함). 영상 조각과 같은 꼴로 맞춘다.
         vf = (f"crop={cw}:{ch}:{x}:{y},{mv}scale={tw}:{th}:flags=lanczos:out_range=tv:out_color_matrix=bt709{pad},"
-              f"format=yuv420p,setsar=1")
+              f"format=yuv420p,setsar=1,{COLOR_TAGS}")
         return ["-loop", "1", "-i", src], vf, ["-r", FPS]
     x, y, cw, ch = crop
     sp = float(speed or 1.0)
     bl = blur_vf(blur, ss, n * sp / FPS)                     # 흐림 시각 = 원본 초(늦추기 전 — setpts 는 흐림 뒤)
     pre = bl + "," if bl else ""
     slow = f"setpts=(PTS-STARTPTS)/{sp:.6f}," if sp < 1.0 - 1e-6 else ""
-    vf = f"{pre}crop={cw}:{ch}:{x}:{y},scale={tw}:{th}:flags=lanczos,setsar=1{pad},{slow}fps={FPS}"
+    vf = f"{pre}crop={cw}:{ch}:{x}:{y},scale={tw}:{th}:flags=lanczos:out_range=tv:out_color_matrix=bt709,setsar=1{pad},{slow}fps={FPS},{COLOR_TAGS}"
     if push:
-        vf = (f"{pre}crop={cw}:{ch}:{x}:{y},scale={tw * 2}:{th * 2}:flags=lanczos,{slow}fps={FPS},"
-              f"zoompan=z='1+{push}*on/{max(1, n)}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={tw}x{th}:fps={FPS},setsar=1{pad}")
+        vf = (f"{pre}crop={cw}:{ch}:{x}:{y},scale={tw * 2}:{th * 2}:flags=lanczos:out_range=tv:out_color_matrix=bt709,{slow}fps={FPS},"
+              f"zoompan=z='1+{push}*on/{max(1, n)}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={tw}x{th}:fps={FPS},setsar=1{pad},{COLOR_TAGS}")
     return ["-ss", f"{ss:.3f}", "-i", src, "-an"], vf, []
 
 
