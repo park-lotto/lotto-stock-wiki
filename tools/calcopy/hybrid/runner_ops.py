@@ -2310,7 +2310,8 @@ def run_do(W: Path, do: list[dict], log=print, stall: float | None = None) -> di
             out.setdefault(rid, {"error": f"cache_miss: {e}"})
         except StageError as e:
             out.setdefault(rid, {"error": str(e)[:600]})
-        except Exception as e:  # noqa: BLE001 — 실패 이유를 서버에 그대로(조용히 삼키지 않는다)
+        except BaseException as e:  # noqa: BLE001 — 실패 이유를 서버에 그대로(조용히 삼키지 않는다). SystemExit 도 — 판 없음(styles.path_of)이
+            #   SystemExit 라 Exception 으로는 안 잡혀 스레드가 기록 없이 죽고 서버엔 빈 결과만 갔다(10-29 회원 잇템로그 '같은 원인 3번')
             out.setdefault(rid, {"error": f"{type(e).__name__}: {str(e)[:500]}"})
         finally:
             r0 = out.get(rid)

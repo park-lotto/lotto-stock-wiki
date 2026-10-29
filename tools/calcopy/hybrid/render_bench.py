@@ -319,7 +319,11 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
             for c in cs:
                 if "at" not in c and c.get("ss") is not None:   # ss 만 적은 컷 = 원음 초 → 그 초가 들리는 줄 안 시각(입 맞춤 그대로, 10-23 꿀템노트 재료)
                     p = next((p for p in opos if p["line"] == lid and p["span"][0] - 1e-3 <= float(c["ss"]) < p["span"][1]), None)
-                    c = {**c, "at": round(p["t0"] - a + float(c["ss"]) - p["span"][0], 3) if p else 0.0}
+                    if p is None:   # 조용히 at 0 에 겹쳐 놓지 않는다(10-29 회원 잇템로그 O2: ss 8.4·11.9 가 줄 맨 앞에 쌓여 컷 길이 -3.2초 → '컷 수 줄여라'만 듣고 더 쪼갬)
+                        spans = [p_["span"] for p_ in opos if p_["line"] == lid]
+                        raise StageError(f"{lid} 원음 줄 컷 ss {c['ss']} 가 그 줄 원음 구간 {spans} 밖 — 원음 줄 컷은 들리는 구간 안 원본 초(입 맞춤)만 적는다. "
+                                         f"다른 장면을 끼우려면 at(줄 안 시각 초)을 같이 적거나 그 컷을 앞뒤 나레 줄로 옮겨라")
+                    c = {**c, "at": round(p["t0"] - a + float(c["ss"]) - p["span"][0], 3)}
                 c0 = a + float(c.get("at", 0.0))
                 ss = c.get("ss")
                 if ss is None:      # 입 맞춤: 그 시각에 들리는 원음 조각의 원본 초
@@ -327,7 +331,8 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
                     if not p:
                         raise StageError(f"{lid} 컷 at {c.get('at')} 가 원음 조각 밖")
                     ss = round(p["span"][0] + (c0 - p["t0"]), 3)
-                cuts.append({**c, "line": lid, "ss": ss, "src": c.get("src", L["src"]), "t0": round(c0, 3), "kind": "orig"})
+                cuts.append({**c, "line": lid, "ss": ss, "src": c.get("src", L["src"]), "t0": round(c0, 3), "kind": "orig",
+                             "lip": c.get("src", L["src"]) == L["src"]})     # 입 맞춤 = 원음 줄의 그 원본(settle_edges·measure_over 의 lip 과 같은 정의)
         else:
             if not cs:
                 raise StageError(f"재료.json cuts 에 나레 줄 {lid} 컷이 없다")
@@ -1392,7 +1397,8 @@ def edge_fault(c: dict, src_dir: Path) -> dict | None:
     if not hit or not short_pieces(hit, e, end):
         return None
     pts = [e] + hit + [end]
-    if c.get("one_shot"):            # 한 샷 이어 쓰기(one_shot_chain) — 안쪽 편집점은 원본이 흐르는 그대로, 우리 컷 앞뒤 끝 조각만 번쩍임으로 본다
+    if c.get("one_shot") or c.get("lip"):   # 한 샷 이어 쓰기(one_shot_chain)·원음 입 맞춤 컷 — 안쪽 편집점은 원본이 흐르는 그대로, 우리 컷 앞뒤 끝 조각만 번쩍임으로 본다
+        #   (10-29 회원 잇템로그 O2: 원본이 2.4~5.9초에 0.3초 간격으로 편집해 입 맞춤 컷이 ③ 에 세 번 막혀 멈춤 — measure_over 는 이미 '원본 편집이 흐르는 것'으로 본다)
         pc = [y - x for x, y in zip(pts, pts[1:])]
         if min(pc[0], pc[-1]) >= MIN_PIECE_SEC - 1e-3:
             return None
