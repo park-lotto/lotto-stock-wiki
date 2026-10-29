@@ -136,12 +136,14 @@ def caps_split_fix(S: dict, st: dict) -> list[str]:
         if not mx or not isinstance(l.get("caps"), list):
             continue
         new = []
-        for c in l["caps"]:
+        from tools.calcopy.hybrid.render_bench import who_prefix
+        for ci, c in enumerate(l["caps"]):
             text = c["text"] if isinstance(c, dict) else c if isinstance(c, str) else None
-            if text is None or nchar(text) <= mx:
+            m1 = mx - nchar(who_prefix(l, ci))      # 화자 대사 줄 첫 덩어리는 '<화자> : ' 까지 보이는 자수(script_audit cap_chars 와 같은 셈)
+            if text is None or nchar(text) <= m1:
                 new.append(c)
                 continue
-            parts = _cap_cut(text.split(), mx, nchar)
+            parts = _cap_cut(text.split(), m1, nchar)
             if len(parts) < 2:
                 new.append(c)
                 continue

@@ -12,8 +12,9 @@
   · 틀 그림 = frame_png() 한 곳(판 설정 frame 칸) · 마스터 = −14 LUFS 2단 loudnorm(판 설정 loudness)
 
 대본.json: slug · title_lines [[[글, 'hi'|null|'#hex'], …], …] · source_label · (comment{text,likes,from,to}) ·
-  lines[{id, kind:'tts', tts, caps[{text, key?, key_color?, object_src?} | 글]} | {id, kind:'orig', src, spans[[a,b]…] | span, caps_rel[[글, s0, s1, key?]…]}
+  lines[{id, kind:'tts', tts, caps[{text, key?, key_color?, object_src?} | 글], who?} | {id, kind:'orig', src, spans[[a,b]…] | span, caps_rel[[글, s0, s1, key?]…]}
         | {id, kind:'sub', dur, caps[{text, s0?, …} | 글]}]   ← sub = 나레 없는 자막 줄(TTS 없이 dur 초 동안 자막만 — 신박·썰풀다A·숏비타민 꼴, 관제 263 02 2차)
+  who = 화자 대사 줄의 화자(의인화한 집단·회사·나라 — '벨'·'한국업체'·'제조사'). 자막 첫 덩어리 앞에 '<who> : ' 가 붙고 tts·caps 에는 대사만 쓴다(목소리는 대사만 읽는다 — 썰템쇼 벤치 jECu·NBdm)
 재료.json: cand_dir · cuts{줄 id: [{src, ss?, crop[x,y,w,h] | 'face', w?, at?, max?, move?, see}]} · blur{src: [[x,y,w,h(,a,b)]…]}(원본에 박힌 글 흐림 — 잘라서 피하지 말고)
   tts 줄 = w(무게) 비례로 줄 칸 [시작, 다음 줄 시작) 을 나눔 · orig 줄 = at(줄 시작부터 초), ss 를 안 적으면 원음 구간에 입을 맞춘 초 · 비어 있으면 구간마다 얼굴 크롭 한 컷
 출력(work/render/): final.mp4 · timeline.json · 자막표.json(배치 결과) · render_info.json · (doc) final_sheet_1s.jpg
@@ -225,6 +226,12 @@ def one_shot_chain(cuts: list, st: dict) -> None:
             c.pop(k, None)
 
 
+def who_prefix(L: dict, j: int) -> str:
+    """(판단 주인 — 화자 대사 줄 보이는 글) 첫 자막 덩어리 앞 '<화자> : '. 대본 검사 cap_chars 도 이 함수로 센다(보이는 자수 그대로)."""
+    w = str(L.get("who") or "").strip()
+    return f"{w} : " if w and j == 0 else ""
+
+
 def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) -> dict:
     """sent = {줄 id: {dur, raw, tempo}} (None 이면 글자÷cps 어림). 반환 = lines(줄 시각)·rows(자막 덩어리)·cuts(화면)·opos(원음 조각)·end."""
     from tools.calcopy.hybrid.material_fit import action_order       # 대사 동작 ↔ 컷 동작(페이블 E3) — 동작 컷 우선 + 없으면 경고
@@ -272,7 +279,7 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
             for j, c in enumerate(caps):
                 a = t + starts[j]
                 b = t + (starts[j + 1] if j + 1 < len(caps) else d)
-                rows.append({"line": L["id"], "j": j, "speaker": "narr", "text": c["text"], "t0": round(a, 3), "t1": round(b, 3),
+                rows.append({"line": L["id"], "j": j, "speaker": "narr", "text": who_prefix(L, j) + c["text"], "t0": round(a, 3), "t1": round(b, 3),
                              **{k: c[k] for k in CAP_EXTRA if c.get(k)}})
             char0 += nchar(L["tts"])
             t += d

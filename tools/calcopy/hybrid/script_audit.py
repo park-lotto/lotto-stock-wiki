@@ -235,8 +235,13 @@ def rule_check(r: dict, d: dict, st: dict) -> tuple[bool, str]:
     if k == "cap_chars":     # max "chunk_max_chars" = 판 caption.chunk_max_chars 를 그대로(조각 자수 판단은 그 칸 하나)
         mx = (st.get("caption") or {}).get("chunk_max_chars") if r["max"] == "chunk_max_chars" else r["max"]
         sel = [l for l in L if (l.get("kind") == "orig") == (r.get("of") == "orig")] if r.get("of") in ("tts", "orig") else L   # of = 나레/원음 번역 자막 따로(자수 자가 다르다)
-        bad = [(l["id"], c) for l in sel for c in _caps(l) if nchar(c) > mx]
+        from tools.calcopy.hybrid.render_bench import who_prefix
+        bad = [(l["id"], who_prefix(l, j) + c) for l in sel for j, c in enumerate(_caps(l)) if nchar(who_prefix(l, j) + c) > mx]
         return not bad, f"자막 덩어리 {mx}자 넘음 {bad}"
+    if k == "speaker_lines":  # 화자 대사 줄 「화자 : 대사」(10-30 썰템쇼 회원 시험: 판에 '옵션 0~3' 으로만 있어 0줄로 나와 채널 결이 빠졌다)
+        W = [l for l in L if str(l.get("who") or "").strip()]
+        bad = [l["id"] for l in W if l.get("kind") != "tts" or len(str(l["who"]).strip()) > r.get("who_max", 6)]
+        return r["min"] <= len(W) <= r["max"] and not bad, f"화자 대사 줄 {len(W)}개 ({r['min']}~{r['max']})" + (f" · 화자 이름 길거나 나레 줄 아님 {bad}" if bad else "")
     if k == "orig_span":
         if not O:
             return False, "원음 줄 없음"
@@ -309,6 +314,8 @@ def rule_text(r: dict, st: dict) -> str:
         return f"'{r.get('why', r['pattern'])}' 줄 {r.get('min', 1)}개 이상"
     if k == "forbid_in":
         return f"금지: {r.get('why', r['pattern'])}"
+    if k == "speaker_lines":
+        return f"화자 대사 줄(who 칸) {r['min']}~{r['max']}개 — " + str(r.get("why") or "")
     if k == "title_lines":
         return f"제목(title_lines) {rng()}줄" + (f" — {r['why']}" if r.get("why") else "")
     if k == "cap_chars":
