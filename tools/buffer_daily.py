@@ -22,7 +22,9 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 from tools import buffer_post as bp  # noqa: E402
 
 # 매일 돌리는 계정 — 인포크 계정이 정해진 채널만(bp._inpock_acct). 나머지 _2 채널은 인포크가 정해지면 넣는다
-ACCOUNTS = ["21(수창) 쓸데수집", "950 숏템리폿", "987_1 샥템스토리", "994_1 썰템홈샷", "995_1 썰템쇼", "995_2 얜샷템",
+# 995_2 얜샷템: 인포크 ystem 은 정했지만 유튜브 프로필에 인포크 링크가 아직 없다(10-29 채널 정보 창 실측: 링크 0개).
+#   설명란 '프로필 링크 N번'이 가리킬 곳이 없으니 링크를 건 뒤 다시 넣는다.
+ACCOUNTS = ["21(수창) 쓸데수집", "950 숏템리폿", "987_1 샥템스토리", "994_1 썰템홈샷", "995_1 썰템쇼",
             "998_1 꿀템샷", "999_1 잇썸홈"]
 SHOPLINK_DIR = os.path.join(ROOT, ".tracks", "쇼핑링크자동") if os.path.isdir(os.path.join(ROOT, ".tracks", "쇼핑링크자동")) \
     else os.path.join(os.path.dirname(os.path.dirname(ROOT)), "쇼핑링크자동")   # 트랙 폴더에서 돌 때(.tracks/버퍼예약드라이브)
