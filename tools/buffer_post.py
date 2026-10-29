@@ -230,7 +230,14 @@ INPOCK = "https://link.inpock.co.kr"
 # 계정 번호 → 인포크 계정. 원본 = tools/shoplink/run.py INPOCK_BY_CHANNEL(쇼핑링크자동 트랙, 병합 전) — 이 트랙 안에선 여기 한 곳
 INPOCK_BY_CHANNEL = {"987": "shocktem", "950": "streport", "999": "yeshot", "21": "ssldezip",
                      "998": "mtst", "995": "stems", "994": "ssult"}
+# 같은 번호에 채널이 둘인 계정(_1/_2)은 폴더마다 인포크가 다를 수 있다 — 여기 적힌 폴더는 이 값이 우선(사장님 10-29 "얜샷템은 ystem")
+INPOCK_BY_FOLDER = {"995_2 얜샷템": "ystem"}
 INPOCK_LINE = "인포크:"     # .txt 안의 한 줄 — "인포크: [10] 조선미녀 맑은쌀 선크림" (Buffer 글에는 안 들어간다)
+
+
+def _inpock_acct(folder):
+    """폴더 → 인포크 계정(주인 한 곳). 폴더 지정이 먼저, 없으면 계정 번호로."""
+    return INPOCK_BY_FOLDER.get(folder) or INPOCK_BY_CHANNEL.get(_acct_no(folder), "")
 
 
 def _split_inpock(cap):
@@ -297,7 +304,7 @@ def _inpock_check(folder, block):
     공개·쿠팡 링크로 있어야 한다. 문제가 있으면 이유 문자열, 괜찮으면 None."""
     if not block:
         return f".txt 에 '{INPOCK_LINE} [번호] 상품명' 줄이 없음(쇼핑링크를 먼저 만들고 그 제목을 적는다)"
-    acct = INPOCK_BY_CHANNEL.get(_acct_no(folder))
+    acct = _inpock_acct(folder)
     if not acct:
         return f"이 계정({folder})의 인포크 계정이 정해지지 않음"
     try:
