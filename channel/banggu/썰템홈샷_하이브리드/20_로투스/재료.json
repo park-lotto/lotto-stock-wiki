@@ -1,0 +1,532 @@
+{
+ "_note": "20 로투스 — Lotus Bakeries North America 공식 광고 Y1MSQGe6Y1A(커피잔이 팔을 뻗어 과자 집기·'Every coffee needs' 글 나오기 전 구간만, 720) · Lotus Bakeries 공식 Craving Cups O-LJvBA8Juk(손·잔·포장·배우 얼굴 구간 안 씀) · FanTECHstic 공장 영상 j6gfInZTX6c 의 컨베이어 Biscoff·Speculoos 포장 컷만(오른쪽 위 채널 표식은 자르기 밖, 구간 받기 t0=10.677 → 로컬 시각) · 연꽃 타임랩스 Z9UGVpz89H4 · 개인 리뷰 손 영상 fHhaxIYoW_o(카푸치노+낱개 포장 Biscoff, 손만)·9nN9iMXcHKY(Biscoff 포장 꺼내기, 손만)·nKoR7Lm2hjU(기내 좌석에서 Biscoff 든 손·창밖 날개, 얼굴 구간 안 씀) · 뒤 = 쿠팡 8285435999 상품 사진 + 같은 Biscoff 손 영상 · 로고 세로 사본 lgp(padclip)·다가감 사본 wingz(날개)·fhz(잔).",
+ "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/20_로투스/src",
+ "shots": [
+  {
+   "src": "Y1MSQGe6Y1A.mp4",
+   "ss": 6.42,
+   "fit": "cover",
+   "full": true,
+   "cuts": [
+    {
+     "src": "Y1MSQGe6Y1A.mp4",
+     "ss": 6.42,
+     "dur": 1.72,
+     "fit": "cover",
+     "src_crop": [
+      300,
+      0,
+      545,
+      720
+     ]
+    },
+    {
+     "src": "y1z.mp4",
+     "ss": 0.0,
+     "dur": 1.0,
+     "fit": "cover",
+     "src_crop": [
+      500,
+      0,
+      545,
+      720
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_leotoast.mp4",
+     "ss": 0.0,
+     "dur": 1.54,
+     "fit": "cover",
+     "src_crop": [
+      367,
+      0,
+      545,
+      720
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "Lotus 공식: 커피잔이 팔을 뻗어 옆 접시의 로투스를 집음 → 잔에 걸친 로투스 → 잔 드는 디카프리오 짤",
+   "why": "훅 = '카페 커피 옆에 늘 따라 나오던 그 과자'"
+  },
+  {
+   "src": "fHhaxIYoW_o.mp4",
+   "ss": 1.4,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "fHhaxIYoW_o.mp4",
+     "ss": 1.4,
+     "dur": 1.95,
+     "fit": "cover",
+     "src_crop": [
+      740,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "O-LJvBA8Juk.mp4",
+     "ss": 4.52,
+     "dur": 0.76,
+     "fit": "cover",
+     "src_crop": [
+      560,
+      132,
+      618,
+      816
+     ]
+    }
+   ],
+   "ours": "손에 든 낱개 Lotus Biscoff 포장(글자) → 에스프레소 내리는 잔(Lotus 공식)",
+   "why": "'비스코프라는 이름이, 비스킷이랑 커피를 합쳐서'"
+  },
+  {
+   "src": "y1z2.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "y1z2.mp4",
+     "ss": 0.0,
+     "dur": 0.97,
+     "fit": "cover",
+     "src_crop": [
+      290,
+      0,
+      545,
+      720
+     ]
+    }
+   ],
+   "ours": "Lotus 공식: Biscoff 포장 옆 커피잔·과자 접시",
+   "why": "'만든 말이래요'"
+  },
+  {
+   "src": "j6gfInZTX6c.mp4",
+   "ss": 29.05,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "j6gfInZTX6c.mp4",
+     "ss": 29.05,
+     "dur": 1.85,
+     "fit": "cover",
+     "src_crop": [
+      300,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "j6gfInZTX6c.mp4",
+     "ss": 33.95,
+     "dur": 0.91,
+     "fit": "cover",
+     "src_crop": [
+      100,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "공장 컨베이어 위 구운 Biscoff → Lotus Speculoos 포장이 지나감",
+   "why": "'처음 만든 사람은, 벨기에의 한 제빵사'"
+  },
+  {
+   "src": "Z9UGVpz89H4.mp4",
+   "ss": 12.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "Z9UGVpz89H4.mp4",
+     "ss": 12.0,
+     "dur": 2.66,
+     "fit": "cover",
+     "src_crop": [
+      880,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "연꽃이 피는 타임랩스",
+   "why": "'로투스는, 깨끗함을 뜻하는 연꽃에서'"
+  },
+  {
+   "src": "lgp.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "lgp.mp4",
+     "ss": 0.0,
+     "dur": 1.04,
+     "fit": "cover",
+     "src_crop": [
+      0,
+      0,
+      1080,
+      1428
+     ]
+    }
+   ],
+   "ours": "Lotus 로고 'Lotus Since 1932'(공장 영상 j6 의 로고 화면을 세로 칸에 통째로 + 흐린 뒤판, padclip lgp — 오른쪽 위 채널 표식은 자르기 밖)",
+   "why": "'따온 이름이고'"
+  },
+  {
+   "src": "fhz.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "fhz.mp4",
+     "ss": 0.0,
+     "dur": 2.61,
+     "fit": "cover",
+     "src_crop": [
+      640,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "카푸치노 옆 낱개 포장 Biscoff(다가감 fhz)",
+   "why": "'과자를 하나씩 따로 싸서 팔자, 카페들이 커피랑 같이'"
+  },
+  {
+   "src": "fHhaxIYoW_o.mp4",
+   "ss": 19.8,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "fHhaxIYoW_o.mp4",
+     "ss": 19.8,
+     "dur": 1.16,
+     "fit": "cover",
+     "src_crop": [
+      455,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "커피잔 옆에 놓인 낱개 포장 Biscoff 껍질들(손 영상)",
+   "why": "'내주기 시작했대요'"
+  },
+  {
+   "src": "O-LJvBA8Juk.mp4",
+   "ss": 7.3,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "O-LJvBA8Juk.mp4",
+     "ss": 7.3,
+     "dur": 1.24,
+     "fit": "cover",
+     "src_crop": [
+      560,
+      132,
+      618,
+      816
+     ]
+    },
+    {
+     "src": "O-LJvBA8Juk.mp4",
+     "ss": 10.06,
+     "dur": 1.12,
+     "fit": "cover",
+     "src_crop": [
+      560,
+      132,
+      618,
+      816
+     ]
+    },
+    {
+     "src": "O-LJvBA8Juk.mp4",
+     "ss": 13.02,
+     "dur": 0.46,
+     "fit": "cover",
+     "src_crop": [
+      540,
+      132,
+      618,
+      816
+     ]
+    }
+   ],
+   "ours": "Lotus 공식: 잔 앞의 손 → 커피에 Biscoff 찍기 → 팔 달린 잔",
+   "why": "'쌉쌀한 커피랑 캐러멜 맛이 서로를 살려 줘서'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_shiaclap.mp4",
+   "ss": 0.1,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_shiaclap.mp4",
+     "ss": 0.1,
+     "dur": 1.47,
+     "fit": "cover",
+     "src_crop": [
+      367,
+      0,
+      545,
+      720
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "기립 박수 샤이아 라보프 짤",
+   "why": "'바로 대박이 났다는데'"
+  },
+  {
+   "src": "nKoR7Lm2hjU.mp4",
+   "ss": 0.55,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "nKoR7Lm2hjU.mp4",
+     "ss": 0.55,
+     "dur": 2.0,
+     "fit": "cover",
+     "src_crop": [
+      935,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "wingz.mp4",
+     "ss": 0.0,
+     "dur": 0.82,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "기내 좌석에서 Biscoff 든 손 → 창밖 비행기 날개(다가감 wingz)",
+   "why": "'미국에는, 비행기에서 나눠 주던 과자로'"
+  },
+  {
+   "src": "wingz.mp4",
+   "ss": 0.82,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "wingz.mp4",
+     "ss": 0.82,
+     "dur": 0.99,
+     "fit": "cover",
+     "src_crop": [
+      551,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "창밖 비행기 날개(이어서)",
+   "why": "'처음 퍼졌대요'"
+  },
+  {
+   "src": "O-LJvBA8Juk.mp4",
+   "ss": 15.82,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "O-LJvBA8Juk.mp4",
+     "ss": 15.82,
+     "dur": 1.1,
+     "fit": "cover",
+     "src_crop": [
+      651,
+      132,
+      618,
+      816
+     ]
+    },
+    {
+     "src": "O-LJvBA8Juk.mp4",
+     "ss": 19.0,
+     "dur": 1.0,
+     "fit": "cover",
+     "src_crop": [
+      916,
+      132,
+      618,
+      816
+     ]
+    },
+    {
+     "src": "Y1MSQGe6Y1A.mp4",
+     "ss": 2.18,
+     "dur": 0.71,
+     "fit": "cover",
+     "src_crop": [
+      367,
+      0,
+      545,
+      720
+     ]
+    }
+   ],
+   "ours": "Lotus 공식: 탁자 위 잔들이 모임 → Biscoff 포장 앞 잔 → 팔 달린 잔",
+   "why": "'그래서 지금도 비행기 과자로 기억하는 사람이 많대요'"
+  },
+  {
+   "src": "cp_8285435999_2.jpg",
+   "ss": 0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "cp_8285435999_2.jpg",
+     "ss": 0,
+     "dur": 3.4,
+     "fit": "cover",
+     "src_crop": [
+      250,
+      135,
+      700,
+      925
+     ],
+     "move": "in"
+    }
+   ],
+   "ours": "쿠팡 8285435999 로투스 비스코프 상품 사진(상자·낱개 봉지, 다가감)",
+   "why": "B 첫 줄 '쿠팡에서 로투스 한 상자를' — 같은 제품"
+  },
+  {
+   "src": "9nN9iMXcHKY.mp4",
+   "ss": 18.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "9nN9iMXcHKY.mp4",
+     "ss": 18.0,
+     "dur": 3.05,
+     "fit": "cover",
+     "src_crop": [
+      647,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "Biscoff 봉지에서 낱개 포장을 꺼내 드는 손",
+   "why": "'하나씩 포장돼 있어서, 커피 마실 때 꺼내 먹기'"
+  },
+  {
+   "src": "fHhaxIYoW_o.mp4",
+   "ss": 16.75,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "fHhaxIYoW_o.mp4",
+     "ss": 16.75,
+     "dur": 1.6,
+     "fit": "cover",
+     "src_crop": [
+      455,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "9nN9iMXcHKY.mp4",
+     "ss": 23.0,
+     "dur": 1.45,
+     "fit": "cover",
+     "src_crop": [
+      781,
+      0,
+      818,
+      1080
+     ]
+    }
+   ],
+   "ours": "카푸치노에 Biscoff 찍는 손 → Biscoff 포장 든 손",
+   "why": "'커피에 살짝 찍어 먹을 때마다, 이름이 왜 비스코프인지'"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_bully.mp4",
+   "ss": 0.1,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_bully.mp4",
+     "ss": 0.1,
+     "dur": 1.33,
+     "fit": "cover",
+     "src_crop": [
+      367,
+      0,
+      545,
+      720
+     ],
+     "kind": "짤"
+    }
+   ],
+   "ours": "거리에서 춤추는 피터 파커 짤",
+   "why": "'알겠더라고요'"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 0,
+   "dt": 0.0,
+   "db": -2,
+   "why": "훅 시작 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_06.mp3",
+   "line": 0,
+   "dt": 2.72,
+   "db": -3,
+   "why": "디카프리오 짤 두둥"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_24.mp3",
+   "line": 5,
+   "dt": 2.81,
+   "db": -3,
+   "why": "박수 짤"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 6,
+   "dt": 0.0,
+   "db": -3,
+   "why": "비행기 전환 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_26.mp3",
+   "line": 8,
+   "dt": 0.0,
+   "db": -2,
+   "why": "뒤 체험 첫 줄 뽀옹"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_28.mp3",
+   "line": 10,
+   "dt": 3.04,
+   "db": -3,
+   "why": "끝 짤 띵"
+  }
+ ]
+}

@@ -1,0 +1,260 @@
+{
+ "_note": "15편 블랙 필오프 립 타투(10-29, 판 잇템로그판_v2): 벤치 4위 zOSpeiMw1nA(1,000만) 소재 · 원본 3개 — celiakbeauty(밀크터치 블랙 필오프 립 타투, 설명란 #milktouch) → arwencelis(930만, 비슷한 까만 필오프 틴트 — 브랜드 미확인이라 '한국'·'밀크터치'라고 말하지 않음) → milktouch_global 공식(제품 시연). 효능·지속 시간 주장 안 함('묻어남 없음·100시간' 같은 말 안 씀). 아웬 5.9~7.6·16~19.9초 박힌 글 구간 안 씀.",
+ "slug": "ititemlog_ep15_lip_tattoo",
+ "brand": "잇템로그판_v2",
+ "pan": "잇템로그판_v2",
+ "product": "밀크터치 블랙 필 오프 립 타투(쿠팡 9187795064 = 같은 제품, 원본 celiakbeauty·milktouch_global 영상 속 제품)",
+ "title_lines": [
+  [
+   [
+    "한국 틴트 발랐다가"
+   ]
+  ],
+  [
+   [
+    "입술 까매진 외국인"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "cl(celiakbeauty TikTok 7613419323440237846) 설명란 'Milktouch black lip peel off tattoo … Peel off the black layer to uncover bold, vivid color' · 화면 7~13초 까만 입술",
+  "f2": "aw 2.12~5.68 'why is it cold. It's like a cooling effect. Is that normal' · 8.32~11.00 'I look like I have a mustache. Oh my God'",
+  "f3": "aw 14.60~17.00 'It hasn't actually been 20 minutes but I got impatient' · 20~24초 벗겨 냄",
+  "f4": "aw 26.60~28.24 'that one was a little better'",
+  "f5": "mt(milktouch_global TikTok 7520987722765372686, 공식) 'Mystery Black ➡️ Bold Color' · 화면 까만 입술 → 벗기면 진한 색",
+  "f6": "cl 19.8~24.8 벗겨 내자 빨간 입술",
+  "f7": "aw 36.04~37.04 'Kind of get the hype' · 37.04~43.12 'make sure your lips are not chapped because you will get these little cracks'"
+ },
+ "cta": "심리 CTA(혼잣말) — 직접 구매 문장 없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강)",
+   "tts": "입술이 까매진 외국인이 있다는데요?",
+   "caps": [
+    {
+     "text": "입술이 까매진"
+    },
+    {
+     "text": "외국인이"
+    },
+    {
+     "text": "있다는데요?"
+    }
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 둘째 원본",
+   "tts": "비슷한 틴트를 써 본 외국인은,",
+   "caps": [
+    {
+     "text": "비슷한 틴트를"
+    },
+    {
+     "text": "써 본 외국인은"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(당황)",
+   "src": "aw.mp4",
+   "spans": [
+    [
+     2.1,
+     5.68
+    ]
+   ],
+   "said": "why is it cold. It's like a cooling effect. Is that normal",
+   "caps_rel": [
+    [
+     "왜 이렇게 차가워?",
+     0.0,
+     1.35
+    ],
+    [
+     "시원한 느낌인데",
+     1.38,
+     2.66
+    ],
+    [
+     "이거 정상이야?",
+     2.66,
+     3.58
+    ]
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음(기겁)",
+   "src": "aw.mp4",
+   "spans": [
+    [
+     8.32,
+     10.98
+    ]
+   ],
+   "said": "I look like I have a mustache. Oh my God",
+   "caps_rel": [
+    [
+     "나 수염 난 것 같아",
+     0.0,
+     1.7
+    ],
+    [
+     "세상에!",
+     1.76,
+     2.66
+    ]
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 벗기기",
+   "tts": "이십 분은 둬야 하는데 못 참고 벗겨 버렸대요.",
+   "caps": [
+    {
+     "text": "이십 분은 둬야 하는데"
+    },
+    {
+     "text": "못 참고 벗겨 버렸대요"
+    }
+   ]
+  },
+  {
+   "id": "O3",
+   "kind": "orig",
+   "role": "원음(반전)",
+   "src": "aw.mp4",
+   "spans": [
+    [
+     26.58,
+     29.24
+    ]
+   ],
+   "said": "wait that one was a little better. What do I do with this",
+   "caps_rel": [
+    [
+     "오, 이번 건",
+     0.0,
+     0.8
+    ],
+    [
+     "좀 낫네",
+     0.8,
+     1.66
+    ],
+    [
+     "이건 어떡하지?",
+     1.7,
+     2.66
+    ]
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "나레 원리",
+   "tts": "한국 제품은 이렇게 까만 막을 벗기면 색만 남는 거라는데,",
+   "caps": [
+    {
+     "text": "한국 제품은 이렇게"
+    },
+    {
+     "text": "까만 막을 벗기면"
+    },
+    {
+     "text": "색만 남는 거라는데"
+    }
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "벗겨 내자 새빨간 입술이 나왔다던데,",
+   "caps": [
+    {
+     "text": "벗겨 내자"
+    },
+    {
+     "text": "새빨간 입술이"
+    },
+    {
+     "text": "나왔다던데"
+    }
+   ]
+  },
+  {
+   "id": "N6",
+   "kind": "tts",
+   "role": "끝 — 다리",
+   "tts": "수염 같다던 그 외국인도,",
+   "caps": [
+    {
+     "text": "수염 같다던"
+    },
+    {
+     "text": "그 외국인도"
+    }
+   ]
+  },
+  {
+   "id": "O4",
+   "kind": "orig",
+   "role": "원음(인정)",
+   "src": "aw.mp4",
+   "spans": [
+    [
+     36.1,
+     37.04
+    ]
+   ],
+   "said": "Kind of get the hype",
+   "caps_rel": [
+    [
+     "왜 유행인지 좀 알겠네",
+     0.0,
+     0.94
+    ]
+   ]
+  },
+  {
+   "id": "N7",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "입술이 트면 잔금이 생긴다고 하고.",
+   "caps": [
+    {
+     "text": "입술이 트면"
+    },
+    {
+     "text": "잔금이 생긴다고 하고"
+    }
+   ]
+  },
+  {
+   "id": "N8",
+   "kind": "tts",
+   "role": "끝 — 혼잣말 CTA",
+   "tts": "아~ 나도 입술 촉촉하게 하고 발라 봐야겠다.",
+   "caps": [
+    {
+     "text": "아~ 나도"
+    },
+    {
+     "text": "입술 촉촉하게 하고"
+    },
+    {
+     "text": "발라 봐야겠다"
+    }
+   ]
+  }
+ ]
+}

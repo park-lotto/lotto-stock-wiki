@@ -1,0 +1,46 @@
+{
+ "_note": "숏템리폿 4차 33 사운드코어 리버티 5 프로 하이브리드 — 앞 = 숏템리폿 현장썰 Mike O'Brien 원음형 박창수판(33_Liberty5Pro/front), 뒤 = 쿠팡 9546164062 '앤커 사운드코어 리버티 5 프로'(같은 제품 — Mike 가 쓴 프로 맥스와 이어폰 본체가 같고 케이스만 다름, 끝 사진 = 프로 맥스 9546570179). 뒤 화면 = 손·제품 컷만(케이스 화면을 쥔 손·이어폰·쿠팡 사진 — 얼굴 0). 금액·남의 상표는 말하지 않는다.",
+ "brand": "잇썸홈",
+ "product": "앤커 사운드코어 리버티 5 프로(쿠팡 9546164062, 같은 제품 — 프로 맥스 9546570179 도 있음)",
+ "product_mode": "exact",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰4차/33_Liberty5Pro/front/render/final.mp4",
+  "cut": 21.62,
+  "why": "O2 원음 끝(21.611) 바로 뒤 — 원본 컷 248.03(앞 21.64) 앞에서 끊음(다음 샷 섞임 0)",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API(10-28 21:46, '사운드코어 리버티 5 프로' 1회, 33_cand/coupang_a.json): 9546164062 '앤커 사운드코어 리버티 5 프로 ENC 무선 블루투스 이어폰, 펄 화이트, D1203'(로켓) · 9546570179 '앤커 사운드코어 리버티 5 프로 맥스 ENC … D1204' · 대표 사진(front/src/cp_9546164062.jpg) = 흰 케이스·이어폰 · 끝 사진(cp_9546570179.jpg) = 검정 프로 맥스",
+  "o_screen": "Mike O'Brien 원본(자동 자막·스피치매틱스) 98.0~106.0 'the Pro model has a little screen on the front, slide left and right to go through a number of different settings' · 427.1~450.0 'if you're connected to … anything else that doesn't have the Soundcore app on it, this allows you to then adjust the level of ANC or spatial audio or the volume … directly from the case' · 원본 134.47~154.95 화면(케이스 화면을 손가락으로 넘김)",
+  "o_note": "Mike O'Brien 원본 120.2~126.0 'the Pro Max has a microphone on there. There's a new feature on here called AI note taker' · 625.2~632.4 'the case does have microphones. It's going to be using those microphones and recording' · 652.1~662.6 'you can go to AI note taker, you can see the notes, they're transcribed, you've got intelligent summary' · 원본 635.07~645.64 화면(케이스 녹음 화면)",
+  "o_ip": "Mike O'Brien 원본 155.0~159.4 'All the models have wireless charging. They're IP55 water and dust resistant.'"
+ },
+ "흥미이음": {
+  "원본흥미": "예초기를 최대로 돌리는 바로 옆에서 이어폰 마이크로 말하는데 목소리가 또렷 — 'This is insane'",
+  "뒤흥미": "쿠팡의 바로 그 리버티 5 프로 — 케이스 화면·녹음 받아 적기·시끄러운 데서 통화",
+  "판정": "같음",
+  "근거": "같은 제품: 쿠팡 상품명 '앤커 사운드코어 리버티 5 프로'(D1203) = Mike 영상 제목 'soundcore Liberty 5 Pro & Pro Max'(이어폰 본체 같음, Mike 0~70초)"
+ },
+ "voice": {"name": "박창수", "voice_id": "tc_6059dad0b83880769a50502f"},
+ "cps_target": 8.3,
+ "bgm": {"id": "honwaka_puppu", "db_below_voice": 14.4},
+ "front_style": {"frame": "channel/hottemreport/현장썰4차/33_Liberty5Pro/front/frame_render.json", "title": "예초기 옆에서도\n또렷한 이어폰"},
+ "transition": {"kind": "slideleft", "dur": 0.25},
+ "back_style": "shortem",
+ "line_role": {"B1": "공개", "B2": "고조", "B3": "고조", "B4": "고조", "B5": "cta"},
+ "back_caption_lines": {
+  "B1": {"emphasis": {"words": ["진짜"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "흰 쿠팡 사진 위 칸은 흰 글씨만 · '진짜'는 흐린 정원·손 위 — 하늘", "enter": {"kind": "pop", "ms": 300}},
+  "B2": {"emphasis": {"words": ["작은 화면이"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "검정 케이스 화면·어두운 손 위 — 하늘"},
+  "B3": {"emphasis": {"words": ["받아 적어"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "회색 자갈·살색 손 위 — 빨강·분홍·주황 금지, 하늘"},
+  "B4": {"emphasis": {"words": ["무선 충전도"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "어두운 나무 탁자 위 — 하늘"},
+  "B5": {"emphasis": {"words": ["시끄러운 카페에서"], "rgb": [90, 210, 255], "style": "grow"}, "_why": "검정 배경 케이스 위 — 흰 쿠팡 사진 칸('상대가 조용한 데 있냐고')은 흰 글씨만", "enter": {"kind": "fade", "ms": 300}}
+ },
+ "sfx": {"pack_customer": 0},
+ "lines": [
+  {"id": "B1", "role": "공개", "point": "잉", "answer_at": 3, "kind": "tts", "seg": "B", "tts": "근데 저 영상 보고 쿠팡에서 찾아봤더니, 그 이어폰이 진짜 있더라고요.", "caps": ["근데 저 영상 보고", "쿠팡에서 찾아봤더니", "그 이어폰이", "진짜 있더라고요"], "emph": ["진짜"], "facts": ["c0"]},
+  {"id": "B2", "role": "고조", "point": "권위", "kind": "tts", "seg": "B", "tts": "케이스에 작은 화면이 달려 있어서, 폰 없이도 설정을 바꿀 수 있대요.", "caps": ["케이스에 작은 화면이", "달려 있어서", "폰 없이도", "설정을 바꿀 수 있대요"], "emph": ["작은 화면이"], "facts": ["o_screen"]},
+  {"id": "B3", "role": "고조", "kind": "tts", "seg": "B", "tts": "프로 맥스는 케이스로 회의를 녹음하면, 글로 바로 받아 적어 준다네요.", "caps": ["프로 맥스는", "케이스로 회의를 녹음하면", "글로 바로", "받아 적어 준다네요"], "emph": ["받아 적어"], "facts": ["o_note"]},
+  {"id": "B4", "role": "고조", "kind": "tts", "seg": "B", "tts": "무선 충전도 되고, 물이랑 먼지에도 강하다고 하고요.", "caps": ["무선 충전도 되고", "물이랑 먼지에도", "강하다고", "하고요"], "emph": ["무선 충전도"], "facts": ["o_ip"]},
+  {"id": "B5", "role": "cta", "kind": "tts", "seg": "B", "tts": "시끄러운 카페에서 전화했더니, 상대가 조용한 데 있냐고 묻더라고요.", "caps": ["시끄러운 카페에서", "전화했더니", "상대가 조용한 데 있냐고", "묻더라고요"], "emph": ["시끄러운 카페에서"], "facts": []}
+ ]
+}

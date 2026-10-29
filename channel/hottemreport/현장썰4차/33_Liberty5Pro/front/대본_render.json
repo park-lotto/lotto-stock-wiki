@@ -1,0 +1,507 @@
+{
+ "topic": "앤커 사운드코어 리버티 5 프로(프로 맥스) — 예초기를 최대로 돌리며 이어폰 마이크로 말하는 Mike O'Brien 'It is full throttle right now … This is insane.'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "zencDPGewuk",
+ "bench_note": "벤치 '기네스북에 오른 노래방 이어폰의 정체'(2.78만, 핫템리포트 10-27 목록 117편 조회수 60위, 설명란 '앤커 사운드코어 리버티 5 프로는 통화 음성 품질로 기네스 세계기록에 오른 무선 이어폰 … #사운드코어 #리버티5프로') — 화면 속 제품 = 사운드코어 리버티 5 프로 맥스. 원음형 = 유튜브 Mike O'Brien 'NEW soundcore Liberty 5 Pro & Pro Max - Unbelievable mic test!' Y4V-Z2UxyRg(47.8만, 소리 트랙 1개 en 140 — 자동 더빙 없음) 전체. 벤치의 한국 리뷰 채널 노래방 화면은 안 씀.",
+ "sources": {
+  "mo": {
+   "file": "mo.mp4",
+   "who": "유튜브 Mike O'Brien Y4V-Z2UxyRg 전체(137+140) — 228~237 마당에서 예초기를 최대로 돌리며 말함(본인 얼굴·예초기) · 242~248 같은 마당 얼굴 근접 · 107~110 프로 맥스 케이스를 쥔 손 · 378~387 이어폰을 집은 손가락",
+   "views": 477909,
+   "dur": 1006.0,
+   "res": "1920x1080"
+  }
+ },
+ "titles": {
+  "hook": "예초기 옆에서도\n또렷한 이어폰"
+ },
+ "facts": {
+  "f1": {
+   "text": "앤커 공식 제품 페이지 anker.com/ca/products/d1203-liberty-5-pro-anc-earbuds-clear-calls 'Officially recognized as the world's clearest earbuds for calls' · Mike O'Brien 원본(스피치매틱스) 8.0~12.6 'tons of wild new features and even a Guinness World Record for call quality' · 176.6~178.8 'these had a Guinness World Record for microphone quality' · 원본 180~186 화면 인증서 글 'Highest speech quality score (G-MOS) for TWS earbuds' · 쿠팡 9546164062 '앤커 사운드코어 리버티 5 프로'",
+   "kind": "공식·리뷰·판매처"
+  },
+  "f2": {
+   "text": "앤커 공식 제품 페이지(같은 곳) 'Filters out extreme background noise up to 100 dB+ so your voice is heard loud and clear' · Mike O'Brien 원본 228.91~236.92(예초기 최대로 돌리는 중 이어폰 마이크로 말함)",
+   "kind": "공식·리뷰"
+  },
+  "f3": {
+   "text": "Mike O'Brien 원본 228.91~236.92 'It is full throttle right now. I like if I was weed whacking, I could technically have a conversation on the phone right now. This is insane.' · 242.16~248.12 'That was running at full throttle. These earbuds actually do block a lot of sound.'",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "text": "통화 음질로 기네스 세계 기록까지 받았다는 이어폰이 있는데요 옆에서 기계가 아무리 시끄러워도 목소리만 골라서 보내 준다네요.",
+    "note": "렌더용 한 문장 — 원문 줄은 대본.json"
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "mo",
+    "span": [
+     228.85,
+     237.0
+    ],
+    "en": "It is full throttle right now. I like if I was weed whacking, I could technically have a conversation on the phone right now. This is insane.",
+    "caps": [
+     "지금 최대로 돌려요",
+     "예초기 돌리면서도",
+     "이 상태로",
+     "전화 통화까지 되겠는데요?",
+     "미쳤네요!"
+    ],
+    "check": "스피치매틱스: It 228.91 · now 230.20~230.52 · I 230.56 · phone 234.72~234.96 · now 235.16~235.48 · This 235.76 · insane 236.16~236.92 · 다음 Like 236.96(뒤 자름) — 예초기가 화면 왼아래에서 도는 한 샷(227.5~237.4, 237.4 예초기 머리가 카메라 앞을 지나감) · 아래 박힌 글 'Outdoor Microphone Test'(y≥950)·예초기 상표 ECHO(y≥1030)는 crop 밖 · 자막 칸이 글자 수 비례라 말 차례(throttle 끝 230.52·phone right now 끝 235.48)에 맞게 글 수 8:8:3:10:4(한 칸이 길면 화면 밖으로 넘쳐 1차 렌더에서 다섯 칸으로 나눔 — 말소리 구간 −38dB 7조각 합 6.33초 기준) "
+   },
+   {
+    "id": "O2",
+    "src": "mo",
+    "span": [
+     242.1,
+     248.0
+    ],
+    "en": "That was running at full throttle. These earbuds actually do block a lot of sound.",
+    "caps": [
+     "방금 게 최대였어요",
+     "이어폰이 소리를",
+     "진짜 엄청나게",
+     "많이 막아 주네요"
+    ],
+    "check": "스피치매틱스: That 242.16 · throttle 243.16~243.92 · This 243.96 · these 244.64 · sound 247.40~248.12 · 원본 컷 248.03(프레임 차 47) 앞에서 끝 · 얼굴 근접 한 샷(241.2~248.03) · 박힌 글 y≥950 crop 밖 · 자막 칸 글 수 8:6:6:7(한 칸 넘침 → 넷으로)(throttle 끝 243.92)"
+   }
+  ],
+  "dropped": {
+   "벤치 '노래방 테스트'(씨넷코리아 화면)": "한국 채널 화면 — 안 씀",
+   "마이크 8개·골전도 센서 2개": "1차 출처(공식 페이지)에서 숫자를 못 찾아 안 씀",
+   "AI 칩 이름": "안 씀",
+   "가격": "금액 금지"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ },
+ "captions_plan": [
+  {
+   "t0": 0.0,
+   "text": "통화 음질로",
+   "kind": "나레"
+  },
+  {
+   "t0": 0.614,
+   "text": "기네스 세계 기록까지",
+   "kind": "나레"
+  },
+  {
+   "t0": 1.848,
+   "text": "받았다는 이어폰이 있는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 3.573,
+   "text": "지금 최대로 돌려요",
+   "kind": "원음"
+  },
+  {
+   "t0": 5.398,
+   "text": "예초기 돌리면서도",
+   "kind": "원음"
+  },
+  {
+   "t0": 7.054,
+   "text": "이 상태로",
+   "kind": "원음"
+  },
+  {
+   "t0": 8.143,
+   "text": "전화 통화까지 되겠는데요?",
+   "kind": "원음"
+  },
+  {
+   "t0": 10.705,
+   "text": "미쳤네요!",
+   "kind": "원음"
+  },
+  {
+   "t0": 11.973,
+   "text": "옆에서 기계가",
+   "kind": "나레"
+  },
+  {
+   "t0": 12.842,
+   "text": "아무리 시끄러워도",
+   "kind": "나레"
+  },
+  {
+   "t0": 13.84,
+   "text": "목소리만 골라서 보내 준다네요",
+   "kind": "나레"
+  },
+  {
+   "t0": 15.711,
+   "text": "방금 게 최대였어요",
+   "kind": "원음"
+  },
+  {
+   "t0": 17.608,
+   "text": "이어폰이 소리를",
+   "kind": "원음"
+  },
+  {
+   "t0": 19.217,
+   "text": "진짜 엄청나게",
+   "kind": "원음"
+  },
+  {
+   "t0": 20.481,
+   "text": "많이 막아 주네요",
+   "kind": "원음"
+  }
+ ],
+ "caption_events": [
+  {
+   "kind": "emph",
+   "text": "통화 음질로",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.0,
+   "dur": 0.614,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "기네스 세계 기록까지",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.614,
+   "dur": 1.234,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "받았다는 이어폰이 있는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 1.848,
+   "dur": 1.725,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "지금 최대로 돌려요",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 3.573,
+   "dur": 1.825,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "예초기 돌리면서도",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 5.398,
+   "dur": 1.656,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "이 상태로",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 7.054,
+   "dur": 1.089,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "전화 통화까지 되겠는데요?",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 8.143,
+   "dur": 2.562,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "미쳤네요!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 10.705,
+   "dur": 1.268,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "옆에서 기계가",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 11.973,
+   "dur": 0.869,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "아무리 시끄러워도",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 12.842,
+   "dur": 0.998,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "목소리만 골라서 보내 준다네요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 13.84,
+   "dur": 1.871,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "방금 게 최대였어요",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 15.711,
+   "dur": 1.897,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "이어폰이 소리를",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 17.608,
+   "dur": 1.609,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "진짜 엄청나게",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 19.217,
+   "dur": 1.264,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "많이 막아 주네요",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 20.481,
+   "dur": 1.73,
+   "who": "원음"
+  }
+ ],
+ "render": {
+  "windows": [
+   [
+    3.573,
+    11.723
+   ],
+   [
+    15.711,
+    21.611
+   ]
+  ],
+  "blocks": [
+   {
+    "id": "N1",
+    "kind": "나레",
+    "n0": 0.0,
+    "n1": 3.323
+   },
+   {
+    "id": "O1",
+    "kind": "원음",
+    "a0": 3.573,
+    "a1": 11.723,
+    "audio_ss": 228.85,
+    "src": "mo"
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "n0": 11.973,
+    "n1": 15.461
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "a0": 15.711,
+    "a1": 21.611,
+    "audio_ss": 242.1,
+    "src": "mo"
+   }
+  ],
+  "pieces": [
+   {
+    "block": "N1",
+    "covers": [
+     "N1"
+    ],
+    "src": "mo",
+    "ss": 171.1,
+    "vs": 0.0,
+    "src_crop": [
+     520,
+     0,
+     857,
+     1080
+    ],
+    "why": "mo 171.00~176.11 한 샷 — 케이스 화면(음악 재생)을 쥔 손, 흐린 풀 배경, 얼굴 없음 (1차 107.4 는 샷이 3.14초뿐이라 실내 얼굴 컷 110.38 이 섞여 바꿈)",
+    "ve": 3.543,
+    "src_end": 174.643
+   },
+   {
+    "block": "O1",
+    "covers": [
+     "O1"
+    ],
+    "src": "mo",
+    "ss": 228.82,
+    "vs": 3.543,
+    "src_crop": [
+     300,
+     0,
+     740,
+     932
+    ],
+    "why": "mo 227.5~237.4 한 샷 — 예초기를 최대로 돌리며 말하는 Mike(예초기 엔진 위쪽이 왼아래에 보임) · 박힌 글·ECHO 상표 crop 밖",
+    "ve": 11.973,
+    "src_end": 237.25
+   },
+   {
+    "block": "N2",
+    "covers": [
+     "N2"
+    ],
+    "src": "mo",
+    "ss": 378.4,
+    "vs": 11.973,
+    "src_crop": [
+     560,
+     0,
+     857,
+     1080
+    ],
+    "why": "mo 378.31~386.95 이어폰을 집은 손가락(흐린 마당 배경)",
+    "ve": 15.681,
+    "src_end": 382.108
+   },
+   {
+    "block": "O2",
+    "covers": [
+     "O2"
+    ],
+    "src": "mo",
+    "ss": 242.07,
+    "vs": 15.681,
+    "src_crop": [
+     470,
+     0,
+     740,
+     932
+    ],
+    "why": "mo 241.2~248.03 같은 마당 얼굴 근접(귀에 검은 이어폰) · 박힌 글 crop 밖",
+    "ve": 22.211,
+    "src_end": 248.6
+   }
+  ],
+  "dur": 22.211,
+  "narr": [
+   {
+    "id": "N1",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\33_Liberty5Pro\\front\\render\\narr_N1.wav",
+    "dur": 3.323,
+    "tempo": 0.827,
+    "chars": 26,
+    "speech": 3.323,
+    "cps": 7.82,
+    "segs": [
+     [
+      0.0,
+      0.76
+     ],
+     [
+      0.888,
+      3.323
+     ]
+    ]
+   },
+   {
+    "id": "N2",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰4차\\33_Liberty5Pro\\front\\render\\narr_N2.wav",
+    "dur": 3.488,
+    "tempo": 0.788,
+    "chars": 27,
+    "speech": 3.367,
+    "cps": 8.02,
+    "segs": [
+     [
+      0.121,
+      3.488
+     ]
+    ]
+   }
+  ]
+ }
+}

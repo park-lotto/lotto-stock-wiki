@@ -1621,7 +1621,7 @@ def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
 # 판정 주인 = cut_content_gate 한 곳. 프레임은 렌더 조각과 같은 자리(cut_crop)·같은 흐림(blur_vf)으로 thumb.card_scene_frame 이 원본에서 뽑는다.
 # 자 = channelkit.vision(PP-OCRv5 det 글자 상자 · YuNet 얼굴 · SFace 동일성). 문턱 표본 = shopping_shorts/tests/fixtures/cut_content_labels.json.
 CONTENT_PAIR = 2 / FPS            # 글자 '붙박이' 재기 짝 프레임 간격 — 박힌 글은 2프레임 동안 그대로, 장면 속 글(포장·간판)은 화면과 같이 움직인다
-CONTENT_VER = 7                   # 판정(자·문턱)이 바뀌면 올린다 — 캐시 열쇠
+CONTENT_VER = 8                   # 판정(자·문턱)이 바뀌면 올린다 — 캐시 열쇠  (10-29 합침: 이 PC 6 + 회사 PC 7 둘 다 반영)
 # 글자 문턱 — 표본 762컷(10-25 494컷 + 10-25 오검출 수리 268컷: 원본 무작위 구간·잇템로그 ep12·박정수·샤크탱크 원편) 오푸스 눈 라벨.
 #   pos 132(원본 쇼츠 가격·자막·제목 띠·방송사 자막·로고·광고 글) / neg 630(제품 포장·상자·라벨·간판·화면 속 글).
 #   id crc32 짝수로 정하고 홀수로 잰 값(정직한 값): 옛 판정 P 0.857·R 0.677 → 지금 P 0.900·R 0.726. 옛 494컷만: P 0.808→0.863 · R 0.94 그대로.
@@ -1916,6 +1916,27 @@ def foreign_text(f: dict) -> bool:
     return f["d_in"] < TEXT_STILL_RATIO * f["d_ring"]
 
 
+def text_with_stack(fr: list) -> list:
+    """(판단 주인 — 흐릴 글줄) 남의 글자로 잡힌 줄 + 그 줄에 위아래로 붙은 글줄(같은 자막의 다른 줄). 붙은 줄은 문턱(채움·획) 밖이어도 같이 가린다 —
+    10-27 런던 지하철 편: 두 줄 자막 'The saxophones were / getting louder' 중 아랫줄만 잡혀(윗줄 채움 0.77 < 0.8) 윗줄이 완성본 내내 남았다."""
+    fg = [f for f in fr if foreign_text(f)]
+    if not fg:
+        return []
+    def near(a, b):
+        ah, bh = a[3] - a[1], b[3] - b[1]
+        gap = max(b[1] - a[3], a[1] - b[3])                       # 세로 틈(음수 = 겹침)
+        ov = min(a[2], b[2]) - max(a[0], b[0])                    # 가로 겹침
+        return gap <= 1.2 * max(ah, bh) and ov >= 0.3 * min(a[2] - a[0], b[2] - b[0])
+    out = list(fg)
+    grew = True
+    while grew:                                                   # 세 줄 자막도 줄줄이
+        grew = False
+        for f in fr:
+            if f not in out and f["score"] >= TEXT_SCORE_MIN and f["aspect"] >= TEXT_GLYPH_ASPECT and any(near(f["box"], g["box"]) for g in out):
+                out.append(f); grew = True
+    return out
+
+
 def other_face(f: dict) -> bool:
     """얼굴 하나가 연예인(기준 얼굴)이 아닌 다른 사람인가 — 판정 주인. f = {h(창 높이 비), cos(기준 얼굴 중 최댓값) | None}.
     표본 = 감사 결함 완성본 8편(함익병 도브·박세리 라프레리 2·안유진·함익병 비누·강민경·최은경) + 얼지마트롯 원본 4편, 오푸스 눈 라벨."""
@@ -2044,7 +2065,7 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
             if r is None:
                 pre[key].result()
                 m = cut_content_feats(src, c["ss"], n, crop, (ww, wh), regs, anchors, ocr=ocr)
-                r = {"text": [[f for f in fr if foreign_text(f)] for fr in m["text"]], "face": [[f for f in fr if other_face(f)] for fr in m["face"]]}
+                r = {"text": [text_with_stack(fr) for fr in m["text"]], "face": [[f for f in fr if other_face(f)] for fr in m["face"]]}
             rows[key] = r
             nt = sum(1 for x in r["text"] if x)
             nf = sum(1 for x in r["face"] if x)
@@ -2073,7 +2094,7 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
                 if left >= TEXT_MIN_HITS:
                     bad.append(f"컷 {k} {where}: 흐림을 넣어도 남의 박힌 글자 {left}장 — 다른 장면으로 바꾼다")
             elif nt >= TEXT_MIN_HITS:
-                boxes = [f["box"] for x in r["text"] for f in x][:3]
+                boxes = [f["box"] for x in r["text"] for f in x]          # 모든 장·모든 글줄(예전 [:3] 은 두 줄 자막의 한 줄만 담았다)
                 bad.append(f"컷 {k} {where}: 흐림 밖 남의 박힌 글자 {nt}/{len(r['text'])}장(창 좌표 {boxes}) — 재료.json blur[{c['src']}] 에 "
                            f"이 칸을 그대로 넣거나(원본 픽셀·원본 초로 바꿔 둠) crop·ss 를 옮긴다: {blur_entry(boxes, crop, (ww, wh), float(c['ss']), n / FPS)}")
             if nf >= FACE_MIN_HITS:
@@ -3074,7 +3095,7 @@ def audio(S: dict, M: dict, st: dict, T: dict, sent: list[dict], placed: dict, R
     ss = float((S.get("bgm") or {}).get("ss", 0.0))      # 곡 몇 초부터 쓰나(편마다 — 보컬 드롭 자리를 맞춘다, 가사 시각 lyric_plan 과 같은 값)
     lay = "stereo" if B.get("stereo") else "mono"     # 판 bgm.stereo — 노래가 주인공인 판(자막노래형)은 곡을 스테레오 그대로(10-27 사장님 '노래 음질 깨짐': 모노로 합쳐 뭉개졌다)
     bed_chain = (f"aresample={SR},aformat=channel_layouts={lay},atrim={ss:.3f}:{ss + end:.3f},asetpts=PTS-STARTPTS,volume={g}dB,"
-                 f"volume='{vol}':eval=frame,afade=t=out:st={end - B.get('fade_out', 0.4):.3f}:d={B.get('fade_out', 0.4)}")
+                 f"volume='{vol}':eval=frame,afade=t=out:st={end - B.get('fade_out', 0.4):.3f}:d={B.get('fade_out', 0.4)}:curve={B.get('fade_curve', 'tri')}")   # fade_curve = 판 bgm 칸(기본 tri = 옛 그대로) — 끝 0.1초 RMS < −60dB(체크리스트 ③, 10-29 ep14)
     bed = R / "bgm_bed.wav"       # BGM 만(나레·원음·효과음 없이) — 덕킹 실측·품질 관문이 읽는다
     F32 = ["-c:a", "pcm_f32le"]      # 소수 wav — 곡을 올릴 때 16비트에서 0dB 넘는 곳이 잘리지 않게(10-27 bgm_bed 잘림 45곳). 최고점은 loud() 가 리미터로 누른다
     run(["ffmpeg", "-y", "-v", "error", "-stream_loop", "-1", "-i", bgm, "-filter_complex", f"[0:a]{bed_chain}[b]", "-map", "[b]", "-ar", SR, *F32, bed])

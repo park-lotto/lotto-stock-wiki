@@ -1,0 +1,329 @@
+{
+ "_note": "샥탬스토리 하이브리드 29편 Pan's Mushroom Jerky — 앞 0~O3 끝 = 칼카피 그대로(끝 원음 투자자 '어쩐지! 더 맛있더라'), 뒤 = 지훈·같은 제목·BGM 이어서 1인칭 체험 나레(존댓말). CTA 없음·금액 없음. 쿠팡에 방송 제품 Pan's Mushroom Jerky 가 그대로 있음(같은 제품) — B1 '똑같은 게 진짜 있더라고요'. 섬유질·비타민·건강 주장 없음. 렌더 tools/calcopy/shark/hybrid.py.",
+ "product": "Pan's Mushroom Jerky 제스티 타이 맛(쿠팡 9694556217 'Pan's Mushroom Jerky, Snacks, Dried Mushrooms Shitake, Plant based Jerky' — 방송 제품과 같은 제품, 여러 맛 묶음 9693936120 도 같은 회사)",
+ "same_product": true,
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "흥미이음": {
+  "원본흥미": "샤크들이 고기 육포인 줄 알고 씹은 게 사실 버섯 — 앞 O3 투자자 '어쩐지! 더 맛있더라'로 끝남",
+  "뒤흥미": "같은 제품 봉지를 뜯어 고기처럼 결대로 찢어지는 버섯 육포를 손으로 보여 줌(The Junk Drawer 리뷰 KEcwnSB1t8M 손 시점 · 공식 Hello Pan Q7lIPtBT2UU 찢는 근접·통 표고버섯)",
+  "판정": "같음",
+  "근거": "쿠팡 파트너스 API 2026-10-28 'pan's mushroom jerky' → 9694556217·9693925408·9693936120·9693976991(전부 'Pan's Mushroom Jerky' 상표, 사진 C:/숏템_칼카피/foreignshowshow/29편_소재/img/cp_9694556217.jpg 봉지 'Pan's MUSHROOM JERKY ZESTY THAI') — 결과 C:/숏템_칼카피/foreignshowshow/29편_소재/쿠팡API_29b.json"
+ },
+ "hybrid": {
+  "front_doc": "../29편_PansMushroomJerky",
+  "front_src": "C:/숏템_칼카피/foreignshowshow/29편_PansMushroomJerky/work/render/final.mp4",
+  "front_render_info": "C:/숏템_칼카피/foreignshowshow/29편_PansMushroomJerky/work/render/render_info.json",
+  "front_work": "C:/숏템_칼카피/foreignshowshow/29편_PansMushroomJerky/work",
+  "cut_after": "O3",
+  "cut_why": "O3 투자자 원음 '어쩐지! 더 맛있더라' 끝 — 그 '이게 버섯이라고?'를 뒤 체험(쿠팡에서 같은 버섯 육포를 사서 찢어 봄)이 받는다",
+  "transition": {
+   "kind": "slideleft",
+   "dur": 0.25,
+   "keep_top": 434,
+   "why": "샥탬 하이브리드 3~28편과 같은 이음(제목 띠 고정)"
+  }
+ },
+ "titles": {
+  "line1": "샤크들이 씹은 육포",
+  "line2": "정체가 버섯이라고?!",
+  "rule": "앞과 같은 제목(띠 고정)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.25,
+  "why": "앞 편과 같은 목소리·같은 speed(R2)"
+ },
+ "bench": {},
+ "render": {
+  "end_pad": 1.1,
+  "_why": "끝 말 뒤 여운 0.6초 이상(10-27 검수 ③, 98 #174)"
+ },
+ "final": {
+  "cps_target": 7.84,
+  "cps_note": "14~28편 하이브리드와 같은 목표(지훈 speed 1.25)",
+  "lines": [
+   {
+    "id": "B1",
+    "kind": "나레",
+    "fn": "이음(연결어)+잉?",
+    "text": "근데 저 버섯 육포가 궁금해서 쿠팡에 쳐 봤더니, 똑같은 게 진짜 있더라고요.",
+    "tts": "근데 저 버섯 육포가 궁금해서, 쿠팡에 쳐 봤더니, 똑같은 게 진짜 있더라고요.",
+    "caps": [
+     "근데 저 버섯 육포가 궁금해서",
+     "쿠팡에 쳐 봤더니",
+     "똑같은 게 진짜 있더라고요"
+    ],
+    "facts": [
+     "c1"
+    ],
+    "point": "잉",
+    "answer_at": 2,
+    "emph_words": [
+     "진짜 있더라고요"
+    ],
+    "emph": [
+     {
+      "cap": "근데 저 버섯 육포가 궁금해서",
+      "span": "육포가 궁금해서",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "쿠팡에 쳐 봤더니",
+      "span": "쳐 봤더니",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "똑같은 게 진짜 있더라고요",
+      "span": "진짜 있더라고요",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B2",
+    "kind": "나레",
+    "fn": "②공개(와우1)",
+    "text": "이게 말도 안 되는 게, 봉지를 뜯으면 진짜 고기 육포처럼 생긴 조각이 나와요.",
+    "tts": "이게 말도 안 되는 게, 봉지를 뜯으면, 진짜 고기 육포처럼 생긴 조각이 나와요.",
+    "caps": [
+     "이게 말도 안 되는 게",
+     "봉지를 뜯으면",
+     "진짜 고기 육포처럼",
+     "생긴 조각이 나와요"
+    ],
+    "facts": [
+     "c2"
+    ],
+    "emph": [
+     {
+      "cap": "이게 말도 안 되는 게",
+      "span": "이게 말도",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "봉지를 뜯으면",
+      "span": "봉지를 뜯으면",
+      "color": "파랑",
+      "whole": true,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "진짜 고기 육포처럼",
+      "span": "육포처럼",
+      "color": "초록",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "생긴 조각이 나와요",
+      "span": "조각이 나와요",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B3",
+    "kind": "나레",
+    "fn": "③핵심(와우2, 잉 답)",
+    "text": "진짜 핵심은 이건데, 손으로 찢으면 결대로 쭉 찢어지는데 이게 다 버섯이에요.",
+    "tts": "진짜 핵심은 이건데, 손으로 찢으면, 결대로 쭉 찢어지는데, 이게 다 버섯이에요.",
+    "caps": [
+     "진짜 핵심은 이건데",
+     "손으로 찢으면",
+     "결대로 쭉 찢어지는데",
+     "이게 다 버섯이에요"
+    ],
+    "facts": [
+     "c2",
+     "c3"
+    ],
+    "emph": [
+     {
+      "cap": "진짜 핵심은 이건데",
+      "span": "핵심은 이건데",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "손으로 찢으면",
+      "span": "손으로 찢으면",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "결대로 쭉 찢어지는데",
+      "span": "찢어지는데",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "이게 다 버섯이에요",
+      "span": "버섯이에요",
+      "color": "파랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B4",
+    "kind": "나레",
+    "fn": "④심지어(와우3)",
+    "text": "심지어 이게 대박인 게, 매콤한 타이 맛부터 바비큐 맛까지 골라 먹는 재미가 있어요.",
+    "tts": "심지어 이게 대박인 게, 매콤한 타이 맛부터, 바비큐 맛까지, 골라 먹는 재미가 있어요.",
+    "caps": [
+     "심지어 이게 대박인 게",
+     "매콤한 타이 맛부터",
+     "바비큐 맛까지",
+     "골라 먹는 재미가 있어요"
+    ],
+    "facts": [
+     "c3",
+     "창작"
+    ],
+    "emph": [
+     {
+      "cap": "심지어 이게 대박인 게",
+      "span": "심지어 이게",
+      "color": "노랑",
+      "whole": false,
+      "why": "자막 띠 시트 확인 손질(배경 대비)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "매콤한 타이 맛부터",
+      "span": "타이 맛부터",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "바비큐 맛까지",
+      "span": "바비큐 맛까지",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "골라 먹는 재미가 있어요",
+      "span": "재미가 있어요",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B5",
+    "kind": "나레",
+    "fn": "끝=사회 반응",
+    "text": "요즘은 친구들한테 고기냐고 물어보고 버섯이라고 할 때 표정 보는 맛에 사요.",
+    "tts": "요즘은 친구들한테 고기냐고 물어보고, 버섯이라고 할 때, 표정 보는 맛에 사요.",
+    "caps": [
+     "요즘은 친구들한테",
+     "고기냐고 물어보고",
+     "버섯이라고 할 때",
+     "표정 보는 맛에 사요"
+    ],
+    "facts": [
+     "창작"
+    ],
+    "emph": [
+     {
+      "cap": "요즘은 친구들한테",
+      "span": "친구들한테",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "고기냐고 물어보고",
+      "span": "물어보고",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "버섯이라고 할 때",
+      "span": "버섯이라고",
+      "color": "초록",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "표정 보는 맛에 사요",
+      "span": "맛에 사요",
+      "color": "파랑",
+      "whole": false,
+      "why": "금지색 대체(빨강·분홍·주황 바탕 많음, emph_ban)",
+      "how": "hand",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ]
+ },
+ "facts": {
+  "c1": "쿠팡 파트너스 API 검색(2026-10-28) 'pan's mushroom jerky' → 9694556217 'Pan's Mushroom Jerky, Snacks, Dried Mushrooms Shitake, Plant based Jerky, Meatless Jerky' 외 같은 상표 3개(→ B1 '똑같은 게 진짜 있더라고요') · 결과 C:/숏템_칼카피/foreignshowshow/29편_소재/쿠팡API_29b.json",
+  "c2": "The Junk Drawer 'Pan's Mushroom Jerky Review: Is It Any Good?' https://www.youtube.com/watch?v=KEcwnSB1t8M (봉지 뜯기 60~63초·조각을 손에 듦 72~75·115~118·192~195초, 손만) · Hello Pan 공식 'Pan's Mushroom Jerky' https://www.youtube.com/watch?v=Q7lIPtBT2UU (조각을 손으로 찢는 근접 15.4~19.1초·통 표고버섯 2.8~4.1초)",
+  "c3": "방송 원본 Gsb98jeXm14 128.49~129.89 'These are all shiitakes, by the way.'(→ '이게 다 버섯') · 107.30~111.98 'Original, zesty Thai, salt and pepper and applewood barbecue.'(→ '타이 맛부터 바비큐 맛까지') https://www.youtube.com/watch?v=Gsb98jeXm14&t=107s",
+  "창작": "B4 '골라 먹는 재미' · B5 '친구들한테 고기냐고 물어보고 버섯이라고 할 때 표정 보는 맛에 사요' = 화자 체험·사회 반응(§0-1 14 허용선 — 성분·효능·안전·금액 아님)"
+ }
+}

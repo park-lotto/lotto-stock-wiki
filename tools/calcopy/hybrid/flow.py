@@ -2745,12 +2745,12 @@ def f_of_got(st, m, rp, u):
     if mode in ("lens", "find"):                 # 같은 영상 판정 = 렌즈 후보든 회원 Claude 가 찾은 후보든 같은 질문·같은 규칙(결과 검사)
         st["of_bad"] = _bad_urls(o)
         from tools.calcopy import origin_find as OF
-        ask = OF.JUDGE_PROMPT + "\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows + _lens_ai_ctx(st)
-        return {"review": [_rv("of_judge", ask, [_img(x) for x in o["sheets"]][:6], model="sonnet", need=("same",))], "then": "of_pick"}
+        ask = OF.JUDGE_PROMPT + (SUBSONG_CLEAN_ASK if _fmt(st) == "자막노래형" else "") + "\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows + _lens_ai_ctx(st)
+        return {"review": [_rv("of_judge", ask, [_img(x) for x in o["sheets"]][:6], model="opus", need=("same",))], "then": "of_pick"}
     prod = ", ".join([str(st["read"].get("brand_hint") or "")] + [str(w) for w in st["read"].get("product_words") or []][:3]).strip(", ")
     need = "최대 2개" if st.get("origins") else "같은 촬영분 원본을 못 찾아 이 후보가 원본이 된다 — 가장 좋은 것부터 최대 3개"   # 가장 좋은 건 원본 그대로(렌즈), 못 찾으면 같은 종류 해외 반응(사장님 10-26)
     ask = PEER_PICK_FOREIGN.replace("{product}", prod).replace("{need}", need) +"\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows
-    return {"review": [_rv("of_peer", ask, [_img(x) for x in o["sheets"]][:4], model="sonnet", need=("picks",))], "then": "of_pick"}
+    return {"review": [_rv("of_peer", ask, [_img(x) for x in o["sheets"]][:4], model="opus", need=("picks",))], "then": "of_pick"}
 
 
 def f_of_pick(st, m, rp, u):
@@ -2760,6 +2760,8 @@ def f_of_pick(st, m, rp, u):
     if st.get("of_mode") in ("lens", "find"):
         a = _reply(rp, "of_judge", ("same",))
         same = [by_n[int(n)] for n in a.get("same") or [] if str(n).isdigit() and int(n) in by_n]
+        if _fmt(st) == "자막노래형" and same:
+            return _subsong_pick_clean(st, a, same)
         seed = {"key": f"yt:{st['bench'].get('id')}", "korean": True, "date": st["bench"].get("date")}
         vs = [seed] + [{**c, "key": f"{c.get('platform')}:{c.get('id')}"} for c in same]
         picked = OF.pick_origins(vs)       # 주인 = origin_find.pick_origins(해외 채널마다 가장 먼저·한국 재편집보다 늦은 것 제외) — 유튜브·틱톡·인스타 모두(10-26 '유튜브만' 버림 제거, 받기 = runner c_origin_get)
@@ -2971,7 +2973,8 @@ def f_of_verify(st, m, rp, u):
         keep = [o for o in st["origins"] if o["id"] in set(v.get("keep") or [])]
         return _set_origin(st, keep, [f for o in keep for f in o.get("files") or []])
     st["_verify"]["rows"] = [r.split(". ", 1)[1] for r in rows]
-    return {"review": [_rv("of_verify", OF_VERIFY_ASK + NL + NL + "후보:" + NL + NL.join(rows), shows, need=("same",))], "then": "of_verify_got"}
+    ask = OF_VERIFY_ASK + (SUBSONG_VERIFY_CLEAN if _fmt(st) == "자막노래형" else "")
+    return {"review": [_rv("of_verify", ask + NL + NL + "후보:" + NL + NL.join(rows), shows, need=("same",))], "then": "of_verify_got"}
 
 
 def f_of_verify_got(st, m, rp, u):
@@ -2997,6 +3000,16 @@ def f_of_verify_got(st, m, rp, u):
                     origin_missing=True, detail=f"원본 확인 다름: {bad}")
     if not any("같은" in str(o.get("how") or "") and "다른" not in str(o.get("how") or "") for o in keep):
         st["log"].append("원본 확인: 같은 촬영분은 모두 빠짐 — 같은 제품 다른 해외 반응만 남음")
+    if _fmt(st) == "자막노래형" and isinstance(a.get("clean"), list):     # 깨끗한 순서 = 받은 영상 실제 장면 기준(썸네일 판정은 덮어씀, 10-27 지하철 편: 썸네일 '깨끗' → 실제는 애니 캐릭터가 화면 가운데를 수시로 가림)
+        rank = {ids[n - 1]: k for k, n in enumerate(a["clean"]) if isinstance(n, int) and 0 < n <= len(ids)}
+        cov = {ids[n - 1] for n in a.get("covered") or [] if isinstance(n, int) and 0 < n <= len(ids)}
+        keep.sort(key=lambda o: (o["id"] in cov, rank.get(o["id"], 99)))
+        st["log"].append(f"원본 확인 깨끗한 순서: {[o['id'] for o in keep]} · 크게 가림 {sorted(cov)}")
+        if keep and all(o["id"] in cov for o in keep) and not st.get("tries", {}).get("of_covered"):
+            st["tries"]["of_covered"] = 1             # 받은 판이 모두 크게 가려짐 → 한 번 더 찾는다(그래도 없으면 가린 판이라도 쓴다 — 멈추지 않는다)
+            st["of_find_why"] = "같은 영상은 찾았지만 받은 판이 모두 캐릭터·큰 글자 띠로 크게 가려짐 — 덧씌운 것 없는 판을 찾아라: " + ", ".join(sorted(cov))
+            st["origins"] = []
+            return {"goto": "of_find"}
     return _set_origin(st, keep, [f for o in keep for f in o.get("files") or []])
 
 
@@ -3653,7 +3666,10 @@ REF_READ_SUBSONG = """너는 자막노래형 소재 판독 담당이다. 아래�
   ★또 false = 대화·말장난으로 웃기는 영상(몰래카메라 대사·스킷·인터뷰 등 — 받아쓰기에 대사가 이어지고 말을 알아들어야 상황이 이해되는 것). 완성본은 원음을 빼고 노래만 깐다 —
     소리를 끄고 화면만 봐도 무슨 일인지 바로 보이는 영상만 true(벤치 6편 = 소리 칸 bgm 뿐·말 없음, 10-27 치과 접수대 몰래카메라 편: 대사로 웃기는데 노래만 깔려 상황이 하나도 이해 안 됨 — 사장님)
 - what: 무슨 장면인지 한 줄 · queries_en: 원본 찾기 영어 검색어 2~4개(장면 낱말)
-JSON만: {"ref_kind":"korean_reedit|foreign_original","is_clip":true,"what":"…","queries_en":["…"],"why":"…"}"""
+- lens_at: (korean_reedit 일 때) 구글 렌즈에 올릴 장면 초 2~3개 — 앞쪽 핵심 장면 중 **인물·동물·장면 전체가 크게 잡힌 것**.
+  ★로고·상표·영어 글자(티셔츠 글씨·간판·제품 이름)가 보이는 장면은 고르지 마라 — 렌즈가 그 물건을 상품으로 검색한다(10-27 사장님, 녹화 편 티셔츠 'NON-ETH…').
+  물건만 크게 잡힌 장면보다 사람·배경이 함께 보이는 장면. 한국 자막·제목 띠는 잘라 내니 신경 쓰지 않는다.
+JSON만: {"ref_kind":"korean_reedit|foreign_original","is_clip":true,"what":"…","queries_en":["…"],"lens_at":[초,…],"why":"…"}"""
 
 SCRIPT_SUBSONG = """너는 댓글 자막 작가다(오푸스). 자막노래형 — 나레(TTS) 없음. 원본 바이럴 클립 한 샷 위에 '댓글 모양 자막' 카드를 박자마다 한 장씩 얹는다.
 아래 판 규칙(대본 쓰는 법)·본보기 꼴 그대로 이 편의 대본·재료·근거를 써라. 대본 검사를 통과해야 한다 — 걸린 이유가 아래에 있으면 고쳐서 다시.
@@ -3719,6 +3735,9 @@ def j_bench_got(st, m, rp, u):
 SHORT_SRC = ("영상이 짧아서 이 스타일로 만들 수 없어요", "이 영상은 여기서 마칠게요")
 
 
+REF_LEN_TOL = 1.0    # 레퍼런스 길이(정수 초로 기록)와 원본 길이 허용 차 — 10-29 실측 5편 차이 -0.4~+4초
+
+
 def _subsong_too_short(st, dur) -> bool:
     """(판단 주인 — 자막노래형 소재 길이) 한 샷을 이어서 쓰는 형식이라 원본이 판 length.min 보다 짧으면 만들 수 없다(되감기·느리게 = 벤치에 없음).
     10-27 개발 완주: 6초 소재(lerlGHkuf5E)로 대본 3번·장면 맞추기 2번 헛돌고 장면 단계에서 멈춤 → 받자마자 길이로 마친다."""
@@ -3748,14 +3767,48 @@ def j_ref_read(st, m, rp, u):
     korean = OF.is_korean(str(B.get("title") or ""), str(B.get("channel") or "")) or r.get("ref_kind") == "korean_reedit"
     st["read"] = {**r, "celeb": "", "korean": korean, "product_words": [str(r.get("what") or "장면")]}
     st["origins"], st["research"] = [], {"spans": []}
-    if korean:
-        st["log"].append("소재 = 한국 재편집 → 렌즈로 해외 원본")
-        return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "lens", "bench_id": B.get("id"), "queries": [q for q in r.get("queries_en") or [] if q][:4]}], "then": "of_got"}
-    st["origins"] = [{"id": B.get("id"), "info": {k: B.get(k) for k in ("id", "title", "channel", "date", "dur", "views", "subs")}, "how": "소재 = 해외 원본"}]
-    st["log"].append("소재 = 해외 원본 그대로(한 샷)")
-    if _subsong_not_hit(st["origins"][0]["info"]):           # 받기 전에 — 원본 그대로인 소재는 그 조회수가 곧 원본 조회수
+    hi = {k: B.get(k) for k in ("views", "subs")}
+    if _subsong_not_hit(hi):            # 터진 영상 = 소재(벤치 편) 수치(10-27 사장님 '원작인지는 상관없다 · 돌고 도는 것') — 재료 영상이 퍼 간 계정이어도 판정은 같다. 받기·렌즈 전에
         st["log"].append(f"소재 조회 {B.get('views')} · 구독 {B.get('subs')} — 터진 영상 아님, 마침")
         raise _Stop(*NOT_HIT, final=True)
+    if korean:
+        st["log"].append(f"소재 = 한국 재편집 → 렌즈로 같은 영상 깨끗한 판(장면 {r.get('lens_at')}초)")
+        at = [float(x) for x in r.get("lens_at") or [] if isinstance(x, (int, float)) and 0 <= float(x) <= float(B.get("dur") or 999)][:3]
+        return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "lens", "bench_id": B.get("id"), "at": at, "queries": [q for q in r.get("queries_en") or [] if q][:4]}], "then": "of_got"}
+    st["origins"] = [{"id": B.get("id"), "info": {k: B.get(k) for k in ("id", "title", "channel", "date", "dur", "views", "subs")}, "how": "소재 = 해외 원본"}]
+    st["log"].append("소재 = 해외 원본 그대로(한 샷)")
+    return {"goto": "of_fetch"}
+
+
+SUBSONG_CLEAN_ASK = ("\n★이 형식은 원작자를 찾지 않는다 — 같은 촬영분이면 누가 언제 올렸든 재료가 된다(10-27 사장님 '돌고 도는 것').\n"
+                     "same 에 든 칸을 **깨끗한 순서**로 clean 에 다시 적는다: ① 덧씌운 자막·글자·제목 띠·스티커·리액션 화면 없는 것(작은 워터마크는 괜찮다) "
+                     "② 화면이 잘리거나 확대되지 않은 것 ③ 그다음이 자막·글자가 박힌 것(지워서 쓴다). dirty = 글자가 박힌 칸.\n"
+                     '답 = {"same":[…], "clean":[깨끗한 순서 번호…], "dirty":[…], "why":"한 줄"}')
+
+
+SUBSONG_VERIFY_CLEAN = ("\n★자막노래형 — 같은 촬영분으로 남긴 번호를 **실제 장면 8장 기준 깨끗한 순서**로 clean 에 적는다(앞 판정은 썸네일 한 장이라 틀릴 수 있다).\n"
+                        "깨끗 = 덧씌운 자막·글자·스티커·캐릭터·리액션 화면 없음. 작은 글자 한 줄(지우거나 흐리면 됨)은 그다음. "
+                        "covered = 캐릭터·사람 얼굴창·큰 그림·큰 글자 띠가 장면을 크게 가려 지워 쓸 수 없는 번호.\n"
+                        '답 = {"same":[…], "clean":[깨끗한 순서…], "covered":[…], "why":"한 줄"}')
+
+
+SUBSONG_ORIGINS_MAX = 5   # 같은 영상 중 받아서 실제 장면으로 깨끗한지 볼 개수(썸네일 '깨끗'이 틀린다 — 10-27 지하철 편)
+
+
+def _subsong_pick_clean(st, a, same: list) -> dict:
+    """(판단 주인 — 자막노래형 재료 고르기) 같은 촬영분 중 깨끗한 것 먼저, 없으면 글자 박힌 것(지워서 쓴다). 올린 날짜·한국 계정 여부로 버리지 않는다
+    (10-27 사과깎이: 렌즈(미국) 같은 영상 3개를 '소재보다 늦게 올린 것'으로 다 버리고 Claude 찾기 7분 헛돎)."""
+    from tools.calcopy import origin_find as OF
+    by_n = {int(c["n"]): c for c in same}
+    order = [by_n[int(n)] for n in a.get("clean") or [] if str(n).isdigit() and int(n) in by_n]
+    order += [c for c in same if c not in order]
+    dirty = {int(n) for n in a.get("dirty") or [] if str(n).isdigit()}
+    order.sort(key=lambda c: (int(c["n"]) in dirty, bool(c.get("korean"))))     # 안정 정렬 — 깨끗한 순서 유지, 글자·한국 판은 뒤로
+    for c in order[:SUBSONG_ORIGINS_MAX]:
+        st["origins"].append({"id": c["id"], "platform": c.get("platform") or "yt", "url": c.get("url") or OF.url_of(c.get("platform") or "yt", c["id"]),
+                              "info": {k: c.get(k) for k in ("id", "title", "channel", "date", "dur", "views", "subs")},
+                              "how": "같은 촬영분" + (" (글자 있음)" if int(c["n"]) in dirty else " (깨끗)")})
+    st["log"].append(f"같은 영상 {len(same)}개 → 재료 {[o['id'] + ' ' + o['how'] for o in st['origins']]}: {str(a.get('why'))[:120]}")
     return {"goto": "of_fetch"}
 
 
@@ -3767,24 +3820,38 @@ def j_of_peers(st, m, rp, u):
 
 def j_of_fetched(st, m, rp, u):
     r = f_of_fetched(st, m, rp, u)
-    if r.get("goto") == "f_product_sheet":        # 제품 단계 없음 — 첫 원본(한 샷)만 남기고 원본 정리로
-        st["origins"] = st["origins"][:1]
-        st["origin"]["files"] = list(st["origins"][0].get("files") or [])
-        dur = max((float(x.get("dur") or 0) for x in st["origin"]["files"]), default=0)
-        if _subsong_too_short(st, dur):
-            st["log"].append(f"원본 길이 {dur}초 < 판 최소 — 마침")
-            raise _Stop(*SHORT_SRC, final=True)
-        lo_h = int(((_style(st["version"]).get("source") or {}).get("min_h")) or 0)
-        hi = max((int(x.get("h") or 0) for x in st["origin"]["files"]), default=0)
-        if lo_h and hi < lo_h:                       # 판 source.min_h — 낮은 화질 원본은 창에 4배 늘려져 흐리다(10-27 flow04 360p)
-            st["log"].append(f"원본 높이 {hi}px < 판 최소 {lo_h}px — 마침")
-            raise _Stop("원본 화질이 낮아서 이 스타일로 만들 수 없어요", "더 선명한(720p 이상) 영상으로 다시 시도해 주세요", final=True)
-        inf = st["origins"][0].get("info") or {}
-        if _subsong_not_hit(inf):
-            st["log"].append(f"원본 조회 {inf.get('views')} · 구독 {inf.get('subs')} — 터진 영상 아님, 마침")
-            raise _Stop(*NOT_HIT, final=True)
-        return {"goto": "j_material"}
+    if r.get("goto") == "f_product_sheet":
+        return j_origin_ready(st, m, rp, u)
     return r
+
+
+def j_origin_ready(st, m, rp, u):
+    """(판단 주인 — 자막노래형 원본 관문) 원본이 정해진 뒤 한 곳: 받기 직후(of_fetched)든 실제 장면 대조 뒤(of_verify_got → _set_origin)든
+    공용 길이 가는 f_product_sheet 자리에 이 처리기가 앉는다(10-27 렌즈 원본이 대조를 거쳐 제품 단계로 새어 '만드는 중 문제'로 멈춤 — 1lMbJh0n_d4).
+    제품 단계 없음 — 첫 원본(한 샷)만 남기고 원본 정리로."""
+    def _dur(o):
+        return max((float(x.get("dur") or 0) for x in o.get("files") or []), default=0)
+    need = float((st.get("bench") or {}).get("dur") or 0) - REF_LEN_TOL if (st.get("read") or {}).get("ref_kind") == "korean_reedit" else 0
+    ok = [o for o in st["origins"] if _dur(o) >= need]       # 레퍼런스보다 짧은 판 = 잘린 퍼 간 판(10-29 사장님 '레퍼런스가 긴데 원본이 짧은 건 안 된다') — 깨끗한 순서 그대로 다음 판
+    if not ok:
+        st["log"].append(f"원본 {[round(_dur(o), 1) for o in st['origins']]}초 모두 레퍼런스 {st['bench'].get('dur')}초보다 짧음 — 마침")
+        raise _Stop(*SHORT_SRC, final=True)
+    if ok[0] is not st["origins"][0]:
+        st["log"].append(f"원본 {st['origins'][0]['id']} {_dur(st['origins'][0]):.1f}초 < 레퍼런스 {st['bench'].get('dur')}초 → {ok[0]['id']} {_dur(ok[0]):.1f}초")
+    st["origins"] = ok[:1]
+    if ok[0]["id"] != st["origin"].get("id"):
+        _set_origin(st, ok[:1], list(ok[0].get("files") or []))       # 원본 칸(주소·플랫폼·창) 주인 한 곳
+    st["origin"]["files"] = list(ok[0].get("files") or [])
+    dur = _dur(ok[0])
+    if _subsong_too_short(st, dur):
+        st["log"].append(f"원본 길이 {dur}초 < 판 최소 — 마침")
+        raise _Stop(*SHORT_SRC, final=True)
+    lo_h = int(((_style(st["version"]).get("source") or {}).get("min_h")) or 0)
+    hi = max((int(x.get("h") or 0) for x in st["origin"]["files"]), default=0)
+    if lo_h and hi < lo_h:                       # 판 source.min_h — 낮은 화질 원본은 창에 4배 늘려져 흐리다(10-27 flow04 360p)
+        st["log"].append(f"원본 높이 {hi}px < 판 최소 {lo_h}px — 마침")
+        raise _Stop("원본 화질이 낮아서 이 스타일로 만들 수 없어요", "더 선명한(720p 이상) 영상으로 다시 시도해 주세요", final=True)
+    return {"goto": "j_material"}
 
 
 def j_material(st, m, rp, u):
@@ -3812,7 +3879,7 @@ FORMAT_PHASES = {   # 형식별 세부 단계 처리기 — 없는 세부 단계
 FORMAT_PHASES["자막노래형"] = {**{k: v for k, v in FORMAT_PHASES["해외원본형"].items()
                                if k not in ("bench", "of_dual", "of_dual_b", "of_dual_retry", "of_settled", "f_product_sheet", "f_product_pick",
                                             "f_product_cands", "f_product_same", "research", "f_research_got", "f_research_check", "f_asr", "f_asr_got")},
-                            "bench_got": j_bench_got, "ref_read": j_ref_read, "of_peers": j_of_peers, "of_fetched": j_of_fetched,
+                            "bench_got": j_bench_got, "ref_read": j_ref_read, "of_peers": j_of_peers, "of_fetched": j_of_fetched, "f_product_sheet": j_origin_ready,
                             "j_material": j_material, "material": j_material, "f_draft_got": j_draft_got}
 PHASE_STAGE.update({
     "ref_read": "bench", "topic_got": "bench", "of_dual_b": "bench", "of_dual": "origin", "of_dual_retry": "origin", "of_settled": "origin", "of_verify": "origin", "of_verify_got": "origin", "of_lens": "origin", "of_peers": "origin", "of_got": "origin", "of_pick": "origin", "of_find": "origin", "of_find_got": "origin", "of_fetch": "origin", "of_fetched": "origin", "of_dedup": "origin",
