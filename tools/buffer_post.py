@@ -23,6 +23,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import random
 import re
 import secrets
 import shutil
@@ -159,7 +160,7 @@ def _remove_remote(*names):
         _ssh("rm -f " + " ".join(f"{REMOTE_DIR}/{n}" for n in names))
 
 
-SLOTS = ((15, 0), (20, 0))     # 사장님(2026-10-26) "매일 3시 한 번, 8시 한 번 / 한 번에 두 개는 없다" — 계정당 칸 하나에 영상 하나
+SLOTS = ((15, 30), (19, 30))   # 사장님(2026-10-29) "매일 3시반·7시반"(10-26 3시·8시에서 바뀜) / "한 번에 두 개는 없다" — 계정당 칸 하나에 영상 하나
 SERVICES = ("youtube", "tiktok")   # 같은 영상을 같은 칸에 유튜브·틱톡 둘 다(10-26 실사용). 인스타는 950 계정이 잘못 붙어 있어 뺀다
 
 
@@ -169,8 +170,15 @@ def _taken(rows, folder):
             if r.get("folder") == folder and r.get("final_status") != "deleted"}
 
 
+def _order(vs):
+    """칸에 넣는 순서 — 폴더에 둘 이상이면 무작위(사장님 10-29 "두 개 이상 있어도 랜덤으로 배정")."""
+    vs = list(vs)
+    random.shuffle(vs)
+    return vs
+
+
 def _slot_dues(rows, folder, n, now=None):
-    """다음 빈 칸 n개(15:00·20:00 KST). 15시가 지났거나 차 있으면 건너뛰고 20시 — 영상이 하나면 그 날 20시로 간다."""
+    """다음 빈 칸 n개(SLOTS, KST). 앞 칸이 지났거나 차 있으면 건너뛰고 다음 칸 — 영상이 하나면 그 날 남은 칸으로 간다."""
     now = now or dt.datetime.now(KST)
     taken, out, day = _taken(rows, folder), [], now.date()
     while len(out) < n:
@@ -246,6 +254,42 @@ def _inpock_blocks(acct, cache={}):
         cache[acct] = [(b.get("title") or "", b.get("url") or "", b.get("is_open", True))
                        for b in arr if b.get("block_type") == "link"]
     return cache[acct]
+
+
+# 설명란 안내 한 줄(사장님 10-29 "설명란에 영상 속 제품은 프로필 링크 몇 번에 있습니다 / 채널별로 말투 다르게").
+# 주인 = 여기 한 곳. 폴더 이름 → 말투. {n} = 인포크 블록 번호. 없는 폴더는 기본 문장.
+LINK_LINE = {
+    "950 숏템리폿": "📌 영상 속 제품은 프로필 링크 {n}번에 정리해 두었습니다.",
+    "987_1 샥템스토리": "영상 속 그 제품, 프로필 링크 {n}번에 있어요 👀",
+    "987_2 신박리포트": "🔎 영상 속 제품 정보는 프로필 링크 {n}번에서 확인하세요.",
+    "994_1 썰템홈샷": "썰 속 그 제품은 프로필 링크 {n}번에 있어요!",
+    "994_2 트롯파파": "영상에 나온 제품은 프로필 링크 {n}번에 있습니다~",
+    "995_1 썰템쇼": "🎬 오늘 나온 제품은 프로필 링크 {n}번에 있어요!",
+    "995_2 얜샷템": "이거 어디서 사냐고요? 프로필 링크 {n}번이에요 😎",
+    "998_1 꿀템샷": "🍯 영상 속 꿀템은 프로필 링크 {n}번에 담아 뒀어요.",
+    "998_2 별빛여행": "✨ 영상 속 아이템은 프로필 링크 {n}번에서 만나보세요.",
+    "999_1 잇썸홈": "🏠 영상 속 살림템은 프로필 링크 {n}번에 있어요.",
+    "999_2 재미썸홈": "궁금하셨죠? 영상 속 제품은 프로필 링크 {n}번이에요 😆",
+    "21(수창) 쓸데수집": "🛒 영상 속 그 물건은 프로필 링크 {n}번에 있어요.",
+    "숏템07(수창) 쓱싹템": "🧽 영상 속 제품은 프로필 링크 {n}번에 있어요.",
+}
+LINK_LINE_DEFAULT = "영상 속 제품은 프로필 링크 {n}번에 있습니다."
+
+
+def _block_no(block):
+    """'[10] 조선미녀…' · '13. 픽업브릭스…' → '10' · '13'."""
+    m = re.match(r"^\s*\[?\s*(\d+)\s*[\].]", block or "")
+    return m.group(1) if m else ""
+
+
+def _with_link_line(folder, cap, block):
+    """제목(첫 줄) 바로 아래에 채널 말투의 '프로필 링크 N번' 한 줄을 넣는다. 이미 '프로필 링크'가 있으면 그대로."""
+    n = _block_no(block)
+    if not n or "프로필 링크" in cap:
+        return cap
+    line = LINK_LINE.get(folder, LINK_LINE_DEFAULT).format(n=n)
+    title, _, rest = cap.partition("\n")
+    return f"{title}\n\n{line}\n\n{rest.strip()}".rstrip()
 
 
 def _inpock_check(folder, block):
@@ -394,7 +438,7 @@ def cmd_post(a):
     rows = _load(LEDGER, [])
     ok = fail = 0
     for n, d, key in _folders(a.folder):
-        vs = _videos(d)
+        vs = _order(_videos(d))
         if not vs:
             continue
         try:
@@ -405,12 +449,9 @@ def cmd_post(a):
         if not targets:
             print(f"[{n}] Buffer에 유튜브·틱톡 채널이 없다 — 건너뜀")
             continue
-        # 시각: --at 이면 그대로(칸이 차 있으면 거절), 없으면 그 계정의 다음 빈 15:00·20:00 칸
-        dues = _due_list(a.at, a.gap, len(vs)) if a.at else _slot_dues(rows, n, len(vs))
-        for due in dues:
-            if due and due[:16] in _taken(rows, n):
-                raise SystemExit(f"[{n}] {due} 칸에 이미 예약이 있다 — 한 칸에 두 개는 없다(사장님 10-26)")
-        for v, due in zip(vs, dues):
+        # ① 올릴 수 있는 영상만 먼저 고른다 — 준비 안 된 영상이 칸을 차지하면 준비된 영상이 다음 날로 밀린다(10-29)
+        ready = []
+        for v in vs:
             cap, cap_path = _caption(d, v)
             if not cap:
                 print(f"[{n}] {v}: .txt 없음 — 건너뜀(첫 줄 제목, 나머지 설명으로 같은 이름 .txt 를 써 두라)")
@@ -420,7 +461,15 @@ def cmd_post(a):
             if bad:
                 print(f"[{n}] {v}: {bad} — 건너뜀")
                 continue
+            if not _block_no(block):
+                print(f"[{n}] {v}: 인포크 제목 '{block}' 에서 번호를 못 읽음 — 건너뜀(설명란 '프로필 링크 N번'을 못 쓴다)")
+                continue
+            cap = _with_link_line(n, cap, block)
             fp = _fingerprint(os.path.join(d, v))
+            same = next((r[0] for r in ready if r[4] == fp), None)
+            if same:     # 이번 묶음 안의 같은 영상(이름만 다름) — 장부엔 아직 없어 _already_posted 가 못 본다
+                print(f"[{n}] {v}: ⛔ 중복 — 이번에 올리는 {same} 와 같은 영상 → 안 올림")
+                continue
             todo = []
             for ch in targets:
                 dup = _already_posted(rows, n, d, v, fp, ch.get("service"))
@@ -428,8 +477,16 @@ def cmd_post(a):
                     print(f"[{n}] {v} {ch.get('service')}: ⛔ 중복 — {dup} → 안 올림(정말 다시 올릴 거면 장부에서 그 행을 지워라)")
                 else:
                     todo.append(ch)
-            if not todo:
-                continue
+            if todo:
+                ready.append((v, cap, cap_path, block, fp, todo))
+        if not ready:
+            continue
+        # ② 시각: --at 이면 그대로(칸이 차 있으면 거절), 없으면 그 계정의 다음 빈 칸(SLOTS) — 준비된 영상 수만큼만
+        dues = _due_list(a.at, a.gap, len(ready)) if a.at else _slot_dues(rows, n, len(ready))
+        for due in dues:
+            if due and due[:16] in _taken(rows, n):
+                raise SystemExit(f"[{n}] {due} 칸에 이미 예약이 있다 — 한 칸에 두 개는 없다(사장님 10-26)")
+        for (v, cap, cap_path, block, fp, todo), due in zip(ready, dues):
             done_any = False
             for ch in todo:
                 remote = None
