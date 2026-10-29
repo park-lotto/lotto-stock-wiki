@@ -10,7 +10,18 @@
 """
 import re
 
-from shopping_shorts import script_generate
+# script_generate(서버 AI 호출·Vertex 깔때기)는 번역할 때만 불러온다 — 글자·언어 판정만 쓰는 렌더(scene_style·video_assemble)가
+# 회원 엔진 묶음에 서버 AI 경로까지 끌고 가지 않게(10-29 회원 묶음 실측). 밖에서 script_translate.script_generate 로 닿는 것은 그대로 된다.
+def _sg():
+    from shopping_shorts import script_generate
+    globals()["script_generate"] = script_generate
+    return script_generate
+
+
+def __getattr__(name):
+    if name == "script_generate":
+        return _sg()
+    raise AttributeError(name)
 
 _HANGUL = re.compile(r"[가-힣]")
 _LATIN = re.compile(r"[A-Za-z]")
@@ -360,7 +371,7 @@ def translate(lines, lang, product="", *, source=None, call=None, tries=2, check
             return list(src)
     elif src_lang == lang:
         return list(src)
-    call = call or (lambda p, s: script_generate._call_json(p, s))
+    call = call or (lambda p, s: _sg()._call_json(p, s))
     hint = f" ('{product}')" if (product or "").strip() else ""
     if legacy:
         tmpl = _PROMPT if lang == "en" else _PROMPT_JA
