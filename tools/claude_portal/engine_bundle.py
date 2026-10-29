@@ -148,6 +148,13 @@ HAND_SERVER_ONLY = {
     "tools/calcopy/engine/preset_make.py",
     "tools/calcopy/hybrid/server_ai.py", "tools/calcopy/hybrid/gemini_server.py",   # 서버 키·주소 — 보내면 안 됨
     "tools/calcopy/engine/preset_save.py",   # 프리셋 만드는 기술(render_itssum 함수 안) — 회원 PC 엔 안 보낸다
+    # 10-29 의존을 끝까지 따라가자 드러난 깊은 곳의 서버 전용(전에도 빠져 있었다 — 이제 '안 보낸다'를 적어 둔다).
+    #   서버 DB·관리 알림·인스타·아피파이 수집·서버 AI 키·틀 만들기·무료 받아쓰기 = 회원 PC 갈래에서 안 도는 길(돌면 그 자리에서 멈춘다)
+    "shopping_shorts/app.py", "shopping_shorts/store.py", "shopping_shorts/apify_client.py", "shopping_shorts/channel_archive.py",
+    "shopping_shorts/instagram_playwright.py", "tools/calcopy/engine/gemini_keys.py", "tools/calcopy/engine/gemini_server.py",
+    "tools/calcopy/engine/to_frame.py", "tools/calcopy/transcribe_free.py",
+    # 개발 PC 스위치(CALCOPY_DEV_COUPANG_SERVER·CALCOPY_DEV_MINA_SERVER)에서만 도는 서버 접속 — 우리 서버 SSH 정보가 들어 있어 보내면 안 된다(묶음 검사 SECRETS)
+    "tools/calcopy/coupang_api_search.py", "tools/calcopy/mina_tts.py", "shopping_shorts/vertex_route.py",
 }
 
 
@@ -181,7 +188,7 @@ def hand_deps(engine: Path) -> dict[str, str]:
                     m = mod_file(x)
                     if m and m not in seen and m not in HAND_SERVER_ONLY:
                         out.setdefault(m, r)
-                        if m in HAND:
+                        if m in HAND or not forbidden(m):   # 부른 파일이 다시 부르는 것까지 끝까지(10-29 회원 실측: kal_analyze 가 함수 안에서 부르는 readline_tools.capseg 가 빠져 재료 시트·장면 맞추기가 멈춤)
                             todo.append(m)
     return out
 
