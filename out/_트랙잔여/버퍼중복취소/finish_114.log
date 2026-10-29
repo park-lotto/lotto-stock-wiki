@@ -1,0 +1,88 @@
+finish 를 분리 실행했다 — 이 창이 꺼져도 끝까지 간다.
+  로그: C:\Users\CH\Desktop\로또의 주식\.tracks\_finish_logs\버퍼중복취소_20261004_111415.log
+11:15:43   ℹ️ 기준선: 저장된 전체 실패 18건(같은 코드 트리) — 정확 비교
+11:15:43   ℹ️ 기준선: 문법·import 만 — 전체 시험은 병합본에서 한 번, 실패한 것만 main 에서 재확인(카드 081)
+11:15:45 [대기] 시험 자원 대기 — 다른 병합이 시험 프로세스 표를 쓰는 중(0/8 확보) (줄과 별개 — 줄은 안 막는다)
+11:20:30 시험 자원: 병렬 8 (남은 메모리 14001MB)
+11:20:30 게이트 실행 중 (병합된 상태, 아직 커밋 없음 · 줄 밖)...
+11:29:37   ℹ️ main 재확인 기억 재사용(코드 트리 2618ab2fb14ddb2b)
+11:29:37   ℹ️ 기존 실패로 분류(병합 전 main 에서도 깨짐) 2건: shopping_shorts/tests/test_auto_deploy_pending.py::test_package_lock_change_installs_node_dependencies, shopping_shorts/tests/test_crawl_watch.py::test_api_crawl_reflects_recorded_run
+11:29:37 ✅ 게이트 통과
+11:30:40   관제: 카드: 114 버퍼 예약 중복 방지 + 예약 취소 + 페이스북 거절 수리
+11:30:40   관제: ✅ 관제 자동 승인 — 고객 화면 변경 1건, 관문(카드·주인·소유권·영향) 통과, 라이브 뒤 자동 실측
+11:30:40   관제: ⚠️ 선점 충돌: shopping_shorts/app.py 는 트랙 장면폰트(카드 036)가 쥐고 있다 — 병합은 하되 관제 판단이 필요하다
+11:30:40   관제: ⚠️ 선점 충돌: shopping_shorts/app.py:api_mix_voice_preview 는 트랙 단어강조(카드 113)가 쥐고 있다 — 병합은 하되 관제 판단이 필요하다
+11:30:40   관제: ⚠️ 선점 충돌: shopping_shorts/static/produce.html 는 트랙 장면폰트(카드 036)가 쥐고 있다 — 병합은 하되 관제 판단이 필요하다
+11:30:40   관제: 소유권 검사 통과 (판단 26개 시그니처, 변경 10파일)
+11:30:40   관제: 영향 지도: mixBeatIdAt(shopping_shorts/static/produce.html) 소비처 0 · diff 에 0 · 영향 없음 표기 0
+11:30:56 영상 관문: 건너뜀 — 제작 라인 변경 없음 (변경 10파일; app.py: 제작 라인 밖 함수만 변경 ['_buffer_job_lock', '_buffer_schedule_locked', 'api_buffer_cancel', 'api_buffer_posts', 'api_buffer_schedule'] · 모듈 상수 ['_BUFFER_JOB_LOCKS'])
+11:30:56   (관문 기록 저장: C:\Users\CH\Desktop\로또의 주식\.tracks\_gate_reports\버퍼중복취소_20261004_113056.txt)
+11:30:56 검사 끝 — 줄에 선다(줄 안에선 커밋·push 만)
+11:31:00 ℹ️ 끼어든 main 커밋에 코드가 있다(2개, 예: shopping_shorts/app.py) — 게이트를 다시 돈다
+11:31:30 ⚠️ 시험하는 사이 main 에 코드가 들어왔다. 줄에서 빠져 최신 main 위에서 다시 잰다 (1/5)...
+11:32:57   ℹ️ 기준선: 문법·import 만 — 전체 시험은 병합본에서 한 번, 실패한 것만 main 에서 재확인(카드 081)
+11:33:01 [대기] 시험 자원 대기 — 다른 병합이 시험 프로세스 표를 쓰는 중(0/8 확보) (줄과 별개 — 줄은 안 막는다)
+11:38:31 [대기] 시험 자원 대기 — 다른 병합이 시험 프로세스 표를 쓰는 중(0/6 확보) (줄과 별개 — 줄은 안 막는다)
+11:38:36 [대기] 시험 자원 대기 — 다른 병합이 시험 프로세스 표를 쓰는 중(0/8 확보) (줄과 별개 — 줄은 안 막는다)
+11:44:47 시험 자원: 병렬 8 (남은 메모리 12376MB)
+11:44:47 재시도: 끼어든 코드·내 변경 관련 시험 350개 파일만 다시(앞 시도 통과 · 줄 밖)...
+11:52:01   ℹ️ main 재확인 기억 재사용(코드 트리 e7b460f060240118)
+11:52:01   ℹ️ 기존 실패로 분류(병합 전 main 에서도 깨짐) 4건: shopping_shorts/tests/test_auto_deploy_pending.py::test_package_lock_change_installs_node_dependencies, shopping_shorts/tests/test_crawl_watch.py::test_api_crawl_reflects_recorded_run, shopping_shorts/tests/test_silent_except_budget.py::test_?_?_?_?, tools/test_capcut_export_audit.py::test_freeze_cut_goes_to_capcut_as_move_plus_photo
+11:52:01 ✅ 게이트 통과
+11:53:00   관제: 카드: 114 버퍼 예약 중복 방지 + 예약 취소 + 페이스북 거절 수리
+11:53:00   관제: 승인 필요 변경 1건 — 카드 114 승인 있음
+11:53:00   관제: ⚠️ 선점 충돌: shopping_shorts/app.py 는 트랙 장면폰트(카드 036)가 쥐고 있다 — 병합은 하되 관제 판단이 필요하다
+11:53:00   관제: ⚠️ 선점 충돌: shopping_shorts/app.py:api_mix_voice_preview 는 트랙 단어강조(카드 113)가 쥐고 있다 — 병합은 하되 관제 판단이 필요하다
+11:53:00   관제: ⚠️ 선점 충돌: shopping_shorts/static/produce.html 는 트랙 장면폰트(카드 036)가 쥐고 있다 — 병합은 하되 관제 판단이 필요하다
+11:53:00   관제: 소유권 검사 통과 (판단 26개 시그니처, 변경 10파일)
+11:53:00   관제: 영향 지도: mixBeatIdAt(shopping_shorts/static/produce.html) 소비처 0 · diff 에 0 · 영향 없음 표기 0
+11:53:18 영상 관문: 건너뜀 — 제작 라인 변경 없음 (변경 10파일; app.py: 제작 라인 밖 함수만 변경 ['_buffer_job_lock', '_buffer_schedule_locked', 'api_buffer_cancel', 'api_buffer_posts', 'api_buffer_schedule'] · 모듈 상수 ['_BUFFER_JOB_LOCKS'])
+11:53:18   (관문 기록 저장: C:\Users\CH\Desktop\로또의 주식\.tracks\_gate_reports\버퍼중복취소_20261004_115318.txt)
+11:53:18 검사 끝 — 줄에 선다(줄 안에선 커밋·push 만)
+11:53:22 ℹ️ 끼어든 main 커밋에 코드가 있다(1개, 예: shopping_shorts/static/scene_lab.html) — 게이트를 다시 돈다
+11:54:52 ⚠️ 시험하는 사이 main 에 코드가 들어왔다. 줄에서 빠져 최신 main 위에서 다시 잰다 (2/5)...
+11:56:21   ℹ️ 기준선: 저장된 전체 실패 20건(같은 코드 트리) — 정확 비교
+11:56:21   ℹ️ 기준선: 문법·import 만 — 전체 시험은 병합본에서 한 번, 실패한 것만 main 에서 재확인(카드 081)
+11:56:25 [대기] 시험 자원 대기 — 다른 병합이 시험 프로세스 표를 쓰는 중(0/8 확보) (줄과 별개 — 줄은 안 막는다)
+11:58:20 [대기] 시험 자원 대기 — 다른 병합이 시험 프로세스 표를 쓰는 중(0/7 확보) (줄과 별개 — 줄은 안 막는다)
+11:58:25 [대기] 시험 자원 대기 — 다른 병합이 시험 프로세스 표를 쓰는 중(0/6 확보) (줄과 별개 — 줄은 안 막는다)
+11:58:30 [대기] 시험 자원 대기 — 다른 병합이 시험 프로세스 표를 쓰는 중(0/7 확보) (줄과 별개 — 줄은 안 막는다)
+11:58:35 [대기] 시험 자원 대기 — 다른 병합이 시험 프로세스 표를 쓰는 중(0/8 확보) (줄과 별개 — 줄은 안 막는다)
+11:59:50 시험 자원: 병렬 8 (남은 메모리 12026MB)
+11:59:50 재시도: 끼어든 코드·내 변경 관련 시험 350개 파일만 다시(앞 시도 통과 · 줄 밖)...
+12:05:43 ✅ 게이트 통과
+12:06:34   관제: 카드: 114 버퍼 예약 중복 방지 + 예약 취소 + 페이스북 거절 수리
+12:06:34   관제: 승인 필요 변경 1건 — 카드 114 승인 있음
+12:06:34   관제: ⚠️ 선점 충돌: shopping_shorts/app.py 는 트랙 장면폰트(카드 036)가 쥐고 있다 — 병합은 하되 관제 판단이 필요하다
+12:06:34   관제: ⚠️ 선점 충돌: shopping_shorts/app.py:api_mix_voice_preview 는 트랙 단어강조(카드 113)가 쥐고 있다 — 병합은 하되 관제 판단이 필요하다
+12:06:34   관제: ⚠️ 선점 충돌: shopping_shorts/static/produce.html 는 트랙 장면폰트(카드 036)가 쥐고 있다 — 병합은 하되 관제 판단이 필요하다
+12:06:34   관제: 소유권 검사 통과 (판단 26개 시그니처, 변경 10파일)
+12:06:34   관제: 영향 지도: mixBeatIdAt(shopping_shorts/static/produce.html) 소비처 0 · diff 에 0 · 영향 없음 표기 0
+12:06:50 영상 관문: 건너뜀 — 제작 라인 변경 없음 (변경 10파일; app.py: 제작 라인 밖 함수만 변경 ['_buffer_job_lock', '_buffer_schedule_locked', 'api_buffer_cancel', 'api_buffer_posts', 'api_buffer_schedule'] · 모듈 상수 ['_BUFFER_JOB_LOCKS'])
+12:06:50   (관문 기록 저장: C:\Users\CH\Desktop\로또의 주식\.tracks\_gate_reports\버퍼중복취소_20261004_120650.txt)
+12:06:50 검사 끝 — 줄에 선다(줄 안에선 커밋·push 만)
+12:06:54 ℹ️ 끼어든 main 커밋에 코드가 있다(1개, 예: shopping_shorts/static/scene_lab.html) — 게이트를 다시 돈다
+12:07:19 ⚠️ 시험하는 사이 main 에 코드가 들어왔다. 줄에서 빠져 최신 main 위에서 다시 잰다 (3/5)...
+12:08:55   ℹ️ 기준선: 저장된 전체 실패 20건(같은 코드 트리) — 정확 비교
+12:08:55   ℹ️ 기준선: 문법·import 만 — 전체 시험은 병합본에서 한 번, 실패한 것만 main 에서 재확인(카드 081)
+12:08:59 [대기] 시험 자원 대기 — 다른 병합이 시험 프로세스 표를 쓰는 중(0/8 확보) (줄과 별개 — 줄은 안 막는다)
+12:15:06 시험 자원: 병렬 8 (남은 메모리 12434MB)
+12:15:06 재시도: 끼어든 코드·내 변경 관련 시험 350개 파일만 다시(앞 시도 통과 · 줄 밖)...
+12:22:07 ✅ 게이트 통과
+12:22:57   관제: 카드: 114 버퍼 예약 중복 방지 + 예약 취소 + 페이스북 거절 수리
+12:22:57   관제: 승인 필요 변경 1건 — 카드 114 승인 있음
+12:22:57   관제: ⚠️ 선점 충돌: shopping_shorts/app.py 는 트랙 장면폰트(카드 036)가 쥐고 있다 — 병합은 하되 관제 판단이 필요하다
+12:22:57   관제: ⚠️ 선점 충돌: shopping_shorts/app.py:api_mix_voice_preview 는 트랙 단어강조(카드 113)가 쥐고 있다 — 병합은 하되 관제 판단이 필요하다
+12:22:57   관제: ⚠️ 선점 충돌: shopping_shorts/static/produce.html 는 트랙 장면폰트(카드 036)가 쥐고 있다 — 병합은 하되 관제 판단이 필요하다
+12:22:57   관제: 소유권 검사 통과 (판단 26개 시그니처, 변경 10파일)
+12:22:57   관제: 영향 지도: mixBeatIdAt(shopping_shorts/static/produce.html) 소비처 0 · diff 에 0 · 영향 없음 표기 0
+12:23:07 영상 관문: 건너뜀 — 제작 라인 변경 없음 (변경 10파일; app.py: 제작 라인 밖 함수만 변경 ['_buffer_job_lock', '_buffer_schedule_locked', 'api_buffer_cancel', 'api_buffer_posts', 'api_buffer_schedule'] · 모듈 상수 ['_BUFFER_JOB_LOCKS'])
+12:23:07   (관문 기록 저장: C:\Users\CH\Desktop\로또의 주식\.tracks\_gate_reports\버퍼중복취소_20261004_122307.txt)
+12:23:07 검사 끝 — 줄에 선다(줄 안에선 커밋·push 만)
+12:23:12 ⏩ 끼어든 main 커밋이 비코드 2개뿐 — 게이트 결과 그대로 두고 합쳐서 다시 push
+12:23:17 ✅ main에 병합 완료 — push됨. 3분 뒤 서버 반영.
+12:23:23 ✅ 관제 카드 114 ← 병합 8c672de337 기록 (main e006d8d32e)
+12:23:23    라이브 실측은 묻지 않아도 자동 — 매시간 tools/live_check.py --all 이 실제 고객 작업으로 영상·소리·자막·캡컷을 재서 카드에 적는다(기준 미달이면 회귀). 지금 바로: py tools/live_check.py --all
+12:23:47 ✅ 트랙 '버퍼중복취소' 폴더는 그대로 두고 최신 main에 맞췄다 — 바로 다음 작업 가능.
+12:23:47    트랙을 아주 접으려면: py tools/track.py close 버퍼중복취소
+rc=0
