@@ -111,7 +111,8 @@ export function shape(out, secret) {
   if (typeof src.stage === 'string') { r.stage = clean(src.stage, null, 40); if (src.step != null) r.step = int(src.step, 0, 99); if (src.step_total != null) r.step_total = int(src.step_total, 0, 99); }   // 진행 한 줄(볼케이노처럼 단계만)
   if (typeof src.message === 'string') r.message = clean(src.message, null, 80);   // 볼케이노형 진행 한 줄("OO 완료 → 다음 OO", 관제 234 10-21)
   if (typeof src.title === 'string' && src.need === 'done') r.title = clean(src.title, null, 100);
-  if (typeof src.preset_used === 'string') r.preset_used = clean(src.preset_used, null, 40);   // 한 줄 요청으로 고른 프리셋 이름(고객용 이름)
+  if (typeof src.preset_used === 'string') r.preset_used = clean(src.preset_used, null, 40);
+  if (typeof src.preset_note === 'string') r.preset_note = clean(src.preset_note, null, 100);   // 별칭 → 프리셋 이름 한 줄(98 #160)   // 한 줄 요청으로 고른 프리셋 이름(고객용 이름)
   if (Array.isArray(src.hints) && src.hints.length) r.hints = src.hints.slice(0, 12).map(h => clean(h, secret, 200)).filter(Boolean);
   if (isObj(src.fail)) r.fail = { where: STEP_NAMES.includes(src.fail.where) ? src.fail.where : clean(src.fail.where, secret, 20), why: clean(src.fail.why, secret, 200), fix: clean(src.fail.fix, secret, 200), retry_ok: !!src.fail.retry_ok };
   const data = shapeData(src.data);

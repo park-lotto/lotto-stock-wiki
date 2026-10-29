@@ -37,7 +37,7 @@ def admin_cookie():
 
 
 @contextlib.contextmanager
-def admin_page(path="/", viewport=(1500, 1000)):
+def admin_page(path="/", viewport=(1500, 1000), setup=None):
     from playwright.sync_api import sync_playwright
     ck = admin_cookie()
     with sync_playwright() as p:
@@ -49,6 +49,8 @@ def admin_page(path="/", viewport=(1500, 1000)):
         pg = ctx.new_page()
         pg.errors = []
         pg.on("pageerror", lambda e: pg.errors.append(str(e)[:200]))
+        if setup:
+            setup(pg)   # 첫 요청 전에 route 등을 건다 — 열고 나서 새로고침하면 화면이 불러오는 도중 저장이 나간다(관제 276 실측)
         pg.goto(BASE + "/" + path.lstrip("/"), wait_until="domcontentloaded")   # git bash 가 /produce 를 경로로 바꾸니 produce 도 받는다
         pg.wait_for_timeout(2500)
         try:

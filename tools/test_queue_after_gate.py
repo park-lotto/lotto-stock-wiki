@@ -70,20 +70,20 @@ def test_시험_프로세스_합계는_8개_이하(tmp_path, monkeypatch):
         t.start()
     for t in ts:
         t.join(60)
-    assert peak[0] <= track.GATE_WORKER_TOKENS == 8, peak[0]
+    assert peak[0] <= track.GATE_WORKER_TOKENS == 4, peak[0]
 
 
 def test_메모리가_모자라면_병렬을_줄이고_최소도_안되면_기다린다(tmp_path, monkeypatch):
     monkeypatch.delenv("GATE_XDIST_N", raising=False)
     monkeypatch.setenv("TRACK_FINISH_LOCK", str(tmp_path / "f.lock"))
-    assert track._gate_target_workers(100000) == 8
+    assert track._gate_target_workers(100000) == 4
     assert track._gate_target_workers(track.GATE_RESERVE_MB + 3 * track.GATE_WORKER_MB) == 3
     assert track._gate_target_workers(track.GATE_RESERVE_MB + track.GATE_WORKER_MB) == 0
     seq = iter([track.GATE_RESERVE_MB] * 2 + [100000] * 50)
     monkeypatch.setattr(track, "_free_mb", lambda: next(seq))
     monkeypatch.setattr(track.time, "sleep", lambda s: None)
     with track._gate_slot() as n:
-        assert n == 8 and __import__("os").environ["GATE_XDIST_N"] == "8"
+        assert n == 4 and __import__("os").environ["GATE_XDIST_N"] == "4"
     assert "GATE_XDIST_N" not in __import__("os").environ
 
 

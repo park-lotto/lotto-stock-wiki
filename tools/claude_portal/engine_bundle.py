@@ -32,14 +32,16 @@ FORBIDDEN = (
     "tools/calcopy/hybrid/*", "tools/calcopy/yanshot/*", "tools/calcopy/oneshot/*", "tools/calcopy/community_*.py",
     "tools/calcopy/transcribe_free.py", "tools/calcopy/*/README.md", "tools/calcopy/*.md",
     "research/*", "docs/*", "handoff/*", "wiki/*", "관제/*", "raw/*", "out/*.md",
-    ".env*", "*.pem", "shopping_shorts/app.py", "shopping_shorts/claude_portal.py", "shopping_shorts/tests/*",
+    ".env*", "*/.env*", "*.pem", "*/*.pem",      # ★하위 폴더 .env 도(fnmatch 는 경로 전체를 맞춰 ".env*" 가 shopping_shorts/.env 를 못 거르던 구멍 — 10-26 기미크림)
+    "shopping_shorts/app.py", "shopping_shorts/claude_portal.py", "shopping_shorts/tests/*",
     # 서버 수집기(계정 돌리기·프록시 슬롯·유료 수집) — 회원 PC 받기는 회원 로그인 쿠키로 한다(media_download 는 이것들 없이 돈다, 10-19 실측)
     "shopping_shorts/channel_archive.py", "shopping_shorts/instagram_playwright.py", "shopping_shorts/apify_client.py", "shopping_shorts/store.py",
 )
 # 묶음 안 어디에도 있으면 안 되는 글자(서버 주소·접속 열쇠 꼴·키 이름)
 #   duckdns 는 숏템 공개 주소(고객 프로그램이 라이선스 확인에 접속)라 숨길 대상이 아니다.
 SECRETS = (r"3\.35\.251\.172", r"LightsailDefaultKey", r"ubuntu@", r"BEGIN (RSA |OPENSSH )?PRIVATE KEY",
-           r"AIza[0-9A-Za-z_-]{30,}", r"SHORTS_GEMINI_KEY_\d+\s*=")
+           r"AIza[0-9A-Za-z_-]{30,}", r"SHORTS_GEMINI_KEY_\d+\s*=",
+           r"(?m)^\s*[A-Z][A-Z0-9_]*(?:API_KEY|_KEY|SECRET|TOKEN)\s*=\s*['\"]?[A-Za-z0-9_\-]{20,}['\"]?\s*$")   # .env 꼴 키 줄(일레븐랩스·타입캐스트·쿠팡 등) — 10-26
 # 노드 렌더러(render_scene_style.js)가 file:// 로 여는 것 — 파이썬 추적에 안 잡힌다. showcase html 의 src/href 에서 더 읽는다.
 RENDERER_EXTRA = ("tools/render_scene_style.js", "out/scene-style-ui-showcase.html")
 # 파이썬 추적에 안 잡히는 데이터(ffmpeg·node 가 여는 것, 설정 화면만 쓰는 것) — 10-19 설치본 실측: 목소리 목록·배경음악이 빠져
@@ -47,7 +49,8 @@ RENDERER_EXTRA = ("tools/render_scene_style.js", "out/scene-style-ui-showcase.ht
 DATA_EXTRA = ("shopping_shorts/assets/voice_presets.json", "shopping_shorts/assets/bgm_lib", "shopping_shorts/assets/sfx_packs",
               "shopping_shorts/calcopy_frame/my_packs.json", "shopping_shorts/static/caption-motions.js",
               "tools/calcopy/engine/warehouse_channels.json",
-              "shopping_shorts/static/fonts/Pretendard-Bold.otf")        # 완성본 오른쪽 위 '광고' 표시 글꼴(engine/ad_mark, 사장님 10-22)
+              "shopping_shorts/static/fonts")        # 글꼴 폴더 통째 — render_bench._font(FONTS/이름)·광고 표시(engine/ad_mark)가 연다.
+              # 10-29 실측: Pretendard 하나만 넣어 회원 묶음 렌더가 제목 글꼴에서 OSError 로 멈췄다(회원 PC 에 글꼴을 이 자리로 넣는 코드도 없다)
 
 
 def data_extra(engine: Path) -> list[str]:
@@ -125,24 +128,33 @@ def top_imports(engine: Path, entries=ENTRY) -> set[str]:
 #   노하우(지시서 hybrid/flow.py·브리프·문서)는 서버 한 곳 — 아래에 없으면 금지 목록 그대로 막힌다. 판 설정(styles/*.json)은 렌더 단계에만 빌린다.
 HAND = tuple(f"tools/calcopy/hybrid/{m}.py" for m in ("__init__", "runner_ops", "rules", "common", "render_bench", "render_itssum", "placement",
                                                        "bench_check", "thumb", "screen", "styles",
-                                                       "fx_target", "pack_map", "thumb_rule")) +     ("tools/calcopy/yanshot/__init__.py", "tools/calcopy/yanshot/common.py", "tools/calcopy/yanshot/plan.py")
+                                                       "fx_target", "pack_map", "thumb_rule",
+                                                       # 10-29 회원 묶음으로 렌더 실측(parity_render) — 렌더 경로가 함수 안에서 부른다. 빠지면 계획·렌더가 ImportError 로 멈춘다
+                                                       "material_fit", "quality_gate", "checks", "script_audit", "deco", "compare_sheet")) + (
+    "tools/calcopy/oneshot/__init__.py", "tools/calcopy/oneshot/scene_fit.py",   # 완성본 검사(check)가 부른다 — 10-29 회원 12/13 ModuleNotFoundError
+    "tools/calcopy/yanshot/__init__.py", "tools/calcopy/yanshot/common.py", "tools/calcopy/yanshot/plan.py",
+    "tools/calcopy/engine/tts_pause.py", "shopping_shorts/channelkit/vision/ocrdet.py",
+    "shopping_shorts/script_translate.py")       # 글자·언어 판정(scene_style·video_assemble) — script_generate 는 번역 때만 늦게 불러온다
 
 
 # HAND 가 부르는 hybrid 모듈 중 회원 PC 에 안 보내는 것(서버·개발 전용) — 여기도 HAND 에도 없으면 build 가 멈춘다(관제 265, 10-25:
 #   render_bench 가 fx_target·pack_map·thumb_rule 을 새로 부르는데 HAND 에 없어 회원 PC import 실패 구멍이 났다 — 손 목록은 썩는다).
 HAND_SERVER_ONLY = {
     # 판단 대기(관제 265): runner_ops·render_itssum·screen 이 함수 안에서 부른다 — 회원 PC 에서 그 갈래가 도는지 확인 뒤 HAND 로 옮기거나 여기 둔다
-    "tools/calcopy/hybrid/quality_gate.py", "tools/calcopy/hybrid/checks.py", "tools/calcopy/hybrid/script_audit.py",
-    "tools/calcopy/hybrid/compare_sheet.py", "tools/calcopy/oneshot/scene_fit.py",
     # 10-25 엔진 render_bench 가 함수 안(src_dir 있을 때)에서 respace_reuse 를 부른다 — material_fit 이 부르는 quality_gate·checks·script_audit·scene_fit 이
     #   전부 위 '판단 대기'라 같이 둔다(회원 PC 로 보낼지는 관제 265 판단, 관제 266 병합 막힘 풀기)
-    "tools/calcopy/hybrid/material_fit.py",
     # 10-26 엔진 render_bench 가 함수 안에서 deco(키치잇 꾸밈 재현, 3a388064c WIP·미검증)를 부른다 — 회원 PC 로 보낼지는 관제 265 발행 판단
-    "tools/calcopy/hybrid/deco.py",
     # 10-26 엔진 runner_ops 가 preset_make(make_synth — 회원 목소리 합성 한 곳)를 부른다 — preset_* 는 묶음 금지 꼴이라 발행 때 판단(관제 265): HAND 로 옮기거나 make_synth 를 금지 밖 파일로
     "tools/calcopy/engine/preset_make.py",
     "tools/calcopy/hybrid/server_ai.py", "tools/calcopy/hybrid/gemini_server.py",   # 서버 키·주소 — 보내면 안 됨
     "tools/calcopy/engine/preset_save.py",   # 프리셋 만드는 기술(render_itssum 함수 안) — 회원 PC 엔 안 보낸다
+    # 10-29 의존을 끝까지 따라가자 드러난 깊은 곳의 서버 전용(전에도 빠져 있었다 — 이제 '안 보낸다'를 적어 둔다).
+    #   서버 DB·관리 알림·인스타·아피파이 수집·서버 AI 키·틀 만들기·무료 받아쓰기 = 회원 PC 갈래에서 안 도는 길(돌면 그 자리에서 멈춘다)
+    "shopping_shorts/app.py", "shopping_shorts/store.py", "shopping_shorts/apify_client.py", "shopping_shorts/channel_archive.py",
+    "shopping_shorts/instagram_playwright.py", "tools/calcopy/engine/gemini_keys.py", "tools/calcopy/engine/gemini_server.py",
+    "tools/calcopy/engine/to_frame.py", "tools/calcopy/transcribe_free.py",
+    # 개발 PC 스위치(CALCOPY_DEV_COUPANG_SERVER·CALCOPY_DEV_MINA_SERVER)에서만 도는 서버 접속 — 우리 서버 SSH 정보가 들어 있어 보내면 안 된다(묶음 검사 SECRETS)
+    "tools/calcopy/coupang_api_search.py", "tools/calcopy/mina_tts.py", "shopping_shorts/vertex_route.py",
 }
 
 
@@ -176,7 +188,7 @@ def hand_deps(engine: Path) -> dict[str, str]:
                     m = mod_file(x)
                     if m and m not in seen and m not in HAND_SERVER_ONLY:
                         out.setdefault(m, r)
-                        if m in HAND:
+                        if m in HAND or not forbidden(m):   # 부른 파일이 다시 부르는 것까지 끝까지(10-29 회원 실측: kal_analyze 가 함수 안에서 부르는 readline_tools.capseg 가 빠져 재료 시트·장면 맞추기가 멈춤)
                             todo.append(m)
     return out
 
@@ -241,7 +253,8 @@ def build(engine: Path, traces: Path, out: Path) -> dict:
     bad = hand_unresolved(engine)
     if bad:
         raise SystemExit("[engine_bundle] HAND 가 부르는데 묶음에서 빠지는 파일 — HAND 또는 HAND_SERVER_ONLY 에 정해라:\n  " + "\n  ".join(bad))
-    want = sorted(mods | data | top_imports(engine) | set(hand_deps(engine)) | set(RENDERER_EXTRA) | set(showcase_deps(engine)) | set(data_extra(engine)))
+    # HAND 자신도 넣는다(10-29: thumb_rule 이 HAND 에 있는데 추적·hand_deps 에 안 잡혀 빠졌다)
+    want = sorted(mods | data | top_imports(engine) | set(HAND) | set(hand_deps(engine)) | set(RENDERER_EXTRA) | set(showcase_deps(engine)) | set(data_extra(engine)))
     kept, dropped, missing = [], [], []
     if out.exists():
         shutil.rmtree(out)

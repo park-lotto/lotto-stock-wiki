@@ -1,0 +1,1052 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>해외 원본 지도</title>
+<link rel="stylesheet" href="../_공용/book.css">
+<style>
+  p, li, td, .box, .three > div { word-break: keep-all; }
+  .prompt.s { font-size: 9.6pt; line-height: 1.55; padding: 4mm 5mm; }
+  .ptag + .pnote { display: inline-block; margin-left: 2mm; font-size: 10.5pt; color: var(--sub); }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; margin-top: 6mm; }
+  .steps div { background: var(--soft); border-radius: 3mm; padding: 4mm; font-size: 11pt; line-height: 1.5; }
+  .steps b { display: block; font-size: 22pt; color: var(--vio); line-height: 1.1; }
+  .three { margin-top: 4mm; display: grid; grid-template-columns: 1fr; gap: 2.5mm; }
+  .three > div { border: 1px solid var(--line); border-radius: 3mm; padding: 3mm 5mm; font-size: 11.5pt; line-height: 1.65; }
+  .three .h { font-weight: 800; font-size: 10.5pt; letter-spacing: .08em; }
+  .three .do .h { color: var(--vio); } .three .ck .h { color: var(--green); } .three .no .h { color: var(--red); }
+  .log td { height: 14mm; border: 1px solid #C9CDD8; }
+  .log th { font-size: 9.5pt; border: 1px solid #2A3250; text-align: center; padding: 2mm 1mm; }
+  .log td:first-child { text-align: center; color: var(--sub); }
+  .result td, .result th, .sm td, .sm th { font-size: 10pt; }
+  .xs td, .xs th { font-size: 9pt; padding: 1.8mm 1.6mm; }
+  .xs th { white-space: nowrap; line-height: 1.3; }
+  .toc li { list-style: none; display: flex; justify-content: space-between; border-bottom: 1px dashed var(--line); padding: .9mm 0; font-size: 11pt; line-height: 1.4; margin-top: 0; }
+  .toc li.part { font-weight: 800; color: var(--vio); border-bottom: 0; padding-top: 2.4mm; }
+  .toc { padding-left: 0; margin-top: 2mm; }
+  .kpi { display: grid; grid-template-columns: repeat(2, 1fr); gap: 3mm; margin-top: 5mm; }
+  .kpi div { background: var(--soft); border-radius: 3mm; padding: 4mm 5mm; font-size: 10.5pt; color: var(--sub); line-height: 1.45; }
+  .kpi b { display: block; font-size: 24pt; color: var(--ink); font-weight: 900; line-height: 1.15; letter-spacing: -.02em; }
+  .kpi b small { font-size: 12pt; font-weight: 700; }
+  .bars { margin-top: 4mm; }
+  .bar { display: flex; align-items: center; gap: 3mm; margin-top: 2.2mm; font-size: 11pt; }
+  .bar .l { flex: 0 0 38mm; }
+  .bar .t { flex: 1; background: var(--soft); border-radius: 1.5mm; height: 7mm; position: relative; }
+  .bar .f { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 1.5mm; background: var(--vio); }
+  .bar .f.g { background: var(--gold); } .bar .f.gr { background: var(--green); } .bar .f.r { background: var(--red); }
+  .bar .v { flex: 0 0 24mm; text-align: right; font-weight: 800; }
+  .flow { display: flex; align-items: stretch; gap: 2mm; margin-top: 6mm; }
+  .flow div { flex: 1; background: var(--soft); border-radius: 3mm; padding: 4mm 3mm; text-align: center; font-size: 10.5pt; color: var(--sub); line-height: 1.4; }
+  .flow b { display: block; font-size: 26pt; color: var(--ink); font-weight: 900; }
+  .flow .ar { flex: 0 0 6mm; background: none; padding: 0; font-size: 16pt; color: var(--vio); display: flex; align-items: center; justify-content: center; }
+  .sig { display: inline-block; font-weight: 800; font-size: 9.5pt; padding: .6mm 2.2mm; border-radius: 1.2mm; color: #fff; white-space: nowrap; }
+  .sig.ok { background: var(--green); } .sig.mid { background: var(--gold); } .sig.no { background: var(--red); }
+  .src { font-size: 9.5pt; line-height: 1.55; color: var(--sub); }
+  .src li { margin-top: .8mm; }
+  .letter { margin-top: 4mm; border: 1px solid var(--line); border-radius: 3mm; padding: 4mm 6mm; font-size: 11pt; line-height: 1.65; background: #FCFCFE; }
+  .letter .ko { color: var(--sub); font-size: 10pt; margin-top: 2mm; }
+  .md { margin-top: 4mm; background: #0F1426; color: #E6E9F2; border-radius: 3mm; padding: 4mm 5mm; font-size: 9.3pt; line-height: 1.6; white-space: pre-wrap; word-break: keep-all; }
+  .md b { color: #F2C46D; }
+  .partpage { display: flex; flex-direction: column; justify-content: center; }
+</style>
+</head>
+<body>
+
+<!-- 표지 -->
+<section class="page cover">
+  <div class="brand">MAKERS LAB · 숏클메이커 키트 2판</div>
+  <div class="kit">2026년 10월 실측판</div>
+  <h1>해외 <em>원본</em> 지도</h1>
+  <p class="lead">한국에서 터진 재편집 쇼츠 53편과 그 해외 원본 19편을 짝지어 잰 기록.<br>원본은 어디서 오고, 얼마나 먼저 올라왔고, 어떤 채널에 몰려 있는가 —<br>그리고 <b style="color:#fff">찾은 원본을 써도 되는지</b> 판정하는 법.</p>
+  <div class="inside">
+    <b>들어 있는 것</b><br>
+    · 재편집↔원본 짝 실측 — 플랫폼·조회수·시간차·종류<br>
+    · 해외 채널 109곳 지도 — 구독 규모별 '한국 관련으로 터진' 비율<br>
+    · 손으로 찾는 6단계 + 화면 따라하기 + 실패 진단표<br>
+    · <b>권리 판정표 8가지 경우</b> + 영어 허락 요청 견본 (유튜브 공식 도움말·저작권법 근거)<br>
+    · 스타일 6형식 지도 + 형식별 편집 수치(138편 실측)<br>
+    · 클로드 지시문 7종 + <b>클로드 스킬 파일 1개</b> (실제로 돌려본 결과 포함)
+  </div>
+  <div class="who">메이커스랩 · cafe.naver.com/makerslab7 · 기준일 2026-10-29</div>
+</section>
+
+<!-- 쓰는 법 -->
+<section class="page">
+  <div class="chap">시작하기 전에</div>
+  <h2>이 책은 무엇이고,<br>누구에게 필요한가</h2>
+  <p class="big">해외 영상을 다시 편집하는 쇼츠 채널은 많습니다. 그런데 <b>"원본이 어디 있고, 써도 되느냐"</b>를 숫자와 근거로 정리한 자료는 찾기 어렵습니다. 이 책은 메이커스랩이 원본을 찾으며 쌓은 장부를 그대로 세어서 만들었습니다.</p>
+  <h3>이런 분께</h3>
+  <ul>
+    <li>해외 반응·동물·썰·뷰티 쇼츠를 시작하려는데 <b>소재를 어디서 찾을지</b> 모르는 분</li>
+    <li>재편집본을 받아 쓰다가 <b>화질·남의 자막·저작권 신고</b>로 막힌 분</li>
+    <li>클로드에게 "원본 찾아줘" 해 봤다가 지친 분</li>
+  </ul>
+  <h3>읽는 순서</h3>
+  <ol>
+    <li><b>1장 데이터</b>를 먼저 보세요. 어디를 찾아야 하는지가 정해집니다.</li>
+    <li><b>2장 채널 지도</b>로 원본이 몰린 채널을 찾는 눈을 기릅니다.</li>
+    <li><b>3장 6단계</b>를 소재 하나로 직접 따라 합니다. 마지막 쪽 기록장에 적으면서.</li>
+    <li><b>4장 권리</b>는 올리기 전에 꼭. 찾은 것과 써도 되는 것은 다릅니다.</li>
+    <li><b>5~7장</b>은 만들 때 펴 보는 참고서입니다. 지시문·스킬 파일은 함께 받은 파일에 있습니다.</li>
+  </ol>
+  <div class="box gold"><div class="t">이 책이 약속하지 않는 것</div>수익 금액은 약속하지 않습니다. 이 책의 숫자는 전부 우리 장부를 센 것이고, 표본이 작은 곳은 작다고 적었습니다(다음 쪽 '데이터와 한계').</div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 차례 -->
+<section class="page">
+  <div class="chap">차례</div>
+  <h2>차례</h2>
+  <ul class="toc">
+    <li><span>데이터 출처 · 기준일 · 한계</span><span data-for="p-data"></span></li>
+    <li class="part"><span>1장 · 원본은 어디서 오나 — 재편집 53편 실측</span><span></span></li>
+    <li><span>왜 '원본'인가</span><span data-for="p-why"></span></li>
+    <li><span>한눈에: 소재 10편 → 재편집 53편 → 원본 19편</span><span data-for="p-flow"></span></li>
+    <li><span>원본은 인스타·틱톡, 재편집은 유튜브</span><span data-for="p-plat"></span></li>
+    <li><span>원본 조회수 vs 재편집 조회수</span><span data-for="p-views"></span></li>
+    <li><span>원본은 보통 2년 전에 올라왔다</span><span data-for="p-gap"></span></li>
+    <li><span>한 원본이 여러 번 쓰인다 · 원본의 종류</span><span data-for="p-reuse"></span></li>
+    <li class="part"><span>2장 · 해외 채널 지도 — 109곳</span><span></span></li>
+    <li><span>지도 한눈에</span><span data-for="p-map"></span></li>
+    <li><span>구독 규모별 '터진' 비율</span><span data-for="p-subs"></span></li>
+    <li><span>좋은 채널 하나에 원본이 몰린다</span><span data-for="p-skew"></span></li>
+    <li><span>이런 채널을 찾는 법 · 채널 평가표</span><span data-for="p-find"></span></li>
+    <li class="part"><span>3장 · 손으로 찾는 6단계</span><span></span></li>
+    <li><span>6단계 한눈에 → 단계별 · 화면 따라하기</span><span data-for="p-six"></span></li>
+    <li><span>실패 진단표</span><span data-for="p-diag"></span></li>
+    <li><span>실제 사례 · 함정 4가지</span><span data-for="p-case"></span></li>
+    <li class="part"><span>4장 · 써도 되나 — 권리 판정</span><span></span></li>
+    <li><span>권리 판정표 8가지 경우</span><span data-for="p-rights"></span></li>
+    <li><span>흔한 오해 · 허락 요청 견본 · 출처</span><span data-for="p-myth"></span></li>
+    <li class="part"><span>5장 · 스타일 6형식과 편집 수치</span><span></span></li>
+    <li><span>형식 지도 · 형식별 수치 138편</span><span data-for="p-style"></span></li>
+    <li class="part"><span>6~7장 · 클로드 지시문 7종 · 클로드 스킬</span><span></span></li>
+    <li><span>지시문</span><span data-for="p-prompt"></span></li>
+    <li><span>스킬 설치 · 실제 결과</span><span data-for="p-skill"></span></li>
+    <li><span>원본 찾기 기록장</span><span data-for="p-log"></span></li>
+  </ul>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 데이터 -->
+<section class="page" id="p-data">
+  <div class="chap">데이터와 한계</div>
+  <h2>이 책의 숫자는 어디서 왔나</h2>
+  <table class="sm">
+    <tr><th style="width:42mm">자료</th><th>무엇인가</th><th style="width:26mm">기준일</th></tr>
+    <tr><td><b>재편집↔원본 장부</b></td><td>한국에서 터진 재편집 쇼츠를 소재로, 같은 장면의 해외 원본을 찾아 짝지은 기록. 영상 302개 · 채널 142곳 · 짝 126개</td><td>2026-10-21</td></tr>
+    <tr><td><b>해외 채널 장부</b></td><td>외국인이 한국 제품·문화에 반응하는 해외 채널의 최근 업로드를 훑은 기록. 채널 109곳 · 훑은 영상 17,489편</td><td>2026-10-20</td></tr>
+    <tr><td><b>스타일 측정</b></td><td>쇼츠 형식별로 대표 채널의 편집을 줄 단위로 잰 기록. 20채널 · 138편</td><td>2026-10월</td></tr>
+    <tr><td><b>엔진 실측</b></td><td>숏클메이커 엔진이 원본 한 편을 찾는 데 걸린 시간(출시 강의에서 공개한 수치)</td><td>2026-10월</td></tr>
+  </table>
+  <h3>짝 126개 = 재편집본 53편 × 원본 19편</h3>
+  <p>소재 10편에서 출발해, 같은 장면을 올린 한국 재편집본 53편과 해외 원본 19편을 찾았습니다. 재편집본 하나가 원본 여러 개와 이어지기도 해서 짝은 126개입니다. <b>이 책은 겹치지 않게 고유 영상 기준</b>으로 셉니다.</p>
+  <div class="box red">
+    <div class="t">꼭 알고 읽으세요 — 한계 4가지</div>
+    ① <b>표본이 작습니다.</b> 원본 19편, 소재 10편입니다. 경향을 보는 자료이지 법칙이 아닙니다.<br>
+    ② <b>이미 터진 것에서 출발했습니다.</b> 터진 재편집본을 거꾸로 따라간 기록이라, 안 터진 경우는 들어 있지 않습니다(선택 편향).<br>
+    ③ <b>조회수가 빠진 영상이 있습니다.</b> 원본 19편 중 12편, 재편집 53편 중 49편만 조회수가 남아 있습니다.<br>
+    ④ 채널 장부의 '한국 관련'은 제목·설명·태그의 낱말로 가렸습니다. 놓친 영상이 있을 수 있습니다.
+  </div>
+  <p class="sub">채널·인물·영상의 실명은 싣지 않았습니다. 원작자와 다른 크리에이터를 보호하기 위해서입니다.</p>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 1장 왜 원본 -->
+<section class="page" id="p-why">
+  <div class="chap">1장 · 원본은 어디서 오나</div>
+  <h2>왜 '원본'인가</h2>
+  <p class="big">쇼츠를 매일 보다 보면 같은 장면을 여러 채널에서 보게 됩니다. 상당수는 <b>해외에서 처음 찍은 영상</b>에 자막과 제목 띠를 덮어 다시 올린 것입니다. 이 책의 장부에서는 원본 한 편이 한국 재편집본 많게는 <b>17편</b>과 이어졌습니다.</p>
+  <h3>재편집본을 그대로 가져오면 안 되는 이유</h3>
+  <ul>
+    <li><b>남의 자막이 덮여 있습니다.</b> 그 위에 내 자막을 또 얹으면 화면이 지저분하고, 남의 편집을 베낀 영상이 됩니다.</li>
+    <li><b>화질이 떨어져 있습니다.</b> 여러 번 다시 올라올수록 흐려집니다.</li>
+    <li><b>누가 처음 찍었는지 모릅니다.</b> 원작자를 모르면 허락을 구할 수도, 출처를 적을 수도 없습니다(4장).</li>
+  </ul>
+  <div class="box vio">
+    <div class="t">원본을 찾으면 한 번에 얻는 것 4가지</div>
+    ① 자막 없는 깨끗한 화면 ② 가장 좋은 화질 ③ <b>원작자 정보 — 허락을 구할 상대</b> ④ 한국에 이미 몇 번 올라왔는지(이미 많이 돈 장면인지)
+  </div>
+  <div class="box">
+    <div class="t">이 책의 낱말 세 개</div>
+    <b>소재</b> = 내가 본 한국 재편집 쇼츠 · <b>원본</b> = 해외에서 처음 찍어 올린 영상 · <b>후보</b> = 원본일지도 모르는, 검색으로 찾은 영상들
+  </div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 한눈에 -->
+<section class="page" id="p-flow">
+  <div class="chap">1장 · 실측 한눈에</div>
+  <h2>소재 10편을 따라가니<br>원본 19편이 나왔다</h2>
+  <div class="flow">
+    <div><b>10</b>한국에서 터진<br>소재 쇼츠</div>
+    <div class="ar">→</div>
+    <div><b>53</b>같은 장면을 올린<br>한국 재편집본</div>
+    <div class="ar">→</div>
+    <div><b>19</b>해외에서 처음<br>찍은 원본</div>
+  </div>
+  <div class="kpi">
+    <div><b>14<small> / 19편</small></b>원본이 인스타그램·틱톡에 있었다</div>
+    <div><b>41<small> / 53편</small></b>한국 재편집본은 유튜브에 있었다</div>
+    <div><b>810<small>일</small></b>원본이 재편집본보다 먼저 올라온 기간(중앙값)</div>
+    <div><b>약 18<small>배</small></b>원본 조회 중앙값 135만 ÷ 재편집 7.4만 (읽는 법은 8쪽 — 그대로 믿으면 안 되는 숫자)</div>
+  </div>
+  <p>이 네 숫자가 이 책의 결론을 거의 다 말합니다.</p>
+  <ol>
+    <li><b>원본은 유튜브 밖에 있다.</b> 유튜브만 뒤지면 재편집본만 계속 나옵니다.</li>
+    <li><b>원본은 오래됐다.</b> 2년 전 영상이 지금 한국에서 터집니다. 최신 영상만 보면 놓칩니다.</li>
+    <li><b>원본은 이미 검증됐다.</b> 해외에서 먼저 크게 터진 장면이 한국에서 다시 돕니다.</li>
+  </ol>
+  <p class="sub">원본 19편 모두 장면 사진 검색(구글 렌즈 같은 방식) 결과에 걸려 있었습니다 — 3장 3단계에서 사진 검색을 맨 앞에 두는 이유입니다.</p>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 플랫폼 -->
+<section class="page" id="p-plat">
+  <div class="chap">1장 · 플랫폼</div>
+  <h2>원본은 인스타·틱톡,<br>재편집은 유튜브</h2>
+  <h3>해외 원본 19편은 어디에 있었나</h3>
+  <div class="bars">
+    <div class="bar"><span class="l">인스타그램</span><span class="t"><span class="f" style="width:36.8%"></span></span><span class="v">7편</span></div>
+    <div class="bar"><span class="l">틱톡</span><span class="t"><span class="f" style="width:36.8%"></span></span><span class="v">7편</span></div>
+    <div class="bar"><span class="l">유튜브</span><span class="t"><span class="f" style="width:26.3%"></span></span><span class="v">5편</span></div>
+  </div>
+  <h3>한국 재편집본 53편은 어디에 있었나</h3>
+  <div class="bars">
+    <div class="bar"><span class="l">유튜브</span><span class="t"><span class="f g" style="width:77.4%"></span></span><span class="v">41편</span></div>
+    <div class="bar"><span class="l">틱톡</span><span class="t"><span class="f g" style="width:15.1%"></span></span><span class="v">8편</span></div>
+    <div class="bar"><span class="l">인스타그램</span><span class="t"><span class="f g" style="width:7.5%"></span></span><span class="v">4편</span></div>
+  </div>
+  <div class="box vio">
+    <div class="t">그래서 이렇게 찾습니다</div>
+    원본 찾기는 <b>인스타·틱톡을 먼저</b>, 유튜브는 마지막에 봅니다. 유튜브는 원본보다 <b>한국 재업로드를 세는 곳</b>(6단계)으로 씁니다.
+  </div>
+  <p class="sub">짝 126개 기준으로 세면 원본 쪽이 틱톡 55 · 인스타 51 · 유튜브 20입니다. 한 원본이 여러 재편집본과 이어지면 여러 번 세어지므로 위 그래프는 고유 영상 기준을 씁니다.</p>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 조회 -->
+<section class="page" id="p-views">
+  <div class="chap">1장 · 조회수</div>
+  <h2>원본 조회수 vs<br>재편집본 조회수</h2>
+  <table>
+    <tr><th></th><th>조회수 있는 편</th><th>중앙값</th><th>범위</th></tr>
+    <tr><td><b>해외 원본</b></td><td>12 / 19편</td><td><b>1,350,000</b></td><td>23,603 ~ 52,800,000</td></tr>
+    <tr><td><b>한국 재편집본</b></td><td>49 / 53편</td><td><b>74,266</b></td><td>재편집 53편 중 24편이 10만 회 이상</td></tr>
+  </table>
+  <h3>읽는 법</h3>
+  <ul>
+    <li><b>원본은 이미 크게 터진 장면입니다.</b> 원본 중앙값이 135만 회입니다. 한국에서 다시 도는 장면은 해외에서 먼저 검증된 경우가 많다는 뜻입니다.</li>
+    <li><b>재편집본도 절반 가까이는 10만 회를 넘었습니다</b>(24/53). 같은 장면이라도 편집과 대본에 따라 결과가 갈립니다.</li>
+    <li>조회수가 둘 다 남은 짝 69개 중 <b>15개는 한국 재편집본이 원본보다 더 많이</b> 봤습니다. 장면이 같아도 대본·편집이 조회수를 바꿉니다.</li>
+  </ul>
+  <div class="box red">
+    <div class="t">이 숫자를 이렇게 쓰면 안 됩니다</div>
+    "원본을 찾으면 18배 더 본다"가 아닙니다. 원본은 플랫폼도, 올린 시기도, 시청자도 다릅니다. 그리고 이 장부는 <b>이미 터진 재편집본에서 거꾸로 출발</b>했기 때문에 숫자가 위로 쏠려 있습니다. 이 표가 말하는 것은 하나 — <b>"해외에서 먼저 크게 터진 장면을 찾아라"</b>입니다.
+  </div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 시간차 -->
+<section class="page" id="p-gap">
+  <div class="chap">1장 · 시간차</div>
+  <h2>원본은 보통 2년 전에<br>올라왔다</h2>
+  <h3>원본 19편이 올라온 해</h3>
+  <div class="bars">
+    <div class="bar"><span class="l">2019년</span><span class="t"><span class="f" style="width:5.3%"></span></span><span class="v">1편</span></div>
+    <div class="bar"><span class="l">2021년</span><span class="t"><span class="f" style="width:10.5%"></span></span><span class="v">2편</span></div>
+    <div class="bar"><span class="l">2022년</span><span class="t"><span class="f" style="width:15.8%"></span></span><span class="v">3편</span></div>
+    <div class="bar"><span class="l">2023년</span><span class="t"><span class="f" style="width:5.3%"></span></span><span class="v">1편</span></div>
+    <div class="bar"><span class="l">2024년</span><span class="t"><span class="f" style="width:47.4%"></span></span><span class="v">9편</span></div>
+    <div class="bar"><span class="l">2025년</span><span class="t"><span class="f" style="width:15.8%"></span></span><span class="v">3편</span></div>
+  </div>
+  <h3>한국 재편집본 53편이 올라온 해</h3>
+  <div class="bars">
+    <div class="bar"><span class="l">2022년</span><span class="t"><span class="f g" style="width:3.8%"></span></span><span class="v">2편</span></div>
+    <div class="bar"><span class="l">2024년</span><span class="t"><span class="f g" style="width:20.8%"></span></span><span class="v">11편</span></div>
+    <div class="bar"><span class="l">2025년</span><span class="t"><span class="f g" style="width:34%"></span></span><span class="v">18편</span></div>
+    <div class="bar"><span class="l">2026년</span><span class="t"><span class="f g" style="width:41.5%"></span></span><span class="v">22편</span></div>
+  </div>
+  <div class="kpi">
+    <div><b>810<small>일</small></b>재편집본이 원본보다 늦게 올라온 기간 중앙값(약 2년 2개월)</div>
+    <div><b>38<small> / 53편</small></b>원본보다 1년 넘게 늦게 올라온 재편집본</div>
+  </div>
+  <div class="box vio"><div class="t">그래서</div>검색할 때 <b>'최신순'으로만 보지 마세요.</b> 업로드 날짜 필터를 풀고, 2~3년 전 영상까지 봐야 원본이 나옵니다. 오래된 장면이 지금 다시 돕니다.</div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 재사용·종류 -->
+<section class="page" id="p-reuse">
+  <div class="chap">1장 · 재사용과 종류</div>
+  <h2>한 원본이 여러 번 쓰인다</h2>
+  <p>원본 한 편이 한국 재편집본 몇 편과 이어졌는지 셌습니다(원본 19편).</p>
+  <div class="bars">
+    <div class="bar"><span class="l">17편과 이어짐</span><span class="t"><span class="f r" style="width:15.8%"></span></span><span class="v">원본 3편</span></div>
+    <div class="bar"><span class="l">7~11편</span><span class="t"><span class="f r" style="width:21.1%"></span></span><span class="v">원본 4편</span></div>
+    <div class="bar"><span class="l">4편</span><span class="t"><span class="f" style="width:52.6%"></span></span><span class="v">원본 10편</span></div>
+    <div class="bar"><span class="l">1편</span><span class="t"><span class="f" style="width:10.5%"></span></span><span class="v">원본 2편</span></div>
+  </div>
+  <p>많이 쓰인 원본은 <b>시청자가 이미 본 장면</b>이기도 합니다. 6단계에서 한국 재업로드를 세는 이유입니다 — 많이 돌았다면 같은 대본으로는 안 되고 <b>다른 각도의 대본</b>이 필요합니다.</p>
+  <h3>원본 19편의 종류</h3>
+  <table class="sm">
+    <tr><th>종류</th><th>원본</th><th>뜻</th></tr>
+    <tr><td>뷰티·화장품 제품</td><td><b>7편</b></td><td>외국인이 한국 화장품을 써 보는 장면</td></tr>
+    <tr><td>썰(사연·상황)</td><td><b>5편</b></td><td>상황·사건 자체가 이야깃거리인 장면</td></tr>
+    <tr><td>생활 제품</td><td><b>5편</b></td><td>화장품 외 생활용품을 쓰는 장면</td></tr>
+    <tr><td>동물 · 기타</td><td>1편 · 1편</td><td></td></tr>
+  </table>
+  <h3>재편집하는 한국 채널은 작은 곳도 많다</h3>
+  <p>재편집 채널 중 구독자 수가 남은 63곳: <b>1만 미만 20곳 · 1만~10만 23곳</b> · 10만~50만 10곳 · 50만~100만 5곳 · 100만 이상 5곳 (중앙값 2.3만). 큰 채널만 하는 일이 아닙니다.</p>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 2장 지도 -->
+<section class="page" id="p-map">
+  <div class="chap">2장 · 해외 채널 지도</div>
+  <h2>한국 제품에 반응하는<br>해외 채널 109곳</h2>
+  <p>외국인이 한국 화장품·음식·생활용품을 써 보고 반응하는 해외 채널의 최근 업로드를 훑었습니다(108곳 유튜브, 1곳 인스타).</p>
+  <div class="kpi">
+    <div><b>8,991<small>만</small></b>109곳 구독자 합 (한 곳 중앙값 18.6만)</div>
+    <div><b>8,433<small>편</small></b>훑은 17,489편 중 한국 관련 영상</div>
+    <div><b>1,417<small>편</small></b>그중 '터진' 영상 (한국 관련의 16.8%)</div>
+    <div><b>413<small>편</small></b>터진 영상 중 뷰티·화장품</div>
+  </div>
+  <div class="box gold">
+    <div class="t">이 책에서 '터진 영상'의 뜻</div>
+    조회수가 <b>그 채널 구독자 수 이상이면서 10만 회 이상</b>인 영상. 구독자보다 많이 봤다는 건 구독자 밖으로 퍼졌다는 뜻입니다. 내가 찾은 채널에도 같은 자로 세어 보세요.
+  </div>
+  <ul>
+    <li>109곳 중 <b>91곳</b>에 한국 관련으로 터진 영상이 1편 이상 있었습니다.</li>
+    <li>터진 영상의 절반 이상이 뷰티인 채널이 <b>37곳</b> — 뷰티는 원본이 몰리는 대표 분야입니다.</li>
+    <li>채널마다 가장 많이 본 한국 관련 영상의 조회수 중앙값은 <b>813만 회</b>였습니다.</li>
+  </ul>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 구독 규모 -->
+<section class="page" id="p-subs">
+  <div class="chap">2장 · 구독 규모</div>
+  <h2>구독 10만~50만 채널이<br>가장 잘 터졌다</h2>
+  <p>한국 관련 영상 중 '터진' 영상의 비율을 채널 구독 규모별로 나눴습니다.</p>
+  <table>
+    <tr><th>구독 규모</th><th>채널</th><th>한국 관련 영상</th><th>터진 영상</th><th>터진 비율</th></tr>
+    <tr><td>1만 미만</td><td>13</td><td>949</td><td>19</td><td>2.0%</td></tr>
+    <tr><td>1만~10만</td><td>32</td><td>2,550</td><td>380</td><td>14.9%</td></tr>
+    <tr><td><b>10만~50만</b></td><td><b>29</b></td><td><b>2,263</b></td><td><b>629</b></td><td><b>27.8%</b></td></tr>
+    <tr><td>50만~100만</td><td>13</td><td>819</td><td>108</td><td>13.2%</td></tr>
+    <tr><td>100만 이상</td><td>22</td><td>1,852</td><td>281</td><td>15.2%</td></tr>
+  </table>
+  <div class="bars">
+    <div class="bar"><span class="l">1만 미만</span><span class="t"><span class="f" style="width:7.2%"></span></span><span class="v">2.0%</span></div>
+    <div class="bar"><span class="l">1만~10만</span><span class="t"><span class="f" style="width:53.6%"></span></span><span class="v">14.9%</span></div>
+    <div class="bar"><span class="l">10만~50만</span><span class="t"><span class="f gr" style="width:100%"></span></span><span class="v">27.8%</span></div>
+    <div class="bar"><span class="l">50만~100만</span><span class="t"><span class="f" style="width:47.5%"></span></span><span class="v">13.2%</span></div>
+    <div class="bar"><span class="l">100만 이상</span><span class="t"><span class="f" style="width:54.7%"></span></span><span class="v">15.2%</span></div>
+  </div>
+  <div class="box vio"><div class="t">읽는 법</div>큰 채널은 구독자가 많아서 '구독자보다 많이 본' 기준을 넘기 어렵고, 아주 작은 채널은 아직 퍼지지 않았습니다. 이 장부에서는 <b>구독 10만~50만 채널의 터진 비율이 가장 높았습니다.</b> 원본 사냥을 이 구간부터 시작해 볼 만합니다. 단, 채널 29곳의 작은 표본입니다.</div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 쏠림 -->
+<section class="page" id="p-skew">
+  <div class="chap">2장 · 쏠림</div>
+  <h2>좋은 채널 하나에<br>원본이 몰린다</h2>
+  <h3>채널별 '한국 관련으로 터진' 영상 수</h3>
+  <div class="bars">
+    <div class="bar"><span class="l">0편</span><span class="t"><span class="f r" style="width:16.5%"></span></span><span class="v">18곳</span></div>
+    <div class="bar"><span class="l">1~5편</span><span class="t"><span class="f" style="width:28.4%"></span></span><span class="v">31곳</span></div>
+    <div class="bar"><span class="l">6~20편</span><span class="t"><span class="f" style="width:33.9%"></span></span><span class="v">37곳</span></div>
+    <div class="bar"><span class="l">21편 이상</span><span class="t"><span class="f gr" style="width:21.1%"></span></span><span class="v">23곳</span></div>
+  </div>
+  <div class="kpi">
+    <div><b>38.3<small>%</small></b>상위 10곳(약 10%)이 터진 영상 1,417편 중 차지한 몫</div>
+    <div><b>23<small>곳</small></b>한국 관련으로 터진 영상이 21편 이상인 채널</div>
+  </div>
+  <div class="box vio">
+    <div class="t">그래서 '영상'이 아니라 '채널'을 찾습니다</div>
+    원본 하나를 찾으면 끝내지 말고, <b>그 원본을 올린 채널의 업로드 목록 전체</b>를 훑으세요. 좋은 채널 하나에서 원본 수십 편이 나옵니다. 109곳 중 18곳은 터진 영상이 0편이었으니, 채널도 골라야 합니다(다음 쪽 평가표).
+  </div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 찾는 법 -->
+<section class="page" id="p-find">
+  <div class="chap">2장 · 채널 찾기</div>
+  <h2>이런 채널을 찾는 법</h2>
+  <p>이 책은 채널 이름 목록을 싣지 않습니다. 대신 <b>같은 종류의 채널을 직접 찾는 검색 방법</b>을 드립니다. 목록은 낡지만 방법은 계속 씁니다.</p>
+  <table class="sm">
+    <tr><th style="width:36mm">찾는 것</th><th>검색어 꼴 (유튜브·틱톡·인스타)</th></tr>
+    <tr><td>한국 화장품 써 보기</td><td>trying Korean skincare · Korean makeup first time · K-beauty haul</td></tr>
+    <tr><td>한국 음식·편의점</td><td>trying Korean convenience store food · Korean snacks taste test</td></tr>
+    <tr><td>한국 생활용품</td><td>Korean gadgets · things I bought in Korea · Korean daiso haul</td></tr>
+    <tr><td>다른 언어권</td><td>韩国 护肤 试用 (중국어) · 韓国コスメ 試してみた (일본어) · корейская косметика (러시아어)</td></tr>
+  </table>
+  <h3>찾은 채널, 3분 만에 고르는 법</h3>
+  <ol>
+    <li>채널의 <b>Shorts(쇼츠) 탭 → 인기순</b>으로 정렬합니다.</li>
+    <li>위에서 <b>30편</b>을 봅니다. 그중 한국 관련이 몇 편인지 셉니다.</li>
+    <li>한국 관련 중 <b>'터진 영상'</b>(구독자 이상 + 10만 회 이상)이 몇 편인지 셉니다.</li>
+    <li><b>직접 찍는 채널인지</b> 봅니다. 같은 사람·같은 방이 계속 나오면 원작자일 가능성이 높고, 매번 다른 사람·워터마크가 보이면 퍼 온 채널입니다.</li>
+    <li>프로필에 <b>이메일·연락처</b>가 있는지 봅니다(4장 허락 요청에 필요).</li>
+  </ol>
+  <div class="box gold"><div class="t">팁</div>원본 하나를 찾았으면 그 영상 아래 '이 채널의 다른 영상'·'추천'에 비슷한 채널이 뜹니다. 한 채널이 다음 채널로 이어집니다.</div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 채널 평가표 -->
+<section class="page">
+  <div class="chap">2장 · 채널 평가표</div>
+  <h2>채널 평가표</h2>
+  <p class="sub">점수: ① 인기 30편 중 한국 관련 10편 이상 = 1점 ② 그중 터진 영상 3편 이상 = 1점 ③ 직접 찍는 채널 = 1점 ④ 연락처 있음 = 1점 ⑤ 구독 10만~50만 = 1점. <b>4점 이상부터 업로드 목록을 전부 훑으세요.</b></p>
+  <table class="log">
+    <tr><th style="width:8mm">#</th><th>채널 주소</th><th style="width:16mm">구독</th><th style="width:16mm">한국<br>관련</th><th style="width:16mm">터진<br>영상</th><th style="width:16mm">직접<br>찍음</th><th style="width:16mm">연락처</th><th style="width:14mm">점수</th></tr>
+    <tr><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>3</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>6</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>7</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>8</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>9</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>11</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>12</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  </table>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 3장 6단계 -->
+<section class="page" id="p-six">
+  <div class="chap">3장 · 손으로 찾는 6단계</div>
+  <h2>6단계 한눈에</h2>
+  <p>원본 찾기는 검색 한 번이 아니라 <b>6단계 일</b>입니다. "똑같네" 하고 끝이 아니라, 진짜 같은 영상인지 검증까지 해야 끝납니다.</p>
+  <div class="steps">
+    <div><b>1</b>소재 받기</div>
+    <div><b>2</b>장면 읽기</div>
+    <div><b>3</b>여러 곳에서<br>원본 찾기</div>
+    <div><b>4</b>같은 영상인지<br>판정</div>
+    <div><b>5</b>받은 원본<br>재확인</div>
+    <div><b>6</b>한국에 몇 번<br>올라왔나 세기</div>
+  </div>
+  <h3>얼마나 걸리나 — 엔진 실측(한 편)</h3>
+  <table class="sm">
+    <tr><th>단계</th><th>시간</th><th>단계</th><th>시간</th></tr>
+    <tr><td>1 소재 받기</td><td>52초</td><td>4 같은 영상 판정</td><td>25초</td></tr>
+    <tr><td>2 장면 읽기</td><td>20초</td><td>5 받은 원본 재확인</td><td>36초</td></tr>
+    <tr><td>3 네 곳 동시 찾기</td><td>197초</td><td>6 한국 재업로드 세기</td><td>33초</td></tr>
+  </table>
+  <p class="sub">엔진이 사람 손 없이 돌았을 때 15편 중앙값 <b>약 7분</b>(숏클메이커 출시 강의 공개 수치). 손으로 처음부터 찾으면 메이커스랩장 경험상 한 편에 1시간 이상 걸립니다. 빨리 찾히는 것도, 끝내 안 찾히는 것도 있습니다.</p>
+  <div class="box vio"><div class="t">시간을 아끼는 순서</div>1장 데이터대로 — <b>사진 검색 → 인스타·틱톡 → 유튜브</b>. 날짜 필터는 풀고. 원본을 찾으면 그 채널 전체를 훑기(2장).</div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 1·2단계 -->
+<section class="page">
+  <div class="chap">3장 · 1~2단계</div>
+  <h2>소재 받기 · 장면 읽기</h2>
+  <h3>1단계 · 소재 받기</h3>
+  <div class="three">
+    <div class="do"><div class="h">할 일</div>원본을 찾을 한국 쇼츠의 주소·채널·올린 날짜·조회수를 기록장에 적습니다. 화면을 캡처할 수 있게 영상을 열어 둡니다.</div>
+    <div class="ck"><div class="h">확인할 것</div>올린 날짜. 나중에 "이것보다 먼저 올린 해외 영상"을 가려낼 기준입니다.</div>
+    <div class="no"><div class="h">흔한 실수</div>주소만 적고 날짜를 안 적는다 → 4단계에서 원본과 퍼 간 쪽을 못 가립니다.</div>
+  </div>
+  <h3>2단계 · 장면 읽기</h3>
+  <div class="three">
+    <div class="do"><div class="h">할 일</div>영상 길이의 <b>15%·35%·55%·75%</b> 지점에서 화면을 한 장씩, 4장 캡처합니다. 남의 자막·제목 띠가 덜 가린 장면을 고르고, 가렸으면 자막 없는 부분만 잘라 냅니다. 그리고 장면을 한 문장으로 적습니다. <mark>"누가 · 어디서 · 무엇을 · 무엇이 놀라운가"</mark></div>
+    <div class="ck"><div class="h">확인할 것</div>4장 안에 ① 사람 얼굴이나 손 ② 배경(벽·가구) ③ 제품이나 물건이 보이는가. 4단계 대조 재료입니다.</div>
+    <div class="no"><div class="h">흔한 실수</div>첫 장면(표지)만 캡처한다. 표지는 재편집하며 바뀌는 경우가 많아 검색이 엉뚱한 데로 갑니다.</div>
+  </div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 3단계 -->
+<section class="page">
+  <div class="chap">3장 · 3단계</div>
+  <h2>여러 곳에서 원본 찾기</h2>
+  <table class="sm">
+    <tr><th style="width:28mm">순서 · 어디서</th><th>어떻게</th></tr>
+    <tr><td><b>① 구글 렌즈</b></td><td>2단계 장면 4장을 <b>한 장씩</b> 넣습니다. 결과 중 영상 주소(틱톡·인스타·유튜브)만 후보로 적습니다. 장부의 원본 19편은 모두 이 방식의 결과에 걸려 있었습니다.</td></tr>
+    <tr><td><b>② 틱톡</b></td><td>여러 언어 검색어로 검색. 원본이 많은 곳입니다.</td></tr>
+    <tr><td><b>③ 인스타그램</b></td><td>검색 → 릴스. 같은 검색어를 띄어쓰기 없이 해시태그로도 넣어 봅니다.</td></tr>
+    <tr><td><b>④ 유튜브</b></td><td>쇼츠로 좁혀 검색. 원본보다 한국 재업로드가 많이 나옵니다(6단계에서 셉니다).</td></tr>
+  </table>
+  <h3>여러 언어 검색어 만드는 법</h3>
+  <ol>
+    <li><b>광고 말을 뺍니다.</b> 브랜드 이름·"리뷰"·"추천"을 넣으면 협찬 광고만 나옵니다.</li>
+    <li>처음 찍은 <b>일반인이 제목에 쓸 말</b>로 바꿉니다. "놀라운 선크림"이 아니라 "선크림 바로 투명해짐".</li>
+    <li><b>영어·중국어·러시아어·일본어</b>로, 한 검색어는 2~5단어. <b>짧게 여러 개</b>로 나눕니다(검색 결과가 앞쪽 몇 개만 보이는 경우가 많아서).</li>
+  </ol>
+  <div class="box gold">
+    <div class="t">예시 — "바르자마자 투명해지는 선크림" 장면</div>
+    영어 <b>sunscreen turns invisible</b> · 일본어 <b>日焼け止め 白浮きしない</b> · 중국어 <b>涂防晒 不假白</b>
+  </div>
+  <p class="sub">엔진 실측: 흔한 검색어 대신 터진 원본들의 공통점으로 만든 4개 언어 검색어를 쓰자, 같은 횟수 검색에서 쓸 만한 소재가 <b>3편 → 10편</b>으로 늘었습니다. 6장 지시문 1이 검색어를 대신 만들어 줍니다.</p>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 따라하기 -->
+<section class="page">
+  <div class="chap">3장 · 화면 따라하기</div>
+  <h2>무엇을 누르고,<br>무엇을 확인하나</h2>
+  <p class="sub">앱·사이트 화면은 자주 바뀝니다. 메뉴 이름이 조금 달라도 같은 기능을 찾으면 됩니다(2026-10 기준).</p>
+  <table class="sm">
+    <tr><th style="width:26mm">어디</th><th>누르는 것</th><th style="width:48mm">확인할 것</th></tr>
+    <tr><td><b>구글 렌즈<br>(PC 크롬)</b></td><td>캡처한 사진을 크롬에서 열고 → 사진 위 <b>오른쪽 클릭</b> → 'Google 렌즈로 이미지 검색'. 또는 구글 검색창의 <b>카메라 모양</b>을 눌러 사진을 끌어다 놓기</td><td>오른쪽 결과에서 <b>영상 주소</b>인 것만. 쇼핑 결과는 무시</td></tr>
+    <tr><td><b>구글 렌즈<br>(휴대폰)</b></td><td>구글 앱 → 검색창의 <b>카메라 모양</b> → 갤러리에서 캡처 고르기</td><td>위와 같음. 사진 범위를 사람·물건에 맞게 줄이면 더 잘 찾습니다</td></tr>
+    <tr><td><b>틱톡</b></td><td>검색 → 검색어 → <b>동영상</b> 탭</td><td>올린 날짜(영상 화면 아래), 같은 사람·같은 방인지</td></tr>
+    <tr><td><b>인스타그램</b></td><td>검색 → 검색어 → <b>릴스</b> 모아보기 / #해시태그</td><td>계정의 다른 릴스에 같은 사람이 계속 나오는지(원작자 신호)</td></tr>
+    <tr><td><b>유튜브</b></td><td>검색 → <b>필터</b> → 유형 '쇼츠'. 업로드 날짜는 <b>제한 없음</b></td><td>제목·채널 이름이 한글이면 한국 재업로드로 따로 세기</td></tr>
+  </table>
+  <div class="box red"><div class="t">하지 않는 것</div>로그인 우회·남의 계정 사용·대량 자동 검색은 하지 않습니다. 계정이 막히고(다음 쪽 진단표), 플랫폼 이용약관 위반이 될 수 있습니다.</div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 4단계 -->
+<section class="page">
+  <div class="chap">3장 · 4단계</div>
+  <h2>같은 영상인지 판정</h2>
+  <p class="big"><b>비슷한 것과 같은 것은 다릅니다.</b> 인기 있는 장면은 다른 사람들이 똑같이 따라 찍습니다. 같은 촬영본인지 4가지로 대조하세요.</p>
+  <table>
+    <tr><th style="width:24mm">대조</th><th>무엇을 보나</th></tr>
+    <tr><td><b>사람</b></td><td>얼굴 생김새, 머리 모양, 옷, <b>손에 낀 반지·시계·네일</b></td></tr>
+    <tr><td><b>장소</b></td><td>벽지·타일 무늬, 가구·창문·콘센트 위치</td></tr>
+    <tr><td><b>물건</b></td><td>제품 모양·색·글자, 놓인 자리</td></tr>
+    <tr><td><b>장면</b></td><td>움직이는 순서, 카메라 각도, 같은 순간의 손 위치</td></tr>
+  </table>
+  <div class="box red">
+    <div class="t">판정 규칙 하나</div>
+    사람·장소·물건 중 <b>하나라도 다르면 '다른 영상'</b>입니다. 표지가 똑같아 보여도 마찬가지입니다. 애매하면 '판단 불가'로 두고 장면을 더 뽑아 다시 봅니다.
+  </div>
+  <h3>원본 고르기</h3>
+  <ul>
+    <li>'같은 영상' 판정을 받은 후보만 남깁니다.</li>
+    <li>그중 <b>해외 계정 가운데 가장 먼저 올린 것</b>이 원본입니다. 모음 영상이면 원본이 여러 개일 수 있습니다.</li>
+    <li>내 소재보다 <b>늦게 올라온 해외 계정</b>은 원본이 아니라 퍼 간 쪽입니다.</li>
+  </ul>
+  <div class="three"><div class="no"><div class="h">흔한 실수</div>조회수가 제일 높은 걸 원본으로 고른다. 원본은 '가장 먼저'이지 '가장 많이 본' 게 아닙니다.</div></div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 5·6단계 -->
+<section class="page">
+  <div class="chap">3장 · 5~6단계</div>
+  <h2>받은 원본 재확인 ·<br>한국에 몇 번 올라왔나</h2>
+  <h3>5단계 · 받은 원본 재확인</h3>
+  <div class="three">
+    <div class="do"><div class="h">할 일</div>원작자 허락을 받아 원본 파일을 받았다면, <b>받은 영상에서 장면을 8장</b> 뽑아 소재 장면과 다시 대조합니다. 4단계는 표지 한 장만 보고 판정한 경우가 많기 때문입니다.</div>
+    <div class="ck"><div class="h">확인할 것</div>소재 장면이 받은 원본 안에 실제로 있는가. 원본에 다른 계정의 자막·워터마크가 없는가. 화질이 소재보다 좋은가.</div>
+    <div class="no"><div class="h">흔한 실수</div>받고 나서 안 열어 본다. 다른 영상이거나 앞부분만 받아진 경우가 있습니다.</div>
+  </div>
+  <h3>6단계 · 한국 재업로드 세기</h3>
+  <div class="three">
+    <div class="do"><div class="h">할 일</div>3단계 결과 중 채널 이름·제목이 한글인 같은 영상을 셉니다. 유튜브에서 원본 장면 사진으로 한 번 더 찾아봅니다.</div>
+    <div class="ck"><div class="h">확인할 것</div>몇 번 올라왔고 각각 조회수가 얼마인가. 여러 번 터졌다면 <b>검증된 장면</b>, 너무 많이 돌았다면 <b>시청자가 이미 본 장면</b>입니다(장부에선 한 원본이 많게는 17편과 이어짐).</div>
+    <div class="no"><div class="h">흔한 실수</div>한국 재업로드를 원본으로 착각한다. 한국 채널은 거의 항상 재편집한 쪽입니다.</div>
+  </div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 진단표 -->
+<section class="page" id="p-diag">
+  <div class="chap">3장 · 실패 진단표</div>
+  <h2>막혔을 때 — 증상별 처방</h2>
+  <table class="sm">
+    <tr><th style="width:36mm">증상</th><th style="width:48mm">흔한 원인</th><th>처방</th></tr>
+    <tr><td><b>원본이 아예 안 나온다</b></td><td>표지나 자막 덮인 장면으로 검색 · 광고 말이 든 검색어 · 원본이 삭제·비공개 · 원본이 중국 앱에 있음</td><td>15·35·55·75% 장면을 자막 없는 부분만 잘라 다시 렌즈 → 일반인 말 검색어로 → 중국어 검색어 추가 → <b>세 번 해도 없으면 기록장에 '안 찾힘'</b> 적고 다음 소재</td></tr>
+    <tr><td><b>비슷한데 다른 영상</b></td><td>유행하는 장면을 다른 사람이 따라 찍음</td><td>손·소품·벽 무늬를 크게 잘라 대조. 하나라도 다르면 버림. 원본은 따라 찍은 영상들보다 <b>날짜가 빠릅니다</b></td></tr>
+    <tr><td><b>찾은 '원본'이 또 재업로드</b></td><td>워터마크에 다른 계정 이름 · 채널에 매번 다른 사람 · 모음 영상</td><td>워터마크 속 계정 이름을 그대로 검색 · 날짜가 더 빠른 후보를 다시 찾기 · 그 채널은 평가표에서 '직접 찍음 ×'</td></tr>
+    <tr><td><b>원본 날짜가 소재보다 늦다</b></td><td>해외 계정이 한국 영상을 퍼 감</td><td>그 계정은 퍼 간 쪽. 더 이른 날짜 후보를 찾기</td></tr>
+    <tr><td><b>계정이 막힌다·로그인하라고 한다</b></td><td>짧은 시간에 검색을 너무 많이 · 창을 여러 개 동시에</td><td>브라우저 하나에 세 곳을 미리 로그인 → 한 곳씩 차례로 → 막히면 그날은 멈추고 다음 날</td></tr>
+    <tr><td><b>원작자에게 연락이 안 된다</b></td><td>메시지 막힘 · 답 없음</td><td>프로필 이메일로 한 번 더 → <b>2주 답이 없으면 쓰지 않음</b>(4장). 답이 없는 건 허락이 아닙니다</td></tr>
+  </table>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 사례 -->
+<section class="page" id="p-case">
+  <div class="chap">실제 사례</div>
+  <h2>690만 회 재편집본의<br>원본을 찾기까지</h2>
+  <p>숏클메이커 엔진이 실제로 찾은 한 편입니다(출시 강의 공개 사례). 채널과 인물은 가렸습니다.</p>
+  <div class="script">
+    <div class="row"><div class="k">소재</div><div class="v">한국 채널의 재편집 쇼츠, <b>690만 회</b>. 여성이 선크림을 바르는 장면.</div></div>
+    <div class="row"><div class="k">3단계</div><div class="v">여러 곳 검색 끝에 해외 <b>틱톡</b>에서 후보 발견.</div></div>
+    <div class="row"><div class="k">4단계</div><div class="v"><b>같은 여성 · 같은 방 · 같은 선크림</b> 장면인지 대조 → 같은 영상.</div></div>
+    <div class="row"><div class="k">원본</div><div class="v">처음 올린 틱톡 계정. 이 원본 채널의 최고 조회수 <b>380만 회</b>.</div></div>
+    <div class="row"><div class="k">6단계</div><div class="v">같은 원본이 한국에 이미 <b>12번</b> 올라와 있었음.</div></div>
+    <div class="row"><div class="k">걸린 시간</div><div class="v"><b>447초</b>(약 7분 30초), 사람 손 없이.</div></div>
+  </div>
+  <div class="box vio">
+    <div class="t">이 사례에서 배울 것</div>
+    ① 원본은 <b>틱톡</b>에 있었습니다 — 1장 데이터와 같습니다.<br>
+    ② 한국 재편집본(690만)이 원본 채널 최고(380만)보다 많이 봤습니다. <b>장면이 같아도 편집과 대본이 조회수를 바꿉니다.</b><br>
+    ③ 한국에 12번 올라왔다는 건 검증된 장면이자, 내가 쓸 땐 <b>다른 각도의 대본</b>이 필요하다는 뜻입니다.
+  </div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 함정 -->
+<section class="page">
+  <div class="chap">3장 · 함정</div>
+  <h2>직접 부딪힌 함정 4가지</h2>
+  <div class="box red">
+    <div class="t">함정 1 · 표지만 보고 골랐더니 다른 사람</div>
+    표지가 똑같아 원본이라고 골랐는데, 받아 보니 같은 장면을 따라 찍은 <b>다른 사람</b>이었습니다.<br>
+    → <b>막는 법</b>: 5단계에서 받은 원본 장면 8장을 소재와 다시 대조합니다.
+  </div>
+  <div class="box red">
+    <div class="t">함정 2 · 검색 결과가 앞쪽만 보인다</div>
+    틱톡·인스타 검색은 결과를 앞쪽 몇 개(우리가 볼 때 6개 안팎)만 보여 주는 경우가 많습니다. 긴 검색어 하나로는 원본이 뒤에 묻힙니다.<br>
+    → <b>막는 법</b>: 짧은 검색어 여러 개로 나눠 각각. 4개 언어 × 3개 = 12번.
+  </div>
+  <div class="box red">
+    <div class="t">함정 3 · 로그인·브라우저가 서로 막는다</div>
+    세 곳의 로그인 방식이 달라 중간에 멈추고, 창을 두 개 띄우면 서로 막기도 합니다.<br>
+    → <b>막는 법</b>: 브라우저 하나에 세 곳을 미리 로그인, 한 곳씩 차례로.
+  </div>
+  <div class="box red">
+    <div class="t">함정 4 · 어제 찾은 걸 오늘 또 찾는다</div>
+    찾은 원본·안 찾힌 소재를 적어 두지 않으면 시간이 두 번 듭니다.<br>
+    → <b>막는 법</b>: 기록장에 소재 주소부터 적고, 찾기 전에 기록장부터 봅니다. 7장 스킬이 기록장 한 줄을 만들어 줍니다.
+  </div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 4장 권리 기본 -->
+<section class="page">
+  <div class="chap">4장 · 써도 되나</div>
+  <h2>찾은 것과 써도 되는 것은<br>다릅니다</h2>
+  <p class="big">원본을 찾았다는 건 <b>누가 찍었는지 알게 됐다</b>는 뜻이지, <b>써도 된다는 허락을 받았다</b>는 뜻이 아닙니다.</p>
+  <h3>기본 세 가지</h3>
+  <ol>
+    <li><b>해외 영상도 한국에서 보호됩니다.</b> 외국인의 저작물도 조약에 따라 우리 저작권법으로 보호됩니다(저작권법 제3조). "외국 영상이니 괜찮다"는 없습니다.</li>
+    <li><b>유튜브에는 두 가지 관문이 따로 있습니다.</b>
+      <br>① <b>저작권</b> — 권리자가 삭제를 요청해 삭제되면 <b>저작권 위반 경고</b>. 90일 안에 3번이면 계정과 연결된 채널이 해지될 수 있습니다. 자동 검사(Content ID)에 걸리면 권리자 설정에 따라 차단·광고 수익 가져감·추적.
+      <br>② <b>수익 창출</b> — 저작권과 별개로, '재사용된 콘텐츠'(의미 있는 해설이나 실질적 수정 없이 재활용)는 <b>채널 전체</b>의 수익 창출이 중단될 수 있습니다.</li>
+    <li><b>사람 얼굴은 또 다른 문제입니다.</b> 저작권 허락과 별개로, 일반인 얼굴이 크게 나온 영상은 초상권 문제가 생길 수 있습니다. 연예인 영상은 더 조심해야 합니다.</li>
+  </ol>
+  <div class="box gold"><div class="t">한 줄 원칙</div><b>허락 받은 것 + 내 것을 크게 더한 것</b>만 씁니다. 확신이 없으면 쓰지 않습니다. 원본은 많고, 채널은 하나입니다.</div>
+  <p class="sub">※ 이 장은 공식 도움말·법 조문을 읽고 정리한 일반 안내이며 <b>법률 자문이 아닙니다.</b> 판단이 필요하면 변호사나 한국저작권위원회 상담을 받으세요. 출처와 확인일은 이 장 끝에 있습니다.</p>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 권리 판정표 -->
+<section class="page" id="p-rights">
+  <div class="chap">4장 · 권리 판정표</div>
+  <h2>8가지 경우 — 안전 · 주의 · 위험</h2>
+  <table class="sm">
+    <tr><th style="width:44mm">사용 방식</th><th style="width:15mm">신호</th><th>이유</th><th style="width:40mm">할 일</th></tr>
+    <tr><td><b>원작자 허락을 글로 받음</b></td><td><span class="sig ok">안전</span></td><td>허락 범위 안에서 쓰면 됩니다. 범위(수익 창출·편집)가 핵심</td><td>답장 캡처 보관, 범위 확인, 출처 표기</td></tr>
+    <tr><td><b>크리에이티브 커먼즈(CC BY)</b> 표시 영상</td><td><span class="sig ok">안전</span>~<span class="sig mid">주의</span></td><td>제목·저작자·원본 주소·라이선스를 밝히면 재사용 가능. 단, 올린 사람이 진짜 원작자가 아닐 수 있음</td><td>유튜브 검색 필터 '크리에이티브 커먼즈', 출처 4가지 표기</td></tr>
+    <tr><td><b>유튜브 리믹스 기능</b>으로 짧게 사용</td><td><span class="sig mid">주의</span></td><td>유튜브 안 영상에만 쓰는 기능이고 원본 링크가 붙음. 틱톡·인스타 원본엔 해당 없음</td><td>앱 안 기능으로만, 길이 제한 확인</td></tr>
+    <tr><td><b>해설·비평·반응을 실질적으로 더함</b></td><td><span class="sig mid">주의</span></td><td>유튜브 수익 정책은 해설·비평·리액션을 허용 예로 듭니다. 하지만 저작권 공정이용은 사례별 판단</td><td>내 말·내 화면이 영상의 중심이 되게. 원본은 짧게</td></tr>
+    <tr><td><b>자막·더빙만 바꿈</b></td><td><span class="sig no">위험</span></td><td>실질적 수정 없이 복사한 콘텐츠로 볼 수 있음 → 수익 중단·저작권 신고 둘 다</td><td>허락이 없으면 쓰지 않음</td></tr>
+    <tr><td><b>해외 원본을 그대로</b> 올림</td><td><span class="sig no">위험</span></td><td>'다른 곳에서 내려받거나 복사한 콘텐츠'는 유튜브가 수익 불가로 명시. 저작권 침해 소지</td><td>쓰지 않음</td></tr>
+    <tr><td><b>제품 브랜드의 공식 광고 영상</b></td><td><span class="sig no">위험</span></td><td>브랜드가 권리자입니다. 제휴·허락 없이 쓰면 신고 대상</td><td>제휴 프로그램이 제공하는 소재만</td></tr>
+    <tr><td><b>얼굴이 크게 나온 일반인 영상</b></td><td><span class="sig no">위험</span></td><td>저작권과 별개로 초상권. 원작자 허락이 찍힌 사람의 허락은 아닐 수 있음</td><td>허락 없으면 건너뜀</td></tr>
+  </table>
+  <p class="sub">신호는 메이커스랩이 공식 도움말을 읽고 매긴 위험도이며, 결과를 보장하지 않습니다.</p>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 유튜브 허용 예 -->
+<section class="page">
+  <div class="chap">4장 · 유튜브가 직접 든 예</div>
+  <h2>수익 창출 — 되는 예, 안 되는 예</h2>
+  <p>유튜브 고객센터 'YouTube 채널 수익 창출 정책'의 재사용된 콘텐츠 항목입니다. 핵심 기준은 <b>"시청자가 보기에 원본과 내 영상 사이에 유의미한 차이가 있는가"</b>입니다.</p>
+  <table class="sm">
+    <tr><th style="width:50%">수익 창출이 가능한 예</th><th>허용되지 않는 예</th></tr>
+    <tr><td>비평을 위해 동영상을 사용</td><td>장면에 설명을 거의·아예 추가하지 않고 편집한 클립</td></tr>
+    <tr><td>원본 영상에 대한 내 의견을 밝히는 리액션</td><td><b>다른 소셜 미디어에서 모아 엮은 짧은 동영상</b></td></tr>
+    <tr><td>다른 크리에이터 영상에 줄거리·해설을 더한 편집물</td><td><b>실질적 수정 없이 다른 곳에서 내려받거나 복사한 콘텐츠</b></td></tr>
+    <tr><td>오디오·시각 효과를 더해 실질적으로 편집한 영상</td><td>음성 해설 없이 비언어적 반응만으로 조회수를 얻는 콘텐츠</td></tr>
+    <tr><td>선수 플레이에 내 설명을 덧붙인 다시보기</td><td>다른 크리에이터가 여러 번 올린 콘텐츠</td></tr>
+  </table>
+  <div class="box red">
+    <div class="t">해외 원본 재편집 채널에 직접 걸리는 줄</div>
+    굵게 표시한 두 줄입니다. 틱톡·인스타 영상을 받아 자막만 얹어 올리는 방식이 정확히 여기에 해당합니다. 그리고 이 정책은 <b>영상 한 편이 아니라 채널 전체</b>에 적용됩니다.
+  </div>
+  <div class="box vio">
+    <div class="t">그래서 숏클 형식들은 이렇게 짭니다</div>
+    원본은 <b>허락 받은 것</b>으로, 그 위에 <b>내 대본의 나레이션</b>이 영상을 끌고 가게(5장 '나레+원음'·'나레' 형식). 원본 소리만 깔고 자막만 얹는 형식은 위험이 가장 큽니다.
+  </div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 오해 -->
+<section class="page" id="p-myth">
+  <div class="chap">4장 · 흔한 오해</div>
+  <h2>이렇게 하면 괜찮다? — 아닙니다</h2>
+  <table class="sm">
+    <tr><th style="width:52mm">흔한 오해</th><th>공식 안내</th></tr>
+    <tr><td>"출처만 밝히면 된다"</td><td>'모든 권리는 작성자에게 있음' 같은 문구를 써도 공정 사용을 뜻하지 않습니다(유튜브 공정 사용 안내).</td></tr>
+    <tr><td>"저작권 침해 의도 없음이라고 쓰면 된다"</td><td>그런 문구로 저작권 신고에서 자동으로 보호되지 않습니다.</td></tr>
+    <tr><td>"오락용·비영리라고 하면 된다"</td><td>'오락용'이라고 적는 것만으로는 영향이 없습니다. 비영리는 유리할 수 있지만 그 자체로 보호되진 않습니다.</td></tr>
+    <tr><td>"내 것을 조금 더하면 된다"</td><td>새로운 표현·의미·메시지를 더하지 못했다면 공정 사용으로 보기 어렵습니다.</td></tr>
+    <tr><td>"몇 초만 쓰면 된다"</td><td>저작물의 핵심 부분이면 짧아도 공정 사용이 아닐 수 있고, 신고가 들어오면 몇 초만 써도 수익 창출이 막힙니다.</td></tr>
+  </table>
+  <h3>한국 저작권법의 '공정한 이용'(제35조의5)</h3>
+  <p>저작물의 일반적인 이용 방법과 충돌하지 않고 저작자의 정당한 이익을 부당하게 해치지 않으면 이용할 수 있으며, 판단할 때 다음 4가지를 봅니다.</p>
+  <ol>
+    <li>이용의 목적 및 성격</li>
+    <li>저작물의 종류 및 용도</li>
+    <li>이용된 부분이 저작물 전체에서 차지하는 비중과 그 중요성</li>
+    <li>이용이 그 저작물의 현재·잠재적 시장 또는 가치에 미치는 영향</li>
+  </ol>
+  <p class="sub">원본을 거의 통째로 쓰는 재편집은 3번(비중)과 4번(원본 시장을 대신함)에서 불리합니다. 공정이용은 법원이 사례별로 판단합니다.</p>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 허락 요청 견본 -->
+<section class="page">
+  <div class="chap">4장 · 허락 요청 견본</div>
+  <h2>원작자에게 보내는 메시지</h2>
+  <p>짧고, 무엇에 어떻게 쓰는지 정확히, 거절해도 괜찮다는 말까지. 아래를 복사해 <span style="color:var(--vio);font-weight:800">[ ]</span>만 바꾸세요.</p>
+  <div class="letter">
+    Hi <b>[@account]</b>, I'm <b>[name]</b>, a creator who makes Korean-language YouTube Shorts.<br>
+    I loved your video <b>[short description, e.g. "the puppy slipping back into the bathtub"]</b> posted on <b>[date]</b>.<br><br>
+    May I use it in one Short with my own Korean narration added? Details:<br>
+    · Where: YouTube Shorts (channel: <b>[link]</b>)<br>
+    · How: about <b>[N]</b> seconds of your clip, with my narration and subtitles<br>
+    · Monetized: <b>[yes / no]</b><br>
+    · Credit: your account name on screen and a link to your original in the description<br><br>
+    If you'd rather I don't, no problem at all — thank you for your time!
+    <div class="ko">뜻: 안녕하세요, 한국어 유튜브 쇼츠를 만드는 [이름]입니다. [날짜]에 올리신 [영상]을 좋게 봤습니다. 제 한국어 나레이션을 더해 쇼츠 한 편에 써도 될까요? 어디에(유튜브 쇼츠) · 어떻게(약 N초, 제 나레이션·자막) · 수익 창출 여부 · 출처 표기(화면에 계정 이름, 설명란에 원본 링크). 원치 않으시면 괜찮습니다. 감사합니다!</div>
+  </div>
+  <h3>보낸 뒤</h3>
+  <ul>
+    <li><b>답장을 캡처</b>해 기록장 '허락' 칸과 함께 보관합니다. 말로 한 허락은 증명이 어렵습니다.</li>
+    <li>허락 받은 <b>범위만</b> 씁니다(편 수·수익 창출 여부). 범위가 바뀌면 다시 묻습니다.</li>
+    <li><b>2주 동안 답이 없으면 쓰지 않습니다.</b> 무응답은 허락이 아닙니다.</li>
+    <li>원작자가 '내 영상 아님'이라고 하면, 그 계정도 퍼 온 것입니다 — 3장 진단표로 돌아갑니다.</li>
+  </ul>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 출처 표기 · 출처 -->
+<section class="page">
+  <div class="chap">4장 · 출처 표기와 근거</div>
+  <h2>출처 표기 견본 · 이 장의 근거</h2>
+  <h3>설명란 출처 표기 (허락 받은 경우)</h3>
+  <div class="md">원본 영상: <b>[영상 제목 또는 설명]</b> — <b>[@원작자 계정]</b>
+<b>[원본 주소]</b>
+원작자의 허락을 받아 사용했습니다. (<b>[허락 받은 날짜]</b>)</div>
+  <h3>크리에이티브 커먼즈(CC BY) 영상인 경우</h3>
+  <div class="md">"<b>[작품 제목]</b>" by <b>[저작자]</b>, <b>[원본 주소]</b>
+CC BY 라이선스가 적용됨</div>
+  <p class="sub">유튜브 안내: CC BY 콘텐츠는 작품 제목·저작자·원본 URL·라이선스 정보를 영상 안 자막·음성 또는 설명란에 밝혀야 합니다. 유튜브는 다른 사람 콘텐츠의 사용 권한을 대신 얻어 주지 않습니다.</p>
+  <h3>이 장의 근거 (확인일 2026-10-29)</h3>
+  <ol class="src">
+    <li>YouTube 고객센터 「YouTube 채널 수익 창출 정책」 — 재사용된 콘텐츠 항목. support.google.com/youtube/answer/1311392</li>
+    <li>YouTube 고객센터 「YouTube의 공정 사용」. support.google.com/youtube/answer/9783148</li>
+    <li>YouTube 고객센터 「소유권 주장이란?」 · 「Content ID의 원리」. answer/7002106 · answer/2797370</li>
+    <li>YouTube 고객센터 「저작권 위반 경고 이해하기」. answer/2814000</li>
+    <li>YouTube 고객센터 「YouTube의 라이선스 유형」(크리에이티브 커먼즈). answer/2797468</li>
+    <li>저작권법 제3조(외국인의 저작물), 제28조(공표된 저작물의 인용), 제35조의5(저작물의 공정한 이용) — 조문은 국가법령정보센터(law.go.kr)에서 최종 확인하세요.</li>
+    <li>쇼츠 리믹스 기능의 길이·사용 범위는 앱 안내를 따르세요(이 책에서 공식 문서로 확인하지 못함).</li>
+  </ol>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 5장 형식 지도 -->
+<section class="page" id="p-style">
+  <div class="chap">5장 · 스타일 6형식</div>
+  <h2>원본으로 만들 수 있는<br>쇼츠 형식 지도</h2>
+  <p>메이커스랩이 쇼츠를 형식으로 나눈 지도입니다. 같은 원본도 형식에 따라 전혀 다른 영상이 됩니다.</p>
+  <table class="sm">
+    <tr><th style="width:30mm">형식</th><th>무엇인가</th><th style="width:56mm">세부 형식</th></tr>
+    <tr><td><b>해외원본</b></td><td>해외에서 터진 원본을 다시 편집. 소리를 어떻게 쓰느냐로 셋</td><td>나레+원음 · 나레 · 자막+배경음</td></tr>
+    <tr><td><b>쇼핑형</b></td><td>제품 이야기를 게시글·스토리 틀로. 나레이션 중심</td><td>인스타스토리형 · 썰쇼핑형 · 썰커뮤니티형</td></tr>
+    <tr><td><b>연예인쇼핑형</b></td><td>연예인 영상의 원래 소리 + 나레 + 같은 제품</td><td>후기형 · 대화형 · 체험형 · 나레+원음형 · 가격공개형</td></tr>
+    <tr><td><b>연예인레시피형</b></td><td>연예인 레시피 원래 소리 + 나레 다리 + 재료</td><td>레시피 체험형 · 레시피 원음형</td></tr>
+    <tr><td><b>여행쇼츠형</b></td><td>숙소 쇼츠 한 편의 틀 그대로</td><td>숙소 따라걷기형 · 숙소 체험먼저형</td></tr>
+    <tr><td><b>인물형</b></td><td>인물 이야기를 나레이션으로</td><td>인물썰형</td></tr>
+  </table>
+  <div class="box red"><div class="t">형식별 권리 위험</div><b>자막+배경음</b>은 원본 소리·화면만 쓰고 내 말이 없어서 4장의 '실질적 수정' 기준에서 가장 불리합니다. <b>연예인 형식</b>은 저작권에 더해 초상·퍼블리시티 문제가 겹칩니다. 시작한다면 <b>나레+원음·나레</b>처럼 내 대본이 영상을 끌고 가는 형식부터 권합니다.</div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 5장 수치 -->
+<section class="page">
+  <div class="chap">5장 · 형식별 편집 수치</div>
+  <h2>형식별로 잰 편집 수치<br><span style="font-size:13pt;color:var(--sub);font-weight:700">20채널 · 138편 (값은 편당 중앙값)</span></h2>
+  <table class="xs">
+    <tr><th>형식 · 세부</th><th>채널/편</th><th>길이<br>(초)</th><th>자막<br>줄</th><th>나레<br>비율</th><th>덩이<br>글자</th><th>덩이<br>초</th><th>나레 속도<br>(자/초)</th><th>장면<br>전환</th><th>효과<br>줄</th></tr>
+    <tr><td>해외원본 · 나레+원음</td><td>3/18</td><td>33.1</td><td>31.5</td><td>55%</td><td>7.3</td><td>0.97</td><td>7.8</td><td>8.5</td><td>23%</td></tr>
+    <tr><td>해외원본 · 나레</td><td>1/12</td><td>16.6</td><td>10.5</td><td>50%</td><td>7.3</td><td>1.06</td><td>7.4</td><td>5</td><td>32%</td></tr>
+    <tr><td>해외원본 · 자막+배경음</td><td>2/12</td><td>18.2</td><td>12.5</td><td>26%</td><td>8.8</td><td>2.12</td><td>5.4</td><td>3</td><td>77%</td></tr>
+    <tr><td>쇼핑형 · 썰쇼핑형</td><td>1/6</td><td>26.3</td><td>27</td><td>100%</td><td>8.5</td><td>0.97</td><td>8.7</td><td>47.5</td><td>10%</td></tr>
+    <tr><td>쇼핑형 · 썰커뮤니티형</td><td>3/18</td><td>28.3</td><td>24.5</td><td>100%</td><td>10</td><td>1.14</td><td>8.5</td><td>14.5</td><td>2%</td></tr>
+    <tr><td>쇼핑형 · 인스타스토리형</td><td>1/6</td><td>20.6</td><td>19.5</td><td>95%</td><td>8</td><td>0.94</td><td>8.6</td><td>1.5</td><td>22%</td></tr>
+    <tr><td>연예인쇼핑형 · 나레+원음형</td><td>3/18</td><td>21.2</td><td>22</td><td>24%</td><td>7</td><td>0.87</td><td>8.5</td><td>2</td><td>56%</td></tr>
+    <tr><td>연예인쇼핑형 · 후기형</td><td>1/8</td><td>14.1</td><td>16.5</td><td>29%</td><td>6.5</td><td>0.76</td><td>9.2</td><td>1.5</td><td>89%</td></tr>
+    <tr><td>연예인쇼핑형 · 대화형</td><td>1/8</td><td>16.8</td><td>18.5</td><td>39%</td><td>8.3</td><td>0.89</td><td>9.9</td><td>1</td><td>75%</td></tr>
+    <tr><td>연예인쇼핑형 · 체험형</td><td>1/8</td><td>37.4</td><td>18.5</td><td>17%</td><td>9</td><td>1.30</td><td>9.3</td><td>7</td><td>34%</td></tr>
+    <tr><td>연예인쇼핑형 · 가격공개형</td><td>1/10</td><td>24.2</td><td>15</td><td>94%</td><td>8.8</td><td>1.29</td><td>6.8</td><td>6</td><td>0%</td></tr>
+    <tr><td>연예인레시피형 · 원음형</td><td>1/8</td><td>26.4</td><td>24.5</td><td>0%</td><td>6.8</td><td>0.94</td><td>6.0</td><td>13</td><td>100%</td></tr>
+    <tr><td>인물형 · 인물썰형</td><td>1/6</td><td>58.2</td><td>26.5</td><td>100%</td><td>16.5</td><td>2.24</td><td>7.4</td><td>4</td><td>2%</td></tr>
+  </table>
+  <div class="box gold"><div class="t">138편 전체 공통값</div>자막 <b>한 덩이 8글자 · 약 1초</b> · 나레 속도 <b>초당 약 8.4글자</b> · 길이 중앙값 <b>약 25초</b>.</div>
+  <p class="sub">낱말 뜻 — 나레 비율: 자막 줄 중 나레이션(내 목소리) 줄의 비율 · 덩이(한 덩이): 화면에 한 번에 뜨는 자막 묶음 · 장면 전환: 편집 표시가 붙은 컷 수 · 효과 붙은 줄: 강조색·스티커·효과음 등이 붙은 자막 줄 비율. 형식마다 1~3채널, 6~18편의 작은 표본이며 여행쇼츠형은 측정이 없어 뺐습니다.</p>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 수치 쓰는 법 -->
+<section class="page">
+  <div class="chap">5장 · 수치 쓰는 법</div>
+  <h2>이 숫자를 내 영상에<br>쓰는 법</h2>
+  <h3>1. 내 자막을 재어 봅니다</h3>
+  <p>내 영상 자막을 줄별로 적고 글자 수를 세어 보세요. 한 덩이가 <b>12글자를 넘으면</b> 읽기 전에 넘어갑니다. 형식 표의 '한 덩이 글자'에 맞춰 끊으세요.</p>
+  <h3>2. 나레 속도를 맞춥니다</h3>
+  <p>대본 글자 수 ÷ 나레이션 길이(초) = 나레 속도. 표의 형식들은 대부분 <b>초당 7~9글자</b>입니다. 25초 영상이면 나레 대본은 대략 175~225글자입니다.</p>
+  <h3>3. 형식마다 '말이 차지하는 몫'이 다릅니다</h3>
+  <table class="sm">
+    <tr><th>나레 비율</th><th>형식</th><th>뜻</th></tr>
+    <tr><td>거의 100%</td><td>썰쇼핑형 · 썰커뮤니티형 · 인물썰형</td><td>내 대본이 처음부터 끝까지 끈다</td></tr>
+    <tr><td>50% 안팎</td><td>해외원본 나레+원음 · 나레</td><td>원본 소리와 내 말이 번갈아 — 원본의 반응을 살린다</td></tr>
+    <tr><td>30% 이하</td><td>연예인쇼핑형 대부분 · 자막+배경음</td><td>원래 소리가 중심 — 권리 위험이 큰 쪽(4장)</td></tr>
+  </table>
+  <h3>4. 효과는 형식이 정합니다</h3>
+  <p>'효과 붙은 줄'은 형식마다 0%에서 100%까지 갈립니다. 효과를 많이 넣는다고 좋은 게 아니라, <b>내 형식의 기준값 근처</b>에 맞추는 것이 그 형식다워 보입니다.</p>
+  <div class="box vio"><div class="t">점검 한 줄</div>내 영상 1편을 표의 같은 형식 줄과 나란히 놓고 <b>한 덩이 글자 · 나레 속도 · 길이</b> 세 개만 비교하세요. 셋 중 둘이 크게 벗어나면 그 형식으로 보이지 않습니다.</div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 6장 다섯 칸 + 지시문1 -->
+<section class="page" id="p-prompt">
+  <div class="chap">6장 · 클로드 지시문</div>
+  <h2>"찾아줘" 대신 이렇게 시키세요</h2>
+  <p>클로드에게 "원본 찾아줘" 한 줄만 쓰면 묻고, 돌아가고, 지칩니다. 사람에게 일을 맡길 때처럼 <b>다섯 칸</b>을 채워 주세요. 아래 7종은 그대로 복사해 쓰는 지시문입니다(prompts.txt에도 있습니다).</p>
+  <table class="sm">
+    <tr><th>칸</th><th>무엇을 적나</th></tr>
+    <tr><td><b>역할</b></td><td>"너는 원본을 가려내는 검수자다"</td></tr>
+    <tr><td><b>할 일 순서</b></td><td>1, 2, 3… 번호로</td></tr>
+    <tr><td><b>결과 모양</b></td><td>표의 칸 이름까지</td></tr>
+    <tr><td><b>끝났다의 기준</b></td><td>눈으로 확인되는 것("12줄이 다 있다")</td></tr>
+    <tr><td><b>멈출 때</b></td><td>모르면 지어내지 말고 무엇을 물을지</td></tr>
+  </table>
+  <div class="ptag">지시문 1</div><span class="pnote">여러 언어 검색어 만들기</span>
+  <div class="prompt s">너는 해외 쇼츠 원본을 찾는 조사원이다.
+소재 영상 설명: <span class="fill">[예: 여자가 욕실에서 선크림을 바르는데 하얗게 뜨지 않고 바로 투명해지는 장면]</span>
+소재 영상 화면에 보이는 글자: <span class="fill">[예: 없음]</span>
+할 일 순서:
+1. 이 장면을 처음 찍은 사람이 제목에 쓸 만한 말을 떠올린다. 광고 문구가 아니라 일반인이 올릴 때 쓰는 말로.
+2. 영어·중국어·러시아어·일본어로 각각 3개씩 만든다. 한 검색어는 2~5단어.
+3. 검색어마다 한국어 뜻을 붙인다.
+4. 협찬·광고 영상이 많이 나올 것 같은 검색어(브랜드명, 'review', '추천')는 빼고, 뺀 이유를 한 줄로 적는다.
+결과 모양: 표 하나 (언어 | 검색어 | 한국어 뜻 | 어디서 검색할지: 틱톡·인스타·유튜브 중)
+끝났다의 기준: 4개 언어 × 3개 = 12줄이 다 있고, 모든 줄에 한국어 뜻이 있다.
+멈출 때: 장면 설명이 너무 짧아 무엇을 찍은 건지 모르겠으면, 검색어를 지어내지 말고 질문 2개만 한다.</div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 지시문 2·3 -->
+<section class="page">
+  <div class="chap">6장 · 지시문</div>
+  <div class="ptag">지시문 2</div><span class="pnote">원본 후보 대조표 만들기</span>
+  <div class="prompt s">너는 해외 쇼츠 원본을 가려내는 조사원이다.
+내가 찾은 소재 영상: <span class="fill">[한국 채널 영상 주소 / 올린 날짜 / 조회수]</span>
+찾은 후보 목록(한 줄에 하나): <span class="fill">[주소 | 채널 이름 | 올린 날짜 | 조회수 | 나라]</span>
+할 일 순서:
+1. 후보를 올린 날짜가 빠른 순으로 줄 세운다.
+2. 소재 영상보다 늦게 올라온 해외 계정은 '퍼 간 쪽'으로 표시한다.
+3. 채널 이름에 한글이 있거나 한국 채널이면 '한국 재업로드'로 따로 센다.
+4. 남은 해외 후보 중 가장 먼저 올린 것을 '원본 1순위'로 표시한다.
+5. 날짜가 없는 후보는 '날짜 확인 필요'로 남기고 순위에 넣지 않는다.
+결과 모양: 표 하나 (순위 | 주소 | 채널 | 올린 날짜 | 조회수 | 구분) + 표 아래 한 줄 요약
+끝났다의 기준: 내가 준 후보가 하나도 빠짐없이 표에 있고, 모든 줄에 구분이 붙어 있다.
+멈출 때: 이 표는 날짜만 본 것이다. 같은 영상인지는 아직 모른다고 표 아래에 꼭 적는다.</div>
+  <div class="ptag">지시문 3</div><span class="pnote">같은 영상인지 판정 (사진 함께 올리기)</span>
+  <div class="prompt s">너는 두 영상이 같은 촬영본인지 가려내는 검수자다. 비슷한 것과 같은 것은 다르다.
+첫 번째 사진들 = 내 소재 영상 장면 <span class="fill">[몇 장]</span> / 두 번째 사진들 = 원본 후보 장면 <span class="fill">[몇 장]</span>
+할 일 순서:
+1. 아래 4가지를 하나씩 대조한다.
+   - 사람: 얼굴 생김새, 머리 모양, 옷, 손에 낀 것
+   - 장소: 벽·타일·가구·창문 위치
+   - 물건: 제품 모양·색·글자·놓인 위치
+   - 장면: 움직이는 순서, 카메라 각도
+2. 항목마다 같음 / 다름 / 사진으로 판단 불가 중 하나와 근거 한 줄을 쓴다.
+3. 4개 항목을 보고 최종 판정을 한다.
+결과 모양: 표 (항목 | 판정 | 근거) + 최종 판정 한 줄: 같은 영상 / 다른 영상 / 판단 불가
+끝났다의 기준: 4개 항목 모두 근거가 있고, 최종 판정이 3개 중 하나다.
+멈출 때: 사람·장소·물건 중 하나라도 '다름'이면 최종은 '다른 영상'이다. 표지만 닮았다고 '같음'을 주지 않는다. 확신이 없으면 '판단 불가'로 하고 어떤 장면을 더 올려 달라고 말한다.</div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 지시문 4·5 -->
+<section class="page">
+  <div class="chap">6장 · 지시문</div>
+  <div class="ptag">지시문 4</div><span class="pnote">터진 영상의 대본 틀 뽑기</span>
+  <div class="prompt s">너는 쇼츠 대본을 뜯어보는 분석가다.
+터진 영상 받아쓰기(자막·말 전부): <span class="fill">[여기에 붙여 넣기]</span>
+영상 길이: <span class="fill">[예: 38초]</span>
+할 일 순서:
+1. 문장 단위로 나눠 번호를 붙인다.
+2. 문장마다 역할을 붙인다: 첫 줄(멈추게 하기) / 궁금하게 하기 / 정체 공개 / 놀라운 점 / 근거 / 반전 / 마무리.
+3. 문장마다 '바꿀 칸'과 '남길 뼈대'를 가른다. 예: "[나라] 천재가 만든 [물건]의 정체" → 뼈대는 남기고 [ ]는 칸.
+4. 첫 줄이 몇 글자인지, 전체가 몇 문장인지 센다.
+결과 모양: 표 (번호 | 원래 문장 | 역할 | 뼈대(칸은 [ ])) + 아래에 숫자 3줄(문장 수, 첫 줄 글자 수, 역할 순서)
+끝났다의 기준: 받아쓰기의 모든 문장이 표에 있고, 모든 줄에 역할과 뼈대가 있다.
+멈출 때: 원래 문장을 바꿔 쓰지 않는다. 이 단계는 '틀 뽑기'만 한다.</div>
+  <div class="ptag">지시문 5</div><span class="pnote">그 틀로 내 대본 쓰기</span>
+  <div class="prompt s">너는 쇼츠 대본 작가다.
+뼈대(지시문 4의 결과): <span class="fill">[뼈대 표 붙여 넣기]</span>
+내 소재: <span class="fill">[예: 하얗게 뜨지 않는 선크림. 원본에서 실제로 보이는 장면: 바르기 전 손등 / 바른 뒤 투명 / 물 뿌려도 그대로]</span>
+할 일 순서:
+1. 뼈대의 문장 수와 역할 순서를 그대로 지킨다.
+2. [ ] 칸만 내 소재로 채운다.
+3. 문장마다 그 문장에 붙일 원본 장면을 적는다. 원본에 없는 장면이 필요한 문장은 쓰지 않고 다른 사실로 바꾼다.
+4. 효능·성분·의학적 효과, 금액, 지어낸 숫자는 쓰지 않는다.
+결과 모양: 표 (번호 | 역할 | 내 문장 | 붙일 장면)
+끝났다의 기준: 문장 수가 뼈대와 같고, 모든 문장에 붙일 장면이 있다.
+멈출 때: 내 소재로 채울 수 없는 칸이 있으면 지어내지 말고 '재료 부족: 무엇이 필요한지'를 그 줄에 적는다.</div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 지시문 6·7 -->
+<section class="page">
+  <div class="chap">6장 · 지시문</div>
+  <div class="ptag">지시문 6</div><span class="pnote">완성본 점검</span>
+  <div class="prompt s">너는 쇼츠 올리기 전 마지막 검수자다. 하나라도 걸리면 '통과'를 주지 않는다.
+완성본 정보: <span class="fill">[길이 / 화면 크기 예: 1080x1920 / 대본 전문 / 자막 전문]</span>
+사진: <span class="fill">[완성본에서 1초마다 뽑은 장면 사진 — 있으면 올리기]</span>
+할 일 순서: 아래 9가지를 하나씩 본다.
+1. 화면 크기가 세로 1080x1920인가  2. 길이가 60초 이하인가  3. 대본과 자막 글자가 같은가
+4. 남의 자막·워터마크·채널 이름이 화면에 남아 있지 않은가  5. 같은 장면이 두 번 나오지 않는가
+6. 문장과 그때 화면이 맞는가  7. 효능·성분·금액·지어낸 숫자가 없는가
+8. 광고·협찬이면 '광고' 표시가 있는가  9. 첫 2초 안에 멈추게 하는 장면·글자가 있는가
+결과 모양: 표 (번호 | 항목 | 통과·걸림·확인 불가 | 근거) + 마지막 줄: 최종 통과 / 고칠 것 N개
+끝났다의 기준: 9줄이 다 있고, 걸린 줄마다 '어디를 어떻게 고칠지'가 있다.
+멈출 때: 자료가 없어 볼 수 없는 항목은 '확인 불가'로 둔다. 확인 못 한 걸 통과로 치지 않는다.</div>
+  <div class="ptag">지시문 7</div><span class="pnote">일 나눠 시키기 (단순한 일 / 판단하는 일)</span>
+  <div class="prompt s">너는 쇼츠 제작 팀장이다. 오늘 할 일: <span class="fill">[예: 해외 원본 찾아서 쇼츠 3편 만들기]</span>
+할 일 순서:
+1. 오늘 일을 10단계 안쪽으로 쪼갠다.
+2. 단계마다 '단순한 일'(받기·자르기·세기·옮겨 적기)인지 '판단하는 일'(같은 영상인지·장면이 맞는지·통과인지)인지 가른다.
+3. 단순한 일은 가볍고 빠른 모델이나 정해진 순서로, 판단하는 일은 가장 좋은 모델이나 사람이 하도록 적는다.
+4. 단계마다 '끝났다의 기준'(눈으로 확인할 수 있는 것)을 적는다.
+5. 앞 단계가 실패하면 어디로 돌아갈지 적는다.
+결과 모양: 표 (단계 | 할 일 | 단순·판단 | 누가 | 끝났다의 기준 | 실패하면)
+끝났다의 기준: 모든 단계에 '끝났다의 기준'과 '실패하면'이 있다.
+멈출 때: 표만 만든다. 내가 '시작'이라고 하기 전에는 실제 일을 하지 않는다.</div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 지시문 결과 -->
+<section class="page">
+  <div class="chap">6장 · 실제로 돌려본 결과</div>
+  <h2>지시문 3을 돌려 봤습니다</h2>
+  <p>같은 욕실·같은 머리·같은 튜브인데, 소재는 <b>왼손에 금반지</b>, 후보는 <b>반지 없음</b>인 두 영상을 넣었습니다. 사람 눈엔 "똑같네" 하고 넘어가기 쉬운 경우입니다.</p>
+  <table class="result">
+    <tr><th style="width:18mm">항목</th><th style="width:30mm">판정</th><th>근거(클로드 답 그대로, 줄임)</th></tr>
+    <tr><td>사람</td><td><b>다름</b></td><td>얼굴과 머리(갈색 단발)는 같습니다. 하지만 소재는 왼손에 금반지가 있고 후보는 손에 반지가 없습니다.</td></tr>
+    <tr><td>장소</td><td>사진으로 판단 불가</td><td>둘 다 흰 타일 욕실이라는 것만 같습니다. 벽·타일 줄눈·창문 위치는 대조할 수 없습니다.</td></tr>
+    <tr><td>물건</td><td>사진으로 판단 불가</td><td>둘 다 흰 튜브지만 글자·캡 모양이 보이지 않습니다. 흰 튜브는 흔해서 이것만으로 같다고 볼 수 없습니다.</td></tr>
+    <tr><td>장면</td><td>사진으로 판단 불가</td><td>순서(짜기→바르기→거울)는 같지만 같은 콘셉트의 다른 촬영본에도 흔한 순서입니다.</td></tr>
+  </table>
+  <div class="box green">
+    <div class="t">최종 판정: 다른 영상</div>
+    "같은 촬영본이라면 같은 장면에서 반지가 생기거나 사라질 수 없습니다. 닮은 점은 모두 '비슷함'의 근거일 뿐 '같음'의 근거가 아닙니다."<br>
+    그리고 확정하려면 <b>손이 가장 크게 나온 장면, 튜브 글자가 보이는 장면</b>을 더 올려 달라고 했습니다.
+  </div>
+  <p class="sub">다섯 칸을 채워 주면 클로드는 "같아 보이네요"로 끝내지 않고, 근거를 대고, 모르는 건 모른다고 합니다. 7종 모두 같은 방식으로 돌려 형식대로 답하는 것을 확인했습니다(2026-10-29, Claude Sonnet).</p>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 7장 스킬 -->
+<section class="page" id="p-skill">
+  <div class="chap">7장 · 클로드 스킬</div>
+  <h2>지시문 7종을 하나로 —<br>'원본찾기 도우미' 스킬</h2>
+  <p>지시문을 매번 붙여 넣는 대신, 클로드가 상황을 보고 알아서 단계를 고르게 만든 파일입니다. 소재 설명만 주면 검색어를, 후보 목록을 주면 대조표를, "써도 돼?"라고 하면 4장 권리 판정표로 답하고, 끝에 기록장 한 줄을 만들어 줍니다.</p>
+  <div class="box gold"><div class="t">이 스킬이 하지 않는 것</div>인터넷을 직접 뒤지지 않습니다. 영상 내려받기·워터마크 지우기·로그인 우회는 안내하지 않습니다. 내가 준 자료로 판단을 돕는 <b>손작업 도우미</b>입니다.</div>
+  <h3>설치 — 클로드 코드(Claude Code)를 쓰는 경우</h3>
+  <ol>
+    <li>함께 받은 <b>원본찾기-도우미</b> 폴더를 통째로 복사합니다(안에 SKILL.md 파일 하나).</li>
+    <li>내 PC의 사용자 폴더 안 <b>.claude\skills\</b> 폴더에 붙여 넣습니다. 없으면 skills 폴더를 만드세요.<br><span class="sub">예: C:\Users\내이름\.claude\skills\원본찾기-도우미\SKILL.md</span></li>
+    <li>클로드 코드를 새로 열고 "원본 찾기 도와줘"라고 말하면 스킬이 켜집니다.</li>
+  </ol>
+  <h3>설치 — 클로드 앱·웹(claude.ai)을 쓰는 경우</h3>
+  <ol>
+    <li>함께 받은 <b>원본찾기-도우미.zip</b>을 준비합니다.</li>
+    <li>설정 → 기능(Capabilities) → 스킬에서 <b>업로드</b>로 zip을 올립니다. 메뉴 이름은 바뀔 수 있습니다.</li>
+    <li>스킬 메뉴가 없는 요금제·화면이라면, SKILL.md 내용을 대화 맨 처음에 붙여 넣고 "이 지시대로 도와줘"라고 해도 같은 효과입니다.</li>
+  </ol>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 스킬 결과 -->
+<section class="page">
+  <div class="chap">7장 · 실제로 돌려본 결과</div>
+  <h2>스킬에 이렇게 물었습니다</h2>
+  <div class="md">소재: 한국 유튜브 쇼츠, 2025-11-03, 조회수 84만. 강아지가 욕조 밖으로 탈출하려다 미끄러져 다시 물에 빠지는 장면.
+후보: ① 틱톡 미국 2024-02-11 210만 ② 인스타 영국 2024-06-30 35만 ③ 유튜브 <b>한국</b> 2025-08-19 12만
+      ④ 틱톡 미국 <b>2025-12-01</b> 4만 ⑤ 인스타 날짜 모름 8천
+<b>"1번이 원본 같은데, 내 대본으로 해설 넣어서 쇼츠로 올려도 돼?"</b></div>
+  <h3>클로드(Sonnet)의 답 — 줄여서 그대로</h3>
+  <table class="result">
+    <tr><th style="width:28mm">단계</th><th>답</th></tr>
+    <tr><td><b>B 대조표</b></td><td>① 원본 1순위(날짜가 가장 빠름 — "조회수 210만은 기준이 아닙니다") · ② 해외 후보 · ③ 한국 재업로드 · ④ 소재보다 늦음 → 퍼 간 쪽 · ⑤ 날짜 확인 필요(순위에서 뺌). "이 표는 날짜만 본 것입니다."</td></tr>
+    <tr><td><b>C 같은 영상</b></td><td><b>지금은 판단 불가.</b> 사진이 없어 "1번이 원본"이라고 단정할 수 없다며, 강아지 털색·목줄, 욕조 타일·수도꼭지, 미끄러지는 순서 장면 3~4장을 올려 달라고 함</td></tr>
+    <tr><td><b>D 권리</b></td><td><b>주의.</b> 해설을 실질적으로 더하면 유튜브 수익 정책의 허용 예에 가깝지만 저작권은 따로이고 공정이용은 사례별 판단. "출처 표기·'침해 의도 없음' 문구·수익 창출 안 함은 허락을 대신하지 않습니다." 안전해지는 길 = 글로 받은 허락</td></tr>
+    <tr><td><b>허락 요청</b></td><td>영어 초안을 바로 써 줌(영상 날짜·한국어 해설·계정 이름 표기·원본 링크·거절해도 괜찮다는 말)</td></tr>
+    <tr><td><b>E 기록장</b></td><td><span style="font-size:9pt">2026-10-29 | 소재 -·2025-11-03 | 틱톡 ①·2024-02-11 | 불가 | 1 | 없음 | ①이 날짜상 1순위, 장면 대조 전</span></td></tr>
+  </table>
+  <div class="box green"><div class="t">눈여겨볼 점</div>"1번이 원본 같다"는 사용자 말에 맞장구치지 않고, <b>날짜로 1순위는 맞지만 같은 영상인지는 아직 모른다</b>고 갈라서 답했습니다. 원문 전체는 함께 받은 파일(실제결과_예시.txt)에 있습니다.</div>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 기록장 -->
+<section class="page" id="p-log">
+  <div class="chap">기록장</div>
+  <h2>원본 찾기 기록장</h2>
+  <p class="sub">찾기 전에 먼저 이 표를 보세요. 같은 소재를 두 번 찾지 않게 합니다. 복사해서 여러 장 쓰세요.<br>① 같음 · 다름 · 불가 &nbsp;&nbsp; ② 요청함 · 받음 · 없음 &nbsp;&nbsp; ③ 안전 · 주의 · 위험 (4장 판정표)</p>
+  <table class="log">
+    <tr><th style="width:8mm">#</th><th>소재 주소·올린 날짜</th><th>원본 주소·올린 날짜</th><th style="width:16mm">판정 ①</th><th style="width:16mm">한국<br>재업로드</th><th style="width:16mm">허락 ②</th><th style="width:16mm">권리 ③</th></tr>
+    <tr><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>3</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>6</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>7</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>8</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>9</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>11</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>12</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  </table>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<!-- 마지막 -->
+<section class="page next">
+  <div class="chap" style="color:#B9A2FF">마지막으로</div>
+  <h2>이 6단계를 한 편 약 7분에 —<br>숏클메이커</h2>
+  <p class="big">직접 해 보셨다면 아실 겁니다. 원본 한 편에 검색 수십 번, 사진 대조, 기록까지. 하루 두 편이면 하루가 갑니다.</p>
+  <p>숏클메이커는 이 6단계를 코드로 짜 둔 엔진을 내 PC의 클로드에 설치합니다. 소재를 주면 사진 검색·여러 언어 검색·같은 영상 판정·재확인·한국 재업로드 세기까지 사람 손 없이 돌고(엔진 실측 15편 중앙값 약 7분), 원본을 근거와 함께 장부에 쌓습니다. <span style="color:#7F89A3">(쌓인 원본을 바로 제작으로 잇는 기능은 준비 중입니다.)</span></p>
+  <div class="box">
+    <div class="t" style="color:#F2C46D">이 책을 만든 장부 (2026-10-20~21 기준)</div>
+    재편집↔원본 장부: 영상 <b>302개</b> · 채널 <b>142곳</b> · 원본 <b>19편</b>과 재편집 <b>53편</b>의 짝<br>
+    해외 채널 장부: 채널 <b>109곳</b> · 훑은 영상 <b>17,489편</b><br>
+    <span style="color:#7F89A3">엔진은 계속 돌며 쌓습니다. 권리 확인(허락)은 엔진이 대신하지 않습니다 — 4장은 숏클로 만들 때도 그대로입니다.</span>
+  </div>
+  <h3 style="color:#fff">더 알고 싶다면</h3>
+  <ul>
+    <li>네이버 <b>메이커스랩 카페</b> — cafe.naver.com/makerslab7</li>
+    <li>숏클메이커 소개·질문은 카페 '숏클 질문·답변' 게시판에</li>
+    <li>쇼핑쇼츠만 하신다면 추가 비용 없는 <b>숏템메이커</b>도 있습니다</li>
+  </ul>
+  <div class="foot"><span>메이커스랩 · 해외 원본 지도</span><span class="pn"></span></div>
+</section>
+
+<script>
+  // 쪽 번호와 차례 번호를 실제 쪽 순서로 채운다(손으로 적으면 쪽을 옮길 때 어긋난다)
+  const pages = [...document.querySelectorAll('.page')];
+  pages.forEach((p, i) => { const pn = p.querySelector('.pn'); if (pn) pn.textContent = i + 1; });
+  document.querySelectorAll('[data-for]').forEach(s => {
+    const t = document.getElementById(s.dataset.for);
+    if (t) s.textContent = pages.indexOf(t) + 1;
+  });
+</script>
+</body>
+</html>

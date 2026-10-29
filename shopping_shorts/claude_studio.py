@@ -499,7 +499,7 @@ def sync_merge(mine: dict, theirs: dict) -> tuple:
 # 숏템메이커에 등록한 회원 키 → 회원 PC(관제 266, 사장님 10-26 '숏템에 있는 거면 그대로 가져올 수 있게').
 #   회원 PC 가 라이선스로 부른다 — 값은 브라우저(웹 화면)를 거치지 않고 PC 로 곧장 간다. 본인이 등록한 키만(사장님 공용 키 없음).
 #   이름 = 숏템메이커 customer_keys service → 회원 PC 키 이름(voice.js KEY_SERVICES). 쿠팡은 'Access:Secret' 한 줄을 PC 가 둘로 나눈다.
-PC_KEY_SERVICES = ("typecast", "elevenlabs", "fish", "coupang", "vmake", "vertex_sa")
+PC_KEY_SERVICES = ("typecast", "elevenlabs", "fish", "coupang", "vmake", "vertex_sa", "buffer")
 
 
 def pc_keys(ctx: dict, store=None) -> dict:

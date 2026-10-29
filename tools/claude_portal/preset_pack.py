@@ -67,6 +67,11 @@ def tech_files(engine: Path, preset: str) -> list[str]:
             if src and (engine / src).is_file():
                 out.append(Path(src).as_posix())
         name = raw.get("base")
+    # 렌더 코드가 불러오는 순간 읽는 판(render_itssum DEF=잇썸홈판·render_jaemi DEF=재미썸홈판) — 빠지면 회원 PC 렌더가 '판이 없다' SystemExit(10-29 회원 잇템로그 11/13)
+    for name in ("잇썸홈판", "재미썸홈판"):
+        while name and f"{h}/styles/{name}.json" not in out and (engine / h / "styles" / f"{name}.json").is_file():
+            out.append(f"{h}/styles/{name}.json")
+            name = json.loads((engine / h / "styles" / f"{name}.json").read_text(encoding="utf-8")).get("base")
     b = st.get("bench") or {}
     if b.get("line_reads"):
         out += [p.relative_to(engine).as_posix() for p in sorted((engine / b["line_reads"]).glob("*.json"))]

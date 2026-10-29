@@ -40,3 +40,34 @@
 .hook-caption-note{margin:0;padding:2px 2px 4px;color:#b9c7cf;font-size:12.5px;font-weight:700;line-height:1.5}
 .hook-caption-note[hidden]{display:none}
 .dec-logo-scope{margin:0 0 10px}.dec-logo-scope button.active{border-color:#43e2b4;background:#0f2a24;color:#63edc6;font-weight:900}
+/* ── 폰(≤760px, 관제 276) ── 1120px 고정 폭 3칸(템플릿·미리보기·문구)이 390px 폰에서 912px 옆으로 밀렸다(tools/mobile_audit.py editor).
+   폰에선 한 줄로 쌓는다: 미리보기 → 문구 편집 → 템플릿. 미리보기는 화면 높이의 절반쯤으로 줄여 아래 편집칸이 보이게 한다.
+   precision20-ui.css 의 ≤1400px 3칸 규칙이 !important 라 여기도 !important 로 이긴다. */
+@media(max-width:760px){
+  .shell{min-width:0!important}
+  .workspace.layout-a{grid-template-columns:minmax(0,1fr)!important;gap:12px!important;min-height:0!important}
+  .layout-a>.preview-pane{order:-2;position:static!important}
+  .layout-a>.edit-pane{order:-1;position:static!important;max-height:none!important;min-height:0!important;overflow:visible!important}
+  .scene-embedded .layout-a>aside.pane:first-child{height:auto!important;max-height:none!important}
+  .layout-a .phone-wrap{height:min(470px,58vh)!important}
+  .layout-a .dynamic-phone{height:min(460px,56vh)!important}
+  .layout-a .edit-pane>.primary{position:static!important}
+  .preset-grid,.simple-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .gallery{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .pair-preview{flex-wrap:wrap;justify-content:center}
+  .page-title{flex-wrap:wrap;gap:6px}
+  /* 미리보기 머리줄: 제목 옆에 [숏폼·화면자리·훅/본문] 단추가 몰려 '숏/폼'·'본/문'이 한 글자씩 쪼개졌다 → 제목 한 줄, 단추는 다음 줄 */
+  .preview-toolbar{flex-wrap:wrap;gap:8px}
+  .preview-toolbar>h2{flex:1 1 100%;margin:0}
+  .preview-toolbar button{white-space:nowrap}
+  /* 칸마다 [크기 − 100% ＋ · 위치 ↑ ↓ 처음으로]: 254px 한 줄에 몰려 '크/기'·'위/치'가 쪼개지고 단추가 23×20px였다
+     → 넘치면 다음 줄로, 단추는 손가락 크기 */
+  .font-stepper{flex-wrap:wrap;row-gap:6px}
+  .font-stepper .stp-label,.font-stepper [data-field-reset]{white-space:nowrap}
+  .font-stepper button{width:36px;height:34px;font-size:16px;line-height:32px}
+  .font-stepper [data-field-reset]{width:auto;padding:0 10px}
+  /* '빠른 조절' 색 고르기 판: 254px에 4칸(칸당 60px) — '제목 1'·'채널명'이 이름+색단추로 짓눌렸다 → 2칸 */
+  .fixed-color-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  /* 손가락 크기 — 편집기는 sidebar.js 공용 규칙이 안 닿는 iframe 이라 여기 따로(같은 36px 하한) */
+  button,select{min-height:36px}
+}
