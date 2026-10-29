@@ -411,6 +411,9 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
             measure_over()
     for i, r in enumerate(rows):      # 자막은 다음 덩어리 시작까지(줄 사이 틈도 앞 자막이 덮는다 — 벤치: 자막 없는 틈 거의 없음)
         r["show"] = [r["t0"], round(rows[i + 1]["t0"] if i + 1 < len(rows) else end, 3)]
+    gap = [(c["line"], c["t1"], cuts[i + 1]["t0"]) for i, c in enumerate(cuts[:-1]) if abs(float(c["t1"]) - float(cuts[i + 1]["t0"])) > 1e-6]
+    if float(cuts[0]["t0"]) > 1e-6 or gap or abs(float(cuts[-1]["t1"]) - end) > 1e-6:      # 컷이 0초~끝을 빈틈없이 덮어야 영상 = 자막표(관제 285: 줄 첫 컷을 빼 0~1.38초가 비어 영상 27.03 < 자막표 28.4)
+        raise StageError(f"컷이 0~{end}초를 빈틈없이 덮지 않는다: 첫 컷 {cuts[0]['t0']} · 마지막 {cuts[-1]['t1']} · 틈/겹침 {gap[:3]}")
     out = {"lines": lines, "rows": rows, "cuts": cuts, "opos": opos, "end": end}
     if orig_trim or log_drop:
         out["orig_trim"] = {"head": orig_trim, "dropped_cuts": log_drop}
