@@ -319,6 +319,11 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
             for c in cs:
                 if "at" not in c and c.get("ss") is not None:   # ss 만 적은 컷 = 원음 초 → 그 초가 들리는 줄 안 시각(입 맞춤 그대로, 10-23 꿀템노트 재료)
                     p = next((p for p in opos if p["line"] == lid and p["span"][0] - 1e-3 <= float(c["ss"]) < p["span"][1]), None)
+                    if p is None:   # 구간 끝에서 MIN_PIECE_SEC 안쪽이면 그 끝으로 붙인다(10-29 사장님 2편 O1 ss 0.0 vs 구간 0.006 — 반올림 차를 막지 않는다)
+                        near = min(((abs(float(c["ss"]) - e), p_, e) for p_ in opos if p_["line"] == lid for e in (p_["span"][0], p_["span"][1] - 1e-3)),
+                                   default=None, key=lambda x: x[0])
+                        if near and near[0] < MIN_PIECE_SEC:
+                            p, c = near[1], {**c, "ss": round(near[2], 3)}
                     if p is None:   # 조용히 at 0 에 겹쳐 놓지 않는다(10-29 회원 잇템로그 O2: ss 8.4·11.9 가 줄 맨 앞에 쌓여 컷 길이 -3.2초 → '컷 수 줄여라'만 듣고 더 쪼갬)
                         spans = [p_["span"] for p_ in opos if p_["line"] == lid]
                         raise StageError(f"{lid} 원음 줄 컷 ss {c['ss']} 가 그 줄 원음 구간 {spans} 밖 — 원음 줄 컷은 들리는 구간 안 원본 초(입 맞춤)만 적는다. "
