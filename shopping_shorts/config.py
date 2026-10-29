@@ -401,7 +401,7 @@ NAVERCLIP_AUTO_PER_CHANNEL = int(os.getenv("NAVERCLIP_AUTO_PER_CHANNEL", "60"))
 YT_RELAY_ENABLED = os.getenv("YT_RELAY_ENABLED", "") == "1"
 YT_RELAY_KEY = os.getenv("YT_RELAY_KEY", "")
 YT_RELAY_DIR = Path(__file__).parent / "data" / "yt_relay"   # 에이전트가 올린 mp4 보관
-YT_RELAY_POLL_TIMEOUT = int(os.getenv("YT_RELAY_POLL_TIMEOUT", "180"))  # 서버측 대기 상한(초)
+YT_RELAY_POLL_TIMEOUT = int(os.getenv("YT_RELAY_POLL_TIMEOUT", "300"))  # 서버측 대기 상한(초) — 180→300(관제 287: 11편 동시 요청 시 뒤쪽이 밀려 포기)
 
 # 수집 규칙
 WINDOW_HOURS = 48          # 48시간 이내만 랭킹(인스타 — 빠르게 도는 릴스 기준)
