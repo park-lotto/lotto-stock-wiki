@@ -81,3 +81,48 @@ export const Slam: React.FC<{ text: string; at: number; x?: number; y: number; s
     return <div style={{ position: "absolute", left: center ? 0 : x, right: center ? 0 : undefined, top: y, textAlign: center ? "center" : "left", fontFamily: "Pret", fontWeight: 800, fontSize: size, color,
       letterSpacing: -4, transform: `scale(${slam(f, at)}) rotate(${rot}deg)`, transformOrigin: center ? "50% 50%" : "0 50%" }}>{text}</div>;
   };
+
+// 검색 화면 브라우저 창(조각02에서 컨펌된 모양): 실제 캡처로 천천히 밀어 들어가 형광펜·밑줄
+export type Shot = { page: number; term: string; from: [number, number, number]; to: [number, number, number]; hl?: [number, number, number, number]; lines: string[]; accent?: number };
+export const WIN = { x: 60, y: 70, w: 1180, h: 780 };
+export const Browser: React.FC<{ shot: Shot; dur: number }> = ({ shot, dur }) => {
+  const f = useCurrentFrame();
+  const p = interpolate(f, [0, dur * 0.7], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.inOut(Easing.cubic) });
+  const x0 = shot.from[0] + (shot.to[0] - shot.from[0]) * p;
+  const y0 = shot.from[1] + (shot.to[1] - shot.from[1]) * p;
+  const w = shot.from[2] + (shot.to[2] - shot.from[2]) * p;
+  const s = WIN.w / w;
+  const hlA = shot.hl ? ez(f, dur * 0.62, dur * 0.62 + 10) : 0;
+  const ulA = shot.hl ? ez(f, dur * 0.62 + 8, dur * 0.62 + 18) : 0;
+  return (
+    <div style={{ position: "absolute", left: WIN.x, top: WIN.y, width: WIN.w, height: WIN.h, borderRadius: 18, overflow: "hidden", background: "#fff", boxShadow: "0 24px 70px rgba(0,0,0,.28)", border: "1px solid #ddd" }}>
+      <div style={{ height: 44, background: "#f1f1f1", display: "flex", flexDirection: "row", alignItems: "center", gap: 10, paddingLeft: 18 }}>
+        {["#ff5f57", "#febc2e", "#28c840"].map((c) => <div key={c} style={{ width: 14, height: 14, borderRadius: 7, background: c }} />)}
+        <div style={{ marginLeft: 20, fontFamily: "Pret", fontWeight: 800, fontSize: 22, color: "#555" }}>youtube.com · "{shot.term}"</div>
+      </div>
+      <div style={{ position: "absolute", left: 0, top: 44, width: WIN.w, height: WIN.h - 44, overflow: "hidden" }}>
+        <Img src={staticFile(`srch/s${shot.page}.jpg`)} style={{ position: "absolute", width: 1920 * s, left: -x0 * s, top: -y0 * s }} />
+        {shot.hl && <>
+          <div style={{ position: "absolute", left: (shot.hl[0] - x0) * s - 8, top: (shot.hl[1] - y0) * s - 6, width: (shot.hl[2] * s + 16) * hlA, height: shot.hl[3] * s + 12,
+            background: "rgba(255,214,0,.42)", borderRadius: 6 }} />
+          <div style={{ position: "absolute", left: (shot.hl[0] - x0) * s, top: (shot.hl[1] + shot.hl[3] - y0) * s + 10, width: shot.hl[2] * s * ulA, height: 9, background: "#E5484D", borderRadius: 5 }} />
+        </>}
+      </div>
+    </div>
+  );
+};
+export const SideText: React.FC<{ lines: string[]; term: string; accent?: number }> = ({ lines, term, accent }) => {
+  const f = useCurrentFrame();
+  return (
+    <div style={{ position: "absolute", left: 1290, top: 150, width: 600 }}>
+      <div style={{ fontFamily: "Pret", fontWeight: 800, fontSize: 34, color: "#9a958d", opacity: ez(f, 0, 10) }}>검색어 · {term}</div>
+      {lines.map((l, k) => {
+        const st = 8 + k * 14;
+        const a = ez(f, st, st + 10);
+        const sc = interpolate(f, [st, st + 5, st + 10], [1.5, 0.95, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+        return <div key={k} style={{ fontFamily: "Pret", fontWeight: 800, fontSize: 84, lineHeight: 1.12, marginTop: k ? 6 : 18, color: k === accent ? OR : INK,
+          opacity: a, transform: `scale(${sc})`, transformOrigin: "0 50%", wordBreak: "keep-all" }}>{l}</div>;
+      })}
+    </div>
+  );
+};
