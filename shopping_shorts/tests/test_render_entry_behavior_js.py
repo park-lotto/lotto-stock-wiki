@@ -109,3 +109,38 @@ function console_err(m){ process.stderr.write(m); process.exit(1); }
 def test_탭_렌더입구가_실제로_동작한다():
     out = run_js(_STUB + "\n" + _fns() + "\n" + _TAIL)
     assert out.strip() == "PASS", out
+
+
+# 관제 288(2026-10-29 황선희님): 완성본 칸에 영상이 있어도 **서버가 낡았다고 하면** 다시 만든다.
+#   '낡았나'의 주인은 서버(/api/mix/status preview_stale = app._preview_is_stale) 한 곳 — 화면 지문으로 정하지 않는다.
+_TAIL_STALE = r"""
+var SL = { job: 'j1', server: true };
+var STALE = true, ASKED = 0;
+var fetch = function(url){ ASKED++; return Promise.resolve({ json: function(){ return { preview_stale: STALE }; } }); };
+var fails = [];
+function chk(c,m){ if(!c) fails.push(m); }
+(async function(){
+  // 낡은 완성본 — 다시 만든다
+  _els.confirmBody.innerHTML = '<video src="old.mp4"></video>';
+  await _askRender();
+  chk(ASKED === 1, '서버에 낡았는지 안 물었다(ASKED=' + ASKED + ')');
+  chk(RENDERS === 1, '서버가 낡았다는데 렌더를 안 걸었다(RENDERS=' + RENDERS + ') — 수정 뒤 완성본 만들기가 안 눌림');
+  // 최신 완성본 — 유료 재렌더 안 한다
+  STALE = false; RENDERS = 0;
+  _els.confirmBody.innerHTML = '<video src="new.mp4"></video>';
+  await _askRender();
+  chk(RENDERS === 0, '서버가 최신이라는데 또 렌더했다(유료 재렌더, RENDERS=' + RENDERS + ')');
+  chk(/new\.mp4/.test(_els.confirmBody.innerHTML), '최신 완성본 영상을 지웠다');
+  // 서버 확인이 실패하면 지금 영상을 그대로 둔다(조용히 유료 재렌더 금지)
+  fetch = function(){ return Promise.reject(new Error('net')); };
+  await _askRender();
+  chk(RENDERS === 0, '서버 확인 실패인데 렌더했다(RENDERS=' + RENDERS + ')');
+  if (fails.length){ process.stderr.write('FAIL: ' + fails.join(' / ')); process.exit(1); }
+  process.stdout.write('PASS');
+})();
+"""
+
+
+def test_낡은_완성본은_서버판정으로_다시_만든다():
+    out = run_js(_STUB + "\n" + _fns() + "\n" + _TAIL_STALE)
+    assert out.strip() == "PASS", out

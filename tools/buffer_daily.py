@@ -22,6 +22,7 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 from tools import buffer_post as bp  # noqa: E402
 
 # 매일 돌리는 계정 — 인포크 계정이 정해진 채널만(bp._inpock_acct). 나머지 _2 채널은 인포크가 정해지면 넣는다
+# 995_2 얜샷템: 인포크 ystem · 유튜브 프로필 링크 link.inpock.co.kr/ystem (10-29 걸고 정보 창에서 실측)
 ACCOUNTS = ["21(수창) 쓸데수집", "950 숏템리폿", "987_1 샥템스토리", "994_1 썰템홈샷", "995_1 썰템쇼", "995_2 얜샷템",
             "998_1 꿀템샷", "999_1 잇썸홈"]
 SHOPLINK_DIR = os.path.join(ROOT, ".tracks", "쇼핑링크자동") if os.path.isdir(os.path.join(ROOT, ".tracks", "쇼핑링크자동")) \
