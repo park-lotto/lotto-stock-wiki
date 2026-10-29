@@ -114,10 +114,11 @@
   "push_orig": 0.0,
   "transition": {
    "kinds": {
-    "colorflash": 0.178
+    "flash": 0.178
    },
    "ms": 450,
-   "colorflash": {
+   "why": "색 번쩍 = 창 전체 색 덮기 α→0 선형(kind flash + 색 = cuts.transition.flash — 렌더러 정본 900c1027a ㉝, 10-29 colorflash 이름 정리) · 비율 0.178 = 15 줄판독 재집계(줄 경계당, d663f72e2) · α 0.62·초록 [15,246,3] = 02 실측 QMJ 38.667 · ms 450 = 스타일분석 §3 '약 0.45초에 0'(벤치 색: 초록·빨강·분홍·노랑 — 다른 색은 팩/02 실측 뒤)",
+   "flash": {
     "alpha": 0.62,
     "colors": [
      [
@@ -126,8 +127,7 @@
       3
      ]
     ]
-   },
-   "why": "색 번쩍 = 창 전체 색 덮기 α→0 선형(02 colorflash, 468380769) · 비율 0.178 = 15 줄판독 재집계(줄 경계당, d663f72e2) · α 0.62·초록 [15,246,3] = 02 실측 QMJ 38.667 · ms 450 = 스타일분석 §3 '약 0.45초에 0'(벤치 색: 초록·빨강·분홍·노랑 — 다른 색은 팩/02 실측 뒤)"
+   }
   },
   "why": "push 0 — motion cam 196·still 12, 편집 줌 미측정"
  },
@@ -146,7 +146,7 @@
    },
    "transition": {
     "kinds": [
-     "colorflash"
+     "flash"
     ],
     "why": "그릴 전환 = 색 번쩍(줄 시작 flash 36/208 — 컷 첫 프레임) · 자리 = 본보기 편 줄판독(placement)"
    },
@@ -206,7 +206,7 @@
    },
    "transition": {
     "cut": 0.817,
-    "colorflash": 0.178,
+    "flash": 0.178,
     "zoomblur": 0.005
    },
    "sfx_kinds": {
@@ -279,7 +279,7 @@
      },
      "no_caption": 0,
      "transitions": {
-      "colorflash": 10,
+      "flash": 10,
       "cut": 24
      },
      "n_trans": 34,
@@ -381,7 +381,7 @@
      },
      "no_caption": 0,
      "transitions": {
-      "colorflash": 9,
+      "flash": 9,
       "cut": 16
      },
      "n_trans": 25,
@@ -488,7 +488,7 @@
      "no_caption": 0,
      "transitions": {
       "cut": 31,
-      "colorflash": 3
+      "flash": 3
      },
      "n_trans": 34,
      "roles": {
@@ -590,7 +590,7 @@
      "no_caption": 0,
      "transitions": {
       "cut": 39,
-      "colorflash": 4
+      "flash": 4
      },
      "n_trans": 43,
      "roles": {
@@ -680,7 +680,7 @@
      "no_caption": 0,
      "transitions": {
       "cut": 31,
-      "colorflash": 7,
+      "flash": 7,
       "zoomblur": 1
      },
      "n_trans": 39,
@@ -775,7 +775,7 @@
      "no_caption": 0,
      "transitions": {
       "cut": 24,
-      "colorflash": 3
+      "flash": 3
      },
      "n_trans": 27,
      "roles": {
