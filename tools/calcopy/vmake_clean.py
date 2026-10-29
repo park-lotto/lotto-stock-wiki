@@ -65,7 +65,10 @@ def key_source() -> str:
     v = (os.environ.get("CALCOPY_VMAKE_VIA") or "").strip().lower()
     if v in ("server", "member"):
         return v
-    from tools.calcopy.hybrid import server_ai
+    try:
+        from tools.calcopy.hybrid import server_ai     # 서버 전용(회원 엔진 묶음엔 없다 — engine_bundle HAND_SERVER_ONLY)
+    except ImportError:                                 # 회원 PC = 회원 본인 키(10-29 회원 샥템·숏템리폿: 준비 점검이 ImportError 로 1/13 멈춤)
+        return "member"
     return "server" if Path(server_ai.KEY).exists() else "member"
 
 
