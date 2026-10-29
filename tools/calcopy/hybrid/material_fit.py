@@ -633,6 +633,9 @@ def relocate_cuts(cuts: list[dict], src_dir: Path | None, origins: set, log=prin
             elif not c.get("over") and mates:
                 # 재사용·전환인데 같은 원본에 빈자리가 없다 — 같은 줄에 Claude 가 고른 다른 컷이 있으면 이 컷을 빼고 그 컷이 시간을 이어받는다
                 # (그 줄 장면만 남아 대사↔화면 그대로 · 다른 영상으로 바꾸지 않는다 — 10-27 펜티 E2 80초, 원음 줄이 원본을 거의 다 씀)
+                k = cuts.index(c)
+                if k + 1 < len(cuts) and cuts[k + 1].get("line") == c.get("line"):
+                    cuts[k + 1]["t0"] = c["t0"]      # 뒤 컷이 이어받는다 — 앞 컷 끝은 fit 이 다음 t0 로 맞추지만 뒤 컷 시작은 아무도 안 당겨 빈 구간이 남았다(10-29 관제 285: 줄 첫 컷을 빼 0~1.38초가 비어 영상 27.03 < 자막표 28.4 → 마지막 장면 ffmpeg 무한)
                 cuts.remove(c)
                 out.append(f"[빼기] {c.get('line')} {c['src']}@{ss0:.2f} {why} — 빈자리 없음, 같은 줄 다른 컷이 이어받음")
             else:

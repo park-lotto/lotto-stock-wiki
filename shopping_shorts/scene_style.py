@@ -1192,6 +1192,12 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
     from . import video_assemble as va
     snapshot=validate_snapshot(snapshot)
     context=context_for(timeline,headcopy,snapshot)
+    # 장면이 입력 영상 끝 뒤에서 시작하면 그 조각은 입력 프레임이 0 → '-loop 1' 레이어만 남아 ffmpeg 가 끝나지 않는다(관제 285, 4시간 멈춤).
+    # 굽기 전에 시간표 ↔ 영상 길이를 재서 이유를 적고 멈춘다.
+    video_frames=round(va._probe_duration(in_video)*30)
+    late=[(i,s["start"]) for i,s in enumerate(context["scenes"]) if round(s["end"]*30)>round(s["start"]*30) and round(s["start"]*30)>=video_frames]
+    if late:
+        raise RuntimeError(f"장면 시간표가 영상보다 길다: 영상 {video_frames/30:.2f}초인데 장면 {late[0][0]}이 {late[0][1]:.2f}초에 시작(넘는 장면 {len(late)}개)")
     work=Path(work).resolve()
     layers=render_layers(timeline,snapshot,work,headcopy)
     parts=[]
@@ -1234,7 +1240,7 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
         else:
             graph+=";[composed]null[final]"
         part=work/f"scene-style-{index:04d}.mp4"
-        va._run_ffmpeg(["ffmpeg","-y","-ss",str(first_frame/30),"-i",str(in_video),*layer_input,"-filter_complex",graph,"-map","[final]","-an","-frames:v",str(last_frame-first_frame),"-r","30","-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),*SCENE_PART_VBV,*va._threads_args(),"-pix_fmt","yuv420p",str(part)],cwd=str(work))
+        va._run_ffmpeg(["ffmpeg","-y","-ss",str(first_frame/30),"-i",str(in_video),*layer_input,"-filter_complex",graph,"-map","[final]","-an","-frames:v",str(last_frame-first_frame),"-r","30","-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),*SCENE_PART_VBV,*va._threads_args(),"-pix_fmt","yuv420p",str(part)],cwd=str(work),timeout=120+(last_frame-first_frame)*2)
         parts.append(part)
     listing=work/"scene-style-concat.txt"
     listing.write_text("\n".join(f"file '{p.name}'" for p in parts),encoding="utf-8")
