@@ -1620,8 +1620,9 @@ def ph_research_check(st, m, rp, u):
 # ── 5 재료 영상 ───────────────────────────────────────────────────────────
 def ph_material(st, m, rp, u):
     R = st["research"]
-    return {"do": [{"id": "screen", "cmd": "screen", "queries": R.get("queries") or [], "exclude": R.get("exclude") or [],
-                    "keywords": R.get("keywords") or [], "top": 8, "bench_id": st["bench"].get("id"), "origin_id": (st.get("origin") or {}).get("id")}],
+    sw = _subject_words(st)          # 이야기 대상 ≠ 파는 제품(쇼핑형 10-29) — 그 물건 장면도 찾는다(대본이 그 물건을 말하는 줄에 쓴다)
+    return {"do": [{"id": "screen", "cmd": "screen", "queries": list(dict.fromkeys((R.get("queries") or []) + sw)), "exclude": R.get("exclude") or [],
+                    "keywords": (R.get("keywords") or []) + sw, "top": 10 if sw else 8, "bench_id": st["bench"].get("id"), "origin_id": (st.get("origin") or {}).get("id")}],
             "then": "material_got"}
 
 
@@ -1632,7 +1633,7 @@ def ph_material_got(st, m, rp, u):
     if not rows:
         return {"do": [{"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "n": 4}], "then": "material_dl"}
     return {"review": [_rv("screen_pick", SCREEN_PICK + "\n\n후보(시트 순서와 같다):\n" + json.dumps(rows, ensure_ascii=False, indent=1) +
-                           f"\n\n제품: {st['product'].get('name')} / 연예인: {st['read'].get('celeb')}", [_img(x) for x in s.get("sheets") or []][:8],
+                           f"\n\n제품: {st['product'].get('name')} / 연예인: {st['read'].get('celeb')}" + _subject_pick_ctx(st), [_img(x) for x in s.get("sheets") or []][:10],
                            need=("chosen",))], "then": "material_pick"}
 
 
@@ -1878,7 +1879,7 @@ def _script_ask(st, fail: str = "") -> dict:
            "\n\n## 원음 받아쓰기(구간마다 — 모델 둘이면 둘 다)\n" + json.dumps(st.get("asr") or {}, ensure_ascii=False)[:6000] +
            "\n\n## 재료 파일(시트 순서 = 앞 5개)\n" + json.dumps(ms.get("list") or [], ensure_ascii=False) +
            "\n실제 크기(crop 은 이 픽셀로 — 시트는 줄인 미리보기다): " + json.dumps(_offer_dims(st), ensure_ascii=False) + _shots_ctx(st) +
-           _foreign_script_ctx(st) + _src_rule_ctx(st) + _cut_rules_ctx(st, ms.get("shots")) + _points_ctx(v) +
+           _foreign_script_ctx(st) + _src_rule_ctx(st) + _cut_rules_ctx(st, ms.get("shots")) + _points_ctx(v) + _subject_ctx(st) +
            (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
     imgs = [_img(x) for x in ms.get("sheets") or []]
     if ms.get("bench_caps"):     # 소재 쇼츠 박힌 한국어 자막(1초 칸) — 잘된 편의 말맛 그대로(사장님 10-26)
@@ -1926,6 +1927,7 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
             a = {"ok": False, "error": f"대본 꼴이 틀렸다: {type(e).__name__}: {str(e)[:200]}"}
     extra = {"title": RU.title_colors_bad(S, _style(v)), "claims": RU.script_claim_problems(S),   # 자막↔목소리 = script_audit(G-1) 안
              "alt_scene": RU.alt_scene_problems(S, M, _origin_names(st)) if (st.get("product") or {}).get("mode") == "alt" else [],
+             "subject_scene": subject_scene_problems(st, S, M),
              "source_rule": RU.source_rule_static(M, _origin_names(st), _rule_bench_id(st), st.get("shots") or {})}
     on = _origin_names(st)
     if _fmt(st) not in FOREIGN_FMTS and not any(str(c.get("src") or "") not in on for cs in (M.get("cuts") or {}).values() for c in (cs if isinstance(cs, list) else [cs])):
@@ -2171,7 +2173,7 @@ def _fix_review(st, why: str, sheet: str | None, rid: str) -> dict:
                json.dumps(sc["S"], ensure_ascii=False)[:6000] + "\n\n재료:\n" + json.dumps(sc["M"], ensure_ascii=False)[:8000] + _shots_ctx(st) +
                # 처음 질문과 같은 장면 규칙·판 숫자·재료 샷 구간·쓸 수 있는 파일(10-27: 고치기 질문엔 이게 없어 고친 컷이 샷 경계·컷 중앙을 새로 넘겼다 —
                # 6편 두 번째 반려 전부 '지난 고치기에서 새로 생김')
-               _src_rule_ctx(st) + _cut_rules_ctx(st, (st.get("_msheets") or {}).get("shots")),
+               _src_rule_ctx(st) + _cut_rules_ctx(st, (st.get("_msheets") or {}).get("shots")) + _subject_ctx(st),
                [_img(sheet)] if sheet else [], need=("ok",))
 
 
@@ -2631,7 +2633,8 @@ PLAN_LOOK_SUBSONG = PLAN_LOOK_SUBSONG_HEAD + PLAN_LOOK_FOREIGN
 TOPIC_READ_SHOP = """너는 쇼핑형 소재 판독 담당이다. 아래는 회원이 준 소재 영상(제품 썰·게시글·리뷰)의 1초 장면 시트·제목·설명·받아쓰기다.
 - is_shopping: 쿠팡에서 살 수 있는 **제품** 이야기면 true(의약품·의료기기·서비스면 false).
 - product_words: 제품을 가리키는 낱말. coupang_queries: 쿠팡 검색어 2~4개. story: 이 소재의 썰 요지 2줄(누가·무엇에 놀랐나 — 화면·말에 있는 것만).
-JSON 하나: {"is_shopping": true, "product_words": ["…"], "coupang_queries": ["…"], "story": "…", "why": "한 줄"}"""
+- subject_words: 썰의 주인공 물건이 **파는 제품과 다르면** 그 물건 낱말(예: 못 사는 원조 '아웃백 망고스프레드' → 파는 건 대체품 '무스 메이플버터'). 같으면 [].
+JSON 하나: {"is_shopping": true, "product_words": ["…"], "subject_words": [], "coupang_queries": ["…"], "story": "…", "why": "한 줄"}"""
 
 PRODUCT_SAME_SHOP = """너는 제품 판정 담당이다(쇼핑형). 첫 그림 = 소재 영상 1초 시트, 마지막 그림 = 쿠팡 후보 사진 시트. 소재 영상의 그 제품과 포장·모양·색이 **같은 제품** 하나를 골라라.
 같은 제품이 없으면 같은 종류·같은 쓰임 중 후기 많고 별점 높은 것(mode 'alt'). 그것도 없으면 product_id ''.
@@ -2648,6 +2651,53 @@ JSON 하나: {"stop": "", "조사_md": "마크다운 전문", "keywords": ["제�
 SCRIPT_SHOP = """너는 대본 작가다(오푸스). 쇼핑형 — 판 규칙·결 기준 그대로 이 편의 대본·재료·근거를 써라(원음 줄 없음 — kind tts, 판이 자막 줄(sub)을 쓰면 그대로). 대본 검사를 통과해야 한다.
 근거 = 쿠팡 베스트 후기(r번호 — 셀링포인트·소구점 전언)·네이버 글(n번호)·조사 사실(f번호). 후기 개수·별점 숫자는 쓰지 않는다. CTA·금액·질병·효능 단정 없음.
 재료의 cand_dir 는 비워 둔다, 컷 src 는 아래 '컷 src 로 쓸 수 있는 파일'의 이름만(제품 영상 · prod_*.jpg 사진은 그 목록에 있을 때만 — 사진은 move: in·out·left·right). 컷마다 see — 그 줄 대사의 동작·상태가 그 컷에 보여야 한다."""
+
+SUBJECT_RULE = """## 이야기 대상 ≠ 파는 제품(반드시 — 10-29 썰템쇼 회원 시험: '제조원이 분명 오뚜기인데' 줄에 영국 제품 무스 메이플버터 화면 → 무스를 오뚜기 것으로 오해)
+이야기 대상({subject})을 말하는 줄에는 파는 제품({product}) 화면(제품 영상·prod_*.jpg)을 쓰지 않는다 — 보는 사람이 제품을 그 대상으로 착각한다.
+그 줄은 이야기 대상 장면(재료에 있으면) 또는 제품이 안 보이는 상황 장면(빵·식탁·매장 등)으로. 파는 제품 화면은 제품을 소개하는 줄부터.
+대본 줄마다 about 칸: 이야기 대상을 말하는 줄 = "subject", 파는 제품·그 밖 = "product" — 대본 검사가 subject 줄의 제품 화면을 반려한다."""
+
+
+def subject_scene_problems(st, S: dict, M: dict) -> list[str]:
+    """(판단 주인 — 이야기 대상 줄에 파는 제품 화면 금지 판정) about=subject 줄의 컷 src 가 prod_*.jpg 이거나 '[이야기 대상]' 으로 고르지 않은 재료 영상이면 문제.
+    이야기 대상이 없으면(subject_words []) 부르지 않는다. 줄 about 칸이 하나도 없으면 그것도 문제(규칙만 있고 판정 못 하는 꼴을 막는다)."""
+    if not _subject_words(st):
+        return []
+    lines = [l for l in S.get("lines") or [] if l.get("kind") != "orig"]
+    if lines and not any(l.get("about") for l in lines):
+        return ["대본 줄에 about 칸이 없다 — 이야기 대상 줄 = \"subject\", 나머지 = \"product\""]
+    subj_ids = {str(c.get("id")) for c in (st.get("screen_pick") or {}).get("chosen") or [] if str(c.get("why") or "").startswith("[이야기 대상]")}
+    if not subj_ids:      # 이야기 대상 장면을 못 받았으면 바꿀 재료가 없다 — 반려하면 대본이 헛돈다. 기록만(장면 검수·눈검수가 SUBJECT_RULE 로 본다)
+        st.setdefault("log", []).append("이야기 대상 장면 0개 — subject 줄 화면 판정 생략(검수 질문 규칙만)")
+        return []
+    subj = {l.get("id") for l in lines if l.get("about") == "subject"}
+    out = []
+    for lid, cuts in (M.get("cuts") or {}).items():
+        if lid not in subj:
+            continue
+        for c in cuts if isinstance(cuts, list) else [cuts]:
+            src = str((c or {}).get("src") or "")
+            if src.startswith("prod_") or (src.endswith(".mp4") and Path(src).stem not in subj_ids):
+                out.append(f"{lid}: 이야기 대상 줄에 파는 제품 화면({src}) — 이야기 대상 장면이나 제품이 안 보이는 상황 장면으로")
+    return out
+
+
+def _subject_words(st) -> list[str]:
+    """(판단 주인) 썰의 주인공 물건이 파는 제품과 다를 때 그 낱말 — 소재 판독 subject_words(쇼핑형). 같으면 []."""
+    return [str(w) for w in ((st.get("read") or {}).get("subject_words") or []) if str(w).strip()][:3]
+
+
+def _subject_ctx(st) -> str:
+    """이야기 대상 ≠ 파는 제품 규칙 글 — 대본 질문·장면 검수 질문이 같이 붙인다(대상이 있을 때만)."""
+    sw = _subject_words(st)
+    return ("\n\n" + SUBJECT_RULE.format(subject=", ".join(sw), product=(st.get("product") or {}).get("name") or "파는 제품")) if sw else ""
+
+
+def _subject_pick_ctx(st) -> str:
+    sw = _subject_words(st)
+    return (f"\n이야기 대상(파는 제품과 다른 물건): {', '.join(sw)} — 그 물건이 크게 나오는 영상 1~2개도 chosen 에 넣는다(why 앞에 '[이야기 대상]'). "
+            "대본이 그 물건을 말하는 줄에 쓴다(제품 화면으로 대신하면 제품을 그 물건으로 착각한다).") if sw else ""
+
 
 PLAN_LOOK_SHOP = """너는 장면 검수 담당이다(쇼핑형). 계획 시트를 보고 컷마다: 대사와 화면이 맞나 · 남의 글자·워터마크 · 사람만 나오고 제품·대사 동작이 안 보이는 컷(사람이 제품을 쓰는 장면은 괜찮다 — 10-27 사장님) · A-B-A 끼움.
 crop 은 원본 픽셀 정수[x, y, w, h] — 숫자 crop 은 엔진이 바꾸지 않는다. 박힌 글자는 재료.blur {파일: [[x, y, w, h, 시작초, 끝초]]}로 흐린다. 고칠 것이 있으면 재료 전체를 고쳐서 돌려준다(없으면 null).

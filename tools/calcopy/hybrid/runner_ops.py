@@ -1106,8 +1106,9 @@ def c_screen(W, d):
     screen.search(W, d.get("queries") or [], n=10, exclude=d.get("exclude"), server=False)
     sj = screen.screen(W, d.get("keywords") or [], top=int(d.get("top") or 8))
     rows = [x for x in sj.get("rows") or [] if x.get("id") not in skip]
-    sheets = [rel(W, W / "screen" / f"{x['id']}_sheet.jpg") for x in rows if (W / "screen" / f"{x['id']}_sheet.jpg").exists()][:8]
-    meta = [{k: x.get(k) for k in ("id", "title", "channel", "max_height", "dur", "hits", "score")} for x in rows][:8]
+    top = int(d.get("top") or 8)     # 고를 후보 수 = 지시서 top(이야기 대상 장면까지 보면 10 — 10-29)
+    sheets = [rel(W, W / "screen" / f"{x['id']}_sheet.jpg") for x in rows if (W / "screen" / f"{x['id']}_sheet.jpg").exists()][:top]
+    meta = [{k: x.get(k) for k in ("id", "title", "channel", "max_height", "dur", "hits", "score")} for x in rows][:top]
     return {"rows": meta, "sheets": sheets}
 
 
