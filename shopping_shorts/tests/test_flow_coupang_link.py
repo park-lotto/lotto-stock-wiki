@@ -37,3 +37,12 @@ def test_link_limit_stops_with_member_fix():
 
 def test_blocked_page_title():
     assert R.blocked_page("Access Denied") and not R.blocked_page("쿠팡! | 무스 메이플버터")
+
+
+def test_retry_after_watch_stop_goes_back_to_asker():
+    """감독 멈춤 뒤 다시 시도 = 옛 감독 답을 되풀이하지 말고 그 일을 시킨 단계부터(10-30 설치본 시험: 같은 '반복됐어요'만 3번)."""
+    st = _st()
+    st.update(phase="watch_got", _watch_from="given", watch_keys={"k": 2})
+    out = F.step(st, {}, {}, {})
+    assert "watch_keys" not in st or not st["watch_keys"].get("k")
+    assert any("감독 멈춤 뒤 다시 시도 → given" in x for x in st["log"])

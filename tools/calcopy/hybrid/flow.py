@@ -549,6 +549,7 @@ def _watch(st: dict, ph: str, r: dict) -> dict | None:
         return None
     st["watch_key"] = key
     st["watch_do"] = {"do": r["do"], "then": r["then"], "cmd": cmd}
+    st["_watch_from"] = ph            # 감독이 멈춘 뒤 다시 시도 = 이 일을 시킨 단계부터(f_watch_got)
     st["phase"] = "watch_got"
     log = "\n".join(str(x)[:300] for x in (st.get("log") or [])[-25:])
     return _rv("watch", WATCH_ASK.format(n=cnt[cmd], cmd=cmd, ph=ph, log=log or "없음"), need=("go",))
@@ -556,6 +557,10 @@ def _watch(st: dict, ph: str, r: dict) -> dict | None:
 
 def f_watch_got(st, m, rp, u):
     w = st.pop("watch_do", None) or {}
+    if not w and not rp:              # 감독 멈춤 뒤 다시 시도 — 옛 감독 답을 되풀이하지 말고 그 일을 시킨 단계부터 새로(10-30 설치본 시험: 같은 멈춤만 3번)
+        st.pop("watch_keys", None)
+        st["log"].append(f"감독 멈춤 뒤 다시 시도 → {st.get('_watch_from') or 'setup'} 부터")
+        return {"goto": st.get("_watch_from") or "setup"}
     a = _reply(rp, "watch", ("go",))
     cmd = w.get("cmd") or ""
     st["log"].append(f"감독({cmd} {st.get('watch_cnt', {}).get(cmd)}번째): {'이어 감' if a.get('go') else '멈춤'} — {str(a.get('why') or '')[:200]}")
