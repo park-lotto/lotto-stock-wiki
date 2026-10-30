@@ -55,3 +55,17 @@ def test_lessons_file_stays_small_and_every_stage_exists():
     assert set(d) == {"script", "material", "plan", "final"}
     assert all(0 < len(v) <= 15 for v in d.values())
     assert all(F._lessons(k) for k in d)
+
+
+def test_eye_left_after_limit_still_finishes_with_notice():
+    """자동 검사 통과 + 눈 지적만 남음 + 고치기 한도 = 멈추지 않고 완성, 남은 지적은 회원에게(사장님 10-31)."""
+    st = {"version": "x", "log": [], "tries": {"look": F.LIMITS["look"]}, "auto": {"ok": True, "rows": []}, "look": {"ok": False, "problems": ["7초 밋밋함"]}}
+    assert F.ph_check_judge(st, {}, {}, {}) == {"goto": "deliver"}
+    assert st["look_left"] == ["7초 밋밋함"] and "7초 밋밋함" in st["notice"]
+
+
+def test_gate_fail_at_limit_is_not_delivered():
+    """자동 검사 ×는 완성으로 안 넘어간다 — 기준을 낮추는 길이 아니다."""
+    st = {"version": "x", "log": [], "tries": {"look": F.LIMITS["look"]}, "auto": {"ok": False, "rows": [{"group": "표식", "what": "광고", "ok": False}]}, "look": {"ok": False, "problems": []}}
+    with pytest.raises(F._Stop):
+        F.ph_check_judge(st, {}, {}, {})

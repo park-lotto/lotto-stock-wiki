@@ -1011,8 +1011,9 @@ def feedback(ctx: dict, body: dict, store=None) -> dict:
     cid, _, _ = _front(store, ctx, "feedback")
     body = body if isinstance(body, dict) else {}
     kind, text = body.get("kind"), body.get("text")
-    if kind not in ("request", "bug") or not isinstance(text, str) or not text.strip() or len(text) > 2000:
-        raise PortalError("bad_request", "kind 는 request·bug, text 는 1~2000자입니다")
+    limit = 30000 if kind == "code_fix" else 2000      # code_fix = 회원 Claude 가 고친 엔진 diff — 우리가 검토해 반영한다(자동 반영 없음, 사장님 10-31)
+    if kind not in ("request", "bug", "code_fix") or not isinstance(text, str) or not text.strip() or len(text) > limit:
+        raise PortalError("bad_request", "kind 는 request·bug·code_fix, text 는 1~2000자(code_fix 30000자)입니다")
     job = str(body.get("job_id") or "")[:64] or None
     with _tx(store, write=True) as c:
         cur = c.execute("INSERT INTO claude_feedback(ts, cid, kind, text, job_id) VALUES(?,?,?,?,?)", (_now(), cid, kind, text.strip(), job))
