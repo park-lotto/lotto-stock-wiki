@@ -26,7 +26,7 @@ for (const k of ['ORIGIN_YT_ONLY', 'SHORTEM_YT_GAP']) if (process.env[k]) env[k]
 const cfg = path.join(dir, 'mcp.json');
 fs.writeFileSync(cfg, JSON.stringify({ mcpServers: { shortem: { command: process.execPath, args: [path.join(HERE, '..', 'server', 'index.js')], env } } }), { mode: 0o600 });
 
-const prompt = RESUME ? `숏템에서 만들던 편(sid ${RESUME})을 이어서 끝까지 만들어줘. shortem_make(step="status", sid="${RESUME}") 부터.
+const prompt = RESUME && arg('--say') ? `${arg('--say')} (만들던 편 sid ${RESUME})` : RESUME ? `숏템에서 만들던 편(sid ${RESUME})을 이어서 끝까지 만들어줘. shortem_make(step="status", sid="${RESUME}") 부터.
 나는 고객이고 대본은 이미 봤어 — 사인할게: "좋아요, 진행해"(사인을 다시 물으면 같은 답으로 바로 사인해). 진행 상황은 숏템이 주는 한 줄만, 끝나면 완성본 경로를 알려줘.` :`${arg('--say')}
 (내 답을 미리 적어 둘게: 대본 사인은 "좋아요, 진행해". 진행 상황은 숏템이 주는 한 줄만 알려 주고, 끝나면 완성본 경로를 알려줘.)`;
 const t0 = Date.now();
