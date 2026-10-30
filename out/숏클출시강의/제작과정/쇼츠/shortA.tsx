@@ -4,7 +4,7 @@ import {
   registerRoot, staticFile, useCurrentFrame,
 } from "remotion";
 
-// 숏클 쇼츠 A "휴대폰 50대가, 혼자 쇼츠를 만듭니다"(세로 1080x1920, 21시 칸) — 대본 쇼츠4편_대본_페이블_v2.md A.
+// 숏클 쇼츠 A "클로드로 만든 채널 50개, 유튜브 공장을 차렸습니다"(10-30 사장님: 폰이 만드는 게 아니라 클로드로 만든 채널로 공장)(세로 1080x1920, 21시 칸) — 대본 쇼츠4편_대본_페이블_v2.md A.
 // 음성 = 줄마다 따로 뽑은 필재 sh/A/aNN.mp3 를 잘라내지 않고 통째로 이어 놓는다(LN). 끝줄 → 첫 컷 같은 앵글 = 루프.
 const FPS = 30, S = (s: number) => Math.round(s * FPS);
 const W = 1080, H = 1920;
@@ -15,18 +15,18 @@ const ez = (f: number, a: number, b: number) =>
 // 줄마다 따로 뽑은 필재 음성 sh/A/aNN.mp3(10-30: 한 덩어리를 정렬 시각으로 자르니 정렬이 최대 0.9초 빨라 말끝이 잘렸다).
 // [파일 길이, 뒤에 더 쉴 초, 자막 조각들 [파일 안 시각(실제 쉼 측정), 글]]
 const LN: [number, number, [number, string][]][] = [
-  [3.8, 0, [[0.38, "이 휴대폰들, 지금"], [1.76, "혼자서 쇼츠를 만들고 있어요."]]],
-  [2.8, 0, [[0.13, "오십 개 채널이에요."], [1.8, "전부 제 거고요."]]],
+  [2.36, 0, [[0.36, "이거, 제 유튜브 공장이에요."]]],
+  [2.8, 0, [[0.21, "오십 개 채널,"], [1.18, "전부 클로드로 만든 채널이에요."]]],
   [3.2, 0, [[0.17, "쇼츠로 돈 번다는 강의,"], [1.92, "많이 들어 보셨잖아요."]]],
   [4.36, 0, [[0.23, "근데 막상 하면,"], [1.45, "소재 찾고, 자르고,"], [2.96, "대본 쓰고, 자막 달고."]]],
-  [2.2, 0.5, [[0.29, "한 편에 하루가 가죠."]]],
-  [3.44, 0, [[0.33, "자, 보시면."], [1.61, "이 폰들에서 나오는 게 이겁니다."]]],
+  [3.48, 0.3, [[0.34, "한 편에 하루가 가죠."], [2.45, "채널 하나도 벅차요."]]],
+  [4.96, 0, [[0.32, "자, 보시면."], [1.5, "이 채널들에 올라가는 쇼츠,"], [3.41, "전부 클로드가 만들었어요."]]],
   [5.16, 1.0, [[0.37, "연예인 화장품 후기."], [1.7, "해외 대박 영상."], [2.95, "감동 썰."], [3.8, "레시피."], [4.46, "여행 숙소."]]],
   [3.48, 0, [[0.22, "원본 찾는 것부터 올리는 것까지,"], [2.48, "제가 한 게 없어요."]]],
   [1.44, 0.4, [[0.32, "제가 한 건 딱 하나."]]],
   [1.6, 0, [[0.18, "\"해외 화장품 만들어 줘.\""]]],
   [1.24, 0, [[0.38, "이 한 줄이에요."]]],
-  [2.16, 0, [[0.15, "그러면 이 폰들이,"], [1.13, "밤에도 돌아갑니다."]]],
+  [3.52, 0, [[0.28, "클로드로 만든 채널 오십 개,"], [2.08, "이렇게 공장이 돌아갑니다."]]],
 ];
 const L: number[] = []; LN.reduce((t, x) => { L.push(t); return t + x[0] + x[1]; }, 0);   // L[i] = i번째 줄 시작(0부터)
 const SPEECH_END = L[11] + LN[11][0];
@@ -45,8 +45,8 @@ const Title: React.FC = () => {
     <div style={{ position: "absolute", left: 70, right: 70, top: 190, textAlign: "center", fontFamily: "Pret", fontWeight: 800, lineHeight: 1.18,
       color: WH, background: "rgba(14,14,16,.82)", borderRadius: 28, padding: "18px 0 22px",
       opacity: ez(f, 0, 6), transform: `scale(${0.94 + 0.06 * ez(f, 0, 8)})` }}>
-      <div style={{ fontSize: 88 }}>휴대폰 <span style={{ color: OR }}>50대</span>가,</div>
-      <div style={{ fontSize: 88 }}>혼자 쇼츠를 만듭니다</div>
+      <div style={{ fontSize: 76 }}>클로드로 만든 채널 <span style={{ color: OR }}>50개</span>,</div>
+      <div style={{ fontSize: 76 }}>유튜브 공장을 차렸습니다</div>
     </div>
   );
 };
@@ -86,7 +86,7 @@ const Fifty: React.FC = () => {
       <AbsoluteFill style={{ background: "rgba(0,0,0,.35)" }} />
       <div style={{ position: "absolute", left: 0, right: 0, top: 690, textAlign: "center", fontFamily: "Pret", fontWeight: 800 }}>
         <div style={{ fontSize: 300, color: OR, lineHeight: 1, transform: `scale(${1 + 0.15 * (1 - ez(f, S(0.8), S(1.1)))})` }}>{n}</div>
-        <div style={{ fontSize: 76, color: WH, marginTop: 10, opacity: ez(f, S(0.6), S(0.9)) }}>개 채널 · 전부 제 거</div>
+        <div style={{ fontSize: 76, color: WH, marginTop: 10, opacity: ez(f, S(0.6), S(0.9)) }}>개 채널 · 전부 클로드로</div>
       </div>
     </AbsoluteFill>
   );
@@ -152,12 +152,12 @@ const Pile: React.FC<{ base: number }> = ({ base }) => {
 // 12.7~15.9 흑백 공장 → 컬러
 const Reveal: React.FC = () => {
   const f = useCurrentFrame();
-  const g = 1 - ez(f, S(1.61), S(2.5));
+  const g = 1 - ez(f, S(1.5), S(2.4));
   return (
     <AbsoluteFill>
       <Factory gray={g} from={5} zoom={[1.18, 1.05]} dur={3.2} />
       <div style={{ position: "absolute", left: 0, right: 0, top: 1240, textAlign: "center", fontFamily: "Pret", fontWeight: 800, fontSize: 84, color: WH,
-        textShadow: "0 6px 30px #000", opacity: ez(f, S(1.6), S(1.9)) }}>이 폰들에서 <span style={{ color: OR }}>나오는 것</span></div>
+        textShadow: "0 6px 30px #000", opacity: ez(f, S(3.41), S(3.7)) }}>전부 <span style={{ color: OR }}>클로드</span>가 만든 쇼츠</div>
     </AbsoluteFill>
   );
 };
@@ -209,7 +209,7 @@ const Auto: React.FC = () => {
   const f = useCurrentFrame();
   return (
     <AbsoluteFill style={{ background: PAPER }}>
-      <div style={{ position: "absolute", left: 140, top: 520 }}>
+      <div style={{ position: "absolute", left: 140, top: 470 }}>
         {STEPS.map((s, k) => {
           const a = ez(f, 4 + k * 9, 10 + k * 9);
           return (
@@ -221,7 +221,7 @@ const Auto: React.FC = () => {
           );
         })}
       </div>
-      <div style={{ position: "absolute", left: 0, right: 0, top: 1300, textAlign: "center", fontFamily: "Pret", fontWeight: 800, fontSize: 72, color: INK, opacity: ez(f, S(2.2), S(2.5)) }}>
+      <div style={{ position: "absolute", left: 0, right: 0, top: 1195, textAlign: "center", fontFamily: "Pret", fontWeight: 800, fontSize: 72, color: INK, opacity: ez(f, S(2.2), S(2.5)) }}>
         제가 손댄 것 <span style={{ color: OR, fontSize: 110 }}>0</span>
       </div>
     </AbsoluteFill>
@@ -254,11 +254,11 @@ const Loop: React.FC = () => {
   return (
     <AbsoluteFill>
       <Factory gray={0} from={0} zoom={[1.0, 1.06]} dur={END - L[11]} />
-      <AbsoluteFill style={{ background: `rgba(0,0,0,${0.45 * ez(f, S(2.3), S(2.8))})` }} />
+      <AbsoluteFill style={{ background: `rgba(0,0,0,${0.45 * ez(f, S(3.4), S(3.9))})` }} />
       <div style={{ position: "absolute", left: 0, right: 0, top: 780, textAlign: "center", fontFamily: "Pret", fontWeight: 800, color: WH, textShadow: "0 6px 30px #000",
-        opacity: ez(f, S(2.3), S(2.7)), transform: `translateY(${(1 - ez(f, S(2.3), S(2.7))) * 30}px)` }}>
-        <div style={{ fontSize: 96 }}><span style={{ color: YEL }}>한 줄</span>이면,</div>
-        <div style={{ fontSize: 96 }}>이 폰들이 돌아갑니다</div>
+        opacity: ez(f, S(3.4), S(3.8)), transform: `translateY(${(1 - ez(f, S(3.4), S(3.8))) * 30}px)` }}>
+        <div style={{ fontSize: 96 }}><span style={{ color: YEL }}>한 줄</span>로 돌리는</div>
+        <div style={{ fontSize: 96 }}>유튜브 공장</div>
         <div style={{ fontSize: 52, color: OR, marginTop: 40 }}>숏클</div>
       </div>
     </AbsoluteFill>
