@@ -1987,18 +1987,26 @@ def face_feats(im, anchors: list) -> list[dict]:
     return out
 
 
+ANCHOR_AXES = ("인물순간",)        # 기준 얼굴을 뽑는 썸네일 축 = 연예인 본인 순간(thumb_rule.AXES)
+ANCHOR_NOT = ("짤반응",)           # 인물순간 카드가 없을 때도 기준으로 안 쓰는 축(남의 반응)
+
+
 def face_anchors(st: dict, doc: Path, T: dict, cand_dir: Path) -> list:
-    """연예인 기준 얼굴 = 썸네일 카드 3안 장면 중 thumb.card_faces 를 통과한 안의 가장 큰 얼굴 SFace 임베딩(카드 얼굴 관문 ⑥과 같은 장면)."""
+    """연예인 기준 얼굴 = 썸네일 카드 중 인물순간(본인) 안 장면의 가장 큰 얼굴 SFace 임베딩. 인물순간 안이 없으면 카드 얼굴 관문 ⑥ 통과 안(짤반응 빼고)."""
     from shopping_shorts.channelkit import vision as V
     from tools.calcopy.hybrid import thumb as TH
     sp = Path(doc) / "썸네일.json"
     if not sp.exists():
         return []
-    ok = {r["id"] for r in TH.card_faces(st, doc, T, cand_dir) if r["ok"]}
+    opts = jload(sp).get("options") or []
+    # 기준 = 연예인 본인 장면(인물순간) 카드 — 카드 크기 관문(⑥)과는 따로(얼굴이 조금 작아도 본인 얼굴이다). 짤반응·물건근접 등은 남의 반응·물건이라 기준이 아니다
+    #   (10-30 얜샷템 회원 시험: 최화정 카드 A 얼굴 0.19<0.2 탈락 · B 물건 → 성시경 '짤반응' C 만 기준이 돼 최화정 본인 컷 7개가 전부 '다른 사람'으로 걸려 렌더 3번 헛돎)
+    me = [o for o in opts if o.get("axis") in ANCHOR_AXES]
+    ok = {o.get("id") for o in me} if me else {r["id"] for r in TH.card_faces(st, doc, T, cand_dir) if r["ok"]}
     _, _, ww, wh = frame_window(st["frame"])
     out = []
-    for o in jload(sp).get("options") or []:
-        if o.get("id") not in ok:
+    for o in opts:
+        if o.get("id") not in ok or (not me and o.get("axis") in ANCHOR_NOT):
             continue
         im, _ = TH.card_scene_frame(o, T, cand_dir, (ww, wh))
         fs = V.faces_all(im) if im is not None else []
