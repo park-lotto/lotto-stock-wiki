@@ -47,6 +47,11 @@ def test_sheet_ask_requires_proof_and_carries_lessons():
     assert tuple(rv["need"]) == F.SHEET_NEED and "지난 제작 경험" in rv["ask"] and "(#" not in rv["ask"]
 
 
+def test_every_stage_guide_file_ships_with_the_server():
+    """가이드 파일이 저장소에 없으면 제작자 과제의 가이드가 빈 글로 나간다(10-31 라이브 실측: 폴더 자체가 없었다)."""
+    assert not [n for n in set(F.STAGE_GUIDE.values()) if not (F.GUIDE_DIR / n).exists()]
+
+
 def test_lessons_file_stays_small_and_every_stage_exists():
     d = json.loads(F.LESSONS_FILE.read_text(encoding="utf-8"))
     assert set(d) == {"script", "material", "plan", "final"}
