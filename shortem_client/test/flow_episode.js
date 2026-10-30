@@ -14,8 +14,10 @@ const RESUME = arg('--resume');   // 이어 가기 시험: 같은 폴더(같은 
 if (fs.existsSync(dir) && !RESUME) { console.error('없는 폴더를 주세요: ' + dir); process.exit(2); }
 const HOME = path.join(dir, 'home'), WORK = path.join(dir, 'work'), CWD = path.join(dir, 'cwd');
 for (const d of [HOME, WORK, CWD]) fs.mkdirSync(d, { recursive: true });
+// --install <설치 폴더> = 설치본 그대로(설치된 MCP·엔진·node + 플러그인 시작 훅이 회원 지침을 넣는다). 없으면 개발 MCP + 지침을 작업 폴더 CLAUDE.md 로
+const INST = arg('--install') ? path.resolve(arg('--install')) : '';
 // 회원 지침(installer/common/CLAUDE_숏클.md) — 회원 PC 엔 설치팩이 넣어 둔다. 시험도 같은 지침을 읽게 작업 폴더 CLAUDE.md 로(관제 290: 지침 없이 돌린 시험은 회원과 다르다)
-fs.copyFileSync(path.join(HERE, '..', '..', 'installer', 'common', 'CLAUDE_숏클.md'), path.join(CWD, 'CLAUDE.md'));
+if (!INST) fs.copyFileSync(path.join(HERE, '..', '..', 'installer', 'common', 'CLAUDE_숏클.md'), path.join(CWD, 'CLAUDE.md'));
 // --keys <폴더>: 회원이 설정 화면 '내 키'에 넣어 둔 것처럼 <HOME>/keys/ 에 복사(쿠팡 파트너스 등 — 값은 출력하지 않는다)
 if (arg('--keys')) fs.cpSync(path.resolve(arg('--keys')), path.join(HOME, 'keys'), { recursive: true });
 const env = { SHORTEM_HOME: HOME, SHORTEM_WORK: WORK, SHORTEM_CLIENT: 'claude-code', SHORTEM_NO_BROWSER: '1', SHORTEM_DEV_TOOLS: '1', SHORTEM_DEV: '1',
@@ -24,7 +26,10 @@ const env = { SHORTEM_HOME: HOME, SHORTEM_WORK: WORK, SHORTEM_CLIENT: 'claude-co
 if (arg('--cache')) env.SHORTEM_SOURCE_CACHE = path.resolve(arg('--cache'));
 for (const k of ['ORIGIN_YT_ONLY', 'SHORTEM_YT_GAP']) if (process.env[k]) env[k] = process.env[k];   // 쓸 계정·요청 간격 — MCP 서버는 부모 환경을 다 물려받지 않는다(넘길 것만 적는다)
 const cfg = path.join(dir, 'mcp.json');
-fs.writeFileSync(cfg, JSON.stringify({ mcpServers: { shortem: { command: process.execPath, args: [path.join(HERE, '..', 'server', 'index.js')], env } } }), { mode: 0o600 });
+if (INST) { delete env.SHORTEM_ENGINE; delete env.SHORTEM_DEV_TOOLS; delete env.SHORTEM_DEV; env.SHORTEM_INSTALL = INST; }
+fs.writeFileSync(cfg, JSON.stringify({ mcpServers: { shortem: INST
+  ? { command: path.join(INST, 'tools', 'node', 'node.exe'), args: [path.join(INST, 'claude-plugin', 'shortem', 'launcher.js')], env }
+  : { command: process.execPath, args: [path.join(HERE, '..', 'server', 'index.js')], env } } }), { mode: 0o600 });
 
 const prompt = RESUME && arg('--say') ? `${arg('--say')} (만들던 편 sid ${RESUME})` : RESUME ? `숏템에서 만들던 편(sid ${RESUME})을 이어서 끝까지 만들어줘. shortem_make(step="status", sid="${RESUME}") 부터.
 나는 고객이고 대본은 이미 봤어 — 사인할게: "좋아요, 진행해"(사인을 다시 물으면 같은 답으로 바로 사인해). 진행 상황은 숏템이 주는 한 줄만, 끝나면 완성본 경로를 알려줘.` :`${arg('--say')}
@@ -32,7 +37,7 @@ const prompt = RESUME && arg('--say') ? `${arg('--say')} (만들던 편 sid ${RE
 const t0 = Date.now();
 const log = path.join(dir, RESUME ? `claude_resume_${Date.now()}.jsonl` : 'claude.jsonl');
 const claude = process.env.CLAUDE_BIN || (process.platform === 'win32' ? path.join(process.env.USERPROFILE || '', '.local', 'bin', 'claude.exe') : 'claude');
-const p = spawn(claude, ['-p', prompt, '--mcp-config', cfg, '--strict-mcp-config', '--model', 'opus', '--output-format', 'stream-json', '--verbose',
+const p = spawn(claude, ['-p', prompt, '--mcp-config', cfg, '--strict-mcp-config', ...(INST ? ['--plugin-dir', path.join(INST, 'claude-plugin', 'shortem')] : []), '--model', 'opus', '--output-format', 'stream-json', '--verbose',
   '--allowedTools', 'mcp__shortem__shortem_setup,mcp__shortem__shortem_presets,mcp__shortem__shortem_make,mcp__shortem__shortem_ai,mcp__shortem__shortem_job,mcp__shortem__shortem_settings,mcp__shortem__shortem_inbox,mcp__shortem__shortem_profile,mcp__shortem__shortem_feedback,Agent,WebSearch,WebFetch',
   '--max-turns', '600'], { cwd: CWD, stdio: ['ignore', fs.openSync(log, 'w'), 'pipe'], windowsHide: true });
 let err = ''; p.stderr.on('data', d => { err += d; });

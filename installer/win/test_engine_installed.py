@@ -51,7 +51,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--install", required=True)
     ap.add_argument("--pack", required=True)
-    ap.add_argument("--preset", default="channel/sseolpulda/preset/A_흰바탕창/창아래_검정")
+    ap.add_argument("--preset", default="channel/humorshowshow/preset/썰템쇼_화자썰")   # 회원 길(하이브리드) 프리셋 — 옛 썰풀다 틀은 회원 목록에서 빠졌다(10-30)
     ap.add_argument("--video", default="https://www.tiktok.com/@11street_official/video/7512363471871216903")
     a = ap.parse_args()
     inst = Path(a.install).resolve()
