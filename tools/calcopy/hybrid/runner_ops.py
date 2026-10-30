@@ -1634,6 +1634,16 @@ def _of_sheets(W: Path, seeds: list[Path], cands: list[dict]) -> list[str]:
     pool = [(c, im) for c in cands for im in [_of_thumb(W, c)] if im is not None]
     for c in cands:
         c["thumb_ok"] = any(x is c for x, _ in pool)
+    for c, im in pool:                   # 후보 썸네일 작은 파일 — 회원 PC 작업실 '원본 찾기' 탭이 보여 준다(관제 291, 시트만 남기면 후보별로 못 보여 줌)
+        vid = str(c.get("id") or "")
+        t = W / "origin_foreign" / f"thumb_{vid}.jpg"
+        if re.fullmatch(r"[\w-]{3,40}", vid) and not t.exists():
+            try:
+                sm = im.copy()
+                sm.thumbnail((240, 360))
+                sm.save(t, quality=80)
+            except OSError as e:
+                print(f"[원본 찾기] 썸네일 저장 못 함 {vid}: {e}", flush=True)
     out = []
     cw, chh, cols = 200, 300, 8
     for s0 in range(0, len(pool), OF_SHEET_N):

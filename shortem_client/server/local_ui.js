@@ -16,6 +16,9 @@ import { makeStep } from './make_flow.js';
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
 import { deliverStatus, linkTelegram, confirmTelegram, setDeliver, deliverFinal } from './deliver.js';
 import { keyStatuses, saveKey } from './engine/voice.js';
+import { flowList, flowView, viewFile } from './work_view.js';
+import { importMakerKeys } from './web_bridge.js';
+import { approveFlow, retryFlow } from './flow_driver.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const STATIC_OK = /^(out|shopping_shorts\/static)\/[0-9A-Za-z가-힣_.\-/]+\.(html|js|css|woff2?|ttf|otf|png|jpe?g|webp|gif|svg|json)$/;
@@ -121,6 +124,12 @@ async function route(req, res, token, port) {
   }
   // 렌더러 편집기 쪽 '내 로고' 목록(미리보기에는 안 쓰인다) — 서버를 부르지 않게 빈 목록
   if (u.pathname === '/api/produce/scene-style/logo' && req.method === 'GET') return send(res, 200, { items: [] });
+  if (u.pathname === '/work.js' && req.method === 'GET') return serveFile(req, res, path.join(HERE, 'ui', 'work.js'), 'text/javascript; charset=utf-8');   // 작업실 탭(관제 291) — 이 PC 에서만(서버판엔 없다)
+  if (/^\/f[la]\//.test(u.pathname) && req.method === 'GET') {     // 작업실 그림(제작 job · AI 요청 폴더) — work_view.viewFile 이 감옥 검사
+    const [, kind, sid, ...rest] = u.pathname.split('/');
+    const file = viewFile(kind, sid, rest.map(decodeURIComponent).join('/'));
+    return file ? serveFile(req, res, file, /\.png$/i.test(file) ? 'image/png' : 'image/jpeg') : send(res, 404, { error: '없음' });
+  }
   if (!u.pathname.startsWith('/api/')) return send(res, 404, { error: '없음' });
   if (req.method === 'POST' && req.headers['x-shortem-ui'] !== '1') return send(res, 403, { error: '화면에서만 바꿀 수 있습니다' });
   if (u.pathname === '/api/state' && req.method === 'GET') {
@@ -134,8 +143,15 @@ async function route(req, res, token, port) {
     return send(res, 200, { presets: list, current: cur, pack, changed, catalog: cat && { ...cat, default_pack: undefined, preset_defaults: undefined }, videos: videos(), error: err, logins: loginStatus(), deliver: deliverStatus(), keys: keyStatuses(),
       stamp: (s.channels[cur] || {}).updated || 0 });
   }
+  if (u.pathname === '/api/flows' && req.method === 'GET') return send(res, 200, { flows: flowList() });
+  if (u.pathname === '/api/flow' && req.method === 'GET') { const v = flowView(u.searchParams.get('sid')); return v ? send(res, 200, v) : send(res, 404, { error: '없는 작업' }); }
   const body = await readBody(req);
   if (!body) return send(res, 400, { error: '요청 모양이 다릅니다' });
+  if (u.pathname === '/api/import-keys') return send(res, 200, await importMakerKeys());   // 숏템메이커 키 가져오기 — 서버 화면 다리와 같은 함수(web_bridge.importMakerKeys)
+  if (u.pathname === '/api/flow/approve' || u.pathname === '/api/flow/retry') {   // 버튼은 MCP 와 같은 함수(flow_driver)를 부르기만
+    const f = (u.pathname.endsWith('approve') ? approveFlow : retryFlow)(body.sid);
+    return f ? send(res, 200, { ok: true, flow: flowView(body.sid) }) : send(res, 404, { error: '없는 작업' });
+  }
   if (u.pathname === '/api/select') return send(res, 200, { ok: select(body.preset) });
   if (u.pathname === '/api/save') return send(res, 200, await savePack(body.preset, body.patch));
   if (u.pathname === '/api/reset') { if (PID_RE.test(String(body.preset || ''))) resetPack(body.preset); return send(res, 200, { ok: true }); }

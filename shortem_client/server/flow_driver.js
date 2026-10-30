@@ -13,7 +13,7 @@ import { ensureDir, jail } from './paths.js';
 
 export const FLOW_SID_RE = /^[0-9a-f]{12}$/;
 const flows = new Map();   // sid → { st, busy, waiters }
-const flowRoot = () => ensureDir(dataDir(), 'flow');
+export const flowRoot = () => ensureDir(dataDir(), 'flow');
 const stFile = sid => path.join(flowRoot(), sid, 'flow.json');
 
 function save(f) {
@@ -60,7 +60,7 @@ function postReview(f, rv) {
       } catch { parts.push({ kind: 'text', text: '(그림을 준비하지 못함)' }); }
     }
   }
-  const req = { id, tag: rv.id, tier: rv.model || 'opus', prompt: rv.ask, parts, need: rv.need || [], made_at: Date.now() / 1000 };
+  const req = { id, tag: rv.id, tier: rv.model || 'opus', prompt: rv.ask, parts, need: rv.need || [], made_at: Date.now() / 1000, ...(rv.meta ? { meta: rv.meta } : {}) };   // meta = 작업실 화면이 판정을 후보에 짝짓는 표식(work_view)
   fs.writeFileSync(path.join(d, 'request.json.tmp'), JSON.stringify(req));
   fs.renameSync(path.join(d, 'request.json.tmp'), path.join(d, 'request.json'));
   return { rid: rv.id, dir: d, need: rv.need || [] };
@@ -157,7 +157,7 @@ async function pump(f) {
       if ((await absorb(f, res)) === 'end') break;
     }
   } catch (e) {
-    f.fail = { why: e instanceof ApiError ? (e.msg || e.code) : '진행이 멈췄습니다', fix: '잠시 뒤 shortem_make(step="retry") 로 이어 가세요', retry_ok: true };
+    f.fail = { why: e instanceof ApiError ? (e.msg || e.code) : '진행이 멈췄습니다', fix: '잠시 뒤 다시 시도해 주세요', retry_ok: true };
     f.status = 'error';
     save(f);
   } finally { f.busy = false; save(f); }

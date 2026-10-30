@@ -307,8 +307,9 @@ def _msg(st: dict, phase: str) -> str:
     return now + tail
 
 
-def _rv(rid: str, ask: str, show: list | None = None, model: str = "opus", need: tuple = ()) -> dict:
-    return {"id": rid, "model": model, "ask": ask, "show": show or [], "need": list(need)}
+def _rv(rid: str, ask: str, show: list | None = None, model: str = "opus", need: tuple = (), meta: dict | None = None) -> dict:
+    # meta = 회원 PC 작업실 화면(shortem_client work_view)이 판정을 후보에 짝지을 표식(판단 아님 — 질문에 쓴 것 그대로)
+    return {"id": rid, "model": model, "ask": ask, "show": show or [], "need": list(need), **({"meta": meta} if meta else {})}
 
 
 def _img(rel: str) -> dict:
@@ -3063,11 +3064,11 @@ def f_of_got(st, m, rp, u):
         st["of_bad"] = _bad_urls(o)
         from tools.calcopy import origin_find as OF
         ask = OF.JUDGE_PROMPT + (SUBSONG_CLEAN_ASK if _fmt(st) == "자막노래형" else "") + "\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows + _lens_ai_ctx(st)
-        return {"review": [_rv("of_judge", ask, [_img(x) for x in o["sheets"]][:6], model="opus", need=("same",))], "then": "of_pick"}
+        return {"review": [_rv("of_judge", ask, [_img(x) for x in o["sheets"]][:6], model="opus", need=("same",), meta={"mode": st.get("of_mode")})], "then": "of_pick"}
     prod = ", ".join([str(st["read"].get("brand_hint") or "")] + [str(w) for w in st["read"].get("product_words") or []][:3]).strip(", ")
     need = "최대 2개" if st.get("origins") else "같은 촬영분 원본을 못 찾아 이 후보가 원본이 된다 — 가장 좋은 것부터 최대 3개"   # 가장 좋은 건 원본 그대로(렌즈), 못 찾으면 같은 종류 해외 반응(사장님 10-26)
     ask = PEER_PICK_FOREIGN.replace("{product}", prod).replace("{need}", need) +"\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows
-    return {"review": [_rv("of_peer", ask, [_img(x) for x in o["sheets"]][:4], model="opus", need=("picks",))], "then": "of_pick"}
+    return {"review": [_rv("of_peer", ask, [_img(x) for x in o["sheets"]][:4], model="opus", need=("picks",), meta={"mode": st.get("of_mode")})], "then": "of_pick"}
 
 
 def f_of_pick(st, m, rp, u):
@@ -3291,7 +3292,7 @@ def f_of_verify(st, m, rp, u):
         return _set_origin(st, keep, [f for o in keep for f in o.get("files") or []])
     st["_verify"]["rows"] = [r.split(". ", 1)[1] for r in rows]
     ask = OF_VERIFY_ASK + (SUBSONG_VERIFY_CLEAN if _fmt(st) == "자막노래형" else "")
-    return {"review": [_rv("of_verify", ask + NL + NL + "후보:" + NL + NL.join(rows), shows, need=("same",))], "then": "of_verify_got"}
+    return {"review": [_rv("of_verify", ask + NL + NL + "후보:" + NL + NL.join(rows), shows, need=("same",), meta={"rows": st["_verify"]["rows"]})], "then": "of_verify_got"}
 
 
 def f_of_verify_got(st, m, rp, u):
@@ -3513,6 +3514,8 @@ def _slot_items(i: int, sl: dict) -> list:
             x["sub"] = sub
         if sl["pend"]["kind"] == "review" and sub:
             x["show"] = [({"file": sub + "/" + s["file"]} if isinstance(s, dict) and s.get("file") else s) for s in x.get("show") or []]
+        if sl["pend"]["kind"] == "review" and x.get("meta"):
+            x["meta"] = {**x["meta"], "sub": sub}     # 회원 PC 작업실이 이 판정을 어느 소재 폴더(job/<sub>) 후보에 짝지을지
         out.append(x)
     return out
 
