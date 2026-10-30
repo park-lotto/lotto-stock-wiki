@@ -94,7 +94,7 @@ PHASE_STAGE = {   # 세부 단계 → 회원에게 보이는 단계
     "product_same": "product", "name_find": "product", "name_got": "product", "named_cands": "product", "named_same": "product",
     "best_same": "product", "product_done": "product", "research": "research", "research_got": "research", "material": "material",
     "material_got": "material", "material_pick": "material", "material_dl": "material", "asr": "asr", "asr_got": "asr", "shots_got": "asr",
-    "script": "script", "script_got": "script", "stills_again": "script", "script_saved": "script", "sign": "sign", "plan": "plan", "plan_got": "plan", "line_fix_got": "plan", "member_revise": "plan", "more_got": "plan", "more_pick": "plan", "more_dl": "plan", "more_sheets": "plan",
+    "script": "script", "script_got": "script", "stills_again": "script", "script_saved": "script", "sign": "sign", "plan": "plan", "plan_got": "plan", "line_fix_got": "plan", "link_got": "product", "member_revise": "plan", "more_got": "plan", "more_pick": "plan", "more_dl": "plan", "more_sheets": "plan",
     "plan_look": "plan", "plan_saved": "plan", "thumb": "plan", "thumb_sheet": "plan", "thumb_got": "plan", "render": "render", "render_got": "render", "render_fix": "render", "render_saved": "render",
     "check": "check", "check_got": "check", "check_look": "check", "final_sheet": "check", "check_fix": "check", "check_saved": "check", "done": "done",
 }
@@ -320,13 +320,55 @@ def _txt(s: str) -> dict:
     return {"text": s}
 
 
+class _NeedLink(Exception):
+    """쿠팡 검색이 이 PC 에서 막힘 — 멈추지 않고 회원 Claude 에게 상품 주소를 받는다(ph_link_ask)."""
+
+
 def _coupang_down(m: dict, key: str = "coupang") -> None:
     """쿠팡 검색이 아예 안 됐으면(runner c_coupang search_failed — 회선 막힘 등) '제품 없음'으로 고객에게 다른 영상을 권하지 않는다(사장님 10-26).
-    멈춤 → 다시 시도(retry)하면 검색한 단계(_asker)부터 이어 간다."""
+    사장님 10-30 "쿠팡은 고객 API 먼저, 없으면 크롬 웹 — 막히면 상품 링크를 받는다 · 크롬은 한 번만": 다시 시도로 돌지 않고 상품 주소 받기로(_NeedLink)."""
     c = m.get(key) or {}
     if c.get("search_failed") or c.get("error"):     # 실행기 오류(10-26 run4: ImportError)도 '검색 안 됨' — '제품 없음'·'제품 이름 모름'으로 오진하지 않는다
-        raise _Stop("쿠팡 검색이 잠시 막혀 있어요", "몇 분 뒤 다시 시도해 주시면 제품 확인부터 이어 갈게요", auto=True,
-                    detail=str(c.get("error") or "search_failed")[:300])
+        raise _NeedLink(str(c.get("error") or "search_failed")[:300])
+
+
+LINK_MAX = 2       # 상품 주소 받기 한도(편당)
+LINK_ASK = """너는 이 편의 제작자다. 이 PC 에서 쿠팡 검색이 막혔다(회원 쿠팡 파트너스 키가 없어 크롬으로 찾다 차단됨). 쿠팡을 다시 열지 말고:
+1. 웹 검색(WebSearch)으로 아래 제품의 **쿠팡 상품 주소**(https://www.coupang.com/vp/products/<숫자> …)를 찾는다 — 같은 제품이 먼저, 없으면 같은 종류 가장 비슷한 것.
+2. 회원에게 한 줄로 확인한다: "이 상품으로 만들까요? <상품 이름> <주소>" — 회원이 다른 주소를 주면 그것. 10분 동안 답이 없으면 찾은 것으로(지침 5장).
+3. 답: 주소·상품 이름(검색 결과에 보이는 그대로)·같은 제품인지(same true/false)·종류(category)·사진 주소(검색 결과에 보이면, 없으면 "").
+제품 단서: {hint}
+JSON 하나: {{"url": "https://www.coupang.com/vp/products/…", "name": "…", "same": true, "category": "…", "image": "", "why": "한 줄"}}"""
+
+
+def _link_ask(st: dict, why: str) -> dict:
+    st["tries"]["product_link"] = st["tries"].get("product_link", 0) + 1
+    if st["tries"]["product_link"] > LINK_MAX:
+        raise _Stop("쿠팡 상품을 정하지 못했어요", "쿠팡 파트너스 키를 설정 화면에 넣거나 상품 주소를 알려 주시면 이어 갈게요", retry=st.get("_asker"), ask_member=True, detail=why)
+    st["log"].append(f"쿠팡 검색 막힘({why[:80]}) → 상품 주소 받기({st['tries']['product_link']}번째)")
+    hint = {"given": st.get("given"), "product_words": (st.get("read") or {}).get("product_words"), "queries": st.get("coupang_qs"),
+            "brand": (st.get("product_pick") or {}).get("brand_words"), "subject": (st.get("read") or {}).get("subject_words")}
+    return {"review": [_rv("product_link", LINK_ASK.format(hint=json.dumps({k: v for k, v in hint.items() if v}, ensure_ascii=False)), [], need=("url", "name"))],
+            "then": "link_got"}
+
+
+def ph_link_got(st, m, rp, u):
+    """회원 Claude 가 정한 쿠팡 상품 주소 → 그 상품으로(후보 시트·검색 없이). 사진은 답의 image(있으면) — 제품 사진 받기(product_stills)가 쓴다."""
+    r = _reply(rp, "product_link", ("url", "name"))
+    _, pid = _given_query(str(r.get("url") or ""))
+    if not pid:
+        return _link_ask(st, "답에 쿠팡 상품 번호가 없다: " + str(r.get("url"))[:120])
+    if str(r.get("category") or "") in ("의약품", "의료기기"):
+        raise _Stop("의약품·의료기기는 만들 수 없는 소재예요", "이 소재는 여기서 마칠게요", final=True)
+    same = r.get("same") is not False
+    st["product"] = {"product_id": str(pid), "name": str(r.get("name") or "")[:120], "why": str(r.get("why") or "")[:200], "category": r.get("category"),
+                     "mode": "exact" if same else "alt", "given": True, "link": True, **({"image": r["image"]} if str(r.get("image") or "").startswith("http") else {}),
+                     "name_hints": [], "brand_words": (st.get("product_pick") or {}).get("brand_words")}
+    if not same:
+        st["notice"] = ALT_NOTICE + " — 종류와 쓰임이 같은 제품이에요"
+        st.pop("_notice_shown", None)
+    st["log"].append(f"상품 주소로 정함: {pid} {st['product']['name'][:40]} ({'같은 제품' if same else '비슷한 제품'})")
+    return {"goto": "reviews"}
 
 
 class _Stop(Exception):
@@ -411,7 +453,10 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
         if h is None:
             return _out(st, "stop", ph, why="만드는 중에 문제가 생겼어요", fix="다시 시도해 주시면 이어 갈게요", detail="알 수 없는 세부 단계 " + str(ph))
         try:
-            r = h(st, m, rp, user)
+            try:
+                r = h(st, m, rp, user)
+            except _NeedLink as nl:          # 쿠팡 검색 막힘 — 그 자리에서 상품 주소 받기(사장님 10-30)
+                r = _link_ask(st, str(nl))
         except _Stop as e:
             st.pop("watch_keys", None)          # 멈춤 뒤 다시 시도 = 같은 일을 일부러 다시 낸다(반복 감시 대상 아님)
             # 뿌리(10-22): 멈춤 34곳 중 5곳만 이어 가기 → 고칠 때마다 원본 찾기부터 20~50분 다시. 이제 정한 retry 가 없으면 **마지막으로 일을 시킨 단계**부터(같은 do·질문을 다시)
@@ -1662,7 +1707,7 @@ def ph_material_got(st, m, rp, u):
     rows = s.get("rows") or []
     st["screen_rows"] = rows
     if not rows:
-        return {"do": [{"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "n": 4}], "then": "material_dl"}
+        return {"do": [{"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "images": [x for x in [(st.get("product") or {}).get("image")] if x], "n": 4}], "then": "material_dl"}
     return {"review": [_rv("screen_pick", SCREEN_PICK + "\n\n후보(시트 순서와 같다):\n" + json.dumps(rows, ensure_ascii=False, indent=1) +
                            f"\n\n제품: {st['product'].get('name')} / 연예인: {st['read'].get('celeb')}" + _subject_pick_ctx(st), [_img(x) for x in s.get("sheets") or []][:10],
                            need=("chosen",))], "then": "material_pick"}
@@ -1675,7 +1720,7 @@ def ph_material_pick(st, m, rp, u):
     chosen = [c for c in r.get("chosen") or [] if isinstance(c, dict) and c.get("id") in known and c["id"] not in (st["bench"].get("id"), (st.get("origin") or {}).get("id"))
               and not (celeb and celeb in str(c.get("why") or ""))]
     st["screen_pick"] = {"chosen": chosen, "rejected": r.get("rejected") or []}
-    stills = {"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "n": 4}
+    stills = {"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "images": [x for x in [(st.get("product") or {}).get("image")] if x], "n": 4}
     return {"do": [{"id": "dl", "cmd": "download", "items": [{"id": c["id"], "sections": c.get("sections") or []} for c in chosen]}, stills] if chosen else [stills],
             "then": "material_dl"}
 
@@ -2030,7 +2075,7 @@ def ph_script_got(st, m, rp, u):
         st["tries"]["stills_again"] = 1
         st["_stills_why"] = json.dumps({k: x for k, x in a.items() if k != "ok"}, ensure_ascii=False)[:4000]
         st["log"].append("비슷한 제품 장면 반려인데 제품 사진 0장 → 사진 다시 받기")
-        return {"do": [{"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "n": 4}], "then": "stills_again"}
+        return {"do": [{"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "images": [x for x in [(st.get("product") or {}).get("image")] if x], "n": 4}], "then": "stills_again"}
     if not a.get("ok"):
         cs = _script_causes(a)
         _tries(st, "script", LIMITS["script"], cs or ["form"])
@@ -3779,7 +3824,7 @@ def f_material(st, m, rp, u):
     """원본 샷 표(카메라 바뀌는 곳·박힌 글자 상자) + 쿠팡 상품 사진 — 해외원본형 재료는 원본이 주재료.
     비슷한 제품이면 그 제품 영상 검색도 같이(_alt_material_needed — 쇼핑형 재료 단계와 같은 screen·SCREEN_PICK·download)."""
     do = [{"id": "shots", "cmd": "shot_sheets", "files": ["src/" + f["name"] for f in st["origin"]["files"]], "window": None},
-          {"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "n": 3}]
+          {"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "images": [x for x in [(st.get("product") or {}).get("image")] if x], "n": 3}]
     if _alt_material_needed(st):
         R = st.get("research") or {}
         do.append({"id": "screen", "cmd": "screen", "queries": _alt_queries(st), "exclude": R.get("exclude") or [],
@@ -4282,7 +4327,7 @@ PHASES = {
     "named_same": ph_named_same, "best": ph_best, "best_rated": ph_best_rated, "given": ph_given, "given_same": ph_given_same, "research": ph_research, "research_got": ph_research_got,
     "research_check": ph_research_check, "material": ph_material, "material_got": ph_material_got, "material_pick": ph_material_pick,
     "material_dl": ph_material_dl, "asr": ph_asr, "asr_got": ph_asr_got, "shots_got": ph_shots_got, "script": ph_script,
-    "script_ask": ph_script_ask, "script_got": ph_script_got, "script_heard": ph_script_heard, "sign": ph_sign, "plan": ph_plan, "plan_got": ph_plan_got, "line_fix_got": ph_line_fix_got, "member_revise": ph_member_revise, "more_got": ph_more_got, "more_pick": ph_more_pick, "more_dl": ph_more_dl, "more_sheets": ph_more_sheets,
+    "script_ask": ph_script_ask, "script_got": ph_script_got, "script_heard": ph_script_heard, "sign": ph_sign, "plan": ph_plan, "plan_got": ph_plan_got, "line_fix_got": ph_line_fix_got, "link_got": ph_link_got, "member_revise": ph_member_revise, "more_got": ph_more_got, "more_pick": ph_more_pick, "more_dl": ph_more_dl, "more_sheets": ph_more_sheets,
     "plan_look": ph_plan_look, "thumb": ph_thumb, "thumb_sheet": ph_thumb_sheet, "thumb_got": ph_thumb_got, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
     "check_got": ph_check_got, "check_look": ph_check_look, "final_sheet": ph_final_sheet, "check_judge": ph_check_judge, "check_fix": ph_check_fix, "customize": ph_customize, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
