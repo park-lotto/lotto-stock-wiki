@@ -3895,6 +3895,13 @@ def f_alt_dl(st, m, rp, u):
     return {"goto": "f_clean"}
 
 
+def erases_text(version: str) -> bool:
+    """(판단 주인 — 이 판 형식에 렌더 전 박힌 글자 지우기 단계가 있나) 해외원본형·자막노래형 = f_clean·f_render 가 VMake 로 지운다.
+    쇼핑형·레시피형 = 없음 → 관문이 흐림을 넣는다(vmake_clean.will_erase 가 부른다)."""
+    fmt, _ = flow_format_of(version)
+    return "f_clean" in FORMAT_PHASES.get(fmt, {})
+
+
 def f_clean(st, m, rp, u):
     """박힌 글자 — 여기서는 **준비만**(돈 0: 판 칸·키 확인, 키 없으면 일찍 멈춤). 실제 VMake 는 장면 맞추기(컷 확정) 뒤·렌더 전 f_render 가
     자막 있는 컷 구간만(사장님 10-26 — 주인 vmake_clean.used_spans·clean_used). 원본 통째로 보내지 않는다."""

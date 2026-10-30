@@ -83,8 +83,23 @@ def style_mode(version: str | None) -> str:
 def will_erase(version: str | None) -> bool:
     """이 판의 박힌 글자를 렌더 전에 지우나(판단 주인) — 판 orig_text.mode 가 vmake 이고 돈 막힘(SHORTEM_NO_PAID)이 아니면 True.
     render_bench --plan 관문 ④ 가 True 일 때 글자 컷을 멈추지 않고 '지울 컷'(timeline.vmake_cuts)에 올린다(사장님 10-26 "글자가 많으면 자막을 지우면 되는 거고").
-    키 없음(need_key)도 True — 지울 판이고, 키는 flow f_clean 이 렌더 전에 따로 멈춰 받는다."""
+    키 없음(need_key)도 True — 지울 판이고, 키는 flow f_clean 이 렌더 전에 따로 멈춰 받는다.
+    ★그 판 형식 단계에 지우기(f_clean)가 없으면 False(10-30 설치본 시험: 쇼핑형 썰템쇼는 지우기 단계가 없는데 True 라 관문이 흐림을 안 넣고
+      고치기 질문도 '흐림 넣지 마라' → 남의 로고·자막이 남아 1초 시트에서 4번 걸림). 형식 판단 주인 = flow.erases_text."""
+    if not _flow_erases(version):
+        return False
     return ready(style_mode(version))["mode"] != "blur"
+
+
+def _flow_erases(version: str | None) -> bool:
+    if not version:
+        return True
+    try:
+        from tools.calcopy.hybrid import flow as F
+        return F.erases_text(version)
+    except Exception as e:  # noqa: BLE001 — 지시서가 없는 판(우리 PC 옛 길)은 판 칸 그대로
+        sys.stderr.write(f"[vmake_clean] 형식 확인 못 함({version}): {type(e).__name__} — 판 칸 그대로" + chr(10))
+        return True
 
 
 def ready(mode: str = "vmake") -> dict:
