@@ -63,14 +63,15 @@ function origin(sid, rv) {
     const rounds = ['lens', 'peers', 'find'].map(mode => {
       const cs = rj(path.join(od, `cands_${mode}.json`));
       if (!Array.isArray(cs)) return null;
-      const j = rv.filter(r => (r.tag === 'of_judge' || r.tag === 'of_peer') && r.meta && r.meta.mode === mode && r.answered).pop();
+      const mine = r => r.meta && (r.meta.sub ?? '') === sub;   // 소재 여럿 동시 찾기면 서버가 meta.sub 로 폴더를 알려 준다(flow._slot_items)
+      const j = rv.filter(r => (r.tag === 'of_judge' || r.tag === 'of_peer') && mine(r) && r.meta.mode === mode && r.answered).pop();
       const ok = new Set(((j && j.answer && (j.answer.same || j.answer.picks)) || []).map(Number));
       const legacy = !j && rv.some(r => (r.tag === 'of_judge' || r.tag === 'of_peer') && !r.meta && r.answered);   // meta 를 붙이기 전(10-30 전) 기록 — 짝을 지을 수 없다
       return { mode, at: mtime(path.join(od, `cands_${mode}.json`)), judged: !!j, legacy, why: j && j.answer ? j.answer.why : undefined,
         cands: cs.map(c => ({ n: c.n, platform: c.platform, title: String(c.title || '').slice(0, 80), views: c.views ?? null, dur: c.dur ?? null, korean: !!c.korean,
           thumb: files.includes(`thumb_${c.id}.jpg`) ? img(`${pre}origin_foreign/thumb_${c.id}.jpg`) : null, same: j ? ok.has(Number(c.n)) : null })) };
     }).filter(Boolean).sort((a, b) => a.at - b.at);
-    const vr = rv.filter(r => r.tag === 'of_verify');
+    const vr = rv.filter(r => r.tag === 'of_verify' && (!r.meta || (r.meta.sub ?? '') === sub));
     const verify = vr.map(r => {
       const rows = (r.meta && r.meta.rows) || [];
       const ok = new Set((r.answer && r.answer.same) || []);

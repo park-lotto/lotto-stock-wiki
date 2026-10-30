@@ -3295,6 +3295,8 @@ def _slot_items(i: int, sl: dict) -> list:
             x["sub"] = sub
         if sl["pend"]["kind"] == "review" and sub:
             x["show"] = [({"file": sub + "/" + s["file"]} if isinstance(s, dict) and s.get("file") else s) for s in x.get("show") or []]
+        if sl["pend"]["kind"] == "review" and x.get("meta"):
+            x["meta"] = {**x["meta"], "sub": sub}     # 회원 PC 작업실이 이 판정을 어느 소재 폴더(job/<sub>) 후보에 짝지을지
         out.append(x)
     return out
 
