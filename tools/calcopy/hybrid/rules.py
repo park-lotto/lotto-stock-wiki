@@ -19,14 +19,22 @@ def fingerprint(bench_lines: list[dict], words: list) -> list[dict]:
     words = [(float(t), norm(w)) for t, w in words if norm(w)]
     out = []
     # 위스퍼는 나레·원음을 한 덩어리로 묶는다(10-21 실측: 2줄, 둘째 줄 80자) → 문장·쉼표·10~16자 토막으로 갈라 토막마다 대조
+    # 토막은 **낱말 경계**에서 자른다(10~16자, 반씩 겹쳐 민다). 10-29 얜샷템 최화정 RPuDFaMmpJI: 글자 수로 14자씩 끊던 옛 판은
+    # '할아버지 김 너무나 힘들다는'이 '…할아버지김너'·'김너무나힘들다…'로 쪼개져 받아쓰기 오타 하나에 0.7 밑 → 4줄 맞는 원본이 1줄만 맞아 놓쳤다
     chunks = []
     for b in bench_lines:
         for s in re.split(r"[.?!,]\s*", str(b.get("text") or "")):
-            n = norm(s)
-            while len(n) > 16:
-                chunks.append(n[:14]); n = n[10:]
-            if len(n) >= 6:
-                chunks.append(n)
+            toks = [t for t in (norm(w) for w in s.split()) if t]
+            i = 0
+            while i < len(toks):
+                acc, j = "", i
+                while j < len(toks) and len(acc) < 10:
+                    acc += toks[j]; j += 1
+                if len(acc) >= 6:
+                    chunks.append(acc[:16])
+                if j >= len(toks):
+                    break
+                i += max(1, (j - i) // 2)
     # 비교 창 길이는 토막 길이 -2~+4 중 가장 맞는 것(98 #117 — 옛 판은 늘 +4 고정이라 11자 토막은 글자가 다 맞아도 0.85,
     # 받아쓰기 한 낱말만 달라도 0.69 로 떨어져 진짜 원본(이미숙 uOj3ix7qCj8)이 1줄만 맞았다)
     for q in dict.fromkeys(chunks):
@@ -128,12 +136,14 @@ def caps_split_fix(S: dict, st: dict) -> list[str]:
         if not mx or not isinstance(l.get("caps"), list):
             continue
         new = []
-        for c in l["caps"]:
+        from tools.calcopy.hybrid.render_bench import who_prefix
+        for ci, c in enumerate(l["caps"]):
             text = c["text"] if isinstance(c, dict) else c if isinstance(c, str) else None
-            if text is None or nchar(text) <= mx:
+            m1 = mx - nchar(who_prefix(l, ci))      # 화자 대사 줄 첫 덩어리는 '<화자> : ' 까지 보이는 자수(script_audit cap_chars 와 같은 셈)
+            if text is None or nchar(text) <= m1:
                 new.append(c)
                 continue
-            parts = _cap_cut(text.split(), mx, nchar)
+            parts = _cap_cut(text.split(), m1, nchar)
             if len(parts) < 2:
                 new.append(c)
                 continue
@@ -145,10 +155,21 @@ def caps_split_fix(S: dict, st: dict) -> list[str]:
     return out
 
 
+def title_spec(st: dict) -> tuple[list, float]:
+    """(판단 주인 — 대본 제목 줄을 받는 판 틀 칸) (줄마다 칸, 받을 수 있는 줄 수). 본문 틀(frame.title)과 구간 틀(frame.segments[].frame.title —
+    훅 카드 흰·연두 2줄 등) 중 칸이 가장 많은 것. 칸에 join 이 있으면 남은 줄을 이어 그리므로 줄 수 제한 없음(render_bench.title_segs 와 같은 뜻).
+    10-29 썰템쇼 회원 시험: 본문 틀 1칸만 보고 훅 카드용 2번째 줄(연두)을 잘라 '제목 1줄' 관문이 고치기 내내 반복됐다."""
+    F = st.get("frame") or {}
+    specs = [F.get("title") or []] + [((g.get("frame") or {}).get("title") or []) for g in F.get("segments") or [] if isinstance(g, dict)]
+    best = max(specs, key=len)
+    cap = float("inf") if any(isinstance(sp, dict) and sp.get("join") is not None for L in specs for sp in L) else len(best)
+    return best, cap
+
+
 def title_colors_fix(S: dict, st: dict) -> list[str]:
-    """(판단 주인 — title_colors_bad 와 같은 판 틀 읽기) 그 줄 틀에 없는 'hi' 를 null 로 바꾼다 — 형식 일이라 대본을 다시 쓰게 하지 않는다
+    """(판단 주인 — title_colors_bad 와 같은 판 틀 읽기 title_spec) 그 줄 틀에 없는 'hi' 를 null 로 바꾼다 — 형식 일이라 대본을 다시 쓰게 하지 않는다
     (10-26 까르보: 'hi' 를 2줄→1줄로 옮겨 붙이며 같은 반려 3번에 멈춤). 반환 = 바꾼 칸 글."""
-    spec = (st.get("frame") or {}).get("title") or []
+    spec, cap = title_spec(st)
     fixed = []
     for i, line in enumerate(S.get("title_lines") or []):
         sp = spec[i] if i < len(spec) else {}
@@ -156,15 +177,15 @@ def title_colors_fix(S: dict, st: dict) -> list[str]:
             if isinstance(chunk, list) and len(chunk) > 1 and chunk[1] == "hi" and "hi" not in sp:
                 chunk[1] = None
                 fixed.append(f"제목 {i + 1}줄 '{chunk[0]}' hi → null")
-    if isinstance(S.get("title_lines"), list) and len(S["title_lines"]) > len(spec):     # 판 틀보다 많은 줄은 그려지지도 않는다 — 잘라 낸다(10-27 TV 스탠드 편 '제목 줄 수 2 > 판 틀 0줄' 반려 6번)
+    if isinstance(S.get("title_lines"), list) and len(S["title_lines"]) > cap:     # 판 틀보다 많은 줄은 그려지지도 않는다 — 잘라 낸다(10-27 TV 스탠드 편 '제목 줄 수 2 > 판 틀 0줄' 반려 6번)
         fixed.append(f"제목 줄 {len(S['title_lines'])} → 판 틀 {len(spec)}줄")
-        S["title_lines"] = S["title_lines"][:len(spec)]
+        S["title_lines"] = S["title_lines"][:int(cap)]
     return fixed
 
 
 def title_colors_bad(S: dict, st: dict) -> list[str]:
-    """제목 줄마다 판 틀(frame.title[줄])에 있는 색만 썼나 — 'hi' 는 그 줄 틀에 hi 가 있을 때만(10-21 실측: 키치잇판 둘째 줄 상자에 hi → 렌더 KeyError)."""
-    spec = (st.get("frame") or {}).get("title") or []
+    """제목 줄마다 판 틀(title_spec)에 있는 색만 썼나 — 'hi' 는 그 줄 틀에 hi 가 있을 때만(10-21 실측: 키치잇판 둘째 줄 상자에 hi → 렌더 KeyError)."""
+    spec, cap = title_spec(st)
     out = []
     for i, line in enumerate(S.get("title_lines") or []):
         sp = spec[i] if i < len(spec) else {}
@@ -172,7 +193,7 @@ def title_colors_bad(S: dict, st: dict) -> list[str]:
             c = chunk[1] if isinstance(chunk, list) and len(chunk) > 1 else None
             if c == "hi" and "hi" not in sp:
                 out.append(f"제목 {i + 1}줄 '{chunk[0]}' 에 'hi' — 이 판 제목 {i + 1}줄은 강조색이 없다(null 또는 '#hex')")
-    if len(S.get("title_lines") or []) > len(spec):
+    if len(S.get("title_lines") or []) > cap:
         out.append(f"제목 줄 수 {len(S['title_lines'])} > 판 틀 {len(spec)}줄")
     return out
 

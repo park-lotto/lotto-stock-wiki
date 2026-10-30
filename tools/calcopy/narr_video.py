@@ -466,6 +466,9 @@ def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover
     if still and move:
         pre += still_move(src, src_crop, ar, frames / FPS if frames else dur, move)
     # loop = 짤처럼 짧은 소스가 컷보다 짧으면 되풀이(짤 3초 < 컷 3.9초 — 10-16 4판)
+    if not still and not loop and overlays and float(ss) >= va._probe_duration(src) - 1 / FPS:
+        # 시작 초가 소스 끝을 넘으면 소스 0 프레임 → 꾸밈 '-loop 1' 만 남아 ffmpeg 가 끝나지 않는다(관제 285 재현: 21초+ 멈춤)
+        raise RuntimeError(f"컷 시작 {float(ss):.2f}초가 소스 길이({va._probe_duration(src):.2f}초)를 넘는다: {Path(src).name}")
     inp = ["-loop", "1", "-framerate", str(FPS), "-i", str(src)] if still else ([*(["-stream_loop", "-1"] if loop else []), "-ss", f"{ss:.3f}", "-i", str(src)])
     # ★색 범위 통일: 그림 파일(png=rgb·jpg=yuvj pc)·영상(tv)이 섞여 이으면 장면 통째가 회색(흰 255→235)이 됐다(10-16 2판) → 전부 tv
     # ★색 표식 통일(10-20 샥탬 9편): 컷마다 표식이 다르면(bt709 / 없음 / smpte170m) -c copy 로 이은 재료에서 compose 가 컷 경계에

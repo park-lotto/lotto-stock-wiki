@@ -96,6 +96,8 @@ def to_drive(final, dest_dir, name: str, doc=None, log=print, drive_root: Path =
 
 
 if __name__ == "__main__":
+    for _s in (sys.stdout, sys.stderr):   # 윈도우 콘솔 cp949 가 '—' 를 못 찍어 거절 사유 대신 UnicodeEncodeError 로 죽었다(10-27)
+        _s.reconfigure(encoding="utf-8", errors="replace")
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("final"); ap.add_argument("dest_dir"); ap.add_argument("name"); ap.add_argument("--doc")

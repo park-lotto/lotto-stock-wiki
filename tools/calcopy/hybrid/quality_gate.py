@@ -95,7 +95,7 @@ def thumb_stamped(video: Path, doc: Path) -> tuple[bool | str | None, str]:
     pk = jload(sp).get("pick")
     jpg = Path(doc) / "thumb" / f"{pk}.jpg"
     ref = np.asarray(Image.open(jpg).convert("L").resize((108, 192)), dtype=np.int16)
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vf", r"select=lt(n\,3),scale=108:192,format=gray", "-vsync", "0",
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vf", r"select=lt(n\,3),scale=108:192,format=gray", "-fps_mode", "passthrough",
                           "-f", "rawvideo", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
     fr = np.frombuffer(raw, np.uint8).reshape(-1, 192, 108).astype(np.int16)
     d = [round(float(np.abs(f - ref).mean()), 1) for f in fr]

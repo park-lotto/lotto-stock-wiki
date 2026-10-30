@@ -222,6 +222,19 @@ def test_lease_두기기_동시면_두번째_409_TTL뒤_성공(env, monkeypatch)
     assert c.post("/api/claude/lease", headers=_h(k, FP1), json={"action": "release", "lease_id": "ls_none"}).json()["ok"]
 
 
+def test_A2_같은기기_시도는_안세고_다른기기만_센다(env):
+    # A2 = '작업 중 다른 기기 시작'(키 돌려쓰기) — 같은 PC 의 제작 중 미리보기·재시작은 거절만, 정지 안 됨(10-30 실측: 시험 라이선스 30일 정지)
+    c = env["client"]
+    k = _two_devices(env)
+    assert c.post("/api/claude/lease", headers=_h(k, FP1), json={"action": "acquire", "job_id": "j1"}).status_code == 200
+    for i in range(12):
+        r = c.post("/api/claude/lease", headers=_h(k, FP1), json={"action": "acquire", "job_id": f"u{i}"})
+        assert r.status_code == 409 and r.json()["code"] == "busy_other_device", r.text
+    assert c.get("/api/claude/license", headers=_h(k, FP1)).status_code == 200, "같은 기기 거절 12번에 정지되면 안 된다"
+    codes = [c.post("/api/claude/lease", headers=_h(k, FP2), json={"action": "acquire", "job_id": f"x{i}"}).json()["code"] for i in range(10)]
+    assert codes[-1] == "suspended", codes
+
+
 def test_강제해제_뒤_앞기기_lease_lost(env):
     c = env["client"]
     k = _two_devices(env)
@@ -603,3 +616,15 @@ def test_install_키만으로_묶음_주소_기기지문_없이(env, tmp_path):
     got = c.get(d["url"])
     assert got.status_code == 200 and got.content == z.read_bytes()
     assert c.get("/api/claude/license", headers=bare).json()["code"] == "bad_request", "다른 창구는 지문이 있어야 한다"
+
+
+def test_라이선스_회원이름_인사(env):
+    """숏클 지침 2장 '○○ 회원님' — 라이선스 응답에 가입 이름(없으면 아이디). 회원이 없으면 빈칸."""
+    c, st = env["client"], env["store"]
+    cid = st.create_customer("hong_gd", "pw-123456", name="홍길동")
+    r = c.get("/api/claude/license", headers=_h(_key(env, cid)))
+    assert r.status_code == 200, r.text
+    assert r.json()["member_name"] == "홍길동"
+    cid2 = st.create_customer("noname_id", "pw-123456")
+    assert c.get("/api/claude/license", headers=_h(_key(env, cid2), fp=FP1)).json()["member_name"] == "noname_id"
+    assert c.get("/api/claude/license", headers=_h(_key(env, 987654))).json().get("member_name", "") == ""

@@ -748,5 +748,25 @@
    "gap": [],
    "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 칼카피 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
   }
+ },
+ "rhythm": {
+  "plain_share": {
+   "v": 0.812,
+   "tol": 0.231,
+   "why": "벤치 6편 줄판독 덩어리 170개 중 꾸밈 없는 것(kal_analyze._decorated 빈 줄 = placement._is_deco 와 같은 칸) 138개 = 0.812(편별 a06y 0.808 · IRFN 0.778 · OE-1 0.586 · Rpfk 0.967 · RWS4 0.833 · ZqVg 0.882). 허용 ±0.231 = 모은 값에서 편별 최대 거리(벤치 편이 다 들어오는 폭) — rhythm_measure.py"
+  },
+  "photo_share_max": {
+   "v": 0.0,
+   "why": "벤치 6편 줄판독 scene/scene_desc/notes '사진·화보' 줄 초 ÷ 길이(키치잇·잇템로그판과 같은 정의) = a06y 0.035 · IRFN 0.0 · OE-1 0.0 · Rpfk 0.0 · RWS4 0.0 · ZqVg 0.0 → p75 0.0 — rhythm_measure.py"
+  },
+  "cut_median": {
+   "v": 1.64,
+   "max": 2.67,
+   "why": "벤치 6편 원본 컷 길이 중앙(kal_analyze.media_of = 관문·재현과 같은 자, C:/숏템_칼카피/hottemreport/src) 편별 a06y 1.13 · IRFN 2.4 · OE-1 2.67 · Rpfk 1.6 · RWS4 1.67 · ZqVg 1.07 → 중앙 1.64(범위 1.07~2.67) · max = 가장 느린 편 — rhythm_measure.py"
+  },
+  "hook_cuts_3s": {
+   "min": 0,
+   "why": "벤치 원본 0.1~3.0초 안 컷 경계 수(media_of cut_at): a06y 0 · IRFN 2 · OE-1 0 · Rpfk 1 · RWS4 1 · ZqVg 0 → 중앙 0.5 · min 0 = 벤치 가장 적은 편(사장님 10-26 '벤치가 못 넘는 문턱은 빡빡') — rhythm_measure.py"
+  }
  }
 }

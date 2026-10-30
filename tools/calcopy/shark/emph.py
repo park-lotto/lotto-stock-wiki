@@ -107,7 +107,8 @@ def fill(doc: Path, dry=False) -> list[list[dict]]:
         old = l.get("emph") or []
         if old and all(e.get("how") == "hand" for e in old):
             continue
-        l["emph"] = [{**e, "how": "auto", "rules": f"shark/rules.json v{rules()['version']}"} for e in r]
+        hand = {e["cap"]: e for e in old if e.get("how") == "hand"}   # 줄 안에 손 칸이 섞여 있어도 그 칸은 지킨다(10-28 19편: 섞인 줄의 손 색이 auto 로 덮임, 98 #180)
+        l["emph"] = [hand.get(e["cap"]) or {**e, "how": "auto", "rules": f"shark/rules.json v{rules()['version']}"} for e in r]
     if not dry:
         p.write_text(json.dumps(S, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     return [l.get("emph") for l in L]

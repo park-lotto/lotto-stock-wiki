@@ -190,10 +190,26 @@ def rank(rows: list[dict]) -> list[dict]:
     return sorted(rows, key=lambda r: (not r.get("ok_quality"), not r.get("title_hit"), -(r.get("hit_n") or 0), r.get("duration") or 9e9))
 
 
+def pick_ids(cands: list[dict], keywords: list[str], top: int) -> list[str]:
+    """(판단 주인 — 어느 후보를 시트로 볼까) 제목에 제품 낱말이 있는 후보 먼저, 그다음 검색어마다 번갈아(한 검색어 결과가 자리를 다 먹지 않게).
+    10-29 썰템쇼 회원 시험: 후보 72개 중 앞 8개(= 첫 검색어 'moose maple butter' 영어 결과)만 잘라 봐서 '맛있어서 소개하는 무스메이플 버터' 같은
+    제목 적중 한국어 영상이 시트에 한 번도 안 올라 재료 0개 → 상품 사진만으로 장면 맞추기가 막혔다."""
+    by_q: dict[str, list[dict]] = {}
+    for c in cands:
+        by_q.setdefault(str(c.get("q") or ""), []).append(c)
+    rr: list[dict] = []
+    while any(by_q.values()):
+        for q in list(by_q):
+            if by_q[q]:
+                rr.append(by_q[q].pop(0))
+    hit = [c for c in rr if keywords and YF.kw_hit(str(c.get("title") or ""), keywords)]
+    return list(dict.fromkeys([c["id"] for c in hit] + [c["id"] for c in rr]))[:top]
+
+
 def screen(work: Path, keywords: list[str], top: int = 12, ids: list[str] | None = None, log=print) -> dict:
     sd = work / "screen"
     cands = jload(sd / "candidates.json")["candidates"] if (sd / "candidates.json").exists() else []
-    ids = ids or [c["id"] for c in cands][:top]
+    ids = ids or pick_ids(cands, keywords, top)
     def safe(v):
         """후보 하나가 실패해도(yt-dlp 토막 오류 등) 그 후보만 error 로 적고 계속 — 10-18 손태영 편은 후보 1개 오류로 648초 뒤 단계가 통째로 죽었다."""
         try:
