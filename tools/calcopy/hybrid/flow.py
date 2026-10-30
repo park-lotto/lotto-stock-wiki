@@ -1249,6 +1249,15 @@ TASK_ASK = """너는 이 편의 **제작자**다(사장님 PC 의 제작 세션�
  · end = 가이드·금지선상 이 편을 만들 수 없다(그때만 회원에게 쉬운 선택지로 묻는다)"""
 
 
+LESSONS_FILE = Path(__file__).with_name("member_lessons.json")       # 98_오류기록에서 눈·판단으로만 잡히는 것만 추린 회원 Claude 경험(사장님 10-30 "그간의 경험을 똑같이") — 고칠 곳은 이 파일 한 곳
+
+
+def _lessons(key: str) -> str:
+    """단계 경험 → 질문에 붙일 글. key = script·material·plan·final."""
+    rows = json.loads(LESSONS_FILE.read_text(encoding="utf-8")).get(key) or []
+    return f"{NL}{NL}## 지난 제작 경험(반드시){NL}" + NL.join("- " + re.sub(r"\(#[\d·#]+\)\s*$", "", x).strip() for x in rows) if rows else ""
+
+
 def _guide(stage_key: str, limit: int = 2500) -> str:
     f = GUIDE_DIR / STAGE_GUIDE.get(stage_key, "00_공통.md")
     try:
@@ -1276,6 +1285,7 @@ def _task(st: dict, e: "_Stop", ph: str, retry: str | None) -> dict | None:
            + f"{NL}이 막힘 과제 {n[key]}/{TASK_PER_KEY}번째 · 최근 기록:{NL}" + f"{NL}".join(str(x)[:200] for x in (st.get('log') or [])[-6:])
            + f"{NL}{NL}" + _task_state(st)
            + (f"{NL}{NL}## 이 단계 함정·금지선{NL}" + f"{NL}".join("- " + x for x in traps) if traps else "")
+           + _lessons({"check": "final"}.get(stg["key"], stg["key"]))
            + f"{NL}{NL}" + _guide(stg["key"]))
     return _rv(rid, ask, need=("action",))
 
@@ -1976,6 +1986,7 @@ def _script_ask(st, fail: str = "") -> dict:
         ctx += "\n\n## 제품 줄 길이(반드시)\n" + RU.ALT_TAIL_RULE
     if st.get("bench_lines"):
         ctx += "\n\n## 소재 쇼츠 문장(반드시)\n" + RU.BENCH_COPY_RULE
+    ctx += _lessons("script") + _lessons("material").replace("지난 제작 경험", "재료 고를 때 지난 제작 경험")
     return _rv(f"script_{v}", _q(st, "SCRIPT") + "\n\n" + ctx, imgs, need=("대본", "재료"))
 
 
@@ -2265,7 +2276,7 @@ def _fix_review(st, why: str, sheet: str | None, rid: str, more_imgs: list | Non
     from tools.calcopy import vmake_clean as VC
     erase = ("\n\n★이 편은 원본에 박힌 글자(자막·워터마크)를 렌더 전에 VMake 로 지운다(사장님 10-26 — 엔진이 글자 컷을 '지울 컷'으로 이미 올렸다). "
              "남의 박힌 글자는 problems 에 넣지 말고 blur 도 새로 넣지 마라 — 장면·제품·얼굴·순서만 본다.") if (st.get("text_fix") or {}).get("mode") == "vmake" else ""
-    return _rv(rid, _q(st, "PLAN_LOOK").replace("{ar}", f"{ww}:{wh}") + erase + (f"\n\n멈춘 이유(재료를 고쳐라): {why}" if why else "") + "\n\n대본:\n" +
+    return _rv(rid, _q(st, "PLAN_LOOK").replace("{ar}", f"{ww}:{wh}") + erase + _lessons("plan") + (f"\n\n멈춘 이유(재료를 고쳐라): {why}" if why else "") + "\n\n대본:\n" +
                json.dumps(sc["S"], ensure_ascii=False)[:6000] + "\n\n재료:\n" + json.dumps(sc["M"], ensure_ascii=False)[:8000] + _shots_ctx(st) +
                # 처음 질문과 같은 장면 규칙·판 숫자·재료 샷 구간·쓸 수 있는 파일(10-27: 고치기 질문엔 이게 없어 고친 컷이 샷 경계·컷 중앙을 새로 넘겼다 —
                # 6편 두 번째 반려 전부 '지난 고치기에서 새로 생김')
@@ -2479,11 +2490,16 @@ def ph_check(st, m, rp, u):
 EYE_REVIEW = False       # 완성본 눈 2단(E1~E9 질문) — 사장님 10-26 "재현일치도랑 눈검수는 필요없다". 되살리면 True
 FINAL_SHEET_LOOK = True  # 완성 전 1초 시트 한 번 — 사장님 PC 제작처럼(숏클 지침 15-0, 관제 290). E 번호 묻기가 아니라 시트를 보고 걸린 것만
 FINAL_SHEET_FILES = ("시트_1초.jpg", "훅3초_0.1초.jpg", "끝2초_0.1초.jpg")
+SHEET_NEED = ("ok", "title_seen", "scenes")     # 봤다는 증거 없는 "ok": true 는 답이 아니다(10-30 회원 2편 — 같은 자료를 새 Claude 는 잡았는데 회원 편은 통과, 답 내용은 기록도 없었다)
 FINAL_SHEET_ASK = """너는 이 편을 채널에 올릴지 마지막으로 보는 사람이다. 자동 검사는 통과했다. 완성본 1초 시트(처음~끝)·훅 3초·끝 2초를 처음부터 끝까지 한 칸씩 본다.
 본다: 줄마다 화면이 대사와 맞나 · 자막이 넘치거나 낱말 중간에서 끊기나 · 제목 줄 수·잘림 · 남의 얼굴·손·글자(원본 편집 자막·워터마크) · 같은 장면 되풀이·멈춘 화면·검은 칸 · 이야기 대상과 다른 물건이 그 줄에 나오나.
 ★우리 틀(결함 아님): 맨 위 제목 · 로고 · 우리 자막(색 강조) · 출처 줄.
-걸린 것은 몇 초·어느 줄인지 적는다(예: "7초 L4 자막 3줄 넘침"). 없으면 빈 목록.
-JSON 하나: {"ok": true, "problems": ["…"]}"""
+합격 기준 = 이 채널에 그대로 올려도 되나. 자동 검사 통과는 근거가 아니다.
+★그림을 직접 열고, 대본을 베끼지 말고 화면에서 읽은 것을 적는다:
+- title_seen: 영상 대부분 구간에 보이는 제목 글자 전부(줄이 나뉘면 이어서).
+- scenes: 대본 줄마다 {"at": "몇 초~몇 초", "line": 줄 앞 낱말, "seen": "화면에 실제로 보이는 것 한 줄"}.
+problems 에는 그대로 올리면 안 되는 결함만 몇 초·어느 줄인지 적는다(예: "7초 L4 자막 3줄 넘침"). 없으면 빈 목록. 아쉽지만 올려도 되는 것은 notes 에 — 고치는 데 회원 시간과 돈이 든다.
+JSON 하나: {"ok": true, "title_seen": "…", "scenes": [{"at": "0~3", "line": "…", "seen": "…"}], "problems": ["…"], "notes": ["…"]}"""
 
 
 def ph_check_got(st, m, rp, u):
@@ -2501,8 +2517,10 @@ def ph_check_got(st, m, rp, u):
         if FINAL_SHEET_LOOK and sheets:     # 완성 전 1초 시트(숏클 지침 15-0) — 고쳐 다시 렌더하면 새 시트로 또 본다
             texts = "".join(f"\n\n## {n}\n{str(t)[:4000]}" for n, t in (c.get("eye_texts") or {}).items())
             sv = script_view(st)
-            return {"review": [_rv(f"sheet_{st['version']}", FINAL_SHEET_ASK + texts + "\n\n## 대본\n" + json.dumps(sv, ensure_ascii=False)[:4000],
-                                   [_img(x) for x in sheets][:3], need=("ok",))], "then": "final_sheet"}
+            return {"review": [_rv(f"sheet_{st['version']}", FINAL_SHEET_ASK + _lessons("final") + texts + "\n\n## 대본\n" + json.dumps(sv, ensure_ascii=False)[:4000],
+                                   [_img(x) for x in sheets][:3], need=SHEET_NEED)], "then": "final_sheet"}
+        if FINAL_SHEET_LOOK:             # 시트 없이 통과시키지 않는다 — 조용한 통과(옛 skipped)는 '눈 안 봄'을 '합격'으로 기록했다
+            raise _Stop("완성본 확인 자료를 만들지 못했어요", AGAIN, retry="check", auto=True, detail=f"eye_files={st['eye_pack']}")
         st["look"] = {"ok": True, "problems": [], "skipped": "눈 검수 뺌(사장님 10-26)"}
         return {"goto": "check_judge"}
     rows = _eye_rows(bool(c.get("upgrade")))
@@ -2526,12 +2544,26 @@ def _eye_verdict(a: dict, keys: list) -> tuple[bool, list]:
     return not bad, bad
 
 
+def sheet_proof_problems(a: dict, sv: dict) -> list:
+    """(판단 주인 — 시트를 실제로 봤나) 화면에서 읽은 제목이 대본 제목과 다르면 결함, 줄 수의 절반도 안 적었으면 안 본 답."""
+    out = []
+    want, seen = RU._plain(sv.get("title") or ""), RU._plain(str(a.get("title_seen") or ""))
+    if want and want != seen:
+        out.append(f"제목: 화면 '{str(a.get('title_seen'))[:40]}' ≠ 대본 '{str(sv.get('title'))[:40]}'")
+    scenes = [x for x in a.get("scenes") or [] if isinstance(x, dict) and str(x.get("seen") or "").strip()]
+    need = max(1, len(sv.get("lines") or []) // 2)
+    if len(scenes) < need:
+        out.append(f"화면 기록이 {len(scenes)}줄뿐(대본 {len(sv.get('lines') or [])}줄) — 시트를 처음부터 끝까지 보고 줄마다 적는다")
+    return out
+
+
 def ph_final_sheet(st, m, rp, u):
     """완성 전 1초 시트 답(숏클 지침 15-0) → 걸린 것이 없으면 완성, 있으면 완성본 고치기(ph_check_judge 의 고치기 길 그대로 — 한도 LIMITS['look'])."""
-    a = _reply(rp, f"sheet_{st['version']}", ("ok",))
+    a = _reply(rp, f"sheet_{st['version']}", SHEET_NEED)
     probs = [str(p)[:200] for p in a.get("problems") or [] if str(p).strip()]
+    probs += sheet_proof_problems(a, script_view(st))
     ok = bool(a.get("ok")) and not probs
-    st["look"] = {"ok": ok, "problems": probs, "by": "완성 전 1초 시트"}
+    st["look"] = {"ok": ok, "problems": probs, "by": "완성 전 1초 시트", "scenes": len(a.get("scenes") or []), "title_seen": str(a.get("title_seen") or "")[:80]}
     st["log"].append(f"완성 전 1초 시트: {'통과' if ok else '걸림 ' + ' / '.join(probs)[:300]}")
     return {"goto": "check_judge"}
 

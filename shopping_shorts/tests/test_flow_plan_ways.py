@@ -70,6 +70,12 @@ def _chk():
     return {"check": {"auto": {"ok": True, "rows": []}, "eye_files": ["썰템쇼판/eye/시트_1초.jpg", "썰템쇼판/eye/훅3초_0.1초.jpg", "썰템쇼판/eye/벤치대조_시트.jpg"], "eye_texts": {}}}
 
 
+def _seen(st, **kw):
+    """시트 답 = 화면에서 읽은 제목·줄별 기록 포함(flow.SHEET_NEED)."""
+    sv = F.script_view(st)
+    return {"title_seen": sv["title"], "scenes": [{"seen": "화면"} for _ in sv["lines"]], **kw}
+
+
 def test_final_sheet_is_asked_even_when_gate_passes():
     """숏클 지침 15-0 — 자동 검사 통과여도 완성 전 1초 시트를 회원 Claude 가 한 번 본다(사장님 PC 제작과 같게)."""
     st = _st()
@@ -79,7 +85,7 @@ def test_final_sheet_is_asked_even_when_gate_passes():
     assert rv["id"] == "sheet_썰템쇼판" and st["phase"] == "final_sheet"
     files = [x.get("file") for x in rv["show"] if isinstance(x, dict)]
     assert "썰템쇼판/eye/시트_1초.jpg" in files and "썰템쇼판/eye/벤치대조_시트.jpg" not in files
-    out = F.step(st, {}, {"sheet_썰템쇼판": {"ok": True, "problems": []}}, {})
+    out = F.step(st, {}, {"sheet_썰템쇼판": _seen(st, ok=True, problems=[])}, {})
     assert out["do"][0]["cmd"] == "finish"
 
 
@@ -90,7 +96,7 @@ def test_final_sheet_problem_goes_to_fix_with_line_way(monkeypatch):
     st = _st()
     st["phase"] = "check_got"
     F.step(st, _chk(), {}, {})
-    out = F.step(st, {}, {"sheet_썰템쇼판": {"ok": False, "problems": ["7초 L3 자막 넘침"]}}, {})
+    out = F.step(st, {}, {"sheet_썰템쇼판": _seen(st, ok=False, problems=["7초 L3 자막 넘침"])}, {})
     assert out["review"][0]["id"] == "final_fix_썰템쇼판" and seen["final_fix_썰템쇼판"].endswith("시트_1초.jpg")
     out = F.step(st, {}, {"final_fix_썰템쇼판": {"ok": False, "대본줄": {"L3": {"tts": "짧은 줄.", "caps": ["짧은 줄"]}}}}, {})
     assert out["do"][0]["id"] == "save_script" and st["phase"] == "plan"
