@@ -180,6 +180,7 @@
 | 제목·자막 글꼴 | `text.title_font` · `text.caption_font` |
 | 자막 방식(쌓이기 등)·나타나는 효과·강조·테두리 | `text.caption.mode` · `enter` · `emphasis` · `outline_px` |
 | 목소리(성우)·빠르기 | `tts.provider` · `voice_id` · `tempo` |
+| 원본에 박힌 글자(남의 자막·로고) 처리 | `text.orig_text` — `auto`(VMake 키 있으면 장면마다 골라 지우기·없으면 흐림) · `vmake`(지우기) · `blur`(흐림) |
 | 배경음악·음량 | `bgm.candidates` · `bgm.gain` |
 | 효과음 | `sfx_pool` |
 | 짤(밈) 종류 | `meme_pool` |

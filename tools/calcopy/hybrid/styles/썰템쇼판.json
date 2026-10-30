@@ -712,6 +712,10 @@
    ]
   }
  },
+ "orig_text": {
+  "mode": "blur",
+  "why": "사장님 10-30 '이 채널은 흐림으로' — 회원 설정 text.orig_text 로 바꿀 수 있다(vmake_clean.style_mode)"
+ },
  "title_form": "게시글 제목 1줄(Pretendard-ExtraBold 76.9) = 훅 문장 · 훅 카드 2줄(흰/연두)은 _pending.hook_card",
  "_pending": {
   "counted": "줄판독 21편이 옛 꼴(줄판독/_옛꼴) — placement.count 가 못 읽음 → 06-humorshowshow 새 꼴 6편 뒤 count",

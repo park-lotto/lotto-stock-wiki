@@ -73,7 +73,11 @@ def key_source() -> str:
 
 
 def style_mode(version: str | None) -> str:
-    """판 칸 orig_text.mode — 'vmake'(지운다) | 'blur'(흐림). 판에 없으면 'vmake'(사장님 10-25: 박힌 자막 = VMake 로 지운다)."""
+    """박힌 글자 처리 방식 — 'vmake'(장면마다 골라 지운다) | 'blur'(흐림). 사장님 10-30 "VMake 가 있으면 고급형으로 장면마다 골라서 지우고 없으면 흐림 ·
+    사용자가 바꿀 수 있게 · 이 채널(썰템쇼)은 흐림": 회원 설정(text.orig_text — 실행기가 SHORTEM_TEXT_MODE 로) > 판 칸 orig_text.mode > 'vmake'(키 없으면 ready 가 흐림)."""
+    m = (os.environ.get("SHORTEM_TEXT_MODE") or "").strip().lower()
+    if m in ("vmake", "blur"):
+        return m
     if not version:
         return "vmake"
     from tools.calcopy.hybrid import styles
@@ -111,8 +115,8 @@ def ready(mode: str = "vmake") -> dict:
         return {"mode": "blur", "why": "SHORTEM_NO_PAID — 돈 드는 호출 막음" if mode != "blur" else "판 orig_text.mode=blur"}
     if key_source() == "server":
         return {"mode": "vmake", "via": "server", "why": ""}
-    if not member_key():
-        return {"mode": "need_key", "why": NO_KEY_WHY, "fix": NO_KEY_FIX}
+    if not member_key():                   # 키 없음 = 흐림(사장님 10-30 — 멈추고 키를 묻지 않는다)
+        return {"mode": "blur", "why": "VMake 키 없음 — 흐림으로 가린다", "fix": NO_KEY_FIX}
     return {"mode": "vmake", "via": "member", "why": ""}
 
 

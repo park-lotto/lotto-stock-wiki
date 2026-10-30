@@ -95,7 +95,7 @@ PHASE_STAGE = {   # 세부 단계 → 회원에게 보이는 단계
     "best_same": "product", "product_done": "product", "research": "research", "research_got": "research", "material": "material",
     "material_got": "material", "material_pick": "material", "material_dl": "material", "asr": "asr", "asr_got": "asr", "shots_got": "asr",
     "script": "script", "script_got": "script", "stills_again": "script", "script_saved": "script", "sign": "sign", "plan": "plan", "plan_got": "plan", "line_fix_got": "plan", "link_got": "product", "member_revise": "plan", "more_got": "plan", "more_pick": "plan", "more_dl": "plan", "more_sheets": "plan",
-    "plan_look": "plan", "plan_saved": "plan", "thumb": "plan", "thumb_sheet": "plan", "thumb_got": "plan", "render": "render", "render_got": "render", "render_fix": "render", "render_saved": "render",
+    "plan_look": "plan", "plan_saved": "plan", "thumb": "plan", "thumb_sheet": "plan", "thumb_got": "plan", "render": "render", "f_text_check": "render", "f_render_clean_got": "render", "render_got": "render", "render_fix": "render", "render_saved": "render",
     "check": "check", "check_got": "check", "check_look": "check", "final_sheet": "check", "check_fix": "check", "check_saved": "check", "done": "done",
 }
 
@@ -2256,8 +2256,8 @@ def _fix_review(st, why: str, sheet: str | None, rid: str, more_imgs: list | Non
     _, _, ww, wh = STY_window(v)
     sc = st["script"]
     from tools.calcopy import vmake_clean as VC
-    erase = ("\n\n★이 판은 원본에 박힌 글자(자막·워터마크)를 렌더 전에 VMake 로 지운다(사장님 10-26 — 엔진이 글자 컷을 '지울 컷'으로 이미 올렸다). "
-             "남의 박힌 글자는 problems 에 넣지 말고 blur 도 새로 넣지 마라 — 장면·제품·얼굴·순서만 본다.") if VC.will_erase(v) else ""
+    erase = ("\n\n★이 편은 원본에 박힌 글자(자막·워터마크)를 렌더 전에 VMake 로 지운다(사장님 10-26 — 엔진이 글자 컷을 '지울 컷'으로 이미 올렸다). "
+             "남의 박힌 글자는 problems 에 넣지 말고 blur 도 새로 넣지 마라 — 장면·제품·얼굴·순서만 본다.") if (st.get("text_fix") or {}).get("mode") == "vmake" else ""
     return _rv(rid, _q(st, "PLAN_LOOK").replace("{ar}", f"{ww}:{wh}") + erase + (f"\n\n멈춘 이유(재료를 고쳐라): {why}" if why else "") + "\n\n대본:\n" +
                json.dumps(sc["S"], ensure_ascii=False)[:6000] + "\n\n재료:\n" + json.dumps(sc["M"], ensure_ascii=False)[:8000] + _shots_ctx(st) +
                # 처음 질문과 같은 장면 규칙·판 숫자·재료 샷 구간·쓸 수 있는 파일(10-27: 고치기 질문엔 이게 없어 고친 컷이 샷 경계·컷 중앙을 새로 넘겼다 —
@@ -3896,10 +3896,11 @@ def f_alt_dl(st, m, rp, u):
 
 
 def erases_text(version: str) -> bool:
-    """(판단 주인 — 이 판 형식에 렌더 전 박힌 글자 지우기 단계가 있나) 해외원본형·자막노래형 = f_clean·f_render 가 VMake 로 지운다.
-    쇼핑형·레시피형 = 없음 → 관문이 흐림을 넣는다(vmake_clean.will_erase 가 부른다)."""
+    """(판단 주인 — 이 판 형식에 렌더 전 박힌 글자 지우기 단계가 있나) 10-30 부터 모든 형식이 렌더 전 f_render(VMake 고급형)를 탄다 —
+    실제로 지우나 흐리나는 회원 PC 의 vmake_clean.ready(키·회원 설정·판 칸)가 정한다."""
     fmt, _ = flow_format_of(version)
-    return "f_clean" in FORMAT_PHASES.get(fmt, {})
+    ph = {**PHASES, **FORMAT_PHASES.get(fmt, {})}
+    return ph.get("render") is f_render
 
 
 def f_clean(st, m, rp, u):
@@ -3936,12 +3937,24 @@ def f_plan(st, m, rp, u):
 
 def f_render(st, m, rp, u):
     """렌더 전 박힌 글자 지우기(사장님 10-26 '장면 편집 후 자막 있는 컷만') — 재료(컷)가 지난 지우기 뒤 바뀌었을 때만 clean_text.
-    구간 계산·자르기·덮기 = vmake_clean(주인), 여기는 순서만. 지운 구간 = 재료.blur 에서 뺀다(rules.blur_minus_spans)."""
+    구간 계산·자르기·덮기 = vmake_clean(주인), 여기는 순서만. 지운 구간 = 재료.blur 에서 뺀다(rules.blur_minus_spans).
+    text_fix 가 없는 형식(쇼핑형·연예인형 — f_clean 이 없다)은 여기서 처음 한 번 방식을 확인한다(f_text_check, 사장님 10-30 '모든 영상')."""
+    if "text_fix" not in st:
+        return {"do": [{"id": "clean", "cmd": "clean_text", "check": True, "version": st["version"]}], "then": "f_text_check"}
     tf = st.get("text_fix") or {}
     if tf.get("mode") != "vmake" or tf.get("key") == _cuts_key(st):
         return ph_render(st, m, rp, u)
     return {"do": [{"id": "clean", "cmd": "clean_text", "version": st["version"], "shots": st.get("shots") or {}, "done": tf.get("done") or {},
                     "replan": st.get("_plan_key") != _cuts_key(st)}], "then": "f_render_clean_got"}
+
+
+def f_text_check(st, m, rp, u):
+    """회원 PC 의 박힌 글자 방식(vmake = 키 있음·고급형 / blur = 키 없음·회원이 흐림을 고름·판이 흐림) → 렌더로."""
+    c = m.get("clean") or {}
+    st["text_fix"] = {"mode": c.get("mode") or ("error" if c.get("error") else "blur"), "need": [], "cleaned": [], "done": {}, "calls": 0, "sec": 0.0,
+                      "why": str(c.get("why") or c.get("error") or "")[:200]}
+    st["log"].append(f"박힌 글자 방식: {st['text_fix']['mode']} — {st['text_fix']['why'] or ('장면마다 골라 지움' if st['text_fix']['mode'] == 'vmake' else '흐림')}")
+    return {"goto": "render"}
 
 
 def f_render_clean_got(st, m, rp, u):
@@ -4339,8 +4352,8 @@ PHASES = {
     "named_same": ph_named_same, "best": ph_best, "best_rated": ph_best_rated, "given": ph_given, "given_same": ph_given_same, "research": ph_research, "research_got": ph_research_got,
     "research_check": ph_research_check, "material": ph_material, "material_got": ph_material_got, "material_pick": ph_material_pick,
     "material_dl": ph_material_dl, "asr": ph_asr, "asr_got": ph_asr_got, "shots_got": ph_shots_got, "script": ph_script,
-    "script_ask": ph_script_ask, "script_got": ph_script_got, "script_heard": ph_script_heard, "sign": ph_sign, "plan": ph_plan, "plan_got": ph_plan_got, "line_fix_got": ph_line_fix_got, "link_got": ph_link_got, "member_revise": ph_member_revise, "more_got": ph_more_got, "more_pick": ph_more_pick, "more_dl": ph_more_dl, "more_sheets": ph_more_sheets,
-    "plan_look": ph_plan_look, "thumb": ph_thumb, "thumb_sheet": ph_thumb_sheet, "thumb_got": ph_thumb_got, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
+    "script_ask": ph_script_ask, "script_got": ph_script_got, "script_heard": ph_script_heard, "sign": ph_sign, "plan": f_plan, "plan_got": ph_plan_got, "line_fix_got": ph_line_fix_got, "link_got": ph_link_got, "member_revise": ph_member_revise, "more_got": ph_more_got, "more_pick": ph_more_pick, "more_dl": ph_more_dl, "more_sheets": ph_more_sheets,
+    "plan_look": ph_plan_look, "thumb": ph_thumb, "thumb_sheet": ph_thumb_sheet, "thumb_got": ph_thumb_got, "render": f_render, "f_text_check": f_text_check, "f_render_clean_got": f_render_clean_got, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
     "check_got": ph_check_got, "check_look": ph_check_look, "final_sheet": ph_final_sheet, "check_judge": ph_check_judge, "check_fix": ph_check_fix, "customize": ph_customize, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
 for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "given_origin_got": "origin", "stopped": "setup", "task_got": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "given": "product", "given_same": "product", "cand_look": "product", "reviews": "product", "reviews_got": "product", "reviews_naver": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():

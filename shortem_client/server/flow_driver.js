@@ -10,6 +10,7 @@ import { runOps, aiRootDir, dataDir, engineRoot } from './engine_bridge.js';
 import { rentPreset } from './preset_rent.js';
 import { refreshCookies } from './logins.js';
 import { ensureDir, jail } from './paths.js';
+import { packFor } from './local_settings.js';
 
 export const FLOW_SID_RE = /^[0-9a-f]{12}$/;
 const flows = new Map();   // sid → { st, busy, waiters }
@@ -130,7 +131,10 @@ async function runWithPreset(f) {
       return Object.fromEntries((f.do || []).map(d => [String(d.id || d.cmd), { error: why }]));
     }
   }
-  try { return await runOps(job, f.do || []); }
+  // 박힌 글자 방식(사장님 10-30 — 회원이 설정에서 바꿈: 자동·지우기·흐림) — 회원 설정 text.orig_text 를 실행기에(vmake_clean.style_mode 가 읽는다)
+  let textMode = '';
+  try { const pk = f.preset ? await packFor(f.preset) : null; textMode = String((pk && pk.text && pk.text.orig_text) || ''); } catch { /* 설정 못 읽음 = 판 칸 그대로 */ }
+  try { return await runOps(job, f.do || [], { env: /^(vmake|blur)$/.test(textMode) ? { SHORTEM_TEXT_MODE: textMode } : {} }); }
   finally { if (rental) await rental.release(); }
 }
 

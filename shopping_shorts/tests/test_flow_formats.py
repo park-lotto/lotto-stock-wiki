@@ -335,14 +335,15 @@ def _mk_video(p, sec):
                     f"sine=duration={sec}", "-shortest", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", str(p)], check=True)
 
 
-def test_clean_text_check_only_no_key_stops(tmp_path, monkeypatch):
+def test_clean_text_check_only_no_key_blurs(tmp_path, monkeypatch):
+    """10-30 사장님 'VMake 가 있으면 장면마다 지우고 없으면 흐림' — 키 없음 = 멈춤(need_key)이 아니라 흐림."""
     from tools.calcopy import vmake_clean as VC
     from tools.calcopy.hybrid import runner_ops as R
     monkeypatch.setattr(R, "PAID_OFF", False)
     monkeypatch.setenv("CALCOPY_VMAKE_VIA", "member")
     monkeypatch.delenv("VMAKE_API_KEY", raising=False)
     monkeypatch.setattr(VC, "MEMBER_KEY_FILE", tmp_path / "none")
-    assert R.c_clean_text(tmp_path, {"check": True})["mode"] == "need_key"
+    assert R.c_clean_text(tmp_path, {"check": True})["mode"] == "blur"
     monkeypatch.setenv("VMAKE_API_KEY", "ak:sk")
     assert R.c_clean_text(tmp_path, {"check": True})["mode"] == "vmake"
     monkeypatch.setattr(R, "PAID_OFF", True)                          # 돈 0 스위치면 키가 있어도 지우지 않는다
