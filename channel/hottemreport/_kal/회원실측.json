@@ -1,0 +1,16 @@
+{
+ "ok": true,
+ "video": "C:\\t\\ep_hottemreport\\work\\완성본\\미국에서_2천만_뷰_넘은_주걱_영상_945b801df846.mp4",
+ "final": {
+  "mb": 21.9,
+  "w": 1080,
+  "h": 1920,
+  "sec": 28.3,
+  "audio": true
+ },
+ "run_dir": null,
+ "path": "MCP(설치 묶음 엔진+꾸러미+지시서+Claude, flow_episode.js)",
+ "at": "2026-10-29T21:02:57",
+ "owner_ok": false,
+ "earlier": null
+}
