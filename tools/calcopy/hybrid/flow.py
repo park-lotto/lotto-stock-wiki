@@ -414,6 +414,9 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
         except _Stop as e:
             st.pop("watch_keys", None)          # 멈춤 뒤 다시 시도 = 같은 일을 일부러 다시 낸다(반복 감시 대상 아님)
             # 뿌리(10-22): 멈춤 34곳 중 5곳만 이어 가기 → 고칠 때마다 원본 찾기부터 20~50분 다시. 이제 정한 retry 가 없으면 **마지막으로 일을 시킨 단계**부터(같은 do·질문을 다시)
+            if _auto_next_source(st, e):        # 소재 창고에서 고른 편이 소재 단계에서 끝났다 — 다음 조회순 편으로(회원에게 묻지 않는다)
+                m, rp, user = {}, {}, {}
+                continue
             retry = None if e.final else (e.retry or st.get("_asker"))
             if e.detail:
                 st["log"].append(f"멈춤 속사정({ph}): {str(e.detail)[:400]}")
@@ -3349,26 +3352,88 @@ SLOT_BENCH = ("bench", "bench_got", "ref_read")
 ALT_NOTICE_WON = "주신 영상은 원본을 아직 찾는 중이라, 함께 찾던 같은 채널 영상으로 먼저 만들게요"
 
 
+POOL_SHOW = 5        # 회원이 후보를 달라고 하면 보여 줄 수(사장님 10-30 "후보 뽑아달라고 하면 5개")
+
+
+def ref_hash(ref: str) -> str:
+    """소재 지문 — 영상 주소·id → 짧은 해시(서버 작업 기록에는 주소를 남기지 않는다: claude_flow 요약 규칙). 만든 편 대조에 쓴다."""
+    from tools.calcopy import origin_find as OF
+    k = OF.vkey(str(ref)) if "/" in str(ref) else None
+    return "h:" + hashlib.sha256(("shortem-ref|" + (k[1] if k else str(ref))).encode()).hexdigest()[:16]
+
+
+def bench_pool(slug: str, done=(), skip_bench: bool = True) -> list[dict]:
+    """(판단 주인 — 소재 창고 순서) 그 판 벤치 채널 쇼츠 조회순(channel/<slug>/_kal/벤치상위.json — 만들기 = bench_pool.py) 중
+    done(회원이 만든 소재 id·주소)과 판 본보기(상위편_목표 ids)를 뺀 것. 사장님 10-30 "말이 없으면 벤치 채널에서 조회수 순으로"."""
+    from tools.calcopy import origin_find as OF
+    f = PRESETS_FILE.parent / str(slug or "-") / "_kal" / ALT_LIST
+    if not f.is_file():
+        return []
+    rows = [r for r in json.loads(f.read_text(encoding="utf-8")).get("rows") or [] if isinstance(r, dict) and r.get("id")]
+    gone, gone_h = set(), set()
+    for d in done or ():
+        if str(d).startswith("h:"):               # 서버 기록(주소 대신 지문)
+            gone_h.add(str(d))
+            continue
+        k = OF.vkey(str(d)) if "/" in str(d) else None
+        gone.add(k[1] if k else str(d))
+    gf = f.parent / ALT_BENCH_IDS
+    if skip_bench and gf.is_file():
+        gone |= set(json.loads(gf.read_text(encoding="utf-8")).get("ids") or [])
+    return [{"url": f"https://www.youtube.com/shorts/{r['id']}", "id": r["id"], "views": r.get("views"), "title": r.get("title")}
+            for r in sorted(rows, key=lambda r: -(r.get("views") or 0)) if r["id"] not in gone and not (gone_h and ref_hash(r["id"]) in gone_h)]
+
+
+def pick_source(version: str, done=()) -> dict | None:
+    """회원이 주소 없이 '만들어줘' — 그 판 소재 창고에서 안 만든 조회 1위(bench_pool). 없으면 None."""
+    _, slug = flow_format_of(version)
+    left = bench_pool(slug, done)
+    return left[0] if left else None
+
+
+AUTO_SOURCE_MAX = 5     # 주소 없이 시작한 편 — 소재 단계에서 끝나면 다음 조회순 편으로 몇 번까지
+
+
+def _auto_next_source(st: dict, e) -> bool:
+    """(판단 주인 — 소재 창고 편이 못 쓰는 소재일 때) 주소 없이 시작한 편(auto_source)이 대본 전에 '이 영상은 여기서 마칠게요'(final)·원본 못 찾음으로
+    끝나면 다음 조회순 편으로 처음부터(같은 sid·만든 편 목록 그대로). 회원이 준 주소면 그대로 멈춘다(회원이 고른 소재)."""
+    if not st.get("auto_source") or (st.get("script") or {}).get("S"):
+        return False
+    if not (e.final or e.origin_missing or "출처" in str(e.why)):
+        return False
+    tried = list(st.get("auto_tried") or []) + [st.get("ref")]
+    if len(tried) >= AUTO_SOURCE_MAX:
+        st["log"].append(f"소재 창고 {len(tried)}편 연속 못 씀 — 멈춤")
+        return False
+    left = bench_pool(st.get("slug"), list(st.get("made_refs") or []) + tried)
+    if not left:
+        return False
+    keep = {k: st[k] for k in ("sid", "version", "fmt", "slug", "env", "given", "made_refs") if k in st}
+    log = list(st.get("log") or []) + [f"소재 창고 편 못 씀({e.why}) → 다음 조회순 {left[0]['url']} (조회 {left[0].get('views')})"]
+    st.clear()
+    st.update(start(left[0]["url"], keep["version"], keep["sid"]))
+    st.update({k: v for k, v in keep.items() if k in ("env", "given", "made_refs")}, auto_source=left[0], auto_tried=tried, log=log)
+    return True
+
+
+def source_candidates(version: str, done=(), n: int = POOL_SHOW) -> list[dict]:
+    """회원이 '후보 뽑아줘' — 같은 순서로 n 개(번호·제목·조회수)."""
+    _, slug = flow_format_of(version)
+    return [{"n": i + 1, **r} for i, r in enumerate(bench_pool(slug, done)[:n])]
+
+
 def pick_alt_source(st: dict) -> dict | None:
     """(판단 주인 — 둘째 소재 고르기) 그 판 벤치 상위(조회순) 중 회원이 준 소재·이 PC 작업 기록의 만든 편(멈춘 편은 다시 씀 — runner done_refs) 아닌 첫 편."""
     from tools.calcopy import origin_find as OF
     if (st.get("env") or {}).get("single_source"):      # 원본 찾기 워커(of_worker, 사장님 10-27 '24시간 미리 찾아 둔다') — 그 소재 하나만
         return None
-    f = PRESETS_FILE.parent / str(st.get("slug") or "-") / "_kal" / ALT_LIST
-    if not f.is_file():
-        st["log"].append(f"둘째 소재 없음: {f.name} 없음({st.get('slug')})")
+    if not (PRESETS_FILE.parent / str(st.get("slug") or "-") / "_kal" / ALT_LIST).is_file():
+        st["log"].append(f"둘째 소재 없음: {ALT_LIST} 없음({st.get('slug')})")
         return None
-    rows = [r for r in json.loads(f.read_text(encoding="utf-8")).get("rows") or [] if isinstance(r, dict) and r.get("id")]
-    k = OF.vkey(str(st.get("ref") or ""))
-    own = k[1] if k else ""
-    done = set((st.get("env") or {}).get("done_refs") or [])
     # 판 본보기(상위편_목표 ids)는 빼고, 남은 상위 ALT_SPREAD 편 중 sid 로 골라 동시에 도는 회원끼리 같은 소재를 안 찾게(10-27 완주시험 3편 모두 콜라겐 마스크 — 원본찾기 시간 절반)
-    gf = f.parent / ALT_BENCH_IDS
-    bench = set(json.loads(gf.read_text(encoding="utf-8")).get("ids") or []) if gf.is_file() else set()
-    left = [r for r in sorted(rows, key=lambda r: -(r.get("views") or 0)) if r["id"] != own and r["id"] not in done and r["id"] not in bench]
+    left = bench_pool(st.get("slug"), [str(st.get("ref") or "")] + list((st.get("env") or {}).get("done_refs") or []) + list(st.get("made_refs") or []))
     if left:
-        r = left[int(hashlib.md5(str(st.get("sid") or "").encode()).hexdigest(), 16) % min(ALT_SPREAD, len(left))]
-        return {"url": f"https://www.youtube.com/shorts/{r['id']}", "id": r["id"], "views": r.get("views"), "title": r.get("title")}
+        return left[int(hashlib.md5(str(st.get("sid") or "").encode()).hexdigest(), 16) % min(ALT_SPREAD, len(left))]
     st["log"].append("둘째 소재 없음: 벤치 상위가 전부 만든 편·판 본보기")
     return None
 

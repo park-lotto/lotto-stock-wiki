@@ -24,6 +24,7 @@ STAGE = [("topic", "소재"), ("ref_read", "소재"), ("origin", "원본"), ("of
 
 
 def stage_of(tag: str) -> str:
+    tag = re.sub(r"^s[0-9]+_", "", tag)      # 해외원본형 소재 칸 질문(s1_·s2_) = 같은 단계
     for k, name in STAGE:
         if tag.startswith(k):
             return name

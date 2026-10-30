@@ -1,0 +1,652 @@
+{
+ "for": "banggu 프리셋 소재 창고 — 벤치 채널 쇼츠 조회순(flow.bench_pool)",
+ "made": "2026-10-30",
+ "basis": "yt-dlp --flat-playlist <채널>/shorts 조회수(view_count) — bench_pool.py build",
+ "channels": [
+  "https://www.youtube.com/@방구석친구들D"
+ ],
+ "rows": [
+  {
+   "id": "ILIiqCJAOSI",
+   "views": 10000000,
+   "title": "영업 기밀을 빼앗겨버린 아웃백 ㄷㄷ",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "8iEhEniPpjE",
+   "views": 5700000,
+   "title": "마케팅천재가 만든 티라미수",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "48PbLQ5az6k",
+   "views": 5300000,
+   "title": "물감을 전혀 묻힐 수 없는 붓",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "Kz8KlJoQ1Vc",
+   "views": 4800000,
+   "title": "프리미엄 브랜드가 쓰는 볼펜의 정체",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "E9hmVYVa7OY",
+   "views": 4800000,
+   "title": "러닝시장 씹어먹은 이어폰",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "ayNy6CSSrIQ",
+   "views": 3800000,
+   "title": "약사가 알려준 블랙헤드의 정체",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "pkX8M-hSLLE",
+   "views": 3100000,
+   "title": "그릭요거트계의 게임체인저",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "NtPQ51ztIto",
+   "views": 2500000,
+   "title": "유학생 지갑 털어버리는 녹음기",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "etM7eAGJ54g",
+   "views": 2300000,
+   "title": "일본1등카레의 비밀",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "omQdAxK_Y6c",
+   "views": 2100000,
+   "title": "생초보가 만든 세계 1등 파스타면",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "WH7A1SZ5QVI",
+   "views": 1400000,
+   "title": "약사들이 절대 안산다는 약국약 ㄷㄷ",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "WgKSYShjOHA",
+   "views": 1300000,
+   "title": "제조사가 아니라는데도 안 믿는 젤리의 능력",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "dMVkkGVQb9Y",
+   "views": 1300000,
+   "title": "매출하락이 걱정되는 애플펜슬",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "GUvDUlIu8W8",
+   "views": 1100000,
+   "title": "자일리톨계의 센세이션",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "c3bkn_--KKY",
+   "views": 1100000,
+   "title": "이미지 탈피하려던 이케아근황",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "noGEfqs8HQU",
+   "views": 828000,
+   "title": "사무용키보드계 1황",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "p67ihpsR83Q",
+   "views": 818000,
+   "title": "덕후들도 후회하는 레고디자인",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "6yqCUNFwqrc",
+   "views": 602000,
+   "title": "또 대단한 거 해낸 LG전자",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "oMXuOzeClo8",
+   "views": 598000,
+   "title": "역발상으로 탄생한 무릎보호대근황",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "nOAHW6oFIDU",
+   "views": 506000,
+   "title": "세상에 하나밖에 없는 아이패드 케이스",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "s_PJ3SovV7w",
+   "views": 505000,
+   "title": "독도지킴이라던 성경김 신제품근황",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "GWANmgLZhzU",
+   "views": 309000,
+   "title": "품절대란 아이스크림의 비밀",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "fakDcqqxuIg",
+   "views": 272000,
+   "title": "아날로그와 디지털이 합쳐진 볼펜",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "hcvNQelcNsk",
+   "views": 255000,
+   "title": "콜라보 제품인데 아무도 안 산다는 레고",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "-RBsxMQ8UNA",
+   "views": 211000,
+   "title": "11만원이 거저라고하는 이유",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "m-D7PZsgHS4",
+   "views": 178000,
+   "title": "용도 외 사용 금지라는 프리미엄 치실",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "p6WG02tzKhU",
+   "views": 166000,
+   "title": "아이패드 사용자 필독 #케이스",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "HZzBHH3g1lo",
+   "views": 161000,
+   "title": "극한상황에 꼭 필수라는 연필깎이",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "DAmw8ginDLU",
+   "views": 150000,
+   "title": "국제대회에서 금지된 전설의 신발 정체는?",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "TdCu5-gpg1Q",
+   "views": 128000,
+   "title": "일반 상식을 '파괴' 해 버린 신발 근황",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "L75kvVdS1YA",
+   "views": 113000,
+   "title": "초소형 게임패드에 사람들이 '감탄한' 이유",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "-7iKM0o0AWk",
+   "views": 103000,
+   "title": "수중스쿠터 포기하려다 사게 된 이유",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "Uj7YrKbGHjY",
+   "views": 89000,
+   "title": "세상에서 가장 똑똑한 탄산음료",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "dqbNq0zbqQo",
+   "views": 81000,
+   "title": "일본맛집이 숨겨왔던 오믈렛의 비밀",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "X30_gcXJOss",
+   "views": 78000,
+   "title": "전세계 절반을 살린 한국음료수",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "66FROPKZ648",
+   "views": 73000,
+   "title": "지능형헬창이 만든 커피머신",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "7am3eYn7wYI",
+   "views": 61000,
+   "title": "한국에서 안 사 오면 후회한다는 굿즈",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "mVUloUj5gno",
+   "views": 61000,
+   "title": "한국에게 패배를 선언한 일본의 특별한 이유",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "Ptu0lJ29g3Y",
+   "views": 60000,
+   "title": "개발자:이것들이?",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "FpXQBldGBwI",
+   "views": 54000,
+   "title": "창작하는 사람들의 필수품",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "4f9pgBTanWg",
+   "views": 52000,
+   "title": "2조 7천억 원짜리 레고를 목성에 보낸 이유",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "e_XRkLyrIH8",
+   "views": 48000,
+   "title": "이케아에서 가장 섬뜩한 순간",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "-H75CKzdlqo",
+   "views": 47000,
+   "title": "MZ세대도 감탄한 비비빅의 미친 선택",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "fGEuODo3k4I",
+   "views": 47000,
+   "title": "손바닥만 한 녹음기가 200만 원인 이유",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "yLgxx12EnEc",
+   "views": 47000,
+   "title": "이거 모르면 물놀이 후 병원감#수영장준비물 #수영장필수품",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "kmeMo4PonK0",
+   "views": 45000,
+   "title": "우리가 몰랐던 맛동산의 충격적인 비밀",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "YaRmcSoY3WY",
+   "views": 44000,
+   "title": "누텔라를 넘어섰다는 악마의 잼",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "9h8vm7FEvZ8",
+   "views": 43000,
+   "title": "한국패치가 너무 잘 된 텀블러",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "1hOhx2n-VQY",
+   "views": 40000,
+   "title": "면도기를 거꾸로 쓰는 이유",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "f__NHOY4gq0",
+   "views": 39000,
+   "title": "CG라 의심받을 정도라는 종이비행기",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "YYhdCOMdIxY",
+   "views": 39000,
+   "title": "돈까스는 안심 vs 등심 vs 둘다",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "mZSD8O-GdtU",
+   "views": 39000,
+   "title": "특별한 영상을 남기고 싶다면?",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "8MP1uDmGF3E",
+   "views": 38000,
+   "title": "보일러회사가 고기에 진심이면 생기는 일",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "so3DN47GQio",
+   "views": 37000,
+   "title": "병원 반창고 보고 든 아이디어 ㅋㅋ",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "cvpI2lM6Nwo",
+   "views": 36000,
+   "title": "떡락하던 중소가 성공시킨 일본1등 초코바",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "m65JIW6Qte0",
+   "views": 36000,
+   "title": "한국회사가 고객을 대하는 방식",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "XyCSl4g4WKA",
+   "views": 35000,
+   "title": "안들리는 헤드폰이 업계 1위인 이유",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "z5dGUIm8y7Q",
+   "views": 34000,
+   "title": "불면증 환자들을 울린 한 회사의 선택",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "MB2l9ljVKrw",
+   "views": 34000,
+   "title": "수백만 명의 목숨을 살린 의사의 말 한마디",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "RZjD4Fs2n0I",
+   "views": 33000,
+   "title": "선크림이 손에 안 묻는 신박한 방법",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "bT1B82SNKcE",
+   "views": 33000,
+   "title": "물놀이가서 이거 바꾸면 세상편함  #물놀이 #수영장 #여름가방",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "lNm0KD7Wi14",
+   "views": 32000,
+   "title": "맥날안가고 빅맥먹는법",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "JlBU17cSKF8",
+   "views": 32000,
+   "title": "읽으면 치명적인 후유증이 남는 책",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "KBc9Y7zUp4k",
+   "views": 32000,
+   "title": "똥손도 무조건 성공한다는 마법의 요리 공식",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "Y-VpRLtADTw",
+   "views": 32000,
+   "title": "아이있는 집 응급템#여름 #감기 #열사병 #응급처치",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "U6zbGw8Pgb4",
+   "views": 30000,
+   "title": "커피 매니아들의 필수품",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "bykk64PR_Ys",
+   "views": 30000,
+   "title": "수영장에서 사람들이 말거는 이유 #수영장준비물#수영장필수품",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "LofWDOJdDrg",
+   "views": 29000,
+   "title": "영업 기밀을 빼앗겨 버린 LG",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "UHuxUm9LcHY",
+   "views": 29000,
+   "title": "국내 도입이 시급하다는 껌",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "otsLWb0MP4k",
+   "views": 29000,
+   "title": "하겐다즈가 아이스크림계의 에르메스인 이유",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "PA6nTpO83Wc",
+   "views": 29000,
+   "title": "이코노미 누워서 가는법 ㄷㄷ",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "cDGVf5Tc0AU",
+   "views": 28000,
+   "title": "한 천재 디자이너가 만든 특별한 시계",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "IGXUNTyLR4A",
+   "views": 27000,
+   "title": "가볍게 샀다가 큰코다친다는 받침대",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "UiMPGu0bQu4",
+   "views": 27000,
+   "title": "한 초콜릿 회사의 전설적인 마케팅",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "IWBHj1U4PIA",
+   "views": 25000,
+   "title": "다꾸러버들이 환장하는 샤프심",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "05rxVDmcNbE",
+   "views": 23000,
+   "title": "이 선글라스때문에 사람들이 놀란 이유",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "U57LacrInJM",
+   "views": 23000,
+   "title": "잡스의 속임수 때문에 사람들이 놀란 이유",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "ABPsdchwgHU",
+   "views": 19000,
+   "title": "놀러 갈 때 이거 없으면 하늘 노래져요",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "otONkLKvKTo",
+   "views": 18000,
+   "title": "비누쓰는 집 삶의질 상승템",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "oc-SS7PPB5k",
+   "views": 17000,
+   "title": "정신나간 인공눈물 후기",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "aLwx2-MnrEQ",
+   "views": 17000,
+   "title": "위급상황에서 꼭 필요하다는 한국 과자 근황",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "IcKp86OVGVA",
+   "views": 17000,
+   "title": "컨셉이 확실한 계산기 근황",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "G6bKBQzt1sc",
+   "views": 17000,
+   "title": "블랙홀이라 불리는 특이한 물감",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "sSdNLLhgt3c",
+   "views": 17000,
+   "title": "임산부와 아이도 마시는 술(?)의 정체",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "VXmU83DIQGA",
+   "views": 16000,
+   "title": "의사들도 극찬했다는 마법의 숟가락",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "ivNXPak8x28",
+   "views": 14000,
+   "title": "박물관이 굿즈에 진심이면 벌어지는 일",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "5bf1Xv5xgPI",
+   "views": 13000,
+   "title": "정육점 사장님이 언제나 밝았던 이유",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "79lhH4w9wjk",
+   "views": 13000,
+   "title": "알람시간에 맞게 밝아지는 조명?",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "mQUjtpoZV8c",
+   "views": 12000,
+   "title": "29년 만에 부활한 장난감의 충격적인 근황",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "pmdKAxayub8",
+   "views": 12000,
+   "title": "여행 준비중이라면?#일본여행추천#여행준비물#필수템",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "jsRHawogJ8U",
+   "views": 11000,
+   "title": "한 때 품절대란이었던 미친 술의 근황",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "eJJo7oftuNc",
+   "views": 11000,
+   "title": "인형뽑기 사장님이 알려준 사기스킬 공개",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "ZnqCm9bOvbU",
+   "views": 11000,
+   "title": "빨래할때 삶의 질이 달라지는  제품 2가지",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "CAlMrL8i0Qw",
+   "views": 10000,
+   "title": "남친선물 추천 #게이밍마우스",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "AxN-EYUvA70",
+   "views": 7200,
+   "title": "워터밤 필수템 #물총#간지",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "e9Kvz6dDJY0",
+   "views": 4600,
+   "title": "여름나들이 필수품 #캐노피 #캠핑체어 #추천",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "iiuF_JGnu-U",
+   "views": 4400,
+   "title": "거대잠만보 입양하실 분?#게이밍의자 #리클라이너",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "Ivou74aI8RA",
+   "views": 3100,
+   "title": "프린터인데 이게없어?",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "CKwZlz76N0I",
+   "views": 3000,
+   "title": "우리엄마 갱년기 극복템 #애완 #화분",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "OA6JLRxR0Kc",
+   "views": 2000,
+   "title": "여행가서 인생샷 찍는 꿀팁은 댓글확인",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "8XDxGsoSQ7I",
+   "views": 1800,
+   "title": "근데 가격이 연예인만 쓸만해..",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "oeIiTI035yM",
+   "views": 1700,
+   "title": "생토마토 먹기 힘든 사람 이거 추천 #토마토요리 #토마토샐러드",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "F95s_s9BVyU",
+   "views": 1600,
+   "title": "사이버트럭 1000배 싸게사는법#3in1충전기",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "7t6Of0lCoDY",
+   "views": 1500,
+   "title": "움직이는 키티 실존 #도어라이트",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "rSvDWJJ218s",
+   "views": 1400,
+   "title": "귀 아픈 사람들 지갑 털어버린 제품",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "8P8QBf2MjVI",
+   "views": 1400,
+   "title": "임산부나 부모님 집에 필수",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  },
+  {
+   "id": "gpmEOFx2cSs",
+   "views": 826,
+   "title": "물무서운 사람한테 추천",
+   "ch": "https://www.youtube.com/@방구석친구들D"
+  }
+ ]
+}

@@ -1,0 +1,814 @@
+{
+ "for": "humorshowshow 프리셋 소재 창고 — 벤치 채널 쇼츠 조회순(flow.bench_pool)",
+ "made": "2026-10-30",
+ "basis": "yt-dlp --flat-playlist <채널>/shorts 조회수(view_count) — bench_pool.py build",
+ "channels": [
+  "https://www.youtube.com/@humorshowshow"
+ ],
+ "rows": [
+  {
+   "id": "Lr2Hwd0PeKM",
+   "views": 7600000,
+   "title": "A restaurant menu that reveals the personalities of each black and white chef.",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "NBdmq90aJus",
+   "views": 7100000,
+   "title": "한국 코스트코만 대놓고 차별한 디저트",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "pY2zNE5A1m4",
+   "views": 6400000,
+   "title": "Flew with an EXPIRED Passport?! 😱",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "BlA9f8rBPuc",
+   "views": 5900000,
+   "title": "Things that Ottogi never sells to the general public",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "jECuoRljWj0",
+   "views": 4300000,
+   "title": "The dessert that Koreans officially broke.",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "bfKkNmVTGPs",
+   "views": 4200000,
+   "title": "Korea bans imports of the top US gift",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "cHynO-CRdYE",
+   "views": 3900000,
+   "title": "The identity of wasabi that completely captivated Koreans",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "GPeF16iUHNo",
+   "views": 3900000,
+   "title": "The magic sauce that took over the American sauce market",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "obod5OHkvSA",
+   "views": 3500000,
+   "title": "This is what Koreans finally broke through",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "UlljlEyhOio",
+   "views": 3400000,
+   "title": "How to fly first class for 750,000 won",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "kZOQNHpqlQE",
+   "views": 2900000,
+   "title": "Yogurt that completely missed the developer's intentions",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "0Q-CAw_iaNw",
+   "views": 2800000,
+   "title": "A dessert recipe that Koreans are particularly bad at keeping.",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "vow_lln97_k",
+   "views": 2700000,
+   "title": "The End of a Japanese Man Who Survived 20 Years on Soy Sauce, Eggs, and Rice",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "xJvwMApZwnE",
+   "views": 2500000,
+   "title": "Korean Desserts That Even French Manufacturers Are Shocked by",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "31fg67aKMjA",
+   "views": 2400000,
+   "title": "The devilish red powder that captivated the eastern United States",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "MhZkmqCTC74",
+   "views": 2200000,
+   "title": "School lunches from around the world shocked by Korean school lunches",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "cj3-wcltAao",
+   "views": 2100000,
+   "title": "The dessert that shattered Korean prejudices",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "kxAf4wZiB_g",
+   "views": 2000000,
+   "title": "The identity of the pottery that was abandoned for 40 years",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "7XRVuHfs45M",
+   "views": 1900000,
+   "title": "The only honey that has been caught only in Korea",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "fgA7dgqwyRM",
+   "views": 1900000,
+   "title": "The magic seasoning that conquered the American grill scene",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "FPIh4eHzcMs",
+   "views": 1800000,
+   "title": "An invasive species that destroys the ecosystem",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "0Rxz5CLsd9Y",
+   "views": 1700000,
+   "title": "The End of the Man Who Bought a Pile of Ashes for 1.9 Billion Won",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "FZz_t8xBNCc",
+   "views": 1700000,
+   "title": "줄서는 식당이 휴업하자 벌어진일 ㄷㄷ",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "dmehdS5SRTI",
+   "views": 1500000,
+   "title": "The legendary sauce that took America by storm",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "C5koRuBK8uU",
+   "views": 1400000,
+   "title": "How a Marketing Genius Takes Over the Cheese Market",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "78p9VfCEbM4",
+   "views": 1300000,
+   "title": "A dessert that Koreans forcibly revived",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "TpYt9hClrJ4",
+   "views": 1300000,
+   "title": "How a Dessert Tasting Gig Doubled My Pay—and Became a Real Career🍰💸",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "8eSqXR6lPsQ",
+   "views": 1200000,
+   "title": "The identity of the ring I've been wearing for 30 years",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "n0nhrNmpopA",
+   "views": 1100000,
+   "title": "Why Alley Restaurant Sauce Sold for 3 Trillion Won",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "u7N6qtUK5zE",
+   "views": 1100000,
+   "title": "흑백요리사 백수저 식당정보 리스트",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "k8akaprOMWM",
+   "views": 1100000,
+   "title": "The latest update on the Seoul course for Japanese people coming to Korea.",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "cNh5lUCJNas",
+   "views": 1000000,
+   "title": "This is something Ashley never sells",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "y3Bgw5MW5K0",
+   "views": 1000000,
+   "title": "This is what came to fix the loosened discipline of the two-cho system.",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "sIExaGe_fTw",
+   "views": 1000000,
+   "title": "흑백요리사 백수저 3인방 충격적인 TMI",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "bHWJdhsX95M",
+   "views": 877000,
+   "title": "Korean expatriates in the US are shocked by the surge in Korean food consumption. #k-food",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "KW8Z7y5ysIo",
+   "views": 869000,
+   "title": "The identity of the source that has the US government upset",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "3YKHC43Yqug",
+   "views": 854000,
+   "title": "A review of a proposal that took three months of hard work.",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "b64CDiL1qF4",
+   "views": 842000,
+   "title": "Why the 90s Generation is the Most Blessed Generation",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "Vh9U8HGCm5U",
+   "views": 822000,
+   "title": "The K-Dessert Takeover: Dubai Chocolate Has Officially Gone Too Far",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "WYVxYXMNqSw",
+   "views": 808000,
+   "title": "Deungchon Shabu-shabu, whose recipe was stolen",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "B7ksd94m5rY",
+   "views": 807000,
+   "title": "A miracle that came after my dog left me",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "JfLR710TzwY",
+   "views": 780000,
+   "title": "The 1988 Seoul Olympics poster, still considered a legend because it looks hip even now.",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "5e61KsZg89o",
+   "views": 752000,
+   "title": "This is something that was only falsely accused in Korea.",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "oHLw5uh__mA",
+   "views": 741000,
+   "title": "바다에서 금속탐지기 쓰다 벌어진 일 ㄷㄷ",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "-u9Cvi9mPMc",
+   "views": 734000,
+   "title": "The identity of the safe that my grandfather has been hiding",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "R4AbZKRvr4k",
+   "views": 707000,
+   "title": "The Pyeongchang Olympics: Zero Food Complaints",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "B1y47VKAqig",
+   "views": 680000,
+   "title": "Black and White Chef Judge Ahn Sung-jae's surprising background",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "t_2SWWxOd_Y",
+   "views": 630000,
+   "title": "벤츠타는 친구 쫓아가다가 인생 바뀜",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "jnXbhR88nTY",
+   "views": 515000,
+   "title": "The legendary sauce that even Wolfgang wanted to steal",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "3CiuXhQyt6Q",
+   "views": 501000,
+   "title": "흑백요리사로 보는 조별과제 희망편",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "BB173SG4k7M",
+   "views": 450000,
+   "title": "This is what Koreans cut off the fastest",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "L8P1o8YkYYM",
+   "views": 444000,
+   "title": "The Japanese rice thief who says there's no answer once you get addicted",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "8wNMmhggflE",
+   "views": 442000,
+   "title": "A dessert that Koreans misunderstand",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "UpxwDR-BMxY",
+   "views": 432000,
+   "title": "흑백요리사 셰프별 찰떡캐 선생님_백수저ver",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "cquTohfmss4",
+   "views": 409000,
+   "title": "This is what Koreans first broke through",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "xpxNgqjjKC4",
+   "views": 396000,
+   "title": "Korean udon that makes Japanese people go crazy",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "uXknsus5UGc",
+   "views": 388000,
+   "title": "The dessert that Koreans say destroyed their identity",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "nabFkQnGOMA",
+   "views": 354000,
+   "title": "Why Airport Staff Tore Off Baggage Belts",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "Kei_vtMrx3Y",
+   "views": 337000,
+   "title": "흑백요리사 급식대가 초등학교 실제 급식 수준 ㄷㄷ",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "R424cdn8Qwc",
+   "views": 323000,
+   "title": "혼밥족이 망한 삼겹살집을 살린 방법 ㄷㄷ",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "KQo1YEI8GdM",
+   "views": 315000,
+   "title": "미국에서 달러 쓸어담고 있는 한식 반찬ㄷㄷ #k-food",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "rQsMesf4RjM",
+   "views": 312000,
+   "title": "Why did my electricity bill go up when I turned off the air conditioner?",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "bcoqNWLXZIk",
+   "views": 264000,
+   "title": "A secret hidden in the attic for 63 years",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "svf9iyFDv3E",
+   "views": 264000,
+   "title": "The grandson's idea saved a bookstore on the verge of closing down",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "TjRR6u0NLHI",
+   "views": 257000,
+   "title": "흑백요리사 최강록 최근 연락두절 근황",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "_ifuPy6HVbs",
+   "views": 253000,
+   "title": "흑백요리사 심사위원 몰랐던 반전 TMI",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "4iMzJlHfufY",
+   "views": 252000,
+   "title": "Why does my puppy sniff the same place every day?",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "DfUFR_z0y20",
+   "views": 240000,
+   "title": "The Only Remaining Branch of a Legendary Past Snack Bar in Seoul",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "yjhPMqv7bQc",
+   "views": 235000,
+   "title": "The Controversial \"Slow-Aging\" Diet Dubbed a Kids' Meal ㄷㄷ",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "UC6YKgIxcqg",
+   "views": 230000,
+   "title": "What happened while using a metal detector on a farm?",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "l6mSx42VYho",
+   "views": 225000,
+   "title": "What happened when I bought a house for 1 euro?",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "T4S8e7nnma8",
+   "views": 224000,
+   "title": "The dessert that shattered the pride of Costco Korea",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "P5DGyfsmhW4",
+   "views": 221000,
+   "title": "The identity of Parmesan, which has captivated 99% of Koreans.",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "eZ7GXhANshI",
+   "views": 212000,
+   "title": "Crumble cookies, the hottest trend among American MZ people these days #crumblcookies",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "Qc0ZBHooTgk",
+   "views": 210000,
+   "title": "The current trend of K-Convenience Stores among foreigners",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "5Ee1H41VUds",
+   "views": 203000,
+   "title": "This that Koreans feel betrayed by",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "mXgeV1-pvAY",
+   "views": 196000,
+   "title": "The secret hidden in a picture frame that was being sold for cheap",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "nKpuL4UfQa4",
+   "views": 195000,
+   "title": "A cookie that makes Koreans angry the moment they eat it",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "rXf0PQQmNzo",
+   "views": 192000,
+   "title": "흑백요리사 백수저들 알고보면 귀여운 포인트",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "yA7CQONVxo4",
+   "views": 184000,
+   "title": "The identity of an item left in a shoebox for 70 years",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "f76PbojvhQY",
+   "views": 179000,
+   "title": "In Korea, the whole world is being oppressed because of a minority.",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "mBZ4-OhWEs0",
+   "views": 179000,
+   "title": "Surprisingly, Korean hamburger franchises are top-tier.",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "jpvasKdG4sc",
+   "views": 176000,
+   "title": "How to cancel Coupang Rocket Wow subscription",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "g9eHzR1qtVQ",
+   "views": 171000,
+   "title": "The identity of the family living in a 111-year-old abandoned school",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "eV8EvpZNq94",
+   "views": 165000,
+   "title": "Costco Desserts That Have Really Captured Koreans",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "auck6rFIsOA",
+   "views": 160000,
+   "title": "The ultimate winter snack that's been going too far these days",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "pdLwMW0yY6Y",
+   "views": 160000,
+   "title": "회사 진짜 그지같은데 그만두지 못하는 이유",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "9BjYK3T2eBw",
+   "views": 154000,
+   "title": "A legend in the American DNA of the salty world",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "ovIe9QeXkUs",
+   "views": 153000,
+   "title": "I brought an essential American gift item to Korea and it was confiscated.",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "442fj6U-HMA",
+   "views": 150000,
+   "title": "The sauce that is the essence of American steak",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "kbJ2_vjRctc",
+   "views": 148000,
+   "title": "엔화 싸다고 일본 갔다간 ㅈ되는이유",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "vzzHOnxL4MQ",
+   "views": 141000,
+   "title": "The end of the young men who bought the ruins for 200 million won",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "8JrruIb_M_8",
+   "views": 139000,
+   "title": "This was created by Japan, which is crazy about raw eggs.",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "uAzrzeaojLA",
+   "views": 129000,
+   "title": "Dad Saves Hikikomori Son",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "RltWO1LzKKk",
+   "views": 120000,
+   "title": "The hidden identity of the Buddha statue with its broken arm",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "xvbLayJ_yj8",
+   "views": 119000,
+   "title": "흑백요리사 보면 볼수록 놀라운점 ㄷㄷ",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "bn-KV5oFGzY",
+   "views": 117000,
+   "title": "The reason he escaped to prison after finding 700 billion won in gold bars",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "Zh8IPX3ns-g",
+   "views": 110000,
+   "title": "Korean Air is now immune to cup ramen smell attacks",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "p9hM_9YOzOM",
+   "views": 105000,
+   "title": "The identity of the amulet kept under the bed for 10 years",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "fFbujxXg3ZU",
+   "views": 102000,
+   "title": "흑백요리사 결국 여경래 예언대로 됨ㄷㄷ",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "SirTS2Qq28M",
+   "views": 102000,
+   "title": "물가체감 쎄게오는 음식 이분야 갑",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "epsUxOvly10",
+   "views": 100000,
+   "title": "The identity of the snack that both Orion and Lotte gave up on",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "-qhUvF4jDbQ",
+   "views": 97000,
+   "title": "A corner that Koreans can't pass up at Costco",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "fGznqswUeqs",
+   "views": 93000,
+   "title": "What happened when I lost my wallet with nothing but cash inside (OMG)",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "SAUtTnyi3G8",
+   "views": 87000,
+   "title": "흑백요리사 본 사람만 이해할 수 있는 궁금한점들",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "GDHvxpSVfUc",
+   "views": 85000,
+   "title": "한국 이자카야 의외로 사람들이 모르는 사실",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "NZAlbZ57l-Y",
+   "views": 80000,
+   "title": "A Korean Air Traveler's Guide to 100 Essential Travel Preparations for Parents",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "ZIvIH01oHZc",
+   "views": 74000,
+   "title": "Korean: The Korean alphabet that foreigners surprisingly find cute",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "BcI4THJtDZE",
+   "views": 73000,
+   "title": "The identity of the paper found in a cheap picture frame",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "vuzX4bRRSh0",
+   "views": 73000,
+   "title": "Koreans are shocked by American kids' school lunches",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "nETjjcgq-Zs",
+   "views": 72000,
+   "title": "This is what Costco Korea has decided to bring in.",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "KeMlfjIqzCo",
+   "views": 69000,
+   "title": "빡침주의)알제리 선수단이 올림픽 개막식에서 헌화한 이유",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "poA9SktpkIA",
+   "views": 68000,
+   "title": "The toast that made the entire nation suspicious",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "XrUA1i4kk6k",
+   "views": 65000,
+   "title": "American Genji's Hambugi National Rule Combination",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "JI3zCaR75Fo",
+   "views": 63000,
+   "title": "This is what 99% of Koreans eat without knowing it.",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "j7ouz0iLdKQ",
+   "views": 59000,
+   "title": "This is what even the French manufacturer was baffled by.",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "ir6sXIo8a98",
+   "views": 58000,
+   "title": "Good Chuseok gift set certification legend collection",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "26jq5gTYBxw",
+   "views": 57000,
+   "title": "This one has become popular along with the popularity of Dujonku.",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "FoUZUx-pd8c",
+   "views": 55000,
+   "title": "The ending of the person who bought the warehouse just by looking at the entrance ㄷㄷ",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "aPxAfJuaF08",
+   "views": 47000,
+   "title": "A business genius who made a fortune out of a sauce that was ruined by a large corporation.",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "9kM6im6_vAg",
+   "views": 47000,
+   "title": "흑백요리사 흑수저 식당정보 리스트",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "tOCdNEeQBoQ",
+   "views": 42000,
+   "title": "The dessert that Koreans turned the tables on",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "wp9DdHY2EYI",
+   "views": 41000,
+   "title": "A dessert that targeted the weaknesses of Koreans",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "0gB9THsg8-U",
+   "views": 40000,
+   "title": "Ingredients that differ dramatically before and after living alone",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "cu_euwUmJ7U",
+   "views": 39000,
+   "title": "The identity of the landlord who didn't raise the rent for 23 years",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "bFWXuAlhxX4",
+   "views": 37000,
+   "title": "The sauce that set Americans' appetites on edge",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "Vnln8MckzAI",
+   "views": 35000,
+   "title": "Why Knowing Only the Source Is a Loss",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "nZdllAqpiEU",
+   "views": 34000,
+   "title": "Black and white chefs' Korean food plating skills are amazing",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "xi0aFaUMpJU",
+   "views": 32000,
+   "title": "A source code that became legendary due to a developer's mistake",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "MkgN--Ycfak",
+   "views": 30000,
+   "title": "The Sauce That Catfished Koreans",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "K0w6JZeaxpw",
+   "views": 29000,
+   "title": "The legendary mayonnaise that made Americans line up",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "xEbyZLpqUWs",
+   "views": 27000,
+   "title": "Tteokbokki, which has recently started to reverse its trend",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "ubzM6ctnxL4",
+   "views": 25000,
+   "title": "The dessert that's causing a stir because of \"Kkeomeoksari\"",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  },
+  {
+   "id": "93KCg9X0Ioc",
+   "views": 25000,
+   "title": "How Koreans Finally Cracked Costco",
+   "ch": "https://www.youtube.com/@humorshowshow"
+  }
+ ]
+}
