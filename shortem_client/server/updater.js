@@ -13,6 +13,27 @@ import { audit } from './audit.js';
 const OK_PATH = /^(server|engine)\/[^\0]+$|^app_version\.json$/;
 export const installDir = () => path.resolve(toolsDir(), '..');
 
+// 멈춘 편을 다시 시도할 때 — 받아 둔 새 판의 engine/ 만 지금 자리에 덮는다. server/ 는 돌고 있으니 다음 켤 때 연결기가 바꾼다.
+//   돌던 편이 없을 때만 부른다(retryFlow 자리). 실패해도 다시 시도는 막지 않는다 — 옛 엔진으로 이어 간다.
+export function applyEngineNow(home = installDir()) {
+  const pend = path.join(home, '_update', 'pending.json');
+  const mark = path.join(home, '_update', 'engine_now.json');
+  let v;
+  try { v = JSON.parse(fs.readFileSync(pend, 'utf8')).version; } catch { return { applied: false, why: 'no_pending' }; }
+  try { if (JSON.parse(fs.readFileSync(mark, 'utf8')).version === v) return { applied: false, why: 'already', version: v }; } catch { /* 처음 */ }
+  const src = path.join(home, '_update', v, 'engine');
+  if (!fs.existsSync(path.join(src, 'tools', 'calcopy', 'make.py'))) return { applied: false, why: 'no_engine' };
+  fs.cpSync(src, path.join(home, 'engine'), { recursive: true, force: true });
+  fs.writeFileSync(mark, JSON.stringify({ version: v, at: Date.now() }));
+  audit('engine_now', { result: v });
+  return { applied: true, version: v };
+}
+
+export async function retryUpdate() {
+  try { await checkUpdate(); return applyEngineNow(); }
+  catch (e) { audit('engine_now_fail', { result: String(e && e.message || e).slice(0, 80) }); return { applied: false, why: 'fail' }; }
+}
+
 export async function checkUpdate({ force = false } = {}) {
   if (devMode() && !force) return { skipped: 'dev' };
   const home = installDir();

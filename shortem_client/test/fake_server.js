@@ -191,7 +191,7 @@ print(json.dumps({"pack":base64.b64encode(n+AESGCM(k).encrypt(n,d,aad)).decode()
       if (u.pathname === '/api/claude/feedback' && req.method === 'POST') {
         const a = auth(req, res); if (!a) return;
         const b = await body(req);
-        if (!b || !['request', 'bug'].includes(b.kind) || typeof b.text !== 'string' || b.text.length > 2000) return fail(res, 400, 'bad_request', '요청 모양이 다릅니다');
+        if (!b || !['request', 'bug', 'code_fix'].includes(b.kind) || typeof b.text !== 'string' || b.text.length > 2000) return fail(res, 400, 'bad_request', '요청 모양이 다릅니다');
         state.feedback.push(b); return send(res, 200, { ok: true, id: state.feedback.length });
       }
       // 시험 손잡이

@@ -49,6 +49,7 @@ RENDERER_EXTRA = ("tools/render_scene_style.js", "out/scene-style-ui-showcase.ht
 DATA_EXTRA = ("shopping_shorts/assets/voice_presets.json", "shopping_shorts/assets/bgm_lib", "shopping_shorts/assets/sfx_packs",
               "shopping_shorts/calcopy_frame/my_packs.json", "shopping_shorts/static/caption-motions.js",
               "tools/calcopy/engine/warehouse_channels.json",
+              "shopping_shorts/vmake_sdk",           # 10-31 설치본 1.0.11 에 __init__.py 만 들어가 회원 VMake 가 ModuleNotFoundError(98 #203)
               "shopping_shorts/static/fonts",        # 글꼴 폴더 통째 — render_bench._font(FONTS/이름)·광고 표시(engine/ad_mark)가 연다.
               # 10-29 실측: Pretendard 하나만 넣어 회원 묶음 렌더가 제목 글꼴에서 OSError 로 멈췄다(회원 PC 에 글꼴을 이 자리로 넣는 코드도 없다)
               # 10-30 실측: 설정 화면 꾸미기의 템플릿 카드 그림이 묶음에 없어 42건 404(카드가 빈 칸) — showcase 화면이 여는 그림

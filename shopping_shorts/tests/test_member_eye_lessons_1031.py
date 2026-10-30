@@ -1,7 +1,5 @@
 """10-31 회원 눈·경험. 같은 자료를 새 Claude 는 잡는데 회원 편은 통과 — 봤다는 증거 없는 답·시트 없는 통과를 막는다."""
 import json
-import os
-import subprocess
 from pathlib import Path
 
 import pytest
@@ -59,21 +57,22 @@ def test_lessons_file_stays_small_and_every_stage_exists():
     assert all(F._lessons(k) for k in d)
 
 
-def _guard(tool, tool_input, env):
-    p = subprocess.run(["node", str(ROOT / "installer/plugin/shortem/hooks/guard.js")], input=json.dumps({"tool_name": tool, "tool_input": tool_input}),
-                       capture_output=True, text=True, encoding="utf-8", env={**os.environ, **env})
-    return "deny" in p.stdout
+def test_eye_left_after_limit_still_finishes_with_notice():
+    """자동 검사 통과 + 눈 지적만 남음 + 고치기 한도 = 멈추지 않고 완성, 남은 지적은 회원에게(사장님 10-31)."""
+    st = {"version": "x", "log": [], "tries": {"look": F.LIMITS["look"]}, "auto": {"ok": True, "rows": []}, "look": {"ok": False, "problems": ["7초 밋밋함"]}}
+    assert F.ph_check_judge(st, {}, {}, {}) == {"goto": "deliver"}
+    assert st["look_left"] == ["7초 밋밋함"] and "7초 밋밋함" in st["notice"]
 
 
-@pytest.mark.parametrize("tool,inp,want", [
-    ("Edit", {"file_path": "C:/Inst/server/engine/tools/calcopy/hybrid/flow.py"}, True),
-    ("Write", {"file_path": "C:\\Inst\\server\\guide\\CLAUDE_숏클.md"}, True),
-    ("Bash", {"command": "sed -i s/a/b/ C:/Inst/server/engine/x.py"}, True),
-    ("PowerShell", {"command": "Set-Content C:\\Inst\\server\\engine\\x.py 'a'"}, True),
-    ("Bash", {"command": "echo a > c:/inst/server/engine/x.py"}, True),
-    ("Write", {"file_path": "C:/Users/m/Desktop/숏템작업/메모.md"}, False),
-    ("Bash", {"command": "ls C:/Inst/server/engine"}, False),
-    ("Bash", {"command": "echo a > C:/Users/m/Desktop/숏템작업/x.txt"}, False),
-])
-def test_guard_locks_inside_only(tool, inp, want):
-    assert _guard(tool, inp, {"SHORTEM_INSTALL": "C:/Inst"}) is want
+def test_gate_fail_at_limit_is_not_delivered():
+    """자동 검사 ×는 완성으로 안 넘어간다 — 기준을 낮추는 길이 아니다."""
+    st = {"version": "x", "log": [], "tries": {"look": F.LIMITS["look"]}, "auto": {"ok": False, "rows": [{"group": "표식", "what": "광고", "ok": False}]}, "look": {"ok": False, "problems": []}}
+    with pytest.raises(F._Stop):
+        F.ph_check_judge(st, {}, {}, {})
+
+
+def test_vmake_sdk_whole_folder_ships_and_upload_dep_listed():
+    from tools.claude_portal import engine_bundle as B
+    d = B.data_extra(ROOT)
+    assert "shopping_shorts/vmake_sdk/core/client.py" in d
+    assert "alibabacloud-oss-v2==" in (ROOT / "installer/common/requirements-engine-py312-win.txt").read_text(encoding="utf-8")

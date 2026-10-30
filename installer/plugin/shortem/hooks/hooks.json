@@ -20,18 +20,6 @@
      }
     ]
    }
-  ],
-  "PreToolUse": [
-   {
-    "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash|PowerShell",
-    "hooks": [
-     {
-      "type": "command",
-      "shell": "powershell",
-      "command": "$n = if ($env:SHORTEM_NODE) { $env:SHORTEM_NODE } else { 'node' }; & $n \"$env:CLAUDE_PLUGIN_ROOT/hooks/guard.js\""
-     }
-    ]
-   }
   ]
  }
 }

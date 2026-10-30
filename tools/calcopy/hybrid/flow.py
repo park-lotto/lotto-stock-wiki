@@ -1233,15 +1233,15 @@ def ph_stopped(st, m, rp, u):
 
 
 NL = chr(10)
-TASK_PER_KEY = 2       # 같은 막힘(이어 갈 단계+이유)마다 제작자 과제 횟수
-TASK_TOTAL = 8         # 한 편 전체 과제 상한 — 넘으면 회원에게(무한 되풀이 금지)
+TASK_PER_KEY = 3       # 같은 막힘(이어 갈 단계+이유)마다 제작자 과제 횟수 — 코드를 고친 뒤 다시 보는 번까지(사장님 10-31 "멈추지 말고 해결해 나가게")
+TASK_TOTAL = 16        # 한 편 전체 과제 상한 — 넘으면 회원에게(무한 되풀이 금지)
 STAGE_GUIDE = {"setup": "00_공통.md", "bench": "01_소재.md", "origin": "02_원본찾기.md", "product": "03_제품_쿠팡.md", "research": "04_조사.md",
                "material": "05_재료영상.md", "asr": "06_받아쓰기.md", "script": "07_대본.md", "sign": "07_대본.md", "plan": "08_계획.md",
                "render": "10_렌더.md", "check": "11_검사.md", "done": "12_납품.md"}
 GUIDE_DIR = Path(__file__).resolve().parents[3] / "channel" / "칼카피_제작순서"
 TASK_ASK = """너는 이 편의 **제작자**다(사장님 PC 의 제작 세션과 같은 자리). 아래 단계에서 만들기가 막혔다 — 회원에게 묻기 전에 네가 푼다.
 지킬 것: 가이드(아래 발췌)를 지킨다 · 금지선·함정은 절대 · 지어내지 않는다(모르면 웹 검색으로 확인) · 회원에게는 꼭 필요한 결정만.
-쓸 수 있는 것: 네 웹 검색(WebSearch·WebFetch) · 이 답(JSON)으로 숏템에 다음 행동을 시킨다 — 숏템이 그 결과를 다시 검사한다(통과해야 다음 단계).
+쓸 수 있는 것: 네 웹 검색(WebSearch·WebFetch) · 숏클 엔진 코드 고치기(코드 결함이면 고친 뒤 retry — 고친 뒤 note 에 파일·이유를 적고 shortem_feedback(kind="code_fix") 로 diff 를 보낸다, 검사 기준을 낮추는 수정은 금지) · 이 답(JSON)으로 숏템에 다음 행동을 시킨다 — 숏템이 그 결과를 다시 검사한다(통과해야 다음 단계).
 답 JSON 하나:
  {"action": "retry" | "give" | "end", "origin_url": "", "product": "", "note": "무엇을 확인했고 왜 이 행동인지 한 줄"}
  · retry = 같은 단계를 다시(잠깐의 막힘·고치기 횟수 소진·받기 실패 등 — 다시 하면 풀릴 근거가 있을 때)
@@ -2518,7 +2518,7 @@ def ph_check_got(st, m, rp, u):
             texts = "".join(f"\n\n## {n}\n{str(t)[:4000]}" for n, t in (c.get("eye_texts") or {}).items())
             sv = script_view(st)
             return {"review": [_rv(f"sheet_{st['version']}", FINAL_SHEET_ASK + _lessons("final") + texts + "\n\n## 대본\n" + json.dumps(sv, ensure_ascii=False)[:4000],
-                                   [_img(x) for x in sheets][:3], need=SHEET_NEED)], "then": "final_sheet"}
+                                   [_img(x) for x in sheets][:3], need=SHEET_NEED, meta={"fresh": True})], "then": "final_sheet"}
         if FINAL_SHEET_LOOK:             # 시트 없이 통과시키지 않는다 — 조용한 통과(옛 skipped)는 '눈 안 봄'을 '합격'으로 기록했다
             raise _Stop("완성본 확인 자료를 만들지 못했어요", AGAIN, retry="check", auto=True, detail=f"eye_files={st['eye_pack']}")
         st["look"] = {"ok": True, "problems": [], "skipped": "눈 검수 뺌(사장님 10-26)"}
@@ -2604,6 +2604,14 @@ def ph_check_judge(st, m, rp, u):
         why = _check_fails(st)
         st["log"].append("완성본 검사 멈춤(코드 몫 — 재료로 못 고침): " + why)
         raise _Stop("완성본 마무리 확인에서 걸린 곳이 있어요", "다시 시도해 주시면 걸린 곳부터 고쳐서 이어 갈게요", retry="check_retry", detail=why)
+    if auto_ok and st["tries"].get("look", 0) >= LIMITS["look"]:
+        # 자동 검사는 통과, 눈 지적만 남음 — 멈추지 않고 완성한다. 남은 지적은 회원에게 알리고 기록한다(사장님 10-31 "멈추지 말고 해결해 나가게")
+        left = [str(p)[:160] for p in look.get("problems") or []]
+        st["look_left"] = left
+        st["notice"] = "완성했어요. 마지막 확인에서 더 다듬으면 좋을 곳: " + " / ".join(left)[:400]
+        st.pop("_notice_shown", None)
+        st["log"].append("눈 지적 남긴 채 완성: " + " / ".join(left)[:300])
+        return {"goto": "deliver"}
     if st["tries"].get("look", 0) >= LIMITS["look"]:
         why = _check_fails(st)
         st["log"].append("완성본 검사 멈춤: " + why)

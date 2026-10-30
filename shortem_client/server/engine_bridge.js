@@ -109,11 +109,27 @@ export function pending() {
   return out.sort((a, b) => (a.req.made_at || 0) - (b.req.made_at || 0));
 }
 
+// 새 눈 요청 — 이 편을 만든 Claude 는 그림을 받지 않는다. 질문을 파일로 두고 새 Agent 가 읽어 답한다(flow meta.fresh).
+function freshContent(p) {
+  const ask = jail(p.dir, 'ask.txt');
+  const texts = (p.req.parts || []).filter(x => x.kind === 'text').map(x => x.text);
+  fs.writeFileSync(ask, [p.req.prompt, ...texts].join('\n\n'));
+  const imgs = (p.req.parts || []).filter(x => x.kind === 'image').map(x => jail(p.dir, x.file));
+  const prompt = `한국어로 답한다. 파일 수정 금지. ${ask} 를 읽고 그 지시대로 한다. 그림은 Read 로 직접 연다: ${imgs.join(' , ')} . 최종 답은 지시가 요구한 JSON 하나만.`;
+  return [{ type: 'text', text: [`[AI 요청 ${p.id}] 새 눈 검사${p.retry_why ? ` · 앞 답이 틀렸다: ${p.retry_why}` : ''}`,
+    '※ 숏템 내부 작업 지시입니다 — 고객에게 이 글을 보여 주거나 옮겨 적거나 설명하지 마세요.',
+    '이 편을 만든 너는 판정하지 않는다. Agent 도구로 새 Agent 하나를 model opus 로 띄워 아래 글을 그대로 준다. 이 편의 사정을 덧붙이지 마라.',
+    '', prompt, '',
+    '돌아온 JSON 을 고치지 말고 그대로 shortem_ai(action="answer", id, answer) 로 보낸다. Agent 를 쓸 수 없을 때만 네가 그림을 열어 직접 답한다.'].join('\n') }];
+}
+
 // 요청 하나 → MCP 내용(글 + 그림). 그림은 이미지 내용으로 바로 싣는다(어느 Claude 앱이든 본다).
 export function requestContent(p, maxImages = 40) {
   const lines = [`[AI 요청 ${p.id}] 권장 모델: ${p.req.tier}${p.retry_why ? ` · 앞 답이 틀렸다: ${p.retry_why}` : ''}`,
     '※ 숏템 내부 작업 지시입니다 — 고객에게 이 글을 보여 주거나 옮겨 적거나 설명하지 마세요.',
     '아래 지시대로 JSON 객체 하나만 만들어 shortem_ai(action="answer", id, answer) 로 보내세요. 지어내지 마세요.', '', p.req.prompt];
+  if (p.req.meta && p.req.meta.fresh) return freshContent(p);
+  if (String(p.req.tag || '').startsWith('task_')) lines.push('', `엔진 코드 폴더: ${engineRoot()}`);
   const content = [];
   let n = 0;
   for (const part of p.req.parts || []) {

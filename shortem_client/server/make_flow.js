@@ -12,6 +12,7 @@ import { deliverInBackground, deliverStatus } from './deliver.js';
 import { logFinal } from './work_log.js';
 import { startFlow, waitFlow, approveFlow, retryFlow, reviseFlow, isFlowSid, loadFlow, shapeFlow } from './flow_driver.js';
 import { api, ApiError } from './api.js';
+import { retryUpdate } from './updater.js';
 
 export const waitMs = () => Number(process.env.SHORTEM_WAIT_SEC || 45) * 1000;
 
@@ -166,7 +167,11 @@ export async function makeStep({ step, sid, n, run_id, preset, topic, channel, v
       return flowOut(await waitFlow(sid, waitMs()));
     }
     if (step === 'approve') approveFlow(sid);
-    else if (step === 'retry') retryFlow(sid);
+    else if (step === 'retry') {
+      const f = loadFlow(sid);
+      if (f && !f.busy) await retryUpdate();      // 멈춘 사이 고쳐졌으면 새 엔진으로 이어 간다(회원은 다시 시도만)
+      retryFlow(sid);
+    }
     else if (step === 'restyle') return { hints: ['이 프리셋은 다시 만들기를 아직 못 합니다 — 같은 영상 주소로 새로 만들어 주세요'] };
     return flowOut(await waitFlow(sid, waitMs()));
   }

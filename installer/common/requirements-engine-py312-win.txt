@@ -107,3 +107,10 @@ playwright==1.58.0 \
     --hash=sha256:a2bf639d0ce33b3ba38de777e08697b0d8f3dc07ab6802e4ac53fb65e3907af8
 pyee==13.0.1 \
     --hash=sha256:af2f8fede4171ef667dfded53f96e2ed0d6e6bd7ee3bb46437f77e3b57689228
+# VMake 업로드(vmake_sdk → alibabacloud_oss_v2, 98 #203 — 10-31 PyPI 해시)
+alibabacloud-oss-v2==1.4.0 \
+    --hash=sha256:c0226aca0dfc59a3f12d895dabfc4e2af3c3a6f7136847418bb1bfd7e4ddcba9
+crcmod-plus==2.3.1 \
+    --hash=sha256:82b0f7e968c430c5a80fe0fc59e75cb54f2e84df2ed0cee5a3ff9cadfbf8a220
+pycryptodome==3.23.0 \
+    --hash=sha256:c75b52aacc6c0c260f204cbdd834f76edc9fb0d8e0da9fbf8352ef58202564e2
