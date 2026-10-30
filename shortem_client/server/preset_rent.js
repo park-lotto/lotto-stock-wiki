@@ -101,7 +101,7 @@ export async function rentPreset({ engineRoot, presetId, profileId, stepName, ki
       const me = current;
       return { presetPath: me.presetPath, release: kind === 'make' ? () => release(me, engineRoot) : async () => {} };
     }
-    if (current.kind === 'ui' && kind === 'make') await release(current, engineRoot);   // 미리보기는 제작에 자리를 내준다
+    if (current.kind === 'ui') await release(current, engineRoot);   // 미리보기는 제작·다른 프리셋 미리보기에 자리를 내준다(10-30 실측: 다른 프리셋을 누르면 409 로 첫 프리셋만 남았다)
     else throw new ApiError(409, { code: 'busy', msg: kind === 'ui' ? '제작 중에는 다른 프리셋 미리보기를 잠시 못 합니다' : '앞 작업이 끝난 뒤 다시 부르세요' });
   }
   sweep(engineRoot);
