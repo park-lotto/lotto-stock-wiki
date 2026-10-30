@@ -53,7 +53,7 @@ def extract_frames(video_path, dest_dir, max_frames=6):
     cmd = [
         "ffmpeg", "-y", "-i", str(video_path),
         "-vf", f"select='gt(scene,0.3)',showinfo",
-        "-vsync", "vfr", "-frames:v", str(max_frames),
+        "-fps_mode", "vfr", "-frames:v", str(max_frames),
         str(pattern),
     ]
     result = subprocess.run(cmd, capture_output=True, check=False,

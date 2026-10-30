@@ -380,7 +380,8 @@ def c_bench(W, d):
         if not mp4.exists() and not (bd / "bench.ko.vtt").exists():
             return {"error": f"cache_miss: 벤치 {vid}"}
     else:
-        yt(["-f", "bv*[height>=720]+ba/b", "--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko",
+        from tools.calcopy.engine.yt_fetch import SORT_1080
+        yt(["-f", "bv*[height>=720]+ba/b", *SORT_1080, "--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko",
             "-o", str(bd / "bench.%(ext)s"), url])
         if not mp4.exists():
             return {"error": "벤치 영상을 받지 못했다" + (f" — {yt_why()}" if yt_why() else "")}
@@ -814,7 +815,8 @@ def c_origin_get(W, d):
             shutil.copyfile(s, dst)
         return {"files": [dims(dst)], "offset": 0.0, "measured": True, "note": "캐시 원본 = 전체 파일(0초 = 원본 0초)"}
     if d.get("url") and "youtu" not in str(d["url"]):     # 틱톡·인스타 원본(해외원본형 렌즈) — 짧은 영상이라 통째로, 벤치 받기와 같은 yt-dlp 길(10-26 까르보불닭)
-        yt(["-f", "bv*[height>=720]+ba/bv*+ba/b", "--merge-output-format", "mp4", "-o", str(src / f"{vid}.%(ext)s"), str(d["url"])])
+        from tools.calcopy.engine.yt_fetch import SORT_1080
+        yt(["-f", "bv*[height>=720]+ba/bv*+ba/b", *SORT_1080, "--merge-output-format", "mp4", "-o", str(src / f"{vid}.%(ext)s"), str(d["url"])])
         if not dst.exists():
             return {"error": f"원본 받기 실패({d['url']})"}
         return {"files": [dims(dst)], "offset": 0.0, "measured": True}
