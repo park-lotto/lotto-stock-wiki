@@ -1,0 +1,122 @@
+{
+ "per": {
+  "48PbLQ5az6k": {
+   "dur": 22.933,
+   "cut_median": 1.6,
+   "n_cuts": 13,
+   "hook_cuts_3s": 2,
+   "lines": 17,
+   "plain": 17,
+   "plain_share": 1.0,
+   "photo_s": 0.0,
+   "photo_share": 0.0,
+   "photo_hits": []
+  },
+  "8iEhEniPpjE": {
+   "dur": 22.833,
+   "cut_median": 1.83,
+   "n_cuts": 11,
+   "hook_cuts_3s": 1,
+   "lines": 19,
+   "plain": 19,
+   "plain_share": 1.0,
+   "photo_s": 0.0,
+   "photo_share": 0.0,
+   "photo_hits": []
+  },
+  "ayNy6CSSrIQ": {
+   "dur": 27.9,
+   "cut_median": 1.6,
+   "n_cuts": 15,
+   "hook_cuts_3s": 2,
+   "lines": 23,
+   "plain": 23,
+   "plain_share": 1.0,
+   "photo_s": 1.6,
+   "photo_share": 0.057,
+   "photo_hits": [
+    [
+     16.7,
+     18.3,
+     "손·제품 근접 clean it zero 클렌징밤 + 노란 튜브 제품 사진 "
+    ]
+   ]
+  },
+  "E9hmVYVa7OY": {
+   "dur": 28.233,
+   "cut_median": 1.98,
+   "n_cuts": 14,
+   "hook_cuts_3s": 1,
+   "lines": 21,
+   "plain": 21,
+   "plain_share": 1.0,
+   "photo_s": 0.0,
+   "photo_share": 0.0,
+   "photo_hits": []
+  },
+  "ILIiqCJAOSI": {
+   "dur": 26.5,
+   "cut_median": 1.63,
+   "n_cuts": 15,
+   "hook_cuts_3s": 2,
+   "lines": 24,
+   "plain": 24,
+   "plain_share": 1.0,
+   "photo_s": 1.57,
+   "photo_share": 0.059,
+   "photo_hits": [
+    [
+     15.767,
+     16.4,
+     "손·제품 근접 BREAD 포장 냉동빵 2봉지(정지 사진) "
+    ],
+    [
+     22.433,
+     23.367,
+     "손·제품 근접 BREAD 포장 빵 묶음(제품 포장 사진) "
+    ]
+   ]
+  },
+  "Kz8KlJoQ1Vc": {
+   "dur": 23.433,
+   "cut_median": 1.25,
+   "n_cuts": 16,
+   "hook_cuts_3s": 1,
+   "lines": 17,
+   "plain": 17,
+   "plain_share": 1.0,
+   "photo_s": 0.0,
+   "photo_share": 0.0,
+   "photo_hits": []
+  }
+ },
+ "summary": {
+  "cut_median": {
+   "median": 1.615,
+   "min": 1.25,
+   "max": 1.98
+  },
+  "hook_cuts_3s": {
+   "median": 1.5,
+   "min": 1
+  },
+  "plain_share": {
+   "pooled": 1.0,
+   "P": 121,
+   "N": 121,
+   "per": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  "photo_share": {
+   "median": 0.0,
+   "max": 0.059,
+   "p75": 0.043
+  }
+ }
+}
