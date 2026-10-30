@@ -367,6 +367,10 @@ def done_refs() -> list[str]:
 def c_bench(W, d):
     bd = W / "bench"; bd.mkdir(exist_ok=True)
     url, vid = d["url"], vid_of(d["url"])
+    old = jload(bd / "bench.info.json").get("id") if (bd / "bench.info.json").exists() else None
+    if old and old != vid:             # 다른 소재가 남은 자리 — 비우고 받는다(10-30 설치본 시험: 소재 창고 다음 순위로 넘어가도 yt-dlp 가 '이미 받음'으로 첫 영상을 5번 다시 냈다)
+        shutil.rmtree(bd)
+        bd.mkdir()
     mp4, info, vtt = bd / "bench.mp4", {}, None
     if CACHE:
         for ext, dst in ((".mp4", mp4), (".info.json", bd / "bench.info.json"), (".ko.vtt", bd / "bench.ko.vtt")):
