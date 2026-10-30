@@ -92,6 +92,9 @@ def will_erase(version: str | None) -> bool:
 
 
 def _flow_erases(version: str | None) -> bool:
+    e = os.environ.get("CALCOPY_ERASE")          # 회원 PC = 지시서가 계획·렌더 명령에 실어 보낸 값(runner_ops 가 그 일 동안만 둔다 — 회원 엔진엔 flow.py 가 없다)
+    if e in ("0", "1"):
+        return e == "1"
     if not version:
         return True
     try:

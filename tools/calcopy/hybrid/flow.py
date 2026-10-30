@@ -2155,7 +2155,7 @@ def ph_sign(st, m, rp, u):
 
 # ── 8 계획 ────────────────────────────────────────────────────────────────
 def ph_plan(st, m, rp, u):
-    return {"do": [{"id": "plan", "cmd": "plan", "version": st["version"], "origin_names": sorted(_origin_names(st)), "other_faces": _other_faces(st)}], "then": "plan_got"}
+    return {"do": [{"id": "plan", "cmd": "plan", "version": st["version"], "origin_names": sorted(_origin_names(st)), "other_faces": _other_faces(st), "erase": erases_text(st["version"])}], "then": "plan_got"}
 
 
 MECH_FIX_MAX = 2      # 같은 편에서 기계 자동 고침(흐림 칸 넣기)을 되풀이하는 한도 — 넘으면 Claude 고치기로(무한 반복 막기)
@@ -2341,7 +2341,7 @@ def ph_thumb(st, m, rp, u):
         # (10-26 이미숙 회원편: part 8 = 시트에선 얼굴 근접 O3@163, 바뀐 재료에선 앰플 병 N2@80 → 카드 얼굴 반려 되풀이·멈춤, 98 기록).
         # 옛 카드는 비우고(옛 번호라 계획 관문 ⑥이 시트를 막는다) 계획을 다시 돌려 새 시트로 묻는다.
         return {"do": [{"id": "clear_thumb", "cmd": "write_doc", "files": {f"{v}/썸네일.json": {"options": []}}, "version": v},
-                       {"id": "plan", "cmd": "plan", "version": v, "origin_names": sorted(_origin_names(st)), "other_faces": _other_faces(st)}], "then": "thumb_sheet"}
+                       {"id": "plan", "cmd": "plan", "version": v, "origin_names": sorted(_origin_names(st)), "other_faces": _other_faces(st), "erase": erases_text(st["version"])}], "then": "thumb_sheet"}
     _, _, ww, wh = STY_window(v)
     ask = THUMB_ASK.format(good=TR.GOOD, order=TR.find_order(st.get("slug")), ww=ww, wh=wh)    # 상위 편 훅 참고 한 줄(지시서 15 — slug 의 _kal/상위편_목표.json)
     if st.get("_thumb_bad"):
@@ -2396,7 +2396,7 @@ def ph_thumb_got(st, m, rp, u):
 
 # ── 10 렌더 ───────────────────────────────────────────────────────────────
 def ph_render(st, m, rp, u):
-    return {"do": [{"id": "render", "cmd": "render", "version": st["version"], "origin_names": sorted(_origin_names(st)), "other_faces": _other_faces(st)}], "then": "render_got"}
+    return {"do": [{"id": "render", "cmd": "render", "version": st["version"], "origin_names": sorted(_origin_names(st)), "other_faces": _other_faces(st), "erase": erases_text(st["version"])}], "then": "render_got"}
 
 
 def ph_render_got(st, m, rp, u):

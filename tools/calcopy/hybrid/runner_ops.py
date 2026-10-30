@@ -1492,7 +1492,30 @@ def _log_beat(W, what: str):
     return f
 
 
+class _erase_env:
+    """지시서가 실어 보낸 '이 형식은 박힌 글자를 지우나'(flow.erases_text)를 그 일 동안만 CALCOPY_ERASE 로(vmake_clean.will_erase 가 읽는다)."""
+    def __init__(self, d):
+        self.v = None if d.get("erase") is None else ("1" if d.get("erase") else "0")
+
+    def __enter__(self):
+        self.old = os.environ.get("CALCOPY_ERASE")
+        if self.v is not None:
+            os.environ["CALCOPY_ERASE"] = self.v
+
+    def __exit__(self, *a):
+        if self.v is not None:
+            if self.old is None:
+                os.environ.pop("CALCOPY_ERASE", None)
+            else:
+                os.environ["CALCOPY_ERASE"] = self.old
+
+
 def c_plan(W, d):
+    with _erase_env(d):
+        return _c_plan(W, d)
+
+
+def _c_plan(W, d):
     from tools.calcopy.hybrid import render_bench
     v = d["version"]
     miss = tts_cache_miss(W, v)
@@ -1536,6 +1559,11 @@ def c_plan(W, d):
 
 
 def c_render(W, d):
+    with _erase_env(d):
+        return _c_render(W, d)
+
+
+def _c_render(W, d):
     from tools.calcopy.hybrid import render_bench
     v = d["version"]
     miss = tts_cache_miss(W, v)

@@ -12,3 +12,18 @@ def test_shop_and_celeb_formats_do_not_erase():
 def test_foreign_format_erases():
     assert F.erases_text("잇템로그판_v2") is True
     assert V.will_erase("잇템로그판_v2") is True        # 키 없음(need_key)도 '지울 판'(키는 f_clean 이 따로 받는다)
+
+
+def test_member_pc_follows_flow_flag(monkeypatch):
+    """회원 엔진엔 flow.py 가 없다 — 지시서가 plan·render 명령에 실은 erase 를 실행기가 그 일 동안 CALCOPY_ERASE 로 둔다."""
+    import os
+    from tools.calcopy.hybrid import runner_ops as R
+    seen = {}
+    monkeypatch.setattr(R, "_c_plan", lambda W, d: seen.setdefault("v", V.will_erase("잇템로그판_v2")))
+    monkeypatch.delenv("CALCOPY_ERASE", raising=False)
+    R.c_plan(None, {"version": "잇템로그판_v2", "erase": False})
+    assert seen["v"] is False and "CALCOPY_ERASE" not in os.environ
+    st = {"version": "썰템쇼판", "fmt": "쇼핑형", "origin": {}, "material": {}}
+    out = F.ph_plan(st, {}, {}, {}) if hasattr(F, "ph_plan") else None
+    if out and out.get("do"):
+        assert out["do"][0].get("erase") is False
