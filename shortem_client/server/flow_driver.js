@@ -157,7 +157,7 @@ async function pump(f) {
       if ((await absorb(f, res)) === 'end') break;
     }
   } catch (e) {
-    f.fail = { why: e instanceof ApiError ? (e.msg || e.code) : '진행이 멈췄습니다', fix: '잠시 뒤 shortem_make(step="retry") 로 이어 가세요', retry_ok: true };
+    f.fail = { why: e instanceof ApiError ? (e.msg || e.code) : '진행이 멈췄습니다', fix: '잠시 뒤 다시 시도해 주세요', retry_ok: true };
     f.status = 'error';
     save(f);
   } finally { f.busy = false; save(f); }

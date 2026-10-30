@@ -17,6 +17,7 @@ import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
 import { deliverStatus, linkTelegram, confirmTelegram, setDeliver, deliverFinal } from './deliver.js';
 import { keyStatuses, saveKey } from './engine/voice.js';
 import { flowList, flowView, viewFile } from './work_view.js';
+import { importMakerKeys } from './web_bridge.js';
 import { approveFlow, retryFlow } from './flow_driver.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -146,6 +147,7 @@ async function route(req, res, token, port) {
   if (u.pathname === '/api/flow' && req.method === 'GET') { const v = flowView(u.searchParams.get('sid')); return v ? send(res, 200, v) : send(res, 404, { error: '없는 작업' }); }
   const body = await readBody(req);
   if (!body) return send(res, 400, { error: '요청 모양이 다릅니다' });
+  if (u.pathname === '/api/import-keys') return send(res, 200, await importMakerKeys());   // 숏템메이커 키 가져오기 — 서버 화면 다리와 같은 함수(web_bridge.importMakerKeys)
   if (u.pathname === '/api/flow/approve' || u.pathname === '/api/flow/retry') {   // 버튼은 MCP 와 같은 함수(flow_driver)를 부르기만
     const f = (u.pathname.endsWith('approve') ? approveFlow : retryFlow)(body.sid);
     return f ? send(res, 200, { ok: true, flow: flowView(body.sid) }) : send(res, 404, { error: '없는 작업' });
