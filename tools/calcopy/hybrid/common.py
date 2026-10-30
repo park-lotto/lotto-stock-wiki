@@ -31,9 +31,15 @@ class StageError(RuntimeError):
     """단계 실패 — 이유를 들고 멈춘다(조용한 실패 금지)."""
 
 
-def run(cmd, check=True, timeout=None):
-    r = subprocess.run([str(c) for c in cmd], check=False, stdin=subprocess.DEVNULL, capture_output=True, text=True,
-                       encoding="utf-8", errors="replace", timeout=timeout)
+RUN_TIMEOUT = float(os.environ.get("SHORTEM_FFMPEG_TIMEOUT") or 3600)   # 명령 한 번 상한(초) — 끝없이 도는 ffmpeg 를 끊는다(관제 285)
+
+
+def run(cmd, check=True, timeout=RUN_TIMEOUT):
+    try:
+        r = subprocess.run([str(c) for c in cmd], check=False, stdin=subprocess.DEVNULL, capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=timeout)
+    except subprocess.TimeoutExpired:
+        raise StageError(f"명령 시간 초과({timeout}초): {' '.join(str(c) for c in cmd)[:240]}")
     if r.returncode != 0:
         from tools.calcopy.engine.encoder import cpu_retry      # GPU 인코딩 실패(세션 한도 등) → 같은 명령 CPU 로 한 번 더(98 #79)
         alt = cpu_retry(cmd)

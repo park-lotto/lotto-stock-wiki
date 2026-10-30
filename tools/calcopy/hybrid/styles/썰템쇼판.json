@@ -67,7 +67,9 @@
     "center": 316.0,
     "color": "#000000",
     "max_w": 980,
-    "x": 546
+    "x": 546,
+    "join": " ",
+    "_why_join": "본문 게시글 제목 = 훅 2줄을 이은 한 문장(벤치 본문 라벨 8/8편 한 줄 문장 — manifest variable_stats frames[body].layers[text:label]) · 10-29 회원 시험 3차: join 없어 1번째 줄('오뚜기가 일반인한테는')만 그려졌다(render_bench.title_segs 이븐쇼핑판과 같은 칸)"
    }
   ],
   "post": {
@@ -300,7 +302,8 @@
   ],
   "why": "자막 = frame.json caption 층(Pretendard-Bold 60.1 검정·외곽 0·가운데·3줄 칸 y488 줄 76 = 488~716) · 조각 초 중앙 1.4(뜯기 8편) · chunk_max_chars 16 = 벤치 나레 조각 자수(공백 뺀) p90 16(n=190, 중앙 10·최대 32) · typing_cps 8.6 = 렌더에 안 닿는 값: 벤치 타이핑 0/190줄 · 판 칸 어디에도 enter typing 없음 → caption_rows 가 이 값을 안 읽음 · band [488,716] = 3줄 칸 전체(frame.json — 줄판독 나레 줄 y 중앙 576~628 n=190 은 한 줄 자리, 칸 안) — handconst.py humorshowshow caption.*",
   "stack": {
-   "lines": 3,
+   "lines": 2,
+   "_why_lines": "10-29 3→2: 줄판독 벤치 표준 틀 4편(BlA9·NBdm·bfKk·jECu) 채널 자막 y 행 = 500(첫 줄)·560(덧붙음 2번째 줄)뿐 — 3번째 줄 0/84(pY2z 는 다른 틀 60초 편만 3줄). 3 은 옛 preset_make 렌더러 2줄 넘침 우회(manifest.differences)였고 회원 시험 3차에서 3~4줄로 쌓여 그림을 덮었다(측정 channel/humorshowshow/줄판독 layer=채널 y 분포)",
    "break": "full",
    "y": 526,
    "pitch": 76,
@@ -318,6 +321,30 @@
    "why": "벤치 줄 경계 비율 black 0.005(1회, bfKk 3.8초 — 줄판독 count) · ms 67 = bench_transition_drop(drop 0.228)"
   },
   "why": "push 0 — 벤치 줌인 컷 비율 0.368(뜯기 8편)이나 세기·조건 미측정 → _pending"
+ },
+ "rhythm": {
+  "cut_median": {
+   "v": 1.57,
+   "max": 1.93,
+   "why": "벤치 6편 원본 컷 길이 중앙(kal_analyze.media_of = 관문·재현과 같은 자, C:/숏템_칼카피/humorshowshow/mp4, 10-29 실측 → channel/humorshowshow/_kal/리듬_실측.json) 편별 bfKk 1.53·BlA9 1.78·jECu 1.93·Lr2H 1.27·NBdm 1.6·pY2z 0.93 → 중앙 1.565(범위 0.93~1.93) · max 1.93 = 벤치 가장 느린 편 jECu(v×1.3=2.04 보다 작음 — E 10-26 사장님 '벤치 실측 범위')"
+  },
+  "hook_cuts_3s": {
+   "min": 1,
+   "why": "벤치 6편 원본 0.1~3.0초 안 컷 경계 수(media_of cut_at): bfKk 1·BlA9 1·jECu 1·Lr2H 1·NBdm 2·pY2z 4 → 중앙 1 · min = 벤치 가장 적은 편 1(E 10-26 — 벤치가 다 넘는 문턱)"
+  },
+  "plain_share": {
+   "v": 0.963,
+   "tol": 0.07,
+   "range": [
+    0.9,
+    1.0
+   ],
+   "why": "벤치 6편 줄판독 덩어리 190개 중 꾸밈 없는 것(kal_analyze._decorated 등장 효과·강조·스티커·변형 모두 없음 = placement._is_deco 와 같은 칸) 183개 = 0.963(편별 bfKk 0.9·BlA9 0.955·jECu 0.957·Lr2H 0.943·NBdm 0.96·pY2z 1.0) · tol 0.07 = 모은 값에서 편별 최대 거리(bfKk 0.063) 올림 — 벤치 6편이 다 들어오는 폭"
+  },
+  "photo_share_max": {
+   "v": 0.39,
+   "why": "벤치 6편 줄판독 scene 첫 낱말 '화보·캡처'(제품 사진·화면 캡처) 와 '사진' 줄 초 ÷ 길이(키치잇·잇템로그판과 같은 정의) = bfKk 0.421·BlA9 0.279·jECu 0.239·Lr2H 0.599(메뉴판 사진 편)·NBdm 0.133·pY2z 0.132 → p75 0.385→0.39(선형 보간 — 키치잇판 8편 p75 0.16 을 같은 식으로 재현 확인, 중앙 0.259, 최대 0.599) — 키치잇·잇템로그판과 같은 p75 규약. 재밌쇼는 제품 사진·캡처 컷을 실제로 많이 쓴다(쇼핑몰 화보·지식인·카톡 캡처, 줄판독 눈 판독) — 그래서 0 이 아니다"
+  }
  },
  "sfx_files": {
   "gain_db": -8,
@@ -685,15 +712,14 @@
    ]
   }
  },
+ "orig_text": {
+  "mode": "blur",
+  "why": "사장님 10-30 '이 채널은 흐림으로' — 회원 설정 text.orig_text 로 바꿀 수 있다(vmake_clean.style_mode)"
+ },
  "title_form": "게시글 제목 1줄(Pretendard-ExtraBold 76.9) = 훅 문장 · 훅 카드 2줄(흰/연두)은 _pending.hook_card",
  "_pending": {
   "counted": "줄판독 21편이 옛 꼴(줄판독/_옛꼴) — placement.count 가 못 읽음 → 06-humorshowshow 새 꼴 6편 뒤 count",
-  "speaker_lines": {
-   "rule": "「화자 : 대사」 자막 줄 0~3개/편 — 화자 = 의인화한 집단·회사·나라(한국인들·제조사·벨·코스트코·프랑스…)",
-   "narration_reads": "나레는 화자 이름을 빼고 대사만 읽는다(78p9·jECu 받아쓰기 대조)",
-   "count_from": "21편 356줄: 화자대사 48 · 2인대화 8 (15/21편에 있음)",
-   "max_per_video": 3
-  },
+  "speaker_lines": "→ script.audit speaker_lines(1~3) · 줄 who 칸 · render_bench.who_prefix 로 붙임(10-30 관제 290)",
   "last_line": {
    "rule": "1인칭 혼잣말 드립 + ㅋㅋ 또는 ㅎㅎ 로 끝 — 편마다 둘 중 하나(사장님 10-18 ㅎㅎ 추가, 벤치는 ㅋㅋ 16/16·ㅎㅎ 0)",
    "from": "훅 카드 꼴 16/16편 ㅋㅋ 끝, 그중 12편 '아/하 ~' 시작"
@@ -703,9 +729,31 @@
   "brief": [
    "박자: 훅 카드(0~2초): [주체] + [센 동사] + [정체 숨긴 대상]? — 2줄째 연두, 아래 띠에 같은 문장 → 대상 소개·배경(회사·시장·문제, ~는데로 넘김) → 충격 사실·장애물(숫자·ㄷㄷ) → 화자 대사 1~3줄(「화자 : 대사」 + 반응 짤) → 정체 공개·해결(바로 ○○ / 대체품·먹는 법) → 근거(성분표·문의답변·댓글·인터뷰 캡처 + 빨간 화살표·밑줄) → 맛·이득 묘사 2~4줄(꾸덕·도른 조합·쟁여두기) → 끝줄 = 1인칭 혼잣말 드립 + ㅋㅋ 또는 ㅎㅎ(아/하 ~ 로 시작)",
    "반말 전언체(존댓말 0) · 자막 끝 ㄷㄷ 27·~는데 17·ㅋㅋ 16·명사 10(21편) · 훅 = [주체]+[센 동사]+[정체 숨긴 대상]",
-   "화자대사줄(옵션): 「화자 : 대사」 0~3줄/편 — 화자 = 의인화한 집단·회사·나라, 나레는 화자 이름 빼고 대사만 읽는다 · 끝줄 = 1인칭 혼잣말 드립 + ㅋㅋ/ㅎㅎ"
+   "화자대사줄(반드시 1~3줄/편 — 벤치 15/21편·48줄): 줄에 who 칸(화자 = 의인화한 집단·회사·나라 6자 이하 — '한국인들'·'제조사'·'벨'·'코스트코')을 넣고 tts·caps 에는 대사만 쓴다(자막엔 '화자 : 대사' 로 보이고 나레는 대사만 읽는다 — jECu '벨 : 엥 빵이 아니구 떡에?'·NBdm '제조사 : 다크 촤컬릿'). 대사는 그 화자가 할 법한 말투(반말·ㅋㅋ·ㄷㄷ) · 끝줄 = 1인칭 혼잣말 드립 + ㅋㅋ/ㅎㅎ"
   ],
   "audit": [
+   {
+    "id": "speaker_lines",
+    "kind": "speaker_lines",
+    "min": 1,
+    "max": 3,
+    "who_max": 6,
+    "why": "「화자 : 대사」 줄(who 칸) — 썰템쇼 채널 결(벤치 21편 중 15편·48줄, 편당 최대 3). 10-30 회원 시험 6차: 판에 '옵션 0~3' 으로만 있어 0줄로 나왔다(사장님 '화자 대사 줄을 안 넣은 건 왜')"
+   },
+   {
+    "id": "cap_chars",
+    "kind": "cap_chars",
+    "max": "chunk_max_chars",
+    "of": "tts",
+    "why": "자막 덩어리 상한 = caption.chunk_max_chars(16, 벤치 나레 조각 p90) 한 칸 — 10-29 회원 시험 3차: 이 칸이 없어 22자 덩어리가 그대로 들어가 한 줄이 넘쳐 '물어보 / 면' 낱말 중간 줄바꿈(대본 자동 나눔 caps_split_fix 는 이 칸이 있어야 돈다)"
+   },
+   {
+    "id": "title_lines",
+    "kind": "title_lines",
+    "min": 2,
+    "max": 2,
+    "why": "훅 카드 제목 = 흰 줄 + 연두 줄 2줄(frame.segments 훅 title 2칸, manifest variable_stats 훅 제목 8/8편 2줄) — 10-29 회원 시험 3차: 1줄만 써서 연두 줄이 비었다"
+   },
    {
     "id": "first_line",
     "kind": "first_line",

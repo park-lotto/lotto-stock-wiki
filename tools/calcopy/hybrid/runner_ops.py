@@ -367,6 +367,10 @@ def done_refs() -> list[str]:
 def c_bench(W, d):
     bd = W / "bench"; bd.mkdir(exist_ok=True)
     url, vid = d["url"], vid_of(d["url"])
+    old = jload(bd / "bench.info.json").get("id") if (bd / "bench.info.json").exists() else None
+    if old and old != vid:             # 다른 소재가 남은 자리 — 비우고 받는다(10-30 설치본 시험: 소재 창고 다음 순위로 넘어가도 yt-dlp 가 '이미 받음'으로 첫 영상을 5번 다시 냈다)
+        shutil.rmtree(bd)
+        bd.mkdir()
     mp4, info, vtt = bd / "bench.mp4", {}, None
     if CACHE:
         for ext, dst in ((".mp4", mp4), (".info.json", bd / "bench.info.json"), (".ko.vtt", bd / "bench.ko.vtt")):
@@ -376,7 +380,8 @@ def c_bench(W, d):
         if not mp4.exists() and not (bd / "bench.ko.vtt").exists():
             return {"error": f"cache_miss: 벤치 {vid}"}
     else:
-        yt(["-f", "bv*[height>=720]+ba/b", "--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko",
+        from tools.calcopy.engine.yt_fetch import SORT_1080
+        yt(["-f", "bv*[height>=720]+ba/b", *SORT_1080, "--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko",
             "-o", str(bd / "bench.%(ext)s"), url])
         if not mp4.exists():
             return {"error": "벤치 영상을 받지 못했다" + (f" — {yt_why()}" if yt_why() else "")}
@@ -810,7 +815,8 @@ def c_origin_get(W, d):
             shutil.copyfile(s, dst)
         return {"files": [dims(dst)], "offset": 0.0, "measured": True, "note": "캐시 원본 = 전체 파일(0초 = 원본 0초)"}
     if d.get("url") and "youtu" not in str(d["url"]):     # 틱톡·인스타 원본(해외원본형 렌즈) — 짧은 영상이라 통째로, 벤치 받기와 같은 yt-dlp 길(10-26 까르보불닭)
-        yt(["-f", "bv*[height>=720]+ba/bv*+ba/b", "--merge-output-format", "mp4", "-o", str(src / f"{vid}.%(ext)s"), str(d["url"])])
+        from tools.calcopy.engine.yt_fetch import SORT_1080
+        yt(["-f", "bv*[height>=720]+ba/bv*+ba/b", *SORT_1080, "--merge-output-format", "mp4", "-o", str(src / f"{vid}.%(ext)s"), str(d["url"])])
         if not dst.exists():
             return {"error": f"원본 받기 실패({d['url']})"}
         return {"files": [dims(dst)], "offset": 0.0, "measured": True}
@@ -846,6 +852,11 @@ def c_frames(W, d):
     return {"files": out, **({"bad": bad} if bad else {}), **({"error": "장면을 하나도 못 뽑음: " + "; ".join(bad[:3])} if bad and not out else {})}
 
 
+def blocked_page(title: str) -> bool:
+    """쿠팡 차단 화면(10-30 설치본 시험 실측: 제목 'Access Denied')."""
+    return "access denied" in str(title or "").lower()
+
+
 def coupang_chrome(queries: list[str], home: Path) -> dict:
     """회원 파트너스 키가 없을 때(사장님 10-21) — 회원 PC 크롬 창(화면 뜸, 쿠팡은 헤드리스를 막는다)으로 검색 결과 카드만 읽는다.
     동선·추출·파싱 = 서비스 크롤러(shopping_shorts/coupang_search) 그대로 — 홈 먼저 → 검색 → 상품 칸 기다림."""
@@ -872,6 +883,9 @@ def coupang_chrome(queries: list[str], home: Path) -> dict:
                     pass
                 items = cs.parse_items(pg.evaluate(cs._EXTRACT_JS, 12), limit=12)
                 res[q] = {"ok": bool(items), "items": items}
+                if not items and blocked_page(pg.title()):    # 쿠팡이 이 창을 막았다 — 다음 검색어로 몰아치지 않고 한 번에 끝(사장님 10-30 "크롬은 한 번만" → flow 가 상품 주소 받기로)
+                    res[q]["blocked"] = True
+                    break
                 pg.wait_for_timeout(1500)                     # 몰아치면 쿠팡이 잠시 막는다(서비스 크롤러 실측)
         finally:
             ctx.close()
@@ -1106,8 +1120,9 @@ def c_screen(W, d):
     screen.search(W, d.get("queries") or [], n=10, exclude=d.get("exclude"), server=False)
     sj = screen.screen(W, d.get("keywords") or [], top=int(d.get("top") or 8))
     rows = [x for x in sj.get("rows") or [] if x.get("id") not in skip]
-    sheets = [rel(W, W / "screen" / f"{x['id']}_sheet.jpg") for x in rows if (W / "screen" / f"{x['id']}_sheet.jpg").exists()][:8]
-    meta = [{k: x.get(k) for k in ("id", "title", "channel", "max_height", "dur", "hits", "score")} for x in rows][:8]
+    top = int(d.get("top") or 8)     # 고를 후보 수 = 지시서 top(이야기 대상 장면까지 보면 10 — 10-29)
+    sheets = [rel(W, W / "screen" / f"{x['id']}_sheet.jpg") for x in rows if (W / "screen" / f"{x['id']}_sheet.jpg").exists()][:top]
+    meta = [{k: x.get(k) for k in ("id", "title", "channel", "max_height", "dur", "hits", "score")} for x in rows][:top]
     return {"rows": meta, "sheets": sheets}
 
 
@@ -1160,6 +1175,9 @@ def c_product_stills(W, d):
             for it in (v or {}).get("items") or []:
                 if str(it.get("product_id") or it.get("productId") or "") == pid and it.get("image") and img_url(it["image"]) not in urls:
                     urls.append(img_url(it["image"]))
+    for u in d.get("images") or []:          # 회원 Claude 가 정한 상품(검색 막힌 PC — flow.ph_link_got)의 사진 주소
+        if str(u).startswith("http") and img_url(u) not in urls:
+            urls.append(img_url(u))
     (W / "src").mkdir(exist_ok=True)
     out, seen, fail = [], set(), []
     for k, u in enumerate(urls[:int(d.get("n") or 4)]):
@@ -1336,16 +1354,18 @@ def jump_free_spans(src: Path, spans: list[list[float]], fps: int = 10, pad: flo
 
 def source_rule_scan(W: Path, T: dict, origin_names: set, faces: bool = True) -> list[str]:
     """출처 규칙 ③ — 원본 밖 재료 컷에 장면 전환이 섞였나(10-21 이미도: 리뷰여왕 별 전환 최고 73·상위10% 53 / 다른 재료 컷 최고 28 이하)."""
+    from tools.calcopy.hybrid.render_bench import FPS, src_frames
     out = []
     for c in (T or {}).get("cuts") or []:
         src = str(c.get("src") or "")
         p = W / "src" / src
         if not src or src in origin_names or not p.exists() or not c.get("dur"):
             continue
-        dd = [] if p.suffix.lower() in RU.STILL_EXT else _cut_jumps(p, float(c.get("ss") or 0), float(c["dur"]))
+        sd = src_frames(c) / FPS if "t1" in c else float(c["dur"]) * float(c.get("speed") or 1.0)    # 원본에서 실제로 쓰는 초(늦춘 컷은 화면 dur 보다 짧다) — 화면 dur 로 읽으면 안 보이는 뒤 전환까지 잡는다(10-27 TV L0 0.84배 거짓 반려)
+        dd = [] if p.suffix.lower() in RU.STILL_EXT else _cut_jumps(p, float(c.get("ss") or 0), sd)
         if _jumpy(dd):
-            out.append(f"{c.get('line')}: {src} {float(c.get('ss') or 0):.1f}초부터 {float(c['dur']):.1f}초 안에 장면 전환·끊김이 있다(남의 영상 편집 효과) — 시작점을 옮기거나 다른 장면으로")
-        n = _cut_faces(W, p, float(c.get("ss") or 0), float(c["dur"]), c.get("crop")) if faces else 0   # faces = 지시서 flow._other_faces(쇼핑형은 사람 등장 허용, 10-27)
+            out.append(f"{c.get('line')}: {src} {float(c.get('ss') or 0):.1f}초부터 {sd:.1f}초 안에 장면 전환·끊김이 있다(남의 영상 편집 효과) — 시작점을 옮기거나 다른 장면으로")
+        n = _cut_faces(W, p, float(c.get("ss") or 0), sd, c.get("crop")) if faces else 0   # faces = 지시서 flow._other_faces(쇼핑형은 사람 등장 허용, 10-27)
         if n:
             out.append(f"{c.get('line')}: {src} {float(c.get('ss') or 0):.1f}초부터 화면에 사람 얼굴이 보인다(원본 밖 영상의 다른 사람 — 광고 모델·리뷰어) — 원본 밖 재료는 사람 없는 제품 장면만")
     return out
@@ -1472,7 +1492,30 @@ def _log_beat(W, what: str):
     return f
 
 
+class _erase_env:
+    """지시서가 실어 보낸 '이 형식은 박힌 글자를 지우나'(flow.erases_text)를 그 일 동안만 CALCOPY_ERASE 로(vmake_clean.will_erase 가 읽는다)."""
+    def __init__(self, d):
+        self.v = None if d.get("erase") is None else ("1" if d.get("erase") else "0")
+
+    def __enter__(self):
+        self.old = os.environ.get("CALCOPY_ERASE")
+        if self.v is not None:
+            os.environ["CALCOPY_ERASE"] = self.v
+
+    def __exit__(self, *a):
+        if self.v is not None:
+            if self.old is None:
+                os.environ.pop("CALCOPY_ERASE", None)
+            else:
+                os.environ["CALCOPY_ERASE"] = self.old
+
+
 def c_plan(W, d):
+    with _erase_env(d):
+        return _c_plan(W, d)
+
+
+def _c_plan(W, d):
     from tools.calcopy.hybrid import render_bench
     v = d["version"]
     miss = tts_cache_miss(W, v)
@@ -1516,6 +1559,11 @@ def c_plan(W, d):
 
 
 def c_render(W, d):
+    with _erase_env(d):
+        return _c_render(W, d)
+
+
+def _c_render(W, d):
     from tools.calcopy.hybrid import render_bench
     v = d["version"]
     miss = tts_cache_miss(W, v)
@@ -1567,13 +1615,20 @@ OF_FRAMES = (0.15, 0.35, 0.55, 0.75)     # 렌즈 장면 = 원본찾기와 같�
 OF_SHEET_N = 24                         # 판정 시트 한 장 칸 수(8열 — origin_find.judge_same 과 같은 꼴)
 
 
-def _of_seed_frames(W: Path) -> list[Path]:
+def _of_seed_frames(W: Path, at: list | None = None) -> list[Path]:
+    """렌즈에 올릴 소재 장면. at = 판독(오푸스)이 고른 초(로고·영어 글자 없는 인물 장면, 10-27 사장님) — 그 장면 먼저, 고정 위치 FRAMES 는 뒤에(렌즈가 두 장면 일치로 멈추면 안 쓴다)."""
     from tools.calcopy.origin_find import FRAMES
     src = W / "bench" / "bench.mp4"
     out = []
     if not src.exists():
         return out
     du = dims(src)["dur"]
+    for t in at or []:
+        p = W / "origin_foreign" / f"seed_at{int(float(t) * 10)}.jpg"
+        if not p.exists():
+            frame(src, min(float(t), max(du - 0.1, 0)), p)
+        if p.exists():
+            out.append(p)
     for f in FRAMES:
         p = W / "origin_foreign" / f"seed_{int(f * 100)}.jpg"
         if not p.exists():
@@ -1620,6 +1675,16 @@ def _of_sheets(W: Path, seeds: list[Path], cands: list[dict]) -> list[str]:
     pool = [(c, im) for c in cands for im in [_of_thumb(W, c)] if im is not None]
     for c in cands:
         c["thumb_ok"] = any(x is c for x, _ in pool)
+    for c, im in pool:                   # 후보 썸네일 작은 파일 — 회원 PC 작업실 '원본 찾기' 탭이 보여 준다(관제 291, 시트만 남기면 후보별로 못 보여 줌)
+        vid = str(c.get("id") or "")
+        t = W / "origin_foreign" / f"thumb_{vid}.jpg"
+        if re.fullmatch(r"[\w-]{3,40}", vid) and not t.exists():
+            try:
+                sm = im.copy()
+                sm.thumbnail((240, 360))
+                sm.save(t, quality=80)
+            except OSError as e:
+                print(f"[원본 찾기] 썸네일 저장 못 함 {vid}: {e}", flush=True)
     out = []
     cw, chh, cols = 200, 300, 8
     for s0 in range(0, len(pool), OF_SHEET_N):
@@ -1845,6 +1910,11 @@ def _peer_raw(qs: list, n: int, skip: set) -> list[dict]:
     return raw + [{**c, **ms.get(c["url"], {})} for c in web]
 
 
+LENS_FIRST = True   # (10-27 사장님 '캡처 → 렌즈 → 결과에서 고르기, 1분도 안 걸린다') 렌즈를 먼저 · 두 장면에 같은 영상이 뜨면 멈춤 · 키워드는 렌즈가 빌 때만
+LENS_HL, LENS_GL = "en", "us"   # 해외 원본 찾기 렌즈 = 미국 결과(한국 회선 기본은 한국 판매 리그램이 위를 덮는다, 10-27 사장님 '구글 미국으로')
+LENS_TOP = 12       # 렌즈 상위만 정보 받기·판정(1lMbJh0n_d4: 60개 정보 83초 + 키워드 100초 동시 → 같은 영상 17개였다)
+
+
 def c_origin_foreign(W, d):
     """해외 원본 후보 + 판정 시트. mode lens = 소재(한국 재편집) 장면 4장 → 구글 렌즈 → 영상 링크 → 메타(origin_find 와 같은 함수) /
     mode peers = 영어 검색어로 같은 제품 다른 해외 반응 쇼츠 / mode find = 회원 Claude 가 찾은 주소(urls)·검색어(queries, 쇼츠 필터) 후보.
@@ -1853,7 +1923,7 @@ def c_origin_foreign(W, d):
     from tools.calcopy import origin_find as OF
     _OF_TL.dir = None if CACHE else W / "_of_memo"     # 이 스레드(소재 칸)의 기억 폴더
     mode = d.get("mode") or "lens"
-    seeds = _of_seed_frames(W)
+    seeds = _of_seed_frames(W, d.get("at"))
     skip = set(d.get("skip") or [])
     raw: list[dict] = []
     lens_ai: dict = {}
@@ -1870,7 +1940,7 @@ def c_origin_foreign(W, d):
             from tools.calcopy import lens as LN
             import threading
             kw: dict = {}
-            if d.get("queries"):        # 키워드 검색(유튜브 yt-dlp·틱톡/인스타 창)은 렌즈 창과 서로 기다릴 일이 없다 — 동시에(10-27 렌즈 34초 + 키워드 76초를 차례로 하던 것)
+            if d.get("queries") and not LENS_FIRST:        # 키워드 검색(유튜브 yt-dlp·틱톡/인스타 창)은 렌즈 창과 서로 기다릴 일이 없다 — 동시에(10-27 렌즈 34초 + 키워드 76초를 차례로 하던 것)
                 base = _memo_base()
 
                 def _kw():
@@ -1889,11 +1959,16 @@ def c_origin_foreign(W, d):
             found: dict = {}
             ai_txt: list[str] = []      # 렌즈 'AI 개요' 글(장면 전체 기준 — 출연자·브랜드 이름, 10-27)
             _t = time.time()
+            crops = [LN.video_crops(s) for s in seeds]
+            order = [(i, c[0]) for i, c in enumerate(crops) if c] + [(i, x) for i, c in enumerate(crops) for x in c[1:]]   # 장면마다 띠 먼저, 윗부분은 뒤에
+            seen_in: dict = {}
             with _plat_lock("lens"), LN.lens_page() as pg:
-                for im in [c for s in seeds for c in LN.video_crops(s)]:
+                for si, im in order:
+                    if LENS_FIRST and any(len(v) >= 2 for v in seen_in.values()):
+                        break       # 서로 다른 장면 두 장에 같은 영상이 떴다 = 사람이 렌즈 결과 맨 위를 누르는 것과 같은 확신 — 나머지 장은 안 올린다
                     try:
                         li: dict = {}
-                        rows = LN.lens_rows(pg, str(im), skip=LN.SKIP_VIDEO, info=li)
+                        rows = LN.lens_rows(pg, str(im), skip=LN.SKIP_VIDEO, info=li, hl=LENS_HL, gl=LENS_GL)
                         if li.get("overview"):
                             ai_txt.append(li["overview"])
                     except Exception as e:  # noqa: BLE001 — 한 장 실패는 남기고 나머지
@@ -1902,7 +1977,8 @@ def c_origin_foreign(W, d):
                         k = OF.vkey(r["href"])
                         if k and k[1] != d.get("bench_id"):
                             found.setdefault(k, {"href": r["href"], "text": r["text"], "hits": 0})["hits"] += 1
-            top = sorted(found.items(), key=lambda kv: -kv[1]["hits"])[:60]     # 여러 장에 뜬 것 먼저(잘라 올리기로 후보가 13 → 58, 10-26)
+                            seen_in.setdefault(k, set()).add(si)
+            top = sorted(found.items(), key=lambda kv: (-len(seen_in.get(kv[0], ())), -kv[1]["hits"]))[:LENS_TOP if LENS_FIRST else 60]     # 여러 장에 뜬 것 먼저(잘라 올리기로 후보가 13 → 58, 10-26)
             sys.stderr.write(f"[구간] 렌즈 {time.time() - _t:.0f}초 · 후보 {len(top)}\n")   # 원본 찾기 어디서 시간이 나나(10-27 run4: 한 번 510~537초, 구간 기록 없음)
             _t = time.time()
             ms = _metas([OF.url_of(pf, vid, x["href"]) for (pf, vid), x in top])
@@ -1911,6 +1987,8 @@ def c_origin_foreign(W, d):
             for (pf, vid), x in top:
                 u = OF.url_of(pf, vid, x["href"])
                 raw.append({"platform": pf, "id": vid, "url": u, "lens_text": x["text"], "lens_hits": x["hits"], **ms.get(u, {})})
+            if kth is None and LENS_FIRST and not raw and d.get("queries"):     # 렌즈가 영상을 하나도 못 줬을 때만 키워드
+                raw += [{**c, "found_by": "keyword"} for c in _peer_raw(d["queries"], int(d.get("n") or 8), skip | {d.get("bench_id")})]
             if kth is not None:         # 키워드 검색도 처음부터(사장님 10-26) — 원본 그대로인 영상이 검색으로 잡혀도 같은 촬영분 판정에 같이 든다
                 kth.join()
                 have = {(c["platform"], c["id"]) for c in raw}
@@ -2288,7 +2366,8 @@ def run_do(W: Path, do: list[dict], log=print, stall: float | None = None) -> di
             out.setdefault(rid, {"error": f"cache_miss: {e}"})
         except StageError as e:
             out.setdefault(rid, {"error": str(e)[:600]})
-        except Exception as e:  # noqa: BLE001 — 실패 이유를 서버에 그대로(조용히 삼키지 않는다)
+        except BaseException as e:  # noqa: BLE001 — 실패 이유를 서버에 그대로(조용히 삼키지 않는다). SystemExit 도 — 판 없음(styles.path_of)이
+            #   SystemExit 라 Exception 으로는 안 잡혀 스레드가 기록 없이 죽고 서버엔 빈 결과만 갔다(10-29 회원 잇템로그 '같은 원인 3번')
             out.setdefault(rid, {"error": f"{type(e).__name__}: {str(e)[:500]}"})
         finally:
             r0 = out.get(rid)

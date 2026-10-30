@@ -152,7 +152,7 @@ def preset_defaults_table() -> dict:
         return {}
 
 
-EDITABLE = {"brand": ("channel_name", "colors"), "text": ("title_font", "caption_font", "caption"),
+EDITABLE = {"brand": ("channel_name", "colors"), "text": ("title_font", "caption_font", "caption", "orig_text"),
             "tts": ("provider", "voice_id", "name", "preset_id", "tempo", "alternates", "emotion"), "bgm": ("candidates", "gain"),
             "sfx_pool": ("start", "point", "end"), "meme_pool": ("kinds", "ids"), "template": None}
 
@@ -176,6 +176,8 @@ def check(pack: dict, cat: dict | None = None) -> list:
     for key in ("title_font", "caption_font"):
         if tx.get(key) and tx[key] not in cat["fonts"]:
             err.append(f"모르는 글꼴: {tx[key]}")
+    if tx.get("orig_text") not in (None, "", "auto", "vmake", "blur"):      # 원본 박힌 글자: auto(VMake 키 있으면 지우기·없으면 흐림) | vmake | blur — 사장님 10-30(vmake_clean.style_mode)
+        err.append(f"모르는 글자 처리: {tx.get('orig_text')} (auto·vmake·blur)")
     cap = tx.get("caption") or {}
     if set(cap) - {"mode", "enter", "emphasis", "outline_px", "outline_rgb"}:
         err.append(f"모르는 자막 칸: {sorted(set(cap) - {'mode', 'enter', 'emphasis', 'outline_px', 'outline_rgb'})}")

@@ -12,8 +12,9 @@
   · 틀 그림 = frame_png() 한 곳(판 설정 frame 칸) · 마스터 = −14 LUFS 2단 loudnorm(판 설정 loudness)
 
 대본.json: slug · title_lines [[[글, 'hi'|null|'#hex'], …], …] · source_label · (comment{text,likes,from,to}) ·
-  lines[{id, kind:'tts', tts, caps[{text, key?, key_color?, object_src?} | 글]} | {id, kind:'orig', src, spans[[a,b]…] | span, caps_rel[[글, s0, s1, key?]…]}
+  lines[{id, kind:'tts', tts, caps[{text, key?, key_color?, object_src?} | 글], who?} | {id, kind:'orig', src, spans[[a,b]…] | span, caps_rel[[글, s0, s1, key?]…]}
         | {id, kind:'sub', dur, caps[{text, s0?, …} | 글]}]   ← sub = 나레 없는 자막 줄(TTS 없이 dur 초 동안 자막만 — 신박·썰풀다A·숏비타민 꼴, 관제 263 02 2차)
+  who = 화자 대사 줄의 화자(의인화한 집단·회사·나라 — '벨'·'한국업체'·'제조사'). 자막 첫 덩어리 앞에 '<who> : ' 가 붙고 tts·caps 에는 대사만 쓴다(목소리는 대사만 읽는다 — 썰템쇼 벤치 jECu·NBdm)
 재료.json: cand_dir · cuts{줄 id: [{src, ss?, crop[x,y,w,h] | 'face', w?, at?, max?, move?, see}]} · blur{src: [[x,y,w,h(,a,b)]…]}(원본에 박힌 글 흐림 — 잘라서 피하지 말고)
   tts 줄 = w(무게) 비례로 줄 칸 [시작, 다음 줄 시작) 을 나눔 · orig 줄 = at(줄 시작부터 초), ss 를 안 적으면 원음 구간에 입을 맞춘 초 · 비어 있으면 구간마다 얼굴 크롭 한 컷
 출력(work/render/): final.mp4 · timeline.json · 자막표.json(배치 결과) · render_info.json · (doc) final_sheet_1s.jpg
@@ -225,6 +226,12 @@ def one_shot_chain(cuts: list, st: dict) -> None:
             c.pop(k, None)
 
 
+def who_prefix(L: dict, j: int) -> str:
+    """(판단 주인 — 화자 대사 줄 보이는 글) 첫 자막 덩어리 앞 '<화자> : '. 대본 검사 cap_chars 도 이 함수로 센다(보이는 자수 그대로)."""
+    w = str(L.get("who") or "").strip()
+    return f"{w} : " if w and j == 0 else ""
+
+
 def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) -> dict:
     """sent = {줄 id: {dur, raw, tempo}} (None 이면 글자÷cps 어림). 반환 = lines(줄 시각)·rows(자막 덩어리)·cuts(화면)·opos(원음 조각)·end."""
     from tools.calcopy.hybrid.material_fit import action_order       # 대사 동작 ↔ 컷 동작(페이블 E3) — 동작 컷 우선 + 없으면 경고
@@ -272,7 +279,7 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
             for j, c in enumerate(caps):
                 a = t + starts[j]
                 b = t + (starts[j + 1] if j + 1 < len(caps) else d)
-                rows.append({"line": L["id"], "j": j, "speaker": "narr", "text": c["text"], "t0": round(a, 3), "t1": round(b, 3),
+                rows.append({"line": L["id"], "j": j, "speaker": "narr", "text": who_prefix(L, j) + c["text"], "t0": round(a, 3), "t1": round(b, 3),
                              **{k: c[k] for k in CAP_EXTRA if c.get(k)}})
             char0 += nchar(L["tts"])
             t += d
@@ -319,7 +326,16 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
             for c in cs:
                 if "at" not in c and c.get("ss") is not None:   # ss 만 적은 컷 = 원음 초 → 그 초가 들리는 줄 안 시각(입 맞춤 그대로, 10-23 꿀템노트 재료)
                     p = next((p for p in opos if p["line"] == lid and p["span"][0] - 1e-3 <= float(c["ss"]) < p["span"][1]), None)
-                    c = {**c, "at": round(p["t0"] - a + float(c["ss"]) - p["span"][0], 3) if p else 0.0}
+                    if p is None:   # 구간 끝에서 MIN_PIECE_SEC 안쪽이면 그 끝으로 붙인다(10-29 사장님 2편 O1 ss 0.0 vs 구간 0.006 — 반올림 차를 막지 않는다)
+                        near = min(((abs(float(c["ss"]) - e), p_, e) for p_ in opos if p_["line"] == lid for e in (p_["span"][0], p_["span"][1] - 1e-3)),
+                                   default=None, key=lambda x: x[0])
+                        if near and near[0] < MIN_PIECE_SEC:
+                            p, c = near[1], {**c, "ss": round(near[2], 3)}
+                    if p is None:   # 조용히 at 0 에 겹쳐 놓지 않는다(10-29 회원 잇템로그 O2: ss 8.4·11.9 가 줄 맨 앞에 쌓여 컷 길이 -3.2초 → '컷 수 줄여라'만 듣고 더 쪼갬)
+                        spans = [p_["span"] for p_ in opos if p_["line"] == lid]
+                        raise StageError(f"{lid} 원음 줄 컷 ss {c['ss']} 가 그 줄 원음 구간 {spans} 밖 — 원음 줄 컷은 들리는 구간 안 원본 초(입 맞춤)만 적는다. "
+                                         f"다른 장면을 끼우려면 at(줄 안 시각 초)을 같이 적거나 그 컷을 앞뒤 나레 줄로 옮겨라")
+                    c = {**c, "at": round(p["t0"] - a + float(c["ss"]) - p["span"][0], 3)}
                 c0 = a + float(c.get("at", 0.0))
                 ss = c.get("ss")
                 if ss is None:      # 입 맞춤: 그 시각에 들리는 원음 조각의 원본 초
@@ -327,7 +343,8 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
                     if not p:
                         raise StageError(f"{lid} 컷 at {c.get('at')} 가 원음 조각 밖")
                     ss = round(p["span"][0] + (c0 - p["t0"]), 3)
-                cuts.append({**c, "line": lid, "ss": ss, "src": c.get("src", L["src"]), "t0": round(c0, 3), "kind": "orig"})
+                cuts.append({**c, "line": lid, "ss": ss, "src": c.get("src", L["src"]), "t0": round(c0, 3), "kind": "orig",
+                             "lip": c.get("src", L["src"]) == L["src"]})     # 입 맞춤 = 원음 줄의 그 원본(settle_edges·measure_over 의 lip 과 같은 정의)
         else:
             if not cs:
                 raise StageError(f"재료.json cuts 에 나레 줄 {lid} 컷이 없다")
@@ -345,6 +362,8 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
                 acc += w
     cuts[0]["t0"] = 0.0
     one_shot_chain(cuts, st)
+    from tools.calcopy.hybrid.material_fit import fix_aba
+    fix_aba(cuts, log=lambda m: sys.stderr.write(m + "\n"))      # A-B-A = 같은 줄 안 화면 맞바꾸기로 계획이 스스로(샷 맞추기 전 — 바뀐 화면을 아래 fit 이 맞춘다)
     src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
     if src_dir:
         fit_lip_edges(cuts, src_dir, end, {k: v.get("src") for k, v in Lm.items()})
@@ -368,25 +387,50 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
     fit_all()
     if src_dir:              # 그래도 남은 짧은 조각 = 계획이 스스로 끝낸다(관문 ③에 보내 Claude 가 초를 고치게 하지 않는다 — 10-26 까르보 '경계 맞추는 중' 22번)
         settle_edges(cuts, src_dir, end, line_src, fit_all)
-    for i, c in enumerate(cuts):
-        lip = c["kind"] == "orig" and c["src"] == Lm[c["line"]].get("src")
-        sd = round(src_frames(c) / FPS, 3)                        # 원본에서 쓰는 초 = 뽑을 프레임 × 속도(늦춘 컷은 짧다) — fit_cut·관문 ③과 같은 프레임 셈
-        cap = None if (c.get("max") is None or lip) else float(c["max"]) - (float(c["ss"]) - float(c.get("ss_planned", c["ss"])))   # max = 재료에 적힌 ss 기준 — 옮긴 만큼 뺀다
-        # 원음(입 맞춤) 컷은 원본 사람이 말하는 구간 그대로 — 그 안에 원본 자체 카메라 전환이 드는 건 원본 편집이 흐르는 것(샷 한도 아님).
-        # 번쩍임(짧은 조각)은 관문 ③(edge_fault)·원본 끝은 src_left 가 따로 본다(10-27 립글로스 회원편 O1 2.76초 vs 샷 0.53초 반려 — 맞출 수 없는 반려)
-        c["over"] = round(sd - cap, 3) if cap is not None and sd > cap + 1e-3 else 0.0
-        if c["over"] and c.get("max_auto") and src_dir:      # 샷이 모자란 재료 컷 — 고칠 자리(이 길이가 들어가는 샷)를 같이 싣는다
-            c["room"] = shot_room(src_dir / c["src"], round(sd / _max_slowmo(), 2))
-        if src_dir:
-            left = src_left(src_dir / c["src"], float(c.get("ss") or 0.0))
-            if left is not None and sd > left + 1e-3:
-                c["src_left"] = left
-                c["over"] = max(c["over"], round(sd - left, 3))
+    def measure_over():
+        for i, c in enumerate(cuts):
+            lip = c["kind"] == "orig" and c["src"] == Lm[c["line"]].get("src")
+            sd = round(src_frames(c) / FPS, 3)                        # 원본에서 쓰는 초 = 뽑을 프레임 × 속도(늦춘 컷은 짧다) — fit_cut·관문 ③과 같은 프레임 셈
+            cap = None if (c.get("max") is None or lip) else float(c["max"]) - (float(c["ss"]) - float(c.get("ss_planned", c["ss"])))   # max = 재료에 적힌 ss 기준 — 옮긴 만큼 뺀다
+            # 원음(입 맞춤) 컷은 원본 사람이 말하는 구간 그대로 — 그 안에 원본 자체 카메라 전환이 드는 건 원본 편집이 흐르는 것(샷 한도 아님).
+            # 번쩍임(짧은 조각)은 관문 ③(edge_fault)·원본 끝은 src_left 가 따로 본다(10-27 립글로스 회원편 O1 2.76초 vs 샷 0.53초 반려 — 맞출 수 없는 반려)
+            c["over"] = round(sd - cap, 3) if cap is not None and sd > cap + 1e-3 else 0.0
+            if c["over"] and c.get("max_auto") and src_dir:      # 샷이 모자란 재료 컷 — 고칠 자리(이 길이가 들어가는 샷)를 같이 싣는다
+                c["room"] = shot_room(src_dir / c["src"], round(sd / _max_slowmo(), 2))
+            if src_dir:
+                left = src_left(src_dir / c["src"], float(c.get("ss") or 0.0))
+                if left is not None and sd > left + 1e-3:
+                    c["src_left"] = left
+                    c["over"] = max(c["over"], round(sd - left, 3))
+    measure_over()
     if src_dir:              # B13(같은 원본 가까운 구간) — 계획이 처음부터 피한다(주인 material_fit.respace_reuse, 판정 = quality_gate.reuse_violations_bench)
-        from tools.calcopy.hybrid.material_fit import respace_reuse
-        respace_reuse(cuts, src_dir, log=lambda m: sys.stderr.write(m + "\n"), adjacent_run=bool((st.get("reuse") or {}).get("adjacent_run")))   # 판 칸 reuse.adjacent_run(두유노판 — 사장님 10-26 '가')
+        from tools.calcopy.hybrid.material_fit import merge_short, relocate_cuts, respace_reuse, split_long
+        from tools.calcopy.hybrid.styles import rhythm_bounds as _STY_bounds
+        adj = bool((st.get("reuse") or {}).get("adjacent_run"))     # 판 칸 reuse.adjacent_run(두유노판 — 사장님 10-26 '가')
+        respace_reuse(cuts, src_dir, log=lambda m: sys.stderr.write(m + "\n"), adjacent_run=adj)
+        # 그래도 남은 샷 넘침·재사용 = 같은 원본 다른 자리로(주인 material_fit.relocate_cuts — Claude 에게 초를 고치라 하지 않는다, 10-27 뿌리 수정)
+        origins = {v.get("src") for v in Lm.values() if v.get("src")}
+        _lg = lambda m: sys.stderr.write(m + "\n")                 # noqa: E731
+        changed = bool(merge_short(cuts, end, log=_lg))             # 번쩍 컷 → 앞 컷에(주인 material_fit.merge_short)
+        hi = (_STY_bounds(st).get("cut_median") or (None, None))[1]
+        if hi and split_long(cuts, src_dir, end, hi, log=_lg, adjacent_run=adj):    # 컷 중앙 상한 → 긴 컷 나누기(주인 material_fit.split_long, 자 = rhythm_gate)
+            changed = True
+        if changed:
+            fit_all()
+            measure_over()
+        from tools.calcopy.hybrid import quality_gate as _QG
+        _still = lambda c: bool(_QG.still_spans(cut_gray({**c, "t1": c.get("t1", end), "dur": c.get("dur") or (float(c.get("t1", end)) - float(c["t0"]))},
+                                                          src_dir / c["src"], st, M)))      # 관문 ⑦ 과 같은 자(cut_still_gate)
+        for _ in range(2):            # 옮기기 ↔ 맞추기(fit 이 ±0.4 옮겨 디졸브에 닿으면 다음 바퀴가 다시 옮긴다)
+            if not relocate_cuts(cuts, src_dir, origins, log=_lg, adjacent_run=adj, end=end, still=_still):
+                break
+            fit_all()                 # 옮긴 자리(ss_planned·max)에서 다시 맞추기·늦추기
+            measure_over()
     for i, r in enumerate(rows):      # 자막은 다음 덩어리 시작까지(줄 사이 틈도 앞 자막이 덮는다 — 벤치: 자막 없는 틈 거의 없음)
         r["show"] = [r["t0"], round(rows[i + 1]["t0"] if i + 1 < len(rows) else end, 3)]
+    gap = [(c["line"], c["t1"], cuts[i + 1]["t0"]) for i, c in enumerate(cuts[:-1]) if abs(float(c["t1"]) - float(cuts[i + 1]["t0"])) > 1e-6]
+    if float(cuts[0]["t0"]) > 1e-6 or gap or abs(float(cuts[-1]["t1"]) - end) > 1e-6:      # 컷이 0초~끝을 빈틈없이 덮어야 영상 = 자막표(관제 285: 줄 첫 컷을 빼 0~1.38초가 비어 영상 27.03 < 자막표 28.4)
+        raise StageError(f"컷이 0~{end}초를 빈틈없이 덮지 않는다: 첫 컷 {cuts[0]['t0']} · 마지막 {cuts[-1]['t1']} · 틈/겹침 {gap[:3]}")
     out = {"lines": lines, "rows": rows, "cuts": cuts, "opos": opos, "end": end}
     if orig_trim or log_drop:
         out["orig_trim"] = {"head": orig_trim, "dropped_cuts": log_drop}
@@ -1100,6 +1144,7 @@ def face_crop(src: Path, t: float, ar: float) -> list[int]:
 
 
 BLUR_SIGMA = 25.0     # 가림 흐림 세기 = 제품 가림막 흐림의 최저값(deco_frame.blur_sigma 25~80)과 같은 gblur
+BLUR_H_RATIO = 0.4    # 칸이 크면(큰 자막 띠) 세기 = 칸 높이 × 이 값 이상 — 10-27 싱크대 J6 띠 140px: 25 = '이 작업은 썬팅 시공과…' 읽힘 · 50+ 안 읽힘(눈 대조)
 
 
 def blur_vf(regs, ss: float, dur: float, sigma: float = BLUR_SIGMA) -> str:
@@ -1113,7 +1158,8 @@ def blur_vf(regs, ss: float, dur: float, sigma: float = BLUR_SIGMA) -> str:
         if a is not None and (b <= ss or a >= ss + dur):
             continue                                           # 이 컷 구간과 안 겹침
         en = f":enable='between(t,{max(0.0, a - ss):.3f},{b - ss:.3f})'" if a is not None else ""
-        out.append(f"split[bo][bi];[bi]crop={w}:{h}:{x}:{y},gblur=sigma={sigma}[bb];[bo][bb]overlay={x}:{y}{en}")
+        sg = max(float(sigma), round(BLUR_H_RATIO * h, 1))        # 글자 크기만큼 세게 — 고정 25 는 큰 자막이 흐린 채 읽혔다
+        out.append(f"split[bo][bi];[bi]crop={w}:{h}:{x}:{y},gblur=sigma={sg}[bb];[bo][bb]overlay={x}:{y}{en}")
     return ",".join(out)
 
 
@@ -1363,7 +1409,8 @@ def edge_fault(c: dict, src_dir: Path) -> dict | None:
     if not hit or not short_pieces(hit, e, end):
         return None
     pts = [e] + hit + [end]
-    if c.get("one_shot"):            # 한 샷 이어 쓰기(one_shot_chain) — 안쪽 편집점은 원본이 흐르는 그대로, 우리 컷 앞뒤 끝 조각만 번쩍임으로 본다
+    if c.get("one_shot") or c.get("lip"):   # 한 샷 이어 쓰기(one_shot_chain)·원음 입 맞춤 컷 — 안쪽 편집점은 원본이 흐르는 그대로, 우리 컷 앞뒤 끝 조각만 번쩍임으로 본다
+        #   (10-29 회원 잇템로그 O2: 원본이 2.4~5.9초에 0.3초 간격으로 편집해 입 맞춤 컷이 ③ 에 세 번 막혀 멈춤 — measure_over 는 이미 '원본 편집이 흐르는 것'으로 본다)
         pc = [y - x for x, y in zip(pts, pts[1:])]
         if min(pc[0], pc[-1]) >= MIN_PIECE_SEC - 1e-3:
             return None
@@ -1592,7 +1639,7 @@ def cut_boundary_gate(T: dict, M: dict, st: dict | None = None) -> list[str]:
 # 판정 주인 = cut_content_gate 한 곳. 프레임은 렌더 조각과 같은 자리(cut_crop)·같은 흐림(blur_vf)으로 thumb.card_scene_frame 이 원본에서 뽑는다.
 # 자 = channelkit.vision(PP-OCRv5 det 글자 상자 · YuNet 얼굴 · SFace 동일성). 문턱 표본 = shopping_shorts/tests/fixtures/cut_content_labels.json.
 CONTENT_PAIR = 2 / FPS            # 글자 '붙박이' 재기 짝 프레임 간격 — 박힌 글은 2프레임 동안 그대로, 장면 속 글(포장·간판)은 화면과 같이 움직인다
-CONTENT_VER = 4                   # 판정(자·문턱)이 바뀌면 올린다 — 캐시 열쇠
+CONTENT_VER = 8                   # 판정(자·문턱)이 바뀌면 올린다 — 캐시 열쇠  (10-29 합침: 이 PC 6 + 회사 PC 7 둘 다 반영)
 # 글자 문턱 — 표본 762컷(10-25 494컷 + 10-25 오검출 수리 268컷: 원본 무작위 구간·잇템로그 ep12·박정수·샤크탱크 원편) 오푸스 눈 라벨.
 #   pos 132(원본 쇼츠 가격·자막·제목 띠·방송사 자막·로고·광고 글) / neg 630(제품 포장·상자·라벨·간판·화면 속 글).
 #   id crc32 짝수로 정하고 홀수로 잰 값(정직한 값): 옛 판정 P 0.857·R 0.677 → 지금 P 0.900·R 0.726. 옛 494컷만: P 0.808→0.863 · R 0.94 그대로.
@@ -1602,6 +1649,7 @@ CONTENT_VER = 4                   # 판정(자·문턱)이 바뀌면 올린다 �
 TEXT_SCORE_MIN = 0.9              # 상자 점수(윤곽 안 확률 평균)
 TEXT_FILL_MIN = 0.8               # 윤곽 넓이/사각형 넓이(얼굴·유리 질감을 따라 번진 가짜 윤곽 거르기 — 박힌 글은 0.85~0.95)
 TEXT_ASPECT_MIN = 1.6             # 가로/세로 — 글줄 모양
+TEXT_EDGE_ASPECT = 1.0            # 창 왼·오른 끝에 닿은 상자(crop 에 잘린 글줄) — 표본 1.0~1.2 오검출 +0(0.8 이면 +2), 10-27 싱크대 L2 원본 '…건조' 1.21·1.55 놓침
 TEXT_H_RANGE = (0.035, 0.25)      # 상자 높이 / 창 높이 — 진열대 가격표(0.01~0.03)는 밖
 TEXT_BLUR_MAX = 0.3               # 흐림 칸이 이만큼 넘게 덮으면 이미 가린 글
 TEXT_STILL_RATIO = 0.5            # 상자 안 변화 / 둘레 변화 < 이 값이면 붙박이(박힌 글) — 움직이는 화면 위 자막
@@ -1611,6 +1659,8 @@ TEXT_FAR_RING = 5.0               # 긴 간격(같은 컷 다른 잴 프레임) 
 TEXT_SCENE_RATIO = (0.6, 1.3)     # 멈춘 화면 글: 긴 간격 짝에서 안/둘레 가 이 범위 = 글이 주변과 같이 변함 = 장면 속 글(카레 상자 팬·전구 무늬·성시경 간판). 표본 0.5~0.7 / 1.2~1.5 어디서나 같은 결과
 TEXT_SMALL_H = 0.03               # 창 3~3.5% 작은 글줄은 긴 간격 짝 전부에서 안/둘레 < TEXT_SMALL_STILL 일 때만(배경이 바뀌는 동안 그대로 = 박힌 자막 — 진열대 가격표는 같이 움직인다)
 TEXT_SMALL_STILL = 0.6
+TEXT_SLOW_RING, TEXT_SLOW_STILL = 1.0, 0.1   # 멈춘 듯한 화면의 긴 자막줄: 긴 간격 짝 둘레 변화 ≥ 1 인데 안/둘레 < 0.1. 표본 오검출 +0(완전히 멈춘 쪽지 글은 둘레도 0)
+TEXT_THIN_H, TEXT_THIN_ASPECT = 0.02, 5.0   # 획 붙박이 판정의 가는 글줄(창 2~3%) — 가로/세로 ≥ 5 일 때만. 표본 오검출 +0(4.0 이면 +1, 3.0 이면 +5), 10-27 TV 원본 박힌 제목 6.4~6.9
 TEXT_GLYPH_STILL = 0.3            # 획 픽셀 변화(d_gl) / 둘레 변화 < 이 값 = 획이 그대로인 박힌 글(자막 줄). 짝수 반 0.3~0.5 같은 결과(0.2 는 R 0.91), 홀수 반 오검출 +0
 TEXT_GLYPH_FILL = 0.65            # 획 판정 상자 채움 하한 — 작은 자막 줄은 낱말 사이 틈 때문에 0.70~0.79(TEXT_FILL_MIN 0.8 밖). 0.6~0.7 같은 결과
 TEXT_GLYPH_ASPECT = 3.0           # 획 판정은 글줄(가로/세로 ≥ 3)만 — 1.6 이면 짝수 반 오검출 +4
@@ -1789,7 +1839,7 @@ def text_feats(a, b, regs=None, crop=None, win=None, t: float = 0.0, far=(), box
         d_in, d_ring = _in_ring(diff, (x0, y0, x1, y1))
         gl = _glyph_diff(ga, [diff] + dfar, (x0, y0, x1, y1))
         out.append({"box": [x0, y0, x1, y1], "score": q["score"], "fill": q["fill"], "aspect": round(bw / bh, 2), "h": round(bh / H, 4),
-                    "cx": round((x0 + x1) / 2 / W, 3), "cy": round((y0 + y1) / 2 / H, 3),
+                    "cx": round((x0 + x1) / 2 / W, 3), "cy": round((y0 + y1) / 2 / H, 3), "edge": x0 <= 2 or x1 >= W - 2,
                     "d_in": d_in, "d_ring": d_ring, "d_gl": gl[0], "fg": gl[1:],
                     "fi": [_in_ring(d, (x0, y0, x1, y1)) for d in dfar],
                     "blur": blur_cover(regs, crop, win, (x0, y0, x1, y1), t) if regs else 0.0})
@@ -1863,7 +1913,11 @@ def foreign_text(f: dict) -> bool:
     if (f.get("d_gl") is not None and f["score"] >= TEXT_SCORE_MIN and f["fill"] >= TEXT_GLYPH_FILL and f["aspect"] >= TEXT_GLYPH_ASPECT
             and TEXT_SMALL_H <= f["h"] <= TEXT_H_RANGE[1] and f["d_ring"] >= TEXT_GLYPH_RING and f["d_gl"] < TEXT_GLYPH_STILL * f["d_ring"]):
         return True               # 획 붙박이 — 움직이는 배경 위 획이 그대로인 글줄(틱톡형 작은 자막 포함). d_gl 없는 옛 값은 건너뜀
-    if f["score"] < TEXT_SCORE_MIN or f["fill"] < TEXT_FILL_MIN or f["aspect"] < TEXT_ASPECT_MIN:
+    if (f.get("d_gl") is not None and TEXT_THIN_H <= f["h"] < TEXT_SMALL_H and f["aspect"] >= TEXT_THIN_ASPECT and f["score"] >= TEXT_SCORE_MIN
+            and f["fill"] >= TEXT_GLYPH_FILL and f["d_ring"] >= TEXT_GLYPH_RING and f["d_gl"] < TEXT_GLYPH_STILL * f["d_ring"]):
+        return True               # 가늘고 아주 긴 글줄(영상 내내 박힌 영문 제목 — 10-27 TV 'Ultimate TV Mobility' 창 2.7%) — 가격표(짧다)는 가로/세로에서 걸러진다
+    asp_min = TEXT_EDGE_ASPECT if f.get("edge") else TEXT_ASPECT_MIN     # 창 끝에 잘린 글줄은 짧아 네모에 가깝다(10-27 싱크대 L2 '…건조' 1.2)
+    if f["score"] < TEXT_SCORE_MIN or f["fill"] < TEXT_FILL_MIN or f["aspect"] < asp_min:
         return False
     if not (TEXT_SMALL_H <= f["h"] <= TEXT_H_RANGE[1]):
         return False
@@ -1874,8 +1928,31 @@ def foreign_text(f: dict) -> bool:
     if f["d_ring"] < TEXT_RING_MIN:
         if any(TEXT_SCENE_RATIO[0] <= q <= TEXT_SCENE_RATIO[1] for q in far):
             return False          # 2프레임 사이엔 멈췄지만 같은 컷 안 긴 간격에서 주변과 같이 변한 글 = 장면 속 글
+        if f["aspect"] >= TEXT_THIN_ASPECT and any(r >= TEXT_SLOW_RING and i / r < TEXT_SLOW_STILL for i, r in (f.get("fi") or [])):
+            return True           # 천천히 움직이는 화면 위 긴 자막줄(긴 간격 짝에서 주변은 변하고 글 칸만 그대로 — 10-27 oInEkACMS5s '이걸로 살짝 피부를…' 창 3.75%)
         return f["h"] >= TEXT_STATIC_H or small
     return f["d_in"] < TEXT_STILL_RATIO * f["d_ring"]
+
+
+def text_with_stack(fr: list) -> list:
+    """(판단 주인 — 흐릴 글줄) 남의 글자로 잡힌 줄 + 그 줄에 위아래로 붙은 글줄(같은 자막의 다른 줄). 붙은 줄은 문턱(채움·획) 밖이어도 같이 가린다 —
+    10-27 런던 지하철 편: 두 줄 자막 'The saxophones were / getting louder' 중 아랫줄만 잡혀(윗줄 채움 0.77 < 0.8) 윗줄이 완성본 내내 남았다."""
+    fg = [f for f in fr if foreign_text(f)]
+    if not fg:
+        return []
+    def near(a, b):
+        ah, bh = a[3] - a[1], b[3] - b[1]
+        gap = max(b[1] - a[3], a[1] - b[3])                       # 세로 틈(음수 = 겹침)
+        ov = min(a[2], b[2]) - max(a[0], b[0])                    # 가로 겹침
+        return gap <= 1.2 * max(ah, bh) and ov >= 0.3 * min(a[2] - a[0], b[2] - b[0])
+    out = list(fg)
+    grew = True
+    while grew:                                                   # 세 줄 자막도 줄줄이
+        grew = False
+        for f in fr:
+            if f not in out and f["score"] >= TEXT_SCORE_MIN and f["aspect"] >= TEXT_GLYPH_ASPECT and any(near(f["box"], g["box"]) for g in out):
+                out.append(f); grew = True
+    return out
 
 
 def other_face(f: dict) -> bool:
@@ -1910,18 +1987,26 @@ def face_feats(im, anchors: list) -> list[dict]:
     return out
 
 
+ANCHOR_AXES = ("인물순간",)        # 기준 얼굴을 뽑는 썸네일 축 = 연예인 본인 순간(thumb_rule.AXES)
+ANCHOR_NOT = ("짤반응",)           # 인물순간 카드가 없을 때도 기준으로 안 쓰는 축(남의 반응)
+
+
 def face_anchors(st: dict, doc: Path, T: dict, cand_dir: Path) -> list:
-    """연예인 기준 얼굴 = 썸네일 카드 3안 장면 중 thumb.card_faces 를 통과한 안의 가장 큰 얼굴 SFace 임베딩(카드 얼굴 관문 ⑥과 같은 장면)."""
+    """연예인 기준 얼굴 = 썸네일 카드 중 인물순간(본인) 안 장면의 가장 큰 얼굴 SFace 임베딩. 인물순간 안이 없으면 카드 얼굴 관문 ⑥ 통과 안(짤반응 빼고)."""
     from shopping_shorts.channelkit import vision as V
     from tools.calcopy.hybrid import thumb as TH
     sp = Path(doc) / "썸네일.json"
     if not sp.exists():
         return []
-    ok = {r["id"] for r in TH.card_faces(st, doc, T, cand_dir) if r["ok"]}
+    opts = jload(sp).get("options") or []
+    # 기준 = 연예인 본인 장면(인물순간) 카드 — 카드 크기 관문(⑥)과는 따로(얼굴이 조금 작아도 본인 얼굴이다). 짤반응·물건근접 등은 남의 반응·물건이라 기준이 아니다
+    #   (10-30 얜샷템 회원 시험: 최화정 카드 A 얼굴 0.19<0.2 탈락 · B 물건 → 성시경 '짤반응' C 만 기준이 돼 최화정 본인 컷 7개가 전부 '다른 사람'으로 걸려 렌더 3번 헛돎)
+    me = [o for o in opts if o.get("axis") in ANCHOR_AXES]
+    ok = {o.get("id") for o in me} if me else {r["id"] for r in TH.card_faces(st, doc, T, cand_dir) if r["ok"]}
     _, _, ww, wh = frame_window(st["frame"])
     out = []
-    for o in jload(sp).get("options") or []:
-        if o.get("id") not in ok:
+    for o in opts:
+        if o.get("id") not in ok or (not me and o.get("axis") in ANCHOR_NOT):
             continue
         im, _ = TH.card_scene_frame(o, T, cand_dir, (ww, wh))
         fs = V.faces_all(im) if im is not None else []
@@ -1930,6 +2015,17 @@ def face_anchors(st: dict, doc: Path, T: dict, cand_dir: Path) -> list:
             if e is not None:
                 out.append(e)
     return out
+
+
+AUTOBLUR_MORE = 2            # 흐림 넣은 뒤 남은 글 상자로 칸을 더 넣는 횟수(10-27 oInEkACMS5s l10: 한 번 넣고 끝나 '흐림을 넣어도 2장' → Claude 장면 교체·재렌더 16분)
+SAME_TEXT_IOU = 0.5          # 같은 원본 두 컷의 글자 상자(원본 픽셀)가 이만큼 겹치면 같은 박힌 글
+
+
+def _rect_iou(a, b) -> float:
+    ax1, ay1, bx1, by1 = a[0] + a[2], a[1] + a[3], b[0] + b[2], b[1] + b[3]
+    iw, ih = max(0, min(ax1, bx1) - max(a[0], b[0])), max(0, min(ay1, by1) - max(a[1], b[1]))
+    inter = iw * ih
+    return inter / max(1, a[2] * a[3] + b[2] * b[3] - inter)
 
 
 def blur_entry(boxes: list, crop: list, win: tuple, ss: float, sec: float, pad: int = 8) -> list:
@@ -1945,7 +2041,8 @@ def blur_entry(boxes: list, crop: list, win: tuple, ss: float, sec: float, pad: 
     return [ax, ay, bx - ax, by - ay, round(ss, 3), round(ss + sec, 3)]
 
 
-def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Path | None = None, log=print, erase: list | None = None) -> list[str]:
+def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Path | None = None, log=print, erase: list | None = None,
+                     autoblur: bool = False) -> list[str]:
     """렌더 전 관문 ④(10-25 감사 남의 글자 33·남 얼굴 15): 계획의 컷마다 렌더 조각과 같은 프레임 3장(cut_crop·blur)을 원본에서 뽑아
       ① 글자: 흐림 밖에 남의 박힌 글자(자막·워터마크·로고 글)가 TEXT_MIN_HITS 장 이상이면 멈춤(foreign_text)
       ② 얼굴(연예인 판 thumb_card_face=true): 기준 얼굴(카드 통과 얼굴)과 다른 사람의 큰 얼굴이 FACE_MIN_HITS 장 이상이면 멈춤(other_face)
@@ -1987,26 +2084,68 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
             ts, t2s = content_times(c["ss"], n)
             pre[key] = ex.submit(cut_frames, [(src, t, crop, (ww, wh), regs) for t in ts + t2s], 1)
     bad, rows = [], {}
+    found, fixed_k = {}, set()          # autoblur: 원본마다 확인된 남의 글자 자리(원본 픽셀) · 흐림 넣은 컷
     try:
         for (k, c, src, n, crop, regs, key) in jobs:
             r = cache.get(key)
             if r is None:
                 pre[key].result()
                 m = cut_content_feats(src, c["ss"], n, crop, (ww, wh), regs, anchors, ocr=ocr)
-                r = {"text": [[f for f in fr if foreign_text(f)] for fr in m["text"]], "face": [[f for f in fr if other_face(f)] for fr in m["face"]]}
+                r = {"text": [text_with_stack(fr) for fr in m["text"]], "face": [[f for f in fr if other_face(f)] for fr in m["face"]]}
             rows[key] = r
             nt = sum(1 for x in r["text"] if x)
             nf = sum(1 for x in r["face"] if x)
             where = f"{c['line']} {c['src']}@{float(c['ss']):.2f}"
             if nt >= TEXT_MIN_HITS and erase is not None:
                 erase.append(k)
+            elif nt >= TEXT_MIN_HITS and autoblur:
+                # (사장님 10-27 뿌리 수정 — Claude 는 장면을 고르고 숫자는 코드가) 흐림 칸 = blur_entry 그대로 재료.blur 에 넣고 다시 잰다.
+                #   예전엔 이 숫자를 반려 글로 Claude 에게 넘겨 재료를 고치게 했다(같은 칸을 손으로 옮겨 적는 왕복). 넣은 뒤에도 글자가 남으면 그때 반려.
+                boxes = [f["box"] for x in r["text"] for f in x]
+                ent = blur_entry(boxes, crop, (ww, wh), float(c["ss"]), n / FPS)
+                M.setdefault("blur", {}).setdefault(c["src"], []).append(ent)
+                M["_blur_added"] = M.get("_blur_added", 0) + 1
+                found.setdefault(c["src"], []).append(ent[:4])
+                fixed_k.add(k)
+                for _ in range(1 + AUTOBLUR_MORE):          # 넣고 다시 잰다 — 칸 밖으로 남은 글 상자(글줄이 길어지거나 다른 자리 자막)는 그 상자로 한 칸 더
+                    m2 = cut_content_feats(src, c["ss"], n, crop, (ww, wh), M["blur"][c["src"]], anchors, ocr=ocr)
+                    rest = [f["box"] for fr in m2["text"] for f in fr if foreign_text(f)]
+                    left = sum(1 for fr in m2["text"] if any(foreign_text(f) for f in fr))
+                    if not rest or _ == AUTOBLUR_MORE:
+                        break
+                    e2 = blur_entry(rest, crop, (ww, wh), float(c["ss"]), n / FPS)
+                    M["blur"][c["src"]].append(e2)
+                    log(f"[흐림 넣기] 컷 {k} {where} 아직 {left}장 → 한 칸 더 {e2}")
+                log(f"[흐림 넣기] 컷 {k} {where} 남의 글자 {nt}/{len(r['text'])}장 → 재료.blur[{c['src']}] += {ent} · 다시 잼 {left}장")
+                if left >= TEXT_MIN_HITS:
+                    bad.append(f"컷 {k} {where}: 흐림을 넣어도 남의 박힌 글자 {left}장 — 다른 장면으로 바꾼다")
             elif nt >= TEXT_MIN_HITS:
-                boxes = [f["box"] for x in r["text"] for f in x][:3]
+                boxes = [f["box"] for x in r["text"] for f in x]          # 모든 장·모든 글줄(예전 [:3] 은 두 줄 자막의 한 줄만 담았다)
                 bad.append(f"컷 {k} {where}: 흐림 밖 남의 박힌 글자 {nt}/{len(r['text'])}장(창 좌표 {boxes}) — 재료.json blur[{c['src']}] 에 "
                            f"이 칸을 그대로 넣거나(원본 픽셀·원본 초로 바꿔 둠) crop·ss 를 옮긴다: {blur_entry(boxes, crop, (ww, wh), float(c['ss']), n / FPS)}")
             if nf >= FACE_MIN_HITS:
                 cs = [f["cos"] for x in r["face"] for f in x][:3]
                 bad.append(f"컷 {k} {where}: 연예인 아닌 얼굴 {nf}/{len(r['face'])}장(기준 얼굴 코사인 {cs} < {FACE_OTHER_COS}) — 연예인이 나오는 장면으로 바꾼다")
+        # 같은 원본 같은 자리 = 같은 박힌 글자(영상 내내 박힌 제목·워터마크). 배경까지 멈춘 컷은 '획 붙박이' 판정이 안 서서 놓친다(10-27 TV 12컷 중 5컷만)
+        #   → 확인된 자리와 겹치는 글자 상자(점수 ≥ TEXT_SCORE_MIN)가 같은 원본 다른 컷에 있으면 그 컷도 같은 글로 보고 흐린다
+        for (k, c, src, n, crop, regs, key) in jobs if autoblur and found else ():
+            if k in fixed_k or c["src"] not in found:
+                continue
+            regs_now = (M.get("blur") or {}).get(c["src"])
+            m = cut_content_feats(src, c["ss"], n, crop, (ww, wh), regs_now, anchors, ocr=ocr)
+            hit = []
+            for fr in m["text"]:
+                for f in fr:
+                    if f["score"] < TEXT_SCORE_MIN or f["blur"] > TEXT_BLUR_MAX:
+                        continue
+                    e = blur_entry([f["box"]], crop, (ww, wh), 0.0, 0.0)
+                    if any(_rect_iou(e[:4], g) >= SAME_TEXT_IOU for g in found[c["src"]]):
+                        hit.append(f["box"])
+            if hit:
+                ent = blur_entry(hit, crop, (ww, wh), float(c["ss"]), n / FPS)
+                M["blur"][c["src"]].append(ent)
+                M["_blur_added"] = M.get("_blur_added", 0) + 1
+                log(f"[흐림 넣기] 컷 {k} {c['line']} {c['src']}@{float(c['ss']):.2f} 같은 자리 박힌 글자(다른 컷에서 확인) → += {ent}")
     finally:
         if todo:
             ex.shutdown(wait=True, cancel_futures=True)
@@ -2092,6 +2231,12 @@ def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, pu
     run(["ffmpeg", "-y", "-v", "error", *inp, "-vf", vf, "-frames:v", n, *extra, *venc(16), "-pix_fmt", "yuv420p", *(["-color_range", "tv", "-colorspace", "bt709"] if src.suffix.lower() in IMG_EXT else []), out])
 
 
+# 컷 조각 색 표식 한 벌 — 조각마다 원본 표식(smpte170m·bt709·unknown)이 달라 이어 붙인 창 영상 중간에 색 정보가 바뀌면
+# ffmpeg 8 이 그 프레임에서 필터 식을 다시 세워 trim·overlay 상태가 초기화된다 → render_base 에서 화면이 몇 초 멈춤
+# (10-29 썰템쇼 회원 시험: smpte170m 원본 m48q 조각 3.07~5.5초 = base.mp4 정지 3.0~5.8초, '화면 멈춤'·'컷≠계획' 관문 반복). 변환은 scale out_color_matrix, 표식은 여기.
+COLOR_TAGS = "setparams=range=tv:color_primaries=bt709:color_trc=bt709:colorspace=bt709"
+
+
 def clip_cmd(src: Path, ss: float, n: int, crop, win: tuple[int, int], push: float = 0.0, move=None, blur=None, pic=None, pic_bg=None,
              speed: float = 1.0) -> tuple[list, str, list]:
     """(판단 주인) 컷 조각이 어떤 그림이 되나 — (입력 인자, 필터, 출력 인자). clip(조각 굽기)·cut_still_gate(관문 ⑦ 멈춤 재기)가 같이 부른다.
@@ -2107,17 +2252,17 @@ def clip_cmd(src: Path, ss: float, n: int, crop, win: tuple[int, int], push: flo
         # 필터를 다시 세우며 틀(제목·로고·출처 줄)을 2~4프레임 빠뜨린다(10-21 장윤주 실측: 쿠팡 사진 컷 앞뒤 2+4프레임 → 고친 뒤 0.
         # 최화정_피부 완성본에도 제목 빠짐 2+2프레임이 있었다 — 원인 대조는 안 함). 영상 조각과 같은 꼴로 맞춘다.
         vf = (f"crop={cw}:{ch}:{x}:{y},{mv}scale={tw}:{th}:flags=lanczos:out_range=tv:out_color_matrix=bt709{pad},"
-              f"format=yuv420p,setsar=1")
+              f"format=yuv420p,setsar=1,{COLOR_TAGS}")
         return ["-loop", "1", "-i", src], vf, ["-r", FPS]
     x, y, cw, ch = crop
     sp = float(speed or 1.0)
     bl = blur_vf(blur, ss, n * sp / FPS)                     # 흐림 시각 = 원본 초(늦추기 전 — setpts 는 흐림 뒤)
     pre = bl + "," if bl else ""
     slow = f"setpts=(PTS-STARTPTS)/{sp:.6f}," if sp < 1.0 - 1e-6 else ""
-    vf = f"{pre}crop={cw}:{ch}:{x}:{y},scale={tw}:{th}:flags=lanczos,setsar=1{pad},{slow}fps={FPS}"
+    vf = f"{pre}crop={cw}:{ch}:{x}:{y},scale={tw}:{th}:flags=lanczos:out_range=tv:out_color_matrix=bt709,setsar=1{pad},{slow}fps={FPS},{COLOR_TAGS}"
     if push:
-        vf = (f"{pre}crop={cw}:{ch}:{x}:{y},scale={tw * 2}:{th * 2}:flags=lanczos,{slow}fps={FPS},"
-              f"zoompan=z='1+{push}*on/{max(1, n)}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={tw}x{th}:fps={FPS},setsar=1{pad}")
+        vf = (f"{pre}crop={cw}:{ch}:{x}:{y},scale={tw * 2}:{th * 2}:flags=lanczos:out_range=tv:out_color_matrix=bt709,{slow}fps={FPS},"
+              f"zoompan=z='1+{push}*on/{max(1, n)}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={tw}x{th}:fps={FPS},setsar=1{pad},{COLOR_TAGS}")
     return ["-ss", f"{ss:.3f}", "-i", src, "-an"], vf, []
 
 
@@ -2980,24 +3125,26 @@ def audio(S: dict, M: dict, st: dict, T: dict, sent: list[dict], placed: dict, R
         nduck = "+".join(f"between(t,{a:.3f},{b:.3f})" for a, b in narr_spans) or "0"
         vol = f"if({duck},{k:.4f},if({nduck},{10 ** (dn / 20):.4f},1))"
     ss = float((S.get("bgm") or {}).get("ss", 0.0))      # 곡 몇 초부터 쓰나(편마다 — 보컬 드롭 자리를 맞춘다, 가사 시각 lyric_plan 과 같은 값)
-    bed_chain = (f"aresample={SR},aformat=channel_layouts=mono,atrim={ss:.3f}:{ss + end:.3f},asetpts=PTS-STARTPTS,volume={g}dB,"
-                 f"volume='{vol}':eval=frame,afade=t=out:st={end - B.get('fade_out', 0.4):.3f}:d={B.get('fade_out', 0.4)}")
+    lay = "stereo" if B.get("stereo") else "mono"     # 판 bgm.stereo — 노래가 주인공인 판(자막노래형)은 곡을 스테레오 그대로(10-27 사장님 '노래 음질 깨짐': 모노로 합쳐 뭉개졌다)
+    bed_chain = (f"aresample={SR},aformat=channel_layouts={lay},atrim={ss:.3f}:{ss + end:.3f},asetpts=PTS-STARTPTS,volume={g}dB,"
+                 f"volume='{vol}':eval=frame,afade=t=out:st={end - B.get('fade_out', 0.4):.3f}:d={B.get('fade_out', 0.4)}:curve={B.get('fade_curve', 'tri')}")   # fade_curve = 판 bgm 칸(기본 tri = 옛 그대로) — 끝 0.1초 RMS < −60dB(체크리스트 ③, 10-29 ep14)
     bed = R / "bgm_bed.wav"       # BGM 만(나레·원음·효과음 없이) — 덕킹 실측·품질 관문이 읽는다
-    run(["ffmpeg", "-y", "-v", "error", "-stream_loop", "-1", "-i", bgm, "-filter_complex", f"[0:a]{bed_chain}[b]", "-map", "[b]", "-ar", SR, bed])
+    F32 = ["-c:a", "pcm_f32le"]      # 소수 wav — 곡을 올릴 때 16비트에서 0dB 넘는 곳이 잘리지 않게(10-27 bgm_bed 잘림 45곳). 최고점은 loud() 가 리미터로 누른다
+    run(["ffmpeg", "-y", "-v", "error", "-stream_loop", "-1", "-i", bgm, "-filter_complex", f"[0:a]{bed_chain}[b]", "-map", "[b]", "-ar", SR, *F32, bed])
     ins2 = ["-i", voice, "-stream_loop", "-1", "-i", bgm]
-    fc2 = [f"[1:a]{bed_chain}[b]"]
-    mix_in = "[0:a][b]"
+    fc2 = [f"[1:a]{bed_chain}[b]", f"[0:a]aformat=channel_layouts={lay}[v0]"]
+    mix_in = "[v0][b]"
     SF = st.get("sfx_files") or {}
     check_sfx(st, placed)
     for j, e in enumerate(placed.get("sfx") or []):
         f = SFX_DIR / SF[e["kind"]]
         ins2 += ["-i", f]
-        fc2.append(f"[{j + 2}:a]aresample={SR},aformat=channel_layouts=mono,volume={SF.get('gain_db', -8)}dB,adelay={int(round(e['t'] * 1000))}[s{j}]")
+        fc2.append(f"[{j + 2}:a]aresample={SR},aformat=channel_layouts={lay},volume={SF.get('gain_db', -8)}dB,adelay={int(round(e['t'] * 1000))}[s{j}]")
         mix_in += f"[s{j}]"
     n_in = 2 + len(placed.get("sfx") or [])
     fc2.append(f"{mix_in}amix=inputs={n_in}:normalize=0:duration=first[o]")
     raw = R / "mix_raw.wav"
-    run(["ffmpeg", "-y", "-v", "error", *ins2, "-filter_complex", ";".join(fc2), "-map", "[o]", "-ar", SR, raw])
+    run(["ffmpeg", "-y", "-v", "error", *ins2, "-filter_complex", ";".join(fc2), "-map", "[o]", "-ar", SR, *F32, raw])
     mix = R / "mix.wav"
     loud(raw, mix, st["loudness"])
     return mix, {"narr_lufs": nI, "orig_lufs": oI, "orig_gain": og, "bgm_gain": g, "bgm_ref": "narr" if not math.isnan(nI) else ("orig" if not math.isnan(oI) else "target"), "mix": lufs(mix),
@@ -3387,7 +3534,7 @@ def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *,
            ("⑥ 카드 글", TR.card_text_gate(doc)),
            ("⑥ 카드 얼굴", TR.card_face_gate(st, doc, T, M["cand_dir"])),
            ("③ 경계", cut_boundary_gate(T, M, st)),
-           ("④ 글자·얼굴", cut_content_gate(T, M, st, doc, R, log, erase=erase)),
+           ("④ 글자·얼굴", cut_content_gate(T, M, st, doc, R, log, erase=erase, autoblur=True)),
            ("⑤ 컷 길이", cut_length_gate(T, st)),
            ("⑦ 멈춤", cut_still_gate(T, M, st)),
            ("사진", photo_gate(T, st, M)),
@@ -3474,6 +3621,8 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         from tools.calcopy import vmake_clean as VC
         erase = [] if VC.will_erase(style_name) else None        # 박힌 글자를 지우는 판(orig_text.mode=vmake·돈 막힘 아님) — 글자 컷은 멈추지 않고 '지울 컷'(사장님 10-26)
         gates = timeline_gates(T, M, st, doc, R, log, plan=True, measured=bool(tts), erase=erase, placed=placed)      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬·꾸밈 전부(첫 실패에서 안 멈춘다)
+        if M.pop("_blur_added", 0):      # 관문 ④가 넣은 흐림 칸 = 재료.json 에 — 렌더(같은 파일을 읽는다)·지문(gate_stamp)이 같은 흐림을 본다
+            jsave(doc / "재료.json", M)
         (R / GATE_STAMP).unlink(missing_ok=True)
         if tts and not erase and not any(b for _, b in gates):      # 진짜 목소리·지울 컷 없음·전부 통과일 때만 지문(지울 컷이 있으면 렌더가 지운 뒤 다시 잰다)
             jsave(R / GATE_STAMP, {"stamp": gate_stamp(T, M, st, doc), "at": __import__("time").strftime("%Y-%m-%d %H:%M:%S")})
@@ -3496,7 +3645,10 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     if sp.exists() and jload(sp).get("stamp") == gate_stamp(T, M, st, doc):      # 계획이 같은 입력으로 전부 통과 — 다시 안 잰다(검수단축 ⑤)
         log(f"[렌더 전 관문] 계획({jload(sp).get('at')})과 입력이 같다(컷·원본·판·썸네일·관문 코드 지문) — 다시 안 잰다")
     else:
-        gate_stop(timeline_gates(T, M, st, doc, R, log, plan=False))      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬 — 영상 굽기 전에 전부 모아 멈춘다(꾸밈은 창 자리 뒤 — GATE_DEPENDS)
+        _g = timeline_gates(T, M, st, doc, R, log, plan=False)
+        if M.pop("_blur_added", 0):      # 지시서가 계획 없이 재료를 다시 써 렌더로 온 길(flow save_m → render) — 흐림 칸을 여기서 넣고 같은 파일에
+            jsave(doc / "재료.json", M)
+        gate_stop(_g)      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬 — 영상 굽기 전에 전부 모아 멈춘다(꾸밈은 창 자리 뒤 — GATE_DEPENDS)
     win0 = render_window(T, M, st, R)                          # 창(전환 없이) — 자리 검출 화면의 재료
     placed = plan_rows(S, T, st, make_locate(S, T, st, R, win0, log))
     deco_apply(placed, doc, st, log)
