@@ -1249,7 +1249,7 @@ TASK_ASK = """너는 이 편의 **제작자**다(사장님 PC 의 제작 세션�
  · end = 가이드·금지선상 이 편을 만들 수 없다(그때만 회원에게 쉬운 선택지로 묻는다)"""
 
 
-LESSONS_FILE = GUIDE_DIR / "회원경험.json"       # 98_오류기록에서 눈·판단으로만 잡히는 것만 추린 회원 Claude 경험(사장님 10-30 "그간의 경험을 똑같이") — 고칠 곳은 이 파일 한 곳
+LESSONS_FILE = Path(__file__).with_name("member_lessons.json")       # 98_오류기록에서 눈·판단으로만 잡히는 것만 추린 회원 Claude 경험(사장님 10-30 "그간의 경험을 똑같이") — 고칠 곳은 이 파일 한 곳
 
 
 def _lessons(key: str) -> str:
