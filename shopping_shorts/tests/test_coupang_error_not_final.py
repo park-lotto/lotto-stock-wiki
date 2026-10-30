@@ -29,9 +29,11 @@ def _flow(src: str | None = None):
 
 
 def _check(mod):
-    with pytest.raises(mod._Stop) as e:
+    # 10-30 사장님 "막히면 상품 링크를 받는다" — 실행기 오류·검색 막힘 = 멈춤(final)이 아니라 상품 주소 받기(_NeedLink → flow._link_ask)
+    exc = getattr(mod, "_NeedLink", None) or mod._Stop
+    with pytest.raises(exc) as e:
         mod._coupang_down({"coupang": {"error": "ImportError: cannot import name 'coupang_api_search' from 'tools.calcopy'"}})
-    assert e.value.auto and not e.value.final and "쿠팡 검색" in e.value.why
+    assert not getattr(e.value, "final", False) and ("ImportError" in str(e.value) or "쿠팡 검색" in getattr(e.value, "why", ""))
     st = mod.start("https://youtu.be/BENCH1", "잇템로그판_v2", "sid")
     st.update({"given": "https://www.coupang.com/vp/products/9392386079", "coupang_qs": ["보라색 치아 미백 스트립"], "read": {"product_words": ["teeth strips"]}})
     r = mod.ph_given(st, {}, {}, {})

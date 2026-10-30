@@ -850,6 +850,11 @@ def c_frames(W, d):
     return {"files": out, **({"bad": bad} if bad else {}), **({"error": "장면을 하나도 못 뽑음: " + "; ".join(bad[:3])} if bad and not out else {})}
 
 
+def blocked_page(title: str) -> bool:
+    """쿠팡 차단 화면(10-30 설치본 시험 실측: 제목 'Access Denied')."""
+    return "access denied" in str(title or "").lower()
+
+
 def coupang_chrome(queries: list[str], home: Path) -> dict:
     """회원 파트너스 키가 없을 때(사장님 10-21) — 회원 PC 크롬 창(화면 뜸, 쿠팡은 헤드리스를 막는다)으로 검색 결과 카드만 읽는다.
     동선·추출·파싱 = 서비스 크롤러(shopping_shorts/coupang_search) 그대로 — 홈 먼저 → 검색 → 상품 칸 기다림."""
@@ -876,6 +881,9 @@ def coupang_chrome(queries: list[str], home: Path) -> dict:
                     pass
                 items = cs.parse_items(pg.evaluate(cs._EXTRACT_JS, 12), limit=12)
                 res[q] = {"ok": bool(items), "items": items}
+                if not items and blocked_page(pg.title()):    # 쿠팡이 이 창을 막았다 — 다음 검색어로 몰아치지 않고 한 번에 끝(사장님 10-30 "크롬은 한 번만" → flow 가 상품 주소 받기로)
+                    res[q]["blocked"] = True
+                    break
                 pg.wait_for_timeout(1500)                     # 몰아치면 쿠팡이 잠시 막는다(서비스 크롤러 실측)
         finally:
             ctx.close()
@@ -1165,6 +1173,9 @@ def c_product_stills(W, d):
             for it in (v or {}).get("items") or []:
                 if str(it.get("product_id") or it.get("productId") or "") == pid and it.get("image") and img_url(it["image"]) not in urls:
                     urls.append(img_url(it["image"]))
+    for u in d.get("images") or []:          # 회원 Claude 가 정한 상품(검색 막힌 PC — flow.ph_link_got)의 사진 주소
+        if str(u).startswith("http") and img_url(u) not in urls:
+            urls.append(img_url(u))
     (W / "src").mkdir(exist_ok=True)
     out, seen, fail = [], set(), []
     for k, u in enumerate(urls[:int(d.get("n") or 4)]):
