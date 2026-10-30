@@ -749,8 +749,10 @@ async function preview(patch,presetId){
   const my=++seq;$('busy').hidden=false;
   const r=await api('/api/preview',{preset:pid,video:S.video,...(patch?{patch}:{})});
   if(my!==seq)return;
-  $('busy').hidden=true;
-  if(r.error){$('applied').innerHTML=`<span class="err">${esc(r.error)}</span>`;return}
+  $('busy').hidden=true;$('busy').textContent='그리는 중…';
+  // 실패하면 앞 프리셋 그림을 흐리게 + 이유를 그림 위에 — 그대로 두면 바뀐 것처럼 보인다(10-30 사장님 화면)
+  if(r.error){$('applied').innerHTML=`<span class="err">${esc(r.error)}</span>`;stage.style.opacity='.25';$('busy').textContent=r.error;$('busy').hidden=false;return}
+  stage.style.opacity='';
   S.preview=r;
   await freshStage();
   if(my!==seq)return;

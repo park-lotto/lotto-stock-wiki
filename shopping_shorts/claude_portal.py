@@ -765,8 +765,10 @@ def lease(ctx: dict, body: dict, store=None) -> dict:
     if expired_old:
         anomaly_check(cid, {"type": "lease_expired", "route": "lease", **_ev(ctx)}, store=store)
     if busy is not None:
-        _raise_on(anomaly_check(cid, {"type": "busy", "route": "lease", **_ev(ctx)}, store=store))
         wait = max(1, busy["expires"] - now)
+        # A2 = '작업 중에 다른 기기가 시작'(설계 §7-9 표)만 센다 — 같은 기기(제작 중 미리보기·프로그램 재시작)는 거절만(10-30 실측: 같은 PC 미리보기 10번에 30일 정지)
+        if busy["fp_hash"] != fh:
+            _raise_on(anomaly_check(cid, {"type": "busy", "route": "lease", **_ev(ctx)}, store=store))
         if busy["fp_hash"] == fh:
             raise PortalError("busy_other_device", "이 기기에서 다른 작업이 진행 중입니다 — 끝나거나 3분 뒤 다시 시도하세요", wait)
         raise PortalError("busy_other_device",

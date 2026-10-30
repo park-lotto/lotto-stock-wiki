@@ -222,6 +222,19 @@ def test_lease_두기기_동시면_두번째_409_TTL뒤_성공(env, monkeypatch)
     assert c.post("/api/claude/lease", headers=_h(k, FP1), json={"action": "release", "lease_id": "ls_none"}).json()["ok"]
 
 
+def test_A2_같은기기_시도는_안세고_다른기기만_센다(env):
+    # A2 = '작업 중 다른 기기 시작'(키 돌려쓰기) — 같은 PC 의 제작 중 미리보기·재시작은 거절만, 정지 안 됨(10-30 실측: 시험 라이선스 30일 정지)
+    c = env["client"]
+    k = _two_devices(env)
+    assert c.post("/api/claude/lease", headers=_h(k, FP1), json={"action": "acquire", "job_id": "j1"}).status_code == 200
+    for i in range(12):
+        r = c.post("/api/claude/lease", headers=_h(k, FP1), json={"action": "acquire", "job_id": f"u{i}"})
+        assert r.status_code == 409 and r.json()["code"] == "busy_other_device", r.text
+    assert c.get("/api/claude/license", headers=_h(k, FP1)).status_code == 200, "같은 기기 거절 12번에 정지되면 안 된다"
+    codes = [c.post("/api/claude/lease", headers=_h(k, FP2), json={"action": "acquire", "job_id": f"x{i}"}).json()["code"] for i in range(10)]
+    assert codes[-1] == "suspended", codes
+
+
 def test_강제해제_뒤_앞기기_lease_lost(env):
     c = env["client"]
     k = _two_devices(env)
