@@ -307,6 +307,57 @@ def script_claim_problems(S: dict) -> list[str]:
     return out
 
 
+BENCH_COPY_CHARS = 12     # 소재 쇼츠(남의 한국 재편집) 받아쓰기와 띄어쓰기·부호 빼고 이만큼 이어서 같으면 베낀 줄
+BENCH_COPY_RULE = ("소재 쇼츠 받아쓰기는 흐름·사실만 빌린다 — 그 문장을 그대로 옮기지 않는다(남의 채널 글이다). "
+                   f"띄어쓰기·부호를 빼고 {BENCH_COPY_CHARS}자 이상 같은 글이 이어지면 반려된다. 숫자·이름 같은 사실은 써도 되지만 문장은 내 말로.")
+
+
+def _plain(t: str) -> str:
+    return re.sub(r"[\s\W_]+", "", str(t or ""))
+
+
+def bench_copy_problems(S: dict, bench_lines: list, n: int = BENCH_COPY_CHARS) -> list[str]:
+    """(판단 주인 — 소재 쇼츠 문장 베끼기) 나레 줄이 소재 쇼츠 받아쓰기와 n자 이상 이어서 같으면 그 줄을 돌려준다.
+    10-30 회사 PC 숏템리폿 '전기 바이크' 편: 소재 쇼츠 끝 문장('무채색 … 이거 타고 다니면 제대로 시선 강탈이겠네요')·스펙 문장을 그대로 옮겼다.
+    원음 줄(kind orig)은 원본 말의 번역이라 뺀다."""
+    B = _plain(" ".join(str((l or {}).get("text") or "") for l in bench_lines or [] if isinstance(l, dict)))
+    if len(B) < n:
+        return []
+    out = []
+    for l in S.get("lines") or []:
+        if l.get("kind") == "orig":
+            continue
+        t = _plain(str(l.get("tts") or "") or " ".join(str(c) for c in l.get("caps") or [] if isinstance(c, str)))
+        best = ""
+        for i in range(len(t) - n + 1):
+            if t[i:i + n] in B:
+                k = n
+                while i + k < len(t) and t[i:i + k + 1] in B:
+                    k += 1
+                if k > len(best):
+                    best = t[i:i + k]
+        if best:
+            out.append(f"{l.get('id')}: 소재 쇼츠 문장과 {len(best)}자 같음('{best[:30]}') — 사실만 두고 내 말로 다시 써라")
+    return out
+
+
+ALT_TAIL_MAX_SEC = 6.0    # 비슷한 제품 + 제품 영상 못 받음(사진만) 편의 원음 뒤 제품 줄 어림 길이 상한
+ALT_TAIL_RULE = (f"이 편은 비슷한 제품 영상을 못 받아 원음이 끝난 뒤 제품 줄은 상품 사진만 나온다 — 그 줄들(원음 마지막 줄 뒤 나레)은 합쳐 {ALT_TAIL_MAX_SEC:.0f}초 이내"
+                 "(비슷한 제품이라 밝히는 줄 + 끝 한 줄 정도). 스펙·감상은 원음 앞 원본 장면 줄에서 끝낸다.")
+
+
+def alt_tail_problems(S: dict, cps: float, max_sec: float = ALT_TAIL_MAX_SEC) -> list[str]:
+    """(판단 주인 — 사진만 나오는 제품 꼬리 길이) 원음 마지막 줄 뒤 나레 글자 ÷ 판 cps 가 max_sec 를 넘으면 문제.
+    10-30 숏템리폿 '전기 바이크' 편: 제품 줄 5개 13초가 같은 상품 사진 2~3장 확대로만 이어져 영상 절반이 정지 화면(벤치 끝 부분 4~5초)."""
+    L = S.get("lines") or []
+    last = max((i for i, l in enumerate(L) if l.get("kind") == "orig"), default=-1)
+    tail = [l for l in L[last + 1:] if l.get("kind") == "tts"]
+    sec = sum(len(_plain(l.get("tts") or "")) for l in tail) / max(0.1, float(cps or 7.0))
+    if sec <= max_sec + 1e-9:
+        return []
+    return [f"원음 뒤 제품 줄 {len(tail)}개 어림 {sec:.1f}초 > {max_sec:.0f}초 — 상품 사진만 이어진다: 밝히는 줄 + 끝 한 줄로 줄이고 나머지는 원음 앞으로"]
+
+
 def alt_scene_problems(S: dict, M: dict, origin_names: set) -> list[str]:
     """대체 제품이면 원음이 끝난 뒤 제품 이야기 줄에 연예인(원본) 장면 금지 — 연예인이 대체품을 말하는 것처럼 보인다(사장님 10-22 강주은).
     같은 제품이면 부르지 않는다(연예인 장면 함께 써도 된다)."""

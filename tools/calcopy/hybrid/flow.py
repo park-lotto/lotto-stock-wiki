@@ -631,6 +631,7 @@ REDO_WHY = {
     "cut_len": ("컷 길이를 장면에 맞추는 중이에요", "컷 길이"), "rhythm": ("컷 박자를 맞추는 중이에요", "컷 박자"),
     "reuse": ("같은 장면이 겹치지 않게 고르는 중이에요", "겹치는 장면"), "render": ("영상을 다시 맞추는 중이에요", "영상 맞추기"),
     "final_check": ("완성본에서 걸린 곳을 고치는 중이에요", "완성본 마무리"),
+    "bench_copy": ("다른 채널 문장과 겹치는 말을 바꾸는 중이에요", "겹치는 말"), "alt_tail": ("제품 이야기를 짧게 줄이는 중이에요", "제품 이야기 길이"),
 }
 REDO_GENERIC = ("더 잘 나오게 다듬는 중이에요", "마무리")
 REDO_VERB = {"script": "다시 쓰는 중", "plan": "장면 다시 맞추는 중", "render": "다시 만드는 중", "check": "다시 고치는 중"}
@@ -1971,6 +1972,10 @@ def _script_ask(st, fail: str = "") -> dict:
     if PR.get("mode") == "alt" and not PR.get("given"):      # 비슷한 제품 밝히기 = 대본 검사(script_audit.alt_disclosed)가 거는 것 — 처음부터(10-27 메이블린·TV 반려)
         from tools.calcopy.hybrid import script_audit
         ctx += "\n\n## 비슷한 제품(반드시)\n" + script_audit.ALT_SAY_RULE
+    if _alt_photo_fallback(st):
+        ctx += "\n\n## 제품 줄 길이(반드시)\n" + RU.ALT_TAIL_RULE
+    if st.get("bench_lines"):
+        ctx += "\n\n## 소재 쇼츠 문장(반드시)\n" + RU.BENCH_COPY_RULE
     return _rv(f"script_{v}", _q(st, "SCRIPT") + "\n\n" + ctx, imgs, need=("대본", "재료"))
 
 
@@ -2009,7 +2014,9 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
     extra = {"title": RU.title_colors_bad(S, _style(v)), "claims": RU.script_claim_problems(S),   # 자막↔목소리 = script_audit(G-1) 안
              "alt_scene": RU.alt_scene_problems(S, M, _origin_names(st)) if (st.get("product") or {}).get("mode") == "alt" else [],
              "subject_scene": subject_scene_problems(st, S, M),
-             "source_rule": RU.source_rule_static(M, _origin_names(st), _rule_bench_id(st), st.get("shots") or {})}
+             "source_rule": RU.source_rule_static(M, _origin_names(st), _rule_bench_id(st), st.get("shots") or {}),
+             "bench_copy": RU.bench_copy_problems(S, st.get("bench_lines") or []),
+             "alt_tail": RU.alt_tail_problems(S, _style(v).get("cps_target") or 7.0) if _alt_photo_fallback(st) else []}
     on = _origin_names(st)
     if _fmt(st) not in FOREIGN_FMTS and not any(str(c.get("src") or "") not in on for cs in (M.get("cuts") or {}).values() for c in (cs if isinstance(cs, list) else [cs])):
         extra["product_cut"] = ["제품 컷이 하나도 없다 — '써 봤다'·제품 설명 줄은 재료 파일(" +
