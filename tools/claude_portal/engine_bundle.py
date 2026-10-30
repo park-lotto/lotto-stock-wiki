@@ -158,6 +158,8 @@ HAND_SERVER_ONLY = {
     "tools/calcopy/engine/to_frame.py", "tools/calcopy/transcribe_free.py",
     # 개발 PC 스위치(CALCOPY_DEV_COUPANG_SERVER·CALCOPY_DEV_MINA_SERVER)에서만 도는 서버 접속 — 우리 서버 SSH 정보가 들어 있어 보내면 안 된다(묶음 검사 SECRETS)
     "tools/calcopy/coupang_api_search.py", "tools/calcopy/mina_tts.py", "shopping_shorts/vertex_route.py",
+    # 10-30 지시서(노하우) = 서버 한 곳 — vmake_clean 이 형식 판단(flow.erases_text)을 함수 안에서 부르지만 회원 PC 는 지시서가 명령에 실은 erase(CALCOPY_ERASE)를 쓴다
+    "tools/calcopy/hybrid/flow.py",
 }
 
 
