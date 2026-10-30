@@ -112,3 +112,21 @@ test('숏템메이커 키 가져오기 — 설정 화면과 회원 Claude 가 �
   assert.match(idx, /action === 'import_keys'[\s\S]{0,400}importMakerKeys\(\)/);
   assert.match(fs.readFileSync(GUIDE, 'utf8'), /action="import_keys"/);
 });
+
+test('회원 지침이 시작 훅으로 들어간다 — 덩어리마다 훅 한도(10,000자) 안, 전부 합치면 원본 그대로(관제 290)', async () => {
+  const { execFileSync } = await import('node:child_process');
+  const inst = path.join(process.env.SHORTEM_HOME, '_inst');
+  fs.mkdirSync(path.join(inst, 'server', 'guide'), { recursive: true });
+  fs.copyFileSync(GUIDE, path.join(inst, 'server', 'guide', 'CLAUDE_숏클.md'));
+  const hook = path.join(REPO, 'installer', 'plugin', 'shortem', 'hooks', 'guide.js');
+  const hooks = JSON.parse(fs.readFileSync(path.join(REPO, 'installer', 'plugin', 'shortem', 'hooks', 'hooks.json'), 'utf8'));
+  const n = hooks.hooks.SessionStart[0].hooks.length;
+  let joined = '';
+  for (let i = 1; i <= n; i++) {
+    const out = JSON.parse(execFileSync(process.execPath, [hook, String(i)], { env: { ...process.env, SHORTEM_INSTALL: inst } }).toString('utf8'));
+    const c = (out.hookSpecificOutput || {}).additionalContext || '';
+    assert.ok(c.length < 10000, `덩어리 ${i} ${c.length}자`);
+    joined += c.replace(/^\[숏클 회원 지침[^\n]*\n/, '') + (c ? '\n' : '');
+  }
+  assert.equal(joined.trim(), fs.readFileSync(GUIDE, 'utf8').trim());
+});
