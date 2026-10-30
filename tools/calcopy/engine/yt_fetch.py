@@ -22,6 +22,9 @@ from pathlib import Path
 
 STALL_SEC = 60.0            # 이 동안 받는 파일이 안 자라면 멈춘 것으로 본다(10-18 한혜진: 137 구간 25분+ 0B)
 POLL_SEC = 2.0
+# 받는 화질 상한(판단 주인 한 곳) — 짧은 변 1080 까지·H.264 먼저. 형식 문자열의 '1080 이상'이 4K 를 고르던 것(10-30 설치본 시험: 재료 4K·AV1·60fps 197초 →
+#   장면 계획 해석 120초 시간 초과 3번). yt-dlp 정렬(-S) 'res' = 짧은 변이라 세로 쇼츠(1080×1920)도 1080 그대로.
+SORT_1080 = ["-S", "res:1080,vcodec:h264"]
 FMT_SECTION_1080 = ("bv*[height=1080][protocol^=m3u8]+ba[protocol^=m3u8]/bv*[height=1080][protocol^=m3u8]+ba/"
                     "bv*[height>=720][protocol^=m3u8]+ba/137+ba[ext=m4a]/bv*[height>=1080]+ba/bv*[height>=720]+ba/b")
 FMT_PREVIEW_360 = "bv*[height<=360][protocol^=m3u8]/bv*[height<=360][ext=mp4]/bv*[height<=360]/wv*"
@@ -401,7 +404,7 @@ def download_sections(url: str, spans: list[tuple[float, float]], dst: Path, fmt
     last = None
     stalls = 0
     for fmt in fmts:
-        args = ["-f", fmt, "--merge-output-format", "mp4", "-o", str(dst.with_suffix(".%(ext)s")), *(extra or [])]
+        args = ["-f", fmt, *SORT_1080, "--merge-output-format", "mp4", "-o", str(dst.with_suffix(".%(ext)s")), *(extra or [])]
         for a, b in spans:
             args += ["--download-sections", f"*{max(0.0, a - pad):.1f}-{b + pad:.1f}"]
         args += ["--force-keyframes-at-cuts", url]
@@ -451,7 +454,7 @@ def download_full(url: str, dst: Path, fmt: str = "137+ba[ext=m4a]/bv*[height>=1
                   stall_sec: float = STALL_SEC * 2, extra: list | None = None, log=print) -> Result:
     """통째 받기(자막 없이 — 자막은 fetch_subs 로 따로). 멈춤 감시 포함."""
     dst = Path(dst); dst.parent.mkdir(parents=True, exist_ok=True)
-    args = ["-f", fmt, "--merge-output-format", "mp4", "--write-info-json", "-o", str(dst.with_suffix(".%(ext)s")), *(extra or []), url]
+    args = ["-f", fmt, *SORT_1080, "--merge-output-format", "mp4", "--write-info-json", "-o", str(dst.with_suffix(".%(ext)s")), *(extra or []), url]
     return ytdlp(args, timeout=timeout, stall_sec=stall_sec, watch=dst.with_suffix(""), log=log)
 
 
