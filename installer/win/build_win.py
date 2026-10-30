@@ -275,6 +275,7 @@ def build_server(stage: Path, client: Path, report: dict) -> None:
         return
     ignore = shutil.ignore_patterns("node_modules", ".git", "test", "tests", "__tests__", "*.test.js", "*.log", ".env*")
     shutil.copytree(client / "server", srv, ignore=ignore)
+    put_guide(srv)                      # 회원 지침 — 켤 때 자동 업데이트(server 묶음)로 같이 바뀐다 → 플러그인 시작 훅이 이것을 먼저 읽는다
     # package.json 이 server 안에 있으면 거기, 아니면 shortem_client 루트 것을 설치 폴더 루트에 둔다(위로 올라가며 찾는다)
     if (client / "server" / "package.json").exists():
         pkg_dir, dst = client / "server", srv
@@ -415,12 +416,21 @@ def build_mcpb(out: Path, dist: Path, stage: Path, report: dict) -> Path:
     return target
 
 
+GUIDE = ROOT / "common" / "CLAUDE_숏클.md"     # 회원 지침 원본 한 곳(관제 290) — 빌드가 플러그인·server 두 자리에 복사만 한다
+
+
+def put_guide(dst: Path) -> None:
+    (dst / "guide").mkdir(parents=True, exist_ok=True)
+    shutil.copy2(GUIDE, dst / "guide" / GUIDE.name)
+
+
 def build_plugin(stage: Path, report: dict) -> None:
     dst = stage / "claude-plugin"
     if dst.exists():
         shutil.rmtree(dst)
     shutil.copytree(ROOT / "plugin", dst)
     shutil.copy2(ROOT / "mcpb" / "launcher.js", dst / "shortem" / "launcher.js")
+    put_guide(dst / "shortem")          # 회원 지침 — 시작 훅(hooks/guide.js)이 읽는다. 업데이트본은 server/guide(build_server)
     claude = shutil.which("claude")
     res = {}
     if claude:

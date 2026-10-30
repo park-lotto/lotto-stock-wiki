@@ -143,6 +143,9 @@ def _reply(rv: dict, ctx: dict) -> dict:
         return {"ok": True, "problems": []}
     if i.startswith("eye_"):
         return dict(ctx.get("eye") or E_OK)
+    if i.startswith("sheet_"):       # 완성 전 1초 시트(flow.ph_final_sheet, 관제 290 — 숏클 지침 15-0)
+        ctx.setdefault("sheets_asked", []).append(i)
+        return dict(ctx.get("sheet") or {"ok": True, "problems": []})
     if i.startswith("task_"):        # 제작자 과제(10-26 flow._task) — 이 시험들은 회원에게 가는 멈춤을 보므로 '만들 수 없다(end)'로 답한다
         ctx.setdefault("tasks", []).append(i)
         return {"action": ctx.get("task_action", "end"), "note": "시험"}

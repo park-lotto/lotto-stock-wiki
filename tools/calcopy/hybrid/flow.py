@@ -94,9 +94,9 @@ PHASE_STAGE = {   # 세부 단계 → 회원에게 보이는 단계
     "product_same": "product", "name_find": "product", "name_got": "product", "named_cands": "product", "named_same": "product",
     "best_same": "product", "product_done": "product", "research": "research", "research_got": "research", "material": "material",
     "material_got": "material", "material_pick": "material", "material_dl": "material", "asr": "asr", "asr_got": "asr", "shots_got": "asr",
-    "script": "script", "script_got": "script", "stills_again": "script", "script_saved": "script", "sign": "sign", "plan": "plan", "plan_got": "plan", "line_fix_got": "plan",
+    "script": "script", "script_got": "script", "stills_again": "script", "script_saved": "script", "sign": "sign", "plan": "plan", "plan_got": "plan", "line_fix_got": "plan", "member_revise": "plan", "more_got": "plan", "more_pick": "plan", "more_dl": "plan", "more_sheets": "plan",
     "plan_look": "plan", "plan_saved": "plan", "thumb": "plan", "thumb_sheet": "plan", "thumb_got": "plan", "render": "render", "render_got": "render", "render_fix": "render", "render_saved": "render",
-    "check": "check", "check_got": "check", "check_look": "check", "check_fix": "check", "check_saved": "check", "done": "done",
+    "check": "check", "check_got": "check", "check_look": "check", "final_sheet": "check", "check_fix": "check", "check_saved": "check", "done": "done",
 }
 
 # 고치기 한도(사장님 10-26 "고치기 한도는 계속 다듬어야 된다") — 근거 = 회원 마스크편(C:/숏템_칼카피/flowtest/ititemlog12_member, 11회 실행 · 대본 15·장면 17 판정)
@@ -400,6 +400,8 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
     """한 번 호출 = 지난 do·review 결과를 먹고 다음 할 일을 낸다. 같은 호출 안에서 바로 이어 갈 수 있는 단계(goto)는 계속 넘어간다."""
     st = state
     m, rp, user = dict(measure or {}), dict(replies or {}), dict(user or {})
+    if user.get("revise") and (st.get("script") or {}).get("S") and st.get("phase") != "sign":
+        st["phase"] = "member_revise"      # 대본이 나온 뒤 회원이 고칠 줄을 말함 — 어느 단계든 그 줄만(재료 그대로, ph_member_revise)
     if m and st.get("watch_last") and any(isinstance(v, dict) and v.get("error") for v in m.values()):
         (st.get("watch_keys") or {}).pop(st["watch_last"], None)     # 실패한 일을 같은 입력으로 다시 = 다시 시도(반복 감시 대상 아님)
     for _ in range(40):
@@ -413,6 +415,9 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
         except _Stop as e:
             st.pop("watch_keys", None)          # 멈춤 뒤 다시 시도 = 같은 일을 일부러 다시 낸다(반복 감시 대상 아님)
             # 뿌리(10-22): 멈춤 34곳 중 5곳만 이어 가기 → 고칠 때마다 원본 찾기부터 20~50분 다시. 이제 정한 retry 가 없으면 **마지막으로 일을 시킨 단계**부터(같은 do·질문을 다시)
+            if _auto_next_source(st, e):        # 소재 창고에서 고른 편이 소재 단계에서 끝났다 — 다음 조회순 편으로(회원에게 묻지 않는다)
+                m, rp, user = {}, {}, {}
+                continue
             retry = None if e.final else (e.retry or st.get("_asker"))
             if e.detail:
                 st["log"].append(f"멈춤 속사정({ph}): {str(e.detail)[:400]}")
@@ -526,6 +531,8 @@ def _out(st: dict, status: str, phase: str, **kw) -> dict:
         lst = _stage_list(st)
         stage = {**stage, "no": [x for x, _ in lst].index(back) + 1, "text": dict(lst)[back], "key": back}
     res = {"status": status, "stage": stage, "message": msg, "traps": traps, "state": st}
+    if (st.get("script") or {}).get("S"):      # 대본은 늘 같이 — 회원이 언제든 보고 그 줄만 고치게(숏클 지침 3-1, 10-30)
+        res["script"] = script_view(st)
     fs = finding_say(st) if stage["key"] == "origin" and status != "stop" else None
     if fs:                         # 원본 찾기가 길어지는 동안 진행 줄(주인 finding_say) — 회원 PC 가 5분마다 'N분째'를 새로 채운다
         res["message"] = f"{msg} · {finding_line(fs)}"
@@ -2067,7 +2074,8 @@ def script_view(st) -> dict:
     S = (st.get("script") or {}).get("S") or {}
     title = " ".join("".join(c[0] for c in l) if isinstance(l, list) else str(l) for l in S.get("title_lines") or [])
     lines = [(l.get("tts") or l.get("text") or " ".join(c[0] for c in l.get("caps_rel") or []) or "").strip() for l in S.get("lines") or []]
-    return {"title": title, "lines": [x for x in lines if x][:30]}
+    rows = [{"id": l.get("id"), "text": x} for l, x in zip(S.get("lines") or [], lines) if x and l.get("kind") != "orig"]
+    return {"title": title, "lines": [x for x in lines if x][:30], "rows": rows[:30]}
 
 
 # ── 회원 맞춤 자리(표준 §10-3 — 지시서 12 가 채운다) ─────────────────────────────
@@ -2186,7 +2194,14 @@ def _mark_new(st: dict, over: list) -> list:
     return out + ([FIX_ALL] if out else [])
 
 
-def _fix_review(st, why: str, sheet: str | None, rid: str) -> dict:
+WAY_LINE = ("그 줄 문장을 장면에 맞게 바꾼다(자막 넘침·낱말 끊김도 이것으로): \"대본줄\": {\"<줄 id>\": {\"tts\": \"…\", \"caps\": [\"…\"]}} "
+            "(바꾼 줄만 · 뜻·사실·결 그대로 · caps 를 이으면 tts)")
+PLAN_LOOK_WAYS = ("\n\n★재료로 못 고치는 줄(맞는 장면이 재료에 없다)은 멈추지 말고 둘 중 하나로 답에 넣어라 — ① " + WAY_LINE +
+                  " ② 재료를 더 찾는다: \"재료_더찾기\": [\"유튜브 검색어\", …] (최대 4개 — 그 장면이 나올 영상 검색어). 해당 없으면 넣지 않는다.")
+FINAL_FIX_WAYS = "\n\n★재료(컷)로 못 고치는 것(자막 넘침·낱말 끊김·대사와 다른 말)은 " + WAY_LINE + " 로 답에 넣어라. 해당 없으면 넣지 않는다."
+
+
+def _fix_review(st, why: str, sheet: str | None, rid: str, more_imgs: list | None = None) -> dict:
     v = st["version"]
     _, _, ww, wh = STY_window(v)
     sc = st["script"]
@@ -2197,8 +2212,8 @@ def _fix_review(st, why: str, sheet: str | None, rid: str) -> dict:
                json.dumps(sc["S"], ensure_ascii=False)[:6000] + "\n\n재료:\n" + json.dumps(sc["M"], ensure_ascii=False)[:8000] + _shots_ctx(st) +
                # 처음 질문과 같은 장면 규칙·판 숫자·재료 샷 구간·쓸 수 있는 파일(10-27: 고치기 질문엔 이게 없어 고친 컷이 샷 경계·컷 중앙을 새로 넘겼다 —
                # 6편 두 번째 반려 전부 '지난 고치기에서 새로 생김')
-               _src_rule_ctx(st) + _cut_rules_ctx(st, (st.get("_msheets") or {}).get("shots")) + _subject_ctx(st),
-               [_img(sheet)] if sheet else [], need=("ok",))
+               _src_rule_ctx(st) + _cut_rules_ctx(st, (st.get("_msheets") or {}).get("shots")) + _subject_ctx(st) + (PLAN_LOOK_WAYS if rid.startswith("plan_") else FINAL_FIX_WAYS if rid.startswith("final_fix_") else ""),
+               ([_img(sheet)] if sheet else []) + [_img(x) for x in more_imgs or []], need=("ok",))
 
 
 def _take_fix(st, r: dict) -> dict | None:
@@ -2226,6 +2241,15 @@ def ph_plan_look(st, m, rp, u):
     voice = [str(o) for o in over if VOICE_RX.search(str(o))]
     if voice:          # 재료 답이 같이 와도 목소리 결함은 대본으로(10-27 이브라인 10번 반복)
         return _voice_rewrite(st, voice)
+    more = [str(q).strip()[:60] for q in (r.get("재료_더찾기") or []) if isinstance(q, str) and q.strip()][:4]
+    if more and st["tries"].get("more_material", 0) < MORE_MATERIAL_MAX:     # 맞는 장면이 재료에 없다 — 그 자리에서 재료만 더(대본·앞 단계 그대로, 숏클 지침 4②)
+        return _more_material(st, more)
+    if isinstance(r.get("대본줄"), dict) and r["대본줄"]:                    # 장면에 맞게 그 줄 문장만(재료 답이 같이 오면 같이)
+        if isinstance(r.get("재료"), dict):
+            _take_fix(st, r)
+        got = _apply_lines(st, r["대본줄"], "장면 검수 — 장면에 맞게 줄 바꿈")
+        if got:
+            return got
     _tries(st, "plan", LIMITS["plan"], _plan_causes(over or [p for p in r.get("problems") or [] if str(p).strip()]))
     M = _take_fix(st, r)
     if M is not None:
@@ -2235,6 +2259,10 @@ def ph_plan_look(st, m, rp, u):
         if probs and not over:
             # 장면은 맞는데 Claude 가 대본·목소리 쪽 문제를 짚었다 — 재료 답 칸이 없어 멈추던 것(10-26 회원 마스크편) → 대본으로
             return _voice_rewrite(st, probs)
+        if not st["tries"].get("plan_ways"):          # 고칠 답 없이 문제만 — 멈추기 전에 한 번: 세 길(재료·대본줄·재료_더찾기) 중 하나를 꼭 고르라고
+            st["tries"]["plan_ways"] = 1
+            why = "; ".join([str(x) for x in over] + probs)[:1500] + " — ★지난 답에 재료·대본줄·재료_더찾기가 다 없었다. 셋 중 하나는 반드시 넣어라"
+            return {"review": [_fix_review(st, why, st.get("_plan_sheet"), f"plan_{v}")], "then": "plan_look"}
         # 속사정 = 엔진 관문에 걸린 것 + 재료 파일 수(10-29 썰템쇼: 재료 영상 0개·상품 사진만이라 '사진 비중' 관문이 고칠 길 없이 반복 — 기록이 빈칸이었다)
         raise _Stop("장면을 맞추다 막혔어요", "다시 시도해 주시면 이어 갈게요",
                     detail=f"엔진 관문 {over[:4]} · 재료 파일 {len((st.get('material') or {}).get('files') or [])}개 · 검수 문제 {probs[:3]}")
@@ -2392,6 +2420,13 @@ def ph_check(st, m, rp, u):
 
 
 EYE_REVIEW = False       # 완성본 눈 2단(E1~E9 질문) — 사장님 10-26 "재현일치도랑 눈검수는 필요없다". 되살리면 True
+FINAL_SHEET_LOOK = True  # 완성 전 1초 시트 한 번 — 사장님 PC 제작처럼(숏클 지침 15-0, 관제 290). E 번호 묻기가 아니라 시트를 보고 걸린 것만
+FINAL_SHEET_FILES = ("시트_1초.jpg", "훅3초_0.1초.jpg", "끝2초_0.1초.jpg")
+FINAL_SHEET_ASK = """너는 이 편을 채널에 올릴지 마지막으로 보는 사람이다. 자동 검사는 통과했다. 완성본 1초 시트(처음~끝)·훅 3초·끝 2초를 처음부터 끝까지 한 칸씩 본다.
+본다: 줄마다 화면이 대사와 맞나 · 자막이 넘치거나 낱말 중간에서 끊기나 · 제목 줄 수·잘림 · 남의 얼굴·손·글자(원본 편집 자막·워터마크) · 같은 장면 되풀이·멈춘 화면·검은 칸 · 이야기 대상과 다른 물건이 그 줄에 나오나.
+★우리 틀(결함 아님): 맨 위 제목 · 로고 · 우리 자막(색 강조) · 출처 줄.
+걸린 것은 몇 초·어느 줄인지 적는다(예: "7초 L4 자막 3줄 넘침"). 없으면 빈 목록.
+JSON 하나: {"ok": true, "problems": ["…"]}"""
 
 
 def ph_check_got(st, m, rp, u):
@@ -2404,7 +2439,13 @@ def ph_check_got(st, m, rp, u):
     if not st["auto"].get("ok"):          # 1단이 ×면 눈 검수는 하지 않는다(표준 §5-2 '1단 통과 뒤') — 바로 고치기 판정으로
         st["look"] = {"ok": False, "problems": ["1단 자동 관문 미통과 — 눈 검수 생략"], "skipped": True}
         return {"goto": "check_judge"}
-    if not EYE_REVIEW:                   # 사장님 10-26 "눈검수는 필요없다" — 1단 자동 관문 통과면 바로 완성(눈 묶음 질문 안 함)
+    if not EYE_REVIEW:                   # 사장님 10-26 "눈검수는 필요없다" — E 번호 묻기는 안 한다
+        sheets = [x for x in st["eye_pack"] if any(str(x).endswith(n) for n in FINAL_SHEET_FILES)]
+        if FINAL_SHEET_LOOK and sheets:     # 완성 전 1초 시트(숏클 지침 15-0) — 고쳐 다시 렌더하면 새 시트로 또 본다
+            texts = "".join(f"\n\n## {n}\n{str(t)[:4000]}" for n, t in (c.get("eye_texts") or {}).items())
+            sv = script_view(st)
+            return {"review": [_rv(f"sheet_{st['version']}", FINAL_SHEET_ASK + texts + "\n\n## 대본\n" + json.dumps(sv, ensure_ascii=False)[:4000],
+                                   [_img(x) for x in sheets][:3], need=("ok",))], "then": "final_sheet"}
         st["look"] = {"ok": True, "problems": [], "skipped": "눈 검수 뺌(사장님 10-26)"}
         return {"goto": "check_judge"}
     rows = _eye_rows(bool(c.get("upgrade")))
@@ -2426,6 +2467,16 @@ def _eye_verdict(a: dict, keys: list) -> tuple[bool, list]:
         if v != "○":
             bad.append(f"{k} {v or '답 없음'}: {str((x or {}).get('memo') if isinstance(x, dict) else '')[:160]}")
     return not bad, bad
+
+
+def ph_final_sheet(st, m, rp, u):
+    """완성 전 1초 시트 답(숏클 지침 15-0) → 걸린 것이 없으면 완성, 있으면 완성본 고치기(ph_check_judge 의 고치기 길 그대로 — 한도 LIMITS['look'])."""
+    a = _reply(rp, f"sheet_{st['version']}", ("ok",))
+    probs = [str(p)[:200] for p in a.get("problems") or [] if str(p).strip()]
+    ok = bool(a.get("ok")) and not probs
+    st["look"] = {"ok": ok, "problems": probs, "by": "완성 전 1초 시트"}
+    st["log"].append(f"완성 전 1초 시트: {'통과' if ok else '걸림 ' + ' / '.join(probs)[:300]}")
+    return {"goto": "check_judge"}
 
 
 def ph_check_look(st, m, rp, u):
@@ -2472,7 +2523,8 @@ def ph_check_judge(st, m, rp, u):
     probs = json.dumps({"자동 관문 ×": [{k: r.get(k) for k in ("group", "what", "value")} for r in (st.get("auto") or {}).get("rows") or []
                                     if r.get("ok") is not True and not r.get("ref")] if not auto_ok else None,
                         "눈 검수 ×": look.get("problems")}, ensure_ascii=False)[:3000]
-    return {"review": [_fix_review(st, "완성본 검사에서 걸린 것(화면·크롭·남의 글자는 재료로 고친다): " + probs + _face_hint(st), None, f"final_fix_{v}")], "then": "check_fix"}
+    sheet = next((x for x in st.get("eye_pack") or [] if str(x).endswith(FINAL_SHEET_FILES[0])), None) if look.get("by") else None
+    return {"review": [_fix_review(st, "완성본 검사에서 걸린 것(화면·크롭·남의 글자는 재료로 고친다): " + probs + _face_hint(st), sheet, f"final_fix_{v}")], "then": "check_fix"}
 
 
 CODE_ONLY_ROWS = ("배치(본보기 벤치 편 대조)",)     # 완성본 1단 칸 중 재료·대본이 아니라 코드가 정하는 것 — 걸리면 헛바퀴 없이 멈춘다(ph_check_judge)
@@ -2515,27 +2567,126 @@ def _line_fix(st, why: str, ids: list[str], pick: bool = False) -> dict | None:
     return {"review": [_rv(f"line_fix_{st['version']}", q, [], need=("lines",))], "then": "line_fix_got"}
 
 
-def ph_line_fix_got(st, m, rp, u):
-    """줄 고치기 답 → 그 줄만 바꿔 대본 검사(재료 그대로) → 통과면 대본만 저장하고 계획부터. 안 되면 옛 길(대본 전체)."""
+def _apply_lines(st, got: dict, why: str) -> dict | None:
+    """(판단 주인 — 대본 줄 바꿔 끼우기: 줄 고치기·회원 고치기·장면 검수가 같이 부른다) 바뀐 줄만 tts·caps 를 바꿔 대본 검사(재료 그대로).
+    통과면 대본(+재료)을 저장하고 계획부터 — 장면 맞추기를 처음부터 다시 하지 않는다. 검사 미달·바꾼 줄 없음이면 None."""
     v = st["version"]
-    r = _reply(rp, f"line_fix_{v}", ("lines",))
     S = json.loads(json.dumps(st["script"]["S"], ensure_ascii=False))
     M = st["script"]["M"]
-    got = r.get("lines") if isinstance(r.get("lines"), dict) else {}
     by = {l["id"]: l for l in S.get("lines") or []}
-    for lid, x in got.items():
+    n = 0
+    for lid, x in (got or {}).items():
         if lid in by and isinstance(x, dict) and by[lid].get("kind") != "orig":
             for k in ("tts", "caps"):
                 if x.get(k):
                     by[lid][k] = x[k]
-    a = audit_script(st, S, M) if got else {"ok": False, "error": "바꾼 줄 없음"}
+                    n += 1
+    a = audit_script(st, S, M) if n else {"ok": False, "error": "바꾼 줄 없음"}
     if not a.get("ok"):
-        st["log"].append("줄 고치기 대본 검사 미달 → 대본 전체 다시: " + json.dumps({k: x for k, x in a.items() if k != "ok"}, ensure_ascii=False)[:300])
-        st["tries"]["line_fix"] = LINE_FIX_MAX
-        return _voice_rewrite(st, [st.get("_line_fix_why") or "줄 고치기 실패"])
+        st["log"].append(f"{why}: 대본 검사 미달 → " + json.dumps({k: x for k, x in a.items() if k != "ok"}, ensure_ascii=False)[:300])
+        return None
     st["script"]["S"] = S
     st["_plan_fixed"] = True          # 재료는 그대로 — 계획이 엔진 검사를 통과하면 장면 검수를 다시 묻지 않는다(ph_plan_got)
-    return {"do": [{"id": "save_script", "cmd": "write_doc", "files": {f"{v}/대본.json": S}, "cand_dir": True, "version": v}], "then": "plan"}
+    st["log"].append(f"{why}: 줄 {sorted(k for k in got if k in by)} 바꿈(재료 그대로)")
+    return {"do": [{"id": "save_script", "cmd": "write_doc", "files": {f"{v}/대본.json": S, f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "plan"}
+
+
+MORE_MATERIAL_MAX = 2    # 장면 검수에서 재료 더 찾기 한도(편당) — 넘으면 대본줄·멈춤
+
+
+def _more_material(st, qs: list) -> dict:
+    """(판단 주인 — 장면에 맞는 재료가 없을 때 그 자리에서 재료만 더, 숏클 지침 4② · 10-30 회원 실패 기록 '재료 0개로 장면 맞추기 막힘')
+    대본·원본·앞 단계는 그대로 — 검색 → 고르기 → 받기 → 새 재료 시트 → 장면 검수로 돌아온다."""
+    st["tries"]["more_material"] = st["tries"].get("more_material", 0) + 1
+    st["_more_q"] = qs
+    st["log"].append(f"재료 더 찾기({st['tries']['more_material']}번째): {qs}")
+    R = st.get("research") or {}
+    return {"do": [{"id": "screen", "cmd": "screen", "queries": qs, "exclude": R.get("exclude") or [], "keywords": qs, "top": 6,
+                    "bench_id": (st.get("bench") or {}).get("id"), "origin_id": (st.get("origin") or {}).get("id")}], "then": "more_got"}
+
+
+def _have_material_ids(st) -> set:
+    return {Path(str(x.get("name") or "")).stem for x in (st.get("material") or {}).get("files") or []}
+
+
+def _back_to_look(st, note: str, imgs: list | None = None) -> dict:
+    why = "; ".join(str(x) for x in st.get("_plan_over") or []) + (" · " if st.get("_plan_over") else "") + note
+    return {"review": [_fix_review(st, why, st.get("_plan_sheet"), f"plan_{st['version']}", imgs)], "then": "plan_look"}
+
+
+def ph_more_got(st, m, rp, u):
+    s = m.get("screen") or {}
+    have = _have_material_ids(st)
+    rows = [x for x in s.get("rows") or [] if x.get("id") not in have]
+    if not rows:
+        return _back_to_look(st, f"재료를 더 찾았지만({st.get('_more_q')}) 새 영상이 없었다 — 대본줄(그 줄 문장을 있는 장면에 맞게)로 고쳐라")
+    st["_more_rows"] = rows
+    sheets = [x for x in s.get("sheets") or [] if not any(h and h in x for h in have)]
+    return {"review": [_rv("more_pick", SCREEN_PICK + "\n\n★장면 검수에서 맞는 장면이 없던 줄을 채울 재료를 더 찾았다(검색어: " + ", ".join(st.get("_more_q") or []) + ")."
+                           "\n\n후보(시트 순서와 같다):\n" + json.dumps(rows, ensure_ascii=False, indent=1) +
+                           f"\n\n제품: {(st.get('product') or {}).get('name')} / 연예인: {(st.get('read') or {}).get('celeb')}" + _subject_pick_ctx(st),
+                           [_img(x) for x in sheets][:8], need=("chosen",))], "then": "more_pick"}
+
+
+def ph_more_pick(st, m, rp, u):
+    r = _reply(rp, "more_pick", ("chosen",))
+    known = {x.get("id") for x in st.get("_more_rows") or []}
+    celeb = str((st.get("read") or {}).get("celeb") or "")
+    chosen = [c for c in r.get("chosen") or [] if isinstance(c, dict) and c.get("id") in known
+              and c["id"] not in ((st.get("bench") or {}).get("id"), (st.get("origin") or {}).get("id"))
+              and not (celeb and celeb in str(c.get("why") or ""))]
+    if not chosen:
+        return _back_to_look(st, "더 찾은 재료 중 쓸 것이 없었다 — 대본줄(그 줄 문장을 있는 장면에 맞게)로 고쳐라")
+    return {"do": [{"id": "dl", "cmd": "download", "items": [{"id": c["id"], "sections": c.get("sections") or []} for c in chosen]}], "then": "more_dl"}
+
+
+def ph_more_dl(st, m, rp, u):
+    new = [f for f in (m.get("dl") or {}).get("files") or [] if f.get("name")]
+    have = {x.get("name") for x in (st.get("material") or {}).get("files") or []}
+    new = [f for f in new if f["name"] not in have]
+    if not new:
+        return _back_to_look(st, "더 찾은 재료를 받지 못했다 — 대본줄(그 줄 문장을 있는 장면에 맞게)로 고쳐라")
+    st.setdefault("material", {}).setdefault("files", []).extend(new)
+    return {"do": [{"id": "msheets", "cmd": "mat_sheets", "files": ["src/" + f["name"] for f in new][:4]}], "then": "more_sheets"}
+
+
+def ph_more_sheets(st, m, rp, u):
+    ms = m.get("msheets") or {}
+    cur = st.setdefault("_msheets", {})
+    cur.setdefault("shots", {}).update(ms.get("shots") or {})
+    cur["list"] = (cur.get("list") or []) + (ms.get("list") or [])
+    names = [x.get("file") for x in ms.get("list") or []]
+    return _back_to_look(st, f"★새 재료 {len(names)}개를 받았다({', '.join(str(x) for x in names)} — 뒤 그림이 그 시트). "
+                             "맞는 장면이 없던 줄을 이 재료로 고쳐 재료 전체를 돌려줘라", ms.get("sheets") or [])
+
+
+def ph_member_revise(st, m, rp, u):
+    """(판단 주인 — 회원이 대본을 보고 고칠 곳을 말함, 숏클 지침 3-1 '그 줄만 고친다') 말에 줄 id 가 있으면 그 줄만,
+    없으면 나레 줄 전부를 보여 주고 최소 줄만 고르게. 재료(컷)는 그대로 → 계획부터. 회원 요청은 줄 고치기 한도를 쓰지 않는다."""
+    text = str(u.get("revise") or "")[:500]
+    st["tries"]["line_fix"] = 0
+    st["_line_fix_why"] = "고객 요청: " + text
+    ids = _line_ids(st, [text])
+    lf = _line_fix(st, "고객 요청: " + text, ids, pick=not ids)
+    if lf:
+        return lf
+    st["tries"]["script"] = 0
+    return {"review": [_script_ask(st, "고객 요청: " + text)], "then": "script_got"}
+
+
+def ph_line_fix_got(st, m, rp, u):
+    """줄 고치기 답 → 그 줄만 바꿔 대본 검사(재료 그대로) → 통과면 대본만 저장하고 계획부터. 안 되면 옛 길(대본 전체)."""
+    v = st["version"]
+    r = _reply(rp, f"line_fix_{v}", ("lines",))
+    got = r.get("lines") if isinstance(r.get("lines"), dict) else {}
+    done = _apply_lines(st, got, "줄 고치기")
+    if not done:
+        st["tries"]["line_fix"] = LINE_FIX_MAX
+        if str(st.get("_line_fix_why") or "").startswith("고객 요청"):     # 회원 요청 — 목소리 탓이 아니다, 그 요청 그대로 대본 다시
+            st["tries"]["script"] = 0
+            return {"review": [_script_ask(st, st["_line_fix_why"])], "then": "script_got"}
+        return _voice_rewrite(st, [st.get("_line_fix_why") or "줄 고치기 실패"])
+    return done
 
 
 def _voice_rewrite(st, probs: list) -> dict:
@@ -2613,6 +2764,12 @@ def ph_check_retry(st, m, rp, u):
 def ph_check_fix(st, m, rp, u):
     v = st["version"]
     r = _reply(rp, f"final_fix_{v}", ("ok",))
+    if isinstance(r.get("대본줄"), dict) and r["대본줄"]:       # 자막 넘침 등 글 쪽 — 그 줄만 바꿔 계획부터(목소리 새로, 재료 답이 같이 오면 같이)
+        if isinstance(r.get("재료"), dict):
+            _take_fix(st, r)
+        got = _apply_lines(st, r["대본줄"], "완성본 고치기 — 줄 바꿈")
+        if got:
+            return got
     M = _take_fix(st, r)
     if M is None and not st["tries"].get("render_same"):
         # 오푸스 '재료로 고칠 것 없음' = 걸린 칸이 렌더·검사 쪽(자막 배치·소리 시각)이다 — 멈추기 전에 재료 그대로 한 번 다시 만든다
@@ -3196,26 +3353,88 @@ SLOT_BENCH = ("bench", "bench_got", "ref_read")
 ALT_NOTICE_WON = "주신 영상은 원본을 아직 찾는 중이라, 함께 찾던 같은 채널 영상으로 먼저 만들게요"
 
 
+POOL_SHOW = 5        # 회원이 후보를 달라고 하면 보여 줄 수(사장님 10-30 "후보 뽑아달라고 하면 5개")
+
+
+def ref_hash(ref: str) -> str:
+    """소재 지문 — 영상 주소·id → 짧은 해시(서버 작업 기록에는 주소를 남기지 않는다: claude_flow 요약 규칙). 만든 편 대조에 쓴다."""
+    from tools.calcopy import origin_find as OF
+    k = OF.vkey(str(ref)) if "/" in str(ref) else None
+    return "h:" + hashlib.sha256(("shortem-ref|" + (k[1] if k else str(ref))).encode()).hexdigest()[:16]
+
+
+def bench_pool(slug: str, done=(), skip_bench: bool = True) -> list[dict]:
+    """(판단 주인 — 소재 창고 순서) 그 판 벤치 채널 쇼츠 조회순(channel/<slug>/_kal/벤치상위.json — 만들기 = bench_pool.py) 중
+    done(회원이 만든 소재 id·주소)과 판 본보기(상위편_목표 ids)를 뺀 것. 사장님 10-30 "말이 없으면 벤치 채널에서 조회수 순으로"."""
+    from tools.calcopy import origin_find as OF
+    f = PRESETS_FILE.parent / str(slug or "-") / "_kal" / ALT_LIST
+    if not f.is_file():
+        return []
+    rows = [r for r in json.loads(f.read_text(encoding="utf-8")).get("rows") or [] if isinstance(r, dict) and r.get("id")]
+    gone, gone_h = set(), set()
+    for d in done or ():
+        if str(d).startswith("h:"):               # 서버 기록(주소 대신 지문)
+            gone_h.add(str(d))
+            continue
+        k = OF.vkey(str(d)) if "/" in str(d) else None
+        gone.add(k[1] if k else str(d))
+    gf = f.parent / ALT_BENCH_IDS
+    if skip_bench and gf.is_file():
+        gone |= set(json.loads(gf.read_text(encoding="utf-8")).get("ids") or [])
+    return [{"url": f"https://www.youtube.com/shorts/{r['id']}", "id": r["id"], "views": r.get("views"), "title": r.get("title")}
+            for r in sorted(rows, key=lambda r: -(r.get("views") or 0)) if r["id"] not in gone and not (gone_h and ref_hash(r["id"]) in gone_h)]
+
+
+def pick_source(version: str, done=()) -> dict | None:
+    """회원이 주소 없이 '만들어줘' — 그 판 소재 창고에서 안 만든 조회 1위(bench_pool). 없으면 None."""
+    _, slug = flow_format_of(version)
+    left = bench_pool(slug, done)
+    return left[0] if left else None
+
+
+AUTO_SOURCE_MAX = 5     # 주소 없이 시작한 편 — 소재 단계에서 끝나면 다음 조회순 편으로 몇 번까지
+
+
+def _auto_next_source(st: dict, e) -> bool:
+    """(판단 주인 — 소재 창고 편이 못 쓰는 소재일 때) 주소 없이 시작한 편(auto_source)이 대본 전에 '이 영상은 여기서 마칠게요'(final)·원본 못 찾음으로
+    끝나면 다음 조회순 편으로 처음부터(같은 sid·만든 편 목록 그대로). 회원이 준 주소면 그대로 멈춘다(회원이 고른 소재)."""
+    if not st.get("auto_source") or (st.get("script") or {}).get("S"):
+        return False
+    if not (e.final or e.origin_missing or "출처" in str(e.why)):
+        return False
+    tried = list(st.get("auto_tried") or []) + [st.get("ref")]
+    if len(tried) >= AUTO_SOURCE_MAX:
+        st["log"].append(f"소재 창고 {len(tried)}편 연속 못 씀 — 멈춤")
+        return False
+    left = bench_pool(st.get("slug"), list(st.get("made_refs") or []) + tried)
+    if not left:
+        return False
+    keep = {k: st[k] for k in ("sid", "version", "fmt", "slug", "env", "given", "made_refs") if k in st}
+    log = list(st.get("log") or []) + [f"소재 창고 편 못 씀({e.why}) → 다음 조회순 {left[0]['url']} (조회 {left[0].get('views')})"]
+    st.clear()
+    st.update(start(left[0]["url"], keep["version"], keep["sid"]))
+    st.update({k: v for k, v in keep.items() if k in ("env", "given", "made_refs")}, auto_source=left[0], auto_tried=tried, log=log)
+    return True
+
+
+def source_candidates(version: str, done=(), n: int = POOL_SHOW) -> list[dict]:
+    """회원이 '후보 뽑아줘' — 같은 순서로 n 개(번호·제목·조회수)."""
+    _, slug = flow_format_of(version)
+    return [{"n": i + 1, **r} for i, r in enumerate(bench_pool(slug, done)[:n])]
+
+
 def pick_alt_source(st: dict) -> dict | None:
     """(판단 주인 — 둘째 소재 고르기) 그 판 벤치 상위(조회순) 중 회원이 준 소재·이 PC 작업 기록의 만든 편(멈춘 편은 다시 씀 — runner done_refs) 아닌 첫 편."""
     from tools.calcopy import origin_find as OF
     if (st.get("env") or {}).get("single_source"):      # 원본 찾기 워커(of_worker, 사장님 10-27 '24시간 미리 찾아 둔다') — 그 소재 하나만
         return None
-    f = PRESETS_FILE.parent / str(st.get("slug") or "-") / "_kal" / ALT_LIST
-    if not f.is_file():
-        st["log"].append(f"둘째 소재 없음: {f.name} 없음({st.get('slug')})")
+    if not (PRESETS_FILE.parent / str(st.get("slug") or "-") / "_kal" / ALT_LIST).is_file():
+        st["log"].append(f"둘째 소재 없음: {ALT_LIST} 없음({st.get('slug')})")
         return None
-    rows = [r for r in json.loads(f.read_text(encoding="utf-8")).get("rows") or [] if isinstance(r, dict) and r.get("id")]
-    k = OF.vkey(str(st.get("ref") or ""))
-    own = k[1] if k else ""
-    done = set((st.get("env") or {}).get("done_refs") or [])
     # 판 본보기(상위편_목표 ids)는 빼고, 남은 상위 ALT_SPREAD 편 중 sid 로 골라 동시에 도는 회원끼리 같은 소재를 안 찾게(10-27 완주시험 3편 모두 콜라겐 마스크 — 원본찾기 시간 절반)
-    gf = f.parent / ALT_BENCH_IDS
-    bench = set(json.loads(gf.read_text(encoding="utf-8")).get("ids") or []) if gf.is_file() else set()
-    left = [r for r in sorted(rows, key=lambda r: -(r.get("views") or 0)) if r["id"] != own and r["id"] not in done and r["id"] not in bench]
+    left = bench_pool(st.get("slug"), [str(st.get("ref") or "")] + list((st.get("env") or {}).get("done_refs") or []) + list(st.get("made_refs") or []))
     if left:
-        r = left[int(hashlib.md5(str(st.get("sid") or "").encode()).hexdigest(), 16) % min(ALT_SPREAD, len(left))]
-        return {"url": f"https://www.youtube.com/shorts/{r['id']}", "id": r["id"], "views": r.get("views"), "title": r.get("title")}
+        return left[int(hashlib.md5(str(st.get("sid") or "").encode()).hexdigest(), 16) % min(ALT_SPREAD, len(left))]
     st["log"].append("둘째 소재 없음: 벤치 상위가 전부 만든 편·판 본보기")
     return None
 
@@ -4063,9 +4282,9 @@ PHASES = {
     "named_same": ph_named_same, "best": ph_best, "best_rated": ph_best_rated, "given": ph_given, "given_same": ph_given_same, "research": ph_research, "research_got": ph_research_got,
     "research_check": ph_research_check, "material": ph_material, "material_got": ph_material_got, "material_pick": ph_material_pick,
     "material_dl": ph_material_dl, "asr": ph_asr, "asr_got": ph_asr_got, "shots_got": ph_shots_got, "script": ph_script,
-    "script_ask": ph_script_ask, "script_got": ph_script_got, "script_heard": ph_script_heard, "sign": ph_sign, "plan": ph_plan, "plan_got": ph_plan_got, "line_fix_got": ph_line_fix_got,
+    "script_ask": ph_script_ask, "script_got": ph_script_got, "script_heard": ph_script_heard, "sign": ph_sign, "plan": ph_plan, "plan_got": ph_plan_got, "line_fix_got": ph_line_fix_got, "member_revise": ph_member_revise, "more_got": ph_more_got, "more_pick": ph_more_pick, "more_dl": ph_more_dl, "more_sheets": ph_more_sheets,
     "plan_look": ph_plan_look, "thumb": ph_thumb, "thumb_sheet": ph_thumb_sheet, "thumb_got": ph_thumb_got, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
-    "check_got": ph_check_got, "check_look": ph_check_look, "check_judge": ph_check_judge, "check_fix": ph_check_fix, "customize": ph_customize, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
+    "check_got": ph_check_got, "check_look": ph_check_look, "final_sheet": ph_final_sheet, "check_judge": ph_check_judge, "check_fix": ph_check_fix, "customize": ph_customize, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
 for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "given_origin_got": "origin", "stopped": "setup", "task_got": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "given": "product", "given_same": "product", "cand_look": "product", "reviews": "product", "reviews_got": "product", "reviews_naver": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():
     PHASE_STAGE.setdefault(_k, _v)

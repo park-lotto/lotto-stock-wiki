@@ -94,7 +94,8 @@ async function absorb(f, res) {
   f.status = res.status;
   f.message = res.message || f.message;
   f.stage = res.stage || f.stage;
-  f.finding = res.finding ? { ...res.finding, at: Date.now() } : null;   // 원본 찾기 진행 줄(서버 flow.finding_say) — 기다리는 동안 'N분째'를 시계로 채운다
+  f.finding = res.finding ? { ...res.finding, at: Date.now() } : null;
+  if (res.script) f.script = res.script;   // 지금 대본(제목·줄 id·문장) — 회원이 보자고 하면 그대로(step='script'), 고칠 줄은 reviseFlow   // 원본 찾기 진행 줄(서버 flow.finding_say) — 기다리는 동안 'N분째'를 시계로 채운다
   f.asks = null;
   f.wait = null;
   if (res.status === 'execute') { f.do = res.do || []; save(f); return 'run'; }
@@ -164,10 +165,29 @@ async function pump(f) {
 
 export async function startFlow({ preset, video, product }) {
   await refreshCookies();
-  const res = await api.step({ step: 'start', preset, source: { kind: /tiktok.com/.test(video) ? 'tiktok' : (/instagram.com/.test(video) ? 'instagram' : 'youtube'), url: video, ...(product ? { product: String(product).slice(0, 200) } : {}) } });
-  const f = { sid: res.sid, preset, video, created: Date.now() };
+  const res = await api.step({ step: 'start', preset, source: { kind: /tiktok.com/.test(video) ? 'tiktok' : (/instagram.com/.test(video) ? 'instagram' : 'youtube'), url: video, ...(product ? { product: String(product).slice(0, 200) } : {}) } });   // url '' = 서버가 소재 창고에서 고른다
+  const f = { sid: res.sid, preset, video: video || '', created: Date.now() };
   flows.set(f.sid, f);
   await absorb(f, res);
+  f.running = pump(f);
+  return f;
+}
+
+// 회원이 대본을 보고 고칠 곳을 말함(숏클 지침 3-1) — 서버가 어느 단계에서든 그 줄만 고친다(flow.ph_member_revise). 돌던 일이 끝난 뒤에만 보낸다(순번 어긋남 방지)
+export async function reviseFlow(sid, text) {
+  const f = loadFlow(sid);
+  if (!f) return null;
+  if (f.busy) return { busy: true };
+  if (!f.script) return { no_script: true };
+  f.busy = true;
+  try {
+    f.fail = null;
+    const res = await send(f, { step: 'revise', revise: String(text || '').slice(0, 500) });
+    await absorb(f, res);
+  } catch (e) {
+    f.fail = { why: e instanceof ApiError ? (e.msg || e.code) : '고치기를 보내지 못했습니다', fix: '잠시 뒤 같은 요청을 다시 해 주세요', retry_ok: false };
+    save(f);
+  } finally { f.busy = false; }
   f.running = pump(f);
   return f;
 }

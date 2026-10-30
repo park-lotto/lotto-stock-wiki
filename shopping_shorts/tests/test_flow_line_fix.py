@@ -51,3 +51,23 @@ def test_no_line_id_uses_old_path(monkeypatch):
     monkeypatch.setattr(F, "_script_ask", lambda st_, why="": called.setdefault("full", why) or {"x": 1})
     F._voice_rewrite(st, ["받아쓰기 확정 결함(줄 표시 없음)"])
     assert "full" in called
+
+
+def test_member_revise_any_phase_fixes_only_that_line(monkeypatch):
+    """숏클 지침 3-1 — 회원이 대본을 보고 'L5 를 더 짧게' 라고 하면 어느 단계에서든 그 줄만(재료 그대로)."""
+    st = _st()
+    st["phase"] = "render_got"
+    monkeypatch.setattr(F, "_reply", lambda rp, rid, need: {})
+    out = F.step(st, {}, {}, {"revise": "L5 줄을 더 짧게"})
+    assert out["status"] == "review" and st["phase"] == "line_fix_got"
+    q = json.dumps(out["review"][0], ensure_ascii=False)
+    assert "고객 요청" in q and "느린 줄" in q and "첫 줄." not in q
+    assert out["script"]["rows"][1]["id"] == "L5"          # 회원 Claude 가 보여 줄 대본(줄 id 포함)
+
+
+def test_member_revise_without_id_shows_all_lines(monkeypatch):
+    st = _st()
+    st["phase"] = "plan_got"
+    out = F.step(st, {}, {}, {"revise": "말투를 더 친근하게"})
+    q = json.dumps(out["review"][0], ensure_ascii=False)
+    assert "첫 줄" in q and "느린 줄" in q and "가장 적게" in q
