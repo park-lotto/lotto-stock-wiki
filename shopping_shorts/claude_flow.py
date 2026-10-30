@@ -78,7 +78,9 @@ def _summary(st: dict) -> dict:
     rh = getattr(_flow(), "ref_hash", None)      # 옛 지시서(지문 함수 없음)·시험 가짜 지시서면 비운다
     return {"seed_h": rh(st["ref"]) if rh and st.get("ref") else None, "origin": (st.get("origin") or {}).get("id"), "product": (st.get("product") or {}).get("product_id"),
             "mode": (st.get("product") or {}).get("mode"), "auto_ok": (st.get("auto") or {}).get("ok"),
-            "look_ok": (st.get("look") or {}).get("ok"), "tries": st.get("tries"), "stopped": st.get("stopped")}
+            "look_ok": (st.get("look") or {}).get("ok"), "look_by": (st.get("look") or {}).get("by"), "look_scenes": (st.get("look") or {}).get("scenes"),
+            "look_n": len((st.get("look") or {}).get("problems") or []), "look_skip": bool((st.get("look") or {}).get("skipped")),
+            "tries": st.get("tries"), "stopped": st.get("stopped")}
 
 
 def _made_refs(store, cid) -> list:
