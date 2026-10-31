@@ -1318,7 +1318,7 @@ def _cut_jumps(src: Path, ss: float, dur: float, fps: int = 10, n: int = 64) -> 
     """컷 구간 안 프레임끼리 바뀐 정도(회색 64칸 평균 차) — 장면 전환·끊김을 잰다(1초 시트 사이로 지나가는 0.5초 전환은 눈 검수가 못 본다)."""
     import numpy as np
     raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{ss:.2f}", "-t", f"{dur:.2f}", "-i", str(src), "-vf", f"fps={fps},scale={n}:{n}",
-                          "-f", "rawvideo", "-pix_fmt", "gray", "-"], capture_output=True, stdin=subprocess.DEVNULL, timeout=120).stdout
+                          "-f", "rawvideo", "-pix_fmt", "gray", "-"], capture_output=True, stdin=subprocess.DEVNULL, timeout=max(120, dur * 4)).stdout
     a = np.frombuffer(raw, np.uint8)
     if a.size < 2 * n * n:
         return []
