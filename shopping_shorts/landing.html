@@ -306,18 +306,18 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 @media(max-width:700px){.dl.v2 .in{padding:12px!important}.dl.v2 .dday{font-size:22px!important}.dl.v2 .cd b,.dl.v2 .cd{font-size:22px!important}.dl.v2 .go{font-size:15px!important;padding:9px 14px!important}}
 /* 숏클 출시(관제 292) — 금액은 서버가 채운다. 영상 = 유튜브 숏클 1편·고퀄 모션 조각 */
 .sc{--sc:#ff5a4f;padding:10px 0 20px}
-.sc-hook{text-align:center;padding:18px 0 30px}
+.sc-hook{text-align:center;padding:4px 0 30px}
 .sc-tag{display:inline-block;padding:7px 16px;border-radius:999px;background:var(--gold-grad);color:#2a1a00;font-size:clamp(13px,1.5vw,16px);font-weight:900;letter-spacing:.02em}
-.sc-title{font-family:'Black Han Sans',sans-serif;font-weight:400;font-size:clamp(46px,7.4vw,92px);line-height:1.12;color:#fff;margin:16px 0 8px}
+.sc-title{font-family:'Black Han Sans',sans-serif;font-weight:400;font-size:clamp(50px,8.4vw,112px);line-height:1.12;color:#fff;margin:10px 0 6px}
 .sc-title em{display:inline-block;font-style:normal;color:#111;background:#ffd84d;line-height:1.08;padding:.12em .16em .03em;border-radius:.12em}
 .kw{display:inline-block;opacity:0;transform:translateY(.55em) scale(.86) rotate(-3deg);filter:blur(6px);animation:kwIn .62s cubic-bezier(.2,1.4,.4,1) forwards;animation-delay:calc(var(--i)*.13s)}
 @keyframes kwIn{to{opacity:1;transform:none;filter:blur(0)}}
-.sc-prompt{display:inline-flex;align-items:center;gap:10px;max-width:100%;margin:6px 0 20px;padding:12px 18px;border-radius:14px;background:#14191f;border:1px solid #2b3440;color:#dce7e4;font-size:clamp(14px,1.9vw,20px);font-weight:700;text-align:left}
+.sc-prompt{display:inline-flex;align-items:center;gap:10px;max-width:100%;margin:4px 0 16px;padding:10px 18px;border-radius:14px;background:#14191f;border:1px solid #2b3440;color:#dce7e4;font-size:clamp(14px,1.9vw,20px);font-weight:700;text-align:left}
 .sc-prompt i{font-style:normal;color:#ff8a5c}
 .sc-type{overflow:hidden;white-space:nowrap;border-right:2px solid #ffd84d;width:0;animation:scType 1.5s steps(17) .9s forwards,scCaret .8s step-end infinite}
 @keyframes scType{to{width:13.7em}}@keyframes scCaret{50%{border-color:transparent}}
 .sc-sub{font-size:clamp(17px,2.2vw,26px);font-weight:800;color:#e8f3ef;margin-bottom:22px}.sc-sub b{color:#ffd166}
-.sc-hv{position:relative;max-width:1180px;margin:0 auto;aspect-ratio:1280/627;border-radius:22px;overflow:hidden;border:1px solid var(--line);background:#05080b;box-shadow:0 30px 90px rgba(0,0,0,.55)}
+.sc-hv{position:relative;max-width:1480px;margin:0 auto;aspect-ratio:1280/627;border-radius:22px;overflow:hidden;border:1px solid var(--line);background:#05080b;box-shadow:0 30px 90px rgba(0,0,0,.55)}
 .sc-hv video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .sc-go{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:14px;margin-top:24px}
 .sc-go .ghost{padding:18px 26px}
@@ -369,12 +369,11 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 <section class=sc id=shortcl-launch>
   <div class=sc-hook>
     <span class=sc-tag>NEW · 숏클메이커 출시</span>
-    <h2 class=sc-title><span class=kw style="--i:0">말</span> <span class=kw style="--i:1">한</span> <span class=kw style="--i:2">줄이면,</span><br><span class=kw style="--i:4"><em>쇼츠</em></span> <span class=kw style="--i:5"><em>한 편.</em></span></h2>
+    <h2 class=sc-title><span class=kw style="--i:0">클로드로</span> <span class=kw style="--i:2"><em>한방에.</em></span></h2>
     <div class=sc-prompt><i>클로드 &gt;</i><span class=sc-type>이 스타일로 쇼츠 한 편 만들어줘</span></div>
-    <div class=sc-sub>개발하다 답답해서 직접 차린 <b>쇼츠 공장</b>, 이제 내 PC에서 돌립니다</div>
     <div class=sc-hv><video src="/landing/sc_hero.mp4" poster="/landing/sc_hero.jpg" autoplay muted loop playsinline preload=auto></video></div>
     <div class=sc-go><a class="cta big" href="/pricing#shortcl"><span class=bt>숏클메이커 시작하기 <i>→</i></span><span class=pr><b>기본반 __SHORTCL_FROM__부터</b></span></a><a class="cta ghost" href="#shortem">숏템메이커 보기 ↓</a></div>
-    <div class=sc-trust>Claude Max 구독(별도 결제) 필요 · 내 PC에 설치 · 원본 찾기부터 올리기까지</div>
+    <div class=sc-trust>개발하다 답답해서 직접 차린 쇼츠 공장, 이제 내 PC에서 · Claude Max 구독(별도 결제) 필요</div>
   </div>
 
   <div class="sc-sec reveal"><div class=sc-row>
