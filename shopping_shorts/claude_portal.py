@@ -160,6 +160,9 @@ _SCHEMA = (
         cid INTEGER PRIMARY KEY, kv INTEGER NOT NULL DEFAULT 0, gkv INTEGER NOT NULL DEFAULT 0,
         key_hash TEXT, issued INTEGER, expires INTEGER, plan TEXT DEFAULT 'claude', entitled_json TEXT,
         revoked INTEGER NOT NULL DEFAULT 0, suspended_until INTEGER NOT NULL DEFAULT 0, suspend_rule TEXT)""",
+    """CREATE TABLE IF NOT EXISTS claude_license_slots (
+        cid INTEGER NOT NULL, slot INTEGER NOT NULL, kv INTEGER NOT NULL, key_hash TEXT, issued INTEGER, expires INTEGER,
+        PRIMARY KEY (cid, slot))""",
     """CREATE TABLE IF NOT EXISTS claude_devices (
         id INTEGER PRIMARY KEY AUTOINCREMENT, cid INTEGER NOT NULL, fp_hash TEXT NOT NULL, dev_id TEXT NOT NULL,
         name TEXT, slot INTEGER, created INTEGER, last_seen INTEGER, removed INTEGER NOT NULL DEFAULT 0)""",
@@ -303,18 +306,28 @@ def _gkv(store) -> int:
         return 0
 
 
-def issue_license(cid, store=None) -> dict:
-    """새 키 발급(kv+1 — 옛 키 즉시 무효). 키 원문은 반환값에만 있고 DB 엔 해시만 남는다."""
+def issue_license(cid, store=None, slot=1) -> dict:
+    """새 키 발급(kv+1 — 그 자리 옛 키 즉시 무효). 키 원문은 반환값에만 있고 DB 엔 해시만 남는다.
+    slot 2 = 관리자 둘째 PC 키(사장님 10-31 "회사·집 2개 발급, 관리자만") — 한쪽을 새로 받아도 다른 쪽이 끊기지 않는다."""
     store = _store(store)
     ensure_schema(store)
     cid = int(cid)
     now = _now()
     exp = now + LICENSE_DAYS * 86400
+    slot = int(slot)
+    if slot not in (1, 2) or (slot == 2 and devices_max(cid) < 2):
+        raise PortalError("bad_request", "둘째 키는 관리자만 받을 수 있습니다")
     with _tx(store, write=True) as c:
         row = _row(c, "SELECT kv FROM claude_licenses WHERE cid=?", (cid,))
-        kv = (row["kv"] if row else 0) + 1
+        top = _row(c, "SELECT MAX(kv) AS kv FROM claude_license_slots WHERE cid=?", (cid,))
+        kv = max(row["kv"] if row else 0, (top or {}).get("kv") or 0) + 1      # 자리끼리 kv 가 겹치면 옛 키가 되살아난다
         key = f"SHORTEM-L1.{cid}.{exp}.{kv}.{_sig(cid, exp, kv)}"
-        if row:
+        if slot == 2:
+            if not row:
+                raise PortalError("bad_request", "첫째 키를 먼저 발급하세요")
+            c.execute("INSERT OR REPLACE INTO claude_license_slots(cid, slot, kv, key_hash, issued, expires) VALUES(?,?,?,?,?,?)",
+                      (cid, slot, kv, _key_hash(key), now, exp))
+        elif row:
             c.execute("UPDATE claude_licenses SET kv=?, gkv=?, key_hash=?, issued=?, expires=?, revoked=0 WHERE cid=?",
                       (kv, _gkv(store), _key_hash(key), now, exp, cid))
         else:
@@ -342,12 +355,14 @@ def verify_license(key, store=None) -> dict:
     cid, exp, kv = _parse_key(key)
     with _tx(store) as c:
         row = _row(c, "SELECT * FROM claude_licenses WHERE cid=?", (cid,))
-    if (not row or row["kv"] != kv or not hmac.compare_digest(row["key_hash"] or "", _key_hash(key.strip()))
+        extra = _row(c, "SELECT * FROM claude_license_slots WHERE cid=? AND kv=?", (cid, kv))
+    held = extra or row          # 둘째 자리 키면 그 자리 해시와, 아니면 첫째 자리와 대조. 회수·전역 kv·정지는 계정 행 하나
+    if (not row or held["kv"] != kv or not hmac.compare_digest(held["key_hash"] or "", _key_hash(key.strip()))
             or int(row["gkv"] or 0) != _gkv(store) or row["revoked"]):
         raise PortalError("revoked", "이 라이선스 키는 더 이상 쓸 수 없습니다 — 페이지에서 새 키를 발급하세요")
     if exp < _now():
         raise PortalError("expired", "라이선스 기간이 끝났습니다")
-    return {"cid": cid, "exp": exp, "kv": kv, "issued": row["issued"], "row": row}
+    return {"cid": cid, "exp": exp, "kv": kv, "issued": held["issued"], "row": row}
 
 
 def ctx_from_request(request, ip="") -> dict:
@@ -1510,7 +1525,8 @@ def home(cid, store=None) -> dict:
         cur = _active_lease(c, cid)
         notes = _rows(c, "SELECT rule, level, ts FROM claude_alerts WHERE cid=? AND resolved=0 AND level IN ('warn','suspend') ORDER BY id DESC LIMIT 5", (cid,))
     lic_out = {"has_key": bool(lic and lic["kv"]), "issued": (lic or {}).get("issued"), "expires": (lic or {}).get("expires"),
-               "revoked": bool(lic and lic["revoked"]), "suspended": bool(lic and (lic["suspended_until"] or 0) > _now())}
+               "revoked": bool(lic and lic["revoked"]), "suspended": bool(lic and (lic["suspended_until"] or 0) > _now()),
+               "slots": devices_max(cid)}
     return {"ok": True, "presets": plist, "styles": styles, "results": results,
             "packs": {"fonts": fonts, "sfx": sorted(sfx.values(), key=lambda g: g["id"]), "bgm": bgm, "templates": tpls,
                       "voices": voices, "memes": sorted(memes.values(), key=lambda m: -m["count"]),

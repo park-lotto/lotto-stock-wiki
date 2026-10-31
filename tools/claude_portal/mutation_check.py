@@ -27,7 +27,7 @@ MUT = [
      'a = _row(c, "SELECT * FROM claude_assets WHERE id=?", (str(asset_id),))', "test_목록밖_pack_거절_extra는_허용풀만"),
     ("페이지에 path 노출", '"date": r.get("date"), "preview": _pv("result", r.get("n"))}',
      '"date": r.get("date"), "preview": _pv("result", r.get("n")), "path": r.get("path")}', "test_페이지_응답에_금지키_원본URL_0개"),
-    ("옛 kv 키 통과", 'if (not row or row["kv"] != kv or',
+    ("옛 kv 키 통과", 'if (not row or held["kv"] != kv or',
      'if (not row or False or', "test_라이선스_위조_만료_재발급"),
 ]
 
