@@ -14470,7 +14470,7 @@ def _dl_blocks(html: str, has_deadline: bool) -> str:
 @app.get("/api/pricing")
 def api_pricing():
     """공개 — 정적 화면(설정·사이드바·안내·챌린지)이 기수·가격을 여기서 받는다. 판단은 _cohort_info 한 곳."""
-    return _cohort_info()
+    return {**_cohort_info(), "shortcl_upgrade_open": _shortcl_upgrade_open()}
 
 
 def _shortcl_banner_html() -> str:
@@ -15682,6 +15682,54 @@ def _pay_href(product) -> str:
     return "/pay/toss" if product["kind"] == "shortem" else f"/pay/toss?product={product['code']}"
 
 
+def _pay_ledger() -> list:
+    """관리자 결제 목록의 주인 — 카드 결제 + 입금 신고. 숏템에 가입하지 않은 결제자도 결제 정보로 나온다."""
+    def row(at, name, amount, method, status, payer, phone, email, cid):
+        plan = next((p[1] for p in _SHORTCL_PLANS if name.startswith(f"숏클메이커 {p[1]}")), "")
+        return {"at": at or "", "group": "숏클" if plan else "숏템", "plan": plan, "upgrade": "업그레이드" in name,
+                "name": name, "amount": amount, "method": method, "status": status, "payer": payer or "",
+                "phone": phone or "", "email": email or "", "customer_id": cid}
+    st = _toss_db()
+    with st._conn() as c:
+        cards = c.execute("SELECT approved_at, order_name, amount, payer_name, payer_phone, payer_email, customer_id "
+                          "FROM toss_payments WHERE status='DONE'").fetchall()
+    items = [row(a, n or "", amt, "카드", "결제 완료", pn, pp, pe, cid) for a, n, amt, pn, pp, pe, cid in cards]
+    amounts = {p["name"]: p["amount"] for p in _pay_products()}
+    for cl in st.list_deposit_claims(only_open=False):
+        name = cl["product"] or _cohort_info()["name"]
+        contact = cl["contact"] or ""
+        items.append(row(cl["created_at"], name, amounts.get(name), "계좌이체", "확인함" if cl["done"] else "입금 신고",
+                         cl["name"], "" if "@" in contact else contact, contact if "@" in contact else "", None))
+    def when(it):       # 카드(+09:00)·입금 신고(UTC) 시각 표기가 달라 글자 순서로는 어긋난다
+        try:
+            return datetime.fromisoformat(it["at"]).timestamp()
+        except ValueError:
+            return 0
+    return sorted(items, key=when, reverse=True)
+
+
+def _shortcl_badges(ledger, customers) -> dict:
+    """계정이 있는 숏클 결제자 표시 — 계정번호·이메일·연락처로 맞춘다. {customer_id: 반}"""
+    digits = lambda v: re.sub(r"\D", "", v or "")
+    by_cid, by_mail, by_phone = {}, {}, {}
+    for it in reversed(ledger):
+        if it["group"] != "숏클":
+            continue
+        if it["customer_id"] not in (None, ""):
+            by_cid[str(it["customer_id"])] = it["plan"]
+        if it["email"]:
+            by_mail[it["email"].lower()] = it["plan"]
+        if digits(it["phone"]):
+            by_phone[digits(it["phone"])] = it["plan"]
+    out = {}
+    for cu in customers:
+        plan = (by_cid.get(str(cu["id"])) or by_mail.get((cu.get("email") or "").lower())
+                or by_phone.get(digits(cu.get("phone"))))
+        if plan:
+            out[cu["id"]] = plan
+    return out
+
+
 def _upgrade_gate(request):
     """차액 결제 자격 — (customer_id, "") 또는 (None, "login"|"not_member"). 판단은 여기 한 곳."""
     cid = _verify_session(request.cookies.get("dash_auth", ""))
@@ -15786,7 +15834,8 @@ def _toss_checkout(request: Request, product: str = ""):
         _gate = _upgrade_gate(request)[1]
         if _gate == "login":
             return HTMLResponse(_toss_page("로그인 필요", "<h1>숏템메이커 계정으로 로그인해 주세요</h1>"
-                                           "<div class=p>차액 결제는 숏템메이커 이용권 회원만 할 수 있습니다.</div>"
+                                           "<div class=p>차액 결제는 숏템메이커 이용권 회원만 할 수 있습니다. 로그인한 뒤 마이페이지 맨 위의 "
+                                           "[숏클메이커 보기]를 누르면 이어서 결제할 수 있습니다.</div>"
                                            '<a class=btn href="/login">로그인</a>'), status_code=401)
         if _gate:
             return HTMLResponse(_toss_page("회원 전용", "<h1>숏템메이커 이용권 회원 전용 상품입니다</h1>"
@@ -17778,6 +17827,11 @@ def _admin_customers(request: Request):
     # ★한도도 일괄로(2026-08-29). 고객마다 _effective_limits를 부르면 설정·고객·키를
     #   1인당 6~7회 다시 읽어 **목록이 18.2초** 걸렸다(라이브 실측 290명).
     limits_map = _effective_limits_all(st, _customers)
+    try:
+        shortcl_map = _shortcl_badges(_pay_ledger(), _customers)
+    except Exception as e:      # noqa: BLE001 — 표시 하나 때문에 고객 목록 전체가 막히면 안 된다
+        print(f"[관리자] 숏클 표시 실패(고객 목록은 계속): {e!r}", file=sys.stderr)
+        shortcl_map = {}
     for cu in _customers:
         _cid = cu["id"]
         # ★access_level에 이미 읽은 고객 dict를 넘긴다(2026-08-29) — 안 넘기면
@@ -17800,6 +17854,7 @@ def _admin_customers(request: Request):
         cu["code_admin"] = (_as_cid(_cid) == 0) or (_email in _ADMIN_EMAILS)
         cu["is_admin"] = cu["code_admin"] or bool(cu.get("admin"))
         cu["challenge"] = _cid in challenge_ids                 # 1기 챌린지 참가 여부(2026-08-24)
+        cu["shortcl"] = shortcl_map.get(_cid, "")               # 숏클 결제 반(관제 292)
         # 포인트 잔액(화면 단위 P) — 등급이 full이어도 잔액 0이면 유료 op가 402로 막힌다.
         # 관리자가 그 상태를 목록에서 바로 보게 한다(2026-08-20 체험 계정 402 사고).
         cu["points"] = pricing.to_display(points_map.get(_cid, 0))
@@ -17874,6 +17929,14 @@ async def _api_deposit_claim(request: Request):
         import sys as _sys
         print(f"[입금신고] 관리자 알림 실패(접수는 정상): {e!r}", file=_sys.stderr)
     return {"ok": True}
+
+
+@app.get("/api/admin/pay_ledger")
+def _admin_pay_ledger(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return {"items": _pay_ledger()}
 
 
 @app.get("/api/admin/deposit_claims")
