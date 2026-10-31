@@ -31,14 +31,16 @@ def test_flow_rejects_ok_with_cut_title():
     assert st["look"]["ok"] is False and st["look"]["problems"][0].startswith("제목")
 
 
-def test_no_sheet_does_not_pass_silently():
+def test_no_sheet_does_not_pass_silently(monkeypatch):
+    monkeypatch.setattr(F, "EYE_REVIEW", False)      # 이 시험은 시트 길 — 눈 2단이 켜진 지금은 꺼서 본다
     st = {"version": "x", "log": [], "tries": {}}
     with pytest.raises(F._Stop):
         F.ph_check_got(st, {"check": {"auto": {"ok": True, "rows": []}, "eye_files": []}}, {}, {})
     assert "look" not in st
 
 
-def test_sheet_ask_requires_proof_and_carries_lessons():
+def test_sheet_ask_requires_proof_and_carries_lessons(monkeypatch):
+    monkeypatch.setattr(F, "EYE_REVIEW", False)      # 이 시험은 시트 길 — 눈 2단이 켜진 지금은 꺼서 본다
     st = {"version": "x", "log": [], "tries": {}, "script": {"S": {"title_lines": [["제목"]], "lines": []}}}
     r = F.ph_check_got(st, {"check": {"auto": {"ok": True, "rows": []}, "eye_files": ["x/eye/시트_1초.jpg"]}}, {}, {})
     rv = r["review"][0]

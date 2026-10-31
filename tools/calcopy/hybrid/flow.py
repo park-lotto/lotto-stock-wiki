@@ -104,7 +104,7 @@ PHASE_STAGE = {   # 세부 단계 → 회원에게 보이는 단계
 #     하나씩 풀어 가는 중이었다. 6번을 넘는 바퀴는 이 로그에 없다(근거 없는 증액은 안 한다).
 #   plan 8 그대로: 장면 맞추기는 9번 반려가 한 번도 통과하지 못했다(마지막 9번 = 장면 경계·컷 길이·남은 글자를 손으로 옮기며 맴돎) — 늘려도 풀린다는 근거 없음.
 #   같은 원인 묶음이 STUCK 번 연속이면 한도 전이라도 멈춘다(REDO_STUCK 아래).
-LIMITS = {"script": 6, "plan": 8, "render": 3, "look": 2, "pick": 2, "review_bad": 2}
+LIMITS = {"script": 6, "plan": 8, "render": 3, "look": 2, "pick": 2, "review_bad": 2, "eye_proof": 2}
 # 대본: 내용 기준은 한 번 고쳐 받으면 통과(사장님 10-27). 꼭 지킬 것만 계속 반려 — 꼴이 틀림·지어낸 사실·출처 규칙·제품 컷·비슷한 제품 밝히기(10-25 규칙)
 SCRIPT_FIX_ONCE = 1
 SCRIPT_MUST = {"form", "claims", "source_rule", "product_cut", "alt_scene", "product:alt_say"}
@@ -2618,7 +2618,8 @@ EYE_ASK = """너는 완성본 눈 검수 담당이다(표준 §5-2 — 사장님
 번호마다 v = "○"(기준 그대로) | "△"(애매 — 통과 아님) | "×"(어긋남), memo = 근거 한 줄(어느 초·어느 줄). ○ 전부여야 통과다 — 모르면 △.
 {rows}
 ★우리 틀(결함 아님): 맨 위 제목·로고·출처 줄·우리 자막(색 강조) — 남의 글자·워터마크가 아니다.
-JSON 하나: {{{keys}}}"""
+★본 증거(없으면 답이 아니다): title_seen = 시트 화면에서 직접 읽은 제목, scenes = 처음부터 끝까지 대본 줄마다 화면에서 본 것.
+JSON 하나: {{"title_seen": "…", "scenes": [{{"at": "0~3", "line": "…", "seen": "…"}}], {keys}}}"""
 
 
 def _eye_rows(upgrade: bool) -> list:
@@ -2633,6 +2634,7 @@ def ph_check(st, m, rp, u):
 EYE_REVIEW = True        # 완성본 눈 2단(E1~E9 질문) — 사장님 10-26 "재현일치도랑 눈검수는 필요없다". 되살리면 True
 FINAL_SHEET_LOOK = True  # 완성 전 1초 시트 한 번 — 사장님 PC 제작처럼(숏클 지침 15-0, 관제 290). E 번호 묻기가 아니라 시트를 보고 걸린 것만
 FINAL_SHEET_FILES = ("시트_1초.jpg", "훅3초_0.1초.jpg", "끝2초_0.1초.jpg")
+EYE_PROOF_NEED = ("title_seen", "scenes")        # 눈 2단 답의 본 증거(판정 = sheet_proof_problems) — ○ 칸만으로 통과시키지 않는다
 SHEET_NEED = ("ok", "title_seen", "scenes")     # 봤다는 증거 없는 "ok": true 는 답이 아니다(10-30 회원 2편 — 같은 자료를 새 Claude 는 잡았는데 회원 편은 통과, 답 내용은 기록도 없었다)
 FINAL_SHEET_ASK = """★이 판정은 네가 바로 답하지 말고 새 Agent(model=opus)에게 이 글과 그림을 그대로 맡겨 그 답을 옮겨라(긴 제작 대화에서 보면 놓친다 — 10-30 두 편).
 너는 이 편을 채널에 올릴지 마지막으로 보는 사람이다. 자동 검사는 통과했다. 완성본 1초 시트(처음~끝)·훅 3초·끝 2초를 처음부터 끝까지 한 칸씩 본다.
@@ -2675,8 +2677,8 @@ def ph_check_got(st, m, rp, u):
     texts = "".join(f"\n\n## {n}\n{str(t)[:5000]}" for n, t in (c.get("eye_texts") or {}).items())
     sc = st.get("script") or {}
     texts += eye_material_note(st["eye_pack"], sc.get("G"))
-    return {"review": [_rv(f"eye_{st['version']}", ask + texts + "\n\n## 대본\n" + json.dumps(sc.get("S") or {}, ensure_ascii=False)[:5000],
-                           [_img(x) for x in st["eye_pack"]][:6], need=tuple(k for k, _, _ in rows), meta={"fresh": True})], "then": "check_look"}
+    return {"review": [_rv(f"eye_{st['version']}", ask + _lessons("final") + texts + "\n\n## 대본\n" + json.dumps(sc.get("S") or {}, ensure_ascii=False)[:5000],
+                           [_img(x) for x in st["eye_pack"]][:6], need=tuple(k for k, _, _ in rows) + EYE_PROOF_NEED, meta={"fresh": True})], "then": "check_look"}
 
 
 def eye_material_note(pack: list, grounds) -> str:
@@ -2731,8 +2733,10 @@ def ph_check_look(st, m, rp, u):
         raise _Stop("확인 결과를 받지 못했어요", "다시 시도해 주시면 멈춘 곳부터 이어 갈게요", auto=True)
     keys = st.get("eye_keys") or [f"E{k}" for k in range(1, 9)]          # 물은 번호 전부(업그레이드 판은 E9 까지) — 답에 빠진 번호도 ×
     ok, bad = _eye_verdict(a, keys)
+    proof = sheet_proof_problems(a, script_view(st))
     st["eye"] = a
-    st["look"] = {"ok": ok, "problems": bad}
+    st["look"] = {"ok": ok and not proof, "problems": bad + proof, "unproved": bool(proof), "by": "눈 2단", "scenes": len(a.get("scenes") or []),
+                  "title_seen": str(a.get("title_seen") or "")[:80]}
     return {"do": [{"id": "save_eye", "cmd": "write_doc", "files": {f"{v}/눈검수.json": {"made_by": "flow 눈 2단(회원 Claude)", "ok": ok, **a}}, "version": v}],
             "then": "check_judge"}
 
@@ -2749,6 +2753,10 @@ def ph_check_judge(st, m, rp, u):
     auto_ok, look = bool((st.get("auto") or {}).get("ok")), st.get("look") or {}
     if auto_ok and look.get("ok"):
         return {"goto": "deliver"}
+    if auto_ok and look.get("unproved"):       # 안 본 답·제목 불일치 = 재료 탓이 아니다 — 고치기로 보내지 않고 눈 검사만 다시, 완성 허가도 주지 않는다
+        st["log"].append("눈 검사 증거 미달: " + " / ".join(look.get("problems") or [])[:300])
+        _tries(st, "eye_proof", LIMITS["eye_proof"], ["final_check"])
+        return {"goto": "check"}
     long = [r for r in (st.get("auto") or {}).get("rows") or [] if r.get("what") == "길이" and r.get("ok") is False]
     if long:
         return _length_rewrite(st, long[0].get("value"))

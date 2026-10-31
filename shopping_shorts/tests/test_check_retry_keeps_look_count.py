@@ -51,3 +51,47 @@ def test_new_check_clears_old_left():
     st = {"version": "x", "log": [], "tries": {}, "look_left": ["옛 지적"], "auto": {"ok": False, "rows": []}}
     F.ph_check_got(st, {"check": {"auto": {"ok": False, "rows": []}}}, {}, {})
     assert "look_left" not in st
+
+
+def _eye_st():
+    return {"version": "x", "log": [], "tries": {}, "eye_keys": ["E1"], "auto": {"ok": True, "rows": []},
+            "script": {"S": {"title_lines": [[["진짜", None]], [["제목", "hi"]]], "lines": [{"id": "L1", "tts": "한 줄"}, {"id": "L2", "tts": "두 줄"}]}}}
+
+
+def _eye_answer(**k):
+    return {"eye_x": {"E1": {"v": "○", "memo": "ok"}, "title_seen": "진짜 제목", "scenes": [{"at": "0~3", "seen": "손"}], **k}}
+
+
+def test_eye_pass_with_proof():
+    st = _eye_st()
+    F.ph_check_look(st, {}, _eye_answer(), {})
+    assert st["look"]["ok"] is True and st["look"]["unproved"] is False
+
+
+def test_eye_all_circles_without_proof_rechecks_without_fix():
+    st = _eye_st()
+    F.ph_check_look(st, {}, {"eye_x": {"E1": {"v": "○"}}}, {})
+    assert st["look"]["ok"] is False and st["look"]["unproved"] is True
+    assert F.ph_check_judge(st, {}, {}, {}) == {"goto": "check"}, "안 본 답을 재료 고치기로 보냈다"
+
+
+def test_unproved_never_finishes_at_limit():
+    st = _eye_st()
+    F.ph_check_look(st, {}, {"eye_x": {"E1": {"v": "○"}}}, {})
+    st["tries"].update(look=F.LIMITS["look"], eye_proof=F.LIMITS["eye_proof"])
+    with pytest.raises(F._Stop):
+        F.ph_check_judge(st, {}, {}, {})
+    assert not st.get("look_left")
+
+
+def test_wrong_title_is_problem():
+    st = _eye_st()
+    F.ph_check_look(st, {}, _eye_answer(title_seen="다른 제목"), {})
+    assert any("제목" in p for p in st["look"]["problems"])
+
+
+def test_eye_ask_demands_proof_and_lessons():
+    st = {"version": "x", "log": [], "tries": {}, "script": {"S": {"title_lines": [["제목"]], "lines": []}}}
+    r = F.ph_check_got(st, {"check": {"auto": {"ok": True, "rows": []}, "eye_files": ["x/eye/시트_1초.jpg"]}}, {}, {})
+    rv = r["review"][0]
+    assert set(F.EYE_PROOF_NEED) <= set(rv["need"]) and "본 증거" in rv["ask"] and "지난 제작 경험" in rv["ask"]
