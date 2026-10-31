@@ -643,6 +643,18 @@ class Store:
                 c.execute("ALTER TABLE deposit_claim ADD COLUMN product TEXT")   # 입금 신고 상품(관제 292)
             except sqlite3.OperationalError:
                 pass  # 이미 존재
+            # 관리자가 손으로 정한 프로그램 구분(관제 295). shortem·shortcl 이 NULL 이면 자동 판정을 따른다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS program_member (
+                    customer_id INTEGER PRIMARY KEY,
+                    shortem INTEGER,
+                    shortcl INTEGER,
+                    plan TEXT NOT NULL DEFAULT '',
+                    move TEXT NOT NULL DEFAULT '',
+                    tutor TEXT NOT NULL DEFAULT '',
+                    updated_at TEXT NOT NULL
+                )
+            """)
             # 1기 챌린지(2026-08-24) — 하루 2영상 업로드 챌린지 참가자·제출물.
             c.execute("""
                 CREATE TABLE IF NOT EXISTS challenge_member (
@@ -7828,6 +7840,18 @@ class Store:
                 "INSERT INTO prereg(name, phone, email, channel, created_at) VALUES(?,?,?,?,?)",
                 (name, phone, email, channel or "", now))
             return cur.lastrowid
+
+    def program_members(self):
+        """관리자가 정한 프로그램 구분 전체 — {customer_id: {...}}."""
+        with self._conn() as c:
+            rows = c.execute("SELECT customer_id, shortem, shortcl, plan, move, tutor FROM program_member").fetchall()
+        return {r[0]: {"shortem": r[1], "shortcl": r[2], "plan": r[3], "move": r[4], "tutor": r[5]} for r in rows}
+
+    def save_program_member(self, customer_id, shortem, shortcl, plan, move, tutor):
+        now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        with self._conn() as c:
+            c.execute("INSERT OR REPLACE INTO program_member(customer_id, shortem, shortcl, plan, move, tutor, updated_at) "
+                      "VALUES(?,?,?,?,?,?,?)", (customer_id, shortem, shortcl, plan, move, tutor, now))
 
     def add_deposit_claim(self, name, depositor, contact="", product=""):
         """'입금 완료했습니다' 신고 저장 → id.

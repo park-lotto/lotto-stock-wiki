@@ -205,7 +205,7 @@ def test_결제_내역은_가입_없이도_숏템_숏클로_갈린다(client):
     assert by["옛신고"]["group"] == "숏템" and by["옛신고"]["amount"] == 880000
     badges = appmod._shortcl_badges(items, [{"id": 5, "email": "BUYER@b.co", "phone": ""}, {"id": 6, "email": "x@b.co", "phone": "01012345678"},
                                             {"id": 7, "email": "n@b.co", "phone": "0100000000"}])
-    assert badges == {5: "프리미엄반", 6: "기본반"}
+    assert badges == {5: {"plan": "프리미엄반", "upgrade": False}, 6: {"plan": "기본반", "upgrade": True}}
 
 
 def test_결제_내역은_관리자만(client):
@@ -256,3 +256,26 @@ def test_비로그인_차액_화면이_다음_길을_알려준다(client):
 
 def test_결과물_영상은_칸에_맞춘다():
     assert ".sc-shot video{width:100%;height:100%" in appmod._LANDING_HTML
+
+
+def test_프로그램_구분은_결제로_자동_저장값이_우선():
+    v = appmod._shortcl_view({"plan": "pro"}, {"plan": "고급반", "upgrade": True}, None)
+    assert (v["shortem"], v["shortcl"], v["plan"], v["move"], v["tutor"]) == (True, True, "고급반", "paid", "")
+    v = appmod._shortcl_view({"plan": "free"}, None, None)
+    assert (v["shortem"], v["shortcl"], v["move"]) == (False, False, "")
+    v = appmod._shortcl_view({"plan": "pro"}, None, {"shortem": 0, "shortcl": 1, "plan": "기본반", "move": "free", "tutor": "태도"})
+    assert (v["shortem"], v["shortcl"], v["plan"], v["move"], v["tutor"]) == (False, True, "기본반", "free", "태도")
+
+
+def test_프로그램_저장은_다시_읽어도_남고_옛_DB도_열린다(client, monkeypatch):
+    st = Store(appmod.DB_PATH)
+    cid = st.create_customer("회원", "pw-1234", email="m@b.co", approved=True)
+    cid = cid if isinstance(cid, int) else cid["id"]
+    monkeypatch.setattr(appmod, "_require_admin", lambda r: None)
+    r = client.post("/api/admin/program_member", json={"customer_id": cid, "shortem": False, "shortcl": True,
+                                                       "plan": "기본반", "move": "free", "tutor": "태도"})
+    assert r.status_code == 200
+    saved = Store(appmod.DB_PATH).program_members()[cid]
+    assert (saved["shortem"], saved["shortcl"], saved["move"], saved["tutor"]) == (None, 1, "free", "태도")
+    assert client.post("/api/admin/program_member", json={"customer_id": cid, "move": "x"}).status_code == 422
+    assert client.post("/api/admin/program_member", json={"customer_id": cid, "plan": "없는반"}).status_code == 422
