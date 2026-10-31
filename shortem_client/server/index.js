@@ -19,7 +19,7 @@ import { keyStatus } from './engine/voice.js';
 import { homeDir, workDir, writeFileIn, jail } from './paths.js';
 import { selftest, encoderCheck } from './selftest.js';
 import { makeStep, aiList } from './make_flow.js';
-import { requestContent, answer as aiAnswer, engineRoot } from './engine_bridge.js';
+import { requestContent, IMAGE_BUDGET_B64, answer as aiAnswer, engineRoot } from './engine_bridge.js';
 import { sweep as sweepRented } from './preset_rent.js';
 import { retryUpdate } from './updater.js';  // 받은 즉시 엔진까지 적용(사장님 10-31 고객이 두 번 켜지 않게)
 import { startUi, openBrowser } from './local_ui.js';
@@ -208,7 +208,8 @@ export function buildServer(ctx = makeCtx()) {
     if (action === 'list') {
       const ps = aiList(limit || 1);
       if (!ps.length) return reply({ info: { pending: 0 }, hints: ['기다리는 요청이 없습니다 — shortem_make(step="wait") 로 이어 가세요'] });
-      return { content: ps.flatMap(p => requestContent(p)) };
+      const budget = { left: IMAGE_BUDGET_B64 };   // 한 응답 전체가 함께 쓴다(limit 최대 5건)
+      return { content: ps.flatMap(p => requestContent(p, 40, budget)) };
     }
     const r = aiAnswer(id, answer);
     return reply(r.ok ? { info: { answered: id }, hints: ['다음 요청: shortem_ai(action="list") · 없으면 shortem_make(step="wait")'] } : { fail: { where: 'AI 답', why: r.why, fix: '요청 id 와 JSON 객체를 확인하세요', retry_ok: true } });
