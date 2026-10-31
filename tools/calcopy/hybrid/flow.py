@@ -1241,11 +1241,13 @@ STAGE_GUIDE = {"setup": "00_공통.md", "bench": "01_소재.md", "origin": "02_�
 GUIDE_DIR = Path(__file__).resolve().parents[3] / "channel" / "칼카피_제작순서"
 TASK_ASK = """너는 이 편의 **제작자**다(사장님 PC 의 제작 세션과 같은 자리). 아래 단계에서 만들기가 막혔다 — 회원에게 묻기 전에 네가 푼다.
 지킬 것: 가이드(아래 발췌)를 지킨다 · 금지선·함정은 절대 · 지어내지 않는다(모르면 웹 검색으로 확인) · 회원에게는 꼭 필요한 결정만.
+너는 사장님 PC 의 Claude 처럼 자유롭게 푼다 — 정해진 길이 없어도 멈추지 말고 네 도구(Bash·파일 수정·yt-dlp·ffmpeg)로 작업 폴더(src/ 등)에서 직접 해결한다. 재료가 모자라면 영상을 직접 받아 src/ 에 넣고 action "material" 로 답한다.
 쓸 수 있는 것: 네 웹 검색(WebSearch·WebFetch) · 숏클 엔진 코드 고치기(코드 결함이면 고친 뒤 retry — 고친 뒤 note 에 파일·이유를 적고 shortem_feedback(kind="code_fix") 로 diff 를 보낸다, 검사 기준을 낮추는 수정은 금지) · 이 답(JSON)으로 숏템에 다음 행동을 시킨다 — 숏템이 그 결과를 다시 검사한다(통과해야 다음 단계).
 답 JSON 하나:
- {"action": "retry" | "give" | "end", "origin_url": "", "product": "", "note": "무엇을 확인했고 왜 이 행동인지 한 줄"}
+ {"action": "retry" | "give" | "material" | "end", "origin_url": "", "product": "", "files": [], "note": "무엇을 확인했고 왜 이 행동인지 한 줄"}
  · retry = 같은 단계를 다시(잠깐의 막힘·고치기 횟수 소진·받기 실패 등 — 다시 하면 풀릴 근거가 있을 때)
  · give = 네가 찾은 것을 준다: origin_url(원본 영상 유튜브 주소 — 원본 찾기 단계) 또는 product(쿠팡 상품 주소나 정확한 제품명 — 제품 확인 단계)
+ · material = 네가 src/ 에 넣은 영상 파일 이름을 files 로 준다 — 대본·목소리 그대로 그 재료로 장면 맞추기부터 다시(숏템이 다시 검사한다)
  · end = 가이드·금지선상 이 편을 만들 수 없다(그때만 회원에게 쉬운 선택지로 묻는다)"""
 
 
@@ -1329,6 +1331,10 @@ def ph_task_got(st, m, rp, u):
     if act == "give" and prod and t.get("stage") == "product":
         st["given"] = prod[:200]
         return {"goto": "given"}
+    if act == "material":        # 살아 있는 Claude 가 직접 받아 넣은 재료 — 재료 더 찾기와 같은 뒷길(시트 → 장면 검수)
+        names = [Path(str(x)).name for x in a.get("files") or [] if str(x).strip()]
+        if names:
+            return ph_more_dl(st, {"dl": {"files": [{"name": n} for n in names]}}, {}, {})
     if act == "retry":
         st["stopped"] = stopped
         return ph_stopped(st, {}, {}, {"retry": True})

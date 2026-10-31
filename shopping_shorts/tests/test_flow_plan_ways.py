@@ -104,3 +104,11 @@ def test_final_sheet_problem_goes_to_fix_with_line_way(monkeypatch):
 
 def test_final_fix_question_offers_line_way_not_more_material():
     assert "대본줄" in F.FINAL_FIX_WAYS and "재료_더찾기" not in F.FINAL_FIX_WAYS and "재료_더찾기" in F.PLAN_LOOK_WAYS
+
+
+def test_task_material_uses_files_claude_added():
+    st = _st()
+    st["material"] = {"files": [{"name": "a.mp4"}]}
+    st["_task"] = {"id": "task_1", "why": "x"}
+    out = F.ph_task_got(st, {}, {"task_1": {"action": "material", "files": ["src/new.mp4"], "note": "직접 받음"}}, {})
+    assert out["then"] == "more_sheets" and out["do"][0]["files"] == ["src/new.mp4"]
