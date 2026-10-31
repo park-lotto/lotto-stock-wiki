@@ -2001,6 +2001,17 @@ def ph_script_ask(st, m, rp, u):
     return {"review": [_script_ask(st)], "then": "script_got"}
 
 
+CHANNEL_COPY_SLUGS = {"썰템홈샷판": "banggu"}      # 납품 공정의 표절 관문(07_대본.md) — 벤치 채널 전 편과 대조
+
+
+def _channel_copy(v: str, S: dict, M: dict) -> list:
+    slug = CHANNEL_COPY_SLUGS.get(v)
+    if not slug:
+        return []
+    from tools.calcopy import bench_distance
+    return bench_distance.check_obj(slug, S, M)["fails"]
+
+
 def audit_script(st: dict, S: dict, M: dict) -> dict:
     """서버 판정 — 대본 검사(script_audit — 자막↔목소리·줄 끝 부호·영문 포함) + 제목 색 + 출처 규칙 ①②·다른 출연자 샷. 하나라도 걸리면 반려."""
     from tools.calcopy.hybrid import script_audit
@@ -2032,7 +2043,7 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
              "alt_scene": RU.alt_scene_problems(S, M, _origin_names(st)) if (st.get("product") or {}).get("mode") == "alt" else [],
              "subject_scene": subject_scene_problems(st, S, M),
              "source_rule": RU.source_rule_static(M, _origin_names(st), _rule_bench_id(st), st.get("shots") or {}),
-             "bench_copy": RU.bench_copy_problems(S, st.get("bench_lines") or []),
+             "bench_copy": RU.bench_copy_problems(S, st.get("bench_lines") or []) + _channel_copy(v, S, M),
              "alt_tail": RU.alt_tail_problems(S, _style(v).get("cps_target") or 7.0) if _alt_photo_fallback(st) else []}
     on = _origin_names(st)
     if _fmt(st) not in FOREIGN_FMTS and not any(str(c.get("src") or "") not in on for cs in (M.get("cuts") or {}).values() for c in (cs if isinstance(cs, list) else [cs])):
