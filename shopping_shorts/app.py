@@ -15709,25 +15709,38 @@ def _pay_ledger() -> list:
 
 
 def _shortcl_badges(ledger, customers) -> dict:
-    """계정이 있는 숏클 결제자 표시 — 계정번호·이메일·연락처로 맞춘다. {customer_id: 반}"""
+    """계정이 있는 숏클 결제자 — 계정번호·이메일·연락처로 맞춘다. {customer_id: {"plan": 반, "upgrade": 차액 결제 여부}}"""
     digits = lambda v: re.sub(r"\D", "", v or "")
     by_cid, by_mail, by_phone = {}, {}, {}
     for it in reversed(ledger):
         if it["group"] != "숏클":
             continue
+        paid = {"plan": it["plan"], "upgrade": it["upgrade"]}
         if it["customer_id"] not in (None, ""):
-            by_cid[str(it["customer_id"])] = it["plan"]
+            by_cid[str(it["customer_id"])] = paid
         if it["email"]:
-            by_mail[it["email"].lower()] = it["plan"]
+            by_mail[it["email"].lower()] = paid
         if digits(it["phone"]):
-            by_phone[digits(it["phone"])] = it["plan"]
+            by_phone[digits(it["phone"])] = paid
     out = {}
     for cu in customers:
-        plan = (by_cid.get(str(cu["id"])) or by_mail.get((cu.get("email") or "").lower())
+        paid = (by_cid.get(str(cu["id"])) or by_mail.get((cu.get("email") or "").lower())
                 or by_phone.get(digits(cu.get("phone"))))
-        if plan:
-            out[cu["id"]] = plan
+        if paid:
+            out[cu["id"]] = paid
     return out
+
+
+def _shortcl_view(cu, paid, saved) -> dict:
+    """고객의 프로그램 구분 주인(관제 295) — 결제 정보로 자동, 관리자가 정한 값이 있으면 그 값."""
+    saved = saved or {}
+    auto_shortem, auto_shortcl = cu.get("plan") == "pro", bool(paid)
+    pick = lambda v, auto: auto if v is None else bool(v)
+    return {"shortem": pick(saved.get("shortem"), auto_shortem), "shortcl": pick(saved.get("shortcl"), auto_shortcl),
+            "auto_shortem": auto_shortem, "auto_shortcl": auto_shortcl,
+            "plan": saved.get("plan") or (paid or {}).get("plan", ""),
+            "move": saved.get("move") or ("paid" if (paid or {}).get("upgrade") else ""),
+            "tutor": saved.get("tutor", "")}
 
 
 def _upgrade_gate(request):
@@ -17832,6 +17845,7 @@ def _admin_customers(request: Request):
     except Exception as e:      # noqa: BLE001 — 표시 하나 때문에 고객 목록 전체가 막히면 안 된다
         print(f"[관리자] 숏클 표시 실패(고객 목록은 계속): {e!r}", file=sys.stderr)
         shortcl_map = {}
+    program_saved = st.program_members()
     for cu in _customers:
         _cid = cu["id"]
         # ★access_level에 이미 읽은 고객 dict를 넘긴다(2026-08-29) — 안 넘기면
@@ -17854,7 +17868,7 @@ def _admin_customers(request: Request):
         cu["code_admin"] = (_as_cid(_cid) == 0) or (_email in _ADMIN_EMAILS)
         cu["is_admin"] = cu["code_admin"] or bool(cu.get("admin"))
         cu["challenge"] = _cid in challenge_ids                 # 1기 챌린지 참가 여부(2026-08-24)
-        cu["shortcl"] = shortcl_map.get(_cid, "")               # 숏클 결제 반(관제 292)
+        cu["program"] = _shortcl_view(cu, shortcl_map.get(_cid), program_saved.get(_cid))   # 프로그램 구분(관제 295)
         # 포인트 잔액(화면 단위 P) — 등급이 full이어도 잔액 0이면 유료 op가 402로 막힌다.
         # 관리자가 그 상태를 목록에서 바로 보게 한다(2026-08-20 체험 계정 402 사고).
         cu["points"] = pricing.to_display(points_map.get(_cid, 0))
@@ -17868,7 +17882,8 @@ def _admin_customers(request: Request):
     #     "입력했는데 저장이 안 되는" 칸이 생긴다(0순위-B).
     allc = st.all_settings()
     shown = {k: v for k, v in allc.items() if k in _ADMIN_SETTING_KEYS}
-    return {"ok": True, "customers": out, "settings": shown}
+    tutors = sorted({v["tutor"] for v in program_saved.values() if v["tutor"]})
+    return {"ok": True, "customers": out, "settings": shown, "shortcl_tutors": tutors}
 
 
 @app.post("/api/prereg")
@@ -17931,12 +17946,56 @@ async def _api_deposit_claim(request: Request):
     return {"ok": True}
 
 
+@app.post("/api/admin/program_member")
+async def _admin_program_member(request: Request):
+    """관리자가 숏템·숏클 회원 구분, 숏클 반, 이동 방식, 조교를 정한다. 자동 판정과 같은 값은 자동으로 남긴다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id 필요"}, status_code=422)
+    st = Store(DB_PATH)
+    cu = st.get_customer(cid)
+    if not cu:
+        return JSONResponse({"error": "없는 고객입니다"}, status_code=404)
+    plan = (body.get("plan") or "").strip()
+    move = (body.get("move") or "").strip()
+    tutor = (body.get("tutor") or "").strip()
+    if plan and plan not in {p[1] for p in _SHORTCL_PLANS}:
+        return JSONResponse({"error": "없는 반입니다"}, status_code=422)
+    if move not in ("", "free", "paid"):
+        return JSONResponse({"error": "이동 방식을 확인해 주세요"}, status_code=422)
+    if len(tutor) > 40:
+        return JSONResponse({"error": "조교 이름이 너무 깁니다"}, status_code=422)
+    paid = _shortcl_badges(_pay_ledger(), [{**cu, "id": cid}]).get(cid)
+    auto = _shortcl_view(cu, paid, None)
+    def keep(key):
+        val = bool(body.get(key))
+        return None if val == auto[f"auto_{key}"] else int(val)
+    st.save_program_member(cid, keep("shortem"), keep("shortcl"), plan, move, tutor)
+    return {"ok": True}
+
+
 @app.get("/api/admin/pay_ledger")
 def _admin_pay_ledger(request: Request):
     denied = _require_admin(request)
     if denied:
         return denied
-    return {"items": _pay_ledger()}
+    items = _pay_ledger()
+    digits = lambda v: re.sub(r"\D", "", v or "")
+    mail, phone = {}, {}
+    for cu in Store(DB_PATH).list_customers():      # 예전 주문엔 계정번호가 없다 — 결제 정보로 계정을 찾아 표시한다
+        if cu.get("email"):
+            mail[cu["email"].lower()] = cu["id"]
+        if digits(cu.get("phone")):
+            phone[digits(cu.get("phone"))] = cu["id"]
+    for it in items:
+        if it["customer_id"] in (None, ""):
+            it["customer_id"] = mail.get(it["email"].lower()) or phone.get(digits(it["phone"]))
+    return {"items": items}
 
 
 @app.get("/api/admin/deposit_claims")
