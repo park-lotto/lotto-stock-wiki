@@ -46,14 +46,16 @@ const prompt = say ? `${say}
 - 소재 후보가 나오면 표로 보여 주고, 내 선택은 "1번"이야.
 - 대본·계획 사인이 필요하면 내 답은 "좋아요, 진행해"야.
 - AI 요청(need=ai)이 오면 지시대로 바로 답해. 기다리라고 하면 shortem_make(step="wait") 로 이어 가.
-끝나면 완성본 파일 경로만 알려줘. 숏템 도구 말고 다른 도구는 쓰지 마.`;
+끝나면 완성본 파일 경로만 알려줘.`;
 
 const t0 = Date.now();
 const log = path.join(dir, 'claude.jsonl');
 // ★셸을 거치면(shell:true) 여러 줄 프롬프트·옵션이 잘려 숏템 설정이 안 붙는다(10-20 첫 시도: 다른 MCP 를 부름) → 실행 파일을 직접
 const claude = process.env.CLAUDE_BIN || (process.platform === 'win32' ? path.join(process.env.USERPROFILE || '', '.local', 'bin', 'claude.exe') : 'claude');
 const p = spawn(claude, ['-p', prompt, '--mcp-config', cfg, '--strict-mcp-config', '--model', 'opus', '--output-format', 'stream-json', '--verbose',
-  '--allowedTools', 'mcp__shortem__shortem_setup,mcp__shortem__shortem_presets,mcp__shortem__shortem_make,mcp__shortem__shortem_ai,mcp__shortem__shortem_job,mcp__shortem__shortem_settings',
+  '--plugin-dir', path.join(inst, 'claude-plugin', 'shortem'),   // 회원 지침(시작 훅)까지 회원과 같이 — 없으면 CLAUDE_숏클.md 가 안 들어간다
+  // 회원 Claude 와 같은 손 — 새 눈 Agent·코드 수정·웹 검색(10-31 숏템 도구만 열어 두면 새 눈이 돌지 못하고 만든 Claude 가 판정한다)
+  '--permission-mode', 'acceptEdits', '--allowedTools', 'mcp__shortem,Agent,Read,Edit,Write,Glob,Grep,Bash,WebSearch,WebFetch',
   '--max-turns', '400'], { cwd: CWD, stdio: ['ignore', fs.openSync(log, 'w'), 'pipe'], windowsHide: true });
 let err = ''; p.stderr.on('data', d => { err += d; });
 const code = await new Promise(r => p.on('close', r));
