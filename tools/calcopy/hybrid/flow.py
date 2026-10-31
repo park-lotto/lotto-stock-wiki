@@ -3494,6 +3494,7 @@ ALT_NOTICE_WON = "주신 영상은 원본을 아직 찾는 중이라, 함께 찾
 
 
 POOL_SHOW = 5        # 회원이 후보를 달라고 하면 보여 줄 수(사장님 10-30 "후보 뽑아달라고 하면 5개")
+POOL_MIX_TOP = 30    # 같은 사용 횟수 안에서 회원별로 섞는 조회 상위 편 수(그 아래는 조회순)
 
 
 def ref_hash(ref: str) -> str:
@@ -3503,9 +3504,11 @@ def ref_hash(ref: str) -> str:
     return "h:" + hashlib.sha256(("shortem-ref|" + (k[1] if k else str(ref))).encode()).hexdigest()[:16]
 
 
-def bench_pool(slug: str, done=(), skip_bench: bool = True) -> list[dict]:
+def bench_pool(slug: str, done=(), skip_bench: bool = True, used=None, seed=None) -> list[dict]:
     """(판단 주인 — 소재 창고 순서) 그 판 벤치 채널 쇼츠 조회순(channel/<slug>/_kal/벤치상위.json — 만들기 = bench_pool.py) 중
-    done(회원이 만든 소재 id·주소)과 판 본보기(상위편_목표 ids)를 뺀 것. 사장님 10-30 "말이 없으면 벤치 채널에서 조회수 순으로"."""
+    done(회원이 만든 소재 id·주소)과 판 본보기(상위편_목표 ids)를 뺀 것. 사장님 10-30 "말이 없으면 벤치 채널에서 조회수 순으로".
+    used(소재 지문 → 다른 회원 사용 수)·seed(회원 번호)를 주면 회원끼리 겹치지 않게: 덜 쓴 편 먼저, 같은 사용 수 안의 조회 상위 POOL_MIX_TOP 편은 seed 로 섞는다.
+    둘 다 없으면 옛 그대로 조회순."""
     from tools.calcopy import origin_find as OF
     f = PRESETS_FILE.parent / str(slug or "-") / "_kal" / ALT_LIST
     if not f.is_file():
@@ -3521,14 +3524,24 @@ def bench_pool(slug: str, done=(), skip_bench: bool = True) -> list[dict]:
     gf = f.parent / ALT_BENCH_IDS
     if skip_bench and gf.is_file():
         gone |= set(json.loads(gf.read_text(encoding="utf-8")).get("ids") or [])
-    return [{"url": f"https://www.youtube.com/shorts/{r['id']}", "id": r["id"], "views": r.get("views"), "title": r.get("title")}
-            for r in sorted(rows, key=lambda r: -(r.get("views") or 0)) if r["id"] not in gone and not (gone_h and ref_hash(r["id"]) in gone_h)]
+    left = [r for r in sorted(rows, key=lambda r: -(r.get("views") or 0)) if r["id"] not in gone and not (gone_h and ref_hash(r["id"]) in gone_h)]
+    if used or seed is not None:
+        tiers: dict[int, list] = {}
+        for r in left:                            # 조회순을 지킨 채 사용 수별로 나눈다
+            tiers.setdefault(int((used or {}).get(ref_hash(r["id"])) or 0), []).append(r)
+        left = []
+        for k in sorted(tiers):
+            top, rest = tiers[k][:POOL_MIX_TOP], tiers[k][POOL_MIX_TOP:]
+            if seed is not None:
+                top.sort(key=lambda r: hashlib.sha256(f"{seed}|{r['id']}".encode()).hexdigest())
+            left += top + rest
+    return [{"url": f"https://www.youtube.com/shorts/{r['id']}", "id": r["id"], "views": r.get("views"), "title": r.get("title")} for r in left]
 
 
-def pick_source(version: str, done=()) -> dict | None:
-    """회원이 주소 없이 '만들어줘' — 그 판 소재 창고에서 안 만든 조회 1위(bench_pool). 없으면 None."""
+def pick_source(version: str, done=(), used=None, seed=None) -> dict | None:
+    """회원이 주소 없이 '만들어줘' — 그 판 소재 창고에서 안 만든 첫 편(순서 = bench_pool). 없으면 None."""
     _, slug = flow_format_of(version)
-    left = bench_pool(slug, done)
+    left = bench_pool(slug, done, used=used, seed=seed)
     return left[0] if left else None
 
 
@@ -3546,21 +3559,25 @@ def _auto_next_source(st: dict, e) -> bool:
     if len(tried) >= AUTO_SOURCE_MAX:
         st["log"].append(f"소재 창고 {len(tried)}편 연속 못 씀 — 멈춤")
         return False
-    left = bench_pool(st.get("slug"), list(st.get("made_refs") or []) + tried)
+    left = bench_pool(st.get("slug"), list(st.get("made_refs") or []) + tried, used=st.get("pool_used"), seed=st.get("pool_seed"))
     if not left:
         return False
-    keep = {k: st[k] for k in ("sid", "version", "fmt", "slug", "env", "given", "made_refs") if k in st}
+    keep = {k: st[k] for k in ("sid", "version", "fmt", "slug", "env", "given", "made_refs", "pool_used", "pool_seed") if k in st}
     log = list(st.get("log") or []) + [f"소재 창고 편 못 씀({e.why}) → 다음 조회순 {left[0]['url']} (조회 {left[0].get('views')})"]
     st.clear()
     st.update(start(left[0]["url"], keep["version"], keep["sid"]))
-    st.update({k: v for k, v in keep.items() if k in ("env", "given", "made_refs")}, auto_source=left[0], auto_tried=tried, log=log)
+    st.update({k: v for k, v in keep.items() if k in ("env", "given", "made_refs", "pool_used", "pool_seed")}, auto_source=left[0], auto_tried=tried, log=log)
     return True
 
 
-def source_candidates(version: str, done=(), n: int = POOL_SHOW) -> list[dict]:
-    """회원이 '후보 뽑아줘' — 같은 순서로 n 개(번호·제목·조회수)."""
+def source_candidates(version: str, done=(), n: int = POOL_SHOW, offset: int = 0, used=None, seed=None) -> list[dict]:
+    """회원이 '후보 뽑아줘' — 같은 순서로 n 개(번호·제목·조회수). 다시 달라 하면 offset 을 n 씩 밀어 다음 묶음, 끝을 넘으면 처음부터."""
     _, slug = flow_format_of(version)
-    return [{"n": i + 1, **r} for i, r in enumerate(bench_pool(slug, done)[:n])]
+    left = bench_pool(slug, done, used=used, seed=seed)
+    if not left:
+        return []
+    o = max(0, int(offset or 0)) % len(left)
+    return [{"n": i + 1, **r} for i, r in enumerate(left[o:o + n])]
 
 
 def pick_alt_source(st: dict) -> dict | None:
@@ -3572,7 +3589,8 @@ def pick_alt_source(st: dict) -> dict | None:
         st["log"].append(f"둘째 소재 없음: {ALT_LIST} 없음({st.get('slug')})")
         return None
     # 판 본보기(상위편_목표 ids)는 빼고, 남은 상위 ALT_SPREAD 편 중 sid 로 골라 동시에 도는 회원끼리 같은 소재를 안 찾게(10-27 완주시험 3편 모두 콜라겐 마스크 — 원본찾기 시간 절반)
-    left = bench_pool(st.get("slug"), [str(st.get("ref") or "")] + list((st.get("env") or {}).get("done_refs") or []) + list(st.get("made_refs") or []))
+    left = bench_pool(st.get("slug"), [str(st.get("ref") or "")] + list((st.get("env") or {}).get("done_refs") or []) + list(st.get("made_refs") or []),
+                      used=st.get("pool_used"), seed=st.get("pool_seed"))
     if left:
         return left[int(hashlib.md5(str(st.get("sid") or "").encode()).hexdigest(), 16) % min(ALT_SPREAD, len(left))]
     st["log"].append("둘째 소재 없음: 벤치 상위가 전부 만든 편·판 본보기")

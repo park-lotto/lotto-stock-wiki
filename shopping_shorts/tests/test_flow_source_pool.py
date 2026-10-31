@@ -47,3 +47,55 @@ def test_server_record_uses_hash_not_url(tmp_path, monkeypatch):
     h = F.ref_hash("https://www.youtube.com/shorts/id00000001x")
     assert h.startswith("h:") and "id00000001x" not in h
     assert F.pick_source("v", [h])["id"] == "id00000003x"
+
+
+# 10-31 숏클 소재 창고: 회원끼리 겹치지 않게 — 덜 쓴 편 먼저·회원별 섞기·후보 다음 5개·실패 편 제외
+MANY = [{"id": f"mm{i:08d}x", "views": 10000 - i, "title": f"t{i}"} for i in range(40)]
+
+
+def test_less_used_first(tmp_path, monkeypatch):
+    _pool(tmp_path, monkeypatch, ROWS)
+    used = {F.ref_hash("id00000001x"): 3, F.ref_hash("id00000003x"): 1}
+    ids = [r["id"] for r in F.bench_pool("slugx", used=used)]
+    assert ids[-2:] == ["id00000003x", "id00000001x"] and ids[0] == "id00000006x"
+    assert F.pick_source("v", (), used=used)["id"] == "id00000006x"
+
+
+def test_members_get_different_first_picks(tmp_path, monkeypatch):
+    _pool(tmp_path, monkeypatch, MANY)
+    firsts = {F.pick_source("v", (), seed=cid)["id"] for cid in range(1, 21)}
+    assert len(firsts) >= 8
+    assert F.pick_source("v", (), seed=7) == F.pick_source("v", (), seed=7)          # 같은 회원은 순서 고정(다음 5개가 이어진다)
+    assert {r["id"] for r in F.bench_pool("slugx", seed=7)[:F.POOL_MIX_TOP]} == {r["id"] for r in MANY[:F.POOL_MIX_TOP]}   # 조회 상위 안에서만
+
+
+def test_candidates_offset_gives_next_five(tmp_path, monkeypatch):
+    _pool(tmp_path, monkeypatch, MANY)
+    a = F.source_candidates("v", seed=3)
+    b = F.source_candidates("v", offset=5, seed=3)
+    assert len(b) == 5 and not {x["id"] for x in a} & {x["id"] for x in b} and [x["n"] for x in b] == [1, 2, 3, 4, 5]
+    assert F.source_candidates("v", offset=40, seed=3) == a                           # 끝을 넘으면 처음부터
+
+
+def test_used_refs_counts_others_running_not_failed(monkeypatch):
+    import sqlite3
+    from contextlib import contextmanager
+
+    from shopping_shorts import claude_flow as CF
+    db = sqlite3.connect(":memory:")
+    db.execute(CF._SCHEMA)
+    rows = [("a", 1, "done", "h:x"), ("b", 2, "execute", "h:x"), ("c", 3, "stop", "h:x"), ("d", 4, "reject", "h:y"),
+            ("e", 9, "done", "h:mine"), ("f", 2, "done", "h:x"), ("g", 5, "start", None)]
+    for sid, cid, status, h in rows:
+        db.execute("INSERT INTO claude_flow_runs(sid,cid,status,summary_json) VALUES(?,?,?,?)", (sid, cid, status, json.dumps({"seed_h": h}) if h else None))
+
+    @contextmanager
+    def tx(store, write=False):
+        yield db
+    monkeypatch.setattr(CF.CP, "_tx", tx)
+    assert CF._used_refs(None, 9) == {"h:x": 2}                                       # 회원 수로(2번 회원 2편 = 1), 실패·내 편 제외
+
+
+def test_old_engine_call_shape_kept():
+    from shopping_shorts import claude_flow as CF
+    assert CF._pool_kw(lambda version, done=(): None, used={}, seed=1) == {}
