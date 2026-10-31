@@ -92,7 +92,7 @@ PHASE_STAGE = {   # 세부 단계 → 회원에게 보이는 단계
     "search": "origin", "search_got": "origin", "titles": "origin", "titles_got": "origin", "subs": "origin", "subs_got": "origin",
     "pick_got": "origin", "origin_got": "origin", "product_sheet": "product", "product_pick": "product", "product_cands": "product",
     "product_same": "product", "name_find": "product", "name_got": "product", "named_cands": "product", "named_same": "product",
-    "best_same": "product", "product_done": "product", "research": "research", "research_got": "research", "material": "material",
+    "best_same": "product", "product_done": "product", "research": "research", "s_peers_got": "research", "research_got": "research", "material": "material",
     "material_got": "material", "material_pick": "material", "material_dl": "material", "asr": "asr", "asr_got": "asr", "shots_got": "asr",
     "script": "script", "script_got": "script", "stills_again": "script", "script_saved": "script", "sign": "sign", "plan": "plan", "plan_got": "plan", "line_fix_got": "plan", "link_got": "product", "member_revise": "plan", "more_got": "plan", "more_pick": "plan", "more_dl": "plan", "more_sheets": "plan",
     "plan_look": "plan", "plan_saved": "plan", "thumb": "plan", "thumb_sheet": "plan", "thumb_got": "plan", "render": "render", "f_text_check": "render", "f_render_clean_got": "render", "render_got": "render", "render_fix": "render", "render_saved": "render",
@@ -1254,9 +1254,10 @@ TASK_ASK = """너는 이 편의 **제작자**다(사장님 PC 의 제작 세션�
 LESSONS_FILE = Path(__file__).with_name("member_lessons.json")       # 98_오류기록에서 눈·판단으로만 잡히는 것만 추린 회원 Claude 경험(사장님 10-30 "그간의 경험을 똑같이") — 고칠 곳은 이 파일 한 곳
 
 
-def _lessons(key: str) -> str:
-    """단계 경험 → 질문에 붙일 글. key = script·material·plan·final."""
-    rows = json.loads(LESSONS_FILE.read_text(encoding="utf-8")).get(key) or []
+def _lessons(key: str, version: str | None = None) -> str:
+    """단계 경험 → 질문에 붙일 글. key = script·material·plan·final. version 을 주면 by_style 의 그 판 전용 경험도 붙는다(다른 판 질문은 그대로)."""
+    d = json.loads(LESSONS_FILE.read_text(encoding="utf-8"))
+    rows = (d.get(key) or []) + (((d.get("by_style") or {}).get(version) or {}).get(key) or [])
     return f"{NL}{NL}## 지난 제작 경험(반드시){NL}" + NL.join("- " + re.sub(r"\(#[\d·#]+\)\s*$", "", x).strip() for x in rows) if rows else ""
 
 
@@ -1726,9 +1727,14 @@ def _material_top(st, sw=None) -> int:
     return max(10 if sw else 8, _material_n(st)[1] * 2)
 
 
-def _screen_pick_ask(st, rows, more="") -> str:
+def _pick_line(st) -> str:
+    """고르기 질문 셋(재료·비슷한 제품·재료 더 찾기)이 같이 쓰는 ★개수 줄 — SCREEN_PICK 이 '아래 ★개수'를 가리킨다."""
     a, b = _material_n(st)
-    return (SCREEN_PICK + f"\n\n★개수: {a}~{b}개를 고른다. 대본 줄마다 가리키는 그림이 달라야 하니 서로 다른 장면을 주는 영상으로." + more +
+    return f"\n\n★개수: {a}~{b}개를 고른다. 대본 줄마다 가리키는 그림이 달라야 하니 서로 다른 장면을 주는 영상으로."
+
+
+def _screen_pick_ask(st, rows, more="") -> str:
+    return (SCREEN_PICK + _pick_line(st) + more +
             "\n\n후보(시트 순서와 같다):\n" + json.dumps(rows, ensure_ascii=False, indent=1) +
             f"\n\n제품: {st['product'].get('name')} / 연예인: {st['read'].get('celeb')}" + _subject_pick_ctx(st))
 
@@ -1902,7 +1908,7 @@ def ph_script(st, m, rp, u):
     files = (origs + mats) if _fmt(st) in FOREIGN_FMTS else (mats + origs)     # 해외원본형은 원본이 주재료 — 원본 시트가 앞
     if not (_photo_ok(st) or _alt_photo_fallback(st)):   # 사진 못 쓰는 판 — 시트 그림·재료 목록에도 사진을 내놓지 않는다(예외 편은 싣는다)
         files = [f for f in files if not f.lower().endswith(PHOTO_EXT)]
-    return {"do": [{"id": "msheets", "cmd": "mat_sheets", "files": files[:5]}], "then": "script_ask"}
+    return {"do": [{"id": "msheets", "cmd": "mat_sheets", "files": files[:max(5, _material_n(st)[1])]}], "then": "script_ask"}
 
 
 def _src_rule_ctx(st) -> str:
@@ -1996,7 +2002,7 @@ def _script_ask(st, fail: str = "") -> dict:
            "\n\n## 쿠팡 베스트 후기(r번호 — 도움 순, 셀링포인트·소구점 근거)\n" +
            (json.dumps(st.get("reviews") or [], ensure_ascii=False)[:4000] if st.get("reviews") else "(못 받음 — 후기 전언 줄을 쓰지 않는다)") +
            "\n\n## 원음 받아쓰기(구간마다 — 모델 둘이면 둘 다)\n" + json.dumps(st.get("asr") or {}, ensure_ascii=False)[:6000] +
-           "\n\n## 재료 파일(시트 순서 = 앞 5개)\n" + json.dumps(ms.get("list") or [], ensure_ascii=False) +
+           f"\n\n## 재료 파일(시트 순서 = 앞 {max(5, _material_n(st)[1])}개)\n" + json.dumps(ms.get("list") or [], ensure_ascii=False) +
            "\n실제 크기(crop 은 이 픽셀로 — 시트는 줄인 미리보기다): " + json.dumps(_offer_dims(st), ensure_ascii=False) + _shots_ctx(st) +
            _foreign_script_ctx(st) + _src_rule_ctx(st) + _cut_rules_ctx(st, ms.get("shots")) + _points_ctx(v) + _subject_ctx(st) +
            (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
@@ -2013,7 +2019,7 @@ def _script_ask(st, fail: str = "") -> dict:
         ctx += "\n\n## 제품 줄 길이(반드시)\n" + RU.ALT_TAIL_RULE
     if st.get("bench_lines"):
         ctx += "\n\n## 소재 쇼츠 문장(반드시)\n" + RU.BENCH_COPY_RULE
-    ctx += _lessons("script") + _lessons("material").replace("지난 제작 경험", "재료 고를 때 지난 제작 경험")
+    ctx += _lessons("script", v) + _lessons("material", v).replace("지난 제작 경험", "재료 고를 때 지난 제작 경험")
     return _rv(f"script_{v}", _q(st, "SCRIPT") + "\n\n" + ctx, imgs, need=("대본", "재료"))
 
 
@@ -2307,6 +2313,26 @@ PLAN_LOOK_WAYS = ("\n\n★재료로 못 고치는 줄(맞는 장면이 재료에
 FINAL_FIX_WAYS = "\n\n★재료(컷)로 못 고치는 것(자막 넘침·낱말 끊김·대사와 다른 말)은 " + WAY_LINE + " 로 답에 넣어라. 해당 없으면 넣지 않는다."
 
 
+LINE_TABLE_ASK = ("\n\n★줄별 대조표(반드시 — 사장님 PC 공정 11): 답에 \"대조표\": [{\"줄\": \"<줄 id>\", \"화면\": \"시트에서 그 줄 자리에 실제로 보이는 것\", \"이유\": \"그 말과 왜 맞는가\"}] 를 대본 줄 전부 넣어라. "
+                  "맞다고 못 쓰는 줄이 있으면 ok 를 주지 말고 고쳐라. 첫 줄은 '이유'에 훅 장면(누구나 아는 장면이고 그 자체가 '잉?' 질문인가)을 적어라.")
+
+
+def _process(st) -> dict:
+    """(판단 주인 — 이 판이 납품 공정의 어느 단계를 쓰나) 판 칸 process 하나. 없으면 {} = 공정 추가 없음(다른 프리셋 불변).
+    peer_points = 같은 소재 남의 영상 몇 편 자막을 볼까 · line_table = 장면 검수에 줄별 대조표를 요구하나."""
+    return (_style(st["version"]) if st.get("version") else {}).get("process") or {}
+
+
+def line_table_problems(st, r: dict) -> list[str]:
+    """(판단 주인 — 줄별 대조표 합격) 대본 줄 전부에 화면·이유가 있어야 한다. 판 process.line_table 이 없으면 빈 목록."""
+    if not _process(st).get("line_table"):
+        return []
+    rows = {str(x.get("줄")): x for x in r.get("대조표") or [] if isinstance(x, dict)}
+    ids = [str(l.get("id")) for l in st["script"]["S"].get("lines") or []]
+    miss = [i for i in ids if not (str((rows.get(i) or {}).get("화면") or "").strip() and str((rows.get(i) or {}).get("이유") or "").strip())]
+    return [f"대조표에 빠진 줄: {', '.join(miss)}"] if miss else []
+
+
 def _fix_review(st, why: str, sheet: str | None, rid: str, more_imgs: list | None = None) -> dict:
     v = st["version"]
     _, _, ww, wh = STY_window(v)
@@ -2314,11 +2340,12 @@ def _fix_review(st, why: str, sheet: str | None, rid: str, more_imgs: list | Non
     from tools.calcopy import vmake_clean as VC
     erase = ("\n\n★이 편은 원본에 박힌 글자(자막·워터마크)를 렌더 전에 VMake 로 지운다(사장님 10-26 — 엔진이 글자 컷을 '지울 컷'으로 이미 올렸다). "
              "남의 박힌 글자는 problems 에 넣지 말고 blur 도 새로 넣지 마라 — 장면·제품·얼굴·순서만 본다.") if (st.get("text_fix") or {}).get("mode") == "vmake" else ""
-    return _rv(rid, _q(st, "PLAN_LOOK").replace("{ar}", f"{ww}:{wh}") + erase + _lessons("plan") + (f"\n\n멈춘 이유(재료를 고쳐라): {why}" if why else "") + "\n\n대본:\n" +
+    return _rv(rid, _q(st, "PLAN_LOOK").replace("{ar}", f"{ww}:{wh}") + erase + _lessons("plan", v) + (f"\n\n멈춘 이유(재료를 고쳐라): {why}" if why else "") + "\n\n대본:\n" +
                json.dumps(sc["S"], ensure_ascii=False)[:6000] + "\n\n재료:\n" + json.dumps(sc["M"], ensure_ascii=False)[:8000] + _shots_ctx(st) +
                # 처음 질문과 같은 장면 규칙·판 숫자·재료 샷 구간·쓸 수 있는 파일(10-27: 고치기 질문엔 이게 없어 고친 컷이 샷 경계·컷 중앙을 새로 넘겼다 —
                # 6편 두 번째 반려 전부 '지난 고치기에서 새로 생김')
-               _src_rule_ctx(st) + _cut_rules_ctx(st, (st.get("_msheets") or {}).get("shots")) + _subject_ctx(st) + (PLAN_LOOK_WAYS if rid.startswith("plan_") else FINAL_FIX_WAYS if rid.startswith("final_fix_") else ""),
+               _src_rule_ctx(st) + _cut_rules_ctx(st, (st.get("_msheets") or {}).get("shots")) + _subject_ctx(st) + (PLAN_LOOK_WAYS if rid.startswith("plan_") else FINAL_FIX_WAYS if rid.startswith("final_fix_") else "") +
+               (LINE_TABLE_ASK if rid.startswith("plan_") and _process(st).get("line_table") else ""),
                ([_img(sheet)] if sheet else []) + [_img(x) for x in more_imgs or []], need=("ok",))
 
 
@@ -2341,8 +2368,18 @@ def ph_plan_look(st, m, rp, u):
     v = st["version"]
     r = _reply(rp, f"plan_{v}", ("ok",))
     over = st.get("_plan_over") or []
+    if r.get("대조표"):
+        st["line_table"] = r["대조표"]
     if r.get("ok") and not over and not r.get("재료"):
+        gap = line_table_problems(st, r)
+        if gap and not st["tries"].get("line_table"):         # 한 번 더 묻는다 — 그래도 없으면 기록하고 간다(대조표 때문에 편을 멈추지 않는다)
+            st["tries"]["line_table"] = 1
+            return {"review": [_fix_review(st, "; ".join(gap), st.get("_plan_sheet"), f"plan_{v}")], "then": "plan_look"}
+        if gap:
+            st["log"].append("줄별 대조표 미달: " + "; ".join(gap)[:200])
         _redo_done(st)
+        if st.get("line_table") and _process(st).get("line_table"):
+            return {"do": [{"id": "save_table", "cmd": "write_doc", "files": {f"{v}/대조표.json": st["line_table"]}, "version": v}], "then": "thumb"}
         return {"goto": "thumb"}
     voice = [str(o) for o in over if VOICE_RX.search(str(o))]
     if voice:          # 재료 답이 같이 와도 목소리 결함은 대본으로(10-27 이브라인 10번 반복)
@@ -2737,7 +2774,7 @@ def _more_material(st, qs: list) -> dict:
     st["_more_q"] = qs
     st["log"].append(f"재료 더 찾기({st['tries']['more_material']}번째): {qs}")
     R = st.get("research") or {}
-    return {"do": [{"id": "screen", "cmd": "screen", "queries": qs, "exclude": R.get("exclude") or [], "keywords": qs, "top": 6,
+    return {"do": [{"id": "screen", "cmd": "screen", "queries": qs, "exclude": R.get("exclude") or [], "keywords": qs, "top": max(6, _material_n(st)[1]),
                     "bench_id": (st.get("bench") or {}).get("id"), "origin_id": (st.get("origin") or {}).get("id")}], "then": "more_got"}
 
 
@@ -2758,10 +2795,10 @@ def ph_more_got(st, m, rp, u):
         return _back_to_look(st, f"재료를 더 찾았지만({st.get('_more_q')}) 새 영상이 없었다 — 대본줄(그 줄 문장을 있는 장면에 맞게)로 고쳐라")
     st["_more_rows"] = rows
     sheets = [x for x in s.get("sheets") or [] if not any(h and h in x for h in have)]
-    return {"review": [_rv("more_pick", SCREEN_PICK + "\n\n★장면 검수에서 맞는 장면이 없던 줄을 채울 재료를 더 찾았다(검색어: " + ", ".join(st.get("_more_q") or []) + ")."
+    return {"review": [_rv("more_pick", SCREEN_PICK + _pick_line(st) + "\n\n★장면 검수에서 맞는 장면이 없던 줄을 채울 재료를 더 찾았다(검색어: " + ", ".join(st.get("_more_q") or []) + ")."
                            "\n\n후보(시트 순서와 같다):\n" + json.dumps(rows, ensure_ascii=False, indent=1) +
                            f"\n\n제품: {(st.get('product') or {}).get('name')} / 연예인: {(st.get('read') or {}).get('celeb')}" + _subject_pick_ctx(st),
-                           [_img(x) for x in sheets][:8], need=("chosen",))], "then": "more_pick"}
+                           [_img(x) for x in sheets][:max(8, _material_n(st)[1])], need=("chosen",))], "then": "more_pick"}
 
 
 def ph_more_pick(st, m, rp, u):
@@ -2783,7 +2820,7 @@ def ph_more_dl(st, m, rp, u):
     if not new:
         return _back_to_look(st, "더 찾은 재료를 받지 못했다 — 대본줄(그 줄 문장을 있는 장면에 맞게)로 고쳐라")
     st.setdefault("material", {}).setdefault("files", []).extend(new)
-    return {"do": [{"id": "msheets", "cmd": "mat_sheets", "files": ["src/" + f["name"] for f in new][:4]}], "then": "more_sheets"}
+    return {"do": [{"id": "msheets", "cmd": "mat_sheets", "files": ["src/" + f["name"] for f in new][:max(4, _material_n(st)[1])]}], "then": "more_sheets"}
 
 
 def ph_more_sheets(st, m, rp, u):
@@ -3923,7 +3960,7 @@ def f_material(st, m, rp, u):
     if _alt_material_needed(st):
         R = st.get("research") or {}
         do.append({"id": "screen", "cmd": "screen", "queries": _alt_queries(st), "exclude": R.get("exclude") or [],
-                   "keywords": [k for k in R.get("keywords") or [] if k][:3] or [str((st.get("product") or {}).get("name") or "")[:20]], "top": 8,
+                   "keywords": [k for k in R.get("keywords") or [] if k][:3] or [str((st.get("product") or {}).get("name") or "")[:20]], "top": _material_top(st),
                    "bench_id": (st.get("bench") or {}).get("id"), "origin_id": (st.get("origin") or {}).get("id")})
     return {"do": do, "then": "f_material_got"}
 
@@ -3960,8 +3997,8 @@ def f_alt_ask(st, m, rp, u):
             st["log"].append("비슷한 제품 영상 후보 0개 — " + str(s.get("error") or s.get("note") or "검색 결과 없음")[:200])
         return {"goto": "f_clean"}
     st["screen_rows"] = rows
-    return {"review": [_rv("screen_pick", SCREEN_PICK + ALT_PICK_NOTE + "\n\n후보(시트 순서와 같다):\n" + json.dumps(rows, ensure_ascii=False, indent=1) +
-                           f"\n\n제품: {(st.get('product') or {}).get('name')}", [_img(x) for x in s.get("sheets") or []][:8], need=("chosen",))],
+    return {"review": [_rv("screen_pick", SCREEN_PICK + _pick_line(st) + ALT_PICK_NOTE + "\n\n후보(시트 순서와 같다):\n" + json.dumps(rows, ensure_ascii=False, indent=1) +
+                           f"\n\n제품: {(st.get('product') or {}).get('name')}", [_img(x) for x in s.get("sheets") or []][:_material_top(st)], need=("chosen",))],
             "then": "f_alt_pick"}
 
 
@@ -4159,10 +4196,33 @@ def s_product_done(st, m, rp, u):
     return {"goto": "reviews"}
 
 
+PEER_ASK = ("\n\n## 같은 소재 남의 영상 자막(소재 쇼츠 채널 제외 — 사장님 10-22 '같은 소재 남의 영상에서 포인트')\n{rows}\n"
+            "★조사.md 맨 끝에 '## 7 남의 영상 포인트' 표를 넣어라: | 영상 | 포인트 | 우리 대본에 쓸 길 | — 사람들이 놀란 사실·궁금해한 것 위주. 문장을 옮겨 적지 말고 포인트만, 사실은 출처로 다시 확인한다.")
+
+
+def _peer_block(st) -> str:
+    """(판단 주인 — 남의 영상 포인트를 조사 질문에 싣나) 받은 자막이 있을 때만."""
+    rows = st.get("peer_videos") or []
+    return PEER_ASK.replace("{rows}", json.dumps(rows, ensure_ascii=False, indent=1)[:6000]) if rows else ""
+
+
+def s_peers_got(st, m, rp, u):
+    r = m.get("peers") or {}
+    st["peer_videos"] = r.get("videos") or []
+    if r.get("error") or not st["peer_videos"]:
+        st["log"].append("남의 영상 자막 0편 — " + str(r.get("error") or "검색·자막 없음")[:200])    # 없어도 조사는 간다(멈추지 않는다, 기록은 남긴다)
+    return s_research(st, {}, {}, u)
+
+
 def s_research(st, m, rp, u, fail: str = ""):
     PR = st["product"]
+    n = int(_process(st).get("peer_points") or 0)
+    if n and "peer_videos" not in st:
+        B = st.get("bench") or {}
+        qs = [q for q in [str(B.get("title") or "").strip()[:60], str(PR.get("name") or "").strip()[:40]] if q]
+        return {"do": [{"id": "peers", "cmd": "peer_points", "queries": qs, "n": n, "skip_ids": [B.get("id")], "skip_channel": B.get("channel")}], "then": "s_peers_got"}
     ask = (RESEARCH_SHOP + "\n\n" + ((_style(st["version"]).get("script") or {}).get("research") or "") + "\n\n## 소재 영상\n제목: " + str(st["bench"].get("title")) + "\n받아쓰기: " + " / ".join(str(l.get("text")) for l in st.get("bench_lines") or [])[:3000] +
-           "\n\n## 제품\n" + json.dumps(PR, ensure_ascii=False) + "\n\n## 쿠팡 베스트 후기·네이버 글\n" + json.dumps(st.get("reviews") or [], ensure_ascii=False)[:5000] +
+           "\n\n## 제품\n" + json.dumps(PR, ensure_ascii=False) + "\n\n## 쿠팡 베스트 후기·네이버 글\n" + json.dumps(st.get("reviews") or [], ensure_ascii=False)[:5000] + _peer_block(st) +
            (f"\n\n## 지난 답에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
     return {"review": [_rv("research", ask, [], need=("조사_md", "keywords", "queries"))], "then": "s_research_check",
             "reject": {"why": fail, "fix": "조사를 고쳐 다시"} if fail else None}
@@ -4176,6 +4236,8 @@ def s_research_check(st, m, rp, u):
     md = str(r.get("조사_md") or "")
     bad = [f"조사.md 에 '{h}' 절이 없다" for h in ("결론", "출처", "사실", "금지", "확인 못") if h not in md]
     bad += [f"사실 {f.get('id')} 에 출처가 없다" for f in r.get("facts") or [] if isinstance(f, dict) and not str(f.get("src") or "").strip()]
+    if _peer_block(st) and "남의 영상 포인트" not in md:
+        bad.append("조사.md 에 '## 7 남의 영상 포인트' 표가 없다")
     if bad:
         _tries(st, "research", 3)
         return s_research(st, {}, {}, u, fail="; ".join(bad))
@@ -4415,7 +4477,7 @@ FORMAT_PHASES = {   # 형식별 세부 단계 처리기 — 없는 세부 단계
                 "f_clean_got": f_clean_got, "f_draft": f_draft, "f_draft_got": f_draft_got, "f_asr": f_asr, "f_asr_got": f_asr_got,
                 "plan": f_plan, "render": f_render, "f_render_clean_got": f_render_clean_got},
     "쇼핑형": {"bench_got": s_bench_got, "topic_got": s_topic_got, "s_cands": s_cands, "s_cand_look": s_cand_look, "s_product_done": s_product_done,
-             "research": s_research, "s_research_check": s_research_check, "material_dl": s_material_dl},
+             "research": s_research, "s_peers_got": s_peers_got, "s_research_check": s_research_check, "material_dl": s_material_dl},
     "레시피형": {},      # 연예인형 처리기 그대로(재료 스티커 = 판)
 }
 FORMAT_PHASES["자막노래형"] = {**{k: v for k, v in FORMAT_PHASES["해외원본형"].items()

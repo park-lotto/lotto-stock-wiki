@@ -1100,6 +1100,23 @@ def c_origin_words(W, d):
     return {"words": words, "from": how}
 
 
+def c_peer_points(W, d):
+    """같은 소재 남의 영상 자막(제작순서 조사 — 납품 포인트.md 의 재료). 소재 쇼츠·그 채널은 뺀다. 판단 없음 — 글만 서버로. 댓글은 안 받는다."""
+    skip, chan = set(d.get("skip_ids") or []), str(d.get("skip_channel") or "").strip()
+    found = [x for x in _search(d.get("queries") or [], 10, True) if x.get("id") not in skip and not (chan and chan == str(x.get("channel") or x.get("uploader") or "").strip())]
+    out, n = [], int(d.get("n") or 4)
+    for x in found:
+        if len(out) >= n:
+            break
+        words, how = _origin_words(W, x["id"])
+        if how == "blocked":                 # 막히면 더 두드리지 않는다(계정 보호, c_origin_subs 와 같은 원칙)
+            break
+        text = " ".join(str(w[1]) for w in words).strip()
+        if text:
+            out.append({"id": x["id"], "title": x.get("title"), "channel": x.get("channel") or x.get("uploader"), "text": text[:1200]})
+    return {"videos": out, "searched": len(found)}
+
+
 def c_screen(W, d):
     """재료 후보(제작순서 05) — 받기·시트는 screen 모듈(yt-dlp 만). 캐시 모드면 받아 둔 재료 영상으로 시트를 만든다."""
     skip = {d.get("bench_id"), d.get("origin_id")}
@@ -2132,7 +2149,7 @@ def c_thumb_auto(W, d):
 
 
 CMDS = {"env": c_env, "bench": c_bench, "search": c_search, "peer_sheet": c_peer_sheet, "channel_list": c_channel_list, "origin_subs": c_origin_subs,
-        "origin_get": c_origin_get, "channel_find": c_channel_find, "origin_probe": c_origin_probe, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "coupang_reviews": c_coupang_reviews, "cand_sheet": c_cand_sheet, "naver": c_naver, "origin_words": c_origin_words,
+        "origin_get": c_origin_get, "channel_find": c_channel_find, "origin_probe": c_origin_probe, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "coupang_reviews": c_coupang_reviews, "cand_sheet": c_cand_sheet, "naver": c_naver, "origin_words": c_origin_words, "peer_points": c_peer_points,
         "screen": c_screen, "download": c_download, "product_stills": c_product_stills, "orig_heard": c_orig_heard, "asr_spans": c_asr_spans, "shot_sheets": c_shot_sheets, "mat_sheets": c_mat_sheets,
         "write_doc": c_write_doc, "plan": c_plan, "render": c_render, "check": c_check, "finish": c_finish,
         "origin_foreign": c_origin_foreign, "of_settle": c_of_settle, "clean_text": c_clean_text, "materials_draft": c_materials_draft, "thumb_auto": c_thumb_auto}
