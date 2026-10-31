@@ -73,4 +73,5 @@ def test_check_retry_measures_again_first():
     """완성본 검사에서 멈춘 편을 다시 시도하면 옛 결과로 고치기를 묻지 않고 검사부터 다시(10-27 run4 a·c편)."""
     st = {"version": "잇템로그판_v2", "tries": {"look": 2}, "log": [], "auto": {"ok": False, "rows": [{"what": "x", "ok": False}]}}
     r = F.ph_check_retry(st, {}, {}, {})
-    assert r == {"goto": "check"} and st["tries"]["look"] == 0
+    assert r == {"goto": "check"}
+    assert st["tries"]["look"] == 2      # 횟수는 지우지 않는다 — 지우면 retry 마다 한도가 새로 시작돼 무한 되풀이(10-31 티라미수 8번)
