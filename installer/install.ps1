@@ -137,6 +137,8 @@ let j = {};
 if (fs.existsSync(cfg)) j = JSON.parse(fs.readFileSync(cfg, 'utf8'));
 if (!j.theme) j.theme = 'dark';
 j.hasCompletedOnboarding = true;
+j.hasCompletedClaudeInChromeOnboarding = true;      // 크롬 확장이 있는 PC 에서 첫 화면이 멈춘다(11-01 실측)
+if (j.claudeInChromeDefaultEnabled === undefined) j.claudeInChromeDefaultEnabled = false;
 j.projects = j.projects || {};
 const key = work.replace(/\\/g, '/');
 j.projects[key] = Object.assign({}, j.projects[key], { hasTrustDialogAccepted: true });
