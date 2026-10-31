@@ -252,3 +252,7 @@ def test_무료회원도_숏클_정가는_살_수_있다(client, monkeypatch):
 
 def test_비로그인_차액_화면이_다음_길을_알려준다(client):
     assert "숏클메이커 보기" in client.get("/pay/toss?product=shortcl_basic_upgrade").text
+
+
+def test_결과물_영상은_칸에_맞춘다():
+    assert ".sc-shot video{width:100%;height:100%" in appmod._LANDING_HTML
