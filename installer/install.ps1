@@ -117,8 +117,46 @@ if ($listed -notmatch 'shortem') { Die '숏클 플러그인 등록을 확인하�
 
 $work = Join-Path ([Environment]::GetFolderPath('Desktop')) '숏템작업'
 New-Item -ItemType Directory -Force -Path $work | Out-Null
+
+# 첫 실행의 글자 스타일 선택·폴더 신뢰 확인을 미리 끝낸다(회원이 누를 것을 없앤다, 11-01 첫 화면 실측). 로그인은 회원 몫이다.
+$cfgDir = if ($env:CLAUDE_CONFIG_DIR) { $env:CLAUDE_CONFIG_DIR } else { $null }
+$cfg = if ($cfgDir) { Join-Path $cfgDir '.claude.json' } else { Join-Path $env:USERPROFILE '.claude.json' }
+$seed = @'
+const fs = require('fs');
+const [cfg, work] = process.argv.slice(1);
+let j = {};
+if (fs.existsSync(cfg)) j = JSON.parse(fs.readFileSync(cfg, 'utf8'));
+if (!j.theme) j.theme = 'dark';
+j.hasCompletedOnboarding = true;
+j.projects = j.projects || {};
+const key = work.replace(/\\/g, '/');
+j.projects[key] = Object.assign({}, j.projects[key], { hasTrustDialogAccepted: true });
+const tmp = cfg + '.shortem.tmp';
+fs.writeFileSync(tmp, JSON.stringify(j, null, 2));
+fs.renameSync(tmp, cfg);
+'@
+& $node -e $seed $cfg $work
+if ($LASTEXITCODE -ne 0) { Say '첫 화면 설정은 건너뜁니다' }
+$local = Join-Path $work '.claude'
+New-Item -ItemType Directory -Force -Path $local | Out-Null
+$allow = Join-Path $local 'settings.json'
+if (-not (Test-Path $allow)) {
+    $rules = '{"permissions":{"allow":["mcp__plugin_shortem_shortem","Skill(shortem:setup)","Skill(shortem:make)","Skill(shortem:script)"]}}'
+    [IO.File]::WriteAllText($allow, $rules, (New-Object Text.UTF8Encoding($false)))
+}
 Say '설치 완료'
 if (-not $env:SHORTEM_NO_LAUNCH) {
-    Say '새 창에서 준비 점검을 시작합니다. Claude 로그인 화면이 뜨면 로그인만 해 주세요'
-    Start-Process powershell -WorkingDirectory $work -ArgumentList '-NoExit', '-Command', 'claude ''숏템 준비 점검해줘'''
+    # 온보딩을 건너뛰면 Claude 가 로그인 화면을 안 띄우고 /login 을 치라고만 한다(11-01 실측) — 여기서 먼저 로그인시킨다
+    $eap = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $logged = (& claude auth status 2>&1 | Out-String) -match '"loggedIn":\s*true'
+    if (-not $logged) {
+        Say '브라우저가 열립니다. Claude 에 로그인하고 승인 버튼만 눌러 주세요'
+        & claude auth login
+    }
+    $ErrorActionPreference = $eap
+    Say '새 창에서 준비 점검을 시작합니다'
+    # -WorkingDirectory 는 Windows Terminal 이 받는 창에서 무시된다(11-01 실측) — 새 창 안에서 옮긴다
+    $env:SHORTEM_WORK_DIR = $work
+    Start-Process powershell -ArgumentList '-NoExit', '-Command', 'Set-Location -LiteralPath $env:SHORTEM_WORK_DIR; claude ''숏클 점검 준비해줘'''
 }
