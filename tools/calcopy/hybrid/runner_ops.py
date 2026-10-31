@@ -1642,6 +1642,8 @@ def c_check(W, d):
         ok = False
     E = Path(r.get("eye_pack_dir") or (W / v / "eye"))
     eye_files = [rel(W, E / n) for n in EYE_FILES if (E / n).exists()]
+    if not any("벤치" in x for x in eye_files) and (W / "bench" / "sheet.jpg").exists():
+        eye_files.insert(1, rel(W, W / "bench" / "sheet.jpg"))     # 회원 PC 는 벤치 대조 시트를 못 만든다 — 받아 둔 벤치 시트로 비교한다
     eye_texts = {n: (E / n).read_text(encoding="utf-8")[:6000] for n in EYE_TEXTS if (E / n).exists()}
     return {"auto": {"ok": ok, "rows": rows, "report": str(r.get("report")), "n_bad": sum(1 for x in rows if x.get("ok") is False),
                      "n_unmeasured": sum(1 for x in rows if x.get("ok") is None and not x.get("ref"))},
