@@ -183,8 +183,7 @@ async function stepOnce({ step, sid, n, run_id, preset, topic, channel, video, p
     }
     if (step === 'approve') approveFlow(sid);
     else if (step === 'retry') {
-      const f = loadFlow(sid);
-      if (f && !f.busy) await retryUpdate();      // 멈춘 사이 고쳐졌으면 새 엔진으로 이어 간다(회원은 다시 시도만)
+      if (idle()) await retryUpdate();      // 멈춘 사이 고쳐졌으면 새 엔진으로 이어 간다(회원은 다시 시도만)
       retryFlow(sid);
     }
     else if (step === 'restyle') return { hints: ['이 프리셋은 다시 만들기를 아직 못 합니다 — 같은 영상 주소로 새로 만들어 주세요'] };

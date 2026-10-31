@@ -21,3 +21,18 @@ def test_duplicate_topic_is_json(monkeypatch, capsys):
 def test_unknown_crash_is_json(monkeypatch, capsys):
     rc, out = _run(monkeypatch, capsys, KeyError("칸"))
     assert rc == 3 and out["code"] == "engine_crash" and "KeyError" in out["error"]
+
+
+def test_customer_restart_reopens_same_topic(tmp_path, monkeypatch):
+    monkeypatch.setattr(MK, "CUSTOMER_MODE", True)
+    a = MK._add_or_reopen("소재", "cat", {}, tmp_path)
+    b = MK._add_or_reopen("소재", "cat", {}, tmp_path)
+    assert a["id"] == b["id"]
+
+
+def test_admin_duplicate_still_refused(tmp_path, monkeypatch):
+    import pytest
+    monkeypatch.setattr(MK, "CUSTOMER_MODE", False)
+    MK._add_or_reopen("소재", "cat", {}, tmp_path)
+    with pytest.raises(MK.CT.TopicError):
+        MK._add_or_reopen("소재", "cat", {}, tmp_path)

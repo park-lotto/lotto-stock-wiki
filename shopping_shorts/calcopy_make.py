@@ -420,6 +420,20 @@ def _norm_facts(facts) -> dict:
     return facts
 
 
+def _add_or_reopen(topic: str, cat: str, src: dict, data_dir=None) -> dict:
+    """글 소재 입구. 고객 PC 에서 멈춘 같은 소재를 다시 시작하면 새로 넣지 않고 그 소재에서 잇는다(10-31 재시작이 중복으로 죽었다)."""
+    try:
+        return CT.add(topic, cat, "bench", source=src, by="만들기 입구", data_dir=data_dir)
+    except CT.TopicError:
+        if not CUSTOMER_MODE:
+            raise
+    name = topic.strip()
+    t = next((x for x in CT.board(category=cat, limit=2000, data_dir=data_dir)["topics"] if x["name"] == name), None)
+    if not t:
+        raise MakeError(f"멈춘 소재를 찾지 못했습니다: {name}", 409)
+    return CT.unstall(t["id"], by="만들기 입구", data_dir=data_dir) if t.get("stalled") else t
+
+
 def start(preset: str, pack: str | int = "1", topic: str | None = None, ref_url: str | None = None, data_dir=None, deps: dict | None = None,
           facts=None, reuse_of: int | None = None, pack_patch: dict | None = None) -> dict:
     """후보 목록(창고 found~scored 상위 10, 모자라면 그 자리에서 찾기) — topic/ref_url 이 오면 후보를 건너뛰고 바로 작업.
@@ -451,7 +465,7 @@ def start(preset: str, pack: str | int = "1", topic: str | None = None, ref_url:
             topic = topic or title
         if facts:
             src["facts_n"] = len(facts)
-        t = CT.add(topic, cat, "bench", source=src, by="만들기 입구", data_dir=data_dir)
+        t = _add_or_reopen(topic, cat, src, data_dir)
         if facts:
             fp = _sdir(data_dir) / S["sid"] / "facts.json"
             fp.write_text(json.dumps(facts, ensure_ascii=False, indent=1), encoding="utf-8")
