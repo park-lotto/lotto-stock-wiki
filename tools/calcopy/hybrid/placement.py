@@ -1245,6 +1245,21 @@ def _sfx_allowed(style: dict) -> list[str]:
     return files or [S.get("kind", "ding")]
 
 
+def _sfx_rate_n(out: list[dict], style: dict, n: int, log: list) -> int:
+    """벤치 밀도(B14 p90) 안에 드는 발 수로 줄인다 — 배치가 넣은 것을 검사가 떨어뜨려 대본 길이로 맞추는 되풀이를 막는다(10-31 해외신기템 2발/33.5초 = 0.060 > 0.059 로 2시간)."""
+    from tools.calcopy.engine.kal_analyze import sfx_rate_p90
+    p = (style.get("bench") or {}).get("line_reads")
+    rd = ROOT / p if p else None
+    if not n or not rd or not rd.exists():
+        return n
+    cap, _ = sfx_rate_p90([json.loads(f.read_text(encoding="utf-8")) for f in sorted(rd.glob("*.json"))])
+    dur = max((float(r.get("t1") or 0) for r in out), default=0.0) - 0.1     # 완성본은 마무리로 조금 짧아질 수 있다
+    if cap is None or n <= int(cap * dur):
+        return n
+    log.append(f"효과음 {n}발 → {int(cap * dur)}발(벤치 p90 {cap:.3f}/초 × {dur:.1f}초)")
+    return int(cap * dur)
+
+
 def sfx_step(out: list[dict], style: dict, ref: dict | None, transitions: list[dict], cuts, log: list, tg: dict | None = None,
              warn: list | None = None) -> list[dict]:
     """(판단 주인: 효과음 수·자리·종류) 판 칸 placement.rules.sfx{max, kinds{이름:비율}, offset, kind(옛 한 종류)}.
@@ -1282,7 +1297,7 @@ def sfx_step(out: list[dict], style: dict, ref: dict | None, transitions: list[d
         log.append(f"효과음 targets: 목표 {tg['sfx_rate']['goal']}발/초 × {dur:.2f}초 = {n_tg}발 · 상한 {cap_n}(상위 편 최대 {tg['sfx_rate']['cap']})")
     sfx = []
     if lines:
-        n = n_tg if n_tg is not None else min(len(lines), int(S.get("max", len(lines))))
+        n = _sfx_rate_n(out, style, n_tg if n_tg is not None else min(len(lines), int(S.get("max", len(lines)))), log)
         offs = sorted(e["off"] for e in lines if isinstance(e.get("off"), (int, float)))
         off = float(S["offset"]) if isinstance(S.get("offset"), (int, float)) else (max(-0.3, min(0.3, offs[len(offs) // 2])) if offs else 0.0)
         rc = Counter(e["role"] for e in lines)
@@ -1347,7 +1362,7 @@ def sfx_step(out: list[dict], style: dict, ref: dict | None, transitions: list[d
         log.append(f"효과음 {len(sfx)}발(본보기 줄판독 {len(lines)}발 · 역할 {dict(per_role)} · 편차 {off:+.2f}초) {[(s['t'], s['kind'], s['role']) for s in sfx]}")
         return sfx
     want = (ref or {}).get("sfx") or []
-    n = min(len(want), int(S.get("max", 3)))
+    n = _sfx_rate_n(out, style, min(len(want), int(S.get("max", 3))), log)
     if n:
         spots = []
         for w in [w for w, _ in Counter(want).most_common() if w != "none"] + ["cap"]:

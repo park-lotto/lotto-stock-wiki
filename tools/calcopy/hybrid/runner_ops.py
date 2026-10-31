@@ -1338,7 +1338,18 @@ def jump_free_spans(src: Path, spans: list[list[float]], fps: int = 10, pad: flo
     lBleNklHu2A 36.2~41.37 을 한 샷으로 줬는데, 그 안 40.2~41.0 디졸브를 source_rule_scan 이 '장면 전환'으로 반려 — 같은 자로 미리 뺀다)."""
     if src.suffix.lower() in RU.STILL_EXT or not spans:
         return spans
-    dd = _cut_jumps(src, 0.0, float(spans[-1][1]), fps=fps)
+    # 재료 전체를 푸는 자리 — 4K 149초 재료는 한 번에 약 3분이라 장면 맞추기를 다시 할 때마다 쌓인다(10-31). 같은 파일이면 잰 값을 다시 쓴다
+    end = float(spans[-1][1])
+    memo = src.with_name(f"{src.stem}.jumps.json")
+    key = [src.stat().st_size, int(src.stat().st_mtime), end, fps]
+    try:
+        m = json.loads(memo.read_text(encoding="utf-8"))
+        dd = m["dd"] if m["key"] == key else None
+    except (OSError, ValueError, KeyError, TypeError):
+        dd = None
+    if dd is None:
+        dd = _cut_jumps(src, 0.0, end, fps=fps)
+        memo.write_text(json.dumps({"key": key, "dd": dd}), encoding="utf-8")
     marks = [(i + 1) / fps for i, x in enumerate(dd) if x > JUMP_MANY]
     out = []
     for a, b in spans:

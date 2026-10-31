@@ -179,12 +179,10 @@ def fps_of(p) -> float:
 # ---------------------------------------------------------------- 판정 조각(입력 = 숫자 — 사보타주 시험이 이것을 부른다)
 def sfx_excess(n_sfx: int, dur: float, bench_docs: list[dict]) -> tuple[bool | None, str]:
     """B14 효과음 과다 = 우리 발/초 ≤ 벤치 편별 발/초의 p90(표준 §3-3 A2). 벤치 줄판독이 없으면 미측정."""
-    import numpy as np
-    from tools.calcopy.engine.kal_analyze import _sfx_n
-    dens = [sum(_sfx_n(l) for l in d.get("lines") or []) / float(d["dur"]) for d in bench_docs if d.get("dur")]
-    if not dens:
+    from tools.calcopy.engine.kal_analyze import sfx_rate_p90
+    p90, dens = sfx_rate_p90(bench_docs)
+    if p90 is None:
         return None, "벤치 줄판독 없음(미측정)"
-    p90 = float(np.percentile(dens, 90))
     ours = n_sfx / dur if dur else 0.0
     return ours <= p90 + 1e-9, f"우리 {n_sfx}발/{dur:.1f}초 = {ours:.3f}/초 · 벤치 p90 {p90:.3f}/초(편별 {[round(x, 3) for x in dens]})"
 
