@@ -28,6 +28,11 @@ $info = Invoke-RestMethod -Uri "$base/api/claude/install?plat=win-x64" -Headers 
 if (-not $info.ready) { Die '설치 묶음이 아직 준비되지 않았습니다. 잠시 뒤 다시 해 주세요' }
 if ($info.version -notmatch '^\d+\.\d+\.\d+$' -or $info.sha256 -notmatch '^[0-9a-f]{64}$') { Die '서버 응답이 올바르지 않습니다' }
 
+# 바탕화면 경로가 빈 값인 환경이 있다(11-01 빈 사용자 시험) — 없으면 사용자 폴더 아래로 만든다
+$desktop = [Environment]::GetFolderPath('Desktop')
+if (-not $desktop) { $desktop = Join-Path $env:USERPROFILE 'Desktop' }
+New-Item -ItemType Directory -Force -Path $desktop | Out-Null
+
 $homeDir = if ($env:SHORTEM_INSTALL_DIR) { $env:SHORTEM_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA 'Shortem' }
 $parent = Split-Path $homeDir -Parent
 New-Item -ItemType Directory -Force -Path $parent | Out-Null
@@ -65,7 +70,6 @@ if ($current -eq $info.version -and (Test-Path $node)) {
     $old = $null
     if (Test-Path $homeDir) { $old = "$homeDir.old-$(Get-Date -Format yyyyMMddHHmmss)"; Rename-Item $homeDir $old }
     Rename-Item $fresh $homeDir
-    $desktop = [Environment]::GetFolderPath('Desktop')
     & $node (Join-Path $homeDir 'postinstall.js') --home $homeDir --version $info.version --desktop $desktop
     if ($LASTEXITCODE -ne 0) {
         Remove-Item $homeDir -Recurse -Force
@@ -94,13 +98,18 @@ $env:SHORTEM_NODE = $node
 
 if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
     $local = Join-Path $env:USERPROFILE '.local\bin'
-    if (Test-Path (Join-Path $local 'claude.exe')) {
-        $env:Path = "$local;$env:Path"
-    } else {
+    if (-not (Test-Path (Join-Path $local 'claude.exe'))) {
         Say 'Claude Code 설치 중'
-        Invoke-RestMethod 'https://claude.ai/install.ps1' | Invoke-Expression
-        $env:Path = "$local;$env:Path"
-        if (-not (Get-Command claude -ErrorAction SilentlyContinue)) { Die 'Claude Code 설치를 확인하지 못했습니다' }
+        # 별도 창 없이 자식 프로세스로 — 같은 범위에서 iex 하면 공식 스크립트가 이 스크립트 변수를 덮어쓴다(11-01 새 PC 시험)
+        & powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://claude.ai/install.ps1 | iex"
+    }
+    $env:Path = "$local;$env:Path"
+    if (-not (Get-Command claude -ErrorAction SilentlyContinue)) { Die 'Claude Code 설치를 확인하지 못했습니다' }
+    if (-not $env:SHORTEM_NO_PERSIST) {     # 공식 설치는 PATH 를 안 넣는다 — 다음에 켜는 창에서도 찾게 사용자 PATH 에 넣는다
+        $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+        if (($userPath -split ';') -notcontains $local) {
+            [Environment]::SetEnvironmentVariable('Path', ($userPath.TrimEnd(';') + ";$local"), 'User')
+        }
     }
 }
 
@@ -115,7 +124,7 @@ $listed = (& claude plugin list 2>&1 | Out-String)
 $ErrorActionPreference = $eap
 if ($listed -notmatch 'shortem') { Die '숏클 플러그인 등록을 확인하지 못했습니다' }
 
-$work = Join-Path ([Environment]::GetFolderPath('Desktop')) '숏템작업'
+$work = Join-Path $desktop '숏템작업'
 New-Item -ItemType Directory -Force -Path $work | Out-Null
 
 # 첫 실행의 글자 스타일 선택·폴더 신뢰 확인을 미리 끝낸다(회원이 누를 것을 없앤다, 11-01 첫 화면 실측). 로그인은 회원 몫이다.
@@ -153,8 +162,10 @@ if (-not $env:SHORTEM_NO_LAUNCH) {
     if (-not $logged) {
         Say '브라우저가 열립니다. Claude 에 로그인하고 승인 버튼만 눌러 주세요'
         & claude auth login
+        $logged = (& claude auth status 2>&1 | Out-String) -match '"loggedIn":\s*true'
     }
     $ErrorActionPreference = $eap
+    if (-not $logged) { Die 'Claude 로그인이 끝나지 않았습니다. 같은 줄을 다시 붙여 넣고 엔터를 눌러 주세요' }
     Say '새 창에서 준비 점검을 시작합니다'
     # -WorkingDirectory 는 Windows Terminal 이 받는 창에서 무시된다(11-01 실측) — 새 창 안에서 옮긴다
     $env:SHORTEM_WORK_DIR = $work
