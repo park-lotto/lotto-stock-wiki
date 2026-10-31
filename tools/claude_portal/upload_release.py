@@ -15,6 +15,7 @@ import hashlib
 import json
 import os
 import subprocess
+import time
 import sys
 import tempfile
 import urllib.request
@@ -41,7 +42,17 @@ def ssh(cmd):
 
 
 def scp(files, dst):
-    return sh(["scp", "-o", "ConnectTimeout=20", "-i", KEY, *map(str, files), f"{HOST}:{dst}"], timeout=3600)
+    # 큰 파일 전송 중 연결이 끊기면 다시 보낸다(10-31 Connection reset 4번). 파일 하나씩, 속도 제한으로
+    for f in files:
+        for n in range(1, 7):
+            try:
+                sh(["scp", "-l", "30000", "-o", "ConnectTimeout=20", "-o", "ServerAliveInterval=15", "-i", KEY, str(f), f"{HOST}:{dst}"], timeout=3600)
+                break
+            except SystemExit:
+                if n == 6:
+                    raise
+                print(f"[upload] {Path(f).name} 전송 끊김 — {n}/6 다시", flush=True)
+                time.sleep(20)
 
 
 def sha256(p: Path) -> str:
