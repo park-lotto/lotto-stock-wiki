@@ -66,11 +66,15 @@ def _words(s: str) -> set[str]:
 
 
 def check(slug: str, script_path, material_path=None) -> dict:
+    return check_obj(slug, _j(script_path), _j(material_path) if material_path else None)
+
+
+def check_obj(slug: str, S: dict, M=None) -> dict:
+    """(판단 주인 — 벤치 표절) 파일 길(check)과 서버 대본 관문(flow.audit_script)이 같이 부른다."""
     B = bench(slug)
-    S = _j(script_path)
     blob = json.dumps(S, ensure_ascii=False)
-    if material_path:
-        blob += json.dumps(_j(material_path), ensure_ascii=False)
+    if M:
+        blob += json.dumps(M, ensure_ascii=False)
     src_hits = sorted({m for m in _YT.findall(blob) if m in B["ids"]})
 
     ours = _flat("".join(script_lines(S)))

@@ -204,7 +204,7 @@ RESEARCH = """너는 조사 담당이다. 이 편의 `조사.md` 한 파일 내�
 JSON 하나: {"stop": "", "조사_md": "마크다운 전문", "keywords": ["제품명", "영문명", "모델"], "queries": ["…"], "exclude": ["모음", "TOP", "가성비"],
  "spans": [{"a": 받은 파일 초, "b": 초, "tag": "O1"}], "facts": [{"id": "f1", "fact": "…", "src": "URL 또는 '원본 n초'"}]}"""
 
-SCREEN_PICK = """너는 제품 영상 고르기 담당이다. 같은 제품만, 1080 이상, 남의 글자가 가운데 상시면 뺀다, 제품 컷이 많은 것 앞으로, 2~4개.
+SCREEN_PICK = """너는 제품 영상 고르기 담당이다. 같은 제품만, 1080 이상, 남의 글자가 가운데 상시면 뺀다, 제품 컷이 많은 것 앞으로, 판이 정한 개수만큼(아래 ★개수).
 ★연예인이 나오는 영상은 찾은 원본(연예인 본인 채널·방송사 공식)에서만 쓴다 — 다른 채널(벤치 쇼츠·재편집·리뷰)에 나온 연예인 영상은 절대 금지. 후보에 그 연예인이 나오면 rejected.
 ★남의 리뷰 영상에 장면 전환 효과(별·와이프)·남의 손 근접이 많으면 뒤로. 원본 안에 제품 근접 장면이 있으면 그게 먼저다(재료가 모자랄 때만 이 후보).
 각 후보의 시트(미리보기 = 영상 전체 약 5초 간격, 칸 왼쪽 위 노란 '분:초' = 그 영상 시각 · 미리보기가 없는 후보는 360p 토막)와 메타가 있다. sections 는 그 영상의 초. 쓸 게 없으면 chosen 빈 목록.
@@ -1241,11 +1241,13 @@ STAGE_GUIDE = {"setup": "00_공통.md", "bench": "01_소재.md", "origin": "02_�
 GUIDE_DIR = Path(__file__).resolve().parents[3] / "channel" / "칼카피_제작순서"
 TASK_ASK = """너는 이 편의 **제작자**다(사장님 PC 의 제작 세션과 같은 자리). 아래 단계에서 만들기가 막혔다 — 회원에게 묻기 전에 네가 푼다.
 지킬 것: 가이드(아래 발췌)를 지킨다 · 금지선·함정은 절대 · 지어내지 않는다(모르면 웹 검색으로 확인) · 회원에게는 꼭 필요한 결정만.
+너는 사장님 PC 의 Claude 처럼 자유롭게 푼다 — 정해진 길이 없어도 멈추지 말고 네 도구(Bash·파일 수정·yt-dlp·ffmpeg)로 작업 폴더(src/ 등)에서 직접 해결한다. 재료가 모자라면 영상을 직접 받아 src/ 에 넣고 action "material" 로 답한다.
 쓸 수 있는 것: 네 웹 검색(WebSearch·WebFetch) · 숏클 엔진 코드 고치기(코드 결함이면 고친 뒤 retry — 고친 뒤 note 에 파일·이유를 적고 shortem_feedback(kind="code_fix") 로 diff 를 보낸다, 검사 기준을 낮추는 수정은 금지) · 이 답(JSON)으로 숏템에 다음 행동을 시킨다 — 숏템이 그 결과를 다시 검사한다(통과해야 다음 단계).
 답 JSON 하나:
- {"action": "retry" | "give" | "end", "origin_url": "", "product": "", "note": "무엇을 확인했고 왜 이 행동인지 한 줄"}
+ {"action": "retry" | "give" | "material" | "end", "origin_url": "", "product": "", "files": [], "note": "무엇을 확인했고 왜 이 행동인지 한 줄"}
  · retry = 같은 단계를 다시(잠깐의 막힘·고치기 횟수 소진·받기 실패 등 — 다시 하면 풀릴 근거가 있을 때)
  · give = 네가 찾은 것을 준다: origin_url(원본 영상 유튜브 주소 — 원본 찾기 단계) 또는 product(쿠팡 상품 주소나 정확한 제품명 — 제품 확인 단계)
+ · material = 네가 src/ 에 넣은 영상 파일 이름을 files 로 준다 — 대본·목소리 그대로 그 재료로 장면 맞추기부터 다시(숏템이 다시 검사한다)
  · end = 가이드·금지선상 이 편을 만들 수 없다(그때만 회원에게 쉬운 선택지로 묻는다)"""
 
 
@@ -1258,7 +1260,7 @@ def _lessons(key: str) -> str:
     return f"{NL}{NL}## 지난 제작 경험(반드시){NL}" + NL.join("- " + re.sub(r"\(#[\d·#]+\)\s*$", "", x).strip() for x in rows) if rows else ""
 
 
-def _guide(stage_key: str, limit: int = 2500) -> str:
+def _guide(stage_key: str, limit: int = 20000) -> str:
     f = GUIDE_DIR / STAGE_GUIDE.get(stage_key, "00_공통.md")
     try:
         return f"[가이드 {f.name} 발췌]{NL}" + f.read_text(encoding="utf-8")[:limit]
@@ -1329,6 +1331,10 @@ def ph_task_got(st, m, rp, u):
     if act == "give" and prod and t.get("stage") == "product":
         st["given"] = prod[:200]
         return {"goto": "given"}
+    if act == "material":        # 살아 있는 Claude 가 직접 받아 넣은 재료 — 재료 더 찾기와 같은 뒷길(시트 → 장면 검수)
+        names = [Path(str(x)).name for x in a.get("files") or [] if str(x).strip()]
+        if names:
+            return ph_more_dl(st, {"dl": {"files": [{"name": n} for n in names]}}, {}, {})
     if act == "retry":
         st["stopped"] = stopped
         return ph_stopped(st, {}, {}, {"retry": True})
@@ -1710,11 +1716,28 @@ def ph_research_check(st, m, rp, u):
 
 
 # ── 5 재료 영상 ───────────────────────────────────────────────────────────
+def _material_n(st) -> tuple:
+    """(판단 주인 — 재료 영상 개수) 판 칸 material_n[최소, 최대], 없으면 2~4. 10-31 썰템홈샷: 납품 재료 중앙 9개 vs 회원 3개 — 뿌리는 질문에 박힌 '2~4개'."""
+    a, b = ((_style(st["version"]) if st.get("version") else {}).get("material_n") or [2, 4])[:2]
+    return int(a), int(b)
+
+
+def _material_top(st, sw=None) -> int:
+    return max(10 if sw else 8, _material_n(st)[1] * 2)
+
+
+def _screen_pick_ask(st, rows, more="") -> str:
+    a, b = _material_n(st)
+    return (SCREEN_PICK + f"\n\n★개수: {a}~{b}개를 고른다. 대본 줄마다 가리키는 그림이 달라야 하니 서로 다른 장면을 주는 영상으로." + more +
+            "\n\n후보(시트 순서와 같다):\n" + json.dumps(rows, ensure_ascii=False, indent=1) +
+            f"\n\n제품: {st['product'].get('name')} / 연예인: {st['read'].get('celeb')}" + _subject_pick_ctx(st))
+
+
 def ph_material(st, m, rp, u):
     R = st["research"]
     sw = _subject_words(st)          # 이야기 대상 ≠ 파는 제품(쇼핑형 10-29) — 그 물건 장면도 찾는다(대본이 그 물건을 말하는 줄에 쓴다)
     return {"do": [{"id": "screen", "cmd": "screen", "queries": list(dict.fromkeys((R.get("queries") or []) + sw)), "exclude": R.get("exclude") or [],
-                    "keywords": (R.get("keywords") or []) + sw, "top": 10 if sw else 8, "bench_id": st["bench"].get("id"), "origin_id": (st.get("origin") or {}).get("id")}],
+                    "keywords": (R.get("keywords") or []) + sw, "top": _material_top(st, sw), "bench_id": st["bench"].get("id"), "origin_id": (st.get("origin") or {}).get("id")}],
             "then": "material_got"}
 
 
@@ -1724,8 +1747,8 @@ def ph_material_got(st, m, rp, u):
     st["screen_rows"] = rows
     if not rows:
         return {"do": [{"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "images": [x for x in [(st.get("product") or {}).get("image")] if x], "n": 4}], "then": "material_dl"}
-    return {"review": [_rv("screen_pick", SCREEN_PICK + "\n\n후보(시트 순서와 같다):\n" + json.dumps(rows, ensure_ascii=False, indent=1) +
-                           f"\n\n제품: {st['product'].get('name')} / 연예인: {st['read'].get('celeb')}" + _subject_pick_ctx(st), [_img(x) for x in s.get("sheets") or []][:10],
+    st["_screen_sheets"] = s.get("sheets") or []
+    return {"review": [_rv("screen_pick", _screen_pick_ask(st, rows), [_img(x) for x in st["_screen_sheets"]][:_material_top(st)],
                            need=("chosen",))], "then": "material_pick"}
 
 
@@ -1736,6 +1759,10 @@ def ph_material_pick(st, m, rp, u):
     chosen = [c for c in r.get("chosen") or [] if isinstance(c, dict) and c.get("id") in known and c["id"] not in (st["bench"].get("id"), (st.get("origin") or {}).get("id"))
               and not (celeb and celeb in str(c.get("why") or ""))]
     st["screen_pick"] = {"chosen": chosen, "rejected": r.get("rejected") or []}
+    if len(chosen) < _material_n(st)[0] and len(known) > len(chosen) and not st["tries"].get("pick_more"):      # 모자라면 한 번 더 — 그래도 없으면 있는 것으로(장면 검수의 재료 더 찾기가 잇는다)
+        st["tries"]["pick_more"] = 1
+        return {"review": [_rv("screen_pick", _screen_pick_ask(st, st.get("screen_rows") or [], f"\n★지난 답은 {len(chosen)}개뿐이었다 — 쓸 수 있는 것을 더 골라라."),
+                               [_img(x) for x in st.get("_screen_sheets") or []][:_material_top(st)], need=("chosen",))], "then": "material_pick"}
     stills = {"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "images": [x for x in [(st.get("product") or {}).get("image")] if x], "n": 4}
     return {"do": [{"id": "dl", "cmd": "download", "items": [{"id": c["id"], "sections": c.get("sections") or []} for c in chosen]}, stills] if chosen else [stills],
             "then": "material_dl"}
@@ -1995,6 +2022,17 @@ def ph_script_ask(st, m, rp, u):
     return {"review": [_script_ask(st)], "then": "script_got"}
 
 
+CHANNEL_COPY_SLUGS = {"썰템홈샷판": "banggu"}      # 납품 공정의 표절 관문(07_대본.md) — 벤치 채널 전 편과 대조
+
+
+def _channel_copy(v: str, S: dict, M: dict) -> list:
+    slug = CHANNEL_COPY_SLUGS.get(v)
+    if not slug:
+        return []
+    from tools.calcopy import bench_distance
+    return bench_distance.check_obj(slug, S, M)["fails"]
+
+
 def audit_script(st: dict, S: dict, M: dict) -> dict:
     """서버 판정 — 대본 검사(script_audit — 자막↔목소리·줄 끝 부호·영문 포함) + 제목 색 + 출처 규칙 ①②·다른 출연자 샷. 하나라도 걸리면 반려."""
     from tools.calcopy.hybrid import script_audit
@@ -2026,7 +2064,7 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
              "alt_scene": RU.alt_scene_problems(S, M, _origin_names(st)) if (st.get("product") or {}).get("mode") == "alt" else [],
              "subject_scene": subject_scene_problems(st, S, M),
              "source_rule": RU.source_rule_static(M, _origin_names(st), _rule_bench_id(st), st.get("shots") or {}),
-             "bench_copy": RU.bench_copy_problems(S, st.get("bench_lines") or []),
+             "bench_copy": RU.bench_copy_problems(S, st.get("bench_lines") or []) + _channel_copy(v, S, M),
              "alt_tail": RU.alt_tail_problems(S, _style(v).get("cps_target") or 7.0) if _alt_photo_fallback(st) else []}
     on = _origin_names(st)
     if _fmt(st) not in FOREIGN_FMTS and not any(str(c.get("src") or "") not in on for cs in (M.get("cuts") or {}).values() for c in (cs if isinstance(cs, list) else [cs])):
@@ -2487,11 +2525,12 @@ def ph_check(st, m, rp, u):
     return {"do": [{"id": "check", "cmd": "check", "version": st["version"], "mode": "full"}], "then": "check_got"}
 
 
-EYE_REVIEW = False       # 완성본 눈 2단(E1~E9 질문) — 사장님 10-26 "재현일치도랑 눈검수는 필요없다". 되살리면 True
+EYE_REVIEW = True        # 완성본 눈 2단(E1~E9 질문) — 사장님 10-26 "재현일치도랑 눈검수는 필요없다". 되살리면 True
 FINAL_SHEET_LOOK = True  # 완성 전 1초 시트 한 번 — 사장님 PC 제작처럼(숏클 지침 15-0, 관제 290). E 번호 묻기가 아니라 시트를 보고 걸린 것만
 FINAL_SHEET_FILES = ("시트_1초.jpg", "훅3초_0.1초.jpg", "끝2초_0.1초.jpg")
 SHEET_NEED = ("ok", "title_seen", "scenes")     # 봤다는 증거 없는 "ok": true 는 답이 아니다(10-30 회원 2편 — 같은 자료를 새 Claude 는 잡았는데 회원 편은 통과, 답 내용은 기록도 없었다)
-FINAL_SHEET_ASK = """너는 이 편을 채널에 올릴지 마지막으로 보는 사람이다. 자동 검사는 통과했다. 완성본 1초 시트(처음~끝)·훅 3초·끝 2초를 처음부터 끝까지 한 칸씩 본다.
+FINAL_SHEET_ASK = """★이 판정은 네가 바로 답하지 말고 새 Agent(model=opus)에게 이 글과 그림을 그대로 맡겨 그 답을 옮겨라(긴 제작 대화에서 보면 놓친다 — 10-30 두 편).
+너는 이 편을 채널에 올릴지 마지막으로 보는 사람이다. 자동 검사는 통과했다. 완성본 1초 시트(처음~끝)·훅 3초·끝 2초를 처음부터 끝까지 한 칸씩 본다.
 본다: 줄마다 화면이 대사와 맞나 · 자막이 넘치거나 낱말 중간에서 끊기나 · 제목 줄 수·잘림 · 남의 얼굴·손·글자(원본 편집 자막·워터마크) · 같은 장면 되풀이·멈춘 화면·검은 칸 · 이야기 대상과 다른 물건이 그 줄에 나오나.
 ★우리 틀(결함 아님): 맨 위 제목 · 로고 · 우리 자막(색 강조) · 출처 줄.
 합격 기준 = 이 채널에 그대로 올려도 되나. 자동 검사 통과는 근거가 아니다.
@@ -2530,7 +2569,7 @@ def ph_check_got(st, m, rp, u):
     texts = "".join(f"\n\n## {n}\n{str(t)[:5000]}" for n, t in (c.get("eye_texts") or {}).items())
     sc = st.get("script") or {}
     return {"review": [_rv(f"eye_{st['version']}", ask + texts + "\n\n## 대본\n" + json.dumps(sc.get("S") or {}, ensure_ascii=False)[:5000],
-                           [_img(x) for x in st["eye_pack"]][:6], need=tuple(k for k, _, _ in rows))], "then": "check_look"}
+                           [_img(x) for x in st["eye_pack"]][:6], need=tuple(k for k, _, _ in rows), meta={"fresh": True})], "then": "check_look"}
 
 
 def _eye_verdict(a: dict, keys: list) -> tuple[bool, list]:
@@ -2874,6 +2913,10 @@ def ph_check_fix(st, m, rp, u):
         st["tries"]["render_same"] = 1
         st["log"].append("완성본 고치기: 재료로 고칠 것 없음 → 재료 그대로 한 번 다시 만들기")
         return {"goto": "render"}
+    if M is None and not st["tries"].get("final_replan"):     # 렌더로도 못 푼 칸(같은 재료 겹침 등) — 무한 재검사 말고 장면 맞추기로 한 번 되돌린다(10-31 글로스 편)
+        st["tries"]["final_replan"] = 1
+        st["log"].append("완성본 고치기: 다시 만들어도 그대로 → 장면 맞추기로 되돌림")
+        return {"goto": "plan"}
     if M is None:      # 다시 시도 = 검사부터(옛 검사 결과를 다시 먹이는 _asker 경로 금지 — 10-27 run4 a·c)
         raise _Stop("완성본 마무리 확인을 통과하지 못했어요", AGAIN, retry="check")
     return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "render"}
@@ -4118,7 +4161,7 @@ def s_product_done(st, m, rp, u):
 
 def s_research(st, m, rp, u, fail: str = ""):
     PR = st["product"]
-    ask = (RESEARCH_SHOP + "\n\n## 소재 영상\n제목: " + str(st["bench"].get("title")) + "\n받아쓰기: " + " / ".join(str(l.get("text")) for l in st.get("bench_lines") or [])[:3000] +
+    ask = (RESEARCH_SHOP + "\n\n" + ((_style(st["version"]).get("script") or {}).get("research") or "") + "\n\n## 소재 영상\n제목: " + str(st["bench"].get("title")) + "\n받아쓰기: " + " / ".join(str(l.get("text")) for l in st.get("bench_lines") or [])[:3000] +
            "\n\n## 제품\n" + json.dumps(PR, ensure_ascii=False) + "\n\n## 쿠팡 베스트 후기·네이버 글\n" + json.dumps(st.get("reviews") or [], ensure_ascii=False)[:5000] +
            (f"\n\n## 지난 답에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
     return {"review": [_rv("research", ask, [], need=("조사_md", "keywords", "queries"))], "then": "s_research_check",
