@@ -138,7 +138,7 @@ video{width:100%;max-height:420px;background:#000;border-radius:10px;display:blo
     <h2>③ 라이선스·기기 <small>키 1개 = 기기 2대 · 동시에 1편만</small></h2>
     <div class="grid">
       <div class="card"><div class="nm">라이선스 키</div><div id="licState" class="sub">불러오는 중…</div>
-        <div class="row" style="margin-top:10px"><button class="btn pri" id="licIssue">키 발급</button><span class="msg" id="licMsg"></span></div>
+        <div class="row" style="margin-top:10px"><button class="btn pri" id="licIssue">키 발급</button><button class="btn" id="licIssue2" style="display:none">둘째 PC 키 발급</button><span class="msg" id="licMsg"></span></div>
         <div id="licKey"></div></div>
       <div class="card"><div class="nm">등록 기기 <small id="devCount"></small></div><div class="list" id="devList"></div>
         <div class="sub" style="margin-top:8px">3대째 기기는 막힙니다 — 여기서 한 대를 빼면 새 기기가 들어갑니다.</div></div>
@@ -339,6 +339,7 @@ function renderLicense(){
   const L=H.license;
   $('licState').innerHTML=L.has_key?('발급됨 · 만료 '+esc(fmtDate(L.expires))+(L.revoked?' · <b style="color:var(--fire)">회수됨</b>':'')+(L.suspended?' · <b style="color:var(--fire)">일시 정지</b>':'')+'<br><small>키는 발급할 때 한 번만 보입니다. 잃어버리면 새로 발급하세요(옛 키는 바로 못 씁니다).</small>'):'아직 발급 안 됨';
   $('licIssue').textContent=L.has_key?'새 키 발급':'키 발급';
+  $('licIssue2').style.display=(L.has_key&&L.slots>1)?'':'none';
   $('devCount').textContent=H.devices.length+' / '+H.devices_max;
   $('devList').innerHTML=H.devices.length?H.devices.map(d=>'<div class="li"><span><b>'+esc(d.name||'이름 없음')+'</b> <small>'+d.slot+'번 칸 · 마지막 '+esc(fmtDate(d.last_seen))+'</small></span><button class="btn sm warn" data-dev="'+esc(d.id)+'">빼기</button></div>').join(''):'<div class="empty">등록된 기기 없음 — 설치팩에서 키를 넣으면 등록됩니다</div>';
   $('devList').querySelectorAll('[data-dev]').forEach(b=>b.onclick=async()=>{
@@ -383,15 +384,17 @@ $('profSave').onclick=async()=>{
        m.className='msg ok'; m.textContent='저장했습니다(v'+d.version+')'; await load(d.profile_id); }
   catch(e){ m.className='msg bad'; m.textContent=e.message; }
 };
-$('licIssue').onclick=async()=>{
-  if(H.license.has_key && !confirm('새 키를 발급하면 지금 키는 바로 못 쓰게 됩니다. 계속할까요?')) return;
+const issueLic=async(slot)=>{
+  if((H.license.has_key || slot==2) && !confirm('새 키를 발급하면 이 자리의 지금 키는 바로 못 쓰게 됩니다. 계속할까요?')) return;
   const m=$('licMsg'); m.className='msg'; m.textContent='';
-  try{ const d=await api('/api/claude/me/license/issue',{method:'POST'});
+  try{ const d=await api('/api/claude/me/license/issue?slot='+slot,{method:'POST'});
        $('licKey').innerHTML='<div class="keybox" id="keyTxt">'+esc(d.key)+'</div><div class="row" style="margin-top:6px"><button class="btn sm" id="keyCopy">복사</button><small>이 창을 닫으면 다시 볼 수 없습니다</small></div>';
        $('keyCopy').onclick=()=>{ navigator.clipboard.writeText(d.key).then(()=>{ $('keyCopy').textContent='복사됨'; }); };
        H.license.has_key=true; m.className='msg ok'; m.textContent='발급했습니다'; }
   catch(e){ m.className='msg bad'; m.textContent=e.message; }
 };
+$('licIssue').onclick=()=>issueLic(1);
+$('licIssue2').onclick=()=>issueLic(2);
 $('leaseFree').onclick=async()=>{
   if(!confirm('작업 중인 기기를 강제로 멈출까요? 그 기기는 지금 단계에서 멈추고 나중에 이어집니다.')) return;
   try{ await api('/api/claude/me/lease/force_release',{method:'POST'}); $('leaseMsg').className='msg ok'; $('leaseMsg').textContent='해제했습니다'; await load(); }

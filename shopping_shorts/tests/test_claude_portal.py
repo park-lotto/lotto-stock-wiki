@@ -179,6 +179,34 @@ def test_관리자는_기기_2대_회원은_1대(env, monkeypatch):
     assert cp.devices_max(77) == 2 and cp.devices_max(78) == 1
 
 
+def test_관리자_둘째_키는_첫째와_따로_산다(env, monkeypatch):
+    from shopping_shorts import app, claude_portal as cp
+    monkeypatch.setattr(app, "_is_admin", lambda cid: cid == 77)
+    st = env["store"] if "store" in env else Store(app_module.DB_PATH)
+    a = cp.issue_license(77, st)["key"]
+    b = cp.issue_license(77, st, 2)["key"]
+    assert a != b and cp.verify_license(a, st)["cid"] == 77 and cp.verify_license(b, st)["cid"] == 77
+    a2 = cp.issue_license(77, st)["key"]                  # 첫째를 새로 받아도 둘째는 산다, 옛 첫째만 끊긴다
+    assert cp.verify_license(b, st)["cid"] == 77 and cp.verify_license(a2, st)["cid"] == 77
+    with pytest.raises(cp.PortalError):
+        cp.verify_license(a, st)
+    b2 = cp.issue_license(77, st, 2)["key"]               # 둘째를 새로 받아도 첫째는 산다, 옛 둘째만 끊긴다
+    assert cp.verify_license(a2, st)["cid"] == 77 and cp.verify_license(b2, st)["cid"] == 77
+    with pytest.raises(cp.PortalError):
+        cp.verify_license(b, st)
+
+
+def test_회원은_둘째_키를_못_받는다(env, monkeypatch):
+    from shopping_shorts import app, claude_portal as cp
+    monkeypatch.setattr(app, "_is_admin", lambda cid: False)
+    st = Store(app_module.DB_PATH)
+    cp.issue_license(78, st)
+    with pytest.raises(cp.PortalError):
+        cp.issue_license(78, st, 2)
+    with pytest.raises(cp.PortalError):
+        cp.issue_license(78, st, 3)
+
+
 def test_기기_3대째_거절(env, monkeypatch):
     from shopping_shorts import claude_portal as cp
     monkeypatch.setattr(cp, "DEVICES_MAX", 2)   # 상한이 2일 때의 규칙(교체는 사람이)

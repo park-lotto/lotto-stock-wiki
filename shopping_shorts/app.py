@@ -19117,13 +19117,13 @@ async def api_claude_me_profile(request: Request):
 
 
 @app.post("/api/claude/me/license/issue")
-def api_claude_me_license_issue(request: Request):
-    """새 키(kv+1, 옛 키 즉시 무효). 키 원문은 이 응답에만 — 서버엔 해시만 남는다."""
+def api_claude_me_license_issue(request: Request, slot: int = 1):
+    """새 키(kv+1, 그 자리 옛 키 즉시 무효). slot=2 = 관리자 둘째 PC 키. 키 원문은 이 응답에만 — 서버엔 해시만 남는다."""
     cid, st, denied = _claude_me(request)
     if denied:
         return denied
     from shopping_shorts import claude_portal as _cp
-    st_, got = _cp.call(_cp.issue_license, cid, st)
+    st_, got = _cp.call(_cp.issue_license, cid, st, slot)
     if st_ != 200:
         return JSONResponse(got, status_code=st_)
     return JSONResponse({"ok": True, "key": got["key"], "expires": got["expires"]}, headers={"Cache-Control": "no-store"})

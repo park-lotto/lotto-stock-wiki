@@ -19,10 +19,11 @@ def main(argv=None):
     ap.add_argument("--db", required=True)
     ap.add_argument("--cid", type=int, default=0)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--slot", type=int, default=1, help="2 = 관리자 둘째 PC 키")
     a = ap.parse_args(argv)
     from shopping_shorts import claude_portal as cp
     from shopping_shorts.store import Store
-    got = cp.issue_license(a.cid, Store(a.db))
+    got = cp.issue_license(a.cid, Store(a.db), a.slot)
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(got["key"], encoding="utf-8")
