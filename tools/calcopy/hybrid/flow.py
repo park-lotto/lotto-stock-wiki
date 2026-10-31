@@ -2497,7 +2497,8 @@ EYE_REVIEW = False       # 완성본 눈 2단(E1~E9 질문) — 사장님 10-26 
 FINAL_SHEET_LOOK = True  # 완성 전 1초 시트 한 번 — 사장님 PC 제작처럼(숏클 지침 15-0, 관제 290). E 번호 묻기가 아니라 시트를 보고 걸린 것만
 FINAL_SHEET_FILES = ("시트_1초.jpg", "훅3초_0.1초.jpg", "끝2초_0.1초.jpg")
 SHEET_NEED = ("ok", "title_seen", "scenes")     # 봤다는 증거 없는 "ok": true 는 답이 아니다(10-30 회원 2편 — 같은 자료를 새 Claude 는 잡았는데 회원 편은 통과, 답 내용은 기록도 없었다)
-FINAL_SHEET_ASK = """너는 이 편을 채널에 올릴지 마지막으로 보는 사람이다. 자동 검사는 통과했다. 완성본 1초 시트(처음~끝)·훅 3초·끝 2초를 처음부터 끝까지 한 칸씩 본다.
+FINAL_SHEET_ASK = """★이 판정은 네가 바로 답하지 말고 새 Agent(model=opus)에게 이 글과 그림을 그대로 맡겨 그 답을 옮겨라(긴 제작 대화에서 보면 놓친다 — 10-30 두 편).
+너는 이 편을 채널에 올릴지 마지막으로 보는 사람이다. 자동 검사는 통과했다. 완성본 1초 시트(처음~끝)·훅 3초·끝 2초를 처음부터 끝까지 한 칸씩 본다.
 본다: 줄마다 화면이 대사와 맞나 · 자막이 넘치거나 낱말 중간에서 끊기나 · 제목 줄 수·잘림 · 남의 얼굴·손·글자(원본 편집 자막·워터마크) · 같은 장면 되풀이·멈춘 화면·검은 칸 · 이야기 대상과 다른 물건이 그 줄에 나오나.
 ★우리 틀(결함 아님): 맨 위 제목 · 로고 · 우리 자막(색 강조) · 출처 줄.
 합격 기준 = 이 채널에 그대로 올려도 되나. 자동 검사 통과는 근거가 아니다.
@@ -2880,6 +2881,10 @@ def ph_check_fix(st, m, rp, u):
         st["tries"]["render_same"] = 1
         st["log"].append("완성본 고치기: 재료로 고칠 것 없음 → 재료 그대로 한 번 다시 만들기")
         return {"goto": "render"}
+    if M is None and not st["tries"].get("final_replan"):     # 렌더로도 못 푼 칸(같은 재료 겹침 등) — 무한 재검사 말고 장면 맞추기로 한 번 되돌린다(10-31 글로스 편)
+        st["tries"]["final_replan"] = 1
+        st["log"].append("완성본 고치기: 다시 만들어도 그대로 → 장면 맞추기로 되돌림")
+        return {"goto": "plan"}
     if M is None:      # 다시 시도 = 검사부터(옛 검사 결과를 다시 먹이는 _asker 경로 금지 — 10-27 run4 a·c)
         raise _Stop("완성본 마무리 확인을 통과하지 못했어요", AGAIN, retry="check")
     return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "render"}
