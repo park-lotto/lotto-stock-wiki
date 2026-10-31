@@ -162,7 +162,7 @@ export async function makeStep(a) {
   return updateSignal(await stepOnce(a));
 }
 
-async function stepOnce({ step, sid, n, run_id, preset, topic, channel, video, product, revise, seconds }) {
+async function stepOnce({ step, sid, n, run_id, preset, topic, channel, video, product, revise, seconds, offset }) {
   if (step === 'pause') {
     const sec = pauseSec(seconds);
     await new Promise(r => setTimeout(r, sec * 1000));
@@ -191,9 +191,9 @@ async function stepOnce({ step, sid, n, run_id, preset, topic, channel, video, p
   }
   if (step === 'sources' && preset) {   // 회원 '후보 뽑아줘' — 그 프리셋 소재 창고(벤치 채널 조회순)에서 안 만든 5개(판단 = 서버 flow.source_candidates)
     try {
-      const r = await api.step({ step: 'sources', preset });
+      const r = await api.step({ step: 'sources', preset, offset: offset || 0 });
       const list = (r.sources || []).map(x => ({ n: x.n, title: x.title, views: x.views, video: x.url }));
-      return list.length ? { need: 'choose', candidates: list, next: '고객에게 번호·제목·조회수 표로 보여 주고, 고른 번호의 video 로 shortem_make(step="start", video=<그 주소>)',
+      return list.length ? { need: 'choose', candidates: list, next_offset: r.next_offset, more: '회원이 다른 후보를 원하면 shortem_make(step="sources", offset=next_offset)', next: '고객에게 번호·제목·조회수 표로 보여 주고, 고른 번호의 video 로 shortem_make(step="start", video=<그 주소>)',
         hints: ['대신 고르지 마세요. 10분 동안 답이 없으면 1번으로 시작합니다(지침 5장)'] }
         : { hints: ['이 프리셋 소재 창고에 아직 안 만든 영상이 없습니다 — 영상 주소를 받아 주세요'] };
     } catch (e) {

@@ -174,6 +174,7 @@ export function buildServer(ctx = makeCtx()) {
       product: z.string().max(200).optional(),
       revise: z.string().max(500).optional(),
       seconds: z.number().int().min(5).max(60).optional(),
+      offset: z.number().int().min(0).max(100000).optional(),
     },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   }, async args => {
