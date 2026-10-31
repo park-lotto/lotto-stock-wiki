@@ -77,7 +77,6 @@ video{width:100%;max-height:420px;background:#000;border-radius:10px;display:blo
   <div class="row" id="mainTabs" style="margin:10px 0 14px">
     <button class="btn pri" data-tab="start">시작하기</button>
     <button class="btn" data-tab="studio">내 채널 설정</button>
-    <button class="btn" data-tab="preset">프리셋 둘러보기</button>
   </div>
   <section id="tabStudio" style="display:none"><iframe id="studioFrame" title="내 채널 설정" style="width:100%;height:calc(100vh - 170px);min-height:640px;border:1px solid var(--line);border-radius:12px;background:var(--panel)"></iframe></section>
   <p class="lead">내 PC 의 Claude(데스크탑·코드)로 숏템 프리셋 영상을 만듭니다. 렌더는 전부 내 PC 에서 돌고, 여기서는 <b>프리셋 고르기 · 내 채널 옵션 저장 · 라이선스 · 설치팩</b>만 합니다.</p>
@@ -384,7 +383,7 @@ $('startCopy').onclick=async()=>{
   catch(e){ $('startMsg').textContent=e.message||'복사하지 못했습니다. 다시 눌러 주세요'; }
 };
 
-const TAB_SEC={start:['license','install','how'],preset:['preset','option','packs']};
+const TAB_SEC={start:['license','install','how']};   // 프리셋·채널 옵션 옛 칸은 안 보인다(사장님 11-01 '실제 안 쓴다'). 설정은 스튜디오 한 곳
 function showTab(t){
   document.querySelectorAll('#mainTabs .btn').forEach(b=>b.classList.toggle('pri',b.dataset.tab===t));
   ['preset','option','packs','license','install','how'].forEach(id=>{ $(id).style.display=(TAB_SEC[t]||[]).includes(id)?'':'none'; });
