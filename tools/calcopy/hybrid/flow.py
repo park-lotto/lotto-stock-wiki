@@ -2493,7 +2493,7 @@ def ph_check(st, m, rp, u):
     return {"do": [{"id": "check", "cmd": "check", "version": st["version"], "mode": "full"}], "then": "check_got"}
 
 
-EYE_REVIEW = False       # 완성본 눈 2단(E1~E9 질문) — 사장님 10-26 "재현일치도랑 눈검수는 필요없다". 되살리면 True
+EYE_REVIEW = True        # 완성본 눈 2단(E1~E9 질문) — 사장님 10-26 "재현일치도랑 눈검수는 필요없다". 되살리면 True
 FINAL_SHEET_LOOK = True  # 완성 전 1초 시트 한 번 — 사장님 PC 제작처럼(숏클 지침 15-0, 관제 290). E 번호 묻기가 아니라 시트를 보고 걸린 것만
 FINAL_SHEET_FILES = ("시트_1초.jpg", "훅3초_0.1초.jpg", "끝2초_0.1초.jpg")
 SHEET_NEED = ("ok", "title_seen", "scenes")     # 봤다는 증거 없는 "ok": true 는 답이 아니다(10-30 회원 2편 — 같은 자료를 새 Claude 는 잡았는데 회원 편은 통과, 답 내용은 기록도 없었다)
@@ -2537,7 +2537,7 @@ def ph_check_got(st, m, rp, u):
     texts = "".join(f"\n\n## {n}\n{str(t)[:5000]}" for n, t in (c.get("eye_texts") or {}).items())
     sc = st.get("script") or {}
     return {"review": [_rv(f"eye_{st['version']}", ask + texts + "\n\n## 대본\n" + json.dumps(sc.get("S") or {}, ensure_ascii=False)[:5000],
-                           [_img(x) for x in st["eye_pack"]][:6], need=tuple(k for k, _, _ in rows))], "then": "check_look"}
+                           [_img(x) for x in st["eye_pack"]][:6], need=tuple(k for k, _, _ in rows), meta={"fresh": True})], "then": "check_look"}
 
 
 def _eye_verdict(a: dict, keys: list) -> tuple[bool, list]:
