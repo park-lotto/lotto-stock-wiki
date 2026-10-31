@@ -36,6 +36,7 @@ export function loadFlow(sid) {
   } catch { return null; }
 }
 export const isFlowSid = sid => !!loadFlow(sid);
+export const anyFlowBusy = () => [...flows.values()].some(f => f.busy);   // 돌고 있는 편이 있으면 엔진을 덮지 않는다
 
 function reqId(tag) {
   const d = new Date(); const p = n => String(n).padStart(2, '0');

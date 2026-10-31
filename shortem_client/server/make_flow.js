@@ -10,7 +10,7 @@ import { packFile as localPackFile, PID_RE } from './local_settings.js';
 import { homeDir, writeFileIn, workDir, ensureDir } from './paths.js';
 import { deliverInBackground, deliverStatus } from './deliver.js';
 import { logFinal } from './work_log.js';
-import { startFlow, waitFlow, approveFlow, retryFlow, reviseFlow, isFlowSid, loadFlow, shapeFlow } from './flow_driver.js';
+import { startFlow, waitFlow, approveFlow, retryFlow, reviseFlow, isFlowSid, loadFlow, shapeFlow, anyFlowBusy } from './flow_driver.js';
 import { api, ApiError } from './api.js';
 import { retryUpdate } from './updater.js';
 
@@ -147,7 +147,22 @@ function flowOut(s) {
   return { ...s, video, deliver: dv.deliver, hints: ['완성본 경로를 고객에게 알려 주세요', dv.hint, ...(s.note ? [s.note] : [])] };
 }
 
-export async function makeStep({ step, sid, n, run_id, preset, topic, channel, video, product, revise, seconds }) {
+const idle = () => !activeRuns().length && !anyFlowBusy();
+
+// 멈춘 응답에 새 판을 싣는다 — 수리가 올라와 있으면 엔진을 덮고 회원 Claude 에게 같은 단계를 다시 부르라는 신호를 준다(사장님 10-31 "신호를 주면 새 판을 받아라")
+export async function updateSignal(o, { isIdle = idle, update = retryUpdate } = {}) {
+  if (!o || !o.fail || !isIdle()) return o;
+  const r = await update();
+  if (!r || !r.applied) return o;
+  return { ...o, fail: { ...o.fail, retry_ok: true }, hints: [...(o.hints || []), `숏템 수리판 ${r.version} 을 적용했습니다 — 회원에게 묻지 말고 같은 단계를 한 번 다시 부르세요`] };
+}
+
+export async function makeStep(a) {
+  if (a.step === 'start' && idle()) await retryUpdate();   // 새 편은 늘 최신 엔진으로
+  return updateSignal(await stepOnce(a));
+}
+
+async function stepOnce({ step, sid, n, run_id, preset, topic, channel, video, product, revise, seconds }) {
   if (step === 'pause') {
     const sec = pauseSec(seconds);
     await new Promise(r => setTimeout(r, sec * 1000));
