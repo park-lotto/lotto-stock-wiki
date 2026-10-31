@@ -1,6 +1,6 @@
 {
  "for": "humorshowshow 프리셋 소재 창고 — 벤치 채널 쇼츠 조회순(flow.bench_pool)",
- "made": "2026-10-30",
+ "made": "2026-10-31",
  "basis": "yt-dlp --flat-playlist <채널>/shorts 조회수(view_count) — bench_pool.py build",
  "channels": [
   "https://www.youtube.com/@humorshowshow"
@@ -500,7 +500,7 @@
   },
   {
    "id": "jpvasKdG4sc",
-   "views": 176000,
+   "views": 177000,
    "title": "How to cancel Coupang Rocket Wow subscription",
    "ch": "https://www.youtube.com/@humorshowshow"
   },
