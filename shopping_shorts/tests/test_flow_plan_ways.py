@@ -76,7 +76,7 @@ def _seen(st, **kw):
     return {"title_seen": sv["title"], "scenes": [{"seen": "화면"} for _ in sv["lines"]], **kw}
 
 
-def test_final_sheet_is_asked_even_when_gate_passes():
+def test_final_sheet_is_asked_even_when_gate_passes(monkeypatch):
     monkeypatch.setattr(F, "EYE_REVIEW", False)
     """숏클 지침 15-0 — 자동 검사 통과여도 완성 전 1초 시트를 회원 Claude 가 한 번 본다(사장님 PC 제작과 같게)."""
     st = _st()
