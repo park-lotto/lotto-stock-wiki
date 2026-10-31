@@ -146,7 +146,7 @@ def step(ctx: dict, body: dict, store=None) -> dict:
                 offset = max(0, int(body.get("offset") or 0))
             except (TypeError, ValueError):
                 raise CP.PortalError("bad_request", "offset 은 숫자여야 합니다")
-            found = flow.source_candidates(line["version"], made, **_pool_kw(flow.source_candidates, offset=offset, used=used, seed=cid))
+            found = flow.source_candidates(line["version"], made, **_pool_kw(flow.source_candidates, n=300, offset=offset, used=used, seed=cid))   # 창고 전체를 고객이 고른다(사장님 10-31)
             return {"ok": True, "status": "sources", "sources": found, "next_offset": offset + len(found)}
         auto = None
         if not url and hasattr(flow, "pick_source"):   # 주소 없이 '만들어줘' — 소재 창고 첫 편(순서 = flow.bench_pool)
