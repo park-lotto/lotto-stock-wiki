@@ -1409,6 +1409,24 @@ def resolve_alert(alert_id, store=None) -> dict:
     return {"ok": True, "closed": 1, "unsuspended": a["level"] == "suspend"}
 
 
+def member_ids(store=None) -> set:
+    """관리자가 숏클로 승인한 회원 — 스위치 claude_portal_enabled 의 고객 목록이 정본(관제 294)."""
+    v = str(_setting(_store(store), "claude_portal_enabled", "") or "").strip().lower()
+    return {int(x) for x in v.split(",") if x.strip().isdigit()}
+
+
+def set_member(cid, on, store=None) -> dict:
+    """숏클 승인·해제. 전체 공개("1")면 목록이 없으니 건드리지 않는다. 비면 관리자만("admin")으로 돌아간다."""
+    store = _store(store)
+    if str(_setting(store, "claude_portal_enabled", "") or "").strip() == "1":
+        raise PortalError("bad_request", "지금은 전체 공개 상태입니다")
+    ids = member_ids(store)
+    (ids.add if on else ids.discard)(int(cid))
+    # 끝의 쉼표는 필수 — 회원 1번 하나만 남으면 값이 "1"(전체 공개)이 된다(11-01 시험에서 잡음)
+    store.set_setting("claude_portal_enabled", "".join(f"{x}," for x in sorted(ids)) or "admin")
+    return {"ok": True, "on": bool(on)}
+
+
 def set_revoked(cid, revoked=True, store=None) -> dict:
     store = _store(store)
     ensure_schema(store)

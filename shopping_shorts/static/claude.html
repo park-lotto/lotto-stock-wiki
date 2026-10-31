@@ -73,7 +73,13 @@ video{width:100%;max-height:420px;background:#000;border-radius:10px;display:blo
 </head>
 <body>
 <div class="wrap">
-  <h1>🤖 클로드형</h1>
+  <h1>🤖 숏클메이커</h1>
+  <div class="row" id="mainTabs" style="margin:10px 0 14px">
+    <button class="btn pri" data-tab="start">시작하기</button>
+    <button class="btn" data-tab="studio">내 채널 설정</button>
+    <button class="btn" data-tab="preset">프리셋 둘러보기</button>
+  </div>
+  <section id="tabStudio" style="display:none"><iframe id="studioFrame" title="내 채널 설정" style="width:100%;height:calc(100vh - 170px);min-height:640px;border:1px solid var(--line);border-radius:12px;background:var(--panel)"></iframe></section>
   <p class="lead">내 PC 의 Claude(데스크탑·코드)로 숏템 프리셋 영상을 만듭니다. 렌더는 전부 내 PC 에서 돌고, 여기서는 <b>프리셋 고르기 · 내 채널 옵션 저장 · 라이선스 · 설치팩</b>만 합니다.</p>
   <nav>
     <a href="#preset">① 프리셋</a><a href="#option">② 내 채널 옵션</a><a href="#packs">팩 둘러보기</a>
@@ -377,6 +383,18 @@ $('startCopy').onclick=async()=>{
   try{ const r=await api('/api/claude/me/start_line'); await navigator.clipboard.writeText(r.line); $('startMsg').textContent='복사했습니다. 이제 파워쉘을 열고 마우스 오른쪽 버튼을 누른 뒤 엔터를 치세요.'; }
   catch(e){ $('startMsg').textContent=e.message||'복사하지 못했습니다. 다시 눌러 주세요'; }
 };
+
+const TAB_SEC={start:['license','install','how'],preset:['preset','option','packs']};
+function showTab(t){
+  document.querySelectorAll('#mainTabs .btn').forEach(b=>b.classList.toggle('pri',b.dataset.tab===t));
+  ['preset','option','packs','license','install','how'].forEach(id=>{ $(id).style.display=(TAB_SEC[t]||[]).includes(id)?'':'none'; });
+  $('tabStudio').style.display=t==='studio'?'':'none';
+  const nav=document.querySelector('nav'), lead=document.querySelector('.lead');
+  if(nav) nav.style.display='none'; if(lead) lead.style.display=t==='studio'?'none':'';
+  if(t==='studio'&&!$('studioFrame').src) $('studioFrame').src='/claude/studio/';
+}
+document.querySelectorAll('#mainTabs .btn').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+showTab('start');
 
 async function load(selId){
   try{ H=await api('/api/claude/me/home'); }

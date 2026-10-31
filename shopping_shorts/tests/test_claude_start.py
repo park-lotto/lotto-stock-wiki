@@ -77,3 +77,33 @@ def test_설치_스크립트에_주소가_채워지고_비밀이_없다():
     from fastapi.testclient import TestClient
     r = TestClient(app_module.app).get("/api/claude/start.ps1", headers={"host": "stmaker.kr"})
     assert r.status_code == 200 and "https://stmaker.kr" in r.text and "__BASE__" not in r.text and "SHORTEM-L1." not in r.text
+
+
+def test_승인하면_열리고_해제하면_닫힌다(st, monkeypatch):
+    monkeypatch.setattr(app_module, "_is_admin", lambda cid: False)
+    st.set_setting("claude_portal_enabled", "admin")
+    assert not app_module._setting_gate(st, "claude_portal_enabled", 7)
+    cp.set_member(7, True, st)
+    cp.set_member(11, True, st)
+    assert app_module._setting_gate(st, "claude_portal_enabled", 7)
+    assert not app_module._setting_gate(st, "claude_portal_enabled", 8)
+    cp.set_member(7, False, st)
+    assert not app_module._setting_gate(st, "claude_portal_enabled", 7)
+    cp.set_member(11, False, st)
+    assert st.get_setting("claude_portal_enabled", "") == "admin"
+
+
+def test_전체_공개면_승인_목록을_덮지_않는다(st):
+    with pytest.raises(cp.PortalError):
+        cp.set_member(7, True, st)
+    assert st.get_setting("claude_portal_enabled", "") == "1"
+
+
+def test_회원_1번_승인이_전체_공개가_되지_않는다(st, monkeypatch):
+    monkeypatch.setattr(app_module, "_is_admin", lambda cid: False)
+    st.set_setting("claude_portal_enabled", "admin")
+    cp.set_member(1, True, st)
+    assert app_module._setting_gate(st, "claude_portal_enabled", 1)
+    assert not app_module._setting_gate(st, "claude_portal_enabled", 2)
+    cp.set_member(1, False, st)
+    assert st.get_setting("claude_portal_enabled", "") == "admin"

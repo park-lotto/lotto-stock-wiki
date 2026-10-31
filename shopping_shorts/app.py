@@ -17485,6 +17485,7 @@ def _api_me(request: Request):
             "script_chat": _setting_gate(st, "script_chat_enabled", cid),
             # 카드뉴스 제작소(관제 223) — 사이드바 메뉴와 서버 입구(/cardnews·/api/cardnews/*)가 같은 스위치 하나
             "cardnews": _setting_gate(st, "cardnews_enabled", cid),
+            "shortcl_open": _setting_gate(st, "claude_portal_enabled", cid),
             # 감정짤(관제 139·143) — 좌측 '밈팩' 메뉴·2단계 짤 칸. 판정은 렌더 경로와 같은 mix_pipeline._meme_on 한 곳
             "meme": bool(mix_pipeline._meme_on(st, {"customer_id": cid})),
             # 대화형 대본(관제 128) — 작업목록 「🎭 대화형」 버튼. 서버 입구(dialogue/*)와 같은 스위치·관리자 판정
@@ -17855,6 +17856,7 @@ def _admin_customers(request: Request):
         cu["is_admin"] = cu["code_admin"] or bool(cu.get("admin"))
         cu["challenge"] = _cid in challenge_ids                 # 1기 챌린지 참가 여부(2026-08-24)
         cu["shortcl"] = shortcl_map.get(_cid, "")               # 숏클 결제 반(관제 292)
+        cu["shortcl_open"] = _setting_gate(st, "claude_portal_enabled", _cid)   # 숏클 승인(관제 294)
         # 포인트 잔액(화면 단위 P) — 등급이 full이어도 잔액 0이면 유료 op가 402로 막힌다.
         # 관리자가 그 상태를 목록에서 바로 보게 한다(2026-08-20 체험 계정 402 사고).
         cu["points"] = pricing.to_display(points_map.get(_cid, 0))
@@ -19494,6 +19496,21 @@ async def api_admin_claude_alerts_resolve(request: Request):
     except (TypeError, ValueError):
         return JSONResponse({"ok": False, "msg": "id 가 필요합니다"}, status_code=400)
     return _cp.resolve_alert(aid, Store(DB_PATH))
+
+
+@app.post("/api/admin/claude/member")
+async def api_admin_claude_member(request: Request):
+    """숏클 승인·해제 {cid, on}(관제 294) — 판단은 claude_portal.set_member."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    try:
+        cid = int(body.get("cid"))
+    except (TypeError, ValueError):
+        return JSONResponse({"ok": False, "msg": "cid 가 필요합니다"}, status_code=400)
+    return _claude_json(_cp.call(_cp.set_member, cid, body.get("on", True) is not False, Store(DB_PATH)))
 
 
 @app.post("/api/admin/claude/license/revoke")
