@@ -25,6 +25,7 @@ ORIG = "_원본"
 MAX_DRIFT = 0.15       # 입히기 전후 길이 차이 허용(초)
 CHUNK = 256 * 1024
 MAX_STALLS = 20        # 조금도 못 읽고 연속으로 끊긴 횟수 한도
+WRITE_WAIT = 60        # 드라이브에 쓴 뒤 크기가 맞을 때까지 기다리는 초
 
 
 def _length(p):
@@ -80,7 +81,12 @@ def apply(folder, video, log=print):
             raise RuntimeError(f"입힌 뒤 어긋남: 길이 {before:.2f}→{after:.2f} 소리 {had_audio}→{has_audio}")
         part = d / (video + ".part")                # .mp4 가 아니라 buffer_post 가 집지 않는다
         shutil.copyfile(work, part)
-        if part.stat().st_size != work.stat().st_size:
+        want = work.stat().st_size
+        for _ in range(WRITE_WAIT):                 # 드라이브는 쓴 직후 크기가 늦게 잡힌다(10-31 14편 중 5편)
+            if part.stat().st_size == want:
+                break
+            time.sleep(1)
+        else:
             part.unlink(missing_ok=True)
             raise RuntimeError(f"드라이브 쓰기 크기 어긋남: {video}")
         keep.parent.mkdir(exist_ok=True)
