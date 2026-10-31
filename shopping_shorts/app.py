@@ -15872,7 +15872,7 @@ def _toss_checkout(request: Request, product: str = ""):
     refund_line = ("결제 확인 즉시 이용권이 열리는 디지털 콘텐츠로, 이용권이 열린 뒤에는 7일 이내라도 환불되지 않음" if is_shortem
                    else "라이선스 키·설치 파일이 제공된 뒤에는 7일 이내라도 환불되지 않음")
     shortcl_note = ("" if is_shortem else '<div class=p style="margin:-6px 0 12px;color:#ffcf6f"><b>'
-                    "Claude Max 구독(별도 결제)이 필요합니다.</b> 내 PC에 설치해 쓰며, PC 1대에서 이용할 수 있습니다.</div>")
+                    "Claude Max 구독(별도 결제)이 필요합니다.</b> 내 PC에 설치해 쓰며, PC 2대까지 이용할 수 있습니다.</div>")
     body = f"""{badge}<h1>💳 {_toss_esc(name)}</h1>
 <div class=amt>{amount:,}원</div>
 <div class=p style="margin:-4px 0 12px">이용기간: {period_from}로부터 {_PRO_PERIOD}</div>
@@ -17498,6 +17498,7 @@ def _api_me(request: Request):
             "script_chat": _setting_gate(st, "script_chat_enabled", cid),
             # 카드뉴스 제작소(관제 223) — 사이드바 메뉴와 서버 입구(/cardnews·/api/cardnews/*)가 같은 스위치 하나
             "cardnews": _setting_gate(st, "cardnews_enabled", cid),
+            "shortcl_open": _setting_gate(st, "claude_portal_enabled", cid),
             # 감정짤(관제 139·143) — 좌측 '밈팩' 메뉴·2단계 짤 칸. 판정은 렌더 경로와 같은 mix_pipeline._meme_on 한 곳
             "meme": bool(mix_pipeline._meme_on(st, {"customer_id": cid})),
             # 대화형 대본(관제 128) — 작업목록 「🎭 대화형」 버튼. 서버 입구(dialogue/*)와 같은 스위치·관리자 판정
@@ -17869,6 +17870,7 @@ def _admin_customers(request: Request):
         cu["is_admin"] = cu["code_admin"] or bool(cu.get("admin"))
         cu["challenge"] = _cid in challenge_ids                 # 1기 챌린지 참가 여부(2026-08-24)
         cu["program"] = _shortcl_view(cu, shortcl_map.get(_cid), program_saved.get(_cid))   # 프로그램 구분(관제 295)
+        cu["shortcl_open"] = _setting_gate(st, "claude_portal_enabled", _cid)   # 숏클 페이지 접근(관제 294)
         # 포인트 잔액(화면 단위 P) — 등급이 full이어도 잔액 0이면 유료 op가 402로 막힌다.
         # 관리자가 그 상태를 목록에서 바로 보게 한다(2026-08-20 체험 계정 402 사고).
         cu["points"] = pricing.to_display(points_map.get(_cid, 0))
@@ -19472,6 +19474,72 @@ def api_claude_me_preview(request: Request, kind: str, pid: str, t: str = ""):
     return Response(content=Path(got["file"]).read_bytes(), media_type=got["media_type"], headers=got["headers"])
 
 
+def _public_base(request: Request) -> str:
+    host = request.headers.get("host") or request.url.netloc
+    return f"http://{host}" if host.split(":")[0] in ("127.0.0.1", "localhost") else f"https://{host}"
+
+
+@app.get("/api/claude/me/start.md")
+def api_claude_me_start_md(request: Request):
+    """회원별 시작.md(관제 294) — 로그인한 회원에게만. 판단은 claude_portal.start_md."""
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return Response(_cp.start_md(cid, _public_base(request)), media_type="text/markdown; charset=utf-8",
+                    headers={"Cache-Control": "no-store", "Content-Disposition": "attachment; filename*=UTF-8''%EC%8B%9C%EC%9E%91.md"})
+
+
+@app.get("/api/claude/me/start.zip")
+def api_claude_me_start_zip(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return Response(_cp.start_zip(cid, _public_base(request)), media_type="application/zip",
+                    headers={"Cache-Control": "no-store", "Content-Disposition": "attachment; filename*=UTF-8''%EC%88%8F%ED%81%B4%EC%8B%9C%EC%9E%91_%EC%9D%B4%ED%8C%8C%EC%9D%BC%EC%9D%84%EC%84%A4%EC%B9%98.zip"})
+
+
+@app.get("/api/claude/me/start_line")
+def api_claude_me_start_line(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return JSONResponse({"ok": True, "line": _cp.start_line(cid, _public_base(request))}, headers={"Cache-Control": "no-store"})
+
+
+@app.post("/api/claude/start/redeem")
+def api_claude_start_redeem(request: Request):
+    from shopping_shorts import claude_portal as _cp
+    return _claude_json(_cp.call(_cp.start_redeem, request.headers.get("x-shortem-start"), Store(DB_PATH)))
+
+
+@app.get("/api/claude/start_menu.ps1")
+def api_claude_start_menu():
+    """파워쉘 시작 메뉴(회원 정보 없음). 주인 파일 = installer/shortcl_menu.ps1."""
+    body = (Path(__file__).resolve().parents[1] / "installer" / "shortcl_menu.ps1").read_text(encoding="utf-8-sig")
+    return Response(body, media_type="text/plain; charset=utf-8", headers={"Cache-Control": "no-store"})
+
+
+@app.get("/api/claude/me/start.cmd")
+def api_claude_me_start_cmd(request: Request):
+    """더블클릭 설치 파일 — 내용은 start_line 한 줄을 파워쉘로 돌리는 것뿐."""
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return Response(_cp.start_cmd(cid, _public_base(request)), media_type="application/octet-stream",
+                    headers={"Cache-Control": "no-store", "Content-Disposition": "attachment; filename=shortcl-setup.cmd"})
+
+
+@app.get("/api/claude/start.ps1")
+def api_claude_start_ps1(request: Request):
+    """설치 스크립트(키·회원 정보 없음 — 누구나 받아도 된다). 주인 파일 = installer/install.ps1."""
+    body = (Path(__file__).resolve().parents[1] / "installer" / "install.ps1").read_text(encoding="utf-8")
+    return Response(body.replace("__BASE__", _public_base(request)), media_type="text/plain; charset=utf-8", headers={"Cache-Control": "no-store"})
+
+
 @app.get("/api/claude/me/installer/{os_id}")
 def api_claude_me_installer(request: Request, os_id: str):
     cid, st, denied = _claude_me(request)
@@ -19505,6 +19573,21 @@ async def api_admin_claude_alerts_resolve(request: Request):
     except (TypeError, ValueError):
         return JSONResponse({"ok": False, "msg": "id 가 필요합니다"}, status_code=400)
     return _cp.resolve_alert(aid, Store(DB_PATH))
+
+
+@app.post("/api/admin/claude/member")
+async def api_admin_claude_member(request: Request):
+    """숏클 승인·해제 {cid, on}(관제 294) — 판단은 claude_portal.set_member."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    try:
+        cid = int(body.get("cid"))
+    except (TypeError, ValueError):
+        return JSONResponse({"ok": False, "msg": "cid 가 필요합니다"}, status_code=400)
+    return _claude_json(_cp.call(_cp.set_member, cid, body.get("on", True) is not False, Store(DB_PATH)))
 
 
 @app.post("/api/admin/claude/license/revoke")

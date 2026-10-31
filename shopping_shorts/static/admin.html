@@ -774,7 +774,8 @@ function renderCustomers(){
     //   날짜별 이력·API 원가처럼 넓게 봐야 하는 것만 전용 페이지로 뺐다.
     const nameCell = `<a href="/admin/customer/${c.id}" style="color:#e8e8ea;text-decoration:none;border-bottom:1px dotted #4a4a52"
         title="상세 시트 열기 — 날짜별 활동·API 원가">${esc(c.name)||'(이름없음)'}</a>${_programTags(c.program,esc)}`;
-    return `<tr><td>${c.id}</td><td>${nameCell}${adminBadge}</td><td>${esc(c.phone)}</td>
+    const scBtn = `<button class="mini" style="margin-left:6px" onclick="setShortcl(${c.id},${!c.shortcl_open})">${c.shortcl_open?'숏클 승인됨 · 해제':'숏클 승인'}</button>`;
+    return `<tr><td>${c.id}</td><td>${nameCell}${adminBadge}${scBtn}</td><td>${esc(c.phone)}</td>
       <td class=mini style="color:${c.gender?'#e8eaed':'#5f6773'}">${esc(c.gender)||'—'}</td>
       <td class=mini style="color:${c.age_band?'#e8eaed':'#5f6773'}">${esc(c.age_band)||'—'}</td>
       <td>${esc(c.email||c.username)}</td><td>${c.plan}</td><td>${lvl}</td>
@@ -797,6 +798,12 @@ function renderCustomers(){
 // 고객이 /pay에서 '입금 완료했습니다'를 누른 것. 통장 확인은 그대로 하시고,
 // 확인이 끝나면 [확인함]을 눌러 목록에서 내린다(승인은 아래 고객표에서 따로).
 let ledgerItems=[];
+async function setShortcl(cid,on){
+  const r=await fetch('/api/admin/claude/member',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cid:cid,on:on})});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok||!d.ok){ console.warn(d.msg||'숏클 승인 실패'); return; }
+  await load();
+}
 async function loadLedger(){
   try{
     const r=await fetch('/api/admin/pay_ledger');

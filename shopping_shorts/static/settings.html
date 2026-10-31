@@ -190,7 +190,7 @@
     <div class="payCard" style="margin-bottom:18px">
       <div class="payTop"><div class="payTitle">🎉 숏클메이커 출시</div></div>
       <div class="paySub" id="scUpSub">내 PC에서 클로드에게 말 한 줄로 쇼츠를 만드는 프로그램입니다.</div>
-      <a class="payBtn" href="/pricing#shortcl">숏클메이커 보기 →</a>
+      <a class="payBtn" id="scUpBtn" href="/pricing#shortcl">숏클메이커 보기 →</a>
     </div>
   <div class="tabs">
     <!-- ★설치안내를 맨 앞 탭으로(2026-08-25 사장님 "반드시 보라고 계정 앞으로 탭을 두고
@@ -1018,6 +1018,11 @@ async function loadAccount(){
   try {
     var d = await getJSON("/api/me");
     renderPayCard(d);
+    if (d.shortcl_open) {   // 관리자가 숏클로 승인한 회원은 바로 작업 페이지로
+      window.__scOpen = true;
+      el("scUpBtn").href = "/claude"; el("scUpBtn").textContent = "숏클메이커 열기 →";
+      el("scUpSub").textContent = "승인된 회원입니다. 설치부터 내 채널 설정까지 여기서 합니다.";
+    }
     var plan = String(d.plan || "free");
     el("acctPlan").textContent = PLAN_LABEL[plan] || plan;
     el("acctPlanSub").textContent = (d.days_left != null)
@@ -1050,7 +1055,7 @@ loadVertex();
          next_price:(p.next_price||0).toLocaleString('ko-KR')+'원'};
   document.querySelectorAll('[data-pr]').forEach(function(el){ var k=el.getAttribute('data-pr'); if(v[k]!=null) el.textContent=v[k]; });
   if(p.cohort && /^\s*$/.test(document.title)===false) document.title=document.title.replace('__COHORT__', p.cohort);
-  if(p.shortcl_upgrade_open){ var up=document.getElementById('scUpSub'); if(up) up.textContent='숏템 이용권 회원은 11월 30일까지 차액만 내고 옮길 수 있습니다.'; }
+  if(p.shortcl_upgrade_open && !window.__scOpen){ var up=document.getElementById('scUpSub'); if(up) up.textContent='숏템 이용권 회원은 11월 30일까지 차액만 내고 옮길 수 있습니다.'; }
 }).catch(function(){}); })();
 </script>
 </body>

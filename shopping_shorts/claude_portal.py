@@ -5,7 +5,7 @@
 
 판단 주인(각 하나 — 라우트는 부르기만, 0순위-C):
   issue_license / verify_license  라이선스 키 발급·검증(SHORTEM-L1.<cid>.<exp>.<kv>.<sig>, 서버는 키 해시만)
-  license                         기기 지문 DEVICES_MAX(1)대·회수·정지·엔진 버전
+  license                         기기 지문 DEVICES_MAX(2)대·회수·정지·엔진 버전
   lease                           cid 당 활성 작업 1개(TTL 180초, 하트비트 60초, 다른 기기 거절, 강제 해제)
   assets_for                      이번 작업이 **참조하는 자산만** 서명 URL(6h) — 통째로 안 준다
   pack                            그 job 의 발급 목록 안 자산만 재발급
@@ -48,8 +48,8 @@ LEASE_TTL = 180
 HEARTBEAT_EVERY = 60
 ASSET_URL_TTL = 6 * 3600
 PREVIEW_TOKEN_TTL = 600
-DEVICES_MAX = 1          # PC 1대만(2026-10-19 사장님 결정, 관제 234 5판). 교체는 마이페이지 '기기 빼기'
-ADMIN_DEVICES = 2        # 관리자는 집·회사 PC 하나씩(사장님 10-31). 회원은 DEVICES_MAX 그대로
+START_TTL = 72 * 3600    # 시작.md 인증값 기한
+DEVICES_MAX = 2          # PC 2대까지(2026-11-01 사장님 "pc는 2대로", 10-19 1대 결정을 대체). 교체는 마이페이지 '기기 빼기'
 PROFILES_MAX = 10
 ASSET_KINDS = ("font", "sfx", "bgm", "template", "meme")
 # 견본 종류 → 허용 확장자(앞이 우선). 원본 kind 와 별개로 목소리·통과작도 견본만 있다.
@@ -269,9 +269,14 @@ def _thresholds(store) -> dict:
 
 
 def devices_max(cid) -> int:
-    """이 계정의 기기 상한 — 판단은 여기 한 곳. 관리자 판정은 app._is_admin."""
+    """이 계정의 기기 상한 — 판단은 여기 한 곳."""
+    return DEVICES_MAX
+
+
+def key_slots(cid) -> int:
+    """이 계정의 키 자리 — 둘째 키는 관리자만(사장님 10-31). 회원은 키 1개로 PC 2대를 쓴다."""
     from shopping_shorts import app as _app
-    return max(DEVICES_MAX, ADMIN_DEVICES) if _app._is_admin(cid) else DEVICES_MAX
+    return 2 if _app._is_admin(cid) else 1
 
 
 def _gate(store, key, cid) -> bool:
@@ -315,7 +320,7 @@ def issue_license(cid, store=None, slot=1) -> dict:
     now = _now()
     exp = now + LICENSE_DAYS * 86400
     slot = int(slot)
-    if slot not in (1, 2) or (slot == 2 and devices_max(cid) < 2):
+    if slot not in (1, 2) or slot > key_slots(cid):
         raise PortalError("bad_request", "둘째 키는 관리자만 받을 수 있습니다")
     with _tx(store, write=True) as c:
         row = _row(c, "SELECT kv FROM claude_licenses WHERE cid=?", (cid,))
@@ -334,6 +339,80 @@ def issue_license(cid, store=None, slot=1) -> dict:
             c.execute("INSERT INTO claude_licenses(cid, kv, gkv, key_hash, issued, expires) VALUES(?,?,?,?,?,?)",
                       (cid, kv, _gkv(store), _key_hash(key), now, exp))
     return {"key": key, "kv": kv, "issued": now, "expires": exp}
+
+
+def member_key(cid, store=None) -> str:
+    """회원의 지금 키 — 서명 방식이라 저장 없이 다시 만들 수 있다(옛 키를 끊지 않는다). 없거나 끝났으면 새로 발급."""
+    store = _store(store)
+    ensure_schema(store)
+    cid = int(cid)
+    with _tx(store) as c:
+        row = _row(c, "SELECT kv, expires, revoked FROM claude_licenses WHERE cid=?", (cid,))
+    if row and not row["revoked"] and row["expires"] > _now():
+        key = f"SHORTEM-L1.{cid}.{row['expires']}.{row['kv']}.{_sig(cid, row['expires'], row['kv'])}"
+        try:
+            verify_license(key, store)
+            return key
+        except PortalError:
+            pass
+    return issue_license(cid, store)["key"]
+
+
+def start_token(cid) -> str:
+    """시작.md 에 들어가는 회원 인증값 — 키 원문은 대화에 남으므로 넣지 않고, 기한 있는 값만 넣는다."""
+    cid, exp = int(cid), _now() + START_TTL
+    return f"{cid}.{exp}.{_mac('start', f'{cid}|{exp}')[:32]}"
+
+
+def start_redeem(token, store=None) -> dict:
+    """인증값 → 회원 키. 설치 스크립트만 부른다. 판단은 이 함수 하나."""
+    store = _store(store)
+    parts = str(token or "").split(".")
+    if len(parts) != 3 or not parts[0].isdigit() or not parts[1].isdigit():
+        raise PortalError("bad_key", "시작 파일이 올바르지 않습니다 — 페이지에서 새로 받아 주세요")
+    cid, exp = int(parts[0]), int(parts[1])
+    if not hmac.compare_digest(parts[2], _mac("start", f"{cid}|{exp}")[:32]):
+        raise PortalError("bad_key", "시작 파일이 올바르지 않습니다 — 페이지에서 새로 받아 주세요")
+    if exp < _now():
+        raise PortalError("expired", "시작 파일 기한이 지났습니다 — 페이지에서 새로 받아 주세요")
+    if not _gate(store, "claude_portal_enabled", cid):
+        raise PortalError("disabled", "클로드형 서비스가 지금 꺼져 있습니다")
+    return {"ok": True, "key": member_key(cid, store)}
+
+
+def start_line(cid, base) -> str:
+    """회원별 설치 한 줄 — PowerShell 에 붙여 넣으면 끝난다(페이지 복사 버튼·시작.md 공용)."""
+    return f"$env:SHORTEM_START='{start_token(cid)}'; irm {base}/api/claude/start.ps1 | iex"
+
+
+def start_cmd(cid, base) -> str:
+    """회원별 더블클릭 설치 파일 — 파워쉘을 열 필요가 없다."""
+    return ("@echo off\r\n"
+            f'powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "{start_line(cid, base)}"\r\n'
+            "pause\r\n")
+
+
+def start_md(cid, base) -> str:
+    """회원별 시작.md — Claude Code 입력창에 끌어다 놓으면 한 줄로 설치가 끝난다."""
+    line = start_line(cid, base)
+    return ("# 숏클 시작\n\n"
+            "이 파일을 Claude Code 입력창에 끌어다 놓고 엔터를 누르세요. 실행 허용을 물으면 '예'만 누르면 됩니다.\n"
+            f"Claude Code 가 없으면 PowerShell 창에 아래 한 줄을 붙여 넣어도 같습니다. 이 파일은 {START_TTL // 3600}시간 동안 쓸 수 있고, 남에게 주지 마세요.\n\n"
+            f"```powershell\n{line}\n```\n\n"
+            "Claude 에게 — 아래만 하세요. 다른 파일은 열거나 고치지 마세요.\n\n"
+            "1. 위 한 줄을 PowerShell 로 백그라운드 실행합니다. 약 1GB 를 받아 10분 넘게 걸릴 수 있으니 끝날 때까지 기다립니다.\n"
+            "2. `설치 완료` 가 나오면 사용자에게 \"새 창에서 준비 점검이 시작됩니다\"라고 한 줄만 알립니다.\n"
+            "3. 실패하면 나온 메시지를 쉬운 말로 알리고 같은 한 줄을 한 번 더 실행합니다.\n")
+
+
+def start_zip(cid, base) -> bytes:
+    """회원별 시작 꾸러미 — 받은 압축 파일을 Claude Code 입력창에 넣으면 안의 시작.md 대로 설치한다."""
+    import io
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("시작.md", start_md(cid, base))
+    return buf.getvalue()
 
 
 def _parse_key(key):
@@ -1341,6 +1420,24 @@ def resolve_alert(alert_id, store=None) -> dict:
     return {"ok": True, "closed": 1, "unsuspended": a["level"] == "suspend"}
 
 
+def member_ids(store=None) -> set:
+    """관리자가 숏클로 승인한 회원 — 스위치 claude_portal_enabled 의 고객 목록이 정본(관제 294)."""
+    v = str(_setting(_store(store), "claude_portal_enabled", "") or "").strip().lower()
+    return {int(x) for x in v.split(",") if x.strip().isdigit()}
+
+
+def set_member(cid, on, store=None) -> dict:
+    """숏클 승인·해제. 전체 공개("1")면 목록이 없으니 건드리지 않는다. 비면 관리자만("admin")으로 돌아간다."""
+    store = _store(store)
+    if str(_setting(store, "claude_portal_enabled", "") or "").strip() == "1":
+        raise PortalError("bad_request", "지금은 전체 공개 상태입니다")
+    ids = member_ids(store)
+    (ids.add if on else ids.discard)(int(cid))
+    # 끝의 쉼표는 필수 — 회원 1번 하나만 남으면 값이 "1"(전체 공개)이 된다(11-01 시험에서 잡음)
+    store.set_setting("claude_portal_enabled", "".join(f"{x}," for x in sorted(ids)) or "admin")
+    return {"ok": True, "on": bool(on)}
+
+
 def set_revoked(cid, revoked=True, store=None) -> dict:
     store = _store(store)
     ensure_schema(store)
@@ -1526,7 +1623,7 @@ def home(cid, store=None) -> dict:
         notes = _rows(c, "SELECT rule, level, ts FROM claude_alerts WHERE cid=? AND resolved=0 AND level IN ('warn','suspend') ORDER BY id DESC LIMIT 5", (cid,))
     lic_out = {"has_key": bool(lic and lic["kv"]), "issued": (lic or {}).get("issued"), "expires": (lic or {}).get("expires"),
                "revoked": bool(lic and lic["revoked"]), "suspended": bool(lic and (lic["suspended_until"] or 0) > _now()),
-               "slots": devices_max(cid)}
+               "slots": key_slots(cid)}
     return {"ok": True, "presets": plist, "styles": styles, "results": results,
             "packs": {"fonts": fonts, "sfx": sorted(sfx.values(), key=lambda g: g["id"]), "bgm": bgm, "templates": tpls,
                       "voices": voices, "memes": sorted(memes.values(), key=lambda m: -m["count"]),
