@@ -484,6 +484,29 @@ def orig_edges(src: Path, spans: list) -> tuple[float, float]:
     return round(h, 3), round(tl, 3)
 
 
+def pause_topup(y, tmap: list, marks: list, write) -> tuple:
+    """쉼을 맞춘 소리를 B18a 와 같은 자(-35dB·0.08초)로 다시 재서 모자란 만큼 그 쉼을 늘린다 — 말 시작 직전 작은 소리가 쉼을 잘라 짧게 재지는 것을 푼다
+    (10-31 해외신기템 L4 0.24·L9 0.19, 대본 고치기 되풀이). marks = [(고치기 전 시각, 목표 초)] · write(y) = 잴 소리를 저장하고 경로를 돌려준다."""
+    import numpy as np
+    from tools.calcopy.hybrid.common import silences
+    if not marks:
+        return y, tmap
+    sil = silences(write(y), "-35dB", 0.08)
+    fix = []
+    for at, want in marks:
+        t = float(np.interp(at, [a for a, _ in tmap], [b for _, b in tmap]))
+        near = min(sil, key=lambda r: abs((r[0] + r[1]) / 2 - t), default=None)
+        if near and abs((near[0] + near[1]) / 2 - t) <= 0.2 and near[1] - near[0] < want - 0.01:
+            fix.append(((near[0] + near[1]) / 2, want - (near[1] - near[0])))
+    for t, more in sorted(fix, reverse=True):
+        i, n, w = int(t * SR), int(round(more * SR)), int(0.02 * SR)
+        y = np.concatenate([y[:i], np.tile(y[i - w // 2:i + w // 2], n // w + 1)[:n], y[i:]])
+        tmap = [(a, b + more if b > t else b) for a, b in tmap]
+    if fix:
+        write(y)
+    return y, tmap
+
+
 def fit_voice(S: dict, st: dict, sent: list, align: dict | None, log=print) -> list:
     """나레 줄 소리(s_<줄>.wav)를 판에 맞춘다 — ① 앞뒤 무음을 EDGE_KEEP 만 남기고 뺀다(줄 사이 '소리 쉼' = 판 timing.gap 이 되게 — 판 gap 은 벤치 소리 쉼 실측)
     ② 줄 안 쉼표·마침표 자리 무음을 pause_targets(판 speech) 길이로(길면 가운데를 자르고, 짧으면 그 무음 가운데를 이어 늘린다 — 디지털 무음 금지).
@@ -584,9 +607,12 @@ def fit_voice(S: dict, st: dict, sent: list, align: dict | None, log=print) -> l
             last = i1
         out.append(x[last:]); tn += (len(x) - last) / SR
         tmap.append((total, tn))
-        y = np.concatenate(out)
-        with wave.open(str(p), "wb") as w:
-            w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((np.clip(y, -1, 1) * 32767).astype("<i2").tobytes())
+        def put(v):
+            with wave.open(str(p), "wb") as w:
+                w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((np.clip(v, -1, 1) * 32767).astype("<i2").tobytes())
+            return p
+        y, tmap = pause_topup(np.concatenate(out), tmap, [(q["at"], q["now"]) for q in inner_log], put)
+        put(y)
         s["dur_before_fit"], s["dur"] = s["dur"], round(len(y) / SR, 3)
         s["tmap"] = [(round(a, 4), round(b, 4)) for a, b in tmap]
         logs.append({"id": s["id"], "head": round(hc, 3), "tail": round(tc, 3), "inner": inner_log, "dur": [s["dur_before_fit"], s["dur"]]})
