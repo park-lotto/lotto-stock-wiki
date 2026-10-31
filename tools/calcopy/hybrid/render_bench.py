@@ -790,7 +790,7 @@ def _title_line(im, spec: dict, segs):
     from PIL import Image, ImageDraw
     d = ImageDraw.Draw(im)
     segs = [(s, None) if isinstance(s, str) else (s[0], s[1] if len(s) > 1 else None) for s in segs]
-    col = lambda c: _rgb(spec["hi"]) if c == "hi" else (_rgb(c) if c else _rgb(spec["color"]))
+    col = lambda c: _rgb(spec.get("hi") or spec["color"]) if c == "hi" else (_rgb(c) if c else _rgb(spec["color"]))   # hi 칸 없는 줄(게시글 본문 제목 = 한 색) = 제 색
     al = spec.get("align", "center")
     if al not in TITLE_ALIGNS:
         raise StageError(f"제목 align '{al}' 모름 — {TITLE_ALIGNS}")
