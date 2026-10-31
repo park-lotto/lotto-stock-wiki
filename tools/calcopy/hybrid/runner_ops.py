@@ -1526,6 +1526,18 @@ def c_plan(W, d):
         return _c_plan(W, d)
 
 
+def _plan_reuse(W, v, T) -> list:
+    """계획의 B13 = 완성본 검사와 같은 판단(quality_gate.reuse_bad) · 옛 렌더러 판은 샷 안 옮기기 결과."""
+    from tools.calcopy.hybrid import quality_gate as QG, styles as ST
+    st = ST.load(v)
+    if st.get("renderer") in QG.OLD_PAUSE_RENDERERS:
+        return [f"같은 장면 재사용 {c.get('line')} {Path(str(c['src'])).stem}@{float(c['ss']):.2f} — 이 줄 컷을 다른 장면으로 바꿔라: {c['reuse_unfixed']}"
+                for c in T["cuts"] if c.get("reuse_unfixed")]
+    cuts = [{**c, "ss": float(c.get("ss") or 0), "dur": float(c["t1"]) - float(c["t0"]), "t0": float(c["t0"]), "t1": float(c["t1"])} for c in T["cuts"]]
+    bad, _ = QG.reuse_bad(cuts, Path(jload(W / "doc" / v / "재료.json")["cand_dir"]), st)
+    return [f"같은 장면 재사용 — 이 재료로 못 피하면 재료_더찾기로 다른 영상을 받아라: {x}" for x in bad]
+
+
 def _c_plan(W, d):
     from tools.calcopy.hybrid import render_bench
     v = d["version"]
@@ -1560,8 +1572,7 @@ def _c_plan(W, d):
     if T.get("cuts"):
         out["sheet"] = rel(W, plan_sheet(W, v, T))
         out["jumps"] = source_rule_scan(W, T, _origin_names(W, v) | set(d.get("origin_names") or []), d.get("other_faces", True))
-        reuse = [f"같은 장면 재사용 {c.get('line')} {Path(str(c['src'])).stem}@{float(c['ss']):.2f} — 그 샷 안에서는 못 피함, 이 줄 컷을 다른 장면으로 바꿔라: {c['reuse_unfixed'][0]}"
-                 for c in T["cuts"] if c.get("reuse_unfixed")]
+        reuse = _plan_reuse(W, v, T)
         out["jumps"] += reuse      # 계획(respace_reuse)이 못 피한 B13 — 렌더(수 분) 뒤 완성본 검사에서야 걸려 11단계로 되돌아갔다(10-26 까르보 B13). 계획 고치기에서 바로
         from tools.calcopy.hybrid import checks as CK      # B16 도 같은 꼴 — 판정 주인 checks.aba_violations(완성본 검사 quality_gate 와 같은 함수·같은 컷)
         aba = CK.aba_violations([{"src": c["src"], "t0": float(c["t0"])} for c in T["cuts"] if c.get("kind") != "orig"])

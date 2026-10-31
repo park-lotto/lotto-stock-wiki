@@ -467,6 +467,16 @@ def reuse_violations_bench(cuts: list[dict], src_len: dict, adjacent_run: bool =
     return bad
 
 
+def reuse_bad(cuts: list, cand_dir: Path, st: dict) -> tuple[list, dict]:
+    """(판단 주인 — B13 을 재는 한 곳) 계획(runner_ops)과 완성본 검사가 같이 부른다. 10-31 회원 글로스 편: 계획은 옮긴 컷만 보고 통과, 완성본만 L1↔L4 를 잡아 12/13 에서 멈췄다.
+    그림 컷은 reuse_violations_bench 가 뺀다 — 길이도 안 잰다(ffprobe 'N/A' 로 통째 미측정이 됐다, 관제26)."""
+    from tools.calcopy.hybrid.common import dur_of
+    from tools.calcopy.hybrid.render_bench import IMG_EXT
+    lens = {c["src"]: dur_of(cand_dir / c["src"]) for c in cuts
+            if Path(str(c["src"])).suffix.lower() not in IMG_EXT and (cand_dir / c["src"]).exists()}
+    return reuse_violations_bench(cuts, lens, bool((st.get("reuse") or {}).get("adjacent_run"))), lens     # 판 칸 reuse.adjacent_run(10-26 두유노판)
+
+
 def drop_verdict(ours: list, bench: list, plan: dict | None = None, kinds=TD_KINDS) -> tuple[bool | None, str]:
     """전환 세기(표준 ⑯): 우리 경계 drop 중앙값이 벤치 drop 중앙값의 ±TD_TOL 안. 우리 경계 0개 = ×(벤치엔 전환이 있는데 우리는 없다)
     — 단 '해당 없음 ○' 은 배치 기록(plan = trans_plan_of, 주인 placement.transitions_step)에 비율 출처가 있고
@@ -758,13 +768,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             if st.get("renderer") in OLD_PAUSE_RENDERERS:
                 v = CK.reuse_violations(cuts, CK.orig_spans_of(S, "잇썸홈판"))
                 return not v, v or "0"
-            from tools.calcopy.hybrid.common import dur_of
-            from tools.calcopy.hybrid.render_bench import IMG_EXT
-            cd = Path(jload(doc / "재료.json")["cand_dir"])
-            # 그림(정지 사진) 컷은 reuse_violations_bench 가 판정에서 뺀다(B6 몫) — 길이 재기도 안 한다(ffprobe 가 'N/A' 를 줘 B13 이 통째 미측정이 됐다, 관제263)
-            lens = {c["src"]: dur_of(cd / c["src"]) for c in cuts
-                    if Path(str(c["src"])).suffix.lower() not in IMG_EXT and (cd / c["src"]).exists()}
-            v = reuse_violations_bench(cuts, lens, bool((st.get("reuse") or {}).get("adjacent_run")))      # 판 칸 reuse.adjacent_run(10-26 두유노판)
+            v, lens = reuse_bad(cuts, Path(jload(doc / "재료.json")["cand_dir"]), st)
             return not v, (v or "0") if v else f"0 (소스 길이 {{{', '.join(f'{Path(k).stem}:{x:.1f}' for k, x in lens.items())}}})"
         row("재료", "B13 같은 장면 재사용(겹침 ×·거리 min(3, 0.25×길이))", b13, "quality_gate.reuse_violations_bench")
         row("재료", "B16 A-B-A 끼움(나레 컷)", lambda: (lambda v: (not v, v or "0"))(CK.aba_violations([c for c in cuts if c["seg"] == "B"])), "checks.aba_violations")

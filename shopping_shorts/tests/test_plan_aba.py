@@ -18,6 +18,7 @@ def test_plan_returns_aba_as_jump(tmp_path, monkeypatch):
     monkeypatch.setattr(R, "plan_sheet", lambda W, v, T: W / "s.jpg")
     monkeypatch.setattr(R, "source_rule_scan", lambda *a, **k: [])
     monkeypatch.setattr(R, "_origin_names", lambda W, v: set())
+    monkeypatch.setattr(R, "_plan_reuse", lambda W, v, T: [])
     out = R.c_plan(tmp_path, {"version": "v"})
     assert any("A-B-A" in j and "A→B→A" in j for j in out["jumps"]), out
 
