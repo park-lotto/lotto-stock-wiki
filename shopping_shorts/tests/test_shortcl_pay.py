@@ -279,3 +279,15 @@ def test_프로그램_저장은_다시_읽어도_남고_옛_DB도_열린다(clie
     assert (saved["shortem"], saved["shortcl"], saved["move"], saved["tutor"]) == (None, 1, "free", "태도")
     assert client.post("/api/admin/program_member", json={"customer_id": cid, "move": "x"}).status_code == 422
     assert client.post("/api/admin/program_member", json={"customer_id": cid, "plan": "없는반"}).status_code == 422
+
+
+def test_예전_주문도_이메일로_계정을_찾는다(client, monkeypatch):
+    st = Store(appmod.DB_PATH)
+    cid = st.create_customer("회원", "pw-1234", email="old@b.co", approved=True)
+    cid = cid if isinstance(cid, int) else cid["id"]
+    with appmod._toss_db()._conn() as c:
+        c.execute("INSERT INTO toss_payments(order_id,amount,order_name,status,approved_at,payer_name,payer_email) VALUES('o',1,'숏템메이커 2기 이용권','DONE','2026-10-01T10:00:00+09:00','회원','OLD@b.co')")
+        c.execute("INSERT INTO toss_payments(order_id,amount,order_name,status,approved_at,payer_name,payer_email) VALUES('n',1,'숏클메이커 기본반','DONE','2026-10-02T10:00:00+09:00','손님','none@b.co')")
+    monkeypatch.setattr(appmod, "_require_admin", lambda r: None)
+    by = {i["payer"]: i for i in client.get("/api/admin/pay_ledger").json()["items"]}
+    assert by["회원"]["customer_id"] == cid and by["손님"]["customer_id"] is None

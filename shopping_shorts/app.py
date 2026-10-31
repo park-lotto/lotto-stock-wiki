@@ -17984,7 +17984,18 @@ def _admin_pay_ledger(request: Request):
     denied = _require_admin(request)
     if denied:
         return denied
-    return {"items": _pay_ledger()}
+    items = _pay_ledger()
+    digits = lambda v: re.sub(r"\D", "", v or "")
+    mail, phone = {}, {}
+    for cu in Store(DB_PATH).list_customers():      # 예전 주문엔 계정번호가 없다 — 결제 정보로 계정을 찾아 표시한다
+        if cu.get("email"):
+            mail[cu["email"].lower()] = cu["id"]
+        if digits(cu.get("phone")):
+            phone[digits(cu.get("phone"))] = cu["id"]
+    for it in items:
+        if it["customer_id"] in (None, ""):
+            it["customer_id"] = mail.get(it["email"].lower()) or phone.get(digits(it["phone"]))
+    return {"items": items}
 
 
 @app.get("/api/admin/deposit_claims")
