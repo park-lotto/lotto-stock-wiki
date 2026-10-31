@@ -1100,6 +1100,23 @@ def c_origin_words(W, d):
     return {"words": words, "from": how}
 
 
+def c_peer_points(W, d):
+    """같은 소재 남의 영상 자막(제작순서 조사 — 납품 포인트.md 의 재료). 소재 쇼츠·그 채널은 뺀다. 판단 없음 — 글만 서버로. 댓글은 안 받는다."""
+    skip, chan = set(d.get("skip_ids") or []), str(d.get("skip_channel") or "").strip()
+    found = [x for x in _search(d.get("queries") or [], 10, True) if x.get("id") not in skip and not (chan and chan == str(x.get("channel") or x.get("uploader") or "").strip())]
+    out, n = [], int(d.get("n") or 4)
+    for x in found:
+        if len(out) >= n:
+            break
+        words, how = _origin_words(W, x["id"])
+        if how == "blocked":                 # 막히면 더 두드리지 않는다(계정 보호, c_origin_subs 와 같은 원칙)
+            break
+        text = " ".join(str(w[1]) for w in words).strip()
+        if text:
+            out.append({"id": x["id"], "title": x.get("title"), "channel": x.get("channel") or x.get("uploader"), "text": text[:1200]})
+    return {"videos": out, "searched": len(found)}
+
+
 def c_screen(W, d):
     """재료 후보(제작순서 05) — 받기·시트는 screen 모듈(yt-dlp 만). 캐시 모드면 받아 둔 재료 영상으로 시트를 만든다."""
     skip = {d.get("bench_id"), d.get("origin_id")}
@@ -1318,7 +1335,7 @@ def _cut_jumps(src: Path, ss: float, dur: float, fps: int = 10, n: int = 64) -> 
     """컷 구간 안 프레임끼리 바뀐 정도(회색 64칸 평균 차) — 장면 전환·끊김을 잰다(1초 시트 사이로 지나가는 0.5초 전환은 눈 검수가 못 본다)."""
     import numpy as np
     raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{ss:.2f}", "-t", f"{dur:.2f}", "-i", str(src), "-vf", f"fps={fps},scale={n}:{n}",
-                          "-f", "rawvideo", "-pix_fmt", "gray", "-"], capture_output=True, stdin=subprocess.DEVNULL, timeout=120).stdout
+                          "-f", "rawvideo", "-pix_fmt", "gray", "-"], capture_output=True, stdin=subprocess.DEVNULL, timeout=max(120, dur * 4)).stdout
     a = np.frombuffer(raw, np.uint8)
     if a.size < 2 * n * n:
         return []
@@ -1338,7 +1355,18 @@ def jump_free_spans(src: Path, spans: list[list[float]], fps: int = 10, pad: flo
     lBleNklHu2A 36.2~41.37 을 한 샷으로 줬는데, 그 안 40.2~41.0 디졸브를 source_rule_scan 이 '장면 전환'으로 반려 — 같은 자로 미리 뺀다)."""
     if src.suffix.lower() in RU.STILL_EXT or not spans:
         return spans
-    dd = _cut_jumps(src, 0.0, float(spans[-1][1]), fps=fps)
+    # 재료 전체를 푸는 자리 — 4K 149초 재료는 한 번에 약 3분이라 장면 맞추기를 다시 할 때마다 쌓인다(10-31). 같은 파일이면 잰 값을 다시 쓴다
+    end = float(spans[-1][1])
+    memo = src.with_name(f"{src.stem}.jumps.json")
+    key = [src.stat().st_size, int(src.stat().st_mtime), end, fps]
+    try:
+        m = json.loads(memo.read_text(encoding="utf-8"))
+        dd = m["dd"] if m["key"] == key else None
+    except (OSError, ValueError, KeyError, TypeError):
+        dd = None
+    if dd is None:
+        dd = _cut_jumps(src, 0.0, end, fps=fps)
+        memo.write_text(json.dumps({"key": key, "dd": dd}), encoding="utf-8")
     marks = [(i + 1) / fps for i, x in enumerate(dd) if x > JUMP_MANY]
     out = []
     for a, b in spans:
@@ -1515,6 +1543,18 @@ def c_plan(W, d):
         return _c_plan(W, d)
 
 
+def _plan_reuse(W, v, T) -> list:
+    """계획의 B13 = 완성본 검사와 같은 판단(quality_gate.reuse_bad) · 옛 렌더러 판은 샷 안 옮기기 결과."""
+    from tools.calcopy.hybrid import quality_gate as QG, styles as ST
+    st = ST.load(v)
+    if st.get("renderer") in QG.OLD_PAUSE_RENDERERS:
+        return [f"같은 장면 재사용 {c.get('line')} {Path(str(c['src'])).stem}@{float(c['ss']):.2f} — 이 줄 컷을 다른 장면으로 바꿔라: {c['reuse_unfixed']}"
+                for c in T["cuts"] if c.get("reuse_unfixed")]
+    cuts = [{**c, "ss": float(c.get("ss") or 0), "dur": float(c["t1"]) - float(c["t0"]), "t0": float(c["t0"]), "t1": float(c["t1"])} for c in T["cuts"]]
+    bad, _ = QG.reuse_bad(cuts, Path(jload(W / "doc" / v / "재료.json")["cand_dir"]), st)
+    return [f"같은 장면 재사용 — 이 재료로 못 피하면 재료_더찾기로 다른 영상을 받아라: {x}" for x in bad]
+
+
 def _c_plan(W, d):
     from tools.calcopy.hybrid import render_bench
     v = d["version"]
@@ -1549,8 +1589,7 @@ def _c_plan(W, d):
     if T.get("cuts"):
         out["sheet"] = rel(W, plan_sheet(W, v, T))
         out["jumps"] = source_rule_scan(W, T, _origin_names(W, v) | set(d.get("origin_names") or []), d.get("other_faces", True))
-        reuse = [f"같은 장면 재사용 {c.get('line')} {Path(str(c['src'])).stem}@{float(c['ss']):.2f} — 그 샷 안에서는 못 피함, 이 줄 컷을 다른 장면으로 바꿔라: {c['reuse_unfixed'][0]}"
-                 for c in T["cuts"] if c.get("reuse_unfixed")]
+        reuse = _plan_reuse(W, v, T)
         out["jumps"] += reuse      # 계획(respace_reuse)이 못 피한 B13 — 렌더(수 분) 뒤 완성본 검사에서야 걸려 11단계로 되돌아갔다(10-26 까르보 B13). 계획 고치기에서 바로
         from tools.calcopy.hybrid import checks as CK      # B16 도 같은 꼴 — 판정 주인 checks.aba_violations(완성본 검사 quality_gate 와 같은 함수·같은 컷)
         aba = CK.aba_violations([{"src": c["src"], "t0": float(c["t0"])} for c in T["cuts"] if c.get("kind") != "orig"])
@@ -2110,7 +2149,7 @@ def c_thumb_auto(W, d):
 
 
 CMDS = {"env": c_env, "bench": c_bench, "search": c_search, "peer_sheet": c_peer_sheet, "channel_list": c_channel_list, "origin_subs": c_origin_subs,
-        "origin_get": c_origin_get, "channel_find": c_channel_find, "origin_probe": c_origin_probe, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "coupang_reviews": c_coupang_reviews, "cand_sheet": c_cand_sheet, "naver": c_naver, "origin_words": c_origin_words,
+        "origin_get": c_origin_get, "channel_find": c_channel_find, "origin_probe": c_origin_probe, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "coupang_reviews": c_coupang_reviews, "cand_sheet": c_cand_sheet, "naver": c_naver, "origin_words": c_origin_words, "peer_points": c_peer_points,
         "screen": c_screen, "download": c_download, "product_stills": c_product_stills, "orig_heard": c_orig_heard, "asr_spans": c_asr_spans, "shot_sheets": c_shot_sheets, "mat_sheets": c_mat_sheets,
         "write_doc": c_write_doc, "plan": c_plan, "render": c_render, "check": c_check, "finish": c_finish,
         "origin_foreign": c_origin_foreign, "of_settle": c_of_settle, "clean_text": c_clean_text, "materials_draft": c_materials_draft, "thumb_auto": c_thumb_auto}
