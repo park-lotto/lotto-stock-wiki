@@ -159,24 +159,29 @@ def test_엔진_낮으면_거절(env):
 
 
 # ── 2. 기기 대수 ─────────────────────────────────────────────────────────
-def test_기본은_PC_1대_두번째_기기_거절(env):
-    """5판 사장님 결정: PC 1대만. 두 번째 기기는 거절, 첫 기기를 빼면 들어온다."""
+def test_PC_2대까지_세번째_기기_거절(env):
+    """사장님 11-01: PC 2대. 세 번째 기기는 거절, 하나를 빼면 들어온다."""
     from shopping_shorts import claude_portal as cp
-    assert cp.DEVICES_MAX == 1
-    env["monkeypatch"].setattr(cp, "ADMIN_DEVICES", 1)   # 시험 계정이 관리자라 회원 상한으로 잰다
+    assert cp.DEVICES_MAX == 2
     c = env["client"]
     k = _key(env)
-    assert c.get("/api/claude/license", headers=_h(k, FP1, name="사무실")).json()["devices_max"] == 1
-    r = c.get("/api/claude/license", headers=_h(k, FP2, name="집"))
+    assert c.get("/api/claude/license", headers=_h(k, FP1, name="사무실")).json()["devices_max"] == 2
+    assert c.get("/api/claude/license", headers=_h(k, FP2, name="집")).json()["device"]["slot"] == 2
+    r = c.get("/api/claude/license", headers=_h(k, FP3, name="셋째"))
     assert r.status_code == 403 and r.json()["code"] == "device_limit"
     assert c.post("/api/claude/me/device/remove", json={"device_id": FP1[:12]}).json()["ok"]
-    assert c.get("/api/claude/license", headers=_h(k, FP2)).json()["device"]["slot"] == 1
+    assert c.get("/api/claude/license", headers=_h(k, FP3)).json()["device"]["slot"] == 1
 
 
-def test_관리자는_기기_2대_회원은_1대(env, monkeypatch):
+def test_기기는_모두_2대_둘째_키는_관리자만(env, monkeypatch):
     from shopping_shorts import app, claude_portal as cp
     monkeypatch.setattr(app, "_is_admin", lambda cid: cid == 77)
-    assert cp.devices_max(77) == 2 and cp.devices_max(78) == 1
+    assert cp.devices_max(77) == 2 and cp.devices_max(78) == 2
+    assert cp.key_slots(77) == 2 and cp.key_slots(78) == 1
+    st = Store(app_module.DB_PATH)
+    cp.issue_license(78, st)
+    with pytest.raises(cp.PortalError):
+        cp.issue_license(78, st, 2)
 
 
 def test_관리자_둘째_키는_첫째와_따로_산다(env, monkeypatch):

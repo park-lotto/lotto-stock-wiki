@@ -5,7 +5,7 @@
 
 판단 주인(각 하나 — 라우트는 부르기만, 0순위-C):
   issue_license / verify_license  라이선스 키 발급·검증(SHORTEM-L1.<cid>.<exp>.<kv>.<sig>, 서버는 키 해시만)
-  license                         기기 지문 DEVICES_MAX(1)대·회수·정지·엔진 버전
+  license                         기기 지문 DEVICES_MAX(2)대·회수·정지·엔진 버전
   lease                           cid 당 활성 작업 1개(TTL 180초, 하트비트 60초, 다른 기기 거절, 강제 해제)
   assets_for                      이번 작업이 **참조하는 자산만** 서명 URL(6h) — 통째로 안 준다
   pack                            그 job 의 발급 목록 안 자산만 재발급
@@ -49,8 +49,7 @@ HEARTBEAT_EVERY = 60
 ASSET_URL_TTL = 6 * 3600
 PREVIEW_TOKEN_TTL = 600
 START_TTL = 72 * 3600    # 시작.md 인증값 기한
-DEVICES_MAX = 1          # PC 1대만(2026-10-19 사장님 결정, 관제 234 5판). 교체는 마이페이지 '기기 빼기'
-ADMIN_DEVICES = 2        # 관리자는 집·회사 PC 하나씩(사장님 10-31). 회원은 DEVICES_MAX 그대로
+DEVICES_MAX = 2          # PC 2대까지(2026-11-01 사장님 "pc는 2대로", 10-19 1대 결정을 대체). 교체는 마이페이지 '기기 빼기'
 PROFILES_MAX = 10
 ASSET_KINDS = ("font", "sfx", "bgm", "template", "meme")
 # 견본 종류 → 허용 확장자(앞이 우선). 원본 kind 와 별개로 목소리·통과작도 견본만 있다.
@@ -270,9 +269,14 @@ def _thresholds(store) -> dict:
 
 
 def devices_max(cid) -> int:
-    """이 계정의 기기 상한 — 판단은 여기 한 곳. 관리자 판정은 app._is_admin."""
+    """이 계정의 기기 상한 — 판단은 여기 한 곳."""
+    return DEVICES_MAX
+
+
+def key_slots(cid) -> int:
+    """이 계정의 키 자리 — 둘째 키는 관리자만(사장님 10-31). 회원은 키 1개로 PC 2대를 쓴다."""
     from shopping_shorts import app as _app
-    return max(DEVICES_MAX, ADMIN_DEVICES) if _app._is_admin(cid) else DEVICES_MAX
+    return 2 if _app._is_admin(cid) else 1
 
 
 def _gate(store, key, cid) -> bool:
@@ -316,7 +320,7 @@ def issue_license(cid, store=None, slot=1) -> dict:
     now = _now()
     exp = now + LICENSE_DAYS * 86400
     slot = int(slot)
-    if slot not in (1, 2) or (slot == 2 and devices_max(cid) < 2):
+    if slot not in (1, 2) or slot > key_slots(cid):
         raise PortalError("bad_request", "둘째 키는 관리자만 받을 수 있습니다")
     with _tx(store, write=True) as c:
         row = _row(c, "SELECT kv FROM claude_licenses WHERE cid=?", (cid,))
@@ -1612,7 +1616,7 @@ def home(cid, store=None) -> dict:
         notes = _rows(c, "SELECT rule, level, ts FROM claude_alerts WHERE cid=? AND resolved=0 AND level IN ('warn','suspend') ORDER BY id DESC LIMIT 5", (cid,))
     lic_out = {"has_key": bool(lic and lic["kv"]), "issued": (lic or {}).get("issued"), "expires": (lic or {}).get("expires"),
                "revoked": bool(lic and lic["revoked"]), "suspended": bool(lic and (lic["suspended_until"] or 0) > _now()),
-               "slots": devices_max(cid)}
+               "slots": key_slots(cid)}
     return {"ok": True, "presets": plist, "styles": styles, "results": results,
             "packs": {"fonts": fonts, "sfx": sorted(sfx.values(), key=lambda g: g["id"]), "bgm": bgm, "templates": tpls,
                       "voices": voices, "memes": sorted(memes.values(), key=lambda m: -m["count"]),

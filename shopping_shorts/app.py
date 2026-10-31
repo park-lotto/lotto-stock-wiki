@@ -15859,7 +15859,7 @@ def _toss_checkout(request: Request, product: str = ""):
     refund_line = ("결제 확인 즉시 이용권이 열리는 디지털 콘텐츠로, 이용권이 열린 뒤에는 7일 이내라도 환불되지 않음" if is_shortem
                    else "라이선스 키·설치 파일이 제공된 뒤에는 7일 이내라도 환불되지 않음")
     shortcl_note = ("" if is_shortem else '<div class=p style="margin:-6px 0 12px;color:#ffcf6f"><b>'
-                    "Claude Max 구독(별도 결제)이 필요합니다.</b> 내 PC에 설치해 쓰며, PC 1대에서 이용할 수 있습니다.</div>")
+                    "Claude Max 구독(별도 결제)이 필요합니다.</b> 내 PC에 설치해 쓰며, PC 2대까지 이용할 수 있습니다.</div>")
     body = f"""{badge}<h1>💳 {_toss_esc(name)}</h1>
 <div class=amt>{amount:,}원</div>
 <div class=p style="margin:-4px 0 12px">이용기간: {period_from}로부터 {_PRO_PERIOD}</div>
