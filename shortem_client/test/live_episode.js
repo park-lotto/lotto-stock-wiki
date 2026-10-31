@@ -53,6 +53,7 @@ const log = path.join(dir, 'claude.jsonl');
 // ★셸을 거치면(shell:true) 여러 줄 프롬프트·옵션이 잘려 숏템 설정이 안 붙는다(10-20 첫 시도: 다른 MCP 를 부름) → 실행 파일을 직접
 const claude = process.env.CLAUDE_BIN || (process.platform === 'win32' ? path.join(process.env.USERPROFILE || '', '.local', 'bin', 'claude.exe') : 'claude');
 const p = spawn(claude, ['-p', prompt, '--mcp-config', cfg, '--strict-mcp-config', '--model', 'opus', '--output-format', 'stream-json', '--verbose',
+  '--setting-sources', 'project',   // 이 PC 전역 지침·플러그인을 빼고 회원과 같게
   '--plugin-dir', path.join(inst, 'claude-plugin', 'shortem'),   // 회원 지침(시작 훅)까지 회원과 같이 — 없으면 CLAUDE_숏클.md 가 안 들어간다
   // 회원 Claude 와 같은 손 — 새 눈 Agent·코드 수정·웹 검색(10-31 숏템 도구만 열어 두면 새 눈이 돌지 못하고 만든 Claude 가 판정한다)
   '--permission-mode', 'acceptEdits', '--allowedTools', 'mcp__shortem,Agent,Read,Edit,Write,Glob,Grep,Bash,WebSearch,WebFetch',
