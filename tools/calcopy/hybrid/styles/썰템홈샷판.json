@@ -846,5 +846,10 @@
       "gap": [],
       "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 칼카피 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
     }
-  }
+  },
+  "material_n": [
+    8,
+    12
+  ],
+  "_why_material_n": "납품 28편 재료 중앙 9개(4~14) — 회원 3개와의 차이(10-31)"
 }

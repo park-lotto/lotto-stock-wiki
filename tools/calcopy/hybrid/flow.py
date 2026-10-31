@@ -204,7 +204,7 @@ RESEARCH = """너는 조사 담당이다. 이 편의 `조사.md` 한 파일 내�
 JSON 하나: {"stop": "", "조사_md": "마크다운 전문", "keywords": ["제품명", "영문명", "모델"], "queries": ["…"], "exclude": ["모음", "TOP", "가성비"],
  "spans": [{"a": 받은 파일 초, "b": 초, "tag": "O1"}], "facts": [{"id": "f1", "fact": "…", "src": "URL 또는 '원본 n초'"}]}"""
 
-SCREEN_PICK = """너는 제품 영상 고르기 담당이다. 같은 제품만, 1080 이상, 남의 글자가 가운데 상시면 뺀다, 제품 컷이 많은 것 앞으로, 2~4개.
+SCREEN_PICK = """너는 제품 영상 고르기 담당이다. 같은 제품만, 1080 이상, 남의 글자가 가운데 상시면 뺀다, 제품 컷이 많은 것 앞으로, 판이 정한 개수만큼(아래 ★개수).
 ★연예인이 나오는 영상은 찾은 원본(연예인 본인 채널·방송사 공식)에서만 쓴다 — 다른 채널(벤치 쇼츠·재편집·리뷰)에 나온 연예인 영상은 절대 금지. 후보에 그 연예인이 나오면 rejected.
 ★남의 리뷰 영상에 장면 전환 효과(별·와이프)·남의 손 근접이 많으면 뒤로. 원본 안에 제품 근접 장면이 있으면 그게 먼저다(재료가 모자랄 때만 이 후보).
 각 후보의 시트(미리보기 = 영상 전체 약 5초 간격, 칸 왼쪽 위 노란 '분:초' = 그 영상 시각 · 미리보기가 없는 후보는 360p 토막)와 메타가 있다. sections 는 그 영상의 초. 쓸 게 없으면 chosen 빈 목록.
@@ -1716,11 +1716,28 @@ def ph_research_check(st, m, rp, u):
 
 
 # ── 5 재료 영상 ───────────────────────────────────────────────────────────
+def _material_n(st) -> tuple:
+    """(판단 주인 — 재료 영상 개수) 판 칸 material_n[최소, 최대], 없으면 2~4. 10-31 썰템홈샷: 납품 재료 중앙 9개 vs 회원 3개 — 뿌리는 질문에 박힌 '2~4개'."""
+    a, b = ((_style(st["version"]) if st.get("version") else {}).get("material_n") or [2, 4])[:2]
+    return int(a), int(b)
+
+
+def _material_top(st, sw=None) -> int:
+    return max(10 if sw else 8, _material_n(st)[1] * 2)
+
+
+def _screen_pick_ask(st, rows, more="") -> str:
+    a, b = _material_n(st)
+    return (SCREEN_PICK + f"\n\n★개수: {a}~{b}개를 고른다. 대본 줄마다 가리키는 그림이 달라야 하니 서로 다른 장면을 주는 영상으로." + more +
+            "\n\n후보(시트 순서와 같다):\n" + json.dumps(rows, ensure_ascii=False, indent=1) +
+            f"\n\n제품: {st['product'].get('name')} / 연예인: {st['read'].get('celeb')}" + _subject_pick_ctx(st))
+
+
 def ph_material(st, m, rp, u):
     R = st["research"]
     sw = _subject_words(st)          # 이야기 대상 ≠ 파는 제품(쇼핑형 10-29) — 그 물건 장면도 찾는다(대본이 그 물건을 말하는 줄에 쓴다)
     return {"do": [{"id": "screen", "cmd": "screen", "queries": list(dict.fromkeys((R.get("queries") or []) + sw)), "exclude": R.get("exclude") or [],
-                    "keywords": (R.get("keywords") or []) + sw, "top": 10 if sw else 8, "bench_id": st["bench"].get("id"), "origin_id": (st.get("origin") or {}).get("id")}],
+                    "keywords": (R.get("keywords") or []) + sw, "top": _material_top(st, sw), "bench_id": st["bench"].get("id"), "origin_id": (st.get("origin") or {}).get("id")}],
             "then": "material_got"}
 
 
@@ -1730,8 +1747,8 @@ def ph_material_got(st, m, rp, u):
     st["screen_rows"] = rows
     if not rows:
         return {"do": [{"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "images": [x for x in [(st.get("product") or {}).get("image")] if x], "n": 4}], "then": "material_dl"}
-    return {"review": [_rv("screen_pick", SCREEN_PICK + "\n\n후보(시트 순서와 같다):\n" + json.dumps(rows, ensure_ascii=False, indent=1) +
-                           f"\n\n제품: {st['product'].get('name')} / 연예인: {st['read'].get('celeb')}" + _subject_pick_ctx(st), [_img(x) for x in s.get("sheets") or []][:10],
+    st["_screen_sheets"] = s.get("sheets") or []
+    return {"review": [_rv("screen_pick", _screen_pick_ask(st, rows), [_img(x) for x in st["_screen_sheets"]][:_material_top(st)],
                            need=("chosen",))], "then": "material_pick"}
 
 
@@ -1742,6 +1759,10 @@ def ph_material_pick(st, m, rp, u):
     chosen = [c for c in r.get("chosen") or [] if isinstance(c, dict) and c.get("id") in known and c["id"] not in (st["bench"].get("id"), (st.get("origin") or {}).get("id"))
               and not (celeb and celeb in str(c.get("why") or ""))]
     st["screen_pick"] = {"chosen": chosen, "rejected": r.get("rejected") or []}
+    if len(chosen) < _material_n(st)[0] and len(known) > len(chosen) and not st["tries"].get("pick_more"):      # 모자라면 한 번 더 — 그래도 없으면 있는 것으로(장면 검수의 재료 더 찾기가 잇는다)
+        st["tries"]["pick_more"] = 1
+        return {"review": [_rv("screen_pick", _screen_pick_ask(st, st.get("screen_rows") or [], f"\n★지난 답은 {len(chosen)}개뿐이었다 — 쓸 수 있는 것을 더 골라라."),
+                               [_img(x) for x in st.get("_screen_sheets") or []][:_material_top(st)], need=("chosen",))], "then": "material_pick"}
     stills = {"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "images": [x for x in [(st.get("product") or {}).get("image")] if x], "n": 4}
     return {"do": [{"id": "dl", "cmd": "download", "items": [{"id": c["id"], "sections": c.get("sections") or []} for c in chosen]}, stills] if chosen else [stills],
             "then": "material_dl"}
