@@ -163,6 +163,7 @@ def test_기본은_PC_1대_두번째_기기_거절(env):
     """5판 사장님 결정: PC 1대만. 두 번째 기기는 거절, 첫 기기를 빼면 들어온다."""
     from shopping_shorts import claude_portal as cp
     assert cp.DEVICES_MAX == 1
+    env["monkeypatch"].setattr(cp, "ADMIN_DEVICES", 1)   # 시험 계정이 관리자라 회원 상한으로 잰다
     c = env["client"]
     k = _key(env)
     assert c.get("/api/claude/license", headers=_h(k, FP1, name="사무실")).json()["devices_max"] == 1
@@ -170,6 +171,12 @@ def test_기본은_PC_1대_두번째_기기_거절(env):
     assert r.status_code == 403 and r.json()["code"] == "device_limit"
     assert c.post("/api/claude/me/device/remove", json={"device_id": FP1[:12]}).json()["ok"]
     assert c.get("/api/claude/license", headers=_h(k, FP2)).json()["device"]["slot"] == 1
+
+
+def test_관리자는_기기_2대_회원은_1대(env, monkeypatch):
+    from shopping_shorts import app, claude_portal as cp
+    monkeypatch.setattr(app, "_is_admin", lambda cid: cid == 77)
+    assert cp.devices_max(77) == 2 and cp.devices_max(78) == 1
 
 
 def test_기기_3대째_거절(env, monkeypatch):
