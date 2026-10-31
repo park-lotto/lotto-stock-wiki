@@ -4118,7 +4118,9 @@ def s_product_done(st, m, rp, u):
 
 def s_research(st, m, rp, u, fail: str = ""):
     PR = st["product"]
-    ask = (RESEARCH_SHOP + "\n\n## 소재 영상\n제목: " + str(st["bench"].get("title")) + "\n받아쓰기: " + " / ".join(str(l.get("text")) for l in st.get("bench_lines") or [])[:3000] +
+    ask = (RESEARCH_SHOP + "
+
+" + ((_style(st["version"]).get("script") or {}).get("research") or "") + "\n\n## 소재 영상\n제목: " + str(st["bench"].get("title")) + "\n받아쓰기: " + " / ".join(str(l.get("text")) for l in st.get("bench_lines") or [])[:3000] +
            "\n\n## 제품\n" + json.dumps(PR, ensure_ascii=False) + "\n\n## 쿠팡 베스트 후기·네이버 글\n" + json.dumps(st.get("reviews") or [], ensure_ascii=False)[:5000] +
            (f"\n\n## 지난 답에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
     return {"review": [_rv("research", ask, [], need=("조사_md", "keywords", "queries"))], "then": "s_research_check",
