@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """숏클 결제 상품 표 _pay_products(관제 292) — 금액은 서버 표에서만, 11월 차액은 숏템 회원만."""
+import re
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -102,3 +104,18 @@ def test_맨위_숏클_출시_띠(client):
     for html in (appmod._with_pay(appmod._LANDING_HTML), client.get("/pricing").text):
         assert "__SHORTCL_BANNER__" not in html
         assert html.index("숏클메이커 출시") < html.index("<div class=nav>")
+
+
+def test_대문_상단_출시영역과_숏클_안내(client):
+    html = appmod._with_pay(appmod._LANDING_HTML)
+    assert "__SHORTCL_PRICES__" not in html and "__SHORTCL_FROM__" not in html
+    assert html.index("<div class=nav>") < html.index("class=sc-title") < html.index("<div class=hook>")
+    assert "기본반 990,000원부터" in html
+    assert "2,990,000원" in html and "Claude Max" in html
+    landing = Path(appmod.__file__).parent / "static" / "landing"
+    for name in re.findall(r"data-video=(sc_\w+)", html):
+        assert (landing / f"{name}.mp4").exists() and (landing / f"{name}.jpg").exists(), name
+    pricing = client.get("/pricing").text
+    assert "__PRO_PERIOD__" not in pricing and "숏클메이커는 무엇이 필요한가요?" in pricing
+    assert "이용기간: 라이선스 키 발급일" in client.get("/pay/toss?product=shortcl_basic").text
+    assert "이용기간: 라이선스 키 발급일" not in client.get("/pay/toss").text

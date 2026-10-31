@@ -304,6 +304,54 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 .dl.v2 .go{font-size:20px!important;padding:14px 26px!important}
 .dl.v2 .gauge{height:5px!important}
 @media(max-width:700px){.dl.v2 .in{padding:12px!important}.dl.v2 .dday{font-size:22px!important}.dl.v2 .cd b,.dl.v2 .cd{font-size:22px!important}.dl.v2 .go{font-size:15px!important;padding:9px 14px!important}}
+/* 숏클 출시(관제 292) — 금액은 서버가 채운다. 영상 = 유튜브 숏클 1편·고퀄 모션 조각 */
+.sc{--sc:#ff5a4f;padding:10px 0 20px}
+.sc-hook{text-align:center;padding:18px 0 30px}
+.sc-tag{display:inline-block;padding:7px 16px;border-radius:999px;background:var(--gold-grad);color:#2a1a00;font-size:clamp(13px,1.5vw,16px);font-weight:900;letter-spacing:.02em}
+.sc-title{font-family:'Black Han Sans',sans-serif;font-weight:400;font-size:clamp(46px,7.4vw,92px);line-height:1.12;color:#fff;margin:16px 0 8px}
+.sc-title em{display:inline-block;font-style:normal;color:#111;background:#ffd84d;line-height:1.08;padding:.12em .16em .03em;border-radius:.12em}
+.kw{display:inline-block;opacity:0;transform:translateY(.55em) scale(.86) rotate(-3deg);filter:blur(6px);animation:kwIn .62s cubic-bezier(.2,1.4,.4,1) forwards;animation-delay:calc(var(--i)*.13s)}
+@keyframes kwIn{to{opacity:1;transform:none;filter:blur(0)}}
+.sc-prompt{display:inline-flex;align-items:center;gap:10px;max-width:100%;margin:6px 0 20px;padding:12px 18px;border-radius:14px;background:#14191f;border:1px solid #2b3440;color:#dce7e4;font-size:clamp(14px,1.9vw,20px);font-weight:700;text-align:left}
+.sc-prompt i{font-style:normal;color:#ff8a5c}
+.sc-type{overflow:hidden;white-space:nowrap;border-right:2px solid #ffd84d;width:0;animation:scType 1.5s steps(17) .9s forwards,scCaret .8s step-end infinite}
+@keyframes scType{to{width:13.7em}}@keyframes scCaret{50%{border-color:transparent}}
+.sc-sub{font-size:clamp(17px,2.2vw,26px);font-weight:800;color:#e8f3ef;margin-bottom:22px}.sc-sub b{color:#ffd166}
+.sc-hv{position:relative;max-width:1180px;margin:0 auto;aspect-ratio:1280/627;border-radius:22px;overflow:hidden;border:1px solid var(--line);background:#05080b;box-shadow:0 30px 90px rgba(0,0,0,.55)}
+.sc-hv video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sc-go{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:14px;margin-top:24px}
+.sc-go .ghost{padding:18px 26px}
+.sc-trust{margin-top:12px;color:var(--muted);font-size:14px}
+.sc-sec{padding:64px 0 0}
+.sc-h{font-family:'Black Han Sans',sans-serif;font-weight:400;font-size:clamp(34px,5.4vw,66px);line-height:1.18;color:#fff;margin-bottom:12px}
+.sc-h em{font-style:normal;color:#ffd84d}.sc-h s{color:var(--sc);text-decoration-thickness:.07em}
+.sc-p{font-size:clamp(16px,1.8vw,20px);color:#c9d6d2;line-height:1.7}.sc-p b{color:#fff}
+.sc-center{text-align:center;max-width:900px;margin:0 auto 26px}
+.sc-row{display:grid;grid-template-columns:5fr 7fr;gap:36px;align-items:center}
+.sc-row.flip{grid-template-columns:7fr 5fr}.sc-row.flip .sc-txt{order:2}
+.sc-eyebrow{display:block;color:#ff8a5c;font-weight:900;font-size:14px;margin-bottom:8px;letter-spacing:.04em}
+.sc-clip{aspect-ratio:1280/627;box-shadow:0 18px 60px rgba(0,0,0,.45)}
+.sc-big{display:flex;gap:26px;flex-wrap:wrap;margin-top:18px}
+.sc-big div{font-family:'Black Han Sans',sans-serif;font-size:clamp(34px,4.4vw,54px);line-height:1;color:#ffd84d}
+.sc-big small{display:block;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;color:var(--muted);margin-top:8px}
+.sc-shots{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:1120px;margin:0 auto}
+.sc-shot{position:relative;aspect-ratio:9/16;border-radius:18px;overflow:hidden;background:#05080b;border:1px solid var(--line)}
+.sc-shot .ph{display:none}
+.sc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.sc-stat{text-align:center;padding:26px 10px;border-radius:18px;background:var(--panel);border:1px solid var(--line)}
+.sc-stat b{display:block;font-family:'Black Han Sans',sans-serif;font-weight:400;font-size:clamp(38px,5vw,62px);line-height:1;color:#ffd84d}
+.sc-stat span{display:block;margin-top:10px;color:var(--muted);font-size:14px;font-weight:700}
+.sc-prices{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.sc-price{display:block;padding:26px 24px;border-radius:20px;background:linear-gradient(160deg,#171c24,#10151c);border:1px solid var(--line);transition:border-color .2s,transform .2s}
+.sc-price:hover{border-color:var(--gold);transform:translateY(-4px)}
+.sc-price b{display:block;font-size:17px;color:var(--gold)}
+.sc-price>span{display:block;font-family:'Black Han Sans',sans-serif;font-size:clamp(28px,3.1vw,38px);margin:8px 0 14px;color:#fff}
+.sc-price ul{list-style:none}.sc-price li{font-size:14px;color:#c9d6d2;padding:3px 0}.sc-price li:before{content:'✓ ';color:var(--mint)}
+.sc-end{text-align:center;margin-top:26px}
+.sc-next{margin:70px 0 14px;padding-top:40px;border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:clamp(16px,1.9vw,21px);font-weight:800}
+.sc-next b{color:var(--mint)}
+@media(max-width:760px){.sc-row,.sc-row.flip{grid-template-columns:1fr;gap:18px}.sc-row.flip .sc-txt{order:0}.sc-shots,.sc-stats{grid-template-columns:1fr 1fr}.sc-prices{grid-template-columns:1fr}.sc-go .cta{width:100%}.sc-sec{padding-top:46px}}
+@media(prefers-reduced-motion:reduce){.kw{animation:none;opacity:1;transform:none;filter:none}.sc-type{animation:none;width:auto;border:0}}
 </style></head><body>__SHORTCL_BANNER__
 
 <!--DL--><div class="dl v2"><div class=in>
@@ -317,6 +365,60 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 <div class=nav>
 <a class=brand href="/">__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></a>
 <span style="display:flex;gap:6px;align-items:center"><a class=login href="/pricing">요금</a><a class="login go" href="/login">로그인</a></span></div>
+
+<section class=sc id=shortcl-launch>
+  <div class=sc-hook>
+    <span class=sc-tag>NEW · 숏클메이커 출시</span>
+    <h2 class=sc-title><span class=kw style="--i:0">말</span> <span class=kw style="--i:1">한</span> <span class=kw style="--i:2">줄이면,</span><br><span class=kw style="--i:4"><em>쇼츠</em></span> <span class=kw style="--i:5"><em>한 편.</em></span></h2>
+    <div class=sc-prompt><i>클로드 &gt;</i><span class=sc-type>이 스타일로 쇼츠 한 편 만들어줘</span></div>
+    <div class=sc-sub>개발하다 답답해서 직접 차린 <b>쇼츠 공장</b>, 이제 내 PC에서 돌립니다</div>
+    <div class=sc-hv><video src="/landing/sc_hero.mp4" poster="/landing/sc_hero.jpg" autoplay muted loop playsinline preload=auto></video></div>
+    <div class=sc-go><a class="cta big" href="/pricing#shortcl"><span class=bt>숏클메이커 시작하기 <i>→</i></span><span class=pr><b>기본반 __SHORTCL_FROM__부터</b></span></a><a class="cta ghost" href="#shortem">숏템메이커 보기 ↓</a></div>
+    <div class=sc-trust>Claude Max 구독(별도 결제) 필요 · 내 PC에 설치 · 원본 찾기부터 올리기까지</div>
+  </div>
+
+  <div class="sc-sec reveal"><div class=sc-row>
+    <div class=sc-txt><span class=sc-eyebrow>왜 만들었나</span><h3 class=sc-h>AI한테 말로 부탁하면<br><s>하루가 끝납니다</s></h3><p class=sc-p>"세 번째 자막 조금만 위로" 한마디에 왕복이 늘어나고, 어느새 처음부터 다시 설명하고 있습니다.</p></div>
+    <div class="vband sc-clip" data-video=sc_chat data-label="클로드 채팅 왕복"></div>
+  </div></div>
+
+  <div class="sc-sec reveal"><div class="sc-row flip">
+    <div class=sc-txt><span class=sc-eyebrow>원본 찾기 엔진</span><h3 class=sc-h>재편집본을 넣으면<br><em>원본</em>을 찾아옵니다</h3><p class=sc-p>AI가 장면을 읽고, 여러 곳을 뒤져, 눈으로 보고 판정합니다.</p>
+      <div class=sc-big><div>690만 회<small>넣은 재편집본</small></div><div>380만 회<small>찾아온 틱톡 원본</small></div><div>약 400초<small>걸린 시간</small></div></div></div>
+    <div class="vband sc-clip" data-video=sc_engine data-label="원본 찾기 엔진"></div>
+  </div></div>
+
+  <div class="sc-sec reveal"><div class=sc-row>
+    <div class=sc-txt><span class=sc-eyebrow>나만의 보물창고</span><h3 class=sc-h>찾은 원본은<br><em>버려지지 않습니다</em></h3><p class=sc-p>엔진이 돌수록 창고에 쌓이고, 만들고 싶을 때 언제든 꺼내 씁니다.</p></div>
+    <div class="vband sc-clip" data-video=sc_store data-label="나만의 보물창고"></div>
+  </div></div>
+
+  <div class="sc-sec reveal"><div class="sc-row flip">
+    <div class=sc-txt><span class=sc-eyebrow>진짜 딸깍</span><h3 class=sc-h>만드는 것도 한 줄,<br><em>고치는 것도 한 번</em></h3><p class=sc-p>완성본을 보면서 고칠 곳을 짚기만 하면 됩니다. 몇 번째 자막인지 말로 설명하지 않습니다.</p></div>
+    <div class="vband sc-clip" data-video=sc_fix data-label="보면서 고치기"></div>
+  </div></div>
+
+  <div class="sc-sec reveal"><div class=sc-center><span class=sc-eyebrow>프리셋</span><h3 class=sc-h>프리셋만 바꿔서 <em>8번</em> 돌렸습니다</h3><p class=sc-p>해외 화장품부터 썰 쇼핑까지, 터진 채널의 틀을 그대로 씁니다.</p></div>
+    <div class="vband sc-clip" data-video=sc_presets data-label="프리셋 시험" style="max-width:1120px"></div></div>
+
+  <div class="sc-sec reveal"><div class=sc-center><span class=sc-eyebrow>결과물</span><h3 class=sc-h>이렇게 <em>나옵니다</em></h3><p class=sc-p>숏클메이커로 실제로 만든 완성본입니다.</p></div>
+    <div class=sc-shots><div class=sc-shot data-video=sc_r1 data-label="결과물"></div><div class=sc-shot data-video=sc_r2 data-label="결과물"></div><div class=sc-shot data-video=sc_r3 data-label="결과물"></div><div class=sc-shot data-video=sc_r4 data-label="결과물"></div></div></div>
+
+  <div class="sc-sec reveal"><div class=sc-row>
+    <div class=sc-txt><span class=sc-eyebrow>올리기까지</span><h3 class=sc-h>원하는 시간에<br><em>올리는 것까지</em></h3><p class=sc-p>만들어 둔 영상을 시간표에 놓고, 링크 등록까지 이어집니다.</p></div>
+    <div class="vband sc-clip" data-video=sc_upload data-label="올리기"></div>
+  </div></div>
+
+  <div class="sc-sec reveal"><div class=sc-stats>
+    <div class=sc-stat><b>50</b><span>직접 돌리는 채널</span></div><div class=sc-stat><b>24</b><span>프리셋</span></div><div class=sc-stat><b>6</b><span>제작 형식</span></div><div class=sc-stat><b>348</b><span>창고의 원본 채널</span></div>
+  </div></div>
+
+  <div class=sc-sec><div class="sc-center reveal"><h3 class=sc-h>숏클메이커 <em>시작하기</em></h3><p class=sc-p>이용기간 12개월 · Claude Max 구독(별도 결제)이 필요합니다</p></div>
+    <div class=sc-prices>__SHORTCL_PRICES__</div>
+    <div class=sc-end><a class=cta href="/pricing#shortcl">반별 구성 자세히 보기 →</a></div></div>
+
+  <div class=sc-next id=shortem>웹에서 버튼으로 만들고 싶다면 → <b>숏템메이커</b></div>
+</section>
 
 <div class=hook>
   <h1 class="nobrain big">오늘 <em>뭘 만들지</em> 고민 끝.<small>매일 랭킹에 <b>100만뷰 쇼핑쇼츠</b>가 줄 서 있습니다 — 골라서 내 제품으로 만들기만 하세요</small></h1>

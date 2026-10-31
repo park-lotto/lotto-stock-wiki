@@ -14481,6 +14481,17 @@ def _shortcl_banner_html() -> str:
             '🎉 숏클메이커 출시 <span style="font-weight:600">· 내 PC에서 말 한 줄로 쇼츠 제작 · 자세히 보기 →</span></a>')
 
 
+def _shortcl_prices_html() -> str:
+    """대문 숏클 가격 카드 — 금액·구성은 _pay_products 표에서만 읽는다."""
+    out = ""
+    for p in _pay_products():
+        if p["kind"] == "shortcl":
+            lis = "".join(f"<li>{i}</li>" for i in p["includes"])
+            out += (f'<a class="sc-price reveal" href="/pricing#shortcl"><b>{p["label"]}</b>'
+                    f'<span>{p["amount"]:,}원</span><ul>{lis}</ul></a>')
+    return out
+
+
 def _shortcl_plans_html() -> str:
     """요금 화면의 숏클 3개 반 — 금액·구성은 _pay_products 표에서만 읽는다."""
     toss = _card_cta("", "")[0] == "/pay/toss"
@@ -14529,6 +14540,9 @@ def _with_pay(html: str) -> str:
     if "__SHORTCL_PLANS__" in html:
         html = html.replace("__SHORTCL_PLANS__", _shortcl_plans_html())
     html = html.replace("__SHORTCL_BANNER__", _shortcl_banner_html())
+    if "__SHORTCL_PRICES__" in html:
+        base = next(p for p in _pay_products() if p["kind"] == "shortcl")
+        html = html.replace("__SHORTCL_PRICES__", _shortcl_prices_html()).replace("__SHORTCL_FROM__", f'{base["amount"]:,}원')
     return (html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
                 .replace("__COHORT__", _toss_esc(c["cohort"])).replace("__NEXT_COHORT__", _toss_esc(c["next_cohort"]))
                 .replace("__PRO_NAME__", _toss_esc(name))
@@ -14984,6 +14998,9 @@ __SHORTCL_PLANS__
 <div class=qa><div class=q>무료 체험만 써도 되나요?</div><div class=a>네. 무료 회원은 레퍼런스 랭킹을 보실 수 있어요. 대본·장면·보이스·영상 제작은 이용권에서 쓰실 수 있습니다.</div></div>
 <div class=qa><div class=q>환불되나요?</div><div class=a>이용권은 결제 확인 즉시 열려 모든 기능(대본·보이스·영상 제작 등)을 바로 쓸 수 있는 디지털 콘텐츠라, <b>이용권이 열린 뒤에는 환불되지 않습니다.</b> 이용권이 열리기 전에는 전액 환불됩니다. 자세한 기준은 <a href="/refund" style="color:inherit">환불정책</a>을 확인해 주세요.</div></div>
 <div class=qa><div class=q>전자상거래법상 7일 안에는 환불되지 않나요?</div><div class=a>전자상거래법 제17조제2항제5호에 따라, 디지털 콘텐츠는 <b>제공이 시작된 뒤에는 7일 이내라도 청약철회가 제한</b>됩니다. 숏템메이커 이용권은 결제 확인과 동시에 제공이 시작되므로 7일 이내라도 환불되지 않습니다. 이 내용은 결제 전 요금·결제 페이지와 신청서의 동의 항목에서 미리 안내하고 동의를 받으며, 결제 전에 무료 회원으로 레퍼런스 랭킹을 먼저 써보실 수 있습니다.</div></div></div></div>
+<div class=qa><div class=q>숏클메이커는 무엇이 필요한가요?</div><div class=a>내 PC와 <b>Claude Max 구독(별도 결제)</b>이 필요합니다. PC 1대에 설치해 쓰며, 이용기간은 라이선스 키 발급일로부터 __PRO_PERIOD__입니다.</div></div>
+<div class=qa><div class=q>숏클메이커는 결제 후 어떻게 시작하나요?</div><div class=a>결제가 확인되면 한 분씩 연락드려 라이선스 키와 설치 방법을 안내해 드립니다.</div></div>
+<div class=qa><div class=q>숏클메이커도 환불되나요?</div><div class=a>라이선스 키·설치 파일이 제공되기 전에는 전액 환불됩니다. 제공된 뒤에는 환불되지 않습니다. 자세한 기준은 신청서의 환불 규정과 환불정책을 확인해 주세요.</div></div>
 <div class=band>
 <h2>무료로 레퍼런스 랭킹부터 둘러보세요</h2>
 <p>구글 계정이면 3초 · 카드 없이 시작. 궁금한 건 카톡으로.</p>
@@ -15449,7 +15466,7 @@ h1{font-size:20px;margin:0 0 4px;text-align:center}.sub{color:#8aa0a0;font-size:
 .home{display:block;text-align:center;color:#5f7373;font-size:12px;margin-top:16px;text-decoration:none}
 .empty{color:#c9a24b;text-align:center;font-size:13px;line-height:1.7;padding:8px 0}</style></head>
 <body><div class=box>
-<h1>💳 결제 안내</h1><div class=sub>__NAME__ 이용권 · 계좌입금</div>
+<h1>💳 결제 안내</h1><div class=sub>숏템메이커·숏클메이커 이용권 · 계좌입금</div>
 __BODY__
 <a class=home href="/">← 돌아가기</a>
 __BIZFOOT__
@@ -15612,9 +15629,10 @@ def _toss_order_name_amount():
 # 숏클메이커 반·금액·11월 차액(2026-11-01 사장님, 관제 292) — 화면·주문·입금 신고는 전부 _pay_products 만 읽는다.
 _SHORTCL_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfXnrij7pohkki2dY1df6ABWQEF6zBSao5mtx5rmnwJVqbYEg/viewform"
 _SHORTCL_PLANS = (
-    ("basic", "기본반", 990000, 110000, ("기본 강의",)),
-    ("advanced", "고급반", 1990000, 1110000, ("기본 강의", "고급 강의")),
-    ("premium", "프리미엄반", 2990000, 2110000, ("기본 강의", "고급 강의", "프리미엄 라운지", "1:1 피드백")),
+    ("basic", "기본반", 990000, 110000, ("프리셋 팩 5~10개 정기 업데이트", "기본 강의")),
+    ("advanced", "고급반", 1990000, 1110000, ("실제 엔진 제공", "어떤 채널이든 벤치마킹", "기본·고급 강의")),
+    ("premium", "프리미엄반", 2990000, 2110000, ("기초 세팅", "한 달 1:1 코칭", "주 2회 Zoom", "오프라인 특강 1회",
+                                                "프리미엄 라운지", "기본·고급 강의")),
 )
 _SHORTCL_UPGRADE_LAST_DAY = "2026-11-30"    # 한국 시각 이날까지만 차액 결제를 판다
 
@@ -15779,11 +15797,14 @@ def _toss_checkout(request: Request, product: str = ""):
     is_shortem = prod["kind"] == "shortem"
     form_title = f"{_cohort_info()['cohort']} 신청서" if is_shortem else "숏클메이커 신청서"
     form_seen_key = "apply_form_opened" if is_shortem else "shortcl_form_opened"
+    period_from = "결제(이용권 활성화)일" if is_shortem else "라이선스 키 발급일"
+    refund_line = ("결제 확인 즉시 이용권이 열리는 디지털 콘텐츠로, 이용권이 열린 뒤에는 7일 이내라도 환불되지 않음" if is_shortem
+                   else "라이선스 키·설치 파일이 제공된 뒤에는 7일 이내라도 환불되지 않음")
     shortcl_note = ("" if is_shortem else '<div class=p style="margin:-6px 0 12px;color:#ffcf6f"><b>'
                     "Claude Max 구독(별도 결제)이 필요합니다.</b> 내 PC에 설치해 쓰며, PC 1대에서 이용할 수 있습니다.</div>")
     body = f"""{badge}<h1>💳 {_toss_esc(name)}</h1>
 <div class=amt>{amount:,}원</div>
-<div class=p style="margin:-4px 0 12px">이용기간: 결제(이용권 활성화)일로부터 {_PRO_PERIOD}</div>
+<div class=p style="margin:-4px 0 12px">이용기간: {period_from}로부터 {_PRO_PERIOD}</div>
 {shortcl_note}<div style="border:1px solid #6ff0d6;border-radius:12px;padding:14px;margin:6px 0 16px;background:#0c1a17">
   <div style="font-weight:800;font-size:16px">① 신청서 작성 <span style="color:#ff8a8a">(필수)</span></div>
   <div class=p style="font-size:13px;margin:4px 0 10px">결제 전에 {_toss_esc(form_title)}를 먼저 제출해 주세요. 새 창에서 열립니다.</div>
@@ -15801,7 +15822,7 @@ def _toss_checkout(request: Request, product: str = ""):
   <input id=pa type=checkbox style="margin-top:3px">
   <span><a href="/refund" target="_blank" style="color:#6ff0d6">환불정책</a>과
   <a href="/terms" target="_blank" style="color:#6ff0d6">이용약관</a>을 확인했고 동의합니다.<br>
-  <b style="color:#ffcf6f">결제 확인 즉시 이용권이 열리는 디지털 콘텐츠로, 이용권이 열린 뒤에는 7일 이내라도 환불되지 않음</b>을 확인했습니다.<br><b style="color:#ffcf6f">업로드한 콘텐츠의 저작권·중복 콘텐츠 문제와 그로 인한 채널 제한·정지·삭제의 책임이 저에게 있음</b>을 확인했습니다.</span></label>
+  <b style="color:#ffcf6f">{refund_line}</b>을 확인했습니다.<br><b style="color:#ffcf6f">업로드한 콘텐츠의 저작권·중복 콘텐츠 문제와 그로 인한 채널 제한·정지·삭제의 책임이 저에게 있음</b>을 확인했습니다.</span></label>
 <input id=sg placeholder="서명 — 결제자 성함을 그대로 적어 주세요" maxlength=40 style="{inp};margin-top:10px">
 <button id=go>카드로 결제하기</button>
 <div class="p err" id=msg></div>
@@ -15945,9 +15966,11 @@ def _toss_success(paymentKey: str = "", orderId: str = "", amount: str = ""):
                               cooldown_sec=0, store=st)
     except Exception as e:      # noqa: BLE001 — 알림 실패가 결제 완료 화면을 막으면 안 된다
         print(f"[토스결제] 관리자 알림 실패(결제는 정상): {e!r}", file=sys.stderr)
+    next_step = ("<br>결제 확인 후 라이선스 키와 설치 방법을 연락드립니다."
+                 if str(d.get("orderName") or "").startswith("숏클메이커") else "")
     return _toss_page("결제 완료", f"""<h1>✅ 결제가 완료되었습니다</h1>
 <div class=amt>{amt:,}원</div>
-<div class=p>{_toss_esc(d.get('orderName'))}<br>결제수단 {_toss_esc(d.get('method'))}<br>
+<div class=p>{_toss_esc(d.get('orderName'))}{next_step}<br>결제수단 {_toss_esc(d.get('method'))}<br>
 주문번호 <code>{_toss_esc(orderId)}</code></div>
 <a class=btn href="/">처음 화면으로 돌아가기</a>""")
 
@@ -16074,7 +16097,7 @@ def _legal_page(path: str, title: str, body: str) -> str:
 _TERMS_BODY = f"""
 <p>본 약관은 {_BRAND['name']}(이하 "회사")가 제공하는 AI 쇼츠 제작 서비스(이하 "서비스")의 이용조건과 절차, 회사와 이용자의 권리·의무를 규정합니다.</p>
 <h2>제1조 (서비스 내용)</h2>
-<p>회사는 이용자가 업로드·선택한 소재를 바탕으로 AI가 대본·음성·영상을 생성·편집하는 온라인 이용권 서비스를 제공합니다. 서비스는 이용권(크레딧)에 따라 렌즈·제작(렌더) 등 기능 이용량이 정해집니다.</p>
+<p>회사는 이용자가 업로드·선택한 소재를 바탕으로 AI가 대본·음성·영상을 생성·편집하는 온라인 이용권 서비스를 제공합니다. 서비스는 이용권(크레딧)에 따라 렌즈·제작(렌더) 등 기능 이용량이 정해집니다. 숏클메이커는 이용자의 PC에 설치해 Claude Max 구독과 함께 쓰는 프로그램이며, 구매한 과정(기본반·고급반·프리미엄반)에 따라 제공 내용이 정해집니다.</p>
 <h2>제2조 (이용계약의 성립)</h2>
 <p>이용계약은 이용자가 구글 계정 등으로 가입하고 회사가 이를 승인함으로써 성립합니다. 회사는 운영상·기술상 필요에 따라 가입 승인을 보류하거나 이용을 제한할 수 있습니다.</p>
 <h2>제3조 (이용권과 결제)</h2>
