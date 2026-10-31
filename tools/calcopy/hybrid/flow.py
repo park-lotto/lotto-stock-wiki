@@ -2653,6 +2653,7 @@ def ph_check_got(st, m, rp, u):
     else:
         st["auto"] = c.get("auto") or {"ok": False, "rows": [{"group": "표식", "what": "관문 결과 없음", "ok": False, "value": ""}]}
     st["eye_pack"] = c.get("eye_files") or []
+    st.pop("look_left", None)             # 새 검사 = 새 판정 — 앞 편의 '남은 눈 지적'을 완성 허가로 물려주지 않는다
     if not st["auto"].get("ok"):          # 1단이 ×면 눈 검수는 하지 않는다(표준 §5-2 '1단 통과 뒤') — 바로 고치기 판정으로
         st["look"] = {"ok": False, "problems": ["1단 자동 관문 미통과 — 눈 검수 생략"], "skipped": True}
         return {"goto": "check_judge"}
@@ -3043,15 +3044,20 @@ def ph_deliver(st, m, rp, u):
     return {"do": [{"id": "final", "cmd": "finish", "version": st["version"], "title": script_view(st)["title"]}], "then": "finished"}
 
 
+def finish_passed(st) -> bool:
+    """(판단 주인 — 완성본을 내도 되나) 자동 관문 통과 + 눈 통과 또는 눈 한도까지 고치고 지적을 회원에게 알린 편(look_left, ph_check_judge)."""
+    return bool((st.get("auto") or {}).get("ok") and ((st.get("look") or {}).get("ok") or st.get("look_left")))
+
+
 def ph_finished(st, m, rp, u):
     f = m.get("final") or {}
     if not f.get("video"):
         raise _Stop("완성본 파일을 찾지 못했어요", "다시 시도해 주시면 이어 갈게요", auto=True)
     asr_single = not ((st.get("env") or {}).get("keys") or {}).get("speechmatics")
-    if not ((st.get("auto") or {}).get("ok") and (st.get("look") or {}).get("ok")):     # 관문 2단을 안 거친 완성본은 내지 않는다(표준 §5 — 다른 길로 deliver 에 와도)
+    if not finish_passed(st):     # 관문 2단을 안 거친 완성본은 내지 않는다(표준 §5 — 다른 길로 deliver 에 와도)
         raise _Stop("완성본 마무리 확인을 아직 통과하지 않았어요", "다시 시도해 주시면 확인부터 다시 할게요", retry="check", detail=_check_fails(st))
     return {"done": {"video": f["video"], "title": script_view(st)["title"], "auto_ok": bool((st.get("auto") or {}).get("ok")),
-                     "look_ok": bool((st.get("look") or {}).get("ok")), "gate": (st.get("auto") or {}).get("report"), "asr_single": asr_single,
+                     "look_ok": bool((st.get("look") or {}).get("ok")), "look_left": st.get("look_left") or [], "gate": (st.get("auto") or {}).get("report"), "asr_single": asr_single,
                      "note": "귀 확인 없음(스피치매틱스 키 없음 — 위스퍼와 눈으로만 대조)" if asr_single else ""}}
 
 
