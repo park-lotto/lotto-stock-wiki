@@ -14470,7 +14470,47 @@ def _dl_blocks(html: str, has_deadline: bool) -> str:
 @app.get("/api/pricing")
 def api_pricing():
     """공개 — 정적 화면(설정·사이드바·안내·챌린지)이 기수·가격을 여기서 받는다. 판단은 _cohort_info 한 곳."""
-    return _cohort_info()
+    return {**_cohort_info(), "shortcl_upgrade_open": _shortcl_upgrade_open()}
+
+
+def _shortcl_banner_html() -> str:
+    """대문·요금 화면 맨 위 '숏클 출시' 띠(사장님 11-01) — 문구·목적지는 여기 한 곳."""
+    return ('<a href="/pricing#shortcl" style="display:block;text-align:center;text-decoration:none;'
+            'background:linear-gradient(90deg,#f0a53a,#ffd27a);color:#1a1206;font-weight:800;font-size:15px;'
+            'line-height:1.4;padding:11px 16px;font-family:\'Noto Sans KR\',sans-serif">'
+            '🎉 숏클메이커 출시 <span style="font-weight:600">· 내 PC에서 말 한 줄로 쇼츠 제작 · 자세히 보기 →</span></a>')
+
+
+def _shortcl_prices_html() -> str:
+    """대문 숏클 가격 카드 — 금액·구성은 _pay_products 표에서만 읽는다."""
+    out = ""
+    for p in _pay_products():
+        if p["kind"] == "shortcl":
+            lis = "".join(f"<li>{i}</li>" for i in p["includes"])
+            out += (f'<a class="sc-price reveal" href="/pricing#shortcl"><b>{p["label"]}</b>'
+                    f'<span>{p["amount"]:,}원</span><ul>{lis}</ul></a>')
+    return out
+
+
+def _shortcl_plans_html() -> str:
+    """요금 화면의 숏클 3개 반 — 금액·구성은 _pay_products 표에서만 읽는다."""
+    toss = _card_cta("", "")[0] == "/pay/toss"
+    plans, gaps = "", ""
+    for p in _pay_products():
+        if p["kind"] == "shortcl":
+            lis = "".join(f'<li><span class=c>✓</span> {i}</li>' for i in p["includes"])
+            href = _pay_href(p) if toss else "/pay"
+            plans += (f'<div class=plan><div class="pt pro-t">{p["label"]}</div>'
+                      f'<div class=price>{p["amount"]:,}<small>원</small></div>'
+                      f'<div class=pd>이용기간 {_PRO_PERIOD}</div><ul>{lis}</ul>'
+                      f'<a class="btn kko" href="{href}">결제하기</a></div>')
+        elif p["kind"] == "upgrade":
+            href = _pay_href(p) if toss else "/pay"
+            gaps += f'<a href="{href}" style="color:var(--mint);margin:0 8px">{p["label"]} {p["amount"]:,}원</a>'
+    if gaps:
+        gaps = f'<div class=lead style="margin-top:14px">숏템 이용권 회원 11월 차액: {gaps}</div>'
+    return ('<div class=sec><h2>숏클메이커</h2><div class=lead>내 PC에서 말 한 줄로 만드는 프로그램 · Claude Max 구독(별도 결제) 필요</div>'
+            f'<div class="plans three">{plans}</div>{gaps}</div>')
 
 
 def _with_pay(html: str) -> str:
@@ -14497,6 +14537,12 @@ def _with_pay(html: str) -> str:
     next_price, list_price = c["next_price"], c["list_price"]
     discount = max(0, round((1 - amount / list_price) * 100)) if list_price > amount else 0
     html = _dl_blocks(html, bool(dl_iso))
+    if "__SHORTCL_PLANS__" in html:
+        html = html.replace("__SHORTCL_PLANS__", _shortcl_plans_html())
+    html = html.replace("__SHORTCL_BANNER__", _shortcl_banner_html())
+    if "__SHORTCL_PRICES__" in html:
+        base = next(p for p in _pay_products() if p["kind"] == "shortcl")
+        html = html.replace("__SHORTCL_PRICES__", _shortcl_prices_html()).replace("__SHORTCL_FROM__", f'{base["amount"]:,}원')
     return (html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
                 .replace("__COHORT__", _toss_esc(c["cohort"])).replace("__NEXT_COHORT__", _toss_esc(c["next_cohort"]))
                 .replace("__PRO_NAME__", _toss_esc(name))
@@ -14882,6 +14928,7 @@ a{text-decoration:none;color:inherit}
 .plan .price{font-family:'Black Han Sans',sans-serif;font-size:38px;margin:10px 0 4px}
 .plan.pro .price{background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 .plan .price small{font-size:15px;color:var(--muted);font-family:'Noto Sans KR'}
+.plans.three{grid-template-columns:repeat(3,1fr);max-width:960px}
 .plan .pd{color:var(--faint);font-size:13px;margin-bottom:18px}
 .plan ul{list-style:none;display:flex;flex-direction:column;gap:9px;margin-bottom:22px}
 .plan li{font-size:14px;color:var(--txt);display:flex;gap:9px}.plan li .c{color:var(--mint);flex:none}
@@ -14902,11 +14949,18 @@ a{text-decoration:none;color:inherit}
 .band h2{font-size:clamp(23px,3.2vw,29px);font-weight:900;margin-bottom:10px}.band p{color:var(--muted);margin-bottom:24px}
 .tbd{color:var(--faint);font-size:12px;margin-top:14px}
 .foot{text-align:center;color:var(--faint);font-size:12.5px;padding:0 0 42px}
-@media(max-width:760px){.plans,.incl,.revs{grid-template-columns:1fr}}
-</style></head><body><div class=wrap>
+@media(max-width:760px){.plans,.plans.three,.incl,.revs{grid-template-columns:1fr}}
+.ptabs{display:flex;justify-content:center;gap:8px;margin:6px 0 10px}
+.ptabs a{padding:11px 24px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-weight:800;font-size:15px}
+html:not(.sc) .ptabs a[data-t=shortem],html.sc .ptabs a[data-t=shortcl]{background:var(--gold-grad);color:#3a2600;border-color:transparent}
+.pv[data-pv=shortcl]{display:none}html.sc .pv[data-pv=shortcl]{display:block}html.sc .pv[data-pv=shortem]{display:none}
+</style><script>if(location.hash==='#shortcl')document.documentElement.classList.add('sc');
+addEventListener('hashchange',function(){document.documentElement.classList.toggle('sc',location.hash==='#shortcl');scrollTo(0,0)});</script></head><body>__SHORTCL_BANNER__<div class=wrap>
 <div class=nav>
 <a class=brand href="/">__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></a>
 <a class="top" href="/login">로그인</a></div>
+<div class=ptabs><a href="#shortem" data-t=shortem>숏템메이커</a><a href="#shortcl" data-t=shortcl>숏클메이커</a></div>
+<div class=pv data-pv=shortem>
 <div class=hero>
 <div class=eyebrow>요금 · 이용권</div>
 <h1 class=display>필요한 만큼만,<br>부담 없이 시작하세요</h1>
@@ -14950,12 +15004,18 @@ a{text-decoration:none;color:inherit}
 <div class=qa><div class=q>무료 체험만 써도 되나요?</div><div class=a>네. 무료 회원은 레퍼런스 랭킹을 보실 수 있어요. 대본·장면·보이스·영상 제작은 이용권에서 쓰실 수 있습니다.</div></div>
 <div class=qa><div class=q>환불되나요?</div><div class=a>이용권은 결제 확인 즉시 열려 모든 기능(대본·보이스·영상 제작 등)을 바로 쓸 수 있는 디지털 콘텐츠라, <b>이용권이 열린 뒤에는 환불되지 않습니다.</b> 이용권이 열리기 전에는 전액 환불됩니다. 자세한 기준은 <a href="/refund" style="color:inherit">환불정책</a>을 확인해 주세요.</div></div>
 <div class=qa><div class=q>전자상거래법상 7일 안에는 환불되지 않나요?</div><div class=a>전자상거래법 제17조제2항제5호에 따라, 디지털 콘텐츠는 <b>제공이 시작된 뒤에는 7일 이내라도 청약철회가 제한</b>됩니다. 숏템메이커 이용권은 결제 확인과 동시에 제공이 시작되므로 7일 이내라도 환불되지 않습니다. 이 내용은 결제 전 요금·결제 페이지와 신청서의 동의 항목에서 미리 안내하고 동의를 받으며, 결제 전에 무료 회원으로 레퍼런스 랭킹을 먼저 써보실 수 있습니다.</div></div></div></div>
-<div class=band>
-<h2>무료로 레퍼런스 랭킹부터 둘러보세요</h2>
-<p>구글 계정이면 3초 · 카드 없이 시작. 궁금한 건 카톡으로.</p>
-<div class=row>
-<a class="btn pri" href="/login">무료로 시작하기 →</a>
-<a class="btn kko" href="__PAY_HREF__" target="_blank" rel="noopener">__PAY_LABEL__</a></div></div>
+</div>
+<div class=pv data-pv=shortcl id=shortcl>
+__SHORTCL_PLANS__
+<div class=sec>
+<h2>자주 묻는 질문</h2>
+<div class=lead>숏클메이커</div>
+<div class=faq>
+<div class=qa><div class=q>숏클메이커는 무엇이 필요한가요?</div><div class=a>내 PC와 <b>Claude Max 구독(별도 결제)</b>이 필요합니다. PC 1대에 설치해 쓰며, 이용기간은 라이선스 키 발급일로부터 __PRO_PERIOD__입니다.</div></div>
+<div class=qa><div class=q>숏클메이커는 결제 후 어떻게 시작하나요?</div><div class=a>결제가 확인되면 한 분씩 연락드려 라이선스 키와 설치 방법을 안내해 드립니다.</div></div>
+<div class=qa><div class=q>숏클메이커도 환불되나요?</div><div class=a>라이선스 키·설치 파일이 제공되기 전에는 전액 환불됩니다. 제공된 뒤에는 환불되지 않습니다. 자세한 기준은 신청서의 환불 규정과 환불정책을 확인해 주세요.</div></div>
+<div class=qa><div class=q>숏템메이커 회원은 어떻게 옮기나요?</div><div class=a>11월 30일까지는 위에 적힌 차액만 내고 옮길 수 있습니다. 숏템메이커 계정으로 로그인한 뒤 결제해 주세요.</div></div>
+</div></div></div>
 <div class=foot>© __NAME__ · 요금·이용권 안내__LEGAL____BIZFOOT__</div>
 </div></body></html>"""
 
@@ -15415,7 +15475,7 @@ h1{font-size:20px;margin:0 0 4px;text-align:center}.sub{color:#8aa0a0;font-size:
 .home{display:block;text-align:center;color:#5f7373;font-size:12px;margin-top:16px;text-decoration:none}
 .empty{color:#c9a24b;text-align:center;font-size:13px;line-height:1.7;padding:8px 0}</style></head>
 <body><div class=box>
-<h1>💳 결제 안내</h1><div class=sub>__NAME__ 이용권 · 계좌입금</div>
+<h1>💳 결제 안내</h1><div class=sub>숏템메이커·숏클메이커 이용권 · 계좌입금</div>
 __BODY__
 <a class=home href="/">← 돌아가기</a>
 __BIZFOOT__
@@ -15449,7 +15509,10 @@ def _deposit_body():
     note_html = (f'<div class=note>{_h.escape(note)}</div>' if note else
                  '<div class=note>입금 금액·이용권은 아래로 <b>문의</b>해 주세요.<br>'
                  '입금 후 <b>입금자명</b>을 알려주시면 <b>바로 이용권을 열어드려요.</b></div>')
-    return card + rows + note_html + _DEPOSIT_CLAIM_HTML + _deposit_contact(kakao, phone)
+    options = "".join(f'<option value="{_h.escape(p["code"])}">{_h.escape(p["name"])} · {p["amount"]:,}원</option>'
+                      for p in _pay_products())
+    return (card + rows + note_html + _DEPOSIT_CLAIM_HTML.replace("__PRODUCT_OPTIONS__", options)
+            + _deposit_contact(kakao, phone))
 
 
 def _deposit_card_html():
@@ -15464,10 +15527,22 @@ def _deposit_card_html():
     if not pay:
         return ""
     tag = (" (테스트)" if pay == "/pay/toss" and ck.startswith("test_") else "")
-    return ('<a href="' + pay + '" style="display:block;text-align:center;text-decoration:none;'
-            'background:linear-gradient(135deg,#ffd27a,#f0a53a);color:#1a1206;border-radius:12px;'
-            'padding:15px;font-size:16px;font-weight:800;margin-bottom:10px">💳 카드로 결제하기' + tag + '</a>'
-            '<div style="text-align:center;color:#6f8583;font-size:13px;margin:6px 0 14px">또는 계좌이체</div>')
+    def btn(href, text):
+        return ('<a href="' + href + '" style="display:block;text-align:center;text-decoration:none;'
+                'background:linear-gradient(135deg,#ffd27a,#f0a53a);color:#1a1206;border-radius:12px;'
+                'padding:15px;font-size:16px;font-weight:800;margin-bottom:10px">' + text + tag + '</a>')
+    if pay != "/pay/toss":      # 외부 카드 링크는 숏템 전용 — 숏클은 계좌이체로 받는다
+        buttons = btn(pay, "💳 카드로 결제하기")
+    else:
+        products = _pay_products()
+        buttons = "".join(btn(_pay_href(p), f'💳 {_toss_esc(p["name"])} · {p["amount"]:,}원')
+                          for p in products if p["kind"] != "upgrade")
+        ups = [p for p in products if p["kind"] == "upgrade"]
+        if ups:
+            buttons += ('<div style="margin:14px 0 8px;font-size:13px;font-weight:700;color:#ffcf6f">'
+                        '숏템 이용권 회원 11월 차액 결제</div>')
+            buttons += "".join(btn(_pay_href(p), f'⬆ 숏클 {_toss_esc(p["label"])} · {p["amount"]:,}원') for p in ups)
+    return buttons + '<div style="text-align:center;color:#6f8583;font-size:13px;margin:6px 0 14px">또는 계좌이체</div>'
 
 
 # '입금 완료했습니다' — 고객이 직접 알리는 창구(2026-08-23).
@@ -15479,6 +15554,8 @@ _DEPOSIT_CLAIM_HTML = """
     border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
     ✅ 입금 완료했습니다</button>
   <div id=dcForm style="display:none;margin-top:10px">
+    <select id=dcProduct style="width:100%;margin-bottom:7px;padding:12px;border-radius:10px;
+      border:1px solid #1e2b2c;background:#0a1113;color:#e8f0ee;font-size:14px;font-family:inherit">__PRODUCT_OPTIONS__</select>
     <input id=dcName placeholder="성함" maxlength=40 style="width:100%;margin-bottom:7px;padding:12px;
       border-radius:10px;border:1px solid #1e2b2c;background:#0a1113;color:#e8f0ee;font-size:14px;font-family:inherit">
     <input id=dcWho placeholder="입금자명 (통장에 찍힌 이름)" maxlength=40 style="width:100%;margin-bottom:7px;padding:12px;
@@ -15503,7 +15580,7 @@ _DEPOSIT_CLAIM_HTML = """
     if(!g('dcName')||!g('dcWho')){ m.textContent='성함과 입금자명을 입력해 주세요.'; m.style.color='#e0a34b'; return; }
     busy=true; s.disabled=true; s.textContent='보내는 중…';
     fetch('/api/deposit_claim',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({name:g('dcName'),depositor:g('dcWho'),contact:g('dcContact')})})
+      body:JSON.stringify({name:g('dcName'),depositor:g('dcWho'),contact:g('dcContact'),product:g('dcProduct')})})
       .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
       .then(function(res){
         if(!res.ok) throw new Error(res.d&&res.d.error?res.d.error:'전송에 실패했어요');
@@ -15558,6 +15635,114 @@ def _toss_order_name_amount():
     return c["name"], c["amount"]
 
 
+# 숏클메이커 반·금액·11월 차액(2026-11-01 사장님, 관제 292) — 화면·주문·입금 신고는 전부 _pay_products 만 읽는다.
+_SHORTCL_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfXnrij7pohkki2dY1df6ABWQEF6zBSao5mtx5rmnwJVqbYEg/viewform"
+_SHORTCL_PLANS = (
+    ("basic", "기본반", 990000, 110000, ("프리셋 팩 5~10개 정기 업데이트", "기본 강의")),
+    ("advanced", "고급반", 1990000, 1110000, ("실제 엔진 제공", "어떤 채널이든 벤치마킹", "기본·고급 강의")),
+    ("premium", "프리미엄반", 2990000, 2110000, ("기초 세팅", "한 달 1:1 코칭", "주 2회 Zoom", "오프라인 특강 1회",
+                                                "프리미엄 라운지", "기본·고급 강의")),
+)
+_SHORTCL_UPGRADE_LAST_DAY = "2026-11-30"    # 한국 시각 이날까지만 차액 결제를 판다
+
+
+def _shortcl_upgrade_open(now=None) -> bool:
+    kst = (now or datetime.now(timezone.utc)).astimezone(timezone(timedelta(hours=9)))
+    return kst.strftime("%Y-%m-%d") <= _SHORTCL_UPGRADE_LAST_DAY
+
+
+def _pay_products(now=None) -> list:
+    """결제 상품 표의 **주인**(0순위-B). 금액은 언제나 여기서 나오고 브라우저 값을 받지 않는다."""
+    c = _cohort_info()
+    items = [{"code": "shortem", "kind": "shortem", "name": c["name"], "label": c["name"],
+              "amount": c["amount"], "includes": ()}]
+    for key, label, amount, _gap, includes in _SHORTCL_PLANS:
+        items.append({"code": f"shortcl_{key}", "kind": "shortcl", "name": f"숏클메이커 {label}",
+                      "label": label, "amount": amount, "includes": includes})
+    if _shortcl_upgrade_open(now):
+        for key, label, _amount, gap, includes in _SHORTCL_PLANS:
+            items.append({"code": f"shortcl_{key}_upgrade", "kind": "upgrade",
+                          "name": f"숏클메이커 {label} 숏템 회원 업그레이드", "label": label,
+                          "amount": gap, "includes": includes})
+    return items
+
+
+def _pay_product(code="", now=None):
+    code = (code or "shortem").strip()
+    return next((p for p in _pay_products(now) if p["code"] == code), None)
+
+
+def _pay_form_url(product) -> str:
+    key, default = (("apply_form_url", _APPLY_FORM_URL) if product["kind"] == "shortem"
+                    else ("shortcl_form_url", _SHORTCL_FORM_URL))
+    return (Store(DB_PATH).get_setting(key, "") or default).strip()
+
+
+def _pay_href(product) -> str:
+    return "/pay/toss" if product["kind"] == "shortem" else f"/pay/toss?product={product['code']}"
+
+
+def _pay_ledger() -> list:
+    """관리자 결제 목록의 주인 — 카드 결제 + 입금 신고. 숏템에 가입하지 않은 결제자도 결제 정보로 나온다."""
+    def row(at, name, amount, method, status, payer, phone, email, cid):
+        plan = next((p[1] for p in _SHORTCL_PLANS if name.startswith(f"숏클메이커 {p[1]}")), "")
+        return {"at": at or "", "group": "숏클" if plan else "숏템", "plan": plan, "upgrade": "업그레이드" in name,
+                "name": name, "amount": amount, "method": method, "status": status, "payer": payer or "",
+                "phone": phone or "", "email": email or "", "customer_id": cid}
+    st = _toss_db()
+    with st._conn() as c:
+        cards = c.execute("SELECT approved_at, order_name, amount, payer_name, payer_phone, payer_email, customer_id "
+                          "FROM toss_payments WHERE status='DONE'").fetchall()
+    items = [row(a, n or "", amt, "카드", "결제 완료", pn, pp, pe, cid) for a, n, amt, pn, pp, pe, cid in cards]
+    amounts = {p["name"]: p["amount"] for p in _pay_products()}
+    for cl in st.list_deposit_claims(only_open=False):
+        name = cl["product"] or _cohort_info()["name"]
+        contact = cl["contact"] or ""
+        items.append(row(cl["created_at"], name, amounts.get(name), "계좌이체", "확인함" if cl["done"] else "입금 신고",
+                         cl["name"], "" if "@" in contact else contact, contact if "@" in contact else "", None))
+    def when(it):       # 카드(+09:00)·입금 신고(UTC) 시각 표기가 달라 글자 순서로는 어긋난다
+        try:
+            return datetime.fromisoformat(it["at"]).timestamp()
+        except ValueError:
+            return 0
+    return sorted(items, key=when, reverse=True)
+
+
+def _shortcl_badges(ledger, customers) -> dict:
+    """계정이 있는 숏클 결제자 표시 — 계정번호·이메일·연락처로 맞춘다. {customer_id: 반}"""
+    digits = lambda v: re.sub(r"\D", "", v or "")
+    by_cid, by_mail, by_phone = {}, {}, {}
+    for it in reversed(ledger):
+        if it["group"] != "숏클":
+            continue
+        if it["customer_id"] not in (None, ""):
+            by_cid[str(it["customer_id"])] = it["plan"]
+        if it["email"]:
+            by_mail[it["email"].lower()] = it["plan"]
+        if digits(it["phone"]):
+            by_phone[digits(it["phone"])] = it["plan"]
+    out = {}
+    for cu in customers:
+        plan = (by_cid.get(str(cu["id"])) or by_mail.get((cu.get("email") or "").lower())
+                or by_phone.get(digits(cu.get("phone"))))
+        if plan:
+            out[cu["id"]] = plan
+    return out
+
+
+def _upgrade_gate(request):
+    """차액 결제 자격 — (customer_id, "") 또는 (None, "login"|"not_member"). 판단은 여기 한 곳."""
+    cid = _verify_session(request.cookies.get("dash_auth", ""))
+    if cid is None:
+        return None, "login"
+    if _as_cid(cid) == 0:
+        return cid, ""
+    cust = Store(DB_PATH).get_customer(cid)
+    if cust and cust.get("plan") == "pro" and access_level(cid, cust=cust) == "full":
+        return cid, ""
+    return None, "not_member"
+
+
 def _toss_db():
     st = Store(DB_PATH)
     with st._conn() as c:
@@ -15567,7 +15752,7 @@ def _toss_db():
                         raw TEXT, created_at TEXT, updated_at TEXT)""")
         # 결제자 정보(2026-09-15) — 회원가입 전 결제라 누가 냈는지 여기만 안다. 옛 표에 컬럼을 더한다.
         cols = {r[1] for r in c.execute("PRAGMA table_info(toss_payments)")}
-        for col in ("payer_name", "payer_phone", "payer_email"):
+        for col in ("payer_name", "payer_phone", "payer_email", "product", "customer_id"):
             if col not in cols:
                 c.execute(f"ALTER TABLE toss_payments ADD COLUMN {col} TEXT")
     return st
@@ -15628,7 +15813,7 @@ def _landing_hits():
 
 
 @app.get("/pay/toss", response_class=HTMLResponse)
-def _toss_checkout(request: Request):
+def _toss_checkout(request: Request, product: str = ""):
     """결제자 정보 → 주문 생성(POST) → 토스 결제창 (2026-09-15 사장님 "결제자 정보를 입력하게 하고
     결제해야 된다. 회원가입 전이면 알 수가 없다 / 신청폼 작성 후 결제").
 
@@ -15641,7 +15826,22 @@ def _toss_checkout(request: Request):
         return HTMLResponse(_toss_page("결제 준비 중", "<h1>카드결제 준비 중</h1>"
                                        "<div class=p>결제 설정이 아직 끝나지 않았습니다.</div>"),
                             status_code=503)
-    name, amount = _toss_order_name_amount()
+    prod = _pay_product(product)
+    if not prod:
+        return HTMLResponse(_toss_page("결제 상품 없음", "<h1 class=err>지금 결제할 수 없는 상품입니다</h1>"
+                                       '<a class=btn href="/pay">결제 안내로 가기</a>'), status_code=404)
+    if prod["kind"] == "upgrade":
+        _gate = _upgrade_gate(request)[1]
+        if _gate == "login":
+            return HTMLResponse(_toss_page("로그인 필요", "<h1>숏템메이커 계정으로 로그인해 주세요</h1>"
+                                           "<div class=p>차액 결제는 숏템메이커 이용권 회원만 할 수 있습니다. 로그인한 뒤 마이페이지 맨 위의 "
+                                           "[숏클메이커 보기]를 누르면 이어서 결제할 수 있습니다.</div>"
+                                           '<a class=btn href="/login">로그인</a>'), status_code=401)
+        if _gate:
+            return HTMLResponse(_toss_page("회원 전용", "<h1>숏템메이커 이용권 회원 전용 상품입니다</h1>"
+                                           "<div class=p>이 계정은 이용권 회원이 아닙니다.</div>"
+                                           '<a class=btn href="/pay">결제 안내로 가기</a>'), status_code=403)
+    name, amount = prod["name"], prod["amount"]
     base = str(request.base_url).rstrip("/")
     if request.headers.get("x-forwarded-proto") == "https" and base.startswith("http://"):
         base = "https://" + base[len("http://"):]
@@ -15651,13 +15851,21 @@ def _toss_checkout(request: Request):
            "border:1px solid #1f3a33;background:#0a1113;color:#e8f3ef;font-size:15px;font-family:inherit")
     # ★신청서(구글폼) 먼저 — 사장님 2026-09-15 "신청할 때 신청폼 반드시 쓸 수 있게".
     #   폼 제출 여부는 구글 쪽이라 서버가 확인할 수 없다 → 폼 링크를 눌러야 체크칸이 열리고, 체크해야 결제된다.
-    form_url = (Store(DB_PATH).get_setting("apply_form_url", "") or _APPLY_FORM_URL).strip()
+    form_url = _pay_form_url(prod)
+    is_shortem = prod["kind"] == "shortem"
+    form_title = f"{_cohort_info()['cohort']} 신청서" if is_shortem else "숏클메이커 신청서"
+    form_seen_key = "apply_form_opened" if is_shortem else "shortcl_form_opened"
+    period_from = "결제(이용권 활성화)일" if is_shortem else "라이선스 키 발급일"
+    refund_line = ("결제 확인 즉시 이용권이 열리는 디지털 콘텐츠로, 이용권이 열린 뒤에는 7일 이내라도 환불되지 않음" if is_shortem
+                   else "라이선스 키·설치 파일이 제공된 뒤에는 7일 이내라도 환불되지 않음")
+    shortcl_note = ("" if is_shortem else '<div class=p style="margin:-6px 0 12px;color:#ffcf6f"><b>'
+                    "Claude Max 구독(별도 결제)이 필요합니다.</b> 내 PC에 설치해 쓰며, PC 1대에서 이용할 수 있습니다.</div>")
     body = f"""{badge}<h1>💳 {_toss_esc(name)}</h1>
 <div class=amt>{amount:,}원</div>
-<div class=p style="margin:-4px 0 12px">이용기간: 결제(이용권 활성화)일로부터 {_PRO_PERIOD}</div>
-<div style="border:1px solid #6ff0d6;border-radius:12px;padding:14px;margin:6px 0 16px;background:#0c1a17">
+<div class=p style="margin:-4px 0 12px">이용기간: {period_from}로부터 {_PRO_PERIOD}</div>
+{shortcl_note}<div style="border:1px solid #6ff0d6;border-radius:12px;padding:14px;margin:6px 0 16px;background:#0c1a17">
   <div style="font-weight:800;font-size:16px">① 신청서 작성 <span style="color:#ff8a8a">(필수)</span></div>
-  <div class=p style="font-size:13px;margin:4px 0 10px">결제 전에 {_toss_esc(_cohort_info()['cohort'])} 신청서를 먼저 제출해 주세요. 새 창에서 열립니다.</div>
+  <div class=p style="font-size:13px;margin:4px 0 10px">결제 전에 {_toss_esc(form_title)}를 먼저 제출해 주세요. 새 창에서 열립니다.</div>
   <a id=fl href="{_toss_esc(form_url)}" target=_blank rel=noopener style="display:block;text-align:center;padding:12px;border-radius:10px;background:#e0a33d;color:#111;font-weight:800;text-decoration:none">📝 신청서 작성하기</a>
   <label class=p style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:14px">
     <input id=fd type=checkbox disabled> <span id=fdl style="opacity:.5">신청서를 작성해 제출했습니다</span></label>
@@ -15667,20 +15875,20 @@ def _toss_checkout(request: Request):
 <input id=pn placeholder="성함" maxlength=40 style="{inp}">
 <input id=pp placeholder="연락처 (010-0000-0000)" maxlength=40 inputmode=tel style="{inp}">
 <input id=pe placeholder="이메일 (가입·안내를 받으실 주소)" maxlength=120 inputmode=email style="{inp}">
-{_pay_legal_box()}
+{_pay_legal_box("숏템메이커" if is_shortem else "숏클메이커")}
 <label class=p style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px">
   <input id=pa type=checkbox style="margin-top:3px">
   <span><a href="/refund" target="_blank" style="color:#6ff0d6">환불정책</a>과
   <a href="/terms" target="_blank" style="color:#6ff0d6">이용약관</a>을 확인했고 동의합니다.<br>
-  <b style="color:#ffcf6f">결제 확인 즉시 이용권이 열리는 디지털 콘텐츠로, 이용권이 열린 뒤에는 7일 이내라도 환불되지 않음</b>을 확인했습니다.<br><b style="color:#ffcf6f">업로드한 콘텐츠의 저작권·중복 콘텐츠 문제와 그로 인한 채널 제한·정지·삭제의 책임이 저에게 있음</b>을 확인했습니다.</span></label>
+  <b style="color:#ffcf6f">{refund_line}</b>을 확인했습니다.<br><b style="color:#ffcf6f">업로드한 콘텐츠의 저작권·중복 콘텐츠 문제와 그로 인한 채널 제한·정지·삭제의 책임이 저에게 있음</b>을 확인했습니다.</span></label>
 <input id=sg placeholder="서명 — 결제자 성함을 그대로 적어 주세요" maxlength=40 style="{inp};margin-top:10px">
 <button id=go>카드로 결제하기</button>
 <div class="p err" id=msg></div>
 <script src="https://js.tosspayments.com/v2/standard"></script>
 <script>
 function _fdOpen() {{ fd.disabled = false; fdl.style.opacity = 1; }}
-try {{ if (localStorage.getItem('apply_form_opened')) _fdOpen(); }} catch (e) {{}}
-fl.addEventListener('click', () => {{ _fdOpen(); try {{ localStorage.setItem('apply_form_opened', '1'); }} catch (e) {{}} }});
+try {{ if (localStorage.getItem({json.dumps(form_seen_key)})) _fdOpen(); }} catch (e) {{}}
+fl.addEventListener('click', () => {{ _fdOpen(); try {{ localStorage.setItem({json.dumps(form_seen_key)}, '1'); }} catch (e) {{}} }});
 (function () {{
   try {{
     const s = JSON.parse(sessionStorage.getItem('prereg_payer') || 'null');
@@ -15699,7 +15907,7 @@ document.getElementById('go').onclick = async () => {{
   busy = true; go.disabled = true; go.textContent = '결제창 여는 중…';
   try {{
     const r = await fetch('/api/pay/toss/order', {{ method: 'POST',
-      headers: {{ 'Content-Type': 'application/json' }}, body: JSON.stringify(payer) }});
+      headers: {{ 'Content-Type': 'application/json' }}, body: JSON.stringify({{ ...payer, product: {json.dumps(prod["code"])} }}) }});
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || '주문을 만들지 못했습니다');
     const tp = TossPayments({json.dumps(ck)});
@@ -15744,13 +15952,22 @@ async def _toss_create_order(request: Request):
         return JSONResponse({"error": "이메일 주소를 확인해 주세요"}, status_code=422)
     if len(pname) > 40 or len(phone) > 40 or len(email) > 120:
         return JSONResponse({"error": "입력이 너무 깁니다"}, status_code=422)
-    name, amount = _toss_order_name_amount()
+    prod = _pay_product(body.get("product") or "")
+    if not prod:
+        return JSONResponse({"error": "지금 결제할 수 없는 상품입니다"}, status_code=422)
+    buyer = None
+    if prod["kind"] == "upgrade":
+        buyer, _gate = _upgrade_gate(request)
+        if _gate:
+            return JSONResponse({"error": "숏템메이커 이용권 회원만 결제할 수 있습니다"},
+                                status_code=401 if _gate == "login" else 403)
+    name, amount = prod["name"], prod["amount"]
     order_id = "ST" + datetime.now().strftime("%Y%m%d%H%M%S") + secrets.token_hex(4)
     now = datetime.now(timezone.utc).isoformat()
     with _toss_db()._conn() as c:
         c.execute("INSERT INTO toss_payments(order_id,amount,order_name,status,payer_name,payer_phone,"
-                  "payer_email,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)",
-                  (order_id, amount, name, "READY", pname, phone, email, now, now))
+                  "payer_email,product,customer_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                  (order_id, amount, name, "READY", pname, phone, email, prod["code"], buyer, now, now))
     return {"ok": True, "orderId": order_id, "amount": amount, "orderName": name}
 
 
@@ -15799,32 +16016,39 @@ def _toss_success(paymentKey: str = "", orderId: str = "", amount: str = ""):
     try:
         from shopping_shorts import ops_alert
         with st._conn() as c:
-            pr = c.execute("SELECT payer_name, payer_phone, payer_email FROM toss_payments WHERE order_id=?",
-                           (orderId,)).fetchone() or ("", "", "")
+            pr = c.execute("SELECT payer_name, payer_phone, payer_email, order_name, customer_id FROM toss_payments "
+                           "WHERE order_id=?", (orderId,)).fetchone() or ("", "", "", "", None)
         # cooldown 0 — 결제 한 건 한 건이 돈이다(입금 신고와 같은 이유).
         ops_alert.raise_alert("toss_paid", f"💳 카드결제 완료 — {pr[0] or '-'} {amt:,}원",
-                              f"연락처 {pr[1] or '-'} / 이메일 {pr[2] or '-'} / 주문 {orderId}",
+                              f"상품 {pr[3] or '-'} / 연락처 {pr[1] or '-'} / 이메일 {pr[2] or '-'} / 계정 {pr[4] if pr[4] is not None else '-'} / 주문 {orderId}",
                               cooldown_sec=0, store=st)
     except Exception as e:      # noqa: BLE001 — 알림 실패가 결제 완료 화면을 막으면 안 된다
         print(f"[토스결제] 관리자 알림 실패(결제는 정상): {e!r}", file=sys.stderr)
+    next_step = ("<br>결제 확인 후 라이선스 키와 설치 방법을 연락드립니다."
+                 if str(d.get("orderName") or "").startswith("숏클메이커") else "")
     return _toss_page("결제 완료", f"""<h1>✅ 결제가 완료되었습니다</h1>
 <div class=amt>{amt:,}원</div>
-<div class=p>{_toss_esc(d.get('orderName'))}<br>결제수단 {_toss_esc(d.get('method'))}<br>
+<div class=p>{_toss_esc(d.get('orderName'))}{next_step}<br>결제수단 {_toss_esc(d.get('method'))}<br>
 주문번호 <code>{_toss_esc(orderId)}</code></div>
-<a class=btn href="/">숏템메이커로 돌아가기</a>""")
+<a class=btn href="/">처음 화면으로 돌아가기</a>""")
 
 
 @app.get("/pay/toss/fail", response_class=HTMLResponse)
 def _toss_fail(code: str = "", message: str = "", orderId: str = ""):
+    retry = "/pay/toss"
     if orderId:
         with _toss_db()._conn() as c:
             c.execute("UPDATE toss_payments SET status=?, raw=?, updated_at=? "
                       "WHERE order_id=? AND status='READY'",
                       ("FAILED", json.dumps({"code": code, "message": message}, ensure_ascii=False),
                        datetime.now(timezone.utc).isoformat(), orderId))
+            row = c.execute("SELECT product FROM toss_payments WHERE order_id=?", (orderId,)).fetchone()
+        prod = _pay_product(row[0]) if row and row[0] else None
+        if prod:
+            retry = _pay_href(prod)
     return _toss_page("결제 실패", f"""<h1 class=err>결제가 완료되지 않았습니다</h1>
 <div class=p>{_toss_esc(message)}<br><code>{_toss_esc(code)}</code></div>
-<a class=btn href="/pay/toss">다시 시도</a>""")
+<a class=btn href="{_toss_esc(retry)}">다시 시도</a>""")
 
 
 @app.get("/pay", response_class=HTMLResponse)
@@ -15931,13 +16155,14 @@ def _legal_page(path: str, title: str, body: str) -> str:
 _TERMS_BODY = f"""
 <p>본 약관은 {_BRAND['name']}(이하 "회사")가 제공하는 AI 쇼츠 제작 서비스(이하 "서비스")의 이용조건과 절차, 회사와 이용자의 권리·의무를 규정합니다.</p>
 <h2>제1조 (서비스 내용)</h2>
-<p>회사는 이용자가 업로드·선택한 소재를 바탕으로 AI가 대본·음성·영상을 생성·편집하는 온라인 이용권 서비스를 제공합니다. 서비스는 이용권(크레딧)에 따라 렌즈·제작(렌더) 등 기능 이용량이 정해집니다.</p>
+<p>회사는 이용자가 업로드·선택한 소재를 바탕으로 AI가 대본·음성·영상을 생성·편집하는 온라인 이용권 서비스를 제공합니다. 서비스는 이용권(크레딧)에 따라 렌즈·제작(렌더) 등 기능 이용량이 정해집니다. 숏클메이커는 이용자의 PC에 설치해 Claude Max 구독과 함께 쓰는 프로그램이며, 구매한 과정(기본반·고급반·프리미엄반)에 따라 제공 내용이 정해집니다.</p>
 <h2>제2조 (이용계약의 성립)</h2>
 <p>이용계약은 이용자가 구글 계정 등으로 가입하고 회사가 이를 승인함으로써 성립합니다. 회사는 운영상·기술상 필요에 따라 가입 승인을 보류하거나 이용을 제한할 수 있습니다.</p>
 <h2>제3조 (이용권과 결제)</h2>
 <ul>
 <li>이용권은 신용카드(토스페이먼츠) 또는 계좌이체로 결제하며, 결제 확인 후 활성화됩니다.</li>
 <li>정식(Pro) 이용권의 이용기간은 결제(이용권 활성화)일로부터 <b>{_PRO_PERIOD}</b>입니다.</li>
+<li>숏클메이커 이용권의 이용기간은 라이선스 키 발급일로부터 <b>{_PRO_PERIOD}</b>이며, Claude Max 구독은 이용자가 별도로 결제합니다.</li>
 <li>이용권별 제공 기능·제작 횟수는 서비스 내 안내에 따릅니다.</li>
 <li>환불에 관한 사항은 별도의 <a href="/refund" style="color:#6ff0d6">환불정책</a>을 따릅니다.</li>
 </ul>
@@ -16005,7 +16230,7 @@ _PRIVACY_BODY = f"""
 <p>개인정보 관련 문의는 아래 사업자정보의 문의처로 접수해 주시면 지체 없이 답변·처리합니다.</p>
 """
 
-def _pay_legal_box():
+def _pay_legal_box(product_name="숏템메이커"):
     """프로 이용권 결제 화면의 '읽고 서명하는 칸'(관제 199, 2026-10-14 사장님).
     환불정책·이용약관·콘텐츠 운영 안내 원문을 페이지 안에서 바로 읽게 펼친다.
     ★문서 본문은 /refund·/terms 와 같은 상수를 그대로 쓴다(0순위-B) — 따로 요약해 적지 마라."""
@@ -16016,7 +16241,7 @@ def _pay_legal_box():
                 f'line-height:1.6;color:#c9cdd2">{body}</div></details>')
     return ('<div style="font-weight:800;font-size:16px;margin-top:18px">③ 꼭 읽고 서명해 주세요</div>'
             '<div class=p>결제 전에 아래 세 가지를 펼쳐 읽어 주세요.</div>'
-            + _content_notice_html()
+            + _content_notice_html().replace("숏템메이커는 영상 제작을", f"{product_name}는 영상 제작을")
             + sec("📄 환불정책 전문", _REFUND_BODY)
             + sec("📄 이용약관 전문", _TERMS_BODY))
 
@@ -16027,11 +16252,11 @@ _REFUND_BODY = f"""
 
 <h2>1. 전액 환불</h2>
 <ul>
-<li>결제 후 <b>이용권이 열리기(정식 Pro 계정 전환) 전</b>: 전액 환불 (예: 계좌이체 입금 후 이용권 개통 전)</li>
+<li>결제 후 <b>이용권이 열리기(정식 Pro 계정 전환 또는 숏클메이커 라이선스 키 발급) 전</b>: 전액 환불 (예: 계좌이체 입금 후 이용권 개통 전)</li>
 </ul>
 
 <h2>2. 청약철회의 제한 (사용 개시 후)</h2>
-<p><b>정식(Pro) 계정으로 전환된 시점</b>부터는 디지털 콘텐츠의 제공이
+<p><b>정식(Pro) 계정으로 전환된 시점 또는 숏클메이커 라이선스 키가 발급된 시점</b>부터는 디지털 콘텐츠의 제공이
 개시된 것으로 보아, 「전자상거래 등에서의 소비자보호에 관한 법률」 제17조제2항에 따라
 청약철회가 제한됩니다.</p>
 <ul>
@@ -17602,6 +17827,11 @@ def _admin_customers(request: Request):
     # ★한도도 일괄로(2026-08-29). 고객마다 _effective_limits를 부르면 설정·고객·키를
     #   1인당 6~7회 다시 읽어 **목록이 18.2초** 걸렸다(라이브 실측 290명).
     limits_map = _effective_limits_all(st, _customers)
+    try:
+        shortcl_map = _shortcl_badges(_pay_ledger(), _customers)
+    except Exception as e:      # noqa: BLE001 — 표시 하나 때문에 고객 목록 전체가 막히면 안 된다
+        print(f"[관리자] 숏클 표시 실패(고객 목록은 계속): {e!r}", file=sys.stderr)
+        shortcl_map = {}
     for cu in _customers:
         _cid = cu["id"]
         # ★access_level에 이미 읽은 고객 dict를 넘긴다(2026-08-29) — 안 넘기면
@@ -17624,6 +17854,7 @@ def _admin_customers(request: Request):
         cu["code_admin"] = (_as_cid(_cid) == 0) or (_email in _ADMIN_EMAILS)
         cu["is_admin"] = cu["code_admin"] or bool(cu.get("admin"))
         cu["challenge"] = _cid in challenge_ids                 # 1기 챌린지 참가 여부(2026-08-24)
+        cu["shortcl"] = shortcl_map.get(_cid, "")               # 숏클 결제 반(관제 292)
         # 포인트 잔액(화면 단위 P) — 등급이 full이어도 잔액 0이면 유료 op가 402로 막힌다.
         # 관리자가 그 상태를 목록에서 바로 보게 한다(2026-08-20 체험 계정 402 사고).
         cu["points"] = pricing.to_display(points_map.get(_cid, 0))
@@ -17679,13 +17910,16 @@ async def _api_deposit_claim(request: Request):
         return JSONResponse({"error": "성함과 입금자명을 입력해 주세요"}, status_code=422)
     if len(name) > 40 or len(depositor) > 40 or len(contact) > 120:
         return JSONResponse({"error": "입력이 너무 깁니다"}, status_code=422)
+    prod = _pay_product(body.get("product") or "")
+    if not prod:
+        return JSONResponse({"error": "지금 결제할 수 없는 상품입니다"}, status_code=422)
     st = Store(DB_PATH)
-    st.add_deposit_claim(name, depositor, contact)
+    st.add_deposit_claim(name, depositor, contact, prod["name"])
     try:
         from shopping_shorts import ops_alert
         # cooldown 0 — 입금 신고는 도배가 아니라 한 건 한 건이 돈이다. 묶으면 놓친다.
         ops_alert.raise_alert("deposit_claim", f"💰 입금 신고 — {name}",
-                              f"입금자명 {depositor} / 연락처 {contact or '-'}",
+                              f"상품 {prod['name']} / 입금자명 {depositor} / 연락처 {contact or '-'}",
                               cooldown_sec=0, store=st)
     except Exception as e:      # noqa: BLE001 — 알림 실패가 접수를 막으면 안 된다
         # ★조용히 삼키지 않는다: 알림이 안 울리면 사장님이 입금 신고를 놓친다.
@@ -17695,6 +17929,14 @@ async def _api_deposit_claim(request: Request):
         import sys as _sys
         print(f"[입금신고] 관리자 알림 실패(접수는 정상): {e!r}", file=_sys.stderr)
     return {"ok": True}
+
+
+@app.get("/api/admin/pay_ledger")
+def _admin_pay_ledger(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return {"items": _pay_ledger()}
 
 
 @app.get("/api/admin/deposit_claims")
