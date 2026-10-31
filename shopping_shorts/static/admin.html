@@ -252,8 +252,8 @@ tbody tr:hover{background:#1b1b22}
      ★입금 증명이 아니다. 통장 확인은 그대로 하시고, 이건 '연락을 놓치지 않기 위한' 목록이다. -->
 <div class="card wait">
   <h2>💰 입금 신고 (<span id=dcnt>0</span>건) <span id=dMsg class=msg></span></h2>
-  <table><thead><tr><th>신고시각</th><th>성함</th><th>입금자명</th><th>연락처</th><th>처리</th></tr></thead>
-  <tbody id=drows><tr><td colspan=5 class=empty>불러오는 중…</td></tr></tbody></table>
+  <table><thead><tr><th>신고시각</th><th>성함</th><th>상품</th><th>입금자명</th><th>연락처</th><th>처리</th></tr></thead>
+  <tbody id=drows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
 
 <div class="card wait">
@@ -266,12 +266,26 @@ tbody tr:hover{background:#1b1b22}
   <div class=modal id=cmodal></div>
 </div>
 
+<h2 class=grouphead>💳 결제 내역</h2>
+<!-- 카드 결제 + 입금 신고(관제 292). 숏템에 가입하지 않은 결제자도 결제 정보로 나온다. -->
+<div class=card>
+  <h2>결제 내역 <span id=plSum class=wlnote></span>
+    <select id=plFilter onchange="renderLedger()" style="margin-left:8px"><option value="">전체 프로그램</option><option value="숏클">숏클메이커</option><option value="숏템">숏템메이커</option></select></h2>
+  <table><thead><tr><th>시각</th><th>가입 프로그램</th><th>상품</th><th>금액</th><th class=mini>수단</th><th class=mini>상태</th><th>결제자</th><th>연락처</th><th>이메일</th><th class=mini>계정</th></tr></thead>
+  <tbody id=plrows><tr><td colspan=10 class=empty>불러오는 중…</td></tr></tbody></table>
+</div>
+
 <h2 class=grouphead>👥 고객 관리</h2>
 
 <div class=card>
   <h2>고객 (<span id=cnt>0</span>명) <span id=cMsg class=msg></span></h2>
   <div class=filterbar>
     <input id=custSearch placeholder="🔍 이름·전화·이메일·성별·연령으로 찾기 (승인 대기도 함께 찾습니다)" oninput="renderCustomers()">
+    <select id=progFilter onchange="renderCustomers()">
+      <option value="">전체 프로그램</option>
+      <option value="shortem">숏템메이커</option>
+      <option value="shortcl">숏클메이커</option>
+    </select>
     <select id=tierFilter onchange="renderCustomers()">
       <option value="">전체 등급</option>
       <option value="pro">pro</option>
@@ -480,6 +494,7 @@ async function load(){
   document.getElementById('settings').innerHTML=SETTING_FIELDS.map(([k,label])=>
     `<div class=setfield><label>${label}</label><input id=set_${k} value="${(CURRENT[k]??'').toString().replace(/"/g,'&quot;')}"></div>`).join('');
   loadDepositClaims();   // 입금 신고 목록(별도 API — 실패해도 이 화면은 계속 뜬다)
+  loadLedger();          // 결제 내역(숏템·숏클 구분)
   renderControlBoard();  // 관제 보드(별도 API — 실패해도 이 화면은 계속 뜬다)
   // ★대기명단 판정 = acked_at(2026-08-30 사장님 "가입하면 자동으로 체험판 랭킹만으로").
   //   가입이 acked_at을 바로 채우므로 이 목록은 **상시 0건이 정상**이다.
@@ -681,9 +696,12 @@ function renderCustomers(){
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const q=((document.getElementById('custSearch')||{}).value||'').trim().toLowerCase();
   const tier=(document.getElementById('tierFilter')||{}).value||'';
+  const prog=(document.getElementById('progFilter')||{}).value||'';
   const onl=(document.getElementById('onlineFilter')||{}).value||'';
   const rest=(window._CUST||[]).filter(c=>c.acked_at!=null).filter(c=>{
     if(tier && _tierOf(c)!==tier) return false;
+    if(prog==='shortcl' && !c.shortcl) return false;
+    if(prog==='shortem' && c.plan!=='pro') return false;
     if(onl && !_onlineMatch(c,onl)) return false;
     if(q && !_custMatch(c,q)) return false;
     return true;
@@ -727,7 +745,7 @@ function renderCustomers(){
     // ★이름을 누르면 상세 시트로 간다(2026-08-29). 모달은 빠른 조작용으로 그대로 두고,
     //   날짜별 이력·API 원가처럼 넓게 봐야 하는 것만 전용 페이지로 뺐다.
     const nameCell = `<a href="/admin/customer/${c.id}" style="color:#e8e8ea;text-decoration:none;border-bottom:1px dotted #4a4a52"
-        title="상세 시트 열기 — 날짜별 활동·API 원가">${esc(c.name)||'(이름없음)'}</a>`;
+        title="상세 시트 열기 — 날짜별 활동·API 원가">${esc(c.name)||'(이름없음)'}</a>${c.plan==='pro'?' <span style="color:#7ee787;font-size:11px">숏템</span>':''}${c.shortcl?` <b style="color:#ffd479;font-size:11px">숏클 ${esc(c.shortcl)}</b>`:''}`;
     return `<tr><td>${c.id}</td><td>${nameCell}${adminBadge}</td><td>${esc(c.phone)}</td>
       <td class=mini style="color:${c.gender?'#e8eaed':'#5f6773'}">${esc(c.gender)||'—'}</td>
       <td class=mini style="color:${c.age_band?'#e8eaed':'#5f6773'}">${esc(c.age_band)||'—'}</td>
@@ -750,6 +768,29 @@ function renderCustomers(){
 // ── 입금 신고 (2026-08-23) ──────────────────────────────────
 // 고객이 /pay에서 '입금 완료했습니다'를 누른 것. 통장 확인은 그대로 하시고,
 // 확인이 끝나면 [확인함]을 눌러 목록에서 내린다(승인은 아래 고객표에서 따로).
+let ledgerItems=[];
+async function loadLedger(){
+  try{
+    const r=await fetch('/api/admin/pay_ledger');
+    if(!r.ok) return;
+    ledgerItems=(await r.json()).items||[];
+    renderLedger();
+  }catch(e){}
+}
+function renderLedger(){
+  const esc=s=>(s??'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const g=document.getElementById('plFilter').value;
+  const items=ledgerItems.filter(x=>!g||x.group===g);
+  const cl=ledgerItems.filter(x=>x.group==='숏클').length;
+  document.getElementById('plSum').textContent=`숏템 ${ledgerItems.length-cl}건 · 숏클 ${cl}건`;
+  document.getElementById('plrows').innerHTML=items.length?items.map(x=>{
+    const t=x.at?new Date(x.at).toLocaleString('ko-KR'):'-';
+    const tag=x.group==='숏클'
+      ?`<b style="color:#ffd479">숏클메이커 ${esc(x.plan)}${x.upgrade?' (숏템에서 이동)':''}</b>`:'<span style="color:#7ee787">숏템메이커</span>';
+    return `<tr><td>${esc(t)}</td><td>${tag}</td><td>${esc(x.name)}</td><td>${x.amount==null?'-':Number(x.amount).toLocaleString('ko-KR')+'원'}</td>`
+      +`<td>${esc(x.method)}</td><td>${esc(x.status)}</td><td><b>${esc(x.payer)}</b></td><td>${esc(x.phone)||'-'}</td><td>${esc(x.email)||'-'}</td><td>${x.customer_id==null?'비회원':esc(x.customer_id)}</td></tr>`;
+  }).join(''):'<tr><td colspan=10 class=empty>결제 내역이 없습니다.</td></tr>';
+}
 async function loadDepositClaims(){
   try{
     const r=await fetch('/api/admin/deposit_claims');
@@ -760,10 +801,10 @@ async function loadDepositClaims(){
     const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
     document.getElementById('drows').innerHTML= items.length ? items.map(c=>{
       const t=c.created_at? new Date(c.created_at).toLocaleString('ko-KR'):'-';
-      return `<tr><td>${esc(t)}</td><td><b>${esc(c.name)}</b></td>`
+      return `<tr><td>${esc(t)}</td><td><b>${esc(c.name)}</b></td><td>${esc(c.product)||'-'}</td>`
         +`<td style="color:#ffd479">${esc(c.depositor)}</td><td>${esc(c.contact)||'-'}</td>`
         +`<td><button class=bok onclick="closeClaim(${Number(c.id)})">확인함</button></td></tr>`;
-    }).join('') : '<tr><td colspan=5 class=empty>새 입금 신고가 없습니다.</td></tr>';
+    }).join('') : '<tr><td colspan=6 class=empty>새 입금 신고가 없습니다.</td></tr>';
   }catch(e){}
 }
 async function closeClaim(id){

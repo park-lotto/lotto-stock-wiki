@@ -186,6 +186,12 @@
     <div class="desc">내 이용권과 하루 이용 한도를 확인하고, 필요한 API 키를 등록할 수 있습니다.</div>
   </div>
 
+    <!-- 로그인 회원은 대문을 안 보므로 숏클 진입을 여기에 둔다(관제 292). 금액은 요금 화면 한 곳 -->
+    <div class="payCard" style="margin-bottom:18px">
+      <div class="payTop"><div class="payTitle">🎉 숏클메이커 출시</div></div>
+      <div class="paySub" id="scUpSub">내 PC에서 클로드에게 말 한 줄로 쇼츠를 만드는 프로그램입니다.</div>
+      <a class="payBtn" href="/pricing#shortcl">숏클메이커 보기 →</a>
+    </div>
   <div class="tabs">
     <!-- ★설치안내를 맨 앞 탭으로(2026-08-25 사장님 "반드시 보라고 계정 앞으로 탭을 두고
          제일 먼저 뜨게"). 처음 오신 분에겐 이 탭이 기본으로 열린다(아래 FIRST_KEY). -->
@@ -1044,6 +1050,7 @@ loadVertex();
          next_price:(p.next_price||0).toLocaleString('ko-KR')+'원'};
   document.querySelectorAll('[data-pr]').forEach(function(el){ var k=el.getAttribute('data-pr'); if(v[k]!=null) el.textContent=v[k]; });
   if(p.cohort && /^\s*$/.test(document.title)===false) document.title=document.title.replace('__COHORT__', p.cohort);
+  if(p.shortcl_upgrade_open){ var up=document.getElementById('scUpSub'); if(up) up.textContent='숏템 이용권 회원은 11월 30일까지 차액만 내고 옮길 수 있습니다.'; }
 }).catch(function(){}); })();
 </script>
 </body>
