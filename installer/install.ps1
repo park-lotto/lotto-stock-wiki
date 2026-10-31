@@ -166,8 +166,14 @@ if (-not $env:SHORTEM_NO_LAUNCH) {
     }
     $ErrorActionPreference = $eap
     if (-not $logged) { Die 'Claude 로그인이 끝나지 않았습니다. 같은 줄을 다시 붙여 넣고 엔터를 눌러 주세요' }
-    Say '새 창에서 준비 점검을 시작합니다'
-    # -WorkingDirectory 는 Windows Terminal 이 받는 창에서 무시된다(11-01 실측) — 새 창 안에서 옮긴다
-    $env:SHORTEM_WORK_DIR = $work
-    Start-Process powershell -ArgumentList '-NoExit', '-Command', 'Set-Location -LiteralPath $env:SHORTEM_WORK_DIR; claude ''숏클 점검 준비해줘'''
+    Say '준비 점검을 시작합니다'
+    if ($env:CLAUDECODE) {
+        # Claude 안에서 실행됐으면 그 안에 또 띄울 수 없어 새 창으로 연다(-WorkingDirectory 는 Windows Terminal 에서 무시돼 창 안에서 옮긴다)
+        $env:SHORTEM_WORK_DIR = $work
+        Start-Process powershell -ArgumentList '-NoExit', '-Command', 'Set-Location -LiteralPath $env:SHORTEM_WORK_DIR; claude ''숏클 점검 준비해줘'''
+    } else {
+        # 창이 둘이면 헷갈린다(사장님 11-01) — 붙여 넣은 그 창이 그대로 Claude 가 된다
+        Set-Location -LiteralPath $work
+        & claude '숏클 점검 준비해줘'
+    }
 }
