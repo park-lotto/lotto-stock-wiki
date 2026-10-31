@@ -385,6 +385,13 @@ def start_line(cid, base) -> str:
     return f"$env:SHORTEM_START='{start_token(cid)}'; irm {base}/api/claude/start.ps1 | iex"
 
 
+def start_cmd(cid, base) -> str:
+    """회원별 더블클릭 설치 파일 — 파워쉘을 열 필요가 없다."""
+    return ("@echo off\r\n"
+            f'powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "{start_line(cid, base)}"\r\n'
+            "pause\r\n")
+
+
 def start_md(cid, base) -> str:
     """회원별 시작.md — Claude Code 입력창에 끌어다 놓으면 한 줄로 설치가 끝난다."""
     line = start_line(cid, base)

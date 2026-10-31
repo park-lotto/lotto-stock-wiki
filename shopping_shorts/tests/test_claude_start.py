@@ -107,3 +107,15 @@ def test_회원_1번_승인이_전체_공개가_되지_않는다(st, monkeypatch
     assert not app_module._setting_gate(st, "claude_portal_enabled", 2)
     cp.set_member(1, False, st)
     assert st.get_setting("claude_portal_enabled", "") == "admin"
+
+
+def test_더블클릭_파일에_키_원문이_없다(st):
+    key = cp.issue_license(7, st)["key"]
+    body = cp.start_cmd(7, "https://x.test")
+    assert key not in body and "SHORTEM_START" in body and body.startswith("@echo off")
+
+
+def test_메뉴_스크립트에_비밀이_없다():
+    from fastapi.testclient import TestClient
+    r = TestClient(app_module.app).get("/api/claude/start_menu.ps1")
+    assert r.status_code == 200 and "숏클 시작" in r.text and "SHORTEM-L1." not in r.text

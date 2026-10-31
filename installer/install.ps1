@@ -155,6 +155,25 @@ if (-not (Test-Path $allow)) {
     $rules = '{"permissions":{"allow":["mcp__plugin_shortem_shortem","Skill(shortem:setup)","Skill(shortem:make)","Skill(shortem:script)"]}}'
     [IO.File]::WriteAllText($allow, $rules, (New-Object Text.UTF8Encoding($false)))
 }
+# 파워쉘을 켜면 뜨는 시작 메뉴. 프로필에는 영문 표시 구간만 넣는다(기존 내용은 그대로, 다시 설치해도 한 번만).
+$menuRaw = Invoke-RestMethod -Uri "$base/api/claude/start_menu.ps1"
+$menu = Join-Path $homeDir 'shortcl_menu.ps1'
+[IO.File]::WriteAllText($menu, ($menuRaw -replace "^\uFEFF", ''), (New-Object Text.UTF8Encoding($true)))
+$prof = if ($env:SHORTEM_PROFILE) { $env:SHORTEM_PROFILE } else { $PROFILE.CurrentUserCurrentHost }
+New-Item -ItemType Directory -Force -Path (Split-Path $prof -Parent) | Out-Null
+$block = @"
+# >>> shortcl >>>
+if ([Environment]::UserInteractive -and `$Host.Name -eq 'ConsoleHost' -and -not `$env:CLAUDECODE -and ([Environment]::GetCommandLineArgs().Count -le 1)) { & '$menu' -Work '$work' }
+# <<< shortcl <<<
+"@
+$old = if (Test-Path $prof) { [IO.File]::ReadAllText($prof) } else { '' }
+$new = [regex]::Replace($old, '(?s)\r?\n?# >>> shortcl >>>.*?# <<< shortcl <<<\r?\n?', '')
+$new = $new.TrimEnd() + $(if ($new.Trim()) { "`r`n" } else { '' }) + $block + "`r`n"
+[IO.File]::WriteAllText($prof, $new, (New-Object Text.UTF8Encoding($true)))
+if (-not $env:SHORTEM_NO_PERSIST -and (Get-ExecutionPolicy -Scope CurrentUser) -in @('Undefined', 'Restricted') -and (Get-ExecutionPolicy) -eq 'Restricted') {
+    Set-ExecutionPolicy -Scope CurrentUser RemoteSigned -Force
+}
+
 Say '설치 완료'
 if (-not $env:SHORTEM_NO_LAUNCH) {
     # 온보딩을 건너뛰면 Claude 가 로그인 화면을 안 띄우고 /login 을 치라고만 한다(11-01 실측) — 여기서 먼저 로그인시킨다

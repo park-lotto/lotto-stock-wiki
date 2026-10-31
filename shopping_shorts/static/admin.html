@@ -191,12 +191,12 @@ tbody tr:hover{background:#1b1b22}
   <tbody id=wlrecent><tr><td colspan=6 class=empty>–</td></tr></tbody></table>
 </details>
 
-<h2 class=grouphead>✍ 대본 생성 규칙</h2>
 
 <!-- 훅 감탄사 켜고 끄기(2026-09-01 사장님 "그냥 모든 대본에 앞에 감탄사 켜고 끄기 버튼").
      코드가 첫 문장 앞에 "와, "/"여러분 "을 얹는다(add_hook_opener) — 그 강제만 끈다.
      모델이 스스로 쓴 감탄사는 그대로다. 반영은 다른 서버 프로세스 기준 최대 1분(캐시). -->
-<div class=card>
+<details class=card>
+  <summary style="cursor:pointer;font-weight:800">✍ 대본 생성 규칙</summary>
   <h2>훅 감탄사 자동 붙이기 <span id=hoMsg class=msg></span></h2>
   <p style="color:#8b95a3;font-size:13px;margin:6px 0 10px">
     켜면 대본 첫 문장 앞에 <b>"와, "</b>(서술형 절반) 또는 <b>"여러분 "</b>(권유형)을 코드가 얹습니다.
@@ -204,14 +204,15 @@ tbody tr:hover{background:#1b1b22}
     (모델이 스스로 쓴 감탄사는 그대로).
   </p>
   <button id=hoBtn class=btn onclick="toggleHookOpener()">불러오는 중…</button>
-</div>
+</details>
 
 <h2 class=grouphead>🔔 오늘 처리할 일</h2>
 
 <!-- 1단계 정확도 측정(2026-09-05) — 서버가 최근 소스 N편으로 [기존 추출 vs B1 컷별 프레임 태깅]의
      묘사↔프레임 정확도를 같은 판정기로 잰다(SSH 불필요). 사장님 "주소 치는 거 말고 job처럼" → 여기 카드.
      ★숫자 읽는 법: 판정기는 관대하다 — 절대값보다 classic/b1 **상대 비교**. 빈 묘사·미판정이 0이 아니면 믿지 않는다. -->
-<div class="card wait" id="probeCard">
+<details class="card wait" id="probeCard">
+  <summary style="cursor:pointer;font-weight:800">🎞 1단계 정확도 측정</summary>
   <h2>🎞 1단계 정확도 측정 <span id=pMsg class=msg></span>
     <span style="float:right;font-size:13px;font-weight:400">
       소스 <input type=number id=probeN value=30 min=1 max=40 style="width:52px"> 편
@@ -223,17 +224,18 @@ tbody tr:hover{background:#1b1b22}
   <details style="margin-top:6px"><summary style="cursor:pointer;font-size:13px;color:#8a8a92">편별 상세</summary>
   <table><thead><tr><th>작업</th><th>소스</th><th>기존</th><th>B1</th><th>세그(기존→B1)</th><th>빈 묘사</th><th>초</th><th>오류</th></tr></thead>
   <tbody id=prows></tbody></table></details>
-</div>
+</details>
 
 <!-- 작업 진단(2026-09-05) — 오류 신고의 작업번호(work=… 또는 job)를 넣으면 서버 상태를 한 장으로(SSH 불필요). -->
-<div class="card wait" id="diagCard">
+<details class="card wait" id="diagCard">
+  <summary style="cursor:pointer;font-weight:800">🩺 작업 진단</summary>
   <h2>🩺 작업 진단 <span id=gMsg class=msg></span>
     <span style="float:right;font-size:13px;font-weight:400">
       <input type=text id=diagId placeholder="work 또는 job 번호 (예 d43ae07da0a2)" style="width:260px" onkeydown="if(event.key==='Enter')runDiag()">
       <button onclick="runDiag()" style="margin-left:6px;padding:4px 12px;cursor:pointer">조회</button>
     </span></h2>
   <pre id=diagOut style="font-size:12px;white-space:pre-wrap;color:#c9c9d0;max-height:420px;overflow:auto;margin:0">오류 신고의 주소에서 work=… 뒤 번호를 넣고 조회.</pre>
-</div>
+</details>
 
 <!-- 오류 신고(2026-08-24) — 고객이 사이드바 '🐞 오류 신고'를 누르면 여기 쌓인다.
      ★고객은 한 줄만 쓴다. 페이지·작업번호·단계·화면오류는 화면이 자동으로 담아 보낸다
@@ -256,11 +258,11 @@ tbody tr:hover{background:#1b1b22}
   <tbody id=drows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
 
-<div class="card wait">
-  <h2>🕓 승인 대기중 (<span id=pcnt>0</span>명) <span id=pMsg class=msg></span></h2>
+<details class="card wait" data-pend>
+  <summary style="cursor:pointer;font-weight:800">🕓 승인 대기중 (<span id=pcnt>0</span>명) <span id=pMsg class=msg></span></summary>
   <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>가입일</th><th>승인</th></tr></thead>
   <tbody id=prows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
-</div>
+</details>
 
 <div class=mask id=cmask onclick="if(event.target===this)closeCust()">
   <div class=modal id=cmodal></div>
@@ -285,6 +287,7 @@ tbody tr:hover{background:#1b1b22}
       <option value="">전체 프로그램</option>
       <option value="shortem">숏템메이커</option>
       <option value="shortcl">숏클메이커</option>
+      <option value="moved">숏템에서 숏클로 이동</option>
     </select>
     <select id=tierFilter onchange="renderCustomers()">
       <option value="">전체 등급</option>
@@ -385,7 +388,9 @@ async function renderAlertBoard(){
   const TH={'고객영향':{c:'cust',l:'🚨 고객 영향 사고 — 지금 확인'},
             '정보':{c:'info',l:'ℹ️ 알림'},
             '운영주의':{c:'ops',l:'⚠️ 운영 주의 — 자동 우회됨, 서비스 정상'}};
-  box.innerHTML=open.map(a=>{
+  // 알림은 접어 둔다(사장님 11-01). 다시 그려도 펼친 상태는 유지한다.
+  const nCust=open.filter(a=>a.grade==='고객영향').length;
+  const list=open.map(a=>{
     const t=TH[a.grade]||TH['운영주의'];
     return '<div class="ab '+t.c+'"><div style="flex:1;min-width:0">'
       + '<div class=abl>'+t.l+'</div>'
@@ -398,6 +403,8 @@ async function renderAlertBoard(){
       + '</div>'
       + '<button class=abx onclick="closeAlert('+JSON.stringify(a.id)+')">닫기</button></div>';
   }).join('');
+  box.innerHTML='<details class=abAll ontoggle="window._abOpen=this.open"'+(globalThis._abOpen?' open':'')+'><summary style="cursor:pointer;font-weight:800;font-size:14px;padding:10px 14px;border:1px solid #33353b;border-radius:10px;color:'
+    +(nCust?'#ff8080':'#ffc85c')+'">🔔 알림 '+open.length+'건'+(nCust?' · 고객 영향 '+nCust+'건':'')+' — 눌러서 보기</summary><div style="margin-top:8px">'+list+'</div></details>';
 }
 // ── 관제 보드(2026-09-30, 카드 004) — 카드 파싱·상태는 서버(/api/admin/control/board → tools/control.py) 한 곳. 여기선 그리기만.
 const CTL_ORDER={'회귀':0,'승인대기':1,'등록':2,'분배':3,'수리':4,'로컬검증':5,'병합':6,'서버반영':7,'라이브실측':8,'완료':9};
@@ -489,7 +496,7 @@ async function closeClaudeAlert(id){
 async function load(){
   const r=await fetch('/api/admin/customers');
   if(r.status===403){document.body.innerHTML='<h2>관리자 전용입니다</h2>';return;}
-  const d=await r.json(); CURRENT=d.settings||{}; window._CUST=d.customers||[];
+  const d=await r.json(); CURRENT=d.settings||{}; window._TUTORS=d.shortcl_tutors||[]; window._CUST=d.customers||[];
   // 설정 폼
   document.getElementById('settings').innerHTML=SETTING_FIELDS.map(([k,label])=>
     `<div class=setfield><label>${label}</label><input id=set_${k} value="${(CURRENT[k]??'').toString().replace(/"/g,'&quot;')}"></div>`).join('');
@@ -692,6 +699,25 @@ function _onlineMatch(c,mode){
   if(mode==='off')    return !_isOnline(c);
   return true;
 }
+function _programTags(p,esc){
+  p=p||{}; let s='';
+  if(p.shortem) s+=' <span style="color:#7ee787;font-size:11px">숏템</span>';
+  if(p.shortcl) s+=` <b style="color:#ffd479;font-size:11px">숏클${p.plan?' '+esc(p.plan):''}</b>`;
+  const m={free:'무료 이동',paid:'추가금 업그레이드'}[p.move];
+  if(m||p.tutor) s+=`<div style="font-size:11px;color:#b7a77a">${m?'숏템→숏클 '+m:''}${m&&p.tutor?' · ':''}${p.tutor?'조교 '+esc(p.tutor):''}</div>`;
+  return s;
+}
+async function saveProgram(cid,btn){
+  return _lockWhile(btn, async()=>{
+    const v=i=>document.getElementById(i);
+    const r=await fetch('/api/admin/program_member',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({customer_id:cid,shortem:v('pgShortem').checked,shortcl:v('pgShortcl').checked,
+                           plan:v('pgPlan').value,move:v('pgMove').value,tutor:v('pgTutor').value})});
+    if(!r.ok){ const d=await r.json().catch(()=>({})); alertLine(d.error||'저장하지 못했습니다'); return; }
+    await load(); openCust(cid);
+  });
+}
+function alertLine(t){ const m=document.getElementById('cMsg'); if(m) m.textContent=t; }
 function renderCustomers(){
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const q=((document.getElementById('custSearch')||{}).value||'').trim().toLowerCase();
@@ -700,8 +726,10 @@ function renderCustomers(){
   const onl=(document.getElementById('onlineFilter')||{}).value||'';
   const rest=(window._CUST||[]).filter(c=>c.acked_at!=null).filter(c=>{
     if(tier && _tierOf(c)!==tier) return false;
-    if(prog==='shortcl' && !c.shortcl) return false;
-    if(prog==='shortem' && c.plan!=='pro') return false;
+    const pg=c.program||{};
+    if(prog==='shortcl' && !pg.shortcl) return false;
+    if(prog==='shortem' && !pg.shortem) return false;
+    if(prog==='moved' && !pg.move) return false;
     if(onl && !_onlineMatch(c,onl)) return false;
     if(q && !_custMatch(c,q)) return false;
     return true;
@@ -745,7 +773,7 @@ function renderCustomers(){
     // ★이름을 누르면 상세 시트로 간다(2026-08-29). 모달은 빠른 조작용으로 그대로 두고,
     //   날짜별 이력·API 원가처럼 넓게 봐야 하는 것만 전용 페이지로 뺐다.
     const nameCell = `<a href="/admin/customer/${c.id}" style="color:#e8e8ea;text-decoration:none;border-bottom:1px dotted #4a4a52"
-        title="상세 시트 열기 — 날짜별 활동·API 원가">${esc(c.name)||'(이름없음)'}</a>${c.plan==='pro'?' <span style="color:#7ee787;font-size:11px">숏템</span>':''}${c.shortcl?` <b style="color:#ffd479;font-size:11px">숏클 ${esc(c.shortcl)}</b>`:''}`;
+        title="상세 시트 열기 — 날짜별 활동·API 원가">${esc(c.name)||'(이름없음)'}</a>${_programTags(c.program,esc)}`;
     const scBtn = `<button class="mini" style="margin-left:6px" onclick="setShortcl(${c.id},${!c.shortcl_open})">${c.shortcl_open?'숏클 승인됨 · 해제':'숏클 승인'}</button>`;
     return `<tr><td>${c.id}</td><td>${nameCell}${adminBadge}${scBtn}</td><td>${esc(c.phone)}</td>
       <td class=mini style="color:${c.gender?'#e8eaed':'#5f6773'}">${esc(c.gender)||'—'}</td>
@@ -985,6 +1013,17 @@ function drawCust(){
          <button class=btrial onclick="grantTrial(${c.id},this)">체험</button>
          <button class=bpro onclick="setPlan(${c.id},'pro',this)">pro</button>
        </span></div></div>
+
+   <div class=msec><h3>가입 프로그램</h3>
+     <div class=mrow>
+       <label style="margin-right:14px"><input type=checkbox id=pgShortem ${(c.program||{}).shortem?'checked':''}> 숏템 회원</label>
+       <label><input type=checkbox id=pgShortcl ${(c.program||{}).shortcl?'checked':''}> 숏클 회원</label></div>
+     <div class=mrow style="flex-wrap:wrap;gap:8px">
+       <select id=pgPlan><option value="">숏클 반 선택</option>${['기본반','고급반','프리미엄반'].map(p=>`<option ${(c.program||{}).plan===p?'selected':''}>${p}</option>`).join('')}</select>
+       <select id=pgMove><option value="">이동 없음</option><option value="free" ${(c.program||{}).move==='free'?'selected':''}>무료 이동</option><option value="paid" ${(c.program||{}).move==='paid'?'selected':''}>추가금 업그레이드</option></select>
+       <input id=pgTutor list=pgTutors placeholder="숏클 조교" maxlength=40 value="${esc((c.program||{}).tutor||'').replace(/"/g,'&quot;')}" style="width:130px">
+       <datalist id=pgTutors>${(window._TUTORS||[]).map(t=>`<option value="${esc(t).replace(/"/g,'&quot;')}">`).join('')}</datalist>
+       <button class=bok onclick="saveProgram(${c.id},this)">저장</button></div></div>
 
    <div class=msec><h3>포인트</h3>
      <div class=mrow><span class=k>잔액</span>
