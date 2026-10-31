@@ -19171,6 +19171,54 @@ def api_claude_me_preview(request: Request, kind: str, pid: str, t: str = ""):
     return Response(content=Path(got["file"]).read_bytes(), media_type=got["media_type"], headers=got["headers"])
 
 
+def _public_base(request: Request) -> str:
+    host = request.headers.get("host") or request.url.netloc
+    return f"http://{host}" if host.split(":")[0] in ("127.0.0.1", "localhost") else f"https://{host}"
+
+
+@app.get("/api/claude/me/start.md")
+def api_claude_me_start_md(request: Request):
+    """회원별 시작.md(관제 294) — 로그인한 회원에게만. 판단은 claude_portal.start_md."""
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return Response(_cp.start_md(cid, _public_base(request)), media_type="text/markdown; charset=utf-8",
+                    headers={"Cache-Control": "no-store", "Content-Disposition": "attachment; filename*=UTF-8''%EC%8B%9C%EC%9E%91.md"})
+
+
+@app.get("/api/claude/me/start.zip")
+def api_claude_me_start_zip(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return Response(_cp.start_zip(cid, _public_base(request)), media_type="application/zip",
+                    headers={"Cache-Control": "no-store", "Content-Disposition": "attachment; filename*=UTF-8''%EC%88%8F%ED%81%B4%EC%8B%9C%EC%9E%91_%EC%9D%B4%ED%8C%8C%EC%9D%BC%EC%9D%84%EC%84%A4%EC%B9%98.zip"})
+
+
+@app.get("/api/claude/me/start_line")
+def api_claude_me_start_line(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return JSONResponse({"ok": True, "line": _cp.start_line(cid, _public_base(request))}, headers={"Cache-Control": "no-store"})
+
+
+@app.post("/api/claude/start/redeem")
+def api_claude_start_redeem(request: Request):
+    from shopping_shorts import claude_portal as _cp
+    return _claude_json(_cp.call(_cp.start_redeem, request.headers.get("x-shortem-start"), Store(DB_PATH)))
+
+
+@app.get("/api/claude/start.ps1")
+def api_claude_start_ps1(request: Request):
+    """설치 스크립트(키·회원 정보 없음 — 누구나 받아도 된다). 주인 파일 = installer/install.ps1."""
+    body = (Path(__file__).resolve().parents[1] / "installer" / "install.ps1").read_text(encoding="utf-8")
+    return Response(body.replace("__BASE__", _public_base(request)), media_type="text/plain; charset=utf-8", headers={"Cache-Control": "no-store"})
+
+
 @app.get("/api/claude/me/installer/{os_id}")
 def api_claude_me_installer(request: Request, os_id: str):
     cid, st, denied = _claude_me(request)

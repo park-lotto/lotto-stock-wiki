@@ -150,6 +150,15 @@ video{width:100%;max-height:420px;background:#000;border-radius:10px;display:blo
 
   <section id="install">
     <h2>④ 연결 파일 <small>작은 파일 하나만 받으면, 실행 도구(브라우저 엔진·ffmpeg·파이썬·노드)는 Claude 가 알아서 받아 깝니다 — 설치 프로그램·관리자 권한 없음</small></h2>
+    <div class="card sel" style="margin-bottom:12px"><div class="nm">가장 쉬운 방법</div>
+      <ol style="padding-left:20px;margin:8px 0;font-size:16px;line-height:1.8">
+        <li>아래 <b>복사하기</b> 버튼을 누릅니다</li>
+        <li>키보드 <b>윈도우 키</b>를 누르고 <b>powershell</b> 을 입력한 뒤 <b>엔터</b></li>
+        <li>파란 창에서 <b>마우스 오른쪽 버튼</b>을 누른 뒤 <b>엔터</b></li>
+      </ol>
+      <button class="btn pri" id="startCopy" style="font-size:16px;padding:10px 22px">복사하기</button>
+      <a class="btn" style="display:inline-block;margin-left:6px;text-decoration:none" href="/api/claude/me/start.md">시작.md 받기</a>
+      <div class="sub" id="startMsg" style="margin-top:8px">내 회원 인증이 들어 있어 따로 입력할 것이 없습니다. 72시간 동안 쓸 수 있고, 남에게 주지 마세요.</div></div>
     <div class="grid" id="instCards"></div>
   </section>
 
@@ -363,6 +372,11 @@ function renderInstall(){
         +'<a class="btn pri" style="display:inline-block;margin-top:8px;text-decoration:none" href="'+esc(i.download)+'">내려받기</a>')
        :'<div class="empty" style="margin-top:6px">준비 중</div>')+'</div>'; }).join('');
 }
+
+$('startCopy').onclick=async()=>{
+  try{ const r=await api('/api/claude/me/start_line'); await navigator.clipboard.writeText(r.line); $('startMsg').textContent='복사했습니다. 이제 파워쉘을 열고 마우스 오른쪽 버튼을 누른 뒤 엔터를 치세요.'; }
+  catch(e){ $('startMsg').textContent=e.message||'복사하지 못했습니다. 다시 눌러 주세요'; }
+};
 
 async function load(selId){
   try{ H=await api('/api/claude/me/home'); }

@@ -48,6 +48,7 @@ LEASE_TTL = 180
 HEARTBEAT_EVERY = 60
 ASSET_URL_TTL = 6 * 3600
 PREVIEW_TOKEN_TTL = 600
+START_TTL = 72 * 3600    # 시작.md 인증값 기한
 DEVICES_MAX = 1          # PC 1대만(2026-10-19 사장님 결정, 관제 234 5판). 교체는 마이페이지 '기기 빼기'
 ADMIN_DEVICES = 2        # 관리자는 집·회사 PC 하나씩(사장님 10-31). 회원은 DEVICES_MAX 그대로
 PROFILES_MAX = 10
@@ -334,6 +335,73 @@ def issue_license(cid, store=None, slot=1) -> dict:
             c.execute("INSERT INTO claude_licenses(cid, kv, gkv, key_hash, issued, expires) VALUES(?,?,?,?,?,?)",
                       (cid, kv, _gkv(store), _key_hash(key), now, exp))
     return {"key": key, "kv": kv, "issued": now, "expires": exp}
+
+
+def member_key(cid, store=None) -> str:
+    """회원의 지금 키 — 서명 방식이라 저장 없이 다시 만들 수 있다(옛 키를 끊지 않는다). 없거나 끝났으면 새로 발급."""
+    store = _store(store)
+    ensure_schema(store)
+    cid = int(cid)
+    with _tx(store) as c:
+        row = _row(c, "SELECT kv, expires, revoked FROM claude_licenses WHERE cid=?", (cid,))
+    if row and not row["revoked"] and row["expires"] > _now():
+        key = f"SHORTEM-L1.{cid}.{row['expires']}.{row['kv']}.{_sig(cid, row['expires'], row['kv'])}"
+        try:
+            verify_license(key, store)
+            return key
+        except PortalError:
+            pass
+    return issue_license(cid, store)["key"]
+
+
+def start_token(cid) -> str:
+    """시작.md 에 들어가는 회원 인증값 — 키 원문은 대화에 남으므로 넣지 않고, 기한 있는 값만 넣는다."""
+    cid, exp = int(cid), _now() + START_TTL
+    return f"{cid}.{exp}.{_mac('start', f'{cid}|{exp}')[:32]}"
+
+
+def start_redeem(token, store=None) -> dict:
+    """인증값 → 회원 키. 설치 스크립트만 부른다. 판단은 이 함수 하나."""
+    store = _store(store)
+    parts = str(token or "").split(".")
+    if len(parts) != 3 or not parts[0].isdigit() or not parts[1].isdigit():
+        raise PortalError("bad_key", "시작 파일이 올바르지 않습니다 — 페이지에서 새로 받아 주세요")
+    cid, exp = int(parts[0]), int(parts[1])
+    if not hmac.compare_digest(parts[2], _mac("start", f"{cid}|{exp}")[:32]):
+        raise PortalError("bad_key", "시작 파일이 올바르지 않습니다 — 페이지에서 새로 받아 주세요")
+    if exp < _now():
+        raise PortalError("expired", "시작 파일 기한이 지났습니다 — 페이지에서 새로 받아 주세요")
+    if not _gate(store, "claude_portal_enabled", cid):
+        raise PortalError("disabled", "클로드형 서비스가 지금 꺼져 있습니다")
+    return {"ok": True, "key": member_key(cid, store)}
+
+
+def start_line(cid, base) -> str:
+    """회원별 설치 한 줄 — PowerShell 에 붙여 넣으면 끝난다(페이지 복사 버튼·시작.md 공용)."""
+    return f"$env:SHORTEM_START='{start_token(cid)}'; irm {base}/api/claude/start.ps1 | iex"
+
+
+def start_md(cid, base) -> str:
+    """회원별 시작.md — Claude Code 입력창에 끌어다 놓으면 한 줄로 설치가 끝난다."""
+    line = start_line(cid, base)
+    return ("# 숏클 시작\n\n"
+            "이 파일을 Claude Code 입력창에 끌어다 놓고 엔터를 누르세요. 실행 허용을 물으면 '예'만 누르면 됩니다.\n"
+            f"Claude Code 가 없으면 PowerShell 창에 아래 한 줄을 붙여 넣어도 같습니다. 이 파일은 {START_TTL // 3600}시간 동안 쓸 수 있고, 남에게 주지 마세요.\n\n"
+            f"```powershell\n{line}\n```\n\n"
+            "Claude 에게 — 아래만 하세요. 다른 파일은 열거나 고치지 마세요.\n\n"
+            "1. 위 한 줄을 PowerShell 로 백그라운드 실행합니다. 약 1GB 를 받아 10분 넘게 걸릴 수 있으니 끝날 때까지 기다립니다.\n"
+            "2. `설치 완료` 가 나오면 사용자에게 \"새 창에서 준비 점검이 시작됩니다\"라고 한 줄만 알립니다.\n"
+            "3. 실패하면 나온 메시지를 쉬운 말로 알리고 같은 한 줄을 한 번 더 실행합니다.\n")
+
+
+def start_zip(cid, base) -> bytes:
+    """회원별 시작 꾸러미 — 받은 압축 파일을 Claude Code 입력창에 넣으면 안의 시작.md 대로 설치한다."""
+    import io
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("시작.md", start_md(cid, base))
+    return buf.getvalue()
 
 
 def _parse_key(key):
