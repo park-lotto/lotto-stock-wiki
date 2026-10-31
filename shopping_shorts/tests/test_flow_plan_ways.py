@@ -77,6 +77,7 @@ def _seen(st, **kw):
 
 
 def test_final_sheet_is_asked_even_when_gate_passes():
+    monkeypatch.setattr(F, "EYE_REVIEW", False)
     """숏클 지침 15-0 — 자동 검사 통과여도 완성 전 1초 시트를 회원 Claude 가 한 번 본다(사장님 PC 제작과 같게)."""
     st = _st()
     st["phase"] = "check_got"
@@ -90,6 +91,7 @@ def test_final_sheet_is_asked_even_when_gate_passes():
 
 
 def test_final_sheet_problem_goes_to_fix_with_line_way(monkeypatch):
+    monkeypatch.setattr(F, "EYE_REVIEW", False)
     seen = {}
     monkeypatch.setattr(F, "_fix_review", lambda st, why, sheet, rid, more=None: seen.setdefault(rid, sheet) and {"id": rid, "ask": why, "show": [], "need": ["ok"]} or {"id": rid, "ask": why, "show": [], "need": ["ok"]})
     monkeypatch.setattr(F, "audit_script", lambda st_, S, M: {"ok": True})
