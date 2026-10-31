@@ -252,8 +252,8 @@ tbody tr:hover{background:#1b1b22}
      ★입금 증명이 아니다. 통장 확인은 그대로 하시고, 이건 '연락을 놓치지 않기 위한' 목록이다. -->
 <div class="card wait">
   <h2>💰 입금 신고 (<span id=dcnt>0</span>건) <span id=dMsg class=msg></span></h2>
-  <table><thead><tr><th>신고시각</th><th>성함</th><th>입금자명</th><th>연락처</th><th>처리</th></tr></thead>
-  <tbody id=drows><tr><td colspan=5 class=empty>불러오는 중…</td></tr></tbody></table>
+  <table><thead><tr><th>신고시각</th><th>성함</th><th>상품</th><th>입금자명</th><th>연락처</th><th>처리</th></tr></thead>
+  <tbody id=drows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
 
 <div class="card wait">
@@ -760,10 +760,10 @@ async function loadDepositClaims(){
     const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
     document.getElementById('drows').innerHTML= items.length ? items.map(c=>{
       const t=c.created_at? new Date(c.created_at).toLocaleString('ko-KR'):'-';
-      return `<tr><td>${esc(t)}</td><td><b>${esc(c.name)}</b></td>`
+      return `<tr><td>${esc(t)}</td><td><b>${esc(c.name)}</b></td><td>${esc(c.product)||'-'}</td>`
         +`<td style="color:#ffd479">${esc(c.depositor)}</td><td>${esc(c.contact)||'-'}</td>`
         +`<td><button class=bok onclick="closeClaim(${Number(c.id)})">확인함</button></td></tr>`;
-    }).join('') : '<tr><td colspan=5 class=empty>새 입금 신고가 없습니다.</td></tr>';
+    }).join('') : '<tr><td colspan=6 class=empty>새 입금 신고가 없습니다.</td></tr>';
   }catch(e){}
 }
 async function closeClaim(id){
