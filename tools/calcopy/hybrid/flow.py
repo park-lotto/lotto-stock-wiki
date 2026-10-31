@@ -2673,8 +2673,18 @@ def ph_check_got(st, m, rp, u):
     ask = EYE_ASK.format(rows="\n".join(f"{k} {q} — 기준: {c_}" for k, q, c_ in rows), keys=keys)
     texts = "".join(f"\n\n## {n}\n{str(t)[:5000]}" for n, t in (c.get("eye_texts") or {}).items())
     sc = st.get("script") or {}
+    texts += eye_material_note(st["eye_pack"], sc.get("G"))
     return {"review": [_rv(f"eye_{st['version']}", ask + texts + "\n\n## 대본\n" + json.dumps(sc.get("S") or {}, ensure_ascii=False)[:5000],
                            [_img(x) for x in st["eye_pack"]][:6], need=tuple(k for k, _, _ in rows), meta={"fresh": True})], "then": "check_look"}
+
+
+def eye_material_note(pack: list, grounds) -> str:
+    """(판단 주인 — 눈 검수가 받는 자료) 답할 자료가 없으면 △ 만 나와 영원히 못 지나간다(10-31 티라미수 8번 반복).
+    근거.md 는 서버가 가진 글을 싣고, 회원 PC 에 없는 벤치 대조 시트는 벤치 본보기 시트로 보고 없으면 그 사실을 알린다."""
+    out = f"\n\n## 근거.md\n{str(grounds)[:5000]}" if str(grounds or "").strip() else ""
+    if not any("벤치" in str(x) or str(x).replace("\\", "/").endswith("bench/sheet.jpg") for x in pack):
+        out += "\n\n★이 PC 에는 벤치 대조 자료가 없다 — 자료가 없다는 이유로 △ 를 주지 마라. E1·E4 는 이 판의 말투·자막 규칙과 완성본 자체의 결함으로 판정한다."
+    return out
 
 
 def _eye_verdict(a: dict, keys: list) -> tuple[bool, list]:
