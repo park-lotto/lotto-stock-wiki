@@ -49,6 +49,7 @@ HEARTBEAT_EVERY = 60
 ASSET_URL_TTL = 6 * 3600
 PREVIEW_TOKEN_TTL = 600
 DEVICES_MAX = 1          # PC 1대만(2026-10-19 사장님 결정, 관제 234 5판). 교체는 마이페이지 '기기 빼기'
+ADMIN_DEVICES = 2        # 관리자는 집·회사 PC 하나씩(사장님 10-31). 회원은 DEVICES_MAX 그대로
 PROFILES_MAX = 10
 ASSET_KINDS = ("font", "sfx", "bgm", "template", "meme")
 # 견본 종류 → 허용 확장자(앞이 우선). 원본 kind 와 별개로 목소리·통과작도 견본만 있다.
@@ -262,6 +263,12 @@ def _thresholds(store) -> dict:
         except (ValueError, AttributeError):
             log.warning("claude_portal: claude_anomaly_thresholds JSON 이 깨져 기본값을 쓴다")
     return t
+
+
+def devices_max(cid) -> int:
+    """이 계정의 기기 상한 — 판단은 여기 한 곳. 관리자 판정은 app._is_admin."""
+    from shopping_shorts import app as _app
+    return max(DEVICES_MAX, ADMIN_DEVICES) if _app._is_admin(cid) else DEVICES_MAX
 
 
 def _gate(store, key, cid) -> bool:
@@ -672,14 +679,15 @@ def license(ctx: dict, store=None) -> dict:
     now = _now()
     fh = _fp_hash(fp)
     registered_now = False
+    limit = devices_max(cid)
     with _tx(store, write=True) as c:
         dev = _row(c, "SELECT * FROM claude_devices WHERE cid=? AND fp_hash=? AND removed=0", (cid, fh))
         live = _rows(c, "SELECT slot FROM claude_devices WHERE cid=? AND removed=0", (cid,))
         if dev:
             c.execute("UPDATE claude_devices SET last_seen=?, name=? WHERE id=?", (now, name, dev["id"]))
-        elif len(live) < DEVICES_MAX:
+        elif len(live) < limit:
             used = {r["slot"] for r in live}
-            slot = next(s for s in range(1, DEVICES_MAX + 1) if s not in used)
+            slot = next(s for s in range(1, limit + 1) if s not in used)
             c.execute("INSERT INTO claude_devices(cid, fp_hash, dev_id, name, slot, created, last_seen) VALUES(?,?,?,?,?,?,?)",
                       (cid, fh, fp[:12], name, slot, now, now))
             dev = {"slot": slot, "name": name}
@@ -687,12 +695,12 @@ def license(ctx: dict, store=None) -> dict:
             live.append({"slot": slot})
     if not dev:
         _raise_on(anomaly_check(cid, {"type": "device_limit", "route": "license", **_ev(ctx)}, store=store))
-        raise PortalError("device_limit", f"기기 {DEVICES_MAX}대가 이미 등록돼 있습니다 — 마이페이지에서 기기를 빼고 다시 시도하세요")
+        raise PortalError("device_limit", f"기기 {limit}대가 이미 등록돼 있습니다 — 마이페이지에서 기기를 빼고 다시 시도하세요")
     _raise_on(anomaly_check(cid, {"type": "license", "route": "license", **_ev(ctx)}, store=store))
     row = info["row"]
     return {"ok": True, "cid": cid, "member_name": _member_name(store, cid), "plan": row.get("plan") or "claude", "expires": info["exp"],
             "device": {"id": fp[:12], "name": name, "slot": dev["slot"], "registered_now": registered_now},
-            "devices_used": len(live), "devices_max": DEVICES_MAX,
+            "devices_used": len(live), "devices_max": limit,
             "entitled_presets": _entitled(store, cid, row),
             "presets": preset_names(store, _entitled(store, cid, row)),
             "profiles": [{"profile_id": p["profile_id"], "name": p["name"], "preset_id": p["preset_id"],
@@ -1193,7 +1201,7 @@ def anomaly_check(cid, event: dict, store=None) -> dict:
         elif typ in ("license", "device_limit"):
             hit, detail = False, ""
             if typ == "device_limit":
-                hit, detail = True, f"등록 안 된 기기에서 키 사용(기기 {DEVICES_MAX}대 찬 상태)"
+                hit, detail = True, f"등록 안 된 기기에서 키 사용(기기 {devices_max(cid)}대 찬 상태)"
             else:
                 n = c.execute("SELECT COUNT(DISTINCT country) FROM claude_license_log WHERE cid=? AND kind='request' AND route='license' "
                               "AND ts>=? AND country<>''", (cid, now - 86400)).fetchone()[0]
@@ -1510,7 +1518,7 @@ def home(cid, store=None) -> dict:
                       "caption_modes": list(channel_profile.CAPTION_MODES)},
             "profiles": list_profiles(cid, store), "license": lic_out,
             "devices": [{"id": d["dev_id"], "name": d["name"], "slot": d["slot"], "last_seen": d["last_seen"]} for d in devs],
-            "devices_max": DEVICES_MAX,
+            "devices_max": devices_max(cid),
             "lease": ({"device": cur["device_name"], "step": cur["step_name"], "since": cur["acquired"]} if cur else None),
             "notices": [{"title": RULE_TITLE.get(n["rule"], n["rule"]), "level": n["level"], "ts": n["ts"]} for n in notes],
             "installers": _installers(), "steps": list(STEP_NAMES),
