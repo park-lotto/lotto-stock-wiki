@@ -297,8 +297,7 @@ def need_list(version: str, url: str = "", fmt: str = "") -> list[dict]:
             from tools.calcopy.engine import voice_synth as PM
             if not PM._member_key("fish"):
                 out.append({"id": "fish", "label": "목소리 키(피쉬)", "how": "setting"})
-    if not PAID_OFF and not voice.get("none") and not have_speechmatics():   # 나레 없는 판(voice.none)은 받아쓸 소리가 없다     # 받아쓰기(원음·완성본 줄별 대조 narr_verify·asr_cross) — 사장님 10-26 '스피치매틱스도 무료 API 필요'. 키 자리 = asr_local.speechmatics_key
-        out.append({"id": "speechmatics", "label": "스피치매틱스 키(무료)", "how": "setting"})
+    # 스피치매틱스는 필수가 아니다 — 키가 없으면 설치본의 위스퍼로 받아쓴다(asr_cross single · flow asr_single, 회원 지침 2-1)
     if fmt in ("해외원본형", "자막노래형"):   # 박힌 자막 지우기(VMake)는 이 두 형식만 부른다(flow f_clean·f_render) — 판 orig_text.mode·키 자리 판단 = vmake_clean.ready
         from tools.calcopy import vmake_clean as VC
         if VC.ready(VC.style_mode(version))["mode"] == "need_key":
@@ -1100,6 +1099,23 @@ def c_origin_words(W, d):
     return {"words": words, "from": how}
 
 
+def c_peer_points(W, d):
+    """같은 소재 남의 영상 자막(제작순서 조사 — 납품 포인트.md 의 재료). 소재 쇼츠·그 채널은 뺀다. 판단 없음 — 글만 서버로. 댓글은 안 받는다."""
+    skip, chan = set(d.get("skip_ids") or []), str(d.get("skip_channel") or "").strip()
+    found = [x for x in _search(d.get("queries") or [], 10, True) if x.get("id") not in skip and not (chan and chan == str(x.get("channel") or x.get("uploader") or "").strip())]
+    out, n = [], int(d.get("n") or 4)
+    for x in found:
+        if len(out) >= n:
+            break
+        words, how = _origin_words(W, x["id"])
+        if how == "blocked":                 # 막히면 더 두드리지 않는다(계정 보호, c_origin_subs 와 같은 원칙)
+            break
+        text = " ".join(str(w[1]) for w in words).strip()
+        if text:
+            out.append({"id": x["id"], "title": x.get("title"), "channel": x.get("channel") or x.get("uploader"), "text": text[:1200]})
+    return {"videos": out, "searched": len(found)}
+
+
 def c_screen(W, d):
     """재료 후보(제작순서 05) — 받기·시트는 screen 모듈(yt-dlp 만). 캐시 모드면 받아 둔 재료 영상으로 시트를 만든다."""
     skip = {d.get("bench_id"), d.get("origin_id")}
@@ -1625,6 +1641,8 @@ def c_check(W, d):
         ok = False
     E = Path(r.get("eye_pack_dir") or (W / v / "eye"))
     eye_files = [rel(W, E / n) for n in EYE_FILES if (E / n).exists()]
+    if not any("벤치" in x for x in eye_files) and (W / "bench" / "sheet.jpg").exists():
+        eye_files.insert(1, rel(W, W / "bench" / "sheet.jpg"))     # 회원 PC 는 벤치 대조 시트를 못 만든다 — 받아 둔 벤치 시트로 비교한다
     eye_texts = {n: (E / n).read_text(encoding="utf-8")[:6000] for n in EYE_TEXTS if (E / n).exists()}
     return {"auto": {"ok": ok, "rows": rows, "report": str(r.get("report")), "n_bad": sum(1 for x in rows if x.get("ok") is False),
                      "n_unmeasured": sum(1 for x in rows if x.get("ok") is None and not x.get("ref"))},
@@ -2132,7 +2150,7 @@ def c_thumb_auto(W, d):
 
 
 CMDS = {"env": c_env, "bench": c_bench, "search": c_search, "peer_sheet": c_peer_sheet, "channel_list": c_channel_list, "origin_subs": c_origin_subs,
-        "origin_get": c_origin_get, "channel_find": c_channel_find, "origin_probe": c_origin_probe, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "coupang_reviews": c_coupang_reviews, "cand_sheet": c_cand_sheet, "naver": c_naver, "origin_words": c_origin_words,
+        "origin_get": c_origin_get, "channel_find": c_channel_find, "origin_probe": c_origin_probe, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "coupang_reviews": c_coupang_reviews, "cand_sheet": c_cand_sheet, "naver": c_naver, "origin_words": c_origin_words, "peer_points": c_peer_points,
         "screen": c_screen, "download": c_download, "product_stills": c_product_stills, "orig_heard": c_orig_heard, "asr_spans": c_asr_spans, "shot_sheets": c_shot_sheets, "mat_sheets": c_mat_sheets,
         "write_doc": c_write_doc, "plan": c_plan, "render": c_render, "check": c_check, "finish": c_finish,
         "origin_foreign": c_origin_foreign, "of_settle": c_of_settle, "clean_text": c_clean_text, "materials_draft": c_materials_draft, "thumb_auto": c_thumb_auto}

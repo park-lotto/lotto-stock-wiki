@@ -114,3 +114,11 @@ def test_task_material_uses_files_claude_added():
     st["_task"] = {"id": "task_1", "why": "x"}
     out = F.ph_task_got(st, {}, {"task_1": {"action": "material", "files": ["src/new.mp4"], "note": "직접 받음"}}, {})
     assert out["then"] == "more_sheets" and out["do"][0]["files"] == ["src/new.mp4"]
+
+
+def test_channel_copy_refuses_bench_sentence():
+    from tools.calcopy import bench_distance as BD
+    B = BD.bench("banggu")
+    txt = next(t for t in B["asr"].values() if len(BD._flat(t)) > 40)
+    S = {"lines": [{"tts": txt[:60], "caps": [txt[:60]]}]}
+    assert F._channel_copy("썰템홈샷판", S, {}) and not F._channel_copy("다른판", S, {})

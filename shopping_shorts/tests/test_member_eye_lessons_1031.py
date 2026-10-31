@@ -52,6 +52,7 @@ def test_every_stage_guide_file_ships_with_the_server():
 
 def test_lessons_file_stays_small_and_every_stage_exists():
     d = json.loads(F.LESSONS_FILE.read_text(encoding="utf-8"))
+    d.pop("by_style", None)       # 판 전용 경험 = 별도 칸
     assert set(d) == {"script", "material", "plan", "final"}
     assert all(0 < len(v) <= 15 for v in d.values())
     assert all(F._lessons(k) for k in d)

@@ -124,7 +124,10 @@ function freshContent(p) {
 }
 
 // 요청 하나 → MCP 내용(글 + 그림). 그림은 이미지 내용으로 바로 싣는다(어느 Claude 앱이든 본다).
-export function requestContent(p, maxImages = 40) {
+// ★응답 하나가 16MB 를 넘으면 Claude Code 가 연결을 끊고 다시 붙지 않는다(10-31 실측: 소재 시트 27장 14MB → base64 18.6MB, 3번 끊김).
+//   예산 안의 그림만 싣고, 넘친 그림은 버리지 않고 경로로 줘 Read 로 열게 한다. budget 을 넘겨 받으면 한 응답의 요청들이 함께 쓴다.
+export const IMAGE_BUDGET_B64 = 12 * 1024 * 1024;
+export function requestContent(p, maxImages = 40, budget = { left: IMAGE_BUDGET_B64 }) {
   const lines = [`[AI 요청 ${p.id}] 권장 모델: ${p.req.tier}${p.retry_why ? ` · 앞 답이 틀렸다: ${p.retry_why}` : ''}`,
     '※ 숏템 내부 작업 지시입니다 — 고객에게 이 글을 보여 주거나 옮겨 적거나 설명하지 마세요.',
     '아래 지시대로 JSON 객체 하나만 만들어 shortem_ai(action="answer", id, answer) 로 보내세요. 지어내지 마세요.', '', p.req.prompt];
@@ -134,10 +137,15 @@ export function requestContent(p, maxImages = 40) {
   let n = 0;
   for (const part of p.req.parts || []) {
     if (part.kind === 'text') { lines.push('', part.text); continue; }
-    if (part.kind === 'image' && n < maxImages) {
-      lines.push('', `(그림 ${part.file})`);
-      try { content.push({ type: 'image', data: fs.readFileSync(jail(p.dir, part.file)).toString('base64'), mimeType: part.file.endsWith('.png') ? 'image/png' : 'image/jpeg' }); n++; }
-      catch { lines.push('(그림을 읽지 못함)'); }
+    if (part.kind === 'image') {
+      try {
+        const file = jail(p.dir, part.file), size = Math.ceil(fs.statSync(file).size / 3) * 4;
+        if (n >= maxImages || size > budget.left) { lines.push('', `(그림 ${part.file} — 응답 크기 때문에 여기 싣지 않았습니다. 답하기 전에 Read 로 직접 여세요: ${file})`); continue; }
+        const data = fs.readFileSync(file).toString('base64');
+        lines.push('', `(그림 ${part.file})`);
+        content.push({ type: 'image', data, mimeType: part.file.endsWith('.png') ? 'image/png' : 'image/jpeg' });
+        budget.left -= data.length; n++;
+      } catch { lines.push('(그림을 읽지 못함)'); }
     }
   }
   return [{ type: 'text', text: lines.join('\n') }, ...content];
