@@ -22,7 +22,7 @@ sys.path.insert(0, str(ROOT))
 from tools.calcopy.hybrid import flow as F  # noqa: E402
 from tools.calcopy.hybrid import rules as RU  # noqa: E402
 
-E_OK = {f"E{k}": {"v": "○", "memo": "ok"} for k in range(1, 10)}
+E_OK = {**{f"E{k}": {"v": "○", "memo": "ok"} for k in range(1, 10)}, "title_seen": "", "scenes": [{"seen": "화면"}]}     # 본 증거 칸(flow.EYE_PROOF_NEED)
 
 
 def _measure(d: dict, ctx: dict) -> dict:
@@ -249,7 +249,8 @@ def test_eye_triangle_is_not_pass(monkeypatch):
     eye = {**E_OK, "E4": {"v": "△", "memo": "애매"}}          # 렌더 뒤 사람 눈 = E1·E4·E6(사장님 10-26 — E3 은 계획 검수에서 한 번)
     st = F.start("https://youtu.be/BENCH1", "키치잇판", "sid")
     tr, res, st2 = walk(F, st, {"eye": eye})
-    assert res["status"] == "stop" and "E4" in st2["stopped"]["detail"] and "E4" not in res["why"]
+    # 자동 관문 통과 + 눈 지적만 남음 = 고치기 한도 뒤 멈추지 않고 완성, 지적은 회원에게 알린다(사장님 10-31 "멈추지 말고 해결해 나가게")
+    assert res["status"] == "done" and any("E4" in x for x in st2["look_left"]) and st2["look"]["ok"] is False
 
 
 def test_runner_check_uses_quality_gate_and_force_fail(tmp_path, monkeypatch):
