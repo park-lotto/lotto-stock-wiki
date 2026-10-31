@@ -1,6 +1,6 @@
 {
  "for": "hottemreport 프리셋 소재 창고 — 벤치 채널 쇼츠 조회순(flow.bench_pool)",
- "made": "2026-10-30",
+ "made": "2026-10-31",
  "basis": "yt-dlp --flat-playlist <채널>/shorts 조회수(view_count) — bench_pool.py build",
  "channels": [
   "https://www.youtube.com/@핫템리포트"
@@ -20,7 +20,7 @@
   },
   {
    "id": "OE-11wb7vdY",
-   "views": 5600000,
+   "views": 5800000,
    "title": "AI 주작 논란 터진 아이언맨 헬멧",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
@@ -38,7 +38,7 @@
   },
   {
    "id": "RWS43GF1A_U",
-   "views": 2300000,
+   "views": 2400000,
    "title": "The E-Bike Gen Z Americans Are Obsessed With",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
@@ -55,6 +55,12 @@
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
+   "id": "a3HLqd4gsfo",
+   "views": 1500000,
+   "title": "미국 커플들이 환장하는 로봇의 정체",
+   "ch": "https://www.youtube.com/@핫템리포트"
+  },
+  {
    "id": "IRFN5B_2LMo",
    "views": 1400000,
    "title": "요즘 미국에서 환장하는 전기차 정체",
@@ -62,26 +68,20 @@
   },
   {
    "id": "4Z9JYCjBeH4",
-   "views": 1200000,
+   "views": 1300000,
    "title": "일본 대기업이 해결한 욕실 난제",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
    "id": "02_FvNC0YTg",
-   "views": 1100000,
+   "views": 1200000,
    "title": "한국 헬스장에 없는 난이도 최강 운동",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
    "id": "a06yYTgpa_c",
-   "views": 1100000,
+   "views": 1200000,
    "title": "월 천 찍은 유튜버들이 산다는 모니터",
-   "ch": "https://www.youtube.com/@핫템리포트"
-  },
-  {
-   "id": "a3HLqd4gsfo",
-   "views": 1100000,
-   "title": "미국 커플들이 환장하는 로봇의 정체",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
@@ -91,15 +91,15 @@
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
-   "id": "4EU4FjIoqrY",
-   "views": 904000,
-   "title": "존잘도 눈썹 밀면 외계인!!",
+   "id": "31CIMtXmCao",
+   "views": 947000,
+   "title": "요즘 미국 유튜버들이 난리 난 챌린지",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
-   "id": "31CIMtXmCao",
-   "views": 898000,
-   "title": "요즘 미국 유튜버들이 난리 난 챌린지",
+   "id": "4EU4FjIoqrY",
+   "views": 904000,
+   "title": "존잘도 눈썹 밀면 외계인!!",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
@@ -109,8 +109,14 @@
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
+   "id": "MNoGikvG8xc",
+   "views": 817000,
+   "title": "하루 만에 5만대 팔린 오리 로봇",
+   "ch": "https://www.youtube.com/@핫템리포트"
+  },
+  {
    "id": "KFheIZe0DGQ",
-   "views": 794000,
+   "views": 795000,
    "title": "1분도 못 버티는 괴물 운동의 정체",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
@@ -121,21 +127,21 @@
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
-   "id": "MNoGikvG8xc",
-   "views": 578000,
-   "title": "하루 만에 5만대 팔린 오리 로봇",
-   "ch": "https://www.youtube.com/@핫템리포트"
-  },
-  {
    "id": "Rpfk8Yn0Y-c",
-   "views": 337000,
+   "views": 339000,
    "title": "요즘 미국에서 난리 난 운동",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
    "id": "gBalgjWMRfQ",
-   "views": 330000,
+   "views": 331000,
    "title": "의자 바퀴에 빡쳐 500억 번 직장인",
+   "ch": "https://www.youtube.com/@핫템리포트"
+  },
+  {
+   "id": "BKctbi_gMPc",
+   "views": 320000,
+   "title": "지구에서 쓰는 일론 머스크 헬멧 정체",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
@@ -145,14 +151,8 @@
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
-   "id": "BKctbi_gMPc",
-   "views": 313000,
-   "title": "지구에서 쓰는 일론 머스크 헬멧 정체",
-   "ch": "https://www.youtube.com/@핫템리포트"
-  },
-  {
    "id": "YuYNhbtw7zM",
-   "views": 254000,
+   "views": 257000,
    "title": "남자들이 두 번 보는 청소 영상",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
@@ -188,19 +188,19 @@
   },
   {
    "id": "0o3Uh12bM00",
-   "views": 178000,
+   "views": 179000,
    "title": "공대생들이 땅을 치고 후회하는 컵",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
    "id": "VIRd0Y_tv94",
-   "views": 154000,
+   "views": 155000,
    "title": "가운데 뻥 뚫고 대박 난 전기 오토바이",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
    "id": "cxhu_izMlik",
-   "views": 149000,
+   "views": 150000,
    "title": "강아지 덕에 대박 난 AI 킥보드 신발",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
@@ -271,15 +271,15 @@
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
-   "id": "y2JFXIjCHrM",
+   "id": "BHsiHQ9uZA0",
    "views": 43000,
-   "title": "가방에 사는 일본 AI 로봇의 정체",
+   "title": "매일 셰프가 해주는 밥 먹는 법",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
-   "id": "BHsiHQ9uZA0",
-   "views": 42000,
-   "title": "매일 셰프가 해주는 밥 먹는 법",
+   "id": "y2JFXIjCHrM",
+   "views": 43000,
+   "title": "가방에 사는 일본 AI 로봇의 정체",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
@@ -301,6 +301,12 @@
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
+   "id": "7YFUgnMv1MQ",
+   "views": 38000,
+   "title": "고작 1kg인 18인치 노트북",
+   "ch": "https://www.youtube.com/@핫템리포트"
+  },
+  {
    "id": "3T8hnGlxiKE",
    "views": 38000,
    "title": "한국 도입이 시급한 직업 1순위!!",
@@ -310,6 +316,12 @@
    "id": "cIuRFzUnqq0",
    "views": 37000,
    "title": "DJI가 막으려한 액션캠의 정체",
+   "ch": "https://www.youtube.com/@핫템리포트"
+  },
+  {
+   "id": "fgA_uTG5iLA",
+   "views": 33000,
+   "title": "반려동물 고인물의 국룰 미국 청소기",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
@@ -337,6 +349,12 @@
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
+   "id": "sEjVunQ8ros",
+   "views": 31000,
+   "title": "뉴욕에서 난리 난 가정용 벌집",
+   "ch": "https://www.youtube.com/@핫템리포트"
+  },
+  {
    "id": "Ls7BKO0e3Us",
    "views": 30000,
    "title": "아이폰 유저들만 환장하는 카메라",
@@ -352,12 +370,6 @@
    "id": "jaML-7tULak",
    "views": 29000,
    "title": "카페 알바의 뜻밖의 재능!!",
-   "ch": "https://www.youtube.com/@핫템리포트"
-  },
-  {
-   "id": "fgA_uTG5iLA",
-   "views": 28000,
-   "title": "반려동물 고인물의 국룰 미국 청소기",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
@@ -400,12 +412,6 @@
    "id": "3D5wGT-NUEw",
    "views": 23000,
    "title": "요즘 가장 힙한 1968년 악기",
-   "ch": "https://www.youtube.com/@핫템리포트"
-  },
-  {
-   "id": "7YFUgnMv1MQ",
-   "views": 21000,
-   "title": "고작 1kg인 18인치 노트북",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
@@ -523,6 +529,12 @@
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
+   "id": "3QeN8l86VJo",
+   "views": 11000,
+   "title": "강아지들이 환징하는 마사지기",
+   "ch": "https://www.youtube.com/@핫템리포트"
+  },
+  {
    "id": "lTYLCWdFwHA",
    "views": 11000,
    "title": "다이소에서 못 파는 안 잘리는 가위",
@@ -541,14 +553,8 @@
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
-   "id": "3QeN8l86VJo",
-   "views": 10000,
-   "title": "강아지들이 환징하는 마사지기",
-   "ch": "https://www.youtube.com/@핫템리포트"
-  },
-  {
    "id": "i4Zb5y2s_dM",
-   "views": 9900,
+   "views": 10000,
    "title": "미국에서 난리 난 민폐 아재 패션",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
@@ -572,19 +578,19 @@
   },
   {
    "id": "A1NMz3EJDkk",
-   "views": 8500,
+   "views": 8600,
    "title": "병맥주에 미친 천재가 만든 장난감",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
    "id": "bUsw0nrELjQ",
-   "views": 8300,
+   "views": 8400,
    "title": "카메라가 미친 아이패드 폴드폰",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
    "id": "PLx9FDmDNTs",
-   "views": 8300,
+   "views": 8400,
    "title": "미국 월가에서 난리 난 의자",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
@@ -596,7 +602,7 @@
   },
   {
    "id": "ZENBe5VXh4A",
-   "views": 8100,
+   "views": 8200,
    "title": "체스 몰라도 무조건 탐나는 체스판",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
@@ -620,7 +626,7 @@
   },
   {
    "id": "dtF7c2VjnX8",
-   "views": 5400,
+   "views": 5500,
    "title": "미국에서 난리 난 미친 모니터",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
@@ -638,19 +644,19 @@
   },
   {
    "id": "G4r0LMCEnWY",
-   "views": 4100,
+   "views": 4200,
    "title": "딸바보 페스티벌 인기상 클라스!!",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
    "id": "tE9Z_e-UTW4",
-   "views": 4000,
+   "views": 4100,
    "title": "물에 넣어도 안 꺼지는 성냥",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
   {
    "id": "J2TTWYA1QC0",
-   "views": 4000,
+   "views": 4100,
    "title": "남자가 절대 웃으면 안되는 날! #웃긴영상 #상황극",
    "ch": "https://www.youtube.com/@핫템리포트"
   },
@@ -662,7 +668,7 @@
   },
   {
    "id": "kppvuHg9xto",
-   "views": 3400,
+   "views": 3500,
    "title": "바다 보이는 서울 원룸의 정체",
    "ch": "https://www.youtube.com/@핫템리포트"
   },

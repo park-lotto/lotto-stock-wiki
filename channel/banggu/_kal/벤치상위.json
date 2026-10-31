@@ -1,6 +1,6 @@
 {
  "for": "banggu 프리셋 소재 창고 — 벤치 채널 쇼츠 조회순(flow.bench_pool)",
- "made": "2026-10-30",
+ "made": "2026-10-31",
  "basis": "yt-dlp --flat-playlist <채널>/shorts 조회수(view_count) — bench_pool.py build",
  "channels": [
   "https://www.youtube.com/@방구석친구들D"
@@ -98,7 +98,7 @@
   },
   {
    "id": "noGEfqs8HQU",
-   "views": 828000,
+   "views": 829000,
    "title": "사무용키보드계 1황",
    "ch": "https://www.youtube.com/@방구석친구들D"
   },
@@ -625,15 +625,15 @@
    "ch": "https://www.youtube.com/@방구석친구들D"
   },
   {
-   "id": "7t6Of0lCoDY",
+   "id": "rSvDWJJ218s",
    "views": 1500,
-   "title": "움직이는 키티 실존 #도어라이트",
+   "title": "귀 아픈 사람들 지갑 털어버린 제품",
    "ch": "https://www.youtube.com/@방구석친구들D"
   },
   {
-   "id": "rSvDWJJ218s",
-   "views": 1400,
-   "title": "귀 아픈 사람들 지갑 털어버린 제품",
+   "id": "7t6Of0lCoDY",
+   "views": 1500,
+   "title": "움직이는 키티 실존 #도어라이트",
    "ch": "https://www.youtube.com/@방구석친구들D"
   },
   {
@@ -644,7 +644,7 @@
   },
   {
    "id": "gpmEOFx2cSs",
-   "views": 826,
+   "views": 828,
    "title": "물무서운 사람한테 추천",
    "ch": "https://www.youtube.com/@방구석친구들D"
   }

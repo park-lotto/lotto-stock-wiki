@@ -1,6 +1,6 @@
 {
  "for": "kitchit 프리셋 소재 창고 — 벤치 채널 쇼츠 조회순(flow.bench_pool)",
- "made": "2026-10-30",
+ "made": "2026-10-31",
  "basis": "yt-dlp --flat-playlist <채널>/shorts 조회수(view_count) — bench_pool.py build",
  "channels": [
   "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
@@ -14,7 +14,7 @@
   },
   {
    "id": "Nv99RyxmrfU",
-   "views": 468000,
+   "views": 499000,
    "title": "메이크업 실장님도 탐낸 장윤주 베이스가 1만원대? 😱  ",
    "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
   },
@@ -26,31 +26,31 @@
   },
   {
    "id": "oTi41R74WIY",
-   "views": 432000,
+   "views": 453000,
    "title": "고현정이 서촌 마실갈 때 툭 맸던 100만원대 반전 가방? (품절됐다 재입고!)",
    "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
   },
   {
    "id": "Ks5kYYKAUlQ",
-   "views": 399000,
+   "views": 401000,
    "title": "선크림 바르고 속건조 심할 때! 박세리가 결국 정착한 촉촉 찐템",
    "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
   },
   {
-   "id": "04xwiT9bj2s",
-   "views": 355000,
-   "title": "74세라는 게 믿기지 않는 배우 박정수 님의 15년째 내돈내산 피부 관리 비법!",
-   "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
-  },
-  {
    "id": "Ybyas9oI9lI",
-   "views": 341000,
+   "views": 399000,
    "title": "70대 박정수가 민낯에 이것만 바르는 진짜 이유 (순한 유기농 썬크림)  ",
    "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
   },
   {
+   "id": "04xwiT9bj2s",
+   "views": 364000,
+   "title": "74세라는 게 믿기지 않는 배우 박정수 님의 15년째 내돈내산 피부 관리 비법!",
+   "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
+  },
+  {
    "id": "cNo91ddBwB8",
-   "views": 171000,
+   "views": 172000,
    "title": "눈가 뻑뻑하고 나도 모르게 눈꼽 껴있을때 슥 닦아내기! 선우용여 가방 속 1등 애착템",
    "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
   },
@@ -58,6 +58,12 @@
    "id": "vSEaZ-BCELY",
    "views": 114000,
    "title": "최민수가 직접 사준 에르메스 가디건",
+   "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
+  },
+  {
+   "id": "YwfAHMNvMtw",
+   "views": 108000,
+   "title": "향에 진심인 정재형이 차에서 쓴다는 전설의 디퓨저   ",
    "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
   },
   {
@@ -73,14 +79,8 @@
    "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
   },
   {
-   "id": "YwfAHMNvMtw",
-   "views": 83000,
-   "title": "향에 진심인 정재형이 차에서 쓴다는 전설의 디퓨저   ",
-   "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
-  },
-  {
    "id": "y8f-GqdqQZ8",
-   "views": 83000,
+   "views": 86000,
    "title": "서울대 의사가 극찬한 다이소 5천원 앰플?! 피부 잡티 싹 사라진 최은경 추천템!",
    "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
   },
@@ -112,6 +112,12 @@
    "id": "FXNucnNJkg4",
    "views": 55000,
    "title": "10만원에 에르메스 핏?! 깃털처럼 가벼워서 실장님이 매일 드는 가방 👜",
+   "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
+  },
+  {
+   "id": "BBs9fWj7D7A",
+   "views": 51000,
+   "title": "60대 황신혜·40대 오윤아도 챙겨 다닌다는 1초 새치 커버템? (2주마다 뿌염 안 함)",
    "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
   },
   {
@@ -211,6 +217,12 @@
    "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
   },
   {
+   "id": "emD4uj-3UAI",
+   "views": 11000,
+   "title": "70대 박정수가 매일 챙겨 먹는 '이것'의 정체 (치과 검진 결과 대반전)",
+   "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
+  },
+  {
    "id": "mgz3FZXfuu8",
    "views": 11000,
    "title": "52살 한고은 자기관리 캘리포니아식 아보카도  ",
@@ -226,12 +238,6 @@
    "id": "eN8F_GMptdg",
    "views": 10000,
    "title": "10년을 되돌린 63세 배종옥 꿀피부 비결?",
-   "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
-  },
-  {
-   "id": "emD4uj-3UAI",
-   "views": 9500,
-   "title": "70대 박정수가 매일 챙겨 먹는 '이것'의 정체 (치과 검진 결과 대반전)",
    "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
   },
   {
@@ -277,6 +283,18 @@
    "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
   },
   {
+   "id": "fsEdvwxFJZY",
+   "views": 5500,
+   "title": "김미경이 제발 사라는 주방템? 15년 식세기 돌려도 멀쩡한 '이 칼'의 정체! (글로벌나이프)",
+   "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
+  },
+  {
+   "id": "ApNznmYdUuE",
+   "views": 5300,
+   "title": "김미경 강사가 다이소 슬리퍼 싹 버리고 수년째 고집하는 인생템? #shorts",
+   "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
+  },
+  {
    "id": "7UVuvcm_5_8",
    "views": 4600,
    "title": "아들 둘 맘 김나영이 정한 실패 없는 아이 추석 선물? 🎁  ",
@@ -307,12 +325,6 @@
    "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
   },
   {
-   "id": "ApNznmYdUuE",
-   "views": 2900,
-   "title": "김미경 강사가 다이소 슬리퍼 싹 버리고 수년째 고집하는 인생템? #shorts",
-   "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
-  },
-  {
    "id": "LrPnAq7Tq_I",
    "views": 2900,
    "title": "신예은이 쓴다는 9천원 쿠팡 크림 정체",
@@ -325,14 +337,8 @@
    "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
   },
   {
-   "id": "fsEdvwxFJZY",
-   "views": 2700,
-   "title": "김미경이 제발 사라는 주방템? 15년 식세기 돌려도 멀쩡한 '이 칼'의 정체! (글로벌나이프)",
-   "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
-  },
-  {
    "id": "jcIX7nx9BFU",
-   "views": 2500,
+   "views": 2600,
    "title": "집안에 복이 굴러오는 선우용여 거실 풍수인테리어의 비밀 이것?",
    "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
   },
@@ -370,6 +376,12 @@
    "id": "zjeDo-ye1u4",
    "views": 1700,
    "title": "아이들 민니 공항 백 어디 꺼?  ",
+   "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
+  },
+  {
+   "id": "GrznGcVrb-g",
+   "views": 146,
+   "title": "똥손도 1초 만에 도자기 피부 완성! 2천원대 꿀조합",
    "ch": "https://www.youtube.com/channel/UCWAekfV5MoDYnPWsqZ_JIIQ"
   }
  ]

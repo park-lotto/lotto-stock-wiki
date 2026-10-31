@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import base64
 import hmac
+import inspect
 import json
 import os
 import re
@@ -98,6 +99,24 @@ def _made_refs(store, cid) -> list:
     return out
 
 
+def _used_refs(store, cid) -> dict:
+    """다른 회원이 쓴 소재 지문 → 쓴 회원 수(claude_flow_runs 전체 · 진행 중 포함). 실패 편(stop·reject)은 안 친다. 순서 판단은 flow.bench_pool."""
+    with CP._tx(store) as c:
+        rows = c.execute("SELECT DISTINCT cid, json_extract(summary_json,'$.seed_h') FROM claude_flow_runs "
+                         "WHERE cid<>? AND COALESCE(status,'') NOT IN ('stop','reject') AND json_valid(summary_json)", (cid,)).fetchall()
+    out: dict = {}
+    for r in rows:
+        if r[1]:
+            out[r[1]] = out.get(r[1], 0) + 1
+    return out
+
+
+def _pool_kw(fn, **kw) -> dict:
+    """옛 지시서(새 인자를 모름)면 뺀다 — 호출 형식 호환."""
+    names = inspect.signature(fn).parameters
+    return {k: v for k, v in kw.items() if k in names}
+
+
 def step(ctx: dict, body: dict, store=None) -> dict:
     store = CP._store(store)
     _ensure(store)
@@ -119,13 +138,19 @@ def step(ctx: dict, body: dict, store=None) -> dict:
             raise CP.PortalError("bad_request", "이 프리셋은 단계 진행 방식이 아닙니다")
         url = str((body.get("source") or {}).get("url") or "")
         made = _made_refs(store, cid)
+        used = _used_refs(store, cid)
         if kind == "sources" and not hasattr(flow, "source_candidates"):
             raise CP.PortalError("bad_request", "이 서버는 아직 후보 뽑기를 못 합니다 — 영상 주소를 주세요")
         if kind == "sources":             # 회원 '후보 뽑아줘' — 그 판 소재 창고(벤치 채널 조회순)에서 안 만든 5개. 편은 만들지 않는다
-            return {"ok": True, "status": "sources", "sources": flow.source_candidates(line["version"], made)}
+            try:
+                offset = max(0, int(body.get("offset") or 0))
+            except (TypeError, ValueError):
+                raise CP.PortalError("bad_request", "offset 은 숫자여야 합니다")
+            found = flow.source_candidates(line["version"], made, **_pool_kw(flow.source_candidates, offset=offset, used=used, seed=cid))
+            return {"ok": True, "status": "sources", "sources": found, "next_offset": offset + len(found)}
         auto = None
-        if not url and hasattr(flow, "pick_source"):   # 주소 없이 '만들어줘' — 소재 창고 조회 1위(사장님 10-30)
-            auto = flow.pick_source(line["version"], made)
+        if not url and hasattr(flow, "pick_source"):   # 주소 없이 '만들어줘' — 소재 창고 첫 편(순서 = flow.bench_pool)
+            auto = flow.pick_source(line["version"], made, **_pool_kw(flow.pick_source, used=used, seed=cid))
             if not auto:
                 raise CP.PortalError("bad_request", "이 프리셋의 소재 창고(벤치 채널)에 아직 안 만든 영상이 없어요 — 영상 주소를 주세요")
             url = auto["url"]
@@ -139,9 +164,10 @@ def step(ctx: dict, body: dict, store=None) -> dict:
         # 제품을 정했을 때만 넘긴다 — 엔진이 이 인자를 모르는 옛판이어도 정하지 않은 편은 그대로 돈다
         st, seq = (flow.start(url, line["version"], sid, product) if product else flow.start(url, line["version"], sid)), 0
         st["made_refs"] = made[:200]          # 둘째 소재(pick_alt_source)도 이 회원이 만든 것을 뺀다
+        st["pool_used"], st["pool_seed"] = dict(sorted(used.items(), key=lambda x: -x[1])[:200]), cid   # 다음 소재·둘째 소재도 같은 순서
         if auto:
             st["auto_source"] = auto
-            st["log"].append(f"소재 창고 조회 1위로 시작: {auto['url']} (조회 {auto.get('views')})")
+            st["log"].append(f"소재 창고에서 시작: {auto['url']} (조회 {auto.get('views')})")
         with CP._tx(store, write=True) as c:
             c.execute("INSERT INTO claude_flow_runs(sid,cid,preset,version,seq,phase,status,created,updated) VALUES(?,?,?,?,?,?,?,?,?)",
                       (sid, cid, pid, line["version"], 0, "setup", "start", CP._now(), CP._now()))

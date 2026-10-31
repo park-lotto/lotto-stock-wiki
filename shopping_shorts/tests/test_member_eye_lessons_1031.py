@@ -31,14 +31,16 @@ def test_flow_rejects_ok_with_cut_title():
     assert st["look"]["ok"] is False and st["look"]["problems"][0].startswith("제목")
 
 
-def test_no_sheet_does_not_pass_silently():
+def test_no_sheet_does_not_pass_silently(monkeypatch):
+    monkeypatch.setattr(F, "EYE_REVIEW", False)
     st = {"version": "x", "log": [], "tries": {}}
     with pytest.raises(F._Stop):
         F.ph_check_got(st, {"check": {"auto": {"ok": True, "rows": []}, "eye_files": []}}, {}, {})
     assert "look" not in st
 
 
-def test_sheet_ask_requires_proof_and_carries_lessons():
+def test_sheet_ask_requires_proof_and_carries_lessons(monkeypatch):
+    monkeypatch.setattr(F, "EYE_REVIEW", False)
     st = {"version": "x", "log": [], "tries": {}, "script": {"S": {"title_lines": [["제목"]], "lines": []}}}
     r = F.ph_check_got(st, {"check": {"auto": {"ok": True, "rows": []}, "eye_files": ["x/eye/시트_1초.jpg"]}}, {}, {})
     rv = r["review"][0]
@@ -52,6 +54,7 @@ def test_every_stage_guide_file_ships_with_the_server():
 
 def test_lessons_file_stays_small_and_every_stage_exists():
     d = json.loads(F.LESSONS_FILE.read_text(encoding="utf-8"))
+    d.pop("by_style", None)        # 판별 경험은 따로
     assert set(d) == {"script", "material", "plan", "final"}
     assert all(0 < len(v) <= 15 for v in d.values())
     assert all(F._lessons(k) for k in d)

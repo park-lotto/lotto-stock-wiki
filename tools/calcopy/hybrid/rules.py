@@ -346,6 +346,19 @@ ALT_TAIL_RULE = (f"이 편은 비슷한 제품 영상을 못 받아 원음이 �
                  "(비슷한 제품이라 밝히는 줄 + 끝 한 줄 정도). 스펙·감상은 원음 앞 원본 장면 줄에서 끝낸다.")
 
 
+def interest_gate(origin_hook: str, back_hook: str, verdict: str) -> list[str]:
+    """(판단 주인 — 흥미 이음, 사장님 10-18 "원본 해외 영상이랑 완전 다른, 흥미롭지 못한 물건") 원본의 신기한 점이 쿠팡 제품에도 보이나.
+    '같음'만 통과. 원본흥미·뒤흥미가 비면 판정을 믿지 않는다. 설명서 channel/hottemreport/현장썰하이브리드/대본설명서.md §0."""
+    bad = []
+    if not str(origin_hook or "").strip():
+        bad.append("원본흥미가 비었다")
+    if not str(back_hook or "").strip():
+        bad.append("뒤흥미가 비었다")
+    if str(verdict or "").strip() != "같음":
+        bad.append(f"판정 '{verdict}' — '같음'만 만든다")
+    return bad
+
+
 def alt_tail_problems(S: dict, cps: float, max_sec: float = ALT_TAIL_MAX_SEC) -> list[str]:
     """(판단 주인 — 사진만 나오는 제품 꼬리 길이) 원음 마지막 줄 뒤 나레 글자 ÷ 판 cps 가 max_sec 를 넘으면 문제.
     10-30 숏템리폿 '전기 바이크' 편: 제품 줄 5개 13초가 같은 상품 사진 2~3장 확대로만 이어져 영상 절반이 정지 화면(벤치 끝 부분 4~5초)."""
