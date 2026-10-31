@@ -1,0 +1,1103 @@
+[
+ {
+  "name": "에이스",
+  "category": "과자·사탕",
+  "tier": "대중",
+  "ok": true,
+  "grade": "중",
+  "story": "10월 31일 '에이스데이' — 군납 건빵 기술로 나온 크래커가 고백 과자가 됐고, 기원은 해태 1977년설 vs 광양시 1984년 광양여중설로 갈린다",
+  "year_people": "1974 해태제과 / 1977·1984 / 광양여중",
+  "source_urls": [
+   "https://www.mt.co.kr/living/2025/10/31/2025103013593667261",
+   "https://www.etoday.co.kr/news/view/2371668"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.coupang.com/vp/products/8752253530",
+  "why_fail": ""
+ },
+ {
+  "name": "허니버터칩",
+  "category": "과자·사탕",
+  "tier": "대중",
+  "ok": true,
+  "grade": "중",
+  "story": "신정훈 대표가 6명 TF로 2년간 미·일 감자칩을 분석해 단 감자칩을 만들었고 2014년 3개월 103억, 품귀 마케팅 의혹까지 났다",
+  "year_people": "2014 / 신정훈 대표",
+  "source_urls": [
+   "https://www.dailian.co.kr/news/view/471192/",
+   "https://www.segye.com/newsView/20141203000475"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.kurly.com/goods/1000263120",
+  "why_fail": ""
+ },
+ {
+  "name": "롯데 자일리톨 껌",
+  "category": "과자·사탕",
+  "tier": "대중",
+  "ok": true,
+  "grade": "중",
+  "story": "1997년 일본에서 8개월 100억 엔 대박인데 한국에선 고가·외환위기로 묻혔다가 충치 연구가 알려지며 터졌다",
+  "year_people": "1997·2000 / 일본 롯데·한국",
+  "source_urls": [
+   "https://www.newsis.com/view/NISX20210625_0001489689"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/2241731654",
+  "why_fail": ""
+ },
+ {
+  "name": "크라운산도",
+  "category": "과자·사탕",
+  "tier": "덜유명",
+  "ok": true,
+  "grade": "중",
+  "story": "전기 오븐 한 대와 미군 부대 도넛 가루로 시작한 윤태현이 1961년 만든 과자, '산도'는 샌드의 일본식 발음",
+  "year_people": "1961 / 윤태현 / 서울 중림동",
+  "source_urls": [
+   "https://m.seoul.co.kr/news/2015/06/01/20150601018003",
+   "https://news.bizwatch.co.kr/article/consumer/2022/02/24/0017"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.kurly.com/goods/5081479",
+  "why_fail": ""
+ },
+ {
+  "name": "웨르더스 오리지널",
+  "category": "과자·사탕",
+  "tier": "덜유명",
+  "ok": true,
+  "grade": "중",
+  "story": "1909년 독일 소도시 베르더의 직원 구스타프 네벨이 만든 레시피, 이름은 마을 이름이고 세계 브랜드명은 1990년대에야 붙었다",
+  "year_people": "1909 / Gustav Nebel / 독일 Werther",
+  "source_urls": [
+   "https://werthers-original.us/en/our-story",
+   "https://www.fundinguniverse.com/company-histories/august-storck-kg-history/"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.kurly.com/goods/5066905",
+  "why_fail": ""
+ },
+ {
+  "name": "참크래커",
+  "category": "과자·사탕",
+  "tier": "덜유명",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "1986 출시",
+  "source_urls": [
+   "https://www.wikitree.co.kr/articles/1084936"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.coupang.com/vp/products/7290972662",
+  "why_fail": "뒷이야기 없음: 출시 연도·판매량만 확인(검색 2회)"
+ },
+ {
+  "name": "컵누들",
+  "category": "라면·식품",
+  "tier": "대중",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "2004.12 출시",
+  "source_urls": [
+   "https://www.smarttoday.co.kr/ko-kr/articles/90205"
+  ],
+  "korea_sale": "미확인",
+  "sale_url": "",
+  "why_fail": "연혁 수준: 제품 정보뿐, 사람·일화 없음"
+ },
+ {
+  "name": "오뚜기 3분카레",
+  "category": "라면·식품",
+  "tier": "대중",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "1981 안양공장",
+  "source_urls": [
+   "https://www.dailian.co.kr/news/view/606597/"
+  ],
+  "korea_sale": "미확인",
+  "sale_url": "",
+  "why_fail": "연혁 수준: 1969 분말→1981 레토르트, 반전 없음"
+ },
+ {
+  "name": "하인즈 케첩",
+  "category": "라면·식품",
+  "tier": "대중",
+  "ok": true,
+  "grade": "상",
+  "story": "헨리 하인즈의 첫 회사(서양고추냉이)는 1875년 파산했고 재기 뒤 케첩을 냈으며, '57가지'는 제품 수와 무관하게 고른 숫자다",
+  "year_people": "1875·1876·1896 / Henry Heinz / 피츠버그",
+  "source_urls": [
+   "https://www.mentalfloss.com/food/why-heinz-ketchup-bottles-have-number-57",
+   "https://www.snopes.com/fact-check/57-varieties/",
+   "https://www.britannica.com/print/article/259741"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.kurly.com/goods/5044481",
+  "why_fail": ""
+ },
+ {
+  "name": "후이펑 스리라차",
+  "category": "라면·식품",
+  "tier": "덜유명",
+  "ok": true,
+  "grade": "상",
+  "story": "베트남을 탈출한 데이비드 트란이 1980년 세운 회사 이름은 그를 실어 나른 배 이름에서 왔다(그 배 승선 자체는 출처 표현 차이 있음)",
+  "year_people": "1978·1980 / David Tran / 베트남→미국",
+  "source_urls": [
+   "https://srirachamovie.com/post/70622620438/david-tran-has-beaten-greater-odds-than",
+   "https://www.nationalarchives.gov.uk/explore-the-collection/stories/the-huey-fong-vietnemese-refugee-crisis/"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/3051493711",
+  "why_fail": ""
+ },
+ {
+  "name": "기꼬만 간장",
+  "category": "라면·식품",
+  "tier": "덜유명",
+  "ok": true,
+  "grade": "중",
+  "story": "기꼬만은 거북 등껍질+만(10000)이란 뜻, 일본 노다의 양조 가문들이 1917년 합병해 생겼다",
+  "year_people": "1917 / Mogi·Takanashi 가문 / 일본 노다",
+  "source_urls": [
+   "https://www.kikkoman.com/en/culture/soysaucemuseum/history/",
+   "https://www.oldtokyo.com/?p=26233"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.kurly.com/goods/1000144339",
+  "why_fail": ""
+ },
+ {
+  "name": "육개장 사발면",
+  "category": "라면·식품",
+  "tier": "덜유명",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "1982.11 출시, 300원",
+  "source_urls": [
+   "https://www.insight.co.kr/news/472765"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.coupang.com/vp/products/9651590184",
+  "why_fail": "구체성 부족: 국사발 용기 단편뿐, 사람·장소 없고 기사에 사실 오류 의심"
+ },
+ {
+  "name": "스타벅스 RTD",
+  "category": "음료",
+  "tier": "대중",
+  "ok": true,
+  "grade": "상",
+  "story": "1994년 펩시와 낸 병 커피음료 마자그란이 망해 접으려던 회의에서 슐츠가 프라푸치노를 병에 넣자고 해 병 프라푸치노가 나왔다",
+  "year_people": "1994 / Howard Schultz / PepsiCo",
+  "source_urls": [
+   "https://tastingtable.com/1011606/the-forgotten-precursor-to-starbucks-bottled-frappuccino",
+   "https://en.wikipedia.org/wiki/Frappuccino"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.kurly.com/goods/1000851759",
+  "why_fail": ""
+ },
+ {
+  "name": "코코팜",
+  "category": "음료",
+  "tier": "대중",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "",
+  "source_urls": [],
+  "korea_sale": "확인",
+  "sale_url": "https://www.coupang.com/vp/products/8298409578",
+  "why_fail": "뒷이야기 없음: 자료 못 찾음"
+ },
+ {
+  "name": "펩시",
+  "category": "음료",
+  "tier": "대중",
+  "ok": true,
+  "grade": "상",
+  "story": "약사 케일럽 브래덤이 1893년 약국에서 판 브래드 드링크가 펩시가 됐고, 1923년 설탕 값 투기 실패로 파산했다",
+  "year_people": "1893·1923 / Caleb Bradham / 뉴번",
+  "source_urls": [
+   "https://en.wikipedia.org/wiki/Pepsi",
+   "https://northcarolinahistory.org/encyclopedia/caleb-bradham-1867-1934/"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://item.gmarket.co.kr/Item?goodscode=3519385328",
+  "why_fail": ""
+ },
+ {
+  "name": "초록매실",
+  "category": "음료",
+  "tier": "덜유명",
+  "ok": true,
+  "grade": "중",
+  "story": "1999년 사내 공모로 이름 짓고 조성모 광고로 '조매실' 별명, 드라마 허준 효과로 모방 제품 30여 개가 쏟아졌다",
+  "year_people": "1999 / 웅진식품 / 조성모",
+  "source_urls": [
+   "https://mobile.newsis.com/view/NISX20200918_0001170488",
+   "https://www.seoul.co.kr/news/2000/12/14/20001214033001"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/5732754483",
+  "why_fail": ""
+ },
+ {
+  "name": "아침햇살",
+  "category": "음료",
+  "tier": "덜유명",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "1999 국내 최초 쌀음료",
+  "source_urls": [
+   "https://www.heraldk.com/article/2026051417512662629"
+  ],
+  "korea_sale": "미확인",
+  "sale_url": "",
+  "why_fail": "뒷이야기 없음: 탄생 일화 미확인(검색 2회)"
+ },
+ {
+  "name": "옥수수수염차",
+  "category": "음료",
+  "tier": "덜유명",
+  "ok": true,
+  "grade": "중",
+  "story": "붓기 빼는 민간요법에 착안해 2006년 출시, 황진이차 광고와 2007년 보아 V라인 콘테스트로 9개월 3000만 병",
+  "year_people": "2006·2007 / 광동제약 / 보아",
+  "source_urls": [
+   "https://m.dailypharm.com/user/news/340517",
+   "https://sateconomy.co.kr/news/view/179587654974233"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.costco.co.kr/Foods/p/601854",
+  "why_fail": ""
+ },
+ {
+  "name": "앙팡 치즈",
+  "category": "유제품·아이스크림",
+  "tier": "대중",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "",
+  "source_urls": [],
+  "korea_sale": "확인",
+  "sale_url": "https://www.kurly.com/goods/5061860",
+  "why_fail": "뒷이야기 없음: 자료 못 찾음"
+ },
+ {
+  "name": "나뚜루",
+  "category": "유제품·아이스크림",
+  "tier": "대중",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "1998 직영점, 2011 GRS 이관, 2018 복귀",
+  "source_urls": [
+   "https://news.bizwatch.co.kr/article/consumer/2026/06/08/0036"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.kurly.com/goods/1000338151",
+  "why_fail": "연혁 수준: 회사 이관 연혁, 사람 없음"
+ },
+ {
+  "name": "수박바",
+  "category": "유제품·아이스크림",
+  "tier": "대중",
+  "ok": true,
+  "grade": "중",
+  "story": "초록 부분을 늘려 달라는 요구와 뒤집힌 합성 사진이 돌자 2017년 롯데가 정말 위아래 바꾼 거꾸로 수박바를 CU에서 냈다",
+  "year_people": "1986·2017.6.29 / 롯데제과 / CU",
+  "source_urls": [
+   "https://www.khan.co.kr/article/201706291119001",
+   "https://sateconomy.co.kr/news/view/179587354464598"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/7892962654",
+  "why_fail": ""
+ },
+ {
+  "name": "더위사냥",
+  "category": "유제품·아이스크림",
+  "tier": "덜유명",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "",
+  "source_urls": [],
+  "korea_sale": "미확인",
+  "sale_url": "",
+  "why_fail": "뒷이야기 없음: 출시 연도조차 확인 못함(검색 2회)"
+ },
+ {
+  "name": "프레지덩 까망베르",
+  "category": "유제품·아이스크림",
+  "tier": "덜유명",
+  "ok": true,
+  "grade": "중",
+  "story": "1933년 라발에서 앙드레 베니에가 까망베르 17개로 시작, 아들 미셸이 1968년 '프랑스는 모두가 대통령'이라며 Président이라 이름 붙였다",
+  "year_people": "1933·1968 / André·Michel Besnier / 라발",
+  "source_urls": [
+   "https://www.lactalis.com/en/our-history",
+   "https://presidentcheese.com/story-temp-page/"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.kurly.com/goods/1001757938",
+  "why_fail": ""
+ },
+ {
+  "name": "레꼬르 버터",
+  "category": "유제품·아이스크림",
+  "tier": "덜유명",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "",
+  "source_urls": [],
+  "korea_sale": "미확인",
+  "sale_url": "",
+  "why_fail": "후보 오류: 브랜드 실존 미확인, 다른 브랜드로 바꾸지 않고 탈락 처리"
+ },
+ {
+  "name": "리큐",
+  "category": "생활용품·세제",
+  "tier": "대중",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "2010 애경, 7개월 100억",
+  "source_urls": [
+   "https://dealsite.co.kr/articles/128216",
+   "https://m.dailian.co.kr/news/view/643962"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/7856590853",
+  "why_fail": "연혁 수준: 매출 기록뿐(검색 2회)"
+ },
+ {
+  "name": "퐁퐁",
+  "category": "생활용품·세제",
+  "tier": "대중",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "",
+  "source_urls": [],
+  "korea_sale": "미확인",
+  "sale_url": "",
+  "why_fail": "뒷이야기 없음: 퐁퐁 자체 자료 못 찾음(검색 2회), 트리오 일화로 대체하지 않음"
+ },
+ {
+  "name": "피죤",
+  "category": "생활용품·세제",
+  "tier": "대중",
+  "ok": true,
+  "grade": "중",
+  "story": "동남합성 직원 이윤재가 1970년대 해외 출장에서 섬유유연제를 처음 보고 40대에 창업, 1978년 '빨래엔 피죤'이 일반명사처럼 됐다",
+  "year_people": "1978 / 이윤재 / 해외 출장",
+  "source_urls": [
+   "https://www.koreajoongangdaily.com/business/silky-softness-sparks-household-revolution/10801779",
+   "https://sgsg.hankyung.com/article/2007071805251"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.costco.co.kr/HomeKitchen/Cleaning-Products/Laundry-Detergent/Pigeon-Fabric-Softener-Air-Sheet-20ct-x-3/p/625705",
+  "why_fail": ""
+ },
+ {
+  "name": "엑츠",
+  "category": "생활용품·세제",
+  "tier": "덜유명",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "2005 피죤 액츠",
+  "source_urls": [
+   "https://www.ajunews.com/view/20150629095400446"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.coupang.com/vp/products/7235424635",
+  "why_fail": "연혁 수준: 국내 최초 액체세제 주장뿐, 일화 없음(검색 2회)"
+ },
+ {
+  "name": "메소드",
+  "category": "생활용품·세제",
+  "tier": "덜유명",
+  "ok": true,
+  "grade": "상",
+  "story": "샌프란시스코 룸메이트 아담 로리와 에릭 라이언이 2000년 독한 세제에 질려 만든 브랜드, 대담한 베팅으로 타깃 진열대에 올랐다",
+  "year_people": "2000 / Adam Lowry·Eric Ryan / 샌프란시스코",
+  "source_urls": [
+   "https://fortune.com/2013/10/10/mopping-up-with-method/",
+   "https://www.npr.org/2018/10/04/654506019/method-adam-lowry-eric-ryan"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.costco.co.kr/Method/c/Method",
+  "why_fail": ""
+ },
+ {
+  "name": "산도깨비",
+  "category": "생활용품·세제",
+  "tier": "덜유명",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "",
+  "source_urls": [],
+  "korea_sale": "확인",
+  "sale_url": "https://www.coupang.com/vp/products/389802",
+  "why_fail": "뒷이야기 없음: 회사 정보 자체 못 찾음(검색 2회)"
+ },
+ {
+  "name": "스타우브",
+  "category": "주방용품",
+  "tier": "대중",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "1974 Francis Staub / Turckheim",
+  "source_urls": [
+   "https://en.wikipedia.org/wiki/Staub_(cookware)",
+   "https://greatbritishchefs.com/features/staub-cast-iron-cookware"
+  ],
+  "korea_sale": "미확인",
+  "sale_url": "",
+  "why_fail": "연혁 수준: 창업 사실은 구체적이나 반전 없음"
+ },
+ {
+  "name": "키친아트",
+  "category": "주방용품",
+  "tier": "대중",
+  "ok": true,
+  "grade": "상",
+  "story": "경동산업이 무너지자 노동자 370명이 주주가 돼 2001년 세운 노동자 자주기업이 키친아트였다(주주 중 손가락 잃은 이들도 있다는 기사, 민감 소재 주의)",
+  "year_people": "2001 / 박선태 전무(전 노조위원장) / 경동산업",
+  "source_urls": [
+   "https://pressian.com/pages/articles/91750",
+   "https://magazine.hankyung.com/business/article/201609074686b"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/1708507838",
+  "why_fail": ""
+ },
+ {
+  "name": "실리트",
+  "category": "주방용품",
+  "tier": "대중",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "1920 Riedlingen",
+  "source_urls": [
+   "https://wmf.com/media/wmf_upload/ebooks/silit_hauptprospekt_2017_en/files/assets/basic-html/page-3.html"
+  ],
+  "korea_sale": "미확인",
+  "sale_url": "",
+  "why_fail": "연혁 수준: 창업자·이름 유래 못 찾음"
+ },
+ {
+  "name": "비알레띠 모카포트",
+  "category": "주방용품",
+  "tier": "덜유명",
+  "ok": true,
+  "grade": "상",
+  "story": "알폰소 비알레티가 1933년 아내의 증기 빨래통을 보고 만들었고, 아들 레나토의 유골은 대형 모카포트에 안치됐다",
+  "year_people": "1933 / Alfonso·Renato Bialetti / 이탈리아 오메냐",
+  "source_urls": [
+   "https://en.ilsole24ore.com/art/storia-bialetti-boom-moka-bilanci-rosso-AEXsSNXG",
+   "https://food52.com/blog/16057-my-ode-to-the-moka-pot-the-man-who-made-it-popular"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.kurly.com/goods/1000435772",
+  "why_fail": ""
+ },
+ {
+  "name": "타이거 보온병",
+  "category": "주방용품",
+  "tier": "덜유명",
+  "ok": true,
+  "grade": "중",
+  "story": "1923년 창업 직후 관동대지진에서 다른 브랜드가 깨지는 동안 타이거 100병은 멀쩡했다고 회사 공식 역사가 적는다",
+  "year_people": "1923 / 기쿠치 다케노리 / 일본",
+  "source_urls": [
+   "https://www.tiger-corporation.com/en/jpn/about-us/history/"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/945629512",
+  "why_fail": ""
+ },
+ {
+  "name": "스탠리 텀블러",
+  "category": "주방용품",
+  "tier": "덜유명",
+  "ok": true,
+  "grade": "상",
+  "story": "변압기 발명가 윌리엄 스탠리가 1913년 만든 강철 보온병, 40oz 퀜처는 2019년 재고 중단됐다가 2020년 인플루언서로 부활했다",
+  "year_people": "1913·2019·2020 / William Stanley Jr. / 매사추세츠",
+  "source_urls": [
+   "https://www.wikiwand.com/en/articles/Stanley_bottle",
+   "https://rjyoungling.substack.com/p/they-created-this-thermos-in-1913"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.kurly.com/goods/1001385082",
+  "why_fail": ""
+ },
+ {
+  "name": "좋은느낌",
+  "category": "화장품·위생",
+  "tier": "대중",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "1999 출시",
+  "source_urls": [
+   "https://www.yuhan-kimberly.co.kr/pdf/05_Sanitary pad.pdf"
+  ],
+  "korea_sale": "미확인",
+  "sale_url": "",
+  "why_fail": "뒷이야기 없음: 출시 연도뿐"
+ },
+ {
+  "name": "위스퍼",
+  "category": "화장품·위생",
+  "tier": "대중",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "1983 Always",
+  "source_urls": [
+   "https://en.wikipedia.org/wiki/Always_(brand)"
+  ],
+  "korea_sale": "미확인",
+  "sale_url": "",
+  "why_fail": "뒷이야기 없음: 한국 시장 일화·구체 사례 못 찾음"
+ },
+ {
+  "name": "록시땅",
+  "category": "화장품·위생",
+  "tier": "대중",
+  "ok": true,
+  "grade": "상",
+  "story": "23살 올리비에 보상이 1976년 월급 절반쯤으로 낡은 증류기를 사 야생 로즈마리 오일을 장터에서 팔며 시작했다",
+  "year_people": "1976 / Olivier Baussan / 오트프로방스",
+  "source_urls": [
+   "https://za.loccitane.com/pages/50-years-brand-anniversary",
+   "https://in.fashionnetwork.com/news/Cachet-of-provence-goes-global-for-l-occitane-cosmetics,645183.html"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.kurly.com/goods/1002102280",
+  "why_fail": ""
+ },
+ {
+  "name": "아이소이",
+  "category": "화장품·위생",
+  "tier": "덜유명",
+  "ok": true,
+  "grade": "상",
+  "story": "'선영아 사랑해' 카피라이터 이진민이 2009년 만든 브랜드, 이름은 I'm so intelligent에서 왔다",
+  "year_people": "2009 / 이진민 / 불가리아 카락 계곡",
+  "source_urls": [
+   "https://www.hankyung.com/amp/2015070175161",
+   "https://www.insight.co.kr/news/189690"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.oliveyoung.co.kr/store/display/getBrandShopDetail.do?onlBrndCd=A000730&trackingCd=Home_Planshop1_6_PROD",
+  "why_fail": ""
+ },
+ {
+  "name": "유세린",
+  "category": "화장품·위생",
+  "tier": "덜유명",
+  "ok": true,
+  "grade": "상",
+  "story": "화학자 리프슈츠가 1900년 특허 낸 유화제 유세리트를 베이어스도르프가 사들였고, 그 성분이 니베아 크림의 바탕이 됐다",
+  "year_people": "1900·1911 / Isaac Lifschütz / 베를린·함부르크",
+  "source_urls": [
+   "https://www.beiersdorf.de/~/media/Beiersdorf/about-us/our-history/chronicle/2023/chronicle-03/Beiersdorf-chronicle-pdf-03-en.pdf",
+   "https://www.eucerin.co.uk/about-eucerin/history"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.oliveyoung.co.kr/store/G.do?goodsNo=A000000112172",
+  "why_fail": ""
+ },
+ {
+  "name": "갸스비",
+  "category": "화장품·위생",
+  "tier": "덜유명",
+  "ok": true,
+  "grade": "상",
+  "story": "다른 이름으로 정해지던 일본 남성 화장품을, 1978년 사장 니시무라 히코지가 소설 위대한 개츠비를 읽고 공감해 뒤집었다",
+  "year_people": "1978 / 니시무라 히코지 / 일본 Mandom",
+  "source_urls": [
+   "https://gatsbyglobal.com/en/about/",
+   "https://encyclopedia.com/books/politics-and-business-magazines/mandom-corporation"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.kurly.com/goods/5077695",
+  "why_fail": ""
+ },
+ {
+  "name": "딕슨 연필",
+  "category": "문구",
+  "tier": "대중",
+  "ok": true,
+  "grade": "중",
+  "story": "도가니 만들던 조셉 딕슨은 연필 양산을 수십 년 시도했고, 대표작 타이콘데로가는 그가 죽고 한참 뒤에야 나왔으며 이름은 프랑스인이 지은 요새에서 왔다",
+  "year_people": "1827·1913 / Joseph Dixon / 매사추세츠 세일럼",
+  "source_urls": [
+   "https://www.lindahall.org/about/news/scientist-of-the-day/joseph-dixon/",
+   "https://weareticonderoga.com/history"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/1442981040",
+  "why_fail": ""
+ },
+ {
+  "name": "유니볼",
+  "category": "문구",
+  "tier": "대중",
+  "ok": true,
+  "grade": "상",
+  "story": "미쓰비시연필은 미쓰비시 그룹과 무관하다 — 1887년 마사키 니로쿠가 세운 회사로, 마름모 로고는 가문 문장이다",
+  "year_people": "1887·1979 / 마사키 니로쿠 / 도쿄",
+  "source_urls": [
+   "https://en.wikipedia.org/wiki/Uni-ball",
+   "https://stationery.wiki/Mitsubishi_Pencil_Company"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/2301301613",
+  "why_fail": ""
+ },
+ {
+  "name": "파버카스텔",
+  "category": "문구",
+  "tier": "대중",
+  "ok": true,
+  "grade": "중",
+  "story": "1761년 목수 카스파 파버의 연필 집안이 1898년 상속녀 오틸리에와 카스텔 백작의 결혼으로 파버카스텔이 됐다",
+  "year_people": "1761·1898 / Kaspar Faber·Ottilie / 독일 슈타인",
+  "source_urls": [
+   "https://en.wikipedia.org/wiki/Faber-Castell_family",
+   "https://en.wikipedia.org/wiki/Kaspar_Faber"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/522922128",
+  "why_fail": ""
+ },
+ {
+  "name": "미쓰비시 포스카",
+  "category": "문구",
+  "tier": "덜유명",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "1983",
+  "source_urls": [
+   "https://en.wikipedia.org/wiki/Uni-ball"
+  ],
+  "korea_sale": "미확인",
+  "sale_url": "",
+  "why_fail": "뒷이야기 없음: 출시 연도만, 이름 유래 못 찾음"
+ },
+ {
+  "name": "아이비스",
+  "category": "문구",
+  "tier": "덜유명",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "",
+  "source_urls": [],
+  "korea_sale": "확인",
+  "sale_url": "https://www.coupang.com/vp/products/276741306",
+  "why_fail": "뒷이야기 없음: 브랜드 역사 자료 없음"
+ },
+ {
+  "name": "르땅",
+  "category": "문구",
+  "tier": "덜유명",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "",
+  "source_urls": [],
+  "korea_sale": "미확인",
+  "sale_url": "",
+  "why_fail": "후보 오류: 브랜드 실존 미확인(검색 2회)"
+ },
+ {
+  "name": "젠가",
+  "category": "완구·게임",
+  "tier": "대중",
+  "ok": true,
+  "grade": "상",
+  "story": "영국 게임 디자이너 레슬리 스콧이 가나에서 가족끼리 하던 나무토막 놀이를 1983년 런던 토이페어에 내놓았고 이름은 스와힐리어 '짓다'에서 왔다",
+  "year_people": "1983 / Leslie Scott / 가나 타코라디·런던",
+  "source_urls": [
+   "https://collections.vam.ac.uk/item/O27368",
+   "https://en.wikipedia.org/wiki/Jenga"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/4306643198",
+  "why_fail": ""
+ },
+ {
+  "name": "실바니안",
+  "category": "완구·게임",
+  "tier": "대중",
+  "ok": true,
+  "grade": "중",
+  "story": "1985년 일본 에포크의 길고 긴 이름에서 줄인 브랜드인데, 1993년 미국에서 이름을 못 쓰게 되어 같은 인형이 Calico Critters가 됐다",
+  "year_people": "1985·1993 / Epoch·Tomy / 일본·미국",
+  "source_urls": [
+   "https://en.wikipedia.org/wiki/Sylvanian_Families"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/9209314737",
+  "why_fail": ""
+ },
+ {
+  "name": "플레이모빌",
+  "category": "완구·게임",
+  "tier": "대중",
+  "ok": true,
+  "grade": "상",
+  "story": "훌라후프 회사가 오일쇼크로 플라스틱 값이 폭등하자 '최소 플라스틱, 최대 놀이' 지시로 한스 벡이 만든 인형이 1974년 플레이모빌이 됐다",
+  "year_people": "1974 / Hans Beck·Horst Brandstätter / 뉘른베르크",
+  "source_urls": [
+   "https://en.wikipedia.org/wiki/Playmobil",
+   "https://en.wikipedia.org/wiki/Hans_Beck"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.coupang.com/vp/products/8128402134",
+  "why_fail": ""
+ },
+ {
+  "name": "시크릿쥬쥬",
+  "category": "완구·게임",
+  "tier": "덜유명",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "",
+  "source_urls": [
+   "https://www.ajunews.com/view/20160317112133428"
+  ],
+  "korea_sale": "미확인",
+  "sale_url": "",
+  "why_fail": "뒷이야기 없음: 출시·개발 자료 없음"
+ },
+ {
+  "name": "마그포마",
+  "category": "완구·게임",
+  "tier": "덜유명",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "2005~",
+  "source_urls": [],
+  "korea_sale": "미확인",
+  "sale_url": "",
+  "why_fail": "뒷이야기 없음: 창업 일화 못 찾음"
+ },
+ {
+  "name": "나노블록",
+  "category": "완구·게임",
+  "tier": "덜유명",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "2008 Kawada",
+  "source_urls": [
+   "https://en.wikipedia.org/wiki/Nanoblock"
+  ],
+  "korea_sale": "미확인",
+  "sale_url": "",
+  "why_fail": "연혁 수준: 출시 사실뿐, 개발자·일화 없음"
+ },
+ {
+  "name": "아이폰 맥세이프",
+  "category": "가전·전자 소형",
+  "tier": "대중",
+  "ok": true,
+  "grade": "상",
+  "story": "애플 맥세이프의 자석 코드는 일본 밥솥·튀김기의 자석 전원선에서 착안했고, 2020년 아이폰에서 이름이 되살아났다",
+  "year_people": "2006·2020·2021 / Apple / 일본 가전",
+  "source_urls": [
+   "https://en.wikipedia.org/wiki/MagSafe",
+   "https://www.slashgear.com/2238130/apple-brought-back-magsafe-charging-macbooks-is-it-better/"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/5981688202",
+  "why_fail": ""
+ },
+ {
+  "name": "네스프레소 머신",
+  "category": "가전·전자 소형",
+  "tier": "대중",
+  "ok": true,
+  "grade": "상",
+  "story": "네슬레 엔지니어 에릭 파브르가 1975년 로마 여행 뒤 만든 캡슐은 회사가 10년 가까이 뭉갰고 1986년에야 나왔다",
+  "year_people": "1975·1976·1986 / Eric Favre / 로마·스위스",
+  "source_urls": [
+   "https://houseofswitzerland.org/swissstories/economics/eric-favre-swiss-inventor-who-put-coffee-capsules",
+   "https://en.wikipedia.org/wiki/Eric_Favre"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/2348912958",
+  "why_fail": ""
+ },
+ {
+  "name": "필립스 면도기",
+  "category": "가전·전자 소형",
+  "tier": "대중",
+  "ok": true,
+  "grade": "중",
+  "story": "필립스 엔지니어 호로비츠가 미국 면도기에 불만을 품고 직접 만든 회전날이 1939년 필리셰이브가 됐다",
+  "year_people": "1939 / Alexandre Horowitz / 에인트호번",
+  "source_urls": [
+   "https://www.philips.nl/en/a-w/philips-museum/stories/philips-shavers.html",
+   "https://tudelft.nl/en/community/alumni/inspiring-alumni/historical-alumni/alexandre-horowitz"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/98211672",
+  "why_fail": ""
+ },
+ {
+  "name": "파나소닉 건전지",
+  "category": "가전·전자 소형",
+  "tier": "덜유명",
+  "ok": true,
+  "grade": "중",
+  "story": "마쓰시타 고노스케는 1923년 자전거 램프를 팔려다 건전지까지 사들이게 됐고 공급이 달려 1931년 오사카 공장을 인수했다",
+  "year_people": "1923·1927·1931 / 마쓰시타 고노스케 / 오사카",
+  "source_urls": [
+   "https://www.panasonic.com/global/consumer/battery/about_us/history.html"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/23997609",
+  "why_fail": ""
+ },
+ {
+  "name": "한일전기",
+  "category": "가전·전자 소형",
+  "tier": "덜유명",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "",
+  "source_urls": [],
+  "korea_sale": "확인",
+  "sale_url": "https://www.coupang.com/vp/products/8118353029",
+  "why_fail": "뒷이야기 없음: 창업사 자료 못 찾음"
+ },
+ {
+  "name": "타이맥스",
+  "category": "가전·전자 소형",
+  "tier": "덜유명",
+  "ok": true,
+  "grade": "상",
+  "story": "1854년 시계 회사가 1933년 미키마우스 시계로 살아났고, 전쟁 뒤 '맞아도 간다' 고문 테스트 광고를 스웨이지가 생방송으로 했다",
+  "year_people": "1854·1933·1956 / John Cameron Swayze / 코네티컷 워터베리",
+  "source_urls": [
+   "https://www.wearethemighty.com/mighty-tactical/timex-us-defense-contractor/",
+   "https://www.encyclopedia.com/media/encyclopedias-almanacs-transcripts-and-maps/timex-watches"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.coupang.com/vp/products/6834206503",
+  "why_fail": ""
+ },
+ {
+  "name": "뉴발란스",
+  "category": "패션·신발·가방",
+  "tier": "대중",
+  "ok": true,
+  "grade": "중",
+  "story": "1906년 보스턴의 깔창 회사로 시작했고 창업자 윌리엄 라일리가 닭발 세 갈래에서 착안했다는 전승이 있다(닭발 부분은 전승임을 밝혀야 함)",
+  "year_people": "1906 / William Riley / 보스턴",
+  "source_urls": [
+   "https://en.wikipedia.org/wiki/New_Balance",
+   "https://shelflife.co.za/magazine/FactsFriday-What-you-didn-t-know-about-New-Balance"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/3822215276",
+  "why_fail": ""
+ },
+ {
+  "name": "나이키 에어포스",
+  "category": "패션·신발·가방",
+  "tier": "대중",
+  "ok": true,
+  "grade": "상",
+  "story": "1984년 단종된 에어포스1을 볼티모어 신발 가게 세 곳이 살려 냈고 그 '이달의 색상'이 1986년 재출시로 이어졌다",
+  "year_people": "1982·1984·1986 / Bruce Kilgore / 볼티모어",
+  "source_urls": [
+   "https://www.yahoo.com/lifestyle/air-force-1-history-timeline-163533023.html",
+   "https://www.nike.com/a/air-force-1-history"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/2499804285",
+  "why_fail": ""
+ },
+ {
+  "name": "리바이스 501",
+  "category": "패션·신발·가방",
+  "tier": "대중",
+  "ok": true,
+  "grade": "상",
+  "story": "리노의 재단사 제이콥 데이비스가 리벳 바지를 발명했지만 특허비가 없어 리바이 스트라우스에게 편지를 보냈고 1873년 함께 특허를 냈다",
+  "year_people": "1871·1873 / Jacob Davis·Levi Strauss / 네바다 리노",
+  "source_urls": [
+   "https://www.smithsonianmag.com/smart-news/levis-jeans-150-years-180982241/",
+   "https://www.levistrauss.com/wp-content/uploads/2014/01/History-of-Levis-501-Jeans.pdf"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/8469398858",
+  "why_fail": ""
+ },
+ {
+  "name": "르꼬끄",
+  "category": "패션·신발·가방",
+  "tier": "덜유명",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "1882 Émile Camuset / Romilly-sur-Seine",
+  "source_urls": [
+   "https://en.wikipedia.org/wiki/Le_Coq_Sportif"
+  ],
+  "korea_sale": "미확인",
+  "sale_url": "",
+  "why_fail": "연혁 수준: 창업 사실은 구체적이나 반전 없음"
+ },
+ {
+  "name": "미즈노",
+  "category": "패션·신발·가방",
+  "tier": "덜유명",
+  "ok": true,
+  "grade": "중",
+  "story": "18살에 야구 경기를 보고 반한 미즈노 리하치가 1906년 오사카에서 동생과 야구공을 파는 가게를 열었다",
+  "year_people": "1906 / 미즈노 리하치 / 오사카",
+  "source_urls": [
+   "https://corp.mizuno.com/en/about/history",
+   "https://www.golf-monthly.co.uk/features/the-game/things-you-didnt-know-about-mizuno-187680"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/7696090876",
+  "why_fail": ""
+ },
+ {
+  "name": "콜롬비아",
+  "category": "패션·신발·가방",
+  "tier": "덜유명",
+  "ok": true,
+  "grade": "상",
+  "story": "1937년 나치를 피해 온 가족의 모자 가게가 시작이고, 1970년 남편이 죽자 거트 보일이 파산 직전 회사를 살렸다",
+  "year_people": "1937·1938·1970 / Paul Lamfrom·Gert Boyle / 포틀랜드",
+  "source_urls": [
+   "https://opb.org/news/article/columbia-sportswear-chairwoman-gert-boyle-dies-95",
+   "https://www.columbia.com/About-Us_History.html"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/8987034034",
+  "why_fail": ""
+ },
+ {
+  "name": "미쉐린",
+  "category": "아웃도어·자동차용품",
+  "tier": "대중",
+  "ok": true,
+  "grade": "상",
+  "story": "1894년 리옹 박람회의 타이어 더미를 보고 '팔다리 달면 사람'이라던 말이 비벤덤이 됐고, 형제는 1900년 가이드북까지 냈다",
+  "year_people": "1894·1898·1900 / André·Édouard Michelin / 리옹",
+  "source_urls": [
+   "https://guide.michelin.com/sg/en/article/features/8-fun-facts-about-bibendum",
+   "https://www.erih.net/how-it-started/stories-about-people-biographies/biography/michelin"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/2161942711",
+  "why_fail": ""
+ },
+ {
+  "name": "네파",
+  "category": "아웃도어·자동차용품",
+  "tier": "대중",
+  "ok": true,
+  "grade": "중",
+  "story": "국산처럼 보이지만 2005년 평안엘앤씨가 밀라노의 NEPA International을 인수해 들여온 이탈리아 태생 브랜드다",
+  "year_people": "1996·2005 / 평안엘앤씨 / 이탈리아 베르가모",
+  "source_urls": [
+   "https://www.inews24.com/view/588218"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.costco.co.kr/ClothingBagsAccessories/Shoes-for-Men/SlippersSandal-for-Men/Nepa-Men-Slide/p/688283",
+  "why_fail": ""
+ },
+ {
+  "name": "스노우피크",
+  "category": "아웃도어·자동차용품",
+  "tier": "대중",
+  "ok": true,
+  "grade": "중",
+  "story": "장비에 불만이던 산악인 야마이 유키오가 1958년 쓰바메산조 금속 장인들에게 등산 장비를 직접 시켜 만들며 시작했다",
+  "year_people": "1958·1963 / 야마이 유키오 / 일본 쓰바메산조",
+  "source_urls": [
+   "https://snowpeak.com/pages/our-history",
+   "https://uk.snowpeak.com/blogs/journal/yukios-journey"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "http://www.11st.co.kr/products/1714484687",
+  "why_fail": ""
+ },
+ {
+  "name": "아크테릭스",
+  "category": "아웃도어·자동차용품",
+  "tier": "덜유명",
+  "ok": true,
+  "grade": "중",
+  "story": "1989년 데이브 레인의 등반 장비 회사 Rock Solid가 1991년 시조새 화석 이름을 줄인 Arc'teryx로 바뀌었다",
+  "year_people": "1989·1991 / Dave Lane·Jeremy Guard",
+  "source_urls": [
+   "https://en.wikipedia.org/wiki/Arc%27teryx"
+  ],
+  "korea_sale": "확인",
+  "sale_url": "https://www.11st.co.kr/products/7521830852",
+  "why_fail": ""
+ },
+ {
+  "name": "레인엑스",
+  "category": "아웃도어·자동차용품",
+  "tier": "덜유명",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "1972 Howard Ohlhausen",
+  "source_urls": [
+   "https://www.rainx.com/about-the-inventor-of-rain-x"
+  ],
+  "korea_sale": "미확인",
+  "sale_url": "",
+  "why_fail": "연혁 수준: 항공 유래 주장은 포럼 글뿐이라 불인정"
+ },
+ {
+  "name": "리퀴몰리",
+  "category": "아웃도어·자동차용품",
+  "tier": "덜유명",
+  "ok": false,
+  "grade": "",
+  "story": "",
+  "year_people": "1957 Hans Henle / Ulm",
+  "source_urls": [
+   "https://liqui-moly.com/en/company/about-us/company-history.html"
+  ],
+  "korea_sale": "미확인",
+  "sale_url": "",
+  "why_fail": "연혁 수준: 이름·특허 인수 사실뿐, 반전 없음"
+ }
+]
