@@ -14509,7 +14509,7 @@ def _shortcl_plans_html() -> str:
             gaps += f'<a href="{href}" style="color:var(--mint);margin:0 8px">{p["label"]} {p["amount"]:,}원</a>'
     if gaps:
         gaps = f'<div class=lead style="margin-top:14px">숏템 이용권 회원 11월 차액: {gaps}</div>'
-    return ('<div class=sec id=shortcl><h2>숏클메이커</h2><div class=lead>내 PC에서 말 한 줄로 만드는 프로그램 · Claude Max 구독(별도 결제) 필요</div>'
+    return ('<div class=sec><h2>숏클메이커</h2><div class=lead>내 PC에서 말 한 줄로 만드는 프로그램 · Claude Max 구독(별도 결제) 필요</div>'
             f'<div class="plans three">{plans}</div>{gaps}</div>')
 
 
@@ -14950,10 +14950,17 @@ a{text-decoration:none;color:inherit}
 .tbd{color:var(--faint);font-size:12px;margin-top:14px}
 .foot{text-align:center;color:var(--faint);font-size:12.5px;padding:0 0 42px}
 @media(max-width:760px){.plans,.plans.three,.incl,.revs{grid-template-columns:1fr}}
-</style></head><body>__SHORTCL_BANNER__<div class=wrap>
+.ptabs{display:flex;justify-content:center;gap:8px;margin:6px 0 10px}
+.ptabs a{padding:11px 24px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-weight:800;font-size:15px}
+html:not(.sc) .ptabs a[data-t=shortem],html.sc .ptabs a[data-t=shortcl]{background:var(--gold-grad);color:#3a2600;border-color:transparent}
+.pv[data-pv=shortcl]{display:none}html.sc .pv[data-pv=shortcl]{display:block}html.sc .pv[data-pv=shortem]{display:none}
+</style><script>if(location.hash==='#shortcl')document.documentElement.classList.add('sc');
+addEventListener('hashchange',function(){document.documentElement.classList.toggle('sc',location.hash==='#shortcl');scrollTo(0,0)});</script></head><body>__SHORTCL_BANNER__<div class=wrap>
 <div class=nav>
 <a class=brand href="/">__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></a>
 <a class="top" href="/login">로그인</a></div>
+<div class=ptabs><a href="#shortem" data-t=shortem>숏템메이커</a><a href="#shortcl" data-t=shortcl>숏클메이커</a></div>
+<div class=pv data-pv=shortem>
 <div class=hero>
 <div class=eyebrow>요금 · 이용권</div>
 <h1 class=display>필요한 만큼만,<br>부담 없이 시작하세요</h1>
@@ -14980,7 +14987,6 @@ a{text-decoration:none;color:inherit}
 <li><span class=c>✓</span> 렌즈·대본·보이스 전부</li>
 <li><span class=c>✓</span> 우선 문의·운영 노하우</li></ul>
 <a class="btn kko" href="__CARD_HREF__">__CARD_LABEL__</a></div></div>
-__SHORTCL_PLANS__
 <div class=sec>
 <h2>이용권에 들어있는 것</h2>
 <div class=lead>파는 사람이 처음부터 끝까지 쓰는 도구</div>
@@ -14998,15 +15004,18 @@ __SHORTCL_PLANS__
 <div class=qa><div class=q>무료 체험만 써도 되나요?</div><div class=a>네. 무료 회원은 레퍼런스 랭킹을 보실 수 있어요. 대본·장면·보이스·영상 제작은 이용권에서 쓰실 수 있습니다.</div></div>
 <div class=qa><div class=q>환불되나요?</div><div class=a>이용권은 결제 확인 즉시 열려 모든 기능(대본·보이스·영상 제작 등)을 바로 쓸 수 있는 디지털 콘텐츠라, <b>이용권이 열린 뒤에는 환불되지 않습니다.</b> 이용권이 열리기 전에는 전액 환불됩니다. 자세한 기준은 <a href="/refund" style="color:inherit">환불정책</a>을 확인해 주세요.</div></div>
 <div class=qa><div class=q>전자상거래법상 7일 안에는 환불되지 않나요?</div><div class=a>전자상거래법 제17조제2항제5호에 따라, 디지털 콘텐츠는 <b>제공이 시작된 뒤에는 7일 이내라도 청약철회가 제한</b>됩니다. 숏템메이커 이용권은 결제 확인과 동시에 제공이 시작되므로 7일 이내라도 환불되지 않습니다. 이 내용은 결제 전 요금·결제 페이지와 신청서의 동의 항목에서 미리 안내하고 동의를 받으며, 결제 전에 무료 회원으로 레퍼런스 랭킹을 먼저 써보실 수 있습니다.</div></div></div></div>
+</div>
+<div class=pv data-pv=shortcl id=shortcl>
+__SHORTCL_PLANS__
+<div class=sec>
+<h2>자주 묻는 질문</h2>
+<div class=lead>숏클메이커</div>
+<div class=faq>
 <div class=qa><div class=q>숏클메이커는 무엇이 필요한가요?</div><div class=a>내 PC와 <b>Claude Max 구독(별도 결제)</b>이 필요합니다. PC 1대에 설치해 쓰며, 이용기간은 라이선스 키 발급일로부터 __PRO_PERIOD__입니다.</div></div>
 <div class=qa><div class=q>숏클메이커는 결제 후 어떻게 시작하나요?</div><div class=a>결제가 확인되면 한 분씩 연락드려 라이선스 키와 설치 방법을 안내해 드립니다.</div></div>
 <div class=qa><div class=q>숏클메이커도 환불되나요?</div><div class=a>라이선스 키·설치 파일이 제공되기 전에는 전액 환불됩니다. 제공된 뒤에는 환불되지 않습니다. 자세한 기준은 신청서의 환불 규정과 환불정책을 확인해 주세요.</div></div>
-<div class=band>
-<h2>무료로 레퍼런스 랭킹부터 둘러보세요</h2>
-<p>구글 계정이면 3초 · 카드 없이 시작. 궁금한 건 카톡으로.</p>
-<div class=row>
-<a class="btn pri" href="/login">무료로 시작하기 →</a>
-<a class="btn kko" href="__PAY_HREF__" target="_blank" rel="noopener">__PAY_LABEL__</a></div></div>
+<div class=qa><div class=q>숏템메이커 회원은 어떻게 옮기나요?</div><div class=a>11월 30일까지는 위에 적힌 차액만 내고 옮길 수 있습니다. 숏템메이커 계정으로 로그인한 뒤 결제해 주세요.</div></div>
+</div></div></div>
 <div class=foot>© __NAME__ · 요금·이용권 안내__LEGAL____BIZFOOT__</div>
 </div></body></html>"""
 
@@ -15817,7 +15826,7 @@ def _toss_checkout(request: Request, product: str = ""):
 <input id=pn placeholder="성함" maxlength=40 style="{inp}">
 <input id=pp placeholder="연락처 (010-0000-0000)" maxlength=40 inputmode=tel style="{inp}">
 <input id=pe placeholder="이메일 (가입·안내를 받으실 주소)" maxlength=120 inputmode=email style="{inp}">
-{_pay_legal_box()}
+{_pay_legal_box("숏템메이커" if is_shortem else "숏클메이커")}
 <label class=p style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px">
   <input id=pa type=checkbox style="margin-top:3px">
   <span><a href="/refund" target="_blank" style="color:#6ff0d6">환불정책</a>과
@@ -16172,7 +16181,7 @@ _PRIVACY_BODY = f"""
 <p>개인정보 관련 문의는 아래 사업자정보의 문의처로 접수해 주시면 지체 없이 답변·처리합니다.</p>
 """
 
-def _pay_legal_box():
+def _pay_legal_box(product_name="숏템메이커"):
     """프로 이용권 결제 화면의 '읽고 서명하는 칸'(관제 199, 2026-10-14 사장님).
     환불정책·이용약관·콘텐츠 운영 안내 원문을 페이지 안에서 바로 읽게 펼친다.
     ★문서 본문은 /refund·/terms 와 같은 상수를 그대로 쓴다(0순위-B) — 따로 요약해 적지 마라."""
@@ -16183,7 +16192,7 @@ def _pay_legal_box():
                 f'line-height:1.6;color:#c9cdd2">{body}</div></details>')
     return ('<div style="font-weight:800;font-size:16px;margin-top:18px">③ 꼭 읽고 서명해 주세요</div>'
             '<div class=p>결제 전에 아래 세 가지를 펼쳐 읽어 주세요.</div>'
-            + _content_notice_html()
+            + _content_notice_html().replace("숏템메이커는 영상 제작을", f"{product_name}는 영상 제작을")
             + sec("📄 환불정책 전문", _REFUND_BODY)
             + sec("📄 이용약관 전문", _TERMS_BODY))
 

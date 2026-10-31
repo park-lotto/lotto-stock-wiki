@@ -119,3 +119,19 @@ def test_대문_상단_출시영역과_숏클_안내(client):
     assert "__PRO_PERIOD__" not in pricing and "숏클메이커는 무엇이 필요한가요?" in pricing
     assert "이용기간: 라이선스 키 발급일" in client.get("/pay/toss?product=shortcl_basic").text
     assert "이용기간: 라이선스 키 발급일" not in client.get("/pay/toss").text
+
+
+def test_숏클_요금탭에_숏템_내용이_섞이지_않는다(client):
+    html = client.get("/pricing").text
+    view = html[html.index("data-pv=shortcl id=shortcl"):html.index("<div class=foot>")]
+    for word in ("레퍼런스", "랭킹", "렌즈", "보이스", "하루 10개", "무료 체험", "880,000"):
+        assert word not in view, word
+    assert "자주 묻는 질문" in view and "2,990,000" in view
+    assert "무료로 레퍼런스 랭킹부터" not in html
+
+
+def test_숏클_결제창_안내문은_숏클_이름(client):
+    html = client.get("/pay/toss?product=shortcl_basic").text
+    assert "숏클메이커는 영상 제작을" in html
+    box = html[:html.index("환불정책 전문")]
+    assert "숏템메이커는 영상 제작을" not in box
