@@ -23,7 +23,7 @@ test('만들기 응답에 내부 프리셋 경로가 없다', () => {
 
 test('서버 안내에 내부 설명 금지가 들어 있다', () => {
   assert.match(SERVER_INSTRUCTIONS, /설명드릴 수 없어요/);
-  assert.match(SERVER_INSTRUCTIONS, /열어 읽거나 보여 주지 않는다/);
+  assert.match(SERVER_INSTRUCTIONS, /보여 주거나 옮겨 적지 않는다/);
 });
 
 test('멈춤 전달 안내는 한국어 칸 이름으로 — why·fix 영어 칸 이름을 고객에게 쓰지 말라고(98 #160)', async () => {

@@ -431,7 +431,8 @@ def _add_or_reopen(topic: str, cat: str, src: dict, data_dir=None) -> dict:
     t = next((x for x in CT.board(category=cat, limit=2000, data_dir=data_dir)["topics"] if x["name"] == name), None)
     if not t:
         raise MakeError(f"멈춘 소재를 찾지 못했습니다: {name}", 409)
-    return CT.unstall(t["id"], by="만들기 입구", data_dir=data_dir)
+    stuck = t.get("stalled") or t.get("retry_at") or t.get("error_count")      # 대기 시간만 남은 소재도 바로 잇는다
+    return CT.unstall(t["id"], by="만들기 입구", data_dir=data_dir) if stuck else t
 
 
 def start(preset: str, pack: str | int = "1", topic: str | None = None, ref_url: str | None = None, data_dir=None, deps: dict | None = None,
