@@ -530,6 +530,21 @@ def sign_cmd() -> str | None:
     return f'"{tool}" sign /fd SHA256 /f "{pfx}"{pw_part} /tr {ts} /td SHA256 "%1"'
 
 
+VENDOR = ("alibabacloud_oss_v2", "Crypto", "crcmod")   # 옛 설치본은 파이썬 부품이 업데이트로 안 간다 — 엔진 묶음에 같이 싣는다
+
+
+def vendor_and_check(stage: Path) -> None:
+    """엔진 _vendor 채우기 + 부품 전수 검사. 없는 모듈이 있으면 빌드 실패(10-31 VMake 부품 누락 재발 방지)."""
+    site = stage / "tools" / "python" / "Lib" / "site-packages"
+    for n in VENDOR:
+        shutil.copytree(site / n, stage / "engine" / "_vendor" / n, dirs_exist_ok=True, ignore=shutil.ignore_patterns("__pycache__"))
+    chk = Path(__file__).resolve().parents[2] / "tools" / "claude_portal" / "engine_deps_check.py"
+    r = subprocess.run([str(stage / "tools" / "python" / "python.exe"), str(chk), str(stage / "engine")], text=True, encoding="utf-8", capture_output=True)
+    log(r.stdout.strip())
+    if r.returncode:
+        raise SystemExit("[build] 엔진 부품 누락 — 위 목록")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(ROOT / "build"))
@@ -617,6 +632,7 @@ def main() -> None:
         else:
             log("코드서명: 미서명 — 인증서 없음(SHORTEM_SIGN_PFX 를 주면 signtool 로 서명). SmartScreen 경고가 뜬다.")
 
+    vendor_and_check(stage)
     sums = []
     for p in sorted(dist.glob("*")):
         if p.is_file() and p.suffix in (".exe", ".mcpb"):

@@ -49,6 +49,7 @@ RENDERER_EXTRA = ("tools/render_scene_style.js", "out/scene-style-ui-showcase.ht
 DATA_EXTRA = ("shopping_shorts/assets/voice_presets.json", "shopping_shorts/assets/bgm_lib", "shopping_shorts/assets/sfx_packs",
               "shopping_shorts/calcopy_frame/my_packs.json", "shopping_shorts/static/caption-motions.js",
               "tools/calcopy/engine/warehouse_channels.json",
+              "channel/starpickroom/_tools/spr_overlay.py",   # render_bench 금색 로고(함수 안 sys.path + import, 부품 검사 engine_deps_check 가 찾음)
               "shopping_shorts/vmake_sdk",           # 10-31 설치본 1.0.11 에 __init__.py 만 들어가 회원 VMake 가 ModuleNotFoundError(98 #203)
               "shopping_shorts/static/fonts",        # 글꼴 폴더 통째 — render_bench._font(FONTS/이름)·광고 표시(engine/ad_mark)가 연다.
               # 10-29 실측: Pretendard 하나만 넣어 회원 묶음 렌더가 제목 글꼴에서 OSError 로 멈췄다(회원 PC 에 글꼴을 이 자리로 넣는 코드도 없다)
