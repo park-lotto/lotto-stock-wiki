@@ -2684,12 +2684,8 @@ def eye_material_note(pack: list, grounds) -> str:
     out = f"\n\n## 근거.md\n{str(grounds)[:5000]}" if str(grounds or "").strip() else ""
     if not any("벤치" in str(x) or str(x).replace("\\", "/").endswith("bench/sheet.jpg") for x in pack):
         out += "\n\n★이 PC 에는 벤치 대조 자료가 없다 — 자료가 없다는 이유로 △ 를 주지 마라. E1·E4 는 이 판의 말투·자막 규칙과 완성본 자체의 결함으로 판정한다."
-    if not out.startswith("
-
-## 근거.md"):
-        out += "
-
-★이 편의 근거 자료가 없다 — E6 은 자료 없음만으로 △ 를 주지 말고, 대본과 화면이 어긋나거나 금액·질병·CTA 가 있을 때만 걸어라."
+    if not str(grounds or "").strip():
+        out += "\n\n★이 편의 근거 자료가 없다 — E6 은 자료 없음만으로 △ 를 주지 말고, 대본과 화면이 어긋나거나 금액·질병·CTA 가 있을 때만 걸어라."
     return out
 
 
