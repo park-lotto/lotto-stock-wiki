@@ -1260,7 +1260,7 @@ def _lessons(key: str) -> str:
     return f"{NL}{NL}## 지난 제작 경험(반드시){NL}" + NL.join("- " + re.sub(r"\(#[\d·#]+\)\s*$", "", x).strip() for x in rows) if rows else ""
 
 
-def _guide(stage_key: str, limit: int = 2500) -> str:
+def _guide(stage_key: str, limit: int = 20000) -> str:
     f = GUIDE_DIR / STAGE_GUIDE.get(stage_key, "00_공통.md")
     try:
         return f"[가이드 {f.name} 발췌]{NL}" + f.read_text(encoding="utf-8")[:limit]
