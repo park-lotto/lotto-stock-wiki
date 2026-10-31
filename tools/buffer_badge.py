@@ -92,6 +92,9 @@ def apply(folder, video, log=print):
         keep.parent.mkdir(exist_ok=True)
         shutil.move(str(src), str(keep))
         part.rename(src)
+        moved = keep.with_name(keep.name + ".part")  # 드라이브가 원본 이름을 .part 로 남긴 적이 있다(10-31 16편 중 1편)
+        if moved.exists() and not keep.exists():
+            moved.rename(keep)
     log(f"[buffer_badge] {video} {before:.1f}초 → 표시 입힘 · 원본은 {ORIG}\\")
     return {"applied": True, "why": ""}
 
