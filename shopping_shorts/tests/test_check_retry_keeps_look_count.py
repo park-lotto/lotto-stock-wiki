@@ -17,3 +17,13 @@ def test_after_retry_recheck_eye_only_finishes_with_notice():
     F.ph_check_retry(st, {}, {}, {})
     assert F.ph_check_judge(st, {}, {}, {}) == {"goto": "deliver"}
     assert st["look_left"] == ["E1 △: 자료 없음"]
+
+
+def test_generic_retry_line_keeps_look():
+    import inspect
+    src = inspect.getsource(F)
+    assert 'if k == "length"}' not in src, "일반 다시 시도도 눈 검수 횟수를 지우면 안 된다"
+
+
+def test_no_grounds_is_told():
+    assert "근거 자료가 없다" in F.eye_material_note(["bench/sheet.jpg"], "")
