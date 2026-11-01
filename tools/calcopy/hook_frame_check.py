@@ -21,6 +21,11 @@ for p in sorted(glob.glob("tools/calcopy/hybrid/styles/*.json")):
             shots.append(f); print(n, tag, g["captions"], "띠글" if g["body_text"] else "-")
             has = st["frame"]["segments"][0].get("long")
             if tag == "long" and has and g["captions"] != "show": fail.append(n)
+            if tag == "long" and has:   # 자막 세로 범위가 띠 안에 드는가
+                c = st.get("caption") or {}; k = c.get("stack"); bb = g["frame"]["post"]["body_box"]["box"]
+                y0, y1 = (k["y"] - k["pitch"] / 2, k["y"] + (k["lines"] - .5) * k["pitch"]) if k else tuple(c["band"])
+                print("  자막", round(y0), round(y1), "띠", bb[1], bb[3])
+                if y0 < bb[1] or y1 > bb[3]: fail.append(n + " 자막이 띠 밖")
             if tag == "short" and has and g["captions"] != "hide": fail.append(n)
         except Exception as e:
             fail.append(n); print(n, tag, "오류", repr(e)[:160])
