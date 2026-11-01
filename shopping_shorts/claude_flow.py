@@ -180,7 +180,7 @@ def step(ctx: dict, body: dict, store=None) -> dict:
             raise CP.PortalError("bad_request", "그 작업을 찾을 수 없습니다")
         if seq != int(row["seq"]):
             raise CP.PortalError("stale", "옛 진행 상태입니다 — 가장 최근 next_payload 로 이어 주세요")
-    user = {"approve": kind == "approve", "retry": kind == "retry", "revise": str(body.get("revise") or "")[:500] if kind == "revise" else ""}
+    user = {"approve": kind == "approve", "retry": kind == "retry", "reclean": kind == "reclean", "revise": str(body.get("revise") or "")[:500] if kind == "revise" else ""}
     res = flow.step(st, body.get("measure") or {}, body.get("replies") or {}, user)
     st2 = res.pop("state")
     seq2 = seq + 1

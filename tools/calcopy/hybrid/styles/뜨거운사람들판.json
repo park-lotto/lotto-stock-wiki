@@ -29,7 +29,7 @@
   "db_below_voice": 0.0,
   "duck_orig_db": 0.0,
   "duck_narr_db": 0.0,
-  "fade_out": 0.04,
+  "fade_out": 0.5,
   "candidates": [],
   "why": "BGM 한 곡 4/6편 같음(템포 74.9 BPM — 스타일분석 §7) · 곡 이름 미확인 → sweets(사람이 고른다) · 목소리 없음 → 배경음 기준 = 판 목표 음량(02 2차 bgm_ref target) · 벤치 원본 소리 실측(handconst.py hotpeople · ebur128): db_below_voice 0 = 목소리·원음 없는 채널 → 배경음이 곧 전체 소리(벤치 통합 −12.7·−12.7·−11.1·−13.9·−13.2·−12.1 LUFS) — 판 목표 음량 기준 0dB 아래 · duck_orig_db 0 = 원음 줄 0(안 쓰임) · duck_narr_db 0 = 나레 없음(안 쓰임) · fade_out 0.04 = 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.04초(0.015~0.128 — 페이드 없음)"
  },

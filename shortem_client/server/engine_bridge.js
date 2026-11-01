@@ -32,7 +32,7 @@ function engineEnv(queue, packFile, extraEnv) {
   const env = { ...process.env, PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8',
     CALCOPY_GEMINI_BACKEND: 'client', CALCOPY_CUSTOMER_MODE: '1', SHORTEM_LLM_QUEUE: queue,
     CALCOPY_DATA_DIR: dataDir(), CALCOPY_PACK_ROOT: packRoot(), CHANNEL_FIND_CACHE: ensureDir(homeDir(), 'cache', 'channel_find'),
-    YTDLP_PROXY_SLOTS: '0', INSTAGRAM_SCRAPER: 'playwright' };   // 회원 PC = 우리 프록시·유료 수집 없음(받기는 회원 로그인 쿠키)
+    YTDLP_PROXY_SLOTS: '0', INSTAGRAM_SCRAPER: 'playwright', SHORTEM_BROWSER_OFFSCREEN: '1' };   // 회원 PC = 우리 프록시·유료 수집 없음(받기는 회원 로그인 쿠키)
   if (packFile) env.CALCOPY_PACKS = packFile;
   Object.assign(env, engineCookieEnv());                 // 회원이 연결한 인스타·틱톡·유튜브 로그인(logins.js) — yt-dlp·media_download 가 쓴다
   Object.assign(env, extraEnv || {});

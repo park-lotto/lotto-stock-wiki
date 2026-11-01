@@ -10,7 +10,7 @@ import { packFile as localPackFile, PID_RE } from './local_settings.js';
 import { homeDir, writeFileIn, workDir, ensureDir } from './paths.js';
 import { deliverInBackground } from './deliver.js';
 import { logFinal } from './work_log.js';
-import { startFlow, waitFlow, approveFlow, retryFlow, isFlowSid, loadFlow, shapeFlow } from './flow_driver.js';
+import { startFlow, waitFlow, approveFlow, retryFlow, recleanFlow, isFlowSid, loadFlow, shapeFlow } from './flow_driver.js';
 import { ApiError } from './api.js';
 
 export const waitMs = () => Number(process.env.SHORTEM_WAIT_SEC || 45) * 1000;
@@ -138,7 +138,7 @@ export async function makeStep({ step, sid, n, run_id, preset, topic, channel, v
   if (sid && isFlowSid(sid)) {     // 볼케이노형 편 — 서버 지시서를 따라 돈다(판단은 서버)
     if (step === 'approve') approveFlow(sid);
     else if (step === 'retry') retryFlow(sid);
-    else if (step === 'restyle') return { hints: ['이 프리셋은 다시 만들기를 아직 못 합니다 — 같은 영상 주소로 새로 만들어 주세요'] };
+    else if (step === 'restyle') recleanFlow(sid);
     return flowOut(await waitFlow(sid, waitMs()));
   }
   if (step === 'start' && video && preset && !process.env.SHORTEM_DEV_PRESET) {
@@ -147,6 +147,7 @@ export async function makeStep({ step, sid, n, run_id, preset, topic, channel, v
       return flowOut(await waitFlow(f.sid, waitMs()));
     } catch (e) {
       // 단계 진행 방식이 아닌 프리셋(옛 엔진 라인)만 아래 옛 길로 — 그 밖의 거절은 그대로 알린다
+      if (e instanceof ApiError && e.code === 'busy_flow') return { fail: { why: e.msg, code: e.code, fix: '지금 편이 끝난 뒤 시작해 주세요' } };
       if (!(e instanceof ApiError && e.code === 'bad_request' && /단계 진행/.test(e.msg))) {
         return { fail: { why: e instanceof ApiError ? (e.msg || e.code) : '서버에 연결하지 못했습니다', code: e.code || 'step', fix: '잠시 뒤 같은 단계를 다시 부르세요' } };
       }

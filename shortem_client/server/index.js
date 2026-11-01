@@ -10,6 +10,7 @@ import { shape, toToolResult, secretNumbers } from './firewall.js';
 import { make, makeCtx, current, cancel, resetLicenseCache } from './runner.js';
 import { outOf } from './engine/next_step.js';
 import { listJobs, JOB_RE } from './jobs.js';
+import { cancelFlow, shapeFlow } from './flow_driver.js';
 import { api, licenseFix } from './api.js';
 import { audit, pruneAudit } from './audit.js';
 import { gcCache, clearCache } from './assets.js';
@@ -188,9 +189,10 @@ export function buildServer(ctx = makeCtx()) {
 
   server.registerTool('shortem_job', {
     title: '작업 상태', description: TOOL_TEXT.shortem_job,
-    inputSchema: { action: z.enum(['status', 'list', 'cancel']), job_id: z.string().regex(JOB_RE).optional() },
+    inputSchema: { action: z.enum(['status', 'list', 'cancel']), job_id: z.string().regex(JOB_RE).optional(), sid: z.string().optional() },
     annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
-  }, async ({ action, job_id }) => {
+  }, async ({ action, job_id, sid }) => {
+    if (action === 'cancel' && sid) { const f = cancelFlow(sid); return reply(f ? shapeFlow(f) : { hints: ['그런 작업이 없습니다'] }); }
     if (action === 'list') return reply({ jobs: listJobs().map(j => ({ job_id: j.job_id, title: (j.title || (j.script && j.script.title) || '').split('\n')[0], progress: outOf(j).progress, ...(j.final ? { video: j.final } : {}) })) });
     if (!job_id) return reply({ hints: ['job_id 가 필요합니다'] });
     if (action === 'cancel') { const j = await cancel(job_id, ctx); return reply(j ? outOf(j) : { hints: ['그런 작업이 없습니다'] }, secretFor(j)); }

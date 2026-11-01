@@ -445,6 +445,11 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
     m, rp, user = dict(measure or {}), dict(replies or {}), dict(user or {})
     if user.get("revise") and (st.get("script") or {}).get("S") and st.get("phase") != "sign":
         st["phase"] = "member_revise"      # 대본이 나온 뒤 회원이 고칠 줄을 말함 — 어느 단계든 그 줄만(재료 그대로, ph_member_revise)
+    if user.get("reclean") and (st.get("script") or {}).get("M"):
+        tf = st.setdefault("text_fix", {})    # 대본·재료·목소리는 그대로, 박힌 글자 지우기부터 렌더만 다시(주인 = 여기 · f_render)
+        tf.update({"mode": "vmake", "key": None})
+        st.get("tries", {}).pop("vmake_fail", None)
+        st["phase"] = "render"
     if m and st.get("watch_last") and any(isinstance(v, dict) and v.get("error") for v in m.values()):
         (st.get("watch_keys") or {}).pop(st["watch_last"], None)     # 실패한 일을 같은 입력으로 다시 = 다시 시도(반복 감시 대상 아님)
     for _ in range(40):
@@ -4267,6 +4272,8 @@ def f_render_clean_got(st, m, rp, u):
         raise _Stop(str(c.get("why")), str(c.get("fix") or ""), retry="render")
     if c.get("error"):
         st["log"].append("박힌 글자 지우기 실패(흐림 그대로 렌더): " + str(c["error"])[:200])
+    if c.get("error") or c.get("mode") in ("blur", "error"):     # 지우기로 정했는데 흐림이 됐다 — 조용히 넘어가지 않는다(11-01)
+        st["notice"], st["_notice_shown"] = "원본 자막을 지우지 못해 흐림으로 가렸어요", False
     if (c.get("mode") == "vmake" and c.get("why")) or c.get("error"):        # 못 지운 구간(시간 초과·크레딧) — 흐림으로 덮고 렌더하지 않는다(10-26 까르보 3판: 흐림이 어긋나 영어 자막이 그대로 남았다). 다시 보내고, 두 번째도 실패면 멈춘다
         for n, iv in (c.get("done") or {}).items():
             tf.setdefault("done", {}).setdefault(n, []).extend(iv)
