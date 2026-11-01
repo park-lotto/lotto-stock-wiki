@@ -19518,7 +19518,7 @@ def api_claude_me_start_zip(request: Request):
                     headers={"Cache-Control": "no-store", "Content-Disposition": "attachment; filename*=UTF-8''%EC%88%8F%ED%81%B4%EC%8B%9C%EC%9E%91_%EC%9D%B4%ED%8C%8C%EC%9D%BC%EC%9D%84%EC%84%A4%EC%B9%98.zip"})
 
 
-@app.post("/api/claude/trial")
+@app.post("/api/claude/me/trial")
 def api_claude_trial(request: Request):
     """숏클 무료 업그레이드 1주(관제 300) — 판단은 claude_portal.claim_trial."""
     cid = getattr(request.state, "customer_id", None)

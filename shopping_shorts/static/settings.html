@@ -1030,7 +1030,7 @@ async function loadAccount(){
       el("scUpBtn").textContent = "숏클로 무료 업그레이드 (7일) →";
       el("scUpBtn").onclick = async function (e) {
         e.preventDefault();
-        var r = await fetch("/api/claude/trial", { method: "POST" });
+        var r = await fetch("/api/claude/me/trial", { method: "POST" });
         var j = {}; try { j = await r.json(); } catch (x) {}
         if (r.ok) location.href = "/claude";
         else el("scUpSub").textContent = j.msg || "신청하지 못했습니다. 다시 눌러 주세요.";
