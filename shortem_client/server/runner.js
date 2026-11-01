@@ -115,7 +115,6 @@ export async function make({ step, job_id, profile_id, source, payload }, ctx = 
 
 const jobsInFlight = new Map();   // 돌고 있는 job 객체(같은 객체를 응답에 쓴다)
 
-export const anyRunning = () => running.size > 0;
 export function current(job_id) { return running.has(job_id) ? jobsInFlight.get(job_id) : loadJob(job_id); }
 
 export async function cancel(job_id, ctx = makeCtx()) {
