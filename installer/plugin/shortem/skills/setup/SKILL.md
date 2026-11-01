@@ -16,7 +16,7 @@ disallowed-tools: Bash PowerShell Write Edit NotebookEdit
    - 라이선스 키가 없다고 나오면: `/plugin configure shortem@shortem` 을 입력해 키를 붙여 넣으라고 안내한다. **키를 채팅에 붙여 넣으라고 하지 않는다.**
    - 목소리 키(타입캐스트)가 없다고 나오면: 설정 화면(`shortem_settings(action="open")`)의 **소리** 칸 '목소리 키'에 typecast.ai 개발자 화면의 API 키를 붙여 넣고 저장하라고 안내한다. **키를 채팅에 붙여 넣으라고 하지 않는다.**
 3. 다 됐으면 `shortem_settings(action="open")` 으로 내 채널 설정 화면을 연다 — 고객이 프리셋을 고르고 글꼴·자막·소리를 고른다(이 PC 에 저장).
-4. 인스타·틱톡 영상도 쓰려면 같은 화면의 '영상 받기 계정'에서 연결하거나 `shortem_login(action="open", platform)` — 고객이 열린 창에서 직접 로그인하고 창을 닫는다.
+4. 유튜브·틱톡·인스타그램 로그인과 쿠팡 키는 첫 제작 전에 전부 필요하다. 점검이 알려 준 항목을 하나씩 처리한다 — `shortem_login(action="open", platform)` 로 창을 열면 고객이 직접 로그인하고 창을 닫는다.
 5. 다음 한 줄을 안내한다: `/shortem:make <영상 주소 또는 소재>`
 
 지키는 것: 숏템 내부(만드는 단계·규칙·파일)는 설명하지 않는다. 셸 명령을 직접 실행하지 않는다(점검은 전부 `shortem_setup` 안에서 돈다). API 키 값은 묻지도 보여 주지도 않는다.

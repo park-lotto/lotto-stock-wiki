@@ -16,7 +16,7 @@ import { audit, pruneAudit } from './audit.js';
 import { gcCache, clearCache } from './assets.js';
 import { resolveTools } from './tools_paths.js';
 import { readLicense, saveLicense, keyPrint, deviceName, ENGINE_VERSION } from './license.js';
-import { keyStatus } from './engine/voice.js';
+import { keyStatus, KEY_SERVICES } from './engine/voice.js';
 import { homeDir, workDir, writeFileIn, jail } from './paths.js';
 import { selftest, encoderCheck } from './selftest.js';
 import { makeStep, aiList } from './make_flow.js';
@@ -129,7 +129,15 @@ export function buildServer(ctx = makeCtx()) {
     let free = null;
     try { const s = fs.statfsSync(workDir().split(/[\\/]/)[0] + (process.platform === 'win32' ? '\\' : '/')); free = Math.round((s.bavail * s.bsize) / 1e8) / 10; } catch { /* 모름 */ }
     if (free != null && free < 3) fails.push({ where: '디스크', why: '디스크 여유가 부족합니다', fix: '아래 지울 후보(cleanup)를 회원에게 보여 주고 고른 것만 shortem_setup(remove=[id…]) 로 지우세요', retry_ok: true });
-    const info = { license: lic, tools: { mode: tools.mode, ok: !tools.problems.length, problems: tools.problems.map(p => `${p.tool}: ${p.why}`) }, keys: { typecast: keyStatus('typecast') }, disk_free_gb: free, device_name: deviceName(), work_dir: workDir(), video_encoder: await encoderCheck(), ...(removed ? { removed } : {}), ...(free != null && free < 10 ? { cleanup: showCandidates(cleanupCandidates()) } : {}) };   // 'gpu'=그래픽카드 우선 · 'cpu'(98 #79)
+    // 사장님 11-02 "무조건 3개 다 로그인 처음에 · 키 점검" — 첫 제작 전에 빠진 것을 한 번에 알린다(실제 호출 판정은 제작 시작 전 runner_ops.need_list)
+    const logged = loginStatus().connected;
+    for (const [k, pf] of Object.entries(PLATFORMS)) {
+      if (!logged[k]) fails.push({ where: '계정 연결', why: `${pf.name} 로그인이 아직 안 됐습니다`, fix: `shortem_login(action="open", platform="${k}") 로 창을 열고 로그인·창 닫기를 부탁한 뒤 다시 점검`, retry_ok: true });
+    }
+    for (const s of ['typecast', 'coupang_access', 'coupang_secret']) {
+      if (!keyStatus(s).present) fails.push({ where: '키', why: `${KEY_SERVICES[s].label} 가 없습니다`, fix: `shortem_settings(action="open") 의 키 칸에 넣어 달라고 부탁 (${KEY_SERVICES[s].where})`, retry_ok: true });
+    }
+    const info = { license: lic, tools: { mode: tools.mode, ok: !tools.problems.length, problems: tools.problems.map(p => `${p.tool}: ${p.why}`) }, keys: Object.fromEntries(Object.keys(KEY_SERVICES).map(k => [k, keyStatus(k).present])), disk_free_gb: free, device_name: deviceName(), work_dir: workDir(), video_encoder: await encoderCheck(), ...(removed ? { removed } : {}), ...(free != null && free < 10 ? { cleanup: showCandidates(cleanupCandidates()) } : {}) };   // 'gpu'=그래픽카드 우선 · 'cpu'(98 #79)
     if (st) {
       const r = await selftest();
       info.selftest = { report: r.report, items: r.items.map(i => ({ name: i.name, ok: i.ok, ...(i.file ? { file: i.file } : {}), ...(i.skipped ? { skipped: i.why } : {}), ...(i.version ? { version: i.version, ass_filter: i.ass_filter } : {}), ...(i.encoder ? { encoder: i.encoder, how: i.how } : {}) })) };

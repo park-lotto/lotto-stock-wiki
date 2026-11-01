@@ -28,6 +28,9 @@ def _version_of(fmt: str, voice_prefix: str = "tc_") -> str:
     pytest.skip(f"{fmt} 판({voice_prefix}) 없음")
 
 
+ALL = ("youtube.com", "instagram.com", "tiktok.com")
+
+
 def _cookies(tmp: Path, *domains) -> str:
     rows = ["# Netscape HTTP Cookie File"]
     names = {"youtube.com": "SAPISID", "instagram.com": "sessionid", "tiktok.com": "sessionid"}
@@ -49,7 +52,9 @@ def member_pc(monkeypatch, tmp_path):
     monkeypatch.setattr(R, "CACHE", "")
     monkeypatch.setattr(R, "PAID_OFF", False)
     monkeypatch.setattr(R.shutil, "which", lambda t: "x")
-    have = {"typecast": False, "vmake": False, "speechmatics": True}
+    have = {"typecast": False, "vmake": False, "speechmatics": True, "coupang": "ok"}
+    monkeypatch.setattr(R, "coupang_key_state", lambda: have["coupang"])
+    monkeypatch.setattr(R, "browser_ok", lambda: True)
     monkeypatch.setattr(R, "have_speechmatics", lambda: have["speechmatics"])
     monkeypatch.setattr(providers, "typecast_key", lambda kf=None: "k" if have["typecast"] else "")
     monkeypatch.setattr(VC, "key_source", lambda: "member")
@@ -66,39 +71,73 @@ def _ids(xs):
 
 
 def test_all_missing_at_once_overseas(member_pc):
+    """11-02 사장님 "무조건 3개 다 로그인 처음에 · 쿠팡 키 점검" — 빠진 것은 시작 전에 한 번에. 스피치매틱스·VMake 는 대체가 있어 요구하지 않는다."""
     have, tmp, mp = member_pc
-    have["speechmatics"] = False
+    have.update(speechmatics=False, coupang="none")
     v = _version_of("해외원본형")
     got = R.need_list(v, "https://www.youtube.com/shorts/abcdefghijk", "해외원본형")
-    assert _ids(got) == ["login:youtube", "speechmatics", "typecast", "vmake"], got
+    assert _ids(got) == ["coupang", "login:instagram", "login:tiktok", "login:youtube", "typecast"], got
     with pytest.raises(F._Stop) as e:
         F.ph_setup_check({"version": v, "log": []}, {"env": {"missing": got}}, {}, {})
     why, fix = e.value.why, e.value.fix
     assert why == F.SETUP_WHY and F.member_ok(why)
     assert F.member_ok(fix, need_next=True), fix
-    for label in ("목소리 키(타입캐스트)", "VMake 키", "유튜브 계정 연결", "스피치매틱스 키(무료)"):
+    for label in ("목소리 키(타입캐스트)", "쿠팡 파트너스 키", "유튜브 계정 연결", "틱톡 계정 연결", "인스타그램 계정 연결"):
         assert label in fix, fix
     assert e.value.retry == "setup"
     for bad in ("TYPECAST", "VMAKE", ".shortem", "keys/", "need_list"):
         assert bad not in fix
 
 
-def test_vmake_only_for_overseas_and_insta_only_for_insta(member_pc):
+def test_three_logins_regardless_of_source(member_pc):
+    """소재가 유튜브여도 재료 단계에서 틱톡·인스타를 받는다 — 소재 주소와 상관없이 셋 다 시작 전에."""
     have, tmp, mp = member_pc
     have["typecast"] = True
     mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, "youtube.com"))
     v = _version_of("연예인형")
-    assert R.need_list(v, "https://www.youtube.com/shorts/abcdefghijk", "연예인형") == []        # 연예인형은 VMake 를 부르지 않는다
-    got = R.need_list(v, "https://www.instagram.com/reel/xyz/", "연예인형")
-    assert _ids(got) == ["login:instagram"], got
-    mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, "youtube.com", "instagram.com"))
-    assert R.need_list(v, "https://www.instagram.com/reel/xyz/", "연예인형") == []
+    got = R.need_list(v, "https://www.youtube.com/shorts/abcdefghijk", "연예인형")
+    assert _ids(got) == ["login:instagram", "login:tiktok"], got
+    mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, *ALL))
+    assert R.need_list(v, "https://www.youtube.com/shorts/abcdefghijk", "연예인형") == []
+
+
+def test_instagram_session_file_alone_is_not_login(member_pc):
+    """세션 파일이 남아 있어도 쿠키가 죽었으면 로그인이 아니다(파일 있음 = 통과였던 구멍)."""
+    have, tmp, mp = member_pc
+    have["typecast"] = True
+    f = tmp / "instagram.json"
+    f.write_text("{}", encoding="utf-8")
+    mp.setenv("INSTAGRAM_SESSION_PATH", str(f))
+    mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, "youtube.com", "tiktok.com"))
+    assert "login:instagram" in _ids(R.need_list(_version_of("연예인형"), "", "연예인형"))
+
+
+def test_coupang_key_checked_by_real_call_state(member_pc):
+    """쿠팡 키 = 있나만 보지 않고 실제 호출 결과로. 없음·죽음 모두 시작 전에 요구, 제품 없는 자막노래형은 안 묻는다."""
+    have, tmp, mp = member_pc
+    have["typecast"] = True
+    mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, *ALL))
+    v = _version_of("연예인형")
+    for st in ("none", "bad"):
+        have["coupang"] = st
+        assert _ids(R.need_list(v, "", "연예인형")) == ["coupang"]
+    assert "coupang" not in _ids(R.need_list(v, "", "자막노래형"))
+
+
+def test_browser_required_for_login_window(member_pc):
+    have, tmp, mp = member_pc
+    have["typecast"] = True
+    mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, *ALL))
+    mp.setattr(R, "browser_ok", lambda: False)
+    got = R.need_list(_version_of("연예인형"), "", "연예인형")
+    assert _ids(got) == ["browser"], got
+    assert F.member_ok(F.setup_fix(got), need_next=True), F.setup_fix(got)
 
 
 def test_everything_present_passes(member_pc):
     have, tmp, mp = member_pc
     have.update(typecast=True, vmake=True)
-    mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, "youtube.com"))
+    mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, *ALL))
     v = _version_of("해외원본형")
     assert R.need_list(v, "https://www.youtube.com/shorts/abcdefghijk", "해외원본형") == []
     st = {"version": v, "log": []}
@@ -107,7 +146,7 @@ def test_everything_present_passes(member_pc):
 
 def test_mina_voice_needs_elevenlabs_on_member_pc(member_pc):
     have, tmp, mp = member_pc
-    mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, "youtube.com"))
+    mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, *ALL))
     v = _version_of("연예인형", "kr-mina")
     assert _ids(R.need_list(v, "", "연예인형")) == ["elevenlabs"]
     mp.setenv("ELEVENLABS_API_KEY", "k")
@@ -120,7 +159,7 @@ def test_paid_off_needs_no_paid_keys(member_pc):
     have["speechmatics"] = False
     mp.setattr(R, "PAID_OFF", True)
     mp.setattr(__import__("tools.calcopy.vmake_clean", fromlist=["x"]), "paid_off", lambda: True)
-    mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, "youtube.com"))
+    mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, *ALL))
     assert R.need_list(_version_of("해외원본형"), "", "해외원본형") == []
 
 
@@ -130,7 +169,7 @@ def test_expired_cookie_is_not_login(member_pc):
     f = tmp / "c.txt"
     f.write_text("\t".join([".youtube.com", "TRUE", "/", "TRUE", "1000", "SAPISID", "x"]) + "\n", encoding="utf-8")
     mp.setenv("YTDLP_COOKIES_YOUTUBE", str(f))
-    assert _ids(R.need_list(_version_of("연예인형"), "", "연예인형")) == ["login:youtube"]
+    assert "login:youtube" in _ids(R.need_list(_version_of("연예인형"), "", "연예인형"))
 
 
 def test_setup_fix_groups_disk_and_install():
@@ -147,7 +186,7 @@ def test_youtube_check_uses_same_auth_as_download(member_pc):
     준비 확인은 받기와 **같은 함수**로 판정해야 한다 — 받기가 PermissionError 면 쿠키 파일이 있어도 '유튜브 계정 연결'이 나와야 한다."""
     have, tmp, mp = member_pc
     have["typecast"] = True
-    mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, "youtube.com"))
+    mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, *ALL))
     from tools.calcopy import origin_find as OF
 
     def no_login(url):
@@ -165,10 +204,25 @@ def test_probe_catches_download_failure_even_when_login_looks_fine(member_pc):
     준비 확인은 그 편 소재 영상을 **실제 받기 함수(yt)** 로 한 번 시험한다 — 실패하면 그 이유를 한 번에 보여 준다."""
     have, tmp, mp = member_pc
     have["typecast"] = True
-    mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, "youtube.com"))
+    mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, *ALL))
     mp.setattr(R, "yt_probe", lambda url: "Video unavailable")
     v = _version_of("연예인형")
     got = R.need_list(v, "https://www.youtube.com/shorts/abcdefghijk", "연예인형")
     assert "probe:youtube" in _ids(got), got
     assert "Video unavailable" in next(x["label"] for x in got if x["id"] == "probe:youtube")
     assert "probe:youtube" not in _ids(R.need_list(v, "https://www.instagram.com/reel/xyz/", "연예인형"))   # 유튜브 소재만 시험
+
+
+def test_gate_uses_whisper_when_speechmatics_missing(monkeypatch):
+    """11-02: 스피치매틱스가 없어도 위스퍼로 판정한다 — 미측정 ×로 완성이 막히지 않게."""
+    from tools.calcopy.hybrid import quality_gate as QG
+    from tools.calcopy.engine import narr_verify as NV
+
+    def no_key(voice):
+        raise RuntimeError("키 없음")
+    monkeypatch.setattr(NV, "heard_words", no_key)
+    words, src = QG.narr_words("v.wav", lambda: [(1.0, 1.5, "안녕")])
+    assert words == [{"s": 1.0, "e": 1.5, "w": "안녕"}] and "위스퍼" in src
+    monkeypatch.setattr(NV, "heard_words", lambda voice: [{"s": 2.0, "e": 2.5, "w": "네"}])
+    words, src = QG.narr_words("v.wav", lambda: pytest.fail("키가 있으면 위스퍼를 부르지 않는다"))
+    assert words[0]["w"] == "네" and "스피치매틱스" in src

@@ -256,8 +256,6 @@ LOGIN_OK = {"youtube": ("youtube.com", ("__Secure-3PSID", "SAPISID")), "instagra
 def _cookie_ok(platform: str) -> bool:
     """회원 PC 로그인 연결 — 숏템 MCP 가 만든 cookies.txt(엔진 환경 YTDLP_COOKIES_YOUTUBE)에 그 사이트 로그인 쿠키가 살아 있나. 이름·만료만 보고 값은 읽지 않는다."""
     f = os.environ.get("YTDLP_COOKIES_YOUTUBE") or ""
-    if platform == "instagram" and os.path.isfile(os.environ.get("INSTAGRAM_SESSION_PATH") or ""):
-        return True
     if not f or not os.path.isfile(f):
         return False
     dom, names = LOGIN_OK[platform]
@@ -269,6 +267,27 @@ def _cookie_ok(platform: str) -> bool:
         if len(r) >= 7 and r[0].lstrip(".").endswith(dom) and r[5] in names and r[6] and (r[4] == "0" or float(r[4] or 0) > now):
             return True
     return False
+
+
+def coupang_key_state() -> str:
+    """쿠팡 파트너스 키 상태 — 'ok'(실제 호출 통과) · 'none'(없음) · 'bad'(호출 실패). 돈 들지 않는 딥링크 1회(coupang_partners.probe_key), 잠깐의 끊김만 한 번 더."""
+    ak, sk = os.environ.get("COUPANG_ACCESS_KEY", ""), os.environ.get("COUPANG_SECRET_KEY", "")
+    if not (ak and sk):
+        return "none"
+    from shopping_shorts import coupang_partners as cp
+    for k in range(2):
+        if cp.probe_key(ak, sk):
+            return "ok"
+        if not k:
+            time.sleep(2)
+    return "bad"
+
+
+def browser_ok() -> bool:
+    """계정 로그인 창을 띄울 크롬·엣지가 있나 — 숏템 MCP logins.js browserExe 와 같은 자리."""
+    roots = [os.environ.get(k) for k in ("PROGRAMFILES", "PROGRAMFILES(X86)", "LOCALAPPDATA")]
+    subs = (("Google", "Chrome", "Application", "chrome.exe"), ("Microsoft", "Edge", "Application", "msedge.exe"))
+    return not sys.platform.startswith("win") or any(Path(r, *x).is_file() for r in roots if r for x in subs)
 
 
 def need_list(version: str, url: str = "", fmt: str = "") -> list[dict]:
@@ -302,7 +321,13 @@ def need_list(version: str, url: str = "", fmt: str = "") -> list[dict]:
         from tools.calcopy import vmake_clean as VC
         if VC.ready(VC.style_mode(version))["mode"] == "need_key":
             out.append({"id": "vmake", "label": "VMake 키(원본 자막 지우기)", "how": "setting"})
-    if not CACHE:                       # 영상 받기·원본 찾기 = 유튜브(모든 형식) + 소재가 인스타·틱톡이면 그 계정
+    if customer and fmt != "자막노래형":      # 사장님 11-02 "쿠팡 api 키 점검" — 시작 전에 실제 호출로(자막노래형은 제품이 없다)
+        cps = coupang_key_state()
+        if cps != "ok":
+            out.append({"id": "coupang", "label": "쿠팡 파트너스 키" + (" 확인 실패" if cps == "bad" else ""), "how": "setting"})
+    if customer and not browser_ok():
+        out.append({"id": "browser", "label": "크롬 브라우저", "how": "browser"})
+    if not CACHE:                       # 영상 받기·원본 찾기 = 유튜브 + 틱톡·인스타(사장님 11-02 "무조건 3개 다 로그인 처음에" — 소재와 상관없이)
         # 판정 = 받기(yt)가 실제로 부르는 origin_find.yt_auth 그대로(10-27 실사고: 회원 모드만 쿠키 파일을 보고 통과 → 받기는 mcp* 프로필 없음으로 멈춤).
         # 브라우저 프로필로 받으면 그걸로 끝, 아니면 회원 PC 처럼 쿠키 파일(설정 파일·YTDLP_COOKIES_YOUTUBE)로 받으니 그 파일을 본다.
         from tools.calcopy.origin_find import yt_auth
@@ -316,9 +341,8 @@ def need_list(version: str, url: str = "", fmt: str = "") -> list[dict]:
             why = yt_probe(str(url))
             if why:
                 out.append({"id": "probe:youtube", "label": f"유튜브 받기 시험 실패 — {why}", "how": "login"})
-        u = str(url or "").lower()
         for pf, name in (("instagram", "인스타그램"), ("tiktok", "틱톡")):
-            if LOGIN_OK[pf][0] in u and customer and not _cookie_ok(pf):
+            if customer and not _cookie_ok(pf):
                 out.append({"id": "login:" + pf, "label": name + " 계정 연결", "how": "login"})
     return out
 

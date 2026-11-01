@@ -123,7 +123,10 @@ async function send(f, body) {
 
 // 실행기 일은 그 편 프리셋(판 설정·벤치 자료 꾸러미)을 빌린 채로 — 렌더·계획·준비 점검이 판 설정을 읽는다(10-29 회원 실측:
 //   빌리지 않아 렌더가 판 파일 없음 SystemExit 로 조용히 죽고 '같은 원인 3번'으로 멈췄다). 빌림 판단은 서버 claude_portal.preset_rent 한 곳.
+const COOKIE_EVERY_MS = 20 * 60 * 1000;   // 한 편이 30~50분 — 유튜브 세션이 도는 사이 끊기지 않게 일 사이마다 새로 뽑는다(사장님 11-02 "중간에 안끊기게")
+let cookiesAt = 0;
 async function runWithPreset(f) {
+  if (Date.now() - cookiesAt > COOKIE_EVERY_MS) { cookiesAt = Date.now(); await refreshCookies(); }
   const job = path.join(flowRoot(), f.sid, 'job');
   let rental = null;
   if (f.preset) {

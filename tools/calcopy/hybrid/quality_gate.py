@@ -9,7 +9,7 @@
   규격·화면·썸네일 측정 = 이 파일(옛 bench_check 본문을 옮김 — bench_check.py 는 호출만 남김)
   재료 B13·B16 = checks.reuse_violations·aba_violations · 되감김 = engine/check_seams.check
   쉼 B18 = checks.pauses_between(문턱 checks.PAUSE_LO/HI) · 받아쓰기 = 스피치매틱스 engine/narr_verify.heard_words(낱말 시각·md5 캐시) → check_line_sync.line_starts_from_asr·LIMIT_SM
-    (칼카피_시작 12번: 위스퍼 small 단독 판정 금지 — 스피치매틱스를 못 쓰면 미측정, 위스퍼는 참고 글로만)
+    (사장님 11-02: 스피치매틱스를 못 쓰면 위스퍼로 판정한다 — 없는 키 때문에 미측정으로 완성이 막히지 않게 · 주인 narr_words)
   대본 = script_audit.audit · 배치 = placement.check_place(렌더 때 자막표.check 에 기록) · 1차 자 = kal_analyze.match_from_render
   장면↔대사 = 완성본 컷 ↔ 계획이 고른 원본 프레임 동일성(창 픽셀 대조 ≥0.97, 표준 §11-4 ㉔) + 계획 점수(material_fit 의 루브릭 rubric:v1)를 그대로 보고
     — 완성본을 다시 채점하지 않는다(같은 자를 두 번 돌리면 잡음만 잰다) · 자 = 루브릭 하나(㉕, 상위편_목표.json), 버전 불일치면 ×
@@ -567,6 +567,15 @@ def bench_drops(st: dict, kinds=TD_KINDS) -> dict | None:
 NARR_LOOK_BEFORE = 1.0    # 나레 줄 시작을 찾는 창 = 계획 시작 −1.0초 ~ 줄 끝 +0.3초(이보다 멀리 밀린 줄 = 못 찾음 ×)
 
 
+def narr_words(voice, whisper) -> tuple[list[dict], str]:
+    """나레 낱말 시각 [{s,e,w}]과 출처 — 스피치매틱스가 먼저, 못 쓰면 위스퍼(whisper() = [(시작,끝,글)])."""
+    from tools.calcopy.engine import narr_verify as NV
+    try:
+        return NV.heard_words(voice), "스피치매틱스 낱말 시각"     # md5 캐시 NV.CACHE
+    except Exception as e:  # noqa: BLE001 — 대체 길로 판정하고 출처에 남긴다
+        return [{"s": a, "e": b, "w": w} for a, b, w in whisper()], f"위스퍼 낱말 시각 · 스피치매틱스 못 씀({type(e).__name__})"
+
+
 def narr_sync_rows(narr: list[dict], lines: dict, words: list[dict]) -> list[dict]:
     """나레 줄 시작 ↔ 스피치매틱스 낱말 시각(narr_verify.heard_words [{s,e,w}]). 줄마다 따로 — 그 줄 계획 구간(시작 −NARR_LOOK_BEFORE ~ 끝 +0.3) 낱말만으로
     check_line_sync.line_starts_from_asr. 허용 = check_line_sync.LIMIT_SM.
@@ -927,19 +936,13 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             if not asr:
                 return None, "받아쓰기 안 함(--no-asr, 미측정)"
             from tools.calcopy.engine import check_line_sync as LS
-            from tools.calcopy.engine import narr_verify as NV
             voice = R / "voice.wav"
-            try:
-                words = NV.heard_words(voice)       # 스피치매틱스 낱말 시각(md5 캐시 NV.CACHE) — 판정은 이것만(칼카피_시작 12번)
-            except Exception as e:  # noqa: BLE001 — 스피치매틱스를 못 쓰면 미측정. 위스퍼는 참고 글로만(단독 판정 금지)
-                try:
-                    ws = _cached(store, f"asr|whisper|{md5(voice)}", lambda: [list(x) for x in LS.asr_segments(voice)])
-                    save_store()
-                    ref = narr_sync_rows(narr, T["lines"], [{"s": a, "e": b, "w": w} for a, b, w in ws])
-                    ref_txt = " ".join(f"{r['line']}:{r['diff']}" for r in ref)
-                except Exception as e2:  # noqa: BLE001
-                    ref_txt = f"위스퍼도 실패 {type(e2).__name__}"
-                return None, f"스피치매틱스 못 씀({type(e).__name__}: {str(e)[:120]}) — 미측정 · 참고(판정 안 함) whisper 차 {ref_txt}"
+
+            def whisper():
+                ws = _cached(store, f"asr|whisper|{md5(voice)}", lambda: [list(x) for x in LS.asr_segments(voice)])
+                save_store()
+                return ws
+            words, src = narr_words(voice, whisper)
             out = narr_sync_rows(narr, T["lines"], words)
             cache["asr"] = {"rows": out, "segs": [(w["s"], w["e"], w["w"]) for w in words]}
             fixed = []
@@ -953,7 +956,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             bad = [r["line"] for r in out if not r["ok"]]
             worst = max((abs(r["diff"]) for r in out if r["diff"] is not None and not r.get("placed_at")), default=None)
             return (not bad if out else None), (f"나레 {len(out)}줄 중 못 찾음·{LS.LIMIT_SM}초 넘게 어긋남 {bad or '0'} · 최대 차 {worst} "
-                                                f"(스피치매틱스 낱말 시각) · " + " ".join(f"{r['line']}:{r['t0']}↔{r['heard_t0']}" for r in out)
+                                                f"({src}) · " + " ".join(f"{r['line']}:{r['t0']}↔{r['heard_t0']}" for r in out)
                                                 + (f" · 받아쓰기 시각 오독을 실제 자리로 바로잡음 {fixed}" if fixed else ""))
         row("소리", "나레 받아쓰기 ↔ 대본", asr_rows, "engine/narr_verify.heard_words(스피치매틱스) → check_line_sync.line_starts_from_asr · LIMIT_SM")
     # ── 대본

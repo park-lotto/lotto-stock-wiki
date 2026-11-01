@@ -779,7 +779,7 @@ def setup_fix(missing: list) -> str:
             hows = {x.get("how") or "setting" for x in xs}
             lead = "설정 화면에서 " + ("넣고 연결하고" if hows == {"setting", "login"} else "연결하고" if hows == {"login"} else "넣고")
         else:
-            lead = {"disk": "C 드라이브 공간을 비우고", "install": "숏템을 다시 설치하고"}.get(g, "설정 화면에서 넣고")
+            lead = {"disk": "C 드라이브 공간을 비우고", "install": "숏템을 다시 설치하고", "browser": "설치하고"}.get(g, "설정 화면에서 넣고")
         parts.append(" · ".join(str(x.get("label")) for x in xs) + " — " + lead)
     return " / ".join(parts) + " 다시 시도해 주시면 바로 이어 갈게요"
 
