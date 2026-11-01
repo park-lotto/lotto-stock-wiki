@@ -21,6 +21,7 @@ function server() {
       req.on('data', d => { b += d; });
       req.on('end', () => {
         const body = JSON.parse(b || '{}');
+        if (req.url.includes('studio')) { rsp.end('{}'); return; }   // 꾸미기 값 맞추기(packFile) — 지시서 고리 밖
         seen.push(body);
         const n = seen.length;
         const out = n === 1 ? { status: 'execute', message: '준비 확인 중', stage: { no: 1, total: 13, text: '준비 확인' }, do: [{ id: 'w', cmd: 'write_doc', files: { 'a.txt': '안녕' } }] }
