@@ -2749,6 +2749,22 @@ def _check_fails(st) -> str:
     return " / ".join(x for x in [("1단 × " + "·".join(one[:8])) if one else "", ("2단 × " + "·".join(two)) if two else ""] if x) or "알 수 없음"
 
 
+def finish_with_left(st) -> dict:
+    """(판단 주인 — 검사가 남아도 완성) 검사는 구속이 아니라 권고다(사장님 11-02) — 고칠 한도를 다 쓰면 남은 것을 회원에게 알리고 완성본을 낸다."""
+    look = st.get("look") or {}
+    auto = [f"{r.get('what')}" for r in (st.get("auto") or {}).get("rows") or [] if r.get("ok") is not True and not r.get("ref")]
+    hard = [x for x in auto if "광고" in x]      # 금지선은 권고가 아니다 — 광고 표시 없는 영상은 내지 않는다
+    if hard:
+        st["log"].append("완성본 검사 멈춤(금지선): " + " / ".join(hard))
+        raise _Stop("완성본에 꼭 들어가야 할 표시가 빠졌어요", "다시 시도해 주시면 걸린 곳부터 고쳐서 이어 갈게요", retry="check_retry", detail=" / ".join(hard))
+    left = [str(p)[:160] for p in look.get("problems") or [] if not look.get("skipped")] + auto
+    st["look_left"] = left or ["마지막 확인을 끝까지 못 했어요"]
+    st["notice"] = "완성했어요. 마지막 확인에서 더 다듬으면 좋을 곳: " + " / ".join(st["look_left"])[:400]
+    st.pop("_notice_shown", None)
+    st["log"].append("남은 지적과 함께 완성: " + " / ".join(st["look_left"])[:300])
+    return {"goto": "deliver"}
+
+
 def ph_check_judge(st, m, rp, u):
     v = st["version"]
     auto_ok, look = bool((st.get("auto") or {}).get("ok")), st.get("look") or {}
@@ -2763,23 +2779,10 @@ def ph_check_judge(st, m, rp, u):
         return _length_rewrite(st, long[0].get("value"))
     bad_rows = [r for r in (st.get("auto") or {}).get("rows") or [] if r.get("ok") is not True and not r.get("ref")]
     if not auto_ok and bad_rows and all(str(r.get("what") or "").startswith(CODE_ONLY_ROWS) for r in bad_rows):
-        # 재료·대본으로 못 고치는 칸(배치 = 코드가 판 규칙으로 정한다)만 걸렸다 — Claude 에게 재료 고치기를 묻고 다시 렌더하는 헛바퀴 대신 바로 멈춘다
-        # (10-27 싱크대: 자막 배치 대조 1건으로 재료 고치기 3번·렌더 3번 → 같은 반려. 뿌리 수리 = placement.check_place)
-        why = _check_fails(st)
-        st["log"].append("완성본 검사 멈춤(코드 몫 — 재료로 못 고침): " + why)
-        raise _Stop("완성본 마무리 확인에서 걸린 곳이 있어요", "다시 시도해 주시면 걸린 곳부터 고쳐서 이어 갈게요", retry="check_retry", detail=why)
-    if auto_ok and st["tries"].get("look", 0) >= LIMITS["look"]:
-        # 자동 검사는 통과, 눈 지적만 남음 — 멈추지 않고 완성한다. 남은 지적은 회원에게 알리고 기록한다(사장님 10-31 "멈추지 말고 해결해 나가게")
-        left = [str(p)[:160] for p in look.get("problems") or []]
-        st["look_left"] = left
-        st["notice"] = "완성했어요. 마지막 확인에서 더 다듬으면 좋을 곳: " + " / ".join(left)[:400]
-        st.pop("_notice_shown", None)
-        st["log"].append("눈 지적 남긴 채 완성: " + " / ".join(left)[:300])
-        return {"goto": "deliver"}
-    if st["tries"].get("look", 0) >= LIMITS["look"]:
-        why = _check_fails(st)
-        st["log"].append("완성본 검사 멈춤: " + why)
-        raise _Stop("완성본 마무리 확인에서 걸린 곳이 있어요", "다시 시도해 주시면 걸린 곳부터 고쳐서 이어 갈게요", retry="check_retry", detail=why)
+        # 재료·대본으로 못 고치는 칸(배치 = 코드가 판 규칙으로 정한다)만 걸렸다 — 재료 고치기·렌더를 되풀이하지 않고 알림과 함께 완성(10-27 싱크대 헛바퀴 3번)
+        return finish_with_left(st)
+    if st["tries"].get("look", 0) >= LIMITS["look"]:      # 고칠 한도를 다 썼다 — 멈추지 않고 완성한다(사장님 10-31 "멈추지 말고" · 11-02 "권고사항")
+        return finish_with_left(st)
     _tries(st, "look", LIMITS["look"], ["final_check"])
     probs = json.dumps({"자동 관문 ×": [{k: r.get(k) for k in ("group", "what", "value")} for r in (st.get("auto") or {}).get("rows") or []
                                     if r.get("ok") is not True and not r.get("ref")] if not auto_ok else None,
@@ -3044,7 +3047,7 @@ def ph_check_fix(st, m, rp, u):
         st["log"].append("완성본 고치기: 다시 만들어도 그대로 → 장면 맞추기로 되돌림")
         return {"goto": "plan"}
     if M is None:      # 다시 시도 = 검사부터(옛 검사 결과를 다시 먹이는 _asker 경로 금지 — 10-27 run4 a·c)
-        raise _Stop("완성본 마무리 확인을 통과하지 못했어요", AGAIN, retry="check")
+        return finish_with_left(st)
     return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "render"}
 
 
@@ -3054,8 +3057,8 @@ def ph_deliver(st, m, rp, u):
 
 
 def finish_passed(st) -> bool:
-    """(판단 주인 — 완성본을 내도 되나) 자동 관문 통과 + 눈 통과 또는 눈 한도까지 고치고 지적을 회원에게 알린 편(look_left, ph_check_judge)."""
-    return bool((st.get("auto") or {}).get("ok") and ((st.get("look") or {}).get("ok") or st.get("look_left")))
+    """(판단 주인 — 완성본을 내도 되나) 검사를 돈 편만 — 자동·눈 통과 또는 한도까지 고치고 남은 것을 회원에게 알린 편(look_left, finish_with_left)."""
+    return bool(st.get("look_left") or ((st.get("auto") or {}).get("ok") and (st.get("look") or {}).get("ok")))
 
 
 def ph_finished(st, m, rp, u):

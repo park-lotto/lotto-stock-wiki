@@ -226,3 +226,13 @@ def test_gate_uses_whisper_when_speechmatics_missing(monkeypatch):
     monkeypatch.setattr(NV, "heard_words", lambda voice: [{"s": 2.0, "e": 2.5, "w": "네"}])
     words, src = QG.narr_words("v.wav", lambda: pytest.fail("키가 있으면 위스퍼를 부르지 않는다"))
     assert words[0]["w"] == "네" and "스피치매틱스" in src
+
+
+def test_gate_fail_finishes_with_notice():
+    """11-02 "권고사항": 고칠 한도를 다 쓴 자동 관문 ×는 멈춤이 아니라 알림과 함께 완성이다. 검사를 안 돈 편은 여전히 못 낸다."""
+    st = {"version": "v", "log": [], "tries": {"look": F.LIMITS["look"]},
+          "auto": {"ok": False, "rows": [{"what": "B14 효과음 과다", "ok": False}]}, "look": {"ok": False, "problems": ["1단 자동 관문 미통과 — 눈 검수 생략"], "skipped": True}}
+    assert F.ph_check_judge(st, {}, {}, {}) == {"goto": "deliver"}
+    assert st["look_left"] == ["B14 효과음 과다"] and "B14 효과음 과다" in st["notice"]
+    assert F.finish_passed(st)
+    assert not F.finish_passed({"auto": {"ok": False}, "look": {"ok": False}})

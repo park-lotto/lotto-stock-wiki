@@ -234,14 +234,14 @@ def test_celeb_stage_numbers_unchanged():
 
 
 # ── 3. check = quality_gate + 눈 2단, 미통과면 고치기 2회 뒤 멈춤(done 아님) ─────
-def test_gate_fail_stops_after_two_fixes():
+def test_gate_fail_finishes_with_notice_after_two_fixes():
+    """11-02 사장님 "권고사항": 두 번 고쳐도 남으면 멈추지 않고 알림과 함께 완성한다."""
     st = F.start("https://youtu.be/BENCH1", "키치잇판", "sid")
     tr, res, st2 = walk(F, st, {"gate_fail": True})
-    assert res["status"] == "stop", tr[-3:]
+    assert res["status"] == "done", tr[-3:]
     assert sum(1 for t in tr if any(r.startswith("final_fix_") for r in t[3])) == 2
     assert sum(1 for t in tr if "check" in t[2]) == 3
-    assert "음량" in st2["stopped"]["detail"] and "음량" not in res["why"]     # 속사정은 기록에만 — 회원 문구엔 검사 항목 안 싣는다(10-26)
-    assert not any(t[0] == "done" for t in tr)
+    assert any("음량" in x for x in st2["look_left"])
 
 
 def test_eye_triangle_is_not_pass(monkeypatch):

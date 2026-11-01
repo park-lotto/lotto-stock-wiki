@@ -41,8 +41,8 @@ def test_no_eye_review_still_blocked():
         _finish(st)
 
 
-def test_failed_auto_blocked_even_with_old_left():
-    st = {"version": "x", "log": [], "tries": {}, "auto": {"ok": False, "rows": []}, "look": {"ok": False, "problems": []}, "look_left": ["E1"]}
+def test_failed_auto_blocked_without_left():
+    st = {"version": "x", "log": [], "tries": {}, "auto": {"ok": False, "rows": []}, "look": {"ok": False, "problems": []}}
     with pytest.raises(F._Stop):
         _finish(st)
 
