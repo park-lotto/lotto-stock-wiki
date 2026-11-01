@@ -69,5 +69,24 @@
     "around_var": 50.8
    }
   ]
+ },
+ "J7GxfaVdwSU|zoomblur|44634:1792917498|15077014": {
+  "id": "J7GxfaVdwSU",
+  "kind": "zoomblur",
+  "window": [
+   0,
+   486,
+   1080,
+   1434
+  ],
+  "boundaries": [
+   {
+    "t": 24.333,
+    "drop": 0.695,
+    "ms": 500,
+    "band_var": 19.6,
+    "around_var": 64.3
+   }
+  ]
  }
 }
