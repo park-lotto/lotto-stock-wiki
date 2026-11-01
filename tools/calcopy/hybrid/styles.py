@@ -226,6 +226,8 @@ def member_frame(st: dict) -> dict:
         for ic in ((F.get("post") or {}).get("head_bar") or {}).get("icons") or []:
             if ic.get("kind") == "text" and ic.get("from", "brand") == "brand":
                 ic.update({"text": name, "from": "_fixed"})     # 대본 post.brand 보다 회원 채널명
+        if not F.get("logo") and not F.get("watermark"):      # 채널명 자리가 없는 틀 = 오른쪽 위 워터마크로 넣는다
+            F["watermark"] = {"font": "Pretendard-Regular.otf", "px": 40, "alpha": 170, "x1": 1040, "cy": 110, "text": name}
     bg = (brand.get("colors") or {}).get("bg")
     if bg:
         F["bg"] = list(bg)
