@@ -1,0 +1,668 @@
+[runner] env 13.4s ok
+[runner] bench 37.7s ok
+[runner] channel_find 25.3s ok
+[runner] origin_probe 68.5s ok
+[runner] origin_get 67.5s ok
+[runner] sheet 0.8s ok
+[runner] frames 0.9s ok
+[runner] coupang 4.5s ok
+[runner] cand_sheet 3.2s ok
+[runner] coupang_reviews 32.7s ok HOLLOW 결과 칸 전부 비어 있음(reviews)
+[runner] naver 0.9s ok
+[runner] origin_words 0.0s ok
+[runner] write_doc 0.0s ok
+[runner] screen 115.4s ok
+[runner] product_stills 1.0s ok
+[runner] shot_sheets 10.3s ok
+[runner] asr_spans 42.5s ok
+[runner] mat_sheets 57.7s ok
+[runner] write_doc 0.0s ok
+[runner] orig_heard 12.4s ok
+[13:57:33] [tts] 일레븐랩스 kr-mina-expressive 1회 12.3초 → narr_full.mp3 (글자 시각 있음)
+[13:57:34] 문장 경계(align): L1:0.00~4.07 L2:4.39~6.47 L3:6.59~9.03 L4:9.27~11.67 L5:12.15~15.83 L6:16.28~18.95 L7:19.43~22.08
+[13:57:34] atempo 기본 1.35 · 평균 6.96자/초 · L1:5.93@1.35 L2:6.32@1.35 L3:6.82@1.3058 L4:6.78@1.2844 L5:6.90@1.35 L6:6.95@1.35 L7:7.16@1.2151
+[13:57:47] [줄별 받아쓰기] 확정 0 · 의심 1 → C:\t\kitchit_local\run1\home\창고\flow\7d890245dfae\job\키치잇판\render\narr_verify.json
+[13:57:49] [쉼 맞춤] L1:앞0.0·뒤0.062 L2:앞0.175·뒤0.025 L3:앞0.394·뒤0.025 L4:앞0.097·뒤0.008 L5:앞0.183·뒤0.013 L6:앞0.197·뒤0.037 L7:앞0.084·뒤0.0
+⚠ [동작] L4 대사 '바르기'(바르) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+⚠ [동작] L5 대사 '바르기'(발라) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+[A-B-A] L2~L4 4XHg_tBy1vg→prod_7536688134_0→… 줄을 넘어 못 바꿈(관문 몫)
+[B13] L2 4XHg_tBy1vg ss 336.10 → 327.33(같은 샷 [141.47,486.16] 안)
+[B13] L4 4XHg_tBy1vg ss 356.30 → 356.70(같은 샷 [141.47,486.16] 안)
+[ WARN:0@0.412] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[13:58:12] 접촉 시트(컷마다 처음·가운데·끝, 렌더 칸 그대로) → C:\t\kitchit_local\run1\home\창고\flow\7d890245dfae\job\doc\키치잇판\plan\계획_접촉시트.jpg
+[13:58:12]   L1     0.00~  1.52 1.52s max 2.733 4XHg_tBy1vg.mp4@9.2
+[13:58:12]   L1     1.52~  3.03 1.52s max 2.5 4XHg_tBy1vg.mp4@14.6
+[13:58:12]   O1     3.03~  6.83 3.80s max 38.95 4XHg_tBy1vg.mp4@344.6
+[13:58:12]   O1     6.83~  8.19 1.36s max 1.526 4XHg_tBy1vg.mp4@341.05
+[13:58:12]   L2     8.19~  9.63 1.44s max 4.707 4XHg_tBy1vg.mp4@327.333
+[13:58:12]   O2     9.63~ 12.54 2.90s max 32.75 4XHg_tBy1vg.mp4@350.8
+[13:58:12]   O2    12.54~ 14.99 2.46s max 2.734 4XHg_tBy1vg.mp4@331.8
+[13:58:12]   L3    14.99~ 16.54 1.55s max None prod_7536688134_0.jpg@None
+[13:58:12]   L4    16.54~ 18.41 1.87s max 27.25 4XHg_tBy1vg.mp4@356.7
+[13:58:12]   L5    18.41~ 19.72 1.31s max 20.15 4XHg_tBy1vg.mp4@363.4
+[13:58:12]   L5    19.72~ 21.03 1.31s max 2.2 4XHg_tBy1vg.mp4@381.35
+[13:58:12]   L6    21.03~ 21.95 0.92s max None prod_7536688134_0.jpg@None
+[13:58:12]   L6    21.95~ 22.87 0.92s max 36.872 4XHg_tBy1vg.mp4@402.2
+[13:58:12]   L7    22.87~ 25.17 2.29s max 30.572 4XHg_tBy1vg.mp4@408.5
+[13:58:12] 목소리 실측 길이 25.1667초 · 배치 ['본보기 벤치 편 = oTi41R74WIY', "전환 [(1.516, 'zoomblur'), (3.032, 'black')] (판 cuts.transition.kinds 비율 {'zoomblur': 0.1, 'black': 0.07, 'flash': 0.01}, 컷 경계 13·붙일 수 있는 10(≥1.2초))", '효과음 0발(본보기 0) []', "꾸밈 없음 2→3/24(판 plain_share 0.163 → 4) 강조 뺌 ['O2「커버가 잘 된대요」'] — 뺄 수 있는 강조만 덩어리 
+[13:58:13] [관문④] 연예인 판인데 기준 얼굴 없음(썸네일.json 없음 또는 카드 얼굴 통과 0) — 얼굴 판정 건너뜀, 글자만 잰다
+[13:59:08] [관문④ → VMake] 박힌 글자 컷 [13] — 멈추지 않고 렌더 전 VMake 로 지운다(vmake_clean.used_spans)
+[ WARN:0@77.353] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@77.385] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[runner] plan 112.2s ok
+[runner] write_doc 0.0s ok
+[14:01:22] 문장 경계(align): L1:0.00~4.07 L2:4.39~6.47 L3:6.59~9.03 L4:9.27~11.67 L5:12.15~15.83 L6:16.28~18.95 L7:19.43~22.08
+[14:01:23] atempo 기본 1.35 · 평균 6.96자/초 · L1:5.93@1.35 L2:6.32@1.35 L3:6.82@1.3058 L4:6.78@1.2844 L5:6.90@1.35 L6:6.95@1.35 L7:7.16@1.2151
+[14:01:23] [줄별 받아쓰기] 확정 0 · 의심 1 → C:\t\kitchit_local\run1\home\창고\flow\7d890245dfae\job\키치잇판\render\narr_verify.json
+[14:01:24] [쉼 맞춤] L1:앞0.0·뒤0.062 L2:앞0.175·뒤0.025 L3:앞0.394·뒤0.025 L4:앞0.097·뒤0.008 L5:앞0.183·뒤0.013 L6:앞0.197·뒤0.037 L7:앞0.084·뒤0.0
+⚠ [동작] L4 대사 '바르기'(바르) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+⚠ [동작] L5 대사 '바르기'(발라) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+[ WARN:0@0.225] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[14:01:44] 접촉 시트(컷마다 처음·가운데·끝, 렌더 칸 그대로) → C:\t\kitchit_local\run1\home\창고\flow\7d890245dfae\job\doc\키치잇판\plan\계획_접촉시트.jpg
+[14:01:44]   L1     0.00~  1.52 1.52s max 2.733 4XHg_tBy1vg.mp4@9.2
+[14:01:44]   L1     1.52~  3.03 1.52s max 6.2 4XHg_tBy1vg.mp4@22
+[14:01:44]   O1     3.03~  8.19 5.16s max 38.95 4XHg_tBy1vg.mp4@344.6
+[14:01:44]   L2     8.19~  9.63 1.44s max 1.807 4XHg_tBy1vg.mp4@339
+[14:01:44]   O2     9.63~ 12.54 2.90s max 32.75 4XHg_tBy1vg.mp4@350.8
+[14:01:44]   O2    12.54~ 14.99 2.46s max 2.734 4XHg_tBy1vg.mp4@331.8
+[14:01:44]   L3    14.99~ 16.54 1.55s max None prod_7536688134_0.jpg@None
+[14:01:44]   L4    16.54~ 18.41 1.87s max None prod_7536688134_1.jpg@None
+[14:01:44]   L5    18.41~ 19.72 1.31s max 22.25 4XHg_tBy1vg.mp4@361.3
+[14:01:44]   L5    19.72~ 21.03 1.31s max 17.85 4XHg_tBy1vg.mp4@365.7
+[14:01:44]   L6    21.03~ 22.87 1.84s max 2.2 4XHg_tBy1vg.mp4@381.35
+[14:01:44]   L7    22.87~ 25.17 2.29s max 18.572 4XHg_tBy1vg.mp4@420.5
+[14:01:44] 목소리 실측 길이 25.1667초 · 배치 ['본보기 벤치 편 = oTi41R74WIY', "전환 [(1.516, 'zoomblur'), (3.032, 'black')] (판 cuts.transition.kinds 비율 {'zoomblur': 0.1, 'black': 0.07, 'flash': 0.01}, 컷 경계 11·붙일 수 있는 11(≥1.2초))", '효과음 0발(본보기 0) []', "꾸밈 없음 2→3/24(판 plain_share 0.163 → 4) 강조 뺌 ['O2「커버가 잘 된대요」'] — 뺄 수 있는 강조만 덩어리 
+[14:01:44] [관문④] 연예인 판인데 기준 얼굴 없음(썸네일.json 없음 또는 카드 얼굴 통과 0) — 얼굴 판정 건너뜀, 글자만 잰다
+[14:02:33] [관문④ → VMake] 박힌 글자 컷 [11] — 멈추지 않고 렌더 전 VMake 로 지운다(vmake_clean.used_spans)
+[ WARN:0@67.324] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@67.347] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[runner] plan 75.3s ok
+[runner] write_doc 0.0s ok
+[14:02:38] 문장 경계(align): L1:0.00~4.07 L2:4.39~6.47 L3:6.59~9.03 L4:9.27~11.67 L5:12.15~15.83 L6:16.28~18.95 L7:19.43~22.08
+[14:02:39] atempo 기본 1.35 · 평균 6.96자/초 · L1:5.93@1.35 L2:6.32@1.35 L3:6.82@1.3058 L4:6.78@1.2844 L5:6.90@1.35 L6:6.95@1.35 L7:7.16@1.2151
+[14:02:39] [줄별 받아쓰기] 확정 0 · 의심 1 → C:\t\kitchit_local\run1\home\창고\flow\7d890245dfae\job\키치잇판\render\narr_verify.json
+[14:02:42] [쉼 맞춤] L1:앞0.0·뒤0.062 L2:앞0.175·뒤0.025 L3:앞0.394·뒤0.025 L4:앞0.097·뒤0.008 L5:앞0.183·뒤0.013 L6:앞0.197·뒤0.037 L7:앞0.084·뒤0.0
+⚠ [동작] L4 대사 '바르기'(바르) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+⚠ [동작] L5 대사 '바르기'(발라) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+[ WARN:0@0.227] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[14:03:04] 접촉 시트(컷마다 처음·가운데·끝, 렌더 칸 그대로) → C:\t\kitchit_local\run1\home\창고\flow\7d890245dfae\job\doc\키치잇판\plan\계획_접촉시트.jpg
+[14:03:04]   L1     0.00~  1.52 1.52s max 2.733 4XHg_tBy1vg.mp4@9.2
+[14:03:04]   L1     1.52~  3.03 1.52s max 6.2 4XHg_tBy1vg.mp4@22
+[14:03:04]   O1     3.03~  8.19 5.16s max 38.95 4XHg_tBy1vg.mp4@344.6
+[14:03:04]   L2     8.19~  9.63 1.44s max 1.807 4XHg_tBy1vg.mp4@339
+[14:03:04]   O2     9.63~ 12.54 2.90s max 32.75 4XHg_tBy1vg.mp4@350.8
+[14:03:04]   O2    12.54~ 14.99 2.46s max 2.734 4XHg_tBy1vg.mp4@331.8
+[14:03:04]   L3    14.99~ 16.54 1.55s max None prod_7536688134_0.jpg@None
+[14:03:04]   L4    16.54~ 18.41 1.87s max None prod_7536688134_1.jpg@None
+[14:03:04]   L5    18.41~ 19.72 1.31s max 22.25 4XHg_tBy1vg.mp4@361.3
+[14:03:04]   L5    19.72~ 21.03 1.31s max 17.85 4XHg_tBy1vg.mp4@365.7
+[14:03:04]   L6    21.03~ 22.87 1.84s max 2.2 4XHg_tBy1vg.mp4@381.35
+[14:03:04]   L7    22.87~ 25.17 2.29s max 18.572 4XHg_tBy1vg.mp4@420.5
+[14:03:04] 목소리 실측 길이 25.1667초 · 배치 ['본보기 벤치 편 = oTi41R74WIY', "전환 [(1.516, 'zoomblur'), (3.032, 'black')] (판 cuts.transition.kinds 비율 {'zoomblur': 0.1, 'black': 0.07, 'flash': 0.01}, 컷 경계 11·붙일 수 있는 11(≥1.2초))", '효과음 0발(본보기 0) []', "꾸밈 없음 2→3/24(판 plain_share 0.163 → 4) 강조 뺌 ['O2「커버가 잘 된대요」'] — 뺄 수 있는 강조만 덩어리 
+[ WARN:0@15.249] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@15.862] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[14:03:05] [관문④] 연예인 판인데 기준 얼굴 없음(썸네일.json 없음 또는 카드 얼굴 통과 0) — 얼굴 판정 건너뜀, 글자만 잰다
+[14:03:14] [관문④ → VMake] 박힌 글자 컷 [11] — 멈추지 않고 렌더 전 VMake 로 지운다(vmake_clean.used_spans)
+[ WARN:0@29.594] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@29.619] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[runner] plan 41.0s ok
+[runner] write_doc 0.0s ok
+[runner] clean_text 0.1s ok
+[vmake] 4XHg_tBy1vg__vm_338.80_340.63 끼움(원본 = 4XHg_tBy1vg__vm_338.80_340.63_orig.mp4)
+[vmake] 4XHg_tBy1vg__vm_361.10_362.83 끼움(원본 = 4XHg_tBy1vg__vm_361.10_362.83_orig.mp4)
+[vmake] 4XHg_tBy1vg__vm_344.40_353.90 끼움(원본 = 4XHg_tBy1vg__vm_344.40_353.90_orig.mp4)
+[vmake] 4XHg_tBy1vg__vm_365.50_367.20 끼움(원본 = 4XHg_tBy1vg__vm_365.50_367.20_orig.mp4)
+[vmake] 4XHg_tBy1vg__vm_331.60_334.47 끼움(원본 = 4XHg_tBy1vg__vm_331.60_334.47_orig.mp4)
+[vmake] 4XHg_tBy1vg__vm_381.15_383.38 끼움(원본 = 4XHg_tBy1vg__vm_381.15_383.38_orig.mp4)
+[vmake] 4XHg_tBy1vg__vm_420.30_423.00 끼움(원본 = 4XHg_tBy1vg__vm_420.30_423.00_orig.mp4)
+[clean_text] 쓰는 구간 26.399초 중 자막 컷 22.566초 → VMake 7회 · 보낸 초 {'4XHg_tBy1vg.mp4': 22.429} · vmake: 
+[runner] clean_text 705.5s ok
+[runner] write_doc 0.0s ok
+⚠ [동작] L4 대사 '바르기'(바르) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+⚠ [동작] L5 대사 '바르기'(발라) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+[ WARN:0@0.222] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@7.653] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@10.219] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@10.288] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@10.501] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@416.074] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@416.095] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[runner] render 424.9s ok
+[ WARN:0@0.025] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[thumb] 얼굴 검사 ○: 0.077s:○ 0.1s:○ 0.6s:○ 1.1s:○ 1.6s:○ 2.1s:○ 2.6s:○
+[ WARN:0@7.401] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@7.456] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@7.581] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+  ○ [규격] 길이 (0.1초): 25.17초 (판 25~30)
+  ○ [규격] 화면=시간표 (0.0초): 25.167 vs 25.1667
+  ○ [규격] 음량 (0.8초): -14.0 LUFS (목표 -14.0)
+  ○ [규격] 최고점 (0.0초): -1.6 dBFS (≤ -1.5+0.5)
+  ○ [규격] 1080×1920·30fps (0.1초): 1080×1920 · 30.0fps
+  ○ [화면] 0초·첫 줄 얼굴 (1.7초): 0.077s:○ 0.1s:○ 0.6s:○ 1.1s:○ 1.6s:○ 2.1s:○ 2.6s:○
+  ○ [화면] 컷 조각 프레임 = 계획 (3.9초): 전부 같음
+  ○ [화면] 화면 멈춤 없음 (0.8초): 0건
+  ○ [화면] 컷 끝 번쩍임 없음(0.2초 안 장면 경계) (0.6초): 0건
+  ○ [화면] 남의 박힌 자막 없음(관문 ④ 자 · 지운 뒤) (14.7초): 0건
+  ○ [화면] B9 첫·끝 컷 Y≥60 (0.5초): 132 · 125 (≥60)
+  참고 [화면] 전환 세기(zoomblur drop 중앙 ±30%, 참고) (1.0초): 우리 drop 중앙 0.334(1경계) vs 벤치 0.175(5회 [-0.192, 0.175, 0.136, 0.337, 0.24]) · 허용 ±30%
+  참고 [화면] 전환 길이 ms(참고) (0.0초): 우리 [67] · 벤치 [200, 33, 0, 167, 400]
+  × [재료] B13 같은 장면 재사용(겹침 ×·거리 min(3, 0.25×길이)) (0.5초): ['거리 1.04초 < 3.00: 4XHg_tBy1vg 344.60~349.76(O1) ↔ 350.80~353.70(O2)']
+  ○ [재료] B16 A-B-A 끼움(나레 컷) (0.0초): 0
+  ○ [재료] B16' 되감김·점프줌 (3.9초): 컷 18 · 되감김 0 [] · 점프줌 0(드묾) · 계획상 앞으로라 뺌(참고) ['8.2초 같은 원본 안 보인 구간 339.0초(앞 컷 끝 349.8초)']
+  참고 [판 리듬] 컷 길이 중앙(판 rhythm.cut_median ±30%, 참고 — 판정은 계획 rhythm_gate) (23.6초): 완성본 컷 중앙 1.85초 vs 판 1.15(범위 0.805~1.97, kal_analyze.media_of 같은 자) · 컷 8
+  참고 [판 리듬] 훅 0.1~3초 컷 경계(판 rhythm.hook_cuts_3s, 참고 — 판정은 계획 rhythm_gate) (0.0초): 0.1~3초 컷 경계 0 [] (판 ≥1)
+  ○ [판 리듬] 꾸밈 없는 덩어리 비율(판 rhythm.plain_share) (0.0초): 꾸밈 없는 덩어리 0.125 vs 판 0.163(범위 0.0~0.5)(자막표 rows · placement.plain_share)
+  ○ [판 리듬] 쿠팡·상품 그림 컷 비중(판 rhythm.photo_share_max) (0.0초): 쿠팡·상품 그림 컷 비중 0.136 (판 ≤0.16, 본인 사진 own_ 은 뺌 — timeline · render_bench.photo_share)
+  ○ [자막·효과] 배치(본보기 벤치 편 대조) (0.0초): 본보기 oTi41R74WIY · 칸 최대 차 0.0
+  ○ [자막·효과] B14 효과음 과다(≤ 벤치 p90) (0.0초): 우리 0발/25.2초 = 0.000/초 · 벤치 p90 0.071/초(편별 [0.0, 0.0, 0.073, 0.0, 0.0, 0.071, 0.0, 0.0])
+  ○ [소리] 줄별 말속도 ±35%(렌더 기록) (0.0초): 렌더 기록 평균 7.42자/초 ±35% · L1:6.06 L2:7.23 L3:8.74 L4:7.18 L5:7.42 L6:7.87 L7:7.43
+  ○ [소리] B18 줄 사이 간격 = 판 timing(±1프레임+0.02) (0.1초): 경계 L1→O1:0.06→0.08 O1→L2:0.06→0.08 L2→O2:0.06→0.12 O2→L3:0.06→0.08 L3→L4:0.06→0.09 L4→L5:0.06→0.09 L5→L6:0.06→0.09 L6→L7:0.06→0.09 (허용 ±0.053)
+  ○ [소리] B18a 줄 안 문장부호 쉼 (0.1초): 해당 없음 — 줄 안 문장부호 없음
+  ○ [소리] 나레 받아쓰기 ↔ 대본 (7.8초): 나레 7줄 중 못 찾음·0.25초 넘게 어긋남 0 · 최대 차 0.023 (스피치매틱스 낱말 시각) · L1:0.0↔0.0 L2:8.192↔8.19 L3:14.995↔15.0 L4:16.542↔16.56 L5:18.413↔18.39 L6:21.032↔21.03 L7:22.872↔22.86
+  ○ [대본] script_audit (0.0초): 규칙 10개 · 미달 0
+  ○ [썸네일] 썸네일 맨 앞 2프레임 (0.6초): 안 C · 프레임 0·1·2 차 [0.4, 0.4, 22.5]
+  ○ [썸네일] thumb_rule.check(3안 규칙) (0.0초): 통과
+  ○ [썸네일] 광고 표시(ad_mark) (0.0초): 완성본 comment = 'ad_mark:v1'
+  참고 [1차 자] 재현일치도(match_table, 참고) (0.0초): 1차 판 — 기준 칸 전부 필수 · 전체 18칸 ✓14 ✗2 미측정0 비교 안 함2(chunk.sec,enter.mode.원음 — 하이브리드 판 목표 없음) · 필수 14칸 중 미달 ['cut.median'] · 벤치 8편
+  ○ [장면↔대사] 완성본 컷 = 계획 프레임(창 대조 ≥0.97) (6.7초): 12컷 중 같음 12 · 다름 0 (창 1−평균차 ≥ 0.97, 최저 0.9929)
+  참고 [장면↔대사] 계획 점수(루브릭) (0.0초): 계획 점수 없음(material_fit 계획 전 편) · 목표 None/None (None)
+  ○ [표식] render_info 표식(판 sha·렌더러 sig·reference) (0.0초): style_sha 9546ef954ce7 · renderer_sig render_bench@33d039059eb3 · reference oTi41R74WIY
+[runner] check 75.8s ok
+[runner] write_doc 0.0s ok
+⚠ [동작] L4 대사 '바르기'(바르) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+⚠ [동작] L5 대사 '바르기'(발라) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+[ WARN:0@0.217] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@16.998] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@18.228] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[vmake] 4XHg_tBy1vg__vm_369.50_371.20 끼움(원본 = 4XHg_tBy1vg__vm_369.50_371.20_orig.mp4)
+[vmake] 4XHg_tBy1vg__vm_374.10_376.57 끼움(원본 = 4XHg_tBy1vg__vm_374.10_376.57_orig.mp4)
+[clean_text] 쓰는 구간 26.166초 중 자막 컷 4.167초 → VMake 2회 · 보낸 초 {'4XHg_tBy1vg.mp4': 4.173} · vmake: 
+[runner] clean_text 331.7s ok
+[runner] write_doc 0.0s ok
+⚠ [동작] L4 대사 '바르기'(바르) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+⚠ [동작] L5 대사 '바르기'(발라) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+[ WARN:0@0.218] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@6.765] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@8.507] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[runner] render 74.3s ERR 썸네일 카드 A: 연예인 얼굴 아님(얼굴 0개 · prod_7536688134_1.jpg@0.00) — 얼굴이 크게 나온 장면으로 바꾼다(얜샷템 썸네일 = 연예인 얼굴)
+[ WARN:0@0.022] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[thumb] 자동 고르기 39장 → 컷 11 @0.46초 얼굴 0.589 점수 6.223 관문자 ○ (4XHg_tBy1vg.mp4@381.81)
+[runner] thumb_auto 4.4s ok
+⚠ [동작] L4 대사 '바르기'(바르) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+⚠ [동작] L5 대사 '바르기'(발라) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+[ WARN:0@0.206] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@6.912] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@8.044] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@8.096] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@8.233] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@151.612] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@151.640] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[runner] render 160.1s ok
+[ WARN:0@0.027] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[thumb] 얼굴 검사 ○: 0.077s:○ 0.1s:○ 0.6s:○ 1.1s:○ 1.6s:○ 2.1s:○ 2.6s:○
+[ WARN:0@7.439] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@7.500] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@7.636] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+  ○ [규격] 길이 (0.1초): 25.17초 (판 25~30)
+  ○ [규격] 화면=시간표 (0.0초): 25.167 vs 25.1667
+  ○ [규격] 음량 (0.7초): -14.0 LUFS (목표 -14.0)
+  ○ [규격] 최고점 (0.0초): -1.6 dBFS (≤ -1.5+0.5)
+  ○ [규격] 1080×1920·30fps (0.1초): 1080×1920 · 30.0fps
+  ○ [화면] 0초·첫 줄 얼굴 (1.7초): 0.077s:○ 0.1s:○ 0.6s:○ 1.1s:○ 1.6s:○ 2.1s:○ 2.6s:○
+  ○ [화면] 컷 조각 프레임 = 계획 (3.9초): 전부 같음
+  ○ [화면] 화면 멈춤 없음 (0.9초): 0건
+  ○ [화면] 컷 끝 번쩍임 없음(0.2초 안 장면 경계) (0.7초): 0건
+  ○ [화면] 남의 박힌 자막 없음(관문 ④ 자 · 지운 뒤) (0.4초): 0건
+  ○ [화면] B9 첫·끝 컷 Y≥60 (0.5초): 132 · 125 (≥60)
+  참고 [화면] 전환 세기(zoomblur drop 중앙 ±30%, 참고) (1.3초): 우리 drop 중앙 0.257(1경계) vs 벤치 0.175(5회 [-0.192, 0.175, 0.136, 0.337, 0.24]) · 허용 ±30%
+  참고 [화면] 전환 길이 ms(참고) (0.0초): 우리 [0] · 벤치 [200, 33, 0, 167, 400]
+  ○ [재료] B13 같은 장면 재사용(겹침 ×·거리 min(3, 0.25×길이)) (0.7초): 0 (소스 길이 {4XHg_tBy1vg:486.2})
+  ○ [재료] B16 A-B-A 끼움(나레 컷) (0.0초): 0
+  ○ [재료] B16' 되감김·점프줌 (4.4초): 컷 19 · 되감김 0 [] · 점프줌 1(드묾) · 계획상 앞으로라 뺌(참고) ['21.033초 같은 원본 앞으로 +10.34초']
+  참고 [판 리듬] 컷 길이 중앙(판 rhythm.cut_median ±30%, 참고 — 판정은 계획 rhythm_gate) (28.6초): 완성본 컷 중앙 3.38초 vs 판 1.15(범위 0.805~1.97, kal_analyze.media_of 같은 자) · 컷 6
+  참고 [판 리듬] 훅 0.1~3초 컷 경계(판 rhythm.hook_cuts_3s, 참고 — 판정은 계획 rhythm_gate) (0.0초): 0.1~3초 컷 경계 0 [] (판 ≥1)
+  ○ [판 리듬] 꾸밈 없는 덩어리 비율(판 rhythm.plain_share) (0.0초): 꾸밈 없는 덩어리 0.125 vs 판 0.163(범위 0.0~0.5)(자막표 rows · placement.plain_share)
+  ○ [판 리듬] 쿠팡·상품 그림 컷 비중(판 rhythm.photo_share_max) (0.0초): 쿠팡·상품 그림 컷 비중 0.136 (판 ≤0.16, 본인 사진 own_ 은 뺌 — timeline · render_bench.photo_share)
+  ○ [자막·효과] 배치(본보기 벤치 편 대조) (0.0초): 본보기 oTi41R74WIY · 칸 최대 차 0.0
+  ○ [자막·효과] B14 효과음 과다(≤ 벤치 p90) (0.0초): 우리 0발/25.2초 = 0.000/초 · 벤치 p90 0.071/초(편별 [0.0, 0.0, 0.073, 0.0, 0.0, 0.071, 0.0, 0.0])
+  ○ [소리] 줄별 말속도 ±35%(렌더 기록) (0.0초): 렌더 기록 평균 7.42자/초 ±35% · L1:6.06 L2:7.23 L3:8.74 L4:7.18 L5:7.42 L6:7.87 L7:7.43
+  ○ [소리] B18 줄 사이 간격 = 판 timing(±1프레임+0.02) (0.1초): 경계 L1→O1:0.06→0.08 O1→L2:0.06→0.08 L2→O2:0.06→0.12 O2→L3:0.06→0.08 L3→L4:0.06→0.09 L4→L5:0.06→0.09 L5→L6:0.06→0.09 L6→L7:0.06→0.09 (허용 ±0.053)
+  ○ [소리] B18a 줄 안 문장부호 쉼 (0.1초): 해당 없음 — 줄 안 문장부호 없음
+  ○ [소리] 나레 받아쓰기 ↔ 대본 (0.0초): 나레 7줄 중 못 찾음·0.25초 넘게 어긋남 0 · 최대 차 0.023 (스피치매틱스 낱말 시각) · L1:0.0↔0.0 L2:8.192↔8.19 L3:14.995↔15.0 L4:16.542↔16.56 L5:18.413↔18.39 L6:21.032↔21.03 L7:22.872↔22.86
+  ○ [대본] script_audit (0.0초): 규칙 10개 · 미달 0
+  ○ [썸네일] 썸네일 맨 앞 2프레임 (0.8초): 안 A · 프레임 0·1·2 차 [0.4, 0.4, 23.7]
+  × [썸네일] thumb_rule.check(3안 규칙) (0.0초): ['안이 1개 — 3안이어야 한다', 'A: 글이 없다', 'A: 궁금 장치(빨간 원·화살표·?·흐림)가 하나도 없다']
+  ○ [썸네일] 광고 표시(ad_mark) (0.1초): 완성본 comment = 'ad_mark:v1'
+  참고 [1차 자] 재현일치도(match_table, 참고) (0.0초): 1차 판 — 기준 칸 전부 필수 · 전체 18칸 ✓14 ✗2 미측정0 비교 안 함2(chunk.sec,enter.mode.원음 — 하이브리드 판 목표 없음) · 필수 14칸 중 미달 ['cut.median'] · 벤치 8편
+  ○ [장면↔대사] 완성본 컷 = 계획 프레임(창 대조 ≥0.97) (8.4초): 13컷 중 같음 13 · 다름 0 (창 1−평균차 ≥ 0.97, 최저 0.994)
+  참고 [장면↔대사] 계획 점수(루브릭) (0.0초): 계획 점수 없음(material_fit 계획 전 편) · 목표 None/None (None)
+  ○ [표식] render_info 표식(판 sha·렌더러 sig·reference) (0.0초): style_sha 9546ef954ce7 · renderer_sig render_bench@33d039059eb3 · reference oTi41R74WIY
+[runner] check 61.9s ok
+⚠ [동작] L4 대사 '바르기'(바르) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+⚠ [동작] L5 대사 '바르기'(발라) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+[ WARN:0@0.216] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@7.082] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@8.220] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@8.277] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@8.381] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@124.980] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@125.000] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[runner] render 133.8s ok
+[ WARN:0@0.025] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[thumb] 얼굴 검사 ○: 0.077s:○ 0.1s:○ 0.6s:○ 1.1s:○ 1.6s:○ 2.1s:○ 2.6s:○
+[ WARN:0@6.222] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@6.279] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@6.415] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+  ○ [규격] 길이 (0.0초): 25.17초 (판 25~30)
+  ○ [규격] 화면=시간표 (0.0초): 25.167 vs 25.1667
+  ○ [규격] 음량 (0.6초): -14.0 LUFS (목표 -14.0)
+  ○ [규격] 최고점 (0.0초): -1.6 dBFS (≤ -1.5+0.5)
+  ○ [규격] 1080×1920·30fps (0.1초): 1080×1920 · 30.0fps
+  ○ [화면] 0초·첫 줄 얼굴 (1.5초): 0.077s:○ 0.1s:○ 0.6s:○ 1.1s:○ 1.6s:○ 2.1s:○ 2.6s:○
+  ○ [화면] 컷 조각 프레임 = 계획 (3.1초): 전부 같음
+  ○ [화면] 화면 멈춤 없음 (0.7초): 0건
+  ○ [화면] 컷 끝 번쩍임 없음(0.2초 안 장면 경계) (0.6초): 0건
+  ○ [화면] 남의 박힌 자막 없음(관문 ④ 자 · 지운 뒤) (0.4초): 0건
+  ○ [화면] B9 첫·끝 컷 Y≥60 (0.4초): 132 · 125 (≥60)
+  참고 [화면] 전환 세기(zoomblur drop 중앙 ±30%, 참고) (1.1초): 우리 drop 중앙 0.257(1경계) vs 벤치 0.175(5회 [-0.192, 0.175, 0.136, 0.337, 0.24]) · 허용 ±30%
+  참고 [화면] 전환 길이 ms(참고) (0.0초): 우리 [0] · 벤치 [200, 33, 0, 167, 400]
+  ○ [재료] B13 같은 장면 재사용(겹침 ×·거리 min(3, 0.25×길이)) (0.6초): 0 (소스 길이 {4XHg_tBy1vg:486.2})
+  ○ [재료] B16 A-B-A 끼움(나레 컷) (0.0초): 0
+  ○ [재료] B16' 되감김·점프줌 (0.0초): 컷 19 · 되감김 0 [] · 점프줌 1(드묾) · 계획상 앞으로라 뺌(참고) ['21.033초 같은 원본 앞으로 +10.34초']
+  참고 [판 리듬] 컷 길이 중앙(판 rhythm.cut_median ±30%, 참고 — 판정은 계획 rhythm_gate) (0.0초): 완성본 컷 중앙 3.38초 vs 판 1.15(범위 0.805~1.97, kal_analyze.media_of 같은 자) · 컷 6
+  참고 [판 리듬] 훅 0.1~3초 컷 경계(판 rhythm.hook_cuts_3s, 참고 — 판정은 계획 rhythm_gate) (0.0초): 0.1~3초 컷 경계 0 [] (판 ≥1)
+  ○ [판 리듬] 꾸밈 없는 덩어리 비율(판 rhythm.plain_share) (0.0초): 꾸밈 없는 덩어리 0.125 vs 판 0.163(범위 0.0~0.5)(자막표 rows · placement.plain_share)
+  ○ [판 리듬] 쿠팡·상품 그림 컷 비중(판 rhythm.photo_share_max) (0.0초): 쿠팡·상품 그림 컷 비중 0.136 (판 ≤0.16, 본인 사진 own_ 은 뺌 — timeline · render_bench.photo_share)
+  ○ [자막·효과] 배치(본보기 벤치 편 대조) (0.0초): 본보기 oTi41R74WIY · 칸 최대 차 0.0
+  ○ [자막·효과] B14 효과음 과다(≤ 벤치 p90) (0.0초): 우리 0발/25.2초 = 0.000/초 · 벤치 p90 0.071/초(편별 [0.0, 0.0, 0.073, 0.0, 0.0, 0.071, 0.0, 0.0])
+  ○ [소리] 줄별 말속도 ±35%(렌더 기록) (0.0초): 렌더 기록 평균 7.42자/초 ±35% · L1:6.06 L2:7.23 L3:8.74 L4:7.18 L5:7.42 L6:7.87 L7:7.43
+  ○ [소리] B18 줄 사이 간격 = 판 timing(±1프레임+0.02) (0.1초): 경계 L1→O1:0.06→0.08 O1→L2:0.06→0.08 L2→O2:0.06→0.12 O2→L3:0.06→0.08 L3→L4:0.06→0.09 L4→L5:0.06→0.09 L5→L6:0.06→0.09 L6→L7:0.06→0.09 (허용 ±0.053)
+  ○ [소리] B18a 줄 안 문장부호 쉼 (0.1초): 해당 없음 — 줄 안 문장부호 없음
+  ○ [소리] 나레 받아쓰기 ↔ 대본 (0.0초): 나레 7줄 중 못 찾음·0.25초 넘게 어긋남 0 · 최대 차 0.023 (스피치매틱스 낱말 시각) · L1:0.0↔0.0 L2:8.192↔8.19 L3:14.995↔15.0 L4:16.542↔16.56 L5:18.413↔18.39 L6:21.032↔21.03 L7:22.872↔22.86
+  ○ [대본] script_audit (0.0초): 규칙 10개 · 미달 0
+  ○ [썸네일] 썸네일 맨 앞 2프레임 (0.6초): 안 A · 프레임 0·1·2 차 [0.4, 0.4, 23.7]
+  × [썸네일] thumb_rule.check(3안 규칙) (0.0초): ['안이 1개 — 3안이어야 한다', 'A: 글이 없다', 'A: 궁금 장치(빨간 원·화살표·?·흐림)가 하나도 없다']
+  ○ [썸네일] 광고 표시(ad_mark) (0.0초): 완성본 comment = 'ad_mark:v1'
+  참고 [1차 자] 재현일치도(match_table, 참고) (0.0초): 1차 판 — 기준 칸 전부 필수 · 전체 18칸 ✓14 ✗2 미측정0 비교 안 함2(chunk.sec,enter.mode.원음 — 하이브리드 판 목표 없음) · 필수 14칸 중 미달 ['cut.median'] · 벤치 8편
+  ○ [장면↔대사] 완성본 컷 = 계획 프레임(창 대조 ≥0.97) (7.0초): 13컷 중 같음 13 · 다름 0 (창 1−평균차 ≥ 0.97, 최저 0.994)
+  참고 [장면↔대사] 계획 점수(루브릭) (0.0초): 계획 점수 없음(material_fit 계획 전 편) · 목표 None/None (None)
+  ○ [표식] render_info 표식(판 sha·렌더러 sig·reference) (0.0초): style_sha 9546ef954ce7 · renderer_sig render_bench@33d039059eb3 · reference oTi41R74WIY
+[runner] check 24.7s ok
+[ WARN:0@0.031] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[thumb] 얼굴 검사 ○: 0.077s:○ 0.1s:○ 0.6s:○ 1.1s:○ 1.6s:○ 2.1s:○ 2.6s:○
+[ WARN:0@6.176] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@6.230] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@6.363] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+  ○ [규격] 길이 (0.0초): 25.17초 (판 25~30)
+  ○ [규격] 화면=시간표 (0.0초): 25.167 vs 25.1667
+  ○ [규격] 음량 (0.6초): -14.0 LUFS (목표 -14.0)
+  ○ [규격] 최고점 (0.0초): -1.6 dBFS (≤ -1.5+0.5)
+  ○ [규격] 1080×1920·30fps (0.1초): 1080×1920 · 30.0fps
+  ○ [화면] 0초·첫 줄 얼굴 (1.5초): 0.077s:○ 0.1s:○ 0.6s:○ 1.1s:○ 1.6s:○ 2.1s:○ 2.6s:○
+  ○ [화면] 컷 조각 프레임 = 계획 (3.1초): 전부 같음
+  ○ [화면] 화면 멈춤 없음 (0.7초): 0건
+  ○ [화면] 컷 끝 번쩍임 없음(0.2초 안 장면 경계) (0.6초): 0건
+  ○ [화면] 남의 박힌 자막 없음(관문 ④ 자 · 지운 뒤) (0.4초): 0건
+  ○ [화면] B9 첫·끝 컷 Y≥60 (0.4초): 132 · 125 (≥60)
+  참고 [화면] 전환 세기(zoomblur drop 중앙 ±30%, 참고) (1.1초): 우리 drop 중앙 0.257(1경계) vs 벤치 0.175(5회 [-0.192, 0.175, 0.136, 0.337, 0.24]) · 허용 ±30%
+  참고 [화면] 전환 길이 ms(참고) (0.0초): 우리 [0] · 벤치 [200, 33, 0, 167, 400]
+  ○ [재료] B13 같은 장면 재사용(겹침 ×·거리 min(3, 0.25×길이)) (0.6초): 0 (소스 길이 {4XHg_tBy1vg:486.2})
+  ○ [재료] B16 A-B-A 끼움(나레 컷) (0.0초): 0
+  ○ [재료] B16' 되감김·점프줌 (0.0초): 컷 19 · 되감김 0 [] · 점프줌 1(드묾) · 계획상 앞으로라 뺌(참고) ['21.033초 같은 원본 앞으로 +10.34초']
+  참고 [판 리듬] 컷 길이 중앙(판 rhythm.cut_median ±30%, 참고 — 판정은 계획 rhythm_gate) (0.0초): 완성본 컷 중앙 3.38초 vs 판 1.15(범위 0.805~1.97, kal_analyze.media_of 같은 자) · 컷 6
+  참고 [판 리듬] 훅 0.1~3초 컷 경계(판 rhythm.hook_cuts_3s, 참고 — 판정은 계획 rhythm_gate) (0.0초): 0.1~3초 컷 경계 0 [] (판 ≥1)
+  ○ [판 리듬] 꾸밈 없는 덩어리 비율(판 rhythm.plain_share) (0.0초): 꾸밈 없는 덩어리 0.125 vs 판 0.163(범위 0.0~0.5)(자막표 rows · placement.plain_share)
+  ○ [판 리듬] 쿠팡·상품 그림 컷 비중(판 rhythm.photo_share_max) (0.0초): 쿠팡·상품 그림 컷 비중 0.136 (판 ≤0.16, 본인 사진 own_ 은 뺌 — timeline · render_bench.photo_share)
+  ○ [자막·효과] 배치(본보기 벤치 편 대조) (0.0초): 본보기 oTi41R74WIY · 칸 최대 차 0.0
+  ○ [자막·효과] B14 효과음 과다(≤ 벤치 p90) (0.0초): 우리 0발/25.2초 = 0.000/초 · 벤치 p90 0.071/초(편별 [0.0, 0.0, 0.073, 0.0, 0.0, 0.071, 0.0, 0.0])
+  ○ [소리] 줄별 말속도 ±35%(렌더 기록) (0.0초): 렌더 기록 평균 7.42자/초 ±35% · L1:6.06 L2:7.23 L3:8.74 L4:7.18 L5:7.42 L6:7.87 L7:7.43
+  ○ [소리] B18 줄 사이 간격 = 판 timing(±1프레임+0.02) (0.1초): 경계 L1→O1:0.06→0.08 O1→L2:0.06→0.08 L2→O2:0.06→0.12 O2→L3:0.06→0.08 L3→L4:0.06→0.09 L4→L5:0.06→0.09 L5→L6:0.06→0.09 L6→L7:0.06→0.09 (허용 ±0.053)
+  ○ [소리] B18a 줄 안 문장부호 쉼 (0.1초): 해당 없음 — 줄 안 문장부호 없음
+  ○ [소리] 나레 받아쓰기 ↔ 대본 (0.0초): 나레 7줄 중 못 찾음·0.25초 넘게 어긋남 0 · 최대 차 0.023 (스피치매틱스 낱말 시각) · L1:0.0↔0.0 L2:8.192↔8.19 L3:14.995↔15.0 L4:16.542↔16.56 L5:18.413↔18.39 L6:21.032↔21.03 L7:22.872↔22.86
+  ○ [대본] script_audit (0.0초): 규칙 10개 · 미달 0
+  ○ [썸네일] 썸네일 맨 앞 2프레임 (0.7초): 안 A · 프레임 0·1·2 차 [0.4, 0.4, 23.7]
+  × [썸네일] thumb_rule.check(3안 규칙) (0.0초): ['안이 1개 — 3안이어야 한다', 'A: 글이 없다', 'A: 궁금 장치(빨간 원·화살표·?·흐림)가 하나도 없다']
+  ○ [썸네일] 광고 표시(ad_mark) (0.1초): 완성본 comment = 'ad_mark:v1'
+  참고 [1차 자] 재현일치도(match_table, 참고) (0.0초): 1차 판 — 기준 칸 전부 필수 · 전체 18칸 ✓14 ✗2 미측정0 비교 안 함2(chunk.sec,enter.mode.원음 — 하이브리드 판 목표 없음) · 필수 14칸 중 미달 ['cut.median'] · 벤치 8편
+  ○ [장면↔대사] 완성본 컷 = 계획 프레임(창 대조 ≥0.97) (7.4초): 13컷 중 같음 13 · 다름 0 (창 1−평균차 ≥ 0.97, 최저 0.994)
+  참고 [장면↔대사] 계획 점수(루브릭) (0.0초): 계획 점수 없음(material_fit 계획 전 편) · 목표 None/None (None)
+  ○ [표식] render_info 표식(판 sha·렌더러 sig·reference) (0.0초): style_sha 9546ef954ce7 · renderer_sig render_bench@33d039059eb3 · reference oTi41R74WIY
+[runner] check 25.0s ok
+[runner] write_doc 0.0s ok
+[14:39:52] [tts] 일레븐랩스 kr-mina-expressive 1회 3.4초 → 184598bfea389d401ff30a70f6988789.mp3 (글자 시각 있음)
+[14:39:52] [tts] 줄 캐시: 재사용 6줄 · 새로 합성 ['L6']
+[14:39:53] 문장 경계(align): L1:0.00~4.07 L2:4.32~6.40 L3:6.65~9.09 L4:9.34~11.74 L5:11.99~15.67 L6:15.67~18.87 L7:19.05~21.70
+[14:39:54] atempo 기본 1.35 · 평균 6.91자/초 · L1:5.96@1.35 L2:6.42@1.35 L3:6.85@1.2966 L4:6.80@1.2753 L5:6.87@1.35 L6:6.69@1.35 L7:7.25@1.2151
+[14:40:09] [줄별 받아쓰기] 확정 0 · 의심 2 → C:\t\kitchit_local\run1\home\창고\flow\7d890245dfae\job\키치잇판\render\narr_verify.json
+[14:40:10] [쉼 맞춤] L1:앞0.0·뒤0.046 L2:앞0.176·뒤0.0 L3:앞0.387·뒤0.0 L4:앞0.1·뒤0.0 L5:앞0.196·뒤0.03 L6:앞0.207·뒤0.038 L7:앞0.082·뒤0.0
+⚠ [동작] L4 대사 '바르기'(바르) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+⚠ [동작] L5 대사 '바르기'(발라) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+[ WARN:0@0.204] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[14:40:34] 접촉 시트(컷마다 처음·가운데·끝, 렌더 칸 그대로) → C:\t\kitchit_local\run1\home\창고\flow\7d890245dfae\job\doc\키치잇판\plan\계획_접촉시트.jpg
+[14:40:34]   L1     0.00~  1.52 1.52s max 2.733 4XHg_tBy1vg.mp4@9.2
+[14:40:34]   L1     1.52~  3.03 1.52s max 6.2 4XHg_tBy1vg.mp4@22
+[14:40:34]   O1     3.03~  6.13 3.10s max 38.95 4XHg_tBy1vg.mp4@344.6
+[14:40:34]   O1     6.13~  8.19 2.06s max 9.25 4XHg_tBy1vg.mp4@374.3
+[14:40:34]   L2     8.19~  9.63 1.44s max 1.807 4XHg_tBy1vg.mp4@339
+[14:40:34]   O2     9.63~ 12.53 2.90s max 32.75 4XHg_tBy1vg.mp4@350.8
+[14:40:34]   O2    12.53~ 14.99 2.46s max 2.734 4XHg_tBy1vg.mp4@331.8
+[14:40:34]   L3    14.99~ 16.57 1.57s max None prod_7536688134_0.jpg@None
+[14:40:34]   L4    16.57~ 18.44 1.87s max None prod_7536688134_1.jpg@None
+[14:40:34]   L5    18.44~ 19.74 1.30s max 22.25 4XHg_tBy1vg.mp4@361.3
+[14:40:34]   L5    19.74~ 21.04 1.30s max 13.85 4XHg_tBy1vg.mp4@369.7
+[14:40:34]   L6    21.04~ 23.24 2.21s max 2.2 4XHg_tBy1vg.mp4@381.35
+[14:40:34]   L7    23.24~ 25.53 2.29s max 18.572 4XHg_tBy1vg.mp4@420.5
+[14:40:34] 목소리 실측 길이 25.5333초 · 배치 ['본보기 벤치 편 = oTi41R74WIY', "전환 [(1.516, 'zoomblur'), (3.032, 'black')] (판 cuts.transition.kinds 비율 {'zoomblur': 0.1, 'black': 0.07, 'flash': 0.01}, 컷 경계 12·붙일 수 있는 12(≥1.2초))", '효과음 0발(본보기 0) []', "꾸밈 없음 2→3/24(판 plain_share 0.163 → 4) 강조 뺌 ['O2「커버가 잘 된대요」'] — 뺄 수 있는 강조만 덩어리 
+[ WARN:0@17.604] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@18.569] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@18.631] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@18.745] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@39.695] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@39.714] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[runner] plan 67.8s ok
+[runner] write_doc 0.0s ok
+[14:40:57] 문장 경계(align): L1:0.00~4.07 L2:4.32~6.40 L3:6.65~9.09 L4:9.34~11.74 L5:11.99~15.67 L6:15.67~18.87 L7:19.05~21.70
+[14:40:58] atempo 기본 1.35 · 평균 6.91자/초 · L1:5.96@1.35 L2:6.42@1.35 L3:6.85@1.2966 L4:6.80@1.2753 L5:6.87@1.35 L6:6.69@1.35 L7:7.25@1.2151
+[14:40:58] [줄별 받아쓰기] 확정 0 · 의심 2 → C:\t\kitchit_local\run1\home\창고\flow\7d890245dfae\job\키치잇판\render\narr_verify.json
+[14:40:59] [쉼 맞춤] L1:앞0.0·뒤0.046 L2:앞0.176·뒤0.0 L3:앞0.387·뒤0.0 L4:앞0.1·뒤0.0 L5:앞0.196·뒤0.03 L6:앞0.207·뒤0.038 L7:앞0.082·뒤0.0
+⚠ [동작] L4 대사 '바르기'(바르) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+⚠ [동작] L5 대사 '바르기'(발라) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+[ WARN:0@0.216] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[14:41:23] 접촉 시트(컷마다 처음·가운데·끝, 렌더 칸 그대로) → C:\t\kitchit_local\run1\home\창고\flow\7d890245dfae\job\doc\키치잇판\plan\계획_접촉시트.jpg
+[14:41:23]   L1     0.00~  1.52 1.52s max 2.733 4XHg_tBy1vg.mp4@9.2
+[14:41:23]   L1     1.52~  3.03 1.52s max 6.2 4XHg_tBy1vg.mp4@22
+[14:41:23]   O1     3.03~  6.13 3.10s max 38.95 4XHg_tBy1vg.mp4@344.6
+[14:41:23]   O1     6.13~  8.19 2.06s max 9.25 4XHg_tBy1vg.mp4@374.3
+[14:41:23]   L2     8.19~  9.63 1.44s max 1.807 4XHg_tBy1vg.mp4@339
+[14:41:23]   O2     9.63~ 12.53 2.90s max 32.75 4XHg_tBy1vg.mp4@350.8
+[14:41:23]   O2    12.53~ 14.99 2.46s max 2.734 4XHg_tBy1vg.mp4@331.8
+[14:41:23]   L3    14.99~ 16.57 1.57s max None prod_7536688134_0.jpg@None
+[14:41:23]   L4    16.57~ 18.44 1.87s max None prod_7536688134_1.jpg@None
+[14:41:23]   L5    18.44~ 19.74 1.30s max 22.25 4XHg_tBy1vg.mp4@361.3
+[14:41:23]   L5    19.74~ 21.04 1.30s max 13.85 4XHg_tBy1vg.mp4@369.7
+[14:41:23]   L6    21.04~ 23.24 2.21s max 2.2 4XHg_tBy1vg.mp4@381.35
+[14:41:23]   L7    23.24~ 25.53 2.29s max 18.572 4XHg_tBy1vg.mp4@420.5
+[14:41:23] 목소리 실측 길이 25.5333초 · 배치 ['본보기 벤치 편 = oTi41R74WIY', "전환 [(1.516, 'zoomblur'), (3.032, 'black')] (판 cuts.transition.kinds 비율 {'zoomblur': 0.1, 'black': 0.07, 'flash': 0.01}, 컷 경계 12·붙일 수 있는 12(≥1.2초))", '효과음 0발(본보기 0) []', "꾸밈 없음 2→3/24(판 plain_share 0.163 → 4) 강조 뺌 ['O2「커버가 잘 된대요」'] — 뺄 수 있는 강조만 덩어리 
+[ WARN:0@17.296] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@18.038] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[14:41:24] [관문④] 연예인 판인데 기준 얼굴 없음(썸네일.json 없음 또는 카드 얼굴 통과 0) — 얼굴 판정 건너뜀, 글자만 잰다
+[ WARN:0@33.082] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@33.120] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[runner] plan 42.7s ok
+[runner] write_doc 0.0s ok
+⚠ [동작] L4 대사 '바르기'(바르) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+⚠ [동작] L5 대사 '바르기'(발라) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+[ WARN:0@0.219] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@6.979] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@9.263] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@9.318] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@9.458] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@141.170] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@141.193] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[runner] render 149.7s ok
+[ WARN:0@0.023] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[thumb] 얼굴 검사 ○: 0.077s:○ 0.1s:○ 0.6s:○ 1.1s:○ 1.6s:○ 2.1s:○ 2.6s:○
+[ WARN:0@6.105] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@6.162] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@6.284] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+  ○ [규격] 길이 (0.0초): 25.53초 (판 25~30)
+  ○ [규격] 화면=시간표 (0.0초): 25.533 vs 25.5333
+  ○ [규격] 음량 (0.6초): -14.0 LUFS (목표 -14.0)
+  ○ [규격] 최고점 (0.0초): -1.5 dBFS (≤ -1.5+0.5)
+  ○ [규격] 1080×1920·30fps (0.1초): 1080×1920 · 30.0fps
+  ○ [화면] 0초·첫 줄 얼굴 (1.5초): 0.077s:○ 0.1s:○ 0.6s:○ 1.1s:○ 1.6s:○ 2.1s:○ 2.6s:○
+  ○ [화면] 컷 조각 프레임 = 계획 (3.0초): 전부 같음
+  ○ [화면] 화면 멈춤 없음 (0.7초): 0건
+  ○ [화면] 컷 끝 번쩍임 없음(0.2초 안 장면 경계) (0.6초): 0건
+  ○ [화면] 남의 박힌 자막 없음(관문 ④ 자 · 지운 뒤) (0.5초): 0건
+  ○ [화면] B9 첫·끝 컷 Y≥60 (0.3초): 132 · 126 (≥60)
+  참고 [화면] 전환 세기(zoomblur drop 중앙 ±30%, 참고) (1.0초): 우리 drop 중앙 0.258(1경계) vs 벤치 0.175(5회 [-0.192, 0.175, 0.136, 0.337, 0.24]) · 허용 ±30%
+  참고 [화면] 전환 길이 ms(참고) (0.0초): 우리 [0] · 벤치 [200, 33, 0, 167, 400]
+  ○ [재료] B13 같은 장면 재사용(겹침 ×·거리 min(3, 0.25×길이)) (0.5초): 0 (소스 길이 {4XHg_tBy1vg:486.2})
+  ○ [재료] B16 A-B-A 끼움(나레 컷) (0.0초): 0
+  ○ [재료] B16' 되감김·점프줌 (4.0초): 컷 20 · 되감김 0 [] · 점프줌 0(드묾) · 계획상 앞으로라 뺌(참고) ['21.033초 같은 원본 앞으로 +10.35초']
+  참고 [판 리듬] 컷 길이 중앙(판 rhythm.cut_median ±30%, 참고 — 판정은 계획 rhythm_gate) (23.1초): 완성본 컷 중앙 6.8초 vs 판 1.15(범위 0.805~1.97, kal_analyze.media_of 같은 자) · 컷 5
+  참고 [판 리듬] 훅 0.1~3초 컷 경계(판 rhythm.hook_cuts_3s, 참고 — 판정은 계획 rhythm_gate) (0.0초): 0.1~3초 컷 경계 0 [] (판 ≥1)
+  ○ [판 리듬] 꾸밈 없는 덩어리 비율(판 rhythm.plain_share) (0.0초): 꾸밈 없는 덩어리 0.125 vs 판 0.163(범위 0.0~0.5)(자막표 rows · placement.plain_share)
+  ○ [판 리듬] 쿠팡·상품 그림 컷 비중(판 rhythm.photo_share_max) (0.0초): 쿠팡·상품 그림 컷 비중 0.135 (판 ≤0.16, 본인 사진 own_ 은 뺌 — timeline · render_bench.photo_share)
+  ○ [자막·효과] 배치(본보기 벤치 편 대조) (0.0초): 본보기 oTi41R74WIY · 칸 최대 차 0.0
+  ○ [자막·효과] B14 효과음 과다(≤ 벤치 p90) (0.0초): 우리 0발/25.5초 = 0.000/초 · 벤치 p90 0.071/초(편별 [0.0, 0.0, 0.073, 0.0, 0.0, 0.071, 0.0, 0.0])
+  ○ [소리] 줄별 말속도 ±35%(렌더 기록) (0.0초): 렌더 기록 평균 7.36자/초 ±35% · L1:6.06 L2:7.24 L3:8.6 L4:7.17 L5:7.49 L6:7.45 L7:7.53
+  ○ [소리] B18 줄 사이 간격 = 판 timing(±1프레임+0.02) (0.1초): 경계 L1→O1:0.06→0.08 O1→L2:0.06→0.08 L2→O2:0.06→0.12 O2→L3:0.06→0.08 L3→L4:0.06→0.09 L4→L5:0.06→0.09 L5→L6:0.06→0.09 L6→L7:0.06→0.09 (허용 ±0.053)
+  ○ [소리] B18a 줄 안 문장부호 쉼 (0.1초): 해당 없음 — 줄 안 문장부호 없음
+  ○ [소리] 나레 받아쓰기 ↔ 대본 (7.7초): 나레 7줄 중 못 찾음·0.25초 넘게 어긋남 0 · 최대 차 0.024 (스피치매틱스 낱말 시각) · L1:0.0↔0.0 L2:8.192↔8.19 L3:14.994↔15.0 L4:16.566↔16.56 L5:18.438↔18.42 L6:21.036↔21.06 L7:23.243↔23.22
+  ○ [대본] script_audit (0.0초): 규칙 10개 · 미달 0
+  ○ [썸네일] 썸네일 맨 앞 2프레임 (0.6초): 안 B · 프레임 0·1·2 차 [0.4, 0.4, 32.6]
+  ○ [썸네일] thumb_rule.check(3안 규칙) (0.0초): 통과
+  ○ [썸네일] 광고 표시(ad_mark) (0.1초): 완성본 comment = 'ad_mark:v1'
+  참고 [1차 자] 재현일치도(match_table, 참고) (0.0초): 1차 판 — 기준 칸 전부 필수 · 전체 18칸 ✓14 ✗2 미측정0 비교 안 함2(chunk.sec,enter.mode.원음 — 하이브리드 판 목표 없음) · 필수 14칸 중 미달 ['cut.median'] · 벤치 8편
+  ○ [장면↔대사] 완성본 컷 = 계획 프레임(창 대조 ≥0.97) (7.3초): 13컷 중 같음 13 · 다름 0 (창 1−평균차 ≥ 0.97, 최저 0.9942)
+  참고 [장면↔대사] 계획 점수(루브릭) (0.0초): 계획 점수 없음(material_fit 계획 전 편) · 목표 None/None (None)
+  ○ [표식] render_info 표식(판 sha·렌더러 sig·reference) (0.0초): style_sha 9546ef954ce7 · renderer_sig render_bench@33d039059eb3 · reference oTi41R74WIY
+[runner] check 59.5s ok
+[runner] write_doc 0.0s ok
+[runner] write_doc 0.0s ok
+⚠ [동작] L4 대사 '바르기'(바르) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+⚠ [동작] L5 대사 '바르기'(발라) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+[ WARN:0@0.184] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@11.563] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@12.995] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@13.042] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@13.143] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[vmake] 4XHg_tBy1vg__vm_383.07_384.07 끼움(원본 = 4XHg_tBy1vg__vm_383.07_384.07_orig.mp4)
+[vmake] 4XHg_tBy1vg__vm_9.00_10.90 끼움(원본 = 4XHg_tBy1vg__vm_9.00_10.90_orig.mp4)
+[vmake] 4XHg_tBy1vg__vm_21.80_23.73 끼움(원본 = 4XHg_tBy1vg__vm_21.80_23.73_orig.mp4)
+[clean_text] 쓰는 구간 26.5초 중 자막 컷 4.833초 → VMake 3회 · 보낸 초 {'4XHg_tBy1vg.mp4': 4.808} · vmake: 
+[runner] clean_text 1471.6s ok
+[runner] write_doc 0.0s ok
+⚠ [동작] L4 대사 '바르기'(바르) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+⚠ [동작] L5 대사 '바르기'(발라) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+[ WARN:0@0.217] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@4.764] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@7.016] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@7.070] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@7.179] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@220.187] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@220.205] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[runner] render 228.7s ok
+[ WARN:0@0.024] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[thumb] 얼굴 검사 ○: 0.077s:○ 0.1s:○ 0.6s:○ 1.1s:○ 1.6s:○ 2.1s:○ 2.6s:○
+[ WARN:0@6.919] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@6.976] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@7.110] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+  ○ [규격] 길이 (0.1초): 25.53초 (판 25~30)
+  ○ [규격] 화면=시간표 (0.0초): 25.533 vs 25.5333
+  ○ [규격] 음량 (0.7초): -14.0 LUFS (목표 -14.0)
+  ○ [규격] 최고점 (0.0초): -1.5 dBFS (≤ -1.5+0.5)
+  ○ [규격] 1080×1920·30fps (0.1초): 1080×1920 · 30.0fps
+  ○ [화면] 0초·첫 줄 얼굴 (1.6초): 0.077s:○ 0.1s:○ 0.6s:○ 1.1s:○ 1.6s:○ 2.1s:○ 2.6s:○
+  ○ [화면] 컷 조각 프레임 = 계획 (3.3초): 전부 같음
+  ○ [화면] 화면 멈춤 없음 (0.8초): 0건
+  ○ [화면] 컷 끝 번쩍임 없음(0.2초 안 장면 경계) (0.7초): 0건
+  ○ [화면] 남의 박힌 자막 없음(관문 ④ 자 · 지운 뒤) (39.7초): 0건
+  ○ [화면] B9 첫·끝 컷 Y≥60 (0.3초): 132 · 126 (≥60)
+  참고 [화면] 전환 세기(zoomblur drop 중앙 ±30%, 참고) (1.0초): 우리 drop 중앙 0.258(1경계) vs 벤치 0.175(5회 [-0.192, 0.175, 0.136, 0.337, 0.24]) · 허용 ±30%
+  참고 [화면] 전환 길이 ms(참고) (0.0초): 우리 [0] · 벤치 [200, 33, 0, 167, 400]
+  ○ [재료] B13 같은 장면 재사용(겹침 ×·거리 min(3, 0.25×길이)) (0.6초): 0 (소스 길이 {4XHg_tBy1vg:486.2})
+  ○ [재료] B16 A-B-A 끼움(나레 컷) (0.0초): 0
+  ○ [재료] B16' 되감김·점프줌 (4.1초): 컷 20 · 되감김 0 [] · 점프줌 0(드묾) · 계획상 앞으로라 뺌(참고) ['21.033초 같은 원본 앞으로 +10.35초']
+  참고 [판 리듬] 컷 길이 중앙(판 rhythm.cut_median ±30%, 참고 — 판정은 계획 rhythm_gate) (23.9초): 완성본 컷 중앙 6.95초 vs 판 1.15(범위 0.805~1.97, kal_analyze.media_of 같은 자) · 컷 4
+  참고 [판 리듬] 훅 0.1~3초 컷 경계(판 rhythm.hook_cuts_3s, 참고 — 판정은 계획 rhythm_gate) (0.0초): 0.1~3초 컷 경계 0 [] (판 ≥1)
+  ○ [판 리듬] 꾸밈 없는 덩어리 비율(판 rhythm.plain_share) (0.0초): 꾸밈 없는 덩어리 0.125 vs 판 0.163(범위 0.0~0.5)(자막표 rows · placement.plain_share)
+  ○ [판 리듬] 쿠팡·상품 그림 컷 비중(판 rhythm.photo_share_max) (0.0초): 쿠팡·상품 그림 컷 비중 0.135 (판 ≤0.16, 본인 사진 own_ 은 뺌 — timeline · render_bench.photo_share)
+  ○ [자막·효과] 배치(본보기 벤치 편 대조) (0.0초): 본보기 oTi41R74WIY · 칸 최대 차 0.0
+  ○ [자막·효과] B14 효과음 과다(≤ 벤치 p90) (0.0초): 우리 0발/25.5초 = 0.000/초 · 벤치 p90 0.071/초(편별 [0.0, 0.0, 0.073, 0.0, 0.0, 0.071, 0.0, 0.0])
+  ○ [소리] 줄별 말속도 ±35%(렌더 기록) (0.0초): 렌더 기록 평균 7.36자/초 ±35% · L1:6.06 L2:7.24 L3:8.6 L4:7.17 L5:7.49 L6:7.45 L7:7.53
+  ○ [소리] B18 줄 사이 간격 = 판 timing(±1프레임+0.02) (0.1초): 경계 L1→O1:0.06→0.08 O1→L2:0.06→0.08 L2→O2:0.06→0.12 O2→L3:0.06→0.08 L3→L4:0.06→0.09 L4→L5:0.06→0.09 L5→L6:0.06→0.09 L6→L7:0.06→0.09 (허용 ±0.053)
+  ○ [소리] B18a 줄 안 문장부호 쉼 (0.1초): 해당 없음 — 줄 안 문장부호 없음
+  ○ [소리] 나레 받아쓰기 ↔ 대본 (0.0초): 나레 7줄 중 못 찾음·0.25초 넘게 어긋남 0 · 최대 차 0.024 (스피치매틱스 낱말 시각) · L1:0.0↔0.0 L2:8.192↔8.19 L3:14.994↔15.0 L4:16.566↔16.56 L5:18.438↔18.42 L6:21.036↔21.06 L7:23.243↔23.22
+  ○ [대본] script_audit (0.0초): 규칙 10개 · 미달 0
+  ○ [썸네일] 썸네일 맨 앞 2프레임 (0.6초): 안 B · 프레임 0·1·2 차 [0.4, 0.4, 33.4]
+  ○ [썸네일] thumb_rule.check(3안 규칙) (0.0초): 통과
+  ○ [썸네일] 광고 표시(ad_mark) (0.1초): 완성본 comment = 'ad_mark:v1'
+  참고 [1차 자] 재현일치도(match_table, 참고) (0.0초): 1차 판 — 기준 칸 전부 필수 · 전체 18칸 ✓14 ✗2 미측정0 비교 안 함2(chunk.sec,enter.mode.원음 — 하이브리드 판 목표 없음) · 필수 14칸 중 미달 ['cut.median'] · 벤치 8편
+  ○ [장면↔대사] 완성본 컷 = 계획 프레임(창 대조 ≥0.97) (5.2초): 13컷 중 같음 13 · 다름 0 (창 1−평균차 ≥ 0.97, 최저 0.9932)
+  참고 [장면↔대사] 계획 점수(루브릭) (0.0초): 계획 점수 없음(material_fit 계획 전 편) · 목표 None/None (None)
+  ○ [표식] render_info 표식(판 sha·렌더러 sig·reference) (0.0초): style_sha 9546ef954ce7 · renderer_sig render_bench@33d039059eb3 · reference oTi41R74WIY
+[runner] check 90.3s ok
+[runner] write_doc 0.0s ok
+[ WARN:0@0.023] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[thumb] 얼굴 검사 ○: 0.077s:○ 0.1s:○ 0.6s:○ 1.1s:○ 1.6s:○ 2.1s:○ 2.6s:○
+[ WARN:0@6.236] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@6.294] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@6.393] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+  ○ [규격] 길이 (0.0초): 25.53초 (판 25~30)
+  ○ [규격] 화면=시간표 (0.0초): 25.533 vs 25.5333
+  ○ [규격] 음량 (0.6초): -14.0 LUFS (목표 -14.0)
+  ○ [규격] 최고점 (0.0초): -1.5 dBFS (≤ -1.5+0.5)
+  ○ [규격] 1080×1920·30fps (0.1초): 1080×1920 · 30.0fps
+  ○ [화면] 0초·첫 줄 얼굴 (1.6초): 0.077s:○ 0.1s:○ 0.6s:○ 1.1s:○ 1.6s:○ 2.1s:○ 2.6s:○
+  ○ [화면] 컷 조각 프레임 = 계획 (3.1초): 전부 같음
+  ○ [화면] 화면 멈춤 없음 (0.7초): 0건
+  ○ [화면] 컷 끝 번쩍임 없음(0.2초 안 장면 경계) (0.6초): 0건
+  ○ [화면] 남의 박힌 자막 없음(관문 ④ 자 · 지운 뒤) (0.5초): 0건
+  ○ [화면] B9 첫·끝 컷 Y≥60 (0.3초): 132 · 126 (≥60)
+  참고 [화면] 전환 세기(zoomblur drop 중앙 ±30%, 참고) (0.9초): 우리 drop 중앙 0.258(1경계) vs 벤치 0.175(5회 [-0.192, 0.175, 0.136, 0.337, 0.24]) · 허용 ±30%
+  참고 [화면] 전환 길이 ms(참고) (0.0초): 우리 [0] · 벤치 [200, 33, 0, 167, 400]
+  ○ [재료] B13 같은 장면 재사용(겹침 ×·거리 min(3, 0.25×길이)) (0.5초): 0 (소스 길이 {4XHg_tBy1vg:486.2})
+  ○ [재료] B16 A-B-A 끼움(나레 컷) (0.0초): 0
+  ○ [재료] B16' 되감김·점프줌 (0.0초): 컷 20 · 되감김 0 [] · 점프줌 0(드묾) · 계획상 앞으로라 뺌(참고) ['21.033초 같은 원본 앞으로 +10.35초']
+  참고 [판 리듬] 컷 길이 중앙(판 rhythm.cut_median ±30%, 참고 — 판정은 계획 rhythm_gate) (0.0초): 완성본 컷 중앙 6.95초 vs 판 1.15(범위 0.805~1.97, kal_analyze.media_of 같은 자) · 컷 4
+  참고 [판 리듬] 훅 0.1~3초 컷 경계(판 rhythm.hook_cuts_3s, 참고 — 판정은 계획 rhythm_gate) (0.0초): 0.1~3초 컷 경계 0 [] (판 ≥1)
+  ○ [판 리듬] 꾸밈 없는 덩어리 비율(판 rhythm.plain_share) (0.0초): 꾸밈 없는 덩어리 0.125 vs 판 0.163(범위 0.0~0.5)(자막표 rows · placement.plain_share)
+  ○ [판 리듬] 쿠팡·상품 그림 컷 비중(판 rhythm.photo_share_max) (0.0초): 쿠팡·상품 그림 컷 비중 0.135 (판 ≤0.16, 본인 사진 own_ 은 뺌 — timeline · render_bench.photo_share)
+  ○ [자막·효과] 배치(본보기 벤치 편 대조) (0.0초): 본보기 oTi41R74WIY · 칸 최대 차 0.0
+  ○ [자막·효과] B14 효과음 과다(≤ 벤치 p90) (0.0초): 우리 0발/25.5초 = 0.000/초 · 벤치 p90 0.071/초(편별 [0.0, 0.0, 0.073, 0.0, 0.0, 0.071, 0.0, 0.0])
+  ○ [소리] 줄별 말속도 ±35%(렌더 기록) (0.0초): 렌더 기록 평균 7.36자/초 ±35% · L1:6.06 L2:7.24 L3:8.6 L4:7.17 L5:7.49 L6:7.45 L7:7.53
+  ○ [소리] B18 줄 사이 간격 = 판 timing(±1프레임+0.02) (0.1초): 경계 L1→O1:0.06→0.08 O1→L2:0.06→0.08 L2→O2:0.06→0.12 O2→L3:0.06→0.08 L3→L4:0.06→0.09 L4→L5:0.06→0.09 L5→L6:0.06→0.09 L6→L7:0.06→0.09 (허용 ±0.053)
+  ○ [소리] B18a 줄 안 문장부호 쉼 (0.1초): 해당 없음 — 줄 안 문장부호 없음
+  ○ [소리] 나레 받아쓰기 ↔ 대본 (0.0초): 나레 7줄 중 못 찾음·0.25초 넘게 어긋남 0 · 최대 차 0.024 (스피치매틱스 낱말 시각) · L1:0.0↔0.0 L2:8.192↔8.19 L3:14.994↔15.0 L4:16.566↔16.56 L5:18.438↔18.42 L6:21.036↔21.06 L7:23.243↔23.22
+  ○ [대본] script_audit (0.0초): 규칙 10개 · 미달 0
+  ○ [썸네일] 썸네일 맨 앞 2프레임 (0.6초): 안 B · 프레임 0·1·2 차 [0.4, 0.4, 33.4]
+  ○ [썸네일] thumb_rule.check(3안 규칙) (0.0초): 통과
+  ○ [썸네일] 광고 표시(ad_mark) (0.0초): 완성본 comment = 'ad_mark:v1'
+  참고 [1차 자] 재현일치도(match_table, 참고) (0.0초): 1차 판 — 기준 칸 전부 필수 · 전체 18칸 ✓14 ✗2 미측정0 비교 안 함2(chunk.sec,enter.mode.원음 — 하이브리드 판 목표 없음) · 필수 14칸 중 미달 ['cut.median'] · 벤치 8편
+  ○ [장면↔대사] 완성본 컷 = 계획 프레임(창 대조 ≥0.97) (5.2초): 13컷 중 같음 13 · 다름 0 (창 1−평균차 ≥ 0.97, 최저 0.9932)
+  참고 [장면↔대사] 계획 점수(루브릭) (0.0초): 계획 점수 없음(material_fit 계획 전 편) · 목표 None/None (None)
+  ○ [표식] render_info 표식(판 sha·렌더러 sig·reference) (0.0초): style_sha 9546ef954ce7 · renderer_sig render_bench@33d039059eb3 · reference oTi41R74WIY
+[runner] check 22.1s ok
+[runner] write_doc 0.0s ok
+[runner] finish 0.0s ok
+[runner] write_doc 0.0s ok
+[runner] orig_heard 15.6s ok
+[15:26:51] [tts] 일레븐랩스 kr-mina-expressive 1회 3.3초 → dd339c7d56c26a23285f94d5f126eb0c.mp3 (글자 시각 있음)
+[15:26:55] [tts] 일레븐랩스 kr-mina-expressive 1회 3.6초 → 7e419c0bb23bef1830d732ee884ff258.mp3 (글자 시각 있음)
+[15:26:55] [tts] 줄 캐시: 재사용 5줄 · 새로 합성 ['L3', 'L7']
+[15:26:56] 문장 경계(align): L1:0.00~4.07 L2:4.32~6.40 L3:6.40~9.36 L4:9.62~12.02 L5:12.27~15.95 L6:16.20~18.87 L7:18.87~22.64
+[15:26:56] atempo 기본 1.35 · 평균 6.80자/초 · L1:5.96@1.35 L2:6.42@1.35 L3:6.72@1.35 L4:6.66@1.2561 L5:6.87@1.35 L6:6.74@1.2962 L7:6.71@1.2826
+[15:27:09] [줄별 받아쓰기] 확정 0 · 의심 0 → C:\t\kitchit_local\run1\home\창고\flow\7d890245dfae\job\키치잇판\render\narr_verify.json
+[15:27:10] [쉼 맞춤] L1:앞0.0·뒤0.046 L2:앞0.176·뒤0.0 L3:앞0.174·뒤0.009 L4:앞0.101·뒤0.01 L5:앞0.196·뒤0.03 L6:앞0.204·뒤0.015 L7:앞0.237·뒤0.0
+⚠ [동작] L4 대사 '바르기'(바르) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+⚠ [동작] L5 대사 '바르기'(발라) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+[ WARN:0@0.193] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[15:27:29] 접촉 시트(컷마다 처음·가운데·끝, 렌더 칸 그대로) → C:\t\kitchit_local\run1\home\창고\flow\7d890245dfae\job\doc\키치잇판\plan\계획_접촉시트.jpg
+[15:27:29]   L1     0.00~  1.52 1.52s max 2.733 4XHg_tBy1vg.mp4@9.2
+[15:27:29]   L1     1.52~  3.03 1.52s max 6.2 4XHg_tBy1vg.mp4@22
+[15:27:29]   O1     3.03~  6.13 3.10s max 38.95 4XHg_tBy1vg.mp4@344.6
+[15:27:29]   O1     6.13~  8.19 2.06s max 9.25 4XHg_tBy1vg.mp4@374.3
+[15:27:29]   L2     8.19~  9.63 1.44s max 1.807 4XHg_tBy1vg.mp4@339
+[15:27:29]   O2     9.63~ 12.53 2.90s max 32.75 4XHg_tBy1vg.mp4@350.8
+[15:27:29]   O2    12.53~ 14.99 2.46s max 2.734 4XHg_tBy1vg.mp4@331.8
+[15:27:29]   L3    14.99~ 17.10 2.11s max None prod_7536688134_0.jpg@None
+[15:27:29]   L4    17.10~ 19.00 1.90s max None prod_7536688134_1.jpg@None
+[15:27:29]   L5    19.00~ 20.30 1.30s max 22.25 4XHg_tBy1vg.mp4@361.3
+[15:27:29]   L5    20.30~ 21.60 1.30s max 13.85 4XHg_tBy1vg.mp4@369.7
+[15:27:29]   L6    21.60~ 23.52 1.92s max 2.2 4XHg_tBy1vg.mp4@381.35
+[15:27:29]   L7    23.52~ 26.40 2.88s max 18.572 4XHg_tBy1vg.mp4@420.5
+[15:27:29] 목소리 실측 길이 26.4초 · 배치 ['본보기 벤치 편 = oTi41R74WIY', "전환 [(1.516, 'zoomblur'), (3.032, 'black')] (판 cuts.transition.kinds 비율 {'zoomblur': 0.1, 'black': 0.07, 'flash': 0.01}, 컷 경계 12·붙일 수 있는 12(≥1.2초))", '효과음 0발(본보기 0) []', "꾸밈 없음 2→3/25(판 plain_share 0.163 → 4) 강조 뺌 ['O2「커버가 잘 된대요」'] — 뺄 수 있는 강조만 덩어리 모자람
+[ WARN:0@12.789] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@14.323] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@14.372] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@14.480] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[15:27:44] [관문④ → VMake] 박힌 글자 컷 [2, 5, 9, 10, 12] — 멈추지 않고 렌더 전 VMake 로 지운다(vmake_clean.used_spans)
+[ WARN:0@31.433] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@31.451] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[runner] plan 60.5s ok
+[runner] write_doc 0.0s ok
+[15:27:55] 문장 경계(align): L1:0.00~4.07 L2:4.32~6.40 L3:6.40~9.36 L4:9.62~12.02 L5:12.27~15.95 L6:16.20~18.87 L7:18.87~22.64
+[15:27:55] atempo 기본 1.35 · 평균 6.80자/초 · L1:5.96@1.35 L2:6.42@1.35 L3:6.72@1.35 L4:6.66@1.2561 L5:6.87@1.35 L6:6.74@1.2962 L7:6.71@1.2826
+[15:27:56] [줄별 받아쓰기] 확정 0 · 의심 0 → C:\t\kitchit_local\run1\home\창고\flow\7d890245dfae\job\키치잇판\render\narr_verify.json
+[15:27:57] [쉼 맞춤] L1:앞0.0·뒤0.046 L2:앞0.176·뒤0.0 L3:앞0.174·뒤0.009 L4:앞0.101·뒤0.01 L5:앞0.196·뒤0.03 L6:앞0.204·뒤0.015 L7:앞0.237·뒤0.0
+⚠ [동작] L4 대사 '바르기'(바르) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+⚠ [동작] L5 대사 '바르기'(발라) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+[ WARN:0@0.198] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[15:28:16] 접촉 시트(컷마다 처음·가운데·끝, 렌더 칸 그대로) → C:\t\kitchit_local\run1\home\창고\flow\7d890245dfae\job\doc\키치잇판\plan\계획_접촉시트.jpg
+[15:28:16]   L1     0.00~  1.52 1.52s max 2.733 4XHg_tBy1vg.mp4@9.2
+[15:28:16]   L1     1.52~  3.03 1.52s max 6.2 4XHg_tBy1vg.mp4@22
+[15:28:16]   O1     3.03~  6.13 3.10s max 38.95 4XHg_tBy1vg.mp4@344.6
+[15:28:16]   O1     6.13~  8.19 2.06s max 9.25 4XHg_tBy1vg.mp4@374.3
+[15:28:16]   L2     8.19~  9.63 1.44s max 1.807 4XHg_tBy1vg.mp4@339
+[15:28:16]   O2     9.63~ 12.53 2.90s max 32.75 4XHg_tBy1vg.mp4@350.8
+[15:28:16]   O2    12.53~ 14.99 2.46s max 2.734 4XHg_tBy1vg.mp4@331.8
+[15:28:16]   L3    14.99~ 17.10 2.11s max None prod_7536688134_0.jpg@None
+[15:28:16]   L4    17.10~ 19.00 1.90s max None prod_7536688134_1.jpg@None
+[15:28:16]   L5    19.00~ 20.30 1.30s max 22.25 4XHg_tBy1vg.mp4@361.3
+[15:28:16]   L5    20.30~ 21.60 1.30s max 13.85 4XHg_tBy1vg.mp4@369.7
+[15:28:16]   L6    21.60~ 23.52 1.92s max 2.2 4XHg_tBy1vg.mp4@381.35
+[15:28:16]   L7    23.52~ 26.40 2.88s max 18.572 4XHg_tBy1vg.mp4@420.5
+[15:28:16] 목소리 실측 길이 26.4초 · 배치 ['본보기 벤치 편 = oTi41R74WIY', "전환 [(1.516, 'zoomblur'), (3.032, 'black')] (판 cuts.transition.kinds 비율 {'zoomblur': 0.1, 'black': 0.07, 'flash': 0.01}, 컷 경계 12·붙일 수 있는 12(≥1.2초))", '효과음 0발(본보기 0) []', "꾸밈 없음 2→3/25(판 plain_share 0.163 → 4) 강조 뺌 ['O2「커버가 잘 된대요」'] — 뺄 수 있는 강조만 덩어리 모자람
+[ WARN:0@12.650] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@13.205] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[15:28:16] [관문④] 연예인 판인데 기준 얼굴 없음(썸네일.json 없음 또는 카드 얼굴 통과 0) — 얼굴 판정 건너뜀, 글자만 잰다
+[15:28:28] [관문④ → VMake] 박힌 글자 컷 [2, 5, 9, 10, 12] — 멈추지 않고 렌더 전 VMake 로 지운다(vmake_clean.used_spans)
+[ WARN:0@28.556] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@28.576] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[runner] plan 37.8s ok
+[runner] write_doc 0.0s ok
+⚠ [동작] L4 대사 '바르기'(바르) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+⚠ [동작] L5 대사 '바르기'(발라) 인데 컷 see 에 그 동작이 없다 — 동작 장면을 재료에서 찾을 것(페이블 E3)
+[ WARN:0@0.193] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@4.949] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@7.192] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@7.243] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@7.347] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@170.754] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@170.773] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[runner] render 179.3s ok
+[ WARN:0@0.023] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[thumb] 얼굴 검사 ○: 0.077s:○ 0.1s:○ 0.6s:○ 1.1s:○ 1.6s:○ 2.1s:○ 2.6s:○
+[ WARN:0@6.292] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@6.341] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+[ WARN:0@6.448] global net_impl_backend.cpp:345 cv::dnn::dnn5_v20260605::Net::Impl::setPreferableTarget Targets are not supported by the new graph engine for now
+  ○ [규격] 길이 (0.0초): 26.40초 (판 25~30)
+  ○ [규격] 화면=시간표 (0.0초): 26.400 vs 26.4
+  ○ [규격] 음량 (0.6초): -14.0 LUFS (목표 -14.0)
+  ○ [규격] 최고점 (0.0초): -1.5 dBFS (≤ -1.5+0.5)
+  ○ [규격] 1080×1920·30fps (0.1초): 1080×1920 · 30.0fps
+  ○ [화면] 0초·첫 줄 얼굴 (1.6초): 0.077s:○ 0.1s:○ 0.6s:○ 1.1s:○ 1.6s:○ 2.1s:○ 2.6s:○
+  ○ [화면] 컷 조각 프레임 = 계획 (3.1초): 전부 같음
+  ○ [화면] 화면 멈춤 없음 (0.7초): 0건
+  ○ [화면] 컷 끝 번쩍임 없음(0.2초 안 장면 경계) (0.6초): 0건
+  ○ [화면] 남의 박힌 자막 없음(관문 ④ 자 · 지운 뒤) (39.5초): 0건
+  ○ [화면] B9 첫·끝 컷 Y≥60 (0.3초): 132 · 126 (≥60)
+  참고 [화면] 전환 세기(zoomblur drop 중앙 ±30%, 참고) (1.0초): 우리 drop 중앙 0.259(1경계) vs 벤치 0.175(5회 [-0.192, 0.175, 0.136, 0.337, 0.24]) · 허용 ±30%
+  참고 [화면] 전환 길이 ms(참고) (0.0초): 우리 [0] · 벤치 [200, 33, 0, 167, 400]
+  ○ [재료] B13 같은 장면 재사용(겹침 ×·거리 min(3, 0.25×길이)) (0.5초): 0 (소스 길이 {4XHg_tBy1vg:486.2})
+  ○ [재료] B16 A-B-A 끼움(나레 컷) (0.0초): 0
+  ○ [재료] B16' 되감김·점프줌 (3.2초): 컷 19 · 되감김 0 [] · 점프줌 0(드묾) · 계획상 앞으로라 뺌(참고) ['21.6초 같은 원본 앞으로 +10.35초']
+  참고 [판 리듬] 컷 길이 중앙(판 rhythm.cut_median ±30%, 참고 — 판정은 계획 rhythm_gate) (22.5초): 완성본 컷 중앙 4.53초 vs 판 1.15(범위 0.805~1.97, kal_analyze.media_of 같은 자) · 컷 5
+  참고 [판 리듬] 훅 0.1~3초 컷 경계(판 rhythm.hook_cuts_3s, 참고 — 판정은 계획 rhythm_gate) (0.0초): 0.1~3초 컷 경계 0 [] (판 ≥1)
+  ○ [판 리듬] 꾸밈 없는 덩어리 비율(판 rhythm.plain_share) (0.0초): 꾸밈 없는 덩어리 0.12 vs 판 0.163(범위 0.0~0.5)(자막표 rows · placement.plain_share)
+  ○ [판 리듬] 쿠팡·상품 그림 컷 비중(판 rhythm.photo_share_max) (0.0초): 쿠팡·상품 그림 컷 비중 0.152 (판 ≤0.16, 본인 사진 own_ 은 뺌 — timeline · render_bench.photo_share)
+  ○ [자막·효과] 배치(본보기 벤치 편 대조) (0.0초): 본보기 oTi41R74WIY · 칸 최대 차 0.0
+  ○ [자막·효과] B14 효과음 과다(≤ 벤치 p90) (0.0초): 우리 0발/26.4초 = 0.000/초 · 벤치 p90 0.071/초(편별 [0.0, 0.0, 0.073, 0.0, 0.0, 0.071, 0.0, 0.0])
+  ○ [소리] 줄별 말속도 ±35%(렌더 기록) (0.0초): 렌더 기록 평균 7.14자/초 ±35% · L1:6.06 L2:7.24 L3:7.32 L4:7.06 L5:7.49 L6:7.53 L7:7.29
+  ○ [소리] B18 줄 사이 간격 = 판 timing(±1프레임+0.02) (0.1초): 경계 L1→O1:0.06→0.08 O1→L2:0.06→0.08 L2→O2:0.06→0.12 O2→L3:0.06→0.08 L3→L4:0.06→0.09 L4→L5:0.06→0.09 L5→L6:0.06→0.09 L6→L7:0.06→0.09 (허용 ±0.053)
+  ○ [소리] B18a 줄 안 문장부호 쉼 (0.1초): 해당 없음 — 줄 안 문장부호 없음
+  ○ [소리] 나레 받아쓰기 ↔ 대본 (7.7초): 나레 7줄 중 못 찾음·0.25초 넘게 어긋남 0 · 최대 차 0.043 (스피치매틱스 낱말 시각) · L1:0.0↔0.0 L2:8.192↔8.19 L3:14.994↔15.0 L4:17.102↔17.1 L5:19.003↔18.96 L6:21.601↔21.6 L7:23.519↔23.52
+  ○ [대본] script_audit (0.0초): 규칙 10개 · 미달 0
+  ○ [썸네일] 썸네일 맨 앞 2프레임 (0.6초): 안 A · 프레임 0·1·2 차 [0.4, 0.4, 26.9]
+  ○ [썸네일] thumb_rule.check(3안 규칙) (0.0초): 통과
+  ○ [썸네일] 광고 표시(ad_mark) (0.0초): 완성본 comment = 'ad_mark:v1'
+  참고 [1차 자] 재현일치도(match_table, 참고) (0.0초): 1차 판 — 기준 칸 전부 필수 · 전체 18칸 ✓14 ✗2 미측정0 비교 안 함2(chunk.sec,enter.mode.원음 — 하이브리드 판 목표 없음) · 필수 14칸 중 미달 ['cut.median'] · 벤치 8편
+  ○ [장면↔대사] 완성본 컷 = 계획 프레임(창 대조 ≥0.97) (5.6초): 13컷 중 같음 13 · 다름 0 (창 1−평균차 ≥ 0.97, 최저 0.9938)
+  참고 [장면↔대사] 계획 점수(루브릭) (0.0초): 계획 점수 없음(material_fit 계획 전 편) · 목표 None/None (None)
+  ○ [표식] render_info 표식(판 sha·렌더러 sig·reference) (0.0초): style_sha 9546ef954ce7 · renderer_sig render_bench@33d039059eb3 · reference oTi41R74WIY
+[runner] check 94.9s ok
+[runner] write_doc 0.0s ok
+[runner] finish 0.0s ok
