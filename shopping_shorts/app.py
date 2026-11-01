@@ -17500,7 +17500,8 @@ def _api_me(request: Request):
             "script_chat": _setting_gate(st, "script_chat_enabled", cid),
             # 카드뉴스 제작소(관제 223) — 사이드바 메뉴와 서버 입구(/cardnews·/api/cardnews/*)가 같은 스위치 하나
             "cardnews": _setting_gate(st, "cardnews_enabled", cid),
-            "shortcl_open": _setting_gate(st, "claude_portal_enabled", cid),
+            "shortcl_open": _shortcl_portal().portal_open(st, cid),
+            "shortcl_trial": _shortcl_portal().trial_state(st, cid, access_level(cid, now) == "full"),
             # 감정짤(관제 139·143) — 좌측 '밈팩' 메뉴·2단계 짤 칸. 판정은 렌더 경로와 같은 mix_pipeline._meme_on 한 곳
             "meme": bool(mix_pipeline._meme_on(st, {"customer_id": cid})),
             # 대화형 대본(관제 128) — 작업목록 「🎭 대화형」 버튼. 서버 입구(dialogue/*)와 같은 스위치·관리자 판정
@@ -17535,6 +17536,11 @@ def _code_admin(customer_id):
         return False
     email = (Store(DB_PATH).get_customer(customer_id) or {}).get("email") or ""
     return email.lower() in _ADMIN_EMAILS
+
+
+def _shortcl_portal():
+    from shopping_shorts import claude_portal as _cp
+    return _cp
 
 
 def _setting_gate(store, key, customer_id):
@@ -17872,7 +17878,7 @@ def _admin_customers(request: Request):
         cu["is_admin"] = cu["code_admin"] or bool(cu.get("admin"))
         cu["challenge"] = _cid in challenge_ids                 # 1기 챌린지 참가 여부(2026-08-24)
         cu["program"] = _shortcl_view(cu, shortcl_map.get(_cid), program_saved.get(_cid))   # 프로그램 구분(관제 295)
-        cu["shortcl_open"] = _setting_gate(st, "claude_portal_enabled", _cid)   # 숏클 페이지 접근(관제 294)
+        cu["shortcl_open"] = _shortcl_portal().portal_open(st, _cid)   # 숏클 페이지 접근(관제 294)
         # 포인트 잔액(화면 단위 P) — 등급이 full이어도 잔액 0이면 유료 op가 402로 막힌다.
         # 관리자가 그 상태를 목록에서 바로 보게 한다(2026-08-20 체험 계정 402 사고).
         cu["points"] = pricing.to_display(points_map.get(_cid, 0))
@@ -19219,7 +19225,7 @@ def _claude_me(request):
     if cid is None:
         return None, None, JSONResponse({"ok": False, "code": "no_key", "msg": "로그인이 필요합니다"}, status_code=401)
     st = Store(DB_PATH)
-    if not _setting_gate(st, "claude_portal_enabled", cid):
+    if not _shortcl_portal().portal_open(st, cid):
         return cid, st, JSONResponse({"ok": False, "code": "disabled", "msg": "클로드형은 아직 열리지 않았습니다"}, status_code=503)
     return cid, st, None
 
@@ -19510,6 +19516,16 @@ def api_claude_me_start_zip(request: Request):
     from shopping_shorts import claude_portal as _cp
     return Response(_cp.start_zip(cid, _public_base(request)), media_type="application/zip",
                     headers={"Cache-Control": "no-store", "Content-Disposition": "attachment; filename*=UTF-8''%EC%88%8F%ED%81%B4%EC%8B%9C%EC%9E%91_%EC%9D%B4%ED%8C%8C%EC%9D%BC%EC%9D%84%EC%84%A4%EC%B9%98.zip"})
+
+
+@app.post("/api/claude/trial")
+def api_claude_trial(request: Request):
+    """숏클 무료 업그레이드 1주(관제 300) — 판단은 claude_portal.claim_trial."""
+    cid = getattr(request.state, "customer_id", None)
+    if cid is None:
+        return JSONResponse({"ok": False, "code": "no_key", "msg": "로그인이 필요합니다"}, status_code=401)
+    _cp = _shortcl_portal()
+    return _claude_json(_cp.call(_cp.claim_trial, cid, access_level(cid) == "full", Store(DB_PATH)))
 
 
 @app.get("/api/claude/me/start_line")

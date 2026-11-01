@@ -157,6 +157,8 @@ def _mac(label, msg) -> str:
 
 # ── DB ──────────────────────────────────────────────────────────────────
 _SCHEMA = (
+    """CREATE TABLE IF NOT EXISTS claude_trials (
+        cid INTEGER PRIMARY KEY, started INTEGER NOT NULL, expires INTEGER NOT NULL, converted INTEGER NOT NULL DEFAULT 0)""",
     """CREATE TABLE IF NOT EXISTS claude_licenses (
         cid INTEGER PRIMARY KEY, kv INTEGER NOT NULL DEFAULT 0, gkv INTEGER NOT NULL DEFAULT 0,
         key_hash TEXT, issued INTEGER, expires INTEGER, plan TEXT DEFAULT 'claude', entitled_json TEXT,
@@ -301,6 +303,52 @@ def _gate(store, key, cid) -> bool:
     return bool(_app._setting_gate(store, key, cid))
 
 
+TRIAL_DAYS = 7
+
+
+def _trial_row(store, cid):
+    ensure_schema(store)
+    with _tx(store) as c:
+        return _row(c, "SELECT * FROM claude_trials WHERE cid=?", (int(cid),))
+
+
+def portal_open(store, cid) -> bool:
+    """숏클을 지금 쓸 수 있나 — 화면·설치·API 공통 판단 한 곳(관제 300). 스위치 + 무료 1주 기한."""
+    if not _gate(store, "claude_portal_enabled", cid):
+        return False
+    if str(_setting(store, "claude_portal_enabled", "") or "").strip() == "1":
+        return True
+    t = _trial_row(store, cid)
+    return not (t and not t["converted"] and t["expires"] <= _now())
+
+
+def trial_state(store, cid, eligible) -> dict:
+    """마이페이지 표시용. available=버튼을 보여도 되나, days_left=무료 기간 남은 날."""
+    store = _store(store)
+    t = _trial_row(store, cid)
+    if t:
+        active = not t["converted"] and t["expires"] > _now()
+        return {"available": False, "active": active, "days_left": max(0, (t["expires"] - _now() + 86399) // 86400) if active else 0}
+    return {"available": bool(eligible) and not portal_open(store, cid), "active": False, "days_left": 0}
+
+
+def claim_trial(cid, eligible, store=None) -> dict:
+    """무료 업그레이드 — 계정당 한 번, 누르면 바로 승인되고 TRIAL_DAYS 뒤 닫힌다."""
+    store = _store(store)
+    cid = int(cid)
+    if not eligible:
+        raise PortalError("bad_request", "숏템메이커 이용 회원만 신청할 수 있습니다")
+    if portal_open(store, cid):
+        return {"ok": True, "already": True}
+    if _trial_row(store, cid):
+        raise PortalError("bad_request", "무료 업그레이드는 계정당 한 번만 쓸 수 있습니다")
+    now = _now()
+    with _tx(store, write=True) as c:
+        c.execute("INSERT INTO claude_trials(cid, started, expires) VALUES(?,?,?)", (cid, now, now + TRIAL_DAYS * 86400))
+    _write_member(store, cid, True)
+    return {"ok": True, "expires": now + TRIAL_DAYS * 86400}
+
+
 def _assets_on(store, cid) -> bool:
     """claude_assets_enabled 는 **킬스위치** — 비어 있으면 켬(포털 스위치를 따른다), "0/off" 면 끔, 그 밖은 _setting_gate."""
     v = str(_setting(store, "claude_assets_enabled", "")).strip().lower()
@@ -391,7 +439,7 @@ def start_redeem(token, store=None) -> dict:
         raise PortalError("bad_key", "시작 파일이 올바르지 않습니다 — 페이지에서 새로 받아 주세요")
     if exp < _now():
         raise PortalError("expired", "시작 파일 기한이 지났습니다 — 페이지에서 새로 받아 주세요")
-    if not _gate(store, "claude_portal_enabled", cid):
+    if not portal_open(store, cid):
         raise PortalError("disabled", "클로드형 서비스가 지금 꺼져 있습니다")
     return {"ok": True, "key": member_key(cid, store)}
 
@@ -545,7 +593,7 @@ def _front(store, ctx, route, need_device=True):
                 pass
         raise
     cid = info["cid"]
-    if not _gate(store, "claude_portal_enabled", cid):
+    if not portal_open(store, cid):
         raise PortalError("disabled", "클로드형 서비스가 지금 꺼져 있습니다")
     _raise_on(anomaly_check(cid, {"type": "request", "route": route, **_ev(ctx)}, store=store))
     if route == "install":                       # 설치 전 연결 파일 — 아직 엔진·기기 지문 계산기가 없다(키만 본다)
@@ -1527,11 +1575,18 @@ def set_member(cid, on, store=None) -> dict:
     store = _store(store)
     if str(_setting(store, "claude_portal_enabled", "") or "").strip() == "1":
         raise PortalError("bad_request", "지금은 전체 공개 상태입니다")
+    _write_member(store, cid, on)
+    ensure_schema(store)
+    with _tx(store, write=True) as c:   # 관리자 결정이 무료 기한보다 앞선다(관제 300)
+        c.execute("UPDATE claude_trials SET converted=1 WHERE cid=?", (int(cid),))
+    return {"ok": True, "on": bool(on)}
+
+
+def _write_member(store, cid, on):
     ids = member_ids(store)
     (ids.add if on else ids.discard)(int(cid))
     # 끝의 쉼표는 필수 — 회원 1번 하나만 남으면 값이 "1"(전체 공개)이 된다(11-01 시험에서 잡음)
     store.set_setting("claude_portal_enabled", "".join(f"{x}," for x in sorted(ids)) or "admin")
-    return {"ok": True, "on": bool(on)}
 
 
 def set_revoked(cid, revoked=True, store=None) -> dict:
