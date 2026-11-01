@@ -28,7 +28,7 @@ import { anyRunning } from './runner.js';  // 받은 즉시 엔진까지 적용(
 import { startUi, openBrowser } from './local_ui.js';
 import { startBridge, importMakerKeys } from './web_bridge.js';
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
-import { readSettings, packFor, savePack, select as selectPreset, PID_RE } from './local_settings.js';
+import { readSettings, setRequest, packFor, savePack, select as selectPreset, PID_RE } from './local_settings.js';
 import { cleanupCandidates, showCandidates, removeCandidates } from './disk.js';
 
 // 멈춤을 고객에게 전하는 꼴 한 곳(98 #160 · 10-26 잇템로그 회원 실측: 회원 Claude 가 칸 이름 그대로 '**why:** … **fix:** …' 라고 영어로 보였다)
@@ -263,13 +263,14 @@ export function buildServer(ctx = makeCtx()) {
     try {
       if (action === 'done') {
         if (!id || !state) return reply({ hints: ['id 와 state 를 같이 주세요'] });
+        if (String(id).startsWith('l_')) { const q = setRequest(id, state, note); return reply({ info: { id, state: q && q.state } }); }
         const r = await api.studioRequest({ id, state, note: note || '' });
         return reply({ info: { id, state: r.request && r.request.state } });
       }
-      const r = await api.studioGet();
-      const open = ((r.settings || {}).requests || []).filter(q => q.state === '대기' || q.state === '처리 중');
+      const r = await api.studioGet().catch(() => ({}));
+      const open = [...((r.settings || {}).requests || []), ...(readSettings().requests || [])].filter(q => q.state === '대기' || q.state === '처리 중');
       return reply({ info: { count: open.length, requests: open.map(q => ({ id: q.id, at: q.at, state: q.state, target: q.target, text: q.text })) },
-        hints: open.length ? ['하나씩 처리하고 shortem_inbox(action="done") 으로 알리세요'] : ['새 지시가 없습니다'] });
+        hints: open.length ? ['하나씩 처리하세요. 겉모습 지시는 shortem_settings(action="set", patch) — 자막 색 text.caption_color(#RRGGBB)·자막 위치 text.caption_dy(px, 위로 음수)·자막 글꼴 text.caption_font·제목 text.title_*·바탕 brand.colors.bg — 로 값을 바꾸고 shortem_make(step="restyle") 로 다시 만든 뒤 shortem_inbox(action="done") 으로 알리세요'] : ['새 지시가 없습니다'] });
     } catch (e) {
       return reply({ fail: { where: '웹 지시함', why: (e && e.msg) || '서버에 연결하지 못했습니다', fix: '잠시 뒤 다시 부르세요', retry_ok: true } });
     }

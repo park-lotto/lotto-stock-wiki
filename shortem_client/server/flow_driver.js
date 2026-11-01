@@ -138,7 +138,7 @@ async function runWithPreset(f) {
   try { const pk = f.preset ? await packFor(f.preset) : null; textMode = String((pk && pk.text && pk.text.orig_text) || ''); } catch { /* 설정 못 읽음 = 판 칸 그대로 */ }
   try {
     const member = PID_RE.test(String(f.preset || '')) ? { SHORTEM_MEMBER_PACK: await packFile(f.preset) } : {};   // 꾸미기 값 → 렌더(엔진 styles.member_frame)
-    return await runOps(job, f.do || [], { env: { ...member, ...(/^(vmake|blur)$/.test(textMode) ? { SHORTEM_TEXT_MODE: textMode } : {}) } }); }
+    return await runOps(job, f.do || [], { env: { ...member, ...(f.restyling ? { SHORTEM_RESTYLE: '1' } : {}), ...(/^(vmake|blur)$/.test(textMode) ? { SHORTEM_TEXT_MODE: textMode } : {}) } }); }
   finally { if (rental) await rental.release(); }
 }
 
@@ -198,6 +198,23 @@ export async function reviseFlow(sid, text) {
   } finally { f.busy = false; }
   f.running = pump(f);
   return f;
+}
+
+// 완성본 다시 만들기 — 대본·재료는 그대로, 지금 회원 설정으로 렌더만 다시(주인 = 실행기 render, 프리셋 빌림·회원 값은 runWithPreset 그대로)
+export async function restyleFlow(sid) {
+  const f = loadFlow(sid);
+  if (!f) return { error: '이 편 기록이 없습니다' };
+  if (f.busy) return { error: '지금 만드는 중입니다' };
+  const job = path.join(flowRoot(), f.sid, 'job');
+  const v = fs.readdirSync(job).find(n => fs.existsSync(path.join(job, n, 'render', 'final.mp4')));
+  if (!v) return { error: '다시 만들 재료가 없습니다' };
+  f.do = [{ id: 'restyle', cmd: 'render', version: v }];
+  f.restyling = true;
+  const m = await runWithPreset(f).finally(() => { f.restyling = false; });
+  const r = m.restyle || Object.values(m)[0] || {};
+  if (r.error || r.ok === false) return { error: String(r.error || '다시 만들지 못했습니다').slice(0, 300) };
+  if (f.video) fs.copyFileSync(path.join(job, v, 'render', 'final.mp4'), f.video);
+  return { ok: true, video: f.video };
 }
 
 export function approveFlow(sid) { const f = loadFlow(sid); if (!f) return null; f.approved = true; save(f); f.running = pump(f); return f; }

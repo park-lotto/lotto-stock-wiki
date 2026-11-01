@@ -369,7 +369,7 @@ def validate_snapshot(value):
         raise ValueError("원본 자막 표시가 올바르지 않습니다")
     if value.get("frameRule") not in (None, *FRAME_RULES):
         raise ValueError("장면 틀 규칙이 올바르지 않습니다")
-    allowed = {"version", "customFrame", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionEnter", "captionPack", "motionPack", "fxPreset", "wordFx", "fontSet", "fontSets", "fontPick", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "sceneTexts", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"captionOverride", "version", "customFrame", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionEnter", "captionPack", "motionPack", "fxPreset", "wordFx", "fontSet", "fontSets", "fontPick", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "sceneTexts", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 

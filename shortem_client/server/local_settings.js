@@ -91,6 +91,25 @@ export async function syncFromServer({ force = false } = {}) {
   return { ok: true };
 }
 
+// 완성본 고치기 지시함(이 PC) — Claude 는 shortem_inbox 로 읽고 처리한다
+export function addRequest(target, text) {
+  const t = String(text || '').trim().slice(0, 4000);
+  if (!t || !target || typeof target !== 'object') return { ok: false, error: '지시 내용을 받지 못했습니다' };
+  const s = readSettings();
+  const q = { id: `l_${Date.now().toString(36)}`, at: Date.now(), state: '대기', target, text: t };
+  s.requests = [...(s.requests || []), q].slice(-100);
+  writeSettings(s);
+  return { ok: true, request: q };
+}
+export function setRequest(id, state, note) {
+  const s = readSettings();
+  const q = (s.requests || []).find(x => x.id === id);
+  if (!q) return null;
+  q.state = state; q.note = String(note || '').slice(0, 1000);
+  writeSettings(s);
+  return q;
+}
+
 // 그림 로고 저장 — packs 옆 logos/<pid>.png (렌더는 styles.member_frame 이 같은 자리를 읽는다)
 export function saveLogo(pid, dataUrl) {
   const m = /^data:image\/png;base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ''));

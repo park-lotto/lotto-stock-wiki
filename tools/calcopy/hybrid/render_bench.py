@@ -3043,7 +3043,8 @@ def snapshot(st: dict) -> dict:
     return scene_style.validate_snapshot({"version": 1, "mode": "story", "plainCaption": 2, "presetId": "plain", "sceneIndex": 0, "frameKind": "body",
                                           "frameRule": "body_all", "text": {"channel": "", "hook1": "", "hook2": "", "bodyTitle": ""},
                                           "captionPack": fields["captionPack"], "motionPack": fields["motionPack"],
-                                          "wordFx": {"style": "mark", "color": "", "grow": ""}})
+                                          "wordFx": {"style": "mark", "color": "", "grow": ""},
+                                          **({"captionOverride": st["member_caption"]} if st.get("member_caption") else {})})
 
 
 def motion_graphics(st: dict, T: dict) -> dict | None:
@@ -3749,7 +3750,10 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         _g = timeline_gates(T, M, st, doc, R, log, plan=False)
         if M.pop("_blur_added", 0):      # 지시서가 계획 없이 재료를 다시 써 렌더로 온 길(flow save_m → render) — 흐림 칸을 여기서 넣고 같은 파일에
             jsave(doc / "재료.json", M)
-        gate_stop(_g)      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬 — 영상 굽기 전에 전부 모아 멈춘다(꾸밈은 창 자리 뒤 — GATE_DEPENDS)
+        if __import__("os").environ.get("SHORTEM_RESTYLE"):      # 겉모습만 다시 = 내용 관문은 첫 제작이 통과했다
+            log("[다시 만들기] 내용 관문 생략")
+        else:
+            gate_stop(_g)      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬 — 영상 굽기 전에 전부 모아 멈춘다(꾸밈은 창 자리 뒤 — GATE_DEPENDS)
     win0 = render_window(T, M, st, R)                          # 창(전환 없이) — 자리 검출 화면의 재료
     placed = plan_rows(S, T, st, make_locate(S, T, st, R, win0, log))
     deco_apply(placed, doc, st, log)

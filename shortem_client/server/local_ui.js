@@ -10,12 +10,12 @@ import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { homeDir, workDir, jail } from './paths.js';
 import { engineRoot, engineTool } from './engine_bridge.js';
-import { readSettings, saveLogo, saveLook, packFor, savePack, select, resetPack, catalog, PID_RE, syncFromServer } from './local_settings.js';
+import { readSettings, addRequest, saveLogo, saveLook, packFor, savePack, select, resetPack, catalog, PID_RE, syncFromServer } from './local_settings.js';
 import { rentPreset } from './preset_rent.js';
 import { makeStep } from './make_flow.js';
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
 import { deliverStatus, linkTelegram, confirmTelegram, setDeliver, deliverFinal } from './deliver.js';
-import { keyStatuses, saveKey } from './engine/voice.js';
+import { keyStatuses, saveKey, readKey } from './engine/voice.js';
 import { flowList, flowView, viewFile } from './work_view.js';
 import { importMakerKeys } from './web_bridge.js';
 import { approveFlow, retryFlow } from './flow_driver.js';
@@ -143,6 +143,7 @@ async function route(req, res, token, port) {
     const file = viewFile(kind, sid, rest.map(decodeURIComponent).join('/'));
     return file ? serveFile(req, res, file, /\.png$/i.test(file) ? 'image/png' : 'image/jpeg') : send(res, 404, { error: '없음' });
   }
+  if (req.method === 'GET' && /^\/api\/(typecast\/voices|typecast\/voices\/mine|fish\/voices|voice-library\/search|voice-presets)$/.test(u.pathname)) return send(res, 200, await voiceList(u));
   if (!u.pathname.startsWith('/api/')) return send(res, 404, { error: '없음' });
   if (req.method === 'POST' && req.headers['x-shortem-ui'] !== '1') return send(res, 403, { error: '화면에서만 바꿀 수 있습니다' });
   if (u.pathname === '/api/state' && req.method === 'GET') {
@@ -153,7 +154,7 @@ async function route(req, res, token, port) {
     let cat = null, pack = null, err = null;
     try { cat = await catalog(); pack = cur ? await packFor(cur) : null; } catch (e) { err = String(e.message || e); }
     const changed = cur ? ((s.channels[cur] || {}).pack || {}) : {};
-    return send(res, 200, { presets: list, current: cur, pack, changed, catalog: cat && { ...cat, default_pack: undefined, preset_defaults: undefined }, videos: videos(), error: err, logins: loginStatus(), deliver: deliverStatus(), keys: keyStatuses(),
+    return send(res, 200, { presets: list, current: cur, pack, changed, catalog: cat && { ...cat, default_pack: undefined, preset_defaults: undefined }, videos: videos(), error: err, requests: s.requests || [], logins: loginStatus(), deliver: deliverStatus(), keys: keyStatuses(),
       stamp: (s.channels[cur] || {}).updated || 0 });
   }
   if (u.pathname === '/api/flows' && req.method === 'GET') return send(res, 200, { flows: flowList() });
@@ -168,6 +169,7 @@ async function route(req, res, token, port) {
   if (u.pathname === '/api/select') return send(res, 200, { ok: select(body.preset) });
   if (u.pathname === '/api/save') return send(res, 200, await savePack(body.preset, body.patch));
   if (u.pathname === '/api/reset') { if (PID_RE.test(String(body.preset || ''))) resetPack(body.preset); return send(res, 200, { ok: true }); }
+  if (u.pathname === '/api/ask') return send(res, 200, addRequest(body.target, body.text));
   if (u.pathname === '/api/logo') return send(res, 200, saveLogo(body.preset, body.data));
   if (u.pathname === '/api/look') return send(res, 200, await saveLook(body.preset, body.snapshot));
   if (u.pathname === '/api/preview') return send(res, 200, await preview(body));
@@ -191,6 +193,31 @@ async function route(req, res, token, port) {
       : { error: (o.fail && o.fail.why) || (o.hints || []).join(' ') || '다시 만들지 못했습니다' });
   }
   return send(res, 404, { error: '없음' });
+}
+
+// 성우 찾기 — 회원 키로 각 회사 목록을 직접 받는다(키는 이 PC 밖 숏템 서버로 안 나간다). 답 모양 = 서버 화면과 같은 {ok,voices,total,error}
+async function voiceList(u) {
+  const q = (u.searchParams.get('q') || '').toLowerCase(), p = u.pathname;
+  const go = async (url, headers) => { const r = await fetch(url, { headers, signal: AbortSignal.timeout(20000) }); if (!r.ok) throw new Error(`목록을 못 받았습니다(${r.status})`); return r.json(); };
+  const need = svc => readKey(svc) || null;
+  try {
+    if (p === '/api/voice-presets') { const b = process.env.SHORTEM_BASE || 'https://shoppingshorts.duckdns.org'; return await go(`${b}/api/voice-presets?lang=KR`, {}); }
+    if (p.startsWith('/api/typecast')) {
+      const key = need('typecast'); if (!key) return { ok: false, voices: [], error: '타입캐스트 키를 설정에서 넣어 주세요' };
+      const d = await go('https://api.typecast.ai/v2/voices', { 'X-API-KEY': key });
+      const all = (Array.isArray(d) ? d : d.voices || d.result || []).map(v => ({ voice_id: v.voice_id, name: v.voice_name || v.name, gender: v.gender, age: v.age, model: (v.models && v.models[0] && (v.models[0].version || v.models[0])) || v.model, emotions: (v.models && v.models[0] && v.models[0].emotions) || v.emotions || [], tags: v.use_cases || [] }));
+      const hit = all.filter(v => (p.endsWith('/mine') ? String(v.voice_id).startsWith('uc_') : true) && String(v.name).toLowerCase().includes(q));
+      return { ok: true, voices: hit.slice(0, 60), total: all.length, error: null };
+    }
+    if (p === '/api/fish/voices') {
+      const key = need('fish'); if (!key) return { ok: false, voices: [], error: '피쉬오디오 키를 설정에서 넣어 주세요' };
+      const d = await go(`https://api.fish.audio/model?page_size=30&language=ko&title=${encodeURIComponent(q)}`, { Authorization: `Bearer ${key}` });
+      return { ok: true, voices: (d.items || []).map(v => ({ voice_id: v._id, name: v.title, tags: v.tags || [], sample_url: (v.samples && v.samples[0] && v.samples[0].audio) || '' })), total: d.total || 0, error: null };
+    }
+    const key = need('elevenlabs'); if (!key) return { ok: false, voices: [], error: '일레븐랩스 키를 설정에서 넣어 주세요' };
+    const d = await go(`https://api.elevenlabs.io/v1/shared-voices?page_size=30&language=ko&search=${encodeURIComponent(q)}`, { 'xi-api-key': key });
+    return { ok: true, voices: (d.voices || []).map(v => ({ voice_id: v.voice_id, name: v.name, gender: v.gender, age: v.age, tags: [v.use_case].filter(Boolean), sample_url: v.preview_url })), total: (d.voices || []).length, error: null };
+  } catch (e) { return { ok: false, voices: [], error: String(e.message || e) }; }
 }
 
 export async function startUi() {
