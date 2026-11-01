@@ -77,8 +77,13 @@ export function serveFile(req, res, file, type) {
   fs.createReadStream(file).pipe(res);
 }
 
+let previewGen = 0;
 async function preview({ preset, patch, video }) {
   if (!PID_RE.test(String(preset || ''))) return { error: '프리셋을 고르세요' };
+  // 프리셋을 연달아 눌러도 마지막 것만 서버에서 받는다(누를 때마다 임대·받기 = 서버 속도 제한) — 화면은 마지막 요청만 쓴다
+  const gen = ++previewGen;
+  await new Promise(r => setTimeout(r, 350));
+  if (gen !== previewGen) return { error: '다른 프리셋을 그리는 중입니다' };
   let presetPath = process.env.SHORTEM_DEV_PRESET || null;
   if (!presetPath) {
     try { presetPath = (await rentPreset({ engineRoot: engineRoot(), presetId: preset, kind: 'ui' })).presetPath; }

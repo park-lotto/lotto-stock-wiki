@@ -722,7 +722,8 @@ def lease(ctx: dict, body: dict, store=None) -> dict:
         raise PortalError("bad_request", "단계 이름이 목록에 없습니다")
     if action == "acquire" and not _JOB_RE.match(job_id):
         raise PortalError("bad_request", "job_id 가 올바르지 않습니다")
-    cid, _, dev = _front(store, ctx, "lease")
+    # 반납은 속도 제한에 막히면 안 된다 — 막히면 임대가 3분 남아 다음 일이 줄줄이 busy 가 된다
+    cid, _, dev = _front(store, ctx, "lease_release" if action == "release" else "lease")
     fh = dev["fp_hash"]
     now = _now()
     busy = None
@@ -739,6 +740,14 @@ def lease(ctx: dict, body: dict, store=None) -> dict:
                           (now + LEASE_TTL, step, cid))
                 _lease_log(c, cid, fh, "acquire", job_id, cur["lease_id"], step, "renew")
                 out = {"ok": True, "lease_id": cur["lease_id"], "ttl": LEASE_TTL, "heartbeat_every": HEARTBEAT_EVERY}
+            elif cur and cur["fp_hash"] == fh and str(cur["job_id"]).startswith("u"):
+                # 같은 기기의 미리보기 임대(job u…)는 새 일에 자리를 내준다 — 반납을 못 한 채 끊긴 것까지 3분 막지 않는다
+                _lease_log(c, cid, fh, "release", cur["job_id"], cur["lease_id"], cur["step_name"], "takeover")
+                lid = "ls_" + secrets.token_hex(8)
+                c.execute("UPDATE claude_leases SET lease_id=?, job_id=?, step_name=?, acquired=?, expires=? WHERE cid=?",
+                          (lid, job_id, step, now, now + LEASE_TTL, cid))
+                _lease_log(c, cid, fh, "acquire", job_id, lid, step, "ok")
+                out = {"ok": True, "lease_id": lid, "ttl": LEASE_TTL, "heartbeat_every": HEARTBEAT_EVERY}
             elif cur:
                 busy = cur
                 _lease_log(c, cid, fh, "acquire", job_id, None, step, "busy")
@@ -1163,7 +1172,7 @@ def anomaly_check(cid, event: dict, store=None) -> dict:
             else:
                 m1 = _count(c, cid, "request", now - 59)
                 h1 = _count(c, cid, "request", now - 3599)
-                if m1 > t["a4_per_min"] or h1 > t["a4_per_hour"]:
+                if route != "lease_release" and (m1 > t["a4_per_min"] or h1 > t["a4_per_hour"]):
                     if not _alerts_since(c, cid, "A4", now - 60):
                         alerts.append(_raise_alert(c, cid, "A4", "throttle", m1 if m1 > t["a4_per_min"] else h1,
                                                    f"분당 {m1} · 시간당 {h1}"))
