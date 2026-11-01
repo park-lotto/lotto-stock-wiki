@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import re
 
 
 import shutil
@@ -168,6 +169,25 @@ def spans_from(d1: list, p99: list, min_sec: float = FREEZE_SEC) -> list:
         else:
             merged.append((a, b))
     return merged
+
+
+def flat_frames(video: Path, skip: int = 2, min_run: int = 3) -> list:
+    """완성본 자체에서 화면 전체가 하얗거나 까만 구간(min_run 프레임 이상) — 계획이 아니라 결과물을 잰다. skip = 맨 앞 썸네일 카드."""
+    import numpy as np
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vf", "scale=32:56,format=gray", "-f", "rawvideo", "-"], capture_output=True, check=True).stdout
+    fr = np.frombuffer(raw, np.uint8).reshape(-1, 56, 32)
+    flags = (fr.mean((1, 2)) > 235) | (fr.mean((1, 2)) < 12)
+    flags[:skip] = False
+    return [(round(a / FPS, 2), round(b / FPS, 2)) for a, b in _runs(flags.tolist(), min_run)]
+
+
+def audio_gaps(video: Path, min_sec: float = 1.0, db: int = -45) -> list:
+    """완성본 소리가 끊긴 구간 — 나레 파일이 아니라 나간 소리를 잰다(마지막 1초는 끝맺음이라 뺀다)."""
+    err = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(video), "-vn", "-af", f"silencedetect=n={db}dB:d={min_sec}", "-f", "null", "-"], capture_output=True, text=True, encoding="utf8", errors="replace").stderr
+    st = [float(x) for x in re.findall(r"silence_start: ([\d.]+)", err)]
+    en = [float(x) for x in re.findall(r"silence_end: ([\d.]+)", err)]
+    end = vdur(video)
+    return [(round(a, 2), round(b, 2)) for a, b in zip(st, en + [end]) if a < end - 1.0]
 
 
 def fps_of(p) -> float:
@@ -724,6 +744,8 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
         row("화면", "0초·첫 줄 얼굴", face, "thumb.face_check")
         row("화면", "컷 조각 프레임 = 계획", lambda: (lambda b: (not b, "전부 같음" if not b else str(b)))(part_frames(R, T)), "parts/c*.mp4")
         row("화면", "화면 멈춤 없음", lambda: (lambda z: (not z, "0건" if not z else " ".join(f"{a}~{b}s" for a, b in z)))(freezes(final, win)), "창 안 프레임 차")
+        row("화면", "흰·검은 화면 없음(완성본 실측)", lambda: (lambda z: (not z, "0건" if not z else str(z[:6])))(flat_frames(final)), "quality_gate.flat_frames")
+        row("소리", "소리 끊김 없음(완성본 실측 1초↑)", lambda: (lambda z: (not z, "0건" if not z else str(z[:6])))(audio_gaps(final)), "quality_gate.audio_gaps")
         row("화면", "컷 끝 번쩍임 없음(0.2초 안 장면 경계)",
              lambda: (lambda s: (not s, "0건" if not s else str(s)))(part_slivers(R, T, Path(jload(doc / "재료.json")["cand_dir"]))), "render_bench.shot_starts")
 
