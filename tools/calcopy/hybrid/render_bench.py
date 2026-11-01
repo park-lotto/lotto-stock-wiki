@@ -883,6 +883,15 @@ def _seg_time(v, S: dict, T: dict) -> float:
 SEG_CAPTIONS = ("show", "hide")
 
 
+def hook_text_fits(text: str, F: dict) -> bool:
+    """훅 카드 띠에 글이 판이 정한 글자 크기 그대로 한 줄에 드는가(판단 주인 = 이 함수, 부르는 곳 = frame_segments)."""
+    from PIL import ImageFont
+    tx = ((F.get("post") or {}).get("body_box") or {}).get("text") or {}
+    if not tx.get("font") or not tx.get("px") or not tx.get("max_w"):
+        return True
+    return ImageFont.truetype(str(FONTS / tx["font"]), round(float(tx["px"]))).getlength(text) <= float(tx["max_w"])
+
+
 def frame_segments(S: dict, T: dict, st: dict) -> list[dict]:
     """시간 구간별 틀(관제 263 02 2차 ①) — 판 칸 frame.segments[{t0, t1, frame{…덮을 칸}, captions show|hide, body_text lines|null, why}].
     구간 밖은 판 frame 그대로, 구간 안은 frame 에 구간 frame 을 깊게 덮은 틀(kind·window·title… 전부 바꿀 수 있다 — 훅 카드 → 본문 틀, A/B 하이브리드).
@@ -916,6 +925,9 @@ def frame_segments(S: dict, T: dict, st: dict) -> list[dict]:
                             if L["kind"] != "orig" and t0 - 1e-3 <= T["lines"][L["id"]][0] < t1 - 1e-3)
         elif bt is not None:
             raise StageError(f"frame.segments[{i}].body_text '{bt}' 모름 — lines 또는 비움")
+        if text and sg.get("long") and not hook_text_fits(text, Fi):   # 벤치보다 긴 첫 줄 = 통문장 띠가 깨알 → 판이 정한 자막형 틀로(11-01 병렬 3편 E4×)
+            Fi = ST._merge(Fi, sg["long"].get("frame") or {})
+            cap, text = "show", None
         out.append({"i": i, "t0": t0, "t1": t1, "frame": Fi, "kind": frame_kind(Fi), "window": frame_window(Fi), "captions": cap,
                     "body_text": text, "why": sg.get("why")})
     out.sort(key=lambda g: g["t0"])

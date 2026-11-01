@@ -283,7 +283,47 @@
     },
     "captions": "hide",
     "body_text": "lines",
-    "why": "훅 카드(0~2초, manifest.roles[0] — 첫 컷 1.83~2.2초 8편) = 첫 나레 문장 → 본문 게시글 틀 · 틀 = frame.json hook(NBdm, 8편 중앙: 바탕 97·머리띠 자리 #565D50·큰 제목 2줄 GmarketSans 113.6 흰/연두 #84FD46 외곽 3+그림자 6·흰 띠 y533~640 Pretendard-SemiBold 59.6 같은 문장) · 제목 가운데 208/334→198/324(NBdm 0.5초 잉크 y0 +10 보정)"
+    "why": "훅 카드(0~2초, manifest.roles[0] — 첫 컷 1.83~2.2초 8편) = 첫 나레 문장 → 본문 게시글 틀 · 틀 = frame.json hook(NBdm, 8편 중앙: 바탕 97·머리띠 자리 #565D50·큰 제목 2줄 GmarketSans 113.6 흰/연두 #84FD46 외곽 3+그림자 6·흰 띠 y533~640 Pretendard-SemiBold 59.6 같은 문장) · 제목 가운데 208/334→198/324(NBdm 0.5초 잉크 y0 +10 보정)",
+    "long": {
+     "frame": {
+      "post": {
+       "body_box": {
+        "box": [
+         0,
+         492,
+         1080,
+         640
+        ],
+        "color": "#FDFDFD",
+        "fade": [
+         0,
+         0
+        ]
+       },
+       "rules": [
+        {
+         "box": [
+          0,
+          707,
+          1080,
+          733
+         ],
+         "color": "#CDCDCD"
+        },
+        {
+         "box": [
+          0,
+          733,
+          1080,
+          748
+         ],
+         "color": "#343434"
+        }
+       ]
+      }
+     },
+     "why": "첫 줄이 칸을 넘을 때만 자막형 — frame_segments/hook_text_fits"
+    }
    }
   ]
  },
