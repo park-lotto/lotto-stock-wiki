@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-"""소재 후보 판정(Jev) — 소재발굴가이드.md 5절 점검표를 점수로 재서 종합 점수순 표를 낸다.
-    C:\\Users\\CH\\jev-lab\\.venv\\Scripts\\python.exe tools/calcopy/longform/jev_screen.py <후보폴더|파일...> [--channel "이름"]
+"""소재 후보 판정(Jev) — 지침/소재.md 조건를 점수로 재서 종합 점수순 표를 낸다.
+    python -X utf8 jev_screen.py <후보폴더|파일...> [--channel "이름"]
 후보 = 소재 하나당 txt 한 파일. 60점 이상 통과, 40~59 보류(사람 판단), 그 아래 탈락.
-원본 프리셋의 jev-screen.ps1 은 받지 못해 가이드의 조건으로 다시 만든 것이다(질문 문구는 원본과 다를 수 있다).
 """
 import glob
 import os
@@ -10,15 +9,14 @@ import sys
 from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-for line in Path(r"C:\Users\CH\jev-lab\.env").read_text(encoding="utf-8").splitlines():
-    if "=" in line and not line.startswith("#"):
-        k, v = line.split("=", 1)
-        os.environ.setdefault(k.strip(), v.strip())
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import keys
+os.environ.setdefault("TYPESAFE_API_KEY", keys.get("typesafe"))
 
 from typesafe_sdk import Noul, Score, TypeSafeClient
 
 N_LEVELS = 4
-WEIGHTS = {  # 가이드 5절 항목. 합 1.0
+WEIGHTS = {  # 합 1.0
     "myth": 0.25, "chapters": 0.20, "sources": 0.20, "relevance": 0.20, "fresh": 0.15,
 }
 CONF_MIN = 0.35   # 이보다 낮은 항목이 있으면 점수가 높아도 사람 판단으로 넘긴다(Jev 확신도)
@@ -63,7 +61,7 @@ def judge(client, name, text, channel, today):
 
 def main():
     args = sys.argv[1:]
-    channel = "지식한입 롱폼(시사·경제 해설)"
+    channel = "시사·경제 해설 롱폼"
     if "--channel" in args:
         i = args.index("--channel"); channel = args[i + 1]; del args[i:i + 2]
     files = []

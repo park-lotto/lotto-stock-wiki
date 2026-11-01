@@ -1,14 +1,15 @@
 # 실사 영상 받기 — shots.py 의 stock 샷(q)과 배경(bg_q)을 assets/stock/sNNN.mp4 로 저장
-# 순서: Pixabay(키 ~/.volcano/keys/pixabay 또는 PIXABAY_API_KEY) → Wikimedia Commons(키 불필요, CC BY 류는 설명란 표기 필수)
+# 순서: Pixabay(키는 keys.py) → Wikimedia Commons(키 불필요, CC BY 류는 설명란 표기 필수)
 # Pexels 는 2026-11 새 키 발급이 중단돼 뺐다. 출처는 assets/stock/credits.md 에 쌓인다.
 # 사용: 작업 폴더에서 python -X utf8 <경로>/stock.py [--force]   (LONGFORM_WORK 로 작업 폴더 지정 가능)
 import importlib.util, json, os, re, subprocess, sys, urllib.parse, urllib.request
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 WORK = os.path.abspath(os.environ.get("LONGFORM_WORK") or os.getcwd())
 OUT = os.path.join(WORK, "assets", "stock"); os.makedirs(OUT, exist_ok=True)
-UA = "Mozilla/5.0 (longform-preset; contact parklotto12@gmail.com)"
-keyfile = os.path.expanduser("~/.volcano/keys/pixabay")
-PIXABAY = os.environ.get("PIXABAY_API_KEY") or (open(keyfile, encoding="utf-8").read().strip() if os.path.exists(keyfile) else "")
+UA = "Mozilla/5.0 (shorcl-longform)"
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import keys
+PIXABAY = keys.get("pixabay")
 MIN_W, MIN_SEC, MAX_MB = 1280, 5, 250
 BAD_LICENSE = re.compile(r"\bNC\b|\bND\b|fair use", re.I)
 used = set()

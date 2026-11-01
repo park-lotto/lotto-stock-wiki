@@ -1,23 +1,18 @@
 # 시작 검수 — 제작 전에 필요한 도구·키·재료를 한 번에 확인한다. 전부 통과해야 시작한다.
 # 사용: python -X utf8 preflight.py [--json]
-# 키는 고객 것을 쓴다: 환경변수 → ~/.shortem/keys/<이름> → ~/.volcano/keys/<이름>(이 PC 시험용). 값은 출력하지 않는다.
-import importlib.util, json, os, shutil, subprocess, sys, urllib.error, urllib.request
+# 키는 고객 것을 쓴다(keys.py). 값은 출력하지 않는다.
+import hashlib, importlib.util, json, os, shutil, subprocess, sys, urllib.error, urllib.request
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 HERE = os.path.dirname(os.path.abspath(__file__))
 WORK = os.path.abspath(os.environ.get("LONGFORM_WORK") or os.getcwd())
 MIN_GB = 10
 PY_MODS = ["PIL", "numpy", "scipy"]
-ENV = {"typecast": "TYPECAST_API_KEY", "pixabay": "PIXABAY_API_KEY", "gemini": "GEMINI_API_KEY", "typesafe": "TYPESAFE_API_KEY"}
+sys.path.insert(0, HERE)
+import keys
 
 
-def key(name):
-    v = os.environ.get(ENV[name], "").strip()
-    if v: return v
-    for d in ("~/.shortem/keys", "~/.volcano/keys"):
-        p = os.path.expanduser(f"{d}/{name}")
-        if os.path.exists(p): return open(p, encoding="utf-8").read().strip()
-    return ""
+key = keys.get
 
 
 def http(url, headers=None):
@@ -55,7 +50,7 @@ def ck_disk():
 
 def ck_assets():
     miss = [p for p in ("fonts/Pretendard-Bold.otf", "fonts/GmarketSansBold.otf", "fonts/BlackHanSans-Regular.ttf", "media/bgm/Bass_Walker.mp3",
-                        "media/bgm/Thinking_Music.mp3", "media/bgm/Local_Forecast.mp3", "media/bgm/Pamgaea.mp3", "media/sfx_b/pop_appear.mp3")
+                        "media/bgm/Thinking_Music.mp3", "media/bgm/Local_Forecast.mp3", "media/bgm/Pamgaea.mp3", "media/sfx/pop_appear.mp3")
             if not os.path.exists(os.path.join(HERE, p))]
     return (not miss, "글꼴·음악 준비됨" if not miss else f"글꼴·음악 {len(miss)}개가 없습니다", "프리셋 꾸러미를 다시 받아 주세요")
 
@@ -77,15 +72,31 @@ def ck_pixabay():
 
 
 def ck_gemini():
+    """그림 1장을 실제로 만들어 본다. 결제 없는 키는 목록 조회는 되고 그림만 429 로 막힌다. 약 50원, 키마다 한 번만."""
     k = key("gemini")
     if not k: return False, "그림 키가 없습니다", "내 채널 설정에 제미나이 키를 넣어 주세요"
-    st, _ = http(f"https://generativelanguage.googleapis.com/v1beta/models?key={k}&pageSize=1")
-    return (st == 200, "그림 키 연결됨(한도는 제작 때 확인)" if st == 200 else "그림 키를 쓸 수 없습니다", "제미나이 키를 다시 확인해 주세요")
+    mark = os.path.expanduser("~/.shortem/image_ok_" + hashlib.sha256(k.encode()).hexdigest()[:12])
+    if os.path.exists(mark): return True, "그림 만들기 확인됨", ""
+    if "--no-paid" in sys.argv: return False, "그림 만들기 확인 전입니다(약 50원)", "--no-paid 없이 다시 실행해 주세요"
+    model = os.environ.get("LONGFORM_IMAGE_MODEL") or "gemini-3.1-flash-lite-image"
+    body = {"contents": [{"parts": [{"text": "A quiet street, photo"}]}], "generationConfig": {"responseModalities": ["IMAGE"]}}
+    req = urllib.request.Request(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent", data=json.dumps(body).encode(),
+                                 headers={"x-goog-api-key": k, "Content-Type": "application/json"}, method="POST")
+    try:
+        urllib.request.urlopen(req, timeout=90).read()
+    except urllib.error.HTTPError as e:
+        if e.code == 429: return False, "그림 사용량이 없는 키입니다", "구글 AI 스튜디오에서 결제를 등록해 주세요"
+        return False, "그림 키를 쓸 수 없습니다", "제미나이 키를 다시 확인해 주세요"
+    open(mark, "w").close()
+    return True, "그림 만들기 확인됨", ""
 
 
 def ck_typesafe():
-    if key("typesafe"): return True, "소재 판정 키 있음(호출 확인은 안 함)", ""
-    return False, "소재 판정 키가 없습니다", "내 채널 설정에 TypeSafe 키를 넣어 주세요"
+    k = key("typesafe")
+    if not k: return False, "소재 판정 키가 없습니다", "내 채널 설정에 TypeSafe 키를 넣어 주세요"
+    st, _ = http("https://api.typesafe.ai/v1/models", {"Authorization": "Bearer " + k, "User-Agent": "Mozilla/5.0"})
+    if st == 401: return False, "소재 판정 키를 쓸 수 없습니다", "TypeSafe 키를 다시 확인해 주세요"
+    return True, "소재 판정 키 있음", ""
 
 
 CHECKS = [("영상 도구", ck_ffmpeg), ("실행 도구", ck_python), ("디스크", ck_disk), ("글꼴·음악", ck_assets), ("목소리", ck_typecast),

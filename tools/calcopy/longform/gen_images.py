@@ -1,45 +1,59 @@
-﻿# shots.py 의 AI 장면을 gpt-image(Codex 내장 이미지 생성)로 만든다.
-# 사용: python -I gen_images.py [ai|stock-fallback] [동시개수]
-import os, sys, subprocess, time, concurrent.futures as cf, importlib.util, glob
+# shots.py 의 AI 장면·실사 대체 그림 → assets/img/sNNN.png
+# 사용: 작업 폴더에서 python -X utf8 <경로>/gen_images.py [동시개수]
+# 고객 제미나이 키를 쓴다. LONGFORM_VERTEX=<프로젝트> 면 그 버텍스 프로젝트로 만든다(gcloud 로그인 필요).
+import concurrent.futures as cf, importlib.util, os, sys, time, warnings
+warnings.filterwarnings("ignore")
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-HERE = os.path.dirname(os.path.abspath(__file__))
-spec = importlib.util.spec_from_file_location("shots", os.path.join(HERE, "shots.py")); sh = importlib.util.module_from_spec(spec); spec.loader.exec_module(sh)
-MODE = sys.argv[1] if len(sys.argv) > 1 else "ai"
-N = int(sys.argv[2]) if len(sys.argv) > 2 else 3
-OUT = os.path.join(HERE, "assets", "img"); os.makedirs(OUT, exist_ok=True)
-STYLE = " Photorealistic documentary photograph, natural lighting, slightly desaturated, 16:9 landscape 1536x864. No text, no letters, no logos, no watermarks in the image."
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import keys
+from google import genai
+from google.genai import types
+
+WORK = os.path.abspath(os.environ.get("LONGFORM_WORK") or os.getcwd())
+OUT = os.path.join(WORK, "assets", "img"); os.makedirs(OUT, exist_ok=True)
+N = int(sys.argv[1]) if len(sys.argv) > 1 else 2
+MODEL = os.environ.get("LONGFORM_IMAGE_MODEL") or "gemini-3.1-flash-lite-image"
+VERTEX = os.environ.get("LONGFORM_VERTEX", "")
+STYLE = " Photorealistic documentary photograph, natural lighting, slightly desaturated. No text, no letters, no logos, no watermarks."
+spec = importlib.util.spec_from_file_location("shots", os.path.join(WORK, "shots.py")); sh = importlib.util.module_from_spec(spec); spec.loader.exec_module(sh)
 
 jobs = []
-for k, s in enumerate(sh.S):
-    if "img" in s: continue  # 다른 샷 그림을 다시 씀
-    if MODE == "ai" and s["type"] == "ai":
-        jobs.append((f"s{s['s'][0]:03d}", s["prompt"]))
-    elif MODE == "stock-fallback":
-        if s["type"] == "stock": jobs.append((f"s{s['s'][0]:03d}", s["ai"]))
-        elif "bg_ai" in s: jobs.append((f"s{s['s'][0]:03d}", s["bg_ai"]))
+for s in sh.S:
+    if "img" in s: continue  # 다른 샷 그림을 다시 쓴다
+    if os.path.exists(os.path.join(WORK, "assets", "stock", f"s{s['s'][0]:03d}.mp4")): continue  # 실사를 받은 칸은 그리지 않는다
+    p = s.get("prompt") or s.get("ai") or s.get("bg_ai")
+    if p: jobs.append((f"s{s['s'][0]:03d}", p))
+if os.environ.get("LONGFORM_IMAGE_REVERSE"): jobs.reverse()   # 다른 모델로 뒤에서부터 같이 채울 때
+client = genai.Client(vertexai=True, project=VERTEX, location="global") if VERTEX else genai.Client(api_key=keys.get("gemini"))
+
 
 def run(job):
     name, prompt = job
     png = os.path.join(OUT, name + ".png")
     if os.path.exists(png): return name, "skip"
-    p = prompt.replace("'", "") + STYLE
-    cmd = ["codex", "exec", "--skip-git-repo-check", "--sandbox", "workspace-write",
-           f"$imagegen 내장 이미지 생성 도구로만 그린다. 코드·SVG·PIL로 그리지 않고 이 작업 외의 파일은 만들거나 고치지 않는다. 그림: {p}. 그림을 한 장 만든 뒤 바로 끝낸다. 파일 복사는 하지 않아도 된다(읽기 전용이어도 괜찮다). 이미지 생성 도구 자체가 아예 없을 때만 마지막 줄에 IMAGEGEN_UNAVAILABLE 을 쓴다."]
-    t0 = time.time()
-    r = subprocess.run(cmd, cwd=OUT, capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, shell=(os.name == "nt"))
-    if os.path.exists(png): return name, f"ok {time.time()-t0:.0f}s"
-    out = (r.stdout or "") + (r.stderr or "")
-    # 이 실행의 세션 폴더에서만 가져온다(동시 실행 때 섞이지 않게)
-    import re, shutil
-    m = re.search(r"session id:\s*([0-9a-f-]{36})", out)
-    if m:
-        gen = sorted(glob.glob(os.path.expanduser(f"~/.codex/generated_images/{m[1]}/*.png")), key=os.path.getmtime)
-        if gen: shutil.copy(gen[-1], png); return name, f"ok(session) {time.time()-t0:.0f}s"
-        return name, "fail: 세션 폴더에 그림 없음 " + m[1]
-    if "IMAGEGEN_UNAVAILABLE" in out: return name, "UNAVAILABLE"
-    return name, "fail: 세션 ID 못 찾음 " + out[-200:]
+    msg = ""
+    for k in range(6):
+        try:
+            t0 = time.time()
+            r = client.models.generate_content(model=MODEL, contents=prompt + STYLE, config=types.GenerateContentConfig(
+                response_modalities=["IMAGE"], image_config=types.ImageConfig(aspect_ratio="16:9")))
+            for part in r.candidates[0].content.parts:
+                if getattr(part, "inline_data", None) and part.inline_data.data:
+                    open(png, "wb").write(part.inline_data.data)
+                    return name, f"ok {time.time() - t0:.0f}s"
+            msg = "빈 답(안전 필터일 수 있음)"
+        except Exception as e:  # noqa: BLE001 — 한도·일시 오류는 잠깐 뒤 다시
+            msg = str(e)[:160]
+            if "429" in msg: time.sleep(30 + k * 15)   # 분당 한도 — 짧게 재시도하면 계속 걸린다
+        time.sleep(3 + k * 5)
+    return name, "fail " + msg
 
+
+print(f"그림 {len(jobs)}장", flush=True)
+bad = 0
 with cf.ThreadPoolExecutor(N) as ex:
     for name, r in ex.map(run, jobs):
-        print(name, r, flush=True)
-
+        if not r.startswith(("ok", "skip")):
+            bad += 1; print(name, r, flush=True)
+print("실패", bad)
+sys.exit(1 if bad else 0)

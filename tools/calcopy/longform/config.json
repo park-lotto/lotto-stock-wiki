@@ -1,119 +1,126 @@
 {
-    "channel_name": "오늘의지식",
-    "logo_brackets": [
-        "《",
-        "》"
-    ],
-    "outro_left": "추천 영상",
-    "outro_right": "최신 영상",
-    "fps_num": 30000,
-    "fps_den": 1001,
-    "width": 1920,
-    "height": 1080,
-    "voice": "타입캐스트 필재 (Piljae, tc_68257f68bc6e3c161ab5078d)",
-    "line_gap": 0.1,
-    "chapter_gap": 0.45,
-    "bumper_main_sec": 2.8,
-    "bumper_short_sec": 1.4,
-    "bumper_short_before": [],
-    "outro_sec": 10.0,
-    "bgm_main": "media/bgm/Cool_Vibes.mp3",
-    "bgm_alt": "media/bgm/Lobby_Time.mp3",
-    "bgm_alt_from_chapter": null,
-    "jingle": "media/bgm/Funky_Chunk.mp3",
-    "jingle_start": 0.0,
-    "outro_music_start": 169.0,
-    "bgm_db": -26.0,
-    "jingle_db": -6.0,
-    "target_lufs": -16.0,
-    "colors": {
-        "sub_box": [
-            0,
-            0,
-            0,
-            184
-        ],
-        "sub_bar": [
-            232,
-            179,
-            42,
-            255
-        ],
-        "paper": [
-            243,
-            243,
-            239
-        ],
-        "blue": [
-            30,
-            108,
-            235
-        ],
-        "blue_light": [
-            184,
-            212,
-            248
-        ],
-        "navy": [
-            27,
-            54,
-            100
-        ],
-        "red": [
-            200,
-            50,
-            50
-        ],
-        "gray": [
-            166,
-            174,
-            183
-        ],
-        "yellow": [
-            255,
-            225,
-            53
-        ],
-        "wine": [
-            201,
-            42,
-            42
-        ],
-        "beige": [
-            239,
-            230,
-            213
-        ],
-        "beige_border": [
-            140,
-            115,
-            75
-        ],
-        "table_head": [
-            29,
-            99,
-            184
-        ],
-        "table_alt": [
-            235,
-            242,
-            250
-        ],
-        "table_hl": [
-            217,
-            232,
-            248
-        ]
-    },
-    "no_capsule": [
-        "훅"
-    ],
-    "para_gap": 0.5,
-    "bgm_rotation": [
-        "media/bgm/Cool_Vibes.mp3",
-        "media/bgm/Groove_Grove.mp3",
-        "media/bgm/Crypto.mp3"
-    ],
-    "bgm_highpass": 150,
-    "output_name": "완성본.mp4"
+ "channel_name": "내 채널",
+ "outro_left": "추천 영상",
+ "outro_right": "최신 영상",
+ "fps_num": 30000,
+ "fps_den": 1001,
+ "width": 1920,
+ "height": 1080,
+ "voice": "Piljae",
+ "line_gap": 0.1,
+ "chapter_gap": 0.45,
+ "bumper_main_sec": 2.8,
+ "bumper_short_sec": 1.4,
+ "bumper_short_before": [],
+ "outro_sec": 10.0,
+ "bgm_main": "media/bgm/Bass_Walker.mp3",
+ "bgm_alt": "media/bgm/Local_Forecast.mp3",
+ "bgm_alt_from_chapter": null,
+ "jingle": "media/bgm/Pamgaea.mp3",
+ "jingle_start": 0.0,
+ "outro_music_start": 0.0,
+ "bgm_db": -26.0,
+ "jingle_db": -6.0,
+ "target_lufs": -16.0,
+ "colors": {
+  "sub_box": [
+   12,
+   16,
+   20,
+   214
+  ],
+  "sub_bar": [
+   18,
+   178,
+   158,
+   255
+  ],
+  "paper": [
+   240,
+   244,
+   243
+  ],
+  "blue": [
+   18,
+   160,
+   142
+  ],
+  "blue_light": [
+   176,
+   232,
+   222
+  ],
+  "navy": [
+   16,
+   58,
+   64
+  ],
+  "red": [
+   200,
+   50,
+   50
+  ],
+  "gray": [
+   166,
+   174,
+   183
+  ],
+  "yellow": [
+   255,
+   214,
+   90
+  ],
+  "wine": [
+   214,
+   74,
+   52
+  ],
+  "beige": [
+   239,
+   230,
+   213
+  ],
+  "beige_border": [
+   140,
+   115,
+   75
+  ],
+  "table_head": [
+   18,
+   120,
+   110
+  ],
+  "table_alt": [
+   232,
+   245,
+   242
+  ],
+  "table_hl": [
+   208,
+   238,
+   232
+  ]
+ },
+ "no_capsule": [
+  "훅"
+ ],
+ "para_gap": 0.5,
+ "bgm_rotation": [
+  "media/bgm/Bass_Walker.mp3",
+  "media/bgm/Thinking_Music.mp3",
+  "media/bgm/Local_Forecast.mp3"
+ ],
+ "bgm_highpass": 150,
+ "output_name": "완성본.mp4",
+ "tempo": 1.2,
+ "font_main": "GmarketSansBold.otf",
+ "photo_motion": "pan",
+ "logo_side": "right",
+ "sfx": {
+  "whoosh": "media/sfx/transition_swipe.mp3",
+  "pop": "media/sfx/pop_appear.mp3",
+  "type": "media/sfx/tick.mp3",
+  "thud": "media/sfx/impact.mp3",
+  "ding": "media/sfx/chime_up.mp3"
+ }
 }
