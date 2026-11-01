@@ -104,6 +104,19 @@ def plan_files(rev: str, src: Path) -> list:
     return files
 
 
+def check_stage(dst: Path) -> None:
+    """묶기 전 무대 검사 — 깨진 이름(한글이 라틴 글자로) · 파이썬 부품 · 효과음 팩 폴더. 하나라도 없으면 내보내지 않는다(1.0.22~23 사고·VMake 부품 누락)."""
+    import re
+    eng = dst / "engine"
+    bad = [str(x.relative_to(dst)) for x in dst.rglob("*") if re.search(r"[À-ÿ]", x.name)]
+    miss = [n for n in ("alibabacloud_oss_v2", "Crypto", "crcmod") if not (eng / "_vendor" / n).is_dir()]
+    packs = eng / "shopping_shorts" / "assets" / "sfx_packs"
+    if not (packs / "팩01").is_dir():
+        miss.append("sfx_packs/팩01")
+    if bad or miss:
+        raise SystemExit(f"[빠른배포] 묶음 검사 실패: 깨진 이름 {bad[:5]} · 없는 부품 {miss}")
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--rev")
@@ -137,6 +150,7 @@ def main(argv=None) -> int:
         p = dst / target(f)
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_bytes(git("show", f"{a.rev}:{f}"))
+    check_stage(dst)
     uz = dst.parent / f"shortem-app-{version}.zip"
     uz.write_bytes(make_zip(dst, version))
     sha = U.sha256(uz)
