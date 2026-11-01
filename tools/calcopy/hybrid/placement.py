@@ -1247,6 +1247,8 @@ def _sfx_allowed(style: dict) -> list[str]:
 
 def _sfx_rate_n(out: list[dict], style: dict, n: int, log: list) -> int:
     """벤치 밀도(B14 p90) 안에 드는 발 수로 줄인다 — 배치가 넣은 것을 검사가 떨어뜨려 대본 길이로 맞추는 되풀이를 막는다(10-31 해외신기템 2발/33.5초 = 0.060 > 0.059 로 2시간)."""
+    if ((style["placement"].get("rules") or {}).get("sfx") or {}).get("over_bench"):   # 판이 벤치보다 많이 넣기로 정했다(납품본 5~8발, 벤치 0발)
+        return n
     from tools.calcopy.engine.kal_analyze import sfx_rate_p90
     p = (style.get("bench") or {}).get("line_reads")
     rd = ROOT / p if p else None

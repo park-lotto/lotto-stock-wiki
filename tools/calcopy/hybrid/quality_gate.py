@@ -844,7 +844,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
         row("자막·효과", "배치(본보기 벤치 편 대조)",
              lambda: (tab["check"]["ok"], f"본보기 {tab['check']['reference']} · 칸 최대 차 {tab['check']['worst_slot_diff']}" + (f" · 걸린 것 {tab['check'].get('bad')}" if tab['check'].get('bad') else "")), "자막표.check = placement.check_place")
         if not legacy:
-            row("자막·효과", "B14 효과음 과다(≤ 벤치 p90)", lambda: sfx_excess(len(tab.get("sfx") or []), float(T["end"]), bench_docs), "자막표.sfx · 줄판독 sfx")
+            row("자막·효과", "B14 효과음 과다(≤ 벤치 p90)", lambda: ((True, "판이 벤치보다 많이 넣기로 정함(over_bench)") if ((st["placement"].get("rules") or {}).get("sfx") or {}).get("over_bench") else sfx_excess(len(tab.get("sfx") or []), float(T["end"]), bench_docs)), "자막표.sfx · 줄판독 sfx")
 
             def deco_row():       # 관제263 10-26 사장님 '키치잇 꾸밈이 우리 편엔 없다'(페이블 E4 가 '같음'으로 놓침) — 판 deco 종류·횟수
                 from tools.calcopy.hybrid import deco as DC
