@@ -7,7 +7,7 @@
 import json, pathlib, shutil, subprocess, pytest
 from shopping_shorts.tests.js_harness import run_js_proc
 
-INDEX_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "index.html"
+INDEX_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "lens_open.js"   # _openUrl 주인(관제 209 에서 옮김)
 NODE = shutil.which("node")
 _START = "function _openUrl("
 

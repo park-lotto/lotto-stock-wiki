@@ -1,0 +1,475 @@
+{
+ "slug": "goodletter",
+ "style": "검정틀_3색팝자막",
+ "made_by": "preset_save v1",
+ "rule": "같은 자리 값이 편마다 기준(숫자 max(4, 3%) · 색 채널 12 · 글·참거짓 같음) 밖이면 $per_video, 제목 글자는 항상 $per_video, --exclude 로 뺀 층은 그 편에서 비교 안 함",
+ "created_at": "2026-10-20T01:30:40+09:00",
+ "sources": [
+  {
+   "id": "j-fB61Yhx5g",
+   "tteutgi": "channel/goodletter/뜯기/j-fB61Yhx5g/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-20 00:41",
+   "frame_tool": "gl_preset.hand",
+   "font": {
+    "top1": null,
+    "top1_score": null,
+    "picked_from": null,
+    "font_confidence": null,
+    "skipped": [],
+    "why": "OCR 글자가 없음"
+   },
+   "font_confidence": null,
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 못 정함: OCR 글자가 없음 — 글자 층 생략",
+    "to_frame --no-ocr(제미나이 금지)라 글자·띠 층은 손으로 — 실측 근거는 gl_preset.py 머리",
+    "자막 강조색(새 틀 호박 #FCB53F 한 색 / 옛 틀 주황·노랑·민트 3색)·P.S. 줄·제품 꼬리표·끝 제품 이름 자막은 스키마 밖 → 판 설정 굿레터판.json + 자막팩_보강안",
+    "자막 등장 = 말 조각마다 팝(약 30%→110~115%@0.1초→100%@0.15~0.18초, 60fps 실측) — 스키마 pop 170ms 로 근사"
+   ],
+   "unknown": [
+    "자막 OCR 일부 실패: ['제미나이 금지(사장님 10-18) — 판독은 클로드 눈', '제미나이 금지(사장님 10-18) — 판독은 클로드 눈']",
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 19개: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]",
+    "자막 글자 못 읽음 20/20개",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: 제미나이 금지(사장님 10-18) — 판독은 클로드 눈; 제미나이 금지(사장님 10-18) — 판독은 클로드 눈",
+    "글꼴: OCR 글자가 없음",
+    "받아쓰기 실패: 제미나이 금지(사장님 10-18) — 판독은 클로드 눈",
+    "소리 구성 실패: 받아쓰기 실패(제미나이 금지(사장님 10-18) — 판독은 클로드 눈)",
+    "sfx_rules: 받아쓰기 실패(제미나이 금지(사장님 10-18) — 판독은 클로드 눈)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(제미나이 금지(사장님 10-18) — 판독은 클로드 눈)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:title].text"
+   ],
+   "caption_style": "원음팝_강조색",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "5dec046f56b5"
+  },
+  {
+   "id": "kfmZ_t4Bbss",
+   "tteutgi": "channel/goodletter/뜯기/kfmZ_t4Bbss/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-20 00:53",
+   "frame_tool": "gl_preset.hand",
+   "font": {
+    "top1": null,
+    "top1_score": null,
+    "picked_from": null,
+    "font_confidence": null,
+    "skipped": [],
+    "why": "OCR 글자가 없음"
+   },
+   "font_confidence": null,
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 못 정함: OCR 글자가 없음 — 글자 층 생략",
+    "to_frame --no-ocr(제미나이 금지)라 글자·띠 층은 손으로 — 실측 근거는 gl_preset.py 머리",
+    "자막 강조색(새 틀 호박 #FCB53F 한 색 / 옛 틀 주황·노랑·민트 3색)·P.S. 줄·제품 꼬리표·끝 제품 이름 자막은 스키마 밖 → 판 설정 굿레터판.json + 자막팩_보강안",
+    "자막 등장 = 말 조각마다 팝(약 30%→110~115%@0.1초→100%@0.15~0.18초, 60fps 실측) — 스키마 pop 170ms 로 근사"
+   ],
+   "unknown": [
+    "자막 OCR 일부 실패: ['제미나이 금지(사장님 10-18) — 판독은 클로드 눈', '제미나이 금지(사장님 10-18) — 판독은 클로드 눈']",
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 7개: [0, 1, 2, 3, 6, 9, 13]",
+    "자막 글자 못 읽음 20/20개",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: 제미나이 금지(사장님 10-18) — 판독은 클로드 눈; 제미나이 금지(사장님 10-18) — 판독은 클로드 눈",
+    "글꼴: OCR 글자가 없음",
+    "받아쓰기 실패: 제미나이 금지(사장님 10-18) — 판독은 클로드 눈",
+    "소리 구성 실패: 받아쓰기 실패(제미나이 금지(사장님 10-18) — 판독은 클로드 눈)",
+    "sfx_rules: 받아쓰기 실패(제미나이 금지(사장님 10-18) — 판독은 클로드 눈)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(제미나이 금지(사장님 10-18) — 판독은 클로드 눈)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:label].text"
+   ],
+   "caption_style": "원음팝_강조색",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "f1badb518825"
+  },
+  {
+   "id": "E6SXj8FdT2s",
+   "tteutgi": "channel/goodletter/뜯기/E6SXj8FdT2s/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-20 00:29",
+   "frame_tool": "gl_preset.hand",
+   "font": {
+    "top1": null,
+    "top1_score": null,
+    "picked_from": null,
+    "font_confidence": null,
+    "skipped": [],
+    "why": "OCR 글자가 없음"
+   },
+   "font_confidence": null,
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 못 정함: OCR 글자가 없음 — 글자 층 생략",
+    "to_frame --no-ocr(제미나이 금지)라 글자·띠 층은 손으로 — 실측 근거는 gl_preset.py 머리",
+    "자막 강조색(새 틀 호박 #FCB53F 한 색 / 옛 틀 주황·노랑·민트 3색)·P.S. 줄·제품 꼬리표·끝 제품 이름 자막은 스키마 밖 → 판 설정 굿레터판.json + 자막팩_보강안",
+    "자막 등장 = 말 조각마다 팝(약 30%→110~115%@0.1초→100%@0.15~0.18초, 60fps 실측) — 스키마 pop 170ms 로 근사"
+   ],
+   "unknown": [
+    "자막 OCR 일부 실패: ['제미나이 금지(사장님 10-18) — 판독은 클로드 눈', '제미나이 금지(사장님 10-18) — 판독은 클로드 눈', '제미나이 금지(사장님 10-18) — 판독은 클로드 눈']",
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 16개: [0, 1, 2, 3, 4, 5, 6, 7, 11, 12]",
+    "자막 글자 못 읽음 26/26개",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: 제미나이 금지(사장님 10-18) — 판독은 클로드 눈; 제미나이 금지(사장님 10-18) — 판독은 클로드 눈",
+    "글꼴: OCR 글자가 없음",
+    "받아쓰기 실패: 제미나이 금지(사장님 10-18) — 판독은 클로드 눈",
+    "소리 구성 실패: 받아쓰기 실패(제미나이 금지(사장님 10-18) — 판독은 클로드 눈)",
+    "sfx_rules: 받아쓰기 실패(제미나이 금지(사장님 10-18) — 판독은 클로드 눈)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(제미나이 금지(사장님 10-18) — 판독은 클로드 눈)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "원음팝_강조색",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "dbc9200dcbaf"
+  },
+  {
+   "id": "m4m5oajgQFo",
+   "tteutgi": "channel/goodletter/뜯기/m4m5oajgQFo/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-20 00:44",
+   "frame_tool": "gl_preset.hand",
+   "font": {
+    "top1": null,
+    "top1_score": null,
+    "picked_from": null,
+    "font_confidence": null,
+    "skipped": [],
+    "why": "OCR 글자가 없음"
+   },
+   "font_confidence": null,
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 못 정함: OCR 글자가 없음 — 글자 층 생략",
+    "to_frame --no-ocr(제미나이 금지)라 글자·띠 층은 손으로 — 실측 근거는 gl_preset.py 머리",
+    "자막 강조색(새 틀 호박 #FCB53F 한 색 / 옛 틀 주황·노랑·민트 3색)·P.S. 줄·제품 꼬리표·끝 제품 이름 자막은 스키마 밖 → 판 설정 굿레터판.json + 자막팩_보강안",
+    "자막 등장 = 말 조각마다 팝(약 30%→110~115%@0.1초→100%@0.15~0.18초, 60fps 실측) — 스키마 pop 170ms 로 근사"
+   ],
+   "unknown": [
+    "자막 OCR 일부 실패: ['제미나이 금지(사장님 10-18) — 판독은 클로드 눈', '제미나이 금지(사장님 10-18) — 판독은 클로드 눈', '제미나이 금지(사장님 10-18) — 판독은 클로드 눈']",
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 10개: [3, 4, 6, 7, 12, 13, 15, 16, 18, 21]",
+    "자막 글자 못 읽음 22/22개",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: 제미나이 금지(사장님 10-18) — 판독은 클로드 눈; 제미나이 금지(사장님 10-18) — 판독은 클로드 눈",
+    "글꼴: OCR 글자가 없음",
+    "받아쓰기 실패: 제미나이 금지(사장님 10-18) — 판독은 클로드 눈",
+    "소리 구성 실패: 받아쓰기 실패(제미나이 금지(사장님 10-18) — 판독은 클로드 눈)",
+    "sfx_rules: 받아쓰기 실패(제미나이 금지(사장님 10-18) — 판독은 클로드 눈)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(제미나이 금지(사장님 10-18) — 판독은 클로드 눈)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "원음팝_강조색",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "4dad4cacbed2"
+  },
+  {
+   "id": "X9mRnmvmTD8",
+   "tteutgi": "channel/goodletter/뜯기/X9mRnmvmTD8/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-20 00:40",
+   "frame_tool": "gl_preset.hand",
+   "font": {
+    "top1": null,
+    "top1_score": null,
+    "picked_from": null,
+    "font_confidence": null,
+    "skipped": [],
+    "why": "OCR 글자가 없음"
+   },
+   "font_confidence": null,
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 못 정함: OCR 글자가 없음 — 글자 층 생략",
+    "to_frame --no-ocr(제미나이 금지)라 글자·띠 층은 손으로 — 실측 근거는 gl_preset.py 머리",
+    "자막 강조색(새 틀 호박 #FCB53F 한 색 / 옛 틀 주황·노랑·민트 3색)·P.S. 줄·제품 꼬리표·끝 제품 이름 자막은 스키마 밖 → 판 설정 굿레터판.json + 자막팩_보강안",
+    "자막 등장 = 말 조각마다 팝(약 30%→110~115%@0.1초→100%@0.15~0.18초, 60fps 실측) — 스키마 pop 170ms 로 근사"
+   ],
+   "unknown": [
+    "자막 OCR 일부 실패: ['제미나이 금지(사장님 10-18) — 판독은 클로드 눈', '제미나이 금지(사장님 10-18) — 판독은 클로드 눈', '제미나이 금지(사장님 10-18) — 판독은 클로드 눈']",
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 9개: [1, 2, 4, 5, 8, 13, 14, 15, 20]",
+    "자막 글자 못 읽음 21/21개",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: 제미나이 금지(사장님 10-18) — 판독은 클로드 눈; 제미나이 금지(사장님 10-18) — 판독은 클로드 눈",
+    "글꼴: OCR 글자가 없음",
+    "받아쓰기 실패: 제미나이 금지(사장님 10-18) — 판독은 클로드 눈",
+    "소리 구성 실패: 받아쓰기 실패(제미나이 금지(사장님 10-18) — 판독은 클로드 눈)",
+    "sfx_rules: 받아쓰기 실패(제미나이 금지(사장님 10-18) — 판독은 클로드 눈)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(제미나이 금지(사장님 10-18) — 판독은 클로드 눈)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "원음팝_강조색",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "bc11e8600628"
+  }
+ ],
+ "updated_at": "2026-10-20T01:30:40+09:00",
+ "variables": [
+  "layers[text:title].text",
+  "layers[text:label].text"
+ ],
+ "caption_styles": [
+  {
+   "name": "원음팝_강조색",
+   "layer": {
+    "kind": "text",
+    "role": "caption",
+    "x": 540,
+    "y": 1356,
+    "w": 1020,
+    "align": "center",
+    "lines": 1,
+    "font": "BinggraeBold",
+    "size": 70,
+    "line_h": 80,
+    "rgb": [
+     253,
+     253,
+     253
+    ],
+    "line_rgb": null,
+    "line_scale": null,
+    "outline": {
+     "px": 9,
+     "rgb": [
+      0,
+      0,
+      0
+     ]
+    },
+    "line_outline": null,
+    "shadow": null,
+    "glow": null,
+    "box": null,
+    "italic": false,
+    "letter_spacing": 0,
+    "word_spacing": 0,
+    "valign": "center",
+    "enter": {
+     "kind": "pop",
+     "ms": 170
+    },
+    "emphasis": null,
+    "text": null
+   },
+   "status": "잰 편 j-fB61Yhx5g",
+   "sources": [
+    "j-fB61Yhx5g",
+    "kfmZ_t4Bbss",
+    "E6SXj8FdT2s",
+    "m4m5oajgQFo",
+    "X9mRnmvmTD8"
+   ],
+   "notes": [
+    "j-fB61Yhx5g: 말 조각마다 팝 · 강조색 줄 23~50%(배치 = styles/굿레터판.json placement)",
+    "kfmZ_t4Bbss: 말 조각마다 팝 · 강조색 줄 23~50%(배치 = styles/굿레터판.json placement)",
+    "E6SXj8FdT2s: 말 조각마다 팝 · 강조색 줄 23~50%(배치 = styles/굿레터판.json placement)",
+    "m4m5oajgQFo: 말 조각마다 팝 · 강조색 줄 23~50%(배치 = styles/굿레터판.json placement)",
+    "X9mRnmvmTD8: 말 조각마다 팝 · 강조색 줄 23~50%(배치 = styles/굿레터판.json placement)"
+   ]
+  }
+ ],
+ "variable_stats": {
+  "layers[text:title].text": {
+   "values": {
+    "j-fB61Yhx5g": "셰프들이 그릇째 먹은\n윤남노 하겐다즈 먹조합",
+    "kfmZ_t4Bbss": "무를 물엿에 3시간\n김가연 오징어젓무침",
+    "E6SXj8FdT2s": "멸치볶음 킥이라는\n김가연 베트남 간장",
+    "m4m5oajgQFo": "밥 한 그릇 뚝딱\n김가연 새우젓무침",
+    "X9mRnmvmTD8": "사먹으면 십만원인데\n강주은 티본스테이크"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  },
+  "layers[text:label].text": {
+   "values": {
+    "j-fB61Yhx5g": "출처: JTBC 냉장고를 부탁해",
+    "kfmZ_t4Bbss": "출처: A급 장영란",
+    "E6SXj8FdT2s": "출처: 게임부부 김가연",
+    "m4m5oajgQFo": "출처: A급 장영란",
+    "X9mRnmvmTD8": "출처: 깡주은"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  }
+ },
+ "rules": {
+  "formula": "title.size = size_cap(잰 크기 중앙값) — 가장 긴 줄이 fill_w(잰 폭 최대·화면 폭−48 중 큰 값)를 넘으면 자간부터(−15%까지), 그래도 넘으면 크기 · title.line_h = size×lh_ratio · title.y = title_top · video.y = (video_anchor) 'gap_ink' 면 제목 잉크 아래 끝 + gap_ink(고정), 'constant' 면 video_top, 'gap' 이면 title.y + lines×line_h + gap — 편마다 덜 흔들리는 쪽(데이터가 고름) · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy",
+  "keys": {
+   "title_top": {
+    "values": {
+     "j-fB61Yhx5g": 168,
+     "kfmZ_t4Bbss": 168,
+     "E6SXj8FdT2s": 168,
+     "m4m5oajgQFo": 168,
+     "X9mRnmvmTD8": 168
+    },
+    "default": 168,
+    "range": [
+     168,
+     168
+    ],
+    "how": "중앙값(5/5편)"
+   },
+   "gap": {
+    "values": {
+     "j-fB61Yhx5g": 62,
+     "kfmZ_t4Bbss": 62,
+     "E6SXj8FdT2s": 62,
+     "m4m5oajgQFo": 62,
+     "X9mRnmvmTD8": 62
+    },
+    "default": 62,
+    "range": [
+     62,
+     62
+    ],
+    "how": "중앙값(5/5편)"
+   },
+   "lh_ratio": {
+    "values": {
+     "j-fB61Yhx5g": 1.292,
+     "kfmZ_t4Bbss": 1.292,
+     "E6SXj8FdT2s": 1.292,
+     "m4m5oajgQFo": 1.292,
+     "X9mRnmvmTD8": 1.292
+    },
+    "default": 1.292,
+    "range": [
+     1.292,
+     1.292
+    ],
+    "how": "중앙값(5/5편)"
+   },
+   "size_cap": {
+    "values": {
+     "j-fB61Yhx5g": 96,
+     "kfmZ_t4Bbss": 96,
+     "E6SXj8FdT2s": 96,
+     "m4m5oajgQFo": 96,
+     "X9mRnmvmTD8": 96
+    },
+    "default": 96,
+    "range": [
+     96,
+     96
+    ],
+    "how": "중앙값(5/5편)"
+   },
+   "video_bottom": {
+    "values": {
+     "j-fB61Yhx5g": 1544,
+     "kfmZ_t4Bbss": 1544,
+     "E6SXj8FdT2s": 1544,
+     "m4m5oajgQFo": 1544,
+     "X9mRnmvmTD8": 1544
+    },
+    "default": 1544,
+    "range": [
+     1544,
+     1544
+    ],
+    "how": "중앙값(5/5편)"
+   },
+   "video_top": {
+    "values": {
+     "j-fB61Yhx5g": 478,
+     "kfmZ_t4Bbss": 478,
+     "E6SXj8FdT2s": 478,
+     "m4m5oajgQFo": 478,
+     "X9mRnmvmTD8": 478
+    },
+    "default": 478,
+    "range": [
+     478,
+     478
+    ],
+    "how": "중앙값(5/5편)"
+   },
+   "gap_ink": {
+    "values": {
+     "j-fB61Yhx5g": 88,
+     "kfmZ_t4Bbss": 87,
+     "E6SXj8FdT2s": 88,
+     "m4m5oajgQFo": 87,
+     "X9mRnmvmTD8": 88
+    },
+    "default": 88,
+    "range": [
+     87,
+     88
+    ],
+    "how": "중앙값(5/5편)"
+   },
+   "fill_w": {
+    "values": {
+     "j-fB61Yhx5g": 1017,
+     "kfmZ_t4Bbss": 891,
+     "E6SXj8FdT2s": 824,
+     "m4m5oajgQFo": 795,
+     "X9mRnmvmTD8": 891
+    },
+    "default": 1032,
+    "range": [
+     795,
+     1017
+    ],
+    "how": "잰 폭 최대와 화면 폭−48 중 큰 값"
+   },
+   "cap_dy": {
+    "values": {
+     "j-fB61Yhx5g": -188,
+     "kfmZ_t4Bbss": -188,
+     "E6SXj8FdT2s": -188,
+     "m4m5oajgQFo": -188,
+     "X9mRnmvmTD8": -188
+    },
+    "default": -188,
+    "range": [
+     -188,
+     -188
+    ],
+    "how": "중앙값(5/5편)"
+   },
+   "video_anchor": {
+    "values": null,
+    "default": "gap_ink",
+    "range": null,
+    "how": "제목 끝–창 간격 고정(gap_ink)"
+   }
+  }
+ },
+ "roles": [
+  "원음 훅(연예인 본인 말 0~3초: 메뉴·놀람·'~있길래' — 첫 강조색 줄 0.2~1.7초 안)",
+  "(선택) 나레 다리 1~2조각('<이름> <장소>에서 나온 <제품>이래요' 전언, 8편 중 2편)",
+  "원음 본문(만드는 법·재료·요령 — 말 조각마다 자막 팝, 강조색은 재료·핵심 팁·반문 펀치에)",
+  "원음 맛 반응(먹는 얼굴·'맛있다' 류, 강조색)",
+  "끝(원음 반전·평 한 줄, 강조색 — 새 틀은 끝까지 원음 / 옛 틀은 무음 제품 컷+제품 이름 자막 또는 나레 질문 '여러분은 ~ 뭐 ~?')"
+ ],
+ "source_kind": "해외영상",
+ "note": "굿레터 옛 틀(09-25~10-04) — 기록·선택지. 근거 channel/goodletter/스타일분석.md · 줄판독/"
+}

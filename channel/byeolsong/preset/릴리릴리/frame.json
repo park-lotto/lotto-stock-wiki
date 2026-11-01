@@ -1,0 +1,81 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "template_off": null,
+ "made_by": "hybrid 판 요약(릴리릴리판 10-27) — 그리는 주인은 tools/calcopy/hybrid/styles/릴리릴리판.json(render_bench), 이 파일은 서버 프리셋 목록·자산 합본용",
+ "source": null,
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    214,
+    196,
+    255
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 476,
+   "w": 1080,
+   "h": 1444,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 238,
+   "w": 980,
+   "align": "center",
+   "lines": 2,
+   "font": "Jalnan2",
+   "size": 96,
+   "line_h": 130,
+   "rgb": [
+    42,
+    22,
+    64
+   ],
+   "line_rgb": [
+    [
+     42,
+     22,
+     64
+    ],
+    [
+     255,
+     255,
+     255
+    ]
+   ],
+   "line_scale": null,
+   "outline": null,
+   "line_outline": [
+    null,
+    {
+     "px": 9,
+     "rgb": [
+      123,
+      75,
+      214
+     ]
+    }
+   ],
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "$per_video"
+  }
+ ]
+}

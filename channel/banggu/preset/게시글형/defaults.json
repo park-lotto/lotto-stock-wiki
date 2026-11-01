@@ -1,0 +1,7 @@
+{
+ "_rule": "기본값 = 이 프리셋 원본 영상(사장님 10-20). 글꼴·자막 외곽선은 frame.json 그대로. 회원이 바꾼 칸만 회원 값. 읽는 곳 = tools/calcopy/preview_request.preset_defaults",
+ "_from": "원본 남 TTS 4/6·8.50자/초(banggu/뜯기/*/뜯기.md) · 통과편 필재 tempo 1.25(칼카피_ILIi/plan/계획.md:70) → 필재 금지(칼카피_시작.md:217)라 박창수(사장님 10-20 고름) · BGM honwaka_puppu 0.22(칼카피_ILIi/audio.json) · 자막 accumulate(칼카피_3편/tts_once.py:27)",
+ "tts": {"provider": "typecast", "voice_id": "tc_6059dad0b83880769a50502f", "name": "박창수", "preset_id": "tc-changsu-stable", "tempo": 1.25},
+ "bgm": {"candidates": ["honwaka_puppu"], "gain": 0.22},
+ "caption": {"mode": "accumulate"}
+}

@@ -326,8 +326,8 @@ def test_lens_kw_expand_returns_combos(tmp_path, monkeypatch):
     """⌨️ 키워드 직접 넣기(2026-08-14): 한국어 소재어만 넣어도 ko+zh 조합이 나와야 한다."""
     seen = {}
 
-    def fake(kw, n=6, exclude=None):
-        seen.update(kw=kw, n=n, exclude=exclude)
+    def fake(kw, n=6, exclude=None, scene=""):
+        seen.update(kw=kw, n=n, exclude=exclude, scene=scene)
         return [{"ko": "시금치 치아바타", "zh": "菠菜恰巴塔"},
                 {"ko": "시금치 빵", "zh": "菠菜面包"}]
     monkeypatch.setattr(appmod, "expand_search_keywords", fake)

@@ -3227,36 +3227,6 @@ window.CONTINUOUS20= [
    },
    "lines": [
     {
-     "bind": "hook1",
-     "x0": 70,
-     "x1": 1010,
-     "y0": 150,
-     "y1": 270,
-     "h": 120,
-     "font_size": 92,
-     "font_family": "BlackHanSans",
-     "font_weight": 400,
-     "color": "#FFFFFF",
-     "background": "#000000",
-     "no_patch": true,
-     "max_lines": 2
-    },
-    {
-     "bind": "hook2",
-     "x0": 70,
-     "x1": 1010,
-     "y0": 280,
-     "y1": 400,
-     "h": 120,
-     "font_size": 92,
-     "font_family": "BlackHanSans",
-     "font_weight": 400,
-     "color": "#00F9ED",
-     "background": "#000000",
-     "no_patch": true,
-     "max_lines": 2
-    },
-    {
      "bind": "caption",
      "x0": 70,
      "x1": 1010,

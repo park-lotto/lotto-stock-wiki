@@ -111,7 +111,9 @@ def test_스위치_뒤_항목은_계약_파일에_표시되고_옛_항목은_아
 def test_자막팩_스위치는_관리자_설정이고_편집기에_알린다():
     src = (ROOT / "shopping_shorts/app.py").read_text(encoding="utf-8")
     assert '"caption_pack_enabled"' in src.split("_ADMIN_SETTING_KEYS")[1].split("}")[0]
-    assert 'context["captionPackEnabled"] = bool(_setting_gate(Store(DB_PATH), "caption_pack_enabled", _cid(request)))' in src
+    # 편집기 스위치는 _scene_editor_flags 한 곳(제작소·설정 화면 공용, 관제 266)에서 읽어 context 에 싣는다
+    assert '"captionPackEnabled": bool(_setting_gate(st, "caption_pack_enabled", cid))' in src
+    assert 'context.update(_scene_editor_flags(_cid(request)))' in src
     js = (ROOT / "out/precision20-ui.js").read_text(encoding="utf-8")
     assert "sceneContext?.captionPackEnabled!==false" in js
 

@@ -85,6 +85,8 @@
   .catsel.pinned{border-color:var(--accent,#37e0bd);color:var(--accent,#37e0bd);font-weight:700}
 .styb{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;
        background:rgba(111,240,214,.14);color:#6ff0d6;white-space:nowrap}
+  /* 관제 276 폰: 채널마다 붙은 카테고리 선택(713개)이 24px — 이 화면은 sidebar.js 공용 폰 규칙이 안 닿아 따로 */
+  @media(max-width:760px){ .catsel{min-height:36px} }
 </style>
 </head>
 <body>

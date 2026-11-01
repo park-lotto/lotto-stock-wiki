@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>숏템 설치 안내</title>
+<style>
+:root{
+  --bg:#f6f4f1; --card:#ffffff; --ink:#1d1b19; --sub:#5f5a54; --line:#e6e1da;
+  --accent:#e2453c; --accent2:#c2185b; --ok:#1f8a5b; --warn:#b26a00;
+  --screen:#fbfaf8; --screen-ink:#2a2724; --chip:#f1ede7; --shadow:0 1px 2px rgba(0,0,0,.06),0 6px 20px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#151413; --card:#1f1d1b; --ink:#f1ede7; --sub:#b3aca3; --line:#34302c;
+    --accent:#ff6a5e; --accent2:#e04a86; --ok:#4cc38a; --warn:#e3a33c;
+    --screen:#262320; --screen-ink:#ece6de; --chip:#2e2a26; --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151413; --card:#1f1d1b; --ink:#f1ede7; --sub:#b3aca3; --line:#34302c;
+  --accent:#ff6a5e; --accent2:#e04a86; --ok:#4cc38a; --warn:#e3a33c;
+  --screen:#262320; --screen-ink:#ece6de; --chip:#2e2a26; --shadow:none;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;word-break:keep-all;overflow-wrap:anywhere}
+.wrap{max-width:880px;margin:0 auto;padding:28px 16px 64px}
+header h1{font-size:28px;line-height:1.3;margin:0 0 8px}
+header p{margin:0;color:var(--sub)}
+.badge{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;background:var(--chip);color:var(--sub);margin-right:6px}
+.toc{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 8px;padding:0;list-style:none}
+.toc a{display:block;font-size:13px;padding:4px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--ink);text-decoration:none}
+.note{margin:18px 0;padding:12px 14px;border-radius:12px;background:var(--card);border:1px solid var(--line);color:var(--sub);font-size:14px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:20px;margin:18px 0;display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:center}
+.step .num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-weight:700;font-size:15px;margin-right:8px;flex:none;margin-top:-1px}
+.step h2{display:flex;align-items:flex-start;font-size:19px;line-height:1.35;margin:0 0 8px}
+.step p{margin:6px 0;color:var(--sub)}
+.step p b{color:var(--ink)}
+.step ul{margin:6px 0;padding-left:20px;color:var(--sub)}
+code{font-family:ui-monospace,Consolas,"D2Coding",monospace;font-size:.92em;background:var(--chip);padding:1px 6px;border-radius:6px;color:var(--ink)}
+.who{font-size:12px;color:var(--sub);margin-bottom:4px}
+/* 화면 모형 */
+.mock{position:relative;background:var(--screen);color:var(--screen-ink);border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:13px;line-height:1.5;min-width:0}
+.mock .bar{display:flex;align-items:center;gap:6px;padding:8px 84px 8px 10px;min-height:33px;border-bottom:1px solid var(--line);background:var(--chip)}
+.mock .bar i{width:9px;height:9px;border-radius:50%;background:#d9d3cb;display:block}
+.mock .bar span{margin-left:6px;font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mock .body{padding:14px}
+.mock p{color:inherit}
+.mock .tag{position:absolute;right:8px;top:7px;font-size:10px;color:var(--sub);background:var(--card);border:1px solid var(--line);padding:1px 6px;border-radius:6px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-block;padding:7px 12px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-weight:600;font-size:12.5px}
+.btn.ghost{background:transparent;color:var(--screen-ink);border:1px solid var(--line)}
+.field{border:1px solid var(--line);border-radius:8px;padding:7px 9px;background:var(--card);font-family:ui-monospace,Consolas,monospace;font-size:12px;color:var(--sub);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.lbl{font-size:11.5px;color:var(--sub);margin:8px 0 3px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pc{border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--card)}
+.pc .th{height:52px;border-radius:7px;background:linear-gradient(160deg,#ffd9c9,#f7b6c9)}
+.pc.sel{outline:2px solid var(--accent)}
+.pc small{display:block;margin-top:5px;font-size:11px;color:var(--sub)}
+.prog{height:8px;border-radius:99px;background:var(--chip);overflow:hidden}
+.prog b{display:block;height:100%;width:68%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.chk{display:flex;gap:8px;align-items:flex-start;margin:6px 0}
+.chk .box{width:15px;height:15px;border-radius:4px;border:1.5px solid var(--accent);background:var(--accent);flex:none;margin-top:2px;position:relative}
+.chk .box:after{content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.chat{display:flex;flex-direction:column;gap:8px}
+.bub{max-width:88%;padding:8px 11px;border-radius:12px;background:var(--chip)}
+.bub.me{align-self:flex-end;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.ok{color:var(--ok);font-weight:700}
+.warn{color:var(--warn);font-weight:700}
+.term{background:#1b1a19;color:#e9e4dc;font-family:ui-monospace,Consolas,monospace;font-size:12px}
+.term .body{padding:12px}
+.term .p{color:#ff8a7a}
+.drop{border:2px dashed var(--accent);border-radius:10px;padding:10px;text-align:center;color:var(--accent);font-weight:600;margin-top:8px}
+.file{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:8px;background:var(--card);border:1px solid var(--line);font-size:12px}
+.file:before{content:"";width:12px;height:15px;border-radius:2px;background:var(--accent);display:block}
+.steps9{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:3px;margin-top:8px}
+.steps9 span{height:6px;border-radius:3px;background:var(--chip)}
+.steps9 span.on{background:var(--accent)}
+footer{margin-top:28px;color:var(--sub);font-size:13px}
+@media (max-width:700px){
+  .wrap{padding:20px 16px 48px}
+  header h1{font-size:23px}
+  .step{grid-template-columns:1fr;padding:16px;gap:14px}
+  .cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>숏템 설치 안내</h1>
+  <p>설치부터 첫 영상까지 11단계. 그림은 <b>화면 모형</b>이라 실제 화면과 글자·배치가 조금 다를 수 있습니다.</p>
+  <p style="margin-top:8px"><span class="badge">윈도 10·11</span><span class="badge">맥 Apple Silicon·Intel</span><span class="badge">Claude Desktop · Claude Code</span></p>
+  <ul class="toc">
+    <li><a href="#s1">1 프리셋·옵션</a></li><li><a href="#s2">2 라이선스 키</a></li><li><a href="#s3">3 설치팩 받기</a></li>
+    <li><a href="#s4">4 설치팩 실행</a></li><li><a href="#s5">5 설치 마침</a></li><li><a href="#s6">6 Desktop 연결</a></li>
+    <li><a href="#s7">7 키 붙여넣기</a></li><li><a href="#s8">8 기기 등록</a></li><li><a href="#s9">9 준비 점검</a></li>
+    <li><a href="#s10">10 Claude Code</a></li><li><a href="#s11">11 첫 영상</a></li>
+  </ul>
+</header>
+
+<div class="note">숏템은 영상을 <b>내 컴퓨터에서</b> 만듭니다. 설치팩 하나가 필요한 실행 도구를 전부 깔아 두므로 따로 내려받을 프로그램이 없습니다. 디스크 여유 2GB 이상을 비워 두세요.</div>
+
+<section class="step" id="s1">
+  <div>
+    <div class="who">숏템메이커 웹(브라우저)</div>
+    <h2><span class="num">1</span>프리셋을 고르고 내 채널 옵션 저장</h2>
+    <p>숏템메이커에 로그인해 <b>'클로드형'</b> 페이지를 엽니다. 프리셋 견본을 보고 하나를 고른 뒤 채널 이름·글꼴·목소리·효과음을 정하고 <b>내 채널 저장</b>을 누릅니다.</p>
+    <p>저장한 옵션이 <b>내 채널 프로필</b>이 됩니다. 나중에 Claude 에게 이 이름으로 만들어 달라고 하면 됩니다.</p>
+  </div>
+  <div class="mock" aria-label="화면 모형: 프리셋 고르기">
+    <div class="bar"><i></i><i></i><i></i><span>shoppingshorts.duckdns.org/claude</span></div>
+    <div class="body">
+      <div class="cards">
+        <div class="pc sel"><div class="th"></div><small>썰 · 흰바탕</small></div>
+        <div class="pc"><div class="th" style="background:linear-gradient(160deg,#cfe3ff,#d9ccff)"></div><small>정보 · 카드</small></div>
+        <div class="pc"><div class="th" style="background:linear-gradient(160deg,#d8f3dc,#ffe8a8)"></div><small>리뷰 · 밝게</small></div>
+      </div>
+      <div class="lbl">채널 이름</div><div class="field">내 채널 · 썰</div>
+      <div class="row" style="margin-top:10px"><span class="btn">내 채널 저장</span></div>
+    </div>
+    <span class="tag">화면 모형</span>
+  </div>
+</section>
+
+<section class="step" id="s2">
+  <div>
+    <div class="who">숏템메이커 웹</div>
+    <h2><span class="num">2</span>라이선스 키 복사</h2>
+    <p>같은 페이지의 <b>라이선스</b> 칸에서 <b>키 발급</b>을 누르고 <b>복사</b>합니다. 키는 <code>SHORTEM-L1.</code> 로 시작합니다.</p>
+    <p>키 원문은 발급할 때 <b>한 번만</b> 보입니다. 메모장 같은 곳에 잠깐 붙여 두세요. 남에게 보내지 마세요 — 한 키로 기기 2대까지만 쓸 수 있습니다.</p>
+  </div>
+  <div class="mock" aria-label="화면 모형: 라이선스 키">
+    <div class="bar"><i></i><i></i><i></i><span>라이선스 · 기기</span></div>
+    <div class="body">
+      <div class="lbl">내 라이선스 키</div>
+      <div class="row"><div class="field" style="flex:1;min-width:0">SHORTEM-L1.12.1793000000.1.a91f…</div><span class="btn">복사</span></div>
+      <div class="lbl">등록된 기기</div>
+      <div class="field">0 / 2대</div>
+    </div>
+    <span class="tag">화면 모형</span>
+  </div>
+</section>
+
+<section class="step" id="s3">
+  <div>
+    <div class="who">숏템메이커 웹</div>
+    <h2><span class="num">3</span>설치팩 내려받기</h2>
+    <p>내 컴퓨터에 맞는 설치팩을 받습니다.</p>
+    <ul>
+      <li>윈도: <code>shortem-setup-win-x64.exe</code></li>
+      <li>맥(M1·M2·M3·M4): <code>…-mac-arm64.pkg</code></li>
+      <li>맥(Intel): <code>…-mac-x64.pkg</code></li>
+    </ul>
+    <p>내 맥이 어느 쪽인지 모르면 화면 왼쪽 위 사과 ▸ <b>이 Mac에 관하여</b>에서 '칩'이 Apple 이면 arm64 입니다.</p>
+  </div>
+  <div class="mock" aria-label="화면 모형: 설치팩 내려받기">
+    <div class="bar"><i></i><i></i><i></i><span>설치팩</span></div>
+    <div class="body">
+      <div class="row" style="justify-content:space-between"><b>윈도 x64</b><span class="btn">내려받기</span></div>
+      <div class="lbl">파일 확인값(sha256)</div><div class="field">3f9c…e21a</div>
+      <div class="row" style="justify-content:space-between;margin-top:10px"><b>맥 Apple Silicon</b><span class="btn ghost">내려받기</span></div>
+      <div class="row" style="justify-content:space-between;margin-top:8px"><b>맥 Intel</b><span class="btn ghost">내려받기</span></div>
+    </div>
+    <span class="tag">화면 모형</span>
+  </div>
+</section>
+
+<section class="step" id="s4">
+  <div>
+    <div class="who">내 컴퓨터</div>
+    <h2><span class="num">4</span>설치팩 실행</h2>
+    <p>받은 파일을 두 번 누릅니다. <b>관리자 암호는 묻지 않습니다</b> — 내 사용자 폴더에만 설치됩니다.</p>
+    <p>윈도에서 파란 <b>'Windows의 PC 보호'</b> 창이 뜨면 <b>추가 정보 ▸ 실행</b>을 누릅니다. (설치팩 코드서명이 끝나면 이 창은 뜨지 않습니다.)</p>
+    <p>맥은 pkg 설치 창에서 <b>계속 ▸ 설치</b>를 누릅니다.</p>
+  </div>
+  <div class="mock" aria-label="화면 모형: 윈도 보호 창">
+    <div class="bar" style="background:#1d5fbf"><span style="color:#fff">Windows의 PC 보호</span></div>
+    <div class="body" style="background:#2470d8;color:#fff">
+      <p style="margin:0 0 8px;font-size:15px;font-weight:700">Windows의 PC 보호</p>
+      <p style="margin:0 0 10px;font-size:12px;opacity:.9">인식할 수 없는 앱의 시작을 막았습니다.</p>
+      <p style="margin:0 0 12px;font-size:12px;text-decoration:underline">추가 정보</p>
+      <div class="row" style="justify-content:flex-end"><span class="btn ghost" style="color:#fff;border-color:#fff">실행</span></div>
+    </div>
+    <span class="tag">화면 모형</span>
+  </div>
+</section>
+
+<section class="step" id="s5">
+  <div>
+    <div class="who">숏템 설치 창</div>
+    <h2><span class="num">5</span>설치가 끝나면 '연결하기'를 켠 채로 마침</h2>
+    <p>렌더러·ffmpeg·파이썬 같은 실행 도구가 한 번에 깔립니다(몇 분). 인터넷에서 따로 받는 것은 없습니다.</p>
+    <p>마지막 화면에서 <b>Claude Desktop 에 숏템 연결하기</b>가 켜져 있는지 보고 <b>마침</b>을 누릅니다. 바탕화면에 <b>숏템작업</b> 폴더가 생깁니다.</p>
+  </div>
+  <div class="mock" aria-label="화면 모형: 설치 마침">
+    <div class="bar"><i></i><i></i><i></i><span>숏템 설치팩</span></div>
+    <div class="body">
+      <b>숏템 설치가 끝났습니다</b>
+      <div class="prog" style="margin:10px 0"><b style="width:100%"></b></div>
+      <div class="chk"><span class="box"></span><span>Claude Desktop 에 숏템 연결하기(shortem.mcpb 열기)</span></div>
+      <div class="chk"><span class="box"></span><span>바탕화면 '숏템작업' 폴더 열기</span></div>
+      <div class="row" style="justify-content:flex-end;margin-top:8px"><span class="btn">마침</span></div>
+    </div>
+    <span class="tag">화면 모형</span>
+  </div>
+</section>
+
+<section class="step" id="s6">
+  <div>
+    <div class="who">Claude Desktop</div>
+    <h2><span class="num">6</span>Claude Desktop 확장 설치 창에서 '설치'</h2>
+    <p>Claude Desktop 이 열리며 <b>숏템</b> 확장 설치 창이 뜹니다. <b>설치</b>를 누릅니다.</p>
+    <p>창이 안 뜨면: Claude Desktop ▸ <b>설정 ▸ 확장 프로그램 ▸ 고급 ▸ 확장 프로그램 설치</b>에서 설치 폴더의 <code>shortem.mcpb</code> 를 고릅니다.</p>
+  </div>
+  <div class="mock" aria-label="화면 모형: 확장 설치">
+    <div class="bar"><i></i><i></i><i></i><span>Claude</span></div>
+    <div class="body">
+      <div class="row"><span style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:block"></span><div><b>숏템</b><br><small style="color:var(--sub)">숏템메이커 · 1.0.0</small></div></div>
+      <p style="margin:10px 0;color:var(--sub);font-size:12px">숏템 채널 프리셋으로 내 PC에서 숏폼을 만듭니다.</p>
+      <div class="row" style="justify-content:flex-end"><span class="btn ghost">취소</span><span class="btn">설치</span></div>
+    </div>
+    <span class="tag">화면 모형</span>
+  </div>
+</section>
+
+<section class="step" id="s7">
+  <div>
+    <div class="who">Claude Desktop</div>
+    <h2><span class="num">7</span>라이선스 키 붙여넣기</h2>
+    <p>설정 칸 <b>숏템 라이선스 키</b>에 2단계에서 복사한 키를 붙여 넣습니다. 입력은 가려지고 안전하게 저장됩니다.</p>
+    <p><b>작업 폴더</b>는 그대로 두면 바탕화면 <code>숏템작업</code> 입니다. <b>저장</b> 뒤 확장이 <b>켜짐</b>인지 확인합니다.</p>
+  </div>
+  <div class="mock" aria-label="화면 모형: 키 입력">
+    <div class="bar"><i></i><i></i><i></i><span>숏템 · 설정</span></div>
+    <div class="body">
+      <div class="lbl">숏템 라이선스 키 *</div><div class="field">●●●●●●●●●●●●●●●●●●●●</div>
+      <div class="lbl">작업 폴더</div><div class="field">바탕 화면\숏템작업</div>
+      <div class="row" style="justify-content:space-between;margin-top:10px"><span class="ok">● 켜짐</span><span class="btn">저장</span></div>
+    </div>
+    <span class="tag">화면 모형</span>
+  </div>
+</section>
+
+<section class="step" id="s8">
+  <div>
+    <div class="who">자동(처음 점검할 때)</div>
+    <h2><span class="num">8</span>이 기기 등록 — 2대까지</h2>
+    <p>처음 준비 점검을 할 때 이 컴퓨터가 <b>자동으로 등록</b>됩니다(2대 중 1). 집·사무실 두 대라면 <b>두 번째 컴퓨터에도 설치팩을 깔고</b> 같은 키를 넣습니다.</p>
+    <p>동시에 돌릴 수 있는 작업은 <b>한 번에 하나</b>입니다. 3대째는 거절되니 바꿀 때는 페이지의 <b>기기 교체</b>를 쓰세요.</p>
+  </div>
+  <div class="mock" aria-label="화면 모형: 기기 목록">
+    <div class="bar"><i></i><i></i><i></i><span>등록된 기기</span></div>
+    <div class="body">
+      <div class="row" style="justify-content:space-between"><span>사무실 PC</span><span class="ok">1번</span></div>
+      <div class="row" style="justify-content:space-between;margin-top:6px;color:var(--sub)"><span>(빈 칸)</span><span>2번</span></div>
+      <div class="lbl">지금 작업 중</div><div class="field">없음</div>
+    </div>
+    <span class="tag">화면 모형</span>
+  </div>
+</section>
+
+<section class="step" id="s9">
+  <div>
+    <div class="who">Claude Desktop 채팅</div>
+    <h2><span class="num">9</span>"숏템 준비 점검해줘"</h2>
+    <p>채팅에 <b>숏템 준비 점검해줘</b>라고 씁니다. 라이선스·기기·실행 도구·자막 굽기(ass)를 확인하고, <b>시험 렌더·시험 목소리·시험 다운로드</b> 3가지를 실제로 만들어 봅니다.</p>
+    <p>결과는 <code>숏템작업\자가점검_결과.md</code> 에도 남습니다. 안 된 항목은 고칠 방법 한 줄이 같이 나옵니다.</p>
+  </div>
+  <div class="mock" aria-label="화면 모형: 준비 점검 채팅">
+    <div class="bar"><i></i><i></i><i></i><span>새 채팅</span></div>
+    <div class="body chat">
+      <div class="bub me">숏템 준비 점검해줘</div>
+      <div class="bub">라이선스 <span class="ok">됨</span> · 기기 1/2 <span class="ok">됨</span><br>실행 도구 <span class="ok">됨</span> · 자막 굽기 <span class="ok">됨</span><br>시험 렌더·목소리·다운로드 <span class="ok">3/3</span></div>
+    </div>
+    <span class="tag">화면 모형</span>
+  </div>
+</section>
+
+<section class="step" id="s10">
+  <div>
+    <div class="who">Claude Code 를 쓰는 경우(Desktop 이면 건너뛰기)</div>
+    <h2><span class="num">10</span>시작.md 를 끌어다 놓고 엔터</h2>
+    <p>바탕화면 <b>숏템작업</b> 폴더의 <code>시작.md</code> 를 Claude Code 입력창에 끌어다 놓고 <b>엔터</b>를 한 번 누릅니다. 플러그인 등록 명령 두 줄을 실행해도 되는지 물으면 <b>예</b>.</p>
+    <p>Claude Code 를 껐다 켠 뒤 <code>/plugin configure shortem@shortem</code> 으로 키를 붙여 넣고 <code>/shortem:setup</code> 을 실행합니다.</p>
+  </div>
+  <div class="mock term" aria-label="화면 모형: Claude Code">
+    <div class="bar" style="background:#262422;border-color:#3a3632"><i></i><i></i><i></i><span style="color:#a39c93">Claude Code</span></div>
+    <div class="body">
+      <div><span class="p">&gt;</span> @숏템작업/시작.md</div>
+      <div style="color:#a39c93;margin:6px 0">플러그인 등록 2줄 실행 … 완료</div>
+      <div><span class="p">&gt;</span> /shortem:setup</div>
+      <div style="color:#7fd6a5;margin-top:6px">준비 끝 — /shortem:make &lt;프로필&gt; &lt;소재&gt;</div>
+      <div class="drop">시작.md 를 여기로</div>
+    </div>
+    <span class="tag">화면 모형</span>
+  </div>
+</section>
+
+<section class="step" id="s11">
+  <div>
+    <div class="who">Claude Desktop 채팅 · Claude Code</div>
+    <h2><span class="num">11</span>첫 영상 만들기</h2>
+    <p>Desktop: <b>"내 채널 · 썰 프로필로 이 영상 만들어줘 &lt;유튜브 주소&gt;"</b><br>Code: <code>/shortem:make 내채널 &lt;주소&gt;</code></p>
+    <p>진행은 <b>9단계 중 몇 번째</b>로만 보입니다. 내가 고르는 곳은 <b>3번</b>뿐입니다 — ① 소재 고르기 ② 대본 확인 ③ 완성본 확인. 완성본은 <code>숏템작업</code> 폴더에 저장됩니다.</p>
+    <p>목소리 비용은 대본·장면 계획을 내가 승인한 뒤에만 나갑니다.</p>
+  </div>
+  <div class="mock" aria-label="화면 모형: 제작 진행">
+    <div class="bar"><i></i><i></i><i></i><span>숏템 · 제작</span></div>
+    <div class="body">
+      <b>9단계 중 4번째 — 장면 계획</b>
+      <div class="steps9"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span><span></span><span></span><span></span></div>
+      <p style="margin:10px 0 6px;color:var(--sub);font-size:12px">소재 · 분석 · 대본 · <b style="color:var(--screen-ink)">장면 계획</b> · 음성 · 렌더 · 검사 · 확인 · 완료</p>
+      <div class="row" style="margin-top:8px"><span class="file">완성본.mp4</span><span class="ok">검사 통과</span></div>
+    </div>
+    <span class="tag">화면 모형</span>
+  </div>
+</section>
+
+<footer>
+  막히면 Claude 에게 <b>"숏템 준비 점검해줘"</b>라고 다시 말해 보세요. 그래도 안 되면 <b>"숏템에 버그 보내줘"</b>라고 하면 상황이 숏템으로 전달됩니다.
+</footer>
+</div>
+</body>
+</html>

@@ -85,7 +85,7 @@ def validate_snapshot(value):
         elif isinstance(obj, str) and len(obj) > 2000:
             raise ValueError("문구가 너무 깁니다")
     walk(value)
-    for name in ("text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"):
+    for name in ("text", "sceneTexts", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"):
         if name in value and not isinstance(value[name], dict):
             raise ValueError(f"{name} 설정이 올바르지 않습니다")
     for color in (value.get("colors") or {}).values():
@@ -118,9 +118,13 @@ def validate_snapshot(value):
         for key in ("background","color"):
             if key in caption and (not isinstance(caption[key],str) or len(caption[key])>500):
                 raise ValueError("자막 색상 형식이 올바르지 않습니다")
-    for texts in (value.get("text") or {},value.get("captionTexts") or {}):
+    for texts in (value.get("text") or {},value.get("sceneTexts") or {},value.get("captionTexts") or {}):
         if any(not isinstance(t,str) for t in texts.values()):
             raise ValueError("문구는 텍스트여야 합니다")
+    # 장면별 제목·채널명 글(관제 219, 회원 힘 10-16 "이 장면만 저장해도 전체 영상에 적용") — 키 = 칸:장면번호. 편집기 precision20-ui.js sceneTexts 와 짝
+    for key in (value.get("sceneTexts") or {}):
+        if not re.fullmatch(r"(channel|hook1|hook2|bodyTitle):\d{1,3}", str(key)):
+            raise ValueError("장면별 문구 형식이 올바르지 않습니다")
     for effect in (value.get("effects") or {}).values():
         if not isinstance(effect,dict):
             raise ValueError("효과 형식이 올바르지 않습니다")
@@ -149,7 +153,7 @@ def validate_snapshot(value):
             for mask in effect["masks"]:
                 if not isinstance(mask,dict):
                     raise ValueError("가림막 항목이 올바르지 않습니다")
-                base=_norm_masks([{**mask,"kind":"shape" if mask.get("kind") in ("graphic","image") else mask.get("kind")}])
+                base=_norm_masks([{**mask,"kind":"shape" if mask.get("kind") in ("graphic","image","mograph") else mask.get("kind")}])
                 if not base:
                     continue
                 item=base[0]
@@ -157,6 +161,11 @@ def validate_snapshot(value):
                     if not re.fullmatch(r"[a-z_]{1,32}",str(mask.get("graphic") or "")):
                         raise ValueError("도형 종류가 올바르지 않습니다")
                     item.update(kind="graphic",graphic=mask["graphic"])
+                if mask.get("kind")=="mograph":
+                    # 모션그래픽팩(관제 222): 어떤 효과인지(이름)만 받는다 — 모양·시간표의 주인은 static/motion-graphics-pack.js
+                    if not re.fullmatch(r"[a-z0-9_]{1,32}",str(mask.get("mograph") or "")):
+                        raise ValueError("모션그래픽 종류가 올바르지 않습니다")
+                    item.update(kind="mograph",mograph=mask["mograph"])
                 if mask.get("kind")=="image":
                     # 로고(관제 065): 계정 폴더의 PNG만. 파일이 없으면 버린다(없는 그림을 렌더가 기다리지 않게).
                     src=str(mask.get("src") or "")
@@ -177,7 +186,7 @@ def validate_snapshot(value):
         if hl:
             for key,default,lo,hi in (("cx",.5,0,1),("cy",.55,0,1),("r",.22,.06,.9),("zoom",2,1.1,4)):
                 number(hl.get(key,default),lo,hi)
-    if value.get("hookMotion") not in (None,"zoom-punch","pop","slide","flash","rise","push-in","shake"):
+    if value.get("hookMotion") not in (None,"zoom-punch","pop","slide","flash","rise","push-in","shake","none"):
         raise ValueError("제목 효과가 올바르지 않습니다")
     if value.get("hookBandMotion") not in (None, "", "rise", "grow"):
         raise ValueError("흰 띠 효과 값이 올바르지 않습니다")
@@ -260,7 +269,7 @@ def validate_snapshot(value):
         raise ValueError("원본 자막 표시가 올바르지 않습니다")
     if value.get("frameRule") not in (None, *FRAME_RULES):
         raise ValueError("장면 틀 규칙이 올바르지 않습니다")
-    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "motionPack", "fxPreset", "wordFx", "fontSet", "fontSets", "fontPick", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "motionPack", "fxPreset", "wordFx", "fontSet", "fontSets", "fontPick", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "sceneTexts", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 
@@ -332,9 +341,12 @@ def account_channel(job_id):
         from .store import Store
         from .config import DB_PATH
         st = Store(DB_PATH)
-        job = st.get_mix_job(job_id) or {}
+        job = st.get_mix_job(job_id)
+        if not job:
+            return ""
+        # ★cid 0 = 관리자(사장님) 계정이다 — 예전엔 0을 '없음'으로 보고 건너뛰어 사장님 작업만 늘 '숏템메이커'였다(관제 252)
         cid = int(job.get("customer_id") or 0)
-        return (st.get_pref(MY_CHANNEL_KEY, customer_id=cid) or "").strip() if cid else ""
+        return (st.get_pref(MY_CHANNEL_KEY, customer_id=cid) or "").strip()
     except Exception as exc:          # 못 읽어도 꾸미기는 떠야 한다 — 단 조용히 넘기지 않는다
         print(f"[scene_style] 내 채널명 읽기 실패 job={job_id}: {exc}", file=sys.stderr)
         return ""
@@ -354,7 +366,8 @@ def frame_kind(index, rule):
 
 
 def _word_key(text):
-    return re.sub(r"[^0-9A-Za-z가-힣]", "", text or "")
+    from .script_translate import letters_only      # 글자의 정의는 한 곳(가나·한자 포함, 관제 248)
+    return letters_only(text)
 
 
 def attach_scene_words(scenes, timeline):
@@ -642,6 +655,13 @@ def zoom_move_vf(effect, width, height, zw, zh, crop_x, crop_y, frames=0, skip=0
             f":d=1:s={width}x{height}:fps=30")
 
 
+# 장면 조각 비트레이트 상한(2026-10-18 고객 제보 "흑백+강조 장면에서 목소리에 버퍼가 걸리고 떨림").
+#   흑백 충격의 필름 잡티(noise c0f=t)+흔들림은 매 프레임이 새 그림이라 crf 만으로는 그 장면이 초당 70~100Mb까지 치솟았다
+#   (실측 fd561d143f44·8eb2c0982f5a·383ac5b29649, 평소 5~12Mb). 재생기가 그 구간에서 버벅여 소리가 끊겨 들린다.
+#   상한 20Mb(1초 버퍼) — 같은 구간 재인코딩 실측 75→20Mb, 평소 구간은 그대로.
+SCENE_PART_VBV = ("-maxrate", "20M", "-bufsize", "20M")
+
+
 def shock_vf(effect, width, height):
     """흑백 충격(관제 124, 사장님 2026-10-05 "흑백은 충격·잘못된 비포 장면에, 흑백과 지지직 효과·약간 흔들리는 느낌") — 영상 칸에만.
     흑백+대비 · 필름 잡티(noise) · 흔들림(프레임마다 ±1.2% 이동) · 지지직(13프레임마다 2프레임 크게 찢기듯 밀림+번쩍).
@@ -679,7 +699,7 @@ CAPCUT_SCENE_FX = {
     "shock": "keyframe",
     "dim": "under",
     "animation": "word_frames",
-    "masks": "bake",           # 흐림 가림막(gblur) — 캡컷 초안에 흐림을 그림으로 실을 수 없다
+    "masks": "bake",           # 흐림 가림막(gblur) — 캡컷 초안에 흐림을 그림으로 실을 수 없다 · 모션그래픽(관제 222)도 움직임이 본체라 완성본에서 뜬다
     "highlight": "bake",       # 장면 강조(highlight_fc)
     "camera": "bake",          # 틀 카메라 움직임(zoompan) — 글자 그림까지 같이 움직인다
 }
@@ -688,7 +708,7 @@ CAPCUT_SCENE_FX = {
 def _needs_bake(effect, layer):
     """이 장면을 완성본에서 떠 와야 하나 — CAPCUT_SCENE_FX 의 bake 효과가 실제로 켜졌는지."""
     effect=effect or {}
-    if any((m or {}).get("fx")=="blur" for m in effect.get("masks") or []):
+    if any((m or {}).get("fx")=="blur" or (m or {}).get("kind")=="mograph" for m in effect.get("masks") or []):
         return True
     from .video_assemble import scene_hl_of      # 강조 켜짐 해석은 렌더(compose→highlight_fc)와 같은 함수 — "on":false 는 꺼짐
     if effect.get("highlight") and scene_hl_of({"scene_hl":effect.get("highlight")}):
@@ -772,7 +792,7 @@ def capcut_bake_spans(scenes, snapshot, layers, folder, final_video):
                 continue
         path=folder/f"scene-style-bake-{i:04d}.mp4"
         va._run_ffmpeg(["ffmpeg","-y","-ss",f"{shift+start:.3f}","-i",str(final_video),"-t",f"{end-start:.3f}","-an",
-                        "-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),"-pix_fmt","yuv420p","-r","30",str(path)])
+                        "-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),*SCENE_PART_VBV,"-pix_fmt","yuv420p","-r","30",str(path)])
         out.append({"path":str(path),"start":start,"end":end,"scene":i})
     return out
 
@@ -944,7 +964,7 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
         else:
             graph+=";[composed]null[final]"
         part=work/f"scene-style-{index:04d}.mp4"
-        va._run_ffmpeg(["ffmpeg","-y","-ss",str(first_frame/30),"-i",str(in_video),*layer_input,"-filter_complex",graph,"-map","[final]","-an","-frames:v",str(last_frame-first_frame),"-r","30","-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),*va._threads_args(),"-pix_fmt","yuv420p",str(part)],cwd=str(work))
+        va._run_ffmpeg(["ffmpeg","-y","-ss",str(first_frame/30),"-i",str(in_video),*layer_input,"-filter_complex",graph,"-map","[final]","-an","-frames:v",str(last_frame-first_frame),"-r","30","-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),*SCENE_PART_VBV,*va._threads_args(),"-pix_fmt","yuv420p",str(part)],cwd=str(work))
         parts.append(part)
     listing=work/"scene-style-concat.txt"
     listing.write_text("\n".join(f"file '{p.name}'" for p in parts),encoding="utf-8")

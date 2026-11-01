@@ -20,7 +20,7 @@ import sys
 HOST = "ubuntu@3.35.251.172"      # IP 가 바뀌면 nslookup shoppingshorts.duckdns.org
 # 키는 PC마다 사용자 폴더가 다르다(TheRose·CH). 경로를 박아두면 다른 PC에서 "Permission denied"로 죽는다.
 KEY = os.path.join(os.path.expanduser("~"), "crawling_bot_client", "LightsailDefaultKey-ap-northeast-2.pem").replace("\\", "/")
-BASE = "https://shoppingshorts.duckdns.org"
+BASE = "https://stmaker.kr"   # 2026-10 옛 주소(shoppingshorts.duckdns.org)는 여기로 넘긴다 — 쿠키는 두 주소 다 넣는다(관제 272)
 
 _MINT = r'''set -a; . /etc/shopping-shorts.env; set +a; python3 -c "
 import hmac,hashlib,os,time
@@ -37,17 +37,20 @@ def admin_cookie():
 
 
 @contextlib.contextmanager
-def admin_page(path="/", viewport=(1500, 1000)):
+def admin_page(path="/", viewport=(1500, 1000), setup=None):
     from playwright.sync_api import sync_playwright
     ck = admin_cookie()
     with sync_playwright() as p:
         b = p.chromium.launch()
         ctx = b.new_context(viewport={"width": viewport[0], "height": viewport[1]})
-        ctx.add_cookies([{"name": "dash_auth", "value": ck, "domain": "shoppingshorts.duckdns.org", "path": "/",
-                          "httpOnly": True, "secure": True, "sameSite": "Lax"}])
+        ctx.add_cookies([{"name": "dash_auth", "value": ck, "domain": d, "path": "/",
+                          "httpOnly": True, "secure": True, "sameSite": "Lax"}
+                         for d in ("stmaker.kr", "shoppingshorts.duckdns.org")])
         pg = ctx.new_page()
         pg.errors = []
         pg.on("pageerror", lambda e: pg.errors.append(str(e)[:200]))
+        if setup:
+            setup(pg)   # 첫 요청 전에 route 등을 건다 — 열고 나서 새로고침하면 화면이 불러오는 도중 저장이 나간다(관제 276 실측)
         pg.goto(BASE + "/" + path.lstrip("/"), wait_until="domcontentloaded")   # git bash 가 /produce 를 경로로 바꾸니 produce 도 받는다
         pg.wait_for_timeout(2500)
         try:

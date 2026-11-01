@@ -80,10 +80,10 @@ def _node(js, tmp_path):
 def test_old_style_band_hidden_only_when_storyboard_on(tmp_path):
     assert 'id="s2StyleBand"' in HTML
     js = """
-const els={s2StyleBand:{style:{display:''}}, s1Storyboard:{style:{},innerHTML:''}, s2Storyboard:{style:{},innerHTML:''}};
+const els={s2StyleBand:{style:{display:''}}, s1Storyboard:{style:{},innerHTML:'',querySelector:()=>null}, s2Storyboard:{style:{},innerHTML:'',querySelector:()=>null}};
 const document={getElementById:id=>els[id]||null}; const window={scrollY:0, scrollTo(){}};
 const SB={jid:''}; function _sbSaveSoon(){}
-""" + _js_fn("sbRender") + """
+""" + "\n".join(_js_fn(n) for n in ["sbKeepFocus", "sbRestoreFocus", "sbRender"]) + """
 window.STORYBOARD_ON=false; sbRender(); const off=els.s2StyleBand.style.display;
 window.STORYBOARD_ON=true; sbRender(); const on=els.s2StyleBand.style.display;
 console.log(JSON.stringify({off, on}));

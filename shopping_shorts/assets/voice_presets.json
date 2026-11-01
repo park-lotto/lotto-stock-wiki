@@ -1238,6 +1238,24 @@
     "best": false
   },
   {
+    "preset_id": "fs-ilban2-stable",
+    "group_id": "fs-ilban2",
+    "variant": "stable",
+    "name": "일반여성2",
+    "one_liner": "밝고 친근한 광고 여성",
+    "lang": "KR",
+    "archetype": "밝고 친근한 광고 여성",
+    "base_voice_id": "4a81bbbb5cd44f22922bf934cb93b369",
+    "model_id": "fish-s2.1-pro-free",
+    "voice_settings": {},
+    "default_speed": 1.0,
+    "default_silence_trim": "mid",
+    "sample_file": "fs-ilban2-stable.mp3",
+    "source_ref": "Fish 무료 성우 '일반여성2'(2026-10-20 회원 요청, 관제 247)",
+    "origin": "curated",
+    "best": false
+  },
+  {
     "preset_id": "tc-piljae-stable",
     "group_id": "tc-piljae",
     "variant": "stable",

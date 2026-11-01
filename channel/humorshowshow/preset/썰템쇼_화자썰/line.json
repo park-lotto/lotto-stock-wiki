@@ -1,0 +1,6 @@
+{
+ "_rule": "이 회원 프리셋이 쓰는 제작 라인 — 주인 한 곳. 기술 꾸러미 = tools/claude_portal/preset_pack.tech_files(변형판 base 사슬·판 그림 파일 포함)",
+ "line": "hybrid",
+ "version": "썰템쇼판",
+ "_from": "channel/프리셋.json humorshowshow — 형식 쇼핑형(썰커뮤니티형, 하이브리드 아님 — 사장님 10-21), member.flow_format 쇼핑형 = flow.FORMAT_STAGES['쇼핑형'] · 판 = 썰템쇼판(renderer bench, 10-29 판 리듬 4칸 기입) · 옛 preset_make 길(frame.json·hs_*.py)은 이 라인에서 안 쓴다(🛑15 MCP 프리셋, 10-29)"
+}

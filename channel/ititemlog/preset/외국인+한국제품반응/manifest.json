@@ -1,0 +1,437 @@
+{
+ "slug": "ititemlog",
+ "style": "외국인+한국제품반응",
+ "made_by": "preset_save v1",
+ "rule": "같은 자리 값이 편마다 기준(숫자 max(4, 3%) · 색 채널 12 · 글·참거짓 같음) 밖이면 $per_video, 제목 글자는 항상 $per_video, --exclude 로 뺀 층은 그 편에서 비교 안 함",
+ "created_at": "2026-10-25T13:36:18+09:00",
+ "sources": [
+  {
+   "id": "aUicTeDoW04",
+   "tteutgi": "channel/ititemlog/뜯기/aUicTeDoW04/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-20 00:59",
+   "frame_tool": "ititemlog_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "제목 = 판 잇템로그판.json frame.title(흰/노랑 2줄 6/6) — 자동은 한 색 한 덩어리로 잡음",
+    "자막 층 = 자동 그대로(렌더는 자막팩 ititemlog)"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 7개: [0, 1, 2, 3, 8, 9, 10]",
+    "글꼴 1위 점수 0.1681 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기 실패: 소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스",
+    "소리 구성 실패: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "sfx_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:title].text"
+   ],
+   "caption_style": "잇템로그자막",
+   "title_ink_w": null,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "TmonMonsori.ttf",
+      "score": 0.5436
+     },
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.4147
+     },
+     {
+      "font": "BMDOHYEON.ttf",
+      "score": 0.3961
+     }
+    ],
+    "top5": [
+     {
+      "font": "TmonMonsori.ttf",
+      "score": 0.5436
+     },
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.4147
+     },
+     {
+      "font": "BMDOHYEON.ttf",
+      "score": 0.3961
+     },
+     {
+      "font": "SBAggroB.ttf",
+      "score": 0.3947
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.3947
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "552e48389b28"
+  },
+  {
+   "id": "ro1l3u734v4",
+   "tteutgi": "channel/ititemlog/뜯기/ro1l3u734v4/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-20 00:51",
+   "frame_tool": "ititemlog_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "제목 = 판 잇템로그판.json frame.title(흰/노랑 2줄 6/6) — 자동은 한 색 한 덩어리로 잡음",
+    "자막 층 = 자동 그대로(렌더는 자막팩 ititemlog)"
+   ],
+   "unknown": [
+    "글꼴 1위 점수 0.3009 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기 실패: 소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스",
+    "소리 구성 실패: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "sfx_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:caption].font",
+    "layers[text:caption].outline",
+    "layers[text:caption].letter_spacing",
+    "layers[text:caption].word_spacing",
+    "layers[text:caption].enter"
+   ],
+   "caption_style": "잇템로그자막",
+   "title_ink_w": null,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "TmonMonsori.ttf",
+      "score": 0.9375
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.6194
+     },
+     {
+      "font": "SBAggroB.ttf",
+      "score": 0.6152
+     }
+    ],
+    "top5": [
+     {
+      "font": "TmonMonsori.ttf",
+      "score": 0.9375
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.6194
+     },
+     {
+      "font": "SBAggroB.ttf",
+      "score": 0.6152
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.6114
+     },
+     {
+      "font": "BlackHanSans.ttf",
+      "score": 0.6114
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "dc4aa093989f"
+  }
+ ],
+ "updated_at": "2026-10-25T13:36:18+09:00",
+ "variables": [
+  "layers[text:title].text",
+  "layers[text:caption].font",
+  "layers[text:caption].outline",
+  "layers[text:caption].letter_spacing",
+  "layers[text:caption].word_spacing",
+  "layers[text:caption].enter"
+ ],
+ "caption_styles": [
+  {
+   "name": "잇템로그자막",
+   "layer": {
+    "kind": "text",
+    "role": "caption",
+    "x": 540,
+    "y": 1239,
+    "w": 1000,
+    "align": "center",
+    "lines": 1,
+    "font": "CcPretendard-Bold",
+    "size": 62.8,
+    "line_h": 72,
+    "rgb": [
+     252,
+     225,
+     5
+    ],
+    "line_rgb": null,
+    "line_scale": null,
+    "outline": {
+     "px": 11,
+     "rgb": [
+      201,
+      175,
+      43
+     ]
+    },
+    "line_outline": null,
+    "shadow": null,
+    "glow": null,
+    "box": null,
+    "italic": false,
+    "letter_spacing": 0,
+    "word_spacing": 0,
+    "valign": "center",
+    "enter": {
+     "kind": "rise",
+     "ms": 300
+    },
+    "emphasis": null,
+    "text": null
+   },
+   "status": "잰 편 aUicTeDoW04",
+   "sources": [
+    "aUicTeDoW04",
+    "ro1l3u734v4"
+   ],
+   "notes": [
+    "aUicTeDoW04: 노랑·흰 굵은 고딕 + 진한 외곽선 · 훅 첫 나레 빨강 · 등장 cut",
+    "ro1l3u734v4: 노랑·흰 굵은 고딕 + 진한 외곽선 · 훅 첫 나레 빨강 · 등장 cut"
+   ]
+  }
+ ],
+ "variable_stats": {
+  "layers[text:title].text": {
+   "values": {
+    "aUicTeDoW04": "한국 화장품 쓰고\n커버력에 당황한 외국인",
+    "ro1l3u734v4": "한국 콜라겐 마스크\n쓰고 충격받은 외국인"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  },
+  "layers[text:caption].font": {
+   "values": {
+    "aUicTeDoW04": "CcPretendard-Bold",
+    "ro1l3u734v4": "CcSpoqaHanSansNeo-Bold"
+   },
+   "default": "CcPretendard-Bold",
+   "range": null,
+   "how": "최빈(1/2편)"
+  },
+  "layers[text:caption].outline": {
+   "values": {
+    "aUicTeDoW04": {
+     "px": 11,
+     "rgb": [
+      201,
+      175,
+      43
+     ]
+    },
+    "ro1l3u734v4": {
+     "px": 9,
+     "rgb": [
+      180,
+      163,
+      19
+     ]
+    }
+   },
+   "default": {
+    "px": 10,
+    "rgb": [
+     190,
+     169,
+     31
+    ]
+   },
+   "range": null,
+   "how": "자리별 중앙값(2/2편)"
+  },
+  "layers[text:caption].letter_spacing": {
+   "values": {
+    "aUicTeDoW04": 0,
+    "ro1l3u734v4": 15.9
+   },
+   "default": 7.95,
+   "range": [
+    0,
+    15.9
+   ],
+   "how": "중앙값(2/2편)"
+  },
+  "layers[text:caption].word_spacing": {
+   "values": {
+    "aUicTeDoW04": 0,
+    "ro1l3u734v4": -33
+   },
+   "default": -16,
+   "range": [
+    -33,
+    0
+   ],
+   "how": "중앙값(2/2편)"
+  },
+  "layers[text:caption].enter": {
+   "values": {
+    "aUicTeDoW04": {
+     "kind": "rise",
+     "ms": 300
+    },
+    "ro1l3u734v4": {
+     "kind": "none",
+     "ms": 300
+    }
+   },
+   "default": {
+    "kind": "rise",
+    "ms": 300
+   },
+   "range": null,
+   "how": "자리별 중앙값(1/2편)"
+  }
+ },
+ "rules": {
+  "formula": "title.size = size_cap(잰 크기 중앙값) — 가장 긴 줄이 fill_w(잰 폭 최대·화면 폭−48 중 큰 값)를 넘으면 자간부터(−15%까지), 그래도 넘으면 크기 · title.line_h = size×lh_ratio · title.y = title_top · video.y = (video_anchor) 'gap_ink' 면 제목 잉크 아래 끝 + gap_ink(고정), 'constant' 면 video_top, 'gap' 이면 title.y + lines×line_h + gap — 편마다 덜 흔들리는 쪽(데이터가 고름) · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy",
+  "keys": {
+   "title_top": {
+    "values": {
+     "aUicTeDoW04": 202.5,
+     "ro1l3u734v4": 202.5
+    },
+    "default": 202.5,
+    "range": [
+     202.5,
+     202.5
+    ],
+    "how": "중앙값(2/2편)"
+   },
+   "gap": {
+    "values": {
+     "aUicTeDoW04": 9.5,
+     "ro1l3u734v4": 9.5
+    },
+    "default": 9.5,
+    "range": [
+     9.5,
+     9.5
+    ],
+    "how": "중앙값(2/2편)"
+   },
+   "lh_ratio": {
+    "values": {
+     "aUicTeDoW04": 1.038,
+     "ro1l3u734v4": 1.038
+    },
+    "default": 1.038,
+    "range": [
+     1.038,
+     1.038
+    ],
+    "how": "중앙값(2/2편)"
+   },
+   "size_cap": {
+    "values": {
+     "aUicTeDoW04": 132,
+     "ro1l3u734v4": 132
+    },
+    "default": 132,
+    "range": [
+     132,
+     132
+    ],
+    "how": "중앙값(2/2편)"
+   },
+   "video_bottom": {
+    "values": {
+     "aUicTeDoW04": 1920,
+     "ro1l3u734v4": 1920
+    },
+    "default": 1920,
+    "range": [
+     1920,
+     1920
+    ],
+    "how": "중앙값(2/2편)"
+   },
+   "video_top": {
+    "values": {
+     "aUicTeDoW04": 486,
+     "ro1l3u734v4": 486
+    },
+    "default": 486,
+    "range": [
+     486,
+     486
+    ],
+    "how": "중앙값(2/2편)"
+   },
+   "gap_ink": {
+    "values": {
+     "aUicTeDoW04": 30,
+     "ro1l3u734v4": 30
+    },
+    "default": 30,
+    "range": [
+     30,
+     30
+    ],
+    "how": "중앙값(2/2편)"
+   },
+   "fill_w": {
+    "values": {
+     "aUicTeDoW04": 1152,
+     "ro1l3u734v4": 1043
+    },
+    "default": 1152,
+    "range": [
+     1043,
+     1152
+    ],
+    "how": "잰 폭 최대와 화면 폭−48 중 큰 값"
+   },
+   "cap_dy": {
+    "values": {
+     "aUicTeDoW04": -681,
+     "ro1l3u734v4": -675
+    },
+    "default": -678,
+    "range": [
+     -681,
+     -675
+    ],
+    "how": "중앙값(2/2편)"
+   },
+   "video_anchor": {
+    "values": null,
+    "default": "gap_ink",
+    "range": null,
+    "how": "제목 끝–창 간격 고정(gap_ink)"
+   }
+  }
+ },
+ "roles": [
+  "훅 나레(결과 먼저 — '~는데요')",
+  "원음 반응(본인 말)",
+  "나레 경과·원리",
+  "원음 반응",
+  "둘째 원본 다리 나레",
+  "끝 전언 '~던데,'",
+  "끝 전언 '~고 하고.'",
+  "끝 혼잣말 '아, …야겠다.'"
+ ],
+ "source_kind": "해외영상",
+ "note": "기록용 — 렌더 숫자는 tools/calcopy/hybrid/styles/잇템로그판.json(·_v2), 자막 효과는 자막팩 ititemlog(_v2). 회원 화면 이름 '외국인+한국제품반응'(사장님 10-25)"
+}

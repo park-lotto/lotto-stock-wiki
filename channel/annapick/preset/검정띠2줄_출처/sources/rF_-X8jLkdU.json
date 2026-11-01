@@ -1,0 +1,177 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 420,
+   "w": 1080,
+   "h": 1080,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 218,
+   "w": 1000,
+   "align": "center",
+   "lines": 2,
+   "font": "Cafe24Ohsquare",
+   "size": 89.2,
+   "line_h": 92,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": [
+    [
+     255,
+     255,
+     255
+    ],
+    [
+     253,
+     226,
+     130
+    ]
+   ],
+   "line_scale": [
+    0.97,
+    1.031
+   ],
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -0.3,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "류혜영의 하얀 치아\n10년넘게쓴 얘덕분"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1068,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "GothicA1Black",
+   "size": 76.6,
+   "line_h": 88,
+   "rgb": [
+    254,
+    253,
+    253
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 6,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": {
+    "kind": "rise",
+    "ms": 300
+   },
+   "emphasis": null,
+   "text": null
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 540,
+   "y": 1515,
+   "w": 960,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-Regular",
+   "size": 34,
+   "line_h": 40,
+   "rgb": [
+    125,
+    125,
+    125
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "출처 : 류혜영레몬과밀치회"
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 540,
+   "y": 1745,
+   "w": 960,
+   "align": "center",
+   "lines": 2,
+   "font": "CcPretendard-Regular",
+   "size": 36,
+   "line_h": 44,
+   "rgb": [
+    140,
+    140,
+    140
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "anna\npick"
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "rF_-X8jLkdU"
+}

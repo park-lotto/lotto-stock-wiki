@@ -35,7 +35,10 @@ log = logging.getLogger("prewarm")
 # 2026-08-28 100 → 300: 100도 하루에 다 찼다(실측 08-28 KST — 카운터 100 소진 뒤
 # 워커 로그에 skipped_cap 180건. 실수요는 280건대). 상한에 걸린 사용자는 즐겨찾기에서
 # "분석 시작"을 눌러도 배지가 몇 초 뒤 '분석 전'으로 되돌아가 고장으로 보였다(조율가 제보).
-_PREWARM_DAILY_CAP = 300
+# 2026-10-15 사장님 "300개 제한없이" — 상한 해제(관제 216). 10-15 저녁 300이 차서 담은 영상이
+#   전부 skipped_cap → 제작소 분석으로 미뤄졌고, 그게 재시작에 끊겨 1단계가 멈췄다(박세현님).
+#   0 = 상한 없음. 카운터는 관측용으로 계속 센다. 비용 방어는 호출부의 회원 크레딧(check_and_count)·전역캡이 한다.
+_PREWARM_DAILY_CAP = 0
 # 1 → 3 (2026-08-04 실사고): 인스타 다운로드는 일시 실패가 흔한데 1회 실패로 영구
 # 래치돼 재담기해도 예열이 조용히 스킵됐다(DQohOUqgdRt — 수동 대본뽑기는 즉시 성공
 # = 경로는 멀쩡, 래치만 스테일). 어제 '래치 7건 삭제' 사고와 같은 계보.
@@ -100,6 +103,8 @@ def daily_remaining(store: Store) -> int:
     담는 시점엔 워커가 아직 판정을 안 했으므로, 여기서 남은 몫을 미리 보고
     0이면 "미리분석은 내일" 이라고 알려 준다. 조용히 건너뛰면 사장님이 이유를 모른다.
     """
+    if not _PREWARM_DAILY_CAP:          # 상한 없음(관제 216) — 안내도 띄우지 않는다
+        return None
     return max(0, _PREWARM_DAILY_CAP - _daily_used(store))
 
 
@@ -118,7 +123,7 @@ def _daily_take(store: Store, *, manual: bool = False) -> bool:
         store.set_setting(_DAILY_MANUAL_KEY, f"{_today_kst()}|{used + 1}")
         return True
     used = _daily_used(store)
-    if used >= _PREWARM_DAILY_CAP:
+    if _PREWARM_DAILY_CAP and used >= _PREWARM_DAILY_CAP:
         return False
     store.set_setting(_DAILY_KEY, f"{_today_kst()}|{used + 1}")
     return True

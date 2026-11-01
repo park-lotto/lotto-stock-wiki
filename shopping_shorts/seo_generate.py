@@ -8,6 +8,8 @@
 대본생성과 똑같이 소진에 취약하다 — script_generate.py:20-25와 같은 이유.
 """
 import json
+import sys
+import time
 
 from google.genai import types
 
@@ -217,6 +219,7 @@ def generate(job, captions=None, only=None, locked=None, keyword_stats=None):
     #   연타해 키를 순식간에 다 태웠다. 사유·실측은 key_vault.pick_paced_key 참조.
     #   시도 횟수·실패 처리는 종전과 같다.
     pool = list(keys)
+    transient = 0     # 일시 과부하 재시도 횟수(아래 except)
     while pool:
         key = key_vault.pick_paced_key(pool)
         if not key:
@@ -237,6 +240,14 @@ def generate(job, captions=None, only=None, locked=None, keyword_stats=None):
                 continue
             if key_vault.is_quota_error(e):
                 continue  # 순간 rate limit — 다음 키로
+            # ★구글 일시 과부하(503 high demand 등)도 다음 키로 — 종전엔 여기서 바로 포기해
+            #   과부하 시간대(10-19 23시~10-20 01시) 생성이 66번 실패했다(관제 247). 판정은 주인 함수 하나.
+            from shopping_shorts.script_extract import is_transient_api_error
+            if is_transient_api_error(e) and transient < 3:
+                transient += 1
+                time.sleep(1.5 * transient)
+                continue
+            print(f"[seo] 생성 실패: {e!r}"[:300], file=sys.stderr)
             return None
     return None
 

@@ -110,3 +110,15 @@ def test_final_panel_rechecks_server_and_removes_cached_video():
     assert "fv.querySelector('video')" not in refresh
     assert "fetch('/api/mix/status/'" in refresh
     assert "!fv.querySelector('video')" not in idle
+
+
+def test_never_rendered_job_tells_to_render_first():
+    # 관제 274: 렌더 전 작업에 "다시"라고 하면 고객이 버퍼 고장으로 안다
+    msg = app_module._video_gone_reason({"status": "ready_for_review", "video_path": None})
+    assert "최종 렌더" in msg and "다시" not in msg
+
+
+def test_buffer_panel_asks_server_with_job_id():
+    html = (Path(app_module.__file__).parent / "static" / "produce.html").read_text(encoding="utf-8")
+    load = html.split("async function loadBuffer(){", 1)[1].split("\nfunction ", 1)[0]
+    assert "/api/buffer/channels' + (MIX_JOB ? '?job_id='" in load

@@ -181,13 +181,15 @@ C.paint=function(el,m,W,H){
        if(m.badgeStyle==='burst'){el.style.borderRadius='12%';el.style.clipPath='polygon(5% 0,95% 0,100% 25%,96% 50%,100% 75%,95% 100%,5% 100%,0 75%,4% 50%,0 25%)';}
      }
      else if(m.kind==='image'){const img=document.createElement('img');img.src=m.src;img.draggable=false;Object.assign(img.style,{width:'100%',height:'100%',objectFit:'contain',display:'block',pointerEvents:'none'});el.style.background='transparent';el.style.borderRadius='0';el.append(img);}
+     else if(m.kind==='mograph'){window.MOTION_GRAPHICS?.poster(el,m,W);}   // 🎞 모션그래픽팩(관제 222) — 모양·시간표는 motion-graphics-pack.js 한 곳
      else if(m.kind==='graphic'){
        const canvas=document.createElement('canvas');canvas.width=480;canvas.height=480;canvas.style.width='100%';canvas.style.height='100%';const ctx=canvas.getContext('2d');ctx.translate(240,240);ctx.shadowColor='#0008';ctx.shadowBlur=12;C.shapeDraw[m.graphic]?.(ctx,170,m.color);el.append(canvas);
      }
      else if(m.fx==='blur'||m.fx==='blurdark'){el.style.backdropFilter='blur(10px)';el.style.background=m.fx==='blurdark'?'#0008':'transparent';if(m.soft>=80)el.style.maskImage='radial-gradient(ellipse,black 45%,transparent 72%)';}
      else{el.style.background=m.fx==='fade'?`linear-gradient(90deg,transparent,${m.color} 20%,${m.color} 80%,transparent)`:m.color;}
 };
-C.animate=function(el,m,W){
+C.animate=function(el,m,W,opt){
+     if(m.kind==='mograph'){window.MOTION_GRAPHICS?.clock(el,m,opt?.sceneMs||0);return;}   // 시계(관제 222) — 장면 안 자리는 팩의 place 가 정한다
      if(m.motion&&m.motion!=='none'){
        // 가리키기는 도형이 향한 방향으로 오간다(2026-09-18 사장님 "회전하면 가리키는 방향도 화살표 방향으로").
        //   CSS translate는 rotate보다 먼저 적용돼 늘 가로로만 움직였다 → 회전 각도만큼 돌린 px 벡터로 준다.

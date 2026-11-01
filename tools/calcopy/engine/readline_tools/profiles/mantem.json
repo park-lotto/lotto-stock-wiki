@@ -1,0 +1,29 @@
+{
+ "_what": "만템(mantem) 판독 도구 채널 값 — 06 워커 10-25 channel/mantem/_kal/readline_profile.json 을 옮김(지시서 13). 원래 파일은 06 주인이라 그대로 둔다.",
+ "_bands": "capseg 띠 1190~1420(나레 노랑 잉크 y≈1226~1290 · 원음 잉크 y≈1322~1390, 대성 편은 원음도 y≈1200~1290) · cutdet 창 420~1500(영상 창 0,420,1080×1080)",
+ "layer": "만템",
+ "measure_band": [
+  1195,
+  1415
+ ],
+ "font": {
+  "name": "GmarketSansBold(원음 줄) / Cafe24Ohsquare 기울임(나레 노랑 줄) — 1판 실측(calcopy.json rules.caption)",
+  "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 눈으로 모양만 재확인"
+ },
+ "hand_font": {
+  "name": "해당 없음",
+  "basis": "손글씨 줄 없음"
+ },
+ "outline": "검정 #000000 약 5px(1판 calcopy.json — 외곽 5) · 바깥 연한 테 없음",
+ "hand_outline": null,
+ "letter_gap_px": "좁음(눈 — 외곽선끼리 거의 붙음, 열 빈칸 px 미측정)",
+ "made_by": "오푸스 실행자 줄판독(눈+픽셀: capseg 자막띠 30fps·cutdet 컷/전환·px 채움색·rangesheet 0.2초/1프레임 시트) 2026-10-25 (관제 263 지시서 06)",
+ "capseg_band": [
+  1190,
+  1420
+ ],
+ "cutdet_window": [
+  420,
+  1500
+ ]
+}

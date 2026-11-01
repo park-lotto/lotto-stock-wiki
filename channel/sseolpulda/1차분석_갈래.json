@@ -1,0 +1,944 @@
+[
+ {
+  "style": "제품 이야기썰형",
+  "n": 30,
+  "views_median": 846000,
+  "views_max": 3000000,
+  "voice": [
+   [
+    "TTS",
+    26
+   ],
+   [
+    "사람",
+    3
+   ],
+   [
+    "TTS|사람",
+    1
+   ]
+  ],
+  "honorific": [
+   [
+    "반말",
+    22
+   ],
+   [
+    "섞임",
+    5
+   ],
+   [
+    "존댓말",
+    3
+   ]
+  ],
+  "duration_median": 26.6,
+  "cps_median": 7.78,
+  "first_word_median": 0.04,
+  "cuts_median": 17.5,
+  "effects_per_video": 13.0,
+  "effect_kinds": [
+   [
+    "text_pop",
+    297
+   ],
+   [
+    "zoom",
+    65
+   ],
+   [
+    "other",
+    10
+   ],
+   [
+    "transition",
+    9
+   ],
+   [
+    "sticker",
+    5
+   ],
+   [
+    "arrow",
+    4
+   ],
+   [
+    "highlight",
+    2
+   ],
+   [
+    "flash",
+    2
+   ]
+  ],
+  "sfx_per_video": 12.5,
+  "frame_variants": [
+   [
+    "A",
+    15
+   ],
+   [
+    "B",
+    6
+   ],
+   [
+    "C",
+    2
+   ],
+   [
+    "E",
+    1
+   ],
+   [
+    "S",
+    1
+   ],
+   [
+    "L",
+    1
+   ],
+   [
+    "O",
+    1
+   ],
+   [
+    "H",
+    1
+   ],
+   [
+    "F",
+    1
+   ],
+   [
+    "N",
+    1
+   ]
+  ],
+  "beat_shapes": [
+   [
+    "훅 > 상황 > 정체공개 > 의문 > 원리 > 의문 > 반전 > 원리 > 기타 > 결말",
+    1
+   ],
+   [
+    "훅 > 의문 > 원리 > 상황 > 결말 > 댓글유도",
+    1
+   ],
+   [
+    "훅 > 상황 > 상황 > 반전 > 원리 > 상황 > 원리 > 결말",
+    1
+   ]
+  ],
+  "ids": [
+   "ho5GSd-4To0",
+   "GqSkDhM_bV0",
+   "7DYbxVNz5q8",
+   "1_VtwOkbbVE",
+   "oJZDImhYdXw",
+   "t-xMApVctB0",
+   "v6Mrf2LDqS0",
+   "CRDgWgy4PA4",
+   "-cDiMofZWyo",
+   "L1mZz4riyZE",
+   "Wu8vTQLkY_E",
+   "LqPm7k1Aqek",
+   "_zLL14jbrdc",
+   "sOGg5ySFBDo",
+   "eLYn_4Nckvw",
+   "WA5rBxExyP8",
+   "6KlP1xkSKnE",
+   "rMXGuFJEWDE",
+   "C7jHq_emrXU",
+   "KWKNY4Vjguc",
+   "GnPAhXFxSV4",
+   "GqV__fVDMkk",
+   "mlaiX-U7Wgk",
+   "2OTU-cK0M5Y",
+   "OksMoXVSN5M",
+   "9XWX-ZMbxlo",
+   "4RKsl0caOFw",
+   "6t5rlyFU1iA",
+   "Q9w-kd3AIdE",
+   "tLuDcq_3zW4"
+  ]
+ },
+ {
+  "style": "정보 전달형",
+  "n": 7,
+  "views_median": 251000,
+  "views_max": 2200000,
+  "voice": [
+   [
+    "TTS",
+    6
+   ],
+   [
+    "사람",
+    1
+   ]
+  ],
+  "honorific": [
+   [
+    "섞임",
+    3
+   ],
+   [
+    "존댓말",
+    3
+   ],
+   [
+    "반말",
+    1
+   ]
+  ],
+  "duration_median": 26.53,
+  "cps_median": 7.42,
+  "first_word_median": 0.08,
+  "cuts_median": 12,
+  "effects_per_video": 7,
+  "effect_kinds": [
+   [
+    "text_pop",
+    48
+   ],
+   [
+    "zoom",
+    16
+   ],
+   [
+    "arrow",
+    11
+   ],
+   [
+    "other",
+    4
+   ],
+   [
+    "pan",
+    3
+   ],
+   [
+    "transition",
+    2
+   ],
+   [
+    "split",
+    2
+   ],
+   [
+    "sticker",
+    1
+   ]
+  ],
+  "sfx_per_video": 9,
+  "frame_variants": [
+   [
+    "G",
+    2
+   ],
+   [
+    "T",
+    1
+   ],
+   [
+    "J",
+    1
+   ],
+   [
+    "E",
+    1
+   ],
+   [
+    "D",
+    1
+   ],
+   [
+    "I",
+    1
+   ]
+  ],
+  "beat_shapes": [
+   [
+    "훅 > 정체공개 > 상황 > 원리 > 상황 > 결말 > 덤",
+    1
+   ],
+   [
+    "훅 > 상황 > 원리 > 원리 > 원리 > 원리 > 원리 > 결말 > 댓글유도",
+    1
+   ],
+   [
+    "훅 > 상황 > 정체공개 > 원리 > 원리 > 결말",
+    1
+   ]
+  ],
+  "ids": [
+   "w-Ygny1f8O8",
+   "6iW_aMG_-L0",
+   "JM3MtB0CHS4",
+   "sZzoHbDirfA",
+   "SSwmHxNgWtU",
+   "5NzKJp0LbBc",
+   "H5ie-Ah1gGY"
+  ]
+ },
+ {
+  "style": "바이럴 제품 시연/반응형",
+  "n": 1,
+  "views_median": 8800000,
+  "views_max": 8800000,
+  "voice": [
+   [
+    "없음",
+    1
+   ]
+  ],
+  "honorific": [
+   [
+    "반말",
+    1
+   ]
+  ],
+  "duration_median": 23.9,
+  "cps_median": 3.95,
+  "first_word_median": 0.02,
+  "cuts_median": 1,
+  "effects_per_video": 1,
+  "effect_kinds": [
+   [
+    "other",
+    1
+   ]
+  ],
+  "sfx_per_video": 0,
+  "frame_variants": [
+   [
+    "D",
+    1
+   ]
+  ],
+  "beat_shapes": [
+   [
+    "훅 > 상황 > 의문 > 상황 > 상황 > 상황 > 반전",
+    1
+   ]
+  ],
+  "ids": [
+   "ZdeZRtCeAC4"
+  ]
+ },
+ {
+  "style": "제품 소개형",
+  "n": 1,
+  "views_median": 3700000,
+  "views_max": 3700000,
+  "voice": [
+   [
+    "TTS",
+    1
+   ]
+  ],
+  "honorific": [
+   [
+    "반말",
+    1
+   ]
+  ],
+  "duration_median": 9.7,
+  "cps_median": 7.13,
+  "first_word_median": 0.05,
+  "cuts_median": 4,
+  "effects_per_video": 8,
+  "effect_kinds": [
+   [
+    "text_pop",
+    8
+   ]
+  ],
+  "sfx_per_video": 8,
+  "frame_variants": [
+   [
+    "D",
+    1
+   ]
+  ],
+  "beat_shapes": [
+   [
+    "훅 > 반전 > 원리 > 덤 > 덤 > 댓글유도",
+    1
+   ]
+  ],
+  "ids": [
+   "D3Pc6HZ6t6c"
+  ]
+ },
+ {
+  "style": "감동 스토리텔링형",
+  "n": 1,
+  "views_median": 3300000,
+  "views_max": 3300000,
+  "voice": [
+   [
+    "TTS",
+    1
+   ]
+  ],
+  "honorific": [
+   [
+    "존댓말",
+    1
+   ]
+  ],
+  "duration_median": 22.43,
+  "cps_median": 6.8,
+  "first_word_median": 0.08,
+  "cuts_median": 5,
+  "effects_per_video": 13,
+  "effect_kinds": [
+   [
+    "text_pop",
+    10
+   ],
+   [
+    "arrow",
+    2
+   ],
+   [
+    "emoji",
+    1
+   ]
+  ],
+  "sfx_per_video": 0,
+  "frame_variants": [
+   [
+    "Q",
+    1
+   ]
+  ],
+  "beat_shapes": [
+   [
+    "훅 > 상황 > 상황 > 반전 > 결말",
+    1
+   ]
+  ],
+  "ids": [
+   "mYxuF1A74j4"
+  ]
+ },
+ {
+  "style": "반전 스토리텔링형",
+  "n": 1,
+  "views_median": 1500000,
+  "views_max": 1500000,
+  "voice": [
+   [
+    "TTS",
+    1
+   ]
+  ],
+  "honorific": [
+   [
+    "반말",
+    1
+   ]
+  ],
+  "duration_median": 10.5,
+  "cps_median": 6.73,
+  "first_word_median": 0.08,
+  "cuts_median": 4,
+  "effects_per_video": 3,
+  "effect_kinds": [
+   [
+    "arrow",
+    1
+   ],
+   [
+    "transition",
+    1
+   ],
+   [
+    "emoji",
+    1
+   ]
+  ],
+  "sfx_per_video": 10,
+  "frame_variants": [
+   [
+    "R",
+    1
+   ]
+  ],
+  "beat_shapes": [
+   [
+    "훅 > 상황 > 의문 > 반전 > 결말",
+    1
+   ]
+  ],
+  "ids": [
+   "s9RVpN6MzX4"
+  ]
+ },
+ {
+  "style": "직업 소개형",
+  "n": 1,
+  "views_median": 1300000,
+  "views_max": 1300000,
+  "voice": [
+   [
+    "TTS",
+    1
+   ]
+  ],
+  "honorific": [
+   [
+    "반말",
+    1
+   ]
+  ],
+  "duration_median": 20.83,
+  "cps_median": 7.42,
+  "first_word_median": 0.08,
+  "cuts_median": 6,
+  "effects_per_video": 6,
+  "effect_kinds": [
+   [
+    "text_pop",
+    2
+   ],
+   [
+    "arrow",
+    2
+   ],
+   [
+    "red_circle",
+    1
+   ],
+   [
+    "sticker",
+    1
+   ]
+  ],
+  "sfx_per_video": 10,
+  "frame_variants": [
+   [
+    "E",
+    1
+   ]
+  ],
+  "beat_shapes": [
+   [
+    "훅 > 상황 > 정체공개 > 원리 > 덤 > 댓글유도",
+    1
+   ]
+  ],
+  "ids": [
+   "m4nffB05HNU"
+  ]
+ },
+ {
+  "style": "이색 장소 소개형",
+  "n": 1,
+  "views_median": 1200000,
+  "views_max": 1200000,
+  "voice": [
+   [
+    "TTS",
+    1
+   ]
+  ],
+  "honorific": [
+   [
+    "존댓말",
+    1
+   ]
+  ],
+  "duration_median": 28.97,
+  "cps_median": 8.8,
+  "first_word_median": 0.02,
+  "cuts_median": 32,
+  "effects_per_video": 30,
+  "effect_kinds": [
+   [
+    "text_pop",
+    29
+   ],
+   [
+    "zoom",
+    1
+   ]
+  ],
+  "sfx_per_video": 29,
+  "frame_variants": [
+   [
+    "C",
+    1
+   ]
+  ],
+  "beat_shapes": [
+   [
+    "훅 > 상황 > 원리 > 정체공개 > 정체공개 > 상황 > 원리 > 원리 > 원리 > 반전 > 덤",
+    1
+   ]
+  ],
+  "ids": [
+   "qcR1cpdR-eA"
+  ]
+ },
+ {
+  "style": "DIY 프로젝트 소개형",
+  "n": 1,
+  "views_median": 589000,
+  "views_max": 589000,
+  "voice": [
+   [
+    "TTS",
+    1
+   ]
+  ],
+  "honorific": [
+   [
+    "존댓말",
+    1
+   ]
+  ],
+  "duration_median": 31.9,
+  "cps_median": 7.22,
+  "first_word_median": 0.05,
+  "cuts_median": 11,
+  "effects_per_video": 9,
+  "effect_kinds": [
+   [
+    "text_pop",
+    8
+   ],
+   [
+    "arrow",
+    1
+   ]
+  ],
+  "sfx_per_video": 10,
+  "frame_variants": [
+   [
+    "D",
+    1
+   ]
+  ],
+  "beat_shapes": [
+   [
+    "훅 > 상황 > 원리 > 진행 > 원리 > 비유 > 결말 > 유머",
+    1
+   ]
+  ],
+  "ids": [
+   "RfbD3Yf9t3E"
+  ]
+ },
+ {
+  "style": "기묘한 제품 소개형",
+  "n": 1,
+  "views_median": 382000,
+  "views_max": 382000,
+  "voice": [
+   [
+    "TTS",
+    1
+   ]
+  ],
+  "honorific": [
+   [
+    "반말",
+    1
+   ]
+  ],
+  "duration_median": 29.4,
+  "cps_median": 7.36,
+  "first_word_median": 0.2,
+  "cuts_median": 11,
+  "effects_per_video": 10,
+  "effect_kinds": [
+   [
+    "transition",
+    6
+   ],
+   [
+    "text_pop",
+    3
+   ],
+   [
+    "sticker",
+    1
+   ]
+  ],
+  "sfx_per_video": 12,
+  "frame_variants": [
+   [
+    "M",
+    1
+   ]
+  ],
+  "beat_shapes": [
+   [
+    "훅 > 상황 > 상황 > 상황 > 상황 > 상황 > 상황 > 결말",
+    1
+   ]
+  ],
+  "ids": [
+   "L4Y90sbL-3A"
+  ]
+ },
+ {
+  "style": "제품 광고형",
+  "n": 1,
+  "views_median": 372000,
+  "views_max": 372000,
+  "voice": [
+   [
+    "TTS",
+    1
+   ]
+  ],
+  "honorific": [
+   [
+    "반말",
+    1
+   ]
+  ],
+  "duration_median": 32.1,
+  "cps_median": 9.07,
+  "first_word_median": 0.02,
+  "cuts_median": 31,
+  "effects_per_video": 18,
+  "effect_kinds": [
+   [
+    "zoom",
+    16
+   ],
+   [
+    "text_pop",
+    1
+   ],
+   [
+    "transition",
+    1
+   ]
+  ],
+  "sfx_per_video": 16,
+  "frame_variants": [
+   [
+    "C",
+    1
+   ]
+  ],
+  "beat_shapes": [
+   [
+    "훅 > 상황 > 정체공개 > 원리 > 상황 > 상황 > 상황 > 원리 > 결말",
+    1
+   ]
+  ],
+  "ids": [
+   "Mkf664rnZKA"
+  ]
+ },
+ {
+  "style": "DIY 꿀팁형",
+  "n": 1,
+  "views_median": 371000,
+  "views_max": 371000,
+  "voice": [
+   [
+    "TTS",
+    1
+   ]
+  ],
+  "honorific": [
+   [
+    "반말",
+    1
+   ]
+  ],
+  "duration_median": 29.73,
+  "cps_median": 6.79,
+  "first_word_median": 0.32,
+  "cuts_median": 12,
+  "effects_per_video": 8,
+  "effect_kinds": [
+   [
+    "zoom",
+    6
+   ],
+   [
+    "text_pop",
+    1
+   ],
+   [
+    "sticker",
+    1
+   ]
+  ],
+  "sfx_per_video": 7,
+  "frame_variants": [
+   [
+    "U",
+    1
+   ]
+  ],
+  "beat_shapes": [
+   [
+    "훅 > 원리 > 원리 > 상황 > 원리 > 원리 > 덤 > 결말",
+    1
+   ]
+  ],
+  "ids": [
+   "w7-TjvF93yw"
+  ]
+ },
+ {
+  "style": "생활 꿀팁 소개형",
+  "n": 1,
+  "views_median": 210000,
+  "views_max": 210000,
+  "voice": [
+   [
+    "TTS",
+    1
+   ]
+  ],
+  "honorific": [
+   [
+    "반말",
+    1
+   ]
+  ],
+  "duration_median": 17.43,
+  "cps_median": 6.71,
+  "first_word_median": 0.0,
+  "cuts_median": 8,
+  "effects_per_video": 5,
+  "effect_kinds": [
+   [
+    "cut",
+    4
+   ],
+   [
+    "zoom",
+    1
+   ]
+  ],
+  "sfx_per_video": 4,
+  "frame_variants": [
+   [
+    "K",
+    1
+   ]
+  ],
+  "beat_shapes": [
+   [
+    "훅 > 상황 > 원리 > 원리 > 원리 > 원리 > 결말",
+    1
+   ]
+  ],
+  "ids": [
+   "GFpMl6gVMI0"
+  ]
+ },
+ {
+  "style": "제품 시연형",
+  "n": 1,
+  "views_median": 205000,
+  "views_max": 205000,
+  "voice": [
+   [
+    "없음",
+    1
+   ]
+  ],
+  "honorific": [
+   [
+    "존댓말",
+    1
+   ]
+  ],
+  "duration_median": 11.37,
+  "cps_median": null,
+  "first_word_median": null,
+  "cuts_median": 4,
+  "effects_per_video": 8,
+  "effect_kinds": [
+   [
+    "highlight",
+    6
+   ],
+   [
+    "text_pop",
+    1
+   ],
+   [
+    "sticker",
+    1
+   ]
+  ],
+  "sfx_per_video": 9,
+  "frame_variants": [
+   [
+    "F",
+    1
+   ]
+  ],
+  "beat_shapes": [
+   [
+    "훅 > 정체공개 > 원리 > 원리 > 원리 > 원리 > 결말 > 덤",
+    1
+   ]
+  ],
+  "ids": [
+   "fnZNougO6NQ"
+  ]
+ },
+ {
+  "style": "제품 추천 랭킹형",
+  "n": 1,
+  "views_median": 188000,
+  "views_max": 188000,
+  "voice": [
+   [
+    "TTS",
+    1
+   ]
+  ],
+  "honorific": [
+   [
+    "반말",
+    1
+   ]
+  ],
+  "duration_median": 14.1,
+  "cps_median": null,
+  "first_word_median": null,
+  "cuts_median": 7,
+  "effects_per_video": 7,
+  "effect_kinds": [
+   [
+    "text_pop",
+    4
+   ],
+   [
+    "zoom",
+    3
+   ]
+  ],
+  "sfx_per_video": 4,
+  "frame_variants": [
+   [
+    "P",
+    1
+   ]
+  ],
+  "beat_shapes": [
+   [
+    "훅 > 상황 > 상황 > 상황",
+    1
+   ]
+  ],
+  "ids": [
+   "iZ-TprLYezA"
+  ]
+ }
+]

@@ -1,0 +1,666 @@
+{
+ "QMJtjJz4M6w": {
+  "vid": "QMJtjJz4M6w",
+  "t": 8.0,
+  "lines": [
+   {
+    "text": "홍수를 막을 수 있는",
+    "ink_y": [
+     212,
+     304
+    ],
+    "ink_h": 92,
+    "ink_x": [
+     112,
+     968
+    ],
+    "ink_w": 856,
+    "fill_rgb": [
+     255,
+     255,
+     131
+    ]
+   },
+   {
+    "text": "역대급 모래 주머니?!",
+    "ink_y": [
+     318,
+     407
+    ],
+    "ink_h": 89,
+    "ink_x": [
+     78,
+     1002
+    ],
+    "ink_w": 924,
+    "fill_rgb": [
+     255,
+     255,
+     255
+    ]
+   }
+  ],
+  "font_rank": {
+   "top": [
+    {
+     "font": "GmarketSansBold.otf",
+     "score": 0.9994,
+     "wins": 1,
+     "raw": 0.7252
+    },
+    {
+     "font": "yg-jalnan.ttf",
+     "score": 0.9322,
+     "wins": 0,
+     "raw": 0.6754
+    },
+    {
+     "font": "Jalnan2.ttf",
+     "score": 0.9307,
+     "wins": 0,
+     "raw": 0.6745
+    },
+    {
+     "font": "JalnanGothic.ttf",
+     "score": 0.9157,
+     "wins": 0,
+     "raw": 0.6635
+    },
+    {
+     "font": "SBAggroB.ttf",
+     "score": 0.9094,
+     "wins": 1,
+     "raw": 0.6583
+    }
+   ],
+   "n": 2,
+   "per_sample_top1": [
+    "SBAggroB.ttf",
+    "GmarketSansBold.otf"
+   ],
+   "agree": 0.5,
+   "method": "fontmatch.pooled_rank(줄별 1위 대비 정규화 평균)"
+  }
+ },
+ "kmQGQNJgSVo": {
+  "vid": "kmQGQNJgSVo",
+  "t": 8.0,
+  "lines": [
+   {
+    "text": "입기만 하면",
+    "ink_y": [
+     162,
+     279
+    ],
+    "ink_h": 117,
+    "ink_x": [
+     201,
+     876
+    ],
+    "ink_w": 675,
+    "fill_rgb": [
+     255,
+     248,
+     113
+    ]
+   },
+   {
+    "text": "살 빠지는 땀복?!",
+    "ink_y": [
+     295,
+     404
+    ],
+    "ink_h": 109,
+    "ink_x": [
+     89,
+     991
+    ],
+    "ink_w": 902,
+    "fill_rgb": [
+     255,
+     254,
+     255
+    ]
+   }
+  ],
+  "font_rank": {
+   "top": [
+    {
+     "font": "GmarketSansBold.otf",
+     "score": 1.0,
+     "wins": 2,
+     "raw": 0.8001
+    },
+    {
+     "font": "JalnanGothic.ttf",
+     "score": 0.8443,
+     "wins": 0,
+     "raw": 0.6738
+    },
+    {
+     "font": "yg-jalnan.ttf",
+     "score": 0.8377,
+     "wins": 0,
+     "raw": 0.6689
+    },
+    {
+     "font": "Jalnan2.ttf",
+     "score": 0.8244,
+     "wins": 0,
+     "raw": 0.6586
+    },
+    {
+     "font": "Cafe24Ohsquare.ttf",
+     "score": 0.7554,
+     "wins": 0,
+     "raw": 0.6023
+    }
+   ],
+   "n": 2,
+   "per_sample_top1": [
+    "GmarketSansBold.otf",
+    "GmarketSansBold.otf"
+   ],
+   "agree": 1.0,
+   "method": "fontmatch.pooled_rank(줄별 1위 대비 정규화 평균)"
+  }
+ },
+ "2jJoIbdciDY": {
+  "vid": "2jJoIbdciDY",
+  "t": 8.0,
+  "lines": [
+   {
+    "text": "땅콩잼을 이제는",
+    "ink_y": [
+     199,
+     306
+    ],
+    "ink_h": 107,
+    "ink_x": [
+     123,
+     959
+    ],
+    "ink_w": 836,
+    "fill_rgb": [
+     255,
+     250,
+     122
+    ]
+   },
+   {
+    "text": "안 긁어도 된다고?!",
+    "ink_y": [
+     320,
+     415
+    ],
+    "ink_h": 95,
+    "ink_x": [
+     86,
+     992
+    ],
+    "ink_w": 906,
+    "fill_rgb": [
+     255,
+     255,
+     255
+    ]
+   }
+  ],
+  "font_rank": {
+   "top": [
+    {
+     "font": "GmarketSansBold.otf",
+     "score": 1.0,
+     "wins": 2,
+     "raw": 0.7787
+    },
+    {
+     "font": "SBAggroB.ttf",
+     "score": 0.9138,
+     "wins": 0,
+     "raw": 0.7116
+    },
+    {
+     "font": "yg-jalnan.ttf",
+     "score": 0.9071,
+     "wins": 0,
+     "raw": 0.7063
+    },
+    {
+     "font": "Jalnan2.ttf",
+     "score": 0.9056,
+     "wins": 0,
+     "raw": 0.7049
+    },
+    {
+     "font": "JalnanGothic.ttf",
+     "score": 0.8986,
+     "wins": 0,
+     "raw": 0.6995
+    }
+   ],
+   "n": 2,
+   "per_sample_top1": [
+    "GmarketSansBold.otf",
+    "GmarketSansBold.otf"
+   ],
+   "agree": 1.0,
+   "method": "fontmatch.pooled_rank(줄별 1위 대비 정규화 평균)"
+  }
+ },
+ "vbxJ_v132ao": {
+  "vid": "vbxJ_v132ao",
+  "t": 8.0,
+  "lines": [
+   {
+    "text": "구멍난 벽을 쉽게",
+    "ink_y": [
+     171,
+     283
+    ],
+    "ink_h": 112,
+    "ink_x": [
+     86,
+     993
+    ],
+    "ink_w": 907,
+    "fill_rgb": [
+     255,
+     235,
+     124
+    ]
+   },
+   {
+    "text": "고쳐준다는 제품",
+    "ink_y": [
+     301,
+     410
+    ],
+    "ink_h": 109,
+    "ink_x": [
+     103,
+     977
+    ],
+    "ink_w": 874,
+    "fill_rgb": [
+     255,
+     255,
+     255
+    ]
+   }
+  ],
+  "font_rank": {
+   "top": [
+    {
+     "font": "GmarketSansBold.otf",
+     "score": 1.0,
+     "wins": 2,
+     "raw": 0.7659
+    },
+    {
+     "font": "yg-jalnan.ttf",
+     "score": 0.9692,
+     "wins": 0,
+     "raw": 0.7422
+    },
+    {
+     "font": "Jalnan2.ttf",
+     "score": 0.9682,
+     "wins": 0,
+     "raw": 0.7414
+    },
+    {
+     "font": "JalnanGothic.ttf",
+     "score": 0.9641,
+     "wins": 0,
+     "raw": 0.7385
+    },
+    {
+     "font": "Cafe24Ohsquare.ttf",
+     "score": 0.8541,
+     "wins": 0,
+     "raw": 0.6542
+    }
+   ],
+   "n": 2,
+   "per_sample_top1": [
+    "GmarketSansBold.otf",
+    "GmarketSansBold.otf"
+   ],
+   "agree": 1.0,
+   "method": "fontmatch.pooled_rank(줄별 1위 대비 정규화 평균)"
+  }
+ },
+ "hZgCO9PEnO8": {
+  "vid": "hZgCO9PEnO8",
+  "t": 8.0,
+  "lines": [
+   {
+    "text": "오로지 낚시줄만",
+    "ink_y": [
+     152,
+     270
+    ],
+    "ink_h": 118,
+    "ink_x": [
+     70,
+     1015
+    ],
+    "ink_w": 945,
+    "fill_rgb": [
+     255,
+     248,
+     115
+    ]
+   },
+   {
+    "text": "자른다는 제품?!",
+    "ink_y": [
+     290,
+     408
+    ],
+    "ink_h": 118,
+    "ink_x": [
+     71,
+     1010
+    ],
+    "ink_w": 939,
+    "fill_rgb": [
+     255,
+     254,
+     255
+    ]
+   }
+  ],
+  "font_rank": {
+   "top": [
+    {
+     "font": "GmarketSansBold.otf",
+     "score": 1.0,
+     "wins": 2,
+     "raw": 0.7503
+    },
+    {
+     "font": "JalnanGothic.ttf",
+     "score": 0.9228,
+     "wins": 0,
+     "raw": 0.6905
+    },
+    {
+     "font": "yg-jalnan.ttf",
+     "score": 0.9012,
+     "wins": 0,
+     "raw": 0.675
+    },
+    {
+     "font": "Jalnan2.ttf",
+     "score": 0.8941,
+     "wins": 0,
+     "raw": 0.6696
+    },
+    {
+     "font": "SBAggroB.ttf",
+     "score": 0.8822,
+     "wins": 0,
+     "raw": 0.6615
+    }
+   ],
+   "n": 2,
+   "per_sample_top1": [
+    "GmarketSansBold.otf",
+    "GmarketSansBold.otf"
+   ],
+   "agree": 1.0,
+   "method": "fontmatch.pooled_rank(줄별 1위 대비 정규화 평균)"
+  }
+ },
+ "mVzrvBpMu3E": {
+  "vid": "mVzrvBpMu3E",
+  "t": 8.0,
+  "lines": [
+   {
+    "text": "여성만 쓸 수 있는 수건?!",
+    "ink_y": [
+     187,
+     271
+    ],
+    "ink_h": 84,
+    "ink_x": [
+     41,
+     1040
+    ],
+    "ink_w": 999,
+    "fill_rgb": [
+     255,
+     255,
+     121
+    ]
+   },
+   {
+    "text": "산다 vs 안산다",
+    "ink_y": [
+     296,
+     413
+    ],
+    "ink_h": 117,
+    "ink_x": [
+     94,
+     991
+    ],
+    "ink_w": 897,
+    "fill_rgb": [
+     255,
+     255,
+     255
+    ]
+   }
+  ],
+  "font_rank": {
+   "top": [
+    {
+     "font": "GmarketSansBold.otf",
+     "score": 1.0,
+     "wins": 2,
+     "raw": 0.7396
+    },
+    {
+     "font": "yg-jalnan.ttf",
+     "score": 0.9184,
+     "wins": 0,
+     "raw": 0.6788
+    },
+    {
+     "font": "JalnanGothic.ttf",
+     "score": 0.9082,
+     "wins": 0,
+     "raw": 0.6716
+    },
+    {
+     "font": "Jalnan2.ttf",
+     "score": 0.902,
+     "wins": 0,
+     "raw": 0.6659
+    },
+    {
+     "font": "SBAggroB.ttf",
+     "score": 0.9012,
+     "wins": 0,
+     "raw": 0.664
+    }
+   ],
+   "n": 2,
+   "per_sample_top1": [
+    "GmarketSansBold.otf",
+    "GmarketSansBold.otf"
+   ],
+   "agree": 1.0,
+   "method": "fontmatch.pooled_rank(줄별 1위 대비 정규화 평균)"
+  }
+ },
+ "aFqKN8s2cA8": {
+  "vid": "aFqKN8s2cA8",
+  "t": 8.0,
+  "lines": [
+   {
+    "text": "케첩을 이제",
+    "ink_y": [
+     187,
+     291
+    ],
+    "ink_h": 104,
+    "ink_x": [
+     242,
+     838
+    ],
+    "ink_w": 596,
+    "fill_rgb": [
+     255,
+     253,
+     127
+    ]
+   },
+   {
+    "text": "안 부어도 된다고?!",
+    "ink_y": [
+     311,
+     416
+    ],
+    "ink_h": 105,
+    "ink_x": [
+     49,
+     1029
+    ],
+    "ink_w": 980,
+    "fill_rgb": [
+     255,
+     255,
+     255
+    ]
+   }
+  ],
+  "font_rank": {
+   "top": [
+    {
+     "font": "GmarketSansBold.otf",
+     "score": 0.9997,
+     "wins": 1,
+     "raw": 0.7835
+    },
+    {
+     "font": "yg-jalnan.ttf",
+     "score": 0.9299,
+     "wins": 0,
+     "raw": 0.728
+    },
+    {
+     "font": "JalnanGothic.ttf",
+     "score": 0.9189,
+     "wins": 1,
+     "raw": 0.719
+    },
+    {
+     "font": "Jalnan2.ttf",
+     "score": 0.9134,
+     "wins": 0,
+     "raw": 0.715
+    },
+    {
+     "font": "SBAggroB.ttf",
+     "score": 0.8795,
+     "wins": 0,
+     "raw": 0.6896
+    }
+   ],
+   "n": 2,
+   "per_sample_top1": [
+    "JalnanGothic.ttf",
+    "GmarketSansBold.otf"
+   ],
+   "agree": 0.5,
+   "method": "fontmatch.pooled_rank(줄별 1위 대비 정규화 평균)"
+  }
+ },
+ "HI--3fL7nt4": {
+  "vid": "HI--3fL7nt4",
+  "t": 8.0,
+  "lines": [
+   {
+    "text": "30초만에 와인 칠링?!",
+    "ink_y": [
+     151,
+     233
+    ],
+    "ink_h": 82,
+    "ink_x": [
+     90,
+     988
+    ],
+    "ink_w": 898,
+    "fill_rgb": [
+     255,
+     237,
+     120
+    ]
+   },
+   {
+    "text": "산다 vs 안산다",
+    "ink_y": [
+     259,
+     376
+    ],
+    "ink_h": 117,
+    "ink_x": [
+     94,
+     991
+    ],
+    "ink_w": 897,
+    "fill_rgb": [
+     255,
+     255,
+     255
+    ]
+   }
+  ],
+  "font_rank": {
+   "top": [
+    {
+     "font": "GmarketSansBold.otf",
+     "score": 0.9857,
+     "wins": 1,
+     "raw": 0.7306
+    },
+    {
+     "font": "SBAggroB.ttf",
+     "score": 0.9239,
+     "wins": 1,
+     "raw": 0.6799
+    },
+    {
+     "font": "JalnanGothic.ttf",
+     "score": 0.8718,
+     "wins": 0,
+     "raw": 0.6478
+    },
+    {
+     "font": "Jalnan2.ttf",
+     "score": 0.8374,
+     "wins": 0,
+     "raw": 0.6226
+    },
+    {
+     "font": "Cafe24Ohsquare.ttf",
+     "score": 0.8118,
+     "wins": 0,
+     "raw": 0.6003
+    }
+   ],
+   "n": 2,
+   "per_sample_top1": [
+    "SBAggroB.ttf",
+    "GmarketSansBold.otf"
+   ],
+   "agree": 0.5,
+   "method": "fontmatch.pooled_rank(줄별 1위 대비 정규화 평균)"
+  }
+ }
+}

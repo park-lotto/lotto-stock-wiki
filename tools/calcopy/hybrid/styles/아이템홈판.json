@@ -1,0 +1,674 @@
+{
+ "name": "아이템홈판",
+ "renderer": "bench",
+ "thumb_card_face": true,
+ "_thumb_card_face": "연예인 채널 — 썸네일 카드 3안 전부 연예인 얼굴(사장님 10-25 '연예인 얼굴 통일')",
+ "_note": "아이템홈 칼카피 1차 판 — 연예인쇼핑형 나레+원음(검정 띠 2줄, window). 근거 = 설명서 프리셋 channel/itemhome/preset/검정띠2줄(8편 실측)·뜯기 8편. 손 스크립트 1편_안유진로션/make_render.py(narr_video+원음 덕킹 손 섞기)·preset/ih_preset.py = 참고물",
+ "bench": {
+  "ko": "아이템홈",
+  "channel": "itemhome",
+  "analysis": "channel/itemhome/뜯기",
+  "line_reads": "channel/itemhome/줄판독",
+  "src_dir": "C:/숏템_칼카피/itemhome/원본",
+  "design": "channel/itemhome/preset/검정띠2줄/manifest.json"
+ },
+ "voice": {
+  "name": "문정",
+  "voice_id": "tc_68f9c6a72f0f04a417bb136f",
+  "candidates": [
+   "유라"
+  ],
+  "why": "벤치 화자 여 우세(뜯기 voice_rules) · 1편 안유진로션 문정(make_render·근거.md:76)"
+ },
+ "cps_target": 7.9,
+ "_why_cps_target": "뜯기 voice_rules.cps 8편 7.29~8.82(중앙 7.92)",
+ "bgm": {
+  "id": "sweets",
+  "db_below_voice": 12.9,
+  "duck_orig_db": 0.0,
+  "duck_narr_db": 0.0,
+  "fade_out": 0.14,
+  "candidates": [],
+  "why": "BGM 경쾌(뜯기 8편) · 1편 make_render BGM sweets · 벤치 6편 원본 소리 실측(handconst.py itemhome → _kal/손상수_실측.json bgm.* · 신호급 — 나레·원음·BGM 섞인 소리, 분리 없음): db_below_voice 12.9 = 말 p50 − 말 사이 바닥(줄 경계 쉼 프레임 중앙, 말 없는 구간 ≥1초 편은 그 p10) 편 중앙 12.86dB(15.09·13.44·12.61·8.9·13.11·9.87, n=6) · duck_orig_db 0 = 원음 조각 바닥 p5 − 나레 조각 바닥 p5 편 중앙(-6.46·0·0·0·0·0, 3dB 미만 차 = 0) · fade_out 0.14 = 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.137초(0.037~0.325) · duck_narr_db 0 = 말 없는 구간 ≥1초 편 0/6 — 말이 처음부터 끝까지 깔려 비교할 빈 구간이 없고 db_below_voice 가 이미 말 사이 바닥 기준"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 통일(사장님 10-18)"
+ },
+ "length": {
+  "min": 15.2,
+  "max": 42.3,
+  "why": "뜯기 probe.duration 8편 15.17~42.3초"
+ },
+ "timing": {
+  "gap": 0.06,
+  "tail": 0.33,
+  "why": "벤치 6편 원본 소리 실측(handconst.py itemhome → _kal/손상수_실측.json): 줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙 — gap 0.06(모든 줄 경계 n=63, p25 0.02·p75 0.1) (경계 ±0.15초 창 안 가장 긴 쉼, 쉼 문턱 = 편별 (말 p50+p5)/2) · tail 0.33 = 마지막 말 소리 끝→영상 끝 편 중앙 0.332초(0.207~0.617, 6/6편 — 로컬 위스퍼 마지막 낱말 끝 p≥0.4)"
+ },
+ "frame": {
+  "kind": "window",
+  "_from": "frame_import.py ← calcopy_frame v1 source=MfptnwqlGKs frame=only span=None",
+  "bg": [
+   9,
+   0,
+   0
+  ],
+  "window": [
+   0,
+   480,
+   1080,
+   1440
+  ],
+  "title": [
+   {
+    "font": "Pretendard-Bold.otf",
+    "px": 102.2,
+    "center": 267.5,
+    "color": "#FBF6F5",
+    "max_w": 1000,
+    "letter_spacing": 5.25
+   },
+   {
+    "font": "Pretendard-Bold.otf",
+    "px": 102.2,
+    "center": 382.5,
+    "color": "#F6E900",
+    "max_w": 1000,
+    "letter_spacing": 5.25
+   }
+  ],
+  "watermark": null,
+  "credit": null,
+  "why": "frame_import.py ← channel/itemhome/preset/검정띠2줄/frame.json + manifest.variable_stats default(편마다 값 중앙 — 8편 Mfpt·dNth·mtMt·cLxE·2uPI·agEw·-RgN·AoHn) · 제목 자간 5.25(frame.json title.letter_spacing)",
+  "_pending": {
+   "props": "['title.letter_spacing=5.25', \"caption.enter={'kind': 'none', 'ms': 300}\"]",
+   "per_video_unfilled": [
+    "layers[text:title].line_scale",
+    "layers[text:title].text"
+   ]
+  }
+ },
+ "caption": {
+  "pack": "itemhome",
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 10.0,
+  "chunk_max_chars": 9,
+  "band": [
+   1222,
+   1308
+  ],
+  "why": "frame.json caption 층(SBAggroB 75 흰·검정 외곽 4) y1222 · chunk_max_chars 9 = 벤치 나레 조각 자수(공백 뺀) p90 9(n=82, 중앙 7·최대 10) · typing_cps 10 = 렌더에 안 닿는 값: 벤치 타이핑 0/214줄 · 판 칸 어디에도 enter typing 없음 → caption_rows 가 이 값을 안 읽음 · band [1222,1308] = frame.json caption 층 y1222(줄판독 나레 픽셀 y 중앙 1228~1302 n=82 — 같은 자리) — handconst.py itemhome caption.*"
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "cut": 1.0
+   },
+   "ms": 0,
+   "why": "전환 미측정(줄판독 0편) — 1차 = 컷(06 뒤 교체)"
+  },
+  "why": "push 0 = 재료 움직임 그대로 — 벤치 나레 줄 motion 82개(cam 45, zoom_out 18, zoom_in 15, pan 3, still 1) · 원음 줄 132개(cam 84, zoom_out 18, zoom_in 16, pan 10, still 4) — zoom_in 과반 아님(나레 15/82·원음 16/132) → 우리 밀기 0, handconst.py itemhome cuts.*"
+ },
+ "sfx_files": {
+  "gain_db": -8,
+  "why": "효과음 종류 미측정 — gain 손 상수"
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "why": "줄판독 0편 — counted 없음(06 줄판독 6편 뒤 placement.py count)"
+   },
+   "meme": {
+    "rate": 0.0,
+    "why": "짤 미측정 — 0(06 뒤 교체)"
+   },
+   "sfx": {
+    "max": 0,
+    "why": "효과음 0 — 줄판독 6편 sfx 0/6(10-25 count)"
+   }
+  },
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/itemhome/줄판독",
+   "n_videos": 6,
+   "slots": {
+    "narr.first": {
+     "n": 26,
+     "enter": {
+      "cut": 0.577,
+      "pop": 0.385,
+      "other": 0.038
+     },
+     "emph": 0.5
+    },
+    "narr.rest": {
+     "n": 56,
+     "enter": {
+      "cut": 0.929,
+      "pop": 0.071
+     },
+     "emph": 0.589
+    },
+    "orig.first": {
+     "n": 27,
+     "enter": {
+      "cut": 0.889,
+      "pop": 0.074,
+      "fade": 0.037
+     },
+     "emph": 0.556
+    },
+    "orig.rest": {
+     "n": 105,
+     "enter": {
+      "cut": 0.905,
+      "pop": 0.095
+     },
+     "emph": 0.514
+    }
+   },
+   "share": {
+    "emph": 1.0,
+    "typing": 0.0,
+    "sfx": 0.167
+   },
+   "stickers": {
+    "circle_arrow": 0.167,
+    "heart": 0.167,
+    "other": 0.167
+   },
+   "transition": {
+    "cut": 1.0
+   },
+   "sfx_kinds": {},
+   "videos": [
+    {
+     "id": "2uPIHITVEX8",
+     "n": 21,
+     "slots": {
+      "narr.first": {
+       "n": 3,
+       "enter": {
+        "pop": 2,
+        "cut": 1
+       },
+       "emph": 3
+      },
+      "narr.rest": {
+       "n": 7,
+       "enter": {
+        "cut": 7
+       },
+       "emph": 4
+      },
+      "orig.first": {
+       "n": 3,
+       "enter": {
+        "cut": 3
+       },
+       "emph": 2
+      },
+      "orig.rest": {
+       "n": 8,
+       "enter": {
+        "cut": 7,
+        "pop": 1
+       },
+       "emph": 4
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "나레(굵은 흰)": 10,
+      "원음(“ ” 기울인 흰)": 11
+     },
+     "sfx": [],
+     "no_caption": 3,
+     "transitions": {
+      "cut": 20
+     },
+     "n_trans": 20,
+     "roles": {
+      "hook": 4,
+      "body": 10,
+      "reveal": 3,
+      "end": 4
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "agEwVlDn25U",
+     "n": 54,
+     "slots": {
+      "narr.first": {
+       "n": 6,
+       "enter": {
+        "cut": 4,
+        "pop": 1,
+        "other": 1
+       },
+       "emph": 2
+      },
+      "narr.rest": {
+       "n": 10,
+       "enter": {
+        "cut": 10
+       },
+       "emph": 6
+      },
+      "orig.first": {
+       "n": 6,
+       "enter": {
+        "cut": 6
+       },
+       "emph": 2
+      },
+      "orig.rest": {
+       "n": 32,
+       "enter": {
+        "cut": 30,
+        "pop": 2
+       },
+       "emph": 18
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "나레(굵은 흰)": 16,
+      "원음(“ ” 기울인 흰)": 38
+     },
+     "sfx": [
+      "cap",
+      "cap",
+      "cap",
+      "cap",
+      "cap"
+     ],
+     "no_caption": 8,
+     "transitions": {
+      "cut": 53
+     },
+     "n_trans": 53,
+     "roles": {
+      "hook": 2,
+      "body": 42,
+      "reveal": 2,
+      "twist": 3,
+      "end": 5
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "cLxEI_U1e_E",
+     "n": 17,
+     "slots": {
+      "orig.first": {
+       "n": 4,
+       "enter": {
+        "cut": 4
+       },
+       "emph": 4
+      },
+      "narr.first": {
+       "n": 3,
+       "enter": {
+        "cut": 3
+       },
+       "emph": 2
+      },
+      "narr.rest": {
+       "n": 5,
+       "enter": {
+        "cut": 5
+       },
+       "emph": 3
+      },
+      "orig.rest": {
+       "n": 5,
+       "enter": {
+        "cut": 5
+       },
+       "emph": 2
+      }
+     },
+     "stickers": {
+      "circle_arrow": 1
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "원음(“ ” 기울인 흰)": 9,
+      "나레(굵은 흰)": 8
+     },
+     "sfx": [],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 16
+     },
+     "n_trans": 16,
+     "roles": {
+      "hook": 3,
+      "body": 11,
+      "reveal": 2,
+      "end": 1
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "dNthcAKrj5U",
+     "n": 49,
+     "slots": {
+      "narr.first": {
+       "n": 6,
+       "enter": {
+        "cut": 4,
+        "pop": 2
+       },
+       "emph": 2
+      },
+      "narr.rest": {
+       "n": 12,
+       "enter": {
+        "cut": 9,
+        "pop": 3
+       },
+       "emph": 8
+      },
+      "orig.first": {
+       "n": 6,
+       "enter": {
+        "cut": 5,
+        "pop": 1
+       },
+       "emph": 3
+      },
+      "orig.rest": {
+       "n": 25,
+       "enter": {
+        "cut": 23,
+        "pop": 2
+       },
+       "emph": 11
+      }
+     },
+     "stickers": {
+      "other": 2,
+      "heart": 1
+     },
+     "sticker_lex": {
+      "other": {
+       "none": 2
+      },
+      "heart": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "나레(굵은 흰)": 18,
+      "원음(“ ” 기울인 흰)": 31
+     },
+     "sfx": [],
+     "no_caption": 8,
+     "transitions": {
+      "cut": 48
+     },
+     "n_trans": 48,
+     "roles": {
+      "hook": 4,
+      "body": 38,
+      "reveal": 2,
+      "end": 5
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "MfptnwqlGKs",
+     "n": 29,
+     "slots": {
+      "narr.first": {
+       "n": 3,
+       "enter": {
+        "pop": 2,
+        "cut": 1
+       },
+       "emph": 3
+      },
+      "narr.rest": {
+       "n": 10,
+       "enter": {
+        "cut": 9,
+        "pop": 1
+       },
+       "emph": 6
+      },
+      "orig.first": {
+       "n": 3,
+       "enter": {
+        "cut": 2,
+        "pop": 1
+       },
+       "emph": 2
+      },
+      "orig.rest": {
+       "n": 13,
+       "enter": {
+        "cut": 12,
+        "pop": 1
+       },
+       "emph": 5
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "나레(굵은 흰)": 13,
+      "원음(“ ” 기울인 흰)": 16
+     },
+     "sfx": [],
+     "no_caption": 4,
+     "transitions": {
+      "cut": 28
+     },
+     "n_trans": 28,
+     "roles": {
+      "hook": 6,
+      "reveal": 3,
+      "body": 16,
+      "end": 4
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "mtMtHzG1GHk",
+     "n": 44,
+     "slots": {
+      "narr.first": {
+       "n": 5,
+       "enter": {
+        "pop": 3,
+        "cut": 2
+       },
+       "emph": 1
+      },
+      "narr.rest": {
+       "n": 12,
+       "enter": {
+        "cut": 12
+       },
+       "emph": 6
+      },
+      "orig.first": {
+       "n": 5,
+       "enter": {
+        "cut": 4,
+        "fade": 1
+       },
+       "emph": 2
+      },
+      "orig.rest": {
+       "n": 22,
+       "enter": {
+        "cut": 18,
+        "pop": 4
+       },
+       "emph": 14
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "나레(굵은 흰)": 17,
+      "원음(“ ” 기울인 흰)": 27
+     },
+     "sfx": [],
+     "no_caption": 7,
+     "transitions": {
+      "cut": 43
+     },
+     "n_trans": 43,
+     "roles": {
+      "hook": 5,
+      "body": 35,
+      "reveal": 2,
+      "end": 2
+     },
+     "sfx_lines": []
+    }
+   ]
+  }
+ },
+ "_pending": {
+  "line_reads": "줄판독 0편 → 06-itemhome(6편)·규칙빈도·sfx_events 뒤 counted·rules 채움 — 지금 판은 L1 미달(counted<6)",
+  "brand": "우리 브랜드 미정(브랜드.json 에 itemhome 없음) — 로고 없음(벤치도 0)"
+ },
+ "script": {
+  "brief": [
+   "박자·말투 = 줄판독 0편이라 미측정(06 뒤 교체)",
+   "벤치 뜯기 화자 4역(여·남) — 원음 섞임"
+  ],
+  "audit": [
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 15.2,
+    "max": 42.3,
+    "why": "뜯기 probe.duration 8편 15.17~42.3초"
+   }
+  ]
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "itemhome",
+   "gap": [
+    "벤치 자막과 같은 팩 없음(같음 기준 글꼴·px±10%·ΔE<5 — 1위 kkultemnote same=False) → 팩요청.md 아이템홈판#1(관제 235) · 그동안 'kitchit' 임시(stand_in)"
+   ],
+   "rank": [
+    {
+     "pack": "kkultemnote",
+     "d": 0.674,
+     "terms": {
+      "px": 0.59,
+      "fill": 0.34,
+      "stroke": 0.5,
+      "y": 0.44,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "tension",
+     "d": 0.742,
+     "terms": {
+      "px": 2.34,
+      "fill": 0.34,
+      "stroke": 0.03,
+      "y": 1.0,
+      "font": 0.0
+     }
+    },
+    {
+     "pack": "deal",
+     "d": 0.776,
+     "terms": {
+      "px": 1.01,
+      "fill": 0.34,
+      "stroke": 0.03,
+      "y": 1.0,
+      "font": 1.5
+     }
+    }
+   ],
+   "from": "벤치 6편 214줄 실측 [나레 82줄[잉크 높이 73px(82줄 y칸) · 자리 y1266 · 채움 #FFFCFA(78줄) · 테 4px] · 원음 132줄[잉크 높이 80px(131줄 y칸) · 자리 y1265 · 채움 #FFFCFA(110줄) · 테 4px] · 글꼴 SBAggroB(판 _pending 측정 층) · 글자 크기 75px(판 _pending 측정 층)] → 1위 kkultemnote(거리 0.674) · 지금 kitchit(거리 1.098, 순위 6)",
+   "stand_in": true,
+   "enter_cover": {
+    "cut": {
+     "share": 0.869,
+     "n": 186,
+     "item": "정지(팩 불필요)"
+    },
+    "pop": {
+     "share": 0.121,
+     "n": 26,
+     "item": "overPop"
+    },
+    "slide": {
+     "share": 0.005,
+     "n": 1,
+     "item": null
+    },
+    "fade": {
+     "share": 0.005,
+     "n": 1,
+     "item": null
+    }
+   }
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — 판 자막팩이 등장까지 정한다(caption-motions.js motionPlan: 팩 motion 이 효과팩 번호보다 이긴다) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": null,
+   "map": {},
+   "gain_db": -8,
+   "why": "효과음 종류 미측정 — gain 손 상수",
+   "ncc": {
+    "measured": true,
+    "hits": 45,
+    "pack_hits": 30,
+    "ge06": 0,
+    "max": 0.455,
+    "max_file": "팩03/tick.wav",
+    "mine_max": null
+   },
+   "from": "NCC 벤치↔팩 파일 30발 중 ≥0.6 0개(최대 0.455 팩03/tick.wav) → 지문으로 고를 수 없어 종류 이름표로 slot: 없음 · 팩 없음(종류 미측정)",
+   "gap": []
+  },
+  "bgm": {
+   "id": "sweets",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)",
+   "candidates": []
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 칼카피 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
+  }
+ }
+}

@@ -8,6 +8,7 @@
 // @grant        GM_xmlhttpRequest
 // @connect      shoppingshorts.duckdns.org
 // @connect      app.stmaker.kr
+// @connect      stmaker.kr
 // @downloadURL  https://shoppingshorts.duckdns.org/insta_fill_comment.user.js
 // @updateURL    https://shoppingshorts.duckdns.org/insta_fill_comment.user.js
 // ==/UserScript==

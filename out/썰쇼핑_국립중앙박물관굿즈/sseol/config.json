@@ -1,0 +1,16 @@
+{
+ "channel_name": "먹보",
+ "voice": {
+  "name": "Jerome",
+  "voice_id": "tc_65a0e1d1d7012c484fe4bfc7",
+  "model": "ssfm-v30",
+  "emotion": "normal",
+  "tempo": 1.0
+ },
+ "target_syllables_per_sec": 8.0,
+ "header_icon_path": "",
+ "bgm": "",
+ "bgm_db": -18,
+ "clip_db": -10,
+ "sfx_db": 3
+}

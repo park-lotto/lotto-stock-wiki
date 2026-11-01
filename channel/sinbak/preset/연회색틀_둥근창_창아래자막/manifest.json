@@ -1,0 +1,801 @@
+{
+ "slug": "sinbak",
+ "style": "연회색틀_둥근창_창아래자막",
+ "made_by": "preset_save v1",
+ "rule": "같은 자리 값이 편마다 기준(숫자 max(4, 3%) · 색 채널 12 · 글·참거짓 같음) 밖이면 $per_video, 제목 글자는 항상 $per_video, --exclude 로 뺀 층은 그 편에서 비교 안 함",
+ "created_at": "2026-10-20T09:05:42+09:00",
+ "sources": [
+  {
+   "id": "rAt34vkQ0OY",
+   "tteutgi": "channel/sinbak/뜯기/rAt34vkQ0OY/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-20 08:16",
+   "frame_tool": "sinbak_preset.hand",
+   "font": {
+    "top1": "Kkubulim.ttf",
+    "top1_score": 0.31,
+    "picked_from": {
+     "file": "Kkubulim.ttf",
+     "score": 0.31
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [243, 243, 243] (뜯기 잰 값 [243, 243, 243])",
+    "글꼴 1위 Kkubulim.ttf(0.31) < 0.5 — 확신 낮음. 쓴 글꼴 Kkubulim({'file': 'Kkubulim.ttf', 'score': 0.31})",
+    "제목 글꼴 JalnanGothic — 분석기 fonts.title 1위 JalnanGothic.ttf(0.2517), 신뢰 low",
+    "제목 줄마다 크기 [45.7, 25.5] → size 35.6 × line_scale [1.284, 0.716]",
+    "제목 기울기 +0도(기둥 전단 투영) → 바름",
+    "제목 글자 OCR 없음 → text null(크기는 표본 글자로 잼)",
+    "자막 자간·낱말 간격 0 — 폭 ≥400px 자막 0/6개(3개 미만)",
+    "자막 등장 none — 뜯기 등장 표본 3개 중 '없음' 3개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "캔버스 1080 으로 · 창/제목/본문 손질(실측 근거 = 이 파일 머리, 값 = measure.json)",
+    "로고 줄 [94,280,773,406] = 우리 '신박리포트' 자리 — 그림 없음, 층 비움(스키마 빈칸 아님, 자산 빈칸)",
+    "창 안 글씨(BMDOHYEON·검정 9px 테·색=뜻·자유 자리)는 스키마 글자 층에 못 담음 → manifest.overlay_style"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 7개: [0, 1, 2, 3, 4, 5, 6]",
+    "글꼴 1위 점수 0.31 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기 실패: 소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스",
+    "소리 구성 실패: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "sfx_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:title].text"
+   ],
+   "caption_style": "본문_검정흰테_즉시",
+   "title_ink_w": 271,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.2517
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.2496
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.2443
+     }
+    ],
+    "top5": [
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.2517
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.2496
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.2443
+     },
+     {
+      "font": "BlackHanSans.ttf",
+      "score": 0.2349
+     },
+     {
+      "font": "SBAggroB.ttf",
+      "score": 0.2321
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "9941180566e5"
+  },
+  {
+   "id": "oT-SxFJcQ-4",
+   "tteutgi": "channel/sinbak/뜯기/oT-SxFJcQ-4/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-20 08:12",
+   "frame_tool": "sinbak_preset.hand",
+   "font": {
+    "top1": "SUIT-Bold.otf",
+    "top1_score": 0.3613,
+    "picked_from": {
+     "file": "SUIT-Bold.otf",
+     "score": 0.3613
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [242, 242, 242] (뜯기 잰 값 [242, 242, 242])",
+    "글꼴 1위 SUIT-Bold.otf(0.3613) < 0.5 — 확신 낮음. 쓴 글꼴 SUITBold({'file': 'SUIT-Bold.otf', 'score': 0.3613})",
+    "제목 글꼴 = 자막 글꼴(SUITBold) — 분석기 fonts.title 없음 · 프레임/제목 OCR 없어 직접 판별 못 함",
+    "제목 기울임: 잉크 없음 → false",
+    "제목 글자 OCR 없음 → text null(크기는 표본 글자로 잼)",
+    "제목 채움색 못 잼 → 잉크 극성 기본색",
+    "자막 자간·낱말 간격 0 — 폭 ≥400px 자막 0/13개(3개 미만)",
+    "자막 등장 none — 뜯기 등장 표본 3개 중 '없음' 3개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "캔버스 1080 으로 · 창/제목/본문 손질(실측 근거 = 이 파일 머리, 값 = measure.json)",
+    "로고 줄 [94,280,773,406] = 우리 '신박리포트' 자리 — 그림 없음, 층 비움(스키마 빈칸 아님, 자산 빈칸)",
+    "창 안 글씨(BMDOHYEON·검정 9px 테·색=뜻·자유 자리)는 스키마 글자 층에 못 담음 → manifest.overlay_style"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 1개: [8]",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: 글자 못 읽음",
+    "글꼴 1위 점수 0.3613 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기 실패: 소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스",
+    "소리 구성 실패: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "sfx_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:title].size",
+    "layers[text:title].line_h"
+   ],
+   "caption_style": "본문_검정흰테_즉시",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "a504b5b55143"
+  },
+  {
+   "id": "fzoZc7V_hDM",
+   "tteutgi": "channel/sinbak/뜯기/fzoZc7V_hDM/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-20 08:13",
+   "frame_tool": "sinbak_preset.hand",
+   "font": {
+    "top1": "Kkubulim.ttf",
+    "top1_score": 0.1476,
+    "picked_from": {
+     "file": "Kkubulim.ttf",
+     "score": 0.1476
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [243, 243, 243] (뜯기 잰 값 [243, 243, 243])",
+    "글꼴 1위 Kkubulim.ttf(0.1476) < 0.5 — 확신 낮음. 쓴 글꼴 Kkubulim({'file': 'Kkubulim.ttf', 'score': 0.1476})",
+    "제목 글꼴 YgJalnan — 분석기 fonts.title 1위 yg-jalnan.ttf(0.2625), 신뢰 low",
+    "제목 줄마다 크기 [45.3, 28.4] → size 36.8 × line_scale [1.231, 0.772]",
+    "제목 기울기 +0도(기둥 전단 투영) → 바름",
+    "제목 글자 OCR 없음 → text null(크기는 표본 글자로 잼)",
+    "자막 자간·낱말 간격 0 — 폭 ≥400px 자막 0/7개(3개 미만)",
+    "자막 등장 none — 뜯기 등장 표본 3개 중 '없음' 3개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "캔버스 1080 으로 · 창/제목/본문 손질(실측 근거 = 이 파일 머리, 값 = measure.json)",
+    "로고 줄 [94,280,773,406] = 우리 '신박리포트' 자리 — 그림 없음, 층 비움(스키마 빈칸 아님, 자산 빈칸)",
+    "창 안 글씨(BMDOHYEON·검정 9px 테·색=뜻·자유 자리)는 스키마 글자 층에 못 담음 → manifest.overlay_style"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 8개: [0, 1, 2, 3, 4, 5, 6, 7]",
+    "자막 글자 못 읽음 1/7개",
+    "글꼴 1위 점수 0.1476 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기 실패: 소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스",
+    "소리 구성 실패: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "sfx_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:title].x"
+   ],
+   "caption_style": "본문_검정흰테_즉시",
+   "title_ink_w": 277,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.2625
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.2587
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.257
+     }
+    ],
+    "top5": [
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.2625
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.2587
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.257
+     },
+     {
+      "font": "BlackHanSans.ttf",
+      "score": 0.2435
+     },
+     {
+      "font": "SBAggroB.ttf",
+      "score": 0.2424
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "49a8f49b0f3f"
+  },
+  {
+   "id": "CnRWZ3scVfk",
+   "tteutgi": "channel/sinbak/뜯기/CnRWZ3scVfk/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-20 08:17",
+   "frame_tool": "sinbak_preset.hand",
+   "font": {
+    "top1": "Pretendard-SemiBold.otf",
+    "top1_score": 0.3897,
+    "picked_from": {
+     "file": "Pretendard-SemiBold.otf",
+     "score": 0.3897
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [242, 242, 242] (뜯기 잰 값 [242, 242, 242])",
+    "글꼴 1위 Pretendard-SemiBold.otf(0.3897) < 0.5 — 확신 낮음. 쓴 글꼴 CcPretendard-SemiBold({'file': 'Pretendard-SemiBold.otf', 'score': 0.3897})",
+    "제목 글꼴 YgJalnan — 분석기 fonts.title 1위 yg-jalnan.ttf(0.2631), 신뢰 low",
+    "제목 줄마다 크기 [45.3, 28.4] → size 36.8 × line_scale [1.231, 0.772]",
+    "제목 줄별 외곽선 [None, [2, 146, 92, 103]] (창 위로 걸친 고리만 잼)",
+    "제목 기울기 +0도(기둥 전단 투영) → 바름",
+    "제목 글자 OCR 없음 → text null(크기는 표본 글자로 잼)",
+    "자막 자간·낱말 간격 0 — 폭 ≥400px 자막 0/9개(3개 미만)",
+    "자막 등장 none — 뜯기 등장 표본 3개 중 '없음' 3개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "캔버스 1080 으로 · 창/제목/본문 손질(실측 근거 = 이 파일 머리, 값 = measure.json)",
+    "로고 줄 [94,280,773,406] = 우리 '신박리포트' 자리 — 그림 없음, 층 비움(스키마 빈칸 아님, 자산 빈칸)",
+    "창 안 글씨(BMDOHYEON·검정 9px 테·색=뜻·자유 자리)는 스키마 글자 층에 못 담음 → manifest.overlay_style"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 11개: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]",
+    "글꼴 1위 점수 0.3897 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기 실패: 소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스",
+    "소리 구성 실패: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "sfx_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "본문_검정흰테_즉시",
+   "title_ink_w": 245,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.2631
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.2598
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.2576
+     }
+    ],
+    "top5": [
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.2631
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.2598
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.2576
+     },
+     {
+      "font": "BlackHanSans.ttf",
+      "score": 0.2432
+     },
+     {
+      "font": "SBAggroB.ttf",
+      "score": 0.2418
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "daeef545b699"
+  },
+  {
+   "id": "bpjoacs2S6Q",
+   "tteutgi": "channel/sinbak/뜯기/bpjoacs2S6Q/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-20 08:19",
+   "frame_tool": "sinbak_preset.hand",
+   "font": {
+    "top1": "SUIT-Bold.otf",
+    "top1_score": 0.3886,
+    "picked_from": {
+     "file": "SUIT-Bold.otf",
+     "score": 0.3886
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [242, 242, 242] (뜯기 잰 값 [242, 242, 242])",
+    "글꼴 1위 SUIT-Bold.otf(0.3886) < 0.5 — 확신 낮음. 쓴 글꼴 SUITBold({'file': 'SUIT-Bold.otf', 'score': 0.3886})",
+    "제목 글꼴 = 자막 글꼴(SUITBold) — 분석기 fonts.title 없음 · 프레임/제목 OCR 없어 직접 판별 못 함",
+    "제목 줄마다 크기 [48.4, 24.2] → size 36.3 × line_scale [1.333, 0.667]",
+    "제목 기울기 +0도(기둥 전단 투영) → 바름",
+    "제목 글자 OCR 없음 → text null(크기는 표본 글자로 잼)",
+    "자막 자간·낱말 간격 0 — 폭 ≥400px 자막 0/10개(3개 미만)",
+    "자막 등장 none — 뜯기 등장 표본 3개 중 '없음' 3개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "캔버스 1080 으로 · 창/제목/본문 손질(실측 근거 = 이 파일 머리, 값 = measure.json)",
+    "로고 줄 [94,280,773,406] = 우리 '신박리포트' 자리 — 그림 없음, 층 비움(스키마 빈칸 아님, 자산 빈칸)",
+    "창 안 글씨(BMDOHYEON·검정 9px 테·색=뜻·자유 자리)는 스키마 글자 층에 못 담음 → manifest.overlay_style"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 12개: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]",
+    "글꼴 1위 점수 0.3886 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기 실패: 소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스",
+    "소리 구성 실패: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "sfx_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "본문_검정흰테_즉시",
+   "title_ink_w": 257,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "58053a74b673"
+  },
+  {
+   "id": "edTkyQKrqMk",
+   "tteutgi": "channel/sinbak/뜯기/edTkyQKrqMk/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-20 08:14",
+   "frame_tool": "sinbak_preset.hand",
+   "font": {
+    "top1": "Pretendard-SemiBold.otf",
+    "top1_score": 0.3593,
+    "picked_from": {
+     "file": "Pretendard-SemiBold.otf",
+     "score": 0.3593
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [243, 243, 243] (뜯기 잰 값 [243, 243, 243])",
+    "글꼴 1위 Pretendard-SemiBold.otf(0.3593) < 0.5 — 확신 낮음. 쓴 글꼴 CcPretendard-SemiBold({'file': 'Pretendard-SemiBold.otf', 'score': 0.3593})",
+    "제목 글꼴 YgJalnan — 분석기 fonts.title 1위 yg-jalnan.ttf(0.2627), 신뢰 low",
+    "제목 줄마다 크기 [45.3, 25.3] → size 35.3 × line_scale [1.283, 0.717]",
+    "제목 칸 폭 342 — 원본 가장 긴 줄 잉크 302px 가 기본 칸보다 넓다",
+    "제목 줄별 외곽선 [None, [2, 252, 251, 250]] (창 위로 걸친 고리만 잼)",
+    "제목 기울기 +0도(기둥 전단 투영) → 바름",
+    "제목 글자 OCR 없음 → text null(크기는 표본 글자로 잼)",
+    "자막 자간·낱말 간격 0 — 폭 ≥400px 자막 0/9개(3개 미만)",
+    "자막 등장 none — 뜯기 등장 표본 3개 중 '없음' 2개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "캔버스 1080 으로 · 창/제목/본문 손질(실측 근거 = 이 파일 머리, 값 = measure.json)",
+    "로고 줄 [94,280,773,406] = 우리 '신박리포트' 자리 — 그림 없음, 층 비움(스키마 빈칸 아님, 자산 빈칸)",
+    "창 안 글씨(BMDOHYEON·검정 9px 테·색=뜻·자유 자리)는 스키마 글자 층에 못 담음 → manifest.overlay_style"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 7개: [0, 2, 4, 5, 6, 7, 8]",
+    "글꼴 1위 점수 0.3593 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기 실패: 소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스",
+    "소리 구성 실패: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "sfx_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(소리 판독(audio/mp3)은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "본문_검정흰테_즉시",
+   "title_ink_w": 302,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.2627
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.2605
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.2583
+     }
+    ],
+    "top5": [
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.2627
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.2605
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.2583
+     },
+     {
+      "font": "BlackHanSans.ttf",
+      "score": 0.2435
+     },
+     {
+      "font": "SBAggroB.ttf",
+      "score": 0.2411
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "508e07c12330"
+  }
+ ],
+ "updated_at": "2026-10-20T09:05:43+09:00",
+ "variables": [
+  "layers[text:title].x",
+  "layers[text:title].size",
+  "layers[text:title].line_h",
+  "layers[text:title].text"
+ ],
+ "caption_styles": [
+  {
+   "name": "본문_검정흰테_즉시",
+   "layer": {
+    "kind": "text",
+    "role": "caption",
+    "x": 548,
+    "y": 1291,
+    "w": 1000,
+    "align": "center",
+    "lines": 1,
+    "font": "CcPretendard-SemiBold",
+    "size": 71.9,
+    "line_h": 83,
+    "rgb": [
+     0,
+     0,
+     0
+    ],
+    "line_rgb": null,
+    "line_scale": null,
+    "outline": {
+     "px": 2,
+     "rgb": [
+      255,
+      255,
+      255
+     ]
+    },
+    "line_outline": null,
+    "shadow": null,
+    "glow": null,
+    "box": null,
+    "italic": false,
+    "letter_spacing": -3.3,
+    "word_spacing": 20.3,
+    "valign": "center",
+    "enter": {
+     "kind": "none",
+     "ms": 0
+    },
+    "emphasis": null,
+    "text": null
+   },
+   "status": "잰 편 rAt34vkQ0OY",
+   "sources": [
+    "rAt34vkQ0OY",
+    "oT-SxFJcQ-4",
+    "fzoZc7V_hDM",
+    "CnRWZ3scVfk",
+    "bpjoacs2S6Q",
+    "edTkyQKrqMk"
+   ],
+   "notes": [
+    "rAt34vkQ0OY: 창 아래 본문 1줄 · instant · 컷=자막 바뀜(45/54)",
+    "oT-SxFJcQ-4: 창 아래 본문 1줄 · instant · 컷=자막 바뀜(45/54)",
+    "fzoZc7V_hDM: 창 아래 본문 1줄 · instant · 컷=자막 바뀜(45/54)",
+    "CnRWZ3scVfk: 창 아래 본문 1줄 · instant · 컷=자막 바뀜(45/54)",
+    "bpjoacs2S6Q: 창 아래 본문 1줄 · instant · 컷=자막 바뀜(45/54)",
+    "edTkyQKrqMk: 창 아래 본문 1줄 · instant · 컷=자막 바뀜(45/54)"
+   ]
+  }
+ ],
+ "variable_stats": {
+  "layers[text:title].x": {
+   "values": {
+    "rAt34vkQ0OY": 91,
+    "oT-SxFJcQ-4": 94,
+    "fzoZc7V_hDM": 96,
+    "CnRWZ3scVfk": 97,
+    "bpjoacs2S6Q": 68,
+    "edTkyQKrqMk": 96
+   },
+   "default": 95,
+   "range": [
+    68,
+    97
+   ],
+   "how": "중앙값(6/6편)"
+  },
+  "layers[text:title].size": {
+   "values": {
+    "rAt34vkQ0OY": 73.6,
+    "oT-SxFJcQ-4": 68.1,
+    "fzoZc7V_hDM": 85.6,
+    "CnRWZ3scVfk": 84.6,
+    "bpjoacs2S6Q": 69.2,
+    "edTkyQKrqMk": 72.5
+   },
+   "default": 73.05,
+   "range": [
+    68.1,
+    85.6
+   ],
+   "how": "중앙값(6/6편)"
+  },
+  "layers[text:title].line_h": {
+   "values": {
+    "rAt34vkQ0OY": 85,
+    "oT-SxFJcQ-4": 78,
+    "fzoZc7V_hDM": 98,
+    "CnRWZ3scVfk": 97,
+    "bpjoacs2S6Q": 80,
+    "edTkyQKrqMk": 83
+   },
+   "default": 84,
+   "range": [
+    78,
+    98
+   ],
+   "how": "중앙값(6/6편)"
+  },
+  "layers[text:title].text": {
+   "values": {
+    "rAt34vkQ0OY": "너무 쉬워 안 까먹는 아이디어",
+    "oT-SxFJcQ-4": "사소하지만 귀티나는 행동들",
+    "fzoZc7V_hDM": "한 번 보면 절대 안 까먹음",
+    "CnRWZ3scVfk": "역대급 귀여운 정당방위",
+    "bpjoacs2S6Q": "정성에 '아이디어'가 더해질 때",
+    "edTkyQKrqMk": "주 4일 흰 옷 입는 선배가 알려줌"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  }
+ },
+ "rules": {
+  "formula": "title.size = size_cap(잰 크기 중앙값) — 가장 긴 줄이 fill_w(잰 폭 최대·화면 폭−48 중 큰 값)를 넘으면 자간부터(−15%까지), 그래도 넘으면 크기 · title.line_h = size×lh_ratio · title.y = title_top · video.y = (video_anchor) 'gap_ink' 면 제목 잉크 아래 끝 + gap_ink(고정), 'constant' 면 video_top, 'gap' 이면 title.y + lines×line_h + gap — 편마다 덜 흔들리는 쪽(데이터가 고름) · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy",
+  "keys": {
+   "title_top": {
+    "values": {
+     "rAt34vkQ0OY": 446,
+     "oT-SxFJcQ-4": 448,
+     "fzoZc7V_hDM": 439,
+     "CnRWZ3scVfk": 439,
+     "bpjoacs2S6Q": 446,
+     "edTkyQKrqMk": 446
+    },
+    "default": 446,
+    "range": [
+     439,
+     448
+    ],
+    "how": "중앙값(6/6편)"
+   },
+   "gap": {
+    "values": {
+     "rAt34vkQ0OY": 10,
+     "oT-SxFJcQ-4": 15,
+     "fzoZc7V_hDM": 4,
+     "CnRWZ3scVfk": 5,
+     "bpjoacs2S6Q": 15,
+     "edTkyQKrqMk": 12
+    },
+    "default": 11,
+    "range": [
+     4,
+     15
+    ],
+    "how": "중앙값(6/6편)"
+   },
+   "lh_ratio": {
+    "values": {
+     "rAt34vkQ0OY": 1.155,
+     "oT-SxFJcQ-4": 1.145,
+     "fzoZc7V_hDM": 1.145,
+     "CnRWZ3scVfk": 1.147,
+     "bpjoacs2S6Q": 1.156,
+     "edTkyQKrqMk": 1.145
+    },
+    "default": 1.146,
+    "range": [
+     1.145,
+     1.156
+    ],
+    "how": "중앙값(6/6편)"
+   },
+   "size_cap": {
+    "values": {
+     "rAt34vkQ0OY": 73.6,
+     "oT-SxFJcQ-4": 68.1,
+     "fzoZc7V_hDM": 85.6,
+     "CnRWZ3scVfk": 84.6,
+     "bpjoacs2S6Q": 69.2,
+     "edTkyQKrqMk": 72.5
+    },
+    "default": 73.05,
+    "range": [
+     68.1,
+     85.6
+    ],
+    "how": "중앙값(6/6편)"
+   },
+   "video_bottom": {
+    "values": {
+     "rAt34vkQ0OY": 1287,
+     "oT-SxFJcQ-4": 1287,
+     "fzoZc7V_hDM": 1287,
+     "CnRWZ3scVfk": 1287,
+     "bpjoacs2S6Q": 1287,
+     "edTkyQKrqMk": 1287
+    },
+    "default": 1287,
+    "range": [
+     1287,
+     1287
+    ],
+    "how": "중앙값(6/6편)"
+   },
+   "video_top": {
+    "values": {
+     "rAt34vkQ0OY": 541,
+     "oT-SxFJcQ-4": 541,
+     "fzoZc7V_hDM": 541,
+     "CnRWZ3scVfk": 541,
+     "bpjoacs2S6Q": 541,
+     "edTkyQKrqMk": 541
+    },
+    "default": 541,
+    "range": [
+     541,
+     541
+    ],
+    "how": "중앙값(6/6편)"
+   },
+   "gap_ink": {
+    "values": {
+     "rAt34vkQ0OY": 18,
+     "oT-SxFJcQ-4": 23,
+     "fzoZc7V_hDM": 15,
+     "CnRWZ3scVfk": 16,
+     "bpjoacs2S6Q": 24,
+     "edTkyQKrqMk": 21
+    },
+    "default": 20,
+    "range": [
+     15,
+     24
+    ],
+    "how": "중앙값(6/6편)"
+   },
+   "fill_w": {
+    "values": {
+     "rAt34vkQ0OY": 271,
+     "oT-SxFJcQ-4": 713,
+     "fzoZc7V_hDM": 277,
+     "CnRWZ3scVfk": 245,
+     "bpjoacs2S6Q": 257,
+     "edTkyQKrqMk": 302
+    },
+    "default": 1032,
+    "range": [
+     245,
+     713
+    ],
+    "how": "잰 폭 최대와 화면 폭−48 중 큰 값"
+   },
+   "cap_dy": {
+    "values": {
+     "rAt34vkQ0OY": 4,
+     "oT-SxFJcQ-4": 4,
+     "fzoZc7V_hDM": 4,
+     "CnRWZ3scVfk": 4,
+     "bpjoacs2S6Q": 4,
+     "edTkyQKrqMk": 4
+    },
+    "default": 4,
+    "range": [
+     4,
+     4
+    ],
+    "how": "중앙값(6/6편)"
+   },
+   "video_anchor": {
+    "values": null,
+    "default": "gap_ink",
+    "range": null,
+    "how": "제목 끝–창 간격 고정(gap_ink)"
+   }
+  }
+ },
+ "roles": [
+  "훅 '…인데/…다는데'(본문 1줄, 실패 장면)",
+  "다리(문제·실패, 창 안 빨강 외침·노랑 상태)",
+  "과정 본문(컷=자막 바뀜, 창 안 노랑·파랑 소리)",
+  "질문 '…하면?'",
+  "공개(창 안 감탄 + 가장 큰 효과음)",
+  "끝 '진짜 ○○하네!!/ㄷㄷ'"
+ ],
+ "source_kind": "해외영상",
+ "note": "1차 = 벤치 그대로. 로고 자리 = 신박리포트(그림 미제작 — 자리만). 창 안 글씨는 overlay_style(스키마 밖)",
+ "logo_slot": {
+  "box": [
+   94,
+   280,
+   773,
+   406
+  ],
+  "brand": "신박리포트",
+  "asset": null,
+  "bench": "마스코트+'a novel discovery'+'신박발견'(복사 금지)"
+ },
+ "overlay_style": {
+  "font": "BMDOHYEON",
+  "font_score": {
+   "font": "BMDOHYEON.ttf",
+   "score": 1.0,
+   "wins": 16,
+   "raw": 0.7629,
+   "family": "BMDOHYEON"
+  },
+  "fill_ink_h": 82.0,
+  "size": 106.5,
+  "outline": {
+   "px": 9.0,
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  "enter": "instant",
+  "colors": {
+   "외침·힘": "#F80A50",
+   "과정·결과·감탄": "#EFC716",
+   "도구 소리·이름표": "#068EF7",
+   "남 대사": "#04AF0D"
+  },
+  "place": "동작 바로 옆 자유 배치(줄판독 x·y) — 스키마 빈칸",
+  "src": "C:\\숏템_칼카피\\sinbak\\work\\preset\\measure.json"
+ }
+}

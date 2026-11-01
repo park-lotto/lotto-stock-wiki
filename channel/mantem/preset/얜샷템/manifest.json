@@ -1,0 +1,885 @@
+{
+ "slug": "mantem",
+ "style": "얜샷템",
+ "made_by": "preset_save v1",
+ "rule": "같은 자리 값이 편마다 기준(숫자 max(4, 3%) · 색 채널 12 · 글·참거짓 같음) 밖이면 $per_video, 제목 글자는 항상 $per_video, --exclude 로 뺀 층은 그 편에서 비교 안 함",
+ "created_at": "2026-10-17T03:11:43+09:00",
+ "sources": [
+  {
+   "id": "BDAjUIBTjfY",
+   "tteutgi": "channel/mantem/뜯기/BDAjUIBTjfY/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-17 02:55",
+   "frame_tool": "mt_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "제목 글 = to_frame",
+    "제목·자막·출처 = 8편 실측 중앙값으로 고정(색톤_실측.md)"
+   ],
+   "unknown": [
+    "글꼴 1위 점수 0.3932 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:title].text"
+   ],
+   "caption_style": "나레_노랑",
+   "title_ink_w": null,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.5662
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.5186
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.5135
+     }
+    ],
+    "top5": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.5662
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.5186
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.5135
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.506
+     },
+     {
+      "font": "TmonMonsori.ttf",
+      "score": 0.4878
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "81a0e7d95f89"
+  },
+  {
+   "id": "S_CXTCRKFVg",
+   "tteutgi": "channel/mantem/뜯기/S_CXTCRKFVg/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-17 02:33",
+   "frame_tool": "mt_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "제목 글 = 뜯기 OCR(to_frame 실패)",
+    "제목·자막·출처 = 8편 실측 중앙값으로 고정(색톤_실측.md)"
+   ],
+   "unknown": [
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:label].text"
+   ],
+   "caption_style": "나레_노랑",
+   "title_ink_w": null,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.6934
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.612
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.6106
+     }
+    ],
+    "top5": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.6934
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.612
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.6106
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.6083
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.6008
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "0dd789cf1bf1"
+  },
+  {
+   "id": "qBPnRzR-VaQ",
+   "tteutgi": "channel/mantem/뜯기/qBPnRzR-VaQ/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-17 02:55",
+   "frame_tool": "mt_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "제목 글 = to_frame",
+    "제목·자막·출처 = 8편 실측 중앙값으로 고정(색톤_실측.md)"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 3개: [4, 5, 8]",
+    "글꼴 1위 점수 0.3527 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기: 길이 초과 12.3~14.0",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "나레_노랑",
+   "title_ink_w": null,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.596
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.5377
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.5353
+     }
+    ],
+    "top5": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.596
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.5377
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.5353
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.532
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.5031
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "94a8dddf022b"
+  },
+  {
+   "id": "3Xb8hDoRiU4",
+   "tteutgi": "channel/mantem/뜯기/3Xb8hDoRiU4/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-17 02:33",
+   "frame_tool": "mt_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "제목 글 = to_frame",
+    "제목·자막·출처 = 8편 실측 중앙값으로 고정(색톤_실측.md)"
+   ],
+   "unknown": [
+    "글꼴 1위 점수 0.2344 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "나레_노랑",
+   "title_ink_w": null,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.5955
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.556
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.5535
+     }
+    ],
+    "top5": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.5955
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.556
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.5535
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.5477
+     },
+     {
+      "font": "SBAggroB.ttf",
+      "score": 0.5147
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "735b7d6b686f"
+  },
+  {
+   "id": "9FcPMZtJVB0",
+   "tteutgi": "channel/mantem/뜯기/9FcPMZtJVB0/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-17 02:44",
+   "frame_tool": "mt_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "제목 글 = to_frame",
+    "제목·자막·출처 = 8편 실측 중앙값으로 고정(색톤_실측.md)"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 11개: [0, 1, 3, 6, 7, 10, 11, 12, 13, 15]",
+    "글꼴 1위 점수 0.101 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기: 구절 미분할 3.6~25.4(21.9초)",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "나레_노랑",
+   "title_ink_w": null,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.6936
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.6102
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.5887
+     }
+    ],
+    "top5": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.6936
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.6102
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.5887
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.5827
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.5765
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "c2edebb36bb8"
+  },
+  {
+   "id": "Sq-kzCh0Xds",
+   "tteutgi": "channel/mantem/뜯기/Sq-kzCh0Xds/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-17 02:44",
+   "frame_tool": "mt_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "제목 글 = to_frame",
+    "제목·자막·출처 = 8편 실측 중앙값으로 고정(색톤_실측.md)"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 3개: [6, 7, 15]",
+    "글꼴 1위 점수 0.2489 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기: 구절 미분할 7.7~22.2(14.5초)",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "나레_노랑",
+   "title_ink_w": null,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.6121
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.5675
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.5622
+     }
+    ],
+    "top5": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.6121
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.5675
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.5622
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.5613
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.5138
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "5eb119caae5f"
+  },
+  {
+   "id": "Pfvwjggi7UA",
+   "tteutgi": "channel/mantem/뜯기/Pfvwjggi7UA/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-17 02:44",
+   "frame_tool": "mt_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "제목 글 = 뜯기 OCR(to_frame 실패)",
+    "제목·자막·출처 = 8편 실측 중앙값으로 고정(색톤_실측.md)"
+   ],
+   "unknown": [
+    "틀이 다른 구간(엔딩·전체화면 등): [[14.5, 14.9]] — 창 다수결에서 뺌",
+    "받아쓰기: 길이 초과 16.5~19.4",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "나레_노랑",
+   "title_ink_w": null,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.6782
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.579
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.5638
+     }
+    ],
+    "top5": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.6782
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.579
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.5638
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.5619
+     },
+     {
+      "font": "SBAggroB.ttf",
+      "score": 0.5388
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "8ad69f559365"
+  },
+  {
+   "id": "0LOyszI-Z0U",
+   "tteutgi": "channel/mantem/뜯기/0LOyszI-Z0U/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-17 02:44",
+   "frame_tool": "mt_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "제목 글 = to_frame",
+    "제목·자막·출처 = 8편 실측 중앙값으로 고정(색톤_실측.md)"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 2개: [9, 12]",
+    "글꼴 1위 점수 0.2537 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기: 길이 초과 10.5~12.3",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "나레_노랑",
+   "title_ink_w": null,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.5297
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.5189
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.508
+     }
+    ],
+    "top5": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.5297
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.5189
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.508
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.5007
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.5006
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "f391ddbc9aaf"
+  }
+ ],
+ "updated_at": "2026-10-17T03:11:44+09:00",
+ "variables": [
+  "layers[text:title].text",
+  "layers[text:label].text"
+ ],
+ "caption_styles": [
+  {
+   "name": "나레_노랑",
+   "layer": {
+    "kind": "text",
+    "role": "caption",
+    "x": 540,
+    "y": 1206,
+    "w": 1000,
+    "align": "center",
+    "lines": 1,
+    "font": "Cafe24Ohsquare",
+    "size": 64,
+    "line_h": 74,
+    "rgb": [
+     245,
+     255,
+     22
+    ],
+    "line_rgb": null,
+    "line_scale": null,
+    "outline": {
+     "px": 5,
+     "rgb": [
+      0,
+      0,
+      0
+     ]
+    },
+    "line_outline": null,
+    "shadow": null,
+    "glow": null,
+    "box": null,
+    "italic": true,
+    "letter_spacing": 0,
+    "word_spacing": 0,
+    "valign": "center",
+    "enter": {
+     "kind": "none",
+     "ms": 300
+    },
+    "emphasis": null,
+    "text": null
+   },
+   "status": "잰 편 BDAjUIBTjfY",
+   "sources": [
+    "BDAjUIBTjfY",
+    "S_CXTCRKFVg",
+    "qBPnRzR-VaQ",
+    "3Xb8hDoRiU4",
+    "9FcPMZtJVB0",
+    "Sq-kzCh0Xds",
+    "Pfvwjggi7UA",
+    "0LOyszI-Z0U"
+   ],
+   "notes": [
+    "BDAjUIBTjfY: 나레 구간 자막(손질 — 8편 노랑 자막 실측)",
+    "S_CXTCRKFVg: 나레 구간 자막(손질 — 8편 노랑 자막 실측)",
+    "qBPnRzR-VaQ: 나레 구간 자막(손질 — 8편 노랑 자막 실측)",
+    "3Xb8hDoRiU4: 나레 구간 자막(손질 — 8편 노랑 자막 실측)",
+    "9FcPMZtJVB0: 나레 구간 자막(손질 — 8편 노랑 자막 실측)",
+    "Sq-kzCh0Xds: 나레 구간 자막(손질 — 8편 노랑 자막 실측)",
+    "Pfvwjggi7UA: 나레 구간 자막(손질 — 8편 노랑 자막 실측)",
+    "0LOyszI-Z0U: 나레 구간 자막(손질 — 8편 노랑 자막 실측)"
+   ]
+  },
+  {
+   "name": "원음_흰글자",
+   "layer": {
+    "kind": "text",
+    "role": "caption",
+    "x": 540,
+    "y": 1320,
+    "w": 1000,
+    "align": "center",
+    "lines": 1,
+    "font": "GmarketSansBold",
+    "size": 58.0,
+    "line_h": 67,
+    "rgb": [
+     255,
+     255,
+     255
+    ],
+    "line_rgb": null,
+    "line_scale": null,
+    "outline": {
+     "px": 5,
+     "rgb": [
+      0,
+      0,
+      0
+     ]
+    },
+    "line_outline": null,
+    "shadow": null,
+    "glow": null,
+    "box": null,
+    "italic": false,
+    "letter_spacing": 0,
+    "word_spacing": 0,
+    "valign": "center",
+    "enter": {
+     "kind": "none",
+     "ms": 300
+    },
+    "emphasis": null,
+    "text": null
+   },
+   "status": "손질(8편 흰 자막 실측 — 바로 선 둥근 고딕·검정 외곽·강조 낱말 민트/노랑)",
+   "sources": [
+    "BDAjUIBTjfY",
+    "S_CXTCRKFVg",
+    "qBPnRzR-VaQ",
+    "3Xb8hDoRiU4",
+    "9FcPMZtJVB0",
+    "Sq-kzCh0Xds",
+    "Pfvwjggi7UA",
+    "0LOyszI-Z0U"
+   ],
+   "emphasis_rgb": {
+    "민트": [
+     187,
+     255,
+     230
+    ],
+    "노랑": [
+     249,
+     245,
+     183
+    ]
+   },
+   "notes": [
+    "원음(연예인 본인 말) 구간 자막. 따옴표 없음 — 색(흰)과 자리(나레보다 약 100px 아래)로 나레와 가른다",
+    "강조 낱말 색은 편마다 낱말이 달라 층 emphasis 로 못 박지 않았다 — 대본 단계에서 emphasis.words 로 채운다"
+   ]
+  }
+ ],
+ "variable_stats": {
+  "layers[text:title].text": {
+   "values": {
+    "BDAjUIBTjfY": "장윤정이 가격\n안 보고 사는 물건",
+    "S_CXTCRKFVg": "전지현에게 선물받은\n휴대용 과일용기",
+    "qBPnRzR-VaQ": "염색약 바꾸고\n머릿결 살아난 최은경",
+    "3Xb8hDoRiU4": "대성이 10년 정착한\n역대급 인생 립밤",
+    "9FcPMZtJVB0": "김혜수가 아끼다\n결국 공개한 명품백",
+    "Sq-kzCh0Xds": "강주은이 30년 쓴\n마술 양념의 정체",
+    "Pfvwjggi7UA": "송은이가 혼자\n다 먹어버린 간식",
+    "0LOyszI-Z0U": "대충 발라도 완벽한\n귀차니즘 수영 쿠션"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  },
+  "layers[text:label].text": {
+   "values": {
+    "BDAjUIBTjfY": "출처 : 장공장장윤정",
+    "S_CXTCRKFVg": "출처 : 이미숙_숙스러운미숙씨",
+    "qBPnRzR-VaQ": "출처 : 최은경의 관리사무소",
+    "3Xb8hDoRiU4": "출처 : Allure Korea",
+    "9FcPMZtJVB0": "출처 : VOGUE KOREA",
+    "Sq-kzCh0Xds": "출처 : 깡주은",
+    "Pfvwjggi7UA": "출처 : 비보티비",
+    "0LOyszI-Z0U": "출처 : 부글부글"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  }
+ },
+ "rules": {
+  "formula": "title.size = size_cap(잰 크기 중앙값) — 가장 긴 줄이 fill_w(잰 폭 최대·화면 폭−48 중 큰 값)를 넘으면 자간부터(−15%까지), 그래도 넘으면 크기 · title.line_h = size×lh_ratio · title.y = title_top · video.y = (video_anchor) 'gap_ink' 면 제목 잉크 아래 끝 + gap_ink(고정), 'constant' 면 video_top, 'gap' 이면 title.y + lines×line_h + gap — 편마다 덜 흔들리는 쪽(데이터가 고름) · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy",
+  "keys": {
+   "title_top": {
+    "values": {
+     "BDAjUIBTjfY": 146,
+     "S_CXTCRKFVg": 146,
+     "qBPnRzR-VaQ": 146,
+     "3Xb8hDoRiU4": 146,
+     "9FcPMZtJVB0": 146,
+     "Sq-kzCh0Xds": 146,
+     "Pfvwjggi7UA": 146,
+     "0LOyszI-Z0U": 146
+    },
+    "default": 146,
+    "range": [
+     146,
+     146
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "gap": {
+    "values": {
+     "BDAjUIBTjfY": 20,
+     "S_CXTCRKFVg": 20,
+     "qBPnRzR-VaQ": 20,
+     "3Xb8hDoRiU4": 20,
+     "9FcPMZtJVB0": 20,
+     "Sq-kzCh0Xds": 20,
+     "Pfvwjggi7UA": 20,
+     "0LOyszI-Z0U": 20
+    },
+    "default": 20,
+    "range": [
+     20,
+     20
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "lh_ratio": {
+    "values": {
+     "BDAjUIBTjfY": 1.076,
+     "S_CXTCRKFVg": 1.076,
+     "qBPnRzR-VaQ": 1.076,
+     "3Xb8hDoRiU4": 1.076,
+     "9FcPMZtJVB0": 1.076,
+     "Sq-kzCh0Xds": 1.076,
+     "Pfvwjggi7UA": 1.076,
+     "0LOyszI-Z0U": 1.076
+    },
+    "default": 1.076,
+    "range": [
+     1.076,
+     1.076
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "size_cap": {
+    "values": {
+     "BDAjUIBTjfY": 118,
+     "S_CXTCRKFVg": 118,
+     "qBPnRzR-VaQ": 118,
+     "3Xb8hDoRiU4": 118,
+     "9FcPMZtJVB0": 118,
+     "Sq-kzCh0Xds": 118,
+     "Pfvwjggi7UA": 118,
+     "0LOyszI-Z0U": 118
+    },
+    "default": 118,
+    "range": [
+     118,
+     118
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "video_bottom": {
+    "values": {
+     "BDAjUIBTjfY": 1500,
+     "S_CXTCRKFVg": 1500,
+     "qBPnRzR-VaQ": 1500,
+     "3Xb8hDoRiU4": 1500,
+     "9FcPMZtJVB0": 1500,
+     "Sq-kzCh0Xds": 1500,
+     "Pfvwjggi7UA": 1500,
+     "0LOyszI-Z0U": 1500
+    },
+    "default": 1500,
+    "range": [
+     1500,
+     1500
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "video_top": {
+    "values": {
+     "BDAjUIBTjfY": 420,
+     "S_CXTCRKFVg": 420,
+     "qBPnRzR-VaQ": 420,
+     "3Xb8hDoRiU4": 420,
+     "9FcPMZtJVB0": 420,
+     "Sq-kzCh0Xds": 420,
+     "Pfvwjggi7UA": 420,
+     "0LOyszI-Z0U": 420
+    },
+    "default": 420,
+    "range": [
+     420,
+     420
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "gap_ink": {
+    "values": {
+     "BDAjUIBTjfY": 33,
+     "S_CXTCRKFVg": 32,
+     "qBPnRzR-VaQ": 33,
+     "3Xb8hDoRiU4": 33,
+     "9FcPMZtJVB0": 32,
+     "Sq-kzCh0Xds": 32,
+     "Pfvwjggi7UA": 33,
+     "0LOyszI-Z0U": 33
+    },
+    "default": 33,
+    "range": [
+     32,
+     33
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "fill_w": {
+    "values": {
+     "BDAjUIBTjfY": 772,
+     "S_CXTCRKFVg": 928,
+     "qBPnRzR-VaQ": 960,
+     "3Xb8hDoRiU4": 887,
+     "9FcPMZtJVB0": 850,
+     "Sq-kzCh0Xds": 794,
+     "Pfvwjggi7UA": 764,
+     "0LOyszI-Z0U": 854
+    },
+    "default": 1032,
+    "range": [
+     764,
+     960
+    ],
+    "how": "잰 폭 최대와 화면 폭−48 중 큰 값"
+   },
+   "cap_dy": {
+    "values": {
+     "BDAjUIBTjfY": -294,
+     "S_CXTCRKFVg": -294,
+     "qBPnRzR-VaQ": -294,
+     "3Xb8hDoRiU4": -294,
+     "9FcPMZtJVB0": -294,
+     "Sq-kzCh0Xds": -294,
+     "Pfvwjggi7UA": -294,
+     "0LOyszI-Z0U": -294
+    },
+    "default": -294,
+    "range": [
+     -294,
+     -294
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "video_anchor": {
+    "values": null,
+    "default": "gap_ink",
+    "range": null,
+    "how": "제목 끝–창 간격 고정(gap_ink)"
+   }
+  }
+ },
+ "roles": [
+  "원음 훅(본인 말 중 가장 센 한 마디, 0~2초)",
+  "나레 다리 1(‘[인물]이 [수식] [제품 정체]이라는데’ 2초 안팎)",
+  "원음 증언 1(쓰는 이유·느낌, 길게)",
+  "나레 다리 2(질문·숫자 ‘~라는데’, 선택)",
+  "원음 증언 2(개수·가격·반응)",
+  "나레 마무리(‘~라네요’ 전언 한 줄)"
+ ],
+ "source_kind": "해외영상",
+ "title_emphasis": {
+  "rgb": [
+   249,
+   245,
+   157
+  ],
+  "where": "2줄 끝 1~2낱말(제품·결말)",
+  "status": "엔진에 제목 낱말 강조 칸 없음 — 요청"
+ },
+ "channel_name": {
+  "slot": null,
+  "note": "만템 화면에 채널명·브랜드 자리 없음(8편 프레임 확인). 얜샷템 이름은 설명란·프로필에서만"
+ }
+}

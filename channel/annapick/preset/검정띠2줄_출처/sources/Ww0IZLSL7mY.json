@@ -1,0 +1,174 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 420,
+   "w": 1080,
+   "h": 1080,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 200,
+   "w": 1000,
+   "align": "center",
+   "lines": 2,
+   "font": "Cafe24Ohsquare",
+   "size": 100,
+   "line_h": 103,
+   "rgb": [
+    244,
+    250,
+    191
+   ],
+   "line_rgb": [
+    [
+     244,
+     250,
+     191
+    ],
+    [
+     253,
+     253,
+     253
+    ]
+   ],
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": true,
+   "letter_spacing": -1.2,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "짠순이 장윤정이\n돈 아끼지 않는것"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1058,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "KCCGanpan",
+   "size": 73.8,
+   "line_h": 85,
+   "rgb": [
+    251,
+    253,
+    246
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 7,
+    "rgb": [
+     153,
+     153,
+     49
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   },
+   "emphasis": null,
+   "text": null
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 540,
+   "y": 1515,
+   "w": 960,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-Regular",
+   "size": 34,
+   "line_h": 40,
+   "rgb": [
+    125,
+    125,
+    125
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "출처 : 장공장장윤정"
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 540,
+   "y": 1745,
+   "w": 960,
+   "align": "center",
+   "lines": 2,
+   "font": "CcPretendard-Regular",
+   "size": 36,
+   "line_h": 44,
+   "rgb": [
+    140,
+    140,
+    140
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "anna\npick"
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "Ww0IZLSL7mY"
+}

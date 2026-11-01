@@ -116,7 +116,7 @@ function _archToast(msg){
   t.textContent=msg;
   t.style.cssText='position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:99999;'
     +'background:rgba(20,20,20,.94);color:#fff;font-size:13px;padding:11px 16px;border-radius:10px;'
-    +'box-shadow:0 8px 28px rgba(0,0,0,.45);max-width:88vw;text-align:center';
+    +'box-shadow:0 8px 28px rgba(0,0,0,.45);width:max-content;max-width:88vw;text-align:center';   // max-content: left:50% 라 폰에서 폭이 절반으로 줄었다(관제 276)
   document.body.appendChild(t);
   setTimeout(()=>t.remove(), 3200);
 }

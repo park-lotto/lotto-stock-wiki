@@ -135,7 +135,35 @@ def check_kind(card):
     owner = (card.get("판단 주인") or "").lower()
     if any(h in owner for h in _VIDEO_HINT):
         return "영상", ""
+    # ★판단 주인 이름만 보면 빠진다(관제 212, 2026-10-15 실측: 카드 209 는 주인이 app.py 라 '수동'이었는데
+    #   실제로 mix_pipeline.py 를 고쳤다 — 렌더·캡컷 실측 없이 넘어감). 병합 커밋이 실제로 바꾼 파일을
+    #   finish 영상 관문과 **같은 판정**(video_gate.needs_video_gate)에 넣는다. app.py 는 판정 함수 없이 보수적으로 '실행'.
+    if _merge_touches_video(card):
+        return "영상", ""
     return "수동", ""
+
+
+def _merge_touches_video(card, repo=None):
+    pm = parse_merge(card.get("병합", "") or "")
+    if not pm:
+        return False
+    sha = pm[0]
+    repo = repo or control.main_worktree()
+    # 카드의 병합 sha 가 '따라잡기' 커밋(finish 가 push 거절 뒤 origin/main 을 합친 것)이면 첫 부모는 내 병합이고
+    #   main 은 둘째 부모다 — 첫 부모와 비교하면 main 쪽 문서만 보인다(카드 209 실측: 관제 md 3개). 그땐 둘째 부모와 비교.
+    msg = subprocess.run(["git", "log", "-1", "--format=%s", sha], cwd=str(repo), capture_output=True, text=True,
+                         encoding="utf-8", errors="replace").stdout
+    base = sha + ("^2" if "origin/main" in msg and msg.startswith("Merge") else "^1")
+    try:
+        out = subprocess.run(["git", "-c", "core.quotepath=off", "diff", "--name-only", base, sha],
+                             cwd=str(repo), capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60)
+    except (OSError, subprocess.SubprocessError):
+        return False
+    if out.returncode != 0:
+        return False
+    changed = [x.strip() for x in out.stdout.splitlines() if x.strip()]
+    run, _why, _un = video_gate.needs_video_gate(changed, video_gate.load_config())
+    return bool(run)
 
 
 def _fetch_live(path):

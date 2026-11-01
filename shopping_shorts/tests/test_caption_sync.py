@@ -54,3 +54,16 @@ def test_low_confidence_returns_none():
 
 def test_empty_words_returns_none():
     assert cs.phrase_durs_from_words("귤은 까요", [], 1.0) is None
+
+
+def test_japanese_char_level_alignment():
+    """일본어는 띄어쓰기가 없다 — 글자 단위로 정렬해야 첫 구절이 전체 시간을 독식하지 않는다(관제 248)."""
+    narr = "ダイソーに行ったら、これだけは絶対に買ってください。"
+    chars = [c for c in narr if c not in "、。"]
+    words = [_w(c, i * 0.2, i * 0.2 + 0.2) for i, c in enumerate(chars)]
+    total = len(chars) * 0.2
+    res = cs.phrase_durs_from_words(narr, words, total)
+    segs = _caption_segments(narr)
+    assert res is not None and len(segs) >= 2
+    assert len(res.durs) == len(segs)
+    assert res.durs[1] > 0.5

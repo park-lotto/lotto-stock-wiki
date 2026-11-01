@@ -1,0 +1,174 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 418,
+   "w": 1080,
+   "h": 1084,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 215,
+   "w": 1000,
+   "align": "center",
+   "lines": 2,
+   "font": "Cafe24Ohsquare",
+   "size": 93.2,
+   "line_h": 96,
+   "rgb": [
+    253,
+    252,
+    253
+   ],
+   "line_rgb": [
+    [
+     253,
+     252,
+     253
+    ],
+    [
+     252,
+     226,
+     119
+    ]
+   ],
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -1.6,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "목주름 걱정끝!\n정유미x이서진도 10년째"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1150,
+   "w": 1000,
+   "align": "center",
+   "lines": 3,
+   "font": "Cafe24Danjunghae",
+   "size": 48.9,
+   "line_h": 56,
+   "rgb": [
+    254,
+    251,
+    250
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 6,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": {
+    "kind": "none",
+    "ms": 300
+   },
+   "emphasis": null,
+   "text": null
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 540,
+   "y": 1515,
+   "w": 960,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-Regular",
+   "size": 34,
+   "line_h": 40,
+   "rgb": [
+    125,
+    125,
+    125
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "출처 : 채널십오야"
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 540,
+   "y": 1745,
+   "w": 960,
+   "align": "center",
+   "lines": 2,
+   "font": "CcPretendard-Regular",
+   "size": 36,
+   "line_h": 44,
+   "rgb": [
+    140,
+    140,
+    140
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "anna\npick"
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "wweUXE86oMM"
+}

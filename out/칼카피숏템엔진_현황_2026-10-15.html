@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>칼카피숏템엔진 현황</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2330;--sub:#5b6475;--line:#e3e6ec;--ok:#1f9d55;--wait:#d97706;--no:#c2410c;--acc:#2563eb}
+@media (prefers-color-scheme:dark){:root{--bg:#14171d;--card:#1d222b;--ink:#e8ebf0;--sub:#9aa3b2;--line:#2c3340}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Pretendard","Malgun Gothic",sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:32px 0 10px;border-left:4px solid var(--acc);padding-left:10px}
+.meta{color:var(--sub);font-size:13px}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:16px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.box b{display:block;font-size:22px}
+.tl{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px 16px}
+.row{display:grid;grid-template-columns:92px 1fr;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border:0}.d{color:var(--sub);font-size:13px;font-weight:600}
+.row h3{margin:0 0 4px;font-size:15px}.row p{margin:2px 0;font-size:14px}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;margin-right:4px;color:#fff}
+.ok{background:var(--ok)}.wait{background:var(--wait)}.no{background:var(--no)}
+ul{margin:6px 0;padding-left:20px}li{margin:3px 0}
+code{font-size:12.5px;background:rgba(127,127,127,.15);padding:1px 5px;border-radius:4px;word-break:break-all}
+</style></head><body><div class="wrap">
+<h1>칼카피숏템엔진 — 어디까지 됐나</h1>
+<div class="meta">2026-10-15 기준 · 출처: <code>.tracks/칼카피숏템엔진/handoff/칼카피숏템엔진.md</code> + git log (관제 카드 097)</div>
+
+<div class="sum">
+ <div class="box">트랙 커밋 (main 미병합)<b>136개</b></div>
+ <div class="box">마지막 커밋<b>10-08 21:04</b></div>
+ <div class="box">미커밋 파일<b>0개</b></div>
+ <div class="box">라이브 반영<b style="color:var(--no)">없음</b></div>
+</div>
+
+<h2>한 줄 요약</h2>
+<p>엔진 뼈대(공통 엔진 + 채널별 spec)와 <b>뜨거운사람들</b> 채널 1편 제작까지 됐고, 이후 <b>썰(방구석·픽션) 대본 쪽</b>으로 넘어가 시험만 여러 번 했습니다. 전부 트랙 브랜치에만 있고 <b>라이브에는 아무것도 안 나갔습니다.</b> 마지막은 10-08 픽션 썰 라이브 렌더 → <b>사장님 판정 대기</b>로 멈춰 있습니다.</p>
+
+<h2>진행 이력</h2>
+<div class="tl">
+ <div class="row"><div class="d">09-25</div><div><h3>엔진 쪼개기 <span class="tag ok">완료</span></h3>
+  <p><code>shopping_shorts/channelkit/</code>(엔진) + <code>channel_presets/brainbulb/</code>(뇌전구 1호). 테스트 276 통과, 쪼개기 전과 결과 불일치 0.</p></div></div>
+ <div class="row"><div class="d">09-25</div><div><h3>뜨거운사람들 2호 채널 + 안세영 첫 편 <span class="tag ok">완료</span></h3>
+  <p>원본 10편 실측 → <code>channel_presets/hotpeople/</code>. 리서치→대본→소스 검색·장면 매칭→렌더→검수 자동. 원본 BGM 4곡 찾아 음량 −12.1 LUFS 맞춤.</p></div></div>
+ <div class="row"><div class="d">09-27~28</div><div><h3>칼카피 기준표(숫자 10층) + 6규칙 강제 <span class="tag ok">완료</span></h3>
+  <p>후킹·단어·컷·자막·음량 전부 숫자화. 안세영 v3가 원본 범위 안으로 들어옴(컷 25·컷=자막 100%·−12.0 LUFS). 측정 도구 <code>channelkit/bench/</code> 1단계.</p></div></div>
+ <div class="row"><div class="d">09-28</div><div><h3>우상혁 편 사고 → 내용 관문(하드 게이트) <span class="tag wait">관문이 막는 중</span></h3>
+  <p>v001이 엉뚱한 장면으로 나간 사고 → 얼굴·박힌 자막 검사로 통과 못 하면 완성본 안 만듦. v3는 자 결함 2개(잘린 얼굴 오판·장면 검사 모델 오탐)로 막혀 있음 — 결정 3건 대기.</p></div></div>
+ <div class="row"><div class="d">10-03</div><div><h3>트랙 통합 + 숏비타민c 역분석</h3>
+  <p>뇌전구벤치·숏템엔진 → 이 트랙 하나로. 숏비타민c 형식 실측(spec 미작성).</p></div></div>
+ <div class="row"><div class="d">10-05~06</div><div><h3>방구석 친구들 역분석 → 씨앗 흐름(seedflow)</h3>
+  <p>대본 구조 6박자·말투 실측. 칸 채우기 방식은 "말맛 없음" 판정 → <code>shopping_shorts/seedflow.py</code>(씨앗 분석→포인트→장면 토대로 쓰기) 버텍스 시험. 이븐쇼핑·우리·노바 비교 문서.</p></div></div>
+ <div class="row"><div class="d">10-07~08</div><div><h3>조사 썰 · 커뮤니티 소재 · 픽션 썰</h3>
+  <p>고객 제품 8건 칼카피 시험, 보배드림 5,866건→소재 63건 분류, 픽션 썰 대본·타입캐스트 녹음, 썰풀다 4편 편집 분석.</p></div></div>
+ <div class="row"><div class="d">10-08</div><div><h3>픽션 썰 라이브 렌더(우리 단계 그대로) <span class="tag wait">시청 판정 대기</span></h3>
+  <p>관리자 작업 <code>440d387bfcb6</code> → <code>channel/banggu/영상/픽션썰_원블레이드_우리단계렌더_2026-10-08.mp4</code>(28초).</p></div></div>
+</div>
+
+<h2>사장님 결정이 필요한 것</h2>
+<ul>
+ <li><b>픽션 썰 영상 판정</b> — 짤 자동 배치·역할 목소리를 우리 단계에 넣을지, 고정 캐릭터 그림체</li>
+ <li><b>엔진에 붙일 대본 방식</b> — 방구석(조사형) vs 픽션형</li>
+ <li>커뮤니티 소재 63건 중 시범 소재 고르기</li>
+ <li>seedflow 첫 줄을 story_hook으로 / 검사 오탐 2종 면제 (10-06부터 대기)</li>
+ <li>뜨거운사람들 관문: 장면 검사 모델 정책·잘린 얼굴 판정 (09-28부터 대기)</li>
+ <li><b>main 병합(라이브)</b> — 136커밋, 고객 화면 변경 포함 시 승인 필요</li>
+</ul>
+
+<h2>안 된 것 / 주의</h2>
+<ul>
+ <li>bench 2·3단계(자막 창 안 검출·말소리·덕킹) 미구현, 숏비타민c·방구석 spec 미작성</li>
+ <li>09-28 자동 커밋 훅 사고 기록 있음 — 원격 정리(force-push)는 당시 보류였음. <b>지금 상태는 이번에 확인 안 했습니다.</b></li>
+ <li>원자료는 <code>C:/숏템_칼카피/</code>, <code>D:\숏템\칼카피\</code>(커밋 안 됨)</li>
+</ul>
+</div></body></html>

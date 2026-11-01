@@ -1,0 +1,17 @@
+{
+  "name": "shortem",
+  "owner": {
+    "name": "숏템메이커",
+    "url": "https://shoppingshorts.duckdns.org"
+  },
+  "metadata": {
+    "description": "숏템 설치팩에 들어 있는 로컬 플러그인 목록(설치 폴더 안에서만 쓰인다)"
+  },
+  "plugins": [
+    {
+      "name": "shortem",
+      "source": "./shortem",
+      "description": "숏템 채널 프리셋으로 내 PC에서 숏폼 만들기"
+    }
+  ]
+}

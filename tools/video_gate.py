@@ -721,6 +721,11 @@ def _measure_and_judge(sh, stage, br, cfg, g, *, say, sleep=time.sleep, remote_t
     rc, sha = _git(stage, "rev-parse", "--short=10", br)
     sha = sha.strip()
     if rc != 0 or not re.fullmatch(r"[0-9a-f]{7,40}", sha):
+        # ★묶음 병합(관제 212): br 이 '묶음(N)' 라벨이면 브랜치가 없다 — 병합본 index 트리 해시로 같은 묶음을 가린다
+        #   (2026-10-15 18:08 실측: 묶음 5개가 이 줄에서 '해시를 못 읽었다'로 무조건 실패해 이분으로 쪼개졌다)
+        rc, sha = _git(stage, "write-tree")
+        sha = sha.strip()[:10]
+    if rc != 0 or not re.fullmatch(r"[0-9a-f]{7,40}", sha):
         return ret(False, ["영상 관문: 트랙 커밋 해시를 못 읽었다: %r" % sha[:80]], [])
     d = "%s/gate_%s" % (remote_tmp.rstrip("/"), sha)            # remote_tmp 는 시험 실행 때만 바꾼다(/tmp/gatecheck)
     try:

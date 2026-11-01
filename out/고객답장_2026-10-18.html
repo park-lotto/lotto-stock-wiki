@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>고객 답장</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2330;--mut:#6b7280;--line:#e5e7eb;--msg:#fee500;--acc:#2563eb}
+@media (prefers-color-scheme:dark){:root{--bg:#12151b;--card:#1b2029;--ink:#e8ebf0;--mut:#9aa3b2;--line:#2b3240}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 "Malgun Gothic",system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:24px 16px}
+h1{font-size:22px;margin:0 0 4px}.sub{color:var(--mut);margin-bottom:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+h2{font-size:17px;margin:0 0 8px}
+.msg{background:var(--msg);color:#191600;border-radius:12px;padding:14px 16px;white-space:pre-wrap;font-size:14.5px}
+.copy{margin-top:8px;border:0;background:var(--acc);color:#fff;border-radius:8px;padding:8px 14px;font-size:14px;cursor:pointer}
+.lab{font-size:13px;color:var(--mut);margin-top:6px}
+</style></head><body><main>
+<h1>고객 답장 정리 · 2026-10-18</h1>
+<div class="sub">카톡에 그대로 붙여 넣으세요. 2026-10-18 18:33 라이브 반영됨.</div>
+
+<div class="card"><h2>① 이윤정 님 — 캡컷에서 튀는 부분</h2>
+<div class="msg" id="m1">안녕하세요 이윤정님! 보내주신 영상 덕분에 원인을 찾았어요 🙏
+
+캡컷으로 보낼 때, 장면꾸미기 확대가 바뀌는 지점에서 영상 조각이 아주 잘게(0.01초 정도) 한 번 더 잘리고 있었어요. 완성본에선 안 보이는데 캡컷에선 그 한 장면이 끼어서 '툭' 튀어 보였던 거예요.
+
+이제 이런 자투리 조각이 생기지 않게 고쳤어요. (보내주신 작업으로 다시 만들어 보니 자투리 조각 3개 → 0개)
+
+👉 반영된 뒤 3단계에서 「캡컷으로 보내기」를 한 번만 다시 눌러 주세요. 새로 만들어진 캡컷 프로젝트에선 안 튈 거예요.
+혹시 또 튀는 곳이 있으면 몇 초쯤인지만 알려주세요!</div>
+<button class="copy" onclick="cp('m1',this)">📋 복사</button>
+<div class="lab">근거: job becdf537ca2e 캡컷 초안 1프레임 미만 조각 3개(0.012·0.016·0.003초) → 고친 코드 재생성 0개, 캡컷 합성 vs 완성본 23장면 차이 0</div></div>
+
+<div class="card"><h2>② Park 님 — 6가지 제보 답변</h2>
+<div class="msg" id="m2">Park님, 보내주신 내용 하나씩 정리해 드려요 🙏
+
+1️⃣ 타입캐스트 성우 검색
+타입캐스트가 성우 이름을 영어로만 줘서(이현 = Leehyun) 한글로 찾으면 안 나왔어요. 이제 한글로 쳐도 찾아져요. (단, 은결·수정처럼 타입캐스트 앱에만 있고 API로 안 열린 성우는 목록에 안 나와요)
+
+2️⃣ 썸네일 크기 조절 버튼
+글자 크기를 끌어서 조절하면 갑자기 아주 작아지고 다시 안 커지던 문제 — 손잡이 범위가 잘못 막혀 있었어요. 고쳤어요.
+
+3️⃣ 처음 1초 멈춤
+이건 오류가 아니라 「썸네일을 영상 맨 앞에 넣기」(1.2초)가 켜져 있어서예요. 썸네일이 첫 장면과 같아 멈춘 것처럼 보였어요. 원치 않으시면 썸네일 단계에서 그 체크를 끄고 다시 렌더해 주세요.
+
+4️⃣ 흑백 + 자동강조 장면에서 목소리 떨림
+목소리 파일은 멀쩡했고, 흑백 효과의 지지직(잡티) 때문에 그 장면만 영상 용량이 10배로 커져 재생할 때 버벅이며 소리가 끊겨 들렸어요. 용량 상한을 걸어 고쳤어요. (다시 렌더하면 적용돼요)
+
+5️⃣ 쇼핑스티커 화살표 + 롱폼 화살표 같이 나옴
+「세트」를 다시 넣을 때 옛 세트가 안 지워지고 겹쳐 쌓이고 있었어요(한 장면에 4벌). 고쳤어요. 반영 뒤 장면꾸미기에서 「세트 빼기」를 한 번 누르고 원하시는 자리로 다시 넣어 주세요.
+
+6️⃣ 머닝 연동
+완성 단계 등록 칸에서 「인포크 / 머닝」을 고를 수 있게 했어요. 머닝을 고르면 「링크 복사 + 머닝 열기」로 바뀌어요. 머닝은 외부 연동(API)을 열어 두지 않아서 자동 등록은 안 되고, 복사한 링크를 머닝에 붙여 넣는 방식이에요. 한 번 고르면 다음 영상에도 그대로예요.
+
+➕ 플랫폼별 CTA 판 (요청하신 것!)
+완성 단계에 「📣 플랫폼별 CTA 판」 칸이 생겨요. 인스타 / 유튜브 수익창출 / 유튜브 비수창 / 틱톡·클립 중 고르고 마지막 멘트만 적어 두면, 최종 렌더 한 번에 마지막 CTA만 다른 영상이 판마다 같이 나와요. 렌더는 1회만 차감돼요.
+· 시간: 판마다 다시 조립해서 판 2개면 렌더 시간이 약 3배예요.
+· 목소리: 「CTA 칸만 새로 굽기」는 빠르지만 이어지는 부분 톤이 살짝 다를 수 있어요. 자연스럽게 원하시면 「전체 다시 굽기」를 고르세요(시간이 더 들어요).
+
+📱 폰으로 올리시는 분들을 위해
+8단계에 「폰으로 보내기(카톡)」 버튼이 생겼어요. 누르면 QR이 뜨고, 폰으로 찍으면 제목·설명·태그·해시태그가 칸마다 「복사」 버튼과 함께 나와요. 카톡으로 나한테 보내기도 돼요.</div>
+<button class="copy" onclick="cp('m2',this)">📋 복사</button>
+<div class="lab">근거: 정리 페이지(고객제보_2026-10-18.html) 각 항목 실측</div></div>
+<script>
+function cp(id,b){try{navigator.clipboard.writeText(document.getElementById(id).innerText);b.textContent='복사됨 ✓';}catch(e){b.textContent='복사 실패 — 직접 드래그해 주세요';}}
+</script>
+</main></body></html>

@@ -114,8 +114,8 @@ def test_겹쳐_틀기도_같은_칸_다른_장면과는_안_겹친다(tmp_path)
 
 def test_화면_안내_1점5배_넘으면_장면_붙이기_버튼():
     src = (HERE / "static" / "scene_lab.html").read_text(encoding="utf-8")
-    i = src.index("const fitHtml =")
-    body = src[i:src.index("}).join('');", i)]
+    i = src.index("const fitList =")
+    body = src[i:src.index("}).filter(Boolean);", i)]
     assert "autoFill(${i})" in body and "addNextScene(${i}" in body          # 같은 의미 / 원본 다음 장면
     big = body[body.index("+ratio > 1.5\n"):]
     assert big.index("addNextScene") < big.index("fitToggle(${i}, '${c.seg_id}', true)")   # 1.5배 넘으면 속도 맞추기 대신

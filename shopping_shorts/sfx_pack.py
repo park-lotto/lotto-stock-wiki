@@ -409,7 +409,29 @@ def clean_pack_edit(v):
         return r
     off = [r for r in (_ref(x) for x in (v.get("off") or [])[:30] if isinstance(v.get("off"), list)) if r]
     swap = [r for r in (_ref(x, True) for x in (v.get("swap") or [])[:30] if isinstance(v.get("swap"), list)) if r]
+    vol = []      # 3단계 효과음 줄에서 고른 소리 하나의 음량 배수(관제 203, 0.0~2.0)
+    for x in (v.get("vol") or [])[:30] if isinstance(v.get("vol"), list) else []:
+        r = _ref(x)
+        try:
+            g = round(float((x or {}).get("g")), 2)
+        except (TypeError, ValueError):
+            continue
+        if r and 0.0 <= g <= 2.0:
+            vol = [y for y in vol if (y["slot"], y["n"]) != (r["slot"], r["n"])] + [{**r, "g": g}]
+    move = []    # 3단계 효과음 줄에서 끌어 옮긴 소리 하나의 시각 이동(초, −5~+5) — 같은 소리를 이름+순번으로 가리킨다
+    for x in (v.get("move") or [])[:30] if isinstance(v.get("move"), list) else []:
+        r = _ref(x)
+        try:
+            dt = round(float((x or {}).get("dt")), 2)
+        except (TypeError, ValueError):
+            continue
+        if r and -5.0 <= dt <= 5.0:
+            move = [y for y in move if (y["slot"], y["n"]) != (r["slot"], r["n"])] + ([{**r, "dt": dt}] if dt else [])
     out = {}
+    if vol:
+        out["vol"] = vol
+    if move:
+        out["move"] = move
     if off:
         out["off"] = off
     if swap:
@@ -417,7 +439,7 @@ def clean_pack_edit(v):
     return out or None
 
 
-def apply_pack_edit(events_per_beat, pack_edit, keep_off=False, log=None):
+def apply_pack_edit(events_per_beat, pack_edit, keep_off=False, log=None, with_extra=False):
     """사람이 2단계에서 고른 '팩 소리 빼기·바꾸기'를 칸별 배치에 입힌다 — **주인 함수 하나**(미리보기·렌더·캡컷 공통).
     events_per_beat: {칸번호: [(소리, 절대초, 자막), ...]} (plan_events 를 칸별로 나눈 것, 시간순)
     pack_edit: {칸번호: clean_pack_edit 모양}
@@ -430,7 +452,10 @@ def apply_pack_edit(events_per_beat, pack_edit, keep_off=False, log=None):
     log = log or (lambda m: print("[sfx_pack] " + m, file=sys.stderr))
     out = {}
     for bi, evs in (events_per_beat or {}).items():
-        rows = [list(e[:3]) + [None] for e in evs]
+        rows, _cnt = [], {}
+        for e in evs:
+            n = _cnt.get(e[0], 0); _cnt[e[0]] = n + 1
+            rows.append(list(e[:3]) + [None, 1.0, {"beat_idx": bi, "slot": e[0], "n": n}])   # [소리, 초, 자막, 표시, 음량배, 가리킴]
         ed = clean_pack_edit((pack_edit or {}).get(bi))
         if ed:
             def _find(ref):
@@ -454,11 +479,20 @@ def apply_pack_edit(events_per_beat, pack_edit, keep_off=False, log=None):
                     if isinstance(r[3], dict):
                         r[0] = r[3]["from"]       # 뺀 소리는 원래 이름으로 보인다(되돌리면 원래 소리)
                     r[3] = "off"
-        out[bi] = [tuple(r) for r in rows if keep_off or r[3] != "off"]
+            for ref in ed.get("vol") or []:
+                r = _find(ref)
+                if r is not None:
+                    r[4] = float(ref["g"])
+            for ref in ed.get("move") or []:
+                r = _find(ref)
+                if r is not None:
+                    r[1] = max(0.0, float(r[1]) + float(ref["dt"]))
+                    r[5] = {**r[5], "dt": float(ref["dt"])}
+        out[bi] = [tuple(r if with_extra else r[:4]) for r in rows if keep_off or r[3] != "off"]
     return out
 
 
-def plan_per_beat(timeline, manual_beats=(), density="normal", first_beats=(), pack_edit=None, keep_off=False, log=None, mute_beats=()):
+def plan_per_beat(timeline, manual_beats=(), density="normal", first_beats=(), pack_edit=None, keep_off=False, log=None, mute_beats=(), with_extra=False):
     """plan_events → 칸별로 나눔 → apply_pack_edit. 미리보기(preview_lines)와 렌더(events)가 **이것 하나**를 부른다."""
     tl = [b for b in (timeline or []) if float(b.get("dur") or 0) > 0]
     per = {}
@@ -467,10 +501,10 @@ def plan_per_beat(timeline, manual_beats=(), density="normal", first_beats=(), p
         if owner is None:
             continue
         per.setdefault(owner, []).append((slot, t, seg))
-    return apply_pack_edit(per, pack_edit, keep_off=keep_off, log=log)
+    return apply_pack_edit(per, pack_edit, keep_off=keep_off, log=log, with_extra=with_extra)
 
 
-def events(timeline, pack, manual_beats=(), first_beats=(), pack_edit=None):
+def events(timeline, pack, manual_beats=(), first_beats=(), pack_edit=None, with_ref=False):
     """[(경로, 절대초, 보정배)] — sfx_events_for가 부른다. pack: resolve()의 결과.
     세 번째 칸(보정배)은 렌더·캡컷이 효과음 볼륨에 곱한다(없으면 1.0 — 종전 이벤트와 호환).
     pack_edit: {칸번호: 2단계에서 고른 팩 소리 빼기·바꾸기} — 실제 TTS 시각으로 배치한 뒤 apply_pack_edit 가 입힌다."""
@@ -480,8 +514,9 @@ def events(timeline, pack, manual_beats=(), first_beats=(), pack_edit=None):
     mute = set(pack.get("mute_beats") or ())      # 끈 칸 — plan_events 가 그 칸 팩 소리를 전부(첫 칸이면 오프너도) 뺀다
     level_mul = 10 ** (LEVEL_DB.get(pack.get("level") or "normal", 0.0) / 20.0)
     density = pack.get("density") or "normal"
-    if pack_edit:
-        flat = [e for evs in plan_per_beat(timeline, skip, density, first_beats, pack_edit, mute_beats=mute).values() for e in evs]
+    if pack_edit or with_ref:
+        # with_ref: 3단계 효과음 줄이 소리마다 '가리킴(칸·이름·순번)'을 받아 빼기·음량을 보낸다 — 배치는 같은 plan_per_beat
+        flat = [e for evs in plan_per_beat(timeline, skip, density, first_beats, pack_edit, mute_beats=mute, with_extra=True).values() for e in evs]
         flat.sort(key=lambda e: e[1])
     else:
         flat = plan_events(timeline, skip, density=density, first_beats=first_beats, mute_beats=mute)     # 고름 없으면 종전 그대로(칸 밖 소리도 유지)
@@ -489,7 +524,8 @@ def events(timeline, pack, manual_beats=(), first_beats=(), pack_edit=None):
     for e in flat:
         slot, t = e[0], e[1]
         path = os.path.join(pack["dir"], slot + ".wav")
-        out.append((path, t, _gain_for(path, slot) * level_mul))
+        g = _gain_for(path, slot) * level_mul * (float(e[4]) if len(e) > 4 else 1.0)
+        out.append((path, t, g, e[5]) if with_ref and len(e) > 5 else (path, t, g))
     return out
 
 

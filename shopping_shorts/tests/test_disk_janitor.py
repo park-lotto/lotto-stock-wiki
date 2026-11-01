@@ -59,12 +59,15 @@ def world(tmp_path):
         _mk(j / f, 8, now)
     # done 3일 — 아직 아무것도 안 지운다
     _mk(d / "mix_jobs" / "done_new" / "pvproxy", 3, now)
-    # 미완(ready_for_review) 60일 — 절대 안 지운다
-    _mk(d / "mix_jobs" / "review_old" / "pvproxy", 60, now)
+    # 검토 대기(ready_for_review) 60일 — 큰 파일만 지우고 폴더·json 은 남긴다(관제 243 F) / 20일 — 아직 안 지운다
+    for name in ("pvproxy", "s0", "final.mp4", "edit_plan.json", "thumb.png"):
+        _mk(d / "mix_jobs" / "review_old" / name, 60, now)
+    _mk(d / "mix_jobs" / "review_mid" / "s0", 20, now)
+    _mk(d / "mix_jobs" / "done_old" / "scripts", 8, now)          # s+숫자가 아닌 s… 이름은 남긴다
     jobs = {
         "failed_old": ("failed", _iso(now, 2)), "failed_fresh": ("failed", _iso(now, 0.2)),
         "done_old": ("done", _iso(now, 8)), "done_new": ("done", _iso(now, 3)),
-        "review_old": ("ready_for_review", _iso(now, 60)),
+        "review_old": ("ready_for_review", _iso(now, 60)), "review_mid": ("ready_for_review", _iso(now, 20)),
     }
     relay = {"done_old.mp4": "done", "done_fresh.mp4": "done", "pending_old.mp4": "pending"}
     return d, jobs, relay, now
@@ -82,15 +85,20 @@ def test_plan_picks_exactly_the_regenerable_and_finished(world):
         "yt_relay/done_old.mp4", "yt_relay/unknown_old.mp4",
         "mix_jobs/failed_old", "mix_jobs/0123456789ab",
         "mix_jobs/done_old/pvproxy", "mix_jobs/done_old/capcut", "mix_jobs/done_old/seg_thumbs",
+        # E — 완료 7일+: 영상·원본·합본(사장님 10-20)
+        "mix_jobs/done_old/s0", "mix_jobs/done_old/s1", "mix_jobs/done_old/join0", "mix_jobs/done_old/final.mp4",
+        "mix_jobs/done_old/preview.mp4", "mix_jobs/done_old/clean_preview.mp4", "mix_jobs/done_old/final_nocta.mp4",
+        # F — 검토 대기 30일+: 큰 파일만
+        "mix_jobs/review_old/s0", "mix_jobs/review_old/final.mp4",
     ])
 
 
 def test_plan_never_touches_customer_data(world):
     d, jobs, relay, now = world
     got = set(_rel(d, dj.plan(d, jobs, relay, now=now)))
-    for keep in ("mix_jobs/done_old/s0", "mix_jobs/done_old/join0", "mix_jobs/done_old/final.mp4",
-                 "mix_jobs/done_old/clean_preview.mp4", "mix_jobs/done_old/tts", "mix_jobs/review_old",
-                 "mix_jobs/review_old/pvproxy", "mix_jobs/done_new/pvproxy", "yt_relay/pending_old.mp4",
+    for keep in ("mix_jobs/done_old/tts", "mix_jobs/done_old/edit_plan.json", "mix_jobs/done_old/scripts", "mix_jobs/review_old",
+                 "mix_jobs/review_old/pvproxy", "mix_jobs/review_old/edit_plan.json", "mix_jobs/review_old/thumb.png",
+                 "mix_jobs/review_mid/s0", "mix_jobs/done_new/pvproxy", "yt_relay/pending_old.mp4",
                  "find_frames/fresh", "mix_jobs/failed_fresh", "mix_jobs/orphan_fresh",
                  "mix_jobs/_scene_style_lab", "mix_jobs/b1test5ec16a"):
         assert keep not in got, keep
@@ -104,11 +112,13 @@ def test_apply_removes_and_reports_size(world):
     assert errors == []
     assert freed == total > 0
     assert not (d / "mix_jobs" / "done_old" / "pvproxy").exists()
-    assert (d / "mix_jobs" / "done_old" / "final.mp4").exists()
-    assert (d / "mix_jobs" / "review_old" / "pvproxy").exists()
+    assert not (d / "mix_jobs" / "done_old" / "final.mp4").exists()
+    assert (d / "mix_jobs" / "done_old" / "edit_plan.json").exists()
+    assert (d / "mix_jobs" / "review_old" / "edit_plan.json").exists() and not (d / "mix_jobs" / "review_old" / "s0").exists()
+    assert (d / "mix_jobs" / "review_mid" / "s0").exists()
 
 
 def test_rules_summary_groups_by_rule(world):
     d, jobs, relay, now = world
     s = dj.summarize(dj.plan(d, jobs, relay, now=now))
-    assert s.startswith("A ") and "합계 8개" in s
+    assert s.startswith("A ") and "합계 17개" in s and "\nE " in s and "\nF " in s

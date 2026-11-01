@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0}[hidden]{display:none!important}</style>
+<title>숏템MCP 라이브 실측</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;700;800&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 레이아웃: 한 줄 기둥(본문 폭 72ch) + 상태 띠 + 단계 목록. 렌더 작업지 같은 차분한 톤 */
+:root{
+  --bg:#f6f7f5; --panel:#ffffff; --fg:#1d2320; --muted:#5d6762; --line:#dfe3df;
+  --accent:#0f7a5c; --accent-soft:#e3f2ec;
+  --ok:#17804f; --warn:#a86400; --warn-soft:#fbf0de; --stop:#b3362f; --stop-soft:#f9e4e2;
+  --display:"Gothic A1","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141917; --panel:#1b211f; --fg:#e6ebe8; --muted:#9aa5a0; --line:#2c3531;
+  --accent:#4cc79c; --accent-soft:#1d3a30; --ok:#5fd19a; --warn:#e7a948; --warn-soft:#3a2d18; --stop:#f07d74; --stop-soft:#3d2120; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141917; --panel:#1b211f; --fg:#e6ebe8; --muted:#9aa5a0; --line:#2c3531;
+  --accent:#4cc79c; --accent-soft:#1d3a30; --ok:#5fd19a; --warn:#e7a948; --warn-soft:#3a2d18; --stop:#f07d74; --stop-soft:#3d2120; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15.5px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.3}
+h1{font-size:2rem;font-weight:800}
+h2{font-size:1.3rem;font-weight:800;padding-bottom:8px;border-bottom:2px solid var(--fg)}
+h3{font-size:1.05rem;font-weight:700}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:16px}
+.eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.06em;color:var(--muted)}
+.lead{font-size:1.08rem;color:var(--fg)}
+.status{display:flex;flex-wrap:wrap;gap:8px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;font-weight:600;padding:3px 11px;border-radius:999px}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.ok{color:var(--ok);background:var(--accent-soft)} .warn{color:var(--warn);background:var(--warn-soft)} .stop{color:var(--stop);background:var(--stop-soft)}
+.nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.num{background:var(--panel);padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.num b{font-family:var(--mono);font-size:1.35rem;font-weight:500;font-variant-numeric:tabular-nums}
+.num span{font-size:.85rem;color:var(--muted)}
+ul{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.fix{border-left:3px solid var(--accent);padding:4px 0 4px 16px;display:flex;flex-direction:column;gap:6px}
+.fix p{color:var(--muted)} .fix p strong{color:var(--fg);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+.tbl{overflow-x:auto}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.8rem;color:var(--muted);font-weight:600;letter-spacing:.03em}
+td:first-child{white-space:nowrap;font-weight:600}
+code{font-family:var(--mono);font-size:.86em;background:var(--accent-soft);padding:1px 6px;border-radius:4px;word-break:break-all}
+.steps{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0;counter-reset:s}
+.steps li{counter-increment:s;display:grid;grid-template-columns:34px 1fr;gap:12px;padding:12px 0;border-bottom:1px dashed var(--line)}
+.steps li::before{content:counter(s);font-family:var(--mono);font-size:.9rem;width:26px;height:26px;border-radius:50%;
+  display:grid;place-items:center;border:1.5px solid var(--accent);color:var(--accent)}
+.steps li>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+.steps li p{color:var(--muted);font-size:.93rem}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{font:inherit;font-weight:600;font-size:.9rem;padding:7px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.note{background:var(--warn-soft);border-radius:10px;padding:14px 16px;font-size:.93rem}
+.note strong{color:var(--warn)}
+.chat{font-family:var(--mono);font-size:.88rem;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;overflow-x:auto}
+.chat .u{color:var(--accent)} .chat .c{color:var(--muted)}
+footer{font-size:.82rem;color:var(--muted)}
+</style>
+
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:14px">
+  <div class="eyebrow">관제 234 · 2026-10-19 02:20~03:00 라이브 실측</div>
+  <h1>숏템MCP 라이브 실측</h1>
+  <p class="lead">고객 PC의 Claude가 숏템 서버에 붙어 영상 한 편을 처음부터 끝까지 만드는 것을 라이브 서버에서 확인했습니다. 지금은 관리자 계정만 쓸 수 있습니다.</p>
+  <div class="status">
+    <span class="pill ok">라이브 1편 완성</span>
+    <span class="pill ok">결함 2개 수리·병합</span>
+    <span class="pill warn">고객 공개 전 (관리자만)</span>
+    <span class="pill stop">설치 파일 서버 미업로드</span>
+  </div>
+</header>
+
+<section>
+  <h2>라이브에서 만든 영상 1편</h2>
+  <div class="nums">
+    <div class="num"><b>9 / 9</b><span>단계 완료</span></div>
+    <div class="num"><b>12.2초</b><span>길이</span></div>
+    <div class="num"><b>1080×1920</b><span>세로 화면</span></div>
+    <div class="num"><b>-14.3 LUFS</b><span>음량</span></div>
+  </div>
+  <ul>
+    <li>완성본 화면 3장을 직접 열어 봤습니다. 페이지에 넣은 채널명 <b>'썰풀다실측'</b>이 머리띠와 작성자 줄에 찍혔고, 게시글 제목 자리에는 이번 편 제목이 들어갔습니다. 자막은 대본 줄마다 바뀝니다.</li>
+    <li>영상 안에 구매자 표식이 들어갔습니다(누가 만든 영상인지 서버가 알 수 있음).</li>
+    <li>이상 경보 0건 · 등록 기기 1/2대 · 작업이 끝난 뒤 동시 작업 잠금 풀림.</li>
+    <li>소재는 시험용 색띠 영상이라 화면 배경은 색띠입니다. 실제 유튜브 소재로는 아직 라이브에서 안 돌렸습니다.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>서버에 올린 재료</h2>
+  <div class="nums">
+    <div class="num"><b>88</b><span>글꼴</span></div>
+    <div class="num"><b>147</b><span>효과음</span></div>
+    <div class="num"><b>24</b><span>BGM</span></div>
+    <div class="num"><b>12</b><span>템플릿</span></div>
+    <div class="num"><b>1,283</b><span>짤</span></div>
+    <div class="num"><b>13</b><span>프리셋</span></div>
+  </div>
+  <p>모두 1,438개 파일, 570MB입니다(서버 디스크 여유 26GB). 페이지에서 보는 미리보기 견본 255개는 모두 규격 안이고, 짤은 견본 시트 32장에 1,283개가 빠짐없이 들어갔습니다.</p>
+</section>
+
+<section>
+  <h2>라이브에서 찾아 고친 결함</h2>
+  <div class="fix">
+    <h3>1. /claude 페이지에 프리셋이 0개로 나왔습니다</h3>
+    <p><strong>원인</strong> 프리셋 틀 파일이 숏템프리셋 엔진 작업 폴더에만 있고 라이브(main)에는 없었습니다. 이 PC 시험은 그 폴더를 직접 읽어서 문제가 가려졌습니다.</p>
+    <p><strong>조치</strong> 틀 148개를 엔진과 같은 내용으로 라이브에 넣었고, 새벽 2시 반영 도구가 앞으로 틀 폴더도 함께 옮기도록 고쳤습니다. 지금 페이지에 13개가 뜹니다.</p>
+  </div>
+  <div class="fix">
+    <h3>2. 짤 견본을 굽다가 전체가 멈췄습니다</h3>
+    <p><strong>원인</strong> 0.5초보다 짧은 짤에서 그림이 안 만들어졌습니다.</p>
+    <p><strong>조치</strong> 짧으면 첫 장면으로 다시 뜨게 고쳤습니다. 0.3초 시험 클립으로 고치기 전에는 멈추고 고친 뒤에는 정상인 것을 대조했습니다.</p>
+  </div>
+  <p>두 수리는 관문을 통과해 병합했습니다(main <code>dc0e5f770</code>).</p>
+</section>
+
+<section>
+  <h2>사용하는 법</h2>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="t-admin" aria-selected="true" aria-controls="p-admin">사장님이 지금 써 보기</button>
+    <button role="tab" id="t-code" aria-selected="false" aria-controls="p-code">고객 · Claude Code</button>
+    <button role="tab" id="t-desk" aria-selected="false" aria-controls="p-desk">고객 · Claude Desktop</button>
+  </div>
+
+  <div role="tabpanel" id="p-admin" aria-labelledby="t-admin" style="display:flex;flex-direction:column;gap:14px">
+    <p>스위치가 '관리자만'이라 사장님 계정으로 로그인하면 바로 보입니다.</p>
+    <ol class="steps">
+      <li><div><h3>숏템메이커에서 <code>/claude</code> 열기</h3><p>shoppingshorts.duckdns.org/claude — 프리셋 카드 13장, 스타일 4종(현장썰·대사썰·나레썰·자막썰), 팩 견본이 나옵니다.</p></div></li>
+      <li><div><h3>프리셋 고르고 내 채널명 넣고 '저장'</h3><p>이게 '내 채널(프로필)'이 됩니다. 영상의 머리띠·작성자 줄에 이 채널명이 찍힙니다.</p></div></li>
+      <li><div><h3>'키 발급' 누르기</h3><p>라이선스 키가 나옵니다(1년, 기기 2대까지). 키는 채팅창이 아니라 설치 뒤 설정 칸에 붙여 넣습니다.</p></div></li>
+      <li><div><h3>설치 파일 설치</h3><p>윈도용 <code>shortem-setup-win-x64-1.0.0.exe</code>(203MB). 아직 서버에 안 올려서 페이지에는 '준비 중'으로 나옵니다. 써 보시려면 말씀해 주세요. 서명이 없어 윈도가 경고를 띄우면 '추가 정보 ▸ 실행'을 누릅니다.</p></div></li>
+      <li><div><h3>Claude에게 만들어 달라고 하기</h3><p>아래 고객 탭의 순서와 같습니다.</p></div></li>
+    </ol>
+  </div>
+
+  <div role="tabpanel" id="p-code" aria-labelledby="t-code" hidden style="display:flex;flex-direction:column;gap:14px">
+    <ol class="steps">
+      <li><div><h3>설치 파일 실행</h3><p>관리자 권한 없이 깔립니다. 끝나면 바탕화면 <code>숏템작업</code> 폴더에 <code>시작.md</code>와 그림 안내(11장)가 생깁니다.</p></div></li>
+      <li><div><h3>Claude Code에 플러그인 등록</h3><p><code>시작.md</code>에 적힌 두 줄을 입력합니다.</p>
+        <div class="chat"><span>claude plugin marketplace add "&lt;설치 폴더의 플러그인&gt;"</span><span>claude plugin install shortem@shortem</span></div></div></li>
+      <li><div><h3>Claude Code를 껐다 켜고 키 넣기</h3><p><code>/plugin configure shortem@shortem</code>에 라이선스 키를 붙여 넣습니다.</p></div></li>
+      <li><div><h3>준비 점검 <code>/shortem:setup</code></h3><p>라이선스·기기 등록·실행 도구·디스크를 확인하고 시험 렌더·시험 목소리·시험 다운로드를 돌려 항목마다 '됨/안 됨'을 알려 줍니다. 끝에 내 채널 이름이 나옵니다.</p></div></li>
+      <li><div><h3>한 편 만들기 <code>/shortem:make</code></h3>
+        <div class="chat"><span class="u">› /shortem:make 썰풀다 https://youtube.com/shorts/…</span><span class="c">9단계 중 1번째 — 준비 …</span></div>
+        <p>Claude가 사람이 정할 세 곳에서만 멈춰 묻습니다: ① 소재 고르기 ② 대본 확인 ③ 완성본 확인. 완성본은 <code>숏템작업</code> 폴더에 저장됩니다.</p></div></li>
+    </ol>
+  </div>
+
+  <div role="tabpanel" id="p-desk" aria-labelledby="t-desk" hidden style="display:flex;flex-direction:column;gap:14px">
+    <ol class="steps">
+      <li><div><h3>설치 파일 실행</h3><p>마지막 화면의 체크박스(기본 켜짐)로 Claude Desktop 연결 파일 <code>shortem.mcpb</code>가 자동으로 열립니다.</p></div></li>
+      <li><div><h3>Claude Desktop에서 '설치'를 누르고 라이선스 키 칸에 붙여 넣기</h3><p>키는 숨김 칸에 저장되고 다시 보이지 않습니다.</p></div></li>
+      <li><div><h3>채팅으로 요청</h3>
+        <div class="chat"><span class="u">› 숏템 준비 점검해 줘</span><span class="u">› 썰풀다 채널로 이 영상 만들어 줘 https://youtube.com/shorts/…</span></div>
+        <p>흐름은 Claude Code와 같습니다(소재 → 대본 → 완성본 확인).</p></div></li>
+    </ol>
+    <div class="note"><strong>미확인</strong> Claude Desktop의 실제 설치 화면에서 <code>.mcpb</code>를 깔아 보는 시험은 아직 안 했습니다. 연결 자체는 같은 서버를 쓰는 Claude Code 쪽으로 확인했습니다.</div>
+  </div>
+
+  <div class="tbl"><table>
+    <thead><tr><th>Claude가 쓰는 도구</th><th>하는 일</th></tr></thead>
+    <tbody>
+      <tr><td>shortem_setup</td><td>준비 점검과 자가점검(키는 이 PC에만 저장)</td></tr>
+      <tr><td>shortem_presets</td><td>쓸 수 있는 프리셋·내 채널 목록</td></tr>
+      <tr><td>shortem_profile</td><td>내 채널 하나 조회(옵션 수정은 웹 페이지에서만)</td></tr>
+      <tr><td>shortem_make</td><td>한 편 만들기(9단계, 사람 자리에서 멈춤)</td></tr>
+      <tr><td>shortem_job</td><td>진행 상태·목록·멈추기</td></tr>
+      <tr><td>shortem_feedback</td><td>요청·버그 보내기(대본·영상은 안 보냄)</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>고객에게 열기 전에 남은 것</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>항목</th><th>상태</th></tr></thead>
+    <tbody>
+      <tr><td>설치 파일 서버 업로드</td><td><span class="pill warn">사장님 결정</span> 서명 없는 203MB 파일을 배포할지</td></tr>
+      <tr><td>고객 공개 스위치</td><td><span class="pill warn">사장님 결정</span> 지금 <code>admin</code>(관리자만)</td></tr>
+      <tr><td>통과작 미리보기 15편</td><td><span class="pill stop">막힘</span> 원본이 외장 D 드라이브에 있음 — D 연결 뒤 굽기</td></tr>
+      <tr><td>목소리 실제 합성</td><td><span class="pill stop">미실측</span> 이 PC에 타입캐스트 키 없음</td></tr>
+      <tr><td>윈도 코드서명</td><td><span class="pill stop">미실측</span> 인증서 필요(없으면 SmartScreen 경고)</td></tr>
+      <tr><td>맥 설치팩</td><td><span class="pill stop">미실측</span> 맥 기기에서 빌드·서명·공증 필요(Apple 개발자 연 99달러)</td></tr>
+      <tr><td>Claude Desktop 설치 화면</td><td><span class="pill stop">미실측</span></td></tr>
+      <tr><td>추가 기능</td><td>채널명 PNG 견본, 자막 효과 견본, 대본 뒤 짤·효과음 요청, 원음 깔기, 템플릿 사용 — 미구현</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>알려 드릴 것</h2>
+  <ul>
+    <li>라이선스 키는 서버 발급 도구 대신 페이지의 '키 발급' 버튼으로 받았습니다. 도구가 서버 비밀값 파일을 읽어야 하는데 권한에서 막혔습니다. 고객도 같은 버튼을 쓰니 확인 경로로는 맞습니다.</li>
+    <li>작업 중 제가 명령을 잘못 묶어 엔진 쪽 파일이 제 작업 폴더로 딸려 왔습니다. 커밋 전에 지웠고 원본은 엔진 커밋에 그대로 있어 잃은 파일은 없습니다.</li>
+    <li>PC 메모리가 부족해 로컬 시험 서버가 자동으로 꺼졌습니다. 라이브 시험엔 필요 없어 다시 켜지 않았습니다.</li>
+  </ul>
+</section>
+
+<footer>기록: <code>handoff/숏템MCP.md</code> · 트랙 커밋 <code>8bcd43f46</code> · 병합 main <code>dc0e5f770</code></footer>
+</div>
+
+<script>
+document.querySelectorAll('[role=tab]').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('[role=tab]').forEach(function(x){
+      var on=x===b; x.setAttribute('aria-selected',on);
+      document.getElementById(x.getAttribute('aria-controls')).hidden=!on;
+    });
+  });
+});
+</script>
+
+</html>

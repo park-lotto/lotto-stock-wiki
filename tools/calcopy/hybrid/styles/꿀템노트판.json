@@ -1,0 +1,897 @@
+{
+ "name": "꿀템노트판",
+ "renderer": "bench",
+ "thumb_card_face": true,
+ "_thumb_card_face": "연예인 채널 — 썸네일 카드 3안 전부 연예인 얼굴(사장님 10-25 '연예인 얼굴 통일')",
+ "_note": "얜샷템 하이브리드 — 꿀템노트(@꿀템노트-g1z) 칼카피 판: 나레가 묻고 연예인 원음이 답하는 가짜 대화. 근거 channel/kkultemnote/{스타일분석.md, 하이브리드_판설계.md, 줄판독/}.",
+ "bench": {
+  "ko": "꿀템노트",
+  "channel": "kkultemnote",
+  "analysis": "channel/kkultemnote/스타일분석.md",
+  "design": "channel/kkultemnote/하이브리드_판설계.md",
+  "line_reads": "channel/kkultemnote/줄판독",
+  "src_dir": "C:/숏템_칼카피/kkultemnote/src",
+  "sfx_events": "channel/kkultemnote/_kal/sfx_events.json",
+  "sfx_key": "kkultemnote",
+  "why_sfx_events": "채널 자기 신호표(표준 §3-3 A2) — placement.sfx_events_path 는 이미 이 파일을 먼저 읽는다(옛 칸 channel/starpickroom/_tools/결과/sfx_events_rules.json 은 표시만 낡아 있었음, 렌더 동작 같음)"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f",
+  "why": "벤치 최근 편(09-25~) 나레 남자 f0 124~166Hz → 박창수(사장님 규칙: 남자면 박창수)"
+ },
+ "cps_target": 9.86,
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 12.0,
+  "duck_orig_db": 0.0,
+  "fade_out": 0.4,
+  "why": "벤치 7/8편 BGM 경쾌·처음~끝·페이드 없음",
+  "candidates": [
+   "otsukare_summer",
+   "sweets",
+   "beggin"
+  ],
+  "duck_narr_db": 0.0,
+  "why_02": "candidates = bgm_pick.py recommend 꿀템노트판(벤치 8편 148.1 BPM·747Hz, 거리 0.713/0.870/0.990) — 곡은 사람이 고른다(id 그대로) · duck_narr_db 0 = 나레 덕킹 실측 없음"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 LUFS·TP −1.5 통일(사장님 10-18) · 벤치 −15.3(1위 BpU)·8편 중앙 −15.7 — 하이브리드_판설계.md 소리"
+ },
+ "length": {
+  "min": 15,
+  "max": 22,
+  "why": "15~22초(벤치 중앙 16.8, 1편 21.6 — 하이브리드_판설계.md 표)"
+ },
+ "timing": {
+  "gap_after_tts": 0.06,
+  "gap_after_orig": 0.06,
+  "tail": 0.11,
+  "why": "벤치 8편 원본 소리 실측(handconst.py kkultemnote → _kal/손상수_실측.json): 줄 경계(화자 바뀜·앞 조각 문장 끝) 소리 쉼 중앙 — gap_after_tts 0.06(앞 나레 n=29, p25 0.04·p75 0.12) · gap_after_orig 0.06(앞 원음 n=54, p25 0·p75 0.08) (경계 ±0.15초 창 안 가장 긴 쉼, 쉼 문턱 = 편별 (말 p50+p5)/2) · tail 0.11 = 마지막 말 소리 끝→영상 끝 편 중앙 0.107초(0.03~0.91, 로컬 위스퍼 마지막 낱말 끝)"
+ },
+ "frame": {
+  "bg": [
+   0,
+   0,
+   0
+  ],
+  "window": [
+   0,
+   420,
+   1080,
+   1080
+  ],
+  "title": [
+   {
+    "font": "SBAggroB.ttf",
+    "px": 98,
+    "ink_top": 176,
+    "color": "#FFFFFF",
+    "hi": "#FCB9CE",
+    "max_w": 960,
+    "why": "제목 2줄 SBAggroB 98/112px y176·287(하이브리드_판설계.md 틀) · max_w 960 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
+   },
+   {
+    "font": "SBAggroB.ttf",
+    "px": 112,
+    "ink_top": 287,
+    "color": "#FFFFFF",
+    "hi": "#0091FD",
+    "max_w": 960,
+    "why": "제목 2줄 SBAggroB 98/112px y176·287(하이브리드_판설계.md 틀) · max_w 960 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
+   }
+  ],
+  "logo": null,
+  "credit": {
+   "font": "Pretendard-Regular.otf",
+   "px": 40,
+   "color": "#FAFAFA",
+   "ink_top": 1615,
+   "why": "출처 40px y1615(틀)"
+  },
+  "comment": {
+   "bottom": 1505,
+   "px": 30,
+   "why": "댓글 카드 아래변 y1505(틀) · px 30 = 손 상수 — 벤치 근거 없음(06 측정 뒤 교체)"
+  },
+  "why": "하이브리드_판설계.md 틀: 바탕 검정 · 창 [0,420,1080,1080] · 출처 Pretendard Regular 40px #FAFAFA y1615 · 댓글 카드 아래변 y1505(벤치 5/8편)"
+ },
+ "caption": {
+  "pack": "kkultemnote",
+  "pack_default": {
+   "narr.first": "fade",
+   "narr.rest": "fade",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {
+   "pop": "orig_pop",
+   "cut": "cut"
+  },
+  "chunk_max_chars": 13,
+  "band": [
+   1245,
+   1328
+  ],
+  "why_band": "자막 잉크 y1245~1328(kkultemnote place — 8편 중 7편) — caption_side 짤·스티커 자리용(fx_target)",
+  "why": "자막팩 kkultemnote(자막) · band = 자막 잉크 y1245~1328(why_band) · chunk_max_chars 13 = 벤치 나레 조각 자수(공백 뺀) p90 13(n=54, 중앙 10·최대 14 — handconst.py kkultemnote caption.chunk_max_chars)"
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "why": "하드컷(하이브리드_판설계.md 장면) · push 0(제품 그릇 컷 느린 확대 1.0→1.08~1.10 은 재료 move 칸)"
+ },
+ "sfx_files": {
+  "ding": "팩01/ding.wav",
+  "whoosh": "팩01/whoosh.wav",
+  "pop": "팩01/pop.wav",
+  "gain_db": -8
+ },
+ "placement": {
+  "rules": {
+   "variants": {
+    "orig_red": {
+     "speaker": "orig",
+     "lex": [
+      "excl"
+     ],
+     "match": "빨강",
+     "why": "BpU '혹 하는 거지'·m0E '안 들어가는 게 없어!' 빨강 펀치"
+    }
+   },
+   "stickers": {
+    "comment_card": {
+     "needs_comment": true,
+     "why": "벤치 댓글 카드 5/8편 — 대본에 원본 실제 댓글이 있을 때만"
+    }
+   },
+   "sfx": {
+    "kind": "ding",
+    "max": 1,
+    "why": "10-19 신호 재측정: 기본 0발, 있으면 자막교체·나레→원음 전환 순간 1발"
+   }
+  },
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/kkultemnote/줄판독",
+   "n_videos": 8,
+   "slots": {
+    "narr.first": {
+     "n": 23,
+     "enter": {
+      "fade": 0.522,
+      "cut": 0.478
+     },
+     "emph": 0.696
+    },
+    "narr.rest": {
+     "n": 31,
+     "enter": {
+      "fade": 0.548,
+      "cut": 0.419,
+      "append": 0.032
+     },
+     "emph": 0.484
+    },
+    "orig.first": {
+     "n": 29,
+     "enter": {
+      "cut": 0.414,
+      "pop": 0.31,
+      "fade": 0.207,
+      "other": 0.034,
+      "typing": 0.034
+     },
+     "emph": 0.207
+    },
+    "orig.rest": {
+     "n": 66,
+     "enter": {
+      "cut": 0.561,
+      "fade": 0.288,
+      "append": 0.045,
+      "pop": 0.045,
+      "other": 0.03,
+      "typing": 0.03
+     },
+     "emph": 0.182
+    }
+   },
+   "share": {
+    "emph": 1.0,
+    "typing": 0.375,
+    "sfx": 0.25
+   },
+   "stickers": {
+    "comment_card": 0.625,
+    "heart": 0.125,
+    "object_pop": 0.25,
+    "other": 0.5,
+    "spark_lines": 0.625
+   },
+   "videos": [
+    {
+     "id": "2wJTffElmjk",
+     "n": 16,
+     "slots": {
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "pop": 1,
+        "other": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 10,
+       "enter": {
+        "cut": 6,
+        "fade": 4
+       },
+       "emph": 3
+      },
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "fade": 1,
+        "cut": 1
+       },
+       "emph": 1
+      },
+      "narr.rest": {
+       "n": 2,
+       "enter": {
+        "fade": 2
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "other": 2,
+      "comment_card": 12,
+      "spark_lines": 1
+     },
+     "sticker_lex": {
+      "other": {
+       "ask": 1,
+       "none": 1
+      },
+      "comment_card": {
+       "ask": 3,
+       "excl": 3,
+       "none": 6
+      },
+      "spark_lines": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "노랑 작게→커짐": 1,
+      "빨강": 1,
+      "기본('깜짝' 어절 크고 굵게)": 1,
+      "기타(잔상 글리치)": 1,
+      "노랑(전체)": 1,
+      "기타(나레 글꼴 굵은 고딕)": 1,
+      "기본(강조어 노랑 크게)": 3
+     },
+     "sfx": [],
+     "no_caption": 0
+    },
+    {
+     "id": "653bTRm8p6E",
+     "n": 18,
+     "slots": {
+      "orig.first": {
+       "n": 4,
+       "enter": {
+        "pop": 2,
+        "cut": 2
+       },
+       "emph": 1
+      },
+      "orig.rest": {
+       "n": 3,
+       "enter": {
+        "cut": 3
+       },
+       "emph": 0
+      },
+      "narr.first": {
+       "n": 3,
+       "enter": {
+        "cut": 3
+       },
+       "emph": 1
+      },
+      "narr.rest": {
+       "n": 8,
+       "enter": {
+        "cut": 7,
+        "fade": 1
+       },
+       "emph": 2
+      }
+     },
+     "stickers": {
+      "spark_lines": 4
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "none": 2,
+       "excl": 2
+      }
+     },
+     "variants": {
+      "기타(노랑 꾸불림)": 3,
+      "기타(분홍 굵은 꾸불림)": 1,
+      "기타(괄호 보충 줄, 노랑 꾸불림, 글 위 따로)": 1
+     },
+     "sfx": [],
+     "no_caption": 3
+    },
+    {
+     "id": "_dzncUms1yQ",
+     "n": 18,
+     "slots": {
+      "orig.first": {
+       "n": 3,
+       "enter": {
+        "pop": 1,
+        "fade": 1,
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 7,
+       "enter": {
+        "fade": 5,
+        "other": 1,
+        "cut": 1
+       },
+       "emph": 1
+      },
+      "narr.first": {
+       "n": 3,
+       "enter": {
+        "fade": 3
+       },
+       "emph": 2
+      },
+      "narr.rest": {
+       "n": 5,
+       "enter": {
+        "fade": 5
+       },
+       "emph": 3
+      }
+     },
+     "stickers": {
+      "other": 2
+     },
+     "sticker_lex": {
+      "other": {
+       "none": 2
+      }
+     },
+     "variants": {
+      "기본(작게→정상)": 1,
+      "기타(잔상 글리치)": 1
+     },
+     "sfx": [],
+     "no_caption": 0
+    },
+    {
+     "id": "BpUOIUwkoG4",
+     "n": 19,
+     "slots": {
+      "orig.first": {
+       "n": 5,
+       "enter": {
+        "fade": 2,
+        "cut": 2,
+        "pop": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 9,
+       "enter": {
+        "cut": 4,
+        "fade": 3,
+        "append": 2
+       },
+       "emph": 0
+      },
+      "narr.first": {
+       "n": 4,
+       "enter": {
+        "fade": 3,
+        "cut": 1
+       },
+       "emph": 3
+      },
+      "narr.rest": {
+       "n": 1,
+       "enter": {
+        "fade": 1
+       },
+       "emph": 1
+      }
+     },
+     "stickers": {
+      "spark_lines": 2
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "none": 2
+      }
+     },
+     "variants": {
+      "기타(붙인 어절 굵은 고딕 흰)": 1,
+      "크게 튀어나옴": 1,
+      "빨강": 1,
+      "기타(붙인 어절 굵은 흰)": 1,
+      "기타(굵은 흰 고딕 크게)": 1
+     },
+     "sfx": [],
+     "no_caption": 0
+    },
+    {
+     "id": "cLk6fJly6OY",
+     "n": 17,
+     "slots": {
+      "orig.first": {
+       "n": 4,
+       "enter": {
+        "cut": 2,
+        "pop": 1,
+        "fade": 1
+       },
+       "emph": 2
+      },
+      "orig.rest": {
+       "n": 7,
+       "enter": {
+        "cut": 5,
+        "typing": 1,
+        "fade": 1
+       },
+       "emph": 1
+      },
+      "narr.first": {
+       "n": 3,
+       "enter": {
+        "cut": 2,
+        "fade": 1
+       },
+       "emph": 2
+      },
+      "narr.rest": {
+       "n": 3,
+       "enter": {
+        "cut": 3
+       },
+       "emph": 2
+      }
+     },
+     "stickers": {
+      "object_pop": 5,
+      "other": 2,
+      "comment_card": 2
+     },
+     "sticker_lex": {
+      "object_pop": {
+       "none": 4,
+       "excl": 1
+      },
+      "other": {
+       "price": 1,
+       "excl": 1
+      },
+      "comment_card": {
+       "excl": 2
+      }
+     },
+     "variants": {
+      "크게 튀어나옴": 1,
+      "노랑(전체)": 1,
+      "노랑(전체)·어절이 위에서 튀어 붙음": 1
+     },
+     "sfx": [],
+     "no_caption": 0
+    },
+    {
+     "id": "KCxJ5qJft38",
+     "n": 19,
+     "slots": {
+      "orig.first": {
+       "n": 4,
+       "enter": {
+        "cut": 3,
+        "fade": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 6,
+       "enter": {
+        "cut": 4,
+        "fade": 1,
+        "pop": 1
+       },
+       "emph": 3
+      },
+      "narr.first": {
+       "n": 3,
+       "enter": {
+        "cut": 2,
+        "fade": 1
+       },
+       "emph": 2
+      },
+      "narr.rest": {
+       "n": 6,
+       "enter": {
+        "fade": 3,
+        "cut": 2,
+        "append": 1
+       },
+       "emph": 3
+      }
+     },
+     "stickers": {
+      "heart": 1,
+      "comment_card": 4,
+      "other": 1,
+      "object_pop": 1
+     },
+     "sticker_lex": {
+      "heart": {
+       "excl": 1
+      },
+      "comment_card": {
+       "none": 3,
+       "excl": 1
+      },
+      "other": {
+       "excl": 1
+      },
+      "object_pop": {
+       "lux": 1
+      }
+     },
+     "variants": {
+      "크게 튀어나옴": 2,
+      "기타(2줄: 위 꾸불림 흰 + 아래 큰 얇은 회흰 감동)": 1,
+      "기타(주황 꾸불림)": 2,
+      "기타(붙인 어절 분홍 + 분홍 번짐 이중상)": 1,
+      "기타(대괄호 보충 줄, 굵은 흰 고딕 + 회색 외곽)": 1
+     },
+     "sfx": [
+      "switch"
+     ],
+     "no_caption": 1
+    },
+    {
+     "id": "m0Ex0y1DN5s",
+     "n": 23,
+     "slots": {
+      "orig.first": {
+       "n": 3,
+       "enter": {
+        "cut": 2,
+        "pop": 1
+       },
+       "emph": 2
+      },
+      "orig.rest": {
+       "n": 17,
+       "enter": {
+        "cut": 13,
+        "fade": 1,
+        "pop": 1,
+        "append": 1,
+        "typing": 1
+       },
+       "emph": 3
+      },
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "cut": 2
+       },
+       "emph": 2
+      },
+      "narr.rest": {
+       "n": 1,
+       "enter": {
+        "fade": 1
+       },
+       "emph": 1
+      }
+     },
+     "stickers": {
+      "comment_card": 2,
+      "spark_lines": 3
+     },
+     "sticker_lex": {
+      "comment_card": {
+       "none": 1,
+       "excl": 1
+      },
+      "spark_lines": {
+       "none": 3
+      }
+     },
+     "variants": {
+      "기타(숫자 굵은 노랑 고딕 + 나머지 꾸불림 흰)": 1,
+      "기타(굵은 노랑 고딕 + 뒤에 흐린 큰 사본 1초 유지)": 1,
+      "크게 튀어나옴": 1,
+      "기타(굵은 흰 고딕)": 1,
+      "기타(붙인 어절 굵은 노랑 고딕)": 1,
+      "빨강": 1
+     },
+     "sfx": [],
+     "no_caption": 0
+    },
+    {
+     "id": "znHaConczpE",
+     "n": 19,
+     "slots": {
+      "orig.first": {
+       "n": 4,
+       "enter": {
+        "pop": 2,
+        "typing": 1,
+        "fade": 1
+       },
+       "emph": 1
+      },
+      "orig.rest": {
+       "n": 7,
+       "enter": {
+        "fade": 4,
+        "pop": 1,
+        "other": 1,
+        "cut": 1
+       },
+       "emph": 1
+      },
+      "narr.first": {
+       "n": 3,
+       "enter": {
+        "fade": 3
+       },
+       "emph": 3
+      },
+      "narr.rest": {
+       "n": 5,
+       "enter": {
+        "fade": 4,
+        "cut": 1
+       },
+       "emph": 3
+      }
+     },
+     "stickers": {
+      "comment_card": 9,
+      "spark_lines": 1
+     },
+     "sticker_lex": {
+      "comment_card": {
+       "none": 6,
+       "lux": 1,
+       "excl": 2
+      },
+      "spark_lines": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "크게 튀어나옴": 2,
+      "빨강": 1,
+      "기타(잔상 글리치)": 1,
+      "노랑(전체)": 1
+     },
+     "sfx": [
+      "cap",
+      "cap"
+     ],
+     "no_caption": 0
+    }
+   ]
+  },
+  "reference": "BpUOIUwkoG4",
+  "reference_why": "1차 칼카피 = 벤치 1위 한 편(BpU)의 등장·꾸밈을 그대로(10-23 사장님 \"꿀템 영상을 칼카피\") — 편마다 다른 본보기를 뽑으면 기준 편과 어긋난다"
+ },
+ "title_form": "'[원음 반응/가격 훅] + 인물도' / '[행동] + 제품' — 1줄 분홍+흰, 2줄 파랑+흰(사람 이름·결과어는 흰) · title_lines 칸 [[글, 'hi'|null], …]",
+ "script": {
+  "brief": [
+   "줄 = 원음 줄(연예인 본인 말, 원본 구간 그대로)과 나레 줄이 번갈아. 나레 3~5줄·한 줄 10~22자·전체 60~95자, 나레 비중 33~45%.",
+   "박자: ①원음 훅 0.8~2초(반응·반문 한 마디, 첫 프레임 연예인 얼굴) ②나레 전언 '[인물]도 [행동]한 [제품] [정체]가 있다는데요?' ③원음 증언 ④나레 질문 '대체 ~가요?'/'뭐 때문에 ~가요?' ⑤원음 답 ⑥나레 정보 '~다네요?' ⑦원음 감탄 ⑧나레 반전·가격·권위 '~지만 ~라는데요?'(숫자 1개 근거 필수) ⑨원음 반전 ⑩원음 끝.",
+   "어미: '~다는데요?'·'~라는데요?'·'~다네요?'·질문 '~가요?' · 끝 정리 '결국 ~했네요'. 반말·1인칭·CTA 없음.",
+   "정직 선: 연예인이 말하지 않은 평가를 연예인 입에 넣지 않는다 — 원음에 반대 말이 있으면 반전 박자로 그대로.",
+   "원본 실제 댓글(좋아요 1위)을 comment{text,likes,from,to} 로 적으면 배치 규칙이 붙일지 정한다."
+  ],
+  "example": "channel/kkultemnote/하이브리드_성시경/대본.json",
+  "audit": [
+   {
+    "kind": "first_line",
+    "is": "orig"
+   },
+   {
+    "kind": "orig_span",
+    "which": "first",
+    "max": 2.2
+   },
+   {
+    "kind": "count",
+    "of": "tts",
+    "min": 3,
+    "max": 5
+   },
+   {
+    "kind": "no_adjacent",
+    "of": "tts"
+   },
+   {
+    "kind": "tts_chars",
+    "min": 8,
+    "max": 26
+   },
+   {
+    "kind": "tts_total_chars",
+    "min": 55,
+    "max": 100
+   },
+   {
+    "kind": "ending",
+    "which": "all_tts",
+    "pattern": "(다는데요|라는데요|다네요|라네요|가요|나요|했네요|다는데|래요)\\s*[?？.!]*$",
+    "min_share": 0.75,
+    "why": "전언·질문 어미"
+   },
+   {
+    "kind": "forbid_in",
+    "of": "tts",
+    "pattern": "^(저도|제가|나도|저는)|따라 (사|해) 봤",
+    "why": "1인칭 없음(꿀템노트 결)"
+   },
+   {
+    "kind": "last_line",
+    "is": "orig",
+    "or_tts_pattern": "했네요"
+   },
+   {
+    "kind": "cap_chars",
+    "max": 15
+   },
+   {
+    "kind": "narr_share",
+    "min": 0.3,
+    "max": 0.48
+   },
+   {
+    "kind": "est_length",
+    "min": 15,
+    "max": 22
+   }
+  ]
+ },
+ "_pending": {
+  "transition_counted": "줄판독 transition 비율(placement.py count --dry 10-25): {'cut': 0.979, 'black': 0.014, 'zoomblur': 0.007} — cuts.transition.kinds·placement.rules.transition 에 넣으면 전환이 실제로 그려진다(지금 판 렌더와 달라짐) → 같은 편 렌더 전/후 대조 뒤 넣는다. 길이 ms 는 02 의 bench_transition_drop 같은 자로 재야 한다(표준 §11 ⑯)"
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "kkultemnote",
+   "gap": [
+    "자기 팩 1위지만 문턱 밖 {'px': 1.29}(1.0 = 문턱) → 팩요청.md 꿀템노트판#1(보정 또는 재측정)",
+    "벤치 등장 ['fade'](줄 5% 이상) 팩 'kkultemnote' 에 없음 → 팩요청.md 꿀템노트판#2"
+   ],
+   "rank": [
+    {
+     "pack": "kkultemnote",
+     "d": 0.33,
+     "terms": {
+      "px": 1.29,
+      "fill": 0.0,
+      "y": 0.03,
+      "font": 0.0
+     }
+    },
+    {
+     "pack": "deal",
+     "d": 0.655,
+     "terms": {
+      "px": 0.12,
+      "fill": 0.0,
+      "y": 1.0,
+      "font": 1.5
+     }
+    },
+    {
+     "pack": "goodletter",
+     "d": 0.72,
+     "terms": {
+      "px": 0.56,
+      "fill": 0.14,
+      "y": 0.68,
+      "font": 1.5
+     }
+    }
+   ],
+   "from": "벤치 8편 149줄 실측 [글꼴 Kkubulim(스타일분석 §1) · 나레 54줄[잉크 높이 85px(54줄 y칸) · 자리 y1288 · 채움 #FFFFFF(53줄)] · 원음 94줄[잉크 높이 85px(92줄 y칸) · 자리 y1288 · 채움 #FFFFFF(78줄)]] → 1위 kkultemnote(거리 0.33) · 지금 kkultemnote(거리 0.33, 순위 1)",
+   "enter_cover": {
+    "cut": {
+     "share": 0.49,
+     "n": 73,
+     "item": "정지(팩 불필요)"
+    },
+    "fade": {
+     "share": 0.362,
+     "n": 54,
+     "item": null
+    },
+    "pop": {
+     "share": 0.081,
+     "n": 12,
+     "item": "overPopBig"
+    },
+    "append": {
+     "share": 0.027,
+     "n": 4,
+     "item": "정지(팩 불필요)"
+    },
+    "기타": {
+     "share": 0.02,
+     "n": 3,
+     "item": null
+    },
+    "typing": {
+     "share": 0.02,
+     "n": 3,
+     "item": null
+    }
+   }
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — 판 자막팩이 등장까지 정한다(caption-motions.js motionPlan: 팩 motion 이 효과팩 번호보다 이긴다) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": "팩01",
+   "map": {
+    "ding": "띠링",
+    "whoosh": "휙",
+    "pop": "뽁"
+   },
+   "gain_db": -8,
+   "ncc": {
+    "measured": false
+   },
+   "from": "NCC 미측정(_kal/sfx_ncc.json 없음) → 지문으로 고를 수 없어 종류 이름표로 slot: ding→띠링 · 팩 팩01",
+   "gap": []
+  },
+  "bgm": {
+   "id": "honwaka_puppu",
+   "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)",
+   "candidates": [
+    "otsukare_summer",
+    "sweets",
+    "beggin"
+   ]
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
+  }
+ },
+ "_why_cps_target": "9.86 = 벤치 8편 나레 글자/자막 초 편 중앙(8.3·9.71·10.68·10.0·11.17·8.08·8.61·12.14 — kal_analyze.rules_of episodes.narr_cps, handconst.py kkultemnote cps_target) · 박창수(타입캐스트) 배속 = 이 값 맞춤(render_itssum, 0.85~1.25)"
+}

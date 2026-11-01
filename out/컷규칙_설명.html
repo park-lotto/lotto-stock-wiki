@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>컷 나누는 규칙</title>
+<style>
+:root{--bg:#14161b;--card:#1d2028;--line:#2c313c;--txt:#e8eaf0;--sub:#9aa3b2;--cap:#2b4a7a;--c1:#2fbf71;--c2:#f2a33a;--c3:#b07cff;--bad:#ff5a5a}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:"Malgun Gothic",system-ui,sans-serif;line-height:1.6}
+main{max-width:900px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:25px;margin:0 0 4px}h2{font-size:20px;margin:34px 0 8px}
+.sub{color:var(--sub)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+.row{display:flex;align-items:center;gap:10px;margin:6px 0}
+.lab{width:52px;flex:0 0 52px;color:var(--sub);font-size:13px;text-align:right}
+.track{position:relative;flex:1;height:38px}
+.seg{position:absolute;top:0;height:38px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0b0d10;overflow:hidden;white-space:nowrap}
+.cap{background:var(--cap);color:#cfe0ff;font-weight:600}
+.k1{background:var(--c1)}.k2{background:var(--c2)}.k3{background:var(--c3)}
+.ext{background:repeating-linear-gradient(45deg,rgba(47,191,113,.55) 0 8px,rgba(47,191,113,.25) 8px 16px);color:#dfffee}
+.mark{position:absolute;top:-6px;bottom:-6px;width:0;border-left:2px dashed #ffd27a}
+.miss{position:absolute;top:-8px;bottom:-8px;width:0;border-left:3px solid var(--bad)}
+.tag{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:700}
+.ok{background:#173a2a;color:#9be7bf}.no{background:#4a1f24;color:#ffb3b3}.pick{background:#3a2e14;color:#ffe0a8}
+.step{display:flex;gap:12px;align-items:flex-start;margin:10px 0}
+.num{flex:0 0 30px;height:30px;border-radius:50%;background:#2a2f3a;display:flex;align-items:center;justify-content:center;font-weight:800}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:620px){.two{grid-template-columns:1fr}.lab{width:40px;flex-basis:40px}}
+</style></head><body><main>
+<h1>컷은 이렇게 나뉩니다</h1>
+<div class="sub">3단계 장면 편집 · 컷 리듬 / 구절 맞춤 공통 규칙 (코드 scene_play.js 기준)</div>
+
+<h2>① 컷 수 = 담은 카드 수 (자막 줄 수가 아님)</h2>
+<div class="box">
+  <div class="row"><div class="lab">자막</div><div class="track">
+    <div class="seg cap" style="left:0;width:43%">매일 아침 간식 고민하던</div>
+    <div class="seg cap" style="left:44%;width:27%">주부들 사이에서</div>
+    <div class="seg cap" style="left:72%;width:28%">난리가 났다는데</div>
+    <div class="mark" style="left:43.5%"></div><div class="mark" style="left:71.5%"></div></div></div>
+  <div class="row"><div class="lab">카드</div><div class="track">
+    <div class="seg k1" style="left:0;width:71%">카드1 · 2.3초</div>
+    <div class="seg k2" style="left:72%;width:28%">카드2 · 0.9초</div>
+    <div class="mark" style="left:43.5%"></div><div class="mark" style="left:71.5%"></div></div></div>
+  <p>자막은 <b>3줄</b>인데 담긴 카드는 <b>2장</b> → 컷도 2개. 그래서 <b>카드1 하나가 자막 2줄을 맡아</b> 2.3초로 길어졌습니다 (사장님 캡처 그대로).</p>
+</div>
+
+<h2>② 시간을 나누는 순서</h2>
+<div class="box">
+  <div class="step"><div class="num">1</div><div><b>똑같이 나눈다</b><br><span class="sub">줄 길이 ÷ 카드 수</span></div></div>
+  <div class="step"><div class="num">2</div><div><b>카드 장면이 짧으면 원본 뒤를 이어서 더 보여준다</b><br><span class="sub">머리글 「0.9/3.2초 · 2.3초는 뒷부분으로」 = 고른 장면은 0.9초뿐, 나머지는 원본 뒷부분으로 채움</span>
+    <div class="row" style="margin-top:8px"><div class="lab">카드1</div><div class="track">
+      <div class="seg k1" style="left:0;width:28%">고른 0.9초</div>
+      <div class="seg ext" style="left:28.5%;width:71.5%">원본 뒤를 이어서 1.4초 더</div></div></div></div></div>
+  <div class="step"><div class="num">3</div><div><b>원본도 바닥나면 줄 전체를 같은 속도로 느리게</b></div></div>
+</div>
+
+<h2>③ 두 모드의 차이 = "장면이 바뀌는 순간"뿐</h2>
+<div class="two">
+  <div class="box"><span class="tag pick">컷 리듬</span>
+    <div class="row"><div class="lab">자막</div><div class="track">
+      <div class="seg cap" style="left:0;width:49.5%">줄1</div><div class="seg cap" style="left:50.5%;width:49.5%">줄2</div>
+      <div class="mark" style="left:50%"></div></div></div>
+    <div class="row"><div class="lab">카드</div><div class="track">
+      <div class="seg k1" style="left:0;width:44%">카드1</div><div class="seg k2" style="left:45%;width:55%">카드2</div>
+      <div class="mark" style="left:50%"></div></div></div>
+    <p class="sub">똑같이 나눈 자리 <b>근처(0.4초 안)</b>에 자막 경계가 있으면 거기로 옮기고, 없으면 그 자리 그대로.</p></div>
+  <div class="box"><span class="tag ok">구절 맞춤</span>
+    <div class="row"><div class="lab">자막</div><div class="track">
+      <div class="seg cap" style="left:0;width:49.5%">줄1</div><div class="seg cap" style="left:50.5%;width:49.5%">줄2</div>
+      <div class="mark" style="left:50%"></div></div></div>
+    <div class="row"><div class="lab">카드</div><div class="track">
+      <div class="seg k1" style="left:0;width:49.5%">카드1</div><div class="seg k2" style="left:50.5%;width:49.5%">카드2</div>
+      <div class="mark" style="left:50%"></div></div></div>
+    <p class="sub"><b>무조건</b> 자막 경계에서 바뀜. 경계가 카드보다 많으면 가장 가까운 것만 씀.</p></div>
+</div>
+
+<h2>④ 그래서 생기는 문제</h2>
+<div class="box">
+  <span class="tag no">처음 배치 때 카드가 자막 줄보다 적게 담기면</span>
+  <ul>
+    <li>카드 하나가 자막 여러 줄을 맡아 <b>3~4초씩 한 장면</b></li>
+    <li>재료가 모자라면 <b>원본 뒷부분</b>까지 끌어다 채움 (그 줄에 안 맞는 장면이 섞일 수 있음)</li>
+    <li>구절 맞춤을 켜도 <b>자막 줄 수 ≠ 카드 수</b>라 1:1로 안 맞음</li>
+  </ul>
+</div>
+
+<h2>⑤ 제안 — 처음 배치를 자막 줄 수만큼</h2>
+<div class="box">
+  <div class="row"><div class="lab">자막</div><div class="track">
+    <div class="seg cap" style="left:0;width:43%">매일 아침 간식 고민하던</div>
+    <div class="seg cap" style="left:44%;width:27%">주부들 사이에서</div>
+    <div class="seg cap" style="left:72%;width:28%">난리가 났다는데</div>
+    <div class="mark" style="left:43.5%"></div><div class="mark" style="left:71.5%"></div></div></div>
+  <div class="row"><div class="lab">카드</div><div class="track">
+    <div class="seg k1" style="left:0;width:43%">카드1</div>
+    <div class="seg k2" style="left:44%;width:27%">카드2</div>
+    <div class="seg k3" style="left:72%;width:28%">카드3</div>
+    <div class="mark" style="left:43.5%"></div><div class="mark" style="left:71.5%"></div></div></div>
+  <p><span class="tag ok">자막 3줄 → 카드 3장</span> 장면 하나가 한 줄씩, 구절 맞춤이 딱 맞음.</p>
+  <p class="sub">처음 배치는 서버 2단계(장면 고르기)가 정하는 곳이라 손댈 곳이 다릅니다 — 영향 범위는 코드 확인 후 말씀드립니다(아직 미확인). 재료 장면이 모자란 줄은 있는 만큼만 들어갑니다.</p>
+</div>
+</main></body></html>

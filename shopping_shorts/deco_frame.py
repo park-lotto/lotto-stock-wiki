@@ -612,6 +612,12 @@ def _norm_masks(raw):
         scs = _scenes_list_raw(m)
         if scs:
             item["scenes"] = [list(s) for s in scs]
+        # 🛍 세트 표식(shopcta·myset:·mybadge:) — 편집기가 "다시 넣기/세트 빼기"에서 옛 세트를 찾는 열쇠.
+        #   종전엔 여기서 버려져 저장 뒤 다시 열면 옛 화살표를 못 찾고 하나 더 얹었다(2026-10-18 고객 제보,
+        #   job 383ac5b29649: 구매링크 화살표+스티커 화살표 동시). 없으면 키를 안 붙인다(옛 작업 cache_key 무변경).
+        st = m.get("set")
+        if isinstance(st, str) and st.strip():
+            item["set"] = st.strip()[:40]
         out.append(item)
     return out
 

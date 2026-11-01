@@ -7,7 +7,9 @@
   ⑧ 자동 설정(관제 096): 설명서·설정의 명령 글자 = 스크립트 머리말 명령, 「명령 복사」가 클립보드에 그 글자를 넣는다,
      클라우드 셸 버튼은 실제로 열리는 주소(show=ide,terminal — show=terminal만은 안 열림 2026-10-03), /landing/vertex_setup.sh 비로그인 200·파일과 같다,
      옛 5단계는 「직접 하기」로 접혀 처음엔 안 보인다
-  ⑨ 4단계(관제 119): 설명서 ⑧ 보이는 단계 1·2·3·4 + 제목 = 마이페이지 ①~④ 순서, 영상 = 4단계판(약 73초)"""
+  ⑨ 4단계(관제 119): 설명서 ⑧ 보이는 단계 1·2·3·4 + 제목 = 마이페이지 ①~④ 순서, 영상 = 4단계 v5판(약 61초)
+  ⑩ v5(관제 255): 영상 1단계 = 가입·결제 정보 두 장면뿐 — 15.2초부터가 바로 「2 클라우드 셸 열기」(v4 의 그 장면과 프레임 대조),
+     앞 두 장면도 v4 와 같은 그림. v4 원본은 git(b75bae076)에서 꺼낸다"""
 import sys, time, shutil, threading, pathlib, urllib.request
 ROOT = pathlib.Path(__file__).resolve().parents[2]; sys.path.insert(0, str(ROOT))
 out = pathlib.Path(sys.argv[1]).resolve(); out.mkdir(parents=True, exist_ok=True)
@@ -18,6 +20,35 @@ from playwright.sync_api import sync_playwright
 module.DB_PATH = str(work / 'qa.db'); module.keycrypt.enabled = lambda: True
 import subprocess
 DUR = float(subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',str(ROOT/'shopping_shorts/static/landing/vertex_guide.mp4')],capture_output=True,text=True).stdout)
+
+
+def _v5_frames():
+    """⑩ 지금 영상의 장면 시각 프레임이 v4 의 어느 장면과 같은 그림인가(평균 화소 차). 2단계 인증 장면이 빠졌는지를 그림으로 잰다."""
+    import tempfile
+    from PIL import Image, ImageChops, ImageStat
+    tmp = pathlib.Path(tempfile.mkdtemp())
+    v4 = tmp / 'v4.mp4'
+    v4.write_bytes(subprocess.run(['git', '-C', str(ROOT), 'show', 'b75bae076:shopping_shorts/static/landing/vertex_guide.mp4'],
+                                  capture_output=True, check=True).stdout)
+    cur = ROOT / 'shopping_shorts/static/landing/vertex_guide.mp4'
+
+    def frame(src, t, name):
+        out = tmp / name
+        subprocess.run(['ffmpeg', '-v', 'error', '-y', '-ss', f'{t:.2f}', '-i', str(src), '-frames:v', '1', '-vf', 'scale=480:-1', str(out)], check=True)
+        return Image.open(out).convert('L')
+
+    def diff(a, b):
+        return ImageStat.Stat(ImageChops.difference(a, b)).mean[0]
+    I, P = 3.2, 6.0
+    res = []
+    # 지금 장면 k(가운데 3초) ↔ v4 장면 m : 0·1 = 가입·결제 그대로, 2 = v4 의 4번(클라우드 셸 열기), 3 = v4 의 5번
+    for k, m, label in [(0, 0, '1 가입'), (1, 1, '1 결제 정보'), (2, 4, '2 클라우드 셸 열기'), (3, 5, '3 명령 복사')]:
+        d = diff(frame(cur, I + k * P + 3, f'c{k}.png'), frame(v4, I + m * P + 3, f'o{m}.png'))
+        res.append((d < 2.0, f'⑩ 지금 영상 {k + 1}번째 장면 = v4 「{label}」 장면(평균 화소 차 {d:.2f})'))
+    # 빠진 장면이 정말 없는지: 지금 영상 3번째 장면이 v4 의 2단계 인증 장면(2)과는 달라야 한다
+    d = diff(frame(cur, I + 2 * P + 3, 'c2b.png'), frame(v4, I + 2 * P + 3, 'o2.png'))
+    res.append((d > 8.0, f'⑩ 3번째 장면이 더는 「2단계 인증」 화면이 아니다(v4 그 장면과 차 {d:.2f})'))
+    return res
 PORT = 8798; BASE = f'http://127.0.0.1:{PORT}'
 fails = []
 def need(ok, msg):
@@ -87,7 +118,9 @@ with sync_playwright() as p:
     need([x[0] for x in steps] == ['1', '2', '3', '4'], f'⑨ 설명서 ⑧ 보이는 단계 = 1·2·3·4 ({steps})')
     want = ['무료 체험', '클라우드 셸', '명령 복사', '연결']
     need(len(steps) == 4 and all(w in steps[i][1] for i, w in enumerate(want)), f'⑨ 단계 제목이 마이페이지 ①~④와 같은 순서 ({[x[1] for x in steps]})')
-    need(70 < DUR < 80, f'⑨ 영상 = 4단계판(약 73초, 지금 {DUR:.1f}초 — 옛 5단계판은 132.7초)')
+    need(55 < DUR < 66, f'⑨ 영상 = 4단계 v5판(약 61초, 지금 {DUR:.1f}초 — v4 72.7초 · 옛 5단계판 132.7초)')
+    for ok, msg in _v5_frames():
+        need(ok, msg)
     errs.clear()
     pg2 = ctx.new_page(); pg2.on('pageerror', lambda e: errs.append(str(e)))
     pg2.on('console', lambda m: errs.append(m.text) if m.type == 'error' else None)

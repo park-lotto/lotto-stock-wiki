@@ -1,4 +1,9 @@
 {
+  "deploy/apache-stmaker.conf": {
+    "at": "2026-10-23 16:45",
+    "card": 258,
+    "track": "도메인전환"
+  },
   "handoff/장면폰트.md": {
     "at": "2026-09-29 23:55",
     "card": 40,
@@ -34,6 +39,11 @@
     "card": 131,
     "track": "로고기억"
   },
+  "out/scene-style-decorations.js": {
+    "at": "2026-10-17 01:08",
+    "card": 222,
+    "track": "모션그래픽팩"
+  },
   "out/scene-style-ui-showcase.html": {
     "at": "2026-09-29 23:55",
     "card": 40,
@@ -54,6 +64,11 @@
     "card": 147,
     "track": "씨앗1단계"
   },
+  "shopping_shorts/app.py:_google_redirect_uri": {
+    "at": "2026-10-23 16:45",
+    "card": 258,
+    "track": "도메인전환"
+  },
   "shopping_shorts/app.py:api_buffer_schedule": {
     "at": "2026-10-04 11:13",
     "card": 114,
@@ -63,6 +78,11 @@
     "at": "2026-10-04 11:05",
     "card": 113,
     "track": "단어강조"
+  },
+  "shopping_shorts/app.py:api_scene_style_asset": {
+    "at": "2026-10-17 01:09",
+    "card": 222,
+    "track": "모션그래픽팩"
   },
   "shopping_shorts/app.py:api_storyboard_prepare": {
     "at": "2026-10-06 20:47",
@@ -83,6 +103,26 @@
     "at": "2026-10-05 15:47",
     "card": 124,
     "track": "장면효과팩"
+  },
+  "shopping_shorts/claude_portal.py:anomaly_check": {
+    "at": "2026-10-18 18:05",
+    "card": 234,
+    "track": "숏템MCP"
+  },
+  "shopping_shorts/claude_portal.py:assets_for": {
+    "at": "2026-10-18 18:05",
+    "card": 234,
+    "track": "숏템MCP"
+  },
+  "shopping_shorts/claude_portal.py:lease": {
+    "at": "2026-10-18 18:05",
+    "card": 234,
+    "track": "숏템MCP"
+  },
+  "shopping_shorts/claude_portal.py:preview": {
+    "at": "2026-10-18 18:05",
+    "card": 234,
+    "track": "숏템MCP"
   },
   "shopping_shorts/clean_base.py:_remap_replay": {
     "at": "2026-10-06 02:29",
@@ -114,6 +154,11 @@
     "card": 36,
     "track": "장면폰트"
   },
+  "shopping_shorts/scene_style.py:_needs_bake": {
+    "at": "2026-10-17 01:09",
+    "card": 222,
+    "track": "모션그래픽팩"
+  },
   "shopping_shorts/scene_style.py:compose": {
     "at": "2026-10-05 15:47",
     "card": 124,
@@ -134,6 +179,11 @@
     "card": 30,
     "track": "장면폰트"
   },
+  "shopping_shorts/static/motion-graphics-pack.js": {
+    "at": "2026-10-17 01:08",
+    "card": 222,
+    "track": "모션그래픽팩"
+  },
   "shopping_shorts/static/produce.html": {
     "at": "2026-09-29 23:07",
     "card": 36,
@@ -149,10 +199,40 @@
     "card": 186,
     "track": "작업잠김"
   },
+  "shopping_shorts/static/produce.html:sbMvRow": {
+    "at": "2026-10-16 19:02",
+    "card": 221,
+    "track": "회원요청묶음"
+  },
+  "shopping_shorts/static/produce_intro.html": {
+    "at": "2026-10-17 01:57",
+    "card": 222,
+    "track": "모션그래픽팩"
+  },
+  "shopping_shorts/static/scene-decoration-catalog.js": {
+    "at": "2026-10-17 01:08",
+    "card": 222,
+    "track": "모션그래픽팩"
+  },
+  "shopping_shorts/static/scene_lab.html": {
+    "at": "2026-10-16 19:02",
+    "card": 220,
+    "track": "회원요청묶음"
+  },
   "shopping_shorts/static/scene_play.js:planClips": {
     "at": "2026-10-03 23:09",
     "card": 106,
     "track": "구절컷리듬분리"
+  },
+  "shopping_shorts/static/shortem_packs.html": {
+    "at": "2026-10-17 01:57",
+    "card": 222,
+    "track": "모션그래픽팩"
+  },
+  "shopping_shorts/static/sidebar.js": {
+    "at": "2026-10-17 01:57",
+    "card": 222,
+    "track": "모션그래픽팩"
   },
   "shopping_shorts/static/text-look-contract.js": {
     "at": "2026-09-29 23:07",
@@ -189,6 +269,11 @@
     "card": 147,
     "track": "씨앗1단계"
   },
+  "shopping_shorts/storyboard.py:scene_review": {
+    "at": "2026-10-23 14:02",
+    "card": 257,
+    "track": "대본붙여넣기AI"
+  },
   "shopping_shorts/tests": {
     "at": "2026-09-29 22:57",
     "card": 36,
@@ -213,6 +298,21 @@
     "at": "2026-10-07 20:45",
     "card": 158,
     "track": "자막팩"
+  },
+  "tools/calcopy/hybrid/material_fit.py:relocate_cuts": {
+    "at": "2026-10-29 09:14",
+    "card": 285,
+    "track": "칼카피숏템엔진"
+  },
+  "tools/calcopy/hybrid/render_bench.py:render": {
+    "at": "2026-10-29 09:14",
+    "card": 285,
+    "track": "칼카피숏템엔진"
+  },
+  "tools/render_scene_style.js": {
+    "at": "2026-10-17 01:09",
+    "card": 222,
+    "track": "모션그래픽팩"
   },
   "tools/scene_font_research/check_text_look.py": {
     "at": "2026-09-29 23:55",

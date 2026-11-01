@@ -37,7 +37,9 @@
       document.head.append(style);}
     inlineShell=document.createElement('section');inlineShell.id='sceneStyleInline';inlineShell.style.cssText='margin-top:10px';
     const note=document.createElement('div');note.id='sceneStyleInlineStatus';note.setAttribute('role','status');note.style.cssText='margin:0 0 8px;color:#bdeee5;font-size:13px';
-    frame=document.createElement('iframe');frame.title='문구와 효과 편집기';frame.style.cssText='width:100%;height:calc(100vh - 200px);min-height:720px;border:1px solid #35505b;border-radius:12px;background:#071118';
+    frame=document.createElement('iframe');frame.title='문구와 효과 편집기';frame.style.cssText='width:100%;height:calc(100vh - 200px);min-height:900px;border:1px solid #35505b;border-radius:12px;background:#071118';
+    // 편집기 높이 = 안 내용 높이(2026-10-15 관제 205). 고정 높이면 내용(938)이 틀(898)을 넘어 안쪽 스크롤이 하나 더 생겼다
+    frame.addEventListener('load',()=>{try{const d=frame.contentDocument;if(!d)return;const fit=()=>{const h=d.documentElement.scrollHeight;if(h>frame.clientHeight+1)frame.style.height=h+2+'px';};fit();new ResizeObserver(fit).observe(d.body);}catch(_){}});
     inlineShell.append(note,frame);panel.append(inlineShell);return inlineShell;
   }
   let allowed=false;   // 새 편집기를 열 수 있는가 — 관리자 또는 스위치(2026-09-23 사장님: 라이브 뒤 켠다. 그전엔 고객에게 안 보인다)
@@ -211,9 +213,11 @@
       const choices=previous.scenes.map((s,i)=>({s,i})).filter(x=>x.s.beat_idx===scene.beat_idx);
       return (choices.find(x=>x.s.caption===scene.caption&&x.s.start===scene.start)||choices.find(x=>x.s.start<=scene.start&&x.s.end>scene.start)||choices[0])?.i;
     });
-    for(const name of ['captionTexts','captionLayouts','captionDrags','captionPositions','fontScales','textOffsets']){
+    // 관제 219: [이 장면만] 제목·채널명(글=sceneTexts `칸:번호`, 크기·위치=`틀:화면:칸:번호`)도 장면 번호를 따라 옮긴다 — 안 옮기면 장면이 늘거나 줄 때 엉뚱한 장면에 붙는다
+    for(const name of ['captionTexts','captionLayouts','captionDrags','captionPositions','fontScales','textOffsets','textDrags','sceneTexts']){
+      if(!snapshot[name])continue;
       const output={};for(const [key,value] of Object.entries(snapshot[name]||{})){
-        const m=key.match(/^(.*:(?:story|continuous):)(\d+)(:caption)$/)||key.match(/^(.*:caption:)(\d+)()$/);
+        const m=key.match(/^(.*:(?:story|continuous):)(\d+)(:caption)$/)||key.match(/^(.*:caption:)(\d+)()$/)||key.match(/^((?:.*:)?(?:channel|hook1|hook2|bodyTitle):)(\d+)()$/);
         if(!m){output[key]=value;continue;}
         sources.forEach((source,i)=>{if(source===Number(m[2])&&!(name==='captionTexts'&&next.scenes[i].beat_idx===changedBeat))output[m[1]+i+m[3]]=value});
       }result[name]=output;
