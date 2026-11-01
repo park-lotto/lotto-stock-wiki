@@ -524,7 +524,7 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
 # 서버↔실행기 고리는 회원 Claude 없이 돈다(flow_driver.pump) — 판단을 묻는 칸이 없으면 같은 일을 몇십 번 돌아도 아무도 모른다
 # (10-27 립글로스: clean_text↔write_doc 67번·37분, 그 42분 동안 회원 Claude 질문 0개). 질문 없이 같은 실행기 일이 WATCH_N 번을 넘으면 실행 대신 회원 Claude 에게 기록을 보여 주고
 # '이어 갈까·멈출까'를 묻는다. 판단 주인 = _watch(세기)·f_watch_got(답 처리) 한 곳.
-WATCH_N = 4            # 뺑뺑이는 일찍 묻는다(사장님 11-02 · 옛 값 6) — 제작자 과제 3번 뒤에 온다
+WATCH_N = 6
 
 WATCH_ASK = """너는 이 영상 제작의 감독이다. 아래 실행기 일이 같은 편 안에서 {n}번째 다시 돌려 한다 — 헛바퀴(같은 결과를 계속 다시 만듦)인지 정상 반복(반려를 받아 고치는 중)인지 기록을 보고 판단해라.
 헛바퀴면 멈추고(go=false) 무엇이 반복되는지·어디를 고쳐야 하는지 why 에 적는다. 정상 반복이면 go=true.
