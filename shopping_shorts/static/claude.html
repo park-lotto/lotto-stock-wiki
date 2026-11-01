@@ -146,10 +146,10 @@ video{width:100%;max-height:420px;background:#000;border-radius:10px;display:blo
         <div class="row" style="margin-top:10px"><button class="btn pri" id="licIssue">키 발급</button><button class="btn" id="licIssue2" style="display:none">둘째 PC 키 발급</button><span class="msg" id="licMsg"></span></div>
         <div id="licKey"></div></div>
       <div class="card"><div class="nm">등록 기기 <small id="devCount"></small></div><div class="list" id="devList"></div>
-        <div class="sub" style="margin-top:8px">3대째 기기는 막힙니다 — 여기서 한 대를 빼면 새 기기가 들어갑니다.</div></div>
-      <div class="card"><div class="nm">지금 작업 중</div><div id="leaseState" class="sub"></div>
+        <div class="sub" id="swapNote" style="margin-top:8px"></div></div>
+      <div class="card"><div class="nm">지금 접속·작업</div><div id="leaseState" class="sub"></div>
         <div class="row" style="margin-top:10px"><button class="btn sm warn" id="leaseFree">강제 해제</button><span class="msg" id="leaseMsg"></span></div>
-        <div class="sub" style="margin-top:6px">다른 기기에서 시작이 막히면 앞 작업이 끝나거나 3분 뒤 됩니다. 급하면 강제 해제 — 앞 기기는 그 단계에서 멈추고 나중에 이어집니다.</div></div>
+        <div class="sub" style="margin-top:6px">동시에 PC 1대만 쓸 수 있습니다. 앞 PC 의 Claude 창을 닫으면 3분 뒤 다른 PC 에서 됩니다. 급하면 강제 해제 — 작업 중이면 그 작업이 그 단계에서 멈추고, 한 번 더 누르면 접속이 끊깁니다.</div></div>
     </div>
   </section>
 
@@ -356,14 +356,16 @@ function renderLicense(){
   $('licIssue').textContent=L.has_key?'새 키 발급':'키 발급';
   $('licIssue2').style.display=(L.has_key&&L.slots>1)?'':'none';
   $('devCount').textContent=H.devices.length+' / '+H.devices_max;
-  $('devList').innerHTML=H.devices.length?H.devices.map(d=>'<div class="li"><span><b>'+esc(d.name||'이름 없음')+'</b> <small>'+d.slot+'번 칸 · 마지막 '+esc(fmtDate(d.last_seen))+'</small></span><button class="btn sm warn" data-dev="'+esc(d.id)+'">빼기</button></div>').join(''):'<div class="empty">등록된 기기 없음 — 설치팩에서 키를 넣으면 등록됩니다</div>';
+  $('devList').innerHTML=H.devices.length?H.devices.map(d=>'<div class="li"><span><b>'+esc(d.name||'이름 없음')+'</b> <small>'+d.slot+'번 칸 · 마지막 '+esc(fmtDate(d.last_seen))+'</small></span>'+(H.swap&&H.swap.status==='new'?'<button class="btn sm warn" data-dev="'+esc(d.id)+'">이 PC 빼기 요청</button>':'')+'</div>').join(''):'<div class="empty">등록된 기기 없음 — 설치팩에서 키를 넣으면 등록됩니다</div>';
   $('devList').querySelectorAll('[data-dev]').forEach(b=>b.onclick=async()=>{
-    if(!confirm('이 기기를 뺄까요? 그 기기에서는 다시 등록해야 쓸 수 있습니다.')) return;
-    try{ await api('/api/claude/me/device/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device_id:b.dataset.dev})}); await load(); }
+    if(!confirm('이 PC 를 빼고 새 PC 로 바꾸도록 요청할까요? 관리자가 승인하면 바뀝니다.')) return;
+    try{ await api('/api/claude/me/device/swap',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device_id:b.dataset.dev})}); await load(); }
     catch(e){ showErr(e.message); }
   });
-  $('leaseState').textContent=H.lease?('작업 중: '+(H.lease.device||'기기')+(H.lease.step?' · '+H.lease.step:'')):'지금 작업 중인 기기 없음';
-  $('leaseFree').disabled=!H.lease;
+  $('swapNote').textContent=H.swap?(H.swap.status==='asked'?'새 PC('+(H.swap.name||'이름 없음')+') 교체를 요청했습니다. 관리자가 승인하면 바로 바뀝니다.':'새 PC('+(H.swap.name||'이름 없음')+')가 기다리고 있습니다. 위에서 뺄 PC 를 골라 주세요.'):'등록한 2대는 자유롭게 오가며 쓸 수 있습니다. PC 를 바꾸려면 새 PC 에 설치하세요 — 여기서 교체를 요청하고 관리자가 승인하면 바뀝니다.';
+  if(H.account_change) $('swapNote').textContent+=' Claude 계정 변경 승인을 기다리는 중입니다.';
+  $('leaseState').textContent=H.lease?('작업 중: '+(H.lease.device||'기기')+(H.lease.step?' · '+H.lease.step:'')):(H.session?'접속 중: '+(H.session.device||'기기'):'지금 접속한 PC 없음');
+  $('leaseFree').disabled=!H.lease&&!H.session;
 }
 
 function renderInstall(){

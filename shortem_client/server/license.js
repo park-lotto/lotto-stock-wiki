@@ -69,6 +69,21 @@ export function deviceFingerprint() {
   return v;
 }
 
+// 이 PC 에 로그인한 Claude 계정의 해시(관제 296) — 계정 값 원문은 내보내지 않는다. 못 읽으면 빈 값(Claude Desktop 등).
+let acct = { at: 0, v: '' };
+export function claudeAccount() {
+  if (process.env.SHORTEM_CLAUDE_ACCOUNT != null) return process.env.SHORTEM_CLAUDE_ACCOUNT;   // 시험용
+  if (Date.now() - acct.at < 60000) return acct.v;
+  let v = '';
+  try {
+    const a = JSON.parse(fs.readFileSync(path.join(process.env.CLAUDE_CONFIG_DIR || os.homedir(), '.claude.json'), 'utf8')).oauthAccount || {};
+    const id = a.accountUuid || a.emailAddress;
+    if (id) v = crypto.createHash('sha256').update('shortem-claude|' + id).digest('hex');
+  } catch { /* Claude Code 설정이 없는 PC */ }
+  acct = { at: Date.now(), v };
+  return v;
+}
+
 export function deviceName() {
   const n = (process.env.SHORTEM_DEVICE_NAME || os.hostname() || '내 PC').replace(/[\r\n\t]/g, ' ').trim();
   return n.slice(0, 40);
