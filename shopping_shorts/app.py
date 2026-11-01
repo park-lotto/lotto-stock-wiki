@@ -11415,7 +11415,10 @@ def _thumb_clean_background(job_id, job):
     work = _MIX_WORK_DIR / job_id
     legacy = job.get("clean_video_path")
     legacy_ok = bool(legacy and Path(legacy).exists())
-    if job.get("clean_status") == "ready":
+    # ★덧지우기 실패·재청소 중에도 이미 만든 청소본은 유효하다 — status 로만 가르면 자막 있는
+    #   preview 로 떨어진다(관제 299, 황선희 b13968032e48). _clean_frame_src 와 같은 판단.
+    has_clean = job.get("clean_status") == "ready" or bool(job.get("subtitle_removal"))
+    if has_clean:
         # ★정본이 있으면 clean_video_path(지금 편성의 청소 조립본 — assemble_clean_video 가 정본+증분 조각으로
         #   렌더와 같은 입력(render_inputs_for)으로 만든다) 먼저(2026-09-27). 정본 **파일 자체**는 청소 당시 편성이라
         #   그 뒤 바꾼 장면·증분 조각이 없다. 조립본이 없을 때만 정본 파일로(이때는 api_thumb_frames 의 자가치유
@@ -11427,7 +11430,7 @@ def _thumb_clean_background(job_id, job):
             return str(fresh)
     if legacy_ok:
         return str(legacy)
-    if job.get("clean_status") == "ready":
+    if has_clean:
         # 썸네일 후보는 컷 좌표를 맞추는 화면이 아니다. 현재 편성본이 없더라도 가장 최근
         # 청소본의 장면을 쓰는 편이 원본 자막이 박힌 preview로 떨어지는 것보다 정확하다.
         any_clean = mix_pipeline.clean_any_final_path(job, work)
