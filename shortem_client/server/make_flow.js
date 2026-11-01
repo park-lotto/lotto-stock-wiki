@@ -142,7 +142,7 @@ function keepFinal(src, { sid, title = '', marker = {}, preset = null }) {
 function flowOut(s) {
   if (!s || s.need !== 'done' || !s.video || !fs.existsSync(s.video)) return s;
   const f = loadFlow(s.sid) || {};
-  const video = keepFinal(s.video, { sid: s.sid, title: String(s.title || ''), marker: { line: 'flow' }, preset: f.preset || null });
+  const video = keepFinal(s.video, { sid: s.sid, title: String(s.title || ''), marker: { line: 'flow', topic_dir: path.dirname(s.video) }, preset: f.preset || null });
   const dv = deliverSay();
   return { ...s, video, deliver: dv.deliver, hints: ['완성본 경로를 고객에게 알려 주세요', dv.hint, ...(s.note ? [s.note] : [])] };
 }

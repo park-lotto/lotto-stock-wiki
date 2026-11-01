@@ -77,6 +77,13 @@ input[type=range]{width:100%;accent-color:var(--violet)}
 .tl{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 10px 12px;display:grid;gap:8px;overflow:hidden}
 .tl-ruler{position:relative;height:16px;margin-left:64px;font-size:10.5px;color:var(--dim)}
 .tl-ruler span{position:absolute;top:0;transform:translateX(-1px);border-left:1px solid var(--line2);padding-left:3px}
+.tl-scroll{overflow-x:auto;padding-bottom:4px}.tl-body{position:relative;display:grid;gap:8px;min-width:100%}
+.tl-tools{display:flex;gap:6px;align-items:center;justify-content:flex-end;font-size:11px;color:var(--dim)}
+.tl-row>b{position:sticky;left:0;z-index:3;background:var(--bg)}
+.tl-track.wave{height:48px;overflow:hidden}.tl-track.wave svg{position:absolute;top:0;left:0;height:100%}
+.clip.thumb{background-repeat:repeat-x;background-size:auto 100%;text-shadow:0 1px 2px #000}
+#tlhead{position:absolute;top:0;bottom:0;width:2px;background:#fff;z-index:4;pointer-events:none;box-shadow:0 0 4px #000}
+.tl-ruler i{position:absolute;bottom:0;width:1px;height:4px;background:var(--line2)}
 .tl-row{display:grid;grid-template-columns:56px minmax(0,1fr);gap:8px;align-items:center}
 .tl-row>b{font-size:12px;color:var(--mute);font-weight:600}
 .tl-track{position:relative;height:38px;background:var(--panel);border-radius:8px}
@@ -235,7 +242,7 @@ function steps(){$('steps').innerHTML=STEPS.map(s=>{const lock=s.k==='edit'&&!ma
   return `<button class="step${s.k===S.step?' on':''}${lock?' lock':''}" data-k="${s.k}" title="${lock?esc(lockWhy()):''}"><span class="ic">${lock?'🔒':s.ic}</span><span>${s.t}</span></button>`}).join('')}
 $('steps').onclick=e=>{const b=e.target.closest('.step');if(!b)return;
   if(b.dataset.k==='edit'&&!made()){state(lockWhy(),true);return}
-  S.step=b.dataset.k;render()};
+  S.step=b.dataset.k;render();if(S.step==='edit'&&!S.video&&(S.st.videos||[]).length)preview()};   // 완성본 고치기 = 최신 완성본의 실제 컷
 
 function render(){
   steps();
@@ -537,19 +544,24 @@ function editBoard(st,p){
   const T=sc[sc.length-1].end||1,W=t=>(t/T*100).toFixed(2);
   const sfx=Object.entries((p.sfx_pool)||{}).filter(([k,v])=>Array.isArray(v)&&v.length);
   const bgmName=((st.catalog.bgm||[]).find(b=>b.id===((p.bgm||{}).candidates||[])[0])||{}).title||((p.bgm||{}).candidates||[])[0]||'배경음악';
-  const clip=(track,i,a,b,label,cls)=>`<button class="clip ${cls||''}${S.pick&&S.pick.track===track&&S.pick.scene===i?' on':''}" style="left:${W(a)}%;width:${W(b-a)}%" data-clip="${track}" data-i="${i}" data-label="${esc(label)}" title="${esc(label)}">${esc(label)}</button>`;
+  const D=(S.preview&&S.preview.detail)||null,vn=S.video||((st.videos||[])[0]||{}).name,z=S.tlz||60;
+  const wave=(pk,c)=>{const st2=D.step,n=pk.length||1,pts=pk.map((v,i)=>`${i},${(50-v/2).toFixed(1)}`).join(' '),low=pk.map((v,i)=>`${n-1-i},${(50+pk[n-1-i]/2).toFixed(1)}`).join(' ');return `<svg viewBox="0 0 ${n} 100" preserveAspectRatio="none" style="width:${(n*st2/T*100).toFixed(2)}%"><polygon fill="${c}" points="${pts} ${low}"/></svg>`};
+  const ticks=()=>{let o='';const big=z>=45?1:z>=20?2:5;for(let t=0;t<=T;t+=big)o+=`<span style="left:${W(t)}%">${t}초</span>`;if(z>=45)for(let t=0;t<=T;t+=.5)o+=`<i style="left:${W(t)}%"></i>`;return o};
+  const clip=(track,i,a,b,label,cls,bg)=>`<button class="clip ${cls||''}${bg?' thumb':''}${S.pick&&S.pick.track===track&&S.pick.scene===i?' on':''}" style="left:${W(a)}%;width:${W(b-a)}%${bg?`;background-image:linear-gradient(#0005,#0005),url('${bg}')`:''}" data-clip="${track}" data-at="${a}" data-i="${i}" data-label="${esc(label)}" title="${esc(label)}">${esc(label)}</button>`;
   const sfxAt={start:0,point:Math.min(1,sc.length-1),end:sc.length-1},sfxName={start:'시작음',point:'강조음',end:'끝음'};
   const reqs=(st.requests||[]).slice().reverse();
   const mv=(S.moves||[]);
   return `<h2>완성본 고치기 <small>고칠 곳을 누르고 '어떻게' 해 달라고 적으면 Claude 가 고쳐서 다시 만듭니다</small></h2>
     ${pcBox()}
     <div class="note">${made()?'오른쪽 완성본을 멈추고 고칠 곳을 <b>누르면 ‘여기’</b>, <b>끌면 ‘이것을 저기로’</b> — 그 자리에 바로 지시 칸이 뜹니다. 아래 줄에서 장면·자막·소리를 골라 시킬 수도 있습니다.':'오른쪽 화면의 글자·띠를 <b>끌어 옮기면</b> 옮긴 값이 지시에 같이 들어갑니다.'}${mv.length?` 지금 ${mv.length}개 — 하나씩 ✕ 로 되돌리거나 <button class="chip" id="mvclear">전부 되돌리기</button>`:''}</div>
-    <div class="tl">
-      <div class="tl-ruler">${sc.map((s,i)=>`<span style="left:${W(s.start)}%">${s.start.toFixed(0)}초</span>`).join('')}</div>
-      <div class="tl-row"><b>장면</b><div class="tl-track">${sc.map((s,i)=>clip('scene',i,s.start,s.end,i?`장면 ${i+1}`:'훅','c-scene')).join('')}</div></div>
-      <div class="tl-row"><b>자막</b><div class="tl-track">${sc.map((s,i)=>clip('caption',i,s.start,s.end,s.caption||'(자막 없음)','c-cap')).join('')}</div></div>
-      <div class="tl-row"><b>효과음</b><div class="tl-track">${sfx.map(([k])=>{const i=sfxAt[k]??0,s=sc[i];return clip('sfx',i,s.start,Math.min(s.end,s.start+0.6*T/12),sfxName[k]||k,'c-sfx')}).join('')||'<small>없음</small>'}</div></div>
-      <div class="tl-row"><b>배경음</b><div class="tl-track">${clip('bgm',0,0,T,bgmName,'c-bgm')}</div></div>
+    <div class="tl">${D?`<div class="tl-tools">확대 <button class="btn" data-tlz="0.7">−</button><button class="btn" data-tlz="1.4">+</button></div>`:''}
+      <div class="tl-scroll"><div class="tl-body" style="${D?`width:${Math.round(T*z)+64}px`:''}">${D?'<div id="tlhead" style="left:64px"></div>':''}
+      <div class="tl-ruler" id="tlruler">${D?ticks():sc.map((s,i)=>`<span style="left:${W(s.start)}%">${s.start.toFixed(0)}초</span>`).join('')}</div>
+      <div class="tl-row"><b>장면</b><div class="tl-track">${D?D.cuts.map((c,k)=>clip('scene',Math.max(0,sc.findIndex(s=>c.t0<s.end)),c.t0,c.t1,k?`장면 ${k+1}`:'훅','c-scene',`tl/${encodeURIComponent(vn)}/cut_${k}.jpg`)).join(''):sc.map((s,i)=>clip('scene',i,s.start,s.end,i?`장면 ${i+1}`:'훅','c-scene')).join('')}</div></div>
+      <div class="tl-row"><b>자막</b><div class="tl-track">${D?D.rows.map(r=>clip('caption',Math.max(0,sc.findIndex(s=>r.t0<s.end)),r.t0,r.t1,r.text,'c-cap')).join(''):sc.map((s,i)=>clip('caption',i,s.start,s.end,s.caption||'(자막 없음)','c-cap')).join('')}</div></div>
+      <div class="tl-row"><b>효과음</b><div class="tl-track">${((S.preview&&S.preview.sfx)||null)?S.preview.sfx.map(x=>{const i=Math.max(0,sc.findIndex(s=>x.t<s.end));return clip('sfx',i,x.t,Math.min(T,x.t+T/40),'효과음','c-sfx')}).join('')||'<small>없음</small>':sfx.map(([k])=>{const i=sfxAt[k]??0,s=sc[i];return clip('sfx',i,s.start,Math.min(s.end,s.start+0.6*T/12),sfxName[k]||k,'c-sfx')}).join('')||'<small>없음</small>'}</div></div>
+      ${D&&D.wave.length?`<div class="tl-row"><b>소리</b><div class="tl-track wave">${wave(D.wave,'#7dd3fc')}</div></div>`:''}
+      <div class="tl-row"><b>배경음</b><div class="tl-track${D&&D.wave_bgm.length?' wave':''}">${clip('bgm',0,0,T,bgmName,'c-bgm')}${D&&D.wave_bgm.length?wave(D.wave_bgm,'#ffffff99'):''}</div></div></div></div>
     </div>
     ${S.pick?`<div class="ask"><div class="sec-h"><b>${esc({scene:'장면',caption:'자막',sfx:'효과음',bgm:'배경음'}[S.pick.track])} · ${esc(S.pick.label)}</b><small>${S.pick.at!=null?S.pick.at.toFixed(1)+'초':''}</small></div>
       ${mv.length?`<div class="mvs">${mv.map((m,i)=>`<i>‘${esc(m.label)}’ ${esc(moveText(m))}<button class="x" data-mvdel="${i}" title="이것만 되돌리기">✕</button></i>`).join('')}</div>`:''}
@@ -663,7 +675,8 @@ $('board').addEventListener('click',async e=>{
     if(!r.ok){await load(true);state(saveErr(r),true);return}   // 다시 읽은 뒤에 오류(load 가 '저장됨'으로 덮던 것 — 10-26 실측: 거절됐는데 '내 계정에 저장됨')
     await load(true);return}
   if(t.id==='editmode'){S.editMode=!S.editMode;render();setEditMode(S.editMode);return}
-  if(t.dataset.clip){const i=+t.dataset.i,TL=tlScenes(),sc=TL.sc[i];S.pick={track:t.dataset.clip,scene:i,label:t.dataset.label,at:sc&&sc.start};S.askDraft='';if(!TL.video)show(i);   // 완성본 줄이면 미리보기 대신 영상을 그 초로
+  if(t.dataset.tlz){S.tlz=Math.min(240,Math.max(12,(S.tlz||60)*+t.dataset.tlz));render();return}
+  if(t.dataset.clip){const i=+t.dataset.i,TL=tlScenes(),sc=TL.sc[i];S.pick={track:t.dataset.clip,scene:i,label:t.dataset.label,at:t.dataset.at!=null?+t.dataset.at:sc&&sc.start};{const v=document.querySelector('#vidpv video');if(v&&S.pick.at!=null){v.pause();v.currentTime=S.pick.at}}S.askDraft='';if(!TL.video)show(i);   // 완성본 줄이면 미리보기 대신 영상을 그 초로
     const v=document.querySelector('#vidpv video');if(v&&sc){try{v.currentTime=sc.start}catch(e){}}
     render();setTimeout(()=>$('asktext')&&$('asktext').focus(),0);return}
   if(t.id==='mvclear'){S.moves=[];preview();render();return}
@@ -762,7 +775,7 @@ let seq=0;
 async function preview(patch,presetId){
   const pid=presetId||(S.st&&S.st.current);if(!pid)return;
   const my=++seq;$('busy').hidden=false;
-  const r=await api('/api/preview',{preset:pid,video:S.video,...(patch?{patch}:{})});
+  const r=await api('/api/preview',{preset:pid,video:S.video||(S.step==='edit'&&((S.st&&S.st.videos||[])[0]||{}).name)||null,...(patch?{patch}:{})});
   if(my!==seq)return;
   $('busy').hidden=true;$('busy').textContent='그리는 중…';
   // 실패하면 앞 프리셋 그림을 흐리게 + 이유를 그림 위에 — 그대로 두면 바뀐 것처럼 보인다(10-30 사장님 화면)
@@ -791,6 +804,7 @@ async function preview(patch,presetId){
   if(S.step==='edit')dragIn(w);
   S.scene=Math.min(S.scene,r.context.scenes.length-1);
   show(S.scene,true);
+  if(S.step==='edit'&&r.detail&&!S.tlDrawn){S.tlDrawn=r.detail;render()}
   $('scenes').innerHTML=r.context.scenes.map((s,i)=>`<button data-i="${i}" class="${i===S.scene?'on':''}">${i?i+1:'훅'}</button>`).join('');
   $('applied').innerHTML=r.applied.length?'<b>프리셋에서 바꾼 것</b><br>'+r.applied.map(esc).join('<br>'):'프리셋 완본 그대로입니다';
 }
@@ -809,6 +823,9 @@ addEventListener('message',async e=>{
   if(ok){S.lookSaved=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});state('꾸민 모양 저장됨');$('lookstate').textContent='✓ 꾸민 모양 저장 '+S.lookSaved;await load(true,true);render()}
 });
 $('redraw').onclick=()=>preview();
+// 재생 위치선 = 완성본 재생 시각 / 눈금 누르면 그 초로
+document.addEventListener('timeupdate',e=>{const h=$('tlhead'),v=e.target;if(h&&v.duration)h.style.left=`calc(64px + (100% - 64px) * ${v.currentTime/v.duration})`},true);
+document.addEventListener('click',e=>{const r=e.target.closest&&e.target.closest('#tlruler'),v=document.querySelector('#vidpv video');if(r&&v&&v.duration){const b=r.getBoundingClientRect();v.currentTime=(e.clientX-b.left)/b.width*v.duration}});
 $('play').onclick=()=>{   // 5초: 장면을 시간 순서로 넘기며 등장 효과를 그 시각대로(렌더러 render_scene_style.js 와 같은 손잡이)
   const w=stage.contentWindow,r=S.preview;if(!r||!w.sceneStyle)return;
   const sc=r.context.scenes,t0=performance.now();

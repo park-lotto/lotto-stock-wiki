@@ -35,6 +35,52 @@ def _sample_timeline(lines):
     return out
 
 
+def _peaks(path: pathlib.Path, step: float = 0.02) -> list:
+    """소리 파일 → 칸별 최대 진폭(0~100). 파형 그림용, 재는 대상은 나간 소리 그대로."""
+    import array, subprocess
+    if not path.is_file():
+        return []
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(path), "-vn", "-ac", "1", "-ar", "8000", "-f", "s16le", "-"], capture_output=True).stdout
+    a = array.array("h", raw[:len(raw) // 2 * 2])
+    n = max(1, int(8000 * step))
+    return [round(max(abs(x) for x in a[i:i + n]) / 327.68) for i in range(0, len(a), n)]
+
+
+def _cut_thumbs(td: pathlib.Path, cuts: list) -> None:
+    """컷마다 작은 그림(<완성본 폴더>/_tl/cut_N.jpg) — 한 번만 만든다. 화면 줄 그림은 local_ui /tl/ 이 내준다."""
+    import subprocess
+    d = td / "_tl"
+    d.mkdir(exist_ok=True)
+    for i, c in enumerate(cuts):
+        f = d / f"cut_{i}.jpg"
+        if not f.is_file():
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", str((float(c["t0"]) + float(c["t1"])) / 2), "-i", str(td / "final.mp4"),
+                            "-frames:v", "1", "-vf", "scale=72:-2", str(f)], capture_output=True)
+
+
+def _bench_timeline(td: pathlib.Path):
+    """render_bench 완성본 폴더 → (장면 목록, 제목, 효과음 시각). 장면 = 실제 컷, 자막 = 그 컷에 보이는 줄. 옛 꼴(beats)이면 None."""
+    T = json.loads((td / "timeline.json").read_text(encoding="utf-8"))
+    if not T.get("cuts"):
+        return None
+    rows, out = T.get("rows") or [], []
+    for i, c in enumerate(T["cuts"]):
+        a, b = float(c["t0"]), float(c["t1"])
+        caps = list(dict.fromkeys(r["text"] for r in rows if r.get("text") and float(r["t0"]) < b and float(r["t1"]) > a))
+        out.append({"beat_idx": i, "t0": a, "dur": b - a, "narration": " ".join(caps), "caption_lines": caps or [""], "role": "hook" if i == 0 else "body",
+                    "primary": {"video_id": "s0", "start": a, "end": b}})
+    tab = td / "자막표.json"
+    sfx = json.loads(tab.read_text(encoding="utf-8")).get("sfx") or [] if tab.is_file() else []
+    title = None
+    doc = td.parent.parent / "doc" / td.parent.name / "대본.json"
+    if doc.is_file():
+        title = "\n".join("".join(seg[0] for seg in ln) for ln in json.loads(doc.read_text(encoding="utf-8")).get("title_lines") or [])
+    _cut_thumbs(td, T["cuts"])
+    detail = {"cuts": [{"t0": float(c["t0"]), "t1": float(c["t1"])} for c in T["cuts"]], "rows": [{"t0": float(r["t0"]), "t1": float(r["t1"]), "text": r.get("text") or ""} for r in rows],
+              "wave": _peaks(td / "final.mp4"), "wave_bgm": _peaks(td / "bgm_bed.wav"), "step": 0.02}
+    return out, title, [{"t": float(x["t"]), "kind": x.get("kind")} for x in sfx], detail
+
+
 def preview(req: dict) -> dict:
     from shopping_shorts import calcopy_make as MK, scene_style
     from shopping_shorts.calcopy_frame import schema, to_snapshot
@@ -44,9 +90,13 @@ def preview(req: dict) -> dict:
     if frame is None:
         raise ValueError("이 프리셋에는 화면 틀이 없습니다")
     spec = schema.validate(frame)
-    tl, title = None, req.get("title") or SAMPLE_TITLE
+    tl, title, sfx, detail = None, req.get("title") or SAMPLE_TITLE, None, None
     td = pathlib.Path(req["topic_dir"]) if req.get("topic_dir") else None
-    if td and (td / "timeline.json").is_file():                       # 완성본 고치기: 그 편의 자막 시각·제목 그대로
+    bench = _bench_timeline(td) if td and (td / "timeline.json").is_file() else None
+    if bench:
+        tl, t2, sfx, detail = bench
+        title = t2 or title
+    elif td and (td / "timeline.json").is_file():                     # 완성본 고치기: 그 편의 자막 시각·제목 그대로
         tl = json.loads((td / "timeline.json").read_text(encoding="utf-8")).get("beats")
         if (td / "대본.json").is_file():
             title = (json.loads((td / "대본.json").read_text(encoding="utf-8")).get("final") or {}).get("title") or title
@@ -54,7 +104,7 @@ def preview(req: dict) -> dict:
     head = {"text": title_text(spec, {"title": title})}
     snap = scene_style.validate_snapshot(to_snapshot.to_snapshot(frame))
     ctx = scene_style.context_for(tl, head, snap)
-    return {"snapshot": snap, "context": ctx, "applied": cfg["applied"], "title": head["text"]}
+    return {"snapshot": snap, "context": ctx, "applied": cfg["applied"], "title": head["text"], "sfx": sfx, "detail": detail}
 
 
 def catalog() -> dict:

@@ -94,7 +94,8 @@ async function preview({ preset, patch, video }) {
     try { topicDir = JSON.parse(fs.readFileSync(path.join(workDir(), '완성본', v.name + '.json'), 'utf8')).topic_dir || null; } catch { topicDir = null; }
   }
   const r = await engineTool('preview', { preset: presetPath, pack, ...(topicDir ? { topic_dir: topicDir } : {}) });
-  return r.error ? { error: r.error } : { snapshot: r.snapshot, context: r.context, applied: r.applied, title: r.title };
+  if (r.tail) console.error(r.tail);   // 엔진 멈춤 사유는 로그로만
+  return r.error ? { error: r.error } : { snapshot: r.snapshot, context: r.context, applied: r.applied, title: r.title, sfx: r.sfx, detail: r.detail };
 }
 
 async function route(req, res, token, port) {
@@ -121,6 +122,12 @@ async function route(req, res, token, port) {
     const name = decodeURIComponent(u.pathname.slice(3));
     if (!videos().some(v => v.name === name)) return send(res, 404, { error: '없음' });
     return serveFile(req, res, path.join(workDir(), '완성본', name), TYPES.mp4);
+  }
+  if (u.pathname.startsWith('/tl/') && req.method === 'GET') {     // 타임라인 컷 그림(엔진 preview_request._cut_thumbs) — 완성본 표식의 폴더만
+    const [, , name, file] = u.pathname.split('/').map(decodeURIComponent);
+    if (!videos().some(v => v.name === name) || !/^cut_\d+\.jpg$/.test(file || '')) return send(res, 404, { error: '없음' });
+    try { return serveFile(req, res, path.join(JSON.parse(fs.readFileSync(path.join(workDir(), '완성본', name + '.json'), 'utf8')).topic_dir, '_tl', file), TYPES.jpg); }
+    catch { return send(res, 404, { error: '없음' }); }
   }
   // 렌더러 편집기 쪽 '내 로고' 목록(미리보기에는 안 쓰인다) — 서버를 부르지 않게 빈 목록
   if (u.pathname === '/api/produce/scene-style/logo' && req.method === 'GET') return send(res, 200, { items: [] });
