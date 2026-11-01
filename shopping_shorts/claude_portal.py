@@ -580,6 +580,16 @@ def _semver(v):
     return tuple(int(x) for x in m.groups()) if m else None
 
 
+def member_tier(store, cid) -> str:
+    """숏클 반(판단 주인) — 관리자가 정한 program_member.plan(기본반·고급반·프리미엄반). 없으면 기본. 벤치마킹 노하우는 고급 이상만."""
+    try:
+        plan = str((store.program_members().get(int(cid)) or {}).get("plan") or "")
+    except Exception as e:  # noqa: BLE001 — 반을 못 읽으면 기본으로(경보 한 줄)
+        log.warning("claude_portal: cid %s 반을 읽지 못했다: %s", cid, type(e).__name__)
+        plan = ""
+    return "premium" if "프리미엄" in plan else "advanced" if "고급" in plan else "basic"
+
+
 def _front(store, ctx, route, need_device=True):
     """PC 라우트 공통 관문: 키 → 스위치 → 탐지(속도·정지) → 지문 → 엔진 → 등록 기기. (cid, info, device_row)"""
     try:
@@ -921,7 +931,7 @@ def license(ctx: dict, store=None) -> dict:
     _guard_session(store, cid, fh)
     _raise_on(anomaly_check(cid, {"type": "license", "route": "license", **_ev(ctx)}, store=store))
     row = info["row"]
-    return {"ok": True, "cid": cid, "member_name": _member_name(store, cid), "plan": row.get("plan") or "claude", "expires": info["exp"],
+    return {"ok": True, "cid": cid, "member_name": _member_name(store, cid), "plan": row.get("plan") or "claude", "tier": member_tier(store, cid), "expires": info["exp"],
             "device": {"id": fp[:12], "name": name, "slot": dev["slot"], "registered_now": registered_now},
             "devices_used": len(live), "devices_max": limit,
             "entitled_presets": _entitled(store, cid, row),

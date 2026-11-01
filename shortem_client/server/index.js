@@ -255,10 +255,10 @@ export function buildServer(ctx = makeCtx()) {
 
   server.registerTool('shortem_knowhow', {
     title: '막혔을 때 노하우 찾기', description: '막혔거나 판단이 안 설 때 부른다. 상황을 쓰면(query) 막힘표(무엇을 어떤 순서로 할지)·그 단계 가이드·지난 제작 경험을 준다. stage 는 단계 이름(bench·origin·product·research·material·script·plan·render·check)',
-    inputSchema: { query: z.string().max(2000).optional(), stage: z.string().max(40).optional() },
+    inputSchema: { query: z.string().max(2000).optional(), stage: z.string().max(40).optional(), topic: z.enum(['benchmark']).optional() },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
-  }, async ({ query, stage }) => {
-    try { const r = await api.knowhow({ query: query || '', stage: stage || '' }); return reply({ info: { stage: r.stage, matched: r.matched, guide: r.guide, lessons: r.lessons } }); }
+  }, async ({ query, stage, topic }) => {
+    try { const r = await api.knowhow({ query: query || '', stage: stage || '', topic: topic || '' }); return reply({ info: r.locked ? { locked: true, say: r.say } : { stage: r.stage, matched: r.matched, guide: r.guide, lessons: r.lessons } }); }
     catch (e) { return reply({ fail: { where: '노하우', why: e.msg || '받지 못했습니다', fix: '지침의 막힘 순서대로 진행한다', retry_ok: true } }); }
   });
 

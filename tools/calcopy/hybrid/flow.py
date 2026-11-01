@@ -1294,6 +1294,11 @@ def knowhow(stage: str = "", query: str = "", version: str | None = None) -> dic
     return {"stage": st, "matched": hit[:4], "guide": _guide(st, 9000), "lessons": _lessons({"check": "final"}.get(st, st), version)}
 
 
+def benchmark_guide() -> str:
+    """채널 벤치마킹 노하우(고급반 이상 — 문턱 = claude_flow.knowhow)."""
+    return (GUIDE_DIR.parent / "production_start.md").read_text(encoding="utf-8")[:30000]
+
+
 def _blocker_text(stage: str, query: str) -> str:
     rows = knowhow(stage, query)["matched"]
     return "" if not rows else f"{NL}{NL}## 이 상황 막힘표{NL}" + NL.join(

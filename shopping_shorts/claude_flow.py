@@ -121,9 +121,14 @@ def knowhow(ctx: dict, body: dict, store=None) -> dict:
     """막혔을 때 노하우 — 상황 글·단계에 맞는 막힘표·가이드·경험. 판단 주인 = flow.knowhow."""
     store = CP._store(store)
     _ensure(store)
-    CP._front(store, ctx, "knowhow")
+    cid, _, _ = CP._front(store, ctx, "knowhow")
     body = body if isinstance(body, dict) else {}
-    return {"ok": True, **_flow().knowhow(str(body.get("stage") or "")[:40], str(body.get("query") or "")[:2000])}
+    tier = CP.member_tier(store, cid)
+    if str(body.get("topic") or "") == "benchmark":      # 채널 벤치마킹 노하우 = 고급 이상(사장님 11-02) — 나머지 노하우는 전 반 같다
+        if tier == "basic":
+            return {"ok": True, "locked": True, "say": "채널 벤치마킹은 고급반에서 제공돼요", "tier": tier}
+        return {"ok": True, "tier": tier, "guide": _flow().benchmark_guide()}
+    return {"ok": True, "tier": tier, **_flow().knowhow(str(body.get("stage") or "")[:40], str(body.get("query") or "")[:2000])}
 
 
 def step(ctx: dict, body: dict, store=None) -> dict:

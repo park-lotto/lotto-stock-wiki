@@ -10,6 +10,8 @@ import { runOps, aiRootDir, dataDir, engineRoot } from './engine_bridge.js';
 import { rentPreset } from './preset_rent.js';
 import { packFile, PID_RE } from './local_settings.js';
 import { refreshCookies } from './logins.js';
+import { setupPassed } from './selftest.js';
+import { resolveTools } from './tools_paths.js';
 import { ensureDir, jail } from './paths.js';
 import { packFor } from './local_settings.js';
 
@@ -213,6 +215,7 @@ export function recleanFlow(sid) {
 export async function startFlow({ preset, video, product }) {
   const live = liveFlow();
   if (live) throw new ApiError(409, { code: 'busy_flow', msg: `이미 만들고 있는 편이 있어요. 끝난 뒤 시작하거나 먼저 멈춰 주세요(shortem_job action="cancel", sid="${live.sid}")` });
+  if (resolveTools().mode !== 'dev' && !setupPassed()) throw new ApiError(409, { code: 'need_setup', msg: '준비 점검을 먼저 끝내야 만들 수 있어요. shortem_setup 을 불러 전부 통과시킨 뒤 다시 시작하세요' });
   await refreshCookies();
   const res = await api.step({ step: 'start', preset, source: { kind: /tiktok.com/.test(video) ? 'tiktok' : (/instagram.com/.test(video) ? 'instagram' : 'youtube'), url: video, ...(product ? { product: String(product).slice(0, 200) } : {}) } });   // url '' = 서버가 소재 창고에서 고른다
   const f = { sid: res.sid, preset, video: video || '', created: Date.now() };
