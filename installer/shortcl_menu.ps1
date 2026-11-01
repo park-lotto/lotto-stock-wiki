@@ -13,7 +13,7 @@ Write-Host '  숏클메이커' -ForegroundColor Green
 Write-Host "  현재 계정: $who"
 Write-Host ''
 Write-Host '  [1] 숏클 시작'
-Write-Host '  [2] 다른 Claude 계정으로 로그인'
+Write-Host '  [2] 다른 Claude 계정으로 로그인 (관리자 승인 필요)'
 Write-Host '  [엔터] 일반 파워쉘'
 Write-Host ''
 $pick = (Read-Host '  번호').Trim()

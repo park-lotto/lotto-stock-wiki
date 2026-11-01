@@ -132,6 +132,8 @@ tbody tr:hover{background:#1b1b22}
 <div class=alertBoard id=alertBoard></div>
 <!-- 클로드형 경보(관제 234, 숏템MCP 설계 §7-9) — 고객 PC 라이선스·임대·자산 이상 행동. 판정은 claude_portal.anomaly_check 하나, 여기는 그리기·해제만. -->
 <div class=alertBoard id=claudeAlertBoard></div>
+<!-- 숏클 기기 교체·Claude 계정 변경 승인(관제 296) — 판단은 claude_portal.decide_change, 여기는 그리기만. -->
+<div class=alertBoard id=claudeChangeBoard></div>
 <details class=card id=controlCard>
 <summary style="cursor:pointer;font-size:14px;font-weight:600">🎛 관제 보드 <span id=ctlSummary style="font-weight:400;color:#8a8a92"></span> <span id=ctlMsg class=msg></span></summary>
 <div style="font-size:11px;color:#8a8a92;margin:4px 0 8px">사장님이 볼 것은 두 줄입니다 — <b>결정할 것</b>(승인 버튼)과 <b>잘못된 것</b>(회귀). 나머지는 세션들이 알아서 합니다.</div>
@@ -489,6 +491,33 @@ async function renderClaudeAlerts(){
     + '<div class=abm>'+_abEsc(a.detail)+' · '+_abEsc(new Date((a.ts||0)*1000).toLocaleString())+'</div></div>'
     + '<button class=abx onclick="closeClaudeAlert('+JSON.stringify(a.id)+')">'+(a.level==='suspend'?'정지 풀기':'해제')+'</button></div>').join('');
 }
+async function renderClaudeChanges(){
+  const box=document.getElementById('claudeChangeBoard'); if(!box) return;
+  let d=null;
+  try{ const r=await fetch('/api/admin/claude/changes'); if(!r.ok) return; d=await r.json(); }catch(e){ return; }
+  const open=(d&&d.changes)||[];
+  box.innerHTML=open.map(a=>'<div class="ab ops"><div style="flex:1;min-width:0">'
+    + '<div class=abl>🖥 숏클 '+(a.kind==='device'?'기기 교체':'Claude 계정 변경')+' 요청</div>'
+    + '<div class=abt>'+_abEsc(a.member||('고객 '+a.cid))+(a.kind==='device'?' · '+_abEsc(a.old_name)+' → '+_abEsc(a.name):'')+'</div>'
+    + '<div class=abm>최근 30일 승인 '+_abEsc(a.done_30d)+'회 · '+_abEsc(new Date((a.created||0)*1000).toLocaleString())+'</div></div>'
+    + '<button class=abx onclick="decideClaudeChange('+a.id+',true)">승인</button>'
+    + '<button class=abx onclick="decideClaudeChange('+a.id+',false)">거절</button></div>').join('');
+}
+async function decideClaudeChange(id,approve){
+  try{ await fetch('/api/admin/claude/changes/decide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,approve:approve})}); }catch(e){}
+  renderClaudeChanges();
+}
+async function shortclDevices(cid){
+  const d=await (await fetch('/api/admin/claude/devices?cid='+cid)).json();
+  const ds=d.devices||[];
+  if(!ds.length){ alert('등록된 숏클 PC 가 없습니다.'); return; }
+  const ans=prompt(ds.map(x=>x.slot+'번: '+(x.name||'이름 없음')).join('\n')+'\n\n뺄 PC 번호를 입력하세요','');
+  if(ans===null||ans.trim()==='') return;
+  const pick=ds.find(x=>String(x.slot)===ans.trim());
+  if(!pick){ alert('없는 번호입니다.'); return; }
+  await fetch('/api/admin/claude/devices/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cid:cid,device_id:pick.id})});
+  alert(pick.slot+'번 PC 를 뺐습니다.');
+}
 async function closeClaudeAlert(id){
   try{ await fetch('/api/admin/claude/alerts/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})}); }catch(e){}
   renderClaudeAlerts();
@@ -774,7 +803,7 @@ function renderCustomers(){
     //   날짜별 이력·API 원가처럼 넓게 봐야 하는 것만 전용 페이지로 뺐다.
     const nameCell = `<a href="/admin/customer/${c.id}" style="color:#e8e8ea;text-decoration:none;border-bottom:1px dotted #4a4a52"
         title="상세 시트 열기 — 날짜별 활동·API 원가">${esc(c.name)||'(이름없음)'}</a>${_programTags(c.program,esc)}`;
-    const scBtn = `<button class="mini" style="margin-left:6px" onclick="setShortcl(${c.id},${!c.shortcl_open})">${c.shortcl_open?'숏클 승인됨 · 해제':'숏클 승인'}</button>`;
+    const scBtn = `<button class="mini" style="margin-left:6px" onclick="setShortcl(${c.id},${!c.shortcl_open})">${c.shortcl_open?'숏클 승인됨 · 해제':'숏클 승인'}</button>${c.shortcl_open?`<button class="mini" style="margin-left:6px" onclick="shortclDevices(${c.id})">숏클 PC</button>`:''}`;
     return `<tr><td>${c.id}</td><td>${nameCell}${adminBadge}${scBtn}</td><td>${esc(c.phone)}</td>
       <td class=mini style="color:${c.gender?'#e8eaed':'#5f6773'}">${esc(c.gender)||'—'}</td>
       <td class=mini style="color:${c.age_band?'#e8eaed':'#5f6773'}">${esc(c.age_band)||'—'}</td>
@@ -1393,6 +1422,9 @@ setInterval(renderAlertBoard, 30000);
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',renderClaudeAlerts);
 else renderClaudeAlerts();
 setInterval(renderClaudeAlerts, 30000);
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',renderClaudeChanges);
+else renderClaudeChanges();
+setInterval(renderClaudeChanges, 30000);
 
 /* ── 1단계 정확도 측정 카드(2026-09-05) ── 서버 API probe/frame_accuracy를 화면으로. 도는 동안 15초마다 새로 그린다. */
 var _probeTimer=null;

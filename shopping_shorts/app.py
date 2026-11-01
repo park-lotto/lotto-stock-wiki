@@ -19258,6 +19258,15 @@ async def api_claude_lease(request: Request):
     return _claude_json(await run_in_threadpool(_cp.call, _cp.lease, ctx, body, Store(DB_PATH)))
 
 
+@app.post("/api/claude/session")
+async def api_claude_session(request: Request):
+    """PC 접속 자리(관제 296) — 판단은 claude_portal.session·_guard_session."""
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cp.call, _cp.session, ctx, body, Store(DB_PATH)))
+
+
 @app.get("/api/claude/assets")
 def api_claude_assets(request: Request, profile: str = "", job: str = "", lease: str = "", extra: str = ""):
     from shopping_shorts import claude_portal as _cp
@@ -19432,14 +19441,15 @@ def api_claude_me_license_issue(request: Request, slot: int = 1):
     return JSONResponse({"ok": True, "key": got["key"], "expires": got["expires"]}, headers={"Cache-Control": "no-store"})
 
 
-@app.post("/api/claude/me/device/remove")
-async def api_claude_me_device_remove(request: Request):
+@app.post("/api/claude/me/device/swap")
+async def api_claude_me_device_swap(request: Request):
+    """새 PC 로 교체 요청(관제 296) — 회원은 고르기만 하고 바꾸기는 관리자 승인."""
     cid, st, denied = _claude_me(request)
     if denied:
         return denied
     from shopping_shorts import claude_portal as _cp
     body = await _claude_body(request)
-    return _claude_json(await run_in_threadpool(_cp.call, _cp.remove_device, cid, body.get("device_id"), st))
+    return _claude_json(await run_in_threadpool(_cp.call, _cp.request_swap, cid, body.get("device_id"), st))
 
 
 @app.post("/api/claude/me/lease/force_release")
@@ -19588,6 +19598,53 @@ async def api_admin_claude_member(request: Request):
     except (TypeError, ValueError):
         return JSONResponse({"ok": False, "msg": "cid 가 필요합니다"}, status_code=400)
     return _claude_json(_cp.call(_cp.set_member, cid, body.get("on", True) is not False, Store(DB_PATH)))
+
+
+@app.get("/api/admin/claude/changes")
+def api_admin_claude_changes(request: Request):
+    """기기 교체·Claude 계정 변경 요청(관제 296)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return {"ok": True, "changes": _cp.list_changes(Store(DB_PATH))}
+
+
+@app.post("/api/admin/claude/changes/decide")
+async def api_admin_claude_changes_decide(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    try:
+        rid = int(body.get("id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"ok": False, "msg": "id 가 필요합니다"}, status_code=400)
+    return _claude_json(_cp.call(_cp.decide_change, rid, body.get("approve") is True, Store(DB_PATH)))
+
+
+@app.get("/api/admin/claude/devices")
+def api_admin_claude_devices(request: Request, cid: int = 0):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return {"ok": True, "devices": _cp.admin_devices(cid, Store(DB_PATH))}
+
+
+@app.post("/api/admin/claude/devices/remove")
+async def api_admin_claude_devices_remove(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    try:
+        cid = int(body.get("cid"))
+    except (TypeError, ValueError):
+        return JSONResponse({"ok": False, "msg": "cid 가 필요합니다"}, status_code=400)
+    return _claude_json(_cp.call(_cp.remove_device, cid, body.get("device_id"), Store(DB_PATH)))
 
 
 @app.post("/api/admin/claude/license/revoke")
