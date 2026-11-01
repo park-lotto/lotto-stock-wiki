@@ -157,6 +157,14 @@ def merge_preset_pack(preset: str, pack: dict) -> dict:
                         for o in old_names:
                             L["text"] = L["text"].replace(o, new_name)
                         applied.append(f"{fid} 글 '{before}' → '{L['text']}'")
+                    if role == "title":                   # 색·크기 = 렌더는 hybrid.styles.member_frame 이 같은 칸을 판 틀에 넣는다
+                        tcs = [c and [int(c[i:i + 2], 16) for i in (1, 3, 5)] for c in text.get("title_colors") or []]
+                        if any(tcs):                      # line_rgb = 줄별 색 목록(to_snapshot) — 안 고른 줄은 프리셋 색
+                            lines = list(L.get("line_rgb") or [])
+                            lines += [L.get("rgb")] * (len(tcs) - len(lines))
+                            L["line_rgb"] = [c or lines[n] for n, c in enumerate(tcs)] + lines[len(tcs):]
+                        if text.get("title_scale") and isinstance(L.get("size"), (int, float)):
+                            L["size"] = round(L["size"] * float(text["title_scale"]))
                     if role == "title" and text.get("title_font") and L.get("font") != text["title_font"]:
                         applied.append(f"{fid} 제목 글꼴 {L.get('font')} → {text['title_font']}"); L["font"] = text["title_font"]
                     if role == "caption":
@@ -170,6 +178,8 @@ def merge_preset_pack(preset: str, pack: dict) -> dict:
                             L["enter"] = None if cap["enter"] == "none" else cap["enter"]
                         if cap.get("emphasis"):
                             L["emphasis"] = None if cap["emphasis"] == "none" else cap["emphasis"]
+                elif L.get("kind") == "bg" and colors.get("bg"):
+                    L["rgb"] = list(colors["bg"])
                 elif L.get("kind") == "band" and L.get("y") == 0 and (L.get("w") or 0) >= 1000 and colors.get("header") is not None:
                     c = colors["header"]
                     c = c.get(fid) if isinstance(c, dict) else c

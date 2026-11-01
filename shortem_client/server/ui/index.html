@@ -274,7 +274,7 @@ function render(){
     h=`<h2>꾸미기 <small>${web?"오른쪽 장면꾸미기 화면에서 바로 — 다 바꾸면 그 화면의 '이 영상에 적용'":'고른 프리셋 모양은 그대로 두고, 바꾼 칸만 내 채널에 맞춥니다'}</small></h2>
       ${S.lookSaved?`<div class="note">✓ 꾸민 모양을 저장했습니다 (${esc(S.lookSaved)})</div>`:''}
       <div class="sec"><div class="sec-h"><b>채널명</b>${badge('brand','channel_name')}</div><input type="text" id="cname" maxlength="30" value="${esc((p.brand||{}).channel_name||'')}"></div>
-      <details class="sec"${web?'':' open'}><summary><b>글꼴·자막${web?' 빠른 설정':''}</b> <small>${web?'장면꾸미기 화면에서도 바꿀 수 있습니다':'안 바꾼 칸은 프리셋 그대로 나옵니다'}</small></summary>
+      ${web?`<details class="sec"><summary><b>글꼴·자막 빠른 설정</b> <small>장면꾸미기 화면에서도 바꿀 수 있습니다</small></summary>
       <div class="sec"><div class="sec-h"><b>제목 글꼴</b>${badge('text','title_font')}</div>${fontGrid('title_font',tx.title_font,cat.fonts)}</div>
       <div class="sec"><div class="sec-h"><b>자막 글꼴</b>${badge('text','caption_font')}</div>${fontGrid('caption_font',tx.caption_font,cat.fonts)}</div>
       <div class="sec"><div class="sec-h"><b>자막 등장</b>${isChg('text')&&(ch().text.caption||{}).enter!==undefined?'<span class="chg">바꾼 칸</span>':'<small>프리셋 그대로</small>'}</div>
@@ -284,7 +284,7 @@ function render(){
         <input type="color" id="emcolor" value="#${emRgb.map(v=>v.toString(16).padStart(2,'0')).join('')}" title="강조 색"></div></div>
       <div class="sec"><div class="row"><b>외곽선</b><input type="range" id="outline" min="0" max="12" step="1" value="${Math.min(12,cap.outline_px??0)}"><output>${cap.outline_px??0}px</output></div>
         <div class="row"><b>외곽선 색</b><input type="color" id="olcolor" value="#${(cap.outline_rgb||[0,0,0]).map(v=>v.toString(16).padStart(2,'0')).join('')}"><output></output></div></div>
-      <div class="sec"><div class="sec-h"><b>자막 쌓기</b></div><div class="chips">${cat.caption_mode.map(k=>`<button class="chip${k===(cap.mode||'accumulate')?' on':''}" data-mode="${k}">${({accumulate:'한 줄씩 쌓기',replace:'한 줄씩 바꾸기'})[k]}</button>`).join('')}</div></div></details>
+      <div class="sec"><div class="sec-h"><b>자막 쌓기</b></div><div class="chips">${cat.caption_mode.map(k=>`<button class="chip${k===(cap.mode||'accumulate')?' on':''}" data-mode="${k}">${({accumulate:'한 줄씩 쌓기',replace:'한 줄씩 바꾸기'})[k]}</button>`).join('')}</div></div></details>`:lookBox(p)}
       ${web?'':'<div class="nav"><button class="btn" id="reset">프리셋 그대로 되돌리기</button><button class="btn pri" id="lookNext">다음: 소리 →</button></div>'}`;
   }else if(S.step==='sound'){
     // 목소리 엔진 먼저(사장님 10-25 '일레븐·타입·피쉬오디오 다 선택') → 그 엔진의 목소리. 피쉬오디오는 회원 PC 엔진에 붙이는 중
@@ -594,6 +594,14 @@ const ASK_HINT={scene:['다른 컷으로 바꿔 줘','제품이 더 크게 보�
   caption:['글자 더 크게','이 줄 고쳐 줘','강조 낱말 바꿔 줘','색 바꿔 줘'],
   sfx:['효과음 빼 줘','다른 효과음으로','더 작게'],bgm:['다른 곡으로','음악 더 작게','음악 더 크게']};
 // 프리셋 카드 — 형식 묶음(group)별로(사장님 10-24 '프리셋 = 형식'). 묶음이 없으면 한 덩어리
+// 회원 PC 꾸미기 칸 = 완성본까지 닿는 것만(엔진 styles.member_frame 과 짝) — 글꼴은 제목에 어울리는 것만 추림
+const TITLE_FONTS=['BlackHanSans','BMDOHYEON','BMJUA','Cafe24Ohsquare','JalnanGothic','GasoekOne-Regular','TmonMonsori'];
+function lookBox(p){const tx=p.text||{},tc=tx.title_colors||[],sc=tx.title_scale||1,bg=(p.brand&&p.brand.colors&&p.brand.colors.bg)||null,fs=TITLE_FONTS.filter(f=>S.st.catalog.fonts.includes(f));
+  const hex=c=>'#'+c.map(v=>v.toString(16).padStart(2,'0')).join('');
+  return `<div class="sec"><div class="sec-h"><b>제목 글꼴</b>${badge('text','title_font')}</div>${fontGrid('title_font',tx.title_font,fs)}</div>
+  <div class="sec"><div class="sec-h"><b>제목 색</b><small>첫째 줄 · 둘째 줄</small></div><input type="color" id="tc0" value="${esc(tc[0]||'#ffffff')}"> <input type="color" id="tc1" value="${esc(tc[1]||tc[0]||'#ffffff')}"></div>
+  <div class="sec"><div class="row"><b>제목 크기</b><input type="range" id="tscale" min="0.7" max="1.3" step="0.05" value="${sc}"><output>${Math.round(sc*100)}%</output></div></div>
+  <div class="sec"><div class="sec-h"><b>바탕색</b><small>영상 밖 틀 색</small></div><input type="color" id="bgc" value="${bg?hex(bg):'#000000'}"></div>`}
 function presetCards(st){
   const list=st.presets||[];
   if(!list.length)return'<p class="err">쓸 수 있는 프리셋이 없습니다 — Claude 에게 "숏템 준비 점검"을 부탁하세요</p>';
@@ -705,6 +713,9 @@ $('board').addEventListener('click',async e=>{
 $('board').addEventListener('change',e=>{
   const t=e.target;
   if(t.id==='cname')save({brand:{channel_name:t.value.trim()}});
+  else if(t.id==='tc0'||t.id==='tc1'){const c=[...(((pk().text||{}).title_colors)||[null,null])];c[+t.id[2]]=t.value;save({text:{title_colors:c}})}
+  else if(t.id==='tscale')save({text:{title_scale:+t.value}});
+  else if(t.id==='bgc')save({brand:{colors:{bg:[1,3,5].map(i=>parseInt(t.value.slice(i,i+2),16))}}});
   else if(t.id==='outline')save({text:{caption:{outline_px:+t.value}}});
   else if(t.id==='olcolor'){const c=t.value;save({text:{caption:{outline_rgb:[1,3,5].map(i=>parseInt(c.slice(i,i+2),16))}}})}
   else if(t.id==='tempo')save({tts:{tempo:+t.value}});

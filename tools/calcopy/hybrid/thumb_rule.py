@@ -58,6 +58,9 @@ def _n(s: str) -> int:
 def check(spec: dict, cuts: list[dict] | None = None, n_parts: int | None = None) -> list[str]:
     """3안 검사 → 문제 목록(빈 목록 = 통과).
     cuts = 본편 컷 [{src(파일 이름), ss, dur}] — src/ss 꼴 안(썰템홈샷) / n_parts = 렌더 컷 수 — part/t 꼴 안(공용 렌더러·회원 라인)."""
+    O = (spec or {}).get("options") or []
+    if len(O) == 1 and O[0].get("auto"):      # 코드가 고른 1안(flow._thumb_auto) = 3안 규칙 대상 아님 — 걸면 재료 고치기로 헛돌아 12/13 에서 멈춘다(10-30 시험 편)
+        return []
     bad = []
     ops = spec.get("options") or []
     if len(ops) != 3:

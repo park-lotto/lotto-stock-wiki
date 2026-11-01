@@ -9,6 +9,7 @@ import { freshDirs } from './helpers.js';
 import { makeKey } from './fake_server.js';
 
 freshDirs('flow_driver');
+(await import('../server/local_settings.js')).useCatalog({ default_pack: {}, preset_defaults: {} });   // 꾸미기 값 파일은 표만 있으면 쓴다
 const ENGINE = process.env.SHORTEM_ENGINE || path.resolve(process.cwd(), '..', '..', '..', '칼카피숏템엔진');
 const seen = [];
 

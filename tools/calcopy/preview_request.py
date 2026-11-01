@@ -152,7 +152,7 @@ def preset_defaults_table() -> dict:
         return {}
 
 
-EDITABLE = {"brand": ("channel_name", "colors"), "text": ("title_font", "caption_font", "caption", "orig_text"),
+EDITABLE = {"brand": ("channel_name", "colors"), "text": ("title_font", "title_colors", "title_scale", "caption_font", "caption", "orig_text"),
             "tts": ("provider", "voice_id", "name", "preset_id", "tempo", "alternates", "emotion"), "bgm": ("candidates", "gain"),
             "sfx_pool": ("start", "point", "end"), "meme_pool": ("kinds", "ids"), "template": None}
 
@@ -178,6 +178,14 @@ def check(pack: dict, cat: dict | None = None) -> list:
             err.append(f"모르는 글꼴: {tx[key]}")
     if tx.get("orig_text") not in (None, "", "auto", "vmake", "blur"):      # 원본 박힌 글자: auto(VMake 키 있으면 지우기·없으면 흐림) | vmake | blur — 사장님 10-30(vmake_clean.style_mode)
         err.append(f"모르는 글자 처리: {tx.get('orig_text')} (auto·vmake·blur)")
+    tc = tx.get("title_colors")
+    if tc is not None and not (isinstance(tc, list) and len(tc) <= 2 and all(c is None or (isinstance(c, str) and re.fullmatch(r"#[0-9A-Fa-f]{6}", c)) for c in tc)):
+        err.append("제목 색은 #RRGGBB 두 개까지입니다")
+    if tx.get("title_scale") is not None and not (isinstance(tx["title_scale"], (int, float)) and 0.7 <= tx["title_scale"] <= 1.3):
+        err.append("제목 크기는 0.7~1.3 배입니다")
+    bgc = (b.get("colors") or {}).get("bg")
+    if bgc is not None and not (isinstance(bgc, list) and len(bgc) == 3 and all(isinstance(c, int) and 0 <= c <= 255 for c in bgc)):
+        err.append("바탕색 모양이 다릅니다")
     cap = tx.get("caption") or {}
     if set(cap) - {"mode", "enter", "emphasis", "outline_px", "outline_rgb"}:
         err.append(f"모르는 자막 칸: {sorted(set(cap) - {'mode', 'enter', 'emphasis', 'outline_px', 'outline_rgb'})}")
