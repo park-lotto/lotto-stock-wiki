@@ -50,7 +50,7 @@ SESSION_KICK = 300       # 페이지에서 끊은 PC 는 5분간 다시 못 잡�
 HEARTBEAT_EVERY = 60
 ASSET_URL_TTL = 6 * 3600
 PREVIEW_TOKEN_TTL = 600
-START_TTL = 72 * 3600    # 시작.md 인증값 기한
+START_TTL = 72 * 3600    # START.md 인증값 기한
 DEVICES_MAX = 2          # PC 2대까지(2026-11-01 사장님 "pc는 2대로", 10-19 1대 결정을 대체). 교체는 관리자 승인(관제 296)
 PROFILES_MAX = 10
 ASSET_KINDS = ("font", "sfx", "bgm", "template", "meme")
@@ -423,7 +423,7 @@ def member_key(cid, store=None) -> str:
 
 
 def start_token(cid) -> str:
-    """시작.md 에 들어가는 회원 인증값 — 키 원문은 대화에 남으므로 넣지 않고, 기한 있는 값만 넣는다."""
+    """START.md 에 들어가는 회원 인증값 — 키 원문은 대화에 남으므로 넣지 않고, 기한 있는 값만 넣는다."""
     cid, exp = int(cid), _now() + START_TTL
     return f"{cid}.{exp}.{_mac('start', f'{cid}|{exp}')[:32]}"
 
@@ -445,7 +445,7 @@ def start_redeem(token, store=None) -> dict:
 
 
 def start_line(cid, base) -> str:
-    """회원별 설치 한 줄 — PowerShell 에 붙여 넣으면 끝난다(페이지 복사 버튼·시작.md 공용)."""
+    """회원별 설치 한 줄 — PowerShell 에 붙여 넣으면 끝난다(페이지 복사 버튼·START.md 공용)."""
     return f"$env:SHORTEM_START='{start_token(cid)}'; irm {base}/api/claude/start.ps1 | iex"
 
 
@@ -457,7 +457,7 @@ def start_cmd(cid, base) -> str:
 
 
 def start_md(cid, base) -> str:
-    """회원별 시작.md — Claude Code 입력창에 끌어다 놓으면 한 줄로 설치가 끝난다."""
+    """회원별 START.md — Claude Code 입력창에 끌어다 놓으면 한 줄로 설치가 끝난다."""
     line = start_line(cid, base)
     return ("# 숏클 시작\n\n"
             "이 파일을 Claude Code 입력창에 끌어다 놓고 엔터를 누르세요. 실행 허용을 물으면 '예'만 누르면 됩니다.\n"
@@ -470,12 +470,12 @@ def start_md(cid, base) -> str:
 
 
 def start_zip(cid, base) -> bytes:
-    """회원별 시작 꾸러미 — 받은 압축 파일을 Claude Code 입력창에 넣으면 안의 시작.md 대로 설치한다."""
+    """회원별 시작 꾸러미 — 받은 압축 파일을 Claude Code 입력창에 넣으면 안의 START.md 대로 설치한다."""
     import io
     import zipfile
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
-        z.writestr("시작.md", start_md(cid, base))
+        z.writestr("START.md", start_md(cid, base))
     return buf.getvalue()
 
 
@@ -1738,7 +1738,7 @@ def admin_devices(cid, store=None) -> list:
 
 
 # 페이지 내려받기 칸(사장님 10-20 exe 없이) — desktop = shortem.mcpb(윈도·맥 공용, 두 번 누르면 Claude 데스크탑이 받는다)
-#   code-win-x64 = Claude Code 시작 꾸러미(플러그인+시작.md+node). 실행 도구는 둘 다 연결 파일이 /api/claude/install 로 받는다.
+#   code-win-x64 = Claude Code 시작 꾸러미(플러그인+START.md+node). 실행 도구는 둘 다 연결 파일이 /api/claude/install 로 받는다.
 #   win-x64·mac-* = 예전 설치 프로그램(서명 전엔 페이지에 안 띄운다 — 남겨 두기만)
 INSTALLER_KINDS = ("desktop", "code-win-x64", "win-x64", "mac-arm64", "mac-x64")
 

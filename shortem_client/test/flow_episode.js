@@ -16,8 +16,8 @@ const HOME = path.join(dir, 'home'), WORK = path.join(dir, 'work'), CWD = path.j
 for (const d of [HOME, WORK, CWD]) fs.mkdirSync(d, { recursive: true });
 // --install <설치 폴더> = 설치본 그대로(설치된 MCP·엔진·node + 플러그인 시작 훅이 회원 지침을 넣는다). 없으면 개발 MCP + 지침을 작업 폴더 CLAUDE.md 로
 const INST = arg('--install') ? path.resolve(arg('--install')) : '';
-// 회원 지침(installer/common/CLAUDE_숏클.md) — 회원 PC 엔 설치팩이 넣어 둔다. 시험도 같은 지침을 읽게 작업 폴더 CLAUDE.md 로(관제 290: 지침 없이 돌린 시험은 회원과 다르다)
-if (!INST) fs.copyFileSync(path.join(HERE, '..', '..', 'installer', 'common', 'CLAUDE_숏클.md'), path.join(CWD, 'CLAUDE.md'));
+// 회원 지침(installer/common/MEMBER_GUIDE.md) — 회원 PC 엔 설치팩이 넣어 둔다. 시험도 같은 지침을 읽게 작업 폴더 CLAUDE.md 로(관제 290: 지침 없이 돌린 시험은 회원과 다르다)
+if (!INST) fs.copyFileSync(path.join(HERE, '..', '..', 'installer', 'common', 'MEMBER_GUIDE.md'), path.join(CWD, 'CLAUDE.md'));
 // --keys <폴더>: 회원이 설정 화면 '내 키'에 넣어 둔 것처럼 <HOME>/keys/ 에 복사(쿠팡 파트너스 등 — 값은 출력하지 않는다)
 if (arg('--keys')) fs.cpSync(path.resolve(arg('--keys')), path.join(HOME, 'keys'), { recursive: true });
 const env = { SHORTEM_HOME: HOME, SHORTEM_WORK: WORK, SHORTEM_CLIENT: 'claude-code', SHORTEM_NO_BROWSER: '1', SHORTEM_DEV_TOOLS: '1', SHORTEM_DEV: '1',

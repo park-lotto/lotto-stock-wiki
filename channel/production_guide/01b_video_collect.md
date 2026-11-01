@@ -1,6 +1,6 @@
 # 01b 영상 수집 — 잇템로그(화장품) · 숏템로그(제품): 한국 재편집 쇼츠 → 해외 원본
 
-(원본찾기 세션 10-21 01:25 실측 답 · 커밋 2df008380 · 규칙 원문 `channel/칼카피_시작.md` 14-2 · 주인 `tools/calcopy/origin_find.py`, 렌즈 `tools/calcopy/lens.py`)
+(원본찾기 세션 10-21 01:25 실측 답 · 커밋 2df008380 · 규칙 원문 `channel/production_start.md` 14-2 · 주인 `tools/calcopy/origin_find.py`, 렌즈 `tools/calcopy/lens.py`)
 얜샷템(연예인 본인 원본)과 다르다 — 여기는 '외국인이 한국 제품에 놀라는' 같은 한국 재편집 쇼츠의 **해외 원본 영상**을 찾아 우리 판으로 다시 만든다.
 
 ## 1. 씨앗 채널

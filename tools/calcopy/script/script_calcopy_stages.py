@@ -1,4 +1,4 @@
-"""대본 칼카피 엔진 — tag · cluster · card · report 단계(script_calcopy.py 가 부른다).
+"""대본 프리셋 엔진 — tag · cluster · card · report 단계(script_calcopy.py 가 부른다).
 tag 만 버텍스를 쓴다(묶음 호출). 나머지는 tags.jsonl 집계뿐이라 버텍스 0 — 카드의 숫자는 전부 태그를 센 값이다."""
 import json, os, re, statistics, time
 from collections import Counter, defaultdict
@@ -53,7 +53,7 @@ SCHEMA = {"type": "object", "properties": {"scripts": {"type": "array", "items":
     "required": ["id", "usable", "product", "category", "tone", "narrator", "characters", "hook_type", "hook_skeleton", "story", "lines", "cta"]}}},
     "required": ["scripts"]}
 
-PROMPT = """너는 한국 쇼츠 대본 분석가다. 아래 대본(받아쓰기 원문)을 한 편씩 **줄 단위로 뜯어** 칼카피(그대로 베껴 쓸 수 있는 틀) 재료를 만든다.
+PROMPT = """너는 한국 쇼츠 대본 분석가다. 아래 대본(받아쓰기 원문)을 한 편씩 **줄 단위로 뜯어** 프리셋(그대로 베껴 쓸 수 있는 틀) 재료를 만든다.
 규칙:
 - lines 의 text 는 원문을 **말 한 호흡 단위로 끊은 것 그대로**다. 한 줄은 대략 15~45자 — 긴 문장은 연결어미(~는데·~니까·~면서·~고·~해서·~더니)와 신호어(근데·심지어·특히) 앞에서 끊어 **여러 줄로** 나눈다(받아쓰기 한 문장 = 보통 2~4줄). 낱말을 바꾸거나 빼거나 요약하지 마라. 이어 붙이면 원문이 돼야 한다(받아쓰기 오타만 고쳐도 된다).
 - beat: {beats}
@@ -336,7 +336,7 @@ def contrast(hits, flops, min_diff=0.12, min_n=3):
 
 
 def build_card(ht, rs):
-    """유형 하나의 칼카피 카드 — 전부 태그 집계. 줄 배치는 가장 많은 전개를 뼈대로, 칸마다 연결어·어미·틀 예문."""
+    """유형 하나의 프리셋 카드 — 전부 태그 집계. 줄 배치는 가장 많은 전개를 뼈대로, 칸마다 연결어·어미·틀 예문."""
     rs = sorted(rs, key=lambda r: -r["views"])
     arcs = Counter(tuple(arc_of(r)) for r in rs)
     beat_stat = defaultdict(lambda: {"n": 0, "conn": Counter(), "end": Counter(), "skel": [], "chars": [], "pos": []})
@@ -425,7 +425,7 @@ def card_md(c):
         L += ["## 잘된 편 vs 안된 편 — 차이 20%p 이상", "| 특징 | 잘된 편 | 안된 편 | 차이 |", "|---|---|---|---|"]
         L += ["| %s | %.0f%% (%d) | %.0f%% (%d) | %+.0f%%p |" % (x["f"], x["hit"] * 100, x["n_hit"], x["flop"] * 100, x["n_flop"], x["diff"] * 100) for x in c["contrast"][:20]] + [""]
     L += ["## 전개(가장 많은 줄 배치)", " → ".join(c["arc_main"]), ""] + ["- %s (%d편)" % (x["arc"], x["n"]) for x in c["arcs"]] + [""]
-    L += ["## 칸별 칼카피"]
+    L += ["## 칸별 프리셋"]
     for s in c["slots"]:
         L.append("### %s — %s (%.0f%% 편 · 위치 %.2f · 편당 %s줄 · 줄 중앙 %d자)" % (s["beat"], s["does"], s["share"] * 100, s["pos_median"], s["lines_per_script"], s["chars_median"]))
         L.append("- 연결어: " + ", ".join("%s %d" % (x["v"] or "(없음)", x["n"]) for x in s["connectors"]))
@@ -509,7 +509,7 @@ def cmd_report(a):
         r = (rec.get("types") or {}).get(ht)
         rhtml = ""
         if r:
-            rhtml = '<div class="recipe"><h3>칼카피 공식 — %s</h3><p class="mut">%s</p><ol>%s</ol>%s</div>' % (
+            rhtml = '<div class="recipe"><h3>프리셋 공식 — %s</h3><p class="mut">%s</p><ol>%s</ol>%s</div>' % (
                 e(r.get("한 줄 정의", "")), e(r.get("히트율", "")), "".join("<li>%s</li>" % e(x) for x in r.get("공식", [])),
                 "".join("<p><b>%s</b> %s</p>" % (e(k), e(v)) for k, v in r.items() if k not in ("한 줄 정의", "히트율", "공식")))
         slots = "".join('<tr><td><b>%s</b><div class="mut">%s</div></td><td>%d%%<br>%d자</td><td>%s</td><td>%s</td><td>%s</td></tr>' % (

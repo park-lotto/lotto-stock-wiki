@@ -2,7 +2,7 @@
 """품질 관문 검토(10-25, 대상 9a8507108·dc128f353·0ea3970d4)로 드러난 느슨함 — 사보타주 시험.
 
 ③ 전환 '해당 없음 ○' = 배치 기록(placement.transitions_step)에 비율 출처가 있고 반올림한 원하는 개수가 0 일 때만
-④ 나레 받아쓰기 = 스피치매틱스 낱말 시각(narr_verify.heard_words) — 위스퍼 small 단독 판정 금지(칼카피_시작 12번)
+④ 나레 받아쓰기 = 스피치매틱스 낱말 시각(narr_verify.heard_words) — 위스퍼 small 단독 판정 금지(production_start 12번)
 ⑥ 스티커 모자람 = check_place bad
 ② 되감김 '경계에서만 센다' = check_seams.split_by_bounds(주인) · 시간표에 컷이 없으면 옛 판정(전부 센다)
 """

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""방구석·선물가게(같은 운영자) 칼카피 — 그 채널의 터진 편을 **씨앗**으로 넣고, 실제 고객 제품 재료로 그 틀대로 쓴다(seedflow).
+"""방구석·선물가게(같은 운영자) 프리셋 — 그 채널의 터진 편을 **씨앗**으로 넣고, 실제 고객 제품 재료로 그 틀대로 쓴다(seedflow).
 서버: cd /tmp/banggu_pkg && (환경 실어서) python3 try_seedflow_banggu.py --seeds 씨앗_방구석선물가게_6편.json --n 8 --out /tmp/seedflow_banggu.json
 작업마다 씨앗을 돌려가며 짝짓는다(제품 i → 씨앗 i mod 6). 씨앗 분석은 씨앗당 1회만(캐시).
 검사: seedflow.problems + 방구석 규칙(banggu.rules: 말끝·권하는 말·혼잣말 꼴) — 방구석 틀로 나왔는지 그 자로 잰다.
@@ -22,7 +22,7 @@ def main():
             return cl.models.generate_content(model=m, contents=prompt, config=types.GenerateContentConfig(response_mime_type="application/json")).text
         for wait in (0, 10, 25, 45):
             time.sleep(wait)
-            ok, got = vertex_route.try_call("script_generate", _vx, what="칼카피씨앗시험")
+            ok, got = vertex_route.try_call("script_generate", _vx, what="프리셋씨앗시험")
             if ok:
                 time.sleep(2); return got or ""
         raise RuntimeError("버텍스 호출 실패")
@@ -34,7 +34,7 @@ def main():
                 tools=[types.Tool(google_search=types.GoogleSearch())])).text
         for wait in (0, 10, 25, 45):
             time.sleep(wait)
-            ok, got = vertex_route.try_call("script_generate", _vx, what="칼카피조사")
+            ok, got = vertex_route.try_call("script_generate", _vx, what="프리셋조사")
             if ok:
                 time.sleep(2); return got or ""
         raise RuntimeError("버텍스(검색) 호출 실패")

@@ -159,16 +159,16 @@ def main() -> int:
     if pr.returncode != 0:
         fails.append("python import 실패")
 
-    files = {n: (inst / n).exists() for n in ("server/index.js", "shortem.mcpb", "시작.md", "install.json", "uninstall.exe",
+    files = {n: (inst / n).exists() for n in ("server/index.js", "shortem.mcpb", "START.md", "install.json", "uninstall.exe",
                                               "claude-plugin/shortem/launcher.js", "claude-plugin/.claude-plugin/marketplace.json",
-                                              "_sandbox_desktop/숏템작업/시작.md")}
+                                              "_sandbox_desktop/숏템작업/START.md")}
     res["files"] = files
     if not all(files.values()):
         fails.append("설치 파일 빠짐")
-    start_md = (inst / "시작.md").read_text(encoding="utf-8") if files["시작.md"] else ""
+    start_md = (inst / "START.md").read_text(encoding="utf-8") if files["START.md"] else ""
     res["start_md_has_path"] = (inst / "claude-plugin").as_posix() in start_md
     if not res["start_md_has_path"]:
-        fails.append("시작.md 경로 치환 안 됨")
+        fails.append("START.md 경로 치환 안 됨")
 
     rt = mcp_roundtrip(T["node"], inst / "claude-plugin" / "shortem" / "launcher.js", inst)
     tl = rt.get("tools/list", {}).get("result", {}).get("tools", [])

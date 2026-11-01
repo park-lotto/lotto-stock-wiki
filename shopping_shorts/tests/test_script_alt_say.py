@@ -24,7 +24,7 @@ def test_alt_said_passes():
     for s in ("영상 보고 쿠팡에서 찾아봤는데 똑같은 건 없어서 후기 많은 걸로 사 봤어요.",
               "같은 제품은 아니고 비슷한 걸로 골라 봤어요.",
               "쿠팡엔 없어서 비슷한 흑백 가디건으로 사 봤는데요."):
-        assert SA.alt_disclosed(_d("alt", "가디건 이야기.", s)) is None, s
+        assert SA.alt_disclosed(_d("alt", "가디건 이야기.", s, "맺음말이에요.")) is None, s      # 11-01: 끝줄은 고지가 아니라 맺음말
 
 
 def test_not_alt_not_judged():

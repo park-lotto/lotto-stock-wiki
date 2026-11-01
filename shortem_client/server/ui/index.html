@@ -196,7 +196,7 @@ details.sec summary small{color:var(--mute);font-size:12px}
 </div>
 <script>
 'use strict';
-// 단계(사장님 10-25): 프리셋(칼카피 영상 스타일) → 템플릿(겉모양) → 꾸미기 → 소리 → 완성본 고치기(캡컷 쉬운 판, 회원 Claude 에게 지시)
+// 단계(사장님 10-25): 프리셋(프리셋 영상 스타일) → 템플릿(겉모양) → 꾸미기 → 소리 → 완성본 고치기(캡컷 쉬운 판, 회원 Claude 에게 지시)
 // 템플릿 단계는 뺐다 — 꾸미기(장면꾸미기)에 템플릿 고르기가 이미 있다(사장님 10-25)
 const STEPS=[{k:'setup',ic:'⚙',t:'설정'},{k:'preset',ic:'◆',t:'프리셋'},{k:'look',ic:'✎',t:'꾸미기'},{k:'sound',ic:'♪',t:'소리'},{k:'edit',ic:'▶',t:'완성본 고치기'}];
 const S={step:'setup',st:null,scene:0,preview:null,video:null,stamp:-1,saving:0};
@@ -263,7 +263,7 @@ function render(){
       ${(st.styles&&st.styles.length)?styleCards(st):presetCards(st)}`;
   }else if(S.step==='template'){
     const tpl=p.template&&p.template!=='none'?p.template:null;
-    // 맨 앞 = 고른 프리셋의 칼카피 틀(기본, 사장님 10-25 '기본 프리셋을 누르면 우리가 칼카피한 템플릿이 그대로')
+    // 맨 앞 = 고른 프리셋의 프리셋 틀(기본, 사장님 10-25 '기본 프리셋을 누르면 우리가 프리셋한 템플릿이 그대로')
     const sty=(st.styles||[]).find(x=>x.id===st.style);
     h=`<h2>템플릿 <small>영상의 겉모양(띠·제목 자리·채널명 칸)을 고릅니다 — 누르면 오른쪽에 바로 그립니다</small></h2>
       <div class="sec"><div class="sec-h"><b>프리셋 기본 틀</b><small>${sty?esc(sty.name)+' 원본 모양 그대로':'고른 프리셋의 원본 모양 그대로'}</small></div>
@@ -422,10 +422,10 @@ function voicePresetBox(eng,tts,cat){
   const gs=eng==='typecast'&&(S.st.tc_presets||[]).length?S.st.tc_presets:S.vp.filter(g=>(EN[g.engine]||g.engine||'typecast')===eng);
   const ready=new Set((cat.voices||[]).map(v=>v.voice_id));   // 회원 PC 엔진 명단(지금 바로 만들 수 있는 목소리)
   if(!gs.length){
-    // 타입캐스트 = 숏템 목록에 추천 묶음이 없다 → 칼카피 명단을 같은 줄 모양(이름·설명·감정 단추)으로(사장님 10-25 '타입캐스트만 왜 다르냐')
+    // 타입캐스트 = 숏템 목록에 추천 묶음이 없다 → 프리셋 명단을 같은 줄 모양(이름·설명·감정 단추)으로(사장님 10-25 '타입캐스트만 왜 다르냐')
     const tc=(cat.voices||[]).filter(v=>(v.engine||'typecast')===eng);
     if(!tc.length)return'';
-    return `<div class="sec"><div class="sec-h"><b>숏템 추천 성우</b><small>${tc.length}명 · 칼카피 명단</small></div><div class="vres tall">${tc.map(v=>voiceRow({voice_id:v.voice_id,name:v.name,tags:[v.about].filter(Boolean),emotions:EMO.map(x=>x[0]),ready:true},eng,tts,S.st)).join('')}</div></div>`;
+    return `<div class="sec"><div class="sec-h"><b>숏템 추천 성우</b><small>${tc.length}명 · 프리셋 명단</small></div><div class="vres tall">${tc.map(v=>voiceRow({voice_id:v.voice_id,name:v.name,tags:[v.about].filter(Boolean),emotions:EMO.map(x=>x[0]),ready:true},eng,tts,S.st)).join('')}</div></div>`;
   }
   return `<div class="sec"><div class="sec-h"><b>숏템 추천 성우</b><small>${gs.length}명 · 숏템메이커와 같은 목록</small></div><div class="vres tall">${gs.map(g=>{
     const vv=Object.entries(g.variants||{}),cur=vv.find(([k,v])=>v.voice_id===tts.voice_id||v.preset_id===tts.voice_id||v.preset_id===tts.preset_id);

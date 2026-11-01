@@ -36,7 +36,7 @@ PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <키> checks --version <판> --redo 
 ```
 ffmpeg -i final.mp4 -ac 1 -ar 16000 asr/final.wav
 PYTHONUTF8=1 py -c "from tools.calcopy.engine.asr_local import transcribe; print(transcribe('asr/final.wav', engine='speechmatics'))"     # 스피치매틱스(주인 asr_local)
-(위스퍼: 06_받아쓰기.md 의 numpy 방식)
+(위스퍼: 06_transcribe.md 의 numpy 방식)
 ```
 - 나레가 **대본 글자대로** 들리나 줄마다 대조. 이름·브랜드가 들리나.
 - **스피치매틱스가 주(主)**(사장님 10-21 유료 승인), 대조는 제미나이 무료 모델(`server_ai.asr_clips`) 또는 위스퍼 small — 위스퍼 혼자 틀리게 들은 건 결함이 아닐 수 있다(정상 나레도 잘못 듣는다). 두 모델이 서로 다르게 들으면 **그 줄만 잘라** 다시 듣는다. 둘 다 틀리면 고친다(대본 tts 표기·재합성).

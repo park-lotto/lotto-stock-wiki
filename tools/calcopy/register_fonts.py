@@ -1,6 +1,6 @@
 """글꼴 창고(shopping_shorts/static/fonts/*.ttf·*.otf) 중 장면꾸미기 렌더러에 @font-face 가 없는 것을 등록한다.
 
-왜: 칼카피 글꼴 판별(engine/fontmatch.rank)은 창고 전부를 후보로 보는데, 렌더러(out/scene-style-ui-showcase.html)는 54개만
+왜: 프리셋 글꼴 판별(engine/fontmatch.rank)은 창고 전부를 후보로 보는데, 렌더러(out/scene-style-ui-showcase.html)는 54개만
 등록돼 있어 1위가 미등록이면 그릴 수 없었다(ZdeZ: Spoqa·IBMPlex·Pretendard-Bold 1~3위 전부 미등록, 2026-10-16).
 어떻게: 파일을 새로 만들지 않고 창고의 ttf/otf 를 그대로 가리킨다(크롬은 ttf/otf 를 읽는다. 서버 자산 길
 api_scene_style_asset 은 shopping_shorts/static/fonts/ 의 .ttf/.otf 를 이미 내준다). 글꼴은 쓰일 때만 내려받는다.

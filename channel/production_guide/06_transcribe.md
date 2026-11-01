@@ -8,7 +8,7 @@
    ```
    ffmpeg -ss <a> -to <b> -i src/<원본>.mp4 -ac 1 -ar 16000 asr/O1.wav
    PYTHONUTF8=1 py -c "from tools.calcopy.engine.asr_local import transcribe; import json; print(json.dumps(transcribe('asr/O1.wav', engine='speechmatics'), ensure_ascii=False))"   # 주인 한 곳(키 ~/.volcano/keys/speechmatics, 실패 시 위스퍼+note)
-   # 옛 두 벌째 = .venv 파이썬 tools/hotpeople/measure/asr_speechmatics.py (같은 키) — 칼카피에선 asr_local 만
+   # 옛 두 벌째 = .venv 파이썬 tools/hotpeople/measure/asr_speechmatics.py (같은 키) — 프리셋에선 asr_local 만
    ```
    위스퍼(로컬 faster-whisper small, 무료): 오디오를 numpy 배열로 넘긴다(파일 경로로 넘기면 av 버전 문제로 죽는다).
    ```python

@@ -1,5 +1,5 @@
-# 숏클 설치 - 회원이 받은 시작.md 의 한 줄이 부른다(관제 294, 사장님 11-01 "시작md 만 넣으면 바로").
-# 회원 입력 0: 인증값(SHORTEM_START)은 시작.md 에 들어 있고, 키는 이 스크립트가 받아 파일로만 저장한다(화면·대화에 내지 않는다).
+# 숏클 설치 - 회원이 받은 START.md 의 한 줄이 부른다(관제 294, 사장님 11-01 "시작md 만 넣으면 바로").
+# 회원 입력 0: 인증값(SHORTEM_START)은 START.md 에 들어 있고, 키는 이 스크립트가 받아 파일로만 저장한다(화면·대화에 내지 않는다).
 # 판단 주인: 키·인증 = shopping_shorts/claude_portal.py start_redeem · 묶음 = install_info · 풀기 후 검사 = postinstall.js.
 # 시험 환경변수: SHORTEM_BASE · SHORTEM_INSTALL_DIR · SHORTEM_NO_PERSIST(사용자 환경변수 안 씀) · SHORTEM_NO_LAUNCH(새 창 안 띄움)
 $ErrorActionPreference = 'Stop'
@@ -12,13 +12,13 @@ function Die($m) { Write-Host "[숏클] 설치를 마치지 못했습니다: $m"
 
 $base = if ($env:SHORTEM_BASE) { $env:SHORTEM_BASE.TrimEnd('/') } else { '__BASE__' }
 $token = $env:SHORTEM_START
-if (-not $token) { Die '시작.md 를 숏템메이커 페이지에서 새로 받아 주세요' }
+if (-not $token) { Die 'START.md 를 숏템메이커 페이지에서 새로 받아 주세요' }
 
 Say '회원 확인 중'
 try {
     $auth = Invoke-RestMethod -Method Post -Uri "$base/api/claude/start/redeem" -Headers @{ 'X-Shortem-Start' = $token }
 } catch {
-    Die '회원 확인이 안 됐습니다. 페이지에서 시작.md 를 새로 받아 주세요'
+    Die '회원 확인이 안 됐습니다. 페이지에서 START.md 를 새로 받아 주세요'
 }
 $key = [string]$auth.key
 if (-not $key) { Die '회원 확인 응답이 비었습니다' }
@@ -70,7 +70,7 @@ if ($current -eq $info.version -and (Test-Path $node)) {
     $old = $null
     if (Test-Path $homeDir) { $old = "$homeDir.old-$(Get-Date -Format yyyyMMddHHmmss)"; Rename-Item $homeDir $old }
     Rename-Item $fresh $homeDir
-    & $node (Join-Path $homeDir 'postinstall.js') --home $homeDir --version $info.version --desktop $desktop
+    & $node (Join-Path $homeDir 'postinstall.js') --home $homeDir --version $info.version
     if ($LASTEXITCODE -ne 0) {
         Remove-Item $homeDir -Recurse -Force
         if ($old) { Rename-Item $old $homeDir }
@@ -124,8 +124,16 @@ $listed = (& claude plugin list 2>&1 | Out-String)
 $ErrorActionPreference = $eap
 if ($listed -notmatch 'shortem') { Die '숏클 플러그인 등록을 확인하지 못했습니다' }
 
-$work = Join-Path $desktop '숏템작업'
+# 작업 폴더 = 바탕화면이 아니라 ~/.shortem/work(재설치로 지워지지 않게 설치 폴더 밖). 이미 바탕화면 폴더를 쓰던 회원은 그대로 쓴다
+$oldWork = Join-Path $desktop '숏템작업'
+$shortemHome = if ($env:SHORTEM_HOME) { $env:SHORTEM_HOME } else { Join-Path $env:USERPROFILE '.shortem' }
+$work = if (Test-Path $oldWork) { $oldWork } else { Join-Path $shortemHome 'work' }
 New-Item -ItemType Directory -Force -Path $work | Out-Null
+# 회원 지침 = 작업 폴더 CLAUDE.md — Claude Code 가 이 폴더에서 시작할 때 자동으로 먼저 읽는다
+$guideSrc = Join-Path $homeDir 'server\guide\MEMBER_GUIDE.md'
+if (-not (Test-Path $guideSrc)) { Die '회원 지침 파일이 없습니다. 같은 줄을 다시 붙여 넣어 주세요' }
+$guideHead = "<!-- 숏클 회원 지침 — 숏클이 자동으로 관리합니다. 고치면 다음 업데이트에 덮입니다. -->`n"
+[IO.File]::WriteAllText((Join-Path $work 'CLAUDE.md'), $guideHead + [IO.File]::ReadAllText($guideSrc), (New-Object Text.UTF8Encoding($false)))
 
 # 첫 실행의 글자 스타일 선택·폴더 신뢰 확인을 미리 끝낸다(회원이 누를 것을 없앤다, 11-01 첫 화면 실측). 로그인은 회원 몫이다.
 $cfgDir = if ($env:CLAUDE_CONFIG_DIR) { $env:CLAUDE_CONFIG_DIR } else { $null }

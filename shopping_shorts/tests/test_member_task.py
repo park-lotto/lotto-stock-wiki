@@ -73,7 +73,7 @@ def test_stuck_goes_to_maker_task_and_retry_really_reruns():
     assert not any(t[0] == "stop" for t in tr)                    # 회원에게 묻지 않았다
     assert ctx["bench_calls"] == 3                                 # 1(실패) → 스스로 1(실패) → 과제 retry → 성공
     ask = ctx["tasks"][0]["ask"]
-    assert "제작자" in ask and "영상 확인" in ask and "[가이드 01_소재.md 발췌]" in ask and '"action"' in ask
+    assert "제작자" in ask and "영상 확인" in ask and "[가이드 01_topic.md 발췌]" in ask and '"action"' in ask
 
 
 def test_task_limit_then_member():

@@ -665,7 +665,7 @@ def audit(path: Path, version: str | None = None) -> dict:
         res["rules"].append({"kind": r["kind"], "ok": good, "why": why, **({"rule": r["why"]} if r.get("why") else {})})
         ok &= good
     for f in st["script"].get("forbid") or []:
-        if f.get("of") == "tts":      # of: tts = 나레 줄만(원음 번역 자막은 방송 내용) · 샥탬 앞 칼카피(final.lines, hybrid 칸 없음)는 벤치 내용이라 대상 아님
+        if f.get("of") == "tts":      # of: tts = 나레 줄만(원음 번역 자막은 방송 내용) · 샥탬 앞 프리셋(final.lines, hybrid 칸 없음)는 벤치 내용이라 대상 아님
             if (d.get("final") or {}).get("lines") and not d.get("hybrid"):
                 continue
             sel = lines

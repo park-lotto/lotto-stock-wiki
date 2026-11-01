@@ -2,7 +2,7 @@
 """Claude 창구 — `claude -p`(Claude Code 헤드리스)로 글·그림 판독 → JSON (관제 097, 2026-10-18 밤).
 
 왜: 사장님 10-18 밤 "제미나이 쓰지 말고" — 로컬·서버 제미나이 = 같은 키 묶음, 고객 서비스와 분당 천장 17~19건을 같이 쓴다
-(handoff/제미니죽은키.md). 판독 = Claude 눈, 단순 작업 = 하이쿠(channel/칼카피_시작.md §11).
+(handoff/제미니죽은키.md). 판독 = Claude 눈, 단순 작업 = 하이쿠(channel/production_start.md §11).
 방식(seed_analyzer/match_compare.py 실측 그대로): 프롬프트는 표준입력(인자로 넘기면 잘려 빈 답), 빈 임시 폴더에서 부른다
 (프로젝트 폴더면 CLAUDE.md·훅이 붙어 요약만 돌아온다). 그림은 그 임시 폴더에 파일로 두고 Read 로 열게 한다.
 

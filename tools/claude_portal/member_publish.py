@@ -1,4 +1,4 @@
-"""칼카피 판 → 회원 MCP 내보내기: '발행 대기 → 사장님 스위치' (관제 265).
+"""프리셋 판 → 회원 MCP 내보내기: '발행 대기 → 사장님 스위치' (관제 265).
 
   py tools/claude_portal/member_publish.py status                  # 엔진 모든 slug 의 단계·빠진 것·대기열 여부
   py tools/claude_portal/member_publish.py live <slug> --out <flow_episode 결과 파일> [--dir <편 폴더>]   # MCP 길 완주 기록(회원실측)

@@ -784,7 +784,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
                     r = render_transition_drop(R, style_name, kinds=TD_KINDS)
                     td["ours"] = r.get("boundaries") or []
                     return drop_verdict([b.get("drop") for b in td["ours"]], bd["drops"], trans_plan_of(tab))      # 개수 기록 = 배치 주인이 자막표에 남긴 것
-                # 참고 행(판정 밖, E 10-26): 벤치 자기 경계 5개 [-0.192,0.175,0.136,0.337,0.24] 중 중앙 ±30% 안 2개뿐 · 맨 컷도 0.255(11_검사) — 벤치가 못 넘는 자.
+                # 참고 행(판정 밖, E 10-26): 벤치 자기 경계 5개 [-0.192,0.175,0.136,0.337,0.24] 중 중앙 ±30% 안 2개뿐 · 맨 컷도 0.255(11_check) — 벤치가 못 넘는 자.
                 #   전환 종류 비율은 재현일치도 transition.rate 가 잰다. 값은 그대로 기록한다.
                 row("화면", "전환 세기(zoomblur drop 중앙 ±30%, 참고)", drop_row, "render_bench.render_transition_drop ↔ bench_transition_drop(채널 _kal 캐시)", ref=True)
                 row("화면", "전환 길이 ms(참고)", lambda: (True, f"우리 {[b.get('ms') for b in td.get('ours') or []]} · 벤치 {bd['ms']}"),

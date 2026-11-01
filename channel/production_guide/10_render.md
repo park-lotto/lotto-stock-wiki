@@ -23,7 +23,7 @@ PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <키> render --version <판>        
 - 쉼이 적은 목소리(유라)에서 문장 자르기가 IndexError 로 죽던 것 → 수리됨(72ac911f8).
 - 타입캐스트 첫 합성이 끝 줄을 앞 문장 되풀이로 읽은 일(유라, 잇템로그) → 11단계 받아쓰기로 잡고 `narr_full.mp3` 를 치워 재합성.
 - `-shortest` 로 끝 프레임이 잘리던 것·AAC 뒤 최고점 +6.3 → 수리됨(`-t`, master_guard).
-- 서버에서 직접 렌더하면 `/etc/shopping-shorts.env` 를 안 실으면 TTS 가 무음 목업 — 칼카피는 이 PC 에서 렌더한다.
+- 서버에서 직접 렌더하면 `/etc/shopping-shorts.env` 를 안 실으면 TTS 가 무음 목업 — 프리셋는 이 PC 에서 렌더한다.
 
 ## 강조어 자막·모션 효과 (preset_make, 관제 097 10-24)
 - 대본.json 줄 `emph`: ["김홍도", …] → 노랑·분홍 번갈아 어절 앞부분 색칠(pop). `fx`: [{"word","kind": stamp|pop|flash|shake|circle|arrow, "x"?,"y"?,"text"?}] — 낱말이 든 첫 박자에 스티커.

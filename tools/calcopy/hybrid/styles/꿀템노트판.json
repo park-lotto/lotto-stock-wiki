@@ -3,7 +3,7 @@
  "renderer": "bench",
  "thumb_card_face": true,
  "_thumb_card_face": "연예인 채널 — 썸네일 카드 3안 전부 연예인 얼굴(사장님 10-25 '연예인 얼굴 통일')",
- "_note": "얜샷템 하이브리드 — 꿀템노트(@꿀템노트-g1z) 칼카피 판: 나레가 묻고 연예인 원음이 답하는 가짜 대화. 근거 channel/kkultemnote/{스타일분석.md, 하이브리드_판설계.md, 줄판독/}.",
+ "_note": "얜샷템 하이브리드 — 꿀템노트(@꿀템노트-g1z) 프리셋 판: 나레가 묻고 연예인 원음이 답하는 가짜 대화. 근거 channel/kkultemnote/{스타일분석.md, 하이브리드_판설계.md, 줄판독/}.",
  "bench": {
   "ko": "꿀템노트",
   "channel": "kkultemnote",
@@ -705,7 +705,7 @@
    ]
   },
   "reference": "BpUOIUwkoG4",
-  "reference_why": "1차 칼카피 = 벤치 1위 한 편(BpU)의 등장·꾸밈을 그대로(10-23 사장님 \"꿀템 영상을 칼카피\") — 편마다 다른 본보기를 뽑으면 기준 편과 어긋난다"
+  "reference_why": "1차 프리셋 = 벤치 1위 한 편(BpU)의 등장·꾸밈을 그대로(10-23 사장님 \"꿀템 영상을 프리셋\") — 편마다 다른 본보기를 뽑으면 기준 편과 어긋난다"
  },
  "title_form": "'[원음 반응/가격 훅] + 인물도' / '[행동] + 제품' — 1줄 분홍+흰, 2줄 파랑+흰(사람 이름·결과어는 흰) · title_lines 칸 [[글, 'hi'|null], …]",
  "script": {
@@ -890,7 +890,7 @@
   "meme": {
    "pack": "local",
    "gap": [],
-   "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
+   "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 프리셋 길 = 로컬 짤 팩"
   }
  },
  "_why_cps_target": "9.86 = 벤치 8편 나레 글자/자막 초 편 중앙(8.3·9.71·10.68·10.0·11.17·8.08·8.61·12.14 — kal_analyze.rules_of episodes.narr_cps, handconst.py kkultemnote cps_target) · 박창수(타입캐스트) 배속 = 이 값 맞춤(render_itssum, 0.85~1.25)"

@@ -117,6 +117,15 @@ def _pool_kw(fn, **kw) -> dict:
     return {k: v for k, v in kw.items() if k in names}
 
 
+def knowhow(ctx: dict, body: dict, store=None) -> dict:
+    """막혔을 때 노하우 — 상황 글·단계에 맞는 막힘표·가이드·경험. 판단 주인 = flow.knowhow."""
+    store = CP._store(store)
+    _ensure(store)
+    CP._front(store, ctx, "knowhow")
+    body = body if isinstance(body, dict) else {}
+    return {"ok": True, **_flow().knowhow(str(body.get("stage") or "")[:40], str(body.get("query") or "")[:2000])}
+
+
 def step(ctx: dict, body: dict, store=None) -> dict:
     store = CP._store(store)
     _ensure(store)

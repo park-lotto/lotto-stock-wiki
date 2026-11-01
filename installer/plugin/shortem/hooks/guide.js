@@ -1,12 +1,14 @@
-// 숏클 회원 지침(installer/common/CLAUDE_숏클.md)을 매 세션 시작에 Claude 맥락으로 넣는다(관제 290 — 회원 ~/.claude/CLAUDE.md 는 건드리지 않는다).
+// 숏클 회원 지침(installer/common/MEMBER_GUIDE.md)을 매 세션 시작에 Claude 맥락으로 넣는다(관제 290 — 회원 ~/.claude/CLAUDE.md 는 건드리지 않는다).
 //   훅 맥락 한 번 한도 10,000자(Claude Code hooks 문서) → 장(## ) 경계로 CHUNK 자 이하 덩어리로 나눠 n 번째만 낸다(hooks.json 이 1·2·3 으로 부른다).
 //   지침 파일: 설치 폴더 server/guide(켤 때 자동 업데이트가 바꾼다) → 없으면 플러그인 안 guide.
 const fs = require('fs');
 const path = require('path');
 const CHUNK = 9000;
 const n = Math.max(1, Number(process.argv[2] || 1));
-const cands = [process.env.SHORTEM_INSTALL && path.join(process.env.SHORTEM_INSTALL, 'server', 'guide', 'CLAUDE_숏클.md'),
-  path.join(__dirname, '..', 'guide', 'CLAUDE_숏클.md')].filter(Boolean);
+// 작업 폴더 CLAUDE.md(지침 전문)를 Claude Code 가 이미 읽는 곳이면 두 번 넣지 않는다
+try { if (fs.readFileSync(path.join(process.cwd(), 'CLAUDE.md'), 'utf8').includes('숏클 회원 지침')) { process.stdout.write('{}'); process.exit(0); } } catch { /* 없으면 아래로 */ }
+const cands = [process.env.SHORTEM_INSTALL && path.join(process.env.SHORTEM_INSTALL, 'server', 'guide', 'MEMBER_GUIDE.md'),
+  path.join(__dirname, '..', 'guide', 'MEMBER_GUIDE.md')].filter(Boolean);
 let text = '';
 for (const f of cands) { try { text = fs.readFileSync(f, 'utf8'); break; } catch { /* 다음 자리 */ } }
 const parts = [];

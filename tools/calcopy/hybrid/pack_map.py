@@ -16,7 +16,7 @@
               render_bench 는 모션그래픽팩을 motion_graphics 로 그린다(02 2차) — snapshot_fields 는 팩 칸만 준다.
   효과음팩    shopping_shorts/assets/sfx_packs/packs.json(slots 7 한글 이름) + 폴더 팩NN/<slot>.wav (파일 이름 = sfx_pack.SLOTS, 같은 순서)
   배경음      shopping_shorts/assets/bgm_lib/catalog.json tracks[].id
-  짤          칼카피 길 = 로컬 팩(material_auto.MEME_*) · 회원 길 = 서버 /api/meme/prefs — render_bench 는 로컬만(server 는 거절)
+  짤          프리셋 길 = 로컬 팩(material_auto.MEME_*) · 회원 길 = 서버 /api/meme/prefs — render_bench 는 로컬만(server 는 거절)
 
 packs 칸 꼴(styles/README.md 'packs 칸' 절이 문서 주인):
   caption {pack, stand_in?, rank[], enter_cover{}, from, gap[]}
@@ -235,7 +235,7 @@ def apply_to_style(st: dict, patch_packs: dict | None = None, name: str = "?") -
         _set(st, path, copy.deepcopy(v))
     st["packs"] = P
     if P["meme"].get("pack") == "server" and _get(st, "placement.rules.meme") is not _MISSING:
-        raise PackError(f"판 {name}: meme.pack server(회원 prefs 짤)는 칼카피 길(render_bench·placement)이 못 받는다 — 지시서 12 연결 전엔 local")
+        raise PackError(f"판 {name}: meme.pack server(회원 prefs 짤)는 프리셋 길(render_bench·placement)이 못 받는다 — 지시서 12 연결 전엔 local")
     return st
 
 
@@ -786,9 +786,9 @@ def map_all(name: str) -> tuple[dict, list[dict]]:
             E["tone"] = Mm["tone"]
         if "pack" in Mm:
             E["dir"] = Mm["pack"]
-        E["from"] = f"벤치 짤 빈도 = placement.rules.meme.rate {Mm.get('rate')}(뼈대 칸 — 여기 안 적음) · 칼카피 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 {Mm.get('tone') or '없음'}"
+        E["from"] = f"벤치 짤 빈도 = placement.rules.meme.rate {Mm.get('rate')}(뼈대 칸 — 여기 안 적음) · 프리셋 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 {Mm.get('tone') or '없음'}"
     else:
-        E["from"] = "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
+        E["from"] = "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 프리셋 길 = 로컬 짤 팩"
     P["meme"] = E
     return P, reqs
 

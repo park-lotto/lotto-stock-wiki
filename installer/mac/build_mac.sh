@@ -222,8 +222,8 @@ else
   SERVER_KIND=placeholder
 fi
 cp "$ROOT/common/postinstall.js" "$STAGE/postinstall.js"
-cp "$ROOT/시작.md" "$STAGE/시작.template.md"
-cp "$ROOT/guide/설치안내.html" "$STAGE/설치안내.html"
+cp "$ROOT/START.md" "$STAGE/START.template.md"
+cp "$ROOT/guide/install_guide.html" "$STAGE/install_guide.html"
 cp "$HERE/uninstall.command" "$STAGE/숏템 제거.command"; chmod 755 "$STAGE/숏템 제거.command"
 rm -rf "$STAGE/claude-plugin"; ditto "$ROOT/plugin" "$STAGE/claude-plugin"
 cp "$ROOT/mcpb/launcher.js" "$STAGE/claude-plugin/shortem/launcher.js"
@@ -279,7 +279,7 @@ EOF
 cat > "$RES/conclusion.html" <<'EOF'
 <html><head><meta charset="utf-8"></head><body style="font-family:-apple-system,sans-serif">
 <h2>설치가 끝났습니다</h2><p>Claude Desktop: 바탕화면 '숏템작업' 옆 설치 폴더의 <b>shortem.mcpb</b>를 두 번 누르고 라이선스 키를 붙여 넣으세요.</p>
-<p>Claude Code: 바탕화면 '숏템작업' 폴더의 <b>시작.md</b>를 Claude Code 입력창에 끌어다 놓고 엔터.</p></body></html>
+<p>Claude Code: 바탕화면 '숏템작업' 폴더의 <b>START.md</b>를 Claude Code 입력창에 끌어다 놓고 엔터.</p></body></html>
 EOF
 HOSTARCH="$( [ "$ARCH" = arm64 ] && echo arm64 || echo x86_64 )"
 cat > "$OUT/distribution-$ARCH.xml" <<EOF

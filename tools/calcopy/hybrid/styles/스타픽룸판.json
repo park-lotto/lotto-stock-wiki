@@ -3,7 +3,7 @@
  "renderer": "bench",
  "thumb_card_face": true,
  "_thumb_card_face": "연예인 채널 — 썸네일 카드 3안 전부 연예인 얼굴(사장님 10-25 '연예인 얼굴 통일')",
- "_note": "얜샷템 하이브리드 — 스타픽룸 칼카피 판: 원음 훅 → 나레 다리(타이핑, 전언 '~있다는데..?') → 우리 체험 나레 → 원음 끝. 근거 channel/starpickroom/{스타일분석.md, 하이브리드_판설계.md, 줄판독/}.",
+ "_note": "얜샷템 하이브리드 — 스타픽룸 프리셋 판: 원음 훅 → 나레 다리(타이핑, 전언 '~있다는데..?') → 우리 체험 나레 → 원음 끝. 근거 channel/starpickroom/{스타일분석.md, 하이브리드_판설계.md, 줄판독/}.",
  "bench": {
   "ko": "스타픽룸",
   "channel": "starpickroom",
@@ -773,7 +773,7 @@
   "meme": {
    "pack": "local",
    "gap": [],
-   "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
+   "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 프리셋 길 = 로컬 짤 팩"
   }
  },
  "_why_cps_target": "미나(일레븐랩스) 서비스 배속 고정 1.35(narr_align.fixed_tempo) — 배속을 못 바꾸고 대본 길이 어림·B3 목표로만 쓰이므로 값 = 이 판으로 낸 미나 실측 7.45자/초(starpickroom/hybrid_sungsikyung 렌더 render_info.sentences 7줄 184자/24.71초, 줄별 7.3~7.7) · 참고 벤치 나레 자/초 중앙 9.29(8편 7.6~10.2, handconst.py starpickroom cps_target) — 미나 고정 배속으로는 벤치 말속도에 못 닿음(목소리 칸 몫)"

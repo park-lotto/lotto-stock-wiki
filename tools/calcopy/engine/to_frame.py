@@ -3,7 +3,7 @@
 
     PYTHONUTF8=1 py tools/calcopy/engine/to_frame.py <뜯기.json> --out frame.json [--no-ocr]
 
-설계 docs/superpowers/specs/2026-10-15-칼카피엔진-design.md §5·§6-3. 판단 주인: 뜯기 값 → 설명서 값 매핑은 build() 한 곳.
+설계 docs/superpowers/specs/2026-10-15-프리셋엔진-design.md §5·§6-3. 판단 주인: 뜯기 값 → 설명서 값 매핑은 build() 한 곳.
 재는 일은 analyze.py 가 했다 — 여기서 새로 재는 것은 뜯기.json 에 없는 셋뿐이고, 원본 영상 한 프레임에서 잰다:
   ① 창 위 고정 글자 띠의 가로 범위·색(뜯기엔 y 범위만 있다)  ② 제목·[광고] 글자(OCR — 뜯기엔 자막 OCR 만 있다)
   ③ 틀이 다른 구간의 정확한 시작(뜯기의 창 다수결은 약 6초 조각 단위라 17.92초로 나온다 — 0.1초 간격으로 다시 찾는다)

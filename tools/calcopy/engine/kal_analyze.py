@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""칼카피 채널 분석 도구 — 한 입구 (관제 097, 2026-10-20). 방법은 `tools/calcopy/칼카피_분석지침서.md`.
+"""프리셋 채널 분석 도구 — 한 입구 (관제 097, 2026-10-20). 방법은 `tools/calcopy/칼카피_분석지침서.md`.
 
   frames   <mp4> --out <dir> [--y0 0 --y1 1920] [--fps 2] [--max-strips 80]
            2fps 시트 + 10fps 글자 띠 변화(견본 channel/starpickroom/_tools/sheets.py 그대로 부름) → change_<id>.json
@@ -649,12 +649,12 @@ def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, ben
 
 
 def with_pixel(T: dict, bench_mp4: str, ours_mp4: str, out_dir: str) -> dict:
-    """(판단 주인 · 1차 칼카피 관문 하나) 줄 단위 자(MATCH_RULES) + 픽셀·소리 자(compare.py 24칸)를 한 판정으로.
+    """(판단 주인 · 1차 프리셋 관문 하나) 줄 단위 자(MATCH_RULES) + 픽셀·소리 자(compare.py 24칸)를 한 판정으로.
     둘 다 통과여야 통과. compare 는 따로 판정하지 않고 여기서만 합친다(10-23 사장님 '덧대기 없애자')."""
     from tools.calcopy.engine import compare as _cmp
     res = _cmp.compare(bench_mp4, ours_mp4, out_dir)
     v = res["verdict"]
-    # 오른쪽 위 '광고' 표시(사장님 10-22 모든 렌더 의무, ad_mark) = 화면 맨 위(y<100) 띠 하나 — 벤치에 없어도 칼카피 차이가 아니다
+    # 오른쪽 위 '광고' 표시(사장님 10-22 모든 렌더 의무, ad_mark) = 화면 맨 위(y<100) 띠 하나 — 벤치에 없어도 프리셋 차이가 아니다
     ub = [b for b in (res["ours"].get("bands") or []) if isinstance(b, (list, tuple)) or isinstance(b, dict)]
     def _y0(b):
         return ((b.get("band") or [b.get("y0", 0)])[0] if isinstance(b, dict) else b[0]) or 0
@@ -1124,7 +1124,7 @@ SKIN_DIFF = {"y_px": 12, "dE": 10.0}   # 업그레이드 뒤 "얼마나 달라�
 
 
 def frame_compare(bench_png: str, ours_png: str, band: tuple, skin: bool = False) -> dict:
-    """skin=False: 1차 칼카피 — 같아야 통과(FRAME_PASS). skin=True: 업그레이드 뒤 달라진 정도 측정(SKIN_DIFF 넘으면 '달라짐' 표시, 판정 아님)."""
+    """skin=False: 1차 프리셋 — 같아야 통과(FRAME_PASS). skin=True: 업그레이드 뒤 달라진 정도 측정(SKIN_DIFF 넘으면 '달라짐' 표시, 판정 아님)."""
     import numpy as np
     a, b = frame_metrics(bench_png, band), frame_metrics(ours_png, band)
     rows = []
@@ -1181,7 +1181,7 @@ def main(argv=None) -> int:
     m = sub.add_parser("match"); m.add_argument("--bench", required=True); m.add_argument("--ours", required=True)
     m.add_argument("--ours-mp4"); m.add_argument("--bench-src", help="벤치 원본 mp4 폴더(같은 자로 컷·LUFS)"); m.add_argument("--bench-tteutgi", help="(대안) 뜯기 값 — 자가 다름")
     m.add_argument("--win", help="영상 창 x,y,w,h (없으면 줄판독 layout.window)"); m.add_argument("--out"); m.add_argument("--title", default="")
-    m.add_argument("--bench-mp4", help="벤치 대표 1편 mp4 — 주면 픽셀·소리 자(compare)까지 한 판정으로(1차 칼카피 관문)")
+    m.add_argument("--bench-mp4", help="벤치 대표 1편 mp4 — 주면 픽셀·소리 자(compare)까지 한 판정으로(1차 프리셋 관문)")
     A = ap.parse_args(argv)
     if A.cmd == "frames":
         win = tuple(int(v) for v in A.window.split(",")) if A.window else None

@@ -19329,6 +19329,14 @@ def api_claude_pack(request: Request, asset_id: str, job: str = ""):
     return _claude_json(_cp.call(_cp.pack_route, ctx, asset_id, job, Store(DB_PATH)))
 
 
+@app.post("/api/claude/knowhow")
+async def api_claude_knowhow(request: Request):
+    from shopping_shorts import claude_flow as _cf, claude_portal as _cp
+    body = await _claude_body(request)
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cp.call, _cf.knowhow, ctx, body, Store(DB_PATH)))
+
+
 @app.post("/api/claude/feedback")
 async def api_claude_feedback(request: Request):
     from shopping_shorts import claude_portal as _cp
@@ -19520,7 +19528,7 @@ def _public_base(request: Request) -> str:
 
 @app.get("/api/claude/me/start.md")
 def api_claude_me_start_md(request: Request):
-    """회원별 시작.md(관제 294) — 로그인한 회원에게만. 판단은 claude_portal.start_md."""
+    """회원별 START.md(관제 294) — 로그인한 회원에게만. 판단은 claude_portal.start_md."""
     cid, st, denied = _claude_me(request)
     if denied:
         return denied

@@ -27,6 +27,7 @@ import { retryUpdate, checkUpdate, installDir } from './updater.js';
 import { anyFlowBusy } from './flow_driver.js';
 import { anyRunning } from './runner.js';  // 받은 즉시 엔진까지 적용(사장님 10-31 고객이 두 번 켜지 않게)
 import { holdSession, holdNow } from './session.js';
+import { syncGuide } from './guide_sync.js';
 import { startUi, openBrowser } from './local_ui.js';
 import { startBridge, importMakerKeys } from './web_bridge.js';
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
@@ -122,6 +123,7 @@ export function buildServer(ctx = makeCtx()) {
     inputSchema: { selftest: z.boolean().optional(), license_key: z.string().max(200).optional(), remove: z.array(z.string().regex(/^[0-9a-f]{8}$/)).max(20).optional() },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
   }, async ({ selftest: st, license_key, remove }) => {
+    syncGuide();
     const fails = [];
     const removed = remove && remove.length ? removeCandidates(remove) : null;   // 회원이 고른 후보만(숏클 지침 4③)
     if (license_key) { try { saveLicense(license_key); } catch { fails.push({ where: '라이선스', why: '라이선스 키 모양이 아닙니다', fix: '숏템 페이지에서 키를 다시 복사하세요', retry_ok: true }); } }
@@ -249,6 +251,15 @@ export function buildServer(ctx = makeCtx()) {
     const o = outOf(j);
     if (j.final) o.hints = [...(o.hints || []), `완성본: ${j.final} · 검사 ${j.verdict && j.verdict.pass ? '통과' : '미달'}`];
     return reply(o, secretFor(j));
+  });
+
+  server.registerTool('shortem_knowhow', {
+    title: '막혔을 때 노하우 찾기', description: '막혔거나 판단이 안 설 때 부른다. 상황을 쓰면(query) 막힘표(무엇을 어떤 순서로 할지)·그 단계 가이드·지난 제작 경험을 준다. stage 는 단계 이름(bench·origin·product·research·material·script·plan·render·check)',
+    inputSchema: { query: z.string().max(2000).optional(), stage: z.string().max(40).optional() },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+  }, async ({ query, stage }) => {
+    try { const r = await api.knowhow({ query: query || '', stage: stage || '' }); return reply({ info: { stage: r.stage, matched: r.matched, guide: r.guide, lessons: r.lessons } }); }
+    catch (e) { return reply({ fail: { where: '노하우', why: e.msg || '받지 못했습니다', fix: '지침의 막힘 순서대로 진행한다', retry_ok: true } }); }
   });
 
   server.registerTool('shortem_feedback', {

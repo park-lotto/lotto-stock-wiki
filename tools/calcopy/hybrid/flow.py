@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""회원 라인 **서버 지시서**(볼케이노형, 관제 234·097 — 사장님 10-21 "볼케이노처럼 / 칼카피 노하우를 녹여서 지금처럼 영상이 나오게").
+"""회원 라인 **서버 지시서**(볼케이노형, 관제 234·097 — 사장님 10-21 "볼케이노처럼 / 프리셋 노하우를 녹여서 지금처럼 영상이 나오게").
 
 노하우(단계 순서·판정 질문·반려 규칙·함정)는 이 파일 한 곳. 회원 PC 는 손(runner_ops 가 do 를 실행)과 눈(회원 Claude 가 review 에 답)만.
 서버(shopping_shorts/claude_flow.py)가 이 모듈을 불러 매 호출마다:
@@ -11,7 +11,7 @@
 
 판단 주인(새로 적지 않고 부른다): 판 = styles · 대본 검사 = script_audit · 출처 규칙·자막↔목소리·제목 색·샷 끝·흐림 = rules ·
 완성본 검사 = quality_gate.gate 1단(PC 가 재고) + 눈 2단 E1·E4·E6(quality_gate.EYE_Q = EYE_HUMAN 질문 그대로, 회원 Claude · 사장님 10-26) · 해외 원본 고르기 = origin_find.pick_origins ·
-형식 = channel/프리셋.json presets[slug].member.flow_format(표준 §2-1 — flow_format_of 한 곳). 단계는 channel/칼카피_제작순서 00~13 과 같은 순서(바꾸면 문서와 같은 커밋).
+형식 = channel/프리셋.json presets[slug].member.flow_format(표준 §2-1 — flow_format_of 한 곳). 단계는 channel/production_guide 00~13 과 같은 순서(바꾸면 문서와 같은 커밋).
 
 형식별 단계표 FORMAT_STAGES(관제 263 지시서 08 · 표준 §7): 연예인형(원래 13단계) · 해외원본형(한국 재편집 → 렌즈로 해외 원본 → 같은 제품 다른 해외 반응 →
 자막 지우기(회원 VMake 키 없으면 흐림) → 대본) · 쇼핑형(제품·썰 소재 → 쿠팡 → 근거 글 → 재료 영상) · 레시피형(연예인형 단계 + 판의 재료 스티커).
@@ -115,7 +115,7 @@ REDO_STUCK = 3
 TITLE_CHUNK = 120     # 원본 후보 제목 한 묶음(질문 하나 약 6천 자 — 10-21 300편 통째 4.2만 자로 40분 멈춤)
 ORIGIN_TRY = 16       # 자막 대조할 후보 수
 
-TRAPS = {   # 단계별 함정(98_오류기록 번호) — 회원 Claude 판정에 같이 실린다
+TRAPS = {   # 단계별 함정(98_error_log 번호) — 회원 Claude 판정에 같이 실린다
     "origin": ["설명란 '영상 속 제품'은 그 채널의 파트너스 상품일 뿐 근거가 아니다(02 §2)", "사람 이름은 화면 글자·이름표로만 — 얼굴로 짐작한 이름은 '불명'",
                "원본은 연예인 본인 채널이 1순위(#8) · 남의 쇼츠 '출처:' 글자도 단서(#9)", "유튜브 제목이 영어 번역으로 올 수 있다(#6)",
                "두세 줄 이상 같은 말이 맞아야 확정, 말한 사람이 본인이어야 한다(02 §4·§5)"],
@@ -938,7 +938,7 @@ def _sb_review(st) -> dict:
 
 
 def _origin_next(st, why: str) -> dict:
-    """원본 찾기의 한 길이 빈손이면 **02_원본찾기 순서대로 다음 길**(사장님 10-26 '연예인 편은 출처가 다 있어 못 찾을 수가 없다 — 방법을 끝까지').
+    """원본 찾기의 한 길이 빈손이면 **02_find_source 순서대로 다음 길**(사장님 10-26 '연예인 편은 출처가 다 있어 못 찾을 수가 없다 — 방법을 끝까지').
     ① 출처 채널 지문(src) → ② 출처 채널 미리보기 대조(sb) → ③ 검색 길(search: 본인 채널·방송사·그 밖) → ④ 화면 대조(vis) → 그래도 없을 때만 회원에게
     '원본을 못 찾았어요 — 주소를 주시면 바로 · 다른 소재?'(주소를 받으면 ph_stopped → _given_origin 으로 바로 이어 간다)."""
     st["log"].append(f"원본 찾기: {why} → 다음 길")
@@ -1244,10 +1244,10 @@ def ph_stopped(st, m, rp, u):
 NL = chr(10)
 TASK_PER_KEY = 3       # 같은 막힘(이어 갈 단계+이유)마다 제작자 과제 횟수 — 코드를 고친 뒤 다시 보는 번까지(사장님 10-31 "멈추지 말고 해결해 나가게")
 TASK_TOTAL = 16        # 한 편 전체 과제 상한 — 넘으면 회원에게(무한 되풀이 금지)
-STAGE_GUIDE = {"setup": "00_공통.md", "bench": "01_소재.md", "origin": "02_원본찾기.md", "product": "03_제품_쿠팡.md", "research": "04_조사.md",
-               "material": "05_재료영상.md", "asr": "06_받아쓰기.md", "script": "07_대본.md", "sign": "07_대본.md", "plan": "08_계획.md",
-               "render": "10_렌더.md", "check": "11_검사.md", "done": "12_납품.md"}
-GUIDE_DIR = Path(__file__).resolve().parents[3] / "channel" / "칼카피_제작순서"
+STAGE_GUIDE = {"setup": "00_common.md", "bench": "01_topic.md", "origin": "02_find_source.md", "product": "03_product_coupang.md", "research": "04_research.md",
+               "material": "05_material.md", "asr": "06_transcribe.md", "script": "07_script.md", "sign": "07_script.md", "plan": "08_plan.md",
+               "render": "10_render.md", "check": "11_check.md", "done": "12_deliver.md"}
+GUIDE_DIR = Path(__file__).resolve().parents[3] / "channel" / "production_guide"
 TASK_ASK = """너는 이 편의 **제작자**다(사장님 PC 의 제작 세션과 같은 자리). 아래 단계에서 만들기가 막혔다 — 회원에게 묻기 전에 네가 푼다.
 지킬 것: 가이드(아래 발췌)를 지킨다 · 금지선·함정은 절대 · 지어내지 않는다(모르면 웹 검색으로 확인) · 회원에게는 꼭 필요한 결정만.
 너는 사장님 PC 의 Claude 처럼 자유롭게 푼다 — 정해진 길이 없어도 멈추지 말고 네 도구(Bash·파일 수정·yt-dlp·ffmpeg)로 작업 폴더(src/ 등)에서 직접 해결한다. 재료가 모자라면 영상을 직접 받아 src/ 에 넣고 action "material" 로 답한다.
@@ -1260,7 +1260,7 @@ TASK_ASK = """너는 이 편의 **제작자**다(사장님 PC 의 제작 세션�
  · end = 가이드·금지선상 이 편을 만들 수 없다(그때만 회원에게 쉬운 선택지로 묻는다)"""
 
 
-LESSONS_FILE = Path(__file__).with_name("member_lessons.json")       # 98_오류기록에서 눈·판단으로만 잡히는 것만 추린 회원 Claude 경험(사장님 10-30 "그간의 경험을 똑같이") — 고칠 곳은 이 파일 한 곳
+LESSONS_FILE = Path(__file__).with_name("member_lessons.json")       # 98_error_log에서 눈·판단으로만 잡히는 것만 추린 회원 Claude 경험(사장님 10-30 "그간의 경험을 똑같이") — 고칠 곳은 이 파일 한 곳
 
 
 def _lessons(key: str, version: str | None = None) -> str:
@@ -1270,8 +1270,28 @@ def _lessons(key: str, version: str | None = None) -> str:
     return f"{NL}{NL}## 지난 제작 경험(반드시){NL}" + NL.join("- " + re.sub(r"\(#[\d·#]+\)\s*$", "", x).strip() for x in rows) if rows else ""
 
 
+BLOCKERS_FILE = Path(__file__).with_name("blockers.json")
+
+
+def knowhow(stage: str = "", query: str = "", version: str | None = None) -> dict:
+    """(판단 주인 — 막혔을 때 어디를 읽나) 상황 글·단계로 막힘표를 찾아 그 단계 가이드·지난 경험과 함께 준다(사장님 11-02 "어떤 상황으로 가이드해줄지").
+    회원 Claude 가 언제든 부른다(shortem_knowhow) · 제작자 과제에도 같은 표가 실린다."""
+    items = json.loads(BLOCKERS_FILE.read_text(encoding="utf-8"))["items"]
+    hit = [x for x in items if re.search(x["match"], str(query or ""), re.I)]
+    if not hit and stage:
+        hit = [x for x in items if x["stage"] == stage]
+    st = stage or next((x["stage"] for x in hit if x["stage"]), "setup")
+    return {"stage": st, "matched": hit[:4], "guide": _guide(st, 9000), "lessons": _lessons({"check": "final"}.get(st, st), version)}
+
+
+def _blocker_text(stage: str, query: str) -> str:
+    rows = knowhow(stage, query)["matched"]
+    return "" if not rows else f"{NL}{NL}## 이 상황 막힘표{NL}" + NL.join(
+        f"- {x['situation']}: " + " → ".join(x["do"]) + f" (읽을 곳 {', '.join(x['read'])})" for x in rows)
+
+
 def _guide(stage_key: str, limit: int = 20000) -> str:
-    f = GUIDE_DIR / STAGE_GUIDE.get(stage_key, "00_공통.md")
+    f = GUIDE_DIR / STAGE_GUIDE.get(stage_key, "00_common.md")
     try:
         return f"[가이드 {f.name} 발췌]{NL}" + f.read_text(encoding="utf-8")[:limit]
     except OSError:
@@ -1297,6 +1317,7 @@ def _task(st: dict, e: "_Stop", ph: str, retry: str | None) -> dict | None:
            + f"{NL}이 막힘 과제 {n[key]}/{TASK_PER_KEY}번째 · 최근 기록:{NL}" + f"{NL}".join(str(x)[:200] for x in (st.get('log') or [])[-6:])
            + f"{NL}{NL}" + _task_state(st)
            + (f"{NL}{NL}## 이 단계 함정·금지선{NL}" + f"{NL}".join("- " + x for x in traps) if traps else "")
+           + _blocker_text(stg["key"], f"{e.why} {e.detail or ''}")
            + _lessons({"check": "final"}.get(stg["key"], stg["key"]))
            + f"{NL}{NL}" + _guide(stg["key"]))
     return _rv(rid, ask, need=("action",))
@@ -2104,7 +2125,7 @@ def ph_script_ask(st, m, rp, u):
     return {"review": [_script_ask(st)], "then": "script_got"}
 
 
-CHANNEL_COPY_SLUGS = {"썰템홈샷판": "banggu"}      # 납품 공정의 표절 관문(07_대본.md) — 벤치 채널 전 편과 대조
+CHANNEL_COPY_SLUGS = {"썰템홈샷판": "banggu"}      # 납품 공정의 표절 관문(07_script.md) — 벤치 채널 전 편과 대조
 
 
 def _channel_copy(v: str, S: dict, M: dict) -> list:
@@ -3678,7 +3699,7 @@ def _set_origin(st, keep: list, files: list) -> dict:
 # 판단 주인 두 곳: ① 둘째 소재 고르기 = pick_alt_source  ② 두 소재를 함께 굴리고 먼저 원본을 확보한 쪽으로 넘어가기 = f_of_dual(소재 칸 스케줄러).
 # 칸마다 단계 처리기는 위의 해외원본형 처리기 그대로(ph_bench → f_bench_got → f_ref_read → 렌즈 → f_of_got/f_of_pick → f_of_find …) — 판단을 두 벌로 적지 않는다.
 # 칸 2 의 실행기 일은 작업 폴더 alt1/ 에서(do 의 sub), 이긴 칸이 alt1 이면 of_settle 이 파일을 맨 위로 옮긴다. 진 소재 = 회원 작업 기록 '멈춘 편'(다시 씀).
-ALT_LIST = "벤치상위.json"     # channel/<slug>/_kal/벤치상위.json — 그 판 벤치 채널 쇼츠(조회순 원천: 칼카피 select 단계 top.json)
+ALT_LIST = "벤치상위.json"     # channel/<slug>/_kal/벤치상위.json — 그 판 벤치 채널 쇼츠(조회순 원천: 프리셋 select 단계 top.json)
 ALT_BENCH_IDS = "상위편_목표.json"   # 그 판 본보기 편(ids) — 둘째 소재에서 뺀다(이미 만든 편·말맛 본보기)
 ALT_SPREAD = 5                      # 남은 상위 몇 편 안에서 sid 로 나눠 고르나
 SLOT_SHARED = ("sid", "version", "fmt", "slug", "env", "given")

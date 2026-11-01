@@ -1,4 +1,4 @@
-// 엔진 다리 — 고객 PC 의 칼카피 엔진(설치팩 동봉 파이썬 + 엔진 묶음)을 부른다(관제 234 5판).
+// 엔진 다리 — 고객 PC 의 프리셋 엔진(설치팩 동봉 파이썬 + 엔진 묶음)을 부른다(관제 234 5판).
 //   판단은 엔진 한 곳(shopping_shorts/calcopy_make — 후보·고르기·검수·사인·만들기). 여기는 띄우고 JSON 을 읽기만 한다.
 //   엔진 AI 는 고객 Claude: 엔진이 요청을 줄 폴더(~/.shortem/ai/<run>/<요청>)에 쓰고 기다린다 → shortem_ai 로 Claude 가 답한다.
 import { spawn } from 'node:child_process';

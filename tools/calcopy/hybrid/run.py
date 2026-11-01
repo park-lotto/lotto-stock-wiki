@@ -247,7 +247,7 @@ def st_deliver(ctx: Ctx, a):
         final = ctx.W / v / "render" / "final.mp4"
         jpg = ctx.W / v / "render" / "final.jpg"
         DESK_DIR.mkdir(parents=True, exist_ok=True)
-        dst = DESK_DIR / f"칼카피_얜샷템_{slug}_{v}.mp4"   # 드라이브 정본 이름·자리는 channel/칼카피_시작.md 🛑 블록(robocopy) — 여기는 바탕화면 사본
+        dst = DESK_DIR / f"칼카피_얜샷템_{slug}_{v}.mp4"   # 드라이브 정본 이름·자리는 channel/production_start.md 🛑 블록(robocopy) — 여기는 바탕화면 사본
         shutil.copy(final, dst)
         same = md5(final) == md5(dst)
         if jpg.exists():

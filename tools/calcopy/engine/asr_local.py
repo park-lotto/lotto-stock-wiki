@@ -9,7 +9,7 @@
 - 위스퍼 = faster-whisper(CTranslate2, CPU int8). 모델 = SHORTEM_WHISPER_MODEL(기본 small) — 설치팩은 모델 폴더를 같이 깐다
   (SHORTEM_WHISPER_DIR, 처음부터 다 깔려 있게). 오디오는 ffmpeg 로 16kHz PCM 으로 풀어 배열로 넘긴다(av 의존 없음).
 - 구절 = 낱말 시각에서 쉼(≥ PAUSE_S)마다 끊는다(위스퍼 기본 구절은 6초 한 덩어리로 나온다 — 10-19 실측).
-- 스피치매틱스 = transcribe(engine='speechmatics')(칼카피 내부) 또는 SHORTEM_ASR=speechmatics(고객) 이고 키가 있을 때(speechmatics_key — 환경변수·~/.volcano/keys/speechmatics). 없으면 위스퍼.
+- 스피치매틱스 = transcribe(engine='speechmatics')(프리셋 내부) 또는 SHORTEM_ASR=speechmatics(고객) 이고 키가 있을 때(speechmatics_key — 환경변수·~/.volcano/keys/speechmatics). 없으면 위스퍼.
 """
 from __future__ import annotations
 
@@ -167,7 +167,7 @@ def _speechmatics(path: str) -> dict:
 
 
 def transcribe(path: str, engine: str | None = None) -> dict:
-    """engine='speechmatics' = 칼카피 내부(사장님 승인 10-21, 유료·가장 정확). 고객 설치는 SHORTEM_ASR=speechmatics 일 때만(고객 키 과금 — 기본 위스퍼 그대로)."""
+    """engine='speechmatics' = 프리셋 내부(사장님 승인 10-21, 유료·가장 정확). 고객 설치는 SHORTEM_ASR=speechmatics 일 때만(고객 키 과금 — 기본 위스퍼 그대로)."""
     a = pcm(path)
     res = None
     if (engine or os.environ.get("SHORTEM_ASR")) == "speechmatics" and speechmatics_key():

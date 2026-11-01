@@ -7,8 +7,8 @@
 | `shortem-setup-win-x64-<버전>.exe` | 윈도 설치팩(실행도구 전부 + 로컬 MCP 서버 + 연결 파일 + 플러그인 + 안내) | `win/build_win.py` + `win/shortem.nsi` |
 | `shortem.mcpb` | Claude Desktop 연결 파일(얇음 — 설치 폴더의 서버를 부르기만) | `mcpb/` (빌드 때 `mcpb pack`) |
 | `claude-plugin/` (설치 폴더 안) | Claude Code 플러그인 `shortem` + 로컬 마켓플레이스 | `plugin/` |
-| `시작.md` | Claude Code 입력창에 끌어다 놓는 입구(플러그인 등록 2줄 + `/shortem:setup`) | `시작.md`(설치 때 실제 경로로 채움) |
-| `설치안내.html` | 그림 안내 11장(화면 모형) | `guide/설치안내.html` |
+| `START.md` | Claude Code 입력창에 끌어다 놓는 입구(플러그인 등록 2줄 + `/shortem:setup`) | `START.md`(설치 때 실제 경로로 채움) |
+| `install_guide.html` | 그림 안내 11장(화면 모형) | `guide/install_guide.html` |
 | `shortem-setup-mac-<arm64\|x64>-<버전>.pkg` | 맥 설치팩 | `mac/build_mac.sh` (**맥에서 실측 전**) |
 
 ## 빌드 — 윈도(이 PC 에서 실측)
@@ -25,7 +25,7 @@ py installer/win/test_install.py --exe <빌드 폴더>/dist/shortem-setup-win-x6
 
 ### 설치 exe 동작
 - 설치 경로 `%LOCALAPPDATA%\Shortem`(관리자 권한 없음, `RequestExecutionLevel user`). `/D=` 로 바꿀 수 있다.
-- 끝: Claude Desktop 이 `.mcpb` 를 열 수 있으면 `shortem.mcpb` 를 연다(마침 화면 체크박스, 기본 켜짐) · 바탕화면 `숏템작업\시작.md`·`설치안내.html` · 제거 프로그램 등록(HKCU) · 사용자 환경변수 `SHORTEM_INSTALL`·`SHORTEM_NODE`(Claude Code 플러그인이 동봉 node 를 찾는 데 쓴다).
+- 끝: Claude Desktop 이 `.mcpb` 를 열 수 있으면 `shortem.mcpb` 를 연다(마침 화면 체크박스, 기본 켜짐) · 바탕화면 `숏템작업\START.md`·`install_guide.html` · 제거 프로그램 등록(HKCU) · 사용자 환경변수 `SHORTEM_INSTALL`·`SHORTEM_NODE`(Claude Code 플러그인이 동봉 node 를 찾는 데 쓴다).
 - 무인: `exe /S [/OPENMCPB] [/D=경로]`. 시험: `/SANDBOX`(등록 키·환경변수 이름에 `_SANDBOXTEST`, 바탕화면 대신 설치 폴더 안 `_sandbox_desktop`).
 - 제거: 설정 ▸ 앱, 또는 `uninstall.exe /S`. `숏템작업`(내 영상)·`~/.shortem`(키·캐시)은 남긴다.
 

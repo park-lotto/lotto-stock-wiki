@@ -111,7 +111,7 @@
   "meme": {
    "pack": "local",
    "gap": [],
-   "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
+   "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 프리셋 길 = 로컬 짤 팩"
   }
  }
 }

@@ -721,20 +721,20 @@ log.md에 `투경 해제 예측 검증` / `종가배팅 시스템` 키워드 있
     회원 PC 합치기 = shortem_client local_settings.packFor(엔진 기본 팩 ← 프리셋 기본값 ← 회원 칸)
     ★새 프리셋을 만들면 defaults.json 도 같이 만든다(없으면 엔진 기본 팩 목소리로 나간다)
     ★필재 금지(10-20) — 기본값·팩 어디에도 쓰지 않는다(남 = 박창수·지훈 / 여 = 문정·유라, 회원 PC 는 타입캐스트만)
-□ 칼카피 지침서(channel/칼카피_시작.md)·편마다 make.py 에서 **사람(오푸스)이 손으로 하던 단계는 회원 PC 엔진에 없다**
+□ 칼카피 지침서(channel/production_start.md)·편마다 make.py 에서 **사람(오푸스)이 손으로 하던 단계는 회원 PC 엔진에 없다**
     10-20 실측: 사장님 편은 컷마다 자를 칸을 골라 '박힌 자막 y≈930 크롭 밖'으로 뺐는데(yanshottem/장윤정 build_plan.py),
     회원 PC 는 자동 초안(모든 컷 가운데 자르기)이라 남의 쇼츠 자막·제목 띠가 우리 자막과 두 겹으로 나왔다.
     → 지침서에 손 단계를 새로 넣으면 '회원 PC 자동 단계에도 있나'를 같이 확인한다. 없으면 회원 결과물은 집 PC 결과물과 다르다
 □ ★회원 PC 노하우 = **서버 지시서 `tools/calcopy/hybrid/flow.py` 한 곳**(볼케이노형, 사장님 10-21 "볼케이노처럼 단계별로 착착").
     회원 PC 는 손(runner_ops 가 do 실행)·눈(회원 Claude 가 review 답)만. 제작순서 문서에 손 판단·함정을 넣으면 **같은 커밋에 flow.py 질문·반려에도** 넣는다.
-    서버 창구 = 숏템MCP 트랙 shopping_shorts/claude_flow.py(POST /api/claude/step) · 고리 = shortem_client/server/flow_driver.js · 문서 = channel/칼카피_제작순서/99_회원PC_MCP.md
+    서버 창구 = 숏템MCP 트랙 shopping_shorts/claude_flow.py(POST /api/claude/step) · 고리 = shortem_client/server/flow_driver.js · 문서 = channel/production_guide/99_member_pc_mcp.md
     개발 완주 = tools/calcopy/hybrid/flow_dev.py · 정답지 대조 = tools/calcopy/hybrid/answer_key.py
 □ ★연예인 장면은 **반드시 찾은 원본(연예인 본인 채널·방송사 공식)에서만** — 다른 채널(벤치 쇼츠·재편집·리뷰)의 연예인 영상을 그대로 가져다 쓰면 **절대 안 된다**(사장님 10-21).
     원본을 못 찾으면 그 편은 만들지 않는다. 제품 컷도 원본 안 제품 장면이 먼저, 남의 영상은 연예인 없는 제품 컷·장면 전환 없는 구간만
     주인 = tools/calcopy/hybrid/rules.source_rule_static(서버 지시서가 대본·계획 때 부른다) + runner_ops.source_rule_scan(장면 전환 — 회원 PC 가 계획·렌더 때 잰다) · 시험 shopping_shorts/tests/test_source_rule.py
-    문서 = channel/칼카피_제작순서/00_공통·02_원본찾기·05_재료영상 · briefs/screen_pick·script
+    문서 = channel/production_guide/00_common·02_find_source·05_material · briefs/screen_pick·script
     10-21 실사고: 이미도 편 17초 별 전환·장갑 손 = 리뷰여왕 영상에서 딸려 옴(원본 전체 862초에는 별 0번, 원본 672~675초에 튜브 근접이 있었다)
-□ ★만들다 난 오류는 그날 바로 channel/칼카피_제작순서/98_오류기록.md 표에 적는다(무엇이·왜·고친 곳·장치) — 편 시작 전에 훑는다(사장님 10-21)
+□ ★만들다 난 오류는 그날 바로 channel/production_guide/98_error_log.md 표에 적는다(무엇이·왜·고친 곳·장치) — 편 시작 전에 훑는다(사장님 10-21)
 □ 회원 PC 결과물 확인 = shortem_client/test/live_episode.js --say "<회원이 친 한 줄>"(설치본·라이브 서버·진짜 키) → 완성본을 눈으로
 □ ★렌더 인코딩 = 그래픽카드 우선, 없으면 CPU — 우리 PC·회원 PC 같은 코드(사장님 10-25 "화질 같게, GPU 있으면 우선, 없으면 CPU")
     주인 = tools/calcopy/engine/encoder.venc() 하나. 렌더 코드에 '-c:v libx264' 를 새로 적지 마라 — venc() 를 부른다
