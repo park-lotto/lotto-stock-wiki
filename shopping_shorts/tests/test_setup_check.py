@@ -54,7 +54,7 @@ def member_pc(monkeypatch, tmp_path):
     monkeypatch.setattr(R.shutil, "which", lambda t: "x")
     have = {"typecast": False, "vmake": False, "speechmatics": True, "coupang": "ok"}
     monkeypatch.setattr(R, "coupang_key_state", lambda: have["coupang"])
-    monkeypatch.setattr(R, "browser_ok", lambda: True)
+    monkeypatch.setattr(R, "browser_ok", lambda chrome_only=False: True)
     monkeypatch.setattr(R, "have_speechmatics", lambda: have["speechmatics"])
     monkeypatch.setattr(providers, "typecast_key", lambda kf=None: "k" if have["typecast"] else "")
     monkeypatch.setattr(VC, "key_source", lambda: "member")
@@ -73,16 +73,16 @@ def _ids(xs):
 def test_all_missing_at_once_overseas(member_pc):
     """11-02 사장님 "무조건 3개 다 로그인 처음에 · 쿠팡 키 점검" — 빠진 것은 시작 전에 한 번에. 스피치매틱스·VMake 는 대체가 있어 요구하지 않는다."""
     have, tmp, mp = member_pc
-    have.update(speechmatics=False, coupang="none")
+    have.update(speechmatics=False)
     v = _version_of("해외원본형")
     got = R.need_list(v, "https://www.youtube.com/shorts/abcdefghijk", "해외원본형")
-    assert _ids(got) == ["coupang", "login:instagram", "login:tiktok", "login:youtube", "typecast"], got
+    assert _ids(got) == ["login:instagram", "login:tiktok", "login:youtube", "typecast"], got
     with pytest.raises(F._Stop) as e:
         F.ph_setup_check({"version": v, "log": []}, {"env": {"missing": got}}, {}, {})
     why, fix = e.value.why, e.value.fix
     assert why == F.SETUP_WHY and F.member_ok(why)
     assert F.member_ok(fix, need_next=True), fix
-    for label in ("목소리 키(타입캐스트)", "쿠팡 파트너스 키", "유튜브 계정 연결", "틱톡 계정 연결", "인스타그램 계정 연결"):
+    for label in ("목소리 키(타입캐스트)", "유튜브 계정 연결", "틱톡 계정 연결", "인스타그램 계정 연결"):
         assert label in fix, fix
     assert e.value.retry == "setup"
     for bad in ("TYPECAST", "VMAKE", ".shortem", "keys/", "need_list"):
@@ -112,23 +112,41 @@ def test_instagram_session_file_alone_is_not_login(member_pc):
     assert "login:instagram" in _ids(R.need_list(_version_of("연예인형"), "", "연예인형"))
 
 
-def test_coupang_key_checked_by_real_call_state(member_pc):
-    """쿠팡 키 = 있나만 보지 않고 실제 호출 결과로. 없음·죽음 모두 시작 전에 요구, 제품 없는 자막노래형은 안 묻는다."""
+def test_coupang_key_is_advice_not_block(member_pc):
+    """11-02: 쿠팡 키는 시작을 막지 않는다 — 없거나 죽었으면 안내만, 있으면 조용히. 제품 없는 자막노래형은 안 묻는다."""
     have, tmp, mp = member_pc
     have["typecast"] = True
     mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, *ALL))
     v = _version_of("연예인형")
     for st in ("none", "bad"):
         have["coupang"] = st
-        assert _ids(R.need_list(v, "", "연예인형")) == ["coupang"]
-    assert "coupang" not in _ids(R.need_list(v, "", "자막노래형"))
+        assert R.need_list(v, "", "연예인형") == []
+        assert "더 빠르고 원활" in R.advice_list("연예인형")[0]
+    assert R.advice_list("자막노래형") == []
+    have["coupang"] = "ok"
+    assert R.advice_list("연예인형") == []
+    st = {"version": v, "log": []}
+    assert F.ph_setup_check(st, {"env": {"missing": [], "keys": {}, "advice": ["안내"]}}, {}, {}) == {"goto": "bench"}
+    assert st["notice"] == "안내"
+
+
+def test_dead_coupang_key_falls_back_to_chrome(monkeypatch):
+    from shopping_shorts import coupang_partners as cp
+    from tools.calcopy import coupang_customer as C
+    monkeypatch.delenv("CALCOPY_DEV_COUPANG_SERVER", raising=False)
+    monkeypatch.setenv("COUPANG_ACCESS_KEY", "a")
+    monkeypatch.setenv("COUPANG_SECRET_KEY", "b")
+    monkeypatch.setattr(cp, "search_products", lambda q, **k: {"ok": False, "items": []})
+    assert C.search(["칫솔"])["칫솔"]["need"] == "chrome"
+    monkeypatch.setattr(cp, "search_products", lambda q, **k: {"ok": True, "items": [1]})
+    assert C.search(["칫솔"])["칫솔"]["items"] == [1]
 
 
 def test_browser_required_for_login_window(member_pc):
     have, tmp, mp = member_pc
     have["typecast"] = True
     mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, *ALL))
-    mp.setattr(R, "browser_ok", lambda: False)
+    mp.setattr(R, "browser_ok", lambda chrome_only=False: False)
     got = R.need_list(_version_of("연예인형"), "", "연예인형")
     assert _ids(got) == ["browser"], got
     assert F.member_ok(F.setup_fix(got), need_next=True), F.setup_fix(got)

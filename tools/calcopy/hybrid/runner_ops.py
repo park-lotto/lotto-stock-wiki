@@ -283,11 +283,19 @@ def coupang_key_state() -> str:
     return "bad"
 
 
-def browser_ok() -> bool:
-    """계정 로그인 창을 띄울 크롬·엣지가 있나 — 숏템 MCP logins.js browserExe 와 같은 자리."""
+def browser_ok(chrome_only: bool = False) -> bool:
+    """로그인 창을 띄울 크롬·엣지가 있나(logins.js browserExe 와 같은 자리). 쿠팡 크롬 검색은 채널이 크롬이라 엣지로 안 된다(chrome_only)."""
     roots = [os.environ.get(k) for k in ("PROGRAMFILES", "PROGRAMFILES(X86)", "LOCALAPPDATA")]
     subs = (("Google", "Chrome", "Application", "chrome.exe"), ("Microsoft", "Edge", "Application", "msedge.exe"))
-    return not sys.platform.startswith("win") or any(Path(r, *x).is_file() for r in roots if r for x in subs)
+    return not sys.platform.startswith("win") or any(Path(r, *x).is_file() for r in roots if r for x in subs[:1 if chrome_only else 2])
+
+
+def advice_list(fmt: str = "") -> list[str]:
+    """시작 전 안내(막지 않는다) — 쿠팡 키는 있으면 먼저 쓰고, 없으면 크롬으로 찾는다(사장님 11-02 "있으면 빠르고 원활하다고 안내")."""
+    if os.environ.get("CALCOPY_CUSTOMER_MODE") != "1" or fmt == "자막노래형":
+        return []
+    return {"none": ["쿠팡 파트너스 키를 넣어 두시면 제품 찾기가 더 빠르고 원활해요. 이번엔 크롬으로 찾아서 만들게요"],
+            "bad": ["쿠팡 파트너스 키가 확인되지 않아요. 다시 넣어 두시면 더 빠르고 원활해요. 이번엔 크롬으로 찾아서 만들게요"]}.get(coupang_key_state(), [])
 
 
 def need_list(version: str, url: str = "", fmt: str = "") -> list[dict]:
@@ -321,11 +329,8 @@ def need_list(version: str, url: str = "", fmt: str = "") -> list[dict]:
         from tools.calcopy import vmake_clean as VC
         if VC.ready(VC.style_mode(version))["mode"] == "need_key":
             out.append({"id": "vmake", "label": "VMake 키(원본 자막 지우기)", "how": "setting"})
-    if customer and fmt != "자막노래형":      # 사장님 11-02 "쿠팡 api 키 점검" — 시작 전에 실제 호출로(자막노래형은 제품이 없다)
-        cps = coupang_key_state()
-        if cps != "ok":
-            out.append({"id": "coupang", "label": "쿠팡 파트너스 키" + (" 확인 실패" if cps == "bad" else ""), "how": "setting"})
-    if customer and not browser_ok():
+    cp_key = bool(os.environ.get("COUPANG_ACCESS_KEY") and os.environ.get("COUPANG_SECRET_KEY"))
+    if customer and not browser_ok(chrome_only=not cp_key and fmt != "자막노래형"):
         out.append({"id": "browser", "label": "크롬 브라우저", "how": "browser"})
     if not CACHE:                       # 영상 받기·원본 찾기 = 유튜브 + 틱톡·인스타(사장님 11-02 "무조건 3개 다 로그인 처음에" — 소재와 상관없이)
         # 판정 = 받기(yt)가 실제로 부르는 origin_find.yt_auth 그대로(10-27 실사고: 회원 모드만 쿠키 파일을 보고 통과 → 받기는 mcp* 프로필 없음으로 멈춤).
@@ -355,6 +360,7 @@ def c_env(W, d):
             "coupang": bool(os.environ.get("COUPANG_ACCESS_KEY") and os.environ.get("COUPANG_SECRET_KEY")), "speechmatics": have_speechmatics()}
     dev = os.environ.get("CALCOPY_DEV_MINA_SERVER") == "1" or os.environ.get("SHORTEM_DEV") == "1"
     missing = need_list(d["version"], d.get("url") or "", d.get("fmt") or "")
+    advice = advice_list(d.get("fmt") or "")
     if du.free / 1e9 < 1.5:
         missing.append({"id": "disk", "label": "C 드라이브 빈 공간 1.5GB", "how": "disk"})
     try:
@@ -362,7 +368,7 @@ def c_env(W, d):
         enc = encoder.kind()
     except Exception:  # noqa: BLE001 — 도구 없음은 missing 이 이미 알린다
         enc = "cpu"
-    return {"keys": keys, "dev": dev, "cache": bool(CACHE), "disk_gb": round(du.free / 1e9, 1), "voice": voice, "missing": missing,
+    return {"keys": keys, "dev": dev, "cache": bool(CACHE), "disk_gb": round(du.free / 1e9, 1), "voice": voice, "missing": missing, "advice": advice,
             "encoder": enc, "done_refs": done_refs(), **({"single_source": True} if os.environ.get("SHORTEM_SINGLE_SOURCE") == "1" else {})}   # 원본 찾기 워커(of_worker) — 둘째 소재 없이 소재 하나만
 
 

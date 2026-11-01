@@ -134,10 +134,16 @@ export function buildServer(ctx = makeCtx()) {
     for (const [k, pf] of Object.entries(PLATFORMS)) {
       if (!logged[k]) fails.push({ where: '계정 연결', why: `${pf.name} 로그인이 아직 안 됐습니다`, fix: `shortem_login(action="open", platform="${k}") 로 창을 열고 로그인·창 닫기를 부탁한 뒤 다시 점검`, retry_ok: true });
     }
-    for (const s of ['typecast', 'coupang_access', 'coupang_secret']) {
-      if (!keyStatus(s).present) fails.push({ where: '키', why: `${KEY_SERVICES[s].label} 가 없습니다`, fix: `shortem_settings(action="open") 의 키 칸에 넣어 달라고 부탁 (${KEY_SERVICES[s].where})`, retry_ok: true });
-    }
-    const info = { license: lic, tools: { mode: tools.mode, ok: !tools.problems.length, problems: tools.problems.map(p => `${p.tool}: ${p.why}`) }, keys: Object.fromEntries(Object.keys(KEY_SERVICES).map(k => [k, keyStatus(k).present])), disk_free_gb: free, device_name: deviceName(), work_dir: workDir(), video_encoder: await encoderCheck(), ...(removed ? { removed } : {}), ...(free != null && free < 10 ? { cleanup: showCandidates(cleanupCandidates()) } : {}) };   // 'gpu'=그래픽카드 우선 · 'cpu'(98 #79)
+    if (!keyStatus('typecast').present) fails.push({ where: '키', why: `${KEY_SERVICES.typecast.label} 가 없습니다`, fix: `shortem_settings(action="open") 의 키 칸에 넣어 달라고 부탁 (${KEY_SERVICES.typecast.where})`, retry_ok: true });
+    // API 도구 점검 결과 — 막지 않고 알린다. 쿠팡은 있으면 먼저 쓰고 없으면 크롬으로 찾는다(사장님 11-02)
+    const coupangKey = keyStatus('coupang_access').present && keyStatus('coupang_secret').present;
+    const apiTools = [
+      { name: '쿠팡 파트너스', ready: coupangKey, merit: '있으면 제품 찾기가 더 빠르고 원활합니다. 없으면 크롬으로 찾습니다' },
+      { name: '받아쓰기(스피치매틱스)', ready: keyStatus('speechmatics').present, merit: '있으면 대사 확인이 더 정확합니다. 없으면 무료 받아쓰기를 씁니다' },
+      { name: '자막 지우기(VMake)', ready: keyStatus('vmake').present, merit: '있으면 박힌 글자를 지웁니다. 없으면 흐림으로 가립니다' },
+      { name: '버텍스 AI', ready: keyStatus('vertex_sa').present, merit: '있으면 소리째 영상 검수와 그림 만들기를 씁니다' },
+    ];
+    const info = { license: lic, tools: { mode: tools.mode, ok: !tools.problems.length, problems: tools.problems.map(p => `${p.tool}: ${p.why}`) }, keys: Object.fromEntries(Object.keys(KEY_SERVICES).map(k => [k, keyStatus(k).present])), api_tools: apiTools, disk_free_gb: free, device_name: deviceName(), work_dir: workDir(), video_encoder: await encoderCheck(), ...(removed ? { removed } : {}), ...(free != null && free < 10 ? { cleanup: showCandidates(cleanupCandidates()) } : {}) };   // 'gpu'=그래픽카드 우선 · 'cpu'(98 #79)
     if (st) {
       const r = await selftest();
       info.selftest = { report: r.report, items: r.items.map(i => ({ name: i.name, ok: i.ok, ...(i.file ? { file: i.file } : {}), ...(i.skipped ? { skipped: i.why } : {}), ...(i.version ? { version: i.version, ass_filter: i.ass_filter } : {}), ...(i.encoder ? { encoder: i.encoder, how: i.how } : {}) })) };
