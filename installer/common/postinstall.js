@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // 설치 직후 1회 — 설치 프로그램(NSIS / 맥 pkg postinstall)이 동봉 node 로 부른다.
-// 하는 일: install.json 기록 · 시작.md 를 실제 설치 경로로 채워 설치 폴더와 바탕화면 '숏템작업'에 둔다.
+// 하는 일: install.json 기록 · 시작.md 를 실제 설치 경로로 채워 설치 폴더에 둔다.
 // 네트워크 0, 셸 0. 인자: --home <설치 폴더> --desktop <바탕화면 폴더> [--version x.y.z]
 'use strict';
 const fs = require('fs');
@@ -53,12 +53,4 @@ const tpl = fs.readFileSync(path.join(home, '시작.template.md'), 'utf8');
 const startMd = tpl.split('{{PLUGIN_DIR}}').join(pluginDir);
 fs.writeFileSync(path.join(home, '시작.md'), startMd, 'utf8');
 
-if (desktop) {
-  const work = path.join(desktop, '숏템작업');
-  fs.mkdirSync(work, { recursive: true });
-  fs.writeFileSync(path.join(work, '시작.md'), startMd, 'utf8');
-  const guide = path.join(home, '설치안내.html');
-  if (fs.existsSync(guide)) fs.copyFileSync(guide, path.join(work, '설치안내.html'));
-  console.log(`[postinstall] 작업 폴더: ${work}`);
-}
 console.log(`[postinstall] 완료: ${home}`);
