@@ -1,0 +1,508 @@
+{
+ "for": "annapick 프리셋 소재 창고 — 벤치 채널 쇼츠 조회순(flow.bench_pool)",
+ "made": "2026-10-31",
+ "basis": "yt-dlp --flat-playlist <채널>/shorts 조회수(view_count) — bench_pool.py build",
+ "channels": [
+  "https://www.youtube.com/@안나픽"
+ ],
+ "rows": [
+  {
+   "id": "Yu1YYz57WXI",
+   "views": 2600000,
+   "title": "Baek Z Young's Super Simple Boiled Pork Recipe: Guaranteed Success Even for Beginners",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "nt6WIGFmILE",
+   "views": 1500000,
+   "title": "The Viral Sold-Out Anti-Slip Ultralight Slippers Recommended by Lee Young-ja #shorts",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "Ww0IZLSL7mY",
+   "views": 1200000,
+   "title": "The fact that thrifty Jang Yoon-jeong uses this every day without skimping on money! #JangYoonjeo...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "itYwQVyuCcc",
+   "views": 1200000,
+   "title": "The Best Way to Save Big on Groceries! What’s the Secret Item in Han Go-eun’s Fridge? #shorts",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "hj9O7LmPZjo",
+   "views": 749000,
+   "title": "허연 발뒤꿈치 아기발 만드는 비결! 백지영 찐추천템 #발각질 #백지영 #발관리 #각질제거 #발크림 #shorts  #연예인추천템 #쇼핑쇼츠 #쿠팡추천템 #꿀템",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "iS0la2aQyl8",
+   "views": 743000,
+   "title": "The 3 must-buy items Han Go-eun always gets at the Hyundai Department Store food hall #HanGoEunRe...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "wweUXE86oMM",
+   "views": 545000,
+   "title": "The secret to removing neck wrinkles that Lee Seo-jin has been using for 10 years, found in Jung ...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "I2KUKOI-zOw",
+   "views": 537000,
+   "title": "Cleaning Expert Brian's Secret to Whitening Yellowed Clothes #Brian #LaundryTips #WhiteningClothe...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "rF_-X8jLkdU",
+   "views": 512000,
+   "title": "Why actress Ryu Hye-young has only used this whitening toothpaste for over 10 years #shorts",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "OJPln69Nv9o",
+   "views": 348000,
+   "title": "The insane coverage foundation recommended by Jung Sun-ah and Tiffany, said to be the trade secre...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "5vkMRQ_I0qQ",
+   "views": 268000,
+   "title": "The US-made soap that has people with hair loss buzzing: Ahn Moon-sook and Sunwoo Yong-nyeo's secret",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "qbi7N-iQTcg",
+   "views": 266000,
+   "title": "Stop spending a fortune at the dermatologist. The cleanser that worked wonders for Kang Min-kyung...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "hmVwRVLfxKU",
+   "views": 237000,
+   "title": "나만 알고 싶어 숨겨뒀다는 유라의 매운맛 가루 정체 공개! 🤫 #유라매운맛 #유라비밀템 #매운가루 #매운맛덕후 #연예인추천템 #안나픽 #쇼핑쇼츠 #shorts  #쿠팡템 #꿀템",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "IJJTZgk9i3Y",
+   "views": 216000,
+   "title": "Declutter your bags in an instant! Why did I just find out about this now? #ChoiEunKyungBagHanger...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "FaAUB-0PaUU",
+   "views": 184000,
+   "title": "The legendary \"rice thief\" seaweed that even food connoisseur Choi Hwa-jung can't easily buy",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "NzKDXVAtofA",
+   "views": 170000,
+   "title": "The interior shelf at Choi Eun-kyung's house that even picky Brian raved about #shorts",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "ySJLtV0K1PY",
+   "views": 135000,
+   "title": "The Towel Jang Yoon-jung Traveled All the Way to Denmark to Stock Up On: Why Every Celebrity Uses It",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "0DRKN0415Qo",
+   "views": 124000,
+   "title": "The Duty-Free Must-Have That Super-Rich Pak Se-ri Stockpiles for Fear of Discontinuation #shorts",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "7ZUKEbdOod8",
+   "views": 113000,
+   "title": "The budget-friendly magic lip balm in the 3,000 won range highly praised by Choi Ji-woo #ChoiJiwo...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "DbZrUmWt3wk",
+   "views": 92000,
+   "title": "The go-to snack highly praised by the picky eater Shin Se-kyung!",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "vRwm66koaQc",
+   "views": 74000,
+   "title": "The Miracle Detox Recipe That Helped Han Go-eun's Husband Lose 20kg! It Even Clears Up Constipati...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "1gEKS-V_CYY",
+   "views": 69000,
+   "title": "The identity of the insane sweet and salty snack that Kang So-ra eats without guilt when she lose...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "H4exBiY48us",
+   "views": 67000,
+   "title": "The Baek Ji-young reversible vest that everyone went crazy over after it appeared on TV",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "CU300rBQ4yk",
+   "views": 50000,
+   "title": "The fashionable genius Uhm Jung-hwa's super stylish magnifying glass revealed",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "__913Fbzt_M",
+   "views": 47000,
+   "title": "Can gray hair really be covered this brightly? Choi Eun-kyung’s 100-year-old tradition DIY hair d...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "Zbu-rTtTzXg",
+   "views": 41000,
+   "title": "The must-have parenting item Son Yeon-jae swears by for feeding solids",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "b6zLUbE1EFc",
+   "views": 40000,
+   "title": "She says this is better than having multiple Chanel bags! The go-to bag Han Hye-jin swears by #sh...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "FI1ro5UeSi8",
+   "views": 38000,
+   "title": "The Must-Have Kitchen Gadget Hong Jin-kyung Swears By Before Kimchi Season #shorts",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "BnhadMHjQlY",
+   "views": 36000,
+   "title": "진짜 맛있다니까?! 강남픽 상상초월 밥도둑 등장! 아내 이상화도 놀란 미친 밥상 조합 #강남 #이상화 #밥도둑 #후리카케  #shorts",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "Y3DP06nvXow",
+   "views": 34000,
+   "title": "이사배가 매일 쓴다는 얼굴 반쪽 만들어주는 윤곽 스틱의 정체 🤫 #이사배 #윤곽스틱 #얼굴소멸 #쉐딩 #컨투어링 #shorts #연예인추천템 #쇼핑쇼츠 #쿠팡추천템 #이사배추천",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "gMW12rAKLp8",
+   "views": 33000,
+   "title": "You can’t stop once you open it! Song Eun-i's go-to snack recommendation",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "SYoA7AOwWu0",
+   "views": 32000,
+   "title": "Not a luxury brand? The twist behind the ultimate minimalist bag chosen by both Han Hye-jin and L...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "5apue0D4ALc",
+   "views": 30000,
+   "title": "The magic frying pan that cooking expert Jung Jae-hyung finally settled on after burning everythi...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "62Hcc64-2GA",
+   "views": 30000,
+   "title": "The real reason Han Ga-in never buys her kids ice cream 🤫 Just take it out of the freezer and pou...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "tj3s4Uv44mk",
+   "views": 27000,
+   "title": "Lee Na-young’s secret to turning back time is finally out! The must-have item for ageless skin yo...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "FCz7Vb653Jg",
+   "views": 25000,
+   "title": "Go Hyun-jung's favorite bag with insane presence despite having no logo✨ The bag that caused a st...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "zblbQVYaDHk",
+   "views": 21000,
+   "title": "Insanely refreshing, chills you to the lungs 💦 An idol waiting room essential #shorts",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "TjG-RfAval0",
+   "views": 21000,
+   "title": "The Chanel bag that made Lee Hyo-ri, who used to say \"who cares about luxury goods,\" get excited ...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "nLJgI17VWXQ",
+   "views": 18000,
+   "title": "강민경이 차에서 곱창 먹고도 냄새 싹 지운 탈취제 정체 #강민경 #위프 #고체탈취제 #올영추천템 #연예인추천템 #탈취제 #shorts #연예인추천템 #쇼핑쇼츠 #쿠팡추천템 #꿀템",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "2MaLOEtgs0E",
+   "views": 16000,
+   "title": "Jang Yoon-jung's Super Simple Perilla Oil Noodles Recipe That Do Kyung-wan Begs For Every Night",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "LmWVXewLyEE",
+   "views": 16000,
+   "title": "목디스크 이제 걱정하지 마세요! 백지영이 제발 다시 만들어달라고 호소해서 부활시킨 목견인기 #목디스크 #목견인기 #shorts",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "XbjDadaIXeQ",
+   "views": 15000,
+   "title": "Lee Young-ji's energy goes through the roof with just one sniff! The secret behind the mysterious...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "32z6CxQaoNI",
+   "views": 15000,
+   "title": "The true identity of the favorite pen Lee Chung-ah has been using for over 2 years, just by repla...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "Gz9lGY43Yz0",
+   "views": 14000,
+   "title": "The ballpoint pen Karina raved about, the writing experience is insane! #Karina #KarinaPen #PenRe...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "9d7JU6t39Ho",
+   "views": 13000,
+   "title": "This bag, carried constantly by top actresses who own hundreds of designer bags as if by prearran...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "c7aFAiri_tA",
+   "views": 12000,
+   "title": "올데프 애니가 새벽 3시 야식 먹고도 붓기 싹 뺀 마법의 반지 정체 #올데프애니 #반지괄사 #마사지바 #붓기제거 #shorts #연예인추천템 #쇼핑쇼츠 #쿠팡추천템 #꿀템",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "hIp07RjfEik",
+   "views": 11000,
+   "title": "Buying this instead of going to the department store? The secret behind the insanely comfortable ...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "uYIIaTTmUIQ",
+   "views": 11000,
+   "title": "Risabae’s Holy Grail Full-Coverage Concealer for Beginners! You Need This #shorts",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "LM_FM-snicQ",
+   "views": 10000,
+   "title": "From flight attendant days until now? Jun Jin's wife Ryu Yi-seo's must-have flight attendant item...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "8MYKJ-4tG8c",
+   "views": 9100,
+   "title": "Kim Hye-soo's daily bag that you'll wear for a lifetime once you buy it #shorts",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "MRVLCoqd4j4",
+   "views": 7900,
+   "title": "The New World of Eye Comfort That Choi Hwa-jung Gifted to Jung Sun-hee and Has Real Bookworms Obs...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "yVqHbKd5niY",
+   "views": 7800,
+   "title": "How much does that \"holy grail\" concealer, praised as top-tier by makeup guru Taeyeon, actually c...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "RLFreEMXtnc",
+   "views": 7600,
+   "title": "Nayeon from *Switching Dating*, who used to wear five lipsticks at a time, finally settled on 'ju...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "ZslS9J7s2nI",
+   "views": 7200,
+   "title": "The daily bag Jennie wears every day instead of Chanel. The ultimate casual-chic staple that even...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "RClmME79CUU",
+   "views": 7000,
+   "title": "Tiffany's go-to $6 cult-favorite blush #shorts",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "utoAiy8XvFE",
+   "views": 6600,
+   "title": "Perfectly block all those questions! This is what Kim Go-eun and Oh Yeon-seo cover their books wi...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "X4HrENVck0g",
+   "views": 6500,
+   "title": "Why picky Lee Seo-jin always buys toothpaste when he visits the US #shorts",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "azkkWdhfYOc",
+   "views": 6300,
+   "title": "Germ-filled tumbler? Cha Ye-ryun's super simple 5-second cleaning hack! #shorts #ChaYeryun #ChaYe...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "gYBJ12ez7Ws",
+   "views": 5500,
+   "title": "\"기념일 다 포기할게!\" 주상욱 카드 10개월 할부로 긁은 차예련 가방",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "UkPNpDicUMg",
+   "views": 5200,
+   "title": "The Hidden Secret Behind the Under $10 Holy Grail Item That GD Has Used at His Go-To Cheongdam Sa...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "c340n6Km8kM",
+   "views": 5200,
+   "title": "Even Ji Suk-jin was hooked on Bomi Yoon's hair loss essence~ Apply this and your hair will look s...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "3xp0NLzrSj4",
+   "views": 4900,
+   "title": "What’s actually inside the bag of the trending Manager Kim? So Ji-sub’s surprising bag essentials...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "DWAVQvSJwMI",
+   "views": 4600,
+   "title": "A sell-out frenzy every holiday! The holiday gift in the 40,000 won range that Song Eun-i and Kim...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "DEXRwTItSwQ",
+   "views": 4100,
+   "title": "What 74-year-old Yoon Mi-ra, who spent millions on skincare, finally settled on?! #YoonMira #Secr...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "8dNQ1VaEUSY",
+   "views": 4000,
+   "title": "안정환도 놀란 이혜원 3분컷 볼륨의 비밀! 진짜 쿠팡에 있네요? 😲 #shorts #이혜원 #이혜원고데기 #뷰티템  #쿠팡템 #헤어볼륨",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "HrO1biVxo98",
+   "views": 3900,
+   "title": "The Reason Byeon Woo-seok x Martin Were Able to Have a 190cm Growth Spurt",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "V0WzT1wteNA",
+   "views": 3800,
+   "title": "The kitchen essential Kim Jung-nan uses every day... Moms, if your hair is thinning, one glass of...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "G06Dish0ZTk",
+   "views": 3700,
+   "title": "A hairbrush that folds in half! The secret to Karina and E-Sian's goddess-like hair #shorts",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "whgLBtzXN6g",
+   "views": 3600,
+   "title": "여자들이 더 난리난 이청아 픽 남자향수! #shorts",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "jfaBoam_H44",
+   "views": 3500,
+   "title": "The reason Gong Hyo-jin was shocked when she saw Hwang Bo-ra's face",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "K1dbmlJ_9Do",
+   "views": 3500,
+   "title": "정유미 때문에 촬영장 발칵 뒤집힌 나피디의 리얼 반응 #정유미 #나영석 #정유미눈티슈 #아이티슈  #shorts",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "VcABRvDh-2o",
+   "views": 3400,
+   "title": "Bong Tae-gyu’s top pick lip balm to rescue dry, cracked lips",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "NGD1sU-USrM",
+   "views": 3400,
+   "title": "The irreplaceable favorite shirt in the 30,000 won range that Kim Na-young wore like a tattoo and...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "5Kn2lp3fMbk",
+   "views": 3200,
+   "title": "Jo Kwon's personal pick for a neck traction device that saved him from orthopedic clinic visits #...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "0mPLRwke3bM",
+   "views": 3200,
+   "title": "The secret scent behind Brian, who is obsessed with fragrance?! #Brian #BrianRecommended #DryerSh...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "w2aLn7HKFIo",
+   "views": 2900,
+   "title": "The secret to GD’s thick hair? The truth about what he drinks every morning ㄷㄷ #shorts #GD #Celeb...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "dsJexNmZJqE",
+   "views": 2800,
+   "title": "Fans are going crazy over Jang Wonyoung's hair! The secret to silky, glossy hair in an instant #s...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "taICMQp3lGQ",
+   "views": 2400,
+   "title": "500만원인 줄 알았는데 8만원? 서인영이 매일 드는 8만원대 갓성비 가방 #shorts #서인영 #서인영가방",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "ksQAc1O6C2E",
+   "views": 2400,
+   "title": "Lee Si-an’s Coupang pick that totally kills blackheads! Getting a smooth nose is so easy, right? ...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "25VMrQbGTQU",
+   "views": 2000,
+   "title": "Thought it was a cushion, but it's sunscreen? Finally found my holy grail sunscreen #Chuu #HolyGr...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "otlTwq4zGqw",
+   "views": 1800,
+   "title": "RESCENE Woni's addictive Taiwanese snack you can't stop eating #shorts",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "tnVHmsWRBzc",
+   "views": 1800,
+   "title": "The Secret to Ironclad Immunity Recommended by Jung Sun-ah and Tiffany: Why Actresses Are Obsesse...",
+   "ch": "https://www.youtube.com/@안나픽"
+  },
+  {
+   "id": "ka7KNREiLW4",
+   "views": 1500,
+   "title": "The Secret De-Puffing Method BLACKPINK Jisoo Only Shared with Hyeri",
+   "ch": "https://www.youtube.com/@안나픽"
+  }
+ ]
+}

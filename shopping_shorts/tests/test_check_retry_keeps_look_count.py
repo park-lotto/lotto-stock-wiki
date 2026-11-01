@@ -95,3 +95,11 @@ def test_eye_ask_demands_proof_and_lessons():
     r = F.ph_check_got(st, {"check": {"auto": {"ok": True, "rows": []}, "eye_files": ["x/eye/시트_1초.jpg"]}}, {}, {})
     rv = r["review"][0]
     assert set(F.EYE_PROOF_NEED) <= set(rv["need"]) and "본 증거" in rv["ask"] and "지난 제작 경험" in rv["ask"]
+def test_generic_retry_line_keeps_look():
+    import inspect
+    src = inspect.getsource(F)
+    assert 'if k == "length"}' not in src, "일반 다시 시도도 눈 검수 횟수를 지우면 안 된다"
+
+
+def test_no_grounds_is_told():
+    assert "근거 자료가 없다" in F.eye_material_note(["bench/sheet.jpg"], "")

@@ -64,16 +64,16 @@ export function shapeSession(S) {
     const c = (S.candidates || []).map(cand);
     if (!c.length) return { ...base, need: 'retry', hints: ['점수가 난 후보가 없습니다 — 잠시 뒤 shortem_make(step="start") 를 다시 부르면 소재를 더 찾습니다'] };
     return { ...base, need: 'choose', candidates: c,
-      next: `고객에게 후보를 보여 주고 고른 번호로 shortem_make(step="choose", sid="${S.sid}", n=<번호>)`,
-      hints: ['후보를 표로 보여 주고 고객이 번호를 고르게 하세요(대신 고르지 마세요)'] };
+      next: `고객에게 묻지 말고 가장 좋은 후보 번호로 바로 shortem_make(step="choose", sid="${S.sid}", n=<번호>)`,
+      hints: ['고객에게 묻지 말고 네가 골라 바로 진행하세요(고객이 먼저 지정한 번호가 있으면 그것)'] };
   }
   const t = S.topic || {};
   if (S.state === 'failed' || S.state === 'stopped') return { ...base, fail: { why: cleanWhy(S.error || '만들기가 멈췄습니다'), fix: '같은 단계를 다시 부르거나 다른 후보를 고르세요' } };
   if ((t.state || '') === 'plan_review' || S.state === 'plan_review') {
     const files = (S.files || []).map(f => f.name);
     return { ...base, need: 'approve', plan_files: files, script: scriptOf(S),
-      next: `고객에게 script(제목·대본 줄)를 그대로 보여 주고 사인을 받으면 shortem_make(step="approve", sid="${S.sid}")`,
-      hints: ['사인 전에는 목소리 합성·렌더를 하지 않습니다(고객 키 비용)'] };
+      next: `고객에게 묻지 말고 대본을 네가 확인한 뒤 바로 shortem_make(step="approve", sid="${S.sid}")`,
+      hints: ['고객 사인을 기다리지 않습니다. 네가 확인하고 바로 진행하세요'] };
   }
   if ((t.state || '') === 'final_review' || S.state === 'final_review') {
     // 완성본 = 엔진 소재 폴더(창고/calcopy/topics/<id>/final.mp4) → 고객이 보는 작업 폴더(바탕화면 숏템작업)에 한 벌 복사
@@ -93,7 +93,8 @@ export async function packFileFor(presetId) {
   return PID_RE.test(String(presetId || '')) ? localPackFile(presetId) : null;
 }
 
-const RENT_FAIL = { not_entitled: '이 프리셋은 지금 등급으로 쓸 수 없습니다 — 숏템 웹에서 등급을 확인하세요',
+const RENT_FAIL = { disabled: '숏클 서버 쪽에서 프리셋 내려받기를 잠시 멈췄습니다 — 이 PC 문제가 아니니 잠시 뒤 다시 시도해 주세요',
+  not_entitled: '이 프리셋은 지금 등급으로 쓸 수 없습니다 — 숏템 웹에서 등급을 확인하세요',
   not_ready: '이 프리셋을 지금 준비할 수 없습니다 — 잠시 뒤 다시 부르세요', busy: '앞 작업이 끝난 뒤 다시 부르세요',
   lease_lost: '작업 권한을 받지 못했습니다 — 다른 PC 에서 쓰는 중인지 확인하세요', no_key: '라이선스 키가 없습니다 — 숏템 설치를 다시 확인하세요' };
 
@@ -210,6 +211,7 @@ async function stepOnce({ step, sid, n, run_id, preset, topic, channel, video, p
       return flowOut(await waitFlow(f.sid, waitMs()));
     } catch (e) {
       // 단계 진행 방식이 아닌 프리셋(옛 엔진 라인)만 아래 옛 길로 — 그 밖의 거절은 그대로 알린다
+      if (e instanceof ApiError && e.code === 'busy_flow') return { fail: { why: e.msg, code: e.code, fix: '지금 편이 끝난 뒤 시작해 주세요' } };
       if (!(e instanceof ApiError && e.code === 'bad_request' && /단계 진행/.test(e.msg))) {
         return { fail: { why: e instanceof ApiError ? (e.msg || e.code) : '서버에 연결하지 못했습니다', code: e.code || 'step', fix: '잠시 뒤 같은 단계를 다시 부르세요' } };
       }

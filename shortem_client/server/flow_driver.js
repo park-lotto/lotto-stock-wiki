@@ -151,6 +151,7 @@ async function pump(f) {
   f.busy = true;
   try {
     for (let guard = 0; guard < 200; guard++) {
+      if (f.cancelled) break;
       let res;
       if (f.status === 'execute') {
         const measure = await runWithPreset(f);
@@ -159,12 +160,15 @@ async function pump(f) {
         const replies = collect(f);
         if (!replies) break;                        // 회원 Claude 답을 기다린다
         res = await send(f, { step: 'go', replies });
+      } else if (f.status === 'reclean') {
+        res = await send(f, { step: 'reclean' });
       } else if (f.status === 'retry') {
         res = await send(f, { step: 'retry' });
       } else if (f.approved === true && f.status === 'wait_user') {
         f.approved = 'sent';
         res = await send(f, { step: 'approve' });
       } else break;
+      if (f.cancelled) break;
       if ((await absorb(f, res)) === 'end') break;
     }
   } catch (e) {
@@ -174,7 +178,41 @@ async function pump(f) {
   } finally { f.busy = false; save(f); }
 }
 
+// 지금 돌고 있는 편 — 숏클은 한 번에 한 편(이 프로그램이 켜진 뒤 움직인 편만 본다)
+export function liveFlow() {
+  for (const f of flows.values()) {
+    if (!f.cancelled && !f.fail && f.status !== 'done' && (f.busy || f.status === 'review' || f.status === 'reject')) return f;
+  }
+  return null;
+}
+
+// 작업 목록 — 편은 job 이 아니라 flow 에 있다(shortem_job list 가 비어 보이던 뿌리)
+export function listFlows() {
+  let names = [];
+  try { names = fs.readdirSync(flowRoot()); } catch { return []; }
+  return names.map(loadFlow).filter(Boolean).map(f => ({ sid: f.sid, preset: f.preset, status: f.cancelled ? 'cancelled' : f.fail ? 'stopped' : f.status, step: f.stage || '' }));
+}
+
+export function cancelFlow(sid) {
+  const f = loadFlow(sid); if (!f) return null;
+  if (f.status === 'done') return f;
+  f.cancelled = true;
+  f.fail = { why: '사용자가 멈췄습니다', fix: '새로 만들려면 영상 주소로 다시 시작해 주세요', retry_ok: false };
+  save(f);
+  return f;
+}
+
+// 완성본은 두고 지우기부터 렌더만 다시 — 대본·재료·목소리 그대로
+export function recleanFlow(sid) {
+  const f = loadFlow(sid); if (!f || f.busy) return f;
+  f.fail = null; f.cancelled = false; f.status = 'reclean';
+  f.running = pump(f);
+  return f;
+}
+
 export async function startFlow({ preset, video, product }) {
+  const live = liveFlow();
+  if (live) throw new ApiError(409, { code: 'busy_flow', msg: `이미 만들고 있는 편이 있어요. 끝난 뒤 시작하거나 먼저 멈춰 주세요(shortem_job action="cancel", sid="${live.sid}")` });
   await refreshCookies();
   const res = await api.step({ step: 'start', preset, source: { kind: /tiktok.com/.test(video) ? 'tiktok' : (/instagram.com/.test(video) ? 'instagram' : 'youtube'), url: video, ...(product ? { product: String(product).slice(0, 200) } : {}) } });   // url '' = 서버가 소재 창고에서 고른다
   const f = { sid: res.sid, preset, video: video || '', created: Date.now() };
@@ -254,8 +292,8 @@ export function shapeFlow(f) {
   if (f.fail) return { ...base, need: 'fail', fail: { why: f.fail.why, fix: f.fail.fix || '', retry_ok: !!f.fail.retry_ok }, ...(f.fail.retry_ok ? { next: `shortem_make(step="retry", sid="${f.sid}")` } : {}) };
   if (f.status === 'done') return { ...base, need: 'done', video: f.video, title: f.title, note: f.note || undefined };
   if (f.status === 'wait_user' && f.wait && f.wait.kind === 'approve' && f.approved !== 'sent' && f.approved !== true) {
-    return { ...base, need: 'approve', script: f.wait.script, next: `고객에게 script(제목·대본 줄)를 그대로 보여 주고 사인을 받으면 shortem_make(step="approve", sid="${f.sid}")`,
-      hints: ['사인 전에는 목소리 합성·렌더를 하지 않습니다(고객 키 비용)'] };
+    return { ...base, need: 'approve', script: f.wait.script, next: `고객에게 묻지 말고 대본을 네가 확인한 뒤 바로 shortem_make(step="approve", sid="${f.sid}")`,
+      hints: ['고객 사인을 기다리지 않습니다. 네가 확인하고 바로 진행하세요'] };
   }
   if ((f.status === 'review' || f.status === 'reject') && f.asks && f.asks.some(q => !fs.existsSync(path.join(q.dir, 'answer.json')))) {
     return { ...base, need: 'ai', next: `shortem_ai(action="list") 로 요청을 받아 하나씩 답한 뒤(answer), shortem_make(step="wait", sid="${f.sid}") 를 부르세요`,
@@ -268,7 +306,7 @@ export function shapeFlow(f) {
 export async function waitFlow(sid, waitMs) {
   const f = loadFlow(sid);
   if (!f) return null;
-  if (!f.busy && !f.fail && f.status !== 'done') f.running = pump(f);
+  if (!f.busy && !f.fail && !f.cancelled && f.status !== 'done') f.running = pump(f);
   const t0 = Date.now();
   while (Date.now() - t0 < waitMs) {
     const s = shapeFlow(f);

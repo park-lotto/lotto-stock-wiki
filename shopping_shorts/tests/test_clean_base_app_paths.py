@@ -60,3 +60,25 @@ def test_app_clean_frame_src_points_into_clean_file(tmp_path, monkeypatch):
     srcs, cvp, ratio, tag, fresh = A._clean_frame_src(job, tmp_path, 0)
     assert cvp.endswith("final_clean_old.mp4") and fresh is True and tag == "_cb_old"
     assert abs(ratio - 0.5) < 1e-6          # 컷 0.0~2.0의 가운데 = 1.0초 / 2.0초
+
+
+def test_app_clean_frame_src_keeps_base_after_failed_topup(tmp_path, monkeypatch):
+    """덧지우기가 실패해도(clean_status=failed) 정본은 살아 있다 — 컷이 ("clean", 시각)이므로 그림도 정본에서 뜬다.
+    황선희님 b13968032e48: VMake 잔액 부족으로 failed → 재료 번호가 clean 인 페이지 그림이 전부 404."""
+    from shopping_shorts import app as A
+    job = _job_with_base(tmp_path)
+    job["clean_status"] = "failed"
+    monkeypatch.setattr(mp, "clean_base_on", lambda store, cid: True)
+    monkeypatch.setattr(A, "Store", lambda db: object())
+    monkeypatch.setattr(A.frame_extract, "_probe_duration", lambda p: 2.0)
+    assert A._final_cuts(job, tmp_path)[0]["video_id"] == "clean"
+    srcs, cvp, ratio, tag, fresh = A._clean_frame_src(job, tmp_path, 0)
+    assert cvp and cvp.endswith("final_clean_old.mp4") and fresh is True and tag == "_cb_old"
+
+
+def test_app_clean_frame_src_no_base_failed_stays_original(tmp_path, monkeypatch):
+    """정본도 없는 실패 작업은 종전대로 원본 — 이 수리가 넓히는 건 정본이 있는 작업뿐이다."""
+    from shopping_shorts import app as A
+    job = {"edit_plan": {"beats": []}, "subtitle_removal": 1, "customer_id": 0, "clean_status": "failed"}
+    monkeypatch.setattr(mp, "clean_base_on", lambda store, cid: True)
+    assert A._clean_frame_src(job, tmp_path, 0) == ({}, None, None, "", False)
