@@ -197,7 +197,7 @@ function engineWorker() {
 }
 
 export async function engineTool(cmd, input, { timeoutMs = 60000 } = {}) {
-  if (['catalog', 'check', 'preview'].includes(cmd) && !process.env.SHORTEM_NO_WORKER) {
+  if (['catalog', 'check', 'preview', 'look'].includes(cmd) && !process.env.SHORTEM_NO_WORKER) {
     const w = engineWorker();
     if (await w.ready) {
       return new Promise(resolve => {

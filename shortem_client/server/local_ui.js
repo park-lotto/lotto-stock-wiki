@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { homeDir, workDir, jail } from './paths.js';
 import { engineRoot, engineTool } from './engine_bridge.js';
-import { readSettings, packFor, savePack, select, resetPack, catalog, PID_RE, syncFromServer } from './local_settings.js';
+import { readSettings, saveLook, packFor, savePack, select, resetPack, catalog, PID_RE, syncFromServer } from './local_settings.js';
 import { rentPreset } from './preset_rent.js';
 import { makeStep } from './make_flow.js';
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
@@ -51,10 +51,10 @@ export function send(res, code, body, type = 'application/json; charset=utf-8', 
   res.end(b);
 }
 
-export async function readBody(req) {
+export async function readBody(req, max = 200000) {
   const ch = [];
   let n = 0;
-  for await (const d of req) { n += d.length; if (n > 200000) return null; ch.push(d); }
+  for await (const d of req) { n += d.length; if (n > max) return null; ch.push(d); }
   try { return JSON.parse(Buffer.concat(ch).toString('utf8') || '{}'); } catch { return null; }
 }
 
@@ -95,7 +95,7 @@ async function preview({ preset, patch, video }) {
   }
   const r = await engineTool('preview', { preset: presetPath, pack, ...(topicDir ? { topic_dir: topicDir } : {}) });
   if (r.tail) console.error(r.tail);   // 엔진 멈춤 사유는 로그로만
-  return r.error ? { error: r.error } : { snapshot: r.snapshot, context: r.context, applied: r.applied, title: r.title, sfx: r.sfx, detail: r.detail };
+  return r.error ? { error: r.error } : { snapshot: r.snapshot, context: r.context, applied: r.applied, title: r.title, sfx: r.sfx, detail: r.detail, look: (readSettings().looks || {})[preset]?.snapshot || null };
 }
 
 async function route(req, res, token, port) {
@@ -152,7 +152,7 @@ async function route(req, res, token, port) {
   }
   if (u.pathname === '/api/flows' && req.method === 'GET') return send(res, 200, { flows: flowList() });
   if (u.pathname === '/api/flow' && req.method === 'GET') { const v = flowView(u.searchParams.get('sid')); return v ? send(res, 200, v) : send(res, 404, { error: '없는 작업' }); }
-  const body = await readBody(req);
+  const body = await readBody(req, 1000000);
   if (!body) return send(res, 400, { error: '요청 모양이 다릅니다' });
   if (u.pathname === '/api/import-keys') return send(res, 200, await importMakerKeys());   // 숏템메이커 키 가져오기 — 서버 화면 다리와 같은 함수(web_bridge.importMakerKeys)
   if (u.pathname === '/api/flow/approve' || u.pathname === '/api/flow/retry') {   // 버튼은 MCP 와 같은 함수(flow_driver)를 부르기만
@@ -162,6 +162,7 @@ async function route(req, res, token, port) {
   if (u.pathname === '/api/select') return send(res, 200, { ok: select(body.preset) });
   if (u.pathname === '/api/save') return send(res, 200, await savePack(body.preset, body.patch));
   if (u.pathname === '/api/reset') { if (PID_RE.test(String(body.preset || ''))) resetPack(body.preset); return send(res, 200, { ok: true }); }
+  if (u.pathname === '/api/look') return send(res, 200, await saveLook(body.preset, body.snapshot));
   if (u.pathname === '/api/preview') return send(res, 200, await preview(body));
   if (u.pathname === '/api/login') return send(res, 200, PLATFORMS[body.platform] ? await openLogin(body.platform) : { ok: false, why: '모르는 곳입니다' });
   // 완성본 받기(텔레그램·구글 드라이브) — 판단은 deliver.js. 봇 토큰은 이 화면에만 넣는다(채팅에 붙여 넣지 않게)

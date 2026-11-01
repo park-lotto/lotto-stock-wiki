@@ -1609,7 +1609,7 @@ def _c_render(W, d):
     if miss:
         return {"ok": False, "error": miss}
     try:
-        info = render_bench.render(v, W / "doc" / v, W / v)
+        info = render_bench.render(v, W / "doc" / v, W / v, pack=os.environ.get("SHORTEM_MEMBER_PACK"))
     except StageError as e:
         if getattr(e, "problems", None):      # 렌더 전 관문 멈춤(render_bench.GateError) — 걸린 것 전부를 자르지 않고(한 번에 고치게, 10-26)
             return {"ok": False, "error": str(e), "gate": [[g, m] for g, m in e.problems]}

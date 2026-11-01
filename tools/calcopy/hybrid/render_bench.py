@@ -2900,6 +2900,8 @@ def look_snapshot(st: dict, look: dict) -> dict:
     from shopping_shorts import scene_style
     base = snapshot(st)
     snap = dict(look)
+    for k in ("text", "sceneTexts", "captionTexts", "manualText"):   # 편집 화면의 견본 글 — 제목·자막 글은 이 편 대본이 주인
+        snap.pop(k, None)
     for k in ("captionPack", "motionPack"):
         if (not snap.get(k) or snap.get(k) == "off") and base.get(k):
             snap[k] = base[k]
