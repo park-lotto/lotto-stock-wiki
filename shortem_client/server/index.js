@@ -2,6 +2,7 @@
 // 숏템 로컬 MCP 서버(stdio) — 고객의 Claude Desktop/Code 가 이 도구 6개로 숏폼 한 편을 **이 PC 에서** 끝까지 만든다.
 //   우리 서버에는 라이선스·임대·자산 받기만 묻는다(제작 호출 0). 셸 실행 도구 없음. 응답은 firewall.shape 를 거친다.
 import fs from 'node:fs';
+import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -21,7 +22,9 @@ import { selftest, encoderCheck } from './selftest.js';
 import { makeStep, aiList } from './make_flow.js';
 import { requestContent, IMAGE_BUDGET_B64, answer as aiAnswer, engineRoot } from './engine_bridge.js';
 import { sweep as sweepRented } from './preset_rent.js';
-import { checkUpdate } from './updater.js';
+import { checkUpdate, installDir } from './updater.js';
+import { anyFlowBusy } from './flow_driver.js';
+import { anyRunning } from './runner.js';
 import { startUi, openBrowser } from './local_ui.js';
 import { startBridge, importMakerKeys } from './web_bridge.js';
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
@@ -308,6 +311,11 @@ export function buildServer(ctx = makeCtx()) {
 }
 
 async function main() {
+  // 설치본은 부모(연결 유지)·자식(실제 서버)으로 돈다 — 새 판을 재실행 없이 바꾼다(supervisor.js). 개발·시험은 그대로 한 프로세스.
+  if (process.env.SHORTEM_INSTALL && process.env.SHORTEM_CHILD !== '1') {
+    const { runSupervisor } = await import('./supervisor.js');
+    return runSupervisor(process.env.SHORTEM_INSTALL);
+  }
   pruneAudit();
   try { gcCache(); } catch { /* 캐시 없음 */ }
   try { sweepRented(engineRoot()); } catch { /* 지난번에 못 지운 빌린 프리셋 — 다음에 */ }
@@ -315,6 +323,13 @@ async function main() {
   await server.connect(new StdioServerTransport());
   // 켤 때 새 판을 뒤에서 받아 둔다 — 바꾸기는 다음에 켤 때 연결기가(돌고 있는 파일을 안 건드린다)
   setTimeout(() => { checkUpdate().catch(e => audit('update_fail', { result: String(e && e.message || e).slice(0, 80) })); }, 5000).unref();
+  if (process.send) {     // 도는 중에도 새 판을 받고, 돌던 일이 없으면 부모에게 바꾸자고 한다
+    process.on('message', m => { if (m && m.go) process.exit(75); });
+    setInterval(async () => {
+      try { await checkUpdate(); } catch (e) { audit('update_fail', { result: String(e && e.message || e).slice(0, 80) }); }
+      if (fs.existsSync(path.join(installDir(), '_update', 'pending.json')) && !anyFlowBusy() && !anyRunning()) process.send({ swap: 1 });
+    }, Number(process.env.SHORTEM_UPDATE_EVERY_MS || 10 * 60 * 1000)).unref();
+  }
   // 웹 설정 화면 다리(관제 266) — 웹 '완성본 고치기'가 이 PC 완성본을 재생·시간 줄로 보게(서버를 안 거친다)
   startBridge().then(r => { if (r.error) audit('bridge_fail', { result: r.error }); }).catch(() => { /* 다리 없이도 제작은 된다 */ });
 }
