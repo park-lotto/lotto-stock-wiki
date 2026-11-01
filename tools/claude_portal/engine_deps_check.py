@@ -13,7 +13,7 @@ from pathlib import Path
 
 
 # 고객 실행 경로가 아닌 자체시험 전용 import
-IGNORE = {"fontpath"}
+IGNORE = {"fontpath", "torch"}   # torch = 무료 자막 엔진 자기 venv(tools/free_subclean)에서만 — 묶음 파이썬엔 없다
 
 
 def imports_of(path: Path) -> set:
