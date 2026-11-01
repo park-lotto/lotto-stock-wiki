@@ -26,7 +26,7 @@
   "db_below_voice": 10.3,
   "duck_orig_db": 0.0,
   "duck_narr_db": -6.0,
-  "fade_out": 0.5,
+  "fade_out": 0.24,
   "candidates": [],
   "why": "BGM 깔림(BFT 관찰) · 곡 = make_trotpapa BGM honwaka_puppu(곡 미식별 — 사람이 고른다) · 벤치 10편 원본 소리 실측(handconst.py uljimatrot → _kal/손상수_실측.json bgm.* · 신호급 — 섞인 소리, 분리 없음): db_below_voice 10.3 = 말 p50 − 말 없는 구간(≥1초 — 끝 카드 등) 바닥 p10 편 중앙 10.33dB(10.4·6.2·10.1·6.0·11.8·11.2·10.2·10.8·10.8·10.0) · duck_narr_db −6.0 = 말 사이 바닥 − 말 없는 구간 바닥 편 중앙 −6.0dB(−9.5·−6.2·−7.6·−16.3·0·−5.9·−5.8·−7.7·−3.2·0 — 말할 때 배경음이 내려가 있음, 10/10편 비교) · duck_orig_db 0 = 원음 줄 0(안 쓰임) · fade_out 0.24 = 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.24초(0.07~0.77)"
  },

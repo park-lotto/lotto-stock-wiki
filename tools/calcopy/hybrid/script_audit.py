@@ -526,7 +526,7 @@ def text_fix(d: dict, joined: bool = True) -> list[str]:
 ALT_SAY = re.compile(r"(똑\s*같은|같은)\s*(제품|건|게|거|걸|것)\s*[은는이가을]?\s*(없|아니|아닌|못\s*찾)|비슷한\s*(걸|거|것|제품|게|건|[^.,!?]{1,12}?(으로|로|을|를))")
 
 
-ALT_SAY_RULE = ("나레 한 줄로 '같은 건 없어서 비슷한 제품'이라고 밝힌다 — 예 '영상 보고 쿠팡에서 찾아봤는데 똑같은 건 없어서 비슷한 걸로 써 봤어요'"
+ALT_SAY_RULE = ("마지막 줄이 아닌 나레 한 줄로 '같은 건 없어서 비슷한 제품'이라고 밝힌다 — 예 '영상 보고 쿠팡에서 찾아봤는데 똑같은 건 없어서 비슷한 걸로 써 봤어요'"
                 "(제작순서 03 · 사장님 10-25) · 판정 = alt_disclosed, 처음 대본 질문(flow._script_ask)도 이 글을 그대로 싣는다")
 
 
@@ -536,6 +536,9 @@ def alt_disclosed(d: dict) -> dict | None:
         return None
     hit = [l.get("id") for l in narr_lines(d) if ALT_SAY.search(_say(l))]
     if hit:
+        ids = [l.get("id") for l in narr_lines(d)]
+        if len(ids) > 1 and ids[-1] in hit and len(hit) == 1:      # 사장님 11-01: 끝은 고지가 아니라 맺음말
+            return {"rule": "alt_say_last", "line": ids[-1], "why": "비슷한 제품 고지가 마지막 줄이다 — 고지는 앞줄로 옮기고 끝은 맺음말로"}
         return None
     return {"rule": "alt_say", "line": None, "why": "product_mode alt(쿠팡에 같은 제품 없음 → 비슷한 제품)인데 목소리로 그걸 밝히는 줄이 없다 — " + ALT_SAY_RULE}
 

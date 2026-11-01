@@ -26,7 +26,7 @@
   "db_below_voice": 90.0,
   "duck_orig_db": 0.0,
   "duck_narr_db": 0.0,
-  "fade_out": 0.5,
+  "fade_out": 0.125,
   "candidates": [],
   "why": "벤치 BGM 0/6(스타일분석 §7 — 쉼 구간 바닥이 말보다 30~39dB 낮고 조성 줄 없음, LHe 쉼 p10 −75dB 디지털 무음) → 1차 = 배경음 없음. render_bench.audio 는 bgm.id 가 없으면 '<None>.mp3' 를 찾다 멈춘다(굿레터판 id null 도 같은 결손) → 그동안 곡 칸은 채우고 db_below_voice 90(목소리보다 90dB 아래 = 들리지 않음)으로 끈다(_pending.bgm_none) · fade_out 0.125 = channel/evenshopping/_kal/손상수_실측.json(handconst.py evenshopping) bgm.fade_out"
  },

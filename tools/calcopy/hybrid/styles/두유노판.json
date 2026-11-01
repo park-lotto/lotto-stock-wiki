@@ -29,7 +29,7 @@
   "db_below_voice": 0.0,
   "duck_orig_db": 0.0,
   "duck_narr_db": 0.0,
-  "fade_out": 0.5,
+  "fade_out": 0.0,
   "why": "사장님 귀 확인 10-26 '두유노는 배경음·효과음이 없다' → 배경음 없음(render_bench 배경음 층 생략 — 판 bgm.id null). 옛 값(honwaka_puppu·−11.22dB = handconst '말 p50 − 말 사이 바닥' 은 말소리 잔향을 배경음으로 잰 것)은 버림"
  },
  "loudness": {

@@ -27,7 +27,7 @@
   "db_below_voice": 8.1,
   "duck_orig_db": 0.0,
   "duck_narr_db": 0.0,
-  "fade_out": 0.5,
+  "fade_out": 0.04,
   "candidates": [],
   "why": "곡 sweets = 곡 미식별(곡은 사람이 고른다 — bgm_pick) · 벤치 9편 원본 소리 실측(handconst.py sseolpulda → _kal/손상수_실측.json bgm.* · 신호급 — 나레·원음·BGM 섞인 소리, 분리 없음): db_below_voice 8.1 = 말 p50 − 말 사이 바닥(줄 경계 쉼 프레임 중앙, 말 없는 구간 ≥1초 편은 그 p10) 편 중앙 8.12dB(5.82·38.45·8.12·10.04·7.75, n=5) · duck_orig_db 0 = 원음·나레가 같이 나온 편 0(원음 줄 없음 → 원음 구간 덕킹 칸 안 쓰임) · fade_out 0.04 = 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.036초(0.023~0.614) · duck_narr_db 0 = 말 사이 바닥 − 말 없는 구간(≥1초) 바닥 편 중앙(비교 편 1/9: 0, 3dB 미만 차 = 0)"
  },
