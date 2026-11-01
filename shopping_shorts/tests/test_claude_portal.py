@@ -200,6 +200,25 @@ def _two_devices(env):
     return k
 
 
+def test_lease_같은기기_미리보기는_새일에_양보_제작은_막힘(env):
+    c = env["client"]
+    k = _two_devices(env)
+    L = lambda **b: c.post("/api/claude/lease", headers=_h(k, FP1), json=b)
+    assert L(action="acquire", job_id="u1").status_code == 200
+    assert L(action="acquire", job_id="m2").status_code == 200       # 미리보기 임대는 내준다
+    assert L(action="acquire", job_id="m3").status_code == 409       # 제작 임대는 그대로 막는다
+    assert c.post("/api/claude/lease", headers=_h(k, FP2), json={"action": "acquire", "job_id": "u9"}).status_code == 409
+
+
+def test_lease_반납은_속도제한에_안막힘(env, monkeypatch):
+    c = env["client"]
+    k = _two_devices(env)
+    r = c.post("/api/claude/lease", headers=_h(k, FP1), json={"action": "acquire", "job_id": "j1"}).json()
+    monkeypatch.setitem(cp.ANOMALY_DEFAULTS, "a4_per_min", 0)
+    assert c.post("/api/claude/lease", headers=_h(k, FP1), json={"action": "heartbeat", "lease_id": r["lease_id"]}).status_code == 429
+    assert c.post("/api/claude/lease", headers=_h(k, FP1), json={"action": "release", "job_id": "j1", "lease_id": r["lease_id"]}).status_code == 200
+
+
 def test_lease_두기기_동시면_두번째_409_TTL뒤_성공(env, monkeypatch):
     c = env["client"]
     k = _two_devices(env)
