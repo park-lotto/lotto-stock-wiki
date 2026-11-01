@@ -2,7 +2,7 @@
 # 사용: python -X utf8 get_bgm.py      (zip 용량 때문에 곡 파일은 넣지 않았다)
 import os, urllib.request, urllib.parse
 HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.join(HERE, "media", "bgm"); os.makedirs(OUT, exist_ok=True)
-SONGS = ["Cool Vibes", "Groove Grove", "Crypto", "Lobby Time", "Funky Chunk"]
+SONGS = ["Cool Vibes", "Groove Grove", "Crypto", "Lobby Time", "Funky Chunk", "Bass Walker", "Thinking Music", "Local Forecast", "Pamgaea"]
 for name in SONGS:
     path = os.path.join(OUT, name.replace(" ", "_") + ".mp3")
     if os.path.exists(path) and os.path.getsize(path) > 500_000: print("있음", name); continue

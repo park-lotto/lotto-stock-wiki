@@ -215,6 +215,7 @@ def place(buf, a, t, gain=1.0):
 SFX = {"whoosh": "media/sfx/whoosh.mp3", "pop": "media/sfx/pop.mp3", "type": "media/sfx/typing.mp3",
        "thud": "media/sfx/thud.mp3", "ding": "media/sfx/ding.mp3"}
 def build_audio(tl):
+    SFX.update(CFG.get("sfx") or {})
     n = int((tl["total"] + 0.5) * SR); narr = np.zeros(n, np.float32); fx = np.zeros(n, np.float32); mus = np.zeros(n, np.float32)
     for x in tl["lines"]:
         place(narr, read_wav(os.path.join(NARR, "trim", f"{x['i']:03d}.wav")), x["t0"])
@@ -440,6 +441,17 @@ def sub_layer(text):
         d.text((x0 + 6 + (bw - 6 - w) // 2, y0 + 10), text, font=f, fill=(255, 255, 255, 255))
     if len(_sub) > 400: _sub.clear()
     _sub[text] = im; return im
+NUMTOK = re.compile(r"\d[\d,.]*(?:%|만|천|억|조|원|달러|배|명|개월|개|년|월|분기)*(?: \d천)?(?: ?(?:원|달러|명))?")
+def draw_sub_b(frame, text, p):
+    """결 b: 아래 띠 + 흰 글자 + 숫자만 노란색. 글자는 0.12초 동안 살짝 올라온다."""
+    d = ImageDraw.Draw(frame, "RGBA"); f = F("GM", 44); w = tw(d, text, f)
+    d.rectangle([0, H - 100, W, H], fill=C["sub_box"]); d.rectangle([0, H - 106, W, H - 100], fill=C["sub_bar"])
+    x = (W - w) // 2; y = H - 76 + int((1 - ease(p / 0.12)) * 16); i = 0
+    for m in list(NUMTOK.finditer(text)) + [None]:
+        a = text[i: m.start() if m else len(text)]
+        if a: d.text((x, y), a, font=f, fill=(255, 255, 255, 255)); x += d.textlength(a, font=f)
+        if m: d.text((x, y), m[0], font=f, fill=C["yellow"] + (255,)); x += d.textlength(m[0], font=f); i = m.end()
+
 _src = {}
 def src_layer(src, bright):
     k = (src, bright)
@@ -455,6 +467,10 @@ def src_layer(src, bright):
 # ───────────────────────── 오버레이 조각 ─────────────────────────
 def bubble(img, text, cx, cy, p):
     if p <= 0: return
+    if STYLE_B:
+        f = F("GM", 40); d = ImageDraw.Draw(img); w = tw(d, text, f); x = 64 - (1 - ease(p / 0.2)) * (w + 140); y = H - 262
+        d.rectangle([x, y, x + w + 58, y + 78], fill=(255, 255, 255, 245)); d.rectangle([x, y, x + 12, y + 78], fill=C["sub_bar"])
+        d.text((x + 34, y + 19), text, font=f, fill=(17, 24, 28, 255)); return
     sc = 0.6 + 0.4 * ease(p / 0.15) if p < 0.15 else 1.0
     f = F("XB", int(40 * sc)); d0 = ImageDraw.Draw(img); w = tw(d0, text, f); h = int(64 * sc)
     lay = Image.new("RGBA", (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(lay)
@@ -466,6 +482,9 @@ def bubble(img, text, cx, cy, p):
     img.alpha_composite(lay)
 def stamp(img, text, cx, cy, p):
     if p <= 0: return
+    if STYLE_B:
+        f = F("GM", 54); d = ImageDraw.Draw(img); w = tw(d, text, f); x = W - 64 - w - 56 + (1 - ease(p / 0.16)) * (w + 120); y = 128
+        d.rectangle([x, y, x + w + 56, y + 92], fill=C["wine"] + (245,)); d.text((x + 28, y + 19), text, font=f, fill=(255, 255, 255, 255)); return
     sc = 1.6 - 0.6 * ease(p / 0.18) if p < 0.18 else 1.0
     f = F("HAN", int(96 * sc)); lay = Image.new("RGBA", (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(lay)
     w = tw(d, text, f); pad = int(26 * sc); hh = int(120 * sc)
@@ -536,6 +555,13 @@ def shot_src(s):
     if is_ai_bg(s) and s["type"] in ("stock", "labels", "bignum", "quote"): return "AI 생성"
     return ""
 
+STYLE_B = CFG.get("ui_style") == "b"
+def pan_b(im, p, k):
+    """결 b: 확대 없이 일정 배율로 한 방향으로 흐른다(샷 번호로 방향이 돈다)."""
+    z = 1.13; w, h = W / z, H / z; mx, my = W - w, H - h; q = max(0.0, min(1.0, p))
+    l, t = [(mx * q, my / 2), (mx * (1 - q), my / 2), (mx / 2, my * q), (mx / 2, my * (1 - q))][k % 4]
+    return im.transform((W, H), Image.EXTENT, (l, t, l + w, t + h), Image.BILINEAR)
+
 def photo_frame(s, lt, T, dark=0.0):
     im = clip_frame(s, lt, T)
     if im is None:
@@ -543,6 +569,8 @@ def photo_frame(s, lt, T, dark=0.0):
             base = load_base(s.get("img", s["s"][0])); z = 1.16 - 0.06 * max(0.0, min(1.0, lt / max(T, 0.1)))
             w, h = int(W / z), int(H / z); l, tp = int((W - w) * 0.8), int((H - h) * 0.3)
             im = base.crop((l, tp, l + w, tp + h)).resize((W, H), Image.BILINEAR)
+        elif STYLE_B:
+            im = pan_b(load_base(s.get("img", s["s"][0])), lt / max(T, 0.1), s["s"][0])
         else:
             im = kenburns(load_base(s.get("img", s["s"][0])), lt / max(T, 0.1), 1.04, 1.16, s.get("k", 0))
     return photo_grade(im, dark).convert("RGBA")
@@ -594,13 +622,15 @@ def draw_bignum(s, lt, T, tl):
         txt = s["fmt"].format(v)
     if pr >= 1 and s.get("fmt_final"): txt = s["fmt_final"]
     bump = max(0.0, 1 - (lt - end_t) / 0.28) if lt >= end_t else 0.0
-    f = F("K", int(150 * (1 + 0.16 * bump))); w = tw(d, txt, f); tb = d.textbbox((0, 0), txt, font=f)
+    f = F("GM" if STYLE_B else "K", int(150 * (1 + 0.16 * bump))); w = tw(d, txt, f); tb = d.textbbox((0, 0), txt, font=f)
+    nx = (lambda w_: 132) if STYLE_B else (lambda w_: (W - w_) // 2)
+    if STYLE_B: d.rectangle([92, H // 2 - 190, 104, H // 2 + 130], fill=C["sub_bar"])
     cy_ = H // 2 - 35; sh = int(10 * bump * math.sin(lt * 90))
-    d.text(((W - w) // 2 + sh, cy_ - (tb[1] + tb[3]) / 2), txt, font=f, fill=(255, 255, 255, 255) if bump < 0.5 else C["yellow"] + (255,), stroke_width=6, stroke_fill=(0, 0, 0, 255))
-    fl = F("B", 46); w2 = tw(d, s["label"], fl); d.text(((W - w2) // 2, H // 2 - 190), s["label"], font=fl, fill=(255, 255, 255, 255), stroke_width=3, stroke_fill=(0, 0, 0, 255))
+    d.text((nx(w) + sh, cy_ - (tb[1] + tb[3]) / 2), txt, font=f, fill=(255, 255, 255, 255) if bump < 0.5 else C["yellow"] + (255,), stroke_width=6, stroke_fill=(0, 0, 0, 255))
+    fl = F("B", 46); w2 = tw(d, s["label"], fl); d.text((nx(w2), H // 2 - 190), s["label"], font=fl, fill=(255, 255, 255, 255), stroke_width=3, stroke_fill=(0, 0, 0, 255))
     sub_t = (at_time(tl, s["sub_word"]) - s["t0"]) if s.get("sub_word") else end_t + 0.5
     if s.get("sub") and lt > sub_t:
-        fs = F("XB", 54); w3 = tw(d, s["sub"], fs); d.text(((W - w3) // 2, H // 2 + 70), s["sub"], font=fs, fill=C["yellow"] + (255,), stroke_width=4, stroke_fill=(0, 0, 0, 255))
+        fs = F("XB", 54); w3 = tw(d, s["sub"], fs); d.text((nx(w3), H // 2 + 70), s["sub"], font=fs, fill=C["yellow"] + (255,), stroke_width=4, stroke_fill=(0, 0, 0, 255))
     return img
 
 def chart_header(d, title, sub):
@@ -727,7 +757,11 @@ def draw_labels(s, lt, T, tl):
         cx = xs[j] + ws[j] / 2; cy = ys[j] + 45
         plain = t.strip().lower() == "vs"
         bgc, ink = ((255, 255, 255), (17, 17, 17)) if plain else LABELC[j % len(LABELC)]
-        d.rounded_rectangle([cx - w / 2 - 44, cy - 62 * sc, cx + w / 2 + 44, cy + 62 * sc], radius=int(62 * sc), fill=bgc + (250,), outline=(17, 17, 17, 255), width=5)
+        if STYLE_B:
+            bgc, ink = [(TYPO_BG["lime"], (12, 24, 28)), (TYPO_BG["pink"], (12, 24, 28)), (C["yellow"], (12, 24, 28))][j % 3]
+            d.rectangle([cx - w / 2 - 44, cy - 58 * sc, cx + w / 2 + 44, cy + 58 * sc], fill=tuple(bgc) + (250,))
+        else:
+            d.rounded_rectangle([cx - w / 2 - 44, cy - 62 * sc, cx + w / 2 + 44, cy + 62 * sc], radius=int(62 * sc), fill=bgc + (250,), outline=(17, 17, 17, 255), width=5)
         tb = d.textbbox((0, 0), t, font=fw); d.text((cx - w / 2 - tb[0], cy - (tb[1] + tb[3]) / 2), t, font=fw, fill=ink + (255,))
     return img
 
@@ -845,8 +879,36 @@ def typo_now(s, lt, tl):
     for c in cs:
         if c["t"] <= T: cur = c
     return cur, T - cur["t"]
+def draw_typo_b(c, p):
+    """결 b: 글자가 차례로 아래에서 올라오고, 강조는 색 글자 + 밑줄이 그어진다."""
+    bg = (12, 24, 28) if c["bg"] == "black" else TYPO_BG[c["bg"]]
+    img = Image.new("RGBA", (W, H), bg + (255,)); ink = TYPO_INK[c["bg"]]; d = ImageDraw.Draw(img)
+    rows = [parse_mark(r) for r in c["text"].split("/")]; size = {"S0": 300, "S1": 190, "S2": 130}[c["size"]]
+    while True:
+        f = F("GM", size); rw = [sum(tw(d, t, f) for t, _ in r) for r in rows]
+        if max(rw) <= W * 0.84 or size < 60: break
+        size = int(size * 0.92)
+    lh = int(size * 1.3); y = (H - lh * len(rows)) / 2; n = 0
+    for r, w in zip(rows, rw):
+        x = {"L": W * 0.08, "C": (W - w) / 2, "R": W * 0.92 - w}[c["pos"]]
+        for t, k in r:
+            col = (TYPO_BG[c["box"]] if c.get("box") else C["sub_bar"][:3]) if k == "box" else ink
+            if k == "box" and c["bg"] != "black": col = C["blue"]
+            base = x; tb = d.textbbox((0, 0), "가", font=f)
+            for i, ch in enumerate(t):
+                g = ease((p - n * 0.028) / 0.24); n += 1; cx = base + d.textlength(t[:i], font=f)
+                if g > 0: d.text((cx, y + (lh - tb[3] - tb[1]) / 2 + (1 - g) * size * 0.55), ch, font=f, fill=tuple(col) + (int(255 * g),))
+            ww = tw(d, t, f)
+            if k:
+                g = ease((p - n * 0.028 - 0.05) / 0.22); yy = y + lh * (0.93 if k == "box" else 0.52)
+                if g > 0: d.rectangle([base, yy, base + ww * g, yy + max(8, size // 14)], fill=tuple(col if k == "box" else C["wine"]) + (255,))
+            x += ww
+        y += lh
+    return img
+
 def draw_typo(s, lt, T, tl):
     c, p = typo_now(s, lt, tl)
+    if STYLE_B: return draw_typo_b(c, p)
     img = Image.new("RGBA", (W, H), TYPO_BG[c["bg"]] + (255,)); ink = TYPO_INK[c["bg"]]
     rows = [parse_mark(r) for r in c["text"].split("/")]
     size = TYPO_SIZE[c["size"]]; d = ImageDraw.Draw(img)
@@ -1024,7 +1086,10 @@ def render_video(t_from=None, t_to=None, out=None, frames=None):
             s = next((x for x in reversed(shots) if x["t0"] <= t), shots[0])
             lt, T = t - s["t0"], s["t1"] - s["t0"]
             frame = DRAW[s["type"]](s, lt, T, tl)
-            if s["type"] not in ("typo",) and lt < 0.22:  # 컷이 바뀔 때 살짝 밀고 들어오는 줌
+            if STYLE_B and s["type"] != "typo" and lt < 0.2:
+                x_ = -420 + (W + 840) * ease(lt / 0.2); dw = ImageDraw.Draw(frame, "RGBA")
+                dw.polygon([(x_ + 150, 0), (x_ + 330, 0), (x_ + 180, H), (x_, H)], fill=C["sub_bar"])
+            elif s["type"] not in ("typo",) and lt < 0.22:  # 컷이 바뀔 때 살짝 밀고 들어오는 줌
                 z = 1.0 + 0.06 * (1 - ease(lt / 0.22)); w_, h_ = W / z, H / z
                 frame = frame.transform((W, H), Image.EXTENT, ((W - w_) / 2, (H - h_) / 2, (W + w_) / 2, (H + h_) / 2), Image.BILINEAR)
             br = typo_bright(s, lt, tl) if s["type"] == "typo" else is_bright(s)
@@ -1040,8 +1105,11 @@ def render_video(t_from=None, t_to=None, out=None, frames=None):
             if not br:  # 사진이라도 우하단이 밝으면 어두운 글자
                 reg = frame.crop((40, H - 150, 760, H - 106) if CFG.get("ui_style") == "b" else (W - 760, H - 95, W - 40, H - 50)).convert("L"); src_bright = np.asarray(reg).mean() > 135
             if s["type"] != "typo": frame.alpha_composite(src_layer(shot_src(s), src_bright))
-            sub = "" if s["type"] == "typo" else next((x["text"] for x in subs if x["t0"] <= t < x["t1"] + 0.1), "")
-            frame.alpha_composite(sub_layer(sub))
+            so = None if s["type"] == "typo" else next((x for x in subs if x["t0"] <= t < x["t1"] + 0.1), None)
+            if STYLE_B:
+                if so: draw_sub_b(frame, so["text"], t - so["t0"])
+            else:
+                frame.alpha_composite(sub_layer(so["text"] if so else ""))
         ff.stdin.write(frame.convert("RGB").tobytes())
         if fi % 300 == 0: print(f"{t/60:.2f}분 / {total/60:.2f}분", flush=True)
     ff.stdin.close(); ff.wait(); print("영상:", out)
