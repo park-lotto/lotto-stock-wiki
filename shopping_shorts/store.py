@@ -639,6 +639,22 @@ class Store:
                     created_at TEXT NOT NULL
                 )
             """)
+            try:
+                c.execute("ALTER TABLE deposit_claim ADD COLUMN product TEXT")   # 입금 신고 상품(관제 292)
+            except sqlite3.OperationalError:
+                pass  # 이미 존재
+            # 관리자가 손으로 정한 프로그램 구분(관제 295). shortem·shortcl 이 NULL 이면 자동 판정을 따른다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS program_member (
+                    customer_id INTEGER PRIMARY KEY,
+                    shortem INTEGER,
+                    shortcl INTEGER,
+                    plan TEXT NOT NULL DEFAULT '',
+                    move TEXT NOT NULL DEFAULT '',
+                    tutor TEXT NOT NULL DEFAULT '',
+                    updated_at TEXT NOT NULL
+                )
+            """)
             # 1기 챌린지(2026-08-24) — 하루 2영상 업로드 챌린지 참가자·제출물.
             c.execute("""
                 CREATE TABLE IF NOT EXISTS challenge_member (
@@ -6603,21 +6619,55 @@ class Store:
 
     # ── 유튜브 로컬 릴레이 큐(2026-07-24) ──
     def enqueue_yt_relay(self, url):
-        """유튜브 다운로드 요청을 큐에 넣고 req_id 반환. PC 에이전트가 받아 처리한다."""
+        """유튜브 다운로드 요청을 큐에 넣고 req_id 반환. PC 에이전트가 받아 처리한다.
+        ★같은 URL 이 이미 대기·처리 중이거나 받아 둔 파일이 있으면 그 요청을 같이 쓴다(2026-10-29 관제 287).
+        종전엔 시간초과로 다시 부를 때마다 새 줄을 세워, 같은 영상이 6번 쌓이고 PC 가 17분 밀렸다.
+        updated_at = 마지막으로 누가 기다리기 시작한 시각 → 아무도 안 기다리는 요청은 next 가 버린다."""
         import secrets
-        req_id = secrets.token_hex(8)
         now = datetime.now(timezone.utc).isoformat()
         with self._conn() as c:
+            from shopping_shorts import config
+            work_cut = (datetime.now(timezone.utc)
+                        - timedelta(seconds=config.YT_RELAY_POLL_TIMEOUT)).isoformat()
+            for rid, st, op, upd in c.execute(
+                    "SELECT req_id, status, out_path, updated_at FROM yt_relay WHERE url=? "
+                    "AND status IN ('pending','working','done') ORDER BY created_at DESC", (url,)).fetchall():
+                if st == "done" and not (op and Path(op).exists()):
+                    continue
+                # ★working 의 updated_at = PC 가 맡은 시각. 오래된 working 은 PC 가 도중에 죽은 것 —
+                #   거기 붙으면 영원히 안 끝난다(10-29 실사고: 에이전트 재시작 뒤 NsSZAEmgJ88 20분 멈춤).
+                if st == "working":
+                    if upd < work_cut:
+                        continue
+                    return rid
+                c.execute("UPDATE yt_relay SET updated_at=? WHERE req_id=?", (now, rid))
+                return rid
+            req_id = secrets.token_hex(8)
             c.execute("INSERT INTO yt_relay(req_id, url, status, created_at, updated_at) "
                       "VALUES(?,?,'pending',?,?)", (req_id, url, now, now))
         return req_id
 
-    def next_pending_yt_relay(self):
-        """가장 오래된 pending 요청 1건 → {req_id, url}. 없으면 None. 에이전트가 폴링한다."""
+    def next_pending_yt_relay(self, stale_after=None):
+        """가장 오래된 pending 요청 1건을 맡겨(working) {req_id, url} 반환. 없으면 None.
+        ★아무도 안 기다리는 pending(서버가 이미 시간초과로 포기)은 먼저 failed 로 버린다 — PC 헛일 방지.
+        working 으로 바꿔 맡기므로 에이전트가 여러 줄로 동시에 받아도 같은 요청을 두 번 안 받는다."""
+        if stale_after is None:
+            from shopping_shorts import config
+            stale_after = config.YT_RELAY_POLL_TIMEOUT + 20
+        cut = (datetime.now(timezone.utc) - timedelta(seconds=stale_after)).isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         with self._conn() as c:
-            r = c.execute("SELECT req_id, url FROM yt_relay WHERE status='pending' "
-                          "ORDER BY created_at LIMIT 1").fetchone()
-        return {"req_id": r[0], "url": r[1]} if r else None
+            c.execute("UPDATE yt_relay SET status='failed', error='stale: 기다리는 쪽 없음(시간초과)', "
+                      "updated_at=? WHERE status='pending' AND updated_at<?", (now, cut))
+            while True:
+                r = c.execute("SELECT req_id, url FROM yt_relay WHERE status='pending' "
+                              "ORDER BY created_at LIMIT 1").fetchone()
+                if not r:
+                    return None
+                n = c.execute("UPDATE yt_relay SET status='working', updated_at=? "
+                              "WHERE req_id=? AND status='pending'", (now, r[0])).rowcount
+                if n:
+                    return {"req_id": r[0], "url": r[1]}
 
     def finish_yt_relay(self, req_id, out_path=None, error=None):
         """에이전트가 완료(out_path) 또는 실패(error) 보고. status를 done|failed로."""
@@ -7791,25 +7841,37 @@ class Store:
                 (name, phone, email, channel or "", now))
             return cur.lastrowid
 
-    def add_deposit_claim(self, name, depositor, contact=""):
+    def program_members(self):
+        """관리자가 정한 프로그램 구분 전체 — {customer_id: {...}}."""
+        with self._conn() as c:
+            rows = c.execute("SELECT customer_id, shortem, shortcl, plan, move, tutor FROM program_member").fetchall()
+        return {r[0]: {"shortem": r[1], "shortcl": r[2], "plan": r[3], "move": r[4], "tutor": r[5]} for r in rows}
+
+    def save_program_member(self, customer_id, shortem, shortcl, plan, move, tutor):
+        now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        with self._conn() as c:
+            c.execute("INSERT OR REPLACE INTO program_member(customer_id, shortem, shortcl, plan, move, tutor, updated_at) "
+                      "VALUES(?,?,?,?,?,?,?)", (customer_id, shortem, shortcl, plan, move, tutor, now))
+
+    def add_deposit_claim(self, name, depositor, contact="", product=""):
         """'입금 완료했습니다' 신고 저장 → id.
         ★고객이 직접 누르는 것이라 **입금 사실을 증명하지 않는다** — 사장님이 통장을
           보고 확인하는 절차는 그대로다. 이건 '연락을 놓치지 않기 위한 알림'이다."""
         now = datetime.now(timezone.utc).isoformat(timespec="seconds")
         with self._conn() as c:
             cur = c.execute(
-                "INSERT INTO deposit_claim(name, depositor, contact, done, created_at) "
-                "VALUES(?,?,?,0,?)", (name, depositor, contact or "", now))
+                "INSERT INTO deposit_claim(name, depositor, contact, product, done, created_at) "
+                "VALUES(?,?,?,?,0,?)", (name, depositor, contact or "", product or "", now))
             return cur.lastrowid
 
     def list_deposit_claims(self, only_open=True):
         """입금 신고 목록 — 최신순. only_open이면 아직 처리 안 한 것만."""
-        q = ("SELECT id, name, depositor, contact, done, created_at FROM deposit_claim "
+        q = ("SELECT id, name, depositor, contact, done, created_at, product FROM deposit_claim "
              + ("WHERE done=0 " if only_open else "") + "ORDER BY id DESC")
         with self._conn() as c:
             rows = c.execute(q).fetchall()
         return [{"id": r[0], "name": r[1], "depositor": r[2], "contact": r[3],
-                 "done": r[4], "created_at": r[5]} for r in rows]
+                 "done": r[4], "created_at": r[5], "product": r[6] or ""} for r in rows]
 
     def close_deposit_claim(self, claim_id):
         """처리 완료 표시(승인하고 나면 목록에서 내린다)."""

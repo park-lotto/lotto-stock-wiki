@@ -19,6 +19,7 @@
 import os
 import sys
 import tempfile
+import threading
 import time
 import traceback
 from pathlib import Path
@@ -31,6 +32,9 @@ from shopping_shorts.media_download import _download_pinterest, _download_ytdlp,
 SERVER = os.getenv("YT_RELAY_SERVER", "https://shoppingshorts.duckdns.org").rstrip("/")
 KEY = os.getenv("YT_RELAY_KEY", "")
 POLL_INTERVAL = int(os.getenv("YT_RELAY_POLL_INTERVAL", "5"))   # 큐 빌 때 대기(초)
+# 동시에 받는 줄 수(관제 287, 2026-10-29). 한 줄이면 11편 요청 시 뒤쪽이 서버 대기 상한을 넘겨 버려졌다.
+# 서버 next 가 요청을 working 으로 맡기므로 여러 줄이 같은 요청을 겹쳐 받지 않는다.
+WORKERS = max(1, int(os.getenv("YT_RELAY_WORKERS", "3")))
 
 
 def _next_job():
@@ -95,7 +99,15 @@ def main():
     if not KEY:
         print("YT_RELAY_KEY 환경변수가 없습니다. 서버와 같은 키를 설정하세요.", file=sys.stderr)
         sys.exit(1)
-    print(f"[relay] 에이전트 시작 — 서버={SERVER}, 폴링={POLL_INTERVAL}s", flush=True)
+    print(f"[relay] 에이전트 시작 — 서버={SERVER}, 폴링={POLL_INTERVAL}s, 동시={WORKERS}", flush=True)
+    threads = [threading.Thread(target=_worker_loop, daemon=True) for _ in range(WORKERS)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+
+def _worker_loop():
     while True:
         try:
             job = _next_job()

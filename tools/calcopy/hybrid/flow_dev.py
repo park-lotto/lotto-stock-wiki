@@ -48,7 +48,7 @@ def answer(W: Path, rv: dict, log, replay: Path | None = None) -> dict:
     prompt = (rv["ask"] + ("\n\n" + "\n".join(texts) if texts else "") + ("\n\n그림 파일(Read 로 열어 본다):\n" + "\n".join(imgs) if imgs else "") +
               "\n\n답은 JSON 객체 하나만, 다른 글 없이.")
     (d / "ask.txt").write_text(prompt, encoding="utf-8")
-    model = {"opus": "opus", "sonnet": "sonnet"}.get(rv.get("model") or "opus", "opus")
+    model = {"opus": "opus", "sonnet": "sonnet", "haiku": "haiku"}.get(os.environ.get("FLOW_DEV_MODEL") or rv.get("model") or "opus", "opus")   # FLOW_DEV_MODEL = 전 질문 모델 강제(10-28 강의 시연 하이쿠)
     t0 = time.time()
     txt = ""
     for _ in range(2):

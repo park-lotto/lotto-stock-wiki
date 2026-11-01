@@ -19,14 +19,22 @@ def fingerprint(bench_lines: list[dict], words: list) -> list[dict]:
     words = [(float(t), norm(w)) for t, w in words if norm(w)]
     out = []
     # 위스퍼는 나레·원음을 한 덩어리로 묶는다(10-21 실측: 2줄, 둘째 줄 80자) → 문장·쉼표·10~16자 토막으로 갈라 토막마다 대조
+    # 토막은 **낱말 경계**에서 자른다(10~16자, 반씩 겹쳐 민다). 10-29 얜샷템 최화정 RPuDFaMmpJI: 글자 수로 14자씩 끊던 옛 판은
+    # '할아버지 김 너무나 힘들다는'이 '…할아버지김너'·'김너무나힘들다…'로 쪼개져 받아쓰기 오타 하나에 0.7 밑 → 4줄 맞는 원본이 1줄만 맞아 놓쳤다
     chunks = []
     for b in bench_lines:
         for s in re.split(r"[.?!,]\s*", str(b.get("text") or "")):
-            n = norm(s)
-            while len(n) > 16:
-                chunks.append(n[:14]); n = n[10:]
-            if len(n) >= 6:
-                chunks.append(n)
+            toks = [t for t in (norm(w) for w in s.split()) if t]
+            i = 0
+            while i < len(toks):
+                acc, j = "", i
+                while j < len(toks) and len(acc) < 10:
+                    acc += toks[j]; j += 1
+                if len(acc) >= 6:
+                    chunks.append(acc[:16])
+                if j >= len(toks):
+                    break
+                i += max(1, (j - i) // 2)
     # 비교 창 길이는 토막 길이 -2~+4 중 가장 맞는 것(98 #117 — 옛 판은 늘 +4 고정이라 11자 토막은 글자가 다 맞아도 0.85,
     # 받아쓰기 한 낱말만 달라도 0.69 로 떨어져 진짜 원본(이미숙 uOj3ix7qCj8)이 1줄만 맞았다)
     for q in dict.fromkeys(chunks):
@@ -128,12 +136,14 @@ def caps_split_fix(S: dict, st: dict) -> list[str]:
         if not mx or not isinstance(l.get("caps"), list):
             continue
         new = []
-        for c in l["caps"]:
+        from tools.calcopy.hybrid.render_bench import who_prefix
+        for ci, c in enumerate(l["caps"]):
             text = c["text"] if isinstance(c, dict) else c if isinstance(c, str) else None
-            if text is None or nchar(text) <= mx:
+            m1 = mx - nchar(who_prefix(l, ci))      # 화자 대사 줄 첫 덩어리는 '<화자> : ' 까지 보이는 자수(script_audit cap_chars 와 같은 셈)
+            if text is None or nchar(text) <= m1:
                 new.append(c)
                 continue
-            parts = _cap_cut(text.split(), mx, nchar)
+            parts = _cap_cut(text.split(), m1, nchar)
             if len(parts) < 2:
                 new.append(c)
                 continue
@@ -145,10 +155,21 @@ def caps_split_fix(S: dict, st: dict) -> list[str]:
     return out
 
 
+def title_spec(st: dict) -> tuple[list, float]:
+    """(판단 주인 — 대본 제목 줄을 받는 판 틀 칸) (줄마다 칸, 받을 수 있는 줄 수). 본문 틀(frame.title)과 구간 틀(frame.segments[].frame.title —
+    훅 카드 흰·연두 2줄 등) 중 칸이 가장 많은 것. 칸에 join 이 있으면 남은 줄을 이어 그리므로 줄 수 제한 없음(render_bench.title_segs 와 같은 뜻).
+    10-29 썰템쇼 회원 시험: 본문 틀 1칸만 보고 훅 카드용 2번째 줄(연두)을 잘라 '제목 1줄' 관문이 고치기 내내 반복됐다."""
+    F = st.get("frame") or {}
+    specs = [F.get("title") or []] + [((g.get("frame") or {}).get("title") or []) for g in F.get("segments") or [] if isinstance(g, dict)]
+    best = max(specs, key=len)
+    cap = float("inf") if any(isinstance(sp, dict) and sp.get("join") is not None for L in specs for sp in L) else len(best)
+    return best, cap
+
+
 def title_colors_fix(S: dict, st: dict) -> list[str]:
-    """(판단 주인 — title_colors_bad 와 같은 판 틀 읽기) 그 줄 틀에 없는 'hi' 를 null 로 바꾼다 — 형식 일이라 대본을 다시 쓰게 하지 않는다
+    """(판단 주인 — title_colors_bad 와 같은 판 틀 읽기 title_spec) 그 줄 틀에 없는 'hi' 를 null 로 바꾼다 — 형식 일이라 대본을 다시 쓰게 하지 않는다
     (10-26 까르보: 'hi' 를 2줄→1줄로 옮겨 붙이며 같은 반려 3번에 멈춤). 반환 = 바꾼 칸 글."""
-    spec = (st.get("frame") or {}).get("title") or []
+    spec, cap = title_spec(st)
     fixed = []
     for i, line in enumerate(S.get("title_lines") or []):
         sp = spec[i] if i < len(spec) else {}
@@ -156,15 +177,15 @@ def title_colors_fix(S: dict, st: dict) -> list[str]:
             if isinstance(chunk, list) and len(chunk) > 1 and chunk[1] == "hi" and "hi" not in sp:
                 chunk[1] = None
                 fixed.append(f"제목 {i + 1}줄 '{chunk[0]}' hi → null")
-    if isinstance(S.get("title_lines"), list) and len(S["title_lines"]) > len(spec):     # 판 틀보다 많은 줄은 그려지지도 않는다 — 잘라 낸다(10-27 TV 스탠드 편 '제목 줄 수 2 > 판 틀 0줄' 반려 6번)
+    if isinstance(S.get("title_lines"), list) and len(S["title_lines"]) > cap:     # 판 틀보다 많은 줄은 그려지지도 않는다 — 잘라 낸다(10-27 TV 스탠드 편 '제목 줄 수 2 > 판 틀 0줄' 반려 6번)
         fixed.append(f"제목 줄 {len(S['title_lines'])} → 판 틀 {len(spec)}줄")
-        S["title_lines"] = S["title_lines"][:len(spec)]
+        S["title_lines"] = S["title_lines"][:int(cap)]
     return fixed
 
 
 def title_colors_bad(S: dict, st: dict) -> list[str]:
-    """제목 줄마다 판 틀(frame.title[줄])에 있는 색만 썼나 — 'hi' 는 그 줄 틀에 hi 가 있을 때만(10-21 실측: 키치잇판 둘째 줄 상자에 hi → 렌더 KeyError)."""
-    spec = (st.get("frame") or {}).get("title") or []
+    """제목 줄마다 판 틀(title_spec)에 있는 색만 썼나 — 'hi' 는 그 줄 틀에 hi 가 있을 때만(10-21 실측: 키치잇판 둘째 줄 상자에 hi → 렌더 KeyError)."""
+    spec, cap = title_spec(st)
     out = []
     for i, line in enumerate(S.get("title_lines") or []):
         sp = spec[i] if i < len(spec) else {}
@@ -172,7 +193,7 @@ def title_colors_bad(S: dict, st: dict) -> list[str]:
             c = chunk[1] if isinstance(chunk, list) and len(chunk) > 1 else None
             if c == "hi" and "hi" not in sp:
                 out.append(f"제목 {i + 1}줄 '{chunk[0]}' 에 'hi' — 이 판 제목 {i + 1}줄은 강조색이 없다(null 또는 '#hex')")
-    if len(S.get("title_lines") or []) > len(spec):
+    if len(S.get("title_lines") or []) > cap:
         out.append(f"제목 줄 수 {len(S['title_lines'])} > 판 틀 {len(spec)}줄")
     return out
 
@@ -284,6 +305,70 @@ def script_claim_problems(S: dict) -> list[str]:
         if l.get("kind") == "tts" and _COUNT_RE.search(t):
             out.append(f"{l.get('id')}: 후기 개수·평점 숫자는 쓰지 않는다 — 베스트 후기의 셀링포인트(r번호)로 바꿔라: {t.strip()[:60]}")
     return out
+
+
+BENCH_COPY_CHARS = 12     # 소재 쇼츠(남의 한국 재편집) 받아쓰기와 띄어쓰기·부호 빼고 이만큼 이어서 같으면 베낀 줄
+BENCH_COPY_RULE = ("소재 쇼츠 받아쓰기는 흐름·사실만 빌린다 — 그 문장을 그대로 옮기지 않는다(남의 채널 글이다). "
+                   f"띄어쓰기·부호를 빼고 {BENCH_COPY_CHARS}자 이상 같은 글이 이어지면 반려된다. 숫자·이름 같은 사실은 써도 되지만 문장은 내 말로.")
+
+
+def _plain(t: str) -> str:
+    return re.sub(r"[\s\W_]+", "", str(t or ""))
+
+
+def bench_copy_problems(S: dict, bench_lines: list, n: int = BENCH_COPY_CHARS) -> list[str]:
+    """(판단 주인 — 소재 쇼츠 문장 베끼기) 나레 줄이 소재 쇼츠 받아쓰기와 n자 이상 이어서 같으면 그 줄을 돌려준다.
+    10-30 회사 PC 숏템리폿 '전기 바이크' 편: 소재 쇼츠 끝 문장('무채색 … 이거 타고 다니면 제대로 시선 강탈이겠네요')·스펙 문장을 그대로 옮겼다.
+    원음 줄(kind orig)은 원본 말의 번역이라 뺀다."""
+    B = _plain(" ".join(str((l or {}).get("text") or "") for l in bench_lines or [] if isinstance(l, dict)))
+    if len(B) < n:
+        return []
+    out = []
+    for l in S.get("lines") or []:
+        if l.get("kind") == "orig":
+            continue
+        t = _plain(str(l.get("tts") or "") or " ".join(str(c) for c in l.get("caps") or [] if isinstance(c, str)))
+        best = ""
+        for i in range(len(t) - n + 1):
+            if t[i:i + n] in B:
+                k = n
+                while i + k < len(t) and t[i:i + k + 1] in B:
+                    k += 1
+                if k > len(best):
+                    best = t[i:i + k]
+        if best:
+            out.append(f"{l.get('id')}: 소재 쇼츠 문장과 {len(best)}자 같음('{best[:30]}') — 사실만 두고 내 말로 다시 써라")
+    return out
+
+
+ALT_TAIL_MAX_SEC = 6.0    # 비슷한 제품 + 제품 영상 못 받음(사진만) 편의 원음 뒤 제품 줄 어림 길이 상한
+ALT_TAIL_RULE = (f"이 편은 비슷한 제품 영상을 못 받아 원음이 끝난 뒤 제품 줄은 상품 사진만 나온다 — 그 줄들(원음 마지막 줄 뒤 나레)은 합쳐 {ALT_TAIL_MAX_SEC:.0f}초 이내"
+                 "(비슷한 제품이라 밝히는 줄 + 끝 한 줄 정도). 스펙·감상은 원음 앞 원본 장면 줄에서 끝낸다.")
+
+
+def interest_gate(origin_hook: str, back_hook: str, verdict: str) -> list[str]:
+    """(판단 주인 — 흥미 이음, 사장님 10-18 "원본 해외 영상이랑 완전 다른, 흥미롭지 못한 물건") 원본의 신기한 점이 쿠팡 제품에도 보이나.
+    '같음'만 통과. 원본흥미·뒤흥미가 비면 판정을 믿지 않는다. 설명서 channel/hottemreport/현장썰하이브리드/대본설명서.md §0."""
+    bad = []
+    if not str(origin_hook or "").strip():
+        bad.append("원본흥미가 비었다")
+    if not str(back_hook or "").strip():
+        bad.append("뒤흥미가 비었다")
+    if str(verdict or "").strip() != "같음":
+        bad.append(f"판정 '{verdict}' — '같음'만 만든다")
+    return bad
+
+
+def alt_tail_problems(S: dict, cps: float, max_sec: float = ALT_TAIL_MAX_SEC) -> list[str]:
+    """(판단 주인 — 사진만 나오는 제품 꼬리 길이) 원음 마지막 줄 뒤 나레 글자 ÷ 판 cps 가 max_sec 를 넘으면 문제.
+    10-30 숏템리폿 '전기 바이크' 편: 제품 줄 5개 13초가 같은 상품 사진 2~3장 확대로만 이어져 영상 절반이 정지 화면(벤치 끝 부분 4~5초)."""
+    L = S.get("lines") or []
+    last = max((i for i, l in enumerate(L) if l.get("kind") == "orig"), default=-1)
+    tail = [l for l in L[last + 1:] if l.get("kind") == "tts"]
+    sec = sum(len(_plain(l.get("tts") or "")) for l in tail) / max(0.1, float(cps or 7.0))
+    if sec <= max_sec + 1e-9:
+        return []
+    return [f"원음 뒤 제품 줄 {len(tail)}개 어림 {sec:.1f}초 > {max_sec:.0f}초 — 상품 사진만 이어진다: 밝히는 줄 + 끝 한 줄로 줄이고 나머지는 원음 앞으로"]
 
 
 def alt_scene_problems(S: dict, M: dict, origin_names: set) -> list[str]:

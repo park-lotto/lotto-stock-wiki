@@ -65,12 +65,19 @@ def key_source() -> str:
     v = (os.environ.get("CALCOPY_VMAKE_VIA") or "").strip().lower()
     if v in ("server", "member"):
         return v
-    from tools.calcopy.hybrid import server_ai
+    try:
+        from tools.calcopy.hybrid import server_ai     # 서버 전용(회원 엔진 묶음엔 없다 — engine_bundle HAND_SERVER_ONLY)
+    except ImportError:                                 # 회원 PC = 회원 본인 키(10-29 회원 샥템·숏템리폿: 준비 점검이 ImportError 로 1/13 멈춤)
+        return "member"
     return "server" if Path(server_ai.KEY).exists() else "member"
 
 
 def style_mode(version: str | None) -> str:
-    """판 칸 orig_text.mode — 'vmake'(지운다) | 'blur'(흐림). 판에 없으면 'vmake'(사장님 10-25: 박힌 자막 = VMake 로 지운다)."""
+    """박힌 글자 처리 방식 — 'vmake'(장면마다 골라 지운다) | 'blur'(흐림). 사장님 10-30 "VMake 가 있으면 고급형으로 장면마다 골라서 지우고 없으면 흐림 ·
+    사용자가 바꿀 수 있게 · 이 채널(썰템쇼)은 흐림": 회원 설정(text.orig_text — 실행기가 SHORTEM_TEXT_MODE 로) > 판 칸 orig_text.mode > 'vmake'(키 없으면 ready 가 흐림)."""
+    m = (os.environ.get("SHORTEM_TEXT_MODE") or "").strip().lower()
+    if m in ("vmake", "blur"):
+        return m
     if not version:
         return "vmake"
     from tools.calcopy.hybrid import styles
@@ -80,8 +87,26 @@ def style_mode(version: str | None) -> str:
 def will_erase(version: str | None) -> bool:
     """이 판의 박힌 글자를 렌더 전에 지우나(판단 주인) — 판 orig_text.mode 가 vmake 이고 돈 막힘(SHORTEM_NO_PAID)이 아니면 True.
     render_bench --plan 관문 ④ 가 True 일 때 글자 컷을 멈추지 않고 '지울 컷'(timeline.vmake_cuts)에 올린다(사장님 10-26 "글자가 많으면 자막을 지우면 되는 거고").
-    키 없음(need_key)도 True — 지울 판이고, 키는 flow f_clean 이 렌더 전에 따로 멈춰 받는다."""
+    키 없음(need_key)도 True — 지울 판이고, 키는 flow f_clean 이 렌더 전에 따로 멈춰 받는다.
+    ★그 판 형식 단계에 지우기(f_clean)가 없으면 False(10-30 설치본 시험: 쇼핑형 썰템쇼는 지우기 단계가 없는데 True 라 관문이 흐림을 안 넣고
+      고치기 질문도 '흐림 넣지 마라' → 남의 로고·자막이 남아 1초 시트에서 4번 걸림). 형식 판단 주인 = flow.erases_text."""
+    if not _flow_erases(version):
+        return False
     return ready(style_mode(version))["mode"] != "blur"
+
+
+def _flow_erases(version: str | None) -> bool:
+    e = os.environ.get("CALCOPY_ERASE")          # 회원 PC = 지시서가 계획·렌더 명령에 실어 보낸 값(runner_ops 가 그 일 동안만 둔다 — 회원 엔진엔 flow.py 가 없다)
+    if e in ("0", "1"):
+        return e == "1"
+    if not version:
+        return True
+    try:
+        from tools.calcopy.hybrid import flow as F
+        return F.erases_text(version)
+    except Exception as e:  # noqa: BLE001 — 지시서가 없는 판(우리 PC 옛 길)은 판 칸 그대로
+        sys.stderr.write(f"[vmake_clean] 형식 확인 못 함({version}): {type(e).__name__} — 판 칸 그대로" + chr(10))
+        return True
 
 
 def ready(mode: str = "vmake") -> dict:
@@ -90,8 +115,8 @@ def ready(mode: str = "vmake") -> dict:
         return {"mode": "blur", "why": "SHORTEM_NO_PAID — 돈 드는 호출 막음" if mode != "blur" else "판 orig_text.mode=blur"}
     if key_source() == "server":
         return {"mode": "vmake", "via": "server", "why": ""}
-    if not member_key():
-        return {"mode": "need_key", "why": NO_KEY_WHY, "fix": NO_KEY_FIX}
+    if not member_key():                   # 키 없음 = 흐림(사장님 10-30 — 멈추고 키를 묻지 않는다)
+        return {"mode": "blur", "why": "VMake 키 없음 — 흐림으로 가린다", "fix": NO_KEY_FIX}
     return {"mode": "vmake", "via": "member", "why": ""}
 
 

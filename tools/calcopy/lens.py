@@ -22,8 +22,10 @@ SKIP_VIDEO = re.compile(r"google\.|gstatic|googleusercontent|ytimg|ggpht|coupang
 LENS_FEW = 20      # 결과 화면의 링크 쌍이 이보다 적으면 덜 뜬 것 — 기다려 내려 본다(실측: 다 뜨면 60)
 
 
-def lens_rows(pg, img: str, skip: re.Pattern = SKIP_SHOP, hl: str = "ko", info: dict | None = None) -> list[dict]:
-    """사진 한 장 → [{href, text, shop}]. hl = 구글 화면 언어(en 이면 해외 결과가 위로 — snowball 10-21)."""
+def lens_rows(pg, img: str, skip: re.Pattern = SKIP_SHOP, hl: str = "ko", info: dict | None = None, gl: str = "") -> list[dict]:
+    """사진 한 장 → [{href, text, shop}]. hl = 구글 화면 언어(en 이면 해외 결과가 위로 — snowball 10-21).
+    gl = 결과 나라(올린 뒤 결과 주소에 붙여 다시 연다). 10-27 사과깎이 1lMbJh0n_d4: 한국 회선 그대로면 영상 12개 중 한국 판매 리그램 11개 ·
+    gl=us 면 한국 0·해외 틱톡·유튜브 15개(jp·cn·br 도 비슷)."""
     pg.goto(f"https://www.google.com/?hl={hl}", wait_until="domcontentloaded", timeout=40000)
     # 고정 1.5초 두 번 대신 버튼이 보이면 바로(10-27 — 장마다 3초)
     btn = pg.locator('div[aria-label="이미지로 검색"], div[aria-label="Search by image"]').first
@@ -43,6 +45,8 @@ def lens_rows(pg, img: str, skip: re.Pattern = SKIP_SHOP, hl: str = "ko", info: 
         up.click()
     fc.value.set_files(str(Path(img).resolve()))
     pg.wait_for_url(re.compile(r"(lens|search)"), timeout=40000)
+    if gl:
+        pg.goto(re.sub(r"&(gl|hl)=[^&]*", "", pg.url) + f"&hl={hl}&gl={gl}", wait_until="domcontentloaded", timeout=40000)
     # 10-27 실측(샤넬 립라이너 4장): 영상 후보는 결과 주소가 뜬 순간에 이미 다 있다(바로 4·4·7·9 = 7초+스크롤 뒤 4·4·7·9, 새 것 0).
     #   예전엔 무조건 7초 + 스크롤 4.2초 = 장마다 11초(8장 ≈ 1.5분). 1.5초 뒤 읽고, 링크가 적을 때만 기다려 내려 본다
     pg.wait_for_timeout(1500)
@@ -134,7 +138,8 @@ def lens_page(name: str = ""):
         def launch(prof):
             return p.chromium.launch_persistent_context(prof, headless=False, channel="chrome", locale="ko-KR",
                                                         viewport={"width": 1366, "height": 900},
-                                                        args=["--disable-blink-features=AutomationControlled"])
+                                                        args=["--disable-blink-features=AutomationControlled"] +
+                                                             (["--window-position=-32000,-32000"] if os.environ.get("SHORTEM_BROWSER_OFFSCREEN") == "1" else []))   # 창은 뜨되 화면 밖(10-28 강의 시연 '창 띄우지 마라')
         try:
             ctx = launch(PROFILE + (f"_{name}" if name else ""))
         except Exception as e:  # noqa: BLE001 — 프로필이 다른 세션 크롬에 잠김('기존 브라우저 세션에서 여는 중', 10-21 워커 5명+원본찾기 충돌)

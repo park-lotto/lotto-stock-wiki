@@ -5,7 +5,7 @@
 
 판단 주인(각 하나 — 라우트는 부르기만, 0순위-C):
   issue_license / verify_license  라이선스 키 발급·검증(SHORTEM-L1.<cid>.<exp>.<kv>.<sig>, 서버는 키 해시만)
-  license                         기기 지문 DEVICES_MAX(1)대·회수·정지·엔진 버전
+  license                         기기 지문 DEVICES_MAX(2)대·회수·정지·엔진 버전
   lease                           cid 당 활성 작업 1개(TTL 180초, 하트비트 60초, 다른 기기 거절, 강제 해제)
   assets_for                      이번 작업이 **참조하는 자산만** 서명 URL(6h) — 통째로 안 준다
   pack                            그 job 의 발급 목록 안 자산만 재발급
@@ -48,7 +48,8 @@ LEASE_TTL = 180
 HEARTBEAT_EVERY = 60
 ASSET_URL_TTL = 6 * 3600
 PREVIEW_TOKEN_TTL = 600
-DEVICES_MAX = 1          # PC 1대만(2026-10-19 사장님 결정, 관제 234 5판). 교체는 마이페이지 '기기 빼기'
+START_TTL = 72 * 3600    # 시작.md 인증값 기한
+DEVICES_MAX = 2          # PC 2대까지(2026-11-01 사장님 "pc는 2대로", 10-19 1대 결정을 대체). 교체는 마이페이지 '기기 빼기'
 PROFILES_MAX = 10
 ASSET_KINDS = ("font", "sfx", "bgm", "template", "meme")
 # 견본 종류 → 허용 확장자(앞이 우선). 원본 kind 와 별개로 목소리·통과작도 견본만 있다.
@@ -159,6 +160,9 @@ _SCHEMA = (
         cid INTEGER PRIMARY KEY, kv INTEGER NOT NULL DEFAULT 0, gkv INTEGER NOT NULL DEFAULT 0,
         key_hash TEXT, issued INTEGER, expires INTEGER, plan TEXT DEFAULT 'claude', entitled_json TEXT,
         revoked INTEGER NOT NULL DEFAULT 0, suspended_until INTEGER NOT NULL DEFAULT 0, suspend_rule TEXT)""",
+    """CREATE TABLE IF NOT EXISTS claude_license_slots (
+        cid INTEGER NOT NULL, slot INTEGER NOT NULL, kv INTEGER NOT NULL, key_hash TEXT, issued INTEGER, expires INTEGER,
+        PRIMARY KEY (cid, slot))""",
     """CREATE TABLE IF NOT EXISTS claude_devices (
         id INTEGER PRIMARY KEY AUTOINCREMENT, cid INTEGER NOT NULL, fp_hash TEXT NOT NULL, dev_id TEXT NOT NULL,
         name TEXT, slot INTEGER, created INTEGER, last_seen INTEGER, removed INTEGER NOT NULL DEFAULT 0)""",
@@ -264,6 +268,17 @@ def _thresholds(store) -> dict:
     return t
 
 
+def devices_max(cid) -> int:
+    """이 계정의 기기 상한 — 판단은 여기 한 곳."""
+    return DEVICES_MAX
+
+
+def key_slots(cid) -> int:
+    """이 계정의 키 자리 — 둘째 키는 관리자만(사장님 10-31). 회원은 키 1개로 PC 2대를 쓴다."""
+    from shopping_shorts import app as _app
+    return 2 if _app._is_admin(cid) else 1
+
+
 def _gate(store, key, cid) -> bool:
     """스위치 판정은 app._setting_gate 하나(""끔·"admin"·"11,42"·"1")."""
     from shopping_shorts import app as _app
@@ -296,24 +311,108 @@ def _gkv(store) -> int:
         return 0
 
 
-def issue_license(cid, store=None) -> dict:
-    """새 키 발급(kv+1 — 옛 키 즉시 무효). 키 원문은 반환값에만 있고 DB 엔 해시만 남는다."""
+def issue_license(cid, store=None, slot=1) -> dict:
+    """새 키 발급(kv+1 — 그 자리 옛 키 즉시 무효). 키 원문은 반환값에만 있고 DB 엔 해시만 남는다.
+    slot 2 = 관리자 둘째 PC 키(사장님 10-31 "회사·집 2개 발급, 관리자만") — 한쪽을 새로 받아도 다른 쪽이 끊기지 않는다."""
     store = _store(store)
     ensure_schema(store)
     cid = int(cid)
     now = _now()
     exp = now + LICENSE_DAYS * 86400
+    slot = int(slot)
+    if slot not in (1, 2) or slot > key_slots(cid):
+        raise PortalError("bad_request", "둘째 키는 관리자만 받을 수 있습니다")
     with _tx(store, write=True) as c:
         row = _row(c, "SELECT kv FROM claude_licenses WHERE cid=?", (cid,))
-        kv = (row["kv"] if row else 0) + 1
+        top = _row(c, "SELECT MAX(kv) AS kv FROM claude_license_slots WHERE cid=?", (cid,))
+        kv = max(row["kv"] if row else 0, (top or {}).get("kv") or 0) + 1      # 자리끼리 kv 가 겹치면 옛 키가 되살아난다
         key = f"SHORTEM-L1.{cid}.{exp}.{kv}.{_sig(cid, exp, kv)}"
-        if row:
+        if slot == 2:
+            if not row:
+                raise PortalError("bad_request", "첫째 키를 먼저 발급하세요")
+            c.execute("INSERT OR REPLACE INTO claude_license_slots(cid, slot, kv, key_hash, issued, expires) VALUES(?,?,?,?,?,?)",
+                      (cid, slot, kv, _key_hash(key), now, exp))
+        elif row:
             c.execute("UPDATE claude_licenses SET kv=?, gkv=?, key_hash=?, issued=?, expires=?, revoked=0 WHERE cid=?",
                       (kv, _gkv(store), _key_hash(key), now, exp, cid))
         else:
             c.execute("INSERT INTO claude_licenses(cid, kv, gkv, key_hash, issued, expires) VALUES(?,?,?,?,?,?)",
                       (cid, kv, _gkv(store), _key_hash(key), now, exp))
     return {"key": key, "kv": kv, "issued": now, "expires": exp}
+
+
+def member_key(cid, store=None) -> str:
+    """회원의 지금 키 — 서명 방식이라 저장 없이 다시 만들 수 있다(옛 키를 끊지 않는다). 없거나 끝났으면 새로 발급."""
+    store = _store(store)
+    ensure_schema(store)
+    cid = int(cid)
+    with _tx(store) as c:
+        row = _row(c, "SELECT kv, expires, revoked FROM claude_licenses WHERE cid=?", (cid,))
+    if row and not row["revoked"] and row["expires"] > _now():
+        key = f"SHORTEM-L1.{cid}.{row['expires']}.{row['kv']}.{_sig(cid, row['expires'], row['kv'])}"
+        try:
+            verify_license(key, store)
+            return key
+        except PortalError:
+            pass
+    return issue_license(cid, store)["key"]
+
+
+def start_token(cid) -> str:
+    """시작.md 에 들어가는 회원 인증값 — 키 원문은 대화에 남으므로 넣지 않고, 기한 있는 값만 넣는다."""
+    cid, exp = int(cid), _now() + START_TTL
+    return f"{cid}.{exp}.{_mac('start', f'{cid}|{exp}')[:32]}"
+
+
+def start_redeem(token, store=None) -> dict:
+    """인증값 → 회원 키. 설치 스크립트만 부른다. 판단은 이 함수 하나."""
+    store = _store(store)
+    parts = str(token or "").split(".")
+    if len(parts) != 3 or not parts[0].isdigit() or not parts[1].isdigit():
+        raise PortalError("bad_key", "시작 파일이 올바르지 않습니다 — 페이지에서 새로 받아 주세요")
+    cid, exp = int(parts[0]), int(parts[1])
+    if not hmac.compare_digest(parts[2], _mac("start", f"{cid}|{exp}")[:32]):
+        raise PortalError("bad_key", "시작 파일이 올바르지 않습니다 — 페이지에서 새로 받아 주세요")
+    if exp < _now():
+        raise PortalError("expired", "시작 파일 기한이 지났습니다 — 페이지에서 새로 받아 주세요")
+    if not _gate(store, "claude_portal_enabled", cid):
+        raise PortalError("disabled", "클로드형 서비스가 지금 꺼져 있습니다")
+    return {"ok": True, "key": member_key(cid, store)}
+
+
+def start_line(cid, base) -> str:
+    """회원별 설치 한 줄 — PowerShell 에 붙여 넣으면 끝난다(페이지 복사 버튼·시작.md 공용)."""
+    return f"$env:SHORTEM_START='{start_token(cid)}'; irm {base}/api/claude/start.ps1 | iex"
+
+
+def start_cmd(cid, base) -> str:
+    """회원별 더블클릭 설치 파일 — 파워쉘을 열 필요가 없다."""
+    return ("@echo off\r\n"
+            f'powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "{start_line(cid, base)}"\r\n'
+            "pause\r\n")
+
+
+def start_md(cid, base) -> str:
+    """회원별 시작.md — Claude Code 입력창에 끌어다 놓으면 한 줄로 설치가 끝난다."""
+    line = start_line(cid, base)
+    return ("# 숏클 시작\n\n"
+            "이 파일을 Claude Code 입력창에 끌어다 놓고 엔터를 누르세요. 실행 허용을 물으면 '예'만 누르면 됩니다.\n"
+            f"Claude Code 가 없으면 PowerShell 창에 아래 한 줄을 붙여 넣어도 같습니다. 이 파일은 {START_TTL // 3600}시간 동안 쓸 수 있고, 남에게 주지 마세요.\n\n"
+            f"```powershell\n{line}\n```\n\n"
+            "Claude 에게 — 아래만 하세요. 다른 파일은 열거나 고치지 마세요.\n\n"
+            "1. 위 한 줄을 PowerShell 로 백그라운드 실행합니다. 약 1GB 를 받아 10분 넘게 걸릴 수 있으니 끝날 때까지 기다립니다.\n"
+            "2. `설치 완료` 가 나오면 사용자에게 \"새 창에서 준비 점검이 시작됩니다\"라고 한 줄만 알립니다.\n"
+            "3. 실패하면 나온 메시지를 쉬운 말로 알리고 같은 한 줄을 한 번 더 실행합니다.\n")
+
+
+def start_zip(cid, base) -> bytes:
+    """회원별 시작 꾸러미 — 받은 압축 파일을 Claude Code 입력창에 넣으면 안의 시작.md 대로 설치한다."""
+    import io
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("시작.md", start_md(cid, base))
+    return buf.getvalue()
 
 
 def _parse_key(key):
@@ -335,12 +434,14 @@ def verify_license(key, store=None) -> dict:
     cid, exp, kv = _parse_key(key)
     with _tx(store) as c:
         row = _row(c, "SELECT * FROM claude_licenses WHERE cid=?", (cid,))
-    if (not row or row["kv"] != kv or not hmac.compare_digest(row["key_hash"] or "", _key_hash(key.strip()))
+        extra = _row(c, "SELECT * FROM claude_license_slots WHERE cid=? AND kv=?", (cid, kv))
+    held = extra or row          # 둘째 자리 키면 그 자리 해시와, 아니면 첫째 자리와 대조. 회수·전역 kv·정지는 계정 행 하나
+    if (not row or held["kv"] != kv or not hmac.compare_digest(held["key_hash"] or "", _key_hash(key.strip()))
             or int(row["gkv"] or 0) != _gkv(store) or row["revoked"]):
         raise PortalError("revoked", "이 라이선스 키는 더 이상 쓸 수 없습니다 — 페이지에서 새 키를 발급하세요")
     if exp < _now():
         raise PortalError("expired", "라이선스 기간이 끝났습니다")
-    return {"cid": cid, "exp": exp, "kv": kv, "issued": row["issued"], "row": row}
+    return {"cid": cid, "exp": exp, "kv": kv, "issued": held["issued"], "row": row}
 
 
 def ctx_from_request(request, ip="") -> dict:
@@ -465,8 +566,33 @@ def preset_names(store, ids) -> list:
         if not p:
             continue
         n = names.get(pid) or names.get(p["internal"]) or {}
-        out.append({"id": pid, "name": str(n.get("name") or _style_label(p["style"]))[:40], "desc": str(n.get("desc") or "")[:120],
-                    "group": str(n.get("group") or "")[:30]})   # 형식 묶음(사장님 10-24) — 설정 화면이 묶어서 보여준다
+        name = str(n.get("name") or _style_label(p["style"]))[:40]
+        out.append({"id": pid, "name": name, "desc": str(n.get("desc") or "")[:120],
+                    "group": str(n.get("group") or "")[:30],   # 형식 묶음(사장님 10-24) — 설정 화면이 묶어서 보여준다
+                    **({"aliases": al[:8]} if (al := preset_aliases().get(_name_key(name))) else {})})
+    return out
+
+
+def _name_key(s: str) -> str:
+    return re.sub(r"[\s+·_\-()]", "", str(s or "").split("(")[0]).lower()
+
+
+def preset_aliases() -> dict:
+    """프리셋 이름 → 회원이 부르는 다른 이름(10-26 회원 '<URL> 이걸로 키치잇 스타일로' 가 '키치잇 프리셋 없음'으로 시작 못 함).
+    주인 = 엔진 channel/프리셋.json presets.<slug>.bench_option(채널 이름)·member.preset_name — 여기는 읽기만. 괄호 설명은 뺀다."""
+    try:
+        d = json.loads((channel_root() / "channel" / "프리셋.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        log.warning("claude_portal: channel/프리셋.json 을 못 읽어 프리셋 별칭 없이 간다")
+        return {}
+    out: dict = {}
+    for slug, x in (d.get("presets") or {}).items():
+        pn = ((x or {}).get("member") or {}).get("preset_name") if isinstance(x, dict) else None
+        bo = re.split(r"[(（]", str((x or {}).get("bench_option") or ""))[0].strip() if isinstance(x, dict) else ""
+        if pn and bo:
+            out.setdefault(_name_key(pn), [])
+            if bo not in out[_name_key(pn)]:
+                out[_name_key(pn)].append(bo)
     return out
 
 
@@ -627,6 +753,16 @@ def _rules_of(pdir: Path, man: dict) -> dict:
 
 
 # ── license ─────────────────────────────────────────────────────────────
+def _member_name(store, cid) -> str:
+    """회원 Claude 첫 인사 "○○ 회원님"(숏클 지침 2장) — 가입 이름, 없으면 아이디. 못 찾으면 빈칸(PC 는 '회원님'만)."""
+    try:
+        cu = store.get_customer(cid) or {}
+    except Exception as e:                       # 회원 표가 없는 시험 저장소 등 — 인사만 빠진다
+        log.debug("member_name: %s", e)
+        return ""
+    return re.sub(r"[\s<>]+", " ", str(cu.get("name") or cu.get("username") or "")).strip()[:20]
+
+
 def license(ctx: dict, store=None) -> dict:
     """GET /api/claude/license — 확인 + 이 기기 등록(빈 칸이 있으면 자동, DEVICES_MAX 차면 거절·자동 교체 없음)."""
     store = _store(store)
@@ -637,14 +773,15 @@ def license(ctx: dict, store=None) -> dict:
     now = _now()
     fh = _fp_hash(fp)
     registered_now = False
+    limit = devices_max(cid)
     with _tx(store, write=True) as c:
         dev = _row(c, "SELECT * FROM claude_devices WHERE cid=? AND fp_hash=? AND removed=0", (cid, fh))
         live = _rows(c, "SELECT slot FROM claude_devices WHERE cid=? AND removed=0", (cid,))
         if dev:
             c.execute("UPDATE claude_devices SET last_seen=?, name=? WHERE id=?", (now, name, dev["id"]))
-        elif len(live) < DEVICES_MAX:
+        elif len(live) < limit:
             used = {r["slot"] for r in live}
-            slot = next(s for s in range(1, DEVICES_MAX + 1) if s not in used)
+            slot = next(s for s in range(1, limit + 1) if s not in used)
             c.execute("INSERT INTO claude_devices(cid, fp_hash, dev_id, name, slot, created, last_seen) VALUES(?,?,?,?,?,?,?)",
                       (cid, fh, fp[:12], name, slot, now, now))
             dev = {"slot": slot, "name": name}
@@ -652,12 +789,12 @@ def license(ctx: dict, store=None) -> dict:
             live.append({"slot": slot})
     if not dev:
         _raise_on(anomaly_check(cid, {"type": "device_limit", "route": "license", **_ev(ctx)}, store=store))
-        raise PortalError("device_limit", f"기기 {DEVICES_MAX}대가 이미 등록돼 있습니다 — 마이페이지에서 기기를 빼고 다시 시도하세요")
+        raise PortalError("device_limit", f"기기 {limit}대가 이미 등록돼 있습니다 — 마이페이지에서 기기를 빼고 다시 시도하세요")
     _raise_on(anomaly_check(cid, {"type": "license", "route": "license", **_ev(ctx)}, store=store))
     row = info["row"]
-    return {"ok": True, "cid": cid, "plan": row.get("plan") or "claude", "expires": info["exp"],
+    return {"ok": True, "cid": cid, "member_name": _member_name(store, cid), "plan": row.get("plan") or "claude", "expires": info["exp"],
             "device": {"id": fp[:12], "name": name, "slot": dev["slot"], "registered_now": registered_now},
-            "devices_used": len(live), "devices_max": DEVICES_MAX,
+            "devices_used": len(live), "devices_max": limit,
             "entitled_presets": _entitled(store, cid, row),
             "presets": preset_names(store, _entitled(store, cid, row)),
             "profiles": [{"profile_id": p["profile_id"], "name": p["name"], "preset_id": p["preset_id"],
@@ -730,8 +867,10 @@ def lease(ctx: dict, body: dict, store=None) -> dict:
     if expired_old:
         anomaly_check(cid, {"type": "lease_expired", "route": "lease", **_ev(ctx)}, store=store)
     if busy is not None:
-        _raise_on(anomaly_check(cid, {"type": "busy", "route": "lease", **_ev(ctx)}, store=store))
         wait = max(1, busy["expires"] - now)
+        # A2 = '작업 중에 다른 기기가 시작'(설계 §7-9 표)만 센다 — 같은 기기(제작 중 미리보기·프로그램 재시작)는 거절만(10-30 실측: 같은 PC 미리보기 10번에 30일 정지)
+        if busy["fp_hash"] != fh:
+            _raise_on(anomaly_check(cid, {"type": "busy", "route": "lease", **_ev(ctx)}, store=store))
         if busy["fp_hash"] == fh:
             raise PortalError("busy_other_device", "이 기기에서 다른 작업이 진행 중입니다 — 끝나거나 3분 뒤 다시 시도하세요", wait)
         raise PortalError("busy_other_device",
@@ -974,8 +1113,9 @@ def feedback(ctx: dict, body: dict, store=None) -> dict:
     cid, _, _ = _front(store, ctx, "feedback")
     body = body if isinstance(body, dict) else {}
     kind, text = body.get("kind"), body.get("text")
-    if kind not in ("request", "bug") or not isinstance(text, str) or not text.strip() or len(text) > 2000:
-        raise PortalError("bad_request", "kind 는 request·bug, text 는 1~2000자입니다")
+    limit = 30000 if kind == "code_fix" else 2000      # code_fix = 회원 Claude 가 고친 엔진 diff — 우리가 검토해 반영한다(자동 반영 없음, 사장님 10-31)
+    if kind not in ("request", "bug", "code_fix") or not isinstance(text, str) or not text.strip() or len(text) > limit:
+        raise PortalError("bad_request", "kind 는 request·bug·code_fix, text 는 1~2000자(code_fix 30000자)입니다")
     job = str(body.get("job_id") or "")[:64] or None
     with _tx(store, write=True) as c:
         cur = c.execute("INSERT INTO claude_feedback(ts, cid, kind, text, job_id) VALUES(?,?,?,?,?)", (_now(), cid, kind, text.strip(), job))
@@ -1155,7 +1295,7 @@ def anomaly_check(cid, event: dict, store=None) -> dict:
         elif typ in ("license", "device_limit"):
             hit, detail = False, ""
             if typ == "device_limit":
-                hit, detail = True, f"등록 안 된 기기에서 키 사용(기기 {DEVICES_MAX}대 찬 상태)"
+                hit, detail = True, f"등록 안 된 기기에서 키 사용(기기 {devices_max(cid)}대 찬 상태)"
             else:
                 n = c.execute("SELECT COUNT(DISTINCT country) FROM claude_license_log WHERE cid=? AND kind='request' AND route='license' "
                               "AND ts>=? AND country<>''", (cid, now - 86400)).fetchone()[0]
@@ -1278,6 +1418,24 @@ def resolve_alert(alert_id, store=None) -> dict:
         if a["level"] == "suspend":
             c.execute("UPDATE claude_licenses SET suspended_until=0, suspend_rule=NULL WHERE cid=?", (a["cid"],))
     return {"ok": True, "closed": 1, "unsuspended": a["level"] == "suspend"}
+
+
+def member_ids(store=None) -> set:
+    """관리자가 숏클로 승인한 회원 — 스위치 claude_portal_enabled 의 고객 목록이 정본(관제 294)."""
+    v = str(_setting(_store(store), "claude_portal_enabled", "") or "").strip().lower()
+    return {int(x) for x in v.split(",") if x.strip().isdigit()}
+
+
+def set_member(cid, on, store=None) -> dict:
+    """숏클 승인·해제. 전체 공개("1")면 목록이 없으니 건드리지 않는다. 비면 관리자만("admin")으로 돌아간다."""
+    store = _store(store)
+    if str(_setting(store, "claude_portal_enabled", "") or "").strip() == "1":
+        raise PortalError("bad_request", "지금은 전체 공개 상태입니다")
+    ids = member_ids(store)
+    (ids.add if on else ids.discard)(int(cid))
+    # 끝의 쉼표는 필수 — 회원 1번 하나만 남으면 값이 "1"(전체 공개)이 된다(11-01 시험에서 잡음)
+    store.set_setting("claude_portal_enabled", "".join(f"{x}," for x in sorted(ids)) or "admin")
+    return {"ok": True, "on": bool(on)}
 
 
 def set_revoked(cid, revoked=True, store=None) -> dict:
@@ -1464,7 +1622,8 @@ def home(cid, store=None) -> dict:
         cur = _active_lease(c, cid)
         notes = _rows(c, "SELECT rule, level, ts FROM claude_alerts WHERE cid=? AND resolved=0 AND level IN ('warn','suspend') ORDER BY id DESC LIMIT 5", (cid,))
     lic_out = {"has_key": bool(lic and lic["kv"]), "issued": (lic or {}).get("issued"), "expires": (lic or {}).get("expires"),
-               "revoked": bool(lic and lic["revoked"]), "suspended": bool(lic and (lic["suspended_until"] or 0) > _now())}
+               "revoked": bool(lic and lic["revoked"]), "suspended": bool(lic and (lic["suspended_until"] or 0) > _now()),
+               "slots": key_slots(cid)}
     return {"ok": True, "presets": plist, "styles": styles, "results": results,
             "packs": {"fonts": fonts, "sfx": sorted(sfx.values(), key=lambda g: g["id"]), "bgm": bgm, "templates": tpls,
                       "voices": voices, "memes": sorted(memes.values(), key=lambda m: -m["count"]),
@@ -1472,7 +1631,7 @@ def home(cid, store=None) -> dict:
                       "caption_modes": list(channel_profile.CAPTION_MODES)},
             "profiles": list_profiles(cid, store), "license": lic_out,
             "devices": [{"id": d["dev_id"], "name": d["name"], "slot": d["slot"], "last_seen": d["last_seen"]} for d in devs],
-            "devices_max": DEVICES_MAX,
+            "devices_max": devices_max(cid),
             "lease": ({"device": cur["device_name"], "step": cur["step_name"], "since": cur["acquired"]} if cur else None),
             "notices": [{"title": RULE_TITLE.get(n["rule"], n["rule"]), "level": n["level"], "ts": n["ts"]} for n in notes],
             "installers": _installers(), "steps": list(STEP_NAMES),

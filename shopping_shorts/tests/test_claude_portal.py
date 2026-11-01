@@ -159,17 +159,57 @@ def test_엔진_낮으면_거절(env):
 
 
 # ── 2. 기기 대수 ─────────────────────────────────────────────────────────
-def test_기본은_PC_1대_두번째_기기_거절(env):
-    """5판 사장님 결정: PC 1대만. 두 번째 기기는 거절, 첫 기기를 빼면 들어온다."""
+def test_PC_2대까지_세번째_기기_거절(env):
+    """사장님 11-01: PC 2대. 세 번째 기기는 거절, 하나를 빼면 들어온다."""
     from shopping_shorts import claude_portal as cp
-    assert cp.DEVICES_MAX == 1
+    assert cp.DEVICES_MAX == 2
     c = env["client"]
     k = _key(env)
-    assert c.get("/api/claude/license", headers=_h(k, FP1, name="사무실")).json()["devices_max"] == 1
-    r = c.get("/api/claude/license", headers=_h(k, FP2, name="집"))
+    assert c.get("/api/claude/license", headers=_h(k, FP1, name="사무실")).json()["devices_max"] == 2
+    assert c.get("/api/claude/license", headers=_h(k, FP2, name="집")).json()["device"]["slot"] == 2
+    r = c.get("/api/claude/license", headers=_h(k, FP3, name="셋째"))
     assert r.status_code == 403 and r.json()["code"] == "device_limit"
     assert c.post("/api/claude/me/device/remove", json={"device_id": FP1[:12]}).json()["ok"]
-    assert c.get("/api/claude/license", headers=_h(k, FP2)).json()["device"]["slot"] == 1
+    assert c.get("/api/claude/license", headers=_h(k, FP3)).json()["device"]["slot"] == 1
+
+
+def test_기기는_모두_2대_둘째_키는_관리자만(env, monkeypatch):
+    from shopping_shorts import app, claude_portal as cp
+    monkeypatch.setattr(app, "_is_admin", lambda cid: cid == 77)
+    assert cp.devices_max(77) == 2 and cp.devices_max(78) == 2
+    assert cp.key_slots(77) == 2 and cp.key_slots(78) == 1
+    st = Store(app_module.DB_PATH)
+    cp.issue_license(78, st)
+    with pytest.raises(cp.PortalError):
+        cp.issue_license(78, st, 2)
+
+
+def test_관리자_둘째_키는_첫째와_따로_산다(env, monkeypatch):
+    from shopping_shorts import app, claude_portal as cp
+    monkeypatch.setattr(app, "_is_admin", lambda cid: cid == 77)
+    st = env["store"] if "store" in env else Store(app_module.DB_PATH)
+    a = cp.issue_license(77, st)["key"]
+    b = cp.issue_license(77, st, 2)["key"]
+    assert a != b and cp.verify_license(a, st)["cid"] == 77 and cp.verify_license(b, st)["cid"] == 77
+    a2 = cp.issue_license(77, st)["key"]                  # 첫째를 새로 받아도 둘째는 산다, 옛 첫째만 끊긴다
+    assert cp.verify_license(b, st)["cid"] == 77 and cp.verify_license(a2, st)["cid"] == 77
+    with pytest.raises(cp.PortalError):
+        cp.verify_license(a, st)
+    b2 = cp.issue_license(77, st, 2)["key"]               # 둘째를 새로 받아도 첫째는 산다, 옛 둘째만 끊긴다
+    assert cp.verify_license(a2, st)["cid"] == 77 and cp.verify_license(b2, st)["cid"] == 77
+    with pytest.raises(cp.PortalError):
+        cp.verify_license(b, st)
+
+
+def test_회원은_둘째_키를_못_받는다(env, monkeypatch):
+    from shopping_shorts import app, claude_portal as cp
+    monkeypatch.setattr(app, "_is_admin", lambda cid: False)
+    st = Store(app_module.DB_PATH)
+    cp.issue_license(78, st)
+    with pytest.raises(cp.PortalError):
+        cp.issue_license(78, st, 2)
+    with pytest.raises(cp.PortalError):
+        cp.issue_license(78, st, 3)
 
 
 def test_기기_3대째_거절(env, monkeypatch):
@@ -220,6 +260,19 @@ def test_lease_두기기_동시면_두번째_409_TTL뒤_성공(env, monkeypatch)
     assert hb.status_code == 409 and hb.json()["code"] == "lease_lost"
     # 없는 lease release 도 ok(멱등)
     assert c.post("/api/claude/lease", headers=_h(k, FP1), json={"action": "release", "lease_id": "ls_none"}).json()["ok"]
+
+
+def test_A2_같은기기_시도는_안세고_다른기기만_센다(env):
+    # A2 = '작업 중 다른 기기 시작'(키 돌려쓰기) — 같은 PC 의 제작 중 미리보기·재시작은 거절만, 정지 안 됨(10-30 실측: 시험 라이선스 30일 정지)
+    c = env["client"]
+    k = _two_devices(env)
+    assert c.post("/api/claude/lease", headers=_h(k, FP1), json={"action": "acquire", "job_id": "j1"}).status_code == 200
+    for i in range(12):
+        r = c.post("/api/claude/lease", headers=_h(k, FP1), json={"action": "acquire", "job_id": f"u{i}"})
+        assert r.status_code == 409 and r.json()["code"] == "busy_other_device", r.text
+    assert c.get("/api/claude/license", headers=_h(k, FP1)).status_code == 200, "같은 기기 거절 12번에 정지되면 안 된다"
+    codes = [c.post("/api/claude/lease", headers=_h(k, FP2), json={"action": "acquire", "job_id": f"x{i}"}).json()["code"] for i in range(10)]
+    assert codes[-1] == "suspended", codes
 
 
 def test_강제해제_뒤_앞기기_lease_lost(env):
@@ -603,3 +656,15 @@ def test_install_키만으로_묶음_주소_기기지문_없이(env, tmp_path):
     got = c.get(d["url"])
     assert got.status_code == 200 and got.content == z.read_bytes()
     assert c.get("/api/claude/license", headers=bare).json()["code"] == "bad_request", "다른 창구는 지문이 있어야 한다"
+
+
+def test_라이선스_회원이름_인사(env):
+    """숏클 지침 2장 '○○ 회원님' — 라이선스 응답에 가입 이름(없으면 아이디). 회원이 없으면 빈칸."""
+    c, st = env["client"], env["store"]
+    cid = st.create_customer("hong_gd", "pw-123456", name="홍길동")
+    r = c.get("/api/claude/license", headers=_h(_key(env, cid)))
+    assert r.status_code == 200, r.text
+    assert r.json()["member_name"] == "홍길동"
+    cid2 = st.create_customer("noname_id", "pw-123456")
+    assert c.get("/api/claude/license", headers=_h(_key(env, cid2), fp=FP1)).json()["member_name"] == "noname_id"
+    assert c.get("/api/claude/license", headers=_h(_key(env, 987654))).json().get("member_name", "") == ""

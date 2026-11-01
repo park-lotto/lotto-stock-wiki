@@ -36,7 +36,8 @@ def prep(src: Path, phase: str = "script") -> Path:
     d = json.loads(s)
     st = d.get("state", d)
     st["phase"], st["tries"] = phase, {}
-    for k in [k for k in st if k.startswith("_plan") or k in RESET + (("material", "shots", "text_fix", "mat_draft", "screen_pick", "screen_rows") if phase != "script" else ())]:
+    st["log"] = []          # 감독(watch)은 log 를 읽어 헛바퀴를 판정한다 — 원본 편 옛 기록(완성본 task_7·8 등)이 새 시험 편을 '같은 반려 되풀이'로 멈췄다(10-27 TV)
+    for k in [k for k in st if k.startswith(("_plan", "watch_")) or k in RESET + (("material", "shots", "text_fix", "mat_draft", "screen_pick", "screen_rows") if phase != "script" else ())]:
         st.pop(k, None)
     sp.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
     return dst

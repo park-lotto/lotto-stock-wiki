@@ -1,0 +1,49 @@
+# 05 재료 영상 — 뒤(체험) 화면에 쓸 그 제품 영상 찾기·고르기·받기
+
+들어가는 것: 제품 정식 이름·키워드(4단계). 나오는 것: `src/` 의 원본 구간 + 고른 제품 영상(1080p, 필요한 구간만).
+판단 기준 원문: `tools/calcopy/검수_매뉴얼.md` A4·A5·A12·A13 · 브리프 `tools/calcopy/hybrid/briefs/screen_pick.md`.
+
+## 명령 (run.py 단계 — 끝난 단계는 건너뛰고, 다시 하려면 `--redo <단계>`)
+```
+PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <키> init --source <원본URL> --product "<제품 정식 이름>" --keywords <국문,영문,모델> --queries "<검색어1>" "<검색어2>" …
+PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <키> download      # 원본 영상(+자막) — chosen 없으면 원본만
+PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <키> candidates    # yt-dlp + 서버 유튜브 API 검색 → screen/candidates.json
+PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <키> screen        # 받기 전 가려내기: 메타·자동자막 키워드·360p 토막 시트 → screen.json
+   → Claude 가 screen.json 의 chosen 을 적는다(아래)
+PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <키> download      # chosen 만 1080p(구간만)
+PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <키> status        # 어디까지 · 다음은 누가
+```
+따로 돌릴 때: `py tools/calcopy/hybrid/screen.py search <W> "<검색어>"… [--n 12 --exclude 모음,TOP]` · `screen <W> --keywords a,b` · `download <W> <id…> [--sections 95-130,200-235]`.
+원본이 길면 필요한 구간만: `yt-dlp --download-sections "*250-320" …` → 파일 `src/<원본id>_<시작>_<끝>.mp4`(표의 초 = 파일 초, 원본 초 = +시작).
+
+## ★먼저 지킬 것 (사장님 10-21)
+- ★연예인 장면은 **반드시 찾은 원본(연예인 본인 채널·방송사 공식)에서만** 쓴다 — 다른 채널(벤치 쇼츠·재편집·리뷰 채널)에 나온 연예인 영상을 그대로 가져다 쓰는 것은 **절대 금지**(사장님 10-21). 원본을 못 찾으면 그 편은 만들지 않는다.
+- 제품 컷도 **원본 안의 제품 장면(연예인이 들고 보여 주는 근접)을 먼저** 쓴다 — 10-21 이미도 원본 672~675초에 튜브 근접이 있었는데 남의 리뷰 영상을 썼다.
+- 남의 영상에서 쓰는 구간에는 장면 전환(별·와이프 등)·남의 손·남의 글자가 없어야 한다 — 1초 시트 사이로 지나가는 0.5초 전환은 시트에 안 보인다(구간 안 프레임 비교로 잰다).
+
+## chosen 고르기 (Claude 가 `screen/<id>_sheet.jpg` 와 info.json 을 보고)
+```json
+"chosen": [{"id": "K-1Hwjo6N2U", "why": "TEKLA 언박싱·택 근접(1080p)", "sections": [[95, 130], [200, 235]]}],
+"rejected": [{"id": "…", "why": "다른 브랜드 / TOP5 모음 / 워터마크 가운데"}]
+```
+- **같은 제품만**(라벨·포장·모양이 조사와 일치). 비슷한 디자인·다른 브랜드·모음집 제외.
+- 화질 `max_height ≥ 1080`(720 은 마지막 수단, 확대 ≤ 2.3배). 남의 글자(워터마크·큰 자막·UI)가 가운데 상시면 제외 — 아래 띠는 crop 으로 피할 수 있으면 메모.
+- 사람 얼굴·남의 손이 제품보다 큰 영상은 뒤로. 제품만 보이는 컷(언박싱·근접·사용)이 많은 영상이 앞. 2~4개면 충분.
+- `sections` 를 적으면 그 구간 ±20초만 받는다(20분 리뷰에서 3분만). 뺀 영상도 `rejected` 로 남긴다(다음 편이 같은 조사를 안 하게).
+
+## 재료가 모자랄 때
+- 리뷰 영상이 0개면: 공식 몰·쿠팡 상품 사진을 **움직이는 컷**으로(재료.json 컷 `move`: in·out·left·right, 기본 1.2배 — 주인 `tools/calcopy/narr_video.py:still_move`. 정지 사진 금지, 사장님 10-18). 김나영 벳우먼 = 공식 몰 사진 10장 6초 느린 확대 + 원본 착용 장면.
+- 원본 자체의 제품 장면(연예인이 쓰는 장면)도 B 컷 재료다.
+- 쿠팡 상품평 사진은 영상이 없을 때만.
+
+## 함정 (실제로 있었던 것)
+- ★구간 받기는 **m3u8 형식**으로: `-f "bv*[height=1080][protocol^=m3u8]+ba[protocol^=m3u8]" --download-sections "*a-b"` — DASH(`137+140`)와 섞으면 10분 넘게 0바이트로 멈췄고 m3u8 은 2.5분(10-21 최화정).
+- 원본 박힌 자막은 장면마다 높이가 다르다(보통 y≈870~, 큰 자막 y≈800~) · 협찬 고지 띠(y 66~105)도 crop 밖으로 — 샷마다 잰다.
+- C 가 가득 차면 쓰던 json 이 0바이트로 덮인다(10-21 screen.json) — 여유부터.
+- ★`run.py download` 는 chosen 다음에 **init 의 source(원본 전체)까지 통째로 받는다** — 구간 파일이 이미 있어도(10-21 최화정 1902초 원본 191MB .part). 원본 구간을 이미 받았으면 download 대신 `screen.py download <W> <id> --sections a-b` 로 고른 재료만 받는다(결함 — 고칠 일).
+- `--download-sections` 가 큰 원본에서 출력 없이 10분 넘게 멈추거나(JS 런타임 없음 경고), 여러 워커가 동시에 받을 때 TLS −10054 로 끊긴다(10-21 최강희·박세리·박정수). 대처: ① 한 번 재시도 ② 판정용이면 720p(`-f 136+140`)로 그 구간만 ③ 그래도 안 되면 디스크 여유를 확인하고 전체를 받아 ffmpeg 로 자른 뒤 **전체본은 바로 지운다**. webm 합치기가 실패하면 ffmpeg 로 mp4 로 합친다.
+- 유튜브 'not a bot'·자막 429 → 자막은 따로·재시도 3회·동시 2개(도구가 함). 후보 하나가 시간 초과로 단계를 죽이던 것 → 행에 사유 적고 계속(도구가 함).
+- id 가 `-` 로 시작하면 ffmpeg·ls 가 옵션으로 읽는다 → `./-xxxx.mp4`.
+- 세로 쇼츠는 max_height 1920 이어도 받으면 608×1080 일 수 있다 — 받은 뒤 해상도를 다시 잰다(crop 은 소스 픽셀 기준).
+- 원본·재료는 git 밖(`C:/숏템_칼카피/…`)이다. 다른 PC 에서 이어 하면 근거.md 의 URL·구간으로 다시 받는다.
+- 다섯 편을 동시에 통째로 받으면 C 드라이브가 찬다(10-18 0.7GB 사고) → 구간만 받기.

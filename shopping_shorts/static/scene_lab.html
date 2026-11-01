@@ -1450,7 +1450,23 @@ function pvTab(which){
 //     "부모에게 렌더를 시킨다"라서 판정 기준이 다르다(0순위-B: 다른 판단은 따로 둔다).
 async function _askRender(){
   var body = document.getElementById('confirmBody');
-  if (!body || body.innerHTML.trim()) return;        // 이미 있다(또는 만드는 중) — 그대로 본다
+  if (!body) return;
+  var _cfHtml = body.innerHTML || '';
+  if (/⏳/.test(_cfHtml)) return;                    // 만드는 중(로더) — 두 번 돌리지 않는다
+  // ★"이미 있는 완성본이 지금 편성 그대로인가"는 **서버 한 곳**(app._preview_is_stale — 편성 지문 비교)만
+  //   판정한다(관제 288, 2026-10-29 황선희님 e5efb8434ac5). 예전엔 칸에 영상이 있기만 하면 그냥 돌아갔고,
+  //   화면을 다시 열면 낡은 완성본에 **지금 편성 지문**이 찍혀(stampConfirmSigIfMissing) 수정 뒤
+  //   [완성본 만들기]가 영영 안 눌렸다(실측: 19:32 렌더 뒤 서버 렌더 요청 0건, 서버 판정 낡음).
+  //   밀린 편집을 먼저 서버에 얹어야 서버 판정이 지금 화면 기준이 된다.
+  if (/<video/i.test(_cfHtml)){
+    try{ if (typeof flushApply === 'function') await flushApply(); }catch(e){ /* 충돌은 아래 렌더 경로가 안내한다 */ }
+    var st = null;
+    try{ st = await (await fetch('/api/mix/status/' + SL.job, {cache: 'no-store'})).json(); }
+    catch(e){ console.warn('완성본 최신 확인 실패 — 지금 영상을 그대로 둔다', e); return; }
+    if (!(st && st.preview_stale)) return;           // 지금 편성 그대로 — 유료 재렌더 안 한다
+  }
+  body.innerHTML = '';                               // 낡은 영상·지난 안내문은 비우고 새로 만든다
+  RENDERED_SIG = ''; PENDING_SIG = '';
   // ★빈 시간이 남은 칸이 있으면 만들지 않는다(2026-09-14 사장님 "안채우면 안되지").
   //   구절 맞춤을 끈 칸은 알아서 안 채우므로, 사람이 채울 때까지 막는다.
   if (typeof cutsGap === 'function'){

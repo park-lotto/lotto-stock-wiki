@@ -57,6 +57,7 @@ class Ctx:
     run: Callable[[list[str], int], tuple[int, str]] = _run
     log: Callable[[str], None] = print
     extra: dict = field(default_factory=dict)
+    worker: str = ""                   # 장부(worker_ledger) 한도 — 비면 장부를 안 쓴다(시험)
 
     def workdir(self, topic: dict) -> Path:
         d = Path(self.out_root) / str(topic["id"])
@@ -65,6 +66,51 @@ class Ctx:
 
     def preset_of(self, topic: dict | None) -> str:
         return ((topic or {}).get("assign") or {}).get("preset") or self.preset or self.channel
+
+
+def _net(TF, ctx: Ctx) -> dict:
+    """유튜브 통로를 장부 한도(4워커 합 시간당 300편) 뒤에 둔다 — 조회 전에 take, 넘으면 LimitHit(이유)."""
+    if not ctx.worker:
+        return TF.NET
+    from tools.calcopy.engine import worker_ledger as L
+    net = dict(TF.NET)
+
+    def search(q, n=10, months=None, _f=TF.NET["yt_search"]):
+        L.take(ctx.worker, "yt", int(n), f"검색 {q}")          # 요청 편수만큼 먼저 잡고(한도 보호)
+        res = _f(q, n, months)
+        got = len([x for x in res or [] if x.get("id")])
+        if got < int(n):                                       # 실제로 온 편수만 남긴다(10-16 실측: 0~4편 오는 검색이 10편씩 먹어 한도 300 이 몇 분에 찼다)
+            L.add(ctx.worker, "yt", got - int(n), f"검색 {q} 반환 — 실제 {got}편")
+        return res
+
+    def detail(vid, *a, _f=TF.NET["yt_detail"], **k):
+        L.take(ctx.worker, "yt", 1, f"상세 {vid}")
+        return _f(vid, *a, **k)
+    net["yt_search"], net["yt_detail"] = search, detail
+    for k, f in TF.NET.items():                     # 그 밖 유튜브 통로(날짜·메타…)는 1편씩
+        if k.startswith("yt_") and k not in ("yt_search", "yt_detail"):
+            def one(*a, _f=f, _k=k, **kw):
+                L.take(ctx.worker, "yt", 1, f"{_k} {a[0] if a else ''}")
+                return _f(*a, **kw)
+            net[k] = one
+    return net
+
+
+def _llm(TF, ctx: Ctx):
+    """무료 제미나이 창구를 장부 한도(워커당 시간당 40회) 뒤에 둔다. 429·쿼터면 장부에 pause(30분 쉼)."""
+    if not ctx.worker:
+        return TF.LLM(budget=ctx.llm_budget)
+    from tools.calcopy.engine import worker_ledger as L
+
+    class Guarded(TF.LLM):
+        def __call__(self, prompt, tag):
+            if len(self.calls) < self.budget:
+                L.take(ctx.worker, "gemini", 1, tag)
+            d, err = super().__call__(prompt, tag)
+            if err and any(x in str(err) for x in ("429", "RESOURCE_EXHAUSTED", "quota", "쿼터")):
+                L.add(ctx.worker, "pause", 1, f"제미나이 {str(err)[:150]}")
+            return d, err
+    return Guarded(budget=ctx.llm_budget)
 
 
 def _engine(name: str):
@@ -82,9 +128,14 @@ def _preset(TF, ctx: Ctx, topic: dict | None) -> dict:
         raise StepError(f"프리셋: {e}") from None
 
 
+def _cid(topic: dict) -> str:
+    """엔진 후보 id — topic_find 프롬프트 예시가 'c1' 꼴이라 숫자만 주면 모델이 'c1' 로 바꿔 답한다(10-16 실측: 점수 '응답에 이 후보 없음')."""
+    return f"c{topic['id']}"
+
+
 def _cand(topic: dict) -> dict:
     src = topic.get("source") or {}
-    return {"id": str(topic["id"]), "topic": topic.get("name") or "", "query": src.get("query") or topic.get("name") or "",
+    return {"id": _cid(topic), "topic": topic.get("name") or "", "query": src.get("query") or topic.get("name") or "",
             "key": src.get("key") or src.get("query") or "", "source": src}
 
 
@@ -99,17 +150,43 @@ def _exists(d: dict) -> dict:
 
 # ── 단계 ──────────────────────────────────────────────────────────────────
 def step_find(topic, ctx: Ctx) -> dict:
-    """소재 후보 모으기(검색만, LLM 없음) → 새 행. 벤치·점수는 다음 단계가 행마다 한다."""
+    """소재 후보 모으기 → 새 행. 검색어 만들기·통로는 topic_find.run 앞부분과 **같은 함수**를 같은 순서로 부른다
+    (해외영상+검색어 없음 = db_candidates, 그 밖 = target_queries+gather). ★엔진에 find_candidates() 가 생기면 그걸 부르고 이 순서는 지운다."""
     TF = _engine("topic_find")
-    P = _preset(TF, ctx, None)
-    kind = (P["manifest"] or {}).get("source_kind") or ctx.extra.get("source_kind")
-    if kind not in TF.SOURCE_KINDS:
-        raise StepError(f"소재 출처 유형 없음/모름: {kind!r} (manifest.source_kind 또는 --source-kind)")
-    top = TF._read_json(P["chdir"] / "원자료" / "top50.json") or []
-    kws = ctx.extra.get("keywords") or TF.keyword_bundles(top)
-    cands, failed = TF.gather(kind, kws, ctx.find_n, ctx.extra.get("months", 6), {v["id"] for v in top}, TF.NET, ctx.log)
+    if ctx.extra.get("originals_file") or ctx.extra.get("channels_file"):   # 채널 기준 찾기(관제 234) — 해외 원본 채널(소재+재료)이 있으면 그것, 없으면 같은 결 한국 채널
+        top = TF._read_json(_preset(TF, ctx, None)["chdir"] / "원자료" / "top50.json") or []
+        cands, failed = TF.channel_candidates(ctx.extra.get("originals_file") or ctx.extra["channels_file"], ctx.find_n, {v["id"] for v in top}, ctx.log)
+    elif hasattr(TF, "find_candidates"):
+        r = TF.find_candidates(ctx.preset_of(None), ctx.find_n, keywords=ctx.extra.get("keywords"), net=_net(TF, ctx), llm=_llm(TF, ctx), log=ctx.log)
+        cands, failed = r["candidates"], r["failed"]
+    else:
+        P = _preset(TF, ctx, None)
+        kind = (P["manifest"] or {}).get("source_kind") or ctx.extra.get("source_kind")
+        if kind not in TF.SOURCE_KINDS:
+            raise StepError(f"소재 출처 유형 없음/모름: {kind!r} (manifest.source_kind 또는 --source-kind)")
+        top = TF._read_json(P["chdir"] / "원자료" / "top50.json") or []
+        limits, kws_in = TF.Limits(), ctx.extra.get("keywords")
+        try:
+            if kind == "해외영상" and not kws_in and hasattr(TF, "db_candidates"):
+                cands, failed, queries = TF.db_candidates(_net(TF, ctx), _llm(TF, ctx), ctx.find_n, ctx.log, limits=limits)
+            else:
+                if not kws_in:
+                    raise StepError(f"'{kind}' 은 검색어(구체 명사)가 필요 — warehouse_channels.json keywords (엔진: 우리 과거 제목에서 뽑지 않는다)")
+                R = TF._read_json(Path(P["rules"])) if P.get("rules") else {}
+                angles = tuple((R or {}).get("topic_angles") or getattr(TF, "DEFAULT_ANGLES", ()))
+                tq = TF.target_queries(kind, kws_in, limits.max_queries, angles) if angles else TF.target_queries(kind, kws_in, limits.max_queries)
+                kws = [q["q"] for q in tq]
+                ctx.log(f"[검색어] {kws}")
+                cands, failed = TF.gather(kind, kws, ctx.find_n, ctx.extra.get("months", 6), {v["id"] for v in top}, _net(TF, ctx), ctx.log,
+                                          limits, brands=list(kws_in))
+        except StepError:
+            raise
+        except Exception as e:  # noqa: BLE001 — 장부 한도(LimitHit)·엔진 오류는 이유로
+            raise StepError(f"찾기 멈춤: {type(e).__name__}: {e}") from None
+        if limits.stopped:
+            failed.append({"where": "limits", "why": limits.stopped})
     if not cands:
-        raise StepError("후보 0 — " + "; ".join(f"{f['where']}: {f['why']}" for f in failed)[:300])
+        raise StepError("후보 0 — " + "; ".join(f"{f.get('where')}: {f.get('why')}" for f in failed)[:300])
     rows = [{"name": c["topic"], "source": {**c["source"], "via": c["source"].get("kind"), "query": c["query"], "key": c.get("key", ""),
                                             "found_at": time.strftime("%Y-%m-%dT%H:%M:%S+09:00")}} for c in cands]
     return {"rows": rows, "failed": failed}
@@ -118,9 +195,9 @@ def step_find(topic, ctx: Ctx) -> dict:
 def step_bench(topic, ctx: Ctx) -> dict:
     TF = _engine("topic_find")
     wd = ctx.workdir(topic)
-    llm = TF.LLM(budget=ctx.llm_budget)
-    b = TF.bench(_cand(topic), wd, TF.NET, llm, ctx.extra.get("bench_n", 6))
-    arts = _exists({"벤치.md": wd / "벤치" / f"{topic['id']}.md", "벤치.json": wd / "벤치" / f"{topic['id']}.json"})
+    llm = _llm(TF, ctx)
+    b = TF.bench(_cand(topic), wd, _net(TF, ctx), llm, ctx.extra.get("bench_n", 4), limits=TF.Limits())
+    arts = _exists({"벤치.md": wd / "벤치" / f"{_cid(topic)}.md", "벤치.json": wd / "벤치" / f"{_cid(topic)}.json"})
     cost = {"gemini": _llm_n(llm)}
     if not b["points"]:
         raise StepError("벤치 포인트 0 — " + "; ".join(b["failed"])[:300], arts, cost)
@@ -131,10 +208,12 @@ def step_bench(topic, ctx: Ctx) -> dict:
 def step_score(topic, ctx: Ctx) -> dict:
     TF = _engine("topic_find")
     P = _preset(TF, ctx, topic)
-    llm = TF.LLM(budget=ctx.llm_budget)
+    llm = _llm(TF, ctx)
     c = _cand(topic)
     rows, err = TF.score([c], {c["id"]: topic.get("bench") or {}}, P["slug"], llm)
     cost = {"gemini": _llm_n(llm)}
+    if not err and c["id"] not in rows and len(rows) == 1:   # 후보 1개만 보냈다 — 답 id 를 바꿔 적어도 그 한 줄이 이 후보
+        rows = {c["id"]: next(iter(rows.values()))}
     if err or c["id"] not in rows:
         raise StepError(f"점수 LLM 실패: {err or '응답에 이 후보 없음'}", cost=cost)
     cs = TF._clean_scores(rows[c["id"]])           # 근거 없는 점수는 None — 서버에 숫자로 속여 넣지 않는다
@@ -144,8 +223,7 @@ def step_score(topic, ctx: Ctx) -> dict:
     if len(crit) < 5:
         raise StepError(f"근거 있는 점수 {len(crit)}개 < 5 — {cs['flags']}", cost=cost)
     return {"cost": cost, "data": {"score": {"criteria": crit, "total": TF.total(cs["scores"], ov), "overlap": ov["score"],
-                                             "overlap_with": ov.get("with"), "showable": (cs["scores"].get("showable") or {}).get("score"),
-                                             "flags": cs["flags"], "angle": rows[c["id"]].get("angle") or ""}}}
+                                             "overlap_with": ov.get("with"), "flags": cs["flags"], "angle": rows[c["id"]].get("angle") or ""}}}
 
 
 def step_assign(topic, ctx: Ctx) -> dict:
@@ -157,14 +235,18 @@ def step_script(topic, ctx: Ctx) -> dict:
     SE = _engine("script_engine")
     TF = _engine("topic_find")
     wd = ctx.workdir(topic) / "대본"
-    bench_md = ctx.workdir(topic) / "벤치" / f"{topic['id']}.md"
-    llm = TF.LLM(budget=ctx.llm_budget)
+    bench_md = ctx.workdir(topic) / "벤치" / f"{_cid(topic)}.md"
+    llm = _llm(TF, ctx)
     wd.mkdir(parents=True, exist_ok=True)
     tj = wd / "소재.json"     # script_engine.load_topic 이 읽는 꼴({topic,…}) — 5기준·각도가 대본_계획.md 에 실린다
-    tj.write_text(json.dumps({"id": topic["id"], "topic": topic.get("name") or "", "scores": topic.get("score") or {},
-                              "angle": (topic.get("score") or {}).get("angle") or "", "source": topic.get("source") or {}},
+    sc = topic.get("score") or {}
+    eng = {name: k for k, name in TF.CRITERIA}     # 서버엔 한국어 기준 이름(criteria) — 엔진 소재.json 은 영문 키 {score, why}
+    tj.write_text(json.dumps({"id": topic["id"], "topic": topic.get("name") or "", "angle": sc.get("angle") or "",
+                              "scores": {eng[n]: v for n, v in (sc.get("criteria") or {}).items() if n in eng},
+                              "overlap": {"score": sc.get("overlap"), "with": sc.get("overlap_with")}, "total": sc.get("total"),
+                              "source": topic.get("source") or {}},
                              ensure_ascii=False, indent=1), encoding="utf-8")
-    S = SE.run(ctx.preset_of(topic), str(tj), wd, str(bench_md) if bench_md.exists() else None, llm=llm, log=ctx.log)
+    S = SE.run(ctx.preset_of(topic), str(tj), wd, str(bench_md) if bench_md.exists() else None, ctx.extra.get("facts_path"), llm=llm, log=ctx.log)
     arts = _exists({"대본.json": wd / "대본.json", "대본_검사.md": wd / "대본_검사.md", "대본_계획.md": wd / "대본_계획.md"})
     cost = {"gemini": _llm_n(llm)}
     chk = (S.get("final") or {}).get("check") or {}
@@ -186,7 +268,19 @@ def step_source(topic, ctx: Ctx) -> dict:
     TF = _engine("topic_find")
     _engine("remake")
     cmd, out = _remake_args(TF, ctx, topic)
-    q = (topic.get("source") or {}).get("query") or topic.get("name") or ""
+    src = topic.get("source") or {}
+    q = src.get("query") or topic.get("name") or ""
+    # ★채널 기준 소재의 원본 편(한국 채널 편집본)은 재료로 쓰지 않는다 — 10-19 실측: 잇템로그 편집본을 재료로 넣자
+    #   그 채널의 한국어 자막('아.. 역겨워;;')이 화면에 박힌 채 계획 시트에 들어갔다. 현장썰 재료 = 해외 원본(다음: 원본 찾기).
+    if src.get("kind") == "채널":
+        q = " ".join(TF.core_terms(topic.get("name") or "")[:3]) or q
+    elif src.get("kind") == "해외원본" and src.get("id"):   # 해외 원본 채널에서 터진 편 = 그 편이 곧 재료(자막 없는 원본, 관제 234)
+        q = f"id:{src['id']}"
+    elif src.get("kind") == "참고영상" and src.get("url"):  # 고객이 준 인스타·틱톡 등 영상 = 그 영상이 재료(받기는 media_download, 관제 234)
+        q = f"url:{src['url']}"
+    if ctx.worker:                                     # remake 후보 모드는 검색 1번에 쇼츠 최대 12편을 받는다(remake.search_shorts n=12)
+        from tools.calcopy.engine import worker_ledger as L
+        L.take(ctx.worker, "yt", 12, f"재료 후보 {q}")
     rc, tail = ctx.run(cmd + ["--queries", q], 1800)
     arts = _exists({"재료_뼈대.json": out / "재료_뼈대.json"})
     cand = out / "재료후보"
@@ -196,9 +290,16 @@ def step_source(topic, ctx: Ctx) -> dict:
     if rc != 2 or "재료_뼈대.json" not in arts:
         raise StepError(f"재료 후보 모드 rc={rc}(기대 2) — {tail[-300:]}", arts)
     vids = sorted(cand.glob("v_*.mp4")) + sorted(out.glob("v_*.mp4"))
-    rights = {v.name: "유튜브 쇼츠(재료 후보·참고, 사용 전 사람 확인)" for v in vids}
-    if not rights:
+    rights = {v.name: ("고객이 준 참고 영상(사용 전 사람 확인)" if q.startswith("url:") else "유튜브 쇼츠(재료 후보·참고, 사용 전 사람 확인)") for v in vids}
+    if not rights:   # ★초안보다 먼저 — 10-19 실측: 후보 0 시도가 빈 재료.json 을 남겨, 다음 시도가 원본을 받아도 빈 초안으로 계획이 죽었다
         raise StepError("재료 후보 영상 0개 — 출처(rights)를 적을 재료가 없다", arts)
+    hook = ctx.extra.get("materials_hook")      # 만들기 입구: 뼈대 → 재료 자동 초안(팩 기본값 주입은 calcopy_make.draft_materials 한 곳)
+    mp = out / "재료.json"
+    stale = mp.exists() and not any(s_.get("src") for s_ in (json.loads(mp.read_text(encoding="utf-8")).get("shots") or []))
+    if hook and (not mp.exists() or stale):
+        M = hook(json.loads((out / "재료_뼈대.json").read_text(encoding="utf-8")))
+        mp.write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
+        arts["재료.json"] = str(mp)
     return {"artifacts": arts, "data": {"rights": rights}, "outputs": {"materials_skeleton": "재료_뼈대.json"}}
 
 
@@ -232,6 +333,10 @@ def step_produce(topic, ctx: Ctx) -> dict:
     had_tts = tts.exists()
     t0 = time.time()
     extra = ["--tts", str(tts)] if had_tts else ["--make-tts"]
+    ra = ctx.extra.get("remake_args") or {}                  # 내 팩 키트(목소리·빠르기·자막 꼴·BGM) — calcopy_make.merge_preset_pack 이 정한 값
+    for k, flag in (("voice", "--voice"), ("tempo", "--tempo"), ("caption_mode", "--caption-mode"), ("bgm", "--bgm"), ("bgm_ratio", "--bgm-ratio")):
+        if ra.get(k) is not None:
+            extra += [flag, str(ra[k])]
     rc, tail = ctx.run(cmd + ["--materials", str(mats), "--script", str(script)] + extra, 3600)
     cost = {"typecast": int(tts.exists() and not had_tts)}
     ctx.log(f"[제작] {round(time.time() - t0)}초 rc={rc}")
@@ -257,15 +362,18 @@ def step_check(topic, ctx: Ctx) -> dict:
     _engine("compare")
     cmd, out = _remake_args(TF, ctx, topic)
     arts = _produce_arts(out)
-    need = [k for k in ("final_sheet_1s.jpg", "차이표.md", "side_by_side.jpg") if k not in arts]
+    J = json.loads(Path(cmd[2]).read_text(encoding="utf-8"))
+    has_orig = bool(J.get("source") and Path(J["source"]).exists())
+    # 고객 PC(관제 234)엔 뜯기 원본이 없어 원본 대조(차이표·나란히)를 만들지 않는다 — remake 가 '생략' 판정만 남긴다
+    want = ("final_sheet_1s.jpg", "차이표.md", "side_by_side.jpg") if has_orig else ("final_sheet_1s.jpg",)
+    need = [k for k in want if k not in arts]
     vj = out / "대조" / "verdict.json"
     if need or not vj.exists():
         raise StepError(f"대조 산출물 없음: {need + ([] if vj.exists() else ['대조/verdict.json'])}", arts)
     arts = {k: v for k, v in arts.items() if k != "final.mp4"}        # 완성본은 produce 때 이미 올렸다
     arts["verdict.json"] = str(vj)
     outs = {**_produce_outputs(arts), "verdict": "verdict.json"}
-    J = json.loads(Path(cmd[2]).read_text(encoding="utf-8"))
-    if J.get("source") and Path(J["source"]).exists():
+    if has_orig:
         arts["original" + Path(J["source"]).suffix] = str(J["source"])
         outs["original"] = "original" + Path(J["source"]).suffix
     return {"artifacts": arts, "outputs": outs}

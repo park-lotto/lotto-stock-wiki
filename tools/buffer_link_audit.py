@@ -70,7 +70,7 @@ def main():
         text = p.get("text") or ""
         title = buffer_api._yt_title(text) if text else ""
         num = (_NUM.match(title) or [None, ""])[1] if title else ""
-        acct = INPOCK_BY_CHANNEL.get(ch, "")
+        acct = bp._inpock_acct(folder)
         # 짝 = 올릴 때 장부에 남긴 인포크 제목(r["inpock"], 관제 282). 옛 행은 유튜브 제목 앞 번호로만 찾는다
         block = ""
         if acct and r.get("inpock"):
@@ -103,7 +103,7 @@ def main():
         slot[k] = r["file"]
     print("중복·칸겹침:", problems or "없음", file=sys.stderr)
     if a.inpock:
-        out = {"rows": out, "inpock": {acct: _inpock_titles(acct) for acct in sorted(set(INPOCK_BY_CHANNEL.values()))}}
+        out = {"rows": out, "inpock": {acct: _inpock_titles(acct) for acct in sorted(set(INPOCK_BY_CHANNEL.values()) | set(bp.INPOCK_BY_FOLDER.values()))}}
     print(json.dumps(out, ensure_ascii=False, indent=1))
 
 

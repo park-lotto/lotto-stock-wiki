@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import base64
 import hmac
+import inspect
 import json
 import os
 import re
@@ -75,9 +76,45 @@ def _line(preset_dir: Path) -> dict | None:
 
 
 def _summary(st: dict) -> dict:
-    return {"origin": (st.get("origin") or {}).get("id"), "product": (st.get("product") or {}).get("product_id"),
+    rh = getattr(_flow(), "ref_hash", None)      # 옛 지시서(지문 함수 없음)·시험 가짜 지시서면 비운다
+    return {"seed_h": rh(st["ref"]) if rh and st.get("ref") else None, "origin": (st.get("origin") or {}).get("id"), "product": (st.get("product") or {}).get("product_id"),
             "mode": (st.get("product") or {}).get("mode"), "auto_ok": (st.get("auto") or {}).get("ok"),
-            "look_ok": (st.get("look") or {}).get("ok"), "tries": st.get("tries"), "stopped": st.get("stopped")}
+            "look_ok": (st.get("look") or {}).get("ok"), "look_by": (st.get("look") or {}).get("by"), "look_scenes": (st.get("look") or {}).get("scenes"),
+            "look_n": len((st.get("look") or {}).get("problems") or []), "look_skip": bool((st.get("look") or {}).get("skipped")), "look_left": len(st.get("look_left") or []),
+            "tries": st.get("tries"), "stopped": st.get("stopped")}
+
+
+def _made_refs(store, cid) -> list:
+    """이 회원이 이미 만든(완성) 소재 지문(flow.ref_hash — 기록엔 주소를 안 남긴다) — 소재 창고에서 뺀다(같은 소재 두 번 금지)."""
+    with CP._tx(store) as c:
+        rows = c.execute("SELECT summary_json FROM claude_flow_runs WHERE cid=? AND status='done' ORDER BY updated DESC LIMIT 500", (cid,)).fetchall()
+    out = []
+    for r in rows:
+        try:
+            ref = (json.loads(r[0] or "{}") or {}).get("seed_h")
+        except ValueError:
+            ref = None
+        if ref:
+            out.append(ref)
+    return out
+
+
+def _used_refs(store, cid) -> dict:
+    """다른 회원이 쓴 소재 지문 → 쓴 회원 수(claude_flow_runs 전체 · 진행 중 포함). 실패 편(stop·reject)은 안 친다. 순서 판단은 flow.bench_pool."""
+    with CP._tx(store) as c:
+        rows = c.execute("SELECT DISTINCT cid, json_extract(summary_json,'$.seed_h') FROM claude_flow_runs "
+                         "WHERE cid<>? AND COALESCE(status,'') NOT IN ('stop','reject') AND json_valid(summary_json)", (cid,)).fetchall()
+    out: dict = {}
+    for r in rows:
+        if r[1]:
+            out[r[1]] = out.get(r[1], 0) + 1
+    return out
+
+
+def _pool_kw(fn, **kw) -> dict:
+    """옛 지시서(새 인자를 모름)면 뺀다 — 호출 형식 호환."""
+    names = inspect.signature(fn).parameters
+    return {k: v for k, v in kw.items() if k in names}
 
 
 def step(ctx: dict, body: dict, store=None) -> dict:
@@ -89,7 +126,7 @@ def step(ctx: dict, body: dict, store=None) -> dict:
     blob = json.dumps({"m": body.get("measure"), "r": body.get("replies")}, ensure_ascii=False)
     if len(blob) > MEASURE_MAX:
         raise CP.PortalError("bad_request", "보낸 결과가 너무 큽니다")
-    if kind == "start":
+    if kind in ("start", "sources"):
         pid = str(body.get("preset") or "")
         with CP._tx(store) as c:
             lic = CP._row(c, "SELECT * FROM claude_licenses WHERE cid=?", (cid,))
@@ -100,13 +137,37 @@ def step(ctx: dict, body: dict, store=None) -> dict:
         if not line:
             raise CP.PortalError("bad_request", "이 프리셋은 단계 진행 방식이 아닙니다")
         url = str((body.get("source") or {}).get("url") or "")
-        if not re.match(r"^https://(www\.)?(youtube\.com/(shorts/|watch\?v=)|youtu\.be/)[0-9A-Za-z_-]{11}", url):
-            raise CP.PortalError("bad_request", "연예인 쇼핑 쇼츠(유튜브) 주소를 주세요")
+        made = _made_refs(store, cid)
+        used = _used_refs(store, cid)
+        if kind == "sources" and not hasattr(flow, "source_candidates"):
+            raise CP.PortalError("bad_request", "이 서버는 아직 후보 뽑기를 못 합니다 — 영상 주소를 주세요")
+        if kind == "sources":             # 회원 '후보 뽑아줘' — 그 판 소재 창고(벤치 채널 조회순)에서 안 만든 5개. 편은 만들지 않는다
+            try:
+                offset = max(0, int(body.get("offset") or 0))
+            except (TypeError, ValueError):
+                raise CP.PortalError("bad_request", "offset 은 숫자여야 합니다")
+            found = flow.source_candidates(line["version"], made, **_pool_kw(flow.source_candidates, n=300, offset=offset, used=used, seed=cid))   # 창고 전체를 고객이 고른다(사장님 10-31)
+            return {"ok": True, "status": "sources", "sources": found, "next_offset": offset + len(found)}
+        auto = None
+        if not url and hasattr(flow, "pick_source"):   # 주소 없이 '만들어줘' — 소재 창고 첫 편(순서 = flow.bench_pool)
+            auto = flow.pick_source(line["version"], made, **_pool_kw(flow.pick_source, used=used, seed=cid))
+            if not auto:
+                raise CP.PortalError("bad_request", "이 프리셋의 소재 창고(벤치 채널)에 아직 안 만든 영상이 없어요 — 영상 주소를 주세요")
+            url = auto["url"]
+        why = flow.source_url_problem(url) if hasattr(flow, "source_url_problem") else (
+            "" if re.match(r"^https://(www\.)?(youtube\.com/(shorts/|watch\?v=)|youtu\.be/)[0-9A-Za-z_-]{11}", url) else "유튜브 쇼츠 주소를 주세요")   # 판단 주인 = 지시서 flow.source_url_problem(옛 지시서면 옛 유튜브 규칙)
+        if why:
+            raise CP.PortalError("bad_request", why)
         sid = uuid.uuid4().hex[:12]
         # 고객이 정한 쿠팡 제품(이름·주소) — 원본에 제품이 말로만 나올 때 쓴다(사장님 10-23)
         product = str((body.get("source") or {}).get("product") or "")[:200]
         # 제품을 정했을 때만 넘긴다 — 엔진이 이 인자를 모르는 옛판이어도 정하지 않은 편은 그대로 돈다
         st, seq = (flow.start(url, line["version"], sid, product) if product else flow.start(url, line["version"], sid)), 0
+        st["made_refs"] = made[:200]          # 둘째 소재(pick_alt_source)도 이 회원이 만든 것을 뺀다
+        st["pool_used"], st["pool_seed"] = dict(sorted(used.items(), key=lambda x: -x[1])[:200]), cid   # 다음 소재·둘째 소재도 같은 순서
+        if auto:
+            st["auto_source"] = auto
+            st["log"].append(f"소재 창고에서 시작: {auto['url']} (조회 {auto.get('views')})")
         with CP._tx(store, write=True) as c:
             c.execute("INSERT INTO claude_flow_runs(sid,cid,preset,version,seq,phase,status,created,updated) VALUES(?,?,?,?,?,?,?,?,?)",
                       (sid, cid, pid, line["version"], 0, "setup", "start", CP._now(), CP._now()))

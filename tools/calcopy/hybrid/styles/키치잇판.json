@@ -259,7 +259,7 @@
    "share": {
     "emph": 0.875,
     "typing": 0.375,
-    "sfx": 0.375
+    "sfx": 0.25
    },
    "stickers": {
     "circle_arrow": 0.25,
@@ -268,6 +268,15 @@
     "kk_doodle": 0.125,
     "other": 0.125,
     "spark_lines": 0.375
+   },
+   "transition": {
+    "cut": 0.913,
+    "black": 0.039,
+    "zoomblur": 0.039,
+    "flash": 0.008
+   },
+   "sfx_kinds": {
+    "other": 1.0
    },
    "videos": [
     {
@@ -326,7 +335,21 @@
       "기타(덩어리 전체 하늘, 주황 테두리)": 1
      },
      "sfx": [],
-     "no_caption": 15
+     "sfx_count": {
+      "sure": 0,
+      "pending": 0
+     },
+     "no_caption": 15,
+     "transitions": {
+      "cut": 16
+     },
+     "n_trans": 16,
+     "roles": {
+      "hook": 2,
+      "body": 14,
+      "end": 1
+     },
+     "sfx_lines": []
     },
     {
      "id": "BRa5Iv4A3Y8",
@@ -395,10 +418,25 @@
       "기타(마지막 '나' 작게)": 1,
       "기타('다 했죠' 반투명에서 선명해짐)": 1
      },
-     "sfx": [
-      "cap"
-     ],
-     "no_caption": 1
+     "sfx": [],
+     "sfx_count": {
+      "sure": 0,
+      "pending": 0
+     },
+     "no_caption": 1,
+     "transitions": {
+      "flash": 1,
+      "black": 1,
+      "zoomblur": 2,
+      "cut": 16
+     },
+     "n_trans": 20,
+     "roles": {
+      "hook": 4,
+      "body": 14,
+      "end": 3
+     },
+     "sfx_lines": []
     },
     {
      "id": "cNo91ddBwB8",
@@ -444,9 +482,33 @@
      },
      "variants": {},
      "sfx": [
+      "none",
       "none"
      ],
-     "no_caption": 2
+     "sfx_count": {
+      "sure": 0,
+      "pending": 2
+     },
+     "no_caption": 2,
+     "transitions": {
+      "black": 2,
+      "cut": 13
+     },
+     "n_trans": 15,
+     "roles": {
+      "hook": 2,
+      "body": 12,
+      "end": 2
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 10.44,
+       "off": 0.773,
+       "basis": "파형 솟음"
+      }
+     ]
     },
     {
      "id": "Cs-Ka_S8nDM",
@@ -503,7 +565,21 @@
       "기타(글자마다 위로 튀며 기울어 나타남)": 1
      },
      "sfx": [],
-     "no_caption": 1
+     "sfx_count": {
+      "sure": 0,
+      "pending": 0
+     },
+     "no_caption": 1,
+     "transitions": {
+      "cut": 17
+     },
+     "n_trans": 17,
+     "roles": {
+      "hook": 2,
+      "body": 15,
+      "reveal": 1
+     },
+     "sfx_lines": []
     },
     {
      "id": "Ks5kYYKAUlQ",
@@ -559,7 +635,22 @@
       "기타(글자 단위로 튀며 이어 붙음, 전체 초록)": 1
      },
      "sfx": [],
-     "no_caption": 0
+     "sfx_count": {
+      "sure": 0,
+      "pending": 0
+     },
+     "no_caption": 0,
+     "transitions": {
+      "black": 2,
+      "zoomblur": 1,
+      "cut": 9
+     },
+     "n_trans": 12,
+     "roles": {
+      "hook": 3,
+      "body": 10
+     },
+     "sfx_lines": []
     },
     {
      "id": "Nv99RyxmrfU",
@@ -606,7 +697,31 @@
      "sfx": [
       "cap"
      ],
-     "no_caption": 0
+     "sfx_count": {
+      "sure": 0,
+      "pending": 1
+     },
+     "no_caption": 0,
+     "transitions": {
+      "cut": 14,
+      "zoomblur": 1
+     },
+     "n_trans": 15,
+     "roles": {
+      "hook": 2,
+      "body": 11,
+      "reveal": 2,
+      "end": 1
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 7.85,
+       "off": 0.72,
+       "basis": "파형 솟음"
+      }
+     ]
     },
     {
      "id": "oTi41R74WIY",
@@ -640,7 +755,23 @@
       "기타(덩어리 전체가 연보라 채움)": 1
      },
      "sfx": [],
-     "no_caption": 4
+     "sfx_count": {
+      "sure": 0,
+      "pending": 0
+     },
+     "no_caption": 4,
+     "transitions": {
+      "cut": 14
+     },
+     "n_trans": 14,
+     "roles": {
+      "hook": 3,
+      "body": 4,
+      "twist": 4,
+      "reveal": 2,
+      "end": 2
+     },
+     "sfx_lines": []
     },
     {
      "id": "vSEaZ-BCELY",
@@ -685,7 +816,24 @@
       "기타(덩어리 전체 연보라)": 2
      },
      "sfx": [],
-     "no_caption": 2
+     "sfx_count": {
+      "sure": 0,
+      "pending": 0
+     },
+     "no_caption": 2,
+     "transitions": {
+      "cut": 17,
+      "zoomblur": 1
+     },
+     "n_trans": 18,
+     "roles": {
+      "hook": 2,
+      "body": 11,
+      "twist": 3,
+      "reveal": 2,
+      "end": 1
+     },
+     "sfx_lines": []
     }
    ]
   }

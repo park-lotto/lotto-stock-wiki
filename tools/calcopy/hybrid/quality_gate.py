@@ -95,7 +95,7 @@ def thumb_stamped(video: Path, doc: Path) -> tuple[bool | str | None, str]:
     pk = jload(sp).get("pick")
     jpg = Path(doc) / "thumb" / f"{pk}.jpg"
     ref = np.asarray(Image.open(jpg).convert("L").resize((108, 192)), dtype=np.int16)
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vf", r"select=lt(n\,3),scale=108:192,format=gray", "-vsync", "0",
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vf", r"select=lt(n\,3),scale=108:192,format=gray", "-fps_mode", "passthrough",
                           "-f", "rawvideo", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
     fr = np.frombuffer(raw, np.uint8).reshape(-1, 192, 108).astype(np.int16)
     d = [round(float(np.abs(f - ref).mean()), 1) for f in fr]
@@ -1105,7 +1105,10 @@ def make_eye_pack(style_name: str, doc: Path, work: Path, T: dict, tab: dict, S:
     if not s1.exists():
         sheet_1s(final, s1)
     shutil.copy2(s1, E / "시트_1초.jpg")
-    compare_sheet.sheet(style_name, Path(doc), Path(work))
+    try:                      # 회원 PC 에는 벤치 영상이 없다 — 벤치 대조만 빠지고 훅·끝 띠·대조표는 이어서 만든다(옛: 여기서 죽어 회원 눈 자료가 시트 한 장뿐)
+        compare_sheet.sheet(style_name, Path(doc), Path(work))
+    except Exception as e:  # noqa: BLE001
+        print(f"[눈 묶음] 벤치 대조 시트 생략: {e}", file=sys.stderr)
     for n in ("벤치대조_시트.jpg", "벤치대조_등장.jpg"):
         if (Path(doc) / n).exists():
             shutil.copy2(Path(doc) / n, E / n)

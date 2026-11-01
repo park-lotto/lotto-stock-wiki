@@ -229,11 +229,19 @@ def rule_check(r: dict, d: dict, st: dict) -> tuple[bool, str]:
     if k == "forbid_in":
         bad = [l["id"] for l in (T if r["of"] == "tts" else L) if re.search(r["pattern"], txt(l))]
         return not bad, f"금지 '{r.get('why', r['pattern'])}' {bad}"
+    if k == "title_lines":   # 훅 카드 제목 줄 수(10-29 썰템쇼: 판 훅 틀은 흰·연두 2줄인데 대본이 1줄만 써서 연두 줄이 빈 채 렌더)
+        n = len(d.get("title_lines") or [])
+        return r["min"] <= n <= r["max"], f"제목 {n}줄 ({r['min']}~{r['max']})"
     if k == "cap_chars":     # max "chunk_max_chars" = 판 caption.chunk_max_chars 를 그대로(조각 자수 판단은 그 칸 하나)
         mx = (st.get("caption") or {}).get("chunk_max_chars") if r["max"] == "chunk_max_chars" else r["max"]
         sel = [l for l in L if (l.get("kind") == "orig") == (r.get("of") == "orig")] if r.get("of") in ("tts", "orig") else L   # of = 나레/원음 번역 자막 따로(자수 자가 다르다)
-        bad = [(l["id"], c) for l in sel for c in _caps(l) if nchar(c) > mx]
+        from tools.calcopy.hybrid.render_bench import who_prefix
+        bad = [(l["id"], who_prefix(l, j) + c) for l in sel for j, c in enumerate(_caps(l)) if nchar(who_prefix(l, j) + c) > mx]
         return not bad, f"자막 덩어리 {mx}자 넘음 {bad}"
+    if k == "speaker_lines":  # 화자 대사 줄 「화자 : 대사」(10-30 썰템쇼 회원 시험: 판에 '옵션 0~3' 으로만 있어 0줄로 나와 채널 결이 빠졌다)
+        W = [l for l in L if str(l.get("who") or "").strip()]
+        bad = [l["id"] for l in W if l.get("kind") != "tts" or len(str(l["who"]).strip()) > r.get("who_max", 6)]
+        return r["min"] <= len(W) <= r["max"] and not bad, f"화자 대사 줄 {len(W)}개 ({r['min']}~{r['max']})" + (f" · 화자 이름 길거나 나레 줄 아님 {bad}" if bad else "")
     if k == "orig_span":
         if not O:
             return False, "원음 줄 없음"
@@ -265,6 +273,12 @@ def rule_check(r: dict, d: dict, st: dict) -> tuple[bool, str]:
             return sh <= r["max"], f"문장 머리 연결어 {len(hit)}/{len(sents)}={sh} (≤{r['max']}) {hit}"
         hit = [m for x in sents for m in BC.MADE_RE.findall(x)]
         return len(hit) <= r["max"], f"지어냄 후보(숫자·나라·권위 말) {len(hit)}개 (≤{r['max']}) {hit}"
+    if k == "hook_formula":    # 사장님 첫 문장 공식(10-16·17, 불편 → '~해버렸대요') — 판단 주인 script_frame.hook_formula_check, 데이터 hook_formula.json
+        hf = SF.load_hook_formula(FRAME["itssum"])
+        R = SF.hook_formula_check(txt(T[0]) if T else "", hf, " ".join(txt(l) for l in T))
+        if R is None:
+            return False, "첫 문장 공식 파일(hook_formula.json) 없음"
+        return R["ok"], ("첫 문장 공식 통과" if R["ok"] else "첫 문장 공식 어긋남: " + " · ".join(R["why"])) + f" — '{R['sentence'][:40]}'"
     if k in ("narr_share", "est_length"):
         cps = st.get("cps_target", 7.0)
         tn = sum(nchar(txt(l)) for l in T) / cps
@@ -300,6 +314,10 @@ def rule_text(r: dict, st: dict) -> str:
         return f"'{r.get('why', r['pattern'])}' 줄 {r.get('min', 1)}개 이상"
     if k == "forbid_in":
         return f"금지: {r.get('why', r['pattern'])}"
+    if k == "speaker_lines":
+        return f"화자 대사 줄(who 칸) {r['min']}~{r['max']}개 — " + str(r.get("why") or "")
+    if k == "title_lines":
+        return f"제목(title_lines) {rng()}줄" + (f" — {r['why']}" if r.get("why") else "")
     if k == "cap_chars":
         mx = (st.get("caption") or {}).get("chunk_max_chars") if r["max"] == "chunk_max_chars" else r["max"]
         return f"자막 덩어리(caps 한 칸) {mx}자 이하" + (f"({'원음 번역' if r['of'] == 'orig' else '나레'} 자막)" if r.get("of") in ("tts", "orig") else "")
@@ -313,6 +331,8 @@ def rule_text(r: dict, st: dict) -> str:
         return f"문장 머리 연결어(그래서·근데 등) 비율 ≤{r['max']}"
     if k == "made_candidates":
         return f"지어낸 것처럼 보이는 숫자·나라·권위 말 {r['max']}개 이하(근거 있는 것만)"
+    if k == "hook_formula":
+        return SF.hook_formula_rule(SF.load_hook_formula(FRAME["itssum"])).strip()
     if k == "narr_share":
         return f"나레 비중 {rng()}"
     if k == "est_length":

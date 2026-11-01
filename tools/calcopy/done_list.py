@@ -5,6 +5,8 @@
   ⓪ 작업 기록지 channel/작업기록.jsonl(+이 PC 회원 기록지 ~/.shortem/작업기록.jsonl) — 주인 tools/calcopy/work_log.py
      status=stopped(멈춘 편)는 '이미 만듦'으로 치지 않고 "멈춘 편(이유)"로만 보여 준다
   ① 작업 폴더 C:/숏템_칼카피/<채널들>/ 의 편 폴더 이름  ② 드라이브 G:/내 드라이브/칼카피영상/ 아래 파일·폴더 이름  ③ channel/결과물.json
+  ④ channel/<채널>/<편>/대본.json 의 소재(bench id·제목) + 편 폴더 이름 — 10-29 사고: 샥템 회원 시험 소재 QMJtjJz4M6w(모래주머니)가
+     이미 만든 1편_STORMBAG(대본.json bench.id 같음)인데 '안 만든 편'으로 나왔다(①이 고정 9채널뿐이라 foreignshowshow 작업 폴더도 안 봤다)
 
   PYTHONUTF8=1 py tools/calcopy/done_list.py 박세리 선크림        # 이미 만든 편이면 rc=1 + 걸린 곳
   PYTHONUTF8=1 py tools/calcopy/done_list.py --list              # 전부
@@ -34,12 +36,25 @@ def entries() -> list[tuple[str, str]]:
     for r in WL.list_(member=True):
         if r.get("status") != "stopped":
             out.append((_rec_name(r), f"기록지 {r.get('status')} {str(r.get('date') or '')[:10]}"))
-    for ch in WORK_CHANNELS:
+    chans = set(WORK_CHANNELS) | ({p.name for p in (ROOT / "channel").iterdir() if p.is_dir()} if (ROOT / "channel").is_dir() else set())
+    for ch in sorted(chans):
         d = WORK / ch
         if d.is_dir():
             out += [(p.name, f"작업폴더 {ch}") for p in d.iterdir() if p.is_dir() and not p.name.startswith(("_", "."))]
     if DRIVE.is_dir():
         out += [(p.relative_to(DRIVE).as_posix(), "드라이브") for p in DRIVE.rglob("*") if not p.name.startswith(".")]
+    for sc in sorted((ROOT / "channel").glob("*/*/대본.json")):
+        ep = f"{sc.parent.parent.name}/{sc.parent.name}"
+        out.append((ep, "채널 편 폴더"))
+        try:
+            d = json.loads(sc.read_text(encoding="utf-8"))
+        except (ValueError, OSError):
+            continue
+        b = d.get("bench") if isinstance(d, dict) else None
+        b = b if isinstance(b, dict) else {"id": b} if isinstance(b, str) else {}   # 옛 편은 bench 가 주소·id 글자 하나
+        for k in ("id", "title", "url"):
+            if isinstance(b.get(k), str) and b[k]:
+                out.append((b[k], f"대본.json 소재 {ep}"))
     f = ROOT / "channel" / "결과물.json"
     if f.is_file():
         def walk(x):

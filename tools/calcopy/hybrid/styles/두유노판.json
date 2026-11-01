@@ -694,6 +694,11 @@
   ],
   "audit": [
    {
+    "id": "hook_formula",
+    "kind": "hook_formula",
+    "why": "사장님 10-16 밤 확정·10-17 공식화 '두유노 = 불편으로 시작' — [주체]+[계기·감정어]+[~해버렸대요](channel/homedesignnote/대본설명서/hook_formula.json). 10-28 사장님 '아직도 저장이 안 되어 있나': 대본 엔진(script_engine)에만 있고 회원 흐름 판 검사엔 없어 tv3·hdn2 첫 줄이 공식 밖으로 나감"
+   },
+   {
     "id": "est_length",
     "kind": "est_length",
     "min": 15,

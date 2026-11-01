@@ -95,9 +95,11 @@ check("② 아직 scheduled 는 그대로", L["p5"].get("final_status"), None)
 check("⑤ G: 에 있던 a → 완료로 이동", os.path.isfile(os.path.join(bp.DRIVE, F, "완료", "a.mp4")), True)
 check("⑤ G: 에 없던 b → 'G:에없음'", L["p2"].get("done_where"), "G:에없음")
 
-# ── 2회차: ssh 살아남 ──
+# ── 2회차: ssh 살아남 · G: 가 뒤늦게 b 를 내려받음(10-29 실사고: 'G:에없음' 7편이 예약\ 에 영영 남았다) ──
 hang[0] = False
 ssh_calls.clear()
+open(os.path.join(d, "b.mp4"), "wb").write(b"B")
+open(os.path.join(d, "b.txt"), "w", encoding="utf-8").write("제목")
 try:
     bp.main(["cleanup"])
 except BaseException as e:   # noqa: BLE001
@@ -108,6 +110,8 @@ check("④ 남은 사본 r1·r2·r4 를 지운다", sorted(n for n in ("r1.mp4",
                                       if ssh_calls and n in ssh_calls[0]), ["r1.mp4", "r2.mp4", "r4.mp4"])
 check("④ cleaned 적힘", all(L[p].get("cleaned") for p in ("p1", "p2", "p4")), True)
 check("② error 는 여전히 사본 남김", L["p3"].get("cleaned"), None)
+check("⑥ 뒤늦게 내려온 b → 완료로 이동", os.path.isfile(os.path.join(bp.DRIVE, F, "완료", "b.mp4")), True)
+check("⑥ b 장부 done_where = 완료", L["p2"].get("done_where"), "완료")
 
 print("\n결과:", "통과" if not fails else f"실패 {len(fails)}건 — {fails}")
 sys.exit(1 if fails else 0)

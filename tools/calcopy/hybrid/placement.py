@@ -98,8 +98,9 @@ def slot_of(speaker: str, first: bool) -> str:
 
 # 줄판독 칸 접기(지침서 §6 어휘 + 자유 글) — 세기(count)·배치(place)·검사(check_place)가 같은 접기를 쓴다
 ROLES = ("hook", "reveal", "twist", "end", "body")
-TRANS_DRAWABLE = ("zoomblur", "flash", "black", "colorflash")      # 렌더러가 그릴 전환(표준 §3-3 A1) — cut 은 전환 없음, other(회오리 등)는 못 그림
-                                                                  # colorflash = 창 색 덮기 α→0(02 468380769 render_bench, 판 cuts.transition.colorflash{alpha, colors})
+TRANS_DRAWABLE = ("zoomblur", "flash", "black")      # 렌더러가 그릴 전환(표준 §3-3 A1) — cut 은 전환 없음, other(회오리 등)는 못 그림
+# 색 번쩍(빨강·초록 덮기)도 kind flash — 렌더러 정본 render_bench.TRANSITION_KINDS(900c1027a ㉝: colorflash 이름 없앰, 색 = 판 cuts.transition.flash.colors).
+# 10-29 사고: 여기만 colorflash 를 계속 내어 샥탬판 회원 렌더가 "전환 종류 colorflash 모름"으로 세 번 멈췄다(시험 test_pan_ready 가 두 곳 짝을 잰다)
 COLOR_FLASH_LEX = r"빨강|초록|분홍|노랑|파랑|주황|보라|색\s*덮기|컬러|color"
 TWIST_LEX = r"근데|하지만|그런데|반전|알고 보니|사실은|의외로"
 
@@ -114,13 +115,11 @@ def role_key(s) -> str:
 
 
 def trans_key(s) -> str:
-    """줄판독 transition 칸 → cut|zoomblur|flash|colorflash|black|other. none·빈칸·'같은 컷 안' = cut(전환 없음).
-    번쩍인데 흰 아닌 색(빨강·초록 덮기 — 샥탬 'flash(빨강 덮기 → 0.45초 사라짐)') = colorflash."""
+    """줄판독 transition 칸 → cut|zoomblur|flash|black|other. none·빈칸·'같은 컷 안' = cut(전환 없음).
+    색 덮기 번쩍(샥탬 'flash(빨강 덮기 → 0.45초 사라짐)')도 flash — 색은 판 cuts.transition.flash.colors 가 정한다(렌더러 정본)."""
     s = str(s if s is not None else "").lower()
     if re.search(r"zoom|줌", s):
         return "zoomblur"
-    if re.search(r"flash|번쩍|덮기", s) and not re.search(r"흰|white", s) and re.search(COLOR_FLASH_LEX, s):
-        return "colorflash"
     if re.search(r"flash|번쩍|흰", s):
         return "flash"
     if re.search(r"black|검은|암전", s):
@@ -1541,10 +1540,14 @@ def check_place(placed: dict, style: dict) -> dict:
     """배치 결과 ↔ 본보기 벤치 편 대조(검사): 칸마다 등장 비율 차이(최대 절댓값)·강조 비율·스티커·효과음 수."""
     ref = next((v for v in (style["placement"].get("counted") or {}).get("videos") or [] if v["id"] == placed.get("reference")), None)
     rows = placed["rows"]
+    fixed = (style["placement"].get("rules") or {}).get("enter") or {}
     rep, worst = {}, 0.0
     for key in SLOTS:
         mine = [r for r in rows if r["slot"] == key]
         rs = (ref or {}).get("slots", {}).get(key)
+        if key in fixed and mine:
+            # 판 rules.enter 로 정한 칸 = 배치(place ①)가 본보기를 안 보고 그 값을 쓴다 → 검사도 같은 자(10-27 두유노 싱크대: 판 cut ↔ 본보기 편 pop 이라 '칸 최대 차 1.0' 으로 완성본 3번 반려)
+            rs = {"n": 1, "enter": {fixed[key]: 1}, "emph": (rs or {}).get("emph", 0) / max(1, (rs or {}).get("n", 1))}
         if not mine or not rs:
             continue
         ours = Counter(r["enter"] for r in mine)

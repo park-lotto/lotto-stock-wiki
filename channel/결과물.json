@@ -1902,6 +1902,38 @@
    "seconds": 40.1,
    "doc": "channel/foreignshowshow/30편_PrankO_하이브리드/",
    "judge": "[확인대기] 벤치 Jlo0i1kEtkQ ↔ Sony -hrbP_slqRI(원어 140-4) · 앞 O2 끝 14.83초 + 뒤 지훈 1인칭(B1 '똑같은 건 없고 비슷하게') · −14.1 LUFS/TP −2.3 · 끝 여운 1.277초 · 끝 0.1초 −117.5dB · freeze/black 0 · 광고 2초 간격 20칸+마지막 프레임 · 자막 띠 0.5초 시트 손질 6칸 · emph_ban 0 · shot_overrun 재료·render_info 0 · 받아쓰기 두 엔진 대조 · deliver --check ○ (사람 판정 전)"
+  },
+  {
+   "channel": "foreignshowshow",
+   "channel_name": "샥탬스토리",
+   "brand": "샥탬스토리",
+   "style": "현장썰 하이브리드(샤크탱크 칼카피 앞 + 쿠팡 1인칭 체험 뒤)",
+   "date": "2026-10-29",
+   "n": 120,
+   "from": "channel/foreignshowshow/31편_MokiDoorstep/make_plan.py → tools/calcopy/shark/render.py(앞) → tools/calcopy/shark/hybrid.py(뒤·이음) → channel/foreignshowshow/하이브리드/final_tail.py(소리=영상 길이·끝 페이드·TP) → engine/finalize.seal",
+   "title": "하이브리드 31 Moki Doorstep(차 문 고리 걸이 발판 — 쿠팡에 같은 제품 없어 비슷한 접이식 도어 래치 후크 스텝 6752807298, 대본에 밝힘)",
+   "path": "C:/숏템_칼카피/foreignshowshow/하이브리드/31편_MokiDoorstep/hybrid/final.mp4",
+   "desktop": "샥탬스토리_31_MokiDoorstep_검수대기.mp4",
+   "md5": "36943dec5fa5de191c3cb2d843f054e0",
+   "seconds": 40.03,
+   "doc": "channel/foreignshowshow/31편_MokiDoorstep_하이브리드/",
+   "judge": "[확인대기] 벤치 JPsGZJ4nwz8 ↔ Shark Tank Global cMYX4FfMT1A(140) · 앞 O3 끝 18.40초 + 뒤 지훈 1인칭(B1 '똑같은 건 없고 비슷한 게') · −13.9 LUFS/TP −2.3 · 끝 여운 1.20초 · 끝 0.1초 −97.1dB · freeze/black 0 · 광고 2초 간격 20칸 · 자막 띠 0.5초 시트 손질 13칸 · emph_ban 0 · shot_overrun 0 · 받아쓰기 두 엔진 대조 · deliver --check ○ (사람 판정 전)"
+  },
+  {
+   "channel": "foreignshowshow",
+   "channel_name": "샥탬스토리",
+   "brand": "샥탬스토리",
+   "style": "현장썰 하이브리드(샤크탱크 칼카피 앞 + 쿠팡 1인칭 체험 뒤)",
+   "date": "2026-10-29",
+   "n": 121,
+   "from": "channel/foreignshowshow/32편_SliimeyHoney/make_plan.py → tools/calcopy/shark/render.py(앞) → tools/calcopy/shark/hybrid.py(뒤·이음) → channel/foreignshowshow/하이브리드/final_tail.py(소리=영상 길이·끝 페이드·TP) → engine/finalize.seal",
+   "title": "하이브리드 32 Sliimey Honey(한국 바나나우유 슬라임 — 쿠팡에 같은 제품 없어 비슷한 바나나우유 슬라임 9715389265, 대본에 밝힘)",
+   "path": "C:/숏템_칼카피/foreignshowshow/하이브리드/32편_SliimeyHoney/hybrid/final.mp4",
+   "desktop": "샥탬스토리_32_SliimeyHoney_검수대기.mp4",
+   "md5": "df61a8ecc6ae6f73feaf60003cf8b66f",
+   "seconds": 41.6,
+   "doc": "channel/foreignshowshow/32편_SliimeyHoney_하이브리드/",
+   "judge": "[확인대기] 벤치 Lbct5sgnyjM ↔ Sony AJTIEVJn7x4(원어 140-7) · 앞 O2 끝 18.60초 + 뒤 지훈 1인칭(B1 '똑같은 건 없고 비슷한 게') · −13.8 LUFS/TP −1.4 · 끝 여운 1.26초 · 끝 0.1초 −89.6dB · freeze/black 0 · 광고 2초 간격 21칸 · 자막 띠 0.5초 시트 손질 11칸 · emph_ban 0 · shot_overrun 0 · 받아쓰기 두 엔진 대조 · deliver --check ○ (사람 판정 전)"
   }
  ]
 }
