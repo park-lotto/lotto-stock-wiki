@@ -3686,6 +3686,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     doc, work = Path(doc), Path(work)
     S, M = jload(doc / "대본.json"), jload(doc / "재료.json")
     S.setdefault("voice", {k: st["voice"][k] for k in ("name", "voice_id", "provider", "emotion") if k in st["voice"]})
+    S["voice"].update(st.get("member_voice") or {})
     RI.voice_args(S, check=True)          # 목소리 칸 검사(provider·감정 — 주인 engine/voices.check_tts). 틀리면 합성 전에 멈춘다
     RI.read_names(S, log)                 # 이름 발음 사전(engine/name_dict — preset_make.tts 와 같은 주인 apply_all, 그 목소리로 확인한 표기만)
     S.setdefault("cps_target", st.get("cps_target", 7.0))

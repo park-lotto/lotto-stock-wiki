@@ -207,8 +207,12 @@ def member_frame(st: dict) -> dict:
     f = os.environ.get("SHORTEM_MEMBER_PACK")
     if not f:
         return st
-    pack = json.loads(open(f, encoding="utf-8").read()).get("1") or {}
+    pack = json.loads(open(f, encoding="utf-8").read()).get("member") or {}
     brand, text = pack.get("brand") or {}, pack.get("text") or {}
+    tts = {k: v for k, v in (pack.get("tts") or {}).items() if k in ("voice_id", "name", "provider", "tempo", "emotion") and v is not None}
+    if tts:          # 소리 단계에서 고른 목소리 — 렌더·계획이 member_voice 로 대본 칸까지 덮는다
+        st["voice"] = {**st.get("voice", {}), **tts}
+        st["member_voice"] = tts
     F = st.get("frame")
     if not F:      # 전용 렌더러 판(잇썸홈·재미썸홈) — 틀 칸이 없다
         return st

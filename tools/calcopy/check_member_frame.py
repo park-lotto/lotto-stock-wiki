@@ -6,7 +6,7 @@ from PIL import Image, ImageChops
 from tools.calcopy.hybrid import render_bench as RB, styles as STY
 
 S = {"title": ["아무도 몰랐던", "이 제품 뒷이야기"], "title_lines": ["아무도 몰랐던", "이 제품 뒷이야기"], "source_label": "출처"}
-PACK = {"1": {"brand": {"channel_name": "시험채널", "colors": {"bg": [30, 60, 120]}},
+PACK = {"member": {"brand": {"channel_name": "시험채널", "colors": {"bg": [30, 60, 120]}},
               "text": {"title_font": "BlackHanSans", "title_colors": ["#FF0000", "#00FF00"], "title_scale": 0.8}}}
 
 def main():

@@ -97,6 +97,6 @@ export async function packFile(pid) {
   const rel = path.join('packs', `${pid}.json`);
   const st = readSettings();
   const web = { look: ((st.looks || {})[pid] || {}).snapshot || null };   // 엔진이 읽는 웹 설정(꾸민 모양) — 팩 검사 밖 칸. 감정은 팩 tts.emotion
-  writeFileIn(homeDir(), rel, JSON.stringify({ 1: await packFor(pid), web }));
+  writeFileIn(homeDir(), rel, JSON.stringify({ 1: await packFor(pid), member: (st.channels[pid] || {}).pack || {}, web }));   // member = 회원이 바꾼 칸만(엔진 styles.member_frame) — 기본값이 판을 덮지 않게
   return path.join(homeDir(), rel);
 }

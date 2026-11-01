@@ -7,12 +7,12 @@ def test_없으면_그대로_있으면_덮는다(tmp_path, monkeypatch):
     monkeypatch.delenv("SHORTEM_MEMBER_PACK", raising=False)
     base = STY.load("잇템로그판")
     p = tmp_path / "p.json"
-    p.write_text(json.dumps({"1": {"brand": {"colors": {"bg": [1, 2, 3]}},
+    p.write_text(json.dumps({"member": {"tts": {"voice_id": "tc_x"}, "brand": {"colors": {"bg": [1, 2, 3]}},
                                    "text": {"title_font": "BMJUA", "title_colors": ["#FF0000", None], "title_scale": 0.5}}}), encoding="utf-8")
     monkeypatch.setenv("SHORTEM_MEMBER_PACK", str(p))
     st = STY.load("잇템로그판")
     a, b = st["frame"]["title"], base["frame"]["title"]
-    assert st["frame"]["bg"] == [1, 2, 3]
+    assert st["frame"]["bg"] == [1, 2, 3] and st["member_voice"] == {"voice_id": "tc_x"}
     assert a[0]["font"] == "BMJUA.ttf" and a[0]["color"] == "#FF0000" and a[0]["px"] == round(b[0]["px"] * 0.5)
     assert a[1]["color"] == b[1]["color"]
 
