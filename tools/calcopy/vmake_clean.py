@@ -318,6 +318,79 @@ def splice(f: Path, pieces: list) -> Path:
     return f
 
 
+def _frames(f: Path) -> int:
+    """영상 프레임 수(실제로 세어 본 값)."""
+    out = subprocess.run(["ffprobe", "-v", "error", "-count_packets", "-select_streams", "v:0", "-show_entries", "stream=nb_read_packets",
+                          "-of", "csv=p=0", str(f)], capture_output=True, text=True, stdin=subprocess.DEVNULL)
+    return int(out.stdout.strip().split(",")[0])
+
+
+def _rate(f: Path) -> str:
+    return subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=r_frame_rate", "-of", "csv=p=0", str(f)],
+                          capture_output=True, text=True, stdin=subprocess.DEVNULL).stdout.strip()
+
+
+def send_joined(files: list, send, log=print) -> dict:
+    """(주인: VMake 호출 수) 조각을 크기가 같은 것끼리 이어 붙여 1회로 보내고, 지운 결과를 프레임 단위로 다시 조각 자리에 돌려준다.
+    숏템메이커 _clean_joined 와 같은 방식(11-01 실측: 호출마다 대기가 복불복이라 13회 = 느린 1건에 걸릴 확률 13배).
+    프레임 수가 안 맞으면 그 묶음은 실패로 돌려준다(어긋난 그림을 끼우지 않는다). send(파일 목록) = server_clean·member_clean."""
+    import hashlib
+    groups: dict = {}
+    for f in map(Path, files):
+        groups.setdefault((*_wh(f), _rate(f)), []).append(f)
+    out = {"cleaned": [], "fail": {}, "calls": 0}
+    jobs = {}
+    for size, fs in groups.items():
+        if len(fs) == 1:
+            jobs[fs[0]] = None
+            continue
+        tag = hashlib.sha1("|".join(f"{f.name}:{f.stat().st_size}" for f in fs).encode()).hexdigest()[:10]
+        j = fs[0].with_name(f"joined_{tag}.mp4")
+        args = ["ffmpeg", "-v", "error", "-y"]
+        for f in fs:
+            args += ["-i", str(f)]
+        chain = "".join(f"[{i}:v]setsar=1,setpts=PTS-STARTPTS[v{i}];" for i in range(len(fs))) + "".join(f"[v{i}]" for i in range(len(fs))) + f"concat=n={len(fs)}:v=1:a=0[o]"
+        subprocess.run(args + ["-filter_complex", chain, "-map", "[o]", "-an", "-c:v", "libx264", "-crf", "14", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(j)],
+                       check=True, stdin=subprocess.DEVNULL)
+        jobs[j] = fs
+    log(f"[vmake] 조각 {len(files)}개 → 호출 {len(jobs)}회로 묶음")
+    r = send(list(jobs))
+    out["calls"] = r.get("calls", 0)
+    out["fail"].update(r.get("fail") or {})
+    for j, fs in jobs.items():
+        if j.name not in r.get("cleaned", []):
+            if fs:
+                for f in fs:
+                    out["fail"].setdefault(f.name, str((r.get("fail") or {}).get(j.name) or "묶음 실패"))
+            continue
+        if fs is None:
+            out["cleaned"].append(j.name)
+            continue
+        counts = [_frames(f) for f in fs]      # 같은 fps 끼리만 묶으니 프레임 수 그대로 이어진다
+        have = _frames(j)
+        if have != sum(counts):
+            for f in fs:
+                out["fail"][f.name] = f"합본 프레임 불일치 {have} != {sum(counts)}"
+            log(f"[vmake] 합본 프레임 불일치 {have} != {sum(counts)} — 끼우지 않는다")
+            continue
+        at = 0
+        for f, n in zip(fs, counts):
+            tmp = f.with_name(f.stem + "_vclean" + f.suffix)
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(j), "-vf", f"trim=start_frame={at}:end_frame={at + n},setpts=PTS-STARTPTS", "-an",
+                            "-c:v", "libx264", "-crf", "14", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(tmp)], check=True, stdin=subprocess.DEVNULL)
+            swap_in(f, tmp)
+            out["cleaned"].append(f.name)
+            at += n
+    for j, fs in jobs.items():
+        if fs:
+            for x in (j, j.with_name(j.stem + "_orig" + j.suffix)):
+                try:
+                    x.unlink()
+                except OSError:
+                    pass
+    return out
+
+
 def clean_used(src_dir: Path, spans: dict, mode: str = "vmake", log=print) -> dict:
     """쓰는 구간만 지우기(주인) — 구간마다 잘라 VMake(서버 키/회원 키 = ready 판정) → 지운 조각을 원본에 덮어 끼움.
     반환 {mode, via, done:{이름:[[a,b]…]}(지운 구간), cleaned:[이름], calls, sec(보낸 초), why, (fix)}. 구간이 없으면 호출 0."""
@@ -332,7 +405,8 @@ def clean_used(src_dir: Path, spans: dict, mode: str = "vmake", log=print) -> di
         return {**rd, "done": {}, "cleaned": [], "calls": 0, "sec": 0.0}
     pieces = {n: [(cut_piece(src_dir / n, a, b), a, b) for a, b in iv] for n, iv in spans.items()}
     files = [p for ps in pieces.values() for p, _, _ in ps]
-    r = server_clean(files, log=log) if rd["via"] == "server" else member_clean(files, member_key(), log=log)
+    send = (lambda fs: server_clean(fs, log=log)) if rd["via"] == "server" else (lambda fs: member_clean(fs, member_key(), log=log))
+    r = send_joined(files, send, log=log)
     done, cleaned = {}, []
     for n, ps in pieces.items():
         ok = [(p, a, b) for p, a, b in ps if p.name in r["cleaned"]]
