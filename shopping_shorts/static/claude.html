@@ -79,7 +79,7 @@ video{width:100%;max-height:420px;background:#000;border-radius:10px;display:blo
     <button class="btn" data-tab="studio">내 채널 설정</button>
   </div>
   <section id="tabStudio" style="display:none"><iframe id="studioFrame" title="내 채널 설정" style="width:100%;height:calc(100vh - 170px);min-height:640px;border:1px solid var(--line);border-radius:12px;background:var(--panel)"></iframe></section>
-  <p class="lead">내 PC 의 Claude(데스크탑·코드)로 숏템 프리셋 영상을 만듭니다. 렌더는 전부 내 PC 에서 돌고, 여기서는 <b>프리셋 고르기 · 내 채널 옵션 저장 · 라이선스 · 설치팩</b>만 합니다.</p>
+  <p class="lead">내 PC 의 Claude 로 숏템 프리셋 영상을 만듭니다. 렌더는 전부 내 PC 에서 돌고, 여기서는 <b>설치 · 기기 관리 · 내 채널 설정</b>만 합니다.</p>
   <nav>
     <a href="#preset">① 프리셋</a><a href="#option">② 내 채널 옵션</a><a href="#packs">팩 둘러보기</a>
     <a href="#license">③ 라이선스·기기</a><a href="#install">④ 설치</a><a href="#how">⑤ Claude 에서 쓰기</a>
@@ -143,7 +143,7 @@ video{width:100%;max-height:420px;background:#000;border-radius:10px;display:blo
     <h2>③ 라이선스·기기 <small>키 1개 = 기기 2대 · 동시에 1편만</small></h2>
     <div class="grid">
       <div class="card"><div class="nm">라이선스 키</div><div id="licState" class="sub">불러오는 중…</div>
-        <div class="row" style="margin-top:10px"><button class="btn pri" id="licIssue">키 발급</button><button class="btn" id="licIssue2" style="display:none">둘째 PC 키 발급</button><span class="msg" id="licMsg"></span></div>
+        <div class="row" id="licRow" style="margin-top:10px;display:none"><button class="btn pri" id="licIssue">키 발급</button><button class="btn" id="licIssue2" style="display:none">둘째 PC 키 발급</button><span class="msg" id="licMsg"></span></div>
         <div id="licKey"></div></div>
       <div class="card"><div class="nm">등록 기기 <small id="devCount"></small></div><div class="list" id="devList"></div>
         <div class="sub" id="swapNote" style="margin-top:8px"></div></div>
@@ -154,7 +154,7 @@ video{width:100%;max-height:420px;background:#000;border-radius:10px;display:blo
   </section>
 
   <section id="install">
-    <h2>④ 연결 파일 <small>작은 파일 하나만 받으면, 실행 도구(브라우저 엔진·ffmpeg·파이썬·노드)는 Claude 가 알아서 받아 깝니다 — 설치 프로그램·관리자 권한 없음</small></h2>
+    <h2>④ 설치 <small>복사해서 붙여 넣으면 Claude 설치부터 준비 점검까지 자동으로 끝납니다</small></h2>
     <div class="card sel" style="margin-bottom:12px"><div class="nm">가장 쉬운 방법</div>
       <ol style="padding-left:20px;margin:8px 0;font-size:16px;line-height:1.8">
         <li>아래 <b>복사하기</b> 버튼을 누릅니다</li>
@@ -162,32 +162,15 @@ video{width:100%;max-height:420px;background:#000;border-radius:10px;display:blo
         <li>열린 창에서 <b>마우스 오른쪽 버튼</b>을 누른 뒤 <b>엔터</b></li>
       </ol>
       <button class="btn pri" id="startCopy" style="font-size:16px;padding:10px 22px">복사하기</button>
-      <a class="btn" style="display:inline-block;margin-left:6px;text-decoration:none" href="/api/claude/me/start.cmd">설치 파일로 받기</a>
-      <a class="btn" style="display:inline-block;margin-left:6px;text-decoration:none" href="/api/claude/me/start.md">시작.md 받기</a>
       <div class="sub" id="startMsg" style="margin-top:8px">내 회원 인증이 들어 있어 따로 입력할 것이 없습니다. 72시간 동안 쓸 수 있고, 남에게 주지 마세요.</div></div>
-    <div class="grid" id="instCards"></div>
   </section>
 
   <section id="how">
-    <h2>⑤ Claude 에서 쓰기</h2>
-    <div class="grid">
-      <div class="card"><div class="nm">Claude 데스크탑</div>
-        <ol style="padding-left:18px;margin:6px 0">
-          <li>위 <b>Claude 데스크탑용</b> 파일(shortem.mcpb)을 두 번 누르기 → 뜨는 설치 화면에서 <b>라이선스 키</b> 붙여넣기</li>
-          <li>채팅에 <code>숏템 설치해줘</code> → 다 받으면(약 1GB) Claude 를 껐다 켜기</li>
-          <li>채팅에 <code>숏클 점검 준비해줘</code></li>
-          <li><code>내 채널(프로필 이름)로 이 영상 만들어줘 &lt;유튜브 주소&gt;</code></li>
-        </ol></div>
-      <div class="card"><div class="nm">Claude Code</div>
-        <ol style="padding-left:18px;margin:6px 0">
-          <li>위 <b>Claude Code용</b> 꾸러미를 받아 바탕화면에 풀기</li>
-          <li>풀린 폴더의 <code>시작.md</code> 를 Claude Code 입력창에 끌어다 놓고 엔터</li>
-          <li><code>/shortem:setup</code> → <code>/shortem:make &lt;프로필&gt; &lt;소재&gt;</code></li>
-        </ol></div>
-    </div>
+    <h2>⑤ 영상 만들기 <small>설치가 끝난 창에 이렇게 말합니다</small></h2>
+    <p><code>내 채널(프로필 이름)로 이 영상 만들어줘 &lt;유튜브 주소&gt;</code></p>
     <h3>진행 순서 <small>Claude 화면에는 이 순서만 보입니다</small></h3>
     <ul class="steps" id="steps"></ul>
-    <p class="sub">사람이 정하는 자리는 3곳 — 소재 고르기 · 대본 확인 · 완성본 확인. <span id="guideLink"></span></p>
+    <p class="sub">사람이 정하는 자리는 3곳 — 소재 고르기 · 대본 확인 · 완성본 확인.</p>
   </section>
 </div>
 <script src="/sidebar.js"></script>
@@ -352,11 +335,12 @@ function fmtDate(t){ if(!t) return '-'; const d=new Date(t*1000); return d.getFu
 
 function renderLicense(){
   const L=H.license;
-  $('licState').innerHTML=L.has_key?('발급됨 · 만료 '+esc(fmtDate(L.expires))+(L.revoked?' · <b style="color:var(--fire)">회수됨</b>':'')+(L.suspended?' · <b style="color:var(--fire)">일시 정지</b>':'')+'<br><small>키는 발급할 때 한 번만 보입니다. 잃어버리면 새로 발급하세요(옛 키는 바로 못 씁니다).</small>'):'아직 발급 안 됨';
+  $('licState').innerHTML=L.has_key?('발급됨 · 만료 '+esc(fmtDate(L.expires))+(L.revoked?' · <b style="color:var(--fire)">회수됨</b>':'')+(L.suspended?' · <b style="color:var(--fire)">일시 정지</b>':'')):'아직 없음 — 설치하면 자동으로 발급됩니다';
+  $('licRow').style.display=L.slots>1?'':'none';   // 키는 설치가 자동으로 넣는다(사장님 11-01 '복사 붙여넣기만') — 직접 발급은 관리자만
   $('licIssue').textContent=L.has_key?'새 키 발급':'키 발급';
   $('licIssue2').style.display=(L.has_key&&L.slots>1)?'':'none';
   $('devCount').textContent=H.devices.length+' / '+H.devices_max;
-  $('devList').innerHTML=H.devices.length?H.devices.map(d=>'<div class="li"><span><b>'+esc(d.name||'이름 없음')+'</b> <small>'+d.slot+'번 칸 · 마지막 '+esc(fmtDate(d.last_seen))+'</small></span>'+(H.swap&&H.swap.status==='new'?'<button class="btn sm warn" data-dev="'+esc(d.id)+'">이 PC 빼기 요청</button>':'')+'</div>').join(''):'<div class="empty">등록된 기기 없음 — 설치팩에서 키를 넣으면 등록됩니다</div>';
+  $('devList').innerHTML=H.devices.length?H.devices.map(d=>'<div class="li"><span><b>'+esc(d.name||'이름 없음')+'</b> <small>'+d.slot+'번 칸 · 마지막 '+esc(fmtDate(d.last_seen))+'</small></span>'+(H.swap&&H.swap.status==='new'?'<button class="btn sm warn" data-dev="'+esc(d.id)+'">이 PC 빼기 요청</button>':'')+'</div>').join(''):'<div class="empty">등록된 기기 없음 — 설치하면 자동으로 등록됩니다</div>';
   $('devList').querySelectorAll('[data-dev]').forEach(b=>b.onclick=async()=>{
     if(!confirm('이 PC 를 빼고 새 PC 로 바꾸도록 요청할까요? 관리자가 승인하면 바뀝니다.')) return;
     try{ await api('/api/claude/me/device/swap',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device_id:b.dataset.dev})}); await load(); }
@@ -366,19 +350,6 @@ function renderLicense(){
   if(H.account_change) $('swapNote').textContent+=' Claude 계정 변경 승인을 기다리는 중입니다.';
   $('leaseState').textContent=H.lease?('작업 중: '+(H.lease.device||'기기')+(H.lease.step?' · '+H.lease.step:'')):(H.session?'접속 중: '+(H.session.device||'기기'):'지금 접속한 PC 없음');
   $('leaseFree').disabled=!H.lease&&!H.session;
-}
-
-function renderInstall(){
-  const ua=navigator.userAgent||''; const isMac=/Mac/i.test(ua);
-  const names={'desktop':'Claude 데스크탑용 (윈도·맥)','code-win-x64':'Claude Code용 (윈도)'};
-  const want=['desktop','code-win-x64'];
-  const by={}; (H.installers||[]).forEach(i=>by[i.os]=i);
-  $('instCards').innerHTML=want.map(os=>{ const i=by[os]; const mine=os==='desktop'||(!isMac&&os==='code-win-x64');
-    return '<div class="card'+(mine?' sel':'')+'"><div class="nm">'+names[os]+(mine?'<br><small>이 PC 에 맞는 것</small>':'')+'</div>'
-      +(i&&i.ready?('<div class="sub">버전 '+esc(i.version||'')+(i.size?' · '+(i.size<1048576?Math.max(1,Math.round(i.size/1024))+'KB':Math.round(i.size/1048576)+'MB'):'')+'</div>'
-        +'<div class="mono" style="margin-top:6px">sha256 '+esc(i.sha256||'')+'</div>'
-        +'<a class="btn pri" style="display:inline-block;margin-top:8px;text-decoration:none" href="'+esc(i.download)+'">내려받기</a>')
-       :'<div class="empty" style="margin-top:6px">준비 중</div>')+'</div>'; }).join('');
 }
 
 $('startCopy').onclick=async()=>{
@@ -403,14 +374,8 @@ async function load(selId){
   catch(e){ showErr(e.message||'불러오지 못했습니다'); $('presetCards').innerHTML='<div class="empty">'+esc(e.message||'')+'</div>'; return; }
   $('err').classList.remove('on');
   $('notices').innerHTML=(H.notices||[]).map(n=>'<div class="notice">⚠️ '+esc(n.title)+(n.level==='suspend'?' — 사용이 잠시 멈췄습니다. 관리자 확인 뒤 풀립니다':' — 평소와 다른 사용이 보였습니다')+'</div>').join('');
-  renderProfiles(selId||(CUR&&CUR.profile_id)); renderPacks(); renderLicense(); renderInstall();
+  renderProfiles(selId||(CUR&&CUR.profile_id)); renderPacks(); renderLicense();
   $('steps').innerHTML=H.steps.map(s=>'<li>'+esc(s)+'</li>').join('');
-  $('guideLink').innerHTML=H.guide?'<a href="'+esc(H.guide)+'" target="_blank" rel="noopener" style="color:var(--accent)">그림 안내 보기</a>':'그림 안내는 준비 중입니다.';
-}
-
-$('profSel').onchange=()=>fillForm(H.profiles.find(p=>p.profile_id===$('profSel').value));
-$('profNew').onclick=()=>{ $('profSel').value=''; fillForm(null); $('oName').focus(); };
-$('profSave').onclick=async()=>{
   const m=$('profMsg'); m.className='msg'; m.textContent='저장 중…';
   const body={name:$('oName').value.trim(),preset_id:$('oPreset').value,options:collect()};
   if(CUR) body.profile_id=CUR.profile_id;
