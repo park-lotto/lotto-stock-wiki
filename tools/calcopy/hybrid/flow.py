@@ -2378,7 +2378,9 @@ WAY_LINE = ("그 줄 문장을 장면에 맞게 바꾼다(자막 넘침·낱말 
             "(바꾼 줄만 · 뜻·사실·결 그대로 · caps 를 이으면 tts)")
 PLAN_LOOK_WAYS = ("\n\n★재료로 못 고치는 줄(맞는 장면이 재료에 없다)은 멈추지 말고 둘 중 하나로 답에 넣어라 — ① " + WAY_LINE +
                   " ② 재료를 더 찾는다: \"재료_더찾기\": [\"유튜브 검색어\", …] (최대 4개 — 그 장면이 나올 영상 검색어). 해당 없으면 넣지 않는다.")
-FINAL_FIX_WAYS = "\n\n★재료(컷)로 못 고치는 것(자막 넘침·낱말 끊김·대사와 다른 말)은 " + WAY_LINE + " 로 답에 넣어라. 해당 없으면 넣지 않는다."
+FINAL_FIX_WAYS = ("\n\n★재료(컷)로 못 고치는 것(자막 넘침·낱말 끊김·대사와 다른 말)은 " + WAY_LINE + " 로 답에 넣어라. 해당 없으면 넣지 않는다."
+                  "\n★줄을 고칠 때는 걸린 말만 지우지 말고 앞뒤 줄과 이어 읽어 말이 되는 문장으로 다시 써라 — 뜻·사실은 그대로(11-01 '저도 제품 찾기부터 따라 해 봤는데요')."
+                  "\n★썸네일을 고쳐야 하면 답에 \"썸네일\": {\"options\":[…]} 를 넣어라.")
 
 
 LINE_TABLE_ASK = ("\n\n★줄별 대조표(반드시 — 사장님 PC 공정 11): 답에 \"대조표\": [{\"줄\": \"<줄 id>\", \"화면\": \"시트에서 그 줄 자리에 실제로 보이는 것\", \"이유\": \"그 말과 왜 맞는가\"}] 를 대본 줄 전부 넣어라. "
@@ -2497,7 +2499,11 @@ JSON 하나: {{"썸네일": {{"options":[3안], "no_person_why": "인물순간 �
 def ph_thumb(st, m, rp, u):
     from tools.calcopy.hybrid import thumb_rule as TR
     v = st["version"]
+    if st.get("_thumb_replan"):          # 재료가 바뀌어 다시 고르는 차례 — AI 를 또 부르지 않고 코드가 새 계획 컷에서 고른다(11-01 키치잇 재호출)
+        st.pop("_thumb_replan", None)
+        return _thumb_auto(st, "재료가 바뀌어 새 컷에서 다시 고름")
     if st.get("_sheet_stale"):
+        st["_thumb_replan"] = True
         # 재료가 계획 시트 뒤에 바뀌었다(재료 고치기·검사 뒤 고치기) — 옛 시트의 컷 번호로 고르면 렌더에선 다른 컷을 가리킨다
         # (10-26 이미숙 회원편: part 8 = 시트에선 얼굴 근접 O3@163, 바뀐 재료에선 앰플 병 N2@80 → 카드 얼굴 반려 되풀이·멈춤, 98 기록).
         # 옛 카드는 비우고(옛 번호라 계획 관문 ⑥이 시트를 막는다) 계획을 다시 돌려 새 시트로 묻는다.
@@ -3025,6 +3031,19 @@ def ph_check_retry(st, m, rp, u):
     return {"review": [_fix_review(st, "완성본 검사에서 걸린 것: " + probs + _face_hint(st), None, f"final_fix_{v}")], "then": "check_fix"}
 
 
+def _thumb_from_fix(st, r: dict) -> list:
+    """고치기 답의 썸네일 칸 — thumb_rule.check 를 통과하면 저장 일감, 아니면 빈 목록(반려는 기록)."""
+    from tools.calcopy.hybrid import thumb_rule as TR
+    spec = r.get("썸네일") or r.get("썸네일.json")
+    if not isinstance(spec, dict):
+        return []
+    bad = TR.check(spec, n_parts=st.get("_n_cuts"))
+    if bad:
+        st["log"].append("고치기 답의 썸네일 반려: " + "; ".join(bad)[:300])
+        return []
+    return [{"id": "save_thumb", "cmd": "write_doc", "files": {f"{st['version']}/썸네일.json": spec}, "version": st["version"]}]
+
+
 def ph_check_fix(st, m, rp, u):
     v = st["version"]
     r = _reply(rp, f"final_fix_{v}", ("ok",))
@@ -3035,6 +3054,9 @@ def ph_check_fix(st, m, rp, u):
         if got:
             return got
     M = _take_fix(st, r)
+    thumb_do = _thumb_from_fix(st, r)
+    if M is None and thumb_do:           # 썸네일만 고친 답을 버리지 않는다
+        return {"do": thumb_do, "then": "render"}
     if M is None and not st["tries"].get("render_same"):
         # 오푸스 '재료로 고칠 것 없음' = 걸린 칸이 렌더·검사 쪽(자막 배치·소리 시각)이다 — 멈추기 전에 재료 그대로 한 번 다시 만든다
         #   (10-27 run4 c편: 스티커 자리 판정이 렌더 때 정해져 다시 만들어야 새 규칙이 반영된다)
@@ -3047,7 +3069,7 @@ def ph_check_fix(st, m, rp, u):
         return {"goto": "plan"}
     if M is None:      # 다시 시도 = 검사부터(옛 검사 결과를 다시 먹이는 _asker 경로 금지 — 10-27 run4 a·c)
         raise _Stop("완성본 마무리 확인을 통과하지 못했어요", AGAIN, retry="check")
-    return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "render"}
+    return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}] + thumb_do, "then": "render"}
 
 
 # ── 12·13 납품·정리 ───────────────────────────────────────────────────────
