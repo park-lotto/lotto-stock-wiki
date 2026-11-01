@@ -20,12 +20,14 @@
 
     PYTHONUTF8=1 py tools/calcopy/vmake_clean.py fetch <폴더> <이름 …>          # 서버에 끝난 *_clean 만 받아 끼우기(40분 제한으로 끊겼을 때)
     PYTHONUTF8=1 py tools/calcopy/vmake_clean.py log <폴더>                     # 장부 보기
+    PYTHONUTF8=1 py tools/calcopy/vmake_clean.py compare <지운 원본.mp4> <결과 폴더> <a-b> [<a-b> …] [--tier basic] [--dry]   # 같은 구간을 다른 등급으로 지워 원본·지금 결과와 나란히 그림(돈 든다, --dry = 호출 없이 그림 틀만)
 """
 from __future__ import annotations
 
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -41,6 +43,7 @@ PAD = 0.2                  # 쓰는 구간 앞뒤 여유(초) — 30fps 반올�
 JOIN_GAP = 1.0             # 같은 파일 이웃 구간 사이가 이보다 짧으면 한 조각으로(호출 수를 줄이고 돈은 사이 초만큼만 더)
 MIN_PIECE = 1.0            # 조각 하한(초) — 아주 짧은 업로드 실패를 피함(VMake 짧은 영상 한계는 확인 안 함, 하한으로 더 드는 돈 1초 미만)
 PIECE_TAG = "__vm_"        # 조각 파일 이름 <stem>__vm_<a>_<b>.mp4 — 장부에서 원본 이름을 되찾는 표식
+TIER = "pro"               # 지우기 등급 한 곳 — pro(4크레딧/초, 서버 로그 처리 중앙 256초) · basic(2크레딧/초, 중앙 38초). 품질 비교 = `compare` 명령
 
 
 def paid_off() -> bool:
@@ -401,7 +404,7 @@ def swap_in(orig: Path, cleaned_video: Path) -> Path:
     return orig
 
 
-def member_clean(files: list, api_key: str, log=print, tier: str = "pro") -> dict:
+def member_clean(files: list, api_key: str, log=print, tier: str = TIER) -> dict:
     """회원 PC — 회원 키로 이 PC 에서 바로. 반환 {cleaned:[이름], calls:n, fail:{이름: 이유}}. 돈이 든다(호출부가 키·동의를 확인한 뒤에만)."""
     if paid_off():
         raise PermissionError("SHORTEM_NO_PAID=1 — VMake 호출 막음")
@@ -437,8 +440,9 @@ def member_clean(files: list, api_key: str, log=print, tier: str = "pro") -> dic
 SERVER_PAR = 4      # 서버 VMake 동시 조각 수(조각마다 다른 ssh·다른 파일)
 
 
-def server_clean(files: list, log=print, timeout: int = SERVER_TIMEOUT) -> dict:
-    """우리 PC — 서버의 사장님 키로 Pro(scratchpad vmake.py 이식). 한 번에 여러 개 보내면 40분 제한에 걸리니 파일마다 따로 부른다."""
+def server_clean(files: list, log=print, timeout: int = SERVER_TIMEOUT, tier: str = TIER) -> dict:
+    """우리 PC — 서버의 사장님 키로 지운다(등급 = tier, scratchpad vmake.py 이식). 한 번에 여러 개 보내면 40분 제한에 걸리니 파일마다 따로 부른다.
+    resume_key = 끊긴 뒤 같은 조각을 다시 보낼 때 새 과금 없이 이어받는 이름표(member_clean 과 같은 꼴)."""
     if paid_off():
         raise PermissionError("SHORTEM_NO_PAID=1 — VMake 호출 막음")
     from tools.calcopy.hybrid import server_ai
@@ -447,10 +451,9 @@ import json, sys
 from shopping_shorts.config import DB_PATH
 from shopping_shorts.store import Store
 from shopping_shorts import mix_pipeline as mp
-from shopping_shorts.vmake_client import TIER_PRO
 a=json.loads(sys.stdin.read()); keys=mp._vmake_keys(Store(DB_PATH),0); out={}
 for n in a['names']:
-    try: mp._vmake_clean(f'/tmp/calcopy_vmake/{n}.mp4', keys, f'/tmp/calcopy_vmake/{n}_clean.mp4', tier=TIER_PRO); out[n]='ok'
+    try: mp._vmake_clean(f'/tmp/calcopy_vmake/{n}.mp4', keys, f'/tmp/calcopy_vmake/{n}_clean.mp4', tier=a['tier'], resume_key=a['resume']); out[n]='ok'
     except Exception as e: out[n]=repr(e)[:300]
 print('@@JSON@@'+json.dumps(out))
 '''
@@ -468,7 +471,7 @@ print('@@JSON@@'+json.dumps(out))
         with lock:
             out["calls"] += 1
         try:
-            res = server_ai._ssh_py(code, {"names": [n]}, timeout=timeout)
+            res = server_ai._ssh_py(code, {"names": [n], "tier": tier, "resume": f"calcopy:{f.name}:{f.stat().st_size}"}, timeout=timeout)
         except Exception as e:  # noqa: BLE001 — 시간 초과면 서버에서는 끝났을 수 있다 → fetch 로 받는다
             res = {n: f"{type(e).__name__}: {str(e)[:200]}"}
         if res.get(n) == "ok":
@@ -503,6 +506,46 @@ def fetch(folder: Path, names: list, log=print) -> list:
     return got
 
 
+def compare(src: Path, out: Path, spans: list, tier: str = "basic", dry: bool = False) -> dict:
+    """같은 구간을 tier 로 새로 지워 [원본 | 지금 결과 | tier 결과] 를 구간마다 3칸씩 나란히 그린다 — 작업 폴더는 안 건드린다(복사본·결과 폴더에서만).
+    src = 이미 지운 <이름>.mp4(옆에 <이름>_orig.mp4). 반환 {sheet, tier, sent_sec, rows:[{span, sec}]}. sec = 장부의 올리기~받기 시간. dry = VMake 없이 원본 칸으로 그림만."""
+    src, out = Path(src), Path(out)
+    orig = src.with_name(src.stem + "_orig" + src.suffix)
+    out.mkdir(parents=True, exist_ok=True)
+    base = out / src.name
+    if not base.exists():
+        shutil.copy2(orig, base)
+    pieces = [cut_piece(base, a, b) for a, b in spans]
+    r = {"fail": {}} if dry else server_clean(pieces, tier=tier)
+    rows, inputs, chain = [], [], []
+
+    def frame(f, at, label):
+        inputs.extend(["-ss", f"{at:.3f}", "-i", str(f)])
+        i = len(inputs) // 4 - 1
+        chain.append(f"[{i}:v]scale=360:-2,trim=end_frame=1,setpts=PTS-STARTPTS[{label}]")
+
+    for k, ((a, b), p) in enumerate(zip(spans, pieces)):
+        for j, part in enumerate((0.2, 0.5, 0.8)):
+            at = (b - a) * part
+            frame(orig, a + at, f"o{k}{j}")
+            frame(src, a + at, f"c{k}{j}")
+            frame(p, at, f"n{k}{j}")
+        rows.append({"span": [a, b], "ok": p.name not in r["fail"], "why": r["fail"].get(p.name, "")})
+    n = len(spans) * 3
+    for i in range(n):
+        k, j = divmod(i, 3)
+        chain.append(f"[o{k}{j}][c{k}{j}][n{k}{j}]hstack=3[r{i}]")
+    chain.append("".join(f"[r{i}]" for i in range(n)) + f"vstack={n}[v]" if n > 1 else "[r0]copy[v]")
+    sheet = out / f"비교_{tier}.jpg"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex", ";".join(chain), "-map", "[v]", "-frames:v", "1", "-q:v", "3", str(sheet)],
+                   check=True, stdin=subprocess.DEVNULL)
+    led = out / LEDGER
+    for row, p in zip(rows, pieces):
+        hit = [e for e in (json.loads(led.read_text(encoding="utf-8")) if led.exists() else []) if e.get("file") == p.name]
+        row["sec"] = hit[-1].get("sec") if hit else None
+    return {"sheet": str(sheet), "tier": tier, "sent_sec": round(sum(b - a for a, b in spans), 3), "rows": rows}
+
+
 def main(argv=None) -> int:
     a = list(sys.argv[1:] if argv is None else argv)
     if not a:
@@ -527,6 +570,16 @@ def main(argv=None) -> int:
         return 0
     if cmd == "fetch":
         print(fetch(Path(a[0]), a[1:]))
+        return 0
+    if cmd == "compare":         # compare <지운 원본.mp4> <결과 폴더> <a-b> [<a-b> …] [--tier basic] [--dry]
+        dry = "--dry" in a
+        a = [x for x in a if x != "--dry"]
+        tier = "basic"
+        if "--tier" in a:
+            i = a.index("--tier")
+            tier = a[i + 1]
+            del a[i:i + 2]
+        print(json.dumps(compare(Path(a[0]), Path(a[1]), [[float(x) for x in s.split("-")] for s in a[2:]], tier, dry), ensure_ascii=False))
         return 0
     if cmd == "log":
         p = Path(a[0]) / LEDGER

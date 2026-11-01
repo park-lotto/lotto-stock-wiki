@@ -484,6 +484,29 @@ def orig_edges(src: Path, spans: list) -> tuple[float, float]:
     return round(h, 3), round(tl, 3)
 
 
+def pause_topup(y, tmap: list, marks: list, write) -> tuple:
+    """쉼을 맞춘 소리를 B18a 와 같은 자(-35dB·0.08초)로 다시 재서 모자란 만큼 그 쉼을 늘린다 — 말 시작 직전 작은 소리가 쉼을 잘라 짧게 재지는 것을 푼다
+    (10-31 해외신기템 L4 0.24·L9 0.19, 대본 고치기 되풀이). marks = [(고치기 전 시각, 목표 초)] · write(y) = 잴 소리를 저장하고 경로를 돌려준다."""
+    import numpy as np
+    from tools.calcopy.hybrid.common import silences
+    if not marks:
+        return y, tmap
+    sil = silences(write(y), "-35dB", 0.08)
+    fix = []
+    for at, want in marks:
+        t = float(np.interp(at, [a for a, _ in tmap], [b for _, b in tmap]))
+        near = min(sil, key=lambda r: abs((r[0] + r[1]) / 2 - t), default=None)
+        if near and abs((near[0] + near[1]) / 2 - t) <= 0.2 and near[1] - near[0] < want - 0.01:
+            fix.append(((near[0] + near[1]) / 2, want - (near[1] - near[0])))
+    for t, more in sorted(fix, reverse=True):
+        i, n, w = int(t * SR), int(round(more * SR)), int(0.02 * SR)
+        y = np.concatenate([y[:i], np.tile(y[i - w // 2:i + w // 2], n // w + 1)[:n], y[i:]])
+        tmap = [(a, b + more if b > t else b) for a, b in tmap]
+    if fix:
+        write(y)
+    return y, tmap
+
+
 def fit_voice(S: dict, st: dict, sent: list, align: dict | None, log=print) -> list:
     """나레 줄 소리(s_<줄>.wav)를 판에 맞춘다 — ① 앞뒤 무음을 EDGE_KEEP 만 남기고 뺀다(줄 사이 '소리 쉼' = 판 timing.gap 이 되게 — 판 gap 은 벤치 소리 쉼 실측)
     ② 줄 안 쉼표·마침표 자리 무음을 pause_targets(판 speech) 길이로(길면 가운데를 자르고, 짧으면 그 무음 가운데를 이어 늘린다 — 디지털 무음 금지).
@@ -584,9 +607,12 @@ def fit_voice(S: dict, st: dict, sent: list, align: dict | None, log=print) -> l
             last = i1
         out.append(x[last:]); tn += (len(x) - last) / SR
         tmap.append((total, tn))
-        y = np.concatenate(out)
-        with wave.open(str(p), "wb") as w:
-            w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((np.clip(y, -1, 1) * 32767).astype("<i2").tobytes())
+        def put(v):
+            with wave.open(str(p), "wb") as w:
+                w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((np.clip(v, -1, 1) * 32767).astype("<i2").tobytes())
+            return p
+        y, tmap = pause_topup(np.concatenate(out), tmap, [(q["at"], q["now"]) for q in inner_log], put)
+        put(y)
         s["dur_before_fit"], s["dur"] = s["dur"], round(len(y) / SR, 3)
         s["tmap"] = [(round(a, 4), round(b, 4)) for a, b in tmap]
         logs.append({"id": s["id"], "head": round(hc, 3), "tail": round(tc, 3), "inner": inner_log, "dur": [s["dur_before_fit"], s["dur"]]})
@@ -857,6 +883,15 @@ def _seg_time(v, S: dict, T: dict) -> float:
 SEG_CAPTIONS = ("show", "hide")
 
 
+def hook_text_fits(text: str, F: dict) -> bool:
+    """훅 카드 띠에 글이 판이 정한 글자 크기 그대로 한 줄에 드는가(판단 주인 = 이 함수, 부르는 곳 = frame_segments)."""
+    from PIL import ImageFont
+    tx = ((F.get("post") or {}).get("body_box") or {}).get("text") or {}
+    if not tx.get("font") or not tx.get("px") or not tx.get("max_w"):
+        return True
+    return ImageFont.truetype(str(FONTS / tx["font"]), round(float(tx["px"]))).getlength(text) <= float(tx["max_w"])
+
+
 def frame_segments(S: dict, T: dict, st: dict) -> list[dict]:
     """시간 구간별 틀(관제 263 02 2차 ①) — 판 칸 frame.segments[{t0, t1, frame{…덮을 칸}, captions show|hide, body_text lines|null, why}].
     구간 밖은 판 frame 그대로, 구간 안은 frame 에 구간 frame 을 깊게 덮은 틀(kind·window·title… 전부 바꿀 수 있다 — 훅 카드 → 본문 틀, A/B 하이브리드).
@@ -890,6 +925,9 @@ def frame_segments(S: dict, T: dict, st: dict) -> list[dict]:
                             if L["kind"] != "orig" and t0 - 1e-3 <= T["lines"][L["id"]][0] < t1 - 1e-3)
         elif bt is not None:
             raise StageError(f"frame.segments[{i}].body_text '{bt}' 모름 — lines 또는 비움")
+        if text and sg.get("long") and not hook_text_fits(text, Fi):   # 벤치보다 긴 첫 줄 = 통문장 띠가 깨알 → 판이 정한 자막형 틀로(11-01 병렬 3편 E4×)
+            Fi = ST._merge(Fi, sg["long"].get("frame") or {})
+            cap, text = "show", None
         out.append({"i": i, "t0": t0, "t1": t1, "frame": Fi, "kind": frame_kind(Fi), "window": frame_window(Fi), "captions": cap,
                     "body_text": text, "why": sg.get("why")})
     out.sort(key=lambda g: g["t0"])
@@ -3523,6 +3561,58 @@ def gate_stamp(T: dict, M: dict, st: dict, doc: Path) -> str:
     return hashlib.sha256(json.dumps(body, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8")).hexdigest()
 
 
+def plan_reuse_gate(T: dict, M: dict, st: dict) -> list[str]:
+    """B13 을 렌더 전에 — 완성본 관문과 같은 함수(quality_gate.reuse_bad)를 계획 컷에 돌린다(11-01 키치잇 렌더 뒤 발견으로 재작업)."""
+    from tools.calcopy.hybrid.quality_gate import reuse_bad
+    if not M.get("cand_dir"):
+        return []
+    return [f"{v} — 겹치지 않는 다른 구간·재료로 바꾼다" for v in reuse_bad(T["cuts"], Path(M["cand_dir"]), st)[0]]
+
+
+BLUR_AREA_MAX = 0.15      # 창 넓이 중 흐림 칸 합 — 넘으면 글자를 가린 게 아니라 화면을 망친 컷(11-01 키치잇 23.5~26.4초 큰 흐림 띠가 통과)
+PHOTO_RUN_MAX = 3.0       # 사진 컷이 이어져도 되는 초(11-01 키치잇 15~19초 멈춘 듯)
+
+
+def blur_cut_gate(T: dict, M: dict, st: dict, area_max: float = BLUR_AREA_MAX) -> list[str]:
+    """(판단 주인 — 흐림으로 때워도 되는 컷인가) 컷이 보여 주는 원본 구간에 걸린 흐림 칸이 창을 얼마나 덮나. 넘으면 다른 구간·재료로 바꾼다.
+    관문 ④ 는 흐림 안 글자를 통과로 치므로 면적은 여기서 재야 한다. 계획·렌더가 timeline_gates 로 같이 부른다."""
+    src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
+    if not src_dir:
+        return []
+    _, _, ww, wh = frame_window(st["frame"])
+    out = []
+    for c in T["cuts"]:
+        regs = (M.get("blur") or {}).get(c["src"]) or []
+        src = src_dir / c["src"]
+        if not regs or c.get("ss") is None or not src.exists() or src.suffix.lower() in IMG_EXT:
+            continue
+        a0 = float(c["ss"]); a1 = a0 + src_frames(c) / FPS
+        x, y, w, h = cut_crop(c, src, (ww, wh))
+        ink = 0.0
+        for r in regs:
+            if len(r) >= 6 and (float(r[5]) <= a0 or float(r[4]) >= a1):
+                continue
+            ix = max(0, min(x + w, r[0] + r[2]) - max(x, r[0])); iy = max(0, min(y + h, r[1] + r[3]) - max(y, r[1]))
+            ink += ix * iy
+        share = ink / max(1, w * h)
+        if share > area_max:
+            out.append(f"{c['line']} {c['src']}@{a0:.2f} 흐림이 화면의 {share:.0%}(상한 {area_max:.0%}) — 이 컷은 남의 글자가 적은 다른 구간이나 다른 재료로 바꾼다")
+    return out
+
+
+def photo_run_gate(T: dict, M: dict, max_sec: float = PHOTO_RUN_MAX) -> list[str]:
+    """(판단 주인 — 사진이 이어져 멈춘 듯 보이나) 사진 컷이 연달아 max_sec 를 넘으면 영상 컷을 끼우게 한다."""
+    out, run, first = [], 0.0, None
+    for c in list(T["cuts"]) + [{"src": "", "t0": 0, "t1": 0}]:
+        if Path(c["src"]).suffix.lower() in IMG_EXT:
+            run += float(c["t1"]) - float(c["t0"]); first = first or c
+        else:
+            if run > max_sec:
+                out.append(f"{first.get('line')}부터 사진만 {run:.1f}초(상한 {max_sec:.0f}초) — 사이에 영상 컷을 넣는다")
+            run, first = 0.0, None
+    return out
+
+
 def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *, plan: bool, measured: bool = True,
                    erase: list | None = None, placed: dict | None = None) -> list[tuple[str, list[str]]]:
     """(판단 주인 — 렌더 전 시간표 관문 목록·순서) 같은 시간표 T 를 읽는 관문을 전부 돌려 [(관문 이름, 문제 글 목록)…] 로(빈 목록 = 통과).
@@ -3538,6 +3628,9 @@ def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *,
            ("⑤ 컷 길이", cut_length_gate(T, st)),
            ("⑦ 멈춤", cut_still_gate(T, M, st)),
            ("사진", photo_gate(T, st, M)),
+           ("흐림 면적", blur_cut_gate(T, M, st)),
+           ("사진 연속", photo_run_gate(T, M)),
+           ("B13 재사용", plan_reuse_gate(T, M, st)),
            ("리듬", rhythm_gate(T, st, src_dir))]
     if placed is not None:
         out.append(("꾸밈", deco_gate(placed, doc, st, log)))
@@ -3593,6 +3686,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     doc, work = Path(doc), Path(work)
     S, M = jload(doc / "대본.json"), jload(doc / "재료.json")
     S.setdefault("voice", {k: st["voice"][k] for k in ("name", "voice_id", "provider", "emotion") if k in st["voice"]})
+    S["voice"].update(st.get("member_voice") or {})
     RI.voice_args(S, check=True)          # 목소리 칸 검사(provider·감정 — 주인 engine/voices.check_tts). 틀리면 합성 전에 멈춘다
     RI.read_names(S, log)                 # 이름 발음 사전(engine/name_dict — preset_make.tts 와 같은 주인 apply_all, 그 목소리로 확인한 표기만)
     S.setdefault("cps_target", st.get("cps_target", 7.0))

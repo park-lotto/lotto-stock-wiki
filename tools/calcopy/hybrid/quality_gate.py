@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import re
 
 
 import shutil
@@ -170,6 +171,25 @@ def spans_from(d1: list, p99: list, min_sec: float = FREEZE_SEC) -> list:
     return merged
 
 
+def flat_frames(video: Path, skip: int = 2, min_run: int = 3) -> list:
+    """완성본 자체에서 화면 전체가 하얗거나 까만 구간(min_run 프레임 이상) — 계획이 아니라 결과물을 잰다. skip = 맨 앞 썸네일 카드."""
+    import numpy as np
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vf", "scale=32:56,format=gray", "-f", "rawvideo", "-"], capture_output=True, check=True).stdout
+    fr = np.frombuffer(raw, np.uint8).reshape(-1, 56, 32)
+    flags = (fr.mean((1, 2)) > 235) | (fr.mean((1, 2)) < 12)
+    flags[:skip] = False
+    return [(round(a / FPS, 2), round(b / FPS, 2)) for a, b in _runs(flags.tolist(), min_run)]
+
+
+def audio_gaps(video: Path, min_sec: float = 1.0, db: int = -45) -> list:
+    """완성본 소리가 끊긴 구간 — 나레 파일이 아니라 나간 소리를 잰다(마지막 1초는 끝맺음이라 뺀다)."""
+    err = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(video), "-vn", "-af", f"silencedetect=n={db}dB:d={min_sec}", "-f", "null", "-"], capture_output=True, text=True, encoding="utf8", errors="replace").stderr
+    st = [float(x) for x in re.findall(r"silence_start: ([\d.]+)", err)]
+    en = [float(x) for x in re.findall(r"silence_end: ([\d.]+)", err)]
+    end = vdur(video)
+    return [(round(a, 2), round(b, 2)) for a, b in zip(st, en + [end]) if a < end - 1.0]
+
+
 def fps_of(p) -> float:
     r = run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=r_frame_rate", "-of", "csv=p=0", p]).stdout.strip().split(",")[0]
     a, _, b = r.partition("/")
@@ -179,12 +199,10 @@ def fps_of(p) -> float:
 # ---------------------------------------------------------------- 판정 조각(입력 = 숫자 — 사보타주 시험이 이것을 부른다)
 def sfx_excess(n_sfx: int, dur: float, bench_docs: list[dict]) -> tuple[bool | None, str]:
     """B14 효과음 과다 = 우리 발/초 ≤ 벤치 편별 발/초의 p90(표준 §3-3 A2). 벤치 줄판독이 없으면 미측정."""
-    import numpy as np
-    from tools.calcopy.engine.kal_analyze import _sfx_n
-    dens = [sum(_sfx_n(l) for l in d.get("lines") or []) / float(d["dur"]) for d in bench_docs if d.get("dur")]
-    if not dens:
+    from tools.calcopy.engine.kal_analyze import sfx_rate_p90
+    p90, dens = sfx_rate_p90(bench_docs)
+    if p90 is None:
         return None, "벤치 줄판독 없음(미측정)"
-    p90 = float(np.percentile(dens, 90))
     ours = n_sfx / dur if dur else 0.0
     return ours <= p90 + 1e-9, f"우리 {n_sfx}발/{dur:.1f}초 = {ours:.3f}/초 · 벤치 p90 {p90:.3f}/초(편별 {[round(x, 3) for x in dens]})"
 
@@ -455,7 +473,7 @@ def reuse_violations_bench(cuts: list[dict], src_len: dict, adjacent_run: bool =
             s2, a2, b2, c2 = rows[j]
             if s1 != s2 or chain[i] == chain[j]:
                 continue
-            if c1.get("kind") == "orig" and c2.get("kind") == "orig" and c1.get("line") == c2.get("line") and a2 >= b1 - eps:
+            if c1.get("kind") == "orig" and c2.get("kind") == "orig" and a2 >= b1 - max(eps, 0.15):
                 continue        # 같은 원음 줄 안 컷어웨이(말하는 사람 → 끼운 장면 → 다시 말하는 사람, 원본 시간은 앞으로) = 원음이 흐르는 것, 재사용 아님(10-27 썬크림 회원편 O2 50~51 ↔ 52~53 오판)
             tag = f"{Path(s1).stem} {a1:.2f}~{b1:.2f}({c1.get('line')}) ↔ {a2:.2f}~{b2:.2f}({c2.get('line')})"
             if a1 < b2 - eps and a2 < b1 - eps:
@@ -467,6 +485,16 @@ def reuse_violations_bench(cuts: list[dict], src_len: dict, adjacent_run: bool =
             if not adjacent and gap < th and run[i] != run[j]:
                 bad.append(f"거리 {gap:.2f}초 < {th:.2f}: {tag}")
     return bad
+
+
+def reuse_bad(cuts: list, cand_dir: Path, st: dict) -> tuple[list, dict]:
+    """(판단 주인 — B13 을 재는 한 곳) 계획(runner_ops)과 완성본 검사가 같이 부른다. 10-31 회원 글로스 편: 계획은 옮긴 컷만 보고 통과, 완성본만 L1↔L4 를 잡아 12/13 에서 멈췄다.
+    그림 컷은 reuse_violations_bench 가 뺀다 — 길이도 안 잰다(ffprobe 'N/A' 로 통째 미측정이 됐다, 관제26)."""
+    from tools.calcopy.hybrid.common import dur_of
+    from tools.calcopy.hybrid.render_bench import IMG_EXT
+    lens = {c["src"]: dur_of(cand_dir / c["src"]) for c in cuts
+            if Path(str(c["src"])).suffix.lower() not in IMG_EXT and (cand_dir / c["src"]).exists()}
+    return reuse_violations_bench(cuts, lens, bool((st.get("reuse") or {}).get("adjacent_run"))), lens     # 판 칸 reuse.adjacent_run(10-26 두유노판)
 
 
 def drop_verdict(ours: list, bench: list, plan: dict | None = None, kinds=TD_KINDS) -> tuple[bool | None, str]:
@@ -716,6 +744,8 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
         row("화면", "0초·첫 줄 얼굴", face, "thumb.face_check")
         row("화면", "컷 조각 프레임 = 계획", lambda: (lambda b: (not b, "전부 같음" if not b else str(b)))(part_frames(R, T)), "parts/c*.mp4")
         row("화면", "화면 멈춤 없음", lambda: (lambda z: (not z, "0건" if not z else " ".join(f"{a}~{b}s" for a, b in z)))(freezes(final, win)), "창 안 프레임 차")
+        row("화면", "흰·검은 화면 없음(완성본 실측)", lambda: (lambda z: (not z, "0건" if not z else str(z[:6])))(flat_frames(final)), "quality_gate.flat_frames")
+        row("소리", "소리 끊김 없음(완성본 실측 1초↑)", lambda: (lambda z: (not z, "0건" if not z else str(z[:6])))(audio_gaps(final)), "quality_gate.audio_gaps")
         row("화면", "컷 끝 번쩍임 없음(0.2초 안 장면 경계)",
              lambda: (lambda s: (not s, "0건" if not s else str(s)))(part_slivers(R, T, Path(jload(doc / "재료.json")["cand_dir"]))), "render_bench.shot_starts")
 
@@ -760,13 +790,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             if st.get("renderer") in OLD_PAUSE_RENDERERS:
                 v = CK.reuse_violations(cuts, CK.orig_spans_of(S, "잇썸홈판"))
                 return not v, v or "0"
-            from tools.calcopy.hybrid.common import dur_of
-            from tools.calcopy.hybrid.render_bench import IMG_EXT
-            cd = Path(jload(doc / "재료.json")["cand_dir"])
-            # 그림(정지 사진) 컷은 reuse_violations_bench 가 판정에서 뺀다(B6 몫) — 길이 재기도 안 한다(ffprobe 가 'N/A' 를 줘 B13 이 통째 미측정이 됐다, 관제263)
-            lens = {c["src"]: dur_of(cd / c["src"]) for c in cuts
-                    if Path(str(c["src"])).suffix.lower() not in IMG_EXT and (cd / c["src"]).exists()}
-            v = reuse_violations_bench(cuts, lens, bool((st.get("reuse") or {}).get("adjacent_run")))      # 판 칸 reuse.adjacent_run(10-26 두유노판)
+            v, lens = reuse_bad(cuts, Path(jload(doc / "재료.json")["cand_dir"]), st)
             return not v, (v or "0") if v else f"0 (소스 길이 {{{', '.join(f'{Path(k).stem}:{x:.1f}' for k, x in lens.items())}}})"
         row("재료", "B13 같은 장면 재사용(겹침 ×·거리 min(3, 0.25×길이))", b13, "quality_gate.reuse_violations_bench")
         row("재료", "B16 A-B-A 끼움(나레 컷)", lambda: (lambda v: (not v, v or "0"))(CK.aba_violations([c for c in cuts if c["seg"] == "B"])), "checks.aba_violations")
@@ -842,7 +866,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
         row("자막·효과", "배치(본보기 벤치 편 대조)",
              lambda: (tab["check"]["ok"], f"본보기 {tab['check']['reference']} · 칸 최대 차 {tab['check']['worst_slot_diff']}" + (f" · 걸린 것 {tab['check'].get('bad')}" if tab['check'].get('bad') else "")), "자막표.check = placement.check_place")
         if not legacy:
-            row("자막·효과", "B14 효과음 과다(≤ 벤치 p90)", lambda: sfx_excess(len(tab.get("sfx") or []), float(T["end"]), bench_docs), "자막표.sfx · 줄판독 sfx")
+            row("자막·효과", "B14 효과음 과다(≤ 벤치 p90)", lambda: ((True, "판이 벤치보다 많이 넣기로 정함(over_bench)") if ((st["placement"].get("rules") or {}).get("sfx") or {}).get("over_bench") else sfx_excess(len(tab.get("sfx") or []), float(T["end"]), bench_docs)), "자막표.sfx · 줄판독 sfx")
 
             def deco_row():       # 관제263 10-26 사장님 '키치잇 꾸밈이 우리 편엔 없다'(페이블 E4 가 '같음'으로 놓침) — 판 deco 종류·횟수
                 from tools.calcopy.hybrid import deco as DC
