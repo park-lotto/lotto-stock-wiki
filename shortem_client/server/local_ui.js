@@ -95,7 +95,7 @@ async function preview({ preset, patch, video }) {
   }
   const r = await engineTool('preview', { preset: presetPath, pack, ...(topicDir ? { topic_dir: topicDir } : {}) });
   if (r.tail) console.error(r.tail);   // 엔진 멈춤 사유는 로그로만
-  return r.error ? { error: r.error } : { snapshot: r.snapshot, context: r.context, applied: r.applied, title: r.title, sfx: r.sfx, detail: r.detail, look: (readSettings().looks || {})[preset]?.snapshot || null };
+  return r.error ? { error: r.error } : { snapshot: r.snapshot, context: r.context, applied: r.applied, title: r.title, sfx: r.sfx, detail: r.detail };
 }
 
 async function route(req, res, token, port) {

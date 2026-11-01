@@ -695,7 +695,7 @@ $('board').addEventListener('click',async e=>{
     S.drafts=[];state(`지시 ${ds.length}개를 Claude 에게 보냈습니다`);await load(true,true);render();return}
   if(t.id==='lookNext'){S.step='sound';render();return}
   if(t.id==='reset'){await api('/api/reset',{preset:S.st.current});await load(true);return}
-  if(t.dataset.font)return save({text:{[t.dataset.font]:t.dataset.v}});
+  {const fb=e.target.closest&&e.target.closest('[data-font]');if(fb)return save({text:{[fb.dataset.font]:fb.dataset.v}})}
   if(t.dataset.enter)return save({text:{caption:{enter:t.dataset.enter==='none'?'none':{kind:t.dataset.enter,ms:300}}}});
   if(t.dataset.emph){const c=$('emcolor').value;return save({text:{caption:{emphasis:t.dataset.emph==='none'?'none':{words:'auto',style:t.dataset.emph,rgb:[1,3,5].map(i=>parseInt(c.slice(i,i+2),16))}}}})}
   if(t.dataset.mode)return save({text:{caption:{mode:t.dataset.mode}}});
@@ -770,7 +770,7 @@ addEventListener('resize',fit);fit();
 // 그릴 때마다 렌더러 페이지를 새로 연다 — 공식 렌더러(render_scene_style.js)도 매번 새 페이지에 load 를 한 번만 부른다.
 //   (10-19 실측: 같은 페이지에 load 를 두 번 부르면 앞 틀이 남아 템플릿으로 바꿔도 화면이 그대로였다 — 렌더와 59% 달랐다)
 const STAGE_URL='r/out/scene-style-ui-showcase.html?qa=1';
-const freshStage=()=>new Promise(r=>{stage.addEventListener('load',r,{once:true});stage.src=STAGE_URL+'&n='+Date.now()});
+const freshStage=()=>new Promise(r=>{stage.style.visibility='hidden';stage.addEventListener('load',r,{once:true});stage.src=STAGE_URL+'&n='+Date.now()});
 let seq=0;
 async function preview(patch,presetId){
   const pid=presetId||(S.st&&S.st.current);if(!pid)return;
@@ -804,7 +804,7 @@ async function preview(patch,presetId){
   await w.document.fonts.ready;w.sceneStyle.refresh&&w.sceneStyle.refresh();w.sceneStyleExporting=true;
   if(S.step==='edit')dragIn(w);
   S.scene=Math.min(S.scene,r.context.scenes.length-1);
-  show(S.scene,true);
+  show(S.scene,true);stage.style.visibility='';
   if(S.step==='edit'&&r.detail&&!S.tlDrawn){S.tlDrawn=r.detail;render()}
   $('scenes').innerHTML=r.context.scenes.map((s,i)=>`<button data-i="${i}" class="${i===S.scene?'on':''}">${i?i+1:'훅'}</button>`).join('');
   $('applied').innerHTML=r.applied.length?'<b>프리셋에서 바꾼 것</b><br>'+r.applied.map(esc).join('<br>'):'프리셋 완본 그대로입니다';
