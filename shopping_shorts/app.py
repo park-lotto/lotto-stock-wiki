@@ -26242,7 +26242,10 @@ def _clean_frame_src(job, work, beat_idx, cut=None, at=None):
     clean_map = job.get("clean_sources") or {}
     if clean_map:
         return clean_map, None, None, "_clean", True
-    if job.get("clean_status") != "ready":
+    # ★정본이 있으면 clean_status 와 무관하게 정본에서 뜬다(2026-11-01 황선희님 b13968032e48). 덧지우기가 실패해도(VMake 잔액 부족 등)
+    #   정본은 살아 있고 컷 목록(_final_cuts)·렌더는 ("clean", 시각)을 쓴다 — 여기만 status 로 빠져나가면 재료 번호 clean 을 못 찾아 그림이 404다.
+    _b = mix_pipeline.clean_base_for(job, work)
+    if job.get("clean_status") != "ready" and _b is None:
         return {}, None, None, "", False
     # ★지금 편성으로 청소한 파일이 있으면 **그 파일**을 먼저 쓴다(2026-09-15).
     #   완성본 1편 청소의 정본은 final_clean_{편성서명}.mp4이고 clean_video_path는
@@ -26280,7 +26283,6 @@ def _clean_frame_src(job, work, beat_idx, cut=None, at=None):
     _ctag = "_clean_" + re.sub(r"[^0-9a-zA-Z]", "", _stem[len("final_clean_"):] if _stem.startswith("final_clean_") else _stem)
     # ★정본(2026-09-22): 재배치된 사본의 컷은 재료가 곧 청소본 좌표("clean", start)다 — 그 시각에서 뜬다.
     #   증분 조각(cb…)이면 그 조각 파일에서 뜬다. 판정·좌표는 render_inputs_for 하나.
-    _b = mix_pipeline.clean_base_for(job, work)
     if _b is not None:
         try:
             _v = _render_view(job, work)                 # 렌더 입력·컷 목록(요청마다 되풀이하지 않는다 — 관제 110)
