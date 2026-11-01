@@ -269,10 +269,12 @@ function render(){
     const enterK=cap.enter&&cap.enter.kind||'none',emK=cap.emphasis&&cap.emphasis.style||'none';
     const emRgb=cap.emphasis&&cap.emphasis.rgb||[255,216,74];
     // 꾸미기 = 장면꾸미기 화면 그대로(사장님 10-25 '직접꾸미기 그 화면이 나오게') — 오른쪽 큰 화면에서 끌어 옮기고 색·글꼴·효과를 바꾼 뒤 '이 영상에 적용'
-    h=`<h2>꾸미기 <small>오른쪽 장면꾸미기 화면에서 바로 — 다 바꾸면 그 화면의 '이 영상에 적용'</small></h2>
+    // 회원 PC = 고른 프리셋 다듬기(사장님 11-01 '프리셋을 고르면 그에 맞게') — 틀은 프리셋 그대로, 바꾼 칸만 팩에 덮는다. 웹은 장면꾸미기 그대로
+    const web=st.host==='server';
+    h=`<h2>꾸미기 <small>${web?"오른쪽 장면꾸미기 화면에서 바로 — 다 바꾸면 그 화면의 '이 영상에 적용'":'고른 프리셋 모양은 그대로 두고, 바꾼 칸만 내 채널에 맞춥니다'}</small></h2>
       ${S.lookSaved?`<div class="note">✓ 꾸민 모양을 저장했습니다 (${esc(S.lookSaved)})</div>`:''}
       <div class="sec"><div class="sec-h"><b>채널명</b>${badge('brand','channel_name')}</div><input type="text" id="cname" maxlength="30" value="${esc((p.brand||{}).channel_name||'')}"></div>
-      <details class="sec"><summary><b>글꼴·자막 빠른 설정</b> <small>장면꾸미기 화면에서도 바꿀 수 있습니다</small></summary>
+      <details class="sec"${web?'':' open'}><summary><b>글꼴·자막${web?' 빠른 설정':''}</b> <small>${web?'장면꾸미기 화면에서도 바꿀 수 있습니다':'안 바꾼 칸은 프리셋 그대로 나옵니다'}</small></summary>
       <div class="sec"><div class="sec-h"><b>제목 글꼴</b>${badge('text','title_font')}</div>${fontGrid('title_font',tx.title_font,cat.fonts)}</div>
       <div class="sec"><div class="sec-h"><b>자막 글꼴</b>${badge('text','caption_font')}</div>${fontGrid('caption_font',tx.caption_font,cat.fonts)}</div>
       <div class="sec"><div class="sec-h"><b>자막 등장</b>${isChg('text')&&(ch().text.caption||{}).enter!==undefined?'<span class="chg">바꾼 칸</span>':'<small>프리셋 그대로</small>'}</div>
@@ -282,7 +284,8 @@ function render(){
         <input type="color" id="emcolor" value="#${emRgb.map(v=>v.toString(16).padStart(2,'0')).join('')}" title="강조 색"></div></div>
       <div class="sec"><div class="row"><b>외곽선</b><input type="range" id="outline" min="0" max="12" step="1" value="${Math.min(12,cap.outline_px??0)}"><output>${cap.outline_px??0}px</output></div>
         <div class="row"><b>외곽선 색</b><input type="color" id="olcolor" value="#${(cap.outline_rgb||[0,0,0]).map(v=>v.toString(16).padStart(2,'0')).join('')}"><output></output></div></div>
-      <div class="sec"><div class="sec-h"><b>자막 쌓기</b></div><div class="chips">${cat.caption_mode.map(k=>`<button class="chip${k===(cap.mode||'accumulate')?' on':''}" data-mode="${k}">${({accumulate:'한 줄씩 쌓기',replace:'한 줄씩 바꾸기'})[k]}</button>`).join('')}</div></div></details>`;
+      <div class="sec"><div class="sec-h"><b>자막 쌓기</b></div><div class="chips">${cat.caption_mode.map(k=>`<button class="chip${k===(cap.mode||'accumulate')?' on':''}" data-mode="${k}">${({accumulate:'한 줄씩 쌓기',replace:'한 줄씩 바꾸기'})[k]}</button>`).join('')}</div></div></details>
+      ${web?'':'<div class="nav"><button class="btn" id="reset">프리셋 그대로 되돌리기</button><button class="btn pri" id="lookNext">다음: 소리 →</button></div>'}`;
   }else if(S.step==='sound'){
     // 목소리 엔진 먼저(사장님 10-25 '일레븐·타입·피쉬오디오 다 선택') → 그 엔진의 목소리. 피쉬오디오는 회원 PC 엔진에 붙이는 중
     const ENG=[['typecast','타입캐스트'],['elevenlabs','일레븐랩스'],['fishaudio','피쉬오디오']];
@@ -343,7 +346,7 @@ function render(){
   else{O.hidden=true;const ov=O.querySelector('video');if(ov)ov.pause()}
   if(S.step==='edit'&&stage.contentWindow&&stage.contentWindow.sceneStyle)dragIn(stage.contentWindow);
   drawMoves();
-  const look=S.step==='look',was=$('phone').classList.contains('inline');
+  const look=S.step==='look'&&S.st&&S.st.host==='server',was=$('phone').classList.contains('inline');
   document.querySelector('.main').classList.toggle('lookmode',look);$('phone').classList.toggle('inline',look);
   if(look!==was){fit();if(S.preview)preview()}
 }
@@ -669,6 +672,7 @@ $('board').addEventListener('click',async e=>{
     const r=await api('/api/ask',{target:{track:'batch',label:`지시 ${ds.length}개`,items:ds.map(d=>({...d.target,text:d.text}))},text});
     if(r.ok===false||r.error){state(r.msg||r.error||'못 보냈습니다',true);t.disabled=false;t.textContent='Claude 에게 한 번에 보내기';return}
     S.drafts=[];state(`지시 ${ds.length}개를 Claude 에게 보냈습니다`);await load(true,true);render();return}
+  if(t.id==='lookNext'){S.step='sound';render();return}
   if(t.id==='reset'){await api('/api/reset',{preset:S.st.current});await load(true);return}
   if(t.dataset.font)return save({text:{[t.dataset.font]:t.dataset.v}});
   if(t.dataset.enter)return save({text:{caption:{enter:t.dataset.enter==='none'?'none':{kind:t.dataset.enter,ms:300}}}});
@@ -761,7 +765,7 @@ async function preview(patch,presetId){
   //   10-25 라이브 실측 프리셋 클릭 31초. 견본은 서버 견본 그림으로 바꾸기 전까지 이름만(고르면 미리보기에 그 글꼴로 나온다)
   // 회원이 장면꾸미기에서 직접 꾸민 모양(look)이 있으면 그것을 쓴다 — 템플릿 단계에서는 템플릿 견주기라 엔진 그림 그대로
   const snap=(r.look&&S.step!=='template')?r.look:r.snapshot;
-  if(S.step==='look'){
+  if(S.step==='look'&&S.st.host==='server'){
     // 장면꾸미기 화면 그대로 — 제작소와 같은 길(scene-style-context 로 넣고, '이 영상에 적용'은 scene-style-save 로 받는다)
     w.postMessage({type:'scene-style-context',context:r.context,snapshot:snap},location.origin);
     const h1=w.document.querySelector('.page-title h1');if(h1)h1.textContent='장면꾸미기';   // 제작소 단계 번호(6 ·)는 여기선 뜻이 없다
