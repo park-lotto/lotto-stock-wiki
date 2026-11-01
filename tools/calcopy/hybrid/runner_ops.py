@@ -1953,6 +1953,7 @@ def _peer_raw(qs: list, n: int, skip: set) -> list[dict]:
 
 LENS_FIRST = True   # (10-27 사장님 '캡처 → 렌즈 → 결과에서 고르기, 1분도 안 걸린다') 렌즈를 먼저 · 두 장면에 같은 영상이 뜨면 멈춤 · 키워드는 렌즈가 빌 때만
 LENS_HL, LENS_GL = "en", "us"   # 해외 원본 찾기 렌즈 = 미국 결과(한국 회선 기본은 한국 판매 리그램이 위를 덮는다, 10-27 사장님 '구글 미국으로')
+LENS_GAP = 2.0      # 렌즈 장면 사이 쉼(초) — 컷별로 늘어 구글 로봇 확인을 피한다
 LENS_TOP = 12       # 렌즈 상위만 정보 받기·판정(1lMbJh0n_d4: 60개 정보 83초 + 키워드 100초 동시 → 같은 영상 17개였다)
 
 
@@ -2000,13 +2001,14 @@ def c_origin_foreign(W, d):
             found: dict = {}
             ai_txt: list[str] = []      # 렌즈 'AI 개요' 글(장면 전체 기준 — 출연자·브랜드 이름, 10-27)
             _t = time.time()
-            crops = [LN.video_crops(s) for s in seeds]
+            crops = [LN.video_crops(s) for s in (seeds[:len(d.get("at") or [])] or seeds)]   # 판독이 고른 장면이 있으면 그것만 — 고정 4장은 호출 낭비
             order = [(i, c[0]) for i, c in enumerate(crops) if c] + [(i, x) for i, c in enumerate(crops) for x in c[1:]]   # 장면마다 띠 먼저, 윗부분은 뒤에
             seen_in: dict = {}
             with _plat_lock("lens"), LN.lens_page() as pg:
                 for si, im in order:
                     if LENS_FIRST and any(len(v) >= 2 for v in seen_in.values()):
                         break       # 서로 다른 장면 두 장에 같은 영상이 떴다 = 사람이 렌즈 결과 맨 위를 누르는 것과 같은 확신 — 나머지 장은 안 올린다
+                    time.sleep(LENS_GAP)
                     try:
                         li: dict = {}
                         rows = LN.lens_rows(pg, str(im), skip=LN.SKIP_VIDEO, info=li, hl=LENS_HL, gl=LENS_GL)

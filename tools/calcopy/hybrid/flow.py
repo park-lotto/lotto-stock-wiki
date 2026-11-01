@@ -1803,7 +1803,7 @@ def _material_top(st, sw=None) -> int:
 def _pick_line(st) -> str:
     """고르기 질문 셋(재료·비슷한 제품·재료 더 찾기)이 같이 쓰는 ★개수 줄 — SCREEN_PICK 이 '아래 ★개수'를 가리킨다."""
     a, b = _material_n(st)
-    return f"\n\n★개수: {a}~{b}개를 고른다. 대본 줄마다 가리키는 그림이 달라야 하니 서로 다른 장면을 주는 영상으로."
+    return f"\n\n★개수: {a}~{b}개를 고른다. 대본 줄마다 가리키는 그림이 달라야 하니 서로 다른 장면을 주는 영상으로." + (CLEAN_SOURCE_RULE if _back_material(st) else "")
 
 
 def _screen_pick_ask(st, rows, more="") -> str:
