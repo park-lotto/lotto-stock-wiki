@@ -330,6 +330,20 @@ def _rate(f: Path) -> str:
                           capture_output=True, text=True, stdin=subprocess.DEVNULL).stdout.strip()
 
 
+def _ledger_pieces(j: Path, fs: list) -> None:
+    """합본 호출 줄을 조각별 줄로 바꾼다 — 보낸 초 검사(sent_from_ledger)는 원본 이름·구간으로 센다."""
+    p = j.parent / LEDGER
+    rows = json.loads(p.read_text(encoding="utf-8")) if p.exists() else []
+    out = []
+    for r in rows:
+        if r.get("file") != j.name:
+            out.append(r)
+            continue
+        out.append({**r, "mode": "joined_call", "pieces": len(fs)})
+        out += [{**r, "file": f.name, "calls": 0, "joined": j.name, **_sent(f)} for f in fs]
+    p.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
 def send_joined(files: list, send, log=print) -> dict:
     """(주인: VMake 호출 수) 조각을 크기가 같은 것끼리 이어 붙여 1회로 보내고, 지운 결과를 프레임 단위로 다시 조각 자리에 돌려준다.
     숏템메이커 _clean_joined 와 같은 방식(11-01 실측: 호출마다 대기가 복불복이라 13회 = 느린 1건에 걸릴 확률 13배).
@@ -383,6 +397,7 @@ def send_joined(files: list, send, log=print) -> dict:
             at += n
     for j, fs in jobs.items():
         if fs:
+            _ledger_pieces(j, fs)
             for x in (j, j.with_name(j.stem + "_orig" + j.suffix)):
                 try:
                     x.unlink()
