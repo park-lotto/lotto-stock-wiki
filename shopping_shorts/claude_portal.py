@@ -1296,6 +1296,9 @@ def feedback(ctx: dict, body: dict, store=None) -> dict:
     with _tx(store, write=True) as c:
         cur = c.execute("INSERT INTO claude_feedback(ts, cid, kind, text, job_id) VALUES(?,?,?,?,?)", (_now(), cid, kind, text.strip(), job))
         fid = cur.lastrowid
+    if kind in ("code_fix", "bug"):      # 회원 Claude 가 고친 것·고장 — 옛 프로그램도 서버에서 바로 보인다(관제 304, 판단 = claude_live). 전문은 이 표에 남는다
+        from shopping_shorts import claude_live
+        claude_live.witness(store, cid, kind, text.strip()[:claude_live.EVENT_HEAD], level="important", sid=job, ref=fid)
     return {"ok": True, "id": fid}
 
 

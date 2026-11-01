@@ -21,6 +21,7 @@ import uuid
 import zlib
 from pathlib import Path
 
+from shopping_shorts import claude_live as LIVE
 from shopping_shorts import claude_portal as CP
 
 _SCHEMA = """CREATE TABLE IF NOT EXISTS claude_flow_runs (
@@ -195,12 +196,19 @@ def step(ctx: dict, body: dict, store=None) -> dict:
         if seq != int(row["seq"]):
             raise CP.PortalError("stale", "옛 진행 상태입니다 — 가장 최근 next_payload 로 이어 주세요")
     user = {"approve": kind == "approve", "retry": kind == "retry", "reclean": kind == "reclean", "revise": str(body.get("revise") or "")[:500] if kind == "revise" else ""}
-    res = flow.step(st, body.get("measure") or {}, body.get("replies") or {}, user)
+    try:
+        res = flow.step(st, body.get("measure") or {}, body.get("replies") or {}, user)
+    except CP.PortalError:
+        raise
+    except Exception as e:      # noqa: BLE001 — 그대로 터뜨린다. 회원은 서버 오류만 보니 사건으로 남긴다(판단 = claude_live)
+        LIVE.flow_crash(store, cid, sid, e)
+        raise
     st2 = res.pop("state")
     seq2 = seq + 1
     with CP._tx(store, write=True) as c:
         c.execute("UPDATE claude_flow_runs SET seq=?, phase=?, status=?, updated=?, summary_json=? WHERE sid=?",
                   (seq2, st2.get("phase"), res.get("status"), CP._now(), json.dumps(_summary(st2), ensure_ascii=False), sid))
+    LIVE.from_flow(store, cid, sid, res, st2)      # 멈춤·반려·과제·완성 — 옛 회원 프로그램도 서버에서 보인다(관제 304)
     res.update(sid=sid, next_payload=_seal(st2, seq2),
                then_call_with=["payload 는 next_payload 그대로", "do 를 실행해 measure{do id: 결과}", "review 마다 replies{review id: 답 JSON}"])
     return res

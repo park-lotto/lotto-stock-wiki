@@ -134,6 +134,19 @@ tbody tr:hover{background:#1b1b22}
 <div class=alertBoard id=claudeAlertBoard></div>
 <!-- 숏클 기기 교체·Claude 계정 변경 승인(관제 296) — 판단은 claude_portal.decide_change, 여기는 그리기만. -->
 <div class=alertBoard id=claudeChangeBoard></div>
+<!-- 숏클 실시간(관제 304) — 회원 Claude ↔ 서버 ↔ 사장님 PC 대기실. 판단(무엇이 긴급인가·전달 표시)은 claude_live 한 곳, 여기는 그리기·보내기만. -->
+<details class=card id=claudeLiveCard ontoggle="if(this.open) renderClaudeLive()">
+<summary style="cursor:pointer;font-size:14px;font-weight:600">🛰 숏클 실시간 <span id=claudeLiveSummary style="font-weight:400;color:#8a8a92"></span></summary>
+<div id=claudeLiveMembers style="font-size:12px;margin-top:10px"></div>
+<div style="display:flex;gap:6px;align-items:flex-start;margin:10px 0">
+  <input id=claudeLiveCid placeholder="회원 번호" style="width:90px">
+  <textarea id=claudeLiveText rows=2 maxlength=1000 placeholder="회원 Claude 에게 보낼 말(1000자까지) — 1분 안에 다음 도구 응답에 실립니다" style="flex:1"></textarea>
+  <button onclick="sendClaudeLive()">보내기</button>
+  <span id=claudeLiveMsg class=msg></span>
+</div>
+<div id=claudeLiveEvents style="font-size:12px;max-height:360px;overflow:auto"></div>
+<pre id=claudeLiveFix style="display:none;font-size:11px;white-space:pre-wrap;max-height:420px;overflow:auto;background:#101014;border:1px solid #2a2a30;border-radius:8px;padding:10px;margin-top:10px"></pre>
+</details>
 <details class=card id=controlCard>
 <summary style="cursor:pointer;font-size:14px;font-weight:600">🎛 관제 보드 <span id=ctlSummary style="font-weight:400;color:#8a8a92"></span> <span id=ctlMsg class=msg></span></summary>
 <div style="font-size:11px;color:#8a8a92;margin:4px 0 8px">사장님이 볼 것은 두 줄입니다 — <b>결정할 것</b>(승인 버튼)과 <b>잘못된 것</b>(회귀). 나머지는 세션들이 알아서 합니다.</div>
@@ -507,6 +520,39 @@ async function renderClaudeChanges(){
 async function decideClaudeChange(id,approve){
   try{ await fetch('/api/admin/claude/changes/decide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,approve:approve})}); }catch(e){}
   renderClaudeChanges();
+}
+// 숏클 실시간(관제 304) — 회원별 진행판·사건·메시지 보내기·code_fix 내용 보기. 판단은 서버 claude_live, 여기는 그리기만.
+function _liveTime(ts){ return ts?new Date(ts*1000).toLocaleString():'—'; }
+async function renderClaudeLive(){
+  const box=document.getElementById('claudeLiveEvents'); if(!box||document.hidden) return;
+  let d=null;
+  try{ const r=await fetch('/api/admin/claude/live/events?limit=100'); if(!r.ok) return; d=await r.json(); }catch(e){ return; }
+  const ev=(d&&d.events)||[], ms=(d&&d.members)||[], w=(d&&d.watch)||{};
+  const on=ms.filter(m=>m.online).length, hot=ev.filter(e=>e.urgent&&Date.now()/1000-e.ts<3600).length;
+  document.getElementById('claudeLiveSummary').textContent='접속 '+on+'명 · 최근 1시간 긴급 '+hot+'건 · 대기실 '+(w.alive?'켜짐':(w.last_ping?'끊김':'안 켬'));
+  document.getElementById('claudeLiveMembers').innerHTML=ms.length?'<table style="width:100%;border-collapse:collapse"><tr style="color:#8a8a92;text-align:left"><th>회원</th><th>접속</th><th>최근 단계</th><th>마지막</th><th>마지막 사건</th><th>미전달</th><th></th></tr>'
+    + ms.map(m=>'<tr><td>'+_abEsc(m.member||'회원')+' ('+_abEsc(m.cid)+')</td><td>'+(m.online?'🟢 '+_abEsc(m.device):'—')+'</td><td>'+_abEsc(m.stage)+' <span style="color:#8a8a92">'+_abEsc(m.status)+'</span></td><td>'+_abEsc(_liveTime(m.last_ts))+'</td>'
+      + '<td>'+_abEsc(m.kind)+' '+_abEsc(m.text)+'</td><td>'+_abEsc(m.undelivered)+'</td><td><button onclick="pickClaudeLive('+Number(m.cid)+')">메시지</button></td></tr>').join('')+'</table>'
+    : '<div style="color:#8a8a92">아직 활동한 회원이 없습니다</div>';
+  box.innerHTML=ev.length?ev.slice().reverse().map(e=>'<div style="padding:4px 0;border-bottom:1px solid #23232a'+(e.urgent?';color:#ffd479':'')+'">'
+    + '<b>'+_abEsc(e.kind)+'</b> · '+_abEsc(e.member||'회원')+' ('+_abEsc(e.cid)+') · '+_abEsc(e.stage)+' · '+_abEsc(_liveTime(e.ts))
+    + ((e.kind==='code_fix'||e.kind==='bug')&&e.ref?' <button onclick="showClaudeFix('+Number(e.ref)+')">내용 보기</button>':'')
+    + '<div style="white-space:pre-wrap">'+_abEsc(e.text)+'</div></div>').join(''):'<div style="color:#8a8a92">사건이 없습니다</div>';
+}
+function pickClaudeLive(cid){ document.getElementById('claudeLiveCid').value=cid; document.getElementById('claudeLiveText').focus(); }
+async function sendClaudeLive(){
+  const c=document.getElementById('claudeLiveCid'), t=document.getElementById('claudeLiveText'), m=document.getElementById('claudeLiveMsg');
+  let d={};
+  try{ const r=await fetch('/api/admin/claude/live/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cid:c.value,text:t.value})}); d=await r.json(); }catch(e){ d={msg:'서버에 연결하지 못했습니다'}; }
+  m.textContent=d.ok?'보냈습니다':(d.msg||d.error||'보내지 못했습니다');
+  if(d.ok){ t.value=''; renderClaudeLive(); }
+}
+async function showClaudeFix(id){
+  const b=document.getElementById('claudeLiveFix');
+  let d={};
+  try{ d=await (await fetch('/api/admin/claude/live/feedback?id='+id)).json(); }catch(e){ d={msg:'서버에 연결하지 못했습니다'}; }
+  b.style.display='block';
+  b.textContent=d.ok?(d.feedback.kind+' · '+(d.feedback.member||'회원')+' ('+d.feedback.cid+') · '+_liveTime(d.feedback.ts)+'\n\n'+d.feedback.text):(d.msg||'불러오지 못했습니다');
 }
 async function shortclDevices(cid){
   const d=await (await fetch('/api/admin/claude/devices?cid='+cid)).json();
@@ -1426,6 +1472,9 @@ setInterval(renderClaudeAlerts, 30000);
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',renderClaudeChanges);
 else renderClaudeChanges();
 setInterval(renderClaudeChanges, 30000);
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',renderClaudeLive);
+else renderClaudeLive();
+setInterval(renderClaudeLive, 20000);
 
 /* ── 1단계 정확도 측정 카드(2026-09-05) ── 서버 API probe/frame_accuracy를 화면으로. 도는 동안 15초마다 새로 그린다. */
 var _probeTimer=null;

@@ -14,6 +14,7 @@ import { setupPassed } from './selftest.js';
 import { resolveTools } from './tools_paths.js';
 import { ensureDir, jail } from './paths.js';
 import { packFor } from './local_settings.js';
+import { reportLive } from './live.js';
 
 export const FLOW_SID_RE = /^[0-9a-f]{12}$/;
 const flows = new Map();   // sid → { st, busy, waiters }
@@ -100,6 +101,7 @@ async function absorb(f, res) {
   f.message = res.message || f.message;
   f.stage = res.stage || f.stage;
   f.finding = res.finding ? { ...res.finding, at: Date.now() } : null;
+  f.movedAt = Date.now();
   if (res.script) f.script = res.script;   // 지금 대본(제목·줄 id·문장) — 회원이 보자고 하면 그대로(step='script'), 고칠 줄은 reviseFlow   // 원본 찾기 진행 줄(서버 flow.finding_say) — 기다리는 동안 'N분째'를 시계로 채운다
   f.asks = null;
   f.wait = null;
@@ -147,12 +149,14 @@ async function runWithPreset(f) {
   finally { if (rental) await rental.release(); }
 }
 
+const PUMP_MAX = 200;
 // 막힐 때(AI 답·회원 사인)까지 고리를 돈다 — 실행기 일은 기다려서 끝낸다
 async function pump(f) {
   if (f.busy) return;
   f.busy = true;
+  let guard = 0;
   try {
-    for (let guard = 0; guard < 200; guard++) {
+    for (; guard < PUMP_MAX; guard++) {
       if (f.cancelled) break;
       let res;
       if (f.status === 'execute') {
@@ -173,11 +177,33 @@ async function pump(f) {
       if (f.cancelled) break;
       if ((await absorb(f, res)) === 'end') break;
     }
+    if (guard >= PUMP_MAX) reportLive({ kind: 'stuck', sid: f.sid, stage: f.stage && f.stage.text, text: `진행 고리가 ${PUMP_MAX}번을 넘었다(같은 단계를 도는 중일 수 있다)` });
   } catch (e) {
     f.fail = { why: e instanceof ApiError ? (e.msg || e.code) : '진행이 멈췄습니다', fix: '잠시 뒤 다시 시도해 주세요', retry_ok: true };
     f.status = 'error';
     save(f);
+    reportLive({ kind: 'error', sid: f.sid, stage: f.stage && f.stage.text, text: `진행 고리 멈춤: ${e instanceof ApiError ? `${e.code} ${e.msg}` : String((e && e.message) || e)}` });   // 서버는 이 편이 끊긴 걸 모른다(관제 304)
   } finally { f.busy = false; save(f); }
+}
+
+// 움직임 없는 편(관제 304) — 신호마다 본다. 사용 한도·창 닫힘으로 회원 Claude 가 사라지면 서버에서 안 보이는 멈춤이다. 그 움직임당 한 번만 알린다
+export const STALL_MS = () => Number(process.env.SHORTEM_STALL_MS) || 20 * 60 * 1000;
+function lastMove(f) {
+  let t = f.movedAt || 0;
+  try { t = Math.max(t, fs.statSync(path.join(flowRoot(), f.sid, 'job', 'progress.json')).mtimeMs); } catch { /* 진행 파일 없음 */ }
+  return t;
+}
+export function flowStall(now = Date.now()) {
+  for (const f of flows.values()) {
+    if (f.cancelled || f.fail || !['execute', 'review', 'reject', 'wait_user'].includes(f.status)) continue;
+    const moved = lastMove(f);
+    if (!moved || now - moved < STALL_MS() || f.stallSaid === moved) continue;
+    f.stallSaid = moved;
+    const min = Math.round((now - moved) / 60000);
+    return { kind: 'stuck', sid: f.sid, stage: f.stage && f.stage.text,
+      text: f.status === 'execute' ? `실행기 일이 ${min}분째 안 끝난다` : `회원 Claude 답을 ${min}분째 기다린다(사용 한도·창 닫힘일 수 있다)` };
+  }
+  return null;
 }
 
 // 지금 돌고 있는 편 — 숏클은 한 번에 한 편(이 프로그램이 켜진 뒤 움직인 편만 본다)

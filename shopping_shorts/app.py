@@ -19345,6 +19345,24 @@ async def api_claude_feedback(request: Request):
     return _claude_json(await run_in_threadpool(_cp.call, _cp.feedback, ctx, body, Store(DB_PATH)))
 
 
+@app.post("/api/claude/live/report")
+async def api_claude_live_report(request: Request):
+    """숏클 실시간 회원 → 서버(관제 304) — 판단은 claude_live.report."""
+    from shopping_shorts import claude_live as _cl, claude_portal as _cp
+    body = await _claude_body(request)
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cp.call, _cl.report, ctx, body, Store(DB_PATH)))
+
+
+@app.post("/api/claude/live/pull")
+async def api_claude_live_pull(request: Request):
+    """숏클 실시간 서버 → 회원(관제 304) — 판단은 claude_live.pull."""
+    from shopping_shorts import claude_live as _cl, claude_portal as _cp
+    body = await _claude_body(request)
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cp.call, _cl.pull, ctx, body, Store(DB_PATH)))
+
+
 @app.get("/api/claude/blob/{token}")
 def api_claude_blob(token: str):
     """원본 서명 URL(6h) — Range 허용. 견본(/api/claude/me/preview)과 다른 길·다른 저장소 접두사."""
@@ -19607,6 +19625,46 @@ def api_claude_me_installer(request: Request, os_id: str):
     if st_ != 200:
         return JSONResponse(got, status_code=st_)
     return FileResponse(str(got["file"]), media_type="application/octet-stream", filename=got["name"])
+
+
+@app.get("/api/admin/claude/live/events")
+def api_admin_claude_live_events(request: Request, since_id: int = 0, limit: int = 200, urgent: int = 0, cid: int = None):
+    """숏클 실시간(관제 304) — 판단은 전부 claude_live. 여기는 관리자 확인·부르기만."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_live as _cl
+    return JSONResponse(_cl.events(Store(DB_PATH), since_id, limit, cid, bool(urgent), with_members=not urgent), headers={"Cache-Control": "no-store"})
+
+
+@app.post("/api/admin/claude/live/send")
+async def api_admin_claude_live_send(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_live as _cl, claude_portal as _cp
+    body = await _claude_body(request)
+    return _claude_json(await run_in_threadpool(_cp.call, _cl.send, Store(DB_PATH), body.get("cid"), body.get("text"), body.get("sid") or ""))
+
+
+@app.post("/api/admin/claude/live/ping")
+async def api_admin_claude_live_ping(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_live as _cl, claude_portal as _cp
+    body = await _claude_body(request)
+    return _claude_json(await run_in_threadpool(_cp.call, _cl.ping, Store(DB_PATH), bool(body.get("stop"))))
+
+
+@app.get("/api/admin/claude/live/feedback")
+def api_admin_claude_live_feedback(request: Request, id: int):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_live as _cl
+    row = _cl.feedback_detail(Store(DB_PATH), id)
+    return {"ok": True, "feedback": row} if row else JSONResponse({"ok": False, "msg": "그 기록이 없습니다"}, status_code=404)
 
 
 @app.get("/api/admin/claude/alerts")
@@ -30489,6 +30547,25 @@ def _start_cardnews_rule_loop():
             except Exception as e:      # noqa: BLE001 — 루프는 죽지 않되 사실은 남긴다
                 logging.warning("[cardnews] 자동 규칙 루프 오류: %r", e)
     threading.Thread(target=_loop, daemon=True, name="cardnews-rules").start()
+
+
+@app.on_event("startup")
+def _start_claude_live_watch_loop():
+    """숏클 대기실 생존 감시(관제 304) — 1분마다 신호가 끊겼나 본다. 판단·중복 방지는 claude_live.check_watch(웹 프로세스가 여럿이어도 한 번만)."""
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        return
+    import threading
+    import time as _t
+
+    def _loop():
+        while True:
+            _t.sleep(60)
+            try:
+                from shopping_shorts import claude_live as _cl
+                _cl.check_watch(Store(DB_PATH))
+            except Exception as e:      # noqa: BLE001 — 루프는 죽지 않되 사실은 남긴다
+                logging.warning("[claude_live] 대기실 감시 오류: %r", e)
+    threading.Thread(target=_loop, daemon=True, name="claude-live-watch").start()
 
 
 app.mount("/", _NoCacheStaticFiles(directory=str(_STATIC), html=True), name="static")

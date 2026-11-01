@@ -20,6 +20,18 @@
      }
     ]
    }
+  ],
+  "UserPromptSubmit": [
+   {
+    "hooks": [
+     {
+      "type": "command",
+      "shell": "powershell",
+      "timeout": 10,
+      "command": "$n = if ($env:SHORTEM_NODE) { $env:SHORTEM_NODE } else { 'node' }; & $n \"$env:CLAUDE_PLUGIN_ROOT/hooks/live.js\""
+     }
+    ]
+   }
   ]
  }
 }

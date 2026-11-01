@@ -54,7 +54,7 @@ function framesLayers(f) { return f.frames ? f.frames.flatMap(x => x.layers) : f
 
 export async function startFakeServer({ port = 0, ttl = 180, heartbeatEvery = 60, devicesMax = 2, blobTtl = 6 * 3600, fonts: fontOverride, rent, update, install } = {}) {
   const FT = fontTable();
-  const state = { customers: new Map(), blobs: new Map(), log: [], feedback: [], leaseSeq: 0, assetsCalls: 0, blobTtl };
+  const state = { customers: new Map(), blobs: new Map(), log: [], feedback: [], leaseSeq: 0, assetsCalls: 0, blobTtl, live: { events: [], msgs: [], down: false, seq: 0 }, stepHandler: null };
   const cust = cid => { if (!state.customers.has(cid)) state.customers.set(cid, { kv: 1, revoked: false, devices: [], lease: null }); return state.customers.get(cid); };
 
   // 프로필별 번들·자산(참조하는 것만)
@@ -196,6 +196,29 @@ print(json.dumps({"pack":base64.b64encode(n+AESGCM(k).encrypt(n,d,aad)).decode()
       }
       // 시험 손잡이
       // 켤 때 자동 업데이트(관제 234) — 서버 claude_portal.update_info 와 같은 꼴
+      if (u.pathname.startsWith('/api/claude/live/') && state.live.down) return fail(res, 503, 'http_503', '서버 점검');
+      // 숏클 실시간(관제 304) — 서버 claude_live.report·pull 과 같은 꼴
+      if (u.pathname === '/api/claude/live/report' && req.method === 'POST') {
+        const a = auth(req, res); if (!a) return;
+        const b = await body(req);
+        if (!b || typeof b.text !== 'string' || !b.text.trim() || b.text.length > 2000) return fail(res, 400, 'bad_request', '요청 모양이 다릅니다');
+        state.live.events.push({ ...b, cid: a.cid }); return send(res, 200, { ok: true, id: state.live.events.length });
+      }
+      if (u.pathname === '/api/claude/live/pull' && req.method === 'POST') {
+        const a = auth(req, res); if (!a) return;
+        const b = await body(req);
+        const now = Date.now();
+        for (const m of state.live.msgs) if (m.cid === a.cid) {
+          if ((b.got || []).concat(b.seen || []).includes(m.id)) m.delivered_at ||= now;
+          if ((b.seen || []).includes(m.id)) m.read_at ||= now;
+        }
+        return send(res, 200, { ok: true, messages: state.live.msgs.filter(m => m.cid === a.cid && !m.delivered_at).map(m => ({ id: m.id, ts: m.ts, sid: '', text: m.text, author: '숏클 팀' })) });
+      }
+      if (u.pathname === '/api/claude/step' && req.method === 'POST' && state.stepHandler) {
+        const a = auth(req, res); if (!a) return;
+        const r = state.stepHandler(await body(req));
+        return send(res, r.code, r.json);
+      }
       if (u.pathname === '/api/claude/update' && req.method === 'GET') {
         const a = auth(req, res); if (!a) return;
         const have = u.searchParams.get('have') || '';
@@ -221,7 +244,8 @@ print(json.dumps({"pack":base64.b64encode(n+AESGCM(k).encrypt(n,d,aad)).decode()
   });
   await new Promise(r => server.listen(port, '127.0.0.1', r));
   const url = `http://127.0.0.1:${server.address().port}`;
-  return { url, state, server, makeKey, close: () => new Promise(r => { server.closeAllConnections?.(); server.close(r); }) };
+  const liveSend = (cid, text) => { const m = { id: ++state.live.seq, ts: Math.floor(Date.now() / 1000), cid, text, delivered_at: null, read_at: null }; state.live.msgs.push(m); return m; };
+  return { url, state, server, makeKey, live: state.live, liveSend, close: () => new Promise(r => { server.closeAllConnections?.(); server.close(r); }) };
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
