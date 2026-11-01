@@ -127,7 +127,7 @@ export async function selftest() {
       items.push({ name, ok: !r.skipped, ...r });
     } catch (e) {
       items.push({ name, ok: false });
-      fails.push({ where, why: `${name}을(를) 만들지 못했습니다`, fix: where === '다운로드' ? '인터넷 연결을 확인하고 다시 시도하세요' : where === '음성' ? '타입캐스트 키·크레딧을 확인하세요' : '설치팩 다시', retry_ok: true });
+      fails.push({ where, why: ['인터넷', '받아쓰기', '브라우저', '계정'].includes(where) ? String(e.message || name).slice(0, 160) : `${name}을(를) 만들지 못했습니다`, fix: where === '다운로드' ? '인터넷 연결을 확인하고 다시 시도하세요' : where === '음성' ? '타입캐스트 키·크레딧을 확인하세요' : '설치팩 다시', retry_ok: true });
       if (process.env.SHORTEM_DEBUG) process.stderr.write(`[selftest] ${name}: ${e.stack || e}\n${e.detail || ''}\n`);
     }
   }
@@ -138,6 +138,6 @@ export async function selftest() {
     ...(fails.length ? ['## 고칠 것', ...fails.map(f => `- [${f.where}] ${f.why} → ${f.fix}`)] : ['모든 점검을 통과했습니다.'])].join('\n');
   const report = path.join(dir, '자가점검_결과.md');
   fs.writeFileSync(report, md + '\n');
-  fs.writeFileSync(stampFile(), JSON.stringify({ ok: !fails.length, at: Date.now(), fails: fails.map(f => f.where) }));   // 전부 통과해야 제작이 열린다(flow_driver.startFlow)
+  fs.writeFileSync(stampFile(), JSON.stringify({ ok: !fails.length && !items.some(i => i.name === '시험 목소리' && i.skipped), at: Date.now(), fails: fails.map(f => f.where) }));   // 전부 통과해야 제작이 열린다(flow_driver.startFlow)
   return { items, fails, report, dir };
 }
