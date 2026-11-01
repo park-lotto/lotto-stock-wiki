@@ -1,5 +1,5 @@
 # 대본(md) → 문장 목록(lines.json) → 타입캐스트 TTS(문장별 wav) → 앞뒤 무음 정리
-# 사용: python -X utf8 tts.py <대본.md> <출력폴더> [--voice Piljae] [--tempo 1.1] [--only 3,7]
+# 사용: python -X utf8 tts.py <대본.md> <출력폴더> [--voice Piljae] [--tempo 1.2] [--only 3,7]
 import json, os, re, sys, time, subprocess, urllib.request, concurrent.futures as cf
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
@@ -7,7 +7,7 @@ SCRIPT, OUT = sys.argv[1], sys.argv[2]
 args = sys.argv[3:]
 def opt(name, default):
     return args[args.index(name) + 1] if name in args else default
-VOICE = opt("--voice", "Piljae"); TEMPO = float(opt("--tempo", "1.1"))
+VOICE = opt("--voice", "Piljae"); TEMPO = float(opt("--tempo", "1.2"))
 ONLY = set(int(x) for x in opt("--only", "").split(",") if x)
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
