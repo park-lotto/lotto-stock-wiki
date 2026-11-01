@@ -41,7 +41,10 @@ def _style_def(name: str) -> dict:
     return d
 
 
-DEF = _style_def("잇썸홈판")
+try:
+    DEF = _style_def("잇썸홈판")
+except SystemExit:     # 회원 PC 에는 빌린 판만 있다 - 이 판이 없어도 공용 함수(tts_once 등)는 쓴다(관제 298)
+    DEF = {}
 PLAN_MARGIN = 1.15      # 계획(어림) 컷 길이 × 이 배수가 max 를 넘으면 '빠듯' — 10-18 손태영 어림 대비 실제 TTS 줄 길이 최대 +12%
 
 
