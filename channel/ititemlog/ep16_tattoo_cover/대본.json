@@ -1,0 +1,297 @@
+{
+ "_note": "16편 타투 커버 파운데이션(11-01, 판 잇템로그판_v2): 벤치 2위 aUicTeDoW04(1,847만) 소재 · 원본 2개 — mp(Mei Pang, TIRTIR 마스크 핏 레드 파운데이션) → nw(Natasha Jane Wood, 다른 제품 DERMACOL — '다른 제품'이라고 나레로 밝힘). 벤치 첫 클립(jack_chilcote)은 제품이 달라 안 씀. 효능·지속 시간 주장 안 함. mp 0~2초·nw 0~1초 박힌 글 구간 안 씀.",
+ "slug": "ititemlog_ep16_tattoo_cover",
+ "brand": "잇템로그판_v2",
+ "pan": "잇템로그판_v2",
+ "product": "티르티르 마스크 핏 레드 파운데이션 30ml(쿠팡 9492370035 = 같은 제품, 원본 mp 영상 속 제품 · ep01 쿠션과 다른 제품)",
+ "title_lines": [
+  [
+   [
+    "한국 파데로 타투"
+   ]
+  ],
+  [
+   [
+    "가려 본 외국인"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "mp(YouTube a5uQfDUn1cI · Instagram DKR9mcnzUcH) 설명란 'test out @tirtir_global new Mask Fit Red Foundation' · 4.88~7.32 원음 · 화면 빨간 뚜껑 병",
+  "f2": "mp 32.68~35.44 'Let's see how many layers it takes to cover my tattoos'",
+  "f3": "mp 37.68~38.52 'Okay. Nope.' · 화면 몸에 한 겹",
+  "f4": "mp 45.88~47.08 'Time for the second layer' · 50.60~54.20 'This is two layers. It's so weird to look at myself like this'",
+  "f5": "mp 58.08~60.92 'And this is three layers. I kind of look like a mannequin right now' · 화면 반쪽 타투 안 보임",
+  "f6": "nw(YouTube M4ajC2mArLo · Instagram DUEF-CDjJ0d) 화면 2~4초 DERMACOL 상자 · 20~24초 타투 안 보이는 팔",
+  "f8": "mp 71.04~74.32 'one layer up top, three layers to cover up my tattoos'",
+  "f7": "nw 24.60~28.12 'Let's get my mum's reaction. Well you look very boring. You prefer tattoos' · 29.5~31초 타투 드러난 팔"
+ },
+ "cta": "심리 CTA(혼잣말) — 직접 구매 문장 없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강)",
+   "tts": "한국 파데로 온몸 타투를 가린 외국인이 있는데요.",
+   "caps": [
+    {
+     "text": "한국 파데로"
+    },
+    {
+     "text": "온몸 타투를 가린"
+    },
+    {
+     "text": "외국인이 있는데요"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(의심)",
+   "src": "mp_ig.mp4",
+   "spans": [
+    [
+     32.68,
+     34.12
+    ]
+   ],
+   "said": "Let's see how many layers it takes",
+   "caps_rel": [
+    [
+     "몇 겹이나 드는지",
+     0.0,
+     0.8
+    ],
+    [
+     "한번 보자",
+     0.8,
+     1.44
+    ]
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 시도",
+   "tts": "일단 한 겹 쓱 발라 보더니,",
+   "caps": [
+    {
+     "text": "일단 한 겹"
+    },
+    {
+     "text": "쓱 발라 보더니"
+    }
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음(실패)",
+   "src": "mp_ig.mp4",
+   "spans": [
+    [
+     37.68,
+     38.52
+    ]
+   ],
+   "said": "Okay. Nope.",
+   "caps_rel": [
+    [
+     "좋아… 안 되네",
+     0.0,
+     0.84
+    ]
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 다시",
+   "tts": "바로 두 겹째 시도해 보는데,",
+   "caps": [
+    {
+     "text": "바로 두 겹째"
+    },
+    {
+     "text": "시도해 보는데"
+    }
+   ]
+  },
+  {
+   "id": "O3",
+   "kind": "orig",
+   "role": "원음(당황)",
+   "src": "mp_ig.mp4",
+   "spans": [
+    [
+     50.6,
+     54.2
+    ]
+   ],
+   "said": "This is two layers. It's so weird to look at myself like this",
+   "caps_rel": [
+    [
+     "이게 두 겹이야",
+     0.0,
+     1.3
+    ],
+    [
+     "내 모습 보니까",
+     1.4,
+     2.6
+    ],
+    [
+     "너무 이상해",
+     2.6,
+     3.6
+    ]
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "나레 공개",
+   "tts": "세 겹을 바르자 타투가 사라져 버렸는데요.",
+   "caps": [
+    {
+     "text": "세 겹을 바르자"
+    },
+    {
+     "text": "타투가 사라져"
+    },
+    {
+     "text": "버렸는데요"
+    }
+   ]
+  },
+  {
+   "id": "O4",
+   "kind": "orig",
+   "role": "원음(큰 반응)",
+   "src": "mp_ig.mp4",
+   "spans": [
+    [
+     58.08,
+     60.92
+    ]
+   ],
+   "said": "And this is three layers. I kind of look like a mannequin right now",
+   "caps_rel": [
+    [
+     "이게 세 겹이야",
+     0.0,
+     1.35
+    ],
+    [
+     "나 지금",
+     1.4,
+     1.95
+    ],
+    [
+     "마네킹 같아",
+     1.95,
+     2.84
+    ]
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "나레 둘째 원본",
+   "tts": "다른 제품으로 타투를 가린 외국인은, 엄마한테 보여 줬다는데,",
+   "caps": [
+    {
+     "text": "다른 제품으로"
+    },
+    {
+     "text": "타투를 가린 외국인은"
+    },
+    {
+     "text": "엄마한테"
+    },
+    {
+     "text": "보여 줬다는데"
+    }
+   ]
+  },
+  {
+   "id": "O5",
+   "kind": "orig",
+   "role": "원음(엄마 반응)",
+   "src": "nw.mp4",
+   "spans": [
+    [
+     24.6,
+     28.12
+    ]
+   ],
+   "said": "Let's get my mum's reaction. Well you look very boring. You prefer tattoos",
+   "caps_rel": [
+    [
+     "엄마 반응 보자",
+     0.0,
+     1.48
+    ],
+    [
+     "너 너무 심심해 보여",
+     1.52,
+     2.5
+    ],
+    [
+     "타투 있는 게 더 좋아?",
+     2.56,
+     3.52
+    ]
+   ]
+  },
+  {
+   "id": "N6",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "그 말에 바로 지워 버렸다던데,",
+   "caps": [
+    {
+     "text": "그 말에 바로"
+    },
+    {
+     "text": "지워 버렸다던데"
+    }
+   ]
+  },
+  {
+   "id": "N7",
+   "kind": "tts",
+   "role": "끝 — 둘째 전언",
+   "tts": "얼굴엔 한 겹, 타투엔 세 겹이라고 하고.",
+   "caps": [
+    {
+     "text": "얼굴엔 한 겹"
+    },
+    {
+     "text": "타투엔"
+    },
+    {
+     "text": "세 겹이라고 하고"
+    }
+   ]
+  },
+  {
+   "id": "N8",
+   "kind": "tts",
+   "role": "끝 — 혼잣말 CTA",
+   "tts": "아~ 나도 얼굴에 한 겹만 올려 봐야겠다.",
+   "caps": [
+    {
+     "text": "아~ 나도"
+    },
+    {
+     "text": "얼굴에 한 겹만"
+    },
+    {
+     "text": "올려 봐야겠다"
+    }
+   ]
+  }
+ ]
+}

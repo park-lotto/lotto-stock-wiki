@@ -1,0 +1,2240 @@
+{
+ "timeline": {
+  "lines": {
+   "N1": [
+    0.0,
+    2.369
+   ],
+   "O1": [
+    2.449,
+    5.158
+   ],
+   "N2": [
+    5.238,
+    6.57
+   ],
+   "O2": [
+    6.65,
+    7.304
+   ],
+   "N3": [
+    7.384,
+    8.847
+   ],
+   "O3": [
+    8.927,
+    12.416
+   ],
+   "N4": [
+    12.496,
+    14.66
+   ],
+   "O4": [
+    14.74,
+    17.514
+   ],
+   "N5": [
+    17.594,
+    20.749
+   ],
+   "O5": [
+    20.829,
+    24.316
+   ],
+   "N6": [
+    24.396,
+    26.283
+   ],
+   "N7": [
+    26.363,
+    28.358
+   ],
+   "N8": [
+    28.438,
+    30.263
+   ]
+  },
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한국 파데로",
+    "t0": 0.0,
+    "t1": 0.686,
+    "show": [
+     0.0,
+     0.686
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "온몸 타투를 가린",
+    "t0": 0.686,
+    "t1": 1.499,
+    "show": [
+     0.686,
+     1.499
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "외국인이 있는데요",
+    "t0": 1.499,
+    "t1": 2.369,
+    "show": [
+     1.499,
+     2.449
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "타투 가리려면",
+    "t0": 2.449,
+    "t1": 3.715,
+    "show": [
+     2.449,
+     3.715
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "몇 겹 드나 보자",
+    "t0": 3.715,
+    "t1": 5.158,
+    "show": [
+     3.715,
+     5.238
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "일단 한 겹",
+    "t0": 5.238,
+    "t1": 5.784,
+    "show": [
+     5.238,
+     5.784
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "쓱 발라 보더니",
+    "t0": 5.784,
+    "t1": 6.57,
+    "show": [
+     5.784,
+     6.65
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "좋아… 안 되네",
+    "t0": 6.65,
+    "t1": 7.304,
+    "show": [
+     6.65,
+     7.384
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "바로 두 겹째",
+    "t0": 7.384,
+    "t1": 8.162,
+    "show": [
+     7.384,
+     8.162
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "시도해 보는데",
+    "t0": 8.162,
+    "t1": 8.847,
+    "show": [
+     8.162,
+     8.927
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "이게 두 겹이야",
+    "t0": 8.927,
+    "t1": 10.205,
+    "show": [
+     8.927,
+     10.305
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "내 모습 보니까",
+    "t0": 10.305,
+    "t1": 11.505,
+    "show": [
+     10.305,
+     11.505
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 2,
+    "speaker": "orig",
+    "text": "너무 이상해",
+    "t0": 11.505,
+    "t1": 12.416,
+    "show": [
+     11.505,
+     12.496
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "세 겹을 바르자",
+    "t0": 12.496,
+    "t1": 13.447,
+    "show": [
+     12.496,
+     13.447
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "타투가 사라져",
+    "t0": 13.447,
+    "t1": 14.05,
+    "show": [
+     13.447,
+     14.05
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "버렸는데요",
+    "t0": 14.05,
+    "t1": 14.66,
+    "show": [
+     14.05,
+     14.74
+    ]
+   },
+   {
+    "line": "O4",
+    "j": 0,
+    "speaker": "orig",
+    "text": "이게 세 겹이야",
+    "t0": 14.74,
+    "t1": 16.024,
+    "show": [
+     14.74,
+     16.074
+    ]
+   },
+   {
+    "line": "O4",
+    "j": 1,
+    "speaker": "orig",
+    "text": "나 지금",
+    "t0": 16.074,
+    "t1": 16.624,
+    "show": [
+     16.074,
+     16.624
+    ]
+   },
+   {
+    "line": "O4",
+    "j": 2,
+    "speaker": "orig",
+    "text": "마네킹 같아",
+    "t0": 16.624,
+    "t1": 17.514,
+    "show": [
+     16.624,
+     17.594
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "다른 제품으로",
+    "t0": 17.594,
+    "t1": 18.245,
+    "show": [
+     17.594,
+     18.245
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "타투를 가린 외국인은",
+    "t0": 18.245,
+    "t1": 19.599,
+    "show": [
+     18.245,
+     19.599
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "엄마한테",
+    "t0": 19.599,
+    "t1": 19.976,
+    "show": [
+     19.599,
+     19.976
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 3,
+    "speaker": "narr",
+    "text": "보여 줬다는데",
+    "t0": 19.976,
+    "t1": 20.749,
+    "show": [
+     19.976,
+     20.829
+    ]
+   },
+   {
+    "line": "O5",
+    "j": 0,
+    "speaker": "orig",
+    "text": "엄마 반응 보자",
+    "t0": 20.829,
+    "t1": 22.276,
+    "show": [
+     20.829,
+     22.316
+    ]
+   },
+   {
+    "line": "O5",
+    "j": 1,
+    "speaker": "orig",
+    "text": "너 너무 심심해 보여",
+    "t0": 22.316,
+    "t1": 23.296,
+    "show": [
+     22.316,
+     23.356
+    ]
+   },
+   {
+    "line": "O5",
+    "j": 2,
+    "speaker": "orig",
+    "text": "타투 있는 게 더 좋아?",
+    "t0": 23.356,
+    "t1": 24.316,
+    "show": [
+     23.356,
+     24.396
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그 말에 바로",
+    "t0": 24.396,
+    "t1": 25.226,
+    "show": [
+     24.396,
+     25.226
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "지워 버렸다던데",
+    "t0": 25.226,
+    "t1": 26.283,
+    "show": [
+     25.226,
+     26.363
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "얼굴엔 한 겹",
+    "t0": 26.363,
+    "t1": 27.314,
+    "show": [
+     26.363,
+     27.314
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "타투엔 세 겹이라고 하고",
+    "t0": 27.314,
+    "t1": 28.358,
+    "show": [
+     27.314,
+     28.438
+    ]
+   },
+   {
+    "line": "N8",
+    "j": 0,
+    "speaker": "narr",
+    "text": "아~ 나도",
+    "t0": 28.438,
+    "t1": 29.108,
+    "show": [
+     28.438,
+     29.108
+    ]
+   },
+   {
+    "line": "N8",
+    "j": 1,
+    "speaker": "narr",
+    "text": "얼굴에 한 겹만",
+    "t0": 29.108,
+    "t1": 29.705,
+    "show": [
+     29.108,
+     29.705
+    ]
+   },
+   {
+    "line": "N8",
+    "j": 2,
+    "speaker": "narr",
+    "text": "올려 봐야겠다",
+    "t0": 29.705,
+    "t1": 30.263,
+    "show": [
+     29.705,
+     30.967
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "src": "mp_ig.mp4",
+    "ss": 0.23,
+    "w": 0.5,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "한쪽 타투가 안 보이는 몸(결과 먼저)",
+    "line": "N1",
+    "t0": 0.0,
+    "kind": "tts",
+    "t1": 1.224,
+    "dur": 1.224,
+    "max": 1.07,
+    "max_auto": true,
+    "ss_moved": 66.8,
+    "ss_planned": 0.23,
+    "speed": 0.8649,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "mp_ig.mp4",
+    "ss": 3.0,
+    "w": 0.5,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "바르기 전 타투 가득한 몸",
+    "line": "N1",
+    "t0": 1.224,
+    "kind": "tts",
+    "t1": 2.449,
+    "dur": 1.225,
+    "max": 4.467,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "몇 겹 드나 보자(입 맞춤)",
+    "line": "O1",
+    "ss": 32.714,
+    "src": "mp_ig.mp4",
+    "t0": 2.449,
+    "kind": "orig",
+    "lip": true,
+    "t1": 5.171,
+    "dur": 2.722,
+    "over": 0.0
+   },
+   {
+    "src": "mp_ig.mp4",
+    "ss": 25.506,
+    "w": 0.5,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "퍼프로 몸에 바르기",
+    "line": "N2",
+    "t0": 5.171,
+    "kind": "tts",
+    "t1": 5.944,
+    "dur": 0.773,
+    "max": 0.694,
+    "max_auto": true,
+    "ss_moved": 39.3,
+    "ss_planned": 25.506,
+    "speed": 0.8696,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "mp_ig.mp4",
+    "ss": 41.333,
+    "w": 0.5,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "팔 타투 위에 바르기",
+    "line": "N2",
+    "t0": 5.944,
+    "kind": "tts",
+    "t1": 6.65,
+    "dur": 0.706,
+    "max": 4.733,
+    "max_auto": true,
+    "over": 0.0,
+    "ss_reuse": 41.2,
+    "frozen": false
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "좋아… 안 되네(입 맞춤)",
+    "line": "O2",
+    "ss": 37.767,
+    "src": "mp_ig.mp4",
+    "t0": 6.65,
+    "kind": "orig",
+    "lip": true,
+    "t1": 7.184,
+    "dur": 0.534,
+    "over": 0.0
+   },
+   {
+    "src": "mp_ig.mp4",
+    "ss": 46.1,
+    "w": 0.5,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "제품 펌프로 덜어 내기",
+    "line": "N3",
+    "t0": 7.184,
+    "kind": "tts",
+    "t1": 8.155,
+    "dur": 0.971,
+    "max": 1.167,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "mp_ig.mp4",
+    "ss": 21.107,
+    "w": 0.5,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "두 겹째 바르기",
+    "line": "N3",
+    "t0": 8.155,
+    "kind": "tts",
+    "t1": 8.927,
+    "dur": 0.772,
+    "max": 0.693,
+    "max_auto": true,
+    "ss_planned": 21.107,
+    "ss_moved": 47.8,
+    "speed": 0.8696,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "두 겹 — 어색해함(입 맞춤)",
+    "line": "O3",
+    "ss": 50.622,
+    "src": "mp_ig.mp4",
+    "t0": 8.927,
+    "kind": "orig",
+    "lip": true,
+    "t1": 12.496,
+    "dur": 3.569,
+    "over": 0.0
+   },
+   {
+    "src": "mp_ig.mp4",
+    "ss": 55.433,
+    "w": 0.5,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "셋째 겹 바르기",
+    "line": "N4",
+    "t0": 12.496,
+    "kind": "tts",
+    "t1": 13.618,
+    "dur": 1.122,
+    "ss_planned": 55.433,
+    "max": 1.2,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "mp_ig.mp4",
+    "ss": 57.0,
+    "w": 0.5,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "타투가 안 보이는 어깨",
+    "line": "N4",
+    "t0": 13.618,
+    "kind": "tts",
+    "t1": 14.74,
+    "dur": 1.122,
+    "max": 1.1,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "세 겹 — 마네킹 같다며(입 맞춤)",
+    "line": "O4",
+    "ss": 58.146,
+    "src": "mp_ig.mp4",
+    "t0": 14.74,
+    "kind": "orig",
+    "lip": true,
+    "t1": 17.594,
+    "dur": 2.854,
+    "over": 0.0
+   },
+   {
+    "src": "nw.mp4",
+    "ss": 20.2,
+    "w": 0.35,
+    "crop": [
+     0,
+     50,
+     1080,
+     1434
+    ],
+    "see": "타투 없는 팔로 선 둘째 외국인",
+    "line": "N5",
+    "t0": 17.594,
+    "kind": "tts",
+    "t1": 18.726,
+    "dur": 1.132,
+    "max": 1.067,
+    "max_auto": true,
+    "ss_planned": 20.3,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "nw.mp4",
+    "ss": 22.033,
+    "w": 0.35,
+    "crop": [
+     0,
+     50,
+     1080,
+     1434
+    ],
+    "see": "두 팔을 앞으로 내밀어 타투 없는 팔 보여 주기",
+    "line": "N5",
+    "t0": 18.726,
+    "kind": "tts",
+    "t1": 19.858,
+    "dur": 1.132,
+    "max": 1.067,
+    "max_auto": true,
+    "ss_planned": 22.1,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "nw.mp4",
+    "ss": 23.133,
+    "w": 0.3,
+    "crop": [
+     0,
+     50,
+     1080,
+     1434
+    ],
+    "see": "양손 펴 보이기",
+    "line": "N5",
+    "t0": 19.858,
+    "kind": "tts",
+    "t1": 20.829,
+    "dur": 0.971,
+    "max": 0.8,
+    "max_auto": true,
+    "ss_planned": 23.2,
+    "over": 0.0,
+    "frozen": false,
+    "speed": 0.8966
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     0,
+     50,
+     1080,
+     1434
+    ],
+    "see": "엄마 반응(입 맞춤)",
+    "line": "O5",
+    "ss": 24.633,
+    "src": "nw.mp4",
+    "t0": 20.829,
+    "kind": "orig",
+    "lip": true,
+    "t1": 24.396,
+    "dur": 3.567,
+    "over": 0.0
+   },
+   {
+    "src": "nw.mp4",
+    "ss": 29.95,
+    "w": 0.6,
+    "crop": [
+     0,
+     50,
+     1080,
+     1434
+    ],
+    "see": "타투가 다시 드러난 팔",
+    "line": "N6",
+    "t0": 24.396,
+    "kind": "tts",
+    "t1": 25.576,
+    "dur": 1.18,
+    "max": 1.183,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "nw.mp4",
+    "ss": 31.72,
+    "w": 0.4,
+    "crop": [
+     0,
+     50,
+     1080,
+     1434
+    ],
+    "see": "말하는 둘째 외국인",
+    "line": "N6",
+    "t0": 25.576,
+    "kind": "tts",
+    "t1": 26.363,
+    "dur": 0.787,
+    "max": 1.18,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "mp_ig.mp4",
+    "ss": 16.135,
+    "w": 0.5,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "얼굴 반쪽 한 겹",
+    "line": "N7",
+    "t0": 26.363,
+    "kind": "tts",
+    "t1": 27.401,
+    "dur": 1.038,
+    "max": 1.265,
+    "max_auto": true,
+    "ss_moved": 31.3,
+    "ss_planned": 16.135,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "mp_ig.mp4",
+    "ss": 66.886,
+    "w": 0.5,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "완성 — 타투 반쪽만 보이는 몸",
+    "line": "N7",
+    "t0": 27.401,
+    "kind": "tts",
+    "t1": 28.438,
+    "dur": 1.037,
+    "max": 0.914,
+    "max_auto": true,
+    "ss_moved": 69.3,
+    "ss_planned": 66.886,
+    "speed": 0.871,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "mp_ig.mp4",
+    "ss": 10.3,
+    "w": 0.5,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "제품 병 들어 보이기",
+    "line": "N8",
+    "t0": 28.438,
+    "kind": "tts",
+    "t1": 29.702,
+    "dur": 1.264,
+    "max": 1.267,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   },
+   {
+    "src": "mp_ig.mp4",
+    "ss": 72.5,
+    "w": 0.5,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "완성 얼굴로 제품 들기",
+    "line": "N8",
+    "t0": 29.702,
+    "kind": "tts",
+    "t1": 30.9667,
+    "dur": 1.265,
+    "max": null,
+    "max_auto": true,
+    "over": 0.0,
+    "frozen": false
+   }
+  ],
+  "opos": [
+   {
+    "line": "O1",
+    "k": 0,
+    "src": "mp_ig.mp4",
+    "span": [
+     32.714,
+     35.423
+    ],
+    "t0": 2.449,
+    "t1": 5.158
+   },
+   {
+    "line": "O2",
+    "k": 0,
+    "src": "mp_ig.mp4",
+    "span": [
+     37.767,
+     38.421
+    ],
+    "t0": 6.65,
+    "t1": 7.304
+   },
+   {
+    "line": "O3",
+    "k": 0,
+    "src": "mp_ig.mp4",
+    "span": [
+     50.622,
+     54.111
+    ],
+    "t0": 8.927,
+    "t1": 12.416
+   },
+   {
+    "line": "O4",
+    "k": 0,
+    "src": "mp_ig.mp4",
+    "span": [
+     58.146,
+     60.92
+    ],
+    "t0": 14.74,
+    "t1": 17.514
+   },
+   {
+    "line": "O5",
+    "k": 0,
+    "src": "nw.mp4",
+    "span": [
+     24.633,
+     28.12
+    ],
+    "t0": 20.829,
+    "t1": 24.316
+   }
+  ],
+  "end": 30.9667,
+  "orig_trim": {
+   "head": {
+    "O1": 0.034,
+    "O2": 0.087,
+    "O3": 0.022,
+    "O4": 0.066,
+    "O5": 0.033
+   },
+   "dropped_cuts": []
+  },
+  "vmake_cuts": [
+   0
+  ]
+ },
+ "placement": {
+  "reference": "SbWTqCnleC8",
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한국 파데로",
+    "t0": 0.0,
+    "t1": 0.686,
+    "show": [
+     0.0,
+     0.686
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": "hook"
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "온몸 타투를 가린",
+    "t0": 0.686,
+    "t1": 1.499,
+    "show": [
+     0.686,
+     1.499
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": "hook"
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "외국인이 있는데요",
+    "t0": 1.499,
+    "t1": 2.369,
+    "show": [
+     1.499,
+     2.449
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "hook",
+    "enter": "cut",
+    "variant": "hook_pop"
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "타투 가리려면",
+    "t0": 2.449,
+    "t1": 3.715,
+    "show": [
+     2.449,
+     3.715
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "몇 겹 드나 보자",
+    "t0": 3.715,
+    "t1": 5.158,
+    "show": [
+     3.715,
+     5.238
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "일단 한 겹",
+    "t0": 5.238,
+    "t1": 5.784,
+    "show": [
+     5.238,
+     5.784
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "쓱 발라 보더니",
+    "t0": 5.784,
+    "t1": 6.57,
+    "show": [
+     5.784,
+     6.65
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "좋아… 안 되네",
+    "t0": 6.65,
+    "t1": 7.304,
+    "show": [
+     6.65,
+     7.384
+    ],
+    "first": true,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "바로 두 겹째",
+    "t0": 7.384,
+    "t1": 8.162,
+    "show": [
+     7.384,
+     8.162
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "시도해 보는데",
+    "t0": 8.162,
+    "t1": 8.847,
+    "show": [
+     8.162,
+     8.927
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "이게 두 겹이야",
+    "t0": 8.927,
+    "t1": 10.205,
+    "show": [
+     8.927,
+     10.305
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "내 모습 보니까",
+    "t0": 10.305,
+    "t1": 11.505,
+    "show": [
+     10.305,
+     11.505
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 2,
+    "speaker": "orig",
+    "text": "너무 이상해",
+    "t0": 11.505,
+    "t1": 12.416,
+    "show": [
+     11.505,
+     12.496
+    ],
+    "first": false,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "세 겹을 바르자",
+    "t0": 12.496,
+    "t1": 13.447,
+    "show": [
+     12.496,
+     13.447
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "타투가 사라져",
+    "t0": 13.447,
+    "t1": 14.05,
+    "show": [
+     13.447,
+     14.05
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "버렸는데요",
+    "t0": 14.05,
+    "t1": 14.66,
+    "show": [
+     14.05,
+     14.74
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O4",
+    "j": 0,
+    "speaker": "orig",
+    "text": "이게 세 겹이야",
+    "t0": 14.74,
+    "t1": 16.024,
+    "show": [
+     14.74,
+     16.074
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O4",
+    "j": 1,
+    "speaker": "orig",
+    "text": "나 지금",
+    "t0": 16.074,
+    "t1": 16.624,
+    "show": [
+     16.074,
+     16.624
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O4",
+    "j": 2,
+    "speaker": "orig",
+    "text": "마네킹 같아",
+    "t0": 16.624,
+    "t1": 17.514,
+    "show": [
+     16.624,
+     17.594
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "다른 제품으로",
+    "t0": 17.594,
+    "t1": 18.245,
+    "show": [
+     17.594,
+     18.245
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "타투를 가린 외국인은",
+    "t0": 18.245,
+    "t1": 19.599,
+    "show": [
+     18.245,
+     19.599
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "엄마한테",
+    "t0": 19.599,
+    "t1": 19.976,
+    "show": [
+     19.599,
+     19.976
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 3,
+    "speaker": "narr",
+    "text": "보여 줬다는데",
+    "t0": 19.976,
+    "t1": 20.749,
+    "show": [
+     19.976,
+     20.829
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O5",
+    "j": 0,
+    "speaker": "orig",
+    "text": "엄마 반응 보자",
+    "t0": 20.829,
+    "t1": 22.276,
+    "show": [
+     20.829,
+     22.316
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O5",
+    "j": 1,
+    "speaker": "orig",
+    "text": "너 너무 심심해 보여",
+    "t0": 22.316,
+    "t1": 23.296,
+    "show": [
+     22.316,
+     23.356
+    ],
+    "first": false,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O5",
+    "j": 2,
+    "speaker": "orig",
+    "text": "타투 있는 게 더 좋아?",
+    "t0": 23.356,
+    "t1": 24.316,
+    "show": [
+     23.356,
+     24.396
+    ],
+    "first": false,
+    "lex": [
+     "excl",
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그 말에 바로",
+    "t0": 24.396,
+    "t1": 25.226,
+    "show": [
+     24.396,
+     25.226
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "지워 버렸다던데",
+    "t0": 25.226,
+    "t1": 26.283,
+    "show": [
+     25.226,
+     26.363
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "얼굴엔 한 겹",
+    "t0": 26.363,
+    "t1": 27.314,
+    "show": [
+     26.363,
+     27.314
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "타투엔 세 겹이라고 하고",
+    "t0": 27.314,
+    "t1": 28.358,
+    "show": [
+     27.314,
+     28.438
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "body",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N8",
+    "j": 0,
+    "speaker": "narr",
+    "text": "아~ 나도",
+    "t0": 28.438,
+    "t1": 29.108,
+    "show": [
+     28.438,
+     29.108
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N8",
+    "j": 1,
+    "speaker": "narr",
+    "text": "얼굴에 한 겹만",
+    "t0": 29.108,
+    "t1": 29.705,
+    "show": [
+     29.108,
+     29.705
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N8",
+    "j": 2,
+    "speaker": "narr",
+    "text": "올려 봐야겠다",
+    "t0": 29.705,
+    "t1": 30.263,
+    "show": [
+     29.705,
+     30.967
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "role_key": "end",
+    "enter": "cut",
+    "variant": ""
+   }
+  ],
+  "sfx": [
+   {
+    "t": 2.749,
+    "role": "body",
+    "why": "body",
+    "kind": "pop"
+   },
+   {
+    "t": 5.538,
+    "role": "body",
+    "why": "body",
+    "kind": "pop"
+   }
+  ],
+  "transitions": [],
+  "flashes": [],
+  "cut_bounds": 21,
+  "trans_plan": {
+   "src": "판 cuts.transition.kinds",
+   "share": {
+    "zoomblur": 0.016
+   },
+   "cut_bounds": 21,
+   "want_raw": {
+    "zoomblur": 0.336
+   },
+   "want": 0,
+   "eligible": 3,
+   "picked": {},
+   "min_cut": 1.2
+  },
+  "log": [
+   "본보기 벤치 편 = SbWTqCnleC8",
+   "목표 밀도 모드(업그레이드 판 targets): fx_rate_narr 0.18(상한 0.231), fx_rate_orig 0.056(상한 0.111), sfx_rate 0.051(상한 0.067), sticker_rate 0.061(상한 0.065) · 출처 channel/ititemlog/_kal/상위편_목표.json density",
+   "훅 N1 덩어리 3개 → hook (끝 hook_pop)",
+   "꾸밈 자리 본문 목표 3 중 0개 — key 덩어리·화자 상한 {'narr': 6, 'orig': 3} 모자람",
+   "꾸밈 자리(rules.deco_pos): 벤치 {'훅': 0.354, '본문': 0.508, '끝': 0.038} · 정해진 {'훅': 3} → 목표 {'훅': 2, '본문': 3, '끝': 0} · 우리 {'훅': 3} (+강조 [])",
+   "꾸밈(narr) 목표 4 중 3개만 — 대본 key 있는 덩어리 모자람",
+   "꾸밈(narr) targets: 목표 0.18×21=4 · 상한 5 · 1차 3 → 3",
+   "꾸밈(orig) 목표 1 중 0개만 — 대본 key 있는 덩어리 모자람",
+   "꾸밈(orig) targets: 목표 0.056×12=1 · 상한 1 · 1차 0 → 0",
+   "전환 [] (판 cuts.transition.kinds 비율 {'zoomblur': 0.02}, 컷 경계 21·붙일 수 있는 3(≥1.2초))",
+   "효과음 targets: 목표 0.051발/초 × 30.26초 = 2발 · 상한 2(상위 편 최대 0.067)",
+   "효과음 2발(본보기 줄판독 10발 · 역할 {'body': 2} · 편차 +0.30초) [(2.749, 'pop', 'body'), (5.538, 'pop', 'body')]",
+   "짤 0개(rate 0.0 — 벤치에 짤 없음도 스타일)",
+   "꾸밈(narr) 목표 4 중 3개만 — 대본 key 있는 덩어리 모자람",
+   "꾸밈(narr) targets: 목표 0.18×21=4 · 상한 5 · 1차 3 → 3",
+   "꾸밈(orig) 목표 1 중 0개만 — 대본 key 있는 덩어리 모자람",
+   "꾸밈(orig) targets: 목표 0.056×12=1 · 상한 1 · 1차 0 → 0",
+   "꾸밈 없음 30/33 ≥ 판 plain_share 0.854×33=28",
+   "등장 {'cut': 33} · 강조 0/33",
+   "꾸밈 답 없음(deco_answers.json)"
+  ],
+  "targets": {
+   "fx_rate_narr": {
+    "goal": 0.18,
+    "cap": 0.231,
+    "n_goal": 4,
+    "lo": 3,
+    "hi": 5,
+    "n_first": 3,
+    "dur": 21,
+    "n": 3,
+    "ours": 0.143,
+    "src": "channel/ititemlog/_kal/상위편_목표.json density"
+   },
+   "fx_rate_orig": {
+    "goal": 0.056,
+    "cap": 0.111,
+    "n_goal": 1,
+    "lo": 0,
+    "hi": 1,
+    "n_first": 1,
+    "dur": 12,
+    "n": 0,
+    "ours": 0.0,
+    "src": "channel/ititemlog/_kal/상위편_목표.json density"
+   },
+   "sfx_rate": {
+    "goal": 0.051,
+    "cap": 0.067,
+    "src": "channel/ititemlog/_kal/상위편_목표.json density",
+    "n_goal": 2,
+    "lo": 1,
+    "hi": 2,
+    "n_first": 2,
+    "dur": 30.263,
+    "n": 2,
+    "ours": 0.066
+   }
+  },
+  "deco_pos": {
+   "bench_pos": {
+    "훅": 0.354,
+    "본문": 0.508,
+    "끝": 0.038
+   },
+   "want": {
+    "훅": 2,
+    "본문": 3,
+    "끝": 0
+   },
+   "have_before": {
+    "훅": 3
+   },
+   "ours": {
+    "훅": 3
+   },
+   "ours_share": {
+    "훅": 1.0,
+    "본문": 0.0,
+    "끝": 0.0
+   },
+   "speaker_cap": {
+    "narr": 6,
+    "orig": 3
+   }
+  },
+  "_timeline": {
+   "cuts": [
+    {
+     "src": "mp_ig.mp4",
+     "ss": 0.23,
+     "w": 0.5,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "한쪽 타투가 안 보이는 몸(결과 먼저)",
+     "line": "N1",
+     "t0": 0.0,
+     "kind": "tts",
+     "t1": 1.224,
+     "dur": 1.224,
+     "max": 1.07,
+     "max_auto": true,
+     "ss_moved": 66.8,
+     "ss_planned": 0.23,
+     "speed": 0.8649,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "mp_ig.mp4",
+     "ss": 3.0,
+     "w": 0.5,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "바르기 전 타투 가득한 몸",
+     "line": "N1",
+     "t0": 1.224,
+     "kind": "tts",
+     "t1": 2.449,
+     "dur": 1.225,
+     "max": 4.467,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "at": 0.0,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "몇 겹 드나 보자(입 맞춤)",
+     "line": "O1",
+     "ss": 32.714,
+     "src": "mp_ig.mp4",
+     "t0": 2.449,
+     "kind": "orig",
+     "lip": true,
+     "t1": 5.171,
+     "dur": 2.722,
+     "over": 0.0
+    },
+    {
+     "src": "mp_ig.mp4",
+     "ss": 25.506,
+     "w": 0.5,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "퍼프로 몸에 바르기",
+     "line": "N2",
+     "t0": 5.171,
+     "kind": "tts",
+     "t1": 5.944,
+     "dur": 0.773,
+     "max": 0.694,
+     "max_auto": true,
+     "ss_moved": 39.3,
+     "ss_planned": 25.506,
+     "speed": 0.8696,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "mp_ig.mp4",
+     "ss": 41.333,
+     "w": 0.5,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "팔 타투 위에 바르기",
+     "line": "N2",
+     "t0": 5.944,
+     "kind": "tts",
+     "t1": 6.65,
+     "dur": 0.706,
+     "max": 4.733,
+     "max_auto": true,
+     "over": 0.0,
+     "ss_reuse": 41.2,
+     "frozen": false
+    },
+    {
+     "at": 0.0,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "좋아… 안 되네(입 맞춤)",
+     "line": "O2",
+     "ss": 37.767,
+     "src": "mp_ig.mp4",
+     "t0": 6.65,
+     "kind": "orig",
+     "lip": true,
+     "t1": 7.184,
+     "dur": 0.534,
+     "over": 0.0
+    },
+    {
+     "src": "mp_ig.mp4",
+     "ss": 46.1,
+     "w": 0.5,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "제품 펌프로 덜어 내기",
+     "line": "N3",
+     "t0": 7.184,
+     "kind": "tts",
+     "t1": 8.155,
+     "dur": 0.971,
+     "max": 1.167,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "mp_ig.mp4",
+     "ss": 21.107,
+     "w": 0.5,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "두 겹째 바르기",
+     "line": "N3",
+     "t0": 8.155,
+     "kind": "tts",
+     "t1": 8.927,
+     "dur": 0.772,
+     "max": 0.693,
+     "max_auto": true,
+     "ss_planned": 21.107,
+     "ss_moved": 47.8,
+     "speed": 0.8696,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "at": 0.0,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "두 겹 — 어색해함(입 맞춤)",
+     "line": "O3",
+     "ss": 50.622,
+     "src": "mp_ig.mp4",
+     "t0": 8.927,
+     "kind": "orig",
+     "lip": true,
+     "t1": 12.496,
+     "dur": 3.569,
+     "over": 0.0
+    },
+    {
+     "src": "mp_ig.mp4",
+     "ss": 55.433,
+     "w": 0.5,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "셋째 겹 바르기",
+     "line": "N4",
+     "t0": 12.496,
+     "kind": "tts",
+     "t1": 13.618,
+     "dur": 1.122,
+     "ss_planned": 55.433,
+     "max": 1.2,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "mp_ig.mp4",
+     "ss": 57.0,
+     "w": 0.5,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "타투가 안 보이는 어깨",
+     "line": "N4",
+     "t0": 13.618,
+     "kind": "tts",
+     "t1": 14.74,
+     "dur": 1.122,
+     "max": 1.1,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "at": 0.0,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "세 겹 — 마네킹 같다며(입 맞춤)",
+     "line": "O4",
+     "ss": 58.146,
+     "src": "mp_ig.mp4",
+     "t0": 14.74,
+     "kind": "orig",
+     "lip": true,
+     "t1": 17.594,
+     "dur": 2.854,
+     "over": 0.0
+    },
+    {
+     "src": "nw.mp4",
+     "ss": 20.2,
+     "w": 0.35,
+     "crop": [
+      0,
+      50,
+      1080,
+      1434
+     ],
+     "see": "타투 없는 팔로 선 둘째 외국인",
+     "line": "N5",
+     "t0": 17.594,
+     "kind": "tts",
+     "t1": 18.726,
+     "dur": 1.132,
+     "max": 1.067,
+     "max_auto": true,
+     "ss_planned": 20.3,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "nw.mp4",
+     "ss": 22.033,
+     "w": 0.35,
+     "crop": [
+      0,
+      50,
+      1080,
+      1434
+     ],
+     "see": "두 팔을 앞으로 내밀어 타투 없는 팔 보여 주기",
+     "line": "N5",
+     "t0": 18.726,
+     "kind": "tts",
+     "t1": 19.858,
+     "dur": 1.132,
+     "max": 1.067,
+     "max_auto": true,
+     "ss_planned": 22.1,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "nw.mp4",
+     "ss": 23.133,
+     "w": 0.3,
+     "crop": [
+      0,
+      50,
+      1080,
+      1434
+     ],
+     "see": "양손 펴 보이기",
+     "line": "N5",
+     "t0": 19.858,
+     "kind": "tts",
+     "t1": 20.829,
+     "dur": 0.971,
+     "max": 0.8,
+     "max_auto": true,
+     "ss_planned": 23.2,
+     "over": 0.0,
+     "frozen": false,
+     "speed": 0.8966
+    },
+    {
+     "at": 0.0,
+     "crop": [
+      0,
+      50,
+      1080,
+      1434
+     ],
+     "see": "엄마 반응(입 맞춤)",
+     "line": "O5",
+     "ss": 24.633,
+     "src": "nw.mp4",
+     "t0": 20.829,
+     "kind": "orig",
+     "lip": true,
+     "t1": 24.396,
+     "dur": 3.567,
+     "over": 0.0
+    },
+    {
+     "src": "nw.mp4",
+     "ss": 29.95,
+     "w": 0.6,
+     "crop": [
+      0,
+      50,
+      1080,
+      1434
+     ],
+     "see": "타투가 다시 드러난 팔",
+     "line": "N6",
+     "t0": 24.396,
+     "kind": "tts",
+     "t1": 25.576,
+     "dur": 1.18,
+     "max": 1.183,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "nw.mp4",
+     "ss": 31.72,
+     "w": 0.4,
+     "crop": [
+      0,
+      50,
+      1080,
+      1434
+     ],
+     "see": "말하는 둘째 외국인",
+     "line": "N6",
+     "t0": 25.576,
+     "kind": "tts",
+     "t1": 26.363,
+     "dur": 0.787,
+     "max": 1.18,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "mp_ig.mp4",
+     "ss": 16.135,
+     "w": 0.5,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "얼굴 반쪽 한 겹",
+     "line": "N7",
+     "t0": 26.363,
+     "kind": "tts",
+     "t1": 27.401,
+     "dur": 1.038,
+     "max": 1.265,
+     "max_auto": true,
+     "ss_moved": 31.3,
+     "ss_planned": 16.135,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "mp_ig.mp4",
+     "ss": 66.886,
+     "w": 0.5,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "완성 — 타투 반쪽만 보이는 몸",
+     "line": "N7",
+     "t0": 27.401,
+     "kind": "tts",
+     "t1": 28.438,
+     "dur": 1.037,
+     "max": 0.914,
+     "max_auto": true,
+     "ss_moved": 69.3,
+     "ss_planned": 66.886,
+     "speed": 0.871,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "mp_ig.mp4",
+     "ss": 10.3,
+     "w": 0.5,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "제품 병 들어 보이기",
+     "line": "N8",
+     "t0": 28.438,
+     "kind": "tts",
+     "t1": 29.702,
+     "dur": 1.264,
+     "max": 1.267,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    },
+    {
+     "src": "mp_ig.mp4",
+     "ss": 72.5,
+     "w": 0.5,
+     "crop": [
+      0,
+      150,
+      1080,
+      1434
+     ],
+     "see": "완성 얼굴로 제품 들기",
+     "line": "N8",
+     "t0": 29.702,
+     "kind": "tts",
+     "t1": 30.9667,
+     "dur": 1.265,
+     "max": null,
+     "max_auto": true,
+     "over": 0.0,
+     "frozen": false
+    }
+   ],
+   "end": 30.9667
+  },
+  "cards": [],
+  "lyrics": [],
+  "transitions_drawn": []
+ }
+}
