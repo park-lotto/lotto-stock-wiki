@@ -167,7 +167,7 @@ export function cancelFlow(sid) {
   const f = loadFlow(sid); if (!f) return null;
   if (f.status === 'done') return f;
   f.cancelled = true;
-  f.fail = { why: '사용자가 멈췄습니다', fix: '새로 만들려면 영상 주소로 다시 시작해 주세요', retry_ok: false };
+  f.fail = { why: '사용자가 멈췄습니다', fix: '이어서 하려면 다시 시도해 주세요', retry_ok: true };
   save(f);
   return f;
 }
@@ -195,7 +195,8 @@ export async function startFlow({ preset, video, product }) {
 export function approveFlow(sid) { const f = loadFlow(sid); if (!f) return null; f.approved = true; save(f); f.running = pump(f); return f; }
 export function retryFlow(sid) {
   const f = loadFlow(sid); if (!f) return null;
-  if (f.status === 'error') { f.fail = null; f.status = f.do ? 'execute' : (f.asks ? 'review' : f.status); }
+  if (f.cancelled) { f.cancelled = false; f.fail = null; save(f); }   // 회원이 멈춘 편은 멈춘 자리부터 잇는다(이미 멈춘 옛 편 포함)
+  else if (f.status === 'error') { f.fail = null; f.status = f.do ? 'execute' : (f.asks ? 'review' : f.status); }
   else if (f.fail && f.fail.server_stop && f.fail.retry_ok) { f.fail = null; f.status = 'retry'; }   // 서버가 '다시 시도하면 이어 간다'고 한 멈춤(받기 실패 등)
   f.running = pump(f);
   return f;
