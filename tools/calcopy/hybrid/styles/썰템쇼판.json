@@ -304,7 +304,7 @@
   "stack": {
    "lines": 2,
    "_why_lines": "10-29 3→2: 줄판독 벤치 표준 틀 4편(BlA9·NBdm·bfKk·jECu) 채널 자막 y 행 = 500(첫 줄)·560(덧붙음 2번째 줄)뿐 — 3번째 줄 0/84(pY2z 는 다른 틀 60초 편만 3줄). 3 은 옛 preset_make 렌더러 2줄 넘침 우회(manifest.differences)였고 회원 시험 3차에서 3~4줄로 쌓여 그림을 덮었다(측정 channel/humorshowshow/줄판독 layer=채널 y 분포)",
-   "break": "full",
+   "break": "line",
    "y": 526,
    "pitch": 76,
    "why": "자막 칸 = frame.json caption 3줄(y488·줄 76) 덧붙음 누적(manifest.differences '2줄째 덧붙음') → lines 3 · frame.json caption 3줄 y488·줄 76 → 첫 줄 가운데 526 — 새 팩 humorshowshow(1a6bb76d7) 렌더 피치 76(팩요청.md 해결)"
