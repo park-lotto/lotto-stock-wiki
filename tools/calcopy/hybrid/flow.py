@@ -447,7 +447,7 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
         st["phase"] = "member_revise"      # 대본이 나온 뒤 회원이 고칠 줄을 말함 — 어느 단계든 그 줄만(재료 그대로, ph_member_revise)
     if user.get("reclean") and (st.get("script") or {}).get("M"):
         tf = st.setdefault("text_fix", {})    # 대본·재료·목소리는 그대로, 박힌 글자 지우기부터 렌더만 다시(주인 = 여기 · f_render)
-        tf.update({"mode": "vmake", "key": None})
+        tf.update({"key": None})          # 방식(지우기·흐림)은 회원 설정 그대로 — 돈 드는 지우기로 강제하지 않는다
         st.get("tries", {}).pop("vmake_fail", None)
         st["phase"] = "render"
     if m and st.get("watch_last") and any(isinstance(v, dict) and v.get("error") for v in m.values()):
@@ -3372,7 +3372,7 @@ def f_of_got(st, m, rp, u):
         return {"review": [_rv("of_judge", ask, [_img(x) for x in o["sheets"]][:6], model="opus", need=("same",), meta={"mode": st.get("of_mode")})], "then": "of_pick"}
     prod = ", ".join([str(st["read"].get("brand_hint") or "")] + [str(w) for w in st["read"].get("product_words") or []][:3]).strip(", ")
     need = "최대 2개" if st.get("origins") else "같은 촬영분 원본을 못 찾아 이 후보가 원본이 된다 — 가장 좋은 것부터 최대 3개"   # 가장 좋은 건 원본 그대로(렌즈), 못 찾으면 같은 종류 해외 반응(사장님 10-26)
-    ask = PEER_PICK_FOREIGN.replace("{product}", prod).replace("{need}", need) +"\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows
+    ask = PEER_PICK_FOREIGN.replace("{product}", prod).replace("{need}", need) + (CLEAN_SOURCE_RULE if _back_material(st) else "") +"\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows
     return {"review": [_rv("of_peer", ask, [_img(x) for x in o["sheets"]][:4], model="opus", need=("picks",), meta={"mode": st.get("of_mode")})], "then": "of_pick"}
 
 
@@ -3425,6 +3425,8 @@ F_FIND_HARD = 60 * 60
 F_SAY_STEP = 5 * 60    # 회원 진행 줄 'N분째' 를 5분마다(사장님 10-26 "5분에 한 번씩 계속 안내")
 
 OF_MAYBE_MAX = 3
+CLEAN_SOURCE_RULE = """
+★납품본과 같이 재료는 글자가 박히지 않은 리뷰어·공식의 긴 영상을 먼저 고른다(납품 현장썰 = 유튜브 긴 영상 1~2개를 창 크기로 잘라 씀). 자막이 화면을 덮은 쇼츠·재편집은 뒤로 — 조회수보다 먼저 본다."""
 LENS_AT_MAX = 6
 
 

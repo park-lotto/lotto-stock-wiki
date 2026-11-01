@@ -40,11 +40,6 @@ IMG_EXT = (".jpg", ".jpeg", ".png", ".webp")
 CAP_EXTRA = ("key", "key_color", "object_src", "aside", "append", "sound", "small", "likes", "ago")   # likes·ago = 댓글카드 글 칸(card_plan)   # 대본 caps 덩어리 칸 → 배치(placement)가 읽는다
 
 
-def bgm_fade(B: dict) -> float:
-    """(판단 주인) 배경음악 끝 페이드 초 — 판 값이 없거나 짧으면 0.5초(끝이 뚝 끊기지 않게, 사장님 11-01)."""
-    return max(float(B.get("fade_out") or 0.0), 0.5)
-
-
 def _rgb(c):
     return tuple(int(c[i:i + 2], 16) for i in (1, 3, 5)) if isinstance(c, str) else tuple(c)
 
@@ -3170,7 +3165,7 @@ def audio(S: dict, M: dict, st: dict, T: dict, sent: list[dict], placed: dict, R
     ss = float((S.get("bgm") or {}).get("ss", 0.0))      # 곡 몇 초부터 쓰나(편마다 — 보컬 드롭 자리를 맞춘다, 가사 시각 lyric_plan 과 같은 값)
     lay = "stereo" if B.get("stereo") else "mono"     # 판 bgm.stereo — 노래가 주인공인 판(자막노래형)은 곡을 스테레오 그대로(10-27 사장님 '노래 음질 깨짐': 모노로 합쳐 뭉개졌다)
     bed_chain = (f"aresample={SR},aformat=channel_layouts={lay},atrim={ss:.3f}:{ss + end:.3f},asetpts=PTS-STARTPTS,volume={g}dB,"
-                 f"volume='{vol}':eval=frame,afade=t=out:st={end - bgm_fade(B):.3f}:d={bgm_fade(B)}:curve={B.get('fade_curve', 'tri')}")   # fade_curve = 판 bgm 칸(기본 tri = 옛 그대로) — 끝 0.1초 RMS < −60dB(체크리스트 ③, 10-29 ep14)
+                 f"volume='{vol}':eval=frame,afade=t=out:st={end - B.get('fade_out', 0.4):.3f}:d={B.get('fade_out', 0.4)}:curve={B.get('fade_curve', 'tri')}")   # fade_curve = 판 bgm 칸(기본 tri = 옛 그대로) — 끝 0.1초 RMS < −60dB(체크리스트 ③, 10-29 ep14)
     bed = R / "bgm_bed.wav"       # BGM 만(나레·원음·효과음 없이) — 덕킹 실측·품질 관문이 읽는다
     F32 = ["-c:a", "pcm_f32le"]      # 소수 wav — 곡을 올릴 때 16비트에서 0dB 넘는 곳이 잘리지 않게(10-27 bgm_bed 잘림 45곳). 최고점은 loud() 가 리미터로 누른다
     run(["ffmpeg", "-y", "-v", "error", "-stream_loop", "-1", "-i", bgm, "-filter_complex", f"[0:a]{bed_chain}[b]", "-map", "[b]", "-ar", SR, *F32, bed])
