@@ -58,6 +58,16 @@ def fetch(v, path):
     os.remove(tmp)
 
 
+def is_chroma(path):
+    """합성용 초록·파랑 배경 영상인가 — 앞쪽 한 장의 화면 비율로 잰다(검색어가 맞아도 장면으로 못 쓴다)"""
+    raw = subprocess.run(["ffmpeg", "-loglevel", "error", "-ss", "1", "-i", path, "-frames:v", "1", "-vf", "scale=64:36",
+                          "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True).stdout
+    px = [raw[i:i + 3] for i in range(0, len(raw) - 2, 3)]
+    if not px: return False
+    keyed = sum(1 for r, g, b in px if (g > 120 and g > 1.6 * max(r, b)) or (b > 120 and b > 1.6 * max(r, g)))
+    return keyed / len(px) > 0.5
+
+
 def main():
     spec = importlib.util.spec_from_file_location("shots", os.path.join(WORK, "shots.py"))
     sh = importlib.util.module_from_spec(spec); spec.loader.exec_module(sh)
@@ -70,14 +80,16 @@ def main():
             name = f"s{s['s'][0]:03d}.mp4"; path = os.path.join(OUT, name)
             if os.path.exists(path) and "--force" not in sys.argv: continue
             v = None
-            for find in (pixabay, commons):
+            for find in (pixabay, pixabay, pixabay, commons):  # 초록 화면이면 다음 후보로
                 try:
                     v = find(q)
                 except Exception as e:
-                    print(name, find.__name__, "실패", q, e, flush=True)
-                if v: break
+                    print(name, find.__name__, "실패", q, e, flush=True); v = None
+                if not v: continue
+                used.add(v["id"]); fetch(v, path)
+                if not is_chroma(path): break
+                print(name, "초록 화면이라 버림", v["id"], flush=True); os.remove(path); v = None
             if not v: miss.append((name, q)); print(name, "못 찾음:", q, flush=True); continue
-            used.add(v["id"]); fetch(v, path)
             cred.write(f"- {name} · {q} · {v['license']} · {v['author']} · {v['page']}\n"); cred.flush()
             print(name, "ok", v["id"], v["license"], v["width"], flush=True)
     print(f"못 찾은 샷 {len(miss)}개 — 검색어를 바꾸거나 AI 그림으로 대신한다" if miss else "전부 받음")
