@@ -240,6 +240,9 @@ def _inpock_acct(folder):
     return INPOCK_BY_FOLDER.get(folder) or INPOCK_BY_CHANNEL.get(_acct_no(folder), "")
 
 
+INPOCK_NONE = "없음"   # .txt 의 '인포크: 없음' = 쿠팡 상품 없이 올린다(프로필 링크 줄도 안 붙는다)
+
+
 def _split_inpock(cap):
     """.txt 글에서 '인포크:' 줄을 떼어 (Buffer 에 보낼 글, 인포크 블록 제목) 으로."""
     keep, block = [], ""
@@ -302,6 +305,8 @@ def _with_link_line(folder, cap, block):
 def _inpock_check(folder, block):
     """올리기 전 관문(사장님 10-26 "인포크 없으면 올리지 마라"): 그 계정 인포크 공개 페이지에 이 제목의 블록이
     공개·쿠팡 링크로 있어야 한다. 문제가 있으면 이유 문자열, 괜찮으면 None."""
+    if block == INPOCK_NONE:   # 사장님 11-01 "쿠팡 연결 없는 것도 그냥 올려" — '인포크: 없음' 명시만 통과, 줄이 없으면 막는다
+        return None
     if not block:
         return f".txt 에 '{INPOCK_LINE} [번호] 상품명' 줄이 없음(쇼핑링크를 먼저 만들고 그 제목을 적는다)"
     acct = _inpock_acct(folder)
@@ -475,7 +480,7 @@ def cmd_post(a):
             if bad:
                 print(f"[{n}] {v}: {bad} — 건너뜀")
                 continue
-            if not _block_no(block):
+            if block != INPOCK_NONE and not _block_no(block):
                 print(f"[{n}] {v}: 인포크 제목 '{block}' 에서 번호를 못 읽음 — 건너뜀(설명란 '프로필 링크 N번'을 못 쓴다)")
                 continue
             cap = _with_link_line(n, cap, block)
