@@ -69,12 +69,28 @@ code{font-family:Consolas,monospace;background:var(--inset);border:1px solid var
 video{width:100%;max-height:420px;background:#000;border-radius:10px;display:block;margin-top:8px}
 .empty{color:var(--sub);font-size:13px}
 @media (max-width:560px){.form{grid-template-columns:minmax(0,1fr)} h1{font-size:22px}}
+.q{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:40px 32px;max-width:560px;margin:8px auto 0;text-align:center}
+.q h2{font-size:28px;font-weight:700;letter-spacing:-.6px;line-height:1.2}
+.qsub{color:var(--sub);margin:8px 0 24px}
+.qbtn{width:100%;font-size:18px;padding:16px;border-radius:12px;transition:transform .15s ease-out}
+.qbtn:active{transform:scale(.97)}
+.qsteps{list-style:none;padding:0;margin:24px 0 0;text-align:left;display:grid;gap:12px}
+.qsteps li{display:flex;gap:12px;align-items:center;font-size:15px}
+.qsteps span{flex:none;width:26px;height:26px;border-radius:50%;background:var(--inset);border:1px solid var(--line);color:var(--accent);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+.qmsg{color:var(--sub);font-size:13px;margin-top:20px}
+.more{max-width:560px;margin:16px auto 0;color:var(--sub);font-size:13px}.more summary{cursor:pointer;text-align:center;padding:6px}
+.more .grid{grid-template-columns:minmax(0,1fr)}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>🤖 클로드형</h1>
-  <p class="lead">내 PC 의 Claude(데스크탑·코드)로 숏템 프리셋 영상을 만듭니다. 렌더는 전부 내 PC 에서 돌고, 여기서는 <b>프리셋 고르기 · 내 채널 옵션 저장 · 라이선스 · 설치팩</b>만 합니다.</p>
+  <h1>숏클메이커</h1>
+  <div class="row" id="mainTabs" style="margin:10px 0 14px">
+    <button class="btn pri" data-tab="start">시작하기</button>
+    <button class="btn" data-tab="studio">내 채널 설정</button>
+  </div>
+  <section id="tabStudio" style="display:none"><iframe id="studioFrame" title="내 채널 설정" style="width:100%;height:calc(100vh - 170px);min-height:640px;border:1px solid var(--line);border-radius:12px;background:var(--panel)"></iframe></section>
+  
   <nav>
     <a href="#preset">① 프리셋</a><a href="#option">② 내 채널 옵션</a><a href="#packs">팩 둘러보기</a>
     <a href="#license">③ 라이선스·기기</a><a href="#install">④ 설치</a><a href="#how">⑤ Claude 에서 쓰기</a>
@@ -134,24 +150,30 @@ video{width:100%;max-height:420px;background:#000;border-radius:10px;display:blo
     <h3>자막팩·자막 효과</h3><div class="grid" id="pkCap"></div>
   </section>
 
-  <section id="license">
-    <h2>③ 라이선스·기기 <small>키 1개 = 기기 2대 · 동시에 1편만</small></h2>
-    <div class="grid">
-      <div class="card"><div class="nm">라이선스 키</div><div id="licState" class="sub">불러오는 중…</div>
-        <div class="row" style="margin-top:10px"><button class="btn pri" id="licIssue">키 발급</button><button class="btn" id="licIssue2" style="display:none">둘째 PC 키 발급</button><span class="msg" id="licMsg"></span></div>
-        <div id="licKey"></div></div>
-      <div class="card"><div class="nm">등록 기기 <small id="devCount"></small></div><div class="list" id="devList"></div>
-        <div class="sub" style="margin-top:8px">3대째 기기는 막힙니다 — 여기서 한 대를 빼면 새 기기가 들어갑니다.</div></div>
-      <div class="card"><div class="nm">지금 작업 중</div><div id="leaseState" class="sub"></div>
-        <div class="row" style="margin-top:10px"><button class="btn sm warn" id="leaseFree">강제 해제</button><span class="msg" id="leaseMsg"></span></div>
-        <div class="sub" style="margin-top:6px">다른 기기에서 시작이 막히면 앞 작업이 끝나거나 3분 뒤 됩니다. 급하면 강제 해제 — 앞 기기는 그 단계에서 멈추고 나중에 이어집니다.</div></div>
+  <section id="quick">
+    <div class="q">
+      <h2>한 줄 붙여넣기로 설치</h2>
+      <p class="qsub">Claude 구독만 있으면 나머지는 알아서 설치됩니다.</p>
+      <button class="btn pri qbtn" id="startCopy">설치 명령 복사하기</button>
+      <ol class="qsteps">
+        <li><span>1</span><div>위 버튼을 누릅니다</div></li>
+        <li><span>2</span><div><b>윈도우 키</b>를 누르고 <b>powershell</b> 입력 후 <b>엔터</b></div></li>
+        <li><span>3</span><div>열린 창에서 <b>마우스 오른쪽 버튼</b>을 누르고 <b>엔터</b></div></li>
+      </ol>
+      <div class="qmsg" id="startMsg">내 회원 인증이 들어 있습니다. 72시간 동안 쓸 수 있고, 남에게 주지 마세요.</div>
     </div>
+    <details class="more"><summary>PC 관리 · 다른 설치 방법</summary>
+      <div class="grid">
+        <div class="card"><div class="nm">등록 PC <small id="devCount"></small></div><div class="list" id="devList"></div><div class="sub" id="swapNote" style="margin-top:8px"></div></div>
+        <div class="card"><div class="nm">지금 접속</div><div id="leaseState" class="sub"></div>
+          <div class="row" style="margin-top:10px"><button class="btn sm warn" id="leaseFree">강제 해제</button><span class="msg" id="leaseMsg"></span></div></div>
+      </div>
+      <div class="grid" id="instCards"></div>
+      <div class="row" style="margin-top:10px"><a class="btn sm" href="/api/claude/me/start.cmd" style="text-decoration:none">설치 파일로 받기</a><a class="btn sm" href="/api/claude/me/start.md" style="text-decoration:none">시작.md 받기</a></div>
+    </details>
   </section>
 
-  <section id="install">
-    <h2>④ 연결 파일 <small>작은 파일 하나만 받으면, 실행 도구(브라우저 엔진·ffmpeg·파이썬·노드)는 Claude 가 알아서 받아 깝니다 — 설치 프로그램·관리자 권한 없음</small></h2>
-    <div class="grid" id="instCards"></div>
-  </section>
+  <section id="license" style="display:none"><div id="licState"></div><button id="licIssue"></button><button id="licIssue2"></button><span id="licMsg"></span><div id="licKey"></div></section>
 
   <section id="how">
     <h2>⑤ Claude 에서 쓰기</h2>
@@ -160,7 +182,7 @@ video{width:100%;max-height:420px;background:#000;border-radius:10px;display:blo
         <ol style="padding-left:18px;margin:6px 0">
           <li>위 <b>Claude 데스크탑용</b> 파일(shortem.mcpb)을 두 번 누르기 → 뜨는 설치 화면에서 <b>라이선스 키</b> 붙여넣기</li>
           <li>채팅에 <code>숏템 설치해줘</code> → 다 받으면(약 1GB) Claude 를 껐다 켜기</li>
-          <li>채팅에 <code>숏템 준비 점검해줘</code></li>
+          <li>채팅에 <code>숏클 점검 준비해줘</code></li>
           <li><code>내 채널(프로필 이름)로 이 영상 만들어줘 &lt;유튜브 주소&gt;</code></li>
         </ol></div>
       <div class="card"><div class="nm">Claude Code</div>
@@ -341,14 +363,16 @@ function renderLicense(){
   $('licIssue').textContent=L.has_key?'새 키 발급':'키 발급';
   $('licIssue2').style.display=(L.has_key&&L.slots>1)?'':'none';
   $('devCount').textContent=H.devices.length+' / '+H.devices_max;
-  $('devList').innerHTML=H.devices.length?H.devices.map(d=>'<div class="li"><span><b>'+esc(d.name||'이름 없음')+'</b> <small>'+d.slot+'번 칸 · 마지막 '+esc(fmtDate(d.last_seen))+'</small></span><button class="btn sm warn" data-dev="'+esc(d.id)+'">빼기</button></div>').join(''):'<div class="empty">등록된 기기 없음 — 설치팩에서 키를 넣으면 등록됩니다</div>';
+  $('devList').innerHTML=H.devices.length?H.devices.map(d=>'<div class="li"><span><b>'+esc(d.name||'이름 없음')+'</b> <small>'+d.slot+'번 칸 · 마지막 '+esc(fmtDate(d.last_seen))+'</small></span>'+(H.swap&&H.swap.status==='new'?'<button class="btn sm warn" data-dev="'+esc(d.id)+'">이 PC 빼기 요청</button>':'')+'</div>').join(''):'<div class="empty">등록된 기기 없음 — 설치팩에서 키를 넣으면 등록됩니다</div>';
   $('devList').querySelectorAll('[data-dev]').forEach(b=>b.onclick=async()=>{
-    if(!confirm('이 기기를 뺄까요? 그 기기에서는 다시 등록해야 쓸 수 있습니다.')) return;
-    try{ await api('/api/claude/me/device/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device_id:b.dataset.dev})}); await load(); }
+    if(!confirm('이 PC 를 빼고 새 PC 로 바꾸도록 요청할까요? 관리자가 승인하면 바뀝니다.')) return;
+    try{ await api('/api/claude/me/device/swap',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device_id:b.dataset.dev})}); await load(); }
     catch(e){ showErr(e.message); }
   });
-  $('leaseState').textContent=H.lease?('작업 중: '+(H.lease.device||'기기')+(H.lease.step?' · '+H.lease.step:'')):'지금 작업 중인 기기 없음';
-  $('leaseFree').disabled=!H.lease;
+  $('swapNote').textContent=H.swap?(H.swap.status==='asked'?'새 PC('+(H.swap.name||'이름 없음')+') 교체를 요청했습니다. 관리자가 승인하면 바로 바뀝니다.':'새 PC('+(H.swap.name||'이름 없음')+')가 기다리고 있습니다. 위에서 뺄 PC 를 골라 주세요.'):'등록한 2대는 자유롭게 오가며 쓸 수 있습니다. PC 를 바꾸려면 새 PC 에 설치하세요 — 여기서 교체를 요청하고 관리자가 승인하면 바뀝니다.';
+  if(H.account_change) $('swapNote').textContent+=' Claude 계정 변경 승인을 기다리는 중입니다.';
+  $('leaseState').textContent=H.lease?('작업 중: '+(H.lease.device||'기기')+(H.lease.step?' · '+H.lease.step:'')):(H.session?'접속 중: '+(H.session.device||'기기'):'지금 접속한 PC 없음');
+  $('leaseFree').disabled=!H.lease&&!H.session;
 }
 
 function renderInstall(){
@@ -363,6 +387,23 @@ function renderInstall(){
         +'<a class="btn pri" style="display:inline-block;margin-top:8px;text-decoration:none" href="'+esc(i.download)+'">내려받기</a>')
        :'<div class="empty" style="margin-top:6px">준비 중</div>')+'</div>'; }).join('');
 }
+
+$('startCopy').onclick=async()=>{
+  try{ const r=await api('/api/claude/me/start_line'); await navigator.clipboard.writeText(r.line); $('startMsg').textContent='복사했습니다. 이제 파워쉘을 열고 마우스 오른쪽 버튼을 누른 뒤 엔터를 치세요.'; }
+  catch(e){ $('startMsg').textContent=e.message||'복사하지 못했습니다. 다시 눌러 주세요'; }
+};
+
+const TAB_SEC={start:['quick']};   // 프리셋·채널 옵션 옛 칸은 안 보인다(사장님 11-01 '실제 안 쓴다'). 설정은 스튜디오 한 곳
+function showTab(t){
+  document.querySelectorAll('#mainTabs .btn').forEach(b=>b.classList.toggle('pri',b.dataset.tab===t));
+  ['preset','option','packs','quick','how'].forEach(id=>{ $(id).style.display=(TAB_SEC[t]||[]).includes(id)?'':'none'; });
+  $('tabStudio').style.display=t==='studio'?'':'none';
+  const nav=document.querySelector('nav'), lead=document.querySelector('.lead');
+  if(nav) nav.style.display='none'; if(lead) lead.style.display=t==='studio'?'none':'';
+  if(t==='studio'&&!$('studioFrame').src) $('studioFrame').src='/claude/studio/';
+}
+document.querySelectorAll('#mainTabs .btn').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+showTab('start');
 
 async function load(selId){
   try{ H=await api('/api/claude/me/home'); }

@@ -419,6 +419,13 @@ def _sfx_n(l: dict) -> int:
     return 1 if _has(v) else 0
 
 
+def sfx_rate_p90(docs: list[dict]) -> tuple[float | None, list[float]]:
+    """(판단 주인: 효과음 밀도 상한) 벤치 편별 발/초의 p90 — 배치(placement.sfx_step)가 지키고 검사(quality_gate.sfx_excess)가 잰다. 줄판독 없으면 None."""
+    import numpy as np
+    dens = [sum(_sfx_n(l) for l in d.get("lines") or []) / float(d["dur"]) for d in docs if d.get("dur")]
+    return (float(np.percentile(dens, 90)), dens) if dens else (None, [])
+
+
 def frame0_kind(d: dict) -> str | None:
     """줄판독 frame0(0초 첫 화면) → card(글 얹은 표지) / scene(그냥 장면). 칸 없으면 None(미측정)."""
     f0 = d.get("frame0")

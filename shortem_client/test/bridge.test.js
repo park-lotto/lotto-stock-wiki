@@ -9,6 +9,7 @@ freshDirs('bridge');
 const { pending, requestContent, answer } = await import('../server/engine_bridge.js');
 const { shapeSession } = await import('../server/make_flow.js');
 const { homeDir } = await import('../server/paths.js');
+const { dataDir } = await import('../server/engine_bridge.js');
 
 function fakeRequest(id, parts) {
   const d = path.join(homeDir(), 'ai', 'r1test', id);
@@ -60,4 +61,25 @@ test('세션 → need: 후보·사인·완성', async () => {
   assert.ok(done.video.endsWith('코팩_피지_abcdef012345.mp4') && fs.existsSync(done.video));   // 작업 폴더 완성본/ 에 복사
   assert.ok(shapeSession({ sid: 'abcdef012345', state: 'final_review', topic_id: 8 }).fail);      // 파일 없으면 실패로
   assert.ok(shapeSession({ error: '거절', code: 403 }).fail);
+});
+
+test('판정 요청은 지금 편 것만 — 이전 편·취소된 편은 내주지 않고 답도 거절(11-01 고객 창)', () => {
+  const root = path.join(homeDir(), 'ai'); fs.rmSync(root, { recursive: true, force: true });
+  const fl = path.join(dataDir(), 'flow');
+  const mk = (sid, n, extra = {}) => {
+    const id = `20261101-20000${n}-of-abcde${n}`; const d = path.join(root, 'flow_' + sid, id);
+    fs.mkdirSync(d, { recursive: true });
+    fs.writeFileSync(path.join(d, 'request.json'), JSON.stringify({ id, tag: 'of', tier: 'opus', prompt: 'x', parts: [], made_at: n }));
+    fs.mkdirSync(path.join(fl, sid), { recursive: true });
+    const p = path.join(fl, sid, 'flow.json');
+    fs.writeFileSync(p, JSON.stringify({ sid, status: 'review', asks: [{ dir: d }], ...extra }));
+    fs.utimesSync(p, n * 1000, n * 1000);
+    return id;
+  };
+  const old = mk('aaaaaaaaaaaa', 1), now = mk('bbbbbbbbbbbb', 2);
+  assert.deepEqual(pending().map(p => p.id), [now]);
+  assert.equal(answer(old, { a: 1 }).ok, false);
+  assert.equal(answer(now, { a: 1 }).ok, true);
+  const c = mk('cccccccccccc', 3, { cancelled: true });
+  assert.ok(!pending().some(p => p.id === c));
 });

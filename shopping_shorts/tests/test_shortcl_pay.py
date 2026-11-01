@@ -35,15 +35,15 @@ def _order(client, product, cookies=None):
 def test_금액표가_사장님_결정과_같다(client):
     got = {p["code"]: p["amount"] for p in appmod._pay_products()}
     assert got == {"shortem": 880000, "shortcl_basic": 990000, "shortcl_advanced": 1990000,
-                   "shortcl_premium": 2990000, "shortcl_basic_upgrade": 110000,
-                   "shortcl_advanced_upgrade": 1110000, "shortcl_premium_upgrade": 2110000}
+                   "shortcl_premium": 2990000,
+                   "shortcl_advanced_upgrade": 1000000, "shortcl_premium_upgrade": 2000000}
 
 
 def test_차액은_한국시각_11월_30일까지만(tmp_path, monkeypatch):
     monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
     Store(str(tmp_path / "t.db"))
-    assert appmod._pay_product("shortcl_basic_upgrade", NOV)
-    assert appmod._pay_product("shortcl_basic_upgrade", DEC) is None
+    assert appmod._pay_product("shortcl_advanced_upgrade", NOV)
+    assert appmod._pay_product("shortcl_advanced_upgrade", DEC) is None
     assert appmod._pay_product("shortcl_basic", DEC)
 
 
@@ -66,20 +66,20 @@ def test_없는_상품은_거절(client):
 
 
 def test_차액은_비로그인_거절(client):
-    assert _order(client, "shortcl_basic_upgrade").status_code == 401
-    assert client.get("/pay/toss?product=shortcl_basic_upgrade", follow_redirects=False).status_code == 401
+    assert _order(client, "shortcl_advanced_upgrade").status_code == 401
+    assert client.get("/pay/toss?product=shortcl_advanced_upgrade", follow_redirects=False).status_code == 401
 
 
 def test_차액은_무료회원_거절_프로회원_통과(client, monkeypatch):
     monkeypatch.setattr(appmod, "_verify_session", lambda c: 7)
     store = Store(appmod.DB_PATH)
     monkeypatch.setattr(Store, "get_customer", lambda self, cid: {"plan": "free"})
-    assert _order(client, "shortcl_basic_upgrade").status_code == 403
+    assert _order(client, "shortcl_advanced_upgrade").status_code == 403
     monkeypatch.setattr(Store, "get_customer", lambda self, cid: {"plan": "pro"})
-    r = _order(client, "shortcl_basic_upgrade")
-    assert r.status_code == 200 and r.json()["amount"] == 110000
+    r = _order(client, "shortcl_advanced_upgrade")
+    assert r.status_code == 200 and r.json()["amount"] == 1000000
     with store._conn() as c:
-        assert c.execute("SELECT product, customer_id FROM toss_payments").fetchone() == ("shortcl_basic_upgrade", "7")
+        assert c.execute("SELECT product, customer_id FROM toss_payments").fetchone() == ("shortcl_advanced_upgrade", "7")
 
 
 def test_입금_신고에_상품이_남는다(client):
@@ -92,7 +92,7 @@ def test_화면에_숏클_금액이_보인다(client):
     Store(appmod.DB_PATH).set_setting("bank_account", "123")
     pay = client.get("/pay").text
     pricing = client.get("/pricing").text
-    for amount in ("990,000원", "1,990,000원", "2,990,000원", "110,000원", "1,110,000원", "2,110,000원"):
+    for amount in ("990,000원", "1,990,000원", "2,990,000원", "1,000,000원", "2,000,000원"):
         assert amount in pay, amount
     assert "1,990,000" in pricing and "__SHORTCL_PLANS__" not in pricing
     assert "__PRODUCT_OPTIONS__" not in pay
@@ -192,7 +192,7 @@ def test_마이페이지에_숏클_진입(client):
 
 
 def test_결제_내역은_가입_없이도_숏템_숏클로_갈린다(client):
-    client.post("/api/deposit_claim", json={"name": "입금자", "depositor": "입금", "contact": "010-1234-5678", "product": "shortcl_basic_upgrade"})
+    client.post("/api/deposit_claim", json={"name": "입금자", "depositor": "입금", "contact": "010-1234-5678", "product": "shortcl_advanced_upgrade"})
     client.post("/api/deposit_claim", json={"name": "옛신고", "depositor": "입금"})
     r = client.post("/api/pay/toss/order", json={"name": "카드", "phone": "010", "email": "buyer@b.co", "product": "shortcl_premium"}).json()
     with appmod._toss_db()._conn() as c:
@@ -201,11 +201,11 @@ def test_결제_내역은_가입_없이도_숏템_숏클로_갈린다(client):
     by = {i["payer"]: i for i in items}
     assert by["카드"]["group"] == "숏클" and by["카드"]["plan"] == "프리미엄반" and by["카드"]["amount"] == 2990000
     assert by["카드"]["customer_id"] is None
-    assert by["입금자"]["upgrade"] is True and by["입금자"]["amount"] == 110000 and by["입금자"]["phone"] == "010-1234-5678"
+    assert by["입금자"]["upgrade"] is True and by["입금자"]["amount"] == 1000000 and by["입금자"]["phone"] == "010-1234-5678"
     assert by["옛신고"]["group"] == "숏템" and by["옛신고"]["amount"] == 880000
     badges = appmod._shortcl_badges(items, [{"id": 5, "email": "BUYER@b.co", "phone": ""}, {"id": 6, "email": "x@b.co", "phone": "01012345678"},
                                             {"id": 7, "email": "n@b.co", "phone": "0100000000"}])
-    assert badges == {5: "프리미엄반", 6: "기본반"}
+    assert badges == {5: {"plan": "프리미엄반", "upgrade": False}, 6: {"plan": "고급반", "upgrade": True}}
 
 
 def test_결제_내역은_관리자만(client):
@@ -251,8 +251,43 @@ def test_무료회원도_숏클_정가는_살_수_있다(client, monkeypatch):
 
 
 def test_비로그인_차액_화면이_다음_길을_알려준다(client):
-    assert "숏클메이커 보기" in client.get("/pay/toss?product=shortcl_basic_upgrade").text
+    assert "숏클메이커 보기" in client.get("/pay/toss?product=shortcl_advanced_upgrade").text
 
 
 def test_결과물_영상은_칸에_맞춘다():
     assert ".sc-shot video{width:100%;height:100%" in appmod._LANDING_HTML
+
+
+def test_프로그램_구분은_결제로_자동_저장값이_우선():
+    v = appmod._shortcl_view({"plan": "pro"}, {"plan": "고급반", "upgrade": True}, None)
+    assert (v["shortem"], v["shortcl"], v["plan"], v["move"], v["tutor"]) == (True, True, "고급반", "paid", "")
+    v = appmod._shortcl_view({"plan": "free"}, None, None)
+    assert (v["shortem"], v["shortcl"], v["move"]) == (False, False, "")
+    v = appmod._shortcl_view({"plan": "pro"}, None, {"shortem": 0, "shortcl": 1, "plan": "기본반", "move": "free", "tutor": "태도"})
+    assert (v["shortem"], v["shortcl"], v["plan"], v["move"], v["tutor"]) == (False, True, "기본반", "free", "태도")
+
+
+def test_프로그램_저장은_다시_읽어도_남고_옛_DB도_열린다(client, monkeypatch):
+    st = Store(appmod.DB_PATH)
+    cid = st.create_customer("회원", "pw-1234", email="m@b.co", approved=True)
+    cid = cid if isinstance(cid, int) else cid["id"]
+    monkeypatch.setattr(appmod, "_require_admin", lambda r: None)
+    r = client.post("/api/admin/program_member", json={"customer_id": cid, "shortem": False, "shortcl": True,
+                                                       "plan": "기본반", "move": "free", "tutor": "태도"})
+    assert r.status_code == 200
+    saved = Store(appmod.DB_PATH).program_members()[cid]
+    assert (saved["shortem"], saved["shortcl"], saved["move"], saved["tutor"]) == (None, 1, "free", "태도")
+    assert client.post("/api/admin/program_member", json={"customer_id": cid, "move": "x"}).status_code == 422
+    assert client.post("/api/admin/program_member", json={"customer_id": cid, "plan": "없는반"}).status_code == 422
+
+
+def test_예전_주문도_이메일로_계정을_찾는다(client, monkeypatch):
+    st = Store(appmod.DB_PATH)
+    cid = st.create_customer("회원", "pw-1234", email="old@b.co", approved=True)
+    cid = cid if isinstance(cid, int) else cid["id"]
+    with appmod._toss_db()._conn() as c:
+        c.execute("INSERT INTO toss_payments(order_id,amount,order_name,status,approved_at,payer_name,payer_email) VALUES('o',1,'숏템메이커 2기 이용권','DONE','2026-10-01T10:00:00+09:00','회원','OLD@b.co')")
+        c.execute("INSERT INTO toss_payments(order_id,amount,order_name,status,approved_at,payer_name,payer_email) VALUES('n',1,'숏클메이커 기본반','DONE','2026-10-02T10:00:00+09:00','손님','none@b.co')")
+    monkeypatch.setattr(appmod, "_require_admin", lambda r: None)
+    by = {i["payer"]: i for i in client.get("/api/admin/pay_ledger").json()["items"]}
+    assert by["회원"]["customer_id"] == cid and by["손님"]["customer_id"] is None

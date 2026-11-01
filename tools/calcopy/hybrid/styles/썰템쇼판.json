@@ -283,7 +283,28 @@
     },
     "captions": "hide",
     "body_text": "lines",
-    "why": "훅 카드(0~2초, manifest.roles[0] — 첫 컷 1.83~2.2초 8편) = 첫 나레 문장 → 본문 게시글 틀 · 틀 = frame.json hook(NBdm, 8편 중앙: 바탕 97·머리띠 자리 #565D50·큰 제목 2줄 GmarketSans 113.6 흰/연두 #84FD46 외곽 3+그림자 6·흰 띠 y533~640 Pretendard-SemiBold 59.6 같은 문장) · 제목 가운데 208/334→198/324(NBdm 0.5초 잉크 y0 +10 보정)"
+    "why": "훅 카드(0~2초, manifest.roles[0] — 첫 컷 1.83~2.2초 8편) = 첫 나레 문장 → 본문 게시글 틀 · 틀 = frame.json hook(NBdm, 8편 중앙: 바탕 97·머리띠 자리 #565D50·큰 제목 2줄 GmarketSans 113.6 흰/연두 #84FD46 외곽 3+그림자 6·흰 띠 y533~640 Pretendard-SemiBold 59.6 같은 문장) · 제목 가운데 208/334→198/324(NBdm 0.5초 잉크 y0 +10 보정)",
+    "long": {
+     "frame": {
+      "post": {
+       "body_box": {
+        "box": [
+         0,
+         480,
+         1080,
+         650
+        ],
+        "color": "#FDFDFD",
+        "fade": [
+         0,
+         0
+        ]
+       },
+       "rules": []
+      }
+     },
+     "why": "첫 줄이 칸을 넘을 때만 자막형 — frame_segments/hook_text_fits"
+    }
    }
   ]
  },
@@ -304,7 +325,7 @@
   "stack": {
    "lines": 2,
    "_why_lines": "10-29 3→2: 줄판독 벤치 표준 틀 4편(BlA9·NBdm·bfKk·jECu) 채널 자막 y 행 = 500(첫 줄)·560(덧붙음 2번째 줄)뿐 — 3번째 줄 0/84(pY2z 는 다른 틀 60초 편만 3줄). 3 은 옛 preset_make 렌더러 2줄 넘침 우회(manifest.differences)였고 회원 시험 3차에서 3~4줄로 쌓여 그림을 덮었다(측정 channel/humorshowshow/줄판독 layer=채널 y 분포)",
-   "break": "full",
+   "break": "line",
    "y": 526,
    "pitch": 76,
    "why": "자막 칸 = frame.json caption 3줄(y488·줄 76) 덧붙음 누적(manifest.differences '2줄째 덧붙음') → lines 3 · frame.json caption 3줄 y488·줄 76 → 첫 줄 가운데 526 — 새 팩 humorshowshow(1a6bb76d7) 렌더 피치 76(팩요청.md 해결)"

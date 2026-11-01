@@ -22,7 +22,7 @@ sys.path.insert(0, str(ROOT))
 from tools.calcopy.hybrid import flow as F  # noqa: E402
 from tools.calcopy.hybrid import rules as RU  # noqa: E402
 
-E_OK = {f"E{k}": {"v": "○", "memo": "ok"} for k in range(1, 10)}
+E_OK = {**{f"E{k}": {"v": "○", "memo": "ok"} for k in range(1, 10)}, "title_seen": "", "scenes": [{"seen": "화면"}]}     # 본 증거 칸(flow.EYE_PROOF_NEED)
 
 
 def _measure(d: dict, ctx: dict) -> dict:
@@ -249,7 +249,8 @@ def test_eye_triangle_is_not_pass(monkeypatch):
     eye = {**E_OK, "E4": {"v": "△", "memo": "애매"}}          # 렌더 뒤 사람 눈 = E1·E4·E6(사장님 10-26 — E3 은 계획 검수에서 한 번)
     st = F.start("https://youtu.be/BENCH1", "키치잇판", "sid")
     tr, res, st2 = walk(F, st, {"eye": eye})
-    assert res["status"] == "stop" and "E4" in st2["stopped"]["detail"] and "E4" not in res["why"]
+    # 자동 관문 통과 + 눈 지적만 남음 = 고치기 한도 뒤 멈추지 않고 완성, 지적은 회원에게 알린다(사장님 10-31 "멈추지 말고 해결해 나가게")
+    assert res["status"] == "done" and any("E4" in x for x in st2["look_left"]) and st2["look"]["ok"] is False
 
 
 def test_runner_check_uses_quality_gate_and_force_fail(tmp_path, monkeypatch):
@@ -380,8 +381,8 @@ def test_clean_used_sends_only_spans_and_splices(tmp_path, monkeypatch):
     monkeypatch.delenv("SHORTEM_NO_PAID", raising=False)
     t0 = "0000"
     r = VC.clean_used(src, {"a.mp4": [[2.0, 4.0], [10.0, 11.5]]})
-    assert r["calls"] == 2 and r["done"] == {"a.mp4": [[2.0, 4.0], [10.0, 11.5]]}
-    assert [round(s, 1) for _, s in calls] == [2.0, 1.5]                # VMake 로 간 것 = 구간 조각뿐(원본 20초 아님)
+    assert r["calls"] == 1 and r["done"] == {"a.mp4": [[2.0, 4.0], [10.0, 11.5]]}
+    assert [round(s, 1) for _, s in calls] == [3.5]                     # VMake 로 간 것 = 구간만 이어 붙인 1회(원본 20초 아님)
     assert abs(VC._dur(src / "a.mp4") - 20.0) < 0.2 and (src / "a_orig.mp4").exists()   # 같은 이름·같은 길이로 끼움, 원본 보존
     assert not list(src.glob("*__vm_*"))                                # 조각은 치운다
     assert (src / "_cutbounds_a_0_240_v2.json").stat().st_mtime >= (src / "a.mp4").stat().st_mtime   # 경계 캐시 그대로 씀

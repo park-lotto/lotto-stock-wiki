@@ -20,12 +20,14 @@
 
     PYTHONUTF8=1 py tools/calcopy/vmake_clean.py fetch <폴더> <이름 …>          # 서버에 끝난 *_clean 만 받아 끼우기(40분 제한으로 끊겼을 때)
     PYTHONUTF8=1 py tools/calcopy/vmake_clean.py log <폴더>                     # 장부 보기
+    PYTHONUTF8=1 py tools/calcopy/vmake_clean.py compare <지운 원본.mp4> <결과 폴더> <a-b> [<a-b> …] [--tier basic] [--dry]   # 같은 구간을 다른 등급으로 지워 원본·지금 결과와 나란히 그림(돈 든다, --dry = 호출 없이 그림 틀만)
 """
 from __future__ import annotations
 
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -41,6 +43,7 @@ PAD = 0.2                  # 쓰는 구간 앞뒤 여유(초) — 30fps 반올�
 JOIN_GAP = 1.0             # 같은 파일 이웃 구간 사이가 이보다 짧으면 한 조각으로(호출 수를 줄이고 돈은 사이 초만큼만 더)
 MIN_PIECE = 1.0            # 조각 하한(초) — 아주 짧은 업로드 실패를 피함(VMake 짧은 영상 한계는 확인 안 함, 하한으로 더 드는 돈 1초 미만)
 PIECE_TAG = "__vm_"        # 조각 파일 이름 <stem>__vm_<a>_<b>.mp4 — 장부에서 원본 이름을 되찾는 표식
+TIER = "pro"               # 지우기 등급 한 곳 — pro(4크레딧/초, 서버 로그 처리 중앙 256초) · basic(2크레딧/초, 중앙 38초). 품질 비교 = `compare` 명령
 
 
 def paid_off() -> bool:
@@ -315,6 +318,94 @@ def splice(f: Path, pieces: list) -> Path:
     return f
 
 
+def _frames(f: Path) -> int:
+    """영상 프레임 수(실제로 세어 본 값)."""
+    out = subprocess.run(["ffprobe", "-v", "error", "-count_packets", "-select_streams", "v:0", "-show_entries", "stream=nb_read_packets",
+                          "-of", "csv=p=0", str(f)], capture_output=True, text=True, stdin=subprocess.DEVNULL)
+    return int(out.stdout.strip().split(",")[0])
+
+
+def _rate(f: Path) -> str:
+    return subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=r_frame_rate", "-of", "csv=p=0", str(f)],
+                          capture_output=True, text=True, stdin=subprocess.DEVNULL).stdout.strip()
+
+
+def _ledger_pieces(j: Path, fs: list) -> None:
+    """합본 호출 줄을 조각별 줄로 바꾼다 — 보낸 초 검사(sent_from_ledger)는 원본 이름·구간으로 센다."""
+    p = j.parent / LEDGER
+    rows = json.loads(p.read_text(encoding="utf-8")) if p.exists() else []
+    out = []
+    for r in rows:
+        if r.get("file") != j.name:
+            out.append(r)
+            continue
+        out.append({**r, "mode": "joined_call", "pieces": len(fs)})
+        out += [{**r, "file": f.name, "calls": 0, "joined": j.name, **_sent(f)} for f in fs]
+    p.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+def send_joined(files: list, send, log=print) -> dict:
+    """(주인: VMake 호출 수) 조각을 크기가 같은 것끼리 이어 붙여 1회로 보내고, 지운 결과를 프레임 단위로 다시 조각 자리에 돌려준다.
+    숏템메이커 _clean_joined 와 같은 방식(11-01 실측: 호출마다 대기가 복불복이라 13회 = 느린 1건에 걸릴 확률 13배).
+    프레임 수가 안 맞으면 그 묶음은 실패로 돌려준다(어긋난 그림을 끼우지 않는다). send(파일 목록) = server_clean·member_clean."""
+    import hashlib
+    groups: dict = {}
+    for f in map(Path, files):
+        groups.setdefault((*_wh(f), _rate(f)), []).append(f)
+    out = {"cleaned": [], "fail": {}, "calls": 0}
+    jobs = {}
+    for size, fs in groups.items():
+        if len(fs) == 1:
+            jobs[fs[0]] = None
+            continue
+        tag = hashlib.sha1("|".join(f"{f.name}:{f.stat().st_size}" for f in fs).encode()).hexdigest()[:10]
+        j = fs[0].with_name(f"joined_{tag}.mp4")
+        args = ["ffmpeg", "-v", "error", "-y"]
+        for f in fs:
+            args += ["-i", str(f)]
+        chain = "".join(f"[{i}:v]setsar=1,setpts=PTS-STARTPTS[v{i}];" for i in range(len(fs))) + "".join(f"[v{i}]" for i in range(len(fs))) + f"concat=n={len(fs)}:v=1:a=0[o]"
+        subprocess.run(args + ["-filter_complex", chain, "-map", "[o]", "-an", "-c:v", "libx264", "-crf", "14", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(j)],
+                       check=True, stdin=subprocess.DEVNULL)
+        jobs[j] = fs
+    log(f"[vmake] 조각 {len(files)}개 → 호출 {len(jobs)}회로 묶음")
+    r = send(list(jobs))
+    out["calls"] = r.get("calls", 0)
+    out["fail"].update(r.get("fail") or {})
+    for j, fs in jobs.items():
+        if j.name not in r.get("cleaned", []):
+            if fs:
+                for f in fs:
+                    out["fail"].setdefault(f.name, str((r.get("fail") or {}).get(j.name) or "묶음 실패"))
+            continue
+        if fs is None:
+            out["cleaned"].append(j.name)
+            continue
+        counts = [_frames(f) for f in fs]      # 같은 fps 끼리만 묶으니 프레임 수 그대로 이어진다
+        have = _frames(j)
+        if have != sum(counts):
+            for f in fs:
+                out["fail"][f.name] = f"합본 프레임 불일치 {have} != {sum(counts)}"
+            log(f"[vmake] 합본 프레임 불일치 {have} != {sum(counts)} — 끼우지 않는다")
+            continue
+        at = 0
+        for f, n in zip(fs, counts):
+            tmp = f.with_name(f.stem + "_vclean" + f.suffix)
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(j), "-vf", f"trim=start_frame={at}:end_frame={at + n},setpts=PTS-STARTPTS", "-an",
+                            "-c:v", "libx264", "-crf", "14", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(tmp)], check=True, stdin=subprocess.DEVNULL)
+            swap_in(f, tmp)
+            out["cleaned"].append(f.name)
+            at += n
+    for j, fs in jobs.items():
+        if fs:
+            _ledger_pieces(j, fs)
+            for x in (j, j.with_name(j.stem + "_orig" + j.suffix)):
+                try:
+                    x.unlink()
+                except OSError:
+                    pass
+    return out
+
+
 def clean_used(src_dir: Path, spans: dict, mode: str = "vmake", log=print) -> dict:
     """쓰는 구간만 지우기(주인) — 구간마다 잘라 VMake(서버 키/회원 키 = ready 판정) → 지운 조각을 원본에 덮어 끼움.
     반환 {mode, via, done:{이름:[[a,b]…]}(지운 구간), cleaned:[이름], calls, sec(보낸 초), why, (fix)}. 구간이 없으면 호출 0."""
@@ -329,7 +420,8 @@ def clean_used(src_dir: Path, spans: dict, mode: str = "vmake", log=print) -> di
         return {**rd, "done": {}, "cleaned": [], "calls": 0, "sec": 0.0}
     pieces = {n: [(cut_piece(src_dir / n, a, b), a, b) for a, b in iv] for n, iv in spans.items()}
     files = [p for ps in pieces.values() for p, _, _ in ps]
-    r = server_clean(files, log=log) if rd["via"] == "server" else member_clean(files, member_key(), log=log)
+    send = (lambda fs: server_clean(fs, log=log)) if rd["via"] == "server" else (lambda fs: member_clean(fs, member_key(), log=log))
+    r = send_joined(files, send, log=log)
     done, cleaned = {}, []
     for n, ps in pieces.items():
         ok = [(p, a, b) for p, a, b in ps if p.name in r["cleaned"]]
@@ -401,7 +493,7 @@ def swap_in(orig: Path, cleaned_video: Path) -> Path:
     return orig
 
 
-def member_clean(files: list, api_key: str, log=print, tier: str = "pro") -> dict:
+def member_clean(files: list, api_key: str, log=print, tier: str = TIER) -> dict:
     """회원 PC — 회원 키로 이 PC 에서 바로. 반환 {cleaned:[이름], calls:n, fail:{이름: 이유}}. 돈이 든다(호출부가 키·동의를 확인한 뒤에만)."""
     if paid_off():
         raise PermissionError("SHORTEM_NO_PAID=1 — VMake 호출 막음")
@@ -437,8 +529,9 @@ def member_clean(files: list, api_key: str, log=print, tier: str = "pro") -> dic
 SERVER_PAR = 4      # 서버 VMake 동시 조각 수(조각마다 다른 ssh·다른 파일)
 
 
-def server_clean(files: list, log=print, timeout: int = SERVER_TIMEOUT) -> dict:
-    """우리 PC — 서버의 사장님 키로 Pro(scratchpad vmake.py 이식). 한 번에 여러 개 보내면 40분 제한에 걸리니 파일마다 따로 부른다."""
+def server_clean(files: list, log=print, timeout: int = SERVER_TIMEOUT, tier: str = TIER) -> dict:
+    """우리 PC — 서버의 사장님 키로 지운다(등급 = tier, scratchpad vmake.py 이식). 한 번에 여러 개 보내면 40분 제한에 걸리니 파일마다 따로 부른다.
+    resume_key = 끊긴 뒤 같은 조각을 다시 보낼 때 새 과금 없이 이어받는 이름표(member_clean 과 같은 꼴)."""
     if paid_off():
         raise PermissionError("SHORTEM_NO_PAID=1 — VMake 호출 막음")
     from tools.calcopy.hybrid import server_ai
@@ -447,10 +540,9 @@ import json, sys
 from shopping_shorts.config import DB_PATH
 from shopping_shorts.store import Store
 from shopping_shorts import mix_pipeline as mp
-from shopping_shorts.vmake_client import TIER_PRO
 a=json.loads(sys.stdin.read()); keys=mp._vmake_keys(Store(DB_PATH),0); out={}
 for n in a['names']:
-    try: mp._vmake_clean(f'/tmp/calcopy_vmake/{n}.mp4', keys, f'/tmp/calcopy_vmake/{n}_clean.mp4', tier=TIER_PRO); out[n]='ok'
+    try: mp._vmake_clean(f'/tmp/calcopy_vmake/{n}.mp4', keys, f'/tmp/calcopy_vmake/{n}_clean.mp4', tier=a['tier'], resume_key=a['resume']); out[n]='ok'
     except Exception as e: out[n]=repr(e)[:300]
 print('@@JSON@@'+json.dumps(out))
 '''
@@ -468,7 +560,7 @@ print('@@JSON@@'+json.dumps(out))
         with lock:
             out["calls"] += 1
         try:
-            res = server_ai._ssh_py(code, {"names": [n]}, timeout=timeout)
+            res = server_ai._ssh_py(code, {"names": [n], "tier": tier, "resume": f"calcopy:{f.name}:{f.stat().st_size}"}, timeout=timeout)
         except Exception as e:  # noqa: BLE001 — 시간 초과면 서버에서는 끝났을 수 있다 → fetch 로 받는다
             res = {n: f"{type(e).__name__}: {str(e)[:200]}"}
         if res.get(n) == "ok":
@@ -503,6 +595,46 @@ def fetch(folder: Path, names: list, log=print) -> list:
     return got
 
 
+def compare(src: Path, out: Path, spans: list, tier: str = "basic", dry: bool = False) -> dict:
+    """같은 구간을 tier 로 새로 지워 [원본 | 지금 결과 | tier 결과] 를 구간마다 3칸씩 나란히 그린다 — 작업 폴더는 안 건드린다(복사본·결과 폴더에서만).
+    src = 이미 지운 <이름>.mp4(옆에 <이름>_orig.mp4). 반환 {sheet, tier, sent_sec, rows:[{span, sec}]}. sec = 장부의 올리기~받기 시간. dry = VMake 없이 원본 칸으로 그림만."""
+    src, out = Path(src), Path(out)
+    orig = src.with_name(src.stem + "_orig" + src.suffix)
+    out.mkdir(parents=True, exist_ok=True)
+    base = out / src.name
+    if not base.exists():
+        shutil.copy2(orig, base)
+    pieces = [cut_piece(base, a, b) for a, b in spans]
+    r = {"fail": {}} if dry else server_clean(pieces, tier=tier)
+    rows, inputs, chain = [], [], []
+
+    def frame(f, at, label):
+        inputs.extend(["-ss", f"{at:.3f}", "-i", str(f)])
+        i = len(inputs) // 4 - 1
+        chain.append(f"[{i}:v]scale=360:-2,trim=end_frame=1,setpts=PTS-STARTPTS[{label}]")
+
+    for k, ((a, b), p) in enumerate(zip(spans, pieces)):
+        for j, part in enumerate((0.2, 0.5, 0.8)):
+            at = (b - a) * part
+            frame(orig, a + at, f"o{k}{j}")
+            frame(src, a + at, f"c{k}{j}")
+            frame(p, at, f"n{k}{j}")
+        rows.append({"span": [a, b], "ok": p.name not in r["fail"], "why": r["fail"].get(p.name, "")})
+    n = len(spans) * 3
+    for i in range(n):
+        k, j = divmod(i, 3)
+        chain.append(f"[o{k}{j}][c{k}{j}][n{k}{j}]hstack=3[r{i}]")
+    chain.append("".join(f"[r{i}]" for i in range(n)) + f"vstack={n}[v]" if n > 1 else "[r0]copy[v]")
+    sheet = out / f"비교_{tier}.jpg"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex", ";".join(chain), "-map", "[v]", "-frames:v", "1", "-q:v", "3", str(sheet)],
+                   check=True, stdin=subprocess.DEVNULL)
+    led = out / LEDGER
+    for row, p in zip(rows, pieces):
+        hit = [e for e in (json.loads(led.read_text(encoding="utf-8")) if led.exists() else []) if e.get("file") == p.name]
+        row["sec"] = hit[-1].get("sec") if hit else None
+    return {"sheet": str(sheet), "tier": tier, "sent_sec": round(sum(b - a for a, b in spans), 3), "rows": rows}
+
+
 def main(argv=None) -> int:
     a = list(sys.argv[1:] if argv is None else argv)
     if not a:
@@ -527,6 +659,16 @@ def main(argv=None) -> int:
         return 0
     if cmd == "fetch":
         print(fetch(Path(a[0]), a[1:]))
+        return 0
+    if cmd == "compare":         # compare <지운 원본.mp4> <결과 폴더> <a-b> [<a-b> …] [--tier basic] [--dry]
+        dry = "--dry" in a
+        a = [x for x in a if x != "--dry"]
+        tier = "basic"
+        if "--tier" in a:
+            i = a.index("--tier")
+            tier = a[i + 1]
+            del a[i:i + 2]
+        print(json.dumps(compare(Path(a[0]), Path(a[1]), [[float(x) for x in s.split("-")] for s in a[2:]], tier, dry), ensure_ascii=False))
         return 0
     if cmd == "log":
         p = Path(a[0]) / LEDGER

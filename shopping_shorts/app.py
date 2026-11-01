@@ -15638,9 +15638,9 @@ def _toss_order_name_amount():
 # 숏클메이커 반·금액·11월 차액(2026-11-01 사장님, 관제 292) — 화면·주문·입금 신고는 전부 _pay_products 만 읽는다.
 _SHORTCL_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfXnrij7pohkki2dY1df6ABWQEF6zBSao5mtx5rmnwJVqbYEg/viewform"
 _SHORTCL_PLANS = (
-    ("basic", "기본반", 990000, 110000, ("프리셋 팩 5~10개 정기 업데이트", "기본 강의")),
-    ("advanced", "고급반", 1990000, 1110000, ("실제 엔진 제공", "어떤 채널이든 벤치마킹", "기본·고급 강의")),
-    ("premium", "프리미엄반", 2990000, 2110000, ("기초 세팅", "한 달 1:1 코칭", "주 2회 Zoom", "오프라인 특강 1회",
+    ("basic", "기본반", 990000, 0, ("프리셋 팩 5~10개 정기 업데이트", "기본 강의")),
+    ("advanced", "고급반", 1990000, 1000000, ("실제 엔진 제공", "어떤 채널이든 벤치마킹", "기본·고급 강의")),
+    ("premium", "프리미엄반", 2990000, 2000000, ("기초 세팅", "한 달 1:1 코칭", "주 2회 Zoom", "오프라인 특강 1회",
                                                 "프리미엄 라운지", "기본·고급 강의")),
 )
 _SHORTCL_UPGRADE_LAST_DAY = "2026-11-30"    # 한국 시각 이날까지만 차액 결제를 판다
@@ -15661,6 +15661,8 @@ def _pay_products(now=None) -> list:
                       "label": label, "amount": amount, "includes": includes})
     if _shortcl_upgrade_open(now):
         for key, label, _amount, gap, includes in _SHORTCL_PLANS:
+            if not gap:     # 기본반 이동은 무료 — 결제 상품이 없고 관리자가 개통한다(관제 298)
+                continue
             items.append({"code": f"shortcl_{key}_upgrade", "kind": "upgrade",
                           "name": f"숏클메이커 {label} 숏템 회원 업그레이드", "label": label,
                           "amount": gap, "includes": includes})
@@ -15709,25 +15711,38 @@ def _pay_ledger() -> list:
 
 
 def _shortcl_badges(ledger, customers) -> dict:
-    """계정이 있는 숏클 결제자 표시 — 계정번호·이메일·연락처로 맞춘다. {customer_id: 반}"""
+    """계정이 있는 숏클 결제자 — 계정번호·이메일·연락처로 맞춘다. {customer_id: {"plan": 반, "upgrade": 차액 결제 여부}}"""
     digits = lambda v: re.sub(r"\D", "", v or "")
     by_cid, by_mail, by_phone = {}, {}, {}
     for it in reversed(ledger):
         if it["group"] != "숏클":
             continue
+        paid = {"plan": it["plan"], "upgrade": it["upgrade"]}
         if it["customer_id"] not in (None, ""):
-            by_cid[str(it["customer_id"])] = it["plan"]
+            by_cid[str(it["customer_id"])] = paid
         if it["email"]:
-            by_mail[it["email"].lower()] = it["plan"]
+            by_mail[it["email"].lower()] = paid
         if digits(it["phone"]):
-            by_phone[digits(it["phone"])] = it["plan"]
+            by_phone[digits(it["phone"])] = paid
     out = {}
     for cu in customers:
-        plan = (by_cid.get(str(cu["id"])) or by_mail.get((cu.get("email") or "").lower())
+        paid = (by_cid.get(str(cu["id"])) or by_mail.get((cu.get("email") or "").lower())
                 or by_phone.get(digits(cu.get("phone"))))
-        if plan:
-            out[cu["id"]] = plan
+        if paid:
+            out[cu["id"]] = paid
     return out
+
+
+def _shortcl_view(cu, paid, saved) -> dict:
+    """고객의 프로그램 구분 주인(관제 295) — 결제 정보로 자동, 관리자가 정한 값이 있으면 그 값."""
+    saved = saved or {}
+    auto_shortem, auto_shortcl = cu.get("plan") == "pro", bool(paid)
+    pick = lambda v, auto: auto if v is None else bool(v)
+    return {"shortem": pick(saved.get("shortem"), auto_shortem), "shortcl": pick(saved.get("shortcl"), auto_shortcl),
+            "auto_shortem": auto_shortem, "auto_shortcl": auto_shortcl,
+            "plan": saved.get("plan") or (paid or {}).get("plan", ""),
+            "move": saved.get("move") or ("paid" if (paid or {}).get("upgrade") else ""),
+            "tutor": saved.get("tutor", "")}
 
 
 def _upgrade_gate(request):
@@ -15859,7 +15874,7 @@ def _toss_checkout(request: Request, product: str = ""):
     refund_line = ("결제 확인 즉시 이용권이 열리는 디지털 콘텐츠로, 이용권이 열린 뒤에는 7일 이내라도 환불되지 않음" if is_shortem
                    else "라이선스 키·설치 파일이 제공된 뒤에는 7일 이내라도 환불되지 않음")
     shortcl_note = ("" if is_shortem else '<div class=p style="margin:-6px 0 12px;color:#ffcf6f"><b>'
-                    "Claude Max 구독(별도 결제)이 필요합니다.</b> 내 PC에 설치해 쓰며, PC 1대에서 이용할 수 있습니다.</div>")
+                    "Claude Max 구독(별도 결제)이 필요합니다.</b> 내 PC에 설치해 쓰며, PC 2대까지 이용할 수 있습니다.</div>")
     body = f"""{badge}<h1>💳 {_toss_esc(name)}</h1>
 <div class=amt>{amount:,}원</div>
 <div class=p style="margin:-4px 0 12px">이용기간: {period_from}로부터 {_PRO_PERIOD}</div>
@@ -17485,6 +17500,8 @@ def _api_me(request: Request):
             "script_chat": _setting_gate(st, "script_chat_enabled", cid),
             # 카드뉴스 제작소(관제 223) — 사이드바 메뉴와 서버 입구(/cardnews·/api/cardnews/*)가 같은 스위치 하나
             "cardnews": _setting_gate(st, "cardnews_enabled", cid),
+            "shortcl_open": _shortcl_portal().portal_open(st, cid),
+            "shortcl_trial": _shortcl_portal().trial_state(st, cid, access_level(cid, now) == "full"),
             # 감정짤(관제 139·143) — 좌측 '밈팩' 메뉴·2단계 짤 칸. 판정은 렌더 경로와 같은 mix_pipeline._meme_on 한 곳
             "meme": bool(mix_pipeline._meme_on(st, {"customer_id": cid})),
             # 대화형 대본(관제 128) — 작업목록 「🎭 대화형」 버튼. 서버 입구(dialogue/*)와 같은 스위치·관리자 판정
@@ -17519,6 +17536,11 @@ def _code_admin(customer_id):
         return False
     email = (Store(DB_PATH).get_customer(customer_id) or {}).get("email") or ""
     return email.lower() in _ADMIN_EMAILS
+
+
+def _shortcl_portal():
+    from shopping_shorts import claude_portal as _cp
+    return _cp
 
 
 def _setting_gate(store, key, customer_id):
@@ -17832,6 +17854,7 @@ def _admin_customers(request: Request):
     except Exception as e:      # noqa: BLE001 — 표시 하나 때문에 고객 목록 전체가 막히면 안 된다
         print(f"[관리자] 숏클 표시 실패(고객 목록은 계속): {e!r}", file=sys.stderr)
         shortcl_map = {}
+    program_saved = st.program_members()
     for cu in _customers:
         _cid = cu["id"]
         # ★access_level에 이미 읽은 고객 dict를 넘긴다(2026-08-29) — 안 넘기면
@@ -17854,7 +17877,8 @@ def _admin_customers(request: Request):
         cu["code_admin"] = (_as_cid(_cid) == 0) or (_email in _ADMIN_EMAILS)
         cu["is_admin"] = cu["code_admin"] or bool(cu.get("admin"))
         cu["challenge"] = _cid in challenge_ids                 # 1기 챌린지 참가 여부(2026-08-24)
-        cu["shortcl"] = shortcl_map.get(_cid, "")               # 숏클 결제 반(관제 292)
+        cu["program"] = _shortcl_view(cu, shortcl_map.get(_cid), program_saved.get(_cid))   # 프로그램 구분(관제 295)
+        cu["shortcl_open"] = _shortcl_portal().portal_open(st, _cid)   # 숏클 페이지 접근(관제 294)
         # 포인트 잔액(화면 단위 P) — 등급이 full이어도 잔액 0이면 유료 op가 402로 막힌다.
         # 관리자가 그 상태를 목록에서 바로 보게 한다(2026-08-20 체험 계정 402 사고).
         cu["points"] = pricing.to_display(points_map.get(_cid, 0))
@@ -17868,7 +17892,8 @@ def _admin_customers(request: Request):
     #     "입력했는데 저장이 안 되는" 칸이 생긴다(0순위-B).
     allc = st.all_settings()
     shown = {k: v for k, v in allc.items() if k in _ADMIN_SETTING_KEYS}
-    return {"ok": True, "customers": out, "settings": shown}
+    tutors = sorted({v["tutor"] for v in program_saved.values() if v["tutor"]})
+    return {"ok": True, "customers": out, "settings": shown, "shortcl_tutors": tutors}
 
 
 @app.post("/api/prereg")
@@ -17931,12 +17956,56 @@ async def _api_deposit_claim(request: Request):
     return {"ok": True}
 
 
+@app.post("/api/admin/program_member")
+async def _admin_program_member(request: Request):
+    """관리자가 숏템·숏클 회원 구분, 숏클 반, 이동 방식, 조교를 정한다. 자동 판정과 같은 값은 자동으로 남긴다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id 필요"}, status_code=422)
+    st = Store(DB_PATH)
+    cu = st.get_customer(cid)
+    if not cu:
+        return JSONResponse({"error": "없는 고객입니다"}, status_code=404)
+    plan = (body.get("plan") or "").strip()
+    move = (body.get("move") or "").strip()
+    tutor = (body.get("tutor") or "").strip()
+    if plan and plan not in {p[1] for p in _SHORTCL_PLANS}:
+        return JSONResponse({"error": "없는 반입니다"}, status_code=422)
+    if move not in ("", "free", "paid"):
+        return JSONResponse({"error": "이동 방식을 확인해 주세요"}, status_code=422)
+    if len(tutor) > 40:
+        return JSONResponse({"error": "조교 이름이 너무 깁니다"}, status_code=422)
+    paid = _shortcl_badges(_pay_ledger(), [{**cu, "id": cid}]).get(cid)
+    auto = _shortcl_view(cu, paid, None)
+    def keep(key):
+        val = bool(body.get(key))
+        return None if val == auto[f"auto_{key}"] else int(val)
+    st.save_program_member(cid, keep("shortem"), keep("shortcl"), plan, move, tutor)
+    return {"ok": True}
+
+
 @app.get("/api/admin/pay_ledger")
 def _admin_pay_ledger(request: Request):
     denied = _require_admin(request)
     if denied:
         return denied
-    return {"items": _pay_ledger()}
+    items = _pay_ledger()
+    digits = lambda v: re.sub(r"\D", "", v or "")
+    mail, phone = {}, {}
+    for cu in Store(DB_PATH).list_customers():      # 예전 주문엔 계정번호가 없다 — 결제 정보로 계정을 찾아 표시한다
+        if cu.get("email"):
+            mail[cu["email"].lower()] = cu["id"]
+        if digits(cu.get("phone")):
+            phone[digits(cu.get("phone"))] = cu["id"]
+    for it in items:
+        if it["customer_id"] in (None, ""):
+            it["customer_id"] = mail.get(it["email"].lower()) or phone.get(digits(it["phone"]))
+    return {"items": items}
 
 
 @app.get("/api/admin/deposit_claims")
@@ -19156,7 +19225,7 @@ def _claude_me(request):
     if cid is None:
         return None, None, JSONResponse({"ok": False, "code": "no_key", "msg": "로그인이 필요합니다"}, status_code=401)
     st = Store(DB_PATH)
-    if not _setting_gate(st, "claude_portal_enabled", cid):
+    if not _shortcl_portal().portal_open(st, cid):
         return cid, st, JSONResponse({"ok": False, "code": "disabled", "msg": "클로드형은 아직 열리지 않았습니다"}, status_code=503)
     return cid, st, None
 
@@ -19195,6 +19264,15 @@ async def api_claude_lease(request: Request):
     body = await _claude_body(request)
     ctx = _cp.ctx_from_request(request, _client_ip(request))
     return _claude_json(await run_in_threadpool(_cp.call, _cp.lease, ctx, body, Store(DB_PATH)))
+
+
+@app.post("/api/claude/session")
+async def api_claude_session(request: Request):
+    """PC 접속 자리(관제 296) — 판단은 claude_portal.session·_guard_session."""
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cp.call, _cp.session, ctx, body, Store(DB_PATH)))
 
 
 @app.get("/api/claude/assets")
@@ -19371,14 +19449,15 @@ def api_claude_me_license_issue(request: Request, slot: int = 1):
     return JSONResponse({"ok": True, "key": got["key"], "expires": got["expires"]}, headers={"Cache-Control": "no-store"})
 
 
-@app.post("/api/claude/me/device/remove")
-async def api_claude_me_device_remove(request: Request):
+@app.post("/api/claude/me/device/swap")
+async def api_claude_me_device_swap(request: Request):
+    """새 PC 로 교체 요청(관제 296) — 회원은 고르기만 하고 바꾸기는 관리자 승인."""
     cid, st, denied = _claude_me(request)
     if denied:
         return denied
     from shopping_shorts import claude_portal as _cp
     body = await _claude_body(request)
-    return _claude_json(await run_in_threadpool(_cp.call, _cp.remove_device, cid, body.get("device_id"), st))
+    return _claude_json(await run_in_threadpool(_cp.call, _cp.request_swap, cid, body.get("device_id"), st))
 
 
 @app.post("/api/claude/me/lease/force_release")
@@ -19411,6 +19490,82 @@ def api_claude_me_preview(request: Request, kind: str, pid: str, t: str = ""):
         return JSONResponse(got, status_code=st_)
     # FileResponse 는 Range 를 보고 206 조각으로 답한다 — 견본은 늘 통째 200(Accept-Ranges: none)으로만 보낸다
     return Response(content=Path(got["file"]).read_bytes(), media_type=got["media_type"], headers=got["headers"])
+
+
+def _public_base(request: Request) -> str:
+    host = request.headers.get("host") or request.url.netloc
+    return f"http://{host}" if host.split(":")[0] in ("127.0.0.1", "localhost") else f"https://{host}"
+
+
+@app.get("/api/claude/me/start.md")
+def api_claude_me_start_md(request: Request):
+    """회원별 시작.md(관제 294) — 로그인한 회원에게만. 판단은 claude_portal.start_md."""
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return Response(_cp.start_md(cid, _public_base(request)), media_type="text/markdown; charset=utf-8",
+                    headers={"Cache-Control": "no-store", "Content-Disposition": "attachment; filename*=UTF-8''%EC%8B%9C%EC%9E%91.md"})
+
+
+@app.get("/api/claude/me/start.zip")
+def api_claude_me_start_zip(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return Response(_cp.start_zip(cid, _public_base(request)), media_type="application/zip",
+                    headers={"Cache-Control": "no-store", "Content-Disposition": "attachment; filename*=UTF-8''%EC%88%8F%ED%81%B4%EC%8B%9C%EC%9E%91_%EC%9D%B4%ED%8C%8C%EC%9D%BC%EC%9D%84%EC%84%A4%EC%B9%98.zip"})
+
+
+@app.post("/api/claude/me/trial")
+def api_claude_trial(request: Request):
+    """숏클 무료 업그레이드 1주(관제 300) — 판단은 claude_portal.claim_trial."""
+    cid = getattr(request.state, "customer_id", None)
+    if cid is None:
+        return JSONResponse({"ok": False, "code": "no_key", "msg": "로그인이 필요합니다"}, status_code=401)
+    _cp = _shortcl_portal()
+    return _claude_json(_cp.call(_cp.claim_trial, cid, access_level(cid) == "full", Store(DB_PATH)))
+
+
+@app.get("/api/claude/me/start_line")
+def api_claude_me_start_line(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return JSONResponse({"ok": True, "line": _cp.start_line(cid, _public_base(request))}, headers={"Cache-Control": "no-store"})
+
+
+@app.post("/api/claude/start/redeem")
+def api_claude_start_redeem(request: Request):
+    from shopping_shorts import claude_portal as _cp
+    return _claude_json(_cp.call(_cp.start_redeem, request.headers.get("x-shortem-start"), Store(DB_PATH)))
+
+
+@app.get("/api/claude/start_menu.ps1")
+def api_claude_start_menu():
+    """파워쉘 시작 메뉴(회원 정보 없음). 주인 파일 = installer/shortcl_menu.ps1."""
+    body = (Path(__file__).resolve().parents[1] / "installer" / "shortcl_menu.ps1").read_text(encoding="utf-8-sig")
+    return Response(body, media_type="text/plain; charset=utf-8", headers={"Cache-Control": "no-store"})
+
+
+@app.get("/api/claude/me/start.cmd")
+def api_claude_me_start_cmd(request: Request):
+    """더블클릭 설치 파일 — 내용은 start_line 한 줄을 파워쉘로 돌리는 것뿐."""
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return Response(_cp.start_cmd(cid, _public_base(request)), media_type="application/octet-stream",
+                    headers={"Cache-Control": "no-store", "Content-Disposition": "attachment; filename=shortcl-setup.cmd"})
+
+
+@app.get("/api/claude/start.ps1")
+def api_claude_start_ps1(request: Request):
+    """설치 스크립트(키·회원 정보 없음 — 누구나 받아도 된다). 주인 파일 = installer/install.ps1."""
+    body = (Path(__file__).resolve().parents[1] / "installer" / "install.ps1").read_text(encoding="utf-8")
+    return Response(body.replace("__BASE__", _public_base(request)), media_type="text/plain; charset=utf-8", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/api/claude/me/installer/{os_id}")
@@ -19446,6 +19601,68 @@ async def api_admin_claude_alerts_resolve(request: Request):
     except (TypeError, ValueError):
         return JSONResponse({"ok": False, "msg": "id 가 필요합니다"}, status_code=400)
     return _cp.resolve_alert(aid, Store(DB_PATH))
+
+
+@app.post("/api/admin/claude/member")
+async def api_admin_claude_member(request: Request):
+    """숏클 승인·해제 {cid, on}(관제 294) — 판단은 claude_portal.set_member."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    try:
+        cid = int(body.get("cid"))
+    except (TypeError, ValueError):
+        return JSONResponse({"ok": False, "msg": "cid 가 필요합니다"}, status_code=400)
+    return _claude_json(_cp.call(_cp.set_member, cid, body.get("on", True) is not False, Store(DB_PATH)))
+
+
+@app.get("/api/admin/claude/changes")
+def api_admin_claude_changes(request: Request):
+    """기기 교체·Claude 계정 변경 요청(관제 296)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return {"ok": True, "changes": _cp.list_changes(Store(DB_PATH))}
+
+
+@app.post("/api/admin/claude/changes/decide")
+async def api_admin_claude_changes_decide(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    try:
+        rid = int(body.get("id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"ok": False, "msg": "id 가 필요합니다"}, status_code=400)
+    return _claude_json(_cp.call(_cp.decide_change, rid, body.get("approve") is True, Store(DB_PATH)))
+
+
+@app.get("/api/admin/claude/devices")
+def api_admin_claude_devices(request: Request, cid: int = 0):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return {"ok": True, "devices": _cp.admin_devices(cid, Store(DB_PATH))}
+
+
+@app.post("/api/admin/claude/devices/remove")
+async def api_admin_claude_devices_remove(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    try:
+        cid = int(body.get("cid"))
+    except (TypeError, ValueError):
+        return JSONResponse({"ok": False, "msg": "cid 가 필요합니다"}, status_code=400)
+    return _claude_json(_cp.call(_cp.remove_device, cid, body.get("device_id"), Store(DB_PATH)))
 
 
 @app.post("/api/admin/claude/license/revoke")
@@ -26100,7 +26317,10 @@ def _clean_frame_src(job, work, beat_idx, cut=None, at=None):
     clean_map = job.get("clean_sources") or {}
     if clean_map:
         return clean_map, None, None, "_clean", True
-    if job.get("clean_status") != "ready":
+    # ★정본이 있으면 clean_status 와 무관하게 정본에서 뜬다(2026-11-01 황선희님 b13968032e48). 덧지우기가 실패해도(VMake 잔액 부족 등)
+    #   정본은 살아 있고 컷 목록(_final_cuts)·렌더는 ("clean", 시각)을 쓴다 — 여기만 status 로 빠져나가면 재료 번호 clean 을 못 찾아 그림이 404다.
+    _b = mix_pipeline.clean_base_for(job, work)
+    if job.get("clean_status") != "ready" and _b is None:
         return {}, None, None, "", False
     # ★지금 편성으로 청소한 파일이 있으면 **그 파일**을 먼저 쓴다(2026-09-15).
     #   완성본 1편 청소의 정본은 final_clean_{편성서명}.mp4이고 clean_video_path는
@@ -26138,7 +26358,6 @@ def _clean_frame_src(job, work, beat_idx, cut=None, at=None):
     _ctag = "_clean_" + re.sub(r"[^0-9a-zA-Z]", "", _stem[len("final_clean_"):] if _stem.startswith("final_clean_") else _stem)
     # ★정본(2026-09-22): 재배치된 사본의 컷은 재료가 곧 청소본 좌표("clean", start)다 — 그 시각에서 뜬다.
     #   증분 조각(cb…)이면 그 조각 파일에서 뜬다. 판정·좌표는 render_inputs_for 하나.
-    _b = mix_pipeline.clean_base_for(job, work)
     if _b is not None:
         try:
             _v = _render_view(job, work)                 # 렌더 입력·컷 목록(요청마다 되풀이하지 않는다 — 관제 110)

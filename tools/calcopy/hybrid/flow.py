@@ -104,7 +104,7 @@ PHASE_STAGE = {   # 세부 단계 → 회원에게 보이는 단계
 #     하나씩 풀어 가는 중이었다. 6번을 넘는 바퀴는 이 로그에 없다(근거 없는 증액은 안 한다).
 #   plan 8 그대로: 장면 맞추기는 9번 반려가 한 번도 통과하지 못했다(마지막 9번 = 장면 경계·컷 길이·남은 글자를 손으로 옮기며 맴돎) — 늘려도 풀린다는 근거 없음.
 #   같은 원인 묶음이 STUCK 번 연속이면 한도 전이라도 멈춘다(REDO_STUCK 아래).
-LIMITS = {"script": 6, "plan": 8, "render": 3, "look": 2, "pick": 2, "review_bad": 2}
+LIMITS = {"script": 6, "plan": 8, "render": 3, "look": 2, "pick": 2, "review_bad": 2, "eye_proof": 2}
 # 대본: 내용 기준은 한 번 고쳐 받으면 통과(사장님 10-27). 꼭 지킬 것만 계속 반려 — 꼴이 틀림·지어낸 사실·출처 규칙·제품 컷·비슷한 제품 밝히기(10-25 규칙)
 SCRIPT_FIX_ONCE = 1
 SCRIPT_MUST = {"form", "claims", "source_rule", "product_cut", "alt_scene", "product:alt_say"}
@@ -335,7 +335,7 @@ def _coupang_down(m: dict, key: str = "coupang") -> None:
 LINK_MAX = 2       # 상품 주소 받기 한도(편당)
 LINK_ASK = """너는 이 편의 제작자다. 이 PC 에서 쿠팡 검색이 막혔다(회원 쿠팡 파트너스 키가 없어 크롬으로 찾다 차단됨). 쿠팡을 다시 열지 말고:
 1. 웹 검색(WebSearch)으로 아래 제품의 **쿠팡 상품 주소**(https://www.coupang.com/vp/products/<숫자> …)를 찾는다 — 같은 제품이 먼저, 없으면 같은 종류 가장 비슷한 것.
-2. 회원에게 한 줄로 확인한다: "이 상품으로 만들까요? <상품 이름> <주소>" — 회원이 다른 주소를 주면 그것. 10분 동안 답이 없으면 찾은 것으로(지침 5장).
+2. 회원에게 묻지 않는다 — 찾은 것으로 바로 답한다(회원이 먼저 상품 주소를 줬으면 그것).
 3. 답: 주소·상품 이름(검색 결과에 보이는 그대로)·같은 제품인지(same true/false)·종류(category)·사진 주소(검색 결과에 보이면, 없으면 "").
 제품 단서: {hint}
 JSON 하나: {{"url": "https://www.coupang.com/vp/products/…", "name": "…", "same": true, "category": "…", "image": "", "why": "한 줄"}}"""
@@ -445,6 +445,11 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
     m, rp, user = dict(measure or {}), dict(replies or {}), dict(user or {})
     if user.get("revise") and (st.get("script") or {}).get("S") and st.get("phase") != "sign":
         st["phase"] = "member_revise"      # 대본이 나온 뒤 회원이 고칠 줄을 말함 — 어느 단계든 그 줄만(재료 그대로, ph_member_revise)
+    if user.get("reclean") and (st.get("script") or {}).get("M"):
+        tf = st.setdefault("text_fix", {})    # 대본·재료·목소리는 그대로, 박힌 글자 지우기부터 렌더만 다시(주인 = 여기 · f_render)
+        tf.update({"key": None})          # 방식(지우기·흐림)은 회원 설정 그대로 — 돈 드는 지우기로 강제하지 않는다
+        st.get("tries", {}).pop("vmake_fail", None)
+        st["phase"] = "render"
     if m and st.get("watch_last") and any(isinstance(v, dict) and v.get("error") for v in m.values()):
         (st.get("watch_keys") or {}).pop(st["watch_last"], None)     # 실패한 일을 같은 입력으로 다시 = 다시 시도(반복 감시 대상 아님)
     for _ in range(40):
@@ -1798,7 +1803,7 @@ def _material_top(st, sw=None) -> int:
 def _pick_line(st) -> str:
     """고르기 질문 셋(재료·비슷한 제품·재료 더 찾기)이 같이 쓰는 ★개수 줄 — SCREEN_PICK 이 '아래 ★개수'를 가리킨다."""
     a, b = _material_n(st)
-    return f"\n\n★개수: {a}~{b}개를 고른다. 대본 줄마다 가리키는 그림이 달라야 하니 서로 다른 장면을 주는 영상으로."
+    return f"\n\n★개수: {a}~{b}개를 고른다. 대본 줄마다 가리키는 그림이 달라야 하니 서로 다른 장면을 주는 영상으로." + (CLEAN_SOURCE_RULE if _back_material(st) else "")
 
 
 def _screen_pick_ask(st, rows, more="") -> str:
@@ -2378,7 +2383,9 @@ WAY_LINE = ("그 줄 문장을 장면에 맞게 바꾼다(자막 넘침·낱말 
             "(바꾼 줄만 · 뜻·사실·결 그대로 · caps 를 이으면 tts)")
 PLAN_LOOK_WAYS = ("\n\n★재료로 못 고치는 줄(맞는 장면이 재료에 없다)은 멈추지 말고 둘 중 하나로 답에 넣어라 — ① " + WAY_LINE +
                   " ② 재료를 더 찾는다: \"재료_더찾기\": [\"유튜브 검색어\", …] (최대 4개 — 그 장면이 나올 영상 검색어). 해당 없으면 넣지 않는다.")
-FINAL_FIX_WAYS = "\n\n★재료(컷)로 못 고치는 것(자막 넘침·낱말 끊김·대사와 다른 말)은 " + WAY_LINE + " 로 답에 넣어라. 해당 없으면 넣지 않는다."
+FINAL_FIX_WAYS = ("\n\n★재료(컷)로 못 고치는 것(자막 넘침·낱말 끊김·대사와 다른 말)은 " + WAY_LINE + " 로 답에 넣어라. 해당 없으면 넣지 않는다."
+                  "\n★줄을 고칠 때는 걸린 말만 지우지 말고 앞뒤 줄과 이어 읽어 말이 되는 문장으로 다시 써라 — 뜻·사실은 그대로(11-01 '저도 제품 찾기부터 따라 해 봤는데요')."
+                  "\n★썸네일을 고쳐야 하면 답에 \"썸네일\": {\"options\":[…]} 를 넣어라.")
 
 
 LINE_TABLE_ASK = ("\n\n★줄별 대조표(반드시 — 사장님 PC 공정 11): 답에 \"대조표\": [{\"줄\": \"<줄 id>\", \"화면\": \"시트에서 그 줄 자리에 실제로 보이는 것\", \"이유\": \"그 말과 왜 맞는가\"}] 를 대본 줄 전부 넣어라. "
@@ -2497,7 +2504,11 @@ JSON 하나: {{"썸네일": {{"options":[3안], "no_person_why": "인물순간 �
 def ph_thumb(st, m, rp, u):
     from tools.calcopy.hybrid import thumb_rule as TR
     v = st["version"]
+    if st.get("_thumb_replan"):          # 재료가 바뀌어 다시 고르는 차례 — AI 를 또 부르지 않고 코드가 새 계획 컷에서 고른다(11-01 키치잇 재호출)
+        st.pop("_thumb_replan", None)
+        return _thumb_auto(st, "재료가 바뀌어 새 컷에서 다시 고름")
     if st.get("_sheet_stale"):
+        st["_thumb_replan"] = True
         # 재료가 계획 시트 뒤에 바뀌었다(재료 고치기·검사 뒤 고치기) — 옛 시트의 컷 번호로 고르면 렌더에선 다른 컷을 가리킨다
         # (10-26 이미숙 회원편: part 8 = 시트에선 얼굴 근접 O3@163, 바뀐 재료에선 앰플 병 N2@80 → 카드 얼굴 반려 되풀이·멈춤, 98 기록).
         # 옛 카드는 비우고(옛 번호라 계획 관문 ⑥이 시트를 막는다) 계획을 다시 돌려 새 시트로 묻는다.
@@ -2618,7 +2629,9 @@ EYE_ASK = """너는 완성본 눈 검수 담당이다(표준 §5-2 — 사장님
 번호마다 v = "○"(기준 그대로) | "△"(애매 — 통과 아님) | "×"(어긋남), memo = 근거 한 줄(어느 초·어느 줄). ○ 전부여야 통과다 — 모르면 △.
 {rows}
 ★우리 틀(결함 아님): 맨 위 제목·로고·출처 줄·우리 자막(색 강조) — 남의 글자·워터마크가 아니다.
-JSON 하나: {{{keys}}}"""
+★0.0초 썸네일 카드(맨 앞 2프레임)는 사장님이 정한 표지다 — 번쩍임·틀 어긋남으로 적지 않는다.
+★본 증거(없으면 답이 아니다): title_seen = 시트 화면에서 직접 읽은 제목, scenes = 처음부터 끝까지 대본 줄마다 화면에서 본 것.
+JSON 하나: {{"title_seen": "…", "scenes": [{{"at": "0~3", "line": "…", "seen": "…"}}], {keys}}}"""
 
 
 def _eye_rows(upgrade: bool) -> list:
@@ -2633,6 +2646,7 @@ def ph_check(st, m, rp, u):
 EYE_REVIEW = True        # 완성본 눈 2단(E1~E9 질문) — 사장님 10-26 "재현일치도랑 눈검수는 필요없다". 되살리면 True
 FINAL_SHEET_LOOK = True  # 완성 전 1초 시트 한 번 — 사장님 PC 제작처럼(숏클 지침 15-0, 관제 290). E 번호 묻기가 아니라 시트를 보고 걸린 것만
 FINAL_SHEET_FILES = ("시트_1초.jpg", "훅3초_0.1초.jpg", "끝2초_0.1초.jpg")
+EYE_PROOF_NEED = ("title_seen", "scenes")        # 눈 2단 답의 본 증거(판정 = sheet_proof_problems) — ○ 칸만으로 통과시키지 않는다
 SHEET_NEED = ("ok", "title_seen", "scenes")     # 봤다는 증거 없는 "ok": true 는 답이 아니다(10-30 회원 2편 — 같은 자료를 새 Claude 는 잡았는데 회원 편은 통과, 답 내용은 기록도 없었다)
 FINAL_SHEET_ASK = """★이 판정은 네가 바로 답하지 말고 새 Agent(model=opus)에게 이 글과 그림을 그대로 맡겨 그 답을 옮겨라(긴 제작 대화에서 보면 놓친다 — 10-30 두 편).
 너는 이 편을 채널에 올릴지 마지막으로 보는 사람이다. 자동 검사는 통과했다. 완성본 1초 시트(처음~끝)·훅 3초·끝 2초를 처음부터 끝까지 한 칸씩 본다.
@@ -2653,6 +2667,7 @@ def ph_check_got(st, m, rp, u):
     else:
         st["auto"] = c.get("auto") or {"ok": False, "rows": [{"group": "표식", "what": "관문 결과 없음", "ok": False, "value": ""}]}
     st["eye_pack"] = c.get("eye_files") or []
+    st.pop("look_left", None)             # 새 검사 = 새 판정 — 앞 편의 '남은 눈 지적'을 완성 허가로 물려주지 않는다
     if not st["auto"].get("ok"):          # 1단이 ×면 눈 검수는 하지 않는다(표준 §5-2 '1단 통과 뒤') — 바로 고치기 판정으로
         st["look"] = {"ok": False, "problems": ["1단 자동 관문 미통과 — 눈 검수 생략"], "skipped": True}
         return {"goto": "check_judge"}
@@ -2674,8 +2689,8 @@ def ph_check_got(st, m, rp, u):
     texts = "".join(f"\n\n## {n}\n{str(t)[:5000]}" for n, t in (c.get("eye_texts") or {}).items())
     sc = st.get("script") or {}
     texts += eye_material_note(st["eye_pack"], sc.get("G"))
-    return {"review": [_rv(f"eye_{st['version']}", ask + texts + "\n\n## 대본\n" + json.dumps(sc.get("S") or {}, ensure_ascii=False)[:5000],
-                           [_img(x) for x in st["eye_pack"]][:6], need=tuple(k for k, _, _ in rows), meta={"fresh": True})], "then": "check_look"}
+    return {"review": [_rv(f"eye_{st['version']}", ask + _lessons("final") + texts + "\n\n## 대본\n" + json.dumps(sc.get("S") or {}, ensure_ascii=False)[:5000],
+                           [_img(x) for x in st["eye_pack"]][:6], need=tuple(k for k, _, _ in rows) + EYE_PROOF_NEED, meta={"fresh": True})], "then": "check_look"}
 
 
 def eye_material_note(pack: list, grounds) -> str:
@@ -2732,8 +2747,10 @@ def ph_check_look(st, m, rp, u):
         raise _Stop("확인 결과를 받지 못했어요", "다시 시도해 주시면 멈춘 곳부터 이어 갈게요", auto=True)
     keys = st.get("eye_keys") or [f"E{k}" for k in range(1, 9)]          # 물은 번호 전부(업그레이드 판은 E9 까지) — 답에 빠진 번호도 ×
     ok, bad = _eye_verdict(a, keys)
+    proof = sheet_proof_problems(a, script_view(st))
     st["eye"] = a
-    st["look"] = {"ok": ok, "problems": bad}
+    st["look"] = {"ok": ok and not proof, "problems": bad + proof, "unproved": bool(proof), "by": "눈 2단", "scenes": len(a.get("scenes") or []),
+                  "title_seen": str(a.get("title_seen") or "")[:80]}
     return {"do": [{"id": "save_eye", "cmd": "write_doc", "files": {f"{v}/눈검수.json": {"made_by": "flow 눈 2단(회원 Claude)", "ok": ok, **a}}, "version": v}],
             "then": "check_judge"}
 
@@ -2750,6 +2767,10 @@ def ph_check_judge(st, m, rp, u):
     auto_ok, look = bool((st.get("auto") or {}).get("ok")), st.get("look") or {}
     if auto_ok and look.get("ok"):
         return {"goto": "deliver"}
+    if auto_ok and look.get("unproved"):       # 안 본 답·제목 불일치 = 재료 탓이 아니다 — 고치기로 보내지 않고 눈 검사만 다시, 완성 허가도 주지 않는다
+        st["log"].append("눈 검사 증거 미달: " + " / ".join(look.get("problems") or [])[:300])
+        _tries(st, "eye_proof", LIMITS["eye_proof"], ["final_check"])
+        return {"goto": "check"}
     long = [r for r in (st.get("auto") or {}).get("rows") or [] if r.get("what") == "길이" and r.get("ok") is False]
     if long:
         return _length_rewrite(st, long[0].get("value"))
@@ -3015,6 +3036,19 @@ def ph_check_retry(st, m, rp, u):
     return {"review": [_fix_review(st, "완성본 검사에서 걸린 것: " + probs + _face_hint(st), None, f"final_fix_{v}")], "then": "check_fix"}
 
 
+def _thumb_from_fix(st, r: dict) -> list:
+    """고치기 답의 썸네일 칸 — thumb_rule.check 를 통과하면 저장 일감, 아니면 빈 목록(반려는 기록)."""
+    from tools.calcopy.hybrid import thumb_rule as TR
+    spec = r.get("썸네일") or r.get("썸네일.json")
+    if not isinstance(spec, dict):
+        return []
+    bad = TR.check(spec, n_parts=st.get("_n_cuts"))
+    if bad:
+        st["log"].append("고치기 답의 썸네일 반려: " + "; ".join(bad)[:300])
+        return []
+    return [{"id": "save_thumb", "cmd": "write_doc", "files": {f"{st['version']}/썸네일.json": spec}, "version": st["version"]}]
+
+
 def ph_check_fix(st, m, rp, u):
     v = st["version"]
     r = _reply(rp, f"final_fix_{v}", ("ok",))
@@ -3025,6 +3059,9 @@ def ph_check_fix(st, m, rp, u):
         if got:
             return got
     M = _take_fix(st, r)
+    thumb_do = _thumb_from_fix(st, r)
+    if M is None and thumb_do:           # 썸네일만 고친 답을 버리지 않는다
+        return {"do": thumb_do, "then": "render"}
     if M is None and not st["tries"].get("render_same"):
         # 오푸스 '재료로 고칠 것 없음' = 걸린 칸이 렌더·검사 쪽(자막 배치·소리 시각)이다 — 멈추기 전에 재료 그대로 한 번 다시 만든다
         #   (10-27 run4 c편: 스티커 자리 판정이 렌더 때 정해져 다시 만들어야 새 규칙이 반영된다)
@@ -3037,7 +3074,7 @@ def ph_check_fix(st, m, rp, u):
         return {"goto": "plan"}
     if M is None:      # 다시 시도 = 검사부터(옛 검사 결과를 다시 먹이는 _asker 경로 금지 — 10-27 run4 a·c)
         raise _Stop("완성본 마무리 확인을 통과하지 못했어요", AGAIN, retry="check")
-    return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "render"}
+    return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}] + thumb_do, "then": "render"}
 
 
 # ── 12·13 납품·정리 ───────────────────────────────────────────────────────
@@ -3045,15 +3082,20 @@ def ph_deliver(st, m, rp, u):
     return {"do": [{"id": "final", "cmd": "finish", "version": st["version"], "title": script_view(st)["title"]}], "then": "finished"}
 
 
+def finish_passed(st) -> bool:
+    """(판단 주인 — 완성본을 내도 되나) 자동 관문 통과 + 눈 통과 또는 눈 한도까지 고치고 지적을 회원에게 알린 편(look_left, ph_check_judge)."""
+    return bool((st.get("auto") or {}).get("ok") and ((st.get("look") or {}).get("ok") or st.get("look_left")))
+
+
 def ph_finished(st, m, rp, u):
     f = m.get("final") or {}
     if not f.get("video"):
         raise _Stop("완성본 파일을 찾지 못했어요", "다시 시도해 주시면 이어 갈게요", auto=True)
     asr_single = not ((st.get("env") or {}).get("keys") or {}).get("speechmatics")
-    if not ((st.get("auto") or {}).get("ok") and (st.get("look") or {}).get("ok")):     # 관문 2단을 안 거친 완성본은 내지 않는다(표준 §5 — 다른 길로 deliver 에 와도)
+    if not finish_passed(st):     # 관문 2단을 안 거친 완성본은 내지 않는다(표준 §5 — 다른 길로 deliver 에 와도)
         raise _Stop("완성본 마무리 확인을 아직 통과하지 않았어요", "다시 시도해 주시면 확인부터 다시 할게요", retry="check", detail=_check_fails(st))
     return {"done": {"video": f["video"], "title": script_view(st)["title"], "auto_ok": bool((st.get("auto") or {}).get("ok")),
-                     "look_ok": bool((st.get("look") or {}).get("ok")), "gate": (st.get("auto") or {}).get("report"), "asr_single": asr_single,
+                     "look_ok": bool((st.get("look") or {}).get("ok")), "look_left": st.get("look_left") or [], "gate": (st.get("auto") or {}).get("report"), "asr_single": asr_single,
                      "note": "귀 확인 없음(스피치매틱스 키 없음 — 위스퍼와 눈으로만 대조)" if asr_single else ""}}
 
 
@@ -3086,7 +3128,8 @@ REF_READ_FOREIGN = """너는 해외원본형 소재 판독 담당이다. 아래�
 - product_words: 제품을 가리키는 낱말(한국어·영어 둘 다 — 화면 글자·설명란·말에서). brand_hint: 화면·설명란에 보이는 브랜드·제품 이름 그대로, 없으면 ''.
 - queries_en: 같은 제품을 다른 해외 사람이 처음 써 보는 쇼츠를 찾을 영어 검색어 2~4개('<브랜드> <제품> reaction'·'trying korean <제품>' 꼴).
 - people: 화면의 해외 출연자 수·옷·머리 한 줄(같은 영상 판정 단서).
-JSON 하나: {"ref_kind": "korean_reedit|overseas_origin", "is_shopping": true, "product_words": ["…"], "brand_hint": "…", "queries_en": ["…"], "people": "…", "why": "한 줄"}"""
+- lens_at: 구글 렌즈에 올릴 장면 초 — 컷이 바뀔 때마다 한 장, 최대 6개. **인물·동물·장면 전체가 크게 잡힌 것**. 로고·워터마크·큰 글자가 크게 있는 장면은 피한다.
+JSON 하나: {"ref_kind": "korean_reedit|overseas_origin", "is_shopping": true, "product_words": ["…"], "brand_hint": "…", "queries_en": ["…"], "lens_at": [초, …], "people": "…", "why": "한 줄"}"""
 
 PEER_PICK_FOREIGN = """너는 같은 제품 해외 반응 고르기 담당이다. **같은 제품**({product}) — 또는 **같은 종류의 비슷한 제품**(색·브랜드·모양이 조금 달라도 쓰임새가 같은 것, 사장님 10-26 "마스크팩이면 색이 다르거나 비슷한 것도 된다") — 을 **해외 사람**이 써 보고 반응하는 쇼츠를 고른다.
 첫 그림 맨 위 줄(S1~S4) = 소재 쇼츠(또는 이미 정한 원본) 장면, 아래 파란 번호 칸 = 후보 썸네일(번호 = 아래 후보 목록 n).
@@ -3281,7 +3324,7 @@ def f_ref_read(st, m, rp, u):
     st["origins"] = []
     if korean:
         st["log"].append("소재 = 한국 재편집 → 렌즈로 해외 원본")
-        return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "lens", "bench_id": B.get("id"), "queries": [q for q in r.get("queries_en") or [] if q][:4]}], "then": "of_got"}
+        return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "lens", "bench_id": B.get("id"), "at": _lens_at(r, B), "queries": [q for q in r.get("queries_en") or [] if q][:4]}], "then": "of_got"}
     st["origins"] = [{"id": B.get("id"), "info": {k: B.get(k) for k in ("id", "title", "channel", "date", "dur")}, "how": "소재 = 해외 원본"}]
     st["log"].append("소재 = 해외 원본 → 첫 원본, 같은 제품 다른 해외 반응 찾기")
     return {"goto": "of_peers"}
@@ -3291,7 +3334,7 @@ def f_of_lens(st, m, rp, u):
     """다시 시도 = 렌즈를 새로 돌린다(10-26: 다시 시도가 같은 후보를 다시 판정만 해 '다른 방법으로'가 거짓이었다 — 렌즈 그림 고친 뒤에도 옛 후보 13개 그대로)."""
     st["origins"] = []
     st.pop("_peers_done", None)
-    return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "lens", "bench_id": (st.get("bench") or {}).get("id"), "queries": [q for q in (st.get("read") or {}).get("queries_en") or [] if q][:4]}], "then": "of_got"}
+    return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "lens", "bench_id": (st.get("bench") or {}).get("id"), "at": _lens_at(st.get("read") or {}, st.get("bench") or {}), "queries": [q for q in (st.get("read") or {}).get("queries_en") or [] if q][:4]}], "then": "of_got"}
 
 
 def f_of_peers(st, m, rp, u):
@@ -3325,11 +3368,11 @@ def f_of_got(st, m, rp, u):
     if mode in ("lens", "find"):                 # 같은 영상 판정 = 렌즈 후보든 회원 Claude 가 찾은 후보든 같은 질문·같은 규칙(결과 검사)
         st["of_bad"] = _bad_urls(o)
         from tools.calcopy import origin_find as OF
-        ask = OF.JUDGE_PROMPT + (SUBSONG_CLEAN_ASK if _fmt(st) == "자막노래형" else "") + "\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows + _lens_ai_ctx(st)
+        ask = OF.JUDGE_PROMPT + OF_JUDGE_MAYBE + (SUBSONG_CLEAN_ASK if _fmt(st) == "자막노래형" else "") + "\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows + _lens_ai_ctx(st)
         return {"review": [_rv("of_judge", ask, [_img(x) for x in o["sheets"]][:6], model="opus", need=("same",), meta={"mode": st.get("of_mode")})], "then": "of_pick"}
     prod = ", ".join([str(st["read"].get("brand_hint") or "")] + [str(w) for w in st["read"].get("product_words") or []][:3]).strip(", ")
     need = "최대 2개" if st.get("origins") else "같은 촬영분 원본을 못 찾아 이 후보가 원본이 된다 — 가장 좋은 것부터 최대 3개"   # 가장 좋은 건 원본 그대로(렌즈), 못 찾으면 같은 종류 해외 반응(사장님 10-26)
-    ask = PEER_PICK_FOREIGN.replace("{product}", prod).replace("{need}", need) +"\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows
+    ask = PEER_PICK_FOREIGN.replace("{product}", prod).replace("{need}", need) + (CLEAN_SOURCE_RULE if _back_material(st) else "") +"\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows
     return {"review": [_rv("of_peer", ask, [_img(x) for x in o["sheets"]][:4], model="opus", need=("picks",), meta={"mode": st.get("of_mode")})], "then": "of_pick"}
 
 
@@ -3342,6 +3385,8 @@ def f_of_pick(st, m, rp, u):
         same = [by_n[int(n)] for n in a.get("same") or [] if str(n).isdigit() and int(n) in by_n]
         if _fmt(st) == "자막노래형" and same:
             return _subsong_pick_clean(st, a, same)
+        ids = {id(c) for c in same}      # 썸네일로 못 가른 공식·언론 영상 = 받아서 장면으로 확인(뒤 OF_VERIFY 가 판정, 11-01 신발 편)
+        same += [c for c in (by_n[int(n)] for n in (a.get("maybe") or [])[:OF_MAYBE_MAX] if str(n).isdigit() and int(n) in by_n) if id(c) not in ids]
         seed = {"key": f"yt:{st['bench'].get('id')}", "korean": True, "date": st["bench"].get("date")}
         vs = [seed] + [{**c, "key": f"{c.get('platform')}:{c.get('id')}"} for c in same]
         picked = OF.pick_origins(vs)       # 주인 = origin_find.pick_origins(해외 채널마다 가장 먼저·한국 재편집보다 늦은 것 제외) — 유튜브·틱톡·인스타 모두(10-26 '유튜브만' 버림 제거, 받기 = runner c_origin_get)
@@ -3379,6 +3424,20 @@ F_FIND_SEC = 20 * 60
 F_FIND_HARD = 60 * 60
 F_SAY_STEP = 5 * 60    # 회원 진행 줄 'N분째' 를 5분마다(사장님 10-26 "5분에 한 번씩 계속 안내")
 
+OF_MAYBE_MAX = 3
+CLEAN_SOURCE_RULE = """
+★납품본과 같이 재료는 글자가 박히지 않은 리뷰어·공식의 긴 영상을 먼저 고른다(납품 현장썰 = 유튜브 긴 영상 1~2개를 창 크기로 잘라 씀). 자막이 화면을 덮은 쇼츠·재편집은 뒤로 — 조회수보다 먼저 본다."""
+LENS_AT_MAX = 6
+
+
+def _lens_at(r: dict, B: dict) -> list:
+    """(판단 주인) 렌즈에 올릴 소재 장면 초 — 판독이 고른 장면, 상한 LENS_AT_MAX. 고정 4장(origin_find.FRAMES)은 뒤에 붙는다."""
+    du = float(B.get("dur") or 999)
+    return [float(x) for x in r.get("lens_at") or [] if isinstance(x, (int, float)) and 0 <= float(x) <= du][:LENS_AT_MAX]
+
+OF_JUDGE_MAYBE = """
+★같은 제품의 브랜드 공식·언론 영상인데 썸네일로는 같은 촬영분인지 못 가르면 same 에 넣지 말고 "maybe":[번호,…] 에 넣는다(최대 3개 — 받아서 안의 장면으로 확인한다). 답 = {"same":[…], "maybe":[…], "why":"한 줄"}"""
+
 OF_FIND_ASK = """너는 해외 원본 찾기 담당이다. 자동 검색(구글 렌즈)으로는 이 소재 쇼츠의 해외 원본을 못 찾았다 — 네가 직접 찾아라.
 목표: 이 소재(한국 재편집 쇼츠)가 가져다 쓴 **해외 원본 영상의 주소**. 원본은 유튜브·틱톡·인스타그램 어디에 있어도 된다(셋 다 받을 수 있다).
 짜깁기면 컷마다 원본이 다르다 — **컷마다 따로** 찾는다(답 = 컷별 표, 최대 8컷).
@@ -3387,6 +3446,8 @@ OF_FIND_ASK = """너는 해외 원본 찾기 담당이다. 자동 검색(구글 
 ③urls 에 적은 주소(유튜브 쇼츠·틱톡 영상·인스타 릴스 한 편 주소) = 숏템이 그 영상 정보·썸네일을 받아 같은 영상인지 소재 장면과 나란히 판정한다(결과 검사 — 통과해야 다음 단계).
 ★틱톡·인스타 주소는 영상 한 편 주소 그대로(…tiktok.com/@아이디/video/숫자 · …instagram.com/reel/코드). 프로필·해시태그·검색 페이지 주소는 판정할 수 없다.
 ★같은 촬영분만 원본이다(같은 사람·같은 장소·같은 순간). 같은 제품을 다른 사람이 쓴 영상은 아니다. 앞 몇 초만 같고 뒤가 리뷰어 해설·반응인 영상도 아니다(영상 전체가 원본이어야 한다). 한국 채널 재편집·소재보다 늦게 올린 계정은 원본이 아니다.
+★사람 이름은 화면·설명란에 적힌 것만 쓴다. 얼굴을 보고 이름을 짐작하지 마라.
+★제품 이름이 일반 낱말과 겹치면(Moonwalkers → 춤 영상) 제품 종류 일반어도 검색어에 넣어라(electric shoes 등).
 ★지난 시도에서 판정에 떨어진 주소·같은 검색어는 다시 주지 마라 — 컷마다 다른 단서(사람 생김새·장소·글자·소리)를 써라.
 JSON 하나: {"cuts": [{"cut": "S1 또는 컷 설명", "seen": "그 컷에 보이는 것 한 줄", "urls": ["https://…"], "queries": ["영어 검색어 3~6단어", …]}, …],
  "why": "컷별로 무엇을 단서로 찾았는지 한 줄"}
@@ -3515,6 +3576,7 @@ def f_of_dedup(st, m, rp, u):
 OF_VERIFY_FRAMES = (4, 2)      # 원본 하나 = 장면 8장(4×2)
 OF_VERIFY_ASK = """너는 원본 확인 담당이다. 첫 그림 = 소재(한국 재편집 쇼츠) 1초 장면 시트, 둘째 = 소재 큰 장면. 그 뒤 그림마다 = 받아 온 원본 후보 하나의 장면 8장(번호 = 아래 목록).
 후보마다 소재와 **같은 촬영분**인지 실제 장면으로 다시 판정해라 — 같은 사람(얼굴·머리색·옷)·같은 장소·같은 제품을 쓰는 같은 순간이어야 같다.
+★소재 컷과 나란히 대조해라: 사람 옷·배경(벽·바닥·물건)·찍은 각도 중 **둘 이상이 같아야** 같다. 같은 제품 + 비슷한 동작(계단 오르기 등)만으로는 같지 않다. 공식·언론 영상이라고 기준을 낮추지 마라.
 비슷한 제품을 쓰는 다른 사람·다른 장소는 같지 않다(썸네일만 보고 고른 앞 판정이 틀렸을 수 있다 — 10-27 실측 3편 중 2편이 다른 사람). 확신이 없으면 같지 않다로.
 JSON 하나: {"same": [번호, …], "why": "한 줄"}"""
 OF_VERIFY_WHOLE = """
@@ -3708,6 +3770,9 @@ def source_candidates(version: str, done=(), n: int = POOL_SHOW, offset: int = 0
 def pick_alt_source(st: dict) -> dict | None:
     """(판단 주인 — 둘째 소재 고르기) 그 판 벤치 상위(조회순) 중 회원이 준 소재·이 PC 작업 기록의 만든 편(멈춘 편은 다시 씀 — runner done_refs) 아닌 첫 편."""
     from tools.calcopy import origin_find as OF
+    if st.get("given"):      # 회원이 제품을 정했다 — 다른 소재로 넘어가면 영상과 제품이 어긋난다(11-01 의자 제품 + 신발 소재)
+        st["log"].append("둘째 소재 없음: 회원이 정한 제품이 있어 소재 고정")
+        return None
     if (st.get("env") or {}).get("single_source"):      # 원본 찾기 워커(of_worker, 사장님 10-27 '24시간 미리 찾아 둔다') — 그 소재 하나만
         return None
     if not (PRESETS_FILE.parent / str(st.get("slug") or "-") / "_kal" / ALT_LIST).is_file():
@@ -4222,6 +4287,8 @@ def f_render_clean_got(st, m, rp, u):
         raise _Stop(str(c.get("why")), str(c.get("fix") or ""), retry="render")
     if c.get("error"):
         st["log"].append("박힌 글자 지우기 실패(흐림 그대로 렌더): " + str(c["error"])[:200])
+    if c.get("error") or c.get("mode") in ("blur", "error"):     # 지우기로 정했는데 흐림이 됐다 — 조용히 넘어가지 않는다(11-01)
+        st["notice"], st["_notice_shown"] = "원본 자막을 지우지 못해 흐림으로 가렸어요", False
     if (c.get("mode") == "vmake" and c.get("why")) or c.get("error"):        # 못 지운 구간(시간 초과·크레딧) — 흐림으로 덮고 렌더하지 않는다(10-26 까르보 3판: 흐림이 어긋나 영어 자막이 그대로 남았다). 다시 보내고, 두 번째도 실패면 멈춘다
         for n, iv in (c.get("done") or {}).items():
             tf.setdefault("done", {}).setdefault(n, []).extend(iv)
@@ -4401,7 +4468,7 @@ REF_READ_SUBSONG = """너는 자막노래형 소재 판독 담당이다. 아래�
   ★또 false = 대화·말장난으로 웃기는 영상(몰래카메라 대사·스킷·인터뷰 등 — 받아쓰기에 대사가 이어지고 말을 알아들어야 상황이 이해되는 것). 완성본은 원음을 빼고 노래만 깐다 —
     소리를 끄고 화면만 봐도 무슨 일인지 바로 보이는 영상만 true(벤치 6편 = 소리 칸 bgm 뿐·말 없음, 10-27 치과 접수대 몰래카메라 편: 대사로 웃기는데 노래만 깔려 상황이 하나도 이해 안 됨 — 사장님)
 - what: 무슨 장면인지 한 줄 · queries_en: 원본 찾기 영어 검색어 2~4개(장면 낱말)
-- lens_at: (korean_reedit 일 때) 구글 렌즈에 올릴 장면 초 2~3개 — 앞쪽 핵심 장면 중 **인물·동물·장면 전체가 크게 잡힌 것**.
+- lens_at: (korean_reedit 일 때) 구글 렌즈에 올릴 장면 초 — 컷이 바뀔 때마다 한 장, 최대 6개. **인물·동물·장면 전체가 크게 잡힌 것**. 로고·워터마크·큰 글자가 크게 있는 장면은 피한다.
   ★로고·상표·영어 글자(티셔츠 글씨·간판·제품 이름)가 보이는 장면은 고르지 마라 — 렌즈가 그 물건을 상품으로 검색한다(10-27 사장님, 녹화 편 티셔츠 'NON-ETH…').
   물건만 크게 잡힌 장면보다 사람·배경이 함께 보이는 장면. 한국 자막·제목 띠는 잘라 내니 신경 쓰지 않는다.
 JSON만: {"ref_kind":"korean_reedit|foreign_original","is_clip":true,"what":"…","queries_en":["…"],"lens_at":[초,…],"why":"…"}"""
@@ -4508,8 +4575,7 @@ def j_ref_read(st, m, rp, u):
         raise _Stop(*NOT_HIT, final=True)
     if korean:
         st["log"].append(f"소재 = 한국 재편집 → 렌즈로 같은 영상 깨끗한 판(장면 {r.get('lens_at')}초)")
-        at = [float(x) for x in r.get("lens_at") or [] if isinstance(x, (int, float)) and 0 <= float(x) <= float(B.get("dur") or 999)][:3]
-        return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "lens", "bench_id": B.get("id"), "at": at, "queries": [q for q in r.get("queries_en") or [] if q][:4]}], "then": "of_got"}
+        return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "lens", "bench_id": B.get("id"), "at": _lens_at(r, B), "queries": [q for q in r.get("queries_en") or [] if q][:4]}], "then": "of_got"}
     st["origins"] = [{"id": B.get("id"), "info": {k: B.get(k) for k in ("id", "title", "channel", "date", "dur", "views", "subs")}, "how": "소재 = 해외 원본"}]
     st["log"].append("소재 = 해외 원본 그대로(한 샷)")
     return {"goto": "of_fetch"}
