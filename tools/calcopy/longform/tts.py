@@ -42,8 +42,10 @@ def yomi(s):
     for a, b in READ: s = re.sub(a, b, s)
     s = s.replace("'", "").replace("‘", "").replace("’", "")
     return s
-for l in lines:
-    if l["type"] == "line": l["tts"] = yomi(l["text"])
+_lp = os.path.join(OUT, "lines.json")
+_kept = {x["text"]: x["tts"] for x in json.load(open(_lp, encoding="utf-8")) if x.get("tts")} if os.path.exists(_lp) else {}
+for l in lines:   # 손으로 바꾼 tts 칸(숫자한글읽기)은 같은 문장이면 그대로 둔다
+    if l["type"] == "line": l["tts"] = _kept.get(l["text"]) or yomi(l["text"])
 json.dump(lines, open(os.path.join(OUT, "lines.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 if "--parse-only" in args:  # 일레븐랩스(tts_r7.py)로 녹음할 때: 문장 목록만 만들고 끝
     print(f"문장 목록만 만듦: {os.path.join(OUT, 'lines.json')}"); sys.exit(0)

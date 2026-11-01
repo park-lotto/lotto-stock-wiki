@@ -30,7 +30,7 @@ def F(name, size):
     if k not in _fc:
         path = {"B": "Pretendard-Bold.otf", "XB": "Pretendard-ExtraBold.otf", "K": "Pretendard-Black.otf", "M": "Pretendard-Medium.otf",
                 "R": "Pretendard-Regular.otf", "SB": "Pretendard-SemiBold.otf", "SERIF": "HANBatangB.ttf",
-                "HAN": "BlackHanSans-Regular.ttf", "PEN": "NanumPenScript-Regular.ttf"}[name]
+                "HAN": "BlackHanSans-Regular.ttf", "PEN": "NanumPenScript-Regular.ttf", "GM": "GmarketSansBold.otf"}[name]
         _fc[k] = ImageFont.truetype(P("fonts", path), size)
     return _fc[k]
 def br_dy(d, f, fb):
@@ -380,14 +380,33 @@ def kenburns(im, p, z0=1.0, z1=1.07, k=None):
 def draw_symbol(size):
     im = Image.new("RGBA", (size, size), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
     s = size
+    if CFG.get("ui_style") == "b":   # 민트 사각 + 흰 재생 삼각형
+        d.rounded_rectangle([s * .06, s * .06, s * .94, s * .94], radius=s * .16, fill=C["sub_bar"])
+        d.polygon([(s * .38, s * .28), (s * .38, s * .72), (s * .74, s * .5)], fill=(255, 255, 255, 255))
+        return im
     d.rounded_rectangle([s * .12, s * .18, s * .88, s * .86], radius=s * .08, fill=(32, 62, 120, 255), outline=(255, 255, 255, 255), width=max(2, s // 28))
     d.line([(s * .5, s * .2), (s * .5, s * .84)], fill=(255, 255, 255, 255), width=max(2, s // 30))
     d.polygon([(s * .62, s * .08), (s * .74, s * .08), (s * .74, s * .58), (s * .68, s * .68), (s * .62, s * .58)], fill=(255, 205, 40, 255), outline=(60, 40, 10, 255))
     return im
 _ui = {}
+def ui_layer_b(chapter, bright):
+    """ui_style b: 채널명 우상단 사각 패, 챕터 좌상단 네모 태그(구분선·캡슐·심볼 없음)."""
+    im = Image.new("RGBA", (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(im); ac = C["sub_bar"]
+    f = F("GM", 34); n = CFG["channel_name"]; nw = tw(d, n, f)
+    d.rectangle([W - 48 - nw - 44, 36, W - 48, 96], fill=ac)
+    d.text((W - 48 - nw - 22, 46), n, font=f, fill=(255, 255, 255, 255))
+    if chapter and chapter not in CFG.get("no_capsule", []):
+        tag = chapter.split(" : ")[-1]; fc = F("GM", 28); cw = tw(d, tag, fc)
+        d.rectangle([48, 36, 48 + cw + 44, 90], fill=(20, 24, 28, 225))
+        d.rectangle([48, 84, 48 + cw + 44, 90], fill=ac)
+        d.text((70, 47), tag, font=fc, fill=(255, 255, 255, 255))
+    return im
+
 def ui_layer(chapter, bright):
     k = (chapter, bright)
     if k in _ui: return _ui[k]
+    if CFG.get("ui_style") == "b":
+        _ui[k] = ui_layer_b(chapter, bright); return _ui[k]
     im = Image.new("RGBA", (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
     b0, b1 = CFG["logo_brackets"]; name = f"{b0}{CFG['channel_name']}{b1}"
     f = F("HAN", 46); fb = F("K", 44); x, y = 48, 40
@@ -409,7 +428,11 @@ _sub = {}
 def sub_layer(text):
     if text in _sub: return _sub[text]
     im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    if text:
+    if text and CFG.get("ui_style") == "b":   # 화면 맨 아래 가로 띠 + 위쪽 색 선
+        d = ImageDraw.Draw(im); f = F("GM", 44); w = tw(d, text, f)
+        d.rectangle([0, H - 100, W, H], fill=C["sub_box"]); d.rectangle([0, H - 106, W, H - 100], fill=C["sub_bar"])
+        d.text(((W - w) // 2, H - 76), text, font=f, fill=(255, 255, 255, 255))
+    elif text:
         d = ImageDraw.Draw(im); f = F("B", 48); w = tw(d, text, f); bh = 76; bw = w + 76
         x0 = (W - bw) // 2; y0 = H - 92 - bh
         d.rectangle([x0, y0, x0 + bw, y0 + bh], fill=C["sub_box"])
@@ -425,7 +448,8 @@ def src_layer(src, bright):
     if src:
         d = ImageDraw.Draw(im); f = F("SB", 26); s = src if src == "AI 생성" else f"출처 : {src}"
         w = tw(d, s, f); col = (51, 51, 51, 255) if bright else (229, 229, 229, 255)
-        d.text((W - 48 - w, H - 59 - 28), s, font=f, fill=col, stroke_width=0 if bright else 2, stroke_fill=(0, 0, 0, 200))
+        x_, y_ = (48, H - 106 - 42) if CFG.get("ui_style") == "b" else (W - 48 - w, H - 59 - 28)   # b: 자막 띠 위 왼쪽
+        d.text((x_, y_), s, font=f, fill=col, stroke_width=0 if bright else 2, stroke_fill=(0, 0, 0, 200))
     _src[k] = im; return im
 
 # ───────────────────────── 오버레이 조각 ─────────────────────────
@@ -805,6 +829,9 @@ def draw_photo(s, lt, T, tl):
 # ───────────────────────── 키네틱 타이포 카드 (타이포템플릿 규격) ─────────────────────────
 TYPO_BG = {"black": (17, 17, 17), "ivory": (242, 239, 233), "lime": (200, 255, 0), "pink": (255, 30, 138), "blue": (30, 108, 235)}
 TYPO_INK = {"black": (245, 245, 240), "ivory": (17, 17, 17), "lime": (17, 17, 17), "pink": (17, 17, 17), "blue": (255, 255, 255)}
+if CFG.get("typo_colors"):   # 결 손잡이 — 편 config 로 타이포 카드 색을 바꾼다
+    TYPO_BG.update({k: tuple(v) for k, v in CFG["typo_colors"].items()})
+    BOXC[:] = [TYPO_BG["lime"], TYPO_BG["pink"], tuple(C["yellow"]), TYPO_BG["blue"]]
 TYPO_SIZE = {"S0": 400, "S1": 270, "S2": 180}
 def typo_cards(s, tl):
     """items: (문장, 단어, 글자, 바탕, 위치 L/C/R, 크기 S0/S1/S2, 등장 stamp/whip, [박스색])"""
@@ -973,13 +1000,16 @@ def draw_outro(lt, T):
     return img
 
 # ───────────────────────── 영상 렌더 ─────────────────────────
-def render_video(t_from=None, t_to=None, out=None):
+ENCODER = ["-c:v", "h264_nvenc", "-preset", "p5", "-rc", "vbr", "-cq", "19", "-b:v", "0"]   # GPU 고정(사장님 11-02)
+
+def render_video(t_from=None, t_to=None, out=None, frames=None):
     tl = json.load(open(os.path.join(BUILD, "timeline.json"), encoding="utf-8"))
     total = tl["total"]; nfr = int(total * FPS)
     f0 = int((t_from or 0) * FPS); f1 = int((t_to or total) * FPS) if t_to else nfr
+    if frames: f0, f1 = frames   # 구간 동시 렌더는 프레임 번호로 끊는다(초로 끊으면 경계에서 한 장이 겹치거나 빠진다)
     out = out or os.path.join(BUILD, "video.mp4" if t_from is None else f"part_{int(t_from)}_{int(t_to or total)}.mp4")
     ff = subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", f"{CFG['fps_num']}/{CFG['fps_den']}",
-                           "-i", "-", "-c:v", "libx264", "-preset", "medium", "-crf", "19", "-pix_fmt", "yuv420p", out], stdin=subprocess.PIPE)
+                           "-i", "-", *ENCODER, "-pix_fmt", "yuv420p", out], stdin=subprocess.PIPE)
     shots = tl["shots"]; subs = tl["subs"]; evs = tl["events"]; si = 0
     for fi in range(f0, f1):
         t = fi / FPS
@@ -1008,13 +1038,37 @@ def render_video(t_from=None, t_to=None, out=None):
             frame.alpha_composite(ui_layer(s["chapter"], br))
             src_bright = br
             if not br:  # 사진이라도 우하단이 밝으면 어두운 글자
-                reg = frame.crop((W - 760, H - 95, W - 40, H - 50)).convert("L"); src_bright = np.asarray(reg).mean() > 135
+                reg = frame.crop((40, H - 150, 760, H - 106) if CFG.get("ui_style") == "b" else (W - 760, H - 95, W - 40, H - 50)).convert("L"); src_bright = np.asarray(reg).mean() > 135
             if s["type"] != "typo": frame.alpha_composite(src_layer(shot_src(s), src_bright))
             sub = "" if s["type"] == "typo" else next((x["text"] for x in subs if x["t0"] <= t < x["t1"] + 0.1), "")
             frame.alpha_composite(sub_layer(sub))
         ff.stdin.write(frame.convert("RGB").tobytes())
         if fi % 300 == 0: print(f"{t/60:.2f}분 / {total/60:.2f}분", flush=True)
     ff.stdin.close(); ff.wait(); print("영상:", out)
+
+def render_parallel(n=6):
+    """구간 n개를 프로세스로 나눠 그린 뒤 다시 인코딩 없이 잇는다. 프레임 수가 안 맞으면 멈춘다."""
+    tl = json.load(open(os.path.join(BUILD, "timeline.json"), encoding="utf-8"))
+    nfr = int(tl["total"] * FPS); cuts = [nfr * k // n for k in range(n + 1)]
+    parts = [os.path.join(BUILD, f"gpu_{k}.mp4") for k in range(n)]
+    def start(k):
+        log = open(os.path.join(BUILD, f"gpu_{k}.log"), "w", encoding="utf-8")   # 왜 죽었는지 남긴다(11-02 2번 구간이 까닭 없이 끊겼다)
+        return subprocess.Popen([sys.executable, "-X", "utf8", os.path.abspath(__file__), "video-part", str(cuts[k]), str(cuts[k + 1]), parts[k]],
+                                stdout=log, stderr=subprocess.STDOUT)
+    ps = [start(k) for k in range(n)]
+    bad = [k for k, p in enumerate(ps) if p.wait()]
+    for k in bad:   # 혼자 다시 돌리면 대개 지나간다 — 한 번만
+        print(f"구간 {k} 다시", flush=True)
+        if start(k).wait(): raise SystemExit(f"구간 {k} 렌더 실패 — build/gpu_{k}.log")
+    lst = os.path.join(BUILD, "gpu_list.txt")
+    open(lst, "w", encoding="utf-8").write("".join("file '" + p.replace(chr(92), "/") + "'" + chr(10) for p in parts))
+    out = os.path.join(BUILD, "video.mp4")
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", out], check=True)
+    got = int(subprocess.run(["ffprobe", "-v", "error", "-count_packets", "-select_streams", "v:0", "-show_entries", "stream=nb_read_packets", "-of", "csv=p=0", out],
+                             capture_output=True, text=True).stdout.strip().rstrip(","))
+    if got != nfr: raise SystemExit(f"프레임 수 불일치: {got} != {nfr}")
+    for p in parts: os.remove(p)
+    print("영상:", out, got, "프레임")
 
 def mux():
     out = E("_완성", CFG.get("output_name", "완성본.mp4")); os.makedirs(os.path.dirname(out), exist_ok=True)
@@ -1027,6 +1081,8 @@ if __name__ == "__main__":
     if cmd == "timeline": tl = build_timeline(); build_audio(tl)
     elif cmd == "video":
         a = float(sys.argv[2]) if len(sys.argv) > 2 else None; b = float(sys.argv[3]) if len(sys.argv) > 3 else None; render_video(a, b)
+    elif cmd == "video-gpu": render_parallel(int(sys.argv[2]) if len(sys.argv) > 2 else 6)
+    elif cmd == "video-part": render_video(out=sys.argv[4], frames=(int(sys.argv[2]), int(sys.argv[3])))
     elif cmd == "frame":
         tl = json.load(open(os.path.join(BUILD, "timeline.json"), encoding="utf-8"))
         for ts in sys.argv[2:]:
