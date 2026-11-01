@@ -17,32 +17,48 @@ for line in Path(r"C:\Users\CH\jev-lab\.env").read_text(encoding="utf-8").splitl
 
 from typesafe_sdk import Noul, Score, TypeSafeClient
 
-LEVELS = ["Clearly no", "Weakly", "Somewhat", "Clearly yes"]
+N_LEVELS = 4
 WEIGHTS = {  # 가이드 5절 항목. 합 1.0
     "myth": 0.25, "chapters": 0.20, "sources": 0.20, "relevance": 0.20, "fresh": 0.15,
 }
+CONF_MIN = 0.35   # 이보다 낮은 항목이 있으면 점수가 높아도 사람 판단으로 넘긴다(Jev 확신도)
+# 단계 문구가 판정의 전부다(Jev 는 각 단계를 설명만 보고 따로 판단). 지시문은 영어, candidate 만 한국어(공식: 영어가 주력).
 QUESTIONS = {
-    "fresh": Score(instructions="`candidate` is a story reported within the past week of the given `today`",
-                   criteria=LEVELS),
-    "myth": Score(instructions="`candidate` has a common belief about the cause, and a concrete number that overturns it",
-                  criteria=LEVELS),
-    "chapters": Score(instructions="The cause in `candidate` can be split into three or more separate explanatory chapters",
-                      criteria=LEVELS),
-    "sources": Score(instructions="`candidate` names three or more official statistics, institutions or news sources",
-                     criteria=LEVELS),
-    "relevance": Score(instructions="Korean viewers of `channel` would feel `candidate` matters to their own life",
-                       criteria=LEVELS),
-    "defame": Noul(instructions="`candidate` can only be told by accusing a named individual rather than explaining systems"),
+    "fresh": Score(instructions="How recently was `candidate` reported, relative to `today`?",
+                   criteria=["No date is given, or the latest reported date is more than 3 months before `today`",
+                             "The latest reported date is 1 to 3 months before `today`",
+                             "The latest reported date is 8 to 30 days before `today`",
+                             "The latest reported date is within 7 days of `today`"]),
+    "myth": Score(instructions="Does `candidate` give a reason to overturn what people commonly believe?",
+                  criteria=["No concrete number appears",
+                            "Numbers appear but only describe the situation",
+                            "A number is surprising, but no specific common belief is challenged",
+                            "A specific common belief or official claim is contradicted by a specific number"]),
+    "chapters": Score(instructions="How many distinct causes does `candidate` state for what happened?",
+                      criteria=["No cause is stated", "One cause is stated", "Two distinct causes are stated",
+                                "Three or more distinct causes are stated"]),
+    "sources": Score(instructions="How many separate named sources does `candidate` cite?",
+                     criteria=["No source is named", "One source is named", "Two sources are named",
+                               "Three or more official statistics, institutions or news outlets are named"]),
+    "relevance": Score(instructions="How directly does `candidate` touch the daily life of Korean viewers of `channel`?",
+                       criteria=["No link to Korea at all",
+                                 "A foreign story with only a distant link to Korea",
+                                 "Affects Korean industries or the Korean economy in general",
+                                 "Directly affects Korean households' money, jobs, housing or prices"]),
+    "defame": Noul(instructions="Can `candidate` only be told by accusing a named individual?",
+                   criteria={"true": "The story depends on claiming that a specific named person committed wrongdoing",
+                             "false": "The story is about institutions, markets, policies or statistics; companies and officials appear only as facts"}),
 }
 
 
 def judge(client, name, text, channel, today):
     r = client.system_one(state={"candidate": text, "channel": channel, "today": today}, questions=QUESTIONS)
-    parts = {k: r.scores[k].score / (len(LEVELS) - 1) for k in WEIGHTS}
+    parts = {k: r.scores[k].score / (N_LEVELS - 1) for k in WEIGHTS}
+    conf = min(r.scores[k].confidence for k in WEIGHTS)
     total = round(sum(parts[k] * w for k, w in WEIGHTS.items()) * 100)
     defame = r.nouls["defame"].noul
-    verdict = "통과" if total >= 60 and defame < 0.5 else "보류" if total >= 40 else "탈락"
-    return dict(name=name, total=total, verdict=verdict, defame=round(defame, 2), **{k: round(v, 2) for k, v in parts.items()})
+    verdict = "보류" if defame >= 0.5 or (total >= 40 and conf < CONF_MIN) else "통과" if total >= 60 else "보류" if total >= 40 else "탈락"
+    return dict(name=name, total=total, verdict=verdict, defame=round(defame, 2), conf=round(conf, 2), **{k: round(v, 2) for k, v in parts.items()})
 
 
 def main():
@@ -61,7 +77,7 @@ def main():
     rows.sort(key=lambda x: -x["total"])
     print("| 소재 | 종합 | 판정 | 뒤집기 | 챕터 | 출처 | 공감 | 이번주 | 명예훼손 |\n|---|---|---|---|---|---|---|---|---|")
     for x in rows:
-        print(f"| {x['name']} | {x['total']} | {x['verdict']} | {x['myth']} | {x['chapters']} | {x['sources']} | {x['relevance']} | {x['fresh']} | {x['defame']} |")
+        print(f"| {x['name']} | {x['total']} | {x['verdict']} | {x['myth']} | {x['chapters']} | {x['sources']} | {x['relevance']} | {x['fresh']} | {x['defame']} | {x['conf']} |")
 
 
 if __name__ == "__main__":
