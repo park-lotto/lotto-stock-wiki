@@ -3561,6 +3561,58 @@ def gate_stamp(T: dict, M: dict, st: dict, doc: Path) -> str:
     return hashlib.sha256(json.dumps(body, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8")).hexdigest()
 
 
+def plan_reuse_gate(T: dict, M: dict, st: dict) -> list[str]:
+    """B13 을 렌더 전에 — 완성본 관문과 같은 함수(quality_gate.reuse_bad)를 계획 컷에 돌린다(11-01 키치잇 렌더 뒤 발견으로 재작업)."""
+    from tools.calcopy.hybrid.quality_gate import reuse_bad
+    if not M.get("cand_dir"):
+        return []
+    return [f"{v} — 겹치지 않는 다른 구간·재료로 바꾼다" for v in reuse_bad(T["cuts"], Path(M["cand_dir"]), st)[0]]
+
+
+BLUR_AREA_MAX = 0.15      # 창 넓이 중 흐림 칸 합 — 넘으면 글자를 가린 게 아니라 화면을 망친 컷(11-01 키치잇 23.5~26.4초 큰 흐림 띠가 통과)
+PHOTO_RUN_MAX = 3.0       # 사진 컷이 이어져도 되는 초(11-01 키치잇 15~19초 멈춘 듯)
+
+
+def blur_cut_gate(T: dict, M: dict, st: dict, area_max: float = BLUR_AREA_MAX) -> list[str]:
+    """(판단 주인 — 흐림으로 때워도 되는 컷인가) 컷이 보여 주는 원본 구간에 걸린 흐림 칸이 창을 얼마나 덮나. 넘으면 다른 구간·재료로 바꾼다.
+    관문 ④ 는 흐림 안 글자를 통과로 치므로 면적은 여기서 재야 한다. 계획·렌더가 timeline_gates 로 같이 부른다."""
+    src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
+    if not src_dir:
+        return []
+    _, _, ww, wh = frame_window(st["frame"])
+    out = []
+    for c in T["cuts"]:
+        regs = (M.get("blur") or {}).get(c["src"]) or []
+        src = src_dir / c["src"]
+        if not regs or c.get("ss") is None or not src.exists() or src.suffix.lower() in IMG_EXT:
+            continue
+        a0 = float(c["ss"]); a1 = a0 + src_frames(c) / FPS
+        x, y, w, h = cut_crop(c, src, (ww, wh))
+        ink = 0.0
+        for r in regs:
+            if len(r) >= 6 and (float(r[5]) <= a0 or float(r[4]) >= a1):
+                continue
+            ix = max(0, min(x + w, r[0] + r[2]) - max(x, r[0])); iy = max(0, min(y + h, r[1] + r[3]) - max(y, r[1]))
+            ink += ix * iy
+        share = ink / max(1, w * h)
+        if share > area_max:
+            out.append(f"{c['line']} {c['src']}@{a0:.2f} 흐림이 화면의 {share:.0%}(상한 {area_max:.0%}) — 이 컷은 남의 글자가 적은 다른 구간이나 다른 재료로 바꾼다")
+    return out
+
+
+def photo_run_gate(T: dict, M: dict, max_sec: float = PHOTO_RUN_MAX) -> list[str]:
+    """(판단 주인 — 사진이 이어져 멈춘 듯 보이나) 사진 컷이 연달아 max_sec 를 넘으면 영상 컷을 끼우게 한다."""
+    out, run, first = [], 0.0, None
+    for c in list(T["cuts"]) + [{"src": "", "t0": 0, "t1": 0}]:
+        if Path(c["src"]).suffix.lower() in IMG_EXT:
+            run += float(c["t1"]) - float(c["t0"]); first = first or c
+        else:
+            if run > max_sec:
+                out.append(f"{first.get('line')}부터 사진만 {run:.1f}초(상한 {max_sec:.0f}초) — 사이에 영상 컷을 넣는다")
+            run, first = 0.0, None
+    return out
+
+
 def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *, plan: bool, measured: bool = True,
                    erase: list | None = None, placed: dict | None = None) -> list[tuple[str, list[str]]]:
     """(판단 주인 — 렌더 전 시간표 관문 목록·순서) 같은 시간표 T 를 읽는 관문을 전부 돌려 [(관문 이름, 문제 글 목록)…] 로(빈 목록 = 통과).
@@ -3576,6 +3628,9 @@ def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *,
            ("⑤ 컷 길이", cut_length_gate(T, st)),
            ("⑦ 멈춤", cut_still_gate(T, M, st)),
            ("사진", photo_gate(T, st, M)),
+           ("흐림 면적", blur_cut_gate(T, M, st)),
+           ("사진 연속", photo_run_gate(T, M)),
+           ("B13 재사용", plan_reuse_gate(T, M, st)),
            ("리듬", rhythm_gate(T, st, src_dir))]
     if placed is not None:
         out.append(("꾸밈", deco_gate(placed, doc, st, log)))
