@@ -297,8 +297,7 @@ def need_list(version: str, url: str = "", fmt: str = "") -> list[dict]:
             from tools.calcopy.engine import voice_synth as PM
             if not PM._member_key("fish"):
                 out.append({"id": "fish", "label": "목소리 키(피쉬)", "how": "setting"})
-    if not PAID_OFF and not voice.get("none") and not have_speechmatics():   # 나레 없는 판(voice.none)은 받아쓸 소리가 없다     # 받아쓰기(원음·완성본 줄별 대조 narr_verify·asr_cross) — 사장님 10-26 '스피치매틱스도 무료 API 필요'. 키 자리 = asr_local.speechmatics_key
-        out.append({"id": "speechmatics", "label": "스피치매틱스 키(무료)", "how": "setting"})
+    # 받아쓰기 키는 요구하지 않는다 — 없으면 위스퍼로 자동 진행(asr_local.transcribe, 관제 298)
     if fmt in ("해외원본형", "자막노래형"):   # 박힌 자막 지우기(VMake)는 이 두 형식만 부른다(flow f_clean·f_render) — 판 orig_text.mode·키 자리 판단 = vmake_clean.ready
         from tools.calcopy import vmake_clean as VC
         if VC.ready(VC.style_mode(version))["mode"] == "need_key":

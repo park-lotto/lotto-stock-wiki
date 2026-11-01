@@ -15638,9 +15638,9 @@ def _toss_order_name_amount():
 # 숏클메이커 반·금액·11월 차액(2026-11-01 사장님, 관제 292) — 화면·주문·입금 신고는 전부 _pay_products 만 읽는다.
 _SHORTCL_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfXnrij7pohkki2dY1df6ABWQEF6zBSao5mtx5rmnwJVqbYEg/viewform"
 _SHORTCL_PLANS = (
-    ("basic", "기본반", 990000, 110000, ("프리셋 팩 5~10개 정기 업데이트", "기본 강의")),
-    ("advanced", "고급반", 1990000, 1110000, ("실제 엔진 제공", "어떤 채널이든 벤치마킹", "기본·고급 강의")),
-    ("premium", "프리미엄반", 2990000, 2110000, ("기초 세팅", "한 달 1:1 코칭", "주 2회 Zoom", "오프라인 특강 1회",
+    ("basic", "기본반", 990000, 0, ("프리셋 팩 5~10개 정기 업데이트", "기본 강의")),
+    ("advanced", "고급반", 1990000, 1000000, ("실제 엔진 제공", "어떤 채널이든 벤치마킹", "기본·고급 강의")),
+    ("premium", "프리미엄반", 2990000, 2000000, ("기초 세팅", "한 달 1:1 코칭", "주 2회 Zoom", "오프라인 특강 1회",
                                                 "프리미엄 라운지", "기본·고급 강의")),
 )
 _SHORTCL_UPGRADE_LAST_DAY = "2026-11-30"    # 한국 시각 이날까지만 차액 결제를 판다
@@ -15661,6 +15661,8 @@ def _pay_products(now=None) -> list:
                       "label": label, "amount": amount, "includes": includes})
     if _shortcl_upgrade_open(now):
         for key, label, _amount, gap, includes in _SHORTCL_PLANS:
+            if not gap:     # 기본반 이동은 무료 — 결제 상품이 없고 관리자가 개통한다(관제 298)
+                continue
             items.append({"code": f"shortcl_{key}_upgrade", "kind": "upgrade",
                           "name": f"숏클메이커 {label} 숏템 회원 업그레이드", "label": label,
                           "amount": gap, "includes": includes})

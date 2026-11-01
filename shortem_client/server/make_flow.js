@@ -80,7 +80,8 @@ export async function packFileFor(presetId) {
   return PID_RE.test(String(presetId || '')) ? localPackFile(presetId) : null;
 }
 
-const RENT_FAIL = { not_entitled: '이 프리셋은 지금 등급으로 쓸 수 없습니다 — 숏템 웹에서 등급을 확인하세요',
+const RENT_FAIL = { disabled: '숏클 서버 쪽에서 프리셋 내려받기를 잠시 멈췄습니다 — 이 PC 문제가 아니니 잠시 뒤 다시 시도해 주세요',
+  not_entitled: '이 프리셋은 지금 등급으로 쓸 수 없습니다 — 숏템 웹에서 등급을 확인하세요',
   not_ready: '이 프리셋을 지금 준비할 수 없습니다 — 잠시 뒤 다시 부르세요', busy: '앞 작업이 끝난 뒤 다시 부르세요',
   lease_lost: '작업 권한을 받지 못했습니다 — 다른 PC 에서 쓰는 중인지 확인하세요', no_key: '라이선스 키가 없습니다 — 숏템 설치를 다시 확인하세요' };
 
