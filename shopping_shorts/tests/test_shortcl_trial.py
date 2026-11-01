@@ -42,3 +42,11 @@ def test_관리자_승인은_기한없음(st, monkeypatch):
 def test_기존_승인회원은_버튼없음(st):
     cp.set_member(9, True, st)
     assert not cp.trial_state(st, 9, True)["available"]
+
+
+def test_신청주소는_로그인세션_경로():
+    """/api/claude/ 는 공개 접두사라 세션이 안 붙는다 — 반드시 me/ 아래(라이브 사고 11-01)."""
+    from pathlib import Path
+    root = Path(cp.__file__).parent
+    assert '@app.post("/api/claude/me/trial")' in (root / "app.py").read_text(encoding="utf-8")
+    assert '"/api/claude/me/trial"' in (root / "static/settings.html").read_text(encoding="utf-8")
