@@ -447,7 +447,7 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
         st["phase"] = "member_revise"      # 대본이 나온 뒤 회원이 고칠 줄을 말함 — 어느 단계든 그 줄만(재료 그대로, ph_member_revise)
     if user.get("reclean") and (st.get("script") or {}).get("M"):
         tf = st.setdefault("text_fix", {})    # 대본·재료·목소리는 그대로, 박힌 글자 지우기부터 렌더만 다시(주인 = 여기 · f_render)
-        tf.update({"mode": "vmake", "key": None})
+        tf.update({"key": None})          # 방식(지우기·흐림)은 회원 설정 그대로 — 돈 드는 지우기로 강제하지 않는다
         st.get("tries", {}).pop("vmake_fail", None)
         st["phase"] = "render"
     if m and st.get("watch_last") and any(isinstance(v, dict) and v.get("error") for v in m.values()):
@@ -1803,7 +1803,7 @@ def _material_top(st, sw=None) -> int:
 def _pick_line(st) -> str:
     """고르기 질문 셋(재료·비슷한 제품·재료 더 찾기)이 같이 쓰는 ★개수 줄 — SCREEN_PICK 이 '아래 ★개수'를 가리킨다."""
     a, b = _material_n(st)
-    return f"\n\n★개수: {a}~{b}개를 고른다. 대본 줄마다 가리키는 그림이 달라야 하니 서로 다른 장면을 주는 영상으로."
+    return f"\n\n★개수: {a}~{b}개를 고른다. 대본 줄마다 가리키는 그림이 달라야 하니 서로 다른 장면을 주는 영상으로." + (CLEAN_SOURCE_RULE if _back_material(st) else "")
 
 
 def _screen_pick_ask(st, rows, more="") -> str:
@@ -3128,7 +3128,8 @@ REF_READ_FOREIGN = """너는 해외원본형 소재 판독 담당이다. 아래�
 - product_words: 제품을 가리키는 낱말(한국어·영어 둘 다 — 화면 글자·설명란·말에서). brand_hint: 화면·설명란에 보이는 브랜드·제품 이름 그대로, 없으면 ''.
 - queries_en: 같은 제품을 다른 해외 사람이 처음 써 보는 쇼츠를 찾을 영어 검색어 2~4개('<브랜드> <제품> reaction'·'trying korean <제품>' 꼴).
 - people: 화면의 해외 출연자 수·옷·머리 한 줄(같은 영상 판정 단서).
-JSON 하나: {"ref_kind": "korean_reedit|overseas_origin", "is_shopping": true, "product_words": ["…"], "brand_hint": "…", "queries_en": ["…"], "people": "…", "why": "한 줄"}"""
+- lens_at: 구글 렌즈에 올릴 장면 초 — 컷이 바뀔 때마다 한 장, 최대 6개. **인물·동물·장면 전체가 크게 잡힌 것**. 로고·워터마크·큰 글자가 크게 있는 장면은 피한다.
+JSON 하나: {"ref_kind": "korean_reedit|overseas_origin", "is_shopping": true, "product_words": ["…"], "brand_hint": "…", "queries_en": ["…"], "lens_at": [초, …], "people": "…", "why": "한 줄"}"""
 
 PEER_PICK_FOREIGN = """너는 같은 제품 해외 반응 고르기 담당이다. **같은 제품**({product}) — 또는 **같은 종류의 비슷한 제품**(색·브랜드·모양이 조금 달라도 쓰임새가 같은 것, 사장님 10-26 "마스크팩이면 색이 다르거나 비슷한 것도 된다") — 을 **해외 사람**이 써 보고 반응하는 쇼츠를 고른다.
 첫 그림 맨 위 줄(S1~S4) = 소재 쇼츠(또는 이미 정한 원본) 장면, 아래 파란 번호 칸 = 후보 썸네일(번호 = 아래 후보 목록 n).
@@ -3323,7 +3324,7 @@ def f_ref_read(st, m, rp, u):
     st["origins"] = []
     if korean:
         st["log"].append("소재 = 한국 재편집 → 렌즈로 해외 원본")
-        return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "lens", "bench_id": B.get("id"), "queries": [q for q in r.get("queries_en") or [] if q][:4]}], "then": "of_got"}
+        return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "lens", "bench_id": B.get("id"), "at": _lens_at(r, B), "queries": [q for q in r.get("queries_en") or [] if q][:4]}], "then": "of_got"}
     st["origins"] = [{"id": B.get("id"), "info": {k: B.get(k) for k in ("id", "title", "channel", "date", "dur")}, "how": "소재 = 해외 원본"}]
     st["log"].append("소재 = 해외 원본 → 첫 원본, 같은 제품 다른 해외 반응 찾기")
     return {"goto": "of_peers"}
@@ -3333,7 +3334,7 @@ def f_of_lens(st, m, rp, u):
     """다시 시도 = 렌즈를 새로 돌린다(10-26: 다시 시도가 같은 후보를 다시 판정만 해 '다른 방법으로'가 거짓이었다 — 렌즈 그림 고친 뒤에도 옛 후보 13개 그대로)."""
     st["origins"] = []
     st.pop("_peers_done", None)
-    return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "lens", "bench_id": (st.get("bench") or {}).get("id"), "queries": [q for q in (st.get("read") or {}).get("queries_en") or [] if q][:4]}], "then": "of_got"}
+    return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "lens", "bench_id": (st.get("bench") or {}).get("id"), "at": _lens_at(st.get("read") or {}, st.get("bench") or {}), "queries": [q for q in (st.get("read") or {}).get("queries_en") or [] if q][:4]}], "then": "of_got"}
 
 
 def f_of_peers(st, m, rp, u):
@@ -3371,7 +3372,7 @@ def f_of_got(st, m, rp, u):
         return {"review": [_rv("of_judge", ask, [_img(x) for x in o["sheets"]][:6], model="opus", need=("same",), meta={"mode": st.get("of_mode")})], "then": "of_pick"}
     prod = ", ".join([str(st["read"].get("brand_hint") or "")] + [str(w) for w in st["read"].get("product_words") or []][:3]).strip(", ")
     need = "최대 2개" if st.get("origins") else "같은 촬영분 원본을 못 찾아 이 후보가 원본이 된다 — 가장 좋은 것부터 최대 3개"   # 가장 좋은 건 원본 그대로(렌즈), 못 찾으면 같은 종류 해외 반응(사장님 10-26)
-    ask = PEER_PICK_FOREIGN.replace("{product}", prod).replace("{need}", need) +"\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows
+    ask = PEER_PICK_FOREIGN.replace("{product}", prod).replace("{need}", need) + (CLEAN_SOURCE_RULE if _back_material(st) else "") +"\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows
     return {"review": [_rv("of_peer", ask, [_img(x) for x in o["sheets"]][:4], model="opus", need=("picks",), meta={"mode": st.get("of_mode")})], "then": "of_pick"}
 
 
@@ -3424,6 +3425,16 @@ F_FIND_HARD = 60 * 60
 F_SAY_STEP = 5 * 60    # 회원 진행 줄 'N분째' 를 5분마다(사장님 10-26 "5분에 한 번씩 계속 안내")
 
 OF_MAYBE_MAX = 3
+CLEAN_SOURCE_RULE = """
+★납품본과 같이 재료는 글자가 박히지 않은 리뷰어·공식의 긴 영상을 먼저 고른다(납품 현장썰 = 유튜브 긴 영상 1~2개를 창 크기로 잘라 씀). 자막이 화면을 덮은 쇼츠·재편집은 뒤로 — 조회수보다 먼저 본다."""
+LENS_AT_MAX = 6
+
+
+def _lens_at(r: dict, B: dict) -> list:
+    """(판단 주인) 렌즈에 올릴 소재 장면 초 — 판독이 고른 장면, 상한 LENS_AT_MAX. 고정 4장(origin_find.FRAMES)은 뒤에 붙는다."""
+    du = float(B.get("dur") or 999)
+    return [float(x) for x in r.get("lens_at") or [] if isinstance(x, (int, float)) and 0 <= float(x) <= du][:LENS_AT_MAX]
+
 OF_JUDGE_MAYBE = """
 ★같은 제품의 브랜드 공식·언론 영상인데 썸네일로는 같은 촬영분인지 못 가르면 same 에 넣지 말고 "maybe":[번호,…] 에 넣는다(최대 3개 — 받아서 안의 장면으로 확인한다). 답 = {"same":[…], "maybe":[…], "why":"한 줄"}"""
 
@@ -3565,6 +3576,7 @@ def f_of_dedup(st, m, rp, u):
 OF_VERIFY_FRAMES = (4, 2)      # 원본 하나 = 장면 8장(4×2)
 OF_VERIFY_ASK = """너는 원본 확인 담당이다. 첫 그림 = 소재(한국 재편집 쇼츠) 1초 장면 시트, 둘째 = 소재 큰 장면. 그 뒤 그림마다 = 받아 온 원본 후보 하나의 장면 8장(번호 = 아래 목록).
 후보마다 소재와 **같은 촬영분**인지 실제 장면으로 다시 판정해라 — 같은 사람(얼굴·머리색·옷)·같은 장소·같은 제품을 쓰는 같은 순간이어야 같다.
+★소재 컷과 나란히 대조해라: 사람 옷·배경(벽·바닥·물건)·찍은 각도 중 **둘 이상이 같아야** 같다. 같은 제품 + 비슷한 동작(계단 오르기 등)만으로는 같지 않다. 공식·언론 영상이라고 기준을 낮추지 마라.
 비슷한 제품을 쓰는 다른 사람·다른 장소는 같지 않다(썸네일만 보고 고른 앞 판정이 틀렸을 수 있다 — 10-27 실측 3편 중 2편이 다른 사람). 확신이 없으면 같지 않다로.
 JSON 하나: {"same": [번호, …], "why": "한 줄"}"""
 OF_VERIFY_WHOLE = """
@@ -3758,6 +3770,9 @@ def source_candidates(version: str, done=(), n: int = POOL_SHOW, offset: int = 0
 def pick_alt_source(st: dict) -> dict | None:
     """(판단 주인 — 둘째 소재 고르기) 그 판 벤치 상위(조회순) 중 회원이 준 소재·이 PC 작업 기록의 만든 편(멈춘 편은 다시 씀 — runner done_refs) 아닌 첫 편."""
     from tools.calcopy import origin_find as OF
+    if st.get("given"):      # 회원이 제품을 정했다 — 다른 소재로 넘어가면 영상과 제품이 어긋난다(11-01 의자 제품 + 신발 소재)
+        st["log"].append("둘째 소재 없음: 회원이 정한 제품이 있어 소재 고정")
+        return None
     if (st.get("env") or {}).get("single_source"):      # 원본 찾기 워커(of_worker, 사장님 10-27 '24시간 미리 찾아 둔다') — 그 소재 하나만
         return None
     if not (PRESETS_FILE.parent / str(st.get("slug") or "-") / "_kal" / ALT_LIST).is_file():
@@ -4453,7 +4468,7 @@ REF_READ_SUBSONG = """너는 자막노래형 소재 판독 담당이다. 아래�
   ★또 false = 대화·말장난으로 웃기는 영상(몰래카메라 대사·스킷·인터뷰 등 — 받아쓰기에 대사가 이어지고 말을 알아들어야 상황이 이해되는 것). 완성본은 원음을 빼고 노래만 깐다 —
     소리를 끄고 화면만 봐도 무슨 일인지 바로 보이는 영상만 true(벤치 6편 = 소리 칸 bgm 뿐·말 없음, 10-27 치과 접수대 몰래카메라 편: 대사로 웃기는데 노래만 깔려 상황이 하나도 이해 안 됨 — 사장님)
 - what: 무슨 장면인지 한 줄 · queries_en: 원본 찾기 영어 검색어 2~4개(장면 낱말)
-- lens_at: (korean_reedit 일 때) 구글 렌즈에 올릴 장면 초 2~3개 — 앞쪽 핵심 장면 중 **인물·동물·장면 전체가 크게 잡힌 것**.
+- lens_at: (korean_reedit 일 때) 구글 렌즈에 올릴 장면 초 — 컷이 바뀔 때마다 한 장, 최대 6개. **인물·동물·장면 전체가 크게 잡힌 것**. 로고·워터마크·큰 글자가 크게 있는 장면은 피한다.
   ★로고·상표·영어 글자(티셔츠 글씨·간판·제품 이름)가 보이는 장면은 고르지 마라 — 렌즈가 그 물건을 상품으로 검색한다(10-27 사장님, 녹화 편 티셔츠 'NON-ETH…').
   물건만 크게 잡힌 장면보다 사람·배경이 함께 보이는 장면. 한국 자막·제목 띠는 잘라 내니 신경 쓰지 않는다.
 JSON만: {"ref_kind":"korean_reedit|foreign_original","is_clip":true,"what":"…","queries_en":["…"],"lens_at":[초,…],"why":"…"}"""
@@ -4560,8 +4575,7 @@ def j_ref_read(st, m, rp, u):
         raise _Stop(*NOT_HIT, final=True)
     if korean:
         st["log"].append(f"소재 = 한국 재편집 → 렌즈로 같은 영상 깨끗한 판(장면 {r.get('lens_at')}초)")
-        at = [float(x) for x in r.get("lens_at") or [] if isinstance(x, (int, float)) and 0 <= float(x) <= float(B.get("dur") or 999)][:3]
-        return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "lens", "bench_id": B.get("id"), "at": at, "queries": [q for q in r.get("queries_en") or [] if q][:4]}], "then": "of_got"}
+        return {"do": [{"id": "of", "cmd": "origin_foreign", "mode": "lens", "bench_id": B.get("id"), "at": _lens_at(r, B), "queries": [q for q in r.get("queries_en") or [] if q][:4]}], "then": "of_got"}
     st["origins"] = [{"id": B.get("id"), "info": {k: B.get(k) for k in ("id", "title", "channel", "date", "dur", "views", "subs")}, "how": "소재 = 해외 원본"}]
     st["log"].append("소재 = 해외 원본 그대로(한 샷)")
     return {"goto": "of_fetch"}

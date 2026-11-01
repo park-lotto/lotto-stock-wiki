@@ -27,7 +27,7 @@
   "db_below_voice": 12.9,
   "duck_orig_db": 0.0,
   "duck_narr_db": 0.0,
-  "fade_out": 0.5,
+  "fade_out": 0.14,
   "candidates": [],
   "why": "BGM 경쾌(뜯기 8편) · 1편 make_render BGM sweets · 벤치 6편 원본 소리 실측(handconst.py itemhome → _kal/손상수_실측.json bgm.* · 신호급 — 나레·원음·BGM 섞인 소리, 분리 없음): db_below_voice 12.9 = 말 p50 − 말 사이 바닥(줄 경계 쉼 프레임 중앙, 말 없는 구간 ≥1초 편은 그 p10) 편 중앙 12.86dB(15.09·13.44·12.61·8.9·13.11·9.87, n=6) · duck_orig_db 0 = 원음 조각 바닥 p5 − 나레 조각 바닥 p5 편 중앙(-6.46·0·0·0·0·0, 3dB 미만 차 = 0) · fade_out 0.14 = 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.137초(0.037~0.325) · duck_narr_db 0 = 말 없는 구간 ≥1초 편 0/6 — 말이 처음부터 끝까지 깔려 비교할 빈 구간이 없고 db_below_voice 가 이미 말 사이 바닥 기준"
  },

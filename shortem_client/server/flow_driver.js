@@ -156,6 +156,13 @@ export function liveFlow() {
   return null;
 }
 
+// 작업 목록 — 편은 job 이 아니라 flow 에 있다(shortem_job list 가 비어 보이던 뿌리)
+export function listFlows() {
+  let names = [];
+  try { names = fs.readdirSync(flowRoot()); } catch { return []; }
+  return names.map(loadFlow).filter(Boolean).map(f => ({ sid: f.sid, preset: f.preset, status: f.cancelled ? 'cancelled' : f.fail ? 'stopped' : f.status, step: f.stage || '' }));
+}
+
 export function cancelFlow(sid) {
   const f = loadFlow(sid); if (!f) return null;
   if (f.status === 'done') return f;

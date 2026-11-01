@@ -30,7 +30,7 @@
   "id": "sweets",
   "db_below_voice": 13.0,
   "duck_orig_db": -4.0,
-  "fade_out": 0.5,
+  "fade_out": 0.13,
   "why": "벤치 6편 원본 소리 실측(handconst.py ititemlog → _kal/손상수_실측.json bgm.* · 신호급 — 나레·원음·BGM 섞인 소리, 분리 없음): db_below_voice 13.0 = 말 p50 − 말 사이 바닥(줄 경계 쉼 프레임 중앙, 말 없는 구간 ≥1초 편은 그 p10) 편 중앙 13.04dB(15.7·10.0·8.8·14.5·14.5·11.6) · duck_orig_db −4.0 = 원음 조각 바닥 p5 − 나레 조각 바닥 p5 편 중앙 −4.0(−6.0·0·−5.2·−3.5·−4.5·−3.3, 3dB 미만 차 = 0) · fade_out 0.13 = 끝 3~1초 전 p50 보다 6dB 이상 내려간 뒤 끝까지 편 중앙 0.127초(0.01~0.25 — 긴 페이드 없음) · duck_narr_db 0 = 말 없는 구간 ≥1초 편 1/6(J7G 쉼 바닥 −28.6 vs 빈 구간 −27.8, 차 0.8dB < 3 → 0) — db_below_voice 가 이미 말 사이 바닥 기준이라 따로 안 줄임 · candidates = bgm_pick.py recommend 잇템로그판(벤치 6편 템포 중앙 139.8 BPM·밝기 555Hz, 거리 0.834/0.882/0.915) — 곡은 사람이 고른다, id sweets 그대로",
   "duck_narr_db": 0.0,
   "candidates": [
