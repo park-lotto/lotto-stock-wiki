@@ -104,7 +104,11 @@ export function shape(out, secret) {
   if (src.ai_requests != null) r.ai_requests = int(src.ai_requests, 0, 99);
   if (typeof src.next === 'string') r.next = clean(src.next, secret, 300);
   if (Array.isArray(src.candidates)) r.candidates = src.candidates.slice(0, 20).map(c => ({ n: int(c.n, 1, 99), title: clean(c.title, null, 120),
-    ...(typeof c.total === 'number' ? { total: c.total } : {}), ...(c.line ? { line: clean(c.line, null, 200) } : {}), made: int(c.made, 0, 999) }));
+    ...(typeof c.total === 'number' ? { total: c.total } : {}), ...(c.line ? { line: clean(c.line, null, 200) } : {}), made: int(c.made, 0, 999),
+    ...(typeof c.views === 'number' ? { views: c.views } : {}),
+    ...(typeof c.video === 'string' && /^https:\/\/(www\.)?(youtube\.com|youtu\.be|tiktok\.com|instagram\.com)\/[\w\-./?=&%]+$/.test(c.video) ? { video: c.video } : {}) }));
+  if (typeof src.next_offset === 'number') r.next_offset = int(src.next_offset, 0, 9999);
+  if (typeof src.more === 'string') r.more = clean(src.more, secret, 200);
   if (Array.isArray(src.plan_files)) r.plan_files = src.plan_files.slice(0, 20).map(f => clean(f, null, 60));
   if (isObj(src.script)) r.script = { title: clean(src.script.title, null, 100), lines: (src.script.lines || []).slice(0, 30).map(l => clean(l, null, 200)) };
   if (typeof src.video === 'string') r.video = clean(src.video, null, 600);
