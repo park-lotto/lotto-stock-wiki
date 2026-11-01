@@ -4173,7 +4173,7 @@ def f_clean_got(st, m, rp, u):
     if c.get("mode") == "need_key":
         raise _Stop(str(c.get("why")), str(c.get("fix") or ""), retry="f_clean")
     st["text_fix"] = {"mode": c.get("mode") or ("error" if c.get("error") else "blur"), "need": (st.get("text_fix") or {}).get("need") or [],
-                      "cleaned": [], "done": {}, "calls": 0, "sec": 0.0, "why": str(c.get("why") or c.get("error") or "")[:200]}
+                      "cleaned": [], "done": {}, "calls": 0, "sec": 0.0, "why": str(c.get("why") or c.get("error") or "")[:200], "via": c.get("via")}
     st["log"].append(f"박힌 글자: {st['text_fix']['mode']} 준비 · 글자 원본 {st['text_fix']['need']} — VMake 는 장면 맞추기 뒤 자막 있는 컷 구간만")
     return {"goto": "f_draft"}
 
@@ -4197,15 +4197,42 @@ def f_render(st, m, rp, u):
     tf = st.get("text_fix") or {}
     if tf.get("mode") != "vmake" or tf.get("key") == _cuts_key(st):
         return ph_render(st, m, rp, u)
+    if tf.get("via") == "free" and tf.get("spots_key") != _cuts_key(st):     # 무료 엔진 = 회원 Claude 가 먼저 자막 자리를 정한다(관제 301)
+        return {"do": [{"id": "spots", "cmd": "spot_sheets", "version": st["version"], "shots": st.get("shots") or {}, "done": tf.get("done") or {}}],
+                "then": "f_spots"}
     return {"do": [{"id": "clean", "cmd": "clean_text", "version": st["version"], "shots": st.get("shots") or {}, "done": tf.get("done") or {},
-                    "replan": st.get("_plan_key") != _cuts_key(st)}], "then": "f_render_clean_got"}
+                    "replan": st.get("_plan_key") != _cuts_key(st), "spots": tf.get("spots") or {}}], "then": "f_render_clean_got"}
+
+
+SPOT_READ = ("이 그림은 영상 한 편에서 지울 구간의 화면들이다. 노란 격자 = 10% 간격, 왼쪽 숫자 = 세로 %.\n"
+             "나중에 덧씌운 글자(자막·제목·화살표 낙서·스티커)가 나오는 세로 띠를 비율로 답하라. 제품에 인쇄된 글자·포장 글자·제품 색 부분은 띠에 넣지 마라.\n"
+             "bands = [{\"y0\":0.74,\"y1\":0.81,\"big\":false}] — 글자가 나오는 모든 프레임을 덮게 약간 넉넉히. 테두리 있는 큰 제목이면 big=true.\n"
+             "emoji = [[x0,x1,y0,y1]] — 흰색이 아닌 색 이모지·색 낙서가 있는 좁은 자리만(제품이 겹치면 넣지 마라). 없으면 빈 목록. JSON 키 bands, emoji.")
+
+
+def f_spots(st, m, rp, u):
+    sheets = (m.get("spots") or {}).get("sheets") or {}
+    if not sheets:
+        st["text_fix"]["spots_key"] = _cuts_key(st)
+        return {"goto": "render"}
+    st["_spot_names"] = sorted(sheets)
+    return {"review": [_rv(f"spot_{i}", SPOT_READ, [_img(sheets[n])], need=("bands",)) for i, n in enumerate(st["_spot_names"])], "then": "f_spots_got"}
+
+
+def f_spots_got(st, m, rp, u):
+    tf = st["text_fix"]
+    got = {n: rp.get(f"spot_{i}") or {} for i, n in enumerate(st.pop("_spot_names", []))}
+    tf["spots"] = {**(tf.get("spots") or {}), **{n: {"bands": a.get("bands") or [], "emoji": a.get("emoji") or []} for n, a in got.items()}}
+    tf["spots_key"] = _cuts_key(st)
+    st["log"].append(f"자막 자리 지정: {len(tf['spots'])}개 원본")
+    return {"goto": "render"}
 
 
 def f_text_check(st, m, rp, u):
     """회원 PC 의 박힌 글자 방식(vmake = 키 있음·고급형 / blur = 키 없음·회원이 흐림을 고름·판이 흐림) → 렌더로."""
     c = m.get("clean") or {}
     st["text_fix"] = {"mode": c.get("mode") or ("error" if c.get("error") else "blur"), "need": [], "cleaned": [], "done": {}, "calls": 0, "sec": 0.0,
-                      "why": str(c.get("why") or c.get("error") or "")[:200]}
+                      "why": str(c.get("why") or c.get("error") or "")[:200], "via": c.get("via")}
     st["log"].append(f"박힌 글자 방식: {st['text_fix']['mode']} — {st['text_fix']['why'] or ('장면마다 골라 지움' if st['text_fix']['mode'] == 'vmake' else '흐림')}")
     return {"goto": "render"}
 
@@ -4601,7 +4628,7 @@ FORMAT_PHASES = {   # 형식별 세부 단계 처리기 — 없는 세부 단계
                 "f_product_same": f_product_same, "research": f_research, "f_research_got": f_research_got, "f_research_check": f_research_check,
                 "f_material": f_material, "material": f_material, "f_material_got": f_material_got, "f_shots_got": f_shots_got, "f_alt_ask": f_alt_ask, "f_alt_pick": f_alt_pick, "f_alt_dl": f_alt_dl, "f_clean": f_clean,
                 "f_clean_got": f_clean_got, "f_draft": f_draft, "f_draft_got": f_draft_got, "f_asr": f_asr, "f_asr_got": f_asr_got,
-                "plan": f_plan, "render": f_render, "f_render_clean_got": f_render_clean_got},
+                "plan": f_plan, "render": f_render, "f_render_clean_got": f_render_clean_got, "f_spots": f_spots, "f_spots_got": f_spots_got},
     "쇼핑형": {"bench_got": s_bench_got, "topic_got": s_topic_got, "s_cands": s_cands, "s_cand_look": s_cand_look, "s_product_done": s_product_done,
              "research": s_research, "s_peers_got": s_peers_got, "s_research_check": s_research_check, "material_dl": s_material_dl},
     "레시피형": {},      # 연예인형 처리기 그대로(재료 스티커 = 판)

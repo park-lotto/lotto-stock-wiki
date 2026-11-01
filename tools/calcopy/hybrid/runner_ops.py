@@ -2081,6 +2081,21 @@ def c_origin_foreign(W, d):
             **({"lens_ai": lens_ai} if lens_ai.get("names") or lens_ai.get("overviews") else {})}
 
 
+def _free_install_bg() -> bool:
+    """키 없는 회원 + NVIDIA GPU = 무료 엔진을 뒤에서 깐다(약 3GB, 렌더를 막지 않는다) — 이번 편은 흐림, 다음 편부터 무료로 지운다(관제 301)."""
+    from tools.free_subclean import engine as FE
+    if FE.installed() or shutil.which("nvidia-smi") is None:
+        return False
+    lock = FE.HOME / "installing"
+    FE.HOME.mkdir(parents=True, exist_ok=True)
+    if lock.exists() and time.time() - lock.stat().st_mtime < 3600:
+        return False
+    lock.touch()
+    subprocess.Popen([sys.executable, str(Path(FE.__file__)), "install"], stdin=subprocess.DEVNULL,
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    return True
+
+
 def c_clean_text(W, d):
     """박힌 글자 지우기 — 판단은 vmake_clean 한 곳(사장님 10-26: 장면 편집 뒤 자막 있는 컷 구간만 VMake). 여기는 부르기만.
     d.check = 돈 없이 준비만(ready — 키 없으면 need_key) · 아니면 d.version 판의 확정 계획(doc/<판>/plan/계획_시간표.json, d.replan 이면 계획을 다시 써서)에서
@@ -2088,7 +2103,10 @@ def c_clean_text(W, d):
     from tools.calcopy import vmake_clean as VC
     mode = "blur" if PAID_OFF else VC.style_mode(d.get("version"))
     if d.get("check"):
-        return VC.ready(mode)
+        r = VC.ready(mode)
+        if r["mode"] == "blur" and mode != "blur":
+            r["free_install"] = _free_install_bg()
+        return r
     v = d["version"]
     if d.get("replan"):                     # 재료가 계획 뒤에 바뀌었다(렌더 고치기) — 같은 계획 함수로 시간표만 새로(합성은 캐시)
         from tools.calcopy.hybrid import render_bench
@@ -2106,13 +2124,38 @@ def c_clean_text(W, d):
             progress(W, "자막 지우기")
     threading.Thread(target=_beat, daemon=True).start()
     try:
-        r = VC.clean_used(src, send, mode, log=lambda s: print(s, file=sys.stderr))
+        r = VC.clean_used(src, send, mode, log=lambda s: print(s, file=sys.stderr), spots=d.get("spots"))
     finally:
         alive.set()
     sent = VC.sent_from_ledger(src, t0)
     r.update({"send": send, "used_sec": VC.span_sec(used), "send_sec": VC.span_sec(send), "sent": sent, "sent_bad": VC.sent_check(sent, used)})
     sys.stderr.write(f"[clean_text] 쓰는 구간 {r['used_sec']}초 중 자막 컷 {r['send_sec']}초 → VMake {r['calls']}회 · 보낸 초 {sent} · {r['mode']}: {r.get('why')}\n")
     return r
+
+
+def c_spot_sheets(W, d):
+    """무료 지우기 전 — 지울 구간의 화면을 격자(10%)와 함께 원본마다 한 장으로. 자리 판독은 회원 Claude(flow f_spots)."""
+    from PIL import Image, ImageDraw
+    from tools.calcopy import vmake_clean as VC
+    src, send, _ = VC.plan_spans(W / "doc" / d["version"], d.get("shots") or {}, d.get("done") or {})
+    sd = W / "_spots"; sd.mkdir(exist_ok=True)
+    sheets = {}
+    for name, iv in send.items():
+        ats = [a + (b - a) * q for a, b in iv for q in (0.2, 0.8)][:12]
+        sh = Image.new("RGB", (6 * 240, ((len(ats) + 5) // 6) * 426), (0, 0, 0))
+        for j, t in enumerate(ats):
+            fp = sd / f"{Path(name).stem}_{j}.jpg"
+            frame(src / name, t, fp)
+            im = Image.open(fp).convert("RGB").resize((240, 426))
+            dr = ImageDraw.Draw(im)
+            for k in range(1, 10):
+                dr.line((0, 42.6 * k, 240, 42.6 * k), fill=(255, 255, 0), width=1)
+                dr.line((24 * k, 0, 24 * k, 426), fill=(255, 255, 0), width=1)
+                dr.text((2, 42.6 * k + 1), str(k * 10), fill=(255, 255, 0))
+            sh.paste(im, ((j % 6) * 240, (j // 6) * 426))
+        p = sd / f"{Path(name).stem}_sheet.jpg"; sh.save(p, quality=85)
+        sheets[name] = rel(W, p)
+    return {"sheets": sheets}
 
 
 def c_materials_draft(W, d):
@@ -2154,7 +2197,7 @@ CMDS = {"env": c_env, "bench": c_bench, "search": c_search, "peer_sheet": c_peer
         "origin_get": c_origin_get, "channel_find": c_channel_find, "origin_probe": c_origin_probe, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "coupang_reviews": c_coupang_reviews, "cand_sheet": c_cand_sheet, "naver": c_naver, "origin_words": c_origin_words, "peer_points": c_peer_points,
         "screen": c_screen, "download": c_download, "product_stills": c_product_stills, "orig_heard": c_orig_heard, "asr_spans": c_asr_spans, "shot_sheets": c_shot_sheets, "mat_sheets": c_mat_sheets,
         "write_doc": c_write_doc, "plan": c_plan, "render": c_render, "check": c_check, "finish": c_finish,
-        "origin_foreign": c_origin_foreign, "of_settle": c_of_settle, "clean_text": c_clean_text, "materials_draft": c_materials_draft, "thumb_auto": c_thumb_auto}
+        "origin_foreign": c_origin_foreign, "of_settle": c_of_settle, "clean_text": c_clean_text, "spot_sheets": c_spot_sheets, "materials_draft": c_materials_draft, "thumb_auto": c_thumb_auto}
 
 
 DUP_TOL, DUP_SHARE, DUP_DUR = 0.15, 0.8, 2.0   # 재업로드 판정: 길이 차 ≤2초 · 짧은 쪽 장면 경계의 80% 이상이 ±0.15초로 겹침(한 번 맞춘 어긋남 안에서)

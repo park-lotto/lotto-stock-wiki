@@ -112,8 +112,29 @@ def _flow_erases(version: str | None) -> bool:
         return True
 
 
+def free_ok() -> bool:
+    """무료 엔진(회원 GPU, tools/free_subclean)이 이 PC 에 깔렸나."""
+    try:
+        from tools.free_subclean import engine as FE
+    except ImportError:          # 옛 묶음 회원 PC — 엔진 파일이 없으면 기존 길 그대로
+        return False
+    return FE.installed()
+
+
+def erase_engine() -> str:
+    """지우는 엔진 고르기(판단 주인) — 회원 설정 SHORTEM_ERASE_ENGINE(free|vmake) > 키 있으면 VMake(기존 그대로) > 무료 엔진이 깔렸으면 무료 > ''."""
+    e = (os.environ.get("SHORTEM_ERASE_ENGINE") or "").strip().lower()
+    if e == "free":
+        return "free" if free_ok() else ""
+    if e == "vmake" or key_source() == "server" or member_key():
+        return "vmake"
+    return "free" if free_ok() else ""
+
+
 def ready(mode: str = "vmake") -> dict:
     """돈 없이 '지울 수 있나'만 — {mode: vmake|blur|need_key, why, (fix), (via)}. flow 가 재료 단계에서 먼저 물어 키 없으면 일찍 멈춘다."""
+    if mode != "blur" and erase_engine() == "free":   # 돈이 안 드니 SHORTEM_NO_PAID 도 막지 않는다
+        return {"mode": "vmake", "via": "free", "why": ""}
     if mode == "blur" or paid_off():
         return {"mode": "blur", "why": "SHORTEM_NO_PAID — 돈 드는 호출 막음" if mode != "blur" else "판 orig_text.mode=blur"}
     if key_source() == "server":
@@ -318,7 +339,7 @@ def splice(f: Path, pieces: list) -> Path:
     return f
 
 
-def clean_used(src_dir: Path, spans: dict, mode: str = "vmake", log=print) -> dict:
+def clean_used(src_dir: Path, spans: dict, mode: str = "vmake", log=print, spots: dict | None = None) -> dict:
     """쓰는 구간만 지우기(주인) — 구간마다 잘라 VMake(서버 키/회원 키 = ready 판정) → 지운 조각을 원본에 덮어 끼움.
     반환 {mode, via, done:{이름:[[a,b]…]}(지운 구간), cleaned:[이름], calls, sec(보낸 초), why, (fix)}. 구간이 없으면 호출 0."""
     src_dir = Path(src_dir)
@@ -332,7 +353,10 @@ def clean_used(src_dir: Path, spans: dict, mode: str = "vmake", log=print) -> di
         return {**rd, "done": {}, "cleaned": [], "calls": 0, "sec": 0.0}
     pieces = {n: [(cut_piece(src_dir / n, a, b), a, b) for a, b in iv] for n, iv in spans.items()}
     files = [p for ps in pieces.values() for p, _, _ in ps]
-    r = server_clean(files, log=log) if rd["via"] == "server" else member_clean(files, member_key(), log=log)
+    if rd["via"] == "free":
+        r = free_clean(files, spots or {}, log=log)
+    else:
+        r = server_clean(files, log=log) if rd["via"] == "server" else member_clean(files, member_key(), log=log)
     done, cleaned = {}, []
     for n, ps in pieces.items():
         ok = [(p, a, b) for p, a, b in ps if p.name in r["cleaned"]]
@@ -434,6 +458,30 @@ def member_clean(files: list, api_key: str, log=print, tier: str = TIER) -> dict
 
     with ThreadPoolExecutor(SERVER_PAR) as ex:      # 조각마다 7분 안팎 — 서버 길과 같게 동시에(10-26)
         list(ex.map(one, files))
+    return out
+
+
+def free_clean(files: list, spots: dict, log=print) -> dict:
+    """회원 GPU 로 지운다(돈 0) — spots = {원본 이름: 자리}(회원 Claude 지정, flow f_spots). 자리 없는 조각은 안 지우고 실패로(흐림이 덮는다)."""
+    from tools.free_subclean import engine as FE
+    out = {"cleaned": [], "calls": 0, "fail": {}}
+    for f in files:                                  # GPU 하나라 차례로
+        f = Path(f)
+        spot = spots.get(of_piece(f.name)[0])
+        if not spot or not (spot.get("bands") or spot.get("emoji")):
+            out["fail"][f.name] = "자막 자리 지정 없음"
+            continue
+        t0 = time.time()
+        tmp = f.with_name(f.stem + "_fclean" + f.suffix)
+        try:
+            res = FE.clean_file(f, tmp, spot)
+            swap_in(f, tmp)
+            out["cleaned"].append(f.name)
+            log_entry(f.parent, {"file": f.name, "mode": "free", "ok": True, "sec": round(time.time() - t0, 1), "calls": 0, **_sent(f), **res})
+        except Exception as e:  # noqa: BLE001 — 실패는 이유를 남기고 다음 조각
+            out["fail"][f.name] = f"{type(e).__name__}: {str(e)[:200]}"
+            log_entry(f.parent, {"file": f.name, "mode": "free", "ok": False, "calls": 0, "why": out["fail"][f.name]})
+            log(f"[free] {f.name} 실패: {out['fail'][f.name]}")
     return out
 
 
