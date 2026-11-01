@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { homeDir, workDir, jail } from './paths.js';
 import { engineRoot, engineTool } from './engine_bridge.js';
-import { readSettings, saveLook, packFor, savePack, select, resetPack, catalog, PID_RE, syncFromServer } from './local_settings.js';
+import { readSettings, saveLogo, saveLook, packFor, savePack, select, resetPack, catalog, PID_RE, syncFromServer } from './local_settings.js';
 import { rentPreset } from './preset_rent.js';
 import { makeStep } from './make_flow.js';
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
@@ -123,6 +123,12 @@ async function route(req, res, token, port) {
     if (!videos().some(v => v.name === name)) return send(res, 404, { error: '없음' });
     return serveFile(req, res, path.join(workDir(), '완성본', name), TYPES.mp4);
   }
+  if (/^\/logo\/p_[0-9a-z]+\.png$/.test(u.pathname) && req.method === 'GET') {     // 회원 로고(saveLogo)
+    const f = path.join(homeDir(), 'logos', path.basename(u.pathname));
+    if (!fs.existsSync(f)) return send(res, 404, { error: 'not found' });
+    res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' });
+    return fs.createReadStream(f).pipe(res);
+  }
   if (u.pathname.startsWith('/tl/') && req.method === 'GET') {     // 타임라인 컷 그림(엔진 preview_request._cut_thumbs) — 완성본 표식의 폴더만
     const [, , name, file] = u.pathname.split('/').map(decodeURIComponent);
     if (!videos().some(v => v.name === name) || !/^cut_\d+\.jpg$/.test(file || '')) return send(res, 404, { error: '없음' });
@@ -162,6 +168,7 @@ async function route(req, res, token, port) {
   if (u.pathname === '/api/select') return send(res, 200, { ok: select(body.preset) });
   if (u.pathname === '/api/save') return send(res, 200, await savePack(body.preset, body.patch));
   if (u.pathname === '/api/reset') { if (PID_RE.test(String(body.preset || ''))) resetPack(body.preset); return send(res, 200, { ok: true }); }
+  if (u.pathname === '/api/logo') return send(res, 200, saveLogo(body.preset, body.data));
   if (u.pathname === '/api/look') return send(res, 200, await saveLook(body.preset, body.snapshot));
   if (u.pathname === '/api/preview') return send(res, 200, await preview(body));
   if (u.pathname === '/api/login') return send(res, 200, PLATFORMS[body.platform] ? await openLogin(body.platform) : { ok: false, why: '모르는 곳입니다' });

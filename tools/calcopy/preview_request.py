@@ -202,7 +202,7 @@ def preset_defaults_table() -> dict:
         return {}
 
 
-EDITABLE = {"brand": ("channel_name", "colors"), "text": ("title_font", "title_colors", "title_scale", "caption_font", "caption", "orig_text"),
+EDITABLE = {"brand": ("channel_name", "colors", "logo"), "text": ("title_font", "title_colors", "title_scale", "title_dy", "caption_font", "caption", "orig_text"),
             "tts": ("provider", "voice_id", "name", "preset_id", "tempo", "alternates", "emotion"), "bgm": ("candidates", "gain"),
             "sfx_pool": ("start", "point", "end"), "meme_pool": ("kinds", "ids"), "template": None}
 
@@ -233,6 +233,12 @@ def check(pack: dict, cat: dict | None = None) -> list:
         err.append("제목 색은 #RRGGBB 두 개까지입니다")
     if tx.get("title_scale") is not None and not (isinstance(tx["title_scale"], (int, float)) and 0.7 <= tx["title_scale"] <= 1.3):
         err.append("제목 크기는 0.7~1.3 배입니다")
+    dy = tx.get("title_dy")
+    if dy is not None and not (isinstance(dy, int) and -500 <= dy <= 500):
+        err.append("제목 위치 값이 범위를 벗어났습니다")
+    lg = b.get("logo")
+    if lg is not None and not (isinstance(lg, dict) and re.fullmatch(r"p_[0-9a-z]+\.png", str(lg.get("file"))) and all(isinstance(lg.get(k), int) for k in ("x", "y", "w")) and 40 <= lg["w"] <= 1080):
+        err.append("로고 값 모양이 다릅니다")
     bgc = (b.get("colors") or {}).get("bg")
     if bgc is not None and not (isinstance(bgc, list) and len(bgc) == 3 and all(isinstance(c, int) and 0 <= c <= 255 for c in bgc)):
         err.append("바탕색 모양이 다릅니다")

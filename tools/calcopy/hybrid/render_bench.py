@@ -1008,6 +1008,11 @@ def frame_png(S: dict, st: dict, out: Path) -> Path:
         bb = f.getbbox(WM["text"])
         dl.text((WM["x1"] - f.getlength(WM["text"]), WM["cy"] - (bb[1] + bb[3]) // 2), WM["text"], font=f, fill=(255, 255, 255, WM["alpha"]))
         im.alpha_composite(lay)
+    LI = F.get("logo_img")
+    if LI:
+        pic = Image.open(LI["file"]).convert("RGBA")
+        w = int(LI["w"]); pic = pic.resize((w, max(1, round(pic.height * w / pic.width))))
+        im.alpha_composite(pic, (int(LI["x"]), int(LI["y"])))
     LG = F.get("logo")
     if LG and LG.get("kind") == "spr_gold":
         sys.path.insert(0, str(ROOT / "channel/starpickroom/_tools"))

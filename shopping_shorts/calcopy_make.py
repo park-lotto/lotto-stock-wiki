@@ -165,6 +165,8 @@ def merge_preset_pack(preset: str, pack: dict) -> dict:
                             L["line_rgb"] = [c or lines[n] for n, c in enumerate(tcs)] + lines[len(tcs):]
                         if text.get("title_scale") and isinstance(L.get("size"), (int, float)):
                             L["size"] = round(L["size"] * float(text["title_scale"]))
+                        if text.get("title_dy") and isinstance(L.get("y"), (int, float)):
+                            L["y"] += int(text["title_dy"])
                     if role == "title" and text.get("title_font") and L.get("font") != text["title_font"]:
                         applied.append(f"{fid} 제목 글꼴 {L.get('font')} → {text['title_font']}"); L["font"] = text["title_font"]
                     if role == "caption":

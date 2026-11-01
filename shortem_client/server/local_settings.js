@@ -91,6 +91,14 @@ export async function syncFromServer({ force = false } = {}) {
   return { ok: true };
 }
 
+// 그림 로고 저장 — packs 옆 logos/<pid>.png (렌더는 styles.member_frame 이 같은 자리를 읽는다)
+export function saveLogo(pid, dataUrl) {
+  const m = /^data:image\/png;base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ''));
+  if (!PID_RE.test(String(pid || '')) || !m) return { ok: false, error: 'PNG 그림만 올릴 수 있습니다' };
+  writeFileIn(homeDir(), path.join('logos', `${pid}.png`), Buffer.from(m[1], 'base64'));
+  return { ok: true, file: `${pid}.png` };
+}
+
 // 꾸민 모양 저장 — 검사는 엔진 한 곳(워커 'look' = scene_style.validate_snapshot), 서버 save_look 과 같은 검사
 const LOOK_MAX = 400000;
 export async function saveLook(pid, snapshot) {

@@ -237,6 +237,11 @@ def member_frame(st: dict) -> dict:
             T["color"] = colors[i]
         if text.get("title_scale"):
             T["px"] = round(T["px"] * float(text["title_scale"]))
+        if text.get("title_dy") and "center" in T:   # 미리보기에서 끌어 옮긴 세로 거리(px, 1080×1920 기준)
+            T["center"] += int(text["title_dy"])
+    L = brand.get("logo")
+    if L:          # 회원 그림 로고 = 팩 폴더 옆 logos/ 의 파일(저장 주인 local_settings.saveLogo)
+        F["logo_img"] = {**L, "file": str(Path(f).parent.parent / "logos" / L["file"])}
     return st
 
 
