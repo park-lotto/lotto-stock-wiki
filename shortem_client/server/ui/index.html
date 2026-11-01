@@ -813,7 +813,13 @@ addEventListener('message',async e=>{
 });
 $('redraw').onclick=()=>preview();
 // 재생 위치선 = 완성본 재생 시각 / 눈금 누르면 그 초로
-document.addEventListener('timeupdate',e=>{const h=$('tlhead'),v=e.target;if(h&&v.duration)h.style.left=`calc(64px + (100% - 64px) * ${v.currentTime/v.duration})`},true);
+// 재생선 = 화면 프레임마다 영상 시각을 따라간다(timeupdate 는 초당 4번뿐이라 끊겨 보임)
+(function tlTick(){const h=$('tlhead'),v=document.querySelector('#vidpv video');if(h&&v&&v.duration){h.style.left=`calc(64px + (100% - 64px) * ${v.currentTime/v.duration})`;
+  if(!v.paused){const b=h.closest('.tl-scroll'),x=h.offsetLeft;if(b&&(x<b.scrollLeft||x>b.scrollLeft+b.clientWidth-40))b.scrollLeft=x-64}}requestAnimationFrame(tlTick)})();
+// 스페이스 = 완성본 재생/멈춤(글 칸·버튼에 있을 땐 그대로)
+document.addEventListener('keydown',e=>{if(e.code!=='Space'||S.step!=='edit')return;
+  const t=e.target;if(t.closest&&t.closest('input,textarea,select,button,[contenteditable]'))return;
+  const v=document.querySelector('#vidpv video');if(!v)return;e.preventDefault();v.paused?v.play():v.pause()});
 document.addEventListener('click',e=>{const r=e.target.closest&&e.target.closest('#tlruler'),v=document.querySelector('#vidpv video');if(r&&v&&v.duration){const b=r.getBoundingClientRect();v.currentTime=(e.clientX-b.left)/b.width*v.duration}});
 $('play').onclick=()=>{   // 5초: 장면을 시간 순서로 넘기며 등장 효과를 그 시각대로(렌더러 render_scene_style.js 와 같은 손잡이)
   const w=stage.contentWindow,r=S.preview;if(!r||!w.sceneStyle)return;
