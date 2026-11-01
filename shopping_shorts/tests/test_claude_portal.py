@@ -169,7 +169,7 @@ def test_PC_2대까지_세번째_기기_거절(env):
     assert c.get("/api/claude/license", headers=_h(k, FP2, name="집")).json()["device"]["slot"] == 2
     r = c.get("/api/claude/license", headers=_h(k, FP3, name="셋째"))
     assert r.status_code == 403 and r.json()["code"] == "device_limit"
-    assert c.post("/api/claude/me/device/remove", json={"device_id": FP1[:12]}).json()["ok"]
+    assert c.post("/api/admin/claude/devices/remove", json={"cid": 0, "device_id": FP1[:12]}).json()["ok"]
     assert c.get("/api/claude/license", headers=_h(k, FP3)).json()["device"]["slot"] == 1
 
 
@@ -226,7 +226,7 @@ def test_기기_3대째_거절(env, monkeypatch):
     again = c.get("/api/claude/license", headers=_h(k, FP1)).json()
     assert again["ok"] and not again["device"]["registered_now"]
     # 기기 빼면 세 번째가 들어온다(자동 교체 아님 — 사람이 뺀다)
-    assert c.post("/api/claude/me/device/remove", json={"device_id": FP2[:12]}).json()["ok"]
+    assert c.post("/api/admin/claude/devices/remove", json={"cid": 0, "device_id": FP2[:12]}).json()["ok"]
     assert c.get("/api/claude/license", headers=_h(k, FP3)).json()["device"]["slot"] == 2
 
 

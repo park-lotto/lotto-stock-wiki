@@ -1,6 +1,6 @@
 // 우리 서버 REST(계약 §1~§5) — 고객 PC 가 부르는 곳은 license·lease·assets·pack·rent·feedback·blob·step 뿐(step = 제작 지시만 받는다 — 영상·키는 안 보낸다).
 //   네트워크 허용 목록: SHORTEM_BASE 의 origin + SHORTEM_ASSET_HOSTS(자산 저장소) 만. 밖이면 요청하지 않는다.
-import { readLicense, deviceFingerprint, deviceName, ENGINE_VERSION } from './license.js';
+import { readLicense, deviceFingerprint, deviceName, claudeAccount, ENGINE_VERSION } from './license.js';
 
 export const baseUrl = () => String(process.env.SHORTEM_BASE || 'https://shoppingshorts.duckdns.org').replace(/\/+$/, '');
 
@@ -35,7 +35,14 @@ function headers(extra = {}) {
   const key = readLicense();
   const h = { 'X-Shortem-Device': deviceFingerprint(), 'X-Shortem-Engine': ENGINE_VERSION, 'X-Shortem-Device-Name': encodeURIComponent(deviceName()), Accept: 'application/json', ...extra };
   if (key) h.Authorization = 'Bearer ' + key;
+  const acct = claudeAccount();
+  if (acct) h['X-Shortem-Claude'] = acct;
   return h;
+}
+
+// 라이선스 단계에서 멈췄을 때 고객에게 보일 할 일(관제 296). 해당 없으면 null.
+export function licenseFix(code) {
+  return { device_limit: "숏클 페이지의 '등록 기기' 안내를 확인하세요", account_mismatch: '관리자가 승인한 뒤 다시 시도하세요', busy_session: '앞 PC 의 Claude 창을 닫고 3분 뒤 다시 시도하세요. 급하면 숏클 페이지의 강제 해제를 누르세요' }[code] || null;
 }
 
 export async function call(method, route, { body, query, timeoutMs = 20000 } = {}) {
@@ -78,6 +85,7 @@ export async function download(url, { timeoutMs = 120000, maxBytes = 512 << 20 }
 export const api = {
   license: () => call('GET', '/api/claude/license'),
   lease: body => call('POST', '/api/claude/lease', { body }),
+  session: body => call('POST', '/api/claude/session', { body }),
   assets: (profile, job, lease, extra) => call('GET', '/api/claude/assets', { query: { profile, job, lease, extra } }),
   pack: (assetId, job) => call('GET', '/api/claude/pack/' + encodeURIComponent(assetId), { query: { job } }),
   rent: (profile, job, lease, preset) => call('POST', '/api/claude/rent', { body: { ...(profile ? { profile } : {}), ...(preset ? { preset } : {}), job, lease }, timeoutMs: 60000 }),   // 편마다 프리셋(관제 234)

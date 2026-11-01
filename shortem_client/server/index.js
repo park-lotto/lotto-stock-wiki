@@ -10,7 +10,7 @@ import { shape, toToolResult, secretNumbers } from './firewall.js';
 import { make, makeCtx, current, cancel, resetLicenseCache } from './runner.js';
 import { outOf } from './engine/next_step.js';
 import { listJobs, JOB_RE } from './jobs.js';
-import { api } from './api.js';
+import { api, licenseFix } from './api.js';
 import { audit, pruneAudit } from './audit.js';
 import { gcCache, clearCache } from './assets.js';
 import { resolveTools } from './tools_paths.js';
@@ -22,6 +22,7 @@ import { makeStep, aiList } from './make_flow.js';
 import { requestContent, answer as aiAnswer, engineRoot } from './engine_bridge.js';
 import { sweep as sweepRented } from './preset_rent.js';
 import { checkUpdate } from './updater.js';
+import { holdSession, holdNow } from './session.js';
 import { startUi, openBrowser } from './local_ui.js';
 import { startBridge } from './web_bridge.js';
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
@@ -78,12 +79,13 @@ async function licenseInfo() {
     resetLicenseCache();
     const lic = await api.license();
     saveProfiles(lic);
+    await holdNow();   // 첫 설치는 여기서 기기가 등록된다 — 다음 신호까지 비지 않게
     return { ok: true, key_fp: keyPrint(readLicense()), device: { name: lic.device && lic.device.name, slot: lic.device && lic.device.slot, registered_now: !!(lic.device && lic.device.registered_now) },
       devices_used: lic.devices_used, devices_max: lic.devices_max, expires: lic.expires ? new Date(lic.expires * 1000).toISOString().slice(0, 10) : '', profiles: (lic.profiles || []).length,
       engine_ok: !lic.min_engine || cmpVer(ENGINE_VERSION, lic.min_engine) >= 0 };
   } catch (e) {
     if (e.code === 'revoked' || e.code === 'expired') clearCache(e.code);
-    return { ok: false, code: e.code, why: e.msg || '라이선스를 확인하지 못했습니다', fix: e.code === 'device_limit' ? '숏템 마이페이지에서 기기를 교체하세요' : e.code === 'network' ? '인터넷 연결을 확인하세요' : '숏템 페이지에서 키를 확인하세요' };
+    return { ok: false, code: e.code, why: e.msg || '라이선스를 확인하지 못했습니다', fix: licenseFix(e.code) || (e.code === 'network' ? '인터넷 연결을 확인하세요' : '숏템 페이지에서 키를 확인하세요') };
   }
 }
 const cmpVer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); return 0; };
@@ -279,6 +281,7 @@ async function main() {
   try { sweepRented(engineRoot()); } catch { /* 지난번에 못 지운 빌린 프리셋 — 다음에 */ }
   const server = buildServer();
   await server.connect(new StdioServerTransport());
+  holdSession();
   // 켤 때 새 판을 뒤에서 받아 둔다 — 바꾸기는 다음에 켤 때 연결기가(돌고 있는 파일을 안 건드린다)
   setTimeout(() => { checkUpdate().catch(e => audit('update_fail', { result: String(e && e.message || e).slice(0, 80) })); }, 5000).unref();
   // 웹 설정 화면 다리(관제 266) — 웹 '완성본 고치기'가 이 PC 완성본을 재생·시간 줄로 보게(서버를 안 거친다)

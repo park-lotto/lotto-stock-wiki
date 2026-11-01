@@ -4,6 +4,7 @@
 //            → voice → render → check → review(사람) → done
 //   규칙: status 가 'working' 인 동안 runner 가 nextStep 을 계속 부른다. 사람 자리는 입력이 없으면 need_input 으로 선다.
 //   서버는 명령을 내리지 않는다 — 여기 전이는 전부 로컬 판단이다.
+import { licenseFix } from '../api.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { STEP_NAMES } from '../lease.js';
@@ -76,7 +77,7 @@ const handlers = {
     let lic;
     try { lic = await ctx.license(); } catch (e) {
       if (e.code === 'revoked' || e.code === 'expired') ctx.clearCache(e.code);
-      return stop(job, failOf('소재', e.msg || '라이선스를 확인하지 못했습니다', e.code === 'device_limit' ? '숏템 마이페이지에서 기기를 교체하세요' : e.code === 'network' ? '인터넷 연결을 확인하고 다시 시도하세요' : '숏템 페이지에서 라이선스 키를 확인하세요', ['network', 'rate_limited'].includes(e.code)));
+      return stop(job, failOf('소재', e.msg || '라이선스를 확인하지 못했습니다', licenseFix(e.code) || (e.code === 'network' ? '인터넷 연결을 확인하고 다시 시도하세요' : '숏템 페이지에서 라이선스 키를 확인하세요'), ['network', 'rate_limited'].includes(e.code)));
     }
     const profiles = lic.profiles || [];
     const pid = job.profile_id || (profiles[0] && profiles[0].profile_id);
