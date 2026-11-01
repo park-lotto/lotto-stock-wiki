@@ -111,8 +111,12 @@ def check_stage(dst: Path) -> None:
     bad = [str(x.relative_to(dst)) for x in dst.rglob("*") if re.search(r"[À-ÿ]", x.name)]
     miss = [n for n in ("alibabacloud_oss_v2", "Crypto", "crcmod") if not (eng / "_vendor" / n).is_dir()]
     packs = eng / "shopping_shorts" / "assets" / "sfx_packs"
-    if not (packs / "팩01").is_dir():
-        miss.append("sfx_packs/팩01")
+    # 전 프리셋 준비 확인 — 판이 부르는 효과음 팩이 묶음에 다 있나(1.0.22 팩01 이름 깨짐으로 1/13 멈춤)
+    styles = Path(__file__).resolve().parents[1] / "calcopy" / "hybrid" / "styles"
+    for s in styles.glob("*.json"):
+        for n in re.findall(r'"pack":\s*"(팩\d+)"', s.read_text(encoding="utf-8")):
+            if not (packs / n).is_dir() and f"sfx_packs/{n}" not in miss:
+                miss.append(f"sfx_packs/{n}")
     if bad or miss:
         raise SystemExit(f"[빠른배포] 묶음 검사 실패: 깨진 이름 {bad[:5]} · 없는 부품 {miss}")
 
