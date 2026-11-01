@@ -524,7 +524,7 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
 # 서버↔실행기 고리는 회원 Claude 없이 돈다(flow_driver.pump) — 판단을 묻는 칸이 없으면 같은 일을 몇십 번 돌아도 아무도 모른다
 # (10-27 립글로스: clean_text↔write_doc 67번·37분, 그 42분 동안 회원 Claude 질문 0개). 질문 없이 같은 실행기 일이 WATCH_N 번을 넘으면 실행 대신 회원 Claude 에게 기록을 보여 주고
 # '이어 갈까·멈출까'를 묻는다. 판단 주인 = _watch(세기)·f_watch_got(답 처리) 한 곳.
-WATCH_N = 6
+WATCH_N = 4            # 뺑뺑이는 일찍 묻는다(사장님 11-02 · 옛 값 6) — 제작자 과제 3번 뒤에 온다
 
 WATCH_ASK = """너는 이 영상 제작의 감독이다. 아래 실행기 일이 같은 편 안에서 {n}번째 다시 돌려 한다 — 헛바퀴(같은 결과를 계속 다시 만듦)인지 정상 반복(반려를 받아 고치는 중)인지 기록을 보고 판단해라.
 헛바퀴면 멈추고(go=false) 무엇이 반복되는지·어디를 고쳐야 하는지 why 에 적는다. 정상 반복이면 go=true.
@@ -579,6 +579,10 @@ def f_watch_got(st, m, rp, u):
 
 
 def _out(st: dict, status: str, phase: str, **kw) -> dict:
+    if st.get("waive_gate"):             # 권고 넘기기 뒤 계획·렌더는 품질 관문을 경고로만(render_bench.gate_stop)
+        for d in kw.get("do") or []:
+            if d.get("cmd") in ("plan", "render"):
+                d["waive"] = True
     stage = _stage(phase, st)
     traps = (TRAPS_FOREIGN if _fmt(st) == "해외원본형" else TRAPS).get(stage["key"], [])
     back = _went_back(st, stage["key"])
@@ -1242,8 +1246,10 @@ def ph_stopped(st, m, rp, u):
 
 
 NL = chr(10)
-TASK_PER_KEY = 3       # 같은 막힘(이어 갈 단계+이유)마다 제작자 과제 횟수 — 코드를 고친 뒤 다시 보는 번까지(사장님 10-31 "멈추지 말고 해결해 나가게")
-TASK_TOTAL = 16        # 한 편 전체 과제 상한 — 넘으면 회원에게(무한 되풀이 금지)
+TASK_PER_KEY = 3       # 똑같은 실패(단계+이유+속사정)가 안 줄 때만 세는 횟수 — 다른 실패가 되면 진전이다(사장님 11-02 "횟수한도 문제")
+TASK_TOTAL = 40        # 한 편 전체 과제 상한 — 무한 되풀이만 막는다(시간·사용량 예산은 기준선 실측 뒤)
+BACK_STAGES = ("script", "plan", "render", "check")        # 회원 Claude 가 돌아가 다시 시작할 수 있는 단계(이미 지난 곳만)
+HARD_SCRIPT = {"claims", "source_rule"}                     # 지어낸 사실·출처 규칙 = 금지선 — 권고 넘기기로 못 넘긴다
 STAGE_GUIDE = {"setup": "00_common.md", "bench": "01_topic.md", "origin": "02_find_source.md", "product": "03_product_coupang.md", "research": "04_research.md",
                "material": "05_material.md", "asr": "06_transcribe.md", "script": "07_script.md", "sign": "07_script.md", "plan": "08_plan.md",
                "render": "10_render.md", "check": "11_check.md", "done": "12_deliver.md"}
@@ -1252,8 +1258,12 @@ TASK_ASK = """너는 이 편의 **제작자**다(사장님 PC 의 제작 세션�
 지킬 것: 가이드(아래 발췌)를 지킨다 · 금지선·함정은 절대 · 지어내지 않는다(모르면 웹 검색으로 확인) · 회원에게는 꼭 필요한 결정만.
 너는 사장님 PC 의 Claude 처럼 자유롭게 푼다 — 정해진 길이 없어도 멈추지 말고 네 도구(Bash·파일 수정·yt-dlp·ffmpeg)로 작업 폴더(src/ 등)에서 직접 해결한다. 재료가 모자라면 영상을 직접 받아 src/ 에 넣고 action "material" 로 답한다.
 쓸 수 있는 것: 네 웹 검색(WebSearch·WebFetch) · 숏클 엔진 코드 고치기(코드 결함이면 고친 뒤 retry — 고친 뒤 note 에 파일·이유를 적고 shortem_feedback(kind="code_fix") 로 diff 를 보낸다, 검사 기준을 낮추는 수정은 금지) · 이 답(JSON)으로 숏템에 다음 행동을 시킨다 — 숏템이 그 결과를 다시 검사한다(통과해야 다음 단계).
+순서: 다시 시도 → 앞 단계로 → 권고 넘기기 → 직접 만들기 → 엔진 수리. 고장 난 곳만 고치고, 같은 방법을 두 번 쓰지 마라. 진전이 없으면 바로 다음 칸으로.
 답 JSON 하나:
- {"action": "retry" | "give" | "material" | "end", "origin_url": "", "product": "", "files": [], "note": "무엇을 확인했고 왜 이 행동인지 한 줄"}
+ {"action": "retry" | "give" | "material" | "back" | "waive" | "submit" | "end", "to": "", "origin_url": "", "product": "", "files": [], "note": "무엇을 확인했고 왜 이 행동인지 한 줄"}
+ · back = 앞 단계부터 다시. to 는 script·plan·render·check 중 이미 지난 단계. 끝난 다른 단계는 다시 하지 않는다
+ · waive = 이 품질 걸림은 권고로 보고 넘긴다. 남은 것은 완성 보고에 경고로 남는다. 지어낸 사실·금지 출처는 넘길 수 없다
+ · submit = 네 도구로 그 판 폴더에 완성본을 직접 만들었다. 숏템이 결과만 다시 판정한다
  · retry = 같은 단계를 다시(잠깐의 막힘·고치기 횟수 소진·받기 실패 등 — 다시 하면 풀릴 근거가 있을 때)
  · give = 네가 찾은 것을 준다: origin_url(원본 영상 유튜브 주소 — 원본 찾기 단계) 또는 product(쿠팡 상품 주소나 정확한 제품명 — 제품 확인 단계)
  · material = 네가 src/ 에 넣은 영상 파일 이름을 files 로 준다 — 대본·목소리 그대로 그 재료로 장면 맞추기부터 다시(숏템이 다시 검사한다)
@@ -1303,7 +1313,7 @@ def _task(st: dict, e: "_Stop", ph: str, retry: str | None) -> dict | None:
     회원에게 바로 가는 것: final(금지선·만들 수 없는 소재 — 결정) · ask_member(키·준비·과제 한도 뒤) · 이어 갈 단계가 없음 · 횟수 한도."""
     if e.final or e.ask_member or not retry:
         return None
-    key = f"{retry}:{e.why}"
+    key = f"{retry}:{e.why}:{hashlib.md5(str(e.detail or '').encode()).hexdigest()[:6]}"
     n = st.setdefault("task_n", {})
     if n.get(key, 0) >= TASK_PER_KEY or sum(n.values()) >= TASK_TOTAL:
         return None
@@ -1369,8 +1379,45 @@ def ph_task_got(st, m, rp, u):
     if act == "retry":
         st["stopped"] = stopped
         return ph_stopped(st, {}, {}, {"retry": True})
+    if act == "back":
+        to = str(a.get("to") or "")
+        keys = [k for k, _ in _stage_list(st)]
+        if to in BACK_STAGES and to in keys and keys.index(to) <= keys.index(t.get("stage") or "setup"):
+            st["log"].append(f"제작자가 앞 단계로: {to}")
+            st["tries"].pop(to, None)
+            st.get("redo_hist", {}).pop(to, None)
+            return {"goto": to}
+    if act == "submit":          # 직접 만든 결과 — 서버는 결과만 판정한다(11-02 C안)
+        st["log"].append("제작자가 직접 만든 결과 제출: " + str(a.get("note") or "")[:200])
+        st["auto"] = None
+        return {"goto": "check"}
+    if act == "waive":
+        got = _waive(st, t.get("stage") or "")
+        if got:
+            return got
     raise _Stop(t.get("why") or "만드는 중에 문제가 생겼어요", t.get("fix") or AGAIN, retry=t.get("retry"), ask_member=True,
                 origin_missing=bool(t.get("origin_missing")), detail=(str(t.get("detail") or "") + f" · 제작자 과제 답 {act}: {str(a.get('note') or '')[:200]}").strip(" ·"))
+
+
+def _waive(st: dict, stage: str) -> dict | None:
+    """(판단 주인 — 권고 넘기기) 품질 걸림을 경고로 남기고 다음으로. 금지선(HARD_SCRIPT)은 넘기지 않는다 → None."""
+    st["waive_gate"] = True
+    st.setdefault("warn", []).append({"stage": stage, "causes": ["제작자 권고 넘기기"], "why": str((st.get("_task") or {}).get("detail") or "")[:300]})
+    if stage == "script":
+        t = st.get("_script_try") or {}
+        if not t or HARD_SCRIPT & set(t.get("causes") or []):
+            return None
+        st["script"] = {"S": t["S"], "M": t["M"], "G": t.get("G") or ""}
+        v = st["version"]
+        return {"do": [{"id": "save_script", "cmd": "write_doc", "files": {f"{v}/대본.json": t["S"], f"{v}/재료.json": t["M"], f"{v}/근거.md": t.get("G") or ""},
+                        "cand_dir": True, "version": v}], "then": "sign"}
+    if stage == "plan":
+        return {"goto": "render"}
+    if stage == "render":
+        return {"goto": "render"}
+    if stage == "check":
+        return finish_with_left(st)
+    return None
 
 
 def _yt_id(text: str) -> str:
@@ -2242,6 +2289,7 @@ def ph_script_got(st, m, rp, u):
         return {"do": [{"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "images": [x for x in [(st.get("product") or {}).get("image")] if x], "n": 4}], "then": "stills_again"}
     if not a.get("ok"):
         cs = _script_causes(a)
+        st["_script_try"] = {"S": S, "M": M, "G": r.get("근거_md") or "", "causes": list(cs)}
         _tries(st, "script", LIMITS["script"], cs or ["form"])
         why = json.dumps({k: x for k, x in a.items() if k != "ok"}, ensure_ascii=False)[:4000]
         st["log"].append("대본 반려: " + why[:400])          # 속사정은 기록에만 — reject 칸은 회원에게도 보일 수 있어 쉬운 말로

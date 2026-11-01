@@ -1568,8 +1568,21 @@ class _erase_env:
                 os.environ["CALCOPY_ERASE"] = self.old
 
 
+@contextlib.contextmanager
+def _waive_env(d):
+    """지시서가 실어 보낸 권고 넘기기(do.waive)를 그 일 동안만 SHORTEM_WAIVE_GATE 로(render_bench.gate_stop 이 읽는다)."""
+    if not d.get("waive"):
+        yield
+        return
+    os.environ["SHORTEM_WAIVE_GATE"] = "1"
+    try:
+        yield
+    finally:
+        os.environ.pop("SHORTEM_WAIVE_GATE", None)
+
+
 def c_plan(W, d):
-    with _erase_env(d):
+    with _erase_env(d), _waive_env(d):
         return _c_plan(W, d)
 
 
@@ -1628,7 +1641,7 @@ def _c_plan(W, d):
 
 
 def c_render(W, d):
-    with _erase_env(d):
+    with _erase_env(d), _waive_env(d):
         return _c_render(W, d)
 
 

@@ -3539,6 +3539,9 @@ class GateError(StageError):
 def gate_stop(groups: list[tuple[str, list[str]]]) -> None:
     """[(관문 이름, 문제 글 목록)…] — 하나라도 있으면 전부 실은 GateError."""
     probs = [(g, m) for g, ms in groups for m in ms]
+    if probs and __import__("os").environ.get("SHORTEM_WAIVE_GATE"):      # 권고 넘기기(flow._waive) — 멈추지 않고 기록만
+        print("[권고 넘기기] 관문 " + " / ".join(f"{g}: {m}" for g, m in probs)[:600], flush=True)
+        return
     if probs:
         raise GateError(probs)
 
