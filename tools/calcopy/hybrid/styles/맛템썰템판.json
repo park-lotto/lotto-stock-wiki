@@ -28,7 +28,7 @@
   "db_below_voice": 16.0,
   "duck_orig_db": 0.0,
   "duck_narr_db": 0.0,
-  "fade_out": 0.0,
+  "fade_out": 0.5,
   "candidates": [],
   "why": "BGM 있음(신호): 말 쉼 바닥 −23~−34dB·p5 −34~−37dB → 목소리보다 15~17dB 낮음 → 16 · 시작 0.05초·끝 페이드 0/6 → fade_out 0 · 곡 미측정 → qiuqiu(defaults.json, audio.json 비율 0.12) · 원음 0 → duck_orig 0 · 나레 덕킹 근거 없음 0"
  },

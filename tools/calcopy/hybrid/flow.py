@@ -445,6 +445,11 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
     m, rp, user = dict(measure or {}), dict(replies or {}), dict(user or {})
     if user.get("revise") and (st.get("script") or {}).get("S") and st.get("phase") != "sign":
         st["phase"] = "member_revise"      # 대본이 나온 뒤 회원이 고칠 줄을 말함 — 어느 단계든 그 줄만(재료 그대로, ph_member_revise)
+    if user.get("reclean") and (st.get("script") or {}).get("M"):
+        tf = st.setdefault("text_fix", {})    # 대본·재료·목소리는 그대로, 박힌 글자 지우기부터 렌더만 다시(주인 = 여기 · f_render)
+        tf.update({"mode": "vmake", "key": None})
+        st.get("tries", {}).pop("vmake_fail", None)
+        st["phase"] = "render"
     if m and st.get("watch_last") and any(isinstance(v, dict) and v.get("error") for v in m.values()):
         (st.get("watch_keys") or {}).pop(st["watch_last"], None)     # 실패한 일을 같은 입력으로 다시 = 다시 시도(반복 감시 대상 아님)
     for _ in range(40):
@@ -3362,7 +3367,7 @@ def f_of_got(st, m, rp, u):
     if mode in ("lens", "find"):                 # 같은 영상 판정 = 렌즈 후보든 회원 Claude 가 찾은 후보든 같은 질문·같은 규칙(결과 검사)
         st["of_bad"] = _bad_urls(o)
         from tools.calcopy import origin_find as OF
-        ask = OF.JUDGE_PROMPT + (SUBSONG_CLEAN_ASK if _fmt(st) == "자막노래형" else "") + "\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows + _lens_ai_ctx(st)
+        ask = OF.JUDGE_PROMPT + OF_JUDGE_MAYBE + (SUBSONG_CLEAN_ASK if _fmt(st) == "자막노래형" else "") + "\n\n" + _brief("origin_foreign.md") + "\n\n후보 목록(칸 번호 = n):\n" + rows + _lens_ai_ctx(st)
         return {"review": [_rv("of_judge", ask, [_img(x) for x in o["sheets"]][:6], model="opus", need=("same",), meta={"mode": st.get("of_mode")})], "then": "of_pick"}
     prod = ", ".join([str(st["read"].get("brand_hint") or "")] + [str(w) for w in st["read"].get("product_words") or []][:3]).strip(", ")
     need = "최대 2개" if st.get("origins") else "같은 촬영분 원본을 못 찾아 이 후보가 원본이 된다 — 가장 좋은 것부터 최대 3개"   # 가장 좋은 건 원본 그대로(렌즈), 못 찾으면 같은 종류 해외 반응(사장님 10-26)
@@ -3379,6 +3384,8 @@ def f_of_pick(st, m, rp, u):
         same = [by_n[int(n)] for n in a.get("same") or [] if str(n).isdigit() and int(n) in by_n]
         if _fmt(st) == "자막노래형" and same:
             return _subsong_pick_clean(st, a, same)
+        ids = {id(c) for c in same}      # 썸네일로 못 가른 공식·언론 영상 = 받아서 장면으로 확인(뒤 OF_VERIFY 가 판정, 11-01 신발 편)
+        same += [c for c in (by_n[int(n)] for n in (a.get("maybe") or [])[:OF_MAYBE_MAX] if str(n).isdigit() and int(n) in by_n) if id(c) not in ids]
         seed = {"key": f"yt:{st['bench'].get('id')}", "korean": True, "date": st["bench"].get("date")}
         vs = [seed] + [{**c, "key": f"{c.get('platform')}:{c.get('id')}"} for c in same]
         picked = OF.pick_origins(vs)       # 주인 = origin_find.pick_origins(해외 채널마다 가장 먼저·한국 재편집보다 늦은 것 제외) — 유튜브·틱톡·인스타 모두(10-26 '유튜브만' 버림 제거, 받기 = runner c_origin_get)
@@ -3416,6 +3423,10 @@ F_FIND_SEC = 20 * 60
 F_FIND_HARD = 60 * 60
 F_SAY_STEP = 5 * 60    # 회원 진행 줄 'N분째' 를 5분마다(사장님 10-26 "5분에 한 번씩 계속 안내")
 
+OF_MAYBE_MAX = 3
+OF_JUDGE_MAYBE = """
+★같은 제품의 브랜드 공식·언론 영상인데 썸네일로는 같은 촬영분인지 못 가르면 same 에 넣지 말고 "maybe":[번호,…] 에 넣는다(최대 3개 — 받아서 안의 장면으로 확인한다). 답 = {"same":[…], "maybe":[…], "why":"한 줄"}"""
+
 OF_FIND_ASK = """너는 해외 원본 찾기 담당이다. 자동 검색(구글 렌즈)으로는 이 소재 쇼츠의 해외 원본을 못 찾았다 — 네가 직접 찾아라.
 목표: 이 소재(한국 재편집 쇼츠)가 가져다 쓴 **해외 원본 영상의 주소**. 원본은 유튜브·틱톡·인스타그램 어디에 있어도 된다(셋 다 받을 수 있다).
 짜깁기면 컷마다 원본이 다르다 — **컷마다 따로** 찾는다(답 = 컷별 표, 최대 8컷).
@@ -3424,6 +3435,8 @@ OF_FIND_ASK = """너는 해외 원본 찾기 담당이다. 자동 검색(구글 
 ③urls 에 적은 주소(유튜브 쇼츠·틱톡 영상·인스타 릴스 한 편 주소) = 숏템이 그 영상 정보·썸네일을 받아 같은 영상인지 소재 장면과 나란히 판정한다(결과 검사 — 통과해야 다음 단계).
 ★틱톡·인스타 주소는 영상 한 편 주소 그대로(…tiktok.com/@아이디/video/숫자 · …instagram.com/reel/코드). 프로필·해시태그·검색 페이지 주소는 판정할 수 없다.
 ★같은 촬영분만 원본이다(같은 사람·같은 장소·같은 순간). 같은 제품을 다른 사람이 쓴 영상은 아니다. 앞 몇 초만 같고 뒤가 리뷰어 해설·반응인 영상도 아니다(영상 전체가 원본이어야 한다). 한국 채널 재편집·소재보다 늦게 올린 계정은 원본이 아니다.
+★사람 이름은 화면·설명란에 적힌 것만 쓴다. 얼굴을 보고 이름을 짐작하지 마라.
+★제품 이름이 일반 낱말과 겹치면(Moonwalkers → 춤 영상) 제품 종류 일반어도 검색어에 넣어라(electric shoes 등).
 ★지난 시도에서 판정에 떨어진 주소·같은 검색어는 다시 주지 마라 — 컷마다 다른 단서(사람 생김새·장소·글자·소리)를 써라.
 JSON 하나: {"cuts": [{"cut": "S1 또는 컷 설명", "seen": "그 컷에 보이는 것 한 줄", "urls": ["https://…"], "queries": ["영어 검색어 3~6단어", …]}, …],
  "why": "컷별로 무엇을 단서로 찾았는지 한 줄"}
@@ -4259,6 +4272,8 @@ def f_render_clean_got(st, m, rp, u):
         raise _Stop(str(c.get("why")), str(c.get("fix") or ""), retry="render")
     if c.get("error"):
         st["log"].append("박힌 글자 지우기 실패(흐림 그대로 렌더): " + str(c["error"])[:200])
+    if c.get("error") or c.get("mode") in ("blur", "error"):     # 지우기로 정했는데 흐림이 됐다 — 조용히 넘어가지 않는다(11-01)
+        st["notice"], st["_notice_shown"] = "원본 자막을 지우지 못해 흐림으로 가렸어요", False
     if (c.get("mode") == "vmake" and c.get("why")) or c.get("error"):        # 못 지운 구간(시간 초과·크레딧) — 흐림으로 덮고 렌더하지 않는다(10-26 까르보 3판: 흐림이 어긋나 영어 자막이 그대로 남았다). 다시 보내고, 두 번째도 실패면 멈춘다
         for n, iv in (c.get("done") or {}).items():
             tf.setdefault("done", {}).setdefault(n, []).extend(iv)

@@ -121,6 +121,7 @@ async function pump(f) {
   f.busy = true;
   try {
     for (let guard = 0; guard < 200; guard++) {
+      if (f.cancelled) break;
       let res;
       if (f.status === 'execute') {
         const measure = await runOps(path.join(flowRoot(), f.sid, 'job'), f.do || []);
@@ -129,12 +130,15 @@ async function pump(f) {
         const replies = collect(f);
         if (!replies) break;                        // 회원 Claude 답을 기다린다
         res = await send(f, { step: 'go', replies });
+      } else if (f.status === 'reclean') {
+        res = await send(f, { step: 'reclean' });
       } else if (f.status === 'retry') {
         res = await send(f, { step: 'retry' });
       } else if (f.approved === true && f.status === 'wait_user') {
         f.approved = 'sent';
         res = await send(f, { step: 'approve' });
       } else break;
+      if (f.cancelled) break;
       if ((await absorb(f, res)) === 'end') break;
     }
   } catch (e) {
@@ -144,7 +148,34 @@ async function pump(f) {
   } finally { f.busy = false; save(f); }
 }
 
+// 지금 돌고 있는 편 — 숏클은 한 번에 한 편(이 프로그램이 켜진 뒤 움직인 편만 본다)
+export function liveFlow() {
+  for (const f of flows.values()) {
+    if (!f.cancelled && !f.fail && f.status !== 'done' && (f.busy || f.status === 'review' || f.status === 'reject')) return f;
+  }
+  return null;
+}
+
+export function cancelFlow(sid) {
+  const f = loadFlow(sid); if (!f) return null;
+  if (f.status === 'done') return f;
+  f.cancelled = true;
+  f.fail = { why: '사용자가 멈췄습니다', fix: '새로 만들려면 영상 주소로 다시 시작해 주세요', retry_ok: false };
+  save(f);
+  return f;
+}
+
+// 완성본은 두고 지우기부터 렌더만 다시 — 대본·재료·목소리 그대로
+export function recleanFlow(sid) {
+  const f = loadFlow(sid); if (!f || f.busy) return f;
+  f.fail = null; f.cancelled = false; f.status = 'reclean';
+  f.running = pump(f);
+  return f;
+}
+
 export async function startFlow({ preset, video, product }) {
+  const live = liveFlow();
+  if (live) throw new ApiError(409, { code: 'busy_flow', msg: `이미 만들고 있는 편이 있어요. 끝난 뒤 시작하거나 먼저 멈춰 주세요(shortem_job action="cancel", sid="${live.sid}")` });
   await refreshCookies();
   const res = await api.step({ step: 'start', preset, source: { kind: 'youtube', url: video, ...(product ? { product: String(product).slice(0, 200) } : {}) } });
   const f = { sid: res.sid, preset, video, created: Date.now() };
@@ -183,7 +214,7 @@ export function shapeFlow(f) {
 export async function waitFlow(sid, waitMs) {
   const f = loadFlow(sid);
   if (!f) return null;
-  if (!f.busy && !f.fail && f.status !== 'done') f.running = pump(f);
+  if (!f.busy && !f.fail && !f.cancelled && f.status !== 'done') f.running = pump(f);
   const t0 = Date.now();
   while (Date.now() - t0 < waitMs) {
     const s = shapeFlow(f);

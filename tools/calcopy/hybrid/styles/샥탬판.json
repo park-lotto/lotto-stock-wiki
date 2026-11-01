@@ -29,7 +29,7 @@
   "db_below_voice": 6.5,
   "duck_orig_db": 0.0,
   "duck_narr_db": 0.0,
-  "fade_out": 0.03,
+  "fade_out": 0.5,
   "candidates": [
    "sweets",
    "qiuqiu"

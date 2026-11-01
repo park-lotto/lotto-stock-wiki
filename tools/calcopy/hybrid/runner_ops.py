@@ -866,7 +866,7 @@ def coupang_chrome(queries: list[str], home: Path) -> dict:
     prof.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as p:
         ctx = p.chromium.launch_persistent_context(str(prof), headless=False, channel="chrome", locale="ko-KR", viewport={"width": 1366, "height": 900},
-                                                   args=["--disable-blink-features=AutomationControlled"])
+                                                   args=["--disable-blink-features=AutomationControlled"] + (["--window-position=-32000,-32000"] if os.environ.get("SHORTEM_BROWSER_OFFSCREEN") == "1" else []))
         try:
             pg = ctx.pages[0] if ctx.pages else ctx.new_page()
             try:
@@ -922,7 +922,7 @@ def c_coupang_reviews(W, d):
     prof.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as p:
         ctx = p.chromium.launch_persistent_context(str(prof), headless=False, channel="chrome", locale="ko-KR", viewport={"width": 1366, "height": 900},
-                                                   args=["--disable-blink-features=AutomationControlled"])
+                                                   args=["--disable-blink-features=AutomationControlled"] + (["--window-position=-32000,-32000"] if os.environ.get("SHORTEM_BROWSER_OFFSCREEN") == "1" else []))
         why = ""
         try:
             pg = ctx.pages[0] if ctx.pages else ctx.new_page()

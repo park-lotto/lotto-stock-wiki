@@ -381,8 +381,8 @@ def test_clean_used_sends_only_spans_and_splices(tmp_path, monkeypatch):
     monkeypatch.delenv("SHORTEM_NO_PAID", raising=False)
     t0 = "0000"
     r = VC.clean_used(src, {"a.mp4": [[2.0, 4.0], [10.0, 11.5]]})
-    assert r["calls"] == 2 and r["done"] == {"a.mp4": [[2.0, 4.0], [10.0, 11.5]]}
-    assert [round(s, 1) for _, s in calls] == [2.0, 1.5]                # VMake 로 간 것 = 구간 조각뿐(원본 20초 아님)
+    assert r["calls"] == 1 and r["done"] == {"a.mp4": [[2.0, 4.0], [10.0, 11.5]]}
+    assert [round(s, 1) for _, s in calls] == [3.5]                     # VMake 로 간 것 = 구간만 이어 붙인 1회(원본 20초 아님)
     assert abs(VC._dur(src / "a.mp4") - 20.0) < 0.2 and (src / "a_orig.mp4").exists()   # 같은 이름·같은 길이로 끼움, 원본 보존
     assert not list(src.glob("*__vm_*"))                                # 조각은 치운다
     assert (src / "_cutbounds_a_0_240_v2.json").stat().st_mtime >= (src / "a.mp4").stat().st_mtime   # 경계 캐시 그대로 씀
