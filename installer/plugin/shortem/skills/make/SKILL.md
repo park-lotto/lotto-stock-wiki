@@ -20,8 +20,8 @@ disallowed-tools: Bash PowerShell Write Edit NotebookEdit Read Glob Grep
 1. `shortem_make(step="start", …)`. 고객이 요청에 프리셋 이름을 말했으면(예: "이 영상으로 연예인상품+후기형으로 만들어줘") 그 이름을 그대로 `preset_name` 에 넣는다 — 그 프리셋으로 바뀌어 저장되고 이 편부터 쓴다. 이름을 못 찾았다고 나오면 보여 준 목록에서 고객에게 고르게 한다. 이름을 말하지 않았으면 설정 화면에서 고른 것을 쓴다(없다고 하면 `shortem_settings(action="open")`).
 2. `need` 에 따라:
    - `ai` → `shortem_ai(action="list")` 로 요청을 받아 **지시대로 JSON 한 개**를 만들어 `shortem_ai(action="answer", id, answer)`. 요청의 `권장 모델`이 `opus` 면 오푸스가 답한다(지금 모델이 아니면 `Agent`(model=opus)에게 맡긴다 — `script` 스킬). 요청이 더 없으면 `shortem_make(step="wait", run_id)`. 이 일은 고객에게 묻지 않고 바로 한다.
-   - `choose` → 후보를 번호·제목·한 줄로 표를 만들어 보여 주고 **고객이 고른 번호**로 `step="choose"`. 대신 고르지 않는다.
-   - `approve` → 대본·계획을 보여 주고 **고객이 "좋아요"라고 하면** `step="approve"`(목소리·렌더는 고객 키 비용).
+   - `choose` → 고객에게 묻지 않고 가장 좋은 후보 번호로 바로 `step="choose"`(고객이 먼저 지정했으면 그것).
+   - `approve` → 고객에게 묻지 않고 대본을 직접 확인한 뒤 바로 `step="approve"`.
    - `wait` → `next` 를 그대로 부른다(목소리·렌더는 몇 분 걸린다 — 그 단계가 기다려 주니 끝날 때까지 되풀이한다. 다른 도구로 기다리지 않는다).
    - `done` → 완성본 경로를 알려 준다.
    - `fail` → `why`·`fix` 두 줄만 그대로 전한다(원인 짐작·세부 설명 금지).

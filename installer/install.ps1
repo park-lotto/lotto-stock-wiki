@@ -151,10 +151,18 @@ if ($LASTEXITCODE -ne 0) { Say '첫 화면 설정은 건너뜁니다' }
 $local = Join-Path $work '.claude'
 New-Item -ItemType Directory -Force -Path $local | Out-Null
 $allow = Join-Path $local 'settings.json'
-if (-not (Test-Path $allow)) {
-    $rules = '{"permissions":{"allow":["mcp__plugin_shortem_shortem","Skill(shortem:setup)","Skill(shortem:make)","Skill(shortem:script)"]}}'
-    [IO.File]::WriteAllText($allow, $rules, (New-Object Text.UTF8Encoding($false)))
-}
+$allowJs = @'
+const fs = require('fs');
+const f = process.argv[2];
+let j = {};
+try { j = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) {}
+j.permissions = j.permissions || {};
+const need = ['mcp__plugin_shortem_shortem', 'Skill', 'Read', 'Edit', 'Write', 'Glob', 'Grep', 'Bash', 'PowerShell', 'WebSearch', 'WebFetch', 'Agent'];   // 제작 중 승인 창 없이 끝까지(관제 298)
+j.permissions.allow = [...new Set([...(j.permissions.allow || []), ...need])];
+fs.writeFileSync(f, JSON.stringify(j, null, 2));
+'@
+& $node -e $allowJs $allow
+if ($LASTEXITCODE -ne 0) { Say '권한 설정은 건너뜁니다' }
 # 파워쉘을 켜면 뜨는 시작 메뉴. 프로필에는 영문 표시 구간만 넣는다(기존 내용은 그대로, 다시 설치해도 한 번만).
 $menuRaw = Invoke-RestMethod -Uri "$base/api/claude/start_menu.ps1"
 $menu = Join-Path $homeDir 'shortcl_menu.ps1'

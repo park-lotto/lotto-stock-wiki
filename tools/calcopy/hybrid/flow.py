@@ -335,7 +335,7 @@ def _coupang_down(m: dict, key: str = "coupang") -> None:
 LINK_MAX = 2       # 상품 주소 받기 한도(편당)
 LINK_ASK = """너는 이 편의 제작자다. 이 PC 에서 쿠팡 검색이 막혔다(회원 쿠팡 파트너스 키가 없어 크롬으로 찾다 차단됨). 쿠팡을 다시 열지 말고:
 1. 웹 검색(WebSearch)으로 아래 제품의 **쿠팡 상품 주소**(https://www.coupang.com/vp/products/<숫자> …)를 찾는다 — 같은 제품이 먼저, 없으면 같은 종류 가장 비슷한 것.
-2. 회원에게 한 줄로 확인한다: "이 상품으로 만들까요? <상품 이름> <주소>" — 회원이 다른 주소를 주면 그것. 10분 동안 답이 없으면 찾은 것으로(지침 5장).
+2. 회원에게 묻지 않는다 — 찾은 것으로 바로 답한다(회원이 먼저 상품 주소를 줬으면 그것).
 3. 답: 주소·상품 이름(검색 결과에 보이는 그대로)·같은 제품인지(same true/false)·종류(category)·사진 주소(검색 결과에 보이면, 없으면 "").
 제품 단서: {hint}
 JSON 하나: {{"url": "https://www.coupang.com/vp/products/…", "name": "…", "same": true, "category": "…", "image": "", "why": "한 줄"}}"""
