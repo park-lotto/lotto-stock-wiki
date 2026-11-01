@@ -19,6 +19,7 @@ load 가 바탕 목록에 패치를 적용한다(통째 목록이 있으면 거�
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -189,6 +190,53 @@ def load(name: str, patch: dict | None = None, _skip_packs: bool = False) -> dic
     if not _skip_packs:
         from tools.calcopy.hybrid import pack_map
         pack_map.apply_to_style(st, (patch or {}).get("packs"), name)
+    return member_frame(st)
+
+
+def member_font_file(name: str) -> str:
+    """화면 글꼴 이름 → 글꼴 파일 이름. 없으면 멈춘다(조용히 판 글꼴로 돌아가지 않는다)."""
+    fonts = DIR.parents[3] / "shopping_shorts/static/fonts"
+    hit = [p.name for p in fonts.glob(f"{name}.*") if p.suffix.lower() in (".ttf", ".otf")]
+    if not hit:
+        raise StyleError(f"회원 제목 글꼴 '{name}' 파일이 없다")
+    return sorted(hit)[0]
+
+
+def member_frame(st: dict) -> dict:
+    """회원 '꾸미기' 값 → 판 틀(주인 한 곳 — 렌더·썸네일·캡컷·관문이 모두 load 로 받는다). SHORTEM_MEMBER_PACK = local_settings.packFile. 없으면 그대로."""
+    f = os.environ.get("SHORTEM_MEMBER_PACK")
+    if not f:
+        return st
+    pack = json.loads(open(f, encoding="utf-8").read()).get("member") or {}
+    brand, text = pack.get("brand") or {}, pack.get("text") or {}
+    tts = {k: v for k, v in (pack.get("tts") or {}).items() if k in ("voice_id", "name", "provider", "tempo", "emotion") and v is not None}
+    if tts:          # 소리 단계에서 고른 목소리 — 렌더·계획이 member_voice 로 대본 칸까지 덮는다
+        st["voice"] = {**st.get("voice", {}), **tts}
+        st["member_voice"] = tts
+    F = st.get("frame")
+    if not F:      # 전용 렌더러 판(잇썸홈·재미썸홈) — 틀 칸이 없다
+        return st
+    name = brand.get("channel_name")
+    if name:
+        if F.get("logo"):
+            F["logo"]["text"] = name
+        if F.get("watermark"):
+            head = F["watermark"]["text"].split(" ", 1)
+            F["watermark"]["text"] = f"{head[0]} {name}" if len(head) == 2 and not head[0].isalnum() else name
+        for ic in ((F.get("post") or {}).get("head_bar") or {}).get("icons") or []:
+            if ic.get("kind") == "text" and ic.get("from", "brand") == "brand":
+                ic.update({"text": name, "from": "_fixed"})     # 대본 post.brand 보다 회원 채널명
+    bg = (brand.get("colors") or {}).get("bg")
+    if bg:
+        F["bg"] = list(bg)
+    colors = text.get("title_colors") or []
+    for i, T in enumerate(F.get("title") or []):
+        if text.get("title_font"):
+            T["font"] = member_font_file(text["title_font"])
+        if i < len(colors) and colors[i]:      # 안 고른 줄은 프리셋 색
+            T["color"] = colors[i]
+        if text.get("title_scale"):
+            T["px"] = round(T["px"] * float(text["title_scale"]))
     return st
 
 

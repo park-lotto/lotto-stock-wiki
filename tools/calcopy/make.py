@@ -127,6 +127,14 @@ def main(argv=None):
     except MK.MakeError as e:
         print(json.dumps({"error": e.msg, "code": e.code}, ensure_ascii=False) if x.json else f"거절({e.code}): {e.msg}")
         return 2
+    except MK.CT.TopicError as e:   # 소재 판단(중복 등)도 회원 MCP 가 읽게 JSON 으로 — 10-31 재시작이 말없이 죽었다
+        print(json.dumps({"error": str(e), "code": "topic"}, ensure_ascii=False) if x.json else f"거절(topic): {e}")
+        return 2
+    except Exception as e:
+        if not x.json:
+            raise
+        print(json.dumps({"error": f"엔진 오류: {type(e).__name__}: {e}"[:300], "code": "engine_crash"}, ensure_ascii=False))
+        return 3
     return 0
 
 

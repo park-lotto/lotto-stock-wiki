@@ -104,7 +104,7 @@ PHASE_STAGE = {   # 세부 단계 → 회원에게 보이는 단계
 #     하나씩 풀어 가는 중이었다. 6번을 넘는 바퀴는 이 로그에 없다(근거 없는 증액은 안 한다).
 #   plan 8 그대로: 장면 맞추기는 9번 반려가 한 번도 통과하지 못했다(마지막 9번 = 장면 경계·컷 길이·남은 글자를 손으로 옮기며 맴돎) — 늘려도 풀린다는 근거 없음.
 #   같은 원인 묶음이 STUCK 번 연속이면 한도 전이라도 멈춘다(REDO_STUCK 아래).
-LIMITS = {"script": 6, "plan": 8, "render": 3, "look": 2, "pick": 2, "review_bad": 2}
+LIMITS = {"script": 6, "plan": 8, "render": 3, "look": 2, "pick": 2, "review_bad": 2, "eye_proof": 2}
 # 대본: 내용 기준은 한 번 고쳐 받으면 통과(사장님 10-27). 꼭 지킬 것만 계속 반려 — 꼴이 틀림·지어낸 사실·출처 규칙·제품 컷·비슷한 제품 밝히기(10-25 규칙)
 SCRIPT_FIX_ONCE = 1
 SCRIPT_MUST = {"form", "claims", "source_rule", "product_cut", "alt_scene", "product:alt_say"}
@@ -2378,7 +2378,9 @@ WAY_LINE = ("그 줄 문장을 장면에 맞게 바꾼다(자막 넘침·낱말 
             "(바꾼 줄만 · 뜻·사실·결 그대로 · caps 를 이으면 tts)")
 PLAN_LOOK_WAYS = ("\n\n★재료로 못 고치는 줄(맞는 장면이 재료에 없다)은 멈추지 말고 둘 중 하나로 답에 넣어라 — ① " + WAY_LINE +
                   " ② 재료를 더 찾는다: \"재료_더찾기\": [\"유튜브 검색어\", …] (최대 4개 — 그 장면이 나올 영상 검색어). 해당 없으면 넣지 않는다.")
-FINAL_FIX_WAYS = "\n\n★재료(컷)로 못 고치는 것(자막 넘침·낱말 끊김·대사와 다른 말)은 " + WAY_LINE + " 로 답에 넣어라. 해당 없으면 넣지 않는다."
+FINAL_FIX_WAYS = ("\n\n★재료(컷)로 못 고치는 것(자막 넘침·낱말 끊김·대사와 다른 말)은 " + WAY_LINE + " 로 답에 넣어라. 해당 없으면 넣지 않는다."
+                  "\n★줄을 고칠 때는 걸린 말만 지우지 말고 앞뒤 줄과 이어 읽어 말이 되는 문장으로 다시 써라 — 뜻·사실은 그대로(11-01 '저도 제품 찾기부터 따라 해 봤는데요')."
+                  "\n★썸네일을 고쳐야 하면 답에 \"썸네일\": {\"options\":[…]} 를 넣어라.")
 
 
 LINE_TABLE_ASK = ("\n\n★줄별 대조표(반드시 — 사장님 PC 공정 11): 답에 \"대조표\": [{\"줄\": \"<줄 id>\", \"화면\": \"시트에서 그 줄 자리에 실제로 보이는 것\", \"이유\": \"그 말과 왜 맞는가\"}] 를 대본 줄 전부 넣어라. "
@@ -2497,7 +2499,11 @@ JSON 하나: {{"썸네일": {{"options":[3안], "no_person_why": "인물순간 �
 def ph_thumb(st, m, rp, u):
     from tools.calcopy.hybrid import thumb_rule as TR
     v = st["version"]
+    if st.get("_thumb_replan"):          # 재료가 바뀌어 다시 고르는 차례 — AI 를 또 부르지 않고 코드가 새 계획 컷에서 고른다(11-01 키치잇 재호출)
+        st.pop("_thumb_replan", None)
+        return _thumb_auto(st, "재료가 바뀌어 새 컷에서 다시 고름")
     if st.get("_sheet_stale"):
+        st["_thumb_replan"] = True
         # 재료가 계획 시트 뒤에 바뀌었다(재료 고치기·검사 뒤 고치기) — 옛 시트의 컷 번호로 고르면 렌더에선 다른 컷을 가리킨다
         # (10-26 이미숙 회원편: part 8 = 시트에선 얼굴 근접 O3@163, 바뀐 재료에선 앰플 병 N2@80 → 카드 얼굴 반려 되풀이·멈춤, 98 기록).
         # 옛 카드는 비우고(옛 번호라 계획 관문 ⑥이 시트를 막는다) 계획을 다시 돌려 새 시트로 묻는다.
@@ -2618,7 +2624,9 @@ EYE_ASK = """너는 완성본 눈 검수 담당이다(표준 §5-2 — 사장님
 번호마다 v = "○"(기준 그대로) | "△"(애매 — 통과 아님) | "×"(어긋남), memo = 근거 한 줄(어느 초·어느 줄). ○ 전부여야 통과다 — 모르면 △.
 {rows}
 ★우리 틀(결함 아님): 맨 위 제목·로고·출처 줄·우리 자막(색 강조) — 남의 글자·워터마크가 아니다.
-JSON 하나: {{{keys}}}"""
+★0.0초 썸네일 카드(맨 앞 2프레임)는 사장님이 정한 표지다 — 번쩍임·틀 어긋남으로 적지 않는다.
+★본 증거(없으면 답이 아니다): title_seen = 시트 화면에서 직접 읽은 제목, scenes = 처음부터 끝까지 대본 줄마다 화면에서 본 것.
+JSON 하나: {{"title_seen": "…", "scenes": [{{"at": "0~3", "line": "…", "seen": "…"}}], {keys}}}"""
 
 
 def _eye_rows(upgrade: bool) -> list:
@@ -2633,6 +2641,7 @@ def ph_check(st, m, rp, u):
 EYE_REVIEW = True        # 완성본 눈 2단(E1~E9 질문) — 사장님 10-26 "재현일치도랑 눈검수는 필요없다". 되살리면 True
 FINAL_SHEET_LOOK = True  # 완성 전 1초 시트 한 번 — 사장님 PC 제작처럼(숏클 지침 15-0, 관제 290). E 번호 묻기가 아니라 시트를 보고 걸린 것만
 FINAL_SHEET_FILES = ("시트_1초.jpg", "훅3초_0.1초.jpg", "끝2초_0.1초.jpg")
+EYE_PROOF_NEED = ("title_seen", "scenes")        # 눈 2단 답의 본 증거(판정 = sheet_proof_problems) — ○ 칸만으로 통과시키지 않는다
 SHEET_NEED = ("ok", "title_seen", "scenes")     # 봤다는 증거 없는 "ok": true 는 답이 아니다(10-30 회원 2편 — 같은 자료를 새 Claude 는 잡았는데 회원 편은 통과, 답 내용은 기록도 없었다)
 FINAL_SHEET_ASK = """★이 판정은 네가 바로 답하지 말고 새 Agent(model=opus)에게 이 글과 그림을 그대로 맡겨 그 답을 옮겨라(긴 제작 대화에서 보면 놓친다 — 10-30 두 편).
 너는 이 편을 채널에 올릴지 마지막으로 보는 사람이다. 자동 검사는 통과했다. 완성본 1초 시트(처음~끝)·훅 3초·끝 2초를 처음부터 끝까지 한 칸씩 본다.
@@ -2653,6 +2662,7 @@ def ph_check_got(st, m, rp, u):
     else:
         st["auto"] = c.get("auto") or {"ok": False, "rows": [{"group": "표식", "what": "관문 결과 없음", "ok": False, "value": ""}]}
     st["eye_pack"] = c.get("eye_files") or []
+    st.pop("look_left", None)             # 새 검사 = 새 판정 — 앞 편의 '남은 눈 지적'을 완성 허가로 물려주지 않는다
     if not st["auto"].get("ok"):          # 1단이 ×면 눈 검수는 하지 않는다(표준 §5-2 '1단 통과 뒤') — 바로 고치기 판정으로
         st["look"] = {"ok": False, "problems": ["1단 자동 관문 미통과 — 눈 검수 생략"], "skipped": True}
         return {"goto": "check_judge"}
@@ -2674,8 +2684,8 @@ def ph_check_got(st, m, rp, u):
     texts = "".join(f"\n\n## {n}\n{str(t)[:5000]}" for n, t in (c.get("eye_texts") or {}).items())
     sc = st.get("script") or {}
     texts += eye_material_note(st["eye_pack"], sc.get("G"))
-    return {"review": [_rv(f"eye_{st['version']}", ask + texts + "\n\n## 대본\n" + json.dumps(sc.get("S") or {}, ensure_ascii=False)[:5000],
-                           [_img(x) for x in st["eye_pack"]][:6], need=tuple(k for k, _, _ in rows), meta={"fresh": True})], "then": "check_look"}
+    return {"review": [_rv(f"eye_{st['version']}", ask + _lessons("final") + texts + "\n\n## 대본\n" + json.dumps(sc.get("S") or {}, ensure_ascii=False)[:5000],
+                           [_img(x) for x in st["eye_pack"]][:6], need=tuple(k for k, _, _ in rows) + EYE_PROOF_NEED, meta={"fresh": True})], "then": "check_look"}
 
 
 def eye_material_note(pack: list, grounds) -> str:
@@ -2732,8 +2742,10 @@ def ph_check_look(st, m, rp, u):
         raise _Stop("확인 결과를 받지 못했어요", "다시 시도해 주시면 멈춘 곳부터 이어 갈게요", auto=True)
     keys = st.get("eye_keys") or [f"E{k}" for k in range(1, 9)]          # 물은 번호 전부(업그레이드 판은 E9 까지) — 답에 빠진 번호도 ×
     ok, bad = _eye_verdict(a, keys)
+    proof = sheet_proof_problems(a, script_view(st))
     st["eye"] = a
-    st["look"] = {"ok": ok, "problems": bad}
+    st["look"] = {"ok": ok and not proof, "problems": bad + proof, "unproved": bool(proof), "by": "눈 2단", "scenes": len(a.get("scenes") or []),
+                  "title_seen": str(a.get("title_seen") or "")[:80]}
     return {"do": [{"id": "save_eye", "cmd": "write_doc", "files": {f"{v}/눈검수.json": {"made_by": "flow 눈 2단(회원 Claude)", "ok": ok, **a}}, "version": v}],
             "then": "check_judge"}
 
@@ -2750,6 +2762,10 @@ def ph_check_judge(st, m, rp, u):
     auto_ok, look = bool((st.get("auto") or {}).get("ok")), st.get("look") or {}
     if auto_ok and look.get("ok"):
         return {"goto": "deliver"}
+    if auto_ok and look.get("unproved"):       # 안 본 답·제목 불일치 = 재료 탓이 아니다 — 고치기로 보내지 않고 눈 검사만 다시, 완성 허가도 주지 않는다
+        st["log"].append("눈 검사 증거 미달: " + " / ".join(look.get("problems") or [])[:300])
+        _tries(st, "eye_proof", LIMITS["eye_proof"], ["final_check"])
+        return {"goto": "check"}
     long = [r for r in (st.get("auto") or {}).get("rows") or [] if r.get("what") == "길이" and r.get("ok") is False]
     if long:
         return _length_rewrite(st, long[0].get("value"))
@@ -3015,6 +3031,19 @@ def ph_check_retry(st, m, rp, u):
     return {"review": [_fix_review(st, "완성본 검사에서 걸린 것: " + probs + _face_hint(st), None, f"final_fix_{v}")], "then": "check_fix"}
 
 
+def _thumb_from_fix(st, r: dict) -> list:
+    """고치기 답의 썸네일 칸 — thumb_rule.check 를 통과하면 저장 일감, 아니면 빈 목록(반려는 기록)."""
+    from tools.calcopy.hybrid import thumb_rule as TR
+    spec = r.get("썸네일") or r.get("썸네일.json")
+    if not isinstance(spec, dict):
+        return []
+    bad = TR.check(spec, n_parts=st.get("_n_cuts"))
+    if bad:
+        st["log"].append("고치기 답의 썸네일 반려: " + "; ".join(bad)[:300])
+        return []
+    return [{"id": "save_thumb", "cmd": "write_doc", "files": {f"{st['version']}/썸네일.json": spec}, "version": st["version"]}]
+
+
 def ph_check_fix(st, m, rp, u):
     v = st["version"]
     r = _reply(rp, f"final_fix_{v}", ("ok",))
@@ -3025,6 +3054,9 @@ def ph_check_fix(st, m, rp, u):
         if got:
             return got
     M = _take_fix(st, r)
+    thumb_do = _thumb_from_fix(st, r)
+    if M is None and thumb_do:           # 썸네일만 고친 답을 버리지 않는다
+        return {"do": thumb_do, "then": "render"}
     if M is None and not st["tries"].get("render_same"):
         # 오푸스 '재료로 고칠 것 없음' = 걸린 칸이 렌더·검사 쪽(자막 배치·소리 시각)이다 — 멈추기 전에 재료 그대로 한 번 다시 만든다
         #   (10-27 run4 c편: 스티커 자리 판정이 렌더 때 정해져 다시 만들어야 새 규칙이 반영된다)
@@ -3037,7 +3069,7 @@ def ph_check_fix(st, m, rp, u):
         return {"goto": "plan"}
     if M is None:      # 다시 시도 = 검사부터(옛 검사 결과를 다시 먹이는 _asker 경로 금지 — 10-27 run4 a·c)
         raise _Stop("완성본 마무리 확인을 통과하지 못했어요", AGAIN, retry="check")
-    return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "render"}
+    return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}] + thumb_do, "then": "render"}
 
 
 # ── 12·13 납품·정리 ───────────────────────────────────────────────────────
@@ -3045,15 +3077,20 @@ def ph_deliver(st, m, rp, u):
     return {"do": [{"id": "final", "cmd": "finish", "version": st["version"], "title": script_view(st)["title"]}], "then": "finished"}
 
 
+def finish_passed(st) -> bool:
+    """(판단 주인 — 완성본을 내도 되나) 자동 관문 통과 + 눈 통과 또는 눈 한도까지 고치고 지적을 회원에게 알린 편(look_left, ph_check_judge)."""
+    return bool((st.get("auto") or {}).get("ok") and ((st.get("look") or {}).get("ok") or st.get("look_left")))
+
+
 def ph_finished(st, m, rp, u):
     f = m.get("final") or {}
     if not f.get("video"):
         raise _Stop("완성본 파일을 찾지 못했어요", "다시 시도해 주시면 이어 갈게요", auto=True)
     asr_single = not ((st.get("env") or {}).get("keys") or {}).get("speechmatics")
-    if not ((st.get("auto") or {}).get("ok") and (st.get("look") or {}).get("ok")):     # 관문 2단을 안 거친 완성본은 내지 않는다(표준 §5 — 다른 길로 deliver 에 와도)
+    if not finish_passed(st):     # 관문 2단을 안 거친 완성본은 내지 않는다(표준 §5 — 다른 길로 deliver 에 와도)
         raise _Stop("완성본 마무리 확인을 아직 통과하지 않았어요", "다시 시도해 주시면 확인부터 다시 할게요", retry="check", detail=_check_fails(st))
     return {"done": {"video": f["video"], "title": script_view(st)["title"], "auto_ok": bool((st.get("auto") or {}).get("ok")),
-                     "look_ok": bool((st.get("look") or {}).get("ok")), "gate": (st.get("auto") or {}).get("report"), "asr_single": asr_single,
+                     "look_ok": bool((st.get("look") or {}).get("ok")), "look_left": st.get("look_left") or [], "gate": (st.get("auto") or {}).get("report"), "asr_single": asr_single,
                      "note": "귀 확인 없음(스피치매틱스 키 없음 — 위스퍼와 눈으로만 대조)" if asr_single else ""}}
 
 
