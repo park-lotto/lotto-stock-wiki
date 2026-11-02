@@ -2,8 +2,6 @@
 name: script
 description: 숏템 엔진 AI 요청 답하기 지침 — shortem_make 가 need="ai" 를 줬을 때 shortem_ai 요청(그림 읽기·소리 판독·점수·대본 쓰기)에 답하는 방법. 숏템 만들기 중에만 쓴다.
 user-invocable: false
-allowed-tools: mcp__plugin_shortem_shortem__shortem_ai mcp__plugin_shortem_shortem__shortem_make Agent
-disallowed-tools: Bash PowerShell Write Edit NotebookEdit WebFetch Read Glob Grep
 ---
 
 # 숏템 AI 요청 답하기
