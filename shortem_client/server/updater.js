@@ -16,7 +16,7 @@ export const installDir = () => path.resolve(toolsDir(), '..');
 
 // 멈춘 편을 다시 시도할 때 — 받아 둔 새 판의 engine/ 만 지금 자리에 덮는다. server/ 는 돌고 있으니 다음 켤 때 연결기가 바꾼다.
 //   돌던 편이 없을 때만 부른다(retryFlow 자리). 실패해도 다시 시도는 막지 않는다 — 옛 엔진으로 이어 간다.
-export function applyEngineNow(home = installDir()) {
+export function applyPendingEngine(home = installDir()) {
   const pend = path.join(home, '_update', 'pending.json');
   const mark = path.join(home, '_update', 'engine_now.json');
   let v;
@@ -31,7 +31,7 @@ export function applyEngineNow(home = installDir()) {
 }
 
 export async function retryUpdate() {
-  try { await checkUpdate(); return applyEngineNow(); }
+  try { await checkUpdate(); return applyPendingEngine(); }
   catch (e) { audit('engine_now_fail', { result: String(e && e.message || e).slice(0, 80) }); return { applied: false, why: 'fail' }; }
 }
 
