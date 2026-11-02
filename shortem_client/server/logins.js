@@ -4,7 +4,7 @@
 //   받는 판단의 주인은 엔진 shopping_shorts/media_download.download_any — 여기는 쿠키 파일만 만든다.
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawn } from 'node:child_process';
+import { spawn, execFile } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { homeDir, ensureDir, writeFileIn } from './paths.js';
 import { audit } from './audit.js';
@@ -63,6 +63,24 @@ export function writeCookies(cookies) {
   return Object.fromEntries(Object.entries(PLATFORMS).map(([k, pf]) => [k, loggedIn(keep, pf)]));
 }
 
+// 숏템 전용 프로필의 크롬 본체 찾기(CS #76) — 창을 닫아도 크롬이 뒤에 남으면 exit 이 오지 않아 waiting 이 굳고,
+//   다음 실행은 창 없는 프로세스에 넘겨져 화면에 아무것도 안 뜬다. 윈도만 잰다. 못 재면 null(옛 동작 그대로).
+export function pickProfileProcs(raw, profile) {
+  let rows;
+  try { rows = JSON.parse(raw || '[]'); } catch { return null; }
+  const norm = t => String(t || '').replace(/\\/g, '/').toLowerCase();
+  const want = norm(profile);
+  return (Array.isArray(rows) ? rows : [rows]).filter(r => r && norm(r.cmd).includes(want)).map(r => ({ pid: +r.pid, win: +r.win > 0 }));
+}
+const PS_PROCS = "Get-CimInstance Win32_Process -Filter \"Name='chrome.exe' or Name='msedge.exe'\" | Where-Object { $_.CommandLine -like '*--user-data-dir=*' -and $_.CommandLine -notlike '*--type=*' } | "
+  + "ForEach-Object { $g = Get-Process -Id $_.ProcessId -ErrorAction SilentlyContinue; [pscustomobject]@{ pid = $_.ProcessId; cmd = $_.CommandLine; win = [int64]$g.MainWindowHandle } } | ConvertTo-Json -Compress";
+function profileProcs() {
+  if (process.platform !== 'win32') return Promise.resolve(null);
+  return new Promise(res => execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', PS_PROCS], { windowsHide: true, timeout: 15000 },
+    (e, out) => res(e ? null : pickProfileProcs(out, profileDir()))));
+}
+const killProcs = ps => Promise.all(ps.map(p => new Promise(res => execFile('taskkill', ['/PID', String(p.pid), '/T', '/F'], { windowsHide: true }, () => res()))));
+
 // 로그인 창 열기 — 보통 크롬 창 그대로(원격 제어 포트 없이: 구글이 그런 창의 로그인을 '안전하지 않은 브라우저'로 막는다).
 //   회원이 로그인하고 창을 닫으면 같은 프로필에서 쿠키를 뽑는다. 바로 돌아오고, 결과는 status() 로 본다.
 export async function openLogin(platform) {
@@ -70,15 +88,34 @@ export async function openLogin(platform) {
   if (!pf) return { ok: false, why: '모르는 곳입니다' };
   const exe = browserExe();
   if (!exe) return { ok: false, why: '이 PC 에 크롬·엣지가 없습니다 — 크롬을 설치한 뒤 다시 해 주세요' };
-  if (open && !open.done) return { ok: true, already: true, platform: open.platform };
-  const proc = spawn(exe, [`--user-data-dir=${profileDir()}`, '--no-first-run', '--no-default-browser-check', '--new-window', pf.url],
+  const procs = await profileProcs();
+  if (procs === null) {
+    if (open && !open.done) return { ok: true, already: true, platform: open.platform };
+  } else if (procs.some(p => p.win)) {
+    return { ok: true, already: true, platform: open && !open.done ? open.platform : platform };
+  } else if (procs.length || (open && !open.done)) {        // 창 없이 남은 크롬 — 치우고 새로 연다. 지난 창의 쿠키 읽기는 새 창을 닫을 때 같이 된다
+    if (open) { open.done = true; open.replaced = true; }
+    await killProcs(procs);
+    await new Promise(r => setTimeout(r, 800));
+  }
+  const proc = spawn(exe, [`--user-data-dir=${profileDir()}`, '--no-first-run', '--no-default-browser-check', '--disable-background-mode', '--new-window', pf.url],
     { detached: false, stdio: 'ignore', windowsHide: false });
   open = { proc, platform, done: false, result: null };
   const me = open;
   const kill = setTimeout(() => { try { proc.kill(); } catch { /* 이미 닫힘 */ } }, 20 * 60 * 1000);
+  let seen = false;
+  const watch = setInterval(async () => {                    // 회원이 창을 닫았는데 크롬이 남은 경우 — 치워야 exit 이 와서 쿠키를 읽는다
+    const ps = await profileProcs();
+    if (!ps || !ps.length) return;
+    if (ps.some(p => p.win)) { seen = true; return; }
+    if (seen) await killProcs(ps);
+  }, 5000);
+  watch.unref();
   proc.on('exit', async () => {
     clearTimeout(kill);
+    clearInterval(watch);
     me.done = true;
+    if (me.replaced) return;
     const st = await refreshCookies();
     me.result = st.connected;
     audit('login', { platform, result: st.connected[platform] ? 'ok' : 'not_logged_in' });

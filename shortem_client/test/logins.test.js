@@ -62,3 +62,17 @@ test('만료된 로그인 쿠키는 연결 안 됨으로 본다', () => {
   L.writeCookies([{ ...ck[0], expires: Date.now() / 1000 - 10 }]);
   assert.equal(L.status().connected.instagram, false);
 });
+
+test('창 없이 남은 전용 프로필 크롬만 고른다(CS #76)', async () => {
+  const { pickProfileProcs } = await import('../server/logins.js');
+  const prof = 'C:\\Users\\A\\.shortem\\browser';
+  const raw = JSON.stringify([
+    { pid: 1, cmd: '"chrome.exe" --user-data-dir=C:\\Users\\A\\.shortem\\browser --no-first-run', win: 0 },
+    { pid: 2, cmd: '"chrome.exe" --user-data-dir=C:\\Other', win: 100 },
+    { pid: 3, cmd: '"chrome.exe" --user-data-dir=c:/users/a/.shortem/browser', win: 500 },
+  ]);
+  assert.deepEqual(pickProfileProcs(raw, prof), [{ pid: 1, win: false }, { pid: 3, win: true }]);
+  assert.deepEqual(pickProfileProcs(JSON.stringify({ pid: 4, cmd: `x ${prof}`, win: 0 }), prof), [{ pid: 4, win: false }]);   // 한 건이면 배열이 아니다
+  assert.deepEqual(pickProfileProcs('', prof), []);
+  assert.equal(pickProfileProcs('깨진', prof), null);
+});
