@@ -92,6 +92,7 @@ def _no_deco_pos(name):
     st = copy.deepcopy(ST.load(name))
     st["placement"]["rules"].pop("deco_pos", None)          # 07 15a9f46ed 가 판에 넣은 deco_pos·stickers — 목표 모드만 따로 잰다
     st["placement"]["rules"].pop("stickers", None)
+    (st.get("rhythm") or {}).pop("plain_share", None)       # 판 rhythm.plain_share(마지막에 강조를 뺀다) — 목표 모드 채우기만 잰다, plain 은 test_placement_targets 몫
     return st
 
 
@@ -311,6 +312,7 @@ def test_skeleton_over_upgrade_cap_is_conflict_not_silent():
     st = copy.deepcopy(ST.load("잇템로그판_v2"))
     st["placement"]["rules"]["deco_pos"] = {"from": "bench"}
     st["placement"]["rules"].pop("stickers", None)
+    (st.get("rhythm") or {}).pop("plain_share", None)       # 판 rhythm.plain_share(마지막에 강조를 뺀다) — 목표 모드 채우기만 잰다, plain 은 test_placement_targets 몫
     for x in st["script"]["audit"]:
         if x["kind"] == "tts_chars":
             x["max"] = 20                                      # 훅 줄 N1 26자 > 20 → 원인 = tts_chars

@@ -58,12 +58,14 @@ def font_faces() -> dict:
 
 
 def family_of(font_file: str) -> str | None:
-    """뜯기 글꼴 파일 이름(예 NotoSansKR-Bold.otf) → 등록 글꼴 이름. 파일 줄기(stem)가 같은 것만(추측 매핑 없음)."""
+    """뜯기 글꼴 파일 이름(예 NotoSansKR-Bold.otf) → 등록 글꼴 이름. 파일 줄기(stem)가 같은 것, 없으면 글꼴 이름이 줄기와 같은 것(추측 매핑 없음).
+    글꼴 이름 길 = 등록 파일이 다른 이름의 woff2 인 글꼴(OwnglyphKonkon = w2/Ownglyph_corncorn-Rg.woff2 — 줄기로만 보면 그릴 수 있는데 못 그린다고 나왔다)."""
     stem = Path(font_file).stem.lower()
-    for fam, path in font_faces().items():
+    faces = font_faces()
+    for fam, path in faces.items():
         if path.stem.lower() == stem:
             return fam
-    return None
+    return next((fam for fam in faces if fam.lower() == stem), None)
 
 
 def pick_font(fonts: dict | None) -> tuple[str | None, dict]:

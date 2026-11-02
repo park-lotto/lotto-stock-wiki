@@ -22,7 +22,9 @@ START, END = "<!--CALCOPY-FONTS-->", "<!--/CALCOPY-FONTS-->"
 
 
 def registered_stems(html: str) -> set:
-    return {Path(u).stem.lower() for u in re.findall(r'@font-face\s*\{[^}]*?src:\s*url\("([^"]+)"', html)}
+    """등록된 글꼴의 파일 줄기 + 글꼴 이름(to_frame.family_of 가 찾는 두 길과 같다 — 이름이 파일 줄기인 woff2 등록 글꼴을 또 등록하지 않게)."""
+    faces = re.findall(r'@font-face\s*\{[^}]*?font-family:\s*"?([A-Za-z0-9_-]+)"?;\s*src:\s*url\("([^"]+)"', html)
+    return {Path(u).stem.lower() for u in re.findall(r'@font-face\s*\{[^}]*?src:\s*url\("([^"]+)"', html)} | {fam.lower() for fam, _ in faces}
 
 
 def block(html_without: str) -> tuple[str, list]:

@@ -114,7 +114,7 @@ def test_gate_narr_row_uses_speechmatics_not_whisper(tmp_path, monkeypatch):
     (R / "timeline.json").write_text(json.dumps({"cuts": [], "lines": F["lines"], "end": 28.5}), encoding="utf-8")
     (R / "자막표.json").write_text(json.dumps({"rows": [], "check": {"ok": True, "reference": "x", "worst_slot_diff": 0}}), encoding="utf-8")
     (doc / "대본.json").write_text(json.dumps({"lines": [{**l, "kind": "tts"} for l in F["narr"]]}, ensure_ascii=False), encoding="utf-8")
-    monkeypatch.setattr(LS, "asr_segments", lambda p: [(0.0, 28.0, "위스퍼가 들은 글")])     # 위스퍼는 판정에 안 쓰인다
+    monkeypatch.setattr(LS, "asr_segments", lambda p: [(0.0, 28.0, "위스퍼가 들은 글")])     # 스피치매틱스가 되는 동안 위스퍼는 안 쓰인다
     calls = []
     monkeypatch.setattr(NV, "heard_words", lambda p, lang="ko": calls.append(p) or F["words"]["e0.4"])
 
@@ -131,8 +131,12 @@ def test_gate_narr_row_uses_speechmatics_not_whisper(tmp_path, monkeypatch):
     def boom(p, lang="ko"):
         raise RuntimeError("키 없음")
     monkeypatch.setattr(NV, "heard_words", boom)
+    row = narr_row()      # 스피치매틱스를 못 쓰면 위스퍼로 판정한다(사장님 결정, 주인 quality_gate.narr_words) — 미측정 아님
+    assert row["ok"] is False and "위스퍼 낱말 시각" in row["value"] and "스피치매틱스 못 씀(RuntimeError)" in row["value"], row   # 위스퍼도 못 들으면 ×
+    _ffmpeg("-f", "lavfi", "-i", "sine=f=301:d=29", "-ar", "48000", R / "voice.wav")      # 소리가 바뀌어야 위스퍼 저장값(md5)을 다시 쓴다
+    monkeypatch.setattr(LS, "asr_segments", lambda p: [(w["s"], w["e"], w["w"]) for w in F["words"]["real"]])
     row = narr_row()
-    assert row["ok"] is None and "참고(판정 안 함)" in row["value"], row     # 스피치매틱스를 못 쓰면 미측정 — 위스퍼로 ○/× 를 정하지 않는다
+    assert row["ok"] is True and "위스퍼 낱말 시각" in row["value"], row                  # 위스퍼가 제대로 들으면 ○
 
 
 # ---------------------------------------------------------------- ⑥ 스티커 모자람 — 10-25 렌더 21판 자막표 실측

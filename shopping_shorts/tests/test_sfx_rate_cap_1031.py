@@ -25,4 +25,4 @@ def test_상한_안이면_줄이지_않는다():
 
 
 def test_벤치_줄판독이_없으면_그대로다():
-    assert _sfx_rate_n([{"t1": 20.0}], {"bench": {}}, 2, []) == 2
+    assert _sfx_rate_n([{"t1": 20.0}], {"bench": {}, "placement": {}}, 2, []) == 2

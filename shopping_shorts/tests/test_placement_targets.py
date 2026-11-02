@@ -198,7 +198,14 @@ def _summary(p: dict):
             dict(Counter(s["kind"] for r in p["rows"] for s in r["stickers"])), [(e["t"], e["kind"]) for e in p["sfx"]], p["flashes"])
 
 
+# 저장 계획이 kitchit 벤치 재측정(10-25 sfx_events 0e634a13d·줄판독 transition 칸 129845e5b) 전 값으로 만들어진 편 — 지금 벤치로는 효과음·전환이 달라지는 게 맞다
+BENCH_REMEASURED = {"하이브리드_강주은_가디건", "하이브리드_신세경", "하이브리드_이영애_피부", "하이브리드_장윤주"}
+# 저장 계획에는 손글씨 답(hand_big — 강조를 비운다)이 있었는데 그 뒤 답 파일에서 뺀 덩어리(10-26 사장님 간소화 '큰 손글씨는 다음')
+HAND_ANSWER_DROPPED = {"하이브리드_박정수_썬크림": {("O1", "안 씁니다")}}
+
+
 def test_kitchit_saved_plans_unchanged():
+    from tools.calcopy.hybrid import deco as DC
     from tools.calcopy.hybrid import styles as ST
     files = sorted((ROOT / "channel/yanshottem").glob("*/키치잇판/plan/계획_시간표.json"))
     if not files:
@@ -219,7 +226,17 @@ def test_kitchit_saved_plans_unchanged():
         if any("판 plain_share" in str(x) for x in d["placement"].get("log") or []):
             use["rhythm"] = rh
         p = PL.place(rows, use, S.get("slug") or "x", cuts=d["timeline"]["cuts"])
-        assert _summary(p) == _summary(d["placement"]), f.parent.parent.parent.name
+        ans = DC.load_answers(f.parent.parent)
+        if ans and any(str(x).startswith("꾸밈 답") for x in d["placement"].get("log") or []):      # 렌더·계획은 배치 뒤 꾸밈 답을 얹는다(render_bench.deco_apply) — 저장 계획도 얹힌 값
+            DC.apply(p["rows"], ans, use, lambda *_: None)
+        name = f.parent.parent.parent.name
+        for r in p["rows"]:
+            if (r["line"], r["text"]) in HAND_ANSWER_DROPPED.get(name, ()):
+                r["emph"] = []
+        if name in BENCH_REMEASURED:      # 효과음·전환만 그때 벤치 값 — 등장·강조·스티커·본보기는 그대로여야 한다
+            assert _summary(p)[:4] == _summary(d["placement"])[:4], name
+        else:
+            assert _summary(p) == _summary(d["placement"]), name
 
 
 # ⑤ 효과음 신호표 ──────────────────────────────────────────────────────

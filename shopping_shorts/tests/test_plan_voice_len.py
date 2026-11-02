@@ -27,7 +27,7 @@ def _doc(tmp_path):
          "lines": [{"id": "N1", "kind": "tts", "tts": "가나다라마바사.", "caps": ["가나다라마바사"]},
                    {"id": "N2", "kind": "tts", "tts": "아자차카.", "caps": ["아자차카"]}]}
     (d / "대본.json").write_text(json.dumps(S, ensure_ascii=False), encoding="utf-8")
-    (d / "재료.json").write_text(json.dumps({"cand_dir": str(tmp_path), "cuts": {"N1": [{"src": "a.mp4", "ss": 0, "no_snap": True}], "N2": [{"src": "a.mp4", "ss": 5, "no_snap": True}]}}), encoding="utf-8")
+    (d / "재료.json").write_text(json.dumps({"cand_dir": str(tmp_path), "cuts": {"N1": [{"src": "a.mp4", "ss": 0, "no_snap": True}], "N2": [{"src": "a.mp4", "ss": 100, "no_snap": True}]}}), encoding="utf-8")
     return d
 
 
