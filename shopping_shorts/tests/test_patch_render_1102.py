@@ -125,12 +125,29 @@ def test_stamp_video_works_without_sound(tmp_path, monkeypatch):
     assert FS.keyframes(f)[1] == 30
 
 
-def test_apply_span_is_frame_exact(tmp_path, monkeypatch):
+def _gray(f):
+    import numpy as np
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(f), "-vf", "scale=160:120,format=gray", "-f", "rawvideo", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
+    return np.frombuffer(raw, np.uint8).reshape(-1, 120, 160).astype(float)
+
+
+def test_apply_span_is_frame_exact_on_concat_video(tmp_path, monkeypatch):
+    """자막 영상(captioned)은 칸 조각을 복사로 이은 것이라 시각이 프레임 격자에서 조금 어긋난다 — 초로 찾으면 한 프레임 밀린다(26초 합성 편 실측: 묶음 전체가 1프레임 앞섬, 컷 경계·자막 등장에서 PSNR 21)."""
     monkeypatch.setattr(ad_mark, "venc", lambda crf=16: ["-c:v", "libx264", "-preset", "ultrafast", "-threads", "1"])
-    f, out = tmp_path / "f.mp4", tmp_path / "o.mp4"
-    _sh("ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "testsrc2=s=320x240:r=30:d=3", "-c:v", "libx264", "-qp", "0", "-preset", "ultrafast", "-threads", "1", "-pix_fmt", "yuv444p", f)
-    ad_mark.apply_span(f, 33, 47, out)
-    assert FS.keyframes(out)[1] == 14
+    parts = []
+    for k in range(3):
+        p = tmp_path / f"p{k}.mp4"
+        _sh("ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"testsrc2=s=320x240:r=30:d=4", "-vf", f"trim=start_frame={k * 37}:end_frame={(k + 1) * 37},setpts=PTS-STARTPTS", "-frames:v", 37, "-r", 30, *X264, p)
+        parts.append(p)
+    lst = tmp_path / "l.txt"
+    lst.write_text(chr(10).join(f"file '{p.name}'" for p in parts), encoding="utf-8")
+    cap, out = tmp_path / "cap.mp4", tmp_path / "o.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", "l.txt", "-c", "copy", "cap.mp4"], cwd=tmp_path, check=True, capture_output=True, stdin=subprocess.DEVNULL)
+    ad_mark.apply_span(cap, 60, 90, out)
+    a, b = _gray(cap), _gray(out)
+    assert len(b) == 30
+    for j in (0, 13, 29):
+        assert int(((a - b[j]) ** 2).mean(axis=(1, 2)).argmin()) == 60 + j
 
 
 # ── 구간만 바꿔도 되나 ─────────────────────────────────────────────────────

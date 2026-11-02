@@ -76,15 +76,15 @@ def make_episode(W: Path, style: str, n_lines: int = 4) -> str:
     """작은 합성 편 — 원본 2개(소리 있음) · 나레 줄 n_lines · 줄마다 컷 하나."""
     src = W / "src"
     src.mkdir(parents=True)
-    for i, (a, b) in enumerate((("0x224488", "0xdd8822"), ("0x118844", "0xcc2266"))):
-        sh("ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"gradients=s=720x1280:r=30:c0={a}:c1={b}:speed=0.05:d=20", "-f", "lavfi", "-i", f"sine=f={500 + i * 200}:d=20",
+    for i, (a, b) in enumerate((("0x224488", "0xdd8822"), ("0x118844", "0xcc2266"))):      # 컷끼리 원본 구간이 겹치지 않게(ss 간격 2.4초) — 흐림 칸이 다른 컷에 번지지 않는다
+        sh("ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"gradients=s=720x1280:r=30:c0={a}:c1={b}:speed=0.05:d=34", "-f", "lavfi", "-i", f"sine=f={500 + i * 200}:d=34",
            "-c:v", "libx264", "-crf", "18", "-preset", "veryfast", "-pix_fmt", "yuv420p", "-c:a", "aac", src / f"s{i}.mp4")
     d = W / "doc" / style
     d.mkdir(parents=True)
     words = [f"시험 자막 {i + 1}번 줄이에요" for i in range(n_lines)]
     S = {"slug": "patch_check", "title": "구간 교체 시험", "title_lines": ["구간 교체", "시험"], "source_label": "시험", "cps_target": 7.0, "voice": {"voice_id": "tc_test"},
          "lines": [{"id": f"N{i + 1}", "kind": "tts", "tts": words[i] + ".", "caps": [words[i]]} for i in range(n_lines)]}
-    M = {"cand_dir": str(src), "cuts": {f"N{i + 1}": [{"src": f"s{i % 2}.mp4", "ss": 1.0 + (i * 3) % 14, "crop": [0, 0, 720, 1280], "no_snap": True}] for i in range(n_lines)}}
+    M = {"cand_dir": str(src), "cuts": {f"N{i + 1}": [{"src": f"s{i % 2}.mp4", "ss": round(1.0 + i * 2.4, 3), "crop": [0, 0, 720, 1280], "no_snap": True}] for i in range(n_lines)}}
     (d / "대본.json").write_text(json.dumps(S, ensure_ascii=False), encoding="utf-8")
     (d / "재료.json").write_text(json.dumps(M, ensure_ascii=False), encoding="utf-8")
     return str(d)
@@ -215,11 +215,12 @@ def judge(first: Path, part: Path, full: Path, ranges: list, chunks: list) -> di
     changed_frames = {i for a, b in ranges for i in range(a, b)}
     moved_in = sum(1 for i in changed_frames if h0[i] != h1[i])
     p_full = psnr_frames(part, full)
+    r_low = [i for i, x in enumerate(p_full) if x < PC.PSNR_SAME]
     p_first = psnr_frames(part, first)
     aud = PC.audio_diff(part, full)
     r = {"frames": [n, PC.frames_of(part), PC.frames_of(full)], "dur": [FS._cap(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", x]).stdout.decode().strip() for x in (first, part, full)],
          "outside_frames": len(outside), "outside_same_md5": same_out, "changed_frames": len(changed_frames), "changed_differ_from_first": moved_in,
-         "psnr_vs_full_min": round(min(p_full), 2), "psnr_vs_full_in_range_min": round(min(p_full[i] for i in changed_frames), 2) if changed_frames else None,
+         "psnr_vs_full_min": round(min(p_full), 2), "psnr_low_frames": r_low[:60], "psnr_vs_full_in_range_min": round(min(p_full[i] for i in changed_frames), 2) if changed_frames else None,
          "psnr_vs_first_in_range_min": round(min(p_first[i] for i in changed_frames), 2) if changed_frames else None,
          "audio_packets_same_as_first": FS.audio_md5(first) == FS.audio_md5(part), "audio_vs_full": aud}
     bad = []

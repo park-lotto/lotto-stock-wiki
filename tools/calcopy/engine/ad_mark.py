@@ -50,13 +50,14 @@ def _graph(m: int) -> str:
     return f"[0:v][1:v]overlay=x=W-w-{m}:y={m}:format=auto,format=yuv420p[v]"
 
 
-def apply_span(src: Path, f0: int, f1: int, dst: Path, fps: int = 30) -> Path:
-    """src 의 프레임 [f0,f1) 에 광고 표시를 덮어 dst 로(소리 없음) — 완성본과 같은 그림·같은 인코더(구간 교체, engine/final_splice)."""
+def apply_span(src: Path, f0: int, f1: int, dst: Path) -> Path:
+    """src 의 프레임 [f0,f1) 에 광고 표시를 덮어 dst 로(소리 없음) — 완성본과 같은 그림·같은 인코더(구간 교체, engine/final_splice).
+    프레임 번호로 자른다(trim). 초로 찾으면(-ss) 안 된다 — 자막 영상은 칸 조각을 복사로 이어 시각이 격자보다 0.3ms 앞서 한 프레임 밀린다(26초 합성 편: 프레임 300 = 9.999674초)."""
     src, dst = Path(src), Path(dst)
     w, _, _ = _probe(src)
     png, m = badge(w, dst.with_name("_ad_mark.png"))
-    r = ENC.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{f0 / fps:.6f}", "-i", str(src), "-i", str(png), "-filter_complex", _graph(m), "-map", "[v]",
-                 "-frames:v", str(f1 - f0), *venc(16), *FINAL_GOP, str(dst)], capture_output=True, text=True, encoding="utf-8", errors="replace")
+    r = ENC.run(["ffmpeg", "-y", "-v", "error", "-i", str(src), "-i", str(png),
+                 "-filter_complex", f"[0:v]trim=start_frame={f0}:end_frame={f1},setpts=PTS-STARTPTS[c];" + _graph(m).replace("[0:v]", "[c]", 1), "-map", "[v]", "-frames:v", str(f1 - f0), *venc(16), *FINAL_GOP, str(dst)], capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode != 0 or not dst.exists():
         raise RuntimeError("구간 광고 표시 실패: " + (r.stderr or "")[-300:])
     png.unlink(missing_ok=True)

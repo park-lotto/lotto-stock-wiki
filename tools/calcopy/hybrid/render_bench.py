@@ -4043,7 +4043,7 @@ def patch_final(final: Path, cap: Path, ranges: list, card: str | None, R: Path,
     keys, n = FS.keyframes(final)
 
     def make(a, b, out):
-        ad_mark.apply_span(cap, a, b, out, FPS)
+        ad_mark.apply_span(cap, a, b, out)
         if a == 0 and card:
             TH.stamp_video(out, Path(card))
     try:
@@ -4216,7 +4216,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
             shutil.move(str(final), str(mix))
         else:
             mix, A = audio(S, M, st, T, sent, placed, R)
-        run(["ffmpeg", "-y", "-v", "error", "-i", cap, "-i", mix, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+        run(["ffmpeg", "-y", "-v", "error", "-i", cap, "-i", mix, "-map", "0:v", "-map", "1:a", "-c:v", "copy", *(["-c:a", "copy"] if scope else ["-c:a", "aac", "-b:a", "192k"]),
              "-t", f"{T['end']:.3f}", final])
         ad_mark.apply_inplace(final, log=log)
         jsave(R / "timeline.json", T)      # 썸네일 카드가 이 시간표로 장면(줄·몇 번째 컷)을 찾는다 — 카드보다 먼저 저장(10-24 09: 옛 시간표로 찾아 실패)
