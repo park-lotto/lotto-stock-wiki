@@ -48,7 +48,7 @@ req = re.sub(r"\s*\\\n\s*--hash=\S+", "", (SRC / "installer/common/requirements-
 # 엔진 코드 안의 우리 서버 접속 정보는 지운다(회원 경로는 쓰지 않는 개발용 갈래)
 scrub = 0
 for p in eng.rglob("*.py"):
-    t = p.read_text(encoding="utf-8", errors="ignore"); t2 = re.sub(r"3\.35\.251\.172|LightsailDefaultKey(?:\.pem)?|ubuntu@", "", t)
+    t = p.read_text(encoding="utf-8", errors="ignore"); t2 = re.sub(r"3\.35\.251\.172|LightsailDefaultKey(?:\.pem)?|ubuntu@", "", t).replace("~/.volcano/keys", "~/.shortem/keys")
     if t2 != t: p.write_text(t2, encoding="utf-8"); scrub += 1
 print("서버 정보 지운 파일", scrub)
 bad = []
@@ -58,4 +58,10 @@ for p in eng.rglob("*"):
         bad += [(p.relative_to(OUT).as_posix(), s[:24]) for s in SECRETS if re.search(s, t)]
 print(f"파일 {n}개, {size / 1e6:.0f}MB, 비밀 글자 {len(bad)}건")
 for b in bad[:12]: print(" ", b)
-sys.exit(1 if bad else 0)
+if bad: sys.exit(1)
+import zipfile
+zp = OUT.with_name(OUT.name + ".zip")
+with zipfile.ZipFile(zp, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
+    for p in OUT.rglob("*"):
+        if p.is_file() and "__pycache__" not in p.parts: z.write(p, Path("shorcl") / p.relative_to(OUT))
+print("압축", zp, zp.stat().st_size // 1000000, "MB")

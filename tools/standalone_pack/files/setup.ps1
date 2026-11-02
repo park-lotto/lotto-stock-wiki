@@ -56,22 +56,6 @@ if (-not (Test-Path $mark)) {
 
 if ($ToolsOnly) { & $pyexe -X utf8 -c "import cv2, PIL, numpy, faster_whisper, yt_dlp, requests, playwright; print('패키지 확인')"; exit $LASTEXITCODE }
 
-$keys = Join-Path $root 'data\keys'; New-Item -ItemType Directory -Force $keys | Out-Null
-$ask = @(
-  @('typecast', '타입캐스트 API 키 (목소리, 필수)'),
-  @('vmake_ak', 'VMake AK (원본 자막 지우기, 필수)'),
-  @('vmake_sk', 'VMake SK (원본 자막 지우기, 필수)'),
-  @('coupang_access', '쿠팡 파트너스 Access Key (없으면 Enter)'),
-  @('coupang_secret', '쿠팡 파트너스 Secret Key (없으면 Enter)'),
-  @('speechmatics', 'Speechmatics 키 (없으면 Enter, 위스퍼로 진행)')
-)
-foreach ($k in $ask) {
-  $p = Join-Path $keys $k[0]
-  if (Test-Path $p) { continue }
-  $s = Read-Host -AsSecureString $k[1]
-  $v = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($s))
-  if ($v) { [IO.File]::WriteAllText($p, $v.Trim()) }
-}
-
+& $pyexe -X utf8 (Join-Path $root 'keys_input.py')
 & $pyexe -X utf8 (Join-Path $root 'login.py')
 & $pyexe -X utf8 (Join-Path $root 'check.py')

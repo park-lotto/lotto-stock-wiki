@@ -19,7 +19,7 @@ AI = HOME / "ai"
 JOBS = HOME / "jobs"
 VERSION = json.loads((ROOT / "pack.json").read_text(encoding="utf-8"))["version"]
 KEY_ENV = {"typecast": "TYPECAST_API_KEY", "elevenlabs": "ELEVENLABS_API_KEY", "coupang_access": "COUPANG_ACCESS_KEY", "coupang_secret": "COUPANG_SECRET_KEY",
-           "vmake_ak": "VMAKE_AK", "vmake_sk": "VMAKE_SK", "speechmatics": "SPEECHMATICS_API_KEY"}
+           "vmake": "VMAKE_API_KEY", "speechmatics": "SPEECHMATICS_API_KEY"}
 TOOLDIRS = ["tools/ffmpeg", "tools/ytdlp", "tools/python", "tools/python/Scripts"]
 
 
@@ -42,8 +42,7 @@ def engine_env():
 
 
 ENV = engine_env()
-for k in ("CALCOPY_GEMINI_BACKEND", "CALCOPY_CUSTOMER_MODE", "SHORTEM_LLM_QUEUE", "CALCOPY_DATA_DIR", "CALCOPY_PACK_ROOT", "SHORTEM_HOME", "PATH", "YTDLP_COOKIES_YOUTUBE"):
-    if k in ENV: os.environ[k] = ENV[k]
+os.environ.update(ENV)   # 판단(flow)과 실행(runner)이 같은 환경을 본다
 for d in (AI / "_runner", JOBS, HOME / "keys", HOME / "sessions", HOME / "store", HOME / "packs", HOME / "cache"):
     d.mkdir(parents=True, exist_ok=True)
 sys.path.insert(0, str(ENGINE))
