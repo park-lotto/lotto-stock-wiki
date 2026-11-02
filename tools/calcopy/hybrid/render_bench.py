@@ -1750,7 +1750,9 @@ def src_ident(src: Path) -> list:
 
 
 def _frame_key(src: Path, t: float, crop, win, blur) -> str:
-    return json.dumps([src_ident(src), repr(float(t)), list(crop) if crop else None, list(win), blur])
+    # 그 시각에 켜진 흐림 칸만 열쇠에 — 다른 시각 칸이 늘어도 그림이 같으니 다시 읽지 않는다(11-02 칸 하나에 원본 전체 재판독, 회원 PC 13분)
+    on = [r for r in blur or [] if len(r) < 6 or float(r[4]) <= float(t) <= float(r[5])] or None
+    return json.dumps([src_ident(src), repr(float(t)), list(crop) if crop else None, list(win), on])
 
 
 def _lock():

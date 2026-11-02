@@ -91,3 +91,15 @@ def test_still_gate_parallel_same_as_one_by_one(tmp_path):
         one += [x.replace("컷 멈춤 0 ", f"컷 멈춤 {k + 10} ", 1) for x in RB.cut_still_gate({"cuts": [c]}, M, st)]
     many = RB.cut_still_gate({"cuts": cuts}, M, st, ks=[k + 10 for k in range(len(cuts))])
     assert many == one and len(many) == 2 and many[0].startswith("컷 멈춤 11 ") and many[1].startswith("컷 멈춤 13 ")
+
+
+def test_frame_key_ignores_blur_not_active_at_that_moment(tmp_path):
+    from tools.calcopy.hybrid import render_bench as RB
+    src, crop, win = tmp_path / "a.mp4", [0, 0, 1080, 1920], (1080, 1920)
+    src.write_bytes(b"x")
+    near = [10, 10, 100, 100, 4.0, 6.0]
+    far = [10, 10, 100, 100, 20.0, 21.0]
+    assert RB._frame_key(src, 5.0, crop, win, [near]) == RB._frame_key(src, 5.0, crop, win, [near, far])      # 다른 시각 칸 = 그림 같음
+    assert RB._frame_key(src, 5.0, crop, win, [far]) == RB._frame_key(src, 5.0, crop, win, None)
+    assert RB._frame_key(src, 5.0, crop, win, [near]) != RB._frame_key(src, 5.0, crop, win, None)              # 켜진 칸 = 다시 읽는다
+    assert RB._frame_key(src, 5.0, crop, win, [[10, 10, 100, 100]]) != RB._frame_key(src, 5.0, crop, win, None)  # 시간 없는 칸 = 언제나 켜짐
