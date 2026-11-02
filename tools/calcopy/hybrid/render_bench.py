@@ -2171,6 +2171,9 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
                 pre[key].result()
                 m = cut_content_feats(src, c["ss"], n, crop, (ww, wh), regs, anchors, ocr=ocr)
                 r = {"text": [text_with_stack(fr) for fr in m["text"]], "face": [[f for f in fr if other_face(f)] for fr in m["face"]]}
+                _cache_save(cp, cache, {**rows, key: r})       # 컷마다 저장 — 느린 PC 는 시간 한도에 끊겨 재시도마다 처음부터 쟀다(11-02 회원 수리 채택)
+                if len(ocr) != len(ocr0):
+                    _cache_save(op, ocr0, {k2: v2 for k2, v2 in ocr.items() if k2 not in ocr0})
             rows[key] = r
             nt = sum(1 for x in r["text"] if x)
             nf = sum(1 for x in r["face"] if x)
