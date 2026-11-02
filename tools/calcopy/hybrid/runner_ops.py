@@ -2422,6 +2422,8 @@ CMD_LABEL = {"env": "준비 확인", "bench": "영상 받기", "channel_find": "
              "naver": "자료 찾기", "download": "영상 조각 받기", "screen": "장면 고르기", "shot_sheets": "장면 정리", "plan": "장면 맞추기",
              "render": "영상 만들기", "check": "완성본 확인", "clean_text": "자막 지우기", "clean_take": "자막 지우기", "thumb_auto": "썸네일 고르기", "finish": "마무리", "of_settle": "원본 정리"}   # 회원 화면 진행 줄(내부 이름 금지)
 STALL_SEC = float(os.environ.get("SHORTEM_STALL_SEC") or 180)    # 진행 신호(명시 progress 또는 작업 폴더 파일 변화)가 이만큼 없으면 멈춘 것
+HANG_SEC = float(os.environ.get("SHORTEM_HANG_SEC") or 300)      # 감시 자신이 이만큼 못 돌면 프로세스째 끝낸다(정규식·C 호출이 GIL 을 쥐면 파이썬 스레드 감시는 함께 멈춘다)
+_HANG: dict = {"on": False, "t": 0.0}
 _PROG: dict = {"t": 0.0}
 _CHILDREN: set = set()
 
@@ -2505,6 +2507,16 @@ def _kill_children() -> int:
     return n
 
 
+def _hang_arm() -> None:
+    """(판단 주인 — 감시가 멈춘 프로세스 끝내기) faulthandler 는 GIL 없이 도는 C 스레드라 파이썬이 통째로 멈춰도 울린다. 전 스레드 위치를 stderr 에 남기고 끝낸다.
+    main 에서만 켠다(run_do 를 부르는 다른 프로세스를 끄지 않게). 감시 고리가 돌 때마다 뒤로 민다."""
+    if not _HANG["on"] or time.time() - _HANG["t"] < 15:
+        return
+    import faulthandler
+    _HANG["t"] = time.time()
+    faulthandler.dump_traceback_later(HANG_SEC, exit=True, file=sys.__stderr__)
+
+
 def _watch(W: Path, items: list, run_one, out: dict, log, budget_of, stall: float) -> None:
     """items 를 각자 스레드로 돌리고 감시 — 예산 초과·진행 신호 stall 초 없음이면 그 일을 '시간 초과' 오류로 끝내고 하위 프로그램을 끈다.
     (판정은 서버 flow — 오류를 받으면 스스로 한 번 다시·다음 방법·회원 선택지로. 실행기는 절대 한없이 기다리지 않는다.)"""
@@ -2519,6 +2531,7 @@ def _watch(W: Path, items: list, run_one, out: dict, log, budget_of, stall: floa
     while any(t.is_alive() for _, t, _ in th):
         next((t for _, t, _ in th if t.is_alive()), th[0][1]).join(1.0 if stall > 5 else 0.2)   # 끝나면 바로 깨어난다(잠만 자면 일마다 1초씩 늦는다)
         now = time.time()
+        _hang_arm()
         s2, c2 = _dir_sig(W), _child_cpu()
         if s2 != sig or c2 > cpu + 0.5:            # 파일이 자라거나 하위 프로그램이 CPU 를 0.5초 넘게 더 쓰면 진행 중
             sig, last, cpu = s2, now, c2
@@ -2609,8 +2622,13 @@ PARALLEL_OK = {"asr_spans", "shot_sheets", "frames", "coupang", "naver", "produc
 
 def main():
     W, do = Path(sys.argv[1]), jload(sys.argv[2])
+    _HANG["on"] = True
+    _hang_arm()
     res = run_do(W, do, log=lambda s: print(s, file=sys.stderr))
-    print(json.dumps(res, ensure_ascii=False))
+    print(json.dumps(res, ensure_ascii=False), flush=True)
+    sys.stderr.flush()
+    # 결과를 냈으면 바로 끝낸다 — 끊긴 일의 풀 스레드를 파이썬 종료가 기다리면 프로세스가 안 닫혀 회원 앱은 결과를 영영 못 받는다(11-02 check 멈춤)
+    os._exit(0)
 
 
 if __name__ == "__main__":

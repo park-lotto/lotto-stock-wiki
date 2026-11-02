@@ -96,3 +96,41 @@ def test_over_budget_but_progressing_is_not_cut(tmp_path, monkeypatch):
     monkeypatch.setitem(R.CMDS, "beat", _beating)
     out = R.run_do(tmp_path, [{"id": "b", "cmd": "beat", "budget": 1.5}], log=lambda s: None, stall=1.0)
     assert out["b"] == {"ok": True}, out
+
+
+_CHILD = """
+import json, re, sys, time
+sys.path.insert(0, sys.argv[1])
+from concurrent.futures import ThreadPoolExecutor
+from tools.calcopy.hybrid import runner_ops as R
+def pool(W, d):
+    with ThreadPoolExecutor(1) as ex:
+        ex.submit(time.sleep, 3600).result()
+def rx(W, d):
+    re.match(r"(a+)+$", "a" * 40 + "b")
+R.CMDS.update(t_pool=pool, t_rx=rx)
+R.main()
+"""
+
+
+def test_끊긴_일의_풀_스레드가_남아도_결과를_내고_프로세스가_끝난다(tmp_path):
+    code = _CHILD.replace("R.main()", "_s = sys.argv; sys.argv = [_s[0], _s[2], _s[3]]; R.main()")
+    do = tmp_path / "do.json"
+    do.write_text(json.dumps([{"cmd": "t_pool"}]), encoding="utf-8")
+    import os
+    p = subprocess.run([sys.executable, "-X", "utf8", "-c", code, str(ROOT), str(tmp_path / "w"), str(do)], capture_output=True, timeout=30,
+                       encoding="utf-8", errors="replace", env={**os.environ, "SHORTEM_STALL_SEC": "2"})
+    assert p.returncode == 0
+    assert json.loads(p.stdout.strip().splitlines()[-1])["t_pool"]["timed_out"] is True
+
+
+def test_GIL을_쥐고_멈춰도_감시가_프로세스를_끝내고_위치를_남긴다(tmp_path):
+    import os
+    code = _CHILD.replace("R.main()", "_s = sys.argv; sys.argv = [_s[0], _s[2], _s[3]]; R.main()")
+    do = tmp_path / "do.json"
+    do.write_text(json.dumps([{"cmd": "t_rx"}]), encoding="utf-8")
+    p = subprocess.run([sys.executable, "-X", "utf8", "-c", code, str(ROOT), str(tmp_path / "w"), str(do)], capture_output=True, timeout=30,
+                       encoding="utf-8", errors="replace", env={**os.environ, "SHORTEM_HANG_SEC": "3"})
+    assert p.returncode != 0 and p.stdout.strip() == ""
+    assert "rx" in p.stderr
+
