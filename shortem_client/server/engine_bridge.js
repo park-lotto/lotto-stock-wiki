@@ -252,31 +252,52 @@ export async function engineTool(cmd, input, { timeoutMs = 60000 } = {}) {
 // 단계형 실행기(관제 234, 10-21) — 서버 지시서가 준 do 목록을 엔진 hybrid/runner_ops 로 돌리고 measure(JSON)를 돌려준다.
 //   허용 명령 판정은 runner_ops 한 곳. 여기는 띄우고 마지막 줄 JSON 을 읽기만 한다.
 const EXIT_GRACE_MS = 5000;   // 실행기가 끝난 뒤 남은 출력을 받을 시간
+const RESULT_POLL_MS = 1000;
+// 결과는 파이프가 아니라 파일(SHORTEM_RESULT)로 받는다 — 판단 주인은 runner_ops.main 과 이 runOps 두 곳 짝.
+//   11-03 완성본 검사 멈춤(정민혜 1.0.52·1.0.54): 산출물을 다 쓴 실행기가 스레드 1개·CPU 0 으로 10분+ 안 끝났다(종료 정리에서 멈춤으로 본다).
+//   결과 파일이 생기면 프로세스가 안 끝나도 잠깐 뒤 끄고 그 파일로 끝낸다. 옛 엔진(파일을 안 씀)은 예전처럼 stdout 마지막 줄.
+const killTree = pid => { try { if (process.platform === 'win32') spawn('taskkill', ['/F', '/T', '/PID', String(pid)], { windowsHide: true, stdio: 'ignore' }); else process.kill(pid, 'SIGKILL'); } catch { /* 이미 끝 */ } };
 export function runOps(jobDir, doList, { timeoutMs = 3 * 60 * 60 * 1000, env: extra = {} } = {}) {
   fs.mkdirSync(jobDir, { recursive: true });
-  const doFile = path.join(jobDir, '..', `do_${Date.now()}.json`);
+  const ts = Date.now();
+  const doFile = path.join(jobDir, '..', `do_${ts}.json`);
+  const resFile = path.join(jobDir, '..', `result_${ts}.json`);
+  const logFile = path.join(jobDir, '..', 'runner.log');
   fs.writeFileSync(doFile, JSON.stringify(doList || []));
   return new Promise(resolve => {
     const proc = spawn(pythonExe(), ['-m', 'tools.calcopy.hybrid.runner_ops', jobDir, doFile],
-      { cwd: engineRoot(), env: { ...engineEnv(ensureDir(aiRoot(), '_runner'), null, {}), SHORTEM_HOME: homeDir(), ...extra }, shell: false, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+      { cwd: engineRoot(), env: { ...engineEnv(ensureDir(aiRoot(), '_runner'), null, {}), SHORTEM_HOME: homeDir(), SHORTEM_RESULT: resFile, SHORTEM_RUNNER_LOG: logFile, ...extra }, shell: false, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    const readRes = () => { try { return JSON.parse(fs.readFileSync(resFile, 'utf8')); } catch { return null; } };
+    const logTail = () => { try { const s = fs.readFileSync(logFile, 'utf8'); return s.slice(-300); } catch { return ''; } };
     const out = [];
     let err = '';
     const t = setTimeout(() => { try { proc.kill(); } catch { /* 이미 끝 */ } }, timeoutMs);
     proc.stdout.on('data', d => out.push(d));
     proc.stderr.on('data', d => { if (err.length < 200000) err += String(d); });
     const fail = why => Object.fromEntries((doList || []).map(d => [String(d.id || d.cmd), { error: why }]));
-    proc.on('error', e => { clearTimeout(t); resolve(fail('실행기를 띄우지 못했다: ' + String(e && e.message).slice(0, 200))); });
+    proc.on('error', e => { clearTimeout(t); clearInterval(poll); resolve(fail('실행기를 띄우지 못했다: ' + String(e && e.message).slice(0, 200))); });
     // close 만 기다리면 손자 프로세스가 출력을 쥐고 있는 동안 실행기가 끝나도 영영 안 온다(11-02 완성본 검사 멈춤 3건 — exit 뒤 12초 재현)
     let done = false;
     const finish = () => {
       if (done) return;
       done = true;
       clearTimeout(t);
-      try { fs.appendFileSync(path.join(jobDir, '..', 'runner.log'), err.slice(-20000)); } catch { /* 기록 실패는 넘어간다 */ }
+      clearInterval(poll);
+      if (err) { try { fs.appendFileSync(logFile, err.slice(-20000)); } catch { /* 기록 실패는 넘어간다 */ } }   // 새 엔진은 runner.log 에 직접 쓴다(err 빈칸)
       try { fs.unlinkSync(doFile); } catch { /* 이미 */ }
+      const r = readRes();
+      try { fs.unlinkSync(resFile); } catch { /* 옛 엔진 = 파일 없음 */ }
+      if (r) return resolve(r);
       const s = Buffer.concat(out).toString('utf8').trim().split('\n').filter(Boolean).pop() || '';
-      try { resolve(JSON.parse(s)); } catch { resolve(fail('실행기 결과를 읽지 못했다: ' + err.slice(-300))); }
+      try { resolve(JSON.parse(s)); } catch { resolve(fail('실행기 결과를 읽지 못했다: ' + (err.slice(-300) || logTail()))); }
     };
+    let seen = 0;
+    const poll = setInterval(() => {      // 결과 파일이 생겼는데 EXIT_GRACE_MS 안에 안 끝나면 끄고 끝낸다
+      if (!fs.existsSync(resFile)) return;
+      if (!seen) { seen = Date.now(); return; }
+      if (Date.now() - seen >= EXIT_GRACE_MS && readRes()) { killTree(proc.pid); finish(); }
+    }, RESULT_POLL_MS);
+    poll.unref();
     proc.on('close', finish);
     proc.on('exit', () => setTimeout(finish, EXIT_GRACE_MS).unref());
   });

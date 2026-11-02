@@ -177,3 +177,27 @@ def test_CPU를_쓰는_계산은_진행신호로_안_끊는다(tmp_path, monkeyp
     out = R.run_do(tmp_path, [{"id": "c", "cmd": "busy"}], log=lambda s: None, stall=1.5)
     assert out["c"] == {"ok": True, "_sec": out["c"]["_sec"]}, out
 
+
+
+def _main_child(tmp_path, cmd, env):
+    import os
+    code = _CHILD.replace("R.main()", "_s = sys.argv; sys.argv = [_s[0], _s[2], _s[3]]; R.main()")
+    do = tmp_path / "do.json"
+    do.write_text(json.dumps([{"cmd": cmd}]), encoding="utf-8")
+    res, log = tmp_path / "result.json", tmp_path / "runner.log"
+    p = subprocess.run([sys.executable, "-X", "utf8", "-c", code, str(ROOT), str(tmp_path / "w"), str(do)], capture_output=True, timeout=30,
+                       encoding="utf-8", errors="replace", env={**os.environ, "SHORTEM_RESULT": str(res), "SHORTEM_RUNNER_LOG": str(log), **env})
+    return p, res, log
+
+
+def test_결과는_파일로_로그는_runner_log로_파이프는_안_쓴다(tmp_path):
+    p, res, log = _main_child(tmp_path, "t_pool", {"SHORTEM_STALL_SEC": "2"})
+    assert p.returncode == 0 and p.stdout.strip() == "" and p.stderr.strip() == "", (p.stdout[-300:], p.stderr[-300:])
+    assert json.loads(res.read_text(encoding="utf-8"))["t_pool"]["timed_out"] is True
+    assert "[runner] t_pool" in log.read_text(encoding="utf-8")
+
+
+def test_감시가_멈춰도_위치_기록은_runner_log에_남는다(tmp_path):
+    p, res, log = _main_child(tmp_path, "t_rx", {"SHORTEM_HANG_SEC": "3"})
+    assert p.returncode != 0 and not res.exists()
+    assert "rx" in log.read_text(encoding="utf-8")

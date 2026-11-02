@@ -2653,15 +2653,48 @@ def run_do(W: Path, do: list[dict], log=print, stall: float | None = None) -> di
 PARALLEL_OK = {"asr_spans", "shot_sheets", "frames", "coupang", "naver", "product_stills", "mat_sheets", "sheet", "origin_foreign"}   # origin_foreign = 소재 2편 칸(sub 다름)을 동시에(10-27 run4: 차례로 510+537초·810+560초)   # 유튜브를 부르지 않고 서로의 결과를 읽지 않는 일
 
 
+def _log_to_file(f: str) -> None:
+    """stderr(로그·faulthandler 위치 기록)를 파이프 대신 파일로 — 앱이 파이프를 못 읽어도 막히지 않고 멈춤 기록이 남는다."""
+    try:
+        fh = open(f, "a", encoding="utf-8", errors="replace", buffering=1)
+    except OSError:
+        return
+    os.dup2(fh.fileno(), 2)
+    sys.stderr = sys.__stderr__ = fh
+
+
+def _end_now() -> None:
+    """(판단 주인 — 실행기 끝내기) 윈도는 TerminateProcess: os._exit(ExitProcess)는 DLL 정리를 돌아 거기서 멈출 수 있다
+    (11-03 정민혜 check — 산출물 다 쓴 뒤 스레드 1개·CPU 0 으로 10분+, faulthandler 스레드도 이미 없음)."""
+    if os.name == "nt":
+        try:
+            import ctypes
+            k = ctypes.windll.kernel32
+            k.TerminateProcess(k.GetCurrentProcess(), 0)
+        except Exception:  # noqa: BLE001
+            pass
+    os._exit(0)
+
+
 def main():
     W, do = Path(sys.argv[1]), jload(sys.argv[2])
+    res_file, log_file = os.environ.get("SHORTEM_RESULT"), os.environ.get("SHORTEM_RUNNER_LOG")
+    if log_file:
+        _log_to_file(log_file)
     _HANG["on"] = True
     _hang_arm()
     res = run_do(W, do, log=lambda s: print(s, file=sys.stderr))
-    print(json.dumps(res, ensure_ascii=False), flush=True)
+    body = json.dumps(res, ensure_ascii=False)
+    if res_file:        # 새 앱(engine_bridge.runOps)은 이 파일을 읽는다 — 파이프에 안 쓴다(앱이 못 읽으면 print 가 막힌다)
+        tmp = res_file + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            fh.write(body)
+        os.replace(tmp, res_file)
+    else:
+        print(body, flush=True)
     sys.stderr.flush()
     # 결과를 냈으면 바로 끝낸다 — 끊긴 일의 풀 스레드를 파이썬 종료가 기다리면 프로세스가 안 닫혀 회원 앱은 결과를 영영 못 받는다(11-02 check 멈춤)
-    os._exit(0)
+    _end_now()
 
 
 if __name__ == "__main__":
