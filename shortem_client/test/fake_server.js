@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const TRACK = path.resolve(HERE, '..', '..');                      // .tracks/숏템MCP
-export const ENGINE = path.resolve(TRACK, '..', '칼카피숏템엔진');
+export const ENGINE = process.env.SHORTEM_TEST_ENGINE || path.resolve(TRACK, '..', '칼카피숏템엔진');   // 다른 자리(임시 worktree)에서 돌릴 때 SHORTEM_TEST_ENGINE
 const SS = path.join(TRACK, 'shopping_shorts');
 const SECRET = 'fake-secret-for-tests';
 const STEP_NAMES = ['소재', '분석', '대본', '장면 계획', '음성', '렌더', '검사', '확인', '완료'];
@@ -191,7 +191,7 @@ print(json.dumps({"pack":base64.b64encode(n+AESGCM(k).encrypt(n,d,aad)).decode()
       if (u.pathname === '/api/claude/feedback' && req.method === 'POST') {
         const a = auth(req, res); if (!a) return;
         const b = await body(req);
-        if (!b || !['request', 'bug', 'code_fix'].includes(b.kind) || typeof b.text !== 'string' || b.text.length > 2000) return fail(res, 400, 'bad_request', '요청 모양이 다릅니다');
+        if (!b || !['request', 'bug', 'code_fix'].includes(b.kind) || typeof b.text !== 'string' || b.text.length > (b.kind === 'code_fix' ? 30000 : 2000)) return fail(res, 400, 'bad_request', '요청 모양이 다릅니다');   // 서버 claude_portal.feedback 과 같은 꼴
         state.feedback.push(b); return send(res, 200, { ok: true, id: state.feedback.length });
       }
       // 시험 손잡이

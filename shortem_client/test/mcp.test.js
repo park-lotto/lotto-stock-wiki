@@ -41,4 +41,10 @@ test('setup: 라이선스 확인·기기 등록, 키 값은 응답에 없음', a
   assert.ok(nm.structuredContent.hints.some(h => /찾지 못했습니다/.test(h)), JSON.stringify(nm.structuredContent));
   const fb = await client.callTool({ name: 'shortem_feedback', arguments: { kind: 'bug', text: '시험' } });
   assert.equal(fb.structuredContent.info.sent, true);
+  // 코드 수리 보내기(관제 304) — 지시서·운영원칙이 시키는 길. 스키마가 막으면 수리가 서버에 안 온다
+  const diff = 'diff --git a/x b/x\n'.repeat(200);
+  const cf = await client.callTool({ name: 'shortem_feedback', arguments: { kind: 'code_fix', text: diff } });
+  assert.equal(cf.structuredContent?.info?.sent, true, JSON.stringify(cf));
+  const long = await client.callTool({ name: 'shortem_feedback', arguments: { kind: 'bug', text: '가'.repeat(2001) } });
+  assert.equal(long.structuredContent?.info?.sent, undefined, '요청·버그는 그대로 2000자 — 서버가 거절');
 });
