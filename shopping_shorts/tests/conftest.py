@@ -90,6 +90,7 @@ def pytest_collection_modifyitems(config, items):
             src = inspect.getsource(it.function)
         except (OSError, TypeError, AttributeError):
             src = ""
-        # bench_caption·loo 는 캐시가 없는 관문 임시 폴더에서 원본 영상을 통째로 읽어 멈춘다(11-02 관문 1시간 40분 정지)
-        if "숏템_칼카피" in src or "bench_caption" in src or "집 PC" in reasons or "원본 없음" in reasons:
+        # test_readline_tools 재현 시험은 도우미 안에서 실제 영상을 통째로 읽는다(11-02 관문 ffmpeg 멈춤 1시간 40분) — 합성 영상(synth) 시험만 돈다
+        real_band = str(it.fspath).endswith("test_readline_tools.py") and "synth" not in getattr(it, "fixturenames", ())
+        if real_band or "숏템_칼카피" in src or "집 PC" in reasons or "원본 없음" in reasons:
             it.add_marker(skip)
