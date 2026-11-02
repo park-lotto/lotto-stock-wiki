@@ -90,5 +90,6 @@ def pytest_collection_modifyitems(config, items):
             src = inspect.getsource(it.function)
         except (OSError, TypeError, AttributeError):
             src = ""
-        if "숏템_칼카피" in src or "집 PC" in reasons or "원본 없음" in reasons:
+        # bench_caption·loo 는 캐시가 없는 관문 임시 폴더에서 원본 영상을 통째로 읽어 멈춘다(11-02 관문 1시간 40분 정지)
+        if "숏템_칼카피" in src or "bench_caption" in src or "집 PC" in reasons or "원본 없음" in reasons:
             it.add_marker(skip)
