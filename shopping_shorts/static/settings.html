@@ -1026,8 +1026,8 @@ async function loadAccount(){
     var scT = d.shortcl_trial || {};
     if (scT.active) el("scUpSub").textContent = "숏클메이커 무료 이용 중 · " + num(scT.days_left) + "일 남았습니다.";
     if (scT.available) {
-      el("scUpSub").textContent = "숏템메이커 회원은 버튼 한 번으로 숏클메이커를 7일 동안 무료로 쓸 수 있습니다.";
-      el("scUpBtn").textContent = "숏클로 무료 업그레이드 (7일) →";
+      el("scUpSub").textContent = "Pro 회원은 버튼 한 번으로 숏클메이커로 옮겨 갈 수 있습니다.";
+      el("scUpBtn").textContent = "숏클로 업그레이드 →";
       el("scUpBtn").onclick = async function (e) {
         e.preventDefault();
         var r = await fetch("/api/claude/me/trial", { method: "POST" });
