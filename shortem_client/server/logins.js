@@ -12,9 +12,14 @@ import { audit } from './audit.js';
 const require = createRequire(import.meta.url);
 export const PLATFORMS = Object.freeze({
   instagram: { name: '인스타그램', url: 'https://www.instagram.com/accounts/login/', domain: 'instagram.com', ok: ['sessionid'] },
-  tiktok: { name: '틱톡', url: 'https://www.tiktok.com/login', domain: 'tiktok.com', ok: ['sessionid', 'sid_tt'] },
+  tiktok: { name: '틱톡', url: 'https://www.tiktok.com/login', domain: 'tiktok.com', ok: ['sessionid', 'sid_tt'], optional: true },   // 안 되면 막지 않고 안내(사장님 11-02)
   youtube: { name: '유튜브', url: 'https://accounts.google.com/ServiceLogin?continue=https%3A%2F%2Fwww.youtube.com%2F', domain: 'youtube.com', ok: ['__Secure-3PSID', 'SAPISID'] },
 });
+// 빠진 로그인 — required 는 첫 제작을 막고 optional 은 회원에게 안내만 한다(준비 점검 두 곳이 여기를 부른다)
+export function missingLogins(connected) {
+  const miss = Object.entries(PLATFORMS).filter(([k]) => !connected[k]);
+  return { required: miss.filter(([, p]) => !p.optional), optional: miss.filter(([, p]) => p.optional) };
+}
 const profileDir = () => ensureDir(homeDir(), 'browser');
 const sessDir = () => ensureDir(homeDir(), 'sessions');
 export const cookiesFile = () => path.join(sessDir(), 'cookies.txt');

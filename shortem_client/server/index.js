@@ -35,7 +35,7 @@ import { syncPlugin } from './plugin_sync.js';
 import { syncVcrt } from './vcrt_sync.js';
 import { startUi, openBrowser } from './local_ui.js';
 import { startBridge, importMakerKeys } from './web_bridge.js';
-import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
+import { openLogin, status as loginStatus, PLATFORMS, missingLogins } from './logins.js';
 import { readSettings, setRequest, packFor, savePack, select as selectPreset, PID_RE } from './local_settings.js';
 import { cleanupCandidates, showCandidates, removeCandidates } from './disk.js';
 
@@ -144,9 +144,11 @@ export function buildServer(ctx = makeCtx()) {
     if (free != null && free < 3) fails.push({ where: '디스크', why: '디스크 여유가 부족합니다', fix: '아래 지울 후보(cleanup)를 회원에게 보여 주고 고른 것만 shortem_setup(remove=[id…]) 로 지우세요', retry_ok: true });
     // 사장님 11-02 "무조건 3개 다 로그인 처음에 · 키 점검" — 첫 제작 전에 빠진 것을 한 번에 알린다(실제 호출 판정은 제작 시작 전 runner_ops.need_list)
     const logged = loginStatus().connected;
-    for (const [k, pf] of Object.entries(PLATFORMS)) {
-      if (!logged[k]) fails.push({ where: '계정 연결', why: `${pf.name} 로그인이 아직 안 됐습니다`, fix: `shortem_login(action="open", platform="${k}") 로 창을 열고 로그인·창 닫기를 부탁한 뒤 다시 점검`, retry_ok: true });
+    const lost = missingLogins(logged);
+    for (const [k, pf] of lost.required) {
+      fails.push({ where: '계정 연결', why: `${pf.name} 로그인이 아직 안 됐습니다`, fix: `shortem_login(action="open", platform="${k}") 로 창을 열고 로그인·창 닫기를 부탁한 뒤 다시 점검`, retry_ok: true });
     }
+    const notices = lost.optional.map(([k, pf]) => `${pf.name} 로그인이 안 됐습니다. 제작은 진행합니다. ${pf.name} 주소를 소재로 쓰면 받기가 안 될 수 있어요. 회원에게 그대로 알리고, 원하면 shortem_login(action="open", platform="${k}") 로 다시 시도`);
     const voiceKey = KEY_SERVICES[voiceProvider(readSettings())] ? voiceProvider(readSettings()) : 'typecast';   // 고른 목소리 회사의 키만 본다(11-02)
     if (!keyStatus(voiceKey).present) fails.push({ where: '키', why: `${KEY_SERVICES[voiceKey].label} 가 없습니다`, fix: `shortem_settings(action="open") 의 키 칸에 넣어 달라고 부탁 (${KEY_SERVICES[voiceKey].where})`, retry_ok: true });
     // API 도구 점검 결과 — 막지 않고 알린다. 쿠팡은 있으면 먼저 쓰고 없으면 크롬으로 찾는다(사장님 11-02)
@@ -164,7 +166,7 @@ export function buildServer(ctx = makeCtx()) {
       fails.push(...r.fails);
     }
     audit('setup', { result: fails.length ? 'fail' : 'ok', n: fails.length });
-    return reply({ info: { ...info, program_version: ENGINE_VERSION }, ...(fails.length ? { fail: fails[0], hints: fails.map(f => `[${f.where}] ${f.why} → ${f.fix}`) } : {}) });
+    return reply({ info: { ...info, program_version: ENGINE_VERSION, ...(notices.length ? { notices } : {}) }, ...(fails.length ? { fail: fails[0], hints: fails.map(f => `[${f.where}] ${f.why} → ${f.fix}`) } : {}) });
   });
 
   server.registerTool('shortem_presets', {

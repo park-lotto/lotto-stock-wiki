@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { workDir, ensureDir, homeDir } from './paths.js';
 import { run, runOk, resolveTools, toolsDir } from './tools_paths.js';
-import { browserExe, status as loginStatus, PLATFORMS } from './logins.js';
+import { browserExe, status as loginStatus, missingLogins } from './logins.js';
 import { normalizeFrame, BASIC_FRAME } from './engine/frame.js';
 import { plan, timeline } from './engine/plan.js';
 import { renderVideo } from './engine/render.js';
@@ -59,8 +59,7 @@ async function testBrowser() {
 }
 
 async function testAccounts() {
-  const c = loginStatus().connected;
-  const bad = Object.entries(PLATFORMS).filter(([k]) => !c[k]).map(([, p]) => p.name);
+  const bad = missingLogins(loginStatus().connected).required.map(([, p]) => p.name);
   if (bad.length) throw new Error('로그인 필요: ' + bad.join(', '));
   return {};
 }
