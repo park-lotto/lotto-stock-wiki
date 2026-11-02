@@ -271,18 +271,15 @@ def _cookie_ok(platform: str) -> bool:
     return False
 
 
+_cp_last: dict = {}     # 이번 실행의 쿠팡 키 확인 결과 {state, reason, http} — c_env 가 measure 에 실어 서버 기록(st['env']['keys'])으로 보낸다
+
+
 def coupang_key_state() -> str:
-    """쿠팡 파트너스 키 상태 — 'ok'(실제 호출 통과) · 'none'(없음) · 'bad'(호출 실패). 돈 들지 않는 딥링크 1회(coupang_partners.probe_key), 잠깐의 끊김만 한 번 더."""
-    ak, sk = os.environ.get("COUPANG_ACCESS_KEY", ""), os.environ.get("COUPANG_SECRET_KEY", "")
-    if not (ak and sk):
-        return "none"
-    from shopping_shorts import coupang_partners as cp
-    for k in range(2):
-        if cp.probe_key(ak, sk):
-            return "ok"
-        if not k:
-            time.sleep(2)
-    return "bad"
+    """쿠팡 파트너스 키 상태 — 'ok' · 'none'(없음) · 'bad'(쿠팡이 키를 거부) · 'unknown'(일시 실패 — 키는 그대로 먼저 쓴다). 판단 주인 = coupang_customer.key_check."""
+    from tools.calcopy import coupang_customer as C
+    _cp_last.clear()
+    _cp_last.update(C.key_check())
+    return _cp_last["state"]
 
 
 def browser_ok(chrome_only: bool = False) -> bool:
@@ -293,7 +290,8 @@ def browser_ok(chrome_only: bool = False) -> bool:
 
 
 def advice_list(fmt: str = "") -> list[str]:
-    """시작 전 안내(막지 않는다) — 쿠팡 키는 있으면 먼저 쓰고, 없으면 크롬으로 찾는다(사장님 11-02 "있으면 빠르고 원활하다고 안내")."""
+    """시작 전 안내(막지 않는다) — 쿠팡 키는 있으면 먼저 쓰고, 없으면 크롬으로 찾는다(사장님 11-02 "있으면 빠르고 원활하다고 안내").
+    'unknown'(일시 실패)은 안내하지 않는다 — 키는 멀쩡할 수 있고 제작 때 c_coupang 이 키를 먼저 쓰며, 안 되면 크롬으로 알아서 넘어간다."""
     if os.environ.get("CALCOPY_CUSTOMER_MODE") != "1" or fmt == "자막노래형":
         return []
     return {"none": ["쿠팡 파트너스 키를 넣어 두시면 제품 찾기가 더 빠르고 원활해요. 이번엔 크롬으로 찾아서 만들게요"],
@@ -363,6 +361,8 @@ def c_env(W, d):
     dev = os.environ.get("CALCOPY_DEV_MINA_SERVER") == "1" or os.environ.get("SHORTEM_DEV") == "1"
     missing = need_list(d["version"], d.get("url") or "", d.get("fmt") or "")
     advice = advice_list(d.get("fmt") or "")
+    if _cp_last:
+        keys["coupang_check"] = dict(_cp_last)      # 키 값 없음(사유 코드·http 만)
     if du.free / 1e9 < 1.5:
         missing.append({"id": "disk", "label": "C 드라이브 빈 공간 1.5GB", "how": "disk"})
     try:
