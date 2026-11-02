@@ -310,6 +310,9 @@ def _msg(st: dict, phase: str) -> str:
 
 def _rv(rid: str, ask: str, show: list | None = None, model: str = "opus", need: tuple = (), meta: dict | None = None) -> dict:
     # meta = 회원 PC 작업실 화면(shortem_client work_view)이 판정을 후보에 짝지을 표식(판단 아님 — 질문에 쓴 것 그대로)
+    miss = [k for k in need if f'"{k}"' not in ask]
+    if miss:          # 답 칸 이름은 질문 글에 꼭 있어야 한다(11-02 CS #109 쇼핑형 대본 질문에 없었다) — 빠진 질문은 여기서 한 곳에서 채운다
+        ask += "\n\n답은 JSON 하나, 최상위 칸: " + ", ".join(f'"{k}"' for k in need)
     return {"id": rid, "model": model, "ask": ask, "show": show or [], "need": list(need), **({"meta": meta} if meta else {})}
 
 
@@ -1889,8 +1892,12 @@ def _pick_line(st) -> str:
     return f"\n\n★개수: {a}~{b}개를 고른다. 대본 줄마다 가리키는 그림이 달라야 하니 서로 다른 장면을 주는 영상으로." + (CLEAN_SOURCE_RULE if _back_material(st) else "")
 
 
+PICK_MORE_WAY = ("\n★고를 수 있는 id 는 아래 후보뿐이다(소재 쇼츠 id 는 넣지 않는다). 같은 제품 영상이 후보에 하나도 없으면 chosen 은 비우고 "
+                 "\"재료_더찾기\": [\"유튜브 검색어\", …] (최대 4개 — 브랜드·정식 제품명을 넣은 검색어)를 답에 넣어라. 다른 제품 영상을 같은 제품처럼 쓰지 않는다.")
+
+
 def _screen_pick_ask(st, rows, more="") -> str:
-    return (SCREEN_PICK + _pick_line(st) + more +
+    return (SCREEN_PICK + _pick_line(st) + PICK_MORE_WAY + more +
             "\n\n후보(시트 순서와 같다):\n" + json.dumps(rows, ensure_ascii=False, indent=1) +
             f"\n\n제품: {st['product'].get('name')} / 연예인: {st['read'].get('celeb')}" + _subject_pick_ctx(st))
 
@@ -1921,6 +1928,14 @@ def ph_material_pick(st, m, rp, u):
     chosen = [c for c in r.get("chosen") or [] if isinstance(c, dict) and c.get("id") in known and c["id"] not in (st["bench"].get("id"), (st.get("origin") or {}).get("id"))
               and not (celeb and celeb in str(c.get("why") or ""))]
     st["screen_pick"] = {"chosen": chosen, "rejected": r.get("rejected") or []}
+    more_q = [str(q).strip()[:60] for q in (r.get("재료_더찾기") or []) if isinstance(q, str) and q.strip()][:4]
+    if not chosen and more_q and st["tries"].get("more_material", 0) < MORE_MATERIAL_MAX:      # 같은 제품 후보가 0 — 사진만으로 대본까지 가지 않고 이 자리에서 다시 찾는다(11-02 CS #109)
+        st["tries"]["more_material"] = st["tries"].get("more_material", 0) + 1
+        st["tries"].pop("pick_more", None)
+        st["log"].append(f"재료 고르기: 같은 제품 후보 0 → 재료 더 찾기: {more_q}")
+        R = st.get("research") or {}
+        return {"do": [{"id": "screen", "cmd": "screen", "queries": more_q, "exclude": R.get("exclude") or [], "keywords": more_q, "top": _material_top(st),
+                        "bench_id": st["bench"].get("id"), "origin_id": (st.get("origin") or {}).get("id")}], "then": "material_got"}
     if len(chosen) < _material_n(st)[0] and len(known) > len(chosen) and not st["tries"].get("pick_more"):      # 모자라면 한 번 더 — 그래도 없으면 있는 것으로(장면 검수의 재료 더 찾기가 잇는다)
         st["tries"]["pick_more"] = 1
         return {"review": [_rv("screen_pick", _screen_pick_ask(st, st.get("screen_rows") or [], f"\n★지난 답은 {len(chosen)}개뿐이었다 — 쓸 수 있는 것을 더 골라라."),
