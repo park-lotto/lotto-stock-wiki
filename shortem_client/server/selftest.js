@@ -11,6 +11,7 @@ import { plan, timeline } from './engine/plan.js';
 import { renderVideo } from './engine/render.js';
 import { probeOut } from './engine/check.js';
 import { synthLines, readKey } from './engine/voice.js';
+import { readSettings } from './local_settings.js';
 
 export const SELFTEST_URL = () => process.env.SHORTEM_SELFTEST_URL || 'https://www.youtube.com/watch?v=jNQXAC9IVRw';   // 'Me at the zoo'(19초 공개 영상) — 통째로 받고 5초만 잘라 쓴다
 const DEFAULT_VOICE = 'tc_68257f68bc6e3c161ab5078d';
@@ -83,7 +84,23 @@ async function testRender(dir) {
   return { file: out, duration: Number(pr.duration.toFixed(2)), size: `${pr.width}x${pr.height}` };
 }
 
+// 회원이 고른 목소리 회사 — 엔진 voices.provider_of 와 같은 판단(CS #142). 지금 채널 먼저, 없으면 고른 적 있는 채널, 그래도 없으면 타입캐스트.
+export function voiceProvider(settings) {
+  const of = c => {
+    const t = ((c || {}).pack || {}).tts || {};
+    const v = String(t.voice_id || '');
+    return t.provider || (v.startsWith('tc_') ? 'typecast' : v.startsWith('kr-') ? 'elevenlabs' : v.startsWith('fs-') ? 'fish' : null);
+  };
+  const ch = (settings || {}).channels || {};
+  return of(ch[(settings || {}).current]) || Object.values(ch).map(of).find(Boolean) || 'typecast';
+}
+
 async function testVoice(dir) {
+  const provider = voiceProvider(readSettings());
+  if (provider !== 'typecast') {   // 시험 합성은 타입캐스트 길뿐이다 — 다른 회사는 키만 보고, 실제 합성은 제작 때 엔진(voice_synth)이 한다
+    if (!readKey(provider)) return { skipped: true, why: `고른 목소리(${provider}) 키 없음` };
+    return { provider, key_only: true };
+  }
   if (!readKey('typecast')) return { skipped: true, why: '타입캐스트 키 없음(~/.shortem/keys/typecast)' };
   const r = await synthLines(['숏템 자가점검 목소리입니다.'], { voice_id: process.env.SHORTEM_SELFTEST_VOICE || DEFAULT_VOICE, tempo: 1.1 }, path.join(dir, '.voice'));
   const out = path.join(dir, '시험_목소리.wav');
