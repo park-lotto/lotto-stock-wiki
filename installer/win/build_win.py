@@ -373,6 +373,11 @@ def build_engine(stage: Path, engine: Path, report: dict) -> None:
         if not src_m.is_file():
             raise SystemExit(f"[build_win] 판독 모델이 없습니다: {src_m}")
         shutil.copy2(src_m, vm / src_m.name)
+    vc = stage / "server" / "vcrt"         # 깨끗한 윈도엔 없는 VC++ 런타임 — python.exe 옆과 업데이트 묶음에(vcrt_sync.js, 11-02 샌드박스 실사고)
+    vc.mkdir(parents=True, exist_ok=True)
+    for n in VC_RUNTIME:
+        shutil.copy2(Path(os.environ["SystemRoot"]) / "System32" / n, vc / n)
+        shutil.copy2(vc / n, stage / "tools" / "python" / n)
     report["engine"] = {"files": len(man["files"]), "dropped": len(man["dropped"]), "missing": man["missing"],
                         "whisper_mb": round(sum(p.stat().st_size for p in wd.iterdir()) / 1e6, 1), "check": "통과"}
     log(f"엔진 묶음 {len(man['files'])}파일(뺀 것 {len(man['dropped'])}) · 받아쓰기 모델 {report['engine']['whisper_mb']}MB")
@@ -541,6 +546,9 @@ def sign_cmd() -> str | None:
 
 
 VENDOR = ("alibabacloud_oss_v2", "Crypto", "crcmod")   # 옛 설치본은 파이썬 부품이 업데이트로 안 간다 — 엔진 묶음에 같이 싣는다
+
+
+VC_RUNTIME = ("msvcp140.dll", "msvcp140_1.dll", "msvcp140_2.dll", "msvcp140_atomic_wait.dll", "msvcp140_codecvt_ids.dll", "concrt140.dll")
 
 
 def vendor_and_check(stage: Path) -> None:

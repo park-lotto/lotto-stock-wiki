@@ -32,6 +32,7 @@ import { anyRunning } from './runner.js';  // 받은 즉시 엔진까지 적용(
 import { holdSession, holdNow } from './session.js';
 import { syncGuide } from './guide_sync.js';
 import { syncPlugin } from './plugin_sync.js';
+import { syncVcrt } from './vcrt_sync.js';
 import { startUi, openBrowser } from './local_ui.js';
 import { startBridge, importMakerKeys } from './web_bridge.js';
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
@@ -373,6 +374,7 @@ async function main() {
   pruneAudit();
   try { gcCache(); } catch { /* 캐시 없음 */ }
   try { sweepRented(engineRoot()); sweepBench(engineRoot()); } catch { /* 지난번에 못 지운 빌린 프리셋·벤치마킹 — 다음에 */ }
+  try { syncVcrt(); } catch (e) { audit('vcrt_sync', { result: String((e && e.message) || e).slice(0, 70) }); }   // 점검·제작보다 먼저
   const server = buildServer();
   await server.connect(new StdioServerTransport());
   syncGuide();          // 회원이 설치를 다시 하지 않게 — 지침·플러그인은 켤 때 스스로 맞춘다
