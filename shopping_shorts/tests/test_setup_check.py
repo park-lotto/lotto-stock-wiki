@@ -76,7 +76,7 @@ def test_all_missing_at_once_overseas(member_pc):
     have.update(speechmatics=False)
     v = _version_of("해외원본형")
     got = R.need_list(v, "https://www.youtube.com/shorts/abcdefghijk", "해외원본형")
-    assert _ids(got) == ["login:instagram", "login:tiktok", "login:youtube", "typecast"], got
+    assert _ids(got) == ["login:instagram", "login:youtube", "typecast"], got
     with pytest.raises(F._Stop) as e:
         F.ph_setup_check({"version": v, "log": []}, {"env": {"missing": got}}, {}, {})
     why, fix = e.value.why, e.value.fix
@@ -90,13 +90,13 @@ def test_all_missing_at_once_overseas(member_pc):
 
 
 def test_three_logins_regardless_of_source(member_pc):
-    """소재가 유튜브여도 재료 단계에서 틱톡·인스타를 받는다 — 소재 주소와 상관없이 셋 다 시작 전에."""
+    """인스타는 소재와 상관없이 시작 전에. 틱톡은 소재가 틱톡일 때만 막는다(11-02 사장님)."""
     have, tmp, mp = member_pc
     have["typecast"] = True
     mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, "youtube.com"))
     v = _version_of("연예인형")
     got = R.need_list(v, "https://www.youtube.com/shorts/abcdefghijk", "연예인형")
-    assert _ids(got) == ["login:instagram", "login:tiktok"], got
+    assert _ids(got) == ["login:instagram"], got
     mp.setenv("YTDLP_COOKIES_YOUTUBE", _cookies(tmp, *ALL))
     assert R.need_list(v, "https://www.youtube.com/shorts/abcdefghijk", "연예인형") == []
 

@@ -112,7 +112,7 @@ def test_reason_reaches_env_measure_without_key_value(api, monkeypatch, tmp_path
     out = R.c_env(tmp_path, {"version": "v", "fmt": "연예인형"})
     assert out["keys"]["coupang"] is True
     assert out["keys"]["coupang_check"] == {"state": "unknown", "reason": "rate_limited", "http": 429}
-    assert out["advice"] == []
+    assert [a for a in out["advice"] if "틱톡" not in a] == []
     cap = capfd.readouterr()
     text = json.dumps(out, ensure_ascii=False) + cap.err + cap.out
     assert "rate_limited" in cap.err                               # 회원 PC runner.log 에도 남는다

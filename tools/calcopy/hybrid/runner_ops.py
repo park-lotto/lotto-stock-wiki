@@ -347,7 +347,7 @@ def need_list(version: str, url: str = "", fmt: str = "") -> list[dict]:
             if why:
                 out.append({"id": "probe:youtube", "label": f"유튜브 받기 시험 실패 — {why}", "how": "login"})
         for pf, name in (("instagram", "인스타그램"), ("tiktok", "틱톡")):
-            if customer and not _cookie_ok(pf):
+            if customer and not _cookie_ok(pf) and (pf != "tiktok" or "tiktok.com" in str(url or "").lower()):     # 틱톡은 소재가 틱톡일 때만 막고, 아니면 안내만(사장님 11-02)
                 out.append({"id": "login:" + pf, "label": name + " 계정 연결", "how": "login"})
     return out
 
@@ -361,6 +361,8 @@ def c_env(W, d):
     dev = os.environ.get("CALCOPY_DEV_MINA_SERVER") == "1" or os.environ.get("SHORTEM_DEV") == "1"
     missing = need_list(d["version"], d.get("url") or "", d.get("fmt") or "")
     advice = advice_list(d.get("fmt") or "")
+    if os.environ.get("CALCOPY_CUSTOMER_MODE") == "1" and not _cookie_ok("tiktok") and not any(x.get("id") == "login:tiktok" for x in missing):
+        advice.append("틱톡 로그인이 안 됐어요. 제작은 그대로 진행하고, 틱톡 소재는 받기가 안 될 수 있고 틱톡 재료 찾기 결과가 적을 수 있어요")
     if _cp_last:
         keys["coupang_check"] = dict(_cp_last)      # 키 값 없음(사유 코드·http 만)
     if du.free / 1e9 < 1.5:
