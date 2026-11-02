@@ -2216,6 +2216,11 @@ def c_clean_text(W, d):
             pass                            # 관문 멈춤이어도 시간표는 관문 앞에서 저장된다
     t0 = time.strftime("%Y-%m-%d %H:%M:%S")
     src, send, used = VC.plan_spans(W / "doc" / v, d.get("shots") or {}, d.get("done") or {})
+    if d.get("bg"):         # 기다리지 않고 뒤로 — 렌더는 임시 흐림으로 간다(관제 304). None = 뒤로 못 보내는 경우(구간 없음·흐림·무료 엔진) → 아래 옛 길
+        j = VC.bg_start(src, send, mode, d.get("spots"))
+        if j:
+            sys.stderr.write(f"[clean_text] 뒤에서 지우기 시작 — 자막 컷 {VC.span_sec(send)}초\n")
+            return {**j, "send": send, "send_sec": VC.span_sec(send), "used_sec": VC.span_sec(used)}
     import threading
     alive = threading.Event()
 
@@ -2230,6 +2235,21 @@ def c_clean_text(W, d):
     sent = VC.sent_from_ledger(src, t0)
     r.update({"send": send, "used_sec": VC.span_sec(used), "send_sec": VC.span_sec(send), "sent": sent, "sent_bad": VC.sent_check(sent, used)})
     sys.stderr.write(f"[clean_text] 쓰는 구간 {r['used_sec']}초 중 자막 컷 {r['send_sec']}초 → VMake {r['calls']}회 · 보낸 초 {sent} · {r['mode']}: {r.get('why')}\n")
+    return r
+
+
+def c_clean_take(W, d):
+    """뒤에서 지운 결과 받기 — 판단은 vmake_clean.bg_take. d.wait = 최대 기다릴 초(0 = 지금 끝났나만). 끝났으면 원본에 덮고 c_clean_text 와 같은 꼴로 돌려준다."""
+    from tools.calcopy import vmake_clean as VC
+    doc = W / "doc" / d["version"]
+    src = Path(jload(doc / "재료.json").get("cand_dir") or (W / "src"))
+    t0 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time() - VC.BG_MAX))
+    r = VC.bg_take(src, float(d.get("wait") or 0), tick=lambda: progress(W, "자막 지우기"))
+    if r.get("state") == "done" and not r.get("error"):
+        _, _, used = VC.plan_spans(doc, {}, {})
+        sent = VC.sent_from_ledger(src, t0)
+        r.update({"sent": sent, "used_sec": VC.span_sec(used), "send_sec": r.get("sec"), "sent_bad": VC.sent_check(sent, used)})
+    sys.stderr.write(f"[clean_take] {r.get('state')} · 호출 {r.get('calls')}회: {r.get('why')}\n")
     return r
 
 
@@ -2361,6 +2381,7 @@ def c_origin_dups(W, d):
 
 
 CMDS["origin_dups"] = c_origin_dups      # 표(CMDS) 정의 뒤라 여기서 등록(진행 이름표는 없으면 '만드는 중')
+CMDS["clean_take"] = c_clean_take
 
 
 HOLLOW_KEYS = ("fail", "failed", "bad", "bad_urls", "miss", "skipped")      # 결과에 이 칸이 비어 있지 않으면 일부를 조용히 버린 것
@@ -2391,13 +2412,13 @@ def hollow(r: dict) -> str:
 #   ★plan 120→600(기미크림 10-26): 위 plan 실측 17개는 --plan 이 TTS·줄별 받아쓰기(관문 7a95600f8)를 하기 전 — 지금 계획은 바뀐 줄 합성+스피치매틱스+긴 원본 장면 경계(524초 원본)까지 해 120초에 두 번 잘렸다(회원 마스크편). 진짜 멈춤은 STALL_SEC 180초가 잡는다.
 BUDGET = {"bench": 900, "origin_get": 320, "origin_probe": 240, "channel_find": 180, "origin_subs": 180, "search": 180, "channel_list": 180,
           "render": 780, "download": 740, "screen": 420, "shot_sheets": 330, "check": 240, "coupang": 120, "coupang_reviews": 150,
-          "plan": 600, "origin_words": 180, "orig_heard": 120, "asr_spans": 120, "origin_foreign": 120, "clean_text": 1800, "thumb_auto": 300}
+          "plan": 600, "origin_words": 180, "orig_heard": 120, "asr_spans": 120, "origin_foreign": 120, "clean_text": 1800, "clean_take": 1800, "thumb_auto": 300}
 BUDGET_DEFAULT = 300
 BUDGET_FLOOR = 600   # 바닥(10-26 run4: 바닥 120초로 plan 120.2초·asr_spans 120.2초를 끊어 멀쩡한 편을 멈췄다 — 98 #124). 한없이 도는 일은 STALL_SEC 가 잡는다
 CMD_LABEL = {"env": "준비 확인", "bench": "영상 받기", "channel_find": "출처 채널 찾기", "origin_probe": "원본 후보 조사", "origin_foreign": "해외 원본 후보 조사", "search": "원본 검색",
              "channel_list": "채널 영상 목록", "origin_subs": "원본 자막 대조", "origin_get": "원본 영상 받기", "coupang": "쿠팡 찾기", "coupang_reviews": "쿠팡 후기",
              "naver": "자료 찾기", "download": "영상 조각 받기", "screen": "장면 고르기", "shot_sheets": "장면 정리", "plan": "장면 맞추기",
-             "render": "영상 만들기", "check": "완성본 확인", "clean_text": "자막 지우기", "thumb_auto": "썸네일 고르기", "finish": "마무리", "of_settle": "원본 정리"}   # 회원 화면 진행 줄(내부 이름 금지)
+             "render": "영상 만들기", "check": "완성본 확인", "clean_text": "자막 지우기", "clean_take": "자막 지우기", "thumb_auto": "썸네일 고르기", "finish": "마무리", "of_settle": "원본 정리"}   # 회원 화면 진행 줄(내부 이름 금지)
 STALL_SEC = float(os.environ.get("SHORTEM_STALL_SEC") or 180)    # 진행 신호(명시 progress 또는 작업 폴더 파일 변화)가 이만큼 없으면 멈춘 것
 _PROG: dict = {"t": 0.0}
 _CHILDREN: set = set()

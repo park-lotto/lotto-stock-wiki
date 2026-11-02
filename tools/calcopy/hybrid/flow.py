@@ -96,7 +96,7 @@ PHASE_STAGE = {   # 세부 단계 → 회원에게 보이는 단계
     "best_same": "product", "product_done": "product", "research": "research", "s_peers_got": "research", "research_got": "research", "material": "material",
     "material_got": "material", "material_pick": "material", "material_dl": "material", "asr": "asr", "asr_got": "asr", "shots_got": "asr",
     "script": "script", "script_got": "script", "stills_again": "script", "script_saved": "script", "sign": "sign", "plan": "plan", "plan_got": "plan", "line_fix_got": "plan", "link_got": "product", "member_revise": "plan", "more_got": "plan", "more_pick": "plan", "more_dl": "plan", "more_sheets": "plan",
-    "plan_look": "plan", "plan_saved": "plan", "thumb": "plan", "thumb_sheet": "plan", "thumb_got": "plan", "render": "render", "f_text_check": "render", "f_render_clean_got": "render", "render_got": "render", "render_fix": "render", "render_saved": "render",
+    "plan_look": "plan", "plan_saved": "plan", "thumb": "plan", "thumb_sheet": "plan", "thumb_got": "plan", "render": "render", "f_text_check": "render", "f_render_clean_got": "render", "f_bg_got": "render", "render_got": "render", "render_fix": "render", "render_saved": "render",
     "check": "check", "check_got": "check", "check_look": "check", "final_sheet": "check", "check_fix": "check", "check_saved": "check", "done": "done",
 }
 
@@ -2685,7 +2685,11 @@ def ph_render_got(st, m, rp, u):
         if tl.get("max") and float(tl["max"]) > cap:
             st["log"].append(f"배속 {tl['max']} > {cap - 0.01}")
         _redo_done(st)
+        if (st.get("text_fix") or {}).get("bg"):      # 뒤에서 지우는 일이 끝났으면 검사 전에 그 구간만 바꾼다(검사를 두 번 안 하게) — 안 끝났으면 그대로 검사로
+            return _bg_take(st, 0, "check")
         return {"goto": "check"}
+    if (st.get("text_fix") or {}).get("bg") and r.get("gate"):      # 임시 흐림으로는 관문을 못 넘는다(흐림 면적 등) — 재료를 고치게 하지 않고 지우기를 기다린다(옛 길과 같은 대기)
+        return _bg_take(st, BG_WAIT, "render")
     probs = [x.strip() for x in str(r.get("error") or "").split(" / ") if x.strip()]
     if probs and all(x.startswith("썸네일 카드") for x in probs):
         # 렌더 전 관문 ⑥(카드 얼굴·글자) 반려는 재료가 아니라 썸네일 몫(10-26 이미숙 회원편: render_fix 는 재료만 받아
@@ -3224,6 +3228,8 @@ def ph_check_fix(st, m, rp, u):
 
 # ── 12·13 납품·정리 ───────────────────────────────────────────────────────
 def ph_deliver(st, m, rp, u):
+    if (st.get("text_fix") or {}).get("bg"):      # 마지막으로 잠깐만 기다린다 — 그래도 안 오면 흐림 판으로 완성(f_bg_got)
+        return _bg_take(st, BG_GRACE, "deliver")
     return {"do": [{"id": "final", "cmd": "finish", "version": st["version"], "title": script_view(st)["title"]}], "then": "finished"}
 
 
@@ -4412,11 +4418,52 @@ def f_render(st, m, rp, u):
     tf = st.get("text_fix") or {}
     if tf.get("mode") != "vmake" or tf.get("key") == _cuts_key(st):
         return ph_render(st, m, rp, u)
+    if tf.get("bg"):      # 재료가 바뀌어 새 구간이 생겼다 — 뒤 일은 한 번에 하나, 먼저 받고 남은 구간만 보낸다(같은 구간을 다시 보내지 않는다)
+        return _bg_take(st, BG_WAIT, "render")
     if tf.get("via") == "free" and tf.get("spots_key") != _cuts_key(st):     # 무료 엔진 = 회원 Claude 가 먼저 자막 자리를 정한다(관제 301)
         return {"do": [{"id": "spots", "cmd": "spot_sheets", "version": st["version"], "shots": st.get("shots") or {}, "done": tf.get("done") or {}}],
                 "then": "f_spots"}
     return {"do": [{"id": "clean", "cmd": "clean_text", "version": st["version"], "shots": st.get("shots") or {}, "done": tf.get("done") or {},
-                    "replan": st.get("_plan_key") != _cuts_key(st), "spots": tf.get("spots") or {}}], "then": "f_render_clean_got"}
+                    "replan": st.get("_plan_key") != _cuts_key(st), "spots": tf.get("spots") or {}, "bg": True}], "then": "f_render_clean_got"}
+
+
+BG_GRACE = 120      # 완성 직전 뒤 결과를 기다리는 초 — 넘으면 흐림 판으로 완성
+BG_WAIT = 1500      # 뒤 결과 없이는 못 가는 곳에서 기다리는 초(앞에서 기다리던 옛 길과 같은 쪽 — 실행기 예산 1800 안)
+
+
+def _bg_take(st, wait: int, then: str) -> dict:
+    """(판단 주인 — 뒤에서 지운 결과를 언제 받나) 렌더 직후(wait 0) · 완성 직전(BG_GRACE) · 못 가는 곳(BG_WAIT). then = 받은 뒤 갈 곳."""
+    st["_bg_then"] = then
+    return {"do": [{"id": "bg", "cmd": "clean_take", "version": st["version"], "wait": wait}], "then": "f_bg_got"}
+
+
+def f_bg_got(st, m, rp, u):
+    """뒤 결과 — 끝남: 구간을 끼우고 흐림을 뺀 뒤 렌더(바뀐 구간만, render_bench.patch_scope). 아직: 검사로 계속. 완성 직전까지 안 옴·실패: 흐림 판 그대로(다시 보내지 않는다 — 호출 수가 늘면 안 된다)."""
+    c = m.get("bg") or {}
+    tf = st["text_fix"]
+    then = st.pop("_bg_then", "render")
+    if c.get("state") == "running" and then == "check":
+        return {"goto": "check"}
+    tf.pop("bg", None)
+    tf["calls"] = int(tf.get("calls") or 0) + int(c.get("calls") or 0)
+    if c.get("state") != "done" or c.get("error") or not c.get("done"):
+        st["notice"], st["_notice_shown"] = "원본 자막을 지우지 못해 흐림으로 가렸어요", False
+        st["log"].append(f"뒤에서 지우기 안 씀({c.get('state')}): {str(c.get('why') or c.get('error') or '')[:200]} — 흐림 판으로")
+        return {"goto": then}
+    for n, iv in (c.get("done") or {}).items():
+        tf.setdefault("done", {}).setdefault(n, []).extend(iv)
+        if n not in tf.setdefault("cleaned", []):
+            tf["cleaned"].append(n)
+    tf["sec"] = round(float(tf.get("sec") or 0) + float(c.get("sec") or 0), 3)
+    st["log"].append(f"뒤에서 지운 자막 받음: {c.get('sec')}초 · 호출 {c.get('calls')}회 · 보낸 초 {c.get('sent')}" + (f" · 못 지운 곳은 흐림: {c.get('why')}" if c.get("why") else ""))
+    if c.get("sent_bad"):
+        raise _Stop("자막 지우기에 쓰지 않는 구간까지 보낸 게 보여 멈췄어요", "이 편은 여기서 마칠게요", final=True)
+    M = st["script"]["M"]
+    nb = RU.blur_minus_spans(M, tf.get("done") or {})
+    if nb:
+        st["log"].append(f"지운 구간의 흐림 {nb}칸 뺌(재료.blur)")
+    v = st["version"]
+    return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "render"}
 
 
 SPOT_READ = ("이 그림은 영상 한 편에서 지울 구간의 화면들이다. 노란 격자 = 10% 간격, 왼쪽 숫자 = 세로 %.\n"
@@ -4466,6 +4513,11 @@ def f_render_clean_got(st, m, rp, u):
     tf = st["text_fix"]
     if c.get("mode") == "need_key":
         raise _Stop(str(c.get("why")), str(c.get("fix") or ""), retry="render")
+    if c.get("mode") == "bg":      # 뒤로 보냈다 — 렌더는 임시 흐림(render 관문 ④ 가 넣는다)으로 바로
+        tf["bg"] = True
+        tf["key"] = _cuts_key(st)
+        st["log"].append(f"자막 지우기를 뒤로 보냄: 자막 컷 {c.get('send_sec')}초 — 렌더는 임시 흐림으로")
+        return {"goto": "render"}
     if c.get("error"):
         st["log"].append("박힌 글자 지우기 실패(흐림 그대로 렌더): " + str(c["error"])[:200])
     if c.get("error") or c.get("mode") in ("blur", "error"):     # 지우기로 정했는데 흐림이 됐다 — 조용히 넘어가지 않는다(11-01)
@@ -4853,7 +4905,7 @@ FORMAT_PHASES = {   # 형식별 세부 단계 처리기 — 없는 세부 단계
                 "f_product_same": f_product_same, "research": f_research, "f_research_got": f_research_got, "f_research_check": f_research_check,
                 "f_material": f_material, "material": f_material, "f_material_got": f_material_got, "f_shots_got": f_shots_got, "f_alt_ask": f_alt_ask, "f_alt_pick": f_alt_pick, "f_alt_dl": f_alt_dl, "f_clean": f_clean,
                 "f_clean_got": f_clean_got, "f_draft": f_draft, "f_draft_got": f_draft_got, "f_asr": f_asr, "f_asr_got": f_asr_got,
-                "plan": f_plan, "render": f_render, "f_render_clean_got": f_render_clean_got, "f_spots": f_spots, "f_spots_got": f_spots_got},
+                "plan": f_plan, "render": f_render, "f_render_clean_got": f_render_clean_got, "f_bg_got": f_bg_got, "f_spots": f_spots, "f_spots_got": f_spots_got},
     "쇼핑형": {"bench_got": s_bench_got, "topic_got": s_topic_got, "s_cands": s_cands, "s_cand_look": s_cand_look, "s_product_done": s_product_done,
              "research": s_research, "s_peers_got": s_peers_got, "s_research_check": s_research_check, "material_dl": s_material_dl},
     "레시피형": {},      # 연예인형 처리기 그대로(재료 스티커 = 판)
@@ -4868,7 +4920,7 @@ PHASE_STAGE.update({
     "f_product_sheet": "product", "f_product_pick": "product", "f_product_cands": "product", "f_product_same": "product", "s_cands": "product", "s_cand_look": "product",
     "s_product_done": "product", "f_research_got": "research", "f_research_check": "research", "s_research_check": "research", "f_material": "material",
     "f_material_got": "material", "f_shots_got": "material", "f_alt_ask": "material", "f_alt_pick": "material", "f_alt_dl": "material", "f_clean": "material", "f_clean_got": "material", "f_draft": "material", "f_draft_got": "material",
-    "f_asr": "asr", "f_asr_got": "asr", "customize": "sign", "j_material": "material", "check_judge": "check", "f_render_clean_got": "render",
+    "f_asr": "asr", "f_asr_got": "asr", "customize": "sign", "j_material": "material", "check_judge": "check", "f_render_clean_got": "render", "f_bg_got": "render",
 })
 
 
@@ -4883,7 +4935,7 @@ PHASES = {
     "research_check": ph_research_check, "material": ph_material, "material_got": ph_material_got, "material_pick": ph_material_pick,
     "material_dl": ph_material_dl, "asr": ph_asr, "asr_got": ph_asr_got, "shots_got": ph_shots_got, "script": ph_script,
     "script_ask": ph_script_ask, "script_got": ph_script_got, "script_heard": ph_script_heard, "sign": ph_sign, "plan": f_plan, "plan_got": ph_plan_got, "line_fix_got": ph_line_fix_got, "link_got": ph_link_got, "member_revise": ph_member_revise, "more_got": ph_more_got, "more_pick": ph_more_pick, "more_dl": ph_more_dl, "more_sheets": ph_more_sheets,
-    "plan_look": ph_plan_look, "thumb": ph_thumb, "thumb_sheet": ph_thumb_sheet, "thumb_got": ph_thumb_got, "render": f_render, "f_text_check": f_text_check, "f_render_clean_got": f_render_clean_got, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
+    "plan_look": ph_plan_look, "thumb": ph_thumb, "thumb_sheet": ph_thumb_sheet, "thumb_got": ph_thumb_got, "render": f_render, "f_text_check": f_text_check, "f_render_clean_got": f_render_clean_got, "f_bg_got": f_bg_got, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
     "check_got": ph_check_got, "check_look": ph_check_look, "final_sheet": ph_final_sheet, "check_judge": ph_check_judge, "check_fix": ph_check_fix, "customize": ph_customize, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
 for _k, _v in {"interest_look": "product", "interest_got": "product", "check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "given_origin_got": "origin", "stopped": "setup", "task_got": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "given": "product", "given_same": "product", "cand_look": "product", "reviews": "product", "reviews_got": "product", "reviews_naver": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():

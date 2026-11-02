@@ -16,6 +16,7 @@ import os
 import shutil
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -29,6 +30,7 @@ from tools.calcopy.hybrid import render_bench as RB  # noqa: E402
 from tools.calcopy.hybrid import render_itssum as RI  # noqa: E402
 
 LINE_SEC = 2.0
+VMAKE_SEC = 1.0      # 가짜 VMake 가 걸리는 초
 
 
 def sh(*cmd):
@@ -126,12 +128,58 @@ def _render(W: Path, style: str, full: bool = False) -> tuple[float, dict, list]
     return round(time.time() - t0, 2), info, logs
 
 
+def fake_vmake(fail: bool):
+    """가짜 VMake(돈 0) — 칸을 칠해 돌려준다. 뒤 프로세스는 스레드로. 호출 수를 센다."""
+    from tools.calcopy import vmake_clean as VC
+    calls = []
+
+    def member_clean(files, key, log=print, tier=VC.TIER):
+        calls.append([Path(f).name for f in files])
+        time.sleep(VMAKE_SEC)
+        if fail:
+            raise RuntimeError("시험: VMake 실패")
+        for f in map(Path, files):
+            t = f.with_name(f.stem + "_v" + f.suffix)
+            sh("ffmpeg", "-y", "-v", "error", "-i", f, "-vf", "drawbox=x=60:y=200:w=300:h=200:c=0x336699:t=fill", "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-threads", "2", "-pix_fmt", "yuv420p", t)
+            VC.swap_in(f, t)
+        return {"cleaned": [Path(f).name for f in files], "calls": 1, "fail": {}}
+
+    def spawn(d):
+        threading.Thread(target=VC.bg_run, args=(d,), daemon=True).start()
+        return 1
+    VC.member_clean, VC._spawn_bg, VC.member_key, VC.key_source, VC.free_ok = member_clean, spawn, (lambda: "k:s"), (lambda: "member"), (lambda: False)
+    os.environ.pop("SHORTEM_NO_PAID", None)
+    return calls
+
+
+def vmake_round(W: Path, style: str, cut: int, fail: bool) -> dict:
+    """첫 렌더(임시 흐림) 뒤 — 지시서가 하는 순서 그대로: 뒤로 보냄 → (기다리지 않고 렌더가 끝났다) → 받기 → 흐림 빼기."""
+    from tools.calcopy import vmake_clean as VC
+    from tools.calcopy.hybrid import rules as RU
+    calls = fake_vmake(fail)
+    p = W / "doc" / style / "재료.json"
+    M = json.loads(p.read_text(encoding="utf-8"))
+    c = M["cuts"][f"N{cut + 1}"][0]
+    span = {c["src"]: [[round(float(c["ss"]) - 0.2, 3), round(float(c["ss"]) + LINE_SEC + 0.2, 3)]]}
+    t0 = time.time()
+    assert VC.bg_start(W / "src", span, "vmake"), "뒤로 못 보냄"
+    waited = round(time.time() - t0, 3)
+    r = VC.bg_take(W / "src", 60)
+    if r.get("done"):
+        RU.blur_minus_spans(M, r["done"])
+        p.write_text(json.dumps(M, ensure_ascii=False), encoding="utf-8")
+    return {"start_sec": waited, "state": r["state"], "done": r["done"], "calls": len(calls), "error": r.get("error")}
+
+
 def change(W: Path, style: str, how: str, cut: int) -> str:
     p = W / "doc" / style / "재료.json"
     M = json.loads(p.read_text(encoding="utf-8"))
     line = f"N{cut + 1}"
     c = M["cuts"][line][0]
-    if how == "blur":       # 렌더 뒤 찾은 로고를 가리는 칸(그 컷 구간에만)
+    if how == "tempblur":     # 첫 렌더 전 — 임시 흐림(관문 ④ 가 넣는 칸 자리)
+        a = float(c["ss"]) - 0.2
+        M.setdefault("blur", {}).setdefault(c["src"], []).append([60, 200, 300, 200, round(a, 3), round(a + LINE_SEC + 0.4, 3)])
+    elif how == "blur":       # 렌더 뒤 찾은 로고를 가리는 칸(그 컷 구간에만)
         a = float(c["ss"]) - 0.2
         M.setdefault("blur", {}).setdefault(c["src"], []).append([60, 200, 300, 200, round(a, 3), round(a + LINE_SEC + 0.4, 3)])
     else:                   # 같은 길이의 다른 장면
@@ -174,20 +222,42 @@ def judge(first: Path, part: Path, full: Path, ranges: list, chunks: list) -> di
     return r
 
 
-def run_check(base: Path, style: str, how: str, cut: int, n_lines: int = 4) -> dict:
+def run_check(base: Path, style: str, how: str, cut: int, n_lines: int = 4, thumb: bool = False, trouble: str = "") -> dict:
+    """trouble = 'scenes'(자막 칸 저장소를 비운다 → 바탕 전체로) · 'splice'(끼우기가 실패한다 → 완성본만 통째로). 어느 쪽이든 결과는 같아야 한다."""
     stub_voice()
     lean_encoder()
     timed()
     W0 = base / "w0"
     make_episode(W0, style, n_lines)
+    if how.startswith("vmake"):
+        change(W0, style, "tempblur", cut)
+    if thumb:
+        (W0 / "doc" / style / "썸네일.json").write_text(json.dumps({"options": [{"id": "A", "axis": "물건근접", "part": cut, "t": 0.5, "text": [{"lines": ["시험 카드"], "xy": [500, 300], "px": 120}]}]}, ensure_ascii=False), encoding="utf-8")
     t = {}
     t["첫 렌더"], info0, logs0 = _render(W0, style)
     first = base / "first.mp4"
     shutil.copy2(W0 / style / "render" / "final.mp4", first)
-    what = change(W0, style, how, cut)
+    vm = None
+    if how.startswith("vmake"):
+        vm = vmake_round(W0, style, cut, how == "vmake_fail")
+        what = f"가짜 VMake {vm}"
+        if how == "vmake_fail":      # 흐림 판으로 완성 — 렌더할 일이 없다: 파일·길이·재료 그대로
+            same = FS.frame_hashes(first) == FS.frame_hashes(W0 / style / "render" / "final.mp4")
+            return {"changed": what, "sec": t, "source_unchanged": not (W0 / "src" / "s0_orig.mp4").exists() and not (W0 / "src" / "s1_orig.mp4").exists(),
+                    "final_unchanged": same, "bad": [] if same and vm["calls"] == 1 and vm["error"] else ["실패했는데 뭔가 바뀌었거나 호출이 1번이 아니다"]}
+    else:
+        what = change(W0, style, how, cut)
     keep = base / "w0_copy"
     shutil.copytree(W0, keep, copy_function=shutil.copy2)     # 같은 절대 경로에서 두 번 돌리려고 — 첫 렌더 뒤 상태를 보관했다가 전체 렌더 전에 되돌린다
+    real_check = FS.check
+    if trouble == "scenes":
+        shutil.rmtree(W0 / style / "render" / "scene_cache")
+    if trouble == "splice":
+        def broken(*a, **k):
+            raise FS.SpliceFail("시험: 끼운 파일 불신")
+        FS.check = broken
     t["구간 교체"], infoP, logsP = _render(W0, style)
+    FS.check = real_check
     stages = {"구간 교체": dict(STAGES)}
     part = base / "part.mp4"
     shutil.copy2(W0 / style / "render" / "final.mp4", part)
@@ -195,7 +265,7 @@ def run_check(base: Path, style: str, how: str, cut: int, n_lines: int = 4) -> d
         raise SystemExit("구간 교체가 안 돌았다:\n" + "\n".join(str(x) for x in logsP[-12:]))
     keys, n = FS.keyframes(first)
     ranges = infoP["patched"]["frames"]
-    chunks = FS.gop_ranges(keys, n, ranges)
+    chunks = FS.gop_ranges(keys, n, ranges) if infoP["patched"]["spliced"] else [[0, n]]     # 끼우기 실패 = 통째로 다시 구웠으니 '구간 밖 같음' 은 잴 수 없다
     shutil.rmtree(W0)
     shutil.move(str(keep), str(W0))
     t["전체 렌더"], infoF, logsF = _render(W0, style, full=True)
@@ -212,15 +282,17 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("folder")
     ap.add_argument("--style", default="키치잇판")
-    ap.add_argument("--change", default="blur", choices=("blur", "move"))
+    ap.add_argument("--change", default="blur", choices=("blur", "move", "vmake", "vmake_fail"))
     ap.add_argument("--cut", type=int, default=2)
     ap.add_argument("--lines", type=int, default=4)
+    ap.add_argument("--thumb", action="store_true", help="바뀐 컷을 고른 썸네일 카드도 있는 편")
+    ap.add_argument("--trouble", default="", choices=("", "scenes", "splice"))
     ap.add_argument("--keep", action="store_true")
     a = ap.parse_args()
     base = Path(a.folder)
     shutil.rmtree(base, ignore_errors=True)
     base.mkdir(parents=True)
-    rep = run_check(base, a.style, a.change, a.cut, a.lines)
+    rep = run_check(base, a.style, a.change, a.cut, a.lines, a.thumb, a.trouble)
     print(json.dumps(rep, ensure_ascii=False, indent=1))
     if not a.keep:
         shutil.rmtree(base, ignore_errors=True)

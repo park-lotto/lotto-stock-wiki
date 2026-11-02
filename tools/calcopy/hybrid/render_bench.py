@@ -2736,11 +2736,25 @@ def _sha(body) -> str:
     return hashlib.sha256(json.dumps(body, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8")).hexdigest()[:32]
 
 
+def cut_src_id(src: Path, ss: float, sec: float) -> list:
+    """(판단 주인 — 컷이 읽는 원본 구간의 정체) 보통은 파일 크기·mtime. 구간 덮기(vmake_clean.splice) 뒤에는 파일 전체 정체가 바뀌어도 덮은 구간 밖 그림은 같다 —
+    덮기 전 기준 정체 + 이 컷과 겹치는 덮은 구간만. 그래야 VMake 결과가 와도 지운 구간의 컷만 다시 굽는다. 표식이 지금 파일과 다르면 표식을 믿지 않는다."""
+    from tools.calcopy import vmake_clean as VC
+    now = src_ident(src)[1:]
+    tag = VC.splice_tag(src)
+    if tag.exists():
+        rec = jload(tag)
+        if rec.get("file") == now:
+            hit = [s for s in rec["spans"] if s[1] > ss and s[0] < ss + sec]
+            return [rec["base"], hit] if hit else rec["base"]      # 겹치지 않으면 덮기 전과 같은 정체 = 같은 지문
+    return now
+
+
 def cut_fp(src: Path, a: dict, n: int) -> str:
     """(판단 주인 — 컷 지문) 이 컷 조각이 어떤 그림이 되나. clip_cmd 가 만드는 명령(자르기·크기·흐림·늦춤·그림 칸·바탕색·밀기) 그대로 + 원본 정체(크기·mtime — VMake 로 지우면 바뀐다) +
     프레임 수 + 인코더 + 만드는 코드 지문. 값을 하나씩 고르지 않고 명령 자체를 재므로 clip_cmd 에 새 칸이 생겨도 빠지지 않는다."""
     inp, vf, extra = clip_cmd(src, a["ss"], n, a["crop"], a["win"], a["push"], a["move"], a["blur"], a["pic"], a["pic_bg"], a["speed"])
-    return _sha([CUT_RULE, _code_sig("cut"), src.name, src_ident(src)[1:], [str(x) for x in inp if x != src], vf, [str(x) for x in extra], n, FPS, [str(x) for x in venc(16)]])
+    return _sha([CUT_RULE, _code_sig("cut"), src.name, cut_src_id(src, a["ss"], n * float(a.get("speed") or 1.0) / FPS), [str(x) for x in inp if x != src], vf, [str(x) for x in extra], n, FPS, [str(x) for x in venc(16)]])
 
 
 def reuse_get(folder: Path, key: str, rule: int, frames: int) -> Path | None:
