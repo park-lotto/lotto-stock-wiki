@@ -22,3 +22,20 @@ test('만드는 중엔 판 교체 표시를 숨기고, 반납이나 다음 켜�
   sweep(path.join(home, 'engine'));                  // 프로그램이 죽어 숨김이 남은 경우
   assert.equal(fs.existsSync(pend), true);
 });
+
+test('다른 프로그램이 제작 중이면 지우지도 교체를 풀지도 않고, 주인이 죽으면 다시 쓴다', async () => {
+  const { spawn } = await import('node:child_process');
+  const { renting } = await import('../server/preset_rent.js');
+  const other = spawn(process.execPath, ['-e', 'setTimeout(()=>{},60000)']);
+  fs.writeFileSync(path.join(home, 'rent.lock'), String(other.pid));
+  const pend = path.join(home, '_update', 'pending.json');
+  holdPending(true);
+  assert.equal(renting(), true);
+  assert.equal(sweep(path.join(home, 'engine')), false);
+  assert.equal(fs.existsSync(pend), false);            // 표시가 숨겨진 채로 남는다
+  other.kill();
+  await new Promise(r => other.on('exit', r));
+  assert.equal(renting(), false);
+  sweep(path.join(home, 'engine'));
+  assert.equal(fs.existsSync(pend), true);
+});

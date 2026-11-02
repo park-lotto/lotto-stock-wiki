@@ -141,7 +141,7 @@ test('hooks.json 에 UserPromptSubmit 이 등록돼 있고 시작 훅은 그대�
 
 test('허용 목록·설치 목록에 shortem_message 가 있다', () => {
   const skill = fs.readFileSync(path.join(REPO, 'installer', 'plugin', 'shortem', 'skills', 'make', 'SKILL.md'), 'utf8');
-  assert.match(skill, /^allowed-tools:.*mcp__plugin_shortem_shortem__shortem_message/m);
+  assert.doesNotMatch(skill, /^(allowed|disallowed)-tools:/m);        // 스킬이 도구를 막지 않는다(11-02 Read 차단으로 완성본 그림을 못 봄)
   const man = JSON.parse(fs.readFileSync(path.join(REPO, 'installer', 'mcpb', 'manifest.json'), 'utf8'));
   assert.ok(man.tools.some(t => t.name === 'shortem_message'));
 });

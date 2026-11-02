@@ -7,7 +7,7 @@
 | # | 지침 문장(장) | 판정 | 근거 | 할 일 |
 |---|---|---|---|---|
 | 1 | "○○ 회원님" 인사(2) | ○ | 라이선스 응답 member_name(가입 이름, 없으면 아이디 — claude_portal._member_name) → shortem_setup info.license.member_name | 시험 test_라이선스_회원이름_인사 |
-| 2 | 지시함 확인 `shortem_inbox`(3-2) | ○ | make 스킬 allowed-tools 에 inbox·job·presets·profile 추가 | 시험 member_guide(지침 속 도구 ⊆ 허용 목록) |
+| 2 | 지시함 확인 `shortem_inbox`(3-2) | ○ | 스킬이 도구를 막지 않음(11-02 allowed/disallowed-tools 제거) | 시험 member_guide(지침 속 도구 ⊆ 허용 목록) |
 | 3 | 채널 여러 개·새 프리셋 `shortem_presets`(3-2) | ○ | 같음(make·setup 스킬) | — |
 | 4 | 새 프리셋 알림(3-2) | ○ | presets 응답 new=true(이 PC ~/.shortem/본프리셋.json, 처음 설치는 조용히) — index.newPresets | 시험 member_guide |
 | 5 | 만들던 편 찾기·멈추기 `shortem_job`(3-2·4⑥) | ○ | 허용 목록 추가 | — |

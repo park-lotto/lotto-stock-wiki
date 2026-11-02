@@ -305,6 +305,7 @@ def _gate(store, key, cid) -> bool:
 
 
 TRIAL_DAYS = 7
+MOVED = 2        # claude_trials.converted — Pro 회원이 버튼으로 옮겨 온 상태. 기한 없음. 관리자가 해제하면 1 로 바뀌어 다시 신청할 수 없다
 
 
 def _trial_row(store, cid):
@@ -313,35 +314,58 @@ def _trial_row(store, cid):
         return _row(c, "SELECT * FROM claude_trials WHERE cid=?", (int(cid),))
 
 
+def _pro_open(store, cid) -> bool:
+    """Pro 회원 전체 기간 공개(사장님 11-02 "1주일 숏템 숏클 같이") — claude_pro_open_until(유닉스 초)까지. 지나면 저절로 닫힌다."""
+    try:
+        if int(str(_setting(store, "claude_pro_open_until", "0") or 0)) <= _now():
+            return False
+        return (store.get_customer(int(cid)) or {}).get("plan") == "pro"
+    except (ValueError, TypeError):
+        return False
+
+
 def portal_open(store, cid) -> bool:
-    """숏클을 지금 쓸 수 있나 — 화면·설치·API 공통 판단 한 곳(관제 300). 스위치 + 무료 1주 기한."""
+    """숏클을 지금 쓸 수 있나 — 화면·설치·API 공통 판단 한 곳(관제 300). 스위치 + 무료 1주 기한 + Pro 전환(관제 306)."""
+    t = _trial_row(store, cid)
+    if t and t["converted"] == MOVED:
+        return True
+    if _pro_open(store, cid):
+        return True
     if not _gate(store, "claude_portal_enabled", cid):
         return False
     if str(_setting(store, "claude_portal_enabled", "") or "").strip() == "1":
         return True
-    t = _trial_row(store, cid)
     return not (t and not t["converted"] and t["expires"] <= _now())
 
 
 def trial_state(store, cid, eligible) -> dict:
-    """마이페이지 표시용. available=버튼을 보여도 되나, days_left=무료 기간 남은 날."""
+    """마이페이지 표시용. available=버튼을 보여도 되나(Pro 회원, 관제 306), days_left=무료 기간 남은 날."""
     store = _store(store)
     t = _trial_row(store, cid)
     if t:
         active = not t["converted"] and t["expires"] > _now()
         return {"available": False, "active": active, "days_left": max(0, (t["expires"] - _now() + 86399) // 86400) if active else 0}
-    return {"available": False, "active": False, "days_left": 0}      # 스스로 신청은 닫혔다 — 사장님이 승인한 회원만(11-02)
+    return {"available": bool(eligible) and not portal_open(store, cid), "active": False, "days_left": 0}
 
 
 def claim_trial(cid, eligible, store=None) -> dict:
-    """무료 업그레이드 — 계정당 한 번, 누르면 바로 승인되고 TRIAL_DAYS 뒤 닫힌다."""
+    """Pro 회원의 숏클 전환(관제 306, 사장님 11-02) — 누르면 바로 열리고 기한이 없다. 관리자 고객표에는 무료 이동으로 남는다.
+    회원별 행에 쓴다: 강의 뒤 동시에 눌러도 서로 덮어쓰지 않는다(설정값 한 칸에 쓰는 set_member 는 동시 클릭에 빠진다)."""
     store = _store(store)
     cid = int(cid)
-    if not eligible:
-        raise PortalError("bad_request", "숏템메이커 이용 회원만 신청할 수 있습니다")
     if portal_open(store, cid):
         return {"ok": True, "already": True}
-    raise PortalError("bad_request", "숏클은 승인된 회원만 쓸 수 있습니다")      # 사장님 11-02 "내가 승인한 사람만"
+    if not eligible:
+        raise PortalError("bad_request", "Pro 회원만 신청할 수 있습니다")
+    if _trial_row(store, cid):
+        raise PortalError("bad_request", "숏클은 관리자 확인이 필요합니다")      # 관리자가 해제했거나 무료 기간이 끝난 계정
+    now = _now()
+    with _tx(store, write=True) as c:
+        c.execute("INSERT OR IGNORE INTO claude_trials(cid, started, expires, converted) VALUES(?,?,?,?)", (cid, now, now, MOVED))
+    saved = store.program_members().get(cid) or {}
+    store.save_program_member(cid, 1, 1, saved.get("plan") or "", saved.get("move") or "free", saved.get("tutor") or "")
+    log.info("claude_portal: cid %s Pro 전환", cid)
+    return {"ok": True, "moved": True}
 
 
 def _assets_on(store, cid) -> bool:
@@ -1581,6 +1605,15 @@ def preview(cid, kind, pid, token, headers: dict, store=None) -> dict:
 
 
 # ── 이상 행동 탐지(§7-9) ─────────────────────────────────────────────────
+# 숏클이 켜져 있으면 저절로 나가는 요청 — 사람의 속도가 아니라 A4 에 세지 않는다(11-02 실측: 이것만으로 시간당 600회, 회원 3명 오정지)
+_A4_BACKGROUND = ("session", "live_pull")
+
+
+def _count_a4(c, cid, since):
+    return c.execute("SELECT COUNT(*) FROM claude_license_log WHERE cid=? AND kind='request' AND ts>=? AND route NOT IN (?,?)",
+                     (cid, since) + _A4_BACKGROUND).fetchone()[0]
+
+
 def _count(c, cid, kind, since, route=None):
     if route:
         return c.execute("SELECT COUNT(*) FROM claude_license_log WHERE cid=? AND kind=? AND route=? AND ts>=?",
@@ -1662,8 +1695,8 @@ def anomaly_check(cid, event: dict, store=None) -> dict:
             if suspended:
                 _deny("suspended", "이상 사용이 감지돼 잠시 멈췄습니다 — 관리자 확인 뒤 풀립니다", lic["suspended_until"] - now)
             else:
-                m1 = _count(c, cid, "request", now - 59)
-                h1 = _count(c, cid, "request", now - 3599)
+                m1 = _count_a4(c, cid, now - 59)
+                h1 = _count_a4(c, cid, now - 3599)
                 if route != "lease_release" and (m1 > t["a4_per_min"] or h1 > t["a4_per_hour"]):
                     if not _alerts_since(c, cid, "A4", now - 60):
                         alerts.append(_raise_alert(c, cid, "A4", "throttle", m1 if m1 > t["a4_per_min"] else h1,

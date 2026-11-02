@@ -10,17 +10,11 @@ import { makeKey } from './fake_server.js';
 freshDirs('member_guide');
 const REPO = path.resolve(process.cwd(), '..', '..');
 const GUIDE = path.join(REPO, 'installer', 'common', 'MEMBER_GUIDE.md');
-const skillTools = name => {
-  const t = fs.readFileSync(path.join(REPO, 'installer', 'plugin', 'shortem', 'skills', name, 'SKILL.md'), 'utf8');
-  return (t.match(/^allowed-tools:(.*)$/m) || ['', ''])[1].split(/\s+/).filter(Boolean).map(x => x.replace('mcp__plugin_shortem_shortem__', ''));
-};
+const skill = name => fs.readFileSync(path.join(REPO, 'installer', 'plugin', 'shortem', 'skills', name, 'SKILL.md'), 'utf8');
 
-test('지침에 나오는 숏클 도구는 make 스킬이 다 쓸 수 있다(점검표 2·3·5)', () => {
-  const named = [...new Set(fs.readFileSync(GUIDE, 'utf8').match(/shortem_[a-z]+/g))];
-  const allowed = new Set(skillTools('make'));
-  const miss = named.filter(n => !allowed.has(n));
-  assert.deepEqual(miss, [], `make 스킬 허용 목록에 없는 도구: ${miss.join(', ')}`);
-  assert.ok(!/Start-Sleep/.test(fs.readFileSync(GUIDE, 'utf8')), '지침이 막힌 셸(Start-Sleep)로 기다리라고 하면 안 된다');
+test('스킬은 회원 Claude 의 도구를 막지 않는다(11-02 진짜 자유 — 완성본 그림을 읽어야 눈 검수가 된다)', () => {
+  for (const n of ['setup', 'make', 'script']) assert.doesNotMatch(skill(n), /^(allowed|disallowed)-tools:/m, n);
+  assert.ok(!/Start-Sleep/.test(fs.readFileSync(GUIDE, 'utf8')), '지침이 Start-Sleep 으로 기다리라고 하면 안 된다');
 });
 
 test('make 단계에 대본 보기·줄 고치기·기다리기가 있다(점검표 6·10)', async () => {

@@ -10,6 +10,7 @@
 """
 from __future__ import annotations
 
+import json
 import logging
 import os
 import re
@@ -181,6 +182,29 @@ def from_flow(store, cid, sid, res: dict, state: dict):
                 witness(store, cid, "progress", str(res.get("message") or stage)[:EVENT_HEAD], sid=sid, stage=stage)
     except Exception:          # noqa: BLE001 — 기록이 제작을 막으면 안 된다
         log.exception("claude_live: 실시간 기록 실패 cid=%s sid=%s", cid, sid)
+
+
+METRIC_MIN_SEC = 30      # 이보다 짧은 일은 안 적는다
+
+
+def metrics(store, cid, sid, measure, stage=""):
+    """실행기 숫자 → 사건 kind=metric(긴급 아님, 관리자 실시간 표) — 어디서 시간을 쓰는지 회원에게 묻지 않고 본다. 시간·횟수만."""
+    try:
+        for rid, r in (measure or {}).items():
+            if not isinstance(r, dict) or float(r.get("_sec") or 0) < METRIC_MIN_SEC:
+                continue
+            parts = [f"{rid} {r['_sec']:.0f}초"]
+            if isinstance(r.get("cuts"), int):
+                parts.append(f"컷 {r['cuts']}")
+            if r.get("cores"):
+                parts.append(f"코어 {r['cores']}")
+            if isinstance(r.get("gate"), dict) and r["gate"]:
+                parts.append("글자검사 " + json.dumps(r["gate"], ensure_ascii=False))
+            if isinstance(r.get("phases"), list) and r["phases"]:
+                parts.append("구간 " + json.dumps(r["phases"], ensure_ascii=False))
+            note(store, cid, "metric", _clean(" · ".join(parts)), sid=sid, stage=stage)
+    except Exception:          # noqa: BLE001 — 기록이 제작을 막으면 안 된다
+        log.exception("claude_live: 측정 기록 실패 cid=%s sid=%s", cid, sid)
 
 
 def flow_crash(store, cid, sid, error):

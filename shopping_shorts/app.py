@@ -17522,7 +17522,7 @@ def _api_me(request: Request):
             # 카드뉴스 제작소(관제 223) — 사이드바 메뉴와 서버 입구(/cardnews·/api/cardnews/*)가 같은 스위치 하나
             "cardnews": _setting_gate(st, "cardnews_enabled", cid),
             "shortcl_open": _shortcl_portal().portal_open(st, cid),
-            "shortcl_trial": _shortcl_portal().trial_state(st, cid, access_level(cid, now) == "full"),
+            "shortcl_trial": _shortcl_portal().trial_state(st, cid, _shortcl_can_move(st, cid)),
             # 감정짤(관제 139·143) — 좌측 '밈팩' 메뉴·2단계 짤 칸. 판정은 렌더 경로와 같은 mix_pipeline._meme_on 한 곳
             "meme": bool(mix_pipeline._meme_on(st, {"customer_id": cid})),
             # 대화형 대본(관제 128) — 작업목록 「🎭 대화형」 버튼. 서버 입구(dialogue/*)와 같은 스위치·관리자 판정
@@ -17557,6 +17557,11 @@ def _code_admin(customer_id):
         return False
     email = (Store(DB_PATH).get_customer(customer_id) or {}).get("email") or ""
     return email.lower() in _ADMIN_EMAILS
+
+
+def _shortcl_can_move(st, cid) -> bool:
+    """숏클 전환 버튼 자격 한 곳 — Pro 회원(관제 306, 사장님 11-02)."""
+    return (st.get_customer(cid) or {}).get("plan") == "pro"
 
 
 def _shortcl_portal():
@@ -17703,6 +17708,7 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "license_kv",
                        # 클로드형 프리셋 끄기 — 프리셋 id(p_…)를 쉼표로. 적힌 것은 페이지·자산에서 빠진다
                        "claude_presets_off",
+                       "claude_pro_open_until",
                        # 클로드형 프리셋 고객용 이름(JSON {프리셋 id 또는 slug/틀: {name, desc}}) — PC 로컬 설정 화면 목록(관제 234)
                        "claude_preset_names",
                        # 클로드형 최소 엔진·설치팩 버전(semver, 기본 1.0.0) — 낮은 PC 는 자산을 못 받는다
@@ -19576,12 +19582,13 @@ def api_claude_me_start_zip(request: Request):
 
 @app.post("/api/claude/me/trial")
 def api_claude_trial(request: Request):
-    """숏클 무료 업그레이드 1주(관제 300) — 판단은 claude_portal.claim_trial."""
+    """숏클 Pro 회원 전환(관제 306) — 판단은 claude_portal.claim_trial."""
     cid = getattr(request.state, "customer_id", None)
     if cid is None:
         return JSONResponse({"ok": False, "code": "no_key", "msg": "로그인이 필요합니다"}, status_code=401)
     _cp = _shortcl_portal()
-    return _claude_json(_cp.call(_cp.claim_trial, cid, access_level(cid) == "full", Store(DB_PATH)))
+    st = Store(DB_PATH)
+    return _claude_json(_cp.call(_cp.claim_trial, cid, _shortcl_can_move(st, cid), st))
 
 
 @app.get("/api/claude/me/start_line")

@@ -246,17 +246,17 @@ SCRIPT = """너는 대본 작가다(오푸스). 아래 판 규칙·결 기준 �
 '| 줄 | 말 | 근거 |' — 줄마다 한 줄(원본 초 · 사실 번호 · URL). 근거 줄 수 = 대본 줄 수. 쿠팡 상품번호도 적는다.
 JSON 하나: {"대본": {…}, "재료": {"cuts": {…}}, "근거_md": "…"}"""
 
-PLAN_LOOK = """너는 장면 검수 담당이다. 계획 시트를 보고 컷마다: 대사와 화면이 맞나 · 남의 신체 근접 · 남의 글자·원본 자막 띠 · 0초·훅 = 연예인 얼굴 · A-B-A 끼움.
+PLAN_LOOK = """너는 장면 검수 담당이다. 계획 시트를 보고 컷마다: 틱톡·유튜브·인스타 로고, 음표 마크, @아이디처럼 남의 플랫폼 표시가 보이나(글자 검사는 그림 로고를 못 잡는다 — 보이면 지금 그 컷 blur 에 자리와 구간을 넣는다. 렌더 뒤에 찾으면 다시 만들어야 한다) · 대사와 화면이 맞나 · 남의 신체 근접 · 남의 글자·원본 자막 띠 · 0초·훅 = 연예인 얼굴 · A-B-A 끼움.
 ★주인공은 칸 가운데. 원본 샷 표의 '글자'(박힌 글자 상자 — 0~1 **비율**)는 잘라서 피하지 말고 재료.blur 로 흐린다(확대 1.0, 사장님 10-22). ★crop 은 **원본 픽셀 정수**[x, y, w, h](비율 × 원본 가로·세로) — 숫자 crop 은 엔진이 바꾸지 않는다(정한 그대로 렌더).
 ★연예인이 나오는 영상은 찾은 원본에서만 — 다른 채널 연예인 영상 절대 금지. 사람 얼굴 컷(face)은 원본 파일만, 제품 컷도 원본 안 제품 장면이 먼저. 시트 칸 = 렌더러가 실제로 자를 화면 그대로다.
 ★crop 'face' 는 원본 **높이 전체**(확대 1.0)다 — 숫자 crop 으로 좁혀 확대하지 않는다(높이 < 원본 높이의 95% 면 반려). 원본에 편집 자막·제목 띠가 박혀 있으면 재료.blur {원본 파일: [[x, y, w, h, 시작초, 끝초]]}(원본 픽셀·원본 초)로 흐린다. 얼굴이 작으면 확대 말고 얼굴이 큰 샷으로 바꾼다.
 고칠 것이 있으면 재료 전체를 고쳐서 돌려준다(없으면 null).
-★우리 틀(결함 아님): 맨 위 제목 2줄 · 화면 왼쪽 위 '얜샷템' 로고 · 화면 아래 '출처: …' 줄 · 우리 자막(가운데 아래, 색 강조) — 이것들은 남의 글자·워터마크가 아니다.
+★우리 틀(결함 아님): 맨 위 제목 2줄 · 화면 위쪽 회원 채널 표시 · 화면 아래 '출처: …' 줄 · 우리 자막(가운데 아래, 색 강조) — 이것들은 남의 글자·워터마크가 아니다.
 JSON 하나: {"ok": true, "problems": ["…"], "재료": null}"""
 
-FINAL_LOOK = """너는 완성본 검수 담당이다. 1초 시트를 보고: 틀·제목·자막 자리·출처 줄, 줄마다 화면이 대사와 맞나, 남의 얼굴·손·글자(원본 편집 자막·워터마크) 없나,
+FINAL_LOOK = """너는 완성본 검수 담당이다. 1초 시트를 보고: 틱톡·유튜브·인스타 로고·음표 마크·@아이디가 남았나, 틀·제목·자막 자리·출처 줄, 줄마다 화면이 대사와 맞나, 남의 얼굴·손·글자(원본 편집 자막·워터마크) 없나,
 0초 = 연예인 얼굴 크게. 남의 채널 연예인 장면·장면 전환 효과(별·와이프)가 섞였나. 받아쓰기와 대본 글자도 대조한다(받아쓰기 한 모델만 틀린 건 결함이 아닐 수 있다).
-★우리 틀(결함 아님): 맨 위 제목 2줄 · 화면 왼쪽 위 '얜샷템' 로고 · 화면 아래 '출처: …' 줄 · 우리 자막(가운데 아래, 색 강조) — 이것들은 남의 글자·워터마크가 아니다.
+★우리 틀(결함 아님): 맨 위 제목 2줄 · 화면 위쪽 회원 채널 표시 · 화면 아래 '출처: …' 줄 · 우리 자막(가운데 아래, 색 강조) — 이것들은 남의 글자·워터마크가 아니다.
 JSON 하나: {"ok": true, "problems": ["…"]}"""
 
 
@@ -310,6 +310,9 @@ def _msg(st: dict, phase: str) -> str:
 
 def _rv(rid: str, ask: str, show: list | None = None, model: str = "opus", need: tuple = (), meta: dict | None = None) -> dict:
     # meta = 회원 PC 작업실 화면(shortem_client work_view)이 판정을 후보에 짝지을 표식(판단 아님 — 질문에 쓴 것 그대로)
+    miss = [k for k in need if f'"{k}"' not in ask]
+    if miss:          # 답 칸 이름은 질문 글에 꼭 있어야 한다(11-02 CS #109 쇼핑형 대본 질문에 없었다) — 빠진 질문은 여기서 한 곳에서 채운다
+        ask += "\n\n답은 JSON 하나, 최상위 칸: " + ", ".join(f'"{k}"' for k in need)
     return {"id": rid, "model": model, "ask": ask, "show": show or [], "need": list(need), **({"meta": meta} if meta else {})}
 
 
@@ -1386,6 +1389,9 @@ def ph_task_got(st, m, rp, u):
         return {"goto": "given"}
     if act == "material":        # 살아 있는 Claude 가 직접 받아 넣은 재료 — 재료 더 찾기와 같은 뒷길(시트 → 장면 검수)
         names = [Path(str(x)).name for x in a.get("files") or [] if str(x).strip()]
+        if names and not st.get("script"):      # 대본 전 재료 단계 — 받은 재료로 대본부터 간다(11-02 KeyError 'script')
+            st["material"] = {"files": [{"name": n} for n in names]}
+            return {"goto": "script"}
         if names:
             return ph_more_dl(st, {"dl": {"files": [{"name": n} for n in names]}}, {}, {})
     if act == "retry":
@@ -1889,8 +1895,12 @@ def _pick_line(st) -> str:
     return f"\n\n★개수: {a}~{b}개를 고른다. 대본 줄마다 가리키는 그림이 달라야 하니 서로 다른 장면을 주는 영상으로." + (CLEAN_SOURCE_RULE if _back_material(st) else "")
 
 
+PICK_MORE_WAY = ("\n★고를 수 있는 id 는 아래 후보뿐이다(소재 쇼츠 id 는 넣지 않는다). 같은 제품 영상이 후보에 하나도 없으면 chosen 은 비우고 "
+                 "\"재료_더찾기\": [\"유튜브 검색어\", …] (최대 4개 — 브랜드·정식 제품명을 넣은 검색어)를 답에 넣어라. 다른 제품 영상을 같은 제품처럼 쓰지 않는다.")
+
+
 def _screen_pick_ask(st, rows, more="") -> str:
-    return (SCREEN_PICK + _pick_line(st) + more +
+    return (SCREEN_PICK + _pick_line(st) + PICK_MORE_WAY + more +
             "\n\n후보(시트 순서와 같다):\n" + json.dumps(rows, ensure_ascii=False, indent=1) +
             f"\n\n제품: {st['product'].get('name')} / 연예인: {st['read'].get('celeb')}" + _subject_pick_ctx(st))
 
@@ -1921,6 +1931,14 @@ def ph_material_pick(st, m, rp, u):
     chosen = [c for c in r.get("chosen") or [] if isinstance(c, dict) and c.get("id") in known and c["id"] not in (st["bench"].get("id"), (st.get("origin") or {}).get("id"))
               and not (celeb and celeb in str(c.get("why") or ""))]
     st["screen_pick"] = {"chosen": chosen, "rejected": r.get("rejected") or []}
+    more_q = [str(q).strip()[:60] for q in (r.get("재료_더찾기") or []) if isinstance(q, str) and q.strip()][:4]
+    if not chosen and more_q and st["tries"].get("more_material", 0) < MORE_MATERIAL_MAX:      # 같은 제품 후보가 0 — 사진만으로 대본까지 가지 않고 이 자리에서 다시 찾는다(11-02 CS #109)
+        st["tries"]["more_material"] = st["tries"].get("more_material", 0) + 1
+        st["tries"].pop("pick_more", None)
+        st["log"].append(f"재료 고르기: 같은 제품 후보 0 → 재료 더 찾기: {more_q}")
+        R = st.get("research") or {}
+        return {"do": [{"id": "screen", "cmd": "screen", "queries": more_q, "exclude": R.get("exclude") or [], "keywords": more_q, "top": _material_top(st),
+                        "bench_id": st["bench"].get("id"), "origin_id": (st.get("origin") or {}).get("id")}], "then": "material_got"}
     if len(chosen) < _material_n(st)[0] and len(known) > len(chosen) and not st["tries"].get("pick_more"):      # 모자라면 한 번 더 — 그래도 없으면 있는 것으로(장면 검수의 재료 더 찾기가 잇는다)
         st["tries"]["pick_more"] = 1
         return {"review": [_rv("screen_pick", _screen_pick_ask(st, st.get("screen_rows") or [], f"\n★지난 답은 {len(chosen)}개뿐이었다 — 쓸 수 있는 것을 더 골라라."),
@@ -2919,6 +2937,8 @@ def ph_check_judge(st, m, rp, u):
         return {"goto": "deliver"}
     if auto_ok and look.get("unproved"):       # 안 본 답·제목 불일치 = 재료 탓이 아니다 — 고치기로 보내지 않고 눈 검사만 다시, 완성 허가도 주지 않는다
         st["log"].append("눈 검사 증거 미달: " + " / ".join(look.get("problems") or [])[:300])
+        if st["tries"].get("eye_proof", 0) >= LIMITS["eye_proof"]:     # 한도 뒤엔 알리고 완성(사장님 11-02 — 검사는 권고), 회원을 세우지 않는다
+            return finish_with_left(st)
         _tries(st, "eye_proof", LIMITS["eye_proof"], ["final_check"])
         return {"goto": "check"}
     long = [r for r in (st.get("auto") or {}).get("rows") or [] if r.get("what") == "길이" and r.get("ok") is False]

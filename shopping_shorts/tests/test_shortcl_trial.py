@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""숏클 무료 업그레이드 1주(관제 300) — 승인·만료·재신청·관리자 승인 우선."""
+"""숏클 Pro 전환(관제 306)과 승인 — 전환·동시 클릭·해제·관리자 승인 우선."""
 import pytest
 from shopping_shorts import claude_portal as cp
 from shopping_shorts.store import Store
@@ -12,11 +12,46 @@ def st(tmp_path):
     return s
 
 
-def test_스스로_신청은_닫혔다_승인한_회원만(st):
-    assert not cp.trial_state(st, 5, True)["available"]
+def test_Pro_회원은_버튼으로_전환되고_기한이_없다(st, monkeypatch):
+    assert cp.trial_state(st, 5, True)["available"]
+    assert cp.claim_trial(5, True, st) == {"ok": True, "moved": True}
+    assert cp.portal_open(st, 5) and not cp.trial_state(st, 5, True)["available"]
+    real = cp._now()
+    monkeypatch.setattr(cp, "_now", lambda: real + 400 * 86400)
+    assert cp.portal_open(st, 5)
+
+
+def test_전환하면_관리자표에_숏클_무료이동으로_남는다(st):
+    st.save_program_member(5, 1, 0, "", "", "조교A")
+    cp.claim_trial(5, True, st)
+    m = st.program_members()[5]
+    assert m["shortcl"] and m["shortem"] and m["move"] == "free" and m["tutor"] == "조교A"
+
+
+def test_여러_명이_동시에_눌러도_빠지지_않는다(st):
+    import concurrent.futures as cf
+    ids = list(range(100, 140))
+    with cf.ThreadPoolExecutor(8) as ex:
+        list(ex.map(lambda i: cp.claim_trial(i, True, st), ids))
+    assert all(cp.portal_open(st, i) for i in ids)
+    assert set(ids) <= set(st.program_members())
+
+
+def test_다시_눌러도_그대로(st):
+    cp.claim_trial(5, True, st)
+    assert cp.claim_trial(5, True, st) == {"ok": True, "already": True}
+
+
+def test_관리자가_해제하면_닫히고_다시_못_누른다(st):
+    cp.claim_trial(5, True, st)
+    cp.set_member(5, False, st)
+    assert not cp.portal_open(st, 5) and not cp.trial_state(st, 5, True)["available"]
     with pytest.raises(cp.PortalError):
         cp.claim_trial(5, True, st)
-    assert not cp.portal_open(st, 5) and 5 not in cp.member_ids(st)
+
+
+def test_Pro_아니면_버튼없음(st):
+    assert not cp.trial_state(st, 5, False)["available"]
 
 
 def test_자격없으면_거절(st):
@@ -43,3 +78,12 @@ def test_신청주소는_로그인세션_경로():
     root = Path(cp.__file__).parent
     assert '@app.post("/api/claude/me/trial")' in (root / "app.py").read_text(encoding="utf-8")
     assert '"/api/claude/me/trial"' in (root / "static/settings.html").read_text(encoding="utf-8")
+
+
+def test_pro_week_open_and_auto_close(st, monkeypatch):
+    monkeypatch.setattr(st, "get_customer", lambda c: {"plan": "pro" if c == 5 else "standard"}, raising=False)
+    now = cp._now()
+    st.set_setting("claude_pro_open_until", str(now + 7 * 86400))
+    assert cp.portal_open(st, 5) and not cp.portal_open(st, 6)
+    monkeypatch.setattr(cp, "_now", lambda: now + 7 * 86400 + 1)
+    assert not cp.portal_open(st, 5)

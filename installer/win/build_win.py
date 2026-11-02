@@ -365,14 +365,15 @@ def build_engine(stage: Path, engine: Path, report: dict) -> None:
     wd.mkdir(parents=True)
     for name in ("config.json", "model.bin", "tokenizer.json", "vocabulary.txt"):
         shutil.copy2(Path(src) / name, wd / name)          # 캐시는 링크일 수 있다 — copy2 가 실제 파일로 복사
-    vm = stage / "engine" / "models"       # 글자·얼굴·사람 판독 모델 — 저장소에 없다. 빠지면 장면 맞추기에서 죽는다(11-02 새 PC 실사고)
-    vm.mkdir(parents=True, exist_ok=True)
-    home_models = Path.home() / ".shortem" / "models"
-    for src_m in (home_models / "ppocrv5_server_det.onnx", home_models / "face_detection_yunet_2023mar.onnx",
-                  home_models / "face_recognition_sface_2021dec.onnx", home_models / "dl" / "nanodet.onnx"):
+    # 글자·얼굴·사람 판독 모델 — 저장소에 없다. 빠지면 장면 맞추기에서 죽는다(11-02 새 PC 실사고).
+    #   설치 폴더 models/ 에 둔다 — engine/ 은 업데이트 때 연결기가 통째로 바꾼다. 찾는 곳 = vision.find_model·common.FACE_MODEL
+    from publish_update import VISION_MODELS, vision_model_source
+    vm = stage / "models"
+    for name in VISION_MODELS:
+        src_m = vision_model_source(name)
         if not src_m.is_file():
             raise SystemExit(f"[build_win] 판독 모델이 없습니다: {src_m}")
-        shutil.copy2(src_m, vm / src_m.name)
+        shutil.copy2(src_m, vm / name)
     vc = stage / "server" / "vcrt"         # 깨끗한 윈도엔 없는 VC++ 런타임 — python.exe 옆과 업데이트 묶음에(vcrt_sync.js, 11-02 샌드박스 실사고)
     vc.mkdir(parents=True, exist_ok=True)
     for n in VC_RUNTIME:
@@ -587,6 +588,7 @@ def main() -> None:
     log(f"버전 실측: {json.dumps(report['probe'], ensure_ascii=False)}")
     build_server(stage, Path(a.client).resolve(), report)
     build_engine(stage, Path(a.engine).resolve(), report)
+    vendor_and_check(stage)             # 묶음을 만들기 전에 — 실패하면 아무것도 안 나오고, _vendor 가 zip·exe 에 든다
     build_packs(stage, Path(a.engine).resolve(), report)
     shutil.copy2(ROOT / "common" / "postinstall.js", stage / "postinstall.js")
     shutil.copy2(ROOT / "START.md", stage / "START.template.md")
@@ -650,7 +652,6 @@ def main() -> None:
         else:
             log("코드서명: 미서명 — 인증서 없음(SHORTEM_SIGN_PFX 를 주면 signtool 로 서명). SmartScreen 경고가 뜬다.")
 
-    vendor_and_check(stage)
     sums = []
     for p in sorted(dist.glob("*")):
         if p.is_file() and p.suffix in (".exe", ".mcpb"):

@@ -30,7 +30,7 @@ import { retryUpdate, checkUpdate, installDir } from './updater.js';
 import { anyFlowBusy } from './flow_driver.js';
 import { anyRunning } from './runner.js';  // 받은 즉시 엔진까지 적용(사장님 10-31 고객이 두 번 켜지 않게)
 import { holdSession, holdNow } from './session.js';
-import { syncGuide } from './guide_sync.js';
+import { syncGuide, syncPermissions } from './guide_sync.js';
 import { syncPlugin } from './plugin_sync.js';
 import { syncVcrt } from './vcrt_sync.js';
 import { startUi, openBrowser } from './local_ui.js';
@@ -377,6 +377,7 @@ async function main() {
   try { syncVcrt(); } catch (e) { audit('vcrt_sync', { result: String((e && e.message) || e).slice(0, 70) }); }   // 점검·제작보다 먼저
   const server = buildServer();
   await server.connect(new StdioServerTransport());
+  syncPermissions();
   syncGuide();          // 회원이 설치를 다시 하지 않게 — 지침·플러그인은 켤 때 스스로 맞춘다
   setTimeout(() => {
     try { syncPlugin({ version: ENGINE_VERSION, installRoot: process.env.SHORTEM_INSTALL, report: t => audit('plugin_sync', { result: t.slice(0, 70) }) }); }

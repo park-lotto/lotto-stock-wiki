@@ -230,6 +230,7 @@ def step(ctx: dict, body: dict, store=None) -> dict:
     with CP._tx(store, write=True) as c:
         c.execute("UPDATE claude_flow_runs SET seq=?, phase=?, status=?, updated=?, summary_json=? WHERE sid=?",
                   (seq2, st2.get("phase"), res.get("status"), CP._now(), json.dumps(_summary(st2), ensure_ascii=False), sid))
+    LIVE.metrics(store, cid, sid, body.get("measure"), str((res.get("stage") or {}).get("text") or ""))
     LIVE.from_flow(store, cid, sid, res, st2)      # 멈춤·반려·과제·완성 — 옛 회원 프로그램도 서버에서 보인다(관제 304)
     res.update(sid=sid, next_payload=_seal(st2, seq2),
                then_call_with=["payload 는 next_payload 그대로", "do 를 실행해 measure{do id: 결과}", "review 마다 replies{review id: 답 JSON}"])

@@ -271,18 +271,15 @@ def _cookie_ok(platform: str) -> bool:
     return False
 
 
+_cp_last: dict = {}     # 이번 실행의 쿠팡 키 확인 결과 {state, reason, http} — c_env 가 measure 에 실어 서버 기록(st['env']['keys'])으로 보낸다
+
+
 def coupang_key_state() -> str:
-    """쿠팡 파트너스 키 상태 — 'ok'(실제 호출 통과) · 'none'(없음) · 'bad'(호출 실패). 돈 들지 않는 딥링크 1회(coupang_partners.probe_key), 잠깐의 끊김만 한 번 더."""
-    ak, sk = os.environ.get("COUPANG_ACCESS_KEY", ""), os.environ.get("COUPANG_SECRET_KEY", "")
-    if not (ak and sk):
-        return "none"
-    from shopping_shorts import coupang_partners as cp
-    for k in range(2):
-        if cp.probe_key(ak, sk):
-            return "ok"
-        if not k:
-            time.sleep(2)
-    return "bad"
+    """쿠팡 파트너스 키 상태 — 'ok' · 'none'(없음) · 'bad'(쿠팡이 키를 거부) · 'unknown'(일시 실패 — 키는 그대로 먼저 쓴다). 판단 주인 = coupang_customer.key_check."""
+    from tools.calcopy import coupang_customer as C
+    _cp_last.clear()
+    _cp_last.update(C.key_check())
+    return _cp_last["state"]
 
 
 def browser_ok(chrome_only: bool = False) -> bool:
@@ -293,7 +290,8 @@ def browser_ok(chrome_only: bool = False) -> bool:
 
 
 def advice_list(fmt: str = "") -> list[str]:
-    """시작 전 안내(막지 않는다) — 쿠팡 키는 있으면 먼저 쓰고, 없으면 크롬으로 찾는다(사장님 11-02 "있으면 빠르고 원활하다고 안내")."""
+    """시작 전 안내(막지 않는다) — 쿠팡 키는 있으면 먼저 쓰고, 없으면 크롬으로 찾는다(사장님 11-02 "있으면 빠르고 원활하다고 안내").
+    'unknown'(일시 실패)은 안내하지 않는다 — 키는 멀쩡할 수 있고 제작 때 c_coupang 이 키를 먼저 쓰며, 안 되면 크롬으로 알아서 넘어간다."""
     if os.environ.get("CALCOPY_CUSTOMER_MODE") != "1" or fmt == "자막노래형":
         return []
     return {"none": ["쿠팡 파트너스 키를 넣어 두시면 제품 찾기가 더 빠르고 원활해요. 이번엔 크롬으로 찾아서 만들게요"],
@@ -363,6 +361,8 @@ def c_env(W, d):
     dev = os.environ.get("CALCOPY_DEV_MINA_SERVER") == "1" or os.environ.get("SHORTEM_DEV") == "1"
     missing = need_list(d["version"], d.get("url") or "", d.get("fmt") or "")
     advice = advice_list(d.get("fmt") or "")
+    if _cp_last:
+        keys["coupang_check"] = dict(_cp_last)      # 키 값 없음(사유 코드·http 만)
     if du.free / 1e9 < 1.5:
         missing.append({"id": "disk", "label": "C 드라이브 빈 공간 1.5GB", "how": "disk"})
     try:
@@ -435,7 +435,8 @@ def c_bench(W, d):
     else:
         from tools.calcopy.engine import yt_fetch as YF
         t0 = time.time()
-        yt(bench_fmt_args(bool(d.get("material"))) + ["--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko",
+        head = ["--download-sections", f"*0-{YF.FULL_MAX_SEC}"] if YF.video_seconds(url) > YF.FULL_MAX_SEC else []      # 회원이 준 긴 영상 = 앞부분만
+        yt(head + bench_fmt_args(bool(d.get("material"))) + ["--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko",
                                                       "-o", str(bd / "bench.%(ext)s"), url])
         if not mp4.exists():
             return {"error": "벤치 영상을 받지 못했다" + (f" — {yt_why()}" if yt_why() else "")}
@@ -1573,10 +1574,24 @@ def _conflict_of(res) -> dict | None:
     return None
 
 
-def _log_beat(W, what: str):
+PHASE_LABEL = re.compile(r"[\[(]?([0-9A-Za-z가-힣_]{2,14}(?: [가-힣]{1,8})?)")
+
+
+def _phases(rows: list, top: int = 8) -> list:
+    """(이 로그가 찍히기까지 걸린 초) 큰 순서 — 이름은 로그 앞머리 단어만(대본 글이 안 나가게)."""
+    gaps = []
+    for (t0, _), (t1, msg) in zip(rows, rows[1:]):
+        m = PHASE_LABEL.match(str(msg))
+        gaps.append([m.group(1) if m else "기타", round(t1 - t0, 1)])
+    return sorted(gaps, key=lambda x: -x[1])[:top]
+
+
+def _log_beat(W, what: str, rows: list | None = None):
     """render_bench 로그 한 줄 = 진행 신호(감시의 '멈춤 아님') + stderr 에 시각과 함께 — 어느 칸에서 오래 걸렸는지 남긴다(10-26 계획 무음 180초 끔)."""
     def f(msg=""):
         progress(W, what)
+        if rows is not None:
+            rows.append((time.time(), msg))
         sys.stderr.write(f"[{time.strftime('%H:%M:%S')}] {str(msg)[:300]}\n")
     return f
 
@@ -1635,6 +1650,7 @@ def _c_plan(W, d):
     miss = tts_cache_miss(W, v)
     if miss:
         return {"error": miss}
+    phase_rows = [(time.time(), "시작")]
     try:
         # 계획 안 관문(장면 경계·컷 내용 — 긴 원본 프레임 읽기)은 로그 없이 수 분 걸린다(10-26 524초 원본: 로그 끝 뒤 180초+ 무음으로 꺼짐).
         #   같은 프로세스 안 계산이라 무음 = 멈춤이 아니다 → 계산이 살아 있는 동안 30초마다 진행 신호. 끝없는 계산은 예산(plan 600초)이 끊는다.
@@ -1646,14 +1662,14 @@ def _c_plan(W, d):
                 progress(W, "장면 맞추기")
         threading.Thread(target=_beat, daemon=True).start()
         try:
-            res = render_bench.render(v, W / "doc" / v, W / v, plan_only=True, tts=True, report=True, log=_log_beat(W, "장면 맞추기"))
+            res = render_bench.render(v, W / "doc" / v, W / v, plan_only=True, tts=True, report=True, log=_log_beat(W, "장면 맞추기", phase_rows))
         finally:
             alive.set()      # 진짜 목소리 길이로 계획 · report = 넘침·길이를 멈추지 않고 돌려받아 재료 고치기 안내(관문 ⑧)(합성은 캐시 — 렌더가 그대로 쓴다)
         over = res.get("over") or ""
     except StageError as e:          # 컷이 원본 샷보다 길다 → 재료를 고치게 한다
         res, over = {"timeline": {"cuts": []}}, str(e)
     T = res.get("timeline") or {}
-    out = {"over": over, "cuts": len(T.get("cuts") or []), "length": res.get("length"),
+    out = {"over": over, "cuts": len(T.get("cuts") or []), "phases": _phases(phase_rows), "gate": render_bench.GATE_STATS, "cores": os.cpu_count(), "length": res.get("length"),
            "sig": hashlib.md5(json.dumps([[c.get("src"), round(float(c.get("ss") or 0), 2), round(float(c.get("t0") or 0), 2)] for c in T.get("cuts") or []]).encode()).hexdigest()}   # 계획 지문 — 고친 뒤 그대로인지(flow ph_plan_got)
     if res.get("thumb_move"):      # 썸네일 장면을 새 컷으로 옮긴 결과(thumb.relocate) — 없어졌을 때만 flow 가 다시 묻는다
         out["thumb_move"] = res["thumb_move"]
@@ -2526,7 +2542,10 @@ def run_do(W: Path, do: list[dict], log=print, stall: float | None = None) -> di
         if sub:
             (W / sub).mkdir(parents=True, exist_ok=True)   # 10-26 run4: 없던 alt1 아래 bench mkdir 이 FileNotFoundError → 2편이 1분 만에 마침
         try:
+            t_run = time.time()
             res = fn(W / sub if sub else W, d)      # sub = 함께 찾는 둘째 소재의 작업 폴더(flow 해외원본형 소재 2편, 10-26) — 진행 신호는 그대로 W
+            if isinstance(res, dict):              # 숫자만 숏클 팀에게(claude_live.metrics) — 영상·대본·키는 안 싣는다
+                res["_sec"] = round(time.time() - t_run, 1)
             if rid not in out:                     # 감시가 이미 '시간 초과'로 끝낸 일은 늦게 온 결과로 덮지 않는다
                 out[rid] = res
             return

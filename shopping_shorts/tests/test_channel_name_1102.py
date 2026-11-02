@@ -34,3 +34,9 @@ def test_guide_blocks_server_phrase_and_source_names():
     from pathlib import Path
     g = (Path(__file__).parents[2] / "installer/common/MEMBER_GUIDE.md").read_text(encoding="utf-8")
     assert "서버에서 막혔다" in g and "참고 채널 이름은 말하지 않는다" in g and "brand.channel_name" in g
+
+
+def test_slot_less_frame_name_goes_top_center_not_ad_corner(tmp_path, monkeypatch):
+    st = _load(tmp_path, monkeypatch, "잇템로그판_v2", {"channel_name": "내채널"})
+    wm = st["frame"]["watermark"]
+    assert wm["cx"] == 540 and "x1" not in wm and wm["cy"] < 200
