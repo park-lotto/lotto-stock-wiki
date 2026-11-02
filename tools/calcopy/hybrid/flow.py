@@ -3863,7 +3863,7 @@ def ref_hash(ref: str) -> str:
 
 
 # 프리셋 → 공동 소재 창고(사장님 11-02 "채널 3개 다 반영, 손님이 만들어달라거나 물어보면 잘 섞어서"). 형식이 같은 판만 묶는다 — 소재가 그 판 흐름을 타야 한다.
-MIX_POOLS = {"banggu": "제품썰", "yummyknow": "제품썰", "humorshowshow": "제품썰"}
+MIX_POOLS = {"banggu": "제품썰", "yummyknow": "제품썰", "humorshowshow": "제품썰", "ititemlog": "외국인K뷰티"}
 MIX_DIR = "_소재창고"
 
 

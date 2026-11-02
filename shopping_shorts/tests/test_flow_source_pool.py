@@ -140,3 +140,9 @@ def test_창고_없는_판은_그대로(tmp_path, monkeypatch):
     _pool(tmp_path, monkeypatch, ROWS)
     assert F.bench_pool("slugx")[0]["id"] == "id00000001x"
 
+
+def test_잇템로그는_제품썰_창고를_안_본다():
+    assert F.MIX_POOLS["ititemlog"] != F.MIX_POOLS["banggu"]
+    titles = [r["channel"] for r in F._pool_rows("ititemlog")]
+    assert set(titles) == {"잇템로그", "한국아우라"}
+
