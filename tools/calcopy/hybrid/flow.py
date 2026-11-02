@@ -105,7 +105,7 @@ PHASE_STAGE = {   # 세부 단계 → 회원에게 보이는 단계
 #     하나씩 풀어 가는 중이었다. 6번을 넘는 바퀴는 이 로그에 없다(근거 없는 증액은 안 한다).
 #   plan 8 그대로: 장면 맞추기는 9번 반려가 한 번도 통과하지 못했다(마지막 9번 = 장면 경계·컷 길이·남은 글자를 손으로 옮기며 맴돎) — 늘려도 풀린다는 근거 없음.
 #   같은 원인 묶음이 STUCK 번 연속이면 한도 전이라도 멈춘다(REDO_STUCK 아래).
-LIMITS = {"script": 6, "plan": 8, "render": 3, "look": 2, "pick": 2, "review_bad": 2, "eye_proof": 2}
+LIMITS = {"script": 6, "plan": 8, "render": 3, "look": 0, "pick": 2, "review_bad": 2, "eye_proof": 2}
 # 대본: 내용 기준은 한 번 고쳐 받으면 통과(사장님 10-27). 꼭 지킬 것만 계속 반려 — 꼴이 틀림·지어낸 사실·출처 규칙·제품 컷·비슷한 제품 밝히기(10-25 규칙)
 SCRIPT_FIX_ONCE = 1
 SCRIPT_MUST = {"form", "claims", "source_rule", "product_cut", "alt_scene", "product:alt_say"}
