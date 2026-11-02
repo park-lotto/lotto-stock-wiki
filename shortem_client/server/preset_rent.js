@@ -8,6 +8,7 @@ import zlib from 'node:zlib';
 import { api, ApiError } from './api.js';
 import { Lease } from './lease.js';
 import { audit } from './audit.js';
+import { mineById, myRoot } from './my_presets.js';
 
 const MARK = '.rented';
 let current = null;                                       // 지금 빌린 것(PC 1대 · 작업 하나)
@@ -106,17 +107,19 @@ export async function rentPreset({ engineRoot, presetId, profileId, stepName, ki
   }
   sweep(engineRoot);
   const jobId = (kind === 'ui' ? 'u' : 'm') + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
-  const lease = new Lease(jobId, { stepName: stepName || (() => '소재') });
-  await lease.acquire();
+  const mine = presetId ? mineById(presetId) : null;     // 내 벤치마킹 프리셋(관제 304) — 이 PC 에 있으니 서버를 안 부른다. 쓰고 지우는 꼴은 같다
+  const lease = mine ? null : new Lease(jobId, { stepName: stepName || (() => '소재') });
+  if (lease) await lease.acquire();
   const me = { jobId, lease, kind, want };
   current = me;
   try {
-    const r = await api.rent(presetId ? null : profileId, jobId, lease.id, presetId || null);
+    const r = mine ? null : await api.rent(presetId ? null : profileId, jobId, lease.id, presetId || null);
     fs.mkdirSync(root, { recursive: true });
     fs.writeFileSync(path.join(root, MARK), jobId);
-    unpack(openPack(r), root);
+    if (mine) fs.cpSync(path.join(myRoot(), mine.slug), path.join(root, mine.slug), { recursive: true });
+    else unpack(openPack(r), root);
     audit('preset_rent', { job: jobId, result: 'ok' });
-    me.presetPath = r.preset_path;
+    me.presetPath = mine ? `channel/${mine.slug}/preset/${mine.style}` : r.preset_path;
   } catch (e) {
     await release(me, engineRoot);
     throw e;
@@ -136,7 +139,7 @@ async function release(me, engineRoot) {
   current = null;
   clearTimeout(me.idle);
   wipe(engineRoot);                                       // 프리셋(channel) + 기술 꾸러미(hybrid·yanshot) — 표식 있는 자리만
-  await me.lease.release();
+  if (me.lease) await me.lease.release();
   audit('preset_return', { job: me.jobId, result: 'ok' });
 }
 

@@ -183,8 +183,9 @@ def plan(engine: Path, out: Path, version: str) -> tuple[list[list[str]], list[s
         dirs = [x for c in steps for i, x in enumerate(c) if i and c[i - 1] == "--preset"]
         steps.insert(0, [py, "tools/claude_portal/member_check.py", *[a for d_ in dirs for a in ("--preset", d_)]])   # 고객 경로 점검 — 빠진 게 있으면 rc=1 로 멈춘다
         steps.append([py, "installer/win/build_win.py", "--out", str(out), "--engine", str(engine), "--version", version])
+        steps.append([py, "tools/claude_portal/benchmark_pack.py", "build", "--engine", str(engine), "--out", str(out / "benchmark")])   # 고급반 벤치마킹 묶음(관제 304)
         steps.append([py, "tools/claude_portal/upload_release.py", "--dist", str(out / "dist"), "--packs", str(packs),
-                      "--version", version, "--update-stage", str(out / "win-x64" / "Shortem")])
+                      "--version", version, "--update-stage", str(out / "win-x64" / "Shortem"), "--benchmark", str(out / "benchmark" / "benchmark_pack.zip")])
     return steps, skipped
 
 

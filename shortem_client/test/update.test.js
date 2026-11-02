@@ -56,15 +56,15 @@ test('덜 찬 업데이트는 되돌리고 예전 판으로 뜬다', () => {
 });
 
 test('받자마자 엔진 적용 — 만드는 중이면 안 건드린다', async () => {
-  const { applyEngineNow } = await import('../server/updater.js');
+  const { applyDownloaded } = await import('../server/updater.js');
   const nodeFs = await import('node:fs'), nodeOs = await import('node:os'), nodePath = await import('node:path');
   const r = nodeFs.mkdtempSync(nodePath.join(nodeOs.tmpdir(), 'up-'));
   const d = nodePath.join(r, 'u'), h = nodePath.join(r, 'h');
   nodeFs.mkdirSync(nodePath.join(d, 'engine'), { recursive: true }); nodeFs.mkdirSync(nodePath.join(h, 'engine'), { recursive: true });
   nodeFs.writeFileSync(nodePath.join(d, 'engine', 'a.py'), 'new'); nodeFs.writeFileSync(nodePath.join(h, 'engine', 'a.py'), 'old');
-  assert.equal(applyEngineNow(d, h, 1), false);
+  assert.equal(applyDownloaded(d, h, 1), false);
   assert.equal(nodeFs.readFileSync(nodePath.join(h, 'engine', 'a.py'), 'utf8'), 'old');
-  assert.equal(applyEngineNow(d, h, 0), true);
+  assert.equal(applyDownloaded(d, h, 0), true);
   assert.equal(nodeFs.readFileSync(nodePath.join(h, 'engine', 'a.py'), 'utf8'), 'new');
   assert.ok(nodeFs.existsSync(nodePath.join(d, 'engine', 'a.py')));
 });

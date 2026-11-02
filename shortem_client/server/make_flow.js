@@ -10,6 +10,7 @@ import { packFile as localPackFile, PID_RE } from './local_settings.js';
 import { homeDir, writeFileIn, workDir, ensureDir } from './paths.js';
 import { deliverInBackground, deliverStatus } from './deliver.js';
 import { logFinal } from './work_log.js';
+import { mineById } from './my_presets.js';
 import { restyleFlow, startFlow, waitFlow, approveFlow, retryFlow, reviseFlow, isFlowSid, loadFlow, shapeFlow, anyFlowBusy } from './flow_driver.js';
 import { api, ApiError } from './api.js';
 import { retryUpdate } from './updater.js';
@@ -115,8 +116,8 @@ async function go(args, opts, presetId) {
   return r.done ? shapeSession({ error: '엔진 결과 없음' }) : aiNeed(r.runId);
 }
 
-const YT_CHANNEL = /^https:\/\/(www\.)?youtube\.com\/(@[^/?#]{1,80}|channel\/UC[0-9A-Za-z_-]{22})\/?$/;
-const VIDEO = /^https:\/\/(www\.)?(youtube\.com\/(shorts\/|watch\?v=)[0-9A-Za-z_-]{11}|youtu\.be\/[0-9A-Za-z_-]{11}|tiktok\.com\/@[^/]{1,60}\/video\/[0-9]{8,25}|instagram\.com\/(reel|p)\/[0-9A-Za-z_-]{5,40})/;
+export const YT_CHANNEL = /^https:\/\/(www\.)?youtube\.com\/(@[^/?#]{1,80}|channel\/UC[0-9A-Za-z_-]{22})\/?$/;
+export const VIDEO = /^https:\/\/(www\.)?(youtube\.com\/(shorts\/|watch\?v=)[0-9A-Za-z_-]{11}|youtu\.be\/[0-9A-Za-z_-]{11}|tiktok\.com\/@[^/]{1,60}\/video\/[0-9]{8,25}|instagram\.com\/(reel|p)\/[0-9A-Za-z_-]{5,40})/;
 
 // 고객이 준 해외 원본 채널 → 엔진이 읽는 원본 채널 목록 파일(~/.shortem/원본채널.json, 고객 채널만)
 function originalsFile(channel) {
@@ -193,6 +194,8 @@ async function stepOnce({ step, sid, n, run_id, preset, topic, channel, video, p
     }
     return flowOut(await waitFlow(sid, waitMs()));
   }
+  const mine = preset ? mineById(preset) : null;   // 내 벤치마킹 프리셋(관제 304) — 서버 지시서·소재 창고가 없다. 엔진 길로 간다(소재 = 준 영상 또는 벤치마킹한 채널)
+  if (mine && step === 'sources') return { hints: ['내 프리셋은 소재 창고가 없습니다 — 영상 주소를 받아 주세요'] };
   if (step === 'sources' && preset) {   // 회원 '후보 뽑아줘' — 그 프리셋 소재 창고(벤치 채널 조회순)에서 안 만든 5개(판단 = 서버 flow.source_candidates)
     try {
       const r = await api.step({ step: 'sources', preset, offset: offset || 0 });
@@ -205,7 +208,11 @@ async function stepOnce({ step, sid, n, run_id, preset, topic, channel, video, p
     }
   }
   // 주소를 주면 그 영상, 주소 없이 '만들어줘'면 서버가 소재 창고 조회 1위(사장님 10-30) — 단계 진행 프리셋만. 아니면 아래 옛 길
-  if (step === 'start' && preset && !topic && !channel && !process.env.SHORTEM_DEV_PRESET) {
+  if (step === 'start' && mine && !video && !topic) {
+    channel = channel || mine.channel;
+    if (!channel) return { hints: ['이 프리셋은 영상으로 만들었습니다 — 만들 영상 주소를 video 로 주세요'] };
+  }
+  if (step === 'start' && preset && !mine && !topic && !channel && !process.env.SHORTEM_DEV_PRESET) {
     try {
       const f = await startFlow({ preset, video: video || '', product });
       return flowOut(await waitFlow(f.sid, waitMs()));

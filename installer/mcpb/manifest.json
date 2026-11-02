@@ -33,6 +33,7 @@
     { "name": "shortem_job", "description": "만든 작업의 진행 단계·완성본 위치·검사 통과 여부 확인, 작업 취소" },
     { "name": "shortem_message", "description": "막혔을 때·중요한 일을 숏클 팀에 바로 알리기" },
     { "name": "shortem_knowhow", "description": "막혔을 때 상황에 맞는 노하우 찾기" },
+    { "name": "shortem_benchmark", "description": "채널 벤치마킹(고급반) — 채널을 뜯어 내 프리셋으로 저장" },
     { "name": "shortem_feedback", "description": "숏템에 요청·버그 보내기" }
   ],
   "keywords": ["숏폼", "shorts", "video", "숏템"],

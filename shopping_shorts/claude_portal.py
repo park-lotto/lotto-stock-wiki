@@ -82,7 +82,7 @@ RULE_TITLE = {
 }
 
 _HTTP = {"no_key": 401, "bad_key": 401, "expired": 401, "revoked": 403, "suspended": 403, "device_unknown": 403,
-         "device_limit": 403, "account_mismatch": 403, "engine_old": 403, "not_in_plan": 403, "not_entitled": 403,
+         "device_limit": 403, "account_mismatch": 403, "engine_old": 403, "not_in_plan": 403, "not_entitled": 403, "tier_locked": 403,
          "busy_other_device": 409, "busy_session": 409, "lease_lost": 409, "rate_limited": 429, "disabled": 503, "bad_request": 400}
 
 _FP_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -1081,6 +1081,13 @@ def _profile_row(c, cid, profile_id):
     return _row(c, "SELECT * FROM claude_profiles WHERE id=? AND customer_id=?", (profile_id, int(cid)))
 
 
+def _lease_match(cur, job_id: str, job_request: dict) -> None:
+    """유효 작업 권한인가(그 job·그 기기·그 lease) — 판단 한 곳(_job_gate·benchmark_rent 공용)."""
+    if (not cur or cur["job_id"] != job_id or cur["fp_hash"] != job_request.get("device_hash")
+            or (job_request.get("lease_id") and cur["lease_id"] != job_request.get("lease_id"))):
+        raise PortalError("lease_lost", "작업 권한이 없습니다 — 작업을 다시 시작하세요")
+
+
 def _job_gate(store, cid, profile_id, job_request: dict, preset_id=None) -> tuple:
     """편 하나에 무언가를 내줄 때의 관문 — 판단 한 곳(assets_for·preset_rent 공용, 관제 234 5판).
     스위치 → 유효 작업 권한(그 job·그 기기·그 lease) → 내 프로필(또는 PC 로컬 설정이 고른 프리셋 id) → 구매(등급)한 프리셋.
@@ -1094,9 +1101,7 @@ def _job_gate(store, cid, profile_id, job_request: dict, preset_id=None) -> tupl
         cur = _active_lease(c, cid)
         prof = _profile_row(c, cid, profile_id)
         lic = _row(c, "SELECT * FROM claude_licenses WHERE cid=?", (cid,))
-    if (not cur or cur["job_id"] != job_id or cur["fp_hash"] != job_request.get("device_hash")
-            or (job_request.get("lease_id") and cur["lease_id"] != job_request.get("lease_id"))):
-        raise PortalError("lease_lost", "작업 권한이 없습니다 — 작업을 다시 시작하세요")
+    _lease_match(cur, job_id, job_request)
     if not prof and not preset_id:
         raise PortalError("bad_request", "채널 프로필을 찾을 수 없습니다 — 페이지에서 프로필을 저장하세요")
     want = prof["preset_id"] if prof else str(preset_id)
@@ -1113,10 +1118,18 @@ def preset_pack_path(pid: str) -> Path:
     return store_dir() / "preset_packs" / f"{pid}.zip"
 
 
+def _seal_pack(data: bytes, cid, job_id: str) -> dict:
+    """꾸러미 잠그기 한 곳 — 요청마다 새 열쇠(AES-256-GCM), 덧붙임 글 = cid|job(preset_rent·benchmark_rent 공용). 열쇠는 PC 메모리에만 둔다."""
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    key, nonce = AESGCM.generate_key(bit_length=256), os.urandom(12)
+    aad = f"{cid}|{job_id}".encode()
+    return {"aad": aad.decode(), "pack": base64.b64encode(nonce + AESGCM(key).encrypt(nonce, data, aad)).decode(),
+            "key": base64.b64encode(key).decode(), "sha256": hashlib.sha256(data).hexdigest()}
+
+
 def preset_rent(cid, profile_id, job_request: dict, store=None, preset_id=None) -> dict:
     """편마다 프리셋 빌려주기(관제 234 5판, 사장님 '프리셋 만드는 노하우가 자산'). 관문(_job_gate) 뒤 그 편 프리셋 꾸러미 하나를
     이 요청 전용 열쇠(AES-256-GCM, 덧붙임 글 = cid|job)로 잠가 보낸다. PC 는 잠근 채 두고 엔진이 도는 동안만 푼다(열쇠는 메모리만)."""
-    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
     store = _store(store)
     ensure_schema(store)
     cid = int(cid)
@@ -1126,15 +1139,9 @@ def preset_rent(cid, profile_id, job_request: dict, store=None, preset_id=None) 
     if not f.is_file():
         log.warning("claude_portal: 프리셋 꾸러미 없음 %s(%s) — preset_pack.py 로 만들어 올려라", p["id"], p["internal"])
         raise PortalError("not_ready", "이 프리셋을 지금 준비할 수 없습니다 — 잠시 뒤 다시 시도하세요")
-    data = f.read_bytes()
-    key, nonce = AESGCM.generate_key(bit_length=256), os.urandom(12)
-    aad = f"{cid}|{job_id}".encode()
-    sealed = AESGCM(key).encrypt(nonce, data, aad)
     with _tx(store, write=True) as c:
         _lease_log(c, cid, job_request.get("device_hash"), "rent", job_id, job_request.get("lease_id"), None, p["id"])
-    return {"ok": True, "preset_path": f"channel/{p['slug']}/preset/{p['style']}", "aad": aad.decode(),
-            "pack": base64.b64encode(nonce + sealed).decode(), "key": base64.b64encode(key).decode(),
-            "sha256": hashlib.sha256(data).hexdigest()}
+    return {"ok": True, "preset_path": f"channel/{p['slug']}/preset/{p['style']}", **_seal_pack(f.read_bytes(), cid, job_id)}
 
 
 def rent(ctx: dict, profile_id, job_id, lease_id=None, store=None, preset_id=None) -> dict:
@@ -1144,6 +1151,34 @@ def rent(ctx: dict, profile_id, job_id, lease_id=None, store=None, preset_id=Non
     cid, _, dev = _front(store, ctx, "rent")
     return preset_rent(cid, profile_id, {"job_id": job_id, "lease_id": lease_id, "device_hash": dev["fp_hash"]}, store=store,
                        preset_id=preset_id or None)
+
+
+def benchmark_pack_path() -> Path:
+    """고급반 벤치마킹 묶음(tools/claude_portal/benchmark_pack.py 가 우리 PC 에서 만든 zip). 고객에게는 benchmark_rent 로만 나간다."""
+    return store_dir() / "benchmark" / "benchmark_pack.zip"
+
+
+def benchmark_rent(ctx: dict, job_id, lease_id=None, store=None) -> dict:
+    """POST /api/claude/benchmark_rent — 채널 벤치마킹 엔진 빌려주기(관제 304, 사장님 11-02 "고급형은 그 노하우를 담아준다").
+    문턱 판단 = member_tier 한 곳(고급·프리미엄). 프리셋 임대와 같은 꼴: 작업 권한 뒤 잠근 꾸러미, PC 는 쓰는 동안만 푼다."""
+    store = _store(store)
+    ensure_schema(store)
+    cid, _, dev = _front(store, ctx, "benchmark")
+    if member_tier(store, cid) == "basic":
+        raise PortalError("tier_locked", "채널 벤치마킹은 고급반에서 제공돼요")
+    job_id = str(job_id or "")
+    if not _JOB_RE.match(job_id):
+        raise PortalError("bad_request", "job_id 가 올바르지 않습니다")
+    with _tx(store) as c:
+        cur = _active_lease(c, cid)
+    _lease_match(cur, job_id, {"device_hash": dev["fp_hash"], "lease_id": lease_id})
+    f = benchmark_pack_path()
+    if not f.is_file():
+        log.warning("claude_portal: 벤치마킹 묶음이 없다 — benchmark_pack.py 로 만들어 올려라")
+        raise PortalError("not_ready", "벤치마킹을 지금 준비할 수 없습니다 — 잠시 뒤 다시 시도하세요")
+    with _tx(store, write=True) as c:
+        _lease_log(c, cid, dev["fp_hash"], "benchmark", job_id, lease_id, None, "benchmark")
+    return {"ok": True, **_seal_pack(f.read_bytes(), cid, job_id)}
 
 
 # ── 켤 때 자동 업데이트(관제 234 5판, 사장님 10-19 "업데이트는 자동으로 켤 때 받을 수 있게") ───────────────

@@ -54,10 +54,12 @@ function engineEnv(queue, packFile, extraEnv) {
 const runs = new Map();   // runId → {proc, done, out, err, queue}
 
 // make.py --json <args…> 를 뒤에서 띄운다. 도구 호출은 waitMs 만 기다린다(AI 요청이 생기면 바로 돌아간다).
-export function startRun(args, { packFile, env: extraEnv, onClose } = {}) {
+export const startRun = (args, opts) => startScript(path.join(engineRoot(), 'tools', 'calcopy', 'make.py'), ['--json', ...args], opts);
+// 엔진 파이썬 입구 하나를 뒤에서 띄운다(make.py · 벤치마킹 bench_member.py 공용) — 마지막 줄 JSON·AI 요청 줄은 같은 꼴
+export function startScript(script, args, { packFile, env: extraEnv, onClose } = {}) {
   const runId = 'r' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
   const queue = ensureDir(aiRoot(), runId);
-  const proc = spawn(pythonExe(), [path.join(engineRoot(), 'tools', 'calcopy', 'make.py'), '--json', ...args],
+  const proc = spawn(pythonExe(), [script, ...args],
     { cwd: engineRoot(), env: engineEnv(queue, packFile, extraEnv), shell: false, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
   const r = { runId, queue, proc, done: false, out: [], err: '', code: null, started: Date.now() };
   proc.stdout.on('data', d => r.out.push(d));

@@ -28,6 +28,7 @@
 | 11 | 검사 | final.mp4 | 자동검사 6항목 ○ · 받아쓰기 대조 · 눈 확인 | `run.py checks` · 스피치매틱스·위스퍼 | [11_check.md](11_check.md) |
 | 12 | 드라이브 납품 | final.mp4 | 드라이브 정본 파일(크기 일치) | PowerShell `robocopy` | [12_deliver.md](12_deliver.md) |
 | 13 | 정리·기록·공유 | 납품 확인 | 로컬 삭제 · handoff · 커밋 · 쪽지 | DriveFS `operations` · git | [13_wrapup.md](13_wrapup.md) |
+| 15 | 채널 벤치마킹(고급반 회원) | 채널 주소 | 회원 PC 내 프리셋 | `shortem_benchmark` · `engine/bench_member.py` | [15_benchmark.md](15_benchmark.md) |
 | 14 | 숏템메이커 흐름(기본) | 해외 원본 있는 소재 | 대본생성→MIX→자막제거→꾸미기→완성본 · 사장님 규칙 8개 | 숏템메이커 라이브 | [14_maker_flow.md](14_maker_flow.md) |
 
 공통(폴더·채널↔판·목소리·돈·금지·병렬 워커): [00_common.md](00_common.md)
