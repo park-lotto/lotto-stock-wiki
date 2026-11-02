@@ -251,6 +251,7 @@ export async function engineTool(cmd, input, { timeoutMs = 60000 } = {}) {
 
 // 단계형 실행기(관제 234, 10-21) — 서버 지시서가 준 do 목록을 엔진 hybrid/runner_ops 로 돌리고 measure(JSON)를 돌려준다.
 //   허용 명령 판정은 runner_ops 한 곳. 여기는 띄우고 마지막 줄 JSON 을 읽기만 한다.
+const EXIT_GRACE_MS = 5000;   // 실행기가 끝난 뒤 남은 출력을 받을 시간
 export function runOps(jobDir, doList, { timeoutMs = 3 * 60 * 60 * 1000, env: extra = {} } = {}) {
   fs.mkdirSync(jobDir, { recursive: true });
   const doFile = path.join(jobDir, '..', `do_${Date.now()}.json`);
@@ -265,13 +266,19 @@ export function runOps(jobDir, doList, { timeoutMs = 3 * 60 * 60 * 1000, env: ex
     proc.stderr.on('data', d => { if (err.length < 200000) err += String(d); });
     const fail = why => Object.fromEntries((doList || []).map(d => [String(d.id || d.cmd), { error: why }]));
     proc.on('error', e => { clearTimeout(t); resolve(fail('실행기를 띄우지 못했다: ' + String(e && e.message).slice(0, 200))); });
-    proc.on('close', () => {
+    // close 만 기다리면 손자 프로세스가 출력을 쥐고 있는 동안 실행기가 끝나도 영영 안 온다(11-02 완성본 검사 멈춤 3건 — exit 뒤 12초 재현)
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
       clearTimeout(t);
       try { fs.appendFileSync(path.join(jobDir, '..', 'runner.log'), err.slice(-20000)); } catch { /* 기록 실패는 넘어간다 */ }
       try { fs.unlinkSync(doFile); } catch { /* 이미 */ }
       const s = Buffer.concat(out).toString('utf8').trim().split('\n').filter(Boolean).pop() || '';
       try { resolve(JSON.parse(s)); } catch { resolve(fail('실행기 결과를 읽지 못했다: ' + err.slice(-300))); }
-    });
+    };
+    proc.on('close', finish);
+    proc.on('exit', () => setTimeout(finish, EXIT_GRACE_MS).unref());
   });
 }
 

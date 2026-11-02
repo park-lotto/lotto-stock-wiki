@@ -3,6 +3,7 @@
 preset_make 는 여기 것을 그대로 다시 내보낸다(옛 import 호환)."""
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 
@@ -16,7 +17,21 @@ def _member_key(name: str) -> str:
     return p.read_text(encoding="utf-8").strip() if p.is_file() else ""
 
 
+JAMO = re.compile(r"\s*[ㄱ-ㅎㅏ-ㅣ]{2,}")
+
+
+def speakable(text: str) -> str:
+    """합성에 보낼 말 — ㄷㄷ·ㅋㅋ 같은 낱자는 목소리가 '딕딕'·'쿡쿡'으로 읽는다(11-02 회원 피쉬 실측). 자막은 대본 그대로 둔다."""
+    t = JAMO.sub("", text).strip()
+    return t or text
+
+
 def make_synth(provider: str, voice: str, tempo, emotion):
+    synth = _make_synth(provider, voice, tempo, emotion)
+    return lambda text, out: synth(speakable(text), out)
+
+
+def _make_synth(provider: str, voice: str, tempo, emotion):
     """provider 분기 → synth(text, out_path). 타입캐스트 = 기존 providers.typecast_synth 그대로(+감정) · 일레븐 = narr_align.eleven_direct
     (회원 키 직접, 추천 프리셋·검색 성우) · 피쉬 = fish_tts 요청 꼴(build_payload·headers)을 회원 키로. 일레븐·피쉬는 1.0 으로 받고 narration() atempo 가 맞춘다."""
     if provider == "typecast":
