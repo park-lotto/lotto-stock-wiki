@@ -299,7 +299,7 @@ export function buildServer(ctx = makeCtx()) {
     if (action === 'status') { const s = loginStatus(); return reply({ info: { connected: Object.fromEntries(Object.entries(s.connected).map(([k, v]) => [PLATFORMS[k].name, v ? '연결됨' : '안 됨'])), waiting: s.waiting } }); }
     if (!platform) return reply({ hints: ['platform 이 필요합니다(instagram·tiktok·youtube)'] });
     const r = await openLogin(platform);
-    return reply(r.ok ? { info: { opened: PLATFORMS[platform].name }, hints: [`고객에게: 열린 크롬 창에서 ${PLATFORMS[platform].name}에 로그인한 뒤 창을 닫아 주세요. 닫으면 shortem_login(action="status") 로 확인하세요`] }
+    return reply(r.ok ? { info: { opened: PLATFORMS[platform].name }, hints: [`고객에게: 영상 수집 절차에 세션 기록이 한 번 필요합니다. 열린 크롬 창에서 ${PLATFORMS[platform].name}에 로그인한 뒤 창을 닫아 주세요. 닫으면 shortem_login(action="status") 로 확인하세요`] }
       : { fail: { where: '계정 연결', why: r.why, fix: '크롬을 설치한 뒤 다시', retry_ok: true } });
   });
 
