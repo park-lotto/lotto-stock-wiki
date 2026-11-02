@@ -257,7 +257,7 @@ def yt_search(q: str, n: int = 10, months: int | None = None) -> list[dict]:
 def yt_upload_date(vid: str) -> str | None:
     """올린 날짜 YYYYMMDD — flat 목록엔 없다. android 클라이언트(기본은 로봇 확인에 막힘, 10-16 실측)."""
     try:
-        r = subprocess.run(["yt-dlp", "--socket-timeout", "15", "--skip-download", "--extractor-args", "youtube:player_client=android",
+        r = subprocess.run(["yt-dlp", "--socket-timeout", "15", "--skip-download", "--ignore-no-formats-error", "--extractor-args", "youtube:player_client=android",
                             "--print", "%(upload_date)s", f"https://www.youtube.com/watch?v={vid}"],
                            capture_output=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, timeout=40)
     except subprocess.TimeoutExpired:
@@ -270,7 +270,7 @@ def yt_detail(vid: str, n_comments: int = 50, url: str | None = None) -> dict:
     """제목·설명·조회·날짜 + 댓글(좋아요 순 n). 10-16 실측: 기본 클라이언트는 '로봇 확인'으로 막혀 android 로 받는다.
     url 을 주면 그 주소(틱톡·인스타 참고 영상, 관제 234)로 — 유튜브 전용 인자는 다른 곳에선 무시된다."""
     try:
-        r = subprocess.run(["yt-dlp", "--encoding", "utf-8", "--socket-timeout", "15", "--skip-download", "--write-comments", "--extractor-args",
+        r = subprocess.run(["yt-dlp", "--encoding", "utf-8", "--socket-timeout", "15", "--skip-download", "--ignore-no-formats-error", "--write-comments", "--extractor-args",
                             f"youtube:player_client=android;comment_sort=top;max_comments={n_comments},{n_comments},0,0", "-J",
                             url or f"https://www.youtube.com/watch?v={vid}"], capture_output=True, encoding="utf-8", errors="replace",
                            stdin=subprocess.DEVNULL, timeout=150)
@@ -329,7 +329,7 @@ def db_top(n: int = 20) -> list[dict]:
 def yt_meta(vid: str) -> dict:
     """영상 1편 제목·올린 날짜(android 클라이언트, 상세 댓글 없이 가볍게)."""
     try:
-        r = subprocess.run(["yt-dlp", "--socket-timeout", "15", "--skip-download", "--extractor-args", "youtube:player_client=android",
+        r = subprocess.run(["yt-dlp", "--socket-timeout", "15", "--skip-download", "--ignore-no-formats-error", "--extractor-args", "youtube:player_client=android",
                             "--print", "%(upload_date)s\t%(duration)s\t%(title)s", f"https://www.youtube.com/watch?v={vid}"],
                            capture_output=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, timeout=40)
     except subprocess.TimeoutExpired:
@@ -651,7 +651,7 @@ def channel_of_video(url: str | None) -> str | None:
     if not url:
         return None
     try:
-        r = subprocess.run(["yt-dlp", "--encoding", "utf-8", "--skip-download", "--print", "%(channel_id)s", url],
+        r = subprocess.run(["yt-dlp", "--encoding", "utf-8", "--skip-download", "--ignore-no-formats-error", "--print", "%(channel_id)s", url],
                            capture_output=True, encoding="utf-8", stdin=subprocess.DEVNULL, timeout=60)
     except (OSError, subprocess.TimeoutExpired):
         return None

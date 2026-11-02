@@ -511,7 +511,7 @@ def storyboard_tiles(info: dict, max_tiles: int = 160) -> list[tuple[float, "obj
 
 def video_seconds(url: str) -> float:
     """영상 길이(초) — 받기 전에 묻는다. 못 재면 -1(받기를 막지 않는다)."""
-    r = ytdlp(["--skip-download", "--no-warnings", "--print", "duration", url], timeout=60)
+    r = ytdlp(["--skip-download", "--ignore-no-formats-error", "--no-warnings", "--print", "duration", url], timeout=60)
     try:
         return float((r.stdout or "").strip().splitlines()[-1])
     except (ValueError, IndexError):
@@ -539,7 +539,7 @@ def fetch_subs(url: str, stem: Path, langs: str = "ko,ko-orig", tries: int = 3, 
     if found:
         return found
     for attempt in range(tries):
-        r = ytdlp(["--skip-download", "--write-auto-subs", "--write-subs", "--sub-langs", langs, "--sub-format", "vtt", "--ignore-errors",
+        r = ytdlp(["--skip-download", "--ignore-no-formats-error", "--write-auto-subs", "--write-subs", "--sub-langs", langs, "--sub-format", "vtt", "--ignore-errors",
                    "--sleep-subtitles", "3", "-o", str(stem), url], timeout=180)
         found = sorted(stem.parent.glob(stem.name + "*.vtt"))
         if found or "429" not in r.stderr:
