@@ -504,14 +504,20 @@ PC_KEY_SERVICES = ("typecast", "elevenlabs", "fish", "coupang", "vmake", "vertex
 
 def pc_keys(ctx: dict, store=None) -> dict:
     """POST /api/claude/studio/keys — {service: 평문 키}(등록한 것만). 키 내용은 로그에 안 남긴다(회원 번호·이름만)."""
+    from shopping_shorts import keyroute
     store = CP._store(store)
     CP.ensure_schema(store)
     cid, _, _ = CP._front(store, ctx, "studio")
     out = {}
     for svc in PC_KEY_SERVICES:
         keys = store.get_customer_keys_plain(cid, svc) or []
-        if keys:
-            out[svc] = keys[-1] if svc == "vertex_sa" else keys[0]   # 버텍스는 회원당 1개(새 것이 옛 것을 갈아끼움) — 마지막 행
+        if svc == "vertex_sa":
+            if keys:
+                out[svc] = keys[-1]                                  # 버텍스는 회원당 1개(새 것이 옛 것을 갈아끼움) — 마지막 행
+            continue
+        good = [k for k in keys if not keyroute.masked_key_reason(k)]   # 가림 검사 전에 저장된 값은 회원 PC 로 보내지 않는다(CS #453)
+        if good:
+            out[svc] = good[0]
     log.info("claude_studio: cid %s 회원 PC 로 키 가져가기 %s", cid, sorted(out))
     return {"ok": True, "keys": out}
 

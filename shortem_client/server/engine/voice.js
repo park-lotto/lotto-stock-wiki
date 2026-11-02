@@ -19,8 +19,17 @@ export function keyFile(service = 'typecast') {
   return jail(homeDir(), 'keys/' + service);
 }
 
+// 화면에 가려 보이는 값(앞8·점8·뒤5, 서버 keycrypt.mask)은 키가 아니다(CS #453). 판단은 서버 keyroute.MASK_CHARS 와 같은 글자.
+export const isMaskedKey = v => /[*•●·×✕✱∗]/.test(String(v || ''));
+
 export function readKey(service = 'typecast') {
-  try { return fs.readFileSync(keyFile(service), 'utf8').trim(); } catch { return ''; }
+  let k = '';
+  try { k = fs.readFileSync(keyFile(service), 'utf8').trim(); } catch { return ''; }
+  if (service !== 'vertex_sa' && isMaskedKey(k)) {           // 이미 저장된 가린 값 — 없는 키로 보고 치운다. 점검이 다시 넣으라고 안내한다
+    try { fs.unlinkSync(keyFile(service)); } catch { /* 다음에 다시 */ }
+    return '';
+  }
+  return k;
 }
 
 // 회원이 넣는 키 목록 — 판단 한 곳(설정 화면·저장·엔진 환경변수가 이 표만 본다). 사장님 10-21: 미나 = 회원 일레븐랩스 키 · 쿠팡 = 회원 파트너스 키(없으면 회원 PC 크롬)
@@ -51,6 +60,7 @@ export function saveKey(service, value) {
     writeFileIn(homeDir(), 'keys/' + service, k, 0o600);
     return { ok: true, ...keyStatus(service) };
   }
+  if (isMaskedKey(k)) return { ok: false, why: `가려진 키입니다 — 점이나 별표가 섞인 값은 쓸 수 없어요. ${svc.where} 에서 전체 키를 복사해 주세요` };
   if (k.length < 16 || k.length > 300 || /\s/.test(k)) return { ok: false, why: `키 모양이 아닙니다 — ${svc.where} 의 키 전체를 붙여 넣으세요` };
   writeFileIn(homeDir(), 'keys/' + service, k, 0o600);
   return { ok: true, ...keyStatus(service) };
