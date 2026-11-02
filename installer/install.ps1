@@ -173,7 +173,7 @@ New-Item -ItemType Directory -Force -Path $local | Out-Null
 $allow = Join-Path $local 'settings.json'
 $allowJs = @'
 const fs = require('fs');
-const f = process.argv[2];
+const f = process.argv[1];
 let j = {};
 try { j = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) {}
 j.permissions = j.permissions || {};
