@@ -3865,6 +3865,7 @@ def ref_hash(ref: str) -> str:
 # 프리셋 → 공동 소재 창고(사장님 11-02 "채널 3개 다 반영, 손님이 만들어달라거나 물어보면 잘 섞어서"). 형식이 같은 판만 묶는다 — 소재가 그 판 흐름을 타야 한다.
 MIX_POOLS = {"banggu": "제품썰", "yummyknow": "제품썰", "humorshowshow": "제품썰", "ititemlog": "외국인K뷰티"}
 MIX_DIR = "_소재창고"
+MIX_MIN_VIEWS = 50000   # 공동 창고는 조회 상위만 돌리지 않고 이 위 전부를 회원별로 섞는다(사장님 11-03 "모두 상위권에서만 하면 똑같은 게 나온다"). 이 아래는 소재 힘이 약해 뺀다
 
 
 def _pool_rows(slug: str) -> list[dict] | None:
@@ -3874,7 +3875,10 @@ def _pool_rows(slug: str) -> list[dict] | None:
     f = shared if shared and shared.is_file() else PRESETS_FILE.parent / str(slug or "-") / "_kal" / ALT_LIST
     if not f.is_file():
         return None
-    return [r for r in json.loads(f.read_text(encoding="utf-8")).get("rows") or [] if isinstance(r, dict) and r.get("id")]
+    rows = [r for r in json.loads(f.read_text(encoding="utf-8")).get("rows") or [] if isinstance(r, dict) and r.get("id")]
+    if f == shared:
+        rows = [r for r in rows if (r.get("views") or 0) >= MIX_MIN_VIEWS] or rows
+    return rows
 
 
 def _mix_channels(rows: list[dict]) -> list[dict]:
@@ -3916,10 +3920,11 @@ def bench_pool(slug: str, done=(), skip_bench: bool = True, used=None, seed=None
             tiers.setdefault(int((used or {}).get(ref_hash(r["id"])) or 0), []).append(r)
         left = []
         for k in sorted(tiers):
-            top, rest = tiers[k][:POOL_MIX_TOP], tiers[k][POOL_MIX_TOP:]
+            n = len(tiers[k]) if str(slug or "") in MIX_POOLS else POOL_MIX_TOP
+            top, rest = tiers[k][:n], tiers[k][n:]
             if seed is not None:
                 top.sort(key=lambda r: hashlib.sha256(f"{seed}|{r['id']}".encode()).hexdigest())
-            left += top + rest
+            left += _mix_channels(top) + rest
     return [{"url": f"https://www.youtube.com/shorts/{r['id']}", "id": r["id"], "views": r.get("views"), "title": r.get("title")} for r in left]
 
 

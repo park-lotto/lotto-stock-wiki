@@ -146,3 +146,16 @@ def test_잇템로그는_제품썰_창고를_안_본다():
     titles = [r["channel"] for r in F._pool_rows("ititemlog")]
     assert set(titles) == {"잇템로그", "한국아우라"}
 
+
+def test_공동창고는_회원마다_조회_하위까지_고르게_퍼지고_채널이_섞인다(tmp_path, monkeypatch):
+    rows = [{"id": f"a{i:010d}", "views": 100000 + i * 1000, "title": "a", "channel": "가"} for i in range(60)] + [{"id": f"b{i:010d}", "views": 100000 + i, "title": "b", "channel": "나"} for i in range(60)]
+    _mix(tmp_path, monkeypatch, rows)
+    first = {F.bench_pool("banggu", seed=m)[0]["id"] for m in range(40)}
+    assert len(first) >= 25
+    assert [x["id"][0] for x in F.bench_pool("banggu", seed=1)[:4]] in (list("abab"), list("baba"))
+
+
+def test_공동창고는_조회가_너무_낮은_편을_뺀다(tmp_path, monkeypatch):
+    _mix(tmp_path, monkeypatch, [{"id": "aaaaaaaaaaa", "views": 49999, "channel": "가"}, {"id": "bbbbbbbbbbb", "views": 50000, "channel": "가"}])
+    assert [x["id"] for x in F.bench_pool("banggu")] == ["bbbbbbbbbbb"]
+
