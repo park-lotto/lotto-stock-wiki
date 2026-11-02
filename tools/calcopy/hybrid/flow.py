@@ -2919,6 +2919,8 @@ def ph_check_judge(st, m, rp, u):
         return {"goto": "deliver"}
     if auto_ok and look.get("unproved"):       # 안 본 답·제목 불일치 = 재료 탓이 아니다 — 고치기로 보내지 않고 눈 검사만 다시, 완성 허가도 주지 않는다
         st["log"].append("눈 검사 증거 미달: " + " / ".join(look.get("problems") or [])[:300])
+        if st["tries"].get("eye_proof", 0) >= LIMITS["eye_proof"]:     # 한도 뒤엔 알리고 완성(사장님 11-02 — 검사는 권고), 회원을 세우지 않는다
+            return finish_with_left(st)
         _tries(st, "eye_proof", LIMITS["eye_proof"], ["final_check"])
         return {"goto": "check"}
     long = [r for r in (st.get("auto") or {}).get("rows") or [] if r.get("what") == "길이" and r.get("ok") is False]
