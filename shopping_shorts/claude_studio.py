@@ -265,6 +265,10 @@ def style_summary(stem: str, d: dict, names: dict, brands: dict) -> dict:
             "group": nm.get("group") or "기타", "desc": nm.get("desc") or "", "badges": badges, "_slug": slug}
 
 
+# 판 카드 공개 스위치(관제 305, 사장님 11-02 '로컬처럼 2개만, 나머지는 비활성화') — 꺼 두면 화면이 회원 PC 와 같은 프리셋 카드(권한 안의 틀)만 그린다.
+#   공개할 프리셋 수는 권한(CP._entitled)이 정한다. 판 카드를 다시 열 때만 True
+STYLES_OPEN = False
+
 STYLES_FILE = HERE / "claude_styles.json"   # 판 요약(tools/claude_portal/style_catalog.py 가 엔진 판에서 만든다) — 서버엔 판 파일이 없다
 
 
@@ -367,7 +371,7 @@ def state(store, cid) -> dict:
     cat = catalog()
     own = (s["channels"].get(cur) or {}).get("pack") or {} if cur else {}
     show = {k: v for k, v in cat.items() if k not in ("default_pack", "preset_defaults")}
-    full = styles(store)
+    full = styles(store) if STYLES_OPEN else []
     sl = [{k: v for k, v in x.items() if not k.startswith("_")} for x in full]
     cur_st = next((x for x in full if x["id"] == s.get("style")), None)
     return {"host": "server", "presets": plist, "current": cur, "pack": pack_for(cat, cur, own) if cur else None,
@@ -379,7 +383,7 @@ def state(store, cid) -> dict:
 
 def select_style(store, cid, sid) -> dict:
     """프리셋(판) 고르기 — 판을 기억하고, 미리보기 바탕 틀은 그 판 채널의 틀로 맞춘다(템플릿을 고르면 템플릿이 덮는다)."""
-    st = next((x for x in styles(store) if x["id"] == sid), None)
+    st = next((x for x in styles(store) if x["id"] == sid), None) if STYLES_OPEN else None
     if not st:
         raise StudioError("bad_request", "모르는 프리셋입니다")
     s = _read(store, cid)
