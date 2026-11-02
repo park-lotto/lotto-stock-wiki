@@ -2035,7 +2035,8 @@ def home(cid, store=None) -> dict:
     def _pv(kind, pid):
         return str(pid) if pid is not None and _preview_file(kind, pid)[0] else None
 
-    passed = [r for r in led.get("results") or [] if r.get("state") == "통과"]
+    # 번호(n) 없는 장부 행은 미리보기를 못 여니 뺀다 — 한 행 때문에 회원 페이지 전체가 500 이 났다(11-02 ititemlog)
+    passed = [r for r in led.get("results") or [] if r.get("state") == "통과" and r.get("n") is not None]
     results = [{"n": r.get("n"), "brand": r.get("brand"), "style": r.get("style"), "seconds": r.get("seconds"),
                 "date": r.get("date"), "preview": _pv("result", r.get("n"))} for r in passed]
     plist = []
