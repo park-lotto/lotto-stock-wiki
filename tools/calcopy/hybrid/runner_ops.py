@@ -69,6 +69,8 @@ def yt(args: list, timeout: int = 300) -> subprocess.CompletedProcess:
     """yt-dlp 한 번 — 한국어 제목(lang=ko, 10-21 영어 번역 제목 #6) · 요청 사이 쉼(not a bot 차단) · 캐시 모드면 부르지 않는다."""
     if CACHE:
         raise CacheMiss("캐시 모드 — 유튜브를 부르지 않는다: " + " ".join(str(a) for a in args[-1:]))
+    from tools.calcopy.engine.yt_fetch import cap_args
+    args = cap_args(args)                        # 강제 상한(주인 yt_fetch.cap_fmt) — 받기가 지나는 입구
     wait = YT_GAP - (time.time() - _last_yt[0])
     if wait > 0:
         time.sleep(wait)
@@ -393,6 +395,28 @@ def done_refs() -> list[str]:
     return sorted(out)       # 'gpu'(NVENC) | 'cpu' — 그래픽카드 있으면 렌더가 GPU 우선(98 #79)
 
 
+def bench_fmt_args(material: bool) -> list:
+    """(판단 주인 — 벤치 받는 화질) 벤치는 분석만 하니 긴 변 1280(720p급). 재료가 될 수 있는 벤치(해외 원본형 — 소재가 곧 원본, d.material)만 1080 상한 그대로."""
+    from tools.calcopy.engine import yt_fetch as YF
+    if material:
+        return ["-f", YF.cap_fmt("bv*[height>=720]+ba/b"), *YF.SORT_1080]
+    return ["-f", YF.cap_fmt("bv*+ba/b", YF.BENCH_CAP), *YF.SORT_720]
+
+
+def bench_as_source(W: Path, vid: str, dst: Path) -> bool:
+    """소재가 곧 원본인 편 — 1080 으로 받아 둔 벤치를 원본 자리에 놓는다(같은 영상을 두 번 받지 않는다). 720 벤치는 재료로 안 쓴다."""
+    bd = W / "bench"
+    if dst.exists() or not (bd / "bench.mp4").exists() or not (bd / "bench.cap.json").exists():
+        return False
+    if not jload(bd / "bench.cap.json").get("material") or jload(bd / "bench.info.json").get("id") != vid:
+        return False
+    try:
+        os.link(bd / "bench.mp4", dst)
+    except OSError:
+        shutil.copyfile(bd / "bench.mp4", dst)
+    return True
+
+
 def c_bench(W, d):
     bd = W / "bench"; bd.mkdir(exist_ok=True)
     url, vid = d["url"], vid_of(d["url"])
@@ -409,11 +433,14 @@ def c_bench(W, d):
         if not mp4.exists() and not (bd / "bench.ko.vtt").exists():
             return {"error": f"cache_miss: 벤치 {vid}"}
     else:
-        from tools.calcopy.engine.yt_fetch import SORT_1080
-        yt(["-f", "bv*[height>=720]+ba/b", *SORT_1080, "--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko",
-            "-o", str(bd / "bench.%(ext)s"), url])
+        from tools.calcopy.engine import yt_fetch as YF
+        t0 = time.time()
+        yt(bench_fmt_args(bool(d.get("material"))) + ["--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko",
+                                                      "-o", str(bd / "bench.%(ext)s"), url])
         if not mp4.exists():
             return {"error": "벤치 영상을 받지 못했다" + (f" — {yt_why()}" if yt_why() else "")}
+        YF.fetch_note(mp4, "벤치 1080(재료 될 수 있음)" if d.get("material") else "벤치 720", time.time() - t0, url, lambda s: print(s, file=sys.stderr, flush=True))
+        jsave(bd / "bench.cap.json", {"material": bool(d.get("material"))})
     if (bd / "bench.info.json").exists():
         info = jload(bd / "bench.info.json")
     vtt = bd / "bench.ko.vtt" if (bd / "bench.ko.vtt").exists() else None
@@ -821,13 +848,15 @@ def c_origin_get(W, d):
         #   media_download.download_any 는 `python -m yt_dlp` 라 틱톡 흉내(impersonate, curl_cffi)가 없으면 'Unexpected response' —
         #   10-26 실측: 같은 @hismile 영상이 python 모듈 3회 실패 · yt-dlp.exe 1회 성공(13.8MB 1080p). 화질 상한은 media_download 와 같은 _Q_CAP.
         if not dst.exists():
-            from shopping_shorts.media_download import _Q_CAP
+            from tools.calcopy.engine import yt_fetch as YF
             why = ""
             for n in range(2):
-                r = subprocess.run(["yt-dlp", "--no-warnings", "--no-playlist", "-f", f"bv*{_Q_CAP}+ba/b{_Q_CAP}/b", "-S", "res,ext:mp4:m4a",
+                t0 = time.time()
+                r = subprocess.run(["yt-dlp", "--no-warnings", "--no-playlist", "-f", YF.cap_fmt("bv*+ba/b"), "-S", "res,ext:mp4:m4a",
                                     "--merge-output-format", "mp4", "-o", str(src / f"{vid}.%(ext)s"), url],
                                    capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
                 if dst.exists():
+                    YF.fetch_note(dst, "틱톡·인스타 원본", time.time() - t0, url, lambda s: print(s, file=sys.stderr, flush=True))
                     break
                 from tools.calcopy.origin_find import yt_error
                 why = yt_error(r.stderr)
@@ -851,6 +880,8 @@ def c_origin_get(W, d):
         return {"files": [dims(dst)], "offset": 0.0, "measured": True}
     from tools.calcopy.engine import yt_fetch as YF
     from tools.calcopy.hybrid import screen
+    if d.get("full") and bench_as_source(W, vid, dst):
+        print(f"[origin_get] 소재 = 원본 — 1080 벤치를 그대로 씀(다시 안 받음) {vid}", file=sys.stderr, flush=True)
     files = screen.download(W, [vid], None if d.get("full") else [(a, b)], prefix="", pad=SECTION_PAD)   # full = 통째로 바로(구간 받기가 멈추는 회선에서 기다림 150초+를 버린다, 10-22 실측 통째 47~53초)
     if not files:
         return {"error": "원본 받기 실패"}
@@ -1624,6 +1655,8 @@ def _c_plan(W, d):
     T = res.get("timeline") or {}
     out = {"over": over, "cuts": len(T.get("cuts") or []), "length": res.get("length"),
            "sig": hashlib.md5(json.dumps([[c.get("src"), round(float(c.get("ss") or 0), 2), round(float(c.get("t0") or 0), 2)] for c in T.get("cuts") or []]).encode()).hexdigest()}   # 계획 지문 — 고친 뒤 그대로인지(flow ph_plan_got)
+    if res.get("thumb_move"):      # 썸네일 장면을 새 컷으로 옮긴 결과(thumb.relocate) — 없어졌을 때만 flow 가 다시 묻는다
+        out["thumb_move"] = res["thumb_move"]
     if res.get("gates"):           # 관문별 걸린 수(기록용 — 질문 글은 over 하나에 전부, render_bench.timeline_gates)
         out["gates"] = {g: len(b) for g, b in res["gates"] if b}
     cf = _conflict_of(res)
@@ -1653,6 +1686,8 @@ def _c_render(W, d):
         return {"ok": False, "error": miss}
     try:
         info = render_bench.render(v, W / "doc" / v, W / v, pack=os.environ.get("SHORTEM_MEMBER_PACK"))
+    except render_bench.ThumbGone as e:      # 고른 썸네일 장면이 없어졌다 — 다시 묻는 길로(flow ph_render_got)
+        return {"ok": False, "thumb_gone": True, "error": str(e)[:300]}
     except StageError as e:
         if getattr(e, "problems", None):      # 렌더 전 관문 멈춤(render_bench.GateError) — 걸린 것 전부를 자르지 않고(한 번에 고치게, 10-26)
             return {"ok": False, "error": str(e), "gate": [[g, m] for g, m in e.problems]}
@@ -1688,10 +1723,14 @@ def c_check(W, d):
     if not any("벤치" in x for x in eye_files) and (W / "bench" / "sheet.jpg").exists():
         eye_files.insert(1, rel(W, W / "bench" / "sheet.jpg"))     # 회원 PC 는 벤치 대조 시트를 못 만든다 — 받아 둔 벤치 시트로 비교한다
     eye_texts = {n: (E / n).read_text(encoding="utf-8")[:6000] for n in EYE_TEXTS if (E / n).exists()}
+    chg = r.get("changed")
+    if chg and chg.get("spans"):       # 눈 재검사 = 바뀐 구간 시트만(flow._eye_scope)
+        sh = QG.changed_sheet(final, chg["spans"], E / "바뀐구간_시트.jpg")
+        chg = {**chg, "sheet": rel(W, sh) if sh else None}
     return {"auto": {"ok": ok, "rows": rows, "report": str(r.get("report")), "n_bad": sum(1 for x in rows if x.get("ok") is False),
                      "n_unmeasured": sum(1 for x in rows if x.get("ok") is None and not x.get("ref"))},
             "eye_files": eye_files, "eye_texts": eye_texts, "upgrade": bool(STY.load(v).get("base")),
-            "sheet": eye_files[0] if eye_files else None}
+            "sheet": eye_files[0] if eye_files else None, "changed": chg}
 
 
 # ── 해외원본형(관제 263 08) ────────────────────────────────────────────────

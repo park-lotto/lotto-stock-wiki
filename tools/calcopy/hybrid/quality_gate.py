@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import re
 
 
@@ -55,11 +56,13 @@ def vdur(p) -> float:
     return float(run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=duration", "-of", "csv=p=0", p]).stdout.strip().split(",")[0] or 0)   # 98 #73
 
 
-def part_frames(R: Path, T: dict) -> list:
-    """컷 조각마다 (번호, 줄, 원본@초, 계획, 실제) — 계획과 다른 것만."""
+def part_frames(R: Path, T: dict, only: list | None = None) -> list:
+    """컷 조각마다 (번호, 줄, 원본@초, 계획, 실제) — 계획과 다른 것만. only = 이 컷만(재사용 조각은 표식의 프레임 수를 렌더가 이미 대조했다)."""
     from tools.calcopy.hybrid.render_bench import count_frames
     bad = []
     for k, c in enumerate(T["cuts"]):
+        if only is not None and k not in only:
+            continue
         p = R / "parts" / f"c{k:02d}.mp4"
         got = count_frames(p) if p.exists() else 0
         if got != c.get("frames"):
@@ -667,6 +670,77 @@ def _row(rows: list, group: str, what: str, fn, src: str, timer=None, ref: bool 
     return ok
 
 
+CHECK_BASE = "check_base.json"     # 지난 검사가 본 컷 지문·줄·항목 결과 — 다음 검사가 바뀐 곳을 안다(changed_since)
+ROW_KEEP = (("script_audit", "doc"), ("thumb_rule.check", "doc"), ("컷 길이 중앙", "bounds"), ("훅 0.1~3초", "bounds"), ("재현일치도", "bounds"),
+            ("전환 세기", "bounds"), ("전환 길이", "bounds"))     # 지난 결과를 다시 쓸 수 있는 항목 — doc = 대본·썸네일·판이 같을 때 · bounds = 컷 경계가 같을 때(모두 참고 칸이거나 그 입력만 읽는다)
+#                                    소리·길이·전체 음량·화면 멈춤처럼 완성본 전체에 걸린 항목은 여기 없다 = 언제나 다시 잰다. 컷마다 재는 항목(남의 글자·조각 프레임)은 바뀐 컷만 잰다.
+
+
+def doc_sig(doc: Path, st: dict) -> str:
+    return hashlib.sha256(json.dumps([md5_text(doc / "대본.json"), md5_text(doc / "썸네일.json"), st], sort_keys=True, ensure_ascii=False, default=str).encode("utf-8")).hexdigest()
+
+
+def md5_text(p: Path) -> str:
+    return hashlib.md5(p.read_bytes()).hexdigest() if p.exists() else "-"
+
+
+def line_sigs(S: dict) -> dict:
+    return {str(l.get("id")): hashlib.md5(json.dumps([l.get(k) for k in ("kind", "tts", "caps", "text")], ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")).hexdigest()
+            for l in S.get("lines") or []}
+
+
+def changed_since(R: Path, T: dict, S: dict) -> dict | None:
+    """(판단 주인 — 지난 검사 뒤 무엇이 바뀌었나) 컷 지문(render_bench.cut_fp)과 줄 글을 지난 검사와 대조. 비교할 수 없으면 None(= 전부 다시).
+    {cuts: 새 컷 번호, lines: 글이 바뀐 줄, spans: 바뀐 초 구간, share: 영상 중 비율, same_bounds: 컷 경계가 같은가}."""
+    p = R / CHECK_BASE
+    cuts = T.get("cuts") or []
+    if not p.exists() or not cuts or any(not c.get("fp") for c in cuts):
+        return None
+    B = jload(p)
+    old = B.get("cuts") or []
+    if not old:
+        return None
+    new_k = [k for k, c in enumerate(cuts) if c["fp"] not in set(old)]
+    if not new_k and [c["fp"] for c in cuts] != old:        # 컷이 빠지거나 순서가 바뀌었다 — 어디가 바뀌었는지 컷으로 말할 수 없다
+        return None
+    now = line_sigs(S)
+    lines = [i for i, v in now.items() if (B.get("lines") or {}).get(i) != v]
+    sp = [[float(cuts[k]["t0"]), float(cuts[k]["t1"])] for k in new_k] + [list(T["lines"][i]) for i in lines if i in (T.get("lines") or {})]
+    merged = []
+    for a, b in sorted(sp):
+        if merged and a <= merged[-1][1] + 0.2:
+            merged[-1][1] = max(merged[-1][1], b)
+        else:
+            merged.append([a, b])
+    end = float(T.get("end") or 1.0) or 1.0
+    return {"cuts": new_k, "lines": lines, "spans": [[round(a, 3), round(b, 3)] for a, b in merged], "share": round(sum(b - a for a, b in merged) / end, 3),
+            "same_bounds": [[c["t0"], c["t1"]] for c in cuts] == (B.get("bounds") or [])}
+
+
+def changed_sheet(final: Path, spans: list, dst: Path, step: float = 0.25, cols: int = 8, w: int = 200) -> Path | None:
+    """바뀐 구간만 step 초마다 한 칸 — 눈 재검사용 시트(전체 시트 대신). 구간이 없으면 None."""
+    from PIL import Image, ImageDraw
+    from tools.calcopy.engine.remake import grab_frames
+    ts = [round(a + k * step, 2) for a, b in spans for k in range(max(1, int((b - a) / step)))][:48]
+    if not ts:
+        return None
+    h = round(w * 1920 / 1080)
+    frames = grab_frames(final, ts, size=(w, h))
+    rows = (len(ts) + cols - 1) // cols
+    sheet = Image.new("RGB", (cols * w, rows * (h + 22)), (20, 20, 20))
+    d = ImageDraw.Draw(sheet)
+    for i, t in enumerate(ts):
+        im = frames.get(t)
+        if im is None:
+            continue
+        x, y = (i % cols) * w, (i // cols) * (h + 22)
+        sheet.paste(im, (x, y + 22))
+        d.text((x + 4, y + 4), f"{t:.2f}s", fill=(255, 230, 0))
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    sheet.save(dst, quality=88)
+    return dst
+
+
 def _cached(store: dict, key: str, fn):
     if key in store:
         return store[key]
@@ -708,7 +782,18 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
     def save_store():
         jsave(cpath, store)
 
+    # 재검사(관제 304 검사표 7) — 지난 검사 뒤 바뀐 것만 잰다. 판정이 ×·미측정이었던 항목은 언제나 다시.
+    chg = changed_since(R, T, S) if mode == "full" and not only else None
+    prev = {r["what"]: r for r in (jload(R / CHECK_BASE).get("rows") or [])} if chg else {}
+    dsig = doc_sig(doc, st)
+    same_doc = bool(chg) and jload(R / CHECK_BASE).get("doc") == dsig
+
     def row(group, what, fn, src, ref=False):
+        scope = next((sc for k, sc in ROW_KEEP if what.startswith(k)), None)
+        old = prev.get(what)
+        if old and scope and (old.get("ok") is True or old.get("ref")) and (same_doc if scope == "doc" else chg["same_bounds"]) and not (scope == "bounds" and st.get("base")):
+            rows.append({**old, "value": f"(바뀐 곳과 무관 — 지난 결과) {old.get('value')}", "sec": 0.0})
+            return old.get("ok")
         return _row(rows, group, what, fn, src, timer, ref)
 
     def dur():
@@ -751,7 +836,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             f = thumb.face_check(final, win, tuple(first), log=log)
             return f["ok"], " ".join(f"{x['t']}s:{'○' if x['ok'] else x['why']}" for x in f["frames"])
         row("화면", "0초·첫 줄 얼굴", face, "thumb.face_check")
-        row("화면", "컷 조각 프레임 = 계획", lambda: (lambda b: (not b, "전부 같음" if not b else str(b)))(part_frames(R, T)), "parts/c*.mp4")
+        row("화면", "컷 조각 프레임 = 계획", lambda: (lambda b: (not b, "전부 같음" if not b else str(b)))(part_frames(R, T, chg["cuts"] if chg else None)), "parts/c*.mp4")
         row("화면", "화면 멈춤 없음", lambda: (lambda z: (not z, "0건" if not z else " ".join(f"{a}~{b}s" for a, b in z)))(freezes(final, win)), "창 안 프레임 차")
         row("화면", "흰·검은 화면 없음(완성본 실측)", lambda: (lambda z: (not z, "0건" if not z else str(z[:6])))(flat_frames(final)), "quality_gate.flat_frames")
         row("소리", "소리 끊김 없음(완성본 실측 1초↑)", lambda: (lambda z: (not z, "0건" if not z else str(z[:6])))(audio_gaps(final)), "quality_gate.audio_gaps")
@@ -762,8 +847,12 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
             """완성본 컷에 남의 박힌 글자가 남았나 — 렌더 전 관문 ④ 와 같은 함수(cut_content_gate)를 **지운 뒤 원본·지금 재료.blur** 로 다시(erase 없이).
             10-26 까르보 3판: VMake 시간 초과로 못 지운 컷을 ④ 가 '지울 예정'으로 넘겨, 'there is no guanciale' 영어 자막이 남은 완성본이 33/33 통과."""
             from tools.calcopy.hybrid.render_bench import cut_content_gate
-            probs = [p for p in cut_content_gate(T, jload(doc / "재료.json"), st, doc, R, log=lambda *_: None) if "글자" in p]
-            return (not probs, "0건" if not probs else " / ".join(probs)[:600])
+            old = prev.get("남의 박힌 자막 없음(관문 ④ 자 · 지운 뒤)")
+            part = chg and old and old.get("ok") is True        # 지난 검사 통과 + 지문이 같은 컷 = 같은 그림 — 바뀐 컷만 잰다
+            if part and not chg["cuts"]:
+                return True, "바뀐 컷 없음 — 지난 결과 0건"
+            probs = [p for p in cut_content_gate(T, jload(doc / "재료.json"), st, doc, R, log=lambda *_: None, only=chg["cuts"] if part else None) if "글자" in p]
+            return (not probs, ("0건" if not part else f"바뀐 컷 {len(chg['cuts'])}개 0건") if not probs else " / ".join(probs)[:600])
         row("화면", "남의 박힌 자막 없음(관문 ④ 자 · 지운 뒤)", foreign_left, "render_bench.cut_content_gate")
         if not legacy:
             def y_ok():
@@ -1070,6 +1159,10 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
         except Exception as e:  # noqa: BLE001 — 눈 검수 묶음 실패는 참고 행(사장님 10-26 "눈검수는 필요없다" — 판정 밖, 실패 글은 남긴다)
             rep["eye_pack_dir"] = None
             rep["rows"].append({"group": "표식", "what": "눈 검수 묶음(참고)", "ok": False, "ref": True, "value": f"만들기 실패: {e}", "src": "make_eye_pack"})
+    if mode == "full" and not only:
+        jsave(R / CHECK_BASE, {"cuts": [c.get("fp") for c in T.get("cuts") or []], "bounds": [[c["t0"], c["t1"]] for c in T.get("cuts") or []], "lines": line_sigs(S), "doc": dsig,
+                               "rows": rep["rows"], "final_md5": fmd5})
+    rep["changed"] = chg
     rep["final_md5"] = fmd5         # 이 결과가 어느 완성본 것인가 — 납품(engine/deliver)이 봉인 md5 와 대조한다(10-25 잇템로그 04: 결과 ×인데 다른 판이 나갔다)
     if not legacy:
         jsave(doc / "품질관문.json", rep)
@@ -1078,7 +1171,7 @@ def gate(style_name: str, doc, work, bench: bool = True, eye_pack: bool = True, 
     for r in rep["rows"]:
         log(f"  {'참고' if r.get('ref') else '○' if r['ok'] is True else '×' if r['ok'] is False else '미측정'} [{r['group']}] {r['what']} ({r.get('sec')}초): {r['value']}")
     return {"ok": rep["ok"], "report": str(doc / ("자동검사.json" if legacy else "품질관문.json")), "rows": rep["rows"], "match": match, "fit": fit_res,
-            "eye_pack_dir": rep.get("eye_pack_dir")}
+            "eye_pack_dir": rep.get("eye_pack_dir"), "changed": chg}
 
 
 # ---------------------------------------------------------------- 2단 눈 검수 묶음(표준 §5-2)

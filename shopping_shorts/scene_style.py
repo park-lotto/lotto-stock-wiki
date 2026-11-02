@@ -799,8 +799,9 @@ def _layer_render_timeout(context):
     return int(min(900, max(240, 120 + total * 30 * 0.5)))
 
 
-def render_layers(timeline, snapshot, output, headcopy=None, job_id=None):
-    """브라우저 미리보기와 외부 편집기가 함께 쓰는 투명 장면 레이어를 만든다."""
+def render_layers(timeline, snapshot, output, headcopy=None, job_id=None, only=None):
+    """브라우저 미리보기와 외부 편집기가 함께 쓰는 투명 장면 레이어를 만든다.
+    only = 이 장면 번호만(부분 렌더 — 나머지 칸은 결과 목록에 None)."""
     snapshot = validate_snapshot(snapshot)
     context = context_for(timeline, headcopy, snapshot, job_id)
     if not context["scenes"]:
@@ -809,7 +810,7 @@ def render_layers(timeline, snapshot, output, headcopy=None, job_id=None):
     output.mkdir(parents=True, exist_ok=True)
     request = output / "scene-style-request.json"
     request.write_text(
-        json.dumps({"snapshot": snapshot, "context": context, "output": str(output)},
+        json.dumps({"snapshot": snapshot, "context": context, "output": str(output), **({"only": list(only)} if only is not None else {})},
                    ensure_ascii=False),
         encoding="utf-8",
     )
@@ -1188,7 +1189,8 @@ def compose_still(frame_path, timeline, snapshot, work, index, out_path, headcop
     return out_path
 
 
-def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
+def compose(in_video, timeline, snapshot, out_path, work, headcopy=None, cache=None):
+    """cache(칼카피 render_bench.SceneReuse) = 장면 조각 재사용 — 같은 지문 칸은 레이어·인코딩을 건너뛴다. None(숏템메이커 고객 길) = 옛 동작 그대로."""
     from . import video_assemble as va
     snapshot=validate_snapshot(snapshot)
     context=context_for(timeline,headcopy,snapshot)
@@ -1199,12 +1201,33 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
     if late:
         raise RuntimeError(f"장면 시간표가 영상보다 길다: 영상 {video_frames/30:.2f}초인데 장면 {late[0][0]}이 {late[0][1]:.2f}초에 시작(넘는 장면 {len(late)}개)")
     work=Path(work).resolve()
-    layers=render_layers(timeline,snapshot,work,headcopy)
+    work.mkdir(parents=True,exist_ok=True)
     parts=[]
     runs=zoom_runs(context["scenes"],snapshot.get("effects"))
+    kept={}
+    if cache:
+        enc=[va._preset(),va._crf(),*SCENE_PART_VBV,"yuv420p"]
+        for index,scene in enumerate(context["scenes"]):
+            first_frame, last_frame = round(scene["start"]*30), round(scene["end"]*30)
+            if last_frame > first_frame:
+                token=cache.token(index,context,first_frame,last_frame,runs[index],snapshot,enc)
+                kept[index]=(token,cache.get(token,last_frame-first_frame))
+        todo=[index for index,(_,part) in kept.items() if part is None]
+        layers=render_layers(timeline,snapshot,work,headcopy,only=todo) if todo else [None]*len(context["scenes"])
+    else:
+        layers=render_layers(timeline,snapshot,work,headcopy)
     for index,(scene,layer) in enumerate(zip(context["scenes"],layers,strict=True)):
         first_frame, last_frame = round(scene["start"]*30), round(scene["end"]*30)
         if last_frame <= first_frame:
+            continue
+        if kept.get(index,(None,None))[1]:           # 같은 지문 = 같은 그림 — 이 칸은 다시 안 만든다
+            part=work/f"scene-style-{index:04d}.mp4"
+            cache_file=kept[index][1]
+            try:
+                os.link(cache_file,part)
+            except OSError:
+                __import__("shutil").copyfile(cache_file,part)
+            parts.append(part)
             continue
         effect,run_off,run_dur=runs[index]   # 같은 장면 다음 자막 칸은 확대를 이어받는다(zoom_runs)
         width,height,top,zw,zh,crop_x,crop_y=media_geometry(layer,effect)
@@ -1242,6 +1265,8 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
         part=work/f"scene-style-{index:04d}.mp4"
         va._run_ffmpeg(["ffmpeg","-y","-ss",str(first_frame/30),"-i",str(in_video),*layer_input,"-filter_complex",graph,"-map","[final]","-an","-frames:v",str(last_frame-first_frame),"-r","30","-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),*SCENE_PART_VBV,*va._threads_args(),"-pix_fmt","yuv420p",str(part)],cwd=str(work),timeout=120+(last_frame-first_frame)*2)
         parts.append(part)
+        if cache:
+            cache.put(kept[index][0],part,last_frame-first_frame)
     listing=work/"scene-style-concat.txt"
     listing.write_text("\n".join(f"file '{p.name}'" for p in parts),encoding="utf-8")
     # 오디오는 장면별로 재인코딩하지 않는다. AAC 지연이 장면마다 누적되는 것을 막는다.

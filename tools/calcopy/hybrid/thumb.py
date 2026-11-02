@@ -275,6 +275,91 @@ def pick_option(doc: Path, spec: dict) -> str:
     return spec["pick"]
 
 
+CARD_MARKS = ("circle", "arrow", "q", "hide", "zoom")     # 카드 칸 좌표에 찍는 것 — crop 이 바뀌면 자리가 어긋난다
+
+
+CROP_SHIFT = 0.03        # 실제 자르기 칸이 칸 폭의 이 비율 안에서 움직이면 같은 구도로 본다(넘으면 원·글 자리가 어긋난다)
+
+
+def same_crop(a, b) -> bool:
+    """실제 자르기 칸 비교. 'face' 는 글자로 같아도 시작 초마다 칸이 다르다 — 넘겨받은 값은 실제 칸이어야 한다."""
+    if not (isinstance(a, list) and isinstance(b, list) and len(a) == 4 and len(b) == 4):
+        return a == b
+    tol = CROP_SHIFT * max(a[2], b[2])
+    return all(abs(x - y) <= tol for x, y in zip(a, b))
+
+
+def card_at(o: dict, c: dict, crop_of=None) -> dict:
+    """컷 번호·컷 안 초 → 원본·원본 초(늦춘 컷은 × speed — card_scene_frame 과 같은 계산) + 그 컷의 실제 자르기 칸."""
+    return {"src": c["src"], "sec": round(float(c.get("ss") or 0) + float(o.get("t", 0.0)) * float(c.get("speed") or 1.0), 3), "crop": (crop_of or (lambda x: x.get("crop")))(c)}
+
+
+def card_find(o: dict, cuts: list[dict], crop_of=None) -> tuple[int, float] | None:
+    """원본·초가 들어 있는 컷 (번호, 컷 안 초) — 없으면 None(장면이 없어졌다). 카드에 원·글 자리가 찍혀 있고 그 컷 crop 이 달라졌으면 없어진 것으로 본다."""
+    at = o["at"]
+    marks = any(o.get(k) for k in CARD_MARKS)
+    for k, c in enumerate(cuts):
+        if c["src"] != at["src"]:
+            continue
+        sp = float(c.get("speed") or 1.0)
+        a = float(c.get("ss") or 0)
+        d = float(c.get("dur") or (float(c["t1"]) - float(c["t0"])))
+        pic = Path(c["src"]).suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")     # 사진은 한 장 — 같은 사진이면 같은 장면
+        if not pic and not a <= float(at["sec"]) < a + d * sp:
+            continue
+        if marks and not same_crop((crop_of or (lambda x: x.get("crop")))(c), at.get("crop")):
+            continue
+        return (k, min(float(o.get("t", 0.0)), d)) if pic else (k, round((float(at["sec"]) - a) / sp, 3))
+    return None
+
+
+def relocate(doc: Path, T: dict, log=print, crop_of=None) -> dict:
+    """(판단 주인 — 재료·줄이 바뀐 뒤 썸네일 장면) 안마다 원본·초(at)를 기억해 새 시간표의 컷으로 옮긴다. 컷 번호가 밀려도 AI 에게 다시 묻지 않는다(11-01 키치잇 재호출).
+    at 이 없는 안 = 지금 시간표로 고른 안 → 지금 자리를 at 으로 적는다. 고른 안 장면이 없어지면 살아 있는 안으로 바꾸고, 다 없어졌을 때만 pick_gone(flow 가 다시 묻는다).
+    crop_of(컷) = 그 컷의 실제 자르기 칸(주인 render_bench.cut_crop) — 카드의 원·글 좌표는 이 칸에 찍혀 있어 칸이 바뀌면 장면이 없어진 것으로 본다.
+    계획·렌더가 시간표를 만든 뒤 부른다. 반환 {have, moved, gone, pick, pick_gone}."""
+    sp = Path(doc) / "썸네일.json"
+    spec = jload(sp) if sp.exists() else {}
+    opts = spec.get("options") or []
+    cuts = T.get("cuts") or []
+    if not opts or not cuts:
+        return {"have": False, "moved": [], "gone": [], "pick_gone": False}
+    moved, gone, touched = [], [], False
+    for o in opts:
+        if o.get("file"):                  # 원본 자리를 직접 적은 안 — 컷과 상관없다
+            continue
+        if not o.get("at"):
+            k = o.get("part")
+            if o.get("line"):
+                ks = [i for i, c in enumerate(cuts) if c["line"] == o["line"]]
+                k = ks[int(o.get("nth", 0))] if len(ks) > int(o.get("nth", 0)) else None
+            if k is None or not 0 <= int(k) < len(cuts):
+                gone.append(o.get("id")); o["gone"] = True; o["part"] = 0; o["t"] = 0.0; touched = True
+                continue
+            o["at"] = card_at(o, cuts[int(k)], crop_of); touched = True
+            continue
+        hit = card_find(o, cuts, crop_of)
+        if hit is None:
+            gone.append(o.get("id"))
+            o["gone"] = True; o["part"] = min(int(o.get("part") or 0), len(cuts) - 1); o["t"] = 0.0
+            touched = True
+            continue
+        k, t = hit
+        if k != o.get("part") or abs(float(o.get("t", 0.0)) - t) > 1e-3 or o.get("gone") or o.get("line"):
+            moved.append(o.get("id")); touched = True
+        o.pop("gone", None); o.pop("line", None); o.pop("nth", None)
+        o["part"], o["t"] = k, t
+    alive = [o.get("id") for o in opts if not o.get("gone")]
+    pick = spec.get("pick")
+    if pick in gone and alive:
+        spec["pick"] = pick = alive[0]; touched = True
+    if touched:
+        jsave(sp, spec)
+    if moved or gone:
+        log(f"[썸네일] 원본·초 기준으로 옮김 {moved} · 장면 없어짐 {gone} · 고른 안 {pick}")
+    return {"have": True, "moved": moved, "gone": gone, "pick": pick, "pick_gone": not alive}
+
+
 def _part_frame(work: Path, part: int, t: float, wh: tuple[int, int] = (1080, 1434)):
     from PIL import Image
     p = Path(work) / "render/parts" / f"c{part:02d}.mp4"
@@ -398,7 +483,7 @@ def cards(style_name: str, doc: Path, work: Path, log=print) -> dict:
     doc = Path(doc)
     spec = jload(doc / "썸네일.json")
     outs = []
-    for o in spec["options"]:
+    for o in [x for x in spec["options"] if not x.get("gone")]:       # 장면이 없어진 안은 그리지 않는다(relocate)
         p = card(style_name, doc, work, o, doc / "thumb" / f"{o['id']}.jpg")
         outs.append((o, p))
         log(f"[card] {o['id']} {p}")
@@ -467,7 +552,7 @@ def card_faces(st: dict, doc: Path, T: dict, cand_dir: Path) -> list[dict]:
     from tools.calcopy.hybrid.render_bench import frame_window
     _, _, ww, wh = frame_window(st["frame"])
     rows = []
-    for o in jload(sp).get("options") or []:
+    for o in [x for x in jload(sp).get("options") or [] if not x.get("gone")]:
         im, where = card_scene_frame(o, T, cand_dir, (ww, wh))
         if im is None:
             rows.append({"id": o.get("id"), "ok": False, "why": where, "where": where}); continue
