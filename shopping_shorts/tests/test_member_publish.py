@@ -89,9 +89,10 @@ def test_open_dry_plan_starts_with_member_check(eng, monkeypatch, capsys):
     monkeypatch.setattr(MP.subprocess, "run", lambda *a, **k: called.append(a))
     assert MP.main(["--engine", str(eng), "open", "--dry", "--version", "9.9.9", "--out", str(eng / "build")]) == 0
     out = capsys.readouterr().out
-    lines = [l for l in out.splitlines() if l[:2] in ("1.", "2.", "3.", "4.")]
+    lines = [l for l in out.splitlines() if l[:2] in ("1.", "2.", "3.", "4.", "5.")]
     assert "member_check.py" in lines[0] and "channel/okpan/preset/b" in lines[0]
-    assert "preset_pack.py build" in lines[1] and "build_win.py" in lines[2] and "upload_release.py" in lines[3]
+    assert "preset_pack.py" in lines[1] and "benchmark_pack.py" in lines[2]        # 프리셋 꾸러미 → 고급반 벤치마킹 묶음
+    assert "build_win.py" in lines[3] and "upload_release.py" in lines[4]
     assert called == []
 
 

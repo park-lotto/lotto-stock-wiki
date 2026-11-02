@@ -344,6 +344,7 @@ def test_clean_text_check_only_no_key_blurs(tmp_path, monkeypatch):
     monkeypatch.setenv("CALCOPY_VMAKE_VIA", "member")
     monkeypatch.delenv("VMAKE_API_KEY", raising=False)
     monkeypatch.setattr(VC, "MEMBER_KEY_FILE", tmp_path / "none")
+    monkeypatch.setattr(VC, "free_ok", lambda: False)        # 이 PC 에 무료 엔진이 있어도 시험은 키만 본다
     assert R.c_clean_text(tmp_path, {"check": True})["mode"] == "blur"
     monkeypatch.setenv("VMAKE_API_KEY", "ak:sk")
     assert R.c_clean_text(tmp_path, {"check": True})["mode"] == "vmake"

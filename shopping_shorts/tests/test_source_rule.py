@@ -233,7 +233,7 @@ def test_any_stop_retries_from_last_asker_with_its_inputs(monkeypatch):
     r = flow.step(st, {}, {"task_1": {"action": "end"}}, {})
     assert r["status"] == "stop" and r.get("retry_ok") and st["stopped"]["retry"] == "c"
     r = flow.step(st, {}, {}, {"retry": True})
-    assert r["status"] == "execute" and seen == [{"v": 1}, {"v": 1}] and st["tries"] == {}
+    assert r["status"] == "execute" and seen == [{"v": 1}, {"v": 1}] and st["tries"] == {"plan": 3}   # 다시 시도가 횟수를 지우지 않는다(관제 304)
     st2 = {"phase": "stopped", "stopped": {"why": "의약품", "fix": ""}, "tries": {}, "log": []}
     assert flow.step(st2, {}, {}, {"retry": True})["status"] == "stop"            # final 멈춤·retry 없는 멈춤은 그대로
 
