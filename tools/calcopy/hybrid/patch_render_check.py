@@ -268,6 +268,10 @@ def run_check(base: Path, style: str, how: str, cut: int, n_lines: int = 4, thum
     keep = base / "w0_copy"
     shutil.copytree(W0, keep, copy_function=shutil.copy2)     # 같은 절대 경로에서 두 번 돌리려고 — 첫 렌더 뒤 상태를 보관했다가 전체 렌더 전에 되돌린다
     real_check = FS.check
+    if trouble == "nostate":      # 기준선 — 구간 교체 전 길(바뀐 컷·자막 칸만 재사용, 바탕·광고·썸네일·소리는 전체)의 시간
+        (W0 / style / "render" / RB.PATCH_STATE).unlink()
+        sec, _, _ = _render(W0, style)
+        return {"changed": what, "sec": {**t, "옛 부분 렌더": sec}, "stages": {"옛 부분 렌더": dict(STAGES)}, "bad": []}
     if trouble == "scenes":
         shutil.rmtree(W0 / style / "render" / "scene_cache")
     if trouble == "splice":
@@ -304,7 +308,7 @@ def main():
     ap.add_argument("--cut", type=int, default=2)
     ap.add_argument("--lines", type=int, default=4)
     ap.add_argument("--thumb", action="store_true", help="바뀐 컷을 고른 썸네일 카드도 있는 편")
-    ap.add_argument("--trouble", default="", choices=("", "scenes", "splice"))
+    ap.add_argument("--trouble", default="", choices=("", "scenes", "splice", "nostate"))
     ap.add_argument("--keep", action="store_true")
     a = ap.parse_args()
     base = Path(a.folder)

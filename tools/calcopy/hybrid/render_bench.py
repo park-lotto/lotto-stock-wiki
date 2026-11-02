@@ -2909,12 +2909,12 @@ def render_window(T: dict, M: dict, st: dict, R: Path, trans: list[dict] | None 
     return window_transitions(win, T, st, R, trans)
 
 
-def window_transitions(win: Path, T: dict, st: dict, R: Path, trans: list[dict] | None) -> Path:
-    """창 영상에 전환(줌블러·검은 프레임)을 입힌다 — 그릴 것이 없으면 창 그대로(다시 굽지 않는다)."""
+def window_transitions(win: Path, T: dict, st: dict, R: Path, trans: list[dict] | None, upto: int | None = None) -> Path:
+    """창 영상에 전환(줌블러·검은 프레임)을 입힌다 — 그릴 것이 없으면 창 그대로(다시 굽지 않는다). upto = 이 프레임까지만(구간 교체 — 뒤는 안 읽는다)."""
     x, y, ww, wh = frame_window(st["frame"])
     fx = window_fx(trans or [], ww, wh)
     if fx:
-        n_all = sum(c["frames"] for c in T["cuts"])
+        n_all = upto or sum(c["frames"] for c in T["cuts"])
         out = R / "window_tr.mp4"
         run(["ffmpeg", "-y", "-v", "error", "-i", win, "-filter_complex", fx, "-map", "[v]", "-frames:v", n_all, "-r", FPS,
              *venc(16), "-pix_fmt", "yuv420p", out])
@@ -4165,7 +4165,6 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         log(f"[모션그래픽] {MG['id']} — bench 자막팩이라 안 그리는 칸: {MG['not_drawn']}")
     if not scope:
         trans = transitions_of(T, st, placed, log)
-    win = window_transitions(win0, T, st, R, trans)
     if look:
         log(f"[회원 꾸민 모양] {look.get('presetId')} — 판 틀 그림 대신 회원 스냅샷으로 틀·자막(창 영상만 넘김)"
             + (" · 댓글 카드는 창 밖이면 잘린다" if placed.get("comment") else ""))
@@ -4184,6 +4183,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         log(f"[구간 교체] 바뀐 컷 {changed} · 프레임 구간 {ranges} — 시간표·배치·소리 그대로")
 
     def bake(span):
+        win = window_transitions(win0, T, st, R, trans, upto=span[1] if span else None)
         base = render_base(S, T, st, placed, R, win, trans, name="base_patch.mp4" if span else "base.mp4", color=(MG or {}).get("color_filter"), look=bool(look), span=span)
         png = None if look else R / "frame.png"
         reuse = SceneReuse(T, st, S, placed, trans, segs, R, png, (MG or {}).get("color_filter"), log)      # 안 바뀐 자막 칸 재사용(scene_token — 컷 지문으로 만든다)
