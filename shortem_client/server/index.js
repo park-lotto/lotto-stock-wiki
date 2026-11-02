@@ -19,7 +19,7 @@ import { resolveTools } from './tools_paths.js';
 import { readLicense, saveLicense, keyPrint, deviceName, ENGINE_VERSION } from './license.js';
 import { keyStatus, KEY_SERVICES } from './engine/voice.js';
 import { homeDir, workDir, writeFileIn, jail } from './paths.js';
-import { selftest, encoderCheck } from './selftest.js';
+import { selftest, encoderCheck, voiceProvider } from './selftest.js';
 import { makeStep, aiList } from './make_flow.js';
 import { pullLive, reportLive, withTeam } from './live.js';
 import { requestContent, IMAGE_BUDGET_B64, answer as aiAnswer, engineRoot } from './engine_bridge.js';
@@ -147,7 +147,8 @@ export function buildServer(ctx = makeCtx()) {
     for (const [k, pf] of Object.entries(PLATFORMS)) {
       if (!logged[k]) fails.push({ where: '계정 연결', why: `${pf.name} 로그인이 아직 안 됐습니다`, fix: `shortem_login(action="open", platform="${k}") 로 창을 열고 로그인·창 닫기를 부탁한 뒤 다시 점검`, retry_ok: true });
     }
-    if (!keyStatus('typecast').present) fails.push({ where: '키', why: `${KEY_SERVICES.typecast.label} 가 없습니다`, fix: `shortem_settings(action="open") 의 키 칸에 넣어 달라고 부탁 (${KEY_SERVICES.typecast.where})`, retry_ok: true });
+    const voiceKey = KEY_SERVICES[voiceProvider(readSettings())] ? voiceProvider(readSettings()) : 'typecast';   // 고른 목소리 회사의 키만 본다(11-02)
+    if (!keyStatus(voiceKey).present) fails.push({ where: '키', why: `${KEY_SERVICES[voiceKey].label} 가 없습니다`, fix: `shortem_settings(action="open") 의 키 칸에 넣어 달라고 부탁 (${KEY_SERVICES[voiceKey].where})`, retry_ok: true });
     // API 도구 점검 결과 — 막지 않고 알린다. 쿠팡은 있으면 먼저 쓰고 없으면 크롬으로 찾는다(사장님 11-02)
     const coupangKey = keyStatus('coupang_access').present && keyStatus('coupang_secret').present;
     const apiTools = [
