@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""libass로 **실제 렌더**해서 글자의 잉크 폭을 잰다 — 볼케이노 실행기 `_fontprobe`와 같은 방식.
+"""libass로 **실제 렌더**해서 글자의 잉크 폭을 잰다 — 외부 사례 실행기 `_fontprobe`와 같은 방식.
 
 왜 PIL이 아닌가: PIL `getlength`는 libass보다 1.3~1.4배 크게 나온다(ASS Fontsize 해석 차이, 8편 문서 §3-②).
   이 값으로 판정하면 멀쩡한 줄을 반려하고, 제목 축소 크기가 틀린다.
@@ -137,7 +137,7 @@ def _render_edges(items, fonts_dir):
 
 
 def font_probe(fonts_dir=None):
-    """폰트 4종이 진짜 잡히는지 — 없는 글꼴의 폴백 폭과 대조 (볼케이노 _fontprobe 방식)."""
+    """폰트 4종이 진짜 잡히는지 — 없는 글꼴의 폴백 폭과 대조 (외부 사례 _fontprobe 방식)."""
     fonts_dir = fonts_dir or spec.FONTS_DIR
     probe = "가나다라마바사"
     names = sorted({v[0] for v in spec.STYLE_FONT.values()})

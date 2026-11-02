@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """audio — A.*  통합 LUFS·TP·LRA·단기 폭·오프닝 음량(두 자)·8~16k 고역.
 
-자 정의(설계 §1, 볼케이노 규율):
+자 정의(설계 §1, 외부 사례 규율):
   - I/LRA/TP = ebur128 stderr의 **마지막** `^\\s*I:` / `LRA:` / `Peak:` (re.M) — Summary 값
   - S 폭 = 정렬 인덱스 S[int(n·.9)] − S[int(n·.1)], S > −70만, n < 20 이면 None, 앞부분 버리지 않음
   - 모노 = (L+R)/2 f32 (`-ac 1`은 +3.01dB)
@@ -54,7 +54,7 @@ def band_rms_db(x: np.ndarray, lo: float, hi: float) -> float:
 
 
 def openvoice(x: np.ndarray) -> dict | None:
-    """20ms RMS dB: 바닥 = 전체 p10, 오프닝(첫 OPEN_S) p90 − 바닥 / 본편 p90 − 바닥 (볼케이노 A7)."""
+    """20ms RMS dB: 바닥 = 전체 p10, 오프닝(첫 OPEN_S) p90 − 바닥 / 본편 p90 − 바닥 (외부 사례 A7)."""
     W = int(SR * WIN_S)
     n = x.size // W
     if n < 8:

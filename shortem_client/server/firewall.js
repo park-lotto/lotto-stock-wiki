@@ -114,8 +114,8 @@ export function shape(out, secret) {
   if (Array.isArray(src.plan_files)) r.plan_files = src.plan_files.slice(0, 20).map(f => clean(f, null, 60));
   if (isObj(src.script)) r.script = { title: clean(src.script.title, null, 100), lines: (src.script.lines || []).slice(0, 30).map(l => clean(l, null, 200)) };
   if (typeof src.video === 'string') r.video = clean(src.video, null, 600);
-  if (typeof src.stage === 'string') { r.stage = clean(src.stage, null, 40); if (src.step != null) r.step = int(src.step, 0, 99); if (src.step_total != null) r.step_total = int(src.step_total, 0, 99); }   // 진행 한 줄(볼케이노처럼 단계만)
-  if (typeof src.message === 'string') r.message = clean(src.message, null, 80);   // 볼케이노형 진행 한 줄("OO 완료 → 다음 OO", 관제 234 10-21)
+  if (typeof src.stage === 'string') { r.stage = clean(src.stage, null, 40); if (src.step != null) r.step = int(src.step, 0, 99); if (src.step_total != null) r.step_total = int(src.step_total, 0, 99); }   // 진행 한 줄(단계만)
+  if (typeof src.message === 'string') r.message = clean(src.message, null, 80);   // 단계형 진행 한 줄("OO 완료 → 다음 OO", 관제 234 10-21)
   if (typeof src.title === 'string' && src.need === 'done') r.title = clean(src.title, null, 100);
   if (typeof src.preset_used === 'string') r.preset_used = clean(src.preset_used, null, 40);
   if (typeof src.preset_note === 'string') r.preset_note = clean(src.preset_note, null, 100);   // 별칭 → 프리셋 이름 한 줄(98 #160)   // 한 줄 요청으로 고른 프리셋 이름(고객용 이름)

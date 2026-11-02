@@ -7,7 +7,7 @@
 2. **구간을 잘라 두 모델로 받아쓴다** (사장님 10-21: 스피치매틱스 먼저 — 유료 승인, 대조는 제미나이 무료 모델 또는 위스퍼):
    ```
    ffmpeg -ss <a> -to <b> -i src/<원본>.mp4 -ac 1 -ar 16000 asr/O1.wav
-   PYTHONUTF8=1 py -c "from tools.calcopy.engine.asr_local import transcribe; import json; print(json.dumps(transcribe('asr/O1.wav', engine='speechmatics'), ensure_ascii=False))"   # 주인 한 곳(키 ~/.volcano/keys/speechmatics, 실패 시 위스퍼+note)
+   PYTHONUTF8=1 py -c "from tools.calcopy.engine.asr_local import transcribe; import json; print(json.dumps(transcribe('asr/O1.wav', engine='speechmatics'), ensure_ascii=False))"   # 주인 한 곳(키 설정 화면의 키 칸 speechmatics, 실패 시 위스퍼+note)
    # 옛 두 벌째 = .venv 파이썬 tools/hotpeople/measure/asr_speechmatics.py (같은 키) — 프리셋에선 asr_local 만
    ```
    위스퍼(로컬 faster-whisper small, 무료): 오디오를 numpy 배열로 넘긴다(파일 경로로 넘기면 av 버전 문제로 죽는다).

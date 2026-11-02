@@ -5,7 +5,7 @@ tools/hotpeople/measure/faces_text.py(2026-09-28, 원본 9편·v3 실측 자)를
   얼굴  : YuNet(facelib_cv, 점수 0.7, 두 배율)                          ← 동봉 facelib_cv.py (MIT, LICENSE-YUNET)
   동일성: SFace 임베딩(cv2.FaceRecognizerSF) · alignCrop 은 YuNet 원시 행 ← 랜드마크 0 채우면 cos=1.0(자가 아무것도 안 잼)
   글자  : PP-OCRv5 server det(글자 상자만, 인식 없음)                  ← 동봉 ocrdet.py (Apache-2.0, LICENSE-PADDLEOCR)
-★동봉 두 파일은 볼케이노 framevision 팩과 **바이트 동일**(sha256 manifest 대조). 고치지 마라.
+★동봉 두 파일은 외부 사례 framevision 팩과 **바이트 동일**(sha256 manifest 대조). 고치지 마라.
 ★모델(onnx)은 저장소에 없다: SHORTEM_MODELS 또는 ~/.shortem/models. 없으면 죽는다 — 조용한 폴백 금지.
 
 그림 입력은 전부 **BGR uint8**(cv2 관례). 반환 좌표는 그림 크기 대비 0~1.
@@ -202,7 +202,7 @@ def text_boxes_scored(bgr):
       score = 윤곽 안 확률 평균(PaddleOCR box_score_fast 와 같은 뜻 — Paddle 기본 det_db_box_thresh 0.6)
       fill  = 윤곽 넓이 / 바깥 사각형 넓이(얼굴 가장자리·질감을 따라 번진 가짜 윤곽은 낮다).
     ★왜: text_boxes 는 점수 없이 문턱 0.3 윤곽을 전부 상자로 준다 — 10-25 잇템로그 05 얼굴 컷에서 얼굴 크기 가짜 상자가 나왔다(관문 ④ 표본).
-    ocrdet.py 는 볼케이노 팩과 바이트 동일이라 고치지 않고 여기서 prob_map 을 불러 잰다."""
+    ocrdet.py 는 외부 사례 팩과 바이트 동일이라 고치지 않고 여기서 prob_map 을 불러 잰다."""
     import cv2
     from . import ocrdet
     det = _ocr()

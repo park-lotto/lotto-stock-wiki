@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""회원 PC **실행기**(볼케이노형 손, 관제 234·097 2026-10-21). 서버 지시서(hybrid/flow.py)가 내려 준 do 목록을 그대로 돌리고 measure 를 낸다.
+"""회원 PC **실행기**(단계형 손, 관제 234·097 2026-10-21). 서버 지시서(hybrid/flow.py)가 내려 준 do 목록을 그대로 돌리고 measure 를 낸다.
 허용된 cmd 만 돈다(서버가 코드·명령줄을 보내지 않는다). 판단은 하지 않는다 — 판정 함수는 rules(서버와 같은 것)를 부른다.
 
     python -m tools.calcopy.hybrid.runner_ops <작업 폴더> <do.json>      → 표준출력 마지막 줄 = measure JSON {do id: 결과}
 
 유튜브 받기는 yt() 한 곳(요청 사이 쉼 — 10-21 'not a bot' 차단 교훈 · 한국어 제목). SHORTEM_SOURCE_CACHE=<폴더> 면 받아 둔 파일만 쓰고
 유튜브는 한 번도 두드리지 않는다(없으면 cache_miss — 시험용, 사장님 10-21 "유튜브는 두드리지 말고 기다려").
-옛 자리: hybrid/customer.py(10-21 TheRose PC) 의 기계 함수들 — 볼케이노형 분해 때 이리로 옮겼다.
+옛 자리: hybrid/customer.py(10-21 TheRose PC) 의 기계 함수들 — 단계형 분해 때 이리로 옮겼다.
 """
 from __future__ import annotations
 

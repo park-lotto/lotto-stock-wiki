@@ -133,7 +133,7 @@ def synth_cached(text: str, voice_id: str, tempo: float | None, out_mp3, model: 
     from shopping_shorts.channelkit import providers
     key_tc = providers.typecast_key(None)
     if not key_tc:
-        raise RuntimeError("Typecast 키가 없다(~/.volcano/keys/typecast 또는 TYPECAST_API_KEY)")
+        raise RuntimeError("Typecast 키가 없다(설정 화면의 목소리 키 또는 TYPECAST_API_KEY)")
     typecast_tts.api_key = lambda *a, **k: key_tc
     locks = _proc_slots()
     try:
@@ -216,7 +216,7 @@ def _synth_member(text: str, voice_id: str, tempo, out: Path, key: str, model: s
                 from shopping_shorts.channelkit import providers
                 key_tc = providers.typecast_key(None)
                 if not key_tc:
-                    raise RuntimeError("Typecast 키가 없다(~/.volcano/keys/typecast 또는 TYPECAST_API_KEY)")
+                    raise RuntimeError("Typecast 키가 없다(설정 화면의 목소리 키 또는 TYPECAST_API_KEY)")
                 typecast_tts.api_key = lambda *a, **k: key_tc
                 align = typecast_tts.synthesize(text, str(out), voice_id=voice_id, speed=tempo, model_id=model, emotion=emo)
             else:

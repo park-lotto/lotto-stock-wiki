@@ -207,12 +207,12 @@ def parse(raw):
         if k not in d:
             raise ValueError(f"대본에 '{k}'가 없습니다")
     for g in d["groups"]:
-        g.pop("lines", None)          # 줄나눔은 우리가 한다 — LLM lines는 버린다(볼케이노와 같다)
+        g.pop("lines", None)          # 줄나눔은 우리가 한다 — LLM lines는 버린다(외부 사례와 같다)
     return d
 
 
 def generate(source_text, call, *, max_rewrites=None, fonts_dir=None, log=print, min_cuts=None):
-    """생성 → 린트 → 반려면 사유를 붙여 재작성 (볼케이노 30→2→0 루프). → (script_with_lines, issues, attempts)"""
+    """생성 → 린트 → 반려면 사유를 붙여 재작성 (외부 사례 30→2→0 루프). → (script_with_lines, issues, attempts)"""
     max_rewrites = spec.POLICY_MAX_REWRITES if max_rewrites is None else max_rewrites
     fb = ""
     last = None

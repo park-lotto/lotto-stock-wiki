@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""단계 배열 상태기계 — 볼케이노 `next_step` 원리. 화면·호출자는 `next()`가 주는 다음 걸음만 따른다.
+"""단계 배열 상태기계 — 외부 사례 `next_step` 원리. 화면·호출자는 `next()`가 주는 다음 걸음만 따른다.
 
 STEPS = setup → script → layout → lint → voice → timing → subtitle → sfx → render → review   (합의 §5)
 - 상태는 작업폴더 `job.json` 하나 (아스트라 (5)). 원자 저장(tmp→rename), `lock` 파일로 중복 실행 방지.
@@ -243,7 +243,7 @@ def next_step(wd):
 
 
 def run_all(wd, **kw):
-    """setup부터 review까지 관통. 멈추면 그 응답을 그대로 돌려준다(볼케이노 need_input/failed와 같은 모양)."""
+    """setup부터 review까지 관통. 멈추면 그 응답을 그대로 돌려준다(외부 사례 need_input/failed와 같은 모양)."""
     with Lock(wd):
         step = next_step(wd) or steps()[0]
         while step:

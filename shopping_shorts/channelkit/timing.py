@@ -8,7 +8,7 @@ from . import spec
 
 def build(card_sec, cut_secs, groups, *, card_img=None, region=None, slug=None):
     """card_sec: 카드 문장 wav 길이 / cut_secs: 컷별 wav 길이 리스트 / groups: 대본 컷 리스트
-    → 볼케이노 timing.json과 같은 모양 {groups:[{i,t,d,color,lines,text,role,img|meme}], total, card_end, ...}"""
+    → 외부 사례 timing.json과 같은 모양 {groups:[{i,t,d,color,lines,text,role,img|meme}], total, card_end, ...}"""
     if len(cut_secs) != len(groups):
         raise ValueError(f"timing: 컷 수 불일치 — wav {len(cut_secs)} vs 대본 {len(groups)}")
     card_end = round(float(card_sec), 3)

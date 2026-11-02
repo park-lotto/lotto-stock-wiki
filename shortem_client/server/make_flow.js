@@ -126,7 +126,7 @@ function originalsFile(channel) {
   return path.join(homeDir(), rel);
 }
 
-// 완성본 한 편 → 작업 폴더(바탕화면 숏템작업/완성본)에 한 벌 + 표식(<영상>.json) + 보내기 + 작업 기록지 — 엔진 길·볼케이노형 길이 같이 부르는 한 곳.
+// 완성본 한 편 → 작업 폴더(바탕화면 숏템작업/완성본)에 한 벌 + 표식(<영상>.json) + 보내기 + 작업 기록지 — 엔진 길·단계형 길이 같이 부르는 한 곳.
 //   다시 만들기(restyle) 뒤엔 새 완성본으로 덮는다. 기록지(~/.shortem/작업기록.jsonl, work_log.js)는 새로 복사했을 때만 1줄.
 //   marker = 표식 파일에 그대로 적을 칸(옛 꼴 유지) · preset = 기록지 style 칸(없으면 marker.preset)
 function keepFinal(src, { sid, title = '', marker = {}, preset = null }) {
@@ -140,7 +140,7 @@ function keepFinal(src, { sid, title = '', marker = {}, preset = null }) {
   return video;
 }
 
-// 볼케이노형 편(서버 지시서) — 완성이면 작업 폴더 완성본으로 한 벌 + 보내기(deliver.js), 응답은 flow_driver.shapeFlow 한 곳
+// 단계형 편(서버 지시서) — 완성이면 작업 폴더 완성본으로 한 벌 + 보내기(deliver.js), 응답은 flow_driver.shapeFlow 한 곳
 function flowOut(s) {
   if (!s || s.need !== 'done' || !s.video || !fs.existsSync(s.video)) return s;
   const f = loadFlow(s.sid) || {};
@@ -170,7 +170,7 @@ async function stepOnce({ step, sid, n, run_id, preset, topic, channel, video, p
     await new Promise(r => setTimeout(r, sec * 1000));
     return { paused: sec, hints: ['회원 답이 왔으면 그 답으로 이어 가고, 아직이면 같은 pause 를 다시(합쳐 10분까지). 10분이 지나면 네가 정해 완성본까지 간다'] };
   }
-  if (sid && isFlowSid(sid)) {     // 볼케이노형 편 — 서버 지시서를 따라 돈다(판단은 서버)
+  if (sid && isFlowSid(sid)) {     // 단계형 편 — 서버 지시서를 따라 돈다(판단은 서버)
     if (step === 'script') {
       const f = loadFlow(sid);
       return f && f.script ? { sid, script: f.script, hints: ['대본을 그대로 보여 주세요. 고칠 줄을 말하면 shortem_make(step="revise", sid, revise="<줄 id 와 바꿀 말>") — 그 줄만 고치고 장면은 그대로 둡니다'] }

@@ -3,7 +3,7 @@
 
 키는 여기서만 읽는다. 키 값은 로그·응답에 절대 싣지 않는다.
 - Gemini: 환경변수 GEMINI_API_KEY 또는 .env
-- Typecast: ~/.volcano/keys/typecast (볼케이노와 같은 자리) 또는 TYPECAST_API_KEY
+- Typecast: ~/.volcano/keys/typecast (외부 사례와 같은 자리) 또는 TYPECAST_API_KEY
 """
 import os
 import re
@@ -122,9 +122,9 @@ def claude_llm(model=None, *, bin_path="claude", timeout=300, log=print):
 
     ★왜 바꾸나 (실측 2026-09-14):
       하루 동안 규칙을 16→21개로 늘렸는데도 대본이 밋밋했다. 원인을 찾다 보니
-      **볼케이노에는 대본 생성 모델이 아예 없었다** — 서버 응답 `script_input` 원문:
+      **외부 사례에는 대본 생성 모델이 아예 없었다** — 서버 응답 `script_input` 원문:
       "서버는 규격만 검사하며 이 단계에서 유료 모델을 부르지 않습니다."
-      볼케이노는 규칙 11개(우리 절반)를 내려주고 **붙어 있는 AI(claude)에게 쓰게 한 뒤**
+      외부 사례는 규칙 11개(우리 절반)를 내려주고 **붙어 있는 AI(claude)에게 쓰게 한 뒤**
       규격만 검사한다. `review.client.bin == "claude"` 가 그 배선이다.
 
       같은 소재(블라인드 집값)로 나란히 뽑아 보면 갈린다:
@@ -139,7 +139,7 @@ def claude_llm(model=None, *, bin_path="claude", timeout=300, log=print):
       사장님이 그 PC에서 무엇을 기본으로 뒀느냐에 달렸다 — 다른 PC에서 Sonnet 이 기본이면
       **말없이 대본 품질이 바뀌고 아래 벤치가 재현되지 않는다**(실측 2026-09-14: 지정 없이
       부르니 `claude-opus-5[1m]` 이 잡혔다. 즉 골든 5편 벤치는 Opus 로 잰 값이다).
-      볼케이노도 같은 자리에서 `cfg["model"]` 로 못 박는다(`volcano_run.claude_call`).
+      외부 사례도 같은 자리에서 `cfg["model"]` 로 못 박는다(`volcano_run.claude_call`).
     """
     import subprocess
 
@@ -200,7 +200,7 @@ def gemini_reviewer(model="gemini-3.1-flash-lite", api_key=None, env_file=None):
 
     ★프롬프트 낱말을 막는 방식은 계속 샌다(실측 2026-09-13: computer screen을 막으니
       digital sign으로, 그걸 막으니 또 다른 표현으로 나왔다). 만든 그림을 보고 판정해야
-      새 표현도 잡힌다. 볼케이노도 같은 구조다 — review_policy={"provider":"client"}.
+      새 표현도 잡힌다. 외부 사례도 같은 구조다 — review_policy={"provider":"client"}.
 
     ★모델마다 판정이 다르다(실측 2026-09-13, 같은 가짜 주가지수 그림):
         gemini-2.5-flash       retry  ['종합주가지수 -2,886.93', '신한투자증권']
@@ -271,7 +271,7 @@ def typecast_synth(voice_id, *, tempo=None, model="ssfm-v30", key_file=None, tim
     from shopping_shorts import typecast_tts
     key = typecast_key(key_file)
     if not key:
-        raise RuntimeError("providers: Typecast 키가 없습니다 (~/.volcano/keys/typecast 또는 TYPECAST_API_KEY)")
+        raise RuntimeError("providers: Typecast 키가 없습니다 (설정 화면의 목소리 키 또는 TYPECAST_API_KEY)")
     voices = dict(voice_id) if isinstance(voice_id, dict) else {"NARR": voice_id}
 
     def synth(text, out_path, role="NARR", emotion=None, intensity=None):

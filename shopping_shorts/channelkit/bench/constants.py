@@ -115,7 +115,7 @@ ANIM_AREA = 0.5           # 첫 면적 < 끝 면적의 50% = 페이드/타자기
 
 # ── cuts.py ────────────────────────────────────────────────────────────────
 SCENE_T = 0.3             # ffmpeg select=gt(scene,T), 영상창 crop. baselines 첫 기준선(컷 중앙 22)이 0.3
-                          # 볼케이노 scene_cuts는 T를 서버가 주므로 고정값이 없다(설계 §1)
+                          # 외부 사례 scene_cuts는 T를 서버가 주므로 고정값이 없다(설계 §1)
 CUT_MERGE_S = 0.2         # 0.2s 안의 중복 검출은 하나로(film scene_cuts)
 CUT_MIN_T = 0.2           # 첫 0.2s 안 검출은 컷이 아니라 시작(옛 cuts.py `c>0.2`)
 CUT_VERIFY_CORR = 0.6     # 컷 앞뒤 64×64 z정규화 상관 < 0.6 이어야 진짜 컷(cut_verify CORR_MAX)
@@ -140,5 +140,5 @@ S_FLOOR = -70.0           # 단기 S: −70 이하 제외
 S_MIN_N = 20              # S 20개 미만이면 폭 None
 HF_LO, HF_HI = 8000.0, 16000.0  # 고역 대역(m_opensound)
 HF_NTAPS, HF_BETA = 1001, 8.6   # kaiser FIR, 중심 이득 정규화(film band_rms_db)
-WIN_S = 0.020             # 20ms RMS 창(볼케이노 B1)
+WIN_S = 0.020             # 20ms RMS 창(외부 사례 B1)
 OPEN_S = 3.0              # 오프닝 구간(A7 openvoice, A.open3s_M)

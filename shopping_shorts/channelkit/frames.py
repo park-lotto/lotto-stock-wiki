@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """컷별 화면(프레임) 조립 — 검은 캔버스 + 슬롯(26,469,1028×786)에 사진(cover 크롭) 또는 밈(높이 맞춤 가운데).
 
-볼케이노 render_frames/vconcat 구조를 따르되 정지 컷 1장씩만 만든다(흔들림 없음이 실측). 카드 구간은 card_img 슬롯 사진.
-사진 크롭은 MVP로 가운데 cover — 볼케이노의 피사체 선택(contain_selected)은 3단계(프레임비전).
+외부 사례 render_frames/vconcat 구조를 따르되 정지 컷 1장씩만 만든다(흔들림 없음이 실측). 카드 구간은 card_img 슬롯 사진.
+사진 크롭은 MVP로 가운데 cover — 외부 사례의 피사체 선택(contain_selected)은 3단계(프레임비전).
 """
 import os
 
@@ -135,7 +135,7 @@ def build(workdir, timing, script, images, *, meme_dir=None, card_img=None, log=
         if not src:
             # ★슬롯 번호가 없는 컷(CHAR·PUNCH 대사)과 밈 팩이 없는 컷은 src가 None이 된다.
             #   그대로 두면 **화면이 통째로 검게** 나간다(실측 2026-09-13 박위 1차: 상영시간의 50%).
-            #   볼케이노 골든은 img 없는 컷 5개가 **전부 밈**이라 빈 컷이 애초에 없다.
+            #   외부 사례 골든은 img 없는 컷 5개가 **전부 밈**이라 빈 컷이 애초에 없다.
             #   우리는 대본이 밈 없는 빈 컷을 만들 수 있으므로 직전 사진을 이어서 쓴다.
             src, kind = last_img, "img"
             blanks += 1

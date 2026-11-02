@@ -249,7 +249,7 @@ export async function engineTool(cmd, input, { timeoutMs = 60000 } = {}) {
   });
 }
 
-// 볼케이노형 실행기(관제 234, 10-21) — 서버 지시서가 준 do 목록을 엔진 hybrid/runner_ops 로 돌리고 measure(JSON)를 돌려준다.
+// 단계형 실행기(관제 234, 10-21) — 서버 지시서가 준 do 목록을 엔진 hybrid/runner_ops 로 돌리고 measure(JSON)를 돌려준다.
 //   허용 명령 판정은 runner_ops 한 곳. 여기는 띄우고 마지막 줄 JSON 을 읽기만 한다.
 export function runOps(jobDir, doList, { timeoutMs = 3 * 60 * 60 * 1000, env: extra = {} } = {}) {
   fs.mkdirSync(jobDir, { recursive: true });
