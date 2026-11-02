@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import tempfile
 import time
@@ -25,9 +26,62 @@ POLL_SEC = 2.0
 # 받는 화질 상한(판단 주인 한 곳) — 짧은 변 1080 까지·H.264 먼저. 형식 문자열의 '1080 이상'이 4K 를 고르던 것(10-30 설치본 시험: 재료 4K·AV1·60fps 197초 →
 #   장면 계획 해석 120초 시간 초과 3번). yt-dlp 정렬(-S) 'res' = 짧은 변이라 세로 쇼츠(1080×1920)도 1080 그대로.
 SORT_1080 = ["-S", "res:1080,vcodec:h264"]
+# 강제 상한(판단 주인 한 곳, 관제 304 11-02) — 긴 변 1920 이하, 세로·가로 모두. 4K 를 받아 줄이면 시간·디스크만 버린다(받은 뒤 줄이지 않는다).
+#   값의 주인 = 여기 Q_CAP · shopping_shorts/media_download._Q_CAP 는 이 값을 가져다 쓴다. 벤치(대본 분석만)는 BENCH_CAP — 재료가 되는 벤치는 Q_CAP(runner_ops.bench_fmt_args).
+Q_CAP = "[width<=1920][height<=1920]"
+BENCH_CAP = "[width<=1280][height<=1280]"
+SORT_720 = ["-S", "res:720,vcodec:h264"]
+CAP_LONG = 1920             # Q_CAP 의 숫자 — 형식 표를 직접 고르는 dash_pick 이 같은 값을 쓴다
+_VIDEO_SEL = re.compile(r"^(?:bv\*|bv|bestvideo\*|bestvideo|b|best|wv\*|wv|worstvideo\*|worstvideo|w|worst|\d+)(?:\[|$)")
 FMT_SECTION_1080 = ("bv*[height=1080][protocol^=m3u8]+ba[protocol^=m3u8]/bv*[height=1080][protocol^=m3u8]+ba/"
                     "bv*[height>=720][protocol^=m3u8]+ba/137+ba[ext=m4a]/bv*[height>=1080]+ba/bv*[height>=720]+ba/b")
 FMT_PREVIEW_360 = "bv*[height<=360][protocol^=m3u8]/bv*[height<=360][ext=mp4]/bv*[height<=360]/wv*"
+
+
+def cap_fmt(fmt: str, cap: str = Q_CAP) -> str:
+    """(판단 주인 — 받는 화질 상한) 형식 사슬의 화면 칸마다 cap 을 붙인다. 소리 칸(ba·bestaudio)은 그대로, 이미 상한이 있는 칸은 그대로.
+    맨 끝에 크기 정보가 없는 영상용 한 칸을 둔다(틱톡·인스타 일부는 형식 표에 크기가 없다 — 크기를 알면서 넘는 것만 막는다)."""
+    alts = []
+    for alt in str(fmt).split("/"):
+        alts.append("+".join(x + cap if _VIDEO_SEL.match(x) and "width<=" not in x else x for x in alt.split("+")))
+    last = "b" + cap.replace("<=", "<=?")
+    if any(_VIDEO_SEL.match(x) for x in str(fmt).split("/")) and last not in alts:
+        alts.append(last)
+    return "/".join(alts)
+
+
+def cap_args(args: list) -> list:
+    """yt-dlp 인자의 -f 값에 상한을 건다 — 받기가 지나는 두 입구(ytdlp · runner_ops.yt)가 부른다. -f 가 없으면(정보만 조회) 그대로."""
+    out = list(args)
+    for i, a in enumerate(out[:-1]):
+        if str(a) in ("-f", "--format"):
+            out[i + 1] = cap_fmt(str(out[i + 1]))
+    return out
+
+
+def fetch_note(dst: Path, how: str, sec: float, url: str = "", log=print) -> dict | None:
+    """(판단 주인 — 받기 기록) 받은 파일 크기·해상도·걸린 시간을 남긴다(SHORTEM_HOME/받기기록.jsonl + 로그 한 줄). 기록 실패는 받기를 막지 않는다."""
+    import json
+    dst = Path(dst)
+    if not dst.exists():
+        return None
+    w = h = None
+    r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=p=0", str(dst)],
+                       capture_output=True, text=True, errors="replace", stdin=subprocess.DEVNULL)
+    m = re.match(r"(\d+),(\d+)", r.stdout.strip())
+    if m:
+        w, h = int(m[1]), int(m[2])
+    row = {"at": time.strftime("%Y-%m-%d %H:%M:%S"), "file": dst.name, "how": how, "mb": round(dst.stat().st_size / 1e6, 1), "w": w, "h": h,
+           "sec": round(float(sec or 0), 1), "url": str(url)[:120]}
+    log(f"[받기 기록] {row['file']} {w}x{h} {row['mb']}MB {row['sec']}초 ({how})")
+    try:
+        f = Path(os.environ.get("SHORTEM_HOME") or (Path.home() / ".shortem")) / "받기기록.jsonl"
+        f.parent.mkdir(parents=True, exist_ok=True)
+        with open(f, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+    except OSError as e:
+        log(f"[받기 기록] 못 씀: {e}")
+    return row
 
 
 @dataclass
@@ -54,6 +108,7 @@ def ytdlp(args: list, timeout: float = 600, stall_sec: float | None = None, watc
     """yt-dlp 를 돌린다. watch(받는 파일 stem 경로)가 있으면 그 stem 으로 시작하는 파일들(.part·.mp4·.ytdl…)의 크기를 POLL_SEC 마다 재
     stall_sec 동안 안 늘면 **이 프로세스만** 끊는다(stalled=True). 예외를 올리지 않는다 — TimeoutExpired 도 결과(timed_out)로 돌려준다."""
     auth = []
+    args = cap_args(args)                         # 강제 상한 — 이 입구를 지나는 받기는 전부(cap_fmt)
     url = next((str(a) for a in args if "youtu" in str(a)), "")
     if url:                                       # 유튜브면 로그인 쿠키(파이어폭스 yt* 프로필)·JS 런타임 — 주인 = origin_find.yt_auth(10-21 회선 'not a bot' 우회)
         try:
@@ -226,6 +281,7 @@ def dash_pick(info: dict) -> tuple[dict | None, dict | None, str]:
     같은 해상도면 avc1(디코딩 가벼움 — av1 1080p60 은 프레임 뽑기가 느리다, 10-26 관문 115초) > 그 밖, 그다음 fps. 소리 = 140(m4a) 먼저."""
     fm = [f for f in info.get("formats") or [] if f.get("protocol") == "https" and f.get("ext") in ("mp4", "m4a") and f.get("url")]
     vids = [f for f in fm if (f.get("vcodec") or "none") != "none" and (f.get("acodec") or "none") == "none" and f.get("width") and f.get("height")]
+    vids = [f for f in vids if max(f["width"], f["height"]) <= CAP_LONG]     # 강제 상한(Q_CAP 과 같은 값) — 4K 조각을 받지 않는다
     ok = [f for f in vids if (f["height"] >= DASH_MIN_LAND if f["width"] >= f["height"] else f["width"] >= DASH_MIN_PORT)]
     if not ok:
         best = max(vids, key=lambda f: f["width"] * f["height"], default=None)
@@ -344,6 +400,7 @@ def dash_sections(url: str, spans: list[tuple[float, float]], dst: Path, pad: fl
         dst.with_suffix(".sections.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
         dst.with_suffix(".info.json").write_text(json.dumps(info, ensure_ascii=False), encoding="utf-8")
         log(f"[yt_fetch] DASH 조각 구간 {len(mp)}개 {meta['sec']}초 {meta['res']} {meta['fmt']} t0={meta['t0']} → {dst} {dst.stat().st_size / 1e6:.1f}MB")
+        fetch_note(dst, "dash_구간", meta["sec"], url, log)
         return meta
     except Exception as e:  # noqa: BLE001 — 이 길이 안 되면 다음 길(형식 사슬·통째)로. 이유는 남긴다
         log(f"[yt_fetch] DASH 조각 실패 → 다음 길: {type(e).__name__}: {str(e)[:200]}")
@@ -411,6 +468,7 @@ def download_sections(url: str, spans: list[tuple[float, float]], dst: Path, fmt
         last = ytdlp(args, timeout=timeout, stall_sec=stall_sec, watch=dst.with_suffix(""), log=log)
         if _valid(dst, need):
             log(f"[yt_fetch] 구간 {len(spans)}개 {last.sec}초 fmt={fmt[:40]}… → {dst} {dst.stat().st_size // 1_000_000}MB")
+            fetch_note(dst, "구간", last.sec, url, log)
             return last
         _cleanup(dst)
         stalls += 1 if (last.stalled or last.timed_out) else 0
@@ -455,7 +513,9 @@ def download_full(url: str, dst: Path, fmt: str = "137+ba[ext=m4a]/bv*[height>=1
     """통째 받기(자막 없이 — 자막은 fetch_subs 로 따로). 멈춤 감시 포함."""
     dst = Path(dst); dst.parent.mkdir(parents=True, exist_ok=True)
     args = ["-f", fmt, *SORT_1080, "--merge-output-format", "mp4", "--write-info-json", "-o", str(dst.with_suffix(".%(ext)s")), *(extra or []), url]
-    return ytdlp(args, timeout=timeout, stall_sec=stall_sec, watch=dst.with_suffix(""), log=log)
+    r = ytdlp(args, timeout=timeout, stall_sec=stall_sec, watch=dst.with_suffix(""), log=log)
+    fetch_note(dst, "통째", r.sec, url, log)
+    return r
 
 
 def fetch_subs(url: str, stem: Path, langs: str = "ko,ko-orig", tries: int = 3, log=print) -> list[Path]:

@@ -811,7 +811,8 @@ def ph_setup_check(st, m, rp, u):
 
 # ── 1 소재(벤치) ──────────────────────────────────────────────────────────
 def ph_bench(st, m, rp, u):
-    return {"do": [{"id": "bench", "cmd": "bench", "url": st["ref"]}], "then": "bench_got"}
+    # 벤치는 분석만 하니 720 — 해외 원본형은 소재가 곧 원본일 수 있어 1080 그대로(runner_ops.bench_fmt_args · 원본 받기가 이 파일을 다시 쓴다)
+    return {"do": [{"id": "bench", "cmd": "bench", "url": st["ref"], **({"material": True} if _fmt(st) in FOREIGN_FMTS else {})}], "then": "bench_got"}
 
 
 def ph_bench_got(st, m, rp, u):
@@ -1216,6 +1217,9 @@ def ph_origin_fetch(st, m, rp, u):
     return {"do": [{"id": "origin", "cmd": "origin_get", "vid": O["id"], "a": O["window"][0], "b": O["window"][1], "ts": ts}], "then": "origin_got"}
 
 
+RETRY_CLEAR = ("render_err", "vmake_fail", "of_verify", "of_verify_refind", "of_covered", "product_link", "pick_more", "stills_again")   # 고치기 횟수가 아니라 '이 길을 한 번 해 봤다' 표시 — 다시 시도 때 지운다
+
+
 def ph_stopped(st, m, rp, u):
     """멈춘 편 — 다시 시도(retry)할 수 있는 멈춤이면 그 단계부터, 아니면 그대로 멈춤."""
     r = (st.get("stopped") or {}).get("retry")
@@ -1234,12 +1238,11 @@ def ph_stopped(st, m, rp, u):
         return _given_origin(st, vid)
     if u.get("retry") and r:
         st.pop("stopped", None)
-        st.pop("redo_hist", None)                 # 다시 시도 = 같은 원인 되풀이 셈도 새로
+        # 다시 시도는 잠깐의 문제를 풀 뿐 — 고치기 횟수·같은 원인 기록(redo_hist)은 그대로 둔다(10-31 티라미수 8번, 관제 304 검사표 5).
+        #   횟수를 다 쓴 단계는 다시 시도로 안 풀린다 — 다음 칸은 제작자 과제의 back(그 단계만 새로)·waive·submit.
+        st["tries"] = {k: v for k, v in (st.get("tries") or {}).items() if k not in RETRY_CLEAR}
         if r == st.get("_asker") and st.get("_asker_in"):
-            st["tries"] = {k: v for k, v in (st.get("tries") or {}).items() if k in ("length", "look")}
             return {"goto": r, "feed": st["_asker_in"]}
-        st["tries"] = {k: v for k, v in (st.get("tries") or {}).items() if k in ("length", "look")}   # 다시 시도 = 고치기 횟수 새로(길이 고치기만 남긴다 — 사인을 다시 받는다)
-        st.pop("redo_hist", None)
         return {"goto": r}
     raise _Stop((st.get("stopped") or {}).get("why") or "아직 마무리되지 않은 편이에요", (st.get("stopped") or {}).get("fix") or AGAIN, retry=r,
                 ask_member=True, origin_missing=bool((st.get("stopped") or {}).get("origin_missing")))   # 이미 회원에게 간 멈춤을 다시 보여 줄 뿐(과제로 또 돌리지 않는다)
@@ -1264,7 +1267,7 @@ TASK_ASK = """너는 이 편의 **제작자**다(사장님 PC 의 제작 세션�
  · back = 앞 단계부터 다시. to 는 script·plan·render·check 중 이미 지난 단계. 끝난 다른 단계는 다시 하지 않는다
  · waive = 이 품질 걸림은 권고로 보고 넘긴다. 남은 것은 완성 보고에 경고로 남는다. 지어낸 사실·금지 출처는 넘길 수 없다
  · submit = 네 도구로 그 판 폴더에 완성본을 직접 만들었다. 숏템이 결과만 다시 판정한다
- · retry = 같은 단계를 다시(잠깐의 막힘·고치기 횟수 소진·받기 실패 등 — 다시 하면 풀릴 근거가 있을 때)
+ · retry = 같은 단계를 다시(잠깐의 막힘·받기 실패 등 — 다시 하면 풀릴 근거가 있을 때. 고치기 횟수는 안 늘어난다 — 횟수를 다 썼으면 back·waive·submit)
  · give = 네가 찾은 것을 준다: origin_url(원본 영상 유튜브 주소 — 원본 찾기 단계) 또는 product(쿠팡 상품 주소나 정확한 제품명 — 제품 확인 단계)
  · material = 네가 src/ 에 넣은 영상 파일 이름을 files 로 준다 — 대본·목소리 그대로 그 재료로 장면 맞추기부터 다시(숏템이 다시 검사한다)
  · end = 가이드·금지선상 이 편을 만들 수 없다(그때만 회원에게 쉬운 선택지로 묻는다)"""
@@ -2429,6 +2432,7 @@ def ph_plan_got(st, m, rp, u):
     if over and p.get("sig") and p["sig"] == st.get("_plan_sig"):     # 고친 답 뒤 계획이 컷 하나도 안 바뀌었다 — 같은 반려를 또 받는다(10-27 재생: b·c 계획 같은 판 4~5번)
         over.insert(0, PLAN_SAME)
     st["_plan_sig"] = p.get("sig")
+    st["_thumb_move"] = p.get("thumb_move")      # 썸네일 장면을 새 컷으로 옮긴 결과 — ph_thumb 이 다시 물을지 정한다
     over = _mark_new(st, over)
     st["_plan_over"] = over
     st["_plan_sheet"], st["_n_cuts"] = p.get("sheet"), p.get("cuts")
@@ -2512,7 +2516,7 @@ def _take_fix(st, r: dict) -> dict | None:
     bad = RU.source_rule_static(M, _origin_names(st), _rule_bench_id(st), st.get("shots") or {})
     st["script"]["M"] = M
     st["_fix_bad"] = bad
-    st["_sheet_stale"] = True      # 재료가 바뀌면 컷 번호(part)가 바뀐다 — 썸네일은 새 계획 시트로 다시 고른다(ph_thumb)
+    st["_sheet_stale"] = True      # 재료가 바뀌면 컷 번호(part)가 바뀐다 — 렌더가 원본·초로 옮긴다(thumb.relocate). 장면이 없어졌을 때만 새 시트로 다시 고른다(ph_thumb)
     return M
 
 
@@ -2581,10 +2585,22 @@ JSON 하나: {{"썸네일": {{"options":[3안], "no_person_why": "인물순간 �
 def ph_thumb(st, m, rp, u):
     from tools.calcopy.hybrid import thumb_rule as TR
     v = st["version"]
+    tm = st.pop("_thumb_move", None) or {}
+    if st.get("_thumb_have") and not tm.get("pick_gone") and (tm.get("have") or not st.get("_sheet_stale")):
+        # 카드가 이미 있고 그 장면이 영상에 살아 있다 — 줄·재료를 고쳐도 다시 묻지 않는다(thumb.relocate 가 원본·초 기준으로 옮겼다, 관제 304 검사표 3)
+        st.pop("_sheet_stale", None)
+        st.pop("_thumb_replan", None)
+        st["log"].append(f"썸네일 그대로 씀(옮김 {tm.get('moved') or []})")
+        return {"goto": "render"}
+    if tm.get("pick_gone"):
+        st["_sheet_stale"] = True
+        st["_thumb_reask"] = True        # 장면이 없어졌다 — 이때만 새 시트로 다시 묻는다
+        st.pop("_thumb_have", None)
     if st.get("_thumb_replan"):          # 재료가 바뀌어 다시 고르는 차례 — AI 를 또 부르지 않고 코드가 새 계획 컷에서 고른다(11-01 키치잇 재호출)
         st.pop("_thumb_replan", None)
-        return _thumb_auto(st, "재료가 바뀌어 새 컷에서 다시 고름")
-    if st.get("_sheet_stale"):
+        if not st.pop("_thumb_reask", None):
+            return _thumb_auto(st, "재료가 바뀌어 새 컷에서 다시 고름")
+    elif st.get("_sheet_stale"):
         st["_thumb_replan"] = True
         # 재료가 계획 시트 뒤에 바뀌었다(재료 고치기·검사 뒤 고치기) — 옛 시트의 컷 번호로 고르면 렌더에선 다른 컷을 가리킨다
         # (10-26 이미숙 회원편: part 8 = 시트에선 얼굴 근접 O3@163, 바뀐 재료에선 앰플 병 N2@80 → 카드 얼굴 반려 되풀이·멈춤, 98 기록).
@@ -2625,6 +2641,7 @@ def _thumb_auto(st, why: str, spec=None) -> dict:
     """썸네일 = 코드 자동 고르기(계획 컷 중 얼굴이 가장 크고 선명한 프레임 — runner thumb_auto → thumb.auto_pick) 뒤 곧장 렌더.
     AI 에게 되묻지 않고 앞 단계로도 안 돌아간다(관제263 10-26 사장님 '썸네일 이렇게 까다로운 것도 문제'). 얼굴이 없으면 카드 없이 렌더."""
     st["_thumb_auto"] = True
+    st["_thumb_have"] = True
     st["log"].append(f"썸네일 자동 고르기: {why[:300]}")
     tx = _thumb_text(spec)
     return {"do": [{"id": "thumb_auto", "cmd": "thumb_auto", "version": st["version"], **({"text": tx} if tx else {})}], "then": "render"}
@@ -2640,6 +2657,7 @@ def ph_thumb_got(st, m, rp, u):
     st.pop("_thumb_bad", None)
     if bad:
         return _thumb_auto(st, "AI 3안 반려 — " + "; ".join(bad), spec)
+    st["_thumb_have"] = True
     return {"do": [{"id": "save_thumb", "cmd": "write_doc", "files": {f"{v}/썸네일.json": spec}, "version": v}], "then": "render"}
 
 
@@ -2650,6 +2668,10 @@ def ph_render(st, m, rp, u):
 
 def ph_render_got(st, m, rp, u):
     r = m.get("render") or {}
+    if r.get("thumb_gone"):                       # 재료를 고쳐 고른 썸네일 장면이 없어졌다(계획 없이 렌더로 온 길) — 이때만 다시 묻는다
+        st["_sheet_stale"] = True
+        st["_thumb_move"] = {"have": True, "pick_gone": True, "gone": []}
+        return {"goto": "thumb"}
     if r.get("conflict"):
         return _conflict_rewrite(st, r["conflict"])
     why = r.get("error") or "; ".join(r.get("jumps") or [])
@@ -2745,15 +2767,23 @@ def ph_check_got(st, m, rp, u):
         st["auto"] = c.get("auto") or {"ok": False, "rows": [{"group": "표식", "what": "관문 결과 없음", "ok": False, "value": ""}]}
     st["eye_pack"] = c.get("eye_files") or []
     st.pop("look_left", None)             # 새 검사 = 새 판정 — 앞 편의 '남은 눈 지적'을 완성 허가로 물려주지 않는다
+    st.pop("_eye_scope", None)
     if not st["auto"].get("ok"):          # 1단이 ×면 눈 검수는 하지 않는다(표준 §5-2 '1단 통과 뒤') — 바로 고치기 판정으로
         st["look"] = {"ok": False, "problems": ["1단 자동 관문 미통과 — 눈 검수 생략"], "skipped": True}
         return {"goto": "check_judge"}
+    scope = _eye_scope(st, c)
+    if scope == "same":                  # 지난 눈 검수 뒤 화면·글이 그대로 — 같은 그림을 다시 묻지 않는다(10-31 티라미수 8번)
+        st["log"].append("눈 검수: 지난 검사 뒤 바뀐 곳 없음 — 지난 결과 그대로")
+        return {"goto": "check_judge"}
+    if scope:
+        st["_eye_scope"] = {"lines": scope.get("lines") or [], "spans": scope.get("spans") or []}
+        st["eye_pack"] = [scope["sheet"]]
     if not EYE_REVIEW:                   # 사장님 10-26 "눈검수는 필요없다" — E 번호 묻기는 안 한다
-        sheets = [x for x in st["eye_pack"] if any(str(x).endswith(n) for n in FINAL_SHEET_FILES)]
+        sheets = [scope["sheet"]] if scope else [x for x in st["eye_pack"] if any(str(x).endswith(n) for n in FINAL_SHEET_FILES)]
         if FINAL_SHEET_LOOK and sheets:     # 완성 전 1초 시트(숏클 지침 15-0) — 고쳐 다시 렌더하면 새 시트로 또 본다
             texts = "".join(f"\n\n## {n}\n{str(t)[:4000]}" for n, t in (c.get("eye_texts") or {}).items())
             sv = script_view(st)
-            return {"review": [_rv(f"sheet_{st['version']}", FINAL_SHEET_ASK + _lessons("final") + texts + "\n\n## 대본\n" + json.dumps(sv, ensure_ascii=False)[:4000],
+            return {"review": [_rv(f"sheet_{st['version']}", FINAL_SHEET_ASK + _eye_scope_note(st) + _lessons("final") + texts + "\n\n## 대본\n" + json.dumps(sv, ensure_ascii=False)[:4000],
                                    [_img(x) for x in sheets][:3], need=SHEET_NEED, meta={"fresh": True})], "then": "final_sheet"}
         if FINAL_SHEET_LOOK:             # 시트 없이 통과시키지 않는다 — 조용한 통과(옛 skipped)는 '눈 안 봄'을 '합격'으로 기록했다
             raise _Stop("완성본 확인 자료를 만들지 못했어요", AGAIN, retry="check", auto=True, detail=f"eye_files={st['eye_pack']}")
@@ -2766,8 +2796,30 @@ def ph_check_got(st, m, rp, u):
     texts = "".join(f"\n\n## {n}\n{str(t)[:5000]}" for n, t in (c.get("eye_texts") or {}).items())
     sc = st.get("script") or {}
     texts += eye_material_note(st["eye_pack"], sc.get("G"))
-    return {"review": [_rv(f"eye_{st['version']}", ask + _lessons("final") + texts + "\n\n## 대본\n" + json.dumps(sc.get("S") or {}, ensure_ascii=False)[:5000],
+    return {"review": [_rv(f"eye_{st['version']}", ask + _eye_scope_note(st) + _lessons("final") + texts + "\n\n## 대본\n" + json.dumps(sc.get("S") or {}, ensure_ascii=False)[:5000],
                            [_img(x) for x in st["eye_pack"]][:6], need=tuple(k for k, _, _ in rows) + EYE_PROOF_NEED, meta={"fresh": True})], "then": "check_look"}
+
+
+EYE_PART_MAX = 0.5      # 바뀐 구간이 영상의 이 비율을 넘으면 전체 시트로 본다
+
+
+def _eye_scope(st, c: dict):
+    """(판단 주인 — 눈 검수를 어디까지 다시 하나, 관제 304 검사표 8) None = 전체 · 'same' = 지난 뒤 바뀐 곳 없음 · dict = 바뀐 구간 시트만.
+    지난 눈 검수가 실제로 돌았고(본 증거 미달 제외) 재검사가 바뀐 구간을 알려 줄 때만 줄인다."""
+    prior, ch = st.get("look") or {}, c.get("changed")
+    if not isinstance(ch, dict) or not prior.get("by") or prior.get("unproved"):
+        return None
+    if not ch.get("cuts") and not ch.get("lines"):
+        return "same"
+    return ch if ch.get("sheet") and float(ch.get("share") or 1.0) <= EYE_PART_MAX else None
+
+
+def _eye_scope_note(st) -> str:
+    sc = st.get("_eye_scope")
+    if not sc:
+        return ""
+    return (f"\n\n★이번 검수는 지난 검수 뒤 바뀐 곳만 본다 — 그림은 바뀐 구간 시트 한 장(구간 {sc.get('spans')}초 · 줄 {sc.get('lines')}). 나머지는 지난 검수 그대로다. "
+            "scenes 는 그 구간 줄만 적는다. 지난 지적: " + " / ".join(str(x)[:120] for x in (st.get("look") or {}).get("problems") or []))
 
 
 def eye_material_note(pack: list, grounds) -> str:
@@ -2792,16 +2844,17 @@ def _eye_verdict(a: dict, keys: list) -> tuple[bool, list]:
     return not bad, bad
 
 
-def sheet_proof_problems(a: dict, sv: dict) -> list:
-    """(판단 주인 — 시트를 실제로 봤나) 화면에서 읽은 제목이 대본 제목과 다르면 결함, 줄 수의 절반도 안 적었으면 안 본 답."""
+def sheet_proof_problems(a: dict, sv: dict, lines: list | None = None) -> list:
+    """(판단 주인 — 시트를 실제로 봤나) 화면에서 읽은 제목이 대본 제목과 다르면 결함, 줄 수의 절반도 안 적었으면 안 본 답.
+    lines = 바뀐 구간만 본 검수의 그 줄들(_eye_scope) — 그 줄 수로 잰다."""
     out = []
     want, seen = RU._plain(sv.get("title") or ""), RU._plain(str(a.get("title_seen") or ""))
     if want and want != seen:
         out.append(f"제목: 화면 '{str(a.get('title_seen'))[:40]}' ≠ 대본 '{str(sv.get('title'))[:40]}'")
     scenes = [x for x in a.get("scenes") or [] if isinstance(x, dict) and str(x.get("seen") or "").strip()]
-    need = max(1, len(sv.get("lines") or []) // 2)
+    need = max(1, len(lines if lines else sv.get("lines") or []) // 2)
     if len(scenes) < need:
-        out.append(f"화면 기록이 {len(scenes)}줄뿐(대본 {len(sv.get('lines') or [])}줄) — 시트를 처음부터 끝까지 보고 줄마다 적는다")
+        out.append(f"화면 기록이 {len(scenes)}줄뿐(대본 {len(lines if lines else sv.get('lines') or [])}줄) — 시트를 처음부터 끝까지 보고 줄마다 적는다")
     return out
 
 
@@ -2809,7 +2862,7 @@ def ph_final_sheet(st, m, rp, u):
     """완성 전 1초 시트 답(숏클 지침 15-0) → 걸린 것이 없으면 완성, 있으면 완성본 고치기(ph_check_judge 의 고치기 길 그대로 — 한도 LIMITS['look'])."""
     a = _reply(rp, f"sheet_{st['version']}", SHEET_NEED)
     probs = [str(p)[:200] for p in a.get("problems") or [] if str(p).strip()]
-    probs += sheet_proof_problems(a, script_view(st))
+    probs += sheet_proof_problems(a, script_view(st), (st.pop("_eye_scope", None) or {}).get("lines"))
     ok = bool(a.get("ok")) and not probs
     st["look"] = {"ok": ok, "problems": probs, "by": "완성 전 1초 시트", "scenes": len(a.get("scenes") or []), "title_seen": str(a.get("title_seen") or "")[:80]}
     st["log"].append(f"완성 전 1초 시트: {'통과' if ok else '걸림 ' + ' / '.join(probs)[:300]}")
@@ -2824,7 +2877,7 @@ def ph_check_look(st, m, rp, u):
         raise _Stop("확인 결과를 받지 못했어요", "다시 시도해 주시면 멈춘 곳부터 이어 갈게요", auto=True)
     keys = st.get("eye_keys") or [f"E{k}" for k in range(1, 9)]          # 물은 번호 전부(업그레이드 판은 E9 까지) — 답에 빠진 번호도 ×
     ok, bad = _eye_verdict(a, keys)
-    proof = sheet_proof_problems(a, script_view(st))
+    proof = sheet_proof_problems(a, script_view(st), (st.pop("_eye_scope", None) or {}).get("lines"))
     st["eye"] = a
     st["look"] = {"ok": ok and not proof, "problems": bad + proof, "unproved": bool(proof), "by": "눈 2단", "scenes": len(a.get("scenes") or []),
                   "title_seen": str(a.get("title_seen") or "")[:80]}
@@ -3034,11 +3087,14 @@ def ph_line_fix_got(st, m, rp, u):
     r = _reply(rp, f"line_fix_{v}", ("lines",))
     got = r.get("lines") if isinstance(r.get("lines"), dict) else {}
     done = _apply_lines(st, got, "줄 고치기")
+    conflict = st.pop("_line_fix_conflict", None)
     if not done:
         st["tries"]["line_fix"] = LINE_FIX_MAX
         if str(st.get("_line_fix_why") or "").startswith("고객 요청"):     # 회원 요청 — 목소리 탓이 아니다, 그 요청 그대로 대본 다시
             st["tries"]["script"] = 0
             return {"review": [_script_ask(st, st["_line_fix_why"])], "then": "script_got"}
+        if conflict:
+            return _conflict_rewrite(st, conflict)
         return _voice_rewrite(st, [st.get("_line_fix_why") or "줄 고치기 실패"])
     return done
 
@@ -3049,12 +3105,12 @@ def _voice_rewrite(st, probs: list) -> dict:
     10-30: 먼저 그 자리에서 걸린 줄만 고친다(_line_fix — 재료 그대로). 줄을 못 찾거나 한도를 넘으면 아래 옛 길(대본 전체)."""
     why = "목소리(합성) 쪽 문제 — 그 줄 문장을 바꿔 다시 합성: " + " / ".join(str(p) for p in probs)[:1200]
     st["_line_fix_why"] = why
-    lf = _line_fix(st, why, _line_ids(st, probs))
+    ids = _line_ids(st, probs)
+    lf = _line_fix(st, why, ids, pick=not ids)      # 줄 표시가 없어도 전체를 다시 쓰지 않는다 — 나레 줄을 보여 주고 최소 줄만 고르게
     if lf:
         return lf
     st["log"].append("목소리 결함 → 대본 다시: " + " / ".join(probs)[:300])
     _tries(st, "conflict", 2, ["voice_speed"], at="script")
-    st["tries"]["script"] = 0
     st["approved"] = False
     why = "목소리(합성) 쪽 문제 — 재료가 아니라 그 줄 문장을 바꿔 다시 합성한다. 아래만 고치고 내용·결은 그대로: " + " / ".join(probs)[:1200]
     return {"review": [_script_ask(st, why)], "then": "script_got"}
@@ -3069,7 +3125,6 @@ def _length_rewrite(st, value) -> dict:
     if lf:
         return lf
     _tries(st, "length", 2, [_len_cause(value)], at="script")
-    st["tries"]["script"] = 0
     st["approved"] = False
     return {"review": [_script_ask(st, f"완성본 길이가 판 범위를 벗어났다: {value} — 나레 글을 줄이거나(넘침) 늘려서(모자람) 범위 안으로. 내용·결은 그대로")],
             "then": "script_got"}
@@ -3080,12 +3135,18 @@ def _conflict_rewrite(st, c) -> dict:
     글자 수 위반 고치는 순서 = 부사·군더더기 제거 → 두 TTS 줄로 나누기(훅 ending 은 첫 줄) → 사인 아래 재작성(정보 낱말 보존). 회원에게는 한 줄 이유 + 사인 다시."""
     c = c if isinstance(c, dict) else {"cause": str(c)}
     cause = str(c.get("cause") or c.get("axis") or "배치 충돌")[:120]
-    st["log"].append(f"배치 충돌 → 대본 다시: {json.dumps(c, ensure_ascii=False)[:300]}")
-    _tries(st, "conflict", 2, ["conflict"], at="script")
-    st["tries"]["script"] = 0
-    st["approved"] = False
     why = (f"배치 충돌({c.get('axis')}: 필요 {c.get('need')} > 상한 {c.get('cap')}) — 뿌리 = 대본 규칙 위반 '{cause}'. 고치는 순서: ① 부사·군더더기·중복 조사 빼기 "
            f"② 그래도 넘치면 낱말 그대로 두 TTS 줄로 나누기(훅 어미는 첫 줄에) ③ 그래도면 정보 낱말을 지키며 다시 쓰기. 내용·결은 그대로")
+    st["_line_fix_why"] = why
+    st["_line_fix_conflict"] = c
+    ids = _line_ids(st, [json.dumps(c, ensure_ascii=False)])
+    lf = _line_fix(st, why, ids, pick=not ids)      # 먼저 걸린 줄만 — 재료는 그대로(_voice_rewrite·_length_rewrite 와 같은 길)
+    if lf:
+        return lf
+    st.pop("_line_fix_conflict", None)
+    st["log"].append(f"배치 충돌 → 대본 다시: {json.dumps(c, ensure_ascii=False)[:300]}")
+    _tries(st, "conflict", 2, ["conflict"], at="script")
+    st["approved"] = False
     return {"review": [_script_ask(st, why)], "then": "script_got", "reject": {"why": st["_redo"]["say"], "fix": "대본을 고쳐 다시 확인받습니다"}}
 
 

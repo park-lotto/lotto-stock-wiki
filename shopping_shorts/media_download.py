@@ -596,7 +596,7 @@ def _download_douyin_inner(url, dest_dir, timeout):
 _YTDLP_CLIENTS = [None, "android", "ios"]
 
 
-_Q_CAP = "[width<=1920][height<=1920]"   # 1080p급 상한 — 세로(1080x1920)·가로(1920x1080) 둘 다 통과, 4K 차단
+from tools.calcopy.engine.yt_fetch import Q_CAP as _Q_CAP   # noqa: E402 — 1080p급 상한(세로·가로 둘 다 통과, 4K 차단). 값의 주인 = yt_fetch.Q_CAP(회원 받기와 같은 값)
 
 
 def _download_ytdlp(url, dest_dir, max_attempts=3):
