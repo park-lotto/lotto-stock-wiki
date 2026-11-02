@@ -1,0 +1,696 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body style="margin:0"><title>캐러셀 자동화 기틀</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 레이아웃: 4:5 피드 프레임을 모티프로 한 보고서 — 상단 요약 → 파이프라인 띠 → 사진 갤러리 → 영상 10개 → 비교 → 기틀 */
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --ink:#16181d; --muted:#5d6370; --line:#dde0e6;
+  --accent:#d43f6a; --accent-soft:#fbe7ee; --ok:#1f7a55; --warn:#a25a00; --chip:#eceef2;
+  --f-display:"Do Hyeon","IBM Plex Sans KR",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans KR",system-ui,-apple-system,"Malgun Gothic",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121317; --surface:#1b1d23; --ink:#eceef2; --muted:#a2a8b4; --line:#2c2f37;
+  --accent:#f0739a; --accent-soft:#3a1f2a; --ok:#5cc79a; --warn:#f0b35a; --chip:#262931; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121317; --surface:#1b1d23; --ink:#eceef2; --muted:#a2a8b4; --line:#2c2f37;
+  --accent:#f0739a; --accent-soft:#3a1f2a; --ok:#5cc79a; --warn:#f0b35a; --chip:#262931; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.65;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;line-height:1.2;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,5vw,3rem)}
+h2{font-size:1.8rem}
+h3{font-size:1.2rem}
+p{margin:0}
+.eyebrow{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.lede{max-width:68ch;color:var(--muted);font-size:1.02rem}
+section{display:flex;flex-direction:column;gap:20px}
+.sec-head{display:flex;flex-direction:column;gap:6px}
+.mono{font-family:var(--f-mono);font-size:.85em}
+a{color:var(--accent)}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--chip);padding:1px 5px;border-radius:4px}
+
+/* 헤더 */
+header{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:32px;align-items:end}
+.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.facts div{background:var(--surface);padding:12px 14px;display:flex;flex-direction:column}
+.facts b{font-family:var(--f-display);font-size:1.6rem;font-weight:400;font-variant-numeric:tabular-nums}
+.facts span{font-size:.8rem;color:var(--muted)}
+
+/* 파이프라인 띠 */
+.pipe{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:6px;overflow-x:auto}
+.pipe .st{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:4px;min-width:96px}
+.pipe .st i{font-style:normal;font-family:var(--f-mono);font-size:.7rem;color:var(--muted)}
+.pipe .st b{font-weight:700;font-size:.92rem}
+.pipe .st small{font-size:.75rem;color:var(--muted);line-height:1.4}
+.pipe .st.hum{border-color:var(--accent);background:var(--accent-soft)}
+.legend{font-size:.82rem;color:var(--muted)}
+.legend em{font-style:normal;color:var(--accent);font-weight:700}
+
+/* 갤러리 */
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{font:inherit;font-size:.88rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:6px 14px;border-radius:999px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tabs button:focus-visible,.shot:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.shot{display:flex;flex-direction:column;gap:8px;background:none;border:0;padding:0;text-align:left;cursor:zoom-in;color:inherit;font:inherit}
+.shot img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--chip)}
+.shot .cap{font-size:.86rem;line-height:1.5}
+.shot .src{font-family:var(--f-mono);font-size:.7rem;color:var(--muted)}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:.68rem;padding:1px 7px;border-radius:999px;background:var(--chip);color:var(--muted);margin-right:6px}
+.tag.d{background:var(--accent-soft);color:var(--accent)}
+dialog{border:0;padding:0;background:transparent;max-width:min(1200px,96vw)}
+dialog::backdrop{background:rgba(0,0,0,.82)}
+dialog img{display:block;max-width:100%;max-height:82vh;border-radius:8px}
+dialog p{color:#f2f2f2;padding:10px 4px;font-size:.92rem}
+dialog button{position:absolute;top:8px;right:8px;font:inherit;background:#000a;color:#fff;border:0;border-radius:6px;padding:4px 10px;cursor:pointer}
+
+/* 영상 10개 */
+.vids{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.vid{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.vid .top{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.vid .no{font-family:var(--f-mono);font-size:.75rem;color:var(--muted)}
+.vid .meta{font-family:var(--f-mono);font-size:.72rem;color:var(--muted)}
+.vid ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px;font-size:.9rem}
+.vid .kind{font-size:.78rem;font-weight:700;color:var(--accent)}
+.vid .note{font-size:.8rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
+
+/* 표 */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:.88rem}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-weight:700;background:var(--chip)}
+tr:last-child td{border-bottom:0}
+td .y{color:var(--ok);font-weight:700}
+td .n{color:var(--warn);font-weight:700}
+
+/* 함정 목록 */
+.traps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.trap{border-left:3px solid var(--warn);padding:4px 0 4px 14px;display:flex;flex-direction:column;gap:2px}
+.trap b{font-size:.95rem}
+.trap span{font-size:.86rem;color:var(--muted)}
+
+/* 기틀 */
+.frame{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.box ol,.box ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
+pre{margin:0;overflow-x:auto;background:var(--chip);border-radius:8px;padding:14px;font-family:var(--f-mono);font-size:.78rem;line-height:1.55}
+.owners{display:flex;flex-direction:column;gap:8px}
+.own{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;font-size:.88rem;border-bottom:1px solid var(--line);padding-bottom:8px}
+.own:last-child{border-bottom:0}
+.own code{white-space:nowrap}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.step .when{font-family:var(--f-mono);font-size:.72rem;color:var(--accent)}
+.step ul{margin:0;padding-left:18px;font-size:.86rem;display:flex;flex-direction:column;gap:3px}
+.step .done{font-size:.8rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
+.decide{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.q{background:var(--accent-soft);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.q b{font-size:.95rem}
+.q span{font-size:.86rem}
+.have{display:flex;flex-direction:column;gap:6px;font-size:.88rem}
+.have div{display:flex;gap:10px}
+.have .s{font-family:var(--f-mono);font-size:.72rem;min-width:52px}
+.have .s.y{color:var(--ok)} .have .s.n{color:var(--warn)}
+footer{font-size:.8rem;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+.toc{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.88rem}
+.toc a{text-decoration:none;border-bottom:1px solid var(--line);color:var(--ink)}
+.toc a:hover{border-color:var(--accent)}
+.decided{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.decided div{background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.decided span{font-size:.75rem;color:var(--muted)}
+.decided b{font-size:.98rem}
+.screens{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.scr{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.scr .nm{display:flex;align-items:baseline;gap:8px}
+.scr .nm i{font-style:normal;font-family:var(--f-mono);font-size:.72rem;color:var(--accent)}
+.scr ul{margin:0;padding-left:18px;font-size:.87rem;display:flex;flex-direction:column;gap:3px}
+.scr .from{font-size:.76rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
+.modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.mode{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.85rem}
+.flow span{background:var(--chip);border-radius:6px;padding:4px 9px}
+.flow span.h{background:var(--accent-soft);color:var(--accent);font-weight:700}
+.flow em{font-style:normal;color:var(--muted)}
+td.pri{font-family:var(--f-mono);font-size:.78rem;white-space:nowrap}
+td.pri.m{color:var(--accent);font-weight:700}
+.svc-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.svc-tabs button{font:inherit;font-size:.82rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 12px;border-radius:999px;cursor:pointer}
+.svc-tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.svc-tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.part{font-family:var(--f-mono);font-size:.75rem;color:var(--muted);letter-spacing:.06em;border-top:2px solid var(--ink);padding-top:10px}
+@media (max-width:820px){.screens,.modes{grid-template-columns:1fr}.decided{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+@media (max-width:820px){
+  header,.vids,.traps,.frame,.decide{grid-template-columns:1fr}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .own{grid-template-columns:1fr;gap:2px}
+}
+@media (max-width:480px){.steps{grid-template-columns:1fr}.facts b{font-size:1.3rem}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <span class="eyebrow">인스타 캐러셀 자동화 · 조사와 설계 기틀 · 2026-10-17</span>
+    <h1>캐러셀 자동화 기틀</h1>
+    <p class="lede">회원에게 파는 카드뉴스 생성 프로그램의 화면과 기능 기획안입니다. 판매 중인 서비스 8곳과 참고 앱 2개의 실제 화면 80컷, 자동화 강의 10편의 화면 58컷을 근거로 짰습니다. 요금은 각 공식 페이지에서 2026-10-17에 본 값이고, 영상 속 매출·팔로워 수치는 출연자 주장이라 확인하지 않았습니다.</p>
+    <nav class="toc" aria-label="목차"><a href="#plan">제품 화면 구성안</a><a href="#features">기능 목록</a><a href="#compare">경쟁 서비스 비교</a><a href="#uigal">경쟁 서비스 화면</a><a href="#lessons">불만에서 배울 것</a><a href="#frame">설계 기틀</a><a href="#gallery">강의 화면</a></nav>
+  </div>
+  <div class="facts">
+    <div><b>10곳</b><span>화면을 본 서비스·앱</span></div>
+    <div><b>138컷</b><span>뽑은 화면 (서비스 80 · 강의 58)</span></div>
+    <div><b>$0.02~</b><span>버텍스 배경 1장 (Imagen 4 Fast)</span></div>
+    <div><b>₩2만~5만</b><span>경쟁 서비스 월 요금대</span></div>
+  </div>
+</header>
+
+<section>
+  <div class="decided">
+    <div><span>누가 쓰나</span><b>회원 판매용</b></div>
+    <div><span>배경 그림</span><b>버텍스 API</b></div>
+    <div><span>시연 계정</span><b>새 인스타 계정</b></div>
+    <div><span>모드</span><b>자동 + 수동 둘 다</b></div>
+  </div>
+  <p class="legend">사장님 결정(2026-10-17). 인스타 게시 연결과 메타 인증은 실제 고객을 붙일 때 하기로 해서 이번 기획에서는 뺐습니다. 지금 기획 범위는 "카드뉴스가 만들어져 나오는 프로그램"까지입니다.</p>
+</section>
+
+<section id="plan">
+  <span class="part">제품 기획안</span>
+  <div class="sec-head">
+    <h2>화면 구성안: 탭 6개</h2>
+    <p class="lede">펄스카드의 "탭 4개, 순서대로" 구조가 가장 단순했고, 판매 서비스들은 여기에 편집기·브랜드·자동을 더했습니다. 두 가지를 합쳐 탭 6개로 잡았습니다. 각 칸 아래에 어느 서비스에서 가져온 것인지 적었습니다.</p>
+  </div>
+  <div class="screens">
+    <div class="scr"><div class="nm"><i>탭 1</i><h3>소재</h3></div><ul><li>오늘 뜨는 이슈 목록: 점수·출처·분야</li><li>내 상품 링크 목록(쿠팡·스마트스토어)</li><li>저장해 둔 아이디어</li><li>줄마다 <b>카드로 만들기</b> 버튼 → 만들기 탭으로 넘어감</li></ul><span class="from">펄스카드 레이더 · 레비오사 대량 기획 · Contentdrips 아이디어 카드</span></div>
+    <div class="scr"><div class="nm"><i>탭 2</i><h3>만들기</h3></div><ul><li>입력 탭: 주제 / 링크(유튜브·블로그·쿠팡·스마트스토어) / 글 붙여넣기 / 상품 홍보</li><li>설정은 한 줄 요약, 누르면 펼침: 목적, 장수(자동 5~10), 비율(4:5 기본), 디자인 팩, 글씨, 이미지 방식</li><li>이미지 방식: 없음 / 무료 사진 / 버텍스 생성. <b>예상 비용</b>을 버튼에 표시</li><li><b>개요 확인</b>: 장별 한 줄을 고친 뒤 진행</li></ul><span class="from">aiCarousels More options · 펄스카드 디자인 패널 · 망고보드·Predis 개요 확인 · Mirra 이미지 사용 방식 · 레비오사 예상 크레딧</span></div>
+    <div class="scr"><div class="nm"><i>탭 3</i><h3>편집</h3></div><ul><li>아래 썸네일 줄, 가운데 큰 미리보기</li><li>글 누르면: 다시 쓰기 · 짧게 · 길게 · 쉽게. {중괄호}로 강조색</li><li>장 누르면: 레이아웃만 교체(글 유지), 배경만 다시 생성</li><li>"AI로 전체 수정" 한 줄 입력(예: 어둡게)</li><li><b>틀림 신고</b>: 이미지 틀림 / 카피 틀림 + 이유</li><li>게시 전 점검표</li></ul><span class="from">aiCarousels 편집기·점검표 · 인피디 강조색 · Mirra AI 전체 수정 · 펄스카드 틀림 버튼</span></div>
+    <div class="scr"><div class="nm"><i>탭 4</i><h3>보관함</h3></div><ul><li>만든 카드 목록(썸네일·주제·날짜), 자동 저장</li><li>캡션·해시태그 복사 버튼</li><li>ZIP(JPEG) · PDF 다운로드</li><li>템플릿으로 저장, 비율 바꾸기(AI가 다시 배치)</li><li>번역본 만들기(일본어 등)</li></ul><span class="from">펄스카드 갤러리 · Mirra 템플릿 저장·비율 변환 · 인피디 번역본 · 망고보드 "저장 전 이탈 시 사라짐" 반면교사</span></div>
+    <div class="scr"><div class="nm"><i>탭 5</i><h3>자동</h3></div><ul><li>규칙 만들기: 주제 범위, 요일·시간, 하루 개수, 장수, 템플릿</li><li>서버가 정해진 시간에 생성 → 검사</li><li><b>승인 대기함</b>: 승인 / 고치기 / 버리기</li><li>승인한 것은 보관함으로(게시 연결은 나중)</li></ul><span class="from">강의 2(코워크 예약)·10(n8n 예약) · 강의 6 승인 버튼 · Predis·PostNitro 팀 승인 흐름</span></div>
+    <div class="scr"><div class="nm"><i>탭 6</i><h3>브랜드·설정</h3></div><ul><li>로고·색·폰트·말투·금지어</li><li>마지막 장(저장·팔로우 유도) 문구</li><li>레퍼런스 이미지나 내 게시물로 템플릿 만들기</li><li>크레딧 잔액·사용 내역, 버텍스 연결 상태</li></ul><span class="from">PostNitro·aiCarousels 브랜드 키트 · 레비오사 템플릿 만들기 3방식 · 펄스카드 비용 표시</span></div>
+  </div>
+
+  <div class="modes">
+    <div class="mode"><h3>수동 모드: 회원이 한 편씩</h3>
+      <div class="flow"><span>소재 or 주제</span><em>→</em><span>설정</span><em>→</em><span class="h">개요 확인</span><em>→</em><span>생성·자동 검사</span><em>→</em><span>편집</span><em>→</em><span class="h">점검표</span><em>→</em><span>다운로드</span></div>
+      <p style="font-size:.86rem;color:var(--muted)">분홍 칸이 사람이 보는 자리입니다. 개요 확인에서 크레딧이 차감됩니다(망고보드 방식). 그래서 확인 전에 그만두면 돈이 들지 않습니다.</p>
+    </div>
+    <div class="mode"><h3>자동 모드: 규칙대로 매일</h3>
+      <div class="flow"><span>규칙</span><em>→</em><span>소재 자동 선택</span><em>→</em><span>생성·자동 검사</span><em>→</em><span class="h">승인 대기함</span><em>→</em><span>보관함</span><em>→</em><span>(나중) 게시</span></div>
+      <p style="font-size:.86rem;color:var(--muted)">서버 크론이 돌리므로 회원 PC가 꺼져 있어도 됩니다. 강의 2·4의 "PC가 켜져 있어야 한다" 문제를 피합니다. 검사를 통과하지 못한 카드는 승인함에 표시만 하고, 다시 쓰기를 한 번 더 시도합니다.</p>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="sec-head">
+    <h2>기능 목록 초안</h2>
+    <p class="lede">우선순위는 "회원이 돈을 내고 처음 써 보는 순간 무엇이 있어야 하나"로 나눴습니다. 1차는 첫 판매에 필요한 것, 2차는 계속 쓰게 만드는 것, 나중은 고객을 붙일 때 붙이는 것입니다.</p>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>기능</th><th>내용</th><th>순서</th><th>근거</th></tr></thead>
+    <tbody>
+      <tr><td><b>입력 4종</b></td><td>주제 / 링크 / 글 붙여넣기 / 상품 홍보(상품명·링크 → 제품 사진 가져옴)</td><td class="pri m">1차</td><td>Mirra 링크 입력, 펄스카드 상품 홍보, Predis 상품 URL</td></tr>
+      <tr><td><b>개요 확인</b></td><td>장별 한 줄 개요를 보여 주고 고친 뒤 생성. 이때 크레딧 차감</td><td class="pri m">1차</td><td>망고보드 7장 개요, Predis 장별 대본, Mirra 기획 검토</td></tr>
+      <tr><td><b>장 구성 규칙</b></td><td>표지 + 주제 따라 바뀌는 본문(숫자·비교·단계·목록) + 저장 유도 마지막 장</td><td class="pri m">1차</td><td>펄스카드 5장 구성, aiCarousels 템플릿별 장 구조</td></tr>
+      <tr><td><b>디자인 팩·글씨</b></td><td>팩 3종 이상(자동 선택 포함), 폰트 미리보기, 표지 폰트 따로, 크기 S·M·L</td><td class="pri m">1차</td><td>펄스카드 디자인 패널</td></tr>
+      <tr><td><b>배경 그림</b></td><td>없음 / 무료 사진 / 버텍스 생성 중 선택. 장당 비용을 화면에 표시. 맞는 그림인지 AI가 한 번 더 확인</td><td class="pri m">1차</td><td>Mirra 이미지 방식 팝업, 펄스카드 스톡 우선·비전 검토, 레비오사 장당 크레딧</td></tr>
+      <tr><td><b>자동 검사</b></td><td>지어낸 날짜·숫자, 빈 카드, 제목 중복, 글자 넘침, 첫 장 글자 수. 걸리면 다시 쓰기</td><td class="pri m">1차</td><td>펄스카드 12가지 검사, aiCarousels 점검표, 강의 6 글자 잘림</td></tr>
+      <tr><td><b>요소 다시 쓰기</b></td><td>글 하나만: 다시·짧게·길게·쉽게. 부분 수정은 크레딧을 적게</td><td class="pri m">1차</td><td>aiCarousels, Canva 불만("고칠 때마다 차감")</td></tr>
+      <tr><td><b>내보내기</b></td><td>JPEG ZIP(1080×1350), PDF. 캡션·해시태그 복사</td><td class="pri m">1차</td><td>전 서비스 공통</td></tr>
+      <tr><td><b>보관함 자동 저장</b></td><td>만든 즉시 저장. 화면을 나가도 남음</td><td class="pri m">1차</td><td>망고보드 "저장 전 이탈 시 사라짐" 한계</td></tr>
+      <tr><td><b>크레딧·요금 표시</b></td><td>버튼마다 예상 차감, 잔액, 사용 내역. 해지 버튼은 찾기 쉽게</td><td class="pri m">1차</td><td>펄스카드 비용 표시, aiCarousels·Predis 해지 불만</td></tr>
+      <tr><td>브랜드 키트</td><td>로고·색·폰트·말투·금지어, 로고 전 장 적용</td><td class="pri">2차</td><td>PostNitro, Mirra 로고 전체 적용</td></tr>
+      <tr><td>템플릿 저장·만들기</td><td>만든 카드를 템플릿으로, 레퍼런스 이미지로 템플릿 생성</td><td class="pri">2차</td><td>Mirra, 레비오사</td></tr>
+      <tr><td>레이아웃 교체</td><td>장 하나의 배치만 바꾸고 글은 유지</td><td class="pri">2차</td><td>aiCarousels 239 레이아웃</td></tr>
+      <tr><td>틀림 신고 학습</td><td>이미지·카피 틀림 이유를 저장해 다음 생성 조건에 반영</td><td class="pri">2차</td><td>펄스카드</td></tr>
+      <tr><td>AI로 전체 수정</td><td>한 줄 지시로 전체 톤·색 다시 생성</td><td class="pri">2차</td><td>Mirra, Contentdrips AI 에이전트</td></tr>
+      <tr><td>자동 모드</td><td>규칙 → 서버 생성 → 승인 대기함</td><td class="pri">2차</td><td>강의 2·6·10, Predis 승인 흐름</td></tr>
+      <tr><td>소재 탭</td><td>이슈 목록, 내 상품 목록에서 바로 만들기</td><td class="pri">2차</td><td>펄스카드 레이더, 레비오사 대량 기획</td></tr>
+      <tr><td>비율 바꾸기</td><td>4:5 → 1:1·9:16 다시 배치</td><td class="pri">2차</td><td>Mirra</td></tr>
+      <tr><td>번역본</td><td>같은 카드를 일본어·영어로</td><td class="pri">나중</td><td>인피디 프로그램</td></tr>
+      <tr><td>릴스 영상 변환</td><td>카드를 짧은 영상으로. 우리 숏템 영상 엔진과 연결할 수 있음</td><td class="pri">나중</td><td>Mirra, Contentdrips MP4, Predis</td></tr>
+      <tr><td>CSV 일괄</td><td>표 한 줄 = 카드 한 벌</td><td class="pri">나중</td><td>Contentdrips, Canva Bulk Create</td></tr>
+      <tr><td>인스타 게시·예약</td><td>공식 API. 메타 앱 검수·비즈니스 인증 뒤</td><td class="pri">나중</td><td>아래 "인스타 공식 API가 정한 선"</td></tr>
+    </tbody>
+  </table></div>
+  <p class="legend">판단 주인 원칙대로, 편집 화면의 미리보기와 다운로드 파일은 <b>같은 렌더 함수</b>로 그립니다. 화면에서 본 것과 받은 파일이 다를 수 없게 하기 위해서입니다.</p>
+</section>
+
+<section id="compare">
+  <span class="part">경쟁 서비스 조사</span>
+  <div class="sec-head">
+    <h2>서비스 10곳 비교</h2>
+    <p class="lede">판매 중인 8곳과 참고 앱 2개입니다. "확인 못 함"은 공식 자료나 화면에서 보지 못한 것입니다. 해외 요금은 달러 그대로 적었습니다.</p>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>서비스</th><th>형태</th><th>입력</th><th>생성 전 확인</th><th>편집</th><th>이미지</th><th>품질 검사</th><th>예약·게시</th><th>한국어</th><th>월 요금</th></tr></thead>
+    <tbody>
+      <tr><td><b>펄스카드</b></td><td>데스크톱 앱</td><td>이슈 레이더·주제·상품명</td><td>없음</td><td>틀림 신고</td><td>무료 사진 먼저, 없으면 AI. AI가 검토</td><td>12가지 자동</td><td>없음(ZIP)</td><td>있음</td><td>무료 배포(본인 키)</td></tr>
+      <tr><td><b>인피디 프로그램</b></td><td>개인 제작 웹</td><td>참고 게시물 캡처</td><td>없음</td><td>제목·강조색·크기</td><td>AI 생성</td><td>확인 못 함</td><td>없음</td><td>한·일 번역</td><td>비매품</td></tr>
+      <tr><td><b>aiCarousels</b></td><td>웹</td><td>주제·글·URL·유튜브·PDF·개요</td><td>템플릿 장 구조</td><td>요소별 다시 쓰기, 레이아웃 교체</td><td>AI 그림 Pro 100/월</td><td>게시 전 점검표</td><td>링크드인(Pro)</td><td>출력 있음</td><td>Pro ₩20,141</td></tr>
+      <tr><td><b>PostNitro</b></td><td>웹</td><td>주제·글·기사·X</td><td>없음</td><td>캔버스·색 프리셋·헤드샷</td><td>AI 5~100/월</td><td>확인 못 함</td><td>Creator+부터</td><td>확인 못 함</td><td>$15 · $30 · $60</td></tr>
+      <tr><td><b>Predis.ai</b></td><td>웹·앱</td><td>주제·상품 URL·스토어 CSV·PDF·유튜브</td><td>장별 대본</td><td>템플릿 교체 편집기</td><td>AI 상품 촬영</td><td>확인 못 함</td><td>캘린더·자동 게시</td><td>확인 못 함</td><td>$19 · $40 · $212</td></tr>
+      <tr><td><b>Contentdrips</b></td><td>웹</td><td>글·기사·유튜브·틱톡·CSV</td><td>없음</td><td>캔버스 + AI 채팅</td><td>AI(25크레딧)</td><td>확인 못 함</td><td>즉시·예약</td><td>확인 못 함</td><td>$19 · $35 · $65</td></tr>
+      <tr><td><b>Mirra</b></td><td>웹</td><td>주제·원고·유튜브·블로그·스마트스토어·쿠팡</td><td>기획 검토(선택)</td><td>AI 전체 수정, 레이어 편집</td><td>검색·무료·AI 새 컷</td><td>확인 못 함</td><td>예약·댓글 DM</td><td>있음</td><td>$19 · $49 · $99 · $199</td></tr>
+      <tr><td><b>망고보드 AI</b></td><td>웹</td><td>주제·파일 5개</td><td>7장 개요 수정</td><td>기존 에디터</td><td>AI 이미지</td><td>확인 못 함</td><td>없음</td><td>한글 폰트 1,000+</td><td>29,000원 · 49,000원</td></tr>
+      <tr><td><b>레비오사</b></td><td>웹</td><td>URL·글·PDF·영상·상품</td><td>확인 못 함</td><td>확인 못 함</td><td>장당 3 / 40 / 75 크레딧</td><td>확인 못 함</td><td>예약·DM 자동응답</td><td>한/영</td><td>브랜딩 269,100원~</td></tr>
+      <tr><td><b>Canva AI</b></td><td>웹</td><td>프롬프트·CSV</td><td>없음</td><td>범용 편집기</td><td>있음</td><td>확인 못 함</td><td>Content Planner(캐러셀 예약은 공식 문서끼리 어긋남)</td><td>UI 있음</td><td>Pro ₩99,000/년</td></tr>
+    </tbody>
+  </table></div>
+  <p class="legend">우리 원가: 버텍스 배경 1장 $0.02(Imagen 4 Fast) ~ $0.134(Nano Banana Pro). 10장 모두 생성해도 $0.20 ~ $1.34입니다. 출처: cloud.google.com/vertex-ai/generative-ai/pricing, 2026-10-17.</p>
+</section>
+
+<section id="uigal">
+  <div class="sec-head">
+    <h2>경쟁 서비스 화면</h2>
+    <p class="lede">서비스를 고르면 그 서비스의 화면만 보입니다. 누르면 크게 보입니다. aiCarousels와 레비오사는 조사원이 실제 사이트를 열어 찍었고, 나머지는 공식 데모 영상이나 공식 가이드에서 뽑았습니다.</p>
+  </div>
+  <div class="svc-tabs" id="svc-tabs" role="group" aria-label="서비스 고르기"></div>
+  <div class="gal" id="ugal"></div>
+</section>
+
+<section id="lessons">
+  <div class="sec-head">
+    <h2>불만에서 배울 것</h2>
+    <p class="lede">리뷰 사이트와 공식 가이드에 적힌 한계에서 뽑았습니다. 리뷰가 거의 없는 서비스도 있어 근거의 두께가 서로 다릅니다.</p>
+  </div>
+  <div class="traps">
+    <div class="trap"><b>해지·환불이 어렵다</b><span>aiCarousels(Trustpilot 3.6, 1점 후기 "해지 루프"), Predis(체험 중 결제, 해지 후 결제). 우리는 해지를 설정 첫 화면에 둔다</span></div>
+    <div class="trap"><b>결과가 반복적이다</b><span>aiCarousels 1점 후기. 장 구성 규칙과 레이아웃이 주제마다 달라져야 한다</span></div>
+    <div class="trap"><b>고칠 때마다 사용량이 깎인다</b><span>Canva AI 리뷰 인용. 부분 수정은 싸게, 전체 재생성만 크레딧을 크게</span></div>
+    <div class="trap"><b>저장 전에 나가면 사라진다</b><span>망고보드 공식 가이드에 적힌 한계. 우리는 생성 즉시 보관함에 저장</span></div>
+    <div class="trap"><b>첨부 이미지가 디자인에 반영 안 된다</b><span>망고보드 공식 한계. 레퍼런스로 템플릿을 만드는 기능(레비오사·Mirra)이 차별점이 된다</span></div>
+    <div class="trap"><b>AI가 만든 결과는 완벽하지 않다</b><span>레비오사가 템플릿 창에 직접 적어 둠. 자동 검사와 틀림 신고로 줄인다</span></div>
+    <div class="trap"><b>남의 게시물 재가공은 저작권 위험</b><span>인피디 영상의 방식. 회원 판매 제품의 기능으로 넣지 않는다</span></div>
+    <div class="trap"><b>무료로 써 보기가 어렵다</b><span>Predis는 무료 플랜 없이 카드 등록 체험, 크레딧 단가를 공개하지 않는 곳도 있다(레비오사). 첫 1회 무료 + 단가 공개가 신뢰를 준다</span></div>
+  </div>
+</section>
+
+<span class="part">1차 조사: 자동화 강의 10편</span>
+
+<section>
+  <div class="sec-head">
+    <span class="eyebrow">10편 공통 흐름</span>
+    <h2>캐러셀 한 편이 나오는 9단계</h2>
+    <p class="lede">10편이 쓰는 도구는 서로 달랐지만 단계는 모두 이 순서였습니다. <em style="font-style:normal;color:var(--accent);font-weight:700">분홍 칸</em>은 영상들이 "사람이 꼭 봐야 한다"고 말한 자리입니다.</p>
+  </div>
+  <div class="pipe" role="list">
+    <div class="st" role="listitem"><i>1</i><b>소재 수집</b><small>뉴스·SNS 크롤·유튜브 링크</small></div>
+    <div class="st hum" role="listitem"><i>2</i><b>주제 고르기</b><small>후보 순위 → 사람 확인</small></div>
+    <div class="st" role="listitem"><i>3</i><b>장별 문구</b><small>표지·본문·마무리 JSON</small></div>
+    <div class="st" role="listitem"><i>4</i><b>디자인 적용</b><small>템플릿 + 브랜드 기준표</small></div>
+    <div class="st" role="listitem"><i>5</i><b>그리기</b><small>HTML 캡처 / 이미지 모델</small></div>
+    <div class="st hum" role="listitem"><i>6</i><b>결과 검사</b><small>글자 잘림·비율·오타</small></div>
+    <div class="st" role="listitem"><i>7</i><b>캡션·태그</b><small>매번 새로 작성</small></div>
+    <div class="st hum" role="listitem"><i>8</i><b>게시 승인</b><small>버튼 하나</small></div>
+    <div class="st" role="listitem"><i>9</i><b>게시·기록</b><small>공식 API · 로그</small></div>
+  </div>
+</section>
+
+<section id="gallery">
+  <div class="sec-head">
+    <span class="eyebrow">사진으로 보기</span>
+    <h2>디자인 형태와 기능 형태</h2>
+    <p class="lede">사진을 누르면 크게 보입니다. "디자인"은 실제로 나온 카드, "기능"은 그 카드를 만드는 화면과 설정입니다.</p>
+  </div>
+  <div class="tabs" role="group" aria-label="사진 분류">
+    <button type="button" id="t-all" data-f="all" aria-pressed="true">전체</button>
+    <button type="button" id="t-d" data-f="d" aria-pressed="false">디자인 결과물</button>
+    <button type="button" id="t-f" data-f="f" aria-pressed="false">기능·설정 화면</button>
+  </div>
+  <div class="gal" id="gal"></div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="eyebrow">영상별 핵심</span>
+    <h2>조사한 강의 10편</h2>
+    <p class="lede">방식이 겹치지 않게 골랐습니다. Claude Code 4편, Claude 앱·디자인 2편, n8n 3편, 피그마 반자동 1편입니다.</p>
+  </div>
+  <div class="vids" id="vids"></div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="eyebrow">비교</span>
+    <h2>그리는 방법 네 가지</h2>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>방법</th><th>쓴 영상</th><th>한글 정확도</th><th>장당 비용</th><th>매번 같은 모양</th><th>수정</th><th>약점</th></tr></thead>
+    <tbody>
+      <tr><td><b>HTML 템플릿 → 브라우저 캡처</b></td><td>1·2·6·7</td><td><span class="y">정확</span></td><td>0원 (영상 6)</td><td><span class="y">숫자로 고정</span></td><td>말로 시키면 즉시</td><td>"다들 비슷한 AI 느낌" (영상 1)</td></tr>
+      <tr><td><b>이미지 모델이 글자까지</b> (나노바나나·Flux)</td><td>1·3·4·10</td><td><span class="n">깨질 수 있음</span></td><td>9장 ≈ 1,000원 (영상 1)</td><td><span class="n">매번 다름</span></td><td>부분 수정 어려움</td><td>재생성마다 비용, 생성 대기 30초~4분</td></tr>
+      <tr><td><b>섞기</b>: 배경은 이미지 모델, 글자는 HTML</td><td>8 (피그마로)</td><td><span class="y">정확</span></td><td>배경 장수만큼</td><td><span class="y">글자 틀 고정</span></td><td>배경만 다시 생성</td><td>두 단계를 맞물려야 함</td></tr>
+      <tr><td><b>디자인 도구 편집본</b> (Claude Design·피그마)</td><td>5·8</td><td><span class="y">정확</span></td><td>도구 요금</td><td>DESIGN.md로 고정</td><td>사람이 손으로 다듬기 좋음</td><td>완전 자동화가 어렵다</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="eyebrow">비교</span>
+    <h2>올리는 방법과 돌리는 곳</h2>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>항목</th><th>메타 공식 API 직접</th><th>Blotato 같은 중계 서비스</th><th>손으로 올리기</th></tr></thead>
+    <tbody>
+      <tr><td>쓴 영상</td><td>4 · 6 · 9</td><td>3 · 10</td><td>1 · 2 · 5 · 7 · 8</td></tr>
+      <tr><td>비용</td><td>무료</td><td>유료 (API 사용은 유료 요금제만)</td><td>무료</td></tr>
+      <tr><td>준비</td><td>프로페셔널·공개 계정, 메타 앱, 테스터 초대, 토큰(60일)</td><td>서비스에 계정 연결</td><td>없음</td></tr>
+      <tr><td>여러 플랫폼</td><td>인스타만 (스레드는 별도 API)</td><td>8개 플랫폼 동시</td><td>-</td></tr>
+      <tr><td>계정 위험</td><td>공식 경로라 수동 게시와 같은 대우라고 영상 6이 설명 (확인 안 함)</td><td>서비스 정책에 달림</td><td>없음</td></tr>
+    </tbody>
+  </table></div>
+  <p class="legend">돌리는 곳: Claude 코워크 예약(영상 2)과 Antigravity 캘린더(영상 4)는 <b>PC와 앱이 켜져 있어야</b> 돕니다. n8n(영상 3·9·10)은 클라우드나 서버에서 상시로 돕니다.</p>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="eyebrow">공식 문서 확인</span>
+    <h2>인스타 공식 API가 정한 선</h2>
+    <p class="lede">출처: developers.facebook.com/docs/instagram-platform/content-publishing (2026-10-17 조회).</p>
+  </div>
+  <div class="traps">
+    <div class="trap"><b>캐러셀은 최대 10장</b><span>사진·영상 섞어도 10개. 캐러셀 1개 = 게시물 1건</span></div>
+    <div class="trap"><b>24시간에 100건</b><span>같은 문서 안에 "50건"이라는 문장도 있어 어긋남. 보수적으로 50으로 잡는다</span></div>
+    <div class="trap"><b>이미지는 JPEG만</b><span>PNG로 뽑으면 그대로 못 올린다. 렌더 결과를 JPEG로 저장</span></div>
+    <div class="trap"><b>공개 URL에 있어야 함</b><span>메타 서버가 그 주소에서 가져간다. 영상 6은 공개 GitHub 저장소를 썼다</span></div>
+    <div class="trap"><b>첫 장 비율로 전부 잘림</b><span>캐러셀은 첫 이미지 크기에 맞춰 나머지를 자른다. 장마다 1080×1350으로 통일</span></div>
+    <div class="trap"><b>2단계 게시</b><span>장마다 컨테이너 → 묶음 컨테이너(CAROUSEL) → 상태가 FINISHED가 되면 게시. 상태는 1분 간격, 5분 이내로 조회 권장. 컨테이너는 24시간 뒤 만료</span></div>
+    <div class="trap"><b>필요 권한</b><span>인스타 로그인 방식: <code>instagram_business_basic</code> + <code>instagram_business_content_publish</code></span></div>
+    <div class="trap"><b>계정 조건</b><span>프로페셔널 계정. 비공개 계정은 토큰이 안 나온다(영상 6). 인스타 로그인 방식은 페이스북 페이지가 필요 없다(영상 6 실측)</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="eyebrow">영상들이 실제로 걸린 곳</span>
+    <h2>함정 목록</h2>
+  </div>
+  <div class="traps">
+    <div class="trap"><b>권한 하나 빠져서 마지막에 실패</b><span>"필수 권한" 목록에 게시 권한이 없다. 직접 추가해야 한다 (영상 6)</span></div>
+    <div class="trap"><b>AI는 자기가 만든 그림을 안 열어 본다</b><span>2번 카드 제목이 잘렸는데 "완료"라고 보고. 사람 눈 검수로 잡음 (영상 6)</span></div>
+    <div class="trap"><b>레퍼런스가 없으면 밋밋하다</b><span>레퍼런스 이미지를 주고 나서야 품질이 올라감. 디자인 용어(글라스모피즘 등)를 알아야 원하는 대로 나온다 (영상 7)</span></div>
+    <div class="trap"><b>AI 티가 나면 덜 본다</b><span>색·폰트·여백 기준표(DESIGN.md)를 고정해 톤을 통일 (영상 5)</span></div>
+    <div class="trap"><b>엉뚱한 주제로 사용량 소진</b><span>끝까지 자동으로 돌렸더니 원하지 않는 주제로 만듦. 주제 확인 단계를 넣음 (영상 2)</span></div>
+    <div class="trap"><b>같은 캡션·해시태그 반복은 스팸</b><span>자동·수동 상관없이 걸린다. 캡션은 매번 새로 쓴다 (영상 6)</span></div>
+    <div class="trap"><b>이미지 생성 실패 시 흐름이 끊김</b><span>대기 후 조회에서 실패하면 재시도 루프가 있어야 운영 가능 (영상 3)</span></div>
+    <div class="trap"><b>토큰은 한 번만 보이고 60일이면 끝</b><span>갱신을 일정에 넣어야 한다 (영상 6·9). 페이스북 로그인 방식 토큰은 처음엔 1시간짜리 (영상 9)</span></div>
+    <div class="trap"><b>스킬은 샘플 하나로 먼저 맞춘다</b><span>원하는 결과가 나올 때까지 한 샘플로 반복(A 테스트), 그 뒤 여러 샘플(A/B). 평가 기준(글자 수·문장부호·어투)을 적어 둔다 (영상 7)</span></div>
+    <div class="trap"><b>첫 실행은 브라우저 부품 없음 에러</b><span>캡처용 브라우저가 안 깔려 있으면 멈춘다 (영상 6)</span></div>
+  </div>
+</section>
+
+<section id="frame">
+  <div class="sec-head">
+    <span class="eyebrow">우리 프로그램</span>
+    <h2>설계 기틀</h2>
+    <p class="lede">10편에서 공통으로 통한 것만 남겼습니다. 글자는 HTML 템플릿으로 정확하게 그리고, 배경 그림만 선택적으로 이미지 모델에 맡기고, 공식 API로 올리고, 서버에서 상시로 돌리는 구조입니다. 우리 규칙(0순위-C)에 따라 판단마다 주인 함수를 하나씩 정하고, 결과물 검사를 처음부터 같이 둡니다.</p>
+  </div>
+
+  <div class="frame">
+    <div class="box">
+      <h3>판단 주인 — 판단 하나에 함수 하나</h3>
+      <div class="owners">
+        <div class="own"><code>plan.build_slides()</code><span>장수(2~10), 장별 역할(표지·본문·마무리), 장별 글자 수 상한. 이 규칙은 여기에만 둔다</span></div>
+        <div class="own"><code>brand/&lt;계정&gt;.json</code><span>계정의 목적·톤·금지어(영상 1의 brand-facts)와 색·폰트·여백(영상 5의 DESIGN.md)을 한 파일에</span></div>
+        <div class="own"><code>render.render_carousel()</code><span>JSON + 템플릿 → 1080×1350 JPEG. 화면 미리보기도 이 함수 결과를 그대로 보여 준다</span></div>
+        <div class="own"><code>check.check_carousel()</code><span>결과물 검사의 주인. 아래 "결과물 검사"를 모두 여기서</span></div>
+        <div class="own"><code>caption.write()</code><span>캡션·해시태그. 직전 게시물들과 겹침률을 재서 반복을 막는다</span></div>
+        <div class="own"><code>publish.publish_carousel()</code><span>공개 URL 업로드 → 장별 컨테이너 → 묶음 → 상태 조회 → 게시. 재시도·실패 기록 포함</span></div>
+      </div>
+    </div>
+
+    <div class="box">
+      <h3>장별 문구 데이터 (단계 3의 결과)</h3>
+<pre>{
+  "account": "숏템",
+  "topic": "홈쇼핑에 나온 건강식품, 쿠팡에서 사는 법",
+  "template": "dark-bold-v1",
+  "rule_version": "plan-2026-10-17",
+  "slides": [
+    {"role": "cover", "title": "...", "sub": "..."},
+    {"role": "body",  "title": "...", "body": "...",
+     "bg_prompt": null},
+    {"role": "cta",   "title": "...", "body": "..."}
+  ],
+  "caption": "...",
+  "hashtags": ["..."]
+}</pre>
+      <p style="font-size:.84rem;color:var(--muted)">영상 3·8·10이 모두 이 모양(장별 배열 + 캡션)을 썼습니다. <code>rule_version</code>은 어떤 규칙으로 만든 파일인지 남기는 표식입니다. <code>bg_prompt</code>가 있을 때만 배경을 이미지 모델로 생성합니다.</p>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="box">
+      <h3>결과물 검사 — 계산이 아니라 나온 파일을 잰다</h3>
+      <ul>
+        <li>렌더된 화면에서 글자 칸마다 <b>넘침</b>을 잰다(내용 높이 &gt; 칸 높이면 실패). 영상 6의 "제목 잘림"을 사람보다 먼저 잡는다</li>
+        <li>파일이 <b>JPEG, 1080×1350</b>이고, 장수가 2~10장인지</li>
+        <li>장마다 <b>빈 화면·검은 화면</b>이 아닌지(픽셀 분산)</li>
+        <li>캡션이 직전 10건과 <b>얼마나 겹치는지</b></li>
+        <li>게시 뒤 게시물 ID로 <b>실제 올라간 장수</b>를 다시 조회해 맞춰 본다</li>
+        <li>검사 도구는 처음 만드는 커밋에 같이 넣고, <b>일부러 망가뜨린 샘플에서 실패가 뜨는지</b> 먼저 시험한다</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>우리가 이미 가진 것 (이번에 코드로 확인)</h3>
+      <div class="have">
+        <div><span class="s y">있음</span><span>Gemini 키풀 <code>pipeline.atoms.key_vault</code> — <code>shopping_shorts/config.py:238</code>에서 사용 중. 문구·캡션 생성에 쓴다(버텍스 말고 키풀)</span></div>
+        <div><span class="s y">있음</span><span>Playwright 화면 캡처 — <code>shopping_shorts/checks/browser.py</code>. HTML→JPEG 렌더의 바탕</span></div>
+        <div><span class="s y">있음</span><span>상시 도는 서버와 크론(Lightsail). "PC가 켜져 있어야 한다" 문제를 피한다</span></div>
+        <div><span class="s n">없음</span><span>인스타 공식 게시 API 코드 — <code>shopping_shorts</code> 안에 <code>media_publish</code>·<code>graph.facebook.com</code> 검색 결과 0건</span></div>
+        <div><span class="s n">미정</span><span>이미지를 올려 둘 공개 URL 자리(서버 정적 폴더로 할지 별도 저장소로 할지)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-head" style="margin-top:8px"><h3>만드는 순서</h3></div>
+  <div class="steps">
+    <div class="step"><span class="when">1단계 · 첫 판매</span><b>수동 모드 완성</b><ul><li>입력 4종 → 개요 확인 → 생성</li><li>디자인 팩 3종, 버텍스 배경 선택</li><li>자동 검사, 요소 다시 쓰기</li><li>보관함, ZIP·PDF, 크레딧 표시</li></ul><span class="done">됐다: 주제 20개를 돌려 넘침·지어낸 숫자 0건, 받은 파일 = 화면</span></div>
+    <div class="step"><span class="when">2단계</span><b>계속 쓰게</b><ul><li>브랜드 키트, 템플릿 저장</li><li>레이아웃 교체, AI 전체 수정</li><li>틀림 신고 학습</li><li>비율 바꾸기</li></ul><span class="done">됐다: 같은 브랜드로 10편이 같은 톤으로 나옴</span></div>
+    <div class="step"><span class="when">3단계</span><b>자동 모드</b><ul><li>소재 탭(이슈·내 상품)</li><li>규칙 → 서버 생성 → 승인 대기함</li><li>검사 탈락분 다시 쓰기</li></ul><span class="done">됐다: 일주일 매일 생성, 회원 손은 승인만</span></div>
+    <div class="step"><span class="when">고객 붙일 때</span><b>게시 연결</b><ul><li>메타 앱 검수·비즈니스 인증</li><li>공식 API 게시, 토큰 갱신</li><li>번역본, 릴스 변환, CSV 일괄</li></ul><span class="done">됐다: 회원 계정에 캐러셀이 장 순서대로 올라감</span></div>
+  </div>
+
+  <div class="sec-head" style="margin-top:8px"><h3>아직 정할 것</h3></div>
+  <div class="decide">
+    <div class="q"><b>1. 숏템 안의 탭인가, 별도 서비스인가</b><span>숏템 안에 두면 로그인·결제·버텍스 등록(vertex_route)·사용량 기록(usage_meter)을 그대로 쓴다. 별도면 새로 만든다</span></div>
+    <div class="q"><b>2. 버텍스 요금은 누가 내나</b><span>지금 숏템은 회원이 자기 버텍스를 등록하는 방식이다. 배경 그림도 회원 버텍스로 할지, 사장님 버텍스로 그리고 크레딧을 팔지</span></div>
+    <div class="q"><b>3. 값을 얼마로</b><span>경쟁 월 요금대는 약 2만~5만 원. 첫 1회 무료와 단가 공개를 할지</span></div>
+    <div class="q"><b>4. 첫 디자인 팩 3종의 방향</b><span>예: 뉴스·정보형(다크), 상품 홍보형(사진 중심), 생활 팁형(밝은 색). 새 계정의 주제와 맞춘다</span></div>
+  </div>
+</section>
+
+<footer>조사 자료: 각 영상 자막 전문(yt-dlp 자동 자막)과 설명란, 영상당 30컷 화면 모음. 영상 속 매출·팔로워·조회수 같은 성과 수치는 출연자 주장이고 확인하지 않았습니다. 10편 모두 강의·커뮤니티·유료 도구로 이어지는 홍보 성격이 있습니다.</footer>
+</div>
+
+<dialog id="lb" aria-label="사진 크게 보기"><button type="button" id="lb-x">닫기</button><img id="lb-img" alt=""><p id="lb-cap"></p></dialog>
+
+<script>
+const V={
+ 1:{id:"WGD4btXRW74",ch:"신영선의 AI탐구",t:"클로드코드로 인스타 카드뉴스(캐러셀) 자동화",d:"2026-04-18",len:"26분",v:"1.8만",kind:"Claude Code · 오픈소스 폴더",pts:["/carousel 주제 명령 하나로 리서치 → 기획 → 장별 프롬프트 JSON → 이미지 → 품질 검사 → 보고","폴더: CLAUDE.md, knowledge(brand-facts·톤·레퍼런스 패턴), templates, scripts, output/날짜","에이전트 4개: 리서처, 프롬프트 라이터, HTML 라이터, 리뷰어","엔진 두 개: HTML(빠르고 깔끔, 다들 비슷) / 나노바나나 프로(그림 좋음, 글자 깨짐·수정 어려움, 9장 약 1,000원)","brand-facts.md를 AI 인터뷰로 채우는 것이 품질의 핵심이라고 강조. 9장 10~15분"],note:"GitHub에 폴더 공개. 부트캠프 홍보"},
+ 2:{id:"29Ddyy5Y8Xs",ch:"기린과자",t:"클로드로 인스타 카드뉴스 자동화하는 법",d:"2026-04-24",len:"13분",v:"1.4만",kind:"Claude 앱 프로젝트 + 코워크 예약",pts:["프로젝트에 지침 프롬프트 + 레퍼런스 디자인 이미지(캔바·핀터레스트 4:5) 넣기","기획 먼저 → 확인 → HTML → PNG. 10장 약 2분 30초. 모델은 Sonnet 권장","코워크 예약: 매일 8시 AI 뉴스 수집 → 주제 5개 순위 → 1개 → 카드","PC와 앱이 켜져 있어야 돈다. 엉뚱한 주제로 사용량을 날려 주제 확인 단계 추가","게시는 손으로. 일주일 팔로워 약 1,500명 증가(본인 주장)"],note:"지침 프롬프트 배포"},
+ 3:{id:"id22R7iBTjo",ch:"Automate with Marc",t:"Viral Instagram Carousel Machine (n8n + Nanobanana + Blotato)",d:"2025-10-09",len:"19분",v:"1.1만",kind:"n8n · 이미지 모델 · 중계 게시",pts:["채팅 트리거 → GPT가 5장 이미지 프롬프트를 배열로(구조화 출력 강제)","배열을 5건으로 나눠 나노바나나 호출 → 30초 대기 → 결과 조회","Blotato 업로드 → 배열 재결합 → 구글 시트 기록 → 캡션 생성 → 병합 → 게시","운영하려면 이미지 실패 재시도 루프와 게시 전 사람 승인이 필요하다고 언급","본인 평가 80% 수준. 글자는 이미지 모델이 그림"],note:"n8n 템플릿 #8877 무료. Blotato 제휴 링크"},
+ 4:{id:"vWCH4sG9hSc",ch:"CONNECT AI LAB",t:"[메타 공식 API] 24시간 인스타그램 자동화 시스템",d:"2026-03-15",len:"13분",v:"3.8만",kind:"공식 API · Antigravity 에이전트",pts:["메타 앱 생성(기타 → 비즈니스) → 인스타 설정 → 테스터 초대 → 인스타에서 수락 → 토큰","에이전트에 스킬 문서를 주고 계정 ID·토큰 저장","에이전트가 이미지를 생성하고 게시 파이썬 코드를 직접 짜서 올림","30일 치 계획을 세우고 캘린더에 게시 일정 등록. PC가 켜져 있어야 돈다","단일 이미지 게시 위주. 캐러셀은 다루지 않음"],note:"유료 클래스 홍보. '알고리즘 해킹' 같은 주장은 근거 없음"},
+ 5:{id:"avHf4mzYRUE",ch:"일머니",t:"인스타 바이럴 카드뉴스, 클로드 디자인으로 10분 양산",d:"2026-05-24",len:"7분",v:"5.2만",kind:"Claude Design · DESIGN.md",pts:["Claude Design 프로젝트에 참고 자료·지침을 넣고 생성 → 코멘트로 수정, 글자 크기·색 직접 편집","캔바·피그마로 넘겨 이어서 편집 가능","DESIGN.md = 색·폰트·여백·레이아웃 기준표. 넣으면 매번 같은 톤(애플·나이키 md 예시)","AI 느낌이 강하면 전환율이 떨어진다는 경고","결이 맞는 계정의 캐러셀을 모아 공통 패턴을 규칙으로 정리 → 학습"],note:"MD 파일·지침 카페 배포"},
+ 6:{id:"VLdlf8qPwdo",ch:"방구석컴퍼니",t:"클로드 코드로 인스타 자동화, 진짜 되나요? 됩니다!",d:"2026-07-30",len:"11분",v:"8.7천",kind:"Claude Code · 공식 API 끝까지",pts:["프로페셔널 계정 필수, 공개 계정만 토큰, 페이스북 페이지는 필요 없음","이용 사례는 '콘텐츠 관리' 필터에서 고름. 게시 권한은 직접 추가해야 함(빠뜨리면 마지막에 에러)","HTML 4:5 → 브라우저 캡처 1080×1350, 이미지 비용 0원. 9장 + 눈 검수까지 6분 9초","AI는 결과물을 안 열어 봐서 제목 잘림을 놓침 → 사람이 확인","공개 저장소로 URL을 만들어 게시. 하루 100건, 캡션 반복은 스팸. 스킬로 묶고 승인 버튼 대시보드"],note:"가장 실전적. 설정 문서 오픈톡 배포"},
+ 7:{id:"HPdBm_PBDh8",ch:"투쏠 AI 에이전트",t:"클로드 코드로 카드뉴스 자동화 (초보자도 가능)",d:"2026-03-16",len:"20분",v:"5천",kind:"Claude Code · 서브에이전트 + 스킬",pts:["유튜브 링크 → Gemini 3 Flash 요약 → 6장 카드 PNG를 만드는 서브에이전트","플랜 모드로 계획부터. 공식 문서를 참고 자료로 줌","스킬 만들기: 작업 구체화, 평가 기준(글자 수·문장부호·어투), 한 샘플로 반복 후 A/B","레퍼런스 없으면 밋밋. 노토산스 KR, 글라스모피즘 같은 용어로 지시","마케팅 에이전트 하나에 뉴스레터·스레드·카드뉴스 스킬을 모으는 방향"],note:"1:1 컨설팅·강의 홍보"},
+ 8:{id:"5RfX_YR3Y9g",ch:"실무자",t:"카드뉴스 자동화 진짜 차이는 여기서 벌어집니다",d:"2026-07-16",len:"7분",v:"1천",kind:"반자동 · 피그마 플러그인",pts:["카드 내용을 JSON 골격으로 뽑고, 키 구조를 스킬에 명시","Claude가 만든 피그마 플러그인에 JSON을 붙여 넣고 색·폰트를 정해 카드 생성","배경 이미지는 이미지 생성 AI(커넥터 연결)로 따로 만듦","소재는 SNS·AI 크롤링으로 모아 인사이트 있는 것만 노션 DB에","결과물이 편집 가능한 피그마 레이어로 남는 것이 장점"],note:"GitHub 스킬 공개"},
+ 9:{id:"t63IlcH1GJY",ch:"Lakshit Ukani",t:"Automate Every Instagram Post Type with n8n + Official API",d:"2025-06-08",len:"25분",v:"3.7만",kind:"n8n · 공식 API 전 유형",pts:["이미지·스토리·릴스·캐러셀을 공식 API로 모두 게시","앱 이름에 IG·Instagram 같은 단어는 거절됨","2단계: 컨테이너 생성 → 상태 조회(FINISHED까지 반복) → media_publish","캐러셀: 장마다 컨테이너 → children으로 묶은 CAROUSEL 컨테이너 → 게시","페이스북 로그인 방식 토큰은 1시간짜리 → 디버거에서 60일로 연장"],note:"Skool 커뮤니티 홍보"},
+ 10:{id:"Ev3xBsldyBk",ch:"Sabrina Ramonov",t:"This n8n AI Agent will AUTOMATE your Carousels and Slideshows",d:"2025-05-03",len:"13분",v:"1.6만",kind:"n8n · 8개 플랫폼 동시",pts:["매일 10시 예약 → AI가 주제 아이디어를 내고 하나를 골라 캡션 + 장별 프롬프트 JSON","정확한 문구·이미지 프롬프트를 직접 지정하는 모드(시트 연결)도 따로 둠","변수는 Setup 노드 한 곳에 모음","Blotato API 한 번으로 카드 생성(문구 위치·스타일·이미지 모델 선택) → 1~4분 대기 → 조회","8개 플랫폼 게시. 테스트는 한 플랫폼씩"],note:"본인이 만든 Blotato 홍보"}
+};
+const S=[
+ ["29Ddyy5Y8Xs-1","d",2,"다크 배경 + 주황 포인트 표지 '이제 Claude로 일하세요'. 실제 인스타 게시물"],
+ ["29Ddyy5Y8Xs-2","d",2,"세리프 제목 다크 표지 'Claude Design 시작하기'"],
+ ["29Ddyy5Y8Xs-19","d",2,"결과 PNG: 다크 카드 + 세리프 + 금색 강조 'GREAT 프롬프터'"],
+ ["29Ddyy5Y8Xs-28","d",2,"마무리 카드 '문제는 Claude가 아니에요. 질문이에요.' 왼쪽은 예약 작업 로그"],
+ ["29Ddyy5Y8Xs-26","d",2,"코워크 예약이 혼자 만든 카드. 크림색 배경 본문형"],
+ ["WGD4btXRW74-1","d",1,"나노바나나 버전 표지: 다크 + 붉은 빛 '해커톤 우승자의 꿀팁 7가지'"],
+ ["WGD4btXRW74-3","d",1,"도식형 카드: 01 ANALYZE / 02 PLAN / 03 EXECUTE"],
+ ["WGD4btXRW74-17","d",1,"HTML 엔진 결과: 아주 단순한 다크 표지 '창시자는 이렇게 씁니다'"],
+ ["WGD4btXRW74-22","d",1,"나노바나나 결과: 손그림 느낌 종이 카드 '24시간 안에 세팅 가능합니다'"],
+ ["HPdBm_PBDh8-0","d",7,"강의자가 반나절 다듬은 붉은 그라데이션 템플릿 묶음"],
+ ["HPdBm_PBDh8-1","d",7,"붉은 3D 아이콘 + 큰 제목 '크리에이터가 마케팅이다'"],
+ ["HPdBm_PBDh8-22","d",7,"레퍼런스 없이 처음 나온 카드. 흰 바탕에 글만 있어 밋밋함"],
+ ["HPdBm_PBDh8-26","d",7,"레퍼런스 + 글라스모피즘 지시 뒤 카드 '자동화, 어디까지 가능할까?'"],
+ ["HPdBm_PBDh8-28","d",7,"같은 템플릿 본문 카드: 번호 목록형"],
+ ["5RfX_YR3Y9g-9","d",8,"피그마 플러그인으로 뽑은 카드 묶음: 검정·형광 표지 + 사진 본문"],
+ ["5RfX_YR3Y9g-23","d",8,"색만 바꿔 다시 생성한 카드 묶음(남색·주황)"],
+ ["5RfX_YR3Y9g-22","d",8,"Claude 안에서 카드 미리보기와 배경 이미지 생성 결과"],
+ ["avHf4mzYRUE-7","d",5,"Claude Design 결과: 다크 바탕 큰 질문형 표지 '5월에 뛸 마라톤, 아직도 검색하세요?'"],
+ ["avHf4mzYRUE-11","d",5,"DESIGN.md 안의 색 팔레트 기준표"],
+ ["avHf4mzYRUE-14","d",5,"유명 브랜드(나이키) 스타일 md를 적용하는 예"],
+ ["avHf4mzYRUE-22","d",5,"레퍼런스 계정 피드: 감도가 일정한 지역 매거진"],
+ ["avHf4mzYRUE-23","d",5,"레퍼런스 계정 피드: 헬스 계정의 굵은 글자 썸네일"],
+ ["id22R7iBTjo-14","d",3,"나노바나나가 글자까지 그린 표지 'Stop losing listeners in the first 60 seconds'"],
+ ["id22R7iBTjo-28","d",3,"자동 게시된 인스타 결과: 일러스트 + 'The Problem' 본문 카드"],
+ ["vWCH4sG9hSc-19","d",4,"에이전트가 생성해 바로 올린 단일 이미지(네온 일러스트)"],
+ ["VLdlf8qPwdo-24","d",6,"자동 게시된 9장 카드가 폰 피드에 올라온 모습"],
+ ["29Ddyy5Y8Xs-13","f",2,"캔바에서 4:5 템플릿을 레퍼런스로 고르는 화면"],
+ ["29Ddyy5Y8Xs-3","f",2,"인스타 인사이트: 카드뉴스 일주일 성과(본인 주장 근거 화면)"],
+ ["WGD4btXRW74-10","f",1,"brand-facts.md 역할: 계정 정보 → AI 학습 → 맞춤 캐러셀"],
+ ["WGD4btXRW74-23","f",1,"듀얼 엔진 구조: CLAUDE.md 하나에서 HTML / 나노바나나 갈림"],
+ ["WGD4btXRW74-8","f",1,".env에 Gemini(이미지 생성)와 Anthropic(품질 검사) 키 연결"],
+ ["avHf4mzYRUE-4","f",5,"주제 목록과 행사 캘린더에서 소재를 뽑는 화면"],
+ ["avHf4mzYRUE-18","f",5,"지침 프롬프트 + 참고 이미지 첨부해 기획 요청"],
+ ["id22R7iBTjo-0","f",3,"전체 흐름: 아이디어 → 이미지 프롬프트 → 5장 캐러셀 → 자동 게시"],
+ ["id22R7iBTjo-1","f",3,"n8n 워크플로우 전체(생성 → 이미지 → 업로드 → 캡션 → 게시)"],
+ ["Ev3xBsldyBk-0","f",10,"n8n 3구역: AI가 문구 작성 / 카드 생성 / 8개 플랫폼 게시"],
+ ["Ev3xBsldyBk-9","f",10,"AI 에이전트 출력 JSON: 캡션 + 장별 장면"],
+ ["Ev3xBsldyBk-10","f",10,"Blotato: 카드·영상 생성과 다중 게시 서비스"],
+ ["5RfX_YR3Y9g-12","f",8,"피그마 플러그인 창: JSON 붙여 넣기와 색·폰트 설정"],
+ ["5RfX_YR3Y9g-14","f",8,"플러그인이 만든 카드들을 피그마 캔버스에서 확인"],
+ ["5RfX_YR3Y9g-25","f",8,"대안 서비스: 말로 명령해 여러 SNS를 관리하는 도구"],
+ ["VLdlf8qPwdo-0","f",6,"출발점: 카드뉴스 만드는 영상은 많은데 다들 만들고 끝"],
+ ["VLdlf8qPwdo-5","f",6,"권한 구조: 내 계정에 올릴 권한을 내가 나한테 준다(심사·승인 없음)"],
+ ["VLdlf8qPwdo-10","f",6,"메타 콘솔 권한 목록. instagram_business_content_publish를 직접 추가"],
+ ["VLdlf8qPwdo-17","f",6,"지시는 주제·장수·비율 세 개만. 폰트·색 지시는 안 넣음"],
+ ["VLdlf8qPwdo-20","f",6,"AI는 만들기까지만 하고 열어서 확인은 안 한다 → 사람 확인 필요"],
+ ["VLdlf8qPwdo-25","f",6,"게시 한도: 하루 100건, 카드 한 세트 = 1건"],
+ ["VLdlf8qPwdo-27","f",6,"스킬로 묶은 뒤: '카페 신메뉴 카드뉴스 만들어서 올려줘' 한 문장"],
+ ["vWCH4sG9hSc-4","f",4,"메타 개발자 콘솔: 앱 만들기 첫 화면"],
+ ["vWCH4sG9hSc-9","f",4,"인스타 설정 > 앱 및 웹사이트 > 테스터 초대 수락"],
+ ["vWCH4sG9hSc-26","f",4,"30일 자동 게시 스크립트 실행 로그"],
+ ["vWCH4sG9hSc-27","f",4,"캘린더에 매일 게시 일정이 자동 등록된 모습"],
+ ["t63IlcH1GJY-10","f",9,"영상 목차: API 설정 / 게시 흐름 / n8n 워크플로우 / 공식 문서"],
+ ["t63IlcH1GJY-6","f",9,"n8n: 게시 유형별(이미지·스토리·릴스·캐러셀) 갈래"],
+ ["t63IlcH1GJY-7","f",9,"페이스북 로그인 방식에서 고르는 권한 10개"],
+ ["t63IlcH1GJY-8","f",9,"페이스북 페이지와 인스타 계정 연결 확인(페이스북 로그인 방식에만 필요)"],
+ ["t63IlcH1GJY-29","f",9,"공식 문서: 컨테이너 생성 요청 형식"],
+ ["vWCH4sG9hSc-23","f",4,"에이전트가 올린 게시물을 웹 피드와 폰에서 바로 확인"]
+];
+const gal=document.getElementById('gal');
+S.forEach(([f,c,n,cap])=>{
+  const b=document.createElement('button');b.type='button';b.className='shot';b.dataset.c=c;
+  b.innerHTML=`<img loading="lazy" src="img/${f}.jpg" alt="${cap}"><span class="cap"><span class="tag ${c==='d'?'d':''}">${c==='d'?'디자인':'기능'}</span>${cap}</span><span class="src">영상 ${n} · ${V[n].ch}</span>`;
+  b.addEventListener('click',()=>{lbImg.src=`img/${f}.jpg`;lbImg.alt=cap;lbCap.textContent=`영상 ${n} · ${V[n].ch} — ${cap}`;try{lb.showModal()}catch(e){lb.setAttribute('open','')}});
+  gal.appendChild(b);
+});
+const lb=document.getElementById('lb'),lbImg=document.getElementById('lb-img'),lbCap=document.getElementById('lb-cap');
+document.getElementById('lb-x').addEventListener('click',()=>lb.close());
+lb.addEventListener('click',e=>{if(e.target===lb)lb.close()});
+document.querySelectorAll('.tabs button').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-pressed',x===btn?'true':'false'));
+  const f=btn.dataset.f;gal.querySelectorAll('.shot').forEach(s=>{s.hidden=!(f==='all'||s.dataset.c===f)});
+}));
+const SV={pulsecard:"펄스카드",inpd:"인피디 프로그램",aicarousels:"aiCarousels",postnitro:"PostNitro",predis:"Predis.ai",contentdrips:"Contentdrips",mirra:"Mirra",mangoboard:"망고보드 AI",leviosa:"레비오사",canva:"Canva AI"};
+const U=[
+ ["pulsecard-1","d","결과 카드 묶음: 다크 배경 + 노란 띠 제목"],
+ ["pulsecard-4","f","레이더 탭: 지금 뜨는 이슈, 점수·출처·분야, 오른쪽 결과 미리보기"],
+ ["pulsecard-6","f","이슈 줄 옆 '카드화' 버튼을 누르면 바로 생성 시작"],
+ ["pulsecard-7","d","상품 홍보 모드 결과 표지 'HBM 앞세운 SK하이닉스, 역대급 실적 달성'"],
+ ["pulsecard-10","f","스튜디오 탭: 주제 입력, 생성 뒤 갤러리에서 확인 안내"],
+ ["pulsecard-11","f","디자인 패널: 디자인 팩 자동·프로·큐트, 주제에 맞춰 자동 선택"],
+ ["pulsecard-12","f","폰트 11종을 샘플 문구로 미리 보고 고름"],
+ ["pulsecard-13","f","표지 큰 글씨 폰트를 따로 고름, 글씨 크기 S·M·L"],
+ ["pulsecard-15","f","생성 진행: 핵심 단어가 카드마다 들어갔는지 맞추며 카피 작성"],
+ ["pulsecard-16","f","생성 진행: 12가지 검사, 걸리면 이유를 짚어 다시 쓰기"],
+ ["pulsecard-19","d","갤러리 탭: 왼쪽 썸네일 목록, 오른쪽 결과 표지"],
+ ["pulsecard-20","d","숫자 중심 주제는 큰 숫자 카드 '한국 기준금리 3.00% 유지'"],
+ ["pulsecard-22","f","카피 틀림 버튼: 사실 틀림 / 문장 어색을 고름"],
+ ["pulsecard-24","f","이미지 틀림 신고 뒤 다음부터 검색 조건을 좁힘"],
+ ["pulsecard-25","f","시스템 탭: 3단계 안내, 키 저장·연결 테스트·샘플 1장"],
+ ["pulsecard-27","f","모델마다 기본 과금 / 비싼 과금 표시"],
+ ["inpd-3","f","재가공 대상으로 고른 남의 인기 게시물(저작권 위험)"],
+ ["inpd-6","f","참고 게시물의 본문을 캡처해 넣는 단계"],
+ ["inpd-11","d","분석 → 문구 + AI 이미지 결과(세로 카드, 하단 제목 3줄)"],
+ ["inpd-12","d","편집 화면: 오른쪽 패널에서 제목·본문 수정"],
+ ["inpd-13","f","{중괄호}로 감싼 단어에 강조색, 색·크기·위치 슬라이더"],
+ ["inpd-20","f","일본어 번역본: 본문이 일본어로 바뀐 편집 패널"],
+ ["aicarousels-1","f","첫 화면 입력창 + 소스 메뉴(글·웹페이지·유튜브·PDF·개요·슬라이드 가져오기)"],
+ ["aicarousels-2","f","More options: 형식·목표·고스트라이터·장당 단어 수·언어 / 테마·장수·그림·마무리"],
+ ["aicarousels-3","d","Mini lesson 템플릿: 예시 카드 4장 + 7장 구조 'How it's built'"],
+ ["aicarousels-4","d","편집기: 흰 바탕 굵은 산세리프 카드, 오른쪽 테마·브랜드 키트 패널"],
+ ["aicarousels-5","f","글 요소 선택: 다시 쓰기·짧게·길게·쉽게, 자동 맞춤"],
+ ["aicarousels-6","f","장 레이아웃 교체 창: 239개, 소개·목록·단계·비교·차트 분류"],
+ ["aicarousels-7","f","캡션 탭: 'Write it for me', 게시 전 점검표"],
+ ["aicarousels-8","f","다운로드: PDF / PNG ZIP"],
+ ["aicarousels-9","f","가입·요금 창: Free / Pro ₩20,141 / Team ₩79,222(월결제)"],
+ ["postnitro-1","f","AI 생성 패널: 주제·글·기사·X 탭, 톤·대상·언어·장수"],
+ ["postnitro-2","f","비율 선택: 1:1, 3:4, 4:5, 9:16, 4:3, 16:9"],
+ ["postnitro-3","d","흰 배경 표지 + 헤드샷(이름·핸들) 패널"],
+ ["postnitro-4","d","색 프리셋 묶음, 검정 본문 장, 마지막 CTA 장과 QR 코드"],
+ ["postnitro-5","f","템플릿 창: 기본 / 내 템플릿, 폰트 업로드·폰트 짝"],
+ ["postnitro-6","d","미리보기: 주황·초록 그라데이션 완성 카드, PNG·PDF·Zapier·Make 내보내기"],
+ ["postnitro-7","f","링크드인 문서 게시 화면(크롬 확장)"],
+ ["predis-1","f","새 게시물 첫 화면: 상품 크리에이티브·캐러셀·영상·사진 촬영, 크레딧 잔액"],
+ ["predis-2","f","캐러셀 1/5단계: 스토어 연결·CSV / 상품 URL / 상품 이미지"],
+ ["predis-3","f","4/5단계: 생성 모드, 캐러셀 스타일 4종, 장수 3~6, 비율"],
+ ["predis-4","f","5/5단계: 장별 대본 확인·수정, 톤 선택, 생성"],
+ ["predis-5","d","결과: 모델 사진 위 문구 카드, 자동 캡션, 게시·편집·다운로드"],
+ ["predis-6","d","편집기(2023 화면): 다른 템플릿 바로 적용 목록"],
+ ["predis-7","f","예약 화면(2023): 플랫폼 체크, 날짜·시간, 워터마크 경고"],
+ ["contentdrips-1","f","가입 후 4단계: 프로필·디자인·글투·아이디어"],
+ ["contentdrips-2","f","홈 입력창: 글·유튜브·블로그·틱톡 링크, 내 브랜드 사용, 아이디어 카드"],
+ ["contentdrips-3","f","AI 캐러셀 메이커: 입력 종류, 출력 언어, 내 스타일 맞추기, −10 크레딧"],
+ ["contentdrips-4","d","결과 그래픽 '5 WAYS TO GROW A BRAND'와 색 팔레트"],
+ ["contentdrips-5","f","다운로드: PDF·MP4·GIF·이미지 / 바로 게시 대상 목록"],
+ ["contentdrips-6","f","게시 준비: 즉시 게시 / 예약(달력·시간), 미리보기"],
+ ["contentdrips-7","f","카드를 영상으로: MP4·GIF 자동 애니메이션"],
+ ["contentdrips-8","f","요금: Starter $19 / Pro $35 / Ultimate $65"],
+ ["mirra-1","f","카드뉴스 생성: 링크에서 가져오기, 원고 입력, 비율 5종, '15 크레딧 사용'"],
+ ["mirra-2","f","템플릿 고른 뒤: 웹 검색, 만들기 전 기획 검토, 추가 지시, 장수"],
+ ["mirra-3","d","결과 7/7장, 썸네일 줄, 템플릿으로 저장·예약하기, 'AI로 전체 수정'"],
+ ["mirra-4","d","편집기: 레이어 패널에서 Noto Sans KR·크기·굵기·색·자간"],
+ ["mirra-5","f","로고 하나를 모든 장에 같은 크기로 적용"],
+ ["mirra-6","f","템플릿으로 저장: 표지·본문·본문·마무리 4장 추출"],
+ ["mirra-7","d","예약 창: 캡션, 이미지 순서, 예약 시각, 인스타 미리보기, 댓글 DM 설정"],
+ ["mangoboard-1","f","AI 디자이너 첫 화면: 카드뉴스 1080×1080, 주제 입력창"],
+ ["mangoboard-2","f","자료 첨부 0/5, '이미지 생성에는 참고하지 않습니다'"],
+ ["mangoboard-3","f","총 7장 개요 확인·수정: 표지·소개·본문·요약·마무리"],
+ ["mangoboard-4","d","결과 표지: 사진 + 주황 띠 '김장맨과 함께하는 김장의 정석'"],
+ ["mangoboard-5","f","결과 처리: 에디터에서 편집 / 다운로드 / 처음부터 다시"],
+ ["mangoboard-6","d","망고보드 에디터로 넘어간 카드뉴스"],
+ ["mangoboard-7","d","공식 예시: 사진 배경 '플로깅 캠페인 모집합니다'"],
+ ["leviosa-1","f","입력 화면: URL 탭, 표지·본문·CTA 미리보기, 템플릿, 이미지 퀄리티, 예상 크레딧"],
+ ["leviosa-2","f","직접 입력 탭: 원고를 붙이면 슬라이드 구성으로 변환(30자 이상)"],
+ ["leviosa-3","d","표지(사진 위 흰 굵은 글씨) + 본문(음식 사진 + 번호 제목)"],
+ ["leviosa-4","f","템플릿 만들기 3방식: 내 게시물 / AI(레퍼런스) / 직접"],
+ ["leviosa-5","f","카드뉴스 대시보드: 대량 기획, 예약관리, 템플릿, 자동 응답, 브랜드"],
+ ["leviosa-6","d","요금 페이지의 결과 예시: 뷰티 사진 위 하단 흰 자막"],
+ ["canva-1","f","Canva AI 2.0 입력창 '오늘은 무엇을 만들어 볼까요?'"],
+ ["canva-2","f","예약까지 한 문장으로 지시하는 예(카드뉴스 5장 매주 수요일)"],
+ ["canva-3","f","편집기 왼쪽 AI 패널에서 참고 이미지로 생성 지시"],
+ ["canva-4","d","AI가 만든 상품 캐러셀(보라 톤 패널)"],
+ ["canva-5","f","Bulk Create: 데이터 필드(페이지·제목·본문·해시태그)를 요소에 연결"],
+ ["canva-6","d","대량 생성으로 채워진 카드 '얼룩 제거 꿀팁 BEST 5'"],
+ ["canva-7","f","다운로드 패널: PNG, 1080×1080, 페이지 선택"]
+];
+const ugal=document.getElementById('ugal'),stabs=document.getElementById('svc-tabs');
+function showSvc(k){
+  stabs.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===k?'true':'false'));
+  ugal.querySelectorAll('.shot').forEach(s=>{s.hidden=!(k==='all'||s.dataset.k===k)});
+}
+[["all","전체"],...Object.entries(SV)].forEach(([k,n])=>{
+  const b=document.createElement('button');b.type='button';b.id='svc-'+k;b.dataset.k=k;b.textContent=n;b.setAttribute('aria-pressed',k==='pulsecard'?'true':'false');
+  b.addEventListener('click',()=>showSvc(k));stabs.appendChild(b);
+});
+U.forEach(([f,c,cap])=>{
+  const k=f.split('-')[0];
+  const b=document.createElement('button');b.type='button';b.className='shot';b.dataset.k=k;
+  b.innerHTML=`<img loading="lazy" src="ui/${f}.jpg" alt="${cap}"><span class="cap"><span class="tag ${c==='d'?'d':''}">${c==='d'?'디자인':'기능'}</span>${cap}</span><span class="src">${SV[k]}</span>`;
+  b.addEventListener('click',()=>{lbImg.src=`ui/${f}.jpg`;lbImg.alt=cap;lbCap.textContent=`${SV[k]} — ${cap}`;try{lb.showModal()}catch(e){lb.setAttribute('open','')}});
+  ugal.appendChild(b);
+});
+showSvc('pulsecard');
+const vids=document.getElementById('vids');
+Object.entries(V).forEach(([n,v])=>{
+  const el=document.createElement('article');el.className='vid';
+  el.innerHTML=`<div class="top"><span class="no">영상 ${n}</span><span class="meta">${v.d} · ${v.len} · 조회 ${v.v}</span></div>
+  <h3><a href="https://youtu.be/${v.id}" target="_blank" rel="noopener">${v.t}</a></h3>
+  <span class="kind">${v.ch} · ${v.kind}</span>
+  <ul>${v.pts.map(p=>`<li>${p}</li>`).join('')}</ul>
+  <span class="note">${v.note}</span>`;
+  vids.appendChild(el);
+});
+</script>
+</body></html>

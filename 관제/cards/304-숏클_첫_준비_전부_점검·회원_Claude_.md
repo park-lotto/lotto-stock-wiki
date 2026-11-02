@@ -22,3 +22,5 @@
 ## 이력
 
 - 2026-11-02 01:11 등록 · 분배 → 칼카피숏템엔진
+- 2026-11-02 11:19 영향 없음: shopping_shorts/scene_style_lab.py — render_layers 새 인자 only 기본 None, lab 호출 형식 그대로. check_plain_downstream 전부 통과, lab 시험 49 통과
+- 2026-11-02 11:20 사장님 11-02 승인: 병합·배포·설치파일 업로드까지 진행. 회원 데이터(진행 사건·메시지) 저장 포함
