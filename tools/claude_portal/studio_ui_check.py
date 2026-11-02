@@ -56,8 +56,7 @@ def main() -> int:
         state = lambda: pg.evaluate("fetch('api/state').then(r=>r.json())")   # noqa: E731
         step = lambda name: pg.locator("[data-step],.steps button,.steps a").filter(has_text=name).first.click()   # noqa: E731
         # ⓪ 설정 단계(10-26 첫 단계 — 키·영상 받기 계정, 값은 회원 PC 에만): 단추가 맨 앞에 있고, 프리셋으로 넘어간다
-        first = pg.locator(".step").first.inner_text().replace("
-", " ")
+        first = pg.locator(".step").first.inner_text().replace(chr(10), " ")
         print(f"⓪ 첫 단계 '{first}'")
         if "설정" not in first:
             bad.append(f"첫 단계가 설정이 아님: {first}")
