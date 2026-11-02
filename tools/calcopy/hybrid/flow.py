@@ -3862,16 +3862,43 @@ def ref_hash(ref: str) -> str:
     return "h:" + hashlib.sha256(("shortem-ref|" + (k[1] if k else str(ref))).encode()).hexdigest()[:16]
 
 
+# 프리셋 → 공동 소재 창고(사장님 11-02 "채널 3개 다 반영, 손님이 만들어달라거나 물어보면 잘 섞어서"). 형식이 같은 판만 묶는다 — 소재가 그 판 흐름을 타야 한다.
+MIX_POOLS = {"banggu": "제품썰", "yummyknow": "제품썰", "humorshowshow": "제품썰"}
+MIX_DIR = "_소재창고"
+
+
+def _pool_rows(slug: str) -> list[dict] | None:
+    """(판단 주인 — 소재 창고 파일) 공동 창고가 있으면 그것, 없으면 그 판 벤치상위.json. 둘 다 없으면 None."""
+    group = MIX_POOLS.get(str(slug or ""))
+    shared = PRESETS_FILE.parent / MIX_DIR / f"{group}.json" if group else None
+    f = shared if shared and shared.is_file() else PRESETS_FILE.parent / str(slug or "-") / "_kal" / ALT_LIST
+    if not f.is_file():
+        return None
+    return [r for r in json.loads(f.read_text(encoding="utf-8")).get("rows") or [] if isinstance(r, dict) and r.get("id")]
+
+
+def _mix_channels(rows: list[dict]) -> list[dict]:
+    """채널이 번갈아 나오게(각 채널 안은 받은 순서 그대로). 채널 칸이 없으면 그대로."""
+    by: dict[str, list] = {}
+    for r in rows:
+        by.setdefault(str(r.get("channel") or ""), []).append(r)
+    out, q = [], list(by.values())
+    while q:
+        out += [c.pop(0) for c in q]
+        q = [c for c in q if c]
+    return out
+
+
 def bench_pool(slug: str, done=(), skip_bench: bool = True, used=None, seed=None) -> list[dict]:
     """(판단 주인 — 소재 창고 순서) 그 판 벤치 채널 쇼츠 조회순(channel/<slug>/_kal/벤치상위.json — 만들기 = bench_pool.py) 중
     done(회원이 만든 소재 id·주소)과 판 본보기(상위편_목표 ids)를 뺀 것. 사장님 10-30 "말이 없으면 벤치 채널에서 조회수 순으로".
     used(소재 지문 → 다른 회원 사용 수)·seed(회원 번호)를 주면 회원끼리 겹치지 않게: 덜 쓴 편 먼저, 같은 사용 수 안의 조회 상위 POOL_MIX_TOP 편은 seed 로 섞는다.
     둘 다 없으면 옛 그대로 조회순."""
     from tools.calcopy import origin_find as OF
-    f = PRESETS_FILE.parent / str(slug or "-") / "_kal" / ALT_LIST
-    if not f.is_file():
+    rows = _pool_rows(slug)
+    if rows is None:
         return []
-    rows = [r for r in json.loads(f.read_text(encoding="utf-8")).get("rows") or [] if isinstance(r, dict) and r.get("id")]
+    f = PRESETS_FILE.parent / str(slug or "-") / "_kal" / ALT_LIST
     gone, gone_h = set(), set()
     for d in done or ():
         if str(d).startswith("h:"):               # 서버 기록(주소 대신 지문)
@@ -3882,7 +3909,7 @@ def bench_pool(slug: str, done=(), skip_bench: bool = True, used=None, seed=None
     gf = f.parent / ALT_BENCH_IDS
     if skip_bench and gf.is_file():
         gone |= set(json.loads(gf.read_text(encoding="utf-8")).get("ids") or [])
-    left = [r for r in sorted(rows, key=lambda r: -(r.get("views") or 0)) if r["id"] not in gone and not (gone_h and ref_hash(r["id"]) in gone_h)]
+    left = _mix_channels([r for r in sorted(rows, key=lambda r: -(r.get("views") or 0)) if r["id"] not in gone and not (gone_h and ref_hash(r["id"]) in gone_h)])
     if used or seed is not None:
         tiers: dict[int, list] = {}
         for r in left:                            # 조회순을 지킨 채 사용 수별로 나눈다
@@ -3946,7 +3973,7 @@ def pick_alt_source(st: dict) -> dict | None:
         return None
     if (st.get("env") or {}).get("single_source"):      # 원본 찾기 워커(of_worker, 사장님 10-27 '24시간 미리 찾아 둔다') — 그 소재 하나만
         return None
-    if not (PRESETS_FILE.parent / str(st.get("slug") or "-") / "_kal" / ALT_LIST).is_file():
+    if _pool_rows(st.get("slug")) is None:
         st["log"].append(f"둘째 소재 없음: {ALT_LIST} 없음({st.get('slug')})")
         return None
     # 판 본보기(상위편_목표 ids)는 빼고, 남은 상위 ALT_SPREAD 편 중 sid 로 골라 동시에 도는 회원끼리 같은 소재를 안 찾게(10-27 완주시험 3편 모두 콜라겐 마스크 — 원본찾기 시간 절반)

@@ -99,3 +99,44 @@ def test_used_refs_counts_others_running_not_failed(monkeypatch):
 def test_old_engine_call_shape_kept():
     from shopping_shorts import claude_flow as CF
     assert CF._pool_kw(lambda version, done=(): None, used={}, seed=1) == {}
+
+
+MIX = [{"id": f"a{i:010d}", "views": 1000 - i, "title": f"a{i}", "channel": "가"} for i in range(4)] + [{"id": f"b{i:010d}", "views": 500 - i, "title": f"b{i}", "channel": "나"} for i in range(2)]
+
+
+def _mix(tmp_path, monkeypatch, rows=MIX):
+    d = tmp_path / "ch" / F.MIX_DIR
+    d.mkdir(parents=True)
+    (d / "제품썰.json").write_text(json.dumps({"rows": rows}), encoding="utf-8")
+    monkeypatch.setattr(F, "PRESETS_FILE", tmp_path / "ch" / "프리셋.json")
+    monkeypatch.setattr(F, "flow_format_of", lambda v: ("쇼핑형", "banggu"))
+
+
+def test_공동창고는_채널이_번갈아_나온다(tmp_path, monkeypatch):
+    _mix(tmp_path, monkeypatch)
+    assert [x["id"][0] for x in F.bench_pool("banggu")] == ["a", "b", "a", "b", "a", "a"]
+
+
+def test_세_프리셋이_같은_창고를_본다(tmp_path, monkeypatch):
+    _mix(tmp_path, monkeypatch)
+    ids = lambda s: [x["id"] for x in F.bench_pool(s)]
+    assert ids("banggu") == ids("yummyknow") == ids("humorshowshow")
+
+
+def test_후보와_시작이_공동창고에서_나오고_만든편을_뺀다(tmp_path, monkeypatch):
+    _mix(tmp_path, monkeypatch)
+    assert F.pick_source("v")["id"] == MIX[0]["id"]
+    assert F.pick_source("v", [MIX[0]["id"]])["id"] == MIX[1]["id"]
+    assert len(F.source_candidates("v")) == 5
+
+
+def test_다른_회원이_쓴_소재는_뒤로(tmp_path, monkeypatch):
+    _mix(tmp_path, monkeypatch)
+    first = F.bench_pool("banggu")[0]["id"]
+    assert F.bench_pool("banggu", used={F.ref_hash(first): 3})[0]["id"] != first
+
+
+def test_창고_없는_판은_그대로(tmp_path, monkeypatch):
+    _pool(tmp_path, monkeypatch, ROWS)
+    assert F.bench_pool("slugx")[0]["id"] == "id00000001x"
+
