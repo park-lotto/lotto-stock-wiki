@@ -224,15 +224,22 @@ def member_frame(st: dict) -> dict:
     if not F:      # 전용 렌더러 판(잇썸홈·재미썸홈) — 틀 칸이 없다
         return st
     name = brand.get("channel_name")
+    bar = (F.get("post") or {}).get("head_bar") or {}
+    bar_text = [ic for ic in bar.get("icons") or [] if ic.get("kind") == "text"]
+    if bar_text:       # 머리띠 글자 = 회원 채널명 한 칸(고정 글자 포함), 안 넣었으면 비운다 — 프리셋 원래 채널 글자를 내보내지 않는다(사장님 11-02)
+        rest = [ic for ic in bar["icons"] if ic.get("kind") != "text"]
+        if name:
+            cx = sum(float(ic.get("cx") or 0) for ic in bar_text) / len(bar_text)
+            rest.append({**bar_text[0], "text": name, "from": "_fixed", "cx": cx, "max_w": max(float(ic.get("max_w") or 0) for ic in bar_text) * len(bar_text)})
+        bar["icons"] = rest
+    if not name:       # 채널명을 안 넣은 회원 = 로고·워터마크 글자 없음
+        F["logo"], F["watermark"] = None, None
     if name:
         if F.get("logo"):
             F["logo"]["text"] = name
         if F.get("watermark"):
             head = F["watermark"]["text"].split(" ", 1)
             F["watermark"]["text"] = f"{head[0]} {name}" if len(head) == 2 and not head[0].isalnum() else name
-        for ic in ((F.get("post") or {}).get("head_bar") or {}).get("icons") or []:
-            if ic.get("kind") == "text" and ic.get("from", "brand") == "brand":
-                ic.update({"text": name, "from": "_fixed"})     # 대본 post.brand 보다 회원 채널명
         if not F.get("logo") and not F.get("watermark"):      # 채널명 자리가 없는 틀 = 오른쪽 위 워터마크로 넣는다
             F["watermark"] = {"font": "Pretendard-Regular.otf", "px": 40, "alpha": 170, "x1": 1040, "cy": 110, "text": name}
     bg = (brand.get("colors") or {}).get("bg")

@@ -28,6 +28,6 @@ test('프리셋 목록은 번호가 아니라 이름(+별칭)', async () => {
   const ps = ((r.structuredContent || {}).info || {}).presets || [];
   const mine = ps.find(p => p.preset === '외국인+한국제품반응');
   assert.ok(mine, JSON.stringify(ps));
-  assert.equal(mine.also, '잇템로그');
+  assert.equal(mine.also, undefined);   // 참고 채널 이름은 고객에게 내보내지 않는다
   assert.ok(!ps.some(p => /^p_[0-9a-f]{10}$/.test(p.preset)), JSON.stringify(ps));
 });

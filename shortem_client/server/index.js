@@ -173,7 +173,7 @@ export function buildServer(ctx = makeCtx()) {
     if (refresh || !c) { const l = await licenseInfo(); if (!l.ok) return reply({ fail: { where: '소재', why: l.why, fix: l.fix, retry_ok: true } }); c = profilesCache(); }
     const named = new Map((c.presets || []).map(p => [p.id, p]));   // 번호 대신 이름(별칭 포함) — 98 #160
     const fresh = newPresets(c.entitled_presets || []);
-    return reply({ info: { presets: (c.entitled_presets || []).map(id => ({ ...(named.get(id) ? { preset: named.get(id).name, ...((named.get(id).aliases || []).length ? { also: named.get(id).aliases.join(' · ') } : {}) } : { preset: presetLabel(id) }), ...(fresh.has(id) ? { new: true } : {}) })), profiles: (c.profiles || []).map(p => ({ profile_id: p.profile_id, name: p.name, preset: presetLabel(p.preset_id), version: p.version })) } });
+    return reply({ info: { presets: (c.entitled_presets || []).map(id => ({ ...(named.get(id) ? { preset: named.get(id).name,  } : { preset: presetLabel(id) }), ...(fresh.has(id) ? { new: true } : {}) })), profiles: (c.profiles || []).map(p => ({ profile_id: p.profile_id, name: p.name, preset: presetLabel(p.preset_id), version: p.version })) } });
   });
 
   server.registerTool('shortem_profile', {

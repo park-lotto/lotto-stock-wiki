@@ -204,7 +204,7 @@ async function stepOnce({ step, sid, n, run_id, preset, topic, channel, video, p
         hints: ['대신 고르지 마세요. 10분 동안 답이 없으면 1번으로 시작합니다(지침 5장)'] }
         : { hints: ['이 프리셋 소재 창고에 아직 안 만든 영상이 없습니다 — 영상 주소를 받아 주세요'] };
     } catch (e) {
-      return { fail: { why: e instanceof ApiError ? (e.msg || e.code) : '서버에 연결하지 못했습니다', fix: '잠시 뒤 다시 해 주세요', retry_ok: true } };
+      return { fail: { why: e instanceof ApiError && e.msg ? e.msg : '잠깐 연결이 끊겼어요', fix: '잠시 뒤 다시 해 주세요', retry_ok: true } };
     }
   }
   // 주소를 주면 그 영상, 주소 없이 '만들어줘'면 서버가 소재 창고 조회 1위(사장님 10-30) — 단계 진행 프리셋만. 아니면 아래 옛 길
@@ -220,7 +220,7 @@ async function stepOnce({ step, sid, n, run_id, preset, topic, channel, video, p
       // 단계 진행 방식이 아닌 프리셋(옛 엔진 라인)만 아래 옛 길로 — 그 밖의 거절은 그대로 알린다
       if (e instanceof ApiError && e.code === 'busy_flow') return { fail: { why: e.msg, code: e.code, fix: '지금 편이 끝난 뒤 시작해 주세요' } };
       if (!(e instanceof ApiError && e.code === 'bad_request' && /단계 진행/.test(e.msg))) {
-        return { fail: { why: e instanceof ApiError ? (e.msg || e.code) : '서버에 연결하지 못했습니다', code: e.code || 'step', fix: '잠시 뒤 같은 단계를 다시 부르세요' } };
+        return { fail: { why: e instanceof ApiError && e.msg ? e.msg : '잠깐 연결이 끊겼어요', code: e.code || 'step', fix: '잠시 뒤 같은 단계를 다시 부르세요' } };
       }
     }
   }
