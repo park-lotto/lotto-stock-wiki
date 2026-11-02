@@ -20,6 +20,13 @@ export function channelDir(engineRoot) { return path.join(engineRoot, 'channel')
 export const TECH_DIRS = ['tools/calcopy/hybrid/styles'];
 const ALLOWED = ['channel/', ...TECH_DIRS.map(d => d + '/')];
 const techDir = (engineRoot, d) => path.join(engineRoot, ...d.split('/'));
+// 만드는 중엔 판 교체를 미룬다 — 연결기가 pending.json 을 보면 engine 폴더를 통째로 바꿔 빌린 판이 사라진다(11-02 742 '판이 없다').
+//   연결기는 푸시로 못 고치므로 표시를 잠시 숨겼다가 반납 때 돌려놓는다. 프로그램이 죽어 숨김이 남으면 켤 때 sweep 이 돌려놓는다.
+const pendFile = hold => path.join(process.env.SHORTEM_INSTALL || '', '_update', hold ? 'pending.hold.json' : 'pending.json');
+export function holdPending(on) {
+  if (!process.env.SHORTEM_INSTALL) return;
+  try { if (fs.existsSync(pendFile(!on))) fs.renameSync(pendFile(!on), pendFile(on)); } catch { /* 없으면 숨길 것도 없다 */ }
+}
 function wipe(engineRoot) {
   for (const d of [channelDir(engineRoot), ...TECH_DIRS.map(x => techDir(engineRoot, x))]) {
     if (fs.existsSync(path.join(d, MARK))) { try { fs.rmSync(d, { recursive: true, force: true }); } catch { /* 다음 sweep 이 지운다 */ } }
@@ -83,6 +90,7 @@ function unpack(zip, root) {
 // 지난번에 못 지운 것(프로그램이 죽었을 때) — 표식이 있는 자리(channel·기술 꾸러미)만 지운다(개발 PC 의 진짜 파일은 표식이 없다).
 export function sweep(engineRoot) {
   if (current) return false;
+  holdPending(false);
   const had = [channelDir(engineRoot), ...TECH_DIRS.map(x => techDir(engineRoot, x))].some(d => fs.existsSync(path.join(d, MARK)));
   wipe(engineRoot);
   return had;
@@ -97,7 +105,7 @@ export async function rentPreset({ engineRoot, presetId, profileId, stepName, ki
   const want = presetId || profileId;
   if (current) {
     if (current.want === want && (kind === 'ui' || current.kind === 'ui')) {   // 같은 프리셋이 이미 풀려 있다 — 다시 받지 않는다
-      if (current.kind === 'ui' && kind === 'make') { current.kind = 'make'; clearTimeout(current.idle); }
+      if (current.kind === 'ui' && kind === 'make') { current.kind = 'make'; clearTimeout(current.idle); holdPending(true); }
       else if (current.kind === 'ui') touch(current, engineRoot);
       const me = current;
       return { presetPath: me.presetPath, release: kind === 'make' ? () => release(me, engineRoot) : async () => {} };
@@ -112,6 +120,7 @@ export async function rentPreset({ engineRoot, presetId, profileId, stepName, ki
   if (lease) await lease.acquire();
   const me = { jobId, lease, kind, want };
   current = me;
+  if (kind === 'make') holdPending(true);
   try {
     const r = mine ? null : await api.rent(presetId ? null : profileId, jobId, lease.id, presetId || null);
     fs.mkdirSync(root, { recursive: true });
@@ -138,6 +147,7 @@ async function release(me, engineRoot) {
   if (current !== me) return;
   current = null;
   clearTimeout(me.idle);
+  holdPending(false);
   wipe(engineRoot);                                       // 프리셋(channel) + 기술 꾸러미(hybrid·yanshot) — 표식 있는 자리만
   if (me.lease) await me.lease.release();
   audit('preset_return', { job: me.jobId, result: 'ok' });

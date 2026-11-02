@@ -7,7 +7,7 @@ import crypto from 'node:crypto';
 import { api, download } from './api.js';
 import { ENGINE_VERSION } from './license.js';
 import { toolsDir, devMode } from './tools_paths.js';
-import { readZip } from './preset_rent.js';
+import { readZip, renting } from './preset_rent.js';
 import { audit } from './audit.js';
 import { activeRuns } from './engine_bridge.js';
 
@@ -41,6 +41,7 @@ export async function checkUpdate({ force = false } = {}) {
   if (!fs.existsSync(path.join(home, 'tools', 'tools.manifest.json')) && !force) return { skipped: 'not_installed' };
   const r = await api.update(ENGINE_VERSION);
   if (!r.update) return { update: false, latest: r.latest };
+  if (renting()) return { update: true, held: true, version: r.version };   // 만드는 중엔 받지도 바꾸지도 않는다 — 다음 확인 때
   const dir = path.join(home, '_update', r.version);
   const pend = path.join(home, '_update', 'pending.json');
   try { if (JSON.parse(fs.readFileSync(pend, 'utf8')).version === r.version) return { update: true, ready: true, version: r.version }; } catch { /* 처음 */ }
