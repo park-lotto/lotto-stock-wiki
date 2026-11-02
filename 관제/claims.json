@@ -124,6 +124,11 @@
     "card": 234,
     "track": "숏템MCP"
   },
+  "shopping_shorts/claude_portal.py:claim_trial": {
+    "at": "2026-11-02 17:58",
+    "card": 306,
+    "track": "숏클전환"
+  },
   "shopping_shorts/claude_portal.py:lease": {
     "at": "2026-10-18 18:05",
     "card": 234,
