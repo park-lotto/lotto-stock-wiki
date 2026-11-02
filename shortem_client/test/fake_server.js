@@ -130,6 +130,7 @@ export async function startFakeServer({ port = 0, ttl = 180, heartbeatEvery = 60
         if (b.action === 'acquire') {
           if (live && L.fp !== a.fp) { const dn = (a.c.devices.find(d => d.fp === L.fp) || {}).name || '다른 PC'; return fail(res, 409, 'busy_other_device', `다른 기기(${dn})에서 작업 중입니다 — 끝나거나 3분 뒤 다시 시도하세요`, { retry_after: Math.ceil((L.exp - Date.now()) / 1000) }); }
           if (live && L.fp === a.fp && L.job_id === b.job_id) { L.exp = Date.now() + ttl * 1000; L.step = b.step_name; return send(res, 200, { ok: true, lease_id: L.lease_id, ttl, heartbeat_every: heartbeatEvery }); }
+          if (state.sameDeviceBusy && live && L.fp === a.fp && !String(L.job_id).startsWith('u')) return fail(res, 409, 'busy_other_device', '이 기기에서 다른 작업이 진행 중입니다 — 끝나거나 3분 뒤 다시 시도하세요');   // 진짜 서버 claude_portal.lease 와 같은 판정
           a.c.lease = { lease_id: 'ls_' + (++state.leaseSeq) + crypto.randomBytes(3).toString('hex'), fp: a.fp, job_id: b.job_id, exp: Date.now() + ttl * 1000, step: b.step_name };
           return send(res, 200, { ok: true, lease_id: a.c.lease.lease_id, ttl, heartbeat_every: heartbeatEvery });
         }

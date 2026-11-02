@@ -25,13 +25,25 @@ const techDir = (engineRoot, d) => path.join(engineRoot, ...d.split('/'));
 //   연결기는 푸시로 못 고치므로 표시를 잠시 숨겼다가 반납 때 돌려놓는다. 프로그램이 죽어 숨김이 남으면 켤 때 sweep 이 돌려놓는다.
 // 프로그램이 둘 뜰 수 있다(Claude 재연결·창 하나 더) — 다른 프로그램의 제작을 지우거나 판을 바꾸지 않게 PC 전체 잠금을 둔다(11-02 742).
 const lockFile = () => path.join(homeDir(), 'rent.lock');
-function otherRenting() {
+function lockOwner() {
   try {
-    const pid = Number(fs.readFileSync(lockFile(), 'utf8'));
-    if (!pid || pid === process.pid) return false;
-    process.kill(pid, 0);
-    return true;
-  } catch { return false; }      // 잠금 없음·주인 죽음 = 비어 있다
+    const t = fs.readFileSync(lockFile(), 'utf8');
+    const j = t.trim().startsWith('{') ? JSON.parse(t) : { pid: Number(t) };   // 옛 잠금 = pid 숫자만
+    return j && j.pid ? j : null;
+  } catch { return null; }
+}
+function otherRenting() {
+  const o = lockOwner();
+  if (!o || o.pid === process.pid) return false;
+  try { process.kill(o.pid, 0); return true; } catch { return false; }      // 주인 죽음 = 비어 있다
+}
+// 죽은 프로그램의 임대를 돌려준다 — 서버는 같은 기기라도 다른 작업이면 임대가 끝날 때(최대 3분)까지 busy_other_device 로 막는다(11-03 #811 재시작 직후 2번 멈춤).
+//   서버 반납은 임대 번호·기기가 같을 때만 지우니 다른 기기 작업은 건드리지 않는다.
+async function freeDeadOwner() {
+  const o = lockOwner();
+  if (!o || o.pid === process.pid || otherRenting()) return;
+  if (o.lease) { try { await api.lease({ action: 'release', job_id: o.job, lease_id: o.lease }); } catch { /* 못 돌려주면 서버 만료를 기다린다 */ } }
+  try { fs.rmSync(lockFile(), { force: true }); } catch { /* 다음 잠금이 덮는다 */ }
 }
 const pendFile = hold => path.join(process.env.SHORTEM_INSTALL || '', '_update', hold ? 'pending.hold.json' : 'pending.json');
 export function holdPending(on) {
@@ -126,13 +138,14 @@ export async function rentPreset({ engineRoot, presetId, profileId, stepName, ki
   }
   if (otherRenting()) throw new ApiError(409, { code: 'busy', msg: '앞 작업이 끝난 뒤 다시 부르세요' });
   sweep(engineRoot);
+  await freeDeadOwner();
   const jobId = (kind === 'ui' ? 'u' : 'm') + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
   const mine = presetId ? mineById(presetId) : null;     // 내 벤치마킹 프리셋(관제 304) — 이 PC 에 있으니 서버를 안 부른다. 쓰고 지우는 꼴은 같다
   const lease = mine ? null : new Lease(jobId, { stepName: stepName || (() => '소재') });
   if (lease) await lease.acquire();
   const me = { jobId, lease, kind, want };
   current = me;
-  try { fs.writeFileSync(lockFile(), String(process.pid)); } catch { /* 잠금 없이도 이 프로그램 안의 보호는 돈다 */ }
+  try { fs.writeFileSync(lockFile(), JSON.stringify({ pid: process.pid, job: jobId, lease: lease ? lease.id : null })); } catch { /* 잠금 없이도 이 프로그램 안의 보호는 돈다 */ }
   if (kind === 'make') holdPending(true);
   try {
     const r = mine ? null : await api.rent(presetId ? null : profileId, jobId, lease.id, presetId || null);
