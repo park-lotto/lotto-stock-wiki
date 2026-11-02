@@ -96,6 +96,10 @@ def names() -> list[str]:
 
 def path_of(name: str) -> Path:
     p = DIR / f"{name}.json"
+    if not p.exists():      # 영문 파일로 옮기는 첫 단계 — 이 판부터 두 이름을 다 읽는다(회원 업데이트 뒤 파일을 옮긴다, 관제 304)
+        af = DIR / "_names.json"
+        alias = json.loads(af.read_text(encoding="utf-8")).get(name) if af.exists() else None
+        p = DIR / f"{alias}.json" if alias else p
     if not p.exists():
         raise SystemExit(f"판 '{name}' 이 없다 — 있는 판: {', '.join(names())}")
     return p

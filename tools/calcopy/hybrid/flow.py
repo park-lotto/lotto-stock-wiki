@@ -21,6 +21,7 @@
 from __future__ import annotations
 
 import hashlib
+import time
 import json
 import math
 import re
@@ -433,7 +434,7 @@ def start(ref: str, version: str, sid: str, product: str = "", fmt: str | None =
     f0, slug = flow_format_of(version)
     if fmt and fmt != f0:
         raise FormatError(f"형식 {fmt} 를 받았지만 판 {version} 은 프리셋 장부에서 {f0} 입니다")
-    st = {"sid": sid, "ref": ref, "version": version, "fmt": f0, "slug": slug, "phase": "setup", "tries": {}, "log": []}
+    st = {"started_at": time.time(), "sid": sid, "ref": ref, "version": version, "fmt": f0, "slug": slug, "phase": "setup", "tries": {}, "log": []}
     if str(product or "").strip():
         st["given"] = str(product).strip()[:200]
     return st
@@ -1251,6 +1252,7 @@ def ph_stopped(st, m, rp, u):
 NL = chr(10)
 TASK_PER_KEY = 3       # 똑같은 실패(단계+이유+속사정)가 안 줄 때만 세는 횟수 — 다른 실패가 되면 진전이다(사장님 11-02 "횟수한도 문제")
 TASK_TOTAL = 40        # 한 편 전체 과제 상한 — 무한 되풀이만 막는다(시간·사용량 예산은 기준선 실측 뒤)
+EPISODE_BUDGET_MIN = 120   # 편당 시간 예산(분) — 넘으면 고치기보다 권고 넘기기·완성을 먼저(기준선 실측 전 임시값, 시험 때 재서 정한다)
 BACK_STAGES = ("script", "plan", "render", "check")        # 회원 Claude 가 돌아가 다시 시작할 수 있는 단계(이미 지난 곳만)
 HARD_SCRIPT = {"claims", "source_rule"}                     # 지어낸 사실·출처 규칙 = 금지선 — 권고 넘기기로 못 넘긴다
 STAGE_GUIDE = {"setup": "00_common.md", "bench": "01_topic.md", "origin": "02_find_source.md", "product": "03_product_coupang.md", "research": "04_research.md",
@@ -1331,7 +1333,9 @@ def _task(st: dict, e: "_Stop", ph: str, retry: str | None) -> dict | None:
     rid = f"task_{sum(n.values())}"
     st["_task"] = {"id": rid, "key": key, "why": e.why, "fix": e.fix, "retry": retry, "origin_missing": bool(e.origin_missing), "stage": stg["key"], "detail": str(e.detail or "")[:400]}
     st["log"].append(f"제작자 과제 {rid}({stg['text']}): {e.why}")
-    ask = (TASK_ASK + f"{NL}{NL}## 막힌 곳{NL}단계: {stg['no']}/{stg.get('total')} {stg['text']}{NL}이유: {e.why}{NL}속사정: {str(e.detail or '-')[:600]}"
+    spent = int((time.time() - float(st.get("started_at") or time.time())) / 60)
+    over = f"{NL}★이 편 {spent}분 경과 — 예산 {EPISODE_BUDGET_MIN}분을 넘었다. 더 고치지 말고 waive 로 끝까지 가라." if spent > EPISODE_BUDGET_MIN else ""
+    ask = (TASK_ASK + over + f"{NL}{NL}## 막힌 곳{NL}단계: {stg['no']}/{stg.get('total')} {stg['text']}{NL}이유: {e.why}{NL}속사정: {str(e.detail or '-')[:600]}"
            + f"{NL}이 막힘 과제 {n[key]}/{TASK_PER_KEY}번째 · 최근 기록:{NL}" + f"{NL}".join(str(x)[:200] for x in (st.get('log') or [])[-6:])
            + f"{NL}{NL}" + _task_state(st)
            + (f"{NL}{NL}## 이 단계 함정·금지선{NL}" + f"{NL}".join("- " + x for x in traps) if traps else "")
