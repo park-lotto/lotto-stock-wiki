@@ -1647,16 +1647,25 @@ def _plan_reuse(W, v, T) -> list:
 
 
 class _Alive:
-    """(판단 주인 — 같은 프로세스 안 긴 계산의 진행 신호) 계산이 살아 있는 동안 30초마다 progress. 계획·렌더가 같이 쓴다.
-    렌더 전 관문(글자 검출)이 CPU PC 에서 컷당 2~4분 무음이라 감시가 '진행 신호 180초 없음'으로 렌더를 끊었다(11-03 회원 i5-1335U 실측)."""
+    """(판단 주인 — 같은 프로세스 안 긴 계산의 진행 신호) 계산이 CPU 를 쓰는 동안만 30초마다 progress. 계획·렌더·완성본 검사가 같이 쓴다.
+    렌더 전 관문(글자 검출)이 CPU PC 에서 컷당 2~4분 무음이라 감시가 '진행 신호 180초 없음'으로 렌더를 끊었다(11-03 회원 i5-1335U 실측).
+    살아만 있으면 보내던 신호는 막혀 기다리는 계산(CPU 0)도 '진행 중'으로 만들어 감시가 30분(예산 3배)까지 못 끊었다(11-03 완성본 검사 멈춤 5건) —
+    그래서 이 프로세스 CPU(감시 고리 자기 몫은 뺀다)가 늘었을 때만 보낸다. 하위 프로그램(ffmpeg) CPU 는 감시가 따로 본다."""
+    EVERY = 30.0
+    MIN_CPU = 0.5
+
     def __init__(self, W, what):
         import threading
         self.W, self.what, self.stop = W, what, threading.Event()
         threading.Thread(target=self._run, daemon=True).start()
 
     def _run(self):
-        while not self.stop.wait(30):
-            progress(self.W, self.what)
+        cpu = _work_cpu()
+        while not self.stop.wait(self.EVERY):
+            c2 = _work_cpu()
+            if c2 - cpu >= self.MIN_CPU:
+                progress(self.W, self.what)
+            cpu = c2
 
     def __enter__(self):
         return self
@@ -2484,8 +2493,16 @@ def progress(W: Path, what: str, n: int | None = None, m: int | None = None) -> 
         pass
 
 
+def _work_cpu() -> float:
+    """이 프로세스 CPU 에서 감시 고리 자기 몫(_dir_sig 훑기)을 뺀 것 — _Alive 가 '계산이 실제로 도나'를 본다."""
+    return time.process_time() - float(_PROG.get("watch_cpu") or 0.0)
+
+
 def _dir_sig(W: Path, cap: int = 4000) -> tuple:
-    """작업 폴더 파일 크기 합·개수 — 받기·렌더처럼 파일이 자라면 진행 중(명시 신호 없는 긴 일도 멈춤으로 오판하지 않게)."""
+    """작업 폴더 파일 크기 합·개수 — 받기·렌더처럼 파일이 자라면 진행 중(명시 신호 없는 긴 일도 멈춤으로 오판하지 않게).
+    뒤에서 도는 VMake(vmake_clean.BG_DIR — 실행기 밖 프로세스)가 쓰는 파일은 뺀다: 지금 일과 무관한데 '진행 중'으로 보여
+    막힌 완성본 검사를 감시가 못 끊었다(11-03 정민혜 check 12분+ 멈춤, VMake 가 그동안 같은 작업 폴더에 씀)."""
+    from tools.calcopy.vmake_clean import BG_DIR
     tot = cnt = 0
     stack = [str(W)]
     while stack and cnt < cap:
@@ -2493,7 +2510,8 @@ def _dir_sig(W: Path, cap: int = 4000) -> tuple:
             with os.scandir(stack.pop()) as it:
                 for e in it:
                     if e.is_dir(follow_symlinks=False):
-                        stack.append(e.path)
+                        if e.name != BG_DIR:
+                            stack.append(e.path)
                     else:
                         try:
                             tot += e.stat().st_size; cnt += 1
@@ -2545,7 +2563,9 @@ def _watch(W: Path, items: list, run_one, out: dict, log, budget_of, stall: floa
         next((t for _, t, _ in th if t.is_alive()), th[0][1]).join(1.0 if stall > 5 else 0.2)   # 끝나면 바로 깨어난다(잠만 자면 일마다 1초씩 늦는다)
         now = time.time()
         _hang_arm()
+        w0 = time.thread_time()
         s2, c2 = _dir_sig(W), _child_cpu()
+        _PROG["watch_cpu"] = float(_PROG.get("watch_cpu") or 0.0) + time.thread_time() - w0
         if s2 != sig or c2 > cpu + 0.5:            # 파일이 자라거나 하위 프로그램이 CPU 를 0.5초 넘게 더 쓰면 진행 중
             sig, last, cpu = s2, now, c2
         cpu = min(cpu, c2)                        # 하위 프로그램이 끝나 합이 줄면 기준도 내린다

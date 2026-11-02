@@ -134,3 +134,46 @@ def test_GIL을_쥐고_멈춰도_감시가_프로세스를_끝내고_위치를_�
     assert p.returncode != 0 and p.stdout.strip() == ""
     assert "rx" in p.stderr
 
+
+def _alive_blocked(W, d):   # 완성본 검사가 무언가를 기다리며 멈춤(CPU 0) — 그동안 뒤 VMake 가 같은 작업 폴더에 계속 쓴다(11-03 정민혜 check 12분+)
+    import threading
+    stop = threading.Event()
+
+    def bg():
+        f = Path(W) / "src" / "_vm_bg" / "part.mp4"
+        f.parent.mkdir(parents=True, exist_ok=True)
+        while not stop.wait(0.2):
+            with open(f, "ab") as fh:
+                fh.write(b"x" * 1000)
+    threading.Thread(target=bg, daemon=True).start()
+    with R._Alive(W, "완성본 확인"):
+        threading.Event().wait(30)
+    stop.set()
+    return {"ok": True}
+
+
+def _alive_busy(W, d):      # 같은 프로세스 안에서 CPU 를 쓰며 오래 도는 계산(글자 검출) — 멈춤 아님
+    with R._Alive(W, "완성본 확인"):
+        t = time.time()
+        while time.time() - t < 4:
+            pass
+    return {"ok": True}
+
+
+def test_막힌_계산은_진행신호와_뒤_VMake_파일이_있어도_끊는다(tmp_path, monkeypatch):
+    monkeypatch.setattr(R._Alive, "EVERY", 0.3)
+    monkeypatch.setattr(R._Alive, "MIN_CPU", 0.05)
+    monkeypatch.setitem(R.CMDS, "blk", _alive_blocked)
+    t0 = time.time()
+    out = R.run_do(tmp_path, [{"id": "c", "cmd": "blk"}], log=lambda s: None, stall=2)
+    assert out["c"].get("timed_out") and "진행 신호" in out["c"]["error"], out
+    assert time.time() - t0 < 15
+
+
+def test_CPU를_쓰는_계산은_진행신호로_안_끊는다(tmp_path, monkeypatch):
+    monkeypatch.setattr(R._Alive, "EVERY", 0.3)
+    monkeypatch.setattr(R._Alive, "MIN_CPU", 0.05)
+    monkeypatch.setitem(R.CMDS, "busy", _alive_busy)
+    out = R.run_do(tmp_path, [{"id": "c", "cmd": "busy"}], log=lambda s: None, stall=1.5)
+    assert out["c"] == {"ok": True, "_sec": out["c"]["_sec"]}, out
+
