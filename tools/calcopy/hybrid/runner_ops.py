@@ -1742,7 +1742,8 @@ def c_check(W, d):
     final = W / v / "render" / "final.mp4"
     if not final.exists():
         return {"error": "완성본 없음"}
-    r = QG.gate(v, W / "doc" / v, W / v, mode="full" if d.get("mode", "full") == "full" else "fast", log=lambda s: print(s, file=sys.stderr))
+    with _Alive(W, "완성본 확인"):      # 관문 글자 검출이 CPU PC 에서 180초 넘게 무음이라 감시가 끊었다(11-03 회원 i5-1335U)
+        r = QG.gate(v, W / "doc" / v, W / v, mode="full" if d.get("mode", "full") == "full" else "fast", log=lambda s: print(s, file=sys.stderr))
     rows = [{k: x.get(k) for k in ("group", "what", "ok", "value")} | ({"ref": True} if x.get("ref") else {}) for x in r.get("rows") or []]
     ok = bool(r.get("ok"))
     if os.environ.get("QG_FORCE_FAIL") == "1":

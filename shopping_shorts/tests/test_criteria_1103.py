@@ -44,4 +44,5 @@ def test_render_sends_alive_signal(tmp_path, monkeypatch):
         pass
     assert not a.stop.is_set() or True
     src = open(R.__file__, encoding="utf-8").read()
-    assert 'with _Alive(W, "영상 만들기")' in src and 'with _Alive(W, "장면 맞추기")' in src
+    for what in ("영상 만들기", "장면 맞추기", "완성본 확인"):      # 같은 프로세스 안 긴 계산 셋 다
+        assert f'with _Alive(W, "{what}")' in src, what
