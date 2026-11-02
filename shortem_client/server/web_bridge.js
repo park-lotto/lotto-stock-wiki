@@ -5,7 +5,8 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
-import { workDir } from './paths.js';
+import { workDir, homeDir } from './paths.js';
+import { saveLogo } from './local_settings.js';
 import { baseUrl } from './api.js';
 import { videos, send, serveFile, readBody } from './local_ui.js';
 import { capcutExport } from './engine_bridge.js';
@@ -70,10 +71,19 @@ async function route(req, res) {
   if (host !== `127.0.0.1:${BRIDGE_PORT}` && host !== `localhost:${BRIDGE_PORT}`) return send(res, 403, { error: '이 PC 에서만' });
   const u = new URL(req.url, `http://${host}`);
   const isVideo = u.pathname.startsWith('/bridge/v/') && req.method === 'GET';
+  const logoName = req.method === 'GET' && (u.pathname.match(/^\/bridge\/logo\/(p_[0-9a-z]+\.png)$/) || [])[1];   // <img src> 도 Origin 이 안 붙을 수 있다 — 로고 파일만, 읽기만
   // 영상(<video src>)은 브라우저가 Origin 을 안 붙일 수 있다 — 대신 완성본 목록에 있는 파일만, 읽기만
-  if (!isVideo && !webOrigins().has(origin)) return send(res, 403, { error: '숏템 웹 화면에서만 부를 수 있습니다' });
+  if (!isVideo && !logoName && !webOrigins().has(origin)) return send(res, 403, { error: '숏템 웹 화면에서만 부를 수 있습니다' });
   const h = origin ? cors(origin) : {};
   if (req.method === 'OPTIONS') { res.writeHead(204, h); return res.end(); }
+  if (logoName) {
+    const f = path.join(homeDir(), 'logos', logoName);
+    return fs.existsSync(f) ? serveFile(req, res, f, 'image/png') : send(res, 404, { error: '없음' }, undefined, h);
+  }
+  if (u.pathname === '/bridge/logo' && req.method === 'POST') {   // 서버 화면 꾸미기의 로고 — 파일은 이 PC 에만(렌더가 읽는 자리, saveLogo 한 곳)
+    const body = (await readBody(req, 1000000)) || {};
+    return send(res, 200, saveLogo(body.preset, body.data), undefined, h);
+  }
   if (u.pathname === '/bridge/hello') return send(res, 200, { ok: true, version: VERSION }, undefined, h);
   if (u.pathname === '/bridge/videos') return send(res, 200, { ok: true, videos: videos().map(v => ({ name: v.name, title: v.title, at: v.at })) }, undefined, h);
   if (u.pathname.startsWith('/bridge/timeline/')) {

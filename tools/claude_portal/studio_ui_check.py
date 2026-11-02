@@ -7,7 +7,7 @@
 잰다(카드 266 '됐다의 기준', 10-26 4단계 화면 — 프리셋 → 꾸미기 → 소리 → 완성본 고치기):
   ① 프리셋 카드 수 = 권한 안의 프리셋 수 · 닫힌 판 카드 0(관제 305)
   ② 프리셋 누르기 → 다음 단계로 저절로 안 넘어가고 계정에 저장(state.current)
-  ③ 꾸미기 = 장면꾸미기 화면이 뜨고 '이 영상에 적용' → 서버 저장 200 · 버튼 '적용됨'
+  ③ 꾸미기 = 회원 PC 와 같은 칸·끌기 층, 칸을 바꾸면 서버 저장 200(관제 305)
   ④ 소리 = 목소리 단추 → 팩 tts 저장(엔진이 모르는 목소리·칸이면 '저장됨'이 아니라 거절 이유가 화면에 남는다)
   ⑤ 완성본 고치기 = 완성본이 없으면 잠김(🔒)
   ⓪ 첫 단계 = 설정(키·영상 받기 계정 — 값은 회원 PC 에만)
@@ -83,24 +83,21 @@ def main() -> int:
         print(f"② 프리셋 고르기 → 저장 {saved} · 단계 그대로 {on_step}")
         if not (saved and on_step):
             bad.append("프리셋 고르기 저장/단계 유지 실패")
-        # ③ 꾸미기
+        # ③ 꾸미기 = 회원 PC 와 같은 칸(관제 305) — 끌기 층 + 칸을 바꾸면 계정에 저장
         step("꾸미기")
-        pg.wait_for_timeout(9000)
-        frs = [f for f in pg.frames if f != pg.main_frame]
-        looks = []
-        pg.on("response", lambda r: looks.append(r.status) if r.url.endswith("/api/look") else None)
-        if not frs:
-            bad.append("꾸미기에 장면꾸미기 화면이 없음")
-        else:
-            fr = frs[0]
-            fr.get_by_role("button", name="이 영상에 적용", exact=True).first.click()
-            pg.wait_for_timeout(5000)
-            btn = fr.evaluate("()=>[...document.querySelectorAll('button')].map(x=>x.textContent.trim()).filter(t=>/영상에 적용/.test(t))")
-            print(f"③ 꾸미기 '이 영상에 적용' → 서버 {looks} · 버튼 {btn}")
-            if looks != [200] or not any("적용됨" in t for t in btn):
-                bad.append(f"꾸민 모양 저장 실패 {looks} {btn}")
-            if out:
-                pg.screenshot(path=str(out / "3_look.png"))
+        pg.wait_for_timeout(4000)
+        saves = []
+        pg.on("response", lambda r: saves.append(r.status) if r.url.endswith("/api/save") else None)
+        heads = pg.locator(".board .sec-h b, .board .row b").all_inner_texts()
+        drag = pg.locator("#lookdrag").count()
+        pg.evaluate("() => { const x = document.getElementById('tscale'); x.value = '1.05'; x.dispatchEvent(new Event('change', {bubbles: true})); }")
+        pg.wait_for_timeout(2500)
+        print(f"③ 꾸미기 칸 {heads} · 끌기 층 {drag} · 저장 {saves}")
+        missing = {"채널명", "로고", "제목 글꼴", "자막 글꼴", "제목 색", "제목 크기", "바탕색"} - set(heads)
+        if missing or not drag or saves != [200]:
+            bad.append(f"꾸미기 칸 부족 {sorted(missing)} · 끌기 층 {drag} · 저장 {saves}")
+        if out:
+            pg.screenshot(path=str(out / "3_look.png"))
         # ④ 소리
         step("소리")
         pg.wait_for_timeout(3000)
