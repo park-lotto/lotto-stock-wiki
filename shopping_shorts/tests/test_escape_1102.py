@@ -63,3 +63,10 @@ def test_gate_stop_waive(monkeypatch):
         RB.gate_stop([("x", ["문제"])])
     monkeypatch.setenv("SHORTEM_WAIVE_GATE", "1")
     assert RB.gate_stop([("x", ["문제"])]) is None
+
+
+def test_material_before_script_goes_to_script():
+    from tools.calcopy.hybrid import flow as F
+    import inspect
+    src = inspect.getsource(F)
+    assert 'if names and not st.get("script"):' in src and 'st["material"] = {"files": [{"name": n} for n in names]}' in src
