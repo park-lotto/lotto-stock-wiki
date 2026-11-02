@@ -67,17 +67,18 @@ def test_plan_stop_lists_every_gate(monkeypatch, tmp_path):
     with pytest.raises(RB.StageError) as e:
         RB.render("t", _doc(tmp_path), tmp_path / "w", plan_only=True, log=lambda *a: None)
     msg = str(e.value)
-    for want in ("원본 샷보다 길다", "③ 경계 문제", "남의 박힌 글자", "리듬 문제", "컷 멈춤 2", "썸네일 카드 A"):
+    for want in ("원본 샷보다 길다", "③ 경계 문제", "남의 박힌 글자", "컷 멈춤 2", "썸네일 카드 A"):      # 리듬 = 권고 관문(11-03) — 막지 않는다
         assert want in msg, want
+    assert "리듬 문제" not in msg       # 권고 관문은 막는 글에 안 들어간다(11-03)
     probs = getattr(e.value, "problems", None)
-    assert probs and {g for g, _ in probs} >= {"넘침", "③ 경계", "④ 글자·얼굴", "⑦ 멈춤", "리듬", "⑥ 카드 얼굴"}
+    assert probs and {g for g, _ in probs} >= {"넘침", "③ 경계", "④ 글자·얼굴", "⑦ 멈춤", "⑥ 카드 얼굴"}
 
 
 def test_plan_report_returns_every_gate(monkeypatch, tmp_path):
     """report(회원 c_plan) — 멈추지 않고 넘침과 관문 글을 다 돌려준다(옛 코드: 카드·③이 걸리면 StageError 로 넘침 글이 빠지고 시간표도 없었다)."""
     _stub(monkeypatch, G)
     res = RB.render("t", _doc(tmp_path), tmp_path / "w", plan_only=True, report=True, log=lambda *a: None)
-    for want in ("원본 샷보다 길다", "③ 경계 문제", "남의 박힌 글자", "리듬 문제", "컷 멈춤 2", "썸네일 카드 A"):
+    for want in ("원본 샷보다 길다", "③ 경계 문제", "남의 박힌 글자", "컷 멈춤 2", "썸네일 카드 A"):      # 리듬 = 권고 관문(11-03) — 막지 않는다
         assert want in res["over"], want
     assert res["timeline"]["cuts"]
     assert [g for g, _ in res["gates"]][:2] == ["넘침", "⑧ 길이"]

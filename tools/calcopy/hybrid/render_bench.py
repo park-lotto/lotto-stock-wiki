@@ -3871,6 +3871,9 @@ def photo_run_gate(T: dict, M: dict, max_sec: float = PHOTO_RUN_MAX) -> list[str
     return out
 
 
+ADVISORY_GATES = {"리듬", "꾸밈", "사진", "사진 연속", "흐림 면적", "B13 재사용"}     # 막지 않는 관문(11-03) — 짧은 컷·멈춤·경계·글자·넘침·길이만 막는다
+
+
 def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *, plan: bool, measured: bool = True,
                    erase: list | None = None, placed: dict | None = None, near: list | None = None, moved: bool = False) -> list[tuple[str, list[str]]]:
     """(판단 주인 — 렌더 전 시간표 관문 목록·순서) 같은 시간표 T 를 읽는 관문을 전부 돌려 [(관문 이름, 문제 글 목록)…] 로(빈 목록 = 통과).
@@ -3902,6 +3905,10 @@ def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *,
            ("리듬", rhythm_gate(T, st, src_dir))]
     if placed is not None:
         out.append(("꾸밈", deco_gate(placed, doc, st, log)))
+    soft = [(g, b) for g, b in out if g in ADVISORY_GATES and b]
+    if soft:      # 권고 관문 = 막지 않고 기록만(사장님 11-03 '이상한 걸로 통과 못 시키는 건 큰 문제') — 계획·렌더 모두 이 함수 하나를 거친다
+        log("[렌더 전 관문·권고] " + " · ".join(f"{g} {len(b)}: {'; '.join(b)[:160]}" for g, b in soft))
+    out = [(g, [] if g in ADVISORY_GATES else b) for g, b in out]
     n = sum(len(b) for _, b in out)
     if n:
         log(f"[렌더 전 관문] 걸린 것 {n}개 — " + " · ".join(f"{g} {len(b)}" for g, b in out if b) + " (한 번에 모아 알린다)")

@@ -107,8 +107,10 @@ PHASE_STAGE = {   # 세부 단계 → 회원에게 보이는 단계
 #   같은 원인 묶음이 STUCK 번 연속이면 한도 전이라도 멈춘다(REDO_STUCK 아래).
 LIMITS = {"script": 6, "plan": 8, "render": 3, "look": 0, "pick": 2, "review_bad": 2, "eye_proof": 2}
 # 대본: 내용 기준은 한 번 고쳐 받으면 통과(사장님 10-27). 꼭 지킬 것만 계속 반려 — 꼴이 틀림·지어낸 사실·출처 규칙·제품 컷·비슷한 제품 밝히기(10-25 규칙)
-SCRIPT_FIX_ONCE = 1
-SCRIPT_MUST = {"form", "claims", "source_rule", "product_cut", "alt_scene", "product:alt_say"}
+# 사장님 11-03 "문구나 저런 거 잡지 마 — 고객이 보고 고칠 거면 고치면 된다": 내용·문구 기준은 반려하지 않고 기록만(0번 고침).
+#   계속 반려 = 금지선(forbid_must: 질병·효능·금액)·꼴·출처 규칙·제품 컷·비슷한 제품 밝히기뿐. 후기 숫자(claims)는 경고로 내렸다
+SCRIPT_FIX_ONCE = 0
+SCRIPT_MUST = {"form", "forbid_must", "source_rule", "product_cut", "alt_scene", "product:alt_say"}
 # 같은 원인 묶음 연속 몇 번이면 '더 고쳐도 안 풀린다'로 보나 = 3. 근거(같은 로그): 똑같은 묶음 2번 연속은 두 번 다 다음 바퀴에 풀렸다
 #   (대본 {말끝·제목 색} 2연속 → 통과 · 장면 {장면 경계} 2연속 → 다른 원인으로 넘어감). 3번 이상 똑같았던 것은 재료로는 못 고치는 원인뿐이었다
 #   (장면 맞추기에서 '한 줄 말 빠르기 이상' 4연속 — 문장을 바꿔야 풀리는 것 · 배치 충돌 '꾸밈 자리' 3연속). 2로 하면 풀릴 바퀴를 두 번 끊는다.
@@ -1257,7 +1259,7 @@ TASK_PER_KEY = 3       # 똑같은 실패(단계+이유+속사정)가 안 줄 �
 TASK_TOTAL = 40        # 한 편 전체 과제 상한 — 무한 되풀이만 막는다(시간·사용량 예산은 기준선 실측 뒤)
 EPISODE_BUDGET_MIN = 120   # 편당 시간 예산(분) — 넘으면 고치기보다 권고 넘기기·완성을 먼저(기준선 실측 전 임시값, 시험 때 재서 정한다)
 BACK_STAGES = ("script", "plan", "render", "check")        # 회원 Claude 가 돌아가 다시 시작할 수 있는 단계(이미 지난 곳만)
-HARD_SCRIPT = {"claims", "source_rule"}                     # 지어낸 사실·출처 규칙 = 금지선 — 권고 넘기기로 못 넘긴다
+HARD_SCRIPT = {"forbid_must", "source_rule"}                     # 지어낸 사실·출처 규칙 = 금지선 — 권고 넘기기로 못 넘긴다
 STAGE_GUIDE = {"setup": "00_common.md", "bench": "01_topic.md", "origin": "02_find_source.md", "product": "03_product_coupang.md", "research": "04_research.md",
                "material": "05_material.md", "asr": "06_transcribe.md", "script": "07_script.md", "sign": "07_script.md", "plan": "08_plan.md",
                "render": "10_render.md", "check": "11_check.md", "done": "12_deliver.md"}
@@ -2945,9 +2947,7 @@ def ph_check_judge(st, m, rp, u):
             return finish_with_left(st)
         _tries(st, "eye_proof", LIMITS["eye_proof"], ["final_check"])
         return {"goto": "check"}
-    long = [r for r in (st.get("auto") or {}).get("rows") or [] if r.get("what") == "길이" and r.get("ok") is False]
-    if long:
-        return _length_rewrite(st, long[0].get("value"))
+    # 완성본 길이가 판 범위 밖이어도 대본을 다시 쓰고 렌더를 다시 돌지 않는다 — 경고로 완성(사장님 11-03 '렌더 두 번 금지'). 렌더 전 길이는 계획 단계가 본다
     bad_rows = [r for r in (st.get("auto") or {}).get("rows") or [] if r.get("ok") is not True and not r.get("ref")]
     if not auto_ok and bad_rows and all(str(r.get("what") or "").startswith(CODE_ONLY_ROWS) for r in bad_rows):
         # 재료·대본으로 못 고치는 칸(배치 = 코드가 판 규칙으로 정한다)만 걸렸다 — 재료 고치기·렌더를 되풀이하지 않고 알림과 함께 완성(10-27 싱크대 헛바퀴 3번)
