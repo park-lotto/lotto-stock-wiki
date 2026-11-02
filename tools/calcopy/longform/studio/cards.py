@@ -20,7 +20,9 @@ def card_photo(s, lt, T, tl):
     i = max(j for j, b in enumerate(s["beats"]) if lt >= b[0]); a, name, move, _ = s["beats"][i]; local = lt - a
     img = stage(name, s, picture(s, lt, T, i, move), smooth(local / 0.2), lt).convert("RGBA")
     if s.get("bubble"):
-        note_tag(img, s["bubble"][1], 0, 0, lt - (bubble_time(tl, s) - s["t0"]), s.get("note", "leader"))
+        at = lt - (bubble_time(tl, s) - s["t0"])
+        if name in SIDE: side_word(img, name, s["bubble"][1], max(at, local))
+        else: note_tag(img, s["bubble"][1], 0, 0, at, s.get("note", "leader"))
     if s.get("stamp"):
         alert_tag(img, s["stamp"][1], 0, 0, lt - (word_time(tl, s["stamp"][0], s["stamp"][1]) - s["t0"]))
     if s.get("big"):
@@ -62,9 +64,9 @@ def card_number(s, lt, T, tl):
         d.rectangle([0, level - 8, W, level], fill=(255, 255, 255))
     else: img = soft_back(s) if look in ("orbit", "slam") else dark(s.get("tint", "base"), lt)
     if look == "orbit":
-        orbit(img, cx, cy, 340, lt, GOLD, 0.55); gather(img, cx, cy, (lt - (end_t - 0.5)) / 0.5); ping(img, cx, cy, since / 0.5)
+        ring_line(img, cx, cy, 340, LINE, 0.8); gather(img, cx, cy, (lt - (end_t - 0.5)) / 0.5); ping(img, cx, cy, since / 0.5)
     elif look == "side":
-        cx = 150; ax = "l"; d = ImageDraw.Draw(img); d.rectangle([96, cy - 200, 110, cy - 200 + 400 * pr], fill=GOLD); orbit(img, 1580, cy, 220, lt, GOLD); orbit(img, 1580, cy, 140, -lt * 1.5, HOT, 1, 1); dot_globe(img, 1580, cy, 90, lt, a=0.8)
+        cx = 150; ax = "l"; d = ImageDraw.Draw(img); d.rectangle([96, cy - 200, 110, cy - 200 + 400 * pr], fill=GOLD)
     elif look == "gauge":
         d = ImageDraw.Draw(img); d.rounded_rectangle([260, cy + 130, W - 260, cy + 146], radius=8, fill=(34, 38, 46)); d.rounded_rectangle([260, cy + 130, 260 + (W - 520) * pr, cy + 146], radius=8, fill=GOLD); sub_y = cy + 220
         for i in range(21): xx = 260 + (W - 520) * i / 20; d.line([(xx, cy + 156), (xx, cy + (172 if i % 5 == 0 else 164))], fill=DIM, width=2)
@@ -74,7 +76,7 @@ def card_number(s, lt, T, tl):
         for i in range(5, 0, -1):
             y_ = cy + i * 44 * (1 - pr * 0.4); glow_text(img, txt, cx, y_, big_face(txt, 230, W - 260), GOLD, 0, 0.09 * (6 - i))
     size = int(230 * (1 + 0.1 * bump)) if look != "slam" else int(230 * (1 + 1.2 * (1 - pr)))
-    glow_text(img, txt, cx, cy, big_face(txt, size, (W - 260) if look != "side" else 1120), ink, 34 if pr >= 1 and look != "flood" else 8 if look != "flood" else 0, 1, ax)
+    glow_text(img, txt, cx, cy, big_face(txt, size, (W - 260) if look != "side" else W - 320), ink, 34 if pr >= 1 and look != "flood" else 8 if look != "flood" else 0, 1, ax)
     if s.get("label"): glow_text(img, s["label"], cx, lab_y, face("B", 44), (14, 14, 16) if look == "flood" and pr > 0.75 else DIM, 0, smooth(lt / 0.2), ax)
     sub_t = (at_time(tl, s["sub_word"]) - s["t0"]) if s.get("sub_word") else end_t + 0.3
     if s.get("sub") and lt > sub_t:
@@ -295,7 +297,7 @@ def card_versus(s, lt, T, tl):
 def card_loop(s, lt, T, tl):
     img = dark(s.get("tint", "base"), lt)
     if s.get("title"): chart_title(img, s["title"], None)
-    cx, cy, R = W / 2, H / 2 + 40, 290; n = len(s["items"]); orbit(img, cx, cy, R, lt, GOLD, 1.0, 2)
+    cx, cy, R = W / 2, H / 2 + 40, 290; n = len(s["items"]); ring_line(img, cx, cy, R)
     now = int(lt / 0.9) % n if lt > 0.3 else -1
     for j, t in enumerate(s["items"]):
         a = -math.pi / 2 + j * 6.283 / n; x, y = cx + R * math.cos(a), cy + R * math.sin(a); q = smooth((lt - 0.1 - j * 0.2) / 0.3)
@@ -306,7 +308,7 @@ def card_loop(s, lt, T, tl):
 
 def card_grade(s, lt, T, tl):
     img = dark(s.get("tint", "base"), lt); chart_title(img, s.get("title", "신용등급"), None); ats = [at_time(tl, a) - s["t0"] for a in s["at"]] if s.get("at") else [0.15, 0.8, 1.4]
-    cx, cy = W / 2 - 340, H / 2 + 50; p = smooth((lt - ats[0]) / 0.4); orbit(img, cx, cy, 190, lt, GOLD, p)
+    cx, cy = W / 2 - 340, H / 2 + 50; p = smooth((lt - ats[0]) / 0.4); ring_line(img, cx, cy, 190, GOLD, p, 4)
     glow_text(img, s["grade"], cx, cy, face("AN", 170), GOLD, 22, p); glow_text(img, "등급 유지", cx, cy + 250, face("B", 40), DIM, 0, p)
     if lt > ats[1]:
         spaced(img, "등급 전망", W / 2 + 50, 400, 34, DIM, 4); glow_text(img, s["before"], W / 2 + 130, 520, face("HAN", 86), SOFT)

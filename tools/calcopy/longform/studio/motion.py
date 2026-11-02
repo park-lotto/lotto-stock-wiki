@@ -77,20 +77,6 @@ def corner_ticks(d, box, col, n=34, width=4):
     for cx, cy, sx, sy in ((x0, y0, 1, 1), (x1, y0, -1, 1), (x0, y1, 1, -1), (x1, y1, -1, -1)):
         d.line([(cx + sx * n, cy), (cx, cy), (cx, cy + sy * n)], fill=col, width=width)
 
-_globe = np.random.default_rng(5)
-GLOBE = np.stack([_globe.uniform(0, 6.283, 220), np.arccos(_globe.uniform(-1, 1, 220))], 1)
-def dot_globe(img, cx, cy, R, t, col=GOLD, a=1.0):
-    """돌아가는 점 지구."""
-    d = ImageDraw.Draw(img); u = GLOBE[:, 0] + t * 0.45; v = GLOBE[:, 1]
-    xs = cx + np.sin(v) * np.cos(u) * R; ys = cy + np.cos(v) * R; zs = np.sin(v) * np.sin(u)
-    for i in range(len(xs)):
-        if zs[i] > 0:
-            j = (i * 7 + 3) % len(xs)
-            if zs[j] > 0.35: d.line([(xs[i], ys[i]), (xs[j], ys[j])], fill=tuple(col) + (int(36 * a),), width=1)
-    for x, y, z in zip(xs, ys, zs):
-        r = 3 if z > 0 else 1.5
-        d.ellipse([x - r, y - r, x + r, y + r], fill=tuple(col) + (int((190 if z > 0 else 60) * a),))
-
 _gath = np.random.default_rng(9)
 GATHER = np.stack([_gath.uniform(0, 6.283, 420), _gath.uniform(220, 880, 420), _gath.uniform(0, 70, 420)], 1)
 def gather(img, cx, cy, p, col=GOLD):
@@ -129,12 +115,8 @@ def speed_lines(img, t, col=INK, cx=None, cy=None):
         r = (st + t * v) % 1.0; r0 = r * r * mx; r1 = min(mx, r0 + 40 + r * 230)
         d.line([(cx + math.cos(a) * r0, cy + math.sin(a) * r0), (cx + math.cos(a) * r1, cy + math.sin(a) * r1)], fill=tuple(col) + (int(40 + 150 * r),), width=2)
 
-def orbit(img, cx, cy, R, t, col=GOLD, a=1.0, n=3):
-    """얇은 궤도 위를 빛 점이 돈다."""
-    d = ImageDraw.Draw(img); d.ellipse([cx - R, cy - R, cx + R, cy + R], outline=tuple(LINE) + (int(255 * a),), width=2)
-    for i in range(n):
-        q = t * 0.7 + i * 6.283 / n; x, y = cx + math.cos(q) * R, cy + math.sin(q) * R
-        d.ellipse([x - 7, y - 7, x + 7, y + 7], fill=tuple(col) + (int(255 * a),))
+def ring_line(img, cx, cy, R, col=LINE, a=1.0, width=2):
+    ImageDraw.Draw(img).ellipse([cx - R, cy - R, cx + R, cy + R], outline=tuple(col) + (int(255 * a),), width=width)
 
 def light_sweep(frame, p):
     """컷이 바뀔 때 얇은 빛살이 지난다."""
@@ -154,17 +136,12 @@ def night_wipe(frame, p):
 
 TINT = {"base": NIGHT, "navy": (8, 13, 30), "wine": (22, 9, 14), "teal": (6, 19, 22)}
 _tinted = {}
-_dust = np.random.default_rng(21).uniform(0, 1, (46, 3))
 def dark(tint="base", t=0.0):
-    """색조가 다른 어두운 바탕 위로 먼지가 천천히 떠오른다."""
+    """색조가 다른 어두운 바탕."""
     if tint not in _tinted:
         add = np.array(TINT[tint], np.int16) - np.array(NIGHT, np.int16)
         _tinted[tint] = Image.fromarray(np.clip(np.asarray(night(), np.int16) + add, 0, 255).astype(np.uint8), "RGB").convert("RGBA")
-    img = _tinted[tint].copy(); d = ImageDraw.Draw(img)
-    for x, y, v in _dust:
-        yy = (y - t * (0.02 + v * 0.05)) % 1.0 * H; xx = x * W + math.sin(t * 0.6 + v * 9) * 18; r = 1 + v * 2.4
-        d.ellipse([xx - r, yy - r, xx + r, yy + r], fill=GOLD + (int(50 + 90 * v),))
-    return img
+    return _tinted[tint].copy()
 
 CUT_SEC = 0.16
 def cut_in(frame, kind, p):

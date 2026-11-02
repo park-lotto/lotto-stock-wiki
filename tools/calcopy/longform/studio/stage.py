@@ -35,12 +35,9 @@ def s_window(s, pic, q, t, side=0):
     img.alpha_composite(sized(pic, bw, bh), (x, y)); corner_ticks(ImageDraw.Draw(img), (x - 14, y - 14, x + bw + 14, y + bh + 14), GOLD + (255,)); return img
 
 def s_offset(s, pic, q, t):
-    """사진을 왼쪽으로 밀고 오른쪽에 도는 고리와 눈금."""
-    img = dark(s["tint"], t); bw, bh = 1340, 800; x = 54 - int((1 - q) * 80); img.alpha_composite(sized(pic, bw, bh), (x, 110)); d = ImageDraw.Draw(img)
-    d.rectangle([x + bw, 110, x + bw + 8, 910], fill=GOLD); orbit(img, 1640, 340, 150, t, GOLD); orbit(img, 1640, 340, 92, -t * 1.6, HOT, 1.0, 1)
-    for i in range(14):
-        wd = 60 + 150 * (0.5 + 0.5 * math.sin(t * 2.2 + i * 0.7)); d.rectangle([1500, 590 + i * 22, 1500 + wd, 598 + i * 22], fill=GOLD + (120,))
-    return img
+    """사진을 왼쪽으로 밀고 오른쪽을 키워드 자리로 비운다."""
+    img = soft_back(s); bw, bh = 1340, 800; x = 54 - int((1 - q) * 80); img.alpha_composite(sized(pic, bw, bh), (x, 110))
+    ImageDraw.Draw(img).rectangle([x + bw, 110, x + bw + 8, 910], fill=GOLD); return img
 
 _masks = {}
 def poly_mask(key, pts):
@@ -49,25 +46,24 @@ def poly_mask(key, pts):
     return _masks[key]
 
 def s_slant(s, pic, q, t, mirror=False):
-    img = dark(s["tint"], t); dot_globe(img, W * (0.83 if mirror else 0.17), H * 0.47, 210, t + s["s"][0], a=q)
-    pts = [(0, 0), (W * 0.70, 0), (W * 0.60, H), (0, H)] if mirror else [(W * 0.40, 0), (W, 0), (W, H), (W * 0.30, H)]
+    img = soft_back(s); pts = [(0, 0), (W * 0.70, 0), (W * 0.60, H), (0, H)] if mirror else [(W * 0.40, 0), (W, 0), (W, H), (W * 0.30, H)]
     img.paste(pic, (0, 0), poly_mask(mirror, pts)); ex = (W * 0.70 if mirror else W * 0.40) + (1 - q) * (-200 if mirror else 200)
     ImageDraw.Draw(img).line([(ex, 0), (ex - W * 0.10, H)], fill=GOLD + (255,), width=7); return img
 
 def s_strips(s, pic, q, t):
     """사진 세 쪽이 위아래에서 맞물린다."""
-    img = dark(s["tint"], t); gap = 12; bw = (W - gap * 2) // 3
+    img = soft_back(s); gap = 12; bw = (W - gap * 2) // 3
     for i in range(3):
         qi = smooth(q * 1.6 - i * 0.3); dy = int((1 - qi) * (-H if i % 2 else H)); x = i * (bw + gap); img.alpha_composite(pic.crop((x, 0, x + bw, H)), (x, dy))
     return img
 
 def s_iris(s, pic, q, t):
-    """둥근 창 안의 사진과 도는 궤도."""
-    img = dark(s["tint"], t); cx, cy, r = 1190, 470, int(400 * (0.82 + 0.18 * q))
+    """둥근 창 안의 사진. 왼쪽은 키워드 자리."""
+    img = soft_back(s); cx, cy, r = 1340, H // 2 - 10, int(470 * (0.86 + 0.14 * q))
     if "iris" not in _masks:
         big = Image.new("L", (1600, 1600), 0); ImageDraw.Draw(big).ellipse([0, 0, 1599, 1599], fill=255); _masks["iris"] = big
     mask = _masks["iris"].resize((r * 2, r * 2), Image.BILINEAR); part = pic.crop((W // 2 - r, H // 2 - r, W // 2 + r, H // 2 + r)); img.paste(part, (cx - r, cy - r), mask)
-    orbit(img, cx, cy, r + 26, t, GOLD); orbit(img, cx, cy, r + 58, -t * 0.7, HOT, 0.6, 1); dot_globe(img, 330, 470, 150, t, a=q); return img
+    ring_line(img, cx, cy, r + 4, GOLD, 1.0, 6); return img
 
 def s_tilt(s, pic, q, t):
     """살짝 기운 사진 카드."""
@@ -76,15 +72,13 @@ def s_tilt(s, pic, q, t):
     lay = lay.rotate(ang, Image.BILINEAR, expand=True); img.alpha_composite(lay, ((W - lay.width) // 2, (H - lay.height) // 2 - 30 + int((1 - q) * 60))); return img
 
 def s_cinema(s, pic, q, t):
-    """검은 띠가 닫히는 영화 비율과 옆 눈금."""
+    """검은 띠가 닫히는 영화 비율."""
     img = pic.copy(); d = ImageDraw.Draw(img); bh = int(128 * q); d.rectangle([0, 0, W, bh], fill=(0, 0, 0)); d.rectangle([0, H - bh, W, H], fill=(0, 0, 0))
-    for i in range(30):
-        yy = 170 + i * 25; d.rectangle([W - 42, yy, W - (30 if i % 5 else 18), yy + 2], fill=GOLD + (200,))
-    yy = 170 + (t * 90) % 725; d.polygon([(W - 58, yy - 8), (W - 58, yy + 8), (W - 46, yy)], fill=GOLD); return img
+    return img
 
 def s_duo(s, pic, q, t):
     """큰 사진 옆에 확대한 두 조각."""
-    img = dark(s["tint"], t); m = 12; mw, sw = 1250, W - 1250 - m; sh = (H - m) // 2; img.alpha_composite(sized(pic, mw, H), (0, 0))
+    img = dark("base"); m = 12; mw, sw = 1250, W - 1250 - m; sh = (H - m) // 2; img.alpha_composite(sized(pic, mw, H), (0, 0))
     for i, f in enumerate(((0.25, 0.3), (0.75, 0.7))):
         cw, ch = W * 0.42, H * 0.42 * (sh / sw) * (W / H) * 0.5625 * 1.78; l, tp = (W - cw) * f[0], (H - ch) * f[1]; part = pic.resize((sw, sh), Image.BILINEAR, box=(l, tp, l + cw, tp + ch))
         img.alpha_composite(part, (mw + m + int((1 - smooth(q * 1.5 - i * 0.4)) * 700), i * (sh + m)))
@@ -97,3 +91,14 @@ def stage(name, s, pic, q, t):
     if name == "slant": return s_slant(s, pic, q, t)
     if name == "slant_r": return s_slant(s, pic, q, t, True)
     return {"strips": s_strips, "iris": s_iris, "tilt": s_tilt, "cinema": s_cinema, "duo": s_duo}[name](s, pic, q, t)
+
+SIDE = {"slant": (70, 500), "slant_r": (1400, 450), "iris": (90, 700), "offset": (1420, 450)}
+def side_word(img, name, text, p):
+    """옆자리에 그 장면의 키워드를 크게 쓴다."""
+    x, wd = SIDE[name]; f = face("HAN", 76); d = ImageDraw.Draw(img); rows, cur = [], ""
+    for w in text.split():
+        if cur and d.textlength(cur + " " + w, font=f) > wd: rows.append(cur); cur = w
+        else: cur = (cur + " " + w).strip()
+    rows.append(cur); lh = 104; y = H // 2 - 30 - lh * (len(rows) - 1) // 2; g = smooth(p / 0.14)
+    d.rectangle([x, y - 56, x + 8, y - 56 + (lh * len(rows) + 8) * g], fill=GOLD)
+    for i, r in enumerate(rows): glow_text(img, r, x + 34 + (1 - g) * 50, y + i * lh, fit_face("HAN", 76, r, wd - 34), INK, 0, g, "l")
