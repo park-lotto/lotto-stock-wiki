@@ -11,7 +11,7 @@ FONTS = {"gmarket": "GmarketSansBold.otf", "pretendard": "Pretendard-Black.otf",
 CHOICES = {"photo_motion": ("pan", "zoom"), "logo_side": ("right", "left"), "font": tuple(FONTS)}
 
 pick = json.load(open(sys.argv[1], encoding="utf-8"))
-style = pick.get("style", "mint")
+style = pick.get("style", "amber")
 path = os.path.join(HERE, "looks", style + ".json")
 if not os.path.exists(path): sys.exit(f"없는 스타일: {style}")
 for k, ok in CHOICES.items():

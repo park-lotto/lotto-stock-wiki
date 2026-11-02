@@ -1,21 +1,7 @@
 # 사진·영상 바탕과 움직임
 from .settings import *
 random.seed(7)
-def page():
-    p = os.path.join(BUILD, "_paper.png")
-    if os.path.exists(p): return Image.open(p).convert("RGB")
-    rng = np.random.default_rng(3)
-    base = np.ones((H, W, 3), np.float32) * np.array(C["paper"], np.float32)
-    n = rng.normal(0, 1, (H // 8, W // 8)).astype(np.float32)
-    n = np.array(Image.fromarray(((n - n.min()) / (n.max() - n.min()) * 255).astype(np.uint8)).resize((W, H), Image.BICUBIC)).astype(np.float32) / 255
-    fine = rng.normal(0, 1, (H, W)).astype(np.float32) * 2.2
-    img = base + ((n - 0.5) * 14)[..., None] + fine[..., None]
-    # 구김 선
-    im = Image.fromarray(np.clip(img, 0, 255).astype(np.uint8)); d = ImageDraw.Draw(im, "RGBA")
-    for _ in range(26):
-        x0, y0 = rng.integers(0, W), rng.integers(0, H); x1, y1 = x0 + rng.integers(-700, 700), y0 + rng.integers(-400, 400)
-        d.line([(x0, y0), (x1, y1)], fill=(255, 255, 255, 40), width=2); d.line([(x0 + 2, y0 + 2), (x1 + 2, y1 + 2)], fill=(0, 0, 0, 14), width=2)
-    im = im.filter(ImageFilter.GaussianBlur(0.6)); im.save(p); return im
+from .motion import night as page
 
 _vig = None
 def edge_shade():
@@ -73,12 +59,3 @@ def video_frame(s, lt, T):
         if VideoFeed.cur: VideoFeed.cur[1].close()
         VideoFeed.cur = (key, VideoFeed(path, T))
     return VideoFeed.cur[1].frame(int(lt * FPS))
-
-def slow_zoom(im, p, z0=1.0, z1=1.07, k=None):
-    p = max(0.0, min(1.0, p)); q = p * p * (3 - 2 * p) * 0.5 + p * 0.5
-    if k is not None and k % 2: z0, z1 = z1, z0          # 홀수 샷은 줌아웃
-    z = z0 + (z1 - z0) * q; w, h = W / z, H / z
-    dirs = [(1, 0), (-1, 0), (0, 1), (1, 1), (-1, -1), (0, -1)]; dx, dy = dirs[(k or 0) % len(dirs)] if k is not None else (0, 0)
-    l = (W - w) / 2 + dx * (W - w) / 2 * (q * 2 - 1); t = (H - h) / 2 + dy * (H - h) / 2 * (q * 2 - 1)
-    return im.transform((W, H), Image.EXTENT, (l, t, l + w, t + h), Image.BILINEAR)
-

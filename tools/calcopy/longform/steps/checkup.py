@@ -49,7 +49,7 @@ def ck_disk():
 
 
 def ck_assets():
-    miss = [p for p in ("fonts/Pretendard-Bold.otf", "fonts/GmarketSansBold.otf", "fonts/BlackHanSans-Regular.ttf", "media/bgm/Bass_Walker.mp3",
+    miss = [p for p in ("fonts/Pretendard-Bold.otf", "fonts/GmarketSansBold.otf", "fonts/BlackHanSans-Regular.ttf", "fonts/Anton-Regular.ttf", "fonts/JetBrainsMono-Bold.ttf", "media/bgm/Bass_Walker.mp3",
                         "media/bgm/Thinking_Music.mp3", "media/bgm/Local_Forecast.mp3", "media/bgm/Pamgaea.mp3", "media/sfx/pop_appear.mp3")
             if not os.path.exists(os.path.join(HERE, p))]
     return (not miss, "글꼴·음악 준비됨" if not miss else f"글꼴·음악 {len(miss)}개가 없습니다", "프리셋 꾸러미를 다시 받아 주세요")
@@ -71,8 +71,18 @@ def ck_pixabay():
     return (st == 200, "실사 영상 연결됨" if st == 200 else "실사 영상 키를 쓸 수 없습니다", "Pixabay 키를 다시 확인해 주세요")
 
 
+def ck_codex():
+    import shutil, subprocess
+    exe = shutil.which("codex")
+    if not exe: return False, "코덱스가 설치되어 있지 않습니다", "npm install -g @openai/codex 로 설치해 주세요"
+    r = subprocess.run([exe, "login", "status"], stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if "Logged in" not in r.stdout + r.stderr: return False, "코덱스에 로그인되어 있지 않습니다", "codex login 으로 로그인해 주세요"
+    return True, "코덱스 로그인 확인됨", ""
+
+
 def ck_gemini():
     """그림 1장을 실제로 만들어 본다. 결제 없는 키는 목록 조회는 되고 그림만 429 로 막힌다. 약 50원, 키마다 한 번만."""
+    if (os.environ.get("SHORCL_IMAGE_ENGINE") or "codex") == "codex": return ck_codex()
     k = key("gemini")
     if not k: return False, "그림 키가 없습니다", "내 채널 설정에 제미나이 키를 넣어 주세요"
     mark = os.path.expanduser("~/.shortem/image_ok_" + hashlib.sha256(k.encode()).hexdigest()[:12])

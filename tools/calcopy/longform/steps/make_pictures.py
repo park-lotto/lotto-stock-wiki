@@ -1,13 +1,11 @@
 # shots.py 의 AI 장면·실사 대체 그림 → assets/img/sNNN.png
 # 사용: 작업 폴더에서 python -X utf8 <경로>/gen_images.py [동시개수]
-# 고객 제미나이 키를 쓴다. SHORCL_VERTEX=<프로젝트> 면 그 버텍스 프로젝트로 만든다(gcloud 로그인 필요).
-import concurrent.futures as cf, importlib.util, os, sys, time, warnings
+# 그리는 곳은 SHORCL_IMAGE_ENGINE 하나로 고른다: codex(기본, 코덱스 구독) | gemini(고객 제미나이 키) .
+# gemini 일 때 SHORCL_VERTEX=<프로젝트> 면 그 버텍스 프로젝트로 만든다(gcloud 로그인 필요).
+import concurrent.futures as cf, importlib.util, os, re, shutil, subprocess, sys, time, warnings
 warnings.filterwarnings("ignore")
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import keys
-from google import genai
-from google.genai import types
 
 WORK = os.path.abspath(os.environ.get("SHORCL_WORK") or os.getcwd())
 OUT = os.path.join(WORK, "material", "img"); os.makedirs(OUT, exist_ok=True)
@@ -24,7 +22,33 @@ for s in sh.S:
     p = s.get("prompt") or s.get("ai") or s.get("bg_ai")
     if p: jobs.append((f"s{s['s'][0]:03d}", p))
 if os.environ.get("SHORCL_IMAGE_REVERSE"): jobs.reverse()   # 다른 모델로 뒤에서부터 같이 채울 때
-client = genai.Client(vertexai=True, project=VERTEX, location="global") if VERTEX else genai.Client(api_key=keys.get("gemini"))
+ENGINE = os.environ.get("SHORCL_IMAGE_ENGINE") or "codex"
+if ENGINE not in ("codex", "gemini"): sys.exit(f"없는 그림 엔진: {ENGINE}")
+SAVED = re.compile(r"[A-Za-z]:[^\s`'\"]*generated_images[^\s`'\"]*?\.png", re.I)
+if ENGINE == "gemini":
+    import keys
+    from google import genai
+    from google.genai import types
+    client = genai.Client(vertexai=True, project=VERTEX, location="global") if VERTEX else genai.Client(api_key=keys.get("gemini"))
+
+
+def ask_gemini(prompt, png):
+    r = client.models.generate_content(model=MODEL, contents=prompt + STYLE, config=types.GenerateContentConfig(
+        response_modalities=["IMAGE"], image_config=types.ImageConfig(aspect_ratio="16:9")))
+    for part in r.candidates[0].content.parts:
+        if getattr(part, "inline_data", None) and part.inline_data.data:
+            open(png, "wb").write(part.inline_data.data)
+            return ""
+    return "빈 답(안전 필터일 수 있음)"
+
+
+def ask_codex(prompt, png):
+    """코덱스 내장 그림 도구로 그리고, 코덱스가 저장한 파일을 받아 온다."""
+    ask = f"Use your built-in image generation tool once to make one 16:9 landscape image: {prompt}{STYLE} Do not edit any files. When done, print only the full path of the generated image."
+    r = subprocess.run([shutil.which("codex") or "codex", "exec", "--skip-git-repo-check", "--sandbox", "read-only", "-"], input=ask, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=600)
+    log = r.stdout + r.stderr; found = SAVED.findall(log)
+    if not found or not os.path.exists(found[-1]): return "코덱스가 그림을 남기지 않음: " + " ".join(log.split())[-160:]
+    shutil.copyfile(found[-1], png); return ""
 
 
 def run(job):
@@ -35,13 +59,8 @@ def run(job):
     for k in range(6):
         try:
             t0 = time.time()
-            r = client.models.generate_content(model=MODEL, contents=prompt + STYLE, config=types.GenerateContentConfig(
-                response_modalities=["IMAGE"], image_config=types.ImageConfig(aspect_ratio="16:9")))
-            for part in r.candidates[0].content.parts:
-                if getattr(part, "inline_data", None) and part.inline_data.data:
-                    open(png, "wb").write(part.inline_data.data)
-                    return name, f"ok {time.time() - t0:.0f}s"
-            msg = "빈 답(안전 필터일 수 있음)"
+            msg = (ask_codex if ENGINE == "codex" else ask_gemini)(prompt, png)
+            if not msg: return name, f"ok {time.time() - t0:.0f}s"
         except Exception as e:  # noqa: BLE001 — 한도·일시 오류는 잠깐 뒤 다시
             msg = str(e)[:160]
             if "429" in msg: time.sleep(30 + k * 15)   # 분당 한도 — 짧게 재시도하면 계속 걸린다

@@ -2,6 +2,7 @@
 from .settings import *
 from .timing import *
 from .marks import *
+from .motion import *
 TYPO_BG = {"black": (12, 24, 28), "ivory": (240, 244, 243), "lime": (72, 226, 196), "pink": (255, 112, 80), "blue": (18, 160, 142)}
 TYPO_INK = {"black": (245, 245, 240), "ivory": (17, 17, 17), "lime": (17, 17, 17), "pink": (17, 17, 17), "blue": (255, 255, 255)}
 if CFG.get("typo_colors"):   # 결 손잡이 — 편 config 로 타이포 카드 색을 바꾼다
@@ -22,7 +23,7 @@ def type_current(s, lt, tl):
 def type_reveal(c, p):
     """결 b: 글자가 차례로 아래에서 올라오고, 강조는 색 글자 + 밑줄이 그어진다."""
     bg = TYPO_BG[c["bg"]]
-    img = Image.new("RGBA", (W, H), bg + (255,)); ink = TYPO_INK[c["bg"]]; d = ImageDraw.Draw(img)
+    img = night().convert("RGBA") if c["bg"] == "black" else Image.new("RGBA", (W, H), bg + (255,)); ink = TYPO_INK[c["bg"]]; d = ImageDraw.Draw(img)
     rows = [read_marks(r) for r in c["text"].split("/")]; size = {"S0": 300, "S1": 190, "S2": 130}[c["size"]]
     while True:
         f = face("GM", size); rw = [sum(width_of(d, t, f) for t, _ in r) for r in rows]
@@ -33,7 +34,7 @@ def type_reveal(c, p):
         x = {"L": W * 0.08, "C": (W - w) / 2, "R": W * 0.92 - w}[c["pos"]]
         for t, k in r:
             col = (TYPO_BG[c["box"]] if c.get("box") else C["sub_bar"][:3]) if k == "box" else ink
-            if k == "box" and c["bg"] != "black": col = C["blue"]
+            if k == "box" and c["bg"] != "black": col = (12, 14, 18)
             base = x; tb = d.textbbox((0, 0), "가", font=f)
             for i, ch in enumerate(t):
                 g = smooth((p - n * 0.028) / 0.24); n += 1; cx = base + d.textlength(t[:i], font=f)

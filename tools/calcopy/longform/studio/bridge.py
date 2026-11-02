@@ -1,24 +1,20 @@
 # 구간 전환 화면과 끝 화면
 from .settings import *
 from .marks import *
-def channel_title(d, x, y, size, fill):
-    d.text((x, y), CFG["channel_name"], font=face("GM", size), fill=fill)
-
+from .motion import *
 def bridge_screen(lt, T, short=False):
-    img = Image.new("RGBA", (W, H), (12, 24, 28, 255)); d = ImageDraw.Draw(img); ac = C["sub_bar"]; n = CFG["channel_name"]
-    dur = 0.5 if short else 0.9; p = smooth(lt / dur); size = 150 if short else 190; f = face("GM", size); w = width_of(d, n, f); x = (W - w) / 2; y = H / 2 - size * 0.62
-    d.rectangle([0, H / 2 + size * 0.62, W * p, H / 2 + size * 0.62 + 10], fill=ac)
-    for i, ch in enumerate(n):
-        g = smooth((lt - i * 0.06) / 0.3)
-        if g > 0: d.text((x + d.textlength(n[:i], font=f), y + (1 - g) * size * 0.5), ch, font=f, fill=(255, 255, 255, int(255 * g)))
+    """속도선 속에서 채널명이 빛나며 멈춘다."""
+    img = night().convert("RGBA"); speed_lines(img, lt * 0.9); n = CFG["channel_name"]; p = smooth(lt / (0.4 if short else 0.7))
+    img.alpha_composite(Image.new("RGBA", (W, H), (0, 0, 0, int(150 * p))))
+    f = fit_face("HAN", 150 if short else 190, n, W - 300); y = H / 2
+    glow_text(img, n, W / 2, y + (1 - p) * 40, f, INK, 26, p)
+    d = ImageDraw.Draw(img); w = d.textlength(n, font=f) * p; d.rectangle([W / 2 - w / 2, y + 130, W / 2 + w / 2, y + 137], fill=GOLD)
     return img
 
 def closing_screen(lt, T):
-    img = Image.new("RGBA", (W, H), (12, 24, 28, 255)); d = ImageDraw.Draw(img); ac = C["sub_bar"]; p = smooth(lt / 0.8)
-    channel_title(d, 110, 90, 72, (255, 255, 255, 255)); d.rectangle([110, 190, 110 + 300 * p, 198], fill=ac)
+    img = night().convert("RGBA"); d = ImageDraw.Draw(img); p = smooth(lt / 0.8)
+    orbit(img, W / 2, H / 2, 620, lt, GOLD, 0.5, 2); glow_text(img, CFG["channel_name"], 110, 130, face("HAN", 76), INK, 16, p, "l"); d.rectangle([110, 190, 110 + 300 * p, 197], fill=GOLD)
     for lab, x, y, w, h in [(CFG["outro_left"], 110, 320, 900, 506), (CFG["outro_right"], 1100, 320, 710, 400)]:
-        d.text((x, y - 62), lab, font=face("GM", 40), fill=(255, 255, 255, 255))
-        d.rectangle([x, y, x + w * p, y + h], outline=ac, width=6)
+        spaced(img, lab, x, y - 54, 34, INK, 3); corner_ticks(d, (x, y, x + w, y + h), GOLD + (int(255 * p),), 54, 6)
     img.alpha_composite(mark_icon(96), (1100, 756))
     return img
-

@@ -26,7 +26,7 @@ def face(name, size):
     if k not in _fc:
         path = {"B": "Pretendard-Bold.otf", "XB": "Pretendard-ExtraBold.otf", "K": "Pretendard-Black.otf", "M": "Pretendard-Medium.otf",
                 "R": "Pretendard-Regular.otf", "SB": "Pretendard-SemiBold.otf", "SERIF": "HANBatangB.ttf",
-                "HAN": "BlackHanSans-Regular.ttf", "PEN": "NanumPenScript-Regular.ttf", "GM": CFG.get("font_main", "GmarketSansBold.otf")}[name]
+                "HAN": "BlackHanSans-Regular.ttf", "PEN": "NanumPenScript-Regular.ttf", "AN": "Anton-Regular.ttf", "MONO": "JetBrainsMono-Bold.ttf", "GM": CFG.get("font_main", "GmarketSansBold.otf")}[name]
         _fc[k] = ImageFont.truetype(P("fonts", path), size)
     return _fc[k]
 

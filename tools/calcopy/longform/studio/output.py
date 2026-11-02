@@ -7,6 +7,7 @@ from .cards import *
 from .typeset import *
 from .news import *
 from .bridge import *
+from .motion import *
 CARDS = {"typo": card_type, "article": card_news, "quote": card_quote, "bignum": card_number, "bar": card_bars, "table": card_table, "labels": card_chips, "vs": card_versus,
         "cycle": card_loop, "rating": card_grade, "ladder": card_steps, "pct": card_share, "stock": card_photo, "ai": card_photo}
 
@@ -14,6 +15,25 @@ def choose_encoder():
     """NVENC 가 실제로 돌면 GPU, 아니면 CPU."""
     ok = subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", "color=c=black:s=640x360:d=0.2", "-c:v", "h264_nvenc", "-f", "null", "-"], capture_output=True).returncode == 0
     return ["-c:v", "h264_nvenc", "-preset", "p5", "-rc", "vbr", "-cq", "19", "-b:v", "0"] if ok else ["-c:v", "libx264", "-preset", "veryfast", "-crf", "20"]
+
+def make_frame(t, tl):
+    """시각 t 의 한 장. 렌더와 견본 시트가 함께 쓴다."""
+    shots = tl["shots"]; subs = tl["subs"]; evs = tl["events"]
+    ev = next((e for e in evs if e["t"] <= t < e["t"] + e["dur"]), None)
+    if ev and ev["kind"].startswith("bumper"): return bridge_screen(t - ev["t"], ev["dur"], ev["kind"] == "bumper_short")
+    if ev and ev["kind"] == "outro": return closing_screen(t - ev["t"], ev["dur"])
+    if t >= shots[-1]["t1"] and not (ev and ev["kind"] == "wipe"): return closing_screen(0, 1)
+    s = next((x for x in reversed(shots) if x["t0"] <= t), shots[0]); lt, T = t - s["t0"], s["t1"] - s["t0"]
+    frame = CARDS[s["type"]](s, lt, T, tl)
+    if s["type"] != "typo": light_sweep(frame, lt / 0.22)
+    if ev and ev["kind"] == "wipe": night_wipe(frame, (t - ev["t"]) / ev["dur"])
+    br = type_is_light(s, lt, tl) if s["type"] == "typo" else False
+    frame.alpha_composite(corner_marks(s["chapter"], br))
+    if s["type"] != "typo":
+        frame.alpha_composite(source_line(shot_src(s), False))
+        so = next((x for x in subs if x["t0"] <= t < x["t1"] + 0.1), None)
+        if so: caption_bar(frame, so["text"], t - so["t0"])
+    return frame
 
 def bake_range(t_from=None, t_to=None, out=None, frames=None):
     tl = json.load(open(os.path.join(BUILD, "timeline.json"), encoding="utf-8"))
@@ -23,39 +43,9 @@ def bake_range(t_from=None, t_to=None, out=None, frames=None):
     out = out or os.path.join(BUILD, "video.mp4" if t_from is None else f"part_{int(t_from)}_{int(t_to or total)}.mp4")
     ff = subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", f"{CFG['fps_num']}/{CFG['fps_den']}",
                            "-i", "-", *choose_encoder(), "-pix_fmt", "yuv420p", out], stdin=subprocess.PIPE)
-    shots = tl["shots"]; subs = tl["subs"]; evs = tl["events"]; si = 0
     for fi in range(f0, f1):
-        t = fi / FPS
-        ev = next((e for e in evs if e["t"] <= t < e["t"] + e["dur"]), None)
-        if ev and ev["kind"].startswith("bumper"):
-            frame = bridge_screen(t - ev["t"], ev["dur"], ev["kind"] == "bumper_short")
-        elif ev and ev["kind"] == "outro":
-            frame = closing_screen(t - ev["t"], ev["dur"])
-        elif t >= shots[-1]["t1"] and not (ev and ev["kind"] == "wipe"):
-            frame = closing_screen(0, 1)
-        else:
-            s = next((x for x in reversed(shots) if x["t0"] <= t), shots[0])
-            lt, T = t - s["t0"], s["t1"] - s["t0"]
-            frame = CARDS[s["type"]](s, lt, T, tl)
-            if s["type"] != "typo" and lt < 0.2:   # 컷이 바뀔 때 색 띠가 지나간다
-                x_ = -420 + (W + 840) * smooth(lt / 0.2); dw = ImageDraw.Draw(frame, "RGBA")
-                dw.polygon([(x_ + 150, 0), (x_ + 330, 0), (x_ + 180, H), (x_, H)], fill=C["sub_bar"])
-            br = type_is_light(s, lt, tl) if s["type"] == "typo" else is_bright(s)
-            if ev and ev["kind"] == "wipe":  # 크림 종이가 대각선으로 지나간다
-                p = (t - ev["t"]) / ev["dur"]; lay = Image.new("RGBA", (W, H), (0, 0, 0, 0)); dl = ImageDraw.Draw(lay)
-                x = -W * 0.6 + (W * 2.2) * p
-                dl.polygon([(x + 14, 0), (x + W * 0.9 + 14, 0), (x + W * 0.5 + 14, H), (x - W * 0.4 + 14, H)], fill=(0, 0, 0, 60))
-                lay = lay.filter(ImageFilter.GaussianBlur(10)); dl = ImageDraw.Draw(lay)
-                dl.polygon([(x, 0), (x + W * 0.9, 0), (x + W * 0.5, H), (x - W * 0.4, H)], fill=(245, 239, 224, 255))
-                frame.alpha_composite(lay)
-            frame.alpha_composite(corner_marks(s["chapter"], br))
-            src_bright = br
-            if not br:  # 사진이라도 우하단이 밝으면 어두운 글자
-                reg = frame.crop((40, H - 150, 760, H - 106)).convert("L"); src_bright = np.asarray(reg).mean() > 135
-            if s["type"] != "typo": frame.alpha_composite(source_line(shot_src(s), src_bright))
-            so = None if s["type"] == "typo" else next((x for x in subs if x["t0"] <= t < x["t1"] + 0.1), None)
-            if so: caption_bar(frame, so["text"], t - so["t0"])
-        ff.stdin.write(frame.convert("RGB").tobytes())
+        t = fi / FPS; frame = make_frame(t, tl)
+        ff.stdin.write(film_grain(frame, t).tobytes())
         if fi % 300 == 0: print(f"{t/60:.2f}분 / {total/60:.2f}분", flush=True)
     ff.stdin.close(); ff.wait(); print("영상:", out)
 
