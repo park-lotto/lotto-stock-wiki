@@ -42,6 +42,16 @@ def _json_of(txt: str):
     return None
 
 
+def claude_exe() -> str | None:
+    """엔진 PATH 에는 claude 폴더가 없다(회원 PC engineEnv) — 자주 쓰는 설치 자리까지 본다(11-02 회원 렌더 FileNotFoundError)."""
+    home = Path.home()
+    for p in (shutil.which("claude"), home / ".local/bin/claude.exe", home / ".local/bin/claude",
+              home / "AppData/Roaming/npm/claude.cmd"):
+        if p and Path(p).is_file():
+            return str(p)
+    return None
+
+
 def ask(parts: list, prompt: str, tag: str = "", model: str | None = None) -> tuple[dict | None, str | None]:
     model = model or model_for(tag)
     d = Path(tempfile.mkdtemp(prefix="claude_ma_"))
@@ -58,11 +68,16 @@ def ask(parts: list, prompt: str, tag: str = "", model: str | None = None) -> tu
         full = head + prompt + "\n\n답은 오직 JSON 객체 하나. 앞뒤 설명·마크다운 금지."
         t0 = time.time()
         try:
-            p = subprocess.run(["claude", "-p", "--model", model, "--output-format", "text", "--allowedTools", "Read"],
+            exe = claude_exe()
+            if not exe:
+                return None, "claude 실행 파일 없음"       # 렌더를 멈추지 않는다 — 부르는 쪽이 눈 판정 없이 간다
+            p = subprocess.run([exe, "-p", "--model", model, "--output-format", "text", "--allowedTools", "Read"],
                                input=full, capture_output=True, text=True, encoding="utf-8", errors="replace",
                                timeout=TIMEOUT, cwd=str(d), stdin=None)
         except subprocess.TimeoutExpired:
             return None, f"timeout {TIMEOUT}s"
+        except OSError as e:
+            return None, f"claude 실행 실패 {type(e).__name__}"
         out = _json_of(p.stdout)
         if out is None:
             return None, f"rc={p.returncode} 빈/깨진 답 {round(time.time() - t0)}s: {(p.stdout or p.stderr or '')[:160]}"
