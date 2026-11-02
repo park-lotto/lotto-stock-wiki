@@ -2199,6 +2199,8 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
                     M["blur"][c["src"]].append(e2)
                     log(f"[흐림 넣기] 컷 {k} {where} 아직 {left}장 → 한 칸 더 {e2}")
                 log(f"[흐림 넣기] 컷 {k} {where} 남의 글자 {nt}/{len(r['text'])}장 → 재료.blur[{c['src']}] += {ent} · 다시 잼 {left}장")
+                if len(ocr) != len(ocr0):      # 다시 잰 글자 검출도 컷마다 저장 — 끊겨도 재시도가 이 컷을 다시 재지 않는다(11-03 N95 회원: 같은 컷 14분 두 번)
+                    _cache_save(op, ocr0, {k2: v2 for k2, v2 in ocr.items() if k2 not in ocr0})
                 if left >= TEXT_MIN_HITS:
                     bad.append(f"컷 {k} {where}: 흐림을 넣어도 남의 박힌 글자 {left}장 — 다른 장면으로 바꾼다")
             elif nt >= TEXT_MIN_HITS:
