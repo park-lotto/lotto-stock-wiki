@@ -30,6 +30,7 @@ SORT_1080 = ["-S", "res:1080,vcodec:h264"]
 #   값의 주인 = 여기 Q_CAP · shopping_shorts/media_download._Q_CAP 는 이 값을 가져다 쓴다. 벤치(대본 분석만)는 BENCH_CAP — 재료가 되는 벤치는 Q_CAP(runner_ops.bench_fmt_args).
 Q_CAP = "[width<=1920][height<=1920]"
 BENCH_CAP = "[width<=1280][height<=1280]"
+FULL_MAX_SEC = 600          # 이보다 긴 원본은 통째로 받지 않는다(11-02 사장님 — 37분 원본 722MB·최대 30분 대기). 벤치는 앞부분만
 SORT_720 = ["-S", "res:720,vcodec:h264"]
 CAP_LONG = 1920             # Q_CAP 의 숫자 — 형식 표를 직접 고르는 dash_pick 이 같은 값을 쓴다
 _VIDEO_SEL = re.compile(r"^(?:bv\*|bv|bestvideo\*|bestvideo|b|best|wv\*|wv|worstvideo\*|worstvideo|w|worst|\d+)(?:\[|$)")
@@ -508,10 +509,23 @@ def storyboard_tiles(info: dict, max_tiles: int = 160) -> list[tuple[float, "obj
     return [(t, im) for t, im in out if im is not None]
 
 
+def video_seconds(url: str) -> float:
+    """영상 길이(초) — 받기 전에 묻는다. 못 재면 -1(받기를 막지 않는다)."""
+    r = ytdlp(["--skip-download", "--no-warnings", "--print", "duration", url], timeout=60)
+    try:
+        return float((r.stdout or "").strip().splitlines()[-1])
+    except (ValueError, IndexError):
+        return -1.0
+
+
 def download_full(url: str, dst: Path, fmt: str = "137+ba[ext=m4a]/bv*[height>=1080]+ba/bv*[height>=720]+ba/b", timeout: float = 1800,
                   stall_sec: float = STALL_SEC * 2, extra: list | None = None, log=print) -> Result:
-    """통째 받기(자막 없이 — 자막은 fetch_subs 로 따로). 멈춤 감시 포함."""
+    """통째 받기(자막 없이 — 자막은 fetch_subs 로 따로). 멈춤 감시 포함. FULL_MAX_SEC 넘는 원본은 받지 않고 실패로 돌려준다(다른 후보로 넘어간다)."""
     dst = Path(dst); dst.parent.mkdir(parents=True, exist_ok=True)
+    sec = video_seconds(url)
+    if sec > FULL_MAX_SEC:
+        log(f"[download] 긴 원본 {sec:.0f}초 — 통째로 받지 않는다 {url}")
+        return Result(1, "", f"원본이 {sec / 60:.0f}분이라 통째로 받지 않았다(상한 {FULL_MAX_SEC // 60}분) — 다른 후보를 쓴다", 0.0)
     args = ["-f", fmt, *SORT_1080, "--merge-output-format", "mp4", "--write-info-json", "-o", str(dst.with_suffix(".%(ext)s")), *(extra or []), url]
     r = ytdlp(args, timeout=timeout, stall_sec=stall_sec, watch=dst.with_suffix(""), log=log)
     fetch_note(dst, "통째", r.sec, url, log)

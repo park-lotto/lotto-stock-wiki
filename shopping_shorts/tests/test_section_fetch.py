@@ -88,3 +88,23 @@ def test_download_sections_tries_dash_first(monkeypatch, tmp_path):
     monkeypatch.setattr(YF, "sections_bad", lambda: True)               # ffmpeg 길이 멈춘 PC 여도 DASH 조각 길은 탄다
     r = YF.download_sections("https://www.youtube.com/watch?v=x", [(1, 2)], tmp_path / "x.mp4", pad=2.0)
     assert r is not None and r.returncode == 0 and seen == [2.0]
+
+
+def test_full_download_refuses_long_original(monkeypatch, tmp_path):
+    from tools.calcopy.engine import yt_fetch as YF
+    called = []
+    monkeypatch.setattr(YF, "video_seconds", lambda url: 2233.0)
+    monkeypatch.setattr(YF, "ytdlp", lambda *a, **k: called.append(a))
+    r = YF.download_full("https://youtu.be/x", tmp_path / "a.mp4", log=lambda s: None)
+    assert r.returncode == 1 and "통째로 받지 않았다" in r.stderr and not called
+
+
+def test_full_download_keeps_going_when_length_unknown_or_short(monkeypatch, tmp_path):
+    from tools.calcopy.engine import yt_fetch as YF
+    for sec in (-1.0, 300.0):
+        called = []
+        monkeypatch.setattr(YF, "video_seconds", lambda url, s=sec: s)
+        monkeypatch.setattr(YF, "ytdlp", lambda *a, **k: called.append(a) or YF.Result(0, "", "", 0.1))
+        monkeypatch.setattr(YF, "fetch_note", lambda *a, **k: None)
+        YF.download_full("https://youtu.be/x", tmp_path / "a.mp4", log=lambda s: None)
+        assert called

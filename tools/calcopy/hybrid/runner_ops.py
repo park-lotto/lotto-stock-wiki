@@ -435,7 +435,8 @@ def c_bench(W, d):
     else:
         from tools.calcopy.engine import yt_fetch as YF
         t0 = time.time()
-        yt(bench_fmt_args(bool(d.get("material"))) + ["--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko",
+        head = ["--download-sections", f"*0-{YF.FULL_MAX_SEC}"] if YF.video_seconds(url) > YF.FULL_MAX_SEC else []      # 회원이 준 긴 영상 = 앞부분만
+        yt(head + bench_fmt_args(bool(d.get("material"))) + ["--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko",
                                                       "-o", str(bd / "bench.%(ext)s"), url])
         if not mp4.exists():
             return {"error": "벤치 영상을 받지 못했다" + (f" — {yt_why()}" if yt_why() else "")}
