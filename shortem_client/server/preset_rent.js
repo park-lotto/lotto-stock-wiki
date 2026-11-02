@@ -37,14 +37,7 @@ function otherRenting() {
   if (!o || o.pid === process.pid) return false;
   try { process.kill(o.pid, 0); return true; } catch { return false; }      // 주인 죽음 = 비어 있다
 }
-// 죽은 프로그램의 임대를 돌려준다 — 서버는 같은 기기라도 다른 작업이면 임대가 끝날 때(최대 3분)까지 busy_other_device 로 막는다(11-03 #811 재시작 직후 2번 멈춤).
-//   서버 반납은 임대 번호·기기가 같을 때만 지우니 다른 기기 작업은 건드리지 않는다.
-async function freeDeadOwner() {
-  const o = lockOwner();
-  if (!o || o.pid === process.pid || otherRenting()) return;
-  if (o.lease) { try { await api.lease({ action: 'release', job_id: o.job, lease_id: o.lease }); } catch { /* 못 돌려주면 서버 만료를 기다린다 */ } }
-  try { fs.rmSync(lockFile(), { force: true }); } catch { /* 다음 잠금이 덮는다 */ }
-}
+// 죽은 프로그램이 남긴 임대 반납은 lease.js freeDeadLeases 한 곳(Lease.acquire 가 부른다).
 const pendFile = hold => path.join(process.env.SHORTEM_INSTALL || '', '_update', hold ? 'pending.hold.json' : 'pending.json');
 export function holdPending(on) {
   if (!process.env.SHORTEM_INSTALL) return;
@@ -138,14 +131,13 @@ export async function rentPreset({ engineRoot, presetId, profileId, stepName, ki
   }
   if (otherRenting()) throw new ApiError(409, { code: 'busy', msg: '앞 작업이 끝난 뒤 다시 부르세요' });
   sweep(engineRoot);
-  await freeDeadOwner();
   const jobId = (kind === 'ui' ? 'u' : 'm') + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
   const mine = presetId ? mineById(presetId) : null;     // 내 벤치마킹 프리셋(관제 304) — 이 PC 에 있으니 서버를 안 부른다. 쓰고 지우는 꼴은 같다
   const lease = mine ? null : new Lease(jobId, { stepName: stepName || (() => '소재') });
   if (lease) await lease.acquire();
   const me = { jobId, lease, kind, want };
   current = me;
-  try { fs.writeFileSync(lockFile(), JSON.stringify({ pid: process.pid, job: jobId, lease: lease ? lease.id : null })); } catch { /* 잠금 없이도 이 프로그램 안의 보호는 돈다 */ }
+  try { fs.writeFileSync(lockFile(), JSON.stringify({ pid: process.pid, job: jobId })); } catch { /* 잠금 없이도 이 프로그램 안의 보호는 돈다 */ }
   if (kind === 'make') holdPending(true);
   try {
     const r = mine ? null : await api.rent(presetId ? null : profileId, jobId, lease.id, presetId || null);
