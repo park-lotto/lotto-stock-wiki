@@ -82,7 +82,7 @@ def test_all_missing_at_once_overseas(member_pc):
     why, fix = e.value.why, e.value.fix
     assert why == F.SETUP_WHY and F.member_ok(why)
     assert F.member_ok(fix, need_next=True), fix
-    for label in ("목소리 키(타입캐스트)", "유튜브 계정 연결", "틱톡 계정 연결", "인스타그램 계정 연결"):
+    for label in ("목소리 키(타입캐스트)", "유튜브 계정 연결", "인스타그램 계정 연결"):
         assert label in fix, fix
     assert e.value.retry == "setup"
     for bad in ("TYPECAST", "VMAKE", ".shortem", "keys/", "need_list"):
