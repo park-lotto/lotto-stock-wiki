@@ -1641,30 +1641,51 @@ def cut_gray(c: dict, src: Path, st: dict, M: dict):
     return np.frombuffer(raw[:len(raw) - len(raw) % (108 * sh)], np.uint8).reshape(-1, sh, 108).astype(np.int16)
 
 
-def cut_still_gate(T: dict, M: dict, st: dict, ks: list | None = None) -> list[str]:
+STILL_VER = 1      # 멈춤 재는 법이 바뀌면 올린다 — cut_still.json 열쇠
+
+
+def cut_still_gate(T: dict, M: dict, st: dict, ks: list | None = None, R: Path | None = None) -> list[str]:
     """렌더 전 관문 ⑦ 멈춤·거의 멈춤(10-25): 컷마다 조각이 될 그림(cut_gray)에서 정지 구간을 quality_gate.still_spans(완성본 '화면 멈춤 없음'과 같은 판정)로 잰다.
     감사 눈7 정지 47건(확정 18: 골든카레 흑백 트럭 2.2초·S&B 로고·카레 캔·거즈 잠옷 등)은 원본 자체가 멈춘 그림인 컷이었고 렌더 전에는 아무 관문도 안 봤다.
     원본 끝을 넘어 마지막 프레임이 굳는 멈춤은 계획의 src_left('컷이 원본 샷보다 길다')가 이미 멈춘다(98 #61) — 여기서 다시 적지 않는다.
     사진 컷은 clip_cmd 가 still_move(확대·흐름)를 넣은 그대로 재므로 '움직임 없는 사진'만 걸린다(벤치 판에 의도된 정지 사진 칸 없음 — 사장님 10-18 '이미지를 쓰려면 계속 움직이게').
-    ks = 문구에 적을 컷 번호(T 컷 순서와 같은 길이 — preset_gates 가 preset_make 컷 번호로). 없으면 T 안 순번."""
+    ks = 문구에 적을 컷 번호(T 컷 순서와 같은 길이 — preset_gates 가 preset_make 컷 번호로). 없으면 T 안 순번.
+    R = 있으면 컷마다 잰 값을 R/cut_still.json 에 — 열쇠에는 관문 ④ 지문처럼 이 컷 근처 흐림만 넣어 흐림 칸이 생긴 컷만 다시 읽는다(관제 304)."""
+    import hashlib
     from tools.calcopy.hybrid import quality_gate as QG
     src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
     if not src_dir:
         return []
     items = [(k, c, src_dir / c["src"]) for k, c in enumerate(T["cuts"]) if (src_dir / c["src"]).exists()]
-    if len(items) > 1:      # 컷마다 ffmpeg 회색 읽기를 동시 FRAME_JOBS 개까지 — 판정(still_spans)·문구 순서는 컷 순서 그대로
+    cp = (R / "cut_still.json") if R else None
+    cache = _cache_load(cp)
+    rule = _files_sig(__file__, QG.__file__)[:16] if cp else ""
+
+    def still_key(c, src):
+        if not cp:
+            return None
+        a = clip_args(c, src, st, M)
+        near = blur_in(a.pop("blur"), a["ss"] - 0.5, src_frames(c) / FPS + 1.0)
+        return hashlib.md5(json.dumps([c["src"], src_ident(src)[1:], a, near, STILL_VER, rule], default=str).encode()).hexdigest()[:16]
+    keys = [still_key(c, src) for _, c, src in items]
+    todo = [x for x, key in zip(items, keys) if key not in cache]
+    if len(todo) > 1:      # 컷마다 ffmpeg 회색 읽기를 동시 FRAME_JOBS 개까지 — 판정(still_spans)·문구 순서는 컷 순서 그대로
         from concurrent.futures import ThreadPoolExecutor
-        with ThreadPoolExecutor(min(FRAME_JOBS, len(items))) as ex:
-            grays = list(ex.map(lambda x: cut_gray(x[1], x[2], st, M), items))
+        with ThreadPoolExecutor(min(FRAME_JOBS, len(todo))) as ex:
+            grays = list(ex.map(lambda x: cut_gray(x[1], x[2], st, M), todo))
     else:
-        grays = [cut_gray(c, src, st, M) for _, c, src in items]
-    bad = []
-    for (k, c, src), g in zip(items, grays):
+        grays = [cut_gray(c, src, st, M) for _, c, src in todo]
+    got = iter(grays)
+    bad, rows = [], {}
+    for (k, c, src), key in zip(items, keys):
         if ks is not None:
             k = ks[k]
-        sp = QG.still_spans(g)
+        sp = cache[key] if key in cache else QG.still_spans(next(got))
+        if key:
+            rows[key] = sp
         if sp:
             bad.append(f"컷 멈춤 {k} {c['line']} {c['src']}@{c.get('ss')}: 컷 안 {[(round(a, 2), round(b, 2)) for a, b in sp]}초가 멈춘 그림 — 움직이는 장면으로 바꾸거나(ss·원본) 사진이면 move 를 준다")
+    _cache_save(cp, cache, rows)
     return bad
 
 
@@ -3839,7 +3860,7 @@ def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *,
            ("③ 경계", cut_boundary_gate(T, M, st)),
            ("④ 글자·얼굴", cut_content_gate(T, M, st, doc, R, log, erase=erase, autoblur=True)),
            ("⑤ 컷 길이", cut_length_gate(T, st)),
-           ("⑦ 멈춤", cut_still_gate(T, M, st)),
+           ("⑦ 멈춤", cut_still_gate(T, M, st, R=R)),
            ("사진", photo_gate(T, st, M)),
            ("흐림 면적", blur_cut_gate(T, M, st)),
            ("사진 연속", photo_run_gate(T, M)),
@@ -3889,6 +3910,37 @@ def plan_length_gate(T: dict, st: dict, measured: bool) -> list[str]:
             + ("줄이거나 쉼을 덜어" if T["end"] > LD["max"] else "늘려") + " 다시(렌더 전에 멈춤)"]
 
 
+PLAN_SIG = "plan_input.json"      # 이 계획을 짠 입력 지문 — 다음 계획이 같으면 컷을 다시 짜지 않는다(plan_again)
+
+
+def plan_input_sig(S: dict, M: dict, st: dict, tts: bool, locate: bool) -> str:
+    """(판단 주인 — 컷을 다시 짜야 할 입력이 바뀌었나) 대본·재료(흐림 칸만 뺌)·판·재료 폴더 파일 정체·엔진 코드. 하나라도 다르면 다른 지문.
+    흐림 칸을 빼는 까닭: 흐림은 그림만 바꾸고 컷을 정하지 않는다(11-02 회원 PC 다시 계획 3번 47분). 흐림이 바꾸는 판정(④ 글자·⑦ 멈춤·흐림 면적)은 관문이 다시 잰다."""
+    import hashlib
+    d = Path(M["cand_dir"]) if M.get("cand_dir") else None
+    files = sorted(src_ident(p)[1:] + [p.name] for p in d.iterdir() if p.is_file() and p.suffix.lower() != ".json" and not p.name.startswith("_")) if d and d.is_dir() else []
+    body = [S, {k: v for k, v in M.items() if k not in ("blur", "_blur_added")}, st, bool(tts), bool(locate), files, _files_sig(*sorted(Path(__file__).parent.glob("*.py")))]
+    return hashlib.sha256(json.dumps(body, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8")).hexdigest()
+
+
+def plan_again(sig: str, doc: Path, R: Path, log=print) -> tuple[dict, dict] | None:
+    """지문(plan_input_sig)이 같은 지난 계획의 (시간표, 배치). 없거나 못 읽으면 None = 처음부터 짠다."""
+    sp, pp = R / PLAN_SIG, doc / "plan/계획_시간표.json"
+    if not (sp.exists() and pp.exists()):
+        return None
+    try:
+        if jload(sp).get("sig") != sig:
+            return None
+        P = jload(pp)
+    except Exception as e:  # noqa: BLE001 — 못 읽는 저장본 = 처음부터 짠다(기록만)
+        log(f"[계획 재사용] 지난 계획을 못 읽어 다시 짠다: {e}")
+        return None
+    if not (isinstance(P, dict) and isinstance(P.get("timeline"), dict) and P["timeline"].get("cuts") and isinstance(P.get("placement"), dict)):
+        return None
+    P["timeline"].pop("vmake_cuts", None)      # 지울 컷은 이번 관문이 다시 정한다
+    return P["timeline"], P["placement"]
+
+
 def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=print, tts: bool = True, report: bool = False, locate: bool = False,
            pack: Path | str | None = None) -> dict:
     """plan_only: 계획만(조각·영상 안 만듦). tts=True(기본) = 진짜 목소리 길이로 계획(합성은 줄 캐시 — 렌더가 그대로 쓴다), False = 어림(--guess, 관문 ⑧ 안 봄).
@@ -3906,18 +3958,28 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     R = work / "render"; R.mkdir(parents=True, exist_ok=True)
     if plan_only:
         sm = align = None
-        if tts:      # 계획 때 진짜 목소리 길이로(관문 ⑧ — 10-22 선우용여: 어림으로 통과 → 렌더 3번 · 10-25 이미 만든 12편 어림이 0.13~3.40초 짧음). 합성은 캐시 — 렌더가 그대로 쓴다
+        sig = plan_input_sig(S, M, st, tts, locate)
+        again = plan_again(sig, doc, R, log)
+        if again:
+            log("[계획 재사용] 흐림 칸 말고 입력이 지난 계획과 같다 — 컷을 다시 짜지 않고 관문만 다시 잰다")
+        else:
+            (R / PLAN_SIG).unlink(missing_ok=True)
+        if tts and not again:      # 계획 때 진짜 목소리 길이로(관문 ⑧ — 10-22 선우용여: 어림으로 통과 → 렌더 3번 · 10-25 이미 만든 12편 어림이 0.13~3.40초 짧음). 합성은 캐시 — 렌더가 그대로 쓴다
             sent, _, align = voice_plan(S, st, R, log)
             sm = {x["id"]: x for x in sent}
-        else:
+        elif not again:
             log("[어림] --guess: 글자÷cps 길이 — 길이 관문(⑧)은 안 본다. 렌더 전 판정은 --plan(진짜 목소리)으로")
-        T = timeline(S, M, st, sm, align)
+        T = again[0] if again else timeline(S, M, st, sm, align)
         from tools.calcopy.hybrid import thumb as TH
         thumb_move = TH.relocate(doc, T, log, crop_of=real_crop(M, st))     # 썸네일 장면 = 원본·초 기준으로 새 컷에 옮긴다(관문 ⑥ 전에) — 장면이 없어졌을 때만 flow 가 다시 묻는다
-        placed = plan_rows(S, T, st, make_locate(S, T, st, R, None, log, det=plan_canvas(T, M, st)) if locate else None)   # --locate = 스티커 자리·원 대상까지 계획에서(렌더 없이)
-        deco_apply(placed, doc, st, log)
-        placed["transitions_drawn"] = transitions_of(T, st, placed, log)
-        jsave(doc / "plan/계획_시간표.json", {"timeline": T, "placement": placed})
+        if again:
+            placed = again[1]
+        else:
+            placed = plan_rows(S, T, st, make_locate(S, T, st, R, None, log, det=plan_canvas(T, M, st)) if locate else None)   # --locate = 스티커 자리·원 대상까지 계획에서(렌더 없이)
+            deco_apply(placed, doc, st, log)
+            placed["transitions_drawn"] = transitions_of(T, st, placed, log)
+            jsave(doc / "plan/계획_시간표.json", {"timeline": T, "placement": placed})
+            jsave(R / PLAN_SIG, {"sig": sig})
         sheet = contact_sheet(T, M, st, doc / "plan/계획_접촉시트.jpg", S)      # G-10 렌더 없는 눈 검사(관문이 멈춰도 볼 수 있게 관문 앞에서)
         if sheet:
             log(f"접촉 시트(컷마다 처음·가운데·끝, 렌더 칸 그대로) → {sheet}")
