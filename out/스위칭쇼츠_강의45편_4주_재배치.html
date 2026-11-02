@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>스위칭쇼츠 4주 재배치</title>
+<link href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+<style>
+/* 숏클 사이트 색. 45편을 주차 표 네 장으로 훑는 내부 참고 문서 */
+:root{--ink:#0b0f14;--panel:#111722;--panel2:#18202d;--line:#2b3646;--txt:#eef4f2;--muted:#a3b5b3;--mint:#6ff0d6;--gold:#ffcf6f;--red:#ff7a6b;
+--display:'Black Han Sans','Pretendard Variable',sans-serif;--body:'Pretendard Variable',Pretendard,'Malgun Gothic',sans-serif;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--ink);color:var(--txt);font-family:var(--body);font-size:17px;line-height:1.6}
+.wrap{max-width:1120px;margin:0 auto;padding:44px 20px 64px;display:flex;flex-direction:column;gap:28px}
+h1,h2{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance}
+h1{font-size:clamp(34px,5vw,52px);line-height:1.2}h2{font-size:30px;line-height:1.25}
+.sub{margin:10px 0 0;color:var(--muted);font-size:18px}
+.alert{border-left:6px solid var(--red);background:#22161a;border-radius:10px;padding:14px 18px}.alert b{color:var(--red)}
+nav{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+nav a{display:flex;flex-direction:column;gap:2px;text-decoration:none;color:var(--txt);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+nav a:hover,nav a:focus-visible{border-color:var(--mint);outline:none}
+nav b{color:var(--mint)}nav span{font-weight:700}nav i{font-style:normal;color:var(--muted);font-size:15px}
+section{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:12px;scroll-margin-top:16px}
+section header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.wk{color:var(--mint);font-weight:800}.cnt{color:var(--gold);font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.goal{margin:0;font-size:18px;color:var(--muted)}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:620px}
+th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-size:15px}.no{color:var(--mint);font-weight:800;width:56px;font-variant-numeric:tabular-nums}.tp{font-weight:700;width:36%}
+.chip{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:2px 12px;margin:2px 6px 2px 0;font-size:15px}
+.weak{display:inline-block;margin-left:8px;color:var(--gold);font-size:13px;font-weight:700}
+.hw{margin:0}.hw b{color:var(--gold);margin-right:6px}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 24px}.note h2{font-size:24px;margin-bottom:8px}
+.note ul{margin:0;padding-left:20px}.note li{margin:5px 0}
+@media(max-width:760px){nav{grid-template-columns:repeat(2,1fr)}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{body{background:#fff;color:#000}section,.note,nav a{background:#fff;break-inside:avoid}}
+</style></head><body><main class="wrap">
+<div><h1>스위칭쇼츠 강의 45편, 4주로 다시 나누기</h1><p class="sub">드라이브 강의정리의 영상 45편을 초보자가 따라가기 좋은 순서로 재배치했습니다.</p></div>
+<div class="alert"><b>내부 참고용</b> 원본 정리본에 외부 공유 금지 표시가 있습니다. 수강생에게 나눠 주지 않습니다.</div>
+<nav><a href="#1주차"><b>1주차</b><span>시작과 첫 영상</span><i>10편</i></a><a href="#2주차"><b>2주차</b><span>소재와 카테고리</span><i>10편</i></a><a href="#3주차"><b>3주차</b><span>벤치마킹과 자동화</span><i>16편</i></a><a href="#4주차"><b>4주차</b><span>롱폼, 해외, 홀로서기</span><i>9편</i></a></nav>
+<section id="1주차"><header><div><div class="wk">1주차</div><h2>시작과 첫 영상</h2></div><span class="cnt">10편</span></header>
+<p class="goal">수익 구조를 이해하고, 채널을 만들고, 첫 영상을 올립니다.</p><div class="scroll"><table><thead><tr><th>순서</th><th>주제</th><th>강의</th></tr></thead><tbody><tr><td class="no">1</td><td class="tp">유튜브 수익 구조와 채널 개설</td><td class="ls"><span class="chip">왕초보 1주차</span><span class="chip">유스타터</span></td></tr><tr><td class="no">2</td><td class="tp">벤치마킹, 저작권, 지속률 입문</td><td class="ls"><span class="chip">루키특강</span></td></tr><tr><td class="no">3</td><td class="tp">편집 기초</td><td class="ls"><span class="chip">캡컷스타터</span><span class="chip">프프스타터 1부</span><span class="chip">프프스타터 2부</span><span class="chip">프프스타터 3부</span></td></tr><tr><td class="no">4</td><td class="tp">클로드 코드 환경 세팅</td><td class="ls"><span class="chip">VSCODE 설치세팅 게릴라</span></td></tr><tr><td class="no">5</td><td class="tp">첫 영상 만들기와 커스텀</td><td class="ls"><span class="chip">정규 1주차 1부</span><span class="chip">정규 1주차 2부</span></td></tr></tbody></table></div>
+<p class="hw"><b>과제</b> 벤치마킹 시트 1개, 내 영상 1편 업로드</p></section><section id="2주차"><header><div><div class="wk">2주차</div><h2>소재와 카테고리</h2></div><span class="cnt">10편</span></header>
+<p class="goal">내 카테고리를 정하고 소재를 찾는 방법을 익힙니다.</p><div class="scroll"><table><thead><tr><th>순서</th><th>주제</th><th>강의</th></tr></thead><tbody><tr><td class="no">1</td><td class="tp">수익화 구조 보는 눈</td><td class="ls"><span class="chip">룰루랄라릴리 초청</span></td></tr><tr><td class="no">2</td><td class="tp">사업 마인드, 계정, 애드센스</td><td class="ls"><span class="chip">월억남 초청</span></td></tr><tr><td class="no">3</td><td class="tp">소재 전략, 유통, 캡컷, 업로드</td><td class="ls"><span class="chip">왕초보 2주차</span></td></tr><tr><td class="no">4</td><td class="tp">영화·드라마, 해외, 정치, 자동 업로드</td><td class="ls"><span class="chip">정규 2주차</span></td></tr><tr><td class="no">5</td><td class="tp">영화·드라마 심화</td><td class="ls"><span class="chip">둥둥아빠 초청 1부</span><span class="chip">둥둥아빠 초청 2부</span></td></tr><tr><td class="no">6</td><td class="tp">카테고리별 심화</td><td class="ls"><span class="chip">가라사대 정치</span><span class="chip">산이 팬튜브</span><span class="chip">에디슨리치 쇼핑</span></td></tr><tr><td class="no">7</td><td class="tp">지표 보기, 제목, 채널 피드백</td><td class="ls"><span class="chip">왕초보 3주차</span></td></tr></tbody></table></div>
+<p class="hw"><b>과제</b> 카테고리 확정, 소재 목록 작성, 영상 3편 업로드</p></section><section id="3주차"><header><div><div class="wk">3주차</div><h2>벤치마킹과 자동화</h2></div><span class="cnt">16편</span></header>
+<p class="goal">터진 채널을 프리셋으로 만들고, 소재와 작업을 자동화합니다.</p><div class="scroll"><table><thead><tr><th>순서</th><th>주제</th><th>강의</th></tr></thead><tbody><tr><td class="no">1</td><td class="tp">채널 수집과 해부, 수치로 재기</td><td class="ls"><span class="chip">프리미엄 1주차</span></td></tr><tr><td class="no">2</td><td class="tp">나만의 프리셋 만들기</td><td class="ls"><span class="chip">프리미엄 2주차</span><span class="chip">프반게릴라 0916</span></td></tr><tr><td class="no">3</td><td class="tp">기획력과 채널 분석</td><td class="ls"><span class="chip">별안간 0922</span></td></tr><tr><td class="no">4</td><td class="tp">소재 자동화, 판단 모델, 병렬 일꾼</td><td class="ls"><span class="chip">프리미엄 3주차</span><span class="chip">전체소재특강 1025</span></td></tr><tr><td class="no">5</td><td class="tp">AI에 일 시키는 체계와 자동화</td><td class="ls"><span class="chip">개발남노씨 초청</span><span class="chip">쇼츠열공 초청</span></td></tr><tr><td class="no">6</td><td class="tp">도구 연결, 차단 대처, 역할 분담</td><td class="ls"><span class="chip">게릴라 0921</span><span class="chip">한가위 0926</span><span class="chip">수요숏 1014</span></td></tr><tr><td class="no">7</td><td class="tp">특강 모음<span class="weak">내용 확인 부족</span></td><td class="ls"><span class="chip">시크릿 0906 1부</span><span class="chip">시크릿 0906 2부</span><span class="chip">게릴라 0918</span><span class="chip">월요 1019 1부</span><span class="chip">월요 1019 2부</span></td></tr></tbody></table></div>
+<p class="hw"><b>과제</b> 나만의 프리셋 1개, 소재 자동 수집 1회</p></section><section id="4주차"><header><div><div class="wk">4주차</div><h2>롱폼, 해외, 홀로서기</h2></div><span class="cnt">9편</span></header>
+<p class="goal">수익원을 넓히고, 혼자 굴러가는 작업장을 만듭니다.</p><div class="scroll"><table><thead><tr><th>순서</th><th>주제</th><th>강의</th></tr></thead><tbody><tr><td class="no">1</td><td class="tp">롱폼 3종</td><td class="ls"><span class="chip">정규 3주차</span></td></tr><tr><td class="no">2</td><td class="tp">카드뉴스, 전자책, 쇼핑, 팟캐스트</td><td class="ls"><span class="chip">정규 4주차</span></td></tr><tr><td class="no">3</td><td class="tp">책 롱폼, 플리 아트웍</td><td class="ls"><span class="chip">프리미엄 4주차</span></td></tr><tr><td class="no">4</td><td class="tp">해외 롱폼과 고단가 시장</td><td class="ls"><span class="chip">프리미엄 확장 1주차</span></td></tr><tr><td class="no">5</td><td class="tp">해외 채널 사례<span class="weak">내용 확인 부족</span></td><td class="ls"><span class="chip">유라짱 초청</span></td></tr><tr><td class="no">6</td><td class="tp">AI 음악</td><td class="ls"><span class="chip">이그나이트 초청</span></td></tr><tr><td class="no">7</td><td class="tp">혼자 굴러가는 작업장</td><td class="ls"><span class="chip">프리미엄 확장 2주차</span></td></tr><tr><td class="no">8</td><td class="tp">세금</td><td class="ls"><span class="chip">N잡세금특강</span></td></tr><tr><td class="no">9</td><td class="tp">복습, 실행 루틴, 수강생 피드백</td><td class="ls"><span class="chip">왕초보 4주차</span></td></tr></tbody></table></div>
+<p class="hw"><b>과제</b> 롱폼 1편, 앞으로 한 달 운영표</p></section>
+<div class="note"><h2>살펴보며 보인 점</h2><ul>
+<li>1주차에 왕초보 내용을 먼저 둬야 합니다. 원래 왕초보와 정규가 따로 달려서 초보자가 시작점을 찾기 어렵습니다.</li>
+<li>3주차가 16편으로 가장 무겁습니다. 프리셋을 먼저 끝내고, 도구 연결은 필요할 때 찾아보는 자료로 빼는 것이 낫습니다.</li>
+<li>수강생 피드백 회차는 2주차와 4주차에 있습니다. 우리 수업도 이 흐름이 좋습니다.</li></ul></div>
+<div class="note"><h2>이 표를 읽을 때</h2><ul>
+<li>45편 전문을 다 읽은 것이 아니라 자료정리와 노하우카드의 요약을 기준으로 나눴습니다.</li>
+<li>내용 확인 부족 표시는 제목과 날짜로 넣은 것입니다.</li>
+<li>인증 우회와 저작권 감지 회피 관련 대목은 우리 수업에 가져오지 않습니다.</li></ul></div>
+</main></body></html>
