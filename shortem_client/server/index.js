@@ -368,6 +368,23 @@ export function buildServer(ctx = makeCtx()) {
   return server;
 }
 
+// Claude 창이 닫히면(입력 끝) 이 프로그램도 끝낸다 — 안 끝나면 창을 다시 켤 때마다 옛 프로그램이 남아 임대·PC 잠금을 쥔 채 쌓였다
+//   (11-03 회원 PC: 21시부터 옛 쌍 6개, 새 편이 '준비가 덜 됐어요'로 막힘). 도는 실행기가 있으면 끝날 때까지 기다린다(최대 2시간).
+export function quitWhenClaudeCloses({ stdin = process.stdin, busy = () => anyFlowBusy() || anyRunning(), exit = c => process.exit(c), every = 10000, maxWait = 2 * 60 * 60 * 1000 } = {}) {
+  let done = false;
+  const bye = () => {
+    if (done) return;
+    done = true;
+    audit('claude_closed', { result: busy() ? 'wait_busy' : 'exit' });
+    const t0 = Date.now();
+    const tick = () => { if (!busy() || Date.now() - t0 > maxWait) exit(0); else setTimeout(tick, every); };
+    tick();
+  };
+  stdin.once('end', bye);
+  stdin.once('close', bye);
+  return bye;
+}
+
 async function main() {
   // 설치본은 부모(연결 유지)·자식(실제 서버)으로 돈다 — 새 판을 재실행 없이 바꾼다(supervisor.js). 개발·시험은 그대로 한 프로세스.
   if (process.env.SHORTEM_INSTALL && process.env.SHORTEM_CHILD !== '1') {
@@ -380,6 +397,7 @@ async function main() {
   try { syncVcrt(); } catch (e) { audit('vcrt_sync', { result: String((e && e.message) || e).slice(0, 70) }); }   // 점검·제작보다 먼저
   const server = buildServer();
   await server.connect(new StdioServerTransport());
+  quitWhenClaudeCloses();
   syncPermissions();
   syncGuide();          // 회원이 설치를 다시 하지 않게 — 지침·플러그인은 켤 때 스스로 맞춘다
   setTimeout(() => {
