@@ -1605,6 +1605,15 @@ def preview(cid, kind, pid, token, headers: dict, store=None) -> dict:
 
 
 # ── 이상 행동 탐지(§7-9) ─────────────────────────────────────────────────
+# 숏클이 켜져 있으면 저절로 나가는 요청 — 사람의 속도가 아니라 A4 에 세지 않는다(11-02 실측: 이것만으로 시간당 600회, 회원 3명 오정지)
+_A4_BACKGROUND = ("session", "live_pull")
+
+
+def _count_a4(c, cid, since):
+    return c.execute("SELECT COUNT(*) FROM claude_license_log WHERE cid=? AND kind='request' AND ts>=? AND route NOT IN (?,?)",
+                     (cid, since) + _A4_BACKGROUND).fetchone()[0]
+
+
 def _count(c, cid, kind, since, route=None):
     if route:
         return c.execute("SELECT COUNT(*) FROM claude_license_log WHERE cid=? AND kind=? AND route=? AND ts>=?",
@@ -1686,8 +1695,8 @@ def anomaly_check(cid, event: dict, store=None) -> dict:
             if suspended:
                 _deny("suspended", "이상 사용이 감지돼 잠시 멈췄습니다 — 관리자 확인 뒤 풀립니다", lic["suspended_until"] - now)
             else:
-                m1 = _count(c, cid, "request", now - 59)
-                h1 = _count(c, cid, "request", now - 3599)
+                m1 = _count_a4(c, cid, now - 59)
+                h1 = _count_a4(c, cid, now - 3599)
                 if route != "lease_release" and (m1 > t["a4_per_min"] or h1 > t["a4_per_hour"]):
                     if not _alerts_since(c, cid, "A4", now - 60):
                         alerts.append(_raise_alert(c, cid, "A4", "throttle", m1 if m1 > t["a4_per_min"] else h1,
