@@ -6,7 +6,7 @@ tools/hotpeople/measure/faces_text.py(2026-09-28, 원본 9편·v3 실측 자)를
   동일성: SFace 임베딩(cv2.FaceRecognizerSF) · alignCrop 은 YuNet 원시 행 ← 랜드마크 0 채우면 cos=1.0(자가 아무것도 안 잼)
   글자  : PP-OCRv5 server det(글자 상자만, 인식 없음)                  ← 동봉 ocrdet.py (Apache-2.0, LICENSE-PADDLEOCR)
 ★동봉 두 파일은 외부 사례 framevision 팩과 **바이트 동일**(sha256 manifest 대조). 고치지 마라.
-★모델(onnx)은 저장소에 없다: SHORTEM_MODELS 또는 ~/.shortem/models. 없으면 죽는다 — 조용한 폴백 금지.
+★모델(onnx)은 저장소에 없다: SHORTEM_MODELS 또는 ~/.shortem/models, 회원 PC = 설치 폴더 models/. 없으면 죽는다 — 조용한 폴백 금지.
 
 그림 입력은 전부 **BGR uint8**(cv2 관례). 반환 좌표는 그림 크기 대비 0~1.
 """
@@ -15,7 +15,8 @@ import os
 import numpy as np
 
 MODELS_DIR = os.environ.get("SHORTEM_MODELS") or os.path.join(os.path.expanduser("~"), ".shortem", "models")
-ENGINE_MODELS = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "models"))   # 회원 설치본 = 엔진 안(build_win)
+ENGINE_MODELS = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "models"))   # 옛 설치본 = 엔진 안
+INSTALL_MODELS = os.path.abspath(os.path.join(ENGINE_MODELS, "..", "..", "models"))                    # 회원 설치본 = 엔진 옆(build_win · updater.adoptModels)
 YUNET = "face_detection_yunet_2023mar.onnx"
 SFACE = "face_recognition_sface_2021dec.onnx"
 OCRDET = "ppocrv5_server_det.onnx"
@@ -39,18 +40,21 @@ WHO_MAIN, WHO_OTHER, WHO_UNSURE, WHO_SMALL, WHO_NONE = "주인공", "다른사�
 _state = {}
 
 
+def find_model(name):
+    """찾는 순서의 주인 — 있으면 경로, 없으면 None."""
+    return next((p for p in (os.path.join(d, name) for d in (MODELS_DIR, INSTALL_MODELS, ENGINE_MODELS)) if os.path.isfile(p)), None)
+
+
 def model(name):
-    p = os.path.join(MODELS_DIR, name)
-    if not os.path.isfile(p):
-        p = os.path.join(ENGINE_MODELS, name)
-    if not os.path.isfile(p):
-        raise RuntimeError(f"vision: 모델 없음 {p} — SHORTEM_MODELS 또는 ~/.shortem/models 에 {name} 을 둬라")
+    p = find_model(name)
+    if not p:
+        raise RuntimeError(f"vision: 모델 없음 {os.path.join(MODELS_DIR, name)} — SHORTEM_MODELS 또는 ~/.shortem/models 에 {name} 을 둬라")
     return p
 
 
 def models_missing():
     """setup 단계 점검용 — 없는 모델 경로 목록."""
-    return [os.path.join(MODELS_DIR, n) for n in (YUNET, SFACE, OCRDET) if not any(os.path.isfile(os.path.join(d, n)) for d in (MODELS_DIR, ENGINE_MODELS))]
+    return [os.path.join(MODELS_DIR, n) for n in (YUNET, SFACE, OCRDET) if not find_model(n)]
 
 
 def _facelib():

@@ -50,13 +50,56 @@ RENDERER_EXTRA = ("tools/render_scene_style.js", "out/scene-style-ui-showcase.ht
 DATA_EXTRA = ("shopping_shorts/assets/voice_presets.json", "shopping_shorts/assets/bgm_lib", "shopping_shorts/assets/sfx_packs",
               "shopping_shorts/calcopy_frame/my_packs.json", "shopping_shorts/static/caption-motions.js",
               "tools/calcopy/engine/warehouse_channels.json",
-              "channel/starpickroom/_tools/spr_overlay.py",   # render_bench 금색 로고(함수 안 sys.path + import, 부품 검사 engine_deps_check 가 찾음)
               "shopping_shorts/vmake_sdk",           # 10-31 설치본 1.0.11 에 __init__.py 만 들어가 회원 VMake 가 ModuleNotFoundError(98 #203)
               "shopping_shorts/static/fonts",        # 글꼴 폴더 통째 — render_bench._font(FONTS/이름)·광고 표시(engine/ad_mark)가 연다.
               # 10-29 실측: Pretendard 하나만 넣어 회원 묶음 렌더가 제목 글꼴에서 OSError 로 멈췄다(회원 PC 에 글꼴을 이 자리로 넣는 코드도 없다)
               # 10-30 실측: 설정 화면 꾸미기의 템플릿 카드 그림이 묶음에 없어 42건 404(카드가 빈 칸) — showcase 화면이 여는 그림
               "out/assets/scene-style/thumbnails", "out/assets/scene-style/uniform-household-demo.png",
               "out/template_refs/even-hook-reference.png")
+
+
+# 금색 로고(render_bench kind=spr_gold) — 원본 channel/…/spr_overlay.py 는 channel/* 금지 + 틀 만들기(to_frame)를 부른다. 그래서 파일을 풀지 않고
+#   로고에 쓰는 조각만 떼어 묶음 맨 위 spr_overlay.py 로 쓴다(제목·워터마크·실측 근거 문서는 안 나간다). 맨 위 = sys.path 의 엔진 뿌리(common.py) 라 render_bench 의 import 가 찾고,
+#   channel/ 폴더는 편마다 지워지므로(preset_rent.wipe) 거기 두면 사라진다. 빠지면 부품 검사(engine_deps_check)가 빌드를 멈춘다.
+OVERLAY_SRC = "channel/starpickroom/_tools/spr_overlay.py"
+OVERLAY_DST = "spr_overlay.py"
+OVERLAY_KEEP = ("W", "LOGO", "star", "gold", "logo_layer")
+OVERLAY_HEAD = r'''# -*- coding: utf-8 -*-
+"""금색 로고 층 — 엔진 묶음 빌드가 만든 파일(engine_bundle.member_overlay)."""
+import math
+import re
+from pathlib import Path
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
+
+ROOT = Path(__file__).resolve().parent
+
+
+def _font(fam, px):
+    """글꼴 이름 → 장면꾸미기 화면 @font-face 첫 등록 파일(렌더러와 같은 파일)."""
+    html = (ROOT / "out/scene-style-ui-showcase.html").read_text(encoding="utf-8")
+    m = re.search(r'@font-face\s*\{[^}]*?font-family:\s*"?' + re.escape(fam) + r'"?;\s*src:\s*url\("([^"]+)"', html)
+    return ImageFont.truetype(str((ROOT / "out" / m.group(1)).resolve()), int(px))
+'''
+
+
+def member_overlay(src: str) -> str:
+    """원본 소스 → 로고 조각만 든 소스. 찾는 조각이 하나라도 없으면 멈춘다."""
+    import ast
+    got = {}
+    for n in ast.parse(src).body:
+        if isinstance(n, ast.FunctionDef):
+            name = n.name
+        elif isinstance(n, ast.Assign):
+            t = n.targets[0]
+            name = t.elts[0].id if isinstance(t, ast.Tuple) else getattr(t, "id", None)
+        else:
+            continue
+        if name in OVERLAY_KEEP:
+            got[name] = ast.get_source_segment(src, n)
+    lost = [k for k in OVERLAY_KEEP if k not in got]
+    if lost:
+        raise SystemExit(f"[engine_bundle] 금색 로고 조각을 못 찾았습니다: {lost}")
+    return OVERLAY_HEAD + "\n\n" + "\n\n\n".join(got[k] for k in OVERLAY_KEEP) + "\n"
 
 
 def data_extra(engine: Path) -> list[str]:
@@ -279,6 +322,11 @@ def build(engine: Path, traces: Path, out: Path) -> dict:
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dst)
         kept.append(rel)
+    if (engine / OVERLAY_SRC).is_file():
+        (out / OVERLAY_DST).write_text(member_overlay((engine / OVERLAY_SRC).read_text(encoding="utf-8")), encoding="utf-8")
+        kept.append(OVERLAY_DST)
+    else:
+        missing.append(OVERLAY_SRC)
     for pkg in {Path(r).parent for r in kept if r.endswith(".py")}:   # 패키지 __init__ (추적에서 빠질 수 있다)
         for p in [pkg, *pkg.parents]:
             if str(p) in (".", ""):
