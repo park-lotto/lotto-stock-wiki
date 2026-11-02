@@ -107,13 +107,13 @@ def orig_grid(J: dict, spec: dict, dst: Path):
     """원본 컷마다 가운데 프레임의 영상 창(설명서 video 층) — 후보와 나란히 볼 기준."""
     from PIL import Image, ImageDraw
     import io
-    v = next(l for l in spec["layers"] if l["kind"] == "video")
+    v = next((l for l in spec["layers"] if l["kind"] == "video"), None)      # 영상 층이 없는 판은 미리보기만 건너뛴다(회원 수리 채택 11-02)
     cuts = [0.0] + list((J.get("cuts") or {}).get("times") or []) + [float(J["probe"]["duration"])]
     shots = [(round(a, 3), round(b, 3)) for a, b in zip(cuts, cuts[1:])]
     # ★원본 영상(J["source"])은 뜯기를 한 우리 PC 에만 있다 — 고객 PC(관제 234)엔 없어서 ffmpeg 가 빈 값을 주고 Image.open 이 죽었다
     #   (10-20 라이브 시험 'cannot identify image file'). 컷 시각(shots)은 뜯기에 있으니 늘 돌려주고, 그림은 그릴 수 있을 때만.
     tiles = []
-    if J.get("source") and Path(J["source"]).is_file():
+    if v and J.get("source") and Path(J["source"]).is_file():
         for i, (a, b) in enumerate(shots):
             t = (a + b) / 2
             png = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t:.2f}", "-i", J["source"], "-frames:v", "1", "-vf",
