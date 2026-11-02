@@ -23,6 +23,7 @@ import hashlib
 import hmac
 import json
 import logging
+import math
 import os
 import re
 import secrets
@@ -1128,27 +1129,217 @@ def rent(ctx: dict, profile_id, job_id, lease_id=None, store=None, preset_id=Non
 
 # ── 켤 때 자동 업데이트(관제 234 5판, 사장님 10-19 "업데이트는 자동으로 켤 때 받을 수 있게") ───────────────
 def update_path() -> Path:
-    """최신 앱(서버+엔진) 묶음 표 — tools/claude_portal/publish_update.py 가 쓴다. {version, sha256, size, notes}"""
+    """앱(서버+엔진) 묶음 표 — 쓰기는 update_register·rollout_* 한 곳뿐(도구가 직접 쓰지 않는다).
+    {version, sha256, size, notes}          전체 판(미리보기·빠른배포가 읽는 칸)
+    rollout {version, sha256, size, notes, percent, cids, started, stage_at, approved_by}   단계 배포 중인 후보
+    recalled {판: {at, why, by}}            되돌린 판 — 이 판을 가진 회원은 전체 판을 다시 받는다
+    previous {version, sha256, size}        rollout_finish 직전 전체 판"""
     return store_dir() / "updates" / "latest.json"
 
 
+def update_table() -> dict:
+    p = update_path()
+    return json.loads(p.read_text(encoding="utf-8")) if p.is_file() else {}
+
+
+def _update_save(d: dict):
+    """통째로 바꾼다(요청이 읽는 동안 반쪽 파일을 보지 않게)."""
+    p = update_path()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    tmp = p.with_name(f"{p.name}.{os.getpid()}.{threading.get_ident()}.tmp")
+    tmp.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp, p)
+
+
+def update_register(version: str, sha256: str, size: int, notes: str = "") -> dict:
+    """전체 판 바로 등록(빠른배포·설치판 올리기) — 판 표를 쓰는 길의 주인. 단계 배포 중이면 끼어들 수 없고, 회수 기록은 지킨다."""
+    d = update_table()
+    if d.get("rollout"):
+        raise PortalError("bad_request", f"단계 배포 중({d['rollout']['version']})입니다 — publish_update --rollout-finish 또는 --rollout-rollback 뒤에 올리세요")
+    if version in (d.get("recalled") or {}):
+        raise PortalError("bad_request", f"{version} 은 되돌린 판입니다 — 새 번호로 올리세요")
+    d.update(version=version, sha256=sha256, size=size, notes=notes)
+    _update_save(d)
+    return d
+
+
+# ── 단계 배포(관제 304, 사장님 11-02 "1명 → 10% → 전체, 실패율이 오르면 자동으로 되돌린다") ───────────────
+#   판단 주인: 대상 = rollout_includes·update_target / 나빠짐 = rollout_bad / 넓히기·전체 승인 = rollout_advance.
+#   재는 값: claude_flow_runs 의 engine(편을 만든 앱 판, X-Shortem-Engine). ★version 칸은 프리셋 판이라 앱 판을 못 가른다.
+ROLLOUT_STEPS = (0, 10, 100)      # 0 = 지정 회원만
+ROLLOUT_MIN_RUNS = 3              # 넓히기 전에 새 판으로 끝난 편 수(막힘+완성)
+ROLLOUT_BASE_DAYS = 30            # 옛 판 대조 구간(시작 전부터 센다 — 표본이 작은 1명 단계에서도 비교가 된다)
+ROLLOUT_WATCH_EVERY = 300         # 초 — 업데이트 창구가 불릴 때 이 간격으로 잰다(별도 크론 없이 돈다)
+ROLLOUT_MARGIN = 0.10             # 막힘 비율이 옛 판보다 이만큼은 높아야 나빠진 것
+ROLLOUT_P = 0.10                  # 우연히 그럴 확률 상한
+
+
+def rollout_includes(r: dict, cid) -> bool:
+    """이 회원이 이 후보를 받나 — 판·cid 해시로 고정. 퍼센트를 넓혀도 앞사람은 그대로, 판이 바뀌면 시험 대상도 바뀐다."""
+    if int(cid) in [int(x) for x in r.get("cids") or ()]:
+        return True
+    h = hashlib.sha256(f"shortem-rollout|{r['version']}|{int(cid)}".encode()).hexdigest()
+    return int(h[:8], 16) % 100 < int(r.get("percent") or 0)
+
+
+def update_target(d: dict, cid, have: str):
+    """이 회원에게 줄 판(없으면 None) — 단계 배포 후보 > 회수된 판 내리기 > 전체 판. 판단은 이 함수 하나."""
+    hv = _semver(str(have or ""))
+    if not hv or not d.get("version"):
+        return None
+    r = d.get("rollout")
+    if r and rollout_includes(r, cid) and _semver(r["version"]) > hv:
+        return r
+    if have in (d.get("recalled") or {}) and have != d["version"]:       # ★판 번호는 더 높지만 받아야 한다
+        return {**d, "rollback": True}
+    return d if _semver(d["version"]) > hv else None
+
+
+def rollout_bad(new_stop: int, new_n: int, old_stop: int, old_n: int) -> bool:
+    """새 판 막힘 비율이 옛 판보다 나빠졌나 — 차이가 ROLLOUT_MARGIN 을 넘고, 우연으로 보기 어려울 때(단측 정확 검정)."""
+    if new_stop < 2 or new_n <= 0:
+        return False
+    if old_n <= 0:                       # 옛 판 표본이 없으면 절대 기준만
+        return new_stop >= 3 and new_stop / new_n >= 0.6
+    if new_stop / new_n <= old_stop / old_n + ROLLOUT_MARGIN:
+        return False
+    n, k = new_n + old_n, new_stop + old_stop
+    tot = math.comb(n, new_n)
+    p = sum(math.comb(k, i) * math.comb(n - k, new_n - i) for i in range(new_stop, min(k, new_n) + 1)) / tot
+    return p < ROLLOUT_P
+
+
+def rollout_health(store=None, d: dict | None = None) -> dict:
+    """후보 판 편 vs 옛 판 편 막힘 비율. verdict = none(단계 배포 없음)·bad·thin(새 판 표본 부족)·ok."""
+    from shopping_shorts import claude_flow        # claude_flow 가 이 모듈을 부른다 — 표 주인은 저쪽
+    d = update_table() if d is None else d
+    r = d.get("rollout")
+    if not r:
+        return {"verdict": "none"}
+    store = _store(store)
+    c = claude_flow.stop_counts(store, r["version"], r["started"], r["started"] - ROLLOUT_BASE_DAYS * 86400)
+    bad = rollout_bad(c["new_stop"], c["new_n"], c["old_stop"], c["old_n"])
+    return {**c, "version": r["version"], "percent": r.get("percent"),
+            "verdict": "bad" if bad else ("thin" if c["new_n"] < ROLLOUT_MIN_RUNS else "ok")}
+
+
+def rollout_start(version: str, sha256: str, size: int, cids: list, notes: str = "") -> dict:
+    """1명 단계 시작 — 전체 판은 그대로 두고 후보만 얹는다."""
+    d = update_table()
+    if not d.get("version"):
+        raise PortalError("bad_request", "되돌아갈 전체 판이 없습니다 — 먼저 전체 판을 올리세요")
+    if d.get("rollout"):
+        raise PortalError("bad_request", f"이미 단계 배포 중입니다({d['rollout']['version']})")
+    if version in (d.get("recalled") or {}):
+        raise PortalError("bad_request", f"{version} 은 되돌린 판입니다 — 새 번호로 올리세요")
+    if _semver(version) <= _semver(d["version"]):
+        raise PortalError("bad_request", f"후보 판은 전체 판({d['version']})보다 높아야 합니다")
+    cids = [int(x) for x in cids]
+    if not cids:
+        raise PortalError("bad_request", "첫 단계에 받을 회원을 지정하세요")
+    d["rollout"] = {"version": version, "sha256": sha256, "size": size, "notes": notes, "percent": 0, "cids": cids,
+                    "started": _now(), "stage_at": _now()}
+    _update_save(d)
+    return d["rollout"]
+
+
+def rollout_advance(percent: int, store=None, approved_by: str = "") -> dict:
+    """다음 단계로(0 → 10 → 100, 건너뛰기 금지). ★100 은 사람 승인 이름이 있어야만 — 자동 감시는 이 함수를 부르지 않는다."""
+    d = update_table()
+    r = d.get("rollout")
+    if not r:
+        raise PortalError("bad_request", "단계 배포 중이 아닙니다")
+    now = ROLLOUT_STEPS.index(r["percent"])
+    if percent not in ROLLOUT_STEPS or ROLLOUT_STEPS.index(percent) != now + 1:
+        raise PortalError("bad_request", f"다음 단계는 {ROLLOUT_STEPS[now + 1:now + 2]} 입니다")
+    if percent == 100 and not str(approved_by or "").strip():
+        raise PortalError("approval_required", "전체 배포는 사람 승인이 있어야 합니다(--approved-by)")
+    h = rollout_health(store, d)
+    if h["verdict"] == "bad":
+        rollout_rollback(f"넓히기 전 점검에서 나빠짐: {_health_text(h)}", by="auto", store=store)
+        raise PortalError("bad_request", f"실패율이 나빠져 되돌렸습니다: {_health_text(h)}")
+    if h["verdict"] != "ok":
+        raise PortalError("bad_request", f"새 판으로 끝난 편이 모자랍니다({h['new_n']}/{ROLLOUT_MIN_RUNS}편)")
+    r.update(percent=percent, stage_at=_now())
+    if percent == 100:
+        r["approved_by"] = str(approved_by).strip()
+    _update_save(d)
+    return r
+
+
+def rollout_finish() -> dict:
+    """100% 뒤 굳히기 — 후보가 전체 판이 된다."""
+    d = update_table()
+    r = d.get("rollout")
+    if not r or r.get("percent") != 100:
+        raise PortalError("bad_request", "100% 단계에서만 굳힙니다")
+    d["previous"] = {k: d.get(k) for k in ("version", "sha256", "size")}
+    d.update({k: r.get(k) for k in ("version", "sha256", "size", "notes")})
+    d.pop("rollout")
+    _update_save(d)
+    return d
+
+
+def _health_text(h: dict) -> str:
+    return f"새 판 {h.get('new_stop')}/{h.get('new_n')} · 옛 판 {h.get('old_stop')}/{h.get('old_n')}"
+
+
+def rollout_rollback(why: str, by: str = "auto", store=None) -> dict:
+    """멈추고 되돌린다 — 후보를 내리고 회수 표에 올린다. 이미 받은 회원은 다음 켤 때 전체 판을 받는다(update_target)."""
+    d = update_table()
+    r = d.pop("rollout", None)
+    if not r:
+        raise PortalError("bad_request", "단계 배포 중이 아닙니다")
+    d.setdefault("recalled", {})[r["version"]] = {"at": _now(), "why": str(why)[:200], "by": str(by)[:40]}
+    _update_save(d)
+    log.error("claude_portal: 단계 배포 되돌림 %s (%s) — %s", r["version"], by, why)
+    store = _store(store)
+    ensure_schema(store)
+    with _tx(store, write=True) as c:
+        _raise_alert(c, 0, "rollout_rollback", "warn", 1, f"{r['version']} → {d['version']} ({by}): {str(why)[:200]}")
+    return d
+
+
+def rollout_tick(store=None, force=False) -> dict | None:
+    """감시 한 번 — 나빠졌으면 멈추고 되돌린다. 넓히기는 하지 않는다. 업데이트 창구가 주기마다 부른다."""
+    d = update_table()
+    if not d.get("rollout"):
+        return None
+    stamp = update_path().with_name("rollout_tick")
+    if not force and stamp.is_file() and time.time() - stamp.stat().st_mtime < ROLLOUT_WATCH_EVERY:
+        return None
+    stamp.touch()
+    h = rollout_health(store, d)
+    if h["verdict"] == "bad":
+        rollout_rollback(f"실패율 악화: {_health_text(h)}", by="auto", store=store)
+        h["rolled_back"] = True
+    return h
+
+
 def update_info(ctx: dict, have: str, store=None) -> dict:
-    """GET /api/claude/update?have=<버전> — 라이선스·기기 관문 뒤, 더 새 판이 있으면 서명 받기 주소. 판단은 이 함수 하나."""
+    """GET /api/claude/update?have=<버전> — 라이선스·기기 관문 뒤, 받을 판이 있으면 서명 받기 주소. 무엇을 받나는 update_target."""
     store = _store(store)
     ensure_schema(store)
     cid, _, _ = _front(store, ctx, "update")
-    p = update_path()
-    if not p.is_file():
+    try:
+        rollout_tick(store)
+    except Exception:      # 감시가 죽어도 업데이트는 나간다 — 대신 크게 남긴다
+        log.exception("claude_portal: 단계 배포 감시 실패 — 자동 되돌리기가 멈춰 있다")
+    d = update_table()
+    if not d:
         return {"ok": True, "update": False}
-    d = json.loads(p.read_text(encoding="utf-8"))
-    if not re.fullmatch(r"\d+\.\d+\.\d+", str(have or "")) or _semver(d["version"]) <= _semver(have):
+    t = update_target(d, cid, have)
+    if not t:
         return {"ok": True, "update": False, "latest": d["version"]}
-    if not (store_dir() / "assets" / d["sha256"]).is_file():
-        log.warning("claude_portal: 업데이트 %s 묶음 파일이 저장소에 없다", d["version"])
+    if not (store_dir() / "assets" / t["sha256"]).is_file():
+        log.warning("claude_portal: 업데이트 %s 묶음 파일이 저장소에 없다", t["version"])
         return {"ok": True, "update": False}
-    url, exp = asset_url({"sha256": d["sha256"], "id": f"update:shortem-app-{d['version']}.zip"}, cid, "update")
-    return {"ok": True, "update": True, "version": d["version"], "sha256": d["sha256"], "size": d["size"], "url": url,
-            "expires": exp, "notes": str(d.get("notes") or "")[:200]}
+    url, exp = asset_url({"sha256": t["sha256"], "id": f"update:shortem-app-{t['version']}.zip"}, cid, "update")
+    out = {"ok": True, "update": True, "version": t["version"], "sha256": t["sha256"], "size": t["size"], "url": url,
+           "expires": exp, "notes": str(t.get("notes") or "")[:200]}
+    if t.get("rollback"):
+        out["rollback"] = True      # updater.js 는 판 높낮이를 안 본다 — 받아서 그대로 바꾼다
+    return out
 
 
 INSTALL_PLATS = ("win-x64", "mac-arm64", "mac-x64")

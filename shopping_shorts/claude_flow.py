@@ -25,7 +25,7 @@ from shopping_shorts import claude_portal as CP
 
 _SCHEMA = """CREATE TABLE IF NOT EXISTS claude_flow_runs (
     sid TEXT PRIMARY KEY, cid INTEGER NOT NULL, preset TEXT, version TEXT, seq INTEGER NOT NULL DEFAULT 0,
-    phase TEXT, status TEXT, created INTEGER, updated INTEGER, summary_json TEXT)"""
+    phase TEXT, status TEXT, created INTEGER, updated INTEGER, summary_json TEXT, engine TEXT)"""
 SID_RE = re.compile(r"^[0-9a-f]{12}$")
 MEASURE_MAX = 400_000      # 요청 하나 measure+replies 상한(대본·받아쓰기가 가장 크다)
 
@@ -47,6 +47,28 @@ def _ensure(store):
     CP.ensure_schema(store)
     with CP._tx(store, write=True) as c:
         c.execute(_SCHEMA)
+        # engine = 이 편을 만든 앱 판(단계 배포 실패율, 관제 304). version 칸은 프리셋 판이다. 라이브 표에는 칸이 없다
+        if "engine" not in [r[1] for r in c.execute("PRAGMA table_info(claude_flow_runs)").fetchall()]:
+            c.execute("ALTER TABLE claude_flow_runs ADD COLUMN engine TEXT")
+
+
+def stop_counts(store, version: str, since_new: int, since_old: int) -> dict:
+    """앱 판별 막힘 수 — 새 판 = version 으로 since_new 뒤 시작한 편, 옛 판 = 그 밖의 판(칸 없던 옛 행 포함) since_old 뒤.
+    끝난 편(stop·done)만 센다. 진행 중이거나 버려진 편은 분모에 안 넣는다. 판정은 claude_portal.rollout_bad."""
+    _ensure(store)
+    with CP._tx(store) as c:
+        rows = CP._rows(c, "SELECT COALESCE(engine,'') engine, status, created FROM claude_flow_runs "
+                           "WHERE status IN ('stop','done') AND created>=?", (min(since_new, since_old),))
+    out = {"new_stop": 0, "new_n": 0, "old_stop": 0, "old_n": 0}
+    for r in rows:
+        if r["engine"] == version:
+            side = "new" if r["created"] >= since_new else None
+        else:
+            side = "old" if r["created"] >= since_old else None
+        if side:
+            out[side + "_n"] += 1
+            out[side + "_stop"] += r["status"] == "stop"
+    return out
 
 
 def _seal(state: dict, seq: int) -> str:
@@ -169,8 +191,8 @@ def step(ctx: dict, body: dict, store=None) -> dict:
             st["auto_source"] = auto
             st["log"].append(f"소재 창고에서 시작: {auto['url']} (조회 {auto.get('views')})")
         with CP._tx(store, write=True) as c:
-            c.execute("INSERT INTO claude_flow_runs(sid,cid,preset,version,seq,phase,status,created,updated) VALUES(?,?,?,?,?,?,?,?,?)",
-                      (sid, cid, pid, line["version"], 0, "setup", "start", CP._now(), CP._now()))
+            c.execute("INSERT INTO claude_flow_runs(sid,cid,preset,version,seq,phase,status,created,updated,engine) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                      (sid, cid, pid, line["version"], 0, "setup", "start", CP._now(), CP._now(), str(ctx.get("engine") or "")[:32]))
     else:
         st, seq = _open(body.get("payload"))
         sid = str(st.get("sid") or "")

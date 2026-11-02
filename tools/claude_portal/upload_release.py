@@ -106,10 +106,9 @@ def main(argv=None) -> int:
             uz.write_bytes(make_zip(Path(a.update_stage), a.version))
             u_sha = sha256(uz)
             scp([uz], f"{UPLOAD}/")
-        reg = ("import json,os;from pathlib import Path;from shopping_shorts import claude_portal as cp;"
+        reg = ("from pathlib import Path;from shopping_shorts import claude_portal as cp;"     # 판 표 쓰기 주인 = update_register(단계 배포 중이면 거절)
                f"p=Path('{UPLOAD}/shortem-app-{a.version}.zip');sha,size=cp.put_blob(p);p.unlink();"
-               f"cp.update_path().parent.mkdir(parents=True,exist_ok=True);"
-               f"cp.update_path().write_text(json.dumps({{'version':'{a.version}','sha256':sha,'size':size,'notes':{json.dumps(a.notes)}}}),encoding='utf-8');print(sha)")
+               f"cp.update_register('{a.version}',sha,size,{a.notes!r});print(sha)")
         import base64      # 따옴표가 셸을 두 번 지나며 깨지지 않게 글을 통째로 넘긴다
         got_u = ssh(f"cd {REPO} && echo {base64.b64encode(reg.encode()).decode()} | base64 -d | /usr/bin/python3 -").strip().splitlines()[-1]
         out["update_sha_match"] = got_u == u_sha
