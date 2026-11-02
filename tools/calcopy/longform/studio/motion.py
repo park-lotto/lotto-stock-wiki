@@ -150,3 +150,55 @@ def night_wipe(frame, p):
     d.polygon([(x, 0), (x + W * 0.9, 0), (x + W * 0.5, H), (x - W * 0.4, H)], fill=NIGHT + (255,))
     d.line([(x, 0), (x - W * 0.4, H)], fill=GOLD + (255,), width=8); d.line([(x + W * 0.9, 0), (x + W * 0.5, H)], fill=GOLD + (255,), width=8)
     frame.alpha_composite(lay)
+
+
+TINT = {"base": NIGHT, "navy": (8, 13, 30), "wine": (22, 9, 14), "teal": (6, 19, 22)}
+_tinted = {}
+_dust = np.random.default_rng(21).uniform(0, 1, (46, 3))
+def dark(tint="base", t=0.0):
+    """색조가 다른 어두운 바탕 위로 먼지가 천천히 떠오른다."""
+    if tint not in _tinted:
+        add = np.array(TINT[tint], np.int16) - np.array(NIGHT, np.int16)
+        _tinted[tint] = Image.fromarray(np.clip(np.asarray(night(), np.int16) + add, 0, 255).astype(np.uint8), "RGB").convert("RGBA")
+    img = _tinted[tint].copy(); d = ImageDraw.Draw(img)
+    for x, y, v in _dust:
+        yy = (y - t * (0.02 + v * 0.05)) % 1.0 * H; xx = x * W + math.sin(t * 0.6 + v * 9) * 18; r = 1 + v * 2.4
+        d.ellipse([xx - r, yy - r, xx + r, yy + r], fill=GOLD + (int(50 + 90 * v),))
+    return img
+
+CUT_SEC = 0.16
+def cut_in(frame, kind, p):
+    """새 화면이 들어오는 순간(0.16초)."""
+    if kind == "none" or p >= 1 or p < 0: return frame
+    q = smooth(p)
+    if kind == "flash": frame.alpha_composite(Image.new("RGBA", (W, H), (255, 255, 255, int(235 * (1 - p)))))
+    elif kind == "sweep": light_sweep(frame, p)
+    elif kind == "punch":
+        z = 1.14 - 0.14 * q; w, h = W / z, H / z; l, t = (W - w) / 2, (H - h) / 2; return frame.transform((W, H), Image.EXTENT, (l, t, l + w, t + h), Image.BILINEAR)
+    elif kind == "whip":
+        sm = frame.resize((W // 18, H), Image.BILINEAR).resize((W, H), Image.BILINEAR); out = Image.blend(sm, frame, q); dx = int((1 - q) * 220)
+        base = Image.new("RGBA", (W, H), NIGHT + (255,)); base.alpha_composite(out, (dx, 0)); return base
+    else:
+        d = ImageDraw.Draw(frame)
+        if kind == "slices":
+            for i in range(7):
+                y0, y1 = i * H // 7, (i + 1) * H // 7; w = int(W * (1 - q)); d.rectangle([0, y0, w, y1] if i % 2 else [W - w, y0, W, y1], fill=NIGHT)
+        elif kind == "shutter":
+            for i in range(9): x0 = i * W // 9; d.rectangle([x0, 0, x0 + int(W / 9 * (1 - q)), H], fill=NIGHT)
+        elif kind == "iris":
+            r = q * 1200; lay = Image.new("RGBA", (W, H), NIGHT + (255,)); ImageDraw.Draw(lay).ellipse([W / 2 - r, H / 2 - r, W / 2 + r, H / 2 + r], fill=(0, 0, 0, 0)); frame.alpha_composite(lay)
+    return frame
+
+def chapter_wipe(frame, kind, p):
+    if kind == "diagonal": night_wipe(frame, p); return
+    d = ImageDraw.Draw(frame); c = 1 - abs(2 * p - 1)
+    if kind == "blinds":
+        for i in range(8):
+            y = i * H // 8; d.rectangle([0, y, W, y + int(H / 8 * c)], fill=NIGHT); d.rectangle([0, y + int(H / 8 * c), W, y + int(H / 8 * c) + 3], fill=GOLD)
+    else:
+        w = int(W / 2 * c); d.rectangle([0, 0, w, H], fill=NIGHT); d.rectangle([W - w, 0, W, H], fill=NIGHT); d.rectangle([w - 6, 0, w, H], fill=GOLD); d.rectangle([W - w, 0, W - w + 6, H], fill=GOLD)
+
+def living(frame, p, punch=0.0):
+    """정지한 카드도 살짝 다가가고, 강조 순간에는 툭 들어간다."""
+    z = 1 + 0.045 * p + 0.07 * punch; w, h = W / z, H / z; l, t = (W - w) / 2, (H - h) / 2
+    return frame.transform((W, H), Image.EXTENT, (l, t, l + w, t + h), Image.BILINEAR)

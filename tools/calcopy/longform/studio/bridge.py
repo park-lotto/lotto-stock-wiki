@@ -2,12 +2,16 @@
 from .settings import *
 from .marks import *
 from .motion import *
-def bridge_screen(lt, T, short=False):
-    """속도선 속에서 채널명이 빛나며 멈춘다."""
-    img = night().convert("RGBA"); speed_lines(img, lt * 0.9); n = CFG["channel_name"]; p = smooth(lt / (0.4 if short else 0.7))
-    img.alpha_composite(Image.new("RGBA", (W, H), (0, 0, 0, int(150 * p))))
-    f = fit_face("HAN", 150 if short else 190, n, W - 300); y = H / 2
-    glow_text(img, n, W / 2, y + (1 - p) * 40, f, INK, 26, p)
+def bridge_screen(lt, T, short=False, look="lines"):
+    """챕터 사이 짧은 숨. 세 가지가 번갈아 나온다."""
+    img = dark("base", lt); n = CFG["channel_name"]; p = smooth(lt / 0.22); f = fit_face("HAN", 150 if short else 190, n, W - 300); y = H / 2
+    if look == "lines": speed_lines(img, lt * 2.2); img.alpha_composite(Image.new("RGBA", (W, H), (0, 0, 0, int(150 * p))))
+    elif look == "rings":
+        for i in range(5): ping(img, W / 2, y, ((lt * 2.4 + i * 0.2) % 1.0), GOLD, 120, 760)
+    else:
+        d = ImageDraw.Draw(img); c = 1 - smooth(lt / 0.3)
+        for i in range(9): x = i * W // 9; d.rectangle([x, 0, x + int(W / 9 * c), H], fill=GOLD)
+    z = 1 + (1 - p) * 0.3; glow_text(img, n, W / 2, y, fit_face("HAN", int((150 if short else 190) * z), n, W - 200), INK, 26, p)
     d = ImageDraw.Draw(img); w = d.textlength(n, font=f) * p; d.rectangle([W / 2 - w / 2, y + 130, W / 2 + w / 2, y + 137], fill=GOLD)
     return img
 

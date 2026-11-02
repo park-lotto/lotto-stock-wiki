@@ -8,6 +8,7 @@ from .typeset import *
 from .news import *
 from .bridge import *
 from .motion import *
+from .direction import direct
 CARDS = {"typo": card_type, "article": card_news, "quote": card_quote, "bignum": card_number, "bar": card_bars, "table": card_table, "labels": card_chips, "vs": card_versus,
         "cycle": card_loop, "rating": card_grade, "ladder": card_steps, "pct": card_share, "stock": card_photo, "ai": card_photo}
 
@@ -18,15 +19,21 @@ def choose_encoder():
 
 def make_frame(t, tl):
     """시각 t 의 한 장. 렌더와 견본 시트가 함께 쓴다."""
-    shots = tl["shots"]; subs = tl["subs"]; evs = tl["events"]
+    direct(tl); shots = tl["shots"]; subs = tl["subs"]; evs = tl["events"]
     ev = next((e for e in evs if e["t"] <= t < e["t"] + e["dur"]), None)
-    if ev and ev["kind"].startswith("bumper"): return bridge_screen(t - ev["t"], ev["dur"], ev["kind"] == "bumper_short")
+    if ev and ev["kind"].startswith("bumper"): return bridge_screen(t - ev["t"], ev["dur"], ev["kind"] == "bumper_short", ev.get("look", "lines"))
     if ev and ev["kind"] == "outro": return closing_screen(t - ev["t"], ev["dur"])
     if t >= shots[-1]["t1"] and not (ev and ev["kind"] == "wipe"): return closing_screen(0, 1)
     s = next((x for x in reversed(shots) if x["t0"] <= t), shots[0]); lt, T = t - s["t0"], s["t1"] - s["t0"]
-    frame = CARDS[s["type"]](s, lt, T, tl)
-    if s["type"] != "typo": light_sweep(frame, lt / 0.22)
-    if ev and ev["kind"] == "wipe": night_wipe(frame, (t - ev["t"]) / ev["dur"])
+    frame = CARDS[s["type"]](s, lt, T, tl).convert("RGBA")
+    if s["type"] in ("bar", "vs", "labels", "bignum", "quote"):
+        rv = (reveal_time(tl, s) - s["t0"]) if s.get("reveal") else None
+        frame = living(frame, lt / max(T, 0.1), max(0.0, 1 - (lt - rv) / 0.25) if rv is not None and lt >= rv else 0.0).convert("RGBA")
+    since, kind = lt, s.get("cut", "none")
+    for a, c in [(b[0], b[3]) for b in s.get("beats", [])[1:]] + [(w[0], w[2]) for w in s.get("swaps", [])]:
+        if lt >= a: since, kind = lt - a, c
+    frame = cut_in(frame, kind, since / CUT_SEC)
+    if ev and ev["kind"] == "wipe": chapter_wipe(frame, ev.get("look", "diagonal"), (t - ev["t"]) / ev["dur"])
     br = type_is_light(s, lt, tl) if s["type"] == "typo" else False
     frame.alpha_composite(corner_marks(s["chapter"], br))
     if s["type"] != "typo":

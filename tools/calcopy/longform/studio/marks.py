@@ -50,19 +50,27 @@ def source_line(src, bright):
     if src: spaced(im, src if src == "AI 생성" else f"출처 {src}", W - 54, 78, 22, (20, 22, 26) if bright else INK, 2, 215, right=True)
     _src[k] = im; return im
 
-def note_tag(img, text, cx, cy, p):
-    """키워드: 빛 점에서 선이 뻗어 표가 열린다."""
+def note_tag(img, text, cx, cy, p, look="leader"):
+    """키워드 표 4종."""
     if p <= 0: return
-    f = face("HAN", 46); g = smooth(p / 0.22); d = ImageDraw.Draw(img); w = d.textlength(text, font=f); x, y = 96, H - 300
-    d.ellipse([x - 12, y + 30, x + 12, y + 54], fill=GOLD + (255,)); d.line([(x, y + 42), (x + 60, y + 42)], fill=GOLD + (255,), width=3)
-    bw = (w + 56) * g; panel(img, [x + 60, y, x + 60 + bw, y + 84], (12, 13, 16), GOLD, radius=4, blur=10)
-    if g > 0.75: glow_text(img, text, x + 88, y + 42, f, INK, 0, smooth((g - 0.75) / 0.25), "l")
+    f = face("HAN", 46); g = smooth(p / 0.14); d = ImageDraw.Draw(img); w = d.textlength(text, font=f)
+    if look == "leader":
+        x, y = 96, H - 300; d.ellipse([x - 12, y + 30, x + 12, y + 54], fill=GOLD + (255,)); d.line([(x, y + 42), (x + 60, y + 42)], fill=GOLD + (255,), width=3)
+        panel(img, [x + 60, y, x + 60 + (w + 56) * g, y + 84], (12, 13, 16), GOLD, radius=4, blur=10)
+        if g > 0.7: glow_text(img, text, x + 88, y + 42, f, INK, 0, (g - 0.7) / 0.3, "l")
+    elif look == "slash":
+        x, y = 90 - (1 - g) * 500, 150; d.polygon([(x, y), (x + w + 90, y), (x + w + 60, y + 88), (x - 30, y + 88)], fill=GOLD + (255,)); glow_text(img, text, x + 34, y + 44, f, (14, 14, 16), 0, 1, "l")
+    elif look == "ribbon":
+        y = H - 268; bw = (w + 120) * g; d.rectangle([W / 2 - bw / 2, y, W / 2 + bw / 2, y + 84], fill=(245, 245, 240, 255)); d.rectangle([W / 2 - bw / 2, y + 80, W / 2 + bw / 2, y + 84], fill=HOT + (255,))
+        if g > 0.7: glow_text(img, text, W / 2, y + 42, f, (14, 14, 16), 0, (g - 0.7) / 0.3)
+    else:
+        x, y = W - 96 - w - 70 + (1 - g) * 500, H - 300; d.rectangle([x, y, x + w + 70, y + 84], fill=(14, 14, 16, 235)); d.rectangle([x + w + 62, y, x + w + 70, y + 84], fill=GOLD + (255,)); glow_text(img, text, x + 28, y + 42, f, INK, 0, 1, "l")
 
 def alert_tag(img, text, cx, cy, p):
     """경고: 빨간 고리가 번지며 찍힌다."""
     if p <= 0: return
-    f = fit_face("HAN", 58, text, 700); d = ImageDraw.Draw(img); w = d.textlength(text, font=f); x = W - 96 - w - 60; y = 130; sc = 1 + 0.2 * (1 - smooth(p / 0.14))
-    ping(img, x + w / 2 + 30, y + 50, p / 0.5, HOT, 60, 220); bw, bh = (w + 60) * sc, 100 * sc
+    f = fit_face("HAN", 58, text, 700); d = ImageDraw.Draw(img); w = d.textlength(text, font=f); x = W - 96 - w - 60; y = 130; sc = 1 + 0.2 * (1 - smooth(p / 0.1))
+    ping(img, x + w / 2 + 30, y + 50, p / 0.4, HOT, 60, 220); bw, bh = (w + 60) * sc, 100 * sc
     panel(img, [x + (w + 60 - bw) / 2, y + (100 - bh) / 2, x + (w + 60 + bw) / 2, y + (100 + bh) / 2], HOT, HOT, blur=14, radius=4)
     glow_text(img, text, x + w / 2 + 30, y + 50, f, (255, 255, 255))
 

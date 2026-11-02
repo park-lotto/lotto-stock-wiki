@@ -8,9 +8,9 @@
  "height": 1080,
  "voice": "Piljae",
  "line_gap": 0.1,
- "chapter_gap": 0.45,
- "bumper_main_sec": 2.8,
- "bumper_short_sec": 1.4,
+ "chapter_gap": 0.25,
+ "bumper_main_sec": 1.3,
+ "bumper_short_sec": 0.75,
  "bumper_short_before": [],
  "outro_sec": 10.0,
  "bgm_main": "media/bgm/Bass_Walker.mp3",
@@ -109,7 +109,7 @@
  "no_capsule": [
   "훅"
  ],
- "para_gap": 0.5,
+ "para_gap": 0.25,
  "bgm_rotation": [
   "media/bgm/Bass_Walker.mp3",
   "media/bgm/Thinking_Music.mp3",
