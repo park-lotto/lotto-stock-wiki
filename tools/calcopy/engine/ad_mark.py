@@ -18,6 +18,7 @@ TEXT = "광고"
 FONT_FRAC = 0.028      # 글자 크기 = 화면 너비 × 이 값
 MARGIN_FRAC = 0.022    # 오른쪽·위 가장자리
 MARK = "ad_mark:v1"    # 완성본 표식(comment) — 두 번 덮지 않는다
+FINAL_GOP = ["-g", "60"]      # 완성본 키프레임 간격(2초) — 뒤에서 찾은 구간만 다시 구울 때 그만큼만 굽게(final_splice). 판단 주인 = 여기, 완성본을 마지막으로 굽는 곳(이 파일·thumb.stamp_video)이 같이 쓴다. 크기 +0.9%(10초 합성 실측)
 
 
 def _probe(p: Path) -> tuple[int, int, str]:
@@ -45,6 +46,23 @@ def badge(width: int, dst: Path) -> tuple[Path, int]:
     return dst, max(8, round(width * MARGIN_FRAC))
 
 
+def _graph(m: int) -> str:
+    return f"[0:v][1:v]overlay=x=W-w-{m}:y={m}:format=auto,format=yuv420p[v]"
+
+
+def apply_span(src: Path, f0: int, f1: int, dst: Path, fps: int = 30) -> Path:
+    """src 의 프레임 [f0,f1) 에 광고 표시를 덮어 dst 로(소리 없음) — 완성본과 같은 그림·같은 인코더(구간 교체, engine/final_splice)."""
+    src, dst = Path(src), Path(dst)
+    w, _, _ = _probe(src)
+    png, m = badge(w, dst.with_name("_ad_mark.png"))
+    r = ENC.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{f0 / fps:.6f}", "-i", str(src), "-i", str(png), "-filter_complex", _graph(m), "-map", "[v]",
+                 "-frames:v", str(f1 - f0), *venc(16), *FINAL_GOP, str(dst)], capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if r.returncode != 0 or not dst.exists():
+        raise RuntimeError("구간 광고 표시 실패: " + (r.stderr or "")[-300:])
+    png.unlink(missing_ok=True)
+    return dst
+
+
 def apply_inplace(final: Path, log=print) -> dict:
     """final.mp4 에 광고 표시를 덮어 같은 이름으로(이미 표식이 있으면 그대로). 반환 = {applied, size}."""
     final = Path(final)
@@ -54,8 +72,8 @@ def apply_inplace(final: Path, log=print) -> dict:
     png, m = badge(w, final.with_name("_ad_mark.png"))
     tmp = final.with_name(final.stem + "_ad.mp4")
     r = ENC.run(["ffmpeg", "-y", "-v", "error", "-i", str(final), "-i", str(png),
-                        "-filter_complex", f"[0:v][1:v]overlay=x=W-w-{m}:y={m}:format=auto,format=yuv420p[v]",
-                        "-map", "[v]", "-map", "0:a?", *venc(16), "-c:a", "copy",
+                        "-filter_complex", _graph(m),
+                        "-map", "[v]", "-map", "0:a?", *venc(16), *FINAL_GOP, "-c:a", "copy",
                         "-metadata", f"comment={(comment + ' ' if comment else '') + MARK}", "-movflags", "+faststart", str(tmp)],
                        capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode != 0 or not tmp.exists():

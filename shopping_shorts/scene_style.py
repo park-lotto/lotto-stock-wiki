@@ -1189,14 +1189,20 @@ def compose_still(frame_path, timeline, snapshot, work, index, out_path, headcop
     return out_path
 
 
-def compose(in_video, timeline, snapshot, out_path, work, headcopy=None, cache=None):
-    """cache(칼카피 render_bench.SceneReuse) = 장면 조각 재사용 — 같은 지문 칸은 레이어·인코딩을 건너뛴다. None(숏템메이커 고객 길) = 옛 동작 그대로."""
+class SpanMiss(RuntimeError):
+    """구간 교체(span) 밖 칸을 새로 만들어야 한다 — 부른 쪽이 전체 바탕으로 다시 부른다."""
+
+
+def compose(in_video, timeline, snapshot, out_path, work, headcopy=None, cache=None, span=None):
+    """cache(칼카피 render_bench.SceneReuse) = 장면 조각 재사용 — 같은 지문 칸은 레이어·인코딩을 건너뛴다. None(숏템메이커 고객 길) = 옛 동작 그대로.
+    span=(f0,f1)(cache 와 함께) = in_video 가 영상 전체가 아니라 프레임 [f0,f1) 만 담은 바탕이다. 그 밖 칸이 재사용 안 되면 SpanMiss."""
     from . import video_assemble as va
     snapshot=validate_snapshot(snapshot)
     context=context_for(timeline,headcopy,snapshot)
     # 장면이 입력 영상 끝 뒤에서 시작하면 그 조각은 입력 프레임이 0 → '-loop 1' 레이어만 남아 ffmpeg 가 끝나지 않는다(관제 285, 4시간 멈춤).
     # 굽기 전에 시간표 ↔ 영상 길이를 재서 이유를 적고 멈춘다.
-    video_frames=round(va._probe_duration(in_video)*30)
+    span_first=span[0] if span else 0
+    video_frames=span_first+round(va._probe_duration(in_video)*30)
     late=[(i,s["start"]) for i,s in enumerate(context["scenes"]) if round(s["end"]*30)>round(s["start"]*30) and round(s["start"]*30)>=video_frames]
     if late:
         raise RuntimeError(f"장면 시간표가 영상보다 길다: 영상 {video_frames/30:.2f}초인데 장면 {late[0][0]}이 {late[0][1]:.2f}초에 시작(넘는 장면 {len(late)}개)")
@@ -1213,6 +1219,8 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None, cache=N
                 token=cache.token(index,context,first_frame,last_frame,runs[index],snapshot,enc)
                 kept[index]=(token,cache.get(token,last_frame-first_frame))
         todo=[index for index,(_,part) in kept.items() if part is None]
+        if span and any(round(context["scenes"][i]["start"]*30)<span[0] or round(context["scenes"][i]["end"]*30)>span[1] for i in todo):
+            raise SpanMiss("구간 밖 자막 칸을 새로 만들어야 한다")
         layers=render_layers(timeline,snapshot,work,headcopy,only=todo) if todo else [None]*len(context["scenes"])
     else:
         layers=render_layers(timeline,snapshot,work,headcopy)
@@ -1263,7 +1271,7 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None, cache=N
         else:
             graph+=";[composed]null[final]"
         part=work/f"scene-style-{index:04d}.mp4"
-        va._run_ffmpeg(["ffmpeg","-y","-ss",str(first_frame/30),"-i",str(in_video),*layer_input,"-filter_complex",graph,"-map","[final]","-an","-frames:v",str(last_frame-first_frame),"-r","30","-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),*SCENE_PART_VBV,*va._threads_args(),"-pix_fmt","yuv420p",str(part)],cwd=str(work),timeout=120+(last_frame-first_frame)*2)
+        va._run_ffmpeg(["ffmpeg","-y","-ss",str((first_frame-span_first)/30),"-i",str(in_video),*layer_input,"-filter_complex",graph,"-map","[final]","-an","-frames:v",str(last_frame-first_frame),"-r","30","-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),*SCENE_PART_VBV,*va._threads_args(),"-pix_fmt","yuv420p",str(part)],cwd=str(work),timeout=120+(last_frame-first_frame)*2)
         parts.append(part)
         if cache:
             cache.put(kept[index][0],part,last_frame-first_frame)

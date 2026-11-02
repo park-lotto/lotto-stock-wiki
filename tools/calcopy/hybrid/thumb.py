@@ -614,8 +614,8 @@ def stamp_video(video: Path, jpg: Path, frames: int = THUMB_FRAMES) -> None:
     im.alpha_composite(b, (1080 - b.size[0] - m, m))
     im.convert("RGB").save(card_png)
     run(["ffmpeg", "-y", "-v", "error", "-i", video, "-i", card_png, "-filter_complex",
-         f"[1:v]scale=1080:1920,setsar=1[t];[0:v][t]overlay=0:0:enable='lt(n,{frames})',format=yuv420p[v]", "-map", "[v]", "-map", "0:a",
-         "-map_metadata", "0", *venc(16), "-c:a", "copy", "-movflags", "+faststart", tmp])
+         f"[1:v]scale=1080:1920,setsar=1[t];[0:v][t]overlay=0:0:enable='lt(n,{frames})',format=yuv420p[v]", "-map", "[v]", "-map", "0:a?",
+         "-map_metadata", "0", *venc(16), *ad_mark.FINAL_GOP, "-c:a", "copy", "-movflags", "+faststart", tmp])
     shutil.move(str(tmp), str(video))
     card_png.unlink(missing_ok=True); Path(bp).unlink(missing_ok=True)
 

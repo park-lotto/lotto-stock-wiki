@@ -2789,6 +2789,11 @@ def reuse_prune(folder: Path, keep_mb: int = REUSE_KEEP_MB) -> None:
             f.with_suffix(".json").unlink(missing_ok=True)
 
 
+def cut_touches(f0: int, f1: int, first: int, last: int) -> bool:
+    """(판단 주인 — 컷이 자막 칸 그림에 닿나) 컷 프레임 [f0,f1) 이 칸 [first,last) 앞뒤 SCENE_MARGIN 안에 걸리나. 칸 지문(SceneReuse.token)·구간 교체(patch_ranges)가 같이 쓴다."""
+    return f1 > first - SCENE_MARGIN and f0 < last + SCENE_MARGIN
+
+
 def _ev_span(e: dict) -> tuple[float, float] | None:
     """시각이 있는 틀 사건(전환·댓글·카드·가사·짤·꾸밈·구간 틀)의 [시작, 끝]."""
     if isinstance(e.get("T"), (list, tuple)):
@@ -2834,7 +2839,7 @@ class SceneReuse:
         sc = context["scenes"]
         t0 = first / FPS
         a, b = first - SCENE_MARGIN, last + SCENE_MARGIN
-        pieces = [[fp, f0 - first, f1 - f0] for f0, f1, fp in self.pos if f1 > a and f0 < b]
+        pieces = [[fp, f0 - first, f1 - f0] for f0, f1, fp in self.pos if cut_touches(f0, f1, first, last)]
 
         def plain(x):
             return {k: (round(v - float(x["start"]), 3) if k in ("start", "end") else [round(c - float(x["start"]), 3) for c in v] if k == "chars" and isinstance(v, list) else v)
@@ -3005,11 +3010,12 @@ def seg_layers(S: dict, st: dict, segs: list[dict], R: Path, ins: list, base_win
 
 
 def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, trans: list[dict] | None = None, name: str = "base.mp4",
-                color: str | None = None, look: bool = False) -> Path:
+                color: str | None = None, look: bool = False, span: tuple[int, int] | None = None) -> Path:
     """틀 + 창 + 댓글 카드 + 짤 + 흰 번쩍임(자막 없는 바탕). 번쩍임 = 전환 목록(transitions_of) kind=flash — 화면 전체.
     짤 = 배치가 검출로 자리를 받은 meme 스티커(자막팩은 짤을 안 그린다 — 여기 한 곳).
     look=True(회원 꾸민 모양, 관제 266): 판 틀 그림·구간 틀을 안 그리고 창 자리만 잘라 낸 영상(창 크기)을 돌려준다 — 틀은 compose 가
-    회원 스냅샷(web.look)으로 그리고 이 영상을 그 스냅샷의 영상 칸에 앉힌다. 짤·꾸밈·번쩍임은 창 안 그대로 따라간다."""
+    회원 스냅샷(web.look)으로 그리고 이 영상을 그 스냅샷의 영상 칸에 앉힌다. 짤·꾸밈·번쩍임은 창 안 그대로 따라간다.
+    span=(f0,f1) = 같은 그래프의 그 프레임만 굽는다(구간 교체 — 사건 시각이 전부 영상 시각이라 그래프는 그대로 두고 끝에서 자른다)."""
     F = st["frame"]
     x, y, ww, wh = frame_window(F)
     if look:
@@ -3096,7 +3102,8 @@ def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, tr
     cf = f"{color.strip()}," if color and color.strip() else ""          # 모션그래픽팩 색감(자막 전 — 고객 엔진 video_assemble 과 같은 순서)
     if look:
         cf = f"crop={ww}:{wh}:{x}:{y}," + cf                             # 회원 꾸민 모양: 창 자리만(틀은 compose 가)
-    run(["ffmpeg", "-y", "-v", "error", *ins, "-filter_complex", fc + f";[{last}]{cf}format=yuv420p[v]", "-map", "[v]", "-frames:v", n, "-r", FPS,
+    cut = f",trim=start_frame={span[0]}:end_frame={span[1]},setpts=PTS-STARTPTS" if span else ""
+    run(["ffmpeg", "-y", "-v", "error", *ins, "-filter_complex", fc + f";[{last}]{cf}format=yuv420p{cut}[v]", "-map", "[v]", "-frames:v", (span[1] - span[0]) if span else n, "-r", FPS,
          *venc(16), out])
     return out
 
@@ -3302,7 +3309,7 @@ def draw_motion_layers(video: Path, MG: dict | None, R: Path) -> Path:
     return out
 
 
-def burn_captions(base: Path, rows: list[dict], st: dict, R: Path, end: float, snap: dict | None = None, reuse: "SceneReuse | None" = None) -> Path:
+def burn_captions(base: Path, rows: list[dict], st: dict, R: Path, end: float, snap: dict | None = None, reuse: "SceneReuse | None" = None, span: tuple[int, int] | None = None) -> Path:
     from shopping_shorts import scene_style
     from tools.caption_pack.check_bench_packs import rows_to_timeline
     if not rows and not snap:      # 자막팩이 그릴 줄 0(댓글카드가 모든 줄 자막 — frame.comment.track lines) → 바탕 그대로(compose 는 빈 시간표를 거절한다)
@@ -3314,7 +3321,7 @@ def burn_captions(base: Path, rows: list[dict], st: dict, R: Path, end: float, s
     jsave(R / "caption_timeline.json", tl)
     out = R / "captioned.mp4"
     shutil.rmtree(R / "cw", ignore_errors=True)
-    scene_style.compose(str(base), tl, snap or snapshot(st), str(out), R / "cw", {"text": ""}, cache=reuse)
+    scene_style.compose(str(base), tl, snap or snapshot(st), str(out), R / "cw", {"text": ""}, cache=reuse, span=span)
     if reuse:
         reuse.done()
     return out
@@ -3848,11 +3855,21 @@ def photo_run_gate(T: dict, M: dict, max_sec: float = PHOTO_RUN_MAX) -> list[str
 
 
 def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *, plan: bool, measured: bool = True,
-                   erase: list | None = None, placed: dict | None = None) -> list[tuple[str, list[str]]]:
+                   erase: list | None = None, placed: dict | None = None, near: list | None = None, moved: bool = False) -> list[tuple[str, list[str]]]:
     """(판단 주인 — 렌더 전 시간표 관문 목록·순서) 같은 시간표 T 를 읽는 관문을 전부 돌려 [(관문 이름, 문제 글 목록)…] 로(빈 목록 = 통과).
-    계획과 렌더가 이 함수 하나를 부른다. placed 를 주면(계획) 꾸밈 관문도. 기대는 관계 = GATE_DEPENDS."""
+    계획과 렌더가 이 함수 하나를 부른다. placed 를 주면(계획) 꾸밈 관문도. 기대는 관계 = GATE_DEPENDS.
+    near = 구간 교체(patch_scope) — 바뀐 컷과 앞뒤 컷만 그림 관문을 잰다. 시간표·소리는 그대로라 길이·리듬·컷 길이는 안 잰다. moved = 원본·시작 초까지 바뀌었다(재사용·사진·카드도 잰다). 문턱은 그대로."""
     from tools.calcopy.hybrid import thumb_rule as TR
     src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
+    if near is not None:
+        sub = {**T, "cuts": [T["cuts"][k] for k in near]}
+        out = [("③ 경계", cut_boundary_gate(sub, M, st)),
+               ("④ 글자·얼굴", cut_content_gate(T, M, st, doc, R, log, erase=erase, autoblur=True, only=near)),
+               ("⑦ 멈춤", cut_still_gate(sub, M, st, ks=near, R=R)),
+               ("흐림 면적", blur_cut_gate(sub, M, st))]
+        if moved:
+            out += [("⑥ 카드 얼굴", TR.card_face_gate(st, doc, T, M["cand_dir"])), ("사진", photo_gate(T, st, M)), ("사진 연속", photo_run_gate(T, M)), ("B13 재사용", plan_reuse_gate(T, M, st))]
+        return out
     out = [("넘침", over_text([c for c in T["cuts"] if c["over"] > 0], plan, measured)),
            ("⑧ 길이", plan_length_gate(T, st, measured)),
            ("⑥ 카드 글", TR.card_text_gate(doc)),
@@ -3941,6 +3958,88 @@ def plan_again(sig: str, doc: Path, R: Path, log=print) -> tuple[dict, dict] | N
     return P["timeline"], P["placement"]
 
 
+# ── 구간만 교체(관제 304, 사장님 11-02 '렌더 두 번 금지 · 해당 구간에서 잘못된 거 그 부분만') ─────────────────────────────
+# 완성본이 나온 뒤 컷 그림만 바뀌면(흐림 칸·VMake 로 지운 원본·같은 길이의 다른 장면) render() 가 스스로 이 길로 간다 — 지시서·회원 Claude 는 그대로 render 를 부른다.
+#   그대로 두는 것: 시간표·배치·전환·소리(옛 완성본 스트림 복사).  다시 만드는 것: 바뀐 컷 조각 → 그 프레임의 바탕 → 닿는 자막 칸 → 그 키프레임 묶음(engine/final_splice).
+#   판단 주인: 해도 되나 = patch_scope · 어디까지 = patch_ranges(칸) + final_splice.gop_ranges(묶음) · 끼운 파일 검사 = final_splice.check. 대조 도구 = hybrid/patch_render_check.py.
+PATCH_STATE = "patch_state.json"     # 마지막 렌더의 배치·전환·입력 지문·완성본 md5 — 없거나 다르면 전체 렌더
+PATCH_RULE = 1
+
+
+def _plain(x):
+    """저장본과 맞대려고 튜플·소수 표기를 JSON 꼴로."""
+    return json.loads(json.dumps(x, ensure_ascii=False, default=str))
+
+
+def patch_sig(S: dict, M: dict, st: dict, look: dict | None) -> str:
+    """소리·시간표·틀을 바꿀 수 있는 입력 지문 — 재료의 컷·흐림만 뺀 전부(대본·판·회원 꾸민 모양·만드는 코드). 컷 그림은 cut_fp 가 잰다."""
+    return _sha([PATCH_RULE, S, {k: v for k, v in M.items() if k not in ("cuts", "blur", "_blur_added")}, st, look, _code_sig("cut"), _code_sig("scene")])
+
+
+def cut_fps(T: dict, M: dict, st: dict) -> list[str]:
+    """시간표 컷마다 지문(cut_fp) — 굽기 전에 어느 컷이 바뀌나 알려고."""
+    out = []
+    for c in T["cuts"]:
+        src = Path(M["cand_dir"]) / c["src"]
+        out.append(cut_fp(src, clip_args(c, src, st, M), round(c["t1"] * FPS) - round(c["t0"] * FPS)))
+    return out
+
+
+def patch_scope(R: Path, T: dict, S: dict, M: dict, st: dict, look: dict | None, MG: dict | None, log=print) -> dict | None:
+    """(판단 주인 — 구간만 바꿔도 되나) 지난 렌더 뒤 달라진 것이 컷 그림뿐이면 {placed, trans, card, T0, audio}, 아니면 None = 전체 렌더. 이유는 로그에 남긴다.
+    막는 것: SHORTEM_FULL_RENDER · 저장본 없음 · 입력 지문 다름 · 완성본이 저장본과 다름 · 컷 경계·줄 시각·원음 조각·전환이 다름 · 모션그래픽(자막 위에 전체 다시 굽는다)."""
+    from tools.calcopy.hybrid.common import md5
+    sp, tp, fin, ip = R / PATCH_STATE, R / "timeline.json", R / "final.mp4", R / "render_info.json"
+    if os.environ.get(FULL_ENV) or not (sp.exists() and tp.exists() and fin.exists() and ip.exists()):
+        return None
+    P, T0 = jload(sp), jload(tp)
+    shape = lambda t: [[[c.get("line"), c.get("kind"), c["t0"], c["t1"]] for c in t["cuts"]], t.get("lines"), t.get("opos")]    # noqa: E731
+    why = ("대본·판·소리 입력이 바뀜" if P.get("sig") != patch_sig(S, M, st, look) else
+           "완성본이 마지막 렌더와 다름" if P.get("md5") != md5(fin) else
+           "컷 경계·줄 시각·원음 조각이 바뀜" if _plain(shape(T)) != _plain(shape(T0)) else
+           "모션그래픽 판" if MG and MG.get("layers") else
+           "전환이 바뀜" if _plain(transitions_of(T, st, P.get("placed") or {})) != _plain(P.get("trans")) else None)
+    if why:
+        log(f"[구간 교체] 안 함({why}) — 전체 렌더")
+        return None
+    return {"placed": P["placed"], "trans": P["trans"], "card": P.get("card"), "T0": T0, "audio": jload(ip).get("audio")}
+
+
+def patch_ranges(T: dict, changed: list, scenes: list) -> list:
+    """(판단 주인 — 어느 프레임을 다시 만드나) 바뀐 컷에 닿는 자막 칸(cut_touches)의 프레임 구간 [[f0,f1)…] — 맞닿은 칸은 합친다."""
+    pos, at = [], 0
+    for c in T["cuts"]:
+        pos.append((at, at + c["frames"]))
+        at += c["frames"]
+    out: list = []
+    for s in scenes:
+        a, b = round(s["start"] * FPS), round(s["end"] * FPS)
+        if b > a and any(cut_touches(*pos[k], a, b) for k in changed):
+            if out and a <= out[-1][1]:
+                out[-1][1] = max(out[-1][1], b)
+            else:
+                out.append([a, b])
+    return out
+
+
+def patch_final(final: Path, cap: Path, ranges: list, card: str | None, R: Path, log=print) -> bool:
+    """완성본에서 ranges 프레임이 든 키프레임 묶음만 cap(새 자막 영상)으로 다시 구워 끼운다. 끼운 파일을 못 믿으면 False(옛 완성본 그대로) — 부른 쪽이 완성본만 통째로 다시 굽는다."""
+    from tools.calcopy.engine import ad_mark, final_splice as FS
+    from tools.calcopy.hybrid import thumb as TH
+    keys, n = FS.keyframes(final)
+
+    def make(a, b, out):
+        ad_mark.apply_span(cap, a, b, out, FPS)
+        if a == 0 and card:
+            TH.stamp_video(out, Path(card))
+    try:
+        FS.splice(final, FS.gop_ranges(keys, n, ranges), make, R / "_splice", log)
+        return True
+    except (FS.SpliceFail, StageError, RuntimeError) as e:
+        log(f"[구간 교체] 끼우기 실패 → 완성본만 다시 굽는다: {e}")
+        return False
+
+
 def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=print, tts: bool = True, report: bool = False, locate: bool = False,
            pack: Path | str | None = None) -> dict:
     """plan_only: 계획만(조각·영상 안 만듦). tts=True(기본) = 진짜 목소리 길이로 계획(합성은 줄 캐시 — 렌더가 그대로 쓴다), False = 어림(--guess, 관문 ⑧ 안 봄).
@@ -4016,11 +4115,21 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     thumb_move = TH.relocate(doc, T, log, crop_of=real_crop(M, st))      # 재료 고치기가 계획 없이 렌더로 온 길도 같은 주인
     if thumb_move.get("pick_gone"):
         raise ThumbGone(f"썸네일 카드 장면이 재료에서 없어졌다: {thumb_move.get('gone')}")
+    look = member_look(pack)                                  # 회원 꾸민 모양(관제 266) — 있으면 판 틀 대신
+    MG = motion_graphics(st, T)
+    scope = patch_scope(R, T, S, M, st, look, MG, log)         # 달라진 것이 컷 그림뿐 = 구간만 교체(그대로 두는 것: 시간표·배치·소리)
+    near, moved = None, False
+    if scope:
+        old = scope["T0"]["cuts"]
+        now = cut_fps(T, M, st)
+        changed = [k for k, fp in enumerate(now) if fp != old[k].get("fp")]
+        near = sorted({j for k in changed for j in (k - 1, k, k + 1) if 0 <= j < len(now)})
+        moved = any((T["cuts"][k]["src"], T["cuts"][k].get("ss")) != (old[k]["src"], old[k].get("ss")) for k in changed)
     sp = R / GATE_STAMP
     if sp.exists() and jload(sp).get("stamp") == gate_stamp(T, M, st, doc):      # 계획이 같은 입력으로 전부 통과 — 다시 안 잰다(검수단축 ⑤)
         log(f"[렌더 전 관문] 계획({jload(sp).get('at')})과 입력이 같다(컷·원본·판·썸네일·관문 코드 지문) — 다시 안 잰다")
     else:
-        _g = timeline_gates(T, M, st, doc, R, log, plan=False)
+        _g = timeline_gates(T, M, st, doc, R, log, plan=False, near=near, moved=moved)
         if M.pop("_blur_added", 0):      # 지시서가 계획 없이 재료를 다시 써 렌더로 온 길(flow save_m → render) — 흐림 칸을 여기서 넣고 같은 파일에
             jsave(doc / "재료.json", M)
         if __import__("os").environ.get("SHORTEM_RESTYLE"):      # 겉모습만 다시 = 내용 관문은 첫 제작이 통과했다
@@ -4028,40 +4137,81 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         else:
             gate_stop(_g)      # 넘침·⑧·⑥·③④⑤⑦·사진·리듬 — 영상 굽기 전에 전부 모아 멈춘다(꾸밈은 창 자리 뒤 — GATE_DEPENDS)
     win0 = render_window(T, M, st, R, log=log)                 # 창(전환 없이) — 자리 검출 화면의 재료 · 안 바뀐 컷은 재사용(cut_fp)
-    placed = plan_rows(S, T, st, make_locate(S, T, st, R, win0, log))
-    deco_apply(placed, doc, st, log)
-    gate_stop([("꾸밈", deco_gate(placed, doc, st, log))])
+    if scope:                                                  # 배치·전환 = 지난 렌더 그대로(자리 다시 안 찾는다) · 관문 ④ 가 흐림을 넣었을 수 있어 굽고 난 지문으로 다시 센다
+        changed = [k for k, c in enumerate(T["cuts"]) if c["fp"] != scope["T0"]["cuts"][k].get("fp")]
+        placed, trans = scope["placed"], scope["trans"]
+    else:
+        placed = plan_rows(S, T, st, make_locate(S, T, st, R, win0, log))
+        deco_apply(placed, doc, st, log)
+        gate_stop([("꾸밈", deco_gate(placed, doc, st, log))])
     from tools.calcopy.hybrid import placement as PL
     chk = PL.check_place(placed, st)
     check_sfx(st, placed)
-    MG = motion_graphics(st, T)
     if MG and MG["not_drawn"]:
         log(f"[모션그래픽] {MG['id']} — bench 자막팩이라 안 그리는 칸: {MG['not_drawn']}")
-    trans = transitions_of(T, st, placed, log)
+    if not scope:
+        trans = transitions_of(T, st, placed, log)
     win = window_transitions(win0, T, st, R, trans)
-    look = member_look(pack)                                  # 회원 꾸민 모양(관제 266) — 있으면 판 틀 대신
     if look:
         log(f"[회원 꾸민 모양] {look.get('presetId')} — 판 틀 그림 대신 회원 스냅샷으로 틀·자막(창 영상만 넘김)"
             + (" · 댓글 카드는 창 밖이면 잘린다" if placed.get("comment") else ""))
-    base = render_base(S, T, st, placed, R, win, trans, color=(MG or {}).get("color_filter"), look=bool(look))
     T["end"] = round(sum(c["frames"] for c in T["cuts"]) / FPS, 4)
     segs = [] if look else frame_segments(S, T, st)
     rows = caption_rows(placed, st, segs)
-    png = None if look else R / "frame.png"
-    reuse = SceneReuse(T, st, S, placed, trans, segs, R, png, (MG or {}).get("color_filter"), log)      # 안 바뀐 자막 칸 재사용(scene_token — 컷 지문으로 만든다)
-    cap = draw_motion_layers(burn_captions(base, rows, st, R, T["end"], snap=look_snapshot(st, look) if look else None, reuse=reuse), MG, R)
-    mix, A = audio(S, M, st, T, sent, placed, R)
+    snap = look_snapshot(st, look) if look else None
+    ranges = []
+    if scope and not (rows or snap):      # 자막이 없으면 칸 조각도 없다 — 바탕이 곧 완성본이라 구간으로 못 나눈다
+        scope = None
+    if scope:
+        from shopping_shorts import scene_style
+        from tools.caption_pack.check_bench_packs import rows_to_timeline
+        ranges = patch_ranges(T, changed, scene_style.context_for(rows_to_timeline(rows, R / "silence.wav", T["end"]), {"text": ""},
+                                                                  scene_style.validate_snapshot(snap or snapshot(st)))["scenes"])
+        log(f"[구간 교체] 바뀐 컷 {changed} · 프레임 구간 {ranges} — 시간표·배치·소리 그대로")
+
+    def bake(span):
+        base = render_base(S, T, st, placed, R, win, trans, name="base_patch.mp4" if span else "base.mp4", color=(MG or {}).get("color_filter"), look=bool(look), span=span)
+        png = None if look else R / "frame.png"
+        reuse = SceneReuse(T, st, S, placed, trans, segs, R, png, (MG or {}).get("color_filter"), log)      # 안 바뀐 자막 칸 재사용(scene_token — 컷 지문으로 만든다)
+        return draw_motion_layers(burn_captions(base, rows, st, R, T["end"], snap=snap, reuse=reuse, span=span), MG, R)
+    if scope and not ranges:              # 그림이 그대로 — 자막 영상도 그대로
+        cap = R / "captioned.mp4"
+    else:
+        from shopping_shorts.scene_style import SpanMiss
+        try:
+            cap = bake((ranges[0][0], ranges[-1][1]) if ranges else None)
+        except SpanMiss as e:             # 칸 재사용 저장소가 비워졌다 — 바탕만 전체로(그림은 같다)
+            log(f"[구간 교체] {e} — 바탕을 전체로 다시 만든다")
+            cap = bake(None)
     final = R / "final.mp4"
-    run(["ffmpeg", "-y", "-v", "error", "-i", cap, "-i", mix, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
-         "-t", f"{T['end']:.3f}", final])
+    has_thumb = (doc / "썸네일.json").exists() and bool(jload(doc / "썸네일.json").get("options") or [])      # 빈 3안 = 카드 없이(flow 가 카드 반려 끝에 비운다, 10-26)
     from tools.calcopy.engine import ad_mark
-    ad_mark.apply_inplace(final, log=log)
-    jsave(R / "timeline.json", T)      # 썸네일 카드가 이 시간표로 장면(줄·몇 번째 컷)을 찾는다 — 카드보다 먼저 저장(10-24 09: 옛 시간표로 찾아 실패)
-    if (doc / "썸네일.json").exists() and (jload(doc / "썸네일.json").get("options") or []):      # 빈 3안 = 카드 없이(flow 가 카드 반려 끝에 비운다, 10-26) · 맨 앞 2프레임 = 썸네일 카드(주인 thumb.card · 10-23 사장님 "맨 앞에 썸네일 아주 잠깐") — 카드에 '광고' 같이 찍힘
-        from tools.calcopy.hybrid import thumb as TH
-        tc = TH.cards(style_name, doc, work, log=log)
-        TH.stamp_video(final, Path(tc["pick_jpg"]))
-        log(f"썸네일 {tc['pick']} → 맨 앞 {TH.THUMB_FRAMES}프레임")      # 오른쪽 위 '광고' 표시 — 주인 = engine/ad_mark(사장님 10-22 모든 렌더)
+    from tools.calcopy.hybrid import thumb as TH
+    from tools.calcopy.hybrid.common import md5
+    spliced, tc = False, None
+    if scope:
+        jsave(R / "timeline.json", T)      # 카드가 이 시간표로 장면을 찾는다(아래와 같은 순서)
+        tc = TH.cards(style_name, doc, work, log=log) if has_thumb else None
+        if (md5(tc["pick_jpg"]) if tc else None) != scope["card"]:      # 카드가 바뀌었다 = 맨 앞 프레임도 다시
+            ranges = [[0, TH.THUMB_FRAMES]] + ranges
+        spliced = patch_final(final, cap, ranges, tc["pick_jpg"] if tc else None, R, log) if ranges else True
+        A = scope["audio"]
+    if not spliced:
+        if scope:                          # 끼우기 실패 = 소리는 옛 완성본 것, 영상만 통째로 다시
+            mix = R / "_prev_final.mp4"
+            shutil.move(str(final), str(mix))
+        else:
+            mix, A = audio(S, M, st, T, sent, placed, R)
+        run(["ffmpeg", "-y", "-v", "error", "-i", cap, "-i", mix, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+             "-t", f"{T['end']:.3f}", final])
+        ad_mark.apply_inplace(final, log=log)
+        jsave(R / "timeline.json", T)      # 썸네일 카드가 이 시간표로 장면(줄·몇 번째 컷)을 찾는다 — 카드보다 먼저 저장(10-24 09: 옛 시간표로 찾아 실패)
+        if has_thumb:                      # 맨 앞 2프레임 = 썸네일 카드(주인 thumb.card · 10-23 사장님 "맨 앞에 썸네일 아주 잠깐") — 카드에 '광고' 같이 찍힘
+            tc = tc or TH.cards(style_name, doc, work, log=log)
+            TH.stamp_video(final, Path(tc["pick_jpg"]))
+            log(f"썸네일 {tc['pick']} → 맨 앞 {TH.THUMB_FRAMES}프레임")      # 오른쪽 위 '광고' 표시 — 주인 = engine/ad_mark(사장님 10-22 모든 렌더)
+        if scope:
+            (R / "_prev_final.mp4").unlink(missing_ok=True)
     from tools.calcopy.engine import finalize
     finalize.seal(final, "render_bench", doc / "대본.json", log=log)      # final 을 고치는 마지막 단계(썸네일 카드) 뒤 — 납품은 이 봉인 그대로인 파일만(engine/deliver)
     jsave(R / "timeline.json", T)
@@ -4077,10 +4227,13 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
             "devices": {**devices(st, trans, A, segs, T, len(sent)),
                         **({"motion_graphics": {"id": MG["id"], "layers": len(MG["layers"]), "color": MG["color_filter"], "not_drawn": MG["not_drawn"]}} if MG else {})},
             **render_marks(style_name, __file__), "line_cps": RI.line_cps(sent),
+            **({"patched": {"cuts": changed, "frames": ranges, "spliced": spliced}} if scope else {}),
             "cuts_flat": [{k: c.get(k) for k in ("line", "src", "ss", "t0", "t1", "dur", "see")} for c in T["cuts"]]}
     jsave(R / "render_info.json", info)
     from tools.calcopy.engine.remake import sheet_1s
     sheet_1s(final, doc / "final_sheet_1s.jpg")
+    jsave(R / PATCH_STATE, {"rule": PATCH_RULE, "sig": patch_sig(S, M, st, look), "md5": md5(final), "placed": placed, "trans": trans,
+                            "card": md5(tc["pick_jpg"]) if has_thumb and tc else None, "made_by": "render_bench.render"})
     log(f"final {final} {info['final_dur']:.2f}초 LUFS/TP {info['final_lufs']} · 배치 {placed['log']}")
     return info
 
