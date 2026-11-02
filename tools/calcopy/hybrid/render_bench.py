@@ -1007,7 +1007,8 @@ def frame_png(S: dict, st: dict, out: Path) -> Path:
         f = _font(WM["font"], WM["px"])
         lay = Image.new("RGBA", (W, H), (0, 0, 0, 0)); dl = ImageDraw.Draw(lay)
         bb = f.getbbox(WM["text"])
-        dl.text((WM["x1"] - f.getlength(WM["text"]), WM["cy"] - (bb[1] + bb[3]) // 2), WM["text"], font=f, fill=(255, 255, 255, WM["alpha"]))
+        wx = WM["cx"] - f.getlength(WM["text"]) / 2 if "cx" in WM else WM["x1"] - f.getlength(WM["text"])
+        dl.text((wx, WM["cy"] - (bb[1] + bb[3]) // 2), WM["text"], font=f, fill=(255, 255, 255, WM["alpha"]))
         im.alpha_composite(lay)
     LI = F.get("logo_img")
     if LI:

@@ -240,8 +240,8 @@ def member_frame(st: dict) -> dict:
         if F.get("watermark"):
             head = F["watermark"]["text"].split(" ", 1)
             F["watermark"]["text"] = f"{head[0]} {name}" if len(head) == 2 and not head[0].isalnum() else name
-        if not F.get("logo") and not F.get("watermark"):      # 채널명 자리가 없는 틀 = 오른쪽 위 워터마크로 넣는다
-            F["watermark"] = {"font": "Pretendard-Regular.otf", "px": 40, "alpha": 170, "x1": 1040, "cy": 110, "text": name}
+        if not F.get("logo") and not F.get("watermark"):      # 채널명 자리가 없는 틀 = 상단 가운데(오른쪽 위는 광고 표시 자리, 사장님 11-02)
+            F["watermark"] = {"font": "Pretendard-Regular.otf", "px": 40, "alpha": 170, "cx": 540, "cy": 110, "text": name}
     bg = (brand.get("colors") or {}).get("bg")
     if bg:
         F["bg"] = list(bg)

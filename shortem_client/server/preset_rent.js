@@ -8,6 +8,7 @@ import zlib from 'node:zlib';
 import { api, ApiError } from './api.js';
 import { Lease } from './lease.js';
 import { audit } from './audit.js';
+import { homeDir } from './paths.js';
 import { mineById, myRoot } from './my_presets.js';
 
 const MARK = '.rented';
@@ -22,6 +23,16 @@ const ALLOWED = ['channel/', ...TECH_DIRS.map(d => d + '/')];
 const techDir = (engineRoot, d) => path.join(engineRoot, ...d.split('/'));
 // 만드는 중엔 판 교체를 미룬다 — 연결기가 pending.json 을 보면 engine 폴더를 통째로 바꿔 빌린 판이 사라진다(11-02 742 '판이 없다').
 //   연결기는 푸시로 못 고치므로 표시를 잠시 숨겼다가 반납 때 돌려놓는다. 프로그램이 죽어 숨김이 남으면 켤 때 sweep 이 돌려놓는다.
+// 프로그램이 둘 뜰 수 있다(Claude 재연결·창 하나 더) — 다른 프로그램의 제작을 지우거나 판을 바꾸지 않게 PC 전체 잠금을 둔다(11-02 742).
+const lockFile = () => path.join(homeDir(), 'rent.lock');
+function otherRenting() {
+  try {
+    const pid = Number(fs.readFileSync(lockFile(), 'utf8'));
+    if (!pid || pid === process.pid) return false;
+    process.kill(pid, 0);
+    return true;
+  } catch { return false; }      // 잠금 없음·주인 죽음 = 비어 있다
+}
 const pendFile = hold => path.join(process.env.SHORTEM_INSTALL || '', '_update', hold ? 'pending.hold.json' : 'pending.json');
 export function holdPending(on) {
   if (!process.env.SHORTEM_INSTALL) return;
@@ -89,7 +100,7 @@ function unpack(zip, root) {
 
 // 지난번에 못 지운 것(프로그램이 죽었을 때) — 표식이 있는 자리(channel·기술 꾸러미)만 지운다(개발 PC 의 진짜 파일은 표식이 없다).
 export function sweep(engineRoot) {
-  if (current) return false;
+  if (current || otherRenting()) return false;
   holdPending(false);
   const had = [channelDir(engineRoot), ...TECH_DIRS.map(x => techDir(engineRoot, x))].some(d => fs.existsSync(path.join(d, MARK)));
   wipe(engineRoot);
@@ -113,6 +124,7 @@ export async function rentPreset({ engineRoot, presetId, profileId, stepName, ki
     if (current.kind === 'ui') await release(current, engineRoot);   // 미리보기는 제작·다른 프리셋 미리보기에 자리를 내준다(10-30 실측: 다른 프리셋을 누르면 409 로 첫 프리셋만 남았다)
     else throw new ApiError(409, { code: 'busy', msg: kind === 'ui' ? '제작 중에는 다른 프리셋 미리보기를 잠시 못 합니다' : '앞 작업이 끝난 뒤 다시 부르세요' });
   }
+  if (otherRenting()) throw new ApiError(409, { code: 'busy', msg: '앞 작업이 끝난 뒤 다시 부르세요' });
   sweep(engineRoot);
   const jobId = (kind === 'ui' ? 'u' : 'm') + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
   const mine = presetId ? mineById(presetId) : null;     // 내 벤치마킹 프리셋(관제 304) — 이 PC 에 있으니 서버를 안 부른다. 쓰고 지우는 꼴은 같다
@@ -120,6 +132,7 @@ export async function rentPreset({ engineRoot, presetId, profileId, stepName, ki
   if (lease) await lease.acquire();
   const me = { jobId, lease, kind, want };
   current = me;
+  try { fs.writeFileSync(lockFile(), String(process.pid)); } catch { /* 잠금 없이도 이 프로그램 안의 보호는 돈다 */ }
   if (kind === 'make') holdPending(true);
   try {
     const r = mine ? null : await api.rent(presetId ? null : profileId, jobId, lease.id, presetId || null);
@@ -147,6 +160,7 @@ async function release(me, engineRoot) {
   if (current !== me) return;
   current = null;
   clearTimeout(me.idle);
+  try { fs.rmSync(lockFile(), { force: true }); } catch { /* 주인이 없으면 비어 있는 것으로 본다 */ }
   holdPending(false);
   wipe(engineRoot);                                       // 프리셋(channel) + 기술 꾸러미(hybrid·yanshot) — 표식 있는 자리만
   if (me.lease) await me.lease.release();
@@ -155,4 +169,4 @@ async function release(me, engineRoot) {
 
 export async function releaseAll(engineRoot) { if (current) await release(current, engineRoot); }
 
-export const renting = () => !!current;
+export const renting = () => !!current || otherRenting();
