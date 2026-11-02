@@ -21,6 +21,7 @@
 """
 from __future__ import annotations
 
+import time
 import json
 import math
 import os
@@ -2078,6 +2079,9 @@ def _rect_iou(a, b) -> float:
     return inter / max(1, a[2] * a[3] + b[2] * b[3] - inter)
 
 
+GATE_STATS: dict = {}              # 글자 관문 마지막 한 번의 숫자 — 숏클 팀 측정(runner_ops._c_plan)
+
+
 def blur_entry(boxes: list, crop: list, win: tuple, ss: float, sec: float, pad: int = 8) -> list:
     """(판단 주인 — 창 좌표 글자 상자 → 재료.blur 한 칸) 창 [x0,y0,x1,y1] 들을 합친 칸을 원본 픽셀 [x, y, w, h, 시작초, 끝초]로.
     10-26 까르보: 반려 문구가 창 좌표만 줘서 고치는 쪽이 원본 좌표로 바꾸다 세 번 다 어긋났다(같은 'NOOO!' 자막 3번 반려)."""
@@ -2129,6 +2133,7 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
         key = hashlib.md5(json.dumps([c["src"], src_ident(src)[1:], round(float(c["ss"]), 3), n, crop, near, ak, CONTENT_VER, ww, wh]).encode()).hexdigest()[:16]
         jobs.append((k, c, src, n, crop, regs, key))
     todo = [j for j in jobs if j[6] not in cache]
+    t_gate = time.time()
     pre = {}
     if todo:
         from concurrent.futures import ThreadPoolExecutor
@@ -2205,6 +2210,7 @@ def cut_content_gate(T: dict, M: dict, st: dict, doc: Path | None = None, R: Pat
     _cache_save(cp, cache, rows)
     if len(ocr) != len(ocr0):
         _cache_save(op, ocr0, {k: v for k, v in ocr.items() if k not in ocr0})
+    GATE_STATS.update(cuts=len(jobs), cuts_new=len(todo), frames_ocr=len(ocr) - len(ocr0), sec=round(time.time() - t_gate, 1))
     return bad
 
 

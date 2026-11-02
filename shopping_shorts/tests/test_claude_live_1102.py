@@ -330,3 +330,14 @@ def test_대기실_첫_시작은_옛_사건을_쏟지_않는다(tmp_path):
     assert wt.last is None
     wt.tick()
     assert wt.last == 90 and out == []
+
+
+def test_metrics_records_numbers_only_for_long_steps(tmp_path):
+    from shopping_shorts import claude_live as LIVE
+    from shopping_shorts.store import Store
+    st = Store(str(tmp_path / "m.db"))
+    LIVE.metrics(st, 7, "s1", {"plan": {"_sec": 780.4, "cuts": 60, "cores": 8, "gate": {"sec": 500}, "phases": [["흐림", 400.0]], "sheet": "비밀 경로"},
+                               "save": {"_sec": 1.0}}, "장면 맞추기")
+    rows = LIVE.events(st, limit=10)["events"]
+    assert len(rows) == 1 and rows[0]["kind"] == "metric" and rows[0]["urgent"] is False
+    assert "plan 780초" in rows[0]["text"] and "코어 8" in rows[0]["text"] and "비밀" not in rows[0]["text"]
