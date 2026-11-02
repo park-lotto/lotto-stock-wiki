@@ -561,5 +561,46 @@
    "v": 0.0,
    "why": "벤치 6편 정지 사진 컷 0(전부 원본 클립 한 샷 — 스타일분석 §4)"
   }
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "caption": {
+   "pack": "clean",
+   "gap": [
+    "자막 측정 0 → 06 줄판독 뒤 pack_map 다시"
+   ],
+   "rank": [],
+   "from": "벤치 자막 측정 없음(https://www.youtube.com/@별헤는쏭) — 사람이 고른 'clean' 유지",
+   "enter_cover": {}
+  },
+  "motion": {
+   "pack": "off",
+   "graphics": "off",
+   "gap": [],
+   "from": "등장 효과팩 off — render_bench 옛 고정값 그대로(벤치 등장 = 판 caption.pack_default·placement.rules.enter 가 정함) · 모션그래픽팩 off — 벤치 전환 {cut 만} 에 맞는 팩 항목 없음(팩 전환 = ['swipe_left'])"
+  },
+  "sfx": {
+   "pack": null,
+   "map": {},
+   "gain_db": -8,
+   "why": "효과음 0(카드 26장 전부 — 신호 추정)",
+   "ncc": {
+    "measured": false
+   },
+   "from": "NCC 미측정(_kal/sfx_ncc.json 없음) → 지문으로 고를 수 없어 종류 이름표로 slot: 없음 · 팩 없음(종류 미측정)",
+   "gap": []
+  },
+  "bgm": {
+   "from": "판 전용 곡 'byeolsong_ref' — 회원 배경음 목록(catalog.json) 밖이라 packs 가 정하지 않음(판 bgm.id 그대로)",
+   "candidates": [],
+   "gap": [
+    "판 전용 곡 'byeolsong_ref' 회원이 팩에서 못 바꾼다(목록에 넣을지는 사람 결정 — 곡 사용 범위)"
+   ]
+  },
+  "meme": {
+   "pack": "local",
+   "gap": [],
+   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 프리셋 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
+  }
  }
 }

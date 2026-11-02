@@ -493,7 +493,8 @@ def cap_distance(B: dict, key: str) -> dict:
 
 
 def cap_rank(B: dict) -> list[dict]:
-    return sorted((cap_distance(B, k) for k in caption_packs()), key=lambda r: r["d"])
+    """가까운 순 — 글꼴이 같은 팩이 먼저(cap_distance 의 '같은 항목'은 글꼴이 같아야 한다. 글꼴이 다른 팩이 크기·자리 평균으로 앞서면 같은 팩을 찾는 이 순위의 뜻이 없다, 예 만템 0.786 > 굿레터 자기 팩 0.792)."""
+    return sorted((cap_distance(B, k) for k in caption_packs()), key=lambda r: (r["terms"].get("font", 0) > 0, r["d"]))
 
 
 def font_pitch(family: str, size: float) -> float | None:
@@ -777,6 +778,10 @@ def map_all(name: str) -> tuple[dict, list[dict]]:
     P["bgm"] = {"id": Bg.get("id"), "from": "id = 사람이 고른 곡(자동 교체 안 함) · candidates = bgm_pick.py recommend 상위 3(02, 벤치 템포·밝기·화성 거리)"}
     if "candidates" in Bg:
         P["bgm"]["candidates"] = Bg["candidates"]
+    if Bg.get("id") is not None and Bg["id"] not in bgm_ids():     # 판 전용 곡(노래형 — 릴리릴리 유메토로 등) = 회원이 고르는 배경음 목록 밖 — packs 는 id 를 안 정하고 판 bgm.id 가 그대로 쓰인다
+        del P["bgm"]["id"]
+        P["bgm"]["from"] = f"판 전용 곡 '{Bg['id']}' — 회원 배경음 목록(catalog.json) 밖이라 packs 가 정하지 않음(판 bgm.id 그대로)"
+        P["bgm"]["gap"] = [f"판 전용 곡 '{Bg['id']}' 회원이 팩에서 못 바꾼다(목록에 넣을지는 사람 결정 — 곡 사용 범위)"]
 
     # 짤
     Mm = ((st.get("placement") or {}).get("rules") or {}).get("meme")

@@ -345,7 +345,7 @@ JSON 하나: {{"url": "https://www.coupang.com/vp/products/…", "name": "…", 
 def _link_ask(st: dict, why: str) -> dict:
     st["tries"]["product_link"] = st["tries"].get("product_link", 0) + 1
     if st["tries"]["product_link"] > LINK_MAX:
-        raise _Stop("쿠팡 상품을 정하지 못했어요", "쿠팡 상품 주소를 알려 주시면 이어 갈게요", retry=st.get("_asker"), ask_member=True, detail=why)
+        raise _Stop("쿠팡 상품을 정하지 못했어요", "다시 시도해 주시면 숏템이 쿠팡 상품을 한 번 더 찾아볼게요", retry=st.get("_asker"), ask_member=True, detail=why)
     st["log"].append(f"쿠팡 검색 막힘({why[:80]}) → 상품 주소 받기({st['tries']['product_link']}번째)")
     hint = {"given": st.get("given"), "product_words": (st.get("read") or {}).get("product_words"), "queries": st.get("coupang_qs"),
             "brand": (st.get("product_pick") or {}).get("brand_words"), "subject": (st.get("read") or {}).get("subject_words")}

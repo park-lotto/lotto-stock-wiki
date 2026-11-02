@@ -156,7 +156,9 @@
   "caption": {
    "pack": "ititemlog_v2",
    "from": "업그레이드 판 자막팩(관제 235, 1a6bb76d7) — 1차 ititemlog 위 후보 강조색 variants(㉚ — 판에 색 직접 안 적음)",
-   "gap": []
+   "gap": [
+    "자막 크기 변형 size:large(ititemlog_v2) → 팩요청.md 잇템로그판_v2#2(관제 235) · 판 caption 에 크기·간격 칸 안 만듦(㉑) — 그동안 팩 기본값"
+   ]
   },
   "motion": {
    "gap": [
