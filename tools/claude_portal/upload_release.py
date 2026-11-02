@@ -72,6 +72,7 @@ def main(argv=None) -> int:
     ap.add_argument("--dry", action="store_true", help="파일·서버 상태만 보고 올리지 않는다")
     ap.add_argument("--update-stage", help="설치 폴더(빌드 win-x64/Shortem) — 주면 server·engine 묶음을 켤 때 자동 업데이트로도 올린다(publish_update.make_zip)")
     ap.add_argument("--notes", default="")
+    ap.add_argument("--benchmark", help="고급반 벤치마킹 묶음 benchmark_pack.zip(benchmark_pack.py build) — 주면 서버 benchmark/ 에 올린다(관제 304)")
     a = ap.parse_args(argv)
     dist, packs = Path(a.dist), Path(a.packs)
     mcpb = dist / "shortem.mcpb"
@@ -98,6 +99,9 @@ def main(argv=None) -> int:
 
     ssh(f"mkdir -p {STORE}/preset_packs {STORE}/installers {UPLOAD}")
     scp(presets, f"{STORE}/preset_packs/")
+    if a.benchmark:
+        ssh(f"mkdir -p {STORE}/benchmark")
+        scp([Path(a.benchmark)], f"{STORE}/benchmark/")
     items = [{"os": "desktop", "file": mcpb.name, "version": a.version, "sha256": sha256(mcpb), "size": mcpb.stat().st_size},
              {"os": "code-win-x64", "file": kit.name, "version": a.version, "sha256": sha256(kit), "size": kit.stat().st_size}]
     with tempfile.TemporaryDirectory() as td:

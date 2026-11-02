@@ -19313,6 +19313,15 @@ async def api_claude_rent(request: Request):
                                                 body.get("lease") or None, Store(DB_PATH), str(body.get("preset") or "") or None))
 
 
+@app.post("/api/claude/benchmark_rent")
+async def api_claude_benchmark_rent(request: Request):
+    """고급반 벤치마킹 엔진 빌려주기(관제 304) — 판단은 claude_portal.benchmark_rent."""
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cp.call, _cp.benchmark_rent, ctx, str(body.get("job") or ""), body.get("lease") or None, Store(DB_PATH)))
+
+
 @app.post("/api/claude/step")
 async def api_claude_step(request: Request):
     """볼케이노형 제작 지시(관제 234, 2026-10-21) — 판단은 엔진 hybrid/flow.py, 관문·서명·기록은 claude_flow.step."""

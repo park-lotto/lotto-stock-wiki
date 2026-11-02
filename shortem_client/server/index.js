@@ -23,6 +23,8 @@ import { selftest, encoderCheck } from './selftest.js';
 import { makeStep, aiList } from './make_flow.js';
 import { requestContent, IMAGE_BUDGET_B64, answer as aiAnswer, engineRoot } from './engine_bridge.js';
 import { sweep as sweepRented } from './preset_rent.js';
+import { withMine } from './my_presets.js';
+import { registerBenchmark, sweepBench } from './benchmark.js';
 import { retryUpdate, checkUpdate, installDir } from './updater.js';
 import { anyFlowBusy } from './flow_driver.js';
 import { anyRunning } from './runner.js';  // 받은 즉시 엔진까지 적용(사장님 10-31 고객이 두 번 켜지 않게)
@@ -68,7 +70,7 @@ export const TOOL_TEXT = Object.freeze({
 const reply = (o, secret) => toToolResult(shape(o, secret));
 const secretFor = job => (job && job.bundle ? secretNumbers(job.bundle.frame, job.bundle.rules) : new Set());
 
-function profilesCache() { try { return JSON.parse(fs.readFileSync(jail(homeDir(), 'profiles.json'), 'utf8')); } catch { return null; } }
+function profilesCache() { try { return withMine(JSON.parse(fs.readFileSync(jail(homeDir(), 'profiles.json'), 'utf8'))); } catch { return null; } }
 function saveProfiles(lic) {
   const v = { at: Date.now(), entitled_presets: lic.entitled_presets || [], presets: (lic.presets || []).map(p => ({ id: p.id, name: p.name, desc: p.desc || '', aliases: (p.aliases || []).slice(0, 8) })), profiles: (lic.profiles || []).map(p => ({ profile_id: p.profile_id, name: p.name, preset_id: p.preset_id, version: p.version, preset_path: p.preset_path, pack: p.pack })) };
   writeFileIn(homeDir(), 'profiles.json', JSON.stringify(v));
@@ -339,6 +341,8 @@ export function buildServer(ctx = makeCtx()) {
     return reply({ info: { current: cur, presets: list.map(p => ({ id: p.id, name: p.name })), settings: { brand: pack.brand, text: pack.text, tts: { name: pack.tts && pack.tts.name, tempo: pack.tts && pack.tts.tempo }, bgm: pack.bgm } } });
   });
 
+  registerBenchmark(server, reply);   // 고급반 벤치마킹(관제 304)
+
   return server;
 }
 
@@ -350,7 +354,7 @@ async function main() {
   }
   pruneAudit();
   try { gcCache(); } catch { /* 캐시 없음 */ }
-  try { sweepRented(engineRoot()); } catch { /* 지난번에 못 지운 빌린 프리셋 — 다음에 */ }
+  try { sweepRented(engineRoot()); sweepBench(engineRoot()); } catch { /* 지난번에 못 지운 빌린 프리셋·벤치마킹 — 다음에 */ }
   const server = buildServer();
   await server.connect(new StdioServerTransport());
   holdSession();

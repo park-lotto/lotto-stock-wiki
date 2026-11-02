@@ -1,0 +1,7 @@
+{
+ "note": "benchmark_check 고정 답(관제 304) — 영상 Ks5kYYKAUlQ 의 판독 요청 그림을 Claude 가 직접 읽은 글. 자막 띠로 잡힌 자리에는 채널 표식만 보인다.",
+ "ocr_all": ["키치잇"],
+ "title_bands": [["가을 햇볕에 피부 찢어질 때?"], ["박세리가 '몇 통째' 쓴 선크림!"]],
+ "frame_ocr": {"title": ["가을 햇볕에 피부 찢어질 때?", "박세리가 '몇 통째' 쓴 선크림!"], "brand": null},
+ "source_kind": "고객제품"
+}

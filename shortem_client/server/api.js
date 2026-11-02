@@ -89,6 +89,7 @@ export const api = {
   assets: (profile, job, lease, extra) => call('GET', '/api/claude/assets', { query: { profile, job, lease, extra } }),
   pack: (assetId, job) => call('GET', '/api/claude/pack/' + encodeURIComponent(assetId), { query: { job } }),
   rent: (profile, job, lease, preset) => call('POST', '/api/claude/rent', { body: { ...(profile ? { profile } : {}), ...(preset ? { preset } : {}), job, lease }, timeoutMs: 60000 }),   // 편마다 프리셋(관제 234)
+  benchmarkRent: (job, lease) => call('POST', '/api/claude/benchmark_rent', { body: { job, lease }, timeoutMs: 60000 }),   // 고급반 벤치마킹 엔진 빌리기(관제 304) — 반 판단은 서버
   update: have => call('GET', '/api/claude/update', { query: { have } }),   // 켤 때 자동 업데이트(관제 234)
   feedback: body => call('POST', '/api/claude/feedback', { body }),
   knowhow: body => call('POST', '/api/claude/knowhow', { body }),

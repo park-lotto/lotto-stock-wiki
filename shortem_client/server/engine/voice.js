@@ -33,6 +33,7 @@ export const KEY_SERVICES = Object.freeze({
   buffer: { label: 'SNS 예약발행 키(Buffer)', where: 'buffer.com ▸ Settings ▸ API ▸ 새 키', env: 'BUFFER_API_KEY', need: '완성본을 SNS 에 예약발행할 때 씁니다(숏템메이커 예약발행과 같은 키)' },
   vmake: { label: '자막 지우기 키(VMake)', where: 'VMake 개발자 화면 ▸ App Key 와 Secret 을 app_key:secret 꼴로', env: 'VMAKE_API_KEY', need: '원본 영상에 박힌 자막을 지울 때 필요합니다(엔진 vmake_clean — 없으면 그 단계에서 멈춥니다)' },
   vertex_sa: { label: '버텍스 AI 서비스 계정(JSON)', where: '구글 클라우드 ▸ IAM ▸ 서비스 계정 ▸ 키 ▸ JSON 내려받기(역할 Vertex AI User)', env: 'GOOGLE_APPLICATION_CREDENTIALS', file: true, json: true, need: 'AI 영상(Veo)·사진(Imagen)을 만들 때 씁니다 — 숏템메이커에 등록한 것을 그대로 가져올 수 있습니다' },
+  gemini: { label: '제미나이 키(선택)', where: 'aistudio.google.com ▸ Get API key', env: 'SHORTEM_MEMBER_GEMINI_KEY', need: '있으면 고급반 벤치마킹 판독을 이 키로 먼저 합니다(없으면 Claude 가 읽습니다)' },
   speechmatics: { label: '받아쓰기 키(스피치매틱스)', where: 'speechmatics.com ▸ Settings ▸ API Keys', env: 'SPEECHMATICS_API_KEY', need: '있으면 원음·완성본 받아쓰기를 두 모델로 대조합니다(없으면 위스퍼만)' },
 });
 

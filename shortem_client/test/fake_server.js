@@ -52,7 +52,7 @@ const sha = b => crypto.createHash('sha256').update(b).digest('hex');
 
 function framesLayers(f) { return f.frames ? f.frames.flatMap(x => x.layers) : f.layers; }
 
-export async function startFakeServer({ port = 0, ttl = 180, heartbeatEvery = 60, devicesMax = 2, blobTtl = 6 * 3600, fonts: fontOverride, rent, update, install } = {}) {
+export async function startFakeServer({ port = 0, ttl = 180, heartbeatEvery = 60, devicesMax = 2, blobTtl = 6 * 3600, fonts: fontOverride, rent, update, install, benchmark } = {}) {
   const FT = fontTable();
   const state = { customers: new Map(), blobs: new Map(), log: [], feedback: [], leaseSeq: 0, assetsCalls: 0, blobTtl };
   const cust = cid => { if (!state.customers.has(cid)) state.customers.set(cid, { kv: 1, revoked: false, devices: [], lease: null }); return state.customers.get(cid); };
@@ -187,6 +187,18 @@ print(json.dumps({"pack":base64.b64encode(n+AESGCM(k).encrypt(n,d,aad)).decode()
         const out = JSON.parse(execFileSync(process.platform === 'win32' ? 'py' : 'python3', ['-c', py, aad], { input: rent.zip }).toString());
         state.rents = (state.rents || 0) + 1;
         return send(res, 200, { ok: true, preset_path: rent.preset_path, aad, ...(rent.tamper ? { ...out, key: Buffer.alloc(32).toString('base64') } : out) });
+      }
+      if (u.pathname === '/api/claude/benchmark_rent' && req.method === 'POST') {   // 고급반 벤치마킹(관제 304) — benchmark = {tier, zip}. 판단 주인은 진짜 서버 claude_portal.benchmark_rent
+        const a = auth(req, res); if (!a) return;
+        if (!benchmark || benchmark.tier === 'basic') return fail(res, 403, 'tier_locked', '채널 벤치마킹은 고급반에서 제공돼요');
+        const b = await body(req);
+        const L = a.c.lease;
+        if (!L || L.exp <= Date.now() || L.job_id !== b.job || L.fp !== a.fp || (b.lease && b.lease !== L.lease_id)) return fail(res, 409, 'lease_lost', '작업 권한이 없습니다');
+        const key = crypto.randomBytes(32), nonce = crypto.randomBytes(12), aad = `${a.cid}|${b.job}`;
+        const ci = crypto.createCipheriv('aes-256-gcm', key, nonce);
+        ci.setAAD(Buffer.from(aad));
+        const enc = Buffer.concat([ci.update(benchmark.zip), ci.final(), ci.getAuthTag()]);
+        return send(res, 200, { ok: true, aad, pack: Buffer.concat([nonce, enc]).toString('base64'), key: key.toString('base64'), sha256: crypto.createHash('sha256').update(benchmark.zip).digest('hex') });
       }
       if (u.pathname === '/api/claude/feedback' && req.method === 'POST') {
         const a = auth(req, res); if (!a) return;

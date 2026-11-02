@@ -60,13 +60,13 @@ export async function checkUpdate({ force = false } = {}) {
   fs.writeFileSync(pend + '.tmp', JSON.stringify({ version: r.version, dir: r.version, at: Date.now() }));
   fs.renameSync(pend + '.tmp', pend);
   audit('update_ready', { result: r.version });
-  applyEngineNow(dir, home, activeRuns().length);
+  applyDownloaded(dir, home, activeRuns().length);
   return { update: true, ready: true, version: r.version };
 }
 
 // 받자마자 엔진을 새 판으로(관제 298, 사장님 '두 번 켜기 없애기'). 엔진은 편마다 새로 뜨는 파이썬이라 다시 켜지 않아도 다음 실행부터 새 판이다.
 //   복사라 묶음은 남고, 다음에 켤 때 연결기가 server 까지 통째로 바꾼다. 만드는 중이면 건드리지 않는다(다음 켤 때).
-export function applyEngineNow(dir, home, running) {
+export function applyDownloaded(dir, home, running) {   // 관제 304 합치기에서 이름이 겹쳐 프로그램이 안 뜨던 것(같은 이름 export 두 개)을 가른다
   if (running) return false;
   try {
     fs.cpSync(path.join(dir, 'engine'), path.join(home, 'engine'), { recursive: true, force: true });

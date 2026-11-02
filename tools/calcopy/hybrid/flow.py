@@ -1296,7 +1296,7 @@ def knowhow(stage: str = "", query: str = "", version: str | None = None) -> dic
 
 def benchmark_guide() -> str:
     """채널 벤치마킹 노하우(고급반 이상 — 문턱 = claude_flow.knowhow)."""
-    return (GUIDE_DIR.parent / "production_start.md").read_text(encoding="utf-8")[:30000]
+    return (GUIDE_DIR / "15_benchmark.md").read_text(encoding="utf-8")[:30000]   # 회원용 문장 — 내부 규칙 원문(production_start)은 내보내지 않는다
 
 
 def _blocker_text(stage: str, query: str) -> str:
