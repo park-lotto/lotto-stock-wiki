@@ -1389,6 +1389,9 @@ def ph_task_got(st, m, rp, u):
         return {"goto": "given"}
     if act == "material":        # 살아 있는 Claude 가 직접 받아 넣은 재료 — 재료 더 찾기와 같은 뒷길(시트 → 장면 검수)
         names = [Path(str(x)).name for x in a.get("files") or [] if str(x).strip()]
+        if names and not st.get("script"):      # 대본 전 재료 단계 — 받은 재료로 대본부터 간다(11-02 KeyError 'script')
+            st["material"] = {"files": [{"name": n} for n in names]}
+            return {"goto": "script"}
         if names:
             return ph_more_dl(st, {"dl": {"files": [{"name": n} for n in names]}}, {}, {})
     if act == "retry":
