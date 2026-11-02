@@ -76,3 +76,14 @@ test('창 없이 남은 전용 프로필 크롬만 고른다(CS #76)', async () 
   assert.deepEqual(pickProfileProcs('', prof), []);
   assert.equal(pickProfileProcs('깨진', prof), null);
 });
+
+test('쿠키 읽기는 프로필 잠김을 재시도하고 끝내 실패하면 알린다(CS #209)', async () => {
+  const { retrying } = await import('../server/logins.js');
+  let n = 0;
+  const flaky = async () => { if (++n < 3) throw new Error('프로필 잠김'); return 'ok'; };
+  assert.deepEqual(await retrying(flaky, [1, 1, 1], async () => {}), { ok: true, value: 'ok' });
+  assert.equal(n, 3);
+  const bad = await retrying(async () => { throw new Error('안 됨'); }, [1], async () => {});
+  assert.equal(bad.ok, false);
+  assert.match(bad.why, /안 됨/);
+});

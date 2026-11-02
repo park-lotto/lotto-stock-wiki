@@ -88,6 +88,7 @@ export async function openLogin(platform) {
   if (!pf) return { ok: false, why: '모르는 곳입니다' };
   const exe = browserExe();
   if (!exe) return { ok: false, why: '이 PC 에 크롬·엣지가 없습니다 — 크롬을 설치한 뒤 다시 해 주세요' };
+  if (refreshing) await refreshing;       // 쿠키를 읽는 동안 새 창을 열면 그 프로세스로 넘겨져 창이 안 뜬다
   const procs = await profileProcs();
   if (procs === null) {
     if (open && !open.done) return { ok: true, already: true, platform: open.platform };
@@ -124,18 +125,33 @@ export async function openLogin(platform) {
 }
 
 // 만들기 전마다 최신 쿠키로(유튜브는 1시간 안에도 세션이 돈다 — 우리 PC 08-31 실측). 로그인 창이 열려 있으면 건너뛴다(프로필 잠김).
+//   ★창을 막 닫으면 프로필이 잠깐 잠겨 있다 — 한 번 실패로 끝내면 로그인했는데 '안 됨'으로 굳는다(CS #209). 재시도하고, 끝내 못 읽으면 status 로 알린다.
+export async function retrying(fn, waits, sleep = ms => new Promise(r => setTimeout(r, ms))) {
+  let last = null;
+  for (const w of [0, ...waits]) {
+    if (w) await sleep(w);
+    try { return { ok: true, value: await fn() }; } catch (e) { last = e; }
+  }
+  return { ok: false, why: String((last && last.message) || last).slice(0, 160) };
+}
+let refreshing = null, refreshFailed = false;
 export async function refreshCookies() {
   if (open && !open.done) return status();
   if (!fs.existsSync(path.join(profileDir(), 'Default'))) return status();
   const exe = browserExe();
   if (!exe) return status();
-  let br = null;
-  try {
-    br = await puppeteer().launch({ executablePath: exe, headless: 'new', userDataDir: profileDir(), args: ['--no-first-run'] });
-    writeCookies(await allCookies(br));
-  } catch (e) {
-    audit('cookie_refresh', { result: 'fail' });
-  } finally { if (br) await br.close().catch(() => {}); }
+  if (refreshing) { await refreshing; return status(); }
+  refreshing = retrying(async () => {
+    let br = null;
+    try {
+      br = await puppeteer().launch({ executablePath: exe, headless: 'new', userDataDir: profileDir(), args: ['--no-first-run'] });
+      writeCookies(await allCookies(br));
+    } finally { if (br) await br.close().catch(() => {}); }
+  }, [1500, 4000, 8000]);
+  const r = await refreshing;
+  refreshing = null;
+  refreshFailed = !r.ok;
+  if (!r.ok) audit('cookie_refresh', { result: 'fail', why: r.why });
   return status();
 }
 
@@ -148,7 +164,7 @@ export function status() {
   for (const [k, pf] of Object.entries(PLATFORMS)) {
     out[k] = rows.some(r => r[0].replace(/^\./, '').endsWith(pf.domain) && pf.ok.includes(r[5]) && r[6] && (r[4] === '0' || +r[4] > now));
   }
-  return { connected: out, waiting: !!(open && !open.done) ? open.platform : null };
+  return { connected: out, waiting: !!(open && !open.done) ? open.platform : null, ...(refreshFailed ? { cookie_read_failed: true } : {}) };
 }
 
 // 엔진 실행 환경에 넣을 것 — 쿠키가 있을 때만(없으면 종전대로 무쿠키)
