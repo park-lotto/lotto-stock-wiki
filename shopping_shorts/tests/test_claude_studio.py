@@ -175,3 +175,14 @@ def test_pc_keys_only_own_registered(env, monkeypatch):
     got = cs.pc_keys({}, env["st"])["keys"]
     assert got == {"typecast": "tc-key-1", "coupang": "AK:SK", "vertex_sa": '{"new":1}'}
     assert all(c == 7 for c, _ in seen) and ("gemini" not in {s for _, s in seen})
+
+
+def test_preset_step_shows_only_open_presets(env, monkeypatch):
+    """관제 305 — 서버 화면도 회원 PC 화면처럼 쓸 수 있는 프리셋 카드만 보인다. 나머지 판은 고를 수 없다."""
+    st = env["st"]
+    monkeypatch.setattr(cs, "styles", lambda store=None: [{"id": "s_0123456789", "name": "닫힌 판", "group": "기타", "_slug": "banggu"}])
+    r = cs.state(st, 1)
+    assert r["styles"] == [] and r["style"] is None      # 화면은 styles 가 비면 presetCards(회원 PC 와 같은 길)
+    assert len(r["presets"]) == 2
+    with pytest.raises(cs.StudioError):
+        cs.select_style(st, 1, "s_0123456789")

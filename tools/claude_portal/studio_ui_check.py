@@ -5,8 +5,8 @@
         라이브(관리자)  py tools/claude_portal/studio_ui_check.py https://shoppingshorts.duckdns.org/claude/studio/ --admin-cookie
 
 잰다(카드 266 '됐다의 기준', 10-26 4단계 화면 — 프리셋 → 꾸미기 → 소리 → 완성본 고치기):
-  ① 프리셋(판) 카드 22 이상 · 이름에 채널명 없이 '묶음 + 번호' · 견본 사진
-  ② 프리셋 누르기 → 다음 단계로 저절로 안 넘어가고 계정에 저장(state.style)
+  ① 프리셋 카드 수 = 권한 안의 프리셋 수 · 닫힌 판 카드 0(관제 305)
+  ② 프리셋 누르기 → 다음 단계로 저절로 안 넘어가고 계정에 저장(state.current)
   ③ 꾸미기 = 장면꾸미기 화면이 뜨고 '이 영상에 적용' → 서버 저장 200 · 버튼 '적용됨'
   ④ 소리 = 목소리 단추 → 팩 tts 저장(엔진이 모르는 목소리·칸이면 '저장됨'이 아니라 거절 이유가 화면에 남는다)
   ⑤ 완성본 고치기 = 완성본이 없으면 잠김(🔒)
@@ -62,26 +62,24 @@ def main() -> int:
             bad.append(f"첫 단계가 설정이 아님: {first}")
         step("프리셋")
         pg.wait_for_timeout(2500)
-        # ① 프리셋(판) 카드
-        cards = pg.locator(".scard")
+        # ① 프리셋 카드 — 권한 안의 프리셋만(관제 305, 회원 PC 화면과 같은 카드). 닫힌 판 카드(.scard)는 0
+        cards = pg.locator("[data-preset]")
         n_cards = cards.count()
-        names = pg.locator(".scard .sc-b b").all_inner_texts()
-        shots = pg.locator(".scard img").count()
-        print(f"① 프리셋 {n_cards}개 · 견본 사진 {shots}개 · 이름 앞 4개 {names[:4]}")
-        if n_cards < 22:
-            bad.append(f"프리셋 {n_cards}개 < 22")
-        bench = [n for n in names if not any(ch.isdigit() for ch in n)]
-        if bench:
-            bad.append(f"'묶음 + 번호' 아닌 이름 {bench[:3]}")
+        names = cards.locator("b").all_inner_texts()
+        allowed = len(state().get("presets") or [])
+        shut = pg.locator(".scard").count()
+        print(f"① 프리셋 {n_cards}개(권한 {allowed}) · 닫힌 판 카드 {shut}개 · 이름 {names[:4]}")
+        if not n_cards or n_cards != allowed or shut:
+            bad.append(f"프리셋 카드 {n_cards}개 · 권한 {allowed}개 · 닫힌 판 카드 {shut}개")
         if out:
             pg.screenshot(path=str(out / "1_preset.png"), full_page=True)
         # ② 누르면 저장, 단계는 그대로
-        target = pg.locator(".scard:not(.on)").first
-        sid = target.get_attribute("data-style")
+        target = pg.locator("[data-preset]:not(.on)").first
+        pid = target.get_attribute("data-preset")
         target.click()
         pg.wait_for_timeout(2500)
-        on_step = pg.locator(".scard").count() > 0
-        saved = state().get("style") == sid
+        on_step = cards.count() > 0
+        saved = state().get("current") == pid
         print(f"② 프리셋 고르기 → 저장 {saved} · 단계 그대로 {on_step}")
         if not (saved and on_step):
             bad.append("프리셋 고르기 저장/단계 유지 실패")
