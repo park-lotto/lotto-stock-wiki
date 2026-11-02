@@ -78,3 +78,12 @@ def test_신청주소는_로그인세션_경로():
     root = Path(cp.__file__).parent
     assert '@app.post("/api/claude/me/trial")' in (root / "app.py").read_text(encoding="utf-8")
     assert '"/api/claude/me/trial"' in (root / "static/settings.html").read_text(encoding="utf-8")
+
+
+def test_pro_week_open_and_auto_close(st, monkeypatch):
+    monkeypatch.setattr(st, "get_customer", lambda c: {"plan": "pro" if c == 5 else "standard"}, raising=False)
+    now = cp._now()
+    st.set_setting("claude_pro_open_until", str(now + 7 * 86400))
+    assert cp.portal_open(st, 5) and not cp.portal_open(st, 6)
+    monkeypatch.setattr(cp, "_now", lambda: now + 7 * 86400 + 1)
+    assert not cp.portal_open(st, 5)

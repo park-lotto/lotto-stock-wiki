@@ -314,10 +314,22 @@ def _trial_row(store, cid):
         return _row(c, "SELECT * FROM claude_trials WHERE cid=?", (int(cid),))
 
 
+def _pro_open(store, cid) -> bool:
+    """Pro 회원 전체 기간 공개(사장님 11-02 "1주일 숏템 숏클 같이") — claude_pro_open_until(유닉스 초)까지. 지나면 저절로 닫힌다."""
+    try:
+        if int(str(_setting(store, "claude_pro_open_until", "0") or 0)) <= _now():
+            return False
+        return (store.get_customer(int(cid)) or {}).get("plan") == "pro"
+    except (ValueError, TypeError):
+        return False
+
+
 def portal_open(store, cid) -> bool:
     """숏클을 지금 쓸 수 있나 — 화면·설치·API 공통 판단 한 곳(관제 300). 스위치 + 무료 1주 기한 + Pro 전환(관제 306)."""
     t = _trial_row(store, cid)
     if t and t["converted"] == MOVED:
+        return True
+    if _pro_open(store, cid):
         return True
     if not _gate(store, "claude_portal_enabled", cid):
         return False
