@@ -12,17 +12,11 @@ def st(tmp_path):
     return s
 
 
-def test_신청하면_열리고_7일뒤_닫히고_재신청불가(st, monkeypatch):
-    assert cp.trial_state(st, 5, True)["available"]
-    cp.claim_trial(5, True, st)
-    assert cp.portal_open(st, 5)
-    assert cp.trial_state(st, 5, True) == {"available": False, "active": True, "days_left": 7}
-    real = cp._now()
-    monkeypatch.setattr(cp, "_now", lambda: real + 7 * 86400 + 1)
-    assert not cp.portal_open(st, 5)
+def test_스스로_신청은_닫혔다_승인한_회원만(st):
     assert not cp.trial_state(st, 5, True)["available"]
     with pytest.raises(cp.PortalError):
         cp.claim_trial(5, True, st)
+    assert not cp.portal_open(st, 5) and 5 not in cp.member_ids(st)
 
 
 def test_자격없으면_거절(st):
@@ -32,7 +26,6 @@ def test_자격없으면_거절(st):
 
 
 def test_관리자_승인은_기한없음(st, monkeypatch):
-    cp.claim_trial(5, True, st)
     cp.set_member(5, True, st)
     real = cp._now()
     monkeypatch.setattr(cp, "_now", lambda: real + 30 * 86400)

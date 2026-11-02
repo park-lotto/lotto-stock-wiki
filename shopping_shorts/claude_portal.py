@@ -330,7 +330,7 @@ def trial_state(store, cid, eligible) -> dict:
     if t:
         active = not t["converted"] and t["expires"] > _now()
         return {"available": False, "active": active, "days_left": max(0, (t["expires"] - _now() + 86399) // 86400) if active else 0}
-    return {"available": bool(eligible) and not portal_open(store, cid), "active": False, "days_left": 0}
+    return {"available": False, "active": False, "days_left": 0}      # 스스로 신청은 닫혔다 — 사장님이 승인한 회원만(11-02)
 
 
 def claim_trial(cid, eligible, store=None) -> dict:
@@ -341,13 +341,7 @@ def claim_trial(cid, eligible, store=None) -> dict:
         raise PortalError("bad_request", "숏템메이커 이용 회원만 신청할 수 있습니다")
     if portal_open(store, cid):
         return {"ok": True, "already": True}
-    if _trial_row(store, cid):
-        raise PortalError("bad_request", "무료 업그레이드는 계정당 한 번만 쓸 수 있습니다")
-    now = _now()
-    with _tx(store, write=True) as c:
-        c.execute("INSERT INTO claude_trials(cid, started, expires) VALUES(?,?,?)", (cid, now, now + TRIAL_DAYS * 86400))
-    _write_member(store, cid, True)
-    return {"ok": True, "expires": now + TRIAL_DAYS * 86400}
+    raise PortalError("bad_request", "숏클은 승인된 회원만 쓸 수 있습니다")      # 사장님 11-02 "내가 승인한 사람만"
 
 
 def _assets_on(store, cid) -> bool:
