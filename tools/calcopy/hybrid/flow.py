@@ -2392,7 +2392,7 @@ def ph_sign(st, m, rp, u):
 
 # ── 8 계획 ────────────────────────────────────────────────────────────────
 def ph_plan(st, m, rp, u):
-    return {"do": [{"id": "plan", "cmd": "plan", "version": st["version"], "origin_names": sorted(_origin_names(st)), "other_faces": _other_faces(st), "erase": erases_text(st["version"])}], "then": "plan_got"}
+    return {"do": [{"id": "plan", "cmd": "plan", "version": st["version"], "origin_names": sorted(_origin_names(st)), "other_faces": _other_faces(st), "erase": _episode_erases(st)}], "then": "plan_got"}
 
 
 MECH_FIX_MAX = 2      # 같은 편에서 기계 자동 고침(흐림 칸 넣기)을 되풀이하는 한도 — 넘으면 Claude 고치기로(무한 반복 막기)
@@ -2628,7 +2628,7 @@ def ph_thumb(st, m, rp, u):
         # (10-26 이미숙 회원편: part 8 = 시트에선 얼굴 근접 O3@163, 바뀐 재료에선 앰플 병 N2@80 → 카드 얼굴 반려 되풀이·멈춤, 98 기록).
         # 옛 카드는 비우고(옛 번호라 계획 관문 ⑥이 시트를 막는다) 계획을 다시 돌려 새 시트로 묻는다.
         return {"do": [{"id": "clear_thumb", "cmd": "write_doc", "files": {f"{v}/썸네일.json": {"options": []}}, "version": v},
-                       {"id": "plan", "cmd": "plan", "version": v, "origin_names": sorted(_origin_names(st)), "other_faces": _other_faces(st), "erase": erases_text(st["version"])}], "then": "thumb_sheet"}
+                       {"id": "plan", "cmd": "plan", "version": v, "origin_names": sorted(_origin_names(st)), "other_faces": _other_faces(st), "erase": _episode_erases(st)}], "then": "thumb_sheet"}
     _, _, ww, wh = STY_window(v)
     ask = THUMB_ASK.format(good=TR.GOOD, order=TR.find_order(st.get("slug")), ww=ww, wh=wh)    # 상위 편 훅 참고 한 줄(지시서 15 — slug 의 _kal/상위편_목표.json)
     if st.get("_thumb_bad"):
@@ -2685,7 +2685,7 @@ def ph_thumb_got(st, m, rp, u):
 
 # ── 10 렌더 ───────────────────────────────────────────────────────────────
 def ph_render(st, m, rp, u):
-    return {"do": [{"id": "render", "cmd": "render", "version": st["version"], "origin_names": sorted(_origin_names(st)), "other_faces": _other_faces(st), "erase": erases_text(st["version"])}], "then": "render_got"}
+    return {"do": [{"id": "render", "cmd": "render", "version": st["version"], "origin_names": sorted(_origin_names(st)), "other_faces": _other_faces(st), "erase": _episode_erases(st)}], "then": "render_got"}
 
 
 def ph_render_got(st, m, rp, u):
@@ -4421,6 +4421,12 @@ def f_alt_dl(st, m, rp, u):
     return {"goto": "f_clean"}
 
 
+def _episode_erases(st: dict) -> bool:
+    """(판단 주인 — 이 편은 렌더 전에 박힌 글자를 지우나) 형식에 지우기 단계가 있고, 이 편 방식이 흐림으로 정해지지 않았을 때만.
+    흐림으로 정해지면(회원 설정 흐림·VMake 확정 실패) 계획·렌더가 흐림 칸을 넣게 False 를 실어 보낸다(11-03 CS #443 — 서버만 흐림이면 글자가 남는다)."""
+    return erases_text(st["version"]) and (st.get("text_fix") or {}).get("mode") != "blur"
+
+
 def erases_text(version: str) -> bool:
     """(판단 주인 — 이 판 형식에 렌더 전 박힌 글자 지우기 단계가 있나) 10-30 부터 모든 형식이 렌더 전 f_render(VMake 고급형)를 탄다 —
     실제로 지우나 흐리나는 회원 PC 의 vmake_clean.ready(키·회원 설정·판 칸)가 정한다."""
@@ -4570,9 +4576,22 @@ def f_render_clean_got(st, m, rp, u):
         tf["key"] = _cuts_key(st)
         st["log"].append(f"자막 지우기를 뒤로 보냄: 자막 컷 {c.get('send_sec')}초 — 렌더는 임시 흐림으로")
         return {"goto": "render"}
+    if c.get("mode") == "blur":      # 회원 설정 흐림·키 없음 — 방식을 흐림으로 확정(다시 clean_text 를 부르지 않고 계획·렌더가 흐림 칸을 넣는다)
+        tf.update(mode="blur", why=str(c.get("why") or "")[:200], key=_cuts_key(st))
+        st["log"].append(f"박힌 글자 방식 흐림으로 확정: {tf['why']}")
+        if "orig_text.mode=blur" not in tf["why"]:        # 회원이 고른 흐림이면 알림 없음
+            st["notice"], st["_notice_shown"] = "원본 자막을 지우지 못해 흐림으로 가렸어요", False
+        return {"goto": "render"}
+    from tools.calcopy import vmake_clean as VCL
+    hard = VCL.hard_fail(str(c.get("why") or "") + " " + str(c.get("error") or ""))
+    if hard:                         # 키·등급·서명 실패 = 다시 보내도 같다 — 재시도 없이 이 편은 흐림(11-03 CS #443 같은 실패 5번)
+        tf.update(mode="blur", why=f"VMake {hard} — 흐림으로", key=_cuts_key(st))
+        st["log"].append(f"박힌 글자 VMake 확정 실패({hard}) — 다시 보내지 않고 흐림으로")
+        st["notice"], st["_notice_shown"] = f"원본 자막을 지우지 못해 흐림으로 가렸어요({VCL.HARD_FIX[hard]})", False
+        return {"goto": "render"}
     if c.get("error"):
         st["log"].append("박힌 글자 지우기 실패(흐림 그대로 렌더): " + str(c["error"])[:200])
-    if c.get("error") or c.get("mode") in ("blur", "error"):     # 지우기로 정했는데 흐림이 됐다 — 조용히 넘어가지 않는다(11-01)
+    if c.get("error") or c.get("mode") == "error":     # 지우기로 정했는데 흐림이 됐다 — 조용히 넘어가지 않는다(11-01)
         st["notice"], st["_notice_shown"] = "원본 자막을 지우지 못해 흐림으로 가렸어요", False
     if (c.get("mode") == "vmake" and c.get("why")) or c.get("error"):        # 못 지운 구간(시간 초과·크레딧) — 흐림으로 덮고 렌더하지 않는다(10-26 까르보 3판: 흐림이 어긋나 영어 자막이 그대로 남았다). 다시 보내고, 두 번째도 실패면 멈춘다
         for n, iv in (c.get("done") or {}).items():

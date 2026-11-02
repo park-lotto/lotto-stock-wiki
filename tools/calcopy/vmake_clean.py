@@ -131,6 +131,18 @@ def erase_engine() -> str:
     return "free" if free_ok() else ""
 
 
+# VMake 확정 실패(다시 보내도 같다) — 판단 주인 hard_fail. 시간 초과·일시 실패는 여기 없다(다시 보내면 지워질 수 있다)
+HARD_FAILS = (("new_api", r"Switch to New API|새 API 키"), ("not_pro", r"ConsumeDeniedError|60001"), ("sign", r"10021|sign not equals"))
+HARD_FIX = {"new_api": "VMake 새 API 키를 넣으면 다음 편부터 지워요", "not_pro": "VMake Pro 요금제에서 지워져요",
+            "sign": "VMake 키를 다시 확인해 주세요"}
+
+
+def hard_fail(text: str) -> str:
+    """실패 글 → 확정 실패 종류('new_api'·'not_pro'·'sign') 또는 ''."""
+    import re
+    return next((k for k, rx in HARD_FAILS if re.search(rx, str(text or ""), re.I)), "")
+
+
 def ready(mode: str = "vmake") -> dict:
     """돈 없이 '지울 수 있나'만 — {mode: vmake|blur|need_key, why, (fix), (via)}. flow 가 재료 단계에서 먼저 물어 키 없으면 일찍 멈춘다."""
     if mode != "blur" and erase_engine() == "free":   # 돈이 안 드니 SHORTEM_NO_PAID 도 막지 않는다
