@@ -305,6 +305,8 @@ def test_capseg_dark_and_box_modes(tmp_path):
 def test_capseg_odd_band_not_garbage():
     """홀수 높이 띠(1137~1462 = 325줄): exact=1 전엔 ffmpeg 가 324줄로 잘라 프레임이 밀려 경계 38개 중 18개만 맞았다(10-25 실측).
     합성 영상은 단색 바탕이라 밀림이 경계를 안 바꿔 못 잡는다 — 실물로 잰다."""
+    if not Path("C:/숏템_칼카피/ititemlog/work/lr6/seg_SbWTqCnleC8.json").exists():
+        pytest.skip("실물 재료가 없는 PC")
     ref = [x["t0"] for x in json.loads(Path("C:/숏템_칼카피/ititemlog/work/lr6/seg_SbWTqCnleC8.json").read_text())[1:]]
     got = [x["t0"] for x in capseg.capseg("C:/숏템_칼카피/ititemlog/src/SbWTqCnleC8.mp4", 1137, 1462)[1:]]
     hit = sum(1 for t in ref if any(abs(t - u) <= 1 / FPS + 1e-6 for u in got))

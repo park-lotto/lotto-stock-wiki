@@ -210,6 +210,7 @@ if (-not $env:SHORTEM_NO_LAUNCH) {
     $logged = (& claude auth status 2>&1 | Out-String) -match '"loggedIn":\s*true'
     if (-not $logged) {
         Say '브라우저가 열립니다. Claude 에 로그인하고 승인 버튼만 눌러 주세요'
+        Say '코드 화면이 나오면 [복사]를 눌러 여기에 붙여 넣고 엔터. 다른 글자를 넣어 Invalid code 가 떠도 창을 닫지 말고 코드만 다시 붙이면 됩니다'
         & claude auth login
         $logged = (& claude auth status 2>&1 | Out-String) -match '"loggedIn":\s*true'
     }
