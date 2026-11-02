@@ -626,7 +626,7 @@ function lookLayer(){{const b=document.querySelector('.tl-scroll');if(b&&S.tlsx)
     L.addEventListener('pointerup',()=>{const m=d;d=null;if(!m||!m.my&&!m.mx)return;$('titlegrab').style.transform=$('logoimg').style.transform='';
       if(m.g==='titlegrab')save({text:{title_dy:Math.max(-500,Math.min(500,m.dy+m.my))}});else save({brand:{logo:{...m.lg,x:m.lg.x+m.mx,y:m.lg.y+m.my}}})})}
   const k=ph.clientWidth/1080,p=pk(),dy=(p.text||{}).title_dy||0,G=$('titlegrab'),I=$('logoimg'),lg=(p.brand||{}).logo;
-  {const w=$('wmtext'),n=(p.brand||{}).channel_name;w.textContent=n||'';w.style.right=40*k+'px';w.style.top=86*k+'px';w.style.fontSize=40*k+'px'}
+  {const w=$('wmtext'),n=(p.brand||{}).channel_name,st0=$('stage'),inF=n&&st0&&((st0.contentDocument&&st0.contentDocument.body)||st0).textContent.includes(n);w.textContent=inF?'':(n||'');w.style.right=40*k+'px';w.style.top=86*k+'px';w.style.fontSize=40*k+'px'}
   G.style.top=(150+dy)*k+'px';G.style.height=330*k+'px';I.hidden=!lg;
   if(lg){I.src=`logo/${lg.file}?${S.logoV||0}`;I.style.left=lg.x*k+'px';I.style.top=lg.y*k+'px';I.style.width=lg.w*k+'px'}}
 function presetCards(st){
