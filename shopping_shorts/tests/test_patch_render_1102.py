@@ -238,3 +238,67 @@ def test_near_gates_measure_only_changed_cuts(monkeypatch, tmp_path):
 def test_encoder_default_args_unchanged():
     """화면 규격(인코더) 고르기는 건드리지 않았다 — GOP 는 완성본을 굽는 두 곳에서만 더한다."""
     assert "-g" not in encoder.venc(16)
+
+
+# ── 자막 합성에 구간만 넘길 때 ───────────────────────────────────────────────
+class _Keep:
+    """모든 칸이 재사용되는 가짜 저장소 — miss 에 적은 칸만 새로 만들어야 한다."""
+    def __init__(self, part, miss=()):
+        self.part, self.miss = part, set(miss)
+
+    def token(self, index, *a):
+        return index
+
+    def get(self, token, frames):
+        return None if token in self.miss else self.part
+
+
+@pytest.fixture
+def composed(tmp_path, monkeypatch):
+    from shopping_shorts import scene_style as SS, video_assemble as va
+    scenes = [{"start": k, "end": k + 1} for k in range(4)]
+    monkeypatch.setattr(SS, "validate_snapshot", lambda s: s)
+    monkeypatch.setattr(SS, "context_for", lambda *a, **k: {"scenes": scenes})
+    monkeypatch.setattr(SS, "zoom_runs", lambda sc, fx: [(None, 0, 0)] * len(sc))
+    monkeypatch.setattr(va, "_probe_duration", lambda p: 1.0)        # 바탕 = 구간 1초뿐
+    monkeypatch.setattr(va, "_run_ffmpeg", lambda *a, **k: None)
+    part = tmp_path / "p.mp4"
+    part.write_bytes(b"x")
+    return SS, part, tmp_path
+
+
+def test_compose_span_allows_scenes_after_the_span(composed):
+    """구간 뒤 칸은 재사용이라 바탕에 없어도 된다 — 없으면 26초 편 가운데 컷에서 '시간표가 영상보다 길다'로 멈춘다(합성 편 실측)."""
+    SS, part, d = composed
+    SS.compose("base.mp4", [], {}, d / "o.mp4", d / "w", cache=_Keep(part), span=(30, 60))
+
+
+def test_compose_without_span_still_stops_on_late_scene(composed):
+    SS, part, d = composed
+    with pytest.raises(RuntimeError, match="영상보다 길다"):
+        SS.compose("base.mp4", [], {}, d / "o.mp4", d / "w", cache=_Keep(part))
+
+
+def test_compose_miss_outside_span_asks_for_whole_base(composed):
+    SS, part, d = composed
+    with pytest.raises(SS.SpanMiss):
+        SS.compose("base.mp4", [], {}, d / "o.mp4", d / "w", cache=_Keep(part, miss=[3]), span=(30, 60))
+
+
+def test_check_catches_changed_frame_outside_chunk(video, monkeypatch):
+    """검사가 정말 잡나 — 묶음 밖 프레임 하나가 달라진 파일은 거절."""
+    good = FS.frame_hashes(video)
+    bad = list(good)
+    bad[70] = "다른 그림"
+    seq = iter([good, bad] * 2)
+    monkeypatch.setattr(FS, "frame_hashes", lambda f: next(seq))
+    assert FS.check(video, video, [[60, 90]], 90)["redone"] == 30
+    with pytest.raises(FS.SpliceFail, match="다시 굽지 않은"):
+        FS.check(video, video, [[30, 60]], 90)
+
+
+def test_check_catches_changed_sound(video, tmp_path):
+    bad = tmp_path / "bad.mp4"
+    _sh("ffmpeg", "-y", "-v", "error", "-i", video, "-f", "lavfi", "-i", "sine=f=900:d=3", "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", bad)
+    with pytest.raises(FS.SpliceFail, match="소리"):
+        FS.check(video, bad, [[0, 30]], 90)

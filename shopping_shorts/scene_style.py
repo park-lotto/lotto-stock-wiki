@@ -1203,7 +1203,7 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None, cache=N
     # 굽기 전에 시간표 ↔ 영상 길이를 재서 이유를 적고 멈춘다.
     span_first=span[0] if span else 0
     video_frames=span_first+round(va._probe_duration(in_video)*30)
-    late=[(i,s["start"]) for i,s in enumerate(context["scenes"]) if round(s["end"]*30)>round(s["start"]*30) and round(s["start"]*30)>=video_frames]
+    late=[(i,s["start"]) for i,s in enumerate(context["scenes"]) if not span and round(s["end"]*30)>round(s["start"]*30) and round(s["start"]*30)>=video_frames]   # span = 구간 뒤 칸은 재사용이라 영상이 없어도 된다(밖 칸이 새로 필요하면 SpanMiss)
     if late:
         raise RuntimeError(f"장면 시간표가 영상보다 길다: 영상 {video_frames/30:.2f}초인데 장면 {late[0][0]}이 {late[0][1]:.2f}초에 시작(넘는 장면 {len(late)}개)")
     work=Path(work).resolve()

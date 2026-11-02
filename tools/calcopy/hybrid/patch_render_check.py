@@ -188,6 +188,23 @@ def change(W: Path, style: str, how: str, cut: int) -> str:
     return f"{line} {how}"
 
 
+def psnr_frames(a: Path, b: Path, w: int = 270, h: int = 480) -> list[float]:
+    """프레임마다 PSNR — partial_render_check.frame_psnr 와 같은 자(작은 회색)를 스트림으로(한 편 전체를 메모리에 올리지 않는다, 커밋 여유 1.5GB 에서 MemoryError 실측)."""
+    import numpy as np
+    pipes = [subprocess.Popen(["ffmpeg", "-v", "error", "-i", str(x), "-vf", f"scale={w}:{h},format=gray", "-f", "rawvideo", "-"], stdout=subprocess.PIPE, stdin=subprocess.DEVNULL) for x in (a, b)]
+    out = []
+    while True:
+        x, y = (p.stdout.read(w * h) for p in pipes)
+        if len(x) < w * h or len(y) < w * h:
+            break
+        m = float(((np.frombuffer(x, np.uint8).astype(np.int16) - np.frombuffer(y, np.uint8).astype(np.int16)) ** 2).mean())
+        out.append(99.0 if m < 1e-9 else float(10 * np.log10(255 ** 2 / m)))
+    for p in pipes:
+        p.stdout.close()
+        p.wait()
+    return out
+
+
 def judge(first: Path, part: Path, full: Path, ranges: list, chunks: list) -> dict:
     """구간 교체 = 전체 렌더? 걸린 것은 bad 에."""
     n = PC.frames_of(first)
@@ -197,8 +214,8 @@ def judge(first: Path, part: Path, full: Path, ranges: list, chunks: list) -> di
     same_out = sum(1 for i in outside if h0[i] == h1[i])
     changed_frames = {i for a, b in ranges for i in range(a, b)}
     moved_in = sum(1 for i in changed_frames if h0[i] != h1[i])
-    p_full = PC.frame_psnr(part, full)
-    p_first = PC.frame_psnr(part, first)
+    p_full = psnr_frames(part, full)
+    p_first = psnr_frames(part, first)
     aud = PC.audio_diff(part, full)
     r = {"frames": [n, PC.frames_of(part), PC.frames_of(full)], "dur": [FS._cap(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", x]).stdout.decode().strip() for x in (first, part, full)],
          "outside_frames": len(outside), "outside_same_md5": same_out, "changed_frames": len(changed_frames), "changed_differ_from_first": moved_in,
