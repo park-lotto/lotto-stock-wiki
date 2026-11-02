@@ -3783,8 +3783,18 @@ class GateError(StageError):
         super().__init__(" / ".join(m for _, m in self.problems))
 
 
+def soften(groups: list[tuple[str, list[str]]], log=print) -> list[tuple[str, list[str]]]:
+    """(판단 주인 — 막는 관문인가) 권고 관문(ADVISORY_GATES)은 막지 않고 기록만 남기고 비운다(사장님 11-03 '이상한 걸로 통과 못 시키는 건 큰 문제').
+    계획·구간 교체·렌더가 모두 timeline_gates 나 gate_stop 을 지나므로 이 한 곳에서 가른다."""
+    soft = [(g, b) for g, b in groups if g in ADVISORY_GATES and b]
+    if soft:
+        log("[렌더 전 관문·권고] " + " · ".join(f"{g} {len(b)}: {'; '.join(b)[:160]}" for g, b in soft))
+    return [(g, [] if g in ADVISORY_GATES else b) for g, b in groups]
+
+
 def gate_stop(groups: list[tuple[str, list[str]]]) -> None:
-    """[(관문 이름, 문제 글 목록)…] — 하나라도 있으면 전부 실은 GateError."""
+    """[(관문 이름, 문제 글 목록)…] — 하나라도 있으면 전부 실은 GateError. 권고 관문은 soften 이 비운다."""
+    groups = soften(groups, lambda s: print(s, flush=True))
     probs = [(g, m) for g, ms in groups for m in ms]
     if probs and __import__("os").environ.get("SHORTEM_WAIVE_GATE"):      # 권고 넘기기(flow._waive) — 멈추지 않고 기록만
         print("[권고 넘기기] 관문 " + " / ".join(f"{g}: {m}" for g, m in probs)[:600], flush=True)
@@ -3889,7 +3899,7 @@ def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *,
                ("흐림 면적", blur_cut_gate(sub, M, st))]
         if moved:
             out += [("⑥ 카드 얼굴", TR.card_face_gate(st, doc, T, M["cand_dir"])), ("사진", photo_gate(T, st, M)), ("사진 연속", photo_run_gate(T, M)), ("B13 재사용", plan_reuse_gate(T, M, st))]
-        return out
+        return soften(out, log)
     out = [("넘침", over_text([c for c in T["cuts"] if c["over"] > 0], plan, measured)),
            ("⑧ 길이", plan_length_gate(T, st, measured)),
            ("⑥ 카드 글", TR.card_text_gate(doc)),
@@ -3905,10 +3915,7 @@ def timeline_gates(T: dict, M: dict, st: dict, doc: Path, R: Path, log=print, *,
            ("리듬", rhythm_gate(T, st, src_dir))]
     if placed is not None:
         out.append(("꾸밈", deco_gate(placed, doc, st, log)))
-    soft = [(g, b) for g, b in out if g in ADVISORY_GATES and b]
-    if soft:      # 권고 관문 = 막지 않고 기록만(사장님 11-03 '이상한 걸로 통과 못 시키는 건 큰 문제') — 계획·렌더 모두 이 함수 하나를 거친다
-        log("[렌더 전 관문·권고] " + " · ".join(f"{g} {len(b)}: {'; '.join(b)[:160]}" for g, b in soft))
-    out = [(g, [] if g in ADVISORY_GATES else b) for g, b in out]
+    out = soften(out, log)
     n = sum(len(b) for _, b in out)
     if n:
         log(f"[렌더 전 관문] 걸린 것 {n}개 — " + " · ".join(f"{g} {len(b)}" for g, b in out if b) + " (한 번에 모아 알린다)")
