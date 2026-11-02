@@ -36,7 +36,7 @@ def test_waive_plan_and_check():
 
 
 def test_waive_cannot_pass_red_line():
-    st = _st(stage="script", _script_try={"S": {}, "M": {}, "causes": ["claims"]})
+    st = _st(stage="script", _script_try={"S": {}, "M": {}, "causes": ["forbid_must"]})      # 금지선(질병·금액) — 11-03 부터 후기 숫자(claims)는 권고
     with pytest.raises(F._Stop):
         _go(st, action="waive")
     st = _st(stage="script", _script_try={"S": {"a": 1}, "M": {}, "causes": ["form"]})

@@ -72,11 +72,9 @@ def test_script_reject_line_says_try_and_reason(monkeypatch):
     monkeypatch.setattr(F, "_script_ask", lambda st, why="": {"id": "script_v", "ask": why})
     monkeypatch.setattr(F, "_fmt", lambda st: "연예인형")
     r = F.ph_script_got(st, {}, {}, {})
-    res = F._out(st, "reject", "script_got", review=r["review"], reject=r["reject"])
-    assert res["message"].endswith("다시 쓰는 중(1/6): 영상이 기준보다 짧아요"), res["message"]
-    assert F.member_ok(res["message"]) and not INNER.search(res["reject"]["why"])
-    assert "est_length" in res["review"][0]["ask"]              # 회원 Claude 에게는 속사정 그대로
+    assert "reject" not in r                                     # 11-03 사장님 '문구로 막지 마' — 어림 길이는 반려 없이 기록만
     assert any("est_length" in x for x in st["log"])
+    assert any(str(c).startswith("est_length") for w in st.get("warn") or [] for c in w.get("causes") or [])
 
 
 def test_same_cause_three_in_a_row_stops_early_with_reason():
