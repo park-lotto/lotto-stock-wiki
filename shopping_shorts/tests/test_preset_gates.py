@@ -92,7 +92,7 @@ def test_plan_estimate_applies_fit_shot(tmp_path, monkeypatch):
 
 # ── G-1 대본 글 ─────────────────────────────────────────────────────────────
 def test_text_gate_latin_sns_but_exaggeration_ok(tmp_path):
-    """작품9 B·C 꼴(읽는 글 'SNS')은 멈추고, 과장·약간의 창작('떼돈·난리')은 잡지 않는다(칼카피_시작 14)."""
+    """작품9 B·C 꼴(읽는 글 'SNS')은 멈추고, 과장·약간의 창작('떼돈·난리')은 잡지 않는다(production_start 14)."""
     bad = _w(tmp_path, [], [{"text": "SNS에서 난리 난 그 제품", "tts": "SNS에서 난리 난 그 제품."}])
     ok = _w(tmp_path, [], [{"text": "떼돈 번 술잔의 정체", "tts": "떼돈 번 술잔의 정체."}])
     g = PG.text_gate(bad)

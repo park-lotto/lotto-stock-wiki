@@ -27,7 +27,7 @@ DIR = Path(__file__).with_name("styles")
 _ROOT = Path(__file__).resolve().parents[3]
 if str(_ROOT) not in sys.path:          # CLI 로 직접 돌릴 때도 tools.calcopy… 가 잡히게(pack_map import)
     sys.path.insert(0, str(_ROOT))
-REQUIRED = ("name", "renderer", "voice", "bgm", "loudness", "length", "script", "thumb_card_face")   # thumb_card_face: 연예인 채널이면 true — 판마다 명시(사장님 10-25 "연예인 얼굴 통일·앞으로 칼카피 모두", 관문 ⑥)
+REQUIRED = ("name", "renderer", "voice", "bgm", "loudness", "length", "script", "thumb_card_face")   # thumb_card_face: 연예인 채널이면 true — 판마다 명시(사장님 10-25 "연예인 얼굴 통일·앞으로 프리셋 모두", 관문 ⑥)
 
 
 # ── 판 리듬 실측 4칸(관제263 10-25 페이블 눈검수 E1·E2·E4 — 모든 판 필수, 값은 그 채널 벤치 실측 + why) ──────────────
@@ -96,6 +96,10 @@ def names() -> list[str]:
 
 def path_of(name: str) -> Path:
     p = DIR / f"{name}.json"
+    if not p.exists():      # 영문 파일로 옮기는 첫 단계 — 이 판부터 두 이름을 다 읽는다(회원 업데이트 뒤 파일을 옮긴다, 관제 304)
+        af = DIR / "_names.json"
+        alias = json.loads(af.read_text(encoding="utf-8")).get(name) if af.exists() else None
+        p = DIR / f"{alias}.json" if alias else p
     if not p.exists():
         raise SystemExit(f"판 '{name}' 이 없다 — 있는 판: {', '.join(names())}")
     return p

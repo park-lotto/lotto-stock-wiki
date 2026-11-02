@@ -234,14 +234,14 @@ def test_celeb_stage_numbers_unchanged():
 
 
 # ── 3. check = quality_gate + 눈 2단, 미통과면 고치기 2회 뒤 멈춤(done 아님) ─────
-def test_gate_fail_stops_after_two_fixes():
+def test_gate_fail_finishes_with_notice_after_two_fixes():
+    """11-02 사장님 "권고사항": 두 번 고쳐도 남으면 멈추지 않고 알림과 함께 완성한다."""
     st = F.start("https://youtu.be/BENCH1", "키치잇판", "sid")
     tr, res, st2 = walk(F, st, {"gate_fail": True})
-    assert res["status"] == "stop", tr[-3:]
+    assert res["status"] == "done", tr[-3:]
     assert sum(1 for t in tr if any(r.startswith("final_fix_") for r in t[3])) == 2
     assert sum(1 for t in tr if "check" in t[2]) == 3
-    assert "음량" in st2["stopped"]["detail"] and "음량" not in res["why"]     # 속사정은 기록에만 — 회원 문구엔 검사 항목 안 싣는다(10-26)
-    assert not any(t[0] == "done" for t in tr)
+    assert any("음량" in x for x in st2["look_left"])
 
 
 def test_eye_triangle_is_not_pass(monkeypatch):
@@ -344,6 +344,7 @@ def test_clean_text_check_only_no_key_blurs(tmp_path, monkeypatch):
     monkeypatch.setenv("CALCOPY_VMAKE_VIA", "member")
     monkeypatch.delenv("VMAKE_API_KEY", raising=False)
     monkeypatch.setattr(VC, "MEMBER_KEY_FILE", tmp_path / "none")
+    monkeypatch.setattr(VC, "free_ok", lambda: False)        # 이 PC 에 무료 엔진이 있어도 시험은 키만 본다
     assert R.c_clean_text(tmp_path, {"check": True})["mode"] == "blur"
     monkeypatch.setenv("VMAKE_API_KEY", "ak:sk")
     assert R.c_clean_text(tmp_path, {"check": True})["mode"] == "vmake"
@@ -381,8 +382,8 @@ def test_clean_used_sends_only_spans_and_splices(tmp_path, monkeypatch):
     monkeypatch.delenv("SHORTEM_NO_PAID", raising=False)
     t0 = "0000"
     r = VC.clean_used(src, {"a.mp4": [[2.0, 4.0], [10.0, 11.5]]})
-    assert r["calls"] == 2 and r["done"] == {"a.mp4": [[2.0, 4.0], [10.0, 11.5]]}
-    assert [round(s, 1) for _, s in calls] == [2.0, 1.5]                # VMake 로 간 것 = 구간 조각뿐(원본 20초 아님)
+    assert r["calls"] == 1 and r["done"] == {"a.mp4": [[2.0, 4.0], [10.0, 11.5]]}
+    assert [round(s, 1) for _, s in calls] == [3.5]                     # VMake 로 간 것 = 구간만 이어 붙인 1회(원본 20초 아님)
     assert abs(VC._dur(src / "a.mp4") - 20.0) < 0.2 and (src / "a_orig.mp4").exists()   # 같은 이름·같은 길이로 끼움, 원본 보존
     assert not list(src.glob("*__vm_*"))                                # 조각은 치운다
     assert (src / "_cutbounds_a_0_240_v2.json").stat().st_mtime >= (src / "a.mp4").stat().st_mtime   # 경계 캐시 그대로 씀

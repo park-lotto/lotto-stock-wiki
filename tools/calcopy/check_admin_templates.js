@@ -1,5 +1,5 @@
 // 관리자 전용 틀(template_register.py admin_only) 노출 검사 — 장면꾸미기 화면(그대로)을 열어 고정형 목록 카드를 센다.
-//   context.adminView=false(고객) → 칼카피 카드 0개 · 전체 개수는 등록 전과 같음 / true(관리자) → 등록한 틀 카드가 보인다.
+//   context.adminView=false(고객) → 프리셋 카드 0개 · 전체 개수는 등록 전과 같음 / true(관리자) → 등록한 틀 카드가 보인다.
 //   쓰는 법: node tools/calcopy/check_admin_templates.js   (출력 JSON, 실패면 종료 코드 1)
 const path=require('path'),{pathToFileURL}=require('url'),puppeteer=require('puppeteer');
 (async()=>{
@@ -14,7 +14,7 @@ const path=require('path'),{pathToFileURL}=require('url'),puppeteer=require('pup
       await page.evaluate(()=>document.querySelector('[data-template-mode="continuous"]')?.click());
       await new Promise(r=>setTimeout(r,300));
       const r=await page.evaluate(()=>{const names=[...document.querySelectorAll('.preset-card b')].map(b=>b.textContent);
-        const rows=(window.CONTINUOUS20||[]);return {cards:names.length,calcopy:names.filter(n=>n.startsWith('칼카피')),
+        const rows=(window.CONTINUOUS20||[]);return {cards:names.length,calcopy:names.filter(n=>n.startsWith('프리셋')),
           adminRows:rows.filter(p=>p.admin_only).map(p=>p.name),count:document.querySelector('.layout-a .pane-head .count')?.textContent||''}});
       out[admin?'admin':'customer']={...r,countBeforeLoad:before,errors};
       await page.close();

@@ -408,7 +408,8 @@ def test_cutdet_rule_blur_tail(tmp_path):
     d = cutdet.cutdet(str(p1), 0, H, v2=True, motion=False)
     c = [x for x in d["cuts"] if abs(x["t"] - 1.0) <= 1 / FPS]
     assert c and c[0]["kind"] == "zoomblur" and not c[0]["blur_tail"], d["cuts"]
-    long = [A] * 30 + [cv2.GaussianBlur(B, (0, 0), 6.0) for _ in range(20)] + [B] * 30
+    # 소스 자체 흐림 = 서서히 풀린다 — 뚝 풀리면 그 자리가 프레임차로 또 하나의 컷이 되고, 흐림이 샷 수준 창(경계+9~21프레임)을 다 덮으면 흐린 값이 샷 수준이 된다
+    long = [A] * 30 + [cv2.GaussianBlur(B, (0, 0), float(s)) for s in [6.0] * 11 + [5.0, 4.0, 2.0, 1.0]] + [B] * 30
     p2 = tmp_path / "long.mp4"
     _write_mp4(p2, long)
     d = cutdet.cutdet(str(p2), 0, H, v2=True, motion=False)

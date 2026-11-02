@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { requestContent } from '../server/engine_bridge.js';
-import { applyEngineNow } from '../server/updater.js';
+import { applyPendingEngine } from '../server/updater.js';
 
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'repair-'));
 
@@ -43,13 +43,13 @@ test('다시 시도 때 받아 둔 새 engine 을 덮고, 같은 판은 두 번 
   fs.writeFileSync(path.join(src, 'tools', 'calcopy', 'make.py'), 'x');
   fs.writeFileSync(path.join(src, 'a.py'), 'new');
   fs.writeFileSync(path.join(home, '_update', 'pending.json'), JSON.stringify({ version: '1.0.12' }));
-  assert.equal(applyEngineNow(home).applied, true);
+  assert.equal(applyPendingEngine(home).applied, true);
   assert.equal(fs.readFileSync(path.join(home, 'engine', 'a.py'), 'utf8'), 'new');
   fs.writeFileSync(path.join(home, 'engine', 'a.py'), 'member');
-  assert.equal(applyEngineNow(home).why, 'already');
+  assert.equal(applyPendingEngine(home).why, 'already');
   assert.equal(fs.readFileSync(path.join(home, 'engine', 'a.py'), 'utf8'), 'member');
 });
 
 test('받아 둔 판이 없으면 그대로 간다', () => {
-  assert.equal(applyEngineNow(tmp()).why, 'no_pending');
+  assert.equal(applyPendingEngine(tmp()).why, 'no_pending');
 });

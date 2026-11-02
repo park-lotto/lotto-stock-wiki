@@ -3,7 +3,7 @@
  "renderer": "bench",
  "thumb_card_face": false,
  "_thumb_card_face": "연예인 채널 아님 — 카드 얼굴 관문 끔(판마다 명시 필수, styles.REQUIRED)",
- "_note": "이븐쇼핑(@UClecY6IhcjwmCBJHiZ2-cTg) 칼카피 1차 판 = 우리 브랜드 재미썸홈(사장님 10-26 '잇템로그·키치잇처럼 표준 길로'). 근거 channel/evenshopping/{스타일분석.md, 줄판독/ 6편 185줄, _kal/}. 렌더 = render_bench.py. 1차 = 벤치와 같게(앱 화면 틀·흰 띠 검정 자막·나레만·BGM 없음·띵 효과음). 재미썸홈판.json(jaemi)은 얜샷템 하이브리드 판이라 그대로 둔다. preset/숏템템플릿(preset_make, renderer make)은 회원 옛 길.",
+ "_note": "이븐쇼핑(@UClecY6IhcjwmCBJHiZ2-cTg) 프리셋 1차 판 = 우리 브랜드 재미썸홈(사장님 10-26 '잇템로그·키치잇처럼 표준 길로'). 근거 channel/evenshopping/{스타일분석.md, 줄판독/ 6편 185줄, _kal/}. 렌더 = render_bench.py. 1차 = 벤치와 같게(앱 화면 틀·흰 띠 검정 자막·나레만·BGM 없음·띵 효과음). 재미썸홈판.json(jaemi)은 얜샷템 하이브리드 판이라 그대로 둔다. preset/숏템템플릿(preset_make, renderer make)은 회원 옛 길.",
  "bench": {
   "ko": "이븐쇼핑",
   "channel": "evenshopping",
@@ -17,7 +17,7 @@
   "name": "진우",
   "voice_id": "tc_632293f759d649937b97f323",
   "candidates": [],
-  "why": "사장님 10-26 결정 '재미썸홈 = 진우, 배속 ≤1.25'(handoff 10-26 새벽 관문 창) · 벤치 나레 남성 f0 148~166Hz(스타일분석 §6) · 필재 금지(칼카피_시작 §12)"
+  "why": "사장님 10-26 결정 '재미썸홈 = 진우, 배속 ≤1.25'(handoff 10-26 새벽 관문 창) · 벤치 나레 남성 f0 148~166Hz(스타일분석 §6) · 필재 금지(production_start §12)"
  },
  "cps_target": 8.68,
  "_why_cps_target": "벤치 6편 나레 글자/자막 초 편 중앙 8.68(8.42·8.69·8.66·8.91·8.62·8.93 — channel/evenshopping/_kal/손상수_실측.json(handconst.py evenshopping) cps_target)",
@@ -810,7 +810,7 @@
   "brief": [
    "박자(이븐쇼핑 6편 줄판독, 스타일분석 §5): 훅(제목 읽기 1.5~2초, '?'로 끝) → 다리(최근·해외·SNS·바이럴 '~는데') → 공개 '이건 바로/바로 ~'(길이의 16~51%) → 고조 '이게 말도 안 되는 게' → 본문(사용법 '~고·~면·~서') → 증거 '심지어'+사실 → 반전 '근데 진짜 충격적인 건'(길이의 70~85%) → 끝 '~다고/~이라고'(사회 반응·후일담). CTA 0.",
    "반말 전언체, 존댓말 0. 자막 기준 8.7자/초. 덩어리 = 낱말 묶음 한 줄 9자 안팎(최대 16, 공백 뺀). 고조 2~3·반전 1~2(사장님 10-25 규칙서 §2). 설명서 = origin/track/노바대본설명서 docs/노바대본설명서/cards_v4/이븐쇼핑.md(틀 돌려 쓰기).",
-   "과장 허용(떼돈·난리·품절 대란) · 성분·효능·과학 근거·안전성·금액은 지어내지 않는다(칼카피_시작 14번)."
+   "과장 허용(떼돈·난리·품절 대란) · 성분·효능·과학 근거·안전성·금액은 지어내지 않는다(production_start 14번)."
   ],
   "audit": [
    {
@@ -981,7 +981,7 @@
   "meme": {
    "pack": "local",
    "gap": [],
-   "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 칼카피 길 = 로컬 짤 팩"
+   "from": "짤 규칙 없음(placement.rules.meme 없음 = 짤 0) · 프리셋 길 = 로컬 짤 팩"
   }
  }
 }

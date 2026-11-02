@@ -27,7 +27,7 @@
  "renderer": "bench",
  "thumb_card_face": false,
  "_thumb_card_face": "연예인 채널 아님 — 카드 얼굴 관문 끔(판마다 명시 필수, styles.REQUIRED)",
- "_note": "방구석 친구들(@방구석친구들D) 칼카피 1차 판 — 쇼핑형>썰커뮤니티형(게시글 틀, frame.kind post). 근거 channel/banggu/{스타일분석.md, 줄판독/ 6편 121줄, _kal/규칙빈도.json}. 손 스크립트 make_썰템홈샷.py(10-17 외관 B 차콜·민트 — 사장님 고른 우리 겉모양) · 썰템홈샷_하이브리드/make.py(앞 썰+뒤 체험 하이브리드 30~42초) 의 규칙은 이 1차 판이 아니라 업그레이드 재료(_pending.upgrade_from_hand_scripts) — 1차 = 벤치 100%(사장님 ⑥)",
+ "_note": "방구석 친구들(@방구석친구들D) 프리셋 1차 판 — 쇼핑형>썰커뮤니티형(게시글 틀, frame.kind post). 근거 channel/banggu/{스타일분석.md, 줄판독/ 6편 121줄, _kal/규칙빈도.json}. 손 스크립트 make_썰템홈샷.py(10-17 외관 B 차콜·민트 — 사장님 고른 우리 겉모양) · 썰템홈샷_하이브리드/make.py(앞 썰+뒤 체험 하이브리드 30~42초) 의 규칙은 이 1차 판이 아니라 업그레이드 재료(_pending.upgrade_from_hand_scripts) — 1차 = 벤치 100%(사장님 ⑥)",
  "bench": {
   "ko": "방구석",
   "channel": "banggu",
@@ -170,9 +170,6 @@
     }
    ]
   },
-  "logo": null,
-  "credit": null,
-  "watermark": null,
   "why": "frame_import.py ← channel/banggu/preset/게시글형/frame.json(body, ILIi 측정) 초안을 벤치 6편 픽셀로 덮음(스타일분석 §1 2): 머리띠 y0~233 #39A0FA(8iEh·48Pb·E9hm 8초 프레임 픽셀 중앙값 — 스타일분석 #42A4F5 는 로고 둘레 평균, ILIi 만 #2AA1FD) · 아래 줄 y236~239 · 게시글 제목 잉크 y274~342(가운데 308) · 부제 잉크 #555355(3편 픽셀 중앙) y378~402(가운데 390) · 가로줄 y446~451 #221F23(3편 픽셀 중앙) · 바탕 #FDFDFD · 창 x20 y672 1036×880(픽셀 재측, 4px 격자) · 브랜드 자리 = 벤치 '방구석' 손글씨 로고 자리(Kkubulim 109.9 = ILIi 측정) → 우리 브랜드 썰템홈샷(브랜드.json) · 부제 시각 '14:25' 뺌(사장님 10-24 가짜 시각 금지) · 워터마크 0/6",
   "_pending": {
    "title_letter_gap": "framecmp 글자 사이 벤치 2px ↔ 우리 5~6px — 자간 −4 로 맞추면 줄 폭이 836→767px 로 좁아짐(벤치 글꼴이 더 넓다) → 자간 0 유지, 글꼴 확정(06) 뒤"
@@ -828,7 +825,7 @@
   "meme": {
    "pack": "local",
    "gap": [],
-   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 칼카피 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
+   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 프리셋 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
   }
  },
  "process": {

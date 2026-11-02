@@ -98,7 +98,7 @@ def video(ass_path, audio_wav, wd, total, *, bg_image=None, frames_list=None, fo
     os.makedirs(os.path.join(wd, os.path.dirname(out_name)), exist_ok=True)
     fd = _fontsdir_arg(fonts_dir, wd)
     if frames_list:
-        vin = ["-f", "concat", "-safe", "0", "-i", _rel(frames_list, wd)]      # 컷별 정지 프레임(볼케이노 vconcat 방식)
+        vin = ["-f", "concat", "-safe", "0", "-i", _rel(frames_list, wd)]      # 컷별 정지 프레임(외부 사례 vconcat 방식)
     elif bg_image:
         vin = ["-loop", "1", "-framerate", str(fps), "-i", _rel(bg_image, wd)]
     else:

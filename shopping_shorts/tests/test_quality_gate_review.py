@@ -2,7 +2,7 @@
 """품질 관문 검토(10-25, 대상 9a8507108·dc128f353·0ea3970d4)로 드러난 느슨함 — 사보타주 시험.
 
 ③ 전환 '해당 없음 ○' = 배치 기록(placement.transitions_step)에 비율 출처가 있고 반올림한 원하는 개수가 0 일 때만
-④ 나레 받아쓰기 = 스피치매틱스 낱말 시각(narr_verify.heard_words) — 위스퍼 small 단독 판정 금지(칼카피_시작 12번)
+④ 나레 받아쓰기 = 스피치매틱스 낱말 시각(narr_verify.heard_words) — 위스퍼 small 단독 판정 금지(production_start 12번)
 ⑥ 스티커 모자람 = check_place bad
 ② 되감김 '경계에서만 센다' = check_seams.split_by_bounds(주인) · 시간표에 컷이 없으면 옛 판정(전부 센다)
 """
@@ -114,7 +114,7 @@ def test_gate_narr_row_uses_speechmatics_not_whisper(tmp_path, monkeypatch):
     (R / "timeline.json").write_text(json.dumps({"cuts": [], "lines": F["lines"], "end": 28.5}), encoding="utf-8")
     (R / "자막표.json").write_text(json.dumps({"rows": [], "check": {"ok": True, "reference": "x", "worst_slot_diff": 0}}), encoding="utf-8")
     (doc / "대본.json").write_text(json.dumps({"lines": [{**l, "kind": "tts"} for l in F["narr"]]}, ensure_ascii=False), encoding="utf-8")
-    monkeypatch.setattr(LS, "asr_segments", lambda p: [(0.0, 28.0, "위스퍼가 들은 글")])     # 위스퍼는 판정에 안 쓰인다
+    monkeypatch.setattr(LS, "asr_segments", lambda p: [(0.0, 28.0, "위스퍼가 들은 글")])     # 스피치매틱스가 되는 동안 위스퍼는 안 쓰인다
     calls = []
     monkeypatch.setattr(NV, "heard_words", lambda p, lang="ko": calls.append(p) or F["words"]["e0.4"])
 
@@ -131,8 +131,12 @@ def test_gate_narr_row_uses_speechmatics_not_whisper(tmp_path, monkeypatch):
     def boom(p, lang="ko"):
         raise RuntimeError("키 없음")
     monkeypatch.setattr(NV, "heard_words", boom)
+    row = narr_row()      # 스피치매틱스를 못 쓰면 위스퍼로 판정한다(사장님 결정, 주인 quality_gate.narr_words) — 미측정 아님
+    assert row["ok"] is False and "위스퍼 낱말 시각" in row["value"] and "스피치매틱스 못 씀(RuntimeError)" in row["value"], row   # 위스퍼도 못 들으면 ×
+    _ffmpeg("-f", "lavfi", "-i", "sine=f=301:d=29", "-ar", "48000", R / "voice.wav")      # 소리가 바뀌어야 위스퍼 저장값(md5)을 다시 쓴다
+    monkeypatch.setattr(LS, "asr_segments", lambda p: [(w["s"], w["e"], w["w"]) for w in F["words"]["real"]])
     row = narr_row()
-    assert row["ok"] is None and "참고(판정 안 함)" in row["value"], row     # 스피치매틱스를 못 쓰면 미측정 — 위스퍼로 ○/× 를 정하지 않는다
+    assert row["ok"] is True and "위스퍼 낱말 시각" in row["value"], row                  # 위스퍼가 제대로 들으면 ○
 
 
 # ---------------------------------------------------------------- ⑥ 스티커 모자람 — 10-25 렌더 21판 자막표 실측

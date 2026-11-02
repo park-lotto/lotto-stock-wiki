@@ -1,4 +1,4 @@
-"""칼카피 자동 실행기 — 채널 하나를 주면 7단계를 이어서 돈다 (관제 097, 2026-10-15).
+"""프리셋 자동 실행기 — 채널 하나를 주면 7단계를 이어서 돈다 (관제 097, 2026-10-15).
 
     py tools/calcopy/autorun.py https://www.youtube.com/@썰풀다 sseolpulda [--upto 2]
 

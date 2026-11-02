@@ -16,7 +16,8 @@ from tools.calcopy.hybrid import render_itssum as RI  # noqa: E402
 
 FX = json.loads((Path(__file__).parent / "fixtures" / "plan_voice_len.json").read_text(encoding="utf-8"))
 ROWS = [r for r in FX["rows"] if "skip" not in r]
-ST = {"name": "t", "length": {"min": 26, "max": 31}, "cps_target": 7.0, "timing": {"tail": 0.35}, "voice": {"voice_id": "v"}}
+ST = {"name": "t", "length": {"min": 26, "max": 31}, "cps_target": 7.0, "timing": {"tail": 0.35}, "voice": {"voice_id": "v"},
+      "frame": {"kind": "full"}}
 
 
 def _doc(tmp_path):
@@ -26,7 +27,7 @@ def _doc(tmp_path):
          "lines": [{"id": "N1", "kind": "tts", "tts": "가나다라마바사.", "caps": ["가나다라마바사"]},
                    {"id": "N2", "kind": "tts", "tts": "아자차카.", "caps": ["아자차카"]}]}
     (d / "대본.json").write_text(json.dumps(S, ensure_ascii=False), encoding="utf-8")
-    (d / "재료.json").write_text(json.dumps({"cand_dir": str(tmp_path), "cuts": {"N1": [{"src": "a.mp4", "ss": 0, "no_snap": True}], "N2": [{"src": "a.mp4", "ss": 5, "no_snap": True}]}}), encoding="utf-8")
+    (d / "재료.json").write_text(json.dumps({"cand_dir": str(tmp_path), "cuts": {"N1": [{"src": "a.mp4", "ss": 0, "no_snap": True}], "N2": [{"src": "a.mp4", "ss": 100, "no_snap": True}]}}), encoding="utf-8")
     return d
 
 
@@ -45,7 +46,7 @@ def _stub(monkeypatch, durs, called):
     monkeypatch.setattr(RI, "make_sentences", lambda S, full, R, log=print, align=None, spread=None:
                         ([{"id": k, "dur": v, "raw": [0, v], "tempo": 1.0, "wav": str(R / f"s_{k}.wav")} for k, v in durs.items()], 1.0, []))
     monkeypatch.setattr(RB, "fit_voice", lambda S, st, sent, align, log=print: sent)
-    monkeypatch.setattr(RB, "plan_rows", lambda S, T, st, locate=None: {"log": "", "transitions": []})
+    monkeypatch.setattr(RB, "plan_rows", lambda S, T, st, locate=None: {"log": [], "transitions": [], "rows": []})
     monkeypatch.setattr(RB, "transitions_of", lambda T, st, placed, log=None: [])
     monkeypatch.setattr(RB, "contact_sheet", lambda *a, **k: None, raising=False)      # G-10 시트는 test_contact_sheet 몫
     for name in ("cut_boundary_gate", "cut_content_gate", "cut_length_gate", "cut_still_gate"):

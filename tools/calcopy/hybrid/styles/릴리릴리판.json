@@ -135,5 +135,14 @@
  "bgm": {
   "id": "yumetourou",
   "why": "夢灯籠(RADWIMPS) 공식 오디오 — 벤치가 쓴 곡과 같은 곡(상호상관 0.855, 원곡 12.05초 지점). 10-27 사장님 '유메토로 · 쇼츠 사용 괜찮' · 음질: 남의 쇼츠에서 뽑은 128k 재압축 → 공식 opus 132k → mp3 320k"
+ },
+ "packs": {
+  "_why": "관제 263 지시서 11 — pack_map.py 가 채움(벤치 측정 → 팩 항목). packs 가 정본, 옛 칸(caption.pack·sfx_files·bgm.id/candidates)은 styles.load 가 packs 에서 채운다(다르면 오류)",
+  "bgm": {
+   "from": "판 전용 곡 'yumetourou' — 회원 배경음 목록(catalog.json) 밖이라 packs 가 정하지 않음(판 bgm.id 그대로)",
+   "gap": [
+    "판 전용 곡 'yumetourou' 회원이 팩에서 못 바꾼다(목록에 넣을지는 사람 결정 — 곡 사용 범위)"
+   ]
+  }
  }
 }

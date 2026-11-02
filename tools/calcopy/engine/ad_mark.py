@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """완성본 오른쪽 위 '광고' 표시 — 판단 주인 한 곳(사장님 10-22 "모든 렌더 시 오른쪽 상단에 광고 표시 하나, 너무 크지 않게").
 렌더러(render_bench·render_itssum·render_jaemi …)는 final.mp4 를 만든 뒤 apply_inplace(final) 하나만 부른다(각자 그리지 않는다).
-글자는 그림(PNG)으로 만들어 덮는다 — ffmpeg drawtext 는 한글 경로에서 죽은 적이 있다(메모리 볼케이노 작업폴더 한글 금지).
+글자는 그림(PNG)으로 만들어 덮는다 — ffmpeg drawtext 는 한글 경로에서 죽은 적이 있다(메모리 외부 사례 작업폴더 한글 금지).
 크기 = 화면 너비 기준(1080 → 글자 30px · 상자 약 78×46 · 가장자리 24px). 소리는 그대로(복사)."""
 from __future__ import annotations
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""TTS — 카드 문장 + 컷마다 따로 합성(볼케이노 방식), 길이는 파일을 ffprobe로 잰다. 정렬 응답에 의존하지 않는다.
+"""TTS — 카드 문장 + 컷마다 따로 합성(외부 사례 방식), 길이는 파일을 ffprobe로 잰다. 정렬 응답에 의존하지 않는다.
 
 합성기는 주입한다: synth(text, out_path) → None. 기본은 typecast_tts.synthesize(voice_id 필요).
 누적 글자수로 비용 상한(spec.POLICY_MAX_TTS_CHARS)을 지킨다 — 돈 나가기 전에 센다.
@@ -18,15 +18,15 @@ def typecast_synth(voice_id, **kw):
     return synth
 
 
-# 앞뒤 무음 제거 — 볼케이노 컷 wav엔 무음이 없다(실측), Typecast 원본엔 0.2초씩 붙는다.
+# 앞뒤 무음 제거 — 외부 사례 컷 wav엔 무음이 없다(실측), Typecast 원본엔 0.2초씩 붙는다.
 # ★stop_periods로 뒤를 자르면 **문장 중간 첫 쉼**에서 뒷말이 통째로 잘린다(실측 2026-09-12: 9음절이 0.21초).
 #   앞만 자르는 필터를 뒤집어서 두 번 쓴다(areverse 샌드위치).
 _TRIM = ("silenceremove=start_periods=1:start_threshold=-40dB:start_silence=0.02,areverse,"
          "silenceremove=start_periods=1:start_threshold=-40dB:start_silence=0.03,areverse,"
-         # 컷 안 쉼 압축 — 볼케이노 28컷엔 0.15s 이상 내부무음이 1건(0.24s)뿐인데 우리는 10건 2.56s였다(사장님: "늘어짐").
+         # 컷 안 쉼 압축 — 외부 사례 28컷엔 0.15s 이상 내부무음이 1건(0.24s)뿐인데 우리는 10건 2.56s였다(사장님: "늘어짐").
          # 0.2s 넘는 쉼을 전부 0.1s로 줄인다(stop_periods=-1 = 모든 구간).
          "silenceremove=stop_periods=-1:stop_duration=0.12:stop_threshold=-40dB:stop_silence=0.06")
-# v004 실측: 앞 잔여 31ms·뒤 70ms(볼케이노 27·38), 나레 전체 무음 1.63s(볼케이노 0.98) → 뒤 트림 -40dB/0.03, 쉼 0.12s↑→0.06s (사장님: "무음구간 많아")
+# v004 실측: 앞 잔여 31ms·뒤 70ms(외부 사례 27·38), 나레 전체 무음 1.63s(외부 사례 0.98) → 뒤 트림 -40dB/0.03, 쉼 0.12s↑→0.06s (사장님: "무음구간 많아")
 
 
 def _to_wav(src, dst):

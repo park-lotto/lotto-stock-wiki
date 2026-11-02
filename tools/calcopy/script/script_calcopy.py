@@ -1,5 +1,5 @@
-"""대본 칼카피 엔진 — 채널 하나의 쇼츠 대본을 전부 받아 줄 단위로 뜯고, 스토리 전개 유형별로 묶어 '그대로 베껴 쓸 수 있는' 칼카피 카드를 만든다.
-(화면·편집 칼카피는 tools/calcopy/engine 뜯기. 이 엔진은 말 — 대본만 본다.)
+"""대본 프리셋 엔진 — 채널 하나의 쇼츠 대본을 전부 받아 줄 단위로 뜯고, 스토리 전개 유형별로 묶어 '그대로 베껴 쓸 수 있는' 프리셋 카드를 만든다.
+(화면·편집 프리셋는 tools/calcopy/engine 뜯기. 이 엔진은 말 — 대본만 본다.)
 
 단계(모두 재개 가능 — 끝난 편은 건너뛴다):
   list        채널 쇼츠 목록(yt-dlp --flat-playlist)        → <out>/list.tsv
@@ -7,7 +7,7 @@
   transcribe  받아쓰기(faster-whisper, 이 PC에서 — 버텍스 0)  → <out>/transcripts.json
   tag         줄별 상세 태깅(버텍스 묶음 호출, 기본 8편/회)   → <out>/tags.jsonl
   cluster     전개 패턴으로 유형 묶기(태그만으로 — 버텍스 0)   → <out>/types.json
-  card        유형별 칼카피 카드(빈도표는 태그 집계 그대로)     → <out>/cards/<유형>.json·md
+  card        유형별 프리셋 카드(빈도표는 태그 집계 그대로)     → <out>/cards/<유형>.json·md
   report      보고 HTML                                        → <out>/report.html
 사용:
   py script_calcopy.py list --url https://www.youtube.com/@<채널>/shorts --slug <slug>

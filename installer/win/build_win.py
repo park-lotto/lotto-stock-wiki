@@ -41,7 +41,7 @@ LOCK = json.loads((ROOT / "common" / "tools.lock.json").read_text(encoding="utf-
 PLAT = "win-x64"
 # 설치 폴더 맨 위에 둘 이름(이것만 exe 에 들어간다 — 시험이 남긴 _engine_test 같은 것이 섞인 사고, 10-19)
 STAGE_TOP = {"app_version.json", "claude-plugin", "engine", "models", "packs", "postinstall.js", "server",
-             "shortem.mcpb", "tools", "설치안내.html", "시작.template.md"}
+             "shortem.mcpb", "tools", "install_guide.html", "START.template.md"}
 
 
 def log(msg: str) -> None:
@@ -416,7 +416,7 @@ def build_mcpb(out: Path, dist: Path, stage: Path, report: dict) -> Path:
     return target
 
 
-GUIDE = ROOT / "common" / "CLAUDE_숏클.md"     # 회원 지침 원본 한 곳(관제 290) — 빌드가 플러그인·server 두 자리에 복사만 한다
+GUIDE = ROOT / "common" / "MEMBER_GUIDE.md"     # 회원 지침 원본 한 곳(관제 290) — 빌드가 플러그인·server 두 자리에 복사만 한다
 
 
 def put_guide(dst: Path) -> None:
@@ -441,7 +441,7 @@ def build_plugin(stage: Path, report: dict) -> None:
 
 
 def build_code_kit(dist: Path, stage: Path, version: str, report: dict) -> Path:
-    """Claude Code 용 시작 꾸러미(exe 없이, 스타터킷처럼 md 한 장 끌어다 놓기) — 플러그인 + 시작_코드.md + node.
+    """Claude Code 용 시작 꾸러미(exe 없이, 스타터킷처럼 md 한 장 끌어다 놓기) — 플러그인 + START_CODE.md + node.
     ★설치 전 PC 엔 node 가 없을 수 있다 → 꾸러미 플러그인은 함께 든 node 로 연결 파일을 띄운다(설치 폴더 안 플러그인은 그대로 SHORTEM_NODE)."""
     import zipfile
     kit = dist / f"shortem-claude-code-{PLAT}-{version}.zip"
@@ -457,7 +457,7 @@ def build_code_kit(dist: Path, stage: Path, version: str, report: dict) -> Path:
                 z.write(p, ("숏템시작/claude-plugin" / rel).as_posix())
         z.writestr(("숏템시작/claude-plugin" / pj_rel).as_posix(), json.dumps(pj, ensure_ascii=False, indent=2) + "\n")
         z.write(stage / "tools" / "node" / "node.exe", "숏템시작/claude-plugin/shortem/node/node.exe")
-        z.write(ROOT / "시작_코드.md", "숏템시작/시작.md")
+        z.write(ROOT / "START_CODE.md", "숏템시작/START.md")
     os.replace(tmp, kit)
     report["code_kit"] = {"file": str(kit), "mb": round(kit.stat().st_size / 1e6, 1), "sha256": sha256_file(kit)}
     log(f"Claude Code 시작 꾸러미 {report['code_kit']['mb']}MB → {kit}")
@@ -571,8 +571,8 @@ def main() -> None:
     build_engine(stage, Path(a.engine).resolve(), report)
     build_packs(stage, Path(a.engine).resolve(), report)
     shutil.copy2(ROOT / "common" / "postinstall.js", stage / "postinstall.js")
-    shutil.copy2(ROOT / "시작.md", stage / "시작.template.md")
-    shutil.copy2(ROOT / "guide" / "설치안내.html", stage / "설치안내.html")
+    shutil.copy2(ROOT / "START.md", stage / "START.template.md")
+    shutil.copy2(ROOT / "guide" / "install_guide.html", stage / "install_guide.html")
     build_plugin(stage, report)
     build_mcpb(out, dist, stage, report)
     build_code_kit(dist, stage, a.version, report)

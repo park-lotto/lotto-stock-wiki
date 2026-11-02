@@ -1,4 +1,4 @@
-"""칼카피 판 → 회원 MCP 내보내기: '발행 대기 → 사장님 스위치' (관제 265).
+"""프리셋 판 → 회원 MCP 내보내기: '발행 대기 → 사장님 스위치' (관제 265).
 
   py tools/claude_portal/member_publish.py status                  # 엔진 모든 slug 의 단계·빠진 것·대기열 여부
   py tools/claude_portal/member_publish.py live <slug> --out <flow_episode 결과 파일> [--dir <편 폴더>]   # MCP 길 완주 기록(회원실측)
@@ -183,8 +183,9 @@ def plan(engine: Path, out: Path, version: str) -> tuple[list[list[str]], list[s
         dirs = [x for c in steps for i, x in enumerate(c) if i and c[i - 1] == "--preset"]
         steps.insert(0, [py, "tools/claude_portal/member_check.py", *[a for d_ in dirs for a in ("--preset", d_)]])   # 고객 경로 점검 — 빠진 게 있으면 rc=1 로 멈춘다
         steps.append([py, "installer/win/build_win.py", "--out", str(out), "--engine", str(engine), "--version", version])
+        steps.append([py, "tools/claude_portal/benchmark_pack.py", "build", "--engine", str(engine), "--out", str(out / "benchmark")])   # 고급반 벤치마킹 묶음(관제 304)
         steps.append([py, "tools/claude_portal/upload_release.py", "--dist", str(out / "dist"), "--packs", str(packs),
-                      "--version", version, "--update-stage", str(out / "win-x64" / "Shortem")])
+                      "--version", version, "--update-stage", str(out / "win-x64" / "Shortem"), "--benchmark", str(out / "benchmark" / "benchmark_pack.zip")])
     return steps, skipped
 
 

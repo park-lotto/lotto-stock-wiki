@@ -1,6 +1,6 @@
 {
  "for": "foreignshowshow 프리셋 소재 창고 — 벤치 채널 쇼츠 조회순(flow.bench_pool)",
- "made": "2026-10-30",
+ "made": "2026-10-31",
  "basis": "yt-dlp --flat-playlist <채널>/shorts 조회수(view_count) — bench_pool.py build",
  "channels": [
   "https://www.youtube.com/@foreignshowshow"
@@ -25,15 +25,15 @@
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
-   "id": "wIMLwQpUYd0",
+   "id": "2jJoIbdciDY",
    "views": 10000000,
-   "title": "갓탤런트에 화가가 나오면 끝까지 봐야하는 이유",
+   "title": "땅콩잼 안짜도 된다고?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
-   "id": "2jJoIbdciDY",
-   "views": 9900000,
-   "title": "땅콩잼 안짜도 된다고?!",
+   "id": "wIMLwQpUYd0",
+   "views": 10000000,
+   "title": "갓탤런트에 화가가 나오면 끝까지 봐야하는 이유",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
@@ -451,6 +451,12 @@
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
+   "id": "YCosCkpODLc",
+   "views": 1300000,
+   "title": "모래성을 쉽게 만든다고?!",
+   "ch": "https://www.youtube.com/@foreignshowshow"
+  },
+  {
    "id": "t5nkgDPx4Yw",
    "views": 1300000,
    "title": "어른들이 더 좋아한다는 제품",
@@ -469,9 +475,9 @@
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
-   "id": "YCosCkpODLc",
+   "id": "TOpscIwGOIA",
    "views": 1200000,
-   "title": "모래성을 쉽게 만든다고?!",
+   "title": "핸드폰이 드론이 된다고?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
@@ -496,12 +502,6 @@
    "id": "YhMo5Ht0hy8",
    "views": 1200000,
    "title": "손에 살쪘다고 요리 못할 거라는 심사위원",
-   "ch": "https://www.youtube.com/@foreignshowshow"
-  },
-  {
-   "id": "TOpscIwGOIA",
-   "views": 1100000,
-   "title": "핸드폰이 드론이 된다고?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
@@ -601,15 +601,15 @@
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
-   "id": "gJ2j2Z3xFd4",
-   "views": 801000,
-   "title": "마법같은 디저트를 만든 남자",
+   "id": "2zYVaWi6V7Q",
+   "views": 809000,
+   "title": "얼음도 견뎌내는 손전등?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
-   "id": "2zYVaWi6V7Q",
-   "views": 799000,
-   "title": "얼음도 견뎌내는 손전등?!",
+   "id": "gJ2j2Z3xFd4",
+   "views": 801000,
+   "title": "마법같은 디저트를 만든 남자",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
@@ -632,7 +632,7 @@
   },
   {
    "id": "MleLwpMSOfk",
-   "views": 735000,
+   "views": 737000,
    "title": "Fishing While Drinking Beer?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
@@ -686,7 +686,7 @@
   },
   {
    "id": "Qu3S7KKz4JM",
-   "views": 577000,
+   "views": 578000,
    "title": "이게 육포가 아니라고?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
@@ -698,7 +698,7 @@
   },
   {
    "id": "Lbct5sgnyjM",
-   "views": 526000,
+   "views": 528000,
    "title": "스트레스 풀린다는 슬라임",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
@@ -716,31 +716,31 @@
   },
   {
    "id": "jRWVDt0e03o",
-   "views": 505000,
+   "views": 512000,
    "title": "The ultimate VR machine that helps you lose weight?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
    "id": "gvlgElwlgqY",
-   "views": 481000,
+   "views": 482000,
    "title": "기저귀 냄새 없애주는 가루?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
    "id": "y1kqSuyHtpI",
-   "views": 477000,
+   "views": 478000,
    "title": "껌 하나로 2000억?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
    "id": "eQ8jfp6lU7M",
-   "views": 468000,
+   "views": 470000,
    "title": "The clip that keeps your bedding from tangling",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
    "id": "s119ZP_Nu4w",
-   "views": 442000,
+   "views": 444000,
    "title": "A portable wireless record player?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
@@ -752,13 +752,13 @@
   },
   {
    "id": "Jlo0i1kEtkQ",
-   "views": 434000,
+   "views": 436000,
    "title": "선물 없는 선물 박스?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
    "id": "SrE9To01edg",
-   "views": 430000,
+   "views": 431000,
    "title": "모두가 투자자를 말린 이유",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
@@ -770,26 +770,32 @@
   },
   {
    "id": "MIlHlQ1Wdg4",
-   "views": 374000,
+   "views": 375000,
    "title": "Guilt-Free Peanut Snacks",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
-   "id": "cZnJQnn4gIk",
-   "views": 359000,
-   "title": "버튼만 눌러도 아몬드밀크가?!",
-   "ch": "https://www.youtube.com/@foreignshowshow"
-  },
-  {
    "id": "KZWyu3lN7XQ",
-   "views": 357000,
+   "views": 361000,
    "title": "샤워부스를 자동으로 세척해준다고?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
+   "id": "cZnJQnn4gIk",
+   "views": 360000,
+   "title": "버튼만 눌러도 아몬드밀크가?!",
+   "ch": "https://www.youtube.com/@foreignshowshow"
+  },
+  {
    "id": "8NGWDpPH-Rs",
-   "views": 330000,
+   "views": 332000,
    "title": "코골이 방지 베개?!",
+   "ch": "https://www.youtube.com/@foreignshowshow"
+  },
+  {
+   "id": "JPsGZJ4nwz8",
+   "views": 314000,
+   "title": "방송 나와서 바로 40억을?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
@@ -799,14 +805,8 @@
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
-   "id": "JPsGZJ4nwz8",
-   "views": 309000,
-   "title": "방송 나와서 바로 40억을?!",
-   "ch": "https://www.youtube.com/@foreignshowshow"
-  },
-  {
    "id": "yeUP61IW6bM",
-   "views": 246000,
+   "views": 247000,
    "title": "신발끈 평생 안묶어도 된다고?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
@@ -824,19 +824,19 @@
   },
   {
    "id": "MKuv--Bsp64",
-   "views": 229000,
+   "views": 230000,
    "title": "엄청난 대나무 행주?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
    "id": "CfFQyRwk3L0",
-   "views": 226000,
+   "views": 227000,
    "title": "칼을 갈아서 보내준다고?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
    "id": "HrFZkgqbKg4",
-   "views": 211000,
+   "views": 212000,
    "title": "하이힐이 단화가 된다고?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
@@ -847,15 +847,21 @@
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
+   "id": "uwVxuE1olh4",
+   "views": 207000,
+   "title": "흔들어 먹는 샐러드?!",
+   "ch": "https://www.youtube.com/@foreignshowshow"
+  },
+  {
    "id": "opK6XXBLrks",
-   "views": 206000,
+   "views": 207000,
    "title": "딸깍 한번에 머리카락에 보석이?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
-   "id": "uwVxuE1olh4",
-   "views": 204000,
-   "title": "흔들어 먹는 샐러드?!",
+   "id": "M9RkObsVz2E",
+   "views": 194000,
+   "title": "스파이더맨 장난감?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
@@ -865,14 +871,8 @@
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
-   "id": "M9RkObsVz2E",
-   "views": 188000,
-   "title": "스파이더맨 장난감?!",
-   "ch": "https://www.youtube.com/@foreignshowshow"
-  },
-  {
    "id": "tFjqA-ZeXQk",
-   "views": 174000,
+   "views": 175000,
    "title": "나도 이제 미슐랭 셰프?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
@@ -896,7 +896,7 @@
   },
   {
    "id": "sWw5TS2VyMs",
-   "views": 155000,
+   "views": 157000,
    "title": "강아지 지켜주는 필수템?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
@@ -907,15 +907,15 @@
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
-   "id": "GVPzrNU0ISk",
+   "id": "K6LQVM3SYME",
    "views": 143000,
-   "title": "The Worst Investment in Shark Tank History?!",
+   "title": "The Man Who Talked His Way to an Investment",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
-   "id": "K6LQVM3SYME",
-   "views": 142000,
-   "title": "The Man Who Talked His Way to an Investment",
+   "id": "GVPzrNU0ISk",
+   "views": 143000,
+   "title": "The Worst Investment in Shark Tank History?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
@@ -925,8 +925,14 @@
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
+   "id": "66iiNifr5xE",
+   "views": 117000,
+   "title": "농구공 안주워도 된다고?!",
+   "ch": "https://www.youtube.com/@foreignshowshow"
+  },
+  {
    "id": "2Dy18hCAzB8",
-   "views": 103000,
+   "views": 105000,
    "title": "액체 걸러주는 후라이팬?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
@@ -944,7 +950,7 @@
   },
   {
    "id": "KqrChe3acL0",
-   "views": 89000,
+   "views": 90000,
    "title": "여드름 장난감?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
@@ -1015,15 +1021,15 @@
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
-   "id": "lvWMLChPNLs",
-   "views": 62000,
-   "title": "Why You Shouldn't Invest in Someone Who Is Only Nice",
+   "id": "8T0S0xQn23Q",
+   "views": 63000,
+   "title": "누워서 편하게 보는 안경?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
-   "id": "8T0S0xQn23Q",
-   "views": 61000,
-   "title": "누워서 편하게 보는 안경?!",
+   "id": "lvWMLChPNLs",
+   "views": 62000,
+   "title": "Why You Shouldn't Invest in Someone Who Is Only Nice",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
@@ -1048,6 +1054,12 @@
    "id": "0_lrPZaAHZM",
    "views": 52000,
    "title": "뭔지도 모르고 투자한다고?!",
+   "ch": "https://www.youtube.com/@foreignshowshow"
+  },
+  {
+   "id": "O7xARGNlPpY",
+   "views": 49000,
+   "title": "한국 컵밥이 미국에서 대박을?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
@@ -1108,12 +1120,6 @@
    "id": "pINVysbt63Q",
    "views": 36000,
    "title": "아빠보다 사장같은 아들",
-   "ch": "https://www.youtube.com/@foreignshowshow"
-  },
-  {
-   "id": "O7xARGNlPpY",
-   "views": 33000,
-   "title": "한국 컵밥이 미국에서 대박을?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },
   {
@@ -1184,7 +1190,7 @@
   },
   {
    "id": "Ib1VZZuEWEg",
-   "views": 28000,
+   "views": 29000,
    "title": "꼬마가 연매출 15억?!",
    "ch": "https://www.youtube.com/@foreignshowshow"
   },

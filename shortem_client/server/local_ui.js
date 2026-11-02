@@ -12,6 +12,7 @@ import { homeDir, workDir, jail } from './paths.js';
 import { engineRoot, engineTool } from './engine_bridge.js';
 import { readSettings, addRequest, saveLogo, saveLook, packFor, savePack, select, resetPack, catalog, PID_RE, syncFromServer } from './local_settings.js';
 import { rentPreset } from './preset_rent.js';
+import { withMine } from './my_presets.js';
 import { makeStep } from './make_flow.js';
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
 import { deliverStatus, linkTelegram, confirmTelegram, setDeliver, deliverFinal } from './deliver.js';
@@ -28,7 +29,9 @@ const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=
 let ui = null;   // {server, port, token, url}
 
 function presets() {
-  try { return JSON.parse(fs.readFileSync(jail(homeDir(), 'profiles.json'), 'utf8')).presets || []; } catch { return []; }
+  let c = {};
+  try { c = JSON.parse(fs.readFileSync(jail(homeDir(), 'profiles.json'), 'utf8')); } catch { /* 아직 없음 */ }
+  return withMine(c).presets || [];
 }
 
 // 완성본 목록 — make_flow 가 완성본 옆에 남긴 표식(<영상>.json: sid·소재 폴더·프리셋)

@@ -1,6 +1,6 @@
 {
  "for": "잇템로그(@it_item_log) 벤치 채널 쇼츠 조회순 — 해외원본형 소재 2편 함께 찾기의 둘째 소재 후보(flow.pick_alt_source)",
- "made": "2026-10-30",
+ "made": "2026-10-31",
  "basis": "yt-dlp --flat-playlist <채널>/shorts 조회수(view_count) — bench_pool.py build",
  "channels": [
   "https://www.youtube.com/@it_item_log"
@@ -98,7 +98,7 @@
   },
   {
    "id": "oInEkACMS5s",
-   "views": 4400000,
+   "views": 4500000,
    "title": "Foreigner shocked and disgusted after using Korean skincare products ㄷㄷ",
    "ch": "https://www.youtube.com/@it_item_log"
   },
@@ -236,7 +236,7 @@
   },
   {
    "id": "mxddifOs0h4",
-   "views": 587000,
+   "views": 592000,
    "title": "한국 화장품 처음쓰고 사용법에 당황해버린 외국인 ㅋㅋ",
    "ch": "https://www.youtube.com/@it_item_log"
   },
@@ -296,7 +296,7 @@
   },
   {
    "id": "6L68YmIkG3E",
-   "views": 331000,
+   "views": 335000,
    "title": "Why is there such a difference between Korean and US foundation??!",
    "ch": "https://www.youtube.com/@it_item_log"
   },
@@ -338,7 +338,7 @@
   },
   {
    "id": "WX3ObAd-4w4",
-   "views": 214000,
+   "views": 215000,
    "title": "Why Na PD freaked out after trying the hand cream Jung Yu-mi gave him ㄷㄷ",
    "ch": "https://www.youtube.com/@it_item_log"
   },
@@ -392,19 +392,19 @@
   },
   {
    "id": "3_GNRQZBxk8",
-   "views": 127000,
+   "views": 128000,
    "title": "The Legendary Sheet Mask Chae Jung-an Highly Recommends (Clear Away Dark Spots and Blemishes!)",
    "ch": "https://www.youtube.com/@it_item_log"
   },
   {
    "id": "QG5x2GAT-hk",
-   "views": 124000,
+   "views": 125000,
    "title": "한국 화장품 쓰고 역대급 도자기 피부 만든 외국인",
    "ch": "https://www.youtube.com/@it_item_log"
   },
   {
    "id": "7NhgxzaeCDw",
-   "views": 121000,
+   "views": 122000,
    "title": "레전드 크림 하나로 깐달걀 피부 만든 외국인 (라로슈포제 시카플라스트 밤 B5+ 크림)",
    "ch": "https://www.youtube.com/@it_item_log"
   },
@@ -440,7 +440,7 @@
   },
   {
    "id": "7OnftLdodXY",
-   "views": 87000,
+   "views": 88000,
    "title": "투명 립스틱 바르고 사기라며 분노하는 외국인",
    "ch": "https://www.youtube.com/@it_item_log"
   },
@@ -499,15 +499,15 @@
    "ch": "https://www.youtube.com/@it_item_log"
   },
   {
-   "id": "QqkNBBiTNVk",
+   "id": "DPWnKr69CVI",
    "views": 66000,
-   "title": "재벌가 신세계 손녀가 실제로 사용하는 메이크업템 8가지",
+   "title": "The #1 Olive Young Body Cream Approved by Chae Jung-an (feat. Cha Joo-young)",
    "ch": "https://www.youtube.com/@it_item_log"
   },
   {
-   "id": "DPWnKr69CVI",
-   "views": 65000,
-   "title": "The #1 Olive Young Body Cream Approved by Chae Jung-an (feat. Cha Joo-young)",
+   "id": "QqkNBBiTNVk",
+   "views": 66000,
+   "title": "재벌가 신세계 손녀가 실제로 사용하는 메이크업템 8가지",
    "ch": "https://www.youtube.com/@it_item_log"
   },
   {
@@ -848,7 +848,7 @@
   },
   {
    "id": "xIJn2evsO9o",
-   "views": 8300,
+   "views": 8400,
    "title": "Essential Makeup After a Breakup",
    "ch": "https://www.youtube.com/@it_item_log"
   },
@@ -860,13 +860,13 @@
   },
   {
    "id": "SzjdLkDE1ZI",
-   "views": 6800,
+   "views": 6900,
    "title": "Go Jun-hee's Top Pick Diet for Losing 10kg in 1 Month",
    "ch": "https://www.youtube.com/@it_item_log"
   },
   {
    "id": "NzvAqSnjtOM",
-   "views": 6800,
+   "views": 6900,
    "title": "The Water Cream that Chaebol Ladies Stock Up On (feat. Teacher Jung Saem-mool)",
    "ch": "https://www.youtube.com/@it_item_log"
   },

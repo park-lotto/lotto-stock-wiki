@@ -79,7 +79,7 @@ a.stop();
 const home = path.join(env.LOCALAPPDATA, 'Shortem');
 out.installed = fs.existsSync(path.join(home, 'tools', 'tools.manifest.json'));
 out.license_saved = fs.existsSync(path.join(env.SHORTEM_HOME, 'license'));
-out.desktop_start_md = fs.existsSync(path.join(dir, 'Desktop', '숏템작업', '시작.md'));
+out.desktop_start_md = fs.existsSync(path.join(dir, 'Desktop', '숏템작업', 'START.md'));
 out.leftover = fs.readdirSync(path.dirname(home)).filter((n) => n !== 'Shortem');   // .part·.new·.old 남으면 안 된다
 out.install_seconds = Math.round((Date.now() - t0) / 1000);
 

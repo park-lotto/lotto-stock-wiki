@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""칼카피 엔진 ① 뜯기 1판 — 영상 1편 → 외관·소리·제작법을 숫자와 사전 후보로.
+"""프리셋 엔진 ① 뜯기 1판 — 영상 1편 → 외관·소리·제작법을 숫자와 사전 후보로.
 
     PYTHONUTF8=1 py tools/calcopy/engine/analyze.py <mp4> --out <폴더>
 
-설계: docs/superpowers/specs/2026-10-15-칼카피엔진-design.md §3 ①뜯기
+설계: docs/superpowers/specs/2026-10-15-프리셋엔진-design.md §3 ①뜯기
 출력(폴더 안): 뜯기.json · 뜯기.md · sheet.jpg(컷마다 가운데 프레임) · captions/(자막 크롭) · fonts/(글꼴 대조 그리드)
 
 재는 자는 전부 남의 것을 부른다(같은 판단 두 벌 금지):
@@ -806,7 +806,7 @@ def to_md(R: dict) -> str:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="칼카피 엔진 ① 뜯기 — 영상 1편 분석")
+    ap = argparse.ArgumentParser(description="프리셋 엔진 ① 뜯기 — 영상 1편 분석")
     ap.add_argument("mp4")
     ap.add_argument("--out", required=True)
     ap.add_argument("--no-materials", action="store_true", help="제작법 판독(제미나이) 건너뛰기")

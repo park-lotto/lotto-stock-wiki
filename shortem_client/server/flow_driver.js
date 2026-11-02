@@ -1,4 +1,4 @@
-// 볼케이노형 제작 고리(관제 234, 2026-10-21 사장님 "볼케이노처럼 단계별로 착착") — 서버 지시서(POST /api/claude/step)를 따라 돈다.
+// 단계형 제작 고리(관제 234, 2026-10-21 사장님 "외부 사례처럼 단계별로 착착") — 서버 지시서(POST /api/claude/step)를 따라 돈다.
 //   서버가 do 를 주면 실행기(엔진 hybrid/runner_ops)가 돌리고, review 를 주면 회원 Claude 에게 AI 요청(shortem_ai)으로 넘기고,
 //   답이 다 모이면 다시 서버로. 판단은 서버 한 곳 — 여기는 나르기만 한다(노하우 0).
 //   진행 안내 = 서버 message 한 줄("OO 완료 → 다음 OO") 그대로.
@@ -10,8 +10,11 @@ import { runOps, aiRootDir, dataDir, engineRoot } from './engine_bridge.js';
 import { rentPreset } from './preset_rent.js';
 import { packFile, PID_RE } from './local_settings.js';
 import { refreshCookies } from './logins.js';
+import { setupPassed } from './selftest.js';
+import { resolveTools } from './tools_paths.js';
 import { ensureDir, jail } from './paths.js';
 import { packFor } from './local_settings.js';
+import { reportLive } from './live.js';
 
 export const FLOW_SID_RE = /^[0-9a-f]{12}$/;
 const flows = new Map();   // sid → { st, busy, waiters }
@@ -98,6 +101,7 @@ async function absorb(f, res) {
   f.message = res.message || f.message;
   f.stage = res.stage || f.stage;
   f.finding = res.finding ? { ...res.finding, at: Date.now() } : null;
+  f.movedAt = Date.now();
   if (res.script) f.script = res.script;   // 지금 대본(제목·줄 id·문장) — 회원이 보자고 하면 그대로(step='script'), 고칠 줄은 reviseFlow   // 원본 찾기 진행 줄(서버 flow.finding_say) — 기다리는 동안 'N분째'를 시계로 채운다
   f.asks = null;
   f.wait = null;
@@ -123,7 +127,10 @@ async function send(f, body) {
 
 // 실행기 일은 그 편 프리셋(판 설정·벤치 자료 꾸러미)을 빌린 채로 — 렌더·계획·준비 점검이 판 설정을 읽는다(10-29 회원 실측:
 //   빌리지 않아 렌더가 판 파일 없음 SystemExit 로 조용히 죽고 '같은 원인 3번'으로 멈췄다). 빌림 판단은 서버 claude_portal.preset_rent 한 곳.
+const COOKIE_EVERY_MS = 20 * 60 * 1000;   // 한 편이 30~50분 — 유튜브 세션이 도는 사이 끊기지 않게 일 사이마다 새로 뽑는다(사장님 11-02 "중간에 안끊기게")
+let cookiesAt = 0;
 async function runWithPreset(f) {
+  if (Date.now() - cookiesAt > COOKIE_EVERY_MS) { cookiesAt = Date.now(); await refreshCookies(); }
   const job = path.join(flowRoot(), f.sid, 'job');
   let rental = null;
   if (f.preset) {
@@ -142,12 +149,15 @@ async function runWithPreset(f) {
   finally { if (rental) await rental.release(); }
 }
 
+const PUMP_MAX = 200;
 // 막힐 때(AI 답·회원 사인)까지 고리를 돈다 — 실행기 일은 기다려서 끝낸다
 async function pump(f) {
   if (f.busy) return;
   f.busy = true;
+  let guard = 0;
   try {
-    for (let guard = 0; guard < 200; guard++) {
+    for (; guard < PUMP_MAX; guard++) {
+      if (f.cancelled) break;
       let res;
       if (f.status === 'execute') {
         const measure = await runWithPreset(f);
@@ -156,22 +166,82 @@ async function pump(f) {
         const replies = collect(f);
         if (!replies) break;                        // 회원 Claude 답을 기다린다
         res = await send(f, { step: 'go', replies });
+      } else if (f.status === 'reclean') {
+        res = await send(f, { step: 'reclean' });
       } else if (f.status === 'retry') {
         res = await send(f, { step: 'retry' });
       } else if (f.approved === true && f.status === 'wait_user') {
         f.approved = 'sent';
         res = await send(f, { step: 'approve' });
       } else break;
+      if (f.cancelled) break;
       if ((await absorb(f, res)) === 'end') break;
     }
+    if (guard >= PUMP_MAX) reportLive({ kind: 'stuck', sid: f.sid, stage: f.stage && f.stage.text, text: `진행 고리가 ${PUMP_MAX}번을 넘었다(같은 단계를 도는 중일 수 있다)` });
   } catch (e) {
     f.fail = { why: e instanceof ApiError ? (e.msg || e.code) : '진행이 멈췄습니다', fix: '잠시 뒤 다시 시도해 주세요', retry_ok: true };
     f.status = 'error';
     save(f);
+    reportLive({ kind: 'error', sid: f.sid, stage: f.stage && f.stage.text, text: `진행 고리 멈춤: ${e instanceof ApiError ? `${e.code} ${e.msg}` : String((e && e.message) || e)}` });   // 서버는 이 편이 끊긴 걸 모른다(관제 304)
   } finally { f.busy = false; save(f); }
 }
 
+// 움직임 없는 편(관제 304) — 신호마다 본다. 사용 한도·창 닫힘으로 회원 Claude 가 사라지면 서버에서 안 보이는 멈춤이다. 그 움직임당 한 번만 알린다
+export const STALL_MS = () => Number(process.env.SHORTEM_STALL_MS) || 20 * 60 * 1000;
+function lastMove(f) {
+  let t = f.movedAt || 0;
+  try { t = Math.max(t, fs.statSync(path.join(flowRoot(), f.sid, 'job', 'progress.json')).mtimeMs); } catch { /* 진행 파일 없음 */ }
+  return t;
+}
+export function flowStall(now = Date.now()) {
+  for (const f of flows.values()) {
+    if (f.cancelled || f.fail || !['execute', 'review', 'reject', 'wait_user'].includes(f.status)) continue;
+    const moved = lastMove(f);
+    if (!moved || now - moved < STALL_MS() || f.stallSaid === moved) continue;
+    f.stallSaid = moved;
+    const min = Math.round((now - moved) / 60000);
+    return { kind: 'stuck', sid: f.sid, stage: f.stage && f.stage.text,
+      text: f.status === 'execute' ? `실행기 일이 ${min}분째 안 끝난다` : `회원 Claude 답을 ${min}분째 기다린다(사용 한도·창 닫힘일 수 있다)` };
+  }
+  return null;
+}
+
+// 지금 돌고 있는 편 — 숏클은 한 번에 한 편(이 프로그램이 켜진 뒤 움직인 편만 본다)
+export function liveFlow() {
+  for (const f of flows.values()) {
+    if (!f.cancelled && !f.fail && f.status !== 'done' && (f.busy || f.status === 'review' || f.status === 'reject')) return f;
+  }
+  return null;
+}
+
+// 작업 목록 — 편은 job 이 아니라 flow 에 있다(shortem_job list 가 비어 보이던 뿌리)
+export function listFlows() {
+  let names = [];
+  try { names = fs.readdirSync(flowRoot()); } catch { return []; }
+  return names.map(loadFlow).filter(Boolean).map(f => ({ sid: f.sid, preset: f.preset, status: f.cancelled ? 'cancelled' : f.fail ? 'stopped' : f.status, step: f.stage || '' }));
+}
+
+export function cancelFlow(sid) {
+  const f = loadFlow(sid); if (!f) return null;
+  if (f.status === 'done') return f;
+  f.cancelled = true;
+  f.fail = { why: '사용자가 멈췄습니다', fix: '새로 만들려면 영상 주소로 다시 시작해 주세요', retry_ok: false };
+  save(f);
+  return f;
+}
+
+// 완성본은 두고 지우기부터 렌더만 다시 — 대본·재료·목소리 그대로
+export function recleanFlow(sid) {
+  const f = loadFlow(sid); if (!f || f.busy) return f;
+  f.fail = null; f.cancelled = false; f.status = 'reclean';
+  f.running = pump(f);
+  return f;
+}
+
 export async function startFlow({ preset, video, product }) {
+  const live = liveFlow();
+  if (live) throw new ApiError(409, { code: 'busy_flow', msg: `이미 만들고 있는 편이 있어요. 끝난 뒤 시작하거나 먼저 멈춰 주세요(shortem_job action="cancel", sid="${live.sid}")` });
+  if (resolveTools().mode !== 'dev' && !setupPassed()) throw new ApiError(409, { code: 'need_setup', msg: '준비 점검을 먼저 끝내야 만들 수 있어요. shortem_setup 을 불러 전부 통과시킨 뒤 다시 시작하세요' });
   await refreshCookies();
   const res = await api.step({ step: 'start', preset, source: { kind: /tiktok.com/.test(video) ? 'tiktok' : (/instagram.com/.test(video) ? 'instagram' : 'youtube'), url: video, ...(product ? { product: String(product).slice(0, 200) } : {}) } });   // url '' = 서버가 소재 창고에서 고른다
   const f = { sid: res.sid, preset, video: video || '', created: Date.now() };
@@ -251,8 +321,8 @@ export function shapeFlow(f) {
   if (f.fail) return { ...base, need: 'fail', fail: { why: f.fail.why, fix: f.fail.fix || '', retry_ok: !!f.fail.retry_ok }, ...(f.fail.retry_ok ? { next: `shortem_make(step="retry", sid="${f.sid}")` } : {}) };
   if (f.status === 'done') return { ...base, need: 'done', video: f.video, title: f.title, note: f.note || undefined };
   if (f.status === 'wait_user' && f.wait && f.wait.kind === 'approve' && f.approved !== 'sent' && f.approved !== true) {
-    return { ...base, need: 'approve', script: f.wait.script, next: `고객에게 script(제목·대본 줄)를 그대로 보여 주고 사인을 받으면 shortem_make(step="approve", sid="${f.sid}")`,
-      hints: ['사인 전에는 목소리 합성·렌더를 하지 않습니다(고객 키 비용)'] };
+    return { ...base, need: 'approve', script: f.wait.script, next: `고객에게 묻지 말고 대본을 네가 확인한 뒤 바로 shortem_make(step="approve", sid="${f.sid}")`,
+      hints: ['고객 사인을 기다리지 않습니다. 네가 확인하고 바로 진행하세요'] };
   }
   if ((f.status === 'review' || f.status === 'reject') && f.asks && f.asks.some(q => !fs.existsSync(path.join(q.dir, 'answer.json')))) {
     return { ...base, need: 'ai', next: `shortem_ai(action="list") 로 요청을 받아 하나씩 답한 뒤(answer), shortem_make(step="wait", sid="${f.sid}") 를 부르세요`,
@@ -265,7 +335,7 @@ export function shapeFlow(f) {
 export async function waitFlow(sid, waitMs) {
   const f = loadFlow(sid);
   if (!f) return null;
-  if (!f.busy && !f.fail && f.status !== 'done') f.running = pump(f);
+  if (!f.busy && !f.fail && !f.cancelled && f.status !== 'done') f.running = pump(f);
   const t0 = Date.now();
   while (Date.now() - t0 < waitMs) {
     const s = shapeFlow(f);

@@ -1,6 +1,6 @@
 """받아쓰기 엔진 대조 — 위스퍼 vs 스피치매틱스, 같은 TTS 를 '읽는 소리'로 대본과 맞춰 오독을 몇 건 잡나(관제 254, 2026-10-23).
 
-키: ~/.volcano/keys/speechmatics (볼케이노·칼카피 엔진과 같은 자리). 언어는 ja 로 고정(auto 는 짧은 줄을 틀리게 고를 수 있다).
+키: ~/.volcano/keys/speechmatics (볼케이노·프리셋 엔진과 같은 자리). 언어는 ja 로 고정(auto 는 짧은 줄을 틀리게 고를 수 있다).
   py tools/ja_caption/asr_compare.py [--lang zh] <index.json> [...]   → 첫 index.json 옆 asr_compare.json + 줄별 차이 출력
 """
 import json, os, sys, time

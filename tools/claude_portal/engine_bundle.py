@@ -25,6 +25,7 @@ FORBIDDEN = (
     "tools/calcopy/engine/to_frame*.py",          # 틀 설명서 만들기
     "tools/calcopy/engine/preset_*.py", "tools/calcopy/engine/loo_preset.py",
     "tools/calcopy/engine/channel_find*.py",      # 채널 찾기·판정
+    "tools/calcopy/engine/bench_member.py",       # 고급반 벤치마킹 입구 — benchmark_pack 으로 빌려준다(관제 304)
     "tools/calcopy/engine/recheck.py", "tools/calcopy/engine/fontmatch.py",   # layout1 = 완성본 대조(check 단계)가 쓰는 자 — 묶음에 둔다
     "tools/calcopy/engine/gemini_server.py", "tools/calcopy/engine/gemini_keys.py", "tools/calcopy/pull_pool_keys.py",
     "tools/calcopy/engine/_server_access.py",     # 우리 서버 SSH 정보

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""관제 266 ④ — render_bench 목소리도 회원 팩 provider·감정을 따른다(합성 분기 주인 preset_make.make_synth · 캐시 열쇠 narr_align.voice_key).
+"""관제 266 ④ — render_bench 목소리도 회원 팩 provider·감정을 따른다(합성 분기 주인 voice_synth.make_synth · 캐시 열쇠 narr_align.voice_key).
 옛 길(타입캐스트 tc_·미나 kr-, 감정 없음)은 열쇠·합성 모두 옛 그대로여야 한다(받아 둔 캐시 재과금 금지). 진짜 합성은 부르지 않는다(가짜로 바꿔 끼움)."""
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import json
 import pytest
 
 from tools.calcopy.engine import narr_align as NA
-from tools.calcopy.engine import preset_make as PM
+from tools.calcopy.engine import voice_synth as VS
 from tools.calcopy.hybrid import render_itssum as RI
 from tools.calcopy.hybrid.common import StageError
 
@@ -33,7 +33,7 @@ def fake(monkeypatch):
         return go
     monkeypatch.setattr(typecast_tts, "synthesize", tc)
     monkeypatch.setattr(providers, "typecast_key", lambda *a: "k")
-    monkeypatch.setattr(PM, "make_synth", ms)
+    monkeypatch.setattr(VS, "make_synth", ms)
     monkeypatch.setattr(NA, "_proc_slots", lambda: [])
     return calls
 

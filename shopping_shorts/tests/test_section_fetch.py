@@ -41,7 +41,7 @@ def test_dash_pick_quality_rule():
     v, a, _ = YF.dash_pick({"formats": [f("399", 1920, 1080, "av01"), f("299", 1920, 1080, "avc1.64002A"), f("136", 1280, 720, "avc1"), aud]})
     assert v["format_id"] == "299" and a["format_id"] == "140"          # 같은 1080 이면 avc1(디코딩 가벼움)
     v, _, _ = YF.dash_pick({"formats": [f("401", 3840, 2160, "av01"), f("299", 1920, 1080, "avc1"), aud]})
-    assert v["format_id"] == "401"                                       # 가능하면 최고
+    assert v["format_id"] == "299"                                       # 4K 는 안 고른다(긴 변 1920 상한, 관제 304)
     v, _, why = YF.dash_pick({"formats": [f("136", 1280, 720, "avc1"), aud]})
     assert v is None and "화질 미달" in why                               # 가로 720p 는 안 받는다 → 다음 길
     v, _, _ = YF.dash_pick({"formats": [f("136", 720, 1280, "avc1"), aud]})

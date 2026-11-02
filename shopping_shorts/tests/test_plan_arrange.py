@@ -100,13 +100,12 @@ def test_check_place_uses_board_fixed_enter_not_reference():
     assert chk["worst_slot_diff"] == 0.0
 
 
-def test_code_only_check_row_stops_without_material_loop():
+def test_code_only_check_row_finishes_without_material_loop():
     from tools.calcopy.hybrid import flow as F
-    import pytest
     st = {"version": "v", "tries": {}, "log": [], "auto": {"ok": False, "rows": [{"group": "자막·효과", "what": "배치(본보기 벤치 편 대조)", "ok": False, "value": "x"}]},
           "look": {"ok": False, "problems": []}}
-    with pytest.raises(F._Stop):
-        F.ph_check_judge(st, {}, {}, None)
+    assert F.ph_check_judge(st, {}, {}, None) == {"goto": "deliver"}
+    assert st["look_left"]
 
 
 def test_blur_strength_scales_with_region_height():

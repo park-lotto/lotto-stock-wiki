@@ -1,4 +1,4 @@
-// 숏클 회원 지침(installer/common/CLAUDE_숏클.md) ↔ 회원 손발 대조(관제 290, 10-30 점검표 × 11개) — 지침이 시키는 일을 도구가 실제로 할 수 있나.
+// 숏클 회원 지침(installer/common/MEMBER_GUIDE.md) ↔ 회원 손발 대조(관제 290, 10-30 점검표 × 11개) — 지침이 시키는 일을 도구가 실제로 할 수 있나.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
@@ -9,7 +9,7 @@ import { makeKey } from './fake_server.js';
 
 freshDirs('member_guide');
 const REPO = path.resolve(process.cwd(), '..', '..');
-const GUIDE = path.join(REPO, 'installer', 'common', 'CLAUDE_숏클.md');
+const GUIDE = path.join(REPO, 'installer', 'common', 'MEMBER_GUIDE.md');
 const skillTools = name => {
   const t = fs.readFileSync(path.join(REPO, 'installer', 'plugin', 'shortem', 'skills', name, 'SKILL.md'), 'utf8');
   return (t.match(/^allowed-tools:(.*)$/m) || ['', ''])[1].split(/\s+/).filter(Boolean).map(x => x.replace('mcp__plugin_shortem_shortem__', ''));
@@ -117,7 +117,7 @@ test('회원 지침이 시작 훅으로 들어간다 — 덩어리마다 훅 한
   const { execFileSync } = await import('node:child_process');
   const inst = path.join(process.env.SHORTEM_HOME, '_inst');
   fs.mkdirSync(path.join(inst, 'server', 'guide'), { recursive: true });
-  fs.copyFileSync(GUIDE, path.join(inst, 'server', 'guide', 'CLAUDE_숏클.md'));
+  fs.copyFileSync(GUIDE, path.join(inst, 'server', 'guide', 'MEMBER_GUIDE.md'));
   const hook = path.join(REPO, 'installer', 'plugin', 'shortem', 'hooks', 'guide.js');
   const hooks = JSON.parse(fs.readFileSync(path.join(REPO, 'installer', 'plugin', 'shortem', 'hooks', 'hooks.json'), 'utf8'));
   const n = hooks.hooks.SessionStart[0].hooks.length;

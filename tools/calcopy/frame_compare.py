@@ -1,6 +1,6 @@
 """틀 설명서(frame.json) → 라이브 렌더 경로(썸네일 = compose_still → render_layer_one)로 한 장 → 원본 프레임과 나란히 + 잉크 좌표표.
 
-설계 2026-10-15-칼카피엔진 §6-3·§6-5(대조). 쓰는 법:
+설계 2026-10-15-프리셋엔진 §6-3·§6-5(대조). 쓰는 법:
   py tools/calcopy/frame_compare.py <frame.json> <원본프레임.png> <출력폴더> --title "1줄\n2줄" --caption "자막"
 나오는 것: <출력>/ours.png(우리 완성 구도 한 장) · <출력>/layer.png(투명 장면 레이어) · <출력>/compare.png(원본|우리) ·
           표준출력에 층별 잉크 상자(원본 vs 우리, 차이 px).

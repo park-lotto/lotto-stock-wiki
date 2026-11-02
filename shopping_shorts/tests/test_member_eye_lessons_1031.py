@@ -67,8 +67,8 @@ def test_eye_left_after_limit_still_finishes_with_notice():
     assert st["look_left"] == ["7초 밋밋함"] and "7초 밋밋함" in st["notice"]
 
 
-def test_gate_fail_at_limit_is_not_delivered():
-    """자동 검사 ×는 완성으로 안 넘어간다 — 기준을 낮추는 길이 아니다."""
+def test_ad_mark_fail_at_limit_is_not_delivered():
+    """11-02 검사는 권고지만 광고 표시 누락은 금지선이다 — 완성으로 안 넘어간다."""
     st = {"version": "x", "log": [], "tries": {"look": F.LIMITS["look"]}, "auto": {"ok": False, "rows": [{"group": "표식", "what": "광고", "ok": False}]}, "look": {"ok": False, "problems": []}}
     with pytest.raises(F._Stop):
         F.ph_check_judge(st, {}, {}, {})

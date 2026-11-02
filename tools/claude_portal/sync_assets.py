@@ -4,7 +4,7 @@ claude_assets 표(id, kind, name, sha256, size, preview_id, grp)를 갱신한다
 
 어디서 찾나(2026-10-18 실측 위치):
   글꼴    out/scene-style-ui-showcase.html 의 @font-face(렌더러가 실제로 여는 파일) — id font:<family>
-          + 거기 없는 static/fonts/*.ttf·otf 는 "Cc"+줄기 이름(엔진 tools/calcopy/register_fonts.py 와 같은 이름 규칙 — 칼카피 틀이 쓰는 이름)
+          + 거기 없는 static/fonts/*.ttf·otf 는 "Cc"+줄기 이름(엔진 tools/calcopy/register_fonts.py 와 같은 이름 규칙 — 프리셋 틀이 쓰는 이름)
   효과음  shopping_shorts/assets/sfx_packs/팩NN/*.wav — id sfx:팩NN/<파일>, grp=팩NN
   BGM     shopping_shorts/assets/bgm_lib/catalog.json tracks — id bgm:<id>
   템플릿  deco_templates.TEMPLATES → static/templates/<file> — id template:<id>

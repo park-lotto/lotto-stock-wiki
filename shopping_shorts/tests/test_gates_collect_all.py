@@ -15,7 +15,8 @@ sys.path.insert(0, str(ROOT))
 from tools.calcopy.hybrid import render_bench as RB  # noqa: E402
 from tools.calcopy.hybrid import render_itssum as RI  # noqa: E402
 
-ST = {"name": "t", "length": {"min": 1, "max": 99}, "cps_target": 7.0, "timing": {"tail": 0.35}, "voice": {"voice_id": "v"}}
+ST = {"name": "t", "length": {"min": 1, "max": 99}, "cps_target": 7.0, "timing": {"tail": 0.35}, "voice": {"voice_id": "v"},
+      "frame": {"kind": "full"}}
 
 
 def _doc(tmp_path):

@@ -1,0 +1,514 @@
+{
+ "for": "hotpeople 프리셋 소재 창고 — 벤치 채널 쇼츠 조회순(flow.bench_pool)",
+ "made": "2026-10-31",
+ "basis": "yt-dlp --flat-playlist <채널>/shorts 조회수(view_count) — bench_pool.py build",
+ "channels": [
+  "https://www.youtube.com/@뜨거운사람들"
+ ],
+ "rows": [
+  {
+   "id": "BzMWncGDhnY",
+   "views": 4000000,
+   "title": "스포츠는 장비빨이라는 사람들 입을 다물게 한 사건",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "X4GIghUr_B4",
+   "views": 3100000,
+   "title": "전 세계를 울린 한국인, 한국의 슈바이처 신부 이태석",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "dvJg0By8Luw",
+   "views": 2600000,
+   "title": "전 세계를 한국어로 떼창하게 만든 남자, 하이브 방시혁 방탄소년단",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "z1fgI__kSPw",
+   "views": 2100000,
+   "title": "재벌가에 나타난 돌연변이, sk 최태원 회장의 딸",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "N4VoQUIwb-I",
+   "views": 1700000,
+   "title": "최하위가 전설이 된 방법",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "s1Z5z_TrnPA",
+   "views": 1500000,
+   "title": "에이티즈 최산, 기괴하다며 욕먹던 아이돌 #bad",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "EjwGyMGfyCc",
+   "views": 1400000,
+   "title": "농구계의 상식을 박살내버린 인물",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "Y72vnk5EpF4",
+   "views": 1200000,
+   "title": "현실판 테이큰",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "94He4a-KJe0",
+   "views": 1200000,
+   "title": "세상에서 가장 위대한 아버지",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "xcI02nF6ZwM",
+   "views": 1100000,
+   "title": "전세계 사람들에게 큰 용기를 준 이 노래의 정체",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "LmXejoM_cTg",
+   "views": 1100000,
+   "title": "경이로운 인간의 생존 본능",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "d3K5TO9RMP4",
+   "views": 1100000,
+   "title": "트라우마를 극복한 최고의 멘탈을 가진 스포츠선수",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "2EYuTNO6ypI",
+   "views": 1000000,
+   "title": "오만한 악플러를 참교육하는 소녀의 품격",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "QtCKhwqvFl0",
+   "views": 1000000,
+   "title": "세기의 낭만이라 불린 남자",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "DOtize6jt9c",
+   "views": 1000000,
+   "title": "야구 역사상 다시는 안나올 기록",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "8z3Vmeydcw4",
+   "views": 1000000,
+   "title": "안세영이 세계 최고라 불리는 이유",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "aKubG1MrQ_k",
+   "views": 1000000,
+   "title": "장애는 내 꿈의 한계가 될 수 없다, 비비드라라러브 주인공 김유남",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "aISNUt9lc_c",
+   "views": 982000,
+   "title": "경찰도 포기한 악마집단을 붕괴시킨 여대생",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "CdTdYZssMaA",
+   "views": 919000,
+   "title": "노블레스 오블리주의 완벽한 예",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "P7ZCWvtG7Os",
+   "views": 913000,
+   "title": "식물인간 아들에게 아버지가 한 일",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "22pPjMk-R_k",
+   "views": 864000,
+   "title": "지금의 에이티즈가 있게한 남자 #최산#bad",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "65qcNEoPcP0",
+   "views": 817000,
+   "title": "BTS가 사람 미치게 만드는 진짜 이유",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "TtKcAllRcf8",
+   "views": 736000,
+   "title": "역대급 재능이란 이런 것",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "7IHAvAAR9t8",
+   "views": 649000,
+   "title": "여자가 이 남자를 믿은 이유, 코너 맥그리거",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "kYdNkH2knIA",
+   "views": 635000,
+   "title": "과학계가 '절대 불가능'이라 못박았던 기록",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "OmOpI0CpK1U",
+   "views": 628000,
+   "title": "길거리 신발 오타쿠가 1조를 번 방법",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "PZ3GHUfL_qI",
+   "views": 604000,
+   "title": "타고난게 하나도 없는 선수, 올라잇 박재훈",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "2coqFxLyGNQ",
+   "views": 592000,
+   "title": "온 우주가 돕는다던 전설의 생방송 ㅋㅋ",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "jnSj3KVpLPo",
+   "views": 516000,
+   "title": "다시없을 세기의 사랑, 너는 내운명",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "sl190TjAxHY",
+   "views": 470000,
+   "title": "현재 미국에서 가장 뜨거운 상황",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "QTTUqd6lnaI",
+   "views": 458000,
+   "title": "나약함을 부수고 지구최강으로 거듭난 남자",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "0oUZZL2TgRc",
+   "views": 289000,
+   "title": "전세계 60개국이 이 남자를 따라 뛰는 이유",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "k5wsBtuUC4Y",
+   "views": 265000,
+   "title": "역사상 가장 어이없게 세계 최고를 이긴 남자",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "h9kOSfHYlt8",
+   "views": 226000,
+   "title": "모두가 삼류라던 싱글맘의 원고",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "eehzg4pzwC4",
+   "views": 216000,
+   "title": "모두를 충격에 빠뜨린 외다리 레슬러",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "Dv4AClkBVwQ",
+   "views": 213000,
+   "title": "BTS 슈가가 증명해낸 방법",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "aIAUO0UCcCU",
+   "views": 200000,
+   "title": "배타고 춤 배우던 소녀의 충격적인 근황, 리센느 원이",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "MKQ75QY580w",
+   "views": 145000,
+   "title": "에이티즈 최산, bad 챌린지 숨겨진 이야기",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "3EkwnSzxMGg",
+   "views": 141000,
+   "title": "유튜브로 독학해서 세계 최고가 된 남자",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "FkBhWwrnrTE",
+   "views": 139000,
+   "title": "우승확률 0.02%을 뒤집은 축구 선수",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "6PNLs61ukp4",
+   "views": 134000,
+   "title": "격투게임에서 소리만 듣고 콤보 꽂아넣는 맹인 게이머",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "7aZHOl-ox54",
+   "views": 120000,
+   "title": "굶어가던 마을 사람들을 위해 기적을 만든 소년",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "sKgVQLGcnHk",
+   "views": 104000,
+   "title": "10년간 실패만 하다가 수조 번 남자",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "guZxpXDVNR4",
+   "views": 92000,
+   "title": "인생 끝났다던 드러머가 전설이 된 방법",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "OX5yssfTg98",
+   "views": 82000,
+   "title": "방구석 10대가 엘리트 과학 카르텔에 한방 먹인 사건",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "CmnmcIvwTPo",
+   "views": 62000,
+   "title": "백수에서 20조원 엑시트",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "kbxDhWBibcc",
+   "views": 54000,
+   "title": "자신의 여자를 지키는 이 남자의 완벽한 대처법",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "KBfIqf6vPdY",
+   "views": 53000,
+   "title": "정부도 포기한 땅에 소년이 한 미친짓",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "KDJTEnqt4MA",
+   "views": 48000,
+   "title": "실화인게 안믿기는 불사신이 된 남자",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "uolgsCAhcRc",
+   "views": 44000,
+   "title": "전설의 방구석 수사대",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "frXYNgHeboA",
+   "views": 44000,
+   "title": "가장 소중한 것을 지켜낸 남자, 악뮤 이찬혁",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "QR8-HkN9Mco",
+   "views": 42000,
+   "title": "치명적 단점늘 필살 무기로 바꾼 남자",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "nPy9O0wJDUU",
+   "views": 41000,
+   "title": "히틀러를 찬양한 자의 최후",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "nl59sKh4hZo",
+   "views": 40000,
+   "title": "친구를 위해 14년동안 한일",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "DC_bemnPVK8",
+   "views": 35000,
+   "title": "실패만 5126번 했던 남자의 소름돋는 결과, 제임스 다이슨",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "fhIdNZIBwGQ",
+   "views": 32000,
+   "title": "법을 뒤집고 업계 최고가 된 청년",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "OB_ozBJ0do8",
+   "views": 31000,
+   "title": "스포츠 역사상 가장 위대한 언더독의 전설",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "2E11XqmQe-Q",
+   "views": 30000,
+   "title": "단신으로 nba를 씹어먹은 남자",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "n9LQV40cQl0",
+   "views": 28000,
+   "title": "흙수저에서 트로트 왕이 된 남자, 가수 임영웅",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "wnxZ7vtaH8M",
+   "views": 26000,
+   "title": "구제불능 남자한테 커리어 전부를 건 여자",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "sKoF7Imxs3I",
+   "views": 26000,
+   "title": "전국민이 동참한 인류애 레전드",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "YUTrh7bKsyY",
+   "views": 25000,
+   "title": "실화라 더 경이로운 인간의 생존 본능",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "5Yy7BJLi7b4",
+   "views": 24000,
+   "title": "가난한 자들의 아버지가 된 바보 의사",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "vpAiveIo3Ao",
+   "views": 24000,
+   "title": "너무 힙해서 사라진 가수의 충격 근황",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "laPHAy3FG_s",
+   "views": 23000,
+   "title": "무례한 질문에 대한 그녀의 대처법",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "MM9_PNoaYQI",
+   "views": 23000,
+   "title": "조롱을 환호로 바꾼 남자 가수 김장훈",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "DB3JaTTG-EU",
+   "views": 22000,
+   "title": "올림픽 금메달을 버린 남자",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "7PFWxq0Y1bU",
+   "views": 22000,
+   "title": "인도에서 일어난 역대급 낭만",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "QXKFoNjQZTM",
+   "views": 19000,
+   "title": "황정민이 잘생긴 배우들 사이에서 살아남은 이유",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "ags3kLwhV74",
+   "views": 16000,
+   "title": "클립을 14번 교환한 결과 ㅋ",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "p4syAPCj2f4",
+   "views": 16000,
+   "title": "전설의 궁수",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "N8jXrm55-8o",
+   "views": 15000,
+   "title": "세상에서 가장 위대한 아버지2",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "IbYOPJ1dBUg",
+   "views": 15000,
+   "title": "연예인 기부쇼라며 욕먹던 배우, 신민아",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "FKs4ZyGPUIY",
+   "views": 14000,
+   "title": "미국 역사상 가장 황당하고 위대한 군인",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "kYzxpCyt8RA",
+   "views": 14000,
+   "title": "무일푼에서 4조원에 엑시트한 남자",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "urFVtNwcxsg",
+   "views": 14000,
+   "title": "세계 바이오 산업의 판도를 바꾼 남자, 셀트리온 서정진",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "jsxxqehtSdE",
+   "views": 12000,
+   "title": "워렌 버핏이 수백억 날린 트레이더에게 한 행동",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "wAIg57IwYNM",
+   "views": 11000,
+   "title": "전설의 세탁소 사장님",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "HO587e64L5Q",
+   "views": 11000,
+   "title": "전례가 없으면 선례가 된다. 삼성 반도체 연구원이자 국회의원 양향자",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "6K-Yxrssr64",
+   "views": 10000,
+   "title": "자신의 제품을 사지말라고 광고해서 억만장자가 된 사람, 파타고니아",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "p0SVOU8Y1C0",
+   "views": 6500,
+   "title": "못 걷는다던 소녀가 세계 최고의 스포츠 선수가 된 방법",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "8ICwiJ7VPLk",
+   "views": 6400,
+   "title": "매일 맞던 빵셔틀이 아시아 최고가 된 방법",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "DnuLCbOD9nY",
+   "views": 4800,
+   "title": "피가 거꾸로 솟는 상황, 김학순 할머니",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  },
+  {
+   "id": "lgSXN0lSQi4",
+   "views": 348,
+   "title": "레인맨이 된 아이",
+   "ch": "https://www.youtube.com/@뜨거운사람들"
+  }
+ ]
+}

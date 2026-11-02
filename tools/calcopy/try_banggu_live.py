@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""방구석 칼카피 대본 — 라이브 작업의 실제 원본 영상 재료로 버텍스 시험.
+"""방구석 프리셋 대본 — 라이브 작업의 실제 원본 영상 재료로 버텍스 시험.
 
 서버에서(핫패치 금지 — 묶음을 /tmp/banggu_pkg/banggu/ 에 올려 부른다. 라이브 폴더는 읽기만):
   scp -r shopping_shorts/channel_presets/banggu  ubuntu@…:/tmp/banggu_pkg/
@@ -44,7 +44,7 @@ def main():
         import time
         for wait in (0, 10, 25, 45):          # 429(분당 한도)는 잠깐 쉬면 풀린다 — 실측 2026-10-06
             time.sleep(wait)
-            ok, got = vertex_route.try_call("script_generate", _vx, what="칼카피시험")
+            ok, got = vertex_route.try_call("script_generate", _vx, what="프리셋시험")
             if ok:
                 time.sleep(2)
                 return got or ""

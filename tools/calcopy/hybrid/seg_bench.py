@@ -5,7 +5,7 @@
     PYTHONUTF8=1 py -m tools.calcopy.hybrid.seg_bench table [--name <편 이름>]
 
 run = 작업 폴더를 <폴더>_seg<n> 으로 복사 → 대본 단계로 되돌림 → flow_dev --resume --approve --stop-at thumb(장면 맞추기 통과 직후 멈춤, 렌더 안 함)
-     → 잰 값 한 줄을 기록(channel/칼카피_제작순서/구간시험.jsonl)에 쌓고 같은 편 직전 줄과 비교(나빠진 칸 표시).
+     → 잰 값 한 줄을 기록(channel/production_guide/segment_bench.jsonl)에 쌓고 같은 편 직전 줄과 비교(나빠진 칸 표시).
 잰 값: 대본 판정 수 · 장면 판정 수 · 장면 반려 수 · 첫 장면 반려에 걸린 문제 수 · 대본·장면 분 · 장면 통과 여부 · 커밋.
 검사 기준(문턱)은 이 도구가 바꾸지 않는다 — 통과는 언제나 같은 관문을 넘은 것이다."""
 from __future__ import annotations
@@ -20,7 +20,7 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-LEDGER = ROOT / "channel" / "칼카피_제작순서" / "구간시험.jsonl"
+LEDGER = ROOT / "channel" / "production_guide" / "segment_bench.jsonl"
 RESET = ("script", "approved", "_redo", "stopped", "_asker", "watch_keys", "_msheets", "auto", "look", "eye_pack", "_fix_bad",
          "redo_hist", "_n_cuts", "_shown_stage", "watch_last")
 WORSE = ("script_n", "plan_n", "plan_rej", "first_rej_items", "min")     # 클수록 나쁜 칸

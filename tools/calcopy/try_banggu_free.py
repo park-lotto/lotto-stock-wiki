@@ -72,7 +72,7 @@ def main():
             return cl.models.generate_content(model=m, contents=prompt, config=types.GenerateContentConfig(response_mime_type="application/json")).text
         for wait in (0, 10, 25, 45):
             time.sleep(wait)
-            ok, got = vertex_route.try_call("script_generate", _vx, what="칼카피시험")
+            ok, got = vertex_route.try_call("script_generate", _vx, what="프리셋시험")
             if ok:
                 time.sleep(2); return got or ""
         raise RuntimeError("버텍스 호출 실패")

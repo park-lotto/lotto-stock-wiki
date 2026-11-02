@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""칼카피 제미나이 창구 **한 곳** — 모든 도구(analyze·material_auto·topic_find·script_frame·yanshot·style_writer·narr_video…)가 ask() 를 부른다.
+"""프리셋 제미나이 창구 **한 곳** — 모든 도구(analyze·material_auto·topic_find·script_frame·yanshot·style_writer·narr_video…)가 ask() 를 부른다.
 키는 gemini_keys.keys() 한 곳(GEMINI_API_KEY*·SHORTS_GEMINI_KEY* = pull_pool_keys 로 받은 공용 풀), 버텍스·유료 API 금지(BRAINBULB_VERTEX=0).
 
 ask(parts, prompt) → (dict|None, 실패이유|None). 429·한도면 다음 키 → 다음 모델로 넘기고, 다 막히면 "quota" 를

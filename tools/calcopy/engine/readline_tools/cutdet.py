@@ -264,6 +264,8 @@ def classify_arrays(A: dict, groups: list[tuple[int, int]], fps: float = 30.0, P
         f["kind"] = decide(f, P)
         f["blur_tail"] = bool(f["kind"] == "cut" and dip_ratio <= P["DIP"])     # 흐려지긴 했지만 효과 지문(대칭·짧음)이 아님
         f["border"] = _border(f, P)
+        if at_start and f["kind"] != "cut":                     # 첫머리 전환 = 시작 블러(앞 샷 없음) — 프레임차로 잡혔든(여기) 안 잡혔든(아래 t=0 칸) 같은 표식
+            f["start"] = True
         out.append(f)
     if n > 2 * W + 13 and not (groups and groups[0][0] <= W):   # 영상 시작도 경계(앞이 없다 → 왼쪽은 회복된 것으로 보고 뒤 수준과 견줌)
         post = _med(sh, W + 1, W + 13)
@@ -312,7 +314,7 @@ def _refine_v2(F, mean, res, shots, fps, h, y0, cap_band, mp4, y1, use_color_fla
         c = by_t.get(round(int(round(r["t"] * fps)) / fps, 3))
         if c:
             r.update({k: v for k, v in c.items() if k not in ("t", "te")})
-    if cls and cls[0].get("start"):
+    if cls and cls[0].get("start") and cls[0]["t"] == 0.0:      # t=0 칸만 res 에 없다(컷 묶음에서 온 시작 블러는 위에서 이미 붙었다)
         res.insert(0, {"t": 0.0, "t_end": 0.0, "diff": 0.0, "kind_v1": None, **{k: v for k, v in cls[0].items() if k not in ("t", "te")}})
     if not motion:                               # 전환만 볼 때(점검 도구) — 샷마다 ORB 는 느리다
         return

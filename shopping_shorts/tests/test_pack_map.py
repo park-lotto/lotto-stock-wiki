@@ -49,11 +49,12 @@ def test_모든_판_packs_있고_옛칸과_같다():
 
 
 def test_판_파일마다_packs_칸_적힘():
-    """모든 판 파일에 packs 칸 — 상속 판은 바탕과 다른 것만(잇템로그판_v2 = 결정 칸 없이 gap 만, 결정은 바탕 상속)."""
+    """모든 판 파일에 packs 칸 — 상속 판은 바탕과 다른 것만(잇템로그판_v2 = 자막팩만 자기 변형 팩, 나머지 결정은 바탕 상속)."""
     miss = [n for n in ST.names() if "packs" not in json.loads(ST.path_of(n).read_text(encoding="utf-8"))]
     assert miss == []
     v2 = json.loads(ST.path_of("잇템로그판_v2").read_text(encoding="utf-8"))["packs"]
-    assert not any(x in (v2.get(k) or {}) for k in PM.PACK_KEYS for x in PM.DECIDE)
+    assert [(k, x) for k in PM.PACK_KEYS for x in PM.DECIDE if x in (v2.get(k) or {})] == [("caption", "pack")]
+    assert v2["caption"]["pack"] != ST.load("잇템로그판")["packs"]["caption"]["pack"]
 
 
 def test_두벌_불일치는_load_거절(tmp_styles):
@@ -101,10 +102,10 @@ def test_상속판_목록패치_적용_잇템로그판_v2():
     v1 = ST.load("잇템로그판")["script"]
     v2 = ST.load("잇템로그판_v2")["script"]
     ids = [a["id"] for a in v2["audit"]]
-    assert ids == [a["id"] for a in v1["audit"]] + ["has_line_jeonun"]
+    assert ids == [a["id"] for a in v1["audit"]] + ["has_line_jeonun", "has_line_hago", "has_line_honjamal", "tts_cps_spread"]   # 판 audit_patch.add 순서 그대로
     last = next(a for a in v2["audit"] if a["id"] == "ending_last")
     assert "겠다" in last["pattern"] and last != next(a for a in v1["audit"] if a["id"] == "ending_last")
-    assert len(v2["brief"]) == len(v1["brief"]) + 3
+    assert len(v2["brief"]) == len(v1["brief"]) + 5
     assert "audit_patch" not in v2 and "brief_patch" not in v2
 
 
@@ -184,6 +185,8 @@ def test_자막크기는_팩변형으로만_없으면_거절():
 def test_업그레이드판_상위편_큰자막은_팩요청_gap():
     st = ST.load("잇템로그판_v2")
     assert any("size:large" in g for g in st["packs"]["caption"]["gap"])
-    assert st["packs"]["caption"]["pack"] == "ititemlog" and st["caption"]["pack"] == "ititemlog"
+    assert st["packs"]["caption"]["pack"] == "ititemlog_v2" and st["caption"]["pack"] == "ititemlog_v2"   # 강조색 후보 팩(관제 235) — 크기는 ititemlog 그대로라 요청이 살아 있다
+    assert PM.pack_look("ititemlog_v2")["ink"] == PM.pack_look("ititemlog")["ink"]
+    assert any("size:large" in g for g in PM.map_all("잇템로그판_v2")[0]["caption"]["gap"])     # 판에 적힌 gap = 지금 측정이 내는 gap
     t = (PM.ROOT / "channel/ititemlog/_kal/팩요청.md").read_text(encoding="utf-8")
     assert "잇템로그판_v2#" in t and "size:large" in t

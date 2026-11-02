@@ -113,7 +113,7 @@ def catalog() -> dict:
     from shopping_shorts.calcopy_frame import schema, to_snapshot
     html = (ROOT / "out" / "scene-style-ui-showcase.html").read_text(encoding="utf-8")
     fonts = sorted({m.group(1) for m in re.finditer(r'@font-face\s*\{[^}]*?font-family:\s*"?([A-Za-z0-9_-]+)"?;', html)})
-    # 목소리 = 칼카피 명단(engine/voices.py — 사장님 10-20 확정, 필재 금지)만. 10-21 실측: 설정 화면에 필재·명단 밖(김건·용식이·발키리)이 나오고 미나가 없었다.
+    # 목소리 = 프리셋 명단(engine/voices.py — 사장님 10-20 확정, 필재 금지)만. 10-21 실측: 설정 화면에 필재·명단 밖(김건·용식이·발키리)이 나오고 미나가 없었다.
     #   타입캐스트 = 회원 타입캐스트 키 · 미나(일레븐랩스) = 회원 일레븐랩스 키(사장님 10-21)
     from tools.calcopy.engine.voices import KNOWN_VOICES, BANNED_VOICES, PROVIDERS, TC_EMOTIONS
     presets = json.loads((ROOT / "shopping_shorts" / "assets" / "voice_presets.json").read_text(encoding="utf-8"))

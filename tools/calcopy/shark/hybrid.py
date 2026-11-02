@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""샥탬스토리 하이브리드 — 앞 = 새 엔진으로 다시 렌더한 칼카피 0~cut 초(후킹), 뒤 = 같은 옷(지훈·샥탬 프리셋·같은 BGM 이어서)의 1인칭 체험 나레 (관제 097, 2026-10-18).
+"""샥탬스토리 하이브리드 — 앞 = 새 엔진으로 다시 렌더한 프리셋 0~cut 초(후킹), 뒤 = 같은 옷(지훈·샥탬 프리셋·같은 BGM 이어서)의 1인칭 체험 나레 (관제 097, 2026-10-18).
 
     PYTHONUTF8=1 py tools/calcopy/shark/hybrid.py <하이브리드 doc 폴더> <작업 폴더> [--plan] [--preview] [--confirm-tts] [--back-only] [--desktop <mp4>]
 
@@ -8,7 +8,7 @@
   --back-only   뒤만 렌더(앞 수리본이 아직 없을 때). 이어 붙이기는 나중에 다시 부르면 뒤 렌더를 재사용
   --confirm-tts 타입캐스트를 처음 부를 때만(페이블 OK 뒤 1회)
 
-  앞 = front_render(): 앞 render_info 의 engine 표식이 지금 엔진(render.ENGINE)과 다르면 앞 칼카피를 새 엔진으로 다시 렌더한다
+  앞 = front_render(): 앞 render_info 의 engine 표식이 지금 엔진(render.ENGINE)과 다르면 앞 프리셋를 새 엔진으로 다시 렌더한다
         (물건 원·적중 검사·고급 모양·−14 LUFS) — 작업 폴더 <앞 작업>/../엔진v2(또는 hybrid.front_work), 옛 타입캐스트 나레 재사용(--tts-from, 비용 0).
         옛 완성 mp4(front_src)는 새 판이 없을 때(--old-front)만.
   뒤 꾸밈 = 뒤 재료.json effects 를 shark/render.py 가 그대로 받는다(대상·적중 검사 같은 길) — 대상 확실한 것만.
@@ -47,7 +47,7 @@ def front_info(H: dict, doc: Path, old: bool = False, plan: bool = False) -> dic
 
 
 def front_render(H: dict, fd: Path, ri: Path, plan: bool = False) -> dict:
-    """(판단 주인: 앞 판) 새 엔진(render.ENGINE) 표식이 붙은 앞 렌더가 있으면 그것, 없으면 앞 칼카피를 다시 렌더(옛 나레 재사용)."""
+    """(판단 주인: 앞 판) 새 엔진(render.ENGINE) 표식이 붙은 앞 렌더가 있으면 그것, 없으면 앞 프리셋를 다시 렌더(옛 나레 재사용)."""
     fw = Path(H.get("front_work") or ri.parents[2] / "엔진v2")
     nri = fw / "render" / "render_info.json"
     if nri.exists() and jload(nri).get("engine") == SR_.ENGINE and (fw / "render" / "final.mp4").exists():

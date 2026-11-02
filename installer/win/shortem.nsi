@@ -60,7 +60,7 @@ VIAddVersionKey /LANG=1042 "LegalCopyright" "${PUBLISHER}"
 !define MUI_WELCOMEPAGE_TITLE "숏템 설치를 시작합니다"
 !define MUI_WELCOMEPAGE_TEXT "숏템이 영상을 만드는 데 쓰는 실행 도구(렌더러·ffmpeg·파이썬)와 숏템 로컬 서버를 이 컴퓨터에 설치합니다.$\r$\n$\r$\n관리자 권한은 필요 없고, 인터넷에서 따로 내려받는 것도 없습니다.$\r$\n$\r$\n설치 위치: 내 사용자 폴더(AppData\Local\Shortem)"
 !define MUI_FINISHPAGE_TITLE "숏템 설치가 끝났습니다"
-!define MUI_FINISHPAGE_TEXT "Claude Desktop 을 쓰면 아래 '연결하기'를 켠 채로 마침을 누르세요. Claude Desktop 설치 창이 뜨면 라이선스 키를 붙여 넣습니다.$\r$\n$\r$\nClaude Code 를 쓰면 바탕화면 '숏템작업' 폴더의 시작.md 를 Claude Code 입력창에 끌어다 놓고 엔터를 누르세요."
+!define MUI_FINISHPAGE_TEXT "Claude Desktop 을 쓰면 아래 '연결하기'를 켠 채로 마침을 누르세요. Claude Desktop 설치 창이 뜨면 라이선스 키를 붙여 넣습니다.$\r$\n$\r$\nClaude Code 를 쓰면 바탕화면 '숏템작업' 폴더의 START.md 를 Claude Code 입력창에 끌어다 놓고 엔터를 누르세요."
 !define MUI_FINISHPAGE_RUN
 !define MUI_FINISHPAGE_RUN_TEXT "Claude Desktop 에 숏템 연결하기(shortem.mcpb 열기)"
 !define MUI_FINISHPAGE_RUN_FUNCTION OpenMcpb
@@ -137,7 +137,7 @@ Section "숏템" SecMain
   ${EndIf}
   WriteUninstaller "$INSTDIR\uninstall.exe"
 
-  DetailPrint "설치 마무리(시작.md·작업 폴더)"
+  DetailPrint "설치 마무리(START.md·작업 폴더)"
   nsExec::ExecToLog '"$INSTDIR\tools\node\node.exe" "$INSTDIR\postinstall.js" --home "$INSTDIR" --desktop "$DesktopBase" --version "${VERSION}"'
   Pop $0
   ${If} $0 != "0"
@@ -181,7 +181,7 @@ Function OpenMcpb
   ${EndIf}
   ${If} $0 == ""
     ${IfNot} ${Silent}
-      MessageBox MB_OK|MB_ICONINFORMATION "이 컴퓨터에서 Claude Desktop 을 찾지 못했습니다.$\r$\n$\r$\nClaude Desktop 을 설치한 뒤 '$INSTDIR\shortem.mcpb' 파일을 두 번 누르거나, Claude Desktop ▸ 설정 ▸ 확장 프로그램 ▸ 고급 ▸ 확장 프로그램 설치에서 이 파일을 고르세요.$\r$\n$\r$\nClaude Code 만 쓴다면 바탕화면 '숏템작업' 폴더의 시작.md 를 쓰면 됩니다."
+      MessageBox MB_OK|MB_ICONINFORMATION "이 컴퓨터에서 Claude Desktop 을 찾지 못했습니다.$\r$\n$\r$\nClaude Desktop 을 설치한 뒤 '$INSTDIR\shortem.mcpb' 파일을 두 번 누르거나, Claude Desktop ▸ 설정 ▸ 확장 프로그램 ▸ 고급 ▸ 확장 프로그램 설치에서 이 파일을 고르세요.$\r$\n$\r$\nClaude Code 만 쓴다면 바탕화면 '숏템작업' 폴더의 START.md 를 쓰면 됩니다."
     ${EndIf}
   ${Else}
     ExecShell "open" "$INSTDIR\shortem.mcpb"

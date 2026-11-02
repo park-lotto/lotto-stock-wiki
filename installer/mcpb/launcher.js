@@ -203,7 +203,7 @@ async function installPack(home, key, saveKey) {
   const args = [path.join(home, 'postinstall.js'), '--home', home, '--version', info.version];
   const desk = desktopDir();
   if (desk) args.push('--desktop', desk);
-  await run(nodeExe(home), args, { timeout: 10 * 60 * 1000 });   // 실행 도구 sha256 대조·시작.md
+  await run(nodeExe(home), args, { timeout: 10 * 60 * 1000 });   // 실행 도구 sha256 대조·START.md
   if (saveKey) {   // 키를 도구 인자로만 받았으면 설치본의 주인 함수(server/license.js saveLicense)로 저장
     const lic = require('url').pathToFileURL(path.join(home, 'server', 'license.js')).href;
     await run(nodeExe(home), ['--input-type=module', '-e', `const m=await import(${JSON.stringify(lic)});m.saveLicense(process.env.SHORTEM_K)`],

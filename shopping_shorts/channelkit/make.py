@@ -14,7 +14,7 @@ import sys
 
 from . import pipeline, providers
 
-DEFAULT_VOICE = "tc_6059dad0b83880769a50502f"      # Typecast 'Changsu' = 박창수 (사장님 지정 2026-09-12). 볼케이노는 여성 나레(228Hz)+남성 PUNCH(104Hz) 2인 구성(실측)
+DEFAULT_VOICE = "tc_6059dad0b83880769a50502f"      # Typecast 'Changsu' = 박창수 (사장님 지정 2026-09-12). 외부 사례는 여성 나레(228Hz)+남성 PUNCH(104Hz) 2인 구성(실측)
 
 
 def _voices(a):
@@ -34,8 +34,8 @@ def main(argv=None):
     ap.add_argument("--workdir", required=True)
     ap.add_argument("--voice", default=None, help="전 역할 같은 목소리(tc_…). 기본은 역할별 3명(spec.POLICY_VOICES)")
     ap.add_argument("--voice-narr", default=None); ap.add_argument("--voice-char", default=None); ap.add_argument("--voice-punch", default=None)
-    ap.add_argument("--tempo", type=float, default=1.3)    # 사장님: "템포 더 빠르게"(v004 1.15=7.9자/초에도). 볼케이노 7.4는 여성 목소리라 더 빨리 들린다
-    _vol = os.path.expanduser("~/.volcano/jobs/20260911_뇌전구_박수홍")     # 로컬에 있는 볼케이노 팩(저작권 미확인 — 커밋 안 함)
+    ap.add_argument("--tempo", type=float, default=1.3)    # 사장님: "템포 더 빠르게"(v004 1.15=7.9자/초에도). 외부 사례 7.4는 여성 목소리라 더 빨리 들린다
+    _vol = os.path.expanduser("~/.volcano/jobs/20260911_뇌전구_박수홍")     # 로컬에 있는 외부 사례 팩(저작권 미확인 — 커밋 안 함)
     ap.add_argument("--sfx-dir", default=os.path.join(_vol, "sfx_norm") if os.path.isdir(os.path.join(_vol, "sfx_norm")) else None)
     ap.add_argument("--meme-dir", default=os.path.join(_vol, "pepe", "fm") if os.path.isdir(os.path.join(_vol, "pepe", "fm")) else None)
     ap.add_argument("--no-images", action="store_true", help="EvoLink 생성 생략(검은 슬롯)")

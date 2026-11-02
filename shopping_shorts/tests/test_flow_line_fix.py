@@ -45,10 +45,13 @@ def test_failed_line_fix_falls_back_to_full_rewrite(monkeypatch):
     assert "full" in called and out["then"] == "script_got"
 
 
-def test_no_line_id_uses_old_path(monkeypatch):
+def test_no_line_id_picks_lines_then_old_path(monkeypatch):
+    """줄 표시가 없어도 먼저 최소 줄만(관제 304 C) — 줄 고치기 한도를 넘어야 옛 길(대본 전체)."""
     st = _st()
     called = {}
     monkeypatch.setattr(F, "_script_ask", lambda st_, why="": called.setdefault("full", why) or {"x": 1})
+    assert F._voice_rewrite(st, ["받아쓰기 확정 결함(줄 표시 없음)"])["then"] == "line_fix_got" and "full" not in called
+    st["tries"]["line_fix"] = F.LINE_FIX_MAX
     F._voice_rewrite(st, ["받아쓰기 확정 결함(줄 표시 없음)"])
     assert "full" in called
 

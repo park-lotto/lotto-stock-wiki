@@ -37,7 +37,7 @@
      "preset_id": "tc-yongsik-stable"
     }
    ],
-   "_note": "이름·id = shopping_shorts/assets/voice_presets.json · 기본 빠르기 1.36 = remake 기본(copy_render.NARR) · 10-20 필재 금지(칼카피_시작.md:217) → 박창수(사장님 고름) · 프리셋마다 기본값은 preview_request.preset_defaults 가 이 위에 얹는다"
+   "_note": "이름·id = shopping_shorts/assets/voice_presets.json · 기본 빠르기 1.36 = remake 기본(copy_render.NARR) · 10-20 필재 금지(production_start.md:217) → 박창수(사장님 고름) · 프리셋마다 기본값은 preview_request.preset_defaults 가 이 위에 얹는다"
   },
   "meme_pool": {
    "dir": "C:/숏템_칼카피/packs/meme/meme_pack",

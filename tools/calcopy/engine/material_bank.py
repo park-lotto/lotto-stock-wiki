@@ -3,7 +3,7 @@
 
 material_auto 는 대본 먼저 → 줄마다 검색이라 같은 종류 다른 제품이 섞였다(창고판 README: 아이스큐브·옥수수커터). 이 도구는 거꾸로 간다:
   1) scan  : 같은 제품 후보 영상 전부를 0.5초 칸으로 잘라 번호 시트 + 원본 장면 경계(render_bench.shot_starts — 관문 ③과 같은 자)
-  2) 태그  : 칸 시트를 **눈으로** 보고(오푸스 — 칼카피_시작 13) <bank>/태그.json 에 구간을 적는다
+  2) 태그  : 칸 시트를 **눈으로** 보고(오푸스 — production_start 13) <bank>/태그.json 에 구간을 적는다
              {"segments":[{"v": 영상, "a": 초, "b": 초, "product": "same|other|none", "act": "동작 이름", "text": 남의 글자 보임?, "cx": 제품 가로 가운데 0~1, "see": "보이는 것"}]}
   3) acts  : same·글자 없음 구간을 동작별로 모은 장면 목록(acts.md) — **대본은 이 목록을 보고 쓴다**(줄마다 pieces[{text, act}])
   4) place : 대본 조각마다 그 동작 구간에서 컷 하나(조각 1 = 컷 1, 벤치 cut_eq_sub 94%) — 재사용 판정 = quality_gate.reuse_violations_bench(판 reuse.adjacent_run),

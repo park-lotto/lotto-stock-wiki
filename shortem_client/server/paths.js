@@ -19,7 +19,10 @@ function desktopDir() {
 }
 
 export function workDir() {
-  return path.resolve(process.env.SHORTEM_WORK || path.join(desktopDir(), '숏템작업'));
+  if (process.env.SHORTEM_WORK) return path.resolve(process.env.SHORTEM_WORK);
+  const old = path.join(desktopDir(), '숏템작업');      // 이미 쓰던 회원은 그대로(재설치로 지워지지 않게 새 회원은 설치 폴더 밖 ~/.shortem/work)
+  try { if (fs.statSync(old).isDirectory()) return path.resolve(old); } catch { /* 없음 */ }
+  return path.join(homeDir(), 'work');
 }
 
 export class JailError extends Error {

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""칼카피 새 판 자막팩 점검(관제 263 · 팩요청.md <판>#1) — 판마다 자막팩을 **실제 렌더**해 벤치 프레임과 대조한다.
+"""프리셋 새 판 자막팩 점검(관제 263 · 팩요청.md <판>#1) — 판마다 자막팩을 **실제 렌더**해 벤치 프레임과 대조한다.
 
     PYTHONUTF8=1 py tools/caption_pack/check_kal_new_packs.py [팩,...] [--out out/check_kal_new_packs]
 

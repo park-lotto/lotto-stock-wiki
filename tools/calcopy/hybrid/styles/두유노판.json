@@ -3,7 +3,7 @@
  "renderer": "bench",
  "thumb_card_face": false,
  "_thumb_card_face": "연예인 채널 아님 — 카드 얼굴 관문 끔(판마다 명시 필수)",
- "_note": "두유노홈디노(@두유노홈디노) 칼카피 1차 판 — 쇼핑형 인스타스토리형(전체화면 해외 원본 클립 + 흰 손글씨 한 줄 자막 + 체험담 나레, frame.kind full). 근거 channel/homedesignnote/{스타일분석.md, 줄판독/ 6편, _kal/규칙빈도.json·손상수_실측.json·homedesignnote판_초안.json} · 옛 길 preset/전체화면_가운데자막(preset_make — 회원 옛 길, 지우지 않음)·10-26 그 manifest 에 잰 근거(자막 외곽·y·rhythm·표지 카드)를 이 판으로 옮김. 잇썸홈판.json(itssum = 얜샷템 하이브리드 뒤 체험)과 다른 판",
+ "_note": "두유노홈디노(@두유노홈디노) 프리셋 1차 판 — 쇼핑형 인스타스토리형(전체화면 해외 원본 클립 + 흰 손글씨 한 줄 자막 + 체험담 나레, frame.kind full). 근거 channel/homedesignnote/{스타일분석.md, 줄판독/ 6편, _kal/규칙빈도.json·손상수_실측.json·homedesignnote판_초안.json} · 옛 길 preset/전체화면_가운데자막(preset_make — 회원 옛 길, 지우지 않음)·10-26 그 manifest 에 잰 근거(자막 외곽·y·rhythm·표지 카드)를 이 판으로 옮김. 잇썸홈판.json(itssum = 얜샷템 하이브리드 뒤 체험)과 다른 판",
  "bench": {
   "ko": "두유노홈디노",
   "channel": "homedesignnote",
@@ -19,7 +19,7 @@
   "candidates": [
    "tc_61f0859907085fc68561c9a1"
   ],
-  "why": "벤치 남성 나레 45/49(judge voice — manifest channel_rules.sound) · 박창수 = 사장님 확정 남 목소리 명단(칼카피_시작 §12, 필재 금지) · 지훈 후보 · 배속은 cps_target 맞춤 ≤1.25(타입캐스트) · tempo 1.2 = 타입캐스트에 1.2배로 받는다(옛 길 manifest tts_tempo 1.2, 15호 실측: 원속도 박창수는 atempo 1.185 필요) — 10-26 첫 편 원속도로 받으니 줄마다 atempo 상한 1.25 에 붙고 '마개예요→막이에요'·'거름망이에요→걸어망해요' 뭉개짐(받아쓰기 관문 ②). 대본.json voice 로 옮기는 곳 = material_bank.emit_bench",
+  "why": "벤치 남성 나레 45/49(judge voice — manifest channel_rules.sound) · 박창수 = 사장님 확정 남 목소리 명단(production_start §12, 필재 금지) · 지훈 후보 · 배속은 cps_target 맞춤 ≤1.25(타입캐스트) · tempo 1.2 = 타입캐스트에 1.2배로 받는다(옛 길 manifest tts_tempo 1.2, 15호 실측: 원속도 박창수는 atempo 1.185 필요) — 10-26 첫 편 원속도로 받으니 줄마다 atempo 상한 1.25 에 붙고 '마개예요→막이에요'·'거름망이에요→걸어망해요' 뭉개짐(받아쓰기 관문 ②). 대본.json voice 로 옮기는 곳 = material_bank.emit_bench",
   "tempo": 1.2
  },
  "cps_target": 8.58,
@@ -689,7 +689,7 @@
   "brief": [
    "두유노홈디노 대본 지침서(origin/track/노바대본설명서 docs/노바대본설명서/두유노홈디노_지침서.html): A 체험형(사람·사건으로 증명, 140~190자 8줄) / B 정보형(만든 사람·원리, 자료조사 2개 이상 확인될 때만)",
    "잇썸홈 points(channel/homedesignnote/대본설명서/points.json — script_audit itssum 엔진): 잉? 1(앞 1/3) · 권위 줄 1(숫자·나라 말 없이 '만든·원래·브랜드' 꼴 + 근거 번호) · 결과 비유 1 · 끝 줄 사회 반응 · 5~8줄 150~246자 · ★와우 줄 머리 강한 연결어는 이 판에서 끔(audit engine.off wow) — 벤치 상위 10편 문장 머리 연결어 0%(10-26 대조): 연결어(심지어·근데·진짜 핵심…)로 문장을 시작하지 않는다",
-   "어미 더라고요>어요>대요 · 존댓말 0.75·전언 0.32 · 조각 4~13자(화면 한 덩어리) · CTA·금액·효능 단정 없음(칼카피_시작 14 — 분위기 과장은 허용)",
+   "어미 더라고요>어요>대요 · 존댓말 0.75·전언 0.32 · 조각 4~13자(화면 한 덩어리) · CTA·금액·효능 단정 없음(production_start 14 — 분위기 과장은 허용)",
    "★장면 매칭(10-26 상위 10편 대조 장면 ○ 0.5 < 중앙 0.75): 줄마다 그 말이 화면에 보이게 쓴다. 사연 줄(훅·도입)도 '보이는 상태'로 — 예 '세면대에 물이 고여서'·'배수구에서 이만한 머리카락 뭉치가 나왔는데'. 그 조각 동작 첫 자리 = 창고 acts.md 의 '문제: …'(제품 없는 문제 상태 구간). 사람 사연(혼남·업체)은 짧은 꼬리로만, 화면에 없는 말로 줄을 채우지 않는다. 숫자·나라 이름은 쓰지 않는다(벤치 지어냄 후보 중앙 0)"
   ],
   "audit": [
@@ -817,7 +817,7 @@
   "meme": {
    "pack": "local",
    "gap": [],
-   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 칼카피 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
+   "from": "벤치 짤 빈도 = placement.rules.meme.rate 0.0(뼈대 칸 — 여기 안 적음) · 프리셋 길 = 로컬 짤 팩(material_auto.MEME_*) · 톤 없음"
   }
  }
 }

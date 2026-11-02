@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""회원 라인(볼케이노형, 관제 234·097 2026-10-21) — 서버 지시서(flow)와 회원 PC 실행기(runner_ops)가 **같이 부르는** 판단 함수.
+"""회원 라인(단계형, 관제 234·097 2026-10-21) — 서버 지시서(flow)와 회원 PC 실행기(runner_ops)가 **같이 부르는** 판단 함수.
 파일·영상·네트워크를 만지지 않는다(글·숫자만) — 서버에서도 PC 에서도 같은 답을 낸다(판단 한 곳, 0순위-B).
-옛 자리: hybrid/customer.py(10-21 TheRose PC) — 볼케이노형 분해 때 이리로 옮겼다(customer.py 는 지웠다)."""
+옛 자리: hybrid/customer.py(10-21 TheRose PC) — 단계형 분해 때 이리로 옮겼다(customer.py 는 지웠다)."""
 from __future__ import annotations
 
 import difflib

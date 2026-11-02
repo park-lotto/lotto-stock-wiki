@@ -83,10 +83,10 @@
 | 요소 | 칸 | 팩(읽기만) | 렌더가 쓰는 곳 |
 |---|---|---|---|
 | `caption` | `pack`(자막팩 키) · `stand_in`(벤치와 같은 팩이 없어 임시) · `rank`(측정 거리 1~3위, 항목별 1.0 = 같음 문턱: 글꼴 같음·잉크 ±10%·ΔE<5·테 ±3px·자리 ±2.5%) · `enter_cover`(벤치 등장 분포 ↔ 팩 등장 이름표) | `caption-motions.js` /*PACKS*/ | `caption.pack` → `render_bench.snapshot` captionPack |
-| `motion` | `pack` = **등장 효과팩 번호** `off`·`1`~`20`(/*MPACKS*/ — `snapshot.motionPack` 이 받는 값) · `graphics` = 모션그래픽팩 `off`·`dynamic_pop`·`minimal_chic`(assets/motion/packs.json) | MPACKS · motion/packs.json | `pack_map.snapshot_fields` → motionPack. ★자막팩에 `motion`(등장)이 있으면 팩이 이긴다(motionPlan) — 칼카피 6팩은 번호가 안 먹는다. ★`graphics` 는 render_bench 가 못 그린다 → off 아니면 거절 |
+| `motion` | `pack` = **등장 효과팩 번호** `off`·`1`~`20`(/*MPACKS*/ — `snapshot.motionPack` 이 받는 값) · `graphics` = 모션그래픽팩 `off`·`dynamic_pop`·`minimal_chic`(assets/motion/packs.json) | MPACKS · motion/packs.json | `pack_map.snapshot_fields` → motionPack. ★자막팩에 `motion`(등장)이 있으면 팩이 이긴다(motionPlan) — 프리셋 6팩은 번호가 안 먹는다. ★`graphics` 는 render_bench 가 못 그린다 → off 아니면 거절 |
 | `sfx` | `pack`(팩NN) · `map{종류: 한글 slot}`(뽁·띠링·휙·둥·오프너·틱·딸깍2 = 파일 pop·ding·whoosh·dung·opener·tick·click2) · `outside{종류: 팩 밖 파일}`(표시된 임시 + gap) · `gain_db` · `ncc`(벤치↔팩 파일 상관 요약) | `assets/sfx_packs` | → `sfx_files{종류: 팩NN/파일.wav}` |
 | `bgm` | `id`(사람이 고른 곡) · `candidates`(bgm_pick 상위 3) | `bgm_lib/catalog.json` | → `bgm.id`·`bgm.candidates` |
-| `meme` | `pack` = `local`(칼카피 로컬 짤 팩 — 기본)·`server`(회원 prefs — 칼카피 길 미연결, 짤 규칙 있는 판이면 거절)·`none` · `tone`·`dir`(있으면 `placement.rules.meme.tone/pack` 로) | 로컬 짤 팩 | placement.meme_step. **빈도 `rate` 는 `placement.rules.meme.rate`(뼈대)** — packs 에 안 적는다(두 벌 금지) |
+| `meme` | `pack` = `local`(프리셋 로컬 짤 팩 — 기본)·`server`(회원 prefs — 프리셋 길 미연결, 짤 규칙 있는 판이면 거절)·`none` · `tone`·`dir`(있으면 `placement.rules.meme.tone/pack` 로) | 로컬 짤 팩 | placement.meme_step. **빈도 `rate` 는 `placement.rules.meme.rate`(뼈대)** — packs 에 안 적는다(두 벌 금지) |
 
 - **자막 크기·줄 간격의 주인 = 자막팩(표준 §11-3 ㉑)** — 판 `caption` 에 크기·간격 칸을 만들지 않는다. 다르게 하려면 `packs.caption.variants{size: …, line_pitch: …}` 로 **팩에 있는 변형**을 고른다(없는 변형 = load 거절). 팩에 없으면 `pack_map` 이 `팩요청.md`(관제 235)+`gap` 을 쓴다: 업그레이드 판 상위 편 p75 잉크가 팩보다 10%↑ → size 변형 요청(잇템로그판_v2 89 vs 74px) · 여러 줄 자막 피치가 팩 기본 줄 높이(글꼴 ascent+descent)와 10%↑ 다름 → line_pitch 변형 요청(썰템쇼·썰템홈샷·트롯파파). 1차 판은 벤치 실측 그대로.
 - 합치기 = `pack_map.merge(엔진 기본 ENGINE_DEFAULT, 판 packs, 회원 patch.packs)` 한 곳 — `styles.load(판, patch={"packs": …})`. 회원 patch 는 지금 `packs` 만(다른 칸은 지시서 12 `apply_patch` — 그 전엔 거절). 없는 팩 항목은 거절(`check`).

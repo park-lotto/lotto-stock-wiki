@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import base64
 import hmac
+import inspect
 import json
 import os
 import re
@@ -20,11 +21,12 @@ import uuid
 import zlib
 from pathlib import Path
 
+from shopping_shorts import claude_live as LIVE
 from shopping_shorts import claude_portal as CP
 
 _SCHEMA = """CREATE TABLE IF NOT EXISTS claude_flow_runs (
     sid TEXT PRIMARY KEY, cid INTEGER NOT NULL, preset TEXT, version TEXT, seq INTEGER NOT NULL DEFAULT 0,
-    phase TEXT, status TEXT, created INTEGER, updated INTEGER, summary_json TEXT)"""
+    phase TEXT, status TEXT, created INTEGER, updated INTEGER, summary_json TEXT, engine TEXT)"""
 SID_RE = re.compile(r"^[0-9a-f]{12}$")
 MEASURE_MAX = 400_000      # 요청 하나 measure+replies 상한(대본·받아쓰기가 가장 크다)
 
@@ -46,6 +48,28 @@ def _ensure(store):
     CP.ensure_schema(store)
     with CP._tx(store, write=True) as c:
         c.execute(_SCHEMA)
+        # engine = 이 편을 만든 앱 판(단계 배포 실패율, 관제 304). version 칸은 프리셋 판이다. 라이브 표에는 칸이 없다
+        if "engine" not in [r[1] for r in c.execute("PRAGMA table_info(claude_flow_runs)").fetchall()]:
+            c.execute("ALTER TABLE claude_flow_runs ADD COLUMN engine TEXT")
+
+
+def stop_counts(store, version: str, since_new: int, since_old: int) -> dict:
+    """앱 판별 막힘 수 — 새 판 = version 으로 since_new 뒤 시작한 편, 옛 판 = 그 밖의 판(칸 없던 옛 행 포함) since_old 뒤.
+    끝난 편(stop·done)만 센다. 진행 중이거나 버려진 편은 분모에 안 넣는다. 판정은 claude_portal.rollout_bad."""
+    _ensure(store)
+    with CP._tx(store) as c:
+        rows = CP._rows(c, "SELECT COALESCE(engine,'') engine, status, created FROM claude_flow_runs "
+                           "WHERE status IN ('stop','done') AND created>=?", (min(since_new, since_old),))
+    out = {"new_stop": 0, "new_n": 0, "old_stop": 0, "old_n": 0}
+    for r in rows:
+        if r["engine"] == version:
+            side = "new" if r["created"] >= since_new else None
+        else:
+            side = "old" if r["created"] >= since_old else None
+        if side:
+            out[side + "_n"] += 1
+            out[side + "_stop"] += r["status"] == "stop"
+    return out
 
 
 def _seal(state: dict, seq: int) -> str:
@@ -98,6 +122,38 @@ def _made_refs(store, cid) -> list:
     return out
 
 
+def _used_refs(store, cid) -> dict:
+    """다른 회원이 쓴 소재 지문 → 쓴 회원 수(claude_flow_runs 전체 · 진행 중 포함). 실패 편(stop·reject)은 안 친다. 순서 판단은 flow.bench_pool."""
+    with CP._tx(store) as c:
+        rows = c.execute("SELECT DISTINCT cid, json_extract(summary_json,'$.seed_h') FROM claude_flow_runs "
+                         "WHERE cid<>? AND COALESCE(status,'') NOT IN ('stop','reject') AND json_valid(summary_json)", (cid,)).fetchall()
+    out: dict = {}
+    for r in rows:
+        if r[1]:
+            out[r[1]] = out.get(r[1], 0) + 1
+    return out
+
+
+def _pool_kw(fn, **kw) -> dict:
+    """옛 지시서(새 인자를 모름)면 뺀다 — 호출 형식 호환."""
+    names = inspect.signature(fn).parameters
+    return {k: v for k, v in kw.items() if k in names}
+
+
+def knowhow(ctx: dict, body: dict, store=None) -> dict:
+    """막혔을 때 노하우 — 상황 글·단계에 맞는 막힘표·가이드·경험. 판단 주인 = flow.knowhow."""
+    store = CP._store(store)
+    _ensure(store)
+    cid, _, _ = CP._front(store, ctx, "knowhow")
+    body = body if isinstance(body, dict) else {}
+    tier = CP.member_tier(store, cid)
+    if str(body.get("topic") or "") == "benchmark":      # 채널 벤치마킹 노하우 = 고급 이상(사장님 11-02) — 나머지 노하우는 전 반 같다
+        if tier == "basic":
+            return {"ok": True, "locked": True, "say": "채널 벤치마킹은 고급반에서 제공돼요", "tier": tier}
+        return {"ok": True, "tier": tier, "guide": _flow().benchmark_guide()}
+    return {"ok": True, "tier": tier, **_flow().knowhow(str(body.get("stage") or "")[:40], str(body.get("query") or "")[:2000])}
+
+
 def step(ctx: dict, body: dict, store=None) -> dict:
     store = CP._store(store)
     _ensure(store)
@@ -119,13 +175,19 @@ def step(ctx: dict, body: dict, store=None) -> dict:
             raise CP.PortalError("bad_request", "이 프리셋은 단계 진행 방식이 아닙니다")
         url = str((body.get("source") or {}).get("url") or "")
         made = _made_refs(store, cid)
+        used = _used_refs(store, cid)
         if kind == "sources" and not hasattr(flow, "source_candidates"):
             raise CP.PortalError("bad_request", "이 서버는 아직 후보 뽑기를 못 합니다 — 영상 주소를 주세요")
         if kind == "sources":             # 회원 '후보 뽑아줘' — 그 판 소재 창고(벤치 채널 조회순)에서 안 만든 5개. 편은 만들지 않는다
-            return {"ok": True, "status": "sources", "sources": flow.source_candidates(line["version"], made)}
+            try:
+                offset = max(0, int(body.get("offset") or 0))
+            except (TypeError, ValueError):
+                raise CP.PortalError("bad_request", "offset 은 숫자여야 합니다")
+            found = flow.source_candidates(line["version"], made, **_pool_kw(flow.source_candidates, n=300, offset=offset, used=used, seed=cid))   # 창고 전체를 고객이 고른다(사장님 10-31)
+            return {"ok": True, "status": "sources", "sources": found, "next_offset": offset + len(found)}
         auto = None
-        if not url and hasattr(flow, "pick_source"):   # 주소 없이 '만들어줘' — 소재 창고 조회 1위(사장님 10-30)
-            auto = flow.pick_source(line["version"], made)
+        if not url and hasattr(flow, "pick_source"):   # 주소 없이 '만들어줘' — 소재 창고 첫 편(순서 = flow.bench_pool)
+            auto = flow.pick_source(line["version"], made, **_pool_kw(flow.pick_source, used=used, seed=cid))
             if not auto:
                 raise CP.PortalError("bad_request", "이 프리셋의 소재 창고(벤치 채널)에 아직 안 만든 영상이 없어요 — 영상 주소를 주세요")
             url = auto["url"]
@@ -139,12 +201,13 @@ def step(ctx: dict, body: dict, store=None) -> dict:
         # 제품을 정했을 때만 넘긴다 — 엔진이 이 인자를 모르는 옛판이어도 정하지 않은 편은 그대로 돈다
         st, seq = (flow.start(url, line["version"], sid, product) if product else flow.start(url, line["version"], sid)), 0
         st["made_refs"] = made[:200]          # 둘째 소재(pick_alt_source)도 이 회원이 만든 것을 뺀다
+        st["pool_used"], st["pool_seed"] = dict(sorted(used.items(), key=lambda x: -x[1])[:200]), cid   # 다음 소재·둘째 소재도 같은 순서
         if auto:
             st["auto_source"] = auto
-            st["log"].append(f"소재 창고 조회 1위로 시작: {auto['url']} (조회 {auto.get('views')})")
+            st["log"].append(f"소재 창고에서 시작: {auto['url']} (조회 {auto.get('views')})")
         with CP._tx(store, write=True) as c:
-            c.execute("INSERT INTO claude_flow_runs(sid,cid,preset,version,seq,phase,status,created,updated) VALUES(?,?,?,?,?,?,?,?,?)",
-                      (sid, cid, pid, line["version"], 0, "setup", "start", CP._now(), CP._now()))
+            c.execute("INSERT INTO claude_flow_runs(sid,cid,preset,version,seq,phase,status,created,updated,engine) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                      (sid, cid, pid, line["version"], 0, "setup", "start", CP._now(), CP._now(), str(ctx.get("engine") or "")[:32]))
     else:
         st, seq = _open(body.get("payload"))
         sid = str(st.get("sid") or "")
@@ -154,13 +217,20 @@ def step(ctx: dict, body: dict, store=None) -> dict:
             raise CP.PortalError("bad_request", "그 작업을 찾을 수 없습니다")
         if seq != int(row["seq"]):
             raise CP.PortalError("stale", "옛 진행 상태입니다 — 가장 최근 next_payload 로 이어 주세요")
-    user = {"approve": kind == "approve", "retry": kind == "retry", "revise": str(body.get("revise") or "")[:500] if kind == "revise" else ""}
-    res = flow.step(st, body.get("measure") or {}, body.get("replies") or {}, user)
+    user = {"approve": kind == "approve", "retry": kind == "retry", "reclean": kind == "reclean", "revise": str(body.get("revise") or "")[:500] if kind == "revise" else ""}
+    try:
+        res = flow.step(st, body.get("measure") or {}, body.get("replies") or {}, user)
+    except CP.PortalError:
+        raise
+    except Exception as e:      # noqa: BLE001 — 그대로 터뜨린다. 회원은 서버 오류만 보니 사건으로 남긴다(판단 = claude_live)
+        LIVE.flow_crash(store, cid, sid, e)
+        raise
     st2 = res.pop("state")
     seq2 = seq + 1
     with CP._tx(store, write=True) as c:
         c.execute("UPDATE claude_flow_runs SET seq=?, phase=?, status=?, updated=?, summary_json=? WHERE sid=?",
                   (seq2, st2.get("phase"), res.get("status"), CP._now(), json.dumps(_summary(st2), ensure_ascii=False), sid))
+    LIVE.from_flow(store, cid, sid, res, st2)      # 멈춤·반려·과제·완성 — 옛 회원 프로그램도 서버에서 보인다(관제 304)
     res.update(sid=sid, next_payload=_seal(st2, seq2),
                then_call_with=["payload 는 next_payload 그대로", "do 를 실행해 measure{do id: 결과}", "review 마다 replies{review id: 답 JSON}"])
     return res

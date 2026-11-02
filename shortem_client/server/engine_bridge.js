@@ -1,4 +1,4 @@
-// 엔진 다리 — 고객 PC 의 칼카피 엔진(설치팩 동봉 파이썬 + 엔진 묶음)을 부른다(관제 234 5판).
+// 엔진 다리 — 고객 PC 의 프리셋 엔진(설치팩 동봉 파이썬 + 엔진 묶음)을 부른다(관제 234 5판).
 //   판단은 엔진 한 곳(shopping_shorts/calcopy_make — 후보·고르기·검수·사인·만들기). 여기는 띄우고 JSON 을 읽기만 한다.
 //   엔진 AI 는 고객 Claude: 엔진이 요청을 줄 폴더(~/.shortem/ai/<run>/<요청>)에 쓰고 기다린다 → shortem_ai 로 Claude 가 답한다.
 import { spawn } from 'node:child_process';
@@ -32,7 +32,7 @@ function engineEnv(queue, packFile, extraEnv) {
   const env = { ...process.env, PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8',
     CALCOPY_GEMINI_BACKEND: 'client', CALCOPY_CUSTOMER_MODE: '1', SHORTEM_LLM_QUEUE: queue,
     CALCOPY_DATA_DIR: dataDir(), CALCOPY_PACK_ROOT: packRoot(), CHANNEL_FIND_CACHE: ensureDir(homeDir(), 'cache', 'channel_find'),
-    YTDLP_PROXY_SLOTS: '0', INSTAGRAM_SCRAPER: 'playwright' };   // 회원 PC = 우리 프록시·유료 수집 없음(받기는 회원 로그인 쿠키)
+    YTDLP_PROXY_SLOTS: '0', INSTAGRAM_SCRAPER: 'playwright', SHORTEM_BROWSER_OFFSCREEN: '1' };   // 회원 PC = 우리 프록시·유료 수집 없음(받기는 회원 로그인 쿠키)
   if (packFile) env.CALCOPY_PACKS = packFile;
   Object.assign(env, engineCookieEnv());                 // 회원이 연결한 인스타·틱톡·유튜브 로그인(logins.js) — yt-dlp·media_download 가 쓴다
   Object.assign(env, extraEnv || {});
@@ -54,10 +54,12 @@ function engineEnv(queue, packFile, extraEnv) {
 const runs = new Map();   // runId → {proc, done, out, err, queue}
 
 // make.py --json <args…> 를 뒤에서 띄운다. 도구 호출은 waitMs 만 기다린다(AI 요청이 생기면 바로 돌아간다).
-export function startRun(args, { packFile, env: extraEnv, onClose } = {}) {
+export const startRun = (args, opts) => startScript(path.join(engineRoot(), 'tools', 'calcopy', 'make.py'), ['--json', ...args], opts);
+// 엔진 파이썬 입구 하나를 뒤에서 띄운다(make.py · 벤치마킹 bench_member.py 공용) — 마지막 줄 JSON·AI 요청 줄은 같은 꼴
+export function startScript(script, args, { packFile, env: extraEnv, onClose } = {}) {
   const runId = 'r' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
   const queue = ensureDir(aiRoot(), runId);
-  const proc = spawn(pythonExe(), [path.join(engineRoot(), 'tools', 'calcopy', 'make.py'), '--json', ...args],
+  const proc = spawn(pythonExe(), [script, ...args],
     { cwd: engineRoot(), env: engineEnv(queue, packFile, extraEnv), shell: false, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
   const r = { runId, queue, proc, done: false, out: [], err: '', code: null, started: Date.now() };
   proc.stdout.on('data', d => r.out.push(d));
@@ -89,8 +91,28 @@ export async function waitRun(r, waitMs) {
 }
 
 // 답을 기다리는 AI 요청 전부(오래된 순)
+// (판단 주인) 이 요청을 내줘도 되나 — 편 요청은 가장 최근에 움직인 편의, 지금 기다리는 요청만. 숏클은 한 번에 한 편이다
+//   이전 편·취소·끝난 편의 요청이 대기함에 남아 다른 편 답이 섞였다(11-01 고객 창).
+function flowFiles() {
+  const root = path.join(dataDir(), 'flow');
+  let names = [];
+  try { names = fs.readdirSync(root); } catch { return []; }
+  return names.map(sid => { try { const p = path.join(root, sid, 'flow.json'); return { sid, p, at: fs.statSync(p).mtimeMs }; } catch { return null; } }).filter(Boolean);
+}
+function liveAsks() {
+  const fs_ = flowFiles();
+  if (!fs_.length) return null;
+  const top = fs_.reduce((a, b) => (b.at > a.at ? b : a));
+  try {
+    const f = JSON.parse(fs.readFileSync(top.p, 'utf8'));
+    if (f.cancelled || f.fail || f.status === 'done') return { sid: top.sid, dirs: new Set() };
+    return { sid: top.sid, dirs: new Set((f.asks || []).map(q => path.resolve(q.dir))) };
+  } catch { return { sid: top.sid, dirs: new Set() }; }
+}
+
 export function pending() {
   const out = [];
+  const live = liveAsks();
   let rootDirs = [];
   try { rootDirs = fs.readdirSync(aiRoot()); } catch { return out; }
   for (const run of rootDirs) {
@@ -99,6 +121,7 @@ export function pending() {
     for (const id of reqs) {
       const d = path.join(aiRoot(), run, id);
       if (!REQ_RE.test(id) || fs.existsSync(path.join(d, 'done')) || fs.existsSync(path.join(d, 'answer.json'))) continue;
+      if (run.startsWith('flow_') && !(live && run === 'flow_' + live.sid && live.dirs.has(path.resolve(d)))) continue;
       let req;
       try { req = JSON.parse(fs.readFileSync(path.join(d, 'request.json'), 'utf8')); } catch { continue; }
       let err = null;
@@ -226,7 +249,7 @@ export async function engineTool(cmd, input, { timeoutMs = 60000 } = {}) {
   });
 }
 
-// 볼케이노형 실행기(관제 234, 10-21) — 서버 지시서가 준 do 목록을 엔진 hybrid/runner_ops 로 돌리고 measure(JSON)를 돌려준다.
+// 단계형 실행기(관제 234, 10-21) — 서버 지시서가 준 do 목록을 엔진 hybrid/runner_ops 로 돌리고 measure(JSON)를 돌려준다.
 //   허용 명령 판정은 runner_ops 한 곳. 여기는 띄우고 마지막 줄 JSON 을 읽기만 한다.
 export function runOps(jobDir, doList, { timeoutMs = 3 * 60 * 60 * 1000, env: extra = {} } = {}) {
   fs.mkdirSync(jobDir, { recursive: true });
