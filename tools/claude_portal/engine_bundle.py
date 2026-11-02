@@ -139,7 +139,7 @@ HAND = tuple(f"tools/calcopy/hybrid/{m}.py" for m in ("__init__", "runner_ops", 
                                                        "material_fit", "quality_gate", "checks", "script_audit", "deco", "compare_sheet")) + (
     "tools/calcopy/oneshot/__init__.py", "tools/calcopy/oneshot/scene_fit.py",   # 완성본 검사(check)가 부른다 — 10-29 회원 12/13 ModuleNotFoundError
     "tools/calcopy/yanshot/__init__.py", "tools/calcopy/yanshot/common.py", "tools/calcopy/yanshot/plan.py",
-    "tools/calcopy/engine/tts_pause.py", "shopping_shorts/channelkit/vision/ocrdet.py",
+    "tools/calcopy/engine/tts_pause.py", "shopping_shorts/channelkit/vision/ocrdet.py", "shopping_shorts/channelkit/vision/facelib_cv.py",
     "shopping_shorts/script_translate.py", "tools/free_subclean/__init__.py", "tools/free_subclean/engine.py")       # 글자·언어 판정(scene_style·video_assemble) — script_generate 는 번역 때만 늦게 불러온다
 
 

@@ -17,6 +17,8 @@ if str(ROOT) not in sys.path:
 
 # 얼굴 검출 모델(YuNet) — 주인 한 곳(render_bench·thumb). 회원 PC = 설치본 models/face(환경변수, 숏템 MCP 가 넣는다). OpenCV 는 한글 경로를 못 읽는다
 FACE_MODEL = os.environ.get("CALCOPY_FACE_MODEL") or "C:/calcopy_models/face_detection_yunet_2023mar.onnx"
+if not os.path.isfile(FACE_MODEL) and (ROOT / "models/face_detection_yunet_2023mar.onnx").is_file():
+    FACE_MODEL = str(ROOT / "models/face_detection_yunet_2023mar.onnx")     # 회원 설치본 = 엔진 안(build_win)
 WORK_BASE = Path("C:/숏템_칼카피/yanshottem")
 DOC_BASE = ROOT / "channel" / "yanshottem"
 DESK_DIR = Path("C:/Users/CH/Desktop/칼카피영상/얜샷템/하이브리드")

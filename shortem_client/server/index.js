@@ -383,13 +383,12 @@ async function main() {
   holdSession({ onBeat: async () => { const s = flowStall(); if (s) await reportLive(s); await pullLive(); } });   // 신호마다 멈춤 알리기·숏클 팀 메시지 받기(관제 304)
   // 켤 때 새 판을 뒤에서 받아 둔다 — 바꾸기는 다음에 켤 때 연결기가(돌고 있는 파일을 안 건드린다)
   setTimeout(() => { retryUpdate().catch(e => audit('update_fail', { result: String(e && e.message || e).slice(0, 80) })); }, 5000).unref();
-  if (process.send) {     // 도는 중에도 새 판을 받고, 돌던 일이 없으면 부모에게 바꾸자고 한다
-    process.on('message', m => { if (m && m.go) process.exit(75); });
-    setInterval(async () => {
-      try { await checkUpdate(); } catch (e) { audit('update_fail', { result: String(e && e.message || e).slice(0, 80) }); }
-      if (fs.existsSync(path.join(installDir(), '_update', 'pending.json')) && !anyFlowBusy() && !anyRunning()) process.send({ swap: 1 });
-    }, Number(process.env.SHORTEM_UPDATE_EVERY_MS || 10 * 60 * 1000)).unref();
-  }
+  // 도는 중에도 새 판을 받는다(엔진은 받자마자 바뀐다 — updater.applyDownloaded). 지금 연결기엔 IPC 가 없어 process.send 는 옛 연결기용
+  if (process.send) process.on('message', m => { if (m && m.go) process.exit(75); });
+  setInterval(async () => {
+    try { await checkUpdate(); } catch (e) { audit('update_fail', { result: String(e && e.message || e).slice(0, 80) }); }
+    if (process.send && fs.existsSync(path.join(installDir(), '_update', 'pending.json')) && !anyFlowBusy() && !anyRunning()) process.send({ swap: 1 });
+  }, Number(process.env.SHORTEM_UPDATE_EVERY_MS || 10 * 60 * 1000)).unref();
   // 웹 설정 화면 다리(관제 266) — 웹 '완성본 고치기'가 이 PC 완성본을 재생·시간 줄로 보게(서버를 안 거친다)
   startBridge().then(r => { if (r.error) audit('bridge_fail', { result: r.error }); }).catch(() => { /* 다리 없이도 제작은 된다 */ });
 }

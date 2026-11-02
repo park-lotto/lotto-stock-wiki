@@ -365,6 +365,14 @@ def build_engine(stage: Path, engine: Path, report: dict) -> None:
     wd.mkdir(parents=True)
     for name in ("config.json", "model.bin", "tokenizer.json", "vocabulary.txt"):
         shutil.copy2(Path(src) / name, wd / name)          # 캐시는 링크일 수 있다 — copy2 가 실제 파일로 복사
+    vm = stage / "engine" / "models"       # 글자·얼굴·사람 판독 모델 — 저장소에 없다. 빠지면 장면 맞추기에서 죽는다(11-02 새 PC 실사고)
+    vm.mkdir(parents=True, exist_ok=True)
+    home_models = Path.home() / ".shortem" / "models"
+    for src_m in (home_models / "ppocrv5_server_det.onnx", home_models / "face_detection_yunet_2023mar.onnx",
+                  home_models / "face_recognition_sface_2021dec.onnx", home_models / "dl" / "nanodet.onnx"):
+        if not src_m.is_file():
+            raise SystemExit(f"[build_win] 판독 모델이 없습니다: {src_m}")
+        shutil.copy2(src_m, vm / src_m.name)
     report["engine"] = {"files": len(man["files"]), "dropped": len(man["dropped"]), "missing": man["missing"],
                         "whisper_mb": round(sum(p.stat().st_size for p in wd.iterdir()) / 1e6, 1), "check": "통과"}
     log(f"엔진 묶음 {len(man['files'])}파일(뺀 것 {len(man['dropped'])}) · 받아쓰기 모델 {report['engine']['whisper_mb']}MB")

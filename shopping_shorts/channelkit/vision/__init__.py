@@ -15,6 +15,7 @@ import os
 import numpy as np
 
 MODELS_DIR = os.environ.get("SHORTEM_MODELS") or os.path.join(os.path.expanduser("~"), ".shortem", "models")
+ENGINE_MODELS = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "models"))   # 회원 설치본 = 엔진 안(build_win)
 YUNET = "face_detection_yunet_2023mar.onnx"
 SFACE = "face_recognition_sface_2021dec.onnx"
 OCRDET = "ppocrv5_server_det.onnx"
@@ -41,13 +42,15 @@ _state = {}
 def model(name):
     p = os.path.join(MODELS_DIR, name)
     if not os.path.isfile(p):
+        p = os.path.join(ENGINE_MODELS, name)
+    if not os.path.isfile(p):
         raise RuntimeError(f"vision: 모델 없음 {p} — SHORTEM_MODELS 또는 ~/.shortem/models 에 {name} 을 둬라")
     return p
 
 
 def models_missing():
     """setup 단계 점검용 — 없는 모델 경로 목록."""
-    return [os.path.join(MODELS_DIR, n) for n in (YUNET, SFACE, OCRDET) if not os.path.isfile(os.path.join(MODELS_DIR, n))]
+    return [os.path.join(MODELS_DIR, n) for n in (YUNET, SFACE, OCRDET) if not any(os.path.isfile(os.path.join(d, n)) for d in (MODELS_DIR, ENGINE_MODELS))]
 
 
 def _facelib():
